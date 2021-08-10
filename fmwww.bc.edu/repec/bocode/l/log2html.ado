@@ -112,7 +112,7 @@ program log2html
 		file write `ho' "</style>" _newline 
 	}
 	else {
-		file write `ho' `"<link rel="stylesheet" href="`css'">"' _newline 
+		file write `ho' `"<link rel="stylesheet" href="http://fmwww.bc.edu/repec/bocode/l/`css'">"' _newline 
 	}
 	file write `ho' "</head>" _newline
 	file write `ho' "<body>" _newline

@@ -14,7 +14,7 @@
 {cmdab:qfactor} {varlist} {ifin}
 {cmd:,}
 {cmdab:nfa:ctor(#)} [{cmdab:ext:raction(string)} {cmdab:rot:ation(string)} 
-{cmdab:sco:re(string)} {cmdab:es:ize(string)} {cmdab:bip:olar(string)}] 
+{cmdab:sco:re(string)} {cmdab:es:ize(string)} {cmdab:bip:olar(string)} {cmdab:stl:ength(#)}] 
 
 {p}
 {bf:varlist} includes Q-sorts that need to be factor-analyzed.
@@ -71,6 +71,8 @@ It also provides number of Q-sorts loaded on each factor, distinguishing stateme
 {synopt:{opt 0 or no}}indicates no assessment of a bipolar factor; the default option{p_end}
 {synopt:{opt any #}}any number more than 0 indicates number of negative loadings required for a bipolar factor.{p_end}
 
+{synopt :{opt stl:ength(#)}}it identifies the maximum length of characters for each statement to be displayed; {ul:the default length is 50 characters}.{p_end}
+
 {title: Options for factor extraction}
 
 {phang}
@@ -107,56 +109,59 @@ subsequent analysis, e.g. producing loading-based graphs.
 {title:Examples of qfactor}
 
 {phang} 
-1-{bf:mldataset.dta:} This dataset includes 40 participants on their views on marijuana legalization. 
-The study was conducted using 19 statements. Suppose the dataset is transposed 
-(each column represents a Q-sort) and Q-sorts are named v1, v2,…, v40. The following 
-commands will conduct qfactor analysis to extract 3 principal component factors using varimax:{p_end}
+{bf:mldataset.dta:} This dataset includes 40 participants on their views on marijuana legalization. 
+The study was conducted using 19 statements. Each column in the dataset represents one Q-sort and Q-sorts are named qsort1, qsort2,…, qsort40.{p_end} 
+{phang}
+The following commands conduct qfactor analysis to extract 3 principal component factors using varimax:{p_end}
 
 {phang2}
-{bf:qfactor v1-v40, nfa(3) ext(pcf)}
+{bf:qfactor qsort1-qsort40, nfa(3) ext(pcf)}
 
 {phang}
 or
 
 {phang2}
-{bf:qfactor v*, nfa(3) ext(pcf)}
+{bf:qfactor qsort*, nfa(3) ext(pcf)}
 
 {phang}
 The same as above using quartimax rotation:
 
 {phang2}
-{bf:qfactor v*, nfa(3) ext(pcf) rot(quartimax)}
+{bf:qfactor qsort*, nfa(3) ext(pcf) rot(quartimax)}
 
 {phang}
 Same as above with varimax rotation but if there is 2 or more negative loadings on any factor it treats it as bipolar factor:
 
 {phang2}
-{bf:qfactor v1-v30, nfa(3) ext(pcf) bip(2)}
+{bf:qfactor qsort1-qsort30, nfa(3) ext(pcf) bip(2)}
 
 {phang}
 Same as above without bipolar option but Cohen's d=0.80:
 
 {phang2}
-{bf:qfactor v1-v30, nfa(3) ext(pcf) es(0.80)}
+{bf:qfactor qsort1-qsort30, nfa(3) ext(pcf) es(0.80)}
 
 {phang}
 The following command runs qfactor on only 30 Q-sorts and uses iterated principal factors (ipf) to extract 3 factors using varimax rotation:
 
 {phang2}
-{bf:qfactor v1-v30, nfa(3) ext(ipf)}
+{bf:qfactor qsort1-qsort30, nfa(3) ext(ipf)}
 
 {phang2}
-{bf:qfactor v1-v30, nfa(3)} 
+{bf:qfactor qsort1-qsort30, nfa(3)} 
 
 {phang}
 The same as above but with 40 Q-sorts and promax(3) rotation:
 
 {phang2}
-{bf:qfactor v1-v40, nfa(3) rot(promax(3))}
+{bf:qfactor qsort1-qsort40, nfa(3) rot(promax(3))}
 
 {phang}
-2-	{bf:mldata2.dta} a non-transposed dataset: This non-transposed dataset includes 19 statements named v1, v2,…, v19 and 40 Q-sorts. The statement file is named Statements.dta. 
-    The following commands will conduct qfactor analysis to extract 3 principal component factors and varimax rotation:{p_end}
+The following command extracts 3 principal component factors using varimax rotation and sets the length of 
+each statement to a maximum of 30 characters in the output:{p_end}
+
+{phang2}
+{bf:qfactor qsort1-qsort40, nfa(3) ext(pcf) stl(30)}
 
 {title:Stored results: Useful for Stata programmers}
 

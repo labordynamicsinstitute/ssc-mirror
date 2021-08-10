@@ -1,6 +1,6 @@
 {smcl}
-{right:version:  2.3.8.6}
-{cmd:help asdoc} {right:Sep 4, 2020}
+{right:version:  2.3.9.5}
+{cmd:help asdoc} {right:April 10, 2021}
 {hline}
 {viewerjumpto "asdoc_Options" "asdoc##asdoc_options"}{...}
 {viewerjumpto "Summary Stats" "asdoc##summary"}{...}
@@ -1323,7 +1323,7 @@ as mean, sum, etc. However, the {ifin} qualifiers are accepted.
 {p 4 4 2} asdoc can export a Stata's matrix to a file in form of a nicely formatted table. 
 The syntax is given below :
 
-{p 4 4 2} {cmd:asdoc wmat}, {opt mat:rix(matrix_name)} [{opt rnames(row names)} {opt cnames(row names)} replace append other_options] 
+{p 4 4 2} {cmd:asdoc wmat}, {opt mat:rix(matrix_name)} [{opt rnames(row names)} {opt cnames(column names)} replace append other_options] 
 
 {p 4 4 2} {hi: Description} : {cmd: wmat} is the command name - an abbreviation for
 {it:writing matrix}. Option {opt mat:rix()} is a required option to get name of an existing matrix.

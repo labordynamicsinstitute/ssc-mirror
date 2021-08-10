@@ -1,4 +1,4 @@
-*! ivreg2h  1.1.03  07feb2019  cfb/mes
+*! ivreg2h  1.1.04  11jul2021  cfb/mes
 *! cloned from
 *! xtivreg2 1.0.13 28Aug2011
 *! author mes
@@ -20,10 +20,11 @@
 *!         Bug fix - wouldn't run under Stata 9 because of extraneous version 10.1 statement.
 *! 1.1.02: Was not passing * (`options') on to ivreg2, which meant that options such as robust were ignored
 *! 1.1.03: Add Z() option to select generated instruments
+*! 1.1.04: Disable execution in absence of included endogenous
 
 program define ivreg2h, eclass byable(recall)
 	version 9
-	local lversion 01.1.01
+	local lversion 01.1.04
 // will be overridden by ivreg2 e(version) for ivreg2_p
 
 // Needed for call to ivreg2
@@ -72,6 +73,11 @@ program define ivreg2h, eclass byable(recall)
 		local lhs `r(depvar)'
 		local exexog `r(exexog)'
 
+// stop if no endo
+		if "`endo'" == "" {
+			di as err _n "No endogenous regressors specified" 
+			error 198
+		}
 // validate fe option: require panel
 		loc feest " "
 		capt xtset

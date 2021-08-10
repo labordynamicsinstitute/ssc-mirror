@@ -22,8 +22,8 @@ d Requires: Stata version 11.0
 d
 d Distribution-Date: 20101221
 d
-d Author: Roger Newson,  Imperial College London
-d Support: email r.newson@@imperial.ac.uk
+d Author: Roger Newson,  King's College London
+d Support: email roger.newson@@kcl.ac.uk
 d
 f creplace.ado
 f creplace.sthlp

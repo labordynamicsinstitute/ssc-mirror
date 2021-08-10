@@ -1,5 +1,6 @@
 #delim ;
 program define dotex;
+local cversion=c(version);
 version 16.0;
 *
  Execute a do-file `1', outputting to `1'.tex,
@@ -7,7 +8,7 @@ version 16.0;
  with the option of passing parameters.
  Adapted from dolog (which creates text log files).
 *! Author: Roger Newson
-*! Date: 27 June 2019
+*! Date: 08 July 2021
 *;
 
 syntax [ anything ] [ , * ];
@@ -32,7 +33,7 @@ tempname currentlog;
 tempfile tmplog;
 qui log using `"`tmplog'"', smcl replace name(`currentlog');
 display "Temporary log file opened on `c(current_date)' at `c(current_time)'";
-capture noisily do `"`dfname'"' `arglist', `options';
+capture noisily version `cversion': do `"`dfname'"' `arglist', `options';
 local retcod = _rc;
 display "Temporary log file completed on `c(current_date)' at `c(current_time)'";
 qui log close `currentlog';

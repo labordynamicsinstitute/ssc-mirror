@@ -123,7 +123,7 @@ program define sidebar
 		file write `book' `"<strong>files</strong>"'_n
 		file write `book' `"</div>"' _n
 		forvalues i = 1/`k' {
-			file write `book' `"<a href="#file`i'" class="w3-bar-item w3-button w3-white w3-leftbar w3-border-green w3-border w3-hover-green line-wrap" >`:word `i' of `fn''</a>"'_n
+			file write `book' `"<a href="htmlcb.ado#file`i'" class="w3-bar-item w3-button w3-white w3-leftbar w3-border-green w3-border w3-hover-green line-wrap" >`:word `i' of `fn''</a>"'_n
 		}
 		file write `book' "</div>"_n
 	}

@@ -1,4 +1,5 @@
 {smcl}
+{* *! version 2.0.1  10jun2021}{...}
 {* *! version 2.0.0  08dec2020}{...}
 {* *! version 1.1.0  12jun2019}{...}
 {* *! version 1.0.1  09jan2018}{...}
@@ -330,7 +331,7 @@ options; seldom used
     {hline}
 {pstd}{bf:Endogenous Panel Stochastic Cost Frontier Example}{p_end}
     Setup
-{phang2}{cmd:. {stata "use http://www.mukarakaplan.com/files/xtsfkkcost.dta, clear"}}{p_end}
+{phang2}{cmd:. {stata "use https://www.mukarakaplan.com/files/xtsfkkcost.dta, clear"}}{p_end}
 {phang2}{cmd:. {stata "xtsfkk, version"}}{p_end}
 {phang2}{cmd:. {stata "xtset id t"}}{p_end}
 
@@ -358,7 +359,7 @@ window until it starts beeping.
     {hline}
 {pstd}{bf:Endogenous Panel Stochastic Production Frontier Example}{p_end}
     Setup
-{phang2}{cmd:. {stata "use http://www.mukarakaplan.com/files/xtsfkkprod.dta, clear"}}{p_end}
+{phang2}{cmd:. {stata "use https://www.mukarakaplan.com/files/xtsfkkprod.dta, clear"}}{p_end}
 {phang2}{cmd:. {stata "summ"}}{p_end}
 {phang2}{cmd:. {stata "xtset firm year"}}{p_end}
 
@@ -403,7 +404,7 @@ equations ({cmd:z1} and {cmd:z2}).
     {hline}
 {pstd}{bf:Example from the U.S. Banking Sector}{p_end}
     Setup
-{phang2}{cmd:. {stata "use http://www.mukarakaplan.com/files/xtsfkkbank.dta, clear"}}{p_end}
+{phang2}{cmd:. {stata "use https://www.mukarakaplan.com/files/xtsfkkbank.dta, clear"}}{p_end}
 {phang2}{cmd:. {stata "xtset id year"}}{p_end}
 {phang2}{cmd:. {stata "xtsfkk loans cdep hotm gta roe big, u(hhi) en(hhi) i(rep) iter(5) save(banks.est)"}}{p_end}
 

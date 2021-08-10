@@ -1,7 +1,7 @@
 {smcl}
-{* *! version 1.3  15oct2014}{...}
+{* *! version 1.4  19may2021}{...}
 {hline}
-help for {cmd:table1}{right:Version 1.3, 15 October 2014}
+help for {cmd:table1}{right:Version 1.4, 19 May 2021}
 {hline}
 
 {title:Title}
@@ -40,7 +40,7 @@ help for {cmd:table1}{right:Version 1.3, 15 October 2014}
 separate column{p_end}
 {synopt:{cmdab:f:ormat(%}{it:{help fmt}}{cmd:)}}default display format for contn and conts variables{p_end}
 {synopt:{cmdab:cf:ormat(%}{it:{help fmt}}{cmd:)}}default display format for cat and bin variables{p_end}
-{synopt:{opt plusminus}}report contn variables as mean ± sd rather than mean (sd){p_end}
+{synopt:{opt plusminus}}report contn variables as mean +/- sd rather than mean (sd){p_end}
 {synopt:{opt percent}}report categorical values as % rather than N (%){p_end}
 {synopt:{opt mis:sing}}don't exclude missing values from categorical variables{p_end}
 {synopt:{opt cmis:sing}}report number of non-missing continuous variables{p_end}

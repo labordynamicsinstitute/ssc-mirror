@@ -1,3 +1,6 @@
+*! Part of package matrixtools v. 0.28
+*! Support: Niels Henrik Bruun, niels.henrik.bruun@gmail.com
+
 program define onewai
     version 12
     return clear

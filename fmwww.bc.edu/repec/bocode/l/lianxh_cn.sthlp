@@ -1,5 +1,5 @@
 {smcl}
-{* *! version 2.17  06Nov2020}{...}
+{* *! version 3  11Apr2021}{...}
 {cmd:help lianxh}
 {hline}
 
@@ -169,7 +169,7 @@ E-mail: {browse "mailto:642070192@qq.com":642070192@qq.com}. {break}
 {p_end}
 
 {phang}
-{cmd:Qingqing, Liu (刘庆庆)} Lingnan College, Sun Yat-Sen University, China.{break}
+{cmd:Ruihan, Liu (刘芮含)} Lingnan College, Sun Yat-Sen University, China.{break}
 E-mail: {browse "mailto:2428172451@qq.com":2428172451@qq.com}. {break}
 {p_end}
 

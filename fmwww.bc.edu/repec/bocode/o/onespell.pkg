@@ -1,6 +1,6 @@
 d 'ONESPELL': module to generate single longest spell for each unit in panel data, listwise
 d
-d onespell produces a subset of a panel data set in which all
+d  onespell produces a subset of a panel data set in which all
 d observations	on varlist are non-missing and contiguous in the
 d time dimension. If a panel unit  contains more than one such
 d subset, the longest "spell" is retained.  Although performing
@@ -33,4 +33,4 @@ d
 f onespell.ado
 f onespell.hlp
 f ../t/tsspell.ado
-f ../t/tsspell.hlp
+f ../t/tsspell.sthlp

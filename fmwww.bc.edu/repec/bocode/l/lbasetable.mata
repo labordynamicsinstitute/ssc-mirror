@@ -1,4 +1,5 @@
-*! version 0.2.5 2020-??-?? > 
+*!version 0.2.6  2021-05-24 > Bug in basetable_parser(): basetable::n_pct_by_value() not called when value ends on r. Thanks to Kasper Norman
+*!version 0.2.6  2021-04-15 > NoTotal and NoPvalue now also for toxl
 * version 0.2.4 2020-10-08 > Bug in basetable::n_pct_by_value() fixed
 * version 0.2.4 2020-10-07 > Fisher's exact test as option
 * version 0.2.3 2019-09-13 > 95% ci for geometric mean is added (gci)
@@ -815,7 +816,7 @@ mata:
                         }					
                     } else {									// categorical variable
                         // input: r,c,ci/c or value+,+r,c,ci/c
-                        if ( regexm(strlower(arguments[1]), "^ci|[rc]$") ) {	// all row values
+                        if ( regexm(strlower(arguments[1]), "^ci|^[rc]$") ) {	// all row values
                             // 0 = row pct, 1 = column pct
                             if ( length(arguments) == 1 ) {
                                 if ( regexm(strlower(arguments[1]), "^ci$") ) arguments = "c", arguments[1] 

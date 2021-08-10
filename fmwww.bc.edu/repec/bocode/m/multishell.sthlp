@@ -1,6 +1,6 @@
 {smcl}
 {hline}
-{hi:help multishell}{right: v. 2.0 - October 2018}
+{hi:help multishell}{right: v. 2.1 - July 2021}
 {hline}
 {title:Title}
 
@@ -29,11 +29,14 @@ This option is useful if {cmd:multishell} is used to run do files across compute
 For an example see {help multishell##example2:Examples}.
 Number of text to be replaced is not limited (in theory).{p_end}
 
-{p 4 13}{cmd: multishell add} {it: path}{break}
+{p 4 13}{cmd: multishell add} {it: path}{cmd: [,}{cmdab:skipl:oop}{cmd:]}{break}
 Adds do file to queue. 
 The number of do files is not restricted (in theory at least).
 {cmd: /* multishell loop*/} ensures that only certain loops are considered.
-See {help: multishell##multishellloop}.  {p_end}
+If option {cmd:skiploop} is invoked, all loops are skipped, meaning that to do file
+as it is run. 
+Loops marked with {cmd: /* multishell loop */} will be ignored.
+See {help multishell##multishellloop: loops in multishell}.  {p_end}
 
 {p 4 13}{ul: Optional}
 
@@ -813,7 +816,7 @@ This option makes only sense for Stata 15 and together with the seed stream.{p_e
 If Stata 15 is used, each task will have a different stream and thus
 the random numbers are unlikely to be repeated.{p_end}
 
-{marker example5}{title:Example 5: Skip loops}
+{marker example5}{marker multishellloop}{title:Example 5: Skip loops}
 
 {p 4 4}As a default {cmd:multishell} processes all loops. 
 If some loops should be skipped by multishell and only certain considered,
@@ -849,6 +852,10 @@ will recognize the loop marked with {cmd:/* multishell loop*/}.
 If no loop is marked, it will process all.{break}
 Thanks to Ben Jann for suggesting this option.
 {p_end}
+
+{p 4 4}If option {cmd:skiploops} is used, then all loops are skipped. 
+The entire do file is run as it is in one instance of Stata. 
+This option is intended parallelzing large do files.{p_end}
 
 {marker killprocess}
 {marker example6}{title: Example 6: Stopping multishell}
@@ -994,8 +1001,8 @@ It does not help to speed up existing Stata commands such as {cmd: regress}, {cm
 
 {marker about}{title:Author}
 
-{p 4}Jan Ditzen (Heriot-Watt University){p_end}
-{p 4}Email: {browse "mailto:j.ditzen@hw.ac.uk":j.ditzen@hw.ac.uk}{p_end}
+{p 4}Jan Ditzen (Free University of Bozen-Bolzano){p_end}
+{p 4}Email: {browse "mailto:jan.ditzen@unibz.it":jan.ditzen@unibz.it}{p_end}
 {p 4}Web: {browse "www.jan.ditzen.net":www.jan.ditzen.net}{p_end}
 
 {p 4 8}Thanks to Francesca Watson for reminding me using batch files to run multiple instances of Stata. 
@@ -1007,7 +1014,7 @@ The program code to obtain random numbers from random.org is taken from
 {p_end}
 
 {p 4 8}Please cite as follows:{break}
-Ditzen, J. 2018. multishell{p_end}
+Ditzen, J. 2021. multishell{p_end}
 
 {p 4 8}The latest versions and examples can be obtained via {stata "net from http://www.ditzen.net/Stata"}.{p_end}
 
@@ -1021,7 +1028,7 @@ I do not take over responsibility for any computer crashes, lost work or financi
 
 {marker changelog}{title:Changelog}
 
-{p 4 8}This version: 2.0 - 2. October 2018{p_end}
+{p 4 8}This version: 2.1 - 29. July 2021{p_end}
 
 
 {title:Also see}

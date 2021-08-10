@@ -1,7 +1,7 @@
 {smcl}
 {hline}
 {hi:help simulate2}{right: v. 1.01 - 03. November 2019}
-{hi:help psimulate2}{right: v. 1.03 - 27. February 2020}
+{hi:help psimulate2}{right: v. 1.05 - 02. August 2021}
 {hline}
 {title:Title}
 
@@ -42,6 +42,7 @@
 {synopt:{opt seed(options)}}control of seed, see {help simulate2##optionsSeed: seed options}{p_end}
 {synopt:{opt seeds:ave(options)}}saves the used seeds, see {help simulate2##SeedSaving: saving seeds}{p_end}
 {synopt:{opt seedstream(integer)}}starting seedstream, only {cmd:psimulate2}{p_end}
+{synopt:{opt nocl:s}}do not refresh window (only {cmd:psimulate2}){p_end}
 {synoptline}
 {p2colreset}{...}	
 		
@@ -205,6 +206,10 @@ It appends an existing dta or frame if option {cmd:append} is used.
 {phang}
 {opt nolegend} suppresses display of the table legend.  The table
 legend identifies the rows of the table with the expressions they represent.
+
+{phang}
+{opt nocls} {cmd:psimualte2} will refresh the window every time it scans for progress. 
+{opt nocls} avoids this behaviour and is intended for use with Servers. 
 
 {phang}
 {opt verbose} requests that the full table legend be displayed.  By default,
@@ -461,25 +466,45 @@ To run {cmd:psimulate} sequentially we code:
 Using {it:_current} within {cmd:seed()} {cmd:psimulate2} will use the 
 current seed of the parent instance as an initial seed for all child instances.
 Each child instance will still have a different seed stream to ensure the random 
-number draws are different.
+number draws are different.{p_end}
 
+{marker knownproblems}{title:Known Problems and Issues}
+{p 8 8} - On some Windows installations the temporary folder is locked. In this 
+case Stata and psimulate2 cannot write any files in the temporary folder. 
+Option {cmd:temppath()} can be used to set an alternative temporary folder.{p_end}
+{p 8 8} - psimulate2 can crash if the temporary path or any other path it writes on
+is in a cloud storage folder from services such as Dropbox, OneDrive or Backup and Sync from 
+Google. A fix is to pause those services.{p_end}
+{p 8 8} - psimulate2 has problems with long names, such as variable names or
+command names. In such cases it tends to shorten the names which might cause interruptions in the code.
+The best solution is to shorten the names.{p_end}
+{p 8 8} - Some servers require the {cmd:nocls} function to run {cmd:psimulate2}.{p_end}
 
 {marker about}{title:Author}
 
-{p 4}Jan Ditzen (Heriot-Watt University){p_end}
-{p 4}Email: {browse "mailto:j.ditzen@hw.ac.uk":j.ditzen@hw.ac.uk}{p_end}
+{p 4}Jan Ditzen (Free University of Bozen-Bolzano){p_end}
+{p 4}Email: {browse "mailto:jan.ditzen@unibz.it":jan.ditzen@unibz.it}{p_end}
 {p 4}Web: {browse "www.jan.ditzen.net":www.jan.ditzen.net}{p_end}
 
 {p 4 4}{opt simulate2} was inspired by comments from Alan Riley 
 and Tim Morris at the Stata User group meeting 2019 in London.
 Parts of the program code and help file were taken from {help simulate}.
 Kit Baum initiated the integration of MacOS and Unix and assisted in the implementation. 
-I am grateful for his help.
+Michael Porst provided much valued feedback.
+I am grateful for all of their help.
 All remaining errors are my own.{p_end}
 
 {title:Change Log}
+{p 4}Version 1.04 to 1.05{p_end}
+{p 8 8}- bug fix in exepath{p_end}
+{p 4}Version 1.03 to 1.04{p_end}
+{p 8 8}- bug fixed if data appended to frame but frame does not exists{p_end}
+{p 8 8}- fix in temppath local{p_end}
+{p 4}Version 1.02 to 1.03{p_end}
+{p 8 8}- improved behaviour for long lines in do files or programs{p_end}
+{p 8 8}- warning message if no seed set{p_end}
 {p 4}Version 1.01 to Version 1.02{p_end}
-{p 8 8}- Mata matrices and scalars are moved from parent to child instance as well.
+{p 8 8}- Mata matrices and scalars are moved from parent to child instance as well.{p_end}
 {p 4}Version 1.0 to Version 1.01{p_end}
 {p 8 8}- bug fixes in program to get exe name{p_end}
 {p 8 8}- no batch file written anymore; support for MacOS{p_end}

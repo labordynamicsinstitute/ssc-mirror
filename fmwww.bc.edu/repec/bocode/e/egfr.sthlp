@@ -1,7 +1,7 @@
 {smcl}
-{* *! version 2.01  09sep2013}{...}
+{* *! version 2.02  03aug2021}{...}
 {hline}
-help for {cmd:egfr}{right:Version 2.01, 9 September 2013}
+help for {cmd:egfr}{right:Version 2.02, 3 August 2021}
 {hline}
 
 {title:Title}
@@ -19,7 +19,7 @@ and/or cystatin C and other variables
 {synopthdr}
 {synoptline}
 {synopt:{opt f:ormula(formula_name)}}formula to use. Supported formulae are {bf:mdrd4} (the
-default), {bf:mdrd6}, {bf:ckdepi}, {bf:ckdepi_pk}, {bf:ckdepi_cyc}, {bf:ckdepi_cr_cyc}, {bf:mayo}, {bf:cg},
+default), {bf:mdrd6}, {bf:ckdepi}, {bf:ckdepi_cyc}, {bf:ckdepi_cr_cyc}, {bf:mayo}, {bf:cg},
 {bf:nankivell} and {bf:schwartz}{p_end}
 {synopt:{opth cr:eatinine(varname)}}serum creatinine{p_end}
 {synopt:{opth cy:statinc(varname)}}serum cystatin C in mg/L{p_end}
@@ -69,10 +69,6 @@ option is used.
 {bf:ckdepi} Original creatinine-only CKD-EPI formula. This formula requires the {it:creatinine},
 {it:age} and {it:female} options to be specified. Subjects are assumed to be non-black unless the
 {it:black} option is also specified. Standardised serum creatinines are assumed.
-
-{pmore}
-{bf:ckdepi_pk} Creatinine-only CKD-EPI (Pak) formula. This formula requires the {it:creatinine},
-{it:age} and {it:female} options to be specified. Standardised serum creatinines are assumed.
 
 {pmore}
 {bf:ckdepi_cyc} CKD-EPI cystatin C formula. This formula requires the {it:cystatinc}, {it:age} and
@@ -215,12 +211,7 @@ nitrogen (mg/dL) and {it:alb} is albumin (g/dL){p_end}
 {pmore}Males with {it:Cr}<=80 micromol/L:{p_end}
 {pmore}eGFR = (141 + 22 if black) x ({it:Cr}/0.9)^-1.209 x 0.993^{it:age}{p_end}
 
-{pmore}where {it:Cr} is creatinine in micromol/L and {it:age} is age in years{p_end}
-
-
-{phang}{bf:CKD-EPI (Pak) creatinine equation} (Jessani et al 2014):{p_end}
-
-{pmore}eGFR = 0.686 x (CKD-EPI^1.059) {p_end}
+{pmore}where {it:Cr} is creatinine in mg/dL and {it:age} is age in years{p_end}
 
 
 {phang}{bf:CKD-EPI cystatin C equation} (Inker et al 2012):{p_end}
@@ -286,17 +277,14 @@ urea in mmol/L and {it:height} is height in cm{p_end}
 
 {title:References}
 
-{phang}Saleem Jessani, Andrew S. Levey, Rasool Bux, Lesley A. Inker, Muhammad Islam, Nish Chaturvedi, 
-Christophe Mariat, Christopher H. Schmid, and Tazeen H. Jafar. Estimation of GFR in South Asians: 
-A Study From the General Population in Pakistan. Am J Kidney Dis. 2014 January ; 63(1): 49â€“58.{p_end}
 {phang}Brion LP, Fleischman AR, McCarton C, Schwartz GJ. A simple estimate of glomerular filtration
 rate in low birth weight infants during the first year of life: noninvasive assessment of body
-composition and growth. J Pediatr. 1986 Oct.;109(4):698Ã707.{p_end}
+composition and growth. J Pediatr. 1986 Oct.;109(4):698Ð707.{p_end}
 {phang}Cockcroft DW, Gault MH. Prediction of creatinine clearance from serum creatinine.
 Nephron. 1976;16(1):31-41.{p_end}
 {phang}Inker LA, Schmid CH, Tighiouart H, Eckfeldt JH, Feldman HI, Greene T, et al. Estimating
 glomerular filtration rate from serum creatinine and cystatin C.
-N Engl J Med. 2012 Jul 5;367(1):20Ã9.{p_end}
+N Engl J Med. 2012 Jul 5;367(1):20Ð9.{p_end}
 {phang}Levey AS, Bosch JP, Lewis JB, Greene T, Rogers N, Roth D. A more accurate method to estimate
 glomerular filtration rate from serum creatinine: a new prediction equation.
 Modification of Diet in Renal Disease Study Group.
@@ -326,7 +314,7 @@ Pediatrics. 1976 Aug.;58(2):259-263.{p_end}
 full-term infants during the first year of life. J Pediatr. 1984 Jun.;104(6):849-854.{p_end}
 {phang}Schwartz GJ, Gauthier B. A simple estimate of glomerular filtration rate in adolescent boys.
 J Pediatr. 1985 Mar.;106(3):522-526.{p_end}
-{phang}Schwartz GJ, Muâ€“oz A, Schneider MF, Mak RH, Kaskel F, Warady BA, et al. New equations to
+{phang}Schwartz GJ, Mu–oz A, Schneider MF, Mak RH, Kaskel F, Warady BA, et al. New equations to
 estimate GFR in children with CKD. J Am Soc Nephrol. 2009 Mar. 1;20(3):629-637.{p_end}
 
 {title:Author}

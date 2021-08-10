@@ -20,7 +20,9 @@
 *				Corrected minor errors in the documentation
 *Version 0.90 : Initial Github release
 
-
+/*To-Do List:  	- Check the result if a macro vector is used as input for esthi and estlo
+				- Allow multiple null hypotheses to be plotted in one graph
+*/
 program define plotsgpv, sortpreserve
 version 12.0
 syntax [if] [in] ,  estlo(name) esthi(name) nulllo(string) nullhi(string)  /// 
@@ -151,9 +153,6 @@ if "`setorder'"!="" & "`setorder'"!="sgpv"{
 	tempvar sgpvcomb nlo nhi x // esthi estlo
 	if `varsfound'==1{
 		qui sgpvalue, estlo(`estlo') esthi(`esthi') nulllo(`nulllo') nullhi(`nullhi') `mata' `replace' //Previously nomata-option was set by default -> variables were always created
-		// if ("`setorder'"=="sgpv") & "`mata'"==""{
-			// gen `sgpvcomb' = cond(pdelta==0,-dg,pdelta )
-		// } 
 	}
 	else if `varsfound'==0{ // Not correct yet
 			qui sgpvalue, estlo(`estlo') esthi(`esthi') nulllo(`nulllo') nullhi(`nullhi') `mata' `replace'  //Nomata option may not be useful, will fail if nomata and c(matsize) < rows of esthi or estlo -> how test these cases?

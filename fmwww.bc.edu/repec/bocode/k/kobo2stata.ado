@@ -1,7 +1,7 @@
 ********************************	
 ********** KOBO2STATA **********
 ******* Felix Schmieding *******
-******* v1.05,14/06/2020 *******
+******* v1.06,19/07/2021 *******
 ********************************
 
 * VERSION LOG
@@ -11,6 +11,7 @@
 	* v1.03 Added "multi" option
 	* v1.04 Relaxed requirements on labelbook (capture); moved "multi" to core funtionality rather than optional.
 	* v1.05 Added "fullreport" option
+	* v1.06 Fixed problem arising from parentheses specified in choiceslabel and surveylabel options
 
 * DEFINING THE PROGRAMME
 
@@ -76,6 +77,8 @@ quietly {
 	drop if list_name==""
 	
 	local strippedchoiceslabel=subinstr("`choiceslabel'", ":", "",.)
+	local strippedchoiceslabel=subinstr("`strippedchoiceslabel'", "(", "",.)
+	local strippedchoiceslabel=subinstr("`strippedchoiceslabel'", ")", "",.)
 	keep list_name name `strippedchoiceslabel'
 	
 	capture assert `strippedchoiceslabel'==. 
@@ -100,6 +103,8 @@ quietly {
 	import excel "`xlsform'", sheet(survey) clear firstrow
 	
 	local strippedsurveylabel=subinstr("`surveylabel'", ":", "",.)
+	local strippedsurveylabel=subinstr("`strippedsurveylabel'", "(", "",.)
+	local strippedsurveylabel=subinstr("`strippedsurveylabel'", ")", "",.)
 	keep type name `strippedsurveylabel'
 	
 	capture assert type==. 

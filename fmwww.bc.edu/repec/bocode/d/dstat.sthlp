@@ -1,5 +1,5 @@
 {smcl}
-{* 22dec2020}{...}
+{* 14jul2021}{...}
 {viewerjumpto "Syntax" "dstat##syntax"}{...}
 {viewerjumpto "Description" "dstat##description"}{...}
 {viewerjumpto "Summary statistics" "dstat##stats"}{...}
@@ -43,13 +43,16 @@ help for {hi:dstat}{...}
 
 {p2colset 15 28 30 2}{...}
 {p2col:{opt d:ensity}}density function{p_end}
+{p2col:{opt pdf}}alias for {cmd:density}{p_end}
 {p2col:{opt h:istogram}}histogram{p_end}
 {p2col:{opt p:roportion}}probability distribution{p_end}
+{p2col:{opt freq:uency}}alias for {cmd:proportion} with option {cmd:frequency}{p_end}
 {p2col:{opt c:df}}cumulative distribution function{p_end}
 {p2col:{opt cc:df}}complementary CDF/survival function{p_end}
 {p2col:{opt q:uantile}}quantile function{p_end}
 {p2col:{opt l:orenz}}lorenz curve{p_end}
 {p2col:{opt sh:are}}percentile shares{p_end}
+{p2col:{opt tip}}TIP curve{p_end}
 
 {pmore}
     {it:varlist} may contain factor variables; see {help fvvarlist}.
@@ -86,6 +89,8 @@ help for {hi:dstat}{...}
 {marker opts}{col 5}{help dstat##options:{it:options}}{col 33}Description
 {synoptline}
 {syntab:{help dstat##mainopts:Main}}
+{synopt:{opt nocase:wise}}do not perform casewise deletion of observations
+    {p_end}
 {synopt:{cmdab:o:ver(}{help varname:{it:overvar}}[{cmd:,} {it:opts}]{cmd:)}}compute results for subpopulations defined by {it:overvar}
     {p_end}
 {synopt:{opt tot:al}}include results for total population
@@ -96,6 +101,8 @@ help for {hi:dstat}{...}
 {synopt:{help dstat##repopts:{it:reporting_options}}}reporting options
     {p_end}
 {synopt:{opt qdef(#)}}quantile definition
+    {p_end}
+{synopt:{opt hdq:uantile}}synonym for {cmd:qdef(10)} (Harrell-Davis quantiles)
     {p_end}
 {synopt:{it:{help dstat##densopts:density_options}}}details of density estimation
     {p_end}
@@ -120,9 +127,13 @@ help for {hi:dstat}{...}
     {p_end}
 
 {syntab:{help dstat##sum:Subcommand {bf:summarize}}}
-{synopt:{opth z:var(varname)}}default sort variable for concentration measures
+{synopt:{opt relax}}compute a statistic even if observations are out of support
+    {p_end}
+{synopt:{opth z:var(varname)}}default secondary variable (for association and concentration measures)
     {p_end}
 {synopt:{opt pl:ine(#|varname)}}default poverty line
+    {p_end}
+{synopt:{opt pstr:ong}}use "strong" poverty definition
     {p_end}
 
 {syntab:{help dstat##density:Subcommand {bf:density}}}
@@ -130,10 +141,12 @@ help for {hi:dstat}{...}
     {p_end}
 {synopt:{opt com:mon}}use common evaluation points across subpopulations
     {p_end}
+{synopt:{opt range(a b)}}use grid from {it:a} to {it:b}; default is to determine
+    grid range from data
+    {p_end}
 {synopt:{opth at(numlist)}}custom grid of evaluation points
     {p_end}
-{synopt:{cmdab:unc:onditional}[{cmd:(}{cmdab:f:ixed}{cmd:)}]}rescale results by
-    relative size of subpopulation
+{synopt:{cmdab:unc:onditional}}rescale results by relative size of subpopulation
     {p_end}
 
 {syntab:{help dstat##hist:Subcommand {bf:histogram}}}
@@ -152,8 +165,9 @@ help for {hi:dstat}{...}
     {p_end}
 {synopt:{opth at(numlist)}}custom bin definitions
     {p_end}
-{synopt:{cmdab:unc:onditional}[{cmd:(}{cmdab:f:ixed}{cmd:)}]}rescale results by
-    relative size of subpopulation
+{synopt:{opt disc:rete}}treat data as discrete (calls {cmd:dstat proportion})
+    {p_end}
+{synopt:{cmdab:unc:onditional}}rescale results by relative size of subpopulation
     {p_end}
 
 {syntab:{help dstat##prop:Subcommand {bf:proportion}}}
@@ -166,8 +180,7 @@ help for {hi:dstat}{...}
 {synopt:{opt nocat:egorical}}allow variables that do not comply to Stata's rules
     for factor variables
     {p_end}
-{synopt:{cmdab:unc:onditional}[{cmd:(}{cmdab:f:ixed}{cmd:)}]}rescale results by
-    relative size of subpopulation
+{synopt:{cmdab:unc:onditional}}rescale results by relative size of subpopulation
     {p_end}
 
 {syntab:{help dstat##cdf:Subcommands {bf:cdf} and {bf:ccdf}}}
@@ -183,18 +196,23 @@ help for {hi:dstat}{...}
     {p_end}
 {synopt:{opt com:mon}}use common evaluation points across subpopulations
     {p_end}
+{synopt:{opt range(a b)}}use grid from {it:a} to {it:b}; default is to determine
+    grid range from data
+    {p_end}
 {synopt:{opth at(numlist)}}custom grid of evaluation points
     {p_end}
 {synopt:{opt disc:rete}}treat data as discrete
     {p_end}
 {synopt:{opt ip:olate}}obtain CDF by linear interpolation
     {p_end}
-{synopt:{cmdab:unc:onditional}[{cmd:(}{cmdab:f:ixed}{cmd:)}]}rescale results by
-    relative size of subpopulation
+{synopt:{cmdab:unc:onditional}}rescale results by relative size of subpopulation
     {p_end}
 
 {syntab:{help dstat##quantile:Subcommand {bf:quantile}}}
 {synopt:{opt n(#)}}size of evaluation grid; default is {cmd:n(99)}
+    {p_end}
+{synopt:{opt range(a b)}}use grid within range from {it:a} to {it:b}, {it:a} and {it:b}
+    in [0,1]; default is {cmd:range(0 1)}
     {p_end}
 {synopt:{opth at(numlist)}}custom grid of evaluation points
     {p_end}
@@ -213,6 +231,9 @@ help for {hi:dstat}{...}
 {synopt:{opth z:var(varname)}}estimate concentration curve with respect to specified variable
     {p_end}
 {synopt:{opt n(#)}}size of evaluation grid; default is {cmd:n(101)}
+    {p_end}
+{synopt:{opt range(a b)}}use grid from {it:a} to {it:b}, {it:a} and {it:b}
+    in [0,1]; default is {cmd:range(0 1)}
     {p_end}
 {synopt:{opth at(numlist)}}custom grid of evaluation points
     {p_end}
@@ -233,6 +254,21 @@ help for {hi:dstat}{...}
 {synopt:{opt n(#)}}number of bins; default is {cmd:n(20)}
     {p_end}
 {synopt:{opth at(numlist)}}custom bin definitions
+    {p_end}
+
+{syntab:{help dstat##tip:Subcommand {bf:tip}}}
+{synopt:{opt pl:ine(#|varname)}}poverty line (required)
+    {p_end}
+{synopt:{opt abs:olute}}estimate absolute TIP curve
+    {p_end}
+{synopt:{opt pstr:ong}}use "strong" poverty definition
+    {p_end}
+{synopt:{opt n(#)}}size of evaluation grid; default is {cmd:n(101)}
+    {p_end}
+{synopt:{opt range(a b)}}use grid from {it:a} to {it:b}, {it:a} and {it:b}
+    in [0,1]; default is {cmd:range(0 1)}
+    {p_end}
+{synopt:{opth at(numlist)}}custom grid of evaluation points
     {p_end}
 {synoptline}
 {pstd}
@@ -263,9 +299,7 @@ help for {hi:dstat}{...}
 {synoptline}
 {synopt:{opt rif}}store recentered influence functions
     {p_end}
-{synopt:{opt com:pact}}store influence functions in compact form; not allowed with {cmd:balance()}
-    {p_end}
-{synopt:{opt svy}}store scores for survey estimation instead of influence functions
+{synopt:{opt com:pact}}store influence functions in compact form; not allowed with {cmd:balance()} or {cmd:unconditional}
     {p_end}
 {synopt:{opt qui:etly}}do not display list of generated variables
     {p_end}
@@ -357,14 +391,16 @@ help for {hi:dstat}{...}
     {p_end}
 {synopt:{opt p}{cmd:(}{it:p}{cmd:)}}alias for {cmd:quantile()}
     {p_end}
+{synopt:{opt hdquantile}{cmd:(}{it:p}{cmd:)}}{it:p}/100 Harrell/Davis (1982) quantile; {it:p} in [0,100]
+    {p_end}
 {synopt:{opt density}{cmd:(}{it:x}{cmd:)}}kernel density at value {it:x}
     {p_end}
 {synopt:{opt hist}{cmd:(}{it:x1}{cmd:,}{it:x2}{cmd:)}}histogram density of data within ({it:x1},{it:x2}]
     {p_end}
-{synopt:{opt cdf}*{cmd:(}{it:x}{cmd:)}}cumulative distribution (CDF) at value {it:x}; suffix {it:*} is empty for default,
+{synopt:{opt cdf}[*]{cmd:(}{it:x}{cmd:)}}cumulative distribution (CDF) at value {it:x}; suffix {it:*} is empty for default,
     {cmd:m} for mid-adjusted CDF, {cmd:f} for floor CDF
     {p_end}
-{synopt:{opt ccdf}*{cmd:(}{it:x}{cmd:)}}complementary CDF at value {it:x}; suffix {it:*} is empty for default,
+{synopt:{opt ccdf}[*]{cmd:(}{it:x}{cmd:)}}complementary CDF at value {it:x}; suffix {it:*} is empty for default,
     {cmd:m} for mid-adjusted CCDF, {cmd:f} for floor CCDF
     {p_end}
 {synopt:{opt prop}{cmd:(}{it:x1}[{cmd:,}{it:x2}]{cmd:)}}proportion of data equal to {it:x1} or within [{it:x1},{it:x2}]
@@ -391,17 +427,13 @@ help for {hi:dstat}{...}
     {p_end}
 {synopt:{opt hmean}}harmonic mean (data must be positive)
     {p_end}
-{synopt:{opt trim}[{cmd:(}{it:p}{cmd:)}]}{it:p}/100 trimmed mean; {it:p} in
-    [0,50]; default is {it:p}=25
+{synopt:{cmd:trim(}{it:p1}[{cmd:,}{it:p2}]{cmd:)}}trimmed mean with
+    {it:p1}/100 lower trimming and {it:p2}/100 upper trimming; {it:p1} and {it:p2} in
+    [0,50]; {it:p2}={it:p1} if omitted; default is {it:p1}={it:p2}=25
     {p_end}
-{synopt:{cmd:trim(}{it:p1}{cmd:,}{it:p2}{cmd:)}}trimmed mean with
-    {it:p1}/100 lower trimming and {it:p2}/100 upper trimming
-    {p_end}
-{synopt:{opt winsor}[{cmd:(}{it:p}{cmd:)}]}{it:p}/100 winsorized mean; {it:p}
-    in [0,50]; default is {it:p}=25
-    {p_end}
-{synopt:{cmd:winsor(}{it:p1}{cmd:,}{it:p2}{cmd:)}}winsorized mean with
-    {it:p1}/100 lower winsorizing and {it:p2}/100 upper winsorizing
+{synopt:{cmd:winsor(}{it:p1}[{cmd:,}{it:p2}]{cmd:)}}winsorized mean with
+    {it:p1}/100 lower winsorizing and {it:p2}/100 upper winsorizing; {it:p1} and {it:p2} in
+    [0,50]; {it:p2}={it:p1} if omitted; default is {it:p1}={it:p2}=25
     {p_end}
 {synopt:{opt median}}median; equal to {cmd:q50}
     {p_end}
@@ -426,27 +458,20 @@ help for {hi:dstat}{...}
 {synopt:{opt smse}[{cmd:(}{it:x}[{cmd:,}{it:df}]{cmd:)}]}square-root of mean
     squared deviation from value {it:x}; default is {it:x}=0 and {it:df}=0
     {p_end}
-{synopt:{opt iqr}[{cmd:(}{it:p1}{cmd:,}{it:p2}{cmd:)}]}interquantile range; default
-    is {cmd:iqr(25,75)} (interquartile range)
+{synopt:{opt iqr}[{cmd:n}][{cmd:(}{it:p1}{cmd:,}{it:p2}{cmd:)}]}interquantile range; default
+    is {cmd:iqr(25,75)} (interquartile range); specify {cmd:iqrn} for
+    normalized IQR, equal to 1/(invnormal({it:p2}) - invnormal({it:p1})) * {cmd:iqr}
     {p_end}
-{synopt:{opt iqrn}}normalized interquartile range; equal to
-    1 / (invnormal(0.75) - invnormal(0.25)) * {cmd:iqr}
+{synopt:{opt mad}[{cmd:n}][{cmd:(}{it:l}[{cmd:,}{it:t}]{cmd:)}]}median (or mean if {it:l}!=0)
+    absolute deviation from the median (or mean if {it:t}!=0); specify {cmd:madn} for
+    normalized MAD, equal to 1/invnormal(0.75) * {cmd:mad} (or sqrt(pi/2) * {cmd:mad} if {it:l}!=0)
     {p_end}
-{synopt:{opt mad}[{cmd:(}{it:l}[{cmd:,}{it:t}]{cmd:)}]}median (or mean if {it:l}!=0)
-    absolute deviation from the median (or mean if {it:t}!=0)
+{synopt:{opt mae}[{cmd:n}][{cmd:(}{it:l}[{cmd:,}{it:x}]{cmd:)}]}median (or mean if {it:l}!=0)
+    absolute deviation from value {it:x}; default is {it:x}=0; specify {cmd:maen} for
+    normalized MAE, equal to 1/invnormal(0.75) * {cmd:mae} or (sqrt(pi/2) * {cmd:mae} if {it:l}!=0)
     {p_end}
-{synopt:{opt madn}[{cmd:(}{it:l}[{cmd:,}{it:t}]{cmd:)}]}normalized MAD; equal to
-    1/invnormal(0.75) * {cmd:mad} (or sqrt(pi/2) * {cmd:mad} if {it:l}!=0)
-    {p_end}
-{synopt:{opt mae}[{cmd:(}{it:l}[{cmd:,}{it:x}]{cmd:)}]}median (or mean if {it:l}!=0)
-    absolute deviation from value {it:x}; default is {it:x}=0
-    {p_end}
-{synopt:{opt maen}[{cmd:(}{it:l}[{cmd:,}{it:x}]{cmd:)}]}normalized MAE; equal to
-    1/invnormal(0.75) * {cmd:mae} or (sqrt(pi/2) * {cmd:mae} if {it:l}!=0)
-    {p_end}
-{synopt:{opt md}}mean absolute pairwise difference; equal to 2 * {cmd:mean} * {cmd:gini}
-    {p_end}
-{synopt:{opt mdn}}normalized mean absolute pairwise difference; equal to sqrt(pi)/2 * {cmd:md}
+{synopt:{opt md}[{cmd:n}]}mean absolute pairwise difference; equal to 2 * {cmd:mean} * {cmd:gini}; specify {cmd:mdn} for
+    normalized MD, equal to sqrt(pi)/2 * {cmd:md}
     {p_end}
 {synopt:{opt mscale}[{cmd:(}{it:bp}{cmd:)}]}M estimate of scale with breakdown
     point {it:bp} in [1,50]; default is {it:bp}=50
@@ -481,6 +506,8 @@ help for {hi:dstat}{...}
     {p_end}
 
 {syntab:Inequality measures}
+{synopt:{opt hoover}}Hoover index (Robin Hood index)
+    {p_end}
 {synopt:{opt gini}[{cmd:(}{it:df}{cmd:)}]}Gini coefficient; {it:df} applies
     small-sample adjustment; default is {it:df}=0
     {p_end}
@@ -517,48 +544,78 @@ help for {hi:dstat}{...}
 {synopt:{opt qratio}[{cmd:(}{it:p1}{cmd:,}{it:p2}{cmd:)}]}quantile ratio
     {cmd:q}({it:p2})/{cmd:q}({it:p1}); default is {it:p1}=10 and {it:p2}=90
     {p_end}
-{synopt:{opt sratio}[{cmd:(}{it:u1}{cmd:,}{it:l2}{cmd:)}]}percentile share ratio;
-    default is {it:u1}=10 and {it:l2}=90
-    {p_end}
 {synopt:{opt sratio}[{cmd:(}{it:l1}{cmd:,}{it:u1}{cmd:,}{it:l2}{cmd:,}{it:u2}{cmd:)}]}percentile
-    share ratio; default is {it:l1}=0, {it:u1}=10, {it:l2}=90, {it:u2}=100
+    share ratio; default is {it:l1}=0, {it:u1}=10, {it:l2}=90, {it:u2}=100; can also specify
+    {cmd:sratio(}{it:u1}{cmd:,}{it:l2}{cmd:)}
     {p_end}
-{synopt:*{cmd:lorenz}{cmd:(}{it:p}{cmd:)}}Lorenz ordinate, {it:p} in [0,100];
+{synopt:[*]{cmd:lorenz}{cmd:(}{it:p}{cmd:)}}Lorenz ordinate, {it:p} in [0,100];
     prefix {it:*} is empty for default, {cmd:g} for generalized, {cmd:t} for total,
     {cmd:a} for absolute, {cmd:e} for equality gap
     {p_end}
-{synopt:*{cmd:share}{cmd:(}{it:p1}{cmd:,}{it:p2}{cmd:)}}percentile
+{synopt:[*]{cmd:share}{cmd:(}{it:p1}{cmd:,}{it:p2}{cmd:)}}percentile
     share, {it:p1} and {it:p2} in [0,100]; prefix {it:*} is empty for default,
     {cmd:d} for density, {cmd:g} for generalized, {cmd:t} for total, {cmd:a} for average
     {p_end}
 
 {syntab:Concentration measures}
-{synopt:{opt gci}{cmd:(}{it:{help varname:zvar}}[{cmd:,}{it:df}]{cmd:)}}Gini concentration index;
-    {it:zvar} specifies the sort variable; {it:df} applies small-sample adjustment; default is {it:df}=0
+{synopt:{opt gci}[{cmd:(}{it:{help varname:zvar}}[{cmd:,}{it:df}]{cmd:)}]}Gini concentration index;
+    {it:zvar} specifies the sort variable; default is as set by option {cmd:zvar()};
+    {it:df} applies small-sample adjustment; default is {it:df}=0; can also
+    specify {opt gci(df)}
     {p_end}
-{synopt:{opt gci}[{cmd:(}{it:df}{cmd:)}]}{cmd:gci} using sort variable from option {cmd:zvar()}
+{synopt:{opt aci}[{cmd:(}{it:{help varname:zvar}}[{cmd:,}{it:df}]{cmd:)}]}absolute Gini concentration index; syntax
+    as for {cmd:gci}
     {p_end}
-{synopt:{opt aci}{cmd:(}{it:{help varname:zvar}}[{cmd:,}{it:df}]{cmd:)}}absolute Gini concentration index;
-    {it:zvar} and {it:df} are as for {cmd:gci}
-    {p_end}
-{synopt:{opt aci}[{cmd:(}{it:df}{cmd:)}]}{cmd:aci} using sort variable from option {cmd:zvar()}
-    {p_end}
-{synopt:*{cmd:ccurve}{cmd:(}{it:p}[{cmd:,}{it:{help varname:zvar}}]{cmd:)}}concentration curve ordinate,
+{synopt:[*]{cmd:ccurve}{cmd:(}{it:p}[{cmd:,}{it:{help varname:zvar}}]{cmd:)}}concentration curve ordinate,
     {it:p} in [0,100]; prefix {it:*} is empty for default, {cmd:g} for generalized, {cmd:t} for total,
     {cmd:a} for absolute, {cmd:e} for equality gap
     {p_end}
-{synopt:*{cmd:cshare}{cmd:(}{it:p1}{cmd:,}{it:p2}[{cmd:,}{it:{help varname:zvar}}]{cmd:)}}concentration share,
+{synopt:[*]{cmd:cshare}{cmd:(}{it:p1}{cmd:,}{it:p2}[{cmd:,}{it:{help varname:zvar}}]{cmd:)}}concentration share,
     {it:p1} and {it:p2} in [0,100]; prefix {it:*} is empty for default, {cmd:d} for density,
     {cmd:g} for generalized, {cmd:t} for total, {cmd:a} for average
     {p_end}
 
 {syntab:Poverty measures}
-{synopt:{opt watts}[{cmd:(}{it:pline}{cmd:)}]}Watts index (see, e.g., Saisana 2014); {it:pline} specifies the poverty line(s) > 0; {it:pline} can
-    be {varname} or {it:#}; the default is as set by option {cmd:pline()}
+{synopt:{opt hcr}[{cmd:(}{it:pline}{cmd:)}]}head count ratio (i.e. proportion poor); {it:pline} specifies the
+    poverty line > 0; {it:pline} can be {varname} or {it:#}; default is as set by option {cmd:pline()}
+    {p_end}
+{synopt:[{cmd:a}]{opt pgap}[{cmd:(}{it:pline}{cmd:)}]}poverty gap (proportion by which mean outcome of poor
+    is below {it:pline}); specify {cmd:apgap} for absolute poverty gap ({it:pline} - mean outcome of poor)
+    {p_end}
+{synopt:[{cmd:a}]{opt pgi}[{cmd:(}{it:pline}{cmd:)}]}poverty gap index; equal to {cmd:hcr}*{cmd:pgap}; specify
+    {cmd:apgi} for absolute poverty gap index, equal to {cmd:hcr}*{cmd:apgap}
     {p_end}
 {synopt:{opt fgt}[{cmd:(}{it:a}[{cmd:,}{it:pline}]{cmd:)}]}Foster–Greer–Thorbecke index with {it:a}>=0
-    (Foster et al. 1984, 2010); default is {it:a}=0 (headcount ratio);
-    {it:pline} specifies the poverty line(s) > 0; {it:pline} can be {varname} or {it:#}; the default is as set by option {cmd:pline()}
+    (Foster et al. 1984, 2010); default is {it:a}=0 (head count ratio); {it:a}=1 is equivalent to
+    {cmd:pgi}
+    {p_end}
+{synopt:{opt sen}[{cmd:(}{it:pline}{cmd:)}]}Sen poverty index (Sen 1976; using the
+    replication invariant version of the index, also see Shorrocks 1995)
+    {p_end}
+{synopt:{opt sst}[{cmd:(}{it:pline}{cmd:)}]}Sen-Shorrocks-Thon poverty index
+    (see, e.g., Osberg and Xu 2008)
+    {p_end}
+{synopt:{opt takayama}[{cmd:(}{it:pline}{cmd:)}]}Takayama poverty index
+    (Takayama 1979)
+    {p_end}
+{synopt:{opt watts}[{cmd:(}{it:pline}{cmd:)}]}Watts index (see, e.g., Saisana 2014)
+    {p_end}
+{synopt:{opt chu}[{cmd:(}{it:a}[{cmd:,}{it:pline}]{cmd:)}]}Clark-Hemming-Ulph poverty index with {it:a} in [0,100]
+    (Clark et al. 1981); default is {it:a}=50; {it:a}=0 is equivalent to
+    1-exp(-{cmd:watts}); {it:a}=100 is equivalent to {cmd:fgt(1)}
+    {p_end}
+{synopt:[{cmd:a}]{cmd:tip}{cmd:(}{it:p}[{cmd:,}{it:pline}]{cmd:)}}TIP ordinate,
+    {it:p} in [0,100]; specify {cmd:atip()} for absolute TIP ordinates
+    {p_end}
+
+{syntab:Association}
+{synopt:{opt corr}[{cmd:(}{it:{help varname:zvar}}{cmd:)}]}correlation coefficient;
+    {it:zvar} specifies the secondary variable; default is as set by option {cmd:zvar()}
+    {p_end}
+{synopt:{opt cov}[{cmd:(}{it:{help varname:zvar}}[{cmd:,}{it:df}]{cmd:)}]}covariance; {it:df} applies small-sample
+    adjustment; default is {it:df}=1; can also specify {opt cov(df)}
+    {p_end}
+{synopt:{opt spearman}[{cmd:(}{it:{help varname:zvar}}{cmd:)}]}Spearman's rank correlation
     {p_end}
 {synoptline}
 
@@ -568,6 +625,18 @@ help for {hi:dstat}{...}
 
 {marker mainopts}{...}
 {dlgtab:Main}
+
+{phang}
+    {cmd:nocasewise} causes missing values to be excluded for each variable in
+    {it:varlist} individually. The default is to perform casewise deletion of
+    observations, that is, to restrict the sample to observations that are not
+    missing for any of the variables. If {cmd:nocasewise} is specified, the
+    overall estimation sample is still restricted by the {cmd:if} and {cmd:in}
+    qualifiers, the weights, and the variables specified in {cmd:over()} and
+    {cmd:balance()}, but not by missing values in the main {it:varlist} (or in
+    {cmd:zvar()}, {it:zvar}, {cmd:pline()}, or {it:pline}). For each variable
+    the subsample of all nonmissing values within the overall estimation sample
+    will then be used in the relevant computations.
 
 {marker over}{...}
 {phang}
@@ -583,14 +652,16 @@ help for {hi:dstat}{...}
     for estimation will always be the total sample including all subpopulations.
 
 {phang2}
-    {opt contr:ast}[{cmd:(}{it:#}{cmd:)}] computes contrasts between
+    {opt contr:ast}[{cmd:(}{it:#}|{cmd:lag}|{cmd:lead}{cmd:)}] computes contrasts between
     subpopulations or between subpopulations and the total population. If
     {cmd:contrast} is specified without argument, the total population or
     the first subpopulation (possibly after applying {cmd:select()})
     will be used as the basis for the contrasts, depending on whether option
     {cmd:total} has been specified or not. Alternatively, specify
-    the value of the reference subpopulation in parentheses; this may also be
-    a subpopulation that has been excluded by {cmd:select()}. {cmd:contrast}
+    the value of the reference subpopulation in parentheses (this may also be
+    a subpopulation that has been excluded by {cmd:select()}) or
+    type {cmd:contrast(lag)} or {cmd:contrast(lead)} to take stepwise contrasts
+    with respect to the previous or next subpopulation, respectively. {cmd:contrast}
     implies {cmd:common} (if relevant).
 
 {pmore2}
@@ -601,14 +672,13 @@ help for {hi:dstat}{...}
 
 {phang2}
     {opt ratio} requests that the contrasts are expressed as ratios. The
-    default is to express contrasts as differences. {cmd:ratio} only has an
-    effect if {cmd:contrast} has been specified.
+    default is to express contrasts as differences. {cmd:ratio} implies
+    {cmd:contrast}.
 
 {phang2}
     {opt lnr:atio} requests that the contrasts are expressed as differences in
     logarithms. The default is to express contrasts as raw differences. {cmd:lnratio}
-    only has an effect if {cmd:contrast} has been specified. {cmd:lnratio}
-    takes precedence over {cmd:ratio}.
+    implies {cmd:contrast} and takes precedence over {cmd:ratio}.
 
 {pmore2}
     When applying {cmd:lnratio} you may also want to specify reporting option
@@ -677,6 +747,12 @@ help for {hi:dstat}{...}
     {it:newvar}. This is useful if you want to check whether covariates have been
     balanced successfully.
 
+{pmore}
+    Balancing weights will only be computed once per subpopulation. If
+    {cmd:casewise} is specified, balancing will be based on the overall estimation
+    sample as defined in the description of the {cmd:casewise} option; the weights
+    will not be recomputed for each variable individually.
+
 {marker repopts}{...}
 {phang}
     {it:reporting_options} are options affecting how results are reported. The options
@@ -736,10 +812,22 @@ help for {hi:dstat}{...}
 
 {phang}
     {opt qdef(#)} sets the quantile definition to be used when computing
-    quantiles, with {it:#} in {c -(}0,...,9{c )-}. The default is
-    {cmd:qdef(2)}. Definitions 1-9 are as described in Hyndman and Fan
-    (1996), definition 0 is the "high" quantile; see
+    quantiles, with {it:#} in {c -(}0,...,10{c )-}. The default is
+    {cmd:qdef(2)} (same as, e.g. {helpb summarize}). Definitions 1-9 are as
+    described in Hyndman and Fan (1996), definition 0 is the "high" quantile,
+    and definition 10 is the Harrell-Davis quantile (Harrell and Davis 1982); see
     {helpb mf_mm_quantile:mm_quantile()} for more information.
+
+{phang}
+    {opt hdquantile} is a synonym for {cmd:qdef(10)} (Harrell-Davis
+    quantiles). Only one of {opt hdquantile} and {opt qdef()} is allowed.
+
+{pmore}
+    The Harrell-Davis estimator typically leads to somewhat smoother quantile
+    functions that the other quantile definitions. Furthermore, standard errors
+    for Harrell-Davis quantiles do not depend on density estimation; they thus
+    tend to be more reliable than standard errors for other quantile if there is
+    heaping in the data.
 
 {marker densopts}{...}
 {phang}
@@ -854,8 +942,8 @@ help for {hi:dstat}{...}
     {opt vce(vcetype)} determines how standard errors are computed. {it:vcetype} may be:
 
             {opt none}
-            [{opt a:nalytic}] [{cmd:,} [{cmd:no}]{cmd:cov} {cmd:svy} ]
-            {opt cl:uster} {it:clustvar} [{cmd:,} [{cmd:no}]{cmd:cov} {cmd:svy} ]
+            [{opt a:nalytic}] [{cmd:,} [{cmd:no}]{cmd:cov} ]
+            {opt cl:uster} {it:clustvar} [{cmd:,} [{cmd:no}]{cmd:cov} ]
             {opt svy} [{help svy##svy_vcetype:{it:svy_vcetype}}] [{cmd:,} [{cmd:no}]{cmd:cov} {help svy##svy_options:{it:svy_options}} ]
             {opt boot:strap} [{cmd:,} [{cmd:no}]{cmd:cov} {help bootstrap:{it:bootstrap_options}} ]
             {opt jack:knife} [{cmd:,} [{cmd:no}]{cmd:cov} {help jackknife:{it:jackknife_options}} ]
@@ -867,18 +955,9 @@ help for {hi:dstat}{...}
 {pmore}
     {cmd:vce(analytic)}, the default, computes standard errors based on
     influence functions. Likewise, {bind:{cmd:vce(cluster} {it:clustvar}{cmd:)}}
-    computes standard errors based on influence function allowing for intragroup
+    computes standard errors based on influence functions allowing for intragroup
     correlation, where {it:clustvar} specifies to which group each observation
-    belongs. Option {cmd:svy} changes the assumptions that are made when
-    computing the standard errors. The default is to assume the sum of weights
-    in the (sub)sample as fixed. This is consistent with
-    how {helpb total} without {cmd:svy}-prefix computes standard errors. If option
-    {cmd:svy} is specified, the number of primary sampling units, that is, the
-    number of observations or, in case of {cmd:vce(cluster)}, the number of
-    clusters is assumed fixed. This is consistent with how {cmd:svy:total}
-    computes standard errors. Note that option {cmd:svy} has no effect for most
-    statistics; it is only relevant for statistics that are not normalized
-    by the sample size (totals and absolute frequencies).
+    belongs.
 
 {pmore}
     {cmd:vce(svy)} computes standard errors taking the survey design as set by
@@ -944,13 +1023,31 @@ help for {hi:dstat}{...}
 {dlgtab:Subcommand summarize}
 
 {phang}
-    {opth zvar(varname)} specifies a default sort variable for concentration
-    measures.
+    {opt relax} continues computations even if there are observations outside
+    of the support for a specific statistic. Some statistics such as the
+    geometric mean, the MLD, or the Theil index require observations to be
+    within a specific domain (e.g. strictly positive). By default, {cmd:dstat} aborts
+    with error if observations violating such requirements are encountered. Specify
+    {cmd:relax} if you want to continue computations based on the valid
+    observations in such a case. Exclusion of invalid observations will be
+    applied to each statistic individually; that is, the invalid observations
+    will not be dropped from the overall estimation sample.
+
+{phang}
+    {opth zvar(varname)} specifies a default secondary variable for
+    association measures and concentration measures.
 
 {phang}
     {opt pline(#|varname)} specifies a default poverty line for poverty
     measures, either as a single value or as a variable containing observation-specific
     values.
+
+{phang}
+    {opt pstrong} selects the poverty definition to be applied (see Donaldson and
+    Weymark 1986). The default is to use the "weak" definition, that is, to treat
+    outcomes equal to the poverty line as non-poor. Specify {cmd:pstrong} to treat
+    these cases as poor ("strong" definition). The choice of definition is relevant
+    only for some of the poverty measures.
 
 {marker density}{...}
 {dlgtab:Subcommand density}
@@ -968,15 +1065,20 @@ help for {hi:dstat}{...}
     evaluation points will be based on the data range in the total population.
 
 {phang}
+    {opt range(a b)} specifies the range of the evaluation grid. The default is
+    is to determine the range of the grid from the data; see option {cmd:n()}. Option
+    {cmd:range()} overrides {cmd:common}. Only one of {cmd:range()} and
+    {cmd:at()} is allowed.
+
+{phang}
     {opth at(numlist)} specifies a custom grid of evaluation points. Only
     one of {cmd:n()} and {cmd:at()} is allowed.
 
 {phang}
-    {cmd:unconditional}[{cmd:(fixed)}] rescales results such that the
+    {cmd:unconditional} rescales results such that the
     density function integrates to the relative size of the subpopulation
     instead of 1. This is only relevant if option {cmd:over()} has been
-    specified. Specify argument {cmd:fixed} to assume subpopulation sizes as
-    fixed; the default is to treat subpopulation sizes as random.
+    specified.
 
 {marker hist}{...}
 {dlgtab:Subcommand histogram}
@@ -1036,11 +1138,16 @@ help for {hi:dstat}{...}
     this condition and does not display a warning if the condition is violated).
 
 {phang}
-    {cmd:unconditional}[{cmd:(fixed)}] rescales results by the relative size of
+    {cmd:discrete} treats the data as discrete and estimates the probability of
+    each observed level in the data. The option is implemented as a
+    redirection to subcommand {cmd:proportion} with option {cmd:nocategorical}. Options
+    {cmd:n()} and {cmd:ep} are not allowed together with {cmd:discrete}; the other
+    options are as described for {help dstat##prop:subcommand {bf:proportion}}.
+
+{phang}
+    {cmd:unconditional} rescales results by the relative size of
     the subpopulation. This is only relevant if option {cmd:over()} has been
-    specified. Specify argument {cmd:fixed} to assume subpopulation sizes as
-    fixed; the default is to treat subpopulation sizes as random. {cmd:unconditional}
-    is not allowed together with {cmd:frequency}.
+    specified. {cmd:unconditional} is not allowed together with {cmd:frequency}.
 
 {marker prop}{...}
 {dlgtab:Subcommand proportion}
@@ -1063,11 +1170,9 @@ help for {hi:dstat}{...}
     labeled in the output.
 
 {phang}
-    {cmd:unconditional}[{cmd:(fixed)}] rescales proportions by the relative size of
+    {cmd:unconditional} rescales proportions by the relative size of
     the subpopulation. This is only relevant if option {cmd:over()} has been
-    specified. Specify argument {cmd:fixed} to assume subpopulation sizes as
-    fixed; the default is to treat subpopulation sizes as random. {cmd:unconditional}
-    is not allowed together with {cmd:frequency}.
+    specified. {cmd:unconditional} is not allowed together with {cmd:frequency}.
 
 {marker cdf}{...}
 {dlgtab:Subcommands cdf and ccdf}
@@ -1107,6 +1212,12 @@ help for {hi:dstat}{...}
     evaluation points will be based on the data range in the total population.
 
 {phang}
+    {opt range(a b)} specifies the range of the evaluation grid. The default is
+    is to determine the range of the grid from the data; see option {cmd:n()}. Option
+    {cmd:range()} overrides {cmd:common}. Only one of {cmd:range()} and
+    {cmd:at()} is allowed.
+
+{phang}
     {opth at(numlist)} provides a custom list of points at which to evaluate
     the CDF. Only one of {cmd:n()} and {cmd:at()} is allowed.
 
@@ -1126,19 +1237,24 @@ help for {hi:dstat}{...}
     described above (see {cmd:mid} and {cmd:floor}).
 
 {phang}
-    {cmd:unconditional}[{cmd:(fixed)}] rescales results by the relative size of
+    {cmd:unconditional} rescales results by the relative size of
     the subpopulation. This is only relevant if option {cmd:over()} has been
-    specified. Specify argument {cmd:fixed} to assume subpopulation sizes as
-    fixed; the default is to treat subpopulation sizes as random. {cmd:unconditional}
-    is not allowed together with {cmd:frequency}.
+    specified. {cmd:unconditional} is not allowed together with {cmd:frequency}.
 
 {marker quantile}{...}
 {dlgtab:Subcommand quantile}
 
 {phang}
     {opt n(#)} sets the number of quantiles to be computed. A regular grid
-    of {it:#} points between 1/(#+1) and #/(#+1) will be used. The default is
+    of {it:#} points from {it:a}+{it:h} to {it:b}-{it:h} will be used,
+    with {it:h} = ({it:b}-{it:a})/({it:#}+1) and {it:a} and {it:b}
+    as set by option {cmd:range()}. The default is
     {cmd:n(99)}. Only one of {cmd:n()} and {cmd:at()} is allowed.
+
+{phang}
+    {opt range(a b)} specifies the range of the evaluation grid, {it:a} and
+    {it:b} in [0,1]. The default is {cmd:range(0 1)}. Only one of {cmd:range()}
+    and {cmd:at()} is allowed.
 
 {phang}
     {opth at(numlist)} provides a custom list of probabilities at which to
@@ -1171,8 +1287,14 @@ help for {hi:dstat}{...}
 
 {phang}
     {opt n(#)} sets the number of ordinates to be estimated. A regular grid
-    of {it:#} values between 0 and 1 will be used. The default is
-    {cmd:n(101)}. Only one of {cmd:n()} and {cmd:at()} is allowed.
+    of {it:#} values from {it:a} to {it:b} will be used, with {it:a} and {it:b}
+    as set by option {cmd:range()}. The default is {cmd:n(101)}. Only one of
+    {cmd:n()} and {cmd:at()} is allowed.
+
+{phang}
+    {opt range(a b)} specifies the range of the evaluation grid, {it:a} and
+    {it:b} in [0,1]. The default is {cmd:range(0 1)}. Only one of {cmd:range()}
+    and {cmd:at()} is allowed.
 
 {phang}
     {opth at(numlist)} provides a custom list of points at which to
@@ -1211,6 +1333,40 @@ help for {hi:dstat}{...}
     {it:n} numbers, {it:n}-1 bins will be created. Note that the constructed
     bins will cover all data only if the first cutpoint is 0 and the last
     cutpoint is 1.
+
+{marker tip}{...}
+{dlgtab:Subcommand tip}
+
+{phang}
+    {opt pline(#|varname)} specifies the poverty line, either as a single
+    value or as a variable containing observation-specific
+    values. Option {cmd:pline()} is required.
+
+{phang}
+    {opt absolute} estimates the absolute TIP curve. Default is to estimate the
+    relative TIP curve.
+
+{phang}
+    {opt pstrong} selects the poverty definition to be applied (see Donaldson and
+    Weymark 1986). The default is to use the "weak" definition, that is, to treat
+    outcomes equal to the poverty line as non-poor. Specify {cmd:pstrong} to treat
+    these cases as poor ("strong" definition).
+
+{phang}
+    {opt n(#)} sets the number of ordinates to be estimated. A regular grid
+    of {it:#} values from {it:a} to {it:b} will be used, with {it:a} and {it:b}
+    as set by option {cmd:range()}. The default is {cmd:n(101)}. Only one of {cmd:n()}
+    and {cmd:at()} is allowed.
+
+{phang}
+    {opt range(a b)} specifies the range of the evaluation grid, {it:a} and
+    {it:b} in [0,1]. The default is {cmd:range(0 1)}. Only one of {cmd:range()}
+    and {cmd:at()} is allowed.
+
+{phang}
+    {opth at(numlist)} provides a custom list of points at which to
+    estimate the ordinates. The specified values must be within [0,1]. Only one of
+    {cmd:n()} and {cmd:at()} is allowed.
 
 {marker graph_options}{...}
 {dlgtab:Graph options}
@@ -1324,8 +1480,10 @@ help for {hi:dstat}{...}
 {phang}
     {opt compact} generates influence functions in compact form. {cmd:compact}
     only has an effect if {cmd:over()} has been specified and is not allowed
-    with {cmd:balance()} or {cmd:unconditional} (although it
-    is allowed with {cmd:unconditional(fixed)}).
+    with {cmd:balance()}, {cmd:unconditional}, {cmd:over(, contrast)}, or
+    {cmd:over(, accumulate)}. Furthermore, {cmd:compact} is not supported
+    for statistics that are not normalized by the sample size (i.e. frequencies
+    or totals).
 
 {pmore}
     The default is to generate one influence function for each single parameter
@@ -1334,15 +1492,6 @@ help for {hi:dstat}{...}
     function. Specify {cmd:compact} to merge the influence functions across
     subpopulations. In this case, {cmd:over()} has to be specified when
     analyzing the influence functions.
-
-{phang}
-    {opt svy} generates scores for use in survey estimation instead of
-    influence functions. In most cases, the scores are identical to the influence
-    functions. However, for statistics that are not normalized by the sample
-    size (e.g., frequencies or totals), the scores are defined such that their
-    total is equal to the statistic in question. This ensures that variance estimates
-    obtained by {cmd:svy:total} will be correct for these statistics. {cmd:rif} and
-    {cmd:compact} are not allowed if {cmd:svy} is specified.
 
 {phang}
     {opt quietly} suppresses the list of generated variables that is displayed by
@@ -1354,6 +1503,15 @@ help for {hi:dstat}{...}
     applied when analyzing the influence functions. The influence functions do,
     however, incorporate the balancing weights (net of base weights)
     from option {cmd:balance()}.
+
+{pstd}
+    Furthermore, note that {cmd:dstat} generates scores instead of
+    influence functions for statistics that are not normalized by the sample
+    size (i.e. frequencies or totals). The difference is that the total of an influence function
+    across the estimation sample is zero, whereas the total of the score is
+    equal to the statistic in question. Returning scores for frequencies and totals
+    ensures that standard errors obtained by {cmd:total} will be correct for these
+    statistics in complex survey designs.
 
 
 {marker examples}{...}
@@ -1542,7 +1700,7 @@ help for {hi:dstat}{...}
 {synopt:{cmd:e(N_vars)}}number of variables{p_end}
 {synopt:{cmd:e(N_stats)}}number of (unique) summary statistics{p_end}
 {synopt:{cmd:e(k_eq)}}number of equations in {cmd:e(b)}{p_end}
-{synopt:{cmd:e(k_omit)}}number of omitted coefficients in {cmd:e(b)}{p_end}
+{synopt:{cmd:e(k_omit)}}number of omitted estimates{p_end}
 {synopt:{cmd:e(df_r)}}sample degrees of freedom{p_end}
 {synopt:{cmd:e(qdef)}}quantile definition{p_end}
 {synopt:{cmd:e(adaptive)}}number of iterations of adaptive density estimator{p_end}
@@ -1559,15 +1717,17 @@ help for {hi:dstat}{...}
 {synopt:{cmd:e(predict)}}{cmd:dstat predict}{p_end}
 {synopt:{cmd:e(cmdline)}}command as typed{p_end}
 {synopt:{cmd:e(depvar)}}name(s) of analyzed variable(s){p_end}
+{synopt:{cmd:e(nocasewise)}}{bf:nocasewise} or empty{p_end}
 {synopt:{cmd:e(over)}}name of {it:overvar}{p_end}
 {synopt:{cmd:e(over_namelist)}}values of subpopulations{p_end}
 {synopt:{cmd:e(over_labels)}}labels of subpopulations{p_end}
 {synopt:{cmd:e(over_select)}}values of selected subpopulations{p_end}
-{synopt:{cmd:e(over_contrast)}}{cmd:total} or {it:#} or empty{p_end}
+{synopt:{cmd:e(over_contrast)}}{cmd:total}, {it:#}, {cmd:lag}, {cmd:lead}, or empty{p_end}
 {synopt:{cmd:e(over_ratio)}}{cmd:ratio} or {cmd:lnratio} or empty{p_end}
 {synopt:{cmd:e(over_accumulate)}}{cmd:accumulate} or empty{p_end}
+{synopt:{cmd:e(over_fixed)}}{cmd:fixed} or empty{p_end}
 {synopt:{cmd:e(total)}}{cmd:total} or empty{p_end}
-{synopt:{cmd:e(unconditional)}}{cmd:unconditional} or {cmd:unconditional(fixed)} or empty{p_end}
+{synopt:{cmd:e(unconditional)}}{cmd:unconditional} or empty{p_end}
 {synopt:{cmd:e(balance)}}list of balancing variables{p_end}
 {synopt:{cmd:e(balmethod)}}balancing method{p_end}
 {synopt:{cmd:e(balref)}}balancing reference{p_end}
@@ -1593,8 +1753,10 @@ help for {hi:dstat}{...}
 {synopt:{cmd:e(generalized)}}{cmd:generalized} or empty{p_end}
 {synopt:{cmd:e(absolute)}}{cmd:absolute} or empty{p_end}
 {synopt:{cmd:e(average)}}{cmd:average} or empty{p_end}
+{synopt:{cmd:e(relax)}}{cmd:relax} or empty{p_end}
 {synopt:{cmd:e(zvar)}}name of sort variable specified in {cmd:zvar()}{p_end}
 {synopt:{cmd:e(pline)}}poverty line variable specified in {cmd:pline()}{p_end}
+{synopt:{cmd:e(pstrong)}}{cmd:pstrong} or empty{p_end}
 {synopt:{cmd:e(generate)}}name(s) of generated variable(s){p_end}
 {synopt:{cmd:e(clustvar)}}name of cluster variable{p_end}
 {synopt:{cmd:e(vce)}}{it:vcetype} specified in {cmd:vce()}{p_end}
@@ -1612,7 +1774,10 @@ help for {hi:dstat}{...}
 {synopt:{cmd:e(V)}}variance-covariance matrix of estimates{p_end}
 {synopt:{cmd:e(se)}}standard errors of estimates{p_end}
 {synopt:{cmd:e(ci)}}confidence intervals of estimates{p_end}
+{synopt:{cmd:e(nobs)}}number of observations per estimate{p_end}
+{synopt:{cmd:e(sumw)}}sum of weights per estimate{p_end}
 {synopt:{cmd:e(at)}}evaluation points of distribution function{p_end}
+{synopt:{cmd:e(omit)}}indicator for omitted estimates{p_end}
 {synopt:{cmd:e(id)}}subpopulation IDs of estimates{p_end}
 {synopt:{cmd:e(cref)}}contrast reference indicators{p_end}
 {synopt:{cmd:e(bwidth)}}kernel bandwidth(s) of density estimation{p_end}
@@ -1647,6 +1812,10 @@ help for {hi:dstat}{...}
     Computational Statistics & Data Analysis 50: 733-759.
     {p_end}
 {phang}
+    Clark, S., R. Hemming, D. Ulph (1981). On Indices for the Measurement of Poverty. The
+    Economic Journal 91(362): 515-526
+    {p_end}
+{phang}
     Cwik, J., J. Mielniczuk (1993). Data-dependent bandwidth choice for a grade density
     kernel estimate. Statistics & Probability Letters 16: 397-405.
     {p_end}
@@ -1658,6 +1827,10 @@ help for {hi:dstat}{...}
     DiNardo, J.E., N. Fortin, T. Lemieux (1996). Labour Market Institutions and
     the Distribution of Wages, 1973-1992: A Semiparametric Approach. Econometrica
     64(5): 1001-1046.
+    {p_end}
+{phang}
+    Donaldson, D., J.A. Weymark (1986). Properties of Fixed-Population Poverty Indices. International
+    Economic Review 27(3): 667-688.
     {p_end}
 {phang}
     Firpo, S., N.M. Fortin, T. Lemieux (2009). Unconditional Quantile
@@ -1679,6 +1852,10 @@ help for {hi:dstat}{...}
 {phang}
     Hampel, F.R. (1974). The Influence Curve and Its Role in Robust
     Estimation. Journal of the American Statistical Association 69: 383-393.
+    {p_end}
+{phang}
+    Harrell, F.E., C.E. Davis (1982). A New Distribution-Free Quantile Estimator. Biometrika
+    69: 635-640.
     {p_end}
 {phang}
     Hinkley, D. V. (1975). On power transformations to symmetry. Biometrika
@@ -1703,6 +1880,10 @@ help for {hi:dstat}{...}
     {browse "http://ideas.repec.org/p/bss/wpaper/35.html"}.
     {p_end}
 {phang}
+    Osberg, L., K. Xu (2008). How Should We Measure Poverty in a Changing World? Methodological
+    Issues and Chinese Case Study. Review of Development Economics 12(2): 419–441.
+    {p_end}
+{phang}
     Rios-Avila, F. (2020). Recentered influence functions (RIFs) in Stata: RIF
     regression and RIF decomposition. The Stata Journal 20(1): 51-94.
     {p_end}
@@ -1716,7 +1897,17 @@ help for {hi:dstat}{...}
     Research. Dordrecht: Springer. DOI: {browse "http://doi.org/10.1007/978-94-007-0753-5_3197":10.1007/978-94-007-0753-5_3197}
     {p_end}
 {phang}
+    Sen, A. (1976). Poverty: An Ordinal Approach to Measurement. Econometrica 44(2): 219-231.
+    {p_end}
+{phang}
     Shorrocks, A.F. (1980). The Class of Additively Decomposable Inequality Measures. Econometrica 48(3): 613-625.
+    {p_end}
+{phang}
+    Shorrocks, A.F. (1995). Revisiting the Sen Poverty Index. Econometrica 63(5): 1225-1230.
+    {p_end}
+{phang}
+    Takayama, N. (1979). Poverty, income inequality, and their measures: Professor Sen's
+    axiomatic approach reconsidered. Econometrica 47(3): 747-759.
     {p_end}
 {phang}
     Wand, M.P., M.C. Jones (1995). Kernel Smoothing. London: Chapman and Hall.
@@ -1727,7 +1918,7 @@ help for {hi:dstat}{...}
 {title:Author}
 
 {pstd}
-    Ben Jann, University of Bern, ben.jann@soz.unibe.ch
+    Ben Jann, University of Bern, ben.jann@unibe.ch
 
 {pstd}
     Thanks for citing this software as follows:
@@ -1743,15 +1934,47 @@ help for {hi:dstat}{...}
 {title:Also see}
 
 {psee}
-    Online: help for {helpb mean}, {helpb proportion}, {helpb total}, {helpb ci},
-    {helpb summarize}, {helpb tabstat}, {helpb centile}, {helpb pctile}, {helpb cumul}, {helpb kdensity},
-    {helpb table}, {helpb histogram}, {helpb teffects ipw}
+    Online: help for
+    {helpb centile},
+    {helpb ci},
+    {helpb cumul},
+    {helpb histogram},
+    {helpb kdensity},
+    {helpb mean},
+    {helpb pctile},
+    {helpb proportion},
+    {helpb summarize},
+    {helpb table},
+    {helpb tabstat},
+    {helpb tabulate},
+    {helpb teffects ipw},
+    {helpb total}
 
 {psee}
     Packages from the SSC Archive (type {cmd:ssc describe} {it:name} for
-    more information): {helpb rif}, {helpb kdens}, {helpb kmatch}, {helpb lorenz},
-    {helpb pshare}, {helpb glcurve}, {helpb svylorenz}, {helpb svygei:svygei_svyatk},
-    {helpb ineqdeco}, {helpb povdeco}, {helpb sumdist}, {helpb robstat},
-    {helpb fre}, {helpb catplot}, {helpb cdfplot}, {helpb distplot},
-    {helpb reldist}, {helpb moremata}
+    more information):
+    {helpb akdensity},
+    {helpb apoverty},
+    {helpb catplot},
+    {helpb cdfplot},
+    {helpb ci2},
+    {helpb dfl},
+    {helpb distplot},
+    {helpb eqprhistogram},
+    {helpb fre},
+    {helpb glcurve},
+    {helpb ineqdeco},
+    {helpb kdens},
+    {helpb kmatch},
+    {helpb lorenz},
+    {helpb moremata},
+    {helpb povdeco},
+    {helpb poverty},
+    {helpb pshare},
+    {helpb reldist},
+    {helpb rif},
+    {helpb robstat},
+    {helpb sumdist},
+    {helpb svygei:svygei_svyatk},
+    {helpb svylorenz}
 

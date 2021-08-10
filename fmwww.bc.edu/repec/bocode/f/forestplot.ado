@@ -89,15 +89,21 @@
 // improvements to code so that earlier versions of Stata do not truncate plot macros
 //  (thanks to Daniel Klein for assistance with testing of earlier versions)
 
-*! version 4.02  David Fisher  23feb2021
+* version 4.02  David Fisher  23feb2021
 // No changes to -forestplot- code; upversioned to match with -metan-
+
+*! version 4.03  David Fisher  28apr2021
+// fixed automated choice of x-axis with proportions with denominator(#)
+// now catches extreme cases where `DXmin' or `DXmax' are missing
+// only implement lalign() if 15.1+ , following user reports that fails with 15.0
+// corrected bug which failed to show diamonds correctly if off-scale
 
 
 program define forestplot, sortpreserve rclass
 
 	version 11.0		// needs v11 for SMCL in graphs
 
-	// June 2018 [updated Oct 2018]: check for "useopts", which recreates previous admetan/ipdmetan/ipdover call
+	// June 2018 [updated Oct 2018]: check for "useopts", which recreates previous -metan- (or ipdmetan/ipdover) call
 	syntax [varlist(numeric max=5 default=none)] [if] [in] [, USEOPTs *]
 	local graphopts `"`options'"'
 
@@ -137,7 +143,7 @@ program define forestplot, sortpreserve rclass
 		INTERaction LCols(namelist) RCols(namelist) LEFTJustify COLSONLY RFDIST(varlist numeric min=2 max=2) RFLevel(passthru) ///
 		NULLOFF noNAmes noNULL NULL2(string) noKEEPVars noOVerall noSUbgroup noSTATs noWT noHET LEVEL(passthru) ILevel(passthru) OLevel(passthru) ///
 		XTItle(passthru) FAVours(passthru) /// /* N.B. -xtitle- is parsed here so that a blank title can be inserted if necessary */
-		CUmulative INFluence PRoportion /// /* undocumented; passed through from -metan-; needed in order to implement "hide" option... */
+		CUmulative INFluence /*PRoportion*/ DENOMinator(passthru) /// /* undocumented; passed through from -metan-; needed in order to implement "hide" option... */
 		/// /* ...and to control default null line/x-axis (e.g. for proportion/influence)
 		/// /* Sub-plot identifier for applying different appearance options, and dataset identifier to separate plots */
 		PLOTID(string) DATAID(string) ///
@@ -158,7 +164,7 @@ program define forestplot, sortpreserve rclass
 	local _UCI `3'	
 	
 	
-	** N.B. Parts of this early setup may repeat work already done by -admetan- or -ipdover-
+	** N.B. Parts of this early setup may repeat work already done by calling program (e.g. -metan- )
 	//  but hopefully the extra overhead is negligible
 
 	// Set up variable names
@@ -534,10 +540,10 @@ program define forestplot, sortpreserve rclass
 			if "`null'"!="nonull" local null
 		}
 	}
-	if `"`influence'`proportion'"'!=`""' & inlist(trim("`null2'"), "", "none", "off") local null nonull
+	if `"`influence'`denominator'"'!=`""' & inlist(trim("`null2'"), "", "none", "off") local null nonull
 	// N.B. `null' now either contains nothing, or "nonull"
 	//  and `h0' contains a number (defaulting to 0), denoting where the null-line will be placed if "`null'"==""
-	// If `influence' or `proportion', "nonull" is the default unless null2(#) is supplied.
+	// If `influence' or proportion (i.e. `denominator'), "nonull" is the default unless null2(#) is supplied.
 	
 	// Now find DXmin, DXmax; xticklist, xlablist, xlablim1
 	summ `_LCI' if `touse', meanonly
@@ -574,7 +580,7 @@ program define forestplot, sortpreserve rclass
 			exit 198
 		}
 	
-		summ `_rfLCI' if `touse', meanonly		// N.B. unnecessary if passed thru from -admetan-, since included in `_LCI'/`_UCI'
+		summ `_rfLCI' if `touse', meanonly		// N.B. unnecessary if passed thru from -metan-, since included in `_LCI'/`_UCI'
 		local DXmin = min(`DXmin', r(min))		//  but need to do it anyway 
 		summ `_rfUCI' if `touse', meanonly
 		local DXmax = max(`DXmax', r(max))
@@ -600,11 +606,24 @@ program define forestplot, sortpreserve rclass
 		}
 	}
 	
-	cap nois ProcessXLabs `DXmin' `DXmax', `eform' h0(`h0') `null' `graphopts' `proportion'
+	// March 2021: handle extreme case
+	if missing(`DXmin') | missing(`DXmax') {
+		summ `_ES' if `touse', meanonly
+		if r(N) {
+			if missing(`DXmin') local DXmin = r(min)
+			if missing(`DXmax') local DXmax = r(max)
+		}
+		else {
+			if missing(`DXmin') local DXmin = `h0'
+			if missing(`DXmax') local DXmax = `h0'
+		}
+	}	
+	
+	cap nois ProcessXLabs `DXmin' `DXmax', `eform' h0(`h0') `null' `graphopts' `denominator'
 	if _rc {
 		if _rc==1 nois disp as err `"User break in {bf:forestplot.ProcessXLabs}"'
 		nois disp as err `"Error in {bf:forestplot.ProcessXLabs}"'
-		c_local err noerr		// tell calling program (admetan or ipdover) not to also report an error
+		c_local err noerr		// tell calling program (e.g. -metan- ) not to also report an error
 		exit _rc
 	}
 	if "`twowaynote'"!="" c_local twowaynote notwowaynote	// so that -metan- does not print an additional message regarding "xlabel" or "force" 
@@ -615,7 +634,7 @@ program define forestplot, sortpreserve rclass
 	local DXmax = r(DXmax)
 	local XLmin = r(XLmin)		// limits of x-axis labelled values
 	local XLmax = r(XLmax)
-
+	
 	return local range `"`DXmin' `DXmax'"'
 	
 	// local xtitleval = r(xtitleval)	// position of xtitle
@@ -669,7 +688,7 @@ program define forestplot, sortpreserve rclass
 	qui gen `lci2' = cond(`"`null'"'==`""', cond(`_LCI'>`h0', `h0', ///
 		cond(`_LCI'>`CXmin', `_LCI', `CXmin')), cond(`_LCI'>`CXmin', `_LCI', `CXmin'))
 		
-	if `"`rfdist'"'!=`""' {			// unecessary if passed thru from -admetan-, but do it anyway
+	if `"`rfdist'"'!=`""' {			// unecessary if passed thru from -metan-, but do it anyway
 		qui replace `lci2' = cond(`"`null'"'==`""', cond(`_rfLCI'>`h0', `h0', ///
 			cond(`_rfLCI'>`CXmin', `_rfLCI', `CXmin')), cond(`_rfLCI'>`CXmin', `_rfLCI', `CXmin'))
 	}
@@ -782,7 +801,7 @@ program define forestplot, sortpreserve rclass
 	if _rc {
 		if _rc==1 nois disp as err `"User break in {bf:forestplot.ProcessColumns}"'
 		else nois disp as err `"Error in {bf:forestplot.ProcessColumns}"'
-		c_local err noerr		// tell calling program (admetan or ipdover) not to also report an error
+		c_local err noerr		// tell calling program (e.g. -metan- ) not to also report an error
 		exit _rc
 	}
 	
@@ -1345,7 +1364,7 @@ end
 * CheckOpts
 // Based on the built-in _check_eformopt.ado,
 //   but expanded from -eform- to general effect specifications.
-// This program is used by -ipdmetan-, -admetan- and -forestplot-
+// This program is used by -ipdmetan-, -(ad)metan- and -forestplot-
 // Not all aspects are relevant to all programs,
 //   but easier to maintain just a single subroutine!
 
@@ -1466,7 +1485,7 @@ end
 program define ProcessXLabs, rclass
 
 	syntax anything [, XLAbel(string asis) XMLabel(string asis) XTick(string) XMTick(string) FORCE ///
-		RAnge(string) CIRAnge(string) EFORM H0(real 0) noNULL PRoportion * ]
+		RAnge(string) CIRAnge(string) EFORM H0(real 0) noNULL /*PRoportion*/ DENOMinator(string) * ]
 	
 	local graphopts `"`options'"'
 	tokenize `anything'
@@ -1849,8 +1868,34 @@ program define ProcessXLabs, rclass
 	
 		// Mar 2020:
 		// If `proportion', simply choose 0, .5 and 1
+		/*
 		if `"`proportion'"'!=`""' {
 			local xlablist `"0 .5 1"'
+			local xlabcmd `"`xlablist'"'
+		}
+		*/
+		// Mar 2021: ... multiplied by `denominator'
+		// Apr 2021: ... but only if `range' not specified and smaller than DXmin/DXmax
+		if "`denominator'"!="" {
+			cap confirm number `denominator'
+			if _rc {
+				nois disp as err `"`denominator' found where number expected in option {bf:denominator(#)}"'
+				exit 198
+			}
+			
+			local xlablist
+			if `"`range'"'!=`""' {
+				local ii = max(`RXmin', 0)
+				local xlablist `"`xlablist' `ii'"'
+				local ii = min(`RXmax', `denominator')
+				local xlablist `"`xlablist' `ii'"'
+			}
+			else {
+				foreach i of numlist 0 .5 1 {
+					local ii = `denominator' * `i'
+					local xlablist `"`xlablist' `ii'"'
+				}
+			}
 			local xlabcmd `"`xlablist'"'
 		}
 		else {
@@ -1884,6 +1929,7 @@ program define ProcessXLabs, rclass
 					local xdiff = abs(`xval'-`mag')
 					foreach i of numlist 1 2 5 10 {
 						local ii = `i' * 10^`mag'
+						if missing(`mag') local ii = 0		// March 2021: catch extreme case
 						if missing(`ii') {
 							local ii = `=`i'-1' * 10^`mag'
 							local xdiff = abs(float(`xval' - `ii'))
@@ -2005,10 +2051,7 @@ program define ProcessXLabs, rclass
 				local DXmin = min(`h0' - .5*(`DXmax'-`DXmin'), `XLmin')	// clip the left-hand side
 				local TooFar = 1
 			}
-			// local toofar "toofar"
 		}
-	
-		// if `"`toofar'"'==`""' {		// modified Jan 2018
 		if `TooFar' {
 			local DXmin = -max(abs(`DXmin'), abs(`DXmax'))
 			local DXmax =  max(abs(`DXmin'), abs(`DXmax'))
@@ -2513,7 +2556,7 @@ program define ProcessColumns, rclass
 		// - LH text columns for _USE==0, 3, 4, 5 may only be extended if there is no data in the remaining LH columns (if any) to their right
 		// - In particular, if data exists in LH columns to the right, default behaviour is for "heterogeneity info" to be placed on a new line (_USE==4)
 		//     rather than at the end of the "pooled overall/subgroup" text (_USE==3, 5).
-		//     This may be overruled using `noextraline' with -admetan- which implies `nolcolcheck' with -forestplot-
+		//     This may be overruled using `noextraline' with -(ad)metan- which implies `nolcolcheck' with -forestplot-
 		// - _USE==6 represents a blank line, so these rows are irrelevant to the calculations.  The user may place text in such rows at their own discretion; it may get overwritten.
 		
 		*  Hence, the strategy is:
@@ -3326,54 +3369,34 @@ program define BuildPlotCmds, sclass
 		args _rfLCI _rfUCI
 	
 		tokenize `rflist'
-		// args tv1 tv2 tv3 tv4 rfLineLCI rfLineUCI rfLineX		// don't name tv1-tv4 yet, as they may not all be needed (see following code)
 		args rfLoffscaleL rfRoffscaleR rfRoffscaleL rfLoffscaleR rfLineLCI rfLineUCI rfLineX
 
 		local touse3 `"`touse' & inlist(`_USE', 3, 5)"'
 		qui count if `touse3'
-		// if r(N) > 1 {
 		if r(N) {
-			// gen byte `tv1' = `touse3' * (float(`_rfLCI') < float(`CXmin'))
-			// gen byte `tv2' = `touse3' * (float(`_rfUCI') > float(`CXmax') & !missing(`_rfUCI'))
-			// local rfLoffscaleL `tv1'
-			// local rfRoffscaleR `tv2'
 			gen byte `rfLoffscaleL' = `touse3' * (float(`_rfLCI') < float(`CXmin'))
 			gen byte `rfRoffscaleR' = `touse3' * (float(`_rfUCI') > float(`CXmax') & !missing(`_rfUCI'))
 			
 			qui count if `touse3' & float(`_UCI') < float(`CXmin')
 			if r(N) {
-				// gen byte `tv3' = `touse3' * (float(`_UCI') < float(`CXmin'))
-				// local rfRoffscaleL `tv3'
 				gen byte `rfRoffscaleL' = `touse3' * (float(`_UCI') < float(`CXmin'))
 			}
-			// else local rfRoffscaleL `"(`touse3' & float(`_LCI') > float(`CXmax') & !missing(`_LCI'))"'
 			else {
-				// gen byte `tv3' = `touse3' * (float(`_LCI') > float(`CXmax') & !missing(`_LCI'))
-				// local rfRoffscaleL `tv3'
 				gen byte `rfRoffscaleL' = `touse3' * (float(`_LCI') > float(`CXmax') & !missing(`_LCI'))
 			}
 			
 			qui count if `touse3' & float(`_LCI') > float(`CXmax') & !missing(`_LCI')
 			if r(N) {
-				// gen byte `tv4' = `touse3' * (float(`_LCI') > float(`CXmax') & !missing(`_LCI'))
-				// local rfLoffscaleR `tv4'
 				gen byte `rfLoffscaleR' = `touse3' * (float(`_LCI') > float(`CXmax') & !missing(`_LCI'))
 			}
-			// else local rfLoffscaleR `"(`touse3' & float(`_UCI') < float(`CXmin'))"'
 			else {
-				// gen byte `tv4' = `touse3' * (float(`_UCI') < float(`CXmin'))
-				// local rfLoffscaleR `tv4'				
 				gen byte `rfLoffscaleR' = `touse3' * (float(`_UCI') < float(`CXmin'))
 			}
 		}
-		/*
-		else if r(N) {
-			local rfLoffscaleL `"(`touse3' & float(`_rfLCI') < float(`CXmin'))"'
-			local rfRoffscaleR `"(`touse3' & float(`_rfUCI') > float(`CXmax') & !missing(`_rfUCI'))"'
-			local rfRoffscaleL `"(`touse3' & float(`_LCI') > float(`CXmax') & !missing(`_LCI'))"'
-			local rfLoffscaleR `"(`touse3' & float(`_UCI') < float(`CXmin'))"'
+		else {
+		    local rfLoffscaleL = 0
+			local rfRoffscaleR = 0
 		}
-		*/
 	}
 
 	
@@ -3490,7 +3513,7 @@ program define BuildPlotCmds, sclass
 	// local defDiamOpts `"lcolor("`defColor'") lalign(center) fcolor("none")"'
 	local defDiamOpts `"lcolor("`defColor'") fcolor("none")"'
 	if "`c(stata_version)'"!="" {
-		if c(stata_version)>=15 local defDiamOpts `"`defDiamOpts' lalign(center)"'		// v3.0.1: lalign() only valid for Stata 15+
+		if c(stata_version)>=15.1 local defDiamOpts `"`defDiamOpts' lalign(center)"'	// v3.0.1: lalign() only valid for Stata 15+
 	}
 	local defPPointOpts `"msymbol("`defShape'") mlcolor("`defColor'") mfcolor("none")"'	// "pooled" point options (alternative to diamond)
 	local defPCIOpts `"lcolor("`defColor'") mcolor("`defColor'")"'						// "pooled" CI options (alternative to diamond)
@@ -4343,51 +4366,6 @@ program define BuildPlotCmds, sclass
 		}
 	}
 	
-	* Now truncate CIs at CXmin/CXmax
-	qui {
-		local touse2 `"`touse' * inlist(`_USE', 1, 3, 5)"'
-
-		replace `_LCI' = `CXmin' if `offscaleL'
-		replace `_UCI' = `CXmax' if `offscaleR'
-		replace `_LCI' = . if `touse2' & float(`_UCI') < float(`CXmin')
-		replace `_UCI' = . if `touse2' & float(`_LCI') > float(`CXmax')
-		replace `_ES'  = . if `touse2' & float(`_ES')  < float(`CXmin')
-		replace `_ES'  = . if `touse2' & float(`_ES')  > float(`CXmax')
-
-		if `"`rfdist'"'!=`""' {
-			
-			// Standard case:
-			tempvar rflci2
-			clonevar `rflci2' = `_rfLCI'
-			replace `_rfLCI' = . if `touse2' & (`offscaleL' | float(`_rfLCI') < float(`CXmin'))
-			replace `_rfUCI' = . if `touse2' & (`offscaleR' | (float(`rflci2') > float(`CXmax') & !missing(`rflci2')))
-			drop `rflci2'
-			
-			replace `_rfLCI' = `CXmin' if `rfLoffscaleL'
-			replace `_rfUCI' = `CXmax' if `rfRoffscaleR'
-		
-			// Niche case:
-			// If one end of both CI and rfCI are offscale in same direction,
-			// and the other end of the CI is *also* outside the CXmin/CXmax limits (albeit not marked as offscale)
-			// (i.e. the only visible piece will be *part of one end* of the rfCI)
-			// then that piece of the rfCI needs an arrow pointing *towards* _ES.
-			// (This will need checking for again when it comes to constructing the rfplot)
-			cap confirm numeric var `rfRoffscaleL'
-			if !_rc {
-				replace `_rfLCI' = `CXmin' if `touse2' & `rfRoffscaleL'
-				replace `_UCI'   = `CXmin' if `touse2' & `rfRoffscaleL'
-			}
-			else local rfRoffscaleL = 0
-			
-			cap confirm numeric var `rfLoffscaleR'
-			if !_rc {
-				replace `_rfUCI' = `CXmax' if `touse2' & `rfLoffscaleR'
-				replace `_LCI'   = `CXmax' if `touse2' & `rfLoffscaleR'
-			}
-			else local rfLoffscaleR = 0
-		}
-	}
-
 	
 	*** AREA PLOTS
 	// Jan 2020: consider all these together, so that their sort orders don't cause conflicts
@@ -4398,7 +4376,7 @@ program define BuildPlotCmds, sclass
 	qui count if `touse' & inlist(`_USE', 3, 5) & `touseDiam'==2		// 2 = area (default)
 	if !r(N) qui replace `touseDiam' = 1 if `touseDiam'>1				// to avoid error if no obs with _USE=3 or 5
 	else {
-		qui expand 4 if `touseDiam' & inlist(`_USE', 3, 5) & `touseDiam'==2
+		qui expand 4 if `touseDiam'==2 & inlist(`_USE', 3, 5)
 		qui bysort `touse' `id' : replace `touseDiam' = (`touseDiam'>0) * _n
 		qui replace `touseDiam' = 1 if `touseDiam'>1 & !inlist(`_USE', 3, 5)
 		
@@ -4459,6 +4437,51 @@ program define BuildPlotCmds, sclass
 	qui replace `touse' = 0 if `touseDiam' > 1 | `touseOCI' > 1
 	if `"`rfdist'"'!=`""' {
 		qui replace `touse' = 0 if `touseRFCI' > 1
+	}
+	
+	* Now truncate CIs at CXmin/CXmax
+	qui {
+		local touse2 `"`touse' * inlist(`_USE', 1, 3, 5)"'
+
+		replace `_LCI' = `CXmin' if `offscaleL'
+		replace `_UCI' = `CXmax' if `offscaleR'
+		replace `_LCI' = . if `touse2' & float(`_UCI') < float(`CXmin')
+		replace `_UCI' = . if `touse2' & float(`_LCI') > float(`CXmax')
+		replace `_ES'  = . if `touse2' & float(`_ES')  < float(`CXmin')
+		replace `_ES'  = . if `touse2' & float(`_ES')  > float(`CXmax')
+
+		if `"`rfdist'"'!=`""' {
+			
+			// Standard case:
+			tempvar rflci2
+			clonevar `rflci2' = `_rfLCI'
+			replace `_rfLCI' = . if `touse2' & (`offscaleL' | float(`_rfLCI') < float(`CXmin'))
+			replace `_rfUCI' = . if `touse2' & (`offscaleR' | (float(`rflci2') > float(`CXmax') & !missing(`rflci2')))
+			drop `rflci2'
+			
+			replace `_rfLCI' = `CXmin' if `rfLoffscaleL'
+			replace `_rfUCI' = `CXmax' if `rfRoffscaleR'
+		
+			// Niche case:
+			// If one end of both CI and rfCI are offscale in same direction,
+			// and the other end of the CI is *also* outside the CXmin/CXmax limits (albeit not marked as offscale)
+			// (i.e. the only visible piece will be *part of one end* of the rfCI)
+			// then that piece of the rfCI needs an arrow pointing *towards* _ES.
+			// (This will need checking for again when it comes to constructing the rfplot)
+			cap confirm numeric var `rfRoffscaleL'
+			if !_rc {
+				replace `_rfLCI' = `CXmin' if `touse2' & `rfRoffscaleL'
+				replace `_UCI'   = `CXmin' if `touse2' & `rfRoffscaleL'
+			}
+			else local rfRoffscaleL = 0
+			
+			cap confirm numeric var `rfLoffscaleR'
+			if !_rc {
+				replace `_rfUCI' = `CXmax' if `touse2' & `rfLoffscaleR'
+				replace `_LCI'   = `CXmax' if `touse2' & `rfLoffscaleR'
+			}
+			else local rfLoffscaleR = 0
+		}
 	}
 	
 	// DF: modified to use added line approach instead of pcspike (less complex & poss. more efficient as fewer vars)

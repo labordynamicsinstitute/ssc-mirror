@@ -1,5 +1,5 @@
-capture program drop usegz
-*! version 0.2.3 24sep2019
+*capture program drop usegz
+*! version 0.3.0 25sep2019
 program define usegz
 	version 11
 	

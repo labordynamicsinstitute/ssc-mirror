@@ -1,4 +1,6 @@
-*! 4.0.1 Joseph N. Luchman, daniel klein, & NJC 16 May 2020
+*! 4.0.3 Joseph N. Luchman, daniel klein, & NJC 16 May 2021
+*  4.0.2 Joseph N. Luchman, daniel klein, & NJC 1 May 2021
+*  4.0.1 Joseph N. Luchman, daniel klein, & NJC 16 May 2020
 *  4.0.0 Joseph N. Luchman, daniel klein, & NJC 1 May 2020
 *  3.4.1 Joseph N. Luchman, daniel klein, & NJC 14 January 2020
 *  3.4.0 Joseph N. Luchman, daniel klein, & NJC 9 January 2020
@@ -18,24 +20,22 @@ program tuples
     
     if (c(stata_version) >= 10) {
         version 10
-        local version10_options                                  ///
-              CONDitionals(string)                               ///
-              NCR /* or */ CVP /* or */ KRONECKER /* or */ NAIVE ///
-              noMata                                             ///
-              SEEMATA                                       // debug
-        if (c(stata_version) >= 16) {
-            version 16                
-            tuples_assert_python // puts python path into py_path
-            if (`"`py_path'"' == "") local python nopython
-            /* not else */ local version16_options noPYthonopt
-            // yes, we call it -noPYthonOPT; see comment below
-        }
-        else local python nopython
+        local OPTIONS            ///
+            CONDitionals(string) ///
+            NCR               /// or
+            CVP               /// or
+            KRONECKER         /// or 
+            NAIVE             ///
+            noMata            ///
+            SEEMATA        // debug; not documented
     }
-    else {
-        local python nopython
-        local mata   nomata
+    else local mata nomata
+    
+    if (c(stata_version) >= 16) {
+        version 16
+        local OPTIONS `OPTIONS' noPYthon
     }
+    else local python nopython    
     
     syntax anything(id = "list")     ///
     [ ,                              ///
@@ -45,8 +45,7 @@ program tuples
         DIsplay                      ///
         noSort                       ///
         LMACNAME(name local)         /// not documented
-        `version10_options'          ///
-        `version16_options'          ///
+        `OPTIONS'                    ///
     ]
     
     tuples_opts_incompatible `asis' `varlist'
@@ -58,8 +57,21 @@ program tuples
         exit 198
     }
     
+    if ("`ncr'`cvp'`kronecker'`naive'" != "") local python nopython
+    
+    if ("`python'" != "nopython") {
+        /*
+            check whether Python is available
+            if it is, put the path into local py_path
+            if it is not, set the option to -nopython-
+        */
+        tuples_get_py_path
+        if ( mi(`"`py_path'"') ) local python nopython
+    }
+    
     if (`"`conditionals'"' != "") {
-        tuples_opts_incompatible conditionals() `mata' `naive'
+        if ("`python'" == "nopython") local _nomata_ `mata'
+        tuples_opts_incompatible conditionals() `naive' `_nomata_'
         mata : tuples_assert_conditionals()
     }
     
@@ -82,35 +94,27 @@ program tuples
         display as txt "minimum reset to maximum " as res `max'
         local min = `max'
     }
-    
-    if ("`ncr'`cvp'`kronecker'`naive'" != "") local python nopython
-    
-    /* 
-        option nopythonopt was included so that users of version 16
-        may specify option -nopython- regardless of whether they 
-        have a -python script--able version of Python installed
-    */
-    if ("`pythonopt'" == "nopythonopt") local python nopython
-    
+        
     if ("`lmacname'" == "") local lmacname tuple
-    else if ( (`"`py_path'"' != "") & ("`python'" != "nopython") ) {
-        display as err "option lmacname() not allowed"
-        exit 198
-    }
     else confirm name _n`lmacname's
     
     
     if ("`python'" != "nopython") {
         python script `"`py_path'"' ///
-            , args(`min' `max' "`conditionals'" "`sort'" "`display'" `anything')                   
+            , args(`min'            ///
+                   `max'            ///
+                   "`conditionals'" ///
+                   "`sort'"         ///
+                   "`display'"      ///
+                   "`lmacname'"     ///
+                   `anything'       ///
+                  )              
         // done
     }
-
     else if ("`mata'" != "nomata") {
         mata : tuples()
         // done
     }
-    
     else {
         // Stata based implemenation
         if ("`display'" == "") local continue continue
@@ -125,12 +129,12 @@ program tuples
                 local tuple // void
                 forvalues j = 1/`n' {
                     if (substr("`indicators'", `j', 1) == "1") {
-                        if (`++one'>`max') continue , break
-                        if (`one'>1) local tuple `"`tuple' ``j''"'
-                        else         local tuple         `"``j''"'
+                        if (`++one' > `max') continue , break
+                        if (`one' > 1) local tuple `"`tuple' ``j''"'
+                        else           local tuple         `"``j''"'
                     }
                 }
-                if (`one'<`min') | (`one'>`max') continue
+                if ( (`one'<`min') | (`one'>`max') ) continue
                 c_local `lmacname'`++k' `"`tuple'"'
                 `continue'
                 display as res "`lmacname'`k': " as txt `"`tuple'"'
@@ -143,7 +147,7 @@ program tuples
                 forval i = 1/`N' { 
                     qui inbase 2 `i'
                     local which `r(base)' 
-                     local nzeros = `n' - `: length local which' 
+                    local nzeros = `n' - `: length local which' 
                     local zeros : di _dup(`nzeros') "0" 
                     local which `zeros'`which'  
                     local which : subinstr local which "1" "1", all count(local n1) 
@@ -162,22 +166,26 @@ program tuples
                         display as res "`lmacname'`k': " as txt `"`out'"'
                     }   
                 }
-            } // end original algorithm
-        } // Stata based implementation
+            }
+        }
+        
+        // return the number of tuples for Stata based implementations
         c_local n`lmacname's `k'
     }
 end
 
-program tuples_assert_python
+program tuples_get_py_path
+    /*
+        make sure to preserve r() results
+    */
     tempname rr
     _return hold `rr'
     capture python query
     if ( !_rc ) { 
         capture findfile st_tuples_py.py 
-        local py_path `"`r(fn)'"'
+        c_local py_path `"`r(fn)'"'
     }
     _return restore `rr'
-    c_local py_path : copy local py_path
 end
 
 program tuples_opts_incompatible
@@ -248,107 +256,12 @@ void tuples()
         else                          tuples_ncr_cond( T )
     }
     else {
-        if ( T.is_kronecker )        tuples_kronecker( T )
-        else if ( T.is_cvp)                tuples_cvp( T )
+        if ( T.is_cvp)                     tuples_cvp( T )
+        else if ( T.is_kronecker )   tuples_kronecker( T )
         else                           tuples_default( T )
         if (T.conditionals != "") tuples_conditionals( T )
         tuples_return( T )
     }
-}
-
-void tuples_default(`Tuples' T)
-{
-    `RS' N, i, csum
-    
-    if ( T.is_debug ) tuples_debug_print_begin("default")
-    
-    T.indicators = J(T.n, (N=2^T.n), .)
-    for (i=1; i<=T.n; ++i) {
-            T.indicators[i, ] = J(1, 2^(i-1), (J(1, (N=N/2), 0), J(1, N, 1)))
-            if (T.is_debug) T.indicators
-    }
-    if ( (T.min>1)|(T.max<T.n) ) {
-        csum = colsum(T.indicators)
-        T.indicators = select(T.indicators, (csum:>=T.min:&csum:<=T.max))
-    }
-    else T.indicators = T.indicators[|., 2\ ., .|]
-    if ( (T.n>2)&(T.is_sort) ) {
-        T.indicators = (colsum(T.indicators)\ T.indicators)'
-        T.indicators = sort(T.indicators, (1..cols(T.indicators)))
-        T.indicators = T.indicators[|1, 2\ ., .|]'
-    }
-    
-    if ( !T.is_debug ) return
-    T.indicators
-    tuples_debug_print_end("default")
-}
-
-void tuples_cvp(`Tuples' T)
-{
-    `RS'                i, j
-    `RM'                base, combin
-    transmorphic scalar info
-    
-    if ( T.is_debug ) tuples_debug_print_begin("cvp")
-    
-    for (i=T.min; i<=T.max; ++i) {
-        base = J(i, 1, 1)\ J(T.n-i, 1, 0)
-        info = cvpermutesetup(base)
-        for (j=1; j<=comb(T.n, i); ++j) {
-            combin = cvpermute(info)
-            if ( (j>1)|(i>T.min) ) T.indicators = (T.indicators, combin)
-            else                   T.indicators =                combin
-            if ( T.is_debug ) T.indicators
-        }
-    }
-    if ( T.is_debug ) tuples_debug_print_end("cvp")
-}
-
-void tuples_kronecker(`Tuples' T)
-{
-    `RM' base, combin, OneComb_x_Base, CombOne_x_Base
-    `RS' i
-    
-    if ( T.is_debug ) tuples_debug_print_begin("kronecker")
-
-    base = combin = I(T.n)
-    if (T.min==1) T.indicators = uniqrows(base) 
-    for (i=2; i<=T.max; ++i) {
-        if (i < T.n) {
-            OneComb_x_Base = J(1, cols(combin), 1)#base
-            CombOne_x_Base = combin#J(1, cols(base), 1)
-            combin = uniqrows((
-                         select(  OneComb_x_Base:+CombOne_x_Base, 
-                         !colsum((OneComb_x_Base:+CombOne_x_Base):==2) )
-                     )')'
-        }
-        else combin = J(T.n, 1, 1)
-        if (i > T.min) T.indicators = (T.indicators, combin)
-        else           T.indicators =                combin
-        if ( T.is_debug ) T.indicators
-    }
-    if ( !T.is_debug ) return
-    T.indicators
-    tuples_debug_print_end("kronecker")
-}
-
-void tuples_return(`Tuples' T)
-{
-    `RS' i
-    
-    if ( T.is_debug ) {
-        tuples_debug_print_begin("return")
-        T.indicators
-        T.list
-    }
-    T.ntuples = cols(T.indicators)
-    for (i=1; i<=T.ntuples; ++i) {
-        tuples_c_local(T, i, select(T.list, T.indicators[, i]'))
-    }
-    tuples_c_local_ntuples( T )
-    
-    if ( !T.is_debug ) return
-    tuples_debug_print_end("return")
 }
 
 void tuples_naive(`Tuples' T)
@@ -428,6 +341,82 @@ void tuples_ncr_cond(`Tuples' T)
     }
     T.indicators = Tindicators[, cols(Tindicators)..2]
     tuples_return( T )
+}
+
+void tuples_cvp(`Tuples' T)
+{
+    `RS'                i, j
+    `RM'                base, combin
+    transmorphic scalar info
+    
+    if ( T.is_debug ) tuples_debug_print_begin("cvp")
+    
+    for (i=T.min; i<=T.max; ++i) {
+        base = J(i, 1, 1)\ J(T.n-i, 1, 0)
+        info = cvpermutesetup(base)
+        for (j=1; j<=comb(T.n, i); ++j) {
+            combin = cvpermute(info)
+            if ( (j>1)|(i>T.min) ) T.indicators = (T.indicators, combin)
+            else                   T.indicators =                combin
+            if ( T.is_debug ) T.indicators
+        }
+    }
+    if ( T.is_debug ) tuples_debug_print_end("cvp")
+}
+
+void tuples_kronecker(`Tuples' T)
+{
+    `RM' base, combin, OneComb_x_Base, CombOne_x_Base
+    `RS' i
+    
+    if ( T.is_debug ) tuples_debug_print_begin("kronecker")
+
+    base = combin = I(T.n)
+    if (T.min==1) T.indicators = uniqrows(base) 
+    for (i=2; i<=T.max; ++i) {
+        if (i < T.n) {
+            OneComb_x_Base = J(1, cols(combin), 1)#base
+            CombOne_x_Base = combin#J(1, cols(base), 1)
+            combin = uniqrows((
+                         select(  OneComb_x_Base:+CombOne_x_Base, 
+                         !colsum((OneComb_x_Base:+CombOne_x_Base):==2) )
+                     )')'
+        }
+        else combin = J(T.n, 1, 1)
+        if (i > T.min) T.indicators = (T.indicators, combin)
+        else           T.indicators =                combin
+        if ( T.is_debug ) T.indicators
+    }
+    if ( !T.is_debug ) return
+    T.indicators
+    tuples_debug_print_end("kronecker")
+}
+
+void tuples_default(`Tuples' T)
+{
+    `RS' N, i, csum
+    
+    if ( T.is_debug ) tuples_debug_print_begin("default")
+    
+    T.indicators = J(T.n, (N=2^T.n), .)
+    for (i=1; i<=T.n; ++i) {
+            T.indicators[i, ] = J(1, 2^(i-1), (J(1, (N=N/2), 0), J(1, N, 1)))
+            if (T.is_debug) T.indicators
+    }
+    if ( (T.min>1)|(T.max<T.n) ) {
+        csum = colsum(T.indicators)
+        T.indicators = select(T.indicators, (csum:>=T.min:&csum:<=T.max))
+    }
+    else T.indicators = T.indicators[|., 2\ ., .|]
+    if ( (T.n>2)&(T.is_sort) ) {
+        T.indicators = (colsum(T.indicators)\ T.indicators)'
+        T.indicators = sort(T.indicators, (1..cols(T.indicators)))
+        T.indicators = T.indicators[|1, 2\ ., .|]'
+    }
+    
+    if ( !T.is_debug ) return
+    T.indicators
+    tuples_debug_print_end("default")
 }
 
 void tuples_conditionals(`Tuples' T)
@@ -577,6 +566,25 @@ void tuples_conditionals(`Tuples' T)
     return(changes)
 }
 
+void tuples_return(`Tuples' T)
+{
+    `RS' i
+    
+    if ( T.is_debug ) {
+        tuples_debug_print_begin("return")
+        T.indicators
+        T.list
+    }
+    T.ntuples = cols(T.indicators)
+    for (i=1; i<=T.ntuples; ++i) {
+        tuples_c_local(T, i, select(T.list, T.indicators[, i]'))
+    }
+    tuples_c_local_ntuples( T )
+    
+    if ( !T.is_debug ) return
+    tuples_debug_print_end("return")
+}
+
 void tuples_c_local(`Tuples' T, `RS' i, `SR' el)
 {
     st_local(T.lmacname, invtokens(el))
@@ -602,20 +610,17 @@ void tuples_debug_print_end(`SS' fcn)
 
 void tuples_assert_conditionals()
 {
-    `RS' checksum
-    checksum = sum(
-                   J(16, 1, ascii(st_local("conditionals")))
-                   :==(ascii(" 0123456789()!&|")')
-                  )
-    if (checksum == strlen(st_local("conditionals"))) return
-    errprintf("option conditionals() invalid\n")
-    errprintf("{p 4 4 2}")
-    errprintf("You specified illegal characters. Only digits ")
-    errprintf("({bf:0123456789}), spaces ( ), ampersands ({bf:&}), ")
-    errprintf("vertical bars ({bf:|}), exclamation marks ({bf:!}), ")
-    errprintf("and parentheses ({bf:()}) are allowed.")
-    errprintf("{p_end}")
-    exit(198)
+    if ( regexm(st_local("conditionals"), "([^ 0123456789\(\)!&|])") ) {
+        errprintf("option conditionals() invalid\n")
+        errprintf("'%s' not allowed", regexs(1))
+        errprintf("{p 4 4 2}")
+        errprintf("You specified illegal characters. Only digits ")
+        errprintf("({bf:0123456789}), spaces ( ), ampersands ({bf:&}), ")
+        errprintf("vertical bars ({bf:|}), exclamation marks ({bf:!}), ")
+        errprintf("and parentheses ({bf:()}) are allowed.")
+        errprintf("{p_end}")
+        exit(198)
+    }
 }
 
 end

@@ -1,4 +1,6 @@
-*! rifhdreg 2.52 Sep 2020 by Fernando Rios Avila
+*! rifhdreg 2.54 July 2021 by FRA Changes anything to drop []
+* rifhdreg 2.53 May 2021 by Fernando Rios Avila Adds "old"
+* rifhdreg 2.52 Sep 2020 by Fernando Rios Avila
 * Added a new option. Trim. This will specify the min and max of the Pscore to avoid large IPWs
 * rifhdreg 2.51 July 2020 by Fernando Rios Avila
 * Change how I store some data
@@ -26,6 +28,9 @@
 * NOTE: try to allow for SVY in next update. 
 * Easy solution. Capture weights, and add option svy. Seems to work.
 
+*capture program drop results
+*capture program drop svyrifhdreg 
+
 *capture program drop rifhdreg
 program rifhdreg, eclass sortpreserve byable(recall) properties( svyb ) 
     if replay() {
@@ -33,7 +38,7 @@ program rifhdreg, eclass sortpreserve byable(recall) properties( svyb )
         exit
     }
 syntax anything [if] [in] [aw fw iw pw], rif(str)  [,* ] ///
-	[retain(str)  replace  /// This is used to save the RIF, and replace if the variable already exists
+	[old retain(str)  replace  /// This is used to save the RIF, and replace if the variable already exists
 	 abs(str)   /// This calls on reghdfe. Absorbs all the variables declared
 	 scale(real 1)  /// Changes the scale of the RIF. Useful for statistics like GINI and Lorenz ordinate, as they are measured between 0-1
 	 iseed(str)     /// Using this, a random variable is created to "sort" data, and avoid (or reduce) the impact of ties, making the results replicable
@@ -45,7 +50,7 @@ syntax anything [if] [in] [aw fw iw pw], rif(str)  [,* ] ///
 	 svy /// allows using SVY for regressions.
 	 ]
  marksample touse
- markout   `touse' `anything' `abs' `rwprobit' `rwlobit' `over' `rwmprobit' `rwmlogit' 
+ markout   `touse'   `abs' `rwprobit' `rwlobit' `over' `rwmprobit' `rwmlogit' 
 
 if "`svy'"=="" { 
 qui {
@@ -191,7 +196,8 @@ qui {
 	
 	
 	** just adds an over. For a more semiparametric, perhaps we can add a smoother parameter. 
-	qui:egen double `rifvar'=rifvar(`y') if `touse', weight(`exp2') `rif' seed(`iseed') by(`over')
+	if "`old'"=="" qui:egen double `rifvar'=rifvar(`y') if `touse', weight(`exp2') `rif' seed(`iseed') by(`over')
+	else           qui:egen double `rifvar'=rifvar_old(`y') if `touse', weight(`exp2') `rif' seed(`iseed') by(`over')
 	** scale is used to rescale data to make it easier to read. May be important for share based statistics
 	** and Gini
 	* MAy also help with poverty indices, if the aim is to find an average gap not as percentage but in poverty line terms.
@@ -282,7 +288,7 @@ if "`svy'"!="" {
 	results
 end
 
-capture program drop svyrifhdreg 
+
   program svyrifhdreg , eclass
   syntax anything [if] [in] , rif(str)  ///
   	[retain(str)  replace  /// This is used to save the RIF, and replace if the variable already exists
@@ -304,7 +310,9 @@ capture program drop svyrifhdreg
 	local wexp=regexr("`r(wexp)'","=","")
 
 	tempvar rifvar
-	qui:egen double `rifvar'=rifvar(`y') if `touse', weight(`wexp') `rif' seed(`iseed') by(`over')
+	if "`old'"=="" qui:egen double `rifvar'=rifvar(`y') if `touse', weight(`exp2') `rif' seed(`iseed') by(`over')
+	else           qui:egen double `rifvar'=rifvar_old(`y') if `touse', weight(`exp2') `rif' seed(`iseed') by(`over')
+	
 	qui:replace `rifvar'=`rifvar'*`scale'
 	if "`retain'"!="" {
 		if "`replace'"!="" {
@@ -331,7 +339,7 @@ capture program drop svyrifhdreg
 	ereturn scalar rifmean=`rifmean'	
   end 
 
-capture program drop results
+
 program results, eclass
         if "`e(cmd)'"=="rifhdreg" & "`e(cmdx)'"=="" {
 			reg 

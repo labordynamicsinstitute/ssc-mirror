@@ -39,6 +39,7 @@ p ldecomp module decomposing the total effects in a logistic regression into dir
 p ldtest module to compute Lorenz Dominance tests
 p leanout module to produce lean output formatting for estimation results
 p leebounds module for estimating Lee (2009) treatment effect bounds
+p leedtwoway module to solve two way labor models
 p leftalign module to left-align (or right-align) variables
 p levels module to report distinct levels of integer or string variable
 p levene module to test for equal population variances
@@ -211,5 +212,5 @@ p ltimbimata module containing six general-purpose Mata functions
 p luvain module to find communities in weighted graph
 p lvalues module for letter value calculation
 p lvr2plot2 module to produce leverage versus squared residual plot with Cook's D
+p lxhuse module to access Stata datasets of lianxh.cn blogs
 p lxpct_2 module to calculate multistate life expectancies
-p lrdrop1	module to calculate likelihood-ratio test after dropping one term

@@ -45,7 +45,7 @@
 {title:Description}
 
 {p 4 4}{cmd:did_multiplegt} estimates the effect of a treatment on an outcome, using group- (e.g. county- or state-) level panel data with multiple groups and periods. 
-The panel of groups may be unbalanced: not all groups have to be observed at every period. The treatment need not be 
+The panel of groups may be unbalanced: not all groups have to be observed at every period (see FAQ section for more info on that). The treatment need not be 
 binary.{p_end}
 
 {p 4 4} If the {cmd:robust_dynamic} option is not specified, 
@@ -127,26 +127,29 @@ This option can be used when the computation of strictly more than one placebo i
 and when the {cmd:covariances} and {cmd:breps(}{it:#}{cmd:)} options are specified.{p_end}
 
 {p 4 8}{cmd:controls(}{it:varlist}{cmd:)} gives the names of all the control variables to be included in the estimation. 
-The DID_M and DID_l estimators with controls are similar to those without controls, except that outcome changes are replaced by residuals, with respect to the controls, from regressions 
-of the change in the outcome on the change in the controls and time fixed effects. Those regressions are estimated in the sample of control observations 
-(groups whose treatment does not change from t-1 to t for the DID_M estimator, and groups whose treatment has not changed till period t for the DID_l estimators), 
-and they are estimated separately for each possible value of the treatment. Estimators with controls are unbiased even if groups experience differential trends,
-provided such differential trends can be fully explained by a linear model in covariates changes. See de Chaisemartin and D'Haultfoeuille (2020b) for further details.{p_end}
+The DID_M and DID_l estimators with controls are similar to those without controls, except that the first-difference of the outcome is replaced by residuals from regressions 
+of the first-difference of the outcome on the first-differences of the controls and time fixed effects. Those regressions are estimated in the sample of control (g,t)s: (g,t)s 
+such that group g's treatment does not change from t-1 to t for the DID_M estimator, and (g,t)s such that group g's treatment has not changed till period t for the DID_l estimators. 
+Those regressions are also estimated separately for each possible value of the treatment, or for each set of treatment values binned together if the {cmd:recat_treatment(}{it:varlist}{cmd:)} option
+is used. Estimators with controls are unbiased even if groups experience differential trends,
+provided such differential trends can be fully explained by a linear model in covariates changes. See de Chaisemartin and D'Haultfoeuille (2020b) for further details.
+When this option is specified, the {cmd:reghdfe}, {cmd:ftools}, and {cmd:moremata} packages have to be installed.{p_end}
 
 {p 4 8}{cmd:trends_nonparam(}{it:varlist}{cmd:)}: when this option is specified, the DID_M (resp. DID_l) estimator is a weighted average of DIDs comparing 
 switchers and non switchers (resp. first-time switchers and not yet switchers) with the same value of {it:varlist}.
 Estimators with the {cmd:trends_nonparam(}{it:varlist}{cmd:)} option are unbiased even if groups experience differential trends,
-provided all groups with the same value of {it:varlist} experience parallel trends. {it:varlist} can only include one categorical variable, and that variable must be coarser than the group variable. 
+provided all groups with the same value of {it:varlist} experience parallel trends. {it:varlist} can only include one categorical variable, and that variable must be strictly coarser than the group variable. 
 For instance, if one works with a county*year data set and one wants to allow for state-specific trends, then one should write {cmd:trends_nonparam(}state{cmd:)}, 
 where state is the state identifier. When this option is specified, the {cmd:reghdfe}, {cmd:ftools}, and {cmd:moremata} packages have to be installed.{p_end}
 
-{p 4 8}{cmd:trends_lin(}{it:varlist}{cmd:)}: when this option is specified, fixed effects for each value of {it:varlist} are included as controls when residualizing outcome changes. This 
+{p 4 8}{cmd:trends_lin(}{it:varlist}{cmd:)}: when this option is specified, fixed effects for each value of {it:varlist} are included as controls when residualizing the first-difference 
+of the outcome. This 
 is equivalent to allowing for {it:varlist}-specific linear trends. 
 Estimators with the {cmd:trends_lin(}{it:varlist}{cmd:)} option are unbiased even if the outcome evolution in each group follows its own linear trend, provided that between each pair of 
-consecutive periods, all groups' potential outcomes experience the same deviation from their {it:varlist}-specific linear trends. {it:varlist} can only include one categorical variable, and that variable must be coarser than the group variable. 
+consecutive periods, all groups' potential outcomes experience the same deviation from their {it:varlist}-specific linear trends. 
+{it:varlist} can only include one categorical variable, and that variable must be weakly coarser than the group variable. 
 For instance, if one works with a village*year data set and one wants to allow for village-specific linear trends, one should write {cmd:trends_lin(}village{cmd:)}, 
-where village is the village identifier. When this option is specified, the {cmd:reghdfe}, {cmd:ftools}, and {cmd:moremata} packages have to be installed. 
-The {cmd:trends_nonparam(}{it:varlist}{cmd:)} and {cmd:trends_lin(}{it:varlist}{cmd:)} options cannot be specified at the same time.{p_end}
+where village is the village identifier. When this option is specified, the {cmd:reghdfe}, {cmd:ftools}, and {cmd:moremata} packages have to be installed.{p_end}
 
 {p 4 8}{cmd:count_switchers_contr}: when this option is specified, the command counts the number of switchers for which counterfactual trends are estimated accounting for the 
 controls requested in {cmd:trends_nonparam(}{it:varlist}{cmd:)} or {cmd:trends_lin(}{it:varlist}{cmd:)}. 
@@ -163,7 +166,7 @@ The {cmd:count_switchers_contr} option allows one to know for how many switchers
 controls requested in {cmd:trends_nonparam(}{it:varlist}{cmd:)} or {cmd:trends_lin(}{it:varlist}{cmd:)} and have to be estimated differently. When {cmd:count_switchers_contr} is specified, 
 {cmd:trends_nonparam(}{it:varlist}{cmd:)} or {cmd:trends_lin(}{it:varlist}{cmd:)} should also be specified.{p_end}
 
-{p 4 8}{cmd:recat_treatment(}{it:varlist}{cmd:)} pools some values of the treatment together when determining the groups whose outcome evolution are compared. 
+{p 4 8}{cmd:recat_treatment(}{it:varlist}{cmd:)} bins some values of the treatment together when determining the groups whose outcome evolution are compared. 
 This option may be useful when the treatment takes many values, or some values are rare in the sample. 
 For instance, assume that treatment D takes the values 0, 1, 2, 3, and 4. One would like to compute the DID_M estimator, but few observations have a treatment equal to 2. 
 Then, there may be a pair of consecutive time periods where one group goes from 2 to 3 units 
@@ -200,17 +203,8 @@ With a non-binary treatment and if the {cmd:robust_dynamic} option is specified,
 after having aggregated the data at the (g,t) level
 and computed all the first- and long-differences of the treatment and of the outcome necessary to estimate the placebos and dynamic effects requested. 
 This option may for instance be useful when one estimates
-dynamic effects, and one would like all the dynamic effects to apply to the same groups. With a binary treatment and a balanced panel of groups such that at least one group
-remains untreated and at least one group remains treated throughout the panel, this can be achieved as follows. Assume one estimates two dynamic effects. Then, let {it:Ylead2} 
-denote the lead of order 2 of the outcome variable. If one writes {cmd:if_first_diff(}{it:Ylead2!=.}{cmd:)} in the command's options, groups for which only the instantaneous
-or first dynamic effect can be estimated are discarded, and the instantaneous effect and the first two dynamic
-effects apply to the same groups. If the number of units per group does not change over time, the number of observations these three effects apply to will also be the same.
-This option can also be useful when one wants to compute the
-DIDM estimator, controlling for other treatments that may change over the panel, as proposed by de Chaisemartin and D'Haultfoeuille (2020c). 
-In that case, let {it:othertreat} be a variable containing the other treatment, and let 
-{it:fd_othertreat} be the first difference of that other treatment. To compute the estimator proposed by de Chaisemartin and D'Haultfoeuille (2020c), 
-one should write {cmd:if_first_diff(}{it:fd_othertreat==0}{cmd:)} {cmd:trends_nonparam(}{it:othertreat}{cmd:)} in the command's options. 
-See de Chaisemartin and D'Haultfoeuille (2020c) for further details.{p_end}
+dynamic effects, and one would like all the dynamic effects to apply to the same groups, see the FAQ section below. This option can also be useful when one wants to compute the
+DIDM estimator, controlling for other treatments that may change over the panel, as proposed by de Chaisemartin and D'Haultfoeuille (2020c), see the FAQ section below as well.{p_end}
 
 {p 4 8}{cmd:count_switchers_tot}: when this option is specified, the command counts the number of switchers of first-time switchers for which each of the instantaneous and
 dynamic effects requested are observed in the data. This number may be larger than the number of switchers of first-time switchers for which each effect can be estimated.
@@ -237,28 +231,117 @@ For instance, assume that one wants to test if the instantaneous effect DID_0 di
 {p 4 8}{cmd:seed(}{it:#}{cmd:)} sets the seed to be used in the bootstrap replications, to ensure results can be reproduced.
 
 {p 4 8}{cmd:graphoptions(}{it:string}{cmd:)}: as explained below, when the {cmd:breps(}{it:#}{cmd:)} option is specified, the command produces a graph. 
-One can use the {cmd:graphoptions(}{it:string}{cmd:)} option to modify the appearance of that graph. Options requested have to follow the syntax of Stata {cmd:twoway_options}.{p_end}
+One can use the {cmd:graphoptions(}{it:string}{cmd:)} option to modify the appearance of that graph. Options requested have to follow the syntax of Stata {cmd:twoway_options}.
+Do not use quotation marks for text passed into the arguments of {cmd:twoway_options}. For instance, if you want the title of your graph to be "Graph to convince
+skeptical referee", you should type {cmd:graphoptions(}title(Graph to convince skeptical referee){cmd:)}.{p_end}
 
 {p 4 8}{cmd:save_results(}{it:path}{cmd:)}: if this option and the {cmd:breps(}{it:#}{cmd:)} options are specified, the command saves the estimators requested, their standard error, their 95% confidence interval, and the number of observations used in the estimation in a separate data set, at the location specified in {it:path}.{p_end}
 
 {hline}
 
-{marker Table}{...}
-{title:Table}
+{marker FAQ}{...}
+{title:FAQ}
+
+{p 4 4}{it:When does the command produce a table, and what does the table contain?}
 
 {p 4 4}If the option breps has been specified, the command returns a table with all the estimated treatment effects and placebos, 
 their standard errors, their 95% confidence intervals, the number of observations used in the estimation, 
 and the number of switchers the effects and placebos apply to. The average effect only appears in the table 
-if the {cmd:covariances} option is specified.{p_end}
+if the {cmd:covariances} option is specified. The p-value from the joint test that all placebos are equal to 0 is not shown in the table, 
+but it is stored in e().{p_end}
 
-{marker Graph}{...}
-{title:Graph}
+{p 4 4}{it:When does the command produce a graph, and how is the graph constructed?}
 
 {p 4 4}If the option breps has been specified, the command returns a graph with all the estimated treatment effects and placebos, 
-and their 95% confidence intervals constructed using a normal approximation. An exception is when dynamic effects and first-difference placebos are requested. 
-Then, the command does not produce a graph, because placebos are first-difference estimators, while dynamic effects are long-difference estimators, so they are not really 
+and their 95% confidence intervals constructed using a normal approximation. 
+An exception is when dynamic effects and first-difference placebos are requested. 
+Then, the command does not produce a graph, because placebos are first-difference estimators, while dynamic effects are long-difference estimators, 
+so they are not really 
 comparable. When dynamic effects and long-difference placebos are requested, everything is relative to the period prior to first-switches, referred to as period -1. 
 Accordingly, the first placebo is shown at period -2 on the graph.{p_end}
+
+{p 4 4} {it:My group-level panel is unbalanced: some groups (e.g. counties) are not observed in every year. Can I still use the command?} 
+
+{p 4 4} You can. A frequent case of unbalancendess is when some groups are not observed over the full duration of the panel, 
+but all groups are observed at evenly-spaced intervals over the period where they are observed. 
+For instance, your data may be a yearly county-level panel from 1990 to 2000, 
+where some counties appear after 1990 while some exit before 2000, but from the
+year they appear till the year they exit, all counties are observed every year.
+Then, there is nothing special you have to do, you can run the command as is.  
+
+{p 4 4} A more complicated case is when some groups are observed at unevenly spaced intervals. 
+For instance, a county is observed in 1990, 1991, 1993, 1994, etc. If you wish to compute the DID_M estimator, there is
+nothing special you have to do: that estimator only relies on first-differences, so it will just not be able 
+to use the 1993 observation for that county. If you wish to compute the DID_l estimators, the years where that county is observed will
+be used in the estimation, 
+except if that county's 1991 and 1993 treatments differ, and that county had never changed treatment prior to 1991. 
+Then, the year when that county's treatment changed for the first time is not known, 
+so the conservative approach implemented by default is to drop it from the
+estimation. If many groups are observed at unevenly spaced intervals, this approach may strongly reduce the sample size. 
+In that case, you may consider filling the group-level panel's holes, using Stata's fillin command. Then, you need
+to replace a group's missing treatments by the value of that same group's treatment, in the first year after those missing years 
+where the treatment is not missing. In the example above, this amounts to replacing the county's 1992 treatment by its 1993 value.
+Then, that county will be included in the estimation. However, the estimation will assume that the 
+county's treatment changed for the first time from 1991 to 1992, and not from 1992 to 1993. 
+Accordingly, the county's estimated effect in 1993 will be considered as a dynamic effect 1 period after the first treatment change, 
+while it may be an instantaneous effect. 
+Without that assumption, that group cannot be used in the computation of the DID_l estimators, which all require that a group's outcome
+be observed in the last year before its treatment changes.
+
+{p 4 4} Finally, it may be the case that the data is fully missing at one or several time periods. 
+For instance, you have data for 1990, 1991, and 1993, but 1992 is missing for every group. If you wish to compute the DID_l estimators, it is important to fill the gap in the data,
+as otherwise the estimation will assume that 1991 and 1993 are as far apart as 1990 and 1991. There are two ways of doing so.
+First, you can append to your data a data set identical to your 1991 data, but with the year equal to 1992, 
+and the outcome missing for every observation. This is a conservative solution, where no
+first treatment change occurring between 1991 and 1993 will be used in the estimation, which may be reasonable because the year in which the change occurred is 
+effectively unknown. 
+Second, you can append to your data a data set identical to your 1993 data, with the year equal to 1992, 
+and the outcome missing for every observation. 
+Then, the first treatment changes occurring between 1991 and 1993 will be used in the estimation, assuming they all took place between 1991 and 1992.  
+
+{p 4 4} {it: Can I make sure that all the dynamic effects I estimate apply to the same groups?} 
+
+{p 4 4} With a binary treatment and a balanced panel of groups such that at least one group
+remains untreated and at least one group remains treated throughout the panel, this can be achieved as follows. Assume one estimates two dynamic effects. Then, let {it:Ylead2} 
+denote the lead of order 2 of the outcome variable. If one writes {cmd:if_first_diff(}{it:Ylead2!=.}{cmd:)} in the command's options, groups for which only the instantaneous
+or first dynamic effect can be estimated are discarded, and the instantaneous effect and the first two dynamic
+effects apply to the same groups. If the number of observations per group does not change over time, the number of observations these three effects apply to will also be the same.
+
+{p 4 4} {it: The number of observations per group (e.g.: counties' populations) is changing over time, and differentially so across groups (e.g.: some counties' populations grow more than others). Accordingly, groups whose number of observations grow more receive more weight in the estimates of long- than short-run effects. Can I avoid such compositional changes?} 
+
+{p 4 4} Yes you can. If your data is not aggregated at the group*period level, start by aggregating the outcome treatment and control variables at that level, and create a variable equal to the number of observations
+in each group*period. Then create a variable time_invariant_weight equal, for each group*period, to the average number of observations in the group across all periods of the panel. 
+Finally, just weight the estimation by time_invariant_weight.{p_end}
+
+{p 4 4} {it: How many control variables can I include in the estimation?}
+
+{p 4 4} The DID_M and DID_l estimators with control variables are similar to those without controls, except that the first-difference of the outcome is replaced by residuals from regressions 
+of the first-difference of the outcome on the first-differences of the controls and time fixed effects. Those regressions are estimated in the sample of control (g,t)s: (g,t)s 
+such that group g's treatment does not change from t-1 to t for the DID_M estimator, and (g,t)s such that group g's treatment has not changed till period t for the DID_l estimators. 
+Those regressions are also estimated separately for each possible value of the treatment, or for each set of treatment values binned together if the {cmd:recat_treatment(}{it:varlist}{cmd:)} option
+is used. If the treatment takes values 0, 1, 2, 3, and 4, one regression is estimated 
+for control (g,t)s with a treatment equal to 0, one regression is estimated for control (g,t)s with a treatment equal to 1, etc. The number of control variables
+needs to be significantly smaller than the number of control (g,t)s in each of those regressions. Otherwise, those regressions will overfit and produce noisy estimates.
+If the number of observations is lower than the number of variables in one of those regressions, the command will run but not all the control variables can be accounted for, 
+and an error message will let you know about that.{p_end}
+ 
+{p 4 4} {it: Can I estimate the effect of a treatment, controlling for other treatments that may also change over the panel?}
+
+{p 4 4} The command can compute the DIDM estimator, controlling for other treatments that may change over the panel, as proposed by de Chaisemartin and D'Haultfoeuille (2020c).
+In that case, let {it:othertreat} be a variable containing the other treatment, and let 
+{it:fd_othertreat} be the first difference of that other treatment. To compute the estimator proposed by de Chaisemartin and D'Haultfoeuille (2020c), 
+one should write {cmd:if_first_diff(}{it:fd_othertreat==0}{cmd:)} {cmd:trends_nonparam(}{it:othertreat}{cmd:)} in the command's options. 
+See de Chaisemartin and D'Haultfoeuille (2020c) for further details.{p_end}
+
+{p 4 4} {it: How can I use the command to estimate heterogeneous treatment effects?} 
+
+{p 4 4} The command can easily be used to investigate treatment effect heterogeneity with respect to group-level time-invariant variables. 
+Let X be one such variable, and let us assume X is binary. Then you can just run the command twice, adding first "if X==0" and then "if X==1" at the end, to separately estimate 
+the effects in groups with X=0/X=1. Assuming you are clustering your ses at the group level, to test if the effects significantly differ in the two groups 
+you can just use the sum of the estimated variances in the X==0 and X==1 subgroups to estimate the variance of the difference between two effects. 
+If your data is at a more disaggregated level than groups and X is a time-invariant characteristic also at a more disaggregated level 
+(you have X=0 and X=1 observations within the same group), then you can still use the same procedure to estimate heterogeneous effects, but you 
+will need to bootstrap the command yourself to estimate the variance of the differences between the effects, if you want your ses to be clustered at the group level.  
 
 {hline}
 
@@ -318,7 +401,13 @@ and the number of treatment units they would have received if they had never swi
 
 {p 4 8}{cmd:e(N_switchers_effect_average)}: number of first-time switchers {cmd:e(effect_average)} applies to.
 
-{p 4 8}{cmd:e(se_effect_average)}: estimated standard error of {cmd:e(effect_average)}, if the options {cmd:covariances(}{it:#}{cmd:)} and {cmd:breps(}{it:#}{cmd:)} have been specified.{p_end}
+{p 4 8}{cmd:e(se_effect_average)}: estimated standard error of {cmd:e(effect_average)}, if the options {cmd:covariances(}{it:#}{cmd:)} and {cmd:breps(}{it:#}{cmd:)} have been specified.
+
+{p 4 8}{cmd:e(estimates)}: column vector containing all the point estimates and placebos requested, if the option {cmd:breps(}{it:#}{cmd:)} has been specified.
+
+{p 4 8}{cmd:e(variances)}: column vector containing the variances of all the point estimates and placebos requested, if the option {cmd:breps(}{it:#}{cmd:)} has been specified.
+
+{p 4 8}{cmd:e(cmd)}: macro equal to "did_multiplegt", the name of the command.{p_end}
 
 {hline}
 

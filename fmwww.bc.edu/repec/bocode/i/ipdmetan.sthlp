@@ -1,5 +1,5 @@
 {smcl}
-{* *! version 4.01  David Fisher  12feb2021}{...}
+{* *! version 4.02  David Fisher  20apr2021}{...}
 {vieweralsosee "ipdover" "help ipdover"}{...}
 {vieweralsosee "forestplot" "help forestplot"}{...}
 {vieweralsosee "metan" "help metan"}{...}
@@ -175,6 +175,16 @@ and that the first valid interaction effect should be pooled across studies.
 This is intended as a helpful shortcut for performing two-stage "deft" interaction analyses as described in {help ipdmetan##references:Fisher 2017}.
 However, it is not foolproof, and the identified coefficient should be checked carefully.
 Alternatively, the desired coefficient to be pooled may be supplied directly using {opt poolvar()}.
+
+{pmore}
+Note that {cmd:forestplot(interaction} [...] {cmd:)} works slightly differently.
+Valid with both Syntax 1 and Syntax 2, this option requests that {cmd:forestplot} apply the set of plot-related options appropriate for interactions;
+that is, using circles in place of squares and diamonds.
+This may be useful in situations where the pooled effect is to be interpreted as an interaction,
+but {it:command} is not formulated such that a standard interaction coefficient is present (or if {opt poolvar()} is used; see above).
+
+{pmore}
+{opt interaction} implies {cmd:forestplot(interaction} [...] {cmd:)}; there is no need to specify {opt interaction} twice.
 
 {phang}
 {opt messages} (Syntax 1 only) requests that information is printed to screen regarding whether effect size and standard error statistics

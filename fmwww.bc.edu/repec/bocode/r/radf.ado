@@ -1,3 +1,4 @@
+*! radf     v1.7 CFBaum 18may2021
 *! radf     v1.6 CFBaum 14oct2020
 *! radf     v1.5 CFBaum 23jul2020
 *! radf     v1.4 CFBaum 10jul2020
@@ -79,7 +80,7 @@ if !`nok' {
 			if "`prefix'" == "" {
 				loc newvars2 "`newvars2' ``v''"
 // disable graph if no prefix given
-				loc graph
+ 				loc graph
 			}
 		else {
 				qui generate  `prefix'`v' = .
@@ -209,10 +210,10 @@ mat `res' = __adfcv[1,2..4] \ __sadfcv[1,2..4] \  __gsadfcv[1,2..4]
 
 if ("`bs'" == "" & `boot'==-1) {
 mat `allres' = `tstat', `res'
-mat rownames `allres' = ADF SADF GSADF
+mat rownames `allres' = ADF0 SADF GSADF
 mat colnames `allres' = Test Tab90 Tab95 Tab99 
 matlist `allres', format(%9.4f)
-di _n as res "Test: ADF, SADF (PWY,2011), GSADF (PSY,2015)"
+di _n as res "Test: ADF0, SADF (PWY,2011), GSADF (PSY,2015)"
 di    as res "Tab : right-tail tabulated critical values for 90, 95, 99 confidence levels"
 di    as res "      from Vasilopoulos, Pavlidis, Spavound and Martínez-García (2020)"
 
@@ -244,10 +245,10 @@ if ("`bs'" != "" | `boot'>0) {
 	loc cmd "radf0 `yboot' in `maxlag2'/`enobs', maxlag(`maxlag') window(`wwid')"
 	mata: bradf("`y'","`yboot'","`dy'","`b'",`maxlag',`enobs',`bootrepl',"`resid'","`touse'", "`lagv'","`cmd'")
 	mat `allres' = `tstat', __bsres, `res'
-	mat rownames `allres' = ADF SADF GSADF
+	mat rownames `allres' = ADF0 SADF GSADF
 	mat colnames `allres' = Test RTMC90 RTMC95 RTMC99 Tab90 Tab95 Tab99 
 	matlist `allres', format(%9.4f)
-	di _n as res "Test: ADF, SADF (PWY,2011), GSADF (PSY,2015)"
+	di _n as res "Test: ADF0, SADF (PWY,2011), GSADF (PSY,2015)"
 	di    as res "RTMC: right-tail Monte Carlo critical values for 90, 95, 99 percentiles"
 	di    as res "      based on wild bootstrap with `bootrepl' replications"
 	di    as res "Tab : right-tail tabulated critical values for 90, 95, 99 confidence levels"
@@ -311,8 +312,10 @@ if "`prefix'" != "" {
 // add 5% CV for gensupadf to created variables
 	qui g `prefix'BSADF_95 = `cv95' if !mi(`cv95')
 	qui g `prefix'Exceeding = (`prefix'BSADF > `cv95') if !mi(`cv95')
-	di as res _n "Labeled by endpoint of estimation window"
-	l `tvar' `newvars2' `prefix'BSADF_95 `prefix'Exceeding in `fc'/`lc', sep(0) noobs abb(20)
+	if ("`print'" == "print") {
+		di as res _n "Labeled by endpoint of estimation window"
+		l `tvar' `newvars2' `prefix'BSADF_95 `prefix'Exceeding in `fc'/`lc', sep(0) noobs abb(20)
+	}
 }
 if ("`print'" == "print") {
 	matlist `res2', tit("Estimation window from rowdate to coldate, crit[`crit']")

@@ -1,7 +1,13 @@
 *!False confirmatory/discovery risk calculations for Second Generation P-Values
 *!Author: Sven-Kristjan Bormann
 *Based on the R-code for fdisk.R  from the sgpv-package from https://github.com/weltybiostat/sgpv
-*!Version 1.03 24.05.2020 : Added more input checks. 
+*!Version 1.1  24.12.2020 : Changed the syntax of the command to match more closely Stata standards, the old syntax still works: (dialog not changed yet) ///
+							Option sgpval became one option 'fcr'. The default is to calculate the Fdr. ///
+							Option nullweights became 'nulltruncnormal'. The option nullweights("Point") is automatically selected if option nullspace contains only one element. If option nullspace contains two elements then the Uniform distribution is used as the default weighting distribution. ///
+							Option altweights became 'alttruncnormal'. The option altweights("Point") is automatically selected if option altspace contains only one element. If option altspace contains two elements then the Uniform distribution is used as the default weighting distribution. ///
+							Options inttype and intlevel became options level(#) and likelihood(#). If no option is set then the confidence interval with the default confidence interval level is used. 							
+*Version 1.04 09.11.2020 : Changed in the dialog the option sgpval (Set Fdr/Fcr) to display "Fdr" or "Fcr" instead of numerical values.
+*Version 1.03 24.05.2020 : Added more input checks. 
 *Version 1.02 14.05.2020 : Changed type of returned results from macro to scalar to be more inline with standard practises.
 *Version 1.01 : Removed unused code for Generalized Beta distribution -> I don't believe that this code will ever be used in the original R-code.
 *Version 1.00 : Initial SSC release, no changes compared to the last Github version.
@@ -15,22 +21,79 @@
 *		 Evaluate input of options directly with the expression parser `= XXX' to allow more flexible input -> somewhat done, but not available for all options
 *		 Rewrite input logic for nullspace and altspace to allow spaces in the input and make it easier to generate inputs in the dialog box -> make options nullspace_lower and nullspace_upper and the same for altspace available.
 * 		Make error messages more descriptive and give hints how resolve the problems.
-*		Set reasonable default values based on the values for the sgpv-command to make using this command easier.
 
 
 capture program drop fdrisk
 
 program define fdrisk, rclass
 version 12.0
-syntax, nulllo(string) nullhi(string) STDerr(real) INTType(string) INTLevel(string) ///
-		NULLSpace(string asis) NULLWeights(string) ALTSpace(string asis) ALTWeights(string) ///
-		[SGPVal(integer 0) Pi0(real 0.5)]
+syntax, nulllo(string) nullhi(string) STDerr(real)   ///
+		NULLSpace(string asis)  ALTSpace(string asis) ///
+		[ Pi0(real 0.5) ///
+		/*Depreciated options */  NULLWeights(string)  ALTWeights(string) INTType(string) INTLevel(string) SGPVal(integer 0) ///
+		/*Newly added options to replace existing ones*/  fcr Level(cilevel) LIKelihood(numlist min=1 max=2)  NULLTruncnormal ALTTruncnormal]
 *Syntax parsing
 local integrate nomataInt // Keep this macro in case I offer a Mata-based solution for the integration at some future point.
 
+
+*New syntax(checks)---------------------------
+// The new command syntax is mapped to the old syntax so that existing code still works with new version.
+// But the new syntax should be more Stata-like than the old R-based one. 
+
+*Set sgpval
+if "`fcr'"!="" local sgpval 1
+if "`fcr'"=="" local sgpval 0
+
+*Set nullweights
+if `:word count `nullspace''==1 local nullweights "Point"
+
+if `:word count `nullspace''==2 & "`nulltruncnormal'" =="" & "`nullweights'"==""{
+		*disp "No distribution for the nullspace provided. Using 'Uniform' as the default distribution."
+		local nullweights "Uniform"
+	}
+
+if `:word count `nullspace''==2 & ("`nulltruncnormal'"==""){
+	local nullweights "Uniform"
+}
+
+if `:word count `nullspace''==2 & "`nulltruncnormal'" !=""{
+	local nullweights "TruncNormal"
+}
+
+*Set altweights
+if `:word count `altspace''==1 local altweights "Point"
+
+if `:word count `altspace''==2 & "`alttruncnormal'" =="" & "`altweights'"==""{
+		*disp "No distribution for the altspace provided. Using 'Uniform' as the default distribution."
+		local altweights "Uniform"
+	}
+
+if `:word count `altspace''==2 & "`alttruncnormal'"==""{
+	local altweights "Uniform"
+}
+
+if `:word count `altspace''==2 & "`alttruncnormal'" !=""{
+	local altweights "TruncNormal"
+}
+
+
+*Set inttype & intlevel only if old syntax has not been used.
+
+if "`level'"!="" & "`likelihood'"=="" & "`inttype'"=="" & "`intlevel'"==""{
+	local inttype "confidence"
+	local intlevel = 1 - 0.01*`level'
+}
+if "`likelihood'"!=""{
+	local inttype "likelihood"
+	local intlevel = `likelihood'
+}
+
+
+*Old syntax (checks)-----------------------------
 if !inlist(`sgpval',0,1){
 	stop "Only values 0 and 1 allowed for the option 'sgpval'"	
 }
+
 
 if !inlist("`inttype'", "confidence","likelihood"){
 	stop "Option 'inttype' must be one of the following: confidence or likelihood."	
@@ -48,6 +111,8 @@ if !(`pi0'>0 & `pi0'<1){
 	stop "Values for option 'pi0' need to lie within the exclusive 0 - 1 interval. A prior probability outside of this interval is not sensible. The default value assumes that both hypotheses are equally likely."
 }
 
+
+
 *Code taken from sgpower.ado -> in R-code things are handled directly by the sgpower() function. This would be only possible in Mata in the same way.
 local intlevel = `intlevel' 
 
@@ -60,10 +125,10 @@ if "`inttype'"=="likelihood"{
 }
 
 *Evaluate inputs to allow more flexible specifications of intervals, null & alt spaces; no further checks yet for non-sensical input -> errors should be caught here by the expression parser -> the code will ignore more than two arguments, seems to be more robust than I initially thought 
-	if wordcount("`nullhi'")>1 stop "Option {cmd:nullhi} has more than one argument."
+	if wordcount("`nullhi'")>1 stop "Option {cmd:nullhi} has more than one number."
 	capture local nullhi = `nullhi'
 	isValid `nullhi' nullhi
-	if wordcount("`nulllo'")>1 stop "Option {cmd:nullhi} has more than one argument."
+	if wordcount("`nulllo'")>1 stop "Option {cmd:nullhi} has more than one number."
 	capture local nulllo = `nulllo'
 	isValid `nulllo' nulllo
 
@@ -116,7 +181,7 @@ if "`inttype'"=="likelihood"{
 	   *interval null
      if(`nulllo' != `nullhi')  {
      *PsgpvH0 @ point (=type I error at nullspace)
-      if("`nullweights'" == "Point")  {
+     if ("`nullweights'" == "Point"){
         if(`:word count `nullspace''!=1){
 			stop "Option 'nullspace' must contain only one value when using a point null probability distribution, e.g. 'nullspace(0)'."
 		} 
@@ -205,6 +270,7 @@ if "`inttype'"=="likelihood"{
 	  if !real("`truncNormmu'") | !real("`truncNormsd'") stop "Both elements of the option 'altspace' must be numeric or be expressions which evaluate to a number."
         local integrand `powerx' * ( normalden(x, `truncNormmu', `truncNormsd') * (normal((`=max(`:word 1 of `altspace'', `:word 2 of `altspace'')' - `truncNormmu')/`truncNormsd') - normal((`=min(`:word 1 of `altspace'', `:word 2 of `altspace'')'- `truncNormmu')/ `truncNormsd'))^(-1) ) 
         qui `integrate', f(`integrand') l(`=min(`:word 1 of `altspace'', `:word 2 of `altspace'')') u(`=max(`:word 1 of `altspace'', `:word 2 of `altspace'')')      
+        *qui integrate, f(`integrand') l(`=min(`:word 1 of `altspace'', `:word 2 of `altspace'')') u(`=max(`:word 1 of `altspace'', `:word 2 of `altspace'')') vectorise
       local PsgpvH1 = `r(integral)'
     }
 	
@@ -261,7 +327,3 @@ return local integral `r(integral)'
 restore
  
 end
-
-
-
-

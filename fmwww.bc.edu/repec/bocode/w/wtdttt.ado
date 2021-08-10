@@ -24,7 +24,7 @@ preserve
 tokenize `varlist'
 local obstime `1'
 
-tempname resmat covarmat prevpr seprev timeperc setimeperc ///
+tempname resmat covarmat prevpr seprev timeperc setimeperc selogtimeperc ///
          logtimeperc beta mu sigma alpha
 
 local fmtperc = strofreal(`iadpercentile' * 100, "%2.0f")
@@ -167,9 +167,12 @@ scalar `seprev' = sqrt(`covarmat'[1, 1])
 
 scalar `timeperc' = `resmat'[1, 2]
 scalar `setimeperc' = sqrt(`covarmat'[2, 2])
+scalar `selogtimeperc' = sqrt(`covarmat'[3, 3])
+
 scalar `logtimeperc' = log(`timeperc')
 return scalar logtimeperc = `logtimeperc'
 return scalar timepercentile = `timeperc'
+return scalar selogtimeperc = `selogtimeperc'
 return scalar setimepercentile = `setimeperc'
 return scalar prevprop = `prevpr'
 return scalar seprev = `seprev'

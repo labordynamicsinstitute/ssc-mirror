@@ -1,24 +1,15 @@
 {smcl}
-{* *! version 0.3.0 03apr2019}{...}
+{* *! version 0.3.1 24jun2021}{...}
 {vieweralsosee "appendgz" "help appendgz"}{...}
 {vieweralsosee "check7z" "help check7z"}{...}
 {vieweralsosee "mergegz" "help mergegz"}{...}
 {vieweralsosee "savegz" "help savegz"}{...}
 {vieweralsosee "usegz" "help usegz"}{...}
 
-{bf:gziputil} {hline 2} Work with gzip compressed Stata datasets
-
-{hline}
+{title:gziputil} 
 
 {pstd}
-{cmd: NEW IN VERSION 0.3.0 FROM 2019-09-25:}
-
-{pstd}
-In case you work on Windows and PeaZip is installed in the standard
-directory (C:\Program Files\PeaZip), you can start using the commands provided 
-by {help gziputil} without {help gziputil##setup:Initial Setup}.
-
-{hline}
+Work with gzip compressed Stata datasets
 
 {title:Description}{marker general}
 
@@ -50,8 +41,9 @@ mimics the original syntax exactly.
 {title:Initial Setup}{marker setup}
 
 {pstd}
-Unless you work on Windows and PeaZip is installed in the standard directory
-(C:\Program Files\PeaZip), you need a little setup to use {cmd:gziputil}:
+In case you work on Windows and PeaZip is installed in the standard
+directory (C:\Program Files\PeaZip), you can start using the commands provided 
+by {help gziputil} without {help gziputil##setup:Initial Setup}. Otherwise:
 
 {phang}
 1.  Download and install {browse "https://www.7-zip.org/":7-Zip} on your 

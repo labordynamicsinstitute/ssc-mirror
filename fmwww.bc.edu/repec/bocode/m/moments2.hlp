@@ -1,5 +1,5 @@
 {smcl}
-{* *! version 1.1.1  20jan2013}{...}
+{* *! version 1.2.0  01may2021}{...}
 {hline}
 help for {hi:moments2}
 {hline}
@@ -45,7 +45,9 @@ on {help by}.
 {title:Description}
 
 {p 4 4 2}{cmd:moments2} calculates mean, standard deviation, skewness and kurtosis of {cmd:type()}
-for {it:varlist}. Any string variables in {it:varlist} are ignored. Definitions and a discussion
+for {it:varlist}. It differs from Nicholas Cox's {net "describe moments, from(http://fmwww.bc.edu/RePEc/bocode/m)":moments} in 
+allowing different measures of skewness and kurtosis and making measures as used in Excel, SAS and
+SPSS the default. Any string variables in {it:varlist} are ignored. Definitions and a discussion
 of the measures specified by {cmd:type()} can be found
 in: Joanes, D. N. & Gill, C. A. (1998). {browse "http://onlinelibrary.wiley.com/doi/10.1111/1467-9884.00122/abstract":Comparing measures of sample skewness and kurtosis}. {it:The Statistician}, {it:47}, 183-189.
 
@@ -56,13 +58,12 @@ in: Joanes, D. N. & Gill, C. A. (1998). {browse "http://onlinelibrary.wiley.com/
 measure as follows [mr = sum((xi-mean(X))^r)/n and s = sqrt(sum((xi-mean(X))^2)/(n-1)) with r = the r-th
 moment, xi = values of variable X, n = number of cases]:
 
-{p 8 13 2}{cmd:g}{space 1} : g1 (skewness) and g2 (kurtosis) as used in many textbooks (Joanes
-& Gill's "type 1" measure); g1 = m3/m2^(3/2) and g2 = m4/m2^2-3
+{p 8 13 2}{cmd:g}{space 1} : g1 (skewness) and g2 (kurtosis) as used in many textbooks {help summariize} command(Joanes & Gill's "type 1" measure); g1 = m3/m2^(3/2) and g2 = m4/m2^2-3
 
 {p 8 13 2}{cmd:g3} : as {cmd:type(g)} without subtracting 3 from the kurtosis measure as
 used in Stata's {help summarize} command
 
-{p 8 13 2}{cmd:G}{space 1} : G1 (skewness) and G2 (kurtosis) as used in SAS and SPSS (Joanes
+{p 8 13 2}{cmd:G}{space 1} : G1 (skewness) and G2 (kurtosis) as used in Excel, SAS and SPSS (Joanes
 & Gill's "type 2" measure); G1 = g1*sqrt(n*(n-1))/(n-2) and G2 = ((n+1)*g2+6)*(n-1)/((n-2)*(n-3)); this is the default
 
 {p 8 13 2}{cmd:G3} : as {cmd:type(G)} adding 3 to the kurtosis measure
@@ -70,7 +71,7 @@ used in Stata's {help summarize} command
 {p 8 13 2}{cmd:b}{space 1} : b1 (skewness) and b2 (kurtosis) as used in
 MINITAB and BMDP (Joanes & Gill's "type 3" measure); b1 = m3/s^3 and b2 = m4/s^4-3
 
-{p 8 13 2}{cmd:b3} : as {cmd:type(b)} without subtracting 3 from the kurtosis measure
+{p 8 13 2}{cmd:b3} : as {cmd:type(b)} adding 3 to the kurtosis measure
 
 {p 4 8 2}{cmd:allobs} specifies use of the maximum possible
 number of observations for each variable. The default is to
@@ -172,4 +173,5 @@ kurtosis the default.
 
 {title:Also see}
 
-{p 4 13 2}help for {help summarize}; help for {help tabstat}; ssc package {cmd:lmoments} ({net "describe lmoments, from(http://fmwww.bc.edu/RePEc/bocode/l)":click here})
+{p 4 13 2}help for {help summarize}; help for {help tabstat}; ssc package {cmd:lmoments} ({net "describe lmoments, from(http://fmwww.bc.edu/RePEc/bocode/l)":click here}){...}
+{p 4 8 2}Cox, N. (2010). {browse "https://journals.sagepub.com/doi/pdf/10.1177/1536867X1001000311":Speaking Stata: The limits of sample skewness and kurtosis}. {it:The Stata Journal}, {it:10}(3), 482-495.

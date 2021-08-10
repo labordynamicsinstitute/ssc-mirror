@@ -123,10 +123,10 @@ save ``d3useddata'', replace
 file open index using "index.html", write replace
 file write index `"<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Frameset//EN"    "http://www.w3.org/TR/html4/frameset.dtd">"'
 file write index `"<html><head><title>Networks</title></head><frameset cols="*,200">"'
-file write index `"<frame src="jsondata/network1.html" name="networks">"'
-file write index `"<frame src="jsondata/menu.html" name="Selection of students networks">"'
-file write index `"<noframes><body><p><a href="Networks.html">Students networks</a>"'
-file write index `"<a href="Selection.html">Selection of students networks</a></p></body>"'
+file write index `"<frame src="http://fmwww.bc.edu/repec/bocode/d/jsondata/network1.html" name="networks">"'
+file write index `"<frame src="http://fmwww.bc.edu/repec/bocode/d/jsondata/menu.html" name="Selection of students networks">"'
+file write index `"<noframes><body><p><a href="http://fmwww.bc.edu/repec/bocode/d/Networks.html">Students networks</a>"'
+file write index `"<a href="http://fmwww.bc.edu/repec/bocode/d/Selection.html">Selection of students networks</a></p></body>"'
 file write index `"</noframes></frameset></html>"'
 file close index	
 			
@@ -1100,7 +1100,7 @@ forv singlenw = 1/`distinction_sum' {
 		}
 	}
 	loc distinction_names_loc = trim("`distinction_names_loc'")
-	file write menu `"<a href="network`singlenw'.html" target="networks"><b>Network`singlenw' (`distinction_names_loc')</b></a><br>"' _n
+	file write menu `"<a href="http://fmwww.bc.edu/repec/bocode/d/network`singlenw'.html" target="networks"><b>Network`singlenw' (`distinction_names_loc')</b></a><br>"' _n
 }
 file write menu "</body></html>"
 file close menu

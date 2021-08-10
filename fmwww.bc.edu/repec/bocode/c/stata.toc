@@ -17,6 +17,7 @@ p catenate module to concatenate variables into string variable
 p caterpillar module to generate confidence intervals, Bonferroni-corrected confidence intervals, and null distribution
 p catgraph module to plotting means of a variable by category 
 p catplot module for plots of frequencies, fractions or percents of categorical data
+p causaldata module providing datasets used in causal analysis
 p cb2html module to write a codebook to an HTML file
 p cbarplot module for centred bar plots of absolute or relative frequencies
 p ccmatch module to match cases and controls using specified  variables
@@ -99,6 +100,7 @@ p ciw module for binomial confidence intervals for proportions using Wilson scor
 p ciwidth_proportions_mc module to calculate precision and power for a CI-based comparison of two independent proportions (RD, RR, or OR)
 p ckvar module to allow error checking routines to easily be defined and attached directly to variables
 p clan module to perform cluster-level analysis of cluster randomised trials
+p clarify module for Interpreting and Presenting Statistical Results
 p classplot module to plot predicted probability and empirical values after a binary response model
 p classtabi module for generating classification statistics and table using summarized data 
 p clean_class module to clean classroom variables
@@ -143,6 +145,7 @@ p cnmapsearch module to extract the specified information by keyword in a certai
 p cnormp module to evaluate censored normal distribution
 p cns module to compute Consensus Measure for Ordinal Scales
 p cnsrsig module to evaluate validity of restrictions on a regression
+p cnssc module to mirror SSC Archive in China 
 p cnstock module to download stock names and codes for Chinese listed companies
 p cntop10 module to download information of top 10 shareholders for a list of stock codes from HeXun
 p cntrade module to retrieve Chinese stock market quotations from NetEase
@@ -181,6 +184,7 @@ p confirmdir module to confirm if a directory exists
 p confnd module to plot and display estimates to assess confounding
 p confsvy module to assess confounding effects in survey studies 
 p conindex module to perform estimation of concentration indices
+p conjoint module to analyse and visualise conjoint (factorial) experiments
 p contour module to draw contour plots
 p contrast module to calculate contrasts between factor levels
 p convert_top_lines module to handle leading lines of text file
@@ -231,6 +235,7 @@ p crossplot module for scatter (or other twoway) plots for each y vs each x vari
 p crossvalidate module to perform k-fold crossvalidation
 p crtest module to perform Cramer-Ridder Test for pooling states in a Multinomial logit 
 p crtrees module to compute Classification and Regression Trees algorithms
+p csdid module for the estimation of Difference-in-Difference models with multiple time periods
 p csipolate module to perform cubic spline interpolation
 p csjl module to extend cs command for exposures with more than two categories
 p csranks module to construct uniformly asymptotically valid confidence sets on ranks
@@ -256,4 +261,3 @@ p cvauroc module to compute Cross-validated Area Under the Curve for ROC Analysi
 p cvcrand module for efficient design and analysis of Cluster Randomized Trials
 p cvxhull module to compute and plot convex hulls of bivariate data
 p cycleplot module for cycle plot (month plot or seasonal subseries plot)
-p codebook2	module to produce a codebook describing a data file

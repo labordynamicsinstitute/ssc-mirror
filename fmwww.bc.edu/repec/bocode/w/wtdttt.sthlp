@@ -72,15 +72,15 @@ Inter-Arrival Distribution (IAD); default is 0.8 (80th percentile){p_end}
 {cmd:wtdttt} estimates a parametric Waiting Time Distribution (WTD)
 to {varname} and then computes an estimate of the specified percentile
 together with an estimate of the proportion of prevalent users in the
-sample. Parameters may depend on covariates when estimating a reverse
-WTD.
+sample. All parameters of the reverse WTD can be allowed to depend on 
+covariates.
 
 {pstd}
 {bf: Note:} To use this command you first need to create a dataset
 which contains only the first prescription redemption of each
 individual within an observation window (ordinary WTD), or the last
 (reverse WTD), respectively. You can typically achieve
-this with something like the following two lines of code:
+this with the following two lines of code:
 
 {phang2}{cmd: . keep if rxdate >= startdate & rxdate <= enddate}
 
@@ -94,18 +94,27 @@ this with something like the following two lines of code:
 and {cmd: rxdate} is a variable containing the time of observed
 prescription redemptions, typically dates. Before estimation it is
 advisable to make a histogram of the variable {cmd:rxdate} to ensure
-that its distribution has the shape of a WTD, ordinary or reverse.
+the distribution has the shape of a WTD, ordinary or reverse.
 
 {pstd} To assess the fit, the command {help wtdtttdiag} can be used to
 obtain diagnostic plots.
 
 {pstd} After estimation, the command {help wtdtttpredprob} allows
 prediction of treatment probabilities on times of interest based on
-observed prescription redemptions. Similarly the command
+observed prescription redemptions. Similarly, the command
 {help wtdtttpreddur} allows prediction of prescription durations
 based on a specified percentile of the inter-arrival distribution.
 
-{pstd} A key requirement for the WTD is that the index date is chosen independently of the individual redemption processes. Instead of using a fixed index date for the WTD and identical observation windows for each individual, it is possible to randomly sample index dates. The is implemented with the command {help ranwtdttt} which takes an entire dataset of prescription redemption dates as input. It then uniformly samples unique index dates for each individual, such that only the first prescription subsequent to (ordinary WTD) or the last prescription prior to (reverse WTD) the random index date for each individual are considered in the WTD estimation.
+{pstd} A key requirement for the WTD is that the index date is chosen
+independently of the individual redemption processes. Instead of using
+a fixed index date for the WTD and identical observation windows for 
+each individual, it is possible to use randomly sampled index dates. 
+This is implemented with the command {help ranwtdttt}, which takes a 
+dataset of all prescription redemption dates of all users as input. 
+It then uniformly samples unique index dates for each individual, such 
+that only the first prescription subsequent to (ordinary WTD) - or the last 
+prescription prior to (reverse WTD) - the random index date for each 
+individual are considered in the WTD estimation.
 
 {marker options}{...}
 {title:Options}
@@ -235,6 +244,14 @@ of prevalent users in the sample after an
 inverse-logit-transformation, i.e. {it: exp(logitp)/(1 + exp(logitp))}
 accompanied by a 95% confidence interval.
 
+{pstd}
+Note that for the percentile reported on the ordinary time-scale (not log time), the 
+reported confidence interval is z-based using the delta-method. However, for 
+smaller sample sizes the assumed asymptotic normality of this estimate is 
+questionable and instead the confidence interval on the log-scale should be 
+used and then be exponentially transformed to the original time scale (see the
+example do-file for a worked example of this). 
+
 
 {marker examples}{...}
 {title:Examples}
@@ -267,10 +284,11 @@ to read comments in the do-file for further explanations.
 {pstd}
 {cmd:wtdttt} stores the following scalars in {cmd:r()}:
 
-{synoptset 20 tabbed}{...}
+{synoptset 22 tabbed}{...}
 {p2col 5 20 24 2: Scalars}{p_end}
 {synoptline}
 {synopt:{cmd:r(logtimeperc)}} Logarithm of estimated IAD percentile{p_end}
+{synopt:{cmd:r(selogtimeperc)}} Standard error of estimated logarithm of IAD percentile{p_end}
 {synopt:{cmd:r(timepercentile)}} Estimated IAD percentile{p_end}
 {synopt:{cmd:r(setimepercentile)}} Standard error of estimated IAD percentile{p_end}
 {synopt:{cmd:r(prevprop)}} Estimated proportion of prevalent users{p_end}
@@ -325,7 +343,7 @@ based on occurrence of health-related events. Stat Med.
 
 {title:Author}
 
-{pstd}Katrine Bødkergaard Nielsen, Aarhus University, kani@ph.au.dk.
+{pstd}Katrine Bødkergaard Nielsen, Aarhus University, kani@clin.au.dk.
 
 {pstd}Henrik Støvring, Aarhus University, stovring@ph.au.dk.
 

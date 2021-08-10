@@ -1,5 +1,5 @@
 {smcl}
-{* *! version 3.1.0 13 March 2021}{...}
+{* *! version 3.2.3 1 June 2021}{...}
 {help boottest:boottest}
 {hline}{...}
 
@@ -52,6 +52,7 @@ individual constraint expression must conform to the syntax for {help constraint
 {synopt:{opt stat:istic(t | c)}}specify statistic type to bootstrap; default is {it:t}{p_end}
 {synopt:{opt r:eps(#)}}specifies number of replications for bootstrap-based tests; deafult is 999; set to 0 for Rao or Wald test{p_end}
 {synopt:{opt nonul:l}}suppress imposition of null before bootstrapping{p_end}
+{synopt:{opt marg:ins}}bootstrap current results from {cmd:margins}{p_end}
 {synopt:{opt madj:ust(bonferroni | sidak)}}specify adjustment for multiple hypothesis tests{p_end}
 {synopt:{opt l:evel(#)}}override default confidence level used for confidence set{p_end}
 {synopt:{cmdab:svm:at}[{cmd:(}{it:t} {cmd:|} {it:numer}{cmd:)]}}request the bootstrapped quasi-t/z distribution, or numerators thereof, be saved in return value {cmd:r(dist)}{p_end}
@@ -102,11 +103,15 @@ hypothesis, a confidence set is derived:
 
 {title:Updates}
 
-{p 2 4 0}* Since the publication of Roodman et al. (2019), {cmd:boottest} has gained one significant feature: the option to perform the bootstrap-c,
+{p 2 4 0}* Since the publication of Roodman et al. (2019), {cmd:boottest} has gained two significant features. The first is the option to perform the bootstrap-c,
 which bootstraps the distribution of the {it:coefficient(s)} of interest (or linear combinations thereof) rather t/z/F/chi2 statistics. Standard theory favors the latter, 
 but Young (2019) presents evidence that the bootstrap-c (or "non-studentized" test) is more reliable, at least in instrumental variables estimation. And theory and simulation in
 Wang (2021) favors the non-studentized test when instruments are weak (but strong in at least one cluster). The option 
 {cmdab:stat:istic(c)} invokes the feature.
+
+{p 2 4 0}* The second major new feature is the {cmdab:marg:ins} option, which allows you to bootstrap results from the {cmd:margins} command. To use this feature,
+run {cmd:boottest} immediately after {cmd:margins} and do not include any hypotheses before the comma in the {cmd:boottest} command line. {cmd:boottest} will treat
+each marginal effect separately.
 
 {p 2 4 0}* Version 2.0.6 of {cmd:boottest}, released in May 2018, introduced two changes that can slightly affect results. The default for {opt r:eps(#)}
 is now 999 instead of 1000. And in computing percentiles in the bootstrap distribution, ties are no longer (half-)counted. 
@@ -184,7 +189,8 @@ after estimation commands that do not support those adjustments.
 The tests are available after OLS, constrained OLS, 2SLS, and LIML estimation performed with {help regress}, {help cnsreg}, {help ivreg}, {help ivregress}, or 
 {stata ssc describe cmp:ivreg2}. The
 program works with Fuller LIML and {it:k}-class estimates done with {help ivreg2} (WRE bootstrap only). The program also works with regressions with one set of "absorbed" fixed
-effects performed with {help areg}; {help xtreg:xtreg, fe}; {help xtivreg:xtivreg, fe}; {help xtivreg2}; or {help reghdfe:reghdfe}. And it works after most Stata 
+effects performed with {help areg}; {help xtreg:xtreg, fe}; {help xtivreg:xtivreg, fe}; {help xtivreg2}; {help reghdfe:reghdfe}; {help didregress}; 
+or {help xtdidregress}. ({help didregress} and {help xtdidregress} themselves can run the wild bootstrap, but much more slowly.) And {cmd:boottest} works after most Stata 
 ML-based estimation commands, including {help probit}, {help glm}, {stata ssc describe cmp:cmp}, and, in Stata 14.0 or later, 
 {help sem} and {help gsem} (score bootstrap only). (To work with {cmd:boottest}, an iterative optimization command must accept
 the {opt const:raints()}, {opt iter:ate()}, {opt from()}, and {opt sc:ore} options.)
@@ -197,8 +203,12 @@ one or more {help estimation options##constraints():constraints}, which are then
 jointly. In the second, modern syntax, one places the constraint expressions directly in the {cmd:boottest} command line before the comma. Each expression must conform to the syntax
 of {help constraint:constraint define}, meaning a list of parameters (all of which are implicitly hypothesized to equal zero) or an equation in the form 
 {it:{help exp}} {cmd:=} {it:{help exp}}. To jointly test several such expressions, list them all, placing each in parentheses. To independently test several such hypotheses, or joint groups
-of hypotheses, list them all, placing each in braces. Omitting both syntaxes implies {cmd:h0(1)}, unless {opt ar} is specified, in which case {cmd:boottest}
-tests the hypothesis that all coefficients on instrumented variables are zero.
+of hypotheses, list them all, placing each in braces.
+
+{pstd}
+Omitting both syntaxes implies {cmd:h0(1)}, except in three cases in which no hyptheses need be explicitly stated: 1. {opt ar} is specified, in which case {cmd:boottest}
+performs the Anderson-Rubin test that all coefficients on instrumented variables are zero; 2. {opt margins} is specified (see below); or 3. {cmd:boottest} is
+run after {help didregress} or {help xtdidregress}, in which case the test defaults to the treatment effect being 0.
 
 {pstd}
 When testing multiple independent hypotheses, the {opt madj:ust()} option requests the Bonferroni or Sidak correction for multiple hypothesis testing.
@@ -219,9 +229,6 @@ original estimate. In particular, you can perform inference with multi-way clust
 By default, the null is imposed before bootstrapping (Fisher and Hall 1990; Davidson and MacKinnon 1999; Cameron, Gelbach, and Miller 2008). The {opt nonul:l} option overrides this behavior. With IV
 estimation, the null is imposed only on the second-stage equation. Thus, after {cmd:ivregress 2sls Y X1 (X2 = Z)}, imposing the null of X1 = 0 results in the equivalent of 
 {cmd:ivregress 2sls Y (X2 = X1 Z)}, not {cmd:ivregress 2sls Y (X2 = Z)}.
-
-{pstd}{cmd:boottest}'s bootstrap-based tests are generally fast, though the WRE runs substantially slower than the others. The code is optimized for clustered standard errors and 
-runs most efficiently in Stata version 13 or later.
 
 {pstd}
 The wild and score bootstraps multiply residuals or scores by weights drawn randomly for each replication. {cmd:boottest} offers five weight distributions:
@@ -305,6 +312,10 @@ time. {opt r:eps(0)} requests a Wald test or--if {opt boottype(score)} is also s
 and {cmd:scoretest} facilitate this usage.
 
 {phang}{opt nonul:l} suppresses the imposition of the null before bootstrapping. This is rarely a good idea.
+
+{phang}{opt marg:ins} instructs {cmd:boottest} to treat results from a call to {cmd:margins}, which must just have been generated, as a linear combination of parameters,
+and test the independent hypotheses that each is 0. {cmd:boottest} extracts the coefficients of these linear combinations from the r(Jacobian) return value of
+{cmd:margins}. When using this option, do not include any hypotheses before the comma (or in the deprecated {cmd:h0()} option).
 
 {phang}{opt madj:ust(bonferroni | sidak)} requests the Bonferroni or Sidak adjustment for multiple hypothesis tests. The Bonferroni correction is
 min(1, n*p) where p is the unadjusted probability and n is the number of hypotheses. The Sidak correction is 1 - (1 - p) ^ n.
@@ -501,6 +512,12 @@ giving back through a {browse "http://j.mp/1iptvDY":donation} to support the wor
 {phang}. {stata cnsreg wage tenure ttl_exp collgrad, constr(1) cluster(industry)}{p_end}
 {phang}. {stata boottest tenure} // wild bootstrap test of tenure=0, conditional on ttl_exp=2, Rademacher weights, null imposed, 999 replications{p_end}
 
+{phang}. {stata regress wage tenure ttl_exp collgrad south#union, cluster(industry)} {p_end}
+{phang}. {stata margins south}{p_end}
+{phang}. {stata boottest, margins}  // bootstrap CI of average predicted wage for south = 0 and 1{p_end}
+{phang}. {stata margins, dydx(south)}{p_end}
+{phang}. {stata boottest, margins graphopt(xtitle(Average effect of south))}  // bootstrap CI of average impact in sample of changing south from 0 to 1{p_end}
+
 {phang}. {stata ivregress 2sls wage ttl_exp collgrad (tenure = union), cluster(industry)}{p_end}
 {phang}. {stata boottest tenure, ptype(equaltail) seed(987654321)} // Wald test, wild restricted efficient bootstrap, Rademacher weights, null imposed, 999 reps{p_end}
 {phang}. {stata boottest tenure, ptype(equaltail) seed(987654321) stat(c)} // same but bootstrap-c{p_end}
@@ -538,6 +555,10 @@ giving back through a {browse "http://j.mp/1iptvDY":donation} to support the wor
 {phang}. {stata gsem (c_city <- tenure wage ttl_exp collgrad), vce(cluster industry) probit} // same probit estimate as previous{p_end}
 {phang}. {stata boottest tenure}{space 60} // requires Stata 14.0 or later {p_end}
 {phang}. {stata boottest tenure, cluster(industry age) bootcluster(industry) small}{space 9} // requires Stata 14.0 or later{p_end}
+
+{phang}. {stata webuse smallg}{p_end}
+{phang}. {stata didregress (outcome x i.b) (treated), group(county) time(year) wildbootstrap(rseed(123) errorweight(webb))}{p_end}
+{phang}. {stata boottest, seed(123) weight(webb) nogr reps(1000)} // same test, ~200 times faster{p_end}
 
 {phang}. {stata sysuse auto}{p_end}
 {phang}. {stata program myprobit} // custom likelihood evaluator{p_end}

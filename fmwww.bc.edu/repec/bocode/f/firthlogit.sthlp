@@ -1,6 +1,6 @@
 {smcl}
-{* 2015-07-17}{...}
-{cmd:help firthlogit} {right:Version 1.1 2015-07-17}
+{* 2021-04-25}{...}
+{cmd:help firthlogit} {right:Version 1.2 2021-04-24}
 
 {hline}
 
@@ -100,6 +100,12 @@ The penalization that allows for convergence to finite estimates in conditions o
 also allows convergence to finite estimates with very sparse data.  In these circumstances, 
 the penalization tends to over-correct for bias.
 
+{pstd}
+Users contemplating using this command should give consideration to alternatives, including 
+another user-written command, {cmd:penlogit} (available for installation by typing 
+{cmd:search penlogit} at Stata's command line), as well as official Stata's implementation 
+of Bayesian modeling procedures and its command for so-called exact logistic regression.
+
 
 {title:Examples}
 
@@ -146,7 +152,7 @@ Joseph Coveney jcoveney@bigplanet.com
 {title:Also see}
 
 {psee}
-Manual:  {bf:[R] exlogistic}
+Manual:  {bf:[BAYES] bayeslogistic}, {bf:[R] exlogistic}
 
 {psee}
-Online:  {helpb ml}, {helpb exlogistic}
+Online:  {helpb penlogit} (if installed), {helpb bayes_logistic}, {helpb exlogistic}

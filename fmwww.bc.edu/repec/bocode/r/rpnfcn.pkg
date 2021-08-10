@@ -1,6 +1,6 @@
 d 'RPNFCN': module to provide a Mata generic function evaluator based on Reverse Polish Notation
 d
-d mf_rpnfcn(cmd) returns the result of sequentially evaluating the
+d  mf_rpnfcn(cmd) returns the result of sequentially evaluating the
 d commands given in the rows of matrix A.  The fundamental commands
 d allowed in A fall in the following categories:  Stack
 d manipulation--Commands that enter matrices into the stack, copy

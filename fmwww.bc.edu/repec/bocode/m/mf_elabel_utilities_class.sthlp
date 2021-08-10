@@ -224,10 +224,10 @@ false (==0).
 
 {pstd}
 {it:u}{cmd:.u_assert_nosysmiss()} issues the Stata error message 
-{err:invalid attempt to modify label} and exist with return code 180 
-if {it:v} contains system missing values. If {it:err}==0, the function 
-never exists with error but returns whether the assertion is true (==1) 
-or false (==0).
+{err:may not label .} and exist with return code 180 if {it:v} 
+contains system missing values. If {it:err}==0, the function 
+never exists with error but returns whether the assertion is true 
+(==1) or false (==0).
 
 {pstd}
 {it:u}{cmd:.u_assert_uniq()} does nothing if {it:list} has no duplicate 

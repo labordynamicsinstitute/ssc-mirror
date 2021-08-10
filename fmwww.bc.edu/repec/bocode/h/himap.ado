@@ -136,7 +136,7 @@ file write `page' ///
 `" <html><head>																											"' _n /// 
 `" <meta http-equiv="content-type" content="text/html; charset=UTF-8"> 													"' _n /// 
 `"   <title>World Heat map - himaps - with Stata by ThomasRoca</title>												"' _n /// 
-`"   <script type='text/javascript' src='himap_js/jquery-1.9.1.js'></script>											"' _n /// 
+`"   <script type='text/javascript' src='http://fmwww.bc.edu/repec/bocode/h/himap_js/jquery-1.9.1.js'></script>											"' _n /// 
 `"   <style type='text/css'>																							"' _n /// 
 `"   #container { 																										"' _n ///
 `"	height: `height'px ;  width: `width'px; margin: 0 auto; 															"' _n /// 
@@ -193,9 +193,9 @@ file write `page' ///
 `"             dataLabels: { enabled: false,format: '{point.name}' }					"' _n /// 
 `"         }]   }); });																	"' _n /// 
 `" </script></head><body>																"' _n /// 
-`" <script src="himap_js/highmaps.js"></script>										"' _n /// 
-`" <script src="himap_js/exporting.js"></script>										"' _n /// 
-`" <script src="himap_js/`projection'.js"></script>											"' _n /// 
+`" <script src="http://fmwww.bc.edu/repec/bocode/h/himap_js/highmaps.js"></script>										"' _n /// 
+`" <script src="http://fmwww.bc.edu/repec/bocode/h/himap_js/exporting.js"></script>										"' _n /// 
+`" <script src="http://fmwww.bc.edu/repec/bocode/h/himap_js/`projection'.js"></script>											"' _n /// 
 `" <div id="container"></div>															"' _n /// 
 `"  </body>																				"' _n /// 
 `" </html>																				"' _n 

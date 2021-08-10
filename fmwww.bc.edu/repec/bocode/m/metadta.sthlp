@@ -16,14 +16,14 @@
 {title:Title}
 {p2colset 5 23 25 2}{...}
 {p2col :{opt metadta} {hline 2}} Fixed- and random-effects meta-analysis and meta-regression 
-of diagnostic accuracy studies{p_end}
+of diagnostic accuracy studies using logistic regression.{p_end}
 {p2colreset}{...}
 
 {marker syntax}{...}
 {title:Syntax}
 
 {p 8 16 2}
-[{help by} {varlist}{cmd::}] {opt metadta tp tn fp fn} [{indepvars}] {ifin} {cmd:,} 
+[{help by} {varlist}{cmd::}] {opt metadta tp fp fn tn [tp2 fp2 fn2 tn2 index comparator]} [{indepvars}] {ifin} {cmd:,} 
 {opt stu:dyid}({var})
 [{it:{help metadta##options_table:options}} {it:{help metadta##foptions_table:foptions}}
 {it:{help metadta##soptions_table:soptions}}]
@@ -39,47 +39,50 @@ of diagnostic accuracy studies{p_end}
 {synoptset 30 tabbed}{...}
 {synopthdr}
 {synoptline}
-{syntab:Modeling}
+{dlgtab:Modeling}
 {synopt :{opt mod:el(random|fixed [, modelopts])}}the type of model to fit; default is {cmd:random}. {help metadta##optimization_options:modelopts}
 control the control the optimization process{p_end}
 {synopt :{opth cov:(metadta##vartype:vartype)}}variance-covariance structure of 
 the random-effects; default is {cmd: un}structured{p_end}
-{synopt : {opth cv:effect(se|sp|sesp)}} specify which latent outcome is to be affected by 
+{synopt : {opth cv:effect(se|sp|sesp)}}specify which latent outcome is to be affected by 
 covariate information; default is {cmd:sesp}{p_end}
-{synopt : {opth in:teraction(se|sp|sesp)}} specify for latent outcome to include the interaction terms; default is {cmd:sesp}{p_end}
-{synopt :{opt pair:ed}}indicate that for each study there are two observations so as to fit repeated measures logistic regression model{p_end}
+{synopt : {opth in:teraction(se|sp|sesp)}}specify for latent outcome to include the interaction terms; default is {cmd:sesp}{p_end}
+{synopt :{opt pair:ed}}indicate notifies the program that the data is in the form {cmd: tp1 fp1 fn1 tn1 tp2 fp2 fn2 tn2 index comparator} {p_end}
+{synopt :{opt comparative}}notifies the program that the studies are comparative (2 observations per study) {p_end}
+{synopt :{opth by:(varname:byvar)}}specificies the stratifying variable for which the margins are estimated {p_end}
+{synopt :{opt prog:ress}}show the {cmd:progress} of the model estimation process{p_end}
+{synopt :{opt A:lphasort}}sort the categorical variables alphabetically {p_end}
 {synopt :{opt nomc}}do not perform {cmd:m}odel {cmd:c}omparison with likelihood-ratio tests comparison the specified model with other simpler models{p_end}
 
-{syntab:Reporting}
-{synoptline}
-{synopt :{opt prog:ress}} show the {cmd:progress} of the model estimation process{p_end}
-{synopt :{opt out:table(logodds|abs|rr|all)}} which summary tables to present from the model estimates. Default is none of the tables. {p_end}
-{synopt :{opt nofp:lot }} suppress the forest plot(s){p_end}
-{synopt :{opt nosr:oc}} suppress the sroc plot {p_end}
-{synopt :{opt noit:able}} suppress display of the table containing the studies{p_end}
+{dlgtab:General}
 {synopt :{opth label:(varname:[namevar=varname], [yearvar=varname])}}specifies that date be labelled by its name and/or year{p_end}
-{synopt :{opt nove:rall}} suppress the display of overall estimates in the itable and fplot{p_end}
-{synopt :{opt nosubg:roup}} suppress the display of the group estimates in the itable and fplot{p_end}
-{synopt :{opt summ:aryonly}} suppress the individual studies in the itable and fplot{p_end}
-{synopt :{opt down:load}} specify the location where a copy of data used to plot the forest plot should be stored {p_end}
+{synopt :{opt nove:rall}}suppress the display of overall estimates in the itable and fplot{p_end}
+{synopt :{opt nosubg:roup}}suppress the display of the group estimates in the itable and fplot{p_end}
+{synopt :{opt summ:aryonly}}suppress the individual studies in the itable and fplot{p_end}
+{synopt :{opth down:load(path)}}specify the location where a copy of data used to plot the forest plot should be stored {p_end}
 {synopt :{opt dp:(#)}} set decimal points to display; default is {cmd: 3}{p_end}
-{synopt :{opth l:evel(level)}} set confidence level; default is {cmd: level(95)}{p_end}
-{synopt :{opt pow:er(#)}} set the exponentiating power; default is {cmd: 0}{p_end}
-{synopt :{opth sort:by(varlist)}} sort the appearance of studies in the itable and fplot based on the variables in {help varlist}{p_end}
-{synopt :{opt A:lphasort}} sort the categorical variables alphabetically {p_end}
-{synopt :{opth ci:method(metapreg##citype:citype)}} specifies how the confidence intervals 
+{synopt :{opth l:evel(level)}}set confidence level; default is {cmd: level(95)}{p_end}
+{synopt :{opt pow:er(#)}}set the exponentiating power; default is {cmd: 0}{p_end}
+{synopt :{opth sort:by(varlist)}}sort the appearance of studies in the itable and fplot based on the variables in {help varlist}{p_end}
+{synopt :{opth ci:method(metapreg##citype:citype)}}specifies how the confidence intervals 
 for the individuals study proportions are computed; default is {cmd:citype(exact)} for proportions. 
 For relative ratios, the score/Koopman CI are computed{p_end}
+
+{dlgtab:Tables}
+{synopt :{opt noit:able}}suppress display of the table containing the studies{p_end}
+{synopt :{opt sum:table(logodds|abs|rr|all)}}which summary tables to present from the model estimates. Default is none of the tables. {p_end}
+
 {synoptline}
 
 {marker foptions_table}{...}
 {synopthdr:foptions}
 {synoptline}
-{synopt :{opt xla:bel(list)}} defines x-axis labels. No checks are made as to whether these points are sensible.  
+{synopt :{opt nofp:lot }}suppress the forest plot(s){p_end}
+{synopt :{opt xla:bel(list)}}defines x-axis labels. No checks are made as to whether these points are sensible.  
 The points in the list {cmd:must} be comma separated.{p_end}
-{synopt :{opt xt:ick(list)}} adds the listed tick marks to the x-axis. The points in the list {cmd:must} be comma separated.{p_end}
-{synopt :{opt plots:tat(label)}} specifies the label(name) for proportions/relative ratios in the forest plot{p_end}
-{synopt :{opth outp:lot(abs|rr)}} specifies to plot absolute or relative measures when data is paired; default is {cmd:outplot(abs)}{p_end}
+{synopt :{opt xt:ick(list)}}adds the listed tick marks to the x-axis. The points in the list {cmd:must} be comma separated.{p_end}
+{synopt :{opt plots:tat(label)}}specifies the label(name) for proportions/relative ratios in the forest plot{p_end}
+{synopt :{opth outp:lot(abs|rr)}}specifies to plot absolute or relative measures when studies are comparative; default is {cmd:outplot(abs)}{p_end}
 {synopt :{opt tex:ts(#)}}increases or decreases the text size of the label. Default value is 1{p_end}
 {synopt :{opth lc:ols(varlist)}}specifies additional columns to the left of the plot{p_end}
 {synopt :{opt double:}}allows more white space in the fplot by running the text on the left i.e {cmd:lcols(varlist)} over two lines in the fplot{p_end}
@@ -87,22 +90,28 @@ The points in the list {cmd:must} be comma separated.{p_end}
 {synopt :{opth point:opt(scatter##marker_options:marker_options)}}controls the points for the study estimates{p_end}
 {synopt :{opth arr:owopt(twoway_pcarrow:marker_options)}}controls the arrows for the truncated confidence intervals of the study estimates{p_end}
 {synopt :{opth ol:ineopt(scatter##connect_options:connect_options)}}controls the overall and subgroup estimates line{p_end} 
-{synopt :{opt as:text(percent)}} percentage of the forest plot to be taken up by the text. Default is 50 {p_end}
+{synopt :{opt as:text(percent)}}percentage of the forest plot to be taken up by the text. Default is 50 {p_end}
 {synopt :{opth cio:pt(scatter##connect_options:connect_options)}}controls the appearance of confidence intervals for studies{p_end}
-{synopt :{opt subl:ine}} displays the line with group estimates{p_end}
-{synopt :{opt noovl:ine}} suppress the overall line; by default the overall line is displayed{p_end}
-{synopt :{opt nost:at}} suppress the text with estimates and confidence intervals; by default the text is displayed{p_end}
-{synopt :{help twoway_options}} specifies other overall graph options{p_end}
+{synopt :{opt subl:ine}}displays the line with group estimates{p_end}
+{synopt :{opt noovl:ine}}suppress the overall line; by default the overall line is displayed{p_end}
+{synopt :{opt nost:at}}suppress the text with estimates and confidence intervals; by default the text is displayed{p_end}
+{synopt :{opt grid}}place grid lines between the studies; by default the grid lines are suppressed{p_end}
+{synopt :{opt log:scale}}requests the plot to be in the (natural)log scale{p_end}
+{synopt :{opth gra:phsave(filename)}}save the plot in/as {it:filename}{p_end}
+{synopt :{help twoway_options}}specifies other overall graph options{p_end}
+{synopt :{opth xline:(metadta##linearg:linearg)}} adds a vertical line at a specified {cmd: x} value{p_end}
+
 {synoptline}
 
 {marker soptions_table}{...}
 {synopthdr:soptions}
 {synoptline}
 
-{synopt :{opt col:orpalette(string)}} specify the colour for each class of the grouping categorical variable. {p_end}
-{synopt :{opt nopred:iction}} suppress the prediction region{p_end}
-{synopt :{opt b:ubbles}} show the study size as weight{p_end}
-{synopt :{opt bub:bleid}} identify the bubbles by row index {p_end}
+{synopt :{opt nosr:oc}}suppress the sroc plot {p_end}
+{synopt :{opt col:orpalette(string)}}specify the colour for each class of the grouping categorical variable. {p_end}
+{synopt :{opt nopred:iction}}suppress the prediction region{p_end}
+{synopt :{opt b:ubbles}}show the study size as weight{p_end}
+{synopt :{opt bub:bleid}}identify the bubbles by row index {p_end}
 {synopt :{opth sp:ointopt(scatter##marker_options:marker_options)}}controls the appearance of study points{p_end}
 {synopt :{opth op:ointopt(scatter##marker_options:marker_options)}}controls the appearance of summary point(s){p_end}
 {synopt :{opth cu:rveopt(scatter##connect_options:connect_options)}}controls the appearance of curve(s){p_end}
@@ -110,6 +119,7 @@ The points in the list {cmd:must} be comma separated.{p_end}
 {synopt :{opth predci:opt(line_options:line_options)}}controls the appearance of prediction line{p_end}
 {synopt :{opth bubo:pt(scatter##marker_options:marker_options)}}controls the appearance of bubbles{p_end}
 {synopt :{opth bid:opt(scatter##marker_label_options:label_options)}}controls the appearance of labels for the bubbles{p_end}
+{synopt :{opth gra:phsave(filename)}} save the plot in/as {it:filename}{p_end}
 {synopt :{help twoway_options}} specifies other overall graph options e.g legend{p_end}
 
 {marker optimization_options}{...}
@@ -149,9 +159,9 @@ the maximization process during refinement of starting values
 {marker vartype}{...}
 {synopthdr :cov}
 {synoptline}
-{synopt :{opt ind:ependent}}different parameter for logit sensitivity and logit specificity random-effects, covariance is 0; the default{p_end}
+{synopt :{opt ind:ependent}}different variance parameters for logit sensitivity and logit specificity random-effects, covariance is 0; the default{p_end}
 {synopt :{opt exc:hangeable}}equal variances for logit sensitivity and logit specificity random-effects, 
-and different covariance parameter{p_end}
+and a different covariance parameter{p_end}
 {synopt :{opt id:entity}}equal variances for logit sensitivity and logit specificity random-effects,  
 covariance is 0{p_end}
 {synopt :{opt un:structured}}all variances logit sensitivity and logit specificity random-effects and covariances to be distinctly 
@@ -175,15 +185,29 @@ estimated{p_end}
 {title:Description}
 
 {pstd}
-{cmd:metadta} is a routine that performs meta-analytical pooling of diagnostic accuracy data from seperate but modelologically and 
-epidemiologically similar studies. The routine implements the generalized linear model for the binomial family 
-with a logit link, i.e logistic regression. 
-It allows for meta-regression, and presents the results in tables, forest plot and/or SROC curve.  
+{cmd:metadta} is implements the generalized linear model for the binomial family 
+with a logit link, i.e logistic regression for meta-analysis of diagnostic accuracy data. 
+The program presents the results in tables, forest plot and/or SROC curve.  
 
 {pstd}
-The routine allows meta-regression and repeated measures analysis. When repeated measures analysis is perfomed, either the proportions
-or the relative ratios can be tabulated and/or plotted (i.e with 1 or 2 covariates). When there are no covariates, heterogeneity is 
-also quantified using the I-squared measure({help metapreg##ZD2014:Zhou and Dendukuri 2014}).
+The program fits fixed or a random-effects model. The data can be from independent studies; where each row contains data from seperate studies, 
+comparative studies; where each study has two rows of data. The first row has the index data and the second row has the control data. The data can also be paired, 
+where each row contains data from each seperation cross-tabulation between the index and the control test.
+
+{pstd}
+{helpb meqrlogit} is used for the random-effects model and {helpb binreg} for the fixed-effects model. 
+The binomial distribution is used to model the within-study variability ({help metapreg##Hamza2008:Hamza et al. 2008}).
+Studies with less variability have more influence in the pooled estimate since they contribute more to the likelihhod function. The 
+weighting is implicit and parameter estimation is an iterative procedure. Therefore, even though the forest plot never displays
+weights for the individual studies, weighting is indeed done. The logistic regression requires at least two studies to run.
+
+
+{pstd}
+The logistic regression framework allows meta-regression. When data is from comparative or paired studies, either the proportions
+or the relative ratios can be tabulated and/or plotted. 
+
+{pstd}
+When there are no covariates, heterogeneity is also quantified using the I-squared measure({help metapreg##ZD2014:Zhou and Dendukuri 2014}).
 
 {marker options}{...}
 {title:Options}
@@ -260,6 +284,10 @@ variance components rather than in the estimates of the fixed effects.
 {opt from(init_specs)};
 see {helpb maximize:[R] maximize}.  These options are seldom used. 
 
+{pmore}
+Examples, {cmd: model(random, intpoint(9))} to increase the integration points, 
+{cmd: model(random, technique(bfgs))} to specify Stata's BFGS maximiztion algorithm.
+
 {phang}
 {opt cov(vartype)} specifies the structure of the covariance matrix for the two random-effects.  {it:vartype} is one of the following:
 {cmd:independent}, {cmd:exchangeable}, {cmd:identity}, or {cmd:unstructured}.
@@ -276,7 +304,7 @@ random effects and 'non-zero' covariance. The exchangeable covariance matrix has
 
 {phang2}
 {cmd:covariance(identity)} is all variances are equal and the covariance is 0. 
-The identity covariance matrix has 1 unique parameters. 
+The identity covariance matrix has 1 parameter. 
 
 {phang2}
 {cmd:covariance(unstructured)} allows for all variances and covariances to be
@@ -314,9 +342,17 @@ The default is {cmd:sesp}. This requires at-least two independent variables.
 {cmd: interaction(sp)} specifies that interactions be included in the equationfor the logit specificity.  
 
 {phang}
-{cmd: paired} indicate that for each study there are two observations so as to fit repeated measures logistic regression model. 
+{cmd: comparative} indicate that for each study there are two observations per study. 
 The variable identifying the pairs should be a {cmd: string} variable and should be the {cmd:fifth} variable after 
 {cmd: tp tn fp fn}. 
+
+{phang}
+{cmd:paired} indicates that data is paired. The expected data is the format {cmd: tp1 fp1 fn1 tn1 tp2 fp2 fn2 tn2 index comparator [covariates]}. 
+
+{phang}
+{cmd: progress} specifies whether the noisily or quitely display the model maximization process as is being executed. 
+By defualt the maximization process is executed quitely. This options is useful is stata is taking too long and you want 
+to see if its actually busy with the maximisation process. On the down-side, there is alot of unnecessary ouput.
 
 {phang}
 {cmd: nomc} indicates not perform {cmd:m}odel {cmd:c}omparison with likelihood-ratio tests comparison the specified model with other simpler models. 
@@ -326,16 +362,23 @@ covariate effect in each of the two equations. A null model, i.e without covaria
 By default, model comparison is perfomed. By imposing {cmd: nomc}, substantial time can be saved 
 especially for complex models involving many covariates and interactions.
 
-
-{dlgtab:Reporting}
+{phang}
+{cmd: alphasort} sort the categorical variables alphabetically. By default, are encoded such that the value labels are sorted according to the 
+rank order as they appear in the data. The option {cmd:alphasort} sorts the categorical variables in the model alphabetical so that the class that appears
+first alphabetically is assigned the base level. 
 
 {phang}
-{cmd: progress} specifies whether the noisily or quitely display the model maximization process as is being executed. 
-By defualt the maximization process is executed quitely. This options is useful is stata is taking too long and you want 
-to see if its actually busy with the maximisation process. On the down-side, there is alot of unnecessary ouput.
+{cmd:by(byvar)} specifies that the summary etsimates be stratified/grouped according to the variable declared. This is useful in meta-regression with more than one covariate,
+and the {cmd:byvar} is not one of the covariates or when there are interactions and the first covariate is not an ideal grouping variable. By default, results are grouped according to the 
+levels of the first categorical variable in the regression equation.
+
+{pmore}
+This option is not the same as the Stata {help by} prefix which repeates the analysis for each group of observation for which the values of the prefixed variable are the same.
+
+{dlgtab:Tables}
 
 {phang}
-{cmd: outtable(parameter)}} specifies which summary margins tables to present from the logistic regression model estimates. 
+{cmd: sumtable(none|logodds|abs|rr|all)}} specifies which summary margins tables to present from the logistic regression model estimates. 
 {it:parameter} can be one of the following:
 {cmd: logodds}, {cmd: abs}, {cmd: rr}, {cmd: all} or a list eg {cmd: logodds abs rr}. By default none of the tables is displayed. 
 The estimates are obtained using {help margins} which calculates predictions from a fitted model at fixed values of some covariates
@@ -343,46 +386,37 @@ and averaging or otherwise integrating over the remaining covariates. The tables
 the z-statistic, and a confidence interval.
 
 {phang2}
-{cmd: outtable(logodds)}} requests the marginal {cmd:log-odds} for each class of the categorical variable, and the log-odds 
+{cmd: sumtable(logodds)}} requests the marginal {cmd:log-odds} for each class of the categorical variable, and the log-odds 
 at the mean of continous varibles. When there are interaction, the log-odds are computed for the each combination of the 
 variable of interest and the confounding factor.
 
 {phang2}
-{cmd: outtable(abs)}} requests the marginal {cmd:proportions} i.e {absolute} estimates for each class of the categorical variable, and the log-odds 
+{cmd: sumtable(abs)}} requests the marginal {cmd:proportions} i.e {absolute} estimates for each class of the categorical variable, and the log-odds 
 at the mean of continous varibles. When there are interaction, the proportions are computed for the each combination of the 
 variable of interest and the confounding factor. The standard-errors, Z-statistic and p-value are in the log-odds scale.
 
 {phang2}
-{cmd: outtable(rr)}} requests the marginal {cmd:r}elative {cmd:r}atio estimates. When data is not paired, the ratio are computed using the first class in 
-the categorical variable as the base. With paired data, the ratio comparing the two classes in the variable of interest is presented for each class of the 
+{cmd: sumtable(rr)}} requests the marginal {cmd:r}elative {cmd:r}atio estimates. When studies are not comparative, the ratio are computed using the first class in 
+the categorical variable as the base. With data from comparative studies, the ratio comparing the two classes in the variable of interest is presented for each class of the 
 confounding variables.  The standard-errors, Z-statistic and p-value are in the log scale. {cmd: outtable(rr)} requires at-least one covariate.
 
 {phang}
-{cmd: nofplot} suppress the forest plot(s). By default, a forest plot is presented.  
-
-{phang}
-{cmd: nosroc} suppress the sroc/cross plot. By default an sroc/cross plot is presented. For the model with no covariates, more than one 
-covariates, or only continous variables, the sroc plots presents a center, an sroc curve, and the corresponding confidence and prediction regions for the 
-overall sensitivity and specificity. A scatter of the studies in the meta-analysis is also plotted.
-When there is one categorical variable, the center, sroc curve, confidence and prediction region, and the studies in each level 
-are plotted each in a distinct colour. When a fixed-effects model is fitted, the sroc curve, and the confidence and prediction intervals are not presented.
-Instead, a cross is plotted spanning the confidence intervals of sensitivity and specificity.
-
-{phang}
 {cmd: noitable} suppress display of the table containing the studies and the summary estimates. By default, the table presented. 
+
+{dlgtab:General}
 
 {phang}
 {cmd: label(varname[namevar=varname], [yearvar=varname])} specifies that date be labelled by its name and/or year.  
 Either or both option/s may be left blank.
 
 {phang}
-{cmd: noverall} suppress the display of overall estimates in the itable and fplot. By default, the overall summary estimate is presented. 
+{cmd: nooverall} suppress the display of overall estimates in the itable and fplot. By default, the overall summary estimate is presented. 
 
 {phang}
 {cmd: nosubgroup} suppress the display of the group estimates for each level of the grouping variable in the itable and fplot. 
 By default, the group estimates are displayed. The group absolute estimates are displayed with one categorical variable. 
-With paired data, two categorical variables where one is the variable of interest and the other a confounding variable, it is possible to 
-present the group relative ratios with the options {cmd:paired} and {cmd: outplot(rr)}. The group estimates are not presented when there are more 
+With data from comparative studies, two categorical variables where one is the variable of interest and the other a confounding variable, it is possible to 
+present the group relative ratios with the options {cmd:comparative} and {cmd: outplot(rr)}. The group estimates are not presented when there are more 
 than one (for {cmd: outplot(abs)}) or two(for {cmd: outplot(rr)}) independent variables.
 
 {phang}
@@ -431,11 +465,6 @@ and the forest plot are displayed as they appear in the data editor. If there gr
 is maintained. The groups are sorted by their rank index in the data, i.e, the groups are sorted according to their appearance in the data.
 
 {phang}
-{cmd: alphasort} sort the categorical variables alphabetically. By default, are encoded such that the value labels are sorted according to the 
-rank order as they appear in the data. The option {cmd:alphasort} sorts the categorical variables in the model alphabetical so that the class that appears
-first alphabetically is assigned the base level. 
-
-{phang}
 {cmd: cimethod(citype)} specifies how the binomial confidence intervals 
 for the individuals study proportions are computed. {it:citype} can be any of the following: 
 {opt exact}, {opt wald}, {opt wilson}, {opt agresti}, and {opt jeffreys}. 
@@ -464,6 +493,11 @@ comparison of the different binomial confidence intervals.
 For relative ratios, the score/Koopman[{help metadta##KOOPMAN1984:1984}] CI are computed{p_end}
 
 {dlgtab:foptions}
+{phang}
+{cmd: nofplot} suppress the forest plot(s). By default, a forest plot is presented.  
+
+{phang}
+{opt logscale} requests the plot to be in the (natural)log scale{p_end}
 
 {phang}
 {opt xla:bel(list)} defines x-axis labels. No checks are made as to whether these points are sensible.  The points in the list {cmd:must} be comma separated.{p_end}
@@ -475,7 +509,7 @@ For relative ratios, the score/Koopman[{help metadta##KOOPMAN1984:1984}] CI are 
 {opt plots:tat(label)} specifies the label(name) for proportions/relative ratios in the forest plot.{p_end} 
 
 {phang}
-{cmd: outplot(abs|rr)} specifies to plot absolute or relative measures when data is {cmd:paired}; default is {cmd:outplot(abs)}. 
+{cmd: outplot(abs|rr)} specifies to plot absolute or relative measures when data is {cmd:comparative}; default is {cmd:outplot(abs)}. 
 
 {pmore}
 {cmd: outplot(abs)}  specifies to plot the absolute measures, i.e the sensitivity and specificity.
@@ -492,7 +526,7 @@ achieve a satisfactory appearance.  The columns are labelled with the variable l
 this is not defined. The first variable specified in {cmd:lcols()} is assumed to be the study identifier and this is used in the itable output.
 
 {phang}
-{opt double:}allows more white space in the fplot by running the text on the left i.e {cmd:lcols(varlist)} over two lines in the fplot. This might be useful to make
+{opt double:} allows more white space in the fplot by running the text on the left i.e {cmd:lcols(varlist)} over two lines in the fplot. This might be useful to make
 the forest plot look less crowded.
 
 {phang}
@@ -517,11 +551,6 @@ See {help scatter##connect_options:connect_options} for the relevant options.
 See {help scatter##connect_options:connect_options} for the relevant options.
 
 {phang}
-{help twoway_options} specifies other overall graph to control how the look of the plot. This allows the addition of titles, subtitles, captions,
-etc., control of margins, plot regions, graph size, aspect ratio, and the use of schemes. eg
-{cmd: graphregion(color(white))}
-
-{phang}
 {opt astext(percent)} percentage of the forest plot to be taken up by the text. Default is 50. The percentage must be in the range 10-90.
 
 {phang}
@@ -533,7 +562,35 @@ etc., control of margins, plot regions, graph size, aspect ratio, and the use of
 {phang}
 {opt nost:at} suppress the text with estimates and confidence intervals; by default the text is displayed{p_end}
 
+{phang}
+{opt grid} show horizontal grid lines on the forestplot; by default no grids are displayed. With many studies, adding grid lines help with readabilitity{p_end}
+
+{phang}
+{opt graphsave(filename)} specifies the location where the .gph graph will be saved. The graph is saved asis. If more than 1 graphs are generated, 'flpot_#' is appended to the name.{p_end}
+
+{phang}
+{help twoway_options} specifies other overall graph to control how the look of the plot. This allows the addition of titles, subtitles, captions,
+etc., control of margins, plot regions, graph size, aspect ratio, and the use of schemes. eg
+{cmd: graphregion(color(white))}
+
+{phang}
+{marker linearg}{...}
+{opt xline(linearg)} adds a vertical line where {cmd:linearg} is {cmd: x [,options]}. The options to specify the look of the line include
+{cmd:lstyle(}{it:{help linestyle}}{cmd:)},
+{cmd:lpattern(}{it:{help linepatternstyle}}{cmd:)},
+{cmd:lwidth(}{it:{help linewidthstyle}}{cmd:)},
+and {cmd:lcolor(}{it:{help colorstyle}}{cmd:)}
+    ; see {manhelp line G-2:graph twoway line}.
+	
 {dlgtab:soptions}
+
+{phang}
+{cmd: nosroc} suppress the sroc/cross plot. By default an sroc/cross plot is presented. For the model with no covariates, more than one 
+covariates, or only continous variables, the sroc plots presents a center, an sroc curve, and the corresponding confidence and prediction regions for the 
+overall sensitivity and specificity. A scatter of the studies in the meta-analysis is also plotted.
+When there is one categorical variable, the center, sroc curve, confidence and prediction region, and the studies in each level 
+are plotted each in a distinct colour. When a fixed-effects model is fitted, the sroc curve, and the confidence and prediction intervals are not presented.
+Instead, a cross is plotted spanning the confidence intervals of sensitivity and specificity.
 
 {phang}
 {cmd: colorpalette(string)} specify the colour for each class of the grouping categorical variable. The default color palette has the following
@@ -574,9 +631,13 @@ bubble is identified by a number which is the row number of the submitted data.
 {opt bidopt(label_options)} See {help scatter##marker_label_options:label_options} controls the appearance of labels for the bubbles{p_end}
 
 {phang}
+{opt graphsave(filename)} specifies the location where the .gph graph will be saved. The graph is saved asis. If more than 1 graphs are generated, 'flpot_#' is appended to the name.{p_end}
+
+{phang}
 {help twoway_options} specifies the graph options for the SROC plot giving control of axis, scales, legend, titles, subtitles, captions,
  margins, plot regions, graph size, aspect ratio, etc. e.g
-{cmd: graphregion(color(white))}
+{cmd: graphregion(color(white))}. To change the order of the legend, the elements in the SROC plot are drawn in the following order; summary points, confidence cross,
+sroc curve, confidence region, prediction region, observed data, the study bubbles and finaly the identifiers for the bubbles.
 
 
 {marker remarks}{...}
@@ -617,7 +678,7 @@ The look of the sroc and forest plot is enhanced via {cmd:soptions(...)} and {cm
 {cmd:. metadta tp tn fp fn,												///} 
 {p_end}
 {pmore3}
-{cmd:studyid(study) model(random) dp(2) outtable(all)					///}   
+{cmd:studyid(study) model(random) dp(2) sumtable(all)					///}   
 {p_end}
 {pmore3}
 {cmd:soptions(xtitle("False positive rate") xlabel(0(0.2)1) xscale(range(0 1))					///} 
@@ -626,27 +687,21 @@ The look of the sroc and forest plot is enhanced via {cmd:soptions(...)} and {cm
 {cmd:ytitle("Sensitivity") yscale(range(0 1)) ylabel(0(0.2)1, nogrid) 							///} 
 {p_end}
 {pmore3}
-{cmd:graphregion(color(white)) plotregion(margin(medium)) xsize(15) ysize(15)									///} 
+{cmd:graphregion(color(white)) plotregion(margin(medium)) xsize(15) ysize(15))									///} 
 {p_end}
 {pmore3}
-{cmd:legend(order(1 "Summary" 3 "Observed data" 2  "SROC" 4 "Confidence region" 5 "Prediction region") 	///} 
+{cmd:foptions(graphregion(color(white)) texts(3) xlabel(0, 0.5, 1) 									///} 
 {p_end}
 {pmore3}
-{cmd:cols(1) ring(0) bplacement(6)))									///}  
-{p_end}
-{pmore3}
-{cmd:foptions(graphregion(color(white)) texts(2.5) xlabel(0, 0.5, 1) 									///} 
-{p_end}
-{pmore3}
-{cmd:diamopt(color(red)) olineopt(color(red) lpattern(dash)))}
+{cmd:diamopt(color(red)) pointopt(msymbol(s)msize(1)) olineopt(color(red) lpattern(dash)))}
 {p_end}
 
 {pmore2} 
 {it:({stata "metadta_examples example_one":click to run})}
 
-{marker example_two}{...}
+{marker example_two_one}{...}
 {pstd}
-{cmd :2. Metaregression - Paired data - 1 Covariate}
+{cmd :2.1 Metaregression - Comparative studies - 1 Covariate}
 
 {pmore}
 This example demonstrates how the intercept only model is extended in a meta-regression setting. 
@@ -654,7 +709,7 @@ The data is from a Cochrane review on the accuracy of human papillomavirus testi
 triage of women with an equivocal Pap smear to diagnose cervical precancer performed by {help metadta##Arbyn2013:Arbyn et al(2013)}.   
 
 {pmore}
-The option {cmd:paired} indicates that the data is in pairs and automatically the first covariate serves as the pair identifying variable. 
+The option {cmd:comparative} indicates that the data is in pairs and automatically the first covariate serves as the pair identifying variable. 
 With one categorical variable, different sroc curves each for every category is also displayed. The look of the sroc and forest plot is enhanced 
 via {cmd:soptions(...)} and {cmd:foptions(...)}. 
 
@@ -666,7 +721,7 @@ via {cmd:soptions(...)} and {cmd:foptions(...)}.
 {cmd:. metadta tp tn fp fn test, 									///}  
 {p_end}
 {pmore3}
-{cmd:studyid(studyid) model(random) paired outtable(all)  									///} 
+{cmd:studyid(studyid) model(random) comparative sumtable(all)  									///} 
 {p_end}
 {pmore3}
 {cmd:soptions(xtitle("False positive rate") xlabel(0(0.2)1) xscale(range(0 1)) 									///} 
@@ -684,15 +739,43 @@ via {cmd:soptions(...)} and {cmd:foptions(...)}.
 {cmd:foptions(graphregion(color(white)) outplot(abs) texts(2) xlabel(0, 1, 1) 									///}  
 {p_end}
 {pmore3}
-{cmd:diamopt(color(red)) olineopt(color(red) lpattern(dash)))} 
+{cmd:diamopt(color(red))  pointopt(msymbol(s)msize(1)) olineopt(color(red) lpattern(dash)))} 
 {p_end}
 
 {pmore2} 
-{it:({stata "metadta_examples example_two":click to run})}
+{it:({stata "metadta_examples example_two_one":click to run})}
+
+{marker example_two_two}{...}
+{pstd}
+{cmd :2.2 Metaregression - Comparative studies - 1 Covariate - RR}
+
+{pmore}
+This example extends {help metadta##example_two_one:Example 2.1} by presenting the relative summary measures instead of the absolute measures.  
+
+{pmore2}
+{stata `"use "http://fmwww.bc.edu/repec/bocode/a/ascus.dta""':. use "http://fmwww.bc.edu/repec/bocode/a/ascus.dta"}
+{p_end}
+
+{pmore2}
+{cmd:. metadta tp tn fp fn test, 									///}  
+{p_end}
+{pmore3}
+{cmd:studyid(studyid) model(random) comparative sumtable(all)  									///} 
+{p_end}
+{pmore3}
+{cmd:foptions(graphregion(color(white)) outplot(rr) texts(2) xlabel(0, 1, 1) 									///}  
+{p_end}
+{pmore3}
+{cmd:diamopt(color(red)) pointopt(msymbol(s)msize(1)) olineopt(color(red) lpattern(dash)))} 
+{p_end}
+
+{pmore2} 
+{it:({stata "metadta_examples example_two_two":click to run})}
+
 
 {marker example_three}{...}
 {pstd}
-{cmd :3. Metaregression - Paired data - 2 Covariates} 
+{cmd :3. Metaregression - Comparative studies - 2 Covariates} 
 
 {pmore}
 This example demonstrates how to examine (dis-)similarity of relative sensitivity and specificity across the different clinical setup. 
@@ -711,8 +794,8 @@ With the option {cmd:outtable(rr)} only the summary relative ratios are presente
 the table with individual studies.
 
 {pmore}
-The look of the sroc and forest plot is enhanced via {cmd:soptions(...)} and {cmd:foptions(...)}. With more than one covariate, 
-the sroc plot presents the overall curve.
+The look of the sroc and forest plot is enhanced via {cmd:soptions(...)} and {cmd:foptions(...)}. With more than one covariate or when the focus is on RR, 
+the sroc plot is not presented.
 
 {pmore2}
 {stata `"use "http://fmwww.bc.edu/repec/bocode/c/clinself.dta""':. use "http://fmwww.bc.edu/repec/bocode/c/clinself.dta"}
@@ -725,7 +808,7 @@ the sroc plot presents the overall curve.
 {cmd:studyid(study) interaction(sesp) model(random)  									///}
 {p_end}
 {pmore3}
-{cmd:summaryonly  paired outtable(rr) noitable  									///}
+{cmd:summaryonly comparative outtable(rr) noitable  									///}
 {p_end}
 {pmore3}
 {cmd:soptions(xtitle("False positive rate") xlabel(0(0.2)1) xscale(range(0 1)) 									///}
@@ -748,7 +831,7 @@ the sroc plot presents the overall curve.
 			
 {marker example_four}{...}
 {pstd}
-{cmd :4. Metaregression - Paired data - 3 Covariates}
+{cmd :4. Metaregression - Comparative - 3 Covariates}
 
 {pmore}
 We extend {help metadta##example_three:Example 3} above and examine differences in relative sensitivity and specificity by test assay while 
@@ -765,7 +848,7 @@ accounting for the clinical setup. The look of the sroc and forest plot is enhan
 {cmd:studyid(study) interaction(sesp) model(random) cov(unstructured)									///}  
 {p_end}
 {pmore3}
-{cmd:paired noitable outtable(rr)									///}
+{cmd:comparative noitable outtable(rr)									///}
 {p_end}
 {pmore3}
 {cmd:soptions(xtitle("False positive rate") xlabel(0(0.2)1) xscale(range(0 1))									///}
@@ -777,7 +860,7 @@ accounting for the clinical setup. The look of the sroc and forest plot is enhan
 {cmd:graphregion(color(white)) plotregion(margin(zero)))									///} 
 {p_end}
 {pmore3}
-{cmd:foptions(outplot(rr) graphregion(color(white)) texts(1.5) xlabel(0.7, 1, 1.3)									///} 
+{cmd:foptions(outplot(rr) grid graphregion(color(white)) texts(1.5) xlabel(0.7, 1, 1.3)									///} 
 {p_end}
 {pmore3}
 {cmd:arrowopt(msize(1)) diamopt(color(red)) olineopt(color(red) lpattern(dash)))} 
@@ -785,6 +868,80 @@ accounting for the clinical setup. The look of the sroc and forest plot is enhan
 
 {pmore2} 
 {it:({stata "metadta_examples example_four":click to run})}
+
+{pstd}
+{cmd :5. Metaregression - Paired data - RR}
+
+{pmore}
+In paired data, each row is of the form {cmd: tp1 fp1 fn1 tn1 tp2 fp2 fn2 tn2 index comparator}. The data should be a from a 2x2 table as displayed below;
+
+{p 22} 
+{c |} Disease Status
+{p_end}
+{pmore2} 
+index{space 4} {c |} Positive{space 5}Negative {c |} 
+{p_end}
+{pmore2}
+{c -} {c -} {c -} {c -} {c -} {c -} {c -} {c -} {c -} {c -} {c -} {c -} {c -} {c -} {c -} {c -} {c -} {c -}
+{p_end}
+{p 10} 
+Positive{space 3} {c |} {space 2} tp1 {space 7}	fp1 {space 2 } {c |} 
+{p_end}
+{p 10} 
+Negative{space 3} {c |} {space 2} fn1 {space 7}	tn1 {space 2} {c |} 
+{p_end}
+{pmore2}
+{c -} {c -} {c -} {c -} {c -} {c -} {c -} {c -} {c -} {c -} {c -} {c -} {c -} {c -} {c -} {c -} {c -} {c -}
+{p_end}
+
+
+
+{p 22} 
+{c |} Disease Status
+{p_end}
+{pmore2} 
+comparator{c |} Positive{space 5}Negative {c |}
+{p_end}
+{pmore2}
+{c -} {c -} {c -} {c -} {c -} {c -} {c -} {c -} {c -} {c -} {c -} {c -} {c -} {c -} {c -} {c -} {c -} {c -}
+{p_end}
+{p 10} 
+Positive{space 3} {c |} {space 2} tp2 {space 7}	fp2 {space 2 } {c |} 
+{p_end}
+{p 10} 
+Negative{space 3} {c |} {space 2} fn2 {space 7}	tn2 {space 2} {c |} 
+{p_end}
+{pmore2}
+{c -} {c -} {c -} {c -} {c -} {c -} {c -} {c -} {c -} {c -} {c -} {c -} {c -} {c -} {c -} {c -} {c -} {c -}
+{p_end}
+
+
+
+{pmore2}
+{stata `"use "https://github.com/VNyaga/Metapreg/blob/master/pairedta.dta?raw=true""':. use "https://github.com/VNyaga/Metapreg/blob/master/pairedta.dta?raw=true"}
+{p_end}
+
+{pmore2}
+{cmd:. metadta tp1 fp1 fn1 tn1 tp2 fp2 fn2 tn2 hpv1 hpv2,									///} 
+{p_end}
+{pmore3}
+{cmd:studyid(study) model(random)									///}  
+{p_end}
+{pmore3}
+{cmd:paired sumtable(rr)									///}
+{p_end}
+{pmore3}
+{cmd:foptions(outplot(rr) grid graphregion(color(white)) texts(1.85)									///} 
+{p_end}
+{pmore3}
+{cmd:xlabel(0.75, 0.90, 1, 1.11, 1.33) logscale lcols(hpv2 setting)  astext(70)									///} 
+{p_end}
+{pmore3}
+{cmd:arrowopt(msize(1)) pointopt(msymbol(s)msize(1)) diamopt(color(red)) olineopt(color(red) lpattern(dash)))} 
+{p_end}
+
+{pmore2} 
+{it:({stata "metadta_examples example_five":click to run})}
 
 {marker results}{...}
 {title:Stored results}
@@ -856,6 +1013,19 @@ Juliette Wytsmanstraat 14, {p_end}
 {pmore}
 Belgium.{p_end}
 
+{pmore}
+Marc Arbyn ({it:Marc.Arbyn@sciensano.be}) {p_end}
+{pmore}
+Belgian Cancer Center/Unit of Cancer Epidemiology, {p_end}
+{pmore}
+Sciensano,{p_end}
+{pmore} 
+Juliette Wytsmanstraat 14, {p_end}
+{pmore}
+B1050 Brussels, {p_end}
+{pmore}
+Belgium.{p_end}
+
 {title:References}
 
 {marker Hamza2008}{...}
@@ -885,6 +1055,7 @@ Koopman, P. A. R. 1984. Confidence intervals for the ratio of two binomial propo
 Arbyn M., Roelens J., Simoens C., Buntinx F., Paraskevaidis E., Martin-Hirsch PPL., Prendiville W. 2013. 
 Human Papillomavirus Testing Versus Repeat Cytology for Triage of Minor Cytological Cervical Lesions.
 {it:Cochrane Database of Systematic Reviews}: 31-201.
+
 {marker Arbyn2014}{...}
 {phang}
 Arbyn, M., Verdoodt, F., Snijders, P.J., Verhoef, V.M., Suonio, E., Dillner, L., Minozzi, S., Bellisario, C., Banzi, R., Zhao, F.H. and Hillemanns, P., 2014. 

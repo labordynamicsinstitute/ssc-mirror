@@ -1,6 +1,6 @@
 {smcl}
-{right:version:  4.5.0}
-{cmd:help asrol} {right:Dec 4, 2018}
+{right:version:  5.5}
+{cmd:help asrol} {right:June 25, 2021}
 {hline}
 {viewerjumpto "Statistics" "asrol##stat"}{...}
 {viewerjumpto "Window" "asrol##window"}{...}
@@ -20,10 +20,10 @@
 {title:Syntax}
 
 {p 4 6 2}
-[{help bysort}]: {cmd:asrol}
+[{help bysort} varlist]: {cmd:asrol}
 {varlist} {ifin}, {cmd:} 
 {cmdab:s:tat(}{it:{help asrol##stat:stat_options}{cmd:)}}
-{cmdab:w:indow(}{it:{help asrol##window:rangevar #}}{cmd:)}
+{cmdab:w:indow(}{it:{help asrol##window:rangevar range_low range_high}}{cmd:)}
 [{cmdab:g:en(}{it:newvar}{cmd:)}
 {cmdab:by:(}{it:{help asrol##byvars:varlist}{cmd:)}}
 {help asrol##min:{cmdab:min:imum:(}{it:#}{cmd:)} }
@@ -43,14 +43,45 @@ The underlined letters signify that the full words can be abbreviated only to th
 
 {p 4 4 2} {cmd: asrol} calculates descriptive statistics in a user's defined rolling-window or over a grouping variable.{cmd: asrol} 
 can efficiently handle all types of data structures such as data declared as time series or panel data, undeclared data, or data with 
-duplicate values, missing values or data having time series gaps. 
+duplicate values, missing values or data having time series gaps. asrol can 
+estimate most commonly used statistics such as mean, standard deviation, minimum,
+maximum, percentiles, median, missing, count, first, last, product, and geometric
+mean. asrol can also find these statistics while excluding focal observations,
+or observations defined by a grouping variable.
 {p_end}
 
-{p 4 4 2} {cmd: asrol} uses efficient coding in the Mata language which makes this version extremely fast as compared to its previous versions or other available programs. The speed efficiency matters more in large data sets. 
-While writing the source code of {opt asrol}, I took utmost care in selecting the most efficient choices among available options. Therefore,
-every line of code had to undergo several tests to ensure accuracy and speed. In fact, there is a long list of of built-in routines which are meant for different data structures. 
-{opt asrol} intelligently identifies data structures and applies the most relevant routine from its library. Hence, {cmd: asrol} speed efficiency is ensured whether the data is rectangular (balanced panel), non-rectangular, has duplicates,
-has missing values, or has both duplicates and missing values. 
+
+
+{title:What's New in Version 5.0}
+
+{p 4 4 2}
+{hi: 1. Changes made to the window() option}  {break}
+Version 5.0 of asrol introduces a more flexible window to identify observation
+in a given range. Previously, the {help asrol##window:window()} option of asrol would take two 
+inputs: the first one being the range variable (such as date) and the second
+input as the length of the rolling window. In the older versions, the window
+would always look backward. This has changed in version 5.
+
+ 
+{p 4 4 2} The window argument can now take up to three arguments. The window can now look
+backward, forward, and both back and forward. More details can be read in {help asrol##window:Section}
+
+{p 4 4 2} {hi:2. Improved algoritham for rolling window indices} {break}
+This version of {cmd: asrol} (version 5.0) significantly improves the 
+calculation speed of the required statistics,
+thanks to the development of a more efficient algoritham for extracting rolling 
+window indices. This has resulted in  significant speed advantage for asrol compared
+to its previous versions or other available programs. The speed efficiency matters 
+more in larger datasets. While writing the source code of {opt asrol}, I took 
+utmost care in making choices among available options. Therefore, every line of
+ code had to undergo several tests to ensure accuracy and speed. In fact, there
+ is a long list of of built-in routines in asrol which are meant to handle 
+ different data structures. {opt asrol} intelligently identifies data structures 
+and applies the most relevant routine from its library. Hence, {cmd: asrol} speed
+ efficiency is ensured whether the data is rectangular (balanced panel), 
+ non-rectangular, has duplicates, has missing values, or has both duplicates 
+ and missing values. 
+
 
 {title:Syntax Details}
 
@@ -60,7 +91,9 @@ The program has one required option and 8 optional options: Details are given be
 {title:Options}
 {marker stat}{...}
 
-{p 4 4 2}1. {opt s:tat}: to specify required statistics. This version of {cmd: asrol} supports multiple statistics for multiple variables. The following statistics are allowed; {p_end}
+{p 4 4 2}1. {opt s:tat}: to specify required statistics. This version of
+ {cmd: asrol} supports multiple statistics for multiple variables. The following
+ statistics are allowed; {p_end}
 
 {dlgtab:Descriptive Statistics}
 {p2colset 8 18 19 2}{...}
@@ -105,25 +138,90 @@ products of values. See more details in {help asrol##add: Section 7-4}. {p_end}
 {title:Optional Options}
 
 
-{p 4 4 2} 1.  The {opt w:indow} option accepts two arguments. The first argument should be name of a numeric variable, let us call it rangevar. The
-rangevar and a numeric integer are used for specifying length of the rolling window. Examples of rangevar include time variable such as day, week,
- month, quarter or year. The second argument should be a number that specifies the length of the rolling window. For example, if our time variable is year and we want a rolling window of 5 observations,
-(that is, the current observation and previous 4 observations), then option {opt w:indow} will look like: {p_end}
+{p 4 4 2} 1.  The {opt w:indow()}:{break} 
+The latest version of asrol accepts up to three
+ arguments and is written like this: {p_end}
 
-{p 10 4 2} {cmdab:w:indow}({it:year 5}) {break}
+{p 4 4 2} {opt window(rangevar #from #upto)}
+
+{p 4 4 2}The {it:rangevar} is usually a time variable such as date, monthly date,
+ or yearly date. However, it can also be any other numeric variable, such as age,
+ income, industry indicator, etc.
+Both {it:{hi:#from}} and {it:{hi:#upto}} are numeric values that sets the lower and upper
+bounds on the rolling window, using the current value of the {it:rangevar} as a benchmark. 
+Negative values of these inputs mean going back # periods from the current 
+value of the {it:rangevar}. Similarly, positive values of these imply going ahead # periods 
+of the current value of the {it:rangevar}. {p_end}
+
+{p 4 8 2}{hi: Please note}: {break}
+1. asrol considers the focal observation as part of the past. {break}
+2. Given the legacy of asrol, a window() with two inputs is still supported. 
+However, the folloiwng rule should be noted: {p_end}
+
+{p 12 12 2}If option {help asrol##window:window()} has two arguments, it shall always look back. 
+In other words, whether you enter a positive or a negative number for the second
+argument, it will always be counted as a negative number. Therefore, the following
+{help asrol##window:window()} options mean the same thing. {p_end}
+
+{p 12 12 2} {opt w:indow(year 50)} {p_end}
+
+{p 12 12 2} {opt w:indow(year -50 0)} {p_end}
+
+{p 12 12 2} {opt w:indow(year -50)} {p_end}
+
+{p 4 4 2}In the following paragraphs, I present some examples to make it easier to understand 
+option {help asrol##window:window()}.
+
+
+{p 4 4 2}{hi:Window examples and interpretations}
+
+{p 4 4 2} The following table presents examples of the {opt w:indow()} option and its interpretations.
+
+
+{dlgtab:window examples}
+{p2colset 4 25 26 2}{...}
+
+{p2col : {opt w:indow(year -5 0)}}	A rolling window of past 5 observations. Therefore, if focal year is {hi:2006}, the window will include these years in the calculations: {hi:2006, 2005, 2004, 2003, 2002}. The window can also be written 
+as {opt w:indow(year 5)} {p_end}
+
+{p2col : {opt w:indow(year 1 5)}}	A rolling window of 5 leading observations. Therefore, if focal year is {hi:2006}, the window will include these years in the calculations: {hi:2007, 2008, 2009, 2010, 2011}.  {p_end}
+
+{p2col : {opt w:indow(year -13 -2)}}	A rolling window of past 11 observations from {hi:t-12} upto {hi:t-2}. 
+Therefore, if focal year is {hi:2006}, the window will include these years in the calculations: 
+{hi: 1994, 1995, 1996, 1997 , 1998, 1999, 2000, 2001, 2002, 2003, 2004}. {p_end}
+
+{p2col : {opt w:indow(year -5 5)}}	A rolling window of 10 observations. 
+Therefore, if focal year is {hi:2006}, the window will include these years in the 
+calculations: {hi:2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011}. 
+ {p_end}
+
+{p2col : {opt  Note on missing values in the rangevar}} Some posts on the Statalist 
+show a confusion concerning the interpretation of the option {opt w:indow()}.
+ For example, using {opt window(year -5)}, a user might incorrectly assume that 
+ the observation in this range will always be 5. This might not be true in a 
+ case where the {it:rangevar} has gaps.  So if the current value of the {it:rangevar}
+ (in our case year) is {hi:2006} and its previous values are {hi:2000, 2001, 2003, 2005}. 
+ Though the window asks for 5 observations within the range of {hi:2006}, the available
+ values of the {it:rangevar} are only {hi:2006, 2005, 2003}, that are only 3 observations. The window
+range ends at 2002, other values of the year are outside the window bounds. {p_end}
+{hline}
 
 {p 4 4 2} {opt Rolling window calculations: } {p_end}
-{p 4 4 2} The default for rolling window is to calculate required statistics on available observation that are within the range. Therefore, the calculations
-of the required statistics start with one observation at the beginning of the rolling window. As we progress in the data set, the number of observations gradually
-increase until the maximum length of the rolling window is reached. Consider the following data of 10 observations, 
-where {it:{opt X}} is the variable of interest for which we would like to calculate arithmetic mean in a rolling window
-of 5; and {it:{opt months}} is the rangevar. To understand the mechanics of the rolling window more clearly, we shall generate 
+{p 4 4 2} The default for rolling window is to calculate required statistics on
+ available observation that are within the range. Therefore, the calculations
+of the required statistics start with one observation at the beginning of the 
+rolling window. As we progress in the data set, the number of observations gradually 
+increase until the maximum length of the rolling window is reached. Consider 
+the following data of 10 observations, where {it:{opt X}} is the variable of
+ interest for which we would like to calculate arithmetic mean in a rolling window
+of past 5 observations; and {it:{opt months}} is the {it:rangevar}. To understand 
+the mechanics of the rolling window more clearly, we shall generate 
 three additional statistics: count, first, and last. {p_end}
 
-	bys id: asrol X, window(months 5) stat(count) gen(count)
-	bys id: asrol X, window(months 5) stat(mean) gen(mean)
-	bys id: asrol X, window(months 5) stat(first) gen(first)
-	bys id: asrol X, window(months 5) stat(last) gen(last)
+	bys id: asrol X, window(months -5 0) stat(count) gen(count)
+	bys id: asrol X, window(months -5 0) stat(mean) gen(mean)
+	bys id: asrol X, window(months -5 0) stat(first) gen(first)
+	bys id: asrol X, window(months -5 0) stat(last) gen(last)
 
 	
 	  +--------------------------------------------------------+
@@ -144,15 +242,21 @@ three additional statistics: count, first, and last. {p_end}
 
 
 {p 4 4 2} {opt Explanation: } {p_end}
-{p 4 4 2} For the first observation, that is 2016m10, the mean value is based on a single observation, as there are no previous
-data. The same is reflected by the variables {it:{opt count}}, {it:{opt first}}, and {it:{opt last}}. For the second observation,
-the mean value is based on two observations of {it:{opt X}}, i.e., {opt (0.6881 + .9795) / 2 = .8338 :}. We can also observe such details
-from the variable {it:{opt count}}, that has a value of 2; variable {it:{opt first}} which shows that the first value in the
-rolling window this far is .6881 and {it:{opt last}}, which shows that the last value in the rolling window is .9795. As we move
-down the data points, the rolling window keeps on adding more observations until the fifth observation, i.e. 2017m2. After this observation,
-the observations at the start of the rolling window are dropped and more recent observations are added. It is pertinent to mention
-that users can limit the calculations of required statistics until minimum number of observations are available, see option {help asrol##min: minimum} for more details.
-
+{p 4 4 2} For the first observation, that is 2016m10, the mean value is based on 
+a single observation, as there are no previous data. The same is reflected by 
+the variables {it:{opt count}}, {it:{opt first}}, and {it:{opt last}}. For the 
+second observation, the mean value is based on two observations of {it:{opt X}},
+ i.e., {opt (0.6881 + .9795) / 2 = .8338 :}. We can also observe such details
+from the variable {it:{opt count}}, that has a value of 2; variable 
+{it:{opt first}} which shows that the first value in the rolling window this 
+far is .6881 and {it:{opt last}}, which shows that the last value in the 
+rolling window is .9795. As we move down the data points, the rolling window 
+keeps on adding more observations until the fifth observation, i.e. 2017m2. 
+After this observation, the observations at the start of the rolling window 
+are dropped and more recent observations are added. It is pertinent to mention
+that users can limit the calculations of required statistics until a minimum 
+number of observations are available, see option {help asrol##min: minimum} 
+for more details.{p_end}
 
 {p 4 4 2} {opt No Window: } {p_end}
 {p 4 4 2} Since the option window is optional, it can be dropped altogether. In such a case, {opt asrol} can be used like {help gen} or {help egen}.
@@ -183,9 +287,9 @@ When used with {help bysort} prefix, {opt asrol} can closely match the performan
  has 1000 firms. We might be interested in finding mean profitability of each industry within each country in a rolling window of 5 years. In that case, we shall use the option {help by} or using the {help bysort} prefix.
  Hence both of the following commands yield similar results. However, the command with {cmd: bysort} prefix has some speed advantage. {break}
  
-     {cmd: asrol profitability, window(year 5) stat(mean), by(country industry)} 
+     {cmd: asrol profitability, window(year -5 0) stat(mean), by(country industry)} 
   
-     {cmd: bys country industry : asrol profitability, window(year 5) stat(mean)}
+     {cmd: bys country industry : asrol profitability, window(year -5 0) stat(mean)}
 
  {marker perc}{...}
  
@@ -197,7 +301,7 @@ When used with {help bysort} prefix, {opt asrol} can closely match the performan
  in finding the 75th percentiles of the values in our desired rolling window, then we have to invoke the option {cmd: perc(.75)}
  along with using the option {cmdab:stat(}{it:median}{cmd:)}. See the following example: {p_end}
  
-      {cmd: bys country industry : asrol profitability, window(year 5) stat(median) perc(.75)} 
+      {cmd: bys country industry : asrol profitability, window(year -5 0) stat(median) perc(.75)} 
 	
 	
 {p 4 4 2}  {opt Note: }: {break}
@@ -251,9 +355,9 @@ The {opt xf} is an abbreviation that I use for  "{it:excluding focal}". There mi
 to exclude the focal observation while calculating the required statistics. {opt asrol} allows excluding focal 
 observation with two flavors. The first one is to exclude only the current observation while
 the second one is to exclude all observation of the relevant variable if there are similar (duplicate) values of 
-the rangevar elsewhere in the given window. An example will better explain the distinction between the two 
+the {it:rangevar} elsewhere in the given window. An example will better explain the distinction between the two 
 options. Consider the following data of 5 observations, where {it:{opt X}} is the variable of interest for which we would
-like to calculate arithmetic mean and {it:{opt year}} is the rangevar. Our calculations do not use any rolling window, therefore the option {opt window} is dropped. {p_end}
+like to calculate arithmetic mean and {it:{opt year}} is the {it:rangevar}. Our calculations do not use any rolling window, therefore the option {opt window} is dropped. {p_end}
 
 {p 4 4 2} 
 {opt Example A:}: {p_end}
@@ -287,7 +391,7 @@ has a value of 350, that is the average of the values of {it:{opt X}} in the yea
 {p 4 4 2} {opt Example B } 
 differs from {opt Example A } in definition of the focal observation(s). In {opt Example B}, 
 we invoke the option {opt xf()} as {opt xf(year)}, where {it:{opt year}} is an existing numeric variable. With this option, the focal observation(s) is(are) defined as the current observation and other observations where the focal observation
-of the rangevar has duplicates. Our data set has two duplicate values in the rangevar, i.e., year 2003.
+of the {it:rangevar} has duplicates. Our data set has two duplicate values in the {it:rangevar}, i.e., year 2003.
 Therefore, the mean values are calculated as shown bellow:
 
 	+-------------------------------------------------------+	
@@ -303,36 +407,56 @@ Therefore, the mean values are calculated as shown bellow:
 
 
 {title:Example 1: Find arithmetic mean in a rolling window of 4 observations for each group (company)}
- {p 4 8 2}{stata "webuse grunfeld" :. webuse grunfeld}{p_end}
- {p 4 8 2}{stata "bys company: asrol invest, stat(mean) win(year 4) " :bys company: asrol invest, stat(mean) win(year 4) } {p_end}
 
-{p 4 8 2} This command calculates arithmetic mean for the variable invest using a four years rolling window and 
+{p 4 4 2} The following command calculates arithmetic mean for the variable {it:invest}
+using a four years rolling window (current year and three past years) and 
 stores the results in a new variable, {it:mean4_invest}. 
 
-{title:Example 2: Geometric mean in a rolling window of 10}
  {p 4 8 2}{stata "webuse grunfeld" :. webuse grunfeld}{p_end}
- {p 4 8 2}{stata "bys company: asrol invest, stat(gmean) win(year 10) " :bys company: asrol invest, stat(gmean) win(year 10) } {p_end}
- 
- 
- {title:Example 3: Geometric mean with add(1) option in a rolling window of 10}
- {p 4 8 2}{stata "bys company: asrol invest, stat(gmean) win(year 10) add(1)" :bys company: asrol invest, stat(gmean) win(year 10) add(1) gen(gmean10) } {p_end}
+ {p 4 8 2}{stata "bys company: asrol invest, stat(mean) win(year 4) " :. bys company: asrol invest, stat(mean) win(year 4) } {p_end}
+
+ {p 4 8 2}{hi: Or using the new window style of Version 5.0 *} {p_end}
+ {p 4 8 2}{stata "bys company: asrol invest, stat(mean) win(year -4 0) " :. bys company: asrol invest, stat(mean) win(year -4 0) } {p_end}
+
+ {p 4 4 2} {hi: * Note:} Given the legacy of asrol that it used to accept only 
+ two inputs in the window option, the
+ old behavior is still supported. Therefore, if you type just two inputs in the
+ window() option, asrol would always consider it as a back-looking window.
+ Therefore, {opt w:indow(year 4)} and {opt w:indow(year -4 0)} mean the same thing, i.e.,
+ it is a 4-years rolling window that includes the current observations and three
+ past observations.
 
 
-{p 4 8 2} This command calculates arithmatic mean for the variable invest using a four years rolling window and 
-stores the results in a new variable, {it:mean4_invest}. 
-
- {title:Example 4: Find Rolling Standard Deviation} 
+{title:Example 2: Geometric mean in a rolling window of 10 periods: 5 past and 5 forward  }
  {p 4 8 2}{stata "webuse grunfeld" :. webuse grunfeld}{p_end}
- {p 4 8 2}{stata "bys company: asrol invest, stat(sd) win( year 6) " :. bys company: asrol invest, stat(sd) win(year 6)} {p_end}
+ {p 4 8 2}{stata "bys company: asrol invest, stat(gmean) win(year -5 5) " :. bys company: asrol invest, stat(gmean) win(year -5 5) } {p_end}
  
- {p 4 8 2} This command calculates standard deviation for the variable invest using a six years 
- rolling window and stores the results in a new variable , {it:sd4_invest} {p_end}
+ 
+ {title:Example 3: Geometric mean with add(1) option : 5-periods lead window}
+ {p 4 8 2}{stata "bys company: asrol invest, stat(gmean) win(year 0 5) add(1)" :. bys company: asrol invest, stat(gmean) win(year 0 5) add(1) gen(gmean10) } {p_end}
+
+
+{p 4 4 2} This command calculates the geometric mean for the {it:invest} variable
+using a 5-years rolling-window. The observations in range will include forward five years.
+The results are stored in a new variable, {it:gmean10}. 
+
+ {title:Example 4: Find Standard Deviation: last 5 years excluding the current observation or the most recent one} 
+ {p 4 8 2}{stata "webuse grunfeld" :. webuse grunfeld}{p_end}
+ {p 4 8 2}{stata "bys company: asrol invest, stat(sd) win( year -5 -1) " :. bys company: asrol invest, stat(sd) win(year -5 -1)} {p_end}
+ 
+ {p 4 4 2} The above command calculates standard deviation for the {it:invest} variable
+ using a 5 years rolling window, from past 5 years, excluding the most recent
+ observation (the focal observation). Therefore, this window uses effectively
+  4 observations. {p_end}
 
    
  {title:Example 5: Find 75th percentile in a rolling window of 4 years} 
  {p 4 8 2}{stata "webuse grunfeld" :. webuse grunfeld}{p_end}
- {p 4 8 2}{stata "bys company: asrol invest, stat(median) win(year 4) perc(.75) " :. bys company: asrol invest, stat(median) win(year 4) perc(.75) } {p_end}
- 
+ {p 4 4 2}{stata "bys company: asrol invest, stat(median) win(year 4) perc(.75) " :. bys company: asrol invest, stat(median) win(year 4) perc(.75) } {p_end}
+
+ {p 4 4 4} OR {p_end}
+ {p 4 8 2}{stata "bys company: asrol invest, stat(median) win(year -4 0) perc(.75) " :. bys company: asrol invest, stat(median) win(year -4 0) perc(.75) } {p_end}
+
  
  {title:Example 6:  5-period rolling median with minimum of 3 observatons} 
  
@@ -340,61 +464,96 @@ stores the results in a new variable, {it:mean4_invest}.
  {p 4 8 2}{stata "bys company: asrol invest, stat(mean) win(year 5) min(3) " :. asrol invest, stat(median) win(year 5) min(3) }
 
  
- {title:Example 7:  Rolling mean with minimum number of observaton while excluding focal observation} 
+ {title:Example 7:  Excluding focal observation} 
  
  {p 4 8 2}{stata "webuse grunfeld" :. webuse grunfeld}{p_end}
- {p 4 8 2}{stata "bys company: asrol invest, stat(mean) win(year 4) xf(focal) " :bys company: asrol invest, stat(mean) win(year 4) xf(focal) } {p_end}
+ {p 4 8 2}{stata "bys company: asrol invest, stat(mean) xf(focal) " :. bys company: asrol invest, stat(mean) xf(focal) } {p_end}
 
  
-  {title:Example 8:  Find 5-periods rolling mean for three variables in one go} 
- 
- {p 4 8 2}{stata "webuse grunfeld" :. webuse grunfeld}{p_end}
- {p 4 8 2}{stata "bys company: asrol invest mvalue kstock , stat(mean) win(year 4)" :bys company: asrol invest mvalue kstock, stat(mean) win(year 4) } {p_end}
-
-   {title:Example 9:  Find 5-periods rolling mean, standard deviation, and count for three variables in one go} 
+ {title:Example 8:  Excluding focal by groups} 
  
  {p 4 8 2}{stata "webuse grunfeld" :. webuse grunfeld}{p_end}
- {p 4 8 2}{stata "bys company: asrol invest mvalue kstock , stat(mean sd count) win(year 4)" :bys company: asrol invest mvalue kstock, stat(mean sd count) win(year 4) } {p_end}
-
-
- {title:Example 10: Using by option for two or three variables} 
+ {p 4 8 2}{stata "asrol invest, stat(sd) xf(company) " :. bys company: asrol invest, stat(mean) xf(company) } {p_end}
  
- {p 4 8 2} We shall generate a dummy data of 5 countries, 10 industries, 100 years, and 5000 firms for further examples.  {p_end}
+ {p 4 4 4} {hi: Explanation}: The above command finds standard deviation
+ for whole sample while excluding the focal company. Therefore, when the company
+ is equal to 1, the standard deviation is based on the remaining 19 companies.
+ Similarly, when the comapny is 2, the standard deviation is based on the first
+ company, and companies 3 to 20.
+ 
+ 
+ {title:Example 9:  Find 5-periods rolling mean for three variables in one go} 
+ 
+ {p 4 8 2}{stata "webuse grunfeld" :. webuse grunfeld}{p_end}
+ {p 4 8 2}{stata "bys company: asrol invest mvalue kstock , stat(mean) win(year -5 0)" :. bys company: asrol invest mvalue kstock, stat(mean) win(year -5 0) } {p_end}
 
- {space 6}{hline 15} {hi:copy the following and run from do editor} {hline 15}
+ {title:Example 10:  Find 5-periods rolling mean, standard deviation, and count for three variables in one go} 
+ 
+ {p 4 8 2}{stata "webuse grunfeld" :. webuse grunfeld}{p_end}
+ {p 4 8 2}{stata "bys company: asrol invest mvalue kstock , stat(mean sd count) win(year -5 0)" :. bys company: asrol invest mvalue kstock, stat(mean sd count) win(year -5 0) } {p_end}
+
+
+ {title:Example 11: Using by option for two or three variables} 
+ 
+ {p 4 8 2} We shall generate a dummy data of 5 countries, 10 industries, 100 months, and 5000 firms for further examples.  {p_end}
+
+ {space 6}{hline 15} {hi:copy the following code and run from do editor} {hline 15}
 	clear
 	set obs 5000
 	gen company=_n
 	expand 100
-	bys company: gen year=_n+1950
+	bys company: gen months=_n+600
+	format %tm months
 	bys company: gen industry=mod(company, 10)+1
 	bys industry: gen country=mod(industry, 5)+1
-	order company year industry country
-	sort company year
-	gen profit=uniform()			 
+	order company months industry country
+	sort company months
+	gen returns = 0.0071 + 0.0436*(rnormal())
+	sort company months
 {space 8}{hline 70}
 
 
-{title:Example 11: Mean by country and industry in a rolling window of 10 years} 
+{title:Example 12: Mean by country and industry in a rolling window of 10 months} 
  
- {p 4 8 2}{stata "bys country industry: asrol profit, stat(mean) win(year 10)" :. bys country industry: asrol profit, stat(mean) win(year 10)} {p_end}
-
- 
-{title:Example 12: Mean by country and industry without a rolling window} 
-
- {p 4 8 2}{stata "bys country industry: asrol profit, stat(mean)" :. bys country industry: asrol profit, stat(mean)} {p_end}
+ {p 4 8 2}{stata "bys country industry: asrol returns, stat(mean) win(months -10 0)" :. bys country industry: asrol returns, stat(mean) win(months -10 0)} {p_end}
 
  
- {title:Example 13: Mean by country and industry in a rolling window of 12 years and excluding focal observation} 
+{title:Example 13: Mean by country and industry without a rolling window} 
 
- {p 4 8 2}{stata "bys country industry: asrol profit, stat(mean) win(year 12) xf(focal)" :. bys country industry: asrol profit, stat(mean) win(year 12) xf(focal)} {p_end}
+ {p 4 8 2}{stata "bys country industry: asrol returns, stat(mean)" :. bys country industry: asrol returns, stat(mean)} {p_end}
 
  
- {title:Example 14: Mean by country and industry in a rolling window of 12 years and excluding focal observation based on year} 
+ {title:Example 14: Mean by country and industry in a rolling window of 12 months and excluding focal observation} 
 
- {p 4 8 2}{stata "bys country industry: asrol profit, stat(mean) win(year 12) xf(year)" :. bys country industry: asrol profit, stat(mean) win(year 12) xf(year)} {p_end}
+ {p 4 8 2}{stata "bys country industry: asrol returns, stat(mean) win(months -12 -1)" :. bys country industry: asrol returns, stat(mean) win(months -12 -1)} {p_end}
 
+ 
+ {title:Example 15: Mean by country in a rolling window of 12 months and excluding focal observation based on a grouping variable: in our case let us use the grouping variable {it: indstry}} 
 
+ {p 4 8 2}{stata "bys country: asrol returns, stat(mean) win(months -12 0) xf(industry)" :. bys country: asrol returns, stat(mean) win(months -12 0) xf(industry)} {p_end}
+
+ {title:Example 16: 11-months cumulative returns over t-12 up to t-2 months}
+
+ {p 4 8 2}{stata "bys comapny: asrol returns, stat(product) add(1) win(months -13 -2)" :. bys comapny: asrol returns, stat(product) add(1) win(months -13 -2)}{p_end}
+
+ {p 4 4 4} {hi: Explanation}: 
+ The above interpretation of the option window might be confusing when
+   implementing a definition that is based on t-# up to t-#2. However, 
+   the above example should  clarify such a confusion, if any. Consider a
+   stock momentum strategy that asks for cumulative returns over the previous
+   11 months from t-12 upto t-2. Let's say that we estimate this cumulative
+   return using the product method and adding 1 to the returns, which asrol
+   will automatically deduct at the end. Now assume that we are currently 
+   at the end of December 2019. This strategy will include the 
+   following months in the calculations  which are shown in the bold 
+    and exclude the ones that are shown without bold face : 
+   {hi:Dec-18, Jan-19, Feb-19, Mar-19, Apr-19, May-19, Jun-19, Jul-19, Aug-19, Sep-19, Oct-19}, Nov-19, Dec-19. 
+   From Dec-18 upto Dec-19, there are 13 months. 
+   To implement this using asrol, the window argument is written as:{break}
+   
+		{p 8 8 8}{opt w:indow(months -13 -2)}{p_end}
+   
+   
 {title:Author}
 
 
@@ -403,8 +562,8 @@ stores the results in a new variable, {it:mean4_invest}.
 *            Dr. Attaullah Shah                                     *
 *            Institute of Management Sciences, Peshawar, Pakistan   *
 *            Email: attaullah.shah@imsciences.edu.pk                *
-*           {browse "www.StataProfessor.com": www.StataProfessor.com}                                 *
 *           {browse "www.OpenDoors.Pk": www.OpenDoors.Pk}                                       *
+*           {browse "www.StataProfessor.com": www.FinTechProfessor.com}                               *
 *:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::*
 
 
@@ -412,14 +571,15 @@ stores the results in a new variable, {it:mean4_invest}.
 {title:Also see}
 
 {psee}
-{help rolling}, 
-{stata "ssc desc astile":astile}, 
-{stata "ssc desc ascol":ascol}, 
-{stata "ssc desc asreg":asreg},
-{browse "http://www.opendoors.pk/asm":asm},
-{stata "ssc desc astx":astx},
-{stata "ssc desc searchfor":searchfor}.
-
+{browse "http://www.opendoors.pk/home/paid-help-in-empirical-finance/stata-program-to-construct-j-k-overlappy-momentum-portfolios-strategy": asm    : for momentum portfolios}   {p_end}
+{psee}{browse "https://FinTechProfessor.com/asdocx":asdocx : Easily create publication-quality tables from Stata and export to Word, Excel, LaTeX} {p_end}
+{psee}{stata "ssc desc asdoc":asdoc : Easily create publication-quality tables from Stata } {p_end}
+{psee}{stata "ssc desc astile":astile : for creating fastest quantile groups} {p_end}
+{psee}{stata "ssc desc asreg":asgen : for weighted average mean} {p_end}
+{psee}{stata "ssc desc asrol":asrol : for rolling-window statistics} {p_end}
+{psee}{stata "ssc desc asreg":asreg : for rolling-window, by-group, and Fama and MacBeth regressions} {p_end}
+{psee}{stata "ssc desc ascol":ascol : for converting asset returns and prices from daily to a weekly, monthly, quarterly, and yearly frequency}{p_end}
+{psee}{stata "ssc desc searchfor":searchfor : for searching text in data sets} {p_end}
 
 {title:Acknowledgements}
 

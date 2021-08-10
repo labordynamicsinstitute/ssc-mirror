@@ -4,30 +4,35 @@ version 12.0
 args argument
 *False discovery risk with 95% confidence level:
 if "`argument'"=="example1"{
-	fdrisk, sgpval(0)  nulllo(log(1/1.1)) nullhi(log(1.1))  stderr(0.8)  nullweights("Uniform")  nullspace(log(1/1.1) log(1.1)) /// 
-		altweights("Uniform") altspace("2-1*invnorm(1-0.05/2)*0.8" "2+1*invnorm(1-0.05/2)*0.8") inttype("confidence")  intlevel(0.05) 
+	noisily disp `"fdrisk, nulllo(log(1/1.1)) nullhi(log(1.1))  stderr(0.8) nullspace(log(1/1.1) log(1.1)) altspace("2-1*invnorm(1-0.05/2)*0.8" "2+1*invnorm(1-0.05/2)*0.8") level(95)"'
+	noisily fdrisk, nulllo(log(1/1.1)) nullhi(log(1.1))  stderr(0.8) nullspace(log(1/1.1) log(1.1))  ///
+		   altspace("2-1*invnorm(1-0.05/2)*0.8" "2+1*invnorm(1-0.05/2)*0.8") level(95) 
 	}
 	
 	*False discovery risk with 1/8 likelihood support level:
-if "`argument'"=="example2a"{	
-	fdrisk, sgpval(0)  nulllo(log(1/1.1)) nullhi(log(1.1))  stderr(0.8)   nullweights("Point")  nullspace(0) /// 
-		altweights("Uniform") altspace("2-1*invnorm(1-0.041/2)*0.8" "2+1*invnorm(1-0.041/2)*0.8")  inttype("likelihood")  intlevel(1/8) 
+if "`argument'"=="example2a"{
+	noisily disp `"fdrisk, nulllo(log(1/1.1)) nullhi(log(1.1)) stderr(0.8) nullspace(0) altspace("2-1*invnorm(1-0.041/2)*0.8" "2+1*invnorm(1-0.041/2)*0.8") likelihood(0.125)"'	
+	noisily fdrisk, nulllo(log(1/1.1)) nullhi(log(1.1)) stderr(0.8) nullspace(0) /// 
+		 altspace("2-1*invnorm(1-0.041/2)*0.8" "2+1*invnorm(1-0.041/2)*0.8") likelihood(0.125)
 	}
 	
 	*with truncated normal weighting distribution:
 if "`argument'"=="example2b"{
-	fdrisk, sgpval(0)  nulllo(log(1/1.1)) nullhi(log(1.1))  stderr(0.8)   nullweights("Point")  nullspace(0)  altweights("TruncNormal") ///
-		altspace("2-1*invnorm(1-0.041/2)*0.8" "2+1*invnorm(1-0.041/2)*0.8")  inttype("likelihood")  intlevel(1/8)
+	noisily disp `"fdrisk, nulllo(log(1/1.1)) nullhi(log(1.1)) stderr(0.8) nullspace(0) alttruncnormal altspace("2-1*invnorm(1-0.041/2)*0.8" "2+1*invnorm(1-0.041/2)*0.8") likelihood(0.125)"'
+	noisily fdrisk, nulllo(log(1/1.1)) nullhi(log(1.1)) stderr(0.8) nullspace(0) alttruncnormal ///
+		altspace("2-1*invnorm(1-0.041/2)*0.8" "2+1*invnorm(1-0.041/2)*0.8") likelihood(0.125)
 }
 
 *False discovery risk with LSI and wider null hypothesis:
 if "`argument'"=="example3"{
-	fdrisk, sgpval(0)  nulllo(log(1/1.5)) nullhi(log(1.5))  stderr(0.8)   nullweights("Point")  nullspace(0)  altweights("Uniform") ///
-		altspace("2.5-1*invnorm(1-0.041/2)*0.8" "2.5+1*invnorm(1-0.041/2)*0.8")  inttype("likelihood")  intlevel(1/8)
+	noisily disp `"fdrisk, nulllo(log(1/1.5)) nullhi(log(1.5)) stderr(0.8) nullspace(0) altspace("2.5-1*invnorm(1-0.041/2)*0.8" "2.5+1*invnorm(1-0.041/2)*0.8")  likelihood(0.125)"'
+	noisily fdrisk, nulllo(log(1/1.5)) nullhi(log(1.5)) stderr(0.8) nullspace(0) ///
+	altspace("2.5-1*invnorm(1-0.041/2)*0.8" "2.5+1*invnorm(1-0.041/2)*0.8")  likelihood(0.125)
 }
 *False confirmation risk example:
 if "`argument'"=="example4"{
-	fdrisk, sgpval(1)  nulllo(log(1/1.5)) nullhi(log(1.5))  stderr(0.15)   nullweights("Uniform") nullspace("0.01 - 1*invnorm(1-0.041/2)*0.15" "0.01 + 1*invnorm(1-0.041/2)*0.15") ///
-		altweights("Uniform")  altspace(log(1.5) 1.25*log(1.5))  inttype("likelihood")  intlevel(1/8) 
+	noisily disp `"fdrisk, fcr nulllo(log(1/1.5)) nullhi(log(1.5)) stderr(0.15) nullspace("0.01 - 1*invnorm(1-0.041/2)*0.15" "0.01 + 1*invnorm(1-0.041/2)*0.15") altspace(log(1.5) 1.25*log(1.5))  likelihood(0.125)"'
+	noisily fdrisk, fcr nulllo(log(1/1.5)) nullhi(log(1.5)) stderr(0.15) /// 
+	nullspace("0.01 - 1*invnorm(1-0.041/2)*0.15" "0.01 + 1*invnorm(1-0.041/2)*0.15") altspace(log(1.5) 1.25*log(1.5))  likelihood(0.125)
 	}
 		

@@ -1,4 +1,4 @@
-*! version 2.13  April 8, 2021 @ 09:13:05 UK
+*! version 2.15  Juli 6, 2021 @ 08:24:14 UK
 * 2.11 Better error messages for missing files and wealth vars ..
 * 2.10 Main release for SSC and Stata User Meeting
 * 1.01 Re-design - psiduse/psidadd -> -psid use- -psid add-/alpha tester version
@@ -10,6 +10,8 @@
 * 2.11 Updated to PSID delivery 2017
 * 2.12 Bug fix
 * 2.13 Updated to PSID delivery 2019
+* 2.14 Bug fix
+* 2.15 Bug fix
 
 * Selector Program
 program psid
@@ -162,7 +164,7 @@ program psid_main
 		foreach filetype of local vtypes {
 			foreach wave of local wavelist {
 				if "``filetype'`wave''" != "" {
-					noi _PROCESS_WAVEFILES_`filetype' ``filetype'`wave'' using `"`using'"' ///
+					_PROCESS_WAVEFILES_`filetype' ``filetype'`wave'' using `"`using'"' ///
 					  , wave(`wave') doc(`doc') idfam(`idfam') `lower'
 					tempfile x`filetype'`wave'
 					`doc' save `x`filetype'`wave'', replace
@@ -174,7 +176,7 @@ program psid_main
 		
 		// Retain datasets from constant files 
 		foreach filetype of local ctypes {
-			noi _PROCESS_`filetype' ``filetype'vars'  ///
+			_PROCESS_`filetype' ``filetype'vars'  ///
 			  using `"`using'"', doc(`doc') `lower' indfile(`indfile') delivery(`delivery') 
 			tempfile x`filetype'
 			`doc' save `x`filetype'', replace
@@ -194,7 +196,7 @@ program psid_main
 				local specialyearincluded: list wavelist & specialyear
 				if "`specialyearincluded'" == "" local wavelist `wavelist' `specialyear'
 			}
-			noi _PROCESS_INDFILE `indvars' using `"`using'"' ///
+			_PROCESS_INDFILE `indvars' using `"`using'"' ///
 			  , wavelist(`wavelist') design(`design')  ///
 			  indfile(`indfile') idind(`idind') sqind(`sqind')  ///
 			  doc(`doc') `lower'
@@ -961,7 +963,6 @@ program _SET_DELIVERY, rclass
 	  [03] `er'33701 [05] `er'33801 [07] `er'33901 [09] `er'34001  ///
 	  [11] `er'34101 [13] `er'34201 [15] `er'34301 [17] `er'34501  ///
 	  [19] `er'34701
-
 	
 	local idfam ///
 	  [68] `v'3      [69] `v'442    [70] `v'1102   [71] `v'1802   [72] `v'2402  [73] `v'3002    ///  
@@ -971,7 +972,7 @@ program _SET_DELIVERY, rclass
 	  [89] `v'16302  [90] `v'17702  [91] `v'19002  [92] `v'20302  [93] `v'21602   /// 
 	  [94] `er'2002  [95] `er'5002  [96] `er'7002  [97] `er'10002 [99] `er'13002  /// 
 	  [01] `er'17002 [03] `er'21002 [05] `er'25002 [07] `er'36002 [09] `er'42002  ///
-	  [11] `er'47302 [13] `er'53002 [15] `er'60002 [17] `er'66002 [19] `er'34701
+	  [11] `er'47302 [13] `er'53002 [15] `er'60002 [17] `er'66002 [19] `er'72002
 
 	local sqind ///
 	  [69] `er'30021 [70] `er'30044 [71] `er'30068 [72] `er'30092 [73] `er'30118 [74] `er'30139  ///

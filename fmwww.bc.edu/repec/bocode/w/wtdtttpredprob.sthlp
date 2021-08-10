@@ -63,7 +63,7 @@ datasets and both are enclosed.
 
 {title:Author}
 
-{pstd}Katrine Bødkergaard Nielsen, Aarhus University, kani@ph.au.dk.
+{pstd}Katrine Bødkergaard Nielsen, Aarhus University, kani@clin.au.dk.
 
 {pstd}Henrik Støvring, Aarhus University, stovring@ph.au.dk.
 

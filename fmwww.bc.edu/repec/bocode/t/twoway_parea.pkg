@@ -17,11 +17,10 @@ d
 d Author: Sergiy Radyakin, Development Economics Research Group, World Bank
 d Support: email sradyakin@@worldbank.org
 d
-f WIN64 twoway_parea.hlp
 f ../y/yxview_parea_draw.ado
 f ../p/parea_g.class
 f ../p/pareakey_g.class
 f twoway_parea_parse.class
 f ../y/yxtype-parea.style
 f ../p/pareademo.do
-h twoway_parea.hlp
+f twoway_parea.hlp

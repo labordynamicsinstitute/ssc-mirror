@@ -1,5 +1,5 @@
 ﻿{smcl}
-{* *! version 1.0.2)}
+{* *! version 1.0.6)}
 {hline}
 {cmd:help clan}{right: ({})}
 {hline}
@@ -33,7 +33,7 @@ cluster randomised trial{p_end}
         {opt eff:ect(effect)}
         [{it:options}]
 
-{synoptset 29 tabbed}{...}
+{synoptset 30 tabbed}{...}
 {marker options}
 {marker options_table}{...}
 {synopthdr}
@@ -43,16 +43,16 @@ cluster randomised trial{p_end}
 arms{p_end}
 {p2coldent :* {opth clus:ter(varname)}}variable defining the 
 clusters{p_end}
-{p2coldent :* {opth eff:ect(clan##effspec:effect)}}a descriptor 
-telling {cmd:clan} which effect estimate you want to produce{p_end}
+{p2coldent :* {opth eff:ect(clan##effspec:effect)}}the effect estimate you want to produce{p_end}
 {synopt :{opth str:ata(varname)}}variable defining the (single) 
 stratification factor used in the trial{p_end}
-{synopt :{opth fup:time(varname)}}variable describing the follow-up 
-time in trials where the outcome is time-to-event{p_end}
+{synopt :{cmdab:fup:time(}{it:{help varname}} [, {cmd:scale(}{it:#}{cmd:)])}}variable describing the follow-up 
+time in trials where the outcome is a rate (events/person-time) and rescaling 
+option {p_end}
 {synopt :{opt plot}}produce a scatter plot of cluster summaries
 {p_end}
-{synopt: {cmdab:sav:ing(}{it:{help filename}}[{cmd:, replace}]{cmd:)}}
-save the cluster-level dataset in {it:filename.dta}. {p_end}
+{synopt: {cmdab:sav:ing(}{it:{help filename}} [{cmd:, replace}]{cmd:)}}
+save the cluster-level dataset in {it:filename.dta}{p_end}
 {synopt :{opth l:evel(#)}}set the level for confidence intervals; 
 default is 95%{p_end}
 {synoptline}
@@ -69,7 +69,7 @@ contain interactions{p_end}
 {synopt :{opt rd}}risk difference{p_end}
 {synopt :{opt rater}}rate ratio{p_end}
 {synopt :{opt rated}}rate difference{p_end}
-{synopt :{opt mean}}mean difference{p_end}
+{synopt :{opt meand}}mean difference{p_end}
 {synoptline}
 
 {marker description}{...}
@@ -82,15 +82,21 @@ individual- and cluster-level covariates. {it: depvar} gives the
 outcome, and {it: indepvars} give adjustment covariates.
 
 {pstd}
+The general idea of a cluster level analysis is that a summary 
+statistic (mean, proportion, or rate) is calculated for each
+cluster, and these can then be compared between trial arms
+as independent observations.
+
+{pstd}
 If any independent variables are included, an appropriate regression 
-model (logistic, linear, or Poisson) is run on the outcome with these
- variables but {it:without} the arm variable and {it:ignoring} 
- clustering. The residuals are then summarised by cluster. If no 
- independent variables are included, the outcome itself is summarised
- by cluster. For a binary outcome, these summaries are cluster 
- proportions; for a continuous outcome, they are cluster means; for a
- time-to-event outcome, they are rates. For calculation of ratio 
- estimators, the command uses the logarithm of the summaries.
+model (logistic, linear, or Poisson) is run on the outcome with the 
+independent variables and strata variable but {it:without} the arm 
+variable and {it:ignoring} clustering. The residuals are then summarised 
+by cluster. If no independent variables are included, the outcome itself 
+is summarised by cluster. For a binary outcome, these summaries are 
+cluster proportions; for a continuous outcome, they are cluster means; 
+for a rate (events/person-time) outcome, they are rates. For calculation 
+of ratio estimators, the command uses the logarithm of the summaries.
 
 {pstd}
 These cluster summaries are then compared between the arms in a 
@@ -112,11 +118,11 @@ The data in memory will not be altered by this command.
 {phang}
 {opth arm(varname)} is the variable which identifies the two trial 
 arms.
-It must be coded 0/1.
+It must be coded 0/1
 
 {phang}
 {opth clus:ter(varname)} is the variable which describes the 
-clusters. It must be a numeric variable.
+clusters. It must be a numeric variable
 
 {phang}
 {opt eff:ect(effect)} specifies which measure of effect you wish to 
@@ -124,30 +130,30 @@ calculate. If {it:rr} or {it:rater} are specified, the confidence
 interval will be calculated on the log scale and the estimate will be
  the ratio of geometric means of the cluster summaries. If any 
  cluster has zero events, 0.5 will be added to all cluster totals to
- allow logarithms to be taken.
+ allow logarithms to be taken
 
 {phang}
 {opth str:ata(varname)} is the variable which identifies the 
 stratification used in the trial randomisation. Only one 
-stratification factor is permitted. It must be a numeric variable.
+stratification factor is permitted. It must be a numeric categorical variable
 
 {phang}
-{opth fup:time(varname)} is the variable which gives the length of 
-time each participant was in the study; this is necessary to 
-calculate time-to-event when either rate differences or ratios are to
- be calculated.
+{cmdab: fup:time(}{it:{help varname}}[{cmd:, scale(}{it:#}{cmd:)}]{cmd:)} specifies 
+the length of time each participant or cluster was in the study; this is required to 
+calculate rate differences and ratios. {it:varname} is the variable containing 
+the follow up time. scale(#) gives a rescaling factor for this follow-up time
 
 {phang}
 {opt plot} produces a scatter plot of the cluster summaries used to 
 produce the effect measure. For adjusted analyses these will be 
 summaries of residual values, and hence will not have a direct 
-interpretation.
+interpretation
 
 {phang}
-{cmdab:saving(}{it:{help filename}}[{cmd:, replace}]{cmd:)} saves a 
+{cmdab: saving(}{it:{help filename}}[{cmd:, replace}]{cmd:)} saves a 
 dataset with the cluster summaries. A new filename is required unless
  {opt replace} is also specified. {opt replace} allows the 
- {it:filename} to be overwritten with new data.
+ {it:filename} to be overwritten with new data
 
 {phang}
 {opt l:evel(#)} sets the confidence level; the default is {cmd:level(95)}
@@ -203,7 +209,7 @@ are not interpretable{p_end}
 {synopt:{cmd:e(rr)}}estimated risk ratio{p_end}
 {synopt:{cmd:e(rated)}}estimated rate difference{p_end}
 {synopt:{cmd:e(rater)}}estimated rate ratio{p_end}
-{synopt:{cmd:e(mean)}}estimated mean difference{p_end}
+{synopt:{cmd:e(meand)}}estimated mean difference{p_end}
 
 {p2col 5 20 24 2: Macros}{p_end}
 {synopt:{cmd:e(cmd)}}{cmd:clan}{p_end}

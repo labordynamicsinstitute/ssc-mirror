@@ -1,5 +1,5 @@
 prog def rct_minim
-*! version 2.2.2  Philip Ryan  2018-09-05
+*! version 2.3.0  Philip Ryan  2021-07-20
 * v 1.0 2009-04-13
 * v 1.0.1 change certain global macros to locals
 * v 1.1.0 [2009-04-18] allow more choices of measuring imbalance.
@@ -18,12 +18,13 @@ prog def rct_minim
 * v 2.2.1 formally set random number generator to kiss32 [suggested by Nooreen Dabbish [ooreen.dabbish@jefferson.edu] [2017-03-02]
 * v 2.2.1 add subject counter to screen message showing subject's treatment assignment
 * v 2.2.2 check for Stata Release < or >= 14 to check for valid -set rng- statement and enforce old KISS32 RNG
+* v 2.3.0 add sleep() option to slow program if rapid repeated invocations of rct_minim would mean duplicated seeds; Karla Hemming [K.HEMMING@bham.ac.uk][2021-07-20]
 version 10
 clear
 syntax , FILEstub(string) NT(int) NF(int) NL(string) PCHOICE(string) [MCHOICE(string) P(string) Q(string) T(string)] ///
          [TREATVar(string) FACTNames(string) PATtern(string) W(string) LIMIT(int 1)] ///
-         [SHOWDetail] [WARN] [delay(int 1)]
- 
+         [SHOWDetail] [WARN] [delay(int 1)] [SLEEP(int 0)]
+di "Stata Release `c(stata_version)' is being used" 
 if `=`c(stata_version)'' < 14 {
 local seed `=`=d(`=subinstr("`c(current_date)'", " ", "",.)')' + `=subinstr("`c(current_time)'",":","",.)''
 set seed `seed'
@@ -54,6 +55,11 @@ exit 198
 
 if `nf' < 1 {
 di _new as err "Must specify at least 1 prognostic factor"
+exit 198
+}
+
+if `sleep' < 0 {
+di _new as err "option sleep() must be a non-negative integer"
 exit 198
 }
 
@@ -749,6 +755,10 @@ save `"`filestub'_rand`ext'"', replace
 
 mat drop _all
 set more on
+if `sleep' > 0 {
+di in ye _new " sleeping now....YAWN....."
+}
+sleep `sleep'
 end
 
 

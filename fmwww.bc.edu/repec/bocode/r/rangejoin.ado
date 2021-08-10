@@ -1,4 +1,4 @@
-*! version 1.1.2  25nov2017 Robert Picard
+*! version 1.1.3, 13apr2021, Robert Picard, robertpicard@gmail.com
 *! requires -rangestat- version 1.1.0, available from SSC
 program define rangejoin
 
@@ -46,7 +46,7 @@ program define rangejoin
 	
 	args vkey low high 
 
-	cap confirm numeric var `vkey'
+	cap confirm numeric var `vkey' , exact
 	if _rc == 7 {
 		dis as err "keyvar in the data in memory is not numeric"
 		exit _rc
@@ -129,6 +129,22 @@ program define rangejoin
 
 	if "`keepusing'" != "" qui use `keepusing' `by' `vkey0' using `"`using'"', clear
 	else qui use `"`using'"', clear
+
+	// using must include keyvar; insist that the name matches exactly
+	cap confirm numeric var `vkey0' , exact
+	if _rc == 111 {
+		dis as err "key variable `vkey0' not found in using dataset"
+		exit 111
+	}
+	else if _rc == 7 {
+		dis as err "key variable `vkey0' in using dataset is not numeric"
+		exit 7
+	}
+	else if _rc != 0 {
+		dis as err "invalid key variable name: `vkey0'"
+		exit _rc
+	}
+
 	
 	// obs with missing values in keyvar cannot match
 	qui drop if mi(`vkey0')
@@ -152,15 +168,7 @@ program define rangejoin
 	sidebyside using "`keyuse'", by(`by') prefix(`prefix') suffix(`suffix') `all' nogen
 	local uvars `r(using_vars)'
 
-	// using must include keyvar
-	cap confirm numeric var `vkey'
-	if _rc == 7 {
-		dis as err "key variable `vkey' in using dataset is not numeric"
-		exit 7
-	}
-	else if _rc error _rc
-	
-	
+
 	// an overall observation identifier
 	tempvar n
 	gen long `n' = _n

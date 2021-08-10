@@ -102,3 +102,26 @@ use lastRx_index, clear /* Open dataset in which we predict treatment
 wtdtttpreddur predmeanrxdur, iadmean
 la var predmeanrxdur "Predicted mean duration of Rx"
 bys packsize: list predmeanrxdur if _n == 1
+
+******************************************************************
+* Confidence interval for the percentile when the sample is small
+******************************************************************
+use wtddat_dates, clear
+
+* Draw a 10% random sample
+set seed 1234
+sample 10
+
+wtdttt rx1time, disttype(lnorm) start(1jan2014) end(31dec2014)
+
+* Confidence interval of IAD percentile based on normal approximation
+di "95% CI: [" r(timepercentile)-invnorm(.975)*r(setimepercentile) "; " ///
+r(timepercentile)+invnorm(.975)*r(setimepercentile) "]"
+
+* Confidence interval calculated on log-scale and the back-transformed
+di "95% CI: [" exp(r(logtimeperc)-invnorm(.975)*r(selogtimeperc)) "; " ///
+exp(r(logtimeperc)+invnorm(.975)*r(selogtimeperc)) "]"
+
+* Although the difference between the two intervals is small ([78.7; 89.0] vs
+* [78.9; 89.1]), the confidence interval based on transformation from the 
+* log-scale is to be preferred.

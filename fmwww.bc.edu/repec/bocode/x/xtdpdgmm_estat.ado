@@ -1,4 +1,4 @@
-*! version 2.3.1  08oct2020
+*! version 2.3.7  30jul2021
 *! Sebastian Kripfganz, www.kripfganz.de
 
 *==================================================*
@@ -373,7 +373,8 @@ program define xtdpdgmm_estat_hausman, rclass
 				loc varlist			: list bvars`e' - cons
 			}
 			else {
-				tsunab varlist		: `varlist'
+				fvexpand `varlist'
+				loc varlist			"`r(varlist)'"
 			}
 			if `df' > `: word count `varlist'' {
 				di as err "option df() incorrectly specified -- outside of allowed range"
@@ -463,12 +464,28 @@ end
 **** computation of Andrews-Lu MMSC statistics ****
 program define xtdpdgmm_estat_mmsc, rclass
 	version 13.0
-	syntax [namelist(id="estimation results")] , [HQ(real 1.01)]
+	syntax [namelist(id="estimation results")] , [N(string) HQ(real 1.01)]
 
 	if `hq' <= 1 {
 		di as txt "note: HQ factor must be larger than 1 for consistency of MMSC-HQIC"
 	}
-	loc ngroups			= e(N_g)
+	if "`n'" == "" {
+		loc n				= cond(e(N_clust) != e(N_g) & e(N_clust) < ., "N_clust", "N_g")
+	}
+	else if "`n'" == substr("groups", 1, max(2, `: length loc n')) {
+		loc n				"N_g"
+	}
+	else if "`n'" == substr("cluster", 1, max(2, `: length loc n')) {
+		loc n				= cond(e(N_clust) < ., "N_clust", "N_g")
+	}
+	else if "`n'" == "obs" {
+		loc n				"N"
+	}
+	else {
+		di as err "option n() incorrectly specified"
+		exit 198
+	}
+	loc ngroups			= e(`n')
 	loc J				= e(chi2_J)
 	loc nmom			= e(zrank) + e(zrank_nl)
 	loc npar			= e(rank)
@@ -482,10 +499,14 @@ program define xtdpdgmm_estat_mmsc, rclass
 			if "`e(cmd)'" != "xtdpdgmm" {
 				qui est res `xtdpdgmm_e'
 				est drop `xtdpdgmm_e'
-				di as err "`name' is not supported by estat overid"
+				di as err "`name' is not supported by estat mmsc"
 				exit 322
 			}
-			loc ngroups`e'		= e(N_g)
+			loc ngroups`e'		= e(`n')
+			if `ngroups`e'' >= . {
+				di as err "cluster-robust results not found for estimation results `name'"
+				exit 322
+			}
 			loc J`e'			= e(chi2_J)
 			loc nmom`e'			= e(zrank) + e(zrank_nl)
 			loc npar`e'			= e(rank)
@@ -503,9 +524,10 @@ program define xtdpdgmm_estat_mmsc, rclass
 			loc rspec			"`rspec'&"
 		}
 	}
-	mat coln `S' = ngroups J nmom npar MMSC-AIC MMSC-BIC MMSC-HQIC
+	mat coln `S' = N J nmom npar MMSC-AIC MMSC-BIC MMSC-HQIC
 	mat rown `S' = . `namelist'
 	matlist `S', cspec(& %12s | %7.0f & %9.4f & %4.0f & %4.0f & %9.4f & %9.4f & %9.4f &) rspec(&|&`rspec') row("Model")
+	di _n as txt "note: MMSC-BIC and MMSC-HQIC use N = e(`n')"
 
 	ret mat S			= `S'
 end

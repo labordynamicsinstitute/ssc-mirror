@@ -21,8 +21,8 @@ d Requires: Stata version 16 and bspline from SSC (q.v.)
 d
 d Distribution-Date: 20200405
 d
-d Author: Roger Newson, Imperial College London
-d Support: email r.newson@@imperial.ac.uk
+d Author: Roger Newson,  King's College London
+d Support: email roger.newson@@kcl.ac.uk
 d
 f polyspline.ado
 f polyspline.sthlp

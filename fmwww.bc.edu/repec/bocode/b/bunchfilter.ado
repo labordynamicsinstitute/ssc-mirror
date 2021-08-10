@@ -1,4 +1,5 @@
-*! ver 1.5; 2020-09-05
+*! ver 1.6; 2021-05-25
+*  ver 1.5; 2020-09-05
 *  ver 1.4; 2020-05-21
 *  ver 1.3; 2020-04-24
 *  ver 1.2; 2019-11-20
@@ -9,7 +10,7 @@ program define bunchfilter, sortpreserve rclass
         version 14
 		syntax varname(numeric) [if] [in] [fw] ///
 		, GENerate(name) DELTAM(real) DELTAP(real) Kink(real) ///
-		[ NOPIC BINWidth(real 9999425) PERC_obs(integer 40) POLorder(integer 7) ]
+		[ NOPIC BINWidth(real 9999425) PCTobs(integer 40) POLorder(integer 7) ]
 		
 		********************************************************************************************
 		*1. SETUP
@@ -39,8 +40,8 @@ program define bunchfilter, sortpreserve rclass
 				di as err "option {bf:binwidth()} incorrectly specified: must be strictly bigger than 0"
 				exit 198
 		}
-		if `perc_obs' <= 0 | `perc_obs' >= 100  {
-				di as err "option {bf:perc_obs()} incorrectly specified: must be integer between 1 and 99"
+		if `pctobs' <= 0 | `pctobs' >= 100  {
+				di as err "option {bf:pctobs()} incorrectly specified: must be integer between 1 and 99"
 				exit 198
 		}
 		if `polorder' < 2 | `polorder' > 7  {
@@ -52,7 +53,7 @@ program define bunchfilter, sortpreserve rclass
         * 3. setup variables
 		tokenize `varlist'
 		** variables:
-        * trunc = truncation to perc_obs% around the kink
+        * trunc = truncation to pctobs% around the kink
         * id_obs = sorting order
 		* right = dummy for obs on the right of the kink
 		* cdf_y_i_1 = CDF with friction error
@@ -60,7 +61,7 @@ program define bunchfilter, sortpreserve rclass
 		* copy = a copy of the unfiltered variable
 		* delta_cdf = a delta betweeb current and previous value - make sure cdf0 is monotonically increasing 
         qui {
-                tempvar test_perc_obs temp trunc id_obs right cdf_y_i_1 copy cdf_y_i_0 delta_cdf			//variables
+                tempvar test_pctobs temp trunc id_obs right cdf_y_i_1 copy cdf_y_i_0 delta_cdf			//variables
 				tempname R2 vars_dropped num_drop cdf_y_i_0_p cdf_y_i_0_m Bhat cdf_y_i_1_val y_i_min 		//scalars
                 gen double `copy' = `1' if `touse'
 				
@@ -77,13 +78,13 @@ program define bunchfilter, sortpreserve rclass
 		********************************************************************************************
 		*truncation:
 		***for better fit, polynomial filtering works within a window around the kink that
-		***has perc_obs% of the data 
+		***has pctobs% of the data 
 		***WARNING: make sure the window [ k-deltam; k+deltap] contains way less data 
-		***than perc_obs% of the data
-		qui gen `test_perc_obs' = (`kink' - `deltam' <= `copy') * (`copy' <= `deltap' + `kink') if `touse'
-		qui sum `test_perc_obs'
-		if `r(mean)' * 100 > `perc_obs' {
-				di as err "Truncation window is too small compared to excluded region. Either increase the truncation window (perc_obs) or decrease excluded region (deltam, deltap)."
+		***than pctobs% of the data
+		qui gen `test_pctobs' = (`kink' - `deltam' <= `copy') * (`copy' <= `deltap' + `kink') if `touse'
+		qui sum `test_pctobs'
+		if `r(mean)' * 100 > `pctobs' {
+				di as err "Truncation window is too small compared to excluded region. Either increase the truncation window (pctobs) or decrease excluded region (deltam, deltap)."
 				exit 2001
 		}
 		
@@ -93,9 +94,9 @@ program define bunchfilter, sortpreserve rclass
 		*3. Estimate CDF with friction error
 		********************************************************************************************
 		*generate trunc dummy
-		***truncation to perc_obs% around the kink
+		***truncation to pctobs% around the kink
 		qui gen `temp' = abs(`copy' - `kink') if `touse'
-		_pctile `temp' [`weight'`exp'], percentiles(`perc_obs')
+		_pctile `temp' [`weight'`exp'], percentiles(`pctobs')
 		qui gen `trunc' = abs(`copy' - `kink') <= r(r1) if `touse'
 
 		*sorting
@@ -125,11 +126,11 @@ program define bunchfilter, sortpreserve rclass
 		local covariates = `polorder' + 1 
 		* rule of a thumb: need 10-20 observations per parameter (covariate)
 		if `reg_obs' < `covariates' {
-				di as err "Not enough observations to run polynomial regression. Try increasing estimation window using perc_obs."
+				di as err "Not enough observations to run polynomial regression. Try increasing estimation window using pctobs."
 				exit 2001
 		}
 		else if `reg_obs' < `covariates' * 10 {
-				di as result "Warning: low number of observations to run polynomial regression:`reg_obs' observations for `covariates' parameters. Try increasing estimation window using option perc_obs"
+				di as result "Warning: low number of observations to run polynomial regression:`reg_obs' observations for `covariates' parameters. Try increasing estimation window using option pctobs"
 		}
 		
 		

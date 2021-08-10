@@ -9,18 +9,30 @@
 *	implemented correction to SiM paper (eq.13)	 *
 *	for survival outcomes, removing the effect	 *
 *	of time units								 *
-*  1.0.2 J. Ensor								 *
+*  Updated: 24/07/20							 *
+*	- calculation of shrinkage for each criteria *
+*	based on N needed in specific criteria		 *
+*	- also allowance for the unique scenario 	 *
+*	when starting N already meets shrinkage 	 *
+*	requirement set by user (continuous outcomes)*
+*  Updated: 17/05/21							 *
+*	- added function to allow user to specify 	 *
+*	C-statistic instead of R-sq					 *
+*	- added addtional parameter checks			 *
+*												 *
+*  1.1.0 J. Ensor								 *
 **************************************************
 
-*! 1.0.2 J.Ensor 13Nov2019
-
+*! 1.1.0 J.Ensor 17May2021
 
 program define pmsampsize, rclass
 
 version 12.1
 
 /* Syntax
-	TYPE = define type of outcome model to calculate development sample size for
+	CONTINUOUS = use pmsampsize for continuous outcome model sample size
+	SURVIVAL = use pmsampsize for survival outcome model sample size
+	BINARY = use pmsampsize for binary outcome model sample size
 	RSQUARED = R-sq adjusted
 	PARAMETERS = number of parameters to be estimated in model
 	SHRINKAGE = required shrinkage of development model
@@ -33,20 +45,42 @@ version 12.1
 	SD = population (null model) standard deviation i.e. sigma(null) (e.g. SD 
 				in the mean blood pressure in the target population
 	MMOE = set MMOE threshold for acceptable precision of intercept 95% CI
-				
+	CSTATISTIC = approximates R-sq adjusted from C-stat and prevalence
+	SEED = set seed for calculation of approx. R-sq from C-stat			
 */
 
-syntax ,  RSQuared(real) PARameters(int) TYPE(string) ///
-			[Shrinkage(real 0.9) RATE(real 0) MEANFup(real 0) ///
-			TIMEpoint(real 0) INTercept(real 0) SD(real 0) ///
+syntax ,   PARameters(int) TYPE(string) ///
+			[RSQuared(real 0) Shrinkage(real 0.9) ///
+			CSTATistic(real 0) SEED(int 123456) ///
+			RATE(real 0) MEANFup(real 0) TIMEpoint(real 0) ///
+			INTercept(real 0) SD(real 0) ///
 			PREValence(real 0) MMOE(real 1.1)]
 
 
 ***********************************************
 
 if "`type'"=="b" {
+	if `cstatistic'!=0 {
+		
+		if `rsquared'!=0 {
+			di as err "Only one of rsquared() or cstatistic() can be specified"
+			error 103
+		}
+		
+		cstat2rsq , c(`cstatistic') prev(`prevalence') seed(`seed')
+		local rsquared = r(coxsnell_r2)
+		return scalar cstatistic = r(cstatistic)
+		return scalar seed = r(seed)
+	}
+	else {
+		if `rsquared'==0 {
+			di as err "One of rsquared() or cstatistic() must be specified"
+			error 103
+		}
+	}
+		
 	binary_samp_size, rsq(`rsquared') par(`parameters') prev(`prevalence') ///
-		s(`shrinkage')
+		s(`shrinkage') 
 	
 	// return list
 	return scalar final_shrinkage = r(final_shrinkage)
@@ -64,7 +98,10 @@ if "`type'"=="b" {
 	else if "`type'"=="c" {
 		
 ***********************************************
-
+	if `rsquared'==0 {
+				di as err "rsquared() must be specified"
+				error 103
+			}
 
 	continuous_samp_size , rsq(`rsquared') par(`parameters') int(`intercept') ///
 		sd(`sd') s(`shrinkage') mmoe(`mmoe')
@@ -83,7 +120,10 @@ if "`type'"=="b" {
 	else if "`type'"=="s" {
 		
 ***********************************************
-
+	if `rsquared'==0 {
+			di as err "rsquared() must be specified"
+			error 103
+		}
 
 	survival_samp_size , rsq(`rsquared') par(`parameters') rate(`rate') ///
 		time(`timepoint') meanfup(`meanfup') s(`shrinkage') 
@@ -128,7 +168,37 @@ version 12.1
 syntax ,  RSQuared(real) PARameters(int) ///
 			PREValence(real) [Shrinkage(real 0.9)] 
 
+// check inputs
+	if `rsquared'>=0 & `rsquared'<=1 { 
+		}
+		else {
+			di as err "R-sq must lie in the interval [0,1]"
+			error 459
+			}
+			
+	if `prevalence'>=0 & `prevalence'<=1 { 
+		}
+		else {
+			di as err "Prevalence must lie in the interval [0,1]"
+			error 459
+			}
+			
+	if `parameters'>0 { 
+		}
+		else {
+			di as err "Parameters must be greater than 0"
+			error 459
+			}
+			
+	if `shrinkage'>=0 & `shrinkage'<=1 { 
+		}
+		else {
+			di as err "Shrinkage must lie in the interval [0,1]"
+			error 459
+			}
+			
 local r2a = `rsquared'
+local DIr2a : di %5.4f `r2a'
 local n1 = `parameters'
 local n2 = `parameters'
 local n3 = `parameters'
@@ -142,14 +212,15 @@ local n3 = `parameters'
 	
 	// criteria 2 - small absolute difference in r-sq adj
 	local lnLnull = (`E1'*(ln(`E1'/`n1')))+((`n1'-`E1')*(ln(1-(`E1'/`n1'))))
-	local max_r2a = round((1- exp((2*`lnLnull')/`n1')),.01)
+	local max_r2a = (1- exp((2*`lnLnull')/`n1'))
+	local DImax_r2a : di %4.3f `max_r2a'
 	
 	if `max_r2a'<`r2a' {
 		di as err "User specified R-squared adjusted is larger than the maximum possible R-squared (=`max_r2a') as defined by equation 23 (Riley et al. 2018)"
 		error 499
 		}
 	
-	local s_4_small_diff = round((`r2a'/(`r2a'+(0.05*`max_r2a'))),.001)
+	local s_4_small_diff = (`r2a'/(`r2a'+(0.05*`max_r2a')))
 
 		local n2 = ceil((`parameters'/((`s_4_small_diff'-1)*(ln(1-(`r2a'/`s_4_small_diff'))))))
 		local shrinkage_2 = `s_4_small_diff'
@@ -177,6 +248,10 @@ local n3 = `parameters'
 // minimum n 
 local nfinal = max(`n1',`n2',`n3')
 local shrinkage_final = `shrinkage_3'
+local DIshrinkage_1 : di %4.3f `shrinkage_1'
+local DIshrinkage_2 : di %4.3f `shrinkage_2'
+local DIshrinkage_3 : di %4.3f `shrinkage_3'
+local DIshrinkage_final : di %4.3f `shrinkage_final'
 local E_final = `nfinal'*`prevalence'
 local epp_final = `E_final'/`parameters'
 local EPP_final = round(`epp_final',.01)
@@ -201,10 +276,10 @@ local i=0
 foreach r of local res {
 	local ++i
 	matrix Results[`i',1] = `n`r''
-	matrix Results[`i',2] = `shrinkage_`r''
+	matrix Results[`i',2] = `DIshrinkage_`r''
 	matrix Results[`i',3] = `parameters'
-	matrix Results[`i',4] = `r2a'
-	matrix Results[`i',5] = `max_r2a'
+	matrix Results[`i',4] = `DIr2a'
+	matrix Results[`i',5] = `DImax_r2a'
 	matrix Results[`i',6] = `EPP_`r''
 	}
 	mat colnames Results = "Samp_size" "Shrinkage" "Parameter" "Rsq" "Max_Rsq" "EPP"
@@ -241,29 +316,59 @@ version 12.1
 syntax , RSQuared(real) PARameters(int) INTercept(real) SD(real) ///
 			[Shrinkage(real 0.9) MMOE(real 1.1)] 
 
+// check inputs
+	if `rsquared'>=0 & `rsquared'<=1 { 
+		}
+		else {
+			di as err "R-sq must lie in the interval [0,1]"
+			error 459
+			}
+			
+	if `parameters'>0 { 
+		}
+		else {
+			di as err "Parameters must be greater than 0"
+			error 459
+			}
+			
+	if `shrinkage'>=0 & `shrinkage'<=1 { 
+		}
+		else {
+			di as err "Shrinkage must lie in the interval [0,1]"
+			error 459
+			}
+			
 local r2a = `rsquared'
+local DIr2a : di %4.3f `r2a'
 local n = `parameters'+2
 local n1 = `parameters'+2
 
 	// criteria 1
 	local es = 1 + ((`parameters'-2)/(`n1'*(ln(1-((`r2a'*(`n1'-`parameters'-1))+`parameters')/(`n1'-1)))))
-
-	while `es' < `shrinkage' { 
-		local ++n1
-		local es = 1 + ((`parameters'-2)/(`n1'*(ln(1-((`r2a'*(`n1'-`parameters'-1))+`parameters')/(`n1'-1)))))
-		
-		if `es'!=. & `es'>=`shrinkage' { 
-			local shrinkage_1 = round(`es',.001)
+	if `es' > `shrinkage' { 
+			local shrinkage_1 = `es'
 			local n1 = `n1'
 			local spp_1 = `n1'/`parameters'
 			local SPP_1 = round(`spp_1',.01)
-			continue, break
 			}
-		}
+			else {
+					while `es' < `shrinkage' { 
+						local ++n1
+						local es = 1 + ((`parameters'-2)/(`n1'*(ln(1-((`r2a'*(`n1'-`parameters'-1))+`parameters')/(`n1'-1)))))
+						
+						if `es'!=. & `es'>=`shrinkage' { 
+							local shrinkage_1 = `es'
+							local n1 = `n1'
+							local spp_1 = `n1'/`parameters'
+							local SPP_1 = round(`spp_1',.01)
+							continue, break
+							}
+						}
+				}
 		
 	// criteria 2 - small absolute difference in r-sq adj & r-sq app
 	local n2 = 1+((`parameters'*(1-`r2a'))/0.05)
-	local shrinkage_2 = `shrinkage'
+	local shrinkage_2 = 1 + ((`parameters'-2)/(`n2'*(ln(1-((`r2a'*(`n2'-`parameters'-1))+`parameters')/(`n2'-1)))))
 	local spp_2 = `n2'/`parameters'
 	local SPP_2 = round(`spp_2',.01)
 		
@@ -285,7 +390,7 @@ local n1 = `parameters'+2
 			
 				if `resvar_mmoe'<=`mmoe' { 
 					local n3 = `n3'
-					local shrinkage_3 = `shrinkage'
+					local shrinkage_3 = 1 + ((`parameters'-2)/(`n3'*(ln(1-((`r2a'*(`n3'-`parameters'-1))+`parameters')/(`n3'-1)))))
 					local spp_3 = `n3'/`parameters'
 					local SPP_3 = round(`spp_3',.01)
 					continue, break
@@ -294,7 +399,7 @@ local n1 = `parameters'+2
 		}
 		else {
 			local n3 = `n3'
-			local shrinkage_3 = `shrinkage'
+			local shrinkage_3 = 1 + ((`parameters'-2)/(`n3'*(ln(1-((`r2a'*(`n3'-`parameters'-1))+`parameters')/(`n3'-1)))))
 			local spp_3 = `n3'/`parameters'
 			local SPP_3 = round(`spp_3',.01)
 			}
@@ -315,7 +420,7 @@ local n1 = `parameters'+2
 			
 				if `int_mmoe'<=`mmoe' { 
 					local n4 = `n4'
-					local shrinkage_4 = `shrinkage'
+					local shrinkage_4 = 1 + ((`parameters'-2)/(`n4'*(ln(1-((`r2a'*(`n4'-`parameters'-1))+`parameters')/(`n4'-1)))))
 					local spp_4 = `n4'/`parameters'
 					local SPP_4 = round(`spp_4',.01)
 					local int_uci = round(`uci',.01)
@@ -326,7 +431,7 @@ local n1 = `parameters'+2
 		}
 		else {
 			local n4 = `n4'
-			local shrinkage_4 = `shrinkage'
+			local shrinkage_4 = 1 + ((`parameters'-2)/(`n4'*(ln(1-((`r2a'*(`n4'-`parameters'-1))+`parameters')/(`n4'-1)))))
 			local spp_4 = `n4'/`parameters'
 			local SPP_4 = round(`spp_4',.01)
 			local int_uci = round(`uci',.01)
@@ -337,12 +442,12 @@ local n1 = `parameters'+2
 local nfinal = max(`n1',`n2',`n3',`n4')	
 local spp_final = `nfinal'/`parameters'
 local SPP_final = round(`spp_final',.01)
-if `n1'>=`n4' {
-	local shrinkage_final = `shrinkage_1' 
-	}
-	else {
-		local shrinkage_final = `shrinkage' 
-		}
+local shrinkage_final = 1 + ((`parameters'-2)/(`nfinal'*(ln(1-((`r2a'*(`nfinal'-`parameters'-1))+`parameters')/(`nfinal'-1)))))
+local DIshrinkage_1 : di %4.3f `shrinkage_1'
+local DIshrinkage_2 : di %4.3f `shrinkage_2'
+local DIshrinkage_3 : di %4.3f `shrinkage_3'
+local DIshrinkage_4 : di %4.3f `shrinkage_4'
+local DIshrinkage_final : di %4.3f `shrinkage_final'
 		
 // return list
 return scalar final_shrinkage = `shrinkage_final'
@@ -363,9 +468,9 @@ local i=0
 foreach r of local res {
 	local ++i
 	matrix Results[`i',1] = `n`r''
-	matrix Results[`i',2] = `shrinkage_`r''
+	matrix Results[`i',2] = `DIshrinkage_`r''
 	matrix Results[`i',3] = `parameters'
-	matrix Results[`i',4] = `r2a'
+	matrix Results[`i',4] = `DIr2a'
 	matrix Results[`i',5] = `SPP_`r''
 	}
 	mat colnames Results = "Samp_size" "Shrinkage" "Parameter" "Rsq" "SPP"
@@ -399,8 +504,32 @@ version 12.1
 syntax ,  RSQuared(real) PARameters(int) ///
 			RATE(real) MEANFup(real) TIMEpoint(real) [Shrinkage(real 0.9)] 
 
+// check inputs
+	if `rsquared'>=0 & `rsquared'<=1 { 
+		}
+		else {
+			di as err "R-sq must lie in the interval [0,1]"
+			error 459
+			}
+			
+	if `parameters'>0 { 
+		}
+		else {
+			di as err "Parameters must be greater than 0"
+			error 459
+			}
+			
+	if `shrinkage'>=0 & `shrinkage'<=1 { 
+		}
+		else {
+			di as err "Shrinkage must lie in the interval [0,1]"
+			error 459
+			}
+			
+			
 local n = 10000 // arbitrary value for n from original study for e.g.
 local r2a = `rsquared'
+local DIr2a : di %5.4f `r2a'
 local n1 = `parameters'
 local n2 = `parameters'
 local n3 = `parameters'
@@ -416,14 +545,15 @@ local events = ceil(`rate'*`tot_per_yrs')
 	
 	// criteria 2 - small absolute difference in r-sq adj
 	local lnLnull = (`events'*(ln(`events'/`n')))-`events'
-	local max_r2a = round((1- exp((2*`lnLnull')/`n')),.01)
+	local max_r2a = (1- exp((2*`lnLnull')/`n'))
+	local DImax_r2a : di %4.3f `max_r2a'
 	
 	if `max_r2a'<`r2a' {
-		di as err "User specified R-squared adjusted is larger than the maximum possible R-squared (=`max_r2a') as defined by equation 23 (Riley et al. 2018)"
+		di as err "User specified R-squared adjusted is larger than the maximum possible R-squared (=`DImax_r2a') as defined by equation 23 (Riley et al. 2018)"
 		error 499
 		}
 	
-	local s_4_small_diff = round((`r2a'/(`r2a'+(0.05*`max_r2a'))),.001)
+	local s_4_small_diff = (`r2a'/(`r2a'+(0.05*`max_r2a')))
 
 		local n2 = ceil((`parameters'/((`s_4_small_diff'-1)*(ln(1-(`r2a'/`s_4_small_diff'))))))
 		local shrinkage_2 = `s_4_small_diff'
@@ -460,6 +590,10 @@ local events = ceil(`rate'*`tot_per_yrs')
 // minimum n 
 local nfinal = max(`n1',`n2',`n3')
 local shrinkage_final = `shrinkage_3'
+local DIshrinkage_1 : di %4.3f `shrinkage_1'
+local DIshrinkage_2 : di %4.3f `shrinkage_2'
+local DIshrinkage_3 : di %4.3f `shrinkage_3'
+local DIshrinkage_final : di %4.3f `shrinkage_final'
 local E_final = `nfinal'*`rate'*`meanfup'
 local epp_final = `E_final'/`parameters'
 local EPP_final = round(`epp_final',.01)
@@ -488,10 +622,10 @@ local i=0
 foreach r of local res {
 	local ++i
 	matrix Results[`i',1] = `n`r''
-	matrix Results[`i',2] = `shrinkage_`r''
+	matrix Results[`i',2] = `DIshrinkage_`r''
 	matrix Results[`i',3] = `parameters'
-	matrix Results[`i',4] = `r2a'
-	matrix Results[`i',5] = `max_r2a'
+	matrix Results[`i',4] = `DIr2a'
+	matrix Results[`i',5] = `DImax_r2a'
 	matrix Results[`i',6] = `EPP_`r''
 	}
 	mat colnames Results = "Samp_size" "Shrinkage" "Parameter" "Rsq" "Max_Rsq" "EPP"
@@ -511,4 +645,80 @@ end
 
 ******* end of survival
 
+******* start of program to calc Cox-Snell R2 from C-stat for binary outcomes 
+program define cstat2rsq, rclass
+
+version 12.1
+
+/* Syntax
+	CSTATISTIC = model's reported (ideally optimism adjusted) C-statistic
+	PREVALENCE = define target population's outcome prevalence 
+	SEED = seed for simulated dataset
+*/
+
+syntax ,  Cstatistic(real) PREValence(real) [SEED(int 123456)] 
+	
+	// check inputs
+	if `cstatistic'>=0 & `cstatistic'<=1 { 
+		}
+		else {
+			di as err "C-statistic must lie in the interval [0,1]"
+			error 459
+			}
+			
+	if `prevalence'>=0 & `prevalence'<=1 { 
+		}
+		else {
+			di as err "Prevalence must lie in the interval [0,1]"
+			error 459
+			}
+	
+	* define variance of the LP in each group 
+	* Assuming calibration slope of 1 in target population, then based on equation 2 in Austin et al:
+	local s2 = 2*(invnorm(`cstatistic')^2)
+
+	* Key ref: Austin PC, Steyerberg EW. Interpreting the concordance statistic of a logistic regression model: relation to the variance and odds ratio of a continuous explanatory variable. BMC Med Res Methodol 2012;12:82. 
+	* Using standardised normal distributions and assuming calibration slope of 1 in target population
+	* events:  LP ~ N(0, 1)
+	* non-events: LP ~ N(mu, 1)
+	* and mu is a function of the C-statistic
+	local mu = sqrt(2)*(invnorm(`cstatistic'))
+
+	preserve
+	clear
+	
+	* now we generate large dataset
+	qui set obs 1000000
+	set seed `seed'
+	* randonly generate outcome proportion according to the outcome proportion
+	qui gen outcome = rbinomial(1,`prevalence')
+	* specify LP for events and non-events group
+	* non-events group (note Stata requests the SD not the variance for a normal distribution)
+	qui gen LP = rnormal(0, 1)
+	* events group mean is non-events group mean + S2 
+	qui replace LP = rnormal(`mu', 1) if outcome == 1
+
+	* Finally, we now calculate Cox-Snell R-squared by fitting a logistic regression with LP as covariate;
+	* this is essentially a calibration model, and the intercept and slope estimates
+	* will ensure the outcome proportion is accounted for, without changing C-statistic
+	qui logistic outcome LP, coef
+	local n_obs = e(N)
+	local llF = e(ll)
+	local llN = e(ll_0)
+	local coxsnell_r2 = 1 - exp(2*(`llN'-`llF')/`n_obs')
+	local di_coxsnell_r2: di %5.4f `coxsnell_r2'
+	
+	* output 
+	di as txt _n "Given C-statistic = `cstatistic' & prevalence = `prevalence'"
+	di as txt _n "Cox-Snell R-sq = `di_coxsnell_r2'" _n
+	
+	* report Cox-Snell R-squared
+	return scalar coxsnell_r2 = `coxsnell_r2'
+	return scalar cstatistic = `cstatistic'
+	return scalar prevalence = `prevalence'
+	return scalar seed = `seed'
+	
+	restore
+	
+end
 

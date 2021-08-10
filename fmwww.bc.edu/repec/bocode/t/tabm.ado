@@ -1,4 +1,6 @@
-*! 2.2.1 NJC 20 December 2016
+*! 2.3.0 NJC 6 May 2021
+* 2.2.2 NJC 6 May 2021
+* 2.2.1 NJC 20 December 2016
 * 2.2.0 NJC 31 March 2016
 * 2.1.0 NJC 25 July 2015
 * 2.0.0 NJC 1 November 2010
@@ -10,7 +12,7 @@
 program tabm, byable(recall)
 	version 8.2
 	syntax varlist(min=2) [if] [in] [fw aw iw] ///
-	[, ONEway transpose Valuelabel(string) MISSing replace *]
+	[, ONEway transpose Valuelabel(string) VARNAMEs MISSing replace *]
 
 	marksample touse, novarlist
 
@@ -37,7 +39,9 @@ program tabm, byable(recall)
 			local OKlist `OKlist' `v'
 			local slist `slist' `v' `wt'
 			local lbl`j' : variable label `v'
-			if `"`lbl`j''"' == "" local lbl`j' "`v'"
+			if "`varnames'" != "" | `"`lbl`j''"' == "" {
+				local lbl`j' "`v'"
+			} 
 			local ++j
 		}
 		else local badlist `badlist' `v'  
@@ -54,14 +58,14 @@ program tabm, byable(recall)
 		exit 0
 	}
 
-	if "`vallbl'" == "" {
+	if "`valuelabel'" == "" {
 		local 1 : word 1 of `slist'
-		local vallbl : value label `1'
+		local valuelabel : value label `1'
 	}
 	// insurance policy
-	if "`vallbl'" != "" {
+	if "`valuelabel'" != "" {
 		tempfile flabels
-		qui label save `vallbl' using `"`flabels'"'
+		qui label save `valuelabel' using `"`flabels'"'
 	}
 
 	preserve
@@ -74,12 +78,12 @@ program tabm, byable(recall)
 	}
 	label val _stack _stack
 
-	if "`vallbl'" != "" {
+	if "`valuelabel'" != "" {
 		if `strOK' di _n as txt "may not label strings"
 		else {
-			capture label list `vallbl'
+			capture label list `valuelabel'
 			if _rc run `flabels'
-			label val `data' `vallbl'
+			label val `data' `valuelabel'
 		}
 	}
 
@@ -102,3 +106,4 @@ program tabm, byable(recall)
 		restore, not
 	}
 end
+

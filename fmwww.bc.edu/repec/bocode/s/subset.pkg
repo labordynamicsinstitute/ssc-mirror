@@ -18,7 +18,7 @@ d KW: regression
 d KW: covariates
 d KW: machine learning
 d
-d Requires: Stata version 15
+d Requires: Stata version 15 and R
 d
 d Distribution-Date: 20200323
 d

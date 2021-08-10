@@ -1,5 +1,6 @@
 {smcl}
-{* *! version 1.00  19 Mar 2020}{...}
+{* *! version 1.02  10 Jul 2020}{...}
+{viewerdialog sgpower "dialog sgpower"}
 {vieweralsosee "" "--"}{...}
 {vieweralsosee "SGPV (Main Command)" "help sgpv"}{...}
 {vieweralsosee "SGPV Value Calculations" "help sgpvalue"}{...}
@@ -10,6 +11,7 @@
 {viewerjumpto "Options" "sgpower##options"}{...}
 {* viewerjumpto "Remarks" "sgpower##remarks"}{...}
 {viewerjumpto "Examples" "sgpower##examples"}{...}
+{viewerjumpto "Stored Results" "sgpower##stored"}{...}
 {title:Title}
 {phang}
 {bf:sgpower} {hline 2} Power functions for Second-Generation P-Values
@@ -18,8 +20,8 @@
 {title:Syntax}
 {p 8 17 2}
 {cmdab:sgpower}
-{cmd:,} true(#) nulllo(#) nullhi(#) {cmdab:intt:ype(interval_type)} {cmdab:intl:evel(#)}
-[{it:options}]
+{cmd:,} {opt true(#)} {opt nulllo(#)} {opt nullhi(#)} {opt l:evel(#)} {opt lik:elihood(#)}
+[{opt std:err(#)} {opt b:onus}]
 
 {synoptset 20 tabbed}{...}
 {synopthdr}
@@ -31,15 +33,15 @@
 {p_end}
 {synopt:{opt nullhi(#)}}  the upper bound for the indifference zone (null interval) upon which the second-generation {it:p}-value is based.
 {p_end}
-{synopt:{opt intt:ype(string)}}  class of interval estimate used for calculating the SGPV. 
+{synopt:{opt l:evel(#)}}  confidence interval with the specified level was used to calculated the SGPV; default is {cmd:level(95)}.
 {p_end}
-{synopt:{opt intl:evel(#)}}  level of interval estimate. 
+{synopt:{opt lik:elihood(#)}} likelihood support interval with level 1/k was used to calculate the SGPV.
 {p_end}
 
 {syntab:Further options}
 {synopt:{opt std:err(#)}}  standard error for the distribution of the estimator for the parameter of interest. 
 {p_end}
-{synopt:{opt b:onus}}  display the additional diagnostics for the type I error .
+{synopt:{opt b:onus}}  display the additional diagnostics for the type I error.
 {p_end}
 {synoptline}
 {p2colreset}{...}
@@ -65,7 +67,7 @@ from {browse "https://journals.plos.org/plosone/article/file?id=10.1371/journal.
 		P_θ(0 < p_δ < 1) = 1 - ϕ[ (θ_0 - δ) /SE - θ/SE - Z_α/2 ] + ϕ[ -(θ_0 + δ) /SE + θ/SE - Z_α/2 ] 
 					 when δ <= Z_α/2 * SE					 
 
-		SE denotes the standard error, (θ_0 - δ) and (θ_0 + δ) denote the lower and upper bound of the null interval.
+		{pstd} SE denotes the standard error, (θ_0 - δ) and (θ_0 + δ) denote the lower and upper bound of the null interval.
 
 
 {marker options}{...}
@@ -82,12 +84,10 @@ from {browse "https://journals.plos.org/plosone/article/file?id=10.1371/journal.
 {opt nullhi(#)}     the upper bound for the indifference zone (null interval) upon which the second-generation {it:p}-value is based.
 
 {phang}
-{opt intt:ype(string)}     class of interval estimate used for calculating the SGPV. 
-Options are "confidence" for a (1-α)100% confidence interval and "likelihood" for a 1/k likelihood support interval.
+{opt l:evel(#)} confidence interval with level (1-α)100% was used to calculated the SGPV. The default is {cmd:level(95)} or as set by {helpb set level} if option {cmd:likelihood} or another confidence level is not set. 
 
 {phang}
-{opt intl:evel(#)}     level of interval estimate. If "inttype" is "confidence", the level is α. 
-If "inttype" is "likelihood", the level is 1/k (not k). 
+{opt lik:elihood(#)} likelihood support interval with level 1/k was used to calculate the SGPV. 
 				
 {pstd}
 {p_end}
@@ -101,7 +101,7 @@ If "inttype" is "likelihood", the level is 1/k (not k).
 {pstd}
 {p_end}
 {phang}
-{opt b:onus}     display the additional diagnostics for type I error . These are different ways the type I error may be summarized for an interval null hypothesis.
+{opt b:onus}     display the additional diagnostics for type I error. These are different ways the type I error may be summarized for an interval null hypothesis.
 
 {pstd}
 {p_end}
@@ -109,14 +109,14 @@ If "inttype" is "likelihood", the level is 1/k (not k).
 {marker examples}{...}
 {title:Examples}
 {pstd}
+{stata . sgpower,true(2) nulllo(-1) nullhi(1) stderr(1)} {break}
+{stata . sgpower,true(0) nulllo(-1) nullhi(1) stderr(1)}
 
-{stata . sgpower,true(2) nulllo(-1) nullhi(1) stderr(1) inttype("confidence") intlevel(0.05)}
-{stata . sgpower,true(0) nulllo(-1) nullhi(1) stderr(1) inttype("confidence") intlevel(0.05)}
-
-Plot the power curve examples (view the {view sgpower-plot-example.do:code} if installed; if not, you can download it {net "describe sgpv, from(https://raw.githubusercontent.com/skbormann/stata-tools/master/)":here})
+{pstd}Plot the power curve examples: Click {view sgpower-plot-example.do:here} to view the code which is part of the ancillary files of the {cmd:sgpv-package}.
+To download the file together with the rest of the examples click {net "get sgpv.pkg, replace":here}.{break}
 {stata . do sgpower-plot-example.do}
 
-
+{marker stored}{...}
 {title:Stored results}
 
 {synoptset 15 tabbed}{...}
@@ -125,11 +125,13 @@ Plot the power curve examples (view the {view sgpower-plot-example.do:code} if i
 {synopt:{cmd:r(powernull)}}  probability of SGPV = 1 calculated assuming the parameter is equal to {cmd:true}. 	That is, {cmd:powernull} = P(SGPV = 1 | θ = {cmd:true}). {p_end}
 {synopt:{cmd:r(powerinc)}}  probability of 0 < SGPV < 1 calculated assuming the parameter is equal to {cmd:true}. 	That is, {cmd:powerinc} = P(0 < SGPV < 1 | θ = {cmd:true}). {p_end}
 
-The next three scalars are only returned if the bonus-option was used.
+{pstd}The next three scalars are only returned if the bonus-option was used.{p_end}
 {synopt:{cmd:r(minI)}}  is the minimum type I error over the range ({cmd:nulllo}, {cmd:nullhi}), which occurs at the midpoint of ({cmd:nulllo}, {cmd:nullhi}). {p_end}
 {synopt:{cmd:r(maxI)}}  is the maximum type I error over the range ({cmd:nulllo}, {cmd:nullhi}), which occurs at the boundaries of the null hypothesis, {cmd:nulllo} and {cmd:nullhi}.  {p_end}
-{synopt:{cmd:r(avgI)}}  is the average type I error (unweighted) over the range ({cmd:nulllo}, {cmd:nullhi}). 
-If 0 is included in the null hypothesis region, then "type I error summaries" also contains at 0, the type I error is calculated assuming the true parameter value θ is equal to 0. {p_end}
+{synopt:{cmd:r(avgI)}}  is the average type I error (unweighted) over the range ({cmd:nulllo}, {cmd:nullhi}). {p_end}
+
+{pstd}If 0 is included in the null hypothesis region, then "type I error summaries" also contains "at 0":{p_end}
+{synopt:{cmd:r(pow0)}}  is the type I error assuming the true parameter value θ is equal to 0. {p_end}
 
 
 {title:References}
@@ -142,7 +144,7 @@ Blume JD, Greevy RA Jr., Welty VF, Smith JR, Dupont WD (2019). An Introduction t
 
 
 {title:Author}
-{p}
+{pstd}
 Sven-Kristjan Bormann, School of Economics and Business Administration, University of Tartu.
 
 {title:Bug Reporting}
@@ -154,6 +156,7 @@ Further Stata programs and development versions can be found under {browse "http
 
 
 {title:See Also}
-Related commands:
+{pstd}
+Related commands:{break}
  {help fdrisk}, {help plotsgpv}, {help sgpvalue}, {help sgpv}
 

@@ -1,5 +1,5 @@
 {smcl}
-{* *! version 4.02  David Fisher  23feb2021}{...}
+{* *! version 4.03  David Fisher  28apr2021}{...}
 {vieweralsosee "metan" "help metan"}{...}
 {vieweralsosee "metan_binary" "help metan_binary"}{...}
 {vieweralsosee "metan_continuous" "help metan_continuous"}{...}
@@ -338,7 +338,10 @@ then a set of heterogeneity information is displayed in brackets alongside the n
 {opt label(label_string)} specifies an alternative display label for a particular model.
 For example, the default label for the DerSimonian-Laird random-effects model is "DL",
 but the simpler label "Random" might be preferred if no other random-effects models are used.
-{cmd:label(}""{cmd:)} will suppress the label entirely.
+
+{pmore}
+{cmd:label(}""{cmd:)} will suppress the label for a particular model.
+To suppress {ul:all} model labels, specify {opt nomodellabels} as a main option to {cmd:metan}.
 
 {pmore}
 If {it:user_spec} is used without {opt label(label_string)}, the default {it:label_string} is "User".

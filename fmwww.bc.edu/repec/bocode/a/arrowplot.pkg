@@ -16,8 +16,8 @@ d Requires: Stata version 10
 d
 d Distribution-Date: 20140819
 d
-d Author: Damian Clarke, Oxford University 
-d Support: email damian.clarke@@economics.ox.ac.uk
+d Author: Damian Clarke, Universidad de Santiago de Chile
+d Support: email dclarke@@fen.uchile.cl
 d
 f arrowplot.ado
 f arrowplot.sthlp

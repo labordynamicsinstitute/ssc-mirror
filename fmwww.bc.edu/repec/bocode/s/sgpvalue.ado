@@ -1,6 +1,8 @@
 *!Second Generation P-Values Calculations
 *!Based on the R-code for sgpvalue.R from the sgpv-package from https://github.com/weltybiostat/sgpv
-*!Version 1.04  05.07.2020: Added/improved support matrices as inputs for options "esthi" and "estlo". Noshow-option now works expected. 
+*!Version 1.05  01.11.2020: Fixed a bug in an input check which made it impossible to use missing values as input for one-sided intervals. ///
+							Fixed a bug which set delta incorrectly when calculating the deltagap for one-sided intervals. 
+*Version 1.04  05.07.2020: Added/improved support matrices as inputs for options "esthi" and "estlo". Noshow-option now works expected. 
 *Version 1.03a 23.06.2020: Removed unnecessary input checks
 *Version 1.03 24.05.2020 : Added further input checks	
 *Version 1.02 06.04.2020 : Added another check to prevent using more than one null interval with variables or large matrices as input estlo and esthi, added two more input error checks -> some non-sensical input is probably still possible. 
@@ -19,13 +21,15 @@
 *			Add an option to format the output -> exists already for the sgpv-command, could added if needed	
 *			Unify options nulllo and nullhi into one option named "null" and options estlo and esthi into "est" or "ALTernative" to make it easier for users to enter null-hypothesis and alternative hypothesis or estimated intervals
 *			Allow matrices as input for the (null-)intervals?
+*			Rename variables created by sgpv_var from "pdelta" and "dg" to "_pdelta" and "_dg" to decrease the risk having user created variables with the same names.
 
 
 
 capture program drop sgpvalue
 program define sgpvalue, rclass
 version 12.0 
-syntax, estlo(string) esthi(string)  nulllo(string) nullhi(string) [NOWARNings INFcorrection(real 1e-5) nodeltagap nomata noshow replace h0(string asis) h1(string asis) /*two additional options for a new syntax to enter intervals */ ] 
+syntax, estlo(string) esthi(string)  nulllo(string) nullhi(string) [NOWARNings INFcorrection(real 1e-5) nodeltagap nomata noshow replace ///
+/*two additional options for a new syntax to enter intervals */  h0(string asis) h1(string asis)  ] 
 
 *Parse the input : 
 *Check that the inputs are variables -> For the moment only allowed if both esthi and estlo are variables
@@ -146,22 +150,18 @@ else{	// Run if rows less than matsize -> the "original" approach
 	forvalues i=1/`estint'{
 		*Parse interval -> Not the best names yet
 		local null_lo  `: word `i' of `nulllo''
-			capture local null_lo = `null_lo'
 			isValid `null_lo' nulllo
 			isInfinite `null_lo'
 			if (`s(infinite)' == `=c(maxdouble)'){
 			 local null_lo = `=c(mindouble)'
 			} 
-		
 		local null_hi  `: word `i' of `nullhi''
-			capture local null_hi = `null_hi'
 			isValid `null_hi' nullhi
 			isInfinite `null_hi'
 			local null_hi = `s(infinite)'
-		*Only required if no variables as input
+		*Only required if no variables as input -> Is that check needed? If I found variables earlier than I should be already in a different algorithm?
 		if `variablefound'==0{
 		local est_lo  `: word `i' of `estlo''	
-			capture local est_lo = `est_lo'
 			isValid `est_lo' estlo
 			isInfinite `est_lo'
 			if (`s(infinite)' == `=c(maxdouble)'){
@@ -169,12 +169,11 @@ else{	// Run if rows less than matsize -> the "original" approach
 			}
 			
 		local est_hi  `: word `i' of `esthi''
-			capture local `est_hi' =`est_hi'
 			isValid `est_hi' esthi
 			isInfinite `est_hi'
 			local est_hi =`s(infinite)'
 		}
-		else{
+		else{ // For which scenario did I include variables in the macro algorithm? In case someone does not want to create variables when using variables as input?
 			local est_lo = `estlo'[`i']
 			local est_hi = `esthi'[`i']
 		}
@@ -187,13 +186,13 @@ else{	// Run if rows less than matsize -> the "original" approach
 		*Warnings -> Make warning messages more descriptive
 			if "`warnings'"!="nowarnings"{
 				if (`est_len'<0  ) & (`null_len'<0){
-					disp "The `i'th interval length is negative. Upper and lower bound of the interval might be switched." 
+					disp "The `i'. interval length is negative. Upper and lower bound of the interval might be switched." 
 				}
-				if (`est_len'==`=c(maxdouble)') | (`null_len'==`=c(maxdouble)'){ // Needs further corrections for everything close to but not exactly c(maxdouble)
-					disp "The `i'th interval has infinite length."
+				if reldif(`est_len',`=c(maxdouble)')<1e-5 | reldif(`null_len',`=c(maxdouble)')<1e-5{ // Needs further corrections for everything close to but not exactly c(maxdouble)
+					disp "The `i'. interval has infinite length."
 				}				
 				if (`est_len'==0 | `null_len'==0 ) {
-					disp "The `i'th interval has a zero length. Consider using an interval hypothesis instead of a point hypothesis."
+					disp "The `i'. interval has zero length. Consider using an interval hypothesis instead of a point hypothesis."
 				}
 		}
 		
@@ -253,8 +252,8 @@ else{	// Run if rows less than matsize -> the "original" approach
 		if "`deltagap'"!="nodeltagap"{
 			local gap = max(`est_lo', `null_lo') - min(`null_hi', `est_hi')
 			local delta = `null_len'/2
-			* Report unscaled delta-gap if null has infinite length
-			if `null_len' ==0{
+			* Report unscaled delta-gap if null has infinite length, use reldif to check if the distance between infinite and null_len is sufficiently small
+			if reldif(`null_len',c(maxdouble)) <1e-5{
 				local delta 1
 			}
 			
@@ -300,7 +299,6 @@ while "`interval'"!=""{
 	gettoken bracket interval:interval,parse (" (") 
 	if "`bracket'"!="(" stop "The interval `i' in option `optname' needs to start with a '('"
 	
-
 	gettoken lb interval:interval,parse(" ,")
 	if "`lb'"=="" stop "The interval `i' in option `optname' needs to have valid number or expression or variable name after the '('."
 	local lb_full `lb_full' `lb'
@@ -331,11 +329,9 @@ args matname macroname
 		exit 198
 		}
 
-	local rowvec 0
-	local colvec 0
 	if rowsof(`matname')>1{
 		local cnt = rowsof(`matname')
-		local colvec  1
+		local colvec 1
 	} 
 
 	if colsof(`matname')>1{
@@ -356,24 +352,26 @@ return local `macroname' `matmacro'
 end
 
 *Convert a local macro into a matrix -> needed if I want to remove the approach based on macros to calculate sgpvs and only use Mata-approach
-program define convertMacro, rclass
+*Not used yet 
+program define convertMacro, sclass
 	args macroname matname
 	tempname macromat
 	forvalues i=1/`=wordcount("`macroname'")' {
 	mat `macromat' = (nullmat(`macromat') \ `=`=word("`macroname'",`i')'')
 	}
 	
-	return matrix `matname' = `macromat'
+	sreturn matrix `matname' = `macromat'
 end
 
-*Check if the input is valid
-program define isValid
+*Check if the input is valid -> Missing value or number
+program define isValid 
 args valid optname
-if real("`=`valid''")==.{
-	disp as error "`valid' in option {cmd:`optname'}  is not a number nor . (missing value) nor empty."
-	exit 198
+if `valid'!=.{
+	if real("`=`valid''")==.{
+		disp as error "`valid' in option {cmd:`optname'}  is not a number nor . (missing value) nor empty."
+		exit 198
 		}
-		
+}		
 end
 
 *Check if input is infinite
@@ -394,7 +392,7 @@ program define stop
  exit 198
 end
 
-*Use new variables to store and calculate the SGPVs
+*Use new variables to store and calculate the SGPVs -> Do I properly deal with one-sided intervals yet?
 program define sgpv_var, rclass
  syntax ,esthi(varname) estlo(varname) nullhi(string) nulllo(string) [replace nodeltagap infcorrection(real 1e-5)]
  if "`replace'"=="replace"{
@@ -549,5 +547,4 @@ real scalar function min_s(real scalar x, real scalar y){
 real scalar function max_s(real scalar x, real scalar y){
 	return(x > y ? x : y)
 }
-
 end

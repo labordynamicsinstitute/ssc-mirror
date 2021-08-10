@@ -80,6 +80,7 @@ p mergeall module to merge multiple files
 p mergemany module to merge many files
 p mergepoly module to merge adjacent polygons from a shapefile
 p merlin module to fit mixed effects regression for linear and non-linear models
+p meta_analysis module to perform subgroup and regression-type fixed- and random-effects meta-analyses
 p meta_lr module to graph positive and negative likelihood ratios in diagnostic test
 p metaaggr modules for meta-analysis of aggregate data
 p metaan module to perform fixed- or random-effects meta-analyses
@@ -108,6 +109,7 @@ p metareg module to perform meta-analysis regression
 p metastrong module for estimating the proportion of true effect sizes above or below a threshold in random-effects meta-analysis
 p metatrend module to implement regression methods for detecting trends in cumulative meta-analysis
 p metatrim module to perform nonparametric analysis of publication bias
+p mfelogit module to estimate marginal effects (AME) and average treatment effects (ATE) in fixed effect logit models
 p mfilegr module to view and save multiple graphs with filenames based on a numeric identifier
 p mfpi module for modelling and displaying interactions
 p mfpigen module for modelling and displaying interactions between continuous predictors
@@ -135,6 +137,7 @@ p mimpt module to impute missing values and persist in case of non-convergence
 p mimrgns module to run margins after mi estimate
 p mimstack module to stack multiply-imputed datasets into format required by mim
 p minap module to calculate minimum average partial correlation for principal components
+p minmse module to create balanced groups for treatment in experiments with one or several treatment arms 
 p mint module to examine across-groups equivalence of confirmatory factor analysis (CFA) measurement model parameters
 p miparallel module to perform parallel estimation for multiple imputed datasets
 p mipolate module to interpolate values 
@@ -159,6 +162,7 @@ p mkprofile module to create or edit your 'profile.do'
 p mkproject module to create a project folder with some boilerplate code and research log
 p mkstrsn modules to format Social Security number variables
 p mktab module to print table of estimates in delimited or screen-presentation format
+p mlad module to perform maximum likelihood using automatic differentiation
 p mlboolean module to implement Boolean logit and probit
 p mlcoint module to compute Johansen cointegration tests
 p mlogitroc module to calculate multiclass ROC Curves and AUC from Multinomial Logistic Regression
@@ -182,6 +186,7 @@ p mog module to produce one way or two way tables of means (or totals)
 p mol module to evaluate literacy level
 p moments module to compute moment-based statistics
 p moments2 module to compute skewness and kurtosis measures
+p moranplot module to produce Moran scatter plots
 p moransi module to compute Moran's I
 p more_clarify module to estimate quantities of interest through simulation and resampling methods 
 p moremata module (Mata) to provide various functions
@@ -219,6 +224,7 @@ p mtreatreg module to fits models with multinomial treatments and continuous, co
 p mulogit module to calculate multivariate and univariate odds ratios in logistic regression
 p multencode module to encode multiple string variables into numeric
 p multibar module to produce bar and dot graphs for use with overlapping over() categories
+p multicoefplot module to produce advanced repeated cross-section graphical analysis
 p multidensity module for kernel density estimation for many variables or groups
 p multidot module for multiple panel dot charts and similar
 p multif module to construct multiple if-restrictions with the same value for different variables
@@ -232,6 +238,7 @@ p mundlak module to estimate random-effects regressions adding group-means of in
 p muxplot module to produce scatter plots with y versus multiple x variables
 p muxyplot module to produce scatter plots with multiple x and y variables
 p mvcorr module to generate moving-window correlation or autocorrelation in time series or panel
+p mvdcmp module to compute multivariate decomposition for nonlinear response models
 p mvfiles module to provide  a convenient way to move/copy matched files from a specified input directory (also including, if wanted, additionally recursively matched subsets of files within distinctly matched offspring-directories) to a specified output directory
 p mvmeta module to perform multivariate random-effects meta-analysis
 p mvnxpb module for  computation of multivariate normal probabilities using bivariate conditioning 

@@ -1,5 +1,5 @@
 {smcl}
-{* 08apr2021}{...}
+{* 19apr2021}{...}
 {hi:help robreg}{...}
 {right:{browse "http://github.com/benjann/robreg/"}}
 {hline}
@@ -47,6 +47,9 @@
 
 {pmore}
     {it:indepvars} may contain factor variables; see {help fvvarlist}.
+    {p_end}
+{pmore}
+    {it:depvar} and {it:indepvars} may contain time-series operators; see {help tsvarlist}.
     {p_end}
 {pmore}
     {cmd:fweight}s and {cmd:pweight}s are allowed; see {help weight}.
@@ -130,6 +133,10 @@
 {marker repopts}{...}
 {syntab :Reporting}
 {synopt :{opt l:evel(#)}}set confidence level; default is {cmd:level(95)}
+    {p_end}
+{synopt :{opt nohead:er}}suppress table header
+    {p_end}
+{synopt :{opt notab:le}}suppress table of results
     {p_end}
 {synopt :{opt all}}report results from all equations (relevant for {cmd:robreg s} and {cmd:robreg mm})
     {p_end}
@@ -324,11 +331,13 @@
     {p_end}
 {synopt:{opt drop(names)}}coefficients to be excluded; may use {cmd:*} and {cmd:?} wildcards
     {p_end}
-{synopt:{opt nod:etail}}do not report results by individual coefficients
-    {p_end}
-{synopt :{opt f:test}}report F tests rather then Wald tests
+{synopt :{opt f:test}}report F test rather then Wald test
     {p_end}
 {synopt :{opt l:evel(#)}}set confidence level; default is {cmd:level(95)}
+    {p_end}
+{synopt :{opt nohead:er}}suppress header containing the overall test
+    {p_end}
+{synopt :{opt notab:le}}suppress table containing tests by individual coefficients
     {p_end}
 {synopt :{help robreg##displayopts:{it:display_options}}}standard
     reporting options as described in
@@ -738,7 +747,13 @@
     {helpb set level}.
 
 {phang}
-    {opt all} report results from all equations in case of {cmd:robreg s} and
+    {opt noheader} suppresses the display of the table header.
+
+{phang}
+    {opt notable} suppresses the display of the table of results.
+
+{phang}
+    {opt all} reports results from all equations in case of {cmd:robreg s} and
     {cmd:robreg mm}. The default is to display only the main equation.
 
 {marker displayopts}{...}
@@ -827,19 +842,14 @@
 {phang}
     {opt keep(names)} provides a space-separated list of coefficients to be included
     in the test. Wildcard characters {cmd:*} and {cmd:?} can be used in the names to
-    match multiple coefficients. The constant is handled by the {cmd:constant} option, 
+    match multiple coefficients. The constant is handled by the {cmd:constant} option,
     independently of {cmd:keep()}.
 
 {phang}
     {opt keep(names)} provides a space-separated list of coefficients to be excluded
     from the test. Wildcard characters {cmd:*} and {cmd:?} can be used in the names to
-    match multiple coefficients. The constant is handled by the {cmd:constant} option, 
+    match multiple coefficients. The constant is handled by the {cmd:constant} option,
     independently of {cmd:drop()}.
-
-{phang}
-    {opt nodetail} specifies that only the overall Hausman test be reported. By default,
-    a table containing t-tests for the differences between individual coefficients
-    is displayed below the overall test.
 
 {phang}
     {opt ftest} requests that the overall test be reported as an F test rather
@@ -848,13 +858,21 @@
     across both models) minus the number of (non-omitted) parameters in the
     (main equation of the) larger model (or in case of clustered standard
     errors, as the number of clusters in the joint sample minus one). The same
-    residual degrees of freedom are also used for the t tests of the differences 
+    residual degrees of freedom are also used for the t tests of the differences
     between coefficients
 
 {phang}
     {opt level(#)} specifies the confidence level, as a percentage, for the
     confidence intervals of the differences between coefficients. The default is
     {cmd:level(95)} or as set by {helpb set level}.
+
+{phang}
+    {opt noheader} suppresses the display of the header that contains the
+    overall test.
+
+{phang}
+    {opt notable} suppresses the display of the table that contains the t-tests
+    for the differences between individual coefficients.
 
 {phang}
     {it:display_options} are standard reporting options such as {cmd:eform},
@@ -893,7 +911,7 @@
 
 {phang}
     {opt weights} generates a variable containing weights corresponding to the final
-    RLS fit. {cmd:weights} is only allowed after {cmd:robreg m}, {cmd:robreg s}, 
+    RLS fit. {cmd:weights} is only allowed after {cmd:robreg m}, {cmd:robreg s},
     and {cmd:robreg mm}.
 
 {phang}
@@ -1025,6 +1043,7 @@
 {synopt:{cmd:e(nkeep)}}number of candidates kept for final refinement ({cmd:robreg s/mm/lts}){p_end}
 {synopt:{cmd:e(sum_adev)}}sum of absolute deviations ({cmd:robreg q}){p_end}
 {synopt:{cmd:e(sum_rdev)}}sum of absolute deviations of empty model ({cmd:robreg q}, unless {cmd:nor2}){p_end}
+{synopt:{cmd:e(q)}}quantile requested ({cmd:robreg q}){p_end}
 {synopt:{cmd:e(bwidth)}}bandwidth ({cmd:robreg q}){p_end}
 {synopt:{cmd:e(kbwidth)}}kernel bandwidth ({cmd:robreg q}, unless {cmd:fitted}){p_end}
 {synopt:{cmd:e(iterations)}}number of iterations ({cmd:robreg q/m/mm}){p_end}
@@ -1204,7 +1223,7 @@
 
 {pmore}
     Jann, B. (2021). robreg: Stata module providing robust regression
-    estimators. Available from http://ideas.repec.org/c/boc/bocode/s457114.html.
+    estimators. Available from http://ideas.repec.org/c/boc/bocode/s458931.html.
 
 
 {marker alsosee}{...}

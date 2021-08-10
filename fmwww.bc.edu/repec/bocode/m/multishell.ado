@@ -312,7 +312,7 @@ program define multishell_seed, rclass
 						*replace seed = "`r(rngstate)'"
 					}
 				}
-				save "`path'\`using'", replace 
+				save "`path'\\`using'", replace 
 				
 				if `status' != 4 {
 					forvalues i = 1(1)`nn' {
@@ -369,6 +369,14 @@ program define multishell_getExePath, rclass
 			local exename `"`datafiles)'"'
 		}
 		else {
+            local type "IC"
+            if `c(MP)' == 1 {
+                local type "MP"
+            }
+            else if `c(SE)' == 1 {
+                local type "SE"
+            }
+			/*
 			if `c(SE)' == 1 & `c(MP)' == 0 {
 				local type "SE"
 			}
@@ -377,13 +385,15 @@ program define multishell_getExePath, rclass
 			}
 			else {
 				local type "IC"
-			}
+			} */
 			local exepath "`c(sysdir_stata)'Stata`type'-`c(bit)'.exe"
 			local exename "Stata`type'-`c(bit)'.exe"
 			
 			if fileexists("`exepath'") == 0 {
 				display as smcl "No Stata exe found. Please set a path using {help multishell##settingup:multishell exepath}."
-				exit
+				display as smcl "Program will keep going but might crash."
+				display as smcl `"path is: `exepath'"'
+			*	exit
 			}
 		}
 		
@@ -927,7 +937,7 @@ end
 
 
 program define multishell_add 
-	syntax anything , [Path(string) EXepath(string) mainfile(string) macnameadd(string) strict ]
+	syntax anything , [Path(string) EXepath(string) mainfile(string) macnameadd(string) strict SKIPLoops]
 		
 		local dopath `"`anything'"'
 		
@@ -984,7 +994,9 @@ program define multishell_add
 			file read `LoopCheck' temp
 		}
 		file close `LoopCheck'
-		
+		if "`skiploops'" == "skiploops" {
+			local strict = "strict"
+		}
 		***check if loops in file
 		local foreach_indic = 0
 		tempname fors m_foreach_indic

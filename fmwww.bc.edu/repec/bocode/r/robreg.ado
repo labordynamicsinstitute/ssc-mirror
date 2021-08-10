@@ -1,4 +1,4 @@
-*! version 2.0.1  08apr2021  Ben Jann
+*! version 2.0.4  21apr2021  Ben Jann
 
 capt findfile lmoremata.mlib
 if _rc {
@@ -9,11 +9,10 @@ if _rc {
 program robreg, eclass properties(svyr svyb svyj)
     version 11
     if replay() { // redisplay output
-        syntax [, all * ]
+        syntax [, all noHEADer NOTABle * ]
         _get_diopts diopts options, `options'
         _get_eformopts, eformopts(`options') allowed(__all__)
-        local diopts `s(eform)' `diopts'
-        Display, `all' `diopts'
+        Display, `all' `header' `notable' `s(eform)' `diopts'
         exit
     }
     gettoken subcmd : 0, parse(", ")
@@ -67,8 +66,8 @@ program Check_vce
 end
 
 program Display
-    syntax [, all * ]
-    if `"`e(cmd)'"'!="robreg" {
+    syntax [, all noHEADer NOTABle * ]
+    if !inlist(`"`e(cmd)'"',"robreg","xtrobreg") {
         di as err "last robreg estimates not found"
         exit 301
     }
@@ -79,64 +78,81 @@ program Display
         if e(k_eq)!=1 local first first
     }
     local subcmd `"`e(subcmd)'"'
-    if c(stata_version)<14 {
-        if `"`e(prefix)'"'!="" {
-            local c1 _col(49)
-            local c2 _col(68)
-            local wfmt 9
+    if "`header'"=="" {
+        local nofgrps "Number of groups"
+        local obsprgrp "Obs per grp:"
+        if c(stata_version)<14 {
+            if `"`e(prefix)'"'!="" {
+                local c1 _col(49)
+                local c2 _col(68)
+                local c3 _col(64)
+                local wfmt 9
+            }
+            else {
+                local c1 _col(51)
+                local c2 _col(67)
+                local c3 _col(63)
+                local wfmt 10
+                local nofgrps "No. of groups"
+                local obsprgrp "Obs per gp:"
+            }
         }
         else {
-            local c1 _col(51)
+            local c1 _col(49)
             local c2 _col(67)
+            local c3 _col(63)
             local wfmt 10
         }
-    }
-    else {
-        local c1 _col(49)
-        local c2 _col(67)
-        local wfmt 10
-    }
-    capt confirm matrix e(V)
-    if _rc==1 exit _rc
-    else if _rc local nomodeltest nomodeltest
-    else        local nomodeltest
-    _coef_table_header, `nomodeltest'
-    if "`subcmd'"'=="q" {
-        di as txt `c1' `"Sum of abs.dev."' `c2' "= " as res %`wfmt'.0g e(sum_adev)
-    }
-    else if "`subcmd'"'=="m" {
-        local obf = proper(`"`e(obf)'"')
-        di as txt `c1' `"`obf' k"'       `c2' "= " as res %`wfmt'.0g e(k)
-    }
-    else if "`subcmd'"'=="s" {
-        di as txt `c1' "Breakdown point" `c2' "= " as res %`wfmt'.0g e(bp)
-        di as txt `c1' "Biweight k"      `c2' "= " as res %`wfmt'.0g e(k)
-    }
-    else if "`subcmd'"'=="mm" {
-        di as txt `c1' "Breakdown point" `c2' "= " as res %`wfmt'.0g e(bp)
-        di as txt `c1' "M-estimate: k "  `c2' "= " as res %`wfmt'.0g e(k)
-        di as txt `c1' "S-estimate: k"   `c2' "= " as res %`wfmt'.0g e(kS)
-    }
-    else if inlist(`"`subcmd'"',"lms","lqs","lts") {
-        if `"`subcmd'"'!="lms" ///
-        di as txt `c1' "Breakdown point" `c2' "= " as res %`wfmt'.0g e(bp)
-    }
-    if "`all'"=="" di as txt `c1' "Scale" `c2' "= " as res %`wfmt'.0g e(scale)
-    di ""
-    eret di, `first' `options'
-    if `"`e(hausman_chi2)'`e(hausman_F)'"'!="" {
-        if      "`subcmd'"=="s"  di as txt "Hausman test of S against LS:" _c
-        else if "`subcmd'"=="mm" di as txt "Hausman test of MM against S:" _c
-        else exit // cannot be reached
-        if `"`e(hausman_F)'"'!="" {
-        di as txt "{col 34}F({res:`e(df_m)'}, {res:`e(df_r)'}) =" /*
-            */as res %`wfmt'.0g e(hausman_F) _c
-        di as txt "{col 62}Prob > F = "as res %6.4f e(hausman_p)
+        capt confirm matrix e(V)
+        if _rc==1 exit _rc
+        else if _rc local nomodeltest nomodeltest
+        else        local nomodeltest
+        _coef_table_header, `nomodeltest'
+        if "`subcmd'"'=="q" {
+            di as txt `c1' `"Sum of abs.dev."' `c2' "= " as res %`wfmt'.0g e(sum_adev)
         }
-        else {
-            di as txt "{col 34}chi2({res:`e(df_m)'}) =" /*
-                */as res %`wfmt'.0g e(hausman_chi2) _c
-            di as txt "{col 59}Prob > chi2 = " as res %6.4f e(hausman_p)
+        else if "`subcmd'"'=="m" {
+            local obf = proper(`"`e(obf)'"')
+            di as txt `c1' `"`obf' k"'       `c2' "= " as res %`wfmt'.0g e(k)
+        }
+        else if "`subcmd'"'=="s" {
+            di as txt `c1' "Breakdown point" `c2' "= " as res %`wfmt'.0g e(bp)
+            di as txt `c1' "Biweight k"      `c2' "= " as res %`wfmt'.0g e(k)
+        }
+        else if "`subcmd'"'=="mm" {
+            di as txt `c1' "Breakdown point" `c2' "= " as res %`wfmt'.0g e(bp)
+            di as txt `c1' "M-estimate: k "  `c2' "= " as res %`wfmt'.0g e(k)
+            di as txt `c1' "S-estimate: k"   `c2' "= " as res %`wfmt'.0g e(kS)
+        }
+        else if inlist(`"`subcmd'"',"lms","lqs","lts") {
+            if `"`subcmd'"'!="lms" ///
+            di as txt `c1' "Breakdown point" `c2' "= " as res %`wfmt'.0g e(bp)
+        }
+        if "`all'"=="" di as txt `c1' "Scale" `c2' "= " as res %`wfmt'.0g e(scale)
+        if e(N_g)<. { // xtrobreg
+            di as txt `c1' "`nofgrps'"  `c2' "= " as res %`wfmt'.0g e(N_g)
+            di as txt `c1' "`obsprgrp'" `c3' "min = " as res %`wfmt'.0g e(g_min)
+            di as txt                   `c3' "avg = " as res %`wfmt'.0g e(g_avg)
+            di as txt                   `c3' "max = " as res %`wfmt'.0g e(g_max)
+        }
+        di ""
+    }
+    if "`notable'"=="" {
+        eret di, `first' `options'
+        if `"`e(hausman_chi2)'`e(hausman_F)'"'!="" {
+            if      "`subcmd'"=="s"  di as txt "Hausman test of S against LS:" _c
+            else if "`subcmd'"=="mm" di as txt "Hausman test of MM against S:" _c
+            else exit // cannot be reached
+            if `"`e(hausman_F)'"'!="" {
+            di as txt "{col 34}F({res:`e(df_m)'}, {res:`e(df_r)'}) =" /*
+                */as res %10.0g e(hausman_F) _c
+            di as txt "{col 62}Prob > F = "as res %6.4f e(hausman_p)
+            }
+            else {
+                di as txt "{col 34}chi2({res:`e(df_m)'}) =" /*
+                    */as res %10.0g e(hausman_chi2) _c
+                di as txt "{col 59}Prob > chi2 = " as res %6.4f e(hausman_p)
+            }
         }
     }
 end
@@ -340,8 +356,9 @@ end
 program Hausman
     // syntax
     _parse comma lhs 0 : 0
-    syntax [, CONStant COMmon keep(str) drop(str) noDetail Ftest post ///
-        COEFTitle(passthru) * ]
+    syntax [, CONStant COMmon keep(str) drop(str) noDetail noHEADer NOTABle ///
+        Ftest post COEFTitle(passthru) * ]
+    if "`detail'"!="" local notable notable // backward compatibility
     _get_diopts diopts options, `options'
     _get_eformopts, eformopts(`options') allowed(__all__)
     local diopts `s(eform)' `diopts'
@@ -420,7 +437,7 @@ program Hausman
         else local touse `touse1'
         if `"`wtype1'"'!="" {
             tempvar wvar
-            qui gen double `wvar' = `wexp1' if `touse' 
+            qui gen double `wvar' `wexp1' if `touse' 
         }
         
         // IFs
@@ -442,12 +459,21 @@ program Hausman
     }
     
     // display
+    if "`header'"!="" & "`notable'"!="" {
+        if "`post'"!="" {
+            postrtoe
+            return_clear
+        }
+        exit
+    }
     _estimates hold `ecurrent', restore nullok
     postrtoe
     tempname rcurrent
     _return hold `rcurrent'
-    hausman_header
-    if "`detail'"=="" {
+    if "`header'"=="" {
+        hausman_header
+    }
+    if "`notable'"=="" {
         if `"`coeftitle'"'=="" local coeftitle coeftitle(Delta)
         di ""
         _coef_table, `coeftitle' `diopts'
@@ -465,6 +491,10 @@ program hausman_header, rclass
     _coef_table_header
 end
 
+program return_clear, rclass
+    local x
+end
+
 program Estimate, eclass
     // syntax
     gettoken subcmd 0 : 0, parse(", ")
@@ -474,10 +504,10 @@ program Estimate, eclass
     foreach opt of local notallowed {
         local notallowedopts notallowedopts `opt'(passthru)
     }
-    syntax varlist(fv) [if] [in] [pw fw iw] [, ///
+    syntax varlist(fv ts) [if] [in] [pw fw iw] [, ///
         noCONStant nor2 ///
         vce(str) CLuster(varname) Ftest NOSE ///
-        Level(passthru) all ///
+        Level(passthru) all noHEADer NOTABle ///
         TOLerance(numlist >0 max=1) ///
         ITERate(integer `c(maxiter)') ///
         relax noquad nolog /// 
@@ -491,7 +521,7 @@ program Estimate, eclass
     _get_diopts diopts options, `options'
     _get_eformopts, eformopts(`options') soptions allowed(__all__)
     local options `"`s(options)'"'
-    c_local diopts `s(eform)' `level' `all' `diopts'
+    c_local diopts `s(eform)' `level' `all' `header' `notable' `diopts'
     if "`tolerance'"=="" {
         if "`subcmd'"=="q" local tolerance 1e-8
         else               local tolerance 1e-10
@@ -789,7 +819,7 @@ program parse_nsamp
 end
 
 program parse_mopts
-    syntax [varlist(default=none fv)] [, ///
+    syntax [varlist(default=none fv ts)] [, ///
         EFFiciency(numlist max=1) K(numlist >0 max=1) ]
     if "`efficiency'"!="" & "`k'"!="" {
         di as err "{bf:efficiency()} and {bf:k()} not both allowed"
@@ -905,7 +935,7 @@ program ReEstimate_mm // returns diopts
     // syntax
     syntax [, ///
         EFFiciency(passthru) K(passthru) noHAUSman ///
-        Ftest Level(passthru) all ///
+        Ftest Level(passthru) all noHEADer NOTABle ///
         TOLerance(passthru) ITERate(passthru) relax noquad noLOG * ]
     if `"`level'"'=="" {
         if `"`e(level)'"'!="" {
@@ -914,7 +944,7 @@ program ReEstimate_mm // returns diopts
     }
     _get_diopts diopts options, `options'
     _get_eformopts, eformopts(`options') allowed(__all__)
-    c_local diopts `s(eform)' `level' `all' `diopts'
+    c_local diopts `s(eform)' `level' `all' `header' `notable' `diopts'
     local options `efficiency' `k' `hausman' `ftest' `level' /*
         */ `tolerance' `iterate' `relax' `quad' `log'
     

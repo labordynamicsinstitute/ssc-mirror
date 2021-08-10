@@ -8,7 +8,6 @@ p gb2fit module to fit Generalized Beta of the Second Kind distribution by maxim
 p gb2lfit module to fit Generalized Beta of the Second Kind distribution by maximum likelihood (log parameter metric)
 p gb2reg module to perform Regression with a GB2 Error Term
 p gbgfit module to fit a Generalized Beta (Type 2) distribution to grouped data via ML
-p gboxplot module to create Box plot for skewed or heavy-tailed distributions
 p gby module to subset graphs and calculate in the same output
 p gcause module to perform Granger causality tests
 p gciget module to read Global Competitiveness Index data into Stata
@@ -73,6 +72,7 @@ p ginireg module for Gini regression
 p gintreg module to perform Generalized Interval Regression 
 p gipf module to graphically display a log-linear model 
 p git module to manage git repositories
+p gitee module to install and uninstall Stata packages from Gitee website
 p givgauss2 module to estimate generalized two-parameter inverse Gaussian regression
 p glcurve module to derive generalised Lorenz curve ordinates 
 p glcurve5 module to derive generalised Lorenz curve ordinates with unit record data (Stata 5 or 6)
@@ -129,6 +129,7 @@ p grouplabs module to create value labels for grouped variables
 p groups module to list group frequencies
 p groupseq module providing functions to determine group sequential trial designs
 p grpdf module to produce PDFs from memory graphs
+p grpvars module to create and manage variable groups
 p grqreg module to graph the coefficients of a quantile regression
 p grsftest module to perform the Gibbons, Ross, Shanken test of mean-variance efficiency of asset returns 
 p grstest module to implement the Gibbons et al. (1989) test in a single-factor or multi-factor setting 

@@ -1,5 +1,5 @@
-capture program drop savegz
-*! version 0.2.6 24sep2019
+*capture program drop savegz
+*! version 0.3.0 25sep2019
 program define savegz
 	version 11
   

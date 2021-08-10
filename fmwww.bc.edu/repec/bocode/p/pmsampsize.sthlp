@@ -1,7 +1,7 @@
 
 {smcl}
 
-{* *! version 1.0.2 13Nov2019}
+{* *! version 1.1.0 17May2021}
 {cmd:help pmsampsize}
 {hline}
 
@@ -16,7 +16,9 @@
 {p 8 17 2}
 {cmd:pmsampsize} , {opt type(string)} {opt rsq:uared(real)} {opt par:ameters(int)} 
 	[{opt s:hrinkage(real 0.9)} {opt rate(real 0)} {opt meanf:up(real 0)} {opt time:point(real 0)} 
-	{opt int:ercept(real 0)} {opt sd(real 0)} {opt prev:alence(real 0)} {opt mmoe(real 1.1)}]
+	{opt int:ercept(real 0)} {opt sd(real 0)} {opt prev:alence(real 0)} {opt mmoe(real 1.1)}
+	{opt cstat:istic(real 0)} 
+	{opt seed(int 123456)}]
 
 {synoptset 30}{...}
 {synopthdr:pmsampsize_options}
@@ -32,6 +34,8 @@
 {synopt :{opt sd(real)}}standard deviation of outcome values expected within the model development dataset, based on previous evidence (for continuous outcomes){p_end}
 {synopt :{opt prev:alence(real)}}outcome proportion (for a prognostic model) or outcome prevalence (for a diagnostic model) expected within the model development dataset, based on previous evidence (for binary outcomes){p_end}
 {synopt :{opt mmoe(real 1.1)}}multiplicative margin of error (MMOE) acceptable for calculation of the intercept (for continuous outcomes){p_end}
+{synopt :{opt cstat:istic(real)}}approximates Cox-Snell R-squared from C-statistic & prevalence (for binary outcomes){p_end}
+{synopt :{opt seed(int 123456)}}set seed for calculation of approximate R-squared from C-statistic (for binary outcomes){p_end}
 {synoptline}
 
 {marker description}{...}
@@ -68,7 +72,8 @@ For example, the user may input the value of the (Cox-Snell) R-squared reported 
 If taking a value from a previous prediction model {it: development} study, users should input the model's {it: adjusted} R-squared value, not the apparent R-squared value, as the latter is optimistic (biased).
 However, if taking the R-squared value from an external validation of a previous model, the apparent R-squared can be used (as the validation data was not used for development, and so R-squared apparent is then unbiased).
 Note that for binary and survival outcome models, the {it: Cox-Snell} R-squared value is required; this is the generalised version of the well-known R-squared for continuous outcomes, based on the likelihood. 
-The papers by Riley et al. (see references) outline how to obtain the Cox-Snell R-squared value from published studies if they are not reported, using other information (such as the C-statistic or Nagelkerke's R-squared).
+The papers by Riley et al. (see references) outline how to obtain the Cox-Snell R-squared value from published studies if they are not reported, using other information 
+(such as the C-statistic [see {opt cstatistic()} option below] or Nagelkerke's R-squared).
 Users should be conservative with their chosen R-squared value; for example, by taking the R-squared value from a previous model, even if they hope their new model will improve performance.
 
 {phang}{opt parameters(int)} specifies the number of candidate predictor parameters for potential inclusion in the new prediction model.
@@ -85,6 +90,12 @@ See references below for further information.
 {phang}{opt prevalence(real)} specifies the overall outcome proportion (for a prognostic model) or overall prevalence (for a diagnostic model) expected within the model development dataset. 
 This should be derived based on previous studies in the same population.
 
+{phang}{opt cstatistic(real)} specifies the C-statistic reported in an existing prediction model study to be used in conjunction with the expected prevalence to approximate the Cox-Snell R-squared using the approach of Riley et al. 2020. 
+Ideally, this should be an optimism-adjusted C-statistic. 
+The approximate Cox-Snell R-squared value is used as described above for the {opt rsquared()} option, and so is treated as a baseline for the expected performance of the new model. 
+
+{phang}{opt seed(int 123456)} specifies the initial value of the random-number seed used by the random-number functions when simulating data 
+to approximate the Cox-Snell R-squared based on reported C-statistic and expect prevalence as described by Riley et al. 2020. 
 
 {marker options}{...}
 {title:Survival outcome options}
@@ -122,6 +133,11 @@ See references below for further information.
 {pstd}Use {cmd: pmsampsize} to calculate the minimum sample size required to develop a multivariable prediction model for a binary outcome using 24 candidate predictor parameters. 
 Based on previous evidence, the outcome prevalence is anticipated to be 0.174 (17.4%) and a lower bound (taken from the adjusted Cox-Snell R-squared of an existing prediction model) for the new model's R-squared value is 0.288 {p_end}
 {phang2}{cmd:. }{stata pmsampsize, type(b) rsquared(0.288) parameters(24) prevalence(0.174)}{p_end}
+
+{pstd}Now lets assume we could not obtain a Cox-Snell R-squared estimate from an existing prediction model, but instead had a C-statistic (0.89) reported for the existing prediction model. 
+We can use this C-statistic along with the prevalence to approximate the Cox-Snell R-squared using the approach of Riley et al. (2020). 
+Use {cmd: pmsampsize} with the {opt cstatistic()} option instead of {opt rsquared()} option. {p_end}
+{phang2}{cmd:. }{stata pmsampsize, type(b) cstatistic(0.89) parameters(24) prevalence(0.174)}{p_end}
 
 {phang}
 {bf:Survial outcomes (Cox prediction models)}
@@ -162,6 +178,8 @@ We know an existing prediction model in the same field has an R-squared adjusted
 {synopt:{cmd:r(int_cuminc)}}Estimate of the true cumulative incidence (overall risk) assuming user input overall event rate and timepoint of interest for prediction (survival models){p_end}
 {synopt:{cmd:r(int_lci)}}Lower 95% CI for the overall risk (survival models){p_end}
 {synopt:{cmd:r(int_uci)}}Upper 95% CI for the overall risk (survival models){p_end}
+{synopt:{cmd:r(cstatistic)}}C-statistic input by user to approximate R-squared (binary models){p_end}
+{synopt:{cmd:r(seed)}}Seed used to approximate R-squared from C-statistic (binary models){p_end}
 {p2colreset}{...}
 
 {synoptset 15 tabbed}{...}
@@ -177,19 +195,31 @@ j.ensor@keele.ac.uk{p_end}
 {phang}Richard D Riley, Keele University {break}
 r.riley@keele.ac.uk{p_end}
 
+{title:Acknowledgements}
+
+{phang}With thanks to Gary Collins, Glen Martin & Kym Snell for helpful feedback{p_end}
+
 {marker reference}{...}
 {title:References}
 
 {p 5 12 2}
-Riley RD, Snell KIE, Ensor J, Burke DL, Harrell FE, Jr., Moons KG, Collins GS. 
-Minimum sample size required for developing a multivariable prediction model: Part I continuous outcomes. {it:Statistics in Medicine}. 2018 (in-press). doi:10.1002/sim.7993{p_end}
+Riley RD, Ensor J, Snell KIE, Harrell FE, Martin GP, Reitsma JB, Moons KGM, Collins G, van Smeden M. Calculating the sample size required for developing a 
+clinical prediction model. {it:BMJ}. 2020.{p_end}
 
 {p 5 12 2}
 Riley RD, Snell KIE, Ensor J, Burke DL, Harrell FE, Jr., Moons KG, Collins GS. 
-Minimum sample size required for developing a multivariable prediction model: Part II binary and time-to-event outcomes. {it:Statistics in Medicine}. 2018 (in-press). doi:10.1002/sim.7992{p_end}
+Minimum sample size required for developing a multivariable prediction model: Part I continuous outcomes. {it:Statistics in Medicine}. 2019.{p_end}
 
 {p 5 12 2}
-van Smeden M, Moons KG, de Groot JA, et al. Sample size for binary logistic prediction models: Beyond events per variable criteria. Stat Methods Med Res 2019;28(8):2455-74{p_end}
+Riley RD, Snell KIE, Ensor J, Burke DL, Harrell FE, Jr., Moons KG, Collins GS. 
+Minimum sample size required for developing a multivariable prediction model: Part II binary and time-to-event outcomes. {it:Statistics in Medicine}. 2019.{p_end}
+
+{p 5 12 2}
+van Smeden M, Moons KG, de Groot JA, et al. Sample size for binary logistic prediction models: Beyond events per variable criteria. {it:Stat Methods Med Res}. 2019;28(8):2455-74.{p_end}
+
+{p 5 12 2}
+Riley, RD, Van Calster, B, Collins, GS. A note on estimating the Cox‐Snell R2 from a reported C statistic (AUROC) to inform sample size calculations for developing a prediction model with a binary outcome. 
+{it:Statistics in Medicine}. 2020.{p_end}
 
 
 {title:Also see}

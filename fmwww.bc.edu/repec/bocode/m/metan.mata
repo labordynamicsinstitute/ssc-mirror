@@ -1,7 +1,7 @@
 * metan.ado
 * Study-level (aka "aggregate-data" or "published data") meta-analysis
 
-*! version 4.02  23feb2021
+*! version 4.03  28apr2021
 *! Current version by David Fisher
 *! Previous versions by Ross Harris and Michael Bradburn
 
@@ -176,7 +176,7 @@ void MLPL(string scalar varlist, string scalar touse, real rowvector levels, rea
 
 	// Initialize
 	real scalar eff0, tausq, eff
-	// eff0 = mean(yi, wi)							// Effect size with zero tausq
+	eff0 = mean(yi, wi)								// Effect size with zero tausq
 	tausq = max((0, quadvariance(yi) - mean(vi)))	// Initialize tausq using Hedges estimator
 	wi = 1:/(vi:+tausq)
 	eff = mean(yi, wi)								// Initialize eff using Hedges estimator
@@ -204,17 +204,18 @@ void MLPL(string scalar varlist, string scalar touse, real rowvector levels, rea
 	ll = optimize_result_value(S)
 	eff = p[1]
 	tausq = p[2]
-	//if(tausq < 0) {
-	//	tausq = 0
-	//	eff = eff0
-	//	ll = sum(lnnormalden(yi, eff, sqrt(vi)))
-	//}
+	if(tausq < 0) {
+		tausq = 0
+		eff = eff0
+		st_numscalar("r(ll_negtsq)", ll)
+		ll = sum(lnnormalden(yi, eff, sqrt(vi)))
+	}
 	wi = 1:/(vi:+tausq)
 	st_numscalar("r(tausq)", tausq)
 	st_numscalar("r(converged)", optimize_result_converged(S))
 	st_numscalar("r(ll)", ll)
 
-	// Variance of tausq
+	// Variance of tausq (using inverse Fisher information)
 	real scalar tsq_var
 	tsq_var = optimize_result_V(S)[2,2]
 	st_numscalar("r(tsq_var)", tsq_var)	
@@ -270,11 +271,11 @@ void MLPL(string scalar varlist, string scalar touse, real rowvector levels, rea
 		tausq0 = optimize(S)
 		rc_ll0  = optimize_result_returncode(S)
 		if(rc_ll0) exit(error(rc_ll0))
-		ll0 = optimize_result_value(S)		
-		// if(tausq0 < 0) {
-		//	tausq0 = 0
-		//	ll0 = sum(lnnormalden(yi, 0, sqrt(vi)))
-		//}
+		ll0 = optimize_result_value(S)
+		if(tausq0 < 0) {
+			tausq0 = 0
+			ll0 = sum(lnnormalden(yi, 0, sqrt(vi)))
+		}
 		if (abs(ll0 - ll) <= itol) lr = 0		// in case ll, ll_b are very close (within itol) and/or rounding error results in a negative value
 		else lr = 2*(ll - ll0) / BCFinv
 		
@@ -394,7 +395,7 @@ real scalar ML_profile_eff(real scalar eff, real colvector yi, real colvector vi
 	rc = optimize_result_returncode(S)	
 	if(rc) exit(error(rc))
 	ll = optimize_result_value(S)
-	// if(tausq_ll < 0) ll = sum(lnnormalden(yi, eff, sqrt(vi)))
+	if(tausq_ll < 0) ll = sum(lnnormalden(yi, eff, sqrt(vi)))
 
 	return(ll - crit)
 }
@@ -431,10 +432,10 @@ real scalar ML_skov(real scalar b, real colvector yi, real colvector vi, real co
 	rc = optimize_result_returncode(S)
 	if(rc) exit(error(rc))
 	ll_b = optimize_result_value(S)
-	// if(tausq_b < 0) {
-	//	tausq_b = 0
-	//	ll_b = sum(lnnormalden(yi, b, sqrt(vi)))
-	//}
+	if(tausq_b < 0) {
+		tausq_b = 0
+		ll_b = sum(lnnormalden(yi, b, sqrt(vi)))
+	}
 	
 	real colvector wi_b
 	wi_b = 1:/(vi:+tausq_b)
@@ -503,7 +504,7 @@ void REML(string scalar varlist, string scalar touse, real scalar hlevel, real r
 	
 	// Initialize
 	real scalar eff0, tausq
-	// eff0 = mean(yi, wi)							// effect size with zero tausq
+	eff0 = mean(yi, wi)								// effect size with zero tausq
 	tausq = max((0, quadvariance(yi) - mean(vi)))	// Initialize tausq using Hedges estimator	
 	
 	// Iterative tau-squared using REML
@@ -523,10 +524,11 @@ void REML(string scalar varlist, string scalar touse, real scalar hlevel, real r
 	rc = optimize_result_returncode(S)	
 	if(rc) exit(error(rc))
 	ll = optimize_result_value(S)
-	// if(tausq < 0) {
-	//	tausq = 0
-	//	ll = sum(lnnormalden(yi, eff0, sqrt(vi))) - 0.5*ln(sum(wi))
-	//}
+	if(tausq < 0) {
+		tausq = 0
+		st_numscalar("r(ll_negtsq)", ll)
+		ll = sum(lnnormalden(yi, eff0, sqrt(vi))) - 0.5*ln(sum(wi))
+	}
 	
 	st_numscalar("r(tausq)", tausq)
 	st_numscalar("r(converged)", optimize_result_converged(S))

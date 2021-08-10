@@ -23,7 +23,7 @@
 {cmdab:noc:at}
 {cmdab:p:aper}
 {cmdab:g:ap}
-{cmdab:t:ype(string) }
+{cmdab:auth:or(string) }
 {cmdab:c:ls}
 {cmdab:f:ile(string)}]
 
@@ -50,8 +50,8 @@ Search for papers. Users can enter {cmd:songbl paper} to view the paper classifi
 {synopt:{cmdab:g:ap}}
 Place a space line between the Stata blog results displayed
 {p_end}
-{synopt:{cmdab:t:ype(string)}}
-Search according to the source of ststa blog，{cmd:t(lxh)} means to retrieve only blog posts from lianxh。{cmd:t(sc)} means to retrieve only blog posts from Stata Club
+{synopt:{cmdab:auth:or(string)}}
+Search according to the source of ststa blog，{cmd:auth(连享会)} means to retrieve only blog posts from lianxh。
 {p_end}
 {synopt:{cmdab:f:ile(string)}}
 The document types in brackets include do or pdf. {cmd:file(do)} means open a do documentblog that ends with .do
@@ -118,11 +118,11 @@ You can also browse the papers and replication data & programs etc  by category 
 
 {pstd}List posts with keyword [PSM] from lianxh.cn {p_end}
 
-{phang2}. {stata "songbl PSM,t(lxh)"}{p_end}
+{phang2}. {stata "songbl PSM,auth(连享会)"}{p_end}
 
 {pstd}List posts with keyword [name] from stata club{p_end}
 
-{phang2}. {stata "songbl name,t(sc)"}{p_end}
+{phang2}. {stata "songbl name,auth(爬虫俱乐部)"}{p_end}
 
 {pstd}List papers with keyword [《金融研究》] {p_end}
 

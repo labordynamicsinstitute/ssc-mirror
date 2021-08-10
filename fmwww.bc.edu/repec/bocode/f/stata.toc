@@ -38,6 +38,7 @@ p find module to find matching strings across files in the current directory
 p find_index module to determine the index (observation number) of an observation that satisfies a specified condition
 p finddup module to find non-unique values or observations
 p findname module to list variables matching name patterns or other properties
+p findregex module to find variable names matching a regular expression pattern
 p findsysmis module to find system missing values in a list of variables
 p findunique module to display combinations of unique identifiers in a dataset.
 p findval module to find a specific value
@@ -53,7 +54,9 @@ p fitstat_ers module to compute goodness of fit statistics for Rasch model
 p fixedrho module to estimate treatment and selection models with fixed rho
 p fixsort module to sort variables and align in sorted order, with others fixed  
 p flex module for flexible pseudo maximum likelihood estimation of models for doubly-bounded data
+p flexmat module to create flexible matrices / tables of text, numbers or both
 p flexpaneldid module to perform causal analysis of treatments with varying start dates and durations
+p floatplot module to draw Floating or sliding stacked bar plot
 p floattolong module to recast variables from float to long storage type
 p flowchart module to generate subject disposition flow diagram figures in LaTeX using PGF/TikZ to include in manuscripts
 p flower module to draw sunflower plots

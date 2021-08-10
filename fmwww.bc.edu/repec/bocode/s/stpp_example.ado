@@ -11,21 +11,7 @@ display ///
  
 stpp R_pp1 using "https://pclambert.net/data/popmort.dta", ///
                   agediag(age) datediag(dx)                  ///
-                  pmother(sex) list(1 5 10) 
-display ///                  
-". twoway  (rarea R_pp1_lci R_pp1_uci _t, sort color(red%30) connect(stairstep)) ///" _newline ///
-"        (line R_pp1 _t, sort lcolor(red) connect(stairstep))                    ///" _newline ///
-"        ,legend(off)                                                            ///" _newline ///
-"        xtitle(Years from diagnosis)                                            ///" _newline ///
-"        ytitle(Marginal relative survival)                                      ///" _newline ///
-"        name(R_pp1, replace)"   
-
-twoway  (rarea R_pp1_lci R_pp1_uci _t, sort color(red%30) connect(stairstep)) ///
-        (line R_pp1 _t, sort lcolor(red) connect(stairstep))                  ///
-        ,legend(off)                                                     ///
-        xtitle(Years from diagnosis)                                     ///
-        ytitle(Marginal relative survival)                               ///
-        name(R_pp1, replace)                   
+                  pmother(sex) list(1 5 10) graphname(R_pp1, replace)                  
   }
   else if `egnumber' == 2 {
   	
@@ -33,33 +19,13 @@ display ///
 `". stpp R_pp2 using "https://pclambert.net/data/popmort.dta" , ///"' _newline ///
 "                  agediag(age) datediag(dx)                    ///" _newline  ///
 "                  pmother(sex) list(1 5 10)                    ///" _newline  ///
-"                  by(sex)                                      ///"
+"                  by(sex) graphname(R_pp2, replace)                                       ///"
  
 stpp R_pp2 using "https://pclambert.net/data/popmort.dta", ///
                   agediag(age) datediag(dx)                ///
                   pmother(sex) list(1 5 10)                ///
-                  by(sex)
-                  
-display ///                  
-". twoway  (rarea R_pp2_lci R_pp2_uci _t if sex==1, sort color(red%30) connect(stairstep)) ///" _newline ///
-"        (line R_pp1 _t if sex==1, sort lcolor(red) connect(stairstep))                    ///" _newline ///
-"        (rarea R_pp2_lci R_pp2_uci _t if sex==2, sort color(red%30) connect(stairstep))   ///" _newline ///
-"        (line R_pp2 _t if sex==2, sort lcolor(red) connect(stairstep))                    ///" _newline ///
-"        ,legend(off)                                                                      ///" _newline ///
-"        xtitle(Years from diagnosis)                                                      ///" _newline ///
-"        ytitle(Marginal relative survival)                                                ///" _newline ///
-"        name(R_pp1, replace)"   
-
-twoway  (rarea R_pp2_lci R_pp2_uci _t if sex==1, sort color(red%30) connect(stairstep))  ///
-        (line R_pp2 _t if sex==1, sort lcolor(red) connect(stairstep))                   ///
-        (rarea R_pp2_lci R_pp2_uci _t if sex==2, sort color(blue%30) connect(stairstep)) ///
-        (line R_pp2 _t if sex==2, sort lcolor(blue) connect(stairstep))                  ///
-        ,legend(order(2 "males" 4 "females") ring(0) pos(1))                             ///
-        xtitle(Years from diagnosis)                                                     ///
-        ytitle(Marginal relative survival)                                               ///
-        name(R_pp2, replace)      
-    
-    
+                  by(sex) graphname(R_pp2, replace) 
+                
   }
   else if `egnumber' == 3 {
 
@@ -70,6 +36,7 @@ display ///
 "                  pmother(sex) list(1 5 10)                    ///" _newline  ///
 "                  by(sex)                                      ///" _newline  ///
 "                  standstrata(ICSSagegrp)                      ///" _newline  ///
+"                  graphname(R_pp3, replace)                    ///" _newline  ///
 "                  standweight(0.07 0.12 0.23 0.29 0.29)        ///" 
  
 recode age (min/44=1) (45/54=2) (55/64=3) (65/74=4) (75/max=5), gen(ICSSagegrp)
@@ -78,28 +45,9 @@ stpp R_pp3 using "https://pclambert.net/data/popmort.dta", ///
                   pmother(sex) list(1 5 10)                ///
                   by(sex)                                  ///
                   standstrata(ICSSagegrp)                  ///
+                  graphname(R_pp3, replace)                ///
                   standweight(0.07 0.12 0.23 0.29 0.29)   
-                  
-display ///                  
-". twoway  (rarea R_pp3_lci R_pp3_uci _t if sex==1, sort color(red%30) connect(stairstep)) ///" _newline ///
-"        (line R_pp3 _t if sex==1, sort lcolor(red) connect(stairstep))                    ///" _newline ///
-"        (rarea R_pp3_lci R_pp3_uci _t if sex==2, sort color(red%30) connect(stairstep))   ///" _newline ///
-"        (line R_pp3 _t if sex==2, sort lcolor(red) connect(stairstep))                    ///" _newline ///
-"        ,legend(off)                                                                      ///" _newline ///
-"        xtitle(Years from diagnosis)                                                      ///" _newline ///
-"        ytitle(Marginal relative survival)                                                ///" _newline ///
-"        name(R_pp3, replace)"   
-
-twoway  (rarea R_pp3_lci R_pp3_uci _t if sex==1, sort color(red%30) connect(stairstep))  ///
-        (line R_pp3 _t if sex==1, sort lcolor(red) connect(stairstep))                   ///
-        (rarea R_pp3_lci R_pp3_uci _t if sex==2, sort color(blue%30) connect(stairstep)) ///
-        (line R_pp3 _t if sex==2, sort lcolor(blue) connect(stairstep))                  ///
-        ,legend(order(2 "males" 4 "females") ring(0) pos(1))                             ///
-        xtitle(Years from diagnosis)                                                     ///
-        ytitle(Marginal relative survival)                                               ///
-        name(R_pp3, replace)      
-      
-    
+                
   }
   else if `egnumber' == 4 {
   	
@@ -112,6 +60,7 @@ display ///
 "                  agediag(age) datediag(dx)                    ///" _newline  ///
 "                  pmother(sex) list(1 5 10)                    ///" _newline  ///
 "                  by(sex)                                      ///" _newline  ///
+"                  graphname(R_pp4, replace)                    ///" _newline  ///
 "                  indweights(wt_age)"                     
 
  
@@ -123,28 +72,8 @@ stpp R_pp4 using "https://pclambert.net/data/popmort.dta", ///
                   agediag(age) datediag(dx)                ///
                   pmother(sex) list(1 5 10)                ///
                   by(sex)                                  ///
-                  indweights(wt_age)                       
-
-                  
-display ///                  
-". twoway  (rarea R_pp4_lci R_pp4_uci _t if sex==1, sort color(red%30) connect(stairstep)) ///" _newline ///
-"        (line R_pp4 _t if sex==1, sort lcolor(red) connect(stairstep))                    ///" _newline ///
-"        (rarea R_pp4_lci R_pp4_uci _t if sex==2, sort color(red%30) connect(stairstep))   ///" _newline ///
-"        (line R_pp4 _t if sex==2, sort lcolor(red) connect(stairstep))                    ///" _newline ///
-"        ,legend(off)                                                                      ///" _newline ///
-"        xtitle(Years from diagnosis)                                                      ///" _newline ///
-"        ytitle(Marginal relative survival)                                                ///" _newline ///
-"        name(R_pp4, replace)"   
-
-twoway  (rarea R_pp4_lci R_pp4_uci _t if sex==1, sort color(red%30) connect(stairstep))  ///
-        (line R_pp4 _t if sex==1, sort lcolor(red) connect(stairstep))                   ///
-        (rarea R_pp4_lci R_pp4_uci _t if sex==2, sort color(blue%30) connect(stairstep)) ///
-        (line R_pp4 _t if sex==2, sort lcolor(blue) connect(stairstep))                  ///
-        ,legend(order(2 "males" 4 "females") ring(0) pos(1))                             ///
-        xtitle(Years from diagnosis)                                                     ///
-        ytitle(Marginal relative survival)                                               ///
-        name(R_pp4, replace)      
-          
+                  graphname(R_pp4, replace)                ///
+                  indweights(wt_age)                          
   }  
   
 end   

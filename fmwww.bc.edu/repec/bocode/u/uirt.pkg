@@ -20,10 +20,20 @@ d KW: item response theory; differential item functioning; item fit; plausible v
 d
 d Requires: Stata version 12
 d
-d Distribution-Date: 20200328
+d Distribution-Date: 20210515
 d
 d Author:   Bartosz Kondratek, Educational Research Institute
 d Support: email  b.kondratek@@ibe.edu.pl
 d
 f uirt.ado
 f uirt.sthlp
+f uirt_chi2w.ado
+f uirt_chi2w.sthlp
+f uirt_dif.ado
+f uirt_dif.sthlp
+f uirt_icc.ado
+f uirt_icc.sthlp
+f uirt_sx2.ado
+f uirt_sx2.sthlp
+f uirt_theta.ado
+f uirt_theta.sthlp

@@ -1,0 +1,32 @@
+d 'EVENTSTUDYINTERACT': module to implement the interaction weighted estimator for an event study
+d
+d   To estimate the dynamic effects of an absorbing treatment,
+d researchers often use two-way fixed effects (TWFE) regressions
+d that include leads and lags of the treatment (event study
+d specification).  Units are categorized into different cohorts
+d based on their initial treatment timing.  Sun and Abraham (2020)
+d proposes this estimator as an alternative to the TWFE regression
+d in the presence of treatment effects heterogeneous across
+d cohorts.  Under treatment effects heterogeneity, the TWFE
+d regression can result in estimates with uninterpretable weights,
+d which can be assessed by the Stata module eventstudyweights.	The
+d IW estimator is implemented in three steps.  First, estimate the
+d interacted regression with reghdfe, where the interactions are
+d between relative time indicators and cohort indicators.  Second,
+d estimate the cohort shares underlying each relative time.  Third,
+d take the weighted average of estimates from the first step, with
+d weights set to the estimated cohort shares.  
+d
+d KW: event study
+d KW: interactions
+d KW: two-way fixed effects
+d
+d Requires: Stata version 13 and avar, ftools and reghdfe from SSC (q.v.)
+d
+d Distribution-Date: 20210804
+d
+d Author: Liyang Sun, MIT	
+d Support: email lsun20@@mit.edu
+d
+f eventstudyinteract.ado
+f eventstudyinteract.sthlp

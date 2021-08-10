@@ -1,5 +1,31 @@
 
-*version 1.2
+*! Version 1.3, 20/02/2021
+*! Nicolas Debarsy and Vincenzo Verardi
+
+* v1.2 In the partial option, residuals were shifted by the avreage predicted value
+* obtained in the parametric part. This is still the case but the noshift option allows
+* to retrieve the unshifted residuals. If the noshift option is used, the graph is in the
+* parametric residual units and not dependent variable units
+
+* v1.2 when weights were applied in the previous version, they were not applied at the partialling-out step 
+* This has been modified and weight are applied at all steps of the procedure.
+
+* v1.2 when trimming was implemented in the previous version, the if condition was not applied when estimting 
+* the density function of the variable entering the model non-parametrically. This has been modified.
+
+* v1.2 only the p-value is reported now for the Hardle and Mammen test as the standardized test statistic
+* could be misleading. The p-value is now displayed in the stored results.
+
+* In version v1.2, the help file has been updated
+
+
+* This program is free software: you can redistribute it and/or modify it.
+
+* This program is distributed in the hope that it will be useful,
+* but WITHOUT ANY WARRANTY; without even the implied warranty of
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+* GNU General Public License for more details <http://www.gnu.org/licenses/>.
+
 program define semipar, eclass
 
 version 10.1
@@ -9,7 +35,7 @@ if replay()& "`e(cmd)'"=="semipar" {
 exit
 }
 
-syntax varlist [if] [in] [aw fw/], nonpar(varlist) [Generate(string) PARtial(string) degree(real 1) trim(real 0) kernel(string) NOGraph ci Title(string) ytitle(string) xtitle(string) robust cluster(varlist) test(numlist max=1) nsim(real 100)  level(real 95) weight_test(varlist)  ]
+syntax varlist [if] [in] [aw fw/], nonpar(varlist) [Generate(string) PARtial(string) degree(real 1) trim(real 0) kernel(string) NOGraph ci Title(string) ytitle(string) xtitle(string) robust cluster(varlist) test(numlist max=1) nsim(real 100)  level(real 95) weight_test(varlist) NOShift bw(numlist max=1)]
 
 tempvar touse res hat y2 res2 id low hi aa nonpardd zzz Parametric_Fit
 tempname B1 B2 B V V0 A
@@ -54,7 +80,7 @@ local nex: word count `expl'
 		exit 198
 	}
 
-capture qui kdensity `nonpar' `wgt', nograph gen(`aa' `nonpardd') at(`nonpar')
+capture qui kdensity `nonpar' `wgt' if `touse', nograph gen(`aa' `nonpardd') at(`nonpar')
 qui sum `nonpardd'
 
 if `trim'<0|`trim'>r(max) {
@@ -74,7 +100,7 @@ exit 198
 
 foreach var of varlist `varlist' {
 tempvar hat`var'
-capture qui lpoly `var' `nonpar' if `touse', degree(`degree') gen(`hat`var'') at(`nonpar') nograph kernel(`kernel')
+capture qui lpoly `var' `nonpar'  `wgt' if `touse', degree(`degree') gen(`hat`var'') at(`nonpar') nograph kernel(`kernel') bw(`bw')
 tempvar res`var'
 qui gen `res`var''=`var'-`hat`var''
 local variabres "`variabres' `res`var''"
@@ -155,8 +181,11 @@ matrix repost b=`B1'
 predict `res2'
 qui summarize `res2', meanonly
 local mean_y_hat=r(mean)
+qui replace `res2'=`dv'-`res2'
 
-qui replace `res2'=`dv'-`res2'+`mean_y_hat'
+if "`noshift'"=="" {
+qui replace `res2'=`res2'+`mean_y_hat'
+}
 
 if "`generate'"!="" {
 	tokenize `"`generate'"'
@@ -167,7 +196,7 @@ if "`generate'"!="" {
 		local marker `1'
 		confirm new var `marker'
 		qui sum  `nonpar'
-		lpoly `res2' `nonpar' `wgt' if `touse' , degree(`degree') gen(`marker') at(`nonpar') legend(off) kernel(`kernel')  nograph
+		lpoly `res2' `nonpar' `wgt' if `touse' , degree(`degree') gen(`marker') at(`nonpar') legend(off) kernel(`kernel') bw(`bw')  nograph
 	}
 
 	else {
@@ -179,7 +208,7 @@ if "`generate'"!="" {
 
 
 else {
-lpoly `res2' `nonpar' `wgt' if `touse', degree(`degree') nograph at(`nonpar') kernel(`kernel')
+lpoly `res2' `nonpar' `wgt' if `touse', degree(`degree') nograph at(`nonpar') kernel(`kernel') bw(`bw')
 }
 
 local b1=r(bwidth)
@@ -228,7 +257,7 @@ exit
 
 qui{
 tempvar yhat0 yhat yhat2 diff2 T0 Ts TT ystar e u
-lpoly `res2' `nonpar' `wgt' if `touse', gen(`yhat0') at(`nonpar') nograph kernel(`kernel') degree(`degree')
+lpoly `res2' `nonpar' `wgt' if `touse', gen(`yhat0') at(`nonpar') nograph kernel(`kernel') degree(`degree') bw(`bw')
 local b0=r(bwidth)
 
 if `test'==0 {
@@ -296,13 +325,13 @@ replace `ystar'=`yhat'+`res'*`e'
 
 
 capture drop `yhat0' `yhat' `yhat2' `diff2'
-lpoly `ystar' `nonpar' `wgt' if `touse', gen(`yhat0') at(`nonpar') nograph kernel(`kernel') degree(`degree')
+lpoly `ystar' `nonpar' `wgt' if `touse', gen(`yhat0') at(`nonpar') nograph kernel(`kernel') degree(`degree') bw(`bw')
 local b0=r(bwidth)
  
 reg `ystar' `nonparb' `wgt' if `touse'
 predict `yhat' if `touse'
 
-lpoly `yhat' `nonpar' `wgt' if `touse', gen(`yhat2') at(`nonpar') bw(`b0') nograph  kernel(`kernel') degree(`degree')
+lpoly `yhat' `nonpar' `wgt' if `touse', gen(`yhat2') at(`nonpar') bw(`b0') nograph  kernel(`kernel') degree(`degree') bw(`bw')
 
 
 gen `diff2'=((`yhat0'-`yhat2')^2)*`weight_test'
@@ -333,10 +362,11 @@ di ""
 di ""
 di "H0: Parametric and non-parametric fits are not different"
 di "-------------------------------------------------------"
-di "Standardized Test statistic T: " `Ts'
-di "Critical value ("  `level'  "%" "): " r(c_1)
-di "Approximate P-value: " `m'
+///di "Standardized Test statistic T: " `Ts'
+///di "Critical value ("  `level'  "%" "): " r(c_1)
+di "Approximate p-value: " `m'
 di""
+
 }
 
 if "`partial'"!="" {
@@ -360,6 +390,9 @@ capture qui est restore  `Parametric_Fit'
 ereturn local _estimates_name "Parametric fit"
 capture qui keep in 1/`max'
 
+if "`test'"!="" {
+ereturn scalar p_HM=`m'
+}
 
 end
 
@@ -387,3 +420,4 @@ program _get_kernel_name, sclass
 end
 
 exit
+

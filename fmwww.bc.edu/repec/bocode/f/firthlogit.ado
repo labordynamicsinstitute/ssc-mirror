@@ -1,4 +1,4 @@
-*! firthlogit.ado Version 1.1 JRC 2015-07-17
+*! firthlogit.ado Version 1.2 2021-04-24
 program define firthlogit
     version 13.1
 
@@ -29,10 +29,10 @@ program define firthlogit_ml, eclass sortpreserve byable(recall)
 		error = 102
 	}
 
-	_rmcoll `predictors', expand
-	global firthlogitpredictors `r(varlist)'
-
 	local weight = cond("`weight'`exp'" == "", "", "[`weight' = `exp']")
+
+	_rmcoll `predictors' if `touse' `weight', expand
+	global firthlogitpredictors `r(varlist)'
 
 	// Initial values
 	tempname Init

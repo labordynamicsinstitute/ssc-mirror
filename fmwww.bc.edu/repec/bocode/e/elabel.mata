@@ -1,9 +1,9 @@
-*! version 4.2.0 09feb2021 daniel klein
+*! version 4.2.2 09jul2021 daniel klein
 // -------------------------------------- elabel.mata
 version 11.2
 
 // -------------------------------------- elabel version
-local elabel_version 4.2.0
+local elabel_version 4.2.2
 local stata_version  `c(stata_version)'
 local date_time      "`c(current_date)' `c(current_time)'"
 
@@ -216,7 +216,7 @@ void Elabel_Utilities::u_assert0(| `SS' where)
 `voidBoolean' Elabel_Utilities::u_assert_nosysmiss(`RV' x, | `RS' rc)
 {
     if (!rc) return( !anyof(x, .) )
-    if ( anyof(x, .) ) exit(error(180))
+    if ( anyof(x, .) ) u_exerr(180, "may not label .")
 }
 
 `voidBoolean' Elabel_Utilities::u_assert_uniq(`SR' caller_list, | `TS' scnd)
@@ -1932,7 +1932,7 @@ void Elabel_ValueLabel::markall() mark(J(K(), 1, `True'))
 `voidBoolean'  Elabel_ValueLabel::sysmiss(| `RS' ok)
 {
     if ( ok ) return( anyof(vvec(), .) )
-    if ( anyof(vvec(), .) ) exit( error(180) )
+    u_assert_nosysmiss(vvec())
 }
 
 `SR' Elabel_ValueLabel::usedby(| `Boolean' update)
@@ -2154,10 +2154,7 @@ class Elabel extends Elabel_Utilities
     private        void                    cmd_cmd()
     
     private        void                    cmd_confirm()
-    
-    private        void                    cmd_swap()
-    private        void                    cmd_swap_u()
-    
+        
     private        void                    cmd_duplicates()
     private        void                    cmd_duplicates_remove()    
     private        void                    cmd_duplicates_get()
@@ -2186,6 +2183,9 @@ class Elabel extends Elabel_Utilities
     
     private        void                    cmd_rename()
     private        `Boolean'               cmd_rename_old_new()
+    
+    private        void                    cmd_swap()
+    private        void                    cmd_swap_u()    
     
     private        void                    cmd_unab()
     
@@ -2251,7 +2251,6 @@ void Elabel::main(`SS' st_cmdline)
     else if ( u_unabbr(subcmd, "c_local:s")      ) cmd_c_locals()
     else if ( u_unabbr(subcmd, "cmd")            ) cmd_cmd()
     else if ( u_unabbr(subcmd, "conf:irm")       ) cmd_confirm()
-    else if ( u_unabbr(subcmd, "swap")           ) cmd_swap()
     else if ( u_unabbr(subcmd, "dup:licates")    ) cmd_duplicates()
     else if ( u_unabbr(subcmd, "fcncall")        ) cmd_fcncall()
     else if ( u_unabbr(subcmd, "numlist")        ) cmd_numlist()
@@ -2260,6 +2259,7 @@ void Elabel::main(`SS' st_cmdline)
     else if ( u_unabbr(subcmd, "protectr")       ) cmd_protectr()
     else if ( u_unabbr(subcmd, "q:uery")         ) cmd_query()
     else if ( u_unabbr(subcmd, "ren:ame")        ) cmd_rename()
+    else if ( u_unabbr(subcmd, "swap")           ) cmd_swap()
     else if ( u_unabbr(subcmd, "unab")           ) cmd_unab()
     else if ( u_unabbr(subcmd, "varvaluelabel:s")) cmd_varvaluelabel()
     else if ( u_unabbr(subcmd, "_oneliner")      ) cmd__oneliner()
@@ -2641,7 +2641,7 @@ void Elabel::cmd_define_eexp(`TC' vspec, `Boolean' is_veexp,
             E.wildcards(st_vlsearch(lblnamelist[i], lspec), lspec)
             E.eexp(vspec)
             VL[i].setup(lblnamelist[i], E.eexp(), lspec)
-            VL[i].sysmiss(`False')
+            u_assert_nosysmiss(VL[i].vvec())
             if ( O.add() & (!O.aa()) ) VL[i].assert_add()
         }
     }
@@ -2656,7 +2656,7 @@ void Elabel::cmd_define_eexp(`TC' vspec, `Boolean' is_veexp,
             vals = E.eexp()
             E.eexp(lspec)
             VL[i].setup(lblnamelist[i], vals, E.eexp())
-            VL[i].sysmiss(`False')
+            u_assert_nosysmiss(VL[i].vvec())
             if ( O.add() & (!O.aa()) ) VL[i].assert_add()
         }
         VL = select(VL, OK)
@@ -3279,75 +3279,6 @@ void Elabel::cmd_confirm()
     if ( uniq ) u_assert_uniq(tok, "value label")
 }
 
-        // ------------------------------ cmd_swap
-void Elabel::cmd_swap()
-{
-    `SR'      oldnames, newnames, tok
-    `Boolean' mlang
-    `TS'      t
-    
-    u_st_syntax(zero, "anything(id = lblname everything) [ , MONOLINGUAL ]")
-    
-    mlang = (st_local("monolingual") == "")
-    
-    pragma unset oldnames
-    pragma unset newnames
-    
-    if ( !u_isgmappings(st_local("anything"), oldnames, newnames) ) {
-        t = tokeninit(" ", " .", "()")
-            tokenset(t, st_local("anything"))
-        while ((tok=tokenget(t)) != "") {
-            tok = elabel_unab(tok, `True', mlang)
-            u_err_fewmany(cols(tok)-1, "old label names")
-            oldnames = (oldnames, tok)
-            if ( anyof((".", ""), (tok=tokenget(t))) ) tok = ""
-            else {
-                tok = cmd_values_elblname(tok)
-                u_err_fewmany(cols(tok)-1, "new label names")
-            }
-            newnames = (newnames, tok)
-        }
-    }
-    else {
-        oldnames = elabel_unab(tokens(oldnames), `True', mlang)
-        newnames = cmd_values_lblnames(newnames)
-        if (cols(newnames) == 1) newnames = J(1, cols(oldnames), newnames)
-        else u_err_fewmany((cols(newnames)-cols(oldnames)), "new label names")
-    }
-    
-    cmd_swap_u(oldnames, newnames, mlang)
-}
-
-void Elabel::cmd_swap_u(`SR' oldnames, `SR' newnames, `Boolean' mlang)
-{
-    `SM' mappings
-    `RR' oldisnew
-    `RS' i
-    
-    mappings = distinctrowsof( (oldnames\newnames)' )
-    oldnames = mappings[, 1]'
-    newnames = mappings[, 2]'
-    
-    oldisnew = (oldnames :== newnames)
-    oldnames = select(oldnames, !oldisnew)
-    newnames = select(newnames, !oldisnew)
-    
-    u_assert_uniq(oldnames, "old label name")
-    
-    if ( !cols(oldnames) ) return
-    
-    breakoff()
-    u_swap_valuelabel(oldnames, newnames)
-    if ( mlang ) {
-        for (i=1; i<=rows(S.langs()); ++i) {
-            (void) _stata("_label language " + S.langs()[i], `True')
-            u_swap_valuelabel(oldnames, newnames)
-        }
-        if ( (i-1) ) (void) _stata("_label language " + S.clang(), `True')
-    }
-    breakreset()
-}
-
         // ------------------------------ cmd_duplicates
 void Elabel::cmd_duplicates()
 {
@@ -3357,7 +3288,8 @@ void Elabel::cmd_duplicates()
     subcmd = tokenget(t_zero)
     zero   = tokenrest(t_zero)
     
-    if      ( u_unabbr(subcmd, "rep:ort") ) subcmd = "report"
+    if      ((subcmd == "") & (zero == "")) subcmd = "report"
+    else if ( u_unabbr(subcmd, "rep:ort") ) subcmd = "report"
     else if ( u_unabbr(subcmd, "remove")  ) subcmd = "remove"
     else if ( u_unabbr(subcmd, "retain")  ) subcmd = "retain"
     else if ( u_unabbr(subcmd, "sel:ect") ) subcmd = "retain"
@@ -3439,13 +3371,13 @@ void Elabel::cmd_duplicates_report(`TS' A, `Boolean' listopt)
     i = 0
     for (loc=asarray_first(A); loc!=NULL; loc=asarray_next(A, loc)) {
         if ((n=cols(cnt=asarray_contents(A, loc))) < 2) continue
-        printf("\n{txt}value label {res:%s} has ", cnt[1])
-        printf("{res:%f} duplicate%s: ", --n, ((n>1) ? "s" : ""))
-        printf("{res:%s}", invtokens(cnt[2..++n]))
+        printf("\n{p 0 12 2}")
+        printf("{txt}value label {res:%s} has {res:%f} duplicate%s: {res:%s}",
+            cnt[1], n-1, ((n>2) ? "s" : ""), invtokens(cnt[2..n]))
+        printf("{p_end}")
         st_numscalar(sprintf("r(n_duplicates%f)", ++i), n)
         st_global(sprintf("r(duplicates%f)", i), invtokens(cnt))
         if ( !listopt ) continue
-        printf("\n")
         VL.setup(cnt[1])
         VL.list()
     }
@@ -3883,6 +3815,75 @@ void Elabel::cmd_rename()
     
     elabel_rename(names[1], names[2], nomem, force)
     return(`True')
+}
+
+        // ------------------------------ cmd_swap
+void Elabel::cmd_swap()
+{
+    `SR'      oldnames, newnames, tok
+    `Boolean' mlang
+    `TS'      t
+    
+    u_st_syntax(zero, "anything(id = lblname everything) [ , MONOLINGUAL ]")
+    
+    mlang = (st_local("monolingual") == "")
+    
+    pragma unset oldnames
+    pragma unset newnames
+    
+    if ( !u_isgmappings(st_local("anything"), oldnames, newnames) ) {
+        t = tokeninit(" ", " .", "()")
+            tokenset(t, st_local("anything"))
+        while ((tok=tokenget(t)) != "") {
+            tok = elabel_unab(tok, `True', mlang)
+            u_err_fewmany(cols(tok)-1, "old label names")
+            oldnames = (oldnames, tok)
+            if ( anyof((".", ""), (tok=tokenget(t))) ) tok = ""
+            else {
+                tok = cmd_values_elblname(tok)
+                u_err_fewmany(cols(tok)-1, "new label names")
+            }
+            newnames = (newnames, tok)
+        }
+    }
+    else {
+        oldnames = elabel_unab(tokens(oldnames), `True', mlang)
+        newnames = cmd_values_lblnames(newnames)
+        if (cols(newnames) == 1) newnames = J(1, cols(oldnames), newnames)
+        else u_err_fewmany((cols(newnames)-cols(oldnames)), "new label names")
+    }
+    
+    cmd_swap_u(oldnames, newnames, mlang)
+}
+
+void Elabel::cmd_swap_u(`SR' oldnames, `SR' newnames, `Boolean' mlang)
+{
+    `SM' mappings
+    `RR' oldisnew
+    `RS' i
+    
+    mappings = distinctrowsof( (oldnames\newnames)' )
+    oldnames = mappings[, 1]'
+    newnames = mappings[, 2]'
+    
+    oldisnew = (oldnames :== newnames)
+    oldnames = select(oldnames, !oldisnew)
+    newnames = select(newnames, !oldisnew)
+    
+    u_assert_uniq(oldnames, "old label name")
+    
+    if ( !cols(oldnames) ) return
+    
+    breakoff()
+    u_swap_valuelabel(oldnames, newnames)
+    if ( mlang ) {
+        for (i=1; i<=rows(S.langs()); ++i) {
+            (void) _stata("_label language " + S.langs()[i], `True')
+            u_swap_valuelabel(oldnames, newnames)
+        }
+        if ( (i-1) ) (void) _stata("_label language " + S.clang(), `True')
+    }
+    breakreset()
 }
 
         // ------------------------------ cmd_unab
@@ -4894,6 +4895,9 @@ end
 exit
 
 /* ---------------------------------------
+4.2.2 09jul2021 polished output for -elabel duplicates report-
+4.2.1 16may2021 -elabel duplicates- w/o arguments defaults to -report-
+                new error message for attempt to label . (sysmiss)
 4.2.0 09feb2021 bug fix ElabelValueLabel() -sep-
 4.1.1 28dec2020 tokendiscard() no longer changes 2nd argument
                 rewrite _distinctrowsof()

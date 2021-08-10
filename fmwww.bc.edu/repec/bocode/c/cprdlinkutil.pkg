@@ -28,8 +28,8 @@ d Requires: Stata version 13 and keyby, chardef from SSC (q.v.)
 d
 d Distribution-Date: 20181210
 d
-d Author: Roger Newson,  Imperial College London
-d Support: email r.newson@@imperial.ac.uk
+d Author: Roger Newson,  King's College London
+d Support: email roger.newson@@kcl.ac.uk
 d
 f cprdlink_linkage_coverage.ado
 f cprdlink_linkage_eligibility.ado

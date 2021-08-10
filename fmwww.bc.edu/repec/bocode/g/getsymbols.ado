@@ -1,7 +1,10 @@
-*! returnsqg, version 1.0, <<<<Oct 2017
-* Author: Alberto Dorantes, Ph.D.  Monterrey Tech, Querétaro Campus, México
-** Prepared to work with at least 3 free databases of Quandl.com: WIKI, CBOE, NASDAQOMX, and CHRIS
-* See https://www.quandl.com/search?query=  to learn about these databases
+*! getsymbols, version 1.1, <<<<May 2021
+*! getsymbols, version 1.0, <<<<Oct 2017
+* In May 2021 Yahoo Finance changed  its url data repository:
+*     from  "https://l1-query.finance.yahoo.com/v7/finance/chart/" 
+*     to    "https://query1.finance.yahoo.com/v7/finance/chart/"
+
+* Author: C. Alberto Dorantes, Ph.D.  Monterrey Tech, QuerÃ©taro Campus, MÃ©xico
 
 capture program drop getsymbols
 program def getsymbols, rclass
@@ -13,8 +16,11 @@ tempfile arch1 archivo
 tempvar temp1
 
 local urlquandl = "https://www.quandl.com/api/v3/datasets/"
-local urlgoogle = "http://finance.google.com/finance/historical?q="
-local urlyahoo = "https://l1-query.finance.yahoo.com/v7/finance/chart/"
+local urlgoogle = "https://www.google.com/finance/historical?q="
+*local urlgoogle = "http://finance.google.com/finance/historical?q="
+*local urlgoogle = "http://finance.google.com/finance/historical?q="
+local urlyahoo = "https://query1.finance.yahoo.com/v7/finance/chart/"
+*local urlyahoo = "https://l1-query.finance.yahoo.com/v7/finance/chart/"
 local urlvantage ="https://www.alphavantage.co/query?function="
 
 local f1=date("`fd'-`fm'-`fy'","DMY")

@@ -1,4 +1,4 @@
-*! Part of package matrixtools v. 0.27
+*! Part of package matrixtools v. 0.28
 *! Support: Niels Henrik Bruun, niels.henrik.bruun@gmail.com
 *! 2019-03-13 nhb >	Zipsettings added
 *! 2019-03-12 nhb >	Label on blank separator line

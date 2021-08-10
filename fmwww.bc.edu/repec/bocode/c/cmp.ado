@@ -1,4 +1,4 @@
-*! cmp 8.5.2 24 March 2021
+*! cmp 8.6.4 22 July 2021
 *! Copyright (C) 2007-21 David Roodman 
 
 * This program is free software: you can redistribute it and/or modify
@@ -18,7 +18,14 @@
 
 cap program drop cmp
 program define cmp, sortpreserve properties(user_score svyb svyj svyr mi fvaddcons) byable(recall)
-	version 11.0
+  version 11
+  cap version 13.0
+  if _rc {
+     di as err "This version of {cmd:cmp} requires Stata version 13 or later. An older version compatible with Stata `c(stata_version)'"
+     di as err "is at https://github.com/droodman/cmp/releases/tag/v8.6.1."
+     exit _rc
+  }
+
 	cap noi _cmp `0'
 	if _rc {
 		local rc = _rc
@@ -70,23 +77,6 @@ program define _cmp
 		exit 0
 	}
 
-	mata st_local("StataVersion", cmpStataVersion()); st_local("CodeVersion", cmpVersion())
-	if `StataVersion' != c(stata_version) | "`CodeVersion'" < "08.00.00" {
-		cap findfile "lcmp.mlib"
-		while !_rc {
-			erase "`r(fn)'"
-			cap findfile "lcmp.mlib"
-		}
-		qui findfile "cmp.mata"
-		cap run "`r(fn)'"
-		if _rc & c(stata_version) >= 13 {
-			di _n "Warning: Could not recompile cmp.mata, probably for lack of write access to the directory where it is stored."
-			di    "For backward compatibility, cmp is distributed as compiled in Stata 11. Recompiling in Stata 13 or later"
-			di   `"makes it to run faster in some cases. To compile it manually, type or click on {stata "which cmp.mata"};"'
-			di    "then run the displayed file like a Stata .do file. This only needs to be done once per installation." _n
-		}
-	}
-
 	cap ghk2version
 	if _rc | "`r(version)'" < "01.70.00" {
 		di as err "Error: {cmd:cmp} works with {cmd:ghk2()} version 1.7.0 or later."
@@ -116,9 +106,9 @@ program define _cmp
 
 	local structural = "`structural'" != ""
 	global cmp_reverse = "`reverse'" != ""
-	mata _mod.set_reverse($cmp_reverse)
+	mata _mod.setReverse($cmp_reverse)
 	global cmpSigXform = "`sigxform'" ==""
-	mata _mod.set_SigXform($cmpSigXform)
+	mata _mod.setSigXform($cmpSigXform)
 	if $cmpSigXform {
 		local ln ln
 		local atanh atanh
@@ -173,10 +163,10 @@ program define _cmp
         syntax [anything(name=intmethod)], [TOLerance(real 1e-8) ITERate(integer 1001)]
 				if `tolerance'<=0 cmp_error 198 "Adaptive quadrature tolerance must be positive."
 				if   `iterate'<=0 cmp_error 198 "Maximum adaptive quadrature iterations must be positive."
-				mata _mod.set_QuadTol(`tolerance'); _mod.set_QuadIter(`iterate')
+				mata _mod.setQuadTol(`tolerance'); _mod.setQuadIter(`iterate')
         local iterate `_iterate'
 			}
-			else mata _mod.set_QuadTol(1e-3); _mod.set_QuadIter(1001)
+			else mata _mod.setQuadTol(1e-3); _mod.setQuadIter(1001)
 			if "`intmethod'"'=="" local intmethod mvaghermite
 			local 0, `intmethod'
 			syntax, [Ghermite MVAghermite]
@@ -220,9 +210,9 @@ program define _cmp
 		di as res "Warning: {cmd:scramble} in {cmd:ghkdraws()} option incompatible with {cmd:ghalton}. {cmd:scramble} ignored."
 		local scramble
 	}
-	if 0`ghkdraws' mata CheckPrime(`ghkdraws')
+	if 0`ghkdraws' mata _mod.CheckPrime(`ghkdraws')
 	local ghkanti = "`antithetics'`ghkanti'"!=""
-	mata _mod.set_ghkType("`ghktype'"); _mod.set_ghkAnti(`ghkanti'); _mod.set_ghkDraws(0`ghkdraws'); _mod.set_ghkScramble("`scramble'")
+	mata _mod.setGHKType("`ghktype'"); _mod.setGHKAnti(`ghkanti'); _mod.setGHKDraws(0`ghkdraws'); _mod.setGHKScramble("`scramble'")
 	local ghkscramble `scramble'
 
 	if `"`covariance'"' == "" {
@@ -252,7 +242,7 @@ program define _cmp
 	local t : subinstr local indicators "(" "", all
 	if $cmp_d != `:word count `:subinstr local t ")" "", all'' cmp_error 198 `"The {cmdab:ind:icators()} option must contain $cmp_d `=plural($cmp_d,"variable","variables, one for each equation")'. Did you forget to type {stata "cmp setup"}?"'
 
-	mata _mod.set_Quadrature(0); _mod.set_REAnti(1)
+	mata _mod.setQuadrature(0); _mod.setREAnti(1)
 	if $parse_L > 1 {
 		if `"`redraws'"' == "" {
 			if `"`intpoints'"' == "" {
@@ -275,7 +265,7 @@ program define _cmp
 				}
 			}
 			local steps 1
-			mata _mod.set_Quadrature(1); _mod.set_REAnti(1)
+			mata _mod.setQuadrature(1); _mod.setREAnti(1)
 		} 
 		else {
 			if `"`intpoints'"' != "" cmp_error 198 "intpoints() and redraws() options conflict. Use one or neither. (Default: sparse-grid quadrature with precision equivalent to 12 integration points.)"
@@ -306,8 +296,8 @@ program define _cmp
 				di as res "Warning: {cmd:scramble} in {cmd:redraws()} option incompatible with {cmd:ghalton}. {cmd:scramble} ignored."
 				local scramble
 			}
-			mata CheckPrime(strtoreal(tokens("`redraws'")))
-			mata _mod.set_REType("`type'"); _mod.set_REAnti(1+("`antithetics'"!= "")); _mod.set_REScramble("`scramble'")
+			mata _mod.CheckPrime(strtoreal(tokens("`redraws'")))
+			mata _mod.setREType("`type'"); _mod.setREAnti(1+("`antithetics'"!= "")); _mod.setREScramble("`scramble'")
 		}
 	}
 	if 0`steps'==0 local steps 1
@@ -322,7 +312,6 @@ program define _cmp
 	global cmp_truncreg 0
 	local asprobit_eq 0
 	tempvar _touse n asmprobit_dummy_sum asmprobit_ind
-	if c(stata_version)>=12.1 local fast fast
 
 	qui {
 		gen byte `_touse' = 0
@@ -333,7 +322,7 @@ program define _cmp
 			if (`"`1'"' == ")" & `asprobit_eq' == 0) | (`"`1'"' == "(" & `asprobit_eq') cmp_error 132 "Too many `1'"
 			if `"`1'"'==")" {
 				if "`m_ro'" == "m" {
-					cap assert `asmprobit_dummy_sum'==1 if `touse' & _cmp_ind`first_asprobit_eq', `fast'
+					cap assert `asmprobit_dummy_sum'==1 if `touse' & _cmp_ind`first_asprobit_eq', fast
 					if _rc cmp_error 132 "For multinomial probit groups, exactly one dependent variable must be non-zero for each observation."
 					replace _cmp_ind`first_asprobit_eq'=`asmprobit_ind'*(_cmp_ind`first_asprobit_eq'!=0) // store choice info in indicator var for first equation
 					drop `asmprobit_ind' `asmprobit_dummy_sum'
@@ -362,11 +351,11 @@ program define _cmp
 			cap gen byte _cmp_ind`cmp_eqno' = `1'
 			if _rc cmp_error 198 `"Error building indicator variable for equation `cmp_eqno' from expression `1'. Did you forget to type {stata "cmp setup"}?"'
 			if "${parse_y`parse_eqno'}"=="." {
-				cap assert inlist(_cmp_ind`cmp_eqno', ., 0) if `touse', `fast'
+				cap assert inlist(_cmp_ind`cmp_eqno', ., 0) if `touse', fast
 				if _rc cmp_error 198 `"Indicator for ${parse_eq`parse_eqno'} equation must only evaluate to missing (".") or 0 since the dependent variable is unobserved."'
 			}
 			else {
-				cap assert inlist(_cmp_ind`cmp_eqno', ., 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10) if `touse', `fast'
+				cap assert inlist(_cmp_ind`cmp_eqno', ., 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10) if `touse', fast
 				if _rc cmp_error 198 "Indicator for ${parse_y`parse_eqno'} must only evaluate to integers between 0 and 10."
 				replace _cmp_ind`cmp_eqno' = $cmp_cont if _cmp_ind`cmp_eqno'==$cmp_trunc // deprecate this indicator value
 			}
@@ -378,24 +367,24 @@ program define _cmp
 			markout _cmp_ind`cmp_eqno' ${cmp_xo`cmp_eqno'} ${cmp_xe`cmp_eqno'}
 			if "${cmp_xe`cmp_eqno'}" != "" replace _cmp_ind`cmp_eqno' = 0 if ${cmp_xe`cmp_eqno'}<=0
 			
-			cap assert _cmp_ind`cmp_eqno' != $cmp_int if `touse', `fast'
+			cap assert _cmp_ind`cmp_eqno' != $cmp_int if `touse', fast
 			if _rc {
 				if `:word count ${cmp_y`cmp_eqno'}' != 2 cmp_error 198 "Interval regression equations require two dependent variables."
 				global cmp_y`cmp_eqno'_L : word 1 of ${cmp_y`cmp_eqno'}
-				gen double _cmp_y`cmp_eqno' = `: word 2 of ${cmp_y`cmp_eqno'}' if `touse' // copy so can modify below in converting some obs to Tobits for efficiency
+				gen double _cmp_y`cmp_eqno' = `: word 2 of ${cmp_y`cmp_eqno'}' if `touse'  // copy so can modify below in converting some obs to Tobits for efficiency
 				global cmp_y`cmp_eqno' _cmp_y`cmp_eqno'
 				global cmp_intreg 1
 				global cmp_intreg`cmp_eqno' 1
 				mat cmp_intregeqs = nullmat(cmp_intregeqs), 1
 				replace _cmp_ind`cmp_eqno' = ${cmp_y`cmp_eqno'}<. if _cmp_ind`cmp_eqno'==$cmp_int & ${cmp_y`cmp_eqno'}==${cmp_y`cmp_eqno'_L}
-				replace _cmp_ind`cmp_eqno' = 0 if _cmp_ind`cmp_eqno'==$cmp_int & ${cmp_y`cmp_eqno'}<${cmp_y`cmp_eqno'_L} & ${cmp_y`cmp_eqno'_L}<.
+				replace _cmp_ind`cmp_eqno' = 0 if _cmp_ind`cmp_eqno'==$cmp_int & ${cmp_y`cmp_eqno'} < ${cmp_y`cmp_eqno'_L} & ${cmp_y`cmp_eqno'_L} < .
 				markout _cmp_ind`cmp_eqno' ${parse_x`parse_eqno'}
 			}
 			else {
 				mat cmp_intregeqs = nullmat(cmp_intregeqs), 0
-				markout _cmp_ind`cmp_eqno' ${parse_x`parse_eqno'} // `=cond("${parse_y`parse_eqno'}"!="." & , "${parse_y`parse_eqno'}", "")'
+				markout _cmp_ind`cmp_eqno' ${parse_x`parse_eqno'}  // `=cond("${parse_y`parse_eqno'}"!="." & , "${parse_y`parse_eqno'}", "")'
 				global cmp_intreg`cmp_eqno' 0
-				global cmp_y`cmp_eqno'_L . // to prevent syntax errors
+				global cmp_y`cmp_eqno'_L .  // to prevent syntax errors
 			}
 
 			if `"${parse_tr`parse_eqno'}"' != "" { // truncated regression
@@ -436,7 +425,7 @@ program define _cmp
 			if "`:list eqnames & global(cmp_eq`cmp_eqno')'" != "" global cmp_eq`cmp_eqno' `=substr("${cmp_eq`cmp_eqno'}",1,29)'`cmp_eqno'
 			local eqnames `eqnames' ${cmp_eq`cmp_eqno'}
 
-      if 0`first_asprobit_eq' == `cmp_eqno' & "${parse_x`parse_eqno'}" == "" { // if this is an mprobit base case with no regressors, leave cons in but constrain to 0
+      if 0`first_asprobit_eq' == `cmp_eqno' & "${parse_x`parse_eqno'}" == "" {  // if this is an mprobit base case with no regressors, leave cons in but constrain to 0
         constraint free
         local _constraints `_constraints' `r(free)'
         constraint `r(free)' [${cmp_eq`parse_eqno'}]_cons
@@ -444,7 +433,7 @@ program define _cmp
 
 			replace `_touse' = `_touse' | _cmp_ind`cmp_eqno'
 
-			cap assert _cmp_ind`cmp_eqno' != $cmp_oprobit if `touse', `fast'
+			cap assert _cmp_ind`cmp_eqno' != $cmp_oprobit if `touse', fast
 			if _rc { // ordered probit
 				GroupCategoricalVar if ${cmp_y`cmp_eqno'} < . & `touse' & _cmp_ind`cmp_eqno', predict(`predict') cmp_eqno(`cmp_eqno')
 				mat cmp_cat`cmp_eqno' = r(cat)
@@ -464,10 +453,10 @@ program define _cmp
 				mat cmp_num_cuts = nullmat(cmp_num_cuts) \ 0
 			}
 
-			cap assert _cmp_ind`cmp_eqno' != $cmp_frac if `touse', `fast'
+			cap assert _cmp_ind`cmp_eqno' != $cmp_frac if `touse', fast
 			if _rc {
 				local hasfrac 1
-				cap assert (${cmp_y`cmp_eqno'} >= 0 & ${cmp_y`cmp_eqno'} <= 1) | ${cmp_y`cmp_eqno'} >= . if `touse' & _cmp_ind`cmp_eqno'==$cmp_frac, `fast'
+				cap assert (${cmp_y`cmp_eqno'} >= 0 & ${cmp_y`cmp_eqno'} <= 1) | ${cmp_y`cmp_eqno'} >= . if `touse' & _cmp_ind`cmp_eqno'==$cmp_frac, fast
 				if _rc cmp_error 198 "Observations of dependent variable for fractional probit equation must be in [0,1]."
 			}
 
@@ -478,7 +467,7 @@ program define _cmp
 			if `N_mprobit' | `N_roprobit' { // multinomial or rank-ordered probit
 				if (`N_mprobit' & "`m_ro'" == "ro") | (`N_roprobit' & "`m_ro'" == "m") cmp_error 148 "Cannot mix multinomial and rank-ordered indicator values in the same group."
 
-				cap assert inlist(_cmp_ind`cmp_eqno', 0, $cmp_mprobit, $cmp_roprobit) if `touse', `fast'
+				cap assert inlist(_cmp_ind`cmp_eqno', 0, $cmp_mprobit, $cmp_roprobit) if `touse', fast
 				if _rc | `N_mprobit'&`N_roprobit' cmp_error "Dependent variables modeled as `=cond(`N_mprobit',"multinomial","rank-ordered")' probit may not be modeled differently for other observations in the same equation."
 				
 				if ${cmp_truncreg`cmp_eqno'} cmp_error "Truncation not allowed in `=cond(`N_mprobit',"multinomial","rank-ordered")' probit equations."
@@ -544,7 +533,7 @@ program define _cmp
 						replace _cmp_ind`cmp_eqno' = 0 if _cmp_ind`first_asprobit_eq' == 0  // exclude obs missing for base case
 					}
 					else {
-						cap assert mod(${cmp_y`cmp_eqno'}, 1)==0 & ${cmp_y`cmp_eqno'}>=0 & ${cmp_y`cmp_eqno'}<=`=maxbyte()-$cmp_roprobit_ind_base' if `touse', `fast'
+						cap assert mod(${cmp_y`cmp_eqno'}, 1)==0 & ${cmp_y`cmp_eqno'}>=0 & ${cmp_y`cmp_eqno'}<=`=maxbyte()-$cmp_roprobit_ind_base' if `touse', fast
 						if _rc cmp_error 148 "Dependent variables modeled as rank-ordered probit must take integer values between 0 and `=maxbyte()-$cmp_roprobit_ind_base'."
 						replace _cmp_ind`cmp_eqno' = ${cmp_y`cmp_eqno'} + $cmp_roprobit_ind_base if _cmp_ind`cmp_eqno'
 					}
@@ -559,7 +548,7 @@ program define _cmp
 				mat cmp_nonbase_cases = nullmat(cmp_nonbase_cases) , 1
 			}
 
-			cap assert ${cmp_y`cmp_eqno'}==. & _cmp_ind`cmp_eqno'!=$cmp_int if `touse', `fast'
+			cap assert ${cmp_y`cmp_eqno'}==. & _cmp_ind`cmp_eqno'!=$cmp_int if `touse', fast
 			if _rc==0 global cmp_y`cmp_eqno' .
 			qui replace _cmp_ind`cmp_eqno' = 0 if `touse' & mi(${cmp_y`cmp_eqno'}) & _cmp_ind`cmp_eqno'!=$cmp_int
 
@@ -569,13 +558,13 @@ program define _cmp
 				else      mat cmp_fixed_rhos$parse_L = (cmp_fixed_rhos$parse_L, J(`i'-1, 1, .)) \ J(1, `i', `FixedRhoFill$parse_L')
 
 				// create sig param unless mprobit eq 1-2 or entirely (ordered/fractional) probit or unobserved
-				cap assert inlist(_cmp_ind`i', $cmp_out, $cmp_probit, $cmp_oprobit, $cmp_missing, $cmp_frac) if `touse', `fast'
+				cap assert inlist(_cmp_ind`i', $cmp_out, $cmp_probit, $cmp_oprobit, $cmp_missing, $cmp_frac) if `touse', fast
 				if _rc==0 {
 					mat cmp_fixed_sigs$parse_L = nullmat(cmp_fixed_sigs$parse_L), 1
 					forvalues l=1/`=$parse_L-1' {
 						mat cmp_fixed_sigs`l' = nullmat(cmp_fixed_sigs`l'), .
 					}
-					cap assert inlist(_cmp_ind`i', $cmp_out, $cmp_missing, $cmp_oprobit) if `touse', `fast'
+					cap assert inlist(_cmp_ind`i', $cmp_out, $cmp_missing, $cmp_oprobit) if `touse', fast
 					if _rc==0 global cmp_xc`i' nocons
 					if "${parse_y`parse_eqno'}"=="." noi di _n as txt "Error for ${cmp_eq`parse_eqno'} equation modeled as standard normal (mean 0, variance 1) and constant term set to 0."
 				}
@@ -653,16 +642,16 @@ program define _cmp
 			global cmp_yL $cmp_yL ${cmp_y`eq'_L}
 			global cmp_ind $cmp_ind _cmp_ind`eq'
 		}
-		mata _mod.set_d($cmp_d); _mod.set_L($parse_L); _mod.set_MaxCuts($cmp_max_cuts)
-		mata _mod.set_UtVars("$cmp_Ut"); _mod.set_LtVars("$cmp_Lt"); _mod.set_yLVars("$cmp_yL"); _mod.set_indVars("$cmp_ind")
+		mata _mod.setd($cmp_d); _mod.setL($parse_L); _mod.setMaxCuts($cmp_max_cuts)
+		mata _mod.setUtVars("$cmp_Ut"); _mod.setLtVars("$cmp_Lt"); _mod.setyLVars("$cmp_yL"); _mod.setindVars("$cmp_ind")
 
 		drop `_touse'
 		egen byte `_touse' = rowmax($cmp_ind) if `touse'
-		replace `touse' = 0 if `_touse'==0 | `_touse'==. // drop obs for which all outcomes unobserved
+		replace `touse' = 0 if `_touse'==0 | `_touse'==.  // drop obs for which all outcomes unobserved
 		drop `_touse'
 
 		global cmpHasGamma 0
-		tempname Gamma GammaINobs GammaI GammaId
+		tempname GammaINobs GammaI GammaId
 		mat `GammaI'     = I($cmp_d)
 		mat `GammaINobs' = I($cmp_d)
 		forvalues eq1=1/$cmp_d {
@@ -679,7 +668,7 @@ program define _cmp
 				else cmp_error 111 `"Equation `EndogVar' not found."'
 			}
 		}
-		mata _mod.set_GammaI(st_matrix("`GammaI'")); _mod.set_GammaInd(st_matrix("cmpGammaInd"))
+		mata _mod.setGammaI(st_matrix("`GammaI'")); _mod.setGammaInd(st_matrix("cmpGammaInd"))
 		if $cmpHasGamma {
 			mata st_matrix("`GammaId'", colsum(st_matrix("`GammaI'")))
 			forvalues eq=1/$cmp_d {
@@ -711,14 +700,14 @@ program define _cmp
 			mat `Eqs'[`eq', `l'] = "`id'"=="_n" | cmp_fixed_sigs`l'[1,`eq']>0  // don't simulate REs with variance=0
 		}
 	}
-	mata _mod.set_Eqs(st_matrix("`Eqs'"))
+	mata _mod.setEqs(st_matrix("`Eqs'"))
 	mat cmp_NumEff = J($parse_L, $cmp_d, 0)
 	forvalues l=1/$parse_L {
 		forvalues eq=1/$cmp_d {
 			mat cmp_NumEff[`l', `eq'] = `cmp_NumEff`l'_`eq''
 		}
 	}
-	mata _mod.set_NumEff(st_matrix("cmp_NumEff"))
+	mata _mod.setNumEff(st_matrix("cmp_NumEff"))
 	
 	local technique technique(`technique')
 	_vce_parse, optlist(robust jackknife bootstrap oim opg) argoptlist(cluster) pwallowed(robust jackknife bootstrap cluster oim opg) old: `wgtexp', `robust' cluster(`cluster') vce(`vce')
@@ -779,7 +768,7 @@ program define _cmp
 				replace `touse' = 0 if `weight`l''<=0
 
 				if "${parse_wtype`l'}" == "fweight" {
-					cap assert mod(`weight`l'', 1)==0 if `touse', `fast'
+					cap assert mod(`weight`l'', 1)==0 if `touse', fast
 					if _rc cmp_error 401 "Frequency weights must be integers."
 				}
 					
@@ -801,7 +790,7 @@ program define _cmp
 				if `l' < $parse_L {
 					tempvar t
 					qui by `cmp_ids': egen float `t' = mad(`weight`l'') if `touse'
-					qui assert inlist(`t', 0, .) if `touse', `fast'
+					qui assert inlist(`t', 0, .) if `touse', fast
 					if _rc cmp_error 101 "Weights for level {res}`:word `l' of $parse_id'{err} must be constant within groups."
 					drop `t'
 				}
@@ -830,7 +819,7 @@ program define _cmp
 	qui count if `touse'
 	if r(N)==0 cmp_error 2000 "No observations."
 
-	mata _mod.set_todo("`lf'"=="")
+	mata _mod.settodo("`lf'"=="")
 
 	if "`predict'" != "" {
 		forvalues l=1/$parse_L {
@@ -838,14 +827,14 @@ program define _cmp
 			mat cmpSigScoreInds`l' = e(sig_score_inds`l')
 		}
 		global cmp_num_scores = e(num_scores)
-		mata _mod.set_NumREDraws(strtoreal(tokens("`redraws'"))')
+		mata _mod.setNumREDraws(strtoreal(tokens("`redraws'"))')
 		
 		constraint drop `_constraints' `initconstraints' `1onlyinitconstraints'
 	}
 
-	mata _mod.set_MprobitGroupInds (st_matrix("cmp_mprobit_group_inds" )); _mod.set_RoprobitGroupInds(st_matrix("cmp_roprobit_group_inds"))
-	mata _mod.set_NonbaseCases(st_matrix("cmp_nonbase_cases"))
-	mata _mod.set_vNumCuts(st_matrix("cmp_num_cuts")); _mod.set_trunceqs(st_matrix("cmp_trunceqs")); _mod.set_intregeqs(st_matrix("cmp_intregeqs"))
+	mata _mod.setMprobitGroupInds(st_matrix("cmp_mprobit_group_inds" )); _mod.setRoprobitGroupInds(st_matrix("cmp_roprobit_group_inds"))
+	mata _mod.setNonbaseCases(st_matrix("cmp_nonbase_cases"))
+	mata _mod.setvNumCuts(st_matrix("cmp_num_cuts")); _mod.settrunceqs(st_matrix("cmp_trunceqs")); _mod.setintregeqs(st_matrix("cmp_intregeqs"))
 
 // /lnsigEx_[lev] accross (ergo within too), exchangeable
 // /lnsigEx accross, bottom
@@ -919,19 +908,29 @@ program define _cmp
 	if "`predict'" != "" {
 		local 0 `predict'
 		syntax if/, [lnl(varname) scores(varlist) EQuation(string)]
+		local s = cond(0`e(k_gamma)'`e(k_gamma_reducedform)', "s", "")  // for gamma models, make sure to use structural parameter set
 		tempname hold
-		_est hold `hold', copy restore
+    _est hold `hold', copy restore
 		local model `e(model)'
 		version 11: ml model `:subinstr local model ": . =" ": _cmp_ind1 =", all' if e(sample) & `if', collinear missing
-		mata _mod.set_todo("`scores'"!=""); _mod.cmp_init($ML_M)
+		mata _mod.settodo("`scores'"!=""); _mod.cmp_init($ML_M)
 		_est unhold `hold'
-		mata _lnf=_S=_H=.
+		mata _lnf = _S = _H = .
 		mata moptimize_init_userinfo($ML_M, 1, &_mod)
-		mata (void) cmp_lf1($ML_M, "`scores'"!="", st_matrix("e(b)"), _lnf, _S, _H)
-		if "`lnl'"!="" mata st_view(_H, ., "`lnl'"   , st_global("ML_samp")); _H[,] = _lnf
-		  else         mata st_view(_H, ., "`scores'", st_global("ML_samp")); _H[,] = _S[,"`equation'"==""?.:strtoreal(tokens("`equation'"))]
+    mata (void) cmp_lf1($ML_M, "`scores'"!="", st_matrix("e(b`s')"), _lnf, _S, _H)
+		if "`lnl'" != "" mata st_view(_H, ., "`lnl'", st_global("ML_samp")); _H[,] = _lnf
+    else {  // scores requested
+      mata st_view(_H, ., "`scores'", st_global("ML_samp"))
+      if "`e(resultsform)'" == "reduced" {
+        di as err "cmp: Won't compute scores on reduced-form results. " _c
+        if "`c(prefix)'"=="svy" di as err "Try estimating with cmp's svy option instead of the svy prefix." _c
+        di _n _n
+      }
+//    if "`e(resultsform)'" == "reduced" mata _H[,] = _S * ("`equation'" == ""? st_matrix("e(dbr_db)") : st_matrix("e(dbr_db)")[`equation',])'
+        else                             mata _H[,] =       "`equation'" == ""? _S                     : _S                    [,`equation']
+    }
 		cmp_clear
-		exit
+		exit 0
 	}
 
 	tempname b cmpInitFull
@@ -1000,7 +999,7 @@ program define _cmp
 		local HasGamma $cmpHasGamma
 		global cmp_num_scores = $cmp_num_scores - $cmpHasGamma
 		global cmpHasGamma 0
-		mata _mod.set_GammaInd(J(0,0,0))
+		mata _mod.setGammaInd(J(0,0,0))
 
 		di as res _n "Fitting " plural($cmp_d>1, "constant") "-only model for LR test of overall model fit."
 		qui InitSearch if `touse' `=cond("`subpop'"!="","& `subpop'","")' `wgtexp', `svy' 1only  auxparams(`auxparams') mlopts(`mlopts')
@@ -1013,7 +1012,7 @@ program define _cmp
 		global cmpHasGamma `HasGamma'
 		global cmp_num_scores = $cmp_num_scores + $cmpHasGamma
 	}
-	mata _mod.set_GammaInd(st_matrix("cmpGammaInd")) // hidden from constants-only fit
+	mata _mod.setGammaInd(st_matrix("cmpGammaInd"))  // hidden from constants-only fit
 
 	tempname LeftCens RightCens
 	qui {
@@ -1023,7 +1022,7 @@ program define _cmp
 				if _rc==0 {
 					replace   _cmp_ind`eq' = $cmp_left      if `LeftCens'  // Having gotten initial fits treating as intreg,
 					cap gen byte `RightCens' = _cmp_ind`eq'==$cmp_int & `touse' & ${cmp_y`eq'  }>=.
-					cap assert `RightCens'==0, `fast'
+					cap assert `RightCens'==0, fast
 					if _rc==0 {
 						replace _cmp_ind`eq' = $cmp_right     if `RightCens' // helps speed & precision to treat left & right
 						if strpos("${cmp_y`eq'}", ".") {
@@ -1060,7 +1059,7 @@ program define _cmp
 		`quietly' auxparams(`auxparams') cmdline(`"`cmdline'"') resteps(`steps') redraws(`redraws') intpoints(`intpoints') ///
 		vsmp(`vsmp') meff(`meff') ghkanti(`ghkanti') ghkdraws(`ghkdraws') ghktype(`ghktype') ghkscramble(`ghkscramble') diparmopt(`diparmopt') `interactive'
 	constraint drop `_constraints' `initconstraints' `1onlyinitconstraints'
-	
+
 	if e(cmd)=="cmp" Display, `diopts'
 end
 
@@ -1297,7 +1296,7 @@ end*/
 cap program drop DoInitSearch
 program define DoInitSearch, rclass
 	version 11.0
-	`*' // run InitSearch
+	`*'  // run InitSearch
 	tempname b
 	mat `b' = r(b)
 	return matrix b = `b'
@@ -1336,10 +1335,10 @@ program define cmp_full_model, eclass
 			}
 		}
 
-		if $cmpHasGamma { // prepare to build reduced-form b and V
+		if $cmpHasGamma {  // prepare to build reduced-form b and V
 			mat cmpGammaInd = .,. \ cmpGammaInd[1..rowsof(cmpGammaInd), 1...]
 
-			tempname b beq Beta Gamma
+			tempname b beq Beta
 			mat `b' = e(b)
 			if "`xvarsall'" != "" mat `Beta'  = J($cmp_d, `:word count `xvarsall'', 0)
 			mat cmpBetaInd  = .,.
@@ -1388,9 +1387,9 @@ program define cmp_full_model, eclass
 			}
 		}
 
-		mata cmpSaveSomeResults(&_mod) // Get final Sig; if weights, get weighted sample size; for Gamma models build e(br), e(Vr)
+		mata _mod.SaveSomeResults() // Get final Sig; if weights, get weighted sample size; for Gamma models build e(br), e(Vr)
 
-		if $cmpHasGamma { // eliminate unnecessary "#"'s in e(b) colnames, unnecessary for predict that is, which wrongly imply that variable is unobserved
+		if $cmpHasGamma {  // eliminate unnecessary "#"'s in e(b) colnames, unnecessary for predict that is, which wrongly imply that variable is unobserved
 			mat colnames `b' = `paramsdisplay'
 			local paramsdisplay: colnames `b'
 			forvalues eq=1/$cmp_d {
@@ -1424,8 +1423,9 @@ program define cmp_full_model, eclass
 			}
 		}
 
-		if "`svy'" != "" & "`: char _dta[_svy_wvar]'" != "" { // compensate for bug in Stata 14, 15 in which ml model, svy puts references to temp var in these macros
-			ereturn local wvar: char _dta[_svy_wvar]
+		if "`svy'" != "" & "`: char _dta[_svy_wvar]'" != "" {  // compensate for bug in Stata 14, 15 because of which ml model, svy puts references to temp var in these macros
+			ereturn local wtype: char _dta[_svy_wtype]
+			ereturn local wvar : char _dta[_svy_wvar]
 			ereturn local wexp "= `e(wvar)'"
 		}
 		else if "$parse_wexpL"!="" ereturn local wexp `"= $parse_wexpL"'
@@ -1436,7 +1436,7 @@ program define cmp_full_model, eclass
 		}
 
 		tempname cat t
-		forvalues i=1/$cmp_d { // capture all _cmp_y* labels, from oprobit and non-as mprobit eqs, for later use if called from cmp_p
+		forvalues i=1/$cmp_d {  // capture all _cmp_y* labels, from oprobit and non-as mprobit eqs, for later use if called from cmp_p
 			cap confirm matrix cmp_cat`i'
 			if _rc mat `t' = J(1, $cmp_max_cuts+1, .)
 			else {
@@ -1458,7 +1458,7 @@ program define cmp_full_model, eclass
 		}
 	
 		ereturn scalar num_scores = $cmp_num_scores
-		mata st_local("ghkdraws", strofreal(_mod.get_ghkDraws()))
+		mata st_local("ghkdraws", strofreal(_mod.getGHKDraws()))
 		foreach macro in diparmopt ghkanti ghkdraws ghktype retype reanti intpoints {
 			ereturn local `macro' ``macro''
 		}
@@ -1568,7 +1568,7 @@ program Estimate, eclass
 	}
 
 	tempname b sample
-	mata _mod.set_WillAdapt($cmp_IntMethod)
+	mata _mod.setWillAdapt($cmp_IntMethod)
 
 	if "`psampling'" == "" {
 		local psampling_cutoff 1
@@ -1585,7 +1585,7 @@ program Estimate, eclass
 		gen `u' = uniform() if `if'
 	}
 
-	local gf = $parse_L>1 & "`1only'"==""
+	local gf = $parse_L > 1 & "`1only'" == ""
 
 	while `psampling_cutoff' < `psampling_rate' {
 		if "`psampling'" != "" {
@@ -1601,7 +1601,7 @@ program Estimate, eclass
 
 			if "`_init'" != "" local initopt init(`_init', copy)
 
-			mata _mod.set_NumREDraws(ceil(_NumREDraws))
+			mata _mod.setNumREDraws(ceil(_NumREDraws))
 
 			local _if if (`if') `=cond("`psampling'" != "", "& (`psampling_cutoff'>=1 | `u'<=.001+`psampling_cutoff')", "")'
 
@@ -1625,7 +1625,7 @@ program Estimate, eclass
 				local this_mlopts nrtol(.001) tolerance(.001)
 				local this_technique = cond($cmp_IntMethod, "bhhh", "nr")
 				local this_technique nr
-				local this_vce opg // faster than oim for lf1, gf1; this interim VCV ignored anyway
+				if "`svy'"=="" local this_vce opg // faster than oim for lf1, gf1; this interim VCV ignored anyway; but vce() can't be combined with svy
 			}
 
 			local mlmodelcmd `model' `=cond(`final' & "`1only'"=="","[`weightexp'] `_if', `options'", "`awgtexp' `_if',")' ///
@@ -1665,7 +1665,7 @@ program Estimate, eclass
 		_est hold `hold'
 		`quietly' ml model gf`="`lf'"==""' cmp_gf1() `mlmodelcmd' vce(`vce') init(`_init') group(_cmp_id1)
 		mata moptimize_init_userinfo($ML_M, 1, &_mod)
-		quietly ml max, search(off) `mlopts' iter(0) // nooutput
+		quietly ml max, search(off) `mlopts' iter(0) nooutput
 		mat `V' = e(V)
 		local vce `e(vce)'
 		local vcetype `e(vcetype)'
@@ -1962,7 +1962,7 @@ program InitSearch, rclass
 						}
 
 						if e(ic) > 0 { // unless we're contrained to zero iterations, mark dropped variables
-							mata _ms_findomitted("`beta'", "`V'")  // In FV versions of Stata, prefix with "o." rather than dropping
+							_ms_findomitted `beta' `V'  // In FV versions of Stata, prefix with "o." rather than dropping
 							local xvars: colnames `beta'
 							local xvars: list xvars - `_cons'
 
@@ -2192,7 +2192,7 @@ program Display, eclass
 		local meff meff meft
 		local diopts: list diopts - meff
 
-		if e(k_gamma) | e(k_gamma_reducedform)<. {
+		if e(k_gamma) | e(k_gamma_reducedform) < . {
 			if `"`resultsform'"' != "" {
 				local 0, `resultsform'
 				syntax, [REDuced STRUCTural]
@@ -2219,7 +2219,7 @@ program Display, eclass
 					}
 					foreach t in `macros' {
 						tempname `t'
-						local ``t'' `e(`t')'
+						local ``t'' `"`e(`t')'"'
 					}
 					foreach t in `matrices' {
 						tempname `t'
@@ -2248,7 +2248,7 @@ program Display, eclass
 						ereturn scalar `t' = ``t''
 					}
 					foreach t in `macros' {
-						ereturn local `t' ```t'''
+						ereturn local `t' `"```t'''"'
 					}
 					foreach t in `matrices' {
 						cap ereturn mat `t' = ``t'' // matrices already stored in lines above will be gone and cause errors here
@@ -2305,171 +2305,173 @@ program Display, eclass
 			}
 		}
 
-		if e(L) == 1 {
-			if `:word count `e(diparmopt)''/3+`:word count `diopts''<=68 ml display, level(`level') `diopts' showeqns `e(diparmopt)'
-																															else ml display, level(`level') `diopts' showeqns
-		}
-		else {
-			tempname t
-			mat `t' = e(num_cuts)' * J(`e(k_dv)', 1, 1)
-			ml display, level(`level') `diopts' showeqns `=cond(e(sigxform) | `t'[1,1], "", "neq(`e(k_dv)')")' // just displaying cuts causes them to be listed as equations, not aux params
-		
-			tempname fixed_sigs fixed_rhos NumEff param se z
-			scalar `z' = invnormal(.5+`level'/200)
-			mat `NumEff' = e(NumEff)
+    if c(noisily) {
+      if e(L) == 1 {
+        if `:word count `e(diparmopt)''/3+`:word count `diopts''<=68 ml display, level(`level') `diopts' showeqns `e(diparmopt)'
+                                                                else ml display, level(`level') `diopts' showeqns
+      }
+      else {
+        tempname t
+        mat `t' = e(num_cuts)' * J(`e(k_dv)', 1, 1)
+        ml display, level(`level') `diopts' showeqns `=cond(e(sigxform) | `t'[1,1], "", "neq(`e(k_dv)')")' // just displaying cuts causes them to be listed as equations, not aux params
+      
+        tempname fixed_sigs fixed_rhos NumEff param se z
+        scalar `z' = invnormal(.5+`level'/200)
+        mat `NumEff' = e(NumEff)
 
-			if e(sigxform) {
-				local exp exp
-				local ln ln
-				local tanh tanh
-				local atanh atanh
-			}
+        if e(sigxform) {
+          local exp exp
+          local ln ln
+          local tanh tanh
+          local atanh atanh
+        }
 
-			di as txt "{hline 36}{c TT}{hline 47}"
-			di "Random effects parameters           {c |}  Estimate    Std. Err.    [`level'% Conf. Interval]"
-			di as txt "{hline 36}{c +}{hline 47}"
+        di as txt "{hline 36}{c TT}{hline 47}"
+        di "Random effects parameters           {c |}  Estimate    Std. Err.    [`level'% Conf. Interval]"
+        di as txt "{hline 36}{c +}{hline 47}"
 
-			forvalues l=1/`=e(L)-1' {
-				local covariance: word `l' of `e(covariance)'
-				di "Level: " as res abbrev("`:word `l' of `e(ivars)''", 15) as txt cond("`covariance'"=="exchangeable", " (exchangeable)", "") _col(37) "{c |}" 
-				mat `fixed_sigs' = e(fixed_sigs`l')
-				mat `fixed_rhos' = e(fixed_rhos`l')
-				if "`covariance'" == "exchangeable" {
-					local paramname /`ln'sigEx_`l'
-					di as txt "    Standard deviations" _col(37) "{c |} " as res %9.0g `exp'(_b[`paramname']) _c
-					if _se[`paramname'] di _col(51) %9.0g exp(e(sigxform)*_b[`paramname'])*_se[`paramname'] _col(64) %9.0g `exp'(_b[`paramname']-`z'*_se[`paramname']) _col(76) %9.0g `exp'(_b[`paramname']+`z'*_se[`paramname'])
-						else di as res "  " %9.0g . as txt
-					if e(k_dv) > 1 {
-						local paramname /`atanh'rhoEx_`l'
-						di as txt "    Cross-eq " plural(1+(e(k_dv)>2 | (e(k_dv)==2 & (`NumEff'[`l', 1]>1 | `NumEff'[`l', e(k_dv)]>1))), "correlation") _col(37) "{c |} " as res %9.0g `tanh'(_b[`paramname']) _c
-						if _se[`paramname'] di _col(51) %9.0g _se[`paramname']/cosh(e(sigxform)*_b[`paramname'])^2 _col(64) %9.0g `tanh'(_b[`paramname']-`z'*_se[`paramname']) _col(76) %9.0g `tanh'(_b[`paramname']+`z'*_se[`paramname'])
-							else di as res "  " %9.0g . as txt
-					}
-				}
-				forvalues eq1=1/`=e(k_dv)' {
-					if `NumEff'[`l', `eq1'] {
-						local covariance`eq1': word `l' of `e(covariance`eq1')'
-						if e(k_dv)>1 di as txt "  " as res abbrev("`:word `eq1' of `e(eqnames)''", 15) as txt cond("`covariance`eq1''"=="exchangeable", " (exchangeable)", "") _col(37) "{c |}" 
-						if  "`covariance'" != "exchangeable" {
-							di as txt "    Standard deviations" _col(37) "{c |} " _c as res
-							if "`covariance`eq1''"=="exchangeable" {
-								local paramname /`ln'sigEx_`l'_`eq1'
-								di as res %9.0g `exp'(_b[`paramname']) _c
-								if _se[`paramname'] di _col(51) %9.0g exp(e(sigxform)*_b[`paramname'])*_se[`paramname'] _col(64) %9.0g `exp'(_b[`paramname']-`z'*_se[`paramname']) _col(76) %9.0g `exp'(_b[`paramname']+`z'*_se[`paramname'])
-									else di "  " %9.0g .
-							}
-							else {
-								di as txt
-								forvalues c=1/`=`NumEff'[`l', `eq1']' {
-									local t = abbrev("`:word `c' of `e(EffNames`l'_`eq1')''", 22)
-									di as txt "      `t'"  _col(37) "{c |} " _c
-									if `fixed_sigs'[1,`eq1'] == . {
-										local paramname /`ln'sig`=cond("`t'"=="_cons","","_`c'")'_`l'_`eq1'
-										di as res %9.0g `exp'(_b[`paramname']) _c
-										if _se[`paramname'] di _col(51) %9.0g exp(e(sigxform)*_b[`paramname'])*_se[`paramname'] _col(64) %9.0g `exp'(_b[`paramname']-`z'*_se[`paramname']) _col(76) %9.0g `exp'(_b[`paramname']+`z'*_se[`paramname'])
-											else di "  " %9.0g . as txt
-									}
-									else di %9.0g `fixed_sigs'[1,`eq1'] as txt "  (constrained)"
-								}
-							}
-						}
-						if `NumEff'[`l', `eq1'] > 1 & "`covariance`eq1''"!="independent" {
-							di as txt "    Intra-eq " plural(`NumEff'[`l', `eq1']-1, "correlation") _col(37) "{c |} " _c
-							if "`covariance`eq1''"=="exchangeable" {
-								local paramname /`atanh'rhoEx_`l'_`eq1'
-								di %9.0g `tanh'(_b[`paramname']) _c
-								if _se[`paramname'] di _col(51) %9.0g _se[`paramname']/cosh(e(sigxform)*_b[`paramname'])^2 _col(64) %9.0g `tanh'(_b[`paramname']-`z'*_se[`paramname']) _col(76) %9.0g `tanh'(_b[`paramname']+`z'*_se[`paramname'])
-									else di "  " %9.0g .
-							}	
-							else {
-								di
-								forvalues c1=1/`=`NumEff'[`l', `eq1']' {
-									forvalues c2=`=`c1'+1'/`=`NumEff'[`l', `eq1']' {
-										local t1 = abbrev("`:word `c1' of `e(EffNames`l'_`eq1')''", 15)
-										local t2 = abbrev("`:word `c2' of `e(EffNames`l'_`eq1')''", 15)
-										local paramname /`atanh'rho_`c1'_	`c2'_`l'_`eq1'
-										di as txt "      `t1'" _col(20) "`t2'" _col(37) "{c |} " as res %9.0g `tanh'(_b[`paramname']) _c
-										if _se[`paramname'] di _col(51) %9.0g _se[`paramname']/cosh(e(sigxform)*_b[`paramname'])^2 _col(64) %9.0g `tanh'(_b[`paramname']-`z'*_se[`paramname']) _col(76) %9.0g `tanh'(_b[`paramname']+`z'*_se[`paramname'])
-											else di "  " %9.0g .
-									}
-								}
-							}
-						}
-					}
-				}
-				if "`:word `l' of `e(covariance)''" == "unstructured" & e(k_dv) > 1 {
-					local needheader 1
-					forvalues eq1=1/`e(k_dv)' {
-						forvalues eq2=`=`eq1'+1'/`e(k_dv)' {
-							if `fixed_rhos'[`eq2',`eq1'] == . & `=`NumEff'[`l', `eq1']' & `=`NumEff'[`l', `eq2']' {
-								if `needheader' di as txt " Cross-eq " plural(1+(e(k_dv)>2 | (e(k_dv)==2 & (`NumEff'[`l', 1]>1 | `NumEff'[`l', e(k_dv)]>1))), "correlation") _col(37) "{c |} "
-								local needheader 0
-								di as txt "  " as res abbrev("`:word `eq1' of `e(eqnames)''", 15) _col(19) abbrev("`:word `eq2' of `e(eqnames)''", 15) as txt _col(37) "{c |}"
-								forvalues c1=1/`=`NumEff'[`l', `eq1']' {
-									forvalues c2=1/`=`NumEff'[`l', `eq2']' {
-										local t1 = abbrev("`:word `c1' of `e(EffNames`l'_`eq1')''", 15)
-										local t2 = abbrev("`:word `c2' of `e(EffNames`l'_`eq2')''", 15)
-										local paramname /`atanh'rho`=cond("`t1'`t2'"=="_cons_cons", "", "_`c1'_`c2'")'_`l'_`eq1'`eq2'
-										di as txt "    `t1'" _col(21) "`t2'" _col(37) "{c |} " as res %9.0g `tanh'(_b[`paramname']) _c
-										if _se[`paramname'] di _col(51) %9.0g _se[`paramname']/cosh(e(sigxform)*_b[`paramname'])^2 _col(64) %9.0g `tanh'(_b[`paramname']-`z'*_se[`paramname']) _col(76) %9.0g `tanh'(_b[`paramname']+`z'*_se[`paramname'])
-											else di "  " %9.0g .
-									}
-								}
-							}
-						}
-					}
-				}
-				di as txt "{hline 36}{c +}{hline 47}"
-			}
+        forvalues l=1/`=e(L)-1' {
+          local covariance: word `l' of `e(covariance)'
+          di "Level: " as res abbrev("`:word `l' of `e(ivars)''", 15) as txt cond("`covariance'"=="exchangeable", " (exchangeable)", "") _col(37) "{c |}" 
+          mat `fixed_sigs' = e(fixed_sigs`l')
+          mat `fixed_rhos' = e(fixed_rhos`l')
+          if "`covariance'" == "exchangeable" {
+            local paramname /`ln'sigEx_`l'
+            di as txt "    Standard deviations" _col(37) "{c |} " as res %9.0g `exp'(_b[`paramname']) _c
+            if _se[`paramname'] di _col(51) %9.0g exp(e(sigxform)*_b[`paramname'])*_se[`paramname'] _col(64) %9.0g `exp'(_b[`paramname']-`z'*_se[`paramname']) _col(76) %9.0g `exp'(_b[`paramname']+`z'*_se[`paramname'])
+              else di as res "  " %9.0g . as txt
+            if e(k_dv) > 1 {
+              local paramname /`atanh'rhoEx_`l'
+              di as txt "    Cross-eq " plural(1+(e(k_dv)>2 | (e(k_dv)==2 & (`NumEff'[`l', 1]>1 | `NumEff'[`l', e(k_dv)]>1))), "correlation") _col(37) "{c |} " as res %9.0g `tanh'(_b[`paramname']) _c
+              if _se[`paramname'] di _col(51) %9.0g _se[`paramname']/cosh(e(sigxform)*_b[`paramname'])^2 _col(64) %9.0g `tanh'(_b[`paramname']-`z'*_se[`paramname']) _col(76) %9.0g `tanh'(_b[`paramname']+`z'*_se[`paramname'])
+                else di as res "  " %9.0g . as txt
+            }
+          }
+          forvalues eq1=1/`=e(k_dv)' {
+            if `NumEff'[`l', `eq1'] {
+              local covariance`eq1': word `l' of `e(covariance`eq1')'
+              if e(k_dv)>1 di as txt "  " as res abbrev("`:word `eq1' of `e(eqnames)''", 15) as txt cond("`covariance`eq1''"=="exchangeable", " (exchangeable)", "") _col(37) "{c |}" 
+              if  "`covariance'" != "exchangeable" {
+                di as txt "    Standard deviations" _col(37) "{c |} " _c as res
+                if "`covariance`eq1''"=="exchangeable" {
+                  local paramname /`ln'sigEx_`l'_`eq1'
+                  di as res %9.0g `exp'(_b[`paramname']) _c
+                  if _se[`paramname'] di _col(51) %9.0g exp(e(sigxform)*_b[`paramname'])*_se[`paramname'] _col(64) %9.0g `exp'(_b[`paramname']-`z'*_se[`paramname']) _col(76) %9.0g `exp'(_b[`paramname']+`z'*_se[`paramname'])
+                    else di "  " %9.0g .
+                }
+                else {
+                  di as txt
+                  forvalues c=1/`=`NumEff'[`l', `eq1']' {
+                    local t = abbrev("`:word `c' of `e(EffNames`l'_`eq1')''", 22)
+                    di as txt "      `t'"  _col(37) "{c |} " _c
+                    if `fixed_sigs'[1,`eq1'] == . {
+                      local paramname /`ln'sig`=cond("`t'"=="_cons","","_`c'")'_`l'_`eq1'
+                      di as res %9.0g `exp'(_b[`paramname']) _c
+                      if _se[`paramname'] di _col(51) %9.0g exp(e(sigxform)*_b[`paramname'])*_se[`paramname'] _col(64) %9.0g `exp'(_b[`paramname']-`z'*_se[`paramname']) _col(76) %9.0g `exp'(_b[`paramname']+`z'*_se[`paramname'])
+                        else di "  " %9.0g . as txt
+                    }
+                    else di %9.0g `fixed_sigs'[1,`eq1'] as txt "  (constrained)"
+                  }
+                }
+              }
+              if `NumEff'[`l', `eq1'] > 1 & "`covariance`eq1''"!="independent" {
+                di as txt "    Intra-eq " plural(`NumEff'[`l', `eq1']-1, "correlation") _col(37) "{c |} " _c
+                if "`covariance`eq1''"=="exchangeable" {
+                  local paramname /`atanh'rhoEx_`l'_`eq1'
+                  di %9.0g `tanh'(_b[`paramname']) _c
+                  if _se[`paramname'] di _col(51) %9.0g _se[`paramname']/cosh(e(sigxform)*_b[`paramname'])^2 _col(64) %9.0g `tanh'(_b[`paramname']-`z'*_se[`paramname']) _col(76) %9.0g `tanh'(_b[`paramname']+`z'*_se[`paramname'])
+                    else di "  " %9.0g .
+                }	
+                else {
+                  di
+                  forvalues c1=1/`=`NumEff'[`l', `eq1']' {
+                    forvalues c2=`=`c1'+1'/`=`NumEff'[`l', `eq1']' {
+                      local t1 = abbrev("`:word `c1' of `e(EffNames`l'_`eq1')''", 15)
+                      local t2 = abbrev("`:word `c2' of `e(EffNames`l'_`eq1')''", 15)
+                      local paramname /`atanh'rho_`c1'_	`c2'_`l'_`eq1'
+                      di as txt "      `t1'" _col(20) "`t2'" _col(37) "{c |} " as res %9.0g `tanh'(_b[`paramname']) _c
+                      if _se[`paramname'] di _col(51) %9.0g _se[`paramname']/cosh(e(sigxform)*_b[`paramname'])^2 _col(64) %9.0g `tanh'(_b[`paramname']-`z'*_se[`paramname']) _col(76) %9.0g `tanh'(_b[`paramname']+`z'*_se[`paramname'])
+                        else di "  " %9.0g .
+                    }
+                  }
+                }
+              }
+            }
+          }
+          if "`:word `l' of `e(covariance)''" == "unstructured" & e(k_dv) > 1 {
+            local needheader 1
+            forvalues eq1=1/`e(k_dv)' {
+              forvalues eq2=`=`eq1'+1'/`e(k_dv)' {
+                if `fixed_rhos'[`eq2',`eq1'] == . & `=`NumEff'[`l', `eq1']' & `=`NumEff'[`l', `eq2']' {
+                  if `needheader' di as txt " Cross-eq " plural(1+(e(k_dv)>2 | (e(k_dv)==2 & (`NumEff'[`l', 1]>1 | `NumEff'[`l', e(k_dv)]>1))), "correlation") _col(37) "{c |} "
+                  local needheader 0
+                  di as txt "  " as res abbrev("`:word `eq1' of `e(eqnames)''", 15) _col(19) abbrev("`:word `eq2' of `e(eqnames)''", 15) as txt _col(37) "{c |}"
+                  forvalues c1=1/`=`NumEff'[`l', `eq1']' {
+                    forvalues c2=1/`=`NumEff'[`l', `eq2']' {
+                      local t1 = abbrev("`:word `c1' of `e(EffNames`l'_`eq1')''", 15)
+                      local t2 = abbrev("`:word `c2' of `e(EffNames`l'_`eq2')''", 15)
+                      local paramname /`atanh'rho`=cond("`t1'`t2'"=="_cons_cons", "", "_`c1'_`c2'")'_`l'_`eq1'`eq2'
+                      di as txt "    `t1'" _col(21) "`t2'" _col(37) "{c |} " as res %9.0g `tanh'(_b[`paramname']) _c
+                      if _se[`paramname'] di _col(51) %9.0g _se[`paramname']/cosh(e(sigxform)*_b[`paramname'])^2 _col(64) %9.0g `tanh'(_b[`paramname']-`z'*_se[`paramname']) _col(76) %9.0g `tanh'(_b[`paramname']+`z'*_se[`paramname'])
+                        else di "  " %9.0g .
+                    }
+                  }
+                }
+              }
+            }
+          }
+          di as txt "{hline 36}{c +}{hline 47}"
+        }
 
-			mat `fixed_sigs' = e(fixed_sigs`e(L)')
-			mat `fixed_rhos' = e(fixed_rhos`e(L)')
-			di "Level: " as res "Observations" _col(37) as txt "{c |}"
-			di " Standard " plural(e(k_dv), "deviation") _col(37) "{c |} " as res  _c
-			if "`:word `e(L)' of `e(covariance)''" == "exchangeable" {
-				local paramname /`ln'sigEx
-				di %9.0g `exp'(_b[`paramname']) _c
-				if _se[`paramname'] di _col(51) as res %9.0g exp(e(sigxform)*_b[`paramname'])*_se[`paramname'] _col(64) %9.0g `exp'(_b[`paramname']-`z'*_se[`paramname']) _col(76) %9.0g `exp'(_b[`paramname']+`z'*_se[`paramname'])
-					else di "  " %9.0g . as txt
-				if e(k_dv) > 1 {
-					di as txt " Cross-eq " plural(e(k_dv)-1, "correlation") _col(37) "{c |} " _c
-					local paramname /`atanh'rhoEx
-					di as res %9.0g `tanh'(_b[`paramname']) _c
-					if _se[`paramname'] di _col(51) as res %9.0g _se[`paramname']/cosh(e(sigxform)*_b[`paramname'])^2 _col(64) %9.0g `tanh'(_b[`paramname']-`z'*_se[`paramname']) _col(76) %9.0g `tanh'(_b[`paramname']+`z'*_se[`paramname'])
-						else di "  " %9.0g .
-				}
-			}
-			else {
-				if e(k_dv)>1 di
-				forvalues eq1=1/`=e(k_dv)' {
-					if e(k_dv)>1 di as txt "  " as res abbrev("`:word `eq1' of `e(eqnames)''", 24) as txt _col(37) "{c |} " _c
-					if `fixed_sigs'[1,`eq1'] == . {
-						local paramname /`ln'sig_`eq1'
-						di as res %9.0g `exp'(_b[`paramname']) _c
-						if _se[`paramname'] di _col(51) %9.0g exp(e(sigxform)*_b[`paramname'])*_se[`paramname'] _col(64) %9.0g `exp'(_b[`paramname']-`z'*_se[`paramname']) _col(76) %9.0g `exp'(_b[`paramname']+`z'*_se[`paramname'])
-							else di "  " %9.0g .
-					}
-					else di as res %9.0g `fixed_sigs'[1,`eq1'] as txt "  (constrained)"
-				}
-				if e(k_dv) > 1 & "`:word `e(L)' of `e(covariance)''" == "unstructured" {
-					local needheader 1
-					forvalues eq1=1/`e(k_dv)' {
-						forvalues eq2=`=`eq1'+1'/`e(k_dv)' {
-							if `fixed_rhos'[`eq2',`eq1'] == . {
-								if `needheader' di as txt " Cross-eq " plural(e(k_dv)-1,"correlation") _col(37) "{c |} "
-								local needheader 0
-								di as txt "  " as res abbrev("`:word `eq1' of `e(eqnames)''", 15) _col(19) as res abbrev("`:word `eq2' of `e(eqnames)''", 15) as txt _col(37) "{c |} " _c
-								local paramname /`atanh'rho_`eq1'`eq2'
-								di as res %9.0g `tanh'(_b[`paramname']) _c
-								if _se[`paramname'] di _col(51) %9.0g _se[`paramname']/cosh(e(sigxform)*_b[`paramname'])^2 _col(64) %9.0g `tanh'(_b[`paramname']-`z'*_se[`paramname']) _col(76) %9.0g `tanh'(_b[`paramname']+`z'*_se[`paramname'])
-									else di "  " %9.0g .
-							}
-						}
-					}
-				}
-			}
-			di as txt "{hline 36}{c BT}{hline 47}"
-		}
+        mat `fixed_sigs' = e(fixed_sigs`e(L)')
+        mat `fixed_rhos' = e(fixed_rhos`e(L)')
+        di "Level: " as res "Observations" _col(37) as txt "{c |}"
+        di " Standard " plural(e(k_dv), "deviation") _col(37) "{c |} " as res  _c
+        if "`:word `e(L)' of `e(covariance)''" == "exchangeable" {
+          local paramname /`ln'sigEx
+          di %9.0g `exp'(_b[`paramname']) _c
+          if _se[`paramname'] di _col(51) as res %9.0g exp(e(sigxform)*_b[`paramname'])*_se[`paramname'] _col(64) %9.0g `exp'(_b[`paramname']-`z'*_se[`paramname']) _col(76) %9.0g `exp'(_b[`paramname']+`z'*_se[`paramname'])
+            else di "  " %9.0g . as txt
+          if e(k_dv) > 1 {
+            di as txt " Cross-eq " plural(e(k_dv)-1, "correlation") _col(37) "{c |} " _c
+            local paramname /`atanh'rhoEx
+            di as res %9.0g `tanh'(_b[`paramname']) _c
+            if _se[`paramname'] di _col(51) as res %9.0g _se[`paramname']/cosh(e(sigxform)*_b[`paramname'])^2 _col(64) %9.0g `tanh'(_b[`paramname']-`z'*_se[`paramname']) _col(76) %9.0g `tanh'(_b[`paramname']+`z'*_se[`paramname'])
+              else di "  " %9.0g .
+          }
+        }
+        else {
+          if e(k_dv)>1 di
+          forvalues eq1=1/`=e(k_dv)' {
+            if e(k_dv)>1 di as txt "  " as res abbrev("`:word `eq1' of `e(eqnames)''", 24) as txt _col(37) "{c |} " _c
+            if `fixed_sigs'[1,`eq1'] == . {
+              local paramname /`ln'sig_`eq1'
+              di as res %9.0g `exp'(_b[`paramname']) _c
+              if _se[`paramname'] di _col(51) %9.0g exp(e(sigxform)*_b[`paramname'])*_se[`paramname'] _col(64) %9.0g `exp'(_b[`paramname']-`z'*_se[`paramname']) _col(76) %9.0g `exp'(_b[`paramname']+`z'*_se[`paramname'])
+                else di "  " %9.0g .
+            }
+            else di as res %9.0g `fixed_sigs'[1,`eq1'] as txt "  (constrained)"
+          }
+          if e(k_dv) > 1 & "`:word `e(L)' of `e(covariance)''" == "unstructured" {
+            local needheader 1
+            forvalues eq1=1/`e(k_dv)' {
+              forvalues eq2=`=`eq1'+1'/`e(k_dv)' {
+                if `fixed_rhos'[`eq2',`eq1'] == . {
+                  if `needheader' di as txt " Cross-eq " plural(e(k_dv)-1,"correlation") _col(37) "{c |} "
+                  local needheader 0
+                  di as txt "  " as res abbrev("`:word `eq1' of `e(eqnames)''", 15) _col(19) as res abbrev("`:word `eq2' of `e(eqnames)''", 15) as txt _col(37) "{c |} " _c
+                  local paramname /`atanh'rho_`eq1'`eq2'
+                  di as res %9.0g `tanh'(_b[`paramname']) _c
+                  if _se[`paramname'] di _col(51) %9.0g _se[`paramname']/cosh(e(sigxform)*_b[`paramname'])^2 _col(64) %9.0g `tanh'(_b[`paramname']-`z'*_se[`paramname']) _col(76) %9.0g `tanh'(_b[`paramname']+`z'*_se[`paramname'])
+                    else di "  " %9.0g .
+                }
+              }
+            }
+          }
+        }
+        di as txt "{hline 36}{c BT}{hline 47}"
+      }
+     }
 		if e(k_gamma) & e(resultsform)=="structural" _estimates unhold `hold'
 	}
 end
@@ -2525,6 +2527,14 @@ program define cmp_error
 end
 
 * Version history
+* 8.6.4 Fixed 8.6.0 bug in truncated-regression models
+* 8.6.3 speed tweaks
+* 8.6.2 Fixed crashes in margins, vce(unconditional) after svy estimation. Now requires Stata 13 or newer.
+* 8.6.1 Fixed crash in margins after resultsform(reduced) and observation weights, and crash in svy: , resultsform(reduced).
+*       Fixed computational bug affecting predict, lnl and predict, scores after resultsform(reduced) and thus standard errors from svy: , resultsform(reduced).
+* 8.6.0 Added optimizations for 1-eq models
+* 8.5.4 Fixed crash when GHK necessitated only by truncation in >=3 eq
+* 8.5.3 Fixed crash on # reference to m/roprobit base case; fixed crash on hierarchical/svy/redraw(, steps())
 * 8.5.2 Fixed crash on non-hierarchical svy models
 * 8.5.1 Small speed-ups
 * 8.5.0 Made predict, pr factor in error variance in all cases, not assume it's 1

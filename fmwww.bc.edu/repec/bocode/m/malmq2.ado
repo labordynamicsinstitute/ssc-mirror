@@ -7,7 +7,9 @@
 capture program drop malmq2
 program define malmq2,rclass prop(xt)
     version 16
-
+	_get_version malmq2
+	_compile_mata, package(malmq2) version(`package_version') verbose 
+	
 	_xt, trequired 
 	local id=r(ivar)
 	local time=r(tvar)
@@ -430,7 +432,7 @@ program define _malmq,rclass
 	}
 	else if `"`techtype'"'=="biennial"{
 
-        qui bys `dmu' (`period'): gen TFPCH=`DD'/`D12' if _n>1
+        qui bys `dmu' (`period'): gen TFPCH=`D12'/`DD'[_n-1] if _n>1
 		label var TFPCH "Total factor productivity change"
 		cap drop `temp'	
 

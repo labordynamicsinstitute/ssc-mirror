@@ -1,3 +1,4 @@
+*! 2.1.1 NJC 2 July 2021 
 *! 2.1.0 NJC 11 May 2014 
 *! 2.0.1 NJC 4 June 2013 
 *! 2.0.0 NJC 13 August 2002 
@@ -75,16 +76,16 @@ program define tsspell, sort
 	} 
 
 	* we're in business 
-	qui {
+	quietly {
 		if `"`fcond'"' != "" { 
-			`byid' gen long `spell' = cond(`touse', sum(`fcond'), 0)  
+			`byid' gen long `spell' = cond(`touse', sum((`fcond') & `touse'), 0)  
 			bysort `id' `spell' (`time') : /* 
 			*/ gen long `seq' = _n * (`spell' > 0) 
 	    	} 	
 	    	else {
 			`byid' gen long `seq' = `cond' & `touse'
 			`byid' replace `seq' = `seq'[_n-1] + 1 if _n > 1 & `seq'
-			`byid' gen long `spell' = cond(`seq', sum(`seq' == 1), 0)
+			`byid' gen long `spell' = cond(`seq', sum(`touse' & `seq' == 1), 0)
 		} 
 	    
 	    	`byid' gen byte `end' = /*

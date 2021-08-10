@@ -17,8 +17,8 @@ d Requires: Stata version 11
 d
 d Distribution-Date: 20130928
 d
-d Author: Damian Clarke, Oxford University 
-d Support: email damian.clarke@@economics.ox.ac.uk
+d Author: Damian Clarke, Universidad de Santiago de Chile
+d Support: email dclarke@@fen.uchile.cl
 d
 f gets.ado
 f gets.sthlp

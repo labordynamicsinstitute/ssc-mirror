@@ -1,5 +1,5 @@
 {smcl}
-{* *! version 1.0.1 30sep2019}{...}
+{* *! version 1.1.0 9mar2021}{...}
 
 {cmd:help icio}{right:}
 {hline}
@@ -16,6 +16,11 @@
 {ul:{hi:{help icio##load:Load an ICIO table}}} (required to run {cmd:icio}):
 
 {p 8 16 2}{cmd:icio_load}, [{it:{help icio##icioload_options:icio_load_options}}]
+
+{phang}
+Erase {cmd:icio} related tables and ancillary files
+
+{p 8 16 2}{cmd:icio_clean}
 
 {phang}
 List of countries and sectors in the loaded ICIO table:
@@ -44,36 +49,36 @@ List of countries and sectors in the loaded ICIO table:
 
 {p 12} {it: a) Value-added and GVC participation in total aggregate exports:}
 
-{p 12 16 2}{cmd:icio}, exporter({it:country_code}) [{it:{help icio##icio_1a_options:methods_1a}}] [{it:{help icio##icio_out_options:output_exports}}] [{it:{help icio##icio_ori_dest_options:origin_destination}}]
+{p 12 16 2}{cmd:icio}, exporter({it:country_code}) [{it:{help icio##icio_1a_options:methods_1a}}] [{it:{help icio##icio_out_options:results_exports}}] [{it:{help icio##icio_ori_dest_options:origin_destination}}]
 [{it:{help icio##icio_options:standard_options}}]
 
 {p 12} {it:b) Value-added and GVC participation in total sectoral exports:}
 
-{p 12 16 2}{cmd:icio}, exporter({it:country_code}, {it:sector_code}) [{it:{help icio##icio_1b_options:methods_1b}}] [{it:{help icio##icio_out_options:output_exports}}] [{it:{help icio##icio_ori_dest_options:origin_destination}}]
+{p 12 16 2}{cmd:icio}, exporter({it:country_code}, {it:sector_code}) [{it:{help icio##icio_1b_options:methods_1b}}] [{it:{help icio##icio_out_options:results_exports}}] [{it:{help icio##icio_ori_dest_options:origin_destination}}]
 [{it:{help icio##icio_options:standard_options}}]
 
 {p 8} {hi: 2. Value-added and GVC participation in bilateral exports:}
 
 {p 12} {it:a) Value-added and GVC participation in bilateral aggregate exports:}
 
-{p 12 16 2}{cmd:icio}, exporter({it:country_code}) importer({it:country_code}) [{it:{help icio##icio_2a_options:methods_2a}}] [{it:{help icio##icio_out_options:output_exports}}] [{it:{help icio##icio_ori_dest_options:origin_destination}}]
+{p 12 16 2}{cmd:icio}, exporter({it:country_code}) importer({it:country_code}) [{it:{help icio##icio_2a_options:methods_2a}}] [{it:{help icio##icio_out_options:results_exports}}] [{it:{help icio##icio_ori_dest_options:origin_destination}}]
 [{it:{help icio##icio_options:standard_options}}]
 
 {p 12} {it:b) Value-added and GVC participation in bilateral sectoral exports:}
 
-{p 12 16 2}{cmd:icio}, exporter({it:country_code}, {it:sector_code}) importer({it:country_code}) [{it:{help icio##icio_2b_options:methods_2b}}] [{it:{help icio##icio_out_options:output_exports}}]
+{p 12 16 2}{cmd:icio}, exporter({it:country_code}, {it:sector_code}) importer({it:country_code}) [{it:{help icio##icio_2b_options:methods_2b}}] [{it:{help icio##icio_out_options:results_exports}}]
 [{it:{help icio##icio_ori_dest_options:origin_destination}}] [{it:{help icio##icio_options:standard_options}}]
 
 {p 8} {hi: 3. Value-added in total imports of a country:}
 
 {p 12} {it:a) Value-added in total aggregate imports:}
 
-{p 12 16 2}{cmd:icio}, importer({it:country_code}) [{it:{help icio##icio_3a_options:methods_3a}}] [{it:{help icio##icio_out_options:output_exports}}] [{it:{help icio##icio_ori_dest_options:origin_destination}}]
+{p 12 16 2}{cmd:icio}, importer({it:country_code}) [{it:{help icio##icio_3a_options:methods_3a}}] [{it:{help icio##icio_out_options:results_imports}}] [{it:{help icio##icio_ori_dest_options:origin_destination}}]
 [{it:{help icio##icio_options:standard_options}}]
 
 {p 12} {it:b) Value-added in total sectoral imports:}
 
-{p 12 16 2}{cmd:icio}, importer({it:country_code}, {it:sector_code}) [{it:{help icio##icio_3b_options:methods_3b}}] [{it:{help icio##icio_out_options:output_exports}}] [{it:{help icio##icio_ori_dest_options:origin_destination}}]
+{p 12 16 2}{cmd:icio}, importer({it:country_code}, {it:sector_code}) [{it:{help icio##icio_3b_options:methods_3b}}] [{it:{help icio##icio_out_options:results_imports}}] [{it:{help icio##icio_ori_dest_options:origin_destination}}]
 [{it:{help icio##icio_options:standard_options}}]
 
 {p2colreset}{...}
@@ -85,16 +90,16 @@ List of countries and sectors in the loaded ICIO table:
 	It provides decompositions of aggregate, bilateral and sectoral exports and imports according to the source and the destination of their value-added content.
 
 {pstd}
-	The {cmd:icio_load} command allows to work directly with the most popular ICIO tables - WIOD (Timmer et al. 2015), TIVA (OECD), EORA (Lenzen et al. 2013), ADB MRIO (Asian Development Bank MRIOT Database); 
-	in addition, any other user-provided ICIO table can be loaded(see the option {opt user()} of {cmd:icio_load}). 
+	The {cmd:icio_load} command allows to work directly with the most popular ICIO tables - WIOD (Timmer et al. 2015), TIVA (OECD), EORA (Lenzen et al. 2013), ADB MRIO (Asian Development Bank MRIOT Database);
+	in addition, any other user-provided ICIO table can be loaded(see the option {opt user()} of {cmd:icio_load}).
 	{cmd:icio} also allows to work with user-defined groups of countries, which means that output measures can be computed  for a country
 	group (e.g. the "Euro area", "MERCOSUR" or "ASEAN") as a whole while taking into account the specific supply/demand/trade structure of each  member of the group (see the option {opt groups()} for more details).
 
 {pstd}
 	{cmd:icio} encompasses the most relevant measures of value-added in exports and imports at different level of aggregation. It follows closely the accounting framework presented in Borin and Mancini (2019), which - in turn - extends,
-	refines and reconciles the other main contributions in this strand of the literature (Johnson and Noguera, 2012; Wang et al., 2013; Koopman et al. 2014; 
+	refines and reconciles the other main contributions in this strand of the literature (Johnson and Noguera, 2012; Wang et al., 2013; Koopman et al. 2014;
 	Borin and Mancini, 2015; Los et al., 2016; Nagengast and Stehrer, 2016; Johnson, 2018; Miroudot and Ye, 2018; Los and Timmer, 2018).
-	A key feature of the conceptual scheme proposed by Borin and Mancini (2019) is that different empirical questions call for distinct accounting methods, 
+	A key feature of the conceptual scheme proposed by Borin and Mancini (2019) is that different empirical questions call for distinct accounting methods,
 	along with different level of aggregation of trade flows. The icio command shares
 	the same rationale.
 
@@ -137,7 +142,7 @@ to measure final demand in different countries and sectors ({opt destination()})
 {synopthdr : icio_load options}
 {synoptline}
 {synopt :{cmdab:iciot:able(}{it:{help icio##table_name:table_name}} [, {it:{help icio##usertable_options:usertable_options}}])}specify the icio table to be used for the analysis; default is {opt wiodn} {p_end}
-{synopt :{opt year(#)}}set the year to be used for the analysis; default is the last available year: {opt year(2014)} for {opt wiodn}, {opt year(2015)} for {opt tivan}, {opt year(2015)} for eora. Not needed for user-provided tables{p_end}
+{synopt :{opt year(#)}}set the year to be used for the analysis; default is the last available year: {opt year(2014)} for {opt wiodn}, {opt year(2015)} for {opt tivan}, {opt year(2015)} for {opt eora}, {opt year(2018)} for {opt adb}. Not needed for user-provided tables{p_end}
 {synopt :{opt info}}describe the source and the version of the Input Output databases available in {cmd:icio}{p_end}
 {synoptline}
 
@@ -165,6 +170,7 @@ and formatted by the user. See {it: usertable_options}. Details on the required 
 {synopt :{opt countryl:istname(string)}}specifies the name of the {it: user-created} country-list{p_end}
 {synoptline}
 
+
 {pstd} Remarks on user provided tables{p_end}
 {synoptline}
 
@@ -176,6 +182,16 @@ In this case, the matrix dimension in the user-provided csv file should be (44x5
 the user provided csv should include only data in the cell range E7 to CYJ2470. More in general, country and sector labels, total output, total consumption and total value-added must not be included in the csv.
 Country list's csv file must only contain a vector (Gx1) of country names, reflecting the same order adopted in the provided table's csv file.{p_end}
 {synoptline}
+
+
+{pstd} Remarks on {cmd:icio_clean}{p_end}
+{synoptline}
+
+{pstd}
+{cmd:icio_clean} can be used to free space on the hard disk. It deletes any icio table or ancillary file downloaded by the user throught the {cmd:icio_load} command.
+These files are stored automatically in the system directory {it:~/ado/plus/i}, where also the {cmd:icio} suite is stored.{p_end}
+{synoptline}
+
 
 {marker supplydemand}{...}
 {pstd} {ul:{hi:Supply, final demand and supply-final demand linkages:}}{p_end}
@@ -203,7 +219,7 @@ Note that within a specific origin/destination option, {opt country_code} and {o
 {phang2}{cmd: icio, destination(deu,all)} {p_end}
 
 {pstd} 3. Value-added by origin and final destination:{p_end}
-{pstd} Display the value-added originated in a a selected country/sector and absorbed by the final demand of a selected country/sector. 
+{pstd} Display the value-added originated in a a selected country/sector and absorbed by the final demand of a selected country/sector.
 All countries or all sectors of origin as well as all countries or all sectors of final demand can be selected at once with the option {opt all}. Examples are:{p_end}
 {phang2}{cmd: icio, origin(deu) destination(chn)} {p_end}
 {phang2}{cmd: icio, origin(all) destination(chn)} {p_end}
@@ -246,7 +262,7 @@ option {opt perspective()} defines the 'perimeter' according to which something 
 For instance, the boundaries may be defined at the level of the exporting country (or the importing one), or of a specific bilateral relation, or of a single exporting sector within a bilateral flow.
 Note that the perspective may differ from the level of disaggregation of trade flow that is considered (i.e. the perimeter that identifies the perspective can be set at a more aggregate level as compared to the selected trade flow).
 For instance, if the question is: what part of a country's GDP is exported? It will be necessary to select {opt exporter(country_code)} and {opt perspective(exporter)} as options, such that the exporting country's frontiers as a whole
-constitute the perimeter that matters in deciding whether or not a certain item has to be classified as domestic value-added (GDP) or double-counted. 
+constitute the perimeter that matters in deciding whether or not a certain item has to be classified as domestic value-added (GDP) or double-counted.
 The {opt perspective(exporter)} has to be used also when one seeks a measure of value-added in sectoral and/or bilateral exports that can be added up to the exporter's GDP in its total exports.{p_end}
 
 {pstd}Alternative perspectives are better suited to address other issues. For instance, if we are interested in measuring the exporter's value-added that is exposed to a tariff imposed on a given sector
@@ -266,7 +282,7 @@ the value-added of a given country that enters, directly or indirectly, in the t
 should be accounted for as 'value-added' or 'double-counted'. Suppose, for instance, that along the production process a certain item is exported by country A first to country B and than to country C.
 By choosing {opt approach(source)} the item is classified as 'value-added' the first time it leaves the national border (i.e. in the exports toward B), whereas the sink-based approach considers it as 'value-added'
 the last time it crosses the border (i.e. in the exports toward C). The choice between the two approaches depends on the particular empirical issue we want to address. The source approach is designed to examine the production
-linkages and the country/sector participation to different types of production processes and to study the features of the production processes in which export flows are involved. 
+linkages and the country/sector participation to different types of production processes and to study the features of the production processes in which export flows are involved.
 Conversely, the value-added in the sink-based approach is recorded as closely as possible to the moment when it is ultimately absorbed.
 This makes it more suited to studying the relationship between value-added in exports and final demand.{p_end}
 
@@ -286,7 +302,7 @@ This makes it more suited to studying the relationship between value-added in ex
 {synoptset 50 tabbed}{...}
 {synopthdr : b) Value-added and GVC participation in total sectoral exports:}
 {synoptline}
-{synopt :{opt perspective(exporter)}}the default. This allows to display output for each exporting sector at once by setting {it:sector_code} as {opt all}. This perspective entails the selection of
+{synopt :{opt perspective(exporter)}}the default. This allows to display results for each exporting sector at once by setting {it:sector_code} as {opt all}. This perspective entails the selection of
 {opt approach(source)} (the default) or {opt approach(sink)}{p_end}
 {synopt :{opt perspective(sectexp)}}{p_end}
 {synoptline}
@@ -305,7 +321,7 @@ This makes it more suited to studying the relationship between value-added in ex
 {synoptset 50 tabbed}{...}
 {synopthdr : b) Value-added and GVC participation in bilateral sectoral exports:}
 {synoptline}
-{synopt :{opt perspective(exporter)}}the default. This allows to display output for each exporting sector at once by setting {it:sector_code} as {opt all}. This perspective entails the selection of
+{synopt :{opt perspective(exporter)}}the default. This allows to display results for each exporting sector at once by setting {it:sector_code} as {opt all}. This perspective entails the selection of
 {opt approach(source)} (the default) or {opt approach(sink)}{p_end}
 {synopt :{opt perspective(sectbil)}}{p_end}
 {synoptline}
@@ -327,11 +343,11 @@ This makes it more suited to studying the relationship between value-added in ex
 {synoptline}
 
 {marker icio_out_options}{...}
-{pstd}{hi:iii) Output and other options:}{p_end}
+{pstd}{hi:iii) Return and other options:}{p_end}
 {synoptline}
 
-{pstd}For the selected trade flow, {cmd:icio} allows to compute the main indicators of gross trade and value-added by specifying the {opt output()} option. For export flows the default
-output option - {opt output(detailed)} - shows a complete value-added decomposition of the trade flows according to the conceptual scheme proposed by Koopman et al. (2014) and refined by Borin and Mancini (2019).
+{pstd}For the selected trade flow, {cmd:icio} allows to compute the main indicators of gross trade and value-added by specifying the {opt return()} option. For export flows the default
+return option - {opt return(detailed)} - shows a complete value-added decomposition of the trade flows according to the conceptual scheme proposed by Koopman et al. (2014) and refined by Borin and Mancini (2019).
 Gross trade - {opt gtrade} - is first split in the part that is originally produced by the exporting country (domestic content - {opt dc}) and the part that is produced abroad (foreign content - {opt fc}); in turn,
 each of these components is broken down in a part of value-added item (domestic value-added - {opt dva} - and foreign value-added - {opt fva}) and in a part of double counting.
 The methodology used to single out the value-added and double-counted components changes according to the selected perspective/approach options (while {opt gtrade}, {opt dc}, {opt fc} measures have to be the same for all the accounting methodologies by construction).
@@ -339,24 +355,24 @@ The detailed output include also additional indicators of trade in value-added t
 VAXIM by Borin and Mancini, 2015 and 2019).
 The additional indicators that are included in the detailed output vary consistently with the selected perspective/approach.{p_end}
 
-{pstd}Instead of the whole detailed output the user can compute only one of the main trade indicators choosing one of the following {opt output()} options: {opt gtrade}, {opt dc}, {opt dva}, {opt fc} and {opt fva}.{p_end}
+{pstd}Instead of the whole detailed output the user can compute only one of the main trade indicators choosing one of the following {opt return()} options: {opt gtrade}, {opt dc}, {opt dva}, {opt fc} and {opt fva}.{p_end}
 
 {pstd}In addition to value-added and gross trade measures, for any export flow it is also possible to compute the value of trade that is related to GVCs, as developed in Borin and Mancini (2015).
 The 'GVC-related trade' includes all the traded items that cross at least two international borders, i.e. that are re-exported at least once.
 The backward and forward GVC participation measures are based on Borin and Mancini (2019) which consistently refine the vertical specialization index proposed by Hummels et al.(2001).
 GVC-related indicators, that are sub-components of the selected export flow, are shown in the detailed output by default (or when {opt perspective(exporter)} and {opt approach(source)} are specified).
-Alternatively it is possible to obtain a single measure of GVC trade by specifying {opt gvc}, {opt gvcb} and {opt gvcf} as arguments of the {opt output()} option for total, backward and forward GVC indicators respectively.{p_end}
+Alternatively it is possible to obtain a single measure of GVC trade by specifying {opt gvc}, {opt gvcb} and {opt gvcf} as arguments of the {opt return()} option for total, backward and forward GVC indicators respectively.{p_end}
 
 {pstd}For value-added and GVC indicators of the selected trade flow it is also possible to single out the country/sector where the goods/services where originally produced by specifying
 the {opt origin(country_code[,sector_code])} option, as well as the market/sector where it is absorbed in final demand by specifying the {opt destination(country_code[,sector_code])} option.
-When one seeks a measure of value-added produced by a specific country/sector the option {opt output(va)} should be specified. Note that, when the country in {opt origin()} correspond
-to that specified in {opt exporter()}, {cmd:icio} provides the same results when selecting {opt output(dva)} or {opt output(va)}.{p_end}
+When one seeks a measure of value-added produced by a specific country/sector the option {opt return(va)} should be specified. Note that, when the country in {opt origin()} correspond
+to that specified in {opt exporter()}, {cmd:icio} provides the same results when selecting {opt return(dva)} or {opt return(va)}.{p_end}
 
-{pstd}{opt output()} options and the other options available for export and import trade flows are reported here below.
+{pstd}{opt return()} options and the other options available for export and import trade flows are reported here below.
 
 
 {synoptset 52 tabbed}{...}
-{synopthdr: Output options for decomposition of exports:}
+{synopthdr: Return options for decomposition of exports:}
 {synoptline}
 {synopt :{opt detailed}}ask for the detailed decomposition. This is the default if origin/destination are not specified.{p_end}
 {synopt :{opt gtrade}}ask for gross trade. This is the default if origin/destination are specified.{p_end}
@@ -370,12 +386,14 @@ to that specified in {opt exporter()}, {cmd:icio} provides the same results when
 {synopt :{opt gvcf}}ask for forward global value chain related trade. It can be computed only if {opt perspective(exporter)} and {opt approach(source)} are selected, which are also the default options for any type of exports{p_end}
 {synoptline}
 
+
 {synoptset 52 tabbed}{...}
-{synopthdr: Output options for decomposition of imports:}
+{synopthdr: Return options for decomposition of imports:}
 {synoptline}
 {synopt :{opt gtrade}}ask for gross trade. This is the default{p_end}
 {synopt :{opt va}}ask for value-added{p_end}
 {synoptline}
+
 
 {marker icio_ori_dest_options}{...}
 {synoptset 52 tabbed}{...}
@@ -386,16 +404,35 @@ to that specified in {opt exporter()}, {cmd:icio} provides the same results when
 {synopt :{cmdab:dest:ination(}{it:country_code} [, {it:sector_code}])} ask for the country/sector where the trade value is absorbed by final demand. Results for all countries or all sectors can be computed and displayed simultaneously, using the option {opt all} for {it:country_code} or {it:sector_code}. {p_end}
 {synoptline}
 
+
 {marker icio_options}{...}
 {synoptset 52 tabbed}{...}
 {synopthdr: General options:}
 {synoptline}
-{synopt :{opt save}({it:{help filename}} [, replace])}save the {cmd:icio} output (scalar, vector or matrix) in memory to an excel file. {opt replace} specifies that it is okay to replace {it:filename.xls} if it already exists{p_end}
+{synopt :{opt save}({it:{help filename}} [, {it:{help icio##icio_save_options:save_options}}])}save the {cmd:icio} output (scalar, vector or matrix) to an excel file{p_end}
 {synopt :{opt gr:oups}({it:grouping_rule} {cmd:"}{it:user_defined_group}{cmd:"} [...])}specifies
 a user-defined grouping of countries. For example, if {cmd:groups(prt,esp,ita,cyp,grc,mlt,tur "south_europe")} is specified, the
 group "south_europe" will be created including Portugal, Spain, Italy, Cyprus, Greece, Malta and Turkey. The comma-separated list of country codes {cmd:prt,esp,ita,cyp,grc,mlt,tur} is in this case the {it:grouping_rule} while {cmd:"south_europe"}
 is the {it:user_defined_group} name. Run {cmd:icio, info} for the list of available country codes for the currently loaded IO table{p_end}
 {synoptline}
+
+
+{marker icio_save_options}{...}
+{synoptset 30 tabbed}{...}
+{synopthdr: Save options:}
+{synoptline}
+{synopt :{opt replace}} overwrite an existing Excel file{p_end}
+{synopt :{opt modify}} modify an existing Excel file{p_end}
+{synopt :{opt s:heet}({it:sheetname} [, replace])}  specify the worksheet to use; the default sheet name is icio_out{p_end}
+{synoptline}
+
+
+
+{marker remarks}{...}
+{title:Remarks}
+
+{pstd}The {opt return()} option replaces the {opt output()} option available in previous icio's versions. Nonetheless, we let the {opt  output()} option working for backward compatibility.{p_end}
+
 
 
 {marker examples}{...}
@@ -441,26 +478,26 @@ is the {it:user_defined_group} name. Run {cmd:icio, info} for the list of availa
 {synoptline}
 
 {pstd}Which part of a country’s total exports is home produced, i.e. is domestic GDP?{p_end}
-{phang2}{cmd: icio, exporter(deu) output(dva)} {p_end}
+{phang2}{cmd: icio, exporter(deu) return(dva)} {p_end}
 
 {pstd}Which part of a country’s total exports can be traced back to other countries GDP?{p_end}
-{phang2}{cmd: icio, exporter(deu) output(fva)} {p_end}
+{phang2}{cmd: icio, exporter(deu) return(fva)} {p_end}
 
 {pstd}Where the foreign value-added in German exports is produced?{p_end}
-{phang2}{cmd: icio, origin(all) exporter(deu) output(fva)} {p_end}
+{phang2}{cmd: icio, origin(all) exporter(deu) return(fva)} {p_end}
 
 {pstd}Considering the bilateral exports from Italy to Germany, where the Italian GDP (domestic VA) re-exported by Germany is absorbed?{p_end}
-{phang2}{cmd: icio, exporter(ita) importer(deu) destination(all) output(dva)} {p_end}
+{phang2}{cmd: icio, exporter(ita) importer(deu) destination(all) return(dva)} {p_end}
 
 {pstd}How can be obtained the complete breakdown by origin and destination of the value-added (both domestic and foreign) for Chinese exports to the US?{p_end}
-{phang2}{cmd: icio, origin(all) exporter(chn) importer(usa) destination(all) output(va) save("CHN_to_USA.xls")} {p_end}
+{phang2}{cmd: icio, origin(all) exporter(chn) importer(usa) destination(all) return(va) save("CHN_to_USA.xls")} {p_end}
 
 {pstd}Which share of the German exports is related to GVC, i.e. cross more than one border?{p_end}
-{phang2}{cmd: icio, exporter(deu) output(gvc)} {p_end}
+{phang2}{cmd: icio, exporter(deu) return(gvc)} {p_end}
 
 {pstd}Which share of the German exports is related to backward and forward GVC?{p_end}
-{phang2}{cmd: icio, exporter(deu) output(gvcb)} {p_end}
-{phang2}{cmd: icio, exporter(deu) output(gvcf)} {p_end}
+{phang2}{cmd: icio, exporter(deu) return(gvcb)} {p_end}
+{phang2}{cmd: icio, exporter(deu) return(gvcf)} {p_end}
 
 {pstd}Note that it is possible to get a detailed assessment of trade in value-added and GVC participation regarding a certain trade flow running:{p_end}
 {phang2}{cmd: icio, exporter(deu)} {p_end}
@@ -474,19 +511,19 @@ is the {it:user_defined_group} name. Run {cmd:icio, info} for the list of availa
 {synoptline}
 
 {pstd}Which is the Chinese GDP that at any point in time, passes through a certain bilateral trade flow, say Chinese exports to the US? In other terms, what is the Chinese GDP potentially exposed to US tariffs on imports from China?{p_end}
-{phang2}{cmd: icio, exp(chn) imp(usa) persp(bilat) output(dva)} {p_end}
+{phang2}{cmd: icio, exp(chn) imp(usa) persp(bilat) return(dva)} {p_end}
 
 {pstd}Which is the German GDP potentially exposed to US tariffs on all imports?{p_end}
-{phang2}{cmd: icio, origin(deu) imp(usa) persp(importer) output(va)} {p_end}
+{phang2}{cmd: icio, origin(deu) imp(usa) persp(importer) return(va)} {p_end}
 
 {pstd}Which is the German GDP that could be affected by US tariffs on imports in sector 20?{p_end}
-{phang2}{cmd: icio, origin(deu) imp(usa,20) persp(sectimp) output(va)} {p_end}
+{phang2}{cmd: icio, origin(deu) imp(usa,20) persp(sectimp) return(va)} {p_end}
 
 {pstd}Which is the exposure of US GDP to a Chinese tariff on US imports in sector 17?{p_end}
-{phang2}{cmd: icio, exp(usa,17) imp(chn) persp(sectbil) output(dva)} {p_end}
+{phang2}{cmd: icio, exp(usa,17) imp(chn) persp(sectbil) return(dva)} {p_end}
 
 {pstd}To what extent are Italian sectors exposed to a shock on German's exports in sector 20?{p_end}
-{phang2}{cmd: icio, origin(ita,all) exp(deu,20) persp(sectexp) output(va)} {p_end}
+{phang2}{cmd: icio, origin(ita,all) exp(deu,20) persp(sectexp) return(va)} {p_end}
 
 {pstd}{cmd: Miscellaneous:}{p_end}
 {synoptline}
@@ -523,15 +560,15 @@ is the {it:user_defined_group} name. Run {cmd:icio, info} for the list of availa
 {cmd:icio} is not an official Stata command. It is a free contribution to the research community. See {browse "http://www.tradeconomics.com/icio/":tradeconomics.com/icio/} for information on last updates. Please cite it as such:
 
 {phang}
-Belotti, F., Borin, A., and Mancini, M. (2020). 
-{browse "http://documents.worldbank.org/curated/en/587121582136569876/icio-Economic-Analysis-with-Inter-Country-Input-Output-Tables-in-Stata":icio: Economic Analysis with Inter-Country Input-Output tables in Stata}. 
+Belotti, F., Borin, A., and Mancini, M. (2020).
+{browse "http://documents.worldbank.org/curated/en/587121582136569876/icio-Economic-Analysis-with-Inter-Country-Input-Output-Tables-in-Stata":icio: Economic Analysis with Inter-Country Input-Output tables in Stata}.
 Policy Research Working Paper; No. 9156. World Bank.
 
 {pstd}
 When measures of value-added in trade and GVC participation are used, please also cite:
 
 {phang}
-Borin, A., and Mancini, M. (2019). {browse "http://documents.worldbank.org/curated/en/639481554384583291/Measuring-What-Matters-in-Global-Value-Chains-and-Value-Added-Trade":Measuring What Matters in Global Value Chains and Value-Added Trade}. 
+Borin, A., and Mancini, M. (2019). {browse "http://documents.worldbank.org/curated/en/639481554384583291/Measuring-What-Matters-in-Global-Value-Chains-and-Value-Added-Trade":Measuring What Matters in Global Value Chains and Value-Added Trade}.
 Policy Research Working Paper; No. 8804. World Bank.
 
 {phang}

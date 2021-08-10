@@ -12,7 +12,7 @@ d KW: W.E.B. DuBois
 d
 d Requires: Stata version 10
 d
-d Distribution-Date: 20210302
+d Distribution-Date: 20210522
 d
 d Author:  Charlie Eaton, Department of Sociology, University of California, Merced
 d Support: email ceaton2@@ucmerced.edu
@@ -26,5 +26,6 @@ d
 d Author: Waleed Rajabally , Department of Sociology, University of California, Merced
 d Support: email wrajabally@@ucmerced.edu
 d
+f dubois_example.ado
 f dubois.sthlp
 f ../s/scheme-dubois.scheme

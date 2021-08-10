@@ -10,9 +10,9 @@ d KW: timer
 d KW: elapsed time
 d KW: runtime
 d
-d Requires: Stata version 10
+d Requires: Stata version 11
 d
-d Distribution-Date: 20190124
+d Distribution-Date: 20210614	
 d
 d Author:  Jesse Wursten, KU Leuven
 d Support: email jesse.wursten@@kuleuven.be 

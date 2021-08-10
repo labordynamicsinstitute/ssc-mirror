@@ -17,12 +17,13 @@ d KW: instrumental variables
 d
 d Requires: Stata version 13 and ftools from SSC (q.v.)
 d
-d Distribution-Date: 20200820
+d Distribution-Date: 20210605
 d
 d Author: Fernando Rios-Avila, Levy Economics Institute of Bard College
 d Support: email friosavi@@levy.org
 d
 f xtheckmanfe.ado
+f xtheckmanfe_ml.ado
 f xtheckmanfe.sthlp
 f ../_/_xthck.ado
 f ../_/_xthckiv.ado

@@ -1,5 +1,5 @@
 {smcl}
-{* *! version 4.01  David Fisher  12feb2021}{...}
+{* *! version 4.02  David Fisher  20apr2021}{...}
 {vieweralsosee "ipdmetan" "help ipdmetan"}{...}
 {vieweralsosee "forestplot" "help forestplot"}{...}
 {vieweralsosee "metan" "help metan"}{...}

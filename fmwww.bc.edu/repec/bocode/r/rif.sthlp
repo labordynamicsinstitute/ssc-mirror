@@ -1,5 +1,5 @@
 {smcl}
-{* *! version 1.0.0  February 2020}{...}
+{* *! version 2.0  May 2021}{...}
 
 
 {title:Title}
@@ -29,23 +29,26 @@ The flexibility and simplicity of this tool has opened the possibility to extend
  using linear regressions or decomposition approaches. 
 
 {pstd}
-This package introduces a set of community contributed commands to facilitate the use of RIFs in the analysis of outcome distributions, using standard linear regression analysis or Oaxaca-Decomposition decomposition approaches.
+This package introduces a set of community contributed commands to facilitate the use of RIFs in the analysis of outcome distributions, using standard linear regression analysis or Oaxaca-Decomposition decomposition approaches. 
 
 {pstd}
 In this package you will find the following commands:
 
 {pstd}
-{help rifvar} is an egen extension that can be used to create RIFs for a large set of distributional statistics. It can also be used in combination with other statistics for which RIF's are not yet available. see {help hvar} for details. 
+{help rifvar} is an egen extension that can be used to create RIFs for a large set of distributional statistics. It can also be used in combination with other statistics for which RIF's are not yet available. see {help hvar} for details. There are now two versions of this command. rifvar() has been rewritten to work with Mata, making it faster than the older command. Some algorithms have been changed, thus, for replication, the older command is now named {cmd: rifvar_old()}.
 
 {pstd}
 {help rifhdreg} is a command that facilitates the estimation of RIF regressions. It also enables the use of high-dimensional fixed effects 
-(if {cmd reghdfe} is installed). This command can also be used to estimate inequality treatment effects.
+(if {cmd:reghdfe} is installed). This command can also be used to estimate inequality treatment effects. There is now a wrapper named {cmd:bsrifhdreg} for bootstraping rif regressions. This is recomended for using the command {help qregplot} for plotting unconditional quantile regression coefficients.
 
 {pstd}
-{help oaxaca_rif} is a command that implements Oaxaca-Blinder decomposition (RIF decompositions), using the RIF's as dependent variables. It implements two type of decompositions: Standard OB deceomposition, and reweighted OB decomposition as suggested by Firpo, Fortin and Lemieux (2018). This requires the command {help oaxaca} (Jann, 2008).
+{help oaxaca_rif} is a command that implements Oaxaca-Blinder decomposition (RIF decompositions), using the RIF's as dependent variables. It implements two type of decompositions: Standard OB deceomposition, and reweighted OB decomposition as suggested by Firpo, Fortin and Lemieux (2018). This requires the command {help oaxaca} (Jann, 2008). Names for the different components have been changed. Old version is now named oaxaca_rif_old.
 
 {pstd}
-{help rifsureg} and {help rifsureg2} are commands that can be used to estimate simulatenous RIF regressions. {cmd rifsureg} focuses on the estimation of simultaneous unconditional quantile regressions, whereas {cmd rifsureg2} can estimate simultanous RIF regressions.
+{help rifsureg} and {help rifsureg2} are commands that can be used to estimate simulatenous RIF regressions. {cmd:rifsureg} focuses on the estimation of simultaneous unconditional quantile regressions, whereas {cmd:rifsureg2} can estimate simultanous RIF regressions.
+
+{pstd}
+{help rifmean} is a commands that can be used to estimate simulatenous RIF regressions. Similar to {cmd:rifsureg2}, this command can estimate simultanous RIFs. But it can more easily be used for the estimation of Mean statistics (and standard devations) over groups.
 
 {pstd}
 {help uqreg} is a self contained command that fits unconditional quantile regressions, allowing for other methods such as probit, logit, xtreg, etc.

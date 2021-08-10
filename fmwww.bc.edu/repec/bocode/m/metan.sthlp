@@ -1,5 +1,5 @@
 {smcl}
-{* *! version 4.02  David Fisher  23feb2021}{...}
+{* *! version 4.03  David Fisher  28apr2021}{...}
 {vieweralsosee "metan_model" "help metan_model"}{...}
 {vieweralsosee "metan_binary" "help metan_binary"}{...}
 {vieweralsosee "metan_continuous" "help metan_continuous"}{...}
@@ -136,7 +136,7 @@ This incorporates all the functionalities of the previous version of {cmd:metan}
 {synopt :{opt keepo:rder}}display "no effect" studies in the order in which they would otherwise appear (by default these are moved to the end){p_end}
 {synopt :{opt nogr:aph}}suppress the forest plot{p_end}
 {synopt :{opt notab:le}}suppress printing the table of effect sizes to screen; see also {opt summaryonly}{p_end}
-{synopt :{opt nohet}}suppress all heterogeneity statistics{p_end}
+{synopt :{opt nohet} {opt nobetween}suppress all heterogeneity statistics, or just between-subgroup heterogeneity statistics{p_end}
 {synopt :{opt nokeep:vars}}do not add {help metan##saved_results:new variables} to the dataset{p_end}
 {synopt :{opt nors:ample}}do not even add new variable {bf:_rsample} recording which observations were used (cf. {help f_e:e(sample)}){p_end}
 {synopt :{opt noov:erall} {opt nosu:bgroup} {opt nosec:sub}}suppress overall pooling, or pooling within subgroups{p_end}
@@ -277,6 +277,11 @@ Note also that the forest plot option {opt summaryonly} has a similar effect to 
 
 {phang}
 {opt nohet} suppresses heterogeneity statistics in both table and forest plot.
+
+{pmore}
+{opt nobetween} is an alternative option, which suppresses only the between-subgroup heterogeneity statistics,
+retaining the overall and subgroup-specific heterogeneity statistics.
+This might be useful in non-standard use-cases where between-subgroup tests are inappropriate or would otherwise cause confusion.
 
 {phang}
 {opt nokeepvars}, {opt norsample} specify that {help metan##saved_results:new variables}

@@ -1,11 +1,13 @@
 p eaalogit module to estimate endogenous attribute attendance models
 p eba module to perform extreme bound analysis
 p ebalance module to perform Entropy reweighting to create balanced samples
+p ebalfit module to perform entropy balancing
 p ebct module to perform entropy reweighting to create balanced samples for continuous treatments
 p ebrowse module to to display variables in the Data Editor, ordered by varlist
 p eclpci module to compute Exact and Approximate Confidence Limits for Poisson Counts
 p eclplot module to generate estimates and confidence limits plots
 p edm module to implement empirical dynamic modeling
+p educationdata module to download data from the Urban Institute Education Data Portal
 p eealogit module to estimate endogenous attribute attendance models
 p eefanalytics module for Evaluating Educational Interventions using Randomised Controlled Trial Designs
 p efetch_tools module to retrieve genetic data from NCBI
@@ -78,9 +80,12 @@ p eurouse module to import data from Eurostat
 p evalue module for conducting sensitivity analyses for unmeasured confounding in observational studies
 p evalue_estat module for conducting postestimation sensitivity analyses of unmeasured confounding in observational studies
 p evalues module to calculate E-values
+p event_plot module to plot the staggered-adoption diff-in-diff ("event study") estimates
+p eventcoefplot module to produce advanced event-study graphical analysis
 p eventdd module to panel event study models and generate event study plots
 p eventstudy module to perform event studies in finance
 p eventstudy2 module to perform event studies with complex test statistics
+p eventstudyinteract module to implement the interaction weighted estimator for an event study
 p eventstudyweights module to estimate the implied weights on the cohort-specific average treatment effects on the treated (CATTs) (event study specifications)
 p evhistplot module to produce event history plot
 p ewma module to calculate exponentially weighted moving average

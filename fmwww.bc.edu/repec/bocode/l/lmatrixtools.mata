@@ -1,5 +1,7 @@
-*! Part of package matrixtools v. 0.27
+*! Part of package matrixtools v. 0.28
 *! Support: Niels Henrik Bruun, niels.henrik.bruun@gmail.com
+*!2021-05-10 > nhb_mt_labelmatrix::append() handles being empty at start
+*!2021-05-10 > nhb_mt_labelmatrix::add_sideways() handles being empty at start
 *!2021-03-01 > function nhb_muf_xlcolumn_nbr() added
 *!2021-02-27 > class nhb_mt_onewai() added
 *2021-02-17 > nhb_mt_chi2tabulate::set() making error for string variables
@@ -356,23 +358,38 @@ mata:
 		void nhb_mt_labelmatrix::append(class nhb_mt_labelmatrix scalar m)
 		{
 			colvector eq, nm
-		
-			eq = this.row_equations()
-			nm = this.row_names()
-			this.values(this.values() \ m.values())
-			this.row_equations(eq \ m.row_equations())
-			this.row_names(nm \ m.row_names())
+			
+			if ( this.empty() ) {
+				this.values(m.values())
+				this.row_equations(m.row_equations())
+				this.row_names(m.row_names())
+				this.column_equations(m.column_equations())
+				this.column_names(m.column_names())
+			} else {
+				eq = this.row_equations()
+				nm = this.row_names()
+				this.values(this.values() \ m.values())
+				this.row_equations(eq \ m.row_equations())
+				this.row_names(nm \ m.row_names())			    
+			}
 		}
 
 		void nhb_mt_labelmatrix::add_sideways(class nhb_mt_labelmatrix scalar m)
 		{
 			colvector eq, nm
-		
-			eq = this.column_equations()
-			nm = this.column_names()
-			this.values( (this.values(), m.values()) )
-			this.column_equations(eq \ m.column_equations())
-			this.column_names(nm \ m.column_names())
+			if ( this.empty() ) {
+				this.values(m.values())
+				this.row_equations(m.row_equations())
+				this.row_names(m.row_names())			    		
+				this.column_equations(m.column_equations())
+				this.column_names(m.column_names())			    
+			} else {
+				eq = this.column_equations()
+				nm = this.column_names()
+				this.values( (this.values(), m.values()) )
+				this.column_equations(eq \ m.column_equations())
+				this.column_names(nm \ m.column_names())
+			}
 		}
 		
 		void nhb_mt_labelmatrix::clear()

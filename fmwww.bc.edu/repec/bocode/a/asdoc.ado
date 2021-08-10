@@ -1,8 +1,18 @@
 *! Attaullah Shah; attaullah.shah@imsciences.edu.pk
 *! Tenured Associate Professor at the Institute of Management Sciences, Peshawar, Pakistan.
 *!-------------------------------------------------------------------------------
-*!  Version 2.3.8.6 : Changes made on Sep 4, 2020      : Option col fixed in tabulate
+*! Version 2.3.9.5 : Changes made on April 10 , 2021   : Bug fixed in sum command when a variable had all empty values
 
+*! Version 2.3.9.4 : Changes made on Jan 30, 2021      : Time series operatr now works with the variable names when exorting data with the list comand. eg asdoc list id year l.x D.x, replace
+*  Version 2.3.9.3 : Changes made on Jan 1, 2021       : Bug fixed in the ttest with option unequal: Previously, it would report results for samples with equal variance.
+*  Version 2.3.9.2 : Changes made on Dec 25, 2020      : Added Option cell to tabulate command to report cell percentages; (2) eform now works with the detailed regression
+*  Version 2.3.9.1 : Changes made on Nov 3, 2020       : Added inspect command to asdoc
+*  Version 2.3.9.1 : Changes made on October 30, 2020  : Added option chi2 to tabulate
+*  Version 2.3.9.0 : Changes made on October 21, 2020  : Added opton row and col to the table command
+*  Version 2.3.8.9 : Changes made on October 12, 2020  : Factor variable now appear with value lables in details regression. Also, the number of observations now do no not have decimal points
+*  Version 2.3.8.8 : Changes made on October 5, 2020   : Bug fixed with bys tabstat
+*  Version 2.3.8.7 : Changes made on Sep 9, 2020       : Option force added to newey regression
+*  Version 2.3.8.6 : Changes made on Sep 4, 2020       : Option col fixed in tabulate
 *  Version 2.3.8.5 : Changes made on August 27, 2020   : cnames() option added to two sample ttest. This option can be used to write custom column titles for the mean values of the two groups. Prevously only Mean1 and Mean2 were used as default names.
 *  Version 2.3.8.4 : Changes made on August 27, 2020   : Bug fixed in pwcorr
 *  Version 2.3.8.3 : Changes made on August 26, 2020   : More than 20 nested regressions are now supported
@@ -54,23 +64,23 @@
 * Version 2.3.3.8: Adding significance level for multi levels
 * Version 2.3.3.7: Windows and MAC separate processing
 /*
-   1. eform option added to nested tables for logistic family of regressions
-   2. Option font added to specify font face, for example, font(Garamond)
-   3. support for ivregress and 2sls added
-   4. Improving output of non-standard Stata output, i.e. multilevel models
-   5. Option fhr fhc for formating header-row and header-column e.g., fhr(\b) for making the title row bold
-   6. Support added for xtmelogit
-   7. Added header row to tab command
-   7. Added support for macOS for the following
-   7.1 wide regression table
-   7.2 option row()
-   7.3 table command revamped completely
-   7.4 proportions
-   8. setting stars level with option setstar e.g, setstars(***@.1, **@.04, *@.01)
-   9. Added confidence intervals to detailed regression
-   10. making stars and confidence intervals optional in detailed regression
-   11. tab command revamped completely
-   12. Table command revamped completely
+	   1. eform option added to nested tables for logistic family of regressions
+	   2. Option font added to specify font face, for example, font(Garamond)
+	   3. support for ivregress and 2sls added
+	   4. Improving output of non-standard Stata output, i.e. multilevel models
+	   5. Option fhr fhc for formating header-row and header-column e.g., fhr(\b) for making the title row bold
+	   6. Support added for xtmelogit
+	   7. Added header row to tab command
+	   7. Added support for macOS for the following
+	   7.1 wide regression table
+	   7.2 option row()
+	   7.3 table command revamped completely
+	   7.4 proportions
+	   8. setting stars level with option setstar e.g, setstars(***@.1, **@.04, *@.01)
+	   9. Added confidence intervals to detailed regression
+	   10. making stars and confidence intervals optional in detailed regression
+	   11. tab command revamped completely
+	   12. Table command revamped completely
 */
 
 version 12
@@ -292,7 +302,6 @@ prog asdoc, byable(onecall)
 
 			if inlist("`command'", "sum","cor", "tabstat", "pwcorr", "ameans")  {
 
-				//if "`command'" == "sum" | "`command'" == "cor" | "`command'" == "tabstat" | "`command'" == "pwcorr" | "`command'" == "ameans"  {
 				if "`varlist'" == "" {
 					qui ds, has(type numeric)
 					local varlist "`r(varlist)'"
@@ -377,7 +386,7 @@ prog asdoc, byable(onecall)
 		if "`sep000'" == "" global sep000
 
 		if "`sepspace'" == "" global sepspace
-		forv i = 1 / 20 {
+		forv i = 1 / 50 {
 			cap mac drop c`i'_tzok
 			cap mac drop c`i'_disfmt
 			cap mac drop c`i'_dec
@@ -443,9 +452,6 @@ prog asdoc, byable(onecall)
 		}
 
 	}
-	*if "`replace'" == "" 	mata: delete_closing_lines("`save'")
-
-	//	if "`wide'" == "" & "`append'" != "" mata : append("`save'", "`rowappend'")
 
 	if "`command'" != "wideReg" global wideReg
 	if "`command'" != "row" global row
@@ -690,7 +696,6 @@ prog asdoc, byable(onecall)
 
 			if "`AppendType'"!= "3" mata : CustomCellSize("`depvar', `cof' `STAT_VALUES' `r2' `estat'")
 
-			dis "`AppendType'"
 			cap mata : CustomCellSize
 			if "`t'" != "below" & "`se'" != "below" {
 				if "`AppendType'" == "1" | "`AppendType'" == "2" {
@@ -746,7 +751,9 @@ prog asdoc, byable(onecall)
 
 
 			qui sum `Groups' `if' `in'
-			loc maxGroups = `r(max)'
+			if "`r(max)'" == "" loc maxGroups 0 
+			else loc maxGroups = `r(max)'
+
 			cap getifin `varlistifin'
 			if "`if'" != "" loc byGroup &  `Groups'
 			else loc byGroup if `Groups'
@@ -1053,15 +1060,18 @@ prog asdoc, byable(onecall)
 		global row row
 		global accum
 	}
-	//-----------------------------------------------------------------------------
+	//--------------------------------------------------------------------------
 	*								TABULATION
-	*==============================================================================
+	*===========================================================================
 
 	if inlist("`command'" , "tab1", "tab2", "tab") {
+	    if strmatch("`poptions'", "*chi2*") loc chi2 chi2
+
 		if "`_byvars'" != "" {
 			loc byexists = 1
 			tempvar Groups
 			qui ds `_byvars' , has(type string)
+
 			if "`r(varlist)'" == "" {
 				tempvar strby 
 				qui ds `_byvars'  , has(vallabel)
@@ -1076,7 +1086,9 @@ prog asdoc, byable(onecall)
 			}
 			else qui encode `_byvars'  `if' `in', gen(`Groups')
 			qui sum `Groups' `if' `in'
-			loc maxGroups = `r(max)'
+			if "`r(max)'" == "" loc maxGroups 0 
+			else loc maxGroups = `r(max)'
+
 			qui aslev `_byvars', vl
 			loc allLabels "`r(vLabel)'"
 
@@ -1179,7 +1191,7 @@ prog asdoc, byable(onecall)
 					local j 1
 					while `j' <= `stop' {		
 
-						noisily di `"-> tabulation of `L' by ``j'' `if' `in'"' 
+						noisily di `"-> tabulation of `L' by ``j'' `if' `in'"'
 						asdoc_tabulate `L' ``j''  `if' `poptions' `row' ///
 							matcell(frequencies) matrow(header_row) 
 
@@ -1189,10 +1201,16 @@ prog asdoc, byable(onecall)
 						if `run' == 1 loc append `append'
 						else loc append append
 
+						if "`chi2'" != "" {
+							loc chi2 : dis %9.2f = `r(chi2)'
+							loc chip2 : dis %9.4f = `r(p)'
+							loc chistr "`chi2' | `chip2'"
+						}
+
 						mata: asdoc_tab_twovars("`L' ``j''", "`save'", "`titlej'", ///
 							"`append'", `fs', "`dec'", "`cmd'",`abb', "`nofreq'", ///
 							"`subopt'", "`nolabel'", "`nokey'", "`font'", "`fhr'", ///
-							"`fhc'", "`notes'" ) 
+							"`fhc'", "`notes'", "`chistr'" ) 
 
 						loc `++run'
 						local j = `j' + 1
@@ -1210,6 +1228,7 @@ prog asdoc, byable(onecall)
 
 			else if "`command'" == "tab" {
 				if strmatch("`poptions'", "*col*") loc subopt col
+				if strmatch("`poptions'", "*cell*") loc subopt `subopt' cell
 				if strmatch("`poptions'", "*nof*") loc nofreq nofreq
 				if strmatch("`poptions'", "*nolab*") loc nolabel nolabel
 
@@ -1227,8 +1246,15 @@ prog asdoc, byable(onecall)
 
 
 				if "`row'" != "" loc subopt `subopt' row
+
 				asdoc_tabulate `varlist' `weights' `if' `poptions'  ///
 					matcell(frequencies) matrow(header_row) `matcol'  `subopt'
+				if "`chi2'" != "" {
+					loc chi2 : dis %9.2f = `r(chi2)'
+					loc chip2 : dis %9.4f = `r(p)'
+					loc chistr "`chi2' | `chip2'"
+				}
+
 
 				if "`abb'" == "" loc abb = 150
 
@@ -1251,7 +1277,7 @@ prog asdoc, byable(onecall)
 					mata: asdoc_tab_twovars("`varlist'", "`save'", "`title'", ///
 						"`append'", `fs', "`dec'", "`cmd'",`abb',"`nofreq'", ///
 						"`subopt'", "`nolabel'","`nokey'", "`font'", "`fhr'", ///
-						"`fhc'", "`notes'") 
+						"`fhc'", "`notes'", "`chistr'") 
 
 				}
 			}
@@ -1431,7 +1457,9 @@ prog asdoc, byable(onecall)
 			}
 			else qui encode `by'  `if' `in', gen(`Groups')
 			qui sum `Groups' `if' `in'
-			loc maxGroups = `r(max)'
+			if "`r(max)'" == "" loc maxGroups 0 
+			else loc maxGroups = `r(max)'
+
 
 			//cap getifin `varlistifin'
 			if "`if'" != "" loc byGroup &  `Groups'
@@ -1478,7 +1506,6 @@ prog asdoc, byable(onecall)
 		}
 
 		if !`byexists' {
-
 			`qui' tablex `varlist' `if' `in' `weights' `poptions' `row' `dec'
 			mata: astable("`save'", "`title'", "`append'","`varlist'", "`row'", ///
 				"`col'", "`super_colum'", `fs', "`cmd'", "`font'", "`fhr'", "`fhc'", ///
@@ -1499,10 +1526,12 @@ prog asdoc, byable(onecall)
 				else loc append append
 
 				cap local vlabel : label `lbe' `g'
-				`qui' tablex `varlist'  `poptions' `row' `dec'  
+				`qui' tablex `varlist'  `poptions' `row' `dec' 
+
 				mata: astable("`save'", "`by'  =  `vlabel'", "`append'", "`varlist'", "`row'", ///
 					"`col'", "`super_colum'", `fs', "`cmd'", "`font'", "`fhr'", "`fhc'", ///
 					"`if'", "`in'")
+				set trace off
 
 				loc `++run'
 				restore
@@ -1590,7 +1619,7 @@ prog asdoc, byable(onecall)
 
 				//loc abb = max(18,.)
 
-				if inlist("`cmd'", "sqreg", "sureg", "reg3") loc multireg 1
+				if inlist("`cmd'", "sqreg", "sureg", "reg3", "mvreg") loc multireg 1
 
 				gettoken depvar indepvars : varlist
 				if inlist("`cmd'" , "ivreg", "ivregr", "ivregre", "ivregres", "ivregress", "mi") {
@@ -1655,7 +1684,7 @@ prog asdoc, byable(onecall)
 				}
 			}
 
-			if "`replay'" != "replay" `qui' `anything' `poptions' `or'
+			if "`replay'" != "replay" `qui' `anything' `poptions' `or' `force'
 			mat A = r(table)
 			loc neq `e(n_q)'
 			loc eq_names `e(eqnames)'
@@ -1735,7 +1764,6 @@ prog asdoc, byable(onecall)
 				}
 				if "`cmd'" == "qreg" & "`title'" == "" loc title "Table : Quantile regression"
 				if "`title" == "" loc title  "Table : Regression results"
-
 				mata: func_nested_reg("`save'", "$AlldepVars", "`rownames'", "coefmat", ///
 					"r(stats)", "`title'", `fs', `abb', "`append'", "`noheader'", ///
 					" " ,`frs', `POS',"$REP", "`dec'", "`statlable'", ///
@@ -1853,7 +1881,9 @@ prog asdoc, byable(onecall)
 
 
 			qui sum `Groups' `if' `in'
-			loc maxGroups = `r(max)'
+			if "`r(max)'" == "" loc maxGroups 0 
+			else loc maxGroups = `r(max)'
+
 
 
 			cap getifin `varlistifin'
@@ -1862,7 +1892,7 @@ prog asdoc, byable(onecall)
 
 			forv j = 1 / `maxGroups' {
 
-				qui cap noi `anything' `byGroup' == `j'  `poptions' 
+				qui cap noi `anything' `byGroup' == `j'  `poptions' `force'
 				if _rc continue
 				if `j' > 1 loc append append
 				gettoken cmd varlist : regtableanything
@@ -2022,11 +2052,14 @@ prog asdoc, byable(onecall)
 				asttom `varlist' `if' `in' `poptions' sep(,) `by' `title' `statsOptions' `cnames'
 
 				mat T = r(T)
+				matlist T
+				set trace on
+
 				mata: asdoctable("`save'", "`r(colnames)'", "`r(rownames)'", 	///
 					"T", "`r(ttitle)'", `fs', `abb', "`append'", "`noheader'", 		///
 					"`rowappend'", "," ,`frs',"", "`dec'", "`cmd'", "`label'", ///
 					"`tzok'", "`font'", "`fhc'", "`fhr'", "`notes'", "`store'")
-
+				set trace off
 			}
 			else { // _bysort
 				tempvar Groups
@@ -2043,11 +2076,12 @@ prog asdoc, byable(onecall)
 
 
 				qui sum `Groups' `if' `in'
-				loc maxGroups = `r(max)'
+				if "`r(max)'" == "" loc maxGroups 0 
+				else loc maxGroups = `r(max)'
+
 
 				bys `Groups' : asttomby `varlist' `poptions' sep(,) `title' `statsOptions'
 
-				dis "bys `Groups' : asttomby `varlist' `poptions' sep(,) `title' `statsOptions'"
 
 				mat T = r(T)
 				local colnames : colfullnames  T
@@ -2058,6 +2092,7 @@ prog asdoc, byable(onecall)
 					"T", "`r(ttitle)'", `fs', `abb', "`append'", "`noheader'", 		///
 					"`rowappend'", "" ,`frs',"", "`dec'", "`cmd'", "`label'", 		///
 					"`tzok'", "`font'", "`fhc'", "`fhr'", "`notes'", "`store'")
+				set trace off
 
 			}
 		}
@@ -2123,8 +2158,11 @@ prog asdoc, byable(onecall)
 
 			else qui encode `by' `_byvars' `if' `in', gen(`Groups')
 			qui sum `Groups' `if' `in'
-			loc maxGroups = `r(max)'
+			if "`r(max)'" == "" loc maxGroups 0 
+			else loc maxGroups = `r(max)'
 
+
+			* One Statistics
 			//--------------------------------------
 			local nstats : word count `stats'
 			if `nstats' <2 {
@@ -2139,15 +2177,14 @@ prog asdoc, byable(onecall)
 					cond("`stats'" == "var", "Variance", 						///
 					cond("`stats'" == "iqr", "Inter-quartile range", "`stats'")))))))))
 
-				// Is this needed---------------
+
 				loca nvars : word count `varlist'
 				loc byName `by'  `_byvars'
 				local NameLabel : variable label `by' `_byvars'
 				if "`NameLabel'" == "" local NameLabel `by' `_byvars'
 
-
 				if "`title'"=="" loc title "Descriptive statistics - `statlable' by(`by' `_byvars')"
-				qui `anything', by(`by' `_byvars'') stat(`stats') save
+				qui `anything', by(`by' `_byvars') stat(`stats') save
 
 				local i = 1
 				forv v = 1 / `maxGroups'  {
@@ -2619,7 +2656,7 @@ prog asdoc, byable(onecall)
 					}
 				}
 				else {
-					if "`qui'"=="" sum `z' `if' `in'
+					qui sum `z' `if' `in'
 					if `nz' == 1 mat SUM = J(1, 5, .)
 					else         mat SUM = SUM \ J(1, 5, .)
 					loc rowtitles `rowtitles' `z'
@@ -2628,17 +2665,26 @@ prog asdoc, byable(onecall)
 
 					qui	sum `z' `if' `in'
 
-					mat SUM[`i',1] = `r(N)'
+					if `r(N)' != 0 {
 
-					mat SUM[`i',2] = `r(mean)'
+						mat SUM[`i',1] = `r(N)'
 
-					mat SUM[`i',3] = `r(sd)'
+						mat SUM[`i',2] = `r(mean)'
 
-					mat SUM[`i',4] = `r(min)'
+						mat SUM[`i',3] = `r(sd)'
 
-					mat SUM[`i',5] = `r(max)'
+						mat SUM[`i',4] = `r(min)'
 
-					loc `i++'	
+						mat SUM[`i',5] = `r(max)'
+
+						loc `i++'	
+					}
+
+					else {
+						mat SUM[`i',1] = 0
+						loc `i++'
+
+					}
 				}
 				loc `++nz'
 			}
@@ -2732,10 +2778,11 @@ prog asdoc, byable(onecall)
 
 	else if "`command'"=="detailedReg"{
 
+
 		if "`by'" == "" & "`_byvars'" == "" {
 
 
-			`qui' `anything' `poptions'
+			`qui' `anything' `poptions' `force' `eform' `or'
 			if "`e(cmd)'" == "mi estimate" loc indepvarsNames : colname(e(b_mi))
 			else loc indepvarsNames : colname(e(b))
 			loc depvar  `e(depvar)'
@@ -2855,7 +2902,9 @@ prog asdoc, byable(onecall)
 
 
 			qui sum `Groups' `if' `in'
-			loc maxGroups = `r(max)'
+			if "`r(max)'" == "" loc maxGroups 0 
+			else loc maxGroups = `r(max)'
+
 
 			cap getifin `varlistifin'
 
@@ -2864,7 +2913,7 @@ prog asdoc, byable(onecall)
 
 
 			forv j = 1 / `maxGroups' {
-				qui cap noi `anything' `byGroup' == `j'  `poptions' 
+				qui cap noi `anything' `byGroup' == `j'  `poptions' `eform' `or'
 				if _rc continue
 				if `j' == `maxGroups' loc bylast = 1  
 				else loc bylast = 0 
@@ -2968,6 +3017,53 @@ prog asdoc, byable(onecall)
 		}
 	}
 
+	else if "`command'" == "inspect" {
+
+		if "`varlistifin'" == "" | "`varlistifin'" == " " {
+			qui ds, has(type numeric) 
+			loc varlistifin "`r(varlist)'"
+		}
+
+		loc nvars : word count `varlistifin'
+		if `nvars' > 1 {
+			loc index = 1
+
+			foreach v of varlist `varlistifin' {
+				capture confirm numeric variable `v' 
+
+				if !_rc {
+					loc label : variable label `v'
+					if `index' == 1 {
+
+						asdoc_inspect `v', notes(`notes') title(`v' : `label') save(`save') append(`append') ///
+							fs(`fs') font(`font') abb(`abb') `tzok' 
+						loc ++index
+					}
+					else {
+						asdoc_inspect `v', notes(`notes') title(`v' : `label') save(`save') append(append) ///
+							fs(`fs') font(`font') abb(`abb') `tzok' 
+						loc ++index
+					}
+				}
+			}
+		}
+
+		else {
+			capture confirm numeric variable `varlistifin'
+			if !_rc {
+				loc label : variable label `varlistifin'
+				asdoc_inspect `varlistifin', notes(`notes') title(`v' : `label') save(`save') append(`append') ///
+					fs(`fs') font(`font') abb(`abb') `tzok' 
+			}
+			else {
+				dis as error "Variable '`varlistifin'' is not numeric, no table generated."
+				exit
+			}
+		}
+
+	}
+
+
 	else if "`command'"=="other" {
 		if "`by'" != "" loc by by(`by')
 		mata: ghkstart()
@@ -3039,7 +3135,7 @@ program define set_default_format
 	if "`dpcomma'" != "" loc format = subinstr("`format'", ".", "," , .)
 
 	else loc format = subinstr("`format'", ",", "." , .)
-	forv i = 1 / 20 {
+	forv i = 1 / 50 {
 		if ("${c`i'_dec}" == "")  global c`i'_dec = `dec'
 		else global c`i'_dec ${c`i'_dec}
 
@@ -3056,7 +3152,7 @@ end
 
 program define reset_colfmt
 	syntax, [dpcomma]
-	forv i = 1 / 20 {
+	forv i = 1 / 50 {
 		global c`i'_dec = 3
 		global c`i'_disfmt "%20.3f"
 		global c`i'_tzok 
@@ -3362,7 +3458,6 @@ prog asttom, byable(onecall) rclass
 
 
 	}
-
 	if "`test'"=="TwoSampleBy" {
 		if "`title'" == "" {
 			if "`unequal'"!= "" loc pair unequal
@@ -3382,7 +3477,7 @@ prog asttom, byable(onecall) rclass
 			loc nstats = `nstats' + 1
 		}
 
-		ttest `varlist' if `touse', by(`by') `welch' `uneq' level(`level')
+		ttest `varlist' if `touse', by(`by') `welch' `unequal' level(`level')
 		mat C = J(1,`nstats',.)
 		loc mean1  = r(mu_1)
 		loc mean2  = r(mu_2)
@@ -3476,7 +3571,7 @@ prog asttom, byable(onecall) rclass
 		}
 
 
-		`qui' ttest `varlist' = `exp' if `touse', `welch' `uneq' level(`level')
+		`qui' ttest `varlist' = `exp' if `touse', `welch' `unequal' level(`level')
 		mat C = J(1,`nstats',.)
 		loc mean1  = r(mu_1)
 		loc mean2  = r(mu_2)
@@ -3585,7 +3680,9 @@ prog asttomby, byable(onecall) rclass
 
 	gettoken p1 options : 0, parse(",")
 	qui sum `_byvars'
-	loc maxGroups = `r(max)'
+	if "`r(max)'" == "" loc maxGroups 0 
+	else loc maxGroups = `r(max)'
+
 
 
 	forv g = 1 / `maxGroups' {
@@ -3615,16 +3712,16 @@ prog asttomby, byable(onecall) rclass
 		}
 	}
 	/*
-	   Work on combined and difference is remaining
-	   if `maxGroups' == 2 {
-	   qui ttest `p1'  , by(`_byvars')
-	   loc cols = colsof(accum)
-	   loc rows = rowsof(accum)
-	   mat accum = accum \ J(`rows', `cols', .)
-	   mat accum[`rows'+1, 1] = `r(N_1)' + `r(N_2)'
-	   mat accum[`rows'+1, 2] = `r(mu_1)' - `r(mu_2)'
+		   Work on combined and difference is remaining
+		   if `maxGroups' == 2 {
+		   qui ttest `p1'  , by(`_byvars')
+		   loc cols = colsof(accum)
+		   loc rows = rowsof(accum)
+		   mat accum = accum \ J(`rows', `cols', .)
+		   mat accum[`rows'+1, 1] = `r(N_1)' + `r(N_2)'
+		   mat accum[`rows'+1, 2] = `r(mu_1)' - `r(mu_2)'
 
-	   }
+		   }
 	*/
 	matlist accum,      	///
 		title(`title') 		///
@@ -3982,9 +4079,17 @@ end
 *! asdoclist: Write values from list command: Attaullah Shah, 2017
 cap prog drop asdoclist
 prog asdoclist
-	syntax [varlist] [if] [in], [append  dec(int 3) fs(int 20) save(str) ///
+	syntax [varlist(ts)] [if] [in], [append  dec(int 3) fs(int 20) save(str) ///
 		title(str) align(str) font(str) fhc(str) fhr(str) label ]
-	*
+	* If time series variables
+	fvexpand `varlist'
+	loc varlist `r(varlist)'
+	loc varnames `varlist'
+	if "`r(tsops)'" == "true" {
+		loc tsops 1
+		tsrevar `varlist'
+		loc varlist `r(varlist)'
+	}
 	if "`align'" == "left" loc justify  \ql
 	else loc justify  \qr
 	preserve
@@ -4046,10 +4151,18 @@ prog asdoclist
 	loc i = 1
 	loc cw = `f`i''
 	foreach v of varlist `varlist' {
-		if "`label'" == "" loc variable `v'
-		else loc variable  : variable label `v'
-		if "`variable'" == "" loc variable `v'
+		loc vari : word `i' of `varnames'
+		if "`tsops'" !="" {
+		    fvexpand `vari'
+		}
+		if "`r(tsops)'" == "true" loc variable `r(varlist)'
 
+		else {
+
+			if "`label'" == "" loc variable `v'
+			else loc variable  : variable label `v'
+			if "`variable'" == "" loc variable `v'
+		}
 		file write fh_out "\clbrdrt\brdrw10\brdrs \clbrdrb\brdrw25\brdrs \cellx`cw'" _n
 
 		file write fh_out "`FS' \pard\intbl `justify' {`fhc' `variable'}\cell" _n
@@ -4119,7 +4232,6 @@ prog makertf
 
 	mata: rtf_maker("`save'", "`title'", "`append'", 20, "`font'", ///
 		30, "`dec'", "tzok", "`matname'", `cs', "`vlines'", "`notes'")
-	di as smcl `"Click to Open File:  {browse "`save'"}"'
 
 
 end
@@ -4413,7 +4525,7 @@ prog getcmd
 		mecloglog anova heckman heckprob heckprobit arima arch arfima ucm prais 	///
 		newey sspace svar vec dfactor mgarch  meologit meqrlogit 			        ///
 		meqrpoisson mi mixed stcox stcrreg stcrr streg rocreg rocfit roctab manova  ///
-		xtmelogit xtmixed xtqreg
+		xtmelogit xtmixed xtqreg ppmlhdfe
 
 	*loc MREG mvreg var	
 
@@ -4459,13 +4571,85 @@ prog getcmd
 	else if "`0'" == "aslist" c_local 	command aslist 
 	else if "`0'" == "replay" c_local 	command replay 
 	else if "`0'" == "resetfmt" c_local command resetfmt
-	else if "`0'" == "setfmt" c_local command setfmt
+	else if "`0'" == "setfmt" c_local   command setfmt
+	else if "`0'" == "inspect" c_local  command inspect
+
 
 
 
 	else c_local command other
 
 end
+
+prog define asdoc_inspect 
+	syntax varlist, [save(str) append(str) notes(str) title(str)  ///
+		fs(str) font(str) abb(str) tzok * ]
+
+
+
+	qui count if `varlist' != .
+	loc nonmissing = `r(N)'
+
+	qui count if `varlist' == .
+	loc missing = `r(N)'
+
+	loc all = `nonmissing' + `missing'
+
+	inspect `varlist'
+
+	mata{
+		output = J(7, 4, "")
+
+		output[1,2] = "Total"
+		output[1,3] = "Integers"
+		output[1,4] = "Non-integers"
+
+		row = 1
+		col = 1
+		negative_nonintegers = strofreal(`r(N_neg)' - `r(N_negint)')
+		positive_nonintegers = strofreal(`r(N_pos)' - `r(N_posint)')
+		all_integers = strofreal(`r(N_0)' + `r(N_posint)' + `r(N_negint)')
+		all_nonintegers = strofreal(`r(N_neg)' - `r(N_negint)' + `r(N_pos)' - `r(N_posint)')
+
+		// Row Negative
+		output[row+1,col] = "Negative"
+		output[row+2,col] = "Zero"
+		output[row+3,col] = "\line Positive"
+		output[row+4,col] = " Total"
+		output[row+5,col] = "Missing"
+		output[row+6,col] = "All"
+
+
+		col = 2
+		output[row+1,col] = "`r(N_neg)'"
+		output[row+2,col] = "`r(N_0)'"
+		output[row+3,col] = "`r(N_pos)'"
+		output[row+4,col] = "`r(N)'"
+		output[row+5,col] = "`missing'"
+		output[row+6,col] = "`all'"
+
+		col = 3
+		output[row+1,col] = "`r(N_negint)'"
+		output[row+2,col] = "`r(N_0)'"
+		output[row+3,col] = "`r(N_posint)'"
+		output[row+4,col] = all_integers
+
+		col = 4
+		output[row+1,col] = negative_nonintegers
+		output[row+2,col] = "-"
+		output[row+3,col] = positive_nonintegers
+		output[row+4,col] = all_nonintegers
+		//mata: output
+	}
+	if "`title'" == "" loc title Number of Observations
+	makertf, notes(`notes') title(`title') save(`save') append(`append') ///
+		fs(`fs') font(`font') abb(`abb') `tzok' cs(`cs') dec(0)
+
+
+
+
+end
+
 
 *! getifin: Parse if in command : Attaullah Shah - 2017
 cap prog drop getifin
@@ -4666,9 +4850,6 @@ prog makemat, by(onecall) rclass
 
 		}
 
-
-
-
 		qui aslev `var1', vl nl sep(,)
 		loc v1 "`r(groups)'"
 		loc ng1 `r(ng)'
@@ -4685,7 +4866,6 @@ prog makemat, by(onecall) rclass
 			loc other : list all - first
 			mkmat `other', mat(st_mat_main)
 		}
-
 
 		else if `nvars' == 2 {
 
@@ -4747,11 +4927,8 @@ prog makemat, by(onecall) rclass
 							if `var1'[`o'] == `vr' & `var2'[`o'] == `vc' mat st_mat_main[`=-1+`r'',`c'] = __000005[`o']
 
 							if `var1'[`o'] == `vr' & `var2'[`o'] == `vc' mat st_mat_main[`r',`c']       = __000006[`o']
-
 						}
-
 					}
-
 				}
 			}
 		}
@@ -4774,8 +4951,6 @@ prog makemat, by(onecall) rclass
 			loc matcols = (`mfactor'+`ng2') * `ng3'
 			loc rows = `ng1' * `nstats'
 			mat st_mat_main = J(`rows', `matcols', .)
-
-
 
 			forv o = 1 / `N' {
 				loc r = 0	
@@ -4816,8 +4991,8 @@ prog makemat, by(onecall) rclass
 								if `var1'[`o'] == `vr' & `var2'[`o'] == `vc' & `var3'[`o'] == `vs'  mat st_mat_main[`=-1+`r'',`col'] = __000005[`o']	
 								if `var1'[`o'] == `vr' & `var2'[`o'] == `vc' & `var3'[`o'] == `vs'  mat st_mat_main[`r',`col']       = __000006[`o']	
 							}
-
 						}
+
 						if "`column'"!= "" loc col = `col' + 1
 					}
 				}
@@ -4873,100 +5048,267 @@ prog makemat, by(onecall) rclass
 								if `var1'[`o'] == `vr' & `var3'[`o'] == `vs'  mat st_mat_main[`=-2+`r'',`col'] = __000004[`o']	
 								if `var1'[`o'] == `vr' & `var3'[`o'] == `vs'  mat st_mat_main[`=-1+`r'',`col'] = __000005[`o']	
 								if `var1'[`o'] == `vr' & `var3'[`o'] == `vs'  mat st_mat_main[`r',`col']       = __000006[`o']	
-
 							}
-
 							loc col = `col'+`ng2'+1
 						}
 					}
 				}
-
 			}
-
-
 			else {
-
 				qui	use sumdata, clear
-
-				if "`rowsum'" != "" qui drop if `var2' == . & `var1' == .
-
-				if `nstats'== 1 {
-					qui keep if `var2' == .
-
-					qui keep __000002
-					mkmat __000002 , mat(sc)
-					mat st_mat_main = st_mat_main , sc
+				if "`column'" != ""  {
+					qui drop if `var2' == . & `var1' == .
+					AddOnlyColumn `var1' `var2' `var3',  nstats(`nstats')
 				}
-
-
-				else if `nstats'==2 {
-					qui keep if `var2' == .
-					qui sum `var1'
-					loc N = `r(N)'
-
-					forv o = 1/ `N'{
-						if `o' == 1 mat sc = __000002[`o'] \ __000003[`o']
-						else mat sc =   sc \ __000002[`o'] \ __000003[`o']
-
-					}
-					mat st_mat_main = st_mat_main , sc
-				}
-				else if `nstats'==3 {
-					qui keep if `var2' == .
-					qui sum `var1'
-					loc N = `r(N)'
-
-					forv o = 1/ `N'{
-						if `o' == 1 mat sc = __000002[`o'] \ __000003[`o']\ __000004[`o']
-						else mat sc =   sc \ __000002[`o'] \ __000003[`o']\ __000004[`o']
-
-					}
-					mat st_mat_main = st_mat_main , sc
-				}
-				else if `nstats'==4 {
-					qui keep if `var2' == .
-					qui sum `var1'
-					loc N = `r(N)'
-
-					forv o = 1/ `N'{
-						if `o' == 1 mat sc = __000002[`o'] \ __000003[`o']\ __000004[`o']\ __000005[`o']
-						else mat sc =   sc \ __000002[`o'] \ __000003[`o']\ __000004[`o']\ __000005[`o']
-
-					}
-					mat st_mat_main = st_mat_main , sc
-				}
-				else if `nstats'==5 {
-					qui keep if `var2' == .
-					qui sum `var1'
-					loc N = `r(N)'
-
-					forv o = 1/ `N'{
-						if `o' == 1 mat sc = __000002[`o'] \ __000003[`o']\ __000004[`o']\ __000005[`o']\ __000006[`o']
-						else mat sc =   sc \ __000002[`o'] \ __000003[`o']\ __000004[`o']\ __000005[`o']\ __000006[`o']
-
-					}
-					mat st_mat_main = st_mat_main , sc
-				}
-
 			}
 		}
-		if "`rowsum'" != "" mata: make_row_total("st_mat_main")
-		qui cap rm  sumdata.dta
-		qui cap rm  orig2.dta
-		if "`dec'" != "" qui asdocmatdec st_mat_main, dec(`dec')
+		if "`column'" == "" & "`rowsum'" != "" {
+			qui	use sumdata, clear
+			AddOnlyRow `var1' `var2' `var3',  nstats(`nstats')
 
+		}
+		if "`column'" != "" & "`rowsum'" != "" {
+			qui	use sumdata, clear
+			save sum3, replace
+			AddBothColRow  `var1' `var2' `var3', nstats(`nstats')
 
-		if `nstats' > 1 & `nvars' == 1 mat colnames st_mat_main = `accum'
+		}
 
 	}
+
+	//qui cap rm  sumdata.dta
+	qui cap rm  orig2.dta
+	if "`dec'" != "" qui asdocmatdec st_mat_main, dec(`dec')
+
+	if `nstats' > 1 & `nvars' == 1 mat colnames st_mat_main = `accum'
 end
 
+progr AddBothColRow
+	syntax varlist, nstats(str)
+	loc nvars : word count `varlist'
+	if `nvars' == 1 loc var1 : word 1 of `varlist'
+	else if `nvars' == 2{
+
+		loc var1 : word 1 of `varlist'
+		loc var2 : word 2 of `varlist'
+	}
+	else if `nvars' == 3{
+
+		loc var1 : word 1 of `varlist'
+		loc var2 : word 2 of `varlist'
+		loc var3 : word 3 of `varlist'
+	}
+	if `nstats' == 1 {
+
+		drop if `var1' !=. & `var2' == .
+		keep if `var1' ==.
+		sort `var3' `var2'
+		mkmat __000002, mat(rowmat)
+		mat st_mat_main = st_mat_main \ rowmat'
+	}
+
+	if `nstats' == 2 {
+
+		drop if `var1' !=. & `var2' == .
+		keep if `var1' ==.
+		sort `var3' `var2'
+		mkmat __000002, mat(rowmat1)
+		mkmat __000003, mat(rowmat2)
+		mat st_mat_main = st_mat_main \ rowmat1'
+		mat st_mat_main = st_mat_main \ rowmat2'
+	}
+
+	else if `nstats' == 3 {
+		drop if `var1' !=. & `var2' == .
+		keep if `var1' ==.
+		sort `var3' `var2'
+		mkmat __000002, mat(rowmat1)
+		mkmat __000003, mat(rowmat2)
+		mkmat __000004, mat(rowmat3)
+		mat st_mat_main = st_mat_main \ rowmat1'
+		mat st_mat_main = st_mat_main \ rowmat2'
+		mat st_mat_main = st_mat_main \ rowmat3'
+	}
+
+	else if `nstats' == 4 {
+		drop if `var1' !=. & `var2' == .
+		keep if `var1' ==.
+		sort `var3' `var2'
+		mkmat __000002, mat(rowmat1)
+		mkmat __000003, mat(rowmat2)
+		mkmat __000004, mat(rowmat3)
+		mkmat __000005, mat(rowmat4)
+		mat st_mat_main = st_mat_main \ rowmat1'
+		mat st_mat_main = st_mat_main \ rowmat2'
+		mat st_mat_main = st_mat_main \ rowmat3'
+		mat st_mat_main = st_mat_main \ rowmat4'
+	}
+
+	else if `nstats' == 5 {
+		drop if `var1' !=. & `var2' == .
+		keep if `var1' ==.
+		sort `var3' `var2'
+		mkmat __000002, mat(rowmat1)
+		mkmat __000003, mat(rowmat2)
+		mkmat __000004, mat(rowmat3)
+		mkmat __000005, mat(rowmat4)
+		mkmat __000006, mat(rowmat5)
+		mat st_mat_main = st_mat_main \ rowmat1'
+		mat st_mat_main = st_mat_main \ rowmat2'
+		mat st_mat_main = st_mat_main \ rowmat3'
+		mat st_mat_main = st_mat_main \ rowmat4'
+		mat st_mat_main = st_mat_main \ rowmat5'
+	}
+
+
+
+
+
+
+end
+
+progr AddOnlyRow
+	syntax varlist, nstats(str)
+	loc nvars : word count `varlist'
+	if `nvars' == 1 loc var1 : word 1 of `varlist'
+
+	else if `nvars' == 2{
+		loc var1 : word 1 of `varlist'
+		loc var2 : word 2 of `varlist'
+	}
+
+	else if `nvars' == 3{
+		loc var1 : word 1 of `varlist'
+		loc var2 : word 2 of `varlist'
+		loc var3 : word 3 of `varlist'
+	}
+
+	if `nstats' == 1 {
+		keep if `var1' == .
+		drop if `var2' == .
+		mkmat __000002, mat(rowmat)
+		mat st_mat_main = st_mat_main \ rowmat'
+	}
+
+	else if `nstats' == 2 {
+		keep if `var1' == .
+		drop if `var2' == .
+		mkmat __000002, mat(rowmat1)
+		mkmat __000003, mat(rowmat2)
+		mat st_mat_main = st_mat_main \ rowmat1'
+		mat st_mat_main = st_mat_main \ rowmat2'
+	}
+
+	else if `nstats' == 3 {
+		keep if `var1' == .
+		drop if `var2' == .
+		mkmat __000002, mat(rowmat1)
+		mkmat __000003, mat(rowmat2)
+		mkmat __000004, mat(rowmat3)
+		mat st_mat_main = st_mat_main \ rowmat1'
+		mat st_mat_main = st_mat_main \ rowmat2'
+		mat st_mat_main = st_mat_main \ rowmat3'
+	}
+
+	else if `nstats' == 4 {
+		keep if `var1' == .
+		drop if `var2' == .
+		mkmat __000002, mat(rowmat1)
+		mkmat __000003, mat(rowmat2)
+		mkmat __000004, mat(rowmat3)
+		mkmat __000005, mat(rowmat4)
+		mat st_mat_main = st_mat_main \ rowmat1'
+		mat st_mat_main = st_mat_main \ rowmat2'
+		mat st_mat_main = st_mat_main \ rowmat3'
+		mat st_mat_main = st_mat_main \ rowmat4'
+	}
+
+	else if `nstats' == 5 {
+		keep if `var1' == .
+		drop if `var2' == .
+		mkmat __000002, mat(rowmat1)
+		mkmat __000003, mat(rowmat2)
+		mkmat __000004, mat(rowmat3)
+		mkmat __000005, mat(rowmat4)
+		mkmat __000006, mat(rowmat5)
+		mat st_mat_main = st_mat_main \ rowmat1'
+		mat st_mat_main = st_mat_main \ rowmat2'
+		mat st_mat_main = st_mat_main \ rowmat3'
+		mat st_mat_main = st_mat_main \ rowmat4'
+		mat st_mat_main = st_mat_main \ rowmat5'
+	}
+
+end
+
+progr AddOnlyColumn
+
+	syntax varlist, nstats(str)
+	loc nvars : word count `varlist'
+	if `nvars' == 1 loc var1 : word 1 of `varlist'
+
+	else if `nvars' == 2{
+		loc var1 : word 1 of `varlist'
+		loc var2 : word 2 of `varlist'
+	}
+
+	else if `nvars' == 3{
+		loc var1 : word 1 of `varlist'
+		loc var2 : word 2 of `varlist'
+		loc var3 : word 3 of `varlist'
+	}
+
+
+	qui keep if `var2' == .
+	if `nstats' == 1 {
+		qui keep __000002
+		mkmat __000002 , mat(sc)
+	}
+
+	else if `nstats' == 2 {
+		qui sum `var1'
+		loc N = `r(N)'
+
+		forv o = 1/ `N'{
+			if `o' == 1 mat sc = __000002[`o'] \ __000003[`o']
+			else mat sc =   sc \ __000002[`o'] \ __000003[`o']
+		}
+	}
+	else if `nstats'==3 {
+		qui sum `var1'
+		loc N = `r(N)'
+		forv o = 1/ `N'{
+			if `o' == 1 mat sc = __000002[`o'] \ __000003[`o']\ __000004[`o']
+			else mat sc =   sc \ __000002[`o'] \ __000003[`o']\ __000004[`o']
+		}
+	}
+	else if `nstats'==4 {
+		qui keep if `var2' == .
+		qui sum `var1'
+		loc N = `r(N)'
+
+		forv o = 1/ `N'{
+			if `o' == 1 mat sc = __000002[`o'] \ __000003[`o']\ __000004[`o']\ __000005[`o']
+			else mat sc =   sc \ __000002[`o'] \ __000003[`o']\ __000004[`o']\ __000005[`o']
+		}
+	}
+	else if `nstats'==5 {
+		qui keep if `var2' == .
+		qui sum `var1'
+		loc N = `r(N)'
+
+		forv o = 1/ `N'{
+			if `o' == 1 mat sc = __000002[`o'] \ __000003[`o']\ __000004[`o']\ __000005[`o']\ __000006[`o']
+			else mat sc =   sc \ __000002[`o'] \ __000003[`o']\ __000004[`o']\ __000005[`o']\ __000006[`o']
+		}
+	}
+	mat st_mat_main = st_mat_main , sc
+end
 
 
 * Adopted from table
 program define tablex, byable(recall)
 	syntax varlist(max=3) [if] [in] [fw aw pw iw] [, /* 
-	*/ BY(varlist) COLumn CW Format(string) Name(string) REPLACE /*
+		*/ BY(varlist) COLumn CW Format(string) Name(string) REPLACE /*
 	*/ ROW SColumn markdown Contents(string) CELLwidth(string) dec(str) *]
 
 	// Removing option Scolumn for now, shall work on it if someone is interested enough
@@ -5020,10 +5362,12 @@ program define tablex, byable(recall)
 		local stats "freq"
 	}
 
+
 	if "`replace'"!="" & "`name'"=="" {
 		local name "table"
 	}
 	local i 0
+	get_stats_in_order  `stats'
 	tokenize `"`stats'"'
 	while "`1'" != "" { 
 		local i = `i' + 1
@@ -5036,12 +5380,21 @@ program define tablex, byable(recall)
 		if "`replace'"!="" {
 			local s3`i' = $S_3
 		}
+
 		local clist "`clist' $S_1"
 		local cell  "`cell' `res'"
 		local vlist "`vlist' $S_2"
 		local flist "`flist' $S_4"
 		mac shift $S_3
 	}
+
+
+
+
+
+
+
+
 	if `i'>5 /* limit from tabdisp */ {
 		di in red "too many stats()"
 		exit 103
@@ -5198,12 +5551,24 @@ program define tablex, byable(recall)
 		}
 	}
 	if "`dec'" != "" loc dec dec(`dec')
-	qui makemat `varlist', `rowtota' `coltota' `sctotal'  `dec'
+	makemat `varlist', `rowtota' `coltota' `sctotal'  `dec'
 
 
 end
 
+program get_stats_in_order
 
+	while `"`0'"' != "" {
+		gettoken stat 0 : 0
+		loc TBL_STATS `TBL_STATS' `stat' 
+		gettoken variable 0 : 0
+
+	}
+	global TBL_STATS `TBL_STATS'
+
+
+
+end
 
 program define AddRes /* resfn origfn clist by cw wgt */
 	args res orig clist by cw wgt 
@@ -5300,8 +5665,8 @@ program define Valid /* word fromvar dfltfmt weighttype */
 	}
 
 	/*
-	   remaining have default format or 
-	   variable's date format
+		   remaining have default format or 
+		   variable's date format
 	*/
 	local fmt : format `v'
 	if substr("`fmt'",2,1)=="-" { 

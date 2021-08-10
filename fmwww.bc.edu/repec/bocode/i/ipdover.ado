@@ -38,7 +38,10 @@
 // no changes to code, other than adding check that -metan- v4.0+ is installed; upversioned to match metan/ipdmetan
 // some changes to text in the help file
 
-*! version 4.01  David Fisher  12feb2021
+* version 4.01  David Fisher  12feb2021
+// no changes to code; upversioned to match with -ipdmetan-
+
+*! version 4.02  David Fisher  20apr2021
 // no changes to code; upversioned to match with -ipdmetan-
 
 
@@ -57,7 +60,7 @@ program define ipdover, rclass
 		exit 499
 	}
 	else {
-		local current_version = 4.0
+		local current_version = 4.03
 		if `r(metan_version)' < `current_version' {
 			nois disp as err "{bf:metan} version " as res `r(metan_version)' as err " may not the most recent version available"
 			nois disp as err "Please check, and consider updating {bf:metan}"

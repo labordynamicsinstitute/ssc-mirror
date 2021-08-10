@@ -1,6 +1,6 @@
 *﻿*Author: Clément de Chaisemartin
 **1st version: November 8th 2019
-**This version: Februrary 10th 2021
+**This version: April 28th 2021
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 ///// Program #1: Does sanity checks and time consuming data manipulations, calls did_multiplegt_results, and stores estimates and standard errors in e() and put them on a graph //////
@@ -102,6 +102,10 @@ gen `counter'=`weight'
 
 *if "`weight'" ==""&aggregated_data==0{
 if aggregated_data==0{
+
+*RECENT NEWW
+replace `counter'=0 if `1'==. 
+*END RECENT NEWW
 
 //Collapsing the data, ensuring that group variable is not the clustering or the trend_lin variable
 
@@ -328,6 +332,10 @@ if "`dynamic'"=="0" {
 
 capture drop diff_stag_d_for`i'_XX
 g diff_stag_d_for`i'_XX = F`i'.diff_stag_d_XX
+*RECENT NEWW
+capture drop counter_F`i'_XX
+g counter_F`i'_XX=F`i'.`counter'
+*END RECENT NEWW
 
 }
 
@@ -349,6 +357,10 @@ forvalue i=1/`=`dynamic''{
 *g diff_d_for`i'_XX = F`i'.diff_d_XX
 capture drop diff_stag_d_for`i'_XX
 g diff_stag_d_for`i'_XX = F`i'.diff_stag_d_XX
+*RECENT NEWW
+capture drop counter_F`i'_XX
+g counter_F`i'_XX=F`i'.`counter'
+*END RECENT NEWW
 *END NEWW
 
 capture drop ldiff_y_`i'_XX
@@ -778,7 +790,6 @@ ereturn scalar p_jointplacebo=1-chi2(`placebo',chi2placebo[1,1])
 }
 *END NEWW
 
-
 ///// Putting estimates and their confidence intervals on a graph, if breps option specified
 
 if "`breps'"!="0"{
@@ -942,6 +953,25 @@ local rownames "`rownames' Placebo_`i'"
 matrix colnames results  = "Estimate" "SE" "LB CI" "UB CI" "N" "Switchers"
 matrix rownames results= `rownames'
 noisily matlist results, title("DID estimators of the instantaneous treatment effect, of dynamic treatment effects if the dynamic option is used, and of placebo tests of the parallel trends assumption if the placebo option is used. The estimators are robust to heterogeneous effects, and to dynamic effects if the robust_dynamic option is used.")
+*RECENT NEWW
+matrix b2=results[1...,1..1]
+ereturn matrix estimates=b2
+if "`average_effect'"!=""&"`covariances'"!=""{
+matrix var2=J(`placebo'+`dynamic'+2,1,0)
+forvalue i=1/`=`placebo'+`dynamic'+2'{
+matrix var2[`i',1]=results[`i',2]^2
+}
+}
+if "`average_effect'"==""|"`covariances'"==""{
+matrix var2=J(`placebo'+`dynamic'+1,1,0)
+forvalue i=1/`=`placebo'+`dynamic'+1'{
+matrix var2[`i',1]=results[`i',2]^2
+}
+}
+matrix rownames var2= `rownames'
+ereturn matrix variances=var2
+ereturn local cmd "did_multiplegt"
+*END RECENT NEWW
 }
 *END NEWW
 
@@ -1319,6 +1349,19 @@ global cond_increase "abs(diff_stag_d_XX)>`threshold_stable_treatment'&increase_
 global cond_stable "abs(diff_stag_d_XX)<=`threshold_stable_treatment'&ever_change_d_XX==0&lag_d_cat_group_XX==`d'"
 global cond_decrease "abs(diff_stag_d_XX)>`threshold_stable_treatment'&increase_d_XX==0&lag_d_cat_group_XX==`d'&diff_stag_d_XX!=."
 
+*RECENT NEWW
+// Counting number of units in each supergroup
+sum diff_y_XX if $cond_increase, meanonly
+scalar n_increase=r(N)
+sum diff_y_XX if $cond_stable, meanonly
+scalar n_stable=r(N)
+sum diff_y_XX if $cond_decrease, meanonly
+scalar n_decrease=r(N)
+
+// Assessing if the residualization needs to be done for that treatment value
+if ("`switchers'"==""&n_stable>0&(n_increase>0|n_decrease>0))|("`switchers'"=="in"&n_stable>0&n_increase>0)|("`switchers'"=="out"&n_stable>0&n_decrease>0) {
+*END RECENT NEWW
+
 sum diff_y_XX if $cond_stable, meanonly
 
 // Assessing if too many controls
@@ -1449,6 +1492,11 @@ cap drop coeff*
 
 /// End of patch if not enough observations in the regression with controls
 }
+
+*RECENT NEWW
+/// End of condition assessing if residualization needed for that treatment value
+}
+*END RECENT NEWW
 
 // End of the loop over values of D_cat
 }
@@ -1594,6 +1642,11 @@ replace `cond_placebo'=0 if abs(diff_stag_d_for`=`i'-1'_XX)>`threshold_stable_tr
 preserve
 
 replace diff_y_XX=ldiff_y_`i'_lag_XX
+*RECENT NEWW
+if `i'>1{
+replace `counter'=counter_F`=`i'-1'_XX
+}
+*END RECENT NEWW
 
 if "`controls'" !=""{
 local j=0
@@ -1669,6 +1722,10 @@ replace `cond_dynamic'=0 if abs(diff_stag_d_for`i'_XX)>`threshold_stable_treatme
 preserve
 
 replace diff_y_XX=ldiff_y_for`i'_XX
+*RECENT NEWW
+replace `counter'=counter_F`i'_XX
+*END RECENT NEWW
+
 *NEWW
 // Note: this line ensures that in Program #5 below, when we compute the denominators (denom_XX), 
 // we have in the denominator D_{g,t+\ell}-d, which is also D_{g,t+\ell}-D_{g,t-1} for a group leaving treatment d for the first time in t
@@ -1905,10 +1962,13 @@ $noisily di "Computing DIDM"
 forvalue t=`=`counter_placebo'+2'/`=`max_time'-`counter_dynamic''{
 
 // Determining the min and max value of group of treatment at t-1
+
 sum lag_d_cat_group_XX if time_XX==`t', meanonly
 
 local D_min=r(min)
 local D_max=r(max)
+
+
 
 // Ensuring that there are observations with non missing lagged treatment
 

@@ -240,7 +240,7 @@ A row style is a combination of the {cmd:begin()}, {cmd:end()},
 {cmd:delimiter()} and {cmd:missnum()} options.
 Each row style produces rows for a particular
 type of table (HTML, TeX or word processor).
-The row styles available are as follows:
+The simpler row styles available are as follows:
 
 {hline}
 {it:Row style}   {cmd:begin()}     {cmd:delimiter()}     {cmd:end()}           {cmd:missnum()}   {it:Description}
@@ -253,6 +253,18 @@ The row styles available are as follows:
 {cmd:markdown}    {cmd:"|"}         {cmd:"|"}             {cmd:"|"}             {cmd:""}          Markdown table rows
 {cmd:tabdelim}    {cmd:""}          {cmd:char(9)}         {cmd:""}              {cmd:""}          Tab-delimited text file rows
 {hline}
+
+{pstd}
+The option {cmd:rstyle(htmltop)} is also available, and specifies top-justified HTML table rows,
+and is equivalent to the combined options:
+
+{pstd}
+{cmd:rstyle(html) begin(`"<tr><td valign="top">"') delim(`"</td><td valign="top">"') end("</td></tr>")}
+
+{pstd}
+Many more complicated HTML row styles can be created by specifying {cmd:rstyle(html)}
+together with other complicated {cmd:begin()}, {cmd:delimiter()}, and/or {cmd:end()} options
+to override the defaults for  {cmd:rstyle(html)}.
 
 {pstd}
 The {cmd:tabdelim} row style produces text rows delimited by the tab character,
@@ -458,8 +470,8 @@ and also the following:
 {title:Author}
 
 {pstd}
-Roger Newson, Imperial College London, UK.
-Email: {browse "mailto:r.newson@imperial.ac.uk":r.newson@imperial.ac.uk}
+Roger Newson, King's College London, UK.
+Email: {browse "mailto:roger.newson@kcl.ac.uk":roger.newson@kcl.ac.uk}
 
 
 {marker references}{title:References}

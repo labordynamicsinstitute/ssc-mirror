@@ -1,9 +1,10 @@
 *! extension of Stata Corp. simulate
-*! Version 1.01 - 23.10.2019
+*! Version 1.02 - 02.03.2020
 *! by Jan Ditzen - www.jan.ditzen.net
 /* changelog
 To version 1.01
 	- 21.10.2019: 	- bug in setting seed options fixed
+	- 02.03.2020:	- bug in setting seed options fixed 2nd
 */
 
 
@@ -117,23 +118,27 @@ program simulate2
 			local seedstart = `start'
 			
 			if "`frame'`dta'" == "" {
+				noi disp "set seed"
 				tokenize `anything'				
-                
+                noi disp "`2'--`3'"
 				if "`2'" != "" {
 					set rng `2'
 				}				
 				if "`3'" != "" {
 					set rngstream `3'
+					noi disp "stream set"
+					disp c(rngstream)
 				}				
 				if "`1'" != "."  {
 					cap `version' set seed `1'
 					cap `version' set rng `1'
+					set rngstream `3'
 				}				
-				
+				disp c(rngstream)
 				local rng `c(rng_current)'`version' set seed `1'
 				local seed `c(rngstate)'
 				local seedstream `c(rngstream)'
-				
+				display rnormal()
 				local seedtype = 1
 			}
 			else {

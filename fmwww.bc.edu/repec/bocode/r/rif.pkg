@@ -37,7 +37,7 @@ d KW: inequality treatment effects
 d
 d Requires: Stata version 12 and oaxaca, reghdfe from SSC Archive (q.v.)
 d
-d Distribution-Date: 20200909
+d Distribution-Date: 20210805
 d
 d Author:  Fernando Rios-Avila, Levy Economics Institute of Bard College
 d Support: email  friosavi@@levy.org
@@ -47,13 +47,19 @@ f rif.sthlp
 f rifhdreg.sthlp
 f rifsureg.ado
 f rifsureg.sthlp
+f rifmean.ado
+f rifmean.sthlp
 f rifsureg2.ado
 f rifsureg2.sthlp
+f rifvar.sthlp
+f ../b/bsrifhdreg.ado
 f ../u/uqreg.ado
 f ../u/uqreg.sthlp
 f rifvar.sthlp
 f ../h/hvar.sthlp
 f ../o/oaxaca_rif.ado
+f ../o/oaxaca_rif_old.ado
 f ../o/oaxaca_rif.sthlp
 f ../_/_ghvar.ado
 f ../_/_grifvar.ado
+f ../_/_grifvar_old.ado

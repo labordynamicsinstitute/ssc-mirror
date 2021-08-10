@@ -1,4 +1,4 @@
-*! version 1.1.0  21dec2020  Ben Jann
+*! version 1.1.9  14jul2021  Ben Jann
 
 capt findfile lmoremata.mlib
 if _rc {
@@ -21,16 +21,32 @@ program dstat, eclass properties(svyb svyj)
         Predict `00'
         exit
     }
+    local version : di "version " string(_caller()) ":"
     if substr(`"`subcmd'"',1,1)=="(" {  // omitted summarize
         local 00 `0'
         local subcmd summarize
     }
-    local version : di "version " string(_caller()) ":"
-    capt Parse_subcmd `subcmd' // expands subcmd
-    if _rc==1 exit _rc
-    if _rc { // try summarize
-        local 00 `"`subcmd' `00'"'
-        local subcmd summarize
+    else if `"`subcmd'"'==substr("frequency",1,max(4,strlen(`"`subcmd'"'))) {
+        // alias for -proportion, frequency-
+        local subcmd proportion
+        Parse_frequency `00'
+    }
+    else {
+        capt Parse_subcmd `subcmd' // expands subcmd
+        if _rc==1 exit _rc
+        if _rc { // try summarize
+            capt confirm variable `subcmd'
+            if _rc==1 exit _rc
+            if _rc {
+                di as err `"invalid subcommand: `subcmd'"'
+                exit 198
+            }
+            local 00 `"`subcmd' `00'"'
+            local subcmd summarize
+        }
+        else if "`subcmd'"=="histogram" {
+            Parse_hist_discrete `00' // redirect to proportion if nocategprical
+        }
     }
     Get_diopts `subcmd' `00' // returns 00, diopts, dioptshaslevel
     tempname BW AT
@@ -79,8 +95,26 @@ program dstat, eclass properties(svyb svyj)
     }
 end
 
+program Parse_frequency
+    _parse comma lhs 0 : 0
+    syntax [, FREQuency * ]
+    c_local 00 `lhs', frequency `options'
+end
+
+program Parse_hist_discrete
+    _parse comma lhs 0 : 0
+    syntax [, DISCrete NOCATegorical PROPortion * ]
+    if "`discrete'"=="" exit
+    c_local subcmd proportion
+    c_local 00 `lhs', nocategorical `options'
+end
+
 program Parse_subcmd
     if `"`0'"'==substr("density",1,max(1,strlen(`"`0'"'))) {
+        c_local subcmd density
+        exit
+    }
+    if `"`0'"'=="pdf" {
         c_local subcmd density
         exit
     }
@@ -110,6 +144,10 @@ program Parse_subcmd
     }
     if `"`0'"'==substr("share",1,max(2,strlen(`"`0'"'))) {
         c_local subcmd share
+        exit
+    }
+    if `"`0'"'=="tip" {
+        c_local subcmd tip
         exit
     }
     if `"`0'"'==substr("summarize",1,max(2,strlen(`"`0'"'))) {
@@ -286,6 +324,7 @@ program Obtain_bwat   // returns bwidth, bwadjust, n, at
     if "`subcmd'"=="quantile" exit
     if "`subcmd'"=="lorenz" exit
     if "`subcmd'"=="share" exit
+    if "`subcmd'"=="tip" exit
     if "`subcmd'"=="summarize" local bwopt bwidth(str)
     else {
         if "`subcmd'"=="density" local bwopt bwidth(str)
@@ -462,7 +501,6 @@ program Predict
     // set to zero for obs outside e(sample) but within -if/in-)
     tempname b
     if `"`e(cmd)'"'=="dstat_svyr" {
-        local svypfx svy
         mat `b' = e(b)
     }
     else if `"`e(cmd)'"'=="dstat" {
@@ -474,11 +512,10 @@ program Predict
         di as err "last dstat results not found"
         exit 301
     }
-    syntax [anything] [if] [in], [ SCores SVY RIF COMpact QUIetly ]
-    if "`svypfx'"!="" local svy svy // enforce svy
+    syntax [anything] [if] [in], [ SCores RIF COMpact QUIetly ]
     _score_spec `anything', scores `bmat'
     local vlist `s(varlist)'
-    Predict_compute_IFs, generate(`vlist', `svy' `rif' `compact') // updates vlist
+    Predict_compute_IFs, generate(`vlist', `rif' `compact') // updates vlist
     if `"`if'`in'"'!="" {
         tempvar tmp
         foreach v of local vlist {
@@ -534,7 +571,7 @@ program Predict_compute_IFs
         local cmdline `cmdline' [`e(wtype)'`e(wexp)'] // what about complex weights in svy?
     }
     local cmdline `cmdline' if `touse', nose `generate' /*
-        */ qdef(`e(qdef)') vformat(`e(vformat)') `e(novalues)'
+        */ qdef(`e(qdef)') vformat(`e(vformat)') `e(novalues)' `e(nocasewise)'
     // - over()
     if `"`e(over)'"'!="" {
         local over
@@ -635,8 +672,13 @@ program Predict_compute_IFs
             local cmdline `cmdline' zvar(`e(zvar)')
         }
     }
+    // - tip
+    else if "`subcmd'"=="tip" {
+        local cmdline `cmdline' `e(pstrong)' `e(absolute)' pline(`e(pline)')
+    }
     // - summarize
     else if "`subcmd'"=="summarize" {
+        local cmdline `cmdline' `e(relax)' `e(pstrong)'
         if `"`e(zvar)'"'!="" {
             local cmdline `cmdline' zvar(`e(zvar)')
         }
@@ -648,7 +690,7 @@ program Predict_compute_IFs
     tempname ecurrent b
     mat `b' = e(b)
     _estimates hold `ecurrent', restore
-    qui Estimate `subcmd' `cmdline'
+    /*qui*/ Estimate `subcmd' `cmdline'
     mat `b' = mreldif(`b',e(b)) // returns missing if non-conformable
     capt assert (`b'[1,1]<1e-15)
     if _rc==1 exit _rc
@@ -768,15 +810,17 @@ program _Replay
         local nopvalues nopvalues
     }
     if "`header'"=="" {
-        _Replay_header `nopvalues'
         if "`nopvalues'"!="" {
+            local w1 15
             local c1 35
-            local c2 51
         }
         else {
+            local w1 17
             local c1 49
-            local c2 67
         }
+        local c2 = `c1' + `w1' + 1
+        local w2 10
+        _Replay_header, `nopvalues' head2left(`w1') head2right(`w2')
         if "`subcmd'"=="density" {
             di as txt _col(`c1') "Kernel" _col(`c2') "= " /*
                 */as res %10s abbrev(e(kernel),10)
@@ -787,23 +831,29 @@ program _Replay
             di as txt _col(`c1') "Bandwidth" _col(`c2') "= " as res `bwidth'
         }
         else if "`subcmd'"=="quantile" {
-            di as txt _col(`c1') "Quantile type" _col(`c2') "= " as res %10.0g e(qdef)
+            local qdef = e(qdef)
+            if `qdef'==10 local qdef "hdquantile"
+            else          local qdef "qdef(`qdef')"
+            di as txt _col(`c1') "Quantile type" _col(`c2') "= " as res %10s "`qdef'"
         }
         else if "`subcmd'"=="lorenz" | "`subcmd'"=="share" {
             if `"`e(zvar)'"'!="" {
                 di as txt _col(`c1') "Sort variable" _col(`c2') "= " as res %10s e(zvar)
             }
         }
+        else if "`subcmd'"=="tip" {
+            di as txt _col(`c1') "Poverty line" _col(`c2') "= " as res %10s e(pline)
+        }
         else if "`subcmd'"=="summarize" {
             if `"`e(zvar)'"'!="" {
-                di as txt _col(`c1') "Sort variable" _col(`c2') "= " as res %10s e(zvar)
+                di as txt _col(`c1') "Secondary var." _col(`c2') "= " as res %10s e(zvar)
             }
             if `"`e(pline)'"'!="" {
                 di as txt _col(`c1') "Poverty line" _col(`c2') "= " as res %10s e(pline)
             }
         }
         if `"`contrast'"'!="" {
-            if `"`contrast'"'=="total" local clbl "total"
+            if real(`"`contrast'"')>=. local clbl `"`contrast'"'
             else local clbl = abbrev(`"`contrast'.`e(over)'"', 10)
             di as txt _col(`c1') "Contrast" _col(`c2') "= " as res %10s `"`clbl'"'
         }
@@ -825,6 +875,7 @@ program _Replay
         if `"`e(over)'"'!="" {
             if "`subcmd'"=="summarize" {
                 if !(`e(N_stats)'==1 & `e(N_vars)'==1) _svy_summarize_legend
+                else di ""
             }
             else _svy_summarize_legend
         }
@@ -904,15 +955,18 @@ program _Replay
     }
 end
 
-prog _Replay_header, eclass 
-    if `"`0'"'=="" { // table includes p-values
-        _coef_table_header, nomodeltest
+prog _Replay_header, eclass
+    syntax [, nopvalues * ]
+    if      c(stata_version)<17            local options
+    else if d(`c(born_date)')<d(13jul2021) local options
+    if "`pvalues'"=="" { // table includes p-values
+        _coef_table_header, nomodeltest `options'
         exit
     }
     nobreak { // no p-values: mimic header of -total-
         ereturn local cmd "total"
         capture noisily break {
-            _coef_table_header, nomodeltest
+            _coef_table_header, nomodeltest `options'
         }
         local rc = _rc
         ereturn local cmd "dstat"
@@ -976,7 +1030,7 @@ program Graph
     if `"`contrast'"'!="" mata: dstat_drop_cref("`B'", 0, 1)
     local b matrix(`B')
     if `"`subcmd'"'!="summarize" {
-        if !(`"`subcmd'"'=="proportion" & `"`e(novalues)'"'=="") {
+        if !(`"`subcmd'"'=="proportion" & `"`e(novalues)'"'=="" & `"`e(categorical)'"'!="") {
             tempname AT
             matrix `AT' = e(at)
             if `"`contrast'"'!="" mata: dstat_drop_cref("`AT'", 0, 1)
@@ -1152,7 +1206,7 @@ program Graph
     }
     
     // (default) rendering
-    if inlist(`"`subcmd'"', "density", "cdf", "ccdf", "quantile", "lorenz") {
+    if inlist(`"`subcmd'"', "density", "cdf", "ccdf", "quantile", "lorenz", "tip") {
         if `"`recast'"'=="" {
             local recast recast(line)
             if (inlist(`"`subcmd'"',"cdf","ccdf") & "`step'"!="") {
@@ -1347,30 +1401,30 @@ program _Graph_overlabels
     if `"`overlabels'"'==`"`overlevels'"' {
         local over `"`e(over)'"'
         local overlabels
-        local overlevels: list overlevels - contrast
         local space
         foreach oval of local overlevels {
             local overlabels `"`overlabels'`space'`"`over'=`oval'"'"'
             local space " "
         }
     }
-    else {
-        if `"`contrast'"'!="" & `"`contrast'"'!="total" {
-            local overlabels0 `"`overlabels'"'
-            local overlabels
-            local i 0
-            local space
-            foreach olab of local overlabels0 {
-                local ++i
-                local oval: word `i' of `overlevels'
-                if `"`oval'"'==`"`contrast'"' continue
-                local overlabels `"`overlabels'`space'`"`olab'"'"'
-                local space " "
-            }
-        }
-    }
-    if `"`e(total)'"'!="" & `"`contrast'"'!="total" {
+    if `"`e(total)'"'!="" {
         local overlabels `"`overlabels' Total"'
+    }
+    if `"`contrast'"'!="" {
+        if      `"`contrast'"'=="lag"   local idrop 1
+        else if `"`contrast'"'=="lead"  local idrop: list sizeof overlabels
+        else if `"`contrast'"'=="total" local idrop: list sizeof overlabels
+        else local idrop: list posof `"`contrast'"' in overlevels
+        local olab0: copy local overlabels
+        local overlabels
+        local space
+        local i 0
+        foreach olab of local olab0 {
+            local ++i
+            if `i'==`idrop' continue
+            local overlabels `"`overlabels'`space'`"`olab'"'"'
+            local space " "
+        }
     }
     c_local overlabels `"`overlabels'"'
 end
@@ -1491,45 +1545,53 @@ program _Estimate, eclass
     local lhs varlist(numeric fv)
     if "`subcmd'"=="density" {
         local opts n(numlist int >=1 max=1) COMmon at(str)/*
-            */ UNConditional UNConditional2(str)
+            */ range(numlist min=2 max=2) /*
+            */ UNConditional
     }
     else if "`subcmd'"=="histogram" {
-        local opts n(passthru) COMmon at(str) ep PROPortion PERcent FREQuency/*
-            */ UNConditional UNConditional2(str)
+        local opts n(passthru) COMmon at(str) /*
+            */ ep PROPortion PERcent FREQuency UNConditional
     }
     else if inlist("`subcmd'","cdf","ccdf") {
-        local opts n(numlist int >=1 max=1) COMmon at(str) mid FLoor DISCrete/*
-        */ PERcent FREQuency IPolate UNConditional UNConditional2(str)
+        local opts n(numlist int >=1 max=1) COMmon at(str) /*
+            */ range(numlist min=2 max=2) /*
+            */ mid FLoor DISCrete PERcent FREQuency IPolate UNConditional
     }
     else if "`subcmd'"=="proportion" {
         local opts NOCATegorical at(str) PERcent FREQuency /*
-            */ UNConditional UNConditional2(str)
+            */ UNConditional
     }
     else if "`subcmd'"=="quantile" {
-        local opts n(numlist int >=1 max=1) at(str)
+        local opts n(numlist int >=1 max=1) at(str) /*
+            */ range(numlist min=2 max=2 >=0 <=1)
     }
     else if "`subcmd'"=="lorenz" {
         local opts n(numlist int >=1 max=1) at(str) /*
+            */ range(numlist min=2 max=2 >=0 <=1) /*
             */ gap sum GENERALized ABSolute PERcent Zvar(varname)
     }
     else if "`subcmd'"=="share" {
         local opts n(numlist int >=1 max=1) at(str) /*
             */ PROPortion PERcent sum AVErage GENERALized Zvar(varname)
     }
+    else if "`subcmd'"=="tip" {
+        local opts n(numlist int >=1 max=1) at(str) /*
+            */ range(numlist min=2 max=2 >=0 <=1) /*
+            */ ABSolute PLine(passthru) PSTRong
+    }
     else if "`subcmd'"=="summarize" {
         local lhs anything(id="varlist")
-        local opts Zvar(varname) PLine(passthru)
+        local opts relax Zvar(varname) PLine(passthru) PSTRong
     }
     else exit 499
     syntax `lhs' [if] [in] [fw iw pw/], [ ///
-            NOVALues VFormat(str) ///
-            qdef(numlist max=1 int >=0 <=9) ///
+            NOVALues VFormat(str) NOCASEwise ///
+            qdef(numlist max=1 int >=0 <=10) HDQuantile ///
             Over(str) TOTal BALance(str) ///
             vce(str) NOSE Level(cilevel) ///
             Generate(passthru) rif(str) Replace ///
             `opts' * ]
     Parse_over `over'
-    Parse_uncond, `unconditional2'
     if "`over_accumulate'"!="" local common common
     if "`over_contrast'"!=""   local common common
     if `"`generate'"'!="" & `"`rif'"'!="" {
@@ -1540,12 +1602,20 @@ program _Estimate, eclass
         confirm format `vformat'
     }
     else local vformat %9.0g
-    if "`qdef'"=="" local qdef 2
+    if "`hdquantile'"!="" {
+        if "`qdef'"!="" & "`qdef'"!="10" {
+            di as err "{bf:qdef()} and {bf:hdquantile} not both allowed"
+        }
+        local qdef 10
+    }
+    else {
+        if "`qdef'"=="" local qdef 2
+    }
     if "`subcmd'"=="proportion" {
         if "`nocategorical'"=="" local categorical "categorical"
     }
     Parse_densityopts, `options'
-    Parse_at "`subcmd'" "`categorical'" `"`n'"' `"`at'"'
+    Parse_at "`subcmd'" "`categorical'" `"`n'"' `"`at'"' `"`range'"' 
     if "`subcmd'"!="summarize" {
         Parse_varlist_unique `varlist'
     }
@@ -1627,6 +1697,15 @@ program _Estimate, eclass
         }
         local zvars `zvar'
     }
+    else if "`subcmd'"=="tip" {
+        if `"`at'`n'"'=="" local n 101
+        if `"`pline'"'=="" {
+            di as err "option {bf:pline()} is required"
+            exit 198
+        }
+        Parse_pline, `pline' // returns pline, plvar
+        local zvars `plvar'
+    }
     else if "`subcmd'"=="summarize" {
         Parse_pline, `pline' // returns pline, plvar
         Parse_sum "`zvar'" "`pline'" "`plvar'" /*
@@ -1655,25 +1734,36 @@ program _Estimate, eclass
         // options that are only relevant if over() is specified
         local compact
         local unconditional
-        local unconditional2
         local total
         local common
     }
     if "`compact'"!="" {
         if `"`bal_method'"'!="" {
-            di as err "{bf:compact} not allowed  {bf:balance()}"
+            di as err "{bf:compact} not allowed with {bf:balance()}"
             exit 198
         }
-        if "`unconditional'"!="" & "`unconditional2'"=="" {
+        if "`unconditional'"!="" {
             di as err "{bf:compact} not allowed with {bf:unconditional}"
+            exit 198
+        }
+        if "`over_contrast'"!="" {
+            di as err "{bf:compact} not allowed with {bf:over(, contrast)}"
+            exit 198
+        }
+        if "`over_accumulate'"!="" {
+            di as err "{bf:compact} not allowed with {bf:over(, accumulate)}"
             exit 198
         }
     }
     c_local generate_quietly `generate_quietly'
     
     // sample and weights
-    marksample touse
-    markout `touse' `varlist' `over' `bal_varlist' `zvars' `plvars'
+    if "`nocasewise'"=="" {
+        marksample touse
+        markout `touse' `zvars'
+    }
+    else marksample touse, novarlist
+    markout `touse' `over' `bal_varlist'
     if "`clustvar'"!="" {
         markout `touse' `clustvar', strok
     }
@@ -1746,7 +1836,7 @@ program _Estimate, eclass
             fvexpand `bal_varlist' if `touse'
             local bal_varlist2 `r(varlist)'
         }
-        if !inlist("`over_contrast'","","contrast") {
+        if !inlist("`over_contrast'","","contrast","lag","lead") {
             if `:list over_contrast in overlevels'==0 {
                 di as err "{bf:over(, contrast())}: no observations in reference distribution"
                 exit 2000
@@ -1776,7 +1866,7 @@ program _Estimate, eclass
             else gettoken over_contrast : overlevels // use first subpop
         }
         if "`over_contrast'"!="" {
-            if "`over_contrast'"=="`overlevels'" {
+            if (`:list sizeof overlevels' + ("`total'"!=""))<2 {
                 di as err "{bf:over(, contrast)}: need at least one comparison group"
                 exit 499
             }
@@ -1791,36 +1881,12 @@ program _Estimate, eclass
     }
     
     // estimate
-    tempname b id _N _W
-    if "`subcmd'"!="summarize" tempname AT
-    if inlist("`subcmd'", "density", "quantile", "summarize") tempname BW
-    if "`svy'"!="" tempname istot
-    if "`over_contrast'"!="" tempname cref
+    tempname b nobs sumw cref id omit IFtot AT BW _N _W /*HCR PGI*/
     mata: dstat()
     // process IFs
     if "`generate'"!="" {
         local coln: colfullnames `b'
-        if "`svy'"!="" {
-            local i 0
-            local j 0
-            local gid0 ""
-            foreach IF of local IFs {
-                gettoken nm coln : coln
-                lab var `IF' "score of _b[`nm']"
-                if "`svy'"=="done" continue // already done by dstat_vce()
-                local ++i
-                local gid = `id'[1, `i']
-                if "`gid'"!="`gid0'" {
-                    local ++j
-                    local gid0 `gid'
-                }
-                if `istot'[1,`i']==0 continue // no adjustment required
-                if "`gid'"=="." local ifexp `touse'
-                else            local ifexp `touse' & `over'==`gid'
-                qui replace `IF' = `IF' + `b'[1,`i']/`_W'[1,`j'] if `ifexp'
-            }
-        }
-        else if "`compact'"!="" {
+        if "`compact'"!="" {
             local CIFs
             local i 0
             local j 0
@@ -1828,6 +1894,12 @@ program _Estimate, eclass
             foreach IF of local IFs {
                 gettoken nm coln : coln
                 local ++i
+                if `IFtot'[1,`i']!=0 {
+                    di as err "{bf:compact} not supported for statistics" ///
+                        " that are not normalized by the sample size" ///
+                        " (frequencies, totals)"
+                    exit 499
+                }
                 local gid = `id'[1, `i']
                 if "`gid'"!="`gid0'" {
                     local ++j
@@ -1849,7 +1921,8 @@ program _Estimate, eclass
                     qui replace `CIF' = `IF' if `ifexp'
                 }
                 mata: dstat_fix_nm("nm", "`gid'", "`total'"!="")
-                lab var `CIF' "IF of _b[`nm']"
+                if "`rif'"!="" lab var `CIF' "RIF of _b[`nm']"
+                else           lab var `CIF' "IF of _b[`nm']"
                 local CIFs `CIFs' `CIF'
                 local ++k
             }
@@ -1860,14 +1933,18 @@ program _Estimate, eclass
             foreach IF of local IFs {
                 gettoken nm coln : coln
                 local ++i
-                qui replace `IF' = `IF' * `W' + `b'[1,`i'] if `touse'
+                qui replace `IF' = `IF' * `W' ///
+                    + (`b'[1,`i'] - `IFtot'[1,`i']) if `touse'
                 lab var `IF' "RIF of _b[`nm']"
             }
         }
         else {
+            local i 0
             foreach IF of local IFs {
                 gettoken nm coln : coln
-                lab var `IF' "IF of _b[`nm']"
+                local ++i
+                if `IFtot'[1,`i']!=0 lab var `IF' "score of _b[`nm']"
+                else                 lab var `IF' "IF of _b[`nm']"
             }
         }
     }
@@ -1911,10 +1988,13 @@ program _Estimate, eclass
     eret scalar k_omit = `k_omit'
     eret matrix _N = `_N'
     eret matrix _W = `_W'
-    eret matrix id = `id' // contains value of over-group for each estimate
+    eret matrix nobs = `nobs'
+    eret matrix sumw = `sumw'
+    eret matrix omit = `omit'
     eret scalar qdef = `qdef'
     eret local novalues "`novalues'"
     eret local vformat "`vformat'"
+    eret local nocasewise "`nocasewise'"
     eret local percent "`percent'"
     eret local proportion "`proportion'"
     eret local frequency "`frequency'"
@@ -1929,14 +2009,14 @@ program _Estimate, eclass
     eret local generalized "`generalized'"
     eret local absolute "`absolute'"
     eret local average "`average'"
+    eret local relax "`relax'"
     eret local zvar "`zvar'"
     if "`plvar'"!="" eret local pline "`plvar'"
     else             eret local pline "`pline'"
+    eret local pstrong "`pstrong'"
     if "`over'"!="" {
+        eret matrix id = `id'
         eret local total "`total'"
-        if "`unconditional2'"!="" {
-            local unconditional "unconditional(`unconditional2')"
-        }
         eret local unconditional "`unconditional'"
         eret local over          "`over'"
         eret local over_select    "`over_select'"
@@ -1956,10 +2036,7 @@ program _Estimate, eclass
             eret local balopts "`bal_opts'"
         }
     }
-    if "`AT'"!="" {
-        eret matrix at = `AT'
-    }
-    if "`BW'"!="" {
+    if `hasdens' {
         eret matrix bwidth = `BW'
         if "`bwmethod'"!="" {
             if "`bwmethod'"=="dpi" {
@@ -1982,6 +2059,9 @@ program _Estimate, eclass
             eret scalar ll       = `ll'
             eret scalar ul       = `ul'
         }
+    }
+    if "`subcmd'"!="summarize" {
+        eret matrix at = `AT'
     }
     if "`subcmd'"=="density" {
         local title "Density"
@@ -2043,6 +2123,12 @@ program _Estimate, eclass
         else if "`average'"!=""     local title "`title' (average)"
         else                        local title "`title' (density)"
     }
+    else if "`subcmd'"=="tip" {
+        if "`absolute'"!="" local title "Absolute TIP curve"
+        else                local title "TIP curve"
+        // eret matrix hcr = `HCR'
+        // eret matrix pgi = `PGI'
+    }
     else if "`subcmd'"=="summarize" {
         eret local slist `"`slist'"'
         eret local stats "`stats'"
@@ -2090,41 +2176,41 @@ end
 
 program Parse_over
     capt n syntax [varname(numeric default=none)] [, SELect(numlist int >=0) ///
-        ACCUMulate CONTRast CONTRast2(numlist int max=1 >=0) ratio LNRatio ]
+        ACCUMulate CONTRast CONTRast2(str) ratio LNRatio ]
     if _rc==1 exit _rc
     if _rc {
         di as err "error in option {bf:over()}"
         exit _rc
     }
-    if "`contrast2'"!="" local contrast "`contrast2'"
-    if "`contrast'"!="" & "`accumulate'"!="" {
-        di as err "{bf:contrast()} and {bf:accumulate} not both allowed"
-        di as err "error in option {bf:over()}"
-        exit 198
+    if "`lnratio'"!=""   local ratio lnratio
+    if "`ratio'"!=""     local contrast contrast
+    if "`contrast2'"!="" local contrast `"`contrast2'"'
+    if `"`contrast'"'!="" {
+        if "`accumulate'"!="" {
+            di as err "{bf:contrast} and {bf:accumulate} not both allowed"
+            di as err "error in option {bf:over()}"
+            exit 198
+        }
+        if !inlist(`"`contrast'"',"contrast","lag","lead") {
+            capt numlist `"`contrast'"', int max(1) range(>=0)
+            if _rc==1 exit _rc
+            if _rc {
+                di as err "invalid argument in {bf:contrast()}"
+                di as err "error in option {bf:over()}"
+                exit 198
+            }
+        }
     }
     if "`varlist'"=="" {
         local select
         local accumulate
         local contrast
     }
-    if "`lnratio'"!=""  local ratio lnratio
-    if "`contrast'"=="" local ratio
     c_local over `varlist'
     c_local over_select `select'
     c_local over_accumulate `accumulate'
     c_local over_contrast `contrast'
     c_local over_ratio `ratio'
-end
-
-program Parse_uncond
-    capt n syntax [, Fixed ]
-    if _rc==1 exit _rc
-    if _rc {
-        di as err "error in option {bf:unconditional()}"
-        exit _rc
-    }
-    if "`fixed'"!="" c_local unconditional unconditional
-    c_local unconditional2 `fixed'
 end
 
 program Parse_rif
@@ -2137,23 +2223,12 @@ end
 program Parse_generate
     syntax [, generate(str) replace ]
     local 0 `"`generate'"'
-    syntax [anything(name=generate)] [, svy rif COMpact QUIetly ]
-    if "`svy'"!="" {
-        if "`compact'"!="" {
-            di as err "{bf:svy} and {bf:compact} not both allowed"
-            exit 198
-        }
-        if "`rif'"!="" {
-            di as err "{bf:svy} and {bf:rif} not both allowed"
-            exit 198
-        }
-    }
+    syntax [anything(name=generate)] [, rif COMpact QUIetly ]
     if `"`generate'"'=="" {
         c_local generate
         exit
     }
     c_local generate_quietly `quietly'
-    c_local svy `svy'
     c_local rif `rif'
     c_local compact `compact'
     if substr(`"`generate'"', -1, 1)=="*" {
@@ -2172,10 +2247,14 @@ program Parse_generate
 end
 
 program Parse_at // returns atmat="matrix" if at is matrix, else expands numlist
-    args subcmd cat n at
+    args subcmd cat n at range
     if `"`at'"'=="" exit
     if `"`n'"'!="" {
         di as err "{bf:n()} and {bf:at()} not both allowed"
+        exit 198
+    }
+    if `"`range'"'!="" {
+        di as err "{bf:range()} and {bf:at()} not both allowed"
         exit 198
     }
     if `: list sizeof at'==1 {
@@ -2198,6 +2277,7 @@ program Parse_at // returns atmat="matrix" if at is matrix, else expands numlist
     else if "`subcmd'"=="quantile"  local args "numlist >=0 <=1"
     else if "`subcmd'"=="lorenz"    local args "numlist >=0 <=1"
     else if "`subcmd'"=="share"     local args "numlist min=2 >=0 <=1 ascending"
+    else if "`subcmd'"=="tip"       local args "numlist >=0 <=1"
     else                            local args "numlist"
     syntax [, at(`args') ]
     c_local at "`at'"
@@ -2242,8 +2322,8 @@ program Parse_pline
         exit
     }
     syntax [, pline(varname numeric) ]
-    c_local pline `"`pline'"'
     c_local plvar `"`pline'"'
+    c_local pline ""
 end
 
 program Parse_sum
@@ -2251,8 +2331,6 @@ program Parse_sum
     gettoken zvar  0 : 0
     gettoken pline 0 : 0
     gettoken plvar 0 : 0
-    local zvars `zvar'      // always include default zvar()
-    local plvars `plvar'    // always include default pline() variable
     Parse_sum_tokenize `0'  // returns stats_#, vars_#, n
     mata: dstat_parse_stats(`n')
     // check/collect variables
@@ -2267,8 +2345,8 @@ program Parse_sum
     mata: dstat_slist_collect(`n')
     c_local slist `"`slist'"'
     c_local varlist: list uniq vlist
-    c_local zvars: list uniq zvars
-    c_local plvars: list uniq plvars
+    c_local zvars: list zvars | plvars  // [sic!]
+    c_local plvars `plvars'
 end
 
 program Parse_sum_hasdens
@@ -2337,7 +2415,7 @@ program Parse_vce
         }
     }
     // options
-    capt n syntax [, NOCOV COV svy]
+    capt n syntax [, NOCOV COV ]
     if _rc==1 exit _rc
     if _rc {
         di as err "error in option {bf:vce()}"
@@ -2350,7 +2428,6 @@ program Parse_vce
         c_local vcetype
         c_local clustvar
         c_local vcenocov
-        c_local vcesvy
         exit
     }
     // vce: other
@@ -2362,7 +2439,6 @@ program Parse_vce
     }
     if `"`subcmd'"'!="summarize" & "`cov'"=="" local nocov nocov
     c_local vcenocov `nocov'
-    c_local vcesvy `svy'
     // cluster
     if "`vce'"=="cluster" {
         local 0 `"`arg'"'
@@ -2539,8 +2615,12 @@ local DATA   dstat_data
 local Data   struct `DATA' scalar
 local GRP    dstat_grp
 local Grp    struct `GRP' scalar
+local GRP0   dstat_grp0
+local Grp0   struct `GRP0' scalar
 local BAL    dstat_bal
 local Bal    struct `BAL' scalar
+local ZVAR   dstat_parse_stats_zvars
+local Zvar   struct `ZVAR' scalar
 // string
 local SS     string scalar
 local SR     string rowvector
@@ -2556,9 +2636,9 @@ local RM     real matrix
 local Int    real scalar
 local IntC   real colvector
 local IntR   real rowvector
+local IntM   real matrix
 // boolean
 local Bool   real scalar
-local BoolR  real rowvector
 local BoolC  real colvector
 local TRUE   1
 local FALSE  0
@@ -2581,20 +2661,33 @@ mata set matastrict on
 // parsing for -dstat summarize-
 // --------------------------------------------------------------------------
 
+struct `ZVAR' {
+    `SS' zvar, plvar, pline
+    `SR' zvars, plvars
+}
+
 void dstat_parse_stats(`Int' n)
 {
-    `Int' i
-    `SS'  nm
-    `T'   A
-    `SC'  list
+    `Int'  i
+    `SS'   nm
+    `T'    A
+    `SC'   list
+    `Zvar' Z
     
     A = dstat_stats_lib()
     list = sort(asarray_keys(A), 1)
+    Z.zvar = st_local("zvar")
+    if (Z.zvar!="") Z.zvars = Z.zvar
+    Z.pline = st_local("pline")
+    Z.plvar = st_local("plvar")
+    if (Z.plvar!="") Z.plvars = Z.plvar
     for (i=1;i<=n;i++) {
         nm = "stats_" + strofreal(i)
-        st_local(nm, _dstat_parse_stats(A, list, 
+        st_local(nm, _dstat_parse_stats(A, list, Z,
             _dstat_parse_stats_tok(st_local(nm))))
     }
+    st_local("zvars", invtokens(Z.zvars))
+    st_local("plvars", invtokens(Z.plvars))
 }
 
 void dstat_parse_stats_hasdens(`Int' n)
@@ -2614,7 +2707,7 @@ void dstat_parse_stats_hasdens(`Int' n)
     }
 }
 
-`SS' _dstat_parse_stats(`T' A, `SC' list, `SR' stats)
+`SS' _dstat_parse_stats(`T' A, `SC' list, `Zvar' Z, `SR' stats)
 {
     `Int' i, n
     `SS'  s0, s, o
@@ -2625,7 +2718,7 @@ void dstat_parse_stats_hasdens(`Int' n)
         s0 = s = stats[i]
         o = _dstat_parse_stats_split(s) // replaces s
         P = asarray(A, _dstat_parse_stats_match(s, list, s0))
-        stats[i] = (*P[2])(s0, s, o, *P[3])
+        stats[i] = (*P[2])(Z, s0, s, o, *P[3])
     }
     return(invtokens(stats))
 }
@@ -2714,125 +2807,148 @@ void dstat_parse_stats_hasdens(`Int' n)
     `T' A
     
     A = asarray_create()
+    // experimental
     // general
-    asarray(A, "q"       , (`f'q(),        `p'1(),    &(0, 100, .)))            // quantile at #
-    asarray(A, "p"       , (`f'p(),        `p'1(),    &(0, 100, .)))            // quantile at #
-    asarray(A, "quantile", (`f'quantile(), `p'1(),    &(0, 100, .)))            // quantile at #
-    asarray(A, "d"       , (`f'd(),        `p'1(),    &(., ., .)))              // kernel density at #
-    asarray(A, "density" , (`f'density(),  `p'1(),    &(., ., .)))              // kernel density at #
-    asarray(A, "hist"    , (`f'hist(),     `p'2(),    &(., ., .)))              // histogram density within [#,#]
-    asarray(A, "cdf"     , (`f'cdf(),      `p'1(),    &(., ., .)))              // cdf at #
-    asarray(A, "cdfm"    , (`f'cdfm(),     `p'1(),    &(., ., .)))              // mid cdf at #
-    asarray(A, "cdff"    , (`f'cdff(),     `p'1(),    &(., ., .)))              // floor cdf at #
-    asarray(A, "ccdf"    , (`f'ccdf(),     `p'1(),    &(., ., .)))              // complementary cdf at #
-    asarray(A, "ccdfm"   , (`f'ccdfm(),    `p'1(),    &(., ., .)))              // mid ccdf at #
-    asarray(A, "ccdff"   , (`f'ccdff(),    `p'1(),    &(., ., .)))              // floor ccdf at #
-    asarray(A, "prop"    , (`f'prop(),     `p'1or2(), &(., ., .)))              // proportion equal to # or within [#,#]
-    asarray(A, "pct"     , (`f'pct(),      `p'1or2(), &(., ., .)))              // percent equal to # or within [#,#]
-    asarray(A, "f"       , (`f'f(),        `p'1or2(), &(., ., .)))              // frequency equal to # or within [#,#]
-    asarray(A, "freq"    , (`f'freq(),     `p'1or2(), &(., ., .)))              // frequency equal to # or within [#,#]
-    asarray(A, "total"   , (`f'total(),    `p'1or2(), &(., ., 0)))              // overall total or total equal to # or within [#,#]
-    asarray(A, "min"     , (`f'min(),      `p'0(),    &.))                      //
-    asarray(A, "max"     , (`f'max(),      `p'0(),    &.))                      //
-    asarray(A, "range"   , (`f'range(),    `p'0(),    &.))                      //
-    asarray(A, "midrange", (`f'midrange(), `p'0(),    &.))                      // (max+min)/2
+    asarray(A, "q"         , (`f'q(),         `p'1(),    &(0, 100, .)))         // quantile at #
+    asarray(A, "p"         , (`f'p(),         `p'1(),    &(0, 100, .)))         // quantile at #
+    asarray(A, "quantile"  , (`f'quantile(),  `p'1(),    &(0, 100, .)))         // quantile at #
+    asarray(A, "hdquantile", (`f'hdquantile(),`p'1(),    &(0, 100, .)))         // Harrell&Davis (1982) quantile at #
+    asarray(A, "d"         , (`f'd(),         `p'1(),    &(., ., .)))           // kernel density at #
+    asarray(A, "density"   , (`f'density(),   `p'1(),    &(., ., .)))           // kernel density at #
+    asarray(A, "hist"      , (`f'hist(),      `p'2(),    &(., ., .)))           // histogram density within [#,#]
+    asarray(A, "cdf"       , (`f'cdf(),       `p'1(),    &(., ., .)))           // cdf at #
+    asarray(A, "cdfm"      , (`f'cdfm(),      `p'1(),    &(., ., .)))           // mid cdf at #
+    asarray(A, "cdff"      , (`f'cdff(),      `p'1(),    &(., ., .)))           // floor cdf at #
+    asarray(A, "ccdf"      , (`f'ccdf(),      `p'1(),    &(., ., .)))           // complementary cdf at #
+    asarray(A, "ccdfm"     , (`f'ccdfm(),     `p'1(),    &(., ., .)))           // mid ccdf at #
+    asarray(A, "ccdff"     , (`f'ccdff(),     `p'1(),    &(., ., .)))           // floor ccdf at #
+    asarray(A, "prop"      , (`f'prop(),      `p'1or2(), &(., ., .)))           // proportion equal to # or within [#,#]
+    asarray(A, "pct"       , (`f'pct(),       `p'1or2(), &(., ., .)))           // percent equal to # or within [#,#]
+    asarray(A, "f"         , (`f'f(),         `p'1or2(), &(., ., .)))           // frequency equal to # or within [#,#]
+    asarray(A, "freq"      , (`f'freq(),      `p'1or2(), &(., ., .)))           // frequency equal to # or within [#,#]
+    asarray(A, "total"     , (`f'total(),     `p'1or2(), &(., ., 0)))           // overall total or total equal to # or within [#,#]
+    asarray(A, "min"       , (`f'min(),       `p'0(),    &.))                   //
+    asarray(A, "max"       , (`f'max(),       `p'0(),    &.))                   //
+    asarray(A, "range"     , (`f'range(),     `p'0(),    &.))                   //
+    asarray(A, "midrange"  , (`f'midrange(),  `p'0(),    &.))                   // (max+min)/2
     // location
-    asarray(A, "mean"    , (`f'mean(),     `p'0(),    &.))                      // arithmetic mean
-    asarray(A, "gmean"   , (`f'gmean(),    `p'0(),    &.))                      // geometric mean
-    asarray(A, "hmean"   , (`f'hmean(),    `p'0(),    &.))                      // harmonic mean
-    asarray(A, "trim"    , (`f'trim(),     `p'1or2(), &(  0,  50, 25)))         // trimmed mean
-    asarray(A, "winsor"  , (`f'winsor(),   `p'1or2(), &(  0,  50, 25)))         // winsorized mean
-    asarray(A, "median"  , (`f'median(),   `p'0(),    &.))                      // median
-    asarray(A, "huber"   , (`f'huber(),    `p'1(),    &(63.7, 99.9, 95)))       // huber m-estimate of location
-    asarray(A, "biweight", (`f'biweight(), `p'1(),    &(0.1, 99.9, 95)))        // biweight m-estimate of location
-    asarray(A, "hl"      , (`f'hl(),       `p'0(),    &.))                      // Hodges-Lehmann estimator
+    asarray(A, "mean"      , (`f'mean(),      `p'0(),    &.))                   // arithmetic mean
+    asarray(A, "gmean"     , (`f'gmean(),     `p'0(),    &.))                   // geometric mean
+    asarray(A, "hmean"     , (`f'hmean(),     `p'0(),    &.))                   // harmonic mean
+    asarray(A, "trim"      , (`f'trim(),      `p'1or2(), &(  0,  50, 25)))      // trimmed mean
+    asarray(A, "winsor"    , (`f'winsor(),    `p'1or2(), &(  0,  50, 25)))      // winsorized mean
+    asarray(A, "median"    , (`f'median(),    `p'0(),    &.))                   // median
+    asarray(A, "huber"     , (`f'huber(),     `p'1(),    &(63.7, 99.9, 95)))    // huber m-estimate of location
+    asarray(A, "biweight"  , (`f'biweight(),  `p'1(),    &(0.1, 99.9, 95)))     // biweight m-estimate of location
+    asarray(A, "hl"        , (`f'hl(),        `p'0(),    &.))                   // Hodges-Lehmann estimator
     // scale
-    asarray(A, "sd"      , (`f'sd(),       `p'1(),    &(., ., 1)))              // standard deviation
-    asarray(A, "variance", (`f'variance(), `p'1(),    &(., ., 1)))              // variance
-    asarray(A, "mse"     , (`f'mse(),      `p'1or2(), &(., ., 0, 0)))           // mean squared error
-    asarray(A, "smse"    , (`f'smse(),     `p'1or2(), &(., ., 0, 0)))           // square-root of MSE
-    asarray(A, "iqr"     , (`f'iqr(),      `p'2(),    &(0, 100, 25, 75)))       // inter quantile range
-    asarray(A, "iqrn"    , (`f'iqrn(),     `p'0(),    &.))                      // normalized inter quartile range
-    asarray(A, "mad"     , (`f'mad(),      `p'1or2(), &(., ., 0, 0)))           // median (or mean) absolute deviation
-    asarray(A, "madn"    , (`f'madn(),     `p'1or2(), &(., ., 0, 0)))           // normalized MAD
-    asarray(A, "mae"     , (`f'mae(),      `p'1or2(), &(., ., 0, 0)))           // median (or mean) absolute error
-    asarray(A, "maen"    , (`f'maen(),     `p'1or2(), &(., ., 0, 0)))           // normalized MAE
-    asarray(A, "md"      , (`f'md(),       `p'0(),    &.))                      // mean absolute pairwise difference
-    asarray(A, "mdn"     , (`f'mdn(),      `p'0(),    &.))                      // normalized mean absolute pairwise difference
-    asarray(A, "mscale"  , (`f'mscale(),   `p'1(),    &(1, 50, 50)))            // m-estimate of scale
-    asarray(A, "qn"      , (`f'qn(),       `p'0(),    &.))                      // Qn coefficient
+    asarray(A, "sd"        , (`f'sd(),        `p'1(),    &(., ., 1)))           // standard deviation
+    asarray(A, "variance"  , (`f'variance(),  `p'1(),    &(., ., 1)))           // variance
+    asarray(A, "mse"       , (`f'mse(),       `p'1or2(), &(., ., 0, 0)))        // mean squared error
+    asarray(A, "smse"      , (`f'smse(),      `p'1or2(), &(., ., 0, 0)))        // square-root of MSE
+    asarray(A, "iqr"       , (`f'iqr(),       `p'2(),    &(0, 100, 25, 75)))    // inter quantile range
+    asarray(A, "iqrn"      , (`f'iqrn(),      `p'2(),    &(0, 100, 25, 75)))    // normalized inter quantile range
+    asarray(A, "mad"       , (`f'mad(),       `p'1or2(), &(., ., 0, 0)))        // median (or mean) absolute deviation
+    asarray(A, "madn"      , (`f'madn(),      `p'1or2(), &(., ., 0, 0)))        // normalized MAD
+    asarray(A, "mae"       , (`f'mae(),       `p'1or2(), &(., ., 0, 0)))        // median (or mean) absolute error
+    asarray(A, "maen"      , (`f'maen(),      `p'1or2(), &(., ., 0, 0)))        // normalized MAE
+    asarray(A, "md"        , (`f'md(),        `p'0(),    &.))                   // mean absolute pairwise difference
+    asarray(A, "mdn"       , (`f'mdn(),       `p'0(),    &.))                   // normalized mean absolute pairwise difference
+    asarray(A, "mscale"    , (`f'mscale(),    `p'1(),    &(1, 50, 50)))         // m-estimate of scale
+    asarray(A, "qn"        , (`f'qn(),        `p'0(),    &.))                   // Qn coefficient
     // skewness
-    asarray(A, "skewness", (`f'skewness(), `p'0(),    &.))                      // classical skewness
-    asarray(A, "qskew"   , (`f'qskew(),    `p'1(),    &(0, 50, 25)))            // quantile skewness measure
-    asarray(A, "mc"      , (`f'mc(),       `p'0(),    &.))                      // medcouple
+    asarray(A, "skewness"  , (`f'skewness(),  `p'0(),    &.))                   // classical skewness
+    asarray(A, "qskew"     , (`f'qskew(),     `p'1(),    &(0, 50, 25)))         // quantile skewness measure
+    asarray(A, "mc"        , (`f'mc(),        `p'0(),    &.))                   // medcouple
     // kurtosis
-    asarray(A, "kurtosis", (`f'kurtosis(), `p'0(),    &.))                      // classical kurtosis
-    asarray(A, "qw"      , (`f'qw(),       `p'1(),    &(0, 50, 25)))            // quantile tail weight
-    asarray(A, "lqw"     , (`f'lqw(),      `p'1(),    &(0, 50, 25)))            // left quantile tail weight
-    asarray(A, "rqw"     , (`f'rqw(),      `p'1(),    &(0, 50, 25)))            // right quantile tail weight
-    asarray(A, "lmc"     , (`f'lmc(),      `p'0(),    &.))                      // left medcouple tail weight
-    asarray(A, "rmc"     , (`f'rmc(),      `p'0(),    &.))                      // right medcouple tail weight
+    asarray(A, "kurtosis"  , (`f'kurtosis(),  `p'0(),    &.))                   // classical kurtosis
+    asarray(A, "qw"        , (`f'qw(),        `p'1(),    &(0, 50, 25)))         // quantile tail weight
+    asarray(A, "lqw"       , (`f'lqw(),       `p'1(),    &(0, 50, 25)))         // left quantile tail weight
+    asarray(A, "rqw"       , (`f'rqw(),       `p'1(),    &(0, 50, 25)))         // right quantile tail weight
+    asarray(A, "lmc"       , (`f'lmc(),       `p'0(),    &.))                   // left medcouple tail weight
+    asarray(A, "rmc"       , (`f'rmc(),       `p'0(),    &.))                   // right medcouple tail weight
     // inequality
-    asarray(A, "gini"    , (`f'gini(),     `p'1(),    &(., ., 0)))              // Gini coefficient
-    asarray(A, "agini"   , (`f'agini(),    `p'1(),    &(., ., 0)))              // absolute Gini coefficient
-    asarray(A, "mld"     , (`f'mld(),      `p'0(),    &.))                      // mean log deviation
-    asarray(A, "theil"   , (`f'theil(),    `p'0(),    &.))                      // Theil index
-    asarray(A, "cv"      , (`f'cv(),       `p'1(),    &(., ., 1)))              // coefficient of variation
-    asarray(A, "ge"      , (`f'ge(),       `p'1(),    &(., ., 1)))              // generalized entropy
-    asarray(A, "atkinson", (`f'atkinson(), `p'1(),    &(0, ., 1)))              // Atkinson inequality measure
-    asarray(A, "lvar"    , (`f'lvar(),     `p'1(),    &(., ., 1)))              // logarithmic variance
-    asarray(A, "vlog"    , (`f'vlog(),     `p'1(),    &(., ., 1)))              // variance of logarithm
-    asarray(A, "top"     , (`f'top(),      `p'1(),    &(0, 100, 10)))           // top share
-    asarray(A, "bottom"  , (`f'bottom(),   `p'1(),    &(0, 100, 40)))           // bottom share
-    asarray(A, "mid"     , (`f'mid(),      `p'2(),    &(0, 100, 40, 90)))       // mid share
-    asarray(A, "palma"   , (`f'palma(),    `p'0(),    &.))                      // palma ratio
-    asarray(A, "qratio"  , (`f'qratio(),   `p'2(),    &(0, 100, 10, 90)))       // quantile ratio
-    asarray(A, "sratio"  , (`f'sratio(),   `p'2or4(), &(0, 100, 0, 10, 90, 100))) // percentile share ratio
-    asarray(A, "lorenz"  , (`f'lorenz(),   `p'1(),    &(0, 100, .)))            // lorenz ordinate
-    asarray(A, "tlorenz" , (`f'tlorenz(),  `p'1(),    &(0, 100, .)))            // total (sum) lorenz ordinate
-    asarray(A, "glorenz" , (`f'glorenz(),  `p'1(),    &(0, 100, .)))            // generalized lorenz ordinate
-    asarray(A, "alorenz" , (`f'alorenz(),  `p'1(),    &(0, 100, .)))            // absolute lorenz ordinate
-    asarray(A, "elorenz" , (`f'elorenz(),  `p'1(),    &(0, 100, .)))            // equality gap lorenz ordinate
-    asarray(A, "share"   , (`f'share(),    `p'2(),    &(0, 100, ., .)))         // percentile share (proportion)
-    asarray(A, "dshare"  , (`f'dshare(),   `p'2(),    &(0, 100, ., .)))         // percentile share (density)
-    asarray(A, "tshare"  , (`f'tshare(),   `p'2(),    &(0, 100, ., .)))         // percentile share (total/sum)
-    asarray(A, "gshare"  , (`f'gshare(),   `p'2(),    &(0, 100, ., .)))         // percentile share (generalized)
-    asarray(A, "ashare"  , (`f'ashare(),   `p'2(),    &(0, 100, ., .)))         // percentile share (average)
+    asarray(A, "hoover"    , (`f'hoover(),    `p'0(),    &.))                   // Hoover aka Robin Hood aka Ricci-Schutz aka Pietra index
+    asarray(A, "gini"      , (`f'gini(),      `p'1(),    &(., ., 0)))           // Gini coefficient
+    asarray(A, "agini"     , (`f'agini(),     `p'1(),    &(., ., 0)))           // absolute Gini coefficient
+    asarray(A, "mld"       , (`f'mld(),       `p'0(),    &.))                   // mean log deviation
+    asarray(A, "theil"     , (`f'theil(),     `p'0(),    &.))                   // Theil index
+    asarray(A, "cv"        , (`f'cv(),        `p'1(),    &(., ., 1)))           // coefficient of variation
+    asarray(A, "ge"        , (`f'ge(),        `p'1(),    &(., ., 1)))           // generalized entropy
+    asarray(A, "atkinson"  , (`f'atkinson(),  `p'1(),    &(0, ., 1)))           // Atkinson inequality measure
+    asarray(A, "lvar"      , (`f'lvar(),      `p'1(),    &(., ., 1)))           // logarithmic variance
+    asarray(A, "vlog"      , (`f'vlog(),      `p'1(),    &(., ., 1)))           // variance of logarithm
+    asarray(A, "top"       , (`f'top(),       `p'1(),    &(0, 100, 10)))        // top share
+    asarray(A, "bottom"    , (`f'bottom(),    `p'1(),    &(0, 100, 40)))        // bottom share
+    asarray(A, "mid"       , (`f'mid(),       `p'2(),    &(0, 100, 40, 90)))    // mid share
+    asarray(A, "palma"     , (`f'palma(),     `p'0(),    &.))                   // palma ratio
+    asarray(A, "qratio"    , (`f'qratio(),    `p'2(),    &(0, 100, 10, 90)))    // quantile ratio
+    asarray(A, "sratio"    , (`f'sratio(),    `p'2or4(), &(0, 100, 0, 10, 90, 100))) // percentile share ratio
+    asarray(A, "lorenz"    , (`f'lorenz(),    `p'1(),    &(0, 100, .)))         // lorenz ordinate
+    asarray(A, "tlorenz"   , (`f'tlorenz(),   `p'1(),    &(0, 100, .)))         // total (sum) lorenz ordinate
+    asarray(A, "glorenz"   , (`f'glorenz(),   `p'1(),    &(0, 100, .)))         // generalized lorenz ordinate
+    asarray(A, "alorenz"   , (`f'alorenz(),   `p'1(),    &(0, 100, .)))         // absolute lorenz ordinate
+    asarray(A, "elorenz"   , (`f'elorenz(),   `p'1(),    &(0, 100, .)))         // equality gap lorenz ordinate
+    asarray(A, "share"     , (`f'share(),     `p'2(),    &(0, 100, ., .)))      // percentile share (proportion)
+    asarray(A, "dshare"    , (`f'dshare(),    `p'2(),    &(0, 100, ., .)))      // percentile share (density)
+    asarray(A, "tshare"    , (`f'tshare(),    `p'2(),    &(0, 100, ., .)))      // percentile share (total/sum)
+    asarray(A, "gshare"    , (`f'gshare(),    `p'2(),    &(0, 100, ., .)))      // percentile share (generalized)
+    asarray(A, "ashare"    , (`f'ashare(),    `p'2(),    &(0, 100, ., .)))      // percentile share (average)
     // concentration
-    asarray(A, "gci"     , (`f'gci(),      `p'z1(),   &(., ., 0)))              // Gini concentration index
-    asarray(A, "aci"     , (`f'aci(),      `p'z1(),   &(., ., 0)))              // absolute Gini concentration index
-    asarray(A, "ccurve"  , (`f'ccurve(),   `p'1z(),   &(0, 100, .)))            // lorenz concentration ordinate
-    asarray(A, "tccurve" , (`f'tccurve(),  `p'1z(),   &(0, 100, .)))            // total concentration ordinate
-    asarray(A, "gccurve" , (`f'gccurve(),  `p'1z(),   &(0, 100, .)))            // generalized concentration ordinate
-    asarray(A, "accurve" , (`f'accurve(),  `p'1z(),   &(0, 100, .)))            // absolute concentration ordinate
-    asarray(A, "eccurve" , (`f'eccurve(),  `p'1z(),   &(0, 100, .)))            // equality gap concentration ordinate
-    asarray(A, "cshare"  , (`f'cshare(),   `p'2z(),   &(0, 100, ., .)))         // concentration share
-    asarray(A, "dcshare" , (`f'dcshare(),  `p'2z(),   &(0, 100, ., .)))         // concentration share as density
-    asarray(A, "gcshare" , (`f'gcshare(),  `p'2z(),   &(0, 100, ., .)))         // generalized concentration share
-    asarray(A, "tcshare" , (`f'tcshare(),  `p'2z(),   &(0, 100, ., .)))         // concentration share as total
-    asarray(A, "acshare" , (`f'acshare(),  `p'2z(),   &(0, 100, ., .)))         // concentration share as average
-        // more concentration measures...
+    asarray(A, "gci"       , (`f'gci(),       `p'z1(),   &(., ., 0)))           // Gini concentration index
+    asarray(A, "aci"       , (`f'aci(),       `p'z1(),   &(., ., 0)))           // absolute Gini concentration index
+    asarray(A, "ccurve"    , (`f'ccurve(),    `p'1z(),   &(0, 100, .)))         // lorenz concentration ordinate
+    asarray(A, "tccurve"   , (`f'tccurve(),   `p'1z(),   &(0, 100, .)))         // total concentration ordinate
+    asarray(A, "gccurve"   , (`f'gccurve(),   `p'1z(),   &(0, 100, .)))         // generalized concentration ordinate
+    asarray(A, "accurve"   , (`f'accurve(),   `p'1z(),   &(0, 100, .)))         // absolute concentration ordinate
+    asarray(A, "eccurve"   , (`f'eccurve(),   `p'1z(),   &(0, 100, .)))         // equality gap concentration ordinate
+    asarray(A, "cshare"    , (`f'cshare(),    `p'2z(),   &(0, 100, ., .)))      // concentration share
+    asarray(A, "dcshare"   , (`f'dcshare(),   `p'2z(),   &(0, 100, ., .)))      // concentration share as density
+    asarray(A, "gcshare"   , (`f'gcshare(),   `p'2z(),   &(0, 100, ., .)))      // generalized concentration share
+    asarray(A, "tcshare"   , (`f'tcshare(),   `p'2z(),   &(0, 100, ., .)))      // concentration share as total
+    asarray(A, "acshare"   , (`f'acshare(),   `p'2z(),   &(0, 100, ., .)))      // concentration share as average
     // poverty
-    asarray(A, "watts"   , (`f'watts(),    `p'pl(),   &(0, .)))                 // Watts poverty
-    asarray(A, "fgt"     , (`f'fgt(),      `p'1pl(),  &(0., ., 0)))             // FGT poverty measure
-        // Sen, Hoover index/robin hood index, TIP
+    asarray(A, "hcr"       , (`f'hcr(),       `p'pl(),   &.))                   // Head count ratio
+    asarray(A, "pgap"      , (`f'pgap(),      `p'pl(),   &.))                   // poverty gap
+    asarray(A, "apgap"     , (`f'apgap(),     `p'pl(),   &.))                   // absolute poverty gap
+    asarray(A, "pgi"       , (`f'pgi(),       `p'pl(),   &.))                   // poverty gap index
+    asarray(A, "apgi"      , (`f'apgi(),      `p'pl(),   &.))                   // absolute poverty gap index
+    asarray(A, "fgt"       , (`f'fgt(),       `p'1pl(),  &(0,   ., 0)))         // FGT poverty measure
+    asarray(A, "chu"       , (`f'chu(),       `p'1pl(),  &(0, 100, 50)))        // Clark-Hemming-Ulph poverty measure
+    asarray(A, "watts"     , (`f'watts(),     `p'pl(),   &.))                   // Watts index
+    asarray(A, "sen"       , (`f'sen(),       `p'pl(),   &.))                   // Sen poverty index
+    asarray(A, "sst"       , (`f'sst(),       `p'pl(),   &.))                   // Sen-Shorrocks-Thon poverty index
+    asarray(A, "takayama"  , (`f'takayama(),  `p'pl(),   &.))                   // Takayama poverty index
+    asarray(A, "tip"       , (`f'tip(),       `p'1pl(),  &(0, 100, .)))         // TIP ordinate
+    asarray(A, "atip"      , (`f'atip(),      `p'1pl(),  &(0, 100, .)))         // absolute TIP ordinate
+    // association
+    asarray(A, "corr"      , (`f'corr(),      `p'z(),    &.))                   // correlation
+    asarray(A, "cov"       , (`f'cov(),       `p'z1(),   &(., ., 1)))           // covariance
+    asarray(A, "spearman"  , (`f'spearman(),  `p'z(),    &.))                   // spearman rank correlation
     return(A)
 }
 
-`SS' _dstat_parse_stats_0(`SS' s0, `SS' s, `SS' o, `RR' O)
-{   // name (without arguments)
-    pragma unused O
-    
-    if (o=="") return(s)
-    printf("{err}'%s' not allowed; invalid statistic\n", s0)
+void _dstat_parse_error(`SS' s)
+{
+    printf("{err}'%s' invalid\n", s)
     exit(198)
 }
 
-`SS' _dstat_parse_stats_1(`SS' s0, `SS' s, `SS' o, `RR' O)
+`SS' _dstat_parse_stats_0(`Zvar' Z, `SS' s0, `SS' s, `SS' o, `RR' O)
+{   // name (without arguments)
+    pragma unused O
+    pragma unused Z
+    
+    if (o=="") return(s)
+    _dstat_parse_error(s0)
+}
+
+`SS' _dstat_parse_stats_1(`Zvar' Z, `SS' s0, `SS' s, `SS' o, `RR' O)
 {   // name# or name(#)
+    pragma unused Z
+    
     if (__dstat_parse_stats_1(o, O[1], O[2], O[3])) return(s+o)
-    printf("{err}'%s' not allowed; invalid statistic\n", s0)
-    exit(198)
+    _dstat_parse_error(s0)
 }
 
 `Bool' __dstat_parse_stats_1(`SS' o, `RS' min, `RS' max, `RS' def)
@@ -2857,11 +2973,12 @@ void dstat_parse_stats_hasdens(`Int' n)
     return(1)
 }
 
-`SS' _dstat_parse_stats_1or2(`SS' s0, `SS' s, `SS' o, `RR' O)
+`SS' _dstat_parse_stats_1or2(`Zvar' Z, `SS' s0, `SS' s, `SS' o, `RR' O)
 {   // name#, name(#), or name(#,#)
+    pragma unused Z
+    
     if (__dstat_parse_stats_1or2(o, O[1], O[2], O[|3\.|])) return(s+o)
-    printf("{err}'%s' not allowed; invalid statistic\n", s0)
-    exit(198)
+    _dstat_parse_error(s0)
 }
 
 `Bool' __dstat_parse_stats_1or2(`SS' o, `RS' min, `RS' max, `RR' def)
@@ -2889,11 +3006,12 @@ void dstat_parse_stats_hasdens(`Int' n)
     return(1)
 }
 
-`SS' _dstat_parse_stats_2(`SS' s0, `SS' s, `SS' o, `RR' O)
+`SS' _dstat_parse_stats_2(`Zvar' Z, `SS' s0, `SS' s, `SS' o, `RR' O)
 {   // name(#,#)
+    pragma unused Z
+    
     if (__dstat_parse_stats_2(o, O[1], O[2], O[|3\.|])) return(s+o)
-    printf("{err}'%s' not allowed; invalid statistic\n", s0)
-    exit(198)
+    _dstat_parse_error(s0)
 }
 
 `Bool' __dstat_parse_stats_2(`SS' o, `RS' min, `RS' max, `RR' def)
@@ -2919,11 +3037,12 @@ void dstat_parse_stats_hasdens(`Int' n)
     return(1)
 }
 
-`SS' _dstat_parse_stats_2or4(`SS' s0, `SS' s, `SS' o, `RR' O)
+`SS' _dstat_parse_stats_2or4(`Zvar' Z, `SS' s0, `SS' s, `SS' o, `RR' O)
 {   // name(#,#) or name(#,#,#,#)
+    pragma unused Z
+    
     if (__dstat_parse_stats_2or4(o, O[1], O[2], O[|3\.|])) return(s+o)
-    printf("{err}'%s' not allowed; invalid statistic\n", s0)
-    exit(198)
+    _dstat_parse_error(s0)
 }
 
 `Bool' __dstat_parse_stats_2or4(`SS' o, `RS' min, `RS' max, `RR' def)
@@ -2953,52 +3072,86 @@ void dstat_parse_stats_hasdens(`Int' n)
     return(1)
 }
 
-`SS' _dstat_parse_stats_z1(`SS' s0, `SS' s, `SS' o, `RR' O)
-{   // name(zvar), name(#), or name(zvar,#)
-    if (__dstat_parse_stats_z1(o, O[1], O[2], O[3])) return(s+o)
-    printf("{err}'%s' not allowed; invalid statistic\n", s0)
-    exit(198)
+`SS' _dstat_parse_stats_z(`Zvar' Z, `SS' s0, `SS' s, `SS' o, `RR' O)
+{   // name[(zvar)]
+    pragma unused O
+    
+    if (__dstat_parse_stats_z(Z, o)) return(s+o)
+    _dstat_parse_error(s0)
 }
 
-`Bool' __dstat_parse_stats_z1(`SS' o, `RS' min, `RS' max, `RR' def)
+`Bool' __dstat_parse_stats_z(`Zvar' Z, `SS' o)
 {   // replaces argument o
     `Int'  l
-    `SS'   z, zvars
+    `SR'   s
+    `Bool' br, rc
+    
+    s = _dstat_parse_stats_args(o, br=`FALSE')
+    l = length(s)
+    if (l==0)      rc = _dstat_parse_stats_get_z(Z, "")
+    else if (l==1) rc = _dstat_parse_stats_get_z(Z, s)
+    else           rc = 1
+    if (rc)        return(0)
+    if (l==0) o = ""
+    else      o = _dstat_parse_stats_brace(s, br)
+    return(1)
+}
+
+`Bool' _dstat_parse_stats_get_z(`Zvar' Z, `SS' z0)
+{
+    `Int' j
+    `SS'  z
+    
+    if (z0=="") z = Z.zvar
+    else {
+        j = _st_varindex(z0, st_global("c(varabbrev)")=="on")
+        if (j>=.) {
+            printf("{err}variable {bf:%s} not found\n", z0)
+            return(1)
+        }
+        z = st_varname(j)
+        if (!anyof(Z.zvars, z)) Z.zvars = (Z.zvars, z)
+    }
+    if (z=="") {
+        printf("{err}{it:zvar} or {bf:zvar()} required\n")
+        return(1)
+    }
+    return(0)
+}
+
+`SS' _dstat_parse_stats_z1(`Zvar' Z, `SS' s0, `SS' s, `SS' o, `RR' O)
+{   // name(zvar), name(#), or name(zvar,#)
+    if (__dstat_parse_stats_z1(Z, o, O[1], O[2], O[3])) return(s+o)
+    _dstat_parse_error(s0)
+}
+
+`Bool' __dstat_parse_stats_z1(`Zvar' Z, `SS' o, `RS' min, `RS' max, `RR' def)
+{   // replaces argument o
+    `Int'  l
     `SR'   s
     `RS'   o1
-    `Bool' br
+    `Bool' br, rc
     
     s = _dstat_parse_stats_args(o, br=`FALSE')
     l = length(s)
     if (l==0) {
-        z  = st_local("zvar")
+        rc = _dstat_parse_stats_get_z(Z, "")
         o1 = def
     }
     else if (l==1) {
         o1 = strtoreal(s)
-        if (o1<.) z = st_local("zvar")
+        if (o1<.) rc = _dstat_parse_stats_get_z(Z, "")
         else {
-            z  = s
+            rc = _dstat_parse_stats_get_z(Z, s)
             o1 = def
         }
     }
     else if (l==2) {
-        z  = s[1]
+        rc = _dstat_parse_stats_get_z(Z, s[1])
         o1 = strtoreal(s[2])
     }
-    else return(0)
-    if (z=="") {
-        printf("{err}{it:zvar} or {bf:zvar()} required\n")
-        return(0)
-    }
-    if (z!=st_local("zvar")) {
-        if (_st_varindex(z, 1)>=.) {
-            printf("{err}variable {bf:%s} not found\n", z)
-            return(0)
-        }
-    }
-    zvars = st_local("zvars")
-    st_local("zvars", (zvars!="" ? zvars + " " : "") + z)
+    else rc = 1
+    if (rc)    return(0)
     if (o1>=.) return(0)
     if ((min<. & o1<min) | (max<. & o1>max)) return(0)
     if (l==0) o = ""
@@ -3006,43 +3159,32 @@ void dstat_parse_stats_hasdens(`Int' n)
     return(1)
 }
 
-`SS' _dstat_parse_stats_1z(`SS' s0, `SS' s, `SS' o, `RR' O)
+`SS' _dstat_parse_stats_1z(`Zvar' Z, `SS' s0, `SS' s, `SS' o, `RR' O)
 {   // name(#) or name(#, zvar)
-    if (__dstat_parse_stats_1z(o, O[1], O[2], O[3])) return(s+o)
-    printf("{err}'%s' not allowed; invalid statistic\n", s0)
-    exit(198)
+    if (__dstat_parse_stats_1z(Z, o, O[1], O[2], O[3])) return(s+o)
+    _dstat_parse_error(s0)
 }
 
-`Bool' __dstat_parse_stats_1z(`SS' o, `RS' min, `RS' max, `RR' def)
+`Bool' __dstat_parse_stats_1z(`Zvar' Z, `SS' o, `RS' min, `RS' max, `RR' def)
 {   // replaces argument o
     `Int'  l
-    `SS'   z, zvars
     `RS'   o1
     `SR'   s
-    `Bool' br
+    `Bool' br, rc
     
     s = _dstat_parse_stats_args(o, br=`FALSE')
     l = length(s)
     if (l<2) {
         if (l==0) o1 = def
         else      o1 = strtoreal(s)
-        if (st_local("zvar")=="") {
-            printf("{err}{it:zvar} or {bf:zvar()} required\n")
-            return(0)
-        }
-        z  = st_local("zvar")
+        rc = _dstat_parse_stats_get_z(Z, "")
     }
     else if (l==2) {
         o1 = strtoreal(s[1])
-        z  = s[2]
-        if (_st_varindex(z, 1)>=.) {
-            printf("{err}variable {bf:%s} not found\n", z)
-            return(0)
-        }
+        rc = _dstat_parse_stats_get_z(Z, s[2])
     }
-    else return(0)
-    zvars = st_local("zvars")
-    st_local("zvars", (zvars!="" ? zvars + " " : "") + z)
+    else rc = 1
+    if (rc)    return(0)
     if (o1>=.) return(0)
     if ((min<. & o1<min) | (max<. & o1>max)) return(0)
     if (l==0) o = ""
@@ -3050,20 +3192,18 @@ void dstat_parse_stats_hasdens(`Int' n)
     return(1)
 }
 
-`SS' _dstat_parse_stats_2z(`SS' s0, `SS' s, `SS' o, `RR' O)
+`SS' _dstat_parse_stats_2z(`Zvar' Z, `SS' s0, `SS' s, `SS' o, `RR' O)
 {   // name(#, #) or name(#, #, zvar)
-    if (__dstat_parse_stats_2z(o, O[1], O[2], O[|3\.|])) return(s+o)
-    printf("{err}'%s' not allowed; invalid statistic\n", s0)
-    exit(198)
+    if (__dstat_parse_stats_2z(Z, o, O[1], O[2], O[|3\.|])) return(s+o)
+    _dstat_parse_error(s0)
 }
 
-`Bool' __dstat_parse_stats_2z(`SS' o, `RS' min, `RS' max, `RR' def)
+`Bool' __dstat_parse_stats_2z(`Zvar' Z, `SS' o, `RS' min, `RS' max, `RR' def)
 {   // replaces argument o
     `Int'  l
-    `SS'   z, zvars
     `RS'   o1, o2
     `SR'   s
-    `Bool' br
+    `Bool' br, rc
     
     s = _dstat_parse_stats_args(o, br=`FALSE')
     l = length(s)
@@ -3072,24 +3212,15 @@ void dstat_parse_stats_hasdens(`Int' n)
         else     o1 = strtoreal(s[1])
         if (l<2) o2 = def[2]
         else     o2 = strtoreal(s[2])
-        if (st_local("zvar")=="") {
-            printf("{err}{it:zvar} or {bf:zvar()} required\n")
-            return(0)
-        }
-        z  = st_local("zvar")
+        rc = _dstat_parse_stats_get_z(Z, "")
     }
     else if (l==3) {
         o1 = strtoreal(s[1])
         o2 = strtoreal(s[2])
-        z  = s[3]
-        if (_st_varindex(z, 1)>=.) {
-            printf("{err}variable {bf:%s} not found\n", z)
-            return(0)
-        }
+        rc = _dstat_parse_stats_get_z(Z, s[3])
     }
-    else return(0)
-    zvars = st_local("zvars")
-    st_local("zvars", (zvars!="" ? zvars + " " : "") + z)
+    else rc = 1
+    if (rc)    return(0)
     if (o1>=.) return(0)
     if ((min<. & o1<min) | (max<. & o1>max)) return(0)
     if (o2>=.) return(0)
@@ -3099,100 +3230,96 @@ void dstat_parse_stats_hasdens(`Int' n)
     return(1)
 }
 
-`SS' _dstat_parse_stats_pl(`SS' s0, `SS' s, `SS' o, `RR' O)
+`SS' _dstat_parse_stats_pl(`Zvar' Z, `SS' s0, `SS' s, `SS' o, `RR' O)
 {   // name or name(pline)
-    if (__dstat_parse_stats_pl(o, O[1], O[2])) return(s+o)
-    printf("{err}'%s' not allowed; invalid statistic\n", s0)
-    exit(198)
+    pragma unused O
+    
+    if (__dstat_parse_stats_pl(Z, o)) return(s+o)
+    _dstat_parse_error(s0)
 }
 
-`Bool' __dstat_parse_stats_pl(`SS' o, `RS' min, `RS' max)
+`Bool' __dstat_parse_stats_pl(`Zvar' Z, `SS' o)
 {   // replaces argument o
     `Int'  l
-    `SS'   plv, plvs
-    `RS'   pl
     `SR'   s
-    `Bool' br
+    `Bool' br, rc
     
     s = _dstat_parse_stats_args(o, br=`FALSE')
     l = length(s)
     if (l==0) {
-        if (st_local("pline")=="") {
-            printf("{err}{it:pline} or {bf:pline()} required\n")
-            return(0)
-        }
-        plv = st_local("plvar")
+        rc = _dstat_parse_stats_get_pl(Z, "")
         o = ""
     }
     else if (l==1) {
-        if ((pl = strtoreal(s))<.) {
-            if ((min<. & pl<min) | (max<. & pl>max)) return(0)
-        }
-        else {
-            plv = s
-            if (_st_varindex(plv, 1)>=.) {
-                printf("{err}variable {bf:%s} not found\n", plv)
-                return(0)
-            }
-        }
+        rc = _dstat_parse_stats_get_pl(Z, s)
         o = _dstat_parse_stats_brace(s, br)
     }
-    else return(0)
-    if (plv!="") {
-        plvs = st_local("plvars")
-        st_local("plvars", (plvs!="" ? plvs + " " : "") + plv)
-    } 
+    else rc = 1
+    if (rc) return(0)
     return(1)
 }
 
-`SS' _dstat_parse_stats_1pl(`SS' s0, `SS' s, `SS' o, `RR' O)
-{   // name, name(#), or name(#, pline)
-    if (__dstat_parse_stats_1pl(o, O[1], O[2], O[3])) return(s+o)
-    printf("{err}'%s' not allowed; invalid statistic\n", s0)
-    exit(198)
+`Bool' _dstat_parse_stats_get_pl(`Zvar' Z, `SS' pl0)
+{
+    `Int' j
+    `SS'  pl
+    
+    if (pl0=="") pl = Z.pline!="" ? Z.pline : Z.plvar
+    else {
+        if (strtoreal(pl0)<.) {
+            pl = pl0
+            if (strtoreal(pl)<=0) {
+                printf("{err}poverty line must be positive\n")
+                return(1)
+            }
+        }
+        else {
+            j = _st_varindex(pl0, st_global("c(varabbrev)")=="on")
+            if (j>=.) {
+                printf("{err}variable {bf:%s} not found\n", pl0)
+                return(1)
+            }
+            pl = st_varname(j)
+            if (!anyof(Z.plvars, pl)) Z.plvars = (Z.plvars, pl)
+        }
+    }
+    if (pl=="") {
+        printf("{err}{it:pline} or {bf:pline()} required\n")
+        return(1)
+    }
+    return(0)
 }
 
-`Bool' __dstat_parse_stats_1pl(`SS' o, `RS' min, `RS' max, `RR' def)
+`SS' _dstat_parse_stats_1pl(`Zvar' Z, `SS' s0, `SS' s, `SS' o, `RR' O)
+{   // name, name(#), or name(#, pline)
+    if (__dstat_parse_stats_1pl(Z, o, O[1], O[2], O[3])) return(s+o)
+    _dstat_parse_error(s0)
+}
+
+`Bool' __dstat_parse_stats_1pl(`Zvar' Z, `SS' o, `RS' min, `RS' max, `RR' def)
 {   // replaces argument o
     `Int'  l
-    `SS'   plv, plvs
-    `RS'   o1, pl
+    `RS'   o1
     `SR'   s
-    `Bool' br
+    `Bool' br, rc
     
     s = _dstat_parse_stats_args(o, br=`FALSE')
     l = length(s)
     if (l<2) {
         if (l==0) o1 = def
         else      o1 = strtoreal(s)
-        if (st_local("pline")=="") {
-            printf("{err}{it:pline} or {bf:pline()} required\n")
-            return(0)
-        }
-        plv = st_local("plvar")
+        rc = _dstat_parse_stats_get_pl(Z, "")
     }
     else if (l==2) {
         o1 = strtoreal(s[1])
-        if ((pl = strtoreal(s[2]))<.) {
-            if (pl<=0) return(0)
-        }
-        else {
-            plv = s[2]
-            if (_st_varindex(plv, 1)>=.) {
-                printf("{err}variable {bf:%s} not found\n", plv)
-                return(0)
-            }
-        }
+        rc = _dstat_parse_stats_get_pl(Z, s[2])
     }
-    else return(0)
+    else rc = 1
+    if (rc)    return(0)
     if (o1>=.) return(0)
     if ((min<. & o1<min) | (max<. & o1>max)) return(0)
     if (l==0) o = ""
     else      o = _dstat_parse_stats_brace(invtokens(s,","), br)
-    if (plv!="") {
-        plvs = st_local("plvars")
-        st_local("plvars", (plvs!="" ? plvs + " " : "") + plv)
-    } 
     return(1)
 }
 
@@ -3564,6 +3691,24 @@ void _dstat_cstripe(`SS' nm, `SM' S, `Bool' row)
 }
 
 // --------------------------------------------------------------------------
+// other helper functions
+// --------------------------------------------------------------------------
+
+`SS' dstat_unab(`SS' v)
+{
+    return(st_varname(st_varindex(v, st_global("c(varabbrev)")=="on")))
+}
+
+`RC' dstat_invp(`Int' N, `IntC' p, `RC' x)
+{
+    `RC' y
+    
+    y = J(N, 1, .)
+    y[p] = x
+    return(y)
+}
+
+// --------------------------------------------------------------------------
 // dstat core
 // --------------------------------------------------------------------------
 
@@ -3577,9 +3722,20 @@ struct `BAL' {
     `RC'    wvar       // view on variable to store balancing weights
 }
 
+struct `GRP0' {
+    `IntC'  p          // observations of current group
+    `Int'   N          // number of obs
+    `RC'    w          // total weight (including balancing)
+    `RS'    W          // sum of weights
+    `RC'    wb         // total weight / base weight
+    `RC'    wc         // total weight - "pooled" component
+}
+
 struct `GRP' {
+    `Grp0'  G0         // backup overall group info if nocasewise
     `Int'   id         // value of group
     `IntC'  p          // observations of current group
+    `IntC'  pp         // valid observation within current group (if nocw)
     `Int'   N          // number of obs
     `RC'    w          // total weight (including balancing)
     `RS'    W          // sum of weights
@@ -3590,6 +3746,7 @@ struct `GRP' {
     `IntC'  p1         // observations of reference group
     `RM'    IFZ1       // reference group's balancing IFs
     // current variable
+    `Bool'  reset      // flag for whether sample requires resetting (dstat sum)
     `RC'    j          // counter of current variable
     `RC'    k          // counter of current group x variable
     `RC'    Y          // current variable
@@ -3609,6 +3766,7 @@ struct `GRP' {
 struct `DATA' {
     `Bool'  nose       // do not compute standard errors
     `Bool'  noIF       // do not compute influence functions
+    `Bool'  nocw       // 1 nocasewise, 0 else
     `Int'   touse      // Stata variable marking sample
     `SR'    yvars      // names of outcome variables
     `RM'    Y          // view on outcome data
@@ -3617,25 +3775,29 @@ struct `DATA' {
     `SS'    wvar       // name of variable containing weights
     `RC'    w          // view on weights
     `RS'    W          // sum of weights
+    `RR'    Wj         // sum of weights per variable (relevant if nocw & uncond)
+    `PR'    mvj        // index of missing values per variable (relevant if nocw & uncond)
     `Int'   wtype      // weights: 0 none, 1 fw, 2 iw, 3 pw
     `SS'    ovar       // name of over variable
     `RC'    over       // view on over() variable
     `IntR'  overlevels // levels of over()
-    `Int'   nover      // number of over groups
+    `Int'   nover      // number of over groups (including total)
     `Bool'  total      // include total across over groups
     `IntR'  _N         // number of obs per group
     `RR'    _W         // sum of weights per group
     `Bal'   bal        // balancing settings
     `Bool'  accum      // accumulate results across subpopulations
-    `Int'   contrast   // compute contrasts
+    `Int'   contrast   // compute contrasts: .=no contrast, #=group, .a=total, .b=lag, .c=lead
     `Int'   ratio      // type of contrast: 0=difference, 1=ratio, 2=lnratio
     `RM'    IF         // view on influence functions
+    `RC'    IFtot      // target value of sum(IF) (typically 0)
     `Int'   K          // length of results vector
     `RC'    b          // vector estimates
     `BoolC' omit       // flags omitted estimates (summarize only)
-    `BoolC' istot      // flag estimates that are totals
     `BoolC' cref       // flag contrast reference
     `RC'    id         // ID of relevant subsample (group) for each estimate
+    `IntR'  nobs       // number of obs per estimate
+    `RR'    sumw       // sum of weights per estimate
     `SM'    cstripe    // column stripe for results
     `SR'    eqs        // equation names
     // command-specific settings
@@ -3646,9 +3808,10 @@ struct `DATA' {
     `Int'   n          // number of evaluation points (if relevant)
     `Bool'  common     // common points across subpops (if relevant)
     `RM'    at         // vector of evaluation points (if relevant)
-    `PDF'   S          // density estimation object (density, summarize)
-    `Bool'  exact      // use exact density estimator (density, summarize)
-    `RR'    bwidth     // container for bandwidth matrix (density, summarize)
+    `Bool'  hasdens    // whether density estimation has been employed
+    `PDF'   S          // density estimation object (density, quantile, summarize)
+    `Bool'  exact      // use exact density estimator (density, quantile, summarize)
+    `RR'    bwidth     // container for bandwidth matrix (density, quantile, summarize)
     `PR'    AT         // pointer rowvector of sets of evaluation points
     `Bool'  ipolate    // interpolate ECDF (cdf/ccdf)
     `Bool'  mid        // midpoint adjustment (cdf/ccdf)
@@ -3657,9 +3820,7 @@ struct `DATA' {
     `Bool'  cat        // categorical (prop)
     `Bool'  prop       // report proportions (histogram, share)
     `Bool'  pct        // report percent (histogram, proportion, cdf, ccdf, share, lorenz)
-    `Int'   uncond     // 0 = condition on subsample, 1 = condition on total sample, 
-                       // 2 = like 1 but assume subsample size fixed (density, histogram, 
-                       // proportion, cdf, ccdf)
+    `Bool'  uncond     // condition on total sample (density, histogram, proportion, cdf, ccdf)
     `Bool'  freq       // report frequencies (histogram, proportion, cdf, ccdf)
     `Bool'  ep         // use equal probability bins (histogram)
     `Bool'  gl         // generalized lorenz ordinates (lorenz, share)
@@ -3667,13 +3828,14 @@ struct `DATA' {
     `Bool'  sum        // total (lorenz, share)
     `Bool'  abs        // absolute (lorenz)
     `Bool'  ave        // average (share)
+    `Bool'  relax      // relax option (summarize)
     `SS'    zvar       // default auxiliary variable (summarize, lorenz, share)
     `SR'    zvars      // names of auxiliary variables (summarize, lorenz, share)
     `RM'    Z          // view on auxiliary variables (summarize, lorenz, share)
-    `RS'    pline      // default poverty line (summarize)
-    `SS'    plvar      // default poverty line variable (summarize)
-    `SR'    plvars     // names of poverty line variables (summarize)
-    `RM'    PL         // view on poverty line variables (summarize)
+    `Bool'  pstrong    // use strong poverty definition (summarize, tip)
+    `RS'    pline      // default poverty line (summarize, tip)
+    `SS'    plvar      // default poverty line variable (summarize, tip)
+    // `RR'    hcr, pgi   // containers to store HCR and PGI (tip)
 }
 
 void dstat()
@@ -3684,6 +3846,7 @@ void dstat()
     // settings
     D.nose     = st_local("nose")!=""
     D.noIF     = D.nose & (st_local("generate")=="")
+    D.nocw     = st_local("nocasewise")!=""
     D.cmd      = st_local("subcmd")
     D.novalues = st_local("novalues")!=""
     D.vfmt     = st_local("vformat")
@@ -3703,6 +3866,8 @@ void dstat()
     D.sum      = st_local("sum")!=""
     D.abs      = st_local("absolute")!=""
     D.ave      = st_local("average")!=""
+    D.relax    = st_local("relax")!=""
+    D.pstrong  = st_local("pstrong")!=""
     
     // get data
     D.touse = st_varindex(st_local("touse"))
@@ -3726,14 +3891,16 @@ void dstat()
         D.w = 1
         D.W = D.N
     }
+    if (D.nocw & D.uncond) {
+        D.Wj = J(1, D.nvars, .)
+        if (D.noIF==0) D.mvj = J(1, D.nvars, NULL)
+    }
     st_numscalar(st_local("W"), D.W)
     D.zvar  = st_local("zvar")
     D.zvars = tokens(st_local("zvars"))
     if (length(D.zvars)) st_view(D.Z, ., D.zvars, D.touse)
     D.pline  = strtoreal(st_local("pline"))
     D.plvar  = st_local("plvar")
-    D.plvars = tokens(st_local("plvars"))
-    if (length(D.plvars)) st_view(D.PL, ., D.plvars, D.touse)
     
     // over
     D.ovar = st_local("over")
@@ -3743,18 +3910,19 @@ void dstat()
         D.nover    = cols(D.overlevels)
         D.total    = st_local("total")!=""
         D.nover    = D.nover + D.total
-        D.uncond   = (st_local("unconditional")!="") + (st_local("unconditional2")!="")
+        D.uncond   = (st_local("unconditional")!="")
         D.accum    = st_local("over_accumulate")!=""
-        if (st_local("over_contrast")=="") D.contrast = .a
+        if (st_local("over_contrast")=="total")     D.contrast = .a
+        else if (st_local("over_contrast")=="lag")  D.contrast = .b
+        else if (st_local("over_contrast")=="lead") D.contrast = .c
         else D.contrast = strtoreal(st_local("over_contrast"))
         D.ratio    = (st_local("over_ratio")!="") + (st_local("over_ratio")=="lnratio")
     }
     else {
         D.nover    = 1
-        D.total    = 0
+        D.total    = `FALSE'
         D.uncond   = 0
-        D.accum    = 0
-        D.contrast = .a
+        D.accum    = `FALSE'
         D.ratio    = 0
     }
     D._N = D._W = J(1, D.nover, .)
@@ -3762,7 +3930,7 @@ void dstat()
     // balancing settings
     D.bal.method = st_local("bal_method")
     if (D.bal.method!="") {
-        D.bal.zvars = st_local("bal_varlist2")
+        D.bal.zvars   = st_local("bal_varlist2")
         D.bal.ref     = strtoreal(st_local("bal_ref"))
         D.bal.noisily = st_local("bal_noisily")!=""
         D.bal.opts    = st_local("bal_opts")
@@ -3771,9 +3939,9 @@ void dstat()
     }
     
     // density estimation setup
+    D.hasdens = `FALSE' // will be reset to TRUE once density estimation is employed
     if (anyof(("density","quantile","summarize"), D.cmd)) {
         D.S.kernel(st_local("kernel"), strtoreal(st_local("adaptive")))
-        st_local("kernel", D.S.kernel())
         D.S.support(strtoreal((st_local("ll"), st_local("ul"))), 
             st_local("boundary")=="lc" ? "linear" : st_local("boundary"),
             st_local("bwrd")!="")
@@ -3807,22 +3975,26 @@ void dstat()
     else if (D.cmd=="quantile")   dstat_quantile(D)
     else if (D.cmd=="lorenz")     dstat_lorenz(D)
     else if (D.cmd=="share")      dstat_share(D)
+    else if (D.cmd=="tip")        dstat_tip(D)
     else if (D.cmd=="summarize")  dstat_sum(D)
     
     // compute contrasts
-    if (D.contrast<.a) {
+    if (D.contrast!=.) {
         if (D.ratio==2)   dstat_lnratio(D)
         else if (D.ratio) dstat_ratio(D)
         else              dstat_contrast(D)
     }
     // accumulate results across subpopulations
     if (D.accum) dstat_accum(D)
-    
     // return results
-    // - b, id, at, k_eq, k_omit
+    // - b, id, at, k_eq, omit, k_omit
     st_matrix(st_local("b"), D.b')
+    st_matrix(st_local("nobs"), D.nobs')
+    st_matrix(st_local("sumw"), D.sumw')
     st_matrix(st_local("id"), D.id')
-    if (st_local("svy")!="") st_matrix(st_local("istot"), D.istot')
+    st_matrix(st_local("omit"), D.omit')
+    st_local("k_omit", strofreal(sum(D.omit)))
+    st_matrix(st_local("IFtot"), D.IFtot')
     if (D.cmd=="summarize") {
         stats = mm_unique(D.cstripe[,2], 1) // uniq list of statistics
         st_local("stats", invtokens(stats'))
@@ -3839,10 +4011,11 @@ void dstat()
                 else D.cstripe = (J(cols(D.eqs),1,""), D.eqs')
             }
         }
-        if (any(D.omit)) D.cstripe[,2] = "o.":*D.omit + D.cstripe[,2]
+        //st_local("k_omit", strofreal(sum(dstat_put_omit(D.cstripe, D.omit))))
         st_local("k_eq", strofreal(mm_nunique(D.cstripe[,1])))
     }
     else {
+        //st_local("k_omit", strofreal(sum(dstat_put_omit(D.cstripe, D.omit))))
         st_local("k_eq", strofreal(length(D.eqs)))
         st_matrix(st_local("AT"), D.at')
         dstat_cstripe(st_local("AT"), D.cstripe)
@@ -3851,17 +4024,26 @@ void dstat()
         }
     }
     dstat_cstripe(st_local("b"), D.cstripe)
+    dstat_cstripe(st_local("nobs"), D.cstripe)
+    dstat_cstripe(st_local("sumw"), D.cstripe)
     dstat_cstripe(st_local("id"), D.cstripe)
-    st_local("k_omit", strofreal(sum(D.omit)))
-    if (D.contrast<.a) {
+    dstat_cstripe(st_local("omit"), D.cstripe)
+    if (D.contrast!=.) {
         st_matrix(st_local("cref"), D.cref')
         dstat_cstripe(st_local("cref"), D.cstripe)
     }
-    // - bwidth
-    if (length(D.bwidth)) {
-        st_matrix(st_local("BW"), D.bwidth)
-        dstat_cstripe(st_local("BW"), (D.eqs', J(cols(D.eqs),1,"bwidth")))
+    // - density estimation
+    if (D.hasdens) {
+        st_local("hasdens", "1")
+        st_local("kernel", D.S.kernel())
+        dstat_store_eqvec(D, D.bwidth, st_local("BW"))
     }
+    else st_local("hasdens", "0")
+    // // HCR and PIG for dstat tip
+    // if (D.cmd=="tip") {
+    //     dstat_store_eqvec(D, D.hcr, st_local("HCR"))
+    //     dstat_store_eqvec(D, D.pgi, st_local("PGI"))
+    // }
     // - _N and _W
     D.eqs = strofreal(D.overlevels)
     if (D.total | length(D.eqs)==0) D.eqs = D.eqs, "total"
@@ -3879,8 +4061,19 @@ void dstat()
     }
     dstat_recenter_IF(D)
     if (D.nose) return
-    dstat_vce(D, st_local("clustvar"), st_local("vcenocov")!="", 
-        st_local("vcesvy")!="")
+    dstat_vce(D, st_local("clustvar"), st_local("vcenocov")!="")
+}
+
+void dstat_store_eqvec(`Data' D, `RR' vec, `SS' nm)
+{
+    `SM' cs
+    
+    cs = J(D.nover, 1, D.yvars')
+    if (D.ovar=="") cs = (J(rows(cs), 1, ""), cs)
+    else cs = (mm_expand((strofreal(D.overlevels), (D.total ? "total" : 
+               J(1,0,"")))', D.nvars, 1, 1), cs)
+    st_matrix(nm, vec)
+    dstat_cstripe(nm, cs)
 }
 
 void dstat_accum(`Data' D)
@@ -3897,6 +4090,7 @@ void dstat_accum(`Data' D)
         D.b[|a \ b|] = D.b[|a \ b|] + D.b[|a0 \ b0|]
         if (D.noIF==0) {
             D.IF[|1,a \ .,b|] = D.IF[|1,a \ .,b|] + D.IF[|1,a0 \ .,b0|]
+            D.IFtot[|a \ b|] = D.IFtot[|a \ b|] + D.IFtot[|a0 \ b0|]
         }
         a0 = a; b0 = b
     }
@@ -3908,16 +4102,34 @@ void dstat_contrast(`Data' D)
     
     k = D.nover
     l = D.K / k
-    if (D.total) r = selectindex((D.overlevels, .):==D.contrast)
-    else         r = selectindex(D.overlevels:==D.contrast)
-    a0 = (r-1)*l + 1; b0 = r*l
+    if (D.contrast!=.b & D.contrast!=.c)  {
+        if (D.contrast==.a) r = D.nover  // total
+        else                r = selectindex(D.overlevels:==D.contrast)
+        a0 = (r-1)*l + 1; b0 = r*l
+    }
     for (i=1;i<=k;i++) {
-        if (i==r) continue
-        a = (i-1)*l + 1
-        b = i*l
+        if (D.contrast==.b | D.contrast==.c) {
+            if (i==k) break
+            if (D.contrast==.b) { // lag
+                a = (k-i)*l + 1
+                b = a + l - 1
+                a0 = a - l; b0 = a - 1
+            }
+            else { // lead
+                a = (i-1)*l + 1
+                b = a + l - 1
+                a0 = b + 1; b0 = b + l
+            }
+        }
+        else {
+            if (i==r) continue
+            a = (i-1)*l + 1
+            b = a + l - 1
+        }
         D.b[|a \ b|] = D.b[|a \ b|] - D.b[|a0 \ b0|]
         if (D.noIF==0) {
             D.IF[|1,a \ .,b|] = D.IF[|1,a \ .,b|] - D.IF[|1,a0 \ .,b0|]
+            D.IFtot[|a \ b|] = D.IFtot[|a \ b|] - D.IFtot[|a0 \ b0|]
         }
     }
     D.cref = J(D.K, 1, 0)
@@ -3928,27 +4140,71 @@ void dstat_ratio(`Data' D)
 {
     `Bool' hasmis
     `Int'  i, j, k, l, r, a, a0, b, b0
-    
+    `RC'   B0, B1, IFtot
+    `RM'   IF0, IF1
+
     hasmis = 0
     k = D.nover
     l = D.K / k
-    if (D.total) r = selectindex((D.overlevels, .):==D.contrast)
-    else         r = selectindex(D.overlevels:==D.contrast)
-    a0 = (r-1)*l + 1; b0 = r*l
-    for (i=1;i<=k;i++) {
-        if (i==r) continue
-        a = (i-1)*l + 1
-        b = i*l
+    if (D.contrast!=.b & D.contrast!=.c)  {
+        if (D.contrast==.a) r = D.nover  // total
+        else                r = selectindex(D.overlevels:==D.contrast)
+        a0 = (r-1)*l + 1; b0 = r*l
+        a0 = (r-1)*l + 1; b0 = r*l
+        B0 = D.b[|a0 \ b0|]
         if (D.noIF==0) {
-            D.IF[|1,a \ .,b|] = (1:/D.b[|a0 \ b0|])' :* D.IF[|1,a \ .,b|] ///
-                - (D.b[|a \ b|]:/(D.b[|a0 \ b0|]:^2))' :* D.IF[|1,a0 \ .,b0|]
+            IF0 = D.IF[|1,a0 \ .,b0|]
+            IFtot = D.IFtot[|a0 \ b0|]
+            if (any(IFtot)) { // recenter IFs of unnormalized stats at zero
+                IF0 = IF0 :- (IFtot'/D.W)
+            }
         }
-        D.b[|a \ b|] = D.b[|a \ b|] :/ D.b[|a0 \ b0|]
+    }
+    // take ratios
+    for (i=1;i<=k;i++) {
+        if (D.contrast==.b | D.contrast==.c) {
+            if (i==k) break
+            if (D.contrast==.b) { // lag
+                a = (k-i)*l + 1
+                b = a + l - 1
+                a0 = a - l; b0 = a - 1
+            }
+            else { // lead
+                a = (i-1)*l + 1
+                b = a + l - 1
+                a0 = b + 1; b0 = b + l
+            }
+            B0 = D.b[|a0 \ b0|]
+            if (D.noIF==0) {
+                IF0 = D.IF[|1,a0 \ .,b0|]
+                IFtot = D.IFtot[|a0 \ b0|]
+                if (any(IFtot)) { // recenter IFs of unnormalized stats at zero
+                    IF0 = IF0 :- (IFtot'/D.W)
+                }
+            }
+        }
+        else {
+            if (i==r) continue
+            a = (i-1)*l + 1
+            b = a + l - 1
+        }
+        B1 = D.b[|a \ b|]
+        if (D.noIF==0) {
+            IF1 = D.IF[|1,a \ .,b|]
+            IFtot = D.IFtot[|a \ b|]
+            if (any(IFtot)) { // recenter IFs of unnormalized stats at zero
+                IF1 = IF1 :- (IFtot'/D.W)
+                D.IFtot[|a \ b|] = J(b-a+1,1,0)
+            }
+            D.IF[|1,a \ .,b|] = (1:/B0)' :* IF1 - (B1:/(B0:^2))' :* IF0
+        }
+        D.b[|a \ b|] = B1 :/ B0
         if (hasmissing(D.b[|a \ b|])) {
             hasmis = 1
             for (j=a;j<=b;j++) {
                 if (D.b[j]<.) continue
                 D.b[j] = 0
+                D.omit[j] = 1
                 if (D.noIF==0) D.IF[.,j] = J(D.N, 1, 0)
             }
         }
@@ -3962,78 +4218,69 @@ void dstat_ratio(`Data' D)
 
 void dstat_lnratio(`Data' D)
 {
+    `Bool' shift
     `Int'  j
     
-    if (D.noIF==0) D.IF = (1:/D.b)' :* D.IF
+    shift = `FALSE'
+    if (D.noIF==0) {
+        if (any(D.IFtot)) {
+            // recenter IFs of unnormalized statistics at zero
+            shift = `TRUE'
+            D.IF = D.IF :- (D.IFtot'/D.W)
+            D.IFtot = J(D.K, 1, 0)
+        }
+        D.IF = (1:/D.b)' :* D.IF
+    }
     D.b = ln(D.b)
     dstat_contrast(D)
+    if (shift) {
+        // adjust IFs of unnormalized statistics in reference group
+        for (j=1;j<=D.K;j++) {
+            if (D.cref[j]==0) continue
+            D.IFtot[j] = 1
+            D.IF[,j] = D.IF[,j] :+ (1/D.W)
+        }
+    }
     if (hasmissing(D.b)) {
         for (j=1;j<=D.K;j++) {
             if (D.b[j]<.) continue
             D.b[j] = 0
+            D.omit[j] = 1
             if (D.noIF==0) D.IF[.,j] = J(D.N, 1, 0)
         }
         display("{txt}(missing estimates reset to zero)")
     }
 }
 
-void dstat_vce(`Data' D, `SS' clust, `Bool' seonly, `Bool' svy)
-{   // svy assumed fleeting
-    `Bool' undo
+void dstat_vce(`Data' D, `SS' clust, `Bool' seonly)
+{
+    `Bool' dev
     `RS'   df_r, c, N_clust
     `RR'   m
     `RM'   V
     
-    // transform IFs due to svy option (if needed)
-    undo = 0
-    if (svy) {
-        if (allof(D.istot, 0)) svy = 0
-    }
-    if (svy) {
-        _dstat_vce_score(D, 0)
-        m = (D.b :* D.istot)'
-        // check whether transformation must be undone at end: no need if 
-        // generate()/rif() not specified or if generate(..., svy) specified
-        if (st_local("generate")!="") {
-            if (st_local("svy")=="") undo = 1
-            else st_local("svy", "done")
-        }
-    }
+    m = D.IFtot'
+    dev = any(m) // use crossdev() if there are any score-type IFs
     // no clusters
     if (clust=="") {
         if (D.wtype==0) { // no weights
-            if (svy) {
-                if (seonly) V = _dstat_vce_cross(1, D.IF, m/D.N)
-                else        V = _dstat_vce_cdev(D.IF, m/D.N)
-            }
-            else {
-                if (seonly) V = _dstat_vce_cross(1, D.IF)
-                else        V = cross(D.IF, D.IF)
-            }
+            if (seonly)   V = _dstat_vce_cross(1, D.IF, m/D.N)
+            else if (dev) V = _dstat_vce_cdev(D.IF, m/D.N)
+            else          V = cross(D.IF, D.IF)
             df_r = D.N - 1
             c = (df_r>0 & df_r<. ? D.N/df_r : 0)
         }
         else if (D.wtype==3) { // pw
-            if (svy) {
-                if (seonly) V = _dstat_vce_cross2(D.w, D.IF, m/D.N)
-                else        V = _dstat_vce_cdev(D.w:*D.IF, m/D.N)
-            }
-            else {
-                if (seonly) V = _dstat_vce_cross(D.w:^2, D.IF)
-                else        V = cross(D.IF, D.w:^2, D.IF)
-            }
+            if (seonly)   V = _dstat_vce_cross2(D.w, D.IF, m/D.N)
+            else if (dev) V = _dstat_vce_cdev(D.w:*D.IF, m/D.N)
+            else          V = cross(D.IF, D.w:^2, D.IF)
             df_r = D.N - 1
             c = (df_r>0 & df_r<. ? D.N/df_r : 0)
         }
         else { // iw or fw
-            if (svy) {
-                if (seonly) V = _dstat_vce_cross(D.w, D.IF, m/D.W)
-                else        V = _dstat_vce_cdev(D.IF, m/D.W, D.w)
-            }
-            else {
-                if (seonly) V = _dstat_vce_cross(D.w, D.IF)
-                else        V = cross(D.IF, D.w, D.IF)
-            }
+            if (seonly)   V = _dstat_vce_cross(D.w, D.IF, m/D.W)
+            else if (dev) V = _dstat_vce_cdev(D.IF, m/D.W, D.w)
+            else          V = cross(D.IF, D.w, D.IF)
             df_r = D.W - 1
             c = (df_r>0 & df_r<. ? D.W/df_r : 0)
         }
@@ -4044,21 +4291,14 @@ void dstat_vce(`Data' D, `SS' clust, `Bool' seonly, `Bool' svy)
         V = _dstat_vce_csum(D.IF, D.w, (st_isstrvar(clust) ? 
             st_sdata(., clust, D.touse) : st_data(., clust, D.touse)))
         N_clust = rows(V)
-        if (svy) {
-            if (seonly) V = _dstat_vce_cross(1, V, m/N_clust)
-            else        V = _dstat_vce_cdev(V, m/N_clust)
-        }
-        else {
-            if (seonly) V = _dstat_vce_cross(1, V)
-            else        V = cross(V, V)
-        }
+        if (seonly)   V = _dstat_vce_cross(1, V, m/N_clust)
+        else if (dev) V = _dstat_vce_cdev(V, m/N_clust)
+        else          V = cross(V, V)
         df_r = N_clust - 1
         V = V * (df_r>0 & df_r<. ? N_clust/df_r : 0)
         st_local("N_clust", st_tempname())
         st_numscalar(st_local("N_clust"), N_clust)
     }
-    // undo transform IFs due to svy option
-    if (undo) _dstat_vce_score(D, 1)
     // return results
     st_local("df_r", st_tempname())
     st_numscalar(st_local("df_r"), df_r)
@@ -4068,38 +4308,11 @@ void dstat_vce(`Data' D, `SS' clust, `Bool' seonly, `Bool' svy)
         dstat_cstripe(st_local("SE"), D.cstripe)
     }
     else {
+        _makesymmetric(V)
         st_local("V", st_tempname())
         st_matrix(st_local("V"), V)
         dstat_cstripe(st_local("V"), D.cstripe)
         dstat_rstripe(st_local("V"), D.cstripe)
-    }
-}
-
-void _dstat_vce_score(`Data' D, `Bool' undo)
-{
-    `Int'  i, id, id0, j
-    `IntC' p
-    `RC'   b
-    
-    if (undo) b = -D.b
-    else      b =  D.b
-    i   = cols(D.IF)
-    id0 = .a // D.id cannot be .a
-    j   = cols(D._W) + 1
-    for (;i;i--) {
-        id = D.id[i]
-        if (id!=id0) {
-            j--
-            p = J(0,1,.) // reset group index
-            id0 = id
-        }
-        if (!D.istot[i]) continue
-        if (id==.) {
-            D.IF[,i] = D.IF[,i] :+ b[i]/D.W
-            continue
-        }
-        if (rows(p)==0) p = selectindex(D.over:==id)
-        D.IF[p,i] = D.IF[p,i] :+ b[i]/D._W[j]
     }
 }
 
@@ -4173,6 +4386,8 @@ void _dstat_vce_score(`Data' D, `Bool' undo)
 
 void dstat_get_at(`Data' D)
 {
+    `RR' r
+    
     D.AT = NULL
     if      (D.cmd=="summarize")    _dstat_get_stats(D)
     else if (st_local("atmat")!="") _dstat_get_atmat(D, st_local("at"))
@@ -4181,22 +4396,30 @@ void dstat_get_at(`Data' D)
     else if (D.cmd=="histogram")    _dstat_get_at_hist(D, st_local("n"))
     else if (D.cmd=="density") {
         D.n = strtoreal(st_local("n"))
-        if (D.common) _dstat_get_at_dens(D)
+        r   = strtoreal(tokens(st_local("range")))
+        if (length(r)) D.AT = &(rangen(r[1], r[2], D.n))
+        else if (D.common) _dstat_get_at_dens(D)
     }
     else if (D.cmd=="cdf" | D.cmd=="ccdf") {
         if (D.discr) _dstat_get_levels(D)
         else {
             D.n = strtoreal(st_local("n"))
-            if (D.common) _dstat_get_at_cdf(D)
+            r   = strtoreal(tokens(st_local("range")))
+            if (length(r)) D.AT = &(rangen(r[1], r[2], D.n))
+            else if (D.common) _dstat_get_at_cdf(D)
         }
     }
     else if (D.cmd=="quantile") {
-        D.n  = strtoreal(st_local("n"))
-        D.AT = &((1::D.n) / (D.n+1))
+        D.n = strtoreal(st_local("n"))
+        r   = strtoreal(tokens(st_local("range")))
+        if (!length(r)) r = (0,1)
+        D.AT = &(rangen(r[1]+(r[2]-r[1])/(D.n+1), r[2]-(r[2]-r[1])/(D.n+1), D.n))
     }
-    else if (D.cmd=="lorenz") {
-        D.n  = strtoreal(st_local("n"))
-        D.AT = &((0::D.n-1) / (D.n-1))
+    else if (D.cmd=="lorenz" | D.cmd=="tip") {
+        D.n = strtoreal(st_local("n"))
+        r   = strtoreal(tokens(st_local("range")))
+        if (!length(r)) r = (0,1)
+        D.AT = &(rangen(r[1], r[2], D.n))
     }
     else if (D.cmd=="share") {
         D.n  = strtoreal(st_local("n"))
@@ -4210,18 +4433,23 @@ void _dstat_get_atmat(`Data' D, `SS' matnm)
 {   // splits vector by equations
     `Int'  i
     `RR'   M
-    `SR'   eqs
+    `SR'   eqs, coefs
     `IntR' from, to
-
+    
     M = st_matrix(matnm)[1,.]
     if (D.cat) { // proportion
         assert(M==trunc(M)) // integer
         assert(all(M:>=0))  // positive
     }
-    else if (anyof(("quantile", "lorenz", "share"), D.cmd)) {
+    else if (anyof(("quantile", "lorenz", "share", "tip"), D.cmd)) {
         assert(all(M:>=0 :& M:<=1))  // within [0,1]
     }
-    eqs  = st_matrixcolstripe(matnm)[.,1]'
+    eqs = st_matrixcolstripe(matnm)[.,1]'
+    if (D.cmd=="proportion" & D.cat & !D.novalues) {
+        // group:#.variable => group~variable:#
+        coefs = st_matrixcolstripe(matnm)[.,2]'
+        eqs = eqs :+ "~" :+  substr(coefs, strrpos(coefs, "."):+1, .)
+    }
     from = selectindex(_mm_unique_tag(eqs, 0))
     to   = selectindex(_mm_unique_tag(eqs, 1))
     i    = length(from)
@@ -4258,7 +4486,14 @@ void _dstat_get_levels(`Data' D)
 
     D.AT = J(1, D.nvars, NULL)
     for (j=1;j<=D.nvars;j++) {
-        D.AT[j] = &(mm_unique(D.Y[,j])) 
+        if (D.nocw) {
+            D.AT[j] = &(mm_unique(select(D.Y[,j], D.Y[,j]:<.)))
+            if (length(*D.AT[j])==0) { // no observations
+                if (D.cmd=="proportion") D.AT[j] = &0
+                else                     D.AT[j] = &.z
+            }
+        }
+        else D.AT[j] = &(mm_unique(D.Y[,j])) 
         //D.AT[j] = &(__dstat_get_levels(D.Y[,j]))
         if (!D.cat) continue
         if (any(*D.AT[j]:<0)) {
@@ -4294,6 +4529,7 @@ void _dstat_get_at_dens(`Data' D)
     `Int' j
     `RS'  tau
     `RR'  bw, range, minmax
+    `RC'  Y
     
     // if lb() and ub() specified: no bandwidth required
     if (D.S.lb()<. & D.S.ub()<.) {
@@ -4313,14 +4549,22 @@ void _dstat_get_at_dens(`Data' D)
     // determine grid for each variable
     D.AT = J(1, D.nvars, NULL)
     for (j=1;j<=D.nvars;j++) {
+        if (D.nocw) {
+            Y = select(D.Y[,j], D.Y[,j]:<.)
+            if (length(Y)==0) { // no observations
+                D.AT[j] = &(J(D.n, 1, .z))
+                continue
+            }
+        }
+        else Y = D.Y[,j]
         if (bw[j]>=.) {
-            D.S.data(D.Y[,j], D.w, D.wtype>=2, 0)
+            D.S.data(Y, D.w, D.wtype>=2, 0)
             bw[j] = D.S.h()
             if (bw[j]>=.) bw[j] = epsilon(1)
         }
         // mimic grid definition from mm_density()
         range = (D.S.lb(), D.S.ub())
-        minmax = minmax(D.Y[,j])
+        minmax = minmax(Y)
         tau = mm_diff(minmax) * D.S.pad()
         tau = min((tau, bw[j] * (D.S.kernel()=="epanechnikov" ? sqrt(5) : 
             (D.S.kernel()=="cosine" ? .5 : (D.S.kernel()=="gaussian" ? 3 : 1)))))
@@ -4338,7 +4582,10 @@ void _dstat_get_at_cdf(`Data' D)
     `Int' j
 
     D.AT = J(1, D.nvars, NULL)
-    for (j=1;j<=D.nvars;j++) D.AT[j] = &(dstat_cdf_AT(D.Y[,j], D.n))
+    for (j=1;j<=D.nvars;j++) {
+        if (D.nocw) D.AT[j] = &(dstat_cdf_AT(select(D.Y[,j], D.Y[,j]:<.), D.n))
+        else        D.AT[j] = &(dstat_cdf_AT(D.Y[,j], D.n))
+    }
 }
 
 void _dstat_get_at_hist(`Data' D, `SS' rule)
@@ -4362,10 +4609,15 @@ void _dstat_get_at_hist(`Data' D, `SS' rule)
     G.k = 0
     for (; i<=I; i++) {
         _dstat_init_grp(D, G, i)
-        if (D.wtype==1) N = G.W
-        else            N = G.N
         for (j=1; j<=D.nvars; j++) {
             dstat_init_Y(D, G, j)
+            if (G.N==0) { // no observations
+                if (D.n<.) D.AT[G.k] = &(J(D.n,1,.z))
+                else       D.AT[G.k] = &(J(2,1,.z))
+                continue
+            }
+            if (D.wtype==1) N = G.W
+            else            N = G.N
             minmax = minmax(G.Y)
             if (D.n>=.) {
                 if (rule=="sqrt") {
@@ -4384,7 +4636,7 @@ void _dstat_get_at_hist(`Data' D, `SS' rule)
                         sqrt(6 * (N-2) / ((N+1) * (N+3))))/ln(2))
                 }
                 else if (rule=="scott") {
-                    h = 3.5 * sqrt(_dstat_variance(D, G, G.Y)) / N^(1/3)
+                    h = 3.5 * sqrt(_dstat_variance(G.Y, G.w, N)) / N^(1/3)
                     n = ceil(mm_diff(minmax)/h) - 1
                 }
                 else if (rule=="fd") {
@@ -4420,10 +4672,9 @@ void dstat_set_K(`Data' D)
         }
     }
     // initialize containers
-    D.b = D.id = J(D.K, 1, .)
+    D.b = D.id = D.nobs = D.sumw = J(D.K, 1, .)
     D.omit = J(D.K, 1, 0)
-    if (D.freq | D.sum) D.istot = J(D.K, 1, 1)
-    else                D.istot = J(D.K, 1, 0)
+    D.IFtot = J(D.K, 1, 0)
     if (D.cmd!="summarize") {
         if (D.cmd=="histogram" | D.cmd=="share") D.at = J(D.K, 3, .)
         else                                     D.at = J(D.K, 1, .)
@@ -4442,28 +4693,44 @@ void dstat_init_IF(`Data' D)
     st_local("IFs", invtokens(vnm))
 }
 
-void dstat_set_IF(`Data' D, `Grp' G, `Int' k, `RC' h, | `RS' h0)
+void dstat_set_IF(`Data' D, `Grp' G, `Int' k, `RC' h, | `RS' h0, `RS' offset)
 {
-    if (args()<5) h0 = 0
-    D.IF[,k] = _dstat_set_IF(D, G, h, h0)
+    D.IF[,k] = _dstat_set_IF(D, G, h, h0, (D.IFtot[k] ? offset : 0))
 }
 
-`RC' _dstat_set_IF(`Data' D, `Grp' G, `RC' h, `RS' h0)
+`RC' _dstat_set_IF(`Data' D, `Grp' G, `RC' h, `RS' h0, `RS' offset)
 {
-    `RR' delta
-    `RC' IF
+    `RR'   delta
+    `RC'   IF
     
-    IF = J(D.N, 1, h0)
+    if (D.uncond) {
+        // h0 is the value of the IF for observations outside the current
+        // subpop (the IF is initialized with h0 for all observations, but will
+        // be replaced later on for observations within the current subpop)
+        IF = J(D.N, 1, h0)
+        if (D.nocw) {
+            // IF must be set to zero for missing observations
+            if (length(dstat_mvj(D, G))) {
+                IF[dstat_mvj(D, G)] = IF[dstat_mvj(D, G)] :* 0
+            }
+        }
+    }
+    else IF = J(D.N, 1, 0)
     if (cols(G.Z)) { // has balancing
-        // (assuming that G.p and G.p1 are distinct)
-        delta = quadcolsum(G.wc :* h :* G.Z)'
-        IF[G.p ] = G.wb :* h + G.IFZ  * delta
-        if (h0) IF[G.p1] =  IF[G.p1] + G.IFZ1 * delta
-        else    IF[G.p1] =             G.IFZ1 * delta
+        if (rows(G.pp)) {
+            // Y has missings
+            delta = quadcolsum(G.wc :* h :* G.Z[G.pp,])'
+            IF[G.p] = G.wb :* h
+            IF[G.G0.p] = IF[G.G0.p] + G.IFZ * delta
+        }
+        else {
+            delta = quadcolsum(G.wc :* h :* G.Z)'
+            IF[G.p] = G.wb :* h + G.IFZ  * delta
+        }
+        IF[G.p1] = IF[G.p1] + G.IFZ1 * delta
     }
-    else {
-        IF[G.p] = h
-    }
+    else        IF[G.p] = h
+    if (offset) IF[G.p] = IF[G.p] :+ offset
     return(IF)
 }
 
@@ -4474,7 +4741,7 @@ void dstat_recenter_IF(`Data' D)
     
     tol  = 1e-6     // issue warning if relative error is larger than 1e-6
     tol0 = 1e-14    // recenter IFs if relative error is larger than 1e-14
-    m   = quadcross(D.w, D.IF)
+    m   = quadcross(D.w, D.IF) - D.IFtot'
     mrd = mreldif(m+D.b', D.b')
     if (mrd>tol) {
         display("{err}warning: total of influence function(s) deviates from zero")
@@ -4510,8 +4777,8 @@ void dstat_init_grp(`Data' D, `Grp' G, `Int' i)
 {
     // group data
     _dstat_init_grp(D, G, i)
-    D._W[i] = G.W
     D._N[i] = G.N
+    D._W[i] = G.W
     // balancing
     if (D.bal.method=="") return
     G.Z = J(0,0,.) // reset
@@ -4524,10 +4791,16 @@ void dstat_init_grp(`Data' D, `Grp' G, `Int' i)
     else exit(499) // cannot be reached
     dstat_balance_rescale(D, G) // update weights
     if (length(D.bal.wvar)) D.bal.wvar[G.p] = G.w
+    if (D.nocw | D.relax) {
+        G.G0.w  = G.w
+        G.G0.wb = G.wb
+        G.G0.wc = G.wc
+    }
 }
 
 void _dstat_init_grp(`Data' D, `Grp' G, `Int' i)
 {
+    G.reset = 0
     if (i>cols(D.overlevels)) { // total
         G.id = G.p = .
         G.N  = D.N
@@ -4538,21 +4811,104 @@ void _dstat_init_grp(`Data' D, `Grp' G, `Int' i)
         G.id = D.overlevels[i]
         G.p  = selectindex(D.over:==G.id)
         G.N  = rows(G.p)
-        if (D.w==1) {; G.w = 1;        G.W = G.N;          }
-        else        {; G.w = D.w[G.p]; G.W = quadsum(G.w); }
+        if (rows(D.w)==1) {; G.w = D.w;      G.W = D.w*G.N;      }
+        else              {; G.w = D.w[G.p]; G.W = quadsum(G.w); }
+    }
+    if (D.nocw | D.relax) {
+        G.G0.p = G.p
+        G.G0.N = G.N
+        G.G0.w = G.w
+        G.G0.W = G.W
     }
 }
 
-void dstat_init_Y(`Data' D, `Grp' G, `Int' j)
+void dstat_init_Y(`Data' D, `Grp' G, `Int' j, | `Int' zj)
 {
+    `Bool' hasmis
+    `RC'   y, z, touse
+    
     G.j = j
     G.k = G.k + 1
-    G.Y = D.Y[G.p, j]                // or use a view?
+    if (D.nocw) {
+        y = D.Y[G.G0.p,G.j]
+        hasmis = hasmissing(y)
+        if (zj<.) {
+            z = D.Z[G.G0.p,zj]
+            hasmis = hasmis + hasmissing(z)
+        }
+        if (hasmis) {
+            if (zj<.) touse = (y:<. :& z:<.)
+            else      touse = (y:<.)
+        }
+    }
+    else hasmis = 0
+    _dstat_init_Y(D, G, D.nocw | G.reset, hasmis, touse)
+    G.reset = 0
+    D.S.data(J(0,1,.)) // clear density object
+}
+
+void _dstat_init_Y(`Data' D, `Grp' G, `Bool' reset, `Bool' hasmis, `BoolC' touse)
+{
+    if (reset) __dstat_init_Y(D, G, hasmis, touse) // update index and weights
+    G.Y = D.Y[G.p, G.j]
     G.Ys = G.Zs = G.ws = G.Yc = G.Wc = J(0,1,.)
     G.z = .
     G.Nc = 0
     G.m  = .
-    D.S.data(J(0,1,.)) // clear density object
+}
+
+void __dstat_init_Y(`Data' D, `Grp' G, `Bool' hasmis, `BoolC' touse)
+{
+    `RS' c
+    
+    if (hasmis) {
+        G.pp = selectindex(touse)
+        if (G.G0.p==.) G.p = G.pp
+        else           G.p = G.G0.p[G.pp]
+        G.N = rows(G.p)
+        if (rows(D.w)==1)    G.W = D.w*G.N
+        else                 G.W = quadsum(D.w[G.p]) // raw sum of weights
+        if (rows(G.G0.w)==1) G.w = G.G0.w
+        else                 G.w = G.G0.w[G.pp]
+        if (cols(G.Z)==0) return // exit if no balancing
+        // renormalize weights; alternative would be to set c = 1 and
+        // G.W = quadsum(G.w); SEs would be the same, but normalizing to the
+        // raw sum of weights within the subsample is used here so that
+        // overall W of nonmissing Y across subpops is not affected by
+        // the balancing
+        c = G.W / quadsum(G.w)
+        G.w = G.w * c
+        G.wb = G.G0.wb[G.pp] * c
+        if (D.noIF==0) G.wc = G.G0.wc[G.pp] * c
+        return
+    }
+    // no missings (full sample)
+    G.pp = J(0,1,.)
+    G.p = G.G0.p; G.N = G.G0.N; G.w = G.G0.w; G.W = G.G0.W
+    G.wb = G.G0.wb; G.wc = G.G0.wc
+}
+
+void dstat_reset_Y(`Data' D, `Grp' G)
+{
+    `Bool' hasmis
+    `RC'   y, touse
+    
+    if (G.reset==0) return
+    if (D.nocw) {
+        y = D.Y[G.G0.p,G.j]
+        hasmis = hasmissing(y)
+        if (hasmis) touse = (y:<.)
+    }
+    else hasmis = 0
+    _dstat_init_Y(D, G, 1, hasmis, touse)
+    G.reset = 0
+}
+
+void dstat_update_Y(`Data' D, `Grp' G, `RC' y)
+{
+    if (rows(G.pp)==0) _dstat_init_Y(D, G, 1, 1, y:<.)
+    else _dstat_init_Y(D, G, 1, 1, dstat_invp(G.G0.N, G.pp, (y:<.)))
+    G.reset = 1
 }
 
 void dstat_init_Ys(`Data' D, `Grp' G, | `Int' z)
@@ -4688,6 +5044,17 @@ void dstat_init_EY(`Data' D, `Grp' G)
     return(G.m)
 }
 
+void dstat_noobs(`Data' D, `Int' a, `Int' b)
+{
+    `Int' n
+    
+    n = b - a + 1
+    D.b[|a \ b|] = J(n, 1, 0)
+    D.omit[|a \ b|] = J(n, 1, 1)
+    if (D.noIF) return
+    D.IF[|1,a \ .,b|] = J(D.N, n, 0)
+}
+
 void dstat_set_density(`Data' D, `Grp' G)
 {
     if (rows(D.S.X())) return // dstat_set_density() already applied
@@ -4697,6 +5064,60 @@ void dstat_set_density(`Data' D, `Grp' G)
     if (D.S.h()>=.)      D.S.bw(epsilon(1))  // missing bandwidth
     D.bwidth[G.k] = D.S.h()
 }
+
+void dstat_set_nobs_sumw(`Data' D, `Grp' G, `Int' a, | `Int' b)
+{
+    if (args()<4) {
+        D.nobs[a] = G.N
+        D.sumw[a] = G.W
+        return
+    }
+    D.nobs[|a \ b|] = J(b-a+1, 1, G.N)
+    D.sumw[|a \ b|] = J(b-a+1, 1, G.W)
+}
+
+`RS' dstat_Wj(`Data' D, `Grp' G)
+{
+    if (D.nocw==0) return(D.W)
+    if (D.Wj[G.j]<.) return(D.Wj[G.j]) // already computed
+    if (D.wtype) D.Wj[G.j] = quadsum(select(D.w, D.Y[,G.j]:<.))
+    else         D.Wj[G.j] = sum(D.Y[,G.j]:<.)
+    return(D.Wj[G.j])
+}
+
+`RC' dstat_mvj(`Data' D, `Grp' G)
+{
+    if (D.mvj[G.j]==NULL) {
+        D.mvj[G.j] = &selectindex(D.Y[,G.j]:>=.)
+    }
+    return(*D.mvj[G.j])
+}
+
+/*
+`RC' dstat_put_omit(`SM' cstripe, `RV' omit)
+{   // adds omitted flags to cstripe and returns number of omitted terms
+    `Int' i, k_omit
+
+    k_omit = sum(omit)
+    if (k_omit) {
+        i = length(omit)
+        for (; i; i--) {
+            if (omit[i]) cstripe[i,2] = _dstat_put_omit(cstripe[i,2])
+        }
+    }
+    return(k_omit)
+}
+
+`SS' _dstat_put_omit(`SS' s)
+{
+    `SS' ospec
+    
+    stata("_ms_put_omit " + s)
+    ospec = st_global("s(ospec)")
+    if (ospec=="") ospec = s // _ms_put_omit failed
+    return(ospec)
+}
+*/
 
 // --------------------------------------------------------------------------
 // balancing
@@ -4902,48 +5323,59 @@ void dstat_density(`Data' D)
     `RC'   AT
     `Grp'  G
     
+    D.hasdens = `TRUE'
     G.k = b = 0
     for (i=1; i<=D.nover; i++) {
         dstat_init_grp(D, G, i)
         for (j=1; j<=D.nvars; j++) {
             dstat_init_Y(D, G, j)
-            dstat_set_density(D, G)
+            if (G.N) dstat_set_density(D, G)
             a = b + 1
             if (D.AT[G.k]==NULL) {
                 b = a + D.n - 1
-                D.b[|a \ b|] = D.S.d(D.n, ., ., D.exact)
+                if (G.N) {
+                    D.b[|a \ b|] = D.S.d(D.n, ., ., D.exact)
+                    AT = D.S.at()
+                }
+                else {
+                    if (D.S.lb()<. & D.S.ub()<.) {
+                        AT = rangen(D.S.lb(), D.S.ub(), D.n)
+                    }
+                    else AT = J(D.n, 1, .z)
+                }
             }
             else {
                 AT = *D.AT[G.k]
                 b = a + rows(AT) - 1
-                D.b[|a \ b|] = D.S.d(AT, D.exact)
+                if (G.N) D.b[|a \ b|] = D.S.d(AT, D.exact)
             }
-            if (D.uncond) D.b[|a \ b|] = D.b[|a \ b|] * (G.W/D.W)
-            D.at[|a \ b|] = D.S.at()
-            // compute IFS
-            if (D.noIF==0) dstat_density_IF(D, G, a)
-            // labels
+            D.at[|a \ b|] = AT
+            dstat_set_nobs_sumw(D, G, a, b)
             dstat_set_cstripe(D, G, i, j, a, b, (D.novalues ? 
-                "d":+strofreal(1::b-a+1) : strofreal(D.S.at(), D.vfmt)))
+                "d":+strofreal(1::b-a+1) : strofreal(AT, D.vfmt)))
+            if (G.N==0) dstat_noobs(D, a, b)
+            else {
+                if (D.uncond) D.b[|a \ b|] = D.b[|a \ b|] * (G.W/dstat_Wj(D, G))
+                if (D.noIF==0) dstat_density_IF(D, G, a, b)
+            }
         }
     }
 }
 
-void dstat_density_IF(`Data' D, `Grp' G, `Int' a)
+void dstat_density_IF(`Data' D, `Grp' G, `Int' a, `Int' b)
 {
     `Int' i
-    `RS'  W, b, f
-    `RC'  at, h, z
+    `RS'  W, B
+    `RC'  h, z
     
-    W  = (D.uncond ? D.W : G.W)
-    f  = (D.uncond==2 ? W/G.W : 1)
-    at = D.S.at()
+    W  = (D.uncond ? dstat_Wj(D, G) : G.W)
+    if (D.freq) D.IFtot[|a \ b|] = D.b[|a \ b|]
     h  = D.S.h() * D.S.l()
-    for (i=rows(at); i; i--) {
-        z = D.S.K(D.S.X(), at[i], h)
-        if (D.exact)     b = D.b[a+i-1] * f
-        else             b = quadcross(G.w, z) / W * f
-        dstat_set_IF(D, G, a+i-1, (z :- b)/W, (D.uncond==1 ? -b/W : 0))
+    for (i=a; i<=b; i++) {
+        z = D.S.K(D.S.X(), D.at[i], h)
+        if (D.exact) B = D.b[i]
+        else         B = quadcross(G.w, z) / W
+        dstat_set_IF(D, G, i, (z :- B)/W, -B/W, D.b[i]/W)
     }
 }
 
@@ -4967,12 +5399,19 @@ void dstat_hist(`Data' D)
             h = mm_diff(AT) // bin width
             a = b + 1
             b = a + rows(AT) - 1
+            D.at[|a,1 \ b,.|] = AT, AT + (h/2 \ .), (h \ .)
+            dstat_set_nobs_sumw(D, G, a, b)
+            dstat_set_cstripe(D, G, i, j, a, b, (D.novalues ? 
+                "h":+strofreal(1::b-a)\"_ul" : strofreal(AT, D.vfmt)))
+            if (G.N==0) {
+                dstat_noobs(D, a, b)
+                continue
+            }
             B = mm_diff(mm_relrank(G.Y, G.w, AT, 0, 1))
             min = min(G.Y)
             if (min==AT[1]) {
-                // make first bin left-inclusive
-                if (D.wtype) B[1] = B[1] + quadsum(select(G.w, (G.Y:==AT[1])))
-                else         B[1] = B[1] + sum(G.Y:==AT[1])
+                if (G.w!=1) B[1] = B[1] + quadsum(select(G.w, (G.Y:==AT[1])))
+                else        B[1] = B[1] + sum(G.Y:==AT[1])
             }
             if (!D.freq) {
                 if      (D.prop) c = 1 / G.W
@@ -4982,15 +5421,10 @@ void dstat_hist(`Data' D)
                     _editmissing(c, 0) // zero width bins
                 }
                 B = B :* c
-                if (D.uncond) B = B * (G.W/D.W)
+                if (D.uncond) B = B * (G.W/dstat_Wj(D, G))
             }
             D.b[|a \ b|] = B \ B[rows(B)]
-            D.at[|a,1 \ b,.|] = AT, AT + (h/2 \ .), (h \ .)
-            // compute IFS
             if (D.noIF==0) dstat_hist_IF(D, G, a, b, min)
-            // labels
-            dstat_set_cstripe(D, G, i, j, a, b, (D.novalues ? 
-                "h":+strofreal(1::b-a)\"_ul" : strofreal(AT, D.vfmt)))
         }
     }
 }
@@ -4998,11 +5432,11 @@ void dstat_hist(`Data' D)
 void dstat_hist_IF(`Data' D, `Grp' G, `Int' a, `Int' b, `RS' min)
 {
     `Int' i
-    `RS'  W, c, f
+    `RS'  W, c
     `RC'  z
     
-    W = (D.uncond    ? D.W   : G.W)
-    f = (D.uncond==2 ? W/G.W : 1)
+    W = (D.uncond ? dstat_Wj(D, G) : G.W)
+    if (D.freq) D.IFtot[|a \ b-1|] = D.b[|a \ b-1|]
     for (i=a; i<=b; i++) {  // assuming b-a >= 1
         if (i==b) {
             D.IF[,i] = J(D.N, 1, 0)
@@ -5013,15 +5447,15 @@ void dstat_hist_IF(`Data' D, `Grp' G, `Int' a, `Int' b, `RS' min)
             else  z = (G.Y:>D.at[i,1] :& G.Y:<=D.at[i+1,1])
         }
         else z = (G.Y:>D.at[i,1] :& G.Y:<=D.at[i+1,1])
-        if      (D.prop) z = (z :- D.b[i]*f    ) / W
-        else if (D.pct)  z = (z :- D.b[i]*f/100) * (100/W)
-        else if (D.freq) z = (z :- D.b[i]/W)
+        if      (D.prop) z = (z :- D.b[i]    ) / W
+        else if (D.pct)  z = (z :- D.b[i]/100) * (100/W)
+        else if (D.freq) z = (z :- D.b[i]/W  )
         else {
             c = 1 / (D.at[i,3] * W)
             if (c>=.) c = 0 // zero width bin
-            z = (z :- D.b[i]*f*D.at[i,3]) * c
+            z = (z :- D.b[i]*D.at[i,3]) * c
         }
-        dstat_set_IF(D, G, i, z, (D.uncond==1 ? -D.b[i]/W : 0))
+        dstat_set_IF(D, G, i, z, -D.b[i]/W, D.b[i]/W)
     }
 }
 
@@ -5044,19 +5478,23 @@ void dstat_cdf(`Data' D, `Bool' cc)
             else                 AT = *D.AT[G.k]
             a = b + 1
             b = a + rows(AT) - 1
-            D.b[|a \ b|] = _dstat_cdf(G.Y, G.w, AT, D.mid+D.floor*2, D.freq, D.ipolate)
-            if (cc) {
-                if (D.freq) D.b[|a \ b|] = G.W :- D.b[|a \ b|]
-                else        D.b[|a \ b|] = 1   :- D.b[|a \ b|]
-            }
-            if (D.pct)  D.b[|a \ b|] = D.b[|a \ b|] * 100
-            if (D.uncond & !D.freq) D.b[|a \ b|] = D.b[|a \ b|] * (G.W/D.W)
             D.at[|a \ b|] = AT
-            // compute IFS
-            if (D.noIF==0) dstat_cdf_IF(D, G, a, b, cc)
-            // labels
+            dstat_set_nobs_sumw(D, G, a, b)
             dstat_set_cstripe(D, G, i, j, a, b, (D.novalues ? 
                 "c":+strofreal(1::b-a+1) : strofreal(AT, D.vfmt)))
+            if (G.N==0) dstat_noobs(D, a, b)
+            else {
+                D.b[|a \ b|] = 
+                    _dstat_cdf(G.Y, G.w, AT, D.mid+D.floor*2, D.freq, D.ipolate)
+                if (cc) {
+                    if (D.freq) D.b[|a \ b|] = G.W :- D.b[|a \ b|]
+                    else        D.b[|a \ b|] = 1   :- D.b[|a \ b|]
+                }
+                if (D.pct)  D.b[|a \ b|] = D.b[|a \ b|] * 100
+                if (D.uncond & !D.freq)
+                    D.b[|a \ b|] = D.b[|a \ b|] * (G.W/dstat_Wj(D, G))
+                if (D.noIF==0) dstat_cdf_IF(D, G, a, b, cc)
+            }
         }
     }
 }
@@ -5065,6 +5503,7 @@ void dstat_cdf(`Data' D, `Bool' cc)
 {
     `RR' minmax
     
+    if (rows(Y)==0) return(J(n,1,.z))
     minmax = minmax(Y)
     return(rangen(minmax[1], minmax[2], n))
 }
@@ -5157,13 +5596,13 @@ void dstat_cdf(`Data' D, `Bool' cc)
 void dstat_cdf_IF(`Data' D, `Grp' G, `Int' a, `Int' b, `Bool' cc)
 {
     `Int' i, j, k, K
-    `RS'  W, f
+    `RS'  W
     `RR'  C
     `RC'  zP
     `RM'  z, AT
     
-    W = (D.uncond    ? D.W   : G.W)
-    f = (D.uncond==2 ? W/G.W : 1)
+    W = (D.uncond ? dstat_Wj(D, G) : G.W)
+    if (D.freq) D.IFtot[|a \ b|] = D.b[|a \ b|]
     if (D.ipolate) {
         // compute IF as weighted average of the IFs of the next lower and
         // upper observed Y-values
@@ -5179,7 +5618,7 @@ void dstat_cdf_IF(`Data' D, `Grp' G, `Int' a, `Int' b, `Bool' cc)
                     zP = (G.Y :== AT[j,k]) / 2
                     if (cc) z[,k] = (G.Y :> AT[j,k])
                     else    z[,k] = (G.Y :< AT[j,k])
-                    C[k]  = sum(quadcross(G.w, (z[,k], zP))) / W * f
+                    C[k]  = sum(quadcross(G.w, (z[,k], zP))) / W
                     z[,k] = (z[,k] + zP) :- C[k]
                 }
                 else {
@@ -5191,7 +5630,7 @@ void dstat_cdf_IF(`Data' D, `Grp' G, `Int' a, `Int' b, `Bool' cc)
                         if (cc) z[,k] = (G.Y :> AT[j,k])
                         else    z[,k] = (G.Y :<= AT[j,k])
                     }
-                    C[k]  = quadcross(G.w, z[,k]) / W * f
+                    C[k]  = quadcross(G.w, z[,k]) / W
                     z[,k] = (z[,k] :- C[k])
                 }
                 if (D.pct)         z[,k] = z[,k] * (100/W)
@@ -5203,14 +5642,14 @@ void dstat_cdf_IF(`Data' D, `Grp' G, `Int' a, `Int' b, `Bool' cc)
                 C = k*C[1]  + (1-k)*C[2]
             }
             if (D.pct) C = C * 100
-            dstat_set_IF(D, G, i, z, (D.uncond==1 ? -C/W : 0))
+            dstat_set_IF(D, G, i, z, -C/W, D.b[i]/W)
         }
         return
     }
     for (i=a; i<=b; i++) {
-        if (D.pct)       C = D.b[i]*f / 100
+        if (D.pct)       C = D.b[i] / 100
         else if (D.freq) C = D.b[i] / W
-        else             C = D.b[i]*f
+        else             C = D.b[i]
         if (D.mid) {
             zP = (G.Y :== D.at[i]) / 2
             if (cc) z = (G.Y :> D.at[i])
@@ -5230,7 +5669,7 @@ void dstat_cdf_IF(`Data' D, `Grp' G, `Int' a, `Int' b, `Bool' cc)
         }
         if (D.pct)           z = z * (100/W)
         else if (!D.freq)    z = z / W
-        dstat_set_IF(D, G, i, z, (D.uncond==1 ? -D.b[i]/W : 0))
+        dstat_set_IF(D, G, i, z, -D.b[i]/W, D.b[i]/W)
     }
 }
 
@@ -5280,14 +5719,16 @@ void dstat_prop(`Data' D)
             AT = *D.AT[G.k]
             a = b + 1
             b = a + rows(AT) - 1
-            D.b[|a \ b|]  = _dstat_prop(D, G, AT)
             D.at[|a \ b|] = AT
-            // compute IFS
-            if (D.noIF==0) dstat_prop_IF(D, G, a, b)
-            // labels
+            dstat_set_nobs_sumw(D, G, a, b)
             dstat_set_cstripe(D, G, i, j, a, b, (D.novalues ? 
                 "p":+strofreal(1::b-a+1) : (D.cat ? strofreal(AT) :
                 strofreal(AT, D.vfmt))))
+            if (G.N==0) dstat_noobs(D, a, b)
+            else {
+                D.b[|a \ b|] = _dstat_prop(D, G, AT)
+                if (D.noIF==0) dstat_prop_IF(D, G, a, b)
+            }
         }
     }
     if (D.cat & !D.novalues) D.eqs = D.eqs[mm_seq(1, G.k, D.nvars)]
@@ -5312,8 +5753,7 @@ void dstat_prop(`Data' D)
     F = J(i, 1, .)
     for (; i; i--) F[i] = asarray(A, AT[i])
     // return
-    if (D.uncond) W = D.W
-    else           W = G.W
+    W = (D.uncond ? dstat_Wj(D, G) : G.W)
     if (D.pct)  return(F * (100/W))
     if (D.freq) return(F)
                 return(F / W)
@@ -5403,16 +5843,16 @@ void dstat_prop(`Data' D)
 void dstat_prop_IF(`Data' D, `Grp' G, `Int' a, `Int' b)
 {
     `Int' i
-    `RS'  W, f
+    `RS'  W
     `RC'  h
     
-    W = (D.uncond    ? D.W   : G.W)
-    f = (D.uncond==2 ? W/G.W : 1)
+    W = (D.uncond ? dstat_Wj(D, G) : G.W)
+    if (D.freq) D.IFtot[|a \ b|] = D.b[|a \ b|]
     for (i=a; i<=b; i++) {
-        if      (D.pct)   h = ((G.Y :== D.at[i]) :- D.b[i]*f/100) * (100/W)
-        else if (D.freq)  h = ((G.Y :== D.at[i]) :- D.b[i]/W    )
-        else              h = ((G.Y :== D.at[i]) :- D.b[i]*f    ) / W
-        dstat_set_IF(D, G, i, h, (D.uncond==1 ? -D.b[i]/W : 0))
+        if (D.pct)       h = ((G.Y :== D.at[i]) :- D.b[i]/100) * (100/W)
+        else if (D.freq) h = ((G.Y :== D.at[i]) :- D.b[i]/W  )
+        else             h = ((G.Y :== D.at[i]) :- D.b[i]    ) / W
+        dstat_set_IF(D, G, i, h, -D.b[i]/W, D.b[i]/W)
     }
 }
 
@@ -5426,6 +5866,7 @@ void dstat_quantile(`Data' D)
     `RC'   AT
     `Grp'  G
     
+    if (D.noIF==0 & D.qdef!=10) D.hasdens = `TRUE'
     G.k = b = 0
     for (i=1; i<=D.nover; i++) {
         dstat_init_grp(D, G, i)
@@ -5435,16 +5876,22 @@ void dstat_quantile(`Data' D)
             AT = *D.AT[G.k]
             a = b + 1
             b = a + rows(AT) - 1
-            D.b[|a \ b|]  = _mm_quantile(G.Ys, G.ws, AT, D.qdef, D.wtype==1)
             D.at[|a \ b|] = AT
-            // compute IFS
-            if (D.noIF==0) {
-                dstat_set_density(D, G)
-                dstat_quantile_IF(D, G, a, b)
-            }
-            // labels
+            dstat_set_nobs_sumw(D, G, a, b)
             dstat_set_cstripe(D, G, i, j, a, b, (D.novalues ? 
                 "q":+strofreal(1::b-a+1) : strofreal(AT, D.vfmt)))
+            if (G.N==0) dstat_noobs(D, a, b)
+            else {
+                if (D.qdef==10) {
+                    _dstat_sum_hdquantile(D, G, a, b, AT)
+                    continue
+                }
+                D.b[|a \ b|] = _mm_quantile(G.Ys, G.ws, AT, D.qdef, D.wtype==1)
+                if (D.noIF==0) {
+                    dstat_set_density(D, G)
+                    dstat_quantile_IF(D, G, a, b)
+                }
+            }
         }
     }
 }
@@ -5457,8 +5904,13 @@ void dstat_quantile_IF(`Data' D, `Grp' G, `Int' a, `Int' b)
     fx = D.S.d(D.b[|a \ b|], D.exact)
     l = 0
     for (i=a; i<=b; i++) {
-        z = (G.Y :<= D.b[i])
-        dstat_set_IF(D, G, i, (mean(z, G.w) :- z) / (G.W * fx[++l]))
+        l++
+        if (D.at[i]==0)      D.IF[,i] = J(D.N, 1, 0)
+        else if (D.at[i]==1) D.IF[,i] = J(D.N, 1, 0)
+        else {
+            z = (G.Y :<= D.b[i])
+            dstat_set_IF(D, G, i, (mean(z, G.w) :- z) / (G.W * fx[l]))
+        }
     }
 }
 
@@ -5479,22 +5931,24 @@ void dstat_lorenz(`Data' D)
     else if (D.sum)    t = 2 // total
     else if (D.pct)    t = 1 // ordinary in percent
     else               t = 0 // ordinary
-    if (D.zvar!="") z = selectindex(D.zvars:==D.zvar)
+    if (D.zvar!="") z = 1
     G.k = b = 0
     for (i=1; i<=D.nover; i++) {
         dstat_init_grp(D, G, i)
         for (j=1; j<=D.nvars; j++) {
-            dstat_init_Y(D, G, j)
+            dstat_init_Y(D, G, j, z)
             AT = *D.AT[G.k]
             a = b + 1
             b = a + rows(AT) - 1
-            D.b[|a \ b|]  = _dstat_lorenz(D, G, AT, t, z)
             D.at[|a \ b|] = AT
-            // compute IFS
-            if (D.noIF==0) dstat_lorenz_IF(D, G, a, b, t)
-            // labels
+            dstat_set_nobs_sumw(D, G, a, b)
             dstat_set_cstripe(D, G, i, j, a, b, (D.novalues ? 
                 "l":+strofreal(1::b-a+1) : strofreal(AT, D.vfmt)))
+            if (G.N==0) dstat_noobs(D, a, b)
+            else {
+                D.b[|a \ b|]  = _dstat_lorenz(D, G, AT, t, z)
+                if (D.noIF==0) dstat_lorenz_IF(D, G, a, b, t)
+            }
         }
     }
 }
@@ -5520,10 +5974,11 @@ void dstat_lorenz(`Data' D)
 
 void dstat_lorenz_IF(`Data' D, `Grp' G, `Int' a, `Int' b, `Int' t)
 {
-    D.IF[|1,a \ .,b|] = _dstat_lorenz_IF(D, G, D.at[|a \ b|], t)
+    if (t==2) D.IFtot[|a \ b|] = D.b[|a \ b|] // total
+    D.IF[|1,a \ .,b|] = _dstat_lorenz_IF(D, G, D.at[|a \ b|], t, D.b[|a \ b|])
 }
 
-`RM' _dstat_lorenz_IF(`Data' D, `Grp' G, `RC' at, `Int' t)
+`RM' _dstat_lorenz_IF(`Data' D, `Grp' G, `RC' at, `Int' t, `RC' B)
 {
     `Int' i, n
     `RC'  q, ey, Z
@@ -5540,7 +5995,7 @@ void dstat_lorenz_IF(`Data' D, `Grp' G, `Int' a, `Int' b, `Int' t)
     for (i=1; i<=n; i++) {
         if (at[i]==0)               continue
         if (at[i]==1 & t!=2 & t!=3) continue
-        IF[,i] = __dstat_lorenz_IF(D, G, (G.z<. ? Z : G.Y):<=q[i], ey[i], t)
+        IF[,i] = __dstat_lorenz_IF(D, G, (G.z<. ? Z : G.Y):<=q[i], ey[i], t, B[i])
     }
     return(IF)
 }
@@ -5556,7 +6011,7 @@ void dstat_lorenz_IF(`Data' D, `Grp' G, `Int' a, `Int' b, `Int' t)
     return(ey)
 }
 
-`RC' __dstat_lorenz_IF(`Data' D, `Grp' G, `RC' Zq, `RS' ey, `Int' t)
+`RC' __dstat_lorenz_IF(`Data' D, `Grp' G, `RC' Zq, `RS' ey, `Int' t, `RS' B)
 {
     `RC' z, p, L, T, W, h
     
@@ -5573,7 +6028,7 @@ void dstat_lorenz_IF(`Data' D, `Grp' G, `Int' a, `Int' b, `Int' t)
     else if (t==2) h =  z :- L/W :+ h                  // total
     else if (t==1) h = (z :- L/T:*G.Y :+ h) * (100/T)  // ordinary in %
     else           h = (z :- L/T:*G.Y :+ h) / T        // ordinary
-    return(_dstat_set_IF(D, G, h, 0))
+    return(_dstat_set_IF(D, G, h, 0, t==2 ? B/G.W : 0))
 }
 
 // --------------------------------------------------------------------------
@@ -5583,7 +6038,7 @@ void dstat_lorenz_IF(`Data' D, `Grp' G, `Int' a, `Int' b, `Int' t)
 void dstat_share(`Data' D)
 {
     `Int'  i, j, a, b, d, t, z
-    `RC'   AT, B, h
+    `RC'   L, AT, B, h
     `Grp'  G
     
     if      (D.prop) {; d = 0; t = 0; } // proportion
@@ -5592,42 +6047,46 @@ void dstat_share(`Data' D)
     else if (D.sum)  {; d = 0; t = 2; } // total
     else if (D.pct)  {; d = 0; t = 1; } // percent
     else             {; d = 1; t = 0; } // density
-    if (D.zvar!="") z = selectindex(D.zvars:==D.zvar)
+    if (D.zvar!="") z = 1
     G.k = b = 0
     for (i=1; i<=D.nover; i++) {
         dstat_init_grp(D, G, i)
         for (j=1; j<=D.nvars; j++) {
-            dstat_init_Y(D, G, j)
+            dstat_init_Y(D, G, j, z)
             AT = *D.AT[G.k]
             h = mm_diff(AT) // bin width
             a = b + 1
             b = a + rows(AT) - 1
-            B = mm_diff(_dstat_lorenz(D, G, AT, t, z))
-            if (d) B = B :* editmissing(1 :/ h, 0)
-            D.b[|a \ b|]  = B \ B[rows(B)]
             D.at[|a,1 \ b,.|] = AT, AT + (h/2 \ .), (h \ .)
-            // compute IFS
-            if (D.noIF==0) dstat_share_IF(D, G, a, b, t, d)
-            // labels
+            dstat_set_nobs_sumw(D, G, a, b)
             dstat_set_cstripe(D, G, i, j, a, b, (D.novalues ? 
                 "s":+strofreal(1::b-a)\"_ul" : strofreal(AT, D.vfmt)))
+            if (G.N==0) dstat_noobs(D, a, b)
+            else {
+                L = _dstat_lorenz(D, G, AT, t, z)
+                B = mm_diff(L)
+                if (d) B = B :* editmissing(1 :/ h, 0)
+                D.b[|a \ b|]  = B \ B[rows(B)]
+                if (D.noIF==0) dstat_share_IF(D, G, a, b, t, d, L)
+            }
         }
     }
 }
 
-void dstat_share_IF(`Data' D, `Grp' G, `Int' a, `Int' b, `Int' t, `Int' d)
+void dstat_share_IF(`Data' D, `Grp' G, `Int' a, `Int' b, `Int' t, `Int' d, `RC' L)
 {
-    D.IF[|1,a \ .,b-1|] = _dstat_share_IF(D, G, D.at[|a,1 \ b,1|], t, d)
+    if (t==2) D.IFtot[|a \ b-1|] = D.b[|a \ b-1|] // total
+    D.IF[|1,a \ .,b-1|] = _dstat_share_IF(D, G, D.at[|a,1 \ b,1|], t, d, L)
     D.IF[,b] = J(D.N, 1, 0)
 }
 
-`RM' _dstat_share_IF(`Data' D, `Grp' G, `RC' at, `Int' t, `Int' d)
+`RM' _dstat_share_IF(`Data' D, `Grp' G, `RC' at, `Int' t, `Int' d, `RC' L)
 {
     `Int' i, n
     `RM'  IF
     
     n = rows(at)
-    IF = _dstat_lorenz_IF(D, G, at, t)
+    IF = _dstat_lorenz_IF(D, G, at, t, L)
     for (i=1; i<n; i++) {
         if (d) IF[,i] = (IF[,i+1] - IF[,i]) * editmissing(1/(at[i+1]-at[i]), 0)
         else   IF[,i] =  IF[,i+1] - IF[,i]
@@ -5636,12 +6095,88 @@ void dstat_share_IF(`Data' D, `Grp' G, `Int' a, `Int' b, `Int' t, `Int' d)
 }
 
 // --------------------------------------------------------------------------
+// dstat tip
+// --------------------------------------------------------------------------
+
+void dstat_tip(`Data' D)
+{
+    `Int'  i, j, a, b, t, z
+    `RC'   AT
+    `Grp'  G
+    
+    // D.hcr = D.pgi = J(1, D.nvars*D.nover, .)
+    if   (D.abs) t = 1 // absolute
+    else         t = 0 // relative
+    if (D.plvar!="") z = 1
+    G.k = b = 0
+    for (i=1; i<=D.nover; i++) {
+        dstat_init_grp(D, G, i)
+        for (j=1; j<=D.nvars; j++) {
+            dstat_init_Y(D, G, j, z)
+            AT = *D.AT[G.k]
+            a = b + 1
+            b = a + rows(AT) - 1
+            D.at[|a \ b|] = AT
+            dstat_set_nobs_sumw(D, G, a, b)
+            dstat_set_cstripe(D, G, i, j, a, b, (D.novalues ? 
+                "tip":+strofreal(1::b-a+1) : strofreal(AT, D.vfmt)))
+            if (G.N==0) dstat_noobs(D, a, b)
+            else D.b[|a \ b|] = _dstat_tip(D, G, AT, t, a, b, 
+                                z<. ? D.Z[G.p, z] : D.pline)
+        }
+    }
+}
+
+`RC' _dstat_tip(`Data' D, `Grp' G, `RC' P, `Int' t, `Int' a, `Int' b, `RC' pl)
+{   // determine tip ordinates
+    `RC' pg, p, p2, L, hc
+    `RM' cdf
+    
+    hc = D.pstrong ? G.Y:<=pl : G.Y:<pl
+    if (t==1) pg =  (pl :- G.Y)        :* hc
+    else      pg = ((pl :- G.Y) :/ pl) :* hc
+    p = mm_order(-pg, 1, 1)
+    cdf = _mm_ecdf2(pg[p], rows(G.w)==1 ? G.w : G.w[p], 0, 1)
+    cdf = (0,0) \ (quadrunningsum(cdf[,1] :* mm_diff(0 \ cdf[,2])), cdf[,2])
+    p2 = order(P, 1)
+    L = P[p2] * cdf[rows(cdf),2]
+        // using cdf[rows(cdf),2] instead of G.W to avoid precision issues at P=1
+    L[p2] = mm_fastipolate(cdf[,2], cdf[,1], L)
+    // D.hcr[G.k] = mean(hc, G.w)
+    // D.pgi[G.k] = cdf[rows(cdf),1] / G.W
+    if (D.noIF==0) dstat_tip_IF(D, G, a, b, P, pg)
+    return(L / G.W)
+}
+
+void dstat_tip_IF(`Data' D, `Grp' G, `Int' a, `Int' b, `RC' P, `RC' pg)
+{
+    `Int' i, j
+    `RS'  p, t
+    `RC'  q, zq, z
+    
+    q = -mm_quantile(-pg, G.w, P, 2)
+    j = 0
+    for (i=a; i<=b; i++) {
+        j++
+        if (P[j]==0) {
+            dstat_set_IF(D, G, i, J(G.N, 1, 0))
+            continue
+        }
+        zq = (pg:>=q[j])
+        p  = mean(zq, G.w)   // set p=mean(zq) to ensure mean(IF)=0
+        z  = pg :* zq
+        t  = mean(z, G.w)    // set t=mean(z) to ensure mean(IF)=0
+        dstat_set_IF(D, G, i, (z :- t :+ q[j] * (p :- zq)) / G.W)
+    }
+}
+
+// --------------------------------------------------------------------------
 // dstat summarize
 // --------------------------------------------------------------------------
 
 void dstat_sum(`Data' D)
 {
-    `Int' i, j, l, ii, nn
+    `Int' i, j, a, b, ii, nn
     `SC'  AT
     `SS'  s, o
     `SC'  list
@@ -5651,22 +6186,31 @@ void dstat_sum(`Data' D)
     
     A = dstat_stats_lib()
     list = sort(asarray_keys(A), 1)
-    G.k = l = 0
+    G.k = b = 0
     for (i=1; i<=D.nover; i++) {
         dstat_init_grp(D, G, i)
         for (j=1; j<=D.nvars; j++) {
             dstat_init_Y(D, G, j)
-            dstat_init_Ys(D, G)
             AT = *D.AT[G.k]
             nn = rows(AT)
-            for (ii=1; ii<=nn; ii++) {
-                l++
-                s = AT[ii]
-                o = _dstat_sum_split(s) // replaces s
-                P = asarray(A, mm_strexpand(s, list))
-                (*P[1])(D, G, l, o, *P[3])
+            a = b + 1
+            b = a + nn - 1
+            dstat_set_cstripe(D, G, i, j, a, b, AT)
+            if (G.N==0) {
+                dstat_noobs(D, a, b)
+                dstat_set_nobs_sumw(D, G, a, b)
             }
-            dstat_set_cstripe(D, G, i, j, l-nn+1, l, AT)
+            else {
+                for (ii=1; ii<=nn; ii++) {
+                    dstat_reset_Y(D, G) // (sample might have been modified)
+                    s = AT[ii]
+                    o = _dstat_sum_split(s) // replaces s
+                    P = asarray(A, mm_strexpand(s, list))
+                    (*P[1])(D, G, a, o, *P[3])
+                    dstat_set_nobs_sumw(D, G, a)
+                    a++
+                }
+            }
         }
     }
 }
@@ -5703,6 +6247,69 @@ void dstat_sum(`Data' D)
     return(0)
 }
 
+void _dstat_sum_fixed(`Data' D, `Int' i, `RS' b)
+{
+    D.b[i] = b
+    if (D.noIF) return(1)
+    D.IF[,i] = J(D.N, 1, 0)
+}
+
+void _dstat_sum_invalid(`Data' D, `Grp' G, `SS' s, `Int' N)
+{
+    `SS' t
+    
+    if (D.ovar!="") {
+        if (G.id<.) t = sprintf("%s in %s=%g", D.yvars[G.j], D.ovar, G.id)
+        else        t = sprintf("%s in total", D.yvars[G.j])
+    }
+    else t = sprintf("%s", D.yvars[G.j])
+    t = sprintf("%s of %s: %g observations out of support", s, t, G.N-N)
+    if (D.relax) {
+        printf("{txt}(%s)\n", t)
+    }
+    else {
+        printf("{err}%s\n", t)
+        printf("{err}specify {bf:relax} to use valid observations only\n")
+        exit(459)
+    }
+}
+
+void _dstat_sum_update_Y(`Data' D, `Grp' G, `RC' Z)
+{
+    if (D.nocw==0) return
+    if (hasmissing(Z)) {
+        dstat_update_Y(D, G, Z)
+        Z = select(Z, Z:<.)
+    }
+}
+
+`RC' _dstat_sum_ccdf(`RC' Y, `RC' w, `RS' W)
+{
+    return((quadsum(w) :- _mm_ranks(Y, w, 3, 1)) / W)
+}
+
+`RC' _dstat_sum_get_pline(`Data' D, `Grp' G, `SS' o)
+{
+    `RC' pl
+    
+    if (o!="") {
+        if (strtoreal(o)>=.) {
+            pl = D.Z[G.p, selectindex(D.zvars:==dstat_unab(o))]
+            _dstat_sum_update_Y(D, G, pl)
+            pl = select(pl, pl:<.)
+            return(pl)
+        }
+        return(strtoreal(o))
+    }
+    if (D.plvar!="") {
+        pl = D.Z[G.p, selectindex(D.zvars:==D.plvar)]
+        _dstat_sum_update_Y(D, G, pl)
+        pl = select(pl, pl:<.)
+        return(pl)
+    }
+    return(D.pline)
+}
+
 void dstat_sum_q(`Data' D, `Grp' G, `Int' i, `SS' o, `RR' O)
 {
     dstat_sum_quantile(D, G, i, o, O)
@@ -5725,11 +6332,78 @@ void _dstat_sum_q(`Data' D, `Grp' G, `Int' i, `RS' p)
     `RC' z
     
     dstat_init_Ys(D, G)
+    if (p==0)      {; _dstat_sum_fixed(D, i, G.Ys[1]);   return; }
+    else if (p==1) {; _dstat_sum_fixed(D, i, G.Ys[G.N]); return; }
+    if (D.qdef==10) {
+        _dstat_sum_hdquantile(D, G, i, i, p)
+        return
+    }
     D.b[i] = _mm_quantile(G.Ys, G.ws, p, D.qdef, D.wtype==1)
     if (D.noIF) return
     fx = _dstat_sum_d(D, G, D.b[i])
     z = (G.Y :<= D.b[i])
     dstat_set_IF(D, G, i, (mean(z, G.w) :- z) / (G.W * fx))
+}
+
+void dstat_sum_hdquantile(`Data' D, `Grp' G, `Int' i, `SS' o, `RR' O)
+{
+    pragma unused O
+    
+    dstat_init_Ys(D, G)
+    _dstat_sum_hdquantile(D, G, i, i, strtoreal(o)/100)
+}
+
+void _dstat_sum_hdquantile(`Data' D, `Grp' G, `Int' a, `Int' b, `RC' p)
+{
+    D.b[|a \ b|] = _mm_hdq(G.Ys, G.ws, p, D.wtype==1)
+    if (D.noIF) return
+    _dstat_sum_hdq_IF(0, D, G, a, b, p)
+}
+
+`T' _dstat_sum_hdq_IF(`Bool' noset, `Data' D, `Grp' G, `Int' i0, `Int' i1, `RC' p)
+{   // obtain IFs in analogy to the jackknife approach by Harrell and Davis
+    // (1982); in the unweighted case, results are equivalent to
+    // hdquantiles_sd() from Python's -scipy-
+    `RS'  i, k, n
+    `RC'  F, F0
+    `RM'  IF
+    
+    if      (rows(G.w)==1) n = G.N * G.w
+    else if (D.wtype==1)   n = G.W
+    else                   n = G.W^2 / quadsum(G.w:^2)
+    if (G.w==1) F = 0 \ (1::n)/(n-1)
+    else {
+        F  = _mm_ranks(G.Ys, G.ws, 0, 0, 1) * (n/(n-1))
+        F0 = F :- (1 / (n-1))
+    }
+    k = 0
+    if (noset) {
+        IF = J(G.N, i1-i0+1, .)
+        for (i=i0; i<=i1; i++) {
+            k++
+            IF[,k] = __dstat_sum_hdq_IF(G, p[k], F, F0, n)
+        }
+        return(IF)
+    }
+    for (i=i0; i<=i1; i++) {
+        dstat_set_IF(D, G, i, __dstat_sum_hdq_IF(G, p[++k], F, F0, n))
+    }
+}
+
+`RC' __dstat_sum_hdq_IF(`Grp' G, `RS' p, `RC' F, `RC' F0, `RS' n)
+{
+    `RS'  a, b
+    `RC'  d, h
+    
+    if (p==0) return(J(G.N, 1, 0))
+    if (p==1) return(J(G.N, 1, 0))
+    a = p * (n + 1)
+    b = (1 - p) * (n + 1)
+    if (G.w==1) d = mm_diff(ibeta(a, b, F)) * (1-n)
+    else        d = (ibeta(a, b, F)-ibeta(a, b, F0)) * (1-n)
+    h = quadrunningsum(d:*(G.Ys[|2\G.N|]\0))
+    h = (0\quadrunningsum(d:*G.Ys))[|1\G.N|] + (h[G.N] :- (0\h[|1\G.N-1|]))
+    return(dstat_invp(G.N, G.ps, h :- mean(h, G.ws)) / G.W)
 }
 
 void dstat_sum_d(`Data' D, `Grp' G, `Int' i, `SS' o, `RR' O)
@@ -5747,14 +6421,14 @@ void dstat_sum_density(`Data' D, `Grp' G, `Int' i, `SS' o, `RR' O)
     dstat_init_Ys(D, G)
     D.b[i] = _dstat_sum_d(D, G, at)
     if (D.noIF) return
-    z = J(G.N, 1, .)
-    z[G.ps] = D.S.K(D.S.X(), at, D.S.h()*D.S.l())
+    z = dstat_invp(G.N, G.ps, D.S.K(D.S.X(), at, D.S.h()*D.S.l()))
     if (D.exact) dstat_set_IF(D, G, i, (z :- D.b[i])/G.W)
     else         dstat_set_IF(D, G, i, (z :- mean(z, G.w))/G.W)
 }
 
 `RC' _dstat_sum_d(`Data' D, `Grp' G, `RC' at)
 {
+    D.hasdens = `TRUE'
     dstat_set_density(D, G) // prepare density object if needed
     return(D.S.d(at, D.exact))
 }
@@ -5865,7 +6539,7 @@ void dstat_sum_ccdff(`Data' D, `Grp' G, `Int' i, `SS' o, `RR' O)
 
 void dstat_sum_prop(`Data' D, `Grp' G, `Int' i, `SS' o, `RR' O)
 {
-    _dstat_sum_freq(D, G, i, o, O)
+    _dstat_sum_freq(D, G, i, o, O, 0)
     if (D.omit[i]) return
     D.b[i] = D.b[i] / G.W
     if (D.noIF) return
@@ -5874,7 +6548,7 @@ void dstat_sum_prop(`Data' D, `Grp' G, `Int' i, `SS' o, `RR' O)
 
 void dstat_sum_pct(`Data' D, `Grp' G, `Int' i, `SS' o, `RR' O)
 {
-    _dstat_sum_freq(D, G, i, o, O)
+    _dstat_sum_freq(D, G, i, o, O, 0)
     if (D.omit[i]) return
     D.b[i] = D.b[i] * (100 / G.W)
     if (D.noIF) return
@@ -5888,11 +6562,10 @@ void dstat_sum_f(`Data' D, `Grp' G, `Int' i, `SS' o, `RR' O)
 
 void dstat_sum_freq(`Data' D, `Grp' G, `Int' i, `SS' o, `RR' O)
 {
-    D.istot[i] = 1
-    _dstat_sum_freq(D, G, i, o, O)
+    _dstat_sum_freq(D, G, i, o, O, 1)
 }
 
-void _dstat_sum_freq(`Data' D, `Grp' G, `Int' i, `SS' o, `RR' O)
+void _dstat_sum_freq(`Data' D, `Grp' G, `Int' i, `SS' o, `RR' O, `Bool' tot)
 {
     `RR' at
     `RC' z
@@ -5912,7 +6585,8 @@ void _dstat_sum_freq(`Data' D, `Grp' G, `Int' i, `SS' o, `RR' O)
         if (_dstat_sum_omit(D, i)) return
     }
     if (D.noIF) return
-    dstat_set_IF(D, G, i, (z :- (D.b[i]/G.W)))
+    if (tot) D.IFtot[i] = D.b[i]
+    dstat_set_IF(D, G, i, (z :- (D.b[i]/G.W)), 0, D.b[i]/G.W)
 }
 
 void dstat_sum_total(`Data' D, `Grp' G, `Int' i, `SS' o, `RR' O)
@@ -5921,7 +6595,6 @@ void dstat_sum_total(`Data' D, `Grp' G, `Int' i, `SS' o, `RR' O)
     `RC' z
     pragma unused O
     
-    D.istot[i] = 1
     at = strtoreal(tokens(o))
     if      (length(at)==0) z = G.Y
     else if (length(at)==1) z = G.Y * (G.Y:==at)
@@ -5932,43 +6605,40 @@ void dstat_sum_total(`Data' D, `Grp' G, `Int' i, `SS' o, `RR' O)
     D.b[i] = quadsum(G.w:*z, 1)
     if (_dstat_sum_omit(D, i)) return
     if (D.noIF) return
-    dstat_set_IF(D, G, i, (z :- (D.b[i]/G.W)))
+    D.IFtot[i] = D.b[i]
+    dstat_set_IF(D, G, i, (z :- (D.b[i]/G.W)), 0, D.b[i]/G.W)
 }
 
 void dstat_sum_min(`Data' D, `Grp' G, `Int' i, `SS' o, `RR' O)
 {
     pragma unused o
     pragma unused O
-    D.b[i] = min(G.Y)
-    if (D.noIF) return
-    D.IF[,i] = J(D.N, 1, 0)
+    
+    _dstat_sum_fixed(D, i, min(G.Y))
 }
 
 void dstat_sum_max(`Data' D, `Grp' G, `Int' i, `SS' o, `RR' O)
 {
     pragma unused o
     pragma unused O
-    D.b[i] = max(G.Y)
-    if (D.noIF) return
-    D.IF[,i] = J(D.N, 1, 0)
+
+    _dstat_sum_fixed(D, i, max(G.Y))
 }
 
 void dstat_sum_range(`Data' D, `Grp' G, `Int' i, `SS' o, `RR' O)
 {
     pragma unused o
     pragma unused O
-    D.b[i] = mm_diff(minmax(G.Y))
-    if (D.noIF) return
-    D.IF[,i] = J(D.N, 1, 0)
+
+    _dstat_sum_fixed(D, i, mm_diff(minmax(G.Y)))
 }
 
 void dstat_sum_midrange(`Data' D, `Grp' G, `Int' i, `SS' o, `RR' O)
 {
     pragma unused o
     pragma unused O
-    D.b[i] = sum(minmax(G.Y))/2
-    if (D.noIF) return
-    D.IF[,i] = J(D.N, 1, 0)
+
+    _dstat_sum_fixed(D, i, sum(minmax(G.Y))/2)
 }
 
 void dstat_sum_mean(`Data' D, `Grp' G, `Int' i, `SS' o, `RR' O)
@@ -5987,22 +6657,32 @@ void dstat_sum_gmean(`Data' D, `Grp' G, `Int' i, `SS' o, `RR' O)
     pragma unused O
     
     z = ln(G.Y)
-    _dstat_sum_isvalid(z, D.yvars[G.j], "gmean")
+    if (hasmissing(z)) {
+        _dstat_sum_invalid(D, G, "gmean", G.N-missing(z))
+        dstat_update_Y(D, G, z)
+        z = ln(G.Y)
+    }
     D.b[i] = exp(mean(z, G.w))
+    if (_dstat_sum_omit(D, i)) return
     if (D.noIF) return
     dstat_set_IF(D, G, i, (z :- ln(D.b[i])) * (D.b[i] / G.W))
 }
 
 void dstat_sum_hmean(`Data' D, `Grp' G, `Int' i, `SS' o, `RR' O)
 {
-    `RC' z
+    `RC'   z
     pragma unused o
     pragma unused O
     
     z = 1 :/ G.Y
-    _dstat_sum_isvalid(z, D.yvars[G.j], "hmean")
+    if (hasmissing(z)) {
+        _dstat_sum_invalid(D, G, "hmean", G.N-missing(z))
+        dstat_update_Y(D, G, z)
+        z = 1 :/ G.Y
+    }
     D.b[i] = 1 / mean(z, G.w)
     if (D.noIF) return
+    if (_dstat_sum_omit(D, i)) return
     dstat_set_IF(D, G, i, (z :- 1/D.b[i]) * (-D.b[i]^2 / G.W))
 }
 
@@ -6166,17 +6846,12 @@ void dstat_sum_sd(`Data' D, `Grp' G, `Int' i, `SS' o, `RR' O)
 
 void dstat_sum_variance(`Data' D, `Grp' G, `Int' i, `SS' o, `RR' O)
 {
-    _dstat_sum_variance(D, G, i, G.Y, o, O)
-}
-
-void _dstat_sum_variance(`Data' D, `Grp' G, `Int' i, `RC' Y, `SS' o, `RR' O)
-{
     `RS' m, c, df
     pragma unset m
     
     if (o!="") df = strtoreal(o)
     else       df = O[3]
-    D.b[i] = _dstat_variance(D, G, Y, df, m)
+    D.b[i] = _dstat_variance(G.Y, G.w, D.wtype==1 ? G.W : G.N, df, m)
     if (_dstat_sum_omit(D, i)) return
     if (D.noIF) return
     if (df!=0) {
@@ -6184,21 +6859,18 @@ void _dstat_sum_variance(`Data' D, `Grp' G, `Int' i, `RC' Y, `SS' o, `RR' O)
         else            c = G.N / (G.N - df)
     }
     else c = 1
-    dstat_set_IF(D, G, i, (c*(Y :- m):^2 :- D.b[i]) / G.W)
+    dstat_set_IF(D, G, i, (c*(G.Y :- m):^2 :- D.b[i]) / G.W)
 }
 
-`RS' _dstat_variance(`Data' D, `Grp' G, `RC' Y, | `RS' df, `RS' m)
+`RS' _dstat_variance(`RC' Y, `RC' w, `RS' W, | `RS' df, `RS' m)
 {    // replaces m
     `RC' v
     
     if (args()<4) df = 1
-    v = mm_meanvariance0(Y, G.w)
+    v = mm_meanvariance0(Y, w)
     m = v[1]
     v = v[2]
-    if (df!=0) {
-        if (D.wtype==1) v = v * (G.W / (G.W - df))
-        else            v = v * (G.N / (G.N - df))
-    }
+    if (df!=0) v = v * (W / (W - df))
     return(v)
 }
 
@@ -6241,31 +6913,29 @@ void dstat_sum_smse(`Data' D, `Grp' G, `Int' i, `SS' o, `RR' O)
 
 void dstat_sum_iqr(`Data' D, `Grp' G, `Int' i, `SS' o, `RR' O)
 {
-    `RC' p, q, fx, z1, z2
+    `RS' b1
+    `RC' p, IF1
     
-    if (o!="") p = strtoreal(tokens(o)')
-    else       p = O[(3,4)]'
-    p = p / 100
-    dstat_init_Ys(D, G)
-    q = _mm_quantile(G.Ys, G.ws, p, D.qdef, D.wtype==1)
-    D.b[i] = q[2] - q[1]
+    if (o!="") p = strtoreal(tokens(o)') / 100
+    else       p = O[(3,4)]' / 100
+    _dstat_sum_q(D, G, i, p[1]) // lower quantile
+    b1 = D.b[i]
+    if (D.noIF==0) IF1 = D.IF[,i]
+    _dstat_sum_q(D, G, i, p[2]) // upper quantile
+    D.b[i] = D.b[i] - b1
     if (D.noIF) return
-    fx = _dstat_sum_d(D, G, q)
-    z1 = (G.Y :<= q[1])
-    z2 = (G.Y :<= q[2])
-    dstat_set_IF(D, G, i,
-        (mean(z2, G.w) :- z2) / (G.W * fx[2])   // upper quartile
-      - (mean(z1, G.w) :- z1) / (G.W * fx[1])   // lower quartile
-        )
+    D.IF[,i] = D.IF[,i] - IF1
 }
 
 void dstat_sum_iqrn(`Data' D, `Grp' G, `Int' i, `SS' o, `RR' O)
 {
-    `RC' c
-    pragma unused o
-    
-    dstat_sum_iqr(D, G, i, "25 75", O)
-    c = 1 / (invnormal(0.75) - invnormal(0.25))
+    `RS' c
+    `RC' p
+
+    dstat_sum_iqr(D, G, i, o, O)
+    if (o!="") p = strtoreal(tokens(o)') / 100
+    else       p = O[(3,4)]' / 100
+    c = 1 / (invnormal(p[2]) - invnormal(p[1]))
     D.b[i] = D.b[i] * c
     if (D.noIF) return
     D.IF[,i] = D.IF[,i] * c
@@ -6441,6 +7111,7 @@ void dstat_sum_md(`Data' D, `Grp' G, `Int' i, `SS' o, `RR' O)
     pragma unused o
     pragma unused O
     
+    dstat_init_Ys(D, G)
     m   = _dstat_mean(G)
     F   = _mm_ranks(G.Ys, G.ws, 3, 1, 1)
     cov = cross(G.Ys, G.ws, F) / G.W
@@ -6448,8 +7119,7 @@ void dstat_sum_md(`Data' D, `Grp' G, `Int' i, `SS' o, `RR' O)
     if (D.noIF) return
     // In analogy to the Gini coefficient the main moment condition of the MD
     // can be written as h = 2*(2*F - 1)*Y - MD
-    B = J(G.N, 1, .)
-    B[G.ps] = _dstat_sum_gini_topsum(G.Ys, G.Ys:*G.ws, G.W)
+    B = dstat_invp(G.N, G.ps, _dstat_sum_ccdf(G.Ys, G.Ys:*G.ws, G.W))
     F[G.ps] = F
     dstat_set_IF(D, G, i, ((4*F :- 2):*G.Y :- D.b[i] :+ 4*(B :- cov)) / G.W)
 }
@@ -6747,6 +7417,22 @@ void dstat_sum_rmc(`Data' D, `Grp' G, `Int' i, `SS' o, `RR' O)
     dstat_set_IF(D, G, i, IF / G.W)
 }
 
+void dstat_sum_hoover(`Data' D, `Grp' G, `Int' i, `SS' o, `RR' O)
+{
+    `RS' t
+    `RC' z, z2
+    pragma unused o
+    pragma unused O
+    
+    t  = _dstat_mean(G)
+    z  = G.Y :- t
+    z2 = abs(z)
+    D.b[i] = mean(z2, G.w) / (2 * t)
+    if (D.noIF) return
+    dstat_set_IF(D, G, i, ((z2 / (2 * t) :- D.b[i])
+        - mean(sign(z) * t + z2, G.w) / (2 * t^2) * z) / G.W)
+}
+
 void dstat_sum_gini(`Data' D, `Grp' G, `Int' i, `SS' o, `RR' O)
 {
     _dstat_sum_gini(0, D, G, i, o, O)
@@ -6781,9 +7467,7 @@ void _dstat_sum_gini(`Bool' abs, `Data' D, `Grp' G, `Int' i, `SS' o, `RR' O)
     // h = (2*F - 1)*Y - G*Y (see Binder & Kovacevic 1995)
     // (the IF of the Gini coefficient has the same structure as the IF of the
     // relative PDF; see -reldist-)
-    B = J(G.N, 1, .)
-    B[G.ps] = _dstat_sum_gini_topsum(G.Ys, G.Ys:*G.ws, G.W)
-    //B[G.ps] = _dstat_sum_gini_topsum(G.Ys, G.Ys:*G.ws, G.W, G.N)
+    B = dstat_invp(G.N, G.ps, _dstat_sum_ccdf(G.Ys, G.Ys:*G.ws, G.W))
     F[G.ps] = F
     if (abs) {
         dstat_set_IF(D, G, i, (((2*F :- 1):*G.Y + 2*(B :- cp))*c :- D.b[i]) / G.W)
@@ -6794,78 +7478,46 @@ void _dstat_sum_gini(`Bool' abs, `Data' D, `Grp' G, `Int' i, `SS' o, `RR' O)
     }
 }
 
-`RC' _dstat_sum_gini_topsum(`RC' Y, `RC' Yw, `RS' W)
+void dstat_sum_mld(`Data' D, `Grp' G, `Int' i, `SS' o, `RR' O, | `SS' lbl)
 {
-    return((quadsum(Yw) :- _mm_ranks(Y, Yw, 3, 1)) / W)
-}
-/*
-`RC' _dstat_sum_gini_topsum(`RC' Y, `RC' Yw, `RS' W, `RS' N)
-{
-    `RC' p
-    
-    p = N::1
-    return(_mm_ranks(-Y[p], Yw[p], 3, 1)[p]/W)
-}
-`RC' _dstat_sum_gini_topsum(`RC' Y, `RC' Yw, `RS' W, `RS' N)
-{
-    `Int' i, i1
-    `RS'  y1
-    `RC'  T
-    
-    T = quadrunningsum(Yw[N::1])[N::1] // reverse running sum of Yw
-    for (i=N; i; i--) {
-        i1 = i
-        y1 = Y[i1]
-        for (; i; i--) {
-            if (Y[i]!=y1) break
-        }
-        i++
-        if (i==i1) T[i] = T[i] - Yw[i]/2
-        else       T[|i\i1|] = J(i1-i+1, 1, T[i] - quadsum(Yw[|i\i1|])/2)
-    }
-    return(T/W)
-}
-*/
-
-void dstat_sum_mld(`Data' D, `Grp' G, `Int' i, `SS' o, `RR' O)
-{
-    `RS' m
-    `RC' lnY
+    `RS'   m
+    `RC'   z
     pragma unused o
     pragma unused O
     
-    m   = _dstat_mean(G)
-    lnY = ln(G.Y)
-    _dstat_sum_isvalid(lnY, D.yvars[G.j], "mld")
-    D.b[i] = ln(m) - mean(lnY, G.w)
+    z = ln(G.Y)
+    if (hasmissing(z)) {
+        _dstat_sum_invalid(D, G, lbl!="" ? lbl : "mld", G.N-missing(z))
+        dstat_update_Y(D, G, z)
+        z = ln(G.Y)
+    }
+    m = _dstat_mean(G)
+    D.b[i] = ln(m) - mean(z, G.w)
+    if (_dstat_sum_omit(D, i)) return
     if (D.noIF) return
-    dstat_set_IF(D, G, i, (((ln(m):-lnY) :- D.b[i]) + (G.Y :- m)/m) / G.W)
+    dstat_set_IF(D, G, i, (((ln(m):-z) :- D.b[i]) + (G.Y :- m)/m) / G.W)
 }
 
-void _dstat_sum_isvalid(`RC' Y, `SS' v, `SS' s)
+void dstat_sum_theil(`Data' D, `Grp' G, `Int' i, `SS' o, `RR' O, | `SS' lbl)
 {
-    if (hasmissing(Y)) {
-        printf("{err}cannot compute %s for %s;" + 
-            " nonpositive values not allowed\n", s, v)
-        exit(411)
-    }
-}
-
-void dstat_sum_theil(`Data' D, `Grp' G, `Int' i, `SS' o, `RR' O)
-{
-    `RS' m, delta
-    `RC' lnY, z
+    `RS'   m, delta
+    `RC'   z
     pragma unused o
     pragma unused O
     
-    m   = _dstat_mean(G)
-    lnY = ln(G.Y)
-    _dstat_sum_isvalid(lnY, D.yvars[G.j], "theil")
-    z   = G.Y :* lnY
+    z = ln(G.Y)
+    if (hasmissing(z)) {
+        _dstat_sum_invalid(D, G, lbl!="" ? lbl : "theil", G.N-missing(z))
+        dstat_update_Y(D, G, z)
+        z = ln(G.Y)
+    }
+    m = _dstat_mean(G)
+    z = G.Y :* z
     D.b[i] = mean(z, G.w)/m - ln(m)
+    if (_dstat_sum_omit(D, i)) return
     if (D.noIF) return
     delta = mean(z/m^2, G.w) :+ 1/m
-    dstat_set_IF(D, G, i, (((z/m:-ln(m)) :- D.b[i]) - delta*(G.Y :- m)) / G.W)
+    dstat_set_IF(D, G, i,(((z/m:-ln(m)) :- D.b[i]) - delta*(G.Y :- m)) / G.W)
 }
 
 void dstat_sum_cv(`Data' D, `Grp' G, `Int' i, `SS' o, `RR' O)
@@ -6875,7 +7527,7 @@ void dstat_sum_cv(`Data' D, `Grp' G, `Int' i, `SS' o, `RR' O)
     
     if (o!="") df = strtoreal(o)
     else       df = O[3]
-    sd = sqrt(_dstat_variance(D, G, G.Y, df, m))
+    sd = sqrt(_dstat_variance(G.Y, G.w, D.wtype==1 ? G.W : G.N, df, m))
     D.b[i] = sd / m
     if (_dstat_sum_omit(D, i)) return
     if (D.noIF) return
@@ -6892,25 +7544,30 @@ void dstat_sum_cv(`Data' D, `Grp' G, `Int' i, `SS' o, `RR' O)
 
 void dstat_sum_ge(`Data' D, `Grp' G, `Int' i, `SS' o, `RR' O)
 {
-    `RS' a, c, m, mz, delta
-    `RC' z
+    `RS'   a, c, m, mz, delta
+    `RC'   z
     
     if (o!="") a = strtoreal(o)
     else       a = O[3]
     if (a==0) {
-        dstat_sum_mld(D, G, i, o, O)
+        dstat_sum_mld(D, G, i, o, O, "ge(0)")
         return
     }
     if (a==1) {
-        dstat_sum_theil(D, G, i, o, O)
+        dstat_sum_theil(D, G, i, o, O, "ge(1)")
         return
     }
-    m = _dstat_mean(G)
     c = 1 / (a * (a - 1))
     z = G.Y:^a
-    _dstat_sum_isvalid(z, D.yvars[G.j], "ge("+strofreal(a)+")")
+    if (hasmissing(z)) {
+        _dstat_sum_invalid(D, G, "ge("+strofreal(a)+")", G.N-missing(z))
+        dstat_update_Y(D, G, z)
+        z = G.Y:^a
+    }
+    m = _dstat_mean(G)
     mz = mean(z, G.w)
     D.b[i] = c * (mz/m^a - 1)
+    if (_dstat_sum_omit(D, i)) return
     if (D.noIF) return
     delta = 1 / ((a - 1) * m^(a + 1)) * mz
     dstat_set_IF(D, G, i, ((c*(z/m^a:-1) :- D.b[i]) - delta*(G.Y :- m)) / G.W)
@@ -6929,42 +7586,56 @@ void dstat_sum_atkinson(`Data' D, `Grp' G, `Int' i, `SS' o, `RR' O)
 
 void _dstat_sum_atkinson1(`Data' D, `Grp' G, `Int' i)
 {
-    `RS' m, lm
-    `RC' z
+    `RS'   m, lm
+    `RC'   z
     
-    m  = _dstat_mean(G)
-    z  = ln(G.Y)
-    _dstat_sum_isvalid(z, D.yvars[G.j], "atkinson(1)")
+    z = ln(G.Y)
+    if (hasmissing(z)) {
+        _dstat_sum_invalid(D, G, "atkinson(1)", G.N-missing(z))
+        dstat_update_Y(D, G, z)
+        z = ln(G.Y)
+    }
+    m = _dstat_mean(G)
     lm = mean(z, G.w)
     D.b[i] = 1 - exp(lm) / m
+    if (_dstat_sum_omit(D, i)) return
     if (D.noIF) return
     dstat_set_IF(D, G, i, ((G.Y:-m)/m :- (z :- lm)) * (exp(lm) / (m * G.W)))
 }
 
 void _dstat_sum_atkinson(`Data' D, `Grp' G, `Int' i, `RS' e)
 {
-    `RS' m, lm
-    `RC' z
+    `RS'   m, lm
+    `RC'   z
     
-    m  = _dstat_mean(G)
-    z  = G.Y:^(1-e)
-    _dstat_sum_isvalid(z, D.yvars[G.j], "atkinson("+strofreal(e)+")")
+    z = G.Y:^(1-e)
+    if (hasmissing(z)) {
+        _dstat_sum_invalid(D, G, "atkinson("+strofreal(e)+")", G.N-missing(z))
+        dstat_update_Y(D, G, z)
+        z = G.Y:^(1-e)
+    }
+    m = _dstat_mean(G)
     lm = mean(z, G.w)
     D.b[i] = 1 - lm^(1/(1-e)) / m
+    if (_dstat_sum_omit(D, i)) return
     if (D.noIF) return
-    dstat_set_IF(D, G, i, ((G.Y:-m) * (lm^(1/(1-e)) / m^2)
-        :- (z :- lm) * (lm^(e/(1-e)) / ((1-e)*m))) / G.W)
+    dstat_set_IF(D, G, i,((G.Y:-m) * (lm^(1/(1-e)) / m^2) :- (z :- lm) *
+        (lm^(e/(1-e)) / ((1-e)*m))) / G.W)
 }
 
 void dstat_sum_lvar(`Data' D, `Grp' G, `Int' i, `SS' o, `RR' O)
 {
-    `RS' m, c, df
-    `RC' z
+    `RS'   m, c, df
+    `RC'   z
     
     if (o!="") df = strtoreal(o)
     else       df = O[3]
     z = ln(G.Y)
-    _dstat_sum_isvalid(z, D.yvars[G.j], "lvar")
+    if (hasmissing(z)) {
+        _dstat_sum_invalid(D, G, "lvar", G.N-missing(z))
+        dstat_update_Y(D, G, z)
+        z = ln(G.Y)
+    }
     if (df!=0) {
         if (D.wtype==1) c = G.W / (G.W - df)
         else            c = G.N / (G.N - df)
@@ -6980,11 +7651,27 @@ void dstat_sum_lvar(`Data' D, `Grp' G, `Int' i, `SS' o, `RR' O)
 
 void dstat_sum_vlog(`Data' D, `Grp' G, `Int' i, `SS' o, `RR' O)
 {
-    `RC' z
-    
+    `RS'   m, c, df
+    `RC'   z
+    pragma unset m
+
+    if (o!="") df = strtoreal(o)
+    else       df = O[3]
+    c = 1
     z = ln(G.Y)
-    _dstat_sum_isvalid(z, D.yvars[G.j], "vlog")
-    _dstat_sum_variance(D, G, i, z, o, O)
+    if (hasmissing(z)) {
+        _dstat_sum_invalid(D, G, "vlog", G.N-missing(z))
+        dstat_update_Y(D, G, z)
+        z = ln(G.Y)
+    }
+    D.b[i] = _dstat_variance(z, G.w, D.wtype==1 ? G.W : G.N, df, m)
+    if (_dstat_sum_omit(D, i)) return
+    if (D.noIF) return
+    if (df!=0) {
+        if (D.wtype==1) c = G.W / (G.W - df)
+        else            c = G.N / (G.N - df)
+    }
+    dstat_set_IF(D, G, i, (c*(z :- m):^2 :- D.b[i]) / G.W)
 }
 
 void dstat_sum_top(`Data' D, `Grp' G, `Int' i, `SS' o, `RR' O)
@@ -7062,10 +7749,10 @@ void dstat_sum_sratio(`Data' D, `Grp' G, `Int' i, `SS' o, `RR' O)
     }
     else p = O[|3\6|]'
     p = p / 100
-    _dstat_sum_share(D, G, i, p[|1\2|]) // lower quantile
+    _dstat_sum_share(D, G, i, p[|1\2|]) // lower share
     b1 = D.b[i]
     if (D.noIF==0) IF1 = D.IF[,i]
-    _dstat_sum_share(D, G, i, p[|3\4|]) // upper quantile
+    _dstat_sum_share(D, G, i, p[|3\4|]) // upper share
     b2 = D.b[i]
     D.b[i] = b2 / b1
     if (_dstat_sum_omit(D, i)) return
@@ -7083,13 +7770,13 @@ void _dstat_sum_lorenz(`Data' D, `Grp' G, `Int' i, `RC' at, `Int' t)
 {
     D.b[i] = _dstat_lorenz(D, G, at, t)
     if (D.noIF) return
-    D.IF[,i] = _dstat_lorenz_IF(D, G, at, t)
+    if (t==2) D.IFtot[i] = D.b[i] // total
+    D.IF[,i] = _dstat_lorenz_IF(D, G, at, t, D.b[i])
 }
 
 void dstat_sum_tlorenz(`Data' D, `Grp' G, `Int' i, `SS' o, `RR' O)
 {
     pragma unused O
-    D.istot[i] = 1
     _dstat_sum_lorenz(D, G, i, strtoreal(o) / 100, 2)
 }
 
@@ -7119,17 +7806,20 @@ void dstat_sum_share(`Data' D, `Grp' G, `Int' i, `SS' o, `RR' O)
 
 void _dstat_sum_share(`Data' D, `Grp' G, `Int' i, `RC' at, | `Int' t, `Bool' d)
 {
+    `RC' L
+    
     if (args()<5) t = 0
     if (args()<6) d = 0
-    
     if (at[1]>at[2]) D.b[i] = .
     else {
-        D.b[i] = mm_diff(_dstat_lorenz(D, G, at, t))
+        L = _dstat_lorenz(D, G, at, t)
+        D.b[i] = mm_diff(L)
         if (d) D.b[i] = D.b[i] * editmissing(1/(at[2]-at[1]), 0)
     }
     if (_dstat_sum_omit(D, i)) return
     if (D.noIF) return
-    D.IF[,i] = _dstat_share_IF(D, G, at, t, d)
+    if (t==2) D.IFtot[i] = D.b[i] // total
+    D.IF[,i] = _dstat_share_IF(D, G, at, t, d, L)
 }
 
 void dstat_sum_dshare(`Data' D, `Grp' G, `Int' i, `SS' o, `RR' O)
@@ -7141,7 +7831,6 @@ void dstat_sum_dshare(`Data' D, `Grp' G, `Int' i, `SS' o, `RR' O)
 void dstat_sum_tshare(`Data' D, `Grp' G, `Int' i, `SS' o, `RR' O)
 {
     pragma unused O
-    D.istot[i] = 1
     _dstat_sum_share(D, G, i, strtoreal(tokens(o)') / 100, 2, 0)
 }
 
@@ -7186,14 +7875,15 @@ void _dstat_sum_gci(`Bool' abs, `Data' D, `Grp' G, `Int' i, `SS' o, `RR' O)
         df = strtoreal(args[1])
         if (df<.) z = selectindex(D.zvars:==D.zvar)
         else {
-            z  = selectindex(D.zvars:==args[1])
+            z  = selectindex(D.zvars:==dstat_unab(args[1]))
             df = O[3]
         }
     }
     else {
-        z  = selectindex(D.zvars:==args[1])
+        z  = selectindex(D.zvars:==dstat_unab(args[1]))
         df = strtoreal(args[2])
     }
+    if (D.nocw) _dstat_sum_update_Y(D, G, D.Z[G.p, z])
     // compute concentration index
     dstat_init_Ys(D, G, z)
     F   = _mm_ranks(G.Zs, G.ws, 3, 1, 1)
@@ -7210,8 +7900,7 @@ void _dstat_sum_gci(`Bool' abs, `Data' D, `Grp' G, `Int' i, `SS' o, `RR' O)
     if (_dstat_sum_omit(D, i)) return
     // compute IF
     if (D.noIF) return
-    B = J(G.N, 1, .)
-    B[G.ps] = _dstat_sum_gini_topsum(G.Zs, (G.Ys:-m):*G.ws, G.W)
+    B = dstat_invp(G.N, G.ps, _dstat_sum_ccdf(G.Zs, (G.Ys:-m):*G.ws, G.W))
     F[G.ps] = F
     if (abs) {
         dstat_set_IF(D, G, i, ((F:-mF):*(G.Y:-m) :+ B :- 2*cov) * ((2*c)/G.W))
@@ -7240,17 +7929,18 @@ void _dstat_sum_ccurve(`Data' D, `Grp' G, `Int' i, `Int' t, `SS' o)
     
     args = tokens(o)
     at   = strtoreal(args[1]) / 100
-    if (length(args)>1) z = selectindex(D.zvars:==args[2])
+    if (length(args)>1) z = selectindex(D.zvars:==dstat_unab(args[2]))
     else                z = selectindex(D.zvars:==D.zvar)
+    if (D.nocw) _dstat_sum_update_Y(D, G, D.Z[G.p, z])
     D.b[i] = _dstat_lorenz(D, G, at, t, z)
     if (D.noIF) return
-    D.IF[,i] = _dstat_lorenz_IF(D, G, at, t)
+    if (t==2) D.IFtot[i] = D.b[i] // total
+    D.IF[,i] = _dstat_lorenz_IF(D, G, at, t, D.b[i])
 }
 
 void dstat_sum_tccurve(`Data' D, `Grp' G, `Int' i, `SS' o, `RR' O)
 {
     pragma unused O
-    D.istot[i] = 1
     _dstat_sum_ccurve(D, G, i, 2, o)
 }
 
@@ -7281,21 +7971,24 @@ void dstat_sum_cshare(`Data' D, `Grp' G, `Int' i, `SS' o, `RR' O)
 void _dstat_sum_cshare(`Data' D, `Grp' G, `Int' i, `Int' t, `Bool' d, `SS' o)
 {
     `SR'  args
-    `RC'  at
+    `RC'  L, at
     `Int' z
     
     args = tokens(o)
     at   = strtoreal(args[|1\2|]') / 100
-    if (length(args)>2) z = selectindex(D.zvars:==args[3])
+    if (length(args)>2) z = selectindex(D.zvars:==dstat_unab(args[3]))
     else                z = selectindex(D.zvars:==D.zvar)
+    if (D.nocw) _dstat_sum_update_Y(D, G, D.Z[G.p, z])
     if (at[1]>at[2]) D.b[i] = .
     else {
-        D.b[i] = mm_diff(_dstat_lorenz(D, G, at, t, z))
+        L = _dstat_lorenz(D, G, at, t, z)
+        D.b[i] = mm_diff(L)
         if (d) D.b[i] = D.b[i] * editmissing(1/(at[2]-at[1]), 0)
     }
     if (_dstat_sum_omit(D, i)) return
     if (D.noIF) return
-    D.IF[,i] = _dstat_share_IF(D, G, at, t, d)
+    if (t==2) D.IFtot[i] = D.b[i] // total
+    D.IF[,i] = _dstat_share_IF(D, G, at, t, d, L)
 }
 
 void dstat_sum_dcshare(`Data' D, `Grp' G, `Int' i, `SS' o, `RR' O)
@@ -7307,7 +8000,6 @@ void dstat_sum_dcshare(`Data' D, `Grp' G, `Int' i, `SS' o, `RR' O)
 void dstat_sum_tcshare(`Data' D, `Grp' G, `Int' i, `SS' o, `RR' O)
 {
     pragma unused O
-    D.istot[i] = 1
     _dstat_sum_cshare(D, G, i, 2, 0, o)
 }
 
@@ -7323,58 +8015,406 @@ void dstat_sum_acshare(`Data' D, `Grp' G, `Int' i, `SS' o, `RR' O)
     _dstat_sum_cshare(D, G, i, 3, 1, o)
 }
 
-void dstat_sum_watts(`Data' D, `Grp' G, `Int' i, `SS' o, `RR' O)
+void dstat_sum_hcr(`Data' D, `Grp' G, `Int' i, `SS' o, `RR' O)
 {
-    `RC'  pl, Z
+    `RC'   z, pl
     pragma unused O
-
-    if (o!="") {
-        pl = strtoreal(o)
-        if (pl>=.) pl = D.PL[G.p, selectindex(D.plvars:==o)]
-    }
-    else {
-        if (D.plvar!="") pl = D.PL[G.p, selectindex(D.plvars:==D.plvar)]
-        else             pl = D.pline
-    }
-    Z = (ln(pl) :-  ln(G.Y)) :* (G.Y :< pl)
-    _dstat_sum_isvalid(Z, D.yvars[G.j], "watts")
-    D.b[i] = mean(Z, G.w)
+    
+    pl = _dstat_sum_get_pline(D, G, o)
+    z = (D.pstrong ? G.Y:<=pl : G.Y:<pl)
+    D.b[i] = mean(z, G.w)
     if (D.noIF) return
-    dstat_set_IF(D, G, i, (Z :- D.b[i]) / G.W)
+    dstat_set_IF(D, G, i, (z :- D.b[i]) / G.W)
+}
+
+void dstat_sum_pgap(`Data' D, `Grp' G, `Int' i, `SS' o, `RR' O)
+{
+    _dstat_sum_pgap(0, D, G, i, o, O)
+}
+
+void dstat_sum_apgap(`Data' D, `Grp' G, `Int' i, `SS' o, `RR' O)
+{
+    _dstat_sum_pgap(1, D, G, i, o, O)
+}
+
+void _dstat_sum_pgap(`Bool' abs, `Data' D, `Grp' G, `Int' i, `SS' o, `RR' O)
+{
+    `RS'   N
+    `RC'   z, h, w, pl
+    `IntC' p
+    pragma unused O
+    
+    pl = _dstat_sum_get_pline(D, G, o)
+    p = selectindex(D.pstrong ? G.Y:<=pl : G.Y:<pl)
+    N = length(p)
+    if (N==0) { // no poor
+        D.b[i] = 0
+        if (D.noIF) return
+        dstat_set_IF(D, G, i, J(G.N, 1, 0))
+        return
+    }
+    w = (rows(G.w)==1 ? G.w : G.w[p])
+    if (abs==0) z = ((pl :- G.Y) :/ pl)[p]
+    else        z = (pl :- G.Y)[p]
+    D.b[i] = mean(z, w)
+    if (D.noIF) return
+    h = J(G.N, 1, 0)
+    h[p] = (z :- D.b[i]) / (rows(G.w)!=1 ? quadsum(G.w[p]) : N)
+    dstat_set_IF(D, G, i, h)
+}
+
+void dstat_sum_pgi(`Data' D, `Grp' G, `Int' i, `SS' o, `RR' O)
+{
+    _dstat_sum_pgi(0, D, G, i, o, O)
+}
+
+void dstat_sum_apgi(`Data' D, `Grp' G, `Int' i, `SS' o, `RR' O)
+{
+    _dstat_sum_pgi(1, D, G, i, o, O)
+}
+
+void _dstat_sum_pgi(`Bool' abs, `Data' D, `Grp' G, `Int' i, `SS' o, `RR' O)
+{
+    `RC'   z, pl
+    pragma unused O
+    
+    pl = _dstat_sum_get_pline(D, G, o)
+    z = (pl :- G.Y) :* (D.pstrong ? G.Y:<=pl : G.Y:<pl)
+    if (abs==0) z = z :/ pl
+    D.b[i] = mean(z, G.w)
+    if (D.noIF) return
+    dstat_set_IF(D, G, i, (z :- D.b[i]) / G.W)
 }
 
 void dstat_sum_fgt(`Data' D, `Grp' G, `Int' i, `SS' o, `RR' O)
 {
     `SR'  args
     `Int' l
-    `RS'  pl, a
-    `RC'  Z
+    `RS'  a
+    `RC'  z, pl
 
     args = tokens(o)
     l = length(args)
     if (l==0) {
         a  = O[3]
-        if (D.plvar!="") pl = D.PL[G.p, selectindex(D.plvars:==D.plvar)]
-        else             pl = D.pline
+        pl = _dstat_sum_get_pline(D, G, "")
     }
     else if (l==1) {
         a  = strtoreal(o)
-        if (D.plvar!="") pl = D.PL[G.p, selectindex(D.plvars:==D.plvar)]
-        else             pl = D.pline
+        pl = _dstat_sum_get_pline(D, G, "")
     }
     else {
         a  = strtoreal(args[1])
-        pl = strtoreal(args[2])
-        if (pl>=.) pl = D.PL[G.p, selectindex(D.plvars:==args[2])]
+        pl = _dstat_sum_get_pline(D, G, args[2])
     }
-    Z = (pl :- G.Y) :* (G.Y :<= pl)
-    Z = (Z:/pl):^a :* (G.Y :<= pl)
-    if (hasmissing(Z)) D.b[i] = .
-    else               D.b[i] = mean(Z, G.w)
+    z = (D.pstrong ? G.Y:<=pl : G.Y:<pl)
+    z = ((pl :- G.Y) :* z :/ pl):^a :* z
+    if (hasmissing(z)) D.b[i] = .
+    else               D.b[i] = mean(z, G.w)
     if (_dstat_sum_omit(D, i)) return
     if (D.noIF) return
-    dstat_set_IF(D, G, i, (Z :- D.b[i]) / G.W)
+    dstat_set_IF(D, G, i, (z :- D.b[i]) / G.W)
 }
+
+void dstat_sum_chu(`Data' D, `Grp' G, `Int' i, `SS' o, `RR' O)
+{
+    `SR'   args
+    `Int'  l
+    `RS'   a, m
+    `RC'   z, pl, h
+    
+    args = tokens(o)
+    l = length(args)
+    if (l==0) {
+        a  = O[3]/100
+        pl = _dstat_sum_get_pline(D, G, "")
+    }
+    else if (l==1) {
+        a  = strtoreal(o)/100
+        pl = _dstat_sum_get_pline(D, G, "")
+    }
+    else {
+        a  = strtoreal(args[1])/100
+        pl = _dstat_sum_get_pline(D, G, args[2])
+    }
+    z = (D.pstrong ? G.Y:<=pl : G.Y:<pl)
+    if (a==0) z = (ln(G.Y) :- ln(pl)) :* z
+    else      z = (1 :- (G.Y:/pl):^a) :* z
+    if (hasmissing(z)) {
+        _dstat_sum_invalid(D, G, "chu("+strofreal(a*100)+")", G.N-missing(z))
+        dstat_update_Y(D, G, z)
+        if (rows(pl)==rows(z)) pl = select(pl, z:<.)
+        z = select(z, z:<.)
+    }
+    m = mean(z, G.w)
+    if (a==0) {
+        D.b[i] = 1 - exp(mean(z, G.w))
+        if (_dstat_sum_omit(D, i)) return
+        if (D.noIF) return
+        h = -exp(m)*(z :- m)
+    }
+    else {
+        D.b[i] = mean(z, G.w) / a
+        if (_dstat_sum_omit(D, i)) return
+        if (D.noIF) return
+        h = z / a :- D.b[i]
+    }
+    dstat_set_IF(D, G, i,h / G.W)
+}
+
+void dstat_sum_watts(`Data' D, `Grp' G, `Int' i, `SS' o, `RR' O)
+{
+    `RC'   z, pl
+    pragma unused O
+    
+    pl = _dstat_sum_get_pline(D, G, o)
+    z = (ln(pl) :-  ln(G.Y)) :* (G.Y :< pl)
+    if (hasmissing(z)) {
+        _dstat_sum_invalid(D, G, "watts", G.N-missing(z))
+        dstat_update_Y(D, G, z)
+        if (rows(pl)==rows(z)) pl = select(pl, z:<.)
+        z = select(z, z:<.)
+    }
+    D.b[i] = mean(z, G.w)
+    if (_dstat_sum_omit(D, i)) return
+    if (D.noIF) return
+    dstat_set_IF(D, G, i, (z :- D.b[i]) / G.W)
+}
+
+void dstat_sum_sen(`Data' D, `Grp' G, `Int' i, `SS' o, `RR' O)
+{
+    `RS'   hcr, pgi, Gp
+    `RC'   z_hcr, z_pgi, z_Gp, pl
+    `RS'   m, cp, N, W
+    `RC'   Ys, ws, F, B
+    `IntC' p
+    pragma unused O
+    
+    pl = _dstat_sum_get_pline(D, G, o)
+    // head count ratio
+    z_hcr  = (D.pstrong ? G.Y:<=pl : G.Y:<pl)
+    hcr    = mean(z_hcr, G.w)
+    // poverty gap index
+    z_pgi  = ((pl :- G.Y) :/ pl) :* z_hcr
+    pgi    = mean(z_pgi, G.w)
+    // Gini among poor
+    p = mm_order(G.Y, 1, rows(G.w)!=1)
+    p = select(p, z_hcr[p])
+    N = length(p)
+    if (N==0) Gp = 0 // no poor
+    else {
+        Ys = G.Y[p]
+        ws = (rows(G.w)!=1 ? G.w[p] : G.w)
+        m  = mean(Ys, ws)
+        F  = _mm_ranks(Ys, ws, 3, 1, 1)
+        W = (rows(ws)==1 ? N*ws : quadsum(ws))
+        cp = cross(Ys, ws, F) / W
+        Gp = cp * 2 / m - 1
+    }
+    // sen poverty index
+    D.b[i] = pgi + (hcr - pgi) * Gp
+    if (D.noIF) return
+    if (N==0) z_Gp = J(G.N, 1, 0) // no poor
+    else {
+        B = z_Gp = J(G.N, 1, 0)
+        B[p] = _dstat_sum_ccdf(Ys, Ys:*ws, W)
+        z_Gp[p] = F
+        z_Gp = z_hcr :* ((z_Gp :- cp/m):*G.Y :+ B :- cp) * (2 / m) * (G.W/W)
+    }
+    z_hcr = Gp             * (z_hcr :- hcr)
+    z_pgi = (1+(hcr-1)*Gp) * (z_pgi :- pgi)
+    dstat_set_IF(D, G, i, (z_pgi + z_hcr + (hcr-pgi) * z_Gp) / G.W)
+}
+
+void dstat_sum_sst(`Data' D, `Grp' G, `Int' i, `SS' o, `RR' O)
+{
+    `RS'   pgi, Gp, m, cp
+    `RC'   pg, pl, Ys, ws, F, B, h
+    `IntC' p
+    pragma unused O
+    
+    pl = _dstat_sum_get_pline(D, G, o)
+    // poverty gap index
+    pg  = ((pl :- G.Y) :/ pl) :* (D.pstrong ? G.Y:<=pl : G.Y:<pl)
+    pgi = mean(pg, G.w)
+    // Gini of poverty gaps
+    p  = mm_order(pg, 1, rows(G.w)!=1)
+    Ys = pg[p]
+    ws = (rows(G.w)!=1 ? G.w[p] : G.w)
+    m  = mean(Ys, ws)
+    F  = _mm_ranks(Ys, ws, 3, 1, 1)
+    cp = cross(Ys, ws, F) / G.W
+    Gp = cp * 2 / m - 1 
+    // SST 
+    D.b[i] = pgi * (1 + Gp) 
+    if (D.noIF) return
+    // part of IF related to Gini
+    B = _dstat_sum_ccdf(Ys, Ys:*ws, G.W)
+    h = J(G.N, 1, 0)
+    h[p] = ((F :- cp/m):*Ys :+ B :- cp) * (2 / m)
+    // add part related to PGI
+    dstat_set_IF(D, G, i, ((1+Gp) * (pg :- pgi) + pgi * h) / G.W)
+}
+
+void dstat_sum_takayama(`Data' D, `Grp' G, `Int' i, `SS' o, `RR' O)
+{
+    `RS'   m, cp
+    `RC'   pl, Ys, ws, F, B, h
+    `IntC' p
+    pragma unused O
+    
+    pl = _dstat_sum_get_pline(D, G, o)
+    // generate censored outcomes
+    Ys = (D.pstrong ? G.Y:<=pl : G.Y:<pl)
+    Ys = (G.Y :* Ys) + (pl :* (1:-Ys))
+    // compute Gini from censored outcome
+    p  = mm_order(Ys, 1, rows(G.w)!=1)
+    Ys = Ys[p]
+    ws = (rows(G.w)!=1 ? G.w[p] : G.w)
+    m  = mean(Ys, ws)
+    F  = _mm_ranks(Ys, ws, 3, 1, 1)
+    cp = cross(Ys, ws, F) / G.W
+    D.b[i] = cp * 2 / m - 1 
+    if (D.noIF) return
+    B = _dstat_sum_ccdf(Ys, Ys:*ws, G.W)
+    h = J(G.N, 1, 0)
+    h[p] = ((F :- cp/m):*Ys :+ B :- cp) * (2 / m)
+    dstat_set_IF(D, G, i, h / G.W)
+}
+
+void dstat_sum_tip(`Data' D, `Grp' G, `Int' i, `SS' o, `RR' O)
+{
+    pragma unused O
+    _dstat_sum_tip(D, G, i, 0, o)
+}
+
+void dstat_sum_atip(`Data' D, `Grp' G, `Int' i, `SS' o, `RR' O)
+{
+    pragma unused O
+    _dstat_sum_tip(D, G, i, 1, o)
+}
+
+void _dstat_sum_tip(`Data' D, `Grp' G, `Int' i, `Int' t, `SS' o)
+{
+    `SR'  args
+    `RS'  at
+    `Int' l
+    `RC'  pl
+    
+    args = tokens(o)
+    l = length(args)
+    if (l==1) {
+        at  = strtoreal(o) / 100
+        pl = _dstat_sum_get_pline(D, G, "")
+    }
+    else {
+        at = strtoreal(args[1]) / 100
+        pl = _dstat_sum_get_pline(D, G, args[2])
+    }
+    D.b[i] = _dstat_tip(D, G, at, t, i, i, pl) // also computes IF
+}
+
+void dstat_sum_corr(`Data' D, `Grp' G, `Int' i, `SS' o, `RR' O)
+{
+    `RS'  mY, sdY, mZ, sdZ, cov
+    `RM'  mv
+    `RC'  Z, zY, zZ
+    pragma unused O
+
+    // settings
+    if (o=="") Z = D.Z[G.p, selectindex(D.zvars:==D.zvar)]
+    else       Z = D.Z[G.p, selectindex(D.zvars:==dstat_unab(o))]
+    _dstat_sum_update_Y(D, G, Z)
+    // compute correlation
+    mv  = mm_meanvariance0((G.Y, Z), G.w)
+    sdY = sqrt(mv[2,1]); sdZ = sqrt(mv[3,2]); cov = mv[3,1]
+    D.b[i] = cov / (sdY * sdZ)
+    if (_dstat_sum_omit(D, i)) return // can happen if N=1
+    // compute IF
+    if (D.noIF) return
+    mY = mv[1,1];   mZ = mv[1,2]
+    zY = (G.Y:-mY); zZ = (Z:-mZ)
+    dstat_set_IF(D, G, i, ((zY:*zZ :- cov) - cov*((zY:^2:-sdY^2)/(2*sdY^2) 
+        + (zZ:^2:-sdZ^2)/(2*sdZ^2))) / (sdY*sdZ*G.W))
+}
+
+void dstat_sum_cov(`Data' D, `Grp' G, `Int' i, `SS' o, `RR' O)
+{
+    `Int' l
+    `SR'  args
+    `RS'  df, c, mY, mZ
+    `RM'  mv
+    `RC'  Z
+    
+    // settings
+    args = tokens(o)
+    l = length(args)
+    if (l==0) {
+        Z  = D.Z[G.p, selectindex(D.zvars:==D.zvar)]
+        df = O[3]
+    }
+    else if (l==1) {
+        df = strtoreal(args[1])
+        if (df<.) Z = D.Z[G.p, selectindex(D.zvars:==D.zvar)]
+        else {
+            Z  = D.Z[G.p, selectindex(D.zvars:==dstat_unab(args[1]))]
+            df = O[3]
+        }
+    }
+    else {
+        Z  = D.Z[G.p, selectindex(D.zvars:==dstat_unab(args[1]))]
+        df = strtoreal(args[2])
+    }
+    _dstat_sum_update_Y(D, G, Z)
+    // compute correlation
+    mv  = mm_meanvariance0((G.Y, Z), G.w)
+    if (df!=0) { // small-sample adjustment
+        if (D.wtype==1) c = G.W / (G.W - df)
+        else            c = G.N / (G.N - df)
+    }
+    else c = 1
+    D.b[i] = mv[3,1] * c
+    if (_dstat_sum_omit(D, i)) return // can happen if N=1
+    // compute IF
+    if (D.noIF) return
+    mY = mv[1,1]; mZ = mv[1,2]
+    dstat_set_IF(D, G, i, (c*((G.Y:-mY) :* (Z:-mZ)) :- D.b[i]) / G.W)
+}
+
+void dstat_sum_spearman(`Data' D, `Grp' G, `Int' i, `SS' o, `RR' O)
+{
+    `RM' mv, cov, vy, vz
+    `RC' pY, pZ, Z, FY, FZ, hY, hZ, hYZ
+    pragma unused O
+
+    // settings
+    if (o=="") Z = D.Z[G.p, selectindex(D.zvars:==D.zvar)]
+    else       Z = D.Z[G.p, selectindex(D.zvars:==dstat_unab(o))]
+    _dstat_sum_update_Y(D, G, Z)
+    // compute correlation
+    pY = mm_order(G.Y, 1, 1)
+    pZ = mm_order(  Z, 1, 1)
+    FY = FZ = J(G.N, 1, .)
+    FY[pY] = _mm_ranks(G.Y[pY], rows(G.w)==1 ? G.w : G.w[pY], 3, 1, 1)
+    FZ[pZ] = _mm_ranks(  Z[pZ], rows(G.w)==1 ? G.w : G.w[pZ], 3, 1, 1)
+    mv = mm_variance0((FY, FZ), G.w)
+    cov = mv[2,1]; vy = mv[1,1]; vz = mv[2,2]
+    D.b[i] = cov / (sqrt(vy) * sqrt(vz))
+    if (_dstat_sum_omit(D, i)) return // can happen if N=1
+    // compute IF
+    if (D.noIF) return
+    hY = hZ = J(G.N, 1, .)
+    hY[pY] = _dstat_sum_ccdf(FY[pY], (FZ:*G.w)[pY], G.W)
+    hZ[pZ] = _dstat_sum_ccdf(FZ[pZ], (FY:*G.w)[pZ], G.W)
+    hYZ    = (FY:*FZ + hY + hZ) :- 3*(cov + 0.25)
+    hY[pY] = _dstat_sum_ccdf(FY[pY], (2*FY:*G.w)[pY], G.W)
+    hY     = (FY:^2 + hY) :- 3*(vy + 0.25)
+    hZ[pZ] = _dstat_sum_ccdf(FZ[pZ], (2*FZ:*G.w)[pZ], G.W)
+    hZ     = (FZ:^2 + hZ) :- 3*(vz + 0.25)
+    dstat_set_IF(D, G, i, (hYZ - cov * (hY/(2*vy) + hZ/(2*vz))) /
+                          (sqrt(vy)*sqrt(vz) * G.W))
+}
+
 
 end
 

@@ -1,6 +1,7 @@
-*! version 1.7.4 20Apr2020
+*! version 1.7.5 May2021
 /*
 History
+PL 17May2021: added noheader and nocoef option 
 PL 20Mar2020: user-specififed knots for tvc fix
 PL 02Jul2018: Now autimatically uses the oldest option if Stata version < 15.1
 PL 27Oct2016: Correct bug for Cure models with delayed entry and orthogonalization
@@ -73,19 +74,51 @@ end
 program Estimate, eclass byable(recall)
 	st_is 2 analysis	
 	syntax  [varlist(fv default=empty)] [fw pw iw aw] [if] [in] ///
-	[, DF(string) TVC(varlist fv) DFTvc(string) KNOTS(numlist ascending) KNOTSTvc(string) ///
-		BKnots(numlist ascending min=2 max=2) BKNOTSTVC(string) KNSCALE(string) noORTHog SCale(string) noCONStant ///
-		INITTheta(real 1) CONSTheta(string) EForm ALLEQ KEEPCons BHAZard(varname) ///
-		LINinit STratify(varlist) THeta(string) OFFset(varname) RCSBASEOFF BHAZINIT(string) ///
-		/* !! PR */ STPMDF(int 0) VERBose SHOWCons MLMethod(string) ///
-		ALL RMAT REVerse CURE FAILCONVLININIT INITSTRATA(varlist) FROM(string) OLDEST ///
-		NOFIRSTDER NOSECONDDER] ///
-	[                               ///
-	noLOg                           /// -ml model- options
-	noLRTEST                        /// 
-	Level(real `c(level)')       /// -Replay- option
-	*                               /// -mlopts- options
-	]
+	        [,                                                  ///
+          DF(string)                                          ///
+          TVC(varlist fv)                                     ///
+          DFTvc(string)                                       ///
+          KNOTS(numlist ascending)                            ///
+          KNOTSTvc(string)                                    ///
+		      BKnots(numlist ascending min=2 max=2)               ///
+          BKNOTSTVC(string)                                   ///
+          KNSCALE(string)                                     ///
+          noORTHog                                            ///
+          SCale(string)                                       ///
+          noCONStant                                          ///
+		      INITTheta(real 1)                                   ///
+          CONSTheta(string)                                   ///
+          EForm                                               ///
+          ALLEQ                                               ///
+          KEEPCons                                            ///
+          BHAZard(varname)                                    ///
+		      LINinit                                             ///
+          STratify(varlist)                                   ///
+          THeta(string)                                       ///
+          OFFset(varname)                                     ///
+          RCSBASEOFF                                          ///
+          BHAZINIT(string)                                    ///
+		      STPMDF(int 0)                                       ///
+          VERBose                                             ///
+          SHOWCons                                            ///
+          MLMethod(string)                                    ///
+		      ALL                                                 ///
+          RMAT                                                ///
+          REVerse                                             ///
+          CURE                                                ///
+          FAILCONVLININIT                                     ///
+          INITSTRATA(varlist)                                 ///
+          FROM(string)                                        ///
+          OLDEST                                              ///
+		      NOFIRSTDER                                          ///
+          NOSECONDDER                                         ///
+          noHEADer                                            ///
+          noCOEF                                              ///
+	        noLOg                                               /// -ml model- options
+	        noLRTEST                                            /// 
+	        Level(real `c(level)')                              /// -Replay- option
+	        *                                                   /// -mlopts- options
+	        ]
 
 /* !! PR - save (parent) variable names from varlist */
 _extract_varnames `varlist'
@@ -105,7 +138,7 @@ local cmdline `"stpm2 `0'"'
 	}
 	
 /* Use old estimation commands if Stata version <15.1 */
-	if `c(stata_version)' < 15.1 {
+	if `c(stata_version)' < 16.1 {
 		local oldest oldest
 	}
 
@@ -651,8 +684,9 @@ local cmdline `"stpm2 `0'"'
 		}
 	}
 
+ 
 /* Generate splines for baseline hazard */
-	/* !! PR */ if "`verbose'"=="verbose" display as txt "Generating Spline Variables"
+	if "`verbose'"=="verbose" display as txt "Generating Spline Variables"
 	if `nbhknots'>0 & "`rcsbaseoff'" == "" {
 		local bhknots `lowerknot'
 
@@ -668,6 +702,7 @@ local cmdline `"stpm2 `0'"'
 				qui _pctile `lnt' if `touse' & _d==1 `wt', p(`tmpknot') 
 				local addknot = `r(r1)'
 			}
+
 			local bhknots `bhknots' `addknot'
 		}
 		local bhknots `bhknots' `upperknot'
@@ -679,12 +714,26 @@ local cmdline `"stpm2 `0'"'
 			display as error "Try using fewer degrees of freedom or specifying the knots yourself."
 			exit 198
 		}
+        
+  /* knot check */
+    forvalues i = 2/ `=wordcount("`bhknots'") - 1' {
+    	if `=word("`bhknots'",`i')'<=`lowerknot' {
+      	di as error "You have an internal knot <= the lower boundary knot"
+        exit 198
+      }
+    	if `=word("`bhknots'",`i')'>=`upperknot' {
+      	di as error "You have an internal knot >= the upper boundary knot"
+        exit 198
+      }      
+    }        
+        
 		qui rcsgen `lnt' if `touse2', knots(`bhknots') gen(_rcs) dgen(_d_rcs) `orthog'  `rmatrixopt' `reverse' `nosecondder' `nofirstder'
 		if "`orthog'" != "" {
 			matrix `R_bh' = r(R)
 		}
 	}
-	
+
+  	
 /* Generate splines for time-dependent effects */	
 	if "`tvc'" != "" {
 		foreach tvcvar in  `tvc' {
@@ -713,6 +762,19 @@ local cmdline `"stpm2 `0'"'
 					display as error "You have duplicate knots positions for the time-dependent effect of `tvcvar'"
 					exit 198
 				}				
+        
+  /* knot check */
+        forvalues i = 2/ `=wordcount("`tvcknots_`tvcvar''") - 1' {
+        	if `=word("`tvcknots_`tvcvar''",`i')'<=`lowerknot_`tvcvar'' {
+          	di as error "You have an internal knot <= the lower boundary knot for the time-dependent effect of `tvcvar'"
+            exit 198
+          }
+        	if `=word("`tvcknots_`tvcvar''",`i')'>=`upperknot_`tvcvar'' {
+          	di as error "You have an internal knot >= the upper boundary knot for the time-dependent effect of `tvcvar'"
+            exit 198
+          }      
+        }          
+        
 				qui rcsgen `lnt' if `touse2', knots(`tvcknots_`tvcvar'') gen(_rcs_`tvcvar') dgen(_d_rcs_`tvcvar') `orthog' `reverse' `nosecondder' `nofirstder'
 				if "`orthog'" != "" {
 					tempname R_`tvcvar' Rinv_`tvcvar'
@@ -1343,11 +1405,11 @@ local cmdline `"stpm2 `0'"'
 	else {
 		ereturn local sp_constraints `dropconslist'
 	}
-	Replay, level(`level') `alleq' `eform' `showcons' `diopts'
+	Replay, level(`level') `alleq' `eform' `showcons' `diopts' `header' `coef'
 end
 
 program Replay
-	syntax [, EFORM ALLEQ SHOWCons Level(int `c(level)') * ]
+	syntax [, EFORM ALLEQ SHOWCons Level(int `c(level)') noCOEF noHEADer * ]
 	_get_diopts diopts, `options'
 	if "`alleq'" == "" {
 		local neq neq(1)
@@ -1363,8 +1425,9 @@ program Replay
 	else {
 		local showcons
 	}
-
-	ml display, `eform' `neq' `showcons' level(`level') `diopts'
+  if "`coef'" == "" {
+	  ml display, `eform' `neq' `showcons' level(`level') `diopts' `header'
+  }
 end
 
 program define _extract_varnames, rclass

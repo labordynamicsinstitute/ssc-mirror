@@ -23,7 +23,7 @@ d KW: global value chains
 d
 d Requires: Stata version 14
 d
-d Distribution-Date: 20200529
+d Distribution-Date: 20210529
 d
 d Author: Federico Belotti, University of Rome Tor Vergata
 d Support: email federico.belotti@@uniroma2.it
@@ -36,5 +36,6 @@ d Support: email michele.mancini@@bancaditalia.it
 d
 f icio.ado
 f icio_load.ado
+f icio_clean.ado
 f icio.sthlp
 f ../l/licio.mlib

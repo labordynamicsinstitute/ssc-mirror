@@ -18,12 +18,12 @@ d Requires: Stata version 10, wbopendata and spmap from SSC (q.v.)
 d
 d Distribution-Date: 20130224
 d
-d Author: Damian Clarke, Oxford University
-d Support: email damian.clarke@@economics.ox.ac.uk
+d Author: Damian Clarke, Universidad de Santiago de Chile
+d Support: email dclarke@@fen.uchile.cl
 d
 f worldstat.ado
 f worldstat.sthlp
-F worldstatworld_data.dta
-F worldstatworld_coords.dta
-F worldstateurope_coords.dta
-F worldstatoceania_coords.dta
+f worldstatworld_data.dta
+f worldstatworld_coords.dta
+f worldstateurope_coords.dta
+f worldstatoceania_coords.dta

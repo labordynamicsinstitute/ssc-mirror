@@ -1,6 +1,10 @@
-*!version 1.0 2008-02-18
+* version 1.0 2008-02-18
+*!Version 1.1 2019-03-27
+* Added possibility to save the variables for the plot
+* Added noGraph option to suppress the plot
 *! Sune.Karlsson@oru.se
 *
+
 *! News impact curve for ARCH type models
 *
 
@@ -8,11 +12,19 @@
 program define newsimpact
 version 9
 
-syntax [, Sigma2(real -1) Range(real -1)]
+syntax [namelist(name=savevar id="Saved variables" min=2 max=2)] [, Sigma2(real -1) Range(real -1) noGraph]
 
 if "`e(cmd)'" != "arch" {
   di as err "newsimpact can only be run after {help arch}"
   exit 198
+}
+
+foreach v of local savevar {
+  capture: confirm variable `v'
+  if ( !_rc ) {
+	di as err "Variable `v' already exists"
+	exit 110
+  }
 }
 
 if ( "`sigma2'" <= "0" ) {
@@ -72,6 +84,16 @@ label var `impact' "Response, sigma^2(t)"
 
 disp as text "News impact calculated at sigma^2 = `sigma2'"
 
-twoway (line `impact' `z'), title("News impact curve")
+if ( "`graph'" == "" ) {
+  twoway (line `impact' `z'), title("News impact curve")
+}
+
+if ( "`savevar'" != "" ) {
+  tokenize `savevar'
+  quietly: gen `1' = `impact'
+  label var `1' "Response, sigma^2(t)"
+  quietly: gen `2' = `z'
+  label var `2' "News, z(t-1)"
+}
 
 end

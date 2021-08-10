@@ -43,6 +43,9 @@
 {synopt :{opt standweights(numlist)}}weights for standardizing{p_end}
 {synopt :{opt using2(filename, suboptions)}}incorporate second population mortality file{p_end}
 {synopt :{opt verbose}}more detailed output{p_end}
+{synopt :{opt graph}}create a graph, with confidence interval{p_end}
+{synopt :{opt graphn:ame(name [, replace])}}name the resulting graph{p_end}
+{synopt :{opt graphc:ode(filename)}}create a do file that contains the code to recreate the graph{p_end}
 
 {p2colreset}{...}
 {p 4 6 2}
@@ -174,10 +177,19 @@ used in the {cmd:pmrate} option
 used in the {cmd:pmyear} option. If population rates do not vary by calendar year in the second population mortality file then
 use {cmd:pmyear2(.)}.
 
-
 {phang}
 {opt verbose} give some details about the how far the estimation process has proceeded. 
 This was useful when developing the command, but may bring pleasure to those who like seeing dots appear.
+
+{phang}
+{opt graph} creates a plot of the main marginal relative survival estimate with a confidence interval. Really only one of the {cmd:graph}, {cmd:graphname} or {cmd:graphcode} options are required to get a plot.
+
+{phang}
+{opt graphname(name [, replace])} an option to name the graph - can replace an existing graph with the replace suboption. 
+
+{phang}
+{opt graphcode(filename)} creates a new do file, which contains the code to recreate the standard graph - this allows the option to make changes to the the plot - e.g. titles, whether to have a risktable etc.
+
 
 {title:Examples}
 
@@ -200,20 +212,8 @@ Estimate marginal relative survival in the study population as a whole.
 {p 16 20 2}
 agediag(age) datediag(dx) {space 27 }///{p_end}
 {p 16 20 2}
- pmother(sex) list(1 5 10){p_end}
- 
-{phang2} 
-. twoway  (rarea R_pp1_lci R_pp1_uci _t, sort color(red%30) connect(stairstep)) ///{p_end}
-{p 16 20 2}
-(line R_pp1 _t, sort lcolor(red) connect(stairstep)){space 18 }                  ///{p_end}
-{p 16 20 2}
-,legend(off) {space 57}                                 ///{p_end}
-{p 16 20 2}
-xtitle("Years from diagnosis") {space 39}               ///{p_end}
-{p 16 20 2}
-ytitle(Marginal relative survival) {space 35}           ///{p_end}
-{p 16 20 2}
-name(R_pp1, replace){p_end} 
+ pmother(sex) list(1 5 10) graphname(R_pp1, replace)  {p_end}
+
 {pmore}
 {it:({stata "stpp_example, egnumber(1)":click to run})}
 
@@ -227,26 +227,10 @@ Estimate marginal relative survival separately for males and females.
 {p 16 20 2}
 agediag(age) datediag(dx) {space 27 }///{p_end}
 {p 16 20 2}
-pmother(sex) list(1 5 10){space 28 }///{p_end}
+pmother(sex) list(1 5 10) graphname(R_pp2, replace) {p_end}///{p_end}
 {p 16 20 2}
 by(sex){p_end} 
 
-{phang2} 
-. twoway  (rarea R_pp2_lci R_pp2_uci _t if sex==1, sort color(red%30) connect(stairstep))  ///{p_end}
-{p 16 20 2}
- (line R_pp2 _t if sex==1, sort lcolor(red) connect(stairstep))   {space 17 }                  ///{p_end}
-{p 16 20 2}
-(rarea R_pp2_lci R_pp2_uci _t if sex==2, sort color(blue%30) connect(stairstep)) {space 0 }  ///{p_end}
-{p 16 20 2}
-(line R_pp2 _t if sex==2, sort lcolor(blue) connect(stairstep)){space 17 }  ///{p_end}
-{p 16 20 2}
-,legend(order(2 "males" 4 "females") ring(0) pos(1)) {space   27}  ///{p_end}
-{p 16 20 2}
-xtitle("Years from diagnosis") {space 49 }               ///{p_end}
-{p 16 20 2}
-ytitle(Marginal relative survival) {space 45 }           ///{p_end}
-{p 16 20 2}
-name(R_pp2, replace){p_end} 
 {pmore}
 {it:({stata "stpp_example, egnumber(2)":click to run})}
 
@@ -270,24 +254,8 @@ by(sex) {space 45 }///{p_end}
 {p 16 20 2}
 standstrata(ICSSagegrp){space 30 }///{p_end}
 {p 16 20 2}
-standweight(0.07 0.12 0.23 0.29 0.29){p_end}
+standweight(0.07 0.12 0.23 0.29 0.29) graphname(R_pp3, replace){p_end}
 
-{phang2} 
-. twoway  (rarea R_pp3_lci R_pp3_uci _t if sex==1, sort color(red%30) connect(stairstep))  ///{p_end}
-{p 16 20 2}
- (line R_pp3 _t if sex==1, sort lcolor(red) connect(stairstep))   {space 17 }                  ///{p_end}
-{p 16 20 2}
-(rarea R_pp3_lci R_pp3_uci _t if sex==2, sort color(blue%30) connect(stairstep)) {space 0 }  ///{p_end}
-{p 16 20 2}
-(line R_pp3 _t if sex==2, sort lcolor(blue) connect(stairstep)){space 17 }  ///{p_end}
-{p 16 20 2}
-,legend(order(2 "males" 4 "females") ring(0) pos(1)) {space   27 }  ///{p_end}
-{p 16 20 2}
-xtitle("Years from diagnosis") {space 49 }               ///{p_end}
-{p 16 20 2}
-ytitle(Marginal relative survival) {space 45 }           ///{p_end}
-{p 16 20 2}
-name(R_pp3, replace){p_end} 
 {pmore}
 {it:({stata "stpp_example, egnumber(3)":click to run})}
 
@@ -315,24 +283,8 @@ pmother(sex) list(1 5 10){space 28 }///{p_end}
 {p 16 20 2}
 by(sex) {space 45 }///{p_end}
 {p 16 20 2}
-indweights(wt_age){p_end}
+indweights(wt_age) graphname(R_pp4, replace) {p_end}
 
-{phang2} 
-. twoway  (rarea R_pp4_lci R_pp4_uci _t if sex==1, sort color(red%30) connect(stairstep))  ///{p_end}
-{p 16 20 2}
- (line R_pp4 _t if sex==1, sort lcolor(red) connect(stairstep))   {space 17 }                  ///{p_end}
-{p 16 20 2}
-(rarea R_pp4_lci R_pp4_uci _t if sex==2, sort color(blue%30) connect(stairstep)) {space 0 }  ///{p_end}
-{p 16 20 2}
-(line R_pp4 _t if sex==2, sort lcolor(blue) connect(stairstep)){space 17 }  ///{p_end}
-{p 16 20 2}
-,legend(order(2 "males" 4 "females") ring(0) pos(1)) {space   27 }  ///{p_end}
-{p 16 20 2}
-xtitle("Years from diagnosis") {space 49 }               ///{p_end}
-{p 16 20 2}
-ytitle(Marginal relative survival) {space 45 }           ///{p_end}
-{p 16 20 2}
-name(R_pp4, replace){p_end} 
 {pmore}
 {it:({stata "stpp_example, egnumber(4)":click to run})}
 
@@ -356,9 +308,10 @@ When using the {cmd:by()} option multiple matrices will be saved.
 {title:Author}
 
 {pstd}
-Paul Lambert, University of Leicester, UK.
+Paul C Lambert, University of Leicester, UK & Karolinska Institutet, Sweden.
 ({browse "mailto:paul.lambert@leicester.ac.uk":paul.lambert@leicester.ac.uk})
-
+Mark J Rutherford
+({browse "mailto:mark.rutherford@leicester.ac.uk":mark.rutherford@leicester.ac.uk})
 
 {title:References}
 

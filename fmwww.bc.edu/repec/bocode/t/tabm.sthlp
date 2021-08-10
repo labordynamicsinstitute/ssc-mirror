@@ -1,5 +1,5 @@
 {smcl}
-{* 11dec2002/1nov2010/27jul2015/1apr2016}{...}
+{* 11dec2002/1nov2010/27jul2015/1apr2016/11may2021}{...}
 {hline}
 help for {hi:tabm}
 {hline}
@@ -18,6 +18,7 @@ help for {hi:tabm}
 {cmd:replace}
 {cmdab:tr:anspose}
 {cmdab:v:aluelabel(}{it:lblname}{cmd:)}
+{cmdab:varname:s}
 {it:tabulate_options}]
 
 {p 4 4 2}
@@ -80,6 +81,11 @@ the first numeric variable in {it:varlist} will be used.  This option
 will be ignored in tabulation of string variables.
 
 {p 4 8 2}
+{cmd:varnames} insists on variable names being shown to indicate {it:varlist} 
+on the rows or columns of the table. The default is to show variable labels 
+whenever defined. 
+
+{p 4 8 2}
 {it:tabulate_options} are options allowed with {help tabulate} for two-way or 
 one-way tables. 
 
@@ -107,7 +113,9 @@ one-way tables.
 
 {p 4 4 2}Lee Sieswerda suggested making {cmd:tabm} {cmd:by}able and 
 helped in testing. Svend Juul gave a careful analysis of how missing
-values were not being supported properly. 
+values were not being supported properly. Questions from Chris Martin 
+led to identification of a bug affecting {cmd:valuelabel()} and the 
+introduction of {cmd:varnames} as an option. 
 
 
 {title:References} 

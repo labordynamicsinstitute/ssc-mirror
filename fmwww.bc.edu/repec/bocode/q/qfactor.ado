@@ -1,4 +1,4 @@
-*! version 2.20 04JUN2019
+*! version 2.21 21MAY2021
 
 /*
 History: Changes from version 1.0
@@ -19,13 +19,16 @@ version 2.10.01:
 version 2.20:
 	1- The option for reading data from PQMethod format has been deleted.
 	2- The names of the original variables  are now preserved and shown in the output. 
+	
+version 2.21:
+	1- The STLENGTH option  was added.
 */
 program define qfactor 
 version 12.0
 
 syntax varlist(min=3 numeric) [if] [in], NFActor(integer) [EXTraction(string)] ///
-                      [ROTation(string)] [SCOre(string)] ///
-					  [ESize(string)] [BIPolar(string)]
+                      [ROTation(string)] [SCOre(string)] [ESize(string)] ///
+					  [BIPolar(string)] [STLength(string)]
 preserve
 foreach var in `varlist' {
 confirm variable `var'
@@ -50,6 +53,11 @@ if "`rotation'"=="" local rotation "varimax"
 global n=`nfactor' /*Define number of factors to be extracted*/
 local nsort: word count `varlist' /*Define number of Q-sorts*/
 scalar nsort=`nsort'
+
+/*Settimg length of statement for display*/
+if "`stlength'"=="" local stlength "50"
+global s=`stlength'
+replace statement=substr(statement,1,$s )
 
 factor `varlist', fa($n) `extraction'  /*Choose matrix extracting technique*/
 matrix unrotated=e(L)

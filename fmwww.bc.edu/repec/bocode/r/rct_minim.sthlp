@@ -1,6 +1,7 @@
 {smcl}
-{* 2017-03-02}
-{* help file to accompany rct_minim 2.2.1}
+{* 2021-07-20}
+{* changes to pchoice option text + addition of table command to final example}
+{* help file to accompany rct_minim 2.3.0}
 {cmd:help rct_minim}
 {hline}
 
@@ -49,6 +50,7 @@ prognostic factors{p_end}
 {synopt :{opt delay(#)}}specify first # subjects are allocated treatments at random{p_end}
 {synopt :{opt warn}}user response required between re-display of command and treatment assignment{p_end}
 {synopt :{opt showd:etail}}display detailed output{p_end}
+{synopt :{opt sleep(#)}}introduce a pause before program ends{p_end}
 
 {synoptline}
 {p 5}
@@ -114,14 +116,24 @@ at least 2 for each factor. Separate the {it:#}s by one or more spaces.
 extent of the bias in treatment assignments. Minimization seeks to assign a treatment based on 
 minimising the prognostic factor imbalance. This imbalance is reflected in function D{it:i} that 
 measures the extent of variation across treatments for levels of factor {it:i}.  By default, {cmd:rct_minim} 
-specifies D{it:i} as the {it:range} in the counts of each level of factor {it:i} across treatments 
-(see option {bf: mchoice} below for alternative methods of measuring imbalance in factors), and 
-then calculates G{it:k}, a sum (perhaps weighted) of the D{it:i} for each treatment {it:k} (k = 1..{bf:nt}).
-We may then {it:deterministically} assign the subject to the treatment that will minimise G, or, 
-perhaps in an effort to better protect the blinding, assign the subject to treatments in a random 
-fashion following an empirical probability distribution. This distribution will of course assign more 
-probability to the treatment minimizing G. Pocock and Simon discuss 3 methods, denoted "{bf:a}", 
-"{bf:b}" and "{bf:c}" for setting up the probability distribution (see section 3.3 of their paper). {p_end}
+specifies D{it:i} as the {it:range}.  We consider in turn what would happen if the subject currently facing 
+randomisation were to be assigned to each of the {bf:nt} treatments. For the first treatment, for the first factor, 
+at just the level of that factor the subject enjoys, we count the numbers of randomisations to {it:each} of the 
+{bf:nt} treatments that would result if that subject were assigned to the first treatment, and calculate the 
+range of those {bf:nt} counts.  Do the same for each factor in turn, yielding {bf:nf} ranges for the first treatment.
+Then repeat this process for the second treatment, and so on. (See option {bf: mchoice} below for alternative methods
+of measuring imbalance in factors).  We then calculate G{it:k} ({it:k} = 1..{bf:nt}), a sum (perhaps weighted) of the 
+{bf:nf} ranges for each treatment. G{it:k} measures the imbalance in treatment allocations {it:at the appropriate} 
+{it:factor levels} were treatment {it:k} assigned. We may then {it:deterministically} assign the subject to the treatment 
+that will minimise G, or, perhaps in an effort to better protect the blinding, assign the subject to treatments in a 
+random fashion following an empirical probability distribution. This distribution will of course assign more 
+probability to the treatment minimizing G. ({it:Note: }Section 3.4 of Pocock and Simon has a simple worked example that 
+makes this seemingly complex process much easier to follow. Their example is reproduced in the Examples section
+at the end of this help file, wherein use of the {bf:showdetail} option will be of great assistance.){p_end}
+
+{p 8 8 2}
+Pocock and Simon discuss 3 methods, denoted "{bf:a}", "{bf:b}" and 
+"{bf:c}" for setting up the probability distribution (see section 3.3 of their paper). {p_end}
 
 {p 8 8 2}
 Method {bf:a} specifies {bf:p} as the probability for the assignment to the treatment with the lowest 
@@ -249,6 +261,13 @@ the final treatment group assignment {p_end}
 {p 12 14 2}
 the updated prognostic factor balance matrix {p_end}
 
+{phang}
+{opt sleep(#)} specifies that a pause of {it:#} milliseconds will be introduced into the program before it ends. This would 
+rarely be specified but may be useful in the context of an automated simulation when {it:very} rapid repeated invocations of 
+{bf:rct_minim} might occur within the 1 second spacing of the seed being set (see {it:Note} under option {bf:warn} above). In that 
+circumstance the same numeric seed would be set for several/many randomisations with potentially unhappy results.  
+Specifying # > 1000 will avoid this. The default is {opt sleep(0)}, implying that no pause is introduced before the program ends.
+
 
 {title:Examples}
 
@@ -275,7 +294,28 @@ process until the 11th subject is randomized; the first 10 subjects will have th
 
 {pstd}Mimic example from section 3.4 of Pocock and Simon. Ensure that files {bf:pocock_simon_v3_rand.dta} and
 {bf:pocock_simon_v3_factbal.dta} (available with the {bf:rct_minim} package from SSC) are installed in the 
-current path. 50 subjects have already been randomised, whither the 51st?{p_end}
+current path. 50 subjects have already been randomised, whither the 51st?  First, we reproduce TABLE 1, Section 3.4, of Pocock and Simon:{p_end}
+
+{p 6 10 2}
+{cmd:. use pocock_simon_v3_rand, clear} {p_end}
+{p 6 10 2}
+{cmd:. reshape long factor, i(_SeqNum) j(level)} {p_end}
+{p 6 10 2}
+{cmd:. table treatment factor level, row col} {p_end}
+
+          --------------------------------------------------------------------------------------------------
+                    |                                    level and factor                                   
+                    | ------------ 1 -----------    ------------ 2 -----------    ------------ 3 -----------
+          treatment |     1      2      3  Total        1      2      3  Total        1      2      3  Total
+          ----------+---------------------------------------------------------------------------------------
+                  1 |     9      8            17        8      9            17        8      4      5     17
+                  2 |    10      7            17        6     11            17        8      5      4     17
+                  3 |     9      7            16        7      9            16        8      3      5     16
+                    | 
+              Total |    28     22            50       21     29            50       24     12     14     50
+          --------------------------------------------------------------------------------------------------
+
+{pstd}Now randomise the 51st subject:{p_end}
 
 {p 6 10 2}
 {cmd:. rct_minim, filestub(pocock_simon_v3) w(2 1 1) nt(3) nf(3) nl(2 2 3) pchoice(a) p(`=2/3') pattern(1 2 2) treatv(treatment) showd} {p_end}
@@ -294,6 +334,8 @@ in the controlled clinical trial. Biometrics 31, 103-115.
 Thanks to Kit Baum, Boston College Economics and DIW Berlin, for suggesting some useful Mata code.{break}
 Thanks also to Tom Sullivan, University of Adelaide, for helping test and debug {bf:rct_minim} and to
 Ben Leiby and Nooreen Dabbish at TJU, Philadelphia, who spotted and helped correct a bug involving the random seed.
+Karla Hemming at the University of Birmingham, UK, alerted me to the potential for duplicated seeds using {bf:rct_minim}
+in simulations.  I thank her also for helping to clarify the text in the help on option pchoice() above.
 
 {title:Author}
 

@@ -1,7 +1,7 @@
-*! version 1.0.0 18August2019
+*! version 2.0.0 23July2021
 
 program define callCcode
-	program bayesqual12, plugin 
-	plugin call bayesqual12
+	program bayesqual13, plugin 
+	plugin call bayesqual13
 end
 

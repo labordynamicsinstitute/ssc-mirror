@@ -1,17 +1,14 @@
-*! Package basetable v 0.2.5
+*! Package basetable v 0.2.6
 *! Support: Niels Henrik Bruun, niels.henrik.bruun@gmail.com
-*!version 0.2.5a  2021-01-28 > Bug fixes
-*!version 0.2.5  2020-12-28 > Converted to ltoxl_v1[34].mata and added columnwidth for toxl
-*!version 0.2.5  2020-12-07 > varlists instead of varnames
-*!version 0.2.5  2020-12-07 > First variable _none
-*!version 0.2.5  2020-12-07 > Overall if kept
-
+*!version 0.2.6  2021-05-24 > Bug in basetable_parser(): basetable::n_pct_by_value() not called when value ends on r. Thanks to Kasper Norman
+*!version 0.2.6  2021-04-15 > NoTotal and NoPvalue now also for toxl
+ 
 * TODO: Count unique by
-* DONE: Set decimals on totals
-* DONE: toxl insert in (row, col) plus update sheet
-* DROP: Header layout = space above, line below. Christine Geyti
-* DONE: Control columnwidth in toxl. Force adjustment similar to style. Only from Stata 14
-
+*version 0.2.5a  2021-01-28 > Bug fixes
+*version 0.2.5  2020-12-28 > Converted to ltoxl_v1[34].mata and added columnwidth for toxl
+*version 0.2.5  2020-12-07 > varlists instead of varnames
+*version 0.2.5  2020-12-07 > First variable _none
+*version 0.2.5  2020-12-07 > Overall if kept
 *version 0.2.4  2020-10-07 > Bug in basetable::n_pct_by_value() fixed
 *version 0.2.4  2020-10-07 > Categorical report as option
 *version 0.2.4  2020-10-07 > Fisher's exact test as option
@@ -154,11 +151,18 @@ program define basetable
                 `QUIETLY' mata: __xlz.columnwidths()            	
             }
 
-            mata: __xlz.insert_matrix(tbl.output)
+            mata: __str_regex = ""
+            if `"`total'"' != "" mata: __str_regex = "^Total$"
+			if  `"`pvalue'"' != "" mata: __str_regex = "^P-value$"
+			if `"`total'"' != "" & `"`pvalue'"' != "" mata: __str_regex = "^Total$|^P-value$"
+            mata: __slct_columns = tbl.regex_select_columns(__str_regex)
+            mata: __output = tbl.output[., __slct_columns]
+
+            mata: __xlz.insert_matrix(__output)
             if `c(stata_version)' >= 14 {
-                mata: __xlz.set_alignments("left", (0, 0), (rows(tbl.output)-1, 0), 1)
-                mata: __xlz.set_alignments("left", (0, 0), (0, cols(tbl.output)-1), 1)
-                mata: __xlz.set_alignments("right", (1, 1), (rows(tbl.output)-1, cols(tbl.output)-1), 1)
+                mata: __xlz.set_alignments("left", (0, 0), (rows(__output)-1, 0), 1)
+                mata: __xlz.set_alignments("left", (0, 0), (0, cols(__output)-1), 1)
+                mata: __xlz.set_alignments("right", (1, 1), (rows(__output)-1, cols(__output)-1), 1)
             }
             if inlist(`"`style'"', "", "smcl") ///
                 mata printf(`"Table saved in "%s", in sheet "%s"... \n"', __xlz.xlfile(), __xlz.sheet())

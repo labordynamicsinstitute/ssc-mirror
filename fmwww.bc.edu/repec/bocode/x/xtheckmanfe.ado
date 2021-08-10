@@ -1,3 +1,5 @@
+*! v2 Adds option -ml- for pseudo ML
+*! v1.2 Adds labels to _mn_vars
 *! v1.1 Fixes a problem for endogenous option 
 *Original code by Anastasia Semykina
 *This version Modified by Fernando Rios-Avila
@@ -70,12 +72,13 @@ program define  xtheckmanfe, eclass
 			exit
 		}
 		else {
-			display in red "last extimates not found"
+			display in red "last estimates not found"
 			exit 301
 		}
 	}
+	
 version 13
-syntax varlist(fv) [if], SELECtion(str) [ ENDogenous(str) id(varname) time(varname) reps(integ 50) seed(str)]
+syntax varlist(fv) [if], SELECtion(str) [ ENDogenous(str) id(varname) time(varname) ml reps(integ 50) seed(str)]
  
 ** This version will be based on Semykina, but standard errors will be done using Bootstrap
 ** Step 1. Gather all variables of interest
@@ -151,23 +154,55 @@ syntax varlist(fv) [if], SELECtion(str) [ ENDogenous(str) id(varname) time(varna
 			 local mn_var_z2  `r(mn_varlist)'
 	}
 
-	//	Initial model estimation quietly
-	qui:probit `y2' i.`time'#c.(`x1' `x1m' `z1' `z1m' `z2' `z2m') i.`time' if `touse'
-	tempname bpi
-	qui:matrix `bpi'=e(b)
-	
-	if "`endogenous'"==""  {
+	if "`endogenous'"=="" & "`ml'"=="" {
 		qui:xtset, clear
- 	 
+		//	Initial model estimation quietly
+ 	 	qui:probit `y2' i.`time'#c.(`x1' `x1m' `z1' `z1m' `z2' `z2m') i.`time' if `touse'
+		tempname bpi
+		qui:matrix `bpi'=e(b)
 		bootstrap, cluster(`id') reps(`reps') seed(`seed'):		_xthck if `touse', ///
 		       y1(`y1') x1(`x1') x1m(`mn_var_x1') /// outcome equation
 	           y2(`y2') z1(`z1') z1m(`mn_var_z1') /// selection equation
 			   time(`time') bpi(`bpi') 
 		if "`isxtset'"=="1" qui:xtset `id' `time'
 	}
+	
+	if "`endogenous'"=="" & "`ml'"!="" {
+		* clean varnames
+		foreach i in `mn_var_x1' `mn_var_z1' {
+			local flag 0
+			foreach j in `xz1m' {
+				if "`i'" == "`j'" {
+					local flag 1
+				}	
+			}
+			if `flag'==0 {
+				local xz1m `xz1m' `i'
+			}
+		}
+		* Find initial values
+		
+ 	 	find_init , sample(`touse') y1(`y1') y2(`y2') time(`time') ///
+					prbxb(`x1' `z1' `xz1m') regxb( `x1' `xz1m') 
+		tempname init
+		matrix `init'=r(init)
+		matrix init=`init'
+		* estimat via pseduo two-step 		
+		ml model lf xtheckmanfe_ml ///
+				(`y1':`y1'= `x1' `xz1m'  i.`time') ///
+				(select: `y2' = i.`time'#c.(`x1' `z1' `xz1m') i.`time') ///
+				(mills: = i.`time'  ) (lnsigma:) , ///
+				 maximize technique(nr bhhh) missing init(`init',skip) cluster(`id')    
+		ml display
+	}
+
+
 	if "`endogenous'"!=""  {
 		qui:xtset, clear
-		capture qui _xthckiv 
+		//	Initial model estimation quietly
+		qui:probit `y2' i.`time'#c.(`x1' `x1m' `z1' `z1m' `z2' `z2m') i.`time' if `touse'
+		tempname bpi
+		qui:matrix `bpi'=e(b)
 		bootstrap, cluster(`id') reps(`reps') seed(`seed'):_xthckiv if `touse', ///
 				y1(`y1') x1(`x1') x1m(`mn_var_x1') 				 /// outcome equation
 				y3(`y3') z1(`z1') z1m(`mn_var_z1')  		     /// Endogeneity equation also adds x1
@@ -182,8 +217,7 @@ end
  program define  myhdfe, rclass
 syntax varlist(fv) [if] , abs(varname)
 	marksample touse
-	
-	ms_fvstrip `varlist' if `touse', expand dropomit
+ 	ms_fvstrip `varlist' if `touse', expand dropomit
 	local 1:word count `r(nobase)'
 	local nb `r(nobase)'
 	local fvl `r(fullvarlist)'
@@ -191,17 +225,70 @@ syntax varlist(fv) [if] , abs(varname)
 		local i1:word `i' of `nb'
 		local i2:word `i' of `fvl'
 		local vnm = subinstr("`i2'",".","_",.)
-		local vnm = subinstr("`vnm'","#","_x_",.)
+		local vnm = subinstr("`vnm'","#","X",.)
+		local flag = 0
+		if strlen("`vnm'")>25 {
+		    local flag = 1
+			local lvnm "`vnm'" 
+			local vnm `i'
+		}
 		if "`i1'"=="0" {
 			capture:qui:gen byte _mn_`vnm'=0
 		}
 		else if "`i1'"=="1" {
 			capture:qui:egen double _mn_`vnm' = mean(`i2') if `touse', by(`abs')
 		}
+		label var _mn_`vnm' "Mean of `i2'"
+		
 		local mn_varlist `mn_varlist' _mn_`vnm'
 	}
  	return local mn_varlist  `mn_varlist'
-end 
+ end 
+ 
+** cheating asymptotics
+ 
+program define find_init, rclass
+	syntax, sample(str) y1(str) y2(str) time(str) prbxb(str) regxb(str) 
+	
+	display "Estimating Probit model"
+	probit `y2' ibn.`time'#c.(`prbxb') ibn.`time' if `sample'==1, notable noheader
+	tempvar select
+	matrix `select'=e(b)
+	matrix coleq `select' = select
+	tempvar _sel_imr
+	predict double `_sel_imr', score
+	
+	
+	display "Estimating Second model"
+	qui:eregress `y1' `regxb'  ibn.`time' ibn.`time'#c.(`_sel_imr') if `y2'==1 & `sample'==1, 
+	tempvar br
+	matrix `br'=e(b)
+	tempvar vals
+	bys `sample' `time': gen byte `vals' = (_n == 1) * `sample'
+    su `vals' if `sample', meanonly
+    local ctime `=r(sum)'
+	
+	tempname lnsigma
+	matrix `lnsigma' = 0.5*log(`br'[1, colsof(`br')])
+	matrix coleq   `lnsigma' = lnsigma
+	matrix colname `lnsigma' = _cons
+	
+	tempname mill
+	matrix `mill' = `br'[1, `=colsof(`br')-`ctime'-1'..`=colsof(`br')-2']
+	matrix `mill' = `mill'[1,1],[`mill'[1,2...]-`mill'[1,1]*J(1,colsof(`mill')-1,1)]
+	matrix coleq   `mill' = mills
+	fvexpand ibn.`time' if `sample'
+	matrix colname `mill' = `=r(varlist)'
+	
+	tempname regs
+	matrix `regs' = `br'
+	matrix coleq `regs'= `y1'
+ 
+	tempname init
+	matrix `init' = `regs', `select', `mill' , `lnsigma' 
+	return matrix init =`init'	
+end
+ 
 /*
 notes for me and asymptotic
 W=x y2 mill     K

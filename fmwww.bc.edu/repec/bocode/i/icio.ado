@@ -1,39 +1,60 @@
 
-*! version 1.2.7  27may2020
+*! version 1.3.1  31may2021
 *! authors: Federico Belotti, Michele Mancini, Alessandro Borin
-*! see end of file for version comments
+*! see end of the ado file for version comments
 
 program define icio, rclass
-    syntax, [EXPorter(string) IMPorter(string) ORIGin(string) DESTination(string) Flow(string) Perspective(string) Approach(string) ///
-	   noDISPlay OUTput(string) SECTor(string) GRoups(string asis) INFO SAVE(string) REPLACE ]
+    syntax, [EXPorter(string) IMPorter(string) ///
+			 ORIGin(string) DESTination(string) ///
+			 Flow(string) Perspective(string) Approach(string) ///
+	         noDISPlay OUTput(string) RETurn(string) ///
+	         SECTor(string) GRoups(string asis) INFO SAVE(string) REPLACE ]
 
-/* fede -> todo: put replace into save() option */
-
-** we need version 14 due to the option save(), but we can try to find a workaround
-** version 11
+** Last version of Mata lib compiled under Stata 15.1
+** due to a sneaky bug affecting the xl() class
+** StataCorp is aware of this weird xl() behaviour
 version 14
 
 *** This is for us: Set this to 0 for distributed version
 loc working_version 0
 
-if "`0'"=="" {
+*** This is the new option return()
+*** We exploit the substituted option output()
+*** keeping it in for backward compatibility
+if "`output'"!="" & "`return'"!="" {
+	di as error "Use return(). Option output() is outdated."
+	error 198
+	exit
+}
+if "`output'"=="" & "`return'"!="" loc output "`return'"
+
+if `"`0'"'==`""' {
 	di as error "At least one of the following options must be specified:"
 	di as error "exporter(), importer(), origin() or destination()."
 	di as error "See {help icio:help icio} for details."
 	error 198
+	exit
 }
 
 loc noi
 
 /* Get working info from _icio_in_ */
-m _icio_useful_info(_icio_in_)
+capture mata _icio_in_!= ""
+if _rc==0 m _icio_useful_info(_icio_in_)
+else {
+	di as error "-icio_load- must be used to load a icio table before using the -icio- command."
+	error 198
+	exit
+}
 
 if "`iciotable'"=="" {
 	di as error "-icio_load- must be used to load a icio table before using the -icio- command."
-	exit 198
+	error 198
+	exit
 }
 
 if "`info'" != "" {
+
 	di
 	icio_countries, iciotable(`iciotable') working_version(`working_version')
 	di
@@ -368,8 +389,6 @@ if  "`perspective'"!="sectimp"  &  "`perspective'"!="" {
 ********************************************************
 
 
-
-
 if   inlist("`flow'","sectimp")==1 & ("`sect_i'"=="99999") {
 		di as error "A sector of import must be specified when perspective(sectimp)."
 		exit 198
@@ -416,6 +435,17 @@ if "`flow'"=="sectimp" local source_is_needed 0
 *******
 if `source_is_needed'==1 ParseICIOapproach approach : `"`approach'"'
 *******
+
+** Mute approach for persp == sectexp
+if "`perspective'"=="sectexp" {
+	if  "`approach'"!="" loc approach
+}
+
+** Warning for muting approach if persp == totalimp and sectimp
+if "`approach'"!="" & inlist("`persp'","importer","sectimp")==1 {
+		di as text "Warning: approach() is redundant."
+		local approach
+}
 
 if `sect_e'!=999 & "`flow'"=="bilateral" & "`persp'"=="bilateral" {
 		di as text "Warning: perspective(bilateral) is not meaningful when a sector is specified in exporter()."
@@ -613,10 +643,10 @@ if colsof(_out)==2 &  "`detail'"=="vby"   mat colnames _out = "Millions of $" "%
 
 if "`display'"=="" & `_display_'==1 {
 	if "`detail'"=="detailed" {
-		matlist _out, underscore cspec(& `fmtrowname' | %14.2f | i %12.2f |) rspec(`_rspec_')
-		di as text "`_note_'"
+		matlist _out, nob underscore cspec(& `fmtrowname' | %14.2f | i %12.2f |) rspec(`_rspec_')
+		if "`_note_'"!="" di as text "`_note_'"
 	}
-	else matlist _out, underscore cspec(& `fmtrowname' | %14.2f | i %12.2f |) rspec(`_rspec_')
+	else matlist _out, nob underscore cspec(& `fmtrowname' | %14.2f | i %12.2f |) rspec(`_rspec_')
 }
 if `_display_'==0 {
 	di
@@ -625,13 +655,17 @@ if `_display_'==0 {
 
 ***** Here save() option in action
 if "`save'"!="" {
-	di ""
-	gettoken savename replace: save, parse(",")
-	local savename = subinstr("`savename'", " ", "", .)
-	local replace = subinstr("`replace'", ",", "", .)
-	local replace = strtrim("`replace'")
-	m _icio_out_export("`savename'", "`replace'")
+	if "`_note_'"!="" di ""
+	gettoken savename saveopt: save, parse(",")
+	if "`savename'" == "" | "`savename'" == "," {
+		di as error "Missing filename in option save()."
+		exit 198
+	}
+	ParseSAVE `saveopt'
+
+	m _icio_out_export("`savename'", "`s(save_replace)'", "`s(save_modify)'", "`s(save_sheet)'", "`s(save_sheet_replace)'")
 }
+
 
 * Common post
 ret local cmd "icio"
@@ -659,6 +693,9 @@ loc structlist _su out _icio_nr_pae _icio_nr_sett sector_names
 foreach st of local structlist {
 	cap m mata drop `st'
 }
+
+** This deletes ParseSAVE macros
+cap sreturn clear
 
 
 
@@ -1236,6 +1273,26 @@ end
 
 /* ----------------------------------------------------------------- */
 
+program define ParseSAVE, sclass
+	syntax [, REPLACE Sheet(string) MODIFY ]
+
+	gettoken sheet sheet_replace: sheet, parse(",")
+	if "`sheet_replace'"!="" {
+		local sheet_replace = subinstr("`sheet_replace'", ",", "", .)
+		local sheet_replace = trim("`sheet_replace'")
+	}
+	if "`replace'"!="" & "`modify'"!="" {
+		di as error "options modify and replace are mutually exclusive"
+		exit 198
+	}
+
+	if "`replace'"!="" sret local save_replace "`replace'"
+	if "`modify'"!="" sret local save_modify "`modify'"
+	if "`sheet'"!="" sret local save_sheet "`sheet'"
+	if "`sheet_replace'"!="" sret local save_sheet_replace "`sheet_replace'"
+
+end
+
 
 /* ----------------------------------------------------------------- */
 
@@ -1633,5 +1690,8 @@ exit
 * version 1.2.5 11sep2019 - Now the option save() works properly using the syntax save(filename [, replace]) where filename is a standard filename or include the full or relative path to the file including the name (optionally the .xls prefix), i.e. "/Users/federico/Desktop/file.xls". Also, now mm_which by Ben Jann has been included in _icio_functions.mata (no need to install moremata anymore).
 * version 1.2.6 5feb2020 - Fixed an annoying bug preventing the use of china and mexico inside groups()
 * version 1.2.7 27may2020 - Added the new table ADB
-
+* version 1.2.8 13nov2020 - Added the new option -return()- as a synonym for previous option -output()- that we'll keep for backward compatibility
+* version 1.2.9 25nov2020 - Added suboptions to the save() options
+* version 1.3.0 10mar2021 - Added new sub-command to the suite: icio_clean. It takes care of the HD space deleting any icio table or icio ancillary file.
+* version 1.3.1 31may2021 - Fixed a sneaky bug affecting option save().
 */

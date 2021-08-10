@@ -1,4 +1,5 @@
-*! 2.8.1 NJC 11 October 2020 
+*! 2.9.0 NJC 10 July 2021     
+* 2.8.1 NJC 11 October 2020 
 * 2.8.0 NJC 4 July 2018 
 * 2.7.2 NJC 8 June 2017 
 * 2.7.1 NJC 27 March 2017 
@@ -38,13 +39,15 @@ program stripplot, sort
 	[, CEnter CEntre VERTical Height(real 0.8) Fraction(str) STack     ///
 	over(varname) by(str asis) Width(numlist max=1 >0)                 ///
 	floor CEILing box BOX2(str asis) bar BAR2(str asis) boffset(str)   /// 
+    tufte TUFTE2(str asis)                                             ///
 	iqr IQR2(numlist >0 max=1) PCTile(numlist >=0 <=100 max=1)         ///
-        WHiskers(str asis) medianbar(str asis) OUTside OUTside2(str asis)  ///
-        CUMULate CUMULative CUMPRob                                        ///
+    WHiskers(str asis) medianbar(str asis) OUTside OUTside2(str asis)  ///
+    CUMULate CUMULative CUMPRob                                        ///
 	PLOT(str asis) ADDPLOT(str asis) variablelabels SEParate(varname)  ///
 	REFline REFline2(str) reflevel(str) reflinestretch(real 0.05)      ///
 	refvar(varname) * ] 
 
+	// parse options 
 	if "`fraction'" != "" {
 		di as inp "fraction()" as txt ": please use " as inp "height()"
 		capture confirm num `fraction' 
@@ -62,6 +65,21 @@ program stripplot, sort
 
 	if `"`box'`box2'"' != "" & `"`bar'`bar2'"' != "" { 
 		di as err "may not combine bar and box"
+		exit 198 
+	}	
+
+	if `"`box'`box2'"' != "" & `"`tufte'`tufte2'"' != "" { 
+		di as err "may not combine box and tufte"
+		exit 198 
+	}	
+
+	if `"`tufte'`tufte2'"' != "" & `"`bar'`bar2'"' != "" { 
+		di as err "may not combine bar and tufte"
+		exit 198 
+	}	
+
+	if `"`box'`box2'"' != "" & `"`bar'`bar2'"' != "" & `"`tufte'`tufte2'"' != "" { 
+		di as err "may not combine bar, box, and tufte"
 		exit 198 
 	}	
 
@@ -133,12 +151,13 @@ program stripplot, sort
 		gettoken comma opts : opts, parse(",") 
 
 		local total "total" 
-		if `: list total in opts' & `"`bar'`bar2'`box'`box2'"' != "" { 
-			di as err "by(, total) not supported with box or bar" 
+		if `: list total in opts' & `"`bar'`bar2'`box'`box2'`tufte'`tufte2'"' != "" { 
+			di as err "by(, total) not supported with bar or box or tufte" 
 			exit 198 
 		}	
 	}
 
+	// data to use, including by() over() separate() options 
 	if `nvars' == 1 marksample touse
 	else marksample touse, novarlist 
 
@@ -148,7 +167,6 @@ program stripplot, sort
 	
 	local noover = "`over'" == ""
 		
-	// variables for plot 
 	quietly if `nvars' > 1 { 
 		if "`over'" != "" { 
 			di as err ///
@@ -167,8 +185,8 @@ program stripplot, sort
 				}
 			} 	
 			else forval i = 1/`nvars' {
-                		local labels "`labels'`i' ``i'' "
-		        }
+           		local labels "`labels'`i' ``i'' "
+	        }
 			
 			if "`by'" != "" { 
 				local bylbl : value label `by' 
@@ -194,11 +212,12 @@ program stripplot, sort
 			drop if missing(`data')
 			gen `copystack' = _stack  
 
-			if `"`box'`box2'"' != "" { 
+			if `"`box'`box2'`tufte'`tufte2'"' != "" { 
 				tempvar median loq upq yshow2 upper upper2 lower lower2 outer 
 				egen `median' = median(`data'), by(`by' _stack) 
 				egen `loq' = pctile(`data'), p(25) by(`by' _stack) 
 				egen `upq' = pctile(`data'), p(75) by(`by' _stack) 
+				if `"`tufte'`tufte2'"' != local pctile = 0 
 	
 				if "`iqr'`iqr2'" != "" { 
 					egen `upper' = max(cond(`data' <= `upq' + `mult' * (`upq' - `loq'), `data', .)), by(`by' _stack) 
@@ -279,7 +298,7 @@ program stripplot, sort
 
 			tempname stlbl
 			label def `stlbl' `labels' 
-		        label val _stack `stlbl'
+	        label val _stack `stlbl'
 			su _stack, meanonly 
 			local range "`r(min)'/`r(max)'" 
 			if "`stack'" != "" { 
@@ -292,8 +311,7 @@ program stripplot, sort
 					replace `count' = _n - (_N + 1)/2
 				} 
 				if r(max) > 0 { 
-					replace _stack = /// 
-					_stack + `height' * `count' / r(max) 
+					replace _stack = _stack + `height' * `count' / r(max) 
 				} 	
 			}	
 
@@ -311,15 +329,12 @@ program stripplot, sort
 
 				if "`centre'`center'" != "" { 
 					if "`cumprob'" != "" { 
-						by `by' `negstack' : ///
-						replace `count' = `count' - 0.5 
+						by `by' `negstack' : replace `count' = `count' - 0.5 
 					}
-					else by `by' `negstack' : ///
-					replace `count' = _n - (_N + 1)/2
+					else by `by' `negstack' : replace `count' = _n - (_N + 1)/2
 				} 
 
-				replace _stack = /// 
-				_stack + `height' * `count' / r(max) 
+				replace _stack = _stack + `height' * `count' / r(max) 
 			} 
 
 			local which "`copystack'" 
@@ -363,11 +378,12 @@ program stripplot, sort
 			else local range "`r(levels)'" 
 		}
 
-		if `"`box'`box2'"' != "" { 
+		if `"`box'`box2'`tufte'`tufte2'"' != "" { 
 			tempvar median loq upq yshow2 upper lower outer 
 			egen `median' = median(`varlist'), by(`by' `over') 
 			egen `loq' = pctile(`varlist'), p(25) by(`by' `over') 
 			egen `upq' = pctile(`varlist'), p(75) by(`by' `over') 
+			if `"`tufte'`tufte2'"' != "" local pctile = 0 
 
 			if "`iqr'`iqr2'" != "" { 
 				egen `upper' = max(cond(`varlist' <= `upq' + `mult' * (`upq' - `loq'), `varlist', .)), by(`by' `over') 
@@ -448,8 +464,7 @@ program stripplot, sort
 			} 
 			gen `overcount' = `over' 
 			if r(max) > 0 { 
-				replace `overcount' = /// 
-				`overcount' + `height' * `count' / r(max) 
+				replace `overcount' = `overcount' + `height' * `count' / r(max) 
 			} 	
 			_crcslbl `overcount' `over'
 			label val `overcount' `: value label `over'' 
@@ -469,17 +484,14 @@ program stripplot, sort
 
 			if "`centre'`center'" != "" { 
 				if "`cumprob'" != "" { 
-					by `by' `negover' : ///
-					replace `count' = `count' - 0.5 
+					by `by' `negover' : replace `count' = `count' - 0.5 
 				} 
-				else by `by' `negover': ///
-				replace `count' = _n - (_N + 1)/2 
+				else by `by' `negover': replace `count' = _n - (_N + 1)/2 
 			} 
 
 			gen `overcount' = `over' 
 			if r(max) > 0 { 
-				replace `overcount' = /// 
-				`overcount' + `height' * `count' / r(max) 
+				replace `overcount' = `overcount' + `height' * `count' / r(max) 
 			} 	
 			_crcslbl `overcount' `over'
 			label val `overcount' `: value label `over'' 
@@ -490,8 +502,9 @@ program stripplot, sort
 
 	// plot details 
 	if "`boffset'" == "" { 
-		if `"`bar'`bar2'"' != "" local boffset = -0.2 
-		else                     local boffset = 0 
+		if `"`bar'`bar2'"' != ""          local boffset = -0.2 
+		else if `"`tufte'`tufte2'"' != "" local boffset = -0.1  
+		else                              local boffset = 0 
 	}	
 
 	if `noover' local axtitle `" "' 
@@ -548,10 +561,8 @@ program stripplot, sort
 				local nprev = `nprev' + 1 
 			}
 			if "`iqr'`iqr2'`pctile'" != "" { 
-				local whisk1 /// 
-		rspike `upq' `upper' `yshow2', lcolor(black) `whiskers' 
-				local whisk2 /// 
-		rspike `loq' `lower' `yshow2', lcolor(black) `whiskers' 
+				local whisk1 rspike `upq' `upper' `yshow2', lcolor(black) `whiskers' 
+				local whisk2 rspike `loq' `lower' `yshow2', lcolor(black) `whiskers' 
 				local nprev = `nprev' + 2 
 			} 
 			if `"`outside'`outside2'"' != "" { 
@@ -565,10 +576,22 @@ program stripplot, sort
 			local nprev = `nprev' + 2 
 		}
 
+		if `"`tufte'`tufte2'"' != "" { 
+			gen `yshow2' = `Y' + `boffset' 
+
+			local whisk1 rspike `upq' `upper' `yshow2', lcolor(black) `whiskers' 
+			local whisk2 rspike `loq' `lower' `yshow2', lcolor(black) `whiskers' 
+			local nprev = `nprev' + 2 
+
+			local boxbar ///
+			|| scatter `median' `yshow2', mcolor(black) ms(Dh) `tufte2' ///
+		    || `whisk1' || `whisk2' 
+			local nprev = `nprev' + 1 
+		}
+
 		if `"`bar'`bar2'"' != "" { 
 			gen `yshow2' = `Y' + `boffset' 
-			local boxbar ///
-			rcap `ul' `ll' `yshow2', `baropts' || ///
+			local boxbar rcap `ul' `ll' `yshow2', `baropts' || ///
 			scatter `mean' `yshow2', `meanopts'   
 			local nprev = `nprev' + 2 
 		}
@@ -614,11 +637,9 @@ program stripplot, sort
 			if `legoff' local separate   
 
 			if `noover' & `nvars' == 1 { 
-				local byby ///
-				"by(`by', noixla noixtic `separate' `opts') xla(none)" 
+				local byby by(`by', noixla noixtic `separate' `opts') xla(none)
 			}
-			else local byby ///
-				"by(`by', noixtic `separate' `opts')" 
+			else local byby by(`by', noixtic `separate' `opts')
 			* local separate 
 		}
 
@@ -641,10 +662,8 @@ program stripplot, sort
 				local nprev = `nprev' + 1 
 			}
 			if "`iqr'`iqr2'`pctile'" != "" { 
-				local whisk1 /// 
-		rspike `upq' `upper' `yshow2', lcolor(black) hor `whiskers' 
-				local whisk2 /// 
-		rspike `loq' `lower' `yshow2', lcolor(black) hor `whiskers' 
+				local whisk1 rspike `upq' `upper' `yshow2', lcolor(black) hor `whiskers' 
+				local whisk2 rspike `loq' `lower' `yshow2', lcolor(black) hor `whiskers' 
 				local nprev = `nprev' + 2 
 			} 
 			if `"`outside'`outside2'"' != "" { 
@@ -656,12 +675,24 @@ program stripplot, sort
 			|| rbar `median' `loq' `yshow2', bfcolor(none) blcolor(black) barw(0.4) hor blwidth(medthin) `box2' ///
 			|| `medianbar' || `whisk1' || `whisk2' || `out' 
 			local nprev = `nprev' + 2 
-		} 	
+		}
+ 	
+		if `"`tufte'`tufte2'"' != "" { 
+			gen `yshow2' = `Y' + `boffset' 
+
+			local whisk1 rspike `upq' `upper' `yshow2', lcolor(black) hor `whiskers' 
+			local whisk2 rspike `loq' `lower' `yshow2', lcolor(black) hor `whiskers' 
+			local nprev = `nprev' + 2 
+
+			local boxbar ///
+			|| scatter `yshow2' `median', mcolor(black) ms(Dh) `tufte2' ///
+		    || `whisk1' || `whisk2' 
+			local nprev = `nprev' + 1 
+		}
 
 		if `"`bar'`bar2'"' != "" { 
 			gen `yshow2' = `Y' + `boffset' 
-			local boxbar ///
-			rcap `ul' `ll' `yshow2', hor `baropts' ///
+			local boxbar rcap `ul' `ll' `yshow2', hor `baropts' ///
 			|| scatter `yshow2' `mean', `meanopts'
 			local nprev = `nprev' + 2 
 		}

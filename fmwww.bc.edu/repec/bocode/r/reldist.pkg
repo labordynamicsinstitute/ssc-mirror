@@ -23,7 +23,7 @@ d KW: reweighting
 d
 d Requires: Stata version 12, moremata, kmatch and kdens from SSC (q.v.)
 d
-d Distribution-Date: 20201019
+d Distribution-Date: 20210621
 d
 d Author: Ben Jann, University of Bern
 d Support: email jann@@soz.unibe.ch

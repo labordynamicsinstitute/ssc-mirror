@@ -1,5 +1,5 @@
 {smcl}
-{* *! version 1.0  January 15, 2020 @ 13:31:10}{...}
+{* *! version 1.0  July 15, 2020 @ 11:24:48}{...}
 {* *! version 1.1  September 9, 2018 @ 18:13:10}{...}
 {vieweralsosee "[R] ml" "help ml"}{...}
 {vieweralsosee "wtdtttdiag" "help wtdtttdiag"}{...}
@@ -13,10 +13,10 @@
 {viewerjumpto "Results" "wtdttt##results"}{...}
 {title:Title}
 
-{phang} {bf:ranwtdttt} {hline 2} Estimate maximum likelihood estimate for
-parametric Waiting Time Distribution (WTD) with random index times based on observed
-prescription redemptions with adjustment for covariates. Reports
-estimates of prevalence fraction and specified percentile of
+{phang} {bf:ranwtdttt} {hline 2} Maximum likelihood estimation for 
+parametric Waiting Time Distribution (WTD) based on observed prescription 
+redemptions with adjustment for covariates using one or more random index times 
+for each individual. Reports estimates of prevalence fraction and specified percentile of
 inter-arrival density together with regression coefficients.
 
 
@@ -42,7 +42,8 @@ Backward Recurrence Density (FRD/BRD){p_end}
 {synopt:{opt reverse}}Estimate reverse WTD{p_end}
 {synopt:{opt samplestart(string)}}Start of sampling window{p_end}
 {synopt:{opt sampleend(string)}}End of sampling window{p_end}
-{synopt:{opt conttime}}Estimate durations for continuous data{p_end}
+{synopt:{opt conttime}}Estimate durations based on redemption times measured in continuous time (non-integer, mostly useful for simulations) {p_end}
+{synopt:{opt nsamp(#)}}Number of sampled random index dates for each ID; default is 1{p_end}
 
 {syntab:Covariates}
 {synopt:{opt logitp:covar}({help fvvarlist})}Covariates for logit({it:p}){p_end}
@@ -70,24 +71,30 @@ Inter-Arrival Distribution (IAD); default is 0.8 (80th percentile){p_end}
 {title:Description}
 
 {pstd}
-{cmd:ranwtdttt} estimates a parametric Waiting Time Distribution (WTD) with random index times
-to {varname} ({it:rxtime}) and then computes an estimate of the specified percentile
+{cmd:ranwtdttt} estimates a parametric Waiting Time Distribution (WTD) 
+to {varname} ({it:rxtime}) using one or more random index times for each individual 
+and then computes an estimate of the specified percentile
 together with an estimate of the proportion of prevalent users in the
-sample. Parameters may depend on covariates when estimating a reverse
+sample. Covariates can only be included when estimating a reverse
 WTD with random index times.
 
 {pstd} Here {it:rxtime} is a variable containing the time of observed
 prescription redemptions, typically dates (discrete case). 
 
 {pstd}
-{cmd:ranwtdttt} estimation is based on the {help wtdttt}, but in contrast to wtdttt it uses all prescription redemption times of patients within a time window as input. Random index times for each individual is then uniformly sampled, within the sampling window of length delta, and the first prescription subsequent to (ordinary WTD) or the last prescription prior to (reverse WTD) the random index time for each individual are considered in the WTD estimation. Consequently the full data window must be sufficiently wide to contain all individual observation windows, i.e. it must be of length 2*delta. 
+{cmd:ranwtdttt} estimation is based on the {help wtdttt}, but in contrast to {help wtdttt} it uses all prescription redemption times of patients within a time window as input. One or more random index times for each individual are then uniformly sampled within the sampling window of length delta, and relative to the index time the first subsequent prescription (ordinary WTD) or the last prior prescription (reverse WTD) are considered in the WTD estimation. Consequently, the full data window must be sufficiently wide to contain all individual observation windows, i.e. it must be of length 2*delta. 
+
+{pstd} Robust variance estimation is used to account for the dependence of observations originating from the same individual.
 
 {pstd}
 {cmd:ranwtdttt} alters the original dataset as it only keeps either the first prescription subsequent to (ordinary WTD) or the last prescription prior to (reverse WTD) the random
-index time for each individual. Furthermore the new dataset contains the variable {it:_rxshift} which is the shifted prescription redemption time after all individuals have had their index times aligned to the same time. 
+index time for each individual and index time. Furthermore the new dataset contains the variable {it:_rxshift} which is the shifted prescription redemption time after all index times have been aligned to the same time. 
+For multiple index dates {cmd:ranwtdttt} returns stacked datasets corresponding to the number of index dates.
+
+{pstd} Post-estimation commands are the same as for the {help wtdttt} command, i.e.:
 
 {pstd} To assess the fit, the command {help wtdtttdiag} can be used to
-obtain diagnostic plots, cf. example below.
+obtain diagnostic plots, cf. the example below.
 
 {pstd} The post-estimation command {help wtdtttpredprob} allows
 prediction of treatment probabilities on times of interest based on
@@ -96,6 +103,11 @@ observed prescription redemptions. Similarly the post-estimation command
 based on a specified percentile of the inter-arrival distribution.
 
 {pstd} For references and a general introduction to the analytic approach of the WTD, see the documentation for {help wtdttt}. 
+
+{pstd} {bf: Note:} For small sample sizes and few index dates it is recommended to calculate the confidence interval for the time percentile on the log-scale and then transform it to the original scale 
+(see the example do-file {it:wtdttt_ex.do} for a worked example of this).
+
+
 
 {marker options}{...}
 {title:Options}
@@ -121,17 +133,19 @@ is estimated.
 {phang}
 {opt samplestart} is either a string such as "1Jan2014" (a date for discrete data) 
 or "1" (a number for continuous data) which gives the start of the sampling 
-window within which we sample random index times. In the discrete case (default) the string must conform to requirements 
+window within which we sample random index times. In the discrete case (default), the string must conform to requirements 
 for the date function {help td}(). 
 
 {phang}
 {opt sampleend} is either a string such as "31Dec2014" (a date for discrete data) 
 or "2" (a number for continuous data) which gives the end of the sampling 
-window. In the discrete case (default) the string must conform to requirements
+window. In the discrete case (default), the string must conform to requirements
 for the date function {help td}().
 
 {phang} {opt conttime} indicates that the data is continuous. If not 
 specified (default), observations are assumed to be discrete.
+
+{phang} {opt nsamp} specifies the number of index times to be randomly sampled for each individual. The default value is 1.
 
 {dlgtab:Covariates}
 {phang}
@@ -157,8 +171,6 @@ distribution (lnorm).
 {opt all:covar}({help fvvarlist}) Covariates included in all regression
 equations for the parameters.
 
-
-
 {phang}
 {opt iadpercentile} The percentile of the IAD, which is to be
 estimated specified as a fraction between 0 and 1 (default is 0.8).
@@ -172,6 +184,9 @@ estimated specified as a fraction between 0 and 1 (default is 0.8).
 {cmd:. ranwtdttt rxdate, id(pid) disttype(lnorm) samplestart(1jan2014) sampleend(31dec2014)}{p_end}
 {phang}
 {cmd:. wtdtttdiag _rxshift}{p_end}
+
+{phang}
+{cmd:. ranwtdttt rxdate, id(pid) disttype(lnorm) samplestart(1jan2014) sampleend(31dec2014) nsamp(5)}{p_end}
 
 {phang}{cmd: . ranwtdttt rxtime, id(pid) disttype(lnorm) samplestart(1) sampleend(2) conttime reverse mucovar(i.packsize)}{p_end}
 
@@ -192,6 +207,7 @@ to read comments in the do-file for further explanations.
 {p2col 5 20 24 2: Scalars}{p_end}
 {synoptline}
 {synopt:{cmd:r(logtimeperc)}} Logarithm of estimated IAD percentile{p_end}
+{synopt:{cmd:r(selogtimeperc)}} Standard error of estimated logarithm of IAD percentile{p_end}
 {synopt:{cmd:r(timepercentile)}} Estimated IAD percentile{p_end}
 {synopt:{cmd:r(setimepercentile)}} Standard error of estimated IAD percentile{p_end}
 {synopt:{cmd:r(prevprop)}} Estimated proportion of prevalent users{p_end}
@@ -214,7 +230,7 @@ help {help ml}.
 
 {title:Author}
 
-{pstd}Katrine Bødkergaard Nielsen, Aarhus University, kani@ph.au.dk.
+{pstd}Katrine Bødkergaard Nielsen, Aarhus University, kani@clin.au.dk.
 
 {pstd}Henrik Støvring, Aarhus University, stovring@ph.au.dk.
 

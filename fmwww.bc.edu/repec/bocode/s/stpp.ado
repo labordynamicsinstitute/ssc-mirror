@@ -1,4 +1,4 @@
-*! version 1.1.8 2021-02-10
+*! version 1.2.0 2021-06-08
 
 program define stpp, rclass sortpreserve
   version 16.0
@@ -27,6 +27,9 @@ program define stpp, rclass sortpreserve
                    STANDWeights(numlist >=0 <=1)                        ///
                    USING2(string)                                       ///
                    VERBOSE                                              ///
+                   GRAPHName(string)                                    /// //ADDED
+                   GRAPH                                                ///	//ADDED	
+                   GRAPHCode(string)                                    /// //ADDED				   
                    ]
   st_is 2 analysis
   marksample touse, novarlist
@@ -96,7 +99,7 @@ program define stpp, rclass sortpreserve
     di as error "You can't use the ederer2 option and using2() options together"
     exit 198
   }
-	
+
 *******************	
 // popmort file ///
 *******************
@@ -218,9 +221,152 @@ program define stpp, rclass sortpreserve
     quietly bysort `by' (_t `d0'): replace `v' = `v'[_n-1] if `v' >= . & `touse' & _d==0
   }
   //return add
+  
+  ////ADDED GRAPH PART
+  if "`graph'"!="" | "`graphname'"!="" | "`graphcode'"!="" {
+    quietly {
+      preserve
+        keep if `touse'
+        tempvar group
+        egen `group'=group(`by')
+        levelsof `group', local(grouplevs)
+        local Nofgroups=wordcount("`grouplevs'")
+        local Nofby=wordcount("`by'")
+			
+        forvalues i=1/`Nofgroups' {
+          local bybit `bybit' risktable(, failevents group(#`i') size(small) rowtitle(,  color("scheme p`i'")) title("N (deaths)", size(medsmall) ))
+        }
+			
+        tempname KM
+        sts graph, by(`by') name(`KM') nodraw `bybit'
+			
+        **GET GRAPH COMMAND**	
+        graph describe `KM'
+        local command=r(command)
+			
+        **STEAL RISKTABLE**
+        local xlabelpart = substr(`"`command'"', strpos(`"`command'"', "xlabel("), .)
+        local xlabelpart =substr(`"`xlabelpart'"', 1 ,strpos(`"`xlabelpart'"',"xoverhang")+9)
+			
+        **MAKE BF*
+        local xlabelpart=subinstr(`"`xlabelpart'"',"`"+char(34),"`"+char(34)+"{bf:", . )
+        local xlabelpart=subinstr(`"`xlabelpart'"',char(34)+"'","}"+char(34)+"'", . )
+		
+        if "`indweights'" != "" {
+          local note note(" " "{bf:Note:}Standardised using `indweights'.")
+        }
+
+        forvalues i=1/`Nofgroups' {
+          forvalues j=1/`Nofby' {
+            if `Nofby'>1 {
+              if `j'!=`Nofby' {
+                local comma ,
+              }
+              else {
+                local comma
+              }
+            }
+            else {
+              local comma
+            }
+            local currentby: word `j' of `by'
+            su `currentby' if `group'==`i', meanonly
+            local bytext`i' `bytext`i'' `currentby'=`r(mean)'`comma'
+         }
+				
+         local graphareatext `graphareatext' (rarea `RS_newvarname'_lci `RS_newvarname'_uci _t if `group'==`i', sort connect(stairstep) ///
+                             color("%30") pstyle("") lwidth(none) fintensity(100) )
+				 
+         local graphareatextforwrite=`"`graphareatextforwrite'"'+"(rarea `RS_newvarname'_lci `RS_newvarname'_uci _t if __group==`i', sort connect(stairstep) color("+char(34)+"%30"+char(34)+") pstyle("+char(34)+char(34)+") lwidth(none) fintensity(100) )"
+				   
+         if `i'==1 {
+           local xlabelpart1 `xlabelpart'
+           local xlabelpart1forwrite=`"`xlabelpart'"'		
+          } 
+          else {
+            local xlabelpart1
+            local xlabelpart1forwrite
+          }
+
+		      local graphlinetext `graphlinetext' (line `RS_newvarname' _t  if `group'==`i', sort connect(J ...) pstyle(p`i'line) color("%80") `xlabelpart1')
+
+          local graphlinetextforwrite=`"`graphlinetextforwrite'"'+"(line `RS_newvarname' _t  if __group==`i', sort connect(J ...) pstyle(p`i'line) color("+char(34)+"%80"+char(34)+") "+`"`xlabelpart1forwrite'"'+")"
+				  
+				  
+           local legendtext `legendtext' `=`Nofgroups'+`i'' `"`bytext`i''"' `i' "95% CI"	
+         }
+	     // DROP LEGEND IF NO BY??
+         if `Nofgroups'>1 {
+           local legend legend(order(`legendtext') region(color(none)) ring(0) pos(1) cols(2))
+         }
+         else {
+           local legend legend(off)
+         }
+         tempvar new
+         bys `by': gen `new'=1 if _n==1
+		 expand 2 if `new'==1, gen(new)
+		 replace _t=0 if new==1
+		 replace `RS_newvarname'=1 if new==1
+		 replace `RS_newvarname'_lci=1 if new==1 
+		 replace `RS_newvarname'_uci=1 if new==1
+		 
+		 if "`graphname'"!="" {
+           local namepart name(`graphname')
+         }
+         else {
+           local namepart
+         }
+
+         twoway `graphareatext' `graphlinetext',  ylabel(0(.25)1, angle(h) ///
+         format(%3.2f) grid) /// 
+         ytitle(`"Marginal relative survival"' `"`ytitle'"') ///
+         xtitle(`"Time since diagnosis (years)"') ///
+         subtitle(`"`subtitle'"') ///
+         `legend'	plotregion(margin(zero)) `note' `namepart' 
+			
+       restore
+		
+       if "`graphcode'"!="" {		
+         //WRITE FILE TO RECREATE GRAPH
+         tokenize "`graphcode'", parse(",") 
+         if "`2'" == "," & "`3'" == "replace" {
+           local replace replace
+           local dofilename `1'
+         }
+         else local dofilename `graphcode'
+         
+         file open graphcode using "`dofilename'", write `replace' 
+         file write graphcode "//WILL CHANGE THE DATA, SO WITHIN PRESERVE RESTORE - RUN ALL CODE TOGETHER"	_n
+         file write graphcode "preserve" _n
+         file write graphcode "//BETTER TO MATCH IF STATEMENT FROM ORIGINAL STPP COMMAND, BUT THIS TAKES NON-MISSING VALUES FOR THE GENERATED VARIABLE AS A PROXY" _n
+         file write graphcode _tab(1) "keep if `RS_newvarname'!=." _n
+         file write graphcode "//GROUP VARIABLE FOR ORIGINAL BY STATEMENT"	_n	
+         file write graphcode _tab(1) "egen __group=group(`by')" _n		
+         file write graphcode "//ADD A VALUE OF 1 AT TIME 0 FOR EACH GROUP"	_n
+         file write graphcode _tab(1) "tempvar new new2" _n	
+         file write graphcode _tab(1) "bys `by': gen \`new'=1 if _n==1" _n	
+         file write graphcode _tab(1) "expand 2 if \`new'==1, gen(\`new2')" _n	
+         file write graphcode _tab(1) "replace _t=0 if \`new2'==1" _n	
+         file write graphcode _tab(1) "replace `RS_newvarname'=1 if \`new2'==1" _n	
+         file write graphcode _tab(1) "replace `RS_newvarname'_lci=1 if \`new2'==1" _n	
+         file write graphcode _tab(1) "replace `RS_newvarname'_uci=1 if \`new2'==1 " _n		
+         file write graphcode "//GRAPH TEXT - RAREA FOR CIs, LINE FOR POINT ESTIMATES, XLABELS FOR THE RISKTABLE" _n		
+         file write graphcode "//MODIFY THIS TEXT TO MAKE CHANGES TO THE GRAPH" _n
+         file write graphcode `"//E.G DELETE FROM THE FIRST XLABEL UP TO AND INCLUDING "XOVERHANG" TO REMOVE THE RISKTABLE"' _n				
+         file write graphcode _tab(1) `"twoway `graphareatextforwrite' `graphlinetextforwrite',  ylabel(0(.25)1, angle(h) ///"' _n 
+         file write graphcode _tab(1) "format(%3.2f) grid) ///" _n 
+         file write graphcode _tab(1) `"ytitle(`"Marginal relative survival"' `"`ytitle'"') ///"' _n 
+         file write graphcode _tab(1) `"xtitle(`"Time since diagnosis"') ///"'	_n
+         file write graphcode _tab(1) `"subtitle(`"`subtitle'"') ///"' _n 
+         file write graphcode _tab(1) `"`legend' plotregion(margin(zero)) `note' `namepart'"' _n 		
+         file write graphcode "restore" _n
+         file close graphcode
+         //doedit ".\__stpp_graph_code_.do"
+       }
+    }
+    di as input "File `dofilename' has been created"
+  }
 end
-
-
 version 16.0
 set matastrict on
 mata:
@@ -1026,11 +1172,22 @@ void function PP_Write_list_results(struct stpp_info scalar   S)
 
   real scalar         i, k, j
 
-  string scalar       method, bytext, rmatname
+  string scalar       method, bytext, rmatname, agestand
   
   transmorphic matrix RS_list_matrix, AC_list_matrix, 
                       CP_can_list_matrix, CP_oth_list_matrix
-  
+
+					  
+///////// //ADDED - THIS NEEDS MOVING TO THE RIGHT PLACE**
+///////// HERE SO IT RUNS EVEN WITHOUT LIST OPTION**
+  if(S.ederer2) method = "Ederer II"
+  else method = "Pohar Perme"
+  if(S.haspopmort2) method = method + " (Sasieni and Brentnall weights)"
+  if(S.hasstandstrata) agestand=sprintf("(Standardized by %s)",S.standstrata_var) 
+	else agestand = ""
+  st_local("subtitle",sprintf(method))
+  st_local("ytitle",sprintf(agestand))
+ 
   if(!S.haslist) return
 
 // create output list

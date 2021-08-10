@@ -1,8 +1,8 @@
-*! version 1.0.1 8September2019
+*! version 2.0.1 23July2021
 
 program define ggt
 
-version 14.0
+version 15.1
 
 syntax, outcomevar(varname) orgchoice(varname) indID(varname) orgID(varname) choicechar(varlist)  ///
  	[, orgchar(varlist max=10) indchar(varlist max=20) niter(numlist integer max=1 min=1) alphapriorvar(numlist max=1 min=1) ///
@@ -15,7 +15,7 @@ syntax, outcomevar(varname) orgchoice(varname) indID(varname) orgID(varname) cho
 		local check=(`niter'>10000)
 		if (`check'!=1){
 			display as error "Number of Iterations must be larger than 10,000 burn-in"
-			exit 505
+			exit 501
 		}
 	}
 
@@ -25,7 +25,16 @@ syntax, outcomevar(varname) orgchoice(varname) indID(varname) orgID(varname) cho
 		local check=`: word 2 of `priortau''
 		if (mod(`check',1)!=0){
 			display as error "Second element of priortau must be an integer"
-		exit 498
+		exit 502
+		}
+	}
+
+*check deltapriorvar in (0,1)
+	if("`deltapriorvar'"!=""){
+		local check=(`deltapriorvar'>0 & `deltapriorvar'<1)
+		if (`check'!=1){
+			display as error "Delta prior variance parameter must be greater than 0 and less than 1"
+			exit 503
 		}
 	}
 
@@ -36,7 +45,7 @@ foreach var in `constraint_varlist' {
     capture confirm variable `var'
     if !_rc {
         display as error "Please rename `var' variable to avoid conflict in GGT code"
-	exit 505
+	exit 504
    }
 }
 
@@ -56,7 +65,7 @@ qui save "`temp_ggt_master'"
 	if (`error'!=0){
 		cap drop temp_ggt_persid temp_ggt_ordID
 		display as error "outcomevar must be binary {0,1}"
-		exit 499
+		exit 505
 	}
 	qui replace temp_GGT_flag=0
 	qui bysort temp_ggt_persid: egen temp_GGT_outcomesum=sum(`outcomevar') 
@@ -68,7 +77,7 @@ qui save "`temp_ggt_master'"
 	if (`error'!=0){
 		cap drop temp_ggt_persid temp_ggt_ordID
 		display as error "outcomevar must be constant within individuals"
-		exit 504
+		exit 506
 	}	
 *check orgchoice are 0 1 and sum to 1 
 	qui replace temp_GGT_flag=0
@@ -78,7 +87,7 @@ qui save "`temp_ggt_master'"
 	if (`error'!=0){
 		cap drop temp_ggt_persid temp_ggt_ordID
 		display as error "orgchoice must be binary {0,1}"
-		exit 500
+		exit 507
 	}
 
 	qui replace temp_GGT_flag=0
@@ -89,7 +98,7 @@ qui save "`temp_ggt_master'"
 	if (`error'!=0){
 		cap drop temp_ggt_persid temp_ggt_ordID
 		display as error "orgchoice must sum to 1 within individuals"
-		exit 501
+		exit 508
 	}
 
 

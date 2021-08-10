@@ -110,7 +110,7 @@ respective elements in local macros. Typical usage of
 {cmd:version {ccl stata_version}}
 {p_end}
 {p 14 16 2}
-{cmd:elabel fcncall}{{cmd:define}|{cmd:variable}} {cmd:lblnames 0 : `0'}
+{cmd:elabel fcncall} {{cmd:define}|{cmd:variable}} {cmd:lblnames 0 : `0'}
 {p_end}
 {p 14 16 2}
 {{cmd:syntax {it:...}}|{cmd:elabel parse {it:...} {cmd:: `0'}}}

@@ -1,4 +1,4 @@
-*! 1.1.1 20-Jan-2013 Dirk Enzmann - modified version of Nick Cox's -moments-, version 1.1.0, 24-SEP-2004
+*! 1.2.0 01-May-2021 Dirk Enzmann - modified version of Nick Cox's -moments-, version 1.1.0, 24-SEP-2004
 program moments2, byable(recall) rclass
         version 8.2
         syntax [varlist] [if] [in] [aweight fweight] ///
@@ -90,11 +90,11 @@ program moments2, byable(recall) rclass
                         replace `SD' = r(sd) in `i'
                         if "`type'" == "b" {
 			replace `skewness' = r(skewness)*((r(N)-1)/r(N))^(3/2) in `i'
-			replace `kurtosis' = r(kurtosis)*((r(N)-1)/r(N))^2 in `i'
+			replace `kurtosis' = r(kurtosis)*((r(N)-1)/r(N))^2-3 in `i'
 		      }
                         else if "`type'" == "b3" {
 			replace `skewness' = r(skewness)*((r(N)-1)/r(N))^(3/2) in `i'
-			replace `kurtosis' = r(kurtosis)*((r(N)-1)/r(N))^2-3 in `i'
+			replace `kurtosis' = r(kurtosis)*((r(N)-1)/r(N))^2 in `i'
 		      }
                         else if "`type'" == "G" {
 			replace `skewness' = r(skewness)*sqrt(r(N)*(r(N)-1))/(r(N)-2) in `i'
@@ -119,11 +119,11 @@ program moments2, byable(recall) rclass
                            mat `matname'[`i',3] = r(sd)
                            if "`type'" == "b" {
 			   mat `matname'[`i',4] = r(skewness)*((r(N)-1)/r(N))^(3/2)
-			   mat `matname'[`i',5] = r(kurtosis)*((r(N)-1)/r(N))^2
+			   mat `matname'[`i',5] = r(kurtosis)*((r(N)-1)/r(N))^2-3
 		         }
                            else if "`type'" == "b3" {
 			   mat `matname'[`i',4] = r(skewness)*((r(N)-1)/r(N))^(3/2)
-			   mat `matname'[`i',5] = r(kurtosis)*((r(N)-1)/r(N))^2-3
+			   mat `matname'[`i',5] = r(kurtosis)*((r(N)-1)/r(N))^2
 		         }
 			else if "`type'" == "G" {
                               mat `matname'[`i',4] = r(skewness)*sqrt(r(N)*(r(N)-1))/(r(N)-2)

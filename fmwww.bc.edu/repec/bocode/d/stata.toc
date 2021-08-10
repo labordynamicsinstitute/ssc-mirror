@@ -54,6 +54,8 @@ p diagt module to report summary statistics for diagnostic tests compared to tru
 p diagtest module to report summary statistics for diagnostic test
 p dichoct module to dichotomizes a variable at a specified centile and generates a new variable containing the dichotomized values
 p dict module to loop over multiple arguments
+p did2s module to estimate a TWFE model using the two-stage difference-in-differences approach 
+p did_imputation module to perform treatment effect estimation and pre-trend testing in event studies
 p did_multiplegt module to estimate sharp Difference-in-Difference designs with multiple groups and periods
 p didq module to compute treatment effects under alternative Parallel-q assumptions
 p difd module to evaluate test items for differential item functioning (DIF)
@@ -88,6 +90,7 @@ p dmerge module to merge datasets using a modification of Stata's merge
 p dmexogxt module to test consistency of OLS vs XT-IV estimates
 p dmout module to create difference-in-means tables
 p do2screen module to display do-files in result window
+p docd module to change the working directory before executing a do-file
 p dolog modules to execute commands from a file with logging
 p dologx modules to execute commands from a file with logging
 p domdiag module to construct dominance diagrams 
@@ -109,6 +112,7 @@ p dqd module to compute treatment effects under alternative Parallel-q assumptio
 p drarea module to overlap two range area plots
 p drcate module to estimate and plot conditional average treatment effect functions with uniform confidence bands using a doubly robust method
 p drdecomp module to estimate  Shapley value of growth and distribution components of changes in poverty indicators
+p drdid module for the estimation of Doubly Robust Difference-in-Difference models
 p drm module to fit Sobel's Diagonal Reference Model (DRM)
 p drmeta module for dose-response meta-analysis
 p drmmws module to perform doubly-robust marginal mean weighting through stratification

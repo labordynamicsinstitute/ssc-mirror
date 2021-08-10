@@ -1,8 +1,9 @@
-*! Part of package matrixtools v. 0.27
+*! Part of package matrixtools v. 0.28
 *! Support: Niels Henrik Bruun, niels.henrik.bruun@gmail.com
 *! 2020-06-10 > frequency weights are now working
 
 * TODO crossmat option hide
+* TODO Tests (trend? comparison) for one variable tables
 
 program define crossmat, rclass
 	version 12.1

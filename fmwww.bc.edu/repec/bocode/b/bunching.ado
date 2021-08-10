@@ -1,13 +1,18 @@
-*! ver 1.3 2020-05-21
+*! ver 1.5 2021-05-25
+*  ver 1.4 2021-05-11
+*  ver 1.3 2020-05-21
 *  ver 1.2 2020-05-19
-* ver 1.1 2020-05-05
-* ver 1.0 2020-04-30
+*  ver 1.1 2020-05-05
+*  ver 1.0 2020-04-30
+
+
+
 
 program define bunching, rclass 
         version 14
 		syntax varlist [if] [in] [fw] ///
-		,  Kink(real) M(real) tax0(real) tax1(real) ///
-		[ GENerate(name) PERC_obs(integer 9999425) POLorder(integer 9999425) ///
+		,  Kink(real) M(real) s0(real) s1(real) ///
+		[ GENerate(name) PCTobs(integer 9999425) POLorder(integer 9999425) ///
 		DELTAM(real 9999425) DELTAP(real 9999425) ///
 		Grid(numlist min=1 max=99 sort) Numiter(integer 500) BINWidth(real 9999425) ///
 		SAVINGTOBIT(string asis) SAVINGBOUNDS(string asis) ///
@@ -29,8 +34,8 @@ program define bunching, rclass
 		
 		
 		* 2.1 check REQUIRED inputs
-		if `tax0' >= `tax1' {
-				di as err "value of {bf:tax1} must be bigger than {bf:tax0}" 
+		if `s0' <= `s1' {
+				di as err "value of {bf:s0} must be bigger than {bf:s1}" 
 				exit 198
 		}
 		if `m' <= 0 | `m' == . {
@@ -52,25 +57,25 @@ program define bunching, rclass
 		}
 		
 		** "perc:_obs" or "pol:order" are entered - check if "generate(newvar)" or "deltam(# real)" or "deltap(# real)" are entered
- 		if `polorder' != 9999425 & `perc_obs' != 9999425 {
+ 		if `polorder' != 9999425 & `pctobs' != 9999425 {
 			if missing("`generate'") | (`deltap' == 9999425 | `deltam' == 9999425)  {
-				di as err "If you'd like to run the filter with custom polorder or perc_obs, you must also provide all three options: deltam, deltap, and generate"
+				di as err "If you'd like to run the filter with custom polorder or pctobs, you must also provide all three options: deltam, deltap, and generate"
 				exit 198
 			}
 		}
-		if (`polorder' != 9999425 & `perc_obs' == 9999425) | (`polorder' == 9999425 & `perc_obs' != 9999425) {
+		if (`polorder' != 9999425 & `pctobs' == 9999425) | (`polorder' == 9999425 & `pctobs' != 9999425) {
 			if missing("`generate'") | (`deltap' == 9999425 | `deltam' == 9999425)  {
-				di as err "If you'd like to run the filter with custom polorder or perc_obs, you must also provide all three options: deltam, deltap, and generate"
+				di as err "If you'd like to run the filter with custom polorder or pctobs, you must also provide all three options: deltam, deltap, and generate"
 				exit 198
 			}
 			
-			if `perc_obs' == 9999425 local perc_obs = 40
+			if `pctobs' == 9999425 local pctobs = 40
 			if `polorder' == 9999425 local polorder = 7
 		}
 		
 		
 		** "perc:_obs" and "pol:order" not entered; any of "generate(newvar)" or "deltam(# real)" or "deltap(# real)" are entered
-		if `polorder' == 9999425 & `perc_obs' == 9999425 {
+		if `polorder' == 9999425 & `pctobs' == 9999425 {
 			if missing("`generate'") & (`deltap' != 9999425 | `deltam' != 9999425) {
 				di as err "If you'd like to run the filter, you must provide all three options deltam, deltap, and generate"
 				exit 198
@@ -81,7 +86,7 @@ program define bunching, rclass
 			}
 			
 			local polorder = 7
-			local perc_obs = 40
+			local pctobs = 40
 		}
 
 
@@ -129,7 +134,7 @@ program define bunching, rclass
 			* as dependent variable by bounds/tobit; otherwise bounds/tobit uses the user-entered dependent variable
 			
 			funcHeader "Filter"
-			bunchfilter `y_i' [`weight'`exp'] `in' `if', gen(`generate') deltam(`deltam') deltap(`deltap') kink(`kink') perc_obs(`perc_obs') polorder(`polorder') `nopic' binwidth(`binwidth')
+			bunchfilter `y_i' [`weight'`exp'] `in' `if', gen(`generate') deltam(`deltam') deltap(`deltap') kink(`kink') pctobs(`pctobs') polorder(`polorder') `nopic' binwidth(`binwidth')
 			if _rc != 0 exit 
 			local y_i `generate'
 			
@@ -141,13 +146,13 @@ program define bunching, rclass
 		
 		* 2. run bunchbounds
 		funcHeader "Bounds"
-		bunchbounds `y_i' [`weight'`exp'] `in' `if', kink(`kink')  tax0(`tax0') tax1(`tax1') m(`m') `nopic' saving(`savingbounds')
+		bunchbounds `y_i' [`weight'`exp'] `in' `if', kink(`kink')  s0(`s0') s1(`s1') m(`m') `nopic' savingbounds(`savingbounds')
 		return add
 		
 		
 		* 3. run bunchtobit
 		funcHeader "Tobit"
-		bunchtobit `y_i' `covariates' [`weight'`exp'] `in' `if', kink(`kink') tax0(`tax0') tax1(`tax1') numiter(`numiter') grid(`grid') `nopic' binwidth(`binwidth') `verbose' saving(`savingtobit')
+		bunchtobit `y_i' `covariates' [`weight'`exp'] `in' `if', kink(`kink') s0(`s0') s1(`s1') numiter(`numiter') grid(`grid') `nopic' binwidth(`binwidth') `verbose' savingtobit(`savingtobit')
 		if _rc != 0 exit 
 		return add
 		

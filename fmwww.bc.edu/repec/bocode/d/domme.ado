@@ -1,8 +1,8 @@
-*! domme version 1.0 7/2/2019 Joseph N. Luchman
+*! domme version 1.0.1 4/17/2021 Joseph N. Luchman
 
 program define domme, eclass 																		// ~ history and version information at end of file ~
 
-version 15.1
+version 15
 
 if replay() & !strlen("`0'") { 																		//replay results - error if "by"; domme allows nothing in "anything" - allow it to replay only when there is nothing in options
 
@@ -322,7 +322,7 @@ quietly generate byte `keep' = 1 `if' `in' 															//generate tempvar tha
 markout `touse' `keep'																				//mark sample for only really works with the if & in; all other missing-based adjustments must derive from running full model
 
 	//**inital run to ensure the syntax works and restrict sample based on full model**//
-if !`drop_exit' capture `reg' [`weight'`exp'] if `touse', `ropts' constraint(`extraconstr')			//run of overall analysis assuming all is well so far; intended to check e(sample) and whether everything works as it should
+if !`drop_exit' capture `reg' [`weight'`exp'] if `touse', `ropts' constraints(`extraconstr')		//run of overall analysis assuming all is well so far; intended to check e(sample) and whether everything works as it should
 	
 if _rc & !`drop_exit' {																				//exit if model is not estimable or program results in error - return the returned code
 
@@ -529,7 +529,7 @@ if !`drop_exit' {																					//if nothing's wrong so far...
 	
 	//**obtain "constant" model which will adjusted out of fitstat**//
 	scalar `consfs' = 0																				//define constant-only model fitstat as 0 - needed for dominance() function
-	
+
 	quietly `reg' [`weight'`exp'] if `touse', `ropts' ///
 		constraints(`nobrkt_constrs' `allcset' `extraconstr')										//all constraints used - this estimates the "constant" model
 		
@@ -706,9 +706,7 @@ if `drop_exit' {																					//if there was a problem during the program
 
 }
 
-local constrs "`nobrkt_constrs' `allcset'"															//if no issues during estimation bind all constraints
-
-foreach constr of numlist `constrs' {																//go through each constraint that was made...
+foreach constr of numlist `nobrkt_constrs' {														//go through each constraint that was made...
 	
 		constraint drop `constr'																	//drop the constraint
 	
@@ -1281,9 +1279,9 @@ return scalar fitstat = `fitstat'
 end
 
 /* programming notes and history
-
 - domme version 1.0 - date - July 2, 2019
-
-Basic version
-
+-base version
+ // 1.0.1 - April 17, 2021 (initiating new versioning: #major.#minor.#patch)
+ -update to documentation for SJ article
+ -bug fix on constraint dropping with all() option and use with xi:
 */

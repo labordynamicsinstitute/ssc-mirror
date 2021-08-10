@@ -20,8 +20,8 @@ d Requires: Stata version 13 and keyby, chardef, lablist from SSC (q.v.)
 d
 d Distribution-Date: 20190203
 d
-d Author: Roger Newson,  Imperial College London
-d Support: email r.newson@@imperial.ac.uk
+d Author: Roger Newson,  King's College London
+d Support: email roger.newson@@kcl.ac.uk
 d
 f cprdons_death_patient.ado
 f cprdonsutil.sthlp

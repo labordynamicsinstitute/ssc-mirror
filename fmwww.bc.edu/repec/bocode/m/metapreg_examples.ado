@@ -6,52 +6,43 @@ end
 program define metapreg_example_one_one
 	preserve
 	use "http://fmwww.bc.edu/repec/bocode/a/arbyn2009jcellmolmedfig1.dta", clear
+	
+	di ". decode tgroup, g(STRtgroup)"
+	
 	di ". metapreg num denom, ///"
 	di "	studyid(study) ///"
-	di "	iv ///"
 	di "	model(random)  ///"
-	di "	by(tgroup)  ///"
+	di "	by(STRtgroup)  ///"
 	di "	cimethod(exact) ///"
 	di "	label(namevar=author, yearvar=year) ///"
-	di "	xlab(.25,0.5,.75,1) ///"
+	di "	xlab(.25, 0.5, .75, 1) ///"
 	di "	xline(0, lcolor(black)) ///"
 	di "	subti(Atypical cervical cytology, size(4)) ///"
-	di "	xtitle(Proportion,size(2))  ///"
-	di "	nowt ///"
-	di "	olineopt(lcolor(red)lpattern(shortdash)) ///"
-	di "	plotregion(icolor(ltbluishgray)) ///"
-	di "	diamopt(lcolor(red)) ///"
-	di "	pointopt(msymbol(x)msize(0))  ///"
-	di "	boxopt(msymbol(S) mcolor(black)) ///"
-	di "	astext(70) ///"
-	di "	texts(150)	"
+	di "	olineopt(lcolor(red) lpattern(shortdash)) ///"
+	di "	graphregion(color(white)) ///"
+	di "	diamopt(lcolor(red)) predciopts(lcolor(red)) ///"
+	di "	pointopt(msymbol(s)msize(1))  ///"
+	di "	texts(1.5) prediction	"
 
 	set more off
 	
-	cap log close
-	cap log using "D:\WIV\Projects\Stata\Metapreg\Logs\doczone.txt", text replace
-	set more off
-	set trace on
-	
+	decode tgroup, g(STRtgroup)
+		
 	metapreg num denom, ///
 		studyid(study) ///
-		iv ///
 		model(random)  ///
-		by(tgroup)  ///
 		cimethod(exact) ///
+		sumtable(none) ///
+		by(STRtgroup) ///
 		label(namevar=author, yearvar=year) ///
-		xlab(.25,0.5,.75,1) ///
+		xlab(0.5, .25, 0.5, .75, 1) ///
 		xline(0, lcolor(black)) ///
 		subti(Atypical cervical cytology, size(4)) ///
-		xtitle(Proportion,size(2))  ///
-		nowt ///
-		olineopt(lcolor(red)lpattern(shortdash)) ///
-		plotregion(icolor(ltbluishgray)) /// 
-		diamopt(lcolor(red)) ///
-		pointopt(msymbol(x)msize(0))  ///
-		boxopt(msymbol(S) mcolor(black)) ///
-		astext(70) ///
-		texts(150)		
+		graphregion(color(white)) /// 
+		olineopt(lcolor(red) lpattern(shortdash)) ///
+		diamopt(lcolor(red)) predciopts(lcolor(red)) ///
+		pointopt(msymbol(s)msize(1))  ///
+		texts(1.5) prediction 	
 	restore
 end
 
@@ -66,12 +57,10 @@ program define metapreg_example_one_two
 	di "	xlab(.25,0.5,.75,1) ///"
 	di "	xline(0, lcolor(black)) ///"
 	di "	subti(Atypical cervical cytology, size(4)) ///"
-	di "	xtitle(Proportion,size(2))  ///"
-	di "	olineopt(lcolor(red)lpattern(shortdash)) ///"
-	di "	plotregion(icolor(ltbluishgray)) /// "
-	di "	diamopt(lcolor(red)) ///"
-	di "	astext(50) ///"
-	di "	texts(90)"
+	di "	pointopt(msymbol(s)msize(1)) ///"
+	di "	graphregion(color(white)) /// "
+	di "	diamopt(lcolor(red)) predciopts(lcolor(red)) ///"
+	di "	texts(1.5) prediction"
 
 	set more off
 	bys tgroup, rc0: metapreg num denom, ///
@@ -79,15 +68,14 @@ program define metapreg_example_one_two
 		model(random)  ///
 		cimethod(wilson) ///
 		label(namevar=author, yearvar=year) ///
-		xlab(.25,0.5,.75,1) ///
+		xlab(0, .25,0.5,.75,1) ///
 		xline(0, lcolor(black)) ///
 		subti(Atypical cervical cytology, size(4)) ///
-		xtitle(Proportion,size(2))  ///
-		olineopt(lcolor(red)lpattern(shortdash)) ///
-		plotregion(icolor(ltbluishgray)) /// 
-		diamopt(lcolor(red)) ///
-		astext(50) ///
-		texts(90)
+		olineopts(lcolor(red) lpattern(shortdash)) ///
+		graphregion(color(white)) /// 
+		pointopt(msymbol(s)msize(1))  ///
+		diamopt(lcolor(red)) predciopts(lcolor(red)) ///
+		texts(1.5) prediction
 	restore
 end
 
@@ -98,19 +86,18 @@ program define metapreg_example_one_three
 	di ""
 	di ". metapreg num denom STRtgroup, ///"
 	di "	studyid(study) ///"
-	di "	outtable(all) ///"
+	di "	sumtable(all) ///"
 	di "	model(random)  ///"
 	di "	cimethod(exact) ///"
 	di "	label(namevar=author, yearvar=year) ///"
-	di "	xlab(.25,0.5,.75,1) ///"
+	di "	xlab(.25, 0.5, .75, 1) ///"
 	di "	xline(0, lcolor(black)) ///"
 	di "	subti(Atypical cervical cytology, size(4)) ///"
-	di "	xtitle(Proportion,size(2))  ///"
-	di "	olineopt(lcolor(red)lpattern(shortdash)) ///"
-	di "	plotregion(icolor(ltbluishgray)) ///" 
-	di "	diamopt(lcolor(red)) ///"
-	di "	astext(50) ///"
-	di "	texts(90)"
+	di "	olineopt(lcolor(red) lpattern(shortdash)) ///"
+	di "	graphregion(color(white)) ///" 
+	di "	diamopt(lcolor(red)) predciopts(lcolor(red)) ///"
+	di "	pointopt(msymbol(s) msize(1)) ///"
+	di "	texts(1.5) prediction summaryonly"
 	
 	set more off
 	
@@ -118,18 +105,18 @@ program define metapreg_example_one_three
 
 	metapreg num denom STRtgroup, ///
 		studyid(study) ///
-		outtable(all) ///
 		model(random)  ///
 		cimethod(exact) ///
+		sumtable(all) ///
 		label(namevar=author, yearvar=year) ///
-		xlab(.25,0.5,.75,1) ///
+		xlab(0, .25, 0.5, .75, 1) ///
+		xline(0) ///
 		subti(Atypical cervical cytology, size(4)) ///
-		xtitle(Proportion,size(2))  ///
-		olineopt(lcolor(red)lpattern(shortdash)) ///
-		plotregion(icolor(ltbluishgray)) /// 
-		diamopt(lcolor(red)) ///
-		astext(50) ///
-		texts(90)
+		graphregion(color(white)) /// 
+		olineopt(lcolor(red) lpattern(shortdash)) ///
+		diamopt(lcolor(red)) predciopts(lcolor(red)) ///
+		pointopt(msymbol(s)msize(1))  ///
+		texts(1.5) prediction summaryonly
 		
 	restore
 end
@@ -139,337 +126,248 @@ program define metapreg_example_two_one
 	use "http://fmwww.bc.edu/repec/bocode/t/tsoumpou2009cancertreatrevfig2WNL.dta", clear
 	di ". metapreg p16p p16ptot, ///" 
 	di "	studyid(study) ///"
-	di "	iv ///"
 	di "	model(random) ///" 
-	di "	ftt ///" 
 	di "	label(namevar=author, yearvar=year) ///" 
 	di "	sortby(year author) ///"
-	di "	xlab(0.1,.2, 0.3,0.4,0.5,0.6,.7,0.8, 0.9, 1) ///"
+	di "	xlab(0, .1, .2, 0.3,0.4,0.5)  ///"
 	di "	xline(0, lcolor(black)) ///"
 	di "	ti(Positivity of p16 immunostaining, size(4) color(blue)) ///"
 	di "	subti(Cytology = WNL, size(4) color(blue)) ///"
-	di "	xtitle(Proportion,size(4)) ///" 
-	di "	nowt ///" 
-	di "	nostats ///"
 	di "	olineopt(lcolor(red)lpattern(shortdash)) ///"
 	di "	diamopt(lcolor(black)) ///"
-	di "	pointopt(msymbol(x)msize(0)) ///"
-	di "	boxopt(msymbol(S) mcolor(black)) ///"
-	di "	astext(70) ///" 
-	di "	texts(100)"
+	di "	pointopt(msymbol(x)msize(2)) ///"
+	di "	graphregion(color(white)) ///"
+	di "	texts(1.5)"
 
 	set more off
 
 	metapreg p16p p16tot, ///		
 		studyid(study) ///
 		model(random)  ///
-		iv ///		
-		ftt ///
 		label(namevar=author, yearvar=year) ///
 		sortby(year author) ///
-		xlab(0.1,.2, 0.3,0.4,0.5,0.6,.7,0.8, 0.9, 1) ///
+		xlab(0, .1, .2, 0.3, 0.4, 0.5) ///
 		xline(0, lcolor(black)) ///
 		ti(Positivity of p16 immunostaining, size(4) color(blue)) ///
 		subti(Cytology = WNL, size(4) color(blue)) ///
-		xtitle(Proportion,size(3)) ///  
-		nostats /// 
-		nowt ///
 		olineopt(lcolor(red) lpattern(shortdash)) ///
+		graphregion(color(white)) /// 
 		diamopt(lcolor(black)) ///
-		pointopt(msymbol(x)msize(0)) /// 
-		boxopt(msymbol(S) mcolor(black)) ///
-		astext(70) ///  
-		texts(100) 
+		pointopt(msymbol(X)msize(2)) /// 
+		texts(1.5) 
 	restore
 end
 
-program define metapreg_example_two_two
-	preserve
-	use "http://fmwww.bc.edu/repec/bocode/t/tsoumpou2009cancertreatrevfig2WNL.dta", clear
-	di ". metapreg p16p p16tot, ///"
-	di "	model(random) /// "
-	di "	studyid(study) ///"
-	di "	label(namevar=author, yearvar=year) ///" 
-	di "	sortby(year author) ///"
-	di "	xlab(0.1,.2, 0.3,0.4,0.5,0.6,.7,0.8, 0.9, 1) /// "
-	di "	xline(1, lcolor(black)) ///"
-	di "	ti(Positivity of p16 immunostaining, size(4) color(blue)) ///"
-	di "	subti(Cytology = HSIL, size(4) color(blue)) ///"
-	di "	xtitle(Proportion,size(3)) ///"
-	di "	nostats ///"
-	di "	olineopt(lcolor(red) lpattern(shortdash)) ///"
-	di "	diamopt(lcolor(black)) ///"
-	di "	pointopt(msymbol(s)msize(2)) /// "
-	di "	astext(70) /// " 
-	di "	texts(100)"  
-	
-	set more off
-	
-	metapreg p16p p16tot, ///
-		model(random) ///
-		studyid(study) ///
-		label(namevar=author, yearvar=year) ///
-		sortby(year author) ///
-		xlab(0.1,.2, 0.3,0.4,0.5,0.6,.7,0.8, 0.9, 1) ///
-		xline(1, lcolor(black)) ///
-		ti(Positivity of p16 immunostaining, size(4) color(blue)) ///
-		subti(Cytology = HSIL, size(4) color(blue)) ///
-		xtitle(Proportion,size(3)) ///
-		nostats ///
-		olineopt(lcolor(red) lpattern(shortdash)) ///
-		diamopt(lcolor(black)) ///
-		pointopt(msymbol(s)msize(2)) ///
-		astext(70) ///
-		texts(100)
-	restore
-
-end
 
 program define metapreg_example_three_one
 	preserve
-	use "https://github.com/VNyaga/Metapreg/blob/master/bcg.dta?raw=true", clear
+	use "http://fmwww.bc.edu/repec/bocode/b/bcg.dta", clear
 	di ". metapreg cases_tb population bcg,  ///" 
 	di "	studyid(study) ///"
 	di "	model(fixed)  /// "
-	di "	second(marginal) ///"
-	di "	outtable(raw logodds abs rr)  ///"
-	di "	tablestat(raw(Raw_Coeff) logodds(Logit) abs(Proportion) rr(Risk_ratio)) ///"
-	di "	paired	///"
-	di "	outplot(rr) ///"
-	di "	plotstat(Risk ratio) ///"
+	di "	sumtable(all)  ///"
+	di "	comparative	///"
+	di "	output(rr) ///"
+	di "	sumstat(Risk ratio) ///"
 	di "	plotregion(color(white)) /// "
 	di "	graphregion(color(white)) /// "
 	di "	xlab(0, 1, 2) ///"
 	di "	xtick(0, 1, 2)  /// "
-	di "	force ///" 
-	di "	xtitle(Relative Ratio,size(2)) /// "
 	di "	olineopt(lcolor(black) lpattern(shortdash)) ///" 
-	di "	diamopt(lcolor(black)) /// "
+	di "	diamopt(lcolor(red)) /// "
 	di "	rcols(cases_tb population) /// "
 	di "	astext(80) /// "
-	di "	texts(150)" 
+	di "	texts(1.5) logscale" 
 
 	set more off
 	
 	metapreg cases_tb population bcg,  /// 
 		studyid(study) ///
 		model(fixed)  /// 
-		second(marginal) ///
-		outtable(raw logodds abs rr)  ///
-		tablestat(raw(Raw_Coeff) logodds(Logit) abs(Proportion) rr(Risk_ratio)) ///
-		paired	///
-		outplot(rr) ///
-		plotstat(Risk ratio) ///
+		sumtable(all)  ///
+		comparative	///
+		output(rr) ///
+		sumstat(Risk ratio) ///
 		plotregion(color(white)) /// 
 		graphregion(color(white)) /// 
 		xlab(0, 1, 2) /// 
 		xtick(0, 1, 2)  /// 
-		force /// 
-		xtitle(Relative Ratio,size(2)) /// 
-		olineopt(lcolor(black) lpattern(shortdash)) /// 
-		diamopt(lcolor(black)) /// 
+		olineopt(lcolor(red) lpattern(shortdash)) /// 
+		diamopt(lcolor(red)) /// 
 		rcols(cases_tb population) /// 
 		astext(80) /// 
-		texts(150) 		
+		texts(1.5) logscale 		
 	restore
 end
 
 program define metapreg_example_three_two
 	preserve
-	use "https://github.com/VNyaga/Metapreg/blob/master/bcg.dta?raw=true", clear
-	di ". metapreg cases_tb population bcg,  /// "
+	use "http://fmwww.bc.edu/repec/bocode/b/bcg.dta", clear
+	di ". metapreg cases_tb population lat,  /// "
 	di "	studyid(study) ///"
 	di "	model(random)  /// "
-	di "	second(fixed) ///"
-	di "	outtable(lor logodds abs rr)  ///"
-	di "	paired	///"
-	di "	outplot(rr) ///"
+	di "	sumtable(all) by(bcg)  ///"
+	di "	paired	sortby(lat) ///"
 	di "	plotregion(color(white)) /// "
 	di "	graphregion(color(white)) /// "
-	di "	xlab(0, 1, 2) /// "
-	di "	xtick(0, 1, 2)  /// "
-	di "	force /// "
-	di "	xtitle(Relative Ratio,size(2)) /// "
-	di "	plotstat(Rel Ratio) ///"
-	di "	olineopt(lcolor(black) lpattern(shortdash)) /// "
-	di "	diamopt(lcolor(black)) /// "
+	di "	xlab(0, 0.05, 0.1) /// "
+	di "	xtick(0, 0.05, 0.1)  /// "
+	di "	sumstat(Proportion) ///"
+	di "	olineopt(lcolor(red) lpattern(shortdash)) /// "
+	di "	diamopt(lcolor(red)) /// "
 	di "	rcols(cases_tb population) /// "
 	di "	astext(80) /// "
-	di "	texts(150) "
+	di "	texts(1.5) prediction "
 		
 	set more off
-	metapreg cases_tb population bcg,  /// 
+	metapreg cases_tb population lat,  /// 
 		studyid(study) ///
 		model(random)  /// 
-		second(fixed) ///
-		outtable(lor logodds abs rr)  ///
-		paired	///
-		outplot(rr) ///
+		sortby(lat) ///
+		sumtable(all) by(bcg) ///
 		plotregion(color(white)) /// 
 		graphregion(color(white)) /// 
-		xlab(0, 1, 2) /// 
-		xtick(0, 1, 2)  /// 
-		force /// 
-		xtitle(Relative Ratio,size(2)) /// 
-		plotstat(Rel Ratio) ///
-		olineopt(lcolor(black) lpattern(shortdash)) /// 
-		diamopt(lcolor(black)) /// 
+		xlab(0, 0.05, 0.1) /// 
+		xtick(0, 0.05, 0.1)  /// 
+		sumstat(Proportion) ///
+		olineopt(lcolor(red) lpattern(shortdash)) /// 
+		diamopt(lcolor(red)) /// 
 		rcols(cases_tb population) /// 
 		astext(80) /// 
-		texts(150) 		
+		texts(1.5) prediction  		
 	restore
 end
 
 program define metapreg_example_three_three
 	preserve
-	use "https://github.com/VNyaga/Metapreg/blob/master/bcg.dta?raw=true", clear
+	use "http://fmwww.bc.edu/repec/bocode/b/bcg.dta", clear
 	di ". metapreg cases_tb population bcg lat,  ///" 
 	di "	studyid(study) ///"
-	di "	model(fixed, intpoints(1))  /// "
+	di "	model(random)  /// "
 	di "	sortby(lat) ///"
-	di "	second(marginal) ///"
-	di "	outtable(all) ///"
-	di "	paired  ///"
-	di "	outplot(rr) ///"
+	di "	sumtable(all) ///"
+	di "	comparative  ///"
+	di "	output(rr) ///"
 	di "	interaction ///"
 	di "	plotregion(color(white)) /// "
 	di "	graphregion(color(white)) /// "
 	di "	xlab(0, 1, 2) /// "
 	di "	xtick(0, 1, 2)  /// "
-	di "	force ///" 
-	di "	xtitle(Relative Ratio,size(2)) ///" 
-	di "	plotstat(Rel Ratio) ///"
-	di "	olineopt(lcolor(black) lpattern(shortdash)) ///" 
-	di "	diamopt(lcolor(black)) ///" 
+	di "	olineopt(lcolor(red) lpattern(shortdash)) ///" 
+	di "	diamopt(lcolor(red)) ///" 
 	di "	rcols(cases_tb population) /// "
 	di "	astext(80) ///" 
-	di "	texts(150)" 
+	di "	texts(1.5) logscale" 
 	
 	set more off
 	metapreg cases_tb population bcg lat,  /// 
 		studyid(study) ///
-		model(fixed, intpoints(1))  /// 
+		model(random)  /// 
 		sortby(lat) ///
-		second(marginal) ///
-		outtable(all) ///
-		paired  ///
-		outplot(rr) ///
+		sumtable(all) ///
+		comparative  ///
+		output(rr) ///
 		interaction ///
 		plotregion(color(white)) /// 
 		graphregion(color(white)) /// 
 		xlab(0, 1, 2) /// 
 		xtick(0, 1, 2)  /// 
-		force /// 
-		xtitle(Relative Ratio,size(2)) /// 
-		plotstat(Rel Ratio) ///
-		olineopt(lcolor(black) lpattern(shortdash)) /// 
-		diamopt(lcolor(black)) /// 
+		olineopt(lcolor(red) lpattern(shortdash)) /// 
+		diamopt(lcolor(red)) /// 
 		rcols(cases_tb population) /// 
 		astext(80) /// 
-		texts(150) 
+		texts(1.5) logscale 
 	restore
 end
 
 program define metapreg_example_four_one
 	preserve
-	use "https://github.com/VNyaga/Metapreg/blob/master/schizo.dta?raw=true", clear
+	use "http://fmwww.bc.edu/repec/bocode/s/schizo.dta", clear
+	di ". gsort firstauthor -arm  "
+	di ""
 	di ". metapreg response total arm missingdata,  /// "
 	di "	studyid(firstauthor) ///"
 	di "	sortby(year) ///"
 	di "	model(fixed)  /// "
-	di "	second(marginal) ///"
-	di "	outtable(all) ///"
-	di "	paired  ///"
-	di "	outplot(rr) ///"
+	di "	sumtable(all) ///"
+	di "	comparative   ///"
+	di "	output(rr) ///"
 	di "	interaction ///"
 	di "	plotregion(color(white)) /// "
 	di "	graphregion(color(white)) /// "
 	di "	xlab(0, 5, 15) /// "
 	di "	xtick(0, 5, 15)  ///" 
-	di "	force /// "
-	di "	xtitle(Relative Ratio,size(2)) ///" 
-	di "	plotstat(Rel Ratio) ///"
+	di "	sumstat(Rel Ratio) ///"
 	di "	olineopt(lcolor(black) lpattern(shortdash)) /// "
 	di "	diamopt(lcolor(black)) /// "
-	di "	lcols(firstauthor year) /// "
-	di "	astext(80) /// "
-	di "	texts(150) "
+	di "	lcols(response total year) /// "
+	di "	astext(70) /// "
+	di "	texts(1.5) logscale "
 			
 	set more off
+	gsort firstauthor -arm
 	
 	metapreg response total arm missingdata,  /// 
 		studyid(firstauthor) ///
 		sortby(year) ///
 		model(fixed)  /// 
-		second(marginal) ///
-		outtable(all) ///
-		paired  ///
+		sumtable(all) ///
+		comparative  ///
 		outplot(rr) ///
 		interaction ///
 		plotregion(color(white)) /// 
 		graphregion(color(white)) /// 
 		xlab(0, 5, 15) /// 
 		xtick(0, 5, 15)  /// 
-		force /// 
-		xtitle(Relative Ratio,size(2)) /// 
-		plotstat(Rel Ratio) ///
+		sumstat(Rel Ratio) ///
 		olineopt(lcolor(black) lpattern(shortdash)) /// 
 		diamopt(lcolor(black)) /// 
-		lcols(firstauthor year) /// 
-		astext(80) /// 
-		texts(150) 
+		lcols(response total year) /// 
+		astext(70) /// 
+		texts(1.5) logscale
 		
 	restore
 end
 
-program define metapreg_example_four_two
+program define metapreg_example_five_one
 	preserve
-	use "https://github.com/VNyaga/Metapreg/blob/master/schizo.dta?raw=true", clear
-	di ". metapreg response total arm missingdata,  /// "
-	di "	studyid(firstauthor) ///"
-	di "	sortby(missingdata arm year) ///"
+	use "http://fmwww.bc.edu/repec/bocode/p/paired.dta", clear
+	di ". metapreg a b c d index comparator,  /// "
+	di "	studyid(study) ///"
 	di "	model(fixed)  /// "
-	di "	second(marginal) ///"
-	di "	outtable(all) ///"
+	di "	sumtable(all) ///"
 	di "	paired  ///"
-	di "	outplot(abs) ///"
-	di "	interaction ///"
+	di "	output(rr) ///"
 	di "	plotregion(color(white)) /// "
 	di "	graphregion(color(white)) /// "
-	di "	xlab(0, 0.5, 1) /// "
-	di "	xtick(0, 0.5, 1)  ///" 
-	di "	force /// "
-	di "	xtitle(Relative Ratio,size(2)) ///" 
-	di "	plotstat(Proportion) ///"
-	di "	olineopt(lcolor(black) lpattern(shortdash)) /// "
-	di "	diamopt(lcolor(black)) /// "
-	di "	lcols(firstauthor year) /// "
+	di "	xlab(0.9, 1, 1.1) /// "
+	di "	xtick(0.9, 1, 1.1)  ///" 
+	di "	sumstat(Ratio) ///"
+	di "	olineopt(lcolor(red) lpattern(shortdash)) /// "
+	di "	diamopt(lcolor(red)) /// "
+	di "	lcols(a b c d comparator index) /// "
 	di "	astext(80) /// "
-	di "	texts(120) "
+	di "	texts(1.5) logscale  "
 	
 	set more off
 	
-	metapreg response total arm missingdata,  /// 
-		studyid(firstauthor) ///
-		sortby(missingdata arm year) ///
+		metapreg a b c d index comparator, /// 
+		studyid(study) ///
 		model(fixed)  /// 
-		second(marginal) ///
-		outtable(all) ///
-		paired  ///
-		outplot(abs) ///
-		interaction ///
+		sumtable(all) ///
+		output(rr) ///
+		paired ///
+		by(comparator) ///
 		plotregion(color(white)) /// 
 		graphregion(color(white)) /// 
-		xlab(0, .5, 1) /// 
-		xtick(0, 0.5, 1)  /// 
-		force /// 
-		xtitle(Proportion Response,size(2)) /// 
-		plotstat(Proportion) ///
-		olineopt(lcolor(black) lpattern(shortdash)) /// 
-		diamopt(lcolor(black)) /// 
-		lcols(firstauthor year arm missingdata) /// 
+		xlab(0.9, 1, 1.1) /// 
+		xtick(0.9, 1, 1.1)  /// 
+		sumstat(Ratio) ///
+		olineopt(lcolor(red) lpattern(shortdash)) /// 
+		diamopt(lcolor(red)) /// 
+		lcols(a b c d comparator index) /// 
 		astext(80) /// 
-		texts(120) 
+		texts(1.5) logscale  
 		
 	restore
 end

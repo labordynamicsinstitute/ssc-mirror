@@ -11,13 +11,13 @@ d KW: B-splines
 d
 d Requires: Stata version 13
 d
-d Distribution-Date: 20210224
+d Distribution-Date: 20210423
+d
+d Author: François Libois, Paris School of Economics
+d Support: email francois.libois@@psemail.eu
 d
 d Author: Vincenzo Verardi, University of Namur
 d Support: email vverardi@@ulb.ac.be
-d
-d Author: François Libois, Facultés Universitaires Notre Dame de la Paix - FUNDP
-d Support: email francois.libois@@fundp.ac.be
 d
 f xtsemipar.ado
 f xtsemipar.sthlp

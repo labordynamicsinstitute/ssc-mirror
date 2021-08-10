@@ -1,5 +1,5 @@
 {smcl}
-{* *! version 2.3.1  08oct2020}{...}
+{* *! version 2.3.7  30jul2021}{...}
 {* *! Sebastian Kripfganz, www.kripfganz.de}{...}
 {vieweralsosee "xtdpdgmm" "help xtdpdgmm"}{...}
 {vieweralsosee "" "--"}{...}
@@ -170,7 +170,7 @@ Generalized Hausman test for model misspecification
 Andrews-Lu model and moment selection criteria
 
 {p 8 16 2}
-{cmd:estat} {cmdab:mmsc} [{it:namelist}] [, {opt hq(#)}]
+{cmd:estat} {cmdab:mmsc} [{it:namelist}] [, {cmd:n(}{opt gr:oups}|{opt cl:uster}|{opt obs)} {opt hq(#)}]
 
 {p 4 6 2}
 where {it:name} is a name under which estimation results were stored via {helpb estimates store:estimates store}, and {it:namelist} is a list of such names.
@@ -220,6 +220,10 @@ The default is the difference in the number of overidentifying restrictions from
 
 {phang}
 {opt nonested} with {cmd:estat hausman} specifies that the two estimators are not nested in terms of the moment conditions they employ. This option implies that the degrees of freedom for the test equal the number of contrasted coefficients.
+
+{phang}
+{cmd:n(groups}|{cmd:cluster}|{cmd:obs)} with {cmd:estat mmsc} specifies whether the penalty term for the MMSC-BIC and MMSC-HQIC criteria is calculated based on the number of groups, {cmd:n(groups)},
+the number of clusters, {cmd:n(cluster)}, or the number of observations, {cmd:n(obs)}. The default is {cmd:n(cluster)} if option {cmd:vce(cluster }{it:clustvar}{cmd:)} was specified with {helpb xtdpdgmm}, and {cmd:n(groups)} otherwise.
 
 {phang}
 {opt hq(#)} with {cmd:estat mmsc} specifies the Hannan-Quinn scaling factor for the correction term of the MMSC-HQIC criterion. The default is {cmd:hq(1.01)}.

@@ -6,7 +6,7 @@ version 11.0;
  (with or without amendments)
  and save begin, delimiter and end strings in r().
 *! Author: Roger Newson
-*! Date: 21 September 2020
+*! Date: 08 July 2021
 */
 
 syntax [, Begin(string) Delimiter(string) End(string) Missnum(string) RStyle(string)
@@ -38,6 +38,17 @@ else if `"`rstyle'"'=="htmlhead" {;
   if `"`begin'"'=="" {;local begin "<tr><th>";};
   if `"`delimiter'"'=="" {;local delimiter "</th><th>";};
   if `"`end'"'=="" {;local end "</th></tr>";};
+};
+else if `"`rstyle'"'=="htmltop" {;
+  if `"`begin'"'=="" {;
+    local begin `"<tr><td valign="top">"';
+  };
+  if `"`delimiter'"'=="" {;
+    local delimiter `"</td><td valign="top">"';
+  };
+  if `"`end'"'=="" {;
+    local end `"</td></tr>"';
+  };
 };
 else if `"`rstyle'"'=="bbcode"  {;
   if `"`begin'"'=="" {;local begin "[tr][td]";};

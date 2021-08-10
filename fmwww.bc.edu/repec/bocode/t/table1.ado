@@ -2,9 +2,11 @@
 *   and optionally comparing them between groups
 * phil clayton, phil@anzdata.org.au
 
-*! -table1- version 1.3 Phil Clayton    2014-10-15
+*! -table1- version 1.4 Phil Clayton    2021-05-19
 
 * version history
+* 2021-05-19	v1.4	Wrap tempfile macros in double quotes
+*						Converted to UTF-8 encoding
 * 2014-10-15	v1.3	Added cmissing option for missing continous data
 * 2014-08-23	v1.2	Added cformat option (default format for cat & bin vars)
 * 2013-06-04	v1.1	Added onecol option
@@ -39,7 +41,7 @@ program define table1
 		[ONEcol]			/// only use 1 column to report categorical vars
 		[Format(string)]	/// default format for contn / conts variables
 		[CFormat(string)]	/// default format for cat/cate/bin/bine variables
-		[plusminus]			/// report contn vars as mean ± sd instead of mean (sd)
+		[plusminus]			/// report contn vars as mean Â± sd instead of mean (sd)
 		[percent]			/// report categorical vars just as % (no N)
 		[MISsing]			/// don't exclude missing values
 		[CMISsing]			/// report (n=) for continous variables
@@ -90,7 +92,7 @@ program define table1
 	qui reshape wide n, i(factor) j(`groupnum')
 	rename n* `groupnum'*
 	gen sort1=`sortorder++'
-	qui save `resultstable', replace
+	qui save "`resultstable'", replace
 	restore
 
 	* step through the variables
@@ -140,7 +142,7 @@ program define table1
 					(count) n=`varname' [`weight'`exp'], by(`groupnum')
 				if "`plusminus'"=="plusminus" {
 					qui gen mean_sd=string(mean, "`varformat'") + ///
-						" ± " + string(sd, "`varformat'")
+						" Â± " + string(sd, "`varformat'")
 				}
 				else {
 					qui gen mean_sd=string(mean, "`varformat'") + ///
@@ -149,7 +151,7 @@ program define table1
 				if "`cmissing'"=="cmissing" {
 					replace mean_sd=mean_sd + " (n=" + string(n) + ")"
 				}
-				if "`plusminus'"=="plusminus" gen factor="`varlab', mean ± SD"
+				if "`plusminus'"=="plusminus" gen factor="`varlab', mean Â± SD"
 				else gen factor="`varlab', mean (SD)"
 				qui clonevar factor_sep=factor
 				keep factor* `groupnum' mean_sd
@@ -163,8 +165,8 @@ program define table1
 					else gen test="ANOVA"
 				}
 				gen sort1=`sortorder++'
-				qui append using `resultstable'
-				qui save `resultstable', replace
+				qui append using "`resultstable'"
+				qui save "`resultstable'", replace
 				restore
 			}
 			
@@ -220,8 +222,8 @@ program define table1
 					else gen test="Kruskal-Wallis"
 				}
 				gen sort1=`sortorder++'
-				qui append using `resultstable'
-				qui save `resultstable', replace
+				qui append using "`resultstable'"
+				qui save "`resultstable'", replace
 				restore
 			}
 			
@@ -316,8 +318,8 @@ program define table1
 				gen sort1=`sortorder++'
 				qui gen sort2=_n
 				qui drop `varnum'
-				qui append using `resultstable'
-				qui save `resultstable', replace
+				qui append using "`resultstable'"
+				qui save "`resultstable'", replace
 				restore
 			}
 	
@@ -381,8 +383,8 @@ program define table1
 					else qui gen test="Fisher's exact"
 				}
 				gen sort1=`sortorder++'
-				qui append using `resultstable'
-				qui save `resultstable', replace
+				qui append using "`resultstable'"
+				qui save "`resultstable'", replace
 				restore
 			}			
 		}
@@ -393,7 +395,7 @@ program define table1
 	local vallab: value label `groupnum'
 	if "`vallab'"!="" {
 		tempfile labels
-		qui label save `vallab' using `labels'
+		qui label save `vallab' using "`labels'"
 	}
 
 	* levels of group variable, for subsequent labelling
@@ -401,10 +403,10 @@ program define table1
 
 	* load results table
 	preserve
-	qui use `resultstable', clear
+	qui use "`resultstable'", clear
 	
 	* restore value labels if available
-	capture do `labels'
+	capture do "`labels'"
 	
 	* label each group variable
 	foreach level of local levels {

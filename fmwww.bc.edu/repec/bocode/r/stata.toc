@@ -54,6 +54,7 @@ p rctable module to create a table used in randomized controlled trials
 p rctmiss module to analyse a randomised controlled trial (RCT) allowing for informatively missing outcome data
 p rd module for regression discontinuity estimation 
 p rdatasets module to access R datasets available in CSV format from GitHub
+p rdbalance module to compute covariate balance statistics with formatted table output in treatment effect analysis and RDD
 p rdci module to calculate risk difference confidence intervals
 p rdcont module to compute non-randomized approximate sign test of density continuity
 p rdcv module to perform Sharp Regression Discontinuity Design with Cross Validation Bandwidth Selection
@@ -70,6 +71,7 @@ p rds module for respondent driven sampling
 p readlog module to read and process a file
 p readreplace module to make replacements that are specified in an external dataset
 p readshare module to access Survey of Health Ageing and Retirement in Europe (SHARE) data 
+p readwind module to read the data downloaded from the Wind into Stata in a long form
 p realcomimpute module to export and import data to the realcomImpute software package
 p recap module to perform capture-recapture analysis for three sources with Goodness-of-Fit based confidence intervals
 p recast2 module to change storage type of variable
@@ -111,6 +113,7 @@ p regxfe module to fit a linear high-order fixed-effects model
 p rel_clust module to compute indices of relative clusterability of variables 
 p reldist module for relative distribution analysis
 p relicoef module to compute Raykov's factor reliability coefficient
+p relogit module to perform Rare Event Logistic Regression
 p relrank module to generate relative data (grade transformation)
 p rely module to graph reliability plot of predictions for linear or logistic regression models
 p relyplot module to graph reliability plot of predictions for linear or logistic regression models
@@ -165,8 +168,10 @@ p rioc module to compute Relative improvement over chance (RIOC)
 p ritest module to perform randomization inference and permutation tests
 p rkqte module for estimation and robust inference for quantile treatment effects (QTE) in regression kink designs (RKD)
 p rmanova module to estimate repeated measures ANOVA
+p rmcorr module to compute a correlation for data with repeated measures
 p rmfiles module to provide a convenient way to remove matched files within a specified directory and possibly, if applicable, corresponding empty directories (which will also, if wanted, be applied recursively to a matched subset of offspring-directories)
 p rmhbounds module to refine mhbounds to remove the cap on the number of strata and replace the large sample approximation for E and V with exact moments
+p rmloa module to compute limits of agreement for data with repeated measures
 p rmpw module to implement the RMPW method of causal mediation analysis to decompose treatment effects into "direct" and "indirect" effects
 p rmse module to calculate raw or adjusted RMSE (Root MSE)
 p rnd modules for random number generation
@@ -229,4 +234,5 @@ p rvlrplot module to plot residuals vs lagged residuals for time series data
 p rvpplot2 module to graph residual-versus-predictor plot after regression-type command
 p rwg module to compute within group interrater reliability
 p rwolf module to calculate Romano-Wolf stepdown p-values for multiple hypothesis testing
+p rwolf2 module to calculate Romano-Wolf stepdown p-values for multiple hypothesis testing
 p rwrmed module for performing causal mediation analysis using regression-with-residuals

@@ -13,6 +13,7 @@ p qlqc15 module for scoring of the EORTC QLQ-C15-PAL
 p qn module to estimate Rousseeuw and Croux (1993) robust measure of dispersion
 p qog module to access the most recent release of the "Quality of Government" data
 p qogbook module to access Quality of Government codebooks 
+p qpair module to perform Q-analysis on paired Q-sorts using different factor extraction and factor rotation techniques
 p qpfit module containing various quantile and probability plots for assessing distribution fit
 p qqcompare module to evaluate balance after matching using quantile-quantile plots
 p qqplot2 module to produce quantile-quantile plot

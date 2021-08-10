@@ -58,6 +58,9 @@ However, some do-files, such as
 {help cscript:certification scripts}, should not contain a {helpb version} statement,
 because it is important to prove that they execute correctly under multiple versions
 of Stata (Gould, 2001).
+The {cmd:dologx} package is now probably obsolete
+for users of {help version:Stata Versions} 16 or above,
+as the {helpb dolog} package for Stata Version 16 now respects version control.
 
 
 {title:Options}
@@ -89,6 +92,18 @@ Stata will then execute the do-file in the version of Stata indicated at the top
 of the do-file, as long as that version, and the version of {helpb dolog} or {cmd:dolog{it:x}},
 are no higher than the version of the Stata executable being used.
 
+{pstd}
+The {cmd:dologx} package is probably now obsolete
+for users of {help version:Stata Versions} 16 or above,
+as the {helpb dolog} package in Stata Version 16 now respects {help version:version control}.
+As in:
+
+{p 8 16}{inp:. version 14: dolog parmest}{p_end}
+
+{pstd}
+which will be executed under Stata Version 14
+if there is no {helpb version} statement in the certification script {cmd:parmest.do}.
+
 
 {title:Examples}
 
@@ -105,8 +120,8 @@ the examples in {hi:parmest.do} work under both Stata versions.
 {title:Author}
 
 {pstd}
-Roger Newson, Imperial College London, UK.
-Email: {browse "mailto:r.newson@imperial.ac.uk":r.newson@imperial.ac.uk}
+Roger Newson, King's College London, UK.
+Email: {browse "mailto:roger.newson@kcl.ac.uk":roger.newson@kcl.ac.uk}
 
 
 {title:References}

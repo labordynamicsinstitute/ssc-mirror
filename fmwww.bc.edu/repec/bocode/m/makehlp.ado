@@ -1,5 +1,5 @@
-*! Date    : 14 Jul 2020
-*! Version : 2.13
+*! Date    : 18 May 2021
+*! Version : 2.15
 *! Author  : Adrian Mander
 *! Email   : mandera@cardiff.ac.uk
 *!  Make help files 
@@ -23,147 +23,151 @@
 17Apr20 v2.11 introduce optional and  required  options
  8Jun20 v2.12 handles the word syntax in the middle of lines and outputs a latex file of the help file
 14Jul20 v2.13 sorted out a bug .. couldn't handle all options being optional! and some problem with seealso
+20Nov20 V2.14 sorting out some spacing issues for multiline options and examples not recognising the carriage return, removed alot of paragraphing
+18May21 v2.15 the command didn't print out the description of the required options if there was a single line
  */
 
 program define makehlp
- /* Allow use on earlier versions of stata that have not been fully tested */
- local version = _caller()
- if `version' < 16.1 {
-    di "{err}WARNING: Tested only for Stata version 16.1 and higher."
-    di "{err}Your Stata version `version' is not officially supported."
- }
- else {
-   version 16.1
- }
- syntax [varlist], File(string) [ Replace DEBUG ME LATEX]
- local comm "`file'"
+/* Allow use on earlier versions of stata that have not been fully tested */
+local version = _caller()
+if `version' < 17.0 {
+  di "{err}WARNING: Tested only for Stata version 17.0 and higher."
+  di "{err}Your Stata version `version' is not officially supported."
+}
+else {
+  version 17.0
+}
+syntax [varlist], File(string) [ Replace DEBUG ME LATEX]
+local comm "`file'"
+
 /*******************************************************************************************
  * Want to read in ado file to find all the help file elements before looking at the syntax
  *  line
  *******************************************************************************************/
 
- tempname fh
- file open `fh' using `"`file'.ado"',read
- file read `fh' mh_line
- local i 1
- local nohelpfiletext 0
- while ( strpos(`"`mh_line'"', "START HELP FILE")==0 & r(eof)==0) { /* get to start of help text*/
-   file read `fh' mh_line 
- }
- if (r(eof)==1) { /* if START HELP FILE not found then close file and proceed to later parts*/
-   file close `fh'
-   di "{err} WARNING: text START HELP FILE not found"
-   local nohelpfiletext 1
- }
- local authi 1
- local institi 1
- local emaili 1
- local seei 1
+tempname fh
+file open `fh' using `"`file'.ado"',read
+file read `fh' mh_line
+local i 1
+local nohelpfiletext 0
+while ( strpos(`"`mh_line'"', "START HELP FILE")==0 & r(eof)==0) { /* get to start of help text*/
+  file read `fh' mh_line 
+}
+if (r(eof)==1) { /* if START HELP FILE not found then close file and proceed to later parts*/
+  file close `fh'
+  di "{err} WARNING: text START HELP FILE not found"
+  local nohelpfiletext 1
+}
+local authi 1
+local institi 1
+local emaili 1
+local seei 1
  
- /* Process the HELP FILE text, keep reading file until end of helpfile* */
-   
- while (strpos(`"`mh_line'"',"END HELP FILE")==0 & !`nohelpfiletext' & r(eof)==0 ) {
-   /* Handling the title text */
-   //di `"LINE `mh_line'"'
-   if strpos(`"`mh_line'"',"syntax")~=0 {
-     di "{err}WARNING: the word syntax appears in the helpfile... this needs to be changed"   
-   }
-   if strpos(`"`mh_line'"', "title[")~=0 {
-     local tit_line 1
-     if (strpos(`"`mh_line'"', "]")==0) local title_text`tit_line' = substr(`"`mh_line'"', strpos(`"`mh_line'"',"title[")+6, .)
-     else local title_text`tit_line' = substr(`"`mh_line'"', strpos(`"`mh_line'"',"title[")+6, strpos(`"`mh_line'"',"]")-7)
-     local `tit_line++'
-     while strpos(`"`mh_line'"',"]")==0 { /* this is for multiple lines*/
-       file read `fh' mh_line
-       if (strpos(`"`mh_line'"',"[")>0) {
-         di "{err}WARNING you have probably used symbols [] in the description... ] stops the title!{txt}"
-       }
-       if strpos(`"`mh_line'"',"]") ==0 {
-         local title_text`tit_line' `"`mh_line'"'	 
-         local `tit_line++'
-       }
-       else if (strlen(strtrim(`"`mh_line'"'))>1) {
-         local title_text`tit_line' = substr(`"`mh_line'"', 1, strpos(`"`mh_line'"',"]")-1)
-       }
-       else {
-         local `tit_line--'
-       }
-     }
-   }
+/* Process the HELP FILE text, keep reading file until end of helpfile* */
+while (strpos(`"`mh_line'"',"END HELP FILE")==0 & !`nohelpfiletext' & r(eof)==0 ) {
+  /* Handling the title text */
+  //di `"LINE `mh_line'"'
+  if strpos(`"`mh_line'"',"syntax")~=0 {
+    di "{err}WARNING: the word syntax appears in the helpfile... this needs to be changed"   
+  }
+  if strpos(`"`mh_line'"', "title[")~=0 {
+    local tit_line 1
+    if (strpos(`"`mh_line'"', "]")==0) local title_text`tit_line' = substr(`"`mh_line'"', strpos(`"`mh_line'"',"title[")+6, .)
+    else local title_text`tit_line' = substr(`"`mh_line'"', strpos(`"`mh_line'"',"title[")+6, strpos(`"`mh_line'"',"]")-7)
+    local `tit_line++'
+    while strpos(`"`mh_line'"',"]")==0 { /* this is for multiple lines*/
+      file read `fh' mh_line
+      if (strpos(`"`mh_line'"',"[")>0) {
+        di "{err}WARNING you have probably used symbols [] in the description... ] stops the title!{txt}"
+      }
+      if strpos(`"`mh_line'"',"]") ==0 {
+        local title_text`tit_line' `"`mh_line'"'	 
+        local `tit_line++'
+      }
+      else if (strlen(strtrim(`"`mh_line'"'))>1) {
+        local title_text`tit_line' = substr(`"`mh_line'"', 1, strpos(`"`mh_line'"',"]")-1)
+      }
+      else {
+        local `tit_line--'
+      }
+    }
+  }
 
-   /* This part handles the options text, note that it is split into opt[] and opt2[]*/
-   if strpos(`"`mh_line'"', "opt[")~=0 {
-     local te = substr(`"`mh_line'"', strpos(`"`mh_line'"',"opt[")+4, .) /* strip out start of line */
-     if (word(`"`te'"',1)~="*") local optname = word(`"`te'"',1)  /* word 1 should be the option name */
-     else local optname "star" /* using * causes problems */
-     if strpos("`optname'","(") ~=0 { /* if there is a bracket in optname get rid of them*/
-       local optname = substr("`optname'", 1, strpos("`optname'","(")-1) /* strips out () if they exist in the name */
-     }
-     local optnamelen = length(word(`"`te'"',1))
- // di "{txt}Processing option `optname'"
-	 
-     local `optname'_line 1
-     if (strpos(`"`mh_line'"', "]")==0) {
-       local `optname'_txt1 = substr(`"`te'"',`optnamelen'+1, .)
-     }
-     else {
-       local `optname'_txt``optname'_line' = substr(`"`te'"', `optnamelen'+1, strpos(`"`te'"', "]")-`optnamelen'-1)
-       if ustrtrim("``optname'_txt``optname'_line''")=="" di "{err}WARNING: empty description for `optname'"
-     }
-     local `optname'_line = ``optname'_line'+1
-     while strpos(`"`mh_line'"',"]")==0 { /* this is for multiple lines*/
-       file read `fh' mh_line
-       if (strpos(`"`mh_line'"',"[")>0) {
-         di "{err}WARNING you have probably used symbols [] in the option... ] stops the option text!{txt}"
-       }
-       if strpos(`"`mh_line'"',"]") ==0 {
-         local `optname'_txt``optname'_line' `"`mh_line'"'	 
-         local `optname'_line = ``optname'_line'+1
-       }
-       else if (strlen(strtrim(`"`mh_line'"'))>1) {
-         local `optname'_txt``optname'_line' = substr(`"`mh_line'"', 1, strpos(`"`mh_line'"',"]")-1)
-       }
-       else {
-         local `optname'_line = ``optname'_line'-1
-       }
-     }
-   }
+/*******************************************************************************
+ * This part handles the options text, note that it is split into opt[] and opt2
+ * opt[ skeleton() ]  creates `skeleton_line' which is number of lines
+ *******************************************************************************/
+  if strpos(`"`mh_line'"', "opt[")~=0 {
+    local te = ustrtrim(substr(`"`mh_line'"', strpos(`"`mh_line'"',"opt[")+4, .)) /* strip out start of line and other blanks */
+    if (word(`"`te'"',1)~="*") local optname = word(`"`te'"',1)  /* word 1 should be the option name */
+    else local optname "star" /* using * causes problems so we use star name */
+    if strpos("`optname'","(") ~=0 { /* if there is a bracket in optname get rid of them*/
+      local optname = substr("`optname'", 1, strpos("`optname'","(")-1) /* strips out () if they exist in the name */
+    }
+    local optnamelen = length(word(`"`te'"',1))
+    local `optname'_line 1
+    if (strpos(`"`mh_line'"', "]")==0) { /* if line has no end  in this line */
+      local `optname'_txt1 = substr(`"`te'"',`optnamelen'+1, .)
+      local `optname'_line = ``optname'_line'+1
+      while strpos(`"`mh_line'"',"]")==0 { /* this is for multiple lines*/
+        file read `fh' mh_line
+        if (strpos(`"`mh_line'"',"[")>0) {
+          di "{err}WARNING you have probably used symbols [] in the option... ] stops the option text!{txt}"
+        }
+        if strpos(`"`mh_line'"',"]") ==0 {
+          local `optname'_txt``optname'_line' `"`mh_line'"'	 
+          local `optname'_line = ``optname'_line'+1
+        }
+        else if (strlen(strtrim(`"`mh_line'"'))>1) {
+          local `optname'_txt``optname'_line' = substr(`"`mh_line'"', 1, strpos(`"`mh_line'"',"]")-1)
+        }
+        else {
+          local `optname'_line = ``optname'_line'-1
+        }
+      }
+    }
+    else { /* The line has an end */
+      local `optname'_txt``optname'_line' = substr(`"`te'"', `optnamelen'+1, strpos(`"`te'"', "]")-`optnamelen'-1)
+      if ustrtrim("``optname'_txt``optname'_line''")=="" di "{err}WARNING: empty description for `optname'"
+    }
+//di "`optname'_txt``optname'_line'  =  ``optname'_txt``optname'_line''"
+  }
   
+
    /* This part handles opt2 options from multiple lines*/
-   if strpos(`"`mh_line'"', "opt2[")~=0 { /* this is the multiple line version*/
-     local te = substr(`"`mh_line'"', strpos(`"`mh_line'"',"opt2[")+5, .)
-     if (word(`"`te'"',1)~="*") local a = word(`"`te'"',1)  /* this should be the option name */
-     else local a "star" /* using * causes problems */
-     if strpos("`a'","(") ~=0 {
-       local a = substr("`a'", 1, strpos("`a'","(")-1) /* strips out () if they exist in the name */
-     }
-     local optnamelen = length(word(`"`te'"',1))
-     
-     local `a'2_line 1
-     if (strpos(`"`mh_line'"', "]")==0) {
-       local `a'2_txt1 = substr(`"`te'"',`optnamelen'+1, .)
-     }
-     else {
-       local `a'2_txt``a'2_line' = substr(`"`te'"', `optnamelen'+1, strpos(`"`te'"', "]")-`optnamelen'-1)
-     }
-     local `a'2_line = ``a'2_line'+1
-     while strpos(`"`mh_line'"',"]")==0 { /* this is for multiple lines*/
-       file read `fh' mh_line
-       if (strpos(`"`mh_line'"',"[")>0) {
-         di "{err}WARNING you have probably used symbols [] in the description... ] stops the description!{txt}"
-       }
-       if strpos(`"`mh_line'"',"]") ==0 {
-         local `a'2_txt``a'2_line' `"`mh_line'"'	 
-         local `a'2_line = ``a'2_line'+1
-       }
-       else if (strlen(strtrim(`"`mh_line'"'))>1) {
-         local `a'2_txt``a'2_line' = substr(`"`mh_line'"', 1, strpos(`"`mh_line'"',"]")-1)
-       }
-       else {
-         local `a'2_line = ``a'2_line'-1
-       }
-     }  
-   }
+  if strpos(`"`mh_line'"', "opt2[")~=0 { /* this is the multiple line version*/
+    local te = ustrtrim(substr(`"`mh_line'"', strpos(`"`mh_line'"',"opt2[")+5, .)) /* strip out blanks */
+    if (word(`"`te'"',1)~="*") local a = word(`"`te'"',1)  /* this should be the option name */
+    else local a "star" /* using * causes problems */
+    if strpos("`a'","(") ~=0 {
+      local a = substr("`a'", 1, strpos("`a'","(")-1) /* strips out () if they exist in the name */
+    }
+    local optnamelen = length(word(`"`te'"',1))   
+    local `a'2_line 1 /* starts on line 1 */
+    if (strpos(`"`mh_line'"', "]")==0) { /* this means there are multiple lines */
+      local `a'2_txt1 = substr(`"`te'"',`optnamelen'+1, .)
+      local `a'2_line = ``a'2_line'+1
+      while strpos(`"`mh_line'"',"]")==0 { /* this is for multiple lines*/
+        file read `fh' mh_line
+        if (strpos(`"`mh_line'"',"[")>0) {
+          di "{err}WARNING you have probably used symbols [] in the description... ] stops the description!{txt}"
+        }
+        if strpos(`"`mh_line'"',"]") ==0 {
+          local `a'2_txt``a'2_line' `"`mh_line'"'	 
+          local `a'2_line = ``a'2_line'+1
+        }
+        else if (strlen(strtrim(`"`mh_line'"'))>1) {
+          local `a'2_txt``a'2_line' = substr(`"`mh_line'"', 1, strpos(`"`mh_line'"',"]")-1)
+        }
+        else {
+          local `a'2_line = ``a'2_line'-1
+        }
+      }
+    }
+    else { /* this is a single line  with closing bracket */
+      local `a'2_txt1 = ustrtrim(substr(`"`te'"', `optnamelen'+1, strpos(`"`te'"', "]")-`optnamelen'-1))
+    }
+  }
   
    /* The description part of the help file*/
    if strpos(`"`mh_line'"', "desc[")~=0 {
@@ -189,7 +193,7 @@ program define makehlp
          }
      }
    }
-    /* AUTHOR handling */  
+   /* AUTHOR handling */  
    if strpos(`"`mh_line'"', "author[")~=0 {
      /* find name of option */
      local author`authi'_text = substr(`"`mh_line'"', strpos(`"`mh_line'"',"author[")+7, .)
@@ -203,7 +207,6 @@ program define makehlp
      local institute`institi'_text = substr(`"`institute`institi'_text'"', 1, strpos(`"`institute`institi'_text'"',"]")-1)
      local `institi++'
    }
-   
    /* The part to handle the return descriptions in the help part */
    if strpos(`"`mh_line'"', "return[")~=0 {
      /* find name of option */
@@ -418,9 +421,9 @@ program define makehlp
  local mylist: list uniq retslist
  local retslist "`mylist'"
  
- /****************************************************************
-  * NOW process the syntax line 
-  ****************************************************************/
+/****************************************************************
+ * NOW process the syntax line 
+ ****************************************************************/
   file open `fh' using `"`file'.ado"',read
   file read `fh' mh_line
   local i 1
@@ -458,6 +461,7 @@ program define makehlp
  }
 */
  local nlines `i'
+
 /*********************************************************************
  * Put all the lines together into synt, hopefully it isn't too long! 
  * I also strip out the comments before creating the syntax macro
@@ -536,189 +540,187 @@ if index(reverse("`preopt'"),"[")<index(reverse("`preopt'"),"]") & index(reverse
 
 /***************************************************************************************
  * The options could have  opt(string asis)  and need to join the words 
- * by using quotes  i.e. opt(string asis) becomes "opt(string asis)" , one word
+ * by using quotes i.e. opt(string asis) becomes "opt(string asis)" , one word
  ***************************************************************************************/
 
- local oopt_opt ""
+local oopt_opt ""
 di "{txt}Optional `opt_opt'"
- foreach word in `opt_opt' {
-   if index("`word'","(")~=0 & index("`word'",")")~=0 local oopt_opt `"`oopt_opt' `word'"'
-   else if index("`word'","(")~=0 local oopt_opt `"`oopt_opt' "`word'"'
-   else if index("`word'",")")~=0 local oopt_opt `"`oopt_opt' `word'""'
-   else local oopt_opt `"`oopt_opt' `word' "'
- }
- local oreq_opt ""
+foreach word in `opt_opt' {
+  if index("`word'","(")~=0 & index("`word'",")")~=0 local oopt_opt `"`oopt_opt' `word'"'
+  else if index("`word'","(")~=0 local oopt_opt `"`oopt_opt' "`word'"'
+  else if index("`word'",")")~=0 local oopt_opt `"`oopt_opt' `word'""'
+  else local oopt_opt `"`oopt_opt' `word' "'
+}
+local oreq_opt ""
 di "{txt}Required `req_opt'"
- foreach word in `req_opt' {
-   if index("`word'","(")~=0 & index("`word'",")")~=0 local oreq_opt `"`oreq_opt' `word'"'
-   else if index("`word'","(")~=0 local oreq_opt `"`oreq_opt' "`word'"'
-   else if index("`word'",")")~=0 local oreq_opt `"`oreq_opt' `word'""'
-   else local oreq_opt `"`oreq_opt' `word' "'
- }
-
+foreach word in `req_opt' {
+  if index("`word'","(")~=0 & index("`word'",")")~=0 local oreq_opt `"`oreq_opt' `word'"'
+  else if index("`word'","(")~=0 local oreq_opt `"`oreq_opt' "`word'"'
+  else if index("`word'",")")~=0 local oreq_opt `"`oreq_opt' `word'""'
+  else local oreq_opt `"`oreq_opt' `word' "'
+}
 di `"AFTER `oreq_opt'"'
 
 /************************************************************************
+ *
  * CREATING the help file
+ *
  ************************************************************************/
- tempname fhw
- local hfile "`comm'.sthlp"   /* Error checking follows on file existence*/
- cap confirm file `hfile'
- if _rc==0 {
-   di as error "WARNING: File `hfile' already exists"
-   if "`replace'"~=""  {
-     di " About to replace this file..."
-     qui file open `fhw' using `hfile',replace write
-   }
-   else exit(198)
- }
- else {
-   di as text "Creating file `hfile'..."
-   qui file open `fhw' using `hfile', write
- }
+tempname fhw
+local hfile "`comm'.sthlp"   /* Error checking follows on file existence*/
+cap confirm file `hfile'
+if _rc==0 {
+  di as error "WARNING: File `hfile' already exists"
+  if "`replace'"~=""  {
+    di " About to replace this file..."
+    qui file open `fhw' using `hfile',replace write
+  }
+  else exit(198)
+}
+else {
+  di as text "Creating file `hfile'..."
+  qui file open `fhw' using `hfile', write
+}
 
+file  write `fhw' "{smcl}" _n
+file  write `fhw' "{* *! version 1.0 `c(current_date)'}{...}" _n
+file  write `fhw' `"{vieweralsosee "" "--"}{...}"' _n
+file  write `fhw' `"{vieweralsosee "Install command2" "ssc install command2"}{...}"' _n
+file  write `fhw' `"{vieweralsosee "Help command2 (if installed)" "help command2"}{...}"' _n
+file  write `fhw' `"{viewerjumpto "Syntax" "`comm'##syntax"}{...}"' _n
+file  write `fhw' `"{viewerjumpto "Description" "`comm'##description"}{...}"' _n
+file  write `fhw' `"{viewerjumpto "Options" "`comm'##options"}{...}"' _n
+file  write `fhw' `"{viewerjumpto "Remarks" "`comm'##remarks"}{...}"' _n
+file  write `fhw' `"{viewerjumpto "Examples" "`comm'##examples"}{...}"' _n
+file  write `fhw' `"{title:Title}"' _n
+file  write `fhw' `"{phang}"' _n
 
- file  write `fhw' "{smcl}" _n
- file  write `fhw' "{* *! version 1.0 `c(current_date)'}{...}" _n
- file  write `fhw' `"{vieweralsosee "" "--"}{...}"' _n
- file  write `fhw' `"{vieweralsosee "Install command2" "ssc install command2"}{...}"' _n
- file  write `fhw' `"{vieweralsosee "Help command2 (if installed)" "help command2"}{...}"' _n
- file  write `fhw' `"{viewerjumpto "Syntax" "`comm'##syntax"}{...}"' _n
- file  write `fhw' `"{viewerjumpto "Description" "`comm'##description"}{...}"' _n
- file  write `fhw' `"{viewerjumpto "Options" "`comm'##options"}{...}"' _n
- file  write `fhw' `"{viewerjumpto "Remarks" "`comm'##remarks"}{...}"' _n
- file  write `fhw' `"{viewerjumpto "Examples" "`comm'##examples"}{...}"' _n
- file  write `fhw' `"{title:Title}"' _n
- file  write `fhw' `"{phang}"' _n
+/* Create the title text*/
+file  write `fhw' "{bf:`comm'} {hline 2} "
+if ("`tit_line'"~="") {
+  forvalues ti = 1/`tit_line' {
+    file  write `fhw' `"`title_text`ti''"' 
+  }
+}
+else file write `fhw' "<Insert title>"
 
- /* Create the title text*/
- file  write `fhw' "{bf:`comm'} {hline 2} "
- if ("`tit_line'"~="") {
-   forvalues ti = 1/`tit_line' {
-     file  write `fhw' `"`title_text`ti''"' 
-   }
- }
- else file write `fhw' "<Insert title>"
+file write `fhw' _n _n 
+file  write `fhw' "{marker syntax}{...}" _n
+file  write `fhw' "{title:Syntax}" _n
+file  write `fhw' "{p 8 17 2}" _n
+file  write `fhw' `"{cmdab:`comm'}"' _n
 
- file write `fhw' _n _n 
- file  write `fhw' "{marker syntax}{...}" _n
- file  write `fhw' "{title:Syntax}" _n
- file  write `fhw' "{p 8 17 2}" _n
- file  write `fhw' `"{cmdab:`comm'}"' _n
+foreach pre in `preopt' {
+  if index("`pre'","syntax")~=0 continue
+  else if index("`pre'","[in]")~=0 file  write `fhw' "[{help in}]" _n
+  else if index("`pre'","[if]")~=0 file  write `fhw' "[{help if}]" _n
+  else if index("`pre'","[varlist]")~=0 file  write `fhw' "[{help varlist}]" _n
+  else file  write `fhw' "`pre'" _n
+}
 
- foreach pre in `preopt' {
-   if index("`pre'","syntax")~=0 continue
-   else if index("`pre'","[in]")~=0 file  write `fhw' "[{help in}]" _n
-   else if index("`pre'","[if]")~=0 file  write `fhw' "[{help if}]" _n
-   else if index("`pre'","[varlist]")~=0 file  write `fhw' "[{help varlist}]" _n
-   else file  write `fhw' "`pre'" _n
- }
-
- file write `fhw' "[{cmd:,}" _n
- file write `fhw' "{it:options}]" _n _n
- file write `fhw' "{synoptset 20 tabbed}{...}" _n
- file write `fhw' "{synopthdr}" _n
- file write `fhw' "{synoptline}" _n
-  if `"`oreq_opt'"'~="" file write `fhw' "{syntab:Required }" _n
+file write `fhw' "[{cmd:,}" _n
+file write `fhw' "{it:options}]" _n _n
+file write `fhw' "{synoptset 20 tabbed}{...}" _n
+file write `fhw' "{synopthdr}" _n
+file write `fhw' "{synoptline}" _n
+if `"`oreq_opt'"'~="" file write `fhw' _n "{syntab:Required }" _n
 
 /*********************************************************************************
- * Processing the ?REQUIRED options for the syntax options table  
+ * Processing the REQUIRED options for the syntax options table  
  *   lower(real 2)  function(string)  etc.. to create the default values in text
  *  this is not an exhaustive list and needs extending.
  *********************************************************************************/
 
- foreach option in `oreq_opt' {
-   local dd ""
-   if index("`option'","*")~=0 {  /* * is a special option and is handled separately */
-     file  write `fhw' "{synopt:{opt *}} `star_txt1'{p_end}" _n
-     continue
-   }
-   if index("`option'","(")~=0 {  /* check if it is a bracketed option() */
-     local name = substr("`option'",1,index("`option'","(")-1) /*create name*/
-     local inse = substr("`option'",index("`option'","(")+1,.) 
-     local inse = substr("`inse'",1,index("`inse'",")")-1) /* find inner bit*/
-     /* handle the integer and real options properly and get the default values */
-     if index("`inse'","real")~=0 {
-       if trim(substr("`inse'",index("`inse'","real")+4,.))~="" local dd ="Default value is"+substr("`inse'",index("`inse'","real")+4,.)+"." 
-       local inse "#"
-     }    
-     if ((index("`inse'","integer")~=0 ) & (index("`inse'","numlist")==0)) {
-       if trim(substr("`inse'",index("`inse'","integer")+7,.))~="" local dd ="Default value is"+substr("`inse'",index("`inse'","integer")+7,.)+"."  
-       local inse "#"
-     }
-     if ((index("`inse'","int")~=0 ) & (index("`inse'","numlist")==0)) {
-       if trim(substr("`inse'",index("`inse'","int")+3,.))~="" local dd ="Default value is"+substr("`inse'",index("`inse'","int")+3,.)+"."  
-       local inse "#"
-     }
-     local xx "(`inse')"
-   }
-   else {
-     local name `"`option'"'
-     local xx ""
-   }
+foreach option in `oreq_opt' {
+  local dd "" /*default text starts empty*/
+  if index("`option'","*")~=0 {  /* * is a special option and is handled separately */
+    file  write `fhw' "{synopt:{opt *}} `star_txt1'{p_end}" _n
+    continue
+  }
+  if index("`option'","(")~=0 {  /* check if it is a bracketed option() */
+    local name = substr("`option'",1,index("`option'","(")-1) /*create name*/
+    local inse = substr("`option'",index("`option'","(")+1,.) 
+    local inse = substr("`inse'",1,index("`inse'",")")-1) /* find inner bit call it inse */
+    /* handle the integer and real options properly and get the default values */
+    if index("`inse'","real")~=0 {
+      if trim(substr("`inse'",index("`inse'","real")+4,.))~="" local dd ="Default value is"+substr("`inse'",index("`inse'","real")+4,.)+"." 
+      local inse "#"
+    }    
+    if ((index("`inse'","integer")~=0 ) & (index("`inse'","numlist")==0)) {
+      if trim(substr("`inse'",index("`inse'","integer")+7,.))~="" local dd ="Default value is"+substr("`inse'",index("`inse'","integer")+7,.)+"."  
+      local inse "#"
+    }
+    if ((index("`inse'","int")~=0 ) & (index("`inse'","numlist")==0)) {
+      if trim(substr("`inse'",index("`inse'","int")+3,.))~="" local dd ="Default value is"+substr("`inse'",index("`inse'","int")+3,.)+"."  
+      local inse "#"
+    }
+    local xx "(`inse')"
+  }
+  else {
+    local name `"`option'"'
+    local xx ""
+  }
 
-   /* Now split the name into lower and upper BUT remember noADEquate is allowed!*/
-   if "`name'"~=lower("`name'") {
-     if index("`name'","no")~=0 {
-       local name = upper(substr("`name'",1,2))+substr("`name'",3,.)
-     }
-     local newname ""
-     local split 0
-     forv i=1/`=length("`name'")' {
-       if lower(substr("`name'",`i',1))~=substr("`name'",`i',1) & !`split' local newname="`newname'"+lower(substr("`name'",`i',1))
-       else if lower(substr("`name'",`i',1))==substr("`name'",`i',1) & !`split' {
-         local split 1
-         local newname="`newname':"+substr("`name'",`i',1)
-       }
-       else local newname="`newname'"+substr("`name'",`i',1)
-     }
-   }
-   else local newname `"`name'"'
+  /* Now split the name into lower and upper BUT remember noADEquate is allowed!*/
+  if "`name'"~=lower("`name'") {
+    if index("`name'","no")~=0 { /* handle options beginning with noxxx and make it NOxxx...*/
+      local name = upper(substr("`name'",1,2))+substr("`name'",3,.)
+    }
+    local newname ""
+    local split 0
+    forv i=1/`=length("`name'")' { /*  loop letters in name to find out where to place :*/
+      if lower(substr("`name'",`i',1))~=substr("`name'",`i',1) & !`split' local newname="`newname'"+lower(substr("`name'",`i',1))
+      else if lower(substr("`name'",`i',1))==substr("`name'",`i',1) & !`split' {
+        local split 1
+        local newname="`newname':"+substr("`name'",`i',1)
+      }
+      else local newname="`newname'"+substr("`name'",`i',1)
+    }
+  }
+  else local newname `"`name'"'
+  local name = lower("`name'") /* take lower case as macro has text*/  
 
-   local name = lower("`name'") /* take lower case as macro has text*/  
-   /* if there are multiple lines then split the writing into the number of lines*/
-   if `"``name'_txt1'"'=="" {
-     if "`newname'"~="star" file  write `fhw' `"{synopt:{opt `newname'`xx'}} ``name'' `dd'{p_end}"' _n /* need to handle stars */
-     else file  write `fhw' "{opt *} `star_txt1' {p_end}"  _n
-   }
-   else {
-     if "`newname'"~="star" file  write `fhw' `"{synopt:{opt `newname'`xx'}} "'
-     else  file  write `fhw' "{opt *} "
-     if "``name'_line'"~="" {
-       forvalues opti = 1/``name'_line' {
-       if (strtrim(`"``name'_txt`opti''"')=="") {
-         file write `fhw' _n "{pstd}" _n
-       }
-       else file  write `fhw' `"``name'_txt`opti''"' _n
-       }
-       file  write `fhw' "{p_end}" _n
-     }
-   }
- }
+//  di "FIRST LINE |`name'|``name'_line'|``name''|"
+  
+  /* if there are multiple lines then split the writing into the number of lines in name_line macro*/
+  if `"``name'_line'"'=="1" { /* a 1 liner*/
+    if "`newname'"~="star" file  write `fhw' _n `"{synopt:{opt `newname'`xx'}} ``name'_txt1' `dd'{p_end}"' _n /* need to handle stars */
+    else file  write `fhw' "{opt *} `star_txt1' {p_end}" _n
+  }
+  else {
+    if "`newname'"~="star" file  write `fhw' `"{synopt:{opt `newname'`xx'}} "'
+    else  file  write `fhw' "{opt *} "
+    if "``name'_line'"~="" { /* sometimes it is empty */
+      forvalues opti = 1/``name'_line' {
+        file  write `fhw' `"``name'_txt`opti'' "'  /* not sure what happens if we run out of line space..*/
+      }
+      file  write `fhw' "`dd'{p_end}" _n
+    }
+  }
+}
 
- 
-  if `"`oopt_opt'"'~="" file write `fhw' "{syntab:Optional}" _n
 
 /*********************************************************************************
  * Processing the OPTIONAL options for the syntax options table  
  *   lower(real 2)  function(string)  etc.. to create the default values in text
  *  this is not an exhaustive list and needs extending.
  *********************************************************************************/
- foreach option in `oopt_opt' {
-   local dd ""
-   if index("`option'","*")~=0 {  /* * is a special option and is handled separately */
-     file  write `fhw' "{synopt:{opt *}} `star_txt1'{p_end}" _n
-     continue
-   }
-   if index("`option'","(")~=0 {  /* check if it is a bracketed option() */
-     local name = substr("`option'",1,index("`option'","(")-1) /*create name*/
-     local inse = substr("`option'",index("`option'","(")+1,.) 
-     local inse = substr("`inse'",1,index("`inse'",")")-1) /* find inner bit*/
-     /* handle the integer and real options properly and get the default values */
-     if index("`inse'","real")~=0 {
-       if trim(substr("`inse'",index("`inse'","real")+4,.))~="" local dd ="Default value is"+substr("`inse'",index("`inse'","real")+4,.)+"." 
-       local inse "#"
-     }    
+if `"`oopt_opt'"'~="" file write `fhw' _n "{syntab:Optional}" _n
+foreach option in `oopt_opt' {
+  local dd ""
+  if index("`option'","*")~=0 {  /* * is a special option and is handled separately */
+    file  write `fhw' "{synopt:{opt *}} `star_txt1'{p_end}" _n
+    continue
+  }
+  if index("`option'","(")~=0 {  /* check if it is a bracketed option() */
+    local name = substr("`option'",1,index("`option'","(")-1) /*create name*/
+    local inse = substr("`option'",index("`option'","(")+1,.) 
+    local inse = substr("`inse'",1,index("`inse'",")")-1) /* find inner bit*/
+    /* handle the integer and real options properly and get the default values */
+    if index("`inse'","real")~=0 {
+      if trim(substr("`inse'",index("`inse'","real")+4,.))~="" local dd ="Default value is"+substr("`inse'",index("`inse'","real")+4,.)+"." 
+        local inse "#"
+    }    
      if ((index("`inse'","integer")~=0 ) & (index("`inse'","numlist")==0)) {
        if trim(substr("`inse'",index("`inse'","integer")+7,.))~="" local dd ="Default value is"+substr("`inse'",index("`inse'","integer")+7,.)+"."  
        local inse "#"
@@ -753,26 +755,23 @@ di `"AFTER `oreq_opt'"'
    else local newname `"`name'"'
 
    local name = lower("`name'") /* take lower case as macro has text*/  
-   /* if there are multiple lines then split the writing into the number of lines*/
-   if `"``name'_txt1'"'=="" {
-     if "`newname'"~="star" file  write `fhw' `"{synopt:{opt `newname'`xx'}} ``name'' `dd'{p_end}"' _n /* need to handle stars */
-     else file  write `fhw' "{opt *} `star_txt1' {p_end}"  _n
+   /* if there are multiple lines then split the writing into the number of lines  =`name'_line */
+   if `"``name'_line'"'=="" {
+     if "`newname'"~="star" file  write `fhw' `"{synopt:{opt `newname'`xx'}} ``name'' `dd'"' _n _n /* need to handle stars */
+     else file  write `fhw' "{opt *} `star_txt1' "   _n _n
    }
    else {
-     if "`newname'"~="star" file  write `fhw' `"{synopt:{opt `newname'`xx'}} "'
-     else  file  write `fhw' "{opt *} "
-     if "``name'_line'"~="" {
-       forvalues opti = 1/``name'_line' {
-       if (strtrim(`"``name'_txt`opti''"')=="") {
-         file write `fhw' _n "{pstd}" _n
-       }
-       else file  write `fhw' `"``name'_txt`opti''"' _n
-       }
-       file  write `fhw' "{p_end}" _n
-     }
-   }
- }
-
+      if "`newname'"~="star" file  write `fhw' `"{synopt:{opt `newname'`xx'}} "'
+      else  file  write `fhw' "{opt *} "
+      if "``name'_line'"~="" {
+        forvalues opti = 1/``name'_line' {
+          local temptxt = strtrim(`"``name'_txt`opti''"')
+          file  write `fhw' `"`temptxt'"' _n
+        }
+        file  write `fhw' _n
+      }
+    }
+  }
 
  file  write `fhw' "{synoptline}" _n
  file  write `fhw' "{p2colreset}{...}" _n
@@ -794,7 +793,7 @@ di `"AFTER `oreq_opt'"'
 
  file  write `fhw' _n "{marker options}{...}" _n
  file  write `fhw' "{title:Options}" _n
- file  write `fhw' "{dlgtab:Main}" _n
+ file  write `fhw' "{dlgtab:Main}" _n _n
 
 /*******************************************************************************
  * Writing the longer descriptions of the options
@@ -802,95 +801,97 @@ di `"AFTER `oreq_opt'"'
  *  blank then it should default to the opt[] syntax
  *******************************************************************************/
 
- foreach option in `oopt_opt' `oreq_opt' {
-   local dd ""
-   if index("`option'","(")~=0 { /* if the option contains brackets */
-     local name = substr("`option'",1,index("`option'","(")-1)
-     local inse = substr("`option'",index("`option'","(")+1,.) 
-     local inse = substr("`inse'",1,index("`inse'",")")-1)
-     /* handle the integer and real options properly */
-     if index("`inse'","real")~=0 {
-       if trim(substr("`inse'",index("`inse'","real")+4,.))~="" local dd ="Default value is"+substr("`inse'",index("`inse'","real")+4,.) 
-       local inse "#"
-     }
-     if ((index("`inse'","integer")~=0 ) & (index("`inse'","numlist")==0)) {
-       if trim(substr("`inse'",index("`inse'","integer")+7,.))~="" local dd ="Default value is"+substr("`inse'",index("`inse'","integer")+7,.)  
-       local inse "#"
-     }    
-     if ((index("`inse'","int")~=0 ) & (index("`inse'","numlist")==0)) {
-       if trim(substr("`inse'",index("`inse'","int")+3,.))~="" local dd ="Default value is"+substr("`inse'",index("`inse'","int")+3,.)  
-       local inse "#"
-     }
-     local xx "(`inse')"
-   }
-   else {
-     if "`option'"~= "*" local name "`option'"
-     else local name "star"
-     local xx ""
-   }
+
+foreach option in `oreq_opt' `oopt_opt' {
+  local dd ""
+  if index("`option'","(")~=0 { /* if the option contains brackets */
+    local name = substr("`option'",1,index("`option'","(")-1)
+    local inse = substr("`option'",index("`option'","(")+1,.) 
+    local inse = substr("`inse'",1,index("`inse'",")")-1)
+    /* handle the integer and real options properly */
+    if index("`inse'","real")~=0 {
+      if trim(substr("`inse'",index("`inse'","real")+4,.))~="" local dd ="Default value is"+substr("`inse'",index("`inse'","real")+4,.)+"." 
+      local inse "#"
+    }
+    if ((index("`inse'","integer")~=0 ) & (index("`inse'","numlist")==0)) {
+      if trim(substr("`inse'",index("`inse'","integer")+7,.))~="" local dd ="Default value is"+substr("`inse'",index("`inse'","integer")+7,.)+"." 
+      local inse "#"
+    }    
+    if ((index("`inse'","int")~=0 ) & (index("`inse'","numlist")==0)) {
+      if trim(substr("`inse'",index("`inse'","int")+3,.))~="" local dd ="Default value is"+substr("`inse'",index("`inse'","int")+3,.)+"."
+      local inse "#"
+    }
+    local xx "(`inse')"
+  }
+  else {
+    if "`option'"~= "*" local name `"`option'"'
+    else local name "star"
+    local xx ""
+  }
   /* Now split the name into lower and upper */
-   if "`name'"~=lower("`name'") {
-     if index("`name'","no")~=0 {
-       local name = upper(substr("`name'",1,2))+substr("`name'",3,.)
-     }
-     local newname ""
-     local split 0
-     forv i=1/`=length("`name'")' {
-       if lower(substr("`name'",`i',1))~=substr("`name'",`i',1) & !`split' local newname="`newname'"+lower(substr("`name'",`i',1))
-       else if lower(substr("`name'",`i',1))==substr("`name'",`i',1) & !`split' {
-         local split 1
-         local newname="`newname':"+substr("`name'",`i',1)
-       }
-       else local newname="`newname'"+substr("`name'",`i',1)
-     }
-   }
-   else local newname "`name'"
+  if "`name'"~=lower("`name'") {
+    if index("`name'","no")~=0 {
+      local name = upper(substr("`name'",1,2))+substr("`name'",3,.)
+    }
+    local newname ""
+    local split 0
+    forv i=1/`=length("`name'")' {
+      if lower(substr("`name'",`i',1))~=substr("`name'",`i',1) & !`split' local newname="`newname'"+lower(substr("`name'",`i',1))
+      else if lower(substr("`name'",`i',1))==substr("`name'",`i',1) & !`split' {
+        local split 1
+        local newname="`newname':"+substr("`name'",`i',1)
+      }
+      else local newname="`newname'"+substr("`name'",`i',1)
+    }
+  }
+  else local newname "`name'"
+  local name = lower("`name'") /* take lower case as macro has text*/  
 
-   local name = lower("`name'") /* take lower case as macro has text*/  
-   file  write `fhw' "{phang}" _n
-   
-   /* this is the part that does the text writing for the option first checking if*/
-   if "``name'2_txt1'"=="" {
-     if "`newname'"~="star" {
-       file  write `fhw' `"{opt `newname'`xx'} ``name''   "'
-       if "``name'_line'"~="" {
-         forvalues opti = 1/``name'_line' {
-           if (strtrim(`"``name'_txt`opti''"')=="") {
-             file write `fhw' _n "{pstd}" _n
-           }
-           else file  write `fhw' `"``name'_txt`opti''"' _n
-         }
-       }     
-       file  write `fhw' "{p_end}" _n
-     }
-     else file  write `fhw' "{opt *} `star_txt1' {p_end}" _n
-   }
-   else {
-     if "`newname'"~="star" file  write `fhw' `"{opt `newname'`xx'} "'
-     else  file  write `fhw' "{opt *} "
-     if "``name'2_line'"~="" {
-       forvalues opti = 1/``name'2_line' {
-         if (strtrim(`"``name'2_txt`opti''"')=="") {
-           file write `fhw' _n "{pstd}" _n
-         }
-         else file  write `fhw' `"``name'2_txt`opti''"' _n
-       }
-     }
-     file  write `fhw' "{p_end}" _n
-   }
- }
+  /* this is the part that does the text writing for the option first checking if*/
+  file  write `fhw' "{phang}" _n
+  if "``name'2_line'"=="" { /* this means option2 not given defaults to option[] */
+    if "`newname'"~="star" {
+      file  write `fhw' `"{opt `newname'`xx'} ``name'' "'
+      if "``name'_line'"~= "" {
+        forvalues opti = 1/``name'_line' {
+          local temptxt = strtrim(`"``name'_txt`opti''"')
+          file  write `fhw' `"`temptxt'"' _n
+        }
+        file  write `fhw' _n  
+      }
+      if "``name'_line'"==""      file  write `fhw' _n  _n
+    }
+    else file  write `fhw' "{opt *} `star_txt1'" _n
+  }
+  else {
+    if "`newname'"~="star" file  write `fhw' `"{opt `newname'`xx'} "'
+    else file  write `fhw' "{opt *} "
+    if "``name'2_line'"~= "" {
+      forvalues opti = 1/``name'2_line' { /* multi line code */
+        local temptxt = strtrim(`"``name'2_txt`opti''"')
+        file  write `fhw' `"`temptxt'"' _n
+      }
+    }
+    file  write `fhw' _n
+  }
 
- file write `fhw' _n _n "{marker examples}{...}" _n
- file write `fhw' "{title:Examples}" _n
- file  write `fhw' "{pstd}" _n
- if "`eg_line'"~="" {
-   forvalues egi = 1/`eg_line' {
-     if (strtrim(`"`eg_text`egi''"')=="") {
-       file write `fhw' _n "{pstd}" _n
-     }
-     else file  write `fhw' `"`eg_text`egi''"' _n
-   }
- }
+}
+
+/******************************************************************
+ *  Examples parts
+ ******************************************************************/
+  file write `fhw' _n _n "{marker examples}{...}" _n
+  file write `fhw' "{title:Examples}" _n
+ // file  write `fhw' "{pstd}" _n
+  if "`eg_line'"~="" { /* i.e. it is multi line */
+    forvalues egi = 1/`eg_line' {
+   //   if (strtrim(`"`eg_text`egi''"')=="") {
+    //    file write `fhw' _n "{pstd}" _n
+  //    }
+//      else
+      file  write `fhw' `"`eg_text`egi''"' _n
+    }
+  }
 /*******************************************************************
  * If we know it is a rclass,sclass or eclass function 
  *******************************************************************/
@@ -923,19 +924,21 @@ di `"AFTER `oreq_opt'"'
    }
  }
 
- /* The references can allow for multiple lines*/
- if "`ref_line'"~="" {
-   file  write `fhw' _n _n "{title:References}" _n 
-   file  write `fhw' "{pstd}" _n
-   if "`ref_line'"~="" {
-     forvalues refi = 1/`ref_line' {
-       if (strtrim(`"`ref_text`refi''"')=="") {
-         file write `fhw' _n "{pstd}" _n
-       }
-       else file  write `fhw' `"`ref_text`refi''"' _n
-     }
-   }
- }
+ /**********************************************************
+  * The references can allow for multiple lines     
+  **********************************************************/
+  if "`ref_line'"~="" {
+    file  write `fhw' _n _n "{title:References}" _n 
+    file  write `fhw' "{pstd}" _n
+    if "`ref_line'"~="" {
+      forvalues refi = 1/`ref_line' {
+        if (strtrim(`"`ref_text`refi''"')=="") {
+          file write `fhw' _n "{pstd}" _n
+        }
+        else file  write `fhw' `"`ref_text`refi''"' _n
+      }
+    }
+  }
  
   /* The free text section can allow for multiple lines*/
  if "`free_line'"~="" {

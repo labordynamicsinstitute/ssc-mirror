@@ -1,10 +1,10 @@
 
-*! Verion: 2.18
-*! Update: 2020/11/25 10:57
+*! V3
+*! Update: 20210411
 *! https://www.lianxh.cn
-* Author: 连玉君 (Email: arlionn@163.com)
-*         康峻杰 (Email: 642070192@qq.com)
-*         刘庆庆 (Email: 2428172451@qq.com)
+* Author: Yujun Lian  (arlionn@163.com)
+*         Junjie Kang (642070192@qq.com)
+*         Ruihan Liu  (2428172451@qq.com)
 
 
 cap program drop lianxh
@@ -439,7 +439,7 @@ syntax [anything(name = class)] [, ///
 					}
 				}
 				if "`catfirst'" == "" & "`nocat'" == "" {
-					dis _n
+					*dis _n
 					dis "-" " 专题：" CatNameURL_md[1]
 					forvalues j = 1/`n' {
 						if (`j'>1) & (Cat_br[`j'] != Cat_br[`j'-1]) {
@@ -447,7 +447,7 @@ syntax [anything(name = class)] [, ///
 						}		
 						dis  "  " blog_Mlink[`j'] //前面空两格
 					}
-					dis _n
+					*dis _n
 				}
 			}
 		
@@ -455,7 +455,7 @@ syntax [anything(name = class)] [, ///
 				use "`outcome'", clear
 				sort CatIDnew id
 				local n = _N
-				dis _n
+				*dis _n
 				if "`nocat'" == "" {
 					dis " 专题：" CatNameURL_md[1]
 					forvalues j = 1/`n' {
@@ -470,7 +470,7 @@ syntax [anything(name = class)] [, ///
 						dis blog_Mlink[`j']
 					}
 				}
-				dis _n
+				*dis _n
 			}
 			
 			if "`weixin'" != ""{  
@@ -513,7 +513,18 @@ syntax [anything(name = class)] [, ///
 			dis as error `"  一无所获? 试试 {stata "   lianxh all  "} 或 {browse "https://www.lianxh.cn/blogs.html":  [推文列表]        }"' 
 			dis as text  `"  烦请您花一分钟反馈您刚才未检索到的关键词，以便我们优化程序："'
 			dis _col(20) `"  {browse "https://www.wjx.cn/jq/98072236.aspx":点击填写 (有惊喜!)      }"'
-		}    
+		}
+		
+  
+/*
+  local cu_m = substr("`c(current_time)'",4,2)  // minute
+  local cu_s = substr("`c(current_time)'",7,2)  // second
+  
+  if mod(`=`cu_m'+`cu_s'',13)==0{
+      dis _n _skip(10) as error "::" `"{browse "https://www.lianxh.cn/news/46917f1076104.html": 连享会最新专题}"' _skip(2) as error "::" 
+  }
+*/
+		
 	
 restore	
 end

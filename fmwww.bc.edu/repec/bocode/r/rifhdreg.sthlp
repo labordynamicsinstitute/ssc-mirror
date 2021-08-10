@@ -1,5 +1,5 @@
 {smcl}
-{* *! version 2.3 Fernando Rios-Avila sep 2020}{...}
+{* *! version 2.4 Fernando Rios-Avila May 2021}{...}
 {cmd:help rifhdreg}
 {hline}
 
@@ -20,6 +20,16 @@
 {opt rwmprobit(varlist)} [{cmd:ate}|{cmd:att}|{cmd:atu}] 
 {opt scale(real)}
 {cmd:svy}
+{it:regress_options} {it:reghdfe_options}]
+
+{p 8 16 2}
+{cmd:bsrifhdreg} {depvar} [{indepvars}] {ifin}  , {opt rif(RIF_options)} 
+[{opt retain(newvar)} {cmd:replace} {opt abs(varlist)} {opt iseed(str)}
+{opt over(varname)}
+{opt rwlogit(varlist)} {opt rwprobit(varlist)} {opt rwmlogit(varlist)}
+{opt rwmprobit(varlist)} [{cmd:ate}|{cmd:att}|{cmd:atu}] 
+{opt scale(real)}
+{it:bootstrap_options}
 {it:regress_options} {it:reghdfe_options}]
 
 {synoptset 25 tabbed}{...}
@@ -68,6 +78,10 @@ work when fixed effects are included (option {cmd:abs()}){p_end}
 {helpb regress} can be used{p_end}
 {synopt :{it:reghdfe_options}}when {cmd:abs()} is used, all options in 
 {helpb reghdfe} can be used; requires {cmd:reghdfe} be installed{p_end}
+{synopt :{it: bootstrap_options}} The command {cmd:bsrifhdreg} is a wrapper around rifhdreg that allows to more easily implement bootstrap standard errors. Specifically, it's use is recommended for plotting unconditional quantile regressions with {help qregplot}. {p_end}
+{synopt: } If using this command, one can use the following options: reps(int 50), strata(), seed(), bca, TIEs, cluster(varname), idcluster(newvarname), nodots, level() and force. see {help bootstrap} for details. 
+ {p_end}
+{synopt :{cmd:old}} This option request using the older {cmd:rifvar} function (for replication purposes). {p_end}
 {synoptline}
 {p 4 6 2}
 {cmd:aweight}s, {cmd:fweight}s, {cmd:iweight}s, and {cmd:pweight}s are allowed;
@@ -263,6 +277,8 @@ errors using survey design. This requires having access to Bootstrap weights.
 {pstd}
 {cmd:rifhdreg} typed without arguments replays the last results.
 
+{pstd}
+{cmd:bsrifhdreg} is a wrapper around rifhdreg. See examples for a syntaxis comparison. You should use this if you want to plot coefficient with bootstrapped standard errors using the command {help qregplot}.
 
 {marker examples}{...}
 {title:Examples}
@@ -332,26 +348,34 @@ robust standard errors and two fixed effects ({cmd:age} and {cmd:isco}).{p_end}
 {bf:. {stata rifhdreg wage educ exper tenure, rif(atkin(1)) vce(robust) abs(age isco)}}
 
 {pstd}
-Estimation with bootstrap standard errors.{p_end}
+Estimation with bootstrap standard errors, and with the wrapper {p_end}
 {phang2}
-{bf:. {stata "bootstrap: rifhdreg lnwage educ exper tenure, rif(q(10))"}}
+{bf:. {stata "bootstrap: rifhdreg lnwage educ exper tenure, rif(q(10))"}}{p_end}
+{phang2}
+{bf:. {stata "bsrifhdreg lnwage educ exper tenure, rif(q(10))"}}
 
 {pstd}
 Estimation with bootstrap standard errors with clusters.{p_end}
 {phang2}
-{bf:. {stata "bootstrap, cluster(age): rifhdreg lnwage educ exper tenure, rif(q(10)) "}}
+{bf:. {stata "bootstrap, cluster(age): rifhdreg lnwage educ exper tenure, rif(q(10)) "}}{p_end}
+{phang2}
+{bf:. {stata "bsrifhdreg lnwage educ exper tenure, rif(q(10)) cluster(age)"}}
 
 {pstd}
 Estimation with bootstrap standard errors with clusters and fixed effects, but
 fixed effects differ from cluster.{p_end}
 {phang2}
-{bf:. {stata "bootstrap, cluster(age): rifhdreg lnwage educ exper tenure, rif(q(10)) abs(isco)"}}
+{bf:. {stata "bootstrap, cluster(age): rifhdreg lnwage educ exper tenure, rif(q(10)) abs(isco)"}}{p_end}
+{phang2}
+{bf:. {stata "bsrifhdreg lnwage educ exper tenure, rif(q(10)) abs(isco) cluster(age)"}}
 
 {pstd}
 Estimation with bootstrap standard errors with clusters and fixed effects, with
 fixed effects the same as cluster.{p_end}
 {phang2}
-{bf:. {stata "bootstrap, cluster(age) idcluster(idage): rifhdreg lnwage educ exper tenure, rif(q(10)) abs(idage)"}}
+{bf:. {stata "bootstrap, cluster(age) idcluster(idage): rifhdreg lnwage educ exper tenure, rif(q(10)) abs(idage)"}}{p_end}
+{phang2}
+{bf:. {stata "bsrifhdreg lnwage educ exper tenure, rif(q(10)) abs(idage) cluster(age) idcluster(idage)"}}
 
 {pstd}
 Replication of results using {cmd:rifreg} (requires installing the command

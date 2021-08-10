@@ -1,5 +1,5 @@
 {smcl}
-{* *! version 2.3  29 Apr 2020}{...}
+{* *! version 0.3  29 Oct 2019}{...}
 {cmd:help malmq2}
 {hline}
 

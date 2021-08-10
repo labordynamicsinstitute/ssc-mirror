@@ -1,4 +1,6 @@
-*! ver 1.9 2020-09-05
+*! ver 2.1 2021-05-25
+*  ver 2.0 2021-05-11
+*  ver 1.9 2020-09-05
 *  ver 1.8 2020-05-21
 *  ver 1.7 2020-05-08
 *  ver 1.6 2020-04-24
@@ -7,9 +9,9 @@
 program define bunchtobit, sortpreserve rclass 
         version 14
 		syntax varlist(min=1) [if] [in] [fw] ///
-		,  Kink(real) tax0(real) tax1(real) ///
+		,  Kink(real) s0(real) s1(real) ///
 		[ Grid(numlist min=1 max=99 sort) ///
-		Numiter(integer 500) VERBOSE NOPIC SAVING(string asis) BINWidth(real 9999425) ]
+		Numiter(integer 500) VERBOSE NOPIC SAVINGTOBIT(string asis) BINWidth(real 9999425) ]
 
 		********************************************************************************************
 		* 0. SETUP
@@ -27,8 +29,8 @@ program define bunchtobit, sortpreserve rclass
 		
 		
 		* 2. check input pararmteres
-		if `tax0' >= `tax1' {
-				di as err "Value of {bf:tax1} must be bigger than {bf:tax0}" 
+		if `s0' <= `s1' {
+				di as err "Value of {bf:s0} must be bigger than {bf:s1}" 
 				exit 198
 		}
 		if `numiter' <= 0 {
@@ -49,18 +51,18 @@ program define bunchtobit, sortpreserve rclass
 		}
 		
 		
-		* 3. -saving()- specified, file exists, -replace- omitted
-		CheckSaveOpt `saving'
-		local saving `s(filename)'
+		* 3. -savingtobit()- specified, file exists, -replace- omitted
+		CheckSaveOpt `savingtobit'
+		local savingtobit `s(filename)'
 		local replace_opt `s(replace)'
-		if `"`saving'"' != "" & `"`replace_opt'"' == "" {
+		if `"`savingtobit'"' != "" & `"`replace_opt'"' == "" {
 			* find the file in the location specified
-			local extpos = strpos("`saving'", ".dta")
-			if (`extpos' == 0) local saving = "`saving'.dta"
-			cap confirm file "`saving'"
+			local extpos = strpos("`savingtobit'", ".dta")
+			if (`extpos' == 0) local savingtobit = "`savingtobit'.dta"
+			cap confirm file "`savingtobit'"
 			* raise an error in case a file exists
 			if !_rc {
-				di as err "file {bf:`saving'} already exists. Use " `"""' "replace" `"""' " option to overwrite the file"
+				di as err "file {bf:`savingtobit'} already exists. Use " `"""' "replace" `"""' " option to overwrite the file"
 				exit 602
 			}
 		}
@@ -92,10 +94,10 @@ program define bunchtobit, sortpreserve rclass
 		* 1. CALCULATE
 		********************************************************************************************
 		* calculate variables
-		* the log of one minus the tax rates 
-		tempname s0 s1 
-		scalar `s0' = ln(1 - `tax0') 
-		scalar `s1' = ln(1 - `tax1') 
+		* the log of one minus the tax rates, for example, s0 = ln(1-t0). 
+		*tempname s0 s1 
+		*scalar s0 = `s0' 
+		*scalar s1 = `s1' 
 
 		* keep freq weight variables for normalizing likelihood function
 		if "`weight'`exp'" != "" {
@@ -400,7 +402,7 @@ program define bunchtobit, sortpreserve rclass
 			* for bunchtobit_tloglike
 			scalar ___kink = `kink'
 			scalar ___h = `grid_h'[`i',1]
-			scalar `denom' = `=scalar(`s1')' - `=scalar(`s0')'
+			scalar `denom' =  `s1'  -  `s0' 
 			
 
 			**sets up the model
@@ -419,7 +421,7 @@ program define bunchtobit, sortpreserve rclass
 				  diparm(eq_r lngamma, f(@1*exp(-@2)) d(exp(@2) -@1*exp(-@2)) label(cons_r)) /// 
 				  diparm(eq_l eq_r lngamma, f((@2 - @1)*exp(-@3)/(`=scalar(`denom')')) /// 
 				    d(-exp(-@3)/(`=scalar(`denom')')  exp(-@3)/(`=scalar(`denom')') -(@2-@1)*exp(-@3)/(`=scalar(`denom')')) /// 
-					label(eps))
+					label(eps)) waldtest(0)
 			
 
 			*sets initial values for parameters
@@ -668,9 +670,9 @@ program define bunchtobit, sortpreserve rclass
 			qui svmat `flag'        , names(col)
 			* save in any case as a temp file to plot elasticities
 			qui save "`bmstobit'", replace
-			* but in case -saving- is specified, use given name to save dta
-			if "`saving'" != "" {
-				qui save "`saving'", `replace_opt'
+			* but in case -savingtobit- is specified, use given name to save dta
+			if "`savingtobit'" != "" {
+				qui save "`savingtobit'", `replace_opt'
 			}
 		restore
 		
@@ -770,15 +772,15 @@ end
 
 
 program CheckSaveOpt, sclass
-/* parse the contents of the -saving- option:
- * saving(filename [, replace])
+/* parse the contents of the -savingtobit- option:
+ * savingtobit(filename [, replace])
  */
 	version 10
 	syntax [anything] [, replace ]
 	
 	if `"`replace'`anything'"' != "" {
 		if 0`:word count `anything'' > 2 {
-			di as err "option saving() incorrectly specified"
+			di as err "option savingtobit() incorrectly specified"
 			exit 198
 		}
 	}

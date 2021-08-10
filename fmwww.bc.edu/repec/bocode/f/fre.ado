@@ -1,4 +1,4 @@
-*! version 1.2.5  Ben Jann  30may2015
+*! version 1.2.5  Ben Jann  01jun2015
 
 version 9.2
 
@@ -637,14 +637,16 @@ real scalar _fre_npieces(string scalar s, real scalar w, | real scalar nobreak)
 
     nobr = ( args()>2 ? nobreak : 0 )
     l = fre_udstrlen(s)
-    if (l<2 | w>=l) return(1)
-    l = fre_ustrlen(s)
+    if (w>=l | (l=fre_ustrlen(s))<2) return(1)
     j = k = n = 0
     b = 1
     for (i=1; i<=l; i++) {
         c = fre_usubstr(s, i, 1)
         if (j<1) { // skip to first nonblank character
-            if (fre_ustrtrim(c)=="") continue
+            if (fre_ustrtrim(c)=="") {
+                b++
+                continue
+            }
         }
         j = j + fre_udstrlen(c)
         if (i==l) {
@@ -682,10 +684,9 @@ string rowvector fre_pieces(string scalar s, real scalar w, | real scalar nobrea
     string rowvector    res
 
     nobr = ( args()>2 ? nobreak : 0 )
-    l = fre_ustrlen(s)
-    if (l<2 | w>=l) return(fre_ustrtrim(s))
+    l = fre_udstrlen(s)
+    if (w>=l | (l=fre_ustrlen(s))<2) return(fre_ustrtrim(s))
     res = J(1, _fre_npieces(s, w, nobr), "")
-    l = fre_ustrlen(s)
     j = k = n = 0
     b = 1
     for (i=1; i<=l; i++) {

@@ -13,9 +13,9 @@ help for {cmd:wridit} and {cmd:fridit}{right:(Roger Newson)}
   ]
 
 {p 8 21 2}
-{cmd:fridit} {varname} {ifin} {weight} , {cmdab:g:enerate}{cmd:(}{help varname:{it:newvarname}}{cmd:)}
+{cmd:fridit} {varname} {ifin} , {cmdab:g:enerate}{cmd:(}{help varname:{it:newvarname}}{cmd:)}
   {break}
-  {cmdab:ffr:ame}{cmd:(}{it:framename} [, {cmdab:w:eightvar}{cmd:(}{varname}{cmd:)}] {cmd:)}
+  {cmdab:ffr:ame}{cmd:(}{it:framename} [, {cmdab:w:eightvar}{cmd:(}{varname}{cmd:)}  {cmdab:x:var}{cmd:(}{varname}{cmd:)}] {cmd:)}
   {break}
   [  {cmd:by(}{varlist}{cmd:)}
   {cmdab:ha:ndedness}{cmd:(}{it:handedness}{cmd:)} {cmdab:fol:ded} {cmdab:rev:erse} {cmdab:perc:ent} {cmd:float}
@@ -96,13 +96,15 @@ if that can be done without loss of information.
 {title:Options for {cmd:fridit} only}
 
 {p 4 8 2}
-{cmd:fframe(}{it:framename} [, {cmd:weightvar}{cmd:(}{varname}{cmd:)}] {cmd:)}
+{cmd:fframe(}{it:framename} [, {cmd:weightvar(}{varname} {cmd:xvar(}{varname}{cmd:)}] {cmd:)}
 must be specified.
 It specifies an existing {help frame:data frame},
 knowwn as the foreign frame,
 and specifying a distribution with respect to which the ridits will be generated.
-This data frame must contain a variable with the same name and mode (numeric or string)
+This data frame must contain a variable with the same mode (numeric or string)
 as the input variable,
+with the name specified by the {cmd:xvar()} option if present
+and the same name as the input variable otherwise,
 plus variables with the same names and modes as the {cmd:by()} variables
 (if a {cmd:by()} option is specified).
 It may also contain a weight variable, specified by the {cmd:weightvar()} suboption,
@@ -204,8 +206,8 @@ How to use ridit analysis.
 {title:Author}
 
 {pstd}
-Roger Newson, Imperial College London, UK.{break}
-Email: {browse "mailto:r.newson@imperial.ac.uk":r.newson@imperial.ac.uk}
+Roger Newson, King's College London, UK.{break}
+Email: {browse "mailto:roger.newson@kcl.ac.uk":roger.newson@kcl.ac.uk}
 
 
 {title:Also see}
