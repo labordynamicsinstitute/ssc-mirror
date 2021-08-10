@@ -1,5 +1,8 @@
 program define tabout
-*! 2.0.7 Ian Watson 5jan2015
+*! 2.0.8 Ian Watson 15mar2019
+*! tabout version 3 (beta) available at: http://tabout.net.au
+* bug fix - wrong row and column totals in svy summary tables when some observations were missing, thanks Ulrich Brandt
+* 2.0.7 Ian Watson 5jan2015
 * bug fix - missing se option when doing counts for svy col and row totals, resulting in cell se not count se going into col and row totals, thanks Anwar Dudekula
 * 2.0.6 Ian Watson 22nov2012
 * added sort option, as per Thomas Odeny request
@@ -94,12 +97,19 @@ mark `touse' `if' `in'
         capture file open `outfile' using "$mainfile", write replace
         capture file write `outfile' ""
             if _rc==111 {
-              di
-              di as err "File `using'"
-              di as err "is already open inside another application."
-              di as err "Please close it before running tabout."
-              di
-              clearglobs
+                 di
+                  di as err "File `using'"
+                  di as err "could not be written to your disk."
+                  di as err "This may be due to the directory being"
+                  di as err "read only. Try specifying a different"
+                  di as err "directory where you have write privileges". 
+                  di as err "If it is your working directory, "
+                  di as err "check that you have write privileges to it."
+                  di as err "It might also be the case that this file"
+                  di as err "is already open inside another application"
+                  di as err "and the operating system has locked it."
+                  di as err "If so, try closing it before running tabout."
+                  di             clearglobs
               exit
         }
         capture file close `outfile'
@@ -917,20 +927,27 @@ program svy_sum
 
     if ($oneway==0) {
         $dots
-        $debug svy, subpop(`touse'): mean `svy_sumvar', over(`hvar')
+        $debug svy, subpop(`touse'): mean `svy_sumvar' if `v'<., over(`hvar') 
         mat svyrow = e(V)
         mat rawrt = e(b)
         $dots
-        $debug svy, subpop(`touse'): mean `svy_sumvar', over(`v')
+        $debug svy, subpop(`touse'): mean `svy_sumvar' if `hvar' <., over(`v') 
         mat svycol = e(V)
         mat rawct = e(b)
+        $dots
+        $debug svy, subpop(`touse'): mean `svy_sumvar' if `v'<. & `hvar' <.,
+        mat gmean = e(b)
+        mat svygmean = e(V)
+        $dots
+    }
+    else {
+        $dots
+        $debug svy, subpop(`touse'): mean `svy_sumvar' if `v'<.,
+        mat gmean = e(b)
+        mat svygmean = e(V)
+        $dots
     }
 
-    $dots
-    $debug svy, subpop(`touse'): mean `svy_sumvar' if `v'<.,
-    mat gmean = e(b)
-    mat svygmean = e(V)
-    $dots
     $debug ta `v' `hvar' $n_wt if `touse', matcell(obs) ///
             matrow(rowvals) `colmat' 
     local row = r(r)        

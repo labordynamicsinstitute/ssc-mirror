@@ -1,10 +1,10 @@
 /* 
   validscale.dlg
-*/  
-
+*/ 
+ 
 VERSION 12.1
 
-POSITION . . 700 330
+POSITION . . 800 330
 
 DIALOG main, label("Validscale") tabtitle("General")
 BEGIN
@@ -39,7 +39,7 @@ BEGIN
            option(partition)                  ///
 		   tooltip("Defines the number of items in each dimension")
 		   
-  TEXT     tx_m @ +20 100 .,                 ///
+  TEXT     tx_m @ +20 160 .,                 ///
            label("Response categories")                 
 		   
   EDIT     ed_modal @ +20 150 .,                  ///
@@ -70,7 +70,7 @@ BEGIN
   RADIO    rb_sum @  +20 100 ., label("Sum") 
           
 		  
-  RADIO    rb_stand @  +20 175 ., last label("Standardize scores from 0 to 100")
+  RADIO    rb_stand @  +20 190 ., last label("Standardize scores from 0 to 100")
   
   
   
@@ -83,13 +83,13 @@ BEGIN
            default(1) 
 		   
 		   
-  RADIO    rb_pms @  +20 150 ., label("Person Mean Substitution") 
+  RADIO    rb_pms @  +20 160 ., label("Person Mean Substitution") 
           
 		  
   RADIO    rb_mi @  +20 140 ., last label("Multiple Imputation")
   
   		   
-  CHECKBOX ck_nor    @  +20 155 .,                ///
+  CHECKBOX ck_nor    @  +20 175 .,                ///
            option(noround)                                       ///
            label("Do not round imputed values") ///
   
@@ -129,22 +129,22 @@ END
 DIALOG cfa, tabtitle("Confirmatory factor analysis")
 BEGIN
   
-  CHECKBOX	ck_cfa 10 10 200 ., label("Perform confirmatory factor analysis") ///
+  CHECKBOX	ck_cfa 10 10 220 ., label("Perform confirmatory factor analysis") ///
 		    option(cfa) ///
 			onclickon(script cfa_ck_cfa_on) ///
 			onclickoff(script cfa_ck_cfa_off)
 			  
-  GROUPBOX gb_cfa 10 +30 280 110 , ///
+  GROUPBOX gb_cfa 10 +30 320 110 , ///
 	       label("Estimation method:") 
  
-  RADIO    rb_ml +10  +24 110 ., first  label("Maximum likelihood") ///
+  RADIO    rb_ml +10  +24 130 ., first  label("Maximum likelihood") ///
            default(1) 
 		   
-  RADIO    rb_mlsb @  +20 260 ., label("Maximum likelihood with Satorra-Bentler adjustment")	  
+  RADIO    rb_mlsb @  +20 310 ., label("Maximum likelihood with Satorra-Bentler adjustment")	  
   
-  RADIO    rb_mlmv @  +20 200 ., label("Maximum likelihood with missing values") 
+  RADIO    rb_mlmv @  +20 230 ., label("Maximum likelihood with missing values") 
            
-  RADIO    rb_adf @  +20 140 ., last label("Asymptotic distribution free")
+  RADIO    rb_adf @  +20 170 ., last label("Asymptotic distribution free")
   
   CHECKBOX	ck_stand 14  +36 140 ., label("Standardize coefficients") ///
 		    option(cfastand) 
@@ -155,23 +155,23 @@ BEGIN
 			
 			
      
-  GROUPBOX gb_covs 310 40 350 180 , ///
+  GROUPBOX gb_covs 350 40 370 180 , ///
 	       label("Covariances between measurements errors:")	
 		   
-  CHECKBOX ck_cfacovs +10  +20 310 .,  label("Manually add covariances (ex : item1*item5 item12*item16 ... )") 
+  CHECKBOX ck_cfacovs +10  +20 350 .,  label("Manually add covariances (ex : item1*item5 item12*item16 ... )") 
 
   EDIT     ed_cfacovs @  +21 240 ., label("cfacovs") ///
            option(cfacov)
 		   
-  CHECKBOX    ck_cfarmsea @  +22 320 ., label("Automatically add covariances until RMSEA is less than:") /// 
+  CHECKBOX    ck_cfarmsea @  +22 330 ., label("Automatically add covariances until RMSEA is less than:") /// 
               //onclickon(script cfa_ck_cfac_on) ///
 		      //onclickoff(script cfa_ck_cfac_off)
 			  
-  EDIT     ed_cfarmsea @  +21 50 ., label("cfarmsea") ///
+  EDIT     ed_cfarmsea @  +21 55 ., label("cfarmsea") ///
            option(cfarmsea) ///
 		   default(0.07)
 			 
-  CHECKBOX    ck_cfacfi @  +22 320 ., label("Automatically add covariances until CFI is greater than:") /// 
+  CHECKBOX    ck_cfacfi @  +22 330 ., label("Automatically add covariances until CFI is greater than:") /// 
               //onclickon(script cfa_ck_cfac_on) ///
 			  //onclickoff(script cfa_ck_cfac_off)
 
@@ -183,7 +183,7 @@ BEGIN
 			option(cfaor)
 			
  
-  CHECKBOX	ck_covdim 310 +45 260 ., label("Assert covariances between dimensions to be zero") ///
+  CHECKBOX	ck_covdim 350 +45 290 ., label("Assert covariances between dimensions to be zero") ///
 		    option(cfanocovdim)			  
 			  
 			
@@ -195,13 +195,13 @@ END
 DIALOG conv, tabtitle("Convergent/divergent validities")
 BEGIN
 
-  CHECKBOX ck_conv_div       10    10    220     .,  				///
+  CHECKBOX ck_conv_div       10    10    230     .,  				///
 		   label("Display convergent/divergent validities") ///
 		   option(convdiv) ///
 		   onclickon(script conv_ck_conv_on) ///
 		   onclickoff(script conv_ck_conv_off)
 
-  TEXT     tx_conv1       10   +26    220     .,  				///
+  TEXT     tx_conv1       10   +26    250     .,  				///
 		   label("Correlations between item and its own score") 
   TEXT     tx_conv2       @     +17   @     .,  				///
 		   label("below this value will be highlighted")
@@ -210,7 +210,7 @@ BEGIN
 		   option(tconvdiv)	  				                         ///
 		   numonly
 		   
-  CHECKBOX ck_conv     10   +42   170     .,                 ///
+  CHECKBOX ck_conv     10   +42   190     .,                 ///
 		   option(convdivboxplots)									///
            label("Display boxplots of correlations")	              ///
 		   default(1)
@@ -223,28 +223,28 @@ BEGIN
 
   TEXT     tx_rel_a       10    10    350     .,  				///
 		   label("Cronbach's alpha below this value will be highlighted")   
-  EDIT     ed_rel_a       320   @   35  ., 						 ///
+  EDIT     ed_rel_a       340   @   35  ., 						 ///
 	       default(0.7)												///
 		   option(alpha)	  				                         ///
 		   numonly
 		   
   TEXT     tx_rel_d       10    +30    350     .,  				///
 		   label("Ferguson's delta below this value will be highlighted")   
-  EDIT     ed_rel_d       320   @   35  ., 						 ///
+  EDIT     ed_rel_d       340   @   35  ., 						 ///
            default(0.9)												///
 		   option(delta)	  				                         ///
 		   numonly
 		   
   TEXT     tx_rel_H       10    +30    380     .,  				///
 		   label("Loevinger's H coefficient below this value will be highlighted")
-  EDIT     ed_rel_H       320   @   35  ., 						 ///
+  EDIT     ed_rel_H       340   @   35  ., 						 ///
            default(0.3)												///
 		   option(h)	  				                         ///
 		   numonly
 		   
   TEXT     tx_rel_h       10    +30    380     .,  				///
 		   label("Loevinger's Hj coefficient below this value will be highlighted")    
-  EDIT     ed_rel_h       320   @   35  ., 						 ///
+  EDIT     ed_rel_h       340   @   35  ., 						 ///
 		   default(0.3)												///
 		   option(hjmin)	 										///
 		   numonly
@@ -278,13 +278,13 @@ BEGIN
 		   onclickon(script rep_ck_ickappa_on)                  ///
 		   onclickoff(script rep_ck_ickappa_off)
 
-  TEXT     tx_boot @  +25   220   .,  ///
+  TEXT     tx_boot @  +25   250   .,  ///
            label("Number of bootstrap replications to estimate")
             
-  TEXT     tx_boot2 @  +15   220   .,  ///
+  TEXT     tx_boot2 @  +15   250   .,  ///
            label("confidence interval (if items are polytomous):") 
 		   
-  SPINNER  sp_ickappa +220  -7   45   .,  ///
+  SPINNER  sp_ickappa +250  -7   55   .,  ///
            label("Number of bootstrap replications") min(1) max(1000) ///
            default(20) ///
 		   option(ickappa)
@@ -324,10 +324,10 @@ BEGIN
 		   option(conc)										  ///
            label("conc")
 	
-  TEXT     tx_t_conc       @   +30   350     .,  				///
+  TEXT     tx_t_conc       @   +30   410     .,  				///
 		   label("Correlations above this value will be highlighted (absolute value)")   
 	
-  EDIT     ed_t_conc       320   @   30  ., 						 ///
+  EDIT     ed_t_conc       360   @   35  ., 						 ///
            default(0.4)												///
 		   option(tconc)	  				                         ///
 		   numonly
@@ -445,7 +445,7 @@ END
 OK ok1,      label("OK")
 CANCEL can1, label("Cancel")
 SUBMIT sub1, label("Submit")
-HELP hlp1,   view("help valid")
+HELP hlp1,   view("help validscale")
 RESET res1
 COPY copy1
 

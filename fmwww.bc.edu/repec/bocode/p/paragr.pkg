@@ -1,8 +1,8 @@
 d 'PARAGR': module for parallel graphing of a coefficient across different equations
 d
-d paragr provides a fast and easy way to compare a coefficient
-d across different equations within an estimation.  It can used
-d to visualize the parallel assumption of ordered logit or the
+d  paragr provides a fast and easy way to compare a coefficient
+d across different equations within an estimation. It can used to
+d visualize the parallel assumption of ordered logit or the
 d equality of coefficients for quantile regression, etc. 
 d
 d KW: graph

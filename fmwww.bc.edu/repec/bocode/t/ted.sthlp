@@ -214,3 +214,13 @@ suggestions and support.
 Online:  {helpb rdrobust}, {helpb rdbwselect}, {helpb rd} 
 
 
+}E-mail: {browse "mailto:giovanni.cerulli@ircres.cnr.it":giovanni.cerulli@ircres.cnr.it}{p_end}
+
+
+
+{title:Also see}
+
+{psee}
+Online:  {helpb rdrobust}, {helpb rdbwselect}, {helpb rd} 
+
+

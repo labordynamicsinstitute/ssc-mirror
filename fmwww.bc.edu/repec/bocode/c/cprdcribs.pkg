@@ -1,0 +1,40 @@
+d 'CPRDCRIBS': module providing template do-files for inputting CPRD datasets into Stata
+d
+d   The cprdcribs package is a set of template (or crib) do-files  
+d    for inputting text datasets produced by the Clinical Practice 
+d     Research Datalink (CPRD), and outputting a core set of Stata 
+d     datasets for a CPRD database, together with a do-file to
+d create      the full set of Stata value labels for the database. 
+d The core	datasets are the non-XYZ-lookup datsets for a CPRD
+d database,	 together with a dataset with 1 observation per
+d practice and a      dataset with 1 observation per patient.  The
+d user may modify      the template do-files for the user's own
+d requirements, and/or	    produce additional do-files to input
+d other kinds of CPRD text	datasets into Stata.  The template
+d do-files may be modified by	   the user.  They include a
+d do-file to produce the lookups, a	 do-file to produce the
+d practice dataset, a do-file to produce      the patient dataset,
+d and a master do-file that calls the other	 do-files in a
+d sensible order, using the SSC package dolog.	The	 do-files
+d of the cprdcribs package use the SSC package cprdutil.      It is
+d probably a good idea to install all of Roger Newson's      Stata
+d packages before using these do-files.  This installation	can
+d be done using one of the instasisay packages, downloadable	 
+d from Roger Newson's website. 
+d
+d KW: data management
+d KW: CPRD
+d
+d Requires: Stata version 13
+d
+d Distribution-Date: 20171021
+d
+d Author: Roger Newson, Imperial College London
+d Support: email r.newson@@imperial.ac.uk
+d
+f create.do
+f ../l/lookups.do
+f ../p/patient.do
+f ../p/patientyear.do
+f ../p/practice.do
+f cprdcribs.sthlp

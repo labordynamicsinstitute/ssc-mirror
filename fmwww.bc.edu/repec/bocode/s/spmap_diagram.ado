@@ -1,4 +1,7 @@
 *! -spmap_diagram-: Auxiliary program for -spmap-                              
+*! Version 1.3.3 - 09 January 2018 - StataCorp edit for stroke align           
+*! Version 1.3.2 - 19 June 2017 - StataCorp edit to plot line in diagram
+*! Version 1.3.1 - 29 March 2017 - StataCorp edit to tempfile macros           
 *! Version 1.3.0 - 13 March 2017                                               
 *! Version 1.2.0 - 14 March 2008                                               
 *! Version 1.1.0 - 7 May 2007                                                  
@@ -47,6 +50,7 @@ syntax, [Data(string)]            ///
         [FColor(string asis)]     ///
         [OColor(string asis)]     ///
         [OSize(string)]           ///
+        [OAlign(string asis)]     ///
                                   ///
         [LEGENDA(string)]         ///
         [LEGTitle(string asis)]   ///
@@ -522,6 +526,10 @@ if (`"`ocolor'"' == "") local ocolor "`ocolor_d' ..."
 local osize_d "thin"
 if ("`osize'" == "") local osize "`osize_d' ..."
 
+/* Set default outline thickness */
+local oalign_d "center"
+if ("`oalign'" == "") local oalign "`oalign_d' ..."
+
 
 /* Set default legend */
 if ("`legenda'" == "") local legenda "off"
@@ -608,6 +616,9 @@ else {
    spmap_psl, l(`fcolor') m(`NG') o({bf:{ul:fc}olor()}) d(`fcolor_d')
    local fcolor `"`s(pl)'"'
 }
+
+spmap_psl, l(`oalign') m(`NG') o({bf:{ul:oa}liagn()}) d(`oalign_d')
+local oalign `"`s(pl)'"'
 
 /* Parse option ocolor() */
 local EXIST : list posof `"`ocolor'"' in PALETTE
@@ -743,22 +754,34 @@ qui clonevar __DIA_LBL = `G'
 keep __DIA*
 qui save "__DIA.dta", replace
 
+if c(stata_version) >= 15 {
+	local LA la(center)
+}
+
 /* Compose command */
 local GRAPH `"`GRAPH'(area __DIA_Y __DIA_X if __DIA_G == 0, nodropbase"'
-local GRAPH `"`GRAPH' cmissing(n) fc("white") lc("white") lw("none")) "'
+local GRAPH `"`GRAPH' cmissing(n) fc("white") lc("white") lw("none") `LA') "'
 forval i = 1/`NG' {
 	local FC : word `i' of `fcolor'
+	local OA : word `i' of `oalign'
+   if c(stata_version) >= 15 {
+	local LA `"la("`OA'")"'
+   }
    local GRAPH `"`GRAPH'(area __DIA_Y __DIA_X if __DIA_G == `i', nodropbase"'
    local GRAPH `"`GRAPH' cmissing(n) fc("`FC'") fi(100) lc("`FC'")"'
-   local GRAPH `"`GRAPH' lw("none")) "'
+   local GRAPH `"`GRAPH' lw("none") `LA') "'
 }
 local OC : word 1 of `ocolor'
 local OS : word 1 of `osize'
+local OA : word 1 of `oalign'
+if c(stata_version) >= 15 {
+	local LA `"la("`OA'")"'
+}
 local GRAPH `"`GRAPH'(area __DIA_Y __DIA_X if __DIA_G == 998, nodropbase"'
-local GRAPH `"`GRAPH' cmissing(n) fc("none") lc("`OC'") lw("`OS'")) "'
+local GRAPH `"`GRAPH' cmissing(n) fc("none") lc("`OC'") lw("`OS'") `LA') "'
 local RC : word 1 of `refcolor'
 local RS : word 1 of `refsize'
-local GRAPH `"`GRAPH'(area __DIA_Y __DIA_X if __DIA_G == 999, nodropbase"'
+local GRAPH `"`GRAPH'(line __DIA_Y __DIA_X if __DIA_G == 999, nodropbase"'
 local GRAPH `"`GRAPH' cmissing(n) fc("none") lc("`RC'") lw("`RS'")) "'
 
 /* Set number of keys */
@@ -918,7 +941,7 @@ forval i = 1/`OBS' {
    qui replace __DIA_X = `Xi' + (__DIA_X * `RAD' * (`Wi'/`WMAX')^(0.57))
    qui replace __DIA_Y = `Yi' + (__DIA_Y * `RAD' * (`Wi'/`WMAX')^(0.57))
    tempfile PIE
-   qui save `PIE', replace
+   qui save `"`PIE'"', replace
 
    local INF ""
    local SUP ""
@@ -938,7 +961,7 @@ forval i = 1/`OBS' {
    }
 
    forval j = 1/`NJ' {
-      use `PIE', clear
+      use `"`PIE'"', clear
       local FROM : word `j' of `INF'
       local TO : word `j' of `SUP'
       qui keep in `FROM'/`TO'
@@ -957,21 +980,21 @@ forval i = 1/`OBS' {
       local VAR : word `j' of `VJ'
       qui gen __DIA_G = `VAR'
       tempfile TEMP`j'
-      qui save `TEMP`j'', replace
+      qui save `"`TEMP`j''"', replace
    }
 
-   use `TEMP1', clear
+   use `"`TEMP1'"', clear
    forval j = 2/`NJ' {
-      qui append using `TEMP`j'' 
+      qui append using `"`TEMP`j''"' 
    }
    
    tempfile PIE`i'
-   qui save `PIE`i'', replace
+   qui save `"`PIE`i''"', replace
 }
 
-use `PIE1', clear
+use `"`PIE1'"', clear
 forval i = 2/`OBS' {
-   qui append using `PIE`i''
+   qui append using `"`PIE`i''"'
 }
 
 /* Save dataset */
@@ -1031,15 +1054,23 @@ else {
 spmap_psl, l(`osize') m(`NVAR') o({bf:{ul:os}ize()}) d(`osize_d')
 local osize `"`s(pl)'"'
 
+/* Parse option oalign() */
+spmap_psl, l(`oalign') m(`NVAR') o({bf:{ul:os}ize()}) d(`oalign_d')
+local oalign `"`s(pl)'"'
+
 /* Compose command */
 forval i = 1/`NVAR' {
    local FC : word `i' of `fcolor'
    local OC : word `i' of `ocolor'
    if ("`OC'" == "none") local OC "`FC'"
    local OS : word `i' of `osize'
+   local OA : word `i' of `oalign'
+   if c(stata_version) >= 15 {
+	local LA `"la("`OA'")"'
+   }
    local GRAPH `"`GRAPH'(area __DIA_Y __DIA_X if __DIA_G == `i', nodropbase"'
    local GRAPH `"`GRAPH' cmissing(n) fc("`FC'") fi(100) lc("`OC'")"'
-   local GRAPH `"`GRAPH' lw("`OS'")) "'
+   local GRAPH `"`GRAPH' lw("`OS'") `LA') "'
 }
 
 /* Set number of keys */

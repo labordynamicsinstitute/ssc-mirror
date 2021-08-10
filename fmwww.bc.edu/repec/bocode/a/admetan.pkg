@@ -1,0 +1,27 @@
+d 'ADMETAN': module to provide comprehensive meta-analysis
+d
+d  As of November 2020, this package is no longer maintained, and
+d is made available solely to enable existing analyses using these
+d commands to be re-run. For aggregate-data meta-analysis and
+d forest plots, please use the latest version of the ‘metan’
+d package (which includes an “immediate” command ‘metani’
+d to replace ‘admetani’).  For two-stage IPD meta-analysis,
+d please use the latest version of the ‘ipdmetan’ package. 
+d
+d KW: meta-analysis
+d KW: forest plot
+d KW: binary data
+d KW: time-to-event data
+d
+d Requires: Stata version 11 
+d
+d Distribution-Date: 20190203
+d
+d Author: David Fisher, MRC Clinical Trials Unit at UCL
+d Support: email d.fisher@@ucl.ac.uk
+d
+f admetan.ado
+f admetan.sthlp
+f admetani.ado
+f admetani.sthlp
+f admetan_hlp_run.ado

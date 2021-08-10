@@ -1,5 +1,7 @@
 /*
-*! version 1.1 # Ian White # 27may2015
+*! Ian White # 6apr2018
+	new measure() option
+version 1.1 # Ian White # 27may2015
 11may2015
     import also from augmented format
     restructured to do this
@@ -17,17 +19,22 @@ program define network_import
 
 // PARSE
 
-* main parse
-syntax [if] [in], STUDyvar(varname) [TReat(varlist min=2 max=2) EFFect(name) STDErr(varname) ///
-    VARiance(name) ref(string) trtlist(string) GENPrefix(string) GENSuffix(string) mult(real 1000)]
+* main parse, to identify syntax errors and store options
+syntax [if] [in], STUDyvar(varname) [TReat(varlist min=2 max=2) EFFect(name) ///
+	STDErr(varname) VARiance(name) ref(string) ///
+	MEAsure(string) trtlist(string) GENPrefix(string) GENSuffix(string) mult(real 1000)]
 
 * is it pairs format?
-cap syntax [if] [in], STUDyvar(varname) TReat(varlist min=2 max=2) EFFect(varname) STDErr(varname) [*]
+cap syntax [if] [in], STUDyvar(varname) TReat(varlist min=2 max=2) ///
+	EFFect(varname) STDErr(varname) [*]
 if !_rc local from pairs
 
-* is it augmented format?
-cap syntax [if] [in], STUDyvar(varname) EFFect(name) VARiance(name) ref(string) [*]
-if !_rc local from augmented
+else {
+	* is it augmented format?
+	cap syntax [if] [in], STUDyvar(varname) EFFect(name) ///
+		VARiance(name) ref(string) [*]
+	if !_rc local from augmented
+}
 
 if mi("`from'") {
     di as error "Please specify the option set corresponding to your current data format:" 
@@ -38,13 +45,12 @@ if mi("`from'") {
 
 di as text "Importing from " as result "`from'" as text " format"
 
+if mi("`measure'") local measure (unidentified measure)
+
 // END OF PARSING
 
 if "`from'"=="pairs" {
 
-    syntax [if] [in], STUDyvar(varname) /// data description compulsory-options
-        TReat(varlist min=2 max=2) EFFect(varname) STDErr(varname) /// data description compulsory-options 
-        [] // other options
     marksample touse
 
     tokenize "`treat'"

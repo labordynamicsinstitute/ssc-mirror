@@ -1,7 +1,10 @@
-*! version 1.0.1 29mar2011 \ Philip M Jones (Copyright), pjones8@uwo.ca
+*! version 1.0.2 19dec2017 \ Philip M Jones (Copyright), pjones8@uwo.ca
 /* combine: Program to combine two groups' mean, n, and SDs together */
 /* the formulae used are taken from the Cochrane handbook version 5.1.0, Table 7.7.a */
 /* No claims about the accuracy of this program are stated or implied. */
+
+
+
 
 capture program drop combine
 program define combine, rclass
@@ -28,7 +31,7 @@ local combined_mean = (`n1'*`m1' + `n2'*`m2') / `combined_sample_size'
 local a = (`n1' - 1) * `sd1'^2
 local b = (`n2' - 1) * `sd2'^2
 local c = (`n1' * `n2') / (`n1' + `n2')
-local d = `m1'^2 + `m2'^2 - (2 * abs(`m1')* abs(`m2'))
+local d = abs(`m1')^2 + abs(`m2')^2 - (2 * abs(`m1')* abs(`m2'))
 
 local combined_SD = sqrt( (`a' + `b' + (`c' * `d')) / (`combined_sample_size' - 1) )
 

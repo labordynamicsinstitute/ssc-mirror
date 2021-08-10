@@ -12,12 +12,19 @@ d of these indices by population subgroup.	 This version is
 d for Stata versions 8.2 onwards. For versions 5 to 8.1,      use
 d povdeco5 instead. 
 d
+d KW: inequality
+d KW: poverty
+d KW: income distribution
+d
+d Requires: Stata version 8.2 (5.0 for povdeco5)
+d
+d
 d Author: Stephen P. Jenkins, London School of Economics
 d Support: email s.jenkins@@lse.ac.uk
 d
-d Distribution-Date: 20080128
+d Distribution-Date: 20210215
 d
 f povdeco.ado
-f povdeco.hlp
+f povdeco.sthlp
 f povdeco5.ado
 f povdeco5.hlp

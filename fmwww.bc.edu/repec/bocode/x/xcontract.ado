@@ -1,6 +1,6 @@
 #delim ;
 program define xcontract;
-version 10.0;
+version 16.0;
 /*
   Extended version of -contract- with by-groups,
   percentages within by-group,
@@ -11,10 +11,10 @@ version 10.0;
   This program contains re-engineered code
   originally derived from official Stata's -contract- and -fillin-.
 *! Author: Roger Newson
-*! Date: 29 September 2011
+*! Date: 31 December 2020
 */
-	
-syntax varlist [if] [in] [fw] [,  LIst(string asis) SAving(string asis) noREstore FAST FList(string)
+
+syntax varlist [if] [in] [fw aw pw iw] [,  LIst(string asis) FRAme(string asis) SAving(string asis) noREstore FAST FList(string)
   Freq(name) Percent(name) CFreq(name) CPercent(name) PTYpe(string) by(varlist)
   IDNum(string) NIDNum(name) IDStr(string) NIDStr(name)
   FOrmat(string)
@@ -28,6 +28,7 @@ Output-destination options:
   and referred to by the new names if REName is specified,
   together with optional if and/or in subsetting clauses and/or list_options
   as allowed by the list command.
+-frame-  specifies a Stata data frame in which to create the output data set.
 -saving- specifies a data set in which to save the output data set.
 -norestore- specifies that the pre-existing data set
   is not restored after the output data set has been produced
@@ -84,6 +85,10 @@ Other options:
   are not to be included in the output data set.
 */
 
+*
+ Make varlists unique
+*;
+local varlist: list uniq varlist;
 
 *
  Set restore to norestore if fast is present
@@ -93,10 +98,11 @@ Other options:
 if "`fast'"!="" {;
     local restore="norestore";
 };
-if (`"`list'"'=="")&(`"`saving'"'=="")&("`restore'"!="norestore")&("`fast'"=="") {;
-    disp as error "You must specify at least one of the four options:"
-      _n "list(), saving(), norestore, and fast."
-      _n "If you specify list(), then the output variables specified are listed."
+if (`"`list'"'=="")&(`"`frame'"'=="")&(`"`saving'"'=="")&("`restore'"!="norestore")&("`fast'"=="") {;
+    disp as error "You must specify at least one of the five options:"
+      _n "list(), frame(), saving(), norestore, and fast."
+      _n "If you specify list(), then the new data set is listed."
+      _n "f you specify frame(), then the new data set is output to a data frame."
       _n "If you specify saving(), then the new data set is output to a disk file."
       _n "If you specify norestore and/or fast, then the new data set is created in the memory,"
       _n "and any existing data set in the memory is destroyed."
@@ -106,19 +112,50 @@ if (`"`list'"'=="")&(`"`saving'"'=="")&("`restore'"!="norestore")&("`fast'"=="")
 
 
 *
+ Parse frame() option if present
+*;
+if `"`frame'"'!="" {;
+  cap frameoption `frame';
+  if _rc {;
+    disp as error `"Illegal frame option: `frame'"';
+    error 498;
+  };
+  local framename "`r(namelist)'";
+  local framereplace "`r(replace)'";
+  local framechange "`r(change)'";
+  if `"`framename'"'=="`c(frame)'" {;
+    disp as error "frame() option may not specify current frame."
+      _n "Use norestore or fast instead.";
+    error 498;
+  };
+  if "`framereplace'"=="" {;
+    cap noi conf new frame `framename';
+    if _rc {;
+      error 498;
+    };
+  };
+};
+
+
+*
  Mark sample for use
  (note that, if the if-expression contains _n or _N,
  then these are interpreted as the observation sequence or observation number, respectively,
  for the whole input data set before any exclusions are made) 
 *;
-if "`miss'"=="nomiss" {;marksample touse , strok; };
-else {;marksample touse , strok novarlist; };
+if "`miss'"=="nomiss" {;
+  marksample touse , strok;
+};
+else {;
+  marksample touse , strok novarlist;
+};
 
 
 * Fill in -freq- macro value if missing *;
 if `"`freq'"' == "" {;
   local freq "_freq";
 };
+
 
 *
  Create weight-expression variable
@@ -127,21 +164,29 @@ if `"`freq'"' == "" {;
  for the whole input data set before any exclusions are made)
 *;
 tempvar expvar;
-if `"`exp'"' == "" {; local exp "= 1"; };
-qui gen `expvar' `exp';
+if `"`exp'"' == "" {;
+  local exp "= 1";
+};
+qui {;
+  gene double `expvar' `exp';
+  compress `expvar';
+};
 
 
 *
- Preserve old data set if restore is set or fast unset
+ Beginning of frame block (NOT INDENTED)
 *;
-if("`fast'"==""){;
-    preserve;
-};
+local oldframe=c(frame);
+tempname tempframe;
+frame put `touse' `by' `varlist' `expvar', into(`tempframe');
+frame `tempframe' {;
 
-* Keep only variables and observations to be used *;
+
+* Keep only observations to be used *;
 qui keep if `touse';
-if _N == 0 {; error 2000; };
-keep `by' `varlist' `expvar';
+if _N == 0 {;
+  error 2000;
+};
 
 
 *
@@ -150,11 +195,12 @@ keep `by' `varlist' `expvar';
 *;
 qui {;
   sort `by' `varlist', stable;
-  by `by' `varlist' : gen long `freq' = sum(`expvar');
+  by `by' `varlist' : gen double `freq' = sum(`expvar');
   by `by' `varlist' : keep if _n == _N;
   compress `freq';
   label var `freq' "Frequency";
 };
+
 
 *
   Create variable -bygrp- containing sequential order of by-group
@@ -165,68 +211,98 @@ tempvar bygrp;
 if "`by'"=="" {;
   qui gene byte `bygrp'=1;
   local nbygrp=1;
+  sort `bygrp';
 };
 else {;
   gsort `by', gene(`bygrp');
-  qui summ `bygrp';
-  local nbygrp=r(max);
+  local nbygrp=`bygrp'[_N];
 };
+
 
 *
  Fill in zero-frequency combinations of -varlist- if requested.
- (This may use a lot of file processing resources.)
+ (This may involve some extra frame processing.)
 *;
 if "`zero'"!="" {;
-  tempfile tf0;
-  qui save `"`tf0'"',replace;
+  local curframe=c(frame);
+  tempname tfr0;
+  qui frame copy `curframe' `tfr0', replace;
   if "`by'"!="" {;
-    * Save file of by-groups with data on by-variable values *;
-    tempfile byfile;
+    * Save frame of by-groups with data on by-variable values *;
+    tempvar inseq inmin inmax;
+    tempname byframe;
     keep `bygrp' `by';
     sort `bygrp';
-    qui by `bygrp':keep if _n==1;
-    qui save `"`byfile'"', replace;
+    qui {;
+      gene long `inseq'=_n;
+      by `bygrp': gene long `inmin'=`inseq'[1];
+      by `bygrp': gene long `inmax'=`inseq'[_N];
+      drop `inseq';
+      by `bygrp': keep if _n==1;
+      frame copy `curframe' `byframe', replace;
+    };
   };
   drop _all;
   forv i1=1(1)`nbygrp' {;
-    qui use `varlist' `freq' `bygrp' if `bygrp'==`i1' using `"`tf0'"', clear;
-    _fillin `varlist';
-    qui replace `freq'=0 if missing(`freq');
-    qui replace `bygrp'=`i1' if missing(`bygrp');
-    tempfile tf`i1';
-    qui save `"`tf`i1''"', replace;
+    tempname tfr`i1';
+    qui {;
+      if "`by'"=="" {;
+        frame `tfr0': frame put `varlist' `freq' `bygrp', into(`tfr`i1'');
+      };
+      else {;
+        frame `byframe' {;
+          local inmincur=`inmin'[`i1'];
+          local inmaxcur=`inmax'[`i1'];
+        };
+        frame `tfr0': frame put  `varlist' `freq' `bygrp' in `inmincur'/`inmaxcur',
+          into(`tfr`i1'');
+      };
+      frame `tfr`i1'' {;
+        _fillin `varlist';
+        replace `freq'=0 if missing(`freq');
+        replace `bygrp'=`i1' if missing(`bygrp');
+      };
+    };
   };
-  qui erase `"`tf0'"';
-  qui use `"`tf1'"', clear;
-  forv i1=2(1)`nbygrp' {;
-    qui append using `"`tf`i1''"';
-  };
+  qui frame drop `tfr0';
+  forv i1=1(1)`nbygrp' {;
+    qui _appendframe `tfr`i1'', drop;
+  };  
   if "`by'"!="" {;
-    * Merge in by-group values *;
-    sort `bygrp' `varlist';
-    tempvar merge;
-    merge `bygrp' using `"`byfile'"', _merge(`merge');
-    drop `merge';
-    qui erase `"`byfile'"';
+    * Merge in by-variables *;
+    qui {;
+      sort `bygrp' `varlist';
+      tempvar bylinvar;
+      frlink m:1 `bygrp', frame(`byframe') gene(`bylinvar');
+      foreach X in `by' {;
+        cap frget `X'=`X', from(`bylinvar');
+      };
+      drop `bylinvar';
+      frame drop `byframe';
+    };
   };
 };
 
+
 * Order and sort output data set *;
 order `by' `varlist';
-sort `by' `varlist';
+sort `bygrp' `varlist';
 
 
 *
  Add percent and cumulative frequency variables
 *;
 
+
 * Default type for percent variables *;
 if "`ptype'" == "" {;
   local ptype "float";
 };
 
+
 * Default format for percent variables *;
 local pformat "%8.2f";
+
 
 * Default names for percent and cumulative frequency variables *;
 if "`percent'"=="" {;local percent "_percent";};
@@ -235,33 +311,26 @@ if "`cfreq'"=="" & "`cpercent'"!="" {;
   local cfreq "`tempcfreq'";
 };
 
-* Generate percent and cumulative frequency variables *;
+
+* Evaluate percent and cumulative frequency variables *;
+tempvar Ninbygrp;
 qui {;
-  gene `ptype' `percent'=.;
+  by `bygrp': egen double `Ninbygrp'=total(`freq');
+  gene `ptype' `percent'=(100*`freq')/`Ninbygrp';
   lab var `percent' "Percent";
   format `percent' `pformat';
   if "`cfreq'"!="" {;
-    gene long `cfreq'=.;
+    by `bygrp': gene double `cfreq'=sum(`freq');
     lab var `cfreq' "Cumulative frequency";
   };
   if "`cpercent'"!="" {;
-    gene `ptype' `cpercent'=.;
+    by `bygrp': gene `ptype' `cpercent'=(100*sum(`freq'))/`Ninbygrp';
     lab var `cpercent' "Cumulative percent";
     format `cpercent' `pformat';
   };
+  drop `Ninbygrp';
 };
 
-* Evaluate percent and cumulative frequency variables *;
-tempname Ninbygrp;
-forv i1=1(1)`nbygrp' {;
-  qui {;
-    summ `freq' if `bygrp'==`i1';
-    scal `Ninbygrp'=r(sum);
-    replace  `percent'=(100*`freq')/`Ninbygrp' if `bygrp'==`i1';
-    if "`cfreq'"!="" {;replace `cfreq'=sum(`freq') if `bygrp'==`i1';};
-    if "`cpercent'"!="" {;replace `cpercent'=(100*`cfreq')/`Ninbygrp' if `bygrp'==`i1';};
-  };
-};
 
 *
  Compress percent and cumulative frequency variables
@@ -269,10 +338,15 @@ forv i1=1(1)`nbygrp' {;
 *;
 qui compress `freq' `percent' `cfreq' `cpercent';
 
-* Keep only wanted variables in final order *;
+
+*
+ Keep only wanted variables in final order and sort order
+*;
 keep `by' `varlist' `freq' `percent' `cfreq' `cpercent';
 order `by' `varlist' `freq' `percent' `cfreq' `cpercent';
+sort `by' `varlist';
 cap drop `tempcfreq';
+
 
 *
  Create numeric and/or string ID variables if requested
@@ -294,6 +368,7 @@ if("`idnum'"!=""){;
     lab var `nidnum' "Numeric ID";
 };
 
+
 *
  Format variables if requested
 *;
@@ -314,22 +389,22 @@ if `"`format'"'!="" {;
     };
 };
 
+
 *
  List variables if requested
 *;
 if `"`list'"'!="" {;
     if "`by'"=="" {;
-        disp _n as text "Listing of results:";
         list `list';
     };
     else {;
-        disp _n as text "Listing of results by: " as result "`by'";
         by `by':list `list';
     };
 };
 
+
 *
- Save data set if requested
+ Save dataset if requested
 *;
 if(`"`saving'"'!=""){;
     capture noisily save `saving';
@@ -353,60 +428,221 @@ if(`"`saving'"'!=""){;
     };
 };
 
+
 *
- Restore old data set if restore is set
- or if program fails when fast is unset
+ Copy new frame to old frame if requested
 *;
-if "`fast'"=="" {;
-    if "`restore'"=="norestore" {;
-        restore,not;
-    };
-    else {;
-        restore;
-    };
+if "`restore'"=="norestore" {;
+  frame copy `tempframe' `oldframe', replace;
 };
+
+
+};
+*
+ End of frame block (NOT INDENED)
+*;
+
+
+*
+ Rename temporary frame to frame name (if frame is specified)
+ and change current frame to frame name (if requested)
+*;
+if "`framename'"!="" {;
+  if "`framereplace'"=="replace" {;
+    cap frame drop `framename';
+  };
+  frame rename `tempframe' `framename';
+  if "`framechange'"!="" {;
+    frame change `framename';
+  };
+};
+
 
 end;
 
 program define _fillin;
 /*
- Fill in combinations of -varlist- with zero frequencies.
- This code is originally derived from official Stata's -fillin-
- (version 2.1.2  19dec1998),
- re-engineered by Roger Newson 12 August 2003.
+ Fill in combinations of varlist with zero frequencies,
+ assuming that the varlist is the primary key of the current frame.
 */
-  version 10.0;
-  syntax varlist(min=2);
-  tokenize `varlist';
-  tempvar merge;
-  tempfile FILLIN0 FILLIN1;
-  preserve;
-  quietly {;
-    keep `varlist' ;
-    save `"`FILLIN0'"', replace;
-    keep `1';
-    sort `1';
-    by `1':  keep if _n==_N;
-    save `"`FILLIN1'"', replace; 
-    mac shift ;
-    while "`1'"!="" { ;
-      use `"`FILLIN0'"', clear;
-      keep `1';
-      sort `1';
-      by `1':  keep if _n==_N;
-      cross using `"`FILLIN1'"';
-      save `"`FILLIN1'"', replace ;
-      macro shift;
+version 16.0;
+syntax varlist(min=2);
+tempname FILLIN0 FILLIN1 curframe;
+tempvar Xseq linvar;
+local curframe=c(frame);
+local Nvar: word count `varlist';
+unab nonkeyvars: *;
+local nonkeyvars: list nonkeyvars - varlist;
+
+qui {;
+  * Save current frame to be merged in later *;
+  frame copy `curframe' `FILLIN0', replace;
+  * Reduce current frame to have 1 obs per value of first variable *;
+  local X: word 1 of `varlist';
+  keep `X';
+  sort `X';
+  by `X': keep if _n==1;
+  local varlist2 "`X'";
+  * Loop over non-first variables *;
+  forv i1=2(1)`Nvar' {;
+    local X: word `i1' of `varlist';
+    frame `FILLIN0' {;
+      frame put `X', into(`FILLIN1');
     };
-    erase `"`FILLIN0'"';    /* to save disk space only */
-    sort `varlist';
-    save `"`FILLIN1'"', replace ;
-    restore, preserve;
-    sort `varlist' ;
-    merge `varlist' using `"`FILLIN1'"', _merge(`merge');
-    noisily assert `merge'!=1;
-    drop `merge' ;
-    sort `varlist';
-    restore, not;
+    frame `FILLIN1' {;
+      sort `X';
+      by `X': keep if _n==1;
+      local Nval=_N;
+      gene long `Xseq'=_n;
+    };
+    expand =`Nval';
+    sort `varlist2';
+    by `varlist2': gene long `Xseq'=_n;
+    frlink m:1 `Xseq', frame(`FILLIN1') gene(`linvar');
+    frget `X'=`X', from(`linvar');
+    drop `linvar' `Xseq';
+    local varlist2 "`varlist2' `X'";
+    sort `varlist2';
+    frame drop `FILLIN1';
   };
+  * Merge in non-key variables if present *;
+  if "`nonkeyvars'"!="" {;
+    frlink 1:1 `varlist', frame(`FILLIN0') gene(`linvar');
+    foreach Y in `nonkeyvars' {;
+      cap frget `Y'=`Y', from(`linvar');
+    };
+  };
+  frame drop `FILLIN0';
+};
+
 end;
+
+prog def frameoption, rclass;
+version 16.0;
+*
+ Parse frame() option
+*;
+
+syntax name [, replace CHange ];
+
+return local change "`change'";
+return local replace "`replace'";
+return local namelist "`namelist'";
+
+end;
+
+#delim cr
+
+program define _appendframe
+/*
+ Append one or more frames to the current frame.
+ This program uses code modified
+ from Jeremy Freese's SSC package frameappend.
+*/
+
+	version 16.0
+
+	syntax namelist(name=frame_list) [, drop fast]
+	/*
+	  drop specifies that the from frame will be dropped.
+	  fast speciffies that no work will be done to preserve the to frame
+	    if the user presses Brak or other failure occurs
+	*/
+
+	* Check that all frame names belong to frames *
+	foreach frame_name in `frame_list' {
+	  confirm frame `frame_name'
+	}
+
+	* Preserve old dataset if requested *
+	if "`fast'"=="" {
+		preserve
+	}
+	
+	* Beginning of frame loop *
+	foreach frame_name in `frame_list' {
+	* Beginning of main quietly block *
+	quietly {
+	
+		* Get varlists from old dataset *
+		ds
+		local to_varlist "`r(varlist)'"
+		* Get varlists from dataset to be appended *
+		frame `frame_name': ds
+		local from_varlist "`r(varlist)'"
+		local shared_varlist : list from_varlist & to_varlist
+		local new_varlist : list from_varlist - shared_varlist
+
+		* Check modes of shared variables (numeric or string) *
+		if "`shared_varlist'" != "" {
+			foreach type in numeric string {
+				ds `shared_varlist', has(type `type')
+				local `type'_to "`r(varlist)'"
+				frame `frame_name': ds `shared_varlist', has(type `type')
+				local `type'_from "`r(varlist)'"
+				local `type'_eq: list `type'_to === `type'_from
+			}
+			if (`numeric_eq' == 0) | (`string_eq' == 0) {
+				di as err "shared variables in frames being combined must be both numeric or both string"
+				error 109
+			}
+		}
+		
+		* get size of new dataframe *
+		frame `frame_name' : local from_N = _N
+		local to_N = _N
+		local from_start = `to_N' + 1
+		local new_N = `to_N' + `from_N'
+
+		* Create variables for linkage in the 2 datasets *
+		set obs `new_N'
+		tempvar temp_n temp_link
+		gen double `temp_n' = _n
+		frame `frame_name' {
+			gen double `temp_n' = _n + `to_N'
+		}
+	
+		* Create linkage between the 2 datasets *
+		frlink 1:1 `temp_n', frame(`frame_name') gen(`temp_link')
+		
+		* Import shared variables to old dataset *
+		if "`shared_varlist'"!="" {
+		  tempvar temphome
+		  foreach X of varlist `shared_varlist' {
+		    frget `temphome'=`X', from(`temp_link')
+		    replace `X'=`temphome' in `=`to_N'+1' / `new_N'
+		    drop `temphome'
+		  }
+		}
+	
+		* Import new variables to old dataset *
+		if "`new_varlist'" != "" {
+		  tempvar temphome2
+		  foreach X in `new_varlist' {
+		    frget `X'=`X', from(`temp_link')
+		  }
+	        }
+	        
+	        * Order variables (old ones first) *
+	        order `to_varlist' `new_varlist'
+
+	}
+        * End of main quietly block *
+        }
+        * End of frame loop *
+
+        * Restore old dataset if requested and necessary *
+	if "`fast'"=="" {
+        	restore, not
+	}
+
+	* Drop appended frame if requested *
+	if "`drop'" == "drop" {
+		foreach frame_name in `frame_list' {
+			frame drop `frame_name'
+		}
+	}
+		
+end
+
+

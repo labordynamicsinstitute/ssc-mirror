@@ -26,9 +26,9 @@ d KW: q-values
 d
 d Requires: Stata version 10.0
 d
-d Distribution-Date: 20130705
+d Distribution-Date: 20201122
 d
-d Author: Roger Newson, National Heart and Lung Institute at Imperial College London
+d Author: Roger Newson, Imperial College London
 d Support: email r.newson@@imperial.ac.uk
 d
 f qqvalue.ado

@@ -1,5 +1,5 @@
 {smcl}
-{* *! version 1.6 28jul2015}{...}
+{* *! version 1.7 16may2018}{...}
 {vieweralsosee "[MI] mi impute" "help mi_impute"}{...}
 {vieweralsosee "[MI] mi impute chained" "help mi_impute_chained"}{...}
 {vieweralsosee "[MI] mi estimate" "help mi_estimate"}{...}
@@ -44,12 +44,13 @@
 {synopt :{opt noisily}}runs {cmd:smcfcs} noisily{p_end}
 {synopt :{opt by}({help varlist:varlist})}specifies that imputation be performed separately by groups defined by {help varlist:varlist}{p_end}
 {synopt :{opt clear}}specifies that any multiply imputed data in memory be cleared. {p_end}
+{synopt :{opt exposure}({help varname:varname})}for Poisson substantive models, an optional variable indicating exposure time {p_end}
 {synoptline}
 
 {pstd}
 {it:smcmd} {help smdepvar:{it:smdepvar}} {help smindepvars:{it:smindepvars}} specifies the substantive model 
 with which covariates are to be imputed compatibly with. Currently {it:smcmd} can be {help regress:regress}, {help logit:logit},
-{help stcox:stcox} or compet. In the case of {help stcox:stcox}, the dataset should be {help stset:stset} 
+{help stcox:stcox}, compet, or {help poisson:poisson}. In the case of {help stcox:stcox}, the dataset should be {help stset:stset} 
 prior to running smcfcs, and no {help smdepvar:{it:smdepvar}} should be specified. In the case of compet,
 the data should not be {help stset:stset}, but instead the time and failure indicator variables should passed
 using the time and failure options.
@@ -130,6 +131,8 @@ a covariate model which includes any fully observed variables in the substantive
 {phang}
 {opt clear} specifies that any previous imputations in the data be cleared. If imputations already exist, {cmd:smcfcs} will exit with an error unless the {opt clear} option is specified.
 
+{phang}
+{opt exposure}({help varname:varname}) for Poisson substantive models, the exposure time variable.
 
 {marker remarks}{...}
 {title:Remarks}

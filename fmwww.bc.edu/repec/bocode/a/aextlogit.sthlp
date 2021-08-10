@@ -1,5 +1,5 @@
 {smcl}
-{* *! version 1.1 - 08/08/16}{...}
+{* *! version 1.2 - 16/06/19}{...}
 {cmd: help aextlogit}
 
 {hline}
@@ -25,13 +25,15 @@
 {synopthdr}
 {synoptline}
 
+{synopt:{opt gr:oup}}specifies the variable defining the panel{p_end}
+
 {synopt:{opt b:etas}}reports the fixed effects logit estimates{p_end}
 
 {synopt:{opt nolog}}suppress the display of the iteration log{p_end}
 
 {synopt:{opth vce(vcetype)}}{it:vcetype} may be {opt oim}, {opt r:obust}, {opt cl:uster} {it:clustvar}, {opt boot:strap}, or {opt jack:knife}{p_end}
 
-{synopt:{it:{help flex##maximize_options:maximize_options}}}control the maximization process{p_end}
+{synopt:{it:{help aextlogit##maximize_options:maximize_options}}}control the maximization process{p_end}
 
 
 {hline}
@@ -43,13 +45,15 @@
 {title:Description}
 
 {pstd}
-{cmd: aextlogit} is a wrapper for {cmd: xtlogit} which estimates the fixed effects logit and reports estimates of 
+{cmd: aextlogit} is a wrapper for {cmd: clogit} which estimates the fixed effects logit and reports estimates of 
 the average (semi-) elasticities of Pr(y=1|x,u) with respect to the regressors, and the corresponding standard 
 errors and t-statistics. The method used to compute the (semi-) elasticities was first described by Kitazawa (2012); 
 see Kemp and Santos Silva (2016) for further details.
 
 
 {title:Options}
+
+{phang}{opt group(panelvar)} specifies that the variable defining the panel is {it:panelvar}.
 
 {phang}
 {opt b:etas} reports the fixed effects logit estimates{p_end}
@@ -97,13 +101,15 @@ out of or in connection with the software or the use or other dealings in the so
 
 {phang2}{cmd:. webuse union}{p_end}
 
+{phang2}{cmd:. xtset idcode}{p_end}
+
 {pstd}Basic use of {cmd: aextlogit}{p_end}
 
 {phang2}{cmd:. aextlogit union age grade i.not_smsa south##c.year}{p_end}
 
-{pstd}Use of {cmd: aextlogit} reporting the fixed effects logit estimates {p_end}
+{pstd}Use of {cmd: aextlogit} with bootstrap standard errors and reporting the fixed effects logit estimates {p_end}
 
-{phang2}{cmd:. aextlogit union age grade i.not_smsa south##c.year, b}{p_end}
+{phang2}{cmd:. aextlogit union age grade i.not_smsa south##c.year, b vce(boot)}{p_end}
 
 {pstd}Estimate the fixed effects logit for comparison{p_end}
 
@@ -113,8 +119,8 @@ out of or in connection with the software or the use or other dealings in the so
 {title:Saved results}
 
 {pstd}
-The output saved in {cmd:e()} by {cmd:aextlogit} is essentially the same that is saved by {cmd:xtlogit} with the {opt fe} 
-option; more details can be seen in {help xtlogit}. Some additional results are listed below.
+The output saved in {cmd:e()} by {cmd:aextlogit} is essentially the same that is saved by {cmd:clogit}; more details can be seen in {help clogit}. 
+Some additional results are listed below.
 
 
 {synoptset 20 tabbed}{...}
@@ -145,8 +151,8 @@ Kitazawa, Y. (2012).
 {title:Also see}
 
 {psee}
-Manual:  {manlink XT xtlogit} 
+Manual:  {manlink R clogit} 
 
 
-{center: Last modified on 8 August 2016}
+{center: Last modified on 16 June 2019}
 

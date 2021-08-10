@@ -1,4 +1,4 @@
-version 10.0
+version 16.0
 mata:
 
 real scalar _bcsf_bisect(pointer (real scalar function) scalar objfun,

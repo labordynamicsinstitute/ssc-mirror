@@ -20,5 +20,6 @@ d
 d Author: Andres Castaneda , World Bank
 d Support: email acastanedaa@@worldbank.org
 d
-f backup.ado
+f WIN64 backup.ado
 f backup.sthlp
+h backup.ado

@@ -1,27 +1,26 @@
 d 'DOTEX': module to generate TeX log from do-file
 d
-d If the user has a file foobar.do, then s/he can type dotex foobar
-d and execute foobar.do, creating a log file foobar.tex written in
-d Stata Journal (SJ) LaTeX. The file foobar.tex (or parts of it)
-d can then be included in the stlog environment of SJ LaTeX. The
-d program was derived by hybridising my own -dolog- with the SJ's
-d logopen and logclose, which also create log files written in SJ
-d LaTeX for inclusion in the stlog environment. dotex has the
-d advantage that the same do-file can be run with dotex, dolog or
-d do, creating, respectively, a SJ LaTeX log, a plain text log or
-d no log. 
+d  If the user has a file foobar.do, then s/he can type dotex
+d foobar and execute foobar.do, creating a log file foobar.tex
+d written in Stata Journal (SJ) LaTeX. The file foobar.tex (or
+d parts of it) can then be included in the stlog environment of SJ
+d LaTeX. The program was derived by hybridising my own -dolog- with
+d the SJ's logopen and logclose, which also create log files
+d written in SJ LaTeX for inclusion in the stlog environment. dotex
+d has the advantage that the same do-file can be run with dotex,
+d dolog or do, creating, respectively, a SJ LaTeX log, a plain text
+d log or no log. 
 d
 d KW: publication
 d KW: replication
 d KW: presentation of results
 d
-d Requires: Stata version 14
+d Requires: Stata version 16
 d
+d Distribution-Date: 20190629
 d
-d Author: Roger Newson, National Heart and Lung Institute, Imperial College London
+d Author: Roger Newson, Imperial College London
 d Support: email r.newson@@imperial.ac.uk
-d
-d Distribution-Date: 20150607
 d
 f dotex.ado
 f dotex.sthlp

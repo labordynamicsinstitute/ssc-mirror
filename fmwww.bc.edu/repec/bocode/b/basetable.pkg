@@ -9,15 +9,17 @@ d KW: data management
 d
 d Requires: Stata version 13
 d
-d Distribution-Date: 20170402
+d Distribution-Date: 20210219
 d
 d Author: Niels Henrik Bruun, Aarhus University
 d Support: email nhbr@@ph.au.dk
 d
 f basetable.ado
 f basetable.sthlp
-f basetable2xl.mata
+f ../l/ltoxl_v13.mata
+f ../l/ltoxl_v14.mata
 f ../l/lbasetable.mlib
 f ../l/lbasetable.mata
 f ../l/lmatrixtools.mata
 f ../l/lmatrixtools.mlib
+f basetable_example_data.ado

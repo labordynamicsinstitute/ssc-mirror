@@ -1,0 +1,16 @@
+use dragonfly2
+circbw orienta
+circkden orienta, h(11.72) saving(Fig3a, replace)
+circkden orienta, h(11.72) circgph saving(Fig3b, replace)
+circkden orienta, h(23.45) saving(Fig3c, replace)
+circkden orienta, h(23.45) circgph saving(Fig3d, replace)
+circkden orienta, h(46.90) saving(Fig3e, replace)
+circkden orienta, h(46.90) circgph saving(Fig3f, replace)
+cirkdevm orienta, h(137.72) saving(Fig4a, replace)
+cirkdevm orienta, h(137.72) circgph saving(Fig4b, replace)
+cirkdevm orienta, h(34.43) saving(Fig4c, replace)
+cirkdevm orienta, h(34.43) circgph saving(Fig4d, replace)
+cirkdevm orienta, h(8.60) saving(Fig4e, replace)
+cirkdevm orienta, h(8.60) circgph saving(Fig4f, replace)
+graph combine Fig3a.gph Fig3c.gph Fig3e.gph Fig3b.gph Fig3d.gph Fig3f.gph, iscale(.5) title(Figura 3) saving(Fig3t, replace)
+graph combine Fig4a.gph Fig4c.gph Fig4e.gph Fig4b.gph Fig4d.gph Fig4f.gph, iscale(.5) title(Figura 4) saving(Fig4t, replace)

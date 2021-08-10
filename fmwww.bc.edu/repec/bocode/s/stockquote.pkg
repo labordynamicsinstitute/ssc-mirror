@@ -16,10 +16,10 @@ d KW: data management
 d
 d Requires: Stata version 9 
 d
-d Distribution-Date: 20081230
+d Distribution-Date: 20200228
 d
 d Author: Nikos Askitas, IZA, Bonn
-d Support: email askitas@@alephnot.de
+d Support: email nikos@@askitas.com
 d
 f stockquote.ado
-f stockquote.hlp
+f stockquote.sthlp

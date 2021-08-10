@@ -1,5 +1,5 @@
 {smcl}
-{* *! version 1.0 16 Nov 2016}{...}
+{* *! version 0.23}{...}
 {vieweralsosee "" "--"}{...}
 {vieweralsosee "Install command2" "ssc install command2"}{...}
 {vieweralsosee "Help command2 (if installed)" "help command2"}{...}
@@ -25,8 +25,10 @@ calculated values in matrices as well as showing them in the log
 {syntab:Main}
 {synopt:{opt l:abel}} Use values labels as row and column names when possible.{p_end}
 {synopt:{opt m:issing}} treat missing values like other values.{p_end}
-{synopt:{opt e:xact}(integer)} Default is 0, ie not set. If set and two variables 
-are given as arguments Fisher's exact test is reported.{p_end}
+{synopt:{opt e:xact}(integer)} The non-negative integer # is a multiplier on 
+the amount of memory that the command is permitted to consume.
+Default is 0, ie not set. If set as a positive integer (start with 1) and two 
+variables are given as arguments Fisher's exact test is reported.{p_end}
 {synopt:{opt v:erbose}} show the Stata commands and output behind crossmat. 
 For validation purposes.{p_end}
 {synoptline}
@@ -109,10 +111,8 @@ seen by:{p_end}
 
 {phang}{bf:Author:}{break}
  	Niels Henrik Bruun, {break}
-	Section for General Practice, {break}
-	Dept. Of Public Health, {break}
-	Aarhus University
+	Aalborg University Hospital
 {p_end}
 {phang}{bf:Support:} {break}
-	{browse "mailto:nhbr@ph.au.dk":nhbr@ph.au.dk}
+	{browse "mailto:niels.henrik.bruun@gmail.com":niels.henrik.bruun@gmail.com}
 {p_end}

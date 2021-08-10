@@ -79,6 +79,7 @@ program define roctabi, rclass
 	quietly {
 
 		expand pop
+		drop if !pop 						// drops zero values
 		recode row (1=0) (2=1)
 		
 		if "`rowlabel'" != "" {

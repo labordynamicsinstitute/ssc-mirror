@@ -1,7 +1,7 @@
 {smcl}
-{* 06Feb2010}{* 1Oct2010}{...}
+{* 06Feb2010}{* 1Oct2010}{* 22Dec2018}{* 22Dec2020}{...}
 {hline}
-help for {hi:ftree}{right: version 2.0}
+help for {hi:ftree}{right: version 3.0}
 {right:{stata ssc install ftree, replace: get the newest version}}
 {hline}
 
@@ -27,7 +27,7 @@ help for {hi:ftree}{right: version 2.0}
 {synoptline}
 {p2coldent :* {cmdab:s:ave(}{it:filename}{cmd:)}}name of the txt file {p_end}
 {p2coldent :* {cmdab:p:ath(}{it:string1}{cmd:)}}directory where the txt file saved to{p_end}
-{p2coldent :* {cmdab:d:ir(}{it:string2}{cmd:)}}can be specify as {cmd:dir} or {cmd:tree}{p_end}
+{p2coldent :* {cmdab:d:ir(}{it:string2}{cmd:)}}can be specify as {it:d(dir)} {it:d(tree)} or {it:d(catalogue)} {p_end}
 {synoptline}
 {p2colreset}{...}
 
@@ -51,13 +51,23 @@ help for {hi:ftree}{right: version 2.0}
 
 {p 4 8 2}. {stata "ftree, s(mydir) p(d:\) d(tree)"}{p_end}
 
+{p 4 8 2}. {stata "ftree, s(mydir) p(d:\) d(catalogue)"}{p_end}
+
+
+{title:Acknowledgments}
+
+
+{pstd}I wish to thank Lian Yujun (Lingnan College, Sun Yat-Sen University) for his good advise {p_end}
+{pstd}to add a new option of {it:d(catalogue)}.
+{break}
+
 
 {title:For problems and suggestions}
 
 
 {pstd}
-{cmd:Author: Liu wei}, The School of Sociology and Population Studies, Renmin University of China. {cmd:Address: }Zhongguancun Street No. 59, Haidian District, Beijing, China. {cmd:ZIP Code:} 100872. 
-{cmd:E-mail:} {browse "mailto:liuv@ruc.edu.cn":liuv@ruc.edu.cn} {break}
+{cmd:Author: Liu wei}, Yunnan University of Finance and Economics. {cmd:Address: }Longquan Road 237, Wuhua District, Kunming, Yunnan, P.R.China. {cmd:ZIP Code:} 650221. 
+{cmd:E-mail:} {browse "mailto:liuwei@ynufe.edu.cn":liuwei@ynufe.edu.cn} {break}
 
 
 {title:Also see}

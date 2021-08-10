@@ -45,16 +45,17 @@ end
 
 capture program drop example02
 program example02
-    wbopendata, indicator(si.pov.2day ) clear long
-    drop if  si_pov_2day == .
+    wbopendata, indicator(si.pov.dday ) clear long
+    drop if  si_pov_dday == .
     sort  countryname year
-    bysort  countryname : gen diff_pov = (si_pov_2day-si_pov_2day[_n-1])/(year-year[_n-1])
-    encode regioncode, gen(reg)
+    bysort  countryname : gen diff_pov = (si_pov_dday-si_pov_dday[_n-1])/(year-year[_n-1])
+    encode region, gen(reg)
     encode countryname, gen(reg2)
-    keep if region == "Aggregates"
-    alorenz diff_pov, gp points(20) fullview  xdecrease markvar(reg2)                                           ///
+    keep if regionname == "Aggregates"
+    alorenz diff_pov, gp points(100) fullview  xdecrease markvar(reg2)                                           ///
         ytitle("Change in Poverty (p.p.)") xtitle("Proportion of regional episodes of poverty reduction (%)")   ///
-        legend(off) title("Poverty Reduction")                                                                  ///
+        legend(off) title("Poverty Reduction")     ///
+        mlabangle(45) ///                                                 ///
         legend(off) note("Source: World Development Indicators using Azevedo, J.P. (2011) wbopendata: Stata module to " "access World Bank databases, Statistical Software Components S457234 Boston College Department of Economics.", size(*.7))
 end
 
@@ -64,16 +65,16 @@ end
 
 capture program drop example03
 program example03
-    wbopendata, indicator(si.pov.2day ) clear long
-    drop if  si_pov_2day == .
+    wbopendata, indicator(si.pov.dday ) clear long
+    drop if  si_pov_dday == .
     sort  countryname year
-    keep if region == "Aggregates"
-    bysort  countryname : gen diff_pov = (si_pov_2day-si_pov_2day[_n-1])/(year-year[_n-1])
-    gen baseline = si_pov_2day if year == 1990
+    keep if regionname == "Aggregates"
+    bysort  countryname : gen diff_pov = (si_pov_dday-si_pov_dday[_n-1])/(year-year[_n-1])
+    gen baseline = si_pov_dday if year == 1990
     sort countryname baseline
     bysort countryname : replace baseline = baseline[1] if baseline == .
     gen mdg1 = baseline/2
-    gen present = si_pov_2day if year == 2008
+    gen present = si_pov_dday if year == 2008
     sort countryname present
     bysort countryname : replace present = present[1] if present == .
     gen target = ((baseline-mdg1)/(2008-1990))*(2015-1990)
@@ -88,7 +89,7 @@ program example03
         (scatter present  target  if year == 2008, mlabel( countrycode))    ///
         (line  angle45y angel45x ),                                         ///
             legend(off) xtitle("Target for 2008")  ytitle(Present)          ///
-            title("MDG 1b - 2 USD")                                         ///
+            title("MDG 1b - 1.9 USD")                                         ///
             note("Source: World Development Indicators (latest available year: 2008) using Azevedo, J.P. (2011) wbopendata: Stata module to " "access World Bank databases, Statistical Software Components S457234 Boston College Department of Economics.", size(*.7))
 end
 
@@ -102,17 +103,20 @@ end
 capture program drop example04
 program example04
 
-wbopendata, indicator(si.pov.dday; ny.gdp.pcap.pp.kd) clear long latest
+	wbopendata, indicator(si.pov.dday; ny.gdp.pcap.pp.kd) clear long latest
 
-local time "$S_FNDATE"
+	local time "$S_FNDATE"
 
-graph twoway ///
-    (scatter si_pov_dday ny_gdp_pcap_pp_kd, msize(*.6)) ///
-    (scatter si_pov_dday ny_gdp_pcap_pp_kd if region == "Aggregates", msize(*.8) mlabel(countryname)  mlabsize(*.8)  mlabangle(25)) ///
-    (lowess si_pov_dday ny_gdp_pcap_pp_kd) , ///
-        xtitle("`r(varlabel2)'") ///
-        ytitle("`r(varlabel1)'") ///
-        legend(off) ///
-        note("Source: World Development Indicators (latest available year as off `time') using Azevedo, J.P. (2011) wbopendata: Stata module to " "access World Bank databases, Statistical Software Components S457234 Boston College Department of Economics.", size(*.7))
-
+	linewrap , longstring("`r(varlabel1)'") maxlength(52) name(ylabel)
+	linewrap , longstring("`r(varlabel2)'") maxlength(52) name(xlabel)
+	
+	graph twoway ///
+		(scatter si_pov_dday ny_gdp_pcap_pp_kd, msize(*.3)) ///
+		(scatter si_pov_dday ny_gdp_pcap_pp_kd if regionname == "Aggregates", msize(*.8) mlabel(countryname)  mlabsize(*.8)  mlabangle(25)) ///
+		(lowess si_pov_dday ny_gdp_pcap_pp_kd) , ///
+			legend(off) ///
+			xtitle("`r(xlabel1)'" "`r(xlabel2)'" "`r(xlabel3)'") ///
+			ytitle("`r(ylabel1)'" "`r(ylabel2)'" "`r(ylabel3)'") ///		
+			note("Source: World Development Indicators (latest available year as off `time') using Azevedo, J.P. (2011) wbopendata: Stata" "module to access World Bank databases, Statistical Software Components S457234 Boston College Department of Economics.", size(*.7)) 
+			
 end

@@ -1,5 +1,5 @@
 {smcl}
-{* *! version 1.0.0, Alexander Staudt, 18apr2016}{...}
+{* *! version 1.0.1, Alexander Staudt, 29dec2020}{...}
 {* findalias asfradohelp}{...}
 {* vieweralsosee "" "--"}{...}
 {* vieweralsosee "[R] help" "help help"}{...}
@@ -52,7 +52,7 @@ Furthermore, {cmd:firthfit} computes the model AIC and BIC, Cox-Snell/maximum li
 {marker author}{...}
 {title:Author}
 
-{phang}Alexander Staudt, Universitaet Mannheim, astaudt@mail.uni-mannheim.de{p_end}
+{phang}Alexander Staudt, staudtlex@live.de{p_end}
 
 {marker alsosee}{...}
 {title:Also see}

@@ -14,7 +14,7 @@
 
 {title:Installing mvmeta}
 
-{pstd}{stata "net from http://www.mrc-bsu.cam.ac.uk/IW_Stata/"}
+{pstd}{stata "net from http://www.homepages.ucl.ac.uk/~rmjwiww/stata/"}
 
 {p}then click on meta then {cmd:mvmeta}. Also install {cmd:bubble}.
 

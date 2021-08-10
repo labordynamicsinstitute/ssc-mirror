@@ -1,19 +1,29 @@
-*! version 1.1  01Dec2012
+*! version 1.5  08Jan2019
 *! Joao Pedro Azevedo, Minh Cong Nguyen, Viviane Sanfelice
+*  version 1.5  06Aug2018
+*  Add: report equation check by years
+*  version 1.4  06Aug2018
+*  Add: middle distribution (from bottom xx% to before top yy%)
+*  version 1.3  24Oct2013
+*  Add: top xx% of the distribution (mean and ratio to all sample), add growth method
+*  version 1.2  16May2013
+*  Add: bottom xx% of the distribution (mean and ratio to all sample)
+*  version 1.1  01Dec2012
+*  Joao Pedro Azevedo, Minh Cong Nguyen, Viviane Sanfelice
 *  version 1.0  15Mar2012
 *  Joao Pedro Azevedo, Minh Cong Nguyen, Viviane Sanfelice
 
-
 cap program drop adecomp
 program define adecomp, rclass sortpreserve byable(recall)
-	version 10.0, missing
+	version 12, missing
 	if c(more)=="on" set more off
 	local version : di "version " string(_caller()) ", missing:"
 	syntax varlist(numeric) [if] [in] [aweight fweight], by(varname numeric) EQuation(string)  	    ///
 			[varpl(varname numeric) INdicator(string) mpl(numlist sort) gic(numlist max=1)   		///
 			Rank(string) ID(varname numeric) PERCentile(numlist max=1)                              ///
 			GRoup(varname numeric) oneway RESidual std strata(varname min=1 max=10) 				///
-			svy bootstrap(numlist max=1)]                            		
+			Bottom(numlist max=1 integer <=99 integer>=1) Top(numlist max=1 integer <=99 integer>=1) ///
+			MIDdle(numlist max=2 integer <=99 integer>=1 sort) MRatio Method(string) svy bootstrap(numlist max=1) Stats(string)]                            		
 	
 	***	Error messages
 	if ("`id'"!="")&(("`rank'"!="")|("`percentile'"!="")|("`strata'"!="")) {
@@ -36,6 +46,19 @@ program define adecomp, rclass sortpreserve byable(recall)
 		di in red "The VARPL option must be used for fgt0, fgt1 and fgt2 - INdicator option"
 		exit 198
 	}
+	if ("`method'"~="") {		
+		if ("`method'"!="difference") & ("`method'"!="growth") {	
+			di in red "Only difference or growth options are possible"
+			exit 198
+		}
+	}
+	else {
+		local method difference	
+	}
+	if ("`mratio'"!="")&("`bottom'"=="") {
+		di in red "The mratio option must be used together with the bottom() option"
+		exit 198
+	}
 	if ("`indicator'"!="") {
 		tempname nofgt
 		local `nofgt' =  regexm("`indicator'","fgt")
@@ -49,15 +72,28 @@ program define adecomp, rclass sortpreserve byable(recall)
 		}
 		if (``nofgt''==0) {
 			tempname pline
-			gen `pline' = 10
+			qui gen `pline' = 10
 			local varpl "`pline'"
 		}
 	}
+	*** Add indicator for Top/Bottom x percentiles and indicators' label
+	label define index 0 "FGT(0)" 1 "FGT(1)" 2 "FGT(2)" 3 "Gini" 4 "Theil" 5 "Mean", add modify
+	if ("`bottom'"!="") & ("`top'"!="") {
+		if ("`mratio'"!="") local indicator "`indicator' bottom top ratio"
+		if ("`mratio'"=="") local indicator "`indicator' bottom top"
+	}
+	if ("`bottom'"!="") & ("`top'"=="") {
+		if ("`mratio'"!="") local indicator "`indicator' bottom ratio"
+		if ("`mratio'"=="") local indicator "`indicator' bottom"
+	}
+	if ("`bottom'"=="") & ("`top'"!="") local indicator "`indicator' top"
+	if ("`middle'"!="") local indicator "`indicator' middle"
+	
 	tempname ind
 	local `ind' "`indicator'"
 	if ("`indicator'"=="")&("`gic'"!="") {
 		tempname pline
-		gen `pline' = 10
+		qui gen `pline' = 10
 		local varpl "`pline'"
 		local indicator "fgt0"
 	}
@@ -95,6 +131,7 @@ program define adecomp, rclass sortpreserve byable(recall)
 	local ct = r(N)
 	local c1 = `matc'[1,1]
 	local c2 = `matc'[2,1]
+	local yrdif = abs(`c1'-`c2')	
 	if r(N)==0 error 2000	
 	if (`r(r)'~=2)|(_rc==134) {
 		di in red "Only 2 groups allow"
@@ -168,7 +205,8 @@ program define adecomp, rclass sortpreserve byable(recall)
 	di in yellow "`lhs' = `eq'"
 	cap drop equation
 	qui gen double equation = `eq'
-	sum `lhs' equation `weight' if `touse'
+	tabstat `lhs' `weight'  if `touse' , by(`by') stat(N mean sd min max) notota
+	tabstat equation `weight'  if `touse' , by(`by') stat(N mean sd min max) nototal
 	sum `lhs' if `touse', meanonly
 	local aux1 = round(r(mean),2)
 	local aux3 = r(N)
@@ -179,9 +217,7 @@ program define adecomp, rclass sortpreserve byable(recall)
 		di in red _n "Warning: The computed equation (`equation') differs from the welfare measure, `lhs'."
 		di as txt    "(The calculation is based on the equation and therefore, on the observations of the component variables)"
 	}
-	
-
-	
+		
 	*** Keep useful variables
 	if ("`rank'"!="" & "`rank'"!="components") local aux_rank "`rank'"
 	qui keep `lhs' `varlist' `wvar' `by' `varpl' `grvar' `touse' `aleat' equation `aux_rank' `strata'
@@ -205,23 +241,22 @@ program define adecomp, rclass sortpreserve byable(recall)
 	local rankvar "equation"
 	if ("`rank'"~="components" & "`rank'"~="") local rankvar "`rank'"	
 	foreach var of varlist `varlist' {	
-		
+	
 		*** Bug inequality indicators fixing
 		cap sum `var' if `by'==`c1', meanonly
 		if `r(mean)' == 0 & `r(max)' == 0 {
-			replace `var' = 0.00001 if `by'==`c1'
+			qui replace `var' = 0.00001 if `by'==`c1'
 		}
 		cap sum `var' if `by'==`c2', meanonly
 		if `r(mean)' == 0 & `r(max)' == 0 {
-			replace `var' = 0.00001 if `by'==`c2'
-		}
-		
+			qui replace `var' = 0.00001 if `by'==`c2'
+		}		
 	
 		*** Create temporary variables
 		tempvar `var'_1
 		cap gen double ``var'_1'=.
 
-		* ** Change the distributions	
+		*** Change the distributions	
 		if ("`rank'"=="components") {
 			if ("`percentile'"!="")  mata: _fchangeadd("`rankvar'", "`var'", "`by'", "`wvar'", "`touse'", "``var'_1'")
 			else qui rescale, rvar(`var') svar(`var') byv(`by') strvar(`strata') ovar(``var'_1') seed(`aleat')
@@ -233,20 +268,34 @@ program define adecomp, rclass sortpreserve byable(recall)
 	}
 	
 	*** Loops over all paths - Calculate income combination based on the given equation	
+	local n=0
 	foreach j of local str2 {				
 		local eq "`equation'"	
 		forvalues i=`n_comp'(-1)1 {	
 			if(substr("`j'",`i',1)=="1") local eq = subinstr("`eq'", "c`i'", "```i''_1'",.)			
 			else                         local eq = subinstr("`eq'", "c`i'", "``i''",.)			
-		}	
-		cap gen double i`j' = `eq'
+		}			
+		cap gen double i`n' = `eq'
 		if (_rc>0) {			
-			noi dis in red "The variable i`j' is already available, rename that variable."
+			noi dis in red "The variable i`n' is already available, rename that variable."
 			exit 110	
-		}
-		local inclist "`inclist' i`j'"
+		}		
+		local inclist "`inclist' i`n'"
+		local ++n
 	}
 	
+	** Statistics
+	if ("`stats'"~="") {
+		** for indicators
+		mata: _fstats("`lhs'", "`by'", "`wvar'", "`varpl'", "`grvar'", "`touse'")
+		** for factors
+		qui tabstat `lhs' `varlist' `weight' if `touse', by(`by') stat(`stats') save nototal
+		mat mallx  = vec(r(Stat1)), vec(r(Stat2))
+		mat colnames mallx = `r(name1)' `r(name2)'
+		return matrix statsvar = mallx		
+	}
+	
+	** Decomposition
 	mata: _fmethod("`inclist'", "`by'", "`wvar'", "`varpl'", "`grvar'", "`touse'")
 	
 	*** Display results
@@ -257,21 +306,52 @@ program define adecomp, rclass sortpreserve byable(recall)
 	forvalues i = 1(1)`n_comp'{
 		label define beffect `i' "``i''", add
 	}			     	
-	label define beffect `=`n_comp'+1' "total change", add
+	//label define beffect `=`n_comp'+1' "total change", add
+	label define beffect `=`n_comp'+1' "total `method'", add
 	label define beffect `=`n_comp'+2' "residual", add	
-	label define index 0 "FGT(0)" 1 "FGT(1)" 2 "FGT(2)" 3 "Gini" 4 "Theil"
+	
+	*** Add indicator for Top/Bottom x percentiles and indicators' label
+	label define index 0 "FGT(0)" 1 "FGT(1)" 2 "FGT(2)" 3 "Gini" 4 "Theil" 5 "Mean", add modify
+	if ("`bottom'"!="") & ("`top'"!="") {
+		if ("`mratio'"!="") label define index 6 "Bottom(`bottom')" 7 "Top(`top')" 8 "Bottom(`bottom')/Mean", add modify
+		if ("`mratio'"=="") label define index 6 "Bottom(`bottom')" 7 "Top(`top')", add modify
+	}
+	if ("`bottom'"!="") & ("`top'"=="") {
+		if ("`mratio'"!="") label define index 6 "Bottom(`bottom')" 8 "Bottom(`bottom')/Mean", add modify
+		if ("`mratio'"=="") label define index 6 "Bottom(`bottom')", add modify
+	}
+	if ("`bottom'"=="") & ("`top'"!="") label define index 7 "Top(`top')", add modify
+	if ("`middle'"~="") label define index 9 "Middle(`middle')", add modify
+	
 	di
-	if ("`std'"=="") di in txt _new "Shapley decomposition"
-	else di in txt _new "Shapley decomposition - standard errors are below their estimates"
+	if ("`stats'"~="") {
+		di in txt _new "Summary statistics:"
+		mat colnames rstats = bind beff bsta		
+		svmat double rstats, n(col)				
+		label val bind index
+		label var bind "Welfare Indicator"
+		if ("`method'"=="growth") local mtd annualized growth
+		if ("`method'"=="difference") local mtd difference
+		la def beff 1 "`c1'" 2 "`c2'" 3 "`mtd'"
+		la val beff beff	
+		la var beff "Year"
+		label var bsta "Statistics"
+		tabdisp beff bind if bind!=., cell(bsta) format(%12.3fc)
+		return matrix stats = rstats
+	}
+	
+	if ("`std'"=="") di in txt _new "Shapley decomposition:"
+	else di in txt _new "Shapley decomposition - standard errors are below their estimates:"
 	di as txt "Number of obs      = " as res %7.0f `ct'
 	local factorial = round(exp(lnfactorial(`n_comp')),1)
   	di as txt "Number of paths    =   `factorial'"
 	di as txt "Number of factors  =   `n_comp'"
+	di as txt "Method             =   `method'"
 	
 	return scalar N = `ct'
 	return scalar path = `factorial'
 	return scalar component = `n_comp'
-		
+	if ("`method'"=="growth")	local pct (annualized %)
 	if ("``ind''"~="") {				
 		foreach lv of local lvl {
 			local lvlgr `"`lvlgr' _rate`lv'"'
@@ -283,12 +363,12 @@ program define adecomp, rclass sortpreserve byable(recall)
 		if ("`std'"~="") svmat double rindstd, n(col)
 		label val beffect beffect	
 		label val bindex index
-		label var bindex "Poverty Indicator"
+		label var bindex "Welfare Indicator `pct'"
 		label var beffect "Effect"		
 		foreach lv of local lvl {
 			local grname : label (`grvar') `lv'
-			if (`:word count `lvl''==1) noi di as txt _new "Shapley decomposition - Poverty Indicator"
-			else noi di as txt _new "Shapley decomposition - Poverty Indicator for group: `grname'"
+			if (`:word count `lvl''==1) noi di as txt _new "Shapley decomposition - Welfare Indicator"
+			else noi di as txt _new "Shapley decomposition - Welfare Indicator for group: `grname'"
 			if ("`std'"=="") tabdisp beffect bindex if bindex!=., cell(_rate`lv') format(%12.3fc)
 			else             tabdisp beffect bindex if bindex!=., cell(_rate`lv' _std`lv') format(%12.3fc)
 		}
@@ -336,7 +416,7 @@ program define adecomp, rclass sortpreserve byable(recall)
 				if ("`std'"=="") local lvlgrmpl0 `"`lvlgrmpl0' _mpl`ln'm_`lv'"'
 				//else             local lvlgrmpl0 `"`lvlgrmpl0' _mpl`ln'm_`lv' _std`ln'm_`lv'"'
 				else local lvlgrmpl0 `"`lvlgrmpl0' _mpl`ln'm_`lv'"'
-				tabdisp b2effect b2index if b2index<=2., cell(`lvlgrmpl0') format(%12.3fc)
+				tabdisp b2effect b2index if b2index<=2, cell(`lvlgrmpl0') format(%12.3fc)
 			}
 		}
 		if ("`std'"~="") return matrix sd = rmplstd
@@ -421,8 +501,7 @@ program define rescale, nclass
 	local univ1 = r(min)
 	local univ2 = r(max)
 	tempvar rank rank_c univ
-	
-	
+		
 	sort `by' `strata' `rvar' `aleat', stable
 	bysort `by' `strata': gen `rank' = _n
 	tempname r1 r2
@@ -436,8 +515,7 @@ program define rescale, nclass
 	gen double `rank_c' = round((``r2''/``r1'')* `rank',1) if `by'==`univ1'
 	replace `rank_c' = round((``r1''/``r2'')* `rank',1) if `by'==`univ2'	
 	replace `rank_c' = 1 if `rank_c'==0
-	save `temp1'.dta, replace
-	
+	save `temp1', replace	
 	
 	* organizing data to switch between two periods
 	gen `univ' = `univ2' if `by'==`univ1'
@@ -447,17 +525,16 @@ program define rescale, nclass
 	tempvar `var'_1
 	rename `svar' ``var'_1'	
 	sort `univ' `strata' `rank_c', stable
-	save `temp2'.dta, replace
+	save `temp2', replace
 					
-	use `temp1'.dta, replace			
+	use `temp1', replace			
 	gen `univ'  = `by' 	 		
 	sort `univ' `strata' `rank_c', stable
-	merge `univ' `strata' `rank_c' using `temp2'.dta, nokeep
+	merge `univ' `strata' `rank_c' using `temp2', nokeep
 	sum _merge if _merge==1, meanonly
 	if `r(N)'!=0  di in red "Warning: `r(N)' observations were not matched. Please, revise the STRATA or ID option"
 	drop _merge `univ'
-	
-	
+		
 	* keep original mean
 	tempname mean1 mean2
 	cap sum `svar'  if `by'==`univ2', meanonly
@@ -487,7 +564,7 @@ program bs_decompso, eclass
 end
 
 // -------------------------------- Mata code ------------------------
-version 10
+version 12
 mata:
 mata clear
 mata drop *()
@@ -495,41 +572,103 @@ mata set matalnum off
 mata set mataoptimize on
 mata set matafavor speed
 
+void _fstats(string scalar inclst, string scalar byvar, string scalar w, string scalar pline0, string scalar groups, string scalar tousename) {
+	inclist = st_data(.,tokens(inclst), tousename)
+	by      = st_data(.,tokens(byvar), tousename)	
+	wt      = st_data(.,tokens(w), tousename)
+	pline   = st_data(.,tokens(pline0), tousename)
+	group   = st_data(.,tokens(groups), tousename)
+	method  = st_local("method")
+	indlist = tokens(st_local("indicator"))
+	minmax  = colminmax(by)	
+	y0 = J(0,1,.)
+	for (i=1; i<=cols(indlist); i++) {
+		if (indlist[i]=="fgt0")  y0 = y0 \ 0
+		if (indlist[i]=="fgt1")  y0 = y0 \ 1
+		if (indlist[i]=="fgt2")  y0 = y0 \ 2
+		if (indlist[i]=="gini")  y0 = y0 \ 3
+		if (indlist[i]=="theil") y0 = y0 \ 4
+		if (indlist[i]=="mean")  y0 = y0 \ 5
+		if (indlist[i]=="bottom") y0 = y0 \ 6
+		if (indlist[i]=="top")   y0 = y0 \ 7
+		if (indlist[i]=="ratio")  y0 = y0 \ 8
+		if (indlist[i]=="middle")  y0 = y0 \ 9
+	}
+
+	indt0 = _fcompind(_fsubmatrix((inclist, wt, pline, group, by), 5, minmax[1,1]))	
+	indt1 = _fcompind(_fsubmatrix((inclist, wt, pline, group, by), 5, minmax[2,1]))	
+	if (method=="difference") {
+		met = indt1 :- indt0
+	}
+	if (method=="growth") {
+		met = 100:*(ln(indt1:/indt0):/(minmax[2,1]-minmax[1,1]))
+	}
+	//stats = (minmax[1,1] \ indt0), (minmax[2,1] \ indt1), (. \ met)
+	stats = (y0, J(rows(y0),1,1), indt0) \ (y0, J(rows(y0),1,2), indt1) \ (y0, J(rows(y0),1,3), met)
+	st_matrix("rstats", stats)
+}
+
 void _fmethod(string scalar inclst, string scalar byvar, string scalar w, string scalar pline0, string scalar groups, string scalar tousename) {
 	inclist = st_data(.,tokens(inclst), tousename)
 	by      = st_data(.,tokens(byvar), tousename)	
 	wt      = st_data(.,tokens(w), tousename)
 	pline   = st_data(.,tokens(pline0), tousename)
 	group   = st_data(.,tokens(groups), tousename)
+	method  = st_local("method")
+	yrdiff  = strtoreal(st_local("yrdif"))
 	st_rclear()	
 	est = _fdecomp(inclist, by, wt, pline, group)
 	if (st_local("oneway")=="") {
 		est2 = _fdecomp(inclist, -1:*by, wt, pline, group)
 		if (st_local("indicator")~="") {
-			m1 = (*est[1,1])[.,1::2], 0.5:* (*est[1,1])[.,3::cols((*est[1,1]))] :- 0.5:* (*est2[1,1])[.,3::cols((*est2[1,1]))]
+			if (method=="difference") m1 = (*est[1,1])[.,1::2], 0.5:* (*est[1,1])[.,3::cols((*est[1,1]))] :- 0.5:* (*est2[1,1])[.,3::cols((*est2[1,1]))]
+			if (method=="growth") m1 = (*est[1,1])[.,1::2], (100/yrdiff)*(0.5:* (*est[1,1])[.,3::cols((*est[1,1]))] :- 0.5:* (*est2[1,1])[.,3::cols((*est2[1,1]))])
 			if (st_local("std")~="") s1 = (*est[2,1])[.,1::2], 0.5:* (*est[2,1])[.,3::cols((*est[2,1]))] :- 0.5:* (*est2[2,1])[.,3::cols((*est2[2,1]))]
 		}
 		if (st_local("mpl")~="") {
-			m2 = (*est[1,2])[.,1::2], 0.5:* (*est[1,2])[.,3::cols((*est[1,2]))] :- 0.5:* (*est2[1,2])[.,3::cols((*est2[1,2]))]
+			if (method=="difference") m2 = (*est[1,2])[.,1::2], 0.5:* (*est[1,2])[.,3::cols((*est[1,2]))] :- 0.5:* (*est2[1,2])[.,3::cols((*est2[1,2]))]
+			if (method=="growth") m2 = (*est[1,2])[.,1::2], (100/yrdiff)*(0.5:* (*est[1,2])[.,3::cols((*est[1,2]))] :- 0.5:* (*est2[1,2])[.,3::cols((*est2[1,2]))])
 			if (st_local("std")~="") s2 = (*est[2,2])[.,1::2], 0.5:* (*est[2,2])[.,3::cols((*est[2,2]))] :- 0.5:* (*est2[2,2])[.,3::cols((*est2[2,2]))]
 		}
 		if (st_local("gic")~="") {
-			m3 = (*est[1,3])[.,1::2], 0.5:* (*est[1,3])[.,3::cols((*est[1,3]))] :- 0.5:* (*est2[1,3])[.,3::cols((*est2[1,3]))]
+			if (method=="difference") m3 = (*est[1,3])[.,1::2], 0.5:* (*est[1,3])[.,3::cols((*est[1,3]))] :- 0.5:* (*est2[1,3])[.,3::cols((*est2[1,3]))]
+			if (method=="growth") m3 = (*est[1,3])[.,1::2], (100/yrdiff)*(0.5:* (*est[1,3])[.,3::cols((*est[1,3]))] :- 0.5:* (*est2[1,3])[.,3::cols((*est2[1,3]))])
 			if (st_local("std")~="") s3 = (*est[2,3])[.,1::2], 0.5:* (*est[2,3])[.,3::cols((*est[2,3]))] :- 0.5:* (*est2[2,3])[.,3::cols((*est2[2,3]))]
 		}
 	}
 	else {
 		if (st_local("indicator")~="") {
-			m1 = *est[1,1]
-			if (st_local("std")~="") s1 = *est[2,1]
+			if (method=="difference") {
+				m1 = *est[1,1]
+				if (st_local("std")~="") s1 = *est[2,1]
+			}
+			if (method=="growth") {
+				m1 = *est[1,1]
+				m1 = m1[.,1::2], (100/yrdiff)*m1[.,3::cols(m1)]
+				if (st_local("std")~="") s1 = *est[2,1]
+			}
 		}
 		if (st_local("mpl")~="") {
-			m2 = *est[1,2]
-			if (st_local("std")~="") s2 = *est[2,2]
+			if (method=="difference") {
+				m2 = *est[1,2]
+				if (st_local("std")~="") s2 = *est[2,2]
+			}
+			if (method=="growth") {
+				m2 = ln(*est[1,2])
+				m2 = m2[.,1::2], (100/yrdiff)*m2[.,3::cols(m2)]
+				if (st_local("std")~="") s2 = *est[2,2]
+			}
 		}
 		if (st_local("gic")~="") {
-			m3 = *est[1,3]
-			if (st_local("std")~="") s3 = *est[2,3]
+			if (method=="difference") {
+				m3 = *est[1,3]
+				if (st_local("std")~="") s3 = *est[2,3]
+			}
+			if (method=="growth") {
+				m3 = ln(*est[1,3])
+				m3 = m3[.,1::2], (100/yrdiff)*m3[.,3::cols(m3)]
+				if (st_local("std")~="") s3 = *est[2,3]
+			}
 		}
 	}
 	st_matrix("rindrate", m1)
@@ -548,14 +687,14 @@ function _fdecomp(real matrix inclist, real matrix by, real matrix wt, real matr
 	indlist = tokens(st_local("indicator"))
 	mpl     = tokens(st_local("mpl"))
 	bin     = strtoreal(st_local("gic"))
-	paths   = tokens(st_local("str2"))
-	steps   = _fsteps(tokens(st_local("str2")))
+	method  = st_local("method")
+	steps   = _fsteps(_fpaths(ncomp))
 	minmax  = colminmax(by)	
 	gr0     = uniqrows(group)
 	incstep = J(rows(steps),1,NULL)
 		
 	fest = (st_local("std")~="" ? J(2,3,NULL) : J(1,3,NULL)) 			
-	for (i=1; i<=rows(steps); i++) { // computer indicator for each path	
+	for (i=1; i<=rows(steps); i++) { // compute indicator for each path	
 		path = tokens(*steps[i,1])
 		pos = tokens(*steps[i,2])
 		incpos = J(1,cols(pos),NULL)
@@ -565,7 +704,7 @@ function _fdecomp(real matrix inclist, real matrix by, real matrix wt, real matr
 			ind0 = J(1,3,NULL)						
 			if (st_local("indicator")~="") ind0[1] = &(_fcompind(X))           // a==1 is indicator list
 			if (st_local("mpl")~="")       ind0[2] = &(_fcompindcmpl(X))       // a==2 is MPL list		
-			if (st_local("gic")~="")      ind0[3] = &(_fcompincbins(X))	   // a==3 is income bins
+			if (st_local("gic")~="")       ind0[3] = &(_fcompincbins(X))	   // a==3 is income bins
 			incpos[j] = pointer_clone(ind0)
 		} // for j
 		incstep[i] = pointer_clone(incpos)
@@ -579,6 +718,11 @@ function _fdecomp(real matrix inclist, real matrix by, real matrix wt, real matr
 			if (indlist[i]=="fgt2")  y0 = y0 \ 2
 			if (indlist[i]=="gini")  y0 = y0 \ 3
 			if (indlist[i]=="theil") y0 = y0 \ 4
+			if (indlist[i]=="mean")  y0 = y0 \ 5
+			if (indlist[i]=="bottom") y0 = y0 \ 6
+			if (indlist[i]=="top")   y0 = y0 \ 7
+			if (indlist[i]=="ratio")  y0 = y0 \ 8
+			if (indlist[i]=="middle")  y0 = y0 \ 9
 		}
 		beffind = J(0,3+rows(gr0),.)
 		beffmpl = J(0,3+rows(gr0)*(cols(mpl)+1),.)
@@ -596,15 +740,18 @@ function _fdecomp(real matrix inclist, real matrix by, real matrix wt, real matr
 				out = _fcheck(path[j], path_a[a])
 				if (out[1,1]==1) {
 					if (st_local("indicator")~="") { // structure: beffect = bindex, bstep, beffect, brate*group
-						diff = *(*(*incstep[i])[j])[1] :- *(*(*incstep[i-1])[a])[1]						
+						if (method=="difference") diff = *(*(*incstep[i])[j])[1] :- *(*(*incstep[i-1])[a])[1]
+						if (method=="growth")      diff = ln(*(*(*incstep[i])[j])[1] :/ *(*(*incstep[i-1])[a])[1])												
 						beffind = beffind \ (y0, J(rows(diff),1,i-1), J(rows(diff),1,out[1,2]), diff)
 					}
 					if (st_local("mpl")~="") { // structure: beffect = bindex, bstep, beffect, brate*mpl*group
-						diff = *(*(*incstep[i])[j])[2] :- *(*(*incstep[i-1])[a])[2]													
+						if (method=="difference") diff = *(*(*incstep[i])[j])[2] :- *(*(*incstep[i-1])[a])[2]
+						if (method=="growth") diff = ln(*(*(*incstep[i])[j])[2] :/ *(*(*incstep[i-1])[a])[2])						
 						beffmpl = beffmpl \ (y0, J(rows(diff),1,i-1), J(rows(diff),1,out[1,2]), diff)
 					}
 					if (st_local("gic")~="") {	// structure: beffect = bindex, bstep, beffect, brate*group		 		
-						diff = *(*(*incstep[i])[j])[3] :- *(*(*incstep[i-1])[a])[3]											
+						if (method=="difference") diff = *(*(*incstep[i])[j])[3] :- *(*(*incstep[i-1])[a])[3]
+						if (method=="growth") diff = ln(*(*(*incstep[i])[j])[3] :/ *(*(*incstep[i-1])[a])[3])
 						beffect = beffect \ (index, J(rows(diff),1,i-1), J(rows(diff),1,out[1,2]), diff)
 					}
 				} // if
@@ -622,11 +769,18 @@ function _fdecomp(real matrix inclist, real matrix by, real matrix wt, real matr
 		beffind_t1 = _fcompind(X1)
 		beffind_t2 = _fcompind(X2)
 		beffind_t3 = _fcompind(X3)	
-		beffind = beffind \ (y0, J(rows(beffind_t1),1,.), J(rows(beffind_t1),1,ncomp+1), beffind_t1 :- beffind_t2) // Total change
-		if (st_local("residual")~="") beffind = beffind \ (y0, J(rows(beffind_t1),1,.), J(rows(beffind_t1),1,ncomp+2), beffind_t1 :- beffind_t3) // Residual change			
-		_sort(beffind, (1,2,3))		
-		weight_path = fact:/mm_freq2(beffind[.,1::3])
-		m1 = _fgrmean2(beffind[.,4..cols(beffind)], (beffind[.,1], beffind[.,3]), weight_path)
+		if (method=="difference") {
+			beffind = beffind \ (y0, J(rows(beffind_t1),1,.), J(rows(beffind_t1),1,ncomp+1), beffind_t1 :- beffind_t2) // Total change
+			if (st_local("residual")~="") beffind = beffind \ (y0, J(rows(beffind_t1),1,.), J(rows(beffind_t1),1,ncomp+2), beffind_t1 :- beffind_t3) // Residual change			
+		}
+		if (method=="growth") {
+			beffind = beffind \ (y0, J(rows(beffind_t1),1,.), J(rows(beffind_t1),1,ncomp+1), ln(beffind_t1 :/ beffind_t2)) // Total ratio
+			if (st_local("residual")~="") beffind = beffind \ (y0, J(rows(beffind_t1),1,.), J(rows(beffind_t1),1,ncomp+2), ln(beffind_t1 :/ beffind_t3)) // Residual ratio			
+		}
+
+		_sort(beffind, (1,2,3))				
+		weight_path = fact:/mm_freq2(beffind[.,1::3])		
+		m1 = _fgrmean2(beffind[.,4..cols(beffind)], (beffind[.,1], beffind[.,3]), weight_path)		
 		m1 = m1[.,cols(m1)-1], m1[.,cols(m1)], m1[.,1::cols(m1)-2]		
 		fest[1,1] = &(m1)
 		if (st_local("std")~="") {
@@ -638,9 +792,15 @@ function _fdecomp(real matrix inclist, real matrix by, real matrix wt, real matr
 	if (st_local("mpl")~="") {       // a==2 is MPL list
 		beffmpl_t1 = _fcompindcmpl(X1)
 		beffmpl_t2 = _fcompindcmpl(X2)
-		beffmpl_t3 = _fcompindcmpl(X3)		
-		beffmpl = beffmpl \ (y0, J(rows(beffmpl_t1),1,.), J(rows(beffmpl_t1),1,ncomp+1), beffmpl_t1 :- beffmpl_t2) // Total change		
-		if (st_local("residual")~="") beffmpl = beffmpl \ (y0, J(rows(beffmpl_t1),1,.), J(rows(beffmpl_t1),1,ncomp+2), beffmpl_t1 :- beffmpl_t3) // Residual change				
+		beffmpl_t3 = _fcompindcmpl(X3)	
+		if (method=="difference") {
+			beffmpl = beffmpl \ (y0, J(rows(beffmpl_t1),1,.), J(rows(beffmpl_t1),1,ncomp+1), beffmpl_t1 :- beffmpl_t2) // Total change		
+			if (st_local("residual")~="") beffmpl = beffmpl \ (y0, J(rows(beffmpl_t1),1,.), J(rows(beffmpl_t1),1,ncomp+2), beffmpl_t1 :- beffmpl_t3) // Residual change				
+		}
+		if (method=="growth") {
+			beffmpl = beffmpl \ (y0, J(rows(beffmpl_t1),1,.), J(rows(beffmpl_t1),1,ncomp+1), ln(beffmpl_t1 :/ beffmpl_t2)) // Total ratio		
+			if (st_local("residual")~="") beffmpl = beffmpl \ (y0, J(rows(beffmpl_t1),1,.), J(rows(beffmpl_t1),1,ncomp+2), ln(beffmpl_t1 :/ beffmpl_t3)) // Residual ratio				
+		}
 		_sort(beffmpl, (1,2,3))		
 		weight_path = fact:/mm_freq2(beffmpl[.,1::3])			
 		m2 = _fgrmean2(beffmpl[.,4..cols(beffmpl)], (beffmpl[.,1], beffmpl[.,3]), weight_path)
@@ -658,10 +818,17 @@ function _fdecomp(real matrix inclist, real matrix by, real matrix wt, real matr
 		beffect_t3 = _fcompincbins(X3)
 		X2a = (minmax[1,1] > 0 ? _fsubmatrix((inclist[.,1], wt, pline, group, by), 5, minmax[1,1]) : _fsubmatrix((inclist[.,1], wt, pline, group, by), 5, minmax[2,1]))
 		beffect_t2a = _fcompincbins(X2a)
-		beffect = beffect \ (index, J(rows(beffect_t1),1,.), J(rows(beffect_t1),1,ncomp+1), beffect_t1 :- beffect_t2) // Total change		
-		if (st_local("residual")~="") beffect = beffect \ (index, J(rows(beffect_t1),1,.), J(rows(beffect_t1),1,ncomp+2), beffect_t1 :- beffect_t3) // Residual change				
+		if (method=="difference") {
+			beffect = beffect \ (index, J(rows(beffect_t1),1,.), J(rows(beffect_t1),1,ncomp+1), beffect_t1 :- beffect_t2) // Total change		
+			if (st_local("residual")~="") beffect = beffect \ (index, J(rows(beffect_t1),1,.), J(rows(beffect_t1),1,ncomp+2), beffect_t1 :- beffect_t3) // Residual change				
+		}
+		if (method=="growth") {
+			beffect = beffect \ (index, J(rows(beffect_t1),1,.), J(rows(beffect_t1),1,ncomp+1), ln(beffect_t1 :/ beffect_t2)) // Total ratio		
+			if (st_local("residual")~="") beffect = beffect \ (index, J(rows(beffect_t1),1,.), J(rows(beffect_t1),1,ncomp+2), ln(beffect_t1 :/ beffect_t3)) // Residual ratio				
+		}
+
 		_sort(beffect, (1,2,3))		
-		weight_path = fact:/mm_freq2(beffect[.,1::3])		
+		weight_path = fact:/mm_freq2(beffect[.,1::3])				
 		m3 = _fgrmean2(beffect[.,4..cols(beffect)], (beffect[.,1], beffect[.,3]), weight_path)		
 		m3 = m3[.,cols(m3)-1], m3[.,cols(m3)], m3[.,1::cols(m3)-2]:/(beffect_t2a#J((st_local("residual")~="" ? ncomp+2 : ncomp+1),1,1))				
 		fest[1,3] = &(m3)
@@ -732,6 +899,9 @@ function _fcompindcmpl(real matrix X) {
 	indlist = tokens(st_local("indicator"))
 	gr = uniqrows(X[.,4])
 	mpl = strtoreal(tokens(st_local("mpl")))
+	btm = strtoreal(st_local("bottom"))
+	top = strtoreal(st_local("top"))
+	mid = strtoreal(tokens(st_local("middle")))
 	indgr = J(cols(indlist),0,.)
 	for (j=1; j<=rows(gr); j++) {
 		X1 = (rows(gr)==1 ? X : _fsubmatrix(X, 4, gr[j,1]))
@@ -745,6 +915,11 @@ function _fcompindcmpl(real matrix X) {
 				if (indlist[i]=="fgt2")  y = y \ _ffgt2(X1[.,1], z0, z1, X1[.,2])
 				if (indlist[i]=="gini")  y = y \ _fgini(X1[.,1], z0, z1, X1[.,2])
 				if (indlist[i]=="theil") y = y \ _ftheil(X1[.,1], z0, z1, X1[.,2])			
+				if (indlist[i]=="mean")  y = y \ _fmean(X1[.,1], z0, z1, X1[.,2])			
+				if (indlist[i]=="bottom") y = y \ _fbottom(X1[.,1], z0, z1, X1[.,2], btm)							
+				if (indlist[i]=="top")   y = y \ _ftop(X1[.,1], z0, z1, X1[.,2], top)			
+				if (indlist[i]=="ratio") y = y \ _fratio(X1[.,1], z0, z1, X1[.,2], btm)			
+				if (indlist[i]=="middle") y = y \ _fmiddle(X1[.,1], z0, z1, X1[.,2], mid[1,1], mid[1,2])			
 			} // for i - each indicator
 			indgr = indgr, y
 		} // for each mpl value		
@@ -755,6 +930,9 @@ function _fcompindcmpl(real matrix X) {
 // function to compute indicators, X = inclist, wt, pline, group
 function _fcompind(real matrix X) {
 	indlist = tokens(st_local("indicator"))
+	btm = strtoreal(st_local("bottom"))
+	top = strtoreal(st_local("top"))
+	mid = strtoreal(tokens(st_local("middle")))
 	gr = uniqrows(X[.,4])
 	indgr = J(cols(indlist),0,.)	
 	for (j=1; j<=rows(gr); j++) {
@@ -767,6 +945,11 @@ function _fcompind(real matrix X) {
 			if (indlist[i]=="fgt2")  y = y \ _ffgt2(X1[.,1], z0, X1[.,3], X1[.,2])
 			if (indlist[i]=="gini")  y = y \ _fgini(X1[.,1], z0, X1[.,3], X1[.,2])
 			if (indlist[i]=="theil") y = y \ _ftheil(X1[.,1], z0, X1[.,3], X1[.,2])			
+			if (indlist[i]=="mean")  y = y \ _fmean(X1[.,1], z0, X1[.,3], X1[.,2])			
+			if (indlist[i]=="bottom") y = y \ _fbottom(X1[.,1], z0, X1[.,3], X1[.,2], btm)						
+			if (indlist[i]=="top")   y = y \ _ftop(X1[.,1], z0, X1[.,3], X1[.,2], top)			
+			if (indlist[i]=="ratio") y = y \ _fratio(X1[.,1], z0, X1[.,3], X1[.,2], btm)
+			if (indlist[i]=="middle") y = y \ _fmiddle(X1[.,1], z0, X1[.,3], X1[.,2], mid[1,1], mid[1,2])			
 		}
 		indgr = indgr, y
 	}	
@@ -992,6 +1175,35 @@ function _fcheck(string v, string u) {
 // theil index, alpha=1
 function _ftheil(x, z0, z1, w) {	
 	return(mean((x:/mean(x)):*ln(x:/mean(x))))
+}
+// mean function
+function _fmean(x, z0, z1, w) {
+	return(mean(x, w))
+}
+
+// bottom mean function
+function _fbottom(x, z0, z1, w, btm) {
+	x1 = x, w, _fpctile(x, 100, w)
+	x2 = select(x1, x1[.,cols(x1)]:<=btm)
+	return(mean(x2[.,1], x2[.,2]))
+}
+// top mean function
+function _ftop(x, z0, z1, w, top) {
+	x1 = x, w, _fpctile(x, 100, w)
+	x2 = select(x1, x1[.,cols(x1)]:>=top)
+	return(mean(x2[.,1], x2[.,2]))
+}
+// ratio of bottom mean over all mean
+function _fratio(x, z0, z1, w, btm) {
+	x1 = x, w, _fpctile(x, 100, w)
+	x2 = select(x1, x1[.,cols(x1)]:<=btm)
+	return(mean(x2[.,1], x2[.,2])/mean(x,w))
+}
+// middle mean function
+function _fmiddle(x, z0, z1, w, mid1, mid2) {
+	x1 = x, w, _fpctile(x, 100, w)	
+	x2 = select(x1, (x1[.,cols(x1)]:>mid1) :+ (x1[.,cols(x1)]:<mid2) :-1)
+	return(mean(x2[.,1], x2[.,2]))
 }
 
 // gini coefficient (fastgini formula)

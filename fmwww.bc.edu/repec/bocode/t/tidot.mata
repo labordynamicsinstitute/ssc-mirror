@@ -1,4 +1,4 @@
-version 10.0
+version 16.0
 mata:
 
 real colvector tidot(real colvector x, real colvector y, | real colvector weight, real colvector xcen, real colvector ycen)

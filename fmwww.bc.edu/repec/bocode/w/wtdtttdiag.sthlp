@@ -31,25 +31,18 @@ prescription redemptions.
 
 {pstd} {cmd:wtdtttdiag} produce a diagnostic plot, i.e. a
 histogram based on observed prescription redemptions and the
-corresponding fitted parametric model of a previous call to {help
-wtdttt}. {wtdtttdiag} should be executed immediately after the
-relevant {help wtdttt} estimated model you want to assess the fit of.
+corresponding fitted parametric model of a previous call to {help wtdttt} or {help ranwtdttt} - the latter only if the estimation procedure has converged. {cmd:wtdtttdiag} should be executed immediately after the
+relevant {help wtdttt} or {help ranwtdttt} estimated model you want to assess the fit of.
 Note that {cmd:wtdtttdiag} is only useful when you did not specify
-covariates in your {help wtdttt} model.
+covariates in your {help wtdttt} or {help ranwtdttt} model.
 
 {marker options}{...}
 {title:Options}
 
-{phang} 
-{opt reverse} If specified, a reverse WTD is drawn (the
-distribution of last prescriptions in the time window). If it is not
-specified, an ordinary WTD is drawn (the distribution of first
-prescriptions in the time window).{p_end}
-
 {phang}
 {opt nbins(integer)} The number of bins plotted in the
 histogram. If not specified it is taken to be the integer part of
-sqrt(n), where n is the number of observations.{p_end}
+min{sqrt(n), 10ln(n)/ln(10)}, where n is the number of observations.{p_end}
 
 {phang}
 {opt nq(integer)} Number of points used in plotting the fitted
@@ -73,7 +66,7 @@ A simple example assessing the fit of a Log-Normal model
 {phang}
 {cmd:. wtdttt rx1time, disttype(lnorm)}{p_end}
 {phang}
-{cmd:. wtdtttdiag rx1time)}{p_end}
+{cmd:. wtdtttdiag rx1time}{p_end}
 
 An example with a reverse WTD based on a Weibull distribution and
 where data used in the plot replace the current dataset in Stata's
@@ -82,7 +75,7 @@ memory:
 {phang}
 {cmd:. wtdttt rx1time, reverse disttype(wei) iadpercentile(0.8)}{p_end}
 {phang}
-{cmd:. wtdtttdiag rx1time, reverse replace)}{p_end}
+{cmd:. wtdtttdiag rx1time, replace}{p_end}
 
 Further examples are provided in the example do-file
 {it:wtdttt_ex.do}, which contains analyses based on the datafile
@@ -90,5 +83,7 @@ Further examples are provided in the example do-file
 
 {title:Author}
 
-{pstd}
-Henrik Støvring, Aarhus University, stovring@ph.au.dk
+{pstd}Katrine Bødkergaard Nielsen, Aarhus University, kani@ph.au.dk.
+
+{pstd}Henrik Støvring, Aarhus University, stovring@ph.au.dk.
+

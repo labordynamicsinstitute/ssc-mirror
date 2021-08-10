@@ -1,3 +1,4 @@
+*! N. Orsini v.1.0.1 6aug19 fixed a missing parenthesis with 6 and 7 knots
 *! N.Orsini v.1.0.0 2nov09   
  
 capture program drop xbrcspline
@@ -105,10 +106,10 @@ foreach anyx of local values {
 				 qui predictnl `xb' =  _b[`xname'1]*(`v_`xname'1'-`refx1')+ _b[`xname'2]*(`v_`xname'2'-`refx2')+ _b[`xname'3]*(`v_`xname'3'-`refx3')+_b[`xname'4]*(`v_`xname'4'-`refx4'), ci(`lo' `hi') level(`cilevel')  
 			}
 			else if `nk'== 6 {
-				 qui predictnl `xb' = _b[`xname'1]*(`v_`xname'1'-`refx1')+ _b[`xname'2]*(`v_`xname'2'-`refx2')+ _b[`xname'3]*(`v_`xname'3'-`refx3')+_b[`xname'4]*(`v_`xname'4'-`refx4') +_b[`xname'5]*(`v_`xname'5'-`refx5'), ci(`lo' `hi')  level`cilevel')  
+				 qui predictnl `xb' = _b[`xname'1]*(`v_`xname'1'-`refx1')+ _b[`xname'2]*(`v_`xname'2'-`refx2')+ _b[`xname'3]*(`v_`xname'3'-`refx3')+_b[`xname'4]*(`v_`xname'4'-`refx4') +_b[`xname'5]*(`v_`xname'5'-`refx5'), ci(`lo' `hi')  level(`cilevel')  
 			}
 			else if `nk'== 7 {
-				 qui predictnl `xb' =  _b[`xname'1]*(`v_`xname'1'-`refx1')+ _b[`xname'2]*(`v_`xname'2'-`refx2')+ _b[`xname'3]*(`v_`xname'3'-`refx3')+_b[`xname'4]*(`v_`xname'4'-`refx4') +_b[`xname'5]*(`v_`xname'5'-`refx5')+_b[`xname'6]*(`v_`xname'6'-`refx6'), ci(`lo' `hi')  level`cilevel')  
+				 qui predictnl `xb' =  _b[`xname'1]*(`v_`xname'1'-`refx1')+ _b[`xname'2]*(`v_`xname'2'-`refx2')+ _b[`xname'3]*(`v_`xname'3'-`refx3')+_b[`xname'4]*(`v_`xname'4'-`refx4') +_b[`xname'5]*(`v_`xname'5'-`refx5')+_b[`xname'6]*(`v_`xname'6'-`refx6'), ci(`lo' `hi')  level(`cilevel')  
 			}
 			else 	{
 				display as error ///

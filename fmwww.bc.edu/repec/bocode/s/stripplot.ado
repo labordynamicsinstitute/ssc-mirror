@@ -1,4 +1,7 @@
-*! 2.7.1 NJC 27 March 2017 
+*! 2.8.1 NJC 11 October 2020 
+* 2.8.0 NJC 4 July 2018 
+* 2.7.2 NJC 8 June 2017 
+* 2.7.1 NJC 27 March 2017 
 * 2.7.0 NJC 2 March 2017 
 * 2.6.0 NJC 21 February 2017 
 * 2.5.3 NJC 20 December 2016 
@@ -39,7 +42,8 @@ program stripplot, sort
         WHiskers(str asis) medianbar(str asis) OUTside OUTside2(str asis)  ///
         CUMULate CUMULative CUMPRob                                        ///
 	PLOT(str asis) ADDPLOT(str asis) variablelabels SEParate(varname)  ///
-	REFline REFline2(str) reflevel(str) reflinestretch(real 0.05) * ] 
+	REFline REFline2(str) reflevel(str) reflinestretch(real 0.05)      ///
+	refvar(varname) * ] 
 
 	if "`fraction'" != "" {
 		di as inp "fraction()" as txt ": please use " as inp "height()"
@@ -197,8 +201,8 @@ program stripplot, sort
 				egen `upq' = pctile(`data'), p(75) by(`by' _stack) 
 	
 				if "`iqr'`iqr2'" != "" { 
-					egen `upper' = max(`data') if `data' <= `upq' + `mult' * (`upq' - `loq'), by(`by' _stack) 
-					egen `lower' = min(`data') if `data' >= `loq' - `mult' * (`upq' - `loq'), by(`by' _stack) 
+					egen `upper' = max(cond(`data' <= `upq' + `mult' * (`upq' - `loq'), `data', .)), by(`by' _stack) 
+					egen `lower' = min(cond(`data' >= `loq' - `mult' * (`upq' - `loq'), `data', .)), by(`by' _stack) 
 				}
 				else if "`pctile'" != "" {
 					if `pctile' == 0 | `pctile' == 100 { 
@@ -239,9 +243,14 @@ program stripplot, sort
 			}
 
 			if `"`refline'`refline2'"' != "" { 
-				tempvar ref left right 
-				egen `ref' = `reflevel'(`data'), by(`by' _stack)
- 				gen `left' = . 
+				if "`refvar'" != "" local ref "`refvar'"
+				else { 
+					tempvar ref 
+					egen `ref' = `reflevel'(`data'), by(`by' _stack)
+ 				}
+
+				tempvar left right 
+				gen `left' = . 
 				gen `right' = . 
 			}
 							
@@ -361,8 +370,8 @@ program stripplot, sort
 			egen `upq' = pctile(`varlist'), p(75) by(`by' `over') 
 
 			if "`iqr'`iqr2'" != "" { 
-				egen `upper' = max(`varlist') if `varlist' <= `upq' + `mult' * (`upq' - `loq'), by(`by' `over') 
-				egen `lower' = min(`varlist') if `varlist' >= `loq' - `mult' * (`upq' - `loq'), by(`by' `over') 
+				egen `upper' = max(cond(`varlist' <= `upq' + `mult' * (`upq' - `loq'), `varlist', .)), by(`by' `over') 
+				egen `lower' = min(cond(`varlist' >= `loq' - `mult' * (`upq' - `loq'), `varlist', .)), by(`by' `over') 
 			}
 			else if "`pctile'" != "" {
 				if `pctile' == 0 | `pctile' == 100 { 
@@ -402,9 +411,14 @@ program stripplot, sort
 			}
 		}
 
-		if `"`refline'`refline2'"' != "" { 
-			tempvar ref left right 
-			egen `ref' = `reflevel'(`varlist'), by(`by' `over') 
+		if `"`refline'`refline2'"' != "" {
+			if "`refvar'" != "" local ref "`refvar'" 
+			else {  
+				tempvar ref 
+				egen `ref' = `reflevel'(`varlist'), by(`by' `over') 
+			}
+
+			tempvar left right 
 			gen `left' = . 
 			gen `right' = . 
 		}
@@ -575,7 +589,7 @@ program stripplot, sort
 			}
 
 			local refcall pcspike `ref' `left' `ref' `right' ///
-			, lc(gs8) lw(thin) `refline2' 
+			, pstyle(p2) lc(gs8) lw(thin) `refline2' 
 			local nprev = `nprev' + 1 
 		}
 
@@ -610,7 +624,7 @@ program stripplot, sort
 
 		noisily twoway `refcall' || ///
 		`boxbar' || ///     
-		scatter `xshow' `yshow',     ///
+		scatter `xshow' `yshow', pstyle(p1)    ///
 		ms(Oh) xti(`"`axtitle'"') yti(`"`axtitle2'"')              /// 
 		xla(`axlabel') `stretch' `byby' `separate' `options'      ///
 		|| `plot' || `addplot' 
@@ -668,7 +682,7 @@ program stripplot, sort
 			}
 
 			local refcall pcspike `left' `ref' `right' `ref' ///
-			, lc(gs8) lw(thin) `refline2' 
+			, lc(gs8) lw(thin) pstyle(p2) `refline2' 
 			local nprev = `nprev' + 1 
 		}
 
@@ -703,7 +717,7 @@ program stripplot, sort
 
 		noisily twoway `refcall' || ///
 		`boxbar' ||  ///
-		scatter `yshow' `xshow',    ///
+		scatter `yshow' `xshow', pstyle(p1)  ///
 		ms(Oh) yti(`"`axtitle'"') xti(`"`axtitle2'"')             /// 
 		yla(`axlabel') `stretch' `byby' `separate' `options'     /// 
 		|| `plot' || `addplot'  

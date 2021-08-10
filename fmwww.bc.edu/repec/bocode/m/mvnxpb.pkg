@@ -1,0 +1,25 @@
+d 'MVNXPB': module for  computation of multivariate normal probabilities using bivariate conditioning 
+d
+d  Mata function mvnxpb() uses bivariate conditionally expected
+d values to estimate a multivariate normal probability with
+d specific means m, positive definite covariance matrix V, with
+d lower integration limits at -infty and upper integration limits
+d at b. Covariance matrix V is permuted to improve accuracy. 
+d
+d KW: Mata
+d KW: multivariate normal
+d KW: probabilities
+d KW: bivariate
+d
+d Requires: Stata version 14
+d
+d Distribution-Date: 20180613
+d
+d Author: Svetlana Mladenovic, FAO
+d Support: email Svetlana.Mladenovic@@fao.org
+d
+d Author: Federico Belotti, University of Rome Tor Vergata
+d Support: email federico.belotti@@uniroma2.it
+d
+f mf_mvnxpb.do
+f mf_mvnxpb.sthlp

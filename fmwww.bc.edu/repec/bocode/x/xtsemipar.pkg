@@ -9,9 +9,9 @@ d KW: fixed effects
 d KW: semiparametric estimation
 d KW: B-splines
 d
-d Requires: Stata version 10.1
+d Requires: Stata version 13
 d
-d Distribution-Date: 20140429
+d Distribution-Date: 20210224
 d
 d Author: Vincenzo Verardi, University of Namur
 d Support: email vverardi@@ulb.ac.be

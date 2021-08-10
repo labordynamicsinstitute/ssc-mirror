@@ -1,97 +1,174 @@
 #delim ;
 prog def parmby, rclass;
-version 11.0;
+version 16.0;
 *
- Call a regression command followed by -parmest- with by-variables,
+ Call an estimation command followed by parmest
+ (possibly with by-variables),
  creating an output data set containing the by-variables
- together with the parameter sequence number -parmseq-
+ together with the parameter sequence number parmseq
  and all the variables in a -parmest- output data set.
 *! Author: Roger Newson
-*! Date: 06 October 2015
+*! Date: 31 December 2020
 *;
 
 
 gettoken cmd 0: 0;
 if `"`cmd'"' == `""' {;error 198;};
 
-syntax [ , LIst(passthru) SAving(passthru) noREstore FAST * ];
+syntax, [  LIst(passthru) FRAme(string asis) SAving(passthru) noREstore FAST * ];
 /*
--norestore- specifies that the pre-existing data set
+list() contains a varlist of variables to be listed,
+  expected to be present in the output data set
+  and referred to by the new names if REName is specified,
+  together with optional if and/or in subsetting clauses and/or list_options
+  as allowed by the list command.
+frame() specifies a Stata data frame in which to create the output data set.
+saving() specifies a file in which to save the output data set.
+norestore specifies that the pre-existing data set
   is not restored after the output data set has been produced
   (set to norestore if FAST is present).
--fast- specifies that parmest will not preserve the original data set
-  so that it can be restored if the user presses Break
-  (intended for use by programmers).
-All other options are passed to -_parmby-.
+fast is now synonymous with norestore
+  and is retained for backwards compatibility.
+Other options are passed to _parmby.
 */
 
+
 *
- Set restore to norestore if -fast- is present
+ Set restore to norestore if fast is present
  and check that the user has specified one of the four options:
- -list()- and/or -saving()- and/or -norestore- and/or -fast-.
+ list and/or nd/or frame and/or saving and/or norestore and/or fast.
 *;
 if "`fast'"!="" {;
     local restore="norestore";
 };
-if (`"`list'"'=="")&(`"`saving'"'=="")&("`restore'"!="norestore")&("`fast'"=="") {;
-    disp as error "You must specify at least one of the four options:"
-      _n "list(), saving(), norestore, and fast."
+if (`"`list'"'=="")&(`"`frame'"'=="")&(`"`saving'"'=="")&("`restore'"!="norestore")&("`fast'"=="") {;
+    disp as error "You must specify at least one of the five options:"
+      _n "list(), frame(), saving(), norestore, and fast."
       _n "If you specify list(), then the output variables specified are listed."
+      _n "f you specify frame(), then the new data set is output to a data frame."
       _n "If you specify saving(), then the new data set is output to a disk file."
-      _n "If you specify norestore and/or fast, then the new data set is created in the memory,"
-      _n "and any existing data set in the memory is destroyed."
+      _n "If you specify norestore and/or fast, then the new data set is created in the current ata frame,"
+      _n "and any existing data set in the current data frame is destroyed."
       _n "For more details, see {help parmest:on-line help for parmby and parmest}.";
     error 498;
 };
 
+
 *
- Preserve old data set if -restore- is set or -fast- unset
+ Parse frame() option if present
 *;
-if("`fast'"==""){;
-    preserve;
+if `"`frame'"'!="" {;
+  cap frameoption `frame';
+  if _rc {;
+    disp as error `"Illegal frame option: `frame'"';
+    error 498;
+  };
+  local framename "`r(namelist)'";
+  local framereplace "`r(replace)'";
+  local framechange "`r(change)'";
+  if `"`framename'"'=="`c(frame)'" {;
+    disp as error "frame() option may not specify current frame."
+      _n "Use norestore or fast instead.";
+    error 498;
+  };
+  if "`framereplace'"=="" {;
+    cap noi conf new frame `framename';
+    if _rc {;
+      error 498;
+    };
+  };
+};
+if "`framename'"!="" {;
+  local passframe "frame(`framename', `framereplace' `framechange')";
 };
 
-* Call -_parmby- with all other options *;
-_parmby `"`cmd'"' , `list' `saving' `options';
+
+*
+ Name temporary frame
+ and pass it to _parmby with the other options
+ and add returned results to returned results for parmby
+*;
+tempname tempframe;
+_parmby `"`cmd'"', `list' tempframe(`tempframe') `saving' `options';
 return add;
 
+
 *
- Restore old data set if -restore- is set
- or if program fails when -fast- is unset
+ Copy new frame to old frame if requested
 *;
-if "`fast'"=="" {;
-    if "`restore'"=="norestore" {;
-        restore,not;
-    };
-    else {;
-        restore;
-    };
+local oldframe=c(frame);
+if "`restore'"=="norestore" {;
+  frame copy `tempframe' `oldframe', replace;
 };
+
+
+*
+ Rename temporary frame to frame name (if frame is specified)
+ and change current frame to frame name (if requested)
+*;
+if "`framename'"!="" {;
+  if "`framereplace'"=="replace" {;
+    cap frame drop `framename';
+  };
+  frame rename `tempframe' `framename';
+  if "`framechange'"!="" {;
+    frame change `framename';
+  };
+};
+
 
 end;
 
-prog def _parmby, rclass;
-version 11.0;
+
+prog def _parmby, rclass sortpreserve;
 *
- Call a regression command followed by -parmest- with by-variables,
- creating an output data set containing the by-variables
- together with the parameter sequence number -parmseq-
- and all the variables in a -parmest- output data set.
+ Do the work for parmby,
+ returning a temporary frame
+ that can be copied to the old frame
+ and/or renamed as the output frame.
 *;
+
 
 gettoken cmd 0: 0;
+if `"`cmd'"' == `""' {;error 198;};
 
-syntax [ ,BY(varlist) COMmand LIst(string asis) SAving(string asis) FList(string) REName(string) FOrmat(string) * ];
-*
- -by- is list of by-variables.
- -command- specifies that the regression command is saved in the output data set
-  as a string variable named -command-.
- Other options are as defined for -parmest-.
-*;
+syntax [ , LIst(string asis) TEMPFRAME(name) SAving(string asis) FList(string)
+   BY(varlist) COMmand * ];
+/*
+list() contains a varlist of variables to be listed,
+  expected to be present in the output data set
+  and referred to by the new names if REName is specified,
+  together with optional if and/or in subsetting clauses and/or list_options
+  as allowed by the list command.
+tempframe() specifies a temporary frame (passed by parmby)
+  in which to create the output dataset.
+saving() specifies a file in which to save the output data set.
+flist() is a global macro name,
+  belonging to a macro containing a filename list (possibly empty),
+  to which parmest will append the name of the data set
+  specified in the SAving() option.
+  This enables the user to build a list of filenames
+  in a global macro,
+  containing the output of a sequence of model fits,
+  which may later be concatenated using dsconcat (if installed) or append.
+by is a list of by-variables.
+command specifies that the estimation command is saved in the output data set
+  as a string variable named command.
+Other options are passed to parmest.
+*/
+
 
 * Echo the command and by-variables *;
 disp as text "Command: " as result `"`cmd'"';
-if "`by'"!="" {;disp as text "By variables: " as result "`by'";};
+if "`by'"!="" {;
+  disp as text "By variables: " as result "`by'";
+};
+
+
+*
+ Create temporary names for temporary frames
+*;;
+tempname byframe curdframe currframe;
 
 
 *
@@ -104,31 +181,33 @@ if "`by'"=="" {;
    Beginning of non-by-group section.
    (Execute the command and -parmest- only once for the whole data set.)
   *;
-  * Beginning of common section to be executed with or without -by- *;
   cap noi {;
     `cmd';
   };
   if _rc!=0 {;
-    drop *;
-  };
-  else {;
-    parmest, fast `options';
-  };
-  * End of common section to be executed with or without -by- *;
-  * Add parmest results to return results *;
-  return add;
-  * Error if no parameters, otherwise sort parameters *;
-  if _N==0 {;
     disp as error "Command was not completed successfully";
     error 498;
   };
-  * Create parameter sequence variable *;
-  qui {;
-    gene long parmseq=_n;
-    compress parmseq;
-    order parmseq;
-    sort parmseq;
-    lab var parmseq "Parameter sequence number";
+  else {;
+    parmest, frame(`tempframe', replace) `options';
+    * Add parmest results to return results *;
+    return clear;
+    return add;
+  };
+  * Create sequenced results in temporary frame *;
+  frame `tempframe' {;
+    * Error if no parameters, otherwise sort and sequence parameters *;
+    if _N==0 {;
+      disp as error "No parameters estimated";
+      error 498;
+    };
+    qui {;
+      gene long parmseq=_n;
+      compress parmseq;
+      order parmseq;
+      sort parmseq;
+      lab var parmseq "Parameter sequence number";
+    }; 
   };
   *
    End of non-by-group section.
@@ -137,62 +216,108 @@ if "`by'"=="" {;
 else {;
   *
    Beginning of by-group section.
-   (Create grouping variable -group- defining by-group
-   and data set -tf0- with 1 obs per by-group,
-   execute the command and -parmest- on each by-group in turn,
-   saving the results to temporary files,
-   and concatenate temporary files.)
+   (Create grouping variable group defining by-group
+   and data fframe byframe with 1 obs per by-group,
+   and execute the command and parmest on each by-group in turn,
+   concatenating the results to tempframe.)
   *;
+  sort `by', stable;
   *
-   Sort and abbreviate dataset
-   and create grouping variable -group-
-   and macro -ngroup- containing number of groups
-   and temporary filenames
+   Create frame byframe with 1 obs per by group
+   and data on by variables
   *;
-  tempfile df0 tf0;
-  qui {;
-    sort `by', stable;
-    save `df0', replace;
-    tempvar group;
+  frame put `by', into(`byframe');
+  tempvar group seqnum inmin inmax;
+  qui frame `byframe' {;
+    sort `by';
     by `by': gene long `group'=_n==1;
     replace `group'=sum(`group');
-    compress `group';
-    keep `by' `group';
-    sort `group';
+    gene long `seqnum'=_n;
+    sort `group' `seqnum';
+    by `group': gene long `inmin'=`seqnum'[1];
+    by `group': gene long `inmax'=`seqnum'[_N];
+    drop `seqnum';
+    by `group': keep if _n==1;
+    compress `group' `inmin' `inmax';
+    keep `by' `group' `inmin' `inmax';
+    local ngroup=`group'[_N];
   };
-  local ngroup=`group'[_N];
-  forv i1=1(1)`ngroup' {;
-    tempfile tf`i1';
-  };
-  * Create temporary results files *;
-  mata: by_groups_for_parmby();
-  * Add last parmest results to return results *;
-  return add;
-  * Concatenate temporary files *;
+  * Add by-group variable to old current frame *;
   qui {;
-    use `"`tf1'"', clear;
-    forv i1=2(1)`ngroup' {;append using `"`tf`i1''"';};
-  };
-  * Error if no parameters, otherwise sort parameters *;
-  if _N==0 {;
-    disp as error "Command was not completed successfully for any by-group";
-    error 498;
-  };
-  * Create parameter sequence variable *;
-  qui {;
-    sort `group', stable;
-    by `group': gene long parmseq=_n;
-    compress parmseq;
-    order parmseq;
-    sort `group' parmseq;
-    lab var parmseq "Parameter sequence number";
+    tempvar bylink;
+    frlink m:1 `by', frame(`byframe') gene(`bylink');
+    frget `group'=`group', from(`bylink');
+    drop `bylink';
   };
   *
-   End of by-group section.
+   Create concatenated results frame in tempframe
+  *;
+  frame create `tempframe';
+  forv i1=1(1)`ngroup' {;
+    * Create current data frame *;
+    frame `byframe' {;
+      local imin=`inmin'[`i1'];
+      local imax=`inmax'[`i1'];
+    };
+    frame put in `imin'/`imax', into(`curdframe');
+    *
+     Create current results frame using data in current data frame
+     and append to tempframe if successful
+    *;
+    frame `curdframe' {;
+      sort `by', stable;
+      cap noi {;
+       by `by': list if 0;
+       `cmd';
+      };
+      if _rc==0 {;
+        *
+         Create current sequenced results frame and append to tempframe
+        *;
+        parmest, frame(`currframe', replace) `options';
+        *
+         Add parmest results to returned results
+         (so returned results include last parmest results)
+        *;
+        return clear;
+        return add;
+        * Create sequenced results in current results frame *;
+        qui frame `currframe' {;
+          gene long `group'=`i1';
+          gene long parmseq=_n;
+          compress `group' parmseq;
+          order `group'  parmseq;
+          sort `group' parmseq;
+          lab var parmseq "Parameter sequence number";
+        };
+        frame `tempframe': _appendframe `currframe', drop fast;
+      };
+    };
+    * Drop current data frame *;
+    frame drop `curdframe';
+  };
+  * Fail if no parameters estimated for any by-group *;
+  frame `tempframe' {;
+    if _N==0 {;
+      disp as error "No parameters estimated for any by-group";
+      error 498;
+    };
+  };
+  *
+   End of by-group section
   *;
 };
 
-* Add variable -command- if requested *;
+
+*
+ Beginning of tempframe block (NOT INDENTED)
+*;
+frame `tempframe' {;
+
+
+*
+ Add variable command if requested
+*;
 if "`command'"!="" {;
   qui gene str1 command="";
   qui replace command=`"`cmd'"';
@@ -200,10 +325,11 @@ if "`command'"!="" {;
   order parmseq command;
 };
 
+
 *
  Rename variables if requested
- (including -parmseq- and -command-, which cannot be renamed by -parmest-)
- and create macros -parmseqv- and -commandv-,
+ (including parmseq and command, which cannot be renamed by parmest)
+ and create macros parmseqv and commandv,
  containing -parmseq- and -command- variable names
 *;
 local parmseqv "parmseq";
@@ -240,6 +366,7 @@ if "`rename'"!="" {;
     };
 };
 
+
 *
  Format variables if requested
 *;
@@ -260,15 +387,22 @@ if `"`format'"'!="" {;
     };
 };
 
-* Add by-variables from file -tf0- if present *;
+
+* Add by-variables from frame byframe if present *;
 if "`by'"!="" {;
-  tempvar merg;
-  qui merge `group' using `"`tf0'"',_merge(`merg');
-  qui keep if `merg'==3;
-  drop `group' `merg';
-  order `by';
-  sort `by' `parmseqv';
+  qui {;
+    tempvar `bylink';
+    frlink m:1 `group', frame(`byframe') gene(`bylink');
+    foreach B in `by' {;
+      cap frget `B'=`B', from(`bylink');
+    };
+    drop `bylink' `group';
+    order `by';
+    sort `by' `parmseqv';
+    frame drop `byframe';
+  };
 };
+
 
 *
  List variables if requested
@@ -284,143 +418,172 @@ if `"`list'"'!="" {;
     };
 };
 
+
 *
  Save data set if requested
 *;
 if(`"`saving'"'!=""){;
-    capture noisily save `saving';
+  capture noisily save `saving';
     if(_rc!=0){;
-        disp as error `"saving(`saving') invalid"';
-        exit 498;
+      disp as error `"saving(`saving') invalid"';
+      exit 498;
+  };
+  tokenize `"`saving'"', parse(" ,");
+  local fname `"`1'"';
+  if(strpos(`"`fname'"'," ")>0){;
+      local fname `""`fname'""';
+  };
+  * Add filename to file list in FList if requested *;
+  if(`"`flist'"'!=""){;
+    if(`"$`flist'"'==""){;
+        global `flist' `"`fname'"';
     };
-    tokenize `"`saving'"',parse(" ,");
-    local fname `"`1'"';
-    if(strpos(`"`fname'"'," ")>0){;
-        local fname `""`fname'""';
+    else{;
+        global `flist' `"$`flist' `fname'"';
     };
-    * Add filename to file list in FList if requested *;
-    if(`"`flist'"'!=""){;
-        if(`"$`flist'"'==""){;
-            global `flist' `"`fname'"';
-        };
-        else{;
-            global `flist' `"$`flist' `fname'"';
-        };
-    };
+  };
 };
+
+
+};
+*
+ End of tempframe block (NOT INDENTED)
+*;
 
 
 * Return results *;
 return local by "`by'";
 return local command `"`cmd'"';
 
+
+end;
+
+
+prog def frameoption, rclass;
+version 16.0;
+*
+ Parse frame() option
+*;
+
+syntax name [, replace CHange ];
+
+return local change "`change'";
+return local replace "`replace'";
+return local namelist "`namelist'";
+
 end;
 
 
 #delim cr
-version 11.0
-/*
-  Private Mata programs used by parmby
-*/
-mata:
 
-
-void by_groups_for_parmby()
-{
+program define _appendframe
 /*
-  Create temporary dataset tf0 with 1 obs per by group
-  and data on by variable values
-  and temporary datasets tf1-tf<ngroup>, where <ngroup> is the number of groups,
-  with 1 observation per estimated parameter in the indicated group
-  and data on parameter attributes,
-  so that datasets tf1-tf<ngroup> can later be concatenated
-  and dataset tf0 then merged in.
+ Append one or more frames to the current frame.
+ This program uses code modified
+ from Jeremy Freese's SSC package frameappend.
 */
 
-string scalar tfcur,lcquote,rcquote,longform,groupvar,byvars,command,parmestopts
-real matrix groupview,byrange
-real scalar maxlong,groupseq,retcode
-/*
-  tfcur contains temporary file currently being created.
-  lcquote contains left compound quote.
-  rcquote contains right compound quote.
-  longform contains a format for outputting observation numbers
-    to Stata commands.
-  groupvar is name of group variable.
-  byvars is the list of by variables.
-  command is the Stata command executed for each by group.
-  parmestopts is list of parmest options to be used.
-  groupview is a view onto the group variable.
-  byrange is a panel matrix with 1 row per by group
-    containing ranges for by groups.
-  maxlong is used to store the scalar c(maxlong).
-  groupseq is the group sequence number.
-  retcode is the current return code.
-*/
+	version 16.0
 
-/*
-  Initialize constant scalars
-*/
-lcquote="`"+`"""'
-rcquote=`"""'+"'"
-longform="%100.0f";
-groupvar=st_local("group")
-byvars=st_local("by")
-command=st_local("cmd")
-parmestopts=st_local("options")
-maxlong=st_numscalar("c(maxlong)")
+	syntax namelist(name=frame_list) [, drop fast]
+	/*
+	  drop specifies that the from frame will be dropped.
+	  fast speciffies that no work will be done to preserve the to frame
+	    if the user presses Brak or other failure occurs
+	*/
 
-/*
-  Create range matrix for by groups
-  and check that it contains only legal values
-  for storage type long
-*/
-st_view(groupview,.,groupvar)
-byrange=panelsetup(groupview,1)
-for(groupseq=1;groupseq<=rows(byrange);groupseq++) {
-  if(byrange[groupseq,1]>maxlong | byrange[groupseq,2]>maxlong){
-    displayas("error")
-    printf("Invalid observation number (>c(maxlong) beginning or ending a by-group\n")
-    exit(error(498))
-  }
-}
+	* Check that all frame names belong to frames *
+	foreach frame_name in `frame_list' {
+	  confirm frame `frame_name'
+	}
 
-/*
-  Create temporary dataset tf0
-*/
-tfcur=st_local("tf0")
-stata("qui by " + groupvar + ": keep if _n==1")
-stata("qui save " + lcquote + tfcur + rcquote + ", replace")
+	* Preserve old dataset if requested *
+	if "`fast'"=="" {
+		preserve
+	}
+	
+	* Beginning of frame loop *
+	foreach frame_name in `frame_list' {
+	* Beginning of main quietly block *
+	quietly {
+	
+		* Get varlists from old dataset *
+		ds
+		local to_varlist "`r(varlist)'"
+		* Get varlists from dataset to be appended *
+		frame `frame_name': ds
+		local from_varlist "`r(varlist)'"
+		local shared_varlist : list from_varlist & to_varlist
+		local new_varlist : list from_varlist - shared_varlist
 
-/*
-  Create datasets tf1 to tf<ngroup>
-*/
-for(groupseq=1;groupseq<=rows(byrange);groupseq++) {
-  tfcur=st_local("df0")
-  stata(
-    "qui use in " + strtrim(strofreal(byrange[groupseq,1],longform))
-    + "/" + strtrim(strofreal(byrange[groupseq,2],longform))
-    + " using " + lcquote + tfcur + rcquote
-    + ", clear"
-  )
-  stata("by " + byvars + ": list if 0")
-  retcode=_stata(command)
-  if(retcode!=0){
-    stata("qui drop _all")
-  }
-  else {
-    retcode=_stata("qui parmest, fast " + parmestopts)
-    if(retcode!=0) {
-      exit(error(retcode))
-    }
-  }
-  stata("qui gene long " + groupvar + "=" + strtrim(strofreal(groupseq,longform)))
-  stata("qui compress `group'")
-  tfcur=st_local("tf" + strtrim(strofreal(groupseq,longform)))
-  stata("qui save " + lcquote + tfcur + rcquote + ", replace emptyok")
-}
+		* Check modes of shared variables (numeric or string) *
+		if "`shared_varlist'" != "" {
+			foreach type in numeric string {
+				ds `shared_varlist', has(type `type')
+				local `type'_to "`r(varlist)'"
+				frame `frame_name': ds `shared_varlist', has(type `type')
+				local `type'_from "`r(varlist)'"
+				local `type'_eq: list `type'_to === `type'_from
+			}
+			if (`numeric_eq' == 0) | (`string_eq' == 0) {
+				di as err "shared variables in frames being combined must be both numeric or both string"
+				error 109
+			}
+		}
+		
+		* get size of new dataframe *
+		frame `frame_name' : local from_N = _N
+		local to_N = _N
+		local from_start = `to_N' + 1
+		local new_N = `to_N' + `from_N'
 
-}
+		* Create variables for linkage in the 2 datasets *
+		set obs `new_N'
+		tempvar temp_n temp_link
+		gen double `temp_n' = _n
+		frame `frame_name' {
+			gen double `temp_n' = _n + `to_N'
+		}
+	
+		* Create linkage between the 2 datasets *
+		frlink 1:1 `temp_n', frame(`frame_name') gen(`temp_link')
+		
+		* Import shared variables to old dataset *
+		if "`shared_varlist'"!="" {
+		  tempvar temphome
+		  foreach X of varlist `shared_varlist' {
+		    frget `temphome'=`X', from(`temp_link')
+		    replace `X'=`temphome' in `=`to_N'+1' / `new_N'
+		    drop `temphome'
+		  }
+		}
+	
+		* Import new variables to old dataset *
+		if "`new_varlist'" != "" {
+		  tempvar temphome2
+		  foreach X in `new_varlist' {
+		    frget `X'=`X', from(`temp_link')
+		  }
+	        }
+	        
+	        * Order variables (old ones first) *
+	        order `to_varlist' `new_varlist'
 
+	}
+        * End of main quietly block *
+        }
+        * End of frame loop *
 
+        * Restore old dataset if requested and necessary *
+	if "`fast'"=="" {
+        	restore, not
+	}
+
+	* Drop appended frame if requested *
+	if "`drop'" == "drop" {
+		foreach frame_name in `frame_list' {
+			frame drop `frame_name'
+		}
+	}
+		
 end

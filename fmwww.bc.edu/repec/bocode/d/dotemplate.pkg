@@ -10,10 +10,11 @@ d KW: do-file management
 d
 d Requires: Stata version 10
 d
-d Distribution-Date: 20151222
+d Distribution-Date: 20190624
 d
 d Author: Andres Castaneda , World Bank
 d Support: email acastanedaa@@worldbank.org
 d
 f dotemplate.ado
+f dotemplate.dlg
 f dotemplate.sthlp

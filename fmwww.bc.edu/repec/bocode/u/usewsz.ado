@@ -1,4 +1,4 @@
-*! usewsz.ado, Chris Charlton and George Leckie, 19May2016
+*! usewsz.ado, Chris Charlton and George Leckie, 23May2019
 program usewsz,
 	version 9.0
 	syntax [anything(equalok everything)] [, batch plugin Clear noLabel mlwinpath(string) VIEWMacro]
@@ -113,7 +113,7 @@ program usewsz,
 	
 	mata: checknames("`filedata'")
 
-	use `varlist' `if' `in' using `filedata', `clear' `label'
+	use `varlist' `if' `in' using "`filedata'", `clear' `label'
 	
 end
 

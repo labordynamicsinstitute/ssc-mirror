@@ -1,8 +1,9 @@
-*! dcreate 1.4.0  06Jul2016
+*! dcreate 1.4.1  18Aug2017
 *! author arh
 
 *  1.3.0:	a minor bug has been fixed
 *  1.4.0:	Bayesian designs supported
+*  1.4.1:	a bug preventing the use of evaldes with Bayesian designs has been fixed
 
 program define dcreate, rclass
 	version 11.1

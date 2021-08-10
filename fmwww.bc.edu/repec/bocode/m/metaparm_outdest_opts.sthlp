@@ -13,6 +13,7 @@
 {synopthdr}
 {synoptline}
 {synopt:{opt li:st(list_spec)}}List output dataset to Stata log and/or Results window{p_end}
+{synopt:{cmdab:fra:me}{cmd:(}{it:framename}[,replace {cmdab:cha:nge}]{cmd:)}}Save output dataset to a data frame{p_end}
 {synopt:{cmdab:sa:ving}{cmd:(}{it:filename}[{cmd:,replace}]{cmd:)}}Save output dataset to a disk file{p_end}
 {synopt:{cmdab::no}{cmdab:re:store}}Write output dataset to memory{p_end}
 {synopt:{opt fast}}Write output dataset to memory without precautions{p_end}
@@ -51,6 +52,15 @@ The user may optionally also specify {help if} or {help in} clauses to list subs
 or change the display style using a list of {it:list_options} allowed as options by the {helpb list} command.
 
 {p 4 8 2}
+{cmd:frame(} {it:name}, [ {cmd:replace} {cmd:change} ] {cmd:)} specifies an output {help frame:data frame},
+to be generated to contain the output data set.
+If {cmd:replace} is specified, then any existing data frame of the same name is overwritten. 
+If {cmd:change} is specified,
+then the current data frame will be changed to the output data frame after the execution of {cmd:metaparm}.
+The {cmd:frame()} option may not specify the current data frame.
+To do this, use one of the options {cmd:norestore} or {cmd:fast}.
+
+{p 4 8 2}
 {cmd:saving(}{it:filename}[{cmd:,replace}]{cmd:)} saves the output dataset to a disk file.
 If {cmd:replace} is specified, and a file of that name already exists,
 then the old file is overwritten.
@@ -82,10 +92,12 @@ These files may later be concatenated using {helpb append}.
 {title:Notes}
 
 {pstd}
-Note that the user must specify at least one of the four options
-{cmd:list()}, {cmd:saving()}, {cmd:norestore} and {cmd:fast}.
+Note that the user must specify at least one of the five options
+{cmd:list()}, {cmd:frame()}, {cmd:saving()}, {cmd:norestore} and {cmd:fast}.
 These four options specify whether the output dataset is listed to the Stata log,
-saved to a disk file, or written to the memory (overwriting any pre-existing dataset).
+saved to a new data frame,
+saved to a disk file, or written to the current data frame
+(overwriting any pre-existing dataset).
 More than one of these options can be specified.
 
 

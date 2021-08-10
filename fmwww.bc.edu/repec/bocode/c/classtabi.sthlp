@@ -1,4 +1,6 @@
 {smcl}
+{* *! version 2.0.1 12Jul2018}{...}
+{* *! version 2.0.0 03Oct2017}{...}
 {* *! version 1.0.1 29May2016}{...}
 {* *! version 1.0.0 29Dec2015}{...}
 {title:Title}
@@ -11,8 +13,18 @@
 {marker syntax}{...}
 {title:Syntax}
 
+{pstd}
+Manual entry of values
+
 {p 8 17 2}
 {cmd:classtabi} {it:#a #b #c #d} [{cmd:,} {opt row:label}{it:(string)} {opt col:label}{it:(string)}]
+
+
+{pstd}
+Referring to a saved 2 X 2 matrix
+
+{p 8 17 2}
+{cmd:classtabi} {it:matname} [{cmd:,} {opt row:label}{it:(string)} {opt col:label}{it:(string)}]
 
 
 {synoptset 19 tabbed}{...}
@@ -28,14 +40,16 @@
 {title:Description}
 
 {pstd}
-{cmd:classtabi} is an immediate command that reports various summary statistics, including a 2 x 2 table for discrete classification data. {cmd:classtabi} is 
+{cmd:classtabi} reports various summary statistics, including a 2 x 2 table for discrete classification data. {cmd:classtabi} is 
 helpful in cases where only summarized data are available. For example, data-mining software generally produce a 2 X 2 classification table (referred to as
 {it: confusion matrix}) as part of the output. Those values can then be entered into {cmd:classtabi} to produce the additional classification statistics.   
 
+{title:Remarks}
+
 {pstd}
 In {cmd:classtabi}, row values indicate the true (binary) state of the observation, such as diseased and nondiseased, or normal and abnormal. Column values represent
-the binary rating or outcome of the diagnostic test, or predicted class from a classification algorithm. As such, the data should be entered as follows 
-(for example, we use disease as the reference [row] variable, and diagnostic test outcome as the classifier [column] variable):{p_end} 
+the binary rating or outcome of the diagnostic test, or predicted class from a classification algorithm. As such, when manually entering the four values (syntax 1), 
+the data should be entered as follows (for example, we use disease as the reference [row] variable, and diagnostic test outcome as the classifier [column] variable):{p_end} 
 
 {pstd}
 -------------------------------------------------------------------------------------- {p_end}
@@ -47,6 +61,9 @@ the binary rating or outcome of the diagnostic test, or predicted class from a c
 {it:#c} -- disease=1, test=0 (false negative)| {it:#d} -- disease=1, test=1 (true positive){p_end}
 {pstd} 
 -------------------------------------------------------------------------------------- {p_end}
+
+{pstd}
+To use the second syntax (syntax 2), the four values must be saved in a 2 X 2 matrix (see example below).
 
 {pstd}
 In addition to the conventional indices of classification accuracy, {cmd:classtabi} includes the {it:effect strength for sensitivity} (ESS), introduced by Yarnold and 
@@ -78,11 +95,17 @@ and 75% or greater to indicate a strong effect.{p_end}
 
 {title:Examples}
 
+{pstd}Entering values manually{p_end}
+
 {phang2}{cmd:. classtabi 1231 397 50 324}{p_end}
 
-{phang2}{cmd:. classtabi 1541 87 215 159, row(actual disease status) col(predicted disease status)}{p_end}
-
 {phang2}{cmd:. classtabi 1554 74 234 140, row(actual disease status) col(predicted disease status)}{p_end}
+
+{pstd}Referring to a matrix{p_end}
+
+{phang2}{cmd:. matrix input B = (1554 74\234 140)}{p_end}
+
+{phang2}{cmd:. classtabi B, row(actual disease status) col(predicted disease status)}{p_end}
 
 
 {title:Stored results}
@@ -95,13 +118,21 @@ and 75% or greater to indicate a strong effect.{p_end}
 {synopt:{cmd:r(P_corr)}}percent correctly classified{p_end}
 {synopt:{cmd:r(P_p1)}}sensitivity{p_end}
 {synopt:{cmd:r(P_n0)}}specificity{p_end}
-{synopt:{cmd:r(P_p0)}}false-positive rate{p_end}
-{synopt:{cmd:r(P_n1)}}false-negative rate{p_end}
+{synopt:{cmd:r(P_0p)}}false-positive rate{p_end}
+{synopt:{cmd:r(P_1n)}}false-negative rate{p_end}
 {synopt:{cmd:r(P_1p)}}positive predictive value{p_end}
 {synopt:{cmd:r(P_0n)}}negative predictive value{p_end}
 {synopt:{cmd:r(roc)}}ROC curve{p_end}
 {synopt:{cmd:r(ess)}}effect strength for sensitivity{p_end}
 {p2colreset}{...}
+
+
+{title:Acknowledgments}
+
+{p 4 4 2}
+Adam Ross Nelson suggested that {cmd:classtabi} accept matrix arguments, and Nicholas J. Cox supplied some elegant code to do just that!
+Anders Alexandersson found a bug when the user enters a zero into any cell, and Daniel Klein found the source of the bug and provided a simple fix. 
+Bruce Weaver noted an error in the output label for "Correctly classified". {p_end}
 
 
 {title:References}
@@ -121,14 +152,13 @@ to the research community, like a paper. Please cite it as such: {p_end}
 
 {p 4 8 2}
 Linden, Ariel (2015). classtabi: Stata module for generating classification statistics and table for summarized data. 
- {browse "http://ideas.repec.org/c/boc/bocode/s458127.html":http://ideas.repec.org/c/boc/bocode/s458127.html}.html{p_end}
+ {browse "http://ideas.repec.org/c/boc/bocode/s458127.html":http://ideas.repec.org/c/boc/bocode/s458127.html}{p_end}
 
 
 {title:Author}
 
 {p 4 8 2}	Ariel Linden{p_end}
 {p 4 8 2}	President, Linden Consulting Group, LLC{p_end}
-{p 4 8 2}	Ann Arbor, MI, USA{p_end}
 {p 4 8 2}{browse "mailto:alinden@lindenconsulting.org":alinden@lindenconsulting.org}{p_end}
 {p 4 8 2}{browse "http://www.lindenconsulting.org"}{p_end}
 
@@ -136,5 +166,5 @@ Linden, Ariel (2015). classtabi: Stata module for generating classification stat
 
 {title:Also see}
 
-{p 4 8 2} Online: {helpb estat classification}, {helpb roccomp}, {helpb looclass} (if installed){p_end}
+{p 4 8 2} Online: {helpb estat classification}, {helpb roccomp}, {helpb roctabi} (if installed), {helpb looclass} (if installed), {helpb kfoldclass} (if installed){p_end}
 

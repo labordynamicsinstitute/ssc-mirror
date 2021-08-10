@@ -1,9 +1,12 @@
-* title                                    colorblind.scheme
-
-* s1 scheme family with colors for subgroup graphs, stylish axis and thin lines.
+* title                                    plotplainblind.scheme
 
 
-*!  version 1.1  24dec2014
+
+*!  version 1.4  07aug2020
+
+sequence 1210
+label "plotplainblind"
+
 #include s1mono
 
 // Legend outside in lower right corner; 1 column; short signatures; no frame

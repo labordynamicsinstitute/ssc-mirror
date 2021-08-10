@@ -1,4 +1,4 @@
-*! version 2.11 September 4, 2015 @ 15:57:12
+*! version 2.13 Januar 15, 2019 @ 17:36:51 UK
 *! Decomposing total effects using the KHB method 
 *! Support: ukohler@uni-potsdam.de
 
@@ -22,6 +22,8 @@
 * 2.9: Option outcome not used for slogit -> fixed
 * 2.10: Option -continuous- not used. -> fixed
 * 2.11: S.E. incorrect with option -concomittant()- -> fixed
+* 2.12: Changes names of residuals stored with -khb ..., keep-
+* 2.13: Version 2.12 accidently outcommented a line. -> fixed
 
 // Caller Program
 // ==============
@@ -83,6 +85,7 @@ version 11
 	markout `touse' `Y' `X' `Z' `concomitant'
 
 	if "`keep'" !="" {
+		capture drop _khb_res*
 		capture drop __KHB_ID_
 		gen long __KHB_ID_ = _n
 		tempfile keep
@@ -212,6 +215,7 @@ program _KHB, eclass
 				tempname e`var'
 				predict `e`var'', resid equation(`var')
 				local elist `elist' `e`var''
+				char `e`var''[khbres] `var'
 			}
 		}
 
@@ -230,7 +234,7 @@ program _KHB, eclass
 				tempname e`var'
 				predict `e`var'', resid 
 				local elist `elist' `e`var''
-				
+				char `e`var''[khbres] `var'
 				estimates store e`var'
 				local models `models' e`var'
 			}
@@ -313,7 +317,7 @@ program _KHB, eclass
 		// Coefnames in Helper Regresson
 		local SURxnames: colnames _SURb
 		local SURxnames: list uniq SURxnames
-		/* local SURxnames: list SURxnames - Cnames */
+		local SURxnames: list SURxnames - Cnames /* 2.13: brought back in this line */
 		local SURxnames: subinstr local SURxnames " _cons" "", all
 		local SURxnames: subinstr local SURxnames " " `"",""' , all
 		
@@ -478,9 +482,12 @@ program _KHB, eclass
 	// --------------
 	local i 1
 	if "`keep'" != "" {
+		
 		capture drop _khb_res*
 		foreach var of varlist `elist' {
-			ren `var' _khb_res`i++'
+			local name ``var'[khbres]'
+
+			ren `var' _khb_res_`name'
 		}
 		keep __KHB_ID_ _khb_res*
 		quietly save `keep'

@@ -1,10 +1,23 @@
-! 1.1.0 NJC 17jul2017 
+*! 1.2.0 NJC 10may2019 
+* 1.1.0 NJC 17jul2017 
 * 1.0.0 NJC 9may2017 
 program multidot 
 	version 10
 
-	syntax varlist(numeric) [if] [in], over(varname)  ///
-	[ recast(str) by(str asis) sort(varlist) DESCending savedata(str asis) SHOW(varname) MISSing *] 
+	syntax varlist(numeric) [if] [in], over(varname)    ///
+	[ recast(str) by(str asis) sort(varlist) DESCending ///
+	savedata(str asis) SHOW(varname) MISSing SEParate SEPby(varname) *] 
+
+	if "`sepby'" != "" { 
+		if "`separate'" != "" { 
+			di as err "separate and sepby() options cannot be combined"
+			exit 198 
+		}
+		if "`recast'" != "" { 
+			di as err "recast() and sepby() options cannot be combined"
+			exit 198 
+		} 
+	} 
 
 	local nvars : word count `varlist' 
 
@@ -39,7 +52,7 @@ program multidot
 		local j = 0 
 		foreach v of local varlist { 
 			local ++j 
-			local call `call' `v' `over' `rank' `show' 
+			local call `call' `v' `over' `rank' `show' `sepby' 
 			local vlbl`j' `"`: var label `v''"' 
 			if `"`vlbl`j''"' == "" local vlbl`j' "`v'" 
 		} 
@@ -54,7 +67,7 @@ program multidot
 
 		local Ylbl : var label `over' 
 
-		stack `call', into(`y' `over' `rank' `show') clear 
+		stack `call', into(`y' `over' `rank' `show' `sepby') clear 
 
 		if `todo' {
 			do `savelbls' 
@@ -83,22 +96,36 @@ program multidot
 			}
 		}
 		label val `rank' `rlbl' 
-	}
+	
+		local ytitle `"`: var label `over''"' 
+		if `"`ytitle'"' == "" local ytitle "`over'" 
+	
+		local RANK `rank' 
 
-	local ytitle `"`: var label `over''"' 
-	if `"`ytitle'"' == "" local ytitle "`over'" 
+		if "`sepby'" != "" { 
+			separate `rank', by(`sepby') veryshortlabel 
+			local rank `r(varlist)' 
+			local off legend(off) 
+		}
+		else if "`separate'" != "" { 
+			separate `rank', by(_stack) veryshortlabel 
+			local rank `r(varlist)' 
+			local off legend(off)
+		}
+	} 
+    * end quietly 
 
   	if "`recast'" == "" { 
 		if "`show'" != "" local show mla(`show') mlabpos(3) 
-		twoway scatter `rank' `y', by(_stack, note("") xrescale `by') ///
+		twoway scatter `rank' `y', by(_stack, note("") xrescale `off' `by') ///
 		ms(Oh) mc(dkgreen) subtitle(, fcolor(green*0.2)) xtitle("") ytitle(`"`ytitle'"') /// 
 		yla(1/`nvals', grid glw(vthin) glc(gs12) valuelabel ang(h) tl(0)) ///
 		`show' `options' 
 	} 
 	else if inlist("`recast'", "line", "connected") { 
 		if "`show'" != "" local show mla(`show') mlabpos(3) 
-                if "`recast'" == "connected" local markers ms(Oh) mc(dkgreen)
-		twoway `recast' `rank' `y', by(_stack, note("") xrescale `by') ///
+        if "`recast'" == "connected" local markers ms(Oh) mc(dkgreen)
+		twoway `recast' `rank' `y', by(_stack, note("") xrescale `off' `by') ///
 		`markers' subtitle(, fcolor(green*0.2)) xtitle("") ytitle(`"`ytitle'"') /// 
 		yla(1/`nvals', grid glw(vthin) glc(gs12) valuelabel ang(h) tl(0)) ///
 		`show' `options' 
@@ -120,7 +147,7 @@ program multidot
 
 	if `"`savedata'"' != "" { 
 		rename `y' _y 
-		rename `rank' _rank 
+		rename `RANK' _rank 
 		save `savedata' 
 	} 
 end 

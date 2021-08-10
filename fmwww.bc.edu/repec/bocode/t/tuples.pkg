@@ -13,9 +13,9 @@ d KW: combinatorics
 d KW: programming
 d KW: selection 
 d
-d Requires: Stata version 8
+d Requires: Stata version 8 (version 10 for some options; version 16 and Python versions 3.6-3.8 for others)
 d
-d Distribution-Date: 20160410
+d Distribution-Date: 20200517
 d
 d Author: Joseph N. Luchman, Fors Marsh Group LLC
 d Support: email   jluchman@@forsmarshgroup.com 
@@ -27,5 +27,6 @@ d Author: Nicholas J. Cox, Durham University
 d Support: email N.J.Cox@@durham.ac.uk
 d
 f tuples.ado
+f ../s/st_tuples_py.py
 f tuples.hlp
 f tuples.sthlp

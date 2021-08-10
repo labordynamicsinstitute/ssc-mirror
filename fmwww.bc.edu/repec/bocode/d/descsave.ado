@@ -1,17 +1,23 @@
 #delim ;
-prog def descsave;
-version 10.0;
+prog def descsave, rclass;
+version 16.0;
+/*
+ Extension of describe
+ creating a resultsset and/or a do-file.
+*! Author: Roger Newson
+*! Date: 11 March 2020
+*/
+
 syntax [anything(id="varlist")] [using] [,
  DOfile(string asis) DONtdo(string)
- LIst(string asis) SAving(string asis) noREstore FAST FList(name)
+ LIst(string asis) FRame(string asis) SAving(string asis) noREstore FAST FList(name)
  CHarlist(string asis) IDNum(string) IDStr(string)
+ VALLabkeep(name)
  REName(string) GSort(string) KEep(string)
  DShead Detail VARList
  SImple Short Fullnames Numbers
  ];
 /*
- Extension of describe
- creating a resultsset and/or a do-file.
  The dofile() option specifies a do-file
    which can reconstruct types, formats, value labels, variable labels,
    and characteristics specified by the charlist option,
@@ -19,21 +25,23 @@ syntax [anything(id="varlist")] [using] [,
    (as they will if the data set has been saved using outsheet
    and re-input using insheet).
  The dontdo() option specifies a list of variable attributes
-   (a sublist of the options type, format, vallab and varlab)
+   (a sublist of the options type, format, vallab, vallabdef and varlab)
    that are not to be changed by the output do-file.
  The list() option specifies what (if anything) will be listed,
    using a [varlist] [if exp] [in range] [ , [list_options] ] format
    (as used by the official Stata list command.
- The saving() option specifies a Stata data set,
+ The frame() option specifies a Stata data frame,
+   with 1 obs per variable in varlist,
+   and data on names, types, formats, value labels, variable labels,
+   and characteristics specified by the charlist() option.
+ The saving() option specifies a Stata data file,
    with 1 obs per variable in varlist,
    and data on names, types, formats, value labels, variable labels,
    and characteristics specified by the charlist() option.
  The norestore option specifies that the pre-existing data set
   is not restored after the output data set has been produced
   (set to norestore if the fast option is present).
- The fast option specifies that descsave will not preserve the original data set
-  so that it can be restored if the user presses Break
-  (intended for use by programmers).
+ The fast option is an alternative name for the norestore option..
  The flist() option is a global macro name,
   belonging to a macro containing a filename list (possibly empty),
   to which descsave will append the name of the dataset
@@ -41,13 +49,18 @@ syntax [anything(id="varlist")] [using] [,
   This enables the user to build a list of filenames
   in a global macro,
   containing the output of a sequence of descsave calls,
-  which may later be concatenated using dsconcat (if installed) or append.
+  which may later be concatenated using append.
+ The charlist() option specifies a list of variable characteristics to store in variables
+   in the output dataset.
  The idnum() and idstr() options
    specify numeric and string identifiers, respectively,
    which will be stored in variables of the same name
    in the saving() data set,
    and can be used as identifiers if the saving data set
    is concatenated with other saving data sets.
+ The vallabkeep() option specifies which of the value labels in the input dataset
+   will be kept in the output dataset
+   (all, none or present in the vallab variable).
  The rename() option specifies a list
    of alternating old and new variable names,
    so the user can rename variables in the saving data set.
@@ -66,8 +79,6 @@ syntax [anything(id="varlist")] [using] [,
    because the Stata 8 version of descsave
    passed them to describe to get the listing,
    instead of having a list() option..
-*! Author: Roger Newson
-*! Date: 03 April 2017
 */
 
 *
@@ -79,15 +90,28 @@ if "`detail'"!="" {;
   local dshead "dshead";
 };
 local dontdo: list uniq dontdo;
-local possdontdo "type format vallab varlab";
+local possdontdo "type format vallab vallabdef varlab";
 local validdontdo: list dontdo in possdontdo;
 if !`validdontdo' {;
   disp as error `"Invalid dontdo(`dontdo')"';
   error 498;
 };
-foreach DD in type format vallab varlab {;
+foreach DD in type format vallab vallabdef varlab {;
   local dodo`DD': list DD in dontdo;
   local dodo`DD'=!`dodo`DD'';
+};
+if "`vallabkeep'"=="" {;
+  local vallabkeep "all";
+};
+local vallabkeep=lower("`vallabkeep'");
+foreach VLK in all present none {;
+  if strpos("`VLK'","`vallabkeep'")==1 {;
+    local vallabkeep="`VLK'";
+  };
+};
+if !inlist("`vallabkeep'","all","present","none") {;
+  disp as error "vallabkeep() option must be all, present, or none";
+  error 498;
 };
 
 *
@@ -95,25 +119,27 @@ foreach DD in type format vallab varlab {;
  and output dataset header lines if requested
 *;
 if "`dshead'"=="" {;
-  qui desc `using', simple `dsvarlist';
+  qui desc `using', `dsvarlist';
 };
 else {;
   desc `using', short `detail' `dsvarlist';
 };
+return add;
 
 *
  Set restore to norestore if fast is present
- and check that the user has specified one of the five options:
- dofile() and/or list() and/or saving() and/or norestore and/or fast.
+ and check that the user has specified one of the six options:
+ dofile() and/or frame() and/or list() and/or saving() and/or norestore and/or fast.
 *;
 if "`fast'"!="" {;
     local restore="norestore";
 };
-if (`"`dofile'"'=="")&(`"`list'"'=="")&(`"`saving'"'=="")&("`restore'"!="norestore")&("`fast'"=="") {;
-    disp as error "You must specify at least one of the five options:"
-      _n "dofile() list(), saving(), norestore, and fast."
+if (`"`dofile'"'=="")&(`"`list'"'=="")&(`"`frame'"'=="")&(`"`saving'"'=="")&("`restore'"!="norestore")&("`fast'"=="") {;
+    disp as error "You must specify at least one of the 6 options:"
+      _n "dofile(), list(), frame(), saving(), norestore, and fast."
       _n "If you specify dofile(), then a do-file is created."
       _n "If you specify list(), then the output variables specified are listed."
+      _n "If you specify frame(), then the new data set is output to a data frame."
       _n "If you specify saving(), then the new data set is output to a disk file."
       _n "If you specify norestore and/or fast, then the new data set is created in the memory,"
       _n "and any existing data set in the memory is destroyed."
@@ -121,36 +147,73 @@ if (`"`dofile'"'=="")&(`"`list'"'=="")&(`"`saving'"'=="")&("`restore'"!="noresto
     error 498;
 };
 
+
 *
- Preserve old dataset if fast is unset
+ Parse frame option if present
 *;
-if("`fast'"==""){;
-    preserve;
+if `"`frame'"'!="" {;
+  cap frameoption `frame';
+  if _rc {;
+    disp as error `"Illegal frame option: `frame'"';
+    error 498;
+  };
+  local framename "`r(namelist)'";
+  local framereplace "`r(replace)'";
+  local framechange "`r(change)'";
+  if `"`framename'"'=="`c(frame)'" {;
+    disp as error "frame() option may not specify current frame."
+      _n "Use norestore or fast instead.";
+    error 498;
+  };
+  if "`framereplace'"=="" {;
+    cap noi conf new frame `framename';
+    if _rc {;
+      error 498;
+    };
+  };
 };
 
-* Input using dataset without observations from file if requested *;
+
+*
+ Beginning of frame block (NOT INDENTED)
+*;
+local oldframe=c(frame);
+tempname tempframe;
 if `"`using'"'!="" {;
-  qui use if 0 `using', clear;
+  frame create `tempframe';
+  frame `tempframe': qui use if 0 `using', clear;
 };
+else {;
+  frame put if 0, into(`tempframe');
+};
+frame `tempframe': {;
+
 
 *
  Fill in varlist if necessary
  and count the variables
 *;
-if "`varlist'"=="" {;unab varlist: *;};
-else {;unab varlist: `varlist';};
-keep `varlist';
+if "`varlist'"=="" {;
+  cap unab varlist: *;
+};
+else {;
+  unab varlist: `varlist';
+};
 local nvar:word count `varlist';
+if `nvar'>0 {;
+  keep `varlist';
+};
 
 *
- Expand and contract charlist if necessary
+ Expand, contract and return charlist if necessary
 *;
 local nchar:word count `charlist';
 local charlist2 "";
 forv i1=1(1)`nchar' {;
   local charcur: word `i1' of `charlist';
   if `"`charcur'"'=="*" {;
-    foreach X of var `varlist' {;
+    forv i1=1(1)`nvar' {;
+      local X: word `i1' of `varlist';
       local charcur2: char `X'[];
       local charlist2 `"`charlist2' `charcur2'"';
     };
@@ -166,13 +229,22 @@ forv i1=1(1)`nchar' {;
 };
 local charlist: list uniq charlist2;
 local nchar: word count `charlist';
+retu local charlist `"`charlist'"';
 
 * Create macro variables containing descriptive features *;
-local i1=0;
-while(`i1'<`nvar'){;local i1=`i1'+1;
+forv i1=1(1)`nvar' {;
   local varcur:word `i1' of `varlist';
   local name`i1' "`varcur'";
   local type`i1':type `varcur';
+  qui {;
+    cap conf numeric var `varcur';
+    if _rc {;
+      local isnumeric`i1'=0;
+    };
+    else {;
+      local isnumeric`i1'=1;
+    };
+  };
   local form`i1':format `varcur';
   local vall`i1':value label `varcur';
   local varl`i1':variable label `varcur';
@@ -190,12 +262,13 @@ while(`i1'<`nvar'){;local i1=`i1'+1;
 if (`"`dofile'"'!=""){;
   tempfile labdef;
   local vllist "";
-  local i1=0;
-  while(`i1'<`nvar'){;local i1=`i1'+1;
+  forv i1=1(1)`nvar' {;
     * Check that variable label exists *;
     cap lab list `vall`i1'';
     if _rc==0 {;
-      if("`vllist'"==""){;local vllist "`vall`i1''";};
+      if("`vllist'"==""){;
+        local vllist "`vall`i1''";
+      };
       else if("`vall`i1''"!=""){;
         *
          Check that the value label is not in the list
@@ -209,11 +282,11 @@ if (`"`dofile'"'!=""){;
       };
     };
   };
-  if ("`vllist'"!="") & `dodovallab' {;
+  if ("`vllist'"!="") & `dodovallabdef' {;
    qui label save `vllist' using `"`labdef'"',replace;
    label drop _all;
   };
-  else{;
+  else {;
     label drop _all;
     qui label save using `"`labdef'"',replace;
   };
@@ -230,16 +303,19 @@ drop _all;
 qui set obs `nvar';
 qui gene long order=_n;
 qui compress order;
-foreach X of new name type format vallab varlab{;qui gene str1 `X'="";};
-local i2=0;
-while(`i2'<`nchar'){;local i2=`i2'+1;
+qui gene byte isnumeric=.;
+qui compress isnumeric;
+foreach X of new name type format vallab varlab{;
+  qui gene str1 `X'="";
+};
+forv i2=1(1)`nchar' {;
   qui gene str1 char`i2'="";
 };
-local i1=0;
-while(`i1'<`nvar'){;local i1=`i1'+1;
+forv i1=1(1)`nvar' {;
   qui{;
     replace name=`"`name`i1''"' in `i1';
     replace type=`"`type`i1''"' in `i1';
+    replace isnumeric=`isnumeric`i1'' in `i1';
     replace format=`"`form`i1''"' in `i1';
     replace vallab=`"`vall`i1''"' in `i1';
     replace varlab=`"`varl`i1''"' in `i1';
@@ -252,6 +328,7 @@ while(`i1'<`nvar'){;local i1=`i1'+1;
 lab var order "Variable order";
 lab var name "Variable name";
 lab var type "Storage type";
+lab var isnumeric "Numeric indicator";
 lab var format "Display format";
 lab var vallab "Value label";
 lab var varlab "Variable label";
@@ -262,33 +339,23 @@ lab var varlab "Variable label";
 char order[varname] "variable order";
 char name[varname] "variable name";
 char type[varname] "storage type";
+char isnumeric[varname] "numeric indicator";
 char format[varname] "display format";
 char vallab[varname] "value label";
 char varlab[varname] "variable label";
 local i2=0;
-while(`i2'<`nchar'){;local i2=`i2'+1;
+while(`i2'<`nchar'){;
+  local i2=`i2'+1;
   local charcur:word `i2' of `charlist';
   lab var char`i2' `"Characteristic varname[`charcur']"';
   char char`i2'[varname] `"varname[`charcur']"';
+  char char`i2'[charname] `"`charcur'"';
 };
 *
- Sort in default order
+ Order and sort in default order
 *;
-sort order, stable;
-
-*
- Left-justify formats for all character variables
- in the base output variable set
-*;
-unab outvars: *;
-foreach X of var `outvars' {;
-    local typecur: type `X';
-    if strpos("`typecur'","str")==1 {;
-        local formcur: format `X';
-        local formcur=subinstr("`formcur'","%","%-",1);
-        format `X' `formcur';
-    };
-};
+order order name type isnumeric format vallab varlab;
+sort order;
 
 *
  Create numeric and/or string ID variables if requested
@@ -306,6 +373,20 @@ if("`idnum'"!=""){;
     qui compress idnum;
     qui order idnum;
     lab var idnum "Numeric id";
+};
+
+*
+ Left-justify formats for all character variables
+ in the base output variable set
+*;
+unab outvars: *;
+foreach X of var `outvars' {;
+    local typecur: type `X';
+    if strpos("`typecur'","str")==1 {;
+        local formcur: format `X';
+        local formcur=subinstr("`formcur'","%","%-",1);
+        format `X' `formcur';
+    };
 };
 
 *
@@ -400,6 +481,25 @@ if(`"`dofile'"'!=""){;
 *;
 
 *
+ Select value labels to keep
+*;
+qui levelsof vallab, lo(presvallabs);
+if "`vallabkeep'"=="none" {;
+  local dropvallabs "_all";
+};
+else if "`vallabkeep'"=="present" {;
+  qui lab dir;
+  local oldvallabs "`r(names)'";
+  local dropvallabs: list oldvallabs - presvallabs;
+};
+else if "`vallabkeep'"=="all" {;
+  local dropvallabs "";
+};
+if "`dropvallabs'"!="" {;
+  qui lab drop `dropvallabs';
+};
+
+*
  Rename variables if requested
 *;
 if "`rename'"!="" {;
@@ -481,36 +581,58 @@ if(`"`saving'"'!=""){;
     };
 };
 
+
 *
- Restore old data set if restore is set
- or if program fails when fast is unset
+ Copy new frame to old frame if requested
 *;
-if "`fast'"=="" {;
-    if "`restore'"=="norestore" {;
-        restore,not;
-    };
-    else {;
-        restore;
-    };
+if "`restore'"=="norestore" {;
+  frame copy `tempframe' `oldframe', replace;
 };
+
+
+};
+*
+ End of frame block (NOT INDENTED)
+*;
+
+
+*
+ Rename temporary frame to frame name (if frame is specified)
+ and change current frame to frame name (if requested)
+*;
+if "`framename'"!="" {;
+  if "`framereplace'"=="replace" {;
+    cap frame drop `framename';
+  };
+  frame rename `tempframe' `framename';
+  if "`framechange'"!="" {;
+    frame change `framename';
+  };
+};
+
 
 end;
 
 prog def linesave;
-version 10.0;
+version 16.0;
 args file;
 * Save variables line1, line2 and line3 to data set file *;
 
-preserve;
-keep line1 line2 line3;
-keep if((!missing(line1))|(!missing(line2))|(!missing(line3)));
-save `"`file'"',replace;
-restore;
+local oldframe=c(frame);
+tempname tempframe;
+frame copy `oldframe' `tempframe', replace;
+frame change `tempframe';
+cap noi {;
+  keep line1 line2 line3;
+  keep if((!missing(line1))|(!missing(line2))|(!missing(line3)));
+  save `"`file'"',replace;
+};
+frame change `oldframe';
 
 end;
 
 prog def dosave;
-version 10.0;
+version 16.0;
 *
  Save the do-file using anything as input file list
 *;
@@ -518,10 +640,11 @@ syntax [anything] using/ [,REPLACE];
 local ninf: word count `anything';
 local labdef: word 1 of `anything';
 
-preserve;
-
-qui {;
-  drop _all;
+local oldframe=c(frame);
+tempname tempframe;
+frame create `tempframe';
+frame change `tempframe';
+cap {;
   * Input label definition file first *;
   infix str line1 1-80 str line2 81-160 str line3 161-240 using `"`labdef'"';
   replace line1=subinstr(line1,"label define ","cap la de ",1);
@@ -533,7 +656,20 @@ qui {;
   * Create output do-file *;
   outfile line1 line2 line3 using `"`using'"',runtogether `replace';
 };
+frame change `oldframe';
 
-restore;
+end;
+
+prog def frameoption, rclass;
+version 16.0;
+*
+ Parse frame() option
+*;
+
+syntax name [, replace CHange ];
+
+return local change "`change'";
+return local replace "`replace'";
+return local namelist "`namelist'";
 
 end;

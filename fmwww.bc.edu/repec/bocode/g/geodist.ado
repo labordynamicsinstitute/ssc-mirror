@@ -1,4 +1,4 @@
-*! version 1.0.1  05may2010 Robert Picard, picard@netbox.com
+*! version 1.1.0  18jun2019 Robert Picard, picard@netbox.com
 program define geodist, rclass
 
 	version 9
@@ -10,7 +10,7 @@ program define geodist, rclass
 		Radius(string) ///
 		Sphere ///
 		Ellipsoid(string) ///
-		Maxiter(integer 25) ///
+		Maxiter(integer 25) /// undocumented
 		]
 	
 	
@@ -30,30 +30,33 @@ program define geodist, rclass
 		dis as err "You must provide lat1 lon1 lat2 lon2"
 		exit 198
 	}
+
 	local hasvar 0
+	local allmissing 0
 	local j 0
+
 	forvalues i = 1/2 {
 		foreach l in lat lon {
 			local ++j
 			local `l'`i' ``j''
-			cap confirm number ``l'`i''
-			local isnum = _rc == 0
-			cap confirm scalar ``l'`i''
-			if !_rc | `isnum' {
-				if "`l'" == "lat" & abs(``j'') > 90 {
-					dis as err "latitude `i' must be between -90 and 90"
-					exit 198
-				}
-				if "`l'" == "lon" & abs(``j'') > 180 {
-					dis as err "longitude `i' must be between -180 and 180"
-					exit 198
-				}
+
+			cap confirm string var ``j''
+			if !_rc {
+				dis as err "``j'' is a string variable"
+				exit 109
 			}
-			else {
-				cap confirm numeric var ``j''
-				if !_rc {
-					local hasvar 1
-					sum ``j'' `if' `in', meanonly
+			
+			cap confirm numeric var ``j''
+			if !_rc {
+
+				local hasvar 1
+
+				if "`touse'" == "" marksample touse, novar
+				markout `touse' ``j''
+
+				sum ``j'' if `touse', meanonly
+				if r(N) == 0 local allmissing 1
+				else {
 					if "`l'" == "lat" & (r(max) > 90 | r(min) < -90) {
 						dis as err "latitude `i' must be between -90 and 90"
 						exit 198
@@ -63,15 +66,49 @@ program define geodist, rclass
 						exit 198
 					}
 				}
-				else {
-					dis as err "Was expecting a variable, scalar, or number " ///
-						"instead of ``j''"
+
+			}
+			else {
+
+				cap confirm number ``j''
+				local isnum = _rc == 0
+
+				cap confirm scalar ``j''
+				local isscalar = _rc == 0
+				if `isscalar' {
+					tempname what
+					cap scalar `what' = ``j'' / 1
+					if _rc {
+						dis as err "``j'' is a string scalar"
+						exit 109
+					}
+				}
+
+				cap local is_missing = mi(``j'')
+				if _rc local is_missing 0
+
+				if !(`isnum' | `isscalar' | `is_missing') {
+					dis as err "Was expecting a number or a numeric scalar " ///
+						"instead of -``j''-"
 					exit 198
+				}
+				
+				if `is_missing' local allmissing 1
+				else {
+					if "`l'" == "lat" & abs(``j'') > 90 {
+						dis as err "latitude `i' must be between -90 and 90"
+						exit 198
+					}
+					if "`l'" == "lon" & abs(``j'') > 180 {
+						dis as err "longitude `i' must be between -180 and 180"
+						exit 198
+					}
 				}
 			}
 		}
 	}
 	
+
 	if !`hasvar' {
 		if "`if'`in'" != "" {
 			dis as err "lat/lon are not variables, if or in option not allowed"
@@ -81,16 +118,19 @@ program define geodist, rclass
 			dis as err "lat/lon are not variables, nothing to generate"
 			exit 198
 		}
+		if `allmissing' {
+			return scalar distance = .
+			exit 0
+		}
 	}
 	else {
 		if "`generate'" == "" {
 			dis as err "you must specify gen(newvar) option"
 			exit 198
 		}
-		capture confirm new var `generate'
-		if _rc {
-			dis as err "cannot create variable specified in gen() option"
-			exit _rc
+		if `allmissing' {
+			qui gen double `generate' = .
+			exit 0
 		}
 	}
 
@@ -109,55 +149,27 @@ program define geodist, rclass
 		// see http://en.wikipedia.org/wiki/Earth_radius#Mean_radii
 		if "`radius'" == "" local radius 6371
 		
-		// double precision sin becomes flat for angles within 1.0536e-08 of pi/2
-		// double precision cos becomes flat for angles <= 1.0536e-08 radians
-		// this represents an earth distance of 67mm (1.0536e-08 * 6371000000)
-		
 		if `hasvar' {
 		
-			tempvar touse
-			qui gen `touse' = 1 `if' `in'
-			qui replace `touse' = 0 if mi(`lat1',`lon1',`lat2',`lon2')
-			qui replace `touse' = 0 if `touse' == .		
-
-			// by default, use haversine formula
+			// use haversine formula
 			// http://www.movable-type.co.uk/scripts/gis-faq-5.1.html
-			// becomes flat within 2 * 67mm of antipod, i.e. max error = 134mm
 			qui gen double `generate' =  2 * asin(min(1,sqrt( ///
 				sin((`lat2' - `lat1') * `d2r' / 2)^2 + ///
 				cos(`lat1' * `d2r') * cos(`lat2' * `d2r') * ///
 				sin((`lon2' - `lon1') * `d2r' / 2)^2))) ///
 				* `radius' `km_to_miles' if `touse'
 				
-			// switch to law of cosines formula for near-antipodal points
-			// becomes flat for points within 67mm of each other on the equator,
-			// i.e. max error = 67mm
-			qui replace `generate' = acos(min(1, ///
-				sin(`lat1' * `d2r') * sin(`lat2' * `d2r') + ///
-				cos(`lat1' * `d2r') * cos(`lat2' * `d2r') * ///
-				cos(`lon2' * `d2r' - `lon1' * `d2r'))) ///
-				* `radius' `km_to_miles' if `touse' & ///
-				`generate' > `radius' * c(pi) - 10
-				
 		}
 		else {
-			local formula "haversine"
 			tempname generate
 			scalar `generate' = 2 * asin(min(1,sqrt( ///
 				sin((`lat2' - `lat1') * `d2r' / 2)^2 + ///
 				cos(`lat1' * `d2r') * cos(`lat2' * `d2r') * ///
 				sin((`lon2' - `lon1') * `d2r' / 2)^2))) ///
 				* `radius' `km_to_miles'
-			if `generate' > `radius' * c(pi) - 10 {
-				scalar `generate' = acos(min(1, ///
-				sin(`lat1' * `d2r') * sin(`lat2' * `d2r') + ///
-				cos(`lat1' * `d2r') * cos(`lat2' * `d2r') * ///
-				cos(`lon2' * `d2r' - `lon1' * `d2r'))) ///
-				* `radius' `km_to_miles'
-				local formula "law of cosines"
-			}
+
 			dis as txt "Great-circle distance " ///
-				"(`formula' formula, radius of `radius'km) = " ///
+				"(haversine formula, radius of `radius'km) = " ///
 				as res `generate' " `units'"
 			return scalar distance = `generate'
 		}
@@ -196,12 +208,6 @@ program define geodist, rclass
 	
 		if `hasvar' {
 		
-			// at least one lat/lon is a variable; others can be scalar or number
-			tempvar touse
-			qui gen `touse' = 1 `if' `in'
-			qui replace `touse' = 0 if mi(`lat1',`lon1',`lat2',`lon2')
-			qui replace `touse' = 0 if `touse' == .			
-
 			// implement Vincenty's (1975) inverse solution
 			// Source: http://www.ngs.noaa.gov/PUBS_LIB/inverse.pdf
 			

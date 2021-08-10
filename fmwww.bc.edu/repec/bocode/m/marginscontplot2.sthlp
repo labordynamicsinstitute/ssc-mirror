@@ -1,5 +1,5 @@
 {smcl}
-{* *! version 1.2.0  10apr2017}{...}
+{* *! version 1.3.0  04jan2018}{...}
 {cmd:help marginscontplot2}{right: Patrick Royston}
 {hline}
 
@@ -32,6 +32,8 @@
 {synopt :{opt marg:opts(string)}}options for {cmd:margins}{p_end}
 {synopt :{opt name(name [, replace])}}store graph to memory {p_end}
 {synopt :{opt nograph}}suppress graph{p_end}
+{synopt :{opt pre:fix(string)}}prefix names of created variables (margins and confidence intervals)
+with {it:string} [relevant only with {opt saving()}]{p_end}
 {synopt :{opt sav:ing(filename [, replace])}}save margins and confidence intervals to file{p_end}
 {synopt :{opt sh:owmarginscmd}}show the {cmd:margins} command as issued{p_end}
 {synopt :{opt var1(# | var1_spec)}}specifies transformed values of {it:xvar1} for plotting{p_end}
@@ -154,6 +156,12 @@ of marginal effects in memory. See {helpb name option} for details.
 
 {phang}
 {opt nograph} suppresses the graph of marginal effects.
+
+{phang}
+{opt prefix(string)} prefixes the names of created variables containing
+margins and confidence intervals with {it:string}. Applies only with the
+{opt saving()} option, otherwise ignored. May be useful if you are saving
+results for different models in order to compare margins graphically. 
 
 {phang}
 {cmd:saving(}{it:filename} [{cmd:, replace}]{cmd:)} saves the calculated

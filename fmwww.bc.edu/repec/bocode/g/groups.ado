@@ -1,4 +1,5 @@
-*! NJC 1.4.0 30 June 2017
+*! NJC 1.4.1 20 February 2018
+* NJC 1.4.0 30 June 2017
 * NJC 1.3.2 11 June 2017
 * NJC 1.3.1 14 May 2017
 * NJC 1.3.0 31 January 2012
@@ -219,7 +220,7 @@ program groups, sort byable(recall)
 		if "`weight'" == "aweight" { 
 			su `exp' if `touse' & `indata', meanonly 
 			replace `freq' = `freq' * `N' / r(sum)   
-			su `exp' if `touse' & `indata' & !missing(`varlist'), meanonly 
+			su `exp' if `touse' & `indata' & !missing(`Varlist'), meanonly 
 			replace `vfreq' = `vfreq' * `N' / r(sum)   
 		}
 		

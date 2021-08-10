@@ -7,7 +7,7 @@
 
 
 {phang}
-{bf:cntrade} {hline 2} Downloads historical Market Quotations for a list of stock codes or index codes from Net Ease (a web site providing financial information in China, www.163.com).
+{bf:cntrade} {hline 2} Downloads historical Market Quotations for a list of stock codes or index codes from Net Ease (a web site providing financial information in China, http://money.163.com/).
 
 
 {title:Syntax}
@@ -18,7 +18,8 @@
 {marker description}{...}
 {title:Description}
 
-{pstd}{it:codelist} is a list of stock codes or index codes to be downloaded from Net. They are separated by spaces. For each code, there will be one stata format data file as an output containing all the trading information for that stock. The code will be the file name, with .dta as the extension. In China, stocks are identified by a six digit numbers, not tickers as in the United States. Examples of codes and the names are as following: {p_end}
+{pstd}{it:codelist} is a list of stock codes or index codes to be downloaded from Net. They are separated by spaces. For each code, there will be one stata format data file as an output containing all the trading information for that stock.
+The code will be the file name, with .dta as the extension. In China, stocks are identified by a six digit numbers, not tickers as in the United States. Examples of codes and the names are as following: {p_end}
 
 {pstd} {hi:Stock Codes and Stock Names:} {p_end}
 {pstd} {hi:000001} Pingan Bank  {p_end}
@@ -93,7 +94,7 @@
 {pstd}Yuan Xue{p_end}
 {pstd}China Stata Club(爬虫俱乐部){p_end}
 {pstd}Wuhan, China{p_end}
-{pstd}xueyuan19920310@163.com{p_end}
+{pstd}xueyuan@hust.edu.cn{p_end}
 
 {title:Also see}
 

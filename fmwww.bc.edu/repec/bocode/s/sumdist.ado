@@ -1,3 +1,4 @@
+*! 2.1.0 SPJ Feb 2021 Add pweight so that use PVK's -rhsbsample- & svy bootstrap 
 *! 2.0.0 SPJ September 2006 (port to version 8.2)
 *! version 1.0.1 Stephen P. Jenkins, Dec 1998
 *! Quantiles, shares of total, and (generalised) Lorenz ordinates 
@@ -9,7 +10,7 @@ program define sumdist, rclass sortpreserve byable(recall)
 
         version 8.2
  
-	 syntax varname(numeric) [aweight fweight] [if] [in] 	///
+	 syntax varname(numeric) [aweight fweight pweight iweight] [if] [in] 	///
                 [, Ngps(int 10) QGP(name) PVar(string) 		///
 		   LVar(string) GLVar(string)   ]
 

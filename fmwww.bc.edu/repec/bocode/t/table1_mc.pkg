@@ -8,12 +8,14 @@ d KW: data management
 d KW: baseline characteristics
 d KW: descriptive statistics
 d
-d Requires: Stata version 14.2
+d Requires: Stata version 14.2 (15.1 for docx output)
 d
-d Distribution-Date: 20170523
+d Distribution-Date: 20200429
 d
 d Author: Mark Chatfield, Menzies School of Health Research
 d Support: email Mark.Chatfield@@menzies.edu.au
 d
 f table1_mc.ado
 f table1_mc.sthlp
+f table1_mc_dta2docx.ado
+f table1_mc_dta2docx.sthlp

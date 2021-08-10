@@ -1,4 +1,10 @@
-*! version 1.0.5 Niels Henrik Bruun	2017-05-19
+*! Support: Niels Henrik Bruun, niels.henrik.bruun@gmail.com
+* version 1.0.9 Niels Henrik Bruun	2020-08-23
+* TODO: Indent of code blocks do not work
+* version 1.0.8 Niels Henrik Bruun	2019-02-27
+* version 1.0.7 Niels Henrik Bruun	
+* version 1.0.6 Niels Henrik Bruun	2017-10-10
+* version 1.0.5 Niels Henrik Bruun	2017-05-19
 * 2017-05-19 >	lines2markup(): Added sampleline to handle broken sample lines
 * version 1.0.4	Niels Henrik Bruun	2017-03-31
 * version 1.0.3	Niels Henrik Bruun	2016-08-19

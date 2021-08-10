@@ -1,7 +1,10 @@
 p hadrilm module to perform Hadri panel unit root test
 p haif module to compute Homoskedastic Adjustment Inflation Factors for model selection
+p haiku module to randomly produce haikus
 p half module to compute homoskedastic adjustment inflation factors for model selection
 p hallt-skewt module to compute skewness-adjusted bootstrap t-statistics
+p hamiltonfilter module to calculate the Hamilton Filter for a Single Time Series or for a Panel Dataset
+p hammock module to implement Hammock plot, visualizing categorical (and continuous) data
 p hangroot module creating a hanging rootogram comparing an empirical distribution to the best fitting theoretical distribution 
 p hansen2 module for Hansen's test for parameter instability 
 p hapblock module to perform haplotype analysis to identify the edges of haplotype blocks
@@ -15,7 +18,11 @@ p hcavar module to perform Hierarchical Clusters Analysis of variables
 p hcnbreg module to estimate Heterogeneous Canonical Negative Binomial Regression
 p hdfe module to partial out variables with respect to a set of fixed effects
 p hdquantile module for Harrell-Davis estimator of quantiles
+p heabs module to calculate the ICER and Net Benefit for up to two datasets
 p head module to print the head observations (first observations in data set)
+p heart module to make coding fun and accessible
+p heatmapgraph module to measure the evolution of risks to financial stability over the financial cycle 
+p heatplot module to create heat plots and hexagon plots
 p heckprob2 module to run heckprob and svyheckprob with d2 evaluator
 p heckroc module to plot ROC curves
 p hegy4 module to compute Hylleberg et al seasonal unit root test
@@ -23,6 +30,8 @@ p heterogi module to quantify heterogeneity in a meta-analysis
 p hetop module for estimating heteroskedastic ordered probit models with ordered frequency data
 p hetprob module to estimate heteroskedastic probit model
 p hetred module to implement heterogeneity reducing algorithms
+p hetsar module to estimate spatial autoregressive models with heterogeneous coefficients 
+p hettreatreg module to compute diagnostics for linear regression when treatment effects are heterogeneous
 p hgclg module to estimate geometric-complementary log log hurdle regression
 p hglogit module to estimate geometric-logit hurdle regression
 p hhi module to compute Herfindahl index
@@ -53,15 +62,21 @@ p hoishapely module to perform Shapley Decomposition of the Human Opportunity In
 p hoishapley module to perform Shapley Decomposition of the Human Opportunity Index
 p holsti module to compute Holsti intercoder reliability coefficients
 p hotdeck module to impute missing values using the hotdeck method
+p hotdeckvar module for hotdeck imputation
 p hotvalue module to generate scales with missing values conditionally imputed
+p how_many_imputations module to determine required number of imputations
 p hpc module to perform specification test to discriminate between models for non-negative data with many zeros
 p hpclg module to estimate Poisson-complementary log log hurdle regression
+p hpfilter module to compute one-sided Hodrick-Prescott filter
 p hplogit module to estimate Poisson-logit hurdle regression
 p hplot module to generate horizontal plots
 p hprescott module to implement Hodrick-Prescott filter for timeseries data
+p hrimvol module providing simple option implied volatility calculator
 p hshaz module to estimate discrete time (grouped data) proportional hazards models
 p hsmode module to calculate half-sample modes
 p hte module to perform heterogeneous treatment effect analysis
+p htmlcb module to write a codebook as an html file
+p htmltab2stata module to load html tables into Stata
 p htmltit module to generate a document title variable for a HTML filename variable
 p htmlutil module to provide utilities for writing Hypertext Markup Language (HTML) files
 p hue module to produce graphical display of named Stata colors

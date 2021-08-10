@@ -1,5 +1,5 @@
 {smcl}
-{* *! version 1.1.2  04jun2017}{...}
+{* *! version 1.2.3  04aug2020}{...}
 {* *! Sebastian Kripfganz, www.kripfganz.de}{...}
 {vieweralsosee "xtsegreg postestimation" "help xtseqreg_postestimation"}{...}
 {vieweralsosee "" "--"}{...}
@@ -19,6 +19,7 @@
 {viewerjumpto "Remarks" "xtseqreg##remarks"}{...}
 {viewerjumpto "Example" "xtseqreg##example"}{...}
 {viewerjumpto "Saved results" "xtseqreg##results"}{...}
+{viewerjumpto "Version history and updates" "xtseqreg##update"}{...}
 {viewerjumpto "Author" "xtseqreg##author"}{...}
 {viewerjumpto "References" "xtseqreg##references"}{...}
 {title:Title}
@@ -31,7 +32,7 @@
 {marker syntax}{...}
 {title:Syntax}
 
-{p 8 16 2}{cmd:xtseqreg} {depvar} [{cmd:(}{it:{help indepvars:varlist1}}{cmd:)}] [{it:{help indepvars:varlist2}}] {ifin} [{cmd:,} {it:options}]
+{p 8 16 2}{cmd:xtseqreg} {depvar} [{cmd:(}{it:{help indepvars:indepvars1}}{cmd:)}] [{it:{help indepvars:indepvars2}}] {ifin} [{cmd:,} {it:options}]
 
 
 {synoptset 20 tabbed}{...}
@@ -49,14 +50,14 @@
 {synopt:{opt nocons:tant}}suppress constant term{p_end}
 
 {syntab:SE/Robust}
-{synopt :{opth vce(vcetype)}}{it:vcetype} may be {opt conventional}, {opt ec}, or {opt r:obust}{p_end}
+{synopt :{opth vce(vcetype)}}{it:vcetype} may be {opt conventional}, {opt ec}, {opt r:obust}, or {opt cl:uster} {it:clustvar}{p_end}
 
 {syntab:Reporting}
 {synopt:{opt c:ombine}}combine the estimation results for both equations{p_end}
 {synopt:{opt l:evel(#)}}set confidence level; default is {cmd:level(95)}{p_end}
 {synopt:{opt nohe:ader}}suppress output header{p_end}
 {synopt:{opt notab:le}}suppress coefficient table{p_end}
-{synopt:{opt noomit:ted}}supress omitted variables{p_end}
+{synopt:{opt noomit:ted}}suppress omitted variables{p_end}
 {synoptline}
 {p2colreset}{...}
 
@@ -97,13 +98,15 @@ You must {cmd:xtset} your data before using {cmd:xtseqreg}; see {helpb xtset:[XT
 {it:depvar} and all {it:varlists} may contain time-series operators; see {help tsvarlist}.{p_end}
 {p 4 6 2}
 See {helpb xtseqreg postestimation} for features available after estimation.{p_end}
+{p 4 6 2}
+{cmd:xtseqreg} is a community-contributed program. The current version requires Stata version 12.1 or higher; see {help xtseqreg##update:version history and updates}.{p_end}
 
 
 {marker description}{...}
 {title:Description}
 
 {pstd}
-{cmd:xtseqreg} implements sequential estimators for linear panel models with the analytical second-stage standard error correction of Kripfganz and Schwarz (2015).
+{cmd:xtseqreg} implements sequential estimators for linear panel models with the analytical second-stage standard error correction of Kripfganz and Schwarz (2019).
 
 {pstd}
 {cmd:xtseqreg} estimates the coefficients b2 and the corresponding standard errors for the linear panel model
@@ -112,11 +115,11 @@ See {helpb xtseqreg postestimation} for features available after estimation.{p_e
 y - x1' b1 = x2' b2 + e
 
 {pstd}
-where x1 and x2 are the variables in {it:varlist1} and {it:varlist2}, respectively. The coefficients b1 are taken from a first-stage regression of y on x1 (and potentially additional independent variables).
+where x1 and x2 are the variables in {it:indepvars1} and {it:indepvars2}, respectively. The coefficients b1 are taken from a first-stage regression of y on x1 (and potentially additional independent variables).
 At the second stage, the standard errors for the coefficients b2 need to be corrected to account for the first-stage estimation error.
 
 {pstd}
-{cmd:xtseqreg} estimates a standard linear panel model if {it:varlist1} is not specified. Ordinary least squares and two-stage least squares estimation are supported,
+{cmd:xtseqreg} estimates a standard linear panel model if {it:indepvars1} is not specified. Ordinary least squares and two-stage least squares estimation are supported,
 as well as generalized method of moments estimation in the spirit of Arellano and Bond (1991), Arellano and Bover (1995), and Blundell and Bond (1998) with flexible choice of the instruments.
 
 
@@ -131,7 +134,7 @@ Specifying {it:name} is equivalent to typing {cmd:estimates restore} {it:name} p
 Allowed {it:suboptions} are {opt nocons:tant}, {opt eq:uation(eqno|eqname)}, and {opt copy}.
 
 {pmore}
-{opt noconstant} specifies that the estimated first-stage constant term, if any, should not be included in {it:varlist1} and that an overall regression constant is estimated at the second stage.
+{opt noconstant} specifies that the estimated first-stage constant term, if any, should not be added to {it:indepvars1} and that an overall regression constant is estimated at the second stage.
 
 {pmore}
 {opt equation(eqno|eqname)} is relevant only when you have previously fit a multiple-equation model. It specifies the equation to which you are referring. You can refer to the equation by its equation number, {cmd:#}{it:#}, or equation name.
@@ -139,7 +142,7 @@ By default, the first equation is used.
 
 {pmore}
 {opt copy} specifies that the first-stage coefficients shall be copied from the prior estimation results by position rather than by name. Equation names are ignored when you have previously fit a multiple-equation model.
-The number of coefficients must equal the number of variables in {it:varlist1}. A constant term is added to {it:varlist1} unless the suboption {cmd:noconstant} is also specified.
+The number of coefficients must equal the number of variables in {it:indepvars1}, including the constant term unless the suboption {cmd:noconstant} is also specified.
 
 {phang}
 {opt both} requests that both the first and the second stage are estimated. By default, the estimation results specified with the option {opt first(first_spec)} are used as first-stage estimates and only stage two is estimated.
@@ -203,13 +206,13 @@ This ratio can be specified with the suboption {opt ratio(#)}. The default is {c
 thus ignoring the covariance between the respective error terms and the first-order serial correlation of the first-differenced error term.
 
 {phang}
-{opt twostep} requests the two-step GMM estimator to be computed that is based on an optimal weighting matrix.  The optimal weighting matrix is computed using one-step GMM estimates based on the initial weighting matrix.
-An unrestricted estimate of the optimal weighting matrix is computed unless {cmd:vce(ec)} is specified in which case a restricted estimate based on an error-components structure is computed.
-By default, the one-step GMM estimator is used based on the initial weighting matrix specified with option {opt wmatrix(wmat_spec)}.
+{opt twostep} requests the two-step GMM estimator to be computed that is based on an optimal weighting matrix. By default, the one-step GMM estimator is used based on the initial weighting matrix specified with option {opt wmatrix(wmat_spec)}.
+An unrestricted optimal weighting matrix is computed using these one-step GMM estimates unless {cmd:vce(ec)} is specified in which case a restricted estimate based on an error-components structure is computed.
+The unrestricted weighting matrix allows for intragroup correlation at the level specified with {cmd:vce(cluster} {it:clustvar}{cmd:)}. By default, {it:clustvar} equals {it:panelvar}.
 
 {phang}
 {opt teffects} requests that time-specific effects are added to the model. The first time period in the estimation sample is treated as the base period.
-If {it:varlist1} is specified, the time effects are added to the first-stage regression if option {cmd:both} is also specified and otherwise to the second-stage regression.
+If {it:indepvars1} is specified, the time effects are added to the first-stage regression if option {cmd:both} is also specified and otherwise to the second-stage regression.
 
 {phang}
 {opt noconstant}; see {helpb estimation options##noconstant:[R] estimation options}.
@@ -217,22 +220,25 @@ If {it:varlist1} is specified, the time effects are added to the first-stage reg
 {dlgtab:SE/Robust}
 
 {phang}
-{opt vce(vcetype)} specifies the type of standard error reported, which includes types that are derived from asymptotic theory ({opt conventional}, {opt ec}) and that are robust to some kinds of misspecification ({opt robust}).
+{opt vce(vcetype)} specifies the type of standard error reported, which includes types that are derived from asymptotic theory ({opt conventional}, {opt ec}), that are robust to some kinds of misspecification ({opt robust}),
+and that allow for intragroup correlation ({opt cluster} {it:clustvar}).
 
 {pmore}
 {cmd:vce(conventional} [{cmd:,} {opt d:ifference}]{cmd:)} uses the conventionally derived variance estimator. It is robust to some kinds of misspecification if the two-step GMM estimator is used.
-The suboption {cmd:difference} requests the error variance to be computed from the first-differenced residuals. {cmd:vce(conventional)} is the default, although in most cases {cmd:vce(robust)} would be recommended.
+The suboption {cmd:difference} requests the error variance to be computed from the first-differenced residuals if the one-step GMM estimator is used.
+{cmd:vce(conventional)} is the default, although in most cases {cmd:vce(robust)} would be recommended.
 
 {pmore}
 {cmd:vce(ec)} assumes an error-components structure with a unit-specific component and an independent and identically distributed idiosyncratic component.
 
 {pmore}
-{cmd:vce(robust)} uses the sandwich estimator for one-step GMM estimation. For two-step GMM estimation, it computes the conventional estimator with the Windmeijer (2005) correction.
+{cmd:vce(robust)} and {cmd:vce(cluster} {it:clustvar}{cmd:)} use the sandwich estimator for one-step GMM estimation. For two-step GMM estimation, they compute the conventional estimator with the Windmeijer (2005) correction.
+{cmd:vce(robust)} is equivalent to {cmd:vce(cluster} {it:panelvar}{cmd:)}.
 
 {dlgtab:Reporting}
 
 {phang}
-{opt combine} combines the estimation results for both equations if {it:varlist1} is specified instead of displaying them as separate equations.
+{opt combine} combines the estimation results for both equations if {it:indepvars1} is specified instead of displaying them as separate equations.
 This option implies the options {opt noheader} and {opt noomitted} and affects the behavior of postestimation commands that compute equation-specific statistics; see {helpb xtseqreg postestimation}.
 
 {phang}
@@ -252,23 +258,23 @@ This option implies the options {opt noheader} and {opt noomitted} and affects t
 {title:Remarks}
 
 {pstd}
-{cmd:xtseqreg} can be used to fit both stages of a sequential regression. At the first stage,
+{cmd:xtseqreg} can be used to fit both stages of a sequential regression. In the first stage,
 
 {pmore}
-{cmd:xtseqreg} {it:depvar} {it:varlist1} {ifin} [{cmd:,} {it:options}]
+{cmd:xtseqreg} {it:depvar} {it:indepvars1} {ifin} [{cmd:,} {it:options}]
 
 {pstd}
-fits a linear panel model of {it:depvar} on {it:varlist1}. At the second stage,
+fits a linear panel model of {it:depvar} on {it:indepvars1}. In the second stage,
 
 {pmore}
-{cmd:xtseqreg} {it:depvar} {cmd:(}{it:varlist1}{cmd:)} {it:varlist2} {ifin} [{cmd:,} {it:options}]
+{cmd:xtseqreg} {it:depvar} {cmd:(}{it:indepvars1}{cmd:)} {it:indepvars2} {ifin} [{cmd:,} {it:options}]
 
 {pstd}
-fits a linear panel model of {it:depvar}, adjusted for the impact of {it:varlist1}, on {it:varlist2}.
-It is often the case that {it:varlist1} constitutes time-varying independent variables and {it:varlist2} time-invariant independent variables.
+fits a linear panel model of {it:depvar}, adjusted for the impact of {it:indepvars1}, on {it:indepvars2}.
+It is often the case that {it:indepvars1} constitutes time-varying independent variables and {it:indepvars2} time-invariant independent variables.
 
 {pstd}
-See Kripfganz and Schwarz (2015) for background information about the analytical standard error correction in the context of sequential GMM estimation of linear dynamic panel models with time-invariant regressors.
+See Kripfganz and Schwarz (2019) for background information about the analytical standard error correction in the context of sequential GMM estimation of linear dynamic panel models with time-invariant regressors.
 
 
 {marker example}{...}
@@ -294,6 +300,7 @@ See Kripfganz and Schwarz (2015) for background information about the analytical
 {p2col 5 20 24 2: Scalars}{p_end}
 {synopt:{cmd:e(N)}}number of observations{p_end}
 {synopt:{cmd:e(N_g)}}number of groups{p_end}
+{synopt:{cmd:e(N_clust)}}number of clusters; not always saved{p_end}
 {synopt:{cmd:e(rank)}}rank of {cmd:e(V)}{p_end}
 {synopt:{cmd:e(sigma2e)}}estimate of sigma_e^2; not always saved{p_end}
 {synopt:{cmd:e(sigma2u)}}estimate of sigma_u^2; not always saved{p_end}
@@ -343,6 +350,22 @@ See Kripfganz and Schwarz (2015) for background information about the analytical
 {p2colreset}{...}
 
 
+{marker update}{...}
+{title:Version history and updates}
+
+{pstd}{cmd:xtseqreg} is a community-contributed program. To determine the currently installed version, type{p_end}
+{phang2}. {stata which xtseqreg, all}{p_end}
+
+{pstd}To update the {cmd:xtseqreg} package to the latest version, type{p_end}
+{phang2}. {stata `"net install xtseqreg, from("http://www.kripfganz.de/stata/") replace"'}{p_end}
+
+{pstd}If the connection to the previous website fails, alternatively type{p_end}
+{phang2}. {stata ssc install xtseqreg, replace}{p_end}
+
+{pstd}
+The SSC version is less frequently updated and may not be the latest available version. The current version of the {cmd:xtseqreg} package requires Stata version 12.1 or higher.
+
+
 {marker author}{...}
 {title:Author}
 
@@ -374,9 +397,9 @@ Initial conditions and moment restrictions in dynamic panel data models.
 {it:Review of Economic Studies} 87: 115-143.
 
 {phang}
-Kripfganz, S., and C. Schwarz. 2015.
+Kripfganz, S., and C. Schwarz. 2019.
 Estimation of linear dynamic panel data models with time-invariant regressors.
-{it:ECB Working Paper} 1838. European Central Bank.
+{it:Journal of Applied Econometrics} 34: 526-546.
 
 {phang}
 Windmeijer, F. 2005.

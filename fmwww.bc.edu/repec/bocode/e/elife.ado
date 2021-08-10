@@ -1,11 +1,11 @@
 /*---------------------------
-1Oct2010 - version 3.0
+22Dec2020 - version 4.0
 
 TABLE VL6 Models for Mortality Improvement. Quinquennial Gains in Life Expectancy
 At Birth According to Intial Level of Life Expectancy
 
-Author: Liu Wei, The School of Sociology and Population Studies, Renmin University of China
-E-mail: liuv@ruc.edu.cn
+Author: Liu Wei, Yunnan University of Finance and Economics
+E-mail: liuwei@ynufe.edu.cn
 ---------------------------*/
 capture prog drop elife
 prog define elife

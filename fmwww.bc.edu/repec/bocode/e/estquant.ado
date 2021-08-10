@@ -2,8 +2,8 @@
 ** (C) KEISUKE KONDO
 ** 
 ** Release Date: November 15, 2016
-** Update Date: March 18, 2017
-** Version: 1.04
+** Update Date: December 06, 2017
+** Version: 1.10
 ** 
 ** [Reference]
 ** Combes, P.P., Duranton, G., Gobillon, L., Puga, D., and Roux, S., (2012) 
@@ -14,6 +14,8 @@
 ** Email: kondo-keisuke@rieti.go.jp
 ** URL: https://sites.google.com/site/keisukekondokk/
 *********************************************************************************/
+** Version: 1.10
+** Added INITR() option 
 ** Version: 1.04
 ** Improved program code
 ** Version: 1.03
@@ -598,7 +600,7 @@ end
 
 
 /*---------- START Command estquant ----------*/
-*! version 1.04  18 March 2017
+*! version 1.05  06 December 2017
 capture program drop estquant
 program define estquant, sortpreserve eclass
 	version 12
@@ -608,6 +610,7 @@ program define estquant, sortpreserve eclass
 		*/ TRuncation /*
 		*/ SHift /*
 		*/ DIlation /*
+		*/ INITR(real 0) /*
 		*/ QRANGE(real 1000) /*
 		*/ BVARiable(string) /*
 		*/ BREPlication(real 50) /*
@@ -623,7 +626,7 @@ program define estquant, sortpreserve eclass
 	/* Variables */
 	local vY `varlist'
 	marksample touse
-	markout `touse' `category'
+	markout `touse' `varlist' `category'
 	tempname b V
 	
 	/* Check and Define Category */
@@ -672,6 +675,17 @@ program define estquant, sortpreserve eclass
 		local dltn = 1
 	}
 	
+	/* Option: Specify Initial Value of Truncation (Default Off) */
+	local initrnc = 0
+	scalar inivaltr = `initr'
+	if( `initr' != 0 ){
+		if( `initr' >= 0.5 ){
+			display as error "Initial value of S in initr() must be lower than 0.5."
+			exit 198
+		}
+		local initrnc = 1
+	}
+
 	/* Option: Confidence Interval */
 	if( "`ci'" == "" ){
 		/* Default: Normal-Based */
@@ -771,7 +785,7 @@ program define estquant, sortpreserve eclass
 						else if( `bstrata' == 1 ){
 							bsample round((nbsample/100)*_N), strata(`category')
 						}
-						mata: estquant("`vY'", "`category'", `trnc', `shft', `dltn', "`touse'", "`b'", "`V'", st_matrix("mP"), "`confi'", `disp')
+						mata: estquant("`vY'", "`category'", `trnc', `shft', `dltn', `initrnc', "`touse'", "`b'", "`V'", st_matrix("mP"), "`confi'", `disp')
 						local bconv = converged
 						local bcnt = `bcnt' + 1
 						if( `bcnt' > 100 ){
@@ -830,7 +844,7 @@ program define estquant, sortpreserve eclass
 					local bconv = 0
 					scalar nbsample = .
 					while `bconv' == 0 {
-						mata: estquant("`vY'`i'", "`category'`i'", `trnc', `shft', `dltn', "`touse'", "`b'", "`V'", st_matrix("mP"), "`confi'", `disp')
+						mata: estquant("`vY'`i'", "`category'`i'", `trnc', `shft', `dltn', `initrnc', "`touse'", "`b'", "`V'", st_matrix("mP"), "`confi'", `disp')
 						local bconv = converged
 						local bcnt = `bcnt' + 1
 						if( `bcnt' > 100 ){
@@ -888,7 +902,7 @@ program define estquant, sortpreserve eclass
 	local disp = 1
 	
 	/* Mata Main Program for Estimation */
-	mata: estquant("`vY'", "`category'", `trnc', `shft', `dltn', "`touse'", "`b'", "`V'", st_matrix("mP"), "`confi'", `disp')
+	mata: estquant("`vY'", "`category'", `trnc', `shft', `dltn', `initrnc', "`touse'", "`b'", "`V'", st_matrix("mP"), "`confi'", `disp')
 	
 	/* ereturn in Stata */
 	matrix colnames `b' = "Shift A" "Dilation D" "Truncation S"
@@ -919,7 +933,7 @@ program define estquant, sortpreserve eclass
 
 	/* Drop Variables and Scalars */
 	scalar drop cat1 cat2 nrange nobs nobs_c1 nobs_c2 meany meany1 meany2 sdy sdy1 sdy2 
-	scalar drop nbrep nbsample converged maxIt eps1 eps2
+	scalar drop nbrep nbsample converged maxIt eps1 eps2 inivaltr
 end
 
 
@@ -929,7 +943,7 @@ end
 ========================== */
 version 12
 mata:
-void estquant(vY, category, trnc, shft, dltn, touse, bname, Vname, mP, ci, disp)
+void estquant(vY, category, trnc, shft, dltn, initrnc, touse, bname, Vname, mP, ci, disp)
 {
 	/* Load Class (Mata Library) */
 	class quantilef scalar Q
@@ -944,6 +958,7 @@ void estquant(vY, category, trnc, shft, dltn, touse, bname, Vname, mP, ci, disp)
 	maxIt = st_numscalar("maxIt")
 	eps1 = st_numscalar("eps1")
 	eps2 = st_numscalar("eps2")
+	inivaltr = st_numscalar("inivaltr")
 	
 	/* Make Two Variables for Each Category */
 	svarlist = category + " " + vY
@@ -975,17 +990,26 @@ void estquant(vY, category, trnc, shft, dltn, touse, bname, Vname, mP, ci, disp)
 	
 	/* Estimation of Gamma and Beta */
 	if( Q.truncation == 1 ){
-		/* Initial Value */
-		pgammi = -2
-		pgamm0 = pgammi
-		Q.critbisf(0,pgammi,Q,voirs,g,H)
-		for(i=1; i<=10; i++){
-			pgammi = pgammi+0.5
-			Q.critbisf(0,pgammi,Q,voiri,g,H)
-			if( voiri < voirs ){
-				pgamm0 = pgammi
-				voirs = voiri
+		/* Auto-Sepecified Initial Value */
+		if( initrnc == 0 ){
+			pgammi = -2.0
+			pgamm0 = pgammi
+			Q.critbisf(0,pgammi,Q,voirs,g,H)
+			for(i=1; i<=10; i++){
+				pgammi = pgammi+0.5
+				Q.critbisf(0,pgammi,Q,voiri,g,H)
+				if( voiri < voirs ){
+					pgamm0 = pgammi
+					voirs = voiri
+				}
 			}
+		}
+		/* Pre-Specified Initial Value */
+		if( initrnc == 1 ){
+			gammi = inivaltr/(inivaltr-1)
+			pgammi = Q.gammapp_1(gammi)
+			pgamm0 = pgammi
+			Q.critbisf(0,pgammi,Q,voirs,g,H)
 		}
 		/* Optimization wrt gamma and beta */
 		for(i=1; i<=5; i++){

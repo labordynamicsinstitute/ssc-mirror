@@ -1,5 +1,5 @@
 {smcl}
-{* *! version 1.1.2  04jun2017}{...}
+{* *! version 1.2.3  04aug2020}{...}
 {* *! Sebastian Kripfganz, www.kripfganz.de}{...}
 {vieweralsosee "xtseqreg" "help xtseqreg"}{...}
 {vieweralsosee "" "--"}{...}
@@ -9,9 +9,7 @@
 {vieweralsosee "[XT] xtdpd postestimation" "help xtdpd_postestimation"}{...}
 {viewerjumpto "Postestimation commands" "xtseqreg_postestimation##description"}{...}
 {viewerjumpto "predict" "xtseqreg_postestimation##predict"}{...}
-{viewerjumpto "estat serial" "xtseqreg_postestimation##estat_serial"}{...}
-{viewerjumpto "estat overid" "xtseqreg_postestimation##estat_overid"}{...}
-{viewerjumpto "estat hausman" "xtseqreg_postestimation##estat_hausman"}{...}
+{viewerjumpto "estat" "xtseqreg_postestimation##estat"}{...}
 {viewerjumpto "Example" "xtseqreg_postestimation##example"}{...}
 {viewerjumpto "Author" "xtseqreg_postestimation##author"}{...}
 {viewerjumpto "References" "xtseqreg_postestimation##references"}{...}
@@ -29,11 +27,11 @@
 The following postestimation commands are of special interest after {cmd:xtseqreg}:
 
 {synoptset 13}{...}
-{p2coldent :Command}Description{p_end}
+{p2coldent:Command}Description{p_end}
 {synoptline}
-{synopt:{helpb xtseqreg postestimation##estat_serial:estat serial}}perform test for autocorrelated residuals{p_end}
-{synopt:{helpb xtseqreg postestimation##estat_overid:estat overid}}perform test of overidentifying restrictions{p_end}
-{synopt:{helpb xtseqreg postestimation##estat_hausman:estat hausman}}perform generalized Hausman test{p_end}
+{synopt:{helpb xtseqreg postestimation##estat:estat serial}}perform test for autocorrelated residuals{p_end}
+{synopt:{helpb xtseqreg postestimation##estat:estat overid}}perform test of overidentifying restrictions{p_end}
+{synopt:{helpb xtseqreg postestimation##estat:estat hausman}}perform generalized Hausman test{p_end}
 {synoptline}
 {p2colreset}{...}
 
@@ -47,7 +45,6 @@ The following standard postestimation commands are available:
 INCLUDE help post_estimates
 INCLUDE help post_hausman
 INCLUDE help post_lincom
-INCLUDE help post_lrtest
 INCLUDE help post_nlcom
 {synopt:{helpb xtseqreg postestimation##predict:predict}}predictions, residuals, influence statistics, and other diagnostic measures{p_end}
 INCLUDE help post_predictnl
@@ -124,7 +121,7 @@ INCLUDE help unstarred
 {opt e} calculates the prediction of e_it; see {helpb xtreg postestimation##options_predict:[XT] xtreg postestimation}.
 
 {phang}
-{opt scores} calculates the parameter-level scores for each independent variable, the first derivatives of the criterion function with respect to the coefficients (multiplied by -1);
+{opt scores} calculates the parameter-level scores for all independent variables, the first derivatives of the criterion function with respect to the coefficients (scaled by -0.5);
 see {helpb gmm postestimation##option_predict:[R] gmm postestimation}. This option requires that the length of the new variable list be equal to the number of independent variables including the constant term, if any.
 A finite-sample correction term is added after two-step GMM estimation with the Windmeijer (2005) correction. This option is not available after {cmd:xtseqreg} with two equations.
 
@@ -134,50 +131,29 @@ A finite-sample correction term is added after two-step GMM estimation with the 
 {opt equation}{cmd:(}{it:eqno}{cmd:)} specifies the equation to which you are referring; see {helpb predict##options:[R] predict}.
 
 
-{marker estat_serial}{...}
-{title:Syntax for estat serial}
+{marker estat}{...}
+{title:Syntax for estat}
+
+{phang}
+Arellano-Bond test for autocorrelated residuals
 
 {p 8 16 2}
 {cmd:estat} {cmdab:ser:ial} [, {opth ar(numlist)}]
 
-
-{title:Description for estat serial}
-
-{pstd}
-{cmd:estat serial} reports the Arellano and Bond (1991) test for autocorrelation of the first-differenced residuals.
-
-
-{title:Options for estat serial}
-
 {phang}
-{opth ar(numlist)} specifies the orders of serial correlation to be tested. The default is {cmd:ar(1 2)}.
-
-
-{marker estat_overid}{...}
-{title:Syntax for estat overid}
+Hansen's J-test of overidentifying restrictions
 
 {p 8 16 2}
-{cmd:estat} {cmdab:over:id} [{it:name}]
+{cmd:estat} {cmdab:over:id}
 
-{p 4 6 2}
-where {it:name} is a name under which estimation results were stored via {helpb estimates store:estimates store}.
+{phang}
+Difference-in-Hansen test of overidentifying restrictions
 
+{p 8 16 2}
+{cmd:estat} {cmdab:over:id} {it:name}
 
-{title:Description for estat overid}
-
-{pstd}
-{cmd:estat overid} reports the Hansen (1982) J-statistic, which is used to determine the validity of the overidentifying restrictions.
-The moment conditions are evaluated at the two-step estimates after {cmd:xtseqreg} with option {cmd:twostep}, and at the one-step estimates otherwise.
-An optimal weighting matrix based on the one-step estimates is used, irrespective of whether the two-step GMM estimator is computed or not.
-
-{pstd}
-{cmd:estat overid} {it:name} reports a difference-in-Hansen statistic, which is used to determine the validity of a subset of overidentifying restrictions.
-It is computed as the difference between the respective J-statistics from the most recent {cmd:xtdpdgmm} estimation results and the estimation results stored as {it:name} by using {helpb estimates store:estimates store}.
-For the resulting test statistic to be valid, the two estimators need to be nested in terms of the moment conditions they employ.
-
-
-{marker estat_hausman}{...}
-{title:Syntax for estat hausman}
+{phang}
+Generalized Hausman test for model misspecification
 
 {p 8 16 2}
 {cmd:estat} {cmdab:haus:man} {it:name} [{cmd:(}{varlist}{cmd:)}] [, {opt df(#)} {opt none:sted}]
@@ -186,22 +162,51 @@ For the resulting test statistic to be valid, the two estimators need to be nest
 where {it:name} is a name under which estimation results were stored via {helpb estimates store:estimates store}.
 
 
-{title:Description for estat hausman}
+{title:Description for estat}
+
+{pstd}
+{cmd:estat serial} reports the Arellano and Bond (1991) test for autocorrelation of the first-differenced residuals.
+A cluster-robust version is computed if {cmd:vce(robust)} or {cmd:vce(cluster} {it:clustvar}{cmd:)} is specified with {cmd:xtseqreg}.
+
+{pstd}
+{cmd:estat overid} reports the Hansen (1982) J-statistic, which is used to determine the validity of the overidentifying restrictions.
+The moment functions are evaluated at the two-step estimates after {cmd:xtseqreg} with option {cmd:twostep}, and at the one-step estimates otherwise.
+An optimal weighting matrix based on the one-step estimates is used, irrespective of whether the two-step GMM estimator is computed or not.
+
+{pstd}
+{cmd:estat overid} {it:name} reports a difference-in-Hansen statistic, which is used to determine the validity of a subset of overidentifying restrictions.
+It is computed as the difference between the respective J-statistics from the most recent {cmd:xtseqreg} estimation results and the estimation results stored as {it:name} by using {helpb estimates store:estimates store}.
 
 {pstd}
 {cmd:estat hausman} reports a generalized Hausman (1978) test for model misspecification by comparing the coefficient estimates of {it:varlist} from the most recent {cmd:xtseqreg} estimation results
 to the corresponding coefficient estimation results stored as {it:name} by using {helpb estimates store:estimates store}. By default, the coefficients of all {it:indepvars} are contrasted,
 excluding deterministic model components such as the constant term and time dummies, if specified with option {opt teffects} of {cmd:xtseqreg}. This generalized test does not require one of the estimators to be efficient.
-It uses the robust variance-covariance estimator for the test statistic suggested by White (1982) that is computed using the parameter-level scores; see {helpb suest:[R] suest}.
+It uses the cluster-robust variance-covariance estimator for the test statistic suggested by White (1982) that is computed using the parameter-level scores; see {helpb suest:[R] suest}.
 
 
-{title:Options for estat hausman}
-
-{phang}
-{opt df(#)} specifies the degrees of freedom for the test. The default is the difference in the number of overidentifying restrictions from the two estimations or the number of contrasted coefficients, whichever is smaller.
+{title:Options for estat}
 
 {phang}
-{opt nonested} specifies that the two estimators are not nested in terms of the moment conditions they employ. This option implies that the degrees of freedom for the test equal the number of contrasted coefficients.
+{opth ar(numlist)} with {cmd:estat serial} specifies the orders of serial correlation to be tested. The default is {cmd:ar(1 2)}.
+
+{phang}
+{opt df(#)} with {cmd:estat hausman} specifies the degrees of freedom for the test.
+The default is the difference in the number of overidentifying restrictions from the two estimations or the number of contrasted coefficients, whichever is smaller.
+
+{phang}
+{opt nonested} with {cmd:estat hausman} specifies that the two estimators are not nested in terms of the moment conditions they employ. This option implies that the degrees of freedom for the test equal the number of contrasted coefficients.
+
+
+{title:Remarks for estat}
+
+{pstd}
+For the difference-in-Hansen test statistic to be valid, the two estimators need to be nested in terms of the moment conditions they employ. It is the user's responsibility to verify that this is indeed the case.
+The test statistic is computed as the difference of Hansen's J-test statistics from the two estimations, subtracting the J-statistic with the smaller degrees of freedom from the one with the larger degrees of freedom.
+In finite samples, the difference-in-Hansen statistic can become negative. This indicates that the excluded instruments received a large weight but the test cannot be used to determine their validity.
+
+{pstd}
+The generalized Hausman test can be used as an asymptotically equivalent test to the difference-in-Hansen test if the two estimators are nested
+and the number of the excluded overidentifying restrictions does not exceed the number of contrasted coefficients. This test statistic is guaranteed to be nonnegative but it might have poor coverage in finite samples.
 
 
 {marker example}{...}

@@ -1,6 +1,6 @@
-d 'BYNOTE': module to Create a note with a user-specified format for use with the by option
+d 'BYNOTE': module to create a note with a user-specified format for use with the by option
 d
-d	 bynote creates a note for use as the note() suboption of
+d	  bynote creates a note for use as the note() suboption of
 d the	   by-option of the graph command.  This note is made up of
 d the	   variable labels of the variables in the varlist, if
 d these labels	    exist, and of the names of these variables
@@ -19,7 +19,7 @@ d Requires: Stata version 10.0
 d
 d Distribution-Date: 20080508
 d
-d Author: Roger Newson, National Heart and Lung Institute at Imperial College London
+d Author: Roger Newson,  Imperial College London
 d Support: email r.newson@@imperial.ac.uk
 d
 f bynote.ado

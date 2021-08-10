@@ -1,6 +1,13 @@
-*! version 1.8.5   Ian White   27mar2017
+*! version 1.8.7   Ian White   12feb2018
 
 /*************************** NOTES ********************************
+version 1.8.7   12feb2018
+	undocumented changes:
+		allow kmgraph(show(#...)) to control which curves are graphed
+		allow hr(x x) to control which curves are compared
+			where x=fully|observed|untreated or abbreviation
+version 1.8.6   17jan2018
+	kmgraph() and zgraph() fixed to allow quotes
 version 1.8.5   27mar2017
 	no changes to code; small changes to help file; posted on SSC
 version 1.8.4   22apr2016 (on website)
@@ -108,8 +115,8 @@ Certification script: H:\trtchg\strbee\update2011\strbee_cscript.do
 * options without arguments get "run" as argument
 program define strbee, 
 version 10
-syntax [anything] [if] [in] [using], [ZGRaph GRaph KMgraph debug *]
-foreach opt in zgraph graph kmgraph {
+syntax [anything] [if] [in] [using], [ZGRaph GRaph KMgraph debug HR *]
+foreach opt in zgraph graph kmgraph hr {
     if `"``opt''"' != "" local options `opt'(run) `options'
 }
 local options `options' `debug'
@@ -641,9 +648,9 @@ end
 ********************* START OF OUTPUT PROGRAM **********************
 
 program define Output, rclass
-syntax [using/], [list ZGRaph(string) psimin(real -10) psimax(real 10) hr /// output options 
-    KMgraph(string) gen(string)              /// output options
-    GRaph(string)                            /// undocumented: equivalent to zgraph(string)
+syntax [using/], [list ZGRaph(string asis) psimin(real -10) psimax(real 10) /// output options 
+    hr(string) KMgraph(string asis) gen(string)              /// output options
+    GRaph(string asis)                            /// undocumented: equivalent to zgraph(string)
     level(cilevel) debug                     /// undocumented options
     ]
 
@@ -659,7 +666,7 @@ if `"`graph'"'!="" & `"`zgraph'"'!="" {
     di as error "Can't have both graph and zgraph"
     exit 198
 }
-if `"`graph'"'!="" local zgraph `graph'
+if `"`graph'"'!="" local zgraph `"`graph'"'
 
 local zcrit = invnorm(1-(100-`level')/200)
 local zcri = round(`zcrit',.01)
@@ -799,7 +806,7 @@ forvalues i=0/1 {
 
 *********************** Z-GRAPH RESULTS ********************
 
-if "`ipe'"=="" & `"`zgraph'"'!="" {
+if "`ipe'"=="" & `"`zgraph'"'!=`""' {
     local 0 , `zgraph'
     syntax, [run TItle(passthru) YTItle(string) XLAbel(passthru) YLAbel(passthru) ///
         Connect(passthru) MSYMbol(passthru) XLIne(passthru) YLIne(passthru) *]
@@ -848,7 +855,7 @@ restore
 
 *** GENERATE U
 if "`estOK'"!="0" {
-    if ("`gen'"!="" | "`hr'"=="hr" | "`kmgraph'"!="") {
+    if ("`gen'"!="" | "`hr'"!="" | `"`kmgraph'"'!=`""') {
         tempvar u du
         qui gen double `u'=.
         qui gen byte `du'=.
@@ -881,7 +888,7 @@ if "`estOK'"!="0" {
     }
 
     *** HR AND KM GRAPH
-    if "`hr'" == "hr" | "`kmgraph'"!="" {
+    if "`hr'" != "" | `"`kmgraph'"'!=`""' {
         * COMMON CODE
         preserve
 		if !mi("`psimult'") {
@@ -903,14 +910,20 @@ if "`estOK'"!="0" {
                   `treat0' `u1' `du' `adjvars' `strata', group(3) clear
         rename _stack `type'
         qui gen int `treat' = 10*(`type'-1)+`treat0'
-        label def treat2  0 "0 observed"       1 "1 observed"     ///
-                         10 "0 untreated"     11 "1 untreated"    ///
-                         20 "0 fully treated" 21 "1 fully treated"
+        local name0  "0 observed"
+		local name1  "1 observed"
+        local name10 "0 untreated"
+		local name11 "1 untreated"    
+        local name20 "0 fully treated" 
+		local name21 "1 fully treated"
+        foreach val in 0 1 10 11 20 21 {
+			label def treat2 `val' "`name`val''", add
+		}
         label val `treat' treat2
         qui stset _t _d, noshow
         if "`debug'"=="debug" stsum, by(`treat')
-        if "`hr'" == "hr" {
-            * Output results: table header
+        if "`hr'" != "" {
+			* Output results: table header
             di _new as text "Hazard ratios derived from psi=" %9.0g `est'
             di `line'
             di `col2' "Haz. ratio" `col3' %5.3f "P-value" `col4' "[`level'% Conf. Interval]"
@@ -938,10 +951,32 @@ if "`estOK'"!="0" {
             cap local hrnon = exp(_b[`treat0'])
             di as text "No treatment**" as result `col2' `hrnon' `col3' %5.3f . `col4' . `col5' .
 
-            * Output results: table footer
+            * Other requested analysis
+            if "`hr'" != "run" {
+				tokenize "`hr'"
+				if "`1'"==substr("observed",1,length("`1'")) local one 1
+				if "`1'"==substr("untreated",1,length("`1'")) local one 11
+				if "`1'"==substr("fully",1,length("`1'")) local one 21
+				if "`2'"==substr("observed",1,length("`2'")) local two 0
+				if "`2'"==substr("untreated",1,length("`2'")) local two 10
+				if "`2'"==substr("fully",1,length("`2'")) local two 20
+				tempvar uservar
+				qui gen `uservar' = `treat'==`one' if inlist(`treat',`one',`two')
+				qui stcox `uservar' `adjvars' if inlist(`treat',`one',`two'), `strataopt'
+				cap local hruser = exp(_b[`uservar'])
+				local seuser = _b[`uservar']/`ZITT'
+				local hruserlow = exp(_b[`uservar']-`zcrit'*`seuser')
+				local hruserupp = exp(_b[`uservar']+`zcrit'*`seuser')
+				di as text "User***" as result `col2' `hruser' `col3' %5.3f  `PITT' `col4' `hruserlow' `col5' `hruserupp'
+				local note3 `""*** User-specified comparison: " as result "`treat'=`name`one''" as text " vs. " as result "`treat'=`name`two''""'
+			}
+		
+			* Output results: table footer
             di `line'
             di as text "* test-based confidence interval"
-            di as text "** check on estimation procedure: hazard ratio should be near 1" _new
+            di as text "** check on estimation procedure: hazard ratio should be near 1" 
+			if !mi(`"`note3'"') di as text `note3'
+			di
             return scalar HR_ITT = `hritt'
             return scalar HR_ITT_low = `hrittlow'
             return scalar HR_ITT_upp = `hrittupp'
@@ -949,14 +984,26 @@ if "`estOK'"!="0" {
             return scalar HR_adj_low = `hradjlow'
             return scalar HR_adj_upp = `hradjupp'
             return scalar HR_non = `hrnon'
+            if "`hr'" != "run" {
+				return scalar HR_user = `hruser'
+				return scalar HR_user_low = `hruserlow'
+				return scalar HR_user_upp = `hruserupp'
+			}
         }
 
-        if "`kmgraph'"!="" { // greatly expanded v1.8.4 to improve patterns and colours
+        if `"`kmgraph'"'!=`""' { // greatly expanded v1.8.4 to improve patterns and colours
             local 0 , `kmgraph'
-            syntax, [run LPattern(string) LColor(string) SHOWAll UNTReated *]
-			
+            syntax, [run LPattern(string) LColor(string) SHOWAll UNTReated show(numlist) *]
 			if !mi("`untreated'") { // new suboption v1.8.3 
 				qui keep if inlist(`treat',10,11)
+			}
+			else if !mi("`show'") { // new suboption v1.8.7
+				tempvar toshow
+				gen `toshow' = 0
+				foreach toshowval of numlist `show' {
+					qui replace `toshow'=1 if `treat'==`toshowval'
+				}
+				qui drop if !`toshow'
 			}
 			else if mi("`showall'") { // new suboption v1.8.3 
 				if `nxo0'==0 qui drop if inlist(`treat',10,20)

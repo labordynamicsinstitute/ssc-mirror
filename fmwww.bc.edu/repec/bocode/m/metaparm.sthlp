@@ -41,8 +41,8 @@ or one observation per by-group, and data on estimates, standard errors,
 {it:z}- or {it:t}-statistics, {it:P}-values and confidence limits
 for a linear combination (weighted sum) of the input parameters,
 assuming that the input parameters are estimated independently (or at least are uncorrelated) for different sub-populations.
-The output dataset can be listed to the Stata log, saved to a disk file,
-or written to memory, overwriting the existing dataset.
+The output dataset can be listed to the Stata log, saved to a new data frame, saved to a disk file,
+or written to the current data frame, overwriting the existing dataset.
 {cmd:metaparm} is useful for meta-analyses (where {help weight:aweights} are used),
 and can also be used with {help weight:iweights} for calculating confidence intervals
 and {it:P}-values for differences or ratios between parameters for different subpopulations.
@@ -83,6 +83,7 @@ These output datasets (or resultssets) are described in detail in {it:{help meta
 {synopthdr}
 {synoptline}
 {synopt:{opt li:st(list_spec)}}List output dataset to Stata log and/or Results window{p_end}
+{synopt:{cmdab:fra:me}{cmd:(}{it:framename}[,replace {cmdab:cha:nge}]{cmd:)}}Save output dataset to a data frame{p_end}
 {synopt:{cmdab:sa:ving}{cmd:(}{it:filename}[{cmd:,replace}]{cmd:)}}Save output dataset to a disk file{p_end}
 {synopt:{cmdab::no}{cmdab:re:store}}Write output dataset to memory{p_end}
 {synopt:{opt fast}}Write output dataset to memory without precautions{p_end}

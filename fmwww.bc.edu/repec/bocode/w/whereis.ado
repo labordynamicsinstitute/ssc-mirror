@@ -1,8 +1,9 @@
 program whereis, rclass
-*! v1.2 mantains a directory of external files 10sep2016 rev 6feb2017
+*! v1.4 mantains a directory of external files or folders 10sep2016 rev 17feb2020
 	version 14
 	args name location
-	mata whereis(`"`name'"', `"`location'"') // updates location macro
+	// why am i storing this is in a macro?
+	mata whereis(`"`name'"', `"`location'"') // stores location in local location
 	if `"`name'"' != "" {
 		display as text `"`location'"' 
 		return local `name' `location'
@@ -27,9 +28,10 @@ mata:
 		}			
 		
 		// list all resources
+		name = ustrtrim(name) //!
 		if (name == "") {
 			if (length(dir) < 1) {
-				printf("{text}No file locations have been stored with {bf}whereis{sf}\n")
+				printf("{text}No resource locations have been stored with {bf}whereis{sf}\n")
 			}
 			else {
 				//printf("{text}File locations saved with with {bf}whereis{sf}:\n")
@@ -52,8 +54,8 @@ mata:
 		}
 		
 		// check location
-		if(!fileexists(location)) {
-			errprintf(`"file "%s" not found\n"', location)
+		if(!fileexists(location) & !direxists(location)) {
+			errprintf(`"file or folder "%s" not found\n"', location)
 			exit(601)
 		}
 		st_local("location", location)
@@ -76,11 +78,13 @@ mata:
 		}
 	}
 	// linear search in whereis directory
-	real scalar lsearch(string vector lines, string scalar stem) {
-		real scalar m, i
-		m = ustrlen(stem)
+	real scalar lsearch(string vector lines, string scalar target) {		
+		real scalar i, m
+		string scalar key
 		for(i = 1; i <= length(lines); i++) {
-			if(usubstr(lines[i], 1, m) == stem) return(i)
+			m = ustrpos(lines[i], " ") 
+			key = m > 1 ? usubstr(lines[i], 1, m-1) : lines[i]
+			if(key == target) return(i)
 		}
 		return(-1)
 	}

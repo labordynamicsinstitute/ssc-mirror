@@ -1,6 +1,6 @@
 d 'IVREG2': module for extended instrumental variables/2SLS and GMM estimation
 d
-d ivreg2 provides extensions to Stata's official ivregress and
+d  ivreg2 provides extensions to Stata's official ivregress and
 d newey. Its main capabilities: two-step feasible GMM estimation;
 d continuously updated GMM estimation (CUE); LIML and k-class
 d estimation; automatic output of the Hansen-Sargan or
@@ -20,7 +20,7 @@ d clustering of standard errors;  Kiefer and Driscoll-Kraay
 d standard errors. ivreg2 can also be used for ordinary least
 d squares (OLS) estimation using the same command syntax as Stata's
 d official regress and newey. New in this version: ivreg2 now
-d supports factor variables. This is version 4.1.10 of ivreg2,
+d supports factor variables. This is version 4.1.11 of ivreg2,
 d updated from that published in Stata Journal, 5(4), requiring
 d Stata 11.2 or better. Stata 8.2/9.2/10.2 users may use this
 d routine, which will  automatically call ivreg28, ivreg29, or
@@ -38,6 +38,7 @@ d KW: heteroskedastic OLS,
 d
 d Requires: Stata version 11.2 and ranktest from SSC
 d
+d Distribution-Date: 20200626
 d
 d Author: Christopher F Baum, Boston College
 d Support: email baum@@bc.edu
@@ -46,15 +47,13 @@ d Author: Mark E Schaffer, Heriot-Watt University
 d Support: email m.e.schaffer@@hw.ac.uk
 d
 d Author: Steven Stillman, Free University of Bozen-Bolzano
-d Support: email  stillman@@motu.org.nz
-d
-d Distribution-Date: 20160209
+d Support: email  Steven.Stillman@@unibz.it
 d
 f ivreg2.ado
 f ivreg2.sthlp
 f ivreg2_p.ado
 f ../l/livreg2.mlib
-f ../c/cs_ivreg2_4.1.10.do
+f ../c/cs_ivreg2_4.1.11.do
 f ivreg210.ado
 f ivreg210.sthlp
 f ivreg210_p.ado

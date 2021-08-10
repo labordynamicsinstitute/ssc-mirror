@@ -15,6 +15,17 @@ version 13
 		qui gen double `zu' = . 
 		qui gen double `zl' = .
 		
+		di as txt "mu"
+		di `mu'
+		di as txt "lamda"
+		di `lambda'
+		di as txt "sigma"
+		di `sigma' 
+		di as txt "p"
+		di `p'
+		di as txt "q"
+		di `q'
+		
 		*Point data
 			tempvar x s l y
 			qui gen double `x' = $ML_y1 - (`mu') if $ML_y1 != . & $ML_y2 != . ///
@@ -39,7 +50,6 @@ version 13
 								`y'))^`p')) if $ML_y1 != . & $ML_y2 != . & ///
 								$ML_y1 == $ML_y2
 		
-		
 		*Interval data
 			qui replace `zu' = abs($ML_y2 - `mu')^`p'/(abs($ML_y2 - `mu')^`p' + ///
 								`q'*`sigma'^`p'*(1+`lambda'*sign($ML_y2 -`mu'))^`p') ///
@@ -56,9 +66,12 @@ version 13
 			qui replace `Fl' = .5*(1-`lambda') + .5*(1+`lambda'*sign($ML_y1- ///
 								`mu'))*sign($ML_y1 - `mu')*ibeta(1/`p',`q',`zl') ///
 								if $ML_y1 != . & $ML_y2 != . &  $ML_y1 != $ML_y2
+			
+			
 								
 			qui replace `lnf' = log(`Fu' -`Fl') if $ML_y1 != . & $ML_y2 != . &  ///
 														$ML_y1 != $ML_y2
+														
 		
 		*Bottom coded data
 			qui replace `zl' = abs($ML_y1 - `mu')^`p'/(abs($ML_y1 - `mu')^`p' + ///
@@ -70,6 +83,7 @@ version 13
 								if $ML_y1 != . & $ML_y2 == .
 								
 			qui replace `lnf' = log(1-`Fl') if $ML_y1 != . & $ML_y2 == .
+
 		
 		*Top coded data
 			qui replace `zu' = abs($ML_y2 - `mu')^`p'/(abs($ML_y2 - `mu')^`p' + ///
@@ -80,11 +94,26 @@ version 13
 								`mu'))*sign($ML_y2 - `mu')*ibeta(1/`p',`q',`zu') ///
 								if $ML_y2 != . & $ML_y1 == .
 								
+								
 			qui replace `lnf' = log(`Fu') if $ML_y2 != . & $ML_y1 == .
+			
 		
 		*Missing values
-			qui replace `lnf' = 0 if $ML_y2 == . & $ML_y1 == .
+			qui replace `lnf' = 0 if $ML_y2 == . & $ML_y1 == . 
+			
+			
+			di as txt "Fu"
+			inspect `Fu'
+			sum `Fu'
+			
+			di as txt "Fl"
+			inspect `Fl'
+			sum `Fl'
+			
 		
+			di as txt "lnf"
+			inspect `lnf'
+			sum `lnf'
 		
 		
 end		

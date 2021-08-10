@@ -169,7 +169,7 @@ program define clemio2, rclass byable(recall)
 //		local ne = char(150)+char(142)
 //		}
 
-	di in gr _n "Clemente-Monta`ne's-Reyes unit-root test with double mean shifts, IO model"
+	di in gr _n "Clemente-Monta{c n~}{c e'}s-Reyes unit-root test with double mean shifts, IO model"
 	di in ye _n "`varlist'" in gr "    T =" %5.0f return(effN)  _col(25) " optimal breakpoints : " in ye `rts' return(Tb1) /*
 	*/ " , " `rts' return(Tb2) 
 	di in gr _n  "AR(" in ye %2.0f return(kopt) in gr ")" _col(22) "du1" _col(37) "du2" _col(49) "(rho - 1)" _col(65) "const"
@@ -188,7 +188,7 @@ if "`graph'" ~= "" {
 	local minp2 = string(return(Tb2),"`rts'")
 	tsline `varlist' if `samp', ti("Test on `varlist': breaks at `minp1',`minp2'") xline(`minx1' `minx2') nodraw name(ser,replace)
 	tsline `dvar' if `samp', ti("D.`varlist'") nodraw xline(`minx1' `minx2') name(ddv,replace)
-	graph combine ser ddv, col(1) ti("Clemente-Monta`ne's-Reyes double IO test for unit root")
+	graph combine ser ddv, col(1) ti("Clemente-Monta{c n~}{c e'}s-Reyes double IO test for unit root")
 }
 
 	end

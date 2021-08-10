@@ -1,6 +1,6 @@
 d 'AUTORENAME': module to automatically rename variables
 d
-d autorename renames variables according to a row in the dataset. 
+d  autorename renames variables according to a row in the dataset. 
 d
 d KW: data management
 d KW: rename

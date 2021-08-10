@@ -1,4 +1,4 @@
-*!Written 02Jan2017
+*!Written 01Oct2017
 *!Written by Sergio Venturini and Mehmet Mehmetoglu
 *!The following code is distributed under GNU General Public License version 3 (GPL-3)
 
@@ -12,8 +12,8 @@ plssem (Attractive > face sexy) ///
 			 structural(Appearance Attractive, ///
 	                Muscle Appearance, ///
 	                Weight Appearance) ///
-	     boot(200) seed(123) stats corr(lv)
-		
+	     boot(200) seed(123) stats correlate(lv)
+
 estat indirect, effects(Muscle Appearance Attractive, ///
                         Weight Appearance Attractive) ///
 								boot(200) seed(456)
@@ -32,13 +32,3 @@ plssem (Attractive > face sexy) ///
 									Muscle Appearance, ///
 									Weight Appearance) ///
 			 group(women, reps(200) groupseed(123) method(bootstrap) alpha(.1) plot)
-
-plssem (Attractive > face sexy) ///
-			 (Appearance > body appear attract) ///
-			 (Muscle > muscle strength endur) ///
-			 (Weight > lweight calories cweight), ///
-			 structural(Appearance Attractive, ///
-									Muscle Appearance, ///
-									Weight Appearance) ///
-			 group(women, reps(200) groupseed(123) method(bootstrap) alpha(.1) plot ///
-						 what(loadings))

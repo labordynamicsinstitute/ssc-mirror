@@ -1,1 +1,0 @@
-d '_GRMINMAX': modules to calculate row min/max values from variable listdd _grmin, _grmax extend the egen function list to incorporate rowd minima and maxima, respectively. dd Author: Nicholas J. Cox, University of Durhamd Support: email N.J.Cox@@durham.ac.ukf _grmax.adof _grmin.ado

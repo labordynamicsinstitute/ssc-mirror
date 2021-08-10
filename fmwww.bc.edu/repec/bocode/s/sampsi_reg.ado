@@ -1,19 +1,96 @@
-*! Date        : 2 June 2011
-*! Version     : 1.02
+*! Date        : 4 Jan 2019
+*! Version     : 1.03
 *! Authors     : Adrian Mander
 *! Email       : adrian.mander@mrc-bsu.cam.ac.uk
 *!
 *! Sample size calculations for linear regression
 
 /*
-version 1.01 16Oct07   Trying to correct the limitations of command .. I haven't finished this
-version 1.02 2Jun11    Found an error with function
-
+v1.01 16Oct07  Trying to correct the limitations of command .. I haven't finished this
+v1.02  2Jun11  Found an error with function
+v1.03  4Jan19  Found a bug on the (`alt'*`alt'*`sx'*`sx')>(`sy'*`sy') check
 */
 
+/* START HELP FILE
+title[Calculates Sample Size or Power for Simple Linear Regression]
+
+desc[
+{cmd:sampsi_reg} calculates the power and sample size for a simple linear regression. The theory behind
+this command is described in Dupont and Plummer (1998) Power and Sample Size Calculations for Studies
+involving Linear Regression, Controlled Clinical Trials 19:589-601.
+
+The calculations require an estimate of the residual standard error. There are three methods for
+doing this: enter the estimate directly; enter the standard deviation of the Y's; or enter the
+correlation between Y and X values.
+
+This command can be combined with samplesize in order to look at multiple calculations and to plot
+the results.
+
+]
+
+opt[null() specifies the "null slope".]
+opt[alt() specifies the "alternative slope".]
+opt[n1() size of sample.]
+opt[sd1() standard deviation of the residuals.]
+opt[alpha() significance level of test.]
+opt[power() power of test.]
+opt[solve() specifies whether to solve for the sample size or power; default is s(n) solves for n
+and the only other choice is s(power) solves for power.]
+opt[sx() the standard deviation of the X's.]
+opt[sy() the standard deviation of the Y's.]
+opt[yxcorr() the correlation between Y's and X's.]
+opt[varmethod() specifies the method for calculating the residual standard deviation.  varmethod(r)
+uses the Y-X correlation and varmethod(sdy) uses the standard deviation of the Y's, the default uses
+a direct estimate of the residual sd sd1(#).]
+opt[onesided one-sided test; default is two-sided.]
+
+example[
+
+Calculate power for a two-sided test:
+
+  {stata sampsi_reg, null(0) alt(0.25) n(100) sx(0.25) yxcorr(0.2) varmethod(r) s(power)}
+
+Compute sample size:
+
+{stata  sampsi_reg, null(0) alt(0.25) sx(0.25) sy(1) varmethod(r) s(n)}
+
+When specifying the variance of the y's you must have a varmethod option
+  WRONG: {stata sampsi_reg, null(0) alt(5) sx(0.5) sy(12.3)}
+  CORRECT: {stata sampsi_reg, null(0) alt(5) sx(0.5) sy(12.3) var(sdy)}
+
+]
+
+author[Dr Adrian Mander]
+institute[MRC Biostatistics Unit, University of Cambridge]
+email[adrian.mander@mrc-bsu.cam.ac.uk]
+
+return[N_2 the second arm sample size]
+return[N_1 the first arm sample size]
+return[power the power]
+
+
+seealso[
+
+{help samplesize} (if installed){stata ssc install samplesize} (to install this command)
+{help sampsi_fleming} (if installed)  {stata ssc install sampsi_fleming} (to install this command)
+{help simon2stage} (if installed)   {stata ssc install simon2stage} (to install this command)
+
+]
+
+END HELP FILE */
+
+
 prog def sampsi_reg, rclass
-version 9.0
-syntax [varlist] [, NULL(real 0) ALT(real 0.5) N1(real 100) SD1(real 1) Alpha(real 0.05) Power(real 0.9) ////
+ /* Allow use on earlier versions of stata that have not been fully tested */
+ local version = _caller()
+ if `version' < 15.1 {
+    di "{err}WARNING: Tested only for Stata version 15.1 and higher."
+    di "{err}Your Stata version `version' is not officially supported."
+ }
+ else {
+   version 15.1
+ }
+syntax [varlist] [, NULL(real 0) ALT(real 0.5) N1(real 100) SD1(real 1) Alpha(real 0.05) Power(real 0.9) ///
 Solve(string) ONESIDED  SX(real 1) SY(real 1) VARmethod(string) YXCORR(real 0.75) ]
 
 /*
@@ -26,14 +103,19 @@ sampsi_reg, null(0) alt(5) sx(0.5) sy(12.3)
 sampsi_reg, null(0) alt(22.6) sy(16.7) varmethod(sdy)
 */
 
-if ((`alt'*`alt'*`sx'*`sx')>(`sy'*`sy')) {
+if "`varmethod'"=="" local varmethod "res"
+if "`varmethod'"~="sdy" & "`sy'"~="1" {
+  di "{error}Warning: If you have specified the variance of the Y's then you should use the {res}varmethod(sdy) {err}option"
+  exit(196)
+}
+
+if "`varmethod'"!="res" & ((`alt'*`alt'*`sx'*`sx')>(`sy'*`sy')) {
   di "{error}Warning alt^2 * Sx^2 > Sy^2!)"
   di "{res}     alt^2 * Sx^2 ="`alt'*`alt'*`sx'*`sx'
   di "             Sy^2 ="`sy'*`sy'
   exit(196)
 }
 
-if "`varmethod'"=="" local varmethod "res"
 if "`solve'"=="" local solve "n"
 
 /*
@@ -41,10 +123,6 @@ if "`solve'"=="" local solve "n"
  EITHER by 
 */
 
-if "`varmethod'"~="sdy" & "`sy'"~="1" {
-  di "{error}Warning: If you have specified the variance of the Y's then you should use the {res}varmethod(sdy) {err}option"
-  exit(196)
-}
 
 if "`varmethod'"=="res" local sres = `sd1'
 if "`varmethod'"=="sdy" local sres = sqrt(`sy'^2-(`alt'-`null')^2*`sx'^2)
@@ -73,7 +151,8 @@ if "`solve'"=="n" {
       di "{error}Please lower sx or increase alt or increase sy"
       exit(198)
     }
-    if `niter++'>100 local relaxiter 1
+    if `niter++'>100 	  local relaxiter 1
+	
   }
 
   di

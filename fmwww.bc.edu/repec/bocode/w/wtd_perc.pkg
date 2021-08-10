@@ -3,14 +3,15 @@ d
 d   wtd_perc estimates a parametric Waiting Time Distribution (WTD)
 d to varname and then computes an    estimate of the specified
 d percentile together with an estimate of the proportion of
-d prevalent users    in the sample. 
+d prevalent users    in the sample. Users should also consider
+d wtdttt, a more comprehensive package for WTDs. 
 d
 d KW: waiting time
 d KW: inter-arrival density
 d
 d Requires: Stata version 14
 d
-d Distribution-Date: 20160329
+d Distribution-Date: 20180124
 d
 d Author: Henrik Stovring, Department of Public Health Biostatistics, University of Aarhus
 d Support: email stovring@@biostat.au.dk

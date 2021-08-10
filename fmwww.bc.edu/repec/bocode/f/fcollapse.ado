@@ -1,4 +1,4 @@
-*! version 2.10.0 08jun2017
+*! version 2.31.2 17dec2018
 program define fcollapse
 	cap noi Inner `0'
 	loc rc = c(rc)
@@ -16,9 +16,12 @@ program define Inner
 		[cw] ///
 		[FREQ FREQvar(name)] /// -contract- feature for free
 		[REGister(namelist local)] /// additional aggregation functions
-		[pool(numlist integer missingok max=1 >0 min=1)] /// memory-related
+		[POOL(numlist integer missingok max=1 >0 min=1)] /// memory-related
 		[MERGE] /// adds back collapsed vars into dataset; replaces egen
+		[APPEND] /// appends collapsed variables at the end of the dataset (useful to add totals to tables)
 		[SMART] /// allow calls to collapse instead of fcollapse
+		[METHOD(string)] /// allow choice of internal method (hash0, hash1, etc.)
+		[noCOMPRESS] /// save variables in the smallest type that preserves information
 		[Verbose] // debug info
 	
 	// Parse
@@ -31,8 +34,12 @@ program define Inner
 		loc by `byvar'
 	}
 	loc merge = ("`merge'" != "")
-	loc smart = ("`smart'" != "") & !`merge' & ("`freqvar'" == "") & ("`register'" == "") & ("`anything'" != "") & ("`by'" != "")
+	loc append = ("`append'" != "")
+	loc smart = ("`smart'" != "") & !`merge' & !`append' & ("`freqvar'" == "") & ("`register'" == "") & ("`anything'" != "") & ("`by'" != "")
+	loc compress = ("`compress'" != "nocompress")
 	loc verbose = ("`verbose'" != "")
+
+	_assert `merge' + `append' < 2, msg("cannot append and merge at the same time")
 
 	if (`smart') {
 		gettoken first_by _ : by
@@ -63,7 +70,7 @@ program define Inner
 	}
 
 	loc valid_stats mean median sum count percent max min ///
-		iqr first last firstnm lastnm sd
+		iqr first last firstnm lastnm sd nansum
 	loc invalid_stats : list stats - valid_stats
 	loc invalid_stats : list invalid_stats - register
 	foreach stat of local invalid_stats {
@@ -82,38 +89,51 @@ program define Inner
 		error `rc'
 	}
 
-	loc interserction : list targets & by
+	loc intersection : list targets & by
 	if ("`intersection'" != "") {
 		di as error "targets in collapse are also in by(): `intersection'"
 		error 110
 	}
-	loc interserction : list targets & freqvar
+	loc intersection : list targets & freqvar
 	if ("`intersection'" != "") {
 		di as error "targets in collapse are also in freq(): `intersection'"
 		error 110
 	}
 
-	// Trim data
-	loc need_touse = ("`if'`in'"!="" | "`cw'"!="")
+	* Trim data
+	loc need_touse = ("`if'`in'"!="" | "`cw'"!="" | "`exp'" != "")
 	if (`need_touse') {
 		marksample touse, strok novarlist
+		
+		* Raise error with [iw] and negative weights (other weight types already do so)
+		if ("`weight'"=="iweight") {
+			_assert (!`touse') | (`exp' >= 0), msg("negative weights encountered") rc(402)
+		}
+
 		if ("`cw'" != "") {
 			markout `touse' `keepvars', strok
 		}
 	
-		if (!`merge') {
+		if (!`merge' & !`append') {
 			qui keep if `touse'
 			drop `touse'
 			loc touse
 		}
 	}
 
+	// Raise error if no obs.
+	if (!c(N)) {
+		error 2000
+	}
+
+	if (`append') loc offset = c(N) + 1
+
 	// Create factor structure
-	mata: F = factor("`by'", "`touse'", `verbose')
+	mata: F = factor("`by'", "`touse'", `verbose', "`method'")
 
 	// Trim again
 	// (saves memory but is slow for big datasets)
-	if (!`merge' & `pool' < .) keep `keepvars' `exp'
+	if (!`merge' & !`append' & `pool' < .) keep `keepvars' `exp'
 
 	// Get list of aggregating functions
 	mata: fun_dict = aggregate_get_funs()
@@ -125,7 +145,7 @@ program define Inner
 
 	// Main loop: collapses data
 	if ("`anything'" != "") {
-		mata: f_collapse(F, fun_dict, query, "`keepvars'", `merge', `pool', "`exp'", "`weight'")
+		mata: f_collapse(F, fun_dict, query, "`keepvars'", `merge', `append', `pool', "`exp'", "`weight'", `compress')
 	}
 	else {
 		clear
@@ -141,13 +161,16 @@ program define Inner
 		if (`merge') {
 			mata: st_store(., st_addvar("`freqtype'", "`freqvar'", 1), F.counts[F.levels])
 		}
+		else if (`append') {
+			mata: st_store((`offset'::`=c(N)'), st_addvar("`freqtype'", "`freqvar'", 1), F.counts)
+		}
 		else {
 			mata: st_store(., st_addvar("`freqtype'", "`freqvar'", 1), F.counts)
 		}
 		la var `freqvar' "Frequency"
 	}
 
-	if (!`merge') order `by' `targets'
+	if (!`merge' & !`append') order `by' `targets'
 	if ("`fast'" == "") restore, not
 end
 
@@ -158,7 +181,7 @@ program define ParseList
 
 	loc stat mean // default
 	mata: query = asarray_create("string") // query[var] -> [stat, target]
-	mata: asarray_notfound(query, J(0, 2, ""))
+	mata: asarray_notfound(query, J(0, 3, ""))
 
 	while ("`0'" != "") {
 		GetStat stat 0 : `0'
@@ -174,10 +197,16 @@ program define ParseList
 					loc target `var'
 				}
 			}
+
+			loc raw = strpos("`stat'", "raw") == 1
+			if (`raw') {
+				loc stat = substr("`stat'", 4, .)
+			}
+
 			loc targets `targets' `target'
 			loc keepvars `keepvars' `var'
 			loc stats `stats' `stat'
-			mata: asarray(query, "`var'", asarray(query, "`var'") \ ("`target'", "`stat'"))
+			mata: asarray(query, "`var'", asarray(query, "`var'") \ ("`target'", "`stat'", "`raw'"))
 			loc target
 		}
 	}
@@ -247,9 +276,10 @@ program define GetTarget
 end
 
 
-ftools, check
-findfile "ftools_type_aliases.mata"
+findfile "ftools.mata"
 include "`r(fn)'"
+
 findfile "fcollapse_main.mata"
 include "`r(fn)'"
+
 exit

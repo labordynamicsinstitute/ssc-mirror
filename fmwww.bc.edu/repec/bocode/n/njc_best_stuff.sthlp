@@ -1,6 +1,6 @@
 {smcl}
 {hline}
-index of NJC's best Stata stuff (version 11 June 2017)  
+index of NJC's best Stata stuff (version 7 March 2021)  
 {hline}
 
 {title:Description} 
@@ -17,6 +17,7 @@ available at {help njc_stuff:NJC stuff}.
 {space 4}command             version added
 {space 4}{hline 33} 
 {space 4}
+{space 4}{help dataex}              14.2, 15.1 update 
 {space 4}{help clonevar}            8 update 
 {space 4}{help tostring}            8 update 
 {space 4}{help ci}                  8 update (advisor) 
@@ -56,6 +57,7 @@ available at {help njc_stuff:NJC stuff}.
 {space 4}{help dpplot}              density probability plots
 {space 4}{help eofplot}             plot coefficients or loadings after PCA or factor analysis
 {space 4}{help eqprhistogram}       equal probability histograms 
+{space 4}{help fabplot}             plots for each subset, rest of data as backdrop 
 {space 4}{help favplots}            formatted added-variable plot(s)
 {space 4}{help fractileplot}        smoothing with distribution function predictors
 {space 4}{help kaplansky}           graph examples of distributions of varying kurtosis 
@@ -64,8 +66,12 @@ available at {help njc_stuff:NJC stuff}.
 {space 4}{help missingplot}         plot showing patterns of missing values in a dataset
 {space 4}{help mlowess}             lowess smoothing with multiple predictors 
 {space 4}{help modeldiag}           model diagnostics after regression-type commands 
-{space 4}{help multqplot}           multiple quantile plots 
+{space 4}{help multidot}            multiple panel dot charts and similar 
+{space 4}{help multiline}           multiple panel line plots 
+{space 4}{help multqplot}           multiple quantile plots
+{space 4}{help mycolours}           set a palette of colours through local macros
 {space 4}{help mylabels}            axis labels or ticks on specified scales 
+{space 4}{help niceloglabels}       nice axis labels for logarithmic scales
 {space 4}{help pairplot}            plots of paired observations
 {space 4}{help parplot}             parallel coordinates plots   
 {space 4}{help pdplot}              Pareto dot plots 
@@ -84,6 +90,7 @@ available at {help njc_stuff:NJC stuff}.
 {space 4}{help stripplot}           strip plots 
 {space 4}{help subsetplot}          plots for subsets, rest of the data as backdrop 
 {space 4}{help tabplot}             one-, two- and three-way bar charts for tables  
+{space 4}{help transplot}           plots for trying out transformations 
 {space 4}{help triplot}             triangular plots 
 {space 4}{help trimplot}            plots of trimmed means 
 {space 4}{help zmap}                binned scatter maps
@@ -135,6 +142,7 @@ available at {help njc_stuff:NJC stuff}.
 {space 4}{help lvalues}             letter value calculation
 {space 4}{help modes}               tabulation of modes 
 {space 4}{help moments}             moment-based statistics
+{space 4}{help multidensity}        kernel density estimation for one or more variables or groups
 {space 4}{help nruns}               number of runs compared with random shuffles
 {space 4}{help omninorm}            omnibus test for univariate or multivariate normality 
 {space 4}{help pcacoefsave}         save results of PCA to new dataset 
@@ -143,13 +151,13 @@ available at {help njc_stuff:NJC stuff}.
 {space 4}{help rangestat}           generate statistics using observations within range
 {space 4}{help shorth}              descriptive statistics based on shortest halves
 {space 4}tab_chi             {help chitest}, {help chitesti}, {help tabm}, {help tabsplit} especially
-{space 4}{help tkdensity}           kernel density estimation, calculation on transformed scale
 {space 4}{help transint}            transformations help 
 {space 4}{help trimmean}            trimmed means as descriptive statistics 
 
 {title:Data management and programming}
 
 {space 4}{help charlist}            list characters present in string variables
+{space 4}{help countvalues}         list counts of integer values across variables
 {space 4}{help dataex}              generate formatted data example for Statalist
 {space 4}{help distinct}            display number of distinct values of variables 
 {space 4}{help egenmore}            extension to generate (more extras) 

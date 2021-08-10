@@ -1,3 +1,7 @@
+*! version 2.1.1 Stephen P. Jenkins, Feb 2021
+*!   add weight / if `touse' to line 98
+*! version 2.1.0 Stephen P. Jenkins, March 2020
+*!  add reporting of rho_f to results table & saved results
 *! version 2.0.0 Stephen P. Jenkins, March 2009
 *!  update to version 8.2
 *! version 1.0.0 Stephen P. Jenkins, Dec 1998
@@ -9,7 +13,7 @@ program define ineqfac, sortpreserve rclass
 	version 8.2
 
 	
-	syntax varlist(min=2 numeric) [aweight fweight] [if] [in] ///
+	syntax varlist(min=2 numeric) [aweight fweight pweight iweight] [if] [in] ///
 		[, i2 Stats TOTal(string) ]
 	
 	local nfac : word count `varlist'
@@ -63,21 +67,21 @@ quietly {
 
 	noisily {	
     		di " "
-    		di as txt "Inequality decomposition by factor components"
-	    	di as txt in smcl "{hline 9}{c TT}{hline 65}"
-    		di as txt "Factor" _col(10) in smcl "{c |}" _c 
-		di as txt _skip(3) "  100*s_f        S_f" _c
+    		di as txt "Inequality decomposition by factor components (Shorrocks' method)"
+	    	di as txt in smcl "{hline 20}{c TT}{hline 58}"
+    		di as txt "Factor" _col(21) in smcl "{c |}" _c 
+			di as txt _skip(2) "100*s_f     S_f" _c
 	
 		if "`i2'" == "" {
-			di as txt _skip(3) "  100*m_f/m      CV_f" _c
-			di as txt _skip(3) "CV_f/CV(Total)"
+			di as txt _skip(1) "  100*m_f/m  rho_f   CV_f" _c
+			di as txt _skip(1) "CV_f/CV(Total)"
 		}
 
 		else if "`i2'" != "" {
-			di as txt _skip(3) "  100*m_f/m      I2_f" _c
-			di as txt _skip(3) "I2_f/I2(Total)"
+			di as txt _skip(1) "  100*m_f/m  rho_f   I2_f" _c
+			di as txt _skip(1) "I2_f/I2(Total)"
 		}
-	    	di as txt in smcl "{hline 9}{c +}{hline 65}"
+	    	di as txt in smcl "{hline 20}{c +}{hline 58}"
 	}
 
 
@@ -91,61 +95,71 @@ quietly {
 		local cv`i' = `sd`i''/(`mean`i'')
 		regress ``i'' `total'  [w = `wi'] if `touse'
 		local sf`i' = _b[`total']
-
+		corr `total' ``i''  [w = `wi'] if `touse'
+		local rho`i' = r(rho)		
+		
 		return local mean_``i'' = `mean`i''
 		return local var_``i'' = `var`i''
 		return local sd_``i'' = `sd`i''
 		return local cv_``i'' = `cv`i''		
 		return local sf_``i'' = `sf`i''
 		return local share_``i'' = `mean`i''/`meantot'
+		return local rho_``i'' = `rho`i''
 
-		noi di as txt "``i''" _col(10) in smcl "{c |}" _c
-		noi di _skip(3) as res %9.4f 100*`sf`i'' _c
+		noi di as txt "``i''" _col(21) in smcl "{c |}" _c
+		noi di _skip(3) as res %6.3f 100*`sf`i'' _c
 		if "`i2'" == "" {
-			noi di _skip(3) as res %9.4f `sf`i''*`cvtot' _c
-			noi di _skip(3) as res %9.4f 100*`mean`i''/`meantot' _c
-			noi di _skip(3) as res %9.4f `cv`i'' _c
-			noi di _skip(3) as res %9.4f `cv`i''/`cvtot'
+			noi di _skip(3) as res %6.3f `sf`i''*`cvtot' _c
+			noi di _skip(3) as res %6.3f 100*`mean`i''/`meantot' _c
+			noi di _skip(2) as res %6.3f  `rho`i'' _c	
+			noi di _skip(2) as res %6.3f `cv`i'' _c
+			noi di _skip(3) as res %6.3f `cv`i''/`cvtot'
+		
 		}
 		if "`i2'" != "" {	
-			noi di _skip(3) as res %9.4f `sf`i''*.5*(`cvtot')^2 _c
-			noi di _skip(3) as res %9.4f 100*`mean`i''/`meantot' _c
-			noi di _skip(3) as res %9.4f .5*(`cv`i'')^2 _c
-			noi di _skip(3) as res %9.4f (`cv`i''/`cvtot')^2
+			noi di _skip(3) as res %6.3f `sf`i''*.5*(`cvtot')^2 _c
+			noi di _skip(3) as res %6.3f 100*`mean`i''/`meantot' _c
+			noi di _skip(2) as res %6.3f  `rho`i'' _c
+			noi di _skip(2) as res %6.3f .5*(`cv`i'')^2 _c
+			noi di _skip(3) as res %6.3f (`cv`i''/`cvtot')^2 
+			
 		}
 
 	}
 
 		noisily {
-		    	di as txt in smcl "{hline 9}{c +}{hline 65}"
-			di as txt "Total" _col(10) in smcl "{c |}" _c
-			di _skip(3) as res %9.4f " 100.0000" _c
+		    di as txt in smcl "{hline 20}{c +}{hline 58}"
+			di as txt "Total" _col(21) in smcl "{c |}" _c
+			di _skip(2) as res %6.3f "100.000" _c
 	
 			if "`i2'" == "" {
-				di _skip(3) as res %9.4f `cvtot' _c
-				di _skip(3) as res %9.4f " 100.0000" _c
-				di _skip(3) as res %9.4f `cvtot' _c
+				di _skip(3) as res %6.3f `cvtot' _c
+				di _skip(2) as res %6.3f "100.000" _c
+				di _skip(3) as res %6.3f "1.000" _c
+				di _skip(2) as res %6.3f `cvtot' _c
 			}
 			if "`i2'" != "" {
-				di _skip(3) as res %9.4f .5*(`cvtot')^2 _c
-				di _skip(3) as res %9.4f " 100.0000" _c
-				di _skip(3) as res %9.4f .5*(`cvtot')^2 _c
+				di _skip(3) as res %6.3f .5*(`cvtot')^2 _c
+				di _skip(2) as res %6.3f "100.000" _c
+				di _skip(3) as res %6.3f "1.000" _c				
+				di _skip(2) as res %6.3f .5*(`cvtot')^2 _c
 			}
-			di _skip(3) as res %9.4f "   1.0000"
+			di _skip(4) as res %6.3f "1.000"
 
-		    	di as txt in smcl "{hline 9}{c BT}{hline 65}"
+		    di as txt in smcl "{hline 20}{c BT}{hline 58}"
 
-			di as txt "Note: The proportionate contribution of factor" _c
-			di as txt _skip(1) "f to inequality of Total,"
-			di as txt "      s_f = rho_f*sd(f)/sd(Total)." _c
+			di as txt "Note: s_f is the proportionate contribution of factor f"
+			di as txt _skip(1) "to inequality of Total, where ..."
+			di as txt " s_f = rho_f*sd(f)/sd(Total) "
+			di as txt "     = rho_f*[m(factor_f)/m(totvar)]*[CV(factor_f)/CV(totvar)]." 
 			if "`i2'" == "" {
-				di as txt _skip(1) "S_f = s_f*CV(Total)."
-				di as txt "      m_f = mean(f). sd(f) = std.dev. of f." _c 
+				di as txt _skip(1) "S_f = s_f*CV(Total). rho_f = corr(f,Total). "
+				di as txt _skip(1) "m_f = mean(f). sd(f) = std.dev. of f." _c 
 				di as txt _skip(1) "CV_f = sd(f)/m_f."
 			}
 			if "`i2'" != "" {
-				di as txt _skip(1) "S_f = s_f*I2(Total)."
-				di as txt "      m_f = mean(f). sd(f) = std.dev. of f." _c 
+				di as txt _skip(1) "S_f = s_f*CV(Total). rho_f = corr(f,Total). "
+				di as txt _skip(1) "m_f = mean(f). sd(f) = std.dev. of f." _c 
 				di as txt _skip(1) "I2_f = .5*[sd(f)/m_f]^2."
 			}
 

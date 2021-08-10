@@ -3,17 +3,24 @@ d
 d distplot produces a plot of cumulative distribution function(s). 
 d This shows the proportion (or if desired the frequency) of values
 d  less than or equal to each value. With the reverse option, 
-d distplot produces a plot of the complementary function.  This is
-d version 2.0.1 of the software and is rewritten for Stata 8.  Also
-d included in this package are distplot7 files, a clone of the 
-d last version of this program written for Stata 7.  
+d distplot produces a plot of the complementary function.  This 
+d version is for Stata 8 or later.  Also included in this package
+d are distplot7 files, a clone of the  last version of this program
+d written for Stata 7. 
+d
+d KW: graphics
+d KW: frequency distributions
+d KW: cumulative distribution function
+d
+d Requires: Stata version 8.0 (7.0 for distplot7)
+d
 d
 d Author: Nicholas J. Cox, University of Durham
 d Support: email N.J.Cox@@durham.ac.uk
 d
-d Distribution-Date: 20031010
-
+d Distribution-Date: 20170916
+d
 f distplot.ado
-f distplot.hlp
+f distplot.sthlp
 f distplot7.ado
 f distplot7.hlp

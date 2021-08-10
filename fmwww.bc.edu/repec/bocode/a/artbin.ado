@@ -1,18 +1,22 @@
+*! version 1.1.2 PR 17apr2018
+*! version 1.1.1 AGB 05aug2016
 *! version 1.1.0 AGB 12feb2014
-*  version 1.0.0 SB 06mar2004.
-*  version 1.0.0 PR 23mar2004.
-*  Based on Abdel Babiker ssizebi.ado version 1.1  20/4/97
+*! version 1.0.0 SB 06mar2004.
+*! version 1.0.0 PR 23mar2004.
+*! Based on Abdel Babiker ssizebi.ado version 1.1  20/4/97
 /*
 	History
-
-1.1.0	12feb2014	Non-inferiority is now correctly implemented (calls art2bin)
+1.1.2	17apr2018	Trivial correction to formatting of allocation ratios
+1.1.1	05aug2016	One-sided option for non-inferiority corrected
+					(previous version double-adjusted alpha)
+1.1.0	12feb2013	Non-inferiority is now correctly implemented (calls art2bin)
 */
 program define artbin, rclass
 version 8
-syntax , pr(string) [ ALpha(real 0.05) ARatios(string) COndit DIstant(int 0)	///
-	DOses(string) N(integer 0) NGroups(integer 2) NI(int 0) Onesided(int 0)	///
-	POwer(real 0.8) TRend NVMethod(int 0) ap2(real 0)]
-local version "version 1.1.0 12feb2014"
+syntax , PR(string) [ ALpha(real 0.05) ARatios(string) COndit DIstant(int 0)	///
+	DOses(string) N(integer 0) NGroups(integer 2) NI(int 0) Onesided(int 0)		///
+	POwer(real 0.8) TRend NVMethod(int 0) ap2(real 0) ccorrect(int 0)]
+local version "binary version 1.1.1 05aug2016"
 local npr: word count `pr'
 if `npr'<2 {
 	di as err "At least two event probabilities required"
@@ -31,9 +35,18 @@ if `n'<0 {
 	exit 198
 }
 if `ni' & ((`npr'>2)|(`ngroups'>2)) {
-	di as err "Only two groups allowed for non-inferiority designs"
+	di as err "Only two groups allowed for non-inferiority/substantial superiority designs"
 	exit 198
 }
+if `ccorrect' & (`ngroups'>2) {
+	di as err "Correction for contituity not allowed in comparison of > 2 groups"
+	exit 198
+}
+if `onesided' & (`ngroups'>2) {
+	di as err "One-sided not allowed in comparison of > 2 groups"
+	exit 198
+}
+
 if `n'==0 {
 	local ssize 1
 }
@@ -46,6 +59,7 @@ else {
 	local local "nolocal"
 	local locmess "(distant)"
 }
+
 * `Alpha' is value as supplied; `alpha' is for use in calculations
 local Alpha `alpha'
 if `onesided' {
@@ -54,6 +68,7 @@ if `onesided' {
 }
 else local sided two
 local Power `power'	/* as supplied */
+
 if `ni' {
 	local trialtype "Non-inferiority"
 }
@@ -62,7 +77,7 @@ local trialtype "`trialtype' - binary outcome"
 
 if `ni' {
 	/* ! Non-inferiority ! */
-	local tit2 "Comparison of `ngroups' binomial proportions P1 and P2."
+	local tit2 "Comparison of 2 binomial proportions P1 and P2."
 	
 	/* Event probability in group 2 under the alternative hypothesis H1 */
 	if `ap2'<0 | `ap2'>1 {
@@ -73,13 +88,13 @@ if `ni' {
 	/* Method of estimating event probabilities for the purpose of estimating
 		the variance of the difference in proportions under the null hypothesis H0 */
 	local nvm = `nvmethod'  
-	if `nvm'>2 | `nvm'<0 {
-		local nvm 0
+	if `nvm'>3 | `nvm'<1 {
+		local nvm 3
 	}
-	local method0 Sample estimate
-	local method1 Fixed marginal totals
-	local method2 Constrained maximum likelihood
-	
+	local method1 Sample estimate
+	local method2 Fixed marginal totals
+	local method3 Constrained maximum likelihood
+
 	if "`aratios'"=="" | "`aratios'"=="1" | "`aratios'"=="1 1" {
 		local allocr "Equal group sizes"
 		local ar21 1
@@ -111,11 +126,10 @@ if `ni' {
 	}
 	frac_ddp `p2'-`p1' 3
 	local altd `r(ddp)'	// Difference in probabilities under alternative hypothesis //
-	local Sided
-	if `onesided' local Sided onesided
+
 	if `ssize' {
 		qui art2bin `p1' `p2', margin(`margin') ar(`ar21')	///
-		alpha(`alpha') power(`power') `Sided' nvmethod(`nvm')
+		alpha(`alpha') power(`power') nvmethod(`nvm')
 		local n `r(n)'
 	}
 	else {
@@ -182,7 +196,8 @@ else {
 	else {
 		scalar `sar'=0
 		tokenize `aratios'
-		local allocr "`1'"
+		frac_ddp `1' 2
+		local allocr `r(ddp)'
 		local i 1
 		while `i'<=_N {
 			if "`1'"!="" {
@@ -198,7 +213,7 @@ else {
 			scalar `sar'=`sar'+`AR'[`i']
 			if `i'>1 {
 				frac_ddp `AR'[`i'] 2
-				local allocr `allocr'.00:`r(ddp)'
+				local allocr `allocr':`r(ddp)'
 			}
 			local ++i
 			macro shift
@@ -407,7 +422,7 @@ local maxwidth 78
 di as text _n "{hi:ART} - {hi:A}NALYSIS OF {hi:R}ESOURCES FOR {hi:T}RIALS" /*
  */ " (`version')" _n "{hline `maxwidth'}"
 display as text "A sample size program by Abdel Babiker, Patrick Royston & Friederike Barthel,"
-display as text "MRC Clinical Trials Unit at UCL, London WC2B 6NH, UK." _n "{hline `maxwidth'}"
+display as text "MRC Clinical Trials Unit at UCL, London WC1V 6LJ, UK." _n "{hline `maxwidth'}"
 di as text "Type of trial" _col(`off') as res "`trialtype'"
 artformatnos, n(`tit2') maxlen(`longstring')
 local nlines=r(lines)

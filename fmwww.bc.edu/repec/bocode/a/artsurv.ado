@@ -34,7 +34,7 @@ syntax [using/] [, ALpha(real 0.05) ARatios(string) CRover(string) DEtail(int 0)
  LG(string) MEDian(real 0) METhod(string) N(integer 0) NGroups(integer 2) NI(int 0) ///
  NPeriod(integer 1) Onesided(int 0) POwer(real 0.8) PWehr(string) REcrt(string) REPLACE ///
  TRend(int 0) TUnit(int 1) WDf(string) WG(string)]
-local version "version 1.1.0, 10 December 2013"
+local version "survival version 1.1.0, 10 December 2013"
 sreturn clear
 local artpep "alpha(`alpha') aratios(`aratios') hratio(`hratio') ngroups(`ngroups') ni(`ni') onesided(`onesided') trend(`trend') tunit(`tunit')"
 
@@ -701,7 +701,7 @@ if "`head'"=="" {
 	di as text _n "{hi:ART} - {hi:A}NALYSIS OF {hi:R}ESOURCES FOR {hi:T}RIALS" /*
 	 */ _skip(`skip') "(`version')" _n "{hline `maxwidth'}"
 	display as text "A sample size program by Abdel G Babiker, Patrick Royston & Friederike Barthel,"
-	display as text "MRC Clinical Trials Unit at UCL, London WC2B 6NH, UK." _n "{hline `maxwidth'}"
+	display as text "MRC Clinical Trials Unit at UCL, London WC1V 6LJ, UK." _n "{hline `maxwidth'}"
 }
 di as text "Type of trial" _col(`off') as res "`trialtype'"
 if `ni' {

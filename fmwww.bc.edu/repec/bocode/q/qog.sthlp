@@ -11,10 +11,10 @@ help {cmd:qog}{right:also see: {helpb qoguse}, {helpb qogmerge}}
 
 
 {title:Author}
-{pstd}Christoph Thewes, University of Potsdam, thewes@uni-potsdam.de{p_end}
+{pstd}Christoph Thewes, University of Potsdam, thewes@mailbox.org{p_end}
 
 {title:Version}
-{psee}2.1.0: 05/08/2017
+{psee}2.1.2: 25/05/2020
 
 
 

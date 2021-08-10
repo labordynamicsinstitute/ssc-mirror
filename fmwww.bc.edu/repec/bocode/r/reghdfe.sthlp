@@ -1,15 +1,20 @@
 {smcl}
-{* *! version 3.2.9 21feb2016}{...}
+{* *! version 5.7.3 13nov2019}{...}
 {vieweralsosee "[R] areg" "help areg"}{...}
 {vieweralsosee "[R] xtreg" "help xtreg"}{...}
 {vieweralsosee "[R] ivregress" "help ivregress"}{...}
 {vieweralsosee "" "--"}{...}
+{vieweralsosee "reghdfe_mata" "help reghdfe_mata"}{...}
+{vieweralsosee "ivreghdfe" "help ivreghdfe"}{...}
+{vieweralsosee "ppmlhdfe" "help ppmlhdfe"}{...}
 {vieweralsosee "ivreg2" "help ivreg2"}{...}
+{vieweralsosee "ftools" "help ftools"}{...}
+{vieweralsosee "" "--"}{...}
 {vieweralsosee "ivregress" "help ivregress"}{...}
 {vieweralsosee "reg2hdfe" "help reg2hdfe"}{...}
 {vieweralsosee "a2reg" "help a2reg"}{...}
 {viewerjumpto "Syntax" "reghdfe##syntax"}{...}
-{viewerjumpto "Description" "reghdfe##description"}{...}
+{viewerjumpto "description" "reghdfe##description"}{...}
 {viewerjumpto "Options" "reghdfe##options"}{...}
 {viewerjumpto "Postestimation Syntax" "reghdfe##postestimation"}{...}
 {viewerjumpto "Remarks" "reghdfe##remarks"}{...}
@@ -22,14 +27,14 @@
 {title:Title}
 
 {p2colset 5 18 20 2}{...}
-{p2col :{cmd:reghdfe} {hline 2}}Linear and instrumental-variable/GMM regression absorbing multiple levels of fixed effects{p_end}
+{p2col :{cmd:reghdfe} {hline 2}}Linear regression absorbing multiple levels of fixed effects{p_end}
 {p2colreset}{...}
 
 {marker syntax}{...}
 {title:Syntax}
 
 {p 8 15 2} {cmd:reghdfe}
-{depvar} [{indepvars}] [{cmd:(}{it:{help varlist:endogvars}} {cmd:=} {it:{help varlist:iv_vars}}{cmd:)}]
+{depvar} [{indepvars}]
 {ifin} {it:{weight}} {cmd:,} {opth a:bsorb(reghdfe##absvar:absvars)} [{help reghdfe##options:options}] {p_end}
 
 {marker opt_summary}{...}
@@ -37,26 +42,17 @@
 {synopthdr}
 {synoptline}
 {syntab:Model {help reghdfe##opt_model:[+]}}
-{p2coldent:* {opth a:bsorb(reghdfe##absvar:absvars)}}identifiers of the absorbed fixed effects; each {help reghdfe##absvar:absvar} represents one set of fixed effects{p_end}
-{synopt: {cmdab:a:bsorb(}{it:...}{cmd:,} {cmdab:save:fe)}}save all fixed effect estimates ({it:__hdfe*} prefix); useful for a subsequent {help reghdfe##postestimation:predict}.
-However, see also the {it:resid} option.{p_end}
-{synopt : {opth res:iduals(newvar)}}save residuals; more direct and much faster than saving the fixed effects and then running predict{p_end}
-{synopt :{opth su:mmarize(tabstat##statname:stats)}}equivalent to {help reghdfe##postestimation:estat summarize} after the regression,
-but more flexible, compatible with the {opt fast:} option, and saves results on {it:e(summarize)}{p_end}
-{synopt : {opt subopt:ions(...)}}additional options that will be passed to the regression command (either {help regress}, {help ivreg2}, or {help ivregress}){p_end}
+{p2coldent:* {opth a:bsorb(reghdfe##absvar:absvars)}}categorical variables that identify the fixed effects to be absorbed{p_end}
+{synopt: {cmdab:a:bsorb(}{it:...}{cmd:,} {cmdab:save:fe)}}save all fixed effect estimates with the {it:__hdfe*} prefix{p_end}
+{synopt: {cmdab:noa:bsorb}}only absorb the constant; alternative to 
+{cmd:regress} that supports for multi-way-clustering{p_end}
+{synopt : {opth res:iduals(newvar)}}save residuals; {it:predict, d} requires this option{p_end}
+{synopt :{opth su:mmarize(tabstat##statname:stats)}}equivalent to the postestimation command {help reghdfe##postestimation:estat summarize},
+but more flexible, faster, and saves results on {it:e(summarize)}{p_end}
 	
 {syntab:SE/Robust {help reghdfe##opt_vce:[+]}}
 {p2coldent:+ {opt vce}{cmd:(}{help reghdfe##opt_vce:vcetype} [{cmd:,}{it:opt}]{cmd:)}}{it:vcetype}
 may be {opt un:adjusted} (default), {opt r:obust} or {opt cl:uster} {help fvvarlist} (allowing two- and multi-way clustering){p_end}
-{synopt :}suboptions {opt bw(#)}, {opt ker:nel(str)}, {opt dkraay(#)} and {opt kiefer} allow for AC/HAC estimates; see the {help avar} package{p_end}
-
-{syntab:Instrumental-Variable/2SLS/GMM {help reghdfe##opt_iv:[+]}}
-{synopt :{opt est:imator(str)}}either {opt 2sls} (default), {opt gmm:2s} (two-stage GMM),
-{opt liml} (limited-information maximum likelihood) or {opt cue} (which gives approximate results, see discussion below){p_end}
-{synopt :{opt stage:s(list)}}estimate additional regressions; choose any of {opt first} {opt ols} {opt reduced} {opt acid} (or {opt all}){p_end}
-{synopt :{opt ff:irst}}compute first-stage diagnostic and identification statistics{p_end}
-{synopt :{opth iv:suite(subcmd)}}package used in the IV/GMM regressions;
-options are {opt ivreg2} (default; needs installing) and {opt ivregress}{p_end}
 
 {syntab:Diagnostic {help reghdfe##opt_diagnostic:[+]}}
 {synopt :{opt v:erbose(#)}}amount of debugging information to show (0=None, 1=Some, 2=More, 3=Parsing/convergence details, 4=Every iteration){p_end}
@@ -65,16 +61,24 @@ options are {opt ivreg2} (default; needs installing) and {opt ivregress}{p_end}
 {syntab:Optimization {help reghdfe##opt_optimization:[+]}}
 {p2coldent:+ {opth tol:erance(#)}}criterion for convergence (default=1e-8){p_end}
 {synopt :{opth maxit:erations(#)}}maximum number of iterations (default=10,000); if set to missing ({cmd:.}) it will run for as long as it takes.{p_end}
-{synopt :{opth pool:size(#)}}apply the within algorithm in groups of {it:#} variables (default 10). a large poolsize is usually faster but uses more memory{p_end}
-{synopt :{opt accel:eration(str)}}acceleration method; options are conjugate_gradient (cg), steep_descent (sd), aitken (a), and none (no){p_end}
-{synopt :{opt transf:orm(str)}}transform operation that defines the type of alternating projection; options are Kaczmarz (kac), Cimmino (cim), Symmetric Kaczmarz (sym){p_end}
+{synopt :{opt accel:eration(str)}}acceleration method; options are conjugate_gradient (cg), steep_descent (sd), aitken (a),
+{browse "http://web.stanford.edu/group/SOL/software/lsmr/":lsmr} (with diagonal preconditioner), and none (no){p_end}
+{synopt :{opt transf:orm(str)}}transform operation that defines the type of alternating projection; options are Kaczmarz (kac), Cimmino (cim), Symmetric Kaczmarz (sym).
+This is ignored with LSMR acceleration{p_end}
+{synopt :{opt prune}}prune vertices of degree-1; acts as a preconditioner
+that is useful if the underlying network is very sparse{p_end}
+{synopt :{opt cond}}compute the finite condition number;
+will only run successfully with few fixed effects
+(because it computes the eigenvalues of the graph Laplacian){p_end}
+
+{syntab:Memory Usage {help reghdfe##memory:[+]}}
+{synopt :{opth pool:size(#)}}apply the within algorithm in groups of {it:#} variables (else, it will run on all variables at the same time).
+A large pool size is usually faster but uses more memory{p_end}
+{synopt :{opt compact}}preserve the dataset and drop variables as much as possible on every step{p_end}
 
 {syntab:Speedup Tricks {help reghdfe##opt_speedup:[+]}}
-{synopt :{cmd: cache(save} [,opt]{cmd:)}}absorb all variables without regressing (destructive; combine it with {help preserve:preserve/restore}){p_end}
-{synopt :}suboption {opth keep(varlist)} adds additional untransformed variables to the resulting dataset{p_end}
-{synopt :{cmd: cache(use)}}run regressions on cached data; {it:vce()} must be the same as with {cmd: cache(save)}.{p_end}
-{synopt :{cmd: cache(clear)}}delete Mata objects to clear up memory; no more regressions can be run after this{p_end}
-{synopt :{opt fast}}will not create {it:e(sample)}; disabled when saving fixed effects, residuals or mobility groups{p_end}
+{synopt :{opt nosamp:le}}will not create {it:e(sample)},
+saving some space and speed{p_end}
 
 {syntab:Degrees-of-Freedom Adjustments {help reghdfe##opt_dof:[+]}}
 {synopt :{opt dof:adjustments(list)}}allows selecting the desired adjustments for degrees of freedom;
@@ -82,20 +86,26 @@ rarely used{p_end}
 {synopt: {opth groupv:ar(newvar)}}unique identifier for the first mobility group{p_end}
 
 {syntab:Reporting {help reghdfe##opt_reporting:[+]}}
-{synopt :{opt version:}}reports the version number and date of reghdfe, and saves it in e(version). standalone option{p_end}
+{synopt :{opt version:}}reports the version number and date of reghdfe, and the list of required packages. standalone option{p_end}
 {synopt :{opt l:evel(#)}}set confidence level; default is {cmd:level(95)}{p_end}
 {synopt :{it:{help reghdfe##display_options:display_options}}}control column formats, row spacing, line width, display of omitted variables and base and empty cells, and factor-variable labeling.{p_end}
 {synopt :}particularly useful are the {opt noomit:ted} and {opt noempty} options to hide regressors omitted due to collinearity{p_end}
 
 {syntab:Undocumented}
 {synopt :{opt keepsin:gletons}}do not drop singleton groups{p_end}
-{synopt :{opt old}}will call the latest 2.x version of reghdfe instead (see the {help reghdfe_old:old help file}){p_end}
+{synopt :{opt nocon:stant}}Do not report estimates for {it:_cons}{p_end}
+{synopt :{opt old}}will call the latest 3.x version of reghdfe instead (see the {help reghdfe_old:old help file}){p_end}
+{synopt :{opth rre(varname)}}where varname is the residual of a proven prev. regression of y against only the FEs{p_end}
+{synopt :{opt check}}compile {it:lreghdfe.mlib} if it does not exist or if it needs to be updated;
+use {cmd:reghdfe,compile} to force an update{p_end}
+{synopt :{opt update}}update reghdfe and dependencies from the respective Github repositories;
+use {cmd:reghdfe,reload} to do so from {it:c:\git\*}{p_end}
 {synoptline}
 {p2colreset}{...}
-{p 4 6 2}* {opt absorb(absvars)} is required.{p_end}
+{p 4 6 2}* either {opt a:bsorb(absvars)} or {opt noa:bsorb} is required.{p_end}
 {p 4 6 2}+ indicates a recommended or important option.{p_end}
-{p 4 6 2}{it:indepvars}, {it:endogvars} and {it:iv_vars} may contain factor variables; see {help fvvarlist}.{p_end}
-{p 4 6 2}all the regression variables may contain time-series operators; see {help tsvarlist}.{p_end}
+{p 4 6 2}the regression variables may contain {help tsvarlist:time-series operators} and {help fvvarlist:factor variables};
+the dependent variable cannot be of the form {it:i.turn}, but {it:42.turn} is allowed{p_end}
 {p 4 6 2}{cmd:fweight}s, {cmd:aweight}s and {cmd:pweight}s are allowed; see {help weight}.{p_end}
 
 
@@ -139,6 +149,9 @@ convergence will still be {it:much} faster.{p_end}
 (note: beyond two levels of fixed effects, this is still an open problem, but we provide a conservative approximation).{p_end}
 {p2col 8 12 12 2: e)}Iteratively removes singleton groups by default, to avoid biasing the standard errors (see ancillary document).{p_end}
 
+{pstd}
+For a description of its internal Mata API, see {help reghdfe_mata}.
+
 {marker options}{...}
 {title:Options}
 
@@ -160,10 +173,14 @@ This will delete all variables named {it:__hdfe*__} and create new ones as requi
 Example: {it:reghdfe price weight, absorb(turn trunk, savefe)}
 
 {phang}
-{opth res:iduals(newvar)} will save the regression residuals in a new variable.
+{opth res:iduals(newvar)} will save the regression residuals in a new variable. 
+
+{pmore} {opt res:iduals} (without parenthesis) saves the residuals
+in the variable {it:_reghdfe_resid}.
 
 {pmore}
-This is a superior alternative than running {cmd:predict, resid} afterwards as it's faster and doesn't require saving the fixed effects.
+This option does not require additional computations, and is required for
+subsequent calls to {cmd:predict, d}.
 
 {phang}
 {opth su:mmarize(tabstat##statname:stats)} will report and save a table of summary of statistics of the regression
@@ -272,50 +289,7 @@ This issue is similar to applying the CUE estimator, described further below.
 {dlgtab:IV/2SLS/GMM}
 
 {phang}
-{opt est:imator}{cmd:(}{opt 2sls}|{opt gmm:2s}|{opt liml}|{opt cue}{cmd:)}
-estimator used in the instrumental-variable estimation
-
-{pmore}
-{opt 2sls} (two-stage least squares, default), {opt gmm:2s} (two-stage efficient GMM), {opt liml} (limited-information maximum likelihood), and
-{opt cue} ("continuously-updated" GMM) are allowed.{p_end}
-
-{pmore}
-Warning: {opt cue} will not give the same results as ivreg2. See the discussion in
-{browse "http://www.stata-journal.com/sjpdf.html?articlenum=st0030_3": Baum, Christopher F., Mark E. Schaffer, and Steven Stillman. "Enhanced routines for instrumental variables/GMM estimation and testing." Stata Journal 7.4 (2007): 465-506}
-(page 484).
-Note that even if this is not exactly {opt cue}, it may still be a desirable/useful alternative to standard cue, as explained in the article.
-
-{phang}
-{opt stage:s(list)}
-adds and saves up to four auxiliary regressions useful when running instrumental-variable regressions:
-
-{phang2}{cmd:first} all first-stage regressions{p_end}
-{phang2}{cmd:ols} ols regression (between dependent variable and endogenous variables; useful as a benchmark){p_end}
-{phang2}{cmd:reduced} reduced-form regression (ols regression with included and excluded instruments as regressors){p_end}
-{phang2}{cmd:acid} an "acid" regression that includes both instruments and endogenous variables as regressors; in this setup, excluded instruments should not be significant.{p_end}
-
-{pmore}
-You can pass suboptions not just to the iv command but to all stage regressions with a comma after the list of stages. Example:{break}
-{cmd:reghdfe price (weight=length), absorb(turn) subopt(nocollin) stages(first, eform(exp(beta)) )}
-
-{pmore}
-By default all stages are saved (see {help estimates dir}).
-The suboption {cmd:,nosave} will prevent that.
-However, future {cmd:replay}s will only replay the iv regression.
-
-{phang}
-{opt ffirst}
-compute and report first stage statistics ({help ivreg2##s_relevance:details}); requires the ivreg2 package.
-
-{pmore}
-These statistics will be saved on the {it:e(first)} matrix. 
-If the first-stage estimates are also saved (with the {cmd:stages()} option), the respective statistics will be copied to {cmd:e(first_*)}.
-
-{phang}
-{opth iv:suite(subcmd)}
-allows the IV/2SLS regression to be run either using {opt ivregress} or {opt ivreg2}.
-
-{pmore} {opt ivreg2} is the default, but needs to be installed for that option to work.
+The IV functionality of {cmd:reghdfe} has been moved into {ivreghdfe}.
 
 {marker opt_diagnostic}{...}
 {dlgtab:Diagnostic}
@@ -410,49 +384,15 @@ Requires {opt pair:wise}, {opt first:pair}, or the default {opt all}.
 {dlgtab:Speeding Up Estimation}
 
 {phang}
-{cmd:reghdfe} {varlist} {ifin}{cmd:,} {opt a:bsorb(absvars)} {cmd:save(cache)} [{it:options}]
-
-{pmore}
-This will transform {it:varlist}, absorbing the fixed effects indicated by {it:absvars}.
-It is useful when running a series of alternative specifications with common variables, as the variables will only be transformed once instead of every time a regression is run.
-
-{pmore}
-It replaces the current dataset, so it is a good idea to precede it with a {help preserve} command
-
-{pmore}
-To keep additional (untransformed) variables in the new dataset, use the {opth keep(varlist)} suboption.
-
-{phang}
-{cmd:cache(use)} is used when running reghdfe after a {it:save(cache)} operation. Both the {it:absorb()} and {it:vce()} options must be the same as when the cache was created (the latter because the degrees of freedom were computed at that point).
-
-{phang}
-{cmd:cache(clear)} will delete the Mata objects created by {it:reghdfe} and kept in memory after the {it:save(cache)} operation. These objects may consume a lot of memory, so it is a good idea to clean up the cache. Additionally, if you previously specified {it:preserve}, it may be a good time to {it:restore}.
-
-{pmore}Example:{p_end}
-{phang2}{cmd:. sysuse auto}{p_end}
-{phang2}{cmd:. preserve}{p_end}
-{phang2}{cmd:.}{p_end}
-{phang2}{cmd:. * Save the cache}{p_end}
-{phang2}{cmd:. reghdfe price weight length, a(turn rep) vce(turn) cache(save, keep(foreign))}{p_end}
-{phang2}{cmd:.}{p_end}
-{phang2}{cmd:. * Run regressions}{p_end}
-{phang2}{cmd:. reghdfe price weight, a(turn rep) cache(use)}{p_end}
-{phang2}{cmd:. reghdfe price length, a(turn rep) cache(use)}{p_end}
-{phang2}{cmd:.}{p_end}
-{phang2}{cmd:. * Clean up}{p_end}
-{phang2}{cmd:. reghdfe, cache(clear)}{p_end}
-{phang2}{cmd:. restore}{p_end}
-
-{phang}
-{opt fast} avoids saving {it:e(sample)} into the regression.
+{opt nosample} avoids saving {it:e(sample)} into the regression.
 Since saving the variable only involves copying a Mata vector, the speedup is currently quite small.
 Future versions of reghdfe may change this as features are added.
 
 {pmore}
-Note that {opt fast} will be disabled when adding variables to the dataset (i.e. when saving residuals, fixed effects, or mobility groups), and is incompatible with most postestimation commands.
+Note that {opt nosample} will be disabled when adding variables to the dataset (i.e. when saving residuals, fixed effects, or mobility groups), and is incompatible with most postestimation commands.
 
 {pmore}
-If you wish to use {opt fast} while reporting {cmd:estat summarize}, see the {opt summarize} option.
+If you wish to use {opt nosample} while reporting {cmd:estat summarize}, see the {opt summarize} option.
 
 {marker opt_optimization}{...}
 {dlgtab:Optimization}
@@ -574,8 +514,8 @@ or tests on different groups, you can replicate it manually, as described
 
 {title:Possible Pitfalls and Common Mistakes}
 
-{p2col 8 12 12 2: 1.}(note: as of version 2.1, the constant is no longer reported) Ignore the constant; it doesn't tell you much. If you want to use descriptive stats, that's what the {opt sum:marize()} and {cmd:estat summ} commands are for.
-Even better, use {opt noconstant} to drop it (although it's not really dropped as it never existed on the first place!){p_end}
+{p2col 8 12 12 2: 1.}Ignore the constant; it doesn't tell you much. If you want to use descriptive stats, that's what the {opt sum:marize()} and {cmd:estat summ} commands are for.
+Even better, use {opt noconstant} to hide it{p_end}
 {p2col 8 12 12 2: 2.}Think twice before saving the fixed effects. They are probably inconsistent / not identified and you will likely be using them wrong.{p_end}
 {p2col 8 12 12 2: 3.}(note: as of version 3.0 singletons are dropped by default) It's good practice to drop singletons. {opt dropsi:ngleton} is your friend.{p_end}
 {p2col 8 12 12 2: 4.}If you use {opt vce(robust)}, be sure that your {it:other} dimension is not "fixed" but grows with N, or your SEs will be wrong.{p_end}
@@ -653,18 +593,8 @@ on the other hand, there may be alternatives:
 {pstd}Save the FEs as variables{p_end}
 {phang2}{cmd:. reghdfe ln_w grade age ttl_exp tenure not_smsa south , absorb(FE1=idcode FE2=year)}{p_end}
 
-{pstd}Report nested F-tests{p_end}
-{phang2}{cmd:. reghdfe ln_w grade age ttl_exp tenure not_smsa south , absorb(idcode year) nested}{p_end}
-
-{pstd}Do AvgE instead of absorb() for one FE{p_end}
-{phang2}{cmd:. reghdfe ln_w grade age ttl_exp tenure not_smsa south , absorb(idcode year) avge(occ)}{p_end}
-{phang2}{cmd:. reghdfe ln_w grade age ttl_exp tenure not_smsa south , absorb(idcode year) avge(AvgByOCC=occ)}{p_end}
-
-{pstd}Check that FE coefs are close to 1.0{p_end}
-{phang2}{cmd:. reghdfe ln_w grade age ttl_exp tenure not_smsa , absorb(idcode year) check}{p_end}
-
 {pstd}Save first mobility group{p_end}
-{phang2}{cmd:. reghdfe ln_w grade age ttl_exp tenure not_smsa , absorb(idcode occ) group(mobility_occ)}{p_end}
+{phang2}{cmd:. reghdfe ln_w grade age ttl_exp tenure not_smsa , absorb(idcode occ) groupv(mobility_occ)}{p_end}
 
 {pstd}Factor interactions in the independent variables{p_end}
 {phang2}{cmd:. reghdfe ln_w i.grade#i.age ttl_exp tenure not_smsa , absorb(idcode occ)}{p_end}
@@ -672,18 +602,13 @@ on the other hand, there may be alternatives:
 {pstd}Interactions in the absorbed variables (notice that only the {it:#} symbol is allowed){p_end}
 {phang2}{cmd:. reghdfe ln_w grade age ttl_exp tenure not_smsa , absorb(idcode#occ)}{p_end}
 
-{pstd}Interactions in both the absorbed and AvgE variables (again, only the {it:#} symbol is allowed){p_end}
-{phang2}{cmd:. reghdfe ln_w grade age ttl_exp not_smsa , absorb(idcode#occ) avge(tenure#occ)}{p_end}
-
-{pstd}IV regression{p_end}
-{phang2}{cmd:. sysuse auto}{p_end}
-{phang2}{cmd:. reghdfe price weight (length=head), absorb(rep78)}{p_end}
-{phang2}{cmd:. reghdfe price weight (length=head), absorb(rep78) first}{p_end}
-{phang2}{cmd:. reghdfe price weight (length=head), absorb(rep78) ivsuite(ivregress)}{p_end}
-
 {pstd}Factorial interactions{p_end}
-{phang2}{cmd:. reghdfe price weight (length=head), absorb(rep78)}{p_end}
 {phang2}{cmd:. reghdfe price weight length, absorb(rep78 turn##c.price)}{p_end}
+
+{pstd}IV regression (this does NOT work anymore, please use the ivreghdfe package instead{p_end}
+{phang2}{cmd:. sysuse auto}{p_end}
+{phang2}{cmd:. ivreghdfe price weight (length=head), absorb(rep78)}{p_end}
+{phang2}{cmd:. ivreghdfe price weight (length=head), absorb(rep78, resid)}{p_end}
 
 
 {marker results}{...}
@@ -698,6 +623,9 @@ on the other hand, there may be alternatives:
 {synoptset 24 tabbed}{...}
 {syntab:Scalars}
 {synopt:{cmd:e(N)}}number of observations{p_end}
+{synopt:{cmd:e(num_singletons)}}number of singleton observations{p_end}
+{synopt:{cmd:e(N_full)}}number of observations including singletons{p_end}
+
 {synopt:{cmd:e(N_hdfe)}}number of absorbed fixed-effects{p_end}
 {synopt:{cmd:e(tss)}}total sum of squares{p_end}
 {synopt:{cmd:e(rss)}}residual sum of squares{p_end}
@@ -723,6 +651,9 @@ on the other hand, there may be alternatives:
 {synopt:{cmd:e(df_m)}}model degrees of freedom{p_end}
 {synopt:{cmd:e(df_r)}}residual degrees of freedom{p_end}
 
+{synopt:{cmd:e(report_constant)}}whether _cons was included in the regressions (default)
+or as part of the fixed effects{p_end}
+
 {synoptset 24 tabbed}{...}
 {syntab:Macros}
 {synopt:{cmd:e(cmd)}}{cmd:reghdfe}{p_end}
@@ -732,8 +663,6 @@ on the other hand, there may be alternatives:
 {synopt:{cmd:e(dofmethod)}}dofmethod employed in the regression{p_end}
 {synopt:{cmd:e(depvar)}}name of dependent variable{p_end}
 {synopt:{cmd:e(indepvars)}}names of independent variables{p_end}
-{synopt:{cmd:e(endogvars)}}names of endogenous right-hand-side variables{p_end}
-{synopt:{cmd:e(instruments)}}names of excluded instruments{p_end}
 {synopt:{cmd:e(absvars)}}name of the absorbed variables or interactions{p_end}
 {synopt:{cmd:e(title)}}title in estimation output{p_end}
 {synopt:{cmd:e(clustvar)}}name of cluster variable{p_end}
@@ -757,8 +686,8 @@ on the other hand, there may be alternatives:
 {title:Author}
 
 {pstd}Sergio Correia{break}
-Fuqua School of Business, Duke University{break}
-Email: {browse "mailto:sergio.correia@duke.edu":sergio.correia@duke.edu}
+Board of Governors of the Federal Reserve{break}
+Email: {browse "mailto:sergio.correia@gmail.com":sergio.correia@gmail.com}
 {p_end}
 
 {marker user_guide}{...}

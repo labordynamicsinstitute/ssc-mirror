@@ -1,16 +1,17 @@
 #delim ;
 prog def addinby, sortpreserve;;
-version 11.0;
+version 16.0;
 /*
   Add in variables and/or values from a disk dataset
   using a foreign key in the memory master dataset,
   leaving the master dataset in its original sorting order
   and without any new merge-status variable (except if requested).
 *! Author: Roger Newson
-*! Date: 12 April 2010
+*! Date: 13 April 2020
 */
 
-syntax varlist using [, Missing UNmatched(string) noCOmplete FAST KEEP(string) GENerate(name) sorted noLabel noNOTES UPDATE REPLACE ];
+syntax varlist using [, Missing UNmatched(string) noCOmplete FAST KEEP(string) GENerate(name)
+  sorted noLabel noNOTES UPDATE REPLACE ];
 /*
   missing denotes that missing values in key variables are allowed.
   unmatched() specifies actin taken if there are unmatched observations

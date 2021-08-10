@@ -1,29 +1,35 @@
-d 'ASREG': module to estimate rolling window regressions and by(group) regressions
+d 'ASREG': module to estimate rolling window regressions, Fama-MacBeth and by(group) regressions
 d
-d  asreg fits a model of depvar on indepvars using linear
-d regression in a user's defined rolling window, recursive window,
-d or by a grouping variable. asreg is order of magnitude faster
-d than estimating rolling window regressions through conventional
-d methods such as Stata loops or using the Stata's official rolling
-d command. asreg has the same speed efficiency as asrol. All the
-d rolling window calculations, estimation of regression parameters,
-d and writing of results to Stata variables are done in the Mata
-d language. asreg reports most commonly used regression statistics
-d such as number of observations, r-squared, adjusted r-squared,
-d constant, slope coefficients, standard errors of the
-d coefficients, fitted values, and regression residuals. 
+d  asreg can fit three types of regression models; (1) a model of
+d depvar on indepvars using linear  regression in a user's defined
+d rolling window or recursive window (2) cross-sectional
+d regressions or regressions by a grouping variable (3) Fama and
+d MacBeth (1973) two-step procedure. asreg is order of magnitude
+d faster than estimating rolling window regressions through
+d conventional	    methods such as Stata loops or using the
+d Stata's official rolling command. asreg has the same speed
+d efficiency as asrol. All the rolling window calculations,
+d estimation of regression parameters,	  and writing of results to
+d Stata variables are done in the Mata language. asreg reports most
+d commonly used regression statistics such as number of
+d observations, r-squared, adjusted r-squared, constant, slope
+d coefficients, standard errors of the	coefficients, fitted
+d values, and regression residuals. 
 d
 d KW:  rolling window regression
 d KW: recursive window regressions
 d KW: by-group regressions
+d KW: Fama
+d KW: MacBeth
+d KW: Newey-West
 d KW: storing regression results in memory
 d KW: rolling betas
 d KW: moving window regressions
 d KW: cross-sectional regressions
 d
-d Requires: Stata version 13
+d Requires: Stata version 11
 d
-d Distribution-Date: 20170502
+d Distribution-Date: 20210218
 d
 d Author: Attaullah Shah, Institute of Management Sciences
 d Support: email attaullah.shah@@imsciences.edu.pk

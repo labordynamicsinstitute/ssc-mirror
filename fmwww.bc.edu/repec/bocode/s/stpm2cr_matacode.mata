@@ -1,4 +1,4 @@
-*! version 1.00 22Sept2016
+*! version 2.3 11Nov2018
 /*
 Notes: 
 PS changed to mdl: indicates the variables in the model, but we can treat mdl as 1 variable.
@@ -39,7 +39,7 @@ void stpm2cr_setup(`structName' temp)											// this is the setup function to
 	pointer scalar p															// memory address
 	rmexternal(temp)
 	p = crexternal(temp)
-	touse = st_local("touse")
+	touse = st_local("touse_obs")
 	scale = st_local("scale")
 	
 		

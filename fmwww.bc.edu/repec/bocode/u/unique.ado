@@ -1,10 +1,10 @@
-*! version 1.2.1  August 1, 2017 @ 16:15:58
+*! version 1.2.4  Jun 17, 2020 @ 17:28:41
 *! MH and TB
 program define unique, sort rclass
   version 10.1
-  syntax varlist(min=1) [if] [in] [, GENerate(name) Detail BY(varname)]
+  syntax varlist(min=1) [if] [in] [, GENerate(name) Detail BY(varlist)]
   tempvar uniq count
-  marksample touse, strok
+  marksample touse, strok novarlist
   sort `varlist'
   summ `touse', meanonly
   local N = r(sum)
@@ -13,9 +13,10 @@ program define unique, sort rclass
   qui summ `uniq'
   di as txt "Number of unique values of `varlist' is  " as result r(sum)
   di as txt "Number of records is  " as result "`N'"
-	// returned results
+  // returned results
   return scalar unique = r(sum)
-	return scalar N = `N'
+  return scalar sum = r(sum)
+  return scalar N = `N'
   if "`detail'" != "" {
     sort `by' `varlist' `touse'
     qui by `by' `varlist' `touse': gen int `count' = _N if _n == 1

@@ -26,19 +26,19 @@ Supplementing external instruments can also allow Sargan-Hansen tests of the ort
 or overidentifying restrictions to be performed, which would not be available in the case 
 of exact identification by external instruments.
 
-{p}Lewbel (2016) discusses how this estimation technique may be used, under certain conditions,
+{p}Lewbel (2016, 2018) discusses how this estimation technique may be used, under certain conditions,
 where an endogenous regressor is binary rather than continuous, such as an endogenous treatment
 indicator. Under the same assumptions, the technique could be employed where both the outcome 
 and regressor are binary.
 
 {p}This implementation has been built using the existing {cmd:xtivreg2} (Schaffer) 
-and {cmd:ivreg2} (Baum, Schaffer, Stillman) routines. At present it does not provide any
-explicit support for panel data (but see the second example below). 
+and {cmd:ivreg2} (Baum, Schaffer, Stillman) routines. It can be used on panel data using the 
+within transformation of a fixed effects model: see the {cmd:fe} option described below. 
 As {cmd:ivreg2h} is a variant of {cmd:ivreg2}, essentially
 all of the features and options of that program are available in {cmd:ivreg2h}. For that
 reason, you should consult {help ivreg2:help ivreg2} for details of the available options.
 
-{p}{cmd:ivreg2h} does provide three additional options: {cmd:gen}, {cmd:gen(}{it:string}{cmd:[,replace])} and {cmd:fe}.
+{p}{cmd:ivreg2h} provides four additional options: {cmd:gen}, {cmd:gen(}{it:string}{cmd:[,replace])}, {cmd:fe} and {cmd:z()}.
 If the {cmd:gen} option is given, the generated instruments are saved, with names built from
 the original variable names suffixed with {cmd:_g}. 
 If greater control over the naming
@@ -48,6 +48,9 @@ which will also be suffixed with {cmd:_g}.
 You may remove earlier instruments with those same names with the {cmd:replace} suboption.
 If the data have been declared as a panel, you can use the {cmd:fe} option to specify that
 a fixed-effects model should be estimated, as in {cmd:xtivreg2}.
+In order to use a subset of the included exogenous variables to construct instruments, include
+them in the {cmd:z()} option. Make sure that the variables listed here are in the list of included
+instruments.
 
 {p}{cmd:ivreg2h} can be invoked to estimate a traditionally identified single equation, 
 or a single equation that--before augmentation with the generated instruments--fails the 
@@ -106,19 +109,21 @@ If i.i.d. errors are assumed, and a Sargan test is displayed in the standard out
 
 {p 8 12}{stata "ivreg2h foodshare z_* (lrtotexp = lrinc), small robust gmm2s " : . ivreg2h foodshare z_* (lrtotexp = lrinc), small robust gmm2s} 
 
+{p 8 12}{stata "ivreg2h foodshare z_* (lrtotexp =), small robust gmm2s z(z_age-z_agesp2)" : . ivreg2h foodshare z_* (lrtotexp = lrinc), small robust gmm2s  z(z_age-z_agesp2)} 
+
+
 {p 8 12}Example using panel data and HAC standard errors. 
 
 {p 8 12}{inp:.} {stata "webuse grunfeld ": webuse grunfeld}
 
 {p 8 12}{inp:.} {stata "ivreg2h invest L(1/2).kstock (mvalue=), fe ": ivreg2h invest L(1/2).kstock (mvalue=), fe }
 
-{p 8 12}{inp:.} {stata "ivreg2h invest L(1/2).kstock (mvalue=L(1/4).mvalue), fe robust ": ivreg2h invest L(1/2).kstock (mvalue=L(1/4).mvalue), fe robust}
+{p 8 12}{inp:.} {stata "ivreg2h invest L(1/2).kstock (mvalue=L(1/4).mvalue), fe robust bw(2)": ivreg2h invest L(1/2).kstock (mvalue=L(1/4).mvalue), fe robust bw(2)}
 
 {title:Acknowledgements}
 
 {p 0 4}We thank participants in the 2012 UK Stata Users Group, 2013 Mexican Stata Users Group
- and 2013 German Stata Users Group 
-meetings for their constructive comments.
+ and 2013 German Stata Users Group  meetings for their constructive comments.
 We are grateful to Federico Belotti for diagnosing and providing corrected code for the -generate- option.
 
 {title:References}
@@ -131,6 +136,9 @@ Journal of Business and Economic Statistics, 30:1, 67-80. {browse "http://fmwww.
 
 {p 0 4} Lewbel, A, 2016. Identification and Estimation Using Heteroscedasticity Without Instruments: The Binary Endogenous Regressor Case.
 Boston College Economics Working Paper 927. {browse "http://fmwww.bc.edu/EC-P/wp927.pdf":http://fmwww.bc.edu/EC-P/wp927.pdf}
+
+{p 0 4} Lewbel, A, 2018. Identification and Estimation Using Heteroscedasticity Without Instruments: The Binary Endogenous Regressor Case.
+Economics Letters, 165, 10-12.
 
 {title:Citation}
 

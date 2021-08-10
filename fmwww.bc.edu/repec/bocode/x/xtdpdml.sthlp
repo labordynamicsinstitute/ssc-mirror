@@ -1,7 +1,7 @@
 {smcl}
-{* *! version 2.11  14nov2016}{...}
+{* *! version 2.50  05jul2019}{...}
 {hline}
-help for {hi:xtdpdml} version 2.11
+help for {hi:xtdpdml} version 2.50
 {hline}
 
 
@@ -57,12 +57,13 @@ INCLUDE help shortdes-coeflegend
 SEs and CIs. {p_end}
 
 {syntab:Other options}
-{synopt :{opt mp:lus(fname, opts)}}Create Mplus inp and dat files. File may need some editing before running.{p_end}
+{synopt :{opt mp:lus(fname, opts)}}Create Mplus input and data files. File may need some editing before running.{p_end}
+{synopt :{opt lav:aan(fname, opts)}}Create Lavaan input and data files. File may need some editing before running.{p_end}
 {synopt :{opt semf:ile(fname, r)}}Create do file with the generated sem commands{p_end}
 {synopt :{opt sto:re(stub)}}Stores the full & highlights-only results under the names stub_f and stub_h {p_end}
 {synopt :{opt dry:run}}Do not actually estimate the model.{p_end}
 {synopt :{opt iter:ate(#)}}Maximum number of iterations allowed. Default is 250.{p_end}
-{synopt :{opt tech:nique(options)}}Estimation technique used. Default is {it: nr 25 bhhh 25}.{p_end}
+{synopt :{opt tech:nique(options)}}Estimation technique used. Default is {it: nr 25 bhhh 25} unless {opt method(adf)} is specified.{p_end}
 {synopt :{opt semopts(options)}}Additional sem options to be included in the generated sem command.{p_end}
 {synopt :{opt fiml}}Full Information Maximum Likelihood is used for missing data.{p_end}
 {synopt :{opt v12}}Lets xtdpdml run under Stata 12.1. Probably ok but use at own risk.{p_end}
@@ -129,6 +130,15 @@ option and let xtdpdml recode the time variable for you (but you can
 still get errors if, say, delta was not specified correctly in the
 source data set, e.g. data were collected every two years and delta was
 set to 1). The model assumes that time intervals are equally spaced.
+
+{p 6 6 2} Note: unless you specify {opt fiml}, panels with missing data
+will be deleted from any intermediate data files 
+xtdpdml creates and from data files created by the {opt mplus}
+or {opt lavaan} options.
+
+{p 6 6 2} Note: unless you specify {opt staywide}, your original data are always
+restored after xtdpdml execution. If you do specify {opt staywide}, be careful if you 
+then save the data file. You don't want to overwrite a file you want to keep.
 
 {pstd} {it:All variable names should start with lowercase letters.} 
 As the Stata sem manual points out, "In the command language, 
@@ -202,13 +212,15 @@ ylag(0) will cause no lagged value of y to be included in the model.{p_end}
 {opt wide} By default, data are assumed to be xtset long with both time and panelid
 variables specified. The data set is temporarily converted to wide format for use with sem.
 If data are already in wide format use the {it:wide} option. However, note that the file
-must have been created by a reshape wide command or else it won't have information
+must have been created by a reshape wide command, using a file that is in long 
+format and that was xtset, or else it won't have information
 that xtdpdml needs. Use of this option is generally discouraged.
 {p_end}
 
 {phang} {opt staywide} This will keep the data in wide format after
 runinng xtdpdml. This may be necessary if you want to use post-estimation 
-commands like predict.
+commands like predict. If you use staywide be careful you don't accidentally
+save the wide .dta file and overwrite a file you want to keep!
 {p_end}
 
 {phang} {opt tfix} Time should be coded t = 1, 2, ..., T where T =
@@ -225,8 +237,7 @@ you correctly code time yourself but tfix should work in most cases.
 to have mean 0 and variance 1. It does this while the data set is still
 in long format. You probably will not want to use this option in most cases
 but it can sometimes help when the model is having trouble converging.
-Does not work if the {opt wide} option has been specified, i.e data 
-are already in wide format.{p_end}
+{p_end}
 
 {phang} {opt std(varlist)} standardizes only the selected variables to
 have mean 0 and variance 1. Does not work if the {opt wide} 
@@ -276,7 +287,7 @@ causes convergence problems.{p_end}
 
 {phang} 
 {opt title(string)} Gives a title to the analysis. This title will appear in both the
-highlights results and (if requested) the Mplus code. For example, {it:ti(Baseline Model)}
+highlights results and (if requested) the Mplus and lavaan code. For example, {it:ti(Baseline Model)}
 {p_end}
 
 {phang} 
@@ -327,26 +338,25 @@ often a good choice for making the output easier to read.
 {dlgtab:Other Options}
 
 {phang} 
-{opt mplus(filenamestub, mplus options)} This will create inp and data
+{opt mplus(filenamestub, mplus options)} This will create inp (mplus commands) and data
 files that can be used by Mplus (has only been tested with Mplus 7.4).
 This is adapted (with permission) from UCLA's and Michael Mitchell's
 stata2mplus command but does not require that it be installed. The
 filenamestub must be specified; it will be used to name the Mplus .inp
 and .dat files. Everything else is optional. Options {opt r:eplace},
-{opt mi:ssing(#)}, {opt listw:ise}, {opt a:nalysis}, and {opt out:put}
+{opt mi:ssing(#)}, {opt a:nalysis}, and {opt out:put}
 are supported. {opt replace} will cause existing .inp and .dat files
 to be overwritten. {opt missing} specifies the missing value for all
-variables; default is -9999. {opt listwise} will cause listwise
-deletion to be used rather than fiml. {opt analysis} and {opt output}
+variables; default is -9999.  {opt analysis} and {opt output}
 specify options to be passed to the Mplus analysis and output options.
 As is the case in Mplus, multiple analysis and output options should
-be separated by semicolons. xtdpdml cannot check your Mplus syntax so
-be careful.
+be separated by semicolons. {opt xtdpdml} cannot check your Mplus syntax so
+be careful. 
 
 {phang}
 So, for example, if the user specified 
 {cmd:mplus(myfile, r missing(-999999) analysis(iterations = 2000) out(mod(3.84); sampstat))} 
-myfile.inp and myfile.dat would be created
+mpl_myfile.inp and mpl_myfile.dat would be created
 (replacing any existing files by those names). All missing values
 would be set to -999999. The Mplus analysis option would set iterations equal to 2000
 (default is 1,000). The output option (note how ; was used to separate the two options requested)
@@ -363,13 +373,24 @@ names; also since data are reshaped wide the names of time-varying variables sho
 characters or less (or 6 characters or less if T > 10) if you want to see
 the full variable name in the output. Some editing of the .inp file
 may be required first, e.g. variable names may need to be shortened and/or long lines may have to
-be split. Mplus automatically uses fiml regardless of whether you have
-asked for it or not; this can be overridden with the mplus {opt listwise} option. 
-Most xdpdml model specification options 
+be split. Like Stata, the Mplus code will default to listwise deletion  
+unless {opt fiml} is specified. Most xdpdml model specification options 
 are supported but the user should still check the coding, e.g. options like
-{opt vce(robust)} or {opt method(adf)} or {opt semopts(whatever)} 
-will not be carried over into the mplus code.
+{opt semopts(whatever)} will not be carried over into the mplus code.
 {p_end}
+
+
+{phang} 
+{opt lavaan(filenamestub, r)} This will create R (lavaan commands) and Stata dta
+files that can be used by R's lavaan package.  The
+filenamestub must be specified; it will be used to name the lavaan .R
+and .dta files. {opt replace} will cause existing .R and .dta files by those names
+to be overwritten. You of course need to have R installed and know how to use it.
+You may want to edit the generated code if you want to change or add options.
+So, for example, if the user specified 
+{cmd:lav(myfile, r)} 
+lav_myfile.R and lav_myfile.dta would be created
+(replacing any existing files by those names).
 
 {phang} 
 {opt semfile(filename, r)} The generated sem commands will be output to a file
@@ -396,8 +417,9 @@ use the full version instead.
 {opt dryrun} This will keep sem from actually being executed. This will catch some
 errors immediately and can be useful
 if you want to see the sem command that is generated and/or wish to specify
-{it:staywide} to reformat the data from long to wide. This will often
-be combined with the {it:showcmd}, {it:mplus}, {it:semfile}, or {it:staywide} options.
+{it:staywide} to reformat the data from long to wide and/or just want to 
+generate mplus or lavaan code and data files. This will often
+be combined with the {it:showcmd}, {it:mplus}, {it:lavaan}, {it:semfile}, or {it:staywide} options.
 {p_end}
 
 {phang} 
@@ -408,11 +430,11 @@ technique if the model is having trouble converging.
 
 {phang}
 {opt technique(methods)} Maximization techniques used. Default is
-{it:technique(nr 25 bhhh 25)}. You can change this if the model is
-having trouble converging. See {help maximize} for details as well as
-for information on other options that can be used, e.g. {it:difficult}. Also we 
-have found that if you specify {opt method(adf)} you will get errors if bhhh is
-specified as a technique.
+{it:technique(nr 25 bhhh 25)} unless {opt method(adf)} is specified. You can change this if the model is
+having trouble converging. If you use {opt method(adf)} (asymptotic distribution free) the default technique 
+is set to {it:technique(nr 25 bfgs 10)} since adf and the bhhh technique do not seem to work together.
+See {help maximize} for details as well as
+for information on other options that can be used, e.g. {it:difficult}. 
 {p_end}
 
 {phang}
@@ -423,7 +445,8 @@ See, for example, {help sem_reporting_options}.
 {phang}
 {opt fiml} Full Information Maximum Likelihood is used for missing data. This is the equivalent of specifying 
 method(mlmv) on the sem command. Use of fiml sometimes dramatically slows down execution so be patient
-if you use it!
+if you use it! Unless you specify fiml, intermediate data files created by xtdpdml will have panels
+with missing data deleted.
 {p_end}
 
 {phang} {opt skipcfatransform} and {opt skipconditional} Stata 14.2
@@ -504,10 +527,12 @@ methods. This is equivalent to specifying both {opt skipcfatransform} and
 {opt skipconditional}, which can also be specified separately if you want.
 
 {p 6 6 2} Mplus sometimes succeeds when Stata has problems and is often much
-faster. Try the {opt mplus} option if you have access to the program.
+faster. Try the {opt mplus} option if you have access to the program. The {opt lavaan}
+option may also be worth trying. We prefer Mplus to lavaan but Mplus costs money
+while lavaan is free (since R and RStudio are free).
 
 {p 6 6 2} Finally, remember that problems with regressing Y on lagged
-Y are not that severe when T and/or N is large. Methods like xtreg may
+Y may not be that severe when T and/or N is large. Methods like xtreg may
 meet your needs in such situations. But even then, features like fiml
 and time-invariant independent variables may make it worth your while
 to pair your dataset down so you can do at least some analyses with
@@ -540,9 +565,10 @@ depending on whether it appears the program is converging to a solution.
 
 {pstd}Data setup. Data should be xtset first with both panel id and time variable specified.
 Run these commands before trying the other examples. NOTE: Some of the examples also require
-that {opt estout} (available from SSC) be installed to run the full example.{p_end}
+that {opt estout} (available from SSC) be installed to run the full example. You may also need
+to specify {opt set matsize} for bigger problems.{p_end}
 {phang2}{cmd}
-use http://www3.nd.edu/~rwilliam/statafiles/wages, clear{p_end}
+use https://www3.nd.edu/~rwilliam/statafiles/wages, clear{p_end}
 {phang2}xtset id t{p_end}
 {txt}
 
@@ -618,7 +644,7 @@ hand tweaking of the code may be required in a few cases). Sometimes xtdpdml yie
 a modestly different model chi-square value than what they reported but we believe the xtdpdml value is
 the correct one. Here we present the fixed effects model 2 from their Table 3.{p_end}
 {phang2}{cmd}* Bollen & Brand Social Forces 2010 Fixed Effects Table 3 Model 2 p. 15 {p_end}
-{phang2}use http://www3.nd.edu/~rwilliam/statafiles/bollenbrand, clear {p_end}
+{phang2}use https://www3.nd.edu/~rwilliam/statafiles/bollenbrand, clear {p_end}
 {phang2}xtdpdml lnwg hchild marr div, ylag(0) fiml tfix errorinv gof {p_end}
 {txt}
 
@@ -642,23 +668,39 @@ xtabond and xtdpdml report N differently but the same data are analyzed by both.
 {pstd}Create files for Mplus -- 
 This will create Mplus .dat and .inp files but some editing may be necessary.
 Files are written to the current directory so make sure it is
-writing to the directory you want. The following will create m1.dat and
-m1.inp, replacing any existing files by those names. dryrun will keep
+writing to the directory you want. The following will create mpl_m1.dat and
+mpl_m1.inp, replacing any existing files by those names. dryrun will keep
 Stata from actually estimating the model, which can be a good idea if you only
 want the Mplus files. The Mplus output will 
 include the Modification Indices and the descriptive sample statistics. Be sure
 to use semicolons if you have multiple options for either analysis or output.
 {p_end}{cmd}
-{phang2}use http://www3.nd.edu/~rwilliam/statafiles/wages, clear{p_end}
+{phang2}use https://www3.nd.edu/~rwilliam/statafiles/wages, clear{p_end}
 {phang2}xtset id t{p_end}
 {phang2}xtdpdml wks L.lwage, inv(ed) pre(L.union) dryrun ti(Baseline Model) mplus(m1, r out(mod; sampstat)){p_end}
 {phang2}* View or edit the mplus .inp file if you want {p_end}
-{phang2}doedit m1.inp {p_end}
+{phang2}doedit mpl_m1.inp {p_end}
 {phang2}* Run mplus if you want to. Mplus mut be installed! {p_end}
 {phang2}* The correct command may depend on your OS and your computer setup. {p_end}
-{phang2}!mplus m1.inp {p_end}
+{phang2}!mplus mpl_m1.inp {p_end}
 {phang2}* View or edit the mplus output file if you want {p_end}
-{phang2}doedit m1.out {p_end}
+{phang2}doedit mpl_m1.out {p_end}
+{txt}
+
+{pstd}Create files for lavaan -- 
+This will create lavaan .R and and .dta files but some editing may be necessary.
+Files are written to the current directory so make sure it is
+writing to the directory you want. The following will create lav_m1.R and
+lav_m1.R, replacing any existing files by those names. dryrun will keep
+Stata from actually estimating the model, which can be a good idea if you only
+want the lavaan files. You will of course need to install R (and probably Rstudio)
+and know how to run it, but that is pretty easy to do.
+{p_end}{cmd}
+{phang2}use https://www3.nd.edu/~rwilliam/statafiles/wages, clear{p_end}
+{phang2}xtset id t{p_end}
+{phang2}xtdpdml wks L.lwage, inv(ed) pre(L.union) dryrun ti(Baseline Model) lavaan(m1, r){p_end}
+{phang2}* View or edit the lavaan .R file if you want {p_end}
+{phang2}doedit lav_m1.R {p_end}
 {txt}
 
 {pstd}Generate a sem do file -- You can output the generated sem commands
@@ -668,7 +710,7 @@ mytry.do is created and (because the r option is specified)
 any existing file by that name is
 overwritten. The staywide option keeps the data in the wide format
 that is required by sem. {p_end}{cmd}
-{phang2}use http://www3.nd.edu/~rwilliam/statafiles/wages, clear{p_end}
+{phang2}use https://www3.nd.edu/~rwilliam/statafiles/wages, clear{p_end}
 {phang2}xtset id t{p_end}
 {phang2}xtdpdml wks L.lwage, inv(ed) pre(L.union) staywide semfile(mytry, r){p_end}
 {txt}
@@ -681,7 +723,7 @@ Richard Williams, University of Notre Dame, Department of Sociology{break}
 Paul Allison, University of Pennsylvania, Department of Sociology{break}
 Enrique Moral Benito, Banco de Espana, Madrid {break}
 Support: Richard.A.Williams.5@ND.Edu{break}
-Web Page: {browse "http://www3.nd.edu/~rwilliam/dynamic/index.html"}{break}
+Web Page: {browse "https://www3.nd.edu/~rwilliam/dynamic/index.html"}{break}
 
 {marker acknowledgments}{...}
 {title:Acknowledgments}
@@ -692,6 +734,7 @@ and Michael Mitchell kindly allowed us to take their stata2mplus
 program  and adapt it for our purposes. Code from Mead Over's linewrap
 program was modified for use with the semfile option. William Lisowski
 and Clyde Schechter provided comments that improved program coding.
+Jacob Long gave us ideas that were very useful for writing the lavaan option.
 Paul von Hippel offered helpful comments on the program's
 documentation. Kristin MacDonald and other Stata Corp staff were very
 helpful in modifying Stata so that sem and xtdpdml would execute much
@@ -700,21 +743,29 @@ more quickly.
 {marker references}{...}
 {title:References}
 
-{p 5 5} Moral-Benito, Enrique, Paul Allison and Richard Williams. 2016
-(in progress). "Dynamic Panel Data Modeling using Maximum Likelihood:
-An Alternative to Arellano-Bond." This currently is the main working
-paper using and explaining the xtdpdml method and program. 
-{browse "http://www3.nd.edu/~rwilliam/dynamic/Benito_Allison_Williams.pdf"}{break}
+{p 5 5} Allison, Paul D., Richard Williams and Enrique Moral-Benito. 2017. "Maximum 
+Likelihood for Cross-Lagged Panel Models with Fixed Effects." Socius 3: 1-17.
+{browse "http://journals.sagepub.com/doi/suppl/10.1177/2378023117710578"} {break}
 
-{p 5 5}Williams, Richard, Paul Allison and Enrique Moral-Benito. 2015.
+{p 5 5}Williams, Richard, Paul D. Allison and Enrique Moral-Benito. 2018.
+"Linear Dynamic Panel-Data Estimation using Maximum Likelihood and 
+Structural Equation Modeling." The Stata Journal 18(2): 293-326. A pre-publication
+version is at 
+{browse "https://www3.nd.edu/~rwilliam/dynamic/SJPaper.pdf"}{break}
+
+{p 5 5} Moral-Benito, Enrique, Paul Allison & Richard Williams (2018): Dynamic panel
+data modelling using maximum likelihood: an alternative to Arellano-Bond.
+Applied Economics, DOI: 10.1080/00036846.2018.1540854. A pre-publication version is at
+{browse "https://www3.nd.edu/~rwilliam/dynamic/Benito_Allison_Williams.pdf"}{break}
+
+{p 5 5}Williams, Richard, Paul D. Allison and Enrique Moral-Benito. 2015.
 "Linear Dynamic Panel-Data Estimation using Maximum Likelihood and
 Structural Equation Modeling". Presented July 30, 2015 at the 2015 Stata
 Users Conference in Columbus, Ohio. 
-{browse "http://www3.nd.edu/~rwilliam/dynamic/xtdpdml_Stata2015.pdf"}{break}
+{browse "https://www3.nd.edu/~rwilliam/dynamic/xtdpdml_Stata2015.pdf"}{break}
 
-{p 5 5}Allison, Paul. 2015. "Don't Put Lagged Dependent Variables in Mixed Models."
-{break}
-{browse "http://statisticalhorizons.com/lagged-dependent-variables"}
+{p 5 5}Allison, Paul D. 2015. "Don't Put Lagged Dependent Variables in Mixed Models."
+{browse "http://statisticalhorizons.com/lagged-dependent-variables"} {break}
 
 {p 5 5}Moral-Benito, Enrique. 2013. "Likelihood-based Estimation of
 Dynamic Panels with Predetermined Regressors." Journal of Business and
@@ -729,15 +780,25 @@ and Fixed Effects: A Structural Equations Approach." Social Forces 89:1, 1-34.
 
 {p 5 5}{cmd:xtdpdml} is not an official Stata command. It is a free
 contribution to the research community, like a paper. Please cite it
-as such. For now, the suggested citations are
+as such. The suggested citations are
 
-{p 5 5}Williams, Richard, Paul Allison and Enrique Moral-Benito. 2015.
+{p 5 5}Williams, Richard, Paul D. Allison and Enrique Moral-Benito. 2018.
+"Linear Dynamic Panel-Data Estimation using Maximum Likelihood and 
+Structural Equation Modeling." The Stata Journal 18(2): 293-326. A pre-publication
+version is at 
+{browse "https://www3.nd.edu/~rwilliam/dynamic/SJPaper.pdf"}{break}
+
+{p 5 5} Allison, Paul D., Richard Williams and Enrique Moral-Benito. 2017. "Maximum 
+Likelihood for Cross-Lagged Panel Models with Fixed Effects." Socius 3: 1-17.
+{browse "http://journals.sagepub.com/doi/suppl/10.1177/2378023117710578"} {break}
+
+{p 5 5} Moral-Benito, Enrique, Paul Allison & Richard Williams (2018): Dynamic panel
+data modelling using maximum likelihood: an alternative to Arellano-Bond.
+Applied Economics, DOI: 10.1080/00036846.2018.1540854. A pre-publication version is at
+{browse "https://www3.nd.edu/~rwilliam/dynamic/Benito_Allison_Williams.pdf"}{break}
+
+{p 5 5}Williams, Richard, Paul D. Allison and Enrique Moral-Benito. 2015.
 "Linear Dynamic Panel-Data Estimation using Maximum Likelihood and
 Structural Equation Modeling". Presented July 30, 2015 at the 2015 Stata
-Users Conference in Columbus, Ohio.
-{browse "http://www3.nd.edu/~rwilliam/dynamic/xtdpdml_Stata2015.pdf"}{break}
-
-{p 5 5} Moral-Benito, Enrique, Paul Allison and Richard Williams. 2016
-(in progress). "Dynamic Panel Data Modeling using Maximum Likelihood:
-An Alternative to Arellano-Bond."  
-{browse "http://www3.nd.edu/~rwilliam/dynamic/Benito_Allison_Williams.pdf"}{break}
+Users Conference in Columbus, Ohio. 
+{browse "https://www3.nd.edu/~rwilliam/dynamic/xtdpdml_Stata2015.pdf"}{break}

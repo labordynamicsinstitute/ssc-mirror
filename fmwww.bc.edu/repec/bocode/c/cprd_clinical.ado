@@ -4,9 +4,9 @@ version 13.0;
 *
  Create dataset clinical with 1 obs per clinical event.
  Add-on packages required:
- lablist
+ lablist, chardef
 *!Author: Roger Newson
-*!Date: 22 March 2016
+*!Date: 29 September 2017
 *;
 
 syntax using [ , CLEAR DOfile(string) ];
@@ -14,9 +14,12 @@ syntax using [ , CLEAR DOfile(string) ];
 *
  Input data
 *;
-import delimited `using', varnames(1) `clear';
+import delimited `using', varnames(1) stringcols(_all) `clear';
 desc, fu;
-char list;
+
+*
+ Add variable labels
+*;
 cap lab var patid "Patient Identifier";
 cap lab var eventdate "Event Date";
 cap lab var sysdate "System Date";
@@ -30,29 +33,47 @@ cap lab var enttype "Entity Type";
 cap lab var adid "Additional Details Identifier";
 
 *
- Label values
+ Convert string variables to numeric if necessary
+*;
+foreach X in patid constype consid medcode staffid episode enttype adid {;
+  cap conf string var `X';
+  if !_rc {;
+    destring `X', replace force;
+    charundef `X';
+  };
+};
+charundef _dta *;
+
+*
+ Add value labels
 *;
 if `"`dofile'"'!="" {;
   run `"`dofile'"';
-  lab val constype sed;
-  lab val episode epi;
-  foreach X of var constype episode {;
-    desc `X', fu;
-    lablist `X', var;
+  cap lab val constype sed;
+  cap lab val episode epi;
+  foreach X in constype episode {;
+    cap conf numeric var `X';
+    if !_rc {;
+      lablist `X', var;
+    };
   };
 };
 
 *
- Create date variables
+ Add numeric date variables
 *;
-foreach X of var eventdate sysdate {;
-  gene long `X'_n=date(`X',"DMY");
-  compress `X'_n;
-  format `X'_n %tdCCYY/NN/DD;
+foreach X in eventdate sysdate {;
+  cap conf string var `X';
+  if !_rc {;
+    gene long `X'_n=date(`X',"DMY");
+    compress `X'_n;
+    format `X'_n %tdCCYY/NN/DD;
+  };
 };
-lab var eventdate_n "Event date";
-lab var sysdate_n "Event system entry date";
+cap lab var eventdate_n "Event date";
+cap lab var sysdate_n "Event system entry date";
 
+* Describe dataset *;
 desc, fu;
 
 end;

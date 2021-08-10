@@ -1,5 +1,5 @@
 {smcl}
-{* 24Mar2010}{* 20Oct2010}{...}
+{* 24Mar2010}{* 20Oct2010}{* 22Dec2020}{...}
 {hline}
 help for {hi:deci}{right: version 2.0}
 {right:{stata ssc install deci, replace: get the newest version}}
@@ -79,8 +79,8 @@ For instance, you can type '{cmd:deci x, f(16) t(10)}' while x[1]='1g'.
 
 
 {pstd}
-{cmd:Author: Liu wei}, The School of Sociology and Population Studies, Renmin University of China. {cmd:Address: }Zhongguancun Street No. 59, Haidian District, Beijing, China. {cmd:ZIP Code:} 100872. 
-{cmd:E-mail:} {browse "mailto:liuv@ruc.edu.cn":liuv@ruc.edu.cn} {break}
+{cmd:Author: Liu wei}, Yunnan University of Finance and Economics. {cmd:Address: }Longquan Road 237, Wuhua District, Kunming, Yunnan, P.R.China. {cmd:ZIP Code:} 650221. 
+{cmd:E-mail:} {browse "mailto:liuwei@ynufe.edu.cn":liuwei@ynufe.edu.cn} {break}
 
 
 {title:Also see}

@@ -23,9 +23,9 @@ d Requires: Stata version 8.2
 d
 d
 d Author: Christopher F Baum, Boston College
-d Support: email  baum@@bc.edu
+d Support: email baum@@bc.edu
 d
-d Distribution-Date: 20060625
-
+d Distribution-Date: 20180513
+d
 f kpss.ado
 f kpss.hlp

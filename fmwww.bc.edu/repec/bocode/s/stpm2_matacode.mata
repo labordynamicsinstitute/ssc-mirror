@@ -375,6 +375,14 @@ void stpm2_ml_theta_rs(transmorphic scalar M,
 
 	if ((*PS).delentry) lnf = lnf :+ ((*PS).calct0):* log((*PS).theta:*(*PS).expxb0:+1):/(*PS).theta
 }
+
+void  msurvpop() 
+{
+-9999
+printf("-9999 + 11")
+-123
+}
+
 end
 
 mata mata mlib create lstpm2, replace

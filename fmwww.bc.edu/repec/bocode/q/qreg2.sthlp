@@ -1,5 +1,5 @@
 {smcl}
-{* *! version 3.8 11 June 2017}{...}
+{* *! version 3.9 29 Feb 2020}{...}
 {cmd:help qreg2} {right:also see:  {help qreg postestimation}}
 
 {hline}
@@ -44,7 +44,7 @@ the variable identifying the clusters is defined by {it:clustvar}{p_end}
 {synoptline}
 {p2colreset}{...}
 
-
+{phang} {it: indepvars} may contain factor variables; see {help fvvarlist}.{p_end}
 {phang}{cmd:qreg2} allows {cmd:fweight}s except when the option {opt cluster} is used; see {help weight}.{p_end}
 {phang}See {manhelp qreg_postestimation R:qreg postestimation} for features available after estimation.
 

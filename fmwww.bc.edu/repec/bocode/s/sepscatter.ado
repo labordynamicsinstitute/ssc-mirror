@@ -1,3 +1,4 @@
+*! 1.1.0 NJC 5 December 2018 
 *! 1.0.2 NJC 9 May 2014 
 *! 1.0.1 NJC 8 May 2014 
 *! 1.0.0 NJC 29 April 2014 
@@ -16,7 +17,7 @@ program sepscatter
 
 	syntax varlist(numeric min=2 max=2) [if] [in] ///
 	[aweight fweight pweight] , SEParate(varname) ///
-	[MYLAbel(varname) MYNUmeric(varname) MISSing *]
+	[MYLAbel(varname) MYNUmeric(varname) MISSing addplot(str asis) *]
 
 	capture noisily {  
 	
@@ -62,7 +63,8 @@ program sepscatter
 	} 
  
 	scatter `Y' `x' if `touse' [`weight' `exp'], ///
-		ytitle(`"`ytitle'"') ms(Oh plus X Th Sh Dh) `mylabel' `options' 	
+		ytitle(`"`ytitle'"') ms(Oh plus X Th Sh Dh) `mylabel' ///
+		`options' || `addplot' 
 	} 
 
 	drop `Y' 

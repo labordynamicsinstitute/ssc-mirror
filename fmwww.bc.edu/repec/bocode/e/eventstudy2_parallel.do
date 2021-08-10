@@ -51,6 +51,11 @@ quietly{
 		
 		if "`model'" != "BHAR" & "`model'" != "BHAR_raw" {
 			gen `zero' = 0
+			
+			if "`model'" == "MA" {
+				replace `cum_returns' = `cum_returns' - `cum_marketreturns'
+				replace `returns' = `returns' - `marketreturns'
+			}
 		
 			scalar `j' = 1
 			while `j' <= `O' { 
@@ -63,12 +68,15 @@ quietly{
 					capture: reg `cum_returns' `cum_intercept' `zero'  if `____id_p'  == `j' & `est_window' == 1, nocons
 				}
 				if "`model'" == "MA" {
-					gen `MAreturns' = `cum_returns' - `cum_marketreturns'
-					capture: reg `MAreturns' `zero'  if `____id_p'  == `j' & `est_window' == 1, nocons
-					drop `MAreturns'
+					capture: reg `cumreturns' `zero'  if `____id_p'  == `j' & `est_window' == 1, nocons
 				}
 				if "`model'" == "FM" & "`garch'" != "garch"{	
 					capture: reg `cum_returns' `cum_intercept' `cum_marketreturns' `cum_factor1' `cum_factor2' `cum_factor3' `cum_factor4' `cum_factor5' `cum_factor6' `cum_factor7' `cum_factor8' `cum_factor9' `cum_factor10' `cum_factor11' `cum_factor12' `cum_factor13' `cum_factor14' `cum_factor15' if `____id_p'  == `j' & `est_window' == 1, nocons
+				
+					if _rc == 0{
+						capture: replace _BETA = _b[`cum_marketreturns'] if `____id_p' == `j'
+					}
+				
 				}
 				
 				if "`model'" == "FM" & "`garch'" == "garch"{

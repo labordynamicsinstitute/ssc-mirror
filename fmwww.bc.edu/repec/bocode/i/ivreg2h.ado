@@ -1,4 +1,4 @@
-*! ivreg2h  1.1.02  02apr2015  cfb/mes
+*! ivreg2h  1.1.03  07feb2019  cfb/mes
 *! cloned from
 *! xtivreg2 1.0.13 28Aug2011
 *! author mes
@@ -19,6 +19,7 @@
 *!         Removed extraneous ivreg2x check code and misc other extraneous code.
 *!         Bug fix - wouldn't run under Stata 9 because of extraneous version 10.1 statement.
 *! 1.1.02: Was not passing * (`options') on to ivreg2, which meant that options such as robust were ignored
+*! 1.1.03: Add Z() option to select generated instruments
 
 program define ivreg2h, eclass byable(recall)
 	version 9
@@ -58,7 +59,7 @@ program define ivreg2h, eclass byable(recall)
 			*/	savefirst SAVEFPrefix(name) saverf SAVERFPrefix(name) CLuster(varlist)	/*
 			*/	orthog(string) ENDOGtest(string) REDundant(string) PARTIAL(string)		/*
 			*/	BW(string) SKIPCOLL														/*
-			*/	GEN1 GEN2(string) NOOUTput												/*
+			*/	GEN1 GEN2(string) NOOUTput Z(string)									/*
 			*/	* ]
 
 // ms - `gen'=1 if ivreg2h leaves behind generated instruments, =0 if not
@@ -125,6 +126,8 @@ di as err "Error - must have ivreg2 version 2.1.15 or greater installed"
 			gen long `wvar'=1
 		}
 
+// di in r "Z = `z'" _n
+
 * Begin estimation blocks
 			loc qnoout nooutput
 			marksample touse
@@ -134,7 +137,14 @@ di as err "Error - must have ivreg2 version 2.1.15 or greater installed"
 			tsrevar `inexog', substitute
 			local inexog_t "`r(varlist)'"
 			loc n_inex : word count `inexog_t'
-// di in r "n_inex `n_inex'"
+// 1.1.03
+			if "`z'" == "" {
+				loc z `inexog'
+			}
+			tsrevar `z', substitute
+			local z_t "`r(varlist)'"
+// di in r "@@ zt `z_t'"
+// di in r "n_inex `n_inex'" _n
 			tsrevar `endo', substitute
 			local endo_t "`r(varlist)'"
 			loc n_endo : word count `endo_t'
@@ -176,7 +186,7 @@ di as err "Error - must have ivreg2 version 2.1.15 or greater installed"
 
 // casewise option in 1.0.9 (Jan2014) ensures that centering is done on the regression sample, and other
 // observations are set to missing
-				by `pv': center `lhs_t' `endo_t' `exexog_t' `inexog_t' if e(sample), casewise inplace 
+				qui by `pv': center `lhs_t' `endo_t' `exexog_t' `inexog_t' if e(sample), casewise inplace 
 				loc feest "Fixed Effects by(`pv'), `npan' groups"
 			}
 // preserve here, prior to first sort
@@ -195,7 +205,7 @@ di as err "Error - must have ivreg2 version 2.1.15 or greater installed"
 			cap est drop StdIV
 		} 
 		else {
-// COMPUTE STANDARD IV RESULTS IF EQUATION IS IDENTIFIED
+// COMPUTE STANDARD IV RESULTS IF EQUATION IS IDENTIFIED ---------------------------------
 			if "`nooutput'"=="" {
 				di as res _n "Standard IV Results" _n "`feest'"
 			}
@@ -323,12 +333,18 @@ di as err "Error - must have ivreg2 version 2.1.15 or greater installed"
 // ms
 // For later use - any collinears or duplicates in standard IV estimation
 				local collin_dups	"`l_collin' `l_dups'"
+				
+// cfb
+				if "`feest'" != "" {
+					di as err _n "Warning: variables have been centered"
+					}
  		}	// end standard IV block
 			
-// COMPUTE RESULTS FOR GENERATED INSTRUMENTS ONLY
+// COMPUTE RESULTS FOR GENERATED INSTRUMENTS ONLY ----------------------------------------
 
 // Even if no excluded insts, must generate insts						
 // Lewbel hetero instruments, based only on centered included exog in FSR
+// Z() overrides list in inexog; expanded into z_t
 
 // if eqn not identified, cannot retrieve e(inexog)
 //  di as err "original inexog"
@@ -340,9 +356,20 @@ di as err "Error - must have ivreg2 version 2.1.15 or greater installed"
                 	local l_inexog `inexog'
                 }
                 local l_inexog : subinstr local l_inexog "." "_", all
- // di as err "new inexog"
- // di as err "`l_inexog'"
-				loc n_inexog: word count `inexog_t'
+//  di as err "new inexog"
+//  di as err "`l_inexog'"
+//  di as err "`inexog_t'""
+
+// if Z() specified, override; should check to see that Z is subset of X 
+				loc zlist `inexog_t'
+				if "`z'" != "" {
+					loc zlist `z_t'
+					loc zlist_t `z'
+					local zlist_t : subinstr local z "." "_", all
+				}
+//  di as err ">>> `zlist_t'"
+//				loc n_inexog: word count `inexog_t'
+				loc n_inexog: word count `zlist'
 				if `n_inexog' == 0 {
 					di in red _n "Error: no Z variables available for construction of generated instruments." _n
 					error 198
@@ -350,18 +377,22 @@ di as err "Error - must have ivreg2 version 2.1.15 or greater installed"
 				loc n_endo_t: word count `endo_t'
 				loc geninst_t	
 				loc geninst
+				
 				loc i 0		
 				foreach e of local endo_t {
-					qui reg `e' `inexog_t' if `touse'
+//					qui reg `e' `inexog_t' if `touse'
+					qui reg `e' `zlist' if `touse'
 					tempvar `e'_eps
 					qui predict double ``e'_eps' if e(sample), residual
 					loc ++i
 					loc en: word `i' of `endo'
 					local j 1
-					foreach v of local inexog_t {
+//					foreach v of local inexog_t {
+					foreach v of local zlist {
 // Federico: added (and some lines commented) to allows correct naming 
 // 			 in the case of more endo vars and to allow the -gen- option to work properly
- 						local vn: word `j' of `l_inexog' 
+// 						local vn: word `j' of `l_inexog' 
+ 						local vn: word `j' of `zlist_t'
  						tempvar z_`e'_`v'_eps
 						su `v' if `touse', mean
 						qui g double `z_`e'_`v'_eps' = (`v' - r(mean)) * ``e'_eps' if `touse'
@@ -372,16 +403,20 @@ di as err "Error - must have ivreg2 version 2.1.15 or greater installed"
 				}
 
 // di "geninst and geninst_t (immediately after creation):"
-// di as err "`geninst'"
-// di as err "`geninst_t'"
+//  di as err "`geninst'"
+//  di as err "`geninst_t'"
 
 // even though residuals are uncorrelated with the regressors used to generate them, 
 // the product of residuals and the (centered) regressors are non-null
 		if "`nooutput'"=="" {
 			di as res _n "IV with Generated Instruments only" _n  "`feest'"
 // list of original regressors here		
-			di as res "Instruments created from Z:"_n "`inexog'"
+//			di as res "Instruments created from Z:"_n "`inexog'"
+			di as res "Instruments created from Z:"_n "`z'"
 		}
+// 	set trace on
+	
+// di as err "geninst_t : `geninst_t'"
 // ms
 // remove orthog(`orthog_t') since std IVs not used here
 // changed `qq'(=qui) to nooutput option so that collinearity and duplicates messages reported
@@ -518,14 +553,31 @@ di as err "Error - must have ivreg2 version 2.1.15 or greater installed"
 				ereturn local cmd "ivreg2h"
 //		su `geninst' if e(sample)
 //		corr `geninst' `inexog_t' if e(sample)
+
+// cfb
+				if "`feest'" != "" {
+					di as err _n "Warning: variables have been centered"
+					}
 				
-// COMPUTE RESULTS FOR GENERATED AND EXCLUDED INSTRUMENTS
+// COMPUTE RESULTS FOR GENERATED AND EXCLUDED INSTRUMENTS --------------------------------
 				
 // Lewbel hetero instruments, based on centered included exog + excluded exog in FSR
+// Z() overrides list in inexog, expanded into z_t
+
 		if "`exexog_t'" != "" {
                 local l_inexog    "`e(inexog)'"
                 local l_inexog : subinstr local l_inexog "." "_", all
-				loc n_inexog: word count `inexog_t'
+                
+// if Z() specified, override; should check to see that Z is subset of X 
+				loc zlist `inexog_t'
+				if "`z'" != "" {
+					loc zlist `z_t'
+					loc zlist_t `z'
+					local zlist_t : subinstr local z "." "_", all
+				}
+// di as err ">>>>> `zlist'"
+//				loc n_inexog: word count `inexog_t'
+				loc n_inexog: word count `zlist'
 				if `n_inexog' == 0 {
 					di in red _n "Error: no Z variables available for construction of generated instruments." _n
 					error 198
@@ -535,13 +587,15 @@ di as err "Error - must have ivreg2 version 2.1.15 or greater installed"
 				loc geninst 
 				loc i 0		
 				foreach e of local endo_t {
-					qui reg `e' `inexog_t' if `touse'
+//					qui reg `e' `inexog_t' if `touse'
+					qui reg `e' `zlist' if `touse'
 					tempvar `e'_eps
 					qui predict double ``e'_eps' if e(sample), residual
 					loc ++i
 					loc en: word `i' of `endo'
 					local j 1
-					foreach v of local inexog_t {
+//					foreach v of local inexog_t {
+					foreach v of local zlist {
 // Federico: added (and some lines commented) to allows correct naming 
 // 			 in the case of more endo vars and to allow the -gen- option to work properly
  						local vn: word `j' of `l_inexog' 
@@ -566,7 +620,8 @@ di as err "Error - must have ivreg2 version 2.1.15 or greater installed"
 		if "`nooutput'"=="" {
 			di as res _n "IV with Generated Instruments and External Instruments" _n "`feest'" 
 // list of original regressors here		
-			di as res "`orthogti' Instruments created from Z:" _n "`inexog'"
+//			di as res "`orthogti' Instruments created from Z:" _n "`inexog'"
+			di as res "`orthogti' Instruments created from Z:"_n "`z'"
 		}
 //         di as err    "`geninst_t'"
 //         di as err _n "`geninst'"
@@ -697,6 +752,11 @@ di as err "Error - must have ivreg2 version 2.1.15 or greater installed"
 // undo hack
 				ereturn local cmd "ivreg2h"
 		}	// end block for std+generated IVs
+		
+// cfb
+				if "`feest'" != "" {
+					di as err _n "Warning: variables have been centered"
+					}
 
 // REPORT OUTPUT
 
@@ -715,6 +775,11 @@ di as err "Error - must have ivreg2 version 2.1.15 or greater installed"
 				}
 //			}
 
+// cfb
+//				if "`feest'" != "" {
+//					di as err _n "Warning: variables have been centered"
+//					}
+					
 // ms - if requested, rename and leave behind generated instruments
 		if `gen' {
 			loc repl

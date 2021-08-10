@@ -1,3 +1,17 @@
+*! version 1.14 beta RhMD 11 Nov 2013
+*! with "specific" added as a new mediation option. This allows the user
+*! to specify two values of a single continuous exposure for which all
+*! effects are to be defined.
+*!
+*! version 1.13 beta RhMD 13 Aug 2013
+*! with "proportion mediated" added to the mediation output
+*!
+*! version 1.12 beta RhMD 21 May 2013
+*! with logOR and logRR options added for mediation - instead of giving 
+*! TCE, NDE, NIE, CDE as risk differences, if one of these options is 
+*! selected, the results will be given on either the logOR or logRR scales, 
+*! respectively.
+*!
 *! version 1.11 beta RhMD 14 Jan 2013
 *! with the "bug" that simulates L independently for different values of
 *! X "fixed" so that the errors are always perfectly correlated across
@@ -58,9 +72,9 @@ version 11
 syntax varlist(min=2 numeric) [if] [in] , OUTcome(varname) COMmands(string) EQuations(string) [Idvar(varname) ///
     Tvar(varname) VARyingcovariates(varlist) intvars(varlist) interventions(string) monotreat eofu pooled death(varname) ///
     derived(varlist) derrules(string) FIXedcovariates(varlist) LAGgedvars(varlist) lagrules(string) msm(string) ///
-    mediation EXposure(varlist) mediator(varlist) control(string) baseline(string) base_confs(varlist) ///
+    mediation EXposure(varlist) mediator(varlist) control(string) baseline(string) alternative(string) base_confs(varlist) ///
     post_confs(varlist) impute(varlist) imp_eq(string) imp_cmd(string) imp_cycles(int 10) SIMulations(int 10000) ///
-	obe oce boceam linexp minsim moreMC graph saving(string) replace]
+	obe oce specific boceam linexp minsim moreMC logOR logRR graph saving(string) replace]
 preserve
 *for the time-varying option, the first step is to make the dataset long again; this is how we want it, 
 *but we had to start with it wide for the sake of the boostrapping
@@ -595,6 +609,15 @@ else {
 			}
 		}
 	}
+	local nbase: word count `exposure'
+	if "`specific'"!="" {
+		detangle "`alternative'" alternative "`exposure'"
+		forvalues i=1/`nbase' {
+			if "${S_`i'}"!="" {
+				local alternative`i' ${S_`i'}
+			}
+		}
+	}
 	local nmed: word count `mediator'
     if "`control'"!="" {
         detangle "`control'" control "`mediator'"
@@ -813,7 +836,7 @@ if $check_print==0 {
 				}
 			}
 		}
-		if "`obe'"=="" & "`oce'"=="" & "`linexp'"=="" {
+		if "`obe'"=="" & "`oce'"=="" & "`linexp'"=="" & "`specific'"=="" {
 			forvalues i=1/`nint' {
 				qui replace `int_no'=`i' if _n>`M' & _n<=`N'
 				forvalues j=1/`nbase' {
@@ -937,6 +960,74 @@ if $check_print==0 {
 					else {
 						qui replace `exposure'=0 if (`int_no'-5)/`num_lev_m'<=1
 						qui replace `exposure'=1 if (`int_no'-5)/`num_lev_m'>1
+					}
+				********************************************************************************************************************************************************************************************************
+				}	
+			}
+			if "`specific'"!="" {
+				forvalues i=1/`nint' {
+					qui replace `int_no'=`i' if _n>`M' & _n<=`N'
+					local M=`N'
+					local N=`N'+`simulations'
+				}
+				qui replace `exposure'=`alternative1' if `int_no'==1 | `int_no'==3 | `int_no'==5
+				qui replace `exposure'=`baseline1' if `int_no'==2 | `int_no'==4
+				********************************************************************************************************************************************************************************************************
+				if "`boceam'"=="" {
+					qui count if `int_no'<6 & `int_no'>0
+					local missout=r(N)
+					tempvar randomorder
+					tempvar originalorder
+					gen `originalorder'=_n
+					gen `randomorder'=uniform()
+					sort `int_no' `randomorder'
+					if "`moreMC'"=="" {
+						qui replace `exposure'=`exposure'[_n-`oldN'-`missout'] if `int_no'==6
+					}
+					else {
+						local RA=ceil(`simulations'/`oldN')
+						forvalues ra=1(1)`RA' {
+							qui replace `exposure'=`exposure'[_n-`ra'*`oldN'-`missout'] if `int_no'==6 & `int_no'[_n-`ra'*`oldN'-`missout']==0
+						}
+					}
+					sort `originalorder'
+				}
+				********************************************************************************************************************************************************************************************************
+				if "`control'"=="" {
+				********************************************************************************************************************************************************************************************************
+					if "`boceam'"=="" {
+						qui count if `int_no'<4 & `int_no'>0
+						local missout=r(N)
+						tempvar randomorder
+						tempvar originalorder
+						gen `originalorder'=_n
+						gen `randomorder'=uniform()
+						sort `int_no' `randomorder'
+						if "`moreMC'"=="" {
+							qui replace `exposure'=`exposure'[_n-`oldN'-`missout'] if `int_no'==4
+						}
+						else {
+							local RA=ceil(`simulations'/`oldN')
+							forvalues ra=1(1)`RA' {
+								qui replace `exposure'=`exposure'[_n-`ra'*`oldN'-`missout'] if `int_no'==4 & `int_no'[_n-`ra'*`oldN'-`missout']==0
+							}
+						}
+						sort `originalorder'
+					}
+				********************************************************************************************************************************************************************************************************
+				}	
+				if "`boceam'"!="" {
+				********************************************************************************************************************************************************************************************************
+					qui tab `exposure' `mediator', matrow(matem1) matcol(matem2)
+					local num_lev_e=rowsof(matem1)
+					local num_lev_m=colsof(matem2)
+					if "`control'"=="" {
+						qui replace `exposure'=`baseline1' if (`int_no'-3)/`num_lev_m'<=1
+						qui replace `exposure'=`alternative1' if (`int_no'-3)/`num_lev_m'>1
+					}
+					else {
+						qui replace `exposure'=`baseline1' if (`int_no'-5)/`num_lev_m'<=1
+						qui replace `exposure'=`alternative1' if (`int_no'-5)/`num_lev_m'>1
 					}
 				********************************************************************************************************************************************************************************************************
 				}	
@@ -2045,14 +2136,28 @@ else {
 		if $check_print==0 {
 			noi di as text "{hline 10}{c RT}"
 		}
-		local tce=`e0'-`e2'
-		local nde=`e1'-`e2'
+		if "`logOR'"=="" & "`logRR'"=="" {
+			local tce=`e0'-`e2'
+			local nde=`e1'-`e2'
+			local cde=`e3'-`e4'
+		}
+		if "`logOR'"!="" & "`logRR'"=="" {
+			local tce=log(`e0'/(1-`e0'))-log(`e2'/(1-`e2'))
+			local nde=log(`e1'/(1-`e1'))-log(`e2'/(1-`e2'))
+			local cde=log(`e3'/(1-`e3'))-log(`e4'/(1-`e4'))
+		}
+		if "`logOR'"=="" & "`logRR'"!="" {
+			local tce=log(`e0')-log(`e2')
+			local nde=log(`e1')-log(`e2')
+			local cde=log(`e3')-log(`e4')
+		}
 		local nie=`tce'-`nde'
-		local cde=`e3'-`e4'
+		local pm=`nie'/`tce'
 		return clear
 		return scalar tce=`tce'
 		return scalar nde=`nde'
 		return scalar nie=`nie'
+		return scalar pm=`pm'
 		return scalar cde=`cde'
 	}
 	else {
@@ -2101,10 +2206,23 @@ else {
 				local e4=0
 			}
 			return clear
-			local tce_`j'=`e0_`j''-`e2'
-			local nde_`j'=`e1_`j''-`e2'
+			if "`logOR'"=="" & "`logRR'"=="" {
+				local tce_`j'=`e0_`j''-`e2'
+				local nde_`j'=`e1_`j''-`e2'
+				local cde_`j'=`e3_`j''-`e4'
+			}
+			if "`logOR'"!="" & "`logRR'"=="" {
+				local tce_`j'=log(`e0_`j''/(1-`e0_`j''))-log(`e2'/(1-`e2'))
+				local nde_`j'=log(`e1_`j''/(1-`e1_`j''))-log(`e2'/(1-`e2'))
+				local cde_`j'=log(`e3_`j''/(1-`e3_`j''))-log(`e4'/(1-`e4'))
+			}
+			if "`logOR'"=="" & "`logRR'"!="" {
+				local tce_`j'=log(`e0_`j'')-log(`e2')
+				local nde_`j'=log(`e1_`j'')-log(`e2')
+				local cde_`j'=log(`e3_`j'')-log(`e4')
+			}			
 			local nie_`j'=`tce_`j''-`nde_`j''
-			local cde_`j'=`e3_`j''-`e4'
+			local pm_`j'=`nie_`j''/`tce_`j''
 		}
 		if $check_print==0 {
 			noi di as text "{hline 10}{c RT}"			
@@ -2113,6 +2231,7 @@ else {
 			return scalar tce_`j'=`tce_`j''
 			return scalar nde_`j'=`nde_`j''
 			return scalar nie_`j'=`nie_`j''
+			return scalar pm_`j'=`pm_`j''
 			return scalar cde_`j'=`cde_`j''
 		}
 	}

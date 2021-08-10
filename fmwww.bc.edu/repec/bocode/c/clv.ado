@@ -1,4 +1,4 @@
-*! Version 2.14 20May2010
+*! Version 2.17 10July2019
 *! Jean-Benoit Hardouin
 ************************************************************************************************************
 * Stata program : clv
@@ -26,15 +26,17 @@
 * Version 2.12 (2006-12-01): Jean-Benoit Hardouin /*savedendro option*/
 * Version 2.13 (2010-05-12): Jean-Benoit Hardouin /*corrections of bugs in KERNEL option and with METHOD(centroid)*/
 * Version 2.14 (2010-05-20): Jean-Benoit Hardouin /*DIM and STD options for biplots*/
+* Version 2.15 (2014-04-14): Jean-Benoit Hardouin /*save and use options*/
+* Version 2.16 (2014-04-30): Jean-Benoit Hardouin, Bastien Perrot /*HTML option*/
+* Version 2.17 (2019-07-10): Jean-Benoit Hardouin /*filesave and dirsave options*/
 *
 * Jean-benoit Hardouin, University of Nantes - Faculty of Pharmaceutical Sciences
-* Department of Biostatistics - France
+* INSERM UMR 1246-SPHERE "Methods in Patient Centered Outcomes and Health Research", Nantes University, University of Tours
 * jean-benoit.hardouin@univ-nantes.fr
 *
-* News about this program : http://anaqol.free.fr
-* FreeIRT Project : http://freeirt.free.fr
+* News about this program : http://anaqol.sphere-nantes.fr
 *
-* Copyright 2005-2006, 2010 Jean-Benoit Hardouin
+* Copyright 2005-2006, 2010, 2014, 2019 Jean-Benoit Hardouin
 *
 * This program is free software; you can redistribute it and/or modify
 * it under the terms of the GNU General Public License as published by
@@ -52,8 +54,8 @@
 *
 ************************************************************************************************************
 program define clv,rclass
-version 9.0
-syntax [varlist(default=none)] [if] [in] [fweight] [, CUTnumber(int 40) bar CONSolidation(int 0) noDENdro SAVEDendro(string) noSTANDardized deltaT HORizontal SHOWcount ABBrev(int 14) TITle(string) CAPtion(string) KERnel(numlist) METHod(string) noBIPlot ADDvar genlv(string) replace TEXTSize(string) std dim(string)]
+version 10
+syntax [varlist(default=none)] [if] [in] [fweight] [, CUTnumber(int 40) bar CONSolidation(int 0) noDENdro SAVEDendro(string) noSTANDardized deltaT HORizontal SHOWcount ABBrev(int 14) TITle(string) CAPtion(string) KERnel(numlist) METHod(string) noBIPlot ADDvar genlv(string) replace TEXTSize(string) std dim(string) save(string) use(string) FILESave DIRSave(string)]
 preserve
 tempfile clvfile
 tempvar id
@@ -61,7 +63,7 @@ gen `id'=_n
 qui save `clvfile',replace
 local matsize=c(matsize)
 local none=0
-if "`varlist'"=="" {
+if "`varlist'"==""&"`use'"=="" {
    capture confirm matrix r(vp)
    if _rc==0 {
       capture confirm matrix r(matclus)
@@ -76,10 +78,40 @@ if "`varlist'"=="" {
    }
 }
 
+if "`filesave'"!="" {
+   if "`dirsave'"=="" {
+      local dirsave `c(pwd)'
+   }
+   local fsb saving(`dirsave'//bar,replace)
+   local fsd saving(`dirsave'//dendrogram,replace)
+   local fsbi saving(`dirsave'//biplot,replace)
+}
 tempname matclus vp indexes
 
 /*********TESTS**********/
 
+if "`use'"!="" {
+   local error=0
+   capture matrix `vp'=`use'_vp
+   if _rc!=0 {
+      local error=_rc
+   }
+   capture matrix `matclus'=`use'_matclus
+   if _rc!=0 {
+      local error=_rc
+   }
+   local varlist $`use'_varlist
+   local method $`use'_method
+   local kernel $`use'_kernel
+   if "`varlist'"==""|"`method'"=="" {
+      local error=1
+   }
+   if `error'!=0 {
+      di in red "You cannot use the {hi:use} option without a preliminary use of the {hi:save} option"
+      error 198
+      exit
+   }
+}
 if `none'==1 {
    matrix `vp'=r(vp)
    matrix `matclus'=r(matclus)
@@ -570,7 +602,7 @@ if "`bar'"!="" {
    local minv3=floor(r(min)*5)/5
    label variable v4 "Relative T variation"
    label variable v7 "Relative T variation order 2"
-   graph twoway (bar v3 id, name(bar,replace) vert yaxis(1))(line v4 id,yaxis(2))/*(line v6 id,yaxis(3))(line v5 id,yaxis(4))*/(line v7 id,yaxis(5)) if id!=0,ylabel(`minv3'(0.2)`maxv3') xlabel(1(1)`=`nbitems'-`nbkerk'+`nbkerg'-1')
+   qui graph twoway (bar v3 id, name(bar,replace) `fsb' vert yaxis(1))(line v4 id,yaxis(2))/*(line v6 id,yaxis(3))(line v5 id,yaxis(4))*/(line v7 id,yaxis(5)) if id!=0,ylabel(`minv3'(0.2)`maxv3') xlabel(1(1)`=`nbitems'-`nbkerk'+`nbkerg'-1')
 }
 /****** DENDROGRAM********/
    drop _all
@@ -650,13 +682,14 @@ if "`dendro'"=="" {
       local textsize: word `=min(int(`nbitems'/15)+1,5)' of medium medsmall small vsmall tiny
    }
    if "`horizontal'"!="" {
-      cluster dendro clv,  name (dendrogram,replace) hor ytitle("`var'") `showcount' xtitle("`titleL'") title("`title'",span) xlabel(`yl') ylabel(,angle(0)  labsize(`textsize')) `cut'
+   *matrix list clv
+      qui cluster dendro clv,  name (dendrogram,replace) `fsd' hor ytitle("`var'") `showcount' xtitle("`titleL'") title("`title'",span) xlabel(`yl') ylabel(,angle(0)  labsize(`textsize')) `cut'
    }
    else {
-      cluster dendro clv, name(dendrogram,replace)  xtitle("`var'") `showcount' ytitle("`titleL'") title("`title'",span) ylabel(`yl') xlabel(,labsize(`textsize')) `cut'
+      qui cluster dendro clv, name(dendrogram,replace) `fsd' xtitle("`var'") `showcount' ytitle("`titleL'") title("`title'",span) ylabel(`yl') xlabel(,labsize(`textsize')) `cut'
    }
    if "`savedendro'"!="" {
-      graph save dendrogram `savedendro'
+      qui graph save dendrogram `savedendro'
    }
 }
 
@@ -872,10 +905,10 @@ if `cons'!=0 {
             if "`addvar'"!="" {
                local add `varlist'
             }
-            if "`dim'"=="" { 
+            if "`dim'"=="" {
                local dim 1 2
             }
-            qui biplotvlab `latent' `add', name(biplot,replace) norow colopts(name(latent variables)) alpha(0) title(Biplot of the latent variables) labdes(size(vsmall) color(blue)) stretch(1) `std' dim(`dim')
+            qui qui biplotvlab `latent' `add', name(biplot,replace) `fsbi' norow colopts(name(latent variables)) alpha(0) title(Biplot of the latent variables) labdes(size(vsmall) color(blue)) stretch(1) `std' dim(`dim')
          }
          else if `nbind'>800&"`biplot'"==""&"`weight'"==""{
             di in green "There is more than 800 individuals, so the {hi:biplot} option is disabled"
@@ -903,10 +936,18 @@ if "`genlv'"!="" {
    qui sort `id'
    qui merge `id' using `lvfile'
 }
-qui drop  `id' 
+qui drop  `id'
 capture drop _merge
 capture cluster delete clv,zap
 matrix colnames `vp'="Parent" "Number of clusters" "Child 1" "Child 2" "T" "DeltaT" "deltaT" "Explained Variance" "Explained Variance (%)" "First eigenvalue" "Second Eigenvalue" "2nd order deltaT"
+if "`save'"!="" {
+   qui matrix `save'_vp=`vp'
+   qui matrix `save'_matclus=`matclus'
+   qui global `save'_varlist `varlist'
+   qui global `save'_method `method'
+   qui global `save'_kernel `kernel'
+}
+
 return matrix vp=`vp'
 return matrix matclus=`matclus'
 return local varlist `varlist'

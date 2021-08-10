@@ -9,7 +9,7 @@ help for {cmd:fvregen} {right:(Roger Newson)}
 {p 8 15}{cmd:fvregen} [{help varlist:{it:newvarlist}}] {ifin} [ {cmd:,}
  {cmdab:fr:om}{cmd:(}{varlist}{cmd:)}
  {cmdab:do:file}{cmd:(}{help do:{it:dofilename}}{cmd:)}
- {cmdab:fm:issing}{cmd:(}{help varname:{it:newvarname}}{cmd:)} ]
+ {cmdab:fm:issing}{cmd:(}{help varname:{it:newvarname}}{cmd:)} {cmd:fast} ]
 
 
 {title:Description}
@@ -62,6 +62,11 @@ variable labels and selected characteristics of the old factors with the same na
 containing missing values for observations excluded by the {helpb if} and {helpb in} qualifiers,
 1 for other observations in which all the generated factors are missing, and 0 for other observations
 in which at least one of the generated factors is nonmissing.
+
+{phang}
+{cmd:fast} is an option for programmers working with very large datasets.
+It specifies that {cmd:fvregen} will not do any extra work to restore the existing dataset in memory,
+if the user presses {help break:Break}.
 
 
 {title:Remarks}

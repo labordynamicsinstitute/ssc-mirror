@@ -1,19 +1,23 @@
 *! 0.1 HS, Nov 11, 2015
 *! 0.2 HS, Mar 16, 2016
 *! 0.3 HS, Aug 30, 2016
+*! 0.4 HS, Sep 09, 2018
+*! 0.5 HS, Dec 02, 2019 - init values
+*! 0.6 KBN, Dec 18, 2019 - discrete (default) or continuous time
 
 pr define wtdttt, rclass
 version 14.0
 
 syntax varname [if] [in], ///
-    DISTtype(string) ///
+    start(string) end(string) ///
+	DISTtype(string) ///
     [IADPercentile(real 0.8) ///
-     start(string) end(string) ///
      LOGITPcovar(varlist fv) ///
      MUcovar(varlist fv) LNSIGMAcovar(varlist fv) ///
      LNALPHAcovar(varlist fv) LNBETAcovar(varlist fv) ///
                          ALLcovar(varlist fv) ///
-                         eform(passthru) delta(real 1) reverse ///
+                         eform(passthru) reverse conttime ///
+						 niter(integer 50) ///
                                                        *]
 qui {
 preserve
@@ -25,36 +29,71 @@ tempname resmat covarmat prevpr seprev timeperc setimeperc ///
 
 local fmtperc = strofreal(`iadpercentile' * 100, "%2.0f")
 
-if ("`start'" != "" & "`end'" == "") | ("`start'" == "" & "`end'" != "") {
-    di in red "If you specify -start()- or -end() you must specify both"
-    error 119
+capture {
+	* For analysis of discrete data with continuity correction
+	if "`conttime'" == "" {
+		local tstart = td(`start') - .5
+		local tend = td(`end') + .5
+	}
+	* For analysis of continuous data 
+	else {
+		local tstart = `start'
+		local tend = `end'
+	}
 }
-if ("`start'" != "" & "`end'" != "") {
-    local delta = (td(`end') - td(`start')) + 1
-    if "`reverse'" != "" {
-        replace `obstime' = td(`end') + .5 - `obstime'
-    }
-    else {
-        replace `obstime' = `obstime' - (d(`start') - .5)
-    }
-    local tstart = td(`start') - .5
-    local tend = td(`end') + .5
+if _rc == 198 {
+	display as error "For discrete prescription data both -start()- and -end()- need to be specified as dates." ///
+	_n "For continuous data use the option -conttime- and let -start()- and -end()- be given as numbers instead of dates."
+	exit 198
+}
+local delta = `tend' - `tstart'
+if "`reverse'" != "" {
+	replace `obstime' = `tend' - `obstime'
 }
 else {
-    local tstart = 0
-    local tend = `delta'
-    if "`reverse'" != "" {
-        replace `obstime' = `tend' - `obstime'
-    }
-}    
+	replace `obstime' = `obstime' - `tstart'
+}  
+
+* Compute init values
+local ntot = _N
+count if `obstime' > (2/3 * `delta')
+local nonprevend = r(N)
+local prp = 1 - 3 * `nonprevend' / `ntot'
+local lpinit = logit(`prp')
+
+if "`disttype'" == "exp" & strpos("`options'", "init(") == 0 {
+	su `obstime' if `obstime' < (.5 * `delta')
+	local lnbetainit = log(1 / r(mean))
+	
+	local initstring = "init(logitp:_cons = `lpinit' lnbeta:_cons = `lnbetainit') search(off)"
+}
+	
+if "`disttype'" == "lnorm" & strpos("`options'", "init(") == 0 {
+	tempvar logtime
+	gen `logtime' = log(`obstime') if `obstime' < (.5 * `delta')
+	su `logtime'
+	local muinit = r(mean)
+	local lnsinit = log(r(sd))
+	
+	local initstring = "init(logitp:_cons = `lpinit' mu:_cons = `muinit' lnsigma:_cons = `lnsinit') search(off)"
+}
+
+if "`disttype'" == "wei" & strpos("`options'", "init(") == 0 {
+	su `obstime' if `obstime' < (.5 * `delta')
+	local lnbetainit = log(1 / r(mean))
+	
+	local initstring = "init(logitp:_cons = `lpinit' lnbeta:_cons = `lnbetainit' lnalpha:_cons = 0) search(off)"
+}
+	
+   
 global wtddelta = `delta'
 
 * Exponential FRD
 if "`disttype'" == "exp" {
-    noi ml model lf mlwtd_exp ///
+    noi ml model lf mlwtdttt_exp ///
         (logitp: `obstime' = `logitpcovar' `allcovar') ///
-        (lnbeta: `lnbetacovar' `allcovar') `if' `in', ///
-            max `options'
+        (lnbeta: `lnbetacovar' `allcovar') `if' `in', iterate(`niter') ///
+            max `initstring' `options'
     if "`eform'" != "" {
         seteform, kexpo(2)
     }
@@ -71,11 +110,11 @@ if "`disttype'" == "exp" {
 
 * Log-Normal FRD
 if "`disttype'" == "lnorm" {
-    noi ml model lf mlwtd_lnorm ///
+    noi ml model lf mlwtdttt_lnorm ///
         (logitp: `obstime' = `logitpcovar' `allcovar') ///
         (mu: `mucovar' `allcovar') ///
-        (lnsigma: `lnsigmacovar' `allcovar') `if' `in', ///
-    `options' max
+        (lnsigma: `lnsigmacovar' `allcovar') `if' `in', iterate(`niter') ///
+    `options' `initstring' max
     if "`eform'" != "" {
         seteform, kexpo(3)
     }
@@ -92,11 +131,11 @@ if "`disttype'" == "lnorm" {
 
 * Weibull FRD
 if "`disttype'" == "wei" {
-    noi ml model lf mlwtd_wei ///
+    noi ml model lf mlwtdttt_wei ///
         (logitp: `obstime' = `logitpcovar' `allcovar') ///
         (lnbeta: `lnbetacovar' `allcovar') ///
-        (lnalpha: `lnalphacovar' `allcovar') `if' `in', ///
-                max
+        (lnalpha: `lnalphacovar' `allcovar') `if' `in', iterate(`niter') ///
+                max `initstring' `options'
     if "`eform'" != "" {
         seteform, kexpo(3)
     }
@@ -116,6 +155,9 @@ if "`disttype'" == "wei" {
                     - [lnbeta]_b[_cons])
     }
 }
+if e(converged) == 0 {
+	noi di as txt "Warning: convergence not achieved"
+}
 
 mat `resmat' = r(b)
 mat `covarmat' = r(V)
@@ -131,7 +173,7 @@ return scalar timepercentile = `timeperc'
 return scalar setimepercentile = `setimeperc'
 return scalar prevprop = `prevpr'
 return scalar seprev = `seprev'
-return local disttype `disttype'
+return local disttype "`disttype'"
 return local reverse "`reverse'"
 return scalar delta = `delta'
 return scalar start = `tstart'

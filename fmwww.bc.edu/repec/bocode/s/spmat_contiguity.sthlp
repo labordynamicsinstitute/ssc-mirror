@@ -1,5 +1,5 @@
 {smcl}
-{* *! version 1.0.1  16mar2010}{...}
+{* *! version 1.0.2  28feb2014}{...}
 {cmd:help spmat contiguity}
 {hline}
 
@@ -69,7 +69,7 @@ in the format created by {help shp2dta} or {help mif2dta}.
 
 {phang}
 {opt tolerance(#)} specifies the numerical tolerance used in deciding
-    whether two places are rook neighbors.  The default is
+    whether two places are rook or queen neighbors.  The default is
     {cmd:tolerance(1e-7)}.
 
 {phang}

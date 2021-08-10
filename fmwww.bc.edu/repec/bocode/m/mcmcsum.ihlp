@@ -50,8 +50,9 @@
 {synopt:{opt me:dian}}report MCMC chain medians rather than means{p_end}
 {synopt:{opt z:ratio}}report classical z-ratios and p-values{p_end}
 {synopt:{opt l:evel(#)}}set credible level; default is level(95){p_end}
-{synopt:{opt w:idth(#)}}parameter/variable width; default is {cmd:width(12)}{p_end}
+{synopt:{opt w:idth(#)}}parameter/variable width; default is {cmd:width(13)}{p_end}
 {synopt:{opt d:etail}}display additional MCMC statistics{p_end}
+{synopt:{help mcmcsum##display_options:display_options}}control column formats{p_end}
 
 {syntab:Graphics}
 {synopt:{opt traj:ectories}}trajectory plot for each MCMC chain{p_end}
@@ -118,6 +119,8 @@ This is useful for parameters fitted on the log-odds and log scales (i.e. multil
 {phang}
 {opt detail} display additional MCMC statistics including various percentiles, the Raftery Lewis statistics and the Brooks Draper statistic.
 
+{marker display_options}{...}
+{phang}{opt display_options}  cformat({help fmt:%fmt}), pformat({help fmt:%fmt}), sformat({help fmt:%fmt}); see {help estimation options##display_options:[R] estimation options.}
 
 {dlgtab:Graphics}
 
@@ -292,7 +295,7 @@ Browne (2012).
 {phang2}{bf:{stata "mcmcsum":. mcmcsum}}{p_end}
 
 {pstd}Calculate and display additional MCMC summary statistics for all model parameters{p_end}
-{phang2}{bf:{stata "mcmcsum":. mcmcsum, detail}}{p_end}
+{phang2}{bf:{stata "mcmcsum, detail":. mcmcsum, detail}}{p_end}
 
 {pstd}Trajectory plots for all model parameters{p_end}
 {phang2}{bf:{stata "mcmcsum, trajectories":. mcmcsum, trajectories}}{p_end}

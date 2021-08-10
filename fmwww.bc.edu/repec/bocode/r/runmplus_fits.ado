@@ -1,5 +1,6 @@
 capture program drop runmplus_fits
 program define runmplus_fits , eclass
+version 10.0
 syntax [anything] [ , REPlace ESTimate(string) se(string) fitmat(string) ]
 
 if "`estimate'"~="" {

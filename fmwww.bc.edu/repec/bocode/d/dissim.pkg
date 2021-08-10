@@ -1,14 +1,26 @@
 d 'DISSIM': module to calculate dissimilarity index
 d
-d dissim displays the dissimilarity index D for each pair of
+d  dissim displays the dissimilarity index D for each pair of
 d variables in varlist. If x and y are >= 0, form the proportions  
 d p = x / SUM x   and	q = y / SUM y and calculate D = 1/2 SUM ( |
-d p - q | ). D lies in [0, 1]. 
+d p - q | ). D lies in [0, 1]. Update 2021: The original dissim.*
+d files from 19990108 remain here   as a matter of record, but
+d anyone henceforth downloading this is  recommended to use the
+d dissim_index.* files, as calls to the help for  dissim now link
+d to a official Stata help file. 
+d
+d KW: dissimilarity index
+d KW: segregation
+d KW: descriptive statistics
+d
+d Requires: Stata version 5.0
+d
+d Distribution-Date: 20210309
 d
 d Author: Nicholas J. Cox, University of Durham
 d Support: email N.J.Cox@@durham.ac.uk
 d
-d Distribution-Date: 19990108
-
+f dissim_index.ado
+f dissim_index.sthlp
 f dissim.ado
 f dissim.hlp

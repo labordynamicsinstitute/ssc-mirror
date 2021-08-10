@@ -1,10 +1,12 @@
-*! version 2.1.0
-*! Christoph Thewes - thewes@uni-potsdam.de - 05.08.2017
+*! version 2.1.2
+*! Christoph Thewes - thewes@mailbox.org - 25.05.2020
 
 * 1.0.0: 10.05.2011: Initial release 
 * 1.1.0: 16.11.2011: added "from()"-option, varname-bugfix (year)
 * 2.0.0: 09.11.2012: added suport for different versions and formats of QoG
 * 2.1.0: 05.08.2017: added support for new versions/formats, new filenaming with date-suffix, modified from()-option > using
+* 2.1.1: 31.08.2017: fixed QoG-filenaming for EQI-data
+* 2.1.2: 25.05.2020: fixed http > https
 
 program qogmerge
 
@@ -12,7 +14,7 @@ program qogmerge
 
 	syntax anything [using/], Version(string) Format(string) [keep(string) * ]
 
-	local q_source "http://www.qogdata.pol.gu.se/data"
+	local q_source "https://www.qogdata.pol.gu.se/data/"
 
 	local temp1: word 1 of `anything'		//countryvar
 	local temp2: word 2 of `anything'		//timevar
@@ -162,20 +164,11 @@ program qogmerge
 		}
 
 		preserve
+			*// Solution proposed by William Lisowski
 			tempfile gnxl
-			copy http://www.qogdata.pol.gu.se/data/ `gnxl'
+			copy https://www.qogdata.pol.gu.se/data/ `gnxl'
 			qui infix str line 1-500 using `gnxl', clear
-			if "`version'"!="eqi" {
-				qui generate file = regexs(1) if regexm(line,">(qog_`version'_`format'_.*dta)<")
-			}
-			if "`version'"=="eqi" {
-				if "`format'" == "ind" {
-					qui generate file = regexs(1) if regexm(line,">(qog_`version'_feb17.dta)<")
-				}
-				if "`format'" == "agg" {
-					qui generate file = regexs(1) if regexm(line,">(qog_`version'_jun15.dta)<")
-				}
-			}
+			qui generate file = regexs(1) if regexm(line,">(qog_`version'_`format'_.*dta)<")
 			qui keep if !missing(file)
 			local q_filename = file[1]
 		restore

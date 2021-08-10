@@ -1,7 +1,9 @@
 /*
-*! version 1.2.3 # Ian White # 11jan2016
+*! Ian White # 4apr2018
+	note() doesn't default to "graphs by column" if no inco model
+version 1.2.3 # Ian White # 11jan2016
     output "group(...) assumed" suppressed unless -debug- on
-*! version 1.2.2 # Ian White # 21aug2015
+version 1.2.2 # Ian White # 21aug2015
     really tiny changes
 version 1.2.1 # Ian White # 22jul2015
     default for group() depends on whether inconsistency results are displayed
@@ -58,7 +60,7 @@ syntax [if] [in], [ ///
     eform ///
 /// standard graph options needing special treatment
     TItle(passthru) XTItle(string) MSIZe(passthru) ///
-	MSymbol(passthru) note(string) LEGend(string) XLABel(string) /// 
+	MSymbol(passthru) note(string asis) LEGend(string) XLABel(string) /// 
 /// undocumented options
     addrows(int 0) headband debug diamondheight(real 0.4) /// 
 /// standard graph options NOT needing special treatment
@@ -99,14 +101,13 @@ local legendcontents `options' `rows' `cols'
 local 0 `"`note'"'
 syntax [anything], [size(passthru) *]
 if mi("`size'") local size size(vsmall)
-local note `anything'
+local note `"`anything'"'
 local noteopts `size' `options'
 * raw forest plot?
 if inlist("`consistency'","off","") & inlist("`inconsistency'","off","") {
 	di as text "Drawing raw forest plot without any model results"
 	local consistency off   // suppresses later message
 	local inconsistency off // suppresses later message
-	if mi("`note'") local note " " // no footnote
 	if mi("`legend'") local legendlocation off // no legend
 }
 if mi("`group'") {
@@ -275,14 +276,14 @@ qui gen low = diff-`zcrit'*se
 qui gen upp = diff+`zcrit'*se
 
 * test
-if mi("`note'") & !mi("`testcons_stat'") {
+if mi(`"`note'"') & !mi("`testcons_stat'") {
     local note = `""Test of consistency: `testcons_type'(`testcons_df')="' ///
         + string(`testcons_stat',"%6.2f") ///
         + `", P="' + string(`testcons_p',"%5.3f") + `"""'
 }
 if "`format'"=="pairs" & `maxarms'>2 local note `"`note' "The data contain multi-arm trials - this analysis in pairs format is wrong""'
-if !mi(trim(`"`note'"')) local note note(`note', `noteopts')
-else if !mi(`"`note'"') local note note("`note'", `noteopts')
+if !mi(`"`note'"') local note note(`note', `noteopts')
+else local note note("")
 
 * TRUNCATION
 if !mi("`xlabel'") & !mi("`force'") {

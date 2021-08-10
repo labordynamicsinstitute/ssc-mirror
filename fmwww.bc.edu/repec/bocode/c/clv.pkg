@@ -16,12 +16,12 @@ d KW: Varclus
 d KW: CLV
 d KW: unidimensionality
 d
-d Requires: Stata version 8.0
+d Requires: Stata version 10
 d
-d Distribution-Date: 20121207
+d Distribution-Date: 20190730
 d
 d Author: Jean-Benoit Hardouin , University of Nantes, France
 d Support: email jean-benoit.hardouin@@univ-nantes.fr
 d
 f clv.ado
-f clv.hlp
+f clv.sthlp

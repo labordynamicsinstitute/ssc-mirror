@@ -1,5 +1,5 @@
 {smcl}
-{* *! version 1.1.1  14jan2015}{...}
+{* *! version 1.1.3  29dec2020}{...}
 {* findalias asfradohelp}{...}
 {* vieweralsosee "" "--"}{...}
 {* vieweralsosee "[R] help" "help help"}{...}
@@ -139,9 +139,9 @@ corresponding dataset would be structured as follows:
 {marker author}
 {title:Authors}
 
-{phang}Mona Krewel, Universitaet Mannheim, mona.krewel@mzes.uni-mannheim.de{p_end}
-{phang}Julia Partheymueller, Mannheimer Zentrum fuer Europaeische Sozialforschung, julia.partheymueller@mzes.uni-mannheim.de{p_end}
-{phang}Alexander Staudt, Universitaet Mannheim, astaudt@mail.uni-mannheim.de{p_end}
+{phang}Mona Krewel, Victoria University of Wellington, mona.krewel@vuw.ac.nz{p_end}
+{phang}Julia Partheymueller, Vienna Center for Electoral Research, julia.partheymueller@univie.ac.at{p_end}
+{phang}Alexander Staudt, staudtlex@live.de{p_end}
 
 
 {marker references}{...}

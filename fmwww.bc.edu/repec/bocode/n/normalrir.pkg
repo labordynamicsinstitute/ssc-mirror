@@ -22,9 +22,9 @@ d KW: normal distribution
 d
 d Requires: Stata version 10
 d
-d Distribution-Date: 20170502
+d Distribution-Date: 20180407
 d
-d Author: Roger Newson, National Heart and Lung Institute, Imperial College London
+d Author: Roger Newson,  Imperial College London
 d Support: email r.newson@@imperial.ac.uk
 d
 f normalrir.ado

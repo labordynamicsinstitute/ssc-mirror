@@ -20,9 +20,9 @@ d Requires: Stata version 8.0
 d
 d
 d Author: Joanne M. Garrett, University of North Carolina
-d Support: email  garrettj@@med.unc.edu
+d Support: email garrettj@@med.unc.edu
 d
-d Distribution-Date: 20060703
-
+d Distribution-Date: 20171117
+d
 f predxcat.ado
-f predxcat.hlp
+f predxcat.sthlp

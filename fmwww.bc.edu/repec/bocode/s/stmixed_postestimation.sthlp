@@ -1,6 +1,7 @@
 {smcl}
 {* *! version 2.0.0 ?????2012}{...}
 {vieweralsosee "stmixed" "help stmixed"}{...}
+{vieweralsosee "merlin postestimation" "help merlin postestimation"}{...}
 {vieweralsosee "streg" "help streg"}{...}
 {vieweralsosee "stpm2" "help stpm2"}{...}
 {title:Title}
@@ -18,7 +19,6 @@ The following standard post-estimation commands are available:
 {synoptset 13 notes}{...}
 {p2coldent :command}description{p_end}
 {synoptline}
-INCLUDE help post_estat
 INCLUDE help post_estimates
 INCLUDE help post_lincom
 INCLUDE help post_lrtest
@@ -34,13 +34,7 @@ INCLUDE help post_testnl
 {marker predict}{...}
 {title:Syntax for predict}
 
-{phang}Syntax for obtaining best linear unbiased predictions (BLUPs) of random effects, or the BLUPs' standard errors{p_end}
-
-{p 8 16 2}
-{cmd:predict} {{it:stub}{bf:*}|{it:newvarlist}} {cmd:,} {{opt ref:fects} | {opt rese:s}}
-
-
-{phang}Syntax for obtaining other predictions{p_end}
+{phang}Syntax for obtaining predictions{p_end}
 
 {p 8 16 2}
 {cmd:predict} {newvar} {ifin} [{cmd:,} {it:statistic} {it:options}]
@@ -50,27 +44,23 @@ INCLUDE help post_testnl
 {synopthdr :statistic}
 {synoptline}
 {syntab:Survival}
+{synopt :{opt eta}}linear predictor{p_end}
 {synopt :{opt h:azard}}hazard{p_end}
 {synopt :{opt s:urvival}}survival S(t){p_end}
-{synopt :{opt cumh:azard}}cumulative hazard{p_end}
-{synopt :{opt mart:ingale}}martingale-like residuals{p_end}
-{synopt :{opt dev:iance}}deviance residuals{p_end}
-
-{syntab:Random effects}
-{synopt :{opt ref:fects}}best linear unbiased predictions (BLUPS) of the random effects{p_end}
-{synopt :{opt rese:s}}standard errors of the best linear unbiased predictions (BLUPS) of the random effects{p_end}
+{synopt :{opt ch:azard}}cumulative hazard{p_end}
+{synopt :{opt cif}}cumulative incidence function{p_end}
+{synopt :{opt rmst}}restricted mean survival time (integral of {cmd:survival}){p_end}
+{synopt :{opt timelost}}time lost due to event (integral of {cmd:cif}){p_end}
 {synoptline}
 
 {synoptset 31 tabbed}{...}
 {synopthdr :options}
 {synoptline}
-{synopt :{opt xb}}see description below{p_end}
-{synopt :{opt fit:ted}}fitted values, linear predictor of the fixed portion plus contributions based on predicted random effects{p_end}
+{synopt :{opt fixedonly}}specifies predictions based on the fixed portion of the model.{p_end}
+{synopt :{opt marginal}}compute prediction marginally with respect to the latent variables{p_end}
 {synopt :{opt at(varname # [varname # ...])}}predict at values of specified covariates{p_end}
 {synopt :{opt ci}}calculate confidence intervals{p_end}
-{synopt :{opt stdp}}standard error of the fixed-portion linear prediction first ml equation{p_end}
 {synopt :{opt time:var(varname)}}time variable used for predictions (defaults: {cmd:_t0} for longitudinal sub-model, {cmd:_t} for survival sub-model){p_end}
-{synopt :{opt zero:s}}sets all covariates to zero (baseline prediction){p_end}
 {synopt :{opt lev:el(#)}}sets confidence level (default 95){p_end}
 {synoptline}
 {p2colreset}{...}
@@ -83,7 +73,14 @@ estimation sample.{p_end}
 
 {title:Options for predict}
 
+{phang}
+Note that if a relative survival model has been fitted by use of the {cmd:bhazard()} option then survival refers to 
+relative survival and hazard refers to excess hazard.
+
 {dlgtab:Survival}
+
+{phang}
+{opt eta} calculates the expected value of the linear predictor
 
 {phang}
 {opt hazard} calculates the predicted hazard.
@@ -92,42 +89,32 @@ estimation sample.{p_end}
 {opt survival} calculates each observation's predicted survival probability.
 
 {phang}
-{opt cumhazard} calculates the predicted cumulative hazard. 
+{opt chazard} calculates the predicted cumulative hazard. 
 
 {phang}
-{opt martingale} calculates martingale-like residuals.
+{opt cif} calculates the predicted cumulative incidence function. 
 
 {phang}
-{opt deviance} calculates deviance residuals.
-
-{dlgtab:Random effects}
+{opt rmst} calculates the restricted mean survival time.
 
 {phang}
-{opt reffects} calculates best linear unbiased predictions (BLUPs) of the random effects. You must specify q new variables, where q is the number of random effects 
-terms in the model (or level).  However, it is much easier to just specify stub* and let Stata name the variables stub1...stubq for you.
-
-{phang}
-{opt reffects} calculates the standard errors of the best linear unbiased predictions (BLUPs) of the random effects. You must specify q new variables, where q is the number of random effects 
-terms in the model (or level).  However, it is much easier to just specify stub* and let Stata name the variables stub1...stubq for you.
+{opt timelost} calculates the time lost due to the event occuring, i.e. the integral of the cumulative incidence 
+function.
 
 {dlgtab:Subsidiary}
 
 {phang}
-{opt xb} specifies predictions based on the fixed portion of the model.
+{opt fixedonly} specifies predictions based on the fixed portion of the model.
 
 {phang}
-{opt fitted} linear predictor of the fixed portion plus contributions based on predicted random effects.
+{opt marginal} compute prediction marginally with respect to the latent variables
 
 {phang}
 {opt at(varname # [ varname # ...])} requests that the covariates specified by 
 the listed {it:varname}(s) be set to the listed {it:#} values. For example,
 {cmd:at(x1 1 x3 50)} would evaluate predictions at {cmd:x1} = 1 and
 {cmd:x3} = 50. This is a useful way to obtain
-out of sample predictions. Note that if {opt at()} is used together
-with {opt zeros} all covariates not listed in {opt at()}
-are set to zero. If {opt at()} is used without {opt zeros} then
-all covariates not listed in {opt at()} are set to their sample
-values. See also {opt zeros}.
+out of sample predictions. 
 
 {phang}
 {opt ci} calculate a confidence interval for the requested statistic and
@@ -135,20 +122,12 @@ stores the confidence limits in {it:newvar}{cmd:_lci} and
 {it:newvar}{cmd:_uci}.
 
 {phang}
-{opt stdp} standard error of the fixed-portion linear prediction first ml equation.
-
-{phang}
 {opt timevar(varname)} defines the variable used as time in the predictions.
 This is useful for large datasets where for plotting purposes predictions are only needed for 200 observations for example. 
 Note that some caution should be taken when using this option as predictions may be 
 made at whatever covariate values are in the first 200 rows of data.
-This can be avoided by using the {opt at()} option and/or the {opt zeros} option to 
+This can be avoided by using the {opt at()} option to 
 define the covariate patterns for which you require the predictions.
-
-{phang}
-{opt zeros} sets all covariates to zero (baseline prediction). For 
-example, {cmd:predict s0, survival zeros} calculates the baseline
-survival function. See also {opt at()}.
 
 {phang}
 {opt level(#)} sets the confidence level; default is {cmd:level(95)}

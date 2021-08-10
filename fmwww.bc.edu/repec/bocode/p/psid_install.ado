@@ -1,9 +1,10 @@
-*! version 3.0.0 April 23, 2015 @ 12:00:25
+*! version 4.0.0 Oktober 26, 2017 @ 16:24:45
 *! Unpacks PSID files and creates Stata dta files
 
 * version 1.0.0 -> distributed on SSC
 * version 2.0.0 -> CNEF install added
 * version 3.0.0 -> CNEF_long added
+* version 4.0.0 -> CNEF no longer publicly available
 
 program psid_install
 version 13
@@ -146,7 +147,7 @@ end
 	
 
 program INSTALL_CNEF 
-	syntax [ , cnef to(string) replacelong replacesingle replace upgrade clean longonly ]
+	syntax using/  [ , cnef to(string) replacelong replacesingle replace upgrade clean longonly ]
 
 	// Define origin and to
 	if `"`to'"' == `""' | `"`to'"' == `"."' local to `"`c(pwd)'"'
@@ -161,33 +162,29 @@ program INSTALL_CNEF
 	// Check what's there
 	local pequivfiles: dir . files "pequiv*.dta" 
 	local pequivlong: dir . files "pequiv_long.dta" 
-	local zipdelivery: dir . files "prawequiv-2.zip" 
-	
-	if `"`zipdelivery'"' != `""' & "`upgrade'" == "" {
-		display `"{txt}Note: {res}`zipdelivery'{txt} exist and will be used. Use option -upgrade- for downloading a new delivery"'
+	if strpos(`"`using'"',`".dta"') | strpos(`"`using'"',`".DTA"') local source long
+	else if strpos(`"`using'"',`".zip"') | strpos(`"`using'"',`".ZIP"') local source zip
+		
+	if `"`source'"' == `"zip"' & `"`pequivlong'"' != `""' & "`upgrade'" == "" {
+		display `"{txt}Note: CNEF-long already exist. Use Option -upgrade- to override with a newly downloaded delivery"'
+		exit 9
 	}
-	else {
-		display "{txt}Downloading CNEF " _continue
-		quietly copy http://static.ehe.osu.edu/sites/cnef/prawequiv-2.zip prawequiv-2.zip, replace
-		display  "{res}[complete]"
+
+	// Unpack Zip and create pequiv_long.dta 
+	else if "`source'" == "zip" {
+
+		capture noisily _CNEF_UNPACK using `using'
+		if _rc _CNEF_FAILSAVE, origin(`origin') to(`to') rc(`=_rc')
+			
+		capture noisily _CNEF_SEARCHSTATA, to(`to')
+		if _rc _CNEF_FAILSAVE, origin(`origin') to(`to') rc(`=_rc')
+
+*		capture noisily  _CNEF_CLEANUP
+*		if _rc _CNEF_FAILSAVE, origin(`origin') to(`to') rc(`=_rc')
 		
 	}
 
-	if `"`pequivlong'"' != "" & "`replacelong'" == "" {
-		display `"{txt}Note: Existing CNEF-long file remain untouched. Use option -replacelong- to overwrite."'
-	}
-	else {
-		display "{txt}Extract Stata dataset (long) from ZIP file " _continue
-		quietly unzipfile prawequiv-2.zip, `replace'
-		local erasefiles: dir . files "pequiv_long.*"
-		local erasefiles `"`erasefiles' `: dir . files "*.sas"'"'
-		local erasefiles: subinstr local erasefiles `""pequiv_long.dta""' `""', all
-		foreach file of local erasefiles {
-			erase `file'
-			}
-		display  "{res}[complete]"
-	}
-
+	// Split CNEF-long into Files
 	if "`longonly'" == "" {
 		use pequiv_long.dta, clear
 		quietly levelsof year, local(K)
@@ -215,9 +212,7 @@ program INSTALL_CNEF
 		}
 	}
 	
-	if "`clean'" != "" erase prawequiv-2.zip
-	quietly cd `"`origin'"'
-	
+	cd `"`origin'"'
 end
 
 
@@ -240,4 +235,74 @@ program _CREATE_WAVELIST, rclass
 	return local wavelist `wavelist'
 end
 
-	
+
+program _CNEF_UNPACK
+	syntax using/
+	capture mkdir __temp
+	display "{txt}Copy `using' to temporary directory" _continue
+	quietly cd __temp
+		
+	capture copy `"`using'"' pequiv_long.zip, replace
+	if _rc {
+		display `"{err} [failed]"' 
+			exit _rc
+	}
+	else display  `"{res} [complete]"'
+		
+	display "{txt}Extract ZIP file " _continue
+	capture unzipfile pequiv_long.zip
+	if _rc {
+		display `"{err} [failed]"' 
+		exit _rc
+	}
+	else display  `"{res} [complete]"'
+	cd ..
+end
+
+
+program _CNEF_FAILSAVE
+	syntax , origin(string) to(string) rc(int)
+	quietly cd `"`origin'"'
+	display `"{err}Installation ended abnormally. Consider erasing directory `"`to'/__temp"' by hand"'
+	exit `rc'
+end
+
+
+program _CNEF_SEARCHSTATA
+	syntax, to(string)
+	pwd
+	display `"{txt}Search for CNEF-Long Stata dataset"'_continue
+	local subdir: dir . dirs *
+	local i 1
+	foreach thisdir of local subdir {
+		quietly cd `"`thisdir'"' 
+		local longname: dir `"."' files `"*.dta"'
+		if `"`longname'"' != `""' {
+			quietly copy `longname' `"`to'/pequiv_long.dta"', replace
+		}
+		local erasefiles: dir . files *
+		foreach file of local erasefiles {
+			rm `"`file'"'
+			}
+			quietly cd ..
+			rmdir `"`thisdir'"'
+		}
+		quietly cd `"`to'"'
+		capture confirm file `"pequiv_long.dta"' 
+		if _rc {
+			display `"{err}[failed]"' _n `"CNEF-Long Stata dataset not found in Zip-file"'
+			quietly cd `"`to'"'
+			exit 601
+		}
+		else display  `"{res}[complete]"'
+end
+
+*program _CNEF_CLEANUP
+*	pwd
+*	display `"{txt}Clean up"' _continue
+*	rm __temp/pequiv_long.zip
+*	rmdir __temp
+*	display  `"{res}[complete]"'
+*end
+
+exit

@@ -237,14 +237,16 @@ a receiver operating characteristic (ROC) curve. {it:Radiology} 143: 29-36.
 to the research community, like a paper. Please cite it as such: {p_end}
 
 {p 4 8 2}
-Linden, Ariel (2016). roctabi: Stata module for performing nonparametric ROC analysis using summarized data.{p_end}
+Linden, Ariel (2016). roctabi: Stata module for performing nonparametric ROC analysis using summarized data.
+{browse "http://ideas.repec.org/c/boc/bocode/s458131.html":http://ideas.repec.org/c/boc/bocode/s458131.html}
+{p_end}
+
 
 
 {title:Author}
 
 {p 4 8 2}       Ariel Linden{p_end}
 {p 4 8 2}       President, Linden Consulting Group, LLC{p_end}
-{p 4 8 2}       Ann Arbor, MI, USA{p_end}
 {p 4 8 2}{browse "mailto:alinden@lindenconsulting.org":alinden@lindenconsulting.org}{p_end}
 {p 4 8 2}{browse "http://www.lindenconsulting.org"}{p_end}
 

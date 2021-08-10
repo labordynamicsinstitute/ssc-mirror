@@ -4,7 +4,8 @@ program predictms_atparse, rclass
 				dmmat(string) 		///
 				i(real 0) 			///
 				Ntrans(real 1) 		///
-				at(string) stacked 	///
+				at(string) 			///
+				stacked 			///
 				out(real 0)]
 	
 	if "`stacked'"=="" local index = 1

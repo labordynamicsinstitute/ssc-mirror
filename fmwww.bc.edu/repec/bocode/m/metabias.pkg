@@ -1,6 +1,6 @@
 d 'METABIAS': module to test for small-study effects in meta-analysis
 d
-d metabias performs several statistical tests for funnel-plot
+d  metabias performs several statistical tests for funnel-plot
 d asymmetry  in meta-analysis and optionally plots associated
 d graphs. As there are several	possible sources of funnel-plot
 d asymmetry, these tests assess evidence for  small-study effects
@@ -21,21 +21,20 @@ d KW: funnel plot
 d
 d Requires: Stata version 9.2 and the metan package (6.0 for metabias6)
 d
+d Distribution-Date: 20101207
 d
 d Author: Robert M Harbord
-d Support: email  roger.harbord@@bristol.ac.uk
+d Support: email roger.harbord@@bristol.ac.uk
 d
 d Author: Ross J Harris
-d Support: email  ross.harris@@hpa.org.uk
+d Support: email ross.harris@@hpa.org.uk
 d
 d Author: Jonathan AC Sterne
-d Support: email  jonathan.sterne@@bristol.ac.uk
+d Support: email jonathan.sterne@@bristol.ac.uk
 d
 d Author: Thomas Steichen
-d Support: email  steichen@@triad.rr.com
+d Support: email steichen@@triad.rr.com
 d
-d Distribution-Date: 20090108
-
 f metabias.ado
 f metabias.hlp
 f metabias6.ado

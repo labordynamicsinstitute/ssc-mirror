@@ -5,17 +5,24 @@ v 1.1
 Author--Jacob Orchard
 Update--6/13/2016*/
 
+capture program drop intllf_sged
 
 program intllf_sged
 version 13
-		args lnf mu lambda sigma p 
-		tempvar Fu Fl zu zl 
+		args lnf mu sigma p a 
+		tempvar Fu Fl zu zl lambda
 		qui gen double `Fu' = .
 		qui gen double `Fl' = .
 		qui gen double `zu' = . 
 		qui gen double `zl' = .
+		qui gen double `lambda' = .
+		
+		qui replace `lambda' = (exp(`a') - 1) / (exp(`a') + 1) 
+		
 		
 		*Point data
+		
+		/*
 			tempvar x s l 
 			qui gen double `x' = $ML_y1 - (`mu') if $ML_y1 != . & $ML_y2 != . ///
 												& $ML_y1 == $ML_y2
@@ -28,11 +35,28 @@ version 13
 																					
 			qui replace `lnf' = `s' - `l' if $ML_y1 != . & $ML_y2 != . & ///
 								$ML_y1 == $ML_y2
+								
+		*/
+		
+			tempvar x s l 
+			
+			qui gen double `x' = $ML_y1 - (`mu') if $ML_y1 != . & $ML_y2 != . ///
+												& $ML_y1 == $ML_y2
+												
+			qui gen double `s' = log(`p') - (abs(`x')^`p'/(exp(`sigma')*(1+`lambda'*sign(`x')))^`p') ///
+								if $ML_y1 != . & $ML_y2 != .  & $ML_y1 == $ML_y2
+												
+			qui gen double `l' = log(2) + `sigma' + lngamma((1/`p')) ///
+								if $ML_y1 != . & $ML_y2 != . & $ML_y1 == $ML_y2
+																					
+			qui replace `lnf' = `s' - `l' if $ML_y1 != . & $ML_y2 != . & ///
+								$ML_y1 == $ML_y2
 		
 		
 		*Interval data
+			
 			qui replace `zu' = (abs($ML_y2 - `mu')^`p')/( ///
-								(`sigma'^`p')*(1+`lambda'*sign($ML_y2 -`mu'))^`p') ///
+								(exp(`sigma')^`p')*(1+`lambda'*sign($ML_y2 -`mu'))^`p') ///
 								if $ML_y1 != . & $ML_y2 != . &  $ML_y1 != $ML_y2
 								
 			qui replace `Fu' = .5*(1-`lambda') + .5*(1+`lambda'*sign($ML_y2- ///
@@ -40,7 +64,7 @@ version 13
 								if $ML_y1 != . & $ML_y2 != . &  $ML_y1 != $ML_y2
 								
 			qui replace `zl' = (abs($ML_y1 - `mu')^`p')/( ///
-								(`sigma'^`p')*(1+`lambda'*sign($ML_y1 -`mu'))^`p') ///
+								(exp(`sigma')^`p')*(1+`lambda'*sign($ML_y1 -`mu'))^`p') ///
 								if $ML_y1 != . & $ML_y2 != . &  $ML_y1 != $ML_y2
 								
 			qui replace `Fl' = .5*(1-`lambda') + .5*(1+`lambda'*sign($ML_y1- ///
@@ -52,7 +76,7 @@ version 13
 		
 		*Bottom coded data
 			qui replace `zl' = (abs($ML_y1 - `mu')^`p')/( ///
-								(`sigma'^`p')*(1+`lambda'*sign($ML_y1 -`mu'))^`p') ///
+								(exp(`sigma')^`p')*(1+`lambda'*sign($ML_y1 -`mu'))^`p') ///
 								if $ML_y1 != . & $ML_y2 == .
 								
 			qui replace `Fl' = .5*(1-`lambda') + .5*(1+`lambda'*sign($ML_y1- ///
@@ -63,7 +87,7 @@ version 13
 		
 		*Top coded data
 			qui replace `zu' = (abs($ML_y2 - `mu')^`p')/( ///
-								(`sigma'^`p')*(1+`lambda'*sign($ML_y2 -`mu'))^`p') ///
+								(exp(`sigma')^`p')*(1+`lambda'*sign($ML_y2 -`mu'))^`p') ///
 								if $ML_y2 != . & $ML_y1 == .
 								
 			qui replace `Fu' = .5*(1-`lambda') + .5*(1+`lambda'*sign($ML_y2- ///
@@ -74,7 +98,5 @@ version 13
 		
 		*Missing values
 			qui replace `lnf' = 0 if $ML_y2 == . & $ML_y1 == .
-		
-		
 		
 end		

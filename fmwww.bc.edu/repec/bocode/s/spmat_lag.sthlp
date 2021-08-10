@@ -1,5 +1,5 @@
 {smcl}
-{* *! version 1.0.1  16mar2010}{...}
+{* *! version 1.0.2  16oct2015}{...}
 {cmd:help spmat lag}
 {hline}
 
@@ -14,7 +14,7 @@
 {title:Syntax}
 
 {p 8 16 2}
-{cmd:spmat lag} [{it:type}] {it:newvar objname varname}
+{cmd:spmat lag} [{it:type}] {it:newvar objname varname} [{cmd:,} {opt id(varname)}]
 
 
 {title:Description}
@@ -24,11 +24,16 @@
 spatial-weighting matrix contained in the {cmd:spmat} object {it:objname}
 and the variable {it:varname}.  Algebraically, {cmd:spmat lag} computes
 {bf:W*y}, where {bf:W} is the spatial-weighting matrix and {bf:y} is the
-variable.  
+variable.
 
 {pstd}
 The default storage type is {cmd:float}. Specify {cmd:double} for the {it:type} to
 store the result in double precision.
+
+{pstd}
+When specified, the {bf:id()} option causes {bf:spmat lag} to assert that the
+identifiers in the dataset match the identifiers in the spmat object.
+The data do not need to be sorted on id variable.
 
 
 {title:Example}

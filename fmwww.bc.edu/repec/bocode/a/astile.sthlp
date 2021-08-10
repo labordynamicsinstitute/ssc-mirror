@@ -1,8 +1,9 @@
 {smcl}
-{right:version:  3.0.0}
-{cmd:help astile} {right:1 APR 2017}
+{right:version:  3.2.2}
+{cmd:help astile} {right:April 17, 2018}
 {hline}
-{viewerjumpto "Options" "astile##options"}{...}
+{viewerjumpto "Options" "astile##astile_options"}{...}
+{viewerjumpto "qc" "astile##qc"}{...}
 
 {title:Title}
 
@@ -16,6 +17,7 @@
 {newvar} {cmd:=} {it:{help exp}}
 {ifin}
 [{cmd:,} {it:{help astile##astile_options:nquantiles(#)}}
+{it:{help astile##astile_qc:qc(string)}}
 {it:{help by}}({it:varlist})]
 
 
@@ -38,14 +40,17 @@ used with {help bys} and without {help bys} is usually few seconds in a million 
 {title:Options}
 
 {p 4 4 2} 
-{cmd:astile} has the following two optional options. {p_end}
+{cmd:astile} has the following three optional options. {p_end}
 
-{p 4 4 2} 1. {opt nq:uantiles} {p_end}
-{p 4 4 2} The {cmd: nq}(#) option specifies the number of quantiles. For example, nq(4) will create quratiles, making 4 equal groups of the data 
+{p 4 4 2} 1. {opt nq:uantiles} : The {cmd: nq}(#) option specifies the number of quantiles. For example, nq(4) will create quratiles, making 4 equal groups of the data 
 based on the values of the selected variable. The default value of {cmd:nq} is 2, that is the median.{p_end}
 		
-{p 4 4 2} 2. {opt by} {p_end}
-{p 4 4 2} {cmd: astile} is {help byable}. Hence, it can be run on groups as specified by option {opt by}({it:varlist}). 		
+{p 4 4 2} 2. {opt by} : {cmd:astile} is {help byable}. Hence, it can be run on groups as specified by option {opt by}({it:varlist}). 		
+
+{marker astile_qc}{...}
+{p 4 4 2} 3. {opt qc(string)} : {opt qc} is an abbreviation for qunatiles criterion. This option can be used if the qunatile breakpoints need to be based on a subset of the data, and then observations 
+in the entire data set (off course in the toused sample as created by the {ifin} options) are assigned to these break points. 
+		
 
  
 {title:Example 1: Create 10 groups of firms based on thier market value}
@@ -57,17 +62,26 @@ based on the values of the selected variable. The default value of {cmd:nq} is 2
  {p 4 8 2}{stata "webuse grunfeld" :. webuse grunfeld}{p_end}
  {p 4 8 2}{stata "astile size5=mvalue, nq(5) by(year)" :. astile size5=mvalue, nq(5) by(year)} {p_end}
  {p 4 8 2} OR {p_end}
-  {p 4 8 2}{stata "bys year: astile size5=mvalue, nq(5)" :. bys year: astile size5=mvalue, nq(5)} {p_end}
+ {p 4 8 2}{stata "bys year: astile size5=mvalue, nq(5)" :. bys year: astile size5=mvalue, nq(5)} {p_end}
 
  
- {title:Limitatons}
+  {title:Example 3: Use option qc:  breakpoints ared based on prices of foreign}
+  {p 4 4 2} Let use use the auto data set and make 10-qunatile breakpoints based on values of the variable  {it:{hi:price}} where the made is {it:{hi:foreign}}, and then  
+ assign observations in the entire data set to these breakpoints. {p_end}
+ 
+ {p 4 8 2}{stata "sysuse auto" :. sysuse auto}{p_end}
+ {p 4 8 2}{stata "astile P10 = price, nq(10) qc(foreign == 1)" :. astile P10 = price, nq(10) qc(foreign == 1)} {p_end}
 
-{p 4 4 2} {cmd: This version of astile} does not support weights, altdef and  cutpoint options that are available in the official xtile function. 
-In the next version, I plan to inlcude some of these options.
-{p_end}
+ {title:Example 4: Use option qc with string variables}
+  {p 4 4 2} {opt qc} accepts both numeric and string variables or other general Stata expressions. For example, if foreign was coded as a string variable in the
+  previous example, we could have typed:{p_end}
+ 
+ {p 4 8 2}{stata "decode foreign , gen(foreign2)" :. decode foreign , gen(foreign2)}{p_end}
+ {p 4 8 2}{stata `"astile Ps102 = price, nq(10) qc(foreign2=="Foreign")"' :. astile Ps102 = price, nq(10) qc(foreign2=="Foreign")} {p_end}
 
 
-{title:Author}
+ 
+ {title:Author}
 
 
 ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::: *
@@ -76,6 +90,8 @@ In the next version, I plan to inlcude some of these options.
 *            Institute of Management Sciences, Peshawar, Pakistan   *
 *            Email: attaullah.shah@imsciences.edu.pk                *
 *           {browse "www.OpenDoors.Pk": www.OpenDoors.Pk}                                       *
+*           {browse "www.StataProfessor.com": www.StataProfessor.com}                                 *
+
 *:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::*
 
 

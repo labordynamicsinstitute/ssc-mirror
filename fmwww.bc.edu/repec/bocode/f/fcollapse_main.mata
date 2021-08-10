@@ -7,9 +7,11 @@ void f_collapse(`Factor' F,
                 `Dict' query,
                 `String' vars,
                 `Boolean' merge,
+                `Boolean' append,
                 `Integer' pool,
               | `Varname' wvar,
-                `String' wtype)
+                `String' wtype,
+                `Boolean' compress)
 {
 	`Integer'			num_vars, num_targets, num_obs, niceness
 	`Integer'			i, i_next, j, i_cstore, j_cstore, i_target
@@ -23,9 +25,12 @@ void f_collapse(`Factor' F,
 	`Dict'				var_positions // varname -> (column, start)
 	`RowVector'			var_pos
 	`Vector'			box
-	`StringMatrix'		target_stat
+	`StringMatrix'		target_stat_raw
 	`String'			target, stat
 	`DataCol'			data
+	`Boolean'			raw
+	`Boolean'			nofill
+	`Vector'			idx // used by APPEND to index the new obs.
 	pointer(`DataCol')	scalar fp
 
 	if (args() < 6) wvar = ""
@@ -55,9 +60,9 @@ void f_collapse(`Factor' F,
 		F.levels = . // save memory
 	}
 
-	// Weights (only partially implemented!)
+	// Weights
 	if (wvar != "") {
-		weights = F.sort(st_data(., wvar))
+		weights = F.sort(st_data(., wvar, F.touse))
 	}
 	else {
 		weights = 1
@@ -70,7 +75,7 @@ void f_collapse(`Factor' F,
 	data_cstore = asarray_create("real", 1)
 	var_positions = asarray_create("string", 1)
 	num_obs = F.num_obs
-	if (!merge) assert(num_obs == st_nobs())
+	if (!merge & !append) assert(num_obs == st_nobs())
 
 	// i, i_next, j -> index variables
 	// i_cstore -> index vectors in the cstore
@@ -96,7 +101,7 @@ void f_collapse(`Factor' F,
 		}
 
 		// Keep pending vars
-		if (!merge) {
+		if (!merge & !append) {
 			if (i_next == num_vars) {
 				stata("clear")
 			}
@@ -127,33 +132,36 @@ void f_collapse(`Factor' F,
 	// Apply aggregations
 	for (i = i_target = 1; i <= num_vars; i++) {
 		var = vars[i]
-		target_stat = asarray(query, var)
+		target_stat_raw = asarray(query, var)
 		var_pos = asarray(var_positions, var)
 
-		for (j = 1; j <= rows(target_stat); j++) {
-			target = target_stat[j, 1]
-			stat = target_stat[j, 2]
-			fp = asarray(fun_dict, stat)
-			targets[i_target] =  target
-			target_labels[i_target] = sprintf("(%s) %s", stat, var)
-			target_types[i_target] = infer_type(var_types[i], var_is_str[i], stat)
-			target_formats[i_target] = stat=="count" ? "%8.0g" : var_formats[i]
-			target_is_str[i_target] = var_is_str[i]
-			
+		for (j = 1; j <= rows(target_stat_raw); j++) {
+
 			i_cstore = var_pos[1]
 			j_cstore = var_pos[2]
 			box = j_cstore \ j_cstore + num_obs - 1
 			data = asarray(data_cstore, i_cstore)[|box|]
+			
+			target = target_stat_raw[j, 1]
+			stat = target_stat_raw[j, 2]
+			raw = strtoreal(target_stat_raw[j, 3])
+			fp = asarray(fun_dict, stat)
+			targets[i_target] =  target
+			target_labels[i_target] = sprintf("(%s) %s", stat, var)
+			target_types[i_target] = infer_type(var_types[i], var_is_str[i], stat, data)
+			target_formats[i_target] = stat=="count" ? "%8.0g" : var_formats[i]
+			target_is_str[i_target] = var_is_str[i]
+			
 			if (stat == "median") {
 				stat = "p50"
 			}
 			if (regexm(stat, "^p[0-9]+$")) {
 				q = strtoreal(substr(stat, 2, .)) / 100
 				fp = asarray(fun_dict, "quantile")
-				asarray(results_cstore, target, (*fp)(F, data, weights, wtype, q))
+				asarray(results_cstore, target, (*fp)(F, data, weights, raw ? "" : wtype, q))
 			}
 			else {
-				asarray(results_cstore, target, (*fp)(F, data, weights, wtype))
+				asarray(results_cstore, target, (*fp)(F, data, weights, raw ? "" : wtype))
 			}
 			++i_target
 		} 
@@ -163,38 +171,136 @@ void f_collapse(`Factor' F,
 		}
 	}
 
-	// Store results
-	if (!merge) {
-		F.store_keys(1) // sort=1 will 'sort' by keys (faster now than later)
-	}
-
-	for (i = 1; i <= length(targets); i++) {
-		target = targets[i]
-		data = asarray(results_cstore, target)
-		if (merge) {
-			data = rows(data) == 1 ? data[F.levels, .] : data[F.levels]
-		}
-
-		if (target_is_str[i]) {
-			st_sstore(., st_addvar(target_types[i], target, 1), F.touse, data)
+	if (append) {
+		// 1) Add obs
+		idx = ( st_nobs()) + 1 :: (st_nobs() + F.num_levels )
+		st_addobs(F.num_levels)
+		// 2) Fill out -by- variables
+		if (substr(F.vartypes[1], 1, 3) == "str") {
+			st_sstore(idx, F.varlist, F.keys)
 		}
 		else {
-			st_store(., st_addvar(target_types[i], target, 1), F.touse, data)
+			st_store(idx, F.varlist, F.keys)
 		}
-		asarray(results_cstore, target, .)
-	}
 
-	// Label and format vars
-	for (i = 1; i <= cols(targets); i++) {
-		st_varlabel(targets[i], target_labels[i])
-		st_varformat(targets[i], target_formats[i])
-	}
+		// Add data to bottom rows, adding variables or recasting if necessary
+		for (i = 1; i <= length(targets); i++) {
+			target = targets[i]
+			data = asarray(results_cstore, target)
+
+			if (target_is_str[i]) {
+				if (missing(_st_varindex(target))) {
+					(void) st_addvar(target_types[i], target)
+				}
+				st_sstore(idx, target, data)
+			}
+			else {
+				if (compress) {
+					target_types[i] = compress_type(target_types[i], data)
+				}
+
+				if (missing(_st_varindex(target))) {
+					(void) st_addvar(target_types[i], target)
+				}
+				else if (st_vartype(target) != target_types[i]) {
+					// Note that the recast attempt might fail if we ran this command with -if-
+					// This is b/c observations not loaded into Mata might be outside the valid range
+					stata(sprintf("qui recast %s %s", target_types[i], target))
+				}
+
+				// (sp. tricky with -merge-, but not so much otherwise, as touse will be always 1)
+				st_store(idx, target, data)
+			}
+			asarray(results_cstore, target, .)
+		}
+	} // APPEND CASE
+	else {
+
+		// Store results
+		if (!merge) {
+			F.store_keys(1) // sort=1 will 'sort' by keys (faster now than later)
+			assert(F.touse == "")
+		}
+
+		nofill = (merge == 0)
+
+		for (i = 1; i <= length(targets); i++) {
+			target = targets[i]
+			data = asarray(results_cstore, target)
+			if (merge) {
+				data = rows(data) == 1 ? data[F.levels, .] : data[F.levels]
+			}
+
+			if (target_is_str[i]) {
+				st_sstore(., st_addvar(target_types[i], target, nofill), F.touse, data)
+			}
+			else {
+				if (compress) {
+					target_types[i] = compress_type(target_types[i], data)
+				}
+				
+				// note: we can't do -nofill- with addvar because that sets the values to 0 instead of missing
+				// (sp. tricky with -merge-, but not so much otherwise, as touse will be always 1)
+				st_store(., st_addvar(target_types[i], target, nofill), F.touse, data)
+			}
+			asarray(results_cstore, target, .)
+		}
+
+		// Label and format vars
+		for (i = 1; i <= cols(targets); i++) {
+			st_varlabel(targets[i], target_labels[i])
+			st_varformat(targets[i], target_formats[i])
+		}
+
+	} // NOT APPEND
+
 	stata(sprintf("cap set niceness %s", strofreal(niceness)))
 }
 
 
+// Try to pick a more compact type after the data has been created
+`String' compress_type(`String' target_type,
+                       `DataCol' data)
+{
+	`RowVector'					_
+	`Integer'					min, max
+
+	// We can't improve on byte
+	if (target_type == "byte") {
+		return(target_type)
+	}
+
+	// We shouldn't lose accuracy
+	if (any( target_type :== ("float", "double") )) {
+		if (trunc(data) != data)  {
+			return(target_type)
+		}
+	}
+	
+	_ = minmax(data)
+	min = _[1]
+	max = _[2]
+
+	if (-127 <= min & max <= 100) {
+		return("byte")
+	}
+	else if (-32767 <= min & max <= 32740) {
+		return("int")
+	}
+	else if (-2147483647 <= min & max <= 2147483620) {
+		return("long")
+	}
+	else {
+		return(target_type)
+	}
+}
+
+
 // Infer type required for new variables after collapse
-`String' infer_type(`String' var_type, `Boolean' var_is_str, `String' stat)
+`String' infer_type(`String' var_type,
+                    `Boolean' var_is_str,
+                    `String' stat,
+                    `DataCol' data)
 {
 	`String' 					ans
 	`StringRowVector' 			fixed_stats
@@ -210,6 +316,7 @@ void f_collapse(`Factor' F,
 	else {
 		ans = "double"
 	}
+
 	return(ans)
 }
 

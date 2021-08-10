@@ -1,3 +1,6 @@
+*! version 3.0          <07apr2020>         JPAzevedo
+* 	support aw
+* 	remove the requirement of autofill
 *! version 2.3          <10sept2010>         JPAzevedo
 *  return list values as matrix
 *! version 2.2          <10abr2007>         JPAzevedo
@@ -26,7 +29,7 @@ program define changemean, rclass
 
     syntax varlist(min=1 max=1 numeric)             ///
                 [in] [if]                           ///
-                [fweight]                           ///
+                [fweight aweight]                           ///
                 [,by(varname)                       ///
                 base(real -99)                      ///
                 line(real -1)                       ///
@@ -35,7 +38,6 @@ program define changemean, rclass
                 fgt2 fgt3 fgt4 fgt5 fgt6 fgt7 fgt8  ///
                 fgt9 chu1 chu2 chu3 chu4 chu5       ///
                 ]
-
 
 
     ************************************************
@@ -50,6 +52,7 @@ program define changemean, rclass
     *********************************************************************************************************
     * Definiendo la mediana de `varlist' como o ponto de corte para generar 2 grupos distintos de comparacion
     *********************************************************************************************************
+
     preserve
 
     if (`line'!=-1) {
@@ -199,7 +202,6 @@ program define changemean, rclass
         ************************************************
         **** generando variables complementares
         ************************************************
-
             _pecats `by'  if `touse'  					/* JP Azevedo 20070330 */	
             local nrows = r(numcats)
             local c = r(catvals)
@@ -283,6 +285,7 @@ program define changemean, rclass
         local cn = subinword("`c'","`c1'","",.)
 
         apoverty `varlist' [`weight' `exp'] if `by'==`c1'  &  `touse', `measure2'  `povertyline'
+		
         local temp_`varlist'_`c1'1 = `measure3'
         scalar temp_`varlist'_`c1'1 = `temp_`varlist'_`c1'1'
         local namemat1 "temp_`varlist'_`c1'1"
@@ -356,6 +359,7 @@ program define changemean, rclass
         gen __base = `temp_`varlist'_`base'0'
 
         mat `matline1' = `matrix1'
+        mat matline1   = `matrix1'
         svmat double `matline1', names(__povc)
 
         mat `matline2' = `matrix2'
@@ -366,16 +370,16 @@ program define changemean, rclass
 
         label variable __index "Index"
         label variable __base "poverty baseline"
-        label variable __povc "original poverty"
-        label variable __povsimulinc "change mean poverty"
-        label variable __povsimulinq "change ineq poverty"
+        label variable __povc1 "original poverty"
+        label variable __povsimulinc1 "change mean poverty"
+        label variable __povsimulinq1 "change ineq poverty"
 
 
-        gen `dif'  = __base - __povc
-        gen `dif1' = __base - __povsimulinc
-        gen `dif2' = __povsimulinq - __povc
-        gen `dif3' = __base -  __povsimulinq
-        gen `dif4' = __povsimulinc - __povc
+        gen `dif'  = __base - __povc1
+        gen `dif1' = __base - __povsimulinc1
+        gen `dif2' = __povsimulinq1 - __povc1
+        gen `dif3' = __base -  __povsimulinq1
+        gen `dif4' = __povsimulinc1 - __povc1
 
         egen `income' = rmean(`dif1' `dif2')
         egen `ineq' = rmean(`dif3'  `dif4')
@@ -390,15 +394,15 @@ program define changemean, rclass
 
     }
 
-    rename __base rn_1
-    rename __povc rn_2
-    rename __povsimulinc rn_3
-    rename __povsimulinq rn_4
-    rename `dif' rn_5
-    rename `income' rn_6
-    rename `ineq' rn_7
-    rename `parc_income' rn_8
-    rename `parc_ineq' rn_9
+    rename __base 			rn_1
+    rename __povc1 			rn_2
+    rename __povsimulinc1 	rn_3
+    rename __povsimulinq1 	rn_4
+    rename `dif' 			rn_5
+    rename `income' 		rn_6
+    rename `ineq' 			rn_7
+    rename `parc_income' 	rn_8
+    rename `parc_ineq' 		rn_9
 
     qui drop if __index ==.
 
@@ -420,4 +424,5 @@ program define changemean, rclass
 
     restore
 
+	
 end

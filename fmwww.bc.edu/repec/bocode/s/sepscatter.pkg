@@ -8,9 +8,9 @@ d KW:  graphics
 d KW: scatter plots
 d KW: line plots
 d
-d Requires: Stata version 8.2
+d Requires: Stata version 9
 d
-d Distribution-Date: 20140511
+d Distribution-Date: 20181226
 d
 d Author: Nicholas J. Cox, Durham University
 d Support: email N.J.Cox@@durham.ac.uk

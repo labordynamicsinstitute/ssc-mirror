@@ -1,5 +1,5 @@
 *! plausexog: Estimating bounds with a plausibly exogenous exclusion restriction  
-*! Version 2.1.0 April 15, 2017 @ 08:26:34
+*! Version 3.1.2 July 01, 2020 @ 15:03:27
 *! Author: Damian Clarke (application of code and ideas of Conley et al., 2012)
 *! Much of the heart of this code comes from the Conley et al implementation
 *! Contact: damian.clarke@usach.cl
@@ -15,6 +15,9 @@ version highlights:
 2.0.0: Now Allowing for all arbitrary distributions with simulation algorithm
 2.0.1: Graph issue when direct effect is negative for UCI (github issue #2)
 2.1.0: Updating for Stata version 11.0 (requires mvtnorm)
+3.0.0: Allows use in IC and Small Stata with simulations.  Simplification of syntax.
+3.1.0: Bug fix on confidence interval calculation (norm vs t) Chapman/Batini
+3.1.2: Dropping observations with missing X or Z for LTZ (comment TH/LT)
 */
 
 cap program drop plausexog
@@ -23,26 +26,26 @@ version 11.0
 #delimit ;
 
 syntax anything(name=0 id="variable list")
-	[if] [in]
-	[fweight pweight aweight iweight]
-	[,
-         grid(real 2)
-         gmin(numlist)
-         gmax(numlist)
-         level(real 0.95)
-         omega(numlist min=1)
-         mu(numlist min=1)
-         GRAph(varlist)
-         GRAPHOMega(numlist min=2 max=22)
-         graphmu(numlist min=2 max=22)
-         graphdelta(numlist)
-         VCE(string)
-         DISTribution(string)
-         seed(numlist min=1 max=1)
-         iterations(integer 5000) 
-	 *
-	]
-	;
+[if] [in]
+[fweight pweight aweight iweight]
+[,
+ grid(real 2)
+ gmin(numlist)
+ gmax(numlist)
+ level(real 0.95)
+ omega(numlist min=1)
+ mu(numlist min=1)
+ GRAph(varlist)
+ GRAPHOMega(numlist min=2 max=22)
+ graphmu(numlist min=2 max=22)
+ graphdelta(numlist)
+ VCE(string)
+ DISTribution(string)
+ seed(numlist min=1 max=1)
+ iterations(integer 5000) 
+ *
+ ]
+;
 #delimit cr
 
 preserve
@@ -158,7 +161,7 @@ local derr1 "Simulation-based estimates require the user-written ado mvtnorm."
 local derr2 "To use this method, please first install mvtnorm from the SSC"
 local derr3 "(ssc install mvtnorm)."
 if length("`distribution'")!=0 {
-    cap which mvnormal
+    cap which rmvnormal
     if _rc!= 0 {
 	dis as error "`derr1' `derr2' `derr3'"
 	error 200
@@ -308,9 +311,9 @@ local cIV   : word count `varlist_iv'
 qui ivregress 2sls `yvar' `varlist1' (`varlist2'=`varlist_iv') `if' `in'  /*
 */ [`weight' `exp'], vce(`vce')
 qui estimates store __iv
-local DF = e(N)-e(rank)
+
 if length("`graph'")!=0 {
-    local CI    = -invttail(`DF',(1 - `level')/2)
+    local CI    = -invnormal((1 - `level')/2)
     local lcomp = _b[`graph'] - `CI'*_se[`graph']
     local ucomp = _b[`graph'] + `CI'*_se[`graph']
 }
@@ -391,7 +394,7 @@ if "`method'"=="uci" {
                 mat b2SLSf[1,`num']=_b[``num'']
                 mat se2SLSf[`num',`num']=_se[``num'']
             }
-            mat CI    = -invttail(`DF',(1 - `level')/2)
+            mat CI    = -invnormal((1 - `level')/2)
             mat ltemp = vec(b2SLSf) - CI*vec(vecdiag(se2SLSf))
             mat utemp = vec(b2SLSf) + CI*vec(vecdiag(se2SLSf))
             
@@ -467,7 +470,7 @@ if "`method'"=="uci" {
                 qui ivregress 2sls `Y_G' `varlist1' (`varlist2'=`varlist_iv') `if' /*
                 */ `in' [`weight' `exp'], vce(`vce')
 
-                local CI    = -invttail(`DF',(1 - `level')/2)
+                local CI = -invnormal((1 - `level')/2)
                 local ltemp = _b[`graph'] - `CI'*_se[`graph']
                 local utemp = _b[`graph'] + `CI'*_se[`graph']
                 if `jj'==1 {
@@ -499,7 +502,7 @@ if "`method'"=="uci" {
                 qui ivregress 2sls `Y_G' `varlist1' (`varlist2'=`varlist_iv') `if' /*
                 */ `in' [`weight' `exp'], vce(`vce')
 
-                local CI    = -invttail(`DF',(1 - `level')/2)
+                local CI = -invnormal((1 - `level')/2)
                 local ltemp = _b[`graph'] - `CI'*_se[`graph']
                 local utemp = _b[`graph'] + `CI'*_se[`graph']
                 if `jj'==4 {
@@ -529,7 +532,7 @@ if "`method'"=="uci" {
                 qui ivregress 2sls `Y_G' `varlist1' (`varlist2'=`varlist_iv') `if' /*
                 */ `in' [`weight' `exp'], vce(`vce')
 
-                local CI    = -invttail(`DF',(1 - `level')/2)
+                local CI = -invnormal((1 - `level')/2)
                 local ltemp = _b[`graph'] - `CI'*_se[`graph']
                 local utemp = _b[`graph'] + `CI'*_se[`graph']
                 if `jj'==1 {
@@ -580,6 +583,10 @@ if "`method'"=="ltz" {
         cap dis _b[`var']
         if _rc!=0 continue
         if _b[`var']!=0 local usevars2 `usevars2' `var'
+    }
+
+    foreach var of varlist `yvar' `varlist_iv' `usevars2' `usevars1' {
+        qui drop if `var'==.
     }
     
     *****************************************************************************
@@ -794,7 +801,7 @@ if length("`graph'")!=0 {
         mat bc = e(b) - (inv(ZX'*inv(ZZ)*ZX)*ZX' * `muC')'
 
         ereturn post bc Vc
-        matrix CI = -invttail(`DF',(1-`level')/2)
+        matrix CI = -invnormal((1-`level')/2)
 
         if `countdelta'==0 {
             scalar delta=`omegaC'[1,1]
@@ -817,7 +824,7 @@ if length("`graph'")!=0 {
     *****************************************************************************
     *** (5e) Determine lower and upper bounds
     *****************************************************************************
-    mat CI  = -invttail(`DF',(1-`level')/2)
+    mat CI  = -invnormal((1-`level')/2)
     mat lb  = b1 - vecdiag(cholesky(diag(vecdiag(V1))))*CI
     mat ub  = b1 + vecdiag(cholesky(diag(vecdiag(V1))))*CI
 
@@ -828,7 +835,7 @@ if length("`graph'")!=0 {
     set level `lev'
     ereturn post b1 V1
     ereturn display
-    local CI    = invttail(`DF',(1 - `level')/2)
+    local CI    = -invnormal((1 - `level')/2)
     foreach var of local varlist2 {
         ereturn scalar lb_`var'=_b[`var']-`CI'*_se[`var']
         ereturn scalar ub_`var'=_b[`var']+`CI'*_se[`var']

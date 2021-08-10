@@ -13,8 +13,8 @@ d Requires: Stata version 7
 d
 d Distribution-Date: 20151004
 d
-d Author: J. Michael Collins, University of Wisconsin
-d Support: email jmcollins@@wisc.edu
+d Author: Karen Pence, Board of Governors of the Federal Reserve System
+d Support: email karen.pence@@frb.gov
 d
 f scfcombo.ado
 f scfcombo.sthlp

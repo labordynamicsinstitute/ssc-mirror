@@ -1,6 +1,8 @@
+
 /*--------------------------------------------------------------------------*/
 * PROGRAM: mtebinary.ado												
-* AUTHORS: Amanda E. Kowalski, Yen Tran, Ljubica Ristovska											
+* AUTHORS: Amanda E. Kowalski, Yen Tran, Ljubica Ristovska
+* Date: July 2018											
 *																		
 * PURPOSE: 															
 * Estimate the marginal treatment effects (MTE) function and associated
@@ -11,104 +13,42 @@
 *																		
 * STRUCTURE:															
 * Defined Mata programs:														
-* - 	der_MUO: uses the polynomial component of AUO([x,]p) to compute the	
-* 	polynomial component muo(p) in MUO([x,]p)							
-* - 	der_MTO: uses the polynomial component of ATO([x,]p) to compute the	
-*	polynomial component mto(p) in MTO([x,]p)							
 * - 	calc_treat_eff: Computes treated/untreated outcomes and treatment 
-*	effects for different groups								
-* - 	der_RMSD: computes the unexplained treatment effect heterogeneity
-*	remaining after including covariates (and returns an RMSD)											
+*	    effects for different groups								
 * Main .ado code:														
 * - Compute summary statistics for different groups	
-* - (Optional) Run the tests for internal and external validity			
 * - Calculate MTE/MTO/MUO and TE/TO/UO for different groups (no covariates)		
 *	* Calculate MTE(p), MTO(p), MUO(p)								
 *	* Calculate treated and untreated outcomes and treatment effects
-*	* (Optional) Selection vs. Treatment effect decomposition												
-*	* (Optional) OLS decomposition												
 *	* Graph MTE(p) and bounds										
 * - Calculate SMTE/SMTO/SMUO and TE/TO/UO (with covariates)
 *	* Estimate propensity scores							
-*	* Estimate ATO(x,p) and AUO(x,p)									
 *	* Derive mte(x,p), muo(x,p), and mto(x,p)						
 *	* Estimate SMTE(p), SMTO(p), and SMUO(p)						
 *	* Graph SMTE(p)													
 *	* Calculate treated and untreated outcomes and treatment effects 																					
 /*--------------------------------------------------------------------------*/
 
-*********************************************
-* MATA FUNCTION FOR DERIVING muo([x,]p)
-*********************************************
-* Recall that MUO(x,p) = X*beta_U + muo(p). This Mata function takes as 
-* input the polynomial component of AUO(x,p) to compute muo(x,p). 
-* In the case without covariates, the polynomial component of  
-* AUO(x,p) = AUO(p), and therefore this function derives the MUO(p).
 
-clear mata
-mata:
-function der_MUO(AUO_matrix)
-{
-	cm = st_matrix(AUO_matrix)
-	
-	/* Multiply AUO([x,]p) by (1-p) */
-	for_der_MUO = polymult(cm, (1, -1)) 
-	
-	/* Take the derivative of (1-p)AUO([x,]p) with respect to p */ 
-	muo_neg = polyderiv(for_der_MUO, 1) 
-	
-	/* Multiply the derivative by -1 (because we took the derivative*/
-	/* with respect to p instead of 1-p)	*/
-	muo = polymult(muo_neg, (-1))  
-	
-	/* Return matrix */     
-	st_matrix("muo_matrix", muo)        
-}
-end
+* MATA FUNCTIONS 
 
-*********************************************
-* MATA FUNCTION FOR DERIVING mto([x,]p)
-*********************************************
-* Recall that MTO(x,p) = X*beta_T + mto(p). This function takes as 
-* input only the polynomial component of ATO(x,p) to compute mto(x,p). 
-* In the case without covariates, the polynomial component of  
-* ATO(x,p) = ATO(p), and therefore this function derives the MTO(p).
-
-mata:
-function der_MTO(ATO_matrix)
-{
-	cm = st_matrix(ATO_matrix)
-	
-	/* Multiply ATO([x,]p) by p */
-	for_der_ATO = polymult(cm,(0,1)) 
-	
-	/* Take the derivative of pATO([x,]p) with respect to p */
-	MTO = polyderiv(for_der_ATO, 1) 
-	
-	/* Export the matrix*/ 
-	st_matrix("mto_matrix", MTO)     
-	}
-end
-
-
-*********************************************
-* MATA FUNCTION FOR DERIVING TREATED AND 
-* UNTREATED OUTCOMES AND TREATMENT EFFECTS
+********************************************************************************
+* MATA FUNCTION FOR DERIVING TREATED AND UNTREATED OUTCOMES AND TREATMENT EFFECTS
 * FOR EACH GROUP OF INTEREST 
-*********************************************
+********************************************************************************
 * This program takes as inputs the covariate component and the polynomial 
 * component of a marginal function (which could be MTE([x,]p), MTO([x,]p) or 
 * MUO([x,]p)), pB, and pI. The function returns the treated outcome, untreated
 * outcome, and treatment effect for different groups. For example, recall that 
 * MTO(x,p) = (beta_T - beta_U)X + mto(p). mto(p) is the polynomial component
 * of MTO(x,p), (beta_T - beta_U)X is the covariate component of MTO(x,p). In the
-* case without covariates, (beta_T - beta_U)X = 0 and mto(p) = MTO(x,p). pBx is 
+* case without covariates, (beta_T - beta_U)X = 0 and mto(p) = MTO(x,p). pCx is 
 * the baseline probability and pIx is the intervention probability for an 
-* individual with characteristics X=x. In the case without covariates, pBx and 
+* individual with characteristics X=x. In the case without covariates, pCx and 
 * pIx are scalars. In the case with covariates, pBx and pIx are vectors.
-* For example, to calculate the treated outcome for the baseline treated (BTTO) 
-* in the case with covariates, we can write: 
-* BTTO = integral(1/pB*MTO(x,p)) from 0 to pB (see Kowalski 2016 for derivation)
+* For example, to calculate the treated outcome for the always takers in the case
+* with covariates, we can write
+* E[Y_T|0<U_D<p_C] = integral(1/p_C*MTO(x,p)) (see Kowalski 2018 for derivation)
 * The code below follows this formula. For different groups, the weights and the
 * integral limits vary. The integrals are computed via matrix multiplication
 * for efficiency.
@@ -118,31 +58,37 @@ end
 * 		desired marginal function
 * mu_outc_name: name of variable in data  containing the covariate component
 *		of the desired marginal function 
-* pB_name: name of variable in data containing the value of pB
+* pC_name: name of variable in data containing the value of pC
 * pI_name: name of variable in data containing the value of pI
 * s_pI: local macro variable containing value of s(pI) = P(Z=1)
 * cov: 	Indicator for whether to compute treatment effects with or without 
-*	covariates. Input "cov" for covariates, anything else for no covars
+*	    covariates. Input "cov" for covariates, anything else for no covars
+
+// ssc install outreg 
+
 mata: 
-function calc_treat_eff(string scalar m_outc_name, string scalar mu_outc_name, string scalar pB_name, string scalar pI_name, string scalar sp_I_name, string scalar cov)
-{
-	
+function calc_treat_eff(string scalar m_outc_name, string scalar mu_outc_name, ///
+						string scalar pC_name, string scalar pI_name, ///
+						string scalar sp_I_name, string scalar treatment_name, ///
+						string scalar IV_name, string scalar probC_name, ///
+						string scalar weightvar_name, string scalar cov)
+{	
 	/* The polynomial component */
-	m_outc = st_matrix(m_outc_name)    
-	
+	m_outc = st_matrix(m_outc_name)   
+		
 	/* Number of columns in m_outc matrix */
-	poly = cols(m_outc)
+	poly = cols(m_outc)	
 	
 	/* In the case with covariates */
 	if (cov=="cov") {
-		
+
 		/* The covariate component*/
 		/* Input should be a variable in data */
 		mu_outc = st_data(.,mu_outc_name) 
 		
 		/* Baseline probability of treatment; a vector */
 		/* Input should be a variable in data */
-		pB = st_data(.,pB_name)	
+		pC = st_data(.,pC_name)	
 		
 		/* Intervention probability of treatment; a vector */ 
 		/* Input should be a variable in data */  
@@ -151,6 +97,19 @@ function calc_treat_eff(string scalar m_outc_name, string scalar mu_outc_name, s
 		/* Fraction of randomized in individuals*/
 		/* Input should be a variable in data */		
 		sp_I = st_data(., sp_I_name)
+		
+		/* Treatment variable */ 
+		treatment = st_data(.,treatment_name)
+		
+		/* IV */ 
+		IV = st_data(.,IV_name)
+		
+		/* weightvar */ 
+		weightvar = st_data(.,weightvar_name)
+		
+		/* Probability of being a complier */ 
+		prob_C = st_data(.,probC_name) 
+	
 	}
 	
 	/* In the case without covariates */
@@ -159,11 +118,11 @@ function calc_treat_eff(string scalar m_outc_name, string scalar mu_outc_name, s
 		/* The covariate component*/
 		/* Input should be a matrix with all values = 0*/
 		mu_outc = st_matrix(mu_outc_name)
-		
+			
 		/* Baseline probability of treatment; a scalar */
 		/* Input should be a matrix with all values = pB*/
-		pB = st_matrix(pB_name)  	  
-		
+		pC = st_matrix(pC_name)  
+	
 		/* Intervention probability of treatment; a scalar */
 		/* Input should be a matrix with all values = pI*/
 		pI = st_matrix(pI_name)
@@ -171,25 +130,26 @@ function calc_treat_eff(string scalar m_outc_name, string scalar mu_outc_name, s
 		/* Fraction of randomized in individuals*/
 		/* Input should be a matrix with all values = sp_I */
 		sp_I = st_matrix(sp_I_name)
-	}
+		
+	}	
 	
 	/* Number of observations */
 	obs = rows(mu_outc)
 	
 	/* First stage */
-	pBI = pI - pB
+	pCI = pI - pC
 	
 	/* Columns of ones */
-	pBmat = J(obs,1,1) 		
+	pCmat = J(obs,1,1) 		
 	pImat = J(obs,1,1)
 	
-	/* Create matrix of powers of pB and pI */
+	/* Create matrix of powers of pC and pI */
 	for( m=1 ; m<=poly ; m++) {
-		poly_m_B = pB :^ m
+		poly_m_C = pC :^ m
 		poly_m_I = pI :^ m
 		
-		/* Create a matrix of powers of pB */
-		pBmat = pBmat,poly_m_B 
+		/* Create a matrix of powers of pC */
+		pCmat = pCmat,poly_m_C 
 		
 		/* Create a matrix of powers of pI*/
 		pImat = pImat,poly_m_I 
@@ -200,146 +160,87 @@ function calc_treat_eff(string scalar m_outc_name, string scalar mu_outc_name, s
 	b1mat = J(obs,poly+1,1)
 	bound1 = J(obs, 1,1)
 	
-	/* Use the sample estimate sp_B = P(Z=0) for both cases with and */
+	/* Use the sample estimate sp_C = P(Z=0) for both cases with and */
 	/* without observables, not sp_Bx for the case with observables  */
-	sp_B = 1 :- sp_I 
+	sp_C = 1 :- sp_I 
 	
 	/* Take an indefinite integral of the polynomial component to obtain */
 	/* coefficients of marginal functions				     */
 	c_outc = polyinteg(m_outc,1) 
-	c_outc = c_outc'
+	c_outc = c_outc'	
 	
 	/* Computing treated outcome, untreated outcome, and treatment effect */
-	/* for baseline treated (BT). The weight for BT is 1/pB, and the */
-	/* limits of integration are 0 to pB */
-	BToutc = mu_outc + (pBmat * c_outc - b0mat * c_outc) :/ pB  
-	if (min(pB) == 0){
-		minindex(pB,1,i,w) 
+	/* for Always Takers (AT). The weight for is 1/pC, and the limits of integration are 0 to pC */
+	AToutc = mu_outc + (pCmat * c_outc - b0mat * c_outc) :/ pC  
+	if (min(pC) == 0){
+		minindex(pC,1,i,w) 
 		numb = rows(i)
 		for(j=1;j<=numb; j++){
 			/* if pB =0, BToutc = Moutc evaluated at pB = 0 */
-			BToutc[i[j]] = mu_outc[i[j]] + m_outc[1,1] 
+			AToutc[i[j]] = mu_outc[i[j]] + m_outc[1,1] 
 		} 
-	}	
-	st_matrix("BT",BToutc)
-	
+	}
+
 	/* Computing treated outcome, untreated outcome, and treatment effect */
-	/* for baseline untreated (BU). The weight for BU is 1/(1-pB), and the */
-	/* limits of integration are pB to 1 */ 
-	BUoutc = mu_outc + (b1mat * c_outc - pBmat * c_outc) :/ (1:-pB)
-	st_matrix("BU", BUoutc)
-	if (max(pB) ==1) { 	
-		/* Obtain an index of the observations with pB == 1 */
-		maxindex(pB,1,i,w) 
-		numb = rows(i)
-		for (j=1; j<=numb; j++) {
-			/* if pB =1 , BUoutc = Moutc evaluated at pB = 1*/
-			BUoutc[i[j]] = mu_outc[i[j]] + sum(m_outc) 
-		} 
-	}	
-	st_matrix("BU",BUoutc)
-	
-	/* Computing treated outcome, untreated outcome, and treatment effect */
-	/* for intervention treated (IT). The weight for IT is 1/pI, and the */
-	/* limits of integration are 0 to pI */ 
-	IToutc = mu_outc + (pImat * c_outc -  b0mat * c_outc) :/ pI
-	if (min(pI) ==0) {
-		minindex(pI,1,i,w)
-		numb = rows(i)
-		for (j=1; j<=numb ; j++) {
-			/* if pI = 0, IToutc = Moutc evaluated at pI = 0*/
-			IToutc[i[j]] = mu_outc[i[j]] + m_outc[1,1] 
-		}
-	}	
-	st_matrix("IT",IToutc)
-	
-	/* Computing treated outcome, untreated outcome, and treatment effect */
-	/* for intervention untreated (IU). The weight for IU is 1/(1-pI), and */
-	/* the limits of integration are pI to 1 */ 
-	IUoutc = mu_outc + (b1mat * c_outc - pImat * c_outc) :/ (1:- pI)
+	/* for Never Takers (NT). The weight for IU is 1/(1-pI), and the limits of integration are pI to 1 */ 
+	NToutc = mu_outc + (b1mat * c_outc - pImat * c_outc) :/ (1:- pI)
 	if (max(pI) ==1){
 		maxindex(pI,1,i,w)
 		numb = rows(i)
 		for (j=1; j<=numb; j++) {
 			/*  if pI = 1, IToutc = Moutc evaluated at pI = 1 */
-			IUoutc[i[j]] = mu_outc[i[j]] + sum(m_outc)
+			NToutc[i[j]] = mu_outc[i[j]] + sum(m_outc)
 		}
-	}	
-	st_matrix("IU", IUoutc)
+	}
 	
 	/* Computing treated outcome, untreated outcome, and treatment effect */
-	/* for the Randomized Intervention Sample Treated (RIST) */
-	
-	/* Weight for RIST from 0 to pB*/
-	w1 =     1:/ (pB + (sp_I :* (pI - pB))) 
-	/* Weight for RIST from pB to pI */
-	w2 = sp_I :/ (pB + (sp_I :* (pI - pB))) 
-	RIST1 = (mu_outc :* w1 :* pB ) + w1 :* (pBmat * c_outc - b0mat * c_outc) 
-	RIST2 = (mu_outc :* w2 :* (pI - pB)) + w2:* (pImat * c_outc - pBmat * c_outc) 
-	RIST = RIST1 + RIST2
-	st_matrix("RIST", RIST)
-
-	/* Computing treated outcome, untreated outcome, and treatment effect */
-	/* for the Randomized Intervention Sample Untreated (RISU) */
-	
-	/* Weight for RISU from pB to pI */
-	w1 = sp_B :/ (1 :- (sp_I :* pI  +  sp_B :* pB)) 
-	/* Weight for RISU from pI to 1 */
-	w2 =     1:/ (1 :- (sp_I :* pI  +  sp_B :* pB)) 
-	RISU1 = (mu_outc :* w1 :* (pI - pB)) + w1 :* (pImat * c_outc  - pBmat * c_outc) 
-	RISU2 = (mu_outc :* w2 :* (bound1 - pI)) + w2 :* (b1mat * c_outc - pImat * c_outc) 
-	RISU = RISU1 + RISU2
-	st_matrix("RISU", RISU)
-
-	/* Computing treated outcome, untreated outcome, and treatment effect */
-	/* for local average (LA). The weight for LA is 1/(pI-pB), and */
-	/* the limits of integration are pB to pI */ 
-	LA = mu_outc + (pImat * c_outc - pBmat * c_outc) :/ (pI-pB)
-	if(min(abs(pBI)) ==0){
-		minindex(pBI,1,i,w) // obtain the min
+	/* for Compliers (C). The weight for LA is 1/(pI-pB), and the limits of integration are pB to pI */ 
+	Coutc = mu_outc + (pImat * c_outc - pCmat * c_outc) :/ (pI-pC)
+	if(min(abs(pCI)) ==0){
+		minindex(pCI,1,i,w) // obtain the min
 		numb = rows(i)
 		for(j=1; j<numb+1; j++){
-			/* if pB = pI, Aoutc = Moutc evaluated at pI or pB */
-			LA[i[j]] = mu_outc[i[j]] + polyeval(m_outc,pI[i[j]]) 
+			/* if pC = pI, Aoutc = Moutc evaluated at pI or pC */
+			Coutc[i[j]] = mu_outc[i[j]] +  pImat[i[j],1...] * c_outc
 		}
 	}	
-	st_matrix("LA",LA)
 	
-	/* Computing treated outcome, untreated outcome, and treatment effect */
-	/* for average (A). The weight for A is 1, and */
-	/* the limits of integration are 0 to 1 */ 
-	Aoutc = mu_outc + b1mat * c_outc  - b0mat * c_outc
-	st_matrix("A",Aoutc)
+	if (cov=="cov") {
+		// compute the average SAT`o', SC`o', SNT`o'
+	
+		/* Average TO, UO, TE across Always takers with D=1 and Z= 0 */
+			pos  = (treatment :== 1)
+			AToutc1     = select(AToutc,pos)
+			IV1         = select(IV,pos)
+			weightvar1  = select(weightvar,pos)
+			pos1 = (IV1 :== 0)
+			AToutc2    = select(AToutc1,pos1)
+			weightvar2 = select(weightvar1,pos1)
+			AToutc     = mean(AToutc2,weightvar2)  // infact it is SAT, named as AT to simplify the code
+			
+		/* Average TO, UO, TE across Never takers with D=0 and Z=1 */
+			pos  = (treatment :== 0)
+			NToutc1 = select(NToutc,pos)
+			IV1     = select(IV,pos)
+			weightvar1     = select(weightvar,pos)
+			pos1 = IV1 :== 1
+			NToutc2 = select(NToutc1,pos1)
+			weightvar2     = select(weightvar1,pos1)
+			NToutc         = mean(NToutc2,weightvar2) 
+		
+		/* Average TO, UO, TE across compliers */
+			prob_Coutc = Coutc :* prob_C
+			sum_Coutc  = mean(prob_Coutc,weightvar) :* sum(weightvar) // sum of outcomes for all compliers
+			sum_probs  = mean(prob_C,weightvar) :* sum(weightvar) // sum of probability of being all compliers for all compliers
+			Coutc     = sum_Coutc :/ sum_probs
+	}
+	
+	// Return results
+	st_matrix("AT",AToutc)
+	st_matrix("NT", NToutc)
+	st_matrix("C",Coutc)
+		
 }
-end
-
-*********************************************
-* MATA FUNCTION FOR DERIVING RMSD(X)
-**********************************************
-* The input is a matrix representing the difference between the ATE and the 
-* MTE(p) in the case without covariates, or the SATE and SMTE(p) in the case
-* with covariates. Since this difference is a function, the input matrix 
-* represents a function. The matrix should be of the form 1 x (M+1) (one row and 
-* (M+1) columns), where M is the order of the MTE(p) or SMTE(p) polynomial
-
-mata
-function der_RMSD(arg_diff_matrix)
-{
-	dm = st_matrix(arg_diff_matrix)
-	
-	/* Multiply the difference matrix by itself (i.e., square it) */
-	for_int = polymult(dm, dm) 	
-	
-	/* Take the integral of the square from 0 to 1*/
-	MSD = polyeval(polyinteg(for_int,1),1) - polyeval(polyinteg(for_int,1),0) 
-	
-	/* Take the square root*/
-	RMSD = sqrt(MSD)	  	
-	
-	/* Export to Stata*/
-	st_numscalar("sc_RMSD", RMSD)	
-}
-
 end
 
 *********************************************
@@ -348,12 +249,11 @@ end
 
 capture program drop mtebinary
 program mtebinary, eclass
-version 14
+version 13
 set scheme s2mono
-syntax anything(name=0) [, poly(integer 1) reps(integer 200) 		///
-			seed(integer 6574357) BOOTsample(namelist)	///
-			weightvar(name) noINTeract GRAPHsave(name) 	///
-			SUMmarize(varlist) DIDtest(varlist) noDEComp ]	///
+syntax anything(name=0) [, poly(integer 1) reps(integer 200) ///
+						seed(integer 6574358) BOOTsample(namelist) ///
+						WEIGHTvar(name) GRAPHsave(name)  SUMmarize(varlist)]  
 
 /* -------------OBTAINING INPUT VARIABLES--------------*/
 
@@ -370,7 +270,7 @@ local obs = `r(sum)'
 
 gettoken btype bvar : bootsample, parse (" ")
 
-/* -------------ERROR CHECKING--------------*/
+/* -----------------ERROR CHECKING---------------------*/
 
 * Check if there is only one instrument specified
 local ninst: word count `IV'
@@ -379,7 +279,11 @@ if `ninst'!=1 {
 	exit,clear
 }
 
-* Check if the instrument is binary
+* Check if there is enough variations in covariates to estimate high order polynomial
+local ncov: word count `indepvars'
+if `ncov' < `poly' & `poly' > 1{
+	di as error "Not enough variation in covariates to estimate a polynomial of order 2"
+}
 	
 * Get number of distinct values for instrument
 qui tabulate `IV'
@@ -427,11 +331,6 @@ if "`indepvars'" == ""  & `poly' > 1 {
 	exit, clear
 }
 
-* Check that the number of reps is at least two
-if `reps'<2 {
-	di as error "The number of bootstrap replications must be 2 or higher."
-	exit, clear
-}
 	
 /* -------------SUMMARIZE THE ESTIMATION PROCESS FOR THE USER--------------*/
 
@@ -439,9 +338,15 @@ di ""
 di ""
 di as result "Beginning Estimation of Marginal Treatment Effects (MTE) with a Binary Instrument."
 di in gr "MTE has been specified as a polynomial of order `poly'."
-di in gr "Number of bootstrap replications: `reps'."
+di in gr "The number of bootstrap replication is `reps'"
 if "`bootsample'" != "" di in gr "Bootstrapping using: `btype' with variable `bvar'."
 if "`weightvar'" != "" di in gr "Weighting using variable `weightvar'."
+
+* Checking if the standard errors would be calculated 
+if `reps' == 0{
+	di in gr "NOTE: You have specified zero bootstrap replication. No standard error will be computed"
+
+}
 
 * Checking for missing values and dropping missing values
 if "`indepvars'" == "" local checkvars "`depvar' `IV' `treatment'"
@@ -450,7 +355,6 @@ else local checkvars "`depvar' `IV' `treatment' `indepvars'"
 foreach var of varlist `checkvars' {
 	qui count if `var'==.
 	if `r(N)'!=0 {
-		di ""
 		di ""
 		di in gr "NOTE: There are observations with missing values for `var'."
 		di in gr "These observations will be dropped entirely from ALL subsequent analyses."
@@ -466,384 +370,233 @@ if "`indepvars'"=="" & "`interact'" == "nointeract" {
 	di in gr "The MTE without covariates does not require interaction terms. The 'nointeract' option will be ignored."
 }
 
+
 * Increment the reps by 1
 local reps = `reps' + 1
 
-/* -------------COMPUTE SUMMARY STATISTICS--------------*/
+tempvar N wt
 
 * Generate the weight variable
 if "`weightvar'"=="" {
-	gen wt = 1
-	local weightvar "wt"
+	gen `wt' = 1
+	local weightvar "`wt'"
 }
-
-* If covariates are specified, predict the outcome and include it in the 
-* summary statistics
-if "`indepvars'" != "" {
-	qui reg `depvar' `indepvars' [pweight=`weightvar'] if `IV'==0
-	qui predict pred_`depvar'
-	local summarize "N `depvar' `summarize' pred_`depvar'"
-}
-else local summarize "N `depvar' `summarize'"
-
-* Generate a variable to help compute the sample counts
-gen N = 1
 
 * Initializing setup
 tempfile temporigin  
+gen `N' = 1
+label var `N' Count
 quietly save "`temporigin'"
-local rowname ""
 local count = 1 
+local varnum = 1
 
-* Start loop for summary statistics variable
-foreach v of varlist `summarize' {
+/* ------------------------ COMPUTE SUMMARY STATISTICS ------------------------*/
+if "`summarize'" != "" {
 	
-	use "`temporigin'", clear
-	
-	* Determine whether to output mean or N 
-	if "`v'" == "N" local statistic = "sum"
-	else local statistic = "mean"
+	local summarize "`summarize' `N'"
+	local nsum: word count `summarize'
 
-	local rowname "`rowname' `v'"
-	
-	* Create matrix for storing summary statistics
-	matrix Stat = J(1,12,.) 	
-	
-	* Drop all missing values for the we are computing statistics for
-	qui keep if `v' != .	
-	
-	* Compute the Randomized Intervention Sample (RIS) statistic
-	* Full sample
-	qui su `v' [aweight=`weightvar']		
-	local RIS = `r(`statistic')' 
-	matrix Stat[1,1] = `r(`statistic')'
-
-	* Compute the Intervention statistic (lottery winners)
-	* Sample with Z=1
-	qui su `v' if `IV'==1 [aweight=`weightvar']	
-	matrix Stat[1,2] = `r(`statistic')'
-
-	* Compute the Baseline statistic (lottery losers)
-	* Sample with Z=0
-	qui su `v' if `IV'==0  [aweight=`weightvar']
-	matrix Stat[1,3] = `r(`statistic')'
-	
-	* Compute the Randomized Intervention Sample Untreated (RISU) statistic
-	* Sample with D=0
-	qui su `v' if `treatment'==0 [aweight=`weightvar']
-	matrix Stat[1,5] = `r(`statistic')'
-
-	* Compute the Randomized Intervention Sample Treated (RIST) statistic
-	* Sample with D=1
-	qui su `v' if `treatment'==1  [aweight=`weightvar']
-	matrix Stat[1,4] = `r(`statistic')'
-
-	* Compute the Baseline Treated (BT) statistic
-	* Sample with D=1 & Z=0
-	qui su `v' if `treatment'==1 & `IV'==0 [aweight=`weightvar']
-	local BTTO = `r(`statistic')'
-	matrix Stat[1,6] = `r(`statistic')'
-
-	* Compute the Intervention Treated (IT) statistic
-	* Sample with D=1 & Z=1
-	qui su `v' if `treatment'==1 & `IV'==1 [aweight=`weightvar']
-	local ITTO = `r(`statistic')'
-	matrix Stat[1,8] = `r(`statistic')'
-
-	* Compute the Baseline Untreated (BU) statistic
-	* Sample with D=0 & Z=0
-	qui su `v' if `treatment'==0 & `IV'==0 [aweight=`weightvar']
-	local BUUO = `r(`statistic')'
-	matrix Stat[1,7] = `r(`statistic')'
-
-	* Compute the Intervention Untreated (IU) statistic
-	* Sample with D=0 & Z=1
-	qui su `v' if `treatment'==0 & `IV'==1 [aweight=`weightvar']
-	local IUUO = `r(`statistic')'
-	matrix Stat[1,9] = `r(`statistic')'
-
-	* Compute s(pI) = P(Z=1)
-	qui su `IV' [aweight=`weightvar']       
-	local sp_I = `r(mean)'					
-
-	* Compute the intervention treatment probability (pI)
-	* pI = Prob(D=1|Z=1)
-	qui su `treatment' if `IV'==1 	[aweight=`weightvar']
-	local pI = `r(mean)'
-	
-	* Compute the baseline treatment probability (pB)
-	* pB = Prob(D=1|Z=0)
-	qui su `treatment' if `IV'==0 	[aweight=`weightvar']
-	local pB = `r(mean)'
-	
-	* Compute the Local Average Treated (LAT):treated compliers
-	* Different calculations for N vs. mean
-	if "`v'" == "N" {
-		local LATO = ((`BTTO'+`ITTO')-(`pB'*`RIS'))
-		matrix Stat[1,10] = `LATO'
-	}
-	else {
-		local LATO = (`pI'*`ITTO'-`pB'*`BTTO')/(`pI'-`pB') 	
-		matrix Stat[1,10] = `LATO'
-	}
-	
-	* Compute the Local Average Untreated (LAU):untreated compliers
-	* Different calculations for N vs. mean
-	if "`v'" == "N" {
-		local LAUO = ((`IUUO'+`BUUO')-((1-`pI')*`RIS'))
-		matrix Stat[1,11] = `LAUO'
-	}
-	else {	
-		local LAUO = ((1-`pB')*`BUUO'-(1-`pI')*`IUUO')/(`pI'-`pB')
-		matrix Stat[1,11] = `LAUO'
-	}
-
-	* Compute the Local Average (LA): all compliers
-	* Different calculations for N vs. mean
-	if "`v'" == "N" {	
-		local LA = `LAUO' + `LATO'
-		matrix Stat[1,12] = `LA'
-	}
-	else {
-		local LA = `sp_I' * `LATO' + (1-`sp_I') * `LAUO' 	
-		matrix Stat[1,12] = `LA'
-	}
-
-	if `count' == 1 matrix Statmat = Stat
-	if `count' > 1  matrix Statmat = [Statmat \ Stat]
-	local ++count
-		
-} // close loop for summary statistics variables
-
-* Display summary statistics output
-di ""
-di ""
-di as result "Summary Statistics (Averages) for Characteristics and Outcomes"          
-local colname = "RIS I B RIST RISU BT BU IT IU LAT LAU LA"      	                   
-matrix rownames Statmat = `rowname' 
-matrix colnames Statmat = `colname'
-matlist Statmat, format(%8.2f) aligncolnames(center) 
-
-
-/* -------------INTERNAL AND EXTERNAL VALIDITY TESTS--------------*/
-
-* If covariates are specified, predict the outcome and include it in the 
-* internal and external validity tests
-
-local numvar = 1
-
-if "`indepvars'" != "" local didtest "`depvar' pred_`depvar' `didtest'"
-else local didtest "`depvar' `didtest'"
-
-* Issue a note
-di ""
-di ""
-di as result "Starting boostrapping for tests of internal and external validity"
-di in gr "NOTE: Bootstrapping may take some time because each variable is bootstrapped separately."
-
-* Begin loop for variables for validity tests
-foreach v of local didtest { 
-
-	* Set the seed up
-	set seed `seed'
-	
-	* Begin bootstrap loop
-	* Each variable is bootstrapped separately so that we can drop 
-	* missing values for each variable
-	forval rep = 1/`reps' {
-	
-		* Issue a note that bootstrapping is about to begin
-		if `rep' == 1 {
-			di ""
-			di ""
-			di in gr "Variable: `v'"
+	foreach v of varlist `summarize' {
+		if `reps' != 1{
+			if `varnum' == 1 local rowname ""`v'" \ "" "
+			if `varnum' > 1 & `varnum' < `nsum' local rowname "`rowname' \ "`v'" \ "" "
+			if `varnum' == `nsum' local rowname "`rowname' \ "Count" \ "" "
+		}
+		else{
+			if `varnum' == 1 local rowname ""`v'""
+			if `varnum' > 1 & `varnum' < `nsum' local rowname "`rowname' \ "`v'" "		
+			if `varnum' == `nsum' local rowname "`rowname' \ "Count" "
 		}
 		
-		* Load data	
-		use "`temporigin'", clear	
+		if `varnum' == 1 local rowname1 "`v'"
+		if `varnum' >  1 & `varnum' < `=`nsum'-1' local rowname1 "`rowname1' `v'"
+		if `varnum' == `nsum' local rowname1 "`rowname1' count"
 	
-		* Issue a note that missing values will be dropped
-		if `rep'==1 {
-			qui count if `v'==.
-			if `r(N)'!= 0 {	
-				di "There are `r(N)' observations with missing values for `v'."
-				di "These observations are excluded from the tests for internal and external validity."
+		matrix Stat = J(`reps',6,.)
+	
+		* Set the seed uphere
+		set seed `seed'
+	
+		* Begin bootstrap loop 
+		* Each variable is bootstrapped separately so that we can drop 
+		* missing values for each variable
+		forval rep = 1/`reps' {
+		
+			* Load data
+			use "`temporigin'", clear
+			
+			* Determine whether to output mean or N
+			if "`v'" == "`N'" local statistic = "sum"
+			else local statistic = "mean"
+		
+			* Issue a note that missing values will be dropped
+			if `rep'==1 {
+				qui count if `v'==.
+				if `r(N)'!= 0 {	
+					di "There are `r(N)' observations with missing values for `v'."
+				}
+			}
+		
+			* Drop all missing values for the we are computing statistics for
+			qui keep if `v' != . 
+	
+			* Re-sample for bootstrapping, keep the first bootstrap 
+			* sample as the original sample
+			quietly if `rep' > 1 	{
+				if "`bootsample'" == "" bsample
+				if "`bootsample'" != "" bsample, `btype'(`bvar')
+			}
+	
+			* Compute statistics for the full sample
+			qui su `v' [aweight=`weightvar']	
+			local RIS = `r(`statistic')'
+			matrix Stat[`rep',1] = `r(`statistic')'
+		
+			* Compute statistics for the Always Takers, Sample with D = 1 & Z = 0
+			qui su `v' if `treatment' == 1 & `IV'== 0 [aweight=`weightvar']	
+			local Z0_D1 = `r(`statistic')'
+			matrix Stat[`rep',2] = `Z0_D1'
+	
+			* Compute statistics for Never Takers, Sample with D = 0 & Z = 1
+			qui su `v' if `treatment' == 0 & `IV' == 1 [aweight=`weightvar']	
+			local Z1_D0  = `r(`statistic')'
+			matrix Stat[`rep',4] = `Z1_D0'
+	
+			* Compute statistics for lottery winners enrolled in Medicaid, Sample D = 1 & Z = 1
+			qui su `v' if `treatment' == 1 & `IV' == 1 [aweight=`weightvar']	
+			local Z1_D1 = `r(`statistic')'
+	
+			* Compute statistics for lottery loser not enrolled in Medicaid, Sample D = 0 & Z = 0
+			qui su `v' if `treatment' == 0 & `IV' == 0  [aweight=`weightvar']	
+			local Z0_D0 = `r(`statistic')'
+
+			* Compute probability of wining a lottery (Z=1)
+			qui su `IV'   [aweight=`weightvar']	  
+			local sp_I = `r(mean)'
+		
+			* Compute the probability of compliers among lottery losers (pC), pC = Prob(D=1|Z=0)
+			qui su  `treatment' if `IV' == 0 [aweight=`weightvar']	
+			local pC = `r(mean)'
+			
+			* Compute the probabily of compliers among lottery winners (pI), pI = Prob(D=1|Z=1)
+			qui su `treatment' if `IV'== 1	[aweight=`weightvar']	
+			local pI = `r(mean)'
+	
+			* Compute the statistics for compliers who enrolled 
+			* Different calculation for N vs. men
+			if "`v'" == "`N'"{
+				local compD1 = ((`Z0_D1' + `Z1_D1') - (`pC' * `RIS'))
+			}
+			else{
+				local compD1 = (`pI'*`Z1_D1'-`pC'*`Z0_D1')/(`pI'-`pC') 
+			}
+			
+			* Compute statistics for Compliers who not enrolled
+			if "`v'" == "`N'"{
+				local compD0 = (`Z1_D0'+`Z0_D0'- (1-`pI')*`RIS')
+			}
+			else{
+				local compD0 = ((1-`pC')*`Z0_D0'-(1-`pI')*`Z1_D0')/(`pI'-`pC')
+
+			}
+			* Compute statistic for Complier troups: all compliers
+			* Different calculations for N vs. mean
+			if "`v'" == "`N'"{
+				local comp = round(`compD0' + `compD1')
+			}
+			else{
+				* It is the weghted average of CompD1 and CompD0 by the probability of winning and losing lottery
+				local comp = round(`sp_I'* `compD1' + (1-`sp_I') * `compD0')
+			}
+			matrix Stat[`rep',3] = `comp'
+			
+			if "`v'" == "`N'"{
+				qui sum `v' if `IV' == 0 & `treatment' == 0
+				local BU = r(sum)
+				qui sum `v' if `IV' == 1 & `treatment' == 1
+				local IT = r(sum)
+				local Z0_D1_N  = `Z0_D1' +  `IT' - `compD1'
+				local Z1_D0_N  = `Z1_D0' +  `BU' - `compD0'
+				matrix Stat[`rep',2] = round(`Z0_D1_N')
+				matrix Stat[`rep',4] = round(`Z1_D0_N')
+	
+			}
+			
+			* Compute the count for the 
+			* Compute the difference between column (2) and (3):
+			local diff1 = `Z0_D1' - `comp'
+			matrix Stat[`rep',5] = `diff1'
+		
+			* Compute the difference between column (3) and (4):
+			local diff2 = `comp' - `Z1_D0'
+			matrix Stat[`rep',6] = `diff2'
+		
+		
+		} // end the bootstrap loop
+		
+		local col = colsof(Stat)
+		svmat Stat
+		forval c = 1/`col' { 
+			qui sum Stat`c'
+			scalar est_`c' =  Stat[1,`c']
+			scalar sd_`c'   = r(sd)
+			if `reps' == 1{
+				if `c' == 1 matrix sum_mat_`x' = [est_`c']
+				if `c' > 1  matrix sum_mat_`x' = [sum_mat_`x',est_`c']
+			}
+			else{
+				if `c' == 1 matrix sum_mat_`x' = [est_`c',sd_`c']
+				if `c' > 1  matrix sum_mat_`x' = [sum_mat_`x',est_`c',sd_`c']
 			}
 		}
 		
-		* Drop observations where the variable for which we are
-		* computing the tests is missing
-		qui keep if `v'!=.
-
-		* Re-sample for bootstrapping, keep the first bootstrap 
-		* sample as the original sample
-		quietly if `rep' > 1 	{
-			if "`bootsample'" == "" bsample
-			if "`bootsample'" != "" bsample, `btype'(`bvar')
-		}
-				
-		* Predict the outcome, if necessary
-		if "`indepvars'" != "" {
-			drop pred_`depvar'
-			qui reg `depvar' `indepvars' [pweight=`weightvar'] if `IV'==0
-			qui predict pred_`depvar'
-		}
-		
-		* Indicate the bootstrap replication number
-		local K = int(`reps' /50)
-		forvalues k = 1/ `K'{
-			if `rep' == 50 * `k' ///
-			di in gr "...Bootstrap replication # `rep'"
-		}
-			
-		* Internal validity test (Difference between Intervention
-		* and Baseline groups). The internal validity test regresses W,
-		* which can be a covariate, an outcome, or a predicted 
-		* outcome on Z. Coefficient of Z is the same as the difference 
-		* between average of W of the Intervention group and that 
-		* of the Baseline group
-
-		qui reg `v' `IV' [pweight=`weightvar']
-		matrix int_`v'_`rep'= _b[`IV']
-		
-		* Calculate the difference between treated and untreated compliers
-		
-		* BT average
-		quietly su `v' if `treatment'==1 & `IV'==0 [aweight=`weightvar']
-		local mean_BT = `r(mean)'
-		
-		* IT average
-		quietly su `v' if `treatment'==1 & `IV'==1 [aweight=`weightvar']
-		local mean_IT = `r(mean)'	
-		
-		* BU average
-		quietly su `v' if `treatment'==0 & `IV'==0 [aweight=`weightvar']
-		local mean_BU = `r(mean)'
-		
-		* IU average
-		quietly su `v' if `treatment'==0 & `IV'==1 [aweight=`weightvar']
-		local mean_IU = `r(mean)'
-		
-		* Baseline treatment probability
-		quietly su `treatment' if `IV' == 0 [aweight=`weightvar']
-		local pB = `r(mean)'
-		
-		* Intervention treatment probability
-		quietly su `treatment' if `IV' == 1 [aweight=`weightvar']
-		local pI = `r(mean)'
-		
-		* Treated compliers average
-		local mean_TC = (1/(`pI' - `pB'))* ///
-			(`pI'*`mean_IT' - `pB'*`mean_BT') 
-			
-		* Untreated compliers average
-		local mean_UC = (1/(`pI' - `pB'))* ///
-			((1-`pB')*`mean_BU' - (1-`pI')*`mean_IU') 
-		
-		* Difference between treated and untreated   compliers
-		matrix int_`v'_`rep' =  ///
-			[int_`v'_`rep' , `mean_TC' - `mean_UC'] 
+		if `varnum' == 1 matrix sum_mat = [sum_mat_`x']
+		if `varnum' > 1  matrix sum_mat = [sum_mat \ sum_mat_`x'] 
+		local varnum = `varnum'+1		
 	
-		if `rep' == 1 ///
-			matrix int_`v' = int_`v'_`rep'
-		if `rep' > 1  ///
-			matrix int_`v' = [int_`v' \ int_`v'_`rep']
+	} // end loops over list of covariates 	
+	if `reps' == 1{
+		local numrow = rowsof(sum_mat)
+		matrix sum_mat[`numrow',5] = .
+		matrix sum_mat[`numrow',6] = .
+		frmttable, statmat(sum_mat) sdec(2) ///
+			rtitles(`rowname') ///
+			ctitles("", "All", "(1)", "(2)", "(3)", "Differences", "" \ "", "","Always","Compliers","Never","(1)-(2)","(2)-(3)"\"","","Takers","","Takers","","") ///
+			title("Average Characteristics of Always Takers, Compliers and Never Takers")
+		matrix colnames sum_mat = All Always_Takers Compliers Never_Takers (1)-(2) (2)-(3)
+		matrix rownames sum_mat = `rowname1'
+		ereturn matrix averages = sum_mat		
+		
+	}
+	else{
+		local numrow = rowsof(sum_mat)
+		matrix sum_mat[`numrow',9] = .
+		matrix sum_mat[`numrow',10] = .
+		matrix sum_mat[`numrow',11] = .
+		matrix sum_mat[`numrow',12] = .
+		frmttable, statmat(sum_mat) sdec(2) substat(1) ///
+			rtitles(`rowname') ///
+			ctitles("", "All", "(1)", "(2)", "(3)", "Differences", "" \ "", "","Always","Compliers","Never","(1)-(2)","(2)-(3)"\"","","Takers","","Takers","","") ///
+			title("Average Characteristics of Always Takers, Compliers and Never Takers")
+		local colname = "All:Est All:Std_error Always_Takers:Est Always_Takers:Std_error Compliers:Est Compliers:Std_error Never_Takers:Est Never_Takers:Std_error"
+		local colname = "`colname' (1)-(2):Mean (1)-(2):Std_error (2)-(3):Mean (2)-(3):Std_error"
+		matrix colnames sum_mat = `colname'
+		matrix rownames sum_mat = `rowname1'
+		ereturn matrix averages = sum_mat
 
-		* Run the difference-in-difference regression
-		gen D_Z  = `treatment' * `IV'
-			
-		qui reg `v' `treatment' `IV' D_Z [pweight=`weightvar']
-			
-		* Output regression estimates 
-		matrix did_`v'_`rep' = _b[D_Z]
-				
-		matrix did_`v'_`rep' = [did_`v'_`rep' , _b[`treatment']]
-		
-		matrix did_`v'_`rep' = [did_`v'_`rep' , _b[`IV']]
-	
-		* Save the diff-in-diff results in matrix			
-		if `rep' == 1 ///
-			matrix did_`v' = did_`v'_`rep'
-		if `rep' > 1  ///
-			matrix did_`v' = [did_`v' \ did_`v'_`rep']
-			
-		drop D_Z
-		
-	} // end bootstrapping loop
-			
-	local ++numvar
-			
-} // end loop for validity test variables
-	
-* Format results for internal validity	
-local rowname ""
-local numvar = 1
-foreach v of local didtest {
-	local rowname "`rowname' `v'"
-	svmat double int_`v'
-	forvalues  c = 1/ 2 { 
-		if `c' == 1 matrix intl_`v' = int_`v'[1,`c']
-		if `c' == 2 matrix intl_`v' = [intl_`v', int_`v'[1,`c']]
-		_pctile int_`v'`c' if _n!=1, p(2.5)
-		matrix intl_`v' = [intl_`v', `r(r1)'] 
-		_pctile int_`v'`c' if _n!=1, p(97.5)
-		matrix intl_`v' = [intl_`v', `r(r1)']
 	}
 	
-	if `numvar' == 1 matrix intvalid = intl_`v'
-	if `numvar' > 1  matrix intvalid = [intvalid \ intl_`v'] 
-	local ++numvar
-}
+}		
 
-* Format results for external validity	
-local rowname ""
-local numvar = 1
-foreach v of local didtest {
-	local rowname "`rowname' `v'"
-	svmat double did_`v'
-	forvalues  c = 1/ 3 { 
-		if `c' == 1 matrix didl_`v' = did_`v'[1,`c']
-		if `c' == 2 matrix didl_`v' = [didl_`v', did_`v'[1,`c']]
-		if `c' == 3 matrix didl_`v' = [didl_`v', did_`v'[1,`c']]
-		_pctile did_`v'`c' if _n!=1, p(2.5)
-		matrix didl_`v' = [didl_`v', `r(r1)'] 
-		_pctile did_`v'`c' if _n!=1, p(97.5)
-		matrix didl_`v' = [didl_`v', `r(r1)']
-	}
-	
-	if `numvar' == 1 matrix did = didl_`v'
-	if `numvar' > 1  matrix did = [did \ didl_`v'] 
-	local ++numvar
-}
-
-* Display internal validity test results
-di ""
-di ""
-di as result "Tests of Internal Validity"
-matrix coleq intvalid = mean_I-mean_B mean_I-mean_B mean_I-mean_B ///
-	mean_LAT-mean_LAU mean_LAT-mean_LAU mean_LAT-mean_LAU
-matrix colnames intvalid = Estimate 95%CI_lb 95%CI_ub Estimate ///
-	95%CI_lb 95%CI_ub
-matrix rownames intvalid = `rowname'
-matlist intvalid, format (%8.3f) showcoleq(combined) ///
-		aligncolnames(center) 
-	
-* Display external validity tests
-di""
-di""
-di as result "Difference-in-Difference regressions"
-di "D: treatment variable, Z: instrument variable"
-matrix coleq did = lambda_DZ lambda_DZ lambda_DZ lambda_D lambda_D lambda_D lambda_Z lambda_Z lambda_Z
-matrix colnames did = Estimate 95%CI_lb 95%CI_ub Estimate ///
-	95%CI_lb 95%CI_ub Estimate 95%CI_lb 95%CI_ub
-matrix rownames did = `rowname'
-matlist did, format (%8.3f) showcoleq(combined) ///
-	aligncolnames(center) 
-
-/* -------------MTE ESTIMATION--------------*/
+/* -------------------MTO, MUO, MTE, TO, UO, TE ESTIMATION--------------------*/
 
 * Set the seed up
 set seed `seed'
+
+* Define matrix for Treated Outcome, Untreated Outcome and Treatment Effects		
+matrix TO = J(`reps',3,.)
+matrix UO = J(`reps',3,.)
+matrix TE = J(`reps',3,.)
 
 * Set the default graph name (if other is not specified by user)
 if "`graphsave'" == "" {
@@ -852,13 +605,13 @@ if "`graphsave'" == "" {
 	di ""
 	di in gr "NOTE: You have not specified a filename for the graph. The graph will be saved as mtegraph.pdf"
 }
-
+	
 * Begin bootstrap loop
 forval rep = 1/`reps' {
 	
 	* Load data	
-	use "`temporigin'", clear	
-	
+	use "`temporigin'", clear		
+
 	* Drop observations where the outcome is missing before 
 	* re-sampling for the bootstrapping. The reason to drop 
 	* observations with a missing outcome before re-sampling 
@@ -868,24 +621,23 @@ forval rep = 1/`reps' {
 	* (b) By dropping missing outcomes, we ensure that every  
 	* bootstrap sample is of equal size
 	qui keep if `depvar' != . 
-
+	
 	* Re-sample for bootstrapping, keep the first bootstrap 
 	* sample as the original sample
+	
 	quietly if `rep' > 1 	{
 		if "`bootsample'" == "" bsample
 		if "`bootsample'" != "" bsample, `btype'(`bvar')
 	}
 	
-	/* -------------MTE WITHOUT COVARIATES--------------*/
-  
-	if "`indepvars'" == "" {
-	
+	/* --------------- MTE, MTO, MUO WITHOUT COVARIATES-----------------------*/ 
+	if "`indepvars'" == "" { 				                  
+
 		* Issue a note that bootstrapping is about to begin
-		if `rep' == 1 {
-			di ""
+		if `reps' != 1 & `rep' == 1{
 			di ""
 			di in gr "Starting boostrapping for the linear MTE without covariates"
-		}
+			}
 		
 		* Indicate the bootstrap replication number
 		local K = int(`reps' /50)
@@ -894,736 +646,826 @@ forval rep = 1/`reps' {
 			di in gr "...Bootstrap replication # `rep'"
 		}
 	
-		* Define matrices for storing results
-		if `rep' ==  1 {
-			matrix TO = J(`reps',8,.)
-			matrix UO = J(`reps',8,.)
-			matrix TE = J(`reps',8,.)
+		* Calculate Propensity Score
+		qui reg `treatment' `IV' [pweight=`weightvar']	
+		qui predict pZ
+		tempvar p_Z
+		gen `p_Z' = pZ
+		drop pZ
+		* OLS Regression of Y on function of p_Z 
+		* Loop over treatment values (D = 0, D = 1)
+	
+		forval d = 0/1 {
+		
+			preserve
 			
-			if "`decomp'"==""{
-				matrix selection = J(`reps', 8 , .)
-				matrix treatment = J(`reps', 8 , .)
-			}	
-		}		
-		
-		* We derive the MTE(p) in this code by deriving the 
-		* ATO(p) and AUO(p) functions first (similarly to Brinch 
-		* et al 2015) and then taking their appropriate 
-		* derivatives (see paper for details) to obtain the 
-		* MTO(p) and MUO(p) functions. We take the difference 
-		* between MTO(p) and MUO(p) to get the MTE(p).
-
-		* Compute ATO(p) and AUO(p) functions						
-		* We derive ATO(p) and AUO(p) using their closed form  
-		* expressions (see paper for derivations) 
-		
-		* Calculate pB = P(D=1|Z=0)
-		qui su `treatment' if `IV'==0 [aweight=`weightvar']
-		local pB = `r(mean)'
-		
-		* Calculate pI = P(D=1|Z=1)
-		qui su `treatment' if `IV'==1 [aweight=`weightvar']
-		local pI = `r(mean)'
-		
-		* Calculate s(pI) = P(Z=1)
-		qui su `IV' [aweight=`weightvar']
-		local sp_I = `r(mean)'
-
-		* Calculate the BTTO = E[Y|D=1,Z=0]
-		qui su `depvar' if `treatment'== 1 & `IV'== 0 [aweight=`weightvar']	
-		local BTTO = `r(mean)'
-
-		* Calculate the ITTO = E[Y|D=1,Z=1]
-		qui su `depvar' if `treatment'== 1 & `IV'== 1 [aweight=`weightvar']	
-		local ITTO = `r(mean)'
-		
-		* Calculate the IUUO = E[Y|D=0, Z=1]
-		qui su `depvar' if `treatment'== 0 & `IV'== 1 [aweight=`weightvar']	
-		local IUUO = `r(mean)'
+			* Restrict sample (e.g., conditional on D=1, conditional on D=0)
+			qui keep if `treatment' == `d'
 			
-		* Calculate the BUUO = E[Y|D=0,Z=0]		
-		qui su `depvar' if `treatment'== 0 & `IV'== 0 [aweight=`weightvar']	
-		local BUUO = `r(mean)'
-		
-		* Calculate ATO(p)
-		local ATO_slope = (`ITTO' - `BTTO')/(`pI' - `pB')
-		local ATO_int = `BTTO' - `ATO_slope'*`pB'
-		matrix ATO_matrix = [`ATO_int',`ATO_slope']
-	
-		* Calculate AUO(p)
-		local AUO_slope = (`IUUO' - `BUUO')/(`pI' - `pB')
-		local AUO_int = `BUUO' - `AUO_slope'*`pB'
-		matrix AUO_matrix = [`AUO_int',`AUO_slope']  
-
-		* Calculate MTO(p)
-		mata: der_MTO("ATO_matrix")
-		matrix mTO_matrix = mto_matrix
-
-		* Calculate MUO(p)
-		mata: der_MUO("AUO_matrix")
-		matrix mUO_matrix = muo_matrix
-		
-		* Compute MTE(p)= MTO(p) - MUO(p)
-		matrix mTE_matrix = mto_matrix - muo_matrix 
-	
-		* Save the MTE(p), MUO(p), MTE(p) slopes and intercepts 
-		* in the function coefficient matrix
-		if `rep' == 1 {
-			matrix MTO = mTO_matrix
-			matrix MUO = mUO_matrix
-			matrix MTE = mTE_matrix
+			* Regress Y on Xs and specified functional form of p (e.g., linear, quadratic etc.)
+			if `d' == 1 gen h_pZ = `p_Z'/2
+			if `d' == 0 gen h_pZ = (1-`p_Z'^2) / (2*(1-`p_Z'))
+			
+			qui reg `depvar' h_pZ [pweight=`weightvar']	
+			
+			* Save regression results a vector of coefficients of each MUO/ MTO function					
+												
+			* Save the constant (coefficient of the polynomial of order 0)
+			matrix M`d'O_matrix = [_b[_cons]]
+				
+			* Save the lambdas
+			matrix M`d'O_matrix = [M`d'O_matrix,_b[h_pZ]]
+			restore
+			
 		}
-		if `rep' > 1 {
-			matrix MTO = [MTO \ mTO_matrix]
-			matrix MUO = [MUO \ mUO_matrix]
-			matrix MTE = [MTE \ mTE_matrix]
-		}
-	
-
-	/* -------------TO, UO, TE WITHOUT COVARIATES--------------*/
-
+			* Rename 
+			matrix mTO_matrix = M1O_matrix
+			matrix mUO_matrix = M0O_matrix
+			
+			* compute MTE(p) = MTO(p) - MUO(p)
+			matrix mTE_matrix = mTO_matrix - mUO_matrix
+			
+			* save coefficients of MTO, MUO, MTE of each replication in a matrix
+			if `rep' == 1 {
+				matrix MTO = mTO_matrix
+				matrix MUO = mUO_matrix
+				matrix MTE = mTE_matrix
+			}
+			if `rep' > 1 {
+				matrix MTO = [MTO \ mTO_matrix]
+				matrix MUO = [MUO \ mUO_matrix]
+				matrix MTE = [MTE \ mTE_matrix]
+			}
+			
+		/*------------------- TE, TO, UO WITHOUT COVARIATES -----------------------*/
+		
 		matrix mu_outc = (0)
-		matrix pB = (`pB')
-		matrix pI = (`pI')
-		matrix sp_I = (`sp_I')
-		local groups "BT BU IT IU RIST RISU LA A"
+		qui su `IV'   [aweight=`weightvar']	  
+		local sp_I = `r(mean)'
+		qui su  `treatment' if `IV' == 0 [aweight=`weightvar']	
+		local pC = `r(mean)'
+		qui su `treatment' if `IV'== 1	[aweight=`weightvar']	
+		local pI = `r(mean)'
+		matrix pC      = (`pC')
+		matrix pI      = (`pI')
+		matrix sp_I    = (`sp_I')
 		local outcomes "TO UO TE"
-		
+		local groups   "AT C NT"
 		foreach o of local outcomes {
 			* Calculate treated outcome, untreated outcome, and 
 			* treatment effects for all groups of interest 
-			mata: calc_treat_eff("m`o'_matrix","mu_outc", "pB", "pI", "sp_I","")
+			mata: calc_treat_eff("m`o'_matrix","mu_outc", "pC", "pI", "sp_I","","","","","")
 			local iter = 1
 			foreach g of local groups {
-				matrix define `g'`o' = `g'
 				matrix `o'[`rep', `iter'] = `g'
 				local ++iter
 			}
-			
 		}
+	} // end the no independent variable case
 	
-	/* -------------DECOMPOSE TREATED OUTCOME--------------*/
-
-		* Begin decomposition clause
-		if "`decomp'" == ""{
-
-			local groups "BT BU IT IU RIST RISU LA A"
-			local iter = 1
-			foreach g of local groups {
-				* Calculate selection effect proportion
-				matrix selection[`rep',`iter'] = ///
-					`g'UO * inv(`g'TO) 
-				* Calculate treatment effect proportion
-				matrix treatment[`rep',`iter'] = ///
-					`g'TE * inv(`g'TO)
-				local ++iter
-			}
-
-			* Calculate the BOLS, IOLS, RISOLS via differences
-			* We can also calculate the BOLS, IOLS, and RISOLS via 
-			* regressions of Y on D on the subsamples with `IV' ==1 , 
-			* `IV' ==0 and the whole sample, respectively. They 
-			* should give the same result as calculating it via 
-			* differences.		
-			matrix define BOLS = BTTO - BUUO 
-			matrix define IOLS = ITTO - IUUO  
-			matrix define RISOLS = RISTTO - RISUUO  
-			
-			if `rep' ==1 matrix OLS_est = [BOLS, IOLS, RISOLS]
-			if `rep' > 1 matrix OLS_est = [OLS_est\ [BOLS, IOLS, RISOLS]]
+	/* ---------------------------MTE WITH COVARIATES--------------------------*/ 
 	
-			* Calculate OLS Decomposition
-			* For each of BOLS, IOLS, and RISOLS we can decompose 
-			* the OLS  estimate into a selection and treatment  
-			* effect in two different ways - using the treated or  
-			* the untreated within each OLS estimate. 
-		
-			* BOLS Decomposition using BTTE
-			matrix OLS_sel_BT = (BOLS-BTTE) * inv(BOLS) // Selection 
-			matrix OLS_tre_BT =  BTTE * inv(BOLS)       // Treatment 
-												
-			* BOLS Decomposition using BUTE
-			matrix OLS_sel_BU = (BOLS-BUTE) * inv(BOLS) // Selection  
-			matrix OLS_tre_BU =  BUTE * inv(BOLS)       // Treatment  
-									
-			* IOLS Decomposition using ITTE
-			matrix OLS_sel_IT = (IOLS-ITTE) * inv(IOLS) // Selection 
-			matrix OLS_tre_IT = ITTE * inv(IOLS)        // Treatment  
-							
-			* IOLS Decomposition using IUTE
-			matrix OLS_sel_IU = (IOLS-IUTE) * inv(IOLS) // Selection  
-			matrix OLS_tre_IU = IUTE * inv(IOLS)        // Treatment 
-							
-			* RISOLS Decomposition using RISTTE
-			matrix OLS_sel_RIST = (RISOLS-RISTTE) * inv(RISOLS)	// Selection effect
-			matrix OLS_tre_RIST = RISTTE * inv(RISOLS) 		// Treatment effect 
-									
-			* RISOLS Decomposition using RISUTE
-			matrix OLS_sel_RISU = (RISOLS-RISUTE) * inv(RISOLS) 	// Selection effect
-			matrix OLS_tre_RISU = RISUTE * inv(RISOLS) 		// Treatment effect
-			
-			* Output 
-			if `rep' == 1 {
-				matrix OLS_sel = [OLS_sel_BT, OLS_sel_BU, OLS_sel_IT, OLS_sel_IU, OLS_sel_RIST, OLS_sel_RISU]					
-				matrix OLS_tre = [OLS_tre_BT, OLS_tre_BU, OLS_tre_IT, OLS_tre_IU, OLS_tre_RIST, OLS_tre_RISU]
-			}
-			if `rep' > 1 {
-				matrix OLS_sel = [OLS_sel \ [OLS_sel_BT, OLS_sel_BU, OLS_sel_IT, OLS_sel_IU, OLS_sel_RIST, OLS_sel_RISU]]
-				matrix OLS_tre = [OLS_tre \ [OLS_tre_BT, OLS_tre_BU, OLS_tre_IT, OLS_tre_IU, OLS_tre_RIST, OLS_tre_RISU]]
-			}
-			
-	
-		} // end decomposition clause
-	
-	} // end no covariates clause
-	
-	/* -------------MTE WITH COVARIATES--------------*/
-
 	if "`indepvars'" != "" {
-
+	
 		* Issue a warning that bootstrapping will take a while
-		if `rep'==1 {
-			di ""
+		if `reps'!=1 & `rep' == 1{
 			di ""
 			di as result "Starting estimation of the MTE with covariates"
 			di as result "NOTE: Bootstrapping for the MTE with covariates will require some time."
 		}
 		
 		* Indicate the bootstrap replication number
-		local K = int(`reps' /50)
+		local K = int(`reps' /5)
 		forvalues k = 1/ `K'{
-			if `rep' == 50 * `k' ///
+			if `rep' == 5 * `k' ///
 			di in gr "...Bootstrap replication # `rep'"
 		}
 		
-		/* -------------ESTIMATE THE MTE WITHOUT COVARIATES--------------*/
-		* We need this for estimating the RMSD
+		/* ------------ Calculate Propensity score -------------------*/
 		
-		* Calculate pB = P(D=1|Z=0)
-		qui su `treatment' if `IV'==0 [aweight=`weightvar']
-		local pB = `r(mean)'
-		
-		* Calculate pI = P(D=1|Z=1)
-		qui su `treatment' if `IV'==1 [aweight=`weightvar']
-		local pI = `r(mean)'
-	
-		* Calculate the BTTO = E[Y|D=1,Z=0]
-		qui su `depvar' if `treatment'== 1 & `IV'== 0 [aweight=`weightvar']	
-		local BTTO = `r(mean)'
-
-		* Calculate the ITTO = E[Y|D=1,Z=1]
-		qui su `depvar' if `treatment'== 1 & `IV'== 1 [aweight=`weightvar']	
-		local ITTO = `r(mean)'
-		
-		* Calculate the IUUO = E[Y|D=0, Z=1]
-		qui su `depvar' if `treatment'== 0 & `IV'== 1 [aweight=`weightvar']	
-		local IUUO = `r(mean)'
-			
-		* Calculate the BUUO = E[Y|D=0,Z=0]		
-		qui su `depvar' if `treatment'== 0 & `IV'== 0 [aweight=`weightvar']	
-		local BUUO = `r(mean)'
-		
-		* Calculate ATO(p)
-		local ATO_slope_nocovars = (`ITTO' - `BTTO')/(`pI' - `pB')
-		local ATO_int_nocovars = `BTTO' - `ATO_slope_nocovars'*`pB'
-		matrix ATO_matrix_nocovars = [`ATO_int_nocovars',`ATO_slope_nocovars']
-	
-		* Calculate AUO(p)
-		local AUO_slope_nocovars = (`IUUO' - `BUUO')/(`pI' - `pB')
-		local AUO_int_nocovars = `BUUO' - `AUO_slope_nocovars'*`pB'
-		matrix AUO_matrix_nocovars = [`AUO_int_nocovars',`AUO_slope_nocovars']  
-
-		* Calculate MTO(p)
-		mata: der_MTO("ATO_matrix_nocovars")
-		matrix mTO_matrix_nocovars = mto_matrix
-
-		* Calculate MUO(p)
-		mata: der_MUO("AUO_matrix_nocovars")
-		matrix mUO_matrix_nocovars = muo_matrix
-		
-		* Compute MTE(p)= MTO(p) - MUO(p)
-		matrix mTE_matrix_nocovars = mto_matrix - muo_matrix
-
-		/* -------------CALCULATE PROPENSITY SCORE--------------*/
-				
 		* Create an alternative instrument, with the value opposite 
 		* of the observed value
 		gen IV_alt = ~`IV'
 		
 		* Estimate the propensity scores if interactions with the instrument are specified
-		if "`interact'" != "nointeract" {
+		* Create the interaction terms
+		foreach x of varlist `indepvars' {				
+				qui gen _int_`x' = `IV'*`x'										
+		}
 		
-			* Create the interaction terms
-			foreach x of varlist `indepvars' {				
-				gen _int_`x' = `IV'*`x'										
-			}
-		
-			* Estimate propensity scores using Z, Xs, and the
-			* interactions between Z and the Xs as the covariates
-			* and D as the dependent variable. 
-			* We use a linear regression to predict the propensity
-			* scores.  Please note that we do not censor the
-			* propensity scores here. We keep the uncensored
-			* propensity scores for the MTE estimation, however,
-			* we do censor them for estimating any treatment effects
-			* from an MTE with covariates. Propensity scores are 
-			* also not censored when estimating the linear MTE
-			* without covariates.	
-		
-			qui reg `treatment' `IV' `indepvars' _int* [pweight=`weightvar']
-		
-			qui predict p_Z
+		* Estimate propensity scores using Z, Xs and the interactions
+		* between Z and Xs as the covariates and D as the dependent variable
+		* We use a linear regression to predict the propensity scores. 
+		* Please note that we do not censor the propensity scores here.
+		* We keep the uncensored propensity scores for the MTE estimation,
+		* however, we do censor them for estimating any treatment effects from
+		* an MTE covariates. Propensity scores are also not censored when estimating
+		* the linear MTE without covariates
 			
-			* Print diagnostics on propensity score		
-			if `rep' ==1 {	
-				di ""
-				di ""		
-				di in gr "Number of observations with predicted propensity scores >1"
-				count if p_Z>1 & p_Z !=.
-				di ""
-				di ""						
-				di in gr "Number of observations with predicted propensity scores <0"
-				count if p_Z<0 & p_Z !=.
-			}
+		qui reg `treatment' `IV' `indepvars' _int* [pweight=`weightvar']
+	
+		qui predict pZ
+		tempvar p_Z
+		gen `p_Z' = pZ
+		drop pZ
+		* Drop individuals with missing propensity scores 
+		qui drop if `p_Z' == .
 		
-			* Drop individuals with missing propensity scores 
-			qui drop if p_Z==.
+		* Estimate the alternative propensity score, which we
+		* define as having Z equal to the opposite of whatever
+		* is observed for each individual. The coefficients
+		* are the ones estimated in the previous regression
 		
-			* Estimate the alternative propensity score, which we
-			* define as having Z equal to the opposite of whatever
-			* is observed for each individual. The coefficients
-			* are the ones estimated in the previous regression
+		quietly {
 			
-			quietly {
+			* Generate an alternative Z that is the opposite of
+			* whatever each individual has and predict the
+			* propensity score with that
+			gen old_IV = `IV'
+			drop `IV'
+			rename IV_alt `IV'
 			
-				* Generate an alternative Z that is the opposite of
-				* whatever each individual has and predict the
-				* propensity score with that
-				gen old_IV = `IV'
-				drop `IV'
-				rename IV_alt `IV'
-			
-				* Generate alternative interactions of Z with 
-				* the covariates
-				foreach x of varlist `indepvars' {		
-					gen alt_`x' = `IV'*`x'
-					gen old_int_`x'=_int_`x'
-					drop _int_`x'
-					rename alt_`x' _int_`x'
-				}
-									
-				* Predict the alternative propensity score
-				predict p_Z_alt
+			* Generate alternative interactions of Z with 
+			* the covariates
+			foreach x of varlist `indepvars' {		
+				gen alt_`x' = `IV'*`x'
+				gen old_int_`x' = _int_`x'
+				drop _int_`x'
+				rename alt_`x' _int_`x'
 				
-				* Revert back to the old names
-				drop `IV'
-				rename old_IV `IV'
+			}
+						
+			* Predict the alternative propensity score
+			predict p_Z_alt
+			
+			* Revert back to the old names
+			drop `IV'
+			rename old_IV `IV'
 				
-				foreach x of varlist `indepvars' {			
-					drop _int_`x'
-					rename old_int_`x' _int_`x'
-				}
+			foreach x of varlist `indepvars' {			
+				drop _int_`x'
+				rename old_int_`x' _int_`x'
 			}
-		} 
+		}
 		
-		* Estimate the propensity scores if no interactions are specified
-		else {
 		
-			* Estimate propensity scores using Z and Xs (as covariates)
-			* and D as dependent variable
-			* We use a linear regression to predict the propensity
-			* scores.  Please note that we do not censor the
-			* propensity scores here. We keep the uncensored
-			* propensity scores for the MTE estimation, however,
-			* we do censor them for estimating any treatment effects
-			* from an MTE with covariates. Propensity scores are 
-			* also not censored when estimating the linear MTE
-			* without covariates.	
-		
-			qui reg `treatment' `IV' `indepvars' [pweight=`weightvar']
-		
-			qui predict p_Z
-			
-			* Print diagnostics on propensity score
-			if `rep' == 1 {
-				di ""
-				di ""		
-				di in gr "Number of observations with predicted propensity scores >1"
-				count if p_Z>1 & p_Z !=.
-				di ""
-				di ""						
-				di in gr "Number of observations with predicted propensity scores <0"
-				count if p_Z<0 & p_Z !=.
-			}
-		
-			* Drop individuals with missing propensity scores 
-			qui drop if p_Z==.
-		
-			* Estimate the alternative propensity score, which we
-			* define as having Z equal to the opposite of whatever
-			* is observed for each individual
-			
-			quietly {
-			
-				* Generate an alternative Z that is the opposite of
-				* whatever each individual has and predict the
-				* propensity score with that
-				gen old_IV = `IV'
-				drop `IV'
-				rename IV_alt `IV'
-					
-				* Predict the alternative propensity score
-				predict p_Z_alt
-				
-				* Revert back to the old names
-				drop `IV'
-				rename old_IV `IV'
-			}
-		} 
 		
 		* Generate pB and pI for each individual
 				
-		* Determine each individual's pB
+		* Determine each individual's pC
+		quietly {
 			
 		* For randomized out individuals, the propensity score 
-		* estimated in the above regression is their pB
-		qui gen pB = p_Z if `IV'==0
+		* estimated in the above regression is their pC
+		gen pC = `p_Z' if `IV' == 0
 		
 		* For randomized in individuals, the propensity score
 		* estimated in the above regression ASSUMING THEIR Z=0
-		* is their pB
-		qui replace pB = p_Z_alt if `IV'==1
+		* is their pC
+		replace pC = p_Z_alt if `IV'==1
 			
 		* Determine each individual's pI
 		
 		* For randomized out individuals, the propensity score
 		* estimated in the above regression ASSUMING THEIR Z=1
 		* is their pI
-		qui gen pI = p_Z_alt if `IV'==0
+		gen pI = p_Z_alt if `IV'==0
 		
 		* For randomized in individuals, the propensity score
 		* estimated in the above regression is their pI
-		qui replace pI = p_Z if `IV'==1
-			
-		* Censor pB and pI 
-		* If pB or pI is less than 0, censor them at 0. If pB 
+		replace pI = `p_Z' if `IV'==1
+	
+		* Censor pC and pI 
+		* If pB or pI is less than 0, censor them at 0. If pC
 		* or pI is greater than 1, censor them at 1.
-		quietly {
-			gen pB_cens = pB
-			replace pB_cens = 0 if pB_cens<0
-			replace pB_cens = 1 if pB_cens>1
+		
+		gen pC_cens = pC
+		replace pC_cens = 0 if pC_cens<0
+		replace pC_cens = 1 if pC_cens>1
 			
-			gen pI_cens = pI
-			replace pI_cens = 0 if pI_cens<0
-			replace pI_cens = 1 if pI_cens>1 
-		}		
-			
-		/* -------------ESTIMATE ATO(x,p) AND AUO(x,p)--------------*/
+		gen pI_cens = pI
+		replace pI_cens = 0 if pI_cens<0
+		replace pI_cens = 1 if pI_cens>1 
+		
+		}
 
+		/* --------------- Estimate MTO, MUO, MTE(x,p) ----------------*/
+		
+		* OLS Regression of Y on function of p_Z 
 		* Loop over treatment values (D = 0, D = 1)
 		forval d = 0/1 {
 		
 			preserve
 			
-			* Restrict sample (e.g., conditional on D=1, 
-			* conditional on D=0)
+			* Restrict sample (e.g., conditional on D=1, conditional on D=0)
 			qui keep if `treatment' == `d'
 			
-			* Based on the pre-specified functional form of g(p), 
-			* generate the polynomial as a function of p
-			local p_poly_`d' ""   
-			forvalues _n=1/`poly' {
-				qui gen p_Z_`_n'_`d' = p_Z^(`_n')
-				local p_poly_`d' "`p_poly_`d'' p_Z_`_n'_`d'"
+			* Based on the pre-specified order of polynomial of the marginal functions 
+			* i.e., (MTO, MUO, MTE(x,p)), generate the polynomial as a function of p
+			local p_poly_`d' ""
+			forval n = 1/ `poly'{
+				if `d' == 1 qui gen h_pZ_`n'_`d' = (`p_Z'^`n')/(1+`n')
+				if `d' == 0 qui gen h_pZ_`n'_`d' = (1-`p_Z'^(`n'+1))/((1+`n')*(1-`p_Z'))
+				local p_poly_`d' "`p_poly_`d'' h_pZ_`n'_`d'"
 			}
-						
-			* Estimate betas and ATO(x,p) and AUO(x,p)
-							
-			* Create a matrix that contains the coefficient of the 
-			* polynomial components, i.e., K0 and K1 (+1 is for the 
-			* constant)
-			matrix K_`d' = J(1, `poly' +1, .) 
-									
-			* Regress Y on Xs and specified functional form of p 
-			* (e.g., linear, quadratic etc.)
+
+			* Regress Y on Xs and specified functional form of p (e.g., linear, quadratic etc.)
+			
 			qui reg `depvar' `indepvars' `p_poly_`d'' [pweight=`weightvar']
-		
-			* Save regression results							
-			if _rc == 0 {
-										
-				* Save the betas for the covariates in macro variables
-				* The coefficients on the covariates from the above 
-				* regression reflect the beta_1 or beta_0, depending
-				* on whether we are running the regression on the 
-				* treated or the untreated.
-				matrix beta`rep'_`d' = J(1,1,.)
 			
-				foreach _var of varlist `indepvars' {
-					scalar define _b_`d'_`_var' = _b[`_var']
-					matrix beta`rep'_`d'= ///
-						[beta`rep'_`d',  _b_`d'_`_var']
-				}
-				
-				matrix beta`rep'_`d' = beta`rep'_`d'[1,2...]
+					
+			* Save the betas for the covariates in macro variables. The coefficients on the 
+			* covariates from the above regression reflects the beta_T and beta_U, depending
+			* on whether we are running the regression on the treated or the untreated
 			
-				if `rep' == 1 matrix beta_`d'_mat = beta`rep'_`d'
-				if `rep' > 1  matrix beta_`d'_mat = [beta_`d'_mat \ beta`rep'_`d']
+			matrix beta`rep'_`d' = J(1,1,.)
 			
-				* Save the  coefficients for graphing			
-				if `rep' == 1{
-					foreach _var of varlist `indepvars' {
-						scalar define _b1_`d'_`_var' = _b[`_var']
-					}
-				}
-								
-				* Save the gammas in macro variables and add them to the 
-				* matrix. The coefficients on the g(p) components, which 
-				* we  call gammas, from the above regression reflect the 
-				* components of ATO(x,p) or AUO(x,p), depending on  
-				* whether we are running the regression on the treated 
-				* or the  untreated.
-				local _m = 2
-				foreach _var of local p_poly_`d' {
-					matrix K_`d'[1,`_m'] = _b[`_var']
-					local ++_m
-				}				
-								
-				matrix K_`d'[1,1] = _b[_cons]
+			foreach _var of varlist `indepvars' {
+				scalar _b_`d'_`_var' = _b[`_var']
+				matrix beta`rep'_`d'= [beta`rep'_`d',  _b_`d'_`_var']
 			}
+			matrix beta`rep'_`d' = beta`rep'_`d'[1,2...]
 			
+			if `rep' == 1 matrix beta_`d'_mat = beta`rep'_`d'
+			if `rep' > 1  matrix beta_`d'_mat = [beta_`d'_mat \ beta`rep'_`d']
+			
+		
+			* Save the  coefficients for graphing			
+			if `rep' == 1 {
+				foreach _var of varlist `indepvars' {
+					scalar define _b1_`d'_`_var' = _b[`_var']
+				}
+			}
+
+			* Save the lammas in macro variables and add them to the matrix 
+			* The coefficients on the g(p) components, which we call lambdas,
+			* from the above regression reflect that coefficient of polynomials
+			* of the marginal functions				
+			
+			* Save the constant (coefficient of the polynomial of order 0)
+			matrix lambda`d'O_matrix = [_b[_cons]]			
+				
+			* Save the lambdas
+			foreach var of local p_poly_`d'{
+				matrix lambda`d'O_matrix = [lambda`d'O_matrix,_b[`var']]
+			}
+
 			restore
 		}
-
-		/* -------------ESTIMATE mto(x,p) AND muo(x,p)--------------*/
-
-		* The function der_MTO carries out these calculations and returns mto(p). 
-		* Similar for muo(p) below
-		mata: der_MTO("K_1")
-		
-		* This change in notation from lowercase to capital letters is only for 
-		* notational convenience later
-		matrix mTO_matrix = mto_matrix 
-		if `rep' == 1 matrix mto_mat = mto_matrix
-		if `rep' > 1  matrix mto_mat = [mto_mat \ mto_matrix]
-							
-		mata: der_MUO("K_0")
-		
-		matrix mUO_matrix = muo_matrix
-		if `rep' == 1 matrix muo_mat = muo_matrix
-		if `rep' > 1  matrix muo_mat = [muo_mat \ muo_matrix] 
-		
-		* Compute mte(p) as the difference between mto(p) and muo(p) 
-		matrix mTE_matrix = mto_matrix - muo_matrix
-		if `rep' == 1 matrix mte_mat = mTE_matrix 
-		if `rep' > 1  matrix mte_mat = [mte_mat \ mTE_matrix]
-		
-		* Keep the mte, mto, muo of the original sample for graphing later 
-		if `rep' == 1 	matrix mte1_matrix = mTE_matrix
-		
-		* Calculate the min and max
-		qui gen double mu_TE_1 = 0
-		foreach x of varlist `indepvars' {
-			qui replace mu_TE_1 = mu_TE_1 + (_b_1_`x'-_b_0_`x')*`x'
+			
+			
+		* Rename 
+		matrix lambdaTO_matrix = lambda1O_matrix
+		matrix lambdaUO_matrix = lambda0O_matrix
+			
+		* Compute lambdaTE(p) =lambdaTO(p) - lambdaUO(p)
+		matrix lambdaTE_matrix = lambdaTO_matrix - lambdaUO_matrix
+			
+		* save coefficients of MTO, MUO, MTE of each replication in a matrix
+		if `rep' == 1 {
+			matrix lambdaTO = lambdaTO_matrix
+			matrix lambdaUO = lambdaUO_matrix
+			matrix lambdaTE = lambdaTE_matrix
+		}
+		if `rep' > 1 {
+			matrix lambdaTO = [lambdaTO \ lambdaTO_matrix]
+			matrix lambdaUO = [lambdaUO \ lambdaUO_matrix]
+			matrix lambdaTE = [lambdaTE \ lambdaTE_matrix]
 		}
 		
-		qui sum mu_TE_1	
-		local avg_mu_te = `r(mean)'
-		local min_mu_te = `r(min)'
-		local max_mu_te = `r(max)'
-		
-		matrix minMTE_matrix = mTE_matrix
-		matrix minMTE_matrix[1,1] = minMTE_matrix[1,1]+`min_mu_te'
-		
-		matrix maxMTE_matrix = mTE_matrix
-		matrix maxMTE_matrix[1,1] = maxMTE_matrix[1,1]+`max_mu_te'
-		
-		if `rep' == 1 matrix minmte_mat = minMTE_matrix 
-		if `rep' > 1  matrix minmte_mat = [minmte_mat \ minMTE_matrix]
-		
-		if `rep' == 1 matrix maxmte_mat = maxMTE_matrix 
-		if `rep' > 1  matrix maxmte_mat = [maxmte_mat \ maxMTE_matrix]
-		
-		
-		/* -------------CALCULATE TO, UO, and TE ON INDIVIDUAL LEVEL AND AVERAGE --------------*/
+		* keep the lambda matrix of the original sample for graphing later
+		if `rep' == 1 {
+			matrix lambdaTE_1_matrix = lambdaTE_matrix
+			matrix lambdaTO_1_matrix = lambdaTO_matrix
+			matrix lambdaUO_1_matrix = lambdaUO_matrix
+		}
 
-		* Calculate (beta_1)*X, beta_0*X and (beta_1-beta_0)*X
-		quietly gen double mu_TE = 0
-		quietly gen double mu_TO = 0
-		quietly gen double mu_UO = 0
-		
-		quietly foreach x of varlist `indepvars' {
+		/*------------------- TE, TO, UO COVARIATES -----------------------*/
+		* Calculate (beta_T) *X, (beta_U)*X and (beta_T - beta_U) * X
+	 qui {
+		gen double mu_TE = 0
+		gen double mu_TO = 0
+		gen double mu_UO = 0
+		foreach x of varlist `indepvars'{
 			replace mu_TE = mu_TE + (_b_1_`x'-_b_0_`x')*`x'
 			replace mu_TO = mu_TO + (_b_1_`x')*`x'
-			replace mu_UO = mu_UO + (_b_0_`x')*`x'
-		}
-		
+			replace mu_UO = mu_UO + (_b_0_`x')*`x'			
+		} 
+
 		* Calculate the values of sp_I for each subgroup
 		* Need to loop through in order to incorporate weights
 			
 		* The tag we generate is for the subgroups without Z: 
 		* to get the s(pI) values
-		quietly reg `treatment' `indepvars'
-		qui predict subgroup_IV
+		reg `treatment' `indepvars'
+		predict subgroup_IV
 		
-		* Sum up the number of randomized in individuals within
-		* each subgroup
-		qui bysort subgroup_IV: egen Z_count = sum(Z)
-		qui bysort subgroup_IV: egen N_count = sum(N)
+		* Sum up the number of randomized in individuals within each subgroup
+		bysort subgroup_IV: egen Z_count = sum(`IV')
+		bysort subgroup_IV: egen N_count = sum(`N')
 		
 		* Replace missing values with zeroes
-		qui replace Z_count=0 if Z_count==.
-		qui replace N_count=0 if N_count==.
+		replace Z_count=0 if Z_count==.
+		replace N_count=0 if N_count==.
 		
-		qui gen s_pI = Z_count/N_count
+		gen s_pI = Z_count/N_count
 				
-		qui drop subgroup_IV
-			
+		drop subgroup_IV
+				
 		* Calculate the probability of being a complier for each individual
 						
 		* We use the closed form expression for the probability of 
 		* being a complier
 		
-		qui gen prob_IT = 0
-		qui gen prob_BU = 0
+		gen prob_I = 0
+		gen prob_1C = 0
 				
-		qui replace prob_IT = 1 if `treatment'==1 & `IV'==1
-		qui replace prob_BU = 1 if `treatment'==0 & `IV'==0
+		replace prob_I = 1  if `treatment'==1 & `IV'==1
+		replace prob_1C = 1 if `treatment'==0 & `IV'==0
 			
-		qui gen prob_C = ((pI_cens - pB_cens)/pI_cens)*prob_IT + ///
-			((pI_cens - pB_cens)/(1-pB_cens))*prob_BU
-		qui replace prob_C=0 if prob_C==.
-			
-		* Calculate the treated and untreated outcome, and treatment effects on
-		* an individual level and then average across individuals
-
-		local groups "BT BU IT IU RIST RISU LA A"
-		local outcomes "TO UO TE"
-
-		foreach o of local outcomes {
-			mata: calc_treat_eff("m`o'_matrix", "mu_`o'","pB_cens", "pI_cens", "s_pI", "cov")
-
-			* Transform mata vectors into Stata variables
-			foreach g of local groups {
-				svmat double `g', names(`g'`o')
-			}
-			
-			* Calculate the weighted averages
-			local iter =1 
-			
-			* Average BTTO, BTUO, BTTE across individuals with D=1 and Z=0 
-			qui su BT`o' if `treatment'== 1 & `IV'==0 [aweight=`weightvar']
-			matrix SBT`o' = `r(mean)'
-			
-			* Average BUTO, BUUO, BUTE across individuals with D=0 and Z=0
-			qui su BU`o' if `treatment'== 0 & `IV'==0 [aweight=`weightvar']
-			matrix SBU`o' = `r(mean)'
-			
-			* Average ITTO, ITUO, ITTE across individuals with D=1 and Z=1 
-			qui su IT`o' if `treatment'== 1 & `IV'==1 [aweight=`weightvar']
-			matrix SIT`o' = `r(mean)'
-			
-			* Average IUTO, IUUO, IUTE across individuals with D=0 and Z=1
-			qui su IU`o' if `treatment'== 0 & `IV'==1 [aweight=`weightvar']
-			matrix SIU`o' = `r(mean)'
-			
-			* Average RISTTO,RISTUO, and RISTTE across individuals with D=1
-			qui su RIST`o' if `treatment'== 1 [aweight=`weightvar']
-			matrix SRIST`o' = `r(mean)'
-			
-			* Average RISUTO, RISUUO, and RISUTE across individuals with D=1		
-			qui su RISU`o' if `treatment'==0 [aweight=`weightvar']
-			matrix SRISU`o' = `r(mean)'
-			
-			* Average ATO, AUO, ATE across all individuals
-			qui su A`o'	[aweight=`weightvar']			
-			matrix SA`o' = `r(mean)'
-				
-			* For SLATE, SLATO, SLAUO
-			* In order to calculate the SLATE, we multiply each individual's 
-			* LATE by his/her probability of being a complier. We take the 
-			* sum of this product and divide it by the sum of the 
-			* probabilities of being a complier across the entire sample. 
-			* We use a similar approach for the SLATO and the SLAUO, except 
-			* that instead of using the overall probability of being a 
-			* complier, we use the probabilities of being a treated or 
-			* untreated complier for the SLATO and SLAUO, respectively.
-				
-			qui gen prob_LA`o' = LA`o' * prob_C
-			
-			quietly su prob_LA`o' [aweight=`weightvar']
-			local sum_LA`o' = `r(sum)'
-						
-			quietly su prob_C [aweight=`weightvar']
-			local sum_probs = `r(sum)'
-						
-			local SLA`o' = `sum_LA`o''/`sum_probs'
-			matrix SLA`o' = `SLA`o''
-			
-			* Output 
-			if `rep' == 1 matrix S`o'_mat = [SBT`o', SBU`o', SIT`o', ///
-				SIU`o', SRIST`o', SRISU`o', SLA`o', SA`o']
-			if `rep' > 1  matrix S`o'_mat = [S`o'_mat \ [SBT`o', SBU`o', /// 
-				SIT`o', SIU`o', SRIST`o', SRISU`o', SLA`o', SA`o']]
+		gen prob_C = ((pI_cens - pC_cens)/pI_cens)*prob_I + ///
+					 ((pI_cens - pC_cens)/(1-pC_cens))*prob_1C
+		replace prob_C=0 if prob_C==.
 		}
-				
+		
+		* Calculate the treated, untreated outcome and treatement effects
+		* on an individual level and then average across individuals
+		
+		local groups   "AT C NT"
+		local outcomes "TO UO TE"
+		foreach o of local outcomes {
+			mata: calc_treat_eff("lambda`o'_matrix", "mu_`o'","pC_cens", "pI_cens", ///
+								"s_pI","`treatment'", "`IV'","prob_C","`weightvar'","cov")
+			matrix SAT`o' = AT
+			matrix SC`o'  = C
+			matrix SNT`o' = NT
+			* output
+			if `rep' == 1 matrix S`o'_mat = [SAT`o', SC`o', SNT`o']
+			if `rep' >  1 matrix S`o'_mat = [S`o'_mat \ [SAT`o', SC`o', SNT`o']]
+		}
+			
 		* Calculate the coefficients of SMTE(p), SMTO(p), SMTO(p) for 
 		* displaying results)
-		* MTE(TO/UO) = mu_TE(TO/UO) + mTE(/TO/UO) and 
+		* MTE(TO/UO) = mu_TE(TO/UO) + mTE(/TO/UO) where the first term
+		* have beta coefficients and the second term has lambda coefficients
 		* SMTE(/TO/UO) =  average_mu_TE(/TO/UO) + mTE(/TO/UO)
-			
+		
 		local os "TO UO TE"	
 		qui foreach o of local os {
 		
 			qui su mu_`o' [aweight=`weightvar']
 			local avg_mu_`o' = `r(mean)'
-			matrix SM`o' = m`o'_matrix
+			matrix SM`o' = lambda`o'_matrix
 			matrix SM`o'[1,1] = SM`o'[1,1] + `avg_mu_`o''
 			if `rep' == 1 matrix SM`o'_mat = SM`o'
 			if `rep' > 1  matrix SM`o'_mat = [SM`o'_mat \ SM`o']
+			
 		}
-		
-		
-		* Calculate RMSD(X_c)
-		matrix diff_SMTE_SATE = SMTE
-		
-		matrix diff_SMTE_SATE[1,1] = SMTE[1,1]-STE_mat[`rep',8] 
+	} // end the independent variable case
+			
 	
-		mata: der_RMSD("diff_SMTE_SATE")
-		local RMSD = sc_RMSD
-				
-		* Calculate RMSD(X_0) where X_0 is the null set of covariates 
-		* and MTE(p) is linear
-		
-		* Calculate ATE. 
-		* We use the closed form expression of the ATE 
-		* (which is integral of MTE from 0 to 1)					
-		local ATE = mTE_matrix_nocovars[1,1] + mTE_matrix_nocovars[1,2]/2
-		
-		* Calculate the difference between MTE(p) and ATE
-		matrix diff_MTE_ATE = mTE_matrix_nocovars
-		matrix diff_MTE_ATE[1,1] = mTE_matrix_nocovars[1,1]-`ATE'
-		
-		* Calculate the RMSD
-		mata: der_RMSD("diff_MTE_ATE")
-		local RMSD0 = sc_RMSD
-		
-		* Calculate the heterogeneity explained by covariates
-		local exp_hetero = (`RMSD0'-`RMSD')/`RMSD0'
-				
-		* Calculate the remaining unexplained heterogeneity
-		local unexp_hetero = `RMSD'/`RMSD0'
-		
-		* Store results
-		if `rep' == 1 matrix RMSD_mat = ///
-			[`RMSD0',`RMSD',`exp_hetero',`unexp_hetero']
-		if `rep' >1   matrix RMSD_mat = ///
-			[RMSD_mat \ [`RMSD0',`RMSD',`exp_hetero',`unexp_hetero']]
-	
-	} // close clause on case with covariates
-	
-} //end bootstrapping loop
+} // end bootstrapping loop
 
-ereturn post
+
+if "`indepvars'" == "" {
+
+	/* --------------DISPLAY RESULT FOR THE CASE WITHOUT COVARIATE -------------*/
+	
+	* Results for the slope and intercept of MTO(p), MUO(p), MTE(p) 	
+	local matr "MTE MTO MUO"
+	foreach m of local matr{
+		local col = colsof(`m')
+		matrix est_m = `m'[1,1...]
+		svmat double `m'
+		forval c  = 1/`col'{
+			qui sum `m'`c' 
+			scalar std_err = r(sd)
+			scalar est     = est_m[1,`c']
+			if `reps' != 1 matrix sum`c'  = [est,std_err]
+			if `reps' == 1 matrix sum`c'  = [est]
+			if `c' == 1 matrix `m'_dis = sum`c'
+			if `c' >  1 matrix `m'_dis = [`m'_dis,sum`c']
+			}		
+	}	
+	
+	mat mfncs = [MTO_dis\MUO_dis\MTE_dis]
+	if `reps' != 1 {
+	frmttable, statmat(mfncs) substat(1) ///
+             rtitles("MTO"\"" \ "MUO"\"" \ "MTE"\ "") ///
+             ctitles("", "Intercept", "Slope") ///
+             title("Marginal Treated Outcome, Untreated Outcome, and Treatment Effect")
+	local colname "Intercept Std_err Slope Std_error"
+	}
+	else {
+	frmttable, statmat(mfncs) ///
+             rtitles("MTO" \ "MUO"\ "MTE") ///
+             ctitles("", "Intercept", "Slope") ///
+             title("Marginal Treated Outcome, Untreated Outcome, and Treatment Effect")
+	local colname "Intercept Slope"
+
+	}
+	* Return results
+	matrix  colnames MTO_dis = `colname' 
+	ereturn matrix MTO = MTO_dis
+	
+	matrix  colnames MUO_dis = `colname' 
+	ereturn matrix MUO = MUO_dis
+	
+	matrix  colnames MTE_dis = `colname' 
+	ereturn matrix MTE = MTE_dis
+	
+	* Results for TO, UO, TE for Never Takers, Always Takers, and Compliers	
+	* Create statistics for Untreated Outcome Test (UOT) and Treated Outcome Test (TOT)
+	matrix TOT = TO[1...,1] - TO[1...,2]
+	matrix UOT = UO[1...,2] - UO[1...,3]
+	
+
+	local matr "TE TO UO UOT TOT"
+	foreach m of local matr {
+		local col = colsof(`m')
+		svmat double `m'
+		forval c  = 1/`col'{
+			scalar mean_`m'`c' = `m'[1,`c']
+			qui sum `m'`c'
+			scalar sd_`m'`c' = r(sd)
+			if `reps' == 1 matrix est_`m'`c' = [mean_`m'`c']
+			if `reps' != 1 matrix est_`m'`c' = [mean_`m'`c', sd_`m'`c']
+			if `c' == 1 matrix est_`m' = est_`m'`c'
+			if `c' > 1  matrix est_`m' = [est_`m',est_`m'`c']
+			}	
+	}	
+
+	if `reps' == 1{
+		matrix out_dis = [est_TO,.,est_TOT\est_UO,est_UOT,.\est_TE,.,.]
+		frmttable, statmat(out_dis) varlabels  ///
+             rtitles("Treated Outcome"  \ "Untreated Outcome"  \ "Treatment Effect" ) ///
+             ctitles("","Always","Compliers","Never","Untreated","Treated" \"", "Takers", "", "Takers", "Outcome Test", "Outcome Test"\"","(1)","(2)","(3)","(2)-(3)","(1)-(2)") ///
+             title("Average Outcome of Always Takers, Compliers, and Never Takers")
+	}
+	else{
+		matrix out_dis = [est_TO,.,.,est_TOT\est_UO,est_UOT,.,.\est_TE,.,.,.,.]
+		frmttable, statmat(out_dis) substat(1) varlabels  ///
+             rtitles("Treated Outcome" \ "" \ "Untreated Outcome" \ "" \ "Treatment Effect" \ "") ///
+             ctitles("","Always","Compliers","Never","Untreated","Treated" \"", "Takers", "", "Takers", "Outcome Test", "Outcome Test"\"","(1)","(2)","(3)","(2)-(3)","(1)-(2)") ///
+             title("Average Outcome of Always Takers, Compliers, and Never Takers")
+
+	}
+	* Return results
+	if `reps' != 1 {
+		local colname "Always_Takers:est Always_Takers:std_error"
+		local colname "`colname' Compliers:est Compliers:std_error"
+		local colname "`colname' Never_Takers:est Compliers:std_error"
+	} 
+	else{
+		local colname "Always_Takers:est"
+		local colname "`colname' Compliers:est"
+		local colname "`colname' Never_Takers:est"
+	}
+	matrix colnames est_TO = `colname'
+	ereturn matrix Treated_Outcome = est_TO
+	
+	matrix colnames est_UO = `colname'
+	ereturn matrix Untreated_Outcome = est_UO
+	
+	matrix colnames est_TE = `colname'
+	ereturn matrix Treatment_Effect = est_TE
+
+	
+	// ------------------------ GRAPHICAL PRESENTATION -------------------------
+	
+	* Graph mte bounds
+	
+	/* -------------- GRAPH AVERAGES OF THE OUTCOME FOR EACH GROUP ----------------*/ 
+
+	
+	use "`temporigin'", clear
+	
+	qui su `depvar' if `treatment' == 1 & `IV'== 0
+	local Z0_D1 = r(mean)
+	
+	qui su `depvar' if `treatment' == 0 & `IV' == 1 
+	local Z1_D0  = r(mean)
+		
+	qui su `depvar' if `treatment' == 1 & `IV' == 1
+	local Z1_D1 = r(mean)
+	
+	qui su `depvar' if `treatment' == 0 & `IV' == 0 
+	local Z0_D0 = r(mean)	
+
+	qui su `IV'     
+	local sp_I = `r(mean)'
+		
+	qui su  `treatment' if `IV' == 0
+	local pC = r(mean)					
+		
+	qui su `treatment' if `IV'== 1	
+	local pI = `r(mean)'
+
+	local compD1 = (`pI'*`Z1_D1'-`pC'*`Z0_D1')/(`pI'-`pC') 	
+		
+	local compD0 = ((1-`pC')*`Z0_D0'-(1-`pI')*`Z1_D0')/(`pI'-`pC')
+	qui{
+		des `depvar'
+		di `r(N)'
+		range t 1 `r(N)' `r(N)'  // create r(N) observation from 1 to r(N)
+
+		gen z0_d1 = . 
+		replace z0_d1 = `Z0_D1' if t <= 2  // Z0_D1
+		gen z1_d0 = . 
+		replace z1_d0 = `Z1_D0' if t <= 2  // Z1_D0
+		gen compd1 = .
+		replace compd1 = `compD1' if t <= 2		
+		gen compd0 = .
+		replace compd0 = `compD0' if t <= 2
+		
+		gen pc=.
+		replace pc = 0 if t==1
+		replace pc =`pC' if t==2
+		
+		gen pbi=.
+		replace pbi=`pC' if t==1
+		replace pbi=`pI' if t==2
+		
+		gen pi=.
+		replace pi=`pI' if t==1
+		replace pi= 1 if t==2
+		
+		local midpI = (1+`pI')/2
+		local midp = (`pI'+`pC')/2
+		local midpC = `pC'/2
+		
+		gen b_to =. 
+		replace b_to = `compD1' if t<=2
+		
+		gen b_uo =.
+		replace b_uo = `compD0' if t<=2 
+	}
+
+	graph twoway (line z0_d1 pc, lwidth(thick) ylabel(#6)lpattern(shortdash) /* 
+	*/    lcolor(green) xlabel(0 `pC' "p{sub:C}" 0.25 `pI' "p{sub:I}" 0.50  0.75 1.00) )/*
+	*/   (line compd1 pbi, lwidth(thick) lpattern(shortdash) lcolor(green)) /*
+	*/   (line compd0 pbi, lwidth(thick) lpattern(longdash) lcolor(blue))/*	
+	*/   (line z1_d0 pi, lwidth(thick) lpattern(longdash) lcolor(blue) ylabel(0 `Z0_D1' `Z1_D0' `compD1' `compD0', format(%8.2f) angle(horizontal))), /*
+	*/    xscale(r(0 1)) yline(0, lcolor(black))  /*
+	*/    title("Average outcomes") /*
+	*/    xtitle("U{sub:D}: net unobserved cost of treatment")	/*
+	*/    ytitle(`depvar') /*
+	*/    legend(order (1 "Treated" 3 "Untreated") cols(2) colgap(3) symxsize(10)) /*
+	*/    name(mte_average_outcomes, replace)
+	
+	* Graphs linear mto, muo, mte functions
+	
+	use "`temporigin'", clear
+	qui su `depvar' if `treatment' == 1 & `IV'== 0
+	local Z0_D1 = r(mean)	
+	qui su `depvar' if `treatment' == 0 & `IV' == 1 
+	local Z1_D0  = r(mean)		
+	qui su `depvar' if `treatment' == 1 & `IV' == 1
+	local Z1_D1 = r(mean)	
+	qui su `depvar' if `treatment' == 0 & `IV' == 0 
+	local Z0_D0 = r(mean)	
+	qui su `IV'     
+	local sp_I = `r(mean)'		
+	qui su  `treatment' if `IV' == 0
+	local pC = r(mean)				
+	qui su `treatment' if `IV'== 1	
+	local pI = `r(mean)'
+	local compD1 = (`pI'*`Z1_D1'-`pC'*`Z0_D1')/(`pI'-`pC') 			
+	local compD0 = ((1-`pC')*`Z0_D0'-(1-`pI')*`Z1_D0')/(`pI'-`pC')
+
+	qui {
+	des `depvar'
+	di `r(N)'
+	range t 1 `r(N)' `r(N)'  // create r(N) observation from 1 to r(N)
+	
+	gen to = .
+	replace to = `Z0_D1' if  t==1
+	replace to = `compD1' if t==2
+		
+	gen pto = .
+	replace pto = `pC'/2 if t==1
+	replace pto = (`pI'+`pC')/2 if t==2
+		
+	gen uo = .
+	replace uo = `compD0' if t==1
+	replace uo = `Z1_D0' if t==2
+		
+	gen puo =.
+	replace puo = (`pI'+`pC')/2 if t==1
+	replace puo = (1+`pI')/2 if t==2
+		
+	gen te = .
+	replace te = MTE[1,1] if t==1 /* intercept of MTE(p) */
+	replace te = `compD1' - `compD0'  if t==2 // `LATE'
+		
+	gen pte = .
+	replace pte = 0 if t==1
+	replace pte = (`pI'+`pC')/2 if t==2
+		
+	gen te_late = .
+	replace te_late = `compD1' - `compD0' if t==2
+	}	
+
+	qui graph twoway (scatter to pto, msymbol(O) mcolor(green)) /*
+	*/   (lfit to pto,range(0 1) ylabel(#6)xlabel(0 `pC'"p{sub:C}" 0.25 `pI'"p{sub:I}" 0.50  0.75 1.00) /*
+	*/   ylabel(0 `Z0_D1' `Z1_D0' `compD1' `compD0' `late', format(%8.2f) angle(horizontal)) /*
+	*/   lwidth(medium) lpattern(shortdash) lcolor(green)) /*
+	*/   (scatter uo puo, msymbol(O) mcolor(blue)) 	/*
+	*/   (lfit uo puo, range(0 1) lpattern(longdash) lcolor(blue)) /* 
+	*/   (scatter te_late pte, msymbol(O) mcolor(red)) /*
+	*/   (lfit te pte, range(0 1) lpattern(solid) lcolor(red)), /*
+	*/   yline(0, lcolor(black)) xscale(r(0 1)) /*
+	*/   xtitle("U{sub:D}: unobserved net cost of treatment") ytitle(`depvar')/*
+	*/   title("MTO(p), MUO(p), MTE(p)") name(mte_linear, replace) /*
+	*/   legend(order (2 "MTO(p)" 4 "MUO(p)"  6 "MTE(p)") cols(3))
+	
+	qui gr combine mte_average_outcomes mte_linear, ycommon 
+	qui gr export `graphsave'.eps, logo(off) replace
+	qui ! epstopdf `graphsave'.eps 
+	
+	
+}
+else{ /*------------ Display results for the with covariate case --------------*/
+	* Return the beta cofficients
+	forval d = 0/1 {
+		matrix beta_`d' = beta_`d'_mat[1,1...]
+		svmat beta_`d'_mat
+		forval j = 1/`=colsof(beta_`d'_mat)'{
+			qui sum beta_`d'_mat`j'
+			if `j' == 1 matrix sd_beta_`d' = [r(sd)]
+			if `j' >  1 matrix sd_beta_`d' = [sd_beta_`d',r(sd)]
+		}
+		matrix beta_`d' = [beta_`d' \ sd_beta_`d']
+	}
+	matrix colnames beta_1 = `indepvars'
+	matrix rownames beta_1 = est std_error
+	ereturn matrix beta_to = beta_1
+	matrix colnames beta_0 = `indepvars'
+	matrix rownames beta_0 = est std_error
+	ereturn matrix beta_uo = beta_0
+	
+	
+	* Display the SMTE, SMTO, SMUO coefficients
+	local outc "TO UO TE"
+	foreach x of local outc {	
+		matrix SM`x'_est = SM`x'_mat[1,1...]
+		svmat SM`x'_mat
+		forval j = 1/`=colsof(SM`x'_mat)'{
+			if `j' == 1  local colname1 "Intercept"
+			if `j' > 1   local colname1 "`colname1', "Polynomial order `=`j'-1'"  "
+
+			if `j' == 1 & `reps' == 1 local colname2 "Intercept"
+			if `j' == 1 & `reps' != 1 local colname2 "Intercept Std_error"
+			if `j' > 1  & `reps' == 1 local colname2 "`colname2' Polynomial_order_`=`j'-1' "
+			if `j' > 1  & `reps' != 1 local colname2 "`colname2' Polynomial_order_`=`j'-1' Std_error"
+			qui sum SM`x'_mat`j', detail
+			scalar SM`x'`j'_std = r(sd)
+			scalar SM`x'`j'_est = SM`x'_est[1,`j']
+			if `reps' != 1 matrix SM`x'`j' = [SM`x'`j'_est, SM`x'`j'_std]
+			if `reps' == 1 matrix SM`x'`j' = [SM`x'`j'_est]
+			if `j'  == 1 matrix SM`x' = SM`x'`j'
+			if `j'  >  1 matrix SM`x' = [SM`x',SM`x'`j']
+		}	
+	}
+	
+	matrix SM_mat = [SMTO \ SMUO \ SMTE]
+	if `reps' != 1{
+		frmttable, statmat(SM_mat) substat(1) ///
+			rtitles("E[MTO(X,p)]" \ "" \ "E[MUO(X,p)]" \ "" \ "E[MTE(X,p)]" \ "") ///
+			ctitles("", `colname1') ///
+			title("Marginal Treated Outcome (E[MTO(X,p)]), Untreated Outcome (E[MUO(X,p)])," " and Treatment Effect (E[MTE(X,p)]) Coefficients")
+	}
+	else{
+		frmttable, statmat(SM_mat) ///
+			rtitles("E[MTO(X,p)]" \ "E[MUO(X,p)]" \ "E[MTE(X,p)]") ///
+			ctitles("", `colname1') ///
+			title("Marginal Treated Outcome (E[MTO(X,p)]), Untreated Outcome (E[MUO(X,p)])," " and Treatment Effect (E[MTE(X,p)]) Coefficients")
+	
+	}
+
+	* Display TE, TO, UO for Compliers, Always Takers and Never Takers
+	local outc "TO UO TE"
+	
+	* Return results SMTO
+	matrix colnames SMTO = `colname2'
+	ereturn matrix EMTO = SMTO
+	* Return results SMUO
+	matrix colnames SMUO = `colname2'
+	ereturn matrix EMUO = SMUO
+	* Return results SMTE
+	matrix colnames SMTE = `colname2'
+	ereturn matrix EMTE = SMTE
+
+	foreach o of local outc{
+		matrix S`o' = J(1,6,.)
+		svmat S`o'_mat 
+		forval j = 1/`=colsof(S`o'_mat)'{
+			qui sum S`o'_mat`j'
+			matrix S`o'[1,2*`j'-1] = S`o'_mat[1,`j']
+			matrix S`o'[1,2*`j']   = r(sd)
+		}
+	}
+	matrix SO_mat = [STO \ SUO \ STE]
+	frmttable, statmat(SO_mat) substat(1) sdec(2) ///
+		rtitles("Treated Outcome" \ "" \"Untreated Outcome"\""\ "Treatment Effect") ///
+		ctitles("","Alway Takers","Compliers", "Never Takers") ///
+		title("Treated Outcome, Untreated Outcome, and Treatment Effect")
+		
+	* Return results STO
+	matrix STO = [STO[1,1],STO[1,3],STO[1,5]\STO[1,2],STO[1,4],STO[1,6]]
+	matrix colnames STO = Always_Takers Compliers Never_Takers
+	matrix rownames STO = Estimate Std_error
+	ereturn matrix Treated_outcome = STO
+	
+	* Return results SUO
+	matrix SUO = [SUO[1,1],SUO[1,3],SUO[1,5]\SUO[1,2],SUO[1,4],SUO[1,6]]
+	matrix colnames SUO = Always_Takers Compliers Never_Takers
+	matrix rownames SUO = Estimate Std_error
+	ereturn matrix Untreated_outcome = SUO
+	
+	* Return results SUO
+	matrix STE = [STE[1,1],STE[1,3],STE[1,5]\STE[1,2],STE[1,4],STE[1,6]]
+	matrix colnames STE = Always_Takers Compliers Never_Takers
+	matrix rownames STE = Estimate Std_error
+	ereturn matrix Treatment_Effects = STE
+	
+	// Graph MTE(x,p), MTO(x,p), MUO(x,p) 
+	* Use the original  data set, instead of the bootstrap data set
+	use "`temporigin'", clear  
+	
+	* Calculate coefficient vectors of the average, min, and max MTE(p)
+	* Recall that MTE(p)=(beta_0-beta_1)*x+mte(p), where small mte(p) is the polynomial
+	* of p_Z with coefficients lambda. Therefore avg_MTE(p) = avg(beta_0*X-beta_1*X)
+	* + mte(p), and so are for min, max_MTE(p)
+	qui gen double mu_TE_1 = 0
+	qui gen double mu_TO_1 = 0 
+	qui gen double mu_UO_1 = 0
+	foreach x of varlist `indepvars' {
+		qui replace mu_TE_1 = mu_TE_1 + (_b1_1_`x'-_b1_0_`x')*`x' 
+		qui replace mu_TO_1 = mu_TO_1 + _b1_1_`x' * `x'
+		qui replace mu_UO_1 = mu_UO_1 + _b1_0_`x' * `x'
+		}
+	
+	local outcome "TE TO UO"
+	foreach o of local outcome{
+		qui sum mu_`o'_1
+		local avg_mu_`o' = `r(mean)'
+		local min_mu_`o' = `r(min)'
+		local max_mu_`o' = `r(max)'
+	}
+	
+	qui sum `depvar'
+	local obs = `r(N)'
+	range p 0 1 `r(N)' // generate the propensity score for graphing
+	
+	foreach o of local outcome{
+		qui gen m`o'p = 0 
+		forvalues n = 0/`poly'{
+			qui replace m`o'p = m`o'p + lambda`o'_1_matrix[1,1+`n'] * p^`n'
+		}
+		qui gen M`o'_avg = m`o'p + `avg_mu_`o'' // generate average MTO, MUO, MTE
+	}
+	// generate MTEmax and MTEmin	
+	qui gen MTE_max = mTEp + `max_mu_TE'
+	qui gen MTE_min = mTEp + `min_mu_TE'
+
+	// create x list
+	local covar ""
+	local i = 1
+	foreach x of local indepvars {
+		if `i' == 1 local covar "`x'"
+		if `i' > 1  local covar "`covar', `x'"
+		local i = `i'+ 1
+	}
+	
+	// Graph MTOavg, MUOavg, MTEavg
+	qui graph twoway (line MTE_avg p , ylabel(#6) lwidth(medium) lcolor(red)) 	/*
+		*/   (line MUO_avg p, lwidth(medium) lpattern(longdash) lcolor(blue)) 	/*
+		*/   (line MTO_avg p, lwidth(medium) lpattern(shortdash) lcolor(green)),	/* 
+		*/    yline(0, lcolor(black)) /*
+		*/    xscale(r(0 1)) name(average_fncs, replace) title("Average MTO, MUO, MTE") /*
+		*/    ytitle("`depvar'") /*
+		*/    xtitle("U{sub:D}: net unobserved cost of treatment") /*
+		*/    legend(order (1 "E[MTE(X,p)]:`covar'" 2 "E[MUO(X,p)]" 3 "E[MTE(X,p)]") cols(1))
+
+
+	// Graph MTEmax, MTEmin, MTEavg
+	qui graph twoway (line MTE_avg p, ylabel(#6) lwidth(medium) lcolor(red)) 	/*
+		*/   (line MTE_min p, lwidth(medium) lpattern(longdash) lcolor(orange_red)) 	/*
+		*/   (line MTE_max p, lwidth(medium) lpattern(longdash) lcolor(sienna)),	/* 
+		*/    yline(0, lcolor(black)) /*
+		*/    xscale(r(0 1)) name(MTE_fncs, replace) title("Bounds for MTE(X,p)")/*
+		*/    ytitle("`depvar'") /*
+		*/    xtitle("U{sub:D}: net unobserved cost of treatment") /*
+		*/    legend(order (1 "E[MTE(X,p)]:`covar'" 2 "minMTE(x,p)" 3 "maxMTE(x,p)") cols(1))
+
+	qui graph combine average_fncs MTE_fncs, ycommon
+	qui gr export `graphsave'.eps, logo(off) replace
+	qui ! epstopdf `graphsave'.eps
+
+}
+
+// ereturn post
 
 * Store the number of observations in e()
 qui count
@@ -1635,558 +1477,13 @@ ereturn scalar reps = `reps'-1
 * Store the polynomial number in e()
 ereturn scalar poly = `poly'
 
-* Store internal and external validity results in e()
-ereturn matrix internal_valid = intvalid
-ereturn matrix did_reg = did	
-
-
-if "`indepvars'" == "" {
-				
-	/* -------------DISPLAY RESULT FOR THE CASE WITHOUT COVARIATES--------------*/
-
-	* Results for the slope and intercept of MTO(p), MUO(p), MTE(p)
-	local matr "MTE MTO MUO TO TE UO"
-	foreach m of local matr {
-		matrix `m'_dis = `m'[1..3,1...]
-		svmat double `m' 
-				
-		local col = colsof(`m')
-		forvalues  c = 1/ `col'{
-			_pctile `m'`c' if _n!=1, p(2.5) 
-			matrix `m'_dis [2,`c'] = `r(r1)'
-			_pctile `m'`c' if _n!=1, p(97.5)
-			matrix `m'_dis [3,`c'] = `r(r1)'
-		}
-
-	}
+* Reload data
 	
-
-	local rowname "Estimate 95%CI_lower 95%CI_upper"
-
-	di ""
-	di ""
-	di as result "Marginal Treated Outcome (MTO), Marginal Untreated Outcome (MUO), Marginal Treatment Effect (MTE)" 
-	matrix fn_coeff_di = [MTO_dis,MUO_dis,MTE_dis]
-	matrix coleq fn_coeff_di = MTO MTO MUO MUO MTE MTE
-	matrix colnames fn_coeff_di = Intercept Slope Intercept Slope Intercept Slope
-	matrix rownames fn_coeff_di = `rowname'
-	matlist fn_coeff_di , showcoleq(combined)
-	
-	* Return results
-	matrix  rownames MTO_dis = `rowname'
-	matrix  colnames MTO_dis = intercept slope 
-	ereturn matrix MTO = MTO_dis
-	matrix  rownames MUO_dis = `rowname'
-	matrix  colnames MUO_dis = intercept slope 
-	ereturn matrix MUO = MUO_dis
-	matrix  rownames MTE_dis = `rowname'
-	matrix  colnames MTE_dis = intercept slope  
-	ereturn matrix MTE = MTE_dis
-	di ""
-	di ""
-	di as result "Treated Outcomes (TO), without covariates" 
-	matrix colnames TO_dis =  BT BU IT IU RIST RISU LA A
-	matrix rownames TO_dis = `rowname'
-	matlist TO_dis ,  showcoleq(combined) aligncolnames(center) 
-	di ""
-	di ""
-	di as result "Untreated Outcomes (UO), without covariates" 
-	matrix colnames UO_dis =  BT BU IT IU RIST RISU LA A
-	matrix rownames UO_dis = `rowname'
-	matlist UO_dis ,  showcoleq(combined) aligncolnames(center) 
-	di ""
-	di ""
-	di as result "Treatment Effects (TE), without covariates"
-	matrix colnames TE_dis =  BT BU IT IU RIST RISU LA A
-	matrix rownames TE_dis = `rowname'
-	matlist TE_dis ,  showcoleq(combined) aligncolnames(center) 
-	
-	* Return results
-	ereturn matrix TE = TE_dis
-	ereturn matrix TO = TO_dis
-	ereturn matrix UO = UO_dis	
-
-	* Results for decomposition of treated outcomes and OLS estimates into 
-	* selection and treatment effects, if specified
-	if "`decomp'" == ""{
-		local matr "selection treatment OLS_est OLS_sel OLS_tre"
-		foreach m of local matr {
-			matrix `m'_dis = `m'[1..3,1...]
-			svmat double `m' 
-			local col = colsof(`m')
-			forvalues  c = 1/ `col'{
-				_pctile `m'`c' if _n!=1, p(2.5)
-				matrix `m'_dis [2,`c'] = `r(r1)'
-				_pctile `m'`c' if _n!=1, p(97.5)
-				matrix `m'_dis [3,`c'] = `r(r1)'
-			}
-		}
-	
-		di ""
-		di ""
-		di as result "Decomposition of Treated Outcomes into Selection and Treatment Effects"
-		di ""
-		di as result "Treated Outcome Selection Effects"
-		matrix colnames selection_dis = BT BU IT IU RIST RISU LA A
-		matrix rownames selection_dis = Estimate 95%CI_lower 95%CI_upper
-		matlist selection_dis,   showcoleq(combined) ///
-			aligncolnames(center) 
-		di ""
-		di as result "Treated Outcome Treatment Effects"
-		matrix colnames treatment_dis = BT BU IT IU RIST RISU LA A
-		matrix rownames treatment_dis = Estimate 95%CI_lower 95%CI_upper
-		matlist treatment_dis,   showcoleq(combined) ///
-			aligncolnames(center) 
-		di ""
-		di ""
-		di as result "OLS Estimates"
-		local col "BOLS IOLS RISOLS"
-		local row "Estimate 95%CI_lower 95%CI_upper"
-		matrix colnames OLS_est_dis = `col'
-		matrix rownames OLS_est_dis = `row'
-		matlist OLS_est_dis,  showcoleq(combined) ///
-			aligncolnames(center) 
-		di ""
-		di ""
-		di as result "Decomposition of OLS into Selection and Treatment Effects"
-		di as result "OLS Selection Effect"
-		matrix coleq OLS_sel_dis = BOLS BOLS IOLS IOLS RISOLS RISOLS 
-		matrix colnames OLS_sel_dis = via_BT via_BU ///
-			via_IT via_IU via_RIST via_RISU
-		matrix rownames OLS_sel_dis = Estimate 95%CI_lower 95%CI_upper
-		matlist OLS_sel_dis,  showcoleq(combined) ///
-			aligncolnames(center) 
-		di""
-		di as result "OLS Treatment Effect"
-		matrix coleq OLS_tre_dis = BOLS BOLS IOLS IOLS RISOLS RISOLS
-		matrix colnames OLS_tre_dis = via_BT  via_BU ///
-			via_IT via_IU via_RIST via_RISU
-		matrix rownames OLS_tre_dis = Estimate 95%CI_lower 95%CI_upper
-		matlist OLS_tre_dis, showcoleq(combined) ///
-			aligncolnames(center) 
-		* Return results
-		ereturn matrix selection = selection_dis
-		ereturn matrix treatment = treatment_dis
-		ereturn matrix OLS_est = OLS_est_dis
-		ereturn matrix OLS_selection = OLS_sel_dis
-		ereturn matrix OLS_treatment = OLS_tre_dis
-	}
-
-	/* -------------GRAPHICAL PRESENTATION --------------*/
-	
-
-	local BTTO = Statmat[2,6]
-	local IUUO = Statmat[2,9]
-	local LATO = Statmat[2,10]
-	local LAUO = Statmat[2,11]
-	local LATE = `LATO' - `LAUO'
-	
-	* Only post the Statmat into e() now because once posted, data 
-	* stored in e() will be lost, and thus the above codes to get 
-	* BTTO, etc. will not work
-	ereturn matrix averages = Statmat  	
-	
-	* Graph bounds (i.e., assuming monotonicity)
-	qui {
-		des `depvar'
-		di `r(N)'
-		range t 1 `r(N)' `r(N)'  
-
-		gen btto = . 
-		replace btto = `BTTO' if t<=2 
-		gen iuuo = . 
-		replace iuuo = `IUUO' if t<=2
-		gen lato = .
-		replace lato = `LATO' if t<=2
-		gen lauo = .
-		replace lauo = `LAUO' if t<=2
-		
-		gen late = lato - lauo
-		gen up_late_a = btto - lauo
-		gen up_late_n = lato - iuuo
-			
-		gen pb=.
-		replace pb = 0 if t==1
-		replace pb =`pB' if t==2
-		
-		gen pbi=.
-		replace pbi=`pB' if t==1
-		replace pbi=`pI' if t==2
-		
-		gen pi=.
-		replace pi=`pI' if t==1
-		replace pi= 1 if t==2
-		
-		local midpI = (1+`pI')/2
-		local midp = (`pI'+`pB')/2
-		local midpB = `pB'/2
-		
-		gen b_to =. 
-		replace b_to = `LATO' if t<=2
-		
-		gen b_uo =.
-		replace b_uo = `LAUO' if t<=2 
-	}
-
-	if `BTTO' >= `LATO' local lab_to "MTO(p) upper bound"
-	if `BTTO' <= `LATO' local lab_to "MTO(p) lower bound"
-	if `LAUO' >= `IUUO' local lab_uo "MUO(p) lower bound"
-	if `LAUO' <= `IUUO' local lab_uo "MUO(p) upper bound"
-	local lab_late "MTE(p) upper bound"
-
-	qui graph twoway (line btto pb, lwidth(medium) ylabel(#6) xlabel(0 `pB' "p{sub:B}" 0.25 `pI' "p{sub:I}" 0.50  0.75 1.00) /*
-	*/    lpattern(shortdash) lcolor(green) text(`BTTO' `midpB' "BTTO", place (n))) /*
-	*/   (line lato pbi, lwidth(medium) lpattern(shortdash) lcolor(green) text(`LATO' `midp' "LATO", place(n)))/*
-	*/   (line lauo pbi, lpattern(longdash) lcolor(blue) text(`LAUO' `midp' "LAUO", place(n)))/*	
-	*/   (line iuuo pi, lpattern(longdash) lcolor(blue) text(`IUUO' `midpI' "IUUO", place(n)))/*
-	*/   (line late pbi, lpattern(solid) lcolor(red) text(`LATE' `midp' "LATE", place(n)))   /*
-	*/   (line b_to pi, lwidth(thick) lpattern(shortdash) lcolor(green))/*
-	*/   (line b_uo pb, lwidth(thick) lpattern(longdash) lcolor(blue)) /*
-	*/   (line up_late_a pb, lpattern(solid) lwidth(thick) lcolor(red)) /*
-	*/   (line up_late_n pi, lpattern(solid) lwidth(thick) lcolor(red)), /*
-	*/    yline(0, lcolor(black)) /*
-	*/    xscale(r(0 1)) /*
-	*/    xtitle("p: potential fraction treated" "U{sub:D}: net unobserved cost of treatment") /*
-	*/    legend(order (1 "MTO(p)" 6 "`lab_to'"  3 "MUO(p)" 7 "`lab_uo'"  5 "MTE(p)" 8 "`lab_late'") cols(2) colgap(3) symxsize(10)) /*
-	*/    title("A. Monotonicity")/*
-	*/   nodraw name(mte_bounds, replace)
-		
-	*qui graph save mte_bounds, replace
-
-	* Graph MTE(p) (assuming linearity)
-	qui{
-		gen to = .
-		replace to = `BTTO' if t==1
-		replace to = `LATO' if t==2
-		
-		gen pto = .
-		replace pto = `midpB' if t==1
-		replace pto = `midp' if t==2
-		
-		gen uo = .
-		replace uo = `LAUO' if t==1
-		replace uo = `IUUO' if t==2
-		
-		gen puo =.
-		replace puo = `midp' if t==1
-		replace puo = `midpI' if t==2
-		
-		gen te = .
-		replace te = MTE[1,1] if t==1 /* intercept of MTE(p) */
-		replace te = `LATE' if t==2
-		
-		gen pte = .
-		replace pte = 0 if t==1
-		replace pte = `midp' if t==2
-		
-		gen te_late = .
-		replace te_late = `LATE' if t==2
-	}	
-
-	qui graph twoway (scatter to pto, msymbol(O) mcolor(green)) /*
-	*/   (lfit to pto,range(0 1) ylabel(#6) xlabel(0 `pB'"p{sub:B}" 0.25 `pI'"p{sub:I}" 0.50  0.75 1.00) /*
-	*/   	lwidth(medium) lpattern(shortdash) lcolor(green) text(`BTTO' `midpB' "BTTO", place(n)) text(`LATO' `midp' "LATO", place (n))) /*
-	*/   (scatter uo puo, msymbol(O) mcolor(blue)) 	/*
-	*/   (lfit uo puo, range(0 1) lpattern(longdash) lcolor(blue) /* 
-	*/  	 text(`LAUO' `midp' "LAUO", place (n)) text(`IUUO' `midpI' "IUUO", place(n)))/*
-	*/   (scatter te_late pte, msymbol(O) mcolor(red)) /*
-	*/   (lfit te pte, range(0 1) lpattern(solid) lcolor(red) text(`LATE' `midp' "LATE" , place(n))), /*
-	*/   	 yline(0, lcolor(black)) /*
-	*/  	 xscale(r(0 1)) /*
-	*/   	 xtitle("p: potential fraction treated" "U{sub:D}: net unobserved cost of treatment") /*
-	*/    title("B. Linearity")/*
-	*/   	 nodraw   name(mte_linear, replace) /*
-	*/   	 legend(order (2 "MTO(p): marginal treated outcome" 4 "MUO(p): marginal untreated outcome"  6 "MTE(p): marginal treatment effect") cols(1))
-
-	*qui graph save mte_linear, replace
-
-	qui gr combine mte_bounds mte_linear, ycommon 
-	qui gr export `graphsave'.eps, logo(off) replace
-	qui ! epstopdf `graphsave'.eps 
-
-} // close indep vars clause
-	
-else {
-
-	* Only post the Statmat into e() now because once posted, data 
-	* stored in e() will be lost, and thus the above codes to get 
-	* BTTO, etc. will not work
-	ereturn matrix averages = Statmat  
-	
-	matrix beta_mat = beta_1_mat - beta_0_mat
-	
-	/* -------------DISPLAY RESULTS --------------*/
-
-	local matrices "SMTO SMTE SMUO SUO STO STE mto mte muo beta_1 beta_0 beta minmte maxmte"
-
-	foreach mat of local matrices {
-
-		svmat double `mat'_mat  
-		matrix define `mat'_dis = `mat'_mat[1..3,1...] 
-		
-		* Calculate 95% CI 
-		local col = colsof(`mat'_mat) 
-		forvalues c = 1/`col' {
-			_pctile `mat'_mat`c' if _n!=1, p(2.5)
-			matrix `mat'_dis[2,`c'] = `r(r1)'
-			_pctile `mat'_mat`c' if _n!=1, p(97.5)
-			matrix `mat'_dis[3,`c'] = `r(r1)'
-		}
-	}
-
-	local rowname "Estimate 95%CI_lower 95%CI_upper"
-
-	* Display results for the coefficients of SMTO(p), SMUO(p), SMTE(p)
-	di ""
-	di ""
-	di as result "Coefficients of the Sample Marginal Treated Outcome (SMTO), Sample Marginal Untreated Outcome (SMUO), and Sample Marginal Treatment Effect (SMTE)"
-	di "(_# denotes the coefficient associated with power # in the polynomial)"
-	local colname ""
-	local os "TO UO TE"
-	foreach o of local os{
-		forval n=0/`poly'{
-			if `n' == 0 {
-				local colname "`colname' const_SM`o'"
-			}
-			else {
-				local colname "`colname' SM`o'_`n'"
-			}
-		}
-	}
-
-	matrix glpl_dis = [SMTO_dis, SMUO_dis, SMTE_dis]
-	matrix colnames glpl_dis  = `colname'
-	matrix rownames glpl_dis  = `rowname'
-	matlist glpl_dis
-
-	* Display treated outcomes, untreated outcomes 
-	di ""
-	di ""
-	di "Sample Treated Outcomes (TO), with covariates"
-	matrix colnames STO_dis =  BT BU IT IU RIST RISU LA A
-	matrix rownames STO_dis = `rowname'
-	matlist STO_dis , aligncolnames(center) showcoleq(combined)  
-	di ""
-	di ""
-	di "Sample Untreated Outcomes (UO), with covariates"
-	matrix colnames SUO_dis =  BT BU IT IU RIST RISU LA A
-	matrix rownames SUO_dis = `rowname'
-	matlist SUO_dis , aligncolnames(center) showcoleq(combined)  
-	di ""
-	di ""
-	di "Sample Treatment Effects (TE), with covariates"
-	matrix colnames STE_dis =  BT BU IT IU RIST RISU LA A
-	matrix rownames STE_dis = `rowname'
-	matlist STE_dis , aligncolnames(center) showcoleq(combined)  
-	
-	* Generate column names for matrices in ereturn
-	local colname_min ""
-	local colname_max ""
-	local colname_SMUO "" 
-	local colname_SMTO ""
-	local colname_SMTE ""
-	forval n=0/`poly'{
-		if `n' == 0 {
-			local colname_min "`colname_min' const"
-			local colname_max "`colname_max' const"
-			local colname_SMUO "`colname_SMUO' const"
-			local colname_SMTO "`colname_SMTO' const"
-			local colname_SMTE "`colname_SMTE' const"
-		}
-		else {
-			local colname_min "`colname_min' min_`n'"
-			local colname_max "`colname_max' max_`n'"
-			local colname_SMUO "`colname_SMUO' SMUO_`n'"
-			local colname_SMTO "`colname_SMTO' SMTO_`n'"
-			local colname_SMTE "`colname_SMTE' SMTE_`n'"
-		}
-	}
-	
-	* minMTE
-	matrix colnames minmte_dis = `colname_min'
-	matrix rownames minmte_dis = `rowname'
-	
-	* maxMTE
-	matrix colnames maxmte_dis = `colname_max'	
-	matrix rownames maxmte_dis = `rowname'
-	
-	* SMUO
-	matrix colnames SMUO_dis = `colname_SMUO'
-	matrix rownames minmte_dis = `rowname'
-	
-	* Generate row and column names for the coefficient matrices
-	matrix colnames beta_1_dis = `indepvars'
-	matrix colnames beta_0_dis = `indepvars'
-	matrix rownames beta_1_dis = `rowname'
-	matrix rownames beta_0_dis = `rowname'
-
-	* Return results
-		
-	ereturn matrix SMTE = SMTE_dis
-	ereturn matrix SMTO = SMTO_dis
-	ereturn matrix SMUO = SMUO_dis
-	ereturn matrix beta_to = beta_1_dis
-	ereturn matrix beta_uo = beta_0_dis
-	ereturn matrix STE = STE_dis
-	ereturn matrix STO = STO_dis
-	ereturn matrix SUO = SUO_dis
-	ereturn matrix minMTE = minmte_dis
-	ereturn matrix maxMTE = maxmte_dis
-		
-	* Output the RMSD and fraction explained/unexplained heterogeneity
-	svmat double RMSD_mat 
-	matrix define RMSD_dis = RMSD_mat[1..3,1...]
-	
-	local col = colsof(RMSD_mat) 
-	forvalues c = 1/`col' {
-		_pctile RMSD_mat`c' if _n!=1, p(2.5)
-		matrix RMSD_dis[2,`c'] = `r(r1)'
-		_pctile RMSD_mat`c' if _n!=1, p(97.5)
-		matrix RMSD_dis[3,`c'] = `r(r1)'
-		}
-	di ""
-	di ""
-	di "RMSD, Explained, and Unexplained Heterogeneity in the Treatment Effect"
-	matrix coleq RMSD_dis = MTE(p) MTE(x,p) Explained  Unexplained
-	matrix colnames RMSD_dis =  RMSD0 RMSD Heterog Heterog
-	matrix rownames RMSD_dis = `rowname'
-	matlist RMSD_dis , aligncolnames(center) showcoleq(combined)  
-	ereturn matrix RMSD = RMSD_dis	
-		
-
-	/* -------------GRAPH SMTE(p), minMTE(x,p), and maxMTE(x,p) --------------*/
-
-	* Calculate the covariate component in MTE(x,p) and its 
-	* average, min, max 
-
-	* Use the original  data set, instead of the bootstrap data set
-	use "`temporigin'" ,clear  
-	qui gen double mu_TE_1 = 0
-	foreach x of varlist `indepvars' {
-		qui replace mu_TE_1 = mu_TE_1 + (_b1_1_`x'-_b1_0_`x')*`x'
-	}
-	qui sum mu_TE_1	
-	local avg_mu_te = `r(mean)'
-	local min_mu_te = `r(min)'
-	local max_mu_te = `r(max)'
-	
-	* Calculate coefficient vectors of the average, min, and max MTE(p)
-	* Recall that MTE(p)=(beta_0-beta_1)*x+mte(p), so 
-	* avg_MTE(p) = avg(beta_0*X-beta_1*X) + mte(p), and so are for min, 
-	* max_MTE(p)
- 
-	qui sum `depvar'
-	local obs = `r(N)'
-	range p 0 1 `r(N)'
-	
-	qui gen mtep = 0 
-	forvalues n = 0/`poly'{
-		qui replace mtep = mtep + mte1_matrix[1,1+`n'] * p^`n'
-	}
-	
-	qui gen MTE_avg = mtep + `avg_mu_te'
-	qui sum MTE_avg
-	qui gen MTE_max = mtep + `max_mu_te'
-	qui gen MTE_min = mtep + `min_mu_te'
-
-	if `poly' == 1 {	
-		* Calculate MTE(p) to include in the graph of MTE(x,p) for comparison 
-		* if the specified MTE is linear
-	
-		quietly su `depvar' if `treatment'==1 & `IV'==0
-		local BTTO = `r(mean)'
-		quietly su `depvar' if `treatment'==1 & `IV'==1
-		local ITTO = `r(mean)'
-		quietly su `depvar' if `treatment'==0 & `IV'==0
-		local BUUO = `r(mean)'
-		quietly su `depvar' if `treatment'==0 & `IV'==1
-		local IUUO = `r(mean)'
-		quietly su `IV'        
-		local sp_I = `r(mean)'			
-		quietly su `treatment'  
-		local p = `r(mean)'			
-		quietly su `treatment' if `IV'==1 
-		local pI = `r(mean)'					
-		quietly su `treatment' if `IV'==0 
-		local pB = `r(mean)'
-		local LATO = (`pI'*`ITTO'-`pB'*`BTTO')/(`pI'-`pB')         
-		local LAUO = ((1-`pB')*`BUUO'-(1-`pI')*`IUUO')/(`pI'-`pB')
-		local int_MTE = (`pI'* (`BTTO'-`BUUO')+`pB'*(`IUUO'-`ITTO')+(`IUUO'-`BUUO'))/(`pI'-`pB') 
-		local LATE = `LATO' - `LAUO'   
-		range t 1 `obs' `obs'
-		qui gen te = .
-		qui replace te = `int_MTE' if t==1 
-		qui replace te = `LATE' if t==2
-		qui gen pte = .
-		qui replace pte = 0 if t==1
-		qui replace pte = (`pI'+`pB')/2 if t==2
-	
-
-		qui graph twoway (line MTE_avg p, ylabel(#6) lwidth(medium) lcolor(red))	/*
-		*/   (line MTE_min p, lwidth(medium) lpattern(longdash) lcolor(orange_red)) 	/*
-		*/   (line MTE_max p, lwidth(medium) lpattern(longdash) lcolor(sienna)) 	/*
-		*/   (lfit te pte,range(0 1) lpattern(shortdash) lcolor(red)),	/* 
-		*/    yline(0, lcolor(black)) /*
-		*/    xscale(r(0 1)) /*
-		*/    ytitle("`depvar'") /*
-		*/    xtitle("p: potential fraction treated" "U{sub:D}: net unobserved cost of treatment") /*
-		*/    legend(order (1 "SMTE(p)" 2 "minMTE(x,p)" 3 "maxMTE(x,p)" 4 "MTE(p)")  cols(1))
-		qui gr export `graphsave'.eps, logo(off) replace
-		qui ! epstopdf `graphsave'.eps 
-	}
-	
-	* If the specified MTE is not linear, no MTE(p) without covariate is  
-	* added into the graph. 
-	else{
-	
-		qui graph twoway (line MTE_avg p, ylabel(#6) lwidth(medium) lcolor(red)) 	/*
-		*/   (line MTE_min p, lwidth(medium) lpattern(longdash) lcolor(orange_red)) 	/*
-		*/   (line MTE_max p, lwidth(medium) lpattern(longdash) lcolor(sienna)),	/* 
-		*/    yline(0, lcolor(black)) /*
-		*/    xscale(r(0 1)) /*
-		*/    ytitle("`depvar'") /*
-		*/    xtitle("p: potential fraction treated" "U{sub:D}: net unobserved cost of treatment") /*
-		*/    legend(order (1 "SMTE(p)" 2 "minMTE(x,p)" 3 "maxMTE(x,p)") cols(1))
-		qui gr export `graphsave'.eps, logo(off) replace
-		qui ! epstopdf `graphsave'.eps 
-	}
-} // close clause for case with covariates
-
-
-* Output legend
-di ""
-di ""
-di "------------------------------------------------------------------"
-di "***************************** LEGEND *****************************"
-di ""
-di "	RIS:	Randomized Intervention Sample (Full Sample)"
-di "	I:	Intervention (Lotteried In)"
-di "	B:	Baseline (Lotteried Out)"
-di "	RIST: 	Randomized Intervention Sample Treated (Treated)"
-di "	RISU:	Randomized Intervention Sample Untreated (Untreated)"
-di "	BT:	Baseline Treated (Always Takers)"
-di "	BU:	Baseline Untreated (Never Takers and Untreated Compliers)"
-di "	IT:	Intervention Treated (Always Takers and Treated Compliers)"
-di "	IU:	Intervention Untreated (Never Takers)"
-di "	LAT:	Local Average Treated (Treated Compliers)"
-di "	LAU:	Local Average Untreated (Untreated Compliers)"
-di "	LA:	Local Average (All Compliers)"
-di "	A:	Average"
-di ""
-di "	BOLS:	Baseline OLS"
-di "	IOLS:	Intervention OLS"
-di "	RISOLS: Randomized Intervention Sample OLS"
-di ""
-di "******************************************************************"
-di "------------------------------------------------------------------"
-di ""
-di ""
-
-* Reload data	
 use "`temporigin'", clear
 qui cap drop pred_`depvar'
 qui cap drop wt
 qui cap drop N
 end
+
 
 

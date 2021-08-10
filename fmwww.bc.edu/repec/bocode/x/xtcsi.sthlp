@@ -51,10 +51,15 @@ For a survey and application of existing cross-section dependence tests refer to
 {col 8}{cmd:r(lm_cd)}{col 27}Pesaran (2004) CD test statistic
 {col 8}{cmd:r(p_lm_cd)}{col 27}two-sided p-value of Normal(0,1)
 
+{title:Other packages needed}
+{browse "https://ideas.repec.org/c/boc/bocode/s456713.html":matpwcorr}
+{browse "https://ideas.repec.org/c/boc/bocode/s457238.html":xtmg}
+
+
 {title:References}
 
 {p 0 4 2}Pesaran, Ullah and Yamagata (2008). "A bias-adjusted LM test of error cross-section independence."
-Econometrics Journal, volume 11, pp. 105–127.
+Econometrics Journal, volume 11, pp. 105â€“127.
 
 
 {title:Acknowledgements}

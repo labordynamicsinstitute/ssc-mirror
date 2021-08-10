@@ -19,10 +19,17 @@ d pooled log-k estimate and the component betas,  and optionally, a
 d jackknife estimate of standard error for the pooled  log-k
 d estimate and a bias-reduced estimate.  
 d
-d Distribution-Date: 20040415
+d KW: logistic regression
+d KW: choice
+d KW: utility
+d
+d Requires: Stata version 8.0
+d
 d
 d Author: E. Paul Wileyto, Tobacco Use Research Center, School of Medicine, U. of Pennsylvania
 d Support: email epw@@mail.med.upenn.edu
+d
+d Distribution-Date: 20040415
 d
 f mcqscore.ado
 f mcqscore.hlp

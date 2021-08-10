@@ -46,6 +46,7 @@ Not usually needed.{p_end}
 
 {syntab:Other options}
 {synopt:{opt ref(string)}}Specifies the reference treatment (in case of future conversion to augmented format){p_end}
+{synopt:{opt measure(string)}}Names the measure used (e.g. log odds ratio, mean difference). This is used only to label output.{p_end}
 {synopt:{opt genp:refix(string)}}Prefix to be used before default variable names (e.g. y for treatment contrasts){p_end}
 {synopt:{opt gens:uffix(string)}}Suffix to be used after default variable names{p_end}
 {synoptline}

@@ -1,5 +1,16 @@
 /*
-*! version 1.2.5 # Ian White # 13mar2017
+*! version 1.5.0 # Ian White # 6apr2018 
+	RELEASED TO UCL AND SSC
+	new: network compare
+	minor improvements to setup, meta, forest, import
+version 1.4 # Ian White # 5jan2018 
+	add network loopsplit
+version 1.3.3 # Ian White # 20nov2017 
+	network bayes doesn't require setup or unsetup
+version 1.3.0 # Ian White # 17aug2017
+	bug fixes in network table
+	incorporated (test version of) network bayes
+version 1.2.5 # Ian White # 13mar2017
     final changes to the connectedness routines in network setup
 version 1.2.4 # Ian White # 23feb2017
     changes to the connectedness routines in network setup
@@ -9,7 +20,7 @@ version 1.2.2 # Ian White # 21dec2015
     improvements to checking for connectedness
         in network_components
         in network_meta
-version 1.2.1 # Ian White # 22jul2015
+version 1.2.1 # Ian White # 22jul2015 # RELEASE
     requires version 13 (otherwise selectindex() fails in network_components)
 version 1.2.0 # Ian White # 3jul2015
     changes to setup, meta and sidesplit to accommodate metamiss2
@@ -39,25 +50,42 @@ version 0.4 # 18dec2013
 */
 prog def network
 version 13
-syntax [anything] [if] [in], [*]
+syntax [anything] [if] [in], [which *]
 
 // LOAD SAVED NETWORK PARAMETERS
 foreach thing in `_dta[network_allthings]' {
     local `thing' : char _dta[network_`thing']
 }
 
-// Parse
-gettoken subcmd rest : anything
-
 // Known network subcommands
 * subcmds requiring data NOT network set
 local subcmds0 setup import // start
 * subcmds requiring data network set
 local subcmds1 convert query unset table /// utilities
-    meta sidesplit rank /// analyses
+    meta sidesplit rank loopsplit /// analyses
     forest pattern map // graphs
+* subcmds not minding whether data are network set
+local subcmds2 bayes
 * all known subcommands
-local subcmds `subcmds0' `subcmds1'
+local subcmds `subcmds0' `subcmds1' `subcmds'
+
+// check a subcommand is given
+if mi("`anything'") {
+	di as error "Syntax: network <subcommand>"
+	exit 198
+}
+
+// "which" option
+if "`anything'"=="which" {
+	which network
+	foreach subcmd of local subcmds {
+		which network_`subcmd'
+	}
+	exit
+}
+
+// Parse current subcommand
+gettoken subcmd rest : anything
 
 // Identify abbreviations of known subcommands
 if length("`subcmd'")>=3 {

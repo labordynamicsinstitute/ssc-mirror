@@ -33,19 +33,19 @@
 
 {pstd}
 For every regional unit in the data {cmd:aggind} aggregates metric indicators among neighbouring regional units that are located within a specified radius. 
-Operation requires a distance matrix, adressed with {it:{help filename}}. Distance matrix has to be in .dta format. 
+The operation requires a distance matrix, addressed with {it:{help filename}}. Distance matrix has to be in .dta format. 
 
 {pstd}	
-Distance matrix contains the information about the proximity of the regional units to each other. The three columns of the distance matrix contain id of the origin unit, 
-id of the target unit, and the distance between the two units. To obtain meaningful results it is important that the distance matrix is {break}
+Distance matrix contains the information about the proximity of the regional units to each other. The three columns of the distance matrix contain the id of the origin unit, 
+the id of the target unit, and the distance between the two units. To obtain meaningful results it is important that the distance matrix is {break}
 a) complete, meaning that it contains all pairs of regional units, {break}
 b) the distance between one unit and itself is specified as zero, {break}
 c) variables are in the following order: id of the origin unit, id of the target unit, distance. {break}
-The distance can be physical distance, traveling time etc. Non-spatial proximity definitions can also be used.
+The distance can be physical distance, travelling time etc. Non-spatial proximity definitions can also be used.
 
 {pstd}
-IDs in in the master dataset (id_unit) and id_origin as well as id_target in the distance matrix dataset have to follow the same classification system 
-though identical naming is not required {break} 
+IDs in the master dataset (id_unit) and id_origin as well as id_target in the distance matrix dataset have to follow the same classification system 
+though identical naming is not required. {break} 
 Id_unit is allowed to repeat in the master data, for example if individual-level data is used where cases are clustered within regional units.
 
 {pstd}	
@@ -66,7 +66,7 @@ The command aggregates indicators as average among neighbouring units. Option {c
 sums of the indicators among neighbouring units.
 
 {pstd}
-Option {cmdab:crcl} will additionally add indicators aggregated as average among neigbouring units under deduction of the starting unit.
+Option {cmdab:crcl} will additionally add indicators aggregated as average among neigbouring units with the deduction of the starting unit.
 
 {pstd}
 After the run the data will be sorted by id_unit. 

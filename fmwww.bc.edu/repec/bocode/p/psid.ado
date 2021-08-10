@@ -1,9 +1,15 @@
-*! version 2.00  Juni 4, 2015 @ 09:00:04
+*! version 2.13  April 8, 2021 @ 09:13:05 UK
+* 2.11 Better error messages for missing files and wealth vars ..
+* 2.10 Main release for SSC and Stata User Meeting
 * 1.01 Re-design - psiduse/psidadd -> -psid use- -psid add-/alpha tester version
 * 1.02 Various Bug fixes, subprograms vardoc and long added -> First published on SSC
 * 1.03 CNEF LL upercase/lowercase problem soved
 * 1.04 CNEF LL upercase/lowercase removed in the new data delivery
 * 2.00 Updated to PSID delivery 2013
+* 2.10 Updated to PSID delivery 2015
+* 2.11 Updated to PSID delivery 2017
+* 2.12 Bug fix
+* 2.13 Updated to PSID delivery 2019
 
 * Selector Program
 program psid
@@ -98,7 +104,7 @@ program psid_main
 		local wavelist: list waves - nonwaves
 	}
 	else if "`ftype'" == "wlth" {
-		local availablewaves 1984 1989 1994 1999 2001 2003 2005 2007 2009 2011 2013 2015 2017
+		local availablewaves 1984 1989 1994 1999 2001 2003 2005 2007 2009 2011 2013 2015 2017 2019
 		local wavelist: list availablewaves & waves
 	}
 	else if "`ftype'" == "psid" & "`waves'" != "" {
@@ -156,7 +162,7 @@ program psid_main
 		foreach filetype of local vtypes {
 			foreach wave of local wavelist {
 				if "``filetype'`wave''" != "" {
-					_PROCESS_WAVEFILES_`filetype' ``filetype'`wave'' using `"`using'"' ///
+					noi _PROCESS_WAVEFILES_`filetype' ``filetype'`wave'' using `"`using'"' ///
 					  , wave(`wave') doc(`doc') idfam(`idfam') `lower'
 					tempfile x`filetype'`wave'
 					`doc' save `x`filetype'`wave'', replace
@@ -168,7 +174,7 @@ program psid_main
 		
 		// Retain datasets from constant files 
 		foreach filetype of local ctypes {
-			_PROCESS_`filetype' ``filetype'vars'  ///
+			noi _PROCESS_`filetype' ``filetype'vars'  ///
 			  using `"`using'"', doc(`doc') `lower' indfile(`indfile') delivery(`delivery') 
 			tempfile x`filetype'
 			`doc' save `x`filetype'', replace
@@ -188,7 +194,7 @@ program psid_main
 				local specialyearincluded: list wavelist & specialyear
 				if "`specialyearincluded'" == "" local wavelist `wavelist' `specialyear'
 			}
-			_PROCESS_INDFILE `indvars' using `"`using'"' ///
+			noi _PROCESS_INDFILE `indvars' using `"`using'"' ///
 			  , wavelist(`wavelist') design(`design')  ///
 			  indfile(`indfile') idind(`idind') sqind(`sqind')  ///
 			  doc(`doc') `lower'
@@ -544,9 +550,10 @@ program _PROCESS_WAVEFILES_wlth
 	}
 	
 	`doc' use `s'?01 `wavevars' using `"`using'/wlth`wave'"', clear
-		`doc' ren `s'?01 x11102_`wave'
-		`doc' replace x11102_`wave' = . if x11102_`wave' == 0
-	`doc' sort x11102_`wave'
+	`doc' ren `s'?01 x11102_`wave'
+	`doc' replace x11102_`wave' = . if x11102_`wave' == 0
+		`doc' sort x11102_`wave'
+	
 end
 
 ** 6. Load variables from Childhood and Adaption History and prepare for merging
@@ -931,7 +938,7 @@ program _SET_DELIVERY, rclass
 	local s =cond("`lower'" == "","S","s")
 
 	// I try to find the users delivery by myself ...
-	local stop 2013
+	local stop 2019
 	while `stop' > 1968 {
 		capture confirm file `"`using'/ind`stop'er.dta"'
 		if !_rc {
@@ -952,7 +959,9 @@ program _SET_DELIVERY, rclass
 	  [92] `er'30733 [93] `er'30806 [94] `er'33101 [95] `er'33201  /// 
 	  [96] `er'33301 [97] `er'33401 [99] `er'33501 [01] `er'33601  /// 
 	  [03] `er'33701 [05] `er'33801 [07] `er'33901 [09] `er'34001  ///
-	  [11] `er'34101 [13] `er'34201
+	  [11] `er'34101 [13] `er'34201 [15] `er'34301 [17] `er'34501  ///
+	  [19] `er'34701
+
 	
 	local idfam ///
 	  [68] `v'3      [69] `v'442    [70] `v'1102   [71] `v'1802   [72] `v'2402  [73] `v'3002    ///  
@@ -962,14 +971,16 @@ program _SET_DELIVERY, rclass
 	  [89] `v'16302  [90] `v'17702  [91] `v'19002  [92] `v'20302  [93] `v'21602   /// 
 	  [94] `er'2002  [95] `er'5002  [96] `er'7002  [97] `er'10002 [99] `er'13002  /// 
 	  [01] `er'17002 [03] `er'21002 [05] `er'25002 [07] `er'36002 [09] `er'42002  ///
-	  [11] `er'47302 [13] `er'53002
+	  [11] `er'47302 [13] `er'53002 [15] `er'60002 [17] `er'66002 [19] `er'34701
+
 	local sqind ///
 	  [69] `er'30021 [70] `er'30044 [71] `er'30068 [72] `er'30092 [73] `er'30118 [74] `er'30139  ///
 	  [75] `er'30161 [76] `er'30189 [77] `er'30218 [78] `er'30247 [79] `er'30284 [80] `er'30314  /// 
 	  [81] `er'30344 [82] `er'30374 [83] `er'30400 [84] `er'30430 [85] `er'30464 [86] `er'30499  /// 
 	  [87] `er'30536 [88] `er'30571 [89] `er'30607 [90] `er'30643 [91] `er'30690 [92] `er'30734  /// 
 	  [93] `er'30807 [94] `er'33102 [95] `er'33202 [96] `er'33302 [97] `er'33402 [99] `er'33502  /// 
-	  [01] `er'33602 [03] `er'33702 [05] `er'33802 [07] `er'33902 [09] `er'34002 [11] `er'34102 [13] `er'34202
+	  [01] `er'33602 [03] `er'33702 [05] `er'33802 [07] `er'33902 [09] `er'34002 [11] `er'34102  ///
+	  [13] `er'34202 [15] `er'34302 [17] `er'34502 [19] `er'34702
 	
 	foreach macname in indfile idfam idind sqind delivery {
 

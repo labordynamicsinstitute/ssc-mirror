@@ -24,9 +24,9 @@ d KW: score bootstrap
 d KW: Rao LM test
 d KW: multi-way clustering
 d
-d Requires: Stata version 11.2
+d Requires: Stata version 13
 d
-d Distribution-Date: 20170731
+d Distribution-Date: 20210328
 d
 d Author: David Roodman
 d Support: email david@@davidroodman.com

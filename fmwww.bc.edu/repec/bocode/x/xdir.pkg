@@ -17,12 +17,14 @@ d KW: directory
 d KW: resultsset
 d KW: file list
 d
-d Requires: Stata version 10.0
+d Requires: Stata version 16
 d
-d Distribution-Date: 20170404
+d Distribution-Date: 20200509
 d
-d Author: Roger Newson, National Heart and Lung Institute, Imperial College London
+d Author: Roger Newson, Imperial College London
 d Support: email r.newson@@imperial.ac.uk
 d
 f xdir.ado
 f xdir.sthlp
+f xframedir.ado
+f xframedir.sthlp

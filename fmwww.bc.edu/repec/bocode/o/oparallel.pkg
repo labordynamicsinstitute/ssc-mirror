@@ -15,10 +15,10 @@ d KW: bootstrap
 d
 d Requires: Stata version 11
 d
-d Distribution-Date: 20131022
+d Distribution-Date: 20190613
 d
-d Author: Maarten L. Buis, WZB, Berlin
-d Support: email maarten.buis@@wzb.eu
+d Author: Maarten L. Buis, University of Konstanz
+d Support: email maarten.buis@@uni-konstanz.de
 d
 f oparallel.ado
 f oparallel.sthlp

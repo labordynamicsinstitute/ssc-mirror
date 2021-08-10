@@ -1,27 +1,39 @@
-*! version 3.12  Ian White 27feb2008
-* version 3.12  27feb2008 - checks metan version before starting
-* version 3.11  19dec2007 - options passed to metan are printed
-*                           bug fix: method(MC) was wrong
-* version 3.10  21nov2007 - bug fixes: method(MC), corrlogimor(), nip() work
-*                           changes: simple dots, drop timer option
-*                           re-organised output
-* version 3.9  29oct2007 - bug fix: includes dotter.ado
-* version 3.8  11oct2007 - state when metan starts (so user can see source of error); small bug in gamblehollis
-* version 3.7   1oct2007 - logimor defaults to 0 if sdlogimor specified
-* version 3.6   7sep2007 - new gamblehollis option; report measure used; method(mc) defaults to RR not all 3; if meta not done, explain why; warning if w1 used.
-* version 3.5   5sep2007 - report weighting scheme; imputes for studies with all reason counts 0 (but exits if all studies are like this)
-* version 3.4    4sep2007 - new syntax allowing ica0 or ica0(var var) etc.; icab/icaw the right way round; big rewrite of Julian's part
-* version 3.3   24apr2007 - (Julian) changed adjustments for empty cells
-* version 3.2   24apr2007 - selects by `measure' not by `rr', `or', `rd'
-* version 3.1   24apr2007 - graphs fixed
-* version 3.0    9feb2007 - combined Ian's and Julian's programs
+/*
+*! version 3.16  Ian White 02oct2018
+version 3.16  Ian White 02oct2018
+	corrected error message if called with no observations
+	check if logimor() etc are variables, and if so return an error
+	[previously their first value was taken. To do: handle them as variables]
+version 3.15  3aug2009 - checks for negative imors; lists cases with missing estimate or se
+version 3.14  10mar2009 - fixes bug with title("...")
+version 3.13  16sep2008 - updated to Stata 10.1: method(MC) is 4-5 times faster 
+                          as it uses drawnorm and rbeta() instead of my random.ado
+version 3.12  27feb2008 - checks metan version before starting. Included in final SJ submission 22aug2008.
+version 3.11  19dec2007 - options passed to metan are printed
+                          bug fix: method(MC) was wrong
+version 3.10  21nov2007 - bug fixes: method(MC), corrlogimor(), nip() work
+                          changes: simple dots, drop timer option
+                          re-organised output
+version 3.9  29oct2007 - bug fix: includes dotter.ado
+version 3.8  11oct2007 - state when metan starts (so user can see source of error); small bug in gamblehollis
+version 3.7   1oct2007 - logimor defaults to 0 if sdlogimor specified
+version 3.6   7sep2007 - new gamblehollis option; report measure used; method(mc) defaults to RR not all 3; if meta not done, explain why; warning if w1 used.
+version 3.5   5sep2007 - report weighting scheme; imputes for studies with all reason counts 0 (but exits if all studies are like this)
+version 3.4    4sep2007 - new syntax allowing ica0 or ica0(var var) etc.; icab/icaw the right way round; big rewrite of Julian's part
+version 3.3   24apr2007 - (Julian) changed adjustments for empty cells
+version 3.2   24apr2007 - selects by `measure' not by `rr', `or', `rd'
+version 3.1   24apr2007 - graphs fixed
+version 3.0    9feb2007 - combined Ian's and Julian's programs
+*/
 
 prog def metamiss
-version 9
+version 10.1
 
-* Note: this file includes programs random, expectn, exit498
+* Note: this file includes programs expectn, exit498
 
 ********************************** CHECK METAN VERSION **********************************
+
+if _N==0 error 2000
 
 tempvar one
 gen `one'=1
@@ -32,7 +44,7 @@ local oldmetan = `oldmetan' | _rc>0
 if `oldmetan' {
     di as error "Your version of -metan- appears to be too old to be compatible with -metamiss-."
     di as error "Please upgrade to a more recent version (e.g. from http://fmwww.bc.edu/RePEc/bocode/m)."
-    di as error "You can do this simply by typing: " as input "net install metan, replace" 
+    di as error "You can do this simply by running " as input "{stata net install metan, replace}" 
     exit 498
 }
 drop `one'
@@ -197,6 +209,10 @@ foreach arm in E C {
    if "`imor'"!="" {
       local logimor`arm'=log(`imor`arm'')
       if `imor`arm''==0 local logimor`arm' -50
+      if `imor`arm''<0 {
+         di as error "Negative IMOR in arm `arm'"
+         exit 498
+      }
    }
    if "`logimor'"!="" {
       if `logimor`arm''>50 & `logimor`arm''!=. local logimor`arm' 50
@@ -204,6 +220,21 @@ foreach arm in E C {
       local imor`arm'=exp(`logimor`arm'')
       if `logimor`arm''<-50 local imor`arm' 0
    }
+}
+
+* check if logimor() etc are variables, and if so return an error
+tempvar thing
+gen `thing' = 0
+foreach arg in logimorE logimorC imorE imorC sdlogimorE sdlogimorC corrlogimor {
+	if mi("``arg''") continue
+	qui replace `thing' = ``arg''
+	summ `thing', meanonly
+	local arg = subinstr("`arg'","C","",1)
+	local arg = subinstr("`arg'","E","",1)
+	if r(max)>r(min) {
+		di as error "Sorry, metamiss cannot at present handle `arg'() varying across individuals"
+		exit 498
+	}
 }
 
 ********************************* END OF COMMON PARSING *********************************
@@ -387,31 +418,35 @@ if "`method'"=="mc" {
       if "`debug'"=="debug" {
          noi di "Drawing logimorE " _c
       }
-      random `newlogimorE' `if' `in', dist(normal)
+      drawnorm `newlogimorE' `newlogimorC' `if' `in', means(`logimorE', `logimorC') sds(`sdlogimorE', `sdlogimorC') corr(1,`corrlogimor' \ `corrlogimor',1)
+*      random `newlogimorE' `if' `in', dist(normal)
       if "`debug'"=="debug" {
          noi di " `logimorC' " _c
       }
-      random `newlogimorC' `if' `in', dist(normal) mean((`corrlogimor')*`newlogimorE') var(1-(`corrlogimor')^2)
+*      random `newlogimorC' `if' `in', dist(normal) mean((`corrlogimor')*`newlogimorE') var(1-(`corrlogimor')^2)
       foreach R in E C {
-         replace `newlogimor`R'' = `logimor`R'' + `newlogimor`R''*(`sdlogimor`R'')
+*         replace `newlogimor`R'' = `logimor`R'' + `newlogimor`R''*(`sdlogimor`R'')
 
          if "`debug'"=="debug" {
             noi di " alpha`R' " _c
          }
-         random `x1' `if' `in', dist(gamma) mean(`a`R'1'+`m`R'')        var(`a`R'1'+`m`R'')
-         random `x0' `if' `in', dist(gamma) mean(`a`R'0'+`f`R''+`r`R'') var(`a`R'0'+`f`R''+`r`R'')
-         gen `alpha`R''=`x1'/(`x0'+`x1')
-         drop `x0' `x1'
+*         random `x1' `if' `in', dist(gamma) mean(`a`R'1'+`m`R'')        var(`a`R'1'+`m`R'')
+*         random `x0' `if' `in', dist(gamma) mean(`a`R'0'+`f`R''+`r`R'') var(`a`R'0'+`f`R''+`r`R'')
+*         gen `alpha`R''=`x1'/(`x0'+`x1')
+*         drop `x0' `x1'
+         gen `alpha`R''=rbeta(`a`R'1'+`m`R'', `a`R'0'+`f`R''+`r`R'')
+
 
          if "`debug'"=="debug" {
             noi di " piobs`R' " _c
          }
-         random `x1' `if' `in', dist(gamma) mean(`b`R'1'+`r`R'') var(`b`R'1'+`r`R'')
-         random `x0' `if' `in', dist(gamma) mean(`b`R'0'+`f`R'') var(`b`R'0'+`f`R'')
-         gen `piobs`R''=`x1'/(`x0'+`x1')
-         drop `x0' `x1'
+*         random `x1' `if' `in', dist(gamma) mean(`b`R'1'+`r`R'') var(`b`R'1'+`r`R'')
+*         random `x0' `if' `in', dist(gamma) mean(`b`R'0'+`f`R'') var(`b`R'0'+`f`R'')
+*         gen `piobs`R''=`x1'/(`x0'+`x1')
+*         drop `x0' `x1'
+         gen `piobs`R''=rbeta(`b`R'1'+`r`R'', `b`R'0'+`f`R'')
 
-         gen `pistar`R''=(1-`alpha`R'')*`piobs`R'' + `alpha`R''*exp(`newlogimor`R'')*`piobs`R''/(1-`piobs`R''+exp(`newlogimor`R'')*`piobs`R'')
+         gen `pistar`R''=(1-`alpha`R'')*`piobs`R'' + `alpha`R''*exp(`newlogimor`R'')*`piobs`R'' / (1-`piobs`R''+exp(`newlogimor`R'')*`piobs`R'')
          drop `newlogimor`R'' `alpha`R''
       }
 
@@ -654,6 +689,7 @@ foreach arm in E C {
     char `p`arm'star'[varname] p`arm'star   
 }
 
+
 * calculate new 'effective 2x2 table based on new overall risks, incorporating missing data imputations, with original sample size
 
 tempvar erE efE enE erC efC enC
@@ -789,9 +825,18 @@ if `nmeasures'==1 {
     else local measurename `measure'
     local idopt = cond("`id'"~="","label(namevar=`id')","")
     di as text _newline "(Calling metan " _c
-    if "`idopt'`options'`eform'`graph'"!="" di as text "with options: `idopt' `options' `eform' `graph'" _c
+    if `"`idopt'`options'`eform'`graph'"'!="" di as text `"with options: `idopt' `options' `eform' `graph'"' _c
     di as text " ...)"
-    if "`debug'"=="debug" di "metan `eststar' `sestar' `if' `in', `idopt' `options' `eform' `graph'"
+    if "`debug'"=="debug" di `"metan `eststar' `sestar' `if' `in', `idopt' `options' `eform' `graph'"'
+qui count if mi(`eststar',! `sestar')
+if r(N)>0 {
+    di as error "Missing values of estimate and/or standard error found"
+    foreach name in eststar sestar pEstar pCstar {
+        char ``name''[varname] `name'
+    }
+    l `id' `eststar' `sestar' `pEstar' `pCstar' if mi(`eststar',! `sestar'), subvarname
+    exit 498
+}
     metan `eststar' `sestar' `if' `in', `idopt' `options' `eform' `graph' effect(`log' `measure')
     qui gen _ES = `eststar'
     if "`eform'"=="eform" qui replace _ES=exp(_ES)
@@ -813,193 +858,6 @@ end
 
 ******************************************************************************
 ******************************************************************************
-
-prog def random
-* version 2.6  06jul2005
-version 7
-
-/* examples of use:
-random x, mean(6) dist(poisson)
-random x, mean(1) var(0.25) dist(gamma)
-random x, mean(1) var(0.25) dist(normal)
-random x, mean(1) var(0.25) dist(binomial)
-
-To do:
-allow 2nd syntax like dist(gamma a l)
-hence also allow dist(beta a b)
-*/
-local opts Mean(string) Variance(string) SD(string) Dist(string) LP(string) CHeck
-cap syntax varlist(max=1) [if] [in], [REPlace `opts']
-if _rc==0 { /* existing variable */
-  if "`replace'"=="replace" {
-    local origvar `varlist'
-    tempvar varlist
-  }
-  else {
-    di in red "`varlist' already defined"
-    exit 110
-  }
-}
-else {
-  syntax newvarlist(max=1) [if] [in], [`opts']
-}
-
-tempvar touse meanval varval
-mark `touse' `if' `in'
-
-foreach distribution in normal poisson bernoulli gamma binomial {
-   if upper(substr("`dist'",1,3))==upper(substr("`distribution'",1,3)) {
-      local dist `distribution'
-   }
-}
-
-if "`dist'"=="" {
-   if "`lp'"~="" {
-      local dist bernoulli
-   }
-   else {
-      local dist normal
-   }
-   di as text "Assuming dist(`dist')"
-}
-
-if "`mean'"=="" {
-   if "`dist'"=="normal" {
-      gen `meanval' = 0
-      di as text "Taking mean = 0"
-   }
-   else if "`dist'"=="bernoulli" {
-      cap gen `meanval' = 1/(1+exp(-(`lp')))
-      if _rc {
-         di as error "Can't use lp(`lp')"
-         exit 498
-      }
-   }
-   else {
-      di as error "mean() must be specified"
-      exit 498
-   }
-}
-else {gen `meanval' = `mean'}
-
-if "`variance'"=="" {
-    if "`sd'"~="" {
-        cap assert `sd'>=0
-        if _rc>0 {
-            di in red "SD must be non-negative"
-            exit 498
-        }
-        gen `varval'=(`sd')^2
-    }
-    else if "`dist'"=="normal" {
-        gen `varval' = 1
-        di as text "Taking variance 1"
-    }
-    else if "`dist'"=="bernoulli" {
-       gen `varval'=`meanval'*(1-`meanval')
-    }
-    else {
-        di in red "var() must be specified"
-        exit 498
-    }
-}
-else {
-   cap assert `variance'>=0
-   if _rc>0 {
-      di in red "Variance must be non-negative"
-      exit 498
-   }
-   gen `varval' = `variance'
-}
-
-local mean `meanval'
-local variance `varval'
-
-if "`dist'"=="normal" {
-   qui gen `varlist' = `mean' + sqrt(`variance')*invnorm(uniform()) if `touse'
-}
-
-else if "`dist'"=="poisson" {
-   if "`variance'"~="" {di "var() ignored"}
-   cap assert `mean'>=0
-   if _rc>0 {
-     di in red "Mean must be non-negative"
-     exit 498
-   }
-   tempvar uniform
-   gen `uniform' = uniform() if `touse'
-   local i = 0
-   qui gen `varlist'=. if `touse'
-   while "`stop'"~="stop" {
-      qui replace `varlist' = `i' if (`varlist'==.) & (1-gammap(`i'+1,`mean') > `uniform') & `touse'
-      local i = `i'+1
-      qui count if `varlist'==.
-      if r(N)==0 {local stop stop}
-      }
-}
-
-else if "`dist'"=="gamma" {
-   cap assert `mean'>=0
-   if _rc>0 {
-     di in red "Mean must be non-negative"
-     exit 498
-   }
-   * mean = alpha/beta, var = alpha/beta^2
-   tempvar alpha beta
-   gen `beta' = `mean'/`variance' if `touse'
-   gen `alpha' = `mean'*`beta' if `touse'
-   qui gen `varlist' = invgammap(`alpha',uniform())/`beta' if `touse'
-}
-
-else if "`dist'"=="binomial" {
-   cap assert `mean'>=0
-   if _rc>0 {
-     di in red "Mean must be non-negative"
-     exit 498
-   }
-   local p = 1-`variance'/`mean'
-   local n = `mean'/`p'
-   tempvar uniform
-   gen `uniform' = uniform() if `touse'
-   local i = 0
-   qui gen `varlist'=. if `touse'
-   while "`stop'"~="stop" {
-      qui replace `varlist' = `i' if (`varlist'==.) & (1-Binomial(`n',`i'+1,`mean'/`n') > `uniform') & `touse'
-      local i = `i'+1
-      qui count if `varlist'==.
-      if r(n)==0 {local stop stop}
-      }
-}
-
-else if "`dist'"=="bernoulli" {
-   cap assert `mean'>=0
-   if _rc>0 {
-     di in red "Mean must be non-negative"
-     exit 498
-   }
-   qui gen `varlist'=uniform()<`mean' if `touse'
-}
-
-else {
-   di in red "Must specify dist(normal|poisson|gamma|binomial|bernoulli)"
-   exit 498
-}
-
-if "`replace'"=="replace" {
-  cap drop `origvar'
-  gen `origvar' = `varlist' if `touse'
-}
-
-
-
-if "`check'"=="check" {
-    summ `varlist' if `touse'
-    gra `varlist' if `touse'
-    }
-
-end
-
-****************************************************************************************
 
 prog def expectn
 syntax anything, gen(name) [genvar(name) nip(int 10) maxit(int 1000) tol(int 10) trace token(string) list debug]

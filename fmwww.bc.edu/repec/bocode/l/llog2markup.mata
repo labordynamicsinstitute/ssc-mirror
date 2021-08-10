@@ -1,4 +1,16 @@
 *! Source code of llog2markup.mlib
+*! version 1.0.8 Niels Henrik Bruun	2018-??-??
+*!	2018-11-20 > Bug: No code_end or sample_end after last line if needed 
+*!	2018-11-20 > Bug when lines starts with | fixed. Bug created 2018-05-08 
+*!	2018-05-08 > Code blocks starts with . or : 
+*!	2018-05-08 > Validation of log file at log 4 is modified to line 4 or 5 
+*! version 1.0.7 Niels Henrik Bruun	2018-02-13
+*!	2017-12-07 > Now handling Mata code lines. 
+*!				 Mata code blocks should be surrounded by "mata {" and "}", not "mata" and "end".
+* version 1.0.6 Niels Henrik Bruun	2017-10-10
+*	2017-10-10 > Modified loglines2markup() with strlst2file()
+*	2017-10-10 > Added strlst2file() and collapse_line_pattern()
+* version 1.0.5	Niels Henrik Bruun	2017-05-19
 *	2017-05-19 > lines2markup(): Added sampleline to handle broken sample lines
 *	2017-02-12 > TODO: Handling for-loops. Workaround: /***/display `"code"'
 *	2016-09-01 > In case "Ignore code, keep pure sample" string trimming is removed
@@ -10,8 +22,6 @@
 * version 1.0.1	Niels Henrik Bruun	2016-02-15
 *	2016-02-15 > Kit Baum discovered bug when logfile doesn't exist. Thanks
 * version 1.0		Niels Henrik Bruun	2016-02-15
-
-
 *	2016-02-22 > ignore blanks after ***/ so that that blanks do not prevent closing of textblocks
 
 version 12
@@ -39,6 +49,22 @@ mata:
 		}
 		fclose(fh)
 		return(lines)
+	}
+	
+	void strlst2file(	string scalar filename,
+						string colvector lines,
+						|real scalar replace)
+	{
+		real scalar fh, rc, r, R
+
+		replace = replace == . ? 0 : replace
+		if ( replace ) rc = _unlink(filename)
+		if (!fileexists(filename)) {
+			fh = fopen(filename, "w")
+			R  = rows(lines)
+			for(r=1;r<=R;r++) rc = _fput(fh, lines[r]) 
+			fclose(fh)
+		} else printf(`"{error} File "%s" already exist!"', filename)
 	}
 
 	string colvector prune_code(string colvector lines)
@@ -129,7 +155,7 @@ mata:
 				// Or line is in a code/sample block 
 				} else {
 					// Code block starts
-					if ( regexm(lines[r], "^\. (.+)") ) {
+					if ( regexm(lines[r], "^[\.:] (.+)") ) {
 						if ( is_sample ) {
 							is_sample = 0
 							if ( keep_sample == 1 ) md_lines = md_lines \ sample_end
@@ -199,6 +225,8 @@ mata:
 				md_lines = md_lines \ regexs(1)
 			}
 		}
+		if ( is_code & keep_code ) md_lines = md_lines \ code_end
+		if ( is_sample & keep_sample == 1 ) md_lines = md_lines \ sample_end
 		return(md_lines)
 	}
 
@@ -246,6 +274,28 @@ mata:
 		return(out)
 	}
 
+	string colvector collapse_line_pattern(	string colvector lines, 
+											string scalar pattern)												
+	{
+		real scalar r, R
+		string colvector out
+		
+		out = J(0,1,"")
+		R = rows(lines)
+		for(r=1;r<=R;r++) {
+			if ( r <= R - 1 ) {
+				if ( lines[r] != pattern ) out = out \ lines[r]
+				if ( lines[r] == pattern ) {
+					r = r + 1
+					out = out \ pattern + lines[r]
+				}
+			} else {
+				out = out \ lines[r]
+			}
+		}
+		return(out)
+	}
+	
 	string colvector loglines2markup(string scalar logfile, extension, code_start, code_end, sample_start, sample_end, real scalar log, replace)
 	/*
 		Requires:	Path and name on a text log file in a string
@@ -258,7 +308,9 @@ mata:
 
 		if ( !fileexists(logfile) ) _error(sprintf("File %s do not exist!!", logfile))
 		lines = file2mata(logfile)
-		if ( lines[4] != "  log type:  text" ) _error(sprintf("File %s is not a Stata text log file!!", logfile))
+		if ( !(lines[4] != "  log type:  text" | lines[5] != "  log type:  text") ) {
+			_error(sprintf("File %s is not a Stata text log file!!", logfile))
+		}
 		lines = lines[6..rows(lines)-6] // Remove log start and log end
 		lines = prune_code(lines)
 		lines = prune_comment(lines)
@@ -279,12 +331,7 @@ mata:
 			for(r=1;r<=rows(lines);r++) lines[r]
 		} else {
 			fn = subinstr(logfile,".log", sprintf(".%s", extension))
-			if ( replace ) rc = _unlink(fn)
-			fh = fopen(fn, "w")
-			for(r=1;r<=rows(lines);r++) {
-				rc = _fput(fh, lines[r]) 
-			}
-			fclose(fh)
+			strlst2file(fn, lines, replace)
 		}
 		return(lines)
 	}

@@ -1,5 +1,5 @@
-{smcl}
-{* *! version 2.10.0 08jun2017}{...}
+2.27.1 23apr2018{smcl}
+{* *! version 2.27.0 20apr2018}{...}
 {vieweralsosee "ftools" "help ftools"}{...}
 {vieweralsosee "[R] collapse" "help collapse"}{...}
 {vieweralsosee "[R] contract" "help contract"}{...}
@@ -57,10 +57,15 @@ make dataset of summary statistics{p_end}
 {p2col :{opt last}}last value{p_end}
 {p2col :{opt firstnm}}first nonmissing value{p_end}
 {p2col :{opt lastnm}}last nonmissing value{p_end}
+{p2col :{opt nansum}}same as sum, but if all obs. in the group are missing it will also be missing (instead of zero){p_end}
+{p2col :{opt raw}{inp:{bf:{it:stat}}}}compute stats while ignoring weights (a generalization of {it:rawsum}){p_end}
 {p2colreset}{...}
 
 {pstd}
 If {it:stat} is not specified, {opt mean} is assumed.
+
+{pstd}
+Technical limitation: Both normal stats and {it:raw} stats will ignore zero weights
 
 {synoptset 15 tabbed}{...}
 {marker table_options}{...}
@@ -72,6 +77,9 @@ If {it:stat} is not specified, {opt mean} is assumed.
 {synopt :{opt merge}}merge collapsed dataset back into the original one;
 if the dataset is unsorted or sorted by something different than {opt by()},
 it is much more efficient than {cmd:egen} and that combining {cmd:collapse} with {cmd:merge}
+{p_end}
+{synopt :{opt append}}append collapsed dataset at the end of the original one;
+this is useful to create rows of totals
 {p_end}
 {synopt :{opt cw}}casewise deletion instead of all possible observations
 {p_end}
@@ -85,16 +93,18 @@ user press {hi:Break}
 the raw observation count (similar to {help contract}).
 If not indicated, the name of the new variable will be {it:_freq}
 {p_end}
-{synopt :{opt register(keys)}}add new stat functions.
+{synopt :{opt reg:ister(keys)}}add new stat functions.
 For each key, a corresponding Mata function should exist.
 See example at the end
 {p_end}
-
 {synopt :{opt pool(#)}}load the data into stata in blocks of # variables
 Default is {it:pool(.)}, select a low value ({it:pool(5)})
 or very low value ({it:pool(1)}) to save memory at the cost of speed
 {p_end}
-{synopt :{opt verbose}}display misc. debug messages
+{synopt :{opt nocompress}}{it:compress} chooses the most compact variable type, at a small speed cost
+(on by default)
+{p_end}
+{synopt :{opt v:erbose}}display misc. debug messages
 {p_end}
 
 {synoptline}
@@ -112,7 +122,7 @@ although string variables are only supported by a few functions
 (first, last, firstnm, lastnm).
 
 {pstd}
-Weights are currently not supported.
+Weights are only partially supported.
 
 {pstd}
 You can implement your own Mata functions to easily extend the fcollapse command.
@@ -147,12 +157,18 @@ should the user press {hi:Break}.
 To choose the name of the variable, use {opth freq(newvar)}
 
 {phang}
-{opt register(fun1 ...)} registers Mata functions {it:fun1}, etc. so 
+{opt reg:ister(fun1 ...)} registers Mata functions {it:fun1}, etc. so 
 to extend {cmd fcollapse}; see example below.
 
 {phang}
 {opt pool(#)} load the data into Stata in blocks of # variables Default is pool(.),
 select a low value (pool(5)) or very low value (pool(1)) to save memory at the cost of speed.
+
+{phang}
+{opt compress} will fit variables into more compact types, such as {it:byte},
+{it:int}, and {it:long}, without losing information when compared to more accurate types
+such as {it:double}.
+The cost is a slight reduction in speed, due to the extra checks involved.
 
 {marker example}{...}
 {title:Example: Adding your own aggregation functions}

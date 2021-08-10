@@ -1,7 +1,7 @@
 #delimit ;
 capture program drop flexcurv;
 program define flexcurv, rclass;
-version 10.0;
+version 16.0;
 /*
  Create a set of splines of specified power
  corresponding to a specified X-variable
@@ -19,7 +19,7 @@ version 10.0;
  and variable labels generated using format labfmt if present,
  or format of X-variable otherwise.
 *! Author: Roger Newson
-*! Date: 25 December 2013
+*! Date: 03 April 2020
 */
 
 syntax [ newvarlist ] [if] [in]

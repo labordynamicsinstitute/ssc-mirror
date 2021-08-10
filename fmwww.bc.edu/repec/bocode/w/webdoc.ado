@@ -1,4 +1,4 @@
-*! version 1.2.2  12apr2017  Ben Jann
+*! version 1.2.8  11nov2019  Ben Jann
 
 program webdoc
     version 10.1
@@ -435,7 +435,7 @@ program webdoc_init
         exit 499
     }
     syntax [anything(id="document name")] [, MD ///
-        Replace Append NOLOGDIR logdir LOGDIR2(str) NOLOGALL LOGAll ///
+        Replace Append NOLOGDIR logdir LOGDIR2(str) NOLOGALL LOGALL ///
         NOPrefix Prefix Prefix2(str) NOSTPATH stpath STPATH2(str) ///
         NODO DO NOLOG LOG NOCMDLog CMDLog NODOSave DOSave NOKeep Keep ///
         NOCustom Custom NOPLAIN PLAIN NORAW RAW NOCMDStrip CMDStrip NOLBStrip ///
@@ -931,6 +931,8 @@ program webdoc_stlog_open
     global WebDoc_ststatus "on"
     // handle sthlp 
     if `"`sthlp'`sthlp2'"'!="" {
+        _parse comma sthlp2 sthlpopts : sthlp2
+        _webdoc_stlog_open_sthlpopts `sthlpopts' // returns sthlpnoid
         if "`nodo'"=="" {
             if "`plain'`raw'"=="" {
                 // backup current r-returns
@@ -1018,6 +1020,11 @@ program webdoc_stlog_open
         }
         version `caller': webdoc_stlog_close`cmdlogopt'`dosopt'
     }
+end
+
+program _webdoc_stlog_open_sthlpopts
+    syntax [, noid ]
+    c_local sthlpnoid `id'
 end
 
 program webdoc_stlog_oom
@@ -1310,15 +1317,16 @@ program webdoc_graph
     if `"`as'"'=="" local as "png"
     local isuffix: word 1 of `as'
     local isuffix `".`isuffix'"'
-    if `"`width'"'!=""      local width width(`width')
-    if `"`height'"'!=""     local height height(`height')
-    if `"`width'`height'"'=="" local width width(500)
-    if `"`name'"'!=""       local name name(`name')
+    if `"`name'"'!="" local name name(`name')
     // export graph
     if `export' {
         foreach ff of local as {
-            if inlist(`"`as'"', "png", "tif") local grsize `width' `height'
-            else                              local grsize
+            local grsize `width' `height'
+            if `"`grsize'"'=="" {
+                if inlist(`"`ff'"', "png", "tif", "gif", "jpg") {
+                    local grsize width(500)
+                }
+            }
             qui graph export `"`filename'.`ff'"', replace `name' `grsize' `options'
             if !("`hardcode'"!="" & "`nokeep'"!="") {
                 _webdoc_makelink `"`filename'.`ff'"' // returns local openlink
@@ -1326,7 +1334,7 @@ program webdoc_graph
             }
         }
         if "`hardcode'"!="" {
-            if "`isuffix'"==".png" {
+            if inlist("`isuffix'", ".png", ".jpg", ".gif") {
                 nobreak {
                     capt n break {
                         mata: webdoc_instance_fh("fh")
@@ -1345,7 +1353,7 @@ program webdoc_graph
                 // do nothing
             }
             else {
-                di as err "hardcode only supported for PNG and SVG"
+                di as err "hardcode not supported with `isuffix'"
                 exit 498
             }
         }
@@ -1374,6 +1382,9 @@ program webdoc_graph
         _webdoc_put put ${WebDoc_set_svg}
         quietly webdoc_append `"`filename'`isuffix'"', drop(1 3)
         _webdoc_write write ${WebDoc_set__svg}
+        if "`nokeep'"!="" {
+            capt erase `"`filename'`isuffix'"'
+        }
     }
     else {
         // standard case: use the img tag
@@ -1385,7 +1396,7 @@ program webdoc_graph
                 _webdoc_write write `webname'`isuffix'
             }
             else {
-                _webdoc_put put data:image/png;base64,
+                _webdoc_put put data:image/`=substr("`isuffix'",2,.)';base64,
                 quietly webdoc_append `"`filename'.base64"'
             }
             if "`nokeep'"!="" {
@@ -1441,7 +1452,7 @@ end
 
 program _webdoc_graph_syntax2
     syntax [, as(str) attributes(str) alt(str) title(str) link2(str) ///
-        caption(str) figure2(str) width(str) height(str) name(str) ]
+        caption(str) figure2(str) width(passthru) height(passthru) name(str) ]
     foreach opt in as attributes alt title link2 caption figure2 width ///
         height name {
         c_local `opt' `"`macval(`opt')'"'
@@ -1537,7 +1548,7 @@ program webdoc_do
 end
 
 program _webdoc_do
-    syntax [, Replace Append MD NOLOGDIR logdir LOGDIR2(str) NOLOGALL LOGAll ///
+    syntax [, Replace Append MD NOLOGDIR logdir LOGDIR2(str) NOLOGALL LOGALL ///
         NOPrefix Prefix Prefix2(str) NOSTPATH stpath STPATH2(str) ///
         NODO DO NOLOG LOG NOCMDLog CMDLog NODOSave DOSave NOKeep Keep ///
         NOCustom Custom NOPLAIN PLAIN NORAW RAW NOCMDStrip CMDStrip NOLBStrip ///
@@ -1631,10 +1642,10 @@ void webdoc_append(real scalar fh, real scalar fh2)
     string colvector f
     string rowvector sub
     
-    f = _webdoc_cat(st_local("using"), fh2)
+    f = _webdoc_catnl(st_local("using"), fh2)
     l = length(f)
     if (l<1) {  // empty file
-        _webdoc_fput(fh, f)
+        _webdoc_fwrite(fh, f)
         return
     }
     // line selection
@@ -1653,7 +1664,7 @@ void webdoc_append(real scalar fh, real scalar fh2)
         f = subinstr(f, sub[(i-1)*2+1], sub[i*2])
     }
     // write to output file
-    _webdoc_fput(fh, f)
+    _webdoc_fwrite(fh, f)
 }
 
 // read snippet, apply substitutions, and append to output document
@@ -1887,7 +1898,7 @@ void webdoc_header(real scalar fh, real scalar fh2)
             if (stataversion()>=1300) css = "https://" + css
             else                      css = "http://" + css
             fput(fh, "<style>")
-            _webdoc_fput(fh, _webdoc_cat(css+".css", fh2))
+            _webdoc_fwrite(fh, _webdoc_catnl(css+".css", fh2))
             fput(fh, "</style>")
         }
         else {
@@ -1975,7 +1986,7 @@ void webdoc_header(real scalar fh, real scalar fh2)
     }
     // include
     if (st_local("include")!="") {
-        _webdoc_fput(fh, _webdoc_cat(st_local("include"), fh2))
+        _webdoc_fwrite(fh, _webdoc_catnl(st_local("include"), fh2))
     }
     // Stata style
     fput(fh, `"<style>"')
@@ -2009,7 +2020,7 @@ void _webdoc_htmlchars(string colvector f)
 // process sthlp file
 void webdoc_stripsthlp(real scalar fh)
 {
-    real scalar      i
+    real scalar      i, noid
     string scalar    fn, id, cmd, path, href0, href1, href2
     string colvector f
     string rowvector sub
@@ -2023,6 +2034,7 @@ void webdoc_stripsthlp(real scalar fh)
         return
     }
     id  = st_global("WebDoc_stid")
+    noid = st_local("sthlpnoid")!=""
     sub = tokens(st_local("sthlp2"))
     if (mod(length(sub), 2)) sub = (sub, "")
     cmd = st_local("using")
@@ -2031,12 +2043,19 @@ void webdoc_stripsthlp(real scalar fh)
     href0 = `"<a href="/help.cgi?"'
     href1 = `"<a href="#"'
     href2 = `"<a href="http://www.stata.com/help.cgi?"'
-    sub = "<p>", "",                                 // remove <p> tags 
-          `"<a name=""', `"<a name=""' + id + `"-"', // local id tags
-          sub,                                       // user substitutions
-          href0 + cmd + `"""', href1 + id + `"""',   // main internal link
-          href0 + cmd + `"#"', href1 + id + `"-"',   // other internal links
-          href0, href2                               // remaining links
+    if (noid==0) sub = 
+        "<p>", "",                                 // remove <p> tags 
+        `"<a name=""', `"<a name=""' + id + `"-"', // local id tags
+        sub,                                       // user substitutions
+        href0 + cmd + `"""', href1 + id + `"""',   // main internal link
+        href0 + cmd + `"#"', href1 + id + `"-"',   // other internal links
+        href0, href2                               // remaining links
+    else sub = 
+        "<p>", "",                                 // remove <p> tags 
+        sub,                                       // user substitutions
+        href0 + cmd + `"""', href1 + id + `"""',   // main internal link
+        href0 + cmd + `"#"', href1,                // other internal links
+        href0, href2                               // remaining links
     f = _webdoc_cat(fn, fh)
     f = f[| 2 \ rows(f)-1|]         // remove leading <pre> and closing </pre>
     for (i=1; i<=(length(sub)/2); i++) {
@@ -2707,7 +2726,7 @@ void webdoc_graph_b64(real scalar fh, real scalar fh2)
            "a", "b", "c", "d", "e", "f", "g", "h", "i", "j", "k", "l", "m",
            "n", "o", "p", "q", "r", "s", "t", "u", "v", "w", "x", "y", "z",
            "0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "+", "/")
-    fh  = fopen(st_local("filename")+".png", "r")                   // input
+    fh  = fopen(st_local("filename")+st_local("isuffix"), "r")      // input
     webdoc_fopen_replace(st_local("filename")+".base64", fh2, "w")  // output
     b = J(1, 24, 0)     // temporary 24 bit vector
     i = 0               // input character counter
@@ -3078,7 +3097,8 @@ void webdoc_do_markup(string colvector f, real colvector t, pointer vector S)
             b--; i--
         }
         // store markup snippet and insert webdoc append command
-        snip = f[|a \ b|]
+        if (a<=r) snip = f[|a \ b|]
+        else      snip = "" // file ended with "/***"
         if (toc) _webdoc_toc(S, snip, toc, otoc, ntoc, ctoc, itoc, mdtoc)
         f[i] = "webdoc append_snippet " + 
             strofreal(_webdoc_add_snippet(S, snip))
@@ -3193,8 +3213,14 @@ void _webdoc_toc(pointer vector S, string colvector f, real scalar toc,
         }
         else {
             j = strpos(s, ">") // end of <h#...>
-            f[i] = substr(f[i],1,j-1) + `" id=""' + id + `"">"' + hnum + 
-                   substr(f[i],j+1,.)
+            if (regexm(substr(s,1,j), `"<.+id *= *"(.+)".*>"')) { // parse id="..."
+                id = regexs(1)
+                f[i] = substr(f[i],1,j) + hnum + substr(f[i],j+1,.)
+            }
+            else {
+                f[i] = substr(f[i],1,j-1) + `" id=""' + id + `"">"' + hnum + 
+                       substr(f[i],j+1,.)
+            }
             s = substr(s, j+1, .)
             j = strpos(s, "</h" + strofreal(d+otoc) + ">") // closing </h#>
             if (j>0) s = substr(s, 1, j-1)
@@ -4039,7 +4065,7 @@ void _webdoc_tag_comments(string colvector f, real scalar a, real scalar lb,
     lb = dq = cdq = 0
     // setup
     if (log) { 
-        if (log==1) j = strpos(f[a],". ") + 2 // first line starts with . " or "  #. "
+        if (log==1) j = strpos(f[a],". ") + 1 // first line starts with . " or "  #. "
         else        j = 5 // following lines start with "&gt; "
         s = substr(f[a], j+1, .)
     }
@@ -4208,6 +4234,42 @@ string colvector _webdoc_cat(string scalar filename, real scalar fh)
         fclose(fh)
         return(res)
 }
+string colvector _webdoc_catnl(string scalar filename, real scalar fh)
+{       // same as _webdoc_cat(), but does not remove new-line characters
+        // explanation: fget() breaks lines longer than 32,768 characters into 
+        //              multiple lines; to make an exact copy of a file with 
+        //              long lines, read the file by _webdoc_catnl() and then 
+        //              write it out by _webdoc_fwrite(); using _webdoc_cat()
+        //              followed by _webdoc_put() would result in a file with 
+        //              broken lines
+        real scalar             i, n
+        string matrix           EOF
+        string colvector        res
+        string scalar           line
+
+        EOF = J(0, 0, "")
+        fh  = fopen(filename, "r")
+        // count lines
+        i = 0
+        while (1) {
+            if (fgetnl(fh)==EOF) break
+            i++ 
+        }
+        res = J(n = i, 1, "")
+        // read file
+        fseek(fh, 0, -1)
+        for (i=1; i<=n; i++) {
+                if ((line=fgetnl(fh))==EOF) {
+                        /* unexpected EOF -- file must have changed */
+                        fclose(fh)
+                        if (--i) return(res[|1\i|])
+                        return(J(0,1,""))
+                }
+                res[i] = line
+        }
+        fclose(fh)
+        return(res)
+}
 
 // write multiple lines to file
 void webdoc_fput(string scalar fn, real scalar fh, string colvector s, 
@@ -4227,6 +4289,14 @@ void _webdoc_fput(real scalar fh, string colvector s)
     
     for (i=1; i<=rows(s); i++) {
         fput(fh, s[i])
+    }
+}
+void _webdoc_fwrite(real scalar fh, string colvector s)
+{   // to be used if s contains new-line characters
+    real scalar i
+    
+    for (i=1; i<=rows(s); i++) {
+        fwrite(fh, s[i])
     }
 }
 

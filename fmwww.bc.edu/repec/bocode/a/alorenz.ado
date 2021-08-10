@@ -1,10 +1,26 @@
-*! version 2.3          < 02july2014>         JPAzevedo
-* fix replace _pecatsal in ebin
-* version 2.2          < 28march2012>         JPAzevedo
-* test ksmirnof
-* use _ebin (equal bins)
-*  version 2.0          < 12dec2008 >         JPAzevedo & SFranco
-*  version 1.0          < 24jul2006 >         JPAzevedo & SFranco
+*! version 3.3       	<20210128>       JPAzevedo
+*		adjust groupfunction version to 2.2
+* version 3.2.2       <20210127>       JPAzevedo
+*		adjust groupfunction version to 2.1.1
+* version 3.2.1       <20200406>       JPAzevedo
+*    	update _ebin to version 1.0
+* version 3.2         <20200405>        JPAzevedo
+*    	fix parameters from which_version
+*    	dependencies check runs quietly
+* version 3.1         <20200404>        JPAzevedo
+*    	check for dependencies 
+*    	install groupfunction on the fly (when needed)
+* version 3.0         <20200404>        JPAzevedo
+*    	replace collapse by groupfunction
+*    	support [aw]
+*    	support return add
+* version 2.3          <20140702>       JPAzevedo
+*		fix replace _pecatsal in ebin
+* version 2.2          <20120328>       JPAzevedo
+* 		test ksmirnof
+* 		use _ebin (equal bins)
+* version 2.0          <20001212>       JPAzevedo & SFranco
+* version 1.0          <20060724>       JPAzevedo & SFranco
 /*
 gl xtitle("Proportion of `varlist'")
 gp xtitle("Average accumulated `varlist'")
@@ -18,38 +34,64 @@ program define alorenz   , rclass
     syntax varlist(min=1 max=1 numeric)             ///
                 [in] [if]                           ///
                 [pweight fweight aweight]           ///
-                [, Points(real 10)                   ///
-                by(varname)                         ///
-                format(string)                      ///
-                output(string)                      ///
-                view                                ///
-                fullview                            ///
-                angle45                             ///
-                gl                                  ///
-                gp                                  ///
-                ge                                  ///
-                gom                                  ///
-                goa                                 ///
-                compare                             ///
-                base(real -99)                      ///
-                invert                              ///
-                results(string)                     ///
-                grname(string)                      ///
-                order(varname)                      ///
-                select(string)                      ///
-                mlabangle(string)                   ///
-                mlabsize(string)                    ///
-                mark(string)                        ///
-                marklabel(string)                   ///
-                markvar(varname)                    ///
-                XDECrease                           ///
-                trimif(string)                      ///
-                ksmirnov                            ///
-                exact                               ///
-                NOIsily                             ///
-                *                                   ///
+                [ , 								///
+					Points(real 10)                 ///
+					by(varname)                     ///
+					format(string)                  ///
+					output(string)                  ///
+					view                            ///
+					fullview                        ///
+					angle45                         ///
+					gl                              ///
+					gp                              ///
+					ge                              ///
+					gom                             ///
+					goa                             ///
+					compare                         ///
+					base(real -99)                  ///
+					invert                          ///
+					results(string)                 ///
+					grname(string)                  ///
+					order(varname)                  ///
+					select(string)                  ///
+					mlabangle(string)               ///
+					mlabsize(string)                ///
+					mark(string)                    ///
+					marklabel(string)               ///
+					markvar(varname)                ///
+					XDECrease                       ///
+					trimif(string)                  ///
+					ksmirnov                        ///
+					exact                           ///
+					NOIsily                         ///
+					*                               ///
                 ]
+    
+  *-----------------------------------------------------------------------------
+  * Download and install required user written ado's
+  *-----------------------------------------------------------------------------
+  * Fill this list will all user-written commands this project requires
+	  local user_commands groupfunction which_version
 
+  * Loop over all the commands to test if they are already installed, if not, then install
+	  qui foreach command of local user_commands {
+		cap which `command'
+		if _rc == 111 { 
+			ssc install `command'
+		}
+		else {
+			which_version groupfunction 
+			* remove dots
+			local sversion = real(subinstr(s(version),".","",.))
+			local l = length("`sversion'")
+			local sversion = (`sversion'/(10^(`l'-1)))
+			if  (`sversion' < 2.2) {
+				ado update groupfunction , update
+			}
+		}
+	  }
+					
+				
     /** flow control */
 
     if (("`gom'" != "") | ("`goa'" != "")) & ("`order'" == "") {
@@ -91,8 +133,8 @@ program define alorenz   , rclass
     }
 
     /** begin */
-
-    tempvar acumprop pesotot weight2 touse varpoint rmean
+	
+	tempvar acumprop pesotot weight2 touse varpoint rmean
 
     tempname valnum rcount temp matrix at bt ct
 
@@ -100,107 +142,113 @@ program define alorenz   , rclass
 
     quietly {
 
-    if ("`by'" != "") {
+		if ("`by'" != "") {
 
-        _pecatsal `by' if `touse'                 /* JP Azevedo 15 sept 2005 */
-        local nrows = r(numcats)
-        local c = r(catvals)
-        local labcat = r(catnms8)
+			_pecatsal `by' if `touse'                 /* JP Azevedo 15 sept 2005 */
+			local nrows = r(numcats)
+			local c = r(catvals)
+			local labcat = r(catnms8)
 
-        if (`nrows'<2) {
-            di as err "by() needs two or more valid categories"
-            exit 198
-        }
+			if (`nrows'<2) {
+				di as err "by() needs two or more valid categories"
+				exit 198
+			}
 
-        if ("`compare'" != "") & (`base' != -99) {         /* JP Azevedo 19 sept 2005 */
-            local find = index("`c'","`base'")
-            if (`find'==0) {
-                di as err "base category must be within the values of by()"
-                exit 198
-            }
-        }
-    }
+			if ("`compare'" != "") & (`base' != -99) {         /* JP Azevedo 19 sept 2005 */
+				local find = index("`c'","`base'")
+				if (`find'==0) {
+					di as err "base category must be within the values of by()"
+					exit 198
+				}
+			}
+		}
 
-    if ("`by'"=="") {
-        tempvar temp
-        tempvar lab
-        gen `temp'=1  if `touse'
-        label define `lab' 1 "Total"
-        label values `temp' `lab'
-        local by `temp'
-        local c=1
-    }
+		if ("`by'"=="") {
+			tempvar temp
+			tempvar lab
+			gen `temp'=1  if `touse'
+			label define `lab' 1 "Total"
+			label values `temp' `lab'
+			local by `temp'
+			local c=1
+		}
 
-    if ("`format'"=="") {
-        local format "%12.2f"
-    }
+		if ("`format'"=="") {
+			local format "%12.2f"
+		}
 
-    if "`weight'" == "" {
-        qui gen byte `weight2' = 1  if `touse'
-    }
-    else {
-        qui gen `weight2' `exp'  if `touse'
-    }
+		if "`weight'" == "" {
+			qui gen byte `weight2' = 1  if `touse'
+		}
+		else {
+			qui gen `weight2' `exp'  if `touse'
+		}
 
-    ****************************
-    * Select                  *
-    ***************************
+		****************************
+		* Select                  *
+		***************************
 
-    if ("`select'" != "") {
+		if ("`select'" != "") {
 
-        tknz "`select'" , parse("|") s(v) nochar
+			tknz "`select'" , parse("|") s(v) nochar
 
-        forvalues sel = 1(1)`s(items)' {
-            loc varsel = word("`v`sel''",1)
-            loc criter = word("`v`sel''",2)
-            loc valsel = word("`v`sel''",3)
-            loc k = 1
-            foreach i of numlist `c' {
-                sum `varlist' if `varsel' `criter' "`valsel'" & `touse' & `by' == `i'
-                if (`r(N)' > 0) {
-                    loc mark`k'_`sel' = `r(mean)'
-                    loc mark`k' "`mark`k'' `mark`k'_`sel''"
-                    loc labelsel`k'_`sel'  "`valsel'"
-                    loc labelsel`k'   "`labelsel`k'' `valsel'"
-                    loc k = `k'+1
-                }
-            }
-        }
-    }
+			forvalues sel = 1(1)`s(items)' {
+				loc varsel = word("`v`sel''",1)
+				loc criter = word("`v`sel''",2)
+				loc valsel = word("`v`sel''",3)
+				loc k = 1
+				foreach i of numlist `c' {
+					sum `varlist' if `varsel' `criter' "`valsel'" & `touse' & `by' == `i'
+					if (`r(N)' > 0) {
+						loc mark`k'_`sel' = `r(mean)'
+						loc mark`k' "`mark`k'' `mark`k'_`sel''"
+						loc labelsel`k'_`sel'  "`valsel'"
+						loc labelsel`k'   "`labelsel`k'' `valsel'"
+						loc k = `k'+1
+					}
+				}
+			}
+			
+			if ("`select'" != "") & (`r(N)'==0) {
+				di	""
+				di as err "select option error: value `valsel' not available in variable `varsel'." 
+				exit 198
+			}
+		}
 
-    ****************************
-    * mark                  *
-    ***************************
+		****************************
+		* mark                  *
+		***************************
 
-    if ("`select'" == "") & ("`mark'" != "") {
-            loc k = 1
-            loc mark`k'         "`mark'"
-            loc labelsel`k'     "`marklabel'"
-            loc select "1"
-    }
+		if ("`select'" == "") & ("`mark'" != "") {
+				loc k = 1
+				loc mark`k'         "`mark'"
+				loc labelsel`k'     "`marklabel'"
+				loc select "1"
+		}
 
-    ****************************
-    * markvar                  *  /* JPA 20081115 */
-    ***************************
+		****************************
+		* markvar                  *  /* JPA 20081115 */
+		***************************
 
-    if ("`select'" == "") & ("`mark'" == "") & ("`markvar'" != "")  {
+		if ("`select'" == "") & ("`mark'" == "") & ("`markvar'" != "")  {
 
-            _pecatsal `markvar' if `touse'
-            loc select = r(numcats)
-            loc strcat = r(catnms8)
-            loc labelsel1 "`r(catnms8)'"
-            loc k = 1
-            foreach n in `r(catvals)' {
-                sum `varlist' if `markvar' == `n'
-                loc mark1 "`mark1' `r(mean)'"
-                loc k = `k'+1
-            }
-            loc tt1 = wordcount("`mark1'")
-            loc tt2 = wordcount("`labelsel1'")
-            di `tt1'
-            di `tt2'
-    }
-
+				_pecatsal `markvar' if `touse'
+				loc select = r(numcats)
+				loc strcat = r(catnms8)
+				loc labelsel1 "`r(catnms8)'"
+				loc k = 1
+				foreach n in `r(catvals)' {
+					sum `varlist' if `markvar' == `n' & `touse'
+					loc mark1 "`mark1' `r(mean)'"
+					loc k = `k'+1
+				}
+				loc tt1 = wordcount("`mark1'")
+				loc tt2 = wordcount("`labelsel1'")
+				di `tt1'
+				di `tt2'
+		}
+		
 
 ************************************************
 **** looping que genera la curva de lorenz y los respectivos datos para cada grupo de comparacion
@@ -216,315 +264,315 @@ program define alorenz   , rclass
 
         preserve
 
-        keep if `by'==`i' & `touse'==1 & `varlist' !=. & `weight2' != .
+			keep if `by'==`i' & `touse'==1 & `varlist' !=. & `weight2' != .
 
-        sort `varlist'
+			sort `varlist'
 
-        local name : label (`by') `i'
+			local name : label (`by') `i'
 
-        ****************************
-        * generando los percentis  *
-        ***************************
+			****************************
+			* generando los percentis  *
+			***************************
 
-        sum `varlist'
-        if (`r(N)' < `points') {
-            loc points = `r(N)'+1
-            di as err "the value for points() automatically adjusted to be equal to the number of observations plus one (points=`points')"
-        }
+			sum `varlist'
+			if (`r(N)' < `points') {
+				loc points = `r(N)'+1
+				di as err "the value for points() automatically adjusted to be equal to the number of observations plus one (points=`points')"
+			}
 
-        if ("`order'" == "") {
-            *xtile `acumprop'=`varlist' , nquantiles(`points')
-            _ebin `varlist' [`weight' `exp']  if `touse', nquantile(`points') gen(`acumprop')
-            loc xtitle1 "Cumulative proportion of sample"
-            loc xtitle2 "Sample proportion"
-        }
+			if ("`order'" == "") {
+				*xtile `acumprop'=`varlist' , nquantiles(`points')
+				_ebin `varlist' [`weight' `exp']  if `touse', nquantile(`points') gen(`acumprop')
+				loc xtitle1 "Cumulative proportion of sample"
+				loc xtitle2 "Sample proportion"
+			}
+
+			if ("`order'" != "") {
+				*xtile `acumprop'=`order' [`weight' `exp']  if `touse', nquantiles(`points')
+				_ebin `varlist' [`weight' `exp']  if `touse', nquantile(`points') gen(`acumprop') order(`order')
+				loc xtitle1 "Cumulative proportion population sorted by `order'"
+				loc xtitle2 "`order' proportion"
+				gen max`order' = `order'     if `touse'
+			}
+
+	*        noisily tab `acumprop'
+
+			gen peso`varlist'=`weight2'  if `touse'
+			gen max`varlist'=`varlist'   if `touse'
+
+			****************************************************************
+			* generando a renda media para comparacao entre distribuicoes  *
+			****************************************************************
+
+			if "`weight'" == "pweight"{
+				qui svyset [`weight' `exp']
+				qui svymean `varlist'  if `touse'
+				gen `rmean'=r(b)
+			}
+			if "`weight'" == "fweight" | "`weight'" == "aweight"{
+				qui sum `varlist' [`weight' `exp']  if `touse'
+				gen `rmean'=r(mean)
+			}
+			if "`weight'" == "" {
+				qui sum `varlist'  if `touse'
+				gen `rmean'=r(mean)
+			}
 
         if ("`order'" != "") {
-            *xtile `acumprop'=`order' [`weight' `exp']  if `touse', nquantiles(`points')
-            _ebin `varlist' [`weight' `exp']  if `touse', nquantile(`points') gen(`acumprop') order(`order')
-            loc xtitle1 "Cumulative proportion population sorted by `order'"
-            loc xtitle2 "`order' proportion"
-            gen max`order' = `order'     if `touse'
-        }
-
-*        noisily tab `acumprop'
-
-        gen peso`varlist'=`weight2'  if `touse'
-        gen max`varlist'=`varlist'   if `touse'
-
-        ****************************************************************
-        * generando a renda media para comparacao entre distribuicoes  *
-        ****************************************************************
-
-        if "`weight'" == "pweight"{
-            qui svyset [`weight' `exp']
-            qui svymean `varlist'  if `touse'
-            gen `rmean'=r(b)
-        }
-        if "`weight'" == "fweight" | "`weight'" == "aweight"{
-            qui sum `varlist' [`weight' `exp']  if `touse'
-            gen `rmean'=r(mean)
-        }
-        if "`weight'" == "" {
-            qui sum `varlist'  if `touse'
-            gen `rmean'=r(mean)
-        }
-
-        if ("`order'" != "") {
-            collapse (sum) `varlist' (rawsum) peso`varlist' (max) max`varlist' (mean) `rmean' `order' (max)  max`order' [`weight' `exp']  if `touse', by(`acumprop')
+            groupfunction if `touse' [`weight' `exp'] , sum(`varlist') rawsum(peso`varlist') max( max`varlist') mean( `rmean' `order') max(max`order') by(`acumprop')
         }
         else {
-            collapse (sum) `varlist' (rawsum) peso`varlist' (max) max`varlist' (mean) `rmean'  [`weight' `exp']  if `touse', by(`acumprop')
+            groupfunction if `touse' [`weight' `exp'] , sum(`varlist') rawsum(peso`varlist') max(max`varlist') mean(`rmean') by(`acumprop')
         }
         *******************************************
         * obtenendo los resultados por percentil  *
         *******************************************
 
-        tempvar totvar totpeso
-        rename `acumprop' x`varlist'`i'                                             	   /*percentil*/
-        rename `varlist' s`varlist'                                                 	   /*`var'total por percentil*/
-        rename peso`varlist' speso                                                  	   /*peso total do percentil*/
-        rename `rmean' rmean                                                        	   /*`var  media da populacao*/
-        if ("`order'" != "") {                                                              /* JPA 20120325 */
-            rename `order' mean_`order'                                                     /** valor medio da variavel `order' */
-        }
-        gen ac_s`varlist' = s`varlist'
-        replace ac_s`varlist' = ac_s`varlist'[_n] + ac_s`varlist'[_n-1] in 2/l      	   /*var acumulado*/
+			tempvar totvar totpeso
+			rename `acumprop' x`varlist'`i'                                             	   /*percentil*/
+			rename `varlist' s`varlist'                                                 	   /*`var'total por percentil*/
+			rename peso`varlist' speso                                                  	   /*peso total do percentil*/
+			rename `rmean' rmean                                                        	   /*`var  media da populacao*/
+			if ("`order'" != "") {                                                              /* JPA 20120325 */
+				rename `order' mean_`order'                                                     /** valor medio da variavel `order' */
+			}
+			gen ac_s`varlist' = s`varlist'
+			replace ac_s`varlist' = ac_s`varlist'[_n] + ac_s`varlist'[_n-1] in 2/l      	   /*var acumulado*/
 
-        gen ac_speso = speso
-        replace ac_speso = ac_speso[_n] + ac_speso[_n-1] in 2/l                     	   /*peso acumulado*/
+			gen ac_speso = speso
+			replace ac_speso = ac_speso[_n] + ac_speso[_n-1] in 2/l                     	   /*peso acumulado*/
 
-        gen mean_`varlist' = s`varlist' / speso                                       	   /*var pormedio del percentil*/
-	
-        gen ac_mean_`varlist' = ac_s`varlist'/ ac_speso                               	   /*var pormedio de los pobres*/
+			gen mean_`varlist' = s`varlist' / speso                                       	   /*var pormedio del percentil*/
+		
+			gen ac_mean_`varlist' = ac_s`varlist'/ ac_speso                               	   /*var pormedio de los pobres*/
 
-        qui sum speso
-        gen prop_pop = speso/ r(sum) * 100                                            	   /*porcentage de la poblacion*/
-        gen `totpeso'=r(sum)
+			qui sum speso
+			gen prop_pop = speso/ r(sum) * 100                                            	   /*porcentage de la poblacion*/
+			gen `totpeso'=r(sum)
 
-        gen ac_prop_pop = prop_pop
-        replace ac_prop_pop = ac_prop_pop[_n] + ac_prop_pop[_n-1] in 2/l            	   /*porcentage acumulada de la poblacion*/
+			gen ac_prop_pop = prop_pop
+			replace ac_prop_pop = ac_prop_pop[_n] + ac_prop_pop[_n-1] in 2/l            	   /*porcentage acumulada de la poblacion*/
 
-        qui sum s`varlist'
-        gen prop_`varlist' = s`varlist'/ r(sum) * 100                                 	   /*porcentage del var total*/
-        gen `totvar'=r(sum)
+			qui sum s`varlist'
+			gen prop_`varlist' = s`varlist'/ r(sum) * 100                                 	   /*porcentage del var total*/
+			gen `totvar'=r(sum)
 
-        gen ac_prop_`varlist' = prop_`varlist'
-        replace ac_prop_`varlist' = ac_prop_`varlist'[_n] + ac_prop_`varlist'[_n-1] in 2/l  /*porcentage acumulada del var total*/
+			gen ac_prop_`varlist' = prop_`varlist'
+			replace ac_prop_`varlist' = ac_prop_`varlist'[_n] + ac_prop_`varlist'[_n-1] in 2/l  /*porcentage acumulada del var total*/
 
-        gen `varpoint' = x`varlist'`i'*(100/`points')
-        local points2=`points'+1
-        set obs `points2'
-        replace `varpoint'=0 in `points2'
+			gen `varpoint' = x`varlist'`i'*(100/`points')
+			local points2=`points'+1
+			set obs `points2'
+			replace `varpoint'=0 in `points2'
 
-        if ("`order'" != "") {                                                              /* JPA 20120325 */
-            tempname tmp1 ac_tmp1
-            gen `tmp1'      = mean_`order'*speso
-            gen `ac_tmp1'   = `tmp1' in 1
-            replace `ac_tmp1' = `tmp1'[_n]+`ac_tmp1'[_n-1] in 2/l
-            gen ac_mean_`order' = `ac_tmp1'/ac_speso
-        }
+			if ("`order'" != "") {                                                              /* JPA 20120325 */
+				tempname tmp1 ac_tmp1
+				gen `tmp1'      = mean_`order'*speso
+				gen `ac_tmp1'   = `tmp1' in 1
+				replace `ac_tmp1' = `tmp1'[_n]+`ac_tmp1'[_n-1] in 2/l
+				gen ac_mean_`order' = `ac_tmp1'/ac_speso
+			}
 
-        foreach var2 of varlist x`varlist'`i' - ac_prop_`varlist'{
-            replace `var2'=. in `points2'
-        }
+			foreach var2 of varlist x`varlist'`i' - ac_prop_`varlist'{
+				replace `var2'=. in `points2'
+			}
 
-        if ("`xdecrease'"!="") {            /* JPA 26/05/2008 */
-           	sum x`varlist'`i'
-         	gen  inv_x`varlist'`i' = 1+abs(x`varlist'`i'-`r(max)')
-            loc  l "`inv_x`varlist'`i'' "
-        }
+			if ("`xdecrease'"!="") {            /* JPA 26/05/2008 */
+				sum x`varlist'`i'
+				gen  inv_x`varlist'`i' = 1+abs(x`varlist'`i'-`r(max)')
+				loc  l "`inv_x`varlist'`i'' "
+			}
 
-        ************************************
-        * generando los respectivos datos  *
-        ************************************
+			************************************
+			* generando los respectivos datos  *
+			************************************
 
-        if  ("`nrows'" != "") {
-            gen `by' = `i'
-            local bycols  "+1"                                            /* JPA 20120325 */
-            local bylist ", `by'"
-            local bymat  "  `by'"
-        }
+			if  ("`nrows'" != "") {
+				gen `by' = `i'
+				local bycols  "+1"                                            /* JPA 20120325 */
+				local bylist ", `by'"
+				local bymat  "  `by'"
+			}
 
-        if ("`order'" != "") {                                                  /* JPA 20120325 */
-            local orderlist ", mean_`order', max`order', ac_mean_`order'"
-            local ordermat  " mean_`order'  max`order' ac_mean_`order'"
-            if ("`fullview'" != "") {
-                local colsmax = 13
-            }
-            if ("`view'" != "") {
-                local colsmax = 8
-            }
-        }
-        else {
-            if ("`fullview'" != "") {
-                local colsmax = 10
-            }
-            if ("`view'" != "") {
-                local colsmax = 5
-            }
-        }
+			if ("`order'" != "") {                                                  /* JPA 20120325 */
+				local orderlist ", mean_`order', max`order', ac_mean_`order'"
+				local ordermat  " mean_`order'  max`order' ac_mean_`order'"
+				if ("`fullview'" != "") {
+					local colsmax = 13
+				}
+				if ("`view'" != "") {
+					local colsmax = 8
+				}
+			}
+			else {
+				if ("`fullview'" != "") {
+					local colsmax = 10
+				}
+				if ("`view'" != "") {
+					local colsmax = 5
+				}
+			}
 
-        if ("`results'" == "" ) & ("`xdecrease'"=="") {
-            if ("`fullview'" != "") {
-                local matfullview     "max`varlist', mean_`varlist', ac_mean_`varlist', speso, ac_speso, prop_pop, ac_prop_pop, prop_`varlist', ac_prop_`varlist'  `orderlist'  `bylist'"
-                local cols = `colsmax' `bycols'
-            }
-            if ("`view'" != "") {
-                local matview         "ac_prop_`varlist',  max`varlist', ac_prop_pop, ac_mean_`varlist'  `orderlist'  `bylist'"
-                local cols = `colsmax' `bycols'
-            }
-        }
+			if ("`results'" == "" ) & ("`xdecrease'"=="") {
+				if ("`fullview'" != "") {
+					local matfullview     "max`varlist', mean_`varlist', ac_mean_`varlist', speso, ac_speso, prop_pop, ac_prop_pop, prop_`varlist', ac_prop_`varlist'  `orderlist'  `bylist'"
+					local cols = `colsmax' `bycols'
+				}
+				if ("`view'" != "") {
+					local matview         "ac_prop_`varlist',  max`varlist', ac_prop_pop, ac_mean_`varlist'  `orderlist'  `bylist'"
+					local cols = `colsmax' `bycols'
+				}
+			}
 
-        if ("`results'" == "" ) & ("`xdecrease'"!="") {
-            if ("`fullview'" != "") {
-                local matfullview     "inv_x`varlist'`i', max`varlist', mean_`varlist', ac_mean_`varlist', speso, ac_speso, prop_pop, ac_prop_pop, prop_`varlist', ac_prop_`varlist'  `orderlist' `bylist'"
-                local cols = `colsmax'+1 `bycols'
-            }
-            if ("`view'" != "") {
-                local matview         "inv_x`varlist'`i', ac_prop_`varlist',  max`varlist', ac_prop_pop, ac_mean_`varlist'  `orderlist' `bylist'"
-                local cols = `colsmax' `bycols'
-            }
-        }
+			if ("`results'" == "" ) & ("`xdecrease'"!="") {
+				if ("`fullview'" != "") {
+					local matfullview     "inv_x`varlist'`i', max`varlist', mean_`varlist', ac_mean_`varlist', speso, ac_speso, prop_pop, ac_prop_pop, prop_`varlist', ac_prop_`varlist'  `orderlist' `bylist'"
+					local cols = `colsmax'+1 `bycols'
+				}
+				if ("`view'" != "") {
+					local matview         "inv_x`varlist'`i', ac_prop_`varlist',  max`varlist', ac_prop_pop, ac_mean_`varlist'  `orderlist' `bylist'"
+					local cols = `colsmax' `bycols'
+				}
+			}
 
 
-        if ("`results'" != "" ) {
-            local count = wordcount("`results'")
-            if ("`fullview'" != "") {
-                local matfullview   "`results'"
-                local cols = 1+`count'
-            }
-            if ("`view'" != "") {
-                local matview       "`results'"
-                local cols = 1+`count'
-            }
-        }
+			if ("`results'" != "" ) {
+				local count = wordcount("`results'")
+				if ("`fullview'" != "") {
+					local matfullview   "`results'"
+					local cols = 1+`count'
+				}
+				if ("`view'" != "") {
+					local matview       "`results'"
+					local cols = 1+`count'
+				}
+			}
 
-    /* JPA  20081115 */
+		/* JPA  20081115 */
 
-        if ("`fullview'" != "")  & ("`xdecrease'"=="") {
+			if ("`fullview'" != "")  & ("`xdecrease'"=="") {
 
-            tempname `varlist'_`c' mat1
-            replace max`varlist'=. if x`varlist'`i'==`points'
-            mkmat x`varlist'`i' max`varlist' mean_`varlist' ac_mean_`varlist' speso ac_speso prop_pop ac_prop_pop prop_`varlist' ac_prop_`varlist' `ordermat' `bymat'
-            mat ``varlist'_`c'' = x`varlist'`i', `matfullview'
-            mat `mat1' = ``varlist'_`c''[1..`points',1..`cols']
-            return matrix lorenz`i' = `mat1'
-        }
+				tempname `varlist'_`c' mat1
+				replace max`varlist'=. if x`varlist'`i'==`points'
+				mkmat x`varlist'`i' max`varlist' mean_`varlist' ac_mean_`varlist' speso ac_speso prop_pop ac_prop_pop prop_`varlist' ac_prop_`varlist' `ordermat' `bymat'
+				mat ``varlist'_`c'' = x`varlist'`i', `matfullview'
+				mat `mat1' = ``varlist'_`c''[1..`points',1..`cols']
+				return matrix lorenz`i' = `mat1'
+			}
 
-        if ("`view'" != "")  & ("`xdecrease'"=="") {
+			if ("`view'" != "")  & ("`xdecrease'"=="") {
 
-            tempname `varlist'_`c' mat1
-            replace max`varlist'=. if x`varlist'`i'==`points'
-            mkmat x`varlist'`i' ac_prop_`varlist' max`varlist' ac_prop_pop ac_mean_`varlist'  `ordermat' `bymat'
-            mat ``varlist'_`c'' = x`varlist'`i',  `matview'
-            mat `mat1' = ``varlist'_`c''[1..`points',1..`cols']
-            return matrix lorenz`i' = `mat1'
-        }
+				tempname `varlist'_`c' mat1
+				replace max`varlist'=. if x`varlist'`i'==`points'
+				mkmat x`varlist'`i' ac_prop_`varlist' max`varlist' ac_prop_pop ac_mean_`varlist'  `ordermat' `bymat'
+				mat ``varlist'_`c'' = x`varlist'`i',  `matview'
+				mat `mat1' = ``varlist'_`c''[1..`points',1..`cols']
+				return matrix lorenz`i' = `mat1'
+			}
 
-    /* JPA  20081115 */
+		/* JPA  20081115 */
 
-        if ("`fullview'" != "")  & ("`xdecrease'"!="") {
+			if ("`fullview'" != "")  & ("`xdecrease'"!="") {
 
-            tempname `varlist'_`c' mat1
-            replace max`varlist'=. if x`varlist'`i'==`points'
-            mkmat x`varlist'`i' inv_x`varlist'`i'   max`varlist' mean_`varlist' ac_mean_`varlist' speso ac_speso prop_pop ac_prop_pop prop_`varlist' ac_prop_`varlist'  `ordermat' `bymat'
-            mat ``varlist'_`c'' = x`varlist'`i', `matfullview'
-            mat `mat1' = ``varlist'_`c''[1..`points',1..`cols']
-            return matrix lorenz`i' = `mat1'
-        }
+				tempname `varlist'_`c' mat1
+				replace max`varlist'=. if x`varlist'`i'==`points'
+				mkmat x`varlist'`i' inv_x`varlist'`i'   max`varlist' mean_`varlist' ac_mean_`varlist' speso ac_speso prop_pop ac_prop_pop prop_`varlist' ac_prop_`varlist'  `ordermat' `bymat'
+				mat ``varlist'_`c'' = x`varlist'`i', `matfullview'
+				mat `mat1' = ``varlist'_`c''[1..`points',1..`cols']
+				return matrix lorenz`i' = `mat1'
+			}
 
-        if ("`view'" != "")  & ("`xdecrease'"!="") {
+			if ("`view'" != "")  & ("`xdecrease'"!="") {
 
-            tempname `varlist'_`c' mat1
-            replace max`varlist'=. if x`varlist'`i'==`points'
-            mkmat x`varlist'`i' inv_x`varlist'`i'  ac_prop_`varlist' max`varlist' ac_prop_pop ac_mean_`varlist'  `ordermat'  `bymat'
-            mat ``varlist'_`c'' = x`varlist'`i',  `matview'
-            mat `mat1' = ``varlist'_`c''[1..`points',1..`cols']
-            return matrix lorenz`i' = `mat1'
-        }
+				tempname `varlist'_`c' mat1
+				replace max`varlist'=. if x`varlist'`i'==`points'
+				mkmat x`varlist'`i' inv_x`varlist'`i'  ac_prop_`varlist' max`varlist' ac_prop_pop ac_mean_`varlist'  `ordermat'  `bymat'
+				mat ``varlist'_`c'' = x`varlist'`i',  `matview'
+				mat `mat1' = ``varlist'_`c''[1..`points',1..`cols']
+				return matrix lorenz`i' = `mat1'
+			}
 
-        if ("`output'" != "") {
-            outsheet x`varlist'`i' max`varlist' mean_`varlist' ac_mean_`varlist' speso ac_speso prop_pop ac_prop_pop prop_`varlist' ac_prop_`varlist'  `ordermat' `bymat'  using `output'_`name'.csv, comma replace
-            noisily di in r "file saved"
-        }
+			if ("`output'" != "") {
+				outsheet x`varlist'`i' max`varlist' mean_`varlist' ac_mean_`varlist' speso ac_speso prop_pop ac_prop_pop prop_`varlist' ac_prop_`varlist'  `ordermat' `bymat'  using `output'_`name'.csv, comma replace
+				noisily di in r "file saved"
+			}
 
-        if ("`compare'" != "") {
-            tempname `varlist'_`i' mat1
-            mkmat  x`varlist'`i' rmean mean_`varlist' ac_mean_`varlist' ac_prop_`varlist'  `ordermat'  `bymat'
-            mat ``varlist'_`i'' = x`varlist'`i', rmean, mean_`varlist', ac_mean_`varlist', ac_prop_`varlist' `orderlist'  `bylist'
-            mat colnames ``varlist'_`i'' = percent`i' t_`i' x_`i' s_`i' l_`i'
-            mat mat`i' = ``varlist'_`i''[1..`points',1..5]
-        }
+			if ("`compare'" != "") {
+				tempname `varlist'_`i' mat1
+				mkmat  x`varlist'`i' rmean mean_`varlist' ac_mean_`varlist' ac_prop_`varlist'  `ordermat'  `bymat'
+				mat ``varlist'_`i'' = x`varlist'`i', rmean, mean_`varlist', ac_mean_`varlist', ac_prop_`varlist' `orderlist'  `bylist'
+				mat colnames ``varlist'_`i'' = percent`i' t_`i' x_`i' s_`i' l_`i'
+				mat mat`i' = ``varlist'_`i''[1..`points',1..5]
+			}
 
-        tempname `varlist'_`c'
-        replace max`varlist'=. if x`varlist'`i'==`points'
-        mkmat  `varpoint'  ac_prop_`varlist' max`varlist' ac_prop_pop ac_mean_`varlist' mean_`varlist' `ordermat' `bymat'
-        mat ``varlist'_`c'' = `varpoint',  ac_prop_`varlist',  max`varlist', ac_prop_pop, ac_mean_`varlist', mean_`varlist'  `orderlist'  `bylist'
-        mat colnames ``varlist'_`c'' = `varpoint'`i'  ac_prop_`varlist'`i' max`varlist'`i' ac_prop_pop`i' ac_mean_`varlist'`i' mean_`varlist'  `ordermat' `bymat'
-        mat temp`i' = ``varlist'_`c''
-        matrix ``varlist'_`c'' = ``varlist'_`c''[1..`points',1..6]
-        if ("`fullview'" == "") & ("`view'" == "") {
-            return matrix lorenz`i' = ``varlist'_`c''
-        }
+			tempname `varlist'_`c'
+			replace max`varlist'=. if x`varlist'`i'==`points'
+			mkmat  `varpoint'  ac_prop_`varlist' max`varlist' ac_prop_pop ac_mean_`varlist' mean_`varlist' `ordermat' `bymat'
+			mat ``varlist'_`c'' = `varpoint',  ac_prop_`varlist',  max`varlist', ac_prop_pop, ac_mean_`varlist', mean_`varlist'  `orderlist'  `bylist'
+			mat colnames ``varlist'_`c'' = `varpoint'`i'  ac_prop_`varlist'`i' max`varlist'`i' ac_prop_pop`i' ac_mean_`varlist'`i' mean_`varlist'  `ordermat' `bymat'
+			mat temp`i' = ``varlist'_`c''
+			matrix ``varlist'_`c'' = ``varlist'_`c''[1..`points',1..6]
+			if ("`fullview'" == "") & ("`view'" == "") {
+				return matrix lorenz`i' = ``varlist'_`c''
+			}
 
-        if ("`results'" == "" ) {
-            if ("`fullview'" != "") {
-                local fullviewvarname "max`varlist' mean_`varlist' ac_mean_`varlist' speso ac_speso prop_pop ac_prop_pop prop_`varlist' ac_prop_`varlist'  `ordermat' `bymat'"
-            }
-            if ("`view'" != "") {
-                local viewvarname "ac_prop_`varlist' max`varlist' ac_prop_pop ac_mean_`varlist' `ordermat' `bymat' "
-            }
-        }
+			if ("`results'" == "" ) {
+				if ("`fullview'" != "") {
+					local fullviewvarname "max`varlist' mean_`varlist' ac_mean_`varlist' speso ac_speso prop_pop ac_prop_pop prop_`varlist' ac_prop_`varlist'  `ordermat' `bymat'"
+				}
+				if ("`view'" != "") {
+					local viewvarname "ac_prop_`varlist' max`varlist' ac_prop_pop ac_mean_`varlist' `ordermat' `bymat' "
+				}
+			}
 
-        if ("`results'" != "" ) {
-            local results2 = subinstr("`results'",","," ",.)
-            if ("`fullview'" != "") {
-                local fullviewvarname "`results2'"
-            }
-            if ("`view'" != "") {
-                local fullviewvarname "`results2'"
-            }
-        }
+			if ("`results'" != "" ) {
+				local results2 = subinstr("`results'",","," ",.)
+				if ("`fullview'" != "") {
+					local fullviewvarname "`results2'"
+				}
+				if ("`view'" != "") {
+					local fullviewvarname "`results2'"
+				}
+			}
 
-        if ("`fullview'" != "") {
-           local k = 1
-            foreach var of varlist `fullviewvarname' {
-                rename `var' ds`k'
-                label define _j `k' `var', modify
-                local k = `k'+1
-            }
-            rename x`varlist'`i' percentile
-            keep if percentile != .
-            reshape long ds , i(percentile)
-            label values _j _j
-            label var _j "Result:  `name'"
-            noisily di
-            noisily di in y "Result:  `name'"
-            noi tabdisp percentile _j, c(ds) format(`format')
-        }
+			if ("`fullview'" != "") {
+			   local k = 1
+				foreach var of varlist `fullviewvarname' {
+					rename `var' ds`k'
+					label define _j `k' `var', modify
+					local k = `k'+1
+				}
+				rename x`varlist'`i' percentile
+				keep if percentile != .
+				reshape long ds , i(percentile)
+				label values _j _j
+				label var _j "Result:  `name'"
+				noisily di
+				noisily di in y "Result:  `name'"
+				noi tabdisp percentile _j, c(ds) format(`format')
+			}
 
-        if ("`view'" != "") {
-           local k = 1
-            foreach var of varlist `viewvarname'  {
-                rename `var' ds`k'
-                label define _j `k' `var', modify
-                local k = `k'+1
-            }
-            rename x`varlist'`i' percentile
-            keep if percentile != .
-            reshape long ds , i(percentile)
-            label values _j _j
-            label var _j "Result:  `name'"
-            noisily di
-            noisily di in y "Result:  `name'"
-            noi tabdisp percentile _j, c(ds) format(`format')
-        }
+			if ("`view'" != "") {
+			   local k = 1
+				foreach var of varlist `viewvarname'  {
+					rename `var' ds`k'
+					label define _j `k' `var', modify
+					local k = `k'+1
+				}
+				rename x`varlist'`i' percentile
+				keep if percentile != .
+				reshape long ds , i(percentile)
+				label values _j _j
+				label var _j "Result:  `name'"
+				noisily di
+				noisily di in y "Result:  `name'"
+				noi tabdisp percentile _j, c(ds) format(`format')
+			}
 
         restore
    }
 
-        preserve
+    preserve
 
     **********************************************
     * generando las figuras Lorenz e Pen's Parade  *
@@ -724,7 +772,7 @@ program define alorenz   , rclass
                     if ("`gp'" != ""){
                         sort `sel_p`s'' `per_p`s''
                         tempvar tmpp`zzz'
-                        gen double `tmpp`zzz'' = round(abs(`sel_p`s''-`st'))
+                        gen double `tmpp`zzz'' = round(abs(`sel_p`s''-`st')) if `touse'
                         sort `tmpp`zzz''
                         local per = `per_p`s'' in 1
                         mat `bt' = nullmat(`bt') \ `st' , `per'
@@ -733,7 +781,7 @@ program define alorenz   , rclass
                     if ("`ge'" != ""){
                         sort `sel_e`s'' `per_e`s''
                         tempvar tmpe`zzz'
-                        gen double `tmpe`zzz'' = round(abs(`sel_e`s''-`st'))
+                        gen double `tmpe`zzz'' = round(abs(`sel_e`s''-`st')) if `touse'
                         sort `tmpe`zzz''
                         local per = `per_e`s'' in 1
                         mat `ct' = nullmat(`ct') \ `st' , `per'
@@ -1215,10 +1263,13 @@ program define alorenz   , rclass
             noi di in y "CE: " in g" Preference for growth with equity."
             noi di ""
 
-        restore
+    restore
 
-        }
+    }
 
-}
+
+	}	
+	
+	return add
 
 end

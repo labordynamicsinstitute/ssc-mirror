@@ -15,10 +15,11 @@ d KW: Theil's U
 d
 d Requires: Stata version 13
 d
-d Distribution-Date: 20170611
+d Distribution-Date: 20180714
 d
 d Author: Christopher F Baum, Boston College 
 d Support: email baum@@bc.edu
 d
 f fcstats.ado
+f fcstats2.ado
 f fcstats.sthlp

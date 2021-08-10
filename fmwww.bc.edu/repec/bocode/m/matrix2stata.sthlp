@@ -1,4 +1,5 @@
 {smcl}
+{* *! version 0.23}{...}
 {vieweralsosee "" "--"}{...}
 {vieweralsosee "Help svmat" "help svmat"}{...}
 {vieweralsosee "Help sumat (Is installed with matprint" "help sumat"}{...}
@@ -28,6 +29,9 @@ matrixname
 creating variables from the matrix.{p_end}
 {synopt:{opt z:iprows}} Orders and merges roweq and rownames into one label 
 column/variable.{p_end}
+{synopt:{opt zi:psettings(string)}} A set of settings for the zip layout.{break}
+Option {opt b:old} makes the equation values bold.
+{p_end}
 {synoptline}
 {p2colreset}{...}
 {p 4 6 2}
@@ -132,10 +136,8 @@ not exist " " is returned.{p_end}
 
 {phang}{bf:Author:}{break}
  	Niels Henrik Bruun, {break}
-	Section for General Practice, {break}
-	Dept. Of Public Health, {break}
-	Aarhus University
+	Aalborg University Hospital
 {p_end}
 {phang}{bf:Support:} {break}
-	{browse "mailto:nhbr@ph.au.dk":nhbr@ph.au.dk}
+	{browse "mailto:niels.henrik.bruun@gmail.com":niels.henrik.bruun@gmail.com}
 {p_end}

@@ -17,10 +17,10 @@ d KW: Kolmogorov-Smirnov
 d
 d Requires: Stata version 9.2
 d
-d Distribution-Date: 20080714
+d Distribution-Date: 20210118
 d
-d Author: Ben Jann, ETH Zurich
-d Support: email ben.jann@@soz.gess.ethz.ch
+d Author: Ben Jann, University of Bern
+d Support: email jann@@soz.unibe.ch
 d
 f mgof.zip
 f mgof.ado

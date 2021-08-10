@@ -1,4 +1,4 @@
-*! version 2.0.2  31jan2005
+*! version 2.0.3  10aug2020
 /* Postestimation command of stcox, estat concordance, is called */
 /* through stcstat.ado 						 */					
 program define stcstat2, rclass /* [if exp] [in range] */
@@ -16,6 +16,7 @@ program define stcstat2, rclass /* [if exp] [in range] */
                 }
                 predict double `h' `restriction', xbnobaseline
                 markout `touse' `h'
+		    replace `touse' = 0 if _st==0
         }
 
         if `"`_dta[st_w]'"' != "" {

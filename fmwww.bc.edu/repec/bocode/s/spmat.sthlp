@@ -42,7 +42,7 @@
 	{cmd:spmat save}{p_end}
 {synopt:{helpb spmat_import:import}}create an {cmd:spmat} object from a text file{p_end}
 {synopt:{helpb spmat_dta:dta}}create an {cmd:spmat} object from a Stata dataset{p_end}
-{synopt:{helpb spmat_putmatrix:putmatrix}}copy a Mata matrix to an {cmd:spmat} object{p_end}
+{synopt:{helpb spmat_putmatrix:putmatrix}}put a Mata matrix into an {cmd:spmat} object{p_end}
 
 {synopt:{helpb spmat_permute:permute}}permute rows and columns of {bf:W}{p_end}
 {synopt:{helpb spmat_tobanded:tobanded}}transform an {it:n} x {it:n} {bf:W} into a

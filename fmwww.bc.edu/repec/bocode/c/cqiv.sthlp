@@ -1,5 +1,5 @@
 {smcl}
-{* August 26, 2011}{...}
+{* Sep 10, 2019}{...}
 {cmd:help cqiv}
 {hline}
 
@@ -21,14 +21,17 @@
 
 {syntab:Model}
 {synopt:{opt q:uantiles(numlist)}}sets the quantile(s) (values between 0 to 100) at which the model is estimated.{p_end}
-{synopt:{opt c:ensorpt(#)}}censoring point of the dependent variable; default is 0.{p_end}
+{synopt:{opt c:ensorpt(#)}}fixed censoring point of the dependent variable; default is 0.{p_end}
+{synopt:{opt censorvar(varname)}}random censoring variable of the dependent variable.{p_end}
 {synopt:{opt t:op}}right censoring of the dependent variable; otherwise, left censoring as default.{p_end}
 {synopt:{opt u:ncensored}}uncensored quantile IV (QIV) estimation.{p_end}
 {synopt:{opt e:xogenous}}censored quantile regression (CQR) with no endogeneity.{p_end}
 {synopt:{opt f:irststage(string)}}determine the first stage estimation procedure, where {it:string} is
   {opt quantile} (default),
   {opt distribution},
-  {opt ols}.{p_end}{synopt:{opt exc:lude}}excludes exogenous regressors other than instruments from the first stage estimation.{p_end}{synopt:{opt nquant(#)}}determines the number of quantiles used in the first stage estimation when the estimation procedure is {opt quantile};
+  {opt ols}.{p_end}
+{synopt:{opt firstvar(varlist)}specifies the list of variables other than instruments that are included in the first stage estimation.{p_end}
+{synopt:{opt nquant(#)}}determines the number of quantiles used in the first stage estimation when the estimation procedure is {opt quantile};
  default is 50; it is advisable to choose a value between 20 to 100.{p_end}
 {synopt:{opt nthresh(#)}}determines the number of thresholds used in the first stage estimation when the estimation procedure is {opt distribution};
  default is 50; it is advisable to choose a value between 20 up to the value of the sample size.{p_end}
@@ -45,13 +48,15 @@
 {synopt:{opt drop1(#)}}sets the proportion of observations {it:q0} with probabilities of censoring above the quantile index that are dropped in the first step
  of the second stage (See Chernozhukov, Fernandez-Val and Kowalski (2010) for details); default is 10.{p_end}
 {synopt:{opt drop2(#)}}sets the proportion of observations {it:q1} with estimate of the conditional quantile above (below for right censoring) that are dropped
- in the second step of the second stage (See Chernozhukov, Fernandez-Val and Kowalski (2010) for details); default is 3.{p_end}{synopt:{opt viewl:og}}shows the intermediate estimation results; default is no log.{p_end}
+ in the second step of the second stage (See Chernozhukov, Fernandez-Val and Kowalski (2010) for details); default is 3.{p_end}
+{synopt:{opt viewl:og}}shows the intermediate estimation results; default is no log.{p_end}
 
 {syntab:Inference}
 {synopt:{opt co:nfidence(string)}}type of confidence intervals, where {it:string} is
   {opt no} (no confidence intervals, the default),
   {opt boot},
   {opt weightboot}.{p_end}
+{synopt:{opt clu:ster(string)}} implements a cluster bootstrap procedure for clustered data when {cmd:confidence(weightboot)} is selected, with {it:string} specifying the variable that defines the group or cluster.{p_end}
 {synopt:{opt b:ootreps(#)}}number of repetition of bootstrap or weighted bootstrap; default is 100.{p_end}
 {synopt:{opt s:etseed(#)}}initial seed number in repetition of bootstrap or weighted bootstrap; default is 777.{p_end}
 {synopt:{opt le:vel(#)}}sets confidence level; default is 95.{p_end}
@@ -65,7 +70,8 @@
  note that {cmd:pweight} is automatically forced for the probit or logit estimation in the procedure, and {cmd:aweight} for the quantile regression estimation.
  When {cmd:confidence(weightboot)} is implemented the multiplication of the bootstrap weights and the user-specified weights is used as the weights
   in the bootstrap procedure.{p_end}
- {phang}{cmd:break} command pressed in the middle of the execution may not restore the original dataset.{p_end}
+ 
+{phang}{cmd:break} command pressed in the middle of the execution may not restore the original dataset.{p_end}
 
 
 {title:Description}
@@ -91,6 +97,9 @@ Note that this is not the list of quantiles for the first stage estimation with 
 {opt censorpt(#)} specifies the censoring point of the dependent variable, where the default is 0; inappropriately specified censoring point will generate errors in estimation.
 
 {phang}
+{opt censorvar(varname)} specifies the censoring variable (i.e., the random censoring point) of the dependent variable.
+
+{phang}
 {opt top} sets right censoring of the dependent variable; otherwise, left censoring is assumed as default.
 
 {phang}
@@ -100,24 +109,34 @@ Note that this is not the list of quantiles for the first stage estimation with 
 {opt exogenous} selects censored quantile regression (CQR) with no endogeneity, which is proposed by Chernozhukov and Hong (2002).
 
 {phang}
-{opt firststage(string)} determines the first stage estimation procedure, where {it:string} is either {opt quantile} for quantile regression (the default), {opt distribution} for distribution regression (either probit or logit), or {opt ols} for ols estimation. Note that {cmd:firststage(distribution)} can take a considerable amount of time to execute.
-{phang}
-{opt exclude} excludes exogenous regressors other than instruments from the first stage estimation.
- {phang}{opt nquant(#)} determines the number of quantiles used in the first stage estimation when the estimation procedure is {opt quantile};
+{opt firststage(string)} determines the first stage estimation procedure, where {it:string} is either
+ {opt quantile} for quantile regression (the default), {opt distribution} for distribution regression (either probit or logit), or
+ {opt ols} for ols estimation. Note that {cmd:firststage(distribution)} can take a considerable amount of time to execute.
+
+{phang}
+{opt firstvar(varlist)} specifies the list of variables other than instruments that are included in the first stage estimation; default is all the variables that are included in the second stage estimation.
+ 
+{phang}
+{opt nquant(#)} determines the number of quantiles used in the first stage estimation when the estimation procedure is {opt quantile};
  default is 50, that is, total 50 evenly-spaced quantiles are chosen in the estimation; it is advisable to choose a value between 20 to 100.
-{phang}
+
+{phang}
  {opt nthresh(#)} determines the number of thresholds used in the first stage estimation when the estimation procedure is {opt distribution};
  default is 50, that is, total 50 evenly-spaced thresholds are chosen in the estimation;
  it is advisable to choose a value between 20 and the value of the sample size;
  when the value is smaller than this range, the estimation may be subject to multicollinearity.
- {phang}{opt ldv1(string)} determines the LDV model used in the first stage estimation when the estimation procedure is {opt distribution}, where {it:string} is either
+ 
+{phang}
+{opt ldv1(string)} determines the LDV model used in the first stage estimation when the estimation procedure is {opt distribution}, where {it:string} is either
  {opt probit} for probit estimation (the default), or {opt logit} for logit estimation.
 
 {phang}
 {opt ldv2(string)} determines the LDV model used in the first step of the second stage estimation, where {it:string} is either
  {opt probit} (the default), or {opt logit}.
-  
-{dlgtab:CQIV estimation}
+  
+
+{dlgtab:CQIV estimation}
+
 {phang}
 {opt corner} calculates the (average) marginal quantile effects for censored dependent variable when the censoring is due to
  economic reasons such are corner solutions. Under this option, the reported coefficients are the average corner solution marginal effects
@@ -126,24 +145,29 @@ Note that this is not the list of quantiles for the first stage estimation with 
  averages the marginal effects over all observations. If the underlying function is nonlinear in the endogenous variable,
  average marginal effects must be calculated directly from the coefficients without {opt corner} option. For details of the related concepts,
  see Section 2.1 of Chernozhukov, Fernandez-Val and Kowalski (2010). The relevant example can be found in the examples section of this help file.
-{phang}
+
+{phang}
 {opt drop1(#)} sets the proportion of observations {it:q0} with probabilities of censoring above the quantile index that are dropped in the first step
  of the second stage (See Chernozhukov, Fernandez-Val and Kowalski (2010) for details); default is 10.
- {phang}
+ 
+{phang}
 {opt drop2(#)} sets the proportion of observations {it:q1} with estimate of the conditional quantile above (below for right censoring) that are dropped
  in the second step of the second stage (See Chernozhukov, Fernandez-Val and Kowalski (2010) for details); default is 3.
-{phang}
+
+{phang}
 {opt viewlog} shows the intermediate estimation results; the default is no log.
 
 
 {dlgtab:Inference}
 
 {phang}
-{opt confidence(string)} specifies the type of confidence intervals. With {it:string} being {opt no}, which is the default, no confidence intervals are calculated. With {it:string} being {opt b:oot} or {opt w:eightedboot},
-either nonparametric bootstrap or weighted bootstrap (respectively) confidence intervals are calculated. The weights of the weighted bootstrap
+{opt confidence(string)} specifies the type of confidence intervals. With {it:string} being
+ {opt no}, which is the default, no confidence intervals are calculated. With {it:string} being {opt b:oot} or {opt w:eightedboot},
+either nonparametric bootstrap or weighted bootstrap (respectively) t-percentile symmetric confidence intervals are calculated. The weights of the weighted bootstrap
  are generated from the standard exponential distribution. Note that {cmd:confidence(boot)} and {cmd:confidence(weightboot)}
  can take a considerable amount of time to execute.
-{phang}
+
+{phang}
 {opt bootreps(#)} sets the number of repetitions of bootstrap or weighted bootstrap if the {cmd:confidence(boot)} or {cmd:confidence(weightboot)}
 is selected. The default number of repetitions is 100.
 
@@ -178,27 +202,31 @@ is selected. The default number of repetitions is 100.
 {col 10}{cmd:e(depvar)}{col 25}Name of the dependent variable
 {col 10}{cmd:e(endogvar)}{col 25}Name of the endogenous regressor
 {col 10}{cmd:e(instrument)}{col 25}Names of the instrumental variables
+{col 10}{cmd:e(censorvar)}{col 25}Name of the censoring variable
 {col 10}{cmd:e(regressors)}{col 25}Names of the regressors
 {col 10}{cmd:e(firststage)}{col 25}Type of the first stage estimation
 {col 10}{cmd:e(confidence)}{col 25}Type of confidence intervals
 
 {phang}Matrices{p_end}
-{col 10}{cmd:e(results)}{col 25}Matrix containing the estimated coefficients, mean, and lower and upper bounds of confidence intervals.
+{col 10}{cmd:e(results)}{col 25}Matrix containing the estimated coefficients, means, standard errors, and lower and upper bounds of confidence intervals.
 {col 10}{cmd:e(quantiles)}{col 25}Row vector containing the quantiles at which CQIV have been estimated.
 {col 10}{cmd:e(robustcheck)}{col 25}Matrix containing the results for the robustness diagnostic test results. (See Table B1 of Chernozhukov, Fernandez-Val and Kowalski (2010).)
 {col 10}Note that the entry {it:complete} denotes whether all the steps are included in the procedure; 1 when they are, and 0 otherwise. For other entries consult the paper.
 
 {title:Examples}
 
-{phang}{cmd:. webuse set http://www.econ.yale.edu/~ak669/} {space 13} (to specify URL from which dataset will be obtained){p_end}
-{phang}{cmd:. webuse alcoholengel} {space 37} (to load the dataset over the URL; See Blundell, Chen and Kristensen (2007) for data descriptions.){p_end}
+{phang}{cmd:. ssc describe cqiv} {space 13} (This line will show the dataset as accessible via the next line of the command.){p_end}
+{phang}{cmd:. net get cqiv}
+{p_end}
+{phang}{cmd:. use alcoholengel.dta} {space 29} (This line will download {cmd:alcoholengel.dta} to the current working directory; See Blundell, Chen and Kristensen (2007) for data descriptions.)
+{p_end}
 {phang}{cmd:. cqiv alcohol logexp2 nkids (logexp = logwages nkids), quantiles(25 50 75)} {space 1} (This generates part of the empirical results of Chernozhukov, Fernandez-Val and Kowalski (2010).)
 
 {phang}
 {cmd:. cqiv alcohol logexp2 (logexp = logwages), quantiles(20 25 70(5)90) firststage(ols)}
 
 {phang}
-{cmd:. cqiv alcohol logexp2 (logexp = logwages), firststage(distribution) ldv1(logit)}
+{cmd:. cqiv alcohol (logexp = logwages), firststage(distribution) ldv1(logit)}
 
 {phang}
 {cmd:. cqiv alcohol logexp2 nkids (logexp = logwages nkids), uncensored} {space 3} (to run QIV)
@@ -227,12 +255,11 @@ is selected. The default number of repetitions is 100.
 
 {p 4 6} Blundell, Chen and Kristensen (2007): Semi-nonparametric IV Estimation of Shape-Invariant Engel Curves, Econometrica, 75(6), 1613-1669.
 
-{p 4 6} Chernozhukov, Fernandez-Val and Kowalski (2010): Quantile Regression with Censoring and Endogeneity, Boston University Department of Economics Working Paper 2009-012.
+{p 4 6} Chernozhukov, Fernandez-Val and Kowalski (2015): Quantile Regression with Censoring and Endogeneity, Journal of Econometrics, 186(1), 201-221.
 
 {p 4 6} Chernozhukov and Hong (2002): Three-Step Censored Quantile Regression and Extramarital Affairs, Journal of the American Statistical Association, 97, 872-882.
 
-{p 4 6} Kowalski (2010): Censored Quantile Instrumental Variable Estimates of the Price Elasticity of Expenditure on Medical Care,
- NBER Working Paper 15085.
+{p 4 6} Kowalski (2016): Censored Quantile Instrumental Variable Estimates of the Price Elasticity of Expenditure on Medical Care, Journal of Business & Economic Statistics, 34(1), 107-117.
  
 {p 4 6} Lee (2007): Endogeneity in Quantile Regression Models: A Control Function Approach, Journal of Econometrics, 141, 1131-1158.
 
@@ -259,7 +286,7 @@ GENERAL, SPECIAL, INCIDENTAL OR CONSEQUENTIAL DAMAGES ARISING OUT OF THE USE OR 
 {title:Authors}
 
 {p 4 6}Victor Chernozhukov, Ivan Fernandez-Val, Sukjin Han, and Amanda Kowalski{p_end}
-{p 4 6}MIT, Boston University, and Yale University{p_end}
-{p 4 6}vchern@mit.edu / ivanf@bu.edu / sukjin.han@yale.edu / amanda.kowalski@yale.edu{p_end}
-{p 4 6}Latest Version: August 2011 / First Version: December 2010{p_end}
+{p 4 6}MIT, Boston University, UT Austin, and University of Michigan{p_end}
+{p 4 6}vchern@mit.edu / ivanf@bu.edu / sukjin.han@austin.utexas.edu / aekowals@umich.edu{p_end}
+{p 4 6}Latest Version: April 2019 / First Version: December 2010{p_end}
 

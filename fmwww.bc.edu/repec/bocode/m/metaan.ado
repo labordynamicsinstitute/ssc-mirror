@@ -1,10 +1,10 @@
 /*  meta analysis module by Evangelos Kontopantelis
-    creted in STATA v9.2, 26 October 2009
+    created in STATA v9.2, 26 October 2009
     v1.1 10 Jan 2013
 		-set variables to double for better precision when study variance is extremely small
     v1.2 25 Feb 2013
 		-added bootstrap method (default is 1,000 iterations)
-		-added sensitivity analysis using preset value for I^2
+		-added sensitivity analysis using pre-set value for I^2
     v1.3 16 Oct 2013
 		-renamed diff scalars since overlap with variables is likely
     v1.4 14 Aug 2014
@@ -24,24 +24,36 @@
 		-seed number no longer set automatically
     v3.0 11 Apr 2017
 		-by option added for subgroup analyses
+    v4.0 25 Jul 2018
+		-added support for binary data (MH, IV or Peto)
+    v4.1 10 Sep 2018
+		-added back-transformation for empirical logit
+		-gave up moving REML code to main ado file (Stata does not allow this for ML algrithms)
+		-added pscl option for [0,1] or [0,100] scaling of percentages (used with prp or backt options only)
+    v4.2 17 Sep 2019
+		-corrected to allow additional twway graph options
+    v4.3 28 Jan 2020
+		-four variable syntax now asks for events and non-events, rather than events and totals
+		
 */
 
 /*stata version define*/
-version 9.2
+version 9
 
 /*metaan calculates the effect and SE for each study (if possible)*/
 program define metaan, rclass
     /*command syntax*/
-    syntax namelist(min=2 max=2) [if] [in], /*
+    syntax namelist(min=2 max=4) [if] [in], /*
 	*/ [fe dl bdl ml reml pl pe sa exp varc prp label(string) forest /*
-	*/ reps(integer -127) seed(integer -127) sens(real 80)( plplot(string) /*
-	*/ grpby(varname numeric) /*
+	*/ reps(integer -127) seed(integer -127) sens(real 80) plplot(string) /*
+	*/ grpby(varname numeric) backt(string) pscl /*
+	*/ /*MH and Peto methods*/ mhor mhrr mhrd por poe /* 	
 	*/ /*new plot options*/ DP(integer 2) ASTEXT(integer 50) TEXTSize(real 100.0) /*
 	*/ BOXSCA(real 100.0) noOVERALL NOHET NULL(real 999) NULLOFF NOWARNING XLAbel(passthru) /*
 	*/ XTick(passthru) FORCE SUMMARYONLY EFFECT(string) FAVOURS(string) /*
 	*/ DOUBLE BOXOPT(string) CLASSIC DIAMOPT(string) POINTOPT(string) CIOPT(string) /*
 	*/ OLINEOPT(string) noSTATS noWT /*
-	*/ /*junk now*/ forestw(real -127.5)]
+	*/ /*junk now*/ forestw(real -127.5) * ]
     /*temp variables used in all methods*/
     tempvar temp1 temp2 temp3 temp4
     /*temp scalars*/
@@ -51,96 +63,279 @@ program define metaan, rclass
     local clvl=c(level)
     local mltps=(100-`clvl')/200
     local mltpl=invnormal(1-(100-`clvl')/200)
-    /*help string for error messages*/
-    local outtxt = "effect sd"
-    if "`varc'"!="" local outtxt = "effect variance"
-    if "`prp'"!="" {
-        if "`varc'"!="" {
-            di as error "Cannot use varc and prp options together: either standard meta-analysis or one of proportions!"
-            error 110
-        }
-        local outtxt = "denominators"
-    }
-    //transform to odds ratios or not
-    scalar `btor'=0
-    if "`exp'"!="" {
-        scalar `btor'=1
-        if "`prp'"!="" {
-            di as error "Cannot use exp and prp options together: either meta-analysis of dichotomous outcomes or one of proportions!"
-            error 110
-        }
-
-    }
+	//methods
+	local mlist1 "fe dl bdl ml pl reml pe sa poe"	
     /*find out if the variables specified are there and include the information they are supposed to have*/
-    local var1 = word("`namelist'",1)
-    local var2 = word("`namelist'",2)
+	local tswc=wordcount("`namelist'")
+	forvalues i=1(1)`tswc' {
+		local var`i' = word("`namelist'",`i')
+	}
+	if `tswc'==3 {
+        di as error "Output variables need to be two or four (see help file)"
+        error 110	
+	}
     /*make sure a user doesn't give the same variable names*/
-    if "`var1'"=="`var2'" {
-        di as error "Output variables need to have different names!"
-        error 110
+	forvalues i=1(1)`tswc' {
+		forvalues j=1(1)`tswc' {
+			if `i'!=`j' & "`var`i''"=="`var`j''" {
+				di as error "Outcome variables need to have different names!"
+				error 110
+			}
+		}
     }
-    //find out the variable specified is there and includes the information they are supposed to have
-    capture confirm numeric variable `var1', exact
-    if _rc!=0 {
-        di as error "Variable `var1' (effects) does not exist or is not numeric"
-        error 110
-    }
-    capture confirm numeric variable `var2', exact
-    if _rc!=0 {
-        di as error "Variable `var2' (`outtxt') does not exist or is not numeric"
-        error 110
-    }
-    qui sum `var2'
-    if r(min)<=0 {
-        di as error "Variable `var2' (`outtxt') must only contain positive numbers"
-        error 110
-    }
-    //additional checks and info if MA of proportions
-    scalar prpinfo=0
-    if "`prp'"!="" {
-        //make sure both variables include integers and positive
-        qui sum `var1'
-        scalar minvar1=r(min)
-        if r(min)<0 {
-            di as error "Variable `var1' (numerators) must only contain positive or zero numbers"
-            error 110
-        }
-        qui count if mod(`var1', 1)!=0
-        if r(N)>0 {
-            di as error "Variable `var1' (numerators) must only contain integers"
-            error 110
-        }
-        qui count if mod(`var2', 1)!=0
-        if r(N)>0 {
-            di as error "Variable `var2' (denominators) must only contain integers"
-            error 110
-        }
-        //make sure denominators are not smaller than numerators
-        qui gen `temp1'=`var2'-`var1'
-        qui sum `temp1'
-        if r(min)<0 {
-            di as error "Numerators appear larger than denominators in some cases"
-            error 110
-        }
-        qui drop `temp1'
-        //to pass to forest plot for range
-        scalar prpinfo=1
-    }
+	//find out the variable specified is there and includes the information they are supposed to have
+	forvalues i=1(1)`tswc'{
+		capture confirm numeric variable `var`i'', exact
+		if _rc!=0 {
+			di as error "Variable `var`i'' does not exist or is not numeric"
+			error 110
+		}		
+	}
+	
+	/*check what is happening with model options*/
+	local mdcnt=0
+	forvalues i=1(1)`=wordcount("`mlist1'")' {
+		if "``=word("`mlist1'",`i')''"!="" local mdcnt = `mdcnt' + 1			
+	}
+	if `mdcnt'>=2 {
+		di as error "Please select only one model option"
+		error 110
+	}	
+	
+	//if provided effect and its variability
+	if `tswc'==2 {	
+		if `mdcnt' == 0 {
+			di as error "You must select a model option: fe, dl, bdl, ml, pl, reml, pe ,sa, poe"
+			error 110
+		}
+		//variables that need to be positive		
+		qui sum `var2' `if' `in'
+		if r(min)<=0 {
+			di as error "Variable `var2' must only contain positive numbers"
+			error 110
+		}	
+		/*prp and varc*/
+		if "`prp'"!="" {
+			if "`varc'"!="" {
+				di as error "Cannot use varc and prp options together: either standard meta-analysis or one of proportions!"
+				error 110
+			}
+		}
+		//exponentiate or not
+		scalar `btor'=0
+		if "`exp'"!="" {
+			scalar `btor'=1
+			if "`prp'"!="" {
+				di as error "Cannot use exp and prp options together: either meta-analysis of dichotomous outcomes or one of proportions!"
+				error 110
+			}
+		}
+		//additional checks and info if MA of proportions
+		scalar prpinfo=0
+		if "`prp'"!="" {
+			//make sure both variables include integers and positive
+			qui sum `var1'
+			scalar minvar1=r(min)
+			if r(min)<0 {
+				di as error "Variable `var1' (numerators) must only contain positive or zero numbers"
+				error 110
+			}
+			qui count if mod(`var1', 1)!=0 & `var1'!=.
+			if r(N)>0 {
+				di as error "Variable `var1' (numerators) must only contain integers"
+				error 110
+			}
+			qui count if mod(`var2', 1)!=0 & `var2'!=.
+			if r(N)>0 {
+				di as error "Variable `var2' (denominators) must only contain integers"
+				error 110
+			}
+			//make sure denominators are not smaller than numerators
+			qui gen `temp1'=`var2'-`var1'
+			qui sum `temp1'
+			if r(min)<0 {
+				di as error "Numerators appear larger than denominators in some cases"
+				error 110
+			}
+			qui drop `temp1'
+			//to pass to forest plot for range
+			scalar prpinfo=1
+		}
+		//cannot have Peto or MH
+		if "`mhor'"!="" | "`mhrr'"!="" | "`mhrd'"!="" | "`por'"!="" {
+			di as error "Cannot select Peto or Mantel-Haenszel when providing an effect and its variance"
+			error 110
+		}		
+		/*Back-transformation options - logit (need percentage) or empirical logit (need percentage and denominator)*/
+		local btcntr=0
+		if "`backt'"!="" {
+			if "`prp'"!="" {
+				di as error "Options backt and prp cannot be requested together"
+				error 197		
+			}
+			if "`exp'"!="" {
+				di as error "Options backt and exp cannot be requested together"
+				error 197		
+			}			
+			tokenize "`backt'", parse(" ,")
+			if "`3'"!="" {
+				di as error "At most two variable names in backt() for empirical logit: percentages and denominators"
+				error 197
+			}
+			while "`1'"!="" {
+				cap confirm var `1'
+				if _rc!=0  {
+					di as err "Back-transformation variable `1' not defined"
+					error 109
+				}
+				/*store variable names in local variables for future use*/
+				local btcntr = `btcntr'+1
+				local btvar`btcntr' = "`1'"
+				macro shift
+			}
+			//make sure first variable is percentages and second denominators
+			forvalues i=1(1)`btcntr' {
+				capture confirm numeric variable `btvar`i'', exact
+				if _rc!=0 {
+					di as error "Variable `btvar`i'' does not exist or is not numeric"
+					error 109
+				}		
+				if `i'==1 {
+					qui sum `btvar`i''
+					if r(min)<0 | r(max)>1 {
+						di as error "Variable `btvar`i'' holds percentages and  needs to be in the [0,1] range"
+						error 109					
+					}
+					//if only one variable provided (percentages) it cannot have any zeros
+					if `btcntr'==1 & (r(min)==0 | r(max)==1) {
+						di as error "Logit back-transformation cannot be applied to variable `btvar`i'' (percentages) since it holds zeros and/or ones"
+						di as error "Include values in the (0,1) range or provide denominators so that the empirical logit back-transfomration can be applied"						
+						error 109					
+					}
+				}
+				if `i'==2 {
+					qui count if mod(`btvar`i'', 1)!=0
+					local bttmp=r(N)				
+					qui sum `btvar`i''
+					if r(min)<=0 | `bttmp'>0 {
+						di as error "Variable `btvar`i'' holds denominators (positive integers)"
+						error 109					
+					}
+				}			
+			}
+		}	
+		//pscl option can only be used with prp or backt
+		if "`pscl'"!="" {
+			if "`backt'"=="" & "`prp'"=="" {
+				di as error "Option pscl can only be used with backt or prp options"
+				error 197					
+			}
+		}
+	}
+	
+	//if provided events and non-events variables
+	if `tswc'==4 {		
+		scalar prpinfo=0
+		//calculate denominators to comply with changing input
+		qui gen `temp1'=`var1'+`var2'
+		qui gen `temp2'=`var3'+`var4'
+		//exponentiate or not
+		scalar `btor'=0
+		if "`exp'"!="" {
+			scalar `btor'=1
+			if "`mhrd'"!="" {
+				di as error "Cannot use exp option with Mantel-Haenszel Risk Difference (option mhrd)"
+				error 110
+			}
+		}
+		//events
+		foreach i in 1 3 {
+			qui sum `var`i''
+			if r(min)<0 {
+				di as error "Variable `var`i'' must only contain non-negative numbers"
+				error 110
+			}
+		}
+		//denominators
+		foreach i in 1 2 {
+			qui sum `temp`i''
+			if r(min)<=0 {
+				di as error "Events and non-events for group `i' must be positive"
+				error 110
+			}
+		}		
+		//options not allowed
+		foreach x in prp varc backt {
+			if "``x''"!="" {
+				di as error "Cannot use option `x' with events and populations variables"
+				error 110
+			}
+		}
+		if "`poe'"!="" {
+			di as error "Cannot use Peto O-E option (poe) with the four variable syntax - needs HR or OR estimates"
+			error 110
+		}
+		//must have one of Peto or MH
+		local cnt = 0
+		foreach x in por mhor mhrr mhrd {
+			if "``x''"!="" local cnt = `cnt' + 1
+		}
+		if `cnt' == 0 {
+			di as error "You must select a calculation option when using events and populations: por, mhor, mhrr, mhrd"
+			error 110
+		}
+		else if `cnt'>=2 {
+			di as error "Please select only one calculation option (por, mhor, mhrr, mhrd)"
+			error 110
+		}		
+		qui drop `temp1' `temp2'
+	}	
+	
+	//if provided effect and its variability OR a different model has been selected for event data
+	if "`tswc'"=="2" | ("`tswc'"=="4" & `mdcnt'>0) {				 							
+		/*if profile likelihood plot is selected*/
+		if "`plplot'"!="" {
+			if "`ml'"=="" & "`pl'"=="" & "`reml'"=="" {
+				di as error "Option plplot can only be used with the maximum-likelihood, profile-likelihood & restricted maximum-likelihood methods"
+				exit
+			}
+			tokenize "`plplot'", parse(" ,")
+			if "`2'"!="" | ("`1'"!="mu" & "`1'"!="tsq") {
+				di as error "Please use plplot with either the mu or tsq option i.e. plplot(mu) or plplot(tsq)"
+				exit
+			}
+			local plplotvar = "`1'"
+		}
+		/*bootsrap options*/
+		if `reps'!=-127 & "`bdl'"=="" {
+			di as error "Bootsrap repetitions option only required for the Bootstrapped DerSimonian-Laird method"
+			error 110
+		}
+		if "`bdl'"!="" {
+			/*set default to 1000*/
+			if `reps'==-127 local reps=1000
+			/*error if few repetitions chosen*/
+			if `reps'<100 {
+				di as error "At least 100 repetitions are recommended"
+				error 110
+			}
+		}
+		/*sensitivity analysis*/
+		if "`sa'"!="" {
+			if `sens'<0 | `sens'>=100 {
+				di as error "Sensitivity analyses performed using an I^2 value and constrained to [0,100)"
+				error 110
+			}
+		}
+		else {
+			if `sens'!=80 {
+				di as error "sens() option can only be used when requesting a sensitivity analysis (sa) model"
+				error 110
+			}
+		}
+	}
 
-    /*make sure only one model option has been selected*/
-    local cnt = 0
-    foreach x in fe dl bdl ml pl reml pe sa {
-        if "``x''"!="" local cnt = `cnt' + 1
-    }
-    if `cnt' == 0 {
-        di as error "You must select a model option: fe, dl, bdl, ml, pl, reml, pe ,sa"
-        error 110
-    }
-    else if `cnt'>=2 {
-        di as error "Please select only one model option"
-        error 110
-    }
-    
+	//common in both 2 or 4 input variables		
     /*to select one of the plot options*/
     local cnt=0
     foreach x in forest plplot {
@@ -151,46 +346,6 @@ program define metaan, rclass
     if `cnt'>1 {
         di as error "Please select only one of the available plot options"
         error 110
-    }
-    /*if profile likelihood plot is selected*/
-    if "`plplot'"!="" {
-        if "`ml'"=="" & "`pl'"=="" & "`reml'"=="" {
-            di as error "Option plplot can only be used with the maximum-likelihood, profile-likelihood & restricted maximum-likelihood methods"
-            exit
-        }
-    	tokenize "`plplot'", parse(" ,")
-    	if "`2'"!="" | ("`1'"!="mu" & "`1'"!="tsq") {
-            di as error "Please use plplot with either the mu or tsq option i.e. plplot(mu) or plplot(tsq)"
-            exit
-        }
-        local plplotvar = "`1'"
-    }
-    /*bootsrap options*/
-    if `reps'!=-127 & "`bdl'"=="" {
-        di as error "Bootsrap repetitions option only required for the Bootstrapped DerSimonian-Laird method"
-        error 110
-    }
-    if "`bdl'"!="" {
-        /*set default to 1000*/
-        if `reps'==-127 local reps=1000
-        /*error if few repetitions chosen*/
-        if `reps'<100 {
-            di as error "At least 100 repetitions are recommended"
-            error 110
-        }
-    }
-    /*sensitivity analysis*/
-    if "`sa'"!="" {
-        if `sens'<0 | `sens'>=100 {
-            di as error "Sensitivity analyses performed using an I^2 value and constrained to [0,100)"
-            error 110
-        }
-    }
-    else {
-        if `sens'!=80 {
-            di as error "sens() option can only be used when requesting a sensitivity analysis (sa) model"
-            error 110
-        }
     }
     /*set seed*/
     if `seed'!=-127 {
@@ -209,7 +364,7 @@ program define metaan, rclass
     if "`label'"!="" {
     	tokenize "`label'", parse(" ,")
     	if "`3'"!="" {
-            di as error "Please at most two variable names in label: e.g ...label(authors year)"
+            di as error "At most two variable names in label(): e.g ...label(authors year)"
             exit
         }
     	while "`1'"!="" {
@@ -254,7 +409,12 @@ program define metaan, rclass
 	//if meta-analysis of proportions
 	if prpinfo==1 {
 		if "`xlabel'"=="" {
-			local xlabel "xlabel(0,20,40,60,80,100)"
+			if "`pscl'"=="" {
+				local xlabel "xlabel(0,0.2,0.4,0.6,0.8,1)"
+			}
+			else {
+				local xlabel "xlabel(0,20,40,60,80,100)"
+			}
 		}
 		local force="force"
 		global MA_nulloff "nulloff"
@@ -270,6 +430,15 @@ program define metaan, rclass
 		local sumstat "ES" 
 		if `btor'==1 {
 			local sumstat "OR"
+			if "`mhrr'"!="" {
+				local sumstat "RR"
+			}
+			else if "`mhrd'"!="" {
+				local sumstat "RD"
+			}			
+			else if "`poe'"!="" {
+				local sumstat "HR"
+			}						
 		}
 	}
 	else {
@@ -290,39 +459,79 @@ program define metaan, rclass
 	global MA_OLINEOPT `"`olineopt'"'
 	
     /*use temporary file to mess with the data as much as needed (can't use tempvar because need to call in many programs)*/
-    preserve
-    /*rename to avoid using the same variable names*/
-    capture drop tempeff
-    rename `var1' tempeff
-    capture drop tempeffvar
-    rename `var2' tempeffvar
-    capture drop eff
-    capture drop effvar
-    //different approach for standard MA and one of proportions
-    if prpinfo==0 {
-        /*varc variable option and changes*/
-        qui gen double eff = tempeff
-        if "`varc'"!="" {
-            qui gen double effvar = tempeffvar
-        }
-        else {
-            qui gen double effvar = tempeffvar^2
-        }
-    }
-    else {
-        //if proportions transform (tempeff=num, tempeffvar=den)
-        /*effect & SE*/
-        qui gen double eff = asin(sqrt(tempeff/(tempeffvar+1))) + asin(sqrt((tempeff+1)/(tempeffvar+1)))
-        qui gen double effvar = (1/(tempeffvar+1))
-    }
+    preserve	
     /*in and if options - create temp variable that will enable thir usage*/
     qui capture drop use
     qui gen use = 0
     qui replace use = 1 `if' `in'
-    /*exclude studies where the eff or the SEeff are missing*/
-    qui replace use=0 if eff==. | effvar==.
-    /*and "remove" studies that are not to be used*/
     qui drop if use==0
+	
+	//if provided use effect and its variance
+	if `tswc'==2 {	
+		/*rename to avoid using the same variable names*/
+		capture drop tempeff_007
+		rename `var1' tempeff_007
+		capture drop tempeff_007var
+		rename `var2' tempeff_007var
+		capture drop eff
+		capture drop effvar
+		//different approach for standard MA and one of proportions
+		if prpinfo==0 {
+			/*varc variable option and changes*/
+			qui gen double eff = tempeff_007
+			if "`varc'"!="" {
+				qui gen double effvar = tempeff_007var
+			}
+			else {
+				qui gen double effvar = tempeff_007var^2
+			}
+		}
+		else {
+			//if proportions transform (tempeff_007=num, tempeff_007var=den)
+			/*effect & SE*/
+			qui gen double eff = asin(sqrt(tempeff_007/(tempeff_007var+1))) + asin(sqrt((tempeff_007+1)/(tempeff_007var+1)))
+			qui gen double effvar = (1/(tempeff_007var+1))
+		}
+		/*exclude studies where the eff or the SEeff are missing*/
+		qui replace use=0 if eff==. | effvar==.
+		qui drop if use==0		
+	}
+	//if events and denominator calculate
+	else {
+		/*rename to avoid using the same variable names*/
+		capture drop ev1_127
+		rename `var1' ev1_127
+		capture drop total1_127
+		qui gen total1_127=ev1_127+`var2'
+		capture drop ev2_127
+		rename `var3' ev2_127
+		capture drop total2_127
+		qui gen total2_127=ev2_127+`var4'		
+		/*exclude studies where the eff or the SEeff are missing*/
+		qui replace use=0 if ev1_127==. | ev2_127==. | total1_127==. | total2_127==.
+		qui drop if use==0				
+		capture drop eff
+		capture drop effvar
+		capture drop weights
+		
+		//call selected weighting program to return eff and eff var
+		if "`mhor'"!="" {
+			calc_MHORf "gen"
+		}		
+		else if "`mhrr'"!="" {
+			calc_MHRRf "gen"
+		}		
+		else if "`mhrd'"!="" {
+			calc_MHRDf "gen"
+		}			
+		else if "`por'"!="" {
+			calc_PORf "gen"
+		}			
+		
+		*restore, not
+		*error
+	}	
+	
     /*generate and id for the studies*/
     qui capture qui drop studyid
     qui egen studyid = seq()
@@ -402,8 +611,8 @@ program define metaan, rclass
 		/*CALCULATE ALL METHODS*/
 		/*number of used studies*/
 		qui count
-		scalar k = r(N)
-
+		scalar k=r(N)
+		
 		/*********************/
 		/*Fixed effects model*/
 		qui gen double `temp1' = eff/effvar
@@ -459,6 +668,53 @@ program define metaan, rclass
 		scalar dl_lo = dl_mu - `mltpl'*sqrt(dl_var)
 		scalar dl_up = dl_mu + `mltpl'*sqrt(dl_var)
 		qui drop `temp1' `temp2'
+		
+		/****************/
+		/*T-test "model"*/
+		/*only use effect sizes and not effect variances*/
+		qui sum eff
+		scalar tt_mu = r(mean)
+		scalar tt_var = r(Var)
+		/*calculate CIs*/
+		scalar tt_lo = tt_mu - invttail(k-1,`mltps')*sqrt(tt_var/k)
+		scalar tt_up = tt_mu + invttail(k-1,`mltps')*sqrt(tt_var/k)			
+		
+		/*********************/
+		/*events methods**/
+		if `tswc'==4 & `mdcnt'==0 {	
+			if "`por'"!="" {
+				calc_PORf "gen"
+				scalar peto_mu = r(mu)
+				scalar peto_var = r(var)
+				scalar peto_lo = r(lo)
+				scalar peto_up = r(up)		
+			}		
+			else {
+				if "`mhor'"!="" {
+					calc_MHORf "gen"
+				}
+				else if "`mhrr'"!="" {
+					calc_MHRRf "gen"
+				}				
+				else if "`mhrd'"!="" {
+					calc_MHRDf "gen"
+				}					
+				scalar mh_mu = r(mu)
+				scalar mh_var = r(var)
+				scalar mh_lo = r(lo)
+				scalar mh_up = r(up)
+			}
+		}		
+		
+		/*********************/
+		/*O-E Peto method**/
+		if "`poe'"!="" {
+			calc_PORf "partgen" "effex"
+			scalar poe_mu = r(mu)
+			scalar poe_var = r(var)
+			scalar poe_lo = r(lo)
+			scalar poe_up = r(up)		
+		}				
 
 		/*************************/
 		/*DerSimonian-Laird bootstrap model*/
@@ -646,10 +902,10 @@ program define metaan, rclass
 			scalar ml_lo = ml_mu - `mltpl'*sqrt(ml_var)
 			scalar ml_up = ml_mu + `mltpl'*sqrt(ml_var)
 			/*calculate the log-likelihood value*/
-			qui gen double `temp1' = -1/2*ln(2*_pi*(effvar+tsq_ml))-1/2*(eff-ml_mu)^2/(effvar+tsq_ml)
+			qui gen double `temp1' = -1/2*ln(2*_pi*(effvar+tsq_ml))-1/2*(eff-ml_mu)^2/(effvar+tsq_ml)			
 			qui sum `temp1'
-			qui drop `temp1'
 			scalar ml_val = r(sum)
+			qui drop `temp1'
 		}
 
 		/*calculate PL only if asked for and ML converged - since it takes time*/
@@ -837,16 +1093,6 @@ program define metaan, rclass
 			scalar reml_up = reml_mu + `mltpl'*sqrt(reml_var)
 		}
 
-		/****************/
-		/*T-test "model"*/
-		/*only use effect sizes and not effect variances*/
-		qui sum eff
-		scalar tt_mu = r(mean)
-		scalar tt_var = r(Var)
-		/*calculate CIs*/
-		scalar tt_lo = tt_mu - invttail(k-1,`mltps')*sqrt(tt_var/k)
-		scalar tt_up = tt_mu + invttail(k-1,`mltps')*sqrt(tt_var/k)
-
 		/*calculate PE only if asked for - since it takes time*/
 		if "`pe'"!="" {
 			/*Permutations method (Follmann, 1999)*/
@@ -885,9 +1131,9 @@ program define metaan, rclass
 			}
 		}
 
-		/*select the method to be displayed and create appropriate strings*/
+		/*select the method to be displayed and create appropriate strings*/	
 		if "`fe'"!="" {
-			local headoutstr = "Fixed-effects method selected"
+			local headoutstr = "Fixed-effect method selected"
 			local modsel = "fe"
 		}
 		else if "`dl'"!="" {
@@ -918,6 +1164,47 @@ program define metaan, rclass
 			local headoutstr = "Sensitivity analysis selected with preset heterogeneity (I^2=`sens'%)"
 			local modsel = "sa"
 		}
+		else if "`poe'"!="" {
+			local headoutstr = "Peto fixed-effect for O-E data selected (log(HR) or log(OR))"
+			local modsel = "poe"
+		}		
+		/*if MH/Peto used in conjuction with one of the above*/
+		if "`mhor'"!="" {
+			if `mdcnt'==0 {
+				local headoutstr = "Mantel-Haenszel fixed-effect method (based on Odds-Ratio)"
+				local modsel = "mh"		
+			}
+			else {
+				local headoutstr = "`headoutstr' (MH Odds-Ratio)"
+			}
+		}		
+		else if "`mhrr'"!="" {
+			if `mdcnt'==0 {
+				local headoutstr = "Mantel-Haenszel fixed-effect method (based on Risk-Ratio)"
+				local modsel = "mh"		
+			}
+			else {
+				local headoutstr = "`headoutstr' (MH Risk-Ratio)"
+			}
+		}				
+		else if "`mhrd'"!="" {
+			if `mdcnt'==0 {
+				local headoutstr = "Mantel-Haenszel fixed-effect method (based on Risk-Difference)"
+				local modsel = "mh"		
+			}
+			else {
+				local headoutstr = "`headoutstr' (MH Risk-Difference)"
+			}
+		}
+		else if "`por'"!="" {
+			if `mdcnt'==0 {
+				local headoutstr = "Peto Odds-Ratio (fixed-effect method)"
+				local modsel = "peto"		
+			}
+			else {
+				local headoutstr = "`headoutstr' (Peto Odds-Ratio)"
+			}			
+		}						
 
 		/*information on methods - post texts*/
 		/*Bootstrap DL on number of repetitions*/
@@ -990,6 +1277,16 @@ program define metaan, rclass
 			local posttext5 = "Cochrane's Q not reported under a sensitivity analysis"
 			local ptxttype5 = "text"
 		}
+		//MH and Peto information
+		if "`modsel'"=="mh" | "`modsel'"=="peto" {
+			local posttext7 = "Heterogeneity measures reported under an inverse-variance weighting assumption"
+			local ptxttype7 = "text"
+		}		
+		//if exponentiated
+		if "`exp'"!="" {
+			local posttext6 = "Effects have been exponentiated"
+			local ptxttype6 = "text"
+		}				
 
 		//restore, not
 		//error 110
@@ -1004,7 +1301,7 @@ program define metaan, rclass
 			qui replace studyloCI = (sin(studyloCI/2))^2
 			qui replace studyupCI = (sin(studyupCI/2))^2
 		}
-		//back-transform here if ORs requested with 'or' option
+		//back-transform here if exponentiation requested with `exp' option
 		if `btor'==1 {
 			/*overall effect*/
 			scalar `modsel'_mu = exp(`modsel'_mu)
@@ -1015,7 +1312,47 @@ program define metaan, rclass
 			qui replace studyloCI = exp(studyloCI)
 			qui replace studyupCI = exp(studyupCI)
 		}
-
+		//back-transform from logit or empirical logit using
+		if "`backt'"!="" {
+			//unweighted or weighted "anchor" for overall effect
+			if `btcntr'==1 {
+				qui sum `btvar1'
+			}
+			else {
+				qui sum `btvar1' [fweight=`btvar2']
+			}
+			/*overall effect - use the mean percentage to anchor*/
+			scalar `modsel'_mu = 1/(exp(-`modsel'_mu)*(1-r(mean))/r(mean)+1)-r(mean)
+			scalar `modsel'_lo = 1/(exp(-`modsel'_lo)*(1-r(mean))/r(mean)+1)-r(mean)
+			scalar `modsel'_up = 1/(exp(-`modsel'_up)*(1-r(mean))/r(mean)+1)-r(mean)						
+			//if only percentage provided => simple logit for study estimates (no zeros or ones allowed, checked earlier)
+			if `btcntr'==1 {			
+				/*variable back-transform*/
+				qui replace eff = 1/(exp(-eff)*(1-`btvar1')/`btvar1'+1)-`btvar1'
+				qui replace studyloCI = 1/(exp(-studyloCI)*(1-`btvar1')/`btvar1'+1)-`btvar1'
+				qui replace studyupCI = 1/(exp(-studyupCI)*(1-`btvar1')/`btvar1'+1)-`btvar1'
+			}
+			//if denominators are provided => empirical logit for study estimates where zeros or ones available
+			else {
+				/*variable back-transform*/
+				qui replace eff = 1/(exp(-eff)*(1-`btvar1')/`btvar1'+1)-`btvar1' if `btvar1'>0 & `btvar1'<1
+				qui replace studyloCI = 1/(exp(-studyloCI)*(1-`btvar1')/`btvar1'+1)-`btvar1' if `btvar1'>0 & `btvar1'<1
+				qui replace studyupCI = 1/(exp(-studyupCI)*(1-`btvar1')/`btvar1'+1)-`btvar1' if `btvar1'>0 & `btvar1'<1				
+				qui replace eff = 1/(exp(-eff)*(1-`btvar1'+0.5/`btvar2')/(`btvar1'+0.5/`btvar2')+1)-`btvar1' if `btvar1'==0 | `btvar1'==1
+				qui replace studyloCI = 1/(exp(-studyloCI)*(1-`btvar1'+0.5/`btvar2')/(`btvar1'+0.5/`btvar2')+1)-`btvar1' if `btvar1'==0 | `btvar1'==1
+				qui replace studyupCI = 1/(exp(-studyupCI)*(1-`btvar1'+0.5/`btvar2')/(`btvar1'+0.5/`btvar2')+1)-`btvar1' if `btvar1'==0 | `btvar1'==1			
+			}						
+		}
+		//if meta-analysis of proportions set to % for forest plot
+		if "`pscl'"!="" {
+			foreach x of varlist eff studyloCI studyupCI {
+				qui replace `x'=`x'*100
+			}
+			foreach x in mu lo up {
+				scalar `modsel'_`x'=`modsel'_`x'*100
+			}
+		}		
+		
 		if "`grpby'"=="" {
 			di as text _newline(2) "`headoutstr'"
 		}
@@ -1037,6 +1374,9 @@ program define metaan, rclass
 		*/_col(46) %7.3f `modsel'_up _col(57) %7.2f sumweights
 		di as text "{hline 21}{c BT}{hline 45}
 		/*post texts*/
+		if "`exp'"!="" {
+			di as `ptxttype6' "`posttext6'"
+		}				
 		if "`modsel'"=="ml" | "`modsel'"=="pl" | "`modsel'"=="bdl" {
 			di as `ptxttype1' "`posttext1'"
 		}
@@ -1120,8 +1460,6 @@ program define metaan, rclass
 			if `modsel'_mu==. | `modsel'_lo==. | `modsel'_up==. {
 				di as error "Forest plot not produced since the model did not converge"
 			}
-			//obsolete forest plot
-			*forestplot `modsel'_mu `modsel'_lo `modsel'_up `modsel' `forestw' prpinfo `btor'
 			
 			/*NEW FOREST PLOT*/
 			//edits and options
@@ -1190,12 +1528,7 @@ program define metaan, rclass
 			*drop author outcome
 			*list
 			*error
-			//if meta-analysis of proportions set to %
-			if prpinfo==1 {
-				foreach x of varlist eff studyloCI studyupCI {
-					qui replace `x'=`x'*100
-				}
-			}
+
 			//if meta-analysis exponentiated tweak label if not set - not needed
 			/*
 			if `btor'==1 & "`xlabel'"=="" {
@@ -1220,7 +1553,7 @@ program define metaan, rclass
 			if `modsel'_mu==. | tsq_`modsel'==. {
 				di as error "Likelihood plot not produced since the model did not converge"
 			}
-			plplot `modsel'_mu tsq_`modsel' `plplotvar' `modsel'
+			plplot `modsel'_mu tsq_`modsel' `plplotvar' `modsel' `btor'
 		}
 
 		/*more displays*/
@@ -1255,6 +1588,28 @@ program define metaan, rclass
 		}
 		else if "`modsel'"=="sa" {
 			di as `ptxttype5' "`posttext5'"
+		}
+		if "`modsel'"=="mh" | "`modsel'"=="peto" {
+			di as `ptxttype7' "`posttext7'"
+		}	
+		//if analysis by group report comparison across subgroups
+		if "`grpby'"!="" & `xlp'==1 {
+			scalar sumqw=0
+		}
+		if "`grpby'"!="" & `xlp'==`numloop' {
+			scalar qdiff=qw-sumqw
+			scalar qpdiff = 1-chi2(`numloop'-2,qdiff)
+			scalar Hdiff=(qdiff-(`numloop'-2))/(`numloop'-2)	/*relies on DL*/
+			if Hdiff<1 scalar Hdiff=1
+			scalar Idiff = 100*(Hdiff-1)/(Hdiff)
+			if Idiff<0 scalar Idiff=0		
+			di as text "Test for subgroup differences: Chi^2=" %4.2f as res qdiff as text ", df=" %1.0f as res `=`numloop'-2' _continue
+			di as text ", p-value=" as res %5.3f qpdiff as text ", H^2=" as res %4.2f Hdiff as text ", I^2=" as res %4.2f Idiff
+		}
+		//save qw in locals to be used for subgroup differences evaluation, if grpby() option used
+		if "`grpby'"!="" {
+			scalar qw`xlp'=qw
+			scalar sumqw=sumqw+qw`xlp'
 		}
 	}
 	
@@ -1306,115 +1661,6 @@ program define metaan, rclass
     *restore, not
 end
 
-//OBSOLETE SINCE NOW USING _DISPGBY
-/*forest plot graph*/
-program forestplot
-    tempname btor
-    /*arguments*/
-    scalar oveff = `1'
-    scalar oveff_lo = `2'
-    scalar oveff_up = `3'
-    local modsel = "`4'"
-    scalar wrescale = `5'
-    scalar prpinfo = `6'
-    scalar `btor' = `7'
-    tempvar studyidrev weights
-    /*rescale weights?*/
-    /*if rescale is requested see if the ratio provided is smaller than the actual one - if it isn't use default weights*/
-    qui sum weights
-    scalar orwrescale = r(max)/r(min)
-    if wrescale == -127.5 | wrescale>orwrescale {
-        qui gen double `weights' = weights
-        local wtext "Original weights (squares) displayed. Largest to smallest ratio: `=string(orwrescale,"%6.2f")'"
-    }
-    else {
-        /*rescale to an wrescale-fold difference between smallest and largest, at most*/
-        qui sum weights
-        qui gen double `weights' = weights/r(min)
-        /*measure the multiplier so that the difference in sizes is the one specified by the user*/
-        qui sum `weights'
-        /*rescale all weights so that:*/
-        /* 1...10 and want to rescale to 1...5: for 10 we have (10-1)*(5-1)/(10-1)+1=5
-        for 5 we have (5-1)*(5-1)/(10-1)+1=2.777 and for 1 we have (1-1)*(5-1)/(10-1)+1=1*/
-        qui replace `weights' = (`weights'-1)*(wrescale-1)/(r(max)-1)+1
-        local wtext "Weights (squares) adjusted in graph. Largest to smallest ratio: `=string(wrescale,"%6.2f")' (Original ratio was `=string(orwrescale,"%6.2f")')"
-    }
-    /*count the number of studies and toy with dataset to create needed graph*/
-    local k=r(N)
-    local newk = `k'+1
-    /*generate display variable and label it*/
-    qui gen `studyidrev' = `k'-studyid+1
-    forvalues i=1(1)`k' {
-        local j = `k'-`i'+1
-        label define studynames `j' "`=labelvar[`i']'", add
-    }
-    /*add the overall effect as an extra observation*/
-    qui set obs `newk'
-    qui replace eff = oveff in `newk'
-    qui replace studyloCI = oveff_lo in `newk'
-    qui replace studyupCI = oveff_up in `newk'
-    qui replace studyid = 0 in `newk'
-    qui replace `studyidrev' = 0 in `newk'
-    label define studynames 0 "Overall effect (`modsel')", add
-    label val `studyidrev' studynames
-    /*find the min and max for use in graphs*/
-    if prpinfo==0 {
-        qui sum studyloCI
-        local lbmin = round(r(min),0.1)
-        if `lbmin'>r(min) local lbmin = `lbmin'-0.1
-        if `lbmin'>-0.1 local lbmin = -0.1
-        qui sum studyupCI
-        local lbmax = round(r(max),0.1)
-        if `lbmax'<r(max) local lbmax = `lbmax'+0.1
-        if `lbmax'<0.1 local lbmax = 0.1
-        /*step decision*/
-        local dstep = 0.1
-        if `lbmax'-`lbmin'>=2 local dstep=0.5
-        //if odds ratios asked we can't have negative so set minimum to zero if negative
-        if `btor'==1 {
-            if `lbmin'<0 {
-                local lbmin=0
-            }
-            //vertical line
-            local strlne `"xline(1, lstyle(grid)) note("`wtext'", size(tiny))"'
-            local xttle "Effect sizes (ORs) and CIs"
-        }
-        else {
-            local strlne `"xline(0, lstyle(grid)) note("`wtext'", size(tiny))"'
-            local xttle "Effect sizes and CIs"
-        }
-    }
-    else {
-        local lbmin = 0
-        local lbmax = 1
-        local dstep = 0.1
-        local strlne ""
-        local xttle "Effect sizes (percentages) and CIs"
-    }
-
-    /*the graph*/
-    twoway scatter `studyidrev' eff [aweight=`weights'] if studyid>0, msymbol(square) mcolor(gs8) /*
-    */ || scatter `studyidrev' eff if studyid>0 , msymbol(diamond) msize(vsmall) mcolor(gs1) /*
-    */ || rcap studyloCI studyupCI `studyidrev' if studyid>0, color(black) horizontal /*
-    /*oveall effect plotting - the diamond*/
-    */ || function y= 0.3/(oveff-oveff_lo)*(x-oveff_lo), range(`=oveff_lo' `=oveff') recast(area) fcolor(maroon) lcolor(maroon) fintensity(inten100) /*
-    */ || function y= -0.3/(oveff-oveff_lo)*(x-oveff_lo), range(`=oveff_lo' `=oveff') recast(area) fcolor(maroon) lcolor(maroon) fintensity(inten100) /*
-    */ || function y= -0.3/(oveff_up-oveff)*(x-oveff_up), range(`=oveff' `=oveff_up') recast(area) fcolor(maroon) lcolor(maroon) fintensity(inten100) /*
-    */ || function y= 0.3/(oveff_up-oveff)*(x-oveff_up), range(`=oveff' `=oveff_up') recast(area) fcolor(maroon) lcolor(maroon) fintensity(inten100) /*
-    /*vertical line and other bits*/
-    */ || pci 0.4 `=oveff' `k' `=oveff', lcolor(maroon) lwidth(medium) lpattern(dash) /*
-    */ , yscale(range(0 `k')) ylabel(0(1)`k', valuelabel labsize(2) angle(0)) ytitle("Studies", size(small)) /*
-    */ xscale(range(`lbmin' `lbmax')) xlabel(`lbmin'(`dstep')`lbmax',labsize(2.5) angle(0)) xtitle("`xttle'", size(small)) /*
-    */ `strlne' /*
-    */ legend(off) ylabel(,nogrid noticks) nodraw
-    /*resize graph if we have many MA*/
-    if k>10 {
-        graph display, ysize(`=min(`k'/1.5,20)') xsize(7)
-    }
-    graph display Graph
-    label drop studynames
-end
-
 /*profile likelihood plot*/
 program plplot
     preserve
@@ -1429,6 +1675,14 @@ program plplot
     else {
         local tstr "ML/PL"
     }
+	local expinf=`5'	
+	if `expinf'==1 {
+		scalar mu=ln(mu)
+		local txtstr1=" (exponentiated)"
+		local txtstr2=" (not exponentiated)"
+		qui replace eff=ln(eff)
+	}
+	
     tempvar temp1
     /*loop to get 100 points around the parameter of interest: mu-1 to mu+1 or 0 to 2*tsq*/
     if "`plottype'"=="tsq" {
@@ -1447,7 +1701,7 @@ program plplot
             qui drop `temp1'
         }
         local sttle "for tau^2 fixed to the `tstr' estimate"
-        local xttle = "mu values"
+        local xttle = "mu values`txtstr1'"
     }
     else {
         /*different number of decimals depending on tsq value*/
@@ -1467,7 +1721,7 @@ program plplot
             scalar xval`cntr' = `i'
             qui drop `temp1'
         }
-        local sttle "for mu fixed to the `tstr' estimate"
+        local sttle "for mu fixed to the `tstr' estimate`txtstr2'"
         local xttle = "tau^2 values"
     }
     local ttle = "Likelihood plot"
@@ -1481,6 +1735,10 @@ program plplot
         qui replace xvar=xval`i' in `i'
         qui replace yvar=yval`i' in `i'
     }
+	//exponentiate only for the mu
+	if `expinf'==1 & "`plottype'"=="tsq"{
+		qui replace xvar=exp(xvar)
+	}	
     /*the graph*/
     twoway mspline yvar xvar, lcolor(maroon) lwidth(medthick)  /*
     */ ylabel(, labsize(2) angle(0)) ytitle("`yttle'", size(small)) /*
@@ -1521,9 +1779,9 @@ program PL_value, rclass
     /*calculate the log-likelihood value*/
     qui gen double `temp1' = -1/2*ln(2*_pi*(effvar+t_sq_m))-1/2*(eff-mu)^2/(effvar+t_sq_m)
     qui sum `temp1'
+	scalar mlval = r(sum)
     qui drop `temp1'
-    scalar mlval = r(sum)
-    /*retutn values to main program*/
+    /*return values to main program*/
     return scalar mlv = mlval
 end
 /*program that estimates mu with t^2 fixed for Profile Likelihood method (used in t^2 CI estimation)*/
@@ -1557,9 +1815,9 @@ program PL_value2, rclass
     /*calculate the log-likelihood value*/
     qui gen double `temp1' = -1/2*ln(2*_pi*(effvar+t_sq_m))-1/2*(eff-mu)^2/(effvar+t_sq_m)
     qui sum `temp1'
+	scalar mlval = r(sum)	
     qui drop `temp1'
-    scalar mlval = r(sum)
-    /*retutn values to main program*/
+    /*return values to main program*/
     return scalar mlv = mlval
 end
 
@@ -1839,6 +2097,302 @@ real scalar bsearch(real scalar sval, real matrix A)
 }
 end
 
+/*Mantel-Haenszel Odds-ratio fixed-effect method*/
+program calc_MHORf, rclass
+	//not needed but remnant from older code
+	local i=127
+	//CI level
+	local clvl=c(level)
+	local mltpl=invnormal(1-(100-`clvl')/200)
+	//temp variables
+    tempvar a`i' b`i' c`i' d`i' N`i' OR`i' varOR`i' w`i'
+    /*only use OR, effmeas= 1 or 2(reversed)*/
+	qui gen `a`i'' = .
+	qui gen `b`i'' = .
+	qui gen `c`i'' = .
+	qui gen `d`i'' = .
+	/*events and non events*/
+	qui replace `a`i'' = ev1_`i'
+	qui replace `b`i'' = total1_`i'-ev1_`i'
+	qui replace `c`i'' = ev2_`i'
+	qui replace `d`i'' = total2_`i'-ev2_`i'	
+	/*correction for zero cells*/
+	foreach x in a b c d {
+		qui replace ``x'`i''=``x'`i''+0.5 if `a`i''<1 | `c`i''<1 | `b`i''<1 | `d`i''<1
+	}
+	qui gen `N`i'' = `a`i''+`b`i''+`c`i''+`d`i''
+	/*but if there are too many that are zero, set all to zero*/
+	foreach x in a b c d {
+		qui replace ``x'`i''=0 if (`a`i''<1 & `c`i''<1) | (`b`i''<1 & `d`i''<1)
+	}
+	/*more calculations*/
+	qui gen double `OR`i'' = (`a`i''*`d`i'')/(`b`i''*`c`i'')
+	qui gen double `varOR`i'' = (1/`a`i''+1/`d`i''+1/`b`i''+1/`c`i'')
+	qui gen double `w`i'' = (`b`i''*`c`i'')/`N`i''
+	/*if one of the cells is still zero set the numerators in the sums to zero to avoid problems*/
+	qui replace `w`i''=1 if (`a`i''<1 & `c`i''<1) | (`b`i''<1 & `d`i''<1)
+	qui replace `N`i''=1 if (`a`i''<1 & `c`i''<1) | (`b`i''<1 & `d`i''<1)
+	qui replace `OR`i''=0 if (`a`i''<1 & `c`i''<1) | (`b`i''<1 & `d`i''<1)
+	qui replace `varOR`i''=1 if (`a`i''<1 & `c`i''<1) | (`b`i''<1 & `d`i''<1)
+
+	//intermediate variables
+    tempvar temp1 temp2 vE vF vG vH vR vS
+    qui gen double `temp1' = `w`i''*`OR`i''
+    qui gen double `temp2' = `w`i''
+    qui gen double `vR' = (`a`i''*`d`i'')/`N`i''
+    qui gen double `vS' = (`b`i''*`c`i'')/`N`i''
+    qui gen double `vE' = ((`a`i''+`d`i'')*`a`i''*`d`i'')/(`N`i''^2)
+    qui gen double `vF' = ((`a`i''+`d`i'')*`b`i''*`c`i'')/(`N`i''^2)
+    qui gen double `vG' = ((`b`i''+`c`i'')*`a`i''*`d`i'')/(`N`i''^2)
+    qui gen double `vH' = ((`b`i''+`c`i'')*`b`i''*`c`i'')/(`N`i''^2)	
+	foreach x in temp1 temp2 vE vF vG vH vR vS {
+		qui sum ``x''
+		local l`x'=r(sum)
+	}
+
+    /*mean estimate (coefficient)*/
+    local MHf_mu = ln(`ltemp1'/`ltemp2')
+    /*variance estimate*/
+    local MHf_var =0.5*(`lvE'/(`lvR'^2) + (`lvF'+`lvG')/(`lvR'*`lvS') + `lvH'/(`lvS'^2))
+    local MHf_lo = `MHf_mu'-`mltpl'*sqrt(`MHf_var')
+    local MHf_up = `MHf_mu'+`mltpl'*sqrt(`MHf_var')
+    /*scalars*/
+    foreach x in mu var lo up {
+		scalar `x'=`MHf_`x''
+    }
+	
+	//create study variables only when requested to do so
+	if "`1'"=="gen" {
+		capture drop eff effvar weights
+		gen double eff=ln(`OR`i'')
+		gen double effvar=`varOR`i''		
+		qui sum `w`i''
+		gen double weights=`w`i''/r(sum)
+	}	
+    /*return overall to main program*/
+	foreach x in mu var lo up {	
+		return scalar `x'=`x'
+	}	
+end
+
+/*Mantel-Haenszel Risk-ratio fixed-effect method*/
+program calc_MHRRf, rclass
+	//not needed but remnant from older code
+	local i=127
+	//CI level
+	local clvl=c(level)
+	local mltpl=invnormal(1-(100-`clvl')/200)
+	//temp variables
+    tempvar a`i' b`i' c`i' d`i' N`i' RR`i' varRR`i' w`i'
+    /*only use OR, effmeas= 1 or 2(reversed)*/
+	qui gen `a`i'' = .
+	qui gen `b`i'' = .
+	qui gen `c`i'' = .
+	qui gen `d`i'' = .
+	/*events and non events*/
+	qui replace `a`i'' = ev1_`i'
+	qui replace `b`i'' = total1_`i'-ev1_`i'
+	qui replace `c`i'' = ev2_`i'
+	qui replace `d`i'' = total2_`i'-ev2_`i'	
+	/*correction for zero cells*/
+	foreach x in a b c d {
+		qui replace ``x'`i''=``x'`i''+0.5 if `a`i''<1 | `c`i''<1 | `b`i''<1 | `d`i''<1
+	}
+	qui gen `N`i'' = `a`i''+`b`i''+`c`i''+`d`i''
+	/*but if there are too many that are zero, set all to zero*/
+	foreach x in a b c d {
+		qui replace ``x'`i''=0 if (`a`i''<1 & `c`i''<1) | (`b`i''<1 & `d`i''<1)
+	}
+	/*more calculations*/
+	qui gen double `RR`i'' = (`a`i''/(`a`i''+`b`i''))/(`c`i''/(`c`i''+`d`i''))
+	qui gen double `varRR`i'' = (1/`a`i'' + 1/`c`i'' - 1/(`a`i''+`b`i'') - 1/(`c`i''+`d`i''))
+	qui gen double `w`i'' = `c`i''*(`a`i''+`b`i'')/`N`i''
+	/*if one of the cells is still zero set the numerators in the sums to zero to avoid problems*/
+	qui replace `w`i''=1 if (`a`i''<1 & `c`i''<1) | (`b`i''<1 & `d`i''<1)
+	qui replace `N`i''=1 if (`a`i''<1 & `c`i''<1) | (`b`i''<1 & `d`i''<1)
+	qui replace `RR`i''=0 if (`a`i''<1 & `c`i''<1) | (`b`i''<1 & `d`i''<1)
+	qui replace `varRR`i''=1 if (`a`i''<1 & `c`i''<1) | (`b`i''<1 & `d`i''<1)	
+	//intermediate variables
+    tempvar temp1 temp2 vP vR vS
+    qui gen double `temp1' = `w`i''*`RR`i''
+    qui gen double `temp2' = `w`i''
+    qui gen double `vP' = ((`a`i''+`b`i'')*(`c`i''+`d`i'')*(`a`i''+`c`i'') - `a`i''*`c`i''*`N`i'')/(`N`i''^2)
+    qui gen double `vR' = (`a`i''*(`c`i''+`d`i''))/`N`i''
+    qui gen double `vS' = (`c`i''*(`a`i''+`b`i''))/`N`i''
+	foreach x in temp1 temp2 vP vR vS {
+		qui sum ``x''
+		local l`x'=r(sum)
+	}
+
+    /*mean estimate (coefficient)*/
+    local MHf_mu = ln(`ltemp1'/`ltemp2')
+    /*variance estimate*/
+    local MHf_var =(`lvP'/(`lvR'*`lvS'))
+    local MHf_lo = `MHf_mu'-`mltpl'*sqrt(`MHf_var')
+    local MHf_up = `MHf_mu'+`mltpl'*sqrt(`MHf_var')
+    /*scalars*/
+    foreach x in mu var lo up {
+		scalar `x'=`MHf_`x''
+    }
+	
+	//create study variables only when requested to do so
+	if "`1'"=="gen" {
+		capture drop eff effvar weights
+		gen double eff=ln(`RR`i'')
+		gen double effvar=`varRR`i''		
+		qui sum `w`i''
+		gen double weights=`w`i''/r(sum)
+	}
+    /*return overall to main program*/
+	foreach x in mu var lo up {	
+		return scalar `x'=`x'
+	}	
+end
+
+//METHODS FOR 4 VARIABLE SYNTAX: EVENTS AND POPULATIONS
+/*Mantel-Haenszel Risk difference fixed-effect method*/
+program calc_MHRDf, rclass
+	//not needed but remnant from older code
+	local i=127
+	//CI level
+	local clvl=c(level)
+	local mltpl=invnormal(1-(100-`clvl')/200)
+	//temp variables
+    tempvar a`i' b`i' c`i' d`i' N`i' RD`i' varRD`i' w`i'
+    /*only use OR, effmeas= 1 or 2(reversed)*/
+	qui gen `a`i'' = .
+	qui gen `b`i'' = .
+	qui gen `c`i'' = .
+	qui gen `d`i'' = .
+	/*events and non events*/
+	qui replace `a`i'' = ev1_`i'
+	qui replace `b`i'' = total1_`i'-ev1_`i'
+	qui replace `c`i'' = ev2_`i'
+	qui replace `d`i'' = total2_`i'-ev2_`i'	
+	/*correction for zero cells*/
+	foreach x in a b c d {
+		/*`a`i''<1 | `c`i''<1 | `b`i''<1 | `d`i''<1*/
+		qui replace ``x'`i''=``x'`i''+0.5 if (`a`i''<1 & `c`i''<1) | (`a`i''<1 & `d`i''<1) | (`b`i''<1 & `c`i''<1) | (`b`i''<1 & `d`i''<1)
+	}
+	qui gen `N`i'' = `a`i''+`b`i''+`c`i''+`d`i''
+	/*more calculations*/
+	qui gen double `RD`i'' = (`a`i''/(`a`i''+`b`i'')) - (`c`i''/(`c`i''+`d`i''))
+	qui gen double `varRD`i'' = (`a`i''*`b`i'')/((`a`i''+`b`i'')^3) + (`c`i''*`d`i'')/((`c`i''+`d`i'')^3)
+	qui gen double `w`i'' = ((`a`i''+`b`i'')*(`c`i''+`d`i''))/`N`i''		
+	//intermediate variables
+    tempvar temp1 temp2 vJ vK
+    qui gen double `temp1' = `w`i''*`RD`i''
+    qui gen double `temp2' = `w`i''
+    qui gen double `vJ' = (`a`i''*`b`i''*((`c`i''+`d`i'')^3)+`c`i''*`d`i''*((`a`i''+`b`i'')^3))/((`a`i''+`b`i'')*(`c`i''+`d`i'')*(`N`i''^2))
+    qui gen double `vK' = ((`a`i''+`b`i'')*(`c`i''+`d`i''))/`N`i''
+	foreach x in temp1 temp2 vJ vK {
+		qui sum ``x''
+		local l`x'=r(sum)
+	}
+    /*mean estimate*/
+    local MHf_mu = (`ltemp1'/`ltemp2')
+    /*variance estimate*/
+	local MHf_var =(`lvJ'/(`lvK'^2))
+    local MHf_lo = `MHf_mu'-`mltpl'*sqrt(`MHf_var')
+    local MHf_up = `MHf_mu'+`mltpl'*sqrt(`MHf_var')
+    /*scalars*/
+    foreach x in mu var lo up {
+		scalar `x'=`MHf_`x''
+    }
+	//create study variables only when requested to do so
+	if "`1'"=="gen" {
+		capture drop eff effvar weights
+		gen double eff=(`RD`i'')
+		gen double effvar=`varRD`i''		
+		qui sum `w`i''
+		gen double weights=`w`i''/r(sum)
+	}
+    /*return overall to main program*/
+	foreach x in mu var lo up {	
+		return scalar `x'=`x'
+	}	
+end
+
+/*Peto Odds-ratio fixed-effect method*/
+program calc_PORf, rclass
+	//not needed but remnant from older code
+	local i=127
+	//CI level
+	local clvl=c(level)
+	local mltpl=invnormal(1-(100-`clvl')/200)
+	//temp variables
+	tempvar a`i' b`i' c`i' d`i' N`i' OR`i' varOR`i' Z`i' V`i'
+	//if effect already there don't calculate
+	if "`2'"!="effex" {
+		/*only use OR, effmeas= 1 or 2(reversed)*/
+		qui gen `a`i'' = .
+		qui gen `b`i'' = .
+		qui gen `c`i'' = .
+		qui gen `d`i'' = .
+		/*events and non events*/
+		qui replace `a`i'' = ev1_`i'
+		qui replace `b`i'' = total1_`i'-ev1_`i'
+		qui replace `c`i'' = ev2_`i'
+		qui replace `d`i'' = total2_`i'-ev2_`i'	
+		
+		/*correction for zero cells*/
+		foreach x in a b c d {
+			*qui replace ``x'`i''=``x'`i''+0.5 if `a`i''<1 | `c`i''<1 | `b`i''<1 | `d`i''<1
+		}
+		qui gen `N`i'' = `a`i''+`b`i''+`c`i''+`d`i''
+		/*but if there are too many that are zero, set all to zero*/
+		foreach x in a b c d {
+			*qui replace ``x'`i''=0 if (`a`i''<1 & `c`i''<1) | (`b`i''<1 & `d`i''<1)
+		}
+		/*more calculations*/
+		qui gen double `Z`i'' = `a`i'' - (`a`i''+`b`i'')*(`a`i''+`c`i'')/`N`i''
+		qui gen double `V`i'' = (`a`i''+`b`i'')*(`c`i''+`d`i'')*(`a`i''+`c`i'')*(`b`i''+`d`i'')/(`N`i''^2*(`N`i''-1))
+		qui gen double `OR`i'' = exp(`Z`i''/`V`i'')
+		qui gen double `varOR`i'' = 1/`V`i''
+		/*can't have any problems with zero cells: only when a=c=b=d=0 which is impossible*/
+	}
+	else {
+		qui gen double `V`i'' = 1/effvar
+		qui gen double `OR`i'' = exp(eff)
+		qui gen double `varOR`i'' = 1/`V`i''		
+	}
+	
+	//intermediate variables
+    tempvar temp1 temp2
+    qui gen double `temp1' = `V`i''*ln(`OR`i'')
+    qui gen double `temp2' = `V`i''	
+	foreach x in temp1 temp2 {
+		qui sum ``x''
+		local l`x'=r(sum)
+	}
+    /*mean estimate (coefficients)*/
+    local Pf_mu = (`ltemp1'/`ltemp2')
+    /*variance estimate*/
+    local Pf_var = 1/`ltemp2'
+    local Pf_lo = `Pf_mu' - `mltpl'*sqrt(`Pf_var')
+    local Pf_up = `Pf_mu' + `mltpl'*sqrt(`Pf_var')
+
+    /*scalars*/
+    foreach x in mu var lo up {
+		scalar `x'=`Pf_`x''
+    }
+	
+	//create study variables only when requested to do so
+	if "`1'"=="gen" {
+		capture drop eff effvar
+		gen double eff=ln(`OR`i'')
+		gen double effvar=`varOR`i''
+	}
+	if "`1'"=="gen" | "`1'"=="partgen" {	
+		capture drop weights		
+		qui sum `V`i''
+		gen double weights=`V`i''/r(sum)
+	}	
+    /*return overall to main program*/
+	foreach x in mu var lo up {	
+		return scalar `x'=`x'
+	}	
+end
 
 **********************************************************
 ***                                                    ***
@@ -2937,6 +3491,12 @@ if "$MA_method1" != "FE"{
 		gen `noteposx' = r(mean) in 1
 		gen `notelab' = "NOTE: Weights are from random effects analysis" in 1
 		local notecmd "(scatter `noteposy' `noteposx', msymbol(none) mlabel(`notelab') mlabcolor(black) mlabpos(3) mlabsize(`textSize')) "
+		if "$MA_method1" == "MH" {
+			replace `notelab' = "NOTE: Mantel-Haenszel fixed-effect weights" in 1
+		}
+		if "$MA_method1" == "PETO" {
+			replace `notelab' = "NOTE: Peto fixed-effect weights" in 1
+		}			
 	}
 	if "$MA_nowarning" != ""{
 		local notecmd

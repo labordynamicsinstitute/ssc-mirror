@@ -4,8 +4,7 @@
 *** ------------------------------------------------------------- ***
 *********************************************************************
 		
-*** version 1.3 23feb2017
-*** part of ssc package "pcpanel"
+*! version 3.10 17sep2020
 
 program define pc_dd_covar, rclass
 version `=clip(`c(version)', 9.0, 13.1)'
@@ -13,10 +12,10 @@ version `=clip(`c(version)', 9.0, 13.1)'
 syntax varname [if] [in], PREpsi(numlist >0 integer max=1) POSTpsi(numlist >0 integer max=1) ///
                           [i(varname) t(varname) DIsplay]
 
-// store master dataset	
+// store master dataset	in case of error
 tempfile m_dta_before_psis
-quietly save `m_dta_before_psis', replace
-	
+quietly save "`m_dta_before_psis'", replace
+
 // check for errors in options
 {
 local depvar = subinstr("`1'",",","",1)
@@ -25,7 +24,7 @@ capture confirm numeric variable `depvar'
 	local rc = _rc
 	if `rc' {
 		display _n "{err}Error: Dependent variable `depvar' must be numeric"
-		use `m_dta_before_psis', clear	
+		use "`m_dta_before_psis'", clear	
 		exit `rc'
 	}
 capture tsset
@@ -43,21 +42,21 @@ capture assert "`i'"!="" & "`t'"!=""
 	if `rc' {
 		display "{err}Error: Must specify cross-sectional unit i() and time period t() variables "
 		display "{err}       to estimate covariance structure of variable `depvar'   "
-		use `m_dta_before_psis', clear	
+		use "`m_dta_before_psis'", clear	
 		exit `rc'
 	}	
 capture confirm numeric variable `i' 
 	local rc = _rc
 	if `rc' {
 		display _n "{err}Error: Cross-sectional unit variable `i' must be numeric"
-		use `m_dta_before_psis', clear	
+		use "`m_dta_before_psis'", clear	
 		exit `rc'
 	}
 capture confirm numeric variable `t' 
 	local rc = _rc
 	if `rc' {
 		display _n "{err}Error: Time period variable `t' must be numeric"
-		use `m_dta_before_psis', clear	
+		use "`m_dta_before_psis'", clear	
 		exit `rc'
 	}
 if "`if'"!="" {
@@ -65,7 +64,7 @@ if "`if'"!="" {
 		local rc = _rc
 		if `rc' {
 			display _n "{err}Error: Option if() needs to be a valid if statement, i.e. if(year>2000 & group==1)"
-			use `m_dta_before_psis', clear	
+			use "`m_dta_before_psis'", clear	
 			exit `rc'
 		}		
 }
@@ -74,7 +73,7 @@ if "`in'"!="" {
 		local rc = _rc
 		if `rc' {
 			display _n "{err}Error: Option in() needs to be a valid if statement, i.e. in 1/100"
-			use `m_dta_before_psis', clear	
+			use "`m_dta_before_psis'", clear	
 			exit `rc'
 		}		
 }
@@ -82,51 +81,51 @@ capture unique `i' `t' if `depvar'!=. & `i'!=. & `t'!=.
 	local rc = _rc
 	if `rc' {
 		display _n "{err}Error: Please ssc install unique"
-		use `m_dta_before_psis', clear	
+		use "`m_dta_before_psis'", clear	
 		exit `rc'
 	}		
 quietly unique `i' `t' if `depvar'!=. & `i'!=. & `t'!=.
-capture assert r(N)==r(sum)
+capture assert (r(N)==r(sum)) | (r(N)==r(unique))
 	local rc = _rc
 	if `rc' {
 		display _n "{err}Error: To calculate variance structure, dependent variable `depvar' "
 		display "{err}       must be unique by `i' and `t' "
-		use `m_dta_before_psis', clear	
+		use "`m_dta_before_psis'", clear	
 		exit `rc'
 	}		
 	
 local tpsi = `prepsi'+`postpsi'
 quietly unique `t'
-capture assert `tpsi'<=r(sum)
+capture assert `tpsi'<=r(sum) & `tpsi'<=r(unique)
 	local rc = _rc
 	if `rc' {
 		display _n "{err}Error: Dataset contains only `r(sum)' time periods; cannot estimate  "
 		display "{err}       covariance structure of a panel DD model with `tpsi' periods "
-		use `m_dta_before_psis', clear	
+		use "`m_dta_before_psis'", clear	
 		exit `rc'
 	}
 
 quietly unique `i' if `depvar'!=. & `i'!=. & `t'!=.
-local n_I = r(sum)
+local n_I = min(r(sum),r(unique))
 quietly unique `i' `t' if `depvar'!=. & `i'!=. & `t'!=.
-capture assert `n_I' < r(sum)/2
+capture assert (`n_I' <= r(sum)/2) & (`n_I' <= r(unique)/2)
 	local rc = _rc
 	if `rc' {
 		display _n "{err}Error: Option i() must specify factor variable to serve as cross-sectional  "
 		display "{err}       unit identifier, and units must have multiple time periods "
-		use `m_dta_before_psis', clear	
+		use "`m_dta_before_psis'", clear	
 		exit `rc'
 	}
 
 quietly unique `t' if `depvar'!=. & `i'!=. & `t'!=.
-local n_T = r(sum)
+local n_T = min(r(sum),r(unique))
 quietly unique `i' `t' if `depvar'!=. & `i'!=. & `t'!=.
-capture assert `n_T' < r(sum)/2
+capture assert (`n_T' <= r(sum)/2) & (`n_T' <= r(unique)/2)
 	local rc = _rc
 	if `rc' {
 		display _n "{err}Error: Option t() must specify factor variable to serve as time-period  "
 		display "{err}       identifier, and time periods must have multiple units "
-		use `m_dta_before_psis', clear	
+		use "`m_dta_before_psis'", clear	
 		exit `rc'
 	}
 
@@ -179,16 +178,16 @@ forvalues t_LoOP_sample = 1/`t_LoOP_max' {
 	preserve
 
 		quietly keep if inrange(tEMp_t_gROUp,`t_LoOP',`t_LoOP_tpsi')
-		quietly reghdfe `depvar' , absorb(tEMp_fe1=`i' tEMp_fe2=tEMp_t_gROUp)
-		quietly predict resid if e(sample), residuals
-		quietly sum resid
+		quietly reghdfe `depvar' , absorb(tEMp_fe1=`i' tEMp_fe2=tEMp_t_gROUp) resid
+		quietly predict rEsId if e(sample), residuals
+		quietly sum rEsId
 		local var__LoOP = r(sd)^2
 
-		quietly keep `i' tEMp_t_gROUp resid
-		quietly keep if resid!=.
+		quietly keep `i' tEMp_t_gROUp rEsId
+		quietly keep if rEsId!=.
 		quietly unique `i'
-		local n_I_LoOP = r(sum)
-		quietly reshape wide resid, i(`i') j(tEMp_t_gROUp)
+		local n_I_LoOP = min(r(sum),r(unique))
+		quietly reshape wide rEsId, i(`i') j(tEMp_t_gROUp)
 
 		forvalues t___LoOP = 1/`prepsi_minus1' {
 			quietly gen covlag_B`t___LoOP' = .
@@ -204,7 +203,7 @@ forvalues t_LoOP_sample = 1/`t_LoOP_max' {
 			local lAGS_max__LoOP = `prepsi'-(`t__LoOP'-`t_LoOP')-1
 			forvalues t___LoOP = 1/`lAGS_max__LoOP' {
 				local t__LoOP2 = `t__LoOP'+`t___LoOP'
-					quietly correlate resid`t__LoOP' resid`t__LoOP2', covariance
+					quietly correlate rEsId`t__LoOP' rEsId`t__LoOP2', covariance
 					quietly replace covlag_B`t___LoOP' = r(cov_12) if _n==`t__LoOP'-`t_LoOP'+1
 			}
 		}	
@@ -212,14 +211,14 @@ forvalues t_LoOP_sample = 1/`t_LoOP_max' {
 			local lAGS_max__LoOP = `postpsi'-(`t__LoOP'-`t_LoOP'-`prepsi')-1
 			forvalues t___LoOP = 1/`lAGS_max__LoOP' {
 				local t__LoOP2 = `t__LoOP'+`t___LoOP'
-					quietly correlate resid`t__LoOP' resid`t__LoOP2', covariance
+					quietly correlate rEsId`t__LoOP' rEsId`t__LoOP2', covariance
 					quietly replace covlag_A`t___LoOP' = r(cov_12) if _n==`t__LoOP'-`t_LoOP'+1
 			}
 		}	
 		forvalues t__LoOP = `t_LoOP'/`t_LoOP_premax' {
 			forvalues t__LoOP2 = `t_LoOP_postmin'/`t_LoOP_tpsi' {
 				local t___LoOP = `t__LoOP2'-`t__LoOP'
-					quietly correlate resid`t__LoOP' resid`t__LoOP2', covariance
+					quietly correlate rEsId`t__LoOP' rEsId`t__LoOP2', covariance
 					quietly replace covlag_X`t___LoOP' = r(cov_12) if _n==`t__LoOP'-`t_LoOP'+1
 			}
 		}	
@@ -321,7 +320,7 @@ if "`display'"=="display" {
 	display "cov_cross = `OuT_psiX_disp'  (avg within-unit residual covariance across pre/post-treatment periods) " 
 }
 
-use  `m_dta_before_psis', clear
+use  "`m_dta_before_psis'", clear
 
 }
 

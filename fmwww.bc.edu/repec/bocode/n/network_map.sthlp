@@ -116,7 +116,7 @@ for example, {cmd:xscale(on) yscale(on)} could be used to show the axes.
 
 {pstd}Draw a network map for the thrombolytics data - assumes {help networkplot} is installed
 
-{pin}. {stata "use http://www.mrc-bsu.cam.ac.uk/IW_Stata/meta/thromb.dta, clear"}
+{pin}. {stata "use http://www.homepages.ucl.ac.uk/~rmjwiww/stata/meta/thromb.dta, clear"}
 
 {pin}. {stata "network setup r n, studyvar(study) trtvar(treat)"}
 

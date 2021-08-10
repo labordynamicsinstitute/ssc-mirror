@@ -24,10 +24,10 @@ d KW: specificity
 d
 d Requires: Stata version 11
 d
-d Distribution-Date: 20141025
+d Distribution-Date: 20190203
 d
-d Author: Jonathan Bartlett, London School of Hygiene and Tropical Medicine
-d Support: email Jonathan.Bartlett@@lshtm.ac.uk
+d Author: Jonathan Bartlett, AstraZeneca
+d Support: email jwb133@@googlemail.com
 d
 f pvw.ado
 f pvwcalc.ado

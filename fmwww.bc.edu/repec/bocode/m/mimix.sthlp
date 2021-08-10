@@ -1,5 +1,5 @@
 {smcl}
-{* *! mimix version 1.3 26Jul2017}{...}
+{* *! mimix version 1.5 14Feb2021}{...}
 {cmd:help mimix}{right: ({browse "http://www.stata-journal.com/article.html?article=st0440":SJ16-2: st0440})}
 {hline}
 
@@ -279,7 +279,7 @@ default is {cmd:burnin(100)}.
 
 {phang}
 {opt m(#)} specifies the number of imputations required.  The default is
-{cmd:m(5)}.
+{cmd:m(5)}. If {opt regress} or {opt mixed} used, {opt m}<1001.
 
 {phang}
 {opt seed(#)} specifies the seed for the random-number generator.  The default
@@ -513,10 +513,12 @@ placebo=2 as the reference{p_end}
 {p2colreset}{...}
 
 
-{title:Acknowledgment}
+{title:Acknowledgments}
 
 {pstd}
-This Stata program is adapted from an SAS macro written by James Roger.
+This Stata program is an adaptation of the SAS macro, miwithd, written by James Roger available at www.missingdata.org.uk.
+I also thank Tim Morris (MRC CTU at UCL, UK) and Baptiste Leurent (London School of
+Hygiene and Tropical Medicine, UK)  for their helpful comments on the program.
 
 
 {marker references}{...}
@@ -537,10 +539,7 @@ York: Wiley.
 
 {pstd}
 Suzie Cro{break}
-London School of Hygiene & Tropical Medicine{break}
-MRC Clinical Trials Unit{break}
-University College London{break}
-London, UK{break}
+Imperial College London, UK{break}
 s.cro@imperial.ac.uk
 
 

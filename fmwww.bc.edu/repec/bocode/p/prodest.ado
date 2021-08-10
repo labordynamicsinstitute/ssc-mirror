@@ -5,8 +5,14 @@
 *!						   added translog production function, added starting points option for estimation, add check for multiple state and proxy
 *! version 1.0.5 06Jun2017 Fixed minor bugs in control variable management, error management of translog production function, added a new feature 
 *!						   in table reporting (prod function CB / Tranlsog), fixed major bugs in predict
-*! authors: Gabriele Rovigatti, University of Chicago Booth, Chicago, IL & EIEF, Rome, Italy. mailto: gabriele.rovigatti@gmail.com
-*!          Vincenzo Mollisi, Bolzano University, Bolzano, Italy & Tor Vergata University, Rome, Italy. mailto: vincenzo.mollisi@gmail.com
+*| version 1.0.6 15Oct2017 SJ review: Added the Wald test for constant return to scale, added the overidentification option for both ACF and WRDG
+*! version 1.1.1 13Feb2018 SJ review: Fixed an issue with var names that prevented more than 10 state variable to be used at once, added the "Robinson/ACF" model, 
+*!									  added the "gmm" option for Wrdg models, fixed the linear version of Wrdg model
+*! version 1.1.2 14Mar2018 Added the eret loc FSres in case of first stage residuals, in order to ensure that predict, omega can be launched
+*! version 1.2.1 26Jun2018 Made several minor fixes on helpfile and dofile suggested by Sven-Kristjan Bormann. Added his dialog box file to the package
+*! version 1.2.2 30Jul2018 Added the controls to the Wooldridge - plain - method.
+*! authors Gabriele Rovigatti, Bank of Italy, Rome, Italy. mailto: gabriele.rovigatti@gmail.com  |  gabriele.rovigatti@esterni.bancaditalia.it
+*!         Vincenzo Mollisi, Bolzano University, Bolzano, Italy & Tor Vergata University, Rome, Italy. mailto: vincenzo.mollisi@gmail.com
 
 /***************************************************************************
 ** Stata program for Production Function Estimation using the control function approach.
@@ -25,8 +31,8 @@ program define prodest, sortpreserve eclass
 		  */ proxy(varlist numeric min=1 max=2) state(varlist numeric min=1) /*
 		  */ [control(varlist min=1) ENDOgenous(varlist min=1) id(varlist min=1 max=1) t(varlist min=1 max=1) reps(integer 5) /*
 		  */ VAlueadded Level(int ${S_level}) OPTimizer(namelist min=1 max=3) MAXiter(integer 10000) /* OPTIMIZER: THERE IS THE POSSIBILITY TO WRITE technique(nr 100 nm 1000) with different optimizers after the number of iterations. 
-		  */ poly(integer 3) METhod(name min=1 max=1) lags(integer 999) TOLerance(real 0.00001) /*
-		  */ VERbose ATTrition ACF INIT(string) FSRESiduals(name min=1 max=1) seed(int 12345) EVALuator(string) TRANSlog]  
+		  */ poly(integer 3) METhod(name min=1 max=1) lags(integer 999) TOLerance(real 0.00001) gmm /*
+		  */ ATTrition ACF INIT(string) FSRESiduals(name min=1 max=1) EVALuator(string) TRANSlog OVERidentification]  
 	
 	loc vv: di "version " string(min(max(10,c(stata_version)),14.0)) ", missing:" // we want a version 10 min, while a version 14.0 max (no version 14.2)
 	loc depvar `varlist'
@@ -54,8 +60,8 @@ program define prodest, sortpreserve eclass
 		exit 198
 	}
 	/// check for unavailable choice of models
-	if (!inlist("`method'","op","lp","wrdg","mr") & !mi("`method'")){
-		di as error "Allowed methods are op, lp, wrdg or mr. Default is lp"
+	if (!inlist("`method'","op","lp","wrdg","mr","rob") & !mi("`method'")){
+		di as error "Allowed methods are op, lp, wrdg, mr or rob. Default is lp"
 		exit 198
 	}
 	else if ("`method'" == "mr" & c(stata_version) < 14.2){
@@ -105,15 +111,15 @@ program define prodest, sortpreserve eclass
 		exit 198
 	}
 	/// optimizer choice
-	if (!mi("`optimizer'") & !inlist("`optimizer'","nm","nr","dfp","bfgs","bhhh")){
+	if (!mi("`optimizer'") & !inlist("`optimizer'", "nm", "nr", "dfp", "bfgs", "bhhh", "gn")){
 		di as error "Allowed optimizers are nm, nr, dfp, bfgs and bhhh or gn for wrdg and mr. Default is nm or gn for wrdg and mr"
 		exit 198
 	}
-	else if inlist("`method'","wrdg","mr") & inlist("`optimizer'","nm","bhhh"){
+	else if inlist("`method'", "wrdg", "mr") & inlist("`optimizer'", "nm", "bhhh"){
 		di as error "`optimizer' is not allowed with `method' method. Optimizer switched to gn (default)"
 		loc optimizer "gn"
 	}
-	else if mi("`optimizer'") & !inlist("`method'","wrdg","mr"){
+	else if mi("`optimizer'") & !inlist("`method'", "wrdg", "mr"){
 		loc optimizer "nm"
 	}
 	else if mi("`optimizer'"){
@@ -157,6 +163,10 @@ program define prodest, sortpreserve eclass
 		}
 		loc init_gmm from(`init_gmm')
 	}
+	if !mi("`fsresiduals'") & inlist("`method'", "wrdg", "mr", "rob"){
+		di as error "fsresiduals is available with OP and LP methods only."
+		exit 198
+	}
 	cap confirm var `fsresiduals'
 	if !_rc{
 		di as error "`fsresiduals' already exists"
@@ -170,8 +180,8 @@ program define prodest, sortpreserve eclass
 		loc evaluator = "d0"
 	}
 	/// check the translog - only meaningful for ACF and Wooldridge methods
-	if !mi("`translog'") & mi("`acf'"){
-		di as error "translog is available with ACF-corrected models only"
+	if !mi("`translog'") & mi("`acf'") & "`method'" != "wrdg"{
+		di as error "translog is available with Wooldridge or ACF-corrected models only"
 		exit 198
 	}
 	else if !mi("`translog'") & !mi("`acf'"){
@@ -184,10 +194,21 @@ program define prodest, sortpreserve eclass
 	else{
 		loc PFtype "Cobb-Douglas"
 	}
+	if !mi("`overidentification'") & mi("`acf'") & "`method'" != "wrdg"{
+		di as error "overidentification is meaningful for ACF or WRDG methods only. Ignoring the option."
+	}
+	if !mi("`gmm'") & "`method'" != "wrdg"{
+		di as error "gmm works for wrdg only. Ignoring the option."
+		loc gmm ""
+	}
+	if !mi("`acf'") & "`model'" == "grossoutput"{
+		di as error "Using ACF correction with GO output does not ensure a correct parameter identification. See ACF (2015)."
+	}
 	
 	if "`method'" == "op" loc strMethod "Olley-Pakes"
 	if "`method'" == "lp" loc strMethod "Levinsohn-Petrin"
 	if "`method'" == "wrdg" loc strMethod "Wooldridge"
+	if "`method'" == "rob" loc strMethod "Wooldridge/Robinson"
 	if "`method'" == "mr" loc strMethod "Mollisi-Rovigatti"
 	
 	loc colnum: word count `free' `state' `control' `proxyGO' 
@@ -198,7 +219,6 @@ program define prodest, sortpreserve eclass
 	
 	/// preserve the data before generating tons of variables
 	preserve
-		set seed `seed'
 		/// generate some locals to be used in order to display results
 		qui xtdes if `touse' == 1, i(`id') t(`t')
 		loc nObs = `r(sum)'
@@ -212,7 +232,7 @@ program define prodest, sortpreserve eclass
 		/// directly keep only observations in IF and IN --> SAVE A TEMPORARY FILE 
 		tempfile temp
 		qui keep if `touse' == 1
-		keep `depvar' `free' `state' `proxy' `control' `id' `t' `touse'  `endogenous'
+		keep `depvar' `free' `state' `proxy' `control' `id' `t' `touse'  `endogenous' 
 		/// generate an "exit" dummy variable equal to one for all firms not present in the last period of panel
 		tempvar exit
 		qui bys `id' (`t'): g `exit' = (_n == _N & `t' < `maxDate')
@@ -270,24 +290,24 @@ program define prodest, sortpreserve eclass
 
 			forv i=1/`varnum'{
 				forv j=`i'/`varnum'{
-					qui g var_`i'`j' = var_`i'*var_`j'
-					loc interactionvars `interactionvars' var_`i'`j'
+					qui g var_`i'_`j' = var_`i'*var_`j'
+					loc interactionvars `interactionvars' var_`i'_`j'
 					if `poly' > 2{
 						forv z=`j'/`varnum'{
-							qui g var_`i'`j'`z' = var_`i'*var_`j'*var_`z'
-							loc interactionvars `interactionvars' var_`i'`j'`z'
+							qui g var_`i'_`j'_`z' = var_`i'*var_`j'*var_`z'
+							loc interactionvars `interactionvars' var_`i'_`j'_`z'
 							if `poly' > 3{
 								forv g = `z'/`varnum'{
-									qui g var_`i'`j'`z'`g' = var_`i'*var_`j'*var_`z'*var_`g'
-									loc interactionvars `interactionvars' var_`i'`j'`z'`g'
+									qui g var_`i'_`j'_`z'_`g' = var_`i'*var_`j'*var_`z'*var_`g'
+									loc interactionvars `interactionvars' var_`i'_`j'_`z'_`g'
 									if `poly' > 4{
 										forv v = `g'/`varnum'{
-											qui g var_`i'`j'`z'`g'`v' = var_`i'*var_`j'*var_`z'*var_`g'*var_`v'
-											loc interactionvars `interactionvars' var_`i'`j'`z'`g'`v'
+											qui g var_`i'_`j'_`z'_`g'_`v' = var_`i'*var_`j'*var_`z'*var_`g'*var_`v'
+											loc interactionvars `interactionvars' var_`i'_`j'_`z'_`g'_`v'
 											if `poly' > 5{
 												forv s = `v'/`varnum'{
-													qui g var_`i'`j'`z'`g'`v'`s' = var_`i'*var_`j'*var_`z'*var_`g'*var_`v'*var_`s'
-													loc interactionvars `interactionvars' var_`i'`j'`z'`g'`v'`s'
+													qui g var_`i'_`j'_`z'_`g'_`v'_`s' = var_`i'*var_`j'*var_`z'*var_`g'*var_`v'*var_`s'
+													loc interactionvars `interactionvars' var_`i'_`j'_`z'_`g'_`v'_`s'
 												}
 											}
 										}
@@ -298,7 +318,7 @@ program define prodest, sortpreserve eclass
 					}
 				}
 			}
-			if ("`method'" == "wrdg" | "`method'" == "mr"){
+			if /*("`method'" == "wrdg" | "`method'" == "mr")*/ inlist("`method'","wrdg","mr","rob"){
 				/// generate GMM fit - for each state and free variables need to initiate the GMM
 				foreach element in `free' `state' `proxyGO'{
 					local gmmfit `gmmfit'-{`element'}*`element'
@@ -308,19 +328,98 @@ program define prodest, sortpreserve eclass
 					cap g l_gen`var' = l.`var'
 					loc lagInteractionvars `lagInteractionvars' l_gen`var'
 				}
-				if !mi("`control'"){
-					loc wrdg_contr1 "-{xe: `control'}"
-					loc wrdg_contr2 "-{xf: `control'}"
+				if !mi("`translog'"){ /* generate the interactions + the square of free and state vars */
+					foreach fvar in `free'{
+						loc ++colnum
+						qui g translog_var`fvar' = `fvar' * `fvar' /* generate squared free */
+						loc translogFit `translogFit'-{translog_var`fvar'}*translog_var`fvar'
+						loc transNames `transNames' "`fvar'*`fvar'"
+						foreach svar in `state'{
+							qui g translog_var`fvar'`svar' = `fvar' * `svar'
+							cap g translog_var`svar'`svar' = `svar' * `svar'
+							loc translogFit `translogFit'-{translog_var`fvar'`svar'}*translog_var`fvar'`svar'
+							loc transNames `transNames' "`fvar'*`svar'"
+							qui g translog_inst`fvar'`svar' = l_gen`fvar' * `svar'
+							loc ++colnum
+						}
+					}
+					loc translogVars translog_var* /* list of interaction + squares variables */
+					loc translogInst translog_inst* /* list of interaction between lagged free and state var */
+					loc wrdg_transVars1 "-{xp: translog_var*}"
+					loc wrdg_transVars2 "-{xq: translog_var*}"
+					di "`translogFit'"
+					di "`translogVars'"
 				}
 				if "`method'" == "wrdg"{ /* WRDG */
-					`vv' qui gmm (eq1: `depvar' `gmmfit'  -{xd: `interactionvars'} `wrdg_contr1' - {a0}) /* y - a0 - witB - xitJ - citL
-						*/ (eq2: `depvar' `gmmfit' -{xc: `lagInteractionvars'} `wrdg_contr2' - {a0} - {e0}), /* y - e0 - witB - xitJ - p(cit-1L) - ... - pg(cit-1L)^g
-						*/ instruments(eq1: `free' `interactionvars' `control') /* Zit1 = (1,wit,xit,c0it)
-						*/ instruments(eq2: `state' `lagfreeVars' `lagInteractionvars' `control') /* Zit2 = (1,xit,wit-1,cit-1)
-						*/ winitial(unadjusted, independent) nocommonesample /*
-						*/ technique(`optimizer') conv_maxiter(`maxiter') `conv_nrtol' `init_gmm'
+					/*
+					`vv' gmm (eq1: `depvar' `gmmfit' /*`translogFit'*/ -{xc: `interactionvars'} /*`wrdg_transVars1'*/ `wrdg_contr1' - {a0}) /* y - a0 - witB - xitJ - citL
+						*/ (eq2: `depvar' `gmmfit' /*`translogFit'*/ -{xd: `lagInteractionvars'} /*`wrdg_transVars2'*/ `wrdg_contr2' - {a0} - {e0}), /* y - e0 - witB - xitJ - p(cit-1L) - ... - pg(cit-1L)^g
+						*/ instruments(eq1: `free' `interactionvars' `control' `translogVars' `overidentification') /* Zit1 = (1,wit,xit,c0it)
+						*/ instruments(eq2: `state' `lagfreeVars' `lagInteractionvars' `control' `translogVars' /*`translogInst'*/) /* Zit2 = (1,xit,wit-1,cit-1)
+						*/ /*winitial(identity, independent) onestep*/ winitial(unadjusted, independent) nocommonesample technique(`optimizer') conv_maxiter(`maxiter') `conv_nrtol' `init_gmm'
+					*/
+					/*
+					mat W = e(W)
+					mat S = e(S)
+					mat V = e(V)
+					mat mV = e(V_modelbased)
+					noi di "final weight matrix"
+					mat list W
+					noi di "S estimator is"
+					mat list S
+					noi di "var-covar matrix"
+					mat list V
+					di "modelbased varcovar matrix"
+					mat list mV
+					*/
+					if !mi("`overidentification'") | !mi("`gmm'") { // in case of overidentification, or in case the user specifies a preference for GMM, estimate a system GMM model, else go with the linear IV model
+						if !mi("`overidentification'"){
+							loc overidentification `lagfreeVars' `lagInteractionvars'
+						}
+						loc eq1counter = 0
+						foreach var of varlist `interactionvars'{
+							loc ++eq1counter
+							loc eq1vars `eq1vars' -{xb`eq1counter'}*`var'
+						}
+						loc eq2counter = 0
+						foreach var of varlist `lagInteractionvars'{
+							loc ++eq2counter
+							loc eq2vars `eq2vars' -{xb`eq2counter'}*`var'
+						}
+						`vv' qui gmm (eq1: `depvar' `gmmfit' /*`translogFit'*/ `eq1vars' /*-{xc: `interactionvars'} `wrdg_transVars1'*/ `wrdg_contr1' - {a0}) /* y - a0 - witB - xitJ - citL
+							*/ (eq2: `depvar' `gmmfit' /*`translogFit'*/ `eq2vars' /*-{xd: `lagInteractionvars'} `wrdg_transVars2'*/ `wrdg_contr2' - {a0} -{e0}), /* y - e0 - witB - xitJ - p(cit-1L) - ... - pg(cit-1L)^g
+							*/ instruments(eq1: `free' /*`lagfreeVars'*/ `interactionvars' `control' `translogVars' /*`lagInteractionvars'*/ `overidentification') /* Zit1 = (1,wit,xit,c0it,cit-1)
+							*/ instruments(eq2: `state' `lagfreeVars' `lagInteractionvars' `control' `translogVars' /*`translogInst'*/) /* Zit2 = (1,xit,wit-1,cit-1)
+							*/ /*winitial(identity, independent) onestep*/ winitial(unadjusted, independent) /*nocommonesample*/ technique(`optimizer') conv_maxiter(`maxiter') `conv_nrtol' `init_gmm'
+						/// save locals for Hanses's J and p-value
+						qui estat overid
+						loc hans_j: di %3.2f `r(J)'
+						loc hans_p: di %3.2f `r(J_p)'
+					}
+					else{ /* WRDG - plain */
+						tempfile wrdg
+						qui save `wrdg'
+							qui reg `depvar' `state' `proxyGO' `interactionvars' `free' `lagfreeVars' `control' // just to take the number of observations used in the estimation
+							loc realObs = `e(N)'
+							qui expand 2, gen(cons2) // double the dataset in order to stack dependent and regressors
+							foreach var of local interactionvars{
+								qui replace `var' = l_gen`var' if cons2 == 1 // change interactionvars to lagged values
+							}
+							qui ivregress gmm `depvar' `state' `proxyGO' `interactionvars' `control' (`free' = `lagfreeVars') cons2, wmatrix(unadjusted) c // run the IV regression 
+							/// save locals for Hanses's J and its p-value
+							loc hans_j: di %3.2f `e(J)'
+							mat cV = colsof(e(V)) // find the number of instruments
+							scalar cV = cV[1,1]
+							loc jdf = cV - `e(rank)' + 1
+							loc hans_p: di %3.2f chi2tail(`jdf', `hans_j') // this is the chi2 p-value of Hansen statistics
+						qui use `wrdg', clear
+						eret loc N `realObs' // post the real number of obseravtions used in estimation
+					}
 				}
-				else{ /* MrEst */
+				else if "`method'" == "mr"{ /* MrEst */
+					if !mi("`overidentification'"){ // interactions are valid instruments, too
+						loc overidentification  `lagInteractionvars' 
+					}
 					/// god forgive me: in order to overcome the difference equation in system GMM we launch both equations in level and take the initial weighting matrix
 					loc instnum = (`freenum' + `statenum')
 					forv i = 1/`instnum'{
@@ -336,12 +435,39 @@ program define prodest, sortpreserve eclass
 					qui mat W2 = e(W)
 					mata W_hat =  st_matrix("W1"),J(rows(st_matrix("W1")),cols(st_matrix("W2")),0) \ J(rows(st_matrix("W2")),cols(st_matrix("W1")),0), st_matrix("W2")
 					mata st_matrix("W_hat", W_hat)
+					/* generate the model for both equations - same parameter for c_{i,t} and c_{i,t-1} in WRDG terms */
+					loc eq1counter = 0
+					foreach var of varlist `interactionvars' `control'{
+						loc ++eq1counter
+						loc eq1vars `eq1vars' "-{xb`eq1counter'}*`var'"
+					}
+					loc eq2counter = 0
+					foreach var of varlist `lagInteractionvars' `control'{
+						loc ++eq2counter
+						loc eq2vars `eq2vars' "-{xb`eq2counter'}*`var'"
+					}
 					/// launch the gmm with the winitial built above
-					`vv' qui gmm (1: `depvar' `gmmfit' - {xk: `interactionvars'} `wrdg_contr1' - {a0}) /* y - a0 - witB - xitJ - citL
-						*/ (2: `depvar' `gmmfit' - {xl: `lagInteractionvars'} `wrdg_contr2' - {a0} - {e0}),/* y - e0 - witB - xitJ - p(cit-1L) - ... - pg(cit-1L)^g
-						*/ instruments(1: `interinstr' `control') xtinstruments(1: `free' `state', l(0/`lags')) /* 
+					`vv' qui gmm (1: `depvar' `gmmfit' `eq1vars' /*`wrdg_contr1'*/ - {a0}) /* y - a0 - witB - xitJ - citL
+						*/ (2: `depvar' `gmmfit' `eq2vars' /*`wrdg_contr2'*/ - {a0} - {e0}),/* y - e0 - witB - xitJ - p(cit-1L) - ... - pg(cit-1L)^g, where p = g = 1
+						*/ instruments(1: `interinstr' `overidentification' `control') xtinstruments(1: `free' `state', l(0/`lags')) /*  
 						*/ xtinstruments(2: `free' `state', l(2/`lags')) instruments(2: `state' `lagInteractionvars' `control') /* 
 						*/ onestep winitial("W_hat") nocommonesample quickd technique(`optimizer') conv_maxiter(`maxiter') `conv_nrtol' `init_gmm'
+					/// save locals for Hanses's J and p-value
+					qui estat overid
+					loc hans_j: di %3.2f `r(J)'
+					loc hans_p: di %3.2f `r(J_p)'
+				}
+				else{ /* Robinson / ACF */
+					*qui gmm (`depvar' `gmmfit' - {xb: `lagInteractionvars'} - {a0}), instruments(`state' `lagfreeVars' `lagInteractionvars') onestep vce(cluster `id')
+					*ivreg2 `depvar' `state' `proxyGO' `lagInteractionvars' ( `free' = `lagfreeVars' `overidentification'), gmm2s cluster(`id') /* this is working! */ 
+					*ivregress gmm `depvar' `state' `proxyGO' `control' `lagInteractionvars' ( `free' = `lagfreeVars' `overidentification'), vce(cluster `id') /* this is working! */ 
+					qui ivregress gmm `depvar' `state' `proxyGO' `control' `lagInteractionvars' (`free' = `lagfreeVars'), vce(cluster `id') /* this is working! */
+					/// save locals for Hanses's J and its p-value
+					loc hans_j: di %3.2f `e(J)'
+					mat cV = colsof(e(V)) // find the number of instruments
+					scalar cV = cV[1,1]
+					loc jdf = cV - `e(rank)' + 1
+					loc hans_p: di %3.2f chi2tail(`jdf', `hans_j') // this is the chi2 p-value of Hansen statistics
 				}
 				/// save elements for result posting
 				loc nObs = `e(N)'
@@ -351,10 +477,12 @@ program define prodest, sortpreserve eclass
 				mat `__b' = `__b'[1...,1..`colnum']
 				mat `__V' = e(V)
 				mat `__V' = `__V'[1..`colnum',1..`colnum']
-				/// save locals for Hanses's J and p-value
-				qui estat overid
-				loc hans_j: di %3.2f `r(J)'
-				loc hans_p: di %3.2f `r(J_p)'
+				/// save locals for Hanses's J and its p-value
+				loc hans_j: di %3.2f `e(J)'
+				mat cV = colsof(e(V)) // find the number of instruments
+				scalar cV = cV[1,1]
+				loc jdf = cV - `e(rank)' + 1
+				loc hans_p: di %3.2f chi2tail(`jdf', `hans_j') // this is the chi2 p-value of Hansen statistics
 				continue, break
 			}
 			else{ /* if it's not WRDG or MrEst */
@@ -387,9 +515,9 @@ program define prodest, sortpreserve eclass
 						loc transNum: word count `transVars'
 						forv i=1/`transNum'{
 							forv j=`i'/`transNum'{
-								loc interactionTransVars `interactionTransVars' var_`i'`j'
-								qui g lagTrans_`i'`j' = l.var_`i'`j'
-								loc lagInteractionTransVars `lagInteractionTransVars' lagTrans_`i'`j'
+								loc interactionTransVars `interactionTransVars' var_`i'_`j'
+								qui g lagTrans_`i'_`j' = l.var_`i'_`j'
+								loc lagInteractionTransVars `lagInteractionTransVars' lagTrans_`i'_`j'
 							}
 						}
 						foreach fvar in `free' `proxyGO'{
@@ -437,7 +565,7 @@ program define prodest, sortpreserve eclass
 				if `b' == 1{
 					qui reg `depvar' `toLagVars' `interactionTransVars' if `touse' == 1
 					if !mi("`init'"){
-						mat ols_s = `init' // give the starting points to the optimization routine
+						mat ols_s = `init' // THIS PART IS JUST A TRYOUT IN ORDER TO MAKE THE COMMAND WORK FOR OUR PURPOSES
 					}
 					else{
 						mat tmp = e(b)
@@ -485,12 +613,16 @@ program define prodest, sortpreserve eclass
 							continue
 						}
 					}
+					*mat `__b'[`b',1] = `firstb'[1...,1..(`freenum'+`controlnum')],r(betas) 
 					mat `__b'[`b',1] = `firstb'[1...,1..(`freenum')],r(betas) 
 				}
 				else{ /* ACF second stage */ 
+					if !mi("`overidentification'"){ // lag intereactions are valid instruments for the first equation, too
+						loc overidentification `lagInteractionvars'
+					}
 					loc toLagVars `free' `state' `control' `proxyGO' `interactionTransVars'
 					loc laggedVars `lagfreeVars' `lagstateVars' `lagcontrolVars' `lproxyGO' `lagInteractionTransVars'
-					loc instrumentVars `lagfreeVars' `state' `control' `lproxyGO' `instrumentTransVars'
+					loc instrumentVars `lagfreeVars' `state' `control' `lproxyGO' `instrumentTransVars' `overidentification'
 					/// here we launch the mata routine for ACF
 					foreach var of varlist `laggedVars' `lagfreeVars' phihat_lag{
 						qui drop if mi(`var')
@@ -534,12 +666,13 @@ program define prodest, sortpreserve eclass
 			loc interactionvars ""
 			loc lagcontrolVars ""
 		}
-		if ("`method'" != "wrdg" & "`method'" != "mr"){
+		if !inlist("`method'","wrdg","mr","rob")/*("`method'" != "wrdg" & "`method'" != "mr")*/{
 			clear 
 			/// generate the varCovar matrix for the bootstrapped estimates
 			qui svmat `__b'
 			qui mat accum `__V' = * in 2/`reps', deviations noconstant 
-			mat `__V' = `__V' / (`reps' - 1)
+			*mat `__V' = `__V' / (`reps' - 1)
+			mat `__V' = `__V' / (`reps')
 			mat `__b' = `__b'[1,1...] 
 		}
 	
@@ -557,6 +690,16 @@ program define prodest, sortpreserve eclass
 	mat colnames `__V' = `free' `state' `control' `proxyGO' `transNames'
 	mat rownames `__V' = `free' `state' `control' `proxyGO' `transNames'
 	
+	/* compute Wald estimator of constant returns to scale */
+	/* taken from levpet */
+	tempname capr diff rvri junk
+	mat `capr' = J(1, colsof(`__b'), 1)
+	mat `rvri' = syminv(`capr'*`__V'*`capr'')
+	mat `diff' = `__b'*`capr'' - 1
+	mat `junk' = `diff'*`rvri'*`diff'
+	loc waldT: di %3.2f trace(`junk')
+	loc waldP: di %3.2f chi2tail(1, `waldT')
+	
 	/// Display results - ereturn
 	eret clear
 	
@@ -564,6 +707,9 @@ program define prodest, sortpreserve eclass
 	
 	if !mi("`acf'"){
 		loc correction "ACF corrected"
+	}
+	if !mi("`fsresiduals'"){
+		eret loc FSres "`fsresiduals'"
 	}
 	
 	eret loc cmd "prodest"
@@ -581,6 +727,9 @@ program define prodest, sortpreserve eclass
 	eret loc correction "`correction'"
 	eret loc predict "prodest_p"
 	eret loc PFtype "`PFtype'"
+	eret loc waldT "`waldT'"
+	eret loc waldP "`waldP'"
+	eret loc gmm "`gmm'"
 	
 	eret scalar N_g = `nGroups'
 	eret scalar tmin = `minGroup'
@@ -588,7 +737,7 @@ program define prodest, sortpreserve eclass
 	eret scalar tmax = `maxGroup'
 	
 	di _n _n
-	di as text "`method' productivity estimator" _continue
+	di as text "`method' productivity estimator `gmm'" _continue
 	di _col(49) "`PFtype' PF"
 	di as text "`correction'"
 	if ("`model'" == "grossoutput") {
@@ -606,11 +755,16 @@ program define prodest, sortpreserve eclass
 	di _col(49) as text "               max = " as result %9.0f `maxGroup'
 	di
 	_coef_table, level(`level')
-	if ("`method'" == "wrdg" | "`method'" == "mr"){
+	di "Wald test on Constant returns to scale: Chi2 = `e(waldT)'"
+	di "					      p = (`e(waldP)')"
+	if ("`method'" == "wrdg" | "`method'" == "mr") & !mi("`overidentification'"){
 		eret loc hans_j "`hans_j'"
 		eret loc hans_p "`hans_p'"
-		di "Hansen's J = `hans_j'"
-		di "Hansen's J p-value = `hans_p'"
+		di "Hansen's J statistic for overidentification = `hans_j'"
+		di "                                          p = (`hans_p')"
+	}
+	else if !mi("`translog'"){
+		di as text "Estimated parameters displayed. To see estimated input elasticities, type{stata predict, parameters: predict, parameters}"
 	}
 end program
 
@@ -622,6 +776,8 @@ capture mata mata drop opt_mata()
 capture mata mata drop facf()
 capture mata mata drop foplp() 
 
+
+*version 7
 mata:
 
 /*---------------------------------------------------------------------*/
@@ -691,19 +847,37 @@ mata:
 		optimize_init_argument(S, 7, PR_HAT)
 		optimize_init_argument(S, 8, ENDO)
 		optimize_init_evaluator(S, f)
+		/*optimize_init_evaluatortype(S, "d0")*/
 		optimize_init_evaluatortype(S, eval)
 		optimize_init_conv_maxiter(S, maxiter)
 		optimize_init_conv_nrtol(S, tol)
+		/*optimize_init_evaluatortype(S, "gf0")*/
 		optimize_init_technique(S, opt)
 		optimize_init_nmsimplexdeltas(S, 0.00001)
 		optimize_init_which(S,"min")
 		optimize_init_params(S,init')
 		p = optimize(S)
 		st_matrix("r(betas)", p)
+		
+		/* tryout to find Newey-type Cov estimator 
+		st_matrix("r(gradient)", optimize_result_gradient(S))
+		st_matrix("r(score)", optimize_result_scores(S))
+		Hl = optimize_result_gradient(S)
+		V = optimize_result_V(S)
+		Vhh = invsym(Hl)*V*invsym(Hl)'
+		st_matrix("r(Vhh)", Vhh)*/
 	}
 	
 /*---------------------------------------------------------------------*/
 	
 end 
+
+/*---------------------------------------------------------------------*/
+/// SAVE MATA LIBRARIES ///
+*global matadir "C:\Users\gabriele\Dropbox (Personale)\ACF_routine\dofile"
+*cd "${matadir}"
+*mata: mata mlib create l_prodest, replace
+*mata: mata mlib add l_prodest *()
+
 
 

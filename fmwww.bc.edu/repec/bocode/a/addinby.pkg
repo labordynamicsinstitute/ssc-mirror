@@ -1,6 +1,6 @@
 d 'ADDINBY': module to add in data from a disk dataset using a foreign key
 d
-d   addinby is a "cleaner" alternative version of merge, designed
+d    addinby is a "cleaner" alternative version of merge, designed
 d to reduce the lines of code in Stata do-files. It adds variables
 d and/or values to existing observations in the dataset currently
 d in memory (the master dataset) from a Stata-format dataset stored
@@ -22,12 +22,14 @@ d KW: key
 d KW: foreign key
 d KW: merge
 d
-d Requires: Stata version 11.0
+d Requires: Stata version 16.0
 d
-d Distribution-Date: 20100413
+d Distribution-Date: 20200414
 d
-d Author: Roger Newson, National Heart and Lung Institute at Imperial College London
+d Author: Roger Newson,  Imperial College London
 d Support: email r.newson@@imperial.ac.uk
 d
 f addinby.ado
 f addinby.sthlp
+f ../f/fraddinby.ado
+f ../f/fraddinby.sthlp

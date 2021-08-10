@@ -1,6 +1,6 @@
 #delimit ;
 program define somersd, eclass byable(onecall) sortpreserve prop(svyj svyb mi);
-version 12.0;
+version 16.0;
 /*
  Take, as input, 2 or more variables in varlist,
  comprising 1 x-variate and 1 or more y-variates,
@@ -12,7 +12,7 @@ version 12.0;
  and the vce matrix equal to their deltajackknife variance-covariance estimates.
  This program allows fweights, iweights or pweights.
 *! Author: Roger Newson
-*! Date: 20 May 2013
+*! Date: 15 April 2020
 */
 
 if(replay()){;
@@ -472,7 +472,7 @@ sort `_byvars' `clseq' `_sortindex';
 end;
 
 program define _somersdby, byable(recall) eclass;
-version 12.0;
+version 16.0;
 *
  Process a by-group for somersd.
  (We can assume that the data are already sorted
@@ -686,7 +686,7 @@ _somersdplay, level(`level') `cimatrix';
 end;
 
 program define _somersdplay;
-version 12.0;
+version 16.0;
 *
  Display output
 *;
@@ -752,7 +752,7 @@ parmtran, level(`level') `cimatrix';
 end;
 
 program define bVzinit;
-version 12.0;
+version 16.0;
 syntax varlist(min=1 max=9999) [, B(string) V(string) ];
 *
  Take varlist as input
@@ -779,7 +779,7 @@ if("`v'"!=""){;
 end;
 
 program define corrtran, rclass;
-version 12.0;
+version 16.0;
 *
  Transform a vector of correlation coefficients from e(b)
  and its dispersion matrix in e(V)
@@ -876,7 +876,7 @@ return matrix V `vce';
 end;
 
 program define parmtran;
-version 12.0;
+version 16.0;
 *
  Take confidence level and estimation output as input
  and create, as results output,
@@ -902,7 +902,6 @@ scal `clfloat'=`level'/100;
 if("`e(tdist)'"!=""){;
   * Student's t-distribution *;
   local dof=e(df_r);
-  * version 6: scal `mult'=invt(`dof',`clfloat');
   scal `mult'=invttail(`dof',0.5*(1-`clfloat'));
 };
 else{;
@@ -973,7 +972,7 @@ if(("`transf'"=="z")|("`transf'"=="asin")|("`transf'"=="zrho")){;
 end;
 
 #delim cr
-version 12.0
+version 16.0
 /*
   Private Mata programs used by somersd
 */

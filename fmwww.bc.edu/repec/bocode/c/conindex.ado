@@ -1,6 +1,7 @@
-*! conindex 1.3  3rd March 2016
+*! conindex 1.5  18 July 2018
 *! Copyright (C) 2015 Owen O'Donnell, Stephen O'Neill, Tom Van Ourti & Brendan Walsh.
 *! svy option added (16 Feb 2016)
+*| using lorenz.ado for graphs (18 July 2018)
 
 * This program is free software: you can redistribute it and/or modify
 * it under the terms of the GNU General Public License as published by
@@ -17,10 +18,10 @@
 capture program drop conindex
 program define conindex, rclass sortpreserve byable(recall)
 version 11.0
-syntax varname [if] [in] [fweight aweight pweight]  , [RANKvar(varname)] [, robust] [, CLUSter(varname)] [, truezero] [, LIMits(numlist min=1 max=2 missingokay)] [, generalized][, generalised] [, bounded] [, WAGstaff] [, ERReygers]  [, v(string)] [,beta(string)] [, graph] [, loud] [, COMPare(varname)] [, KEEPrank(string)] [, ytitle(string)] [, xtitle(string)] [,compkeep(numlist)] [,extended] [,symmetric] [,bygroup(numlist)] [,svy]
+syntax varname [if] [in] [fweight aweight pweight]  , [RANKvar(varname)] [, robust] [, CLUSter(varname)] [, truezero] [, LIMits(numlist min=1 max=2 missingokay)] [, generalized][, generalised] [, bounded] [, WAGstaff] [, ERReygers]  [, v(string)] [,beta(string)] [, graph] [, loud] [, COMPare(varname)] [, KEEPrank(string)] [, ytitle(string)] [, xtitle(string)] [,compkeep(numlist)] [,extended] [,symmetric] [,bygroup(numlist)] [,svy] 
 marksample touse
 tempname grouptest counter
-tempvar wght sumw cumw cumw_1 cumwr cumwr_1 frnk temp sigma2 meanlhs meanlhs_star cumlhs cumlhs1 lhs rhs1 rhs2 xmin xmax varlist_star weight1 meanweight1 tempx temp1x sumlhsx  temps tempex lhsex rhs1ex rhs2ex sigma2ex exrank tempgx  lhsgex lhsgexstar symrank smrankmean tempsym sigma2sym lhssym lhssymstar rhs1sym rhs2sym lhsgsym tempgxstar raw_rank_c wi_c cusum_c wj_c rank_c var_rank_c mean_c lhs_c split_c ranking  extwght temp1 meanweight  sumlhs sumwr  counts meanoverall tempdis temp0 meanlhs2  rhs temp2  frnktest meanlhsex2  equality group lhscomp  rhs1comp rhs2comp rhscomp intercept scale
+tempvar wght sumw cumw cumw_1 cumwr cumwr_1 frnk temp sigma2 meanlhs meanlhs_star cumlhs cumlhs1 lhs rhs1 rhs2 xmin xmax varlist_star weight1 meanweight1 tempx temp1x sumlhsx  temps tempex lhsex rhs1ex rhs2ex sigma2ex exrank tempgx  lhsgex lhsgexstar symrank smrankmean tempsym sigma2sym lhssym lhssymstar rhs1sym rhs2sym lhsgsym tempgxstar raw_rank_c wi_c cusum_c wj_c rank_c var_rank_c mean_c lhs_c split_c ranking  extwght temp1 meanweight  sumlhs sumwr  counts meanoverall tempdis temp0 meanlhs2  rhs temp2  frnktest meanlhsex2  equality group lhscomp  rhs1comp rhs2comp rhscomp intercept scale  
 local weighted [`weight'`exp'] 
 if "`weight'" != "" local weighted [`weight'`exp'] 
 if "`weight'" == "" qui gen byte `wght' = 1 
@@ -302,13 +303,11 @@ quietly {
 			di as err="Graph option not supported for Wagstaff or Erreygers Normalisations."
 			local problem=1
 		}
-		local graph=1
 		if `extended'==1 | `symmetric'==1{
 			di as err="Graph option not supported for Extended or Symmetric Indices."
 			local problem=1
 		}
 	}
-	else local graph=0
 	
 	if "`loud'"=="loud" local noisily="noisily"	
 	if `problem'==1  exit 498 
@@ -342,14 +341,18 @@ quietly {
 		replace `meanlhs'=`meanlhs'-xmin
 	}
 
-	if `graph'==1 {
-		egen double `cumlhs'=sum(`wght'*`varlist_star') if `touse'
-		gen double `cumlhs1'=sum(`wght'*`varlist_star') if `touse'
-		replace `cumlhs1'=`cumlhs1'/`cumlhs'
+
+	if "`graph'"=="graph" {
+ 		capture which lorenz
+ 		if _rc==111 disp "conindex requires the lorenz.ado by Ben Jahn to produce graphs. Please install this before using conindex." 
 		if "`ytitle'" ==""{
 			local ytext : variable label `varlist' 
 			if "`ytext'" == "" local ytext "`varlist'" 
 			local ytitle = "Cumulative share of `ytext'"
+			if `generalized'==1 {
+				if "`ytext'" == "" local ytext "`varlist'" 
+				local ytitle = "Cumulative average of `ytext'"
+			}
 		}
 		if "`xtitle'" ==""{
 			if "`rankvar'"  == "" local xtext : variable label `varlist' 
@@ -358,22 +361,27 @@ quietly {
 			if "`xtext'" == "" local xtext "`varlist'" 
 			local xtitle = "Rank of `xtext'"
 		}	
-		if `generalized'==0 {
-			gen double `equality'=`frnk'
-			twoway (line `cumlhs1' `frnk', sort  lwidth(thick) clcolor(blue))(line `equality' `frnk', sort  clwidth(thick) clcolor(black)), ytitle(`ytitle', size(medsmall)) yscale(titlegap(5))  xtitle(`xtitle', size(medsmall)) legend(rows(5)) xscale(titlegap(5)) legend(off) plotregion(margin(zero) lcolor(none)) aspect(1) ysize(8) xsize(8)  graphregion(color(white)) bgcolor(white) 
+		if `generalized'== 0{
+			lorenz estimate `varlist_star', pvar(`ranking')
+			lorenz graph, ytitle(`ytitle', size(medsmall)) yscale(titlegap(5))  xtitle(`xtitle', size(medsmall))  ytitle(`ytitle', size(medsmall)) graphregion(color(white)) bgcolor(white) 
 		}
 		if `generalized'==1 {
-			replace `cumlhs1'=`cumlhs1'*`meanlhs'
-			gen double `equality'=`frnk'*`meanlhs'
-			if "`ytext'" == "" local ytext "`varlist'" 
-			local ytitle = "Cumulative average of `ytext'"
-			twoway (line `cumlhs1' `frnk', sort clwidth(thick) clcolor(blue))(line `equality' `frnk', sort  clwidth(thick) clcolor(black)), ytitle(`ytitle', size(medsmall)) yscale(titlegap(5))  xtitle(`xtitle', size(medsmall)) legend(rows(5)) xscale(titlegap(5)) legend(off) plotregion(margin(zero) lcolor(none)) aspect(1) ysize(8) xsize(8)  graphregion(color(white)) bgcolor(white) 
-		}		
+			lorenz estimate `varlist_star', pvar(`ranking') generalized 
+			lorenz graph, ytitle(`ytitle', size(medsmall)) yscale(titlegap(5))  xtitle(`xtitle', size(medsmall))  ytitle(`ytitle', size(medsmall)) graphregion(color(white)) bgcolor(white) 
+		}	
 	}
 
-	noisily  di in text "{hline 105}"
-	noisily  di in text "Index:" _col(25) "{c |} No. of obs." _col(40) "{c |} Index value" _col(65) "{c |} `SEtype'" _col(90) "{c |} p-value "_col(105) "{c |}"
-	noisily  di in text "{hline 105}"
+	
+	noisily  di in smcl ///
+        "{hline 19}{c TT}{hline 13}{c TT}{hline 13}{c TT}{hline 19}" _c
+	noi di in smcl  "{c TT}{hline 10}{c TRC}"
+
+	noisily  di in text "Index:" _col(20) "{c |} No. of obs." _col(34) ///
+          "{c |} Index value" _col(48) "{c |} `SEtype'" _col(68) ///
+          "{c |} p-value" _col(79) "{c |}"
+	noisily  di in smcl ///
+        "{hline 19}{c +}{hline 13}{c +}{hline 13}{c +}{hline 19}" _c
+	noi di in smcl  "{c +}{hline 10}{c RT}"
 	
 	gen double `lhs'=2*`sigma2'*(`varlist_star'/`meanlhs')*`scale' if `touse'
 	gen double `intercept'=`scale' if `touse'
@@ -396,17 +404,17 @@ quietly {
 	}	
 	if `wagstaff'==1{
 		`noisily'  disp "Wagstaff Normalisation"
-		local type = "Wagstaff normalised `index'"
+		local type = "Wagstaff norm. `index'"
 		replace `lhs'= `lhs'/(1-`meanlhs') if `touse' 
 	}
 	if `erreygers'==1{
 		`noisily'  disp "Errygers Normalisation"
-		local type = "Erreygers normalised `index'"
+		local type = "Erreygers norm. `index'"
 		replace `lhs'= `lhs'*(4*`meanlhs') if `touse'
 	}
 	if `generalized'==1 {
-		`noisily'  disp "generalized standard `index'"
-		local type = "generalized `index'"
+		`noisily'  disp "Gen. standard `index'"
+		local type = "Gen. `index'"
 		replace `lhs'=`lhs'*`meanlhs' if `touse'
 	}	
 	
@@ -432,7 +440,7 @@ quietly {
 		gen double `lhs'=(`meanlhs2'/`meanoverall')*`temp2' if `touse' & `temp0'==1
 		local type = "Extended `index'"	
 		if `generalized'==1{
-			local type = "generalized extended `index'"
+			local type = "Gen. extended `index'"
 			replace `lhs'=(`meanlhs2'*(`v'^(`v'/(`v'-1)))/(`v'-1))*`temp2' if `touse' & `temp0'==1
 		}
 	}			
@@ -447,7 +455,7 @@ quietly {
 		local type = "Symmetric `index'"
 	
 		if `generalized'==1{
-			local type = "generalized symmetric `index'"
+			local type = "Gen. symmetric `index'"
 			replace `lhs'=`meanlhs2'*4*`temp2' if `touse' & `temp0'==1
 		}
 	}
@@ -475,10 +483,15 @@ quietly {
 	local nclus= e(N_clust) 
 	local t=return(CI)/return(CIse)
  	local p=2*ttail(e(df_r),abs(`t'))
- 	noisily  di in text "`type'" _col(25) "{c |} " as result return(N) _col(40) "{c |} " as result return(CI) _col(65) "{c |}" as result return(CIse) _col(90) "{c |} " as result %7.4f `p' _col(105)"{c |}"
- 	noisily  di in text "{hline 105}"
+ 	noisily  di in text "`type'" _col(20) "{c |} " as result return(N) ///
+	    _col(34) "{c |} " as result return(CI) _col(48) "{c | }" ///
+ 	    as result return(CIse) _col(68) "{c |} " as result %7.4f ///
+	    `p' _col(79)"{c |}"
+ 	noisily  di in smcl ///
+        "{hline 19}{c BT}{hline 13}{c BT}{hline 13}{c BT}{hline 19}" _c
+	noi di in smcl  "{c BT}{hline 10}{c BRC}"
 
-	if `nclus'!=. noisily  di in text "(Note: Std. Error adjusted for `nclus' clusters in `cluster')"
+	if `nclus'!=. noisily  di in text "(Note: Std. error adjusted for `nclus' clusters in `cluster')"
 	if return(Nunique)!=return(N) noisily  di in text "(Note: Only " return(Nunique) " unique values for `rankvar')"
 	if `extended'==1 | `symmetric'==1{
 		noisily  di in text "(Note: Standard errors for the extended and symmetric indices are not calculated by the current version of conindex.)"
@@ -496,6 +509,9 @@ quietly {
 			}			
 	} 
 	
+
+
+
 	if "`compkeep'"!="" {
 		confirm new variable templhs
 		gen double templhs=`lhs'
@@ -543,10 +559,10 @@ quietly {
 
 		return scalar F=[(return(SSE_restricted)-return(SSE_unrestricted))/(gmax-1)]/(return(SSE_unrestricted)/(return(N_restricted)-2*gmax))
 		local p=1 - F(gmax-1,(return(N_restricted)- 2*gmax), return(F))						/* OO'D made two changes to second df 28.5.14 */
-		noisily  di in text "Test for statistically significant differences with Ho: diff=0 (assuming equal variances)" _col(50) "
-		noisily  di in text "{hline 105}"
-		noisily  di in text "{c |} F - stat = " as result return(F) _col(30) "{c |} p-value= "  as result %7.4f `p' _col(50) "{c |}"		
-		noisily  di in text "{hline 105}"	
+		noisily  di in text "Test for stat. significant differences with Ho: diff=0 (assuming equal variances)" _col(50) "
+		noi di in smcl "{hline 19}{c TT}{hline 19}{c TRC}"
+		noisily  di in text "F-stat = " as result return(F) _col(20) "{c |} p-value= "  as result %7.4f `p' _col(40) "{c |}"		
+		noi di in smcl "{hline 19}{c BT}{hline 19}{c BRC}"
 
 		if gmax==2{
 			disp "Group: `compare'=0"
@@ -563,10 +579,14 @@ quietly {
 			return scalar Diffse= sqrt((return(CIse0))^2 + (return(CIse1))^2)
 			return scalar z=return(Diff)/return(Diffse)
 			local p=2*(1-normal(abs(return(z))))
-			noisily  di in text "Test for statistically significant differences with Ho: diff=0" _col(50) "(large sample assumed)"
-			noisily  di in text "{hline 105}"
-			noisily  di in text "Difference = " as result return(Diff) _col(30) "{c |} Standard error = " as result return(Diffse) _col(50) "{c |} z-stat= " as result %7.2f return(z) _col(65) "{c |} p-value= "  as result %7.4f `p' _col(105)"{c |}"				
-			noisily  di in text "{hline 105}"
+			noisily  di in text "Test for stat. significant differences with Ho: diff=0 " _col(50) "(large sample assumed)"
+			noi di in smcl ///
+				"{hline 19}{c TT}{hline 23}{c TT}{hline 17}{c TT}{hline 18}{c TRC}"
+			noisily  di in text "Diff. = " as result return(Diff) _col(20) ///
+				"{c |} Std. err. = " as result return(Diffse) _col(44) ///
+				"{c |} z-stat = " as result %7.2f return(z) _col(59) "{c |} p-value = " as result %7.4f `p' _col(79)"{c |}"				
+			noi di in smcl ///
+				"{hline 19}{c BT}{hline 23}{c BT}{hline 17}{c BT}{hline 18}{c BRC}"
 		}
 	}	
 }

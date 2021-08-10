@@ -1,7 +1,7 @@
 d 'CGROUP': module to group contiguous observations with identical values of a varlist
 d
-d    cgroup inputs a list of variables specified by a varlist, and 
-d    generates, as output, a new integer-valued variable,    
+d     cgroup inputs a list of variables specified by a varlist, and
+d     generates, as output, a new integer-valued variable,    
 d indicating, in each observation, membership of a group of    
 d contiguous observations with identical values of the varlist.    
 d It is therefore a non-sorting version of gsort. 

@@ -1,0 +1,10 @@
+New abstract:
+
+ranktest implements various tests for the rank of a matrix. Tests of the rank of a matrix have many practical applications. For example, in econometrics the requirement for identification is the rank condition, which states that a particular matrix must be of full column rank. Another example from econometrics concerns cointegration in vector autoregressive (VAR) models; the Johansen trace test is a test of a rank of a particular matrix. The traditional test of the rank of a matrix for the standard (stationary) case is the Anderson (1951) canonical correlations test. If we denote one list of variables as Y and a second as Z, and we calculate the squared canonical correlations between Y and Z, the LM form of the Anderson test, where the null hypothesis is that the matrix of correlations or regression parameters B between Y and Z has rank(B)=r, is N times the sum of the r+1 largest squared canonical correlations. A large test statistic and rejection of the null indicates that the matrix has rank at least r+1. The Cragg-Donald (1993) statistic is a closely related Wald test for the rank of a matrix. The standard versions of these tests require the assumption that the covariance matrix has a Kronecker form; when this is not so, e.g., when disturbances are heteroskedastic or autocorrelated, the test statistics are no longer valid. ranktest implements various generalizations of these tests - Kleibergen-Paap, Cragg-Donald, and J-type 2-step GMM and CUE GMM tests - to the case of a non-Kronecker covariance matrix. The implementation in ranktest will calculate test statistics that are robust to various forms of heteroskedasticity, autocorrelation, and clustering.
+
+Note: ranktest was substantially rewritten and expanded starting with version 2.0.02, and the version of Stata required was raised to Stata 12. To run the previous version of ranktest, either use version control (version 11: ranktest ...) or call ranktest11 (included in the ranktest package).
+
+
+Additional author:
+
+Frank Windmeijer, frank.windmeijer@stats.ox.ac.uk

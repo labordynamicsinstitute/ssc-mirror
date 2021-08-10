@@ -1,5 +1,5 @@
 {smcl}
-{* *! version 1.0.0 2016.09.29}{...}
+{* *! version 2.0.1 2020.03.28}{...}
 {viewerjumpto "Syntax" "uirt##syntax"}{...}
 {viewerjumpto "Description" "uirt##description"}{...}
 {viewerjumpto "Options" "uirt##options"}{...}
@@ -46,8 +46,15 @@
 {synopt:{opt icc_vars(varlist)}} create ICC graphs for selected items and save them in current working directory{p_end}
 {synopt:{opt icc_format(str)}} file format for ICC graphs (png|gph|eps); default: icc_format(png) {p_end}
 {synopt:{opt icc_bins(#)}} number of ability intervals for observed proportions; default: icc_bins(100) {p_end}
+{synopt:{opt icc_pv}} use plausible values to compute observed proportions; default behavior is to use numerical integration {p_end}
 {synopt:{opt icc_pvbin(#)}} number of plausible values in each bin; default: icc_pvbin(10000) {p_end}
-{synopt:{opt icc_nofit}} suppress plotting observed proportions{p_end}
+{synopt:{opt icc_noobs}} suppress plotting observed proportions{p_end}
+
+{syntab:Item-fit}
+{synopt:{opt fit}} compute chi2W item-fit statistic for all items{p_end}
+{synopt:{opt fit_vars(varlist)}} compute chi2W item-fit statistic for selected items{p_end}
+{synopt:{opt fit_sx2}} compute S-X2 item-fit statistic for all dichotomous items{p_end}
+{synopt:{opt fit_sx2_vars(varlist)}} compute S-X2 item-fit statistic for selected dichotomous items{p_end}
 
 {syntab:Theta & PVs}
 {synopt:{opt th:eta}} create EAP estimator of theta and its standard error {p_end}
@@ -62,7 +69,7 @@
 
 {syntab:EM control}
 {synopt:{opt nip(#)}} number of GH quadrature points used in EM algorithm; default: nip(51){p_end}
-{synopt:{opt nip_theta(#)}} number of GH quadrature points used when calculating EAP and its SE; default: nip_theta(195){p_end}
+{synopt:{opt theta_nip(#)}} number of GH quadrature points used when calculating EAP and its SE; default: theta_nip(195){p_end}
 {synopt:{opt nit(#)}} maximum number of iterations of EM algorithm; default: nit(100) {p_end}
 {synopt:{opt crit_ll(#)}} stopping rule - relative change in logL between EM iterations; default: crit_ll(1e-9) {p_end}
 {synopt:{opt crit_par(#)}} stopping rule - maximum absolute change in parameter values between EM iterations; default: crit_par(1e-4) {p_end}
@@ -71,15 +78,15 @@
 
 {syntab:Reporting}
 {synopt:{opt not:able}} suppress coefficient table{p_end}
-{synopt:{opt tr:ace(#)}} control log display after each iteration; 0 - supress; 1 - normal (default); 2 - detailed{p_end}
+{synopt:{opt tr:ace(#)}} control log display after each iteration; 0 - suppress; 1 - normal (default); 2 - detailed{p_end}
 
 
 {marker description}{...}
 {title:Description}
 
 {pstd}
-{cmd:uirt} is a Stata module for estimating variety of unidimensional IRT models (2PLM, 3PLM, GRM, PCM, GPCM).
-It features multi-group modelling, DIF analysis, extended graphical item fit analysis 
+{cmd:uirt} is a Stata module for estimating variety of unidimensional IRT models (2PLM, 3PLM, GRM, PCM and GPCM).
+It features multi-group modelling, DIF analysis, item-fit analysis 
 and generating plausible values (PVs) conditioned via latent regression.
 {cmd:uirt} implements the EM algorithm (Dempster, Laird & Rubin, 1977) 
 in the form of marginal maximum likelihood estimation (MML) proposed by Bock & Aitkin (1981) 
@@ -87,8 +94,8 @@ with normal Gauss-Hermite quadrature.
 LR test is used for DIF testing and model based P-DIF effect size measures are provided (Wainer, 1993).
 Generating PVs is performed by adapting a MCMC method 
 developed for IRT models by Patz & Junker (1999).
-Unconditioned PVs are used to plot observed response proportions against the item characteristic curves
-allowing for detailed graphical item fit analysis.
+Observed response proportions are plotted against the item characteristic curves to allow for detailed graphical item fit analysis.
+Two item-fit statistics are available: S-X2 by Orlando and Thissen (2000) and chi2W developed by the author (Kondratek, 2020).
 
 
 {marker options}{...}
@@ -154,7 +161,7 @@ the pseudo-guessing goes negative,
 the discrimination parameter goes to 0 or negative etc. 
 The second criterion is a result of a "LR test" after single EM iteration
 - if the model likelihood does not improve significantly the item stays 2PL.
-During each attempt {cmd:uirt} will print a note if either LR or convergence criterion resulted in a item staying 2PL.
+During each attempt {cmd:uirt} will print a note if either LR or convergence criterion resulted in an item staying 2PL.
 Number of attempts of fitting a 3PL model is controlled by {opt guessing_attempts()}
 and the LR sensitivity is controlled by {opt guessing_lrcrit()}.
 Note that this is an exploratory procedure.
@@ -174,15 +181,12 @@ This procedure is more conservative that the actual LR test (performed after com
 {dlgtab:ICC}
 
 {pstd}
-If {cmd:uirt} is asked to plot ICCs it will, by default, add observed proportions to the plot
-that enable a graphical item-fit assessment.
+If {cmd:uirt} is asked to plot ICCs it will, by default, superimpose observed proportions against the ICC curves to enable a graphical item-fit assessment.
 The observed proportions are computed after quantile-based division of the distribution of latent variable.
-To achieve this a method of plausible values (PVs) is employed.
-Due to the use of PVs the unreliability of measurement of latent variable is taken into account.
 Item response of a single person is included simultaneously into many intervals (bins) of theta with probability
-proportional to the density of a posteriori latent trait distribution of that person in each bin.
-Plotting observed proportions is controlled by {opt icc_bins()} and {opt icc_pvbin()}, 
-it can be also turned off by {opt icc_nofit} option.
+proportional to the density of {it: a posteriori} latent trait distribution of that person in each bin.
+Default method uses definite numerical integration, but after choosing {opt icc_pv}, plausible values (PVs) will be employed to achieve this task.
+Plotting observed proportions is controlled by {opt icc_bins()} and {opt icc_pvbin()}, it can be also turned off by {opt icc_noobs} option.
 
 {phang}
 {opt icc} creates ICC graphs for all items and saves them in current working directory.
@@ -202,12 +206,43 @@ This option influences also the graphs created after asking for DIF analysis.
 when calculating observed proportions of responses. Default value is icc_bins(100).
 
 {phang}
+{opt icc_pv} changes the default method of computing observed proportions from definite numerical integration to Monte Carlo integration
+with unconditioned PVs. It involves more CPU time, introduces variance due to sampling of PVs, 
+but takes the uncertainty in estimation of IRT model parameters into account.
+
+{phang}
 {opt icc_pvbin(#)} sets the number of plausible values used for computing observed proportions of responses
 within each interval of theta. Default value is icc_pvbin(10000).
 
 {phang}
-{opt icc_nofit} suppress plotting observed proportions.
+{opt icc_noobs} suppress plotting observed proportions.
 
+
+{dlgtab:Item-fit}
+
+{pstd}
+{cmd:uirt} allows computing two types of item fit statistics. In single group setting, when there is enough dichotomously scored items with no missing responses,
+item-fit can be assessed with classical S-X2 statistic proposed by Orlando and Thissen (2000).
+The second available item-fit statistic, chi2W, is more general and can be applied to incomplete data and all IRT models handled by {cmd:uirt}.
+
+{phang}
+{opt fit} computes chi2W item-fit statistic for all items.
+chi2W is a Wald-type test statistic that compares the observed and expected item mean scores over a set of ability bins.
+The observed and expected scores are weighted means with weights being {it: a posteriori} density of person's ability within the bin 
+- likewise as in the approach used to compute observed proportions in ICC plots.
+Properties of chi2W have been examined for dichotomous items, Type I error rate was close to nominal and it exceeded S-X2 in statistical power (Kondratek, 2020).
+Behavior of chi2W in case of polytomous items, as for the time of this {cmd:uirt} release, has not been researched. The results are stored in {cmd:e(item_fit_chi2W)}.
+
+{phang}
+{opt icc_vars(varlist)} does the same as simple {opt fit} but you can choose the items for which the fit statistic is computed. 
+
+{phang}
+{opt fit_sx2} computes S-X2 item-fit statistic for all dichotomous items, as described in Orlando and Thissen (2000). S-X2 cannot be used in multigroup setting. 
+The number-correct score used for grouping is obtained from dichotomous items - if polytomous items are present, they are ignored in computation of S-X2.
+If a dichotomous item has missing responses it is also ignored in computation of S-X2. The results are stored in {cmd:e(item_fit_SX2)}.
+
+{phang}
+{opt fit_sx2_vars(varlist)} does the same as simple {opt fit_sx2} but you can choose the items for which the fit statistic is computed.
 
 
 {dlgtab:Theta & PVs}
@@ -226,7 +261,7 @@ In the first step, # random draws, b*, of model parameters are taken from MVN di
 In the second step, for each person, # independent MCMC chains are run according to procedure described by 
 Patz & Junker (1999) with b* parameter draws treated as fixed. 
 Finally, after a burn-in period, each of the PVs is drawn from a different MCMC chain.
-Such procedure allows to incorporate IRT model uncertainty in PV generation without the need of multilevel-structured MCMC, 
+Such procedure allows incorporating IRT model uncertainty in PV generation without the need of multilevel-structured MCMC, 
 thus reducing the computational expense and avoiding the use of Bayesian priors for item parameters. 
 Note that if some of the item parameters are fixed with {opt fiximatrix()} option the PVs will take no account 
 of the uncertainty of estimation of these fixed parameters.
@@ -275,9 +310,9 @@ In a single group model it will make sense only together with {opt dist} option 
 Default value is 51.
 
 {phang}
-{opt nip_theta(#)} sets the number of Gauss-Hermite quadrature points used when calculating EAP estimator of theta and its SE.
+{opt theta_nip(#)} sets the number of Gauss-Hermite quadrature points used when calculating EAP estimator of theta and its SE.
 Default value is 195 which is an obvious overkill, but it does not consume much resources while
-too low {opt nip_theta()} values may lead to inadequate estimate of standard errors of EAP.
+too low {opt theta_nip()} values may lead to inadequate estimate of standard errors of EAP.
 
 {phang}
 {opt nit(#)} sets the maximum number of iterations of EM algorithm.
@@ -383,20 +418,26 @@ so you may wish not to see the default coefficient table at all.
 {synopt:{cmd:e(item_group_N)}}number of observations for each item by group{p_end}
 {synopt:{cmd:e(item_cats)}}item categories{p_end}
 {synopt:{cmd:e(dif_results)}}LR test results and effect size measures after DIF analysis{p_end}
-
+{synopt:{cmd:e(item_fit_chi2W)}}item-fit results for chi2W statistic{p_end}
+{synopt:{cmd:e(item_fit_SX2)}}item-fit results for S-X2 statistic{p_end}
 
 
 {title:Author}
 
 Bartosz Kondratek
-b.kondratek@ibe.edu.pl
+everythingthatcounts@gmail.com
 
 {title:Acknowledgement}
 
-The author wishes to thank Cees Glas who provided invaluable consultancy on many parts of the estimation algorithms used in {cmd:uirt} 
+{phang}
+I wish to thank Cees Glas who provided me with invaluable consultancy on many parts of the estimation algorithms used in {cmd:uirt} 
 and Mateusz Zoltak for very helpful hints on Mata pointers which led to significant boost in efficiency of {cmd:uirt}.
-Also many thanks to all of my colleagues at the Institute of Educational Research in Warsaw for using {cmd:uirt} at all the many stages 
-of its development and providing me with feedback and encouragement to continue with this endeavor.
+Many thanks to all of my colleagues at the Institute of Educational Research in Warsaw for using {cmd:uirt} at the early stages of its development
+and providing me with feedback and encouragement to continue with this endeavor. I am also grateful to numerous Stata users 
+who contacted me with ideas on how to improve the software after its first release.
+
+{title:Funding}
+Preparation of modules of {cmd:uirt} related to item-fit analysis was funded by the National Science Center research grant number 2015/17/N/HS6/02965.
 
 {marker references}{...}
 {title:References}
@@ -414,12 +455,22 @@ Maximum Likelihood from Incomplete Data via the EM Algorithm.
 {phang}
 Jamshidian, M., Jennrich, R.I. 2000.
 Standard Errors for EM Estimation. 
-{it: Journal of the Royal Statistical Society}, Series B, 62, 257{c -}270.
+{it:Journal of the Royal Statistical Society}, Series B, 62, 257{c -}270.
+
+{phang}
+Kondratek, B., 2020.
+{it:Item-Fit Statistic Based on Posterior Probabilities of Membership in Ability Groups.}
+Manuscript submitted for publication.
 
 {phang}
 Louis, T. A. 1982.
 Finding the Observed Information Matrix When Using the EM Algorithm.
 {it:Journal of the Royal Statistical Society}, Series B, 44, 226{c -}233.
+
+{phang}
+Orlando, M., & Thissen, D. 2000. 
+Likelihood-based item-fit indices for dichotomous item response theory models.
+{it:Applied Psychological Measurement}, 24, 50{c -}64.
 
 {phang}
 Patz, R. J., Junker, B. W. 1999.

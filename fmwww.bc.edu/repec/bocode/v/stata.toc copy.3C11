@@ -1,5 +1,0 @@
-p vallab module to pack values and labels into a new string variablep vallist module to list distinct values of a variablep varcase module to toggle the case of variable namesp varlab module to save and load variable labelsp varlag module to determine the appropriate lag length in VARs, ECMsp vecar module to estimate vector autoregressive (VAR) modelsp vecar6 module to estimate vector autoregressive (VAR) models (version 6)p vececm module to estimate vector error correction models (ECMs)p venndiag module to generate Venn diagramsp violin module to generate violin plotsp vlist module to expand variable list in command syntaxp vmatch module to match variables between subjectsp vplplot modules to generate paired data plotsp vallist	module to list distinct values of a variable
-p vallist module to list distinct values of a variable
-p vartyp module to set variable types for codebook2
-p vreverse module to reverse existing categorical variable
-p violin	module to generate violin plots

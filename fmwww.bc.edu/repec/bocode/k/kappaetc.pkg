@@ -15,7 +15,7 @@ d KW: krippendorff
 d
 d Requires: Stata version 11.2
 d
-d Distribution-Date: 20170623
+d Distribution-Date: 20190106
 d
 d Author: Daniel Klein, Universität Kassel
 d Support: email daniel.klein@@uni-kassel.de
@@ -24,4 +24,9 @@ f kappaetc.ado
 f kappaetc.sthlp
 f kappaetci.ado
 f kappaetci.sthlp
+f kappaetcssi.ado
+f kappaetcssi.sthlp
+f kappaetc_choosing.sthlp
+f kappaetc_icc.sthlp
+f kappaetc_loa.sthlp
 f kappaetc_ttest.sthlp

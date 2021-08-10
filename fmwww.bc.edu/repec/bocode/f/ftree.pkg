@@ -8,10 +8,11 @@ d KW: directory
 d
 d Requires: Stata version 9 for Windows
 d
-d Distribution-Date: 20130728
+d Distribution-Date: 20201123
 d
 d Author: Liu Wei, School of Sociology and Population Studies, Renmin University of China
 d Support: email rucwz-stata@@yahoo.cn
 d
-f ftree.ado
-f ftree.hlp
+f WIN64 ftree.ado
+f ftree.sthlp
+h ftree.ado

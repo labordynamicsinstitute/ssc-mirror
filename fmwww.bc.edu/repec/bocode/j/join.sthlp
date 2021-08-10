@@ -1,5 +1,5 @@
 {smcl}
-{* *! version 2.14.1 12jul2017}{...}
+{* *! version 2.37.0 16aug2019}{...}
 {vieweralsosee "ftools" "help ftools"}{...}
 {vieweralsosee "fmerge" "help fmerge"}{...}
 {vieweralsosee "[R] merge" "help merge"}{...}
@@ -45,7 +45,7 @@ As above, but with the "using" dataset currently open instead of the "master"
 {synoptset 24 tabbed}{...}
 {synopthdr}
 {synoptline}
-{p2coldent:+ {cmd:from(}{help filename} [{help if}]{cmd:)}}filename of the {it:using} datasetm, where the keys are unique{p_end}
+{p2coldent:+ {cmd:from(}{help filename} [{help if}]{cmd:)}}filename of the {it:using} dataset, where the keys are unique{p_end}
 {...}
 {p2coldent:+ {cmd:into(}{help filename} [{help if}]{cmd:)}}filename of the {it:master} dataset{p_end}
 {...}
@@ -74,6 +74,9 @@ As above, but with the "using" dataset currently open instead of the "master"
 {synopt :{opt keepn:one}}don't add any variables from using (overrides default of {it:_all}){p_end}
 {...}
 {synopt :{opt v:erbose}}show internal debug info
+{...}
+{p_end}
+{synopt :{opt method(string)}}(advanced) set method used internally for hashing
 {p_end}
 {synoptline}
 {p2colreset}{...}

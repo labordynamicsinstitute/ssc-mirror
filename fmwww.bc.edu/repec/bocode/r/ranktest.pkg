@@ -1,42 +1,41 @@
-d 'RANKTEST': module to test the rank of a matrix using the Kleibergen-Paap rk statistic
+d 'RANKTEST': module to test the rank of a matrix 
 d
-d  ranktest implements the Kleibergen-Paap (2006) rk test for the
-d rank of a matrix.  Tests of the rank of a matrix have many
-d practical applications.  For example, in econometrics the
-d requirement for identification is the rank condition, which
-d states that a particular matrix must be of full column rank. 
-d Another example from econometrics concerns cointegration in
-d vector autoregressive (VAR) models; the Johansen trace test is a
-d test of a rank of a particular matrix.  The traditional test of
-d the rank of a matrix for the standard (stationary) case is the
-d Anderson (1951) canonical correlations test.	If we denote one
-d list of variables as Y and a second as Z, and we calculate the
-d squared canonical correlations between Y and Z, the LM form of
-d the Anderson test, where the null hypothesis is that the matrix
-d of correlations or regression parameters B between Y and Z has
-d rank(B)=r, is N times the sum of the r+1 largest squared
-d canonical correlations.  A large test statistic and rejection of
-d the null indicates that the matrix has rank at least r+1.  The
-d Cragg-Donald (1993) statistic is a closely related Wald test for
-d the rank of a matrix.  Both the Anderson and Cragg-Donald tests
-d require the assumption that the covariance matrix has a Kronecker
-d form; when this is not so, e.g., when disturbances are
-d heteroskedastic or autocorrelated, the test statistics are no
-d longer valid. The Kleibergen-Paap (2006) rk statistic is a
-d generalization of the Anderson canonical correlation rank test to
-d the case of a non-Kronecker covariance matrix.  The
-d implementation in ranktest will calculate rk statistics that are
-d robust to various forms of heteroskedasticity, autocorrelation,
-d and clustering.  
+d  ranktest implements various tests for the rank of a matrix.
+d Tests of the rank of a matrix have many practical applications.
+d For example, in econometrics the requirement for identification
+d is the rank condition, which states that a particular matrix must
+d be of full column rank. Another example from econometrics
+d concerns cointegration in vector autoregressive (VAR) models; the
+d Johansen trace test is a test of a rank of a particular matrix.
+d The traditional test of the rank of a matrix for the standard
+d (stationary) case is the Anderson (1951) canonical correlations
+d test. If we denote one list of variables as Y and a second as Z,
+d and we calculate the squared canonical correlations between Y and
+d Z, the LM form of the Anderson test, where the null hypothesis is
+d that the matrix of correlations or regression parameters B
+d between Y and Z has rank(B)=r, is N times the sum of the r+1
+d largest squared canonical correlations. A large test statistic
+d and rejection of the null indicates that the matrix has rank at
+d least r+1. The Cragg-Donald (1993) statistic is a closely related
+d Wald test for the rank of a matrix. The standard versions of
+d these tests require the assumption that the covariance matrix has
+d a Kronecker form; when this is not so, e.g., when disturbances
+d are heteroskedastic or autocorrelated, the test statistics are no
+d longer valid. ranktest implements various generalizations of
+d these tests - Kleibergen-Paap, Cragg-Donald, and J-type 2-step
+d GMM and CUE GMM tests - to the case of a non-Kronecker covariance
+d matrix. The implementation in ranktest will calculate test
+d statistics that are robust to various forms of
+d heteroskedasticity, autocorrelation, and clustering. 
 d
 d KW: matrix
 d KW: rank
 d KW: collinearity
 d KW: cointegration
 d
-d Requires: Stata version 11.2 (version 9.2 for ranktest9)
+d Requires: Stata version 12 (version 9.2 for ranktest9, version 11 for ranktest11)
 d
-d Distribution-Date: 20150124
+d Distribution-Date: 20200929
 d
 d Author: Frank Kleibergen, Brown University
 d Support: email  Frank_Kleibergen@@brown.edu
@@ -44,8 +43,13 @@ d
 d Author: Mark E Schaffer, Heriot-Watt University
 d Support: email m.e.schaffer@@hw.ac.uk
 d
+d Author: Frank Windmeijer, University of Oxford
+d Support: email frank.windmeijer@@stats.ox.ac.uk
+d
 f ranktest.ado
 f ranktest9.ado
-f ranktest.hlp
+f ranktest11.ado
+f ranktest.sthlp
+f ranktest11.sthlp
 f ../l/livreg2.mlib
-f ../c/cs_ranktest_1.4.01.do
+f ../c/cs_ranktest_2.0.03.do

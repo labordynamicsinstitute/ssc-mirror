@@ -87,6 +87,9 @@ Available from www.cochrane-handbook.org. The specific formula used is in Table 
 
 {title:Change Log:}
 
+
+{phang2}{bf:1.0.2:} 19dec2017 - Updated to correct erroneous SDs when negative numbers were input for means. (Thanks Sam Kumar){p_end}
+
 {phang2}{bf:1.0.1:} 29mar2011 - Updated to notify users about absolute value usage (see Notes) and
 added syntax for combining a third group using the returned scalars.{p_end}
 

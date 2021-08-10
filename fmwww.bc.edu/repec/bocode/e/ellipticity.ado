@@ -1,8 +1,36 @@
-*Vincenzo Verardi and Catherine Vermandele
-*Version 1.1
+*! Version 1.2 (15/2/2021) 
+* V.1.1 Using robmv instead of smultiv for robustified versions
+* V.1.2 Changed the way in which the pre-installation of robmv.ado is checked
+* Vincenzo Verardi and Catherine Vermandele
+
+* This program is free software: you can redistribute it and/or modify
+* it under the terms of the GNU General Public License as published by
+* the Free Software Foundation, either version 3 of the License, or
+* (at your option) any later version.
+
+* This program is distributed in the hope that it will be useful,
+* but WITHOUT ANY WARRANTY; without even the implied warranty of
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+* GNU General Public License for more details.
+
+* For GNU General Public License, see <http://www.gnu.org/licenses/>.
 
 program define ellipticity, rclass
 
+	local required_ados "robmv"
+	foreach x of local required_ados {
+		capture findfile `x'.ado	
+		if _rc!=0 {
+			di "Please install the `x' package before running ellipticity"
+			capture window stopbox rusure "Do you want to install `x' from SSC?"
+			if _rc != 0 {
+				di ""
+				di in r "The `x' package is needed for ellipticity to run"
+				exit
+			}
+			qui ssc install robmv
+		}
+	}
 
 * Ellipticity test 
 
@@ -32,15 +60,19 @@ di in r "The level option should be between 0 and 1"
 exit 198
 }
 
+*1. Remove collinear variables
+
 _rmcoll `varlist' if  `touse'
 local varlist =r(varlist)
+
+*2. Identify the combination of options chosen by the user
 
 if "`robust'"!=""&"`sphericity'"=="" {
 di""
 di "Test, H0: Robust Ellipticity"
 di "----------------------------"
-smultiv `varlist' if `touse'
-matrix `S'=e(S)
+qui robmv s `varlist' if `touse', whilferty
+matrix `S'=e(Cov)
 matrix `mu'=e(mu)
 mata: ellip("`varlist'","`touse'")
 }
@@ -49,8 +81,8 @@ if "`robust'"!=""&"`sphericity'"!="" {
 di""
 di "Test, H0: Robust Sphericity"
 di "---------------------------"
-smultiv `varlist' if `touse'
-matrix `S'=e(S)
+qui robmv s `varlist' if `touse', whilferty
+matrix `S'=e(Cov)
 matrix `S'=I(rowsof(`S'))
 matrix `mu'=e(mu)
 mata: spher("`varlist'","`touse'")
@@ -61,9 +93,11 @@ di""
 di "Test, H0: Sphericity"
 di "--------------------"
 
-qui matrix accum `S'=`varlist' if `touse', mean(`mu') noc
-matrix `S'=I(colsof(`mu'))
+qui robmv classic `varlist' if `touse'
+matrix `S'=e(Cov)
+matrix `mu'=e(mu)
 
+*3. Run the data code for the sphericity test
 mata: spher("`varlist'","`touse'")
 }
 
@@ -72,16 +106,21 @@ di""
 di "Test, H0: Ellipticity"
 di "---------------------"
 
-qui matrix accum `S'=`varlist' if `touse', mean(`mu') noc
-matrix `S'=I(colsof(`mu'))
+qui robmv classic `varlist' if `touse'
+matrix `S'=e(Cov)
+matrix `mu'=e(mu)
 
+
+*4. Run the mata code for the ellipticity test
 mata: ellip("`varlist'","`touse'")
 }
 
 
 local p=chi2tail(`df',`Q')
+local N=e(N)
 return clear
 
+return scalar N=`N'
 return scalar p=`p'
 return scalar df =`df'
 return scalar crit =`crit'

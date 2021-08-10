@@ -1,5 +1,5 @@
 {smcl}
-{* *! version 0.12.3 10feb2017}{...}
+{* *! version 0.12.4 13dec2018}{...}
 {viewerjumpto "Description" "rctmiss##description"}{...}
 {viewerjumpto "Syntax" "rctmiss##syntax"}{...}
 {viewerjumpto "Graphical sensitivity analyses" "rctmiss##gsa"}{...}
@@ -230,7 +230,7 @@ That is, use {cmd:xi:rctmiss...} and not {cmd:rctmiss:xi...}.
 
 {p 0 0 0}{cmd:UK500 data (quantitative outcome)}
 
-{phang}. {stata "use http://www.mrc-bsu.cam.ac.uk/IW_Stata/missing/uk500.dta, clear"}
+{phang}. {stata "use http://www.homepages.ucl.ac.uk/~rmjwiww/stata/missing/uk500.dta, clear"}
 {* -net- always downloads file name as lower-case, and -use- is case-sensitive over the internet}
 
 {p 0 0 0}Analysis assuming MAR, dropping missing baselines:
@@ -267,7 +267,7 @@ in one arm or in both arms:
 
 {p 0 0 0}{cmd:Smoking data (binary outcome)}
 
-{phang}. {stata "use http://www.mrc-bsu.cam.ac.uk/IW_Stata/missing/smoke.dta, clear"}
+{phang}. {stata "use http://www.homepages.ucl.ac.uk/~rmjwiww/stata/missing/smoke.dta, clear"}
 
 {phang}. {stata tab rand quit, miss}
 
@@ -290,18 +290,20 @@ in one arm or in both arms:
 
 {title:References}{marker references}
 
-{marker WCH17}{phang}White IR, Carpenter J, Horton NJ. A mean score method for sensitivity analysis
+{marker WCH17}{phang}White IR, Carpenter J, Horton NJ. 
+A mean score method for sensitivity analysis
 to departures from the missing at random assumption in randomised trials.
-Under review.
+Statistica Sinica 2018;28:1985–2003. 
+{browse "http://www3.stat.sinica.edu.tw/statistica/J28N4/J28N415/J28N415.html"}
 
 {marker WHCP11}{phang}White IR, Horton NJ, Carpenter J, Pocock SJ. An intention-to-treat analysis strategy for randomised trials with missing outcome data. British Medical Journal 2011;342:d40.
 {browse "http://www.bmj.com/content/342/bmj.d40.full"}
 
-{marker WT05}{phang}White IR, Thompson SG. Adjusting for partially missing baseline measurements in randomised trials. Statistics in Medicine 2005; 24: 993-1007.
-{browse "http://onlinelibrary.wiley.com/doi/10.1002/sim.1981/abstract"}
-
 {marker HWW08}{phang}Higgins JPT, White IR, Wood AM. Imputation methods for missing outcome data in meta-analysis of clinical trials. Clinical Trials 2008; 5: 225-239.
 {browse "http://ctj.sagepub.com/content/5/3/225.short"}
+
+{marker WT05}{phang}White IR, Thompson SG. Adjusting for partially missing baseline measurements in randomised trials. Statistics in Medicine 2005; 24: 993-1007.
+{browse "http://onlinelibrary.wiley.com/doi/10.1002/sim.1981/abstract"}
 
 
 {title:Author and updates}{marker updates}
@@ -310,7 +312,7 @@ Under review.
 Email {browse "mailto:ian.white@ucl.ac.uk":ian.white@ucl.ac.uk}.
 
 {p}You can get the latest version of this and my other Stata software using 
-{stata "net from http://www.mrc-bsu.cam.ac.uk/IW_Stata/"}.
+{stata "net from http://www.homepages.ucl.ac.uk/~rmjwiww/stata/"}.
 
 {p}I thank James Carpenter (MRC CTU at UCL, UK) and Nicholas Horton (Amherst College, USA) 
 for working with me on the theory behind this method,

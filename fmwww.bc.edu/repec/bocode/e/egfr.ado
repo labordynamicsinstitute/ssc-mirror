@@ -51,11 +51,19 @@ program define egfr, rclass
 	}
 
 	* check formula is known
+	local frm "mdrd4 mdrd6 ckdepi ckdepi_pk ckdepi_cyc ckdepi_cr_cyc mayo cg nankivell schwartz"
+	if strpos("`frm'", "`formula'") == 0 {
+		di in re "Unrecognised formula: `formula'"
+		error 498
+	}
+	
+/*
 	if !inlist("`formula'", "mdrd4", "mdrd6", "ckdepi", ///
 		"ckdepi_cyc", "ckdepi_cr_cyc", "mayo", "cg", "nankivell", "schwartz") {
 		di in re "Unrecognised formula: `formula'"
 		error 498
 	}
+*/
 
 	* fsex is an indicator variable for female sex
 	if "`female'"!="" {
@@ -66,7 +74,7 @@ program define egfr, rclass
 	* blk is an indicator variable for black race
 	* assume non-black race if no black variable specified
 	* only required for mdrd & creatinine-based ckdepi formulae
-	if ("`formula'"=="mdrd4" | "`formula'"=="mdrd6" | "`formula'"=="ckdepi") {
+	if ("`formula'"=="mdrd4" | "`formula'"=="mdrd6" | "`formula'"=="ckdepi" | "`formula'"=="ckdepi_pk") {
 		tempvar blk
 		if "`black'"=="" {
 			di "Assuming non-black race for all subjects"
@@ -100,7 +108,7 @@ program define egfr, rclass
 
 	* MDRD (4 variable)
 	* refs: Levey et al. J Am Soc Nephrol. 2000;11(11):155A
-	*       Levey et al. Ann Intern Med. 2006 Aug 15;145(4):247–54
+	*       Levey et al. Ann Intern Med. 2006 Aug 15;145(4):247√ê54
 	if "`formula'"=="mdrd4" {
 		if "`creatinine'"=="" | "`age'"=="" | "`female'"=="" {
 			di in re "4-variable MDRD formula requires creatinine, age and female options"
@@ -122,7 +130,7 @@ program define egfr, rclass
 
 	* MDRD (6 variable)
 	* refs: Levey et al. Ann Intern Med. 1999 Mar. 16;130(6):461-470
-	*       Levey et al. Ann Intern Med. 2006 Aug 15;145(4):247–54
+	*       Levey et al. Ann Intern Med. 2006 Aug 15;145(4):247√ê54
 	if "`formula'"=="mdrd6" {
 		if "`creatinine'"=="" | "`age'"=="" | "`female'"=="" | "`urea'"=="" | "`albumin'"=="" {
 			di in re "6-variable MDRD formula requires creatinine, age, female, urea and albumin options"
@@ -164,8 +172,28 @@ program define egfr, rclass
 		local newvarlab="eGFR (CKD-EPI creatinine formula)"
 	}
 
+	* CKD-EPI (Pak) creatinine formula
+	* ref: Jessani et al, Am J Kidney Dis. 2014 January ; 63(1): 49‚Äì58.
+	if "`formula'"=="ckdepi_pk" {
+		if "`creatinine'"=="" | "`age'"=="" | "`female'"=="" {
+			di in re "CKD-EPI (Pak) creatinine formula requires creatinine, age and female options"
+			error 498
+		}
+		
+		if "`standard'"=="" {
+			di "Assuming creatinines are standardised. If not, CKD-EPI (Pak) formula is not valid."
+		}
+
+		qui gen     `egfr' = 0.686*(((144 + 22*`blk')*(`crmgdl'/0.7)^(-0.329)*0.993^`age')^1.059) if `fsex'==1 & `crumoll'<=62
+		qui replace `egfr' = 0.686*(((144 + 22*`blk')*(`crmgdl'/0.7)^(-1.209)*0.993^`age')^1.059) if `fsex'==1 & `crumoll'>62
+		qui replace `egfr' = 0.686*(((141 + 22*`blk')*(`crmgdl'/0.9)^(-0.411)*0.993^`age')^1.059) if `fsex'==0 & `crumoll'<=80
+		qui replace `egfr' = 0.686*(((141 + 22*`blk')*(`crmgdl'/0.9)^(-1.209)*0.993^`age')^1.059) if `fsex'==0 & `crumoll'>80
+		*qui replace `egfr' = 0.686*((`egfr')^1.059) 
+		
+		local newvarlab="eGFR (CKD-EPI (Pak) creatinine formula)"
+	}	
 	* CKD-EPI cystatin C formula
-	* ref: Inker et al, N Engl J Med. 2012 Jul 5;367(1):20–9
+	* ref: Inker et al, N Engl J Med. 2012 Jul 5;367(1):20√ê9
 	if "`formula'"=="ckdepi_cyc" {
 		if "`cystatinc'"=="" | "`age'"=="" | "`female'"=="" {
 			di in re "CKD-EPI cystatin C formula requires cystatinc, age and female options"
@@ -180,7 +208,7 @@ program define egfr, rclass
 	}
 
 	* CKD-EPI creatinine plus cystatin C formula
-	* ref: Inker et al, N Engl J Med. 2012 Jul 5;367(1):20–9
+	* ref: Inker et al, N Engl J Med. 2012 Jul 5;367(1):20√ê9
 	if "`formula'"=="ckdepi_cr_cyc" {
 		if "`creatinine'"=="" | "`cystatinc'"=="" | "`age'"=="" | "`female'"=="" {
 			di in re "CKD-EPI creatinine-cystatin C formula requires creatinine, cystatinc, age and female options"

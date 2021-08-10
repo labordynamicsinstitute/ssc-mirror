@@ -1,8 +1,16 @@
-*! texsave 1.3.3 17jan2014 by Julian Reif
+*! texsave 1.5 2nov2020 by Julian Reif 
+* 1.5: added decimalalign option
+* 1.4.6: added label option (replaces marker function, which is now deprecated)
+* 1.4.5: added new endash option (enabled by default)
+* 1.4.4: added headersep() option
+* 1.4.3: width default changed from \textwidth to \linewidth, to improve landscape tables. Added addlinespace() as footnote suboption. Changed default to \addlinespace[\belowrulesep]
+* 1.4.2: added preamble option.
+* 1.4.1: added footnote width option.
+* 1.4: geometry package now required. footnote parameters edited. landscape and geometry options added.
 * 1.3.3: -fix- option now also corrects "_" in column names
 * 1.3.2: make -autonumber- option stack with, rather than replace, column names.
 * 1.3.1: hlines now allows negative numbers
-* 1.3: Booktabs and tabularx packages now required. 'H' allowed as location option (for subfig package). Headerlines option now enabled when nonames option is requested. Fixed hlines bug when numlist was unsorted. SW options turned off by default.
+* 1.3: booktabs and tabularx packages now required. 'H' allowed as location option (for subfig package). Headerlines option now enabled when nonames option is requested. Fixed hlines bug when numlist was unsorted. SW options turned off by default.
 * 1.2.2: added headerlines option
 * 1.2.1: added extra space after \hline to make tables look nicer. Added -rowsep- option to set row height spacing.
 * 1.2: added booktab package and formatting options.
@@ -15,7 +23,7 @@
 program define texsave, nclass
 	version 10
 
-	syntax [varlist] using/ [if] [in] [, noNAMES SW noFIX title(string) DELIMITer(string) footnote(string asis) headerlines(string asis) headlines(string asis) footlines(string asis) frag align(string) LOCation(string) size(string) width(string) marker(string) bold(string) italics(string) underline(string) slanted(string) smallcaps(string) sansserif(string) monospace(string) emphasis(string) VARLABels hlines(numlist) autonumber rowsep(string) replace]
+	syntax [varlist] using/ [if] [in] [, noNAMES SW noFIX noENDASH title(string) DELIMITer(string) footnote(string asis) headerlines(string asis) headlines(string asis) preamble(string asis) footlines(string asis) frag align(string) LOCation(string) size(string) width(string) marker(string) label(string) bold(string) italics(string) underline(string) slanted(string) smallcaps(string) sansserif(string) monospace(string) emphasis(string) VARLABels hlines(numlist) autonumber rowsep(string) headersep(string) LANDscape GEOmetry(string) DECIMALalign replace]
 
 	* Check if appendfile is installed
 	cap appendfile
@@ -29,6 +37,7 @@ program define texsave, nclass
 		di as error "option varlabels not allowed with option nonames"
 		exit 198
 	}
+
 	
 	* Error check hlines
 	if "`hlines'"!="" {
@@ -55,18 +64,30 @@ program define texsave, nclass
 		numlist "`hlines'", integer sort
 		local hlines "`r(numlist)'"
 	}
-
+	
 	* Define a horizontal line
 	local horiz_line "\midrule"
 	
-	* Define row separation spacing if applicable
-	if `"`rowsep'"'!="" local rowsep `" \addlinespace[`rowsep']"'
+	* Define row and header separation spacing if applicable. (rowsep uses "\BS" since it is implemented via filefilter)
+	if `"`rowsep'"'!="" local rowsep `" \BSaddlinespace[`rowsep']"'
+	
+	if `"`headersep'"'!="" local headersep `" \addlinespace[`headersep']"'
+	else local headersep `" \addlinespace[\belowrulesep]"'
 	
 	* Append .tex extension if no extension present
 	if strpos(`"`using'"',".") == 0 local using `"`using'.tex"'
 
 	* Get number of vars/columns
 	local num_vars : word count `varlist'
+	
+	* Label option overloads the marker option
+	if !mi(`"`label'"') {
+		if !mi(`"`marker'"') {
+			di as error "Cannot specify both the label and marker options"
+			exit 198	
+		}
+		local marker `"`label'"'
+	}
 
 	* Error check the location option.  Set default to "tbp"
 	if `"`location'"'!="" {
@@ -83,7 +104,7 @@ program define texsave, nclass
 	else local location "tbp"
 	
 	* Set table width
-	if "`width'"=="" local width "\textwidth"
+	if "`width'"=="" local width "\linewidth"
 	
 	* Set default values for delimiter.  Determine what the end-of-line character is for the machine (needed for filefilter command below)
 	if `"`delimiter'"'=="" local delimiter "&"
@@ -98,26 +119,31 @@ program define texsave, nclass
 	***** FOOTNOTE OPTIONS   ****
 	*****************************
 	
-	* Pull out footnotesize and footnote align options if specificed
-	foreach v in using size align varlist if in {
+	* Pull out footnotesize and footnote width options if specified. Save the options that apply to the table so they don't get overwritten here.
+	foreach v in using size width varlist if in {
 		local hold_`v' `"``v''"'
 	}
 	local 0 `"`footnote'"'	
 	gettoken footnote 0 : 0, parse(,)
-		cap syntax, [size(string) align(string)] 
+		cap syntax, [size(string) width(string) addlinespace(string)] 
 		if _rc!=0 {
 			di as error "Invalid syntax for footnote() option"
 			exit 198
 		}
 	local footnotesize `"`size'"'
-	local footnotealign `"`align'"'
-	foreach v in using size align varlist if in {
+	local footnotewidth `"`width'"'
+	foreach v in using size width varlist if in {
 		local `v' `"`hold_`v''"'
 	}
+	
+	* Footnote spacing option. Default (no footnote) is blank. Default (footnote, user did not specify spacing) is \belowrulesep (suggestion by booktabs package)
+	* http://mirror.utexas.edu/ctan/macros/latex/contrib/booktabs/booktabs.pdf
+	if `"`footnote'"'!=""                          local footnotespace  "\addlinespace[\belowrulesep]"
+	if `"`footnote'"'!="" & `"`addlinespace'"'!="" local footnotespace `"\addlinespace[`addlinespace']"'
 		
-	* Error check the size and footnotesize options. Set default for footnotesize and footnotealign.
+	* Error check the size and footnotesize options. Set default for footnotesize.
 	if "`footnotesize'"=="" local footnotesize "footnotesize"
-	if "`footnotealign'"=="" local footnotealign "p{\textwidth}"
+
 	foreach opt in "size" "footnotesize" {
 		if "``opt''"!="" {
 
@@ -160,7 +186,8 @@ program define texsave, nclass
 	if `"`align'"'=="" {
 		local align "l"
 		forval x = 2/`num_vars' {
-			local align "`align'C"
+			if "`decimalalign'"!="" local align "`align'S"
+			else local align "`align'C"
 		}
 	}
 
@@ -185,10 +212,13 @@ program define texsave, nclass
 	if "`autonumber'"!="" {
 		local run_no = 1
 		foreach v of local varlist {
-			if `run_no'>1  local header_autonumber `"`header_autonumber'`delimiter'(`=`run_no'-1')"'
+			if `run_no'>1  local header_autonumber `"`header_autonumber'`delimiter'{(`=`run_no'-1')}"'
 			local run_no = `run_no'+1
 		}
 		local header_autonumber `"`header_autonumber' \tabularnewline"'
+		
+		* If variable names are also being written out, add an additional horizontal line
+		if "`names'"=="" local header_autonumber `"`header_autonumber' `horiz_line'"'
 	}
 	
 	* Column names (either varlabels or Stata column names) - don't write these out if user specifies -nonames-
@@ -196,22 +226,26 @@ program define texsave, nclass
 		foreach v of local varlist {
 			if "`varlabels'"!="" {
 				local lbl : variable label `v'
-				local header_colnames `"`header_colnames'`delimiter'`lbl'"'
+				local header_colnames `"`header_colnames'`delimiter'{`lbl'}"'
 			}
-			else local header_colnames `"`header_colnames'`delimiter'`v'"'
+			else local header_colnames `"`header_colnames'`delimiter'{`v'}"'	
 		}		
 		* Strip out the first delimiter
 		local header_colnames : subinstr local header_colnames `"`delimiter'"' ""
 		local header_colnames `"`header_colnames' \tabularnewline"'
 	}
-	
+
 	*****
 	* Correct chars that cause problems in LaTeX; add bold, italics, underline etc. tags as necessary
 	*****
+	
+	* Header, title, and footer corrections
 	if "`fix'"=="" {		
-		* Header, title, and footer
+		
 		foreach str in "header_colnames" "footnote" "title" {
-			foreach symbol in _ & % # $ ~ {
+		    
+			* Note: $ substitution here does not work
+			foreach symbol in _ % # $ & ~ {
 				if "`str'"=="header_colnames" & "`symbol'"=="&" continue				// Allow &'s in headers since they are delimiters
 				local `str' : subinstr local `str' `"`symbol'"' `"\\`symbol'"', all
 			}
@@ -224,8 +258,11 @@ program define texsave, nclass
 			local `str' : subinstr local `str' `"^"' `"\^{}"', all
 		}
 	}
-	if "`fix'"=="" | `"`bold'`italics'`underline'`slanted'`smallcaps'`sansserif'`monospace'`emphasis'"'!="" {
+	
+	* Dataset corrections
+	if "`fix'"=="" | "`endash'"=="" | `"`bold'`italics'`underline'`slanted'`smallcaps'`sansserif'`monospace'`emphasis'"'!="" | "`decimalalign'"!="" {
 		
+		tempvar index_neg isreal
 		local renamed = "yes"
 		
 		* Variables - create new temporary ones that have bad chars stripped out of them and are formatted as specified by user
@@ -237,14 +274,22 @@ program define texsave, nclass
 			capture confirm string var `v'
 			if _rc==0 {
 								
-				* Fix problematic symbols
+				* Fix problematic symbols 
 				if "`fix'"=="" {
-					foreach symbol in _ & % # $ & ~ {
+					foreach symbol in _ % # $ & ~ {
 						qui replace `v' = subinstr(`v',"`symbol'","\\`symbol'",.)
 					}
 					qui replace `v' = subinstr(`v',"{","\{",.)
 					qui replace `v' = subinstr(`v',"}","\}",.)
 					qui replace `v' = subinstr(`v',"^","\^{}",.)
+				}
+				
+				* Reformat negative signs from "-" to "--" (en-dash), unless decimalalign option is specified
+				* Only reformat negative signs if they are followed by a number and not preceded by an alphabetic character or negative sign
+				if "`endash'"=="" & "`decimalalign'"=="" {
+				    qui gen `index_neg' = strpos(`v',"-")
+					qui replace `v' = subinstr(`v',"-","--",1) if real(substr(`v',`index_neg'+1,1))!=. & regexm(substr(`v',`index_neg'-1,1),"[A-Za-z\-]")!=1
+					drop `index_neg'
 				}
 				
 				* Formatting options
@@ -261,6 +306,13 @@ program define texsave, nclass
 					}
 					
 					local run_no = `run_no'+1
+				}
+				
+				* For decimalalign option, when variable is a formatted string, surround text data with "{...}" but not numeric data
+				if "`decimalalign'"!="" {
+					qui gen `isreal' = real(`v')
+					replace `v' = "{" + `v' + "}" if mi(`isreal')
+					drop `isreal'
 				}
 			}			
 		}
@@ -280,8 +332,22 @@ program define texsave, nclass
 		file write `fh' "\documentclass{article}" _n
 		file write `fh' "\usepackage{booktabs}" _n
 		file write `fh' "\usepackage{tabularx}" _n
-		file write `fh' "\begin{document}" _n
+		file write `fh' "\usepackage[margin=1in]{geometry}" _n
+		if "`landscape'"!=""    file write `fh' "\usepackage{pdflscape}" _n
+		if "`decimalalign'"!="" file write `fh' "\usepackage{siunitx}" _n
 	}
+	* Preamble option. This is always outputted, whether or not frag option is specified
+	if `"`preamble'"' != "" {
+		tokenize `"`preamble'"'
+		while `"`1'"' != "" {
+			file write `fh' `"`1'"' _n
+			macro shift
+		}
+	}	
+	if "`frag'" == "" file write `fh' "\begin{document}" _n(2)
+	
+	if "`landscape'"!="" file write `fh' "\begin{landscape}" _n
+	if `"`geometry'"'!="" file write `fh' `"\newgeometry{`geometry'}"' _n
 	
 	* Headlines option
 	if `"`headlines'"' != "" {
@@ -292,16 +358,17 @@ program define texsave, nclass
 		}
 	}
 	
-		if "`sw'"!="" file write `fh' "%TCIMACRO{\TeXButton{B}{\begin{table}[`location'] \centering}}%" _n
+		if "`sw'"!="" file write `fh' "%TCIMACRO{\TeXButton{B}{\begin{table}[`location'] \centering}}" _n
 		if "`sw'"!="" file write `fh' "%BeginExpansion" _n
-	file write `fh' "\begin{table}[`location'] \centering%" _n
-	file write `fh' "\newcolumntype{C}{>{\centering\arraybackslash}X}" _n
+	file write `fh' "\begin{table}[`location'] \centering" _n
+	file write `fh' "\newcolumntype{C}{>{\centering\arraybackslash}X}" _n(2)
 		if "`sw'"!="" file write `fh' "%EndExpansion" _n
-	if `"`title'"'!="" file write `fh' `"\caption{`title'}%"' _n
+	if `"`title'"'!="" file write `fh' `"\caption{`title'}"' _n
+	if `"`marker'"'!="" file write `fh' `"\label{`marker'}"' _n
 	if `"`size'"'!="" file write `fh' `"{\\`size'"' _n
-	file write `fh' "\begin{tabularx}{`width'}{`align'}" _n
+	file write `fh' "\begin{tabularx}{`width'}{`align'}" _n(2)
 
-	* Create double-line or thick line, depending on book tabs
+	* Create double-line or thick line, depending on booktabs
 	file write `fh' "\toprule" _n
 	
 	
@@ -309,12 +376,12 @@ program define texsave, nclass
 	** Header, if specified. headerlines, autonumber, and colnames all stack together
 	********
 	
+	if "`autonumber'"!="" 		    qui file write `fh' "`header_autonumber'" _n
 	if `"`header_headerlines'"'!="" qui file write `fh' "`header_headerlines'" _n
-	if "`autonumber'"!="" 		qui file write `fh' "`header_autonumber'" _n
-	if "`header_colnames'"!=""	qui file write `fh' "`header_colnames'" _n
+	if "`header_colnames'"!=""	    qui file write `fh' "`header_colnames'" _n
 
 	* Only write out a horizontal line if there is a header	
-	if `"`header_headerlines'`autonumber'`header_colnames'"'!="" qui file write `fh' "`horiz_line'\addlinespace[1.5ex]" _n
+	if `"`header_headerlines'`autonumber'`header_colnames'"'!="" qui file write `fh' "`horiz_line'`headersep'" _n
 	file close `fh'
 	
 	*********
@@ -373,16 +440,25 @@ program define texsave, nclass
 	qui file open `fh' using "`end_file'", write `replace'	
 	
 	* SW has a bug with \bottomrule that requires you to output an extra \\
-	file write `fh' "\bottomrule \addlinespace[1.5ex]" _n
+	file write `fh' `"\bottomrule `footnotespace'"' _n(2)	
+
+	* Footnote style #1 only done if user specifies width option: this aligns with columns and needs to go before \end{tabularx}
+	if `"`footnote'"'!="" & `"`footnotewidth'"'!="" file write `fh' `"\multicolumn{`num_vars'}{`footnotewidth'}{\begin{`footnotesize'} `footnote'\end{`footnotesize'}}"' _n	
 	
-	if `"`footnote'"'!="" file write `fh' `"\multicolumn{`num_vars'}{`footnotealign'}{\begin{`footnotesize'} `footnote'\end{`footnotesize'}}"' _n
+	file write `fh' "\end{tabularx}" _n
+
+	* Footnote style #2: just a simple flush left after the end of the table
+	if `"`footnote'"'!="" & `"`footnotewidth'"'=="" {
+		file write `fh' `"\begin{flushleft}"' _n
+		file write `fh' `"\\`footnotesize' `footnote'"' _n
+		file write `fh' `"\end{flushleft}"' _n
+	}
 	
-	file write `fh' "\end{tabularx}%" _n
+	
 	if `"`size'"'!="" file write `fh' "}" _n
-	if `"`marker'"'!="" file write `fh' `"\label{`marker'}%"' _n
 		if "`sw'"!="" file write `fh' "%TCIMACRO{\TeXButton{E}{\end{table}}}%" _n
 		if "`sw'"!="" file write `fh' "%BeginExpansion" _n
-	file write `fh' "\end{table}%" _n
+	file write `fh' "\end{table}" _n
 		if "`sw'"!="" file write `fh' "%EndExpansion" _n
 		
 	* Footlines option
@@ -393,6 +469,8 @@ program define texsave, nclass
 			macro shift
 		}
 	}
+	if `"`geometry'"'!="" file write `fh' "\restoregeometry" _n
+	if "`landscape'"!="" file write `fh' "\end{landscape}" _n
 	
 	* End the tex document
 	if "`frag'"=="" file write `fh' "\end{document}" _n

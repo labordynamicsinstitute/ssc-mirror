@@ -2,8 +2,9 @@
 * Change log
 * 7.17.14 Version 1.1: Option prefix to handle multiple equations
 * 2.22.16 Version 1.2: Fixed bug with trivial failure to reject H0
+* 1.25.19 Version 1.3: Converted to rclass, return main results
 
-program define utest
+program define utest, rclass
 version 9
 
 syntax varlist(min=2 max=2 numeric) [, MInimum(real -.12345) MAximum(real .12345) Quadratic Inverse Fieller Level(cilevel) PREfix(string)]
@@ -18,7 +19,7 @@ if "`prefix'"!="" & substr("`prefix'",-1,.)!=":" {
 local df=e(df_r)
 
 if `df'==. {
-  
+   
   local df=e(N)  
   }
 
@@ -140,6 +141,9 @@ if (`t_min')*(`t_max')>0 {
   di in text "{hline 17}{c BT}{hline 31}"
   di
   di as text "Extremum outside interval - trivial failure to reject H0"
+  
+  return scalar t=.
+  return scalar p=.
   }
   
   else {
@@ -152,8 +156,19 @@ if (`t_min')*(`t_max')>0 {
   di as text "     t-value = " in  result %9.2f `t_sac'
   di as text "     P>|t|   = " in result %9.3g ttail(`df',`t_sac')
 
+  return scalar t=`t_sac'
+  return scalar p=ttail(`df',`t_sac')
   }  
 
+  
+  return scalar x_l=`x_min'
+  return scalar x_u=`x_max'
+  return scalar s_l=`sl_min'
+  return scalar s_u=`sl_max'
+  return scalar t_l=`t_min'
+  return scalar t_u=`t_max'
+  return scalar extr=`top'
+  return local shape="`shape'"  
 
 *** Calculation of Fieller interval ***
 

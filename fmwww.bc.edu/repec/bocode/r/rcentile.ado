@@ -1,11 +1,11 @@
 #delim ;
 prog def rcentile, rclass byable(recall);
-version 10.0;
+version 16.0;
 /*
  Compute robust confidence intervals for percentiles,
  allowing for clustering and sampling-probability weights.
 *!Author: Roger Newson
-*!Date: 21 May 2013
+*!Date: 16 April 2013
 */
 
 
@@ -13,6 +13,7 @@ syntax varname(numeric) [fweight pweight iweight] [if] [in] [ ,
   CEntile(numlist >=0 <=100 sort)
   Level(cilevel) CLuster(varname) CFWeight(string asis)
   TDist TRansf(string)
+  FAST
   ];
 /*
 centile() specifies the list of percents for the percentiles.
@@ -23,12 +24,22 @@ tdist specifies that confidence intervals will be calculated
   using the t-distribution.
 transf() specifies the Normalizing and variance-stabilizing transformation
   used for Somers' D to calculate the confidence intervals.
+fast specifies that rcentile will not do any work to restore the original data
+  if the user presses Break.
 */
 
 
 * Initialize percentiles to default *;
 if "`centile'"=="" {;
   local centile "50";
+};
+
+
+*
+ Preserve data if fast not specified
+*;
+if "`fast'"=="" {;
+  preserve;
 };
 
 
@@ -175,7 +186,8 @@ if "`wttype'"=="" {;
 qui sccendif `varlist' 0 if `touse' [`wttype'=`iwei'] ,
   nyvar(`t_nyvar') nweight(`t_nweight') ncfweight(`t_ncfweight') nobs(`t_nobs') nscen(`t_nscen')
   centile(`centile') level(`level') transf(`transf') `tdist'
-  cluster(`cluster') cfweight(`cfwei');
+  cluster(`cluster') cfweight(`cfwei')
+  fast;
 tempname N_clust df_r cimat;
 scal `N_clust'=r(N_clust);
 scal `df_r'=r(df_r);
@@ -183,6 +195,14 @@ local transf `"`r(transf)'"';
 local tranlab `"`r(tranlab)'"';
 matr def `cimat'=r(cimat);
 matr colnames `cimat'=Percent Centile Minimum Maximum;
+
+
+*
+ Preserve data if fast not specified
+*;
+if "`fast'"=="" {;
+  restore;
+};
 
 
 *

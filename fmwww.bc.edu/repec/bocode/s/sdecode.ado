@@ -6,11 +6,11 @@ version 13.0;
   which may be new or replace the input variable,
   optionally replacing unlabelled input values with formatted values.
 *! Author: Roger Newson
-*! Date: 20 September 2013
+*! Date: 19 November 2020
 */
 
 syntax varname(numeric) [if] [in] , [ Generate(name) replace MAXLength(string) FORMat(string) LABOnly Missing
-  FTRim XMLSub ESub(string asis) PRefix(string) SUffix(string) ];
+  FTRim XMLSub ESub(string asis) PRefix(string) SUffix(string) FAST ];
 /*
   -generate()- specifies the name of a new output string variable.
   -replace- specifies that the output string variable will replace the input numeric variable.
@@ -26,6 +26,7 @@ syntax varname(numeric) [if] [in] , [ Generate(name) replace MAXLength(string) F
   -esub()- specifies rule for substitution of exponents in formatted output values.
   -prefix- specifies a prefix string (to be added on the left).
   -suffix- specifies a suffix string (to be added on the right).
+  -fast- specifies that -sdecode- will not use preserve and restore.
 */
 
 *
@@ -35,7 +36,7 @@ syntax varname(numeric) [if] [in] , [ Generate(name) replace MAXLength(string) F
 if "`replace'"!="" {;
   if "`generate'"!="" {;
     disp as error "options generate() and replace are mutually exclusive";
-    error 198;
+    error 498;
   };
   * Save old variable order *;
   unab oldvars: *;
@@ -44,7 +45,7 @@ if "`replace'"!="" {;
 else {;
   if "`generate'"=="" {;
     disp as error "must specify either generate() or replace option";
-    error 198;
+    error 498;
   };
   confirm new variable generate;
 };
@@ -53,7 +54,7 @@ else {;
  Initialise -maxlength- if absent
  and check that -maxlength- is legal otherwise
 *;
-local maxmaxl=c(maxstrvarlen);
+local maxmaxl=c(maxvlabellen);
 if "`maxlength'"=="" {;
   local maxlength=`maxmaxl';
 };
@@ -61,11 +62,11 @@ else {;
   cap confirm integer number `maxlength';
   if _rc!=0 {;
     disp as error "option maxl() incorrectly specified";
-    error 198;
+    error 498;
   };
   if `maxlength'<1 | `maxlength'>`maxmaxl' {;
     disp as error "maxlength() must be between 1 and `maxmaxl' in this form of Stata";
-    error 198;
+    error 498;
   };
 };
 
@@ -74,7 +75,10 @@ if "`format'"=="" {;
   local format:format `varlist';
 };
 
-preserve;
+* Preserve if -fast- is not specified *;
+if "`fast'"=="" {;
+  preserve;
+};
 
 marksample touse, novarlist;
 
@@ -142,7 +146,10 @@ if "`replace'"!="" {;
   order `oldvars';
 };
 
-restore, not;
+* Restore if -fast- is not specified *;
+if "`fast'"=="" {;
+  restore, not;
+};
 
 end;
 

@@ -18,33 +18,21 @@
   the equality of factor means among groups. The sequence of 
   measurement invariance followed by{bf: mint} is:
 
-1){bf:Equal form} solution has the same form/structure with the same 
-  indicators loading on the latent variables for each group. It
-  does not impose any equality constraints on the parameters. 
+1){bf:Equal form/configural invariance} solution has the same form/
+  structure with the same indicators loading on the latent variables 
+  for each group. 
 
-2){bf:Equal loadings} solution constrains the loadings to be equal (+ 
-  assumes equal form solution). In other words, it tests whether
-  the latent variables have the same meaning for the groups.
+2){bf:Equal loadings/weak invariance} solution constrains the loadings 
+  to be equal for each group.
 
-3){bf:Equal intercepts} solution constrains the intercepts to be 
-  equal (+ assumes equal loadings solution). When the latent 
-  means are fixed to be 0, the intercepts represent the means 
-  of the indicators. If the loadings and intercepts are both 
-  shown to be equal, it would then be unlikely for the latent 
-  variables to have different means.
+3){bf:Equal intercepts/strong invariance} solution constrains the intercepts 
+  (+ loadings) to be equal for each group. 
 
-4){bf:Equal error variances} solution constrains the error 
-  variances to be equal (+ assumes equal loadings solution). 
-  This test does not often support both equal error variances 
-  and loadings. Thus, many scholars continue with the equal 
-  loading solution.
-
-5){bf:Equal factor variances and covariances} solution constrains 
-  the variances and covariances to be equal (+ assumes equal 
-  loadings and error variances).  
+4){bf:Equal error variances/strict invariance} solution constrains the error 
+  variances (+ loadings and intercepts) to be equal for each group. 
 	 
-6){bf:Equal factor means} solution constrains the latent means to 
-  be equal (+ assumes equal loadings solution).  
+5){bf:Equal factor means} solution constrains the latent means (+ loadings
+  intercepts, and error variances) to be equal for each group.  
   
   
 KW: latent
@@ -73,8 +61,10 @@ mehmetm@svt.ntnu.no
 
 
 {title:Reference}
-Acock, A. C. (2013). Discovering structural equation modeling 
-using Stata. College Station, Texas: Stata press.
+Hirschfeld, G. and von Brachel, R. (2014). Multi-Group confirmatory factor
+analysis in R - A tutorial in measurement invariance with continuous and 
+ordinal indicators. Practical Assessment, Research & Evaluation. Volume 19,
+Number 7, 1-12. 
 
 
 	

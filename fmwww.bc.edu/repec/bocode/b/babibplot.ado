@@ -1,5 +1,5 @@
 **
-*! babibplot v1.0.0 Lutz Bornmann June 2017
+*! babibplot v2 Lutz Bornmann October 2017
 program def babibplot, rclass
 version 11
 syntax varlist(min=2 max=2 numeric) [if] [in], plot(string)
@@ -10,8 +10,7 @@ if `r(N)' == 0 {
 	}
 local journal: word 1 of `varlist'
 local paper: word 2 of `varlist'
-quietly drop if `journal'== . | `journal'== .
-quietly summarize `journal' if `touse', detail
+quietly count if `journal' ~= . & `paper' ~=. & `touse'
 display r(N) " papers without missings are considered in the plot"
 quietly gen diff =  `paper' - `journal'
 quietly gen diff_top_10=diff if `paper'>=90
@@ -38,8 +37,8 @@ quietly count if over_2 == 0 & `touse'
 local nc2 = r(N)
 local nc2p = round(`nc2' / `obs' * 100)
 quietly egen over_3 = group(over over_2), label
-quietly by over_3, sort: egen diff_over_3=mean(diff) if `touse'
-quietly by over_3, sort: egen avg_over_3=mean(avg) if `touse'
+quietly by over_3, sort: egen diff_over_3=median(diff) if `touse'
+quietly by over_3, sort: egen avg_over_3=median(avg) if `touse'
 
 quietly summarize over if over==1 & over_2==1 & `touse'
 local nq1 = r(N)
@@ -55,8 +54,8 @@ quietly gen over_4 = 4
 quietly replace over_4 = 1 if `paper'>=50 & `journal'>=50
 quietly replace over_4 = 2 if `paper'>=50 & `journal'<50
 quietly replace over_4 = 3 if `paper'<50 & `journal'<50
-quietly by over_4, sort: egen p_over_4=mean(`paper') if `touse'
-quietly by over_4, sort: egen j_over_4=mean(`journal') if `touse'
+quietly by over_4, sort: egen p_over_4=median(`paper') if `touse'
+quietly by over_4, sort: egen j_over_4=median(`journal') if `touse'
 quietly count if over_4==1 & `touse'
 local nq1s = r(N)
 local nq1ps = round(`nq1s' / `obs' * 100)
@@ -80,12 +79,12 @@ local nr2s = `nq3s' + `nq4s'
 local nr2ps = round(`nr2s' / `obs' * 100)
 
 
-if "`plot'" == "bland" {
+if "`plot'" == "average" {
 
-quietly summarize diff if `touse'
-local d_diff = r(mean)
-quietly summarize avg if `touse'
-local d_avg = r(mean)
+quietly summarize diff if `touse', detail
+local d_diff = r(p50)
+quietly summarize avg if `touse', detail
+local d_avg = r(p50)
 quietly twoway (scatter diff_top_10 avg, msymbol(Oh t) mcolor(black)) /*
 */ (scatter diff_bot_90 avg, mcolor(black)) /*
 */ (scatter diff_over_3 avg_over_3, msymbol(Sh) mcolor(red)), /*
@@ -107,10 +106,10 @@ quietly drop diff diff_top_10 diff_bot_90 avg over over_2 over_3 diff_over_3 avg
 
 
 if "`plot'" == "scatter" {
-quietly summarize `journal' if `touse'
-local jou = r(mean)
-quietly summarize `paper' if `touse'
-local pap = r(mean)
+quietly summarize `journal' if `touse', detail
+local jou = r(p50)
+quietly summarize `paper' if `touse', detail
+local pap = r(p50)
 twoway (scatter `journal' `paper' if `touse') (function x, range(0 100) lcolor(cranberry)) /*
 */ (scatter j_over_4 p_over_4, msymbol(Sh) mcolor(red)), /*
 */ xline(50) yline(50) xlabel(0(10)100) /*
@@ -127,4 +126,10 @@ quietly drop diff diff_top_10 diff_bot_90 avg over over_2 over_3 diff_over_3 avg
 }
 
 
+if ("`plot'" ~= "scatter") & ("`plot'" ~= "average") {
+display "The plot option must be 'scatter' or 'average'"
+quietly drop diff diff_top_10 diff_bot_90 avg over over_2 over_3 diff_over_3 avg_over_3 over_4 p_over_4 j_over_4
+}
+
 end
+

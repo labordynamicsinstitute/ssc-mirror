@@ -11,10 +11,10 @@ d KW: matching
 d
 d Requires: Stata version 14.1
 d
-d Distribution-Date: 20161227
+d Distribution-Date: 20200514
 d
-d Author: Adrien Bouguen, University of Mannheim
-d Support: email adbouguen@@gmail.com
+d Author: Adrien Bouguen, Santa Clara University
+d Support: email abouguen@@scu.edu
 d
 f clean_name.ado
 f clean_name.sthlp

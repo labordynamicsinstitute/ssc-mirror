@@ -1,50 +1,61 @@
 *! version 2.9.0 28mar2017
+
+* Possible improvements: allow in, if, reverse sort (like gsort)
+* This uses Andrew Maurer's trick to clear the sort order:
+* http://www.statalist.org/forums/forum/general-stata-discussion/mata/172131-big-data-recalling-previous-sort-orders
+
+
 program define fsort
-	syntax varlist [if] [in] , [Generate(name)] [Verbose]
-	
-	* Apply Andrew Maurer's trick:
-	* http://www.statalist.org/forums/forum/general-stata-discussion/mata/172131-big-data-recalling-previous-sort-orders
-	loc sortvar : sort
-	if ("`sortvar'" != "") {
+	syntax varlist, [Verbose]
+
+	loc sortvar : sortedby
+
+	if ("`sortvar'" == "`varlist'") {
+		exit
+	}
+	else if ("`sortvar'" != "") {
+		* Andrew Maurer's trick to clear `: sortedby'
 		loc sortvar : word 1 of `sortvar'
+		loc sortvar_type : type `sortvar'
+		loc sortvar_is_str = strpos("`sortvar_type'", "str") == 1
 		loc val = `sortvar'[1]
-		cap replace `sortvar' = 0 in 1
-		cap replace `sortvar' = . in 1
-		cap replace `sortvar' = "" in 1
-		cap replace `sortvar' = "." in 1
-		qui replace `sortvar' = `val' in 1
-		assert "`: sort'" == ""
-	}
 
-	loc verbose = ("`verbose'" != "")
-
-	mata: F = factor("`varlist'", "`touse'", `verbose', "", ., ., ., 0)
-	mata: F.panelsetup()
-	if ("`generate'" != "") {
-		mata: F.store_levels("`generate'")
-	}
-
-	foreach var of varlist _all {
-		if (substr("`: type `var''", 1, 3) == "str") {
-			loc strvars `strvars' `var'
+		if (`sortvar_is_str') {
+			qui replace `sortvar' = cond(mi(`"`val'"'), ".", "") in 1
+			qui replace `sortvar' = `"`val'"' in 1
 		}
 		else {
-			loc numvars `numvars' `var'
+			qui replace `sortvar' = cond(mi(`val'), 0, .) in 1
+			qui replace `sortvar' = `val' in 1
 		}
-	}
-	
-	if ("`numvars'" != "") {
-		mata: st_view(data = ., ., "`numvars'")
-		mata: st_store(., tokens("`numvars'"), data[F.p, .])
+		assert "`: sortedby'" == ""
 	}
 
-	if ("`strvars'" != "") {
-		mata: st_sview(data = ., ., "`strvars'")
-		mata: st_sstore(., tokens("`strvars'"), data[F.p, .])
-	}
-	mata: mata drop F
-	sort `varlist'
+	fsort_inner `varlist', `verbose'
+	sort `varlist' // dataset already sorted by `varlist' but flag `: sortedby' not set
 end
 
-ftools, check
+
+program define fsort_inner, sortpreserve
+	syntax varlist, [Verbose]
+	loc verbose = ("`verbose'" != "")
+	mata: fsort_inner("`varlist'", "`_sortindex'", `verbose')
+end
+
+
+mata:
+void fsort_inner(string scalar vars, string scalar sortindex, real scalar verbose)
+{
+	class Factor scalar F
+	F = factor(vars, "", verbose, "", ., ., ., 0)
+	if (!F.is_sorted) {
+		F.panelsetup()
+		st_store(., sortindex, invorder(F.p))
+	}
+}
+end
+
+
+findfile "ftools.mata"
+include "`r(fn)'"
 exit

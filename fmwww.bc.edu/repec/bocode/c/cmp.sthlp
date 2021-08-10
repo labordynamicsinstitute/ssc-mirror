@@ -1,5 +1,5 @@
 {smcl}
-{* *! version 8.0.0 19 June 2017}{...}
+{* *! cmp 8.5.0 13 November 2020}{...}
 {cmd:help cmp}
 {hline}{...}
 
@@ -64,7 +64,7 @@ parentheses, optionally prefixed with a name for the equation:
 	[{cmd:,} {opt nocons:tant} {opth off:set(varname:varname_o)} {opth exp:osure(varname:varname_e)} {opt trunc:points(exp exp)} {opt iia}]
 {cmd:)}
 
-{phang}{it:indepvars} may include factor variables; see {help fvvarlist}. Importantly, {it:indepvars} may also include the linear functionals associated with
+{phang}{it:indepvars} may include factor variables; see {help fvvarlist}. Importantly, {it:indepvars} may also include the linear predictors associated with
 any equations in the model. Such references should be by {it:eqname} rather than {it:depvar}, if the two differ, and suffixed with a {cmd:#}. This feature 
 allows dependent variables to depend on each other in their continuous and perhaps
 incompletely observed form. It also allows for simultaneous, as distinct from strictly recursive, systems of equations.{p_end}
@@ -112,9 +112,9 @@ may be numbers or variables; {it:a} missing ({it:a} {ul:>} {cmd:.}) means minus 
 
 {title:UPDATES}
 
-{pstd} Version 8.0.0 of {cmd:cmp}, released in mid-2017, includes changes that can slightly affect results in hierarchical models. The previous version, 7.1.0, is available as a
-{browse "http://github.com/droodman/cmp/tree/09ce0ec1fe765a8c585208004b848758763a1cfe":Gtihub archive}, and can be directly installed, in Stata 13 or later, via
-{net "from https://raw.githubusercontent.com/droodman/cmp/v7.1.0":net from https://raw.githubusercontent.com/droodman/cmp/v7.1.0}.
+{pstd} Versions 8.0.0 and 8.20. of {cmd:cmp}, released in mid-2017 and early 2018, include changes that can somewhat affect results in hierarchical models. An older version, 7.1.0, is available as a
+{browse "http://github.com/droodman/cmp/tree/09ce0ec1fe765a8c585208004b848758763a1cfe":Github archive}, and can be directly installed, in Stata 13 or later, via
+"{net "from https://raw.github.com/droodman/cmp/v7.1.0":net from https://raw.github.com/droodman/cmp/v7.1.0}".
 
 {pstd}Major features have been added to {cmd:cmp} since Roodman (2011), and are documented only here. They include:
 
@@ -129,7 +129,7 @@ may be numbers or variables; {it:a} missing ({it:a} {ul:>} {cmd:.}) means minus 
 all models except multinomial and rank-ordered probit.
 
 {p 4 6 0}
-* References to any equation's linear functional (XB) can appear on the right side of any equation, even when it is modeled as latent (not fully observed), and
+* References to any equation's linear predictor (XB) can appear on the right side of any equation, even when it is modeled as latent (not fully observed), and
 even if the resulting equation system is simultaneous rather than recursive.
 
 {p 4 6 0}
@@ -146,12 +146,11 @@ Consider giving back through a {browse "http://j.mp/1iptvDY":donation} to suppor
 
 {pstd}
 {cmd:cmp} fits a large family of multi-equation, multi-level, conditional mixed-process estimators. Right-side references to left-side variables must together have
-a recursive structure when those references are to the observed, censored variables; but references to the (latent) linear functionals may be 
+a recursive structure when those references are to the observed, censored variables; but references to the (latent) linear predictors may be 
 collectively simultaneous. The various terms in that description can be defined as follows:
 
 {p 4 6 0}
-* "Multi-equation" means that {cmd:cmp} can fit Seemingly Unrelated (SUR), instrumental variables (IV) systems, and some simultaneous-equation systems. As a special case,
-single-equation models can be fit too.
+* "Multi-equation" means that {cmd:cmp} can fit Seemingly Unrelated (SUR), instrumental variables (IV) systems, and some simultaneous-equation systems. Single-equation models can be fit too.
 
 {p 4 6 0}
 * "Multi-level" means that random coefficients and effects (intercepts) can be modeled at
@@ -164,7 +163,7 @@ with each other, with the observation-level errors, and with the regressors.{p_e
 * "Mixed process" means that different equations can have different kinds of 
 dependent variables (response types). The choices, all generalized linear models with a Gaussian error distribution, are: continuous and unbounded (the classical linear regression 
 model), tobit (left-, right-, or bi-censored), interval-censored, probit, ordered probit, multinomial 
-probit, and rank-ordered probit. Pre-censoring truncation can be modeled for most response types. A dependent variable in one equation can appear on the right side of another equation.
+probit, rank-ordered probit, and fractional probit. Pre-censoring truncation can be modeled for most response types. A dependent variable in one equation can appear on the right side of another equation.
 
 {p 4 6 0}
 * "Conditional" means that the model can vary by observation. An equation can be dropped for observations for which it is not relevant--if, say, a worker
@@ -178,8 +177,8 @@ determinants of {it:C} and {it:C} as a determinant of {it:D}--but {it:D} could n
 modeled determinant of {it:A}, {it:B}, or {it:C}.
 
 {p 4 6 0}
-* "Simultaneous" means that that recursivity is {it:not} required in the references to linear (latent) dependent variables. If {it:A*}, {it:B*}, {it:C*}, and {it:D*}
-are the hypothesized, unobserved linear functionals behind the observed {it:A}, {it:B}, {it:C}, and {it:D}--ie., if {it:A}=0 when {it:A*}<0 and {it:A}=1 when {it:A*}>=0,
+* "Simultaneous" means that that recursivity is {it:not} required in the references to the (latent) linear predictors of dependent variables. If {it:A*}, {it:B*}, {it:C*}, and {it:D*}
+are the hypothesized, unobserved linear predictors behind the observed {it:A}, {it:B}, {it:C}, and {it:D}--ie., if {it:A}=0 when {it:A*}<0 and {it:A}=1 when {it:A*}>=0,
 etc.--then {it:D*} can appear in any of the equations even though {it:D} cannot. The same holds even if D* is {it:completely} censored, i.e., completely unobserved.
 
 {pstd}
@@ -190,22 +189,23 @@ parameters are structural. In the latter, it is a limited-information (LIML) est
 
 {pstd}
 {cmd:cmp}'s modeling framework embraces those of the official Stata commands {help probit:probit}, {help ivprobit:ivprobit}, {help treatreg:treatreg}, 
-{help biprobit:biprobit}, {help tetrachoric:tetrachoric}, {help oprobit:oprobit}, {help mprobit:mprobit}, {help asmprobit:asmprobit}, {help asroprobit:asroprobit}, {help tobit:tobit}, {help ivtobit:ivtobit}, 
-{help cnreg:cnreg}, {help intreg:intreg}, {help truncreg:truncreg}, {help fracreg:fracreg}, {help heckman:heckman}, {help heckprob:heckprob}, {help heckoprobit:heckoprobit}, 
-{help xtreg:xtreg}, {help xtprobit:xtprobit}, {help xttobit:xttobit}, and {help xtinteg:xtintreg}; to lesser degrees {help regress:regress}, {help sureg:sureg}, {help reg3:reg3},
-and {help xtmelogit:xtmelogit}; and user-written {stata findit ssm:ssm}, {stata findit polychoric:polychoric}, {stata findit triprobit:triprobit}, 
+{help biprobit:biprobit}, {help tetrachoric:tetrachoric}, {help oprobit:oprobit}, {help mprobit:mprobit}, {help asmprobit:}, {help asroprobit:asroprobit}, {help tobit:tobit}, {help ivtobit:ivtobit}, 
+{help cnreg}, {help intreg}, {help truncreg}, {help fracreg}, {help heckman}, {help heckprob}, {help heckoprobit}, 
+{help xtreg:}, {help xtprobit}, {help xttobit}, {help xtintreg}, {help xtheckman}, {help meintreg}, {help meoprobit}, {help metobit}, {help metobit}, 
+{help eprobit}; to lesser degrees {help regress:regress}, {help sureg}, 
+and {help reg3}; and user-written {stata findit ssm:ssm}, {stata findit polychoric:polychoric}, {stata findit triprobit:triprobit}, 
 {stata findit mvprobit:mvprobit}, {stata findit bitobit:bitobit}, 
 {stata findit mvtobit:mvtobit}, {stata findit oheckman:oheckman}, {stata findit switch_probit:switch_probit}, {stata findit reoprob:reoprob}, 
-{stata findit cdsimeq:cdsimeq}, and {stata findit bioprobit:bioprobit}. It 
-goes beyond them in many ways. Thanks to the flexibility of {help ml:ml}, on which it is built, it accepts linear coefficient {help constraint:constraints}
-as well as all weight types, vce types (robust, cluster, linearized, etc.), and {cmd:svy} settings. And it offers 
+{stata findit cdsimeq:cdsimeq}, and {stata findit bioprobit:bioprobit}. While lacking the specialized post-estimation features many of those packages offer, {cmd:cmp} 
+goes beyond them in the generality of model specification. Thanks to the flexibility of {help ml:ml}, on which it is built, it accepts linear coefficient {help constraint:constraints}
+as well as all weight types, vce types (robust, cluster, etc.), and {cmd:svy} settings. And it offers 
 more flexibility in model construction. For example, one can regress a continuous variable on two endogenous variables, 
 one binary and the other sometimes left-censored, instrumenting each with additional variables. And {cmd:cmp} usually allows the model to vary by observations.
 Equations can have different samples, overlapping or non-overlapping. Heckman selection modeling can be incorporated into a wide variety of models through auxilliary
 probit equations. In some cases, the gain is consistent estimation where it was difficult before. Sometimes the gain is in efficiency.
 For example if {it:C} is continuous, {it:B} is a sometimes-left-censored determinant of {it:C}, and {it:A} is an instrument, then the effect of {it:B} on {it:C} can be
-consistently estimated with 2SLS (Kelejian 1971). However, a {cmd:cmp} estimate that uses the information that {it:B} is censored will be more efficient, based as it
-is on a more accurate model.
+consistently estimated with 2SLS (Kelejian 1971). However, a {cmd:cmp} estimate that uses the information that {it:B} is censored will be more efficient if it is based
+on a more accurate model.
 
 {pstd}
 To inform {cmd:cmp} about the natures of the dependent variables and about which equations apply to which observations, the user must include the 
@@ -215,7 +215,7 @@ quotes. For each observation, each expression must evaluate to one of the follow
 
 {pin} 0 = observation is not in this equation's sample{p_end}
 {pin} . = observation is in this equation's sample but dependent variable unobserved for this observation{p_end}
-{pin} 1 = equation is "continuous" for this observation, i.e., has the OLS likelihood or is an uncensored observation in a tobit equation{p_end}
+{pin} 1 = equation is "continuous" for this observation, i.e., is linear with Gaussian error or is an uncensored observation in a tobit equation{p_end}
 {pin} 2 = observation is left-censored for this (tobit) equation at the value stored in the dependent variable{p_end}
 {pin} 3 = observation is right-censored at the value stored in the dependent variable{p_end}
 {pin} 4 = equation is probit for this observation{p_end}
@@ -278,8 +278,8 @@ the documentation does not describe {help sureg:sureg} as an instrumental variab
 Version 6 of cmp, introduced in 2013, can handle violations of both conditions. This it does using the standard technique for estimating simultaneous-equation systems, which transforms
 a simultaneous system into an SUR one (with "reduced form" coefficients). Condition 2 is no longer required: models may refer to latent 
 variables, using a # suffix. {cmd:cmp (y1 = y2# x1) (y2 = x2), ind($cmp_probit $cmp_probit)} models y1 and y2 as probit and y1 as depending on the unobserved
-linear functional behind y2. The #-suffixed references should be to names of equations rather than dependent variables, though these are the same by default. So, 
-equivalent to the previous example is {cmd:cmp (eq1:y1 = eq2# x1) (eq2:y2 = x2), ind($cmp_probit $cmp_probit)}. In addition, references to (latent) linear dependent variables
+linear predictor behind y2. The #-suffixed references should be to names of equations rather than dependent variables, though these are the same by default. So, 
+equivalent to the previous example is {cmd:cmp (eq1:y1 = eq2# x1) (eq2:y2 = x2), ind($cmp_probit $cmp_probit)}. In addition, references to (latent) linear predictors
 need not satisfy condition 1. So {cmd:cmp (y1 = y2# x1) (y2 = y1# x2), ind($cmp_probit $cmp_probit)} is acceptable. References to {it:censored} variables must still be recursive:
 {cmd:cmp (y1 = y2 x1) (y2 = y1 x2), ind($cmp_probit $cmp_probit)} will not work as intended. Fortunately, this requirement is not as restrictive as it seems because 
 many models with non-recursive dependencies on censored variables are logically impossible (see discussion in Roodman 2011).
@@ -326,7 +326,7 @@ and the contradiction here would cause an error:
 {pin}(math = age || school: || class: [pw=weightvar1]) (reading = age || class: [pw=weightvar2]){p_end}
 
 {pstd}
-Like {help xtreg:xtreg}, {help xtprobit:xtprobit}, {help xttobit:xttobit}, {help xtinteg:xtintreg}, and {help xtmixed:xtmixed},
+Like {help xtreg:xtreg}, {help xtprobit:xtprobit}, {help xttobit:xttobit}, {help xtintreg:xtintreg}, {help xtheckman:xtheckman}, and {help xtmixed:xtmixed},
 {cmd:cmp} uses adaptive quadrature by default to integrate likelihoods over the unobserved random effects (see {manhelp xtmixed R}). Quadrature estimates these 
 integrals by evaluating the integrands at a few strategically chosen points (12 by default), and summing using particular weights. It is extremely efficient for computing
 one-dimensional integrals, but unreliable. {it:Adaptive} quadrature is more reliable, but slower. It iteratively adjusts the points 
@@ -336,7 +336,7 @@ function.
 {pstd}
 The traditional generaization of quadrature to multidimensional integrals, such as arise with correlated random effects and coefficients,
 is inefficient. A {it:d}-dimensional integral, can take 12^{it:d} evaluations. Heiss and Winschel (2008) put forward an alternative called sparse-grid integration
-that radically reduces the number of evaluations needed for a given level of accuracy. {cmd:cmp} uses this method by default for multidimensional random
+that reduces the number of evaluations needed for a given level of accuracy. {cmd:cmp} uses this method by default for multidimensional random
 effects/coefficients problems. Still, despite the reduction, for higher-dimensional problems, practicality may still require the user to reduce the precision of the grid below the default
 of 12, using the {cmdab:intp:oints()} option.
 
@@ -351,12 +351,12 @@ search method often works best).
 {pstd}
 To trigger simulation, include the {cmdab:red:raws()} option. This sets the number of draws per observation
 at each level,
-the type of sequence (Halton, Hammersley, generalized Halton, pseudorandom), whether antithetics are also drawn, and whether, in the Halton and Hammersley caes,
+the type of sequence (Halton, Hammersley, generalized Halton, pseudorandom), whether antithetics are also drawn, and, in the Halton and Hammersley caes,
 whether and how the sequences should be scrambled. (See Gates 2006 for more on all these concepts except scrambling, for which see Kolenikov 2012.)
 For (generalized) Halton and Hammersley sequences, it is preferable to make the number of draws prime, to insure more variable coverage of the
 distribution from observation to observation, making coverage more uniform overall. Increasing the 
 number of draws increases precision at the expense of time. In a bid for speed {cmd:cmp} can begin by estimating
-with just 1 draw per observation and random effect (plus the antithetics if specified). It can then use the result of this rough search as the starting point for an
+with just 1 draw per observation per random effect (plus the antithetics if specified). It can then use the result of this rough search as the starting point for an
 estimate with more draws, then repeat, multiplying by a fixed amount each time until reaching the specified number of draws. The {opt st:eps(#)} suboption 
 of {cmdab:red:raws()} can override the default number of steps, which is just 1. {cmd:redraws(50 50)} would 
 specify immediate estimation with the full 50
@@ -375,8 +375,8 @@ suboptions. See {help cmp##options:options}
 below for more.
 
 {pstd}
-{cmd:cmp} starts by fitting each equation separately in order to obtain a good starting point for the full model fit.
-Sometimes in this preparatory step, convergence difficulties make a reported parameter covariance matrix singular, yielding missing 
+{cmd:cmp} starts by fitting each equation separately in order to obtain a good starting point for the full model fit. Sometimes in this preparatory step, 
+convergence difficulties make a reported parameter covariance matrix singular, yielding missing 
 standard errors for some regressors. Or variables are found to be collinear. In order to maximize the chance of convergence, {cmd:cmp} ordinarily 
 drops such regressors from the equations in which they cause trouble, reruns the single-equation fit, and then leaves them out for the full model too. The 
 {opt nodr:op} option prevents this behavior.
@@ -423,7 +423,7 @@ probit syntax. In this "alternative-specific" syntax, you list one equation in t
 regressors. Unlike {help asmprobit:asmprobit}, {cmd:cmp} does not force regressors that appear in more than one equation 
 to have the same coefficient across alternatives, although again this restriction can be imposed through {help constraint:constraints}. When using
 the alternative-specific syntax, the dependent variables listed should be a set of {it:dummies}, as can be generated with {help xi:xi, noomit} from the 
-underlying choice variable. The first equation is always treated as the base alternative, so here you can control which alternative is the base alternative,
+underlying choice variable. The first equation is always treated as the base alternative, so here you can control which alternative is the base alternative
 by reordering the equations. In 
 general, regressors that appear in all other equations should be excluded from the base alternative. Otherwise, unless a constraint is imposed to reduce the degrees
 of freedom, the model will not be identified. ({cmd:cmp} automatically excludes the constant from the base alternative equation.) Variables that are specific 
@@ -432,7 +432,7 @@ assumed, nor available through an option. It can still be imposed through constr
 
 {pstd}
 To specify an alternative-specific multinomial probit group, include expressions in the {cmdab:ind:icators()} that evaluate to 0 or 6 
-({cmd:$cmp_out} or {cmd:$cmp_mprobit}) for each equation (0 indicating that the choice is not available for given observations). You must enclose the 
+({cmd:$cmp_out} or {cmd:$cmp_mprobit}) for each equation (0 indicating that the choice is not available for given observations). Enclose the 
 whole list in 
 an additional set of parentheses. Note that unlike with {help asmprobit:asmprobit}, there should be still be one row in the data set per case, not per case and
 alternative. So instead of variables that vary by alternative, there must be a version of that variable for each
@@ -458,7 +458,7 @@ IIA under this option, one would then constrain various "atanhrho" and "lnsig" p
 with and without the structural parameterization.
 
 {pstd}
-The intuitiveness of the structural parameterization comes at a real cost, however (Bunch (1991); 
+The intuitiveness of the structural parameterization comes at a cost, however (Bunch (1991); 
 {browse "http://books.google.com/books?id=kbrIEvo_zawC&printsec=frontcover":Long and Freese (2006)}, pp. 325-29). Though the particular set of 
 constraints imposed seems innocent, it actually results in a mapping from the space of allowed structural covariances to the space of possible 
 covariance matrices for the relative-differenced errors that is not {it:onto}. That is, there are positive definite (J-1)x(J-1) matrices,
@@ -527,7 +527,7 @@ for confidence intervals of the coefficients; see {help level:help level}. The
 default is set by {help set level:level} and is usually 95.
 
 {phang}{cmdab:result:sform(}{cmdab:struct:ural} | {cmdab:red:uced)} affects how results are stored and displayed after fitting models with
-#-suffixed references to other equations' linear functionals. {cmdab:result:sform(}{cmdab:struct:ural)}, the default, displays results
+#-suffixed references to other equations' linear predictors. {cmdab:result:sform(}{cmdab:struct:ural)}, the default, displays results
 corresponding to the specified model. {cmdab:result:sform(}{cmdab:red:uced)} switches to the reduced form, in which dependent variables
 are expressed more fully in terms of the exogenous variables. After estimation,
 you can switch between the two forms by typing {cmd:cmp, {cmdab:result:sform}{cmd:(}{cmdab:red:uced}{cmd:)}} and 
@@ -573,12 +573,12 @@ and {help ml:ml}'s {cmd:nonrtolerance tolerance(0.1)} options in order to accept
 only to increase speed by using fewer draws until the search is close to the maximum. The optional {opt scr:amble()} option "scrambles"
 the digit sequences to reduce cross-sequence correlations (Kolenikov 2012). The square-root scrambler {opt scramble(sqrt)} multiplies each digit in the
 sequence for prime {it:p} by floor(sqrt(p)), modulo p. {opt scramble(negsqrt)} multiples by the negative square root. {opt scramble(fl)} multplies
-by the number specific to {it:p} recommended by Faure and Lemieux (2009). {opt scramble(sqrt)} and {opt scramble(lr)} have no effect for models in with
+by the number specific to {it:p} recommended by Faure and Lemieux (2009). {opt scramble(sqrt)} and {opt scramble(lr)} have no effect for models with
 at most two random effect/coefficient components because for primes 2 and 3, their multipliers are 1.
 
-{phang}{opt lf} makes {cmd:cmp} use its lf-method evaluator instead of its d2-method one (for Stata 10 or earlier) or lf1-method one (Stata 11 or
-later). This forces {cmd:cmp} to compute first derivatives of the likelihood numerically instead of analytically, which substantially
-slows estimation but occassionally improves convergence.
+{phang}{opt lf} makes {cmd:cmp} use its lf-method evaluator instead of the lf0-method one. (See {help ml:help ml}.) This forces Stata's Maximum Likelihood estimation package 
+to compute the first derivatives of the likelihood numerically instead of using {cmd:cmp} to compute them analytically. This substantially slows 
+estimation but occassionally improves convergence.
 
 {phang}{cmdab:ghkd:raws(}[#]{cmd: , }[{opt type(halton | hammersley | ghalton | random)} {opt anti:thetics} {opt scr:amble(sqrt | negsqrt | fl)} ]{cmd:)} governs the draws used in GHK simulation of 
 higher-dimensional cumulative multivariate normal distributions. It is similar to the {opt red:raws} option. However, it takes at most one number;
@@ -702,7 +702,7 @@ variance is estimated:
 {synopt :{opt lnl}}observation-level log likelihood (in hierarchical models, averaged over groups){p_end}
 {synopt :{opt sc:ores}}derivative of the log likelihood with respect to xb or parameter{p_end}
 {synopt :{opt re:siduals}}residuals relative to linear prediction{p_end}
-{synopt :{cmd:pr}[{cmd:(}{it:a b}{cmd:)}]}probability of positive outcome (probit) or given outcome (ordered probit). Omitting {cmd:(}{it:a b}{cmd:)} defaults to {cmd:(0 .)}, meaning positive values{p_end}
+{synopt :{cmd:pr}[{cmd:(}{it:a b}{cmd:)}]}probability of positive outcome (probit), given outcome (ordered probit, multinomial), or linear predictor being in given range (otherwise). Omitting {cmd:(}{it:a b}{cmd:)} defaults to {cmd:(0 .)}, meaning positive values{p_end}
 {synopt :{cmd:e}[{cmd:(}{it:a b}{cmd:)}]}truncated expected value: E[y|{it:a}<y<{it:b}]. Omitting {cmd:(}{it:a b}{cmd:)} defaults to {cmd:(. .)}, meaning unbounded{p_end}
 {synopt :{cmd:ystar(}{it:a b}{cmd:)}}censored expected value: E(y*), y* = max({it:a}, min(y, {it:b})){p_end}
 {synopt :{cmdab:cond:ition(}{it:c d} [, {cmdab:eq:uation(#}{it:eqno}|{it:eqname}{cmd:)}]{cmd:)}}condition a {cmd:pr}, {cmd:e}, or {cmd:ystar} statistic on bounding another equation's continuous (latent) outcome between {it:c} and {it:d}{p_end}
@@ -841,13 +841,15 @@ illustrate how {cmd:cmp} works (colored text is clickable):
 {phang}. {stata ivprobit fem_work fem_educ kids (other_inc = male_educ), first}{p_end}
 {phang}. {stata "version 13: margins, predict(pr) dydx(*)"}{p_end}
 {phang}. {stata cmp (fem_work = other_inc fem_educ kids) (other_inc = fem_educ kids male_educ), ind($cmp_probit $cmp_cont)}{p_end}
-{phang}. {stata margins, predict(pr eq(#1)) dydx(*) force}{p_end}
+{phang}. {stata margins, predict(pr) dydx(*) force}{p_end}
 
 {phang}. {stata treatreg other_inc fem_educ kids, treat(fem_work  = male_educ)}{p_end}
 {phang}. {stata cmp (other_inc = fem_educ kids fem_work) (fem_work  = male_educ), ind($cmp_cont $cmp_probit) qui}{p_end}
 
 {phang}. {stata tobit fem_inc kids male_educ, ll}{p_end}
+{phang}. {stata margins, dydx(*) predict(pr(17,.))}{p_end}
 {phang}. {stata cmp (fem_inc = kids male_educ), ind("cond(fem_inc>10, $cmp_cont, $cmp_left)") qui}{p_end}
+{phang}. {stata margins, dydx(*) predict(pr(17 .))}{p_end}
 
 {phang}. {stata ivtobit fem_inc kids (male_educ = other_inc fem_work), ll first}{p_end}
 {phang}. {stata cmp (fem_inc=kids male_educ) (male_educ=kids other_inc fem_work), ind("cond(fem_inc>10,$cmp_cont,$cmp_left)" $cmp_cont)}{p_end}
@@ -870,12 +872,13 @@ illustrate how {cmd:cmp} works (colored text is clickable):
 {phang}. {stata mprobit insure age male nonwhite site2 site3}{p_end}
 {phang}. {stata margins, dydx(nonwhite) predict(outcome(2))}{p_end}
 {phang}. {stata cmp (insure = age male nonwhite site2 site3, iia), nolr ind($cmp_mprobit) qui}{p_end}
-{phang}. {stata margins, dydx(nonwhite) expression(binormal( (predict(eq(#2))-predict(eq(#1)))/sqrt(2), (predict(eq(#2))-predict(eq(#3)))/sqrt(2), .5)) force}{p_end}
+{phang}. {stata margins, dydx(nonwhite) predict(eq(#2) pr)}{p_end}
 
 {phang}. {stata webuse travel}{p_end}
 {phang}. {stata asmprobit choice travelcost termtime, casevars(income) case(id) alternatives(mode) struct}{p_end}
+{phang}. {stata predict pr, pr} // probability of choosing each outcome in each case{p_end}
 {phang}. {stata drop invehiclecost traveltime partysize}{p_end}
-{phang}. {stata reshape wide choice termtime travelcost, i(id) j(mode)}{p_end}
+{phang}. {stata reshape wide choice termtime travelcost pr, i(id) j(mode)}{p_end}
 {phang}. {stata constraint 1 [air]termtime1 = [train]termtime2}{p_end}
 {phang}. {stata constraint 2 [train]termtime2 = [bus]termtime3}{p_end}
 {phang}. {stata constraint 3 [bus]termtime3 = [car]termtime4}{p_end}
@@ -883,18 +886,30 @@ illustrate how {cmd:cmp} works (colored text is clickable):
 {phang}. {stata constraint 5 [train]travelcost2 = [bus]travelcost3}{p_end}
 {phang}. {stata constraint 6 [bus]travelcost3 = [car]travelcost4}{p_end}
 {phang}. {stata "cmp (air:choice1=t*1) (train: choice2=income t*2) (bus: choice3=income t*3) (car: choice4=income t*4), ind((6 6 6 6)) constr(1/6) nodrop struct tech(dfp) ghkd(200)"}{p_end}
+{phang}. {stata predict cmppr1, eq(air) pr}{p_end}
+{phang}. {stata predict cmppr2, eq(train) pr}{p_end}
+{phang}. {stata predict cmppr3, eq(bus) pr}{p_end}
+{phang}. {stata predict cmppr4, eq(car) pr}{p_end}
 
 {phang}. {stata webuse wlsrank}{p_end}
 {phang}. {stata asroprobit rank high low, casevars(female score) case(id) alternatives(jobchar) reverse}{p_end}
-{phang}. {stata reshape wide rank high low, i(id) j(jobchar)}{p_end}
+{phang}. {stata predict pr, pr1} // probability of ranking each outcome first in each case{p_end}
+{phang}. {stata reshape wide rank high low pr, i(id) j(jobchar)}{p_end}
 {phang}. {stata constraint 1 [esteem]high1=[variety]high2}{p_end}
 {phang}. {stata constraint 2 [esteem]high1=[autonomy]high3}{p_end}
 {phang}. {stata constraint 3 [esteem]high1=[security]high4}{p_end}
 {phang}. {stata constraint 4 [esteem]low1=[variety]low2}{p_end}
 {phang}. {stata constraint 5 [esteem]low1=[autonomy]low3}{p_end}
 {phang}. {stata constraint 6 [esteem]low1=[security]low4}{p_end}
-{phang}. {stata "cmp (esteem:rank1=high1 low1)(variety:rank2=female score high2 low2)(autonomy:rank3=female score high3 low3)(security:rank4=female score high4 low4),ind((9 9 9 9)) tech(dfp) ghkd(200, type(hammersley)) rev constr(1/6)"}
-{p_end}
+{phang}. {stata "cmp (esteem:rank1=high1 low1)(variety:rank2=female score high2 low2)(autonomy:rank3=female score high3 low3)(security:rank4=female score high4 low4),ind((9 9 9 9)) tech(dfp) ghkd(200, type(hammersley)) rev constr(1/6)"}{p_end}
+{phang}. {stata predict cmppr1, eq(esteem) pr}{p_end}
+{phang}. {stata predict cmppr2, eq(variety) pr}{p_end}
+{phang}. {stata predict cmppr3, eq(autonomy) pr}{p_end}
+{phang}. {stata predict cmppr4, eq(security) pr}{p_end}
+
+{phang}. {stata webuse class10}{p_end}
+{phang}. {stata eprobit graduate income i.roommate, endogenous(hsgpa = income i.hscomp) entreat(program = i.campus i.scholar income) vce(robust)}{p_end}
+{phang}. {stata "cmp (graduate = program#(c.income roommate c.hsgpa) program income roommate hsgpa) (program = i.campus i.scholar income) (hsgpa = income i.hscomp), vce(robust) ind(4 4 1) qui nolr":cmp (graduate = program##(c.income roommate c.hsgpa)) (program = i.campus i.scholar income) (hsgpa = income i.hscomp), vce(robust) ind($cmp_probit $cmp_probit $cmp_cont) qui nolr}{p_end}
 
 {pstd}{hilite:* Heckman selection models}
 
@@ -952,33 +967,41 @@ illustrate how {cmd:cmp} works (colored text is clickable):
 {pstd}{hilite:* Hierarchical/random effects models}
 
 {phang}. {stata webuse union}{p_end}
-{phang}. {stata "xtprobit union age grade not_smsa south year south#c.year"}{p_end}
-{phang}. {stata "gsem (union <- age grade not_smsa south year south#c.year M[idcode]@1), probit intp(12)"}{p_end}
-{phang}. {stata "cmp (union = age grade not_smsa south year south#c.year || idcode:), ind($cmp_probit) nolr qui"}{p_end}
+{phang}. {stata "xtprobit union age grade not_smsa south south#c.year" :xtprobit union age grade not_smsa south##c.year}{p_end}
+{phang}. {stata "gsem (union <- age grade not_smsa south south#c.year M[idcode]@1), probit intp(12)":gsem (union <- age grade not_smsa south##c.year M[idcode]@1), probit intp(12)}{p_end}
+{phang}. {stata "cmp (union = age grade not_smsa south south#c.year || idcode:), ind($cmp_probit) qui" :cmp (union = age grade not_smsa south##c.year || idcode:), ind($cmp_probit) qui}{p_end}
 
 {phang}. {stata webuse nlswork3}{p_end}
-{phang}. {stata xttobit ln_wage union age grade not_smsa south year south#c.year, ul(1.9)}{p_end}
-{phang}. {stata "gsem (ln_wage <- union age grade not_smsa south year south#c.year M[idcode]@1), family(gaussian, rcensored(1.9)) intp(12)"}{p_end}
+{phang}. {stata xttobit ln_wage union age grade not_smsa south south#c.year, ul(1.9)}{p_end}
+{phang}. {stata "gsem (ln_wage <- union age grade not_smsa south south#c.year M[idcode]@1), family(gaussian, rcensored(1.9)) intp(12)"}{p_end}
 {phang}. {stata replace ln_wage = 1.9 if ln_wage > 1.9}{p_end}
-{phang}. {stata `"cmp (ln_wage = union age grade not_smsa south year south#c.year || idcode:), ind("cond(ln_wage<1.899999, $cmp_cont, $cmp_right)") nolr qui"'}{p_end}
+{phang}. {stata `"cmp (ln_wage = union age grade not_smsa south south#c.year || idcode:), ind("cond(ln_wage<1.899999, $cmp_cont, $cmp_right)") nolr qui"'}{p_end}
 
 {phang}. {stata webuse nlswork5}{p_end}
-{phang}. {stata xtintreg ln_wage1 ln_wage2 union age grade south year south#c.year occ_code}{p_end}
-{phang}. {stata "gsem (ln_wage1 <- union age grade south year south#c.year occ_code M[idcode]@1), family(gaussian, udepvar(ln_wage2)) intp(12)"}{p_end}
-{phang}. {stata "cmp (ln_wage1 ln_wage2 = union age grade south year south#c.year occ_code || idcode:), ind($cmp_int) nolr qui"}{p_end}
+{phang}. {stata xtintreg ln_wage1 ln_wage2 union age grade south south#c.year occ_code}{p_end}
+{phang}. {stata "gsem (ln_wage1 <- union age grade south south#c.year occ_code M[idcode]@1), family(gaussian, udepvar(ln_wage2)) intp(12)"}{p_end}
+{phang}. {stata "cmp (ln_wage1 ln_wage2 = union age grade south south#c.year occ_code || idcode:), ind($cmp_int) nolr qui"}{p_end}
 
-{phang}. {stata webuse bangladesh}{p_end}
-{phang}. {stata "xtmelogit c_use urban age child* || district: urban, cov(unstruct)"}{p_end}
-{phang}. {stata "cmp (c_use = urban age child* || district: urban), ind($cmp_probit) nolr qui"}{p_end}
+{phang}. {stata webuse tvsfpors}{p_end}
+{phang}. {stata "meoprobit thk prethk cc#tv || school: || class:"}{p_end}
+{phang}. {stata "cmp (thk = prethk cc#tv || school: || class:), ind($cmp_oprobit) intpoints(7 7) nolr qui"}{p_end}
 
 {phang}. {stata webuse productivity}{p_end}
 {phang}. {stata "xtmixed gsp private emp hwy water other unemp || region: || state:"}{p_end}
-{phang}. {stata "cmp (gsp = private emp hwy water other unemp || region: || state:), nolr ind($cmp_cont) qui"}{p_end}
+{phang}. {stata "cmp (gsp = private emp hwy water other unemp || region: || state:), nolr ind($cmp_cont)"}{p_end}
 
-{pstd}These examples go beyond standard commands (other than {help gsem}):
+{phang}. {stata webuse womenhlthre}{p_end}
+{phang}. {stata gen byte goodhlth = health > 3}{p_end}
+{phang}. {stata xteprobit goodhlth exercise grade, entreat(insured = grade i.workschool)}{p_end}
+{phang}. {stata "cmp (goodhlth = insured#c.(exercise grade) exercise grade insured || personid:) (insured = grade i.workschool || personid:), ind($cmp_probit $cmp_probit) intp(7) nolr":cmp (goodhlth = insured##c.(exercise grade) || personid:) (insured = grade i.workschool || personid:), ind($cmp_probit $cmp_probit) intp(7) nolr}{p_end}
+
+{phang}. {stata webuse wagework}{p_end}
+{phang}. {stata xtheckman wage age tenure, select(working = age market)}{p_end}
+{phang}. {stata "cmp (wage = age tenure || personid:) (working = age market || personid:), ind(working*$cmp_cont $cmp_probit) intp(7) nolr"}{p_end}
+
+{pstd}These examples go beyond standard commands (though {help gsem} can do some):
 
 {phang}. {stata webuse laborsup}{p_end}
-
 
 {phang}{hilite:* Trivariate seemingly unrelated ordered probit}{p_end}
 {phang}. {stata gen byte kids2 = kids + int(uniform()*3)}{p_end}
@@ -1003,7 +1026,7 @@ illustrate how {cmd:cmp} works (colored text is clickable):
 
 {phang}{hilite:* Random effects probit dependent on latent first stage}{p_end}
 {phang}. {stata webuse union}{p_end}
-{phang}. {stata "cmp (union = age not_smsa black# || idcode:) (black = south year south#c.year), ind($cmp_probit $cmp_probit) nolr"}{p_end}
+{phang}. {stata "cmp (union = age not_smsa black# || idcode:) (black = south#c.year), ind($cmp_probit $cmp_probit) nolr"}{p_end}
 
 {marker predict_egs}{...}
 {pstd}These illustrate subtleties of {help predict:predict} after {cmd:cmp}:
@@ -1074,23 +1097,3 @@ to labor supply. {it:Econometrica} 54(3): 679-85.{p_end}
 
 {pstd}Thanks to Kit Baum, David Drukker, Arne Hole, Stanislaw Kolenikov, and Mead Over for comments, and to Florian Heiss and Viktor Winschel for permission to adapt
 their sparse grid Mata code.
-
-{title:Also see}
-
-{psee}
-{manhelp ml R},
-{manhelp biprobit R},
-{manhelp probit R},
-{manhelp oprobit R},
-{manhelp sureg R},
-{manhelp ivreg R},
-{manhelp tobit R},
-{manhelp cnreg R},
-{manhelp intreg R},
-{manhelp truncreg R},
-{manhelp ivtobit R},
-{manhelp ivprobit R},
-{manhelp heckman R},
-{manhelp heckprob R},
-{manhelp svy_estimation SVY:svy estimation}.
-{p_end}

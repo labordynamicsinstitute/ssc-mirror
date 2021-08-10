@@ -13,8 +13,8 @@ d Requires: Stata version 11
 d
 d Distribution-Date: 20150423
 d
-d Author: Adrien Bouguen, Ecole d'économie de Paris
-d Support: email abouguen@@povertyactionlab.org
+d Author: Adrien Bouguen, Santa Clara University
+d Support: email abouguen@@scu.edu
 d
 f varmi.ado
 f varmi.sthlp

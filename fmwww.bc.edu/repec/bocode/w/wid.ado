@@ -1,9 +1,9 @@
-*! wid v1.0.2 Thomas Blanchet 20jun2017
+*! wid v1.0.4 Thomas Blanchet 7apr2020
 
 program wid
 	version 13
 	
-	syntax, [INDicators(string) AReas(string) Years(numlist) Perc(string) AGes(string) POPulation(string) METAdata clear]
+	syntax, [INDicators(string) AReas(string) Years(numlist) Perc(string) AGes(string) POPulation(string) METAdata EXclude clear]
 	
 	// ---------------------------------------------------------------------- //
 	// Check if there are already some data in memory
@@ -44,42 +44,44 @@ program wid
 		}
 		local areas `areas_comma'
 	}
-	// In no year specified, use all of them
-	if inlist("`years'", "_all", "") {
-		local years "1800-2015"
-	}
-	else {
-		// Add a comma between years
-		foreach y of local years {
-			if ("`years_comma'" != "") {
-				local years_comma "`years_comma',`y'"
-			}
-			else {
-				local years_comma "`y'"
-			}
-		}
-		local years `years_comma'
-	}
 	
 	// ---------------------------------------------------------------------- //
 	// Retrieve all possible variables for the area(s)
 	// ---------------------------------------------------------------------- //
 	
-	display as text "* Get variables associated to your selection...",, _continue
+	display as text ""
+	display as text "* Get variables associated to your selection...", _continue
 	
+	tempfile allvars
 	clear
-	javacall com.wid.WIDDownloader importCountriesAvailableVariables, args("`areas'")
+	quietly save "`allvars'", emptyok
+	
+	foreach sixlet in `indicators' {
+		clear
+		if regexm("`sixlet'", "^[a-z][a-z][a-z][a-z][a-z][a-z]$") {
+			clear
+			javacall com.wid.WIDDownloader importCountriesAvailableVariables, args("`areas'" "`sixlet'")
+		}
+		else if ("`sixlet'" == "_all") {
+			clear
+			javacall com.wid.WIDDownloader importCountriesAvailableVariables, args("`areas'" "all")
+		}
+		else {
+			display as error "`name' is not a valid six letter code"
+			exit 198
+		}
+		quietly append using "`allvars'"
+		quietly save "`allvars'", replace
+	}
 	
 	// Check if there are some results
+	quietly use "`allvars'"
 	quietly count
 	if (r(N) == 0) {
 		display as text "DONE"
 		display as text "(no data matching your selection)"
 		exit 0
 	}
-	
-	tempfile allvars
-	quietly save "`allvars'"
 	
 	// ---------------------------------------------------------------------- //
 	// Only keep variables that the user asked for
@@ -99,8 +101,24 @@ program wid
 			}
 			quietly replace variable = "`name'" in `i'
 		}
+		quietly duplicates drop
 		tempfile list_indicators
 		quietly save "`list_indicators'"
+	}
+	
+	// Create a list with all the years specified, if any
+	clear
+	if !inlist("`years'", "", "_all") {
+		local n: word count `years'
+		quietly set obs `n'
+		quietly generate year = .
+		forvalue i = 1/`n' {
+			local year: word `i' of `years'
+			quietly replace year = `year' in `i'
+		}
+		quietly duplicates drop
+		tempfile list_years
+		quietly save "`list_years'"
 	}
 	
 	// Create a list with all percentiles specified, if any
@@ -117,6 +135,7 @@ program wid
 			}
 			quietly replace percentile = "`p'" in `i'
 		}
+		quietly duplicates drop
 		tempfile list_perc
 		quietly save "`list_perc'"
 	}
@@ -126,15 +145,16 @@ program wid
 	if !inlist("`ages'", "", "_all") {
 		local n: word count `ages'
 		quietly set obs `n'
-		quietly generate age = .
+		quietly generate age = ""
 		forvalues i = 1/`n' {
 			local a: word `i' of `ages'
 			if !regexm("`a'", "^[0-9][0-9][0-9]$") {
 				display as error "`a' is not a valid age code"
 				exit 198
 			}
-			quietly replace age = `a' in `i'
+			quietly replace age = "`a'" in `i'
 		}
+		quietly duplicates drop
 		tempfile list_ages
 		quietly save "`list_ages'"
 	}
@@ -153,6 +173,7 @@ program wid
 			}
 			quietly replace pop = "`pop'" in `i'
 		}
+		quietly duplicates drop
 		tempfile list_population
 		quietly save "`list_population'"
 	}
@@ -207,52 +228,88 @@ program wid
 	else {
 		local plural_age "y"
 	}
+	quietly tab pop
+	local nb_pop = r(r)
+	if (`nb_pop' > 1) {
+		local plural_pop "ies"
+	}
+	else {
+		local plural_pop "y"
+	}
 	
 	display as text "DONE"
 	display as text "(found `nb_variable' variable`plural_variable'", _continue
 	display as text "for `nb_country' area`plural_country',", _continue
-	display as text "`nb_percentile' percentile`plural_percentile'", _continue
-	display as text "and `nb_age' age categor`plural_age')"
+	display as text "`nb_percentile' percentile`plural_percentile',", _continue
+	display as text "`nb_age' age categor`plural_age',", _continue
+	display as text "`nb_pop' population categor`plural_pop')"
+	display as text ""
 	
 	// ---------------------------------------------------------------------- //
 	// Retrieve the data from the API
 	// ---------------------------------------------------------------------- //
 	
-	display as text "* Download the data...",, _continue
+	display as text "* Downloading the data",, _continue
 	
 	// Generate the variable names to be used in the API
-	quietly generate data_code = variable + "_" + percentile + "_" + string(age) + "_" + pop
+	quietly generate data_code = variable + "_" + percentile + "_" + age + "_" + pop
+		
+	// Divide the data in smaller chunks before making the request: group by
+	// variable and percentiles
+	sort variable percentile age pop country
+	quietly egen grp = group(variable percentile age pop)
+	quietly generate chunk = round(grp/10)
+	quietly drop grp
 	
-	// Divide the data in smaller chunks before making the request
-	quietly generate chunk = round(_n/50)
 	tempfile codes output_data
 	quietly save "`codes'"
+		
+	display ""
+	display ""
+	display "{c LT} 0% {hline 3}{c +}{hline 3} 20% {hline 3}{c +}{hline 3} 40% {hline 3}{c +}{hline 3} 60% {hline 3}{c +}{hline 3} 80% {hline 3}{c +}{hline 3} 100% {c RT}" in smcl
 	
+	quietly tabulate chunk
+	local nchunks = r(r)
 	quietly levelsof chunk, local(chunk_list)
+	local progress = 1
 	foreach c of local chunk_list {
 		quietly use "`codes'"
 		quietly levelsof data_code if (chunk == `c'), separate(",") local(variables_list) clean
 		quietly levelsof country if (chunk == `c'), separate(",") local(areas_list) clean
 		
 		clear
-		javacall com.wid.WIDDownloader importCountriesVariablesDownload, args("`areas_list'" "`variables_list'" "`years'")
+		javacall com.wid.WIDDownloader importCountriesVariables, args("`areas_list'" "`variables_list'" "`exclude'")
+		quietly drop if missing(value)
 		
 		if (`c' != 0) {
 			quietly append using "`output_data'"
 		}
 		quietly save "`output_data'", replace
-	}
-	display as text "DONE"
 		
+		while (`c'/`nchunks'*68 > `progress') {
+			di "=",, _continue
+			local progress = `progress' + 1
+		}
+	}
+	while (`progress' < 68) {
+		di "=",, _continue
+		local progress = `progress' + 1
+	}
+	display ""
+	display ""
+	
+	if ("`list_years'" != "") {
+		quietly merge n:1 year using "`list_years'", nogenerate keep(match)
+	}
+	
 	quietly count
 	if (r(N) == 0) {
 		display as text "(no data matching you selection)"
 		exit 0
 	}
-		
-	quietly duplicates drop country indicator percentile year, force
-	generate variable = substr(indicator, 1, 6) + substr(indicator, 8, 3) + substr(indicator, 12, 1)
-	drop indicator
+	
+	quietly duplicates drop country variable age pop percentile year, force
+	quietly replace variable = variable + age + pop
 	order country variable percentile year value
 	quietly save "`output_data'", replace
 	
@@ -261,44 +318,67 @@ program wid
 	// ---------------------------------------------------------------------- //
 	
 	if ("`metadata'" != "") {
-		display as text "* Download the metadata...",, _continue
+		display as text "* Download the metadata...", _continue
 		
 		// Only keep information required for the metadata, and divide them again
 		tempfile output_metadata
 		quietly use "`codes'", clear
+		
+		// Only keep one percentile per variable (metadata are the same for all percentiles)
 		drop chunk
-		quietly generate metadata_code = variable + "_" + string(age) + "_" + pop
-		quietly duplicates drop country metadata_code, force
+		quietly duplicates drop variable country age pop, force
 		quietly generate chunk = round(_n/50)
 		quietly save "`codes'", replace
 		
 		quietly levelsof chunk, local(chunk_list)
+		local first 1
 		foreach c of local chunk_list {
 			quietly use "`codes'", clear
-			quietly levelsof metadata_code if (chunk == `c'), separate(",") local(variables_list) clean
+			quietly levelsof data_code if (chunk == `c'), separate(",") local(variables_list) clean
 			quietly levelsof country if (chunk == `c'), separate(",") local(areas_list) clean
 			
 			clear
 			javacall com.wid.WIDDownloader importCountriesVariablesMetadata, args("`areas_list'" "`variables_list'")
-		
-			keep variable shortname shortdes pop age country source method
-			quietly tostring variable shortname shortdes pop age country source method, replace
 			
-			if (`c' != 0) {
+			// Pass if the dataset is empty (can happen with metadata)
+			quietly count
+			if (r(N) == 0) {
+				continue
+			}
+		
+			drop percentile
+			
+			if (`first' == 0) {
 				quietly append using "`output_metadata'"
 			}
+			local first 0
 			quietly save "`output_metadata'", replace
 		}
+				
+		quietly count
+		if (r(N) > 0) {
+			display as text "DONE"
+		
+			quietly replace variable = variable + age + pop
+			quietly duplicates drop variable country, force
 			
-		display as text "DONE"
+			quietly save "`output_metadata'", replace
+			
+			// Merge data & metadata
+			use "`output_data'", clear
+			quietly merge n:1 country variable using "`output_metadata'", nogenerate keep(master match)
+		}
+		else {
+			display as text "DONE (no metadata found for requested data)"
+		}
 		
-		quietly duplicates drop variable country, force
-		
-		// Merge data & metadata
-		use "`output_data'"
-		quietly merge n:1 variable country using "`output_metadata'", nogenerate keep(master match)
-		
-		order country variable percentile year value shortname shortdes pop age source method
+		quietly replace imputation = "regional imputation"       if imputation == "region"
+		quietly replace imputation = "adjusted surveys"          if imputation == "survey"
+		quietly replace imputation = "surveys and tax data"      if imputation == "tax"
+		quietly replace imputation = "surveys and tax microdata" if imputation == "full"
+		quietly replace imputation = "rescaled fiscal income"    if imputation == "rescaling"
+
+		order country variable percentile year value
 	}
 	
 	// Saves memory

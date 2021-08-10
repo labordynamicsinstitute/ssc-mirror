@@ -1,10 +1,14 @@
 {smcl}
-{* 22 January 2016}{...}
+{* 31 October 2019}{...}
 {hline}
 help for {hi:eventstudy2}
 {hline}
 
 {title:eventstudy2 - A module to perform event studies with complex test statistics}
+
+EXAMPLES AND DATA ARE AVAILABLE BELOW. IT IS RECOMMENDED TO FRIST GET THESE EXAMPLES RUNNNING AND THEN APPLYING {cmd:eventstudy2} TO ONE'S OWN DATA. 
+
+NEW IN THIS VERSION: GRANK-T test for cumulative average abnormal returns according to Kolari and Pynnönen (2011); Adjusted Patell test (Kolari and Pynnönen (2010) adjustment); Wilcoxon (1945) signed ranks test; further:a substantially improved error output when input data does not match eventstudy2's criteria; the correction of an error in displaying significance levels of buy-and-hold returns; the correction of an error in calculating the bootstrapped skewness-adjusted t-ratio -> Thanks to Ludwig Erl for bringing this error to my attention.
 
 {p 8 16 2}{cmd:eventstudy2}
 {it:security_id} {it:date} {cmd:using} {it:security_returns_file}{cmd:,} 
@@ -64,7 +68,7 @@ The {hi:Patell test} of standardized residuals (Patell, 1976, pp. 254-258).
 The {hi:Boehmer test} of standardized residuals corrected for event-induced changes in volatility (Boehmer et al., 1991, pp. 258-270).
 
 {p 8 8 2}
-The {hi:Kolari test} of standardized residuals corrected for event-induced changes in volatility and cross-correlation (Kolari and Pynn�nen, 2010, p. 4003).
+The {hi:Kolari test} of standardized residuals corrected for event-induced changes in volatility and cross-correlation (Kolari and Pynnönen, 2010, p. 4003).
 
 {p 8 8 2}
 The {hi:Corrado rank test} (Corrado, 1989, pp. 387-388). For cumulative (average) abnormal returns, the aggregation formula in Cowan (1992, p. 346) is applied.
@@ -74,6 +78,12 @@ The {hi:Corrado and Zivney rank test} corrected for event-induced volatility of 
 
 {p 8 8 2}
 The {hi:generalized sign test} according to Cowan (1992, pp. 345-346).
+
+{p 8 8 2}
+The {hi:GRANK test} for average cumulative returns according to Kolari and Pynnönen (2011), including the Kolari and Pynnönen (2010) for cross-correlation (see Fn. 6 in Kolari and Pynnönen (2011)).
+
+{p 8 8 2}
+The {hi:Wilcoxon signed-ranks test} according to Wilcoxon (1945).
 
 {p 8 8 2}
 The {hi:skewness-adjusted bootstrapped t-ratio test} for buy-and-hold abnormal returns according to Lyon et al. (1999, pp. 173-175).
@@ -88,7 +98,7 @@ extensive meta-analysis on data availability. For instance, securities/firms tha
 {p 4 8 2}{cmd:eventstudy2} is not an official Stata command.
 It is a free contribution to the research community.
 Please cite it as such: {p_end}
-{p 8 8 2}Kaspereit, T. 2015. eventstudy2 - A program to perform event studies with complex test statistics in Stata (Version 1.1).{p_end}
+{p 8 8 2}Kaspereit, T. 2019. eventstudy2 - A program to perform event studies with complex test statistics in Stata (Version 3.0).{p_end}
 
 
 {title:Options}
@@ -181,12 +191,12 @@ classified as arising from thin trading if the trading volume, i.e. {it:prices} 
 {cmdab:trading:volume(}{it:trading_volume}{cmd:)}) is lower than {it:thin_trading_threshold}.
 All return observations that are classified as arising from thin trading are handled on a trade-to-trade basis as suggested in Maynes and Rumsey (1993, pp. 148-149).
 
-{p 4 8 2}{cmd:fill} specifies whether missing missing security and market returns are set to zero if missing. Nevertheless, missing returns are never set to zero if they are before the
-first or after the last valid return observation in the file {it:security_returns_file}. It is strongly recommend to not use this option, except for models BHAR and BHAR_raw where is option is always activated.
-{hi:eventstudy2} handles missing returns or returns that arise from thin trading is a very efficient way with a minimum loss in observations. Further, all test statistics account  for such missing returns on a daily basis.
+{p 4 8 2}{cmd:fill} specifies whether missing security and market returns are set to zero if missing. Nevertheless, missing returns are never set to zero if they are before the
+first or after the last valid return observation in the file {it:security_returns_file}. It is strongly recommended to not use this option, except for models BHAR and BHAR_raw where this option is always activated.
+{hi:eventstudy2} handles missing returns or returns that arise from thin trading in a very efficient way with a minimum loss in observations. Further, all test statistics account  for such missing returns on a daily basis.
 
-{p 4 8 2}{cmdab:nokol:ari} If this option is called, the Kolari and Pynn�nen (2010, p. 4003) adjustment of the Boehmer et al. (1991, pp. 258-270) test is not calculated but set to 1. In this case
-the Boehmer test equals the Kolari test. Calling this option might increase the calculation of test statistics dramatically since resource requirements to calculate the Kolari and Pynn�nen adjustment increase quadratically in the number of events.
+{p 4 8 2}{cmdab:nokol:ari} If this option is called, the Kolari and Pynnönen (2010, p. 4003) adjustment of the Boehmer et al. (1991, pp. 258-270) test is not calculated but set to 1. In this case
+the Boehmer test equals the Kolari test. Calling this option might increase the calculation of test statistics dramatically since resource requirements to calculate the Kolari and Pynnönen adjustment increase quadratically in the number of events.
 
 {p 4 8 2}{cmdab:del:weekend} If this option is called, return observations at Saturdays and Sundays are never considered valid observations and are deleted from the analysis.
 
@@ -199,7 +209,7 @@ If this option is not specified, any date on which there is at least one return 
 {p 4 8 2}{cmdab:shift(}{it:maximum_event_date_shift}{cmd:)} {hi:eventstudy2} derives the set of valid dates (date line) from the file {it:security_returns_file}. If an event date does not coincide with any of those
 dates, it is shifted to the next date on the date line. maximum_event_date_shift specifies the maximum number of calendar days an event date is shifted forward. The default value is 3.
 
-{p 4 8 2}{cmdab:garch} invokes the estimation of a (G)ARCH model is the benchmark model is a (multi)factor model (FM). The options {cmdab:archo:ption:(}{it:arch_option}{cmd:)}, {cmdab:garcho:ption:(}{it:garch_option}{cmd:)}
+{p 4 8 2}{cmdab:garch} invokes the estimation of a (G)ARCH model if the benchmark model is a (multi)factor model (FM). The options {cmdab:archo:ption:(}{it:arch_option}{cmd:)}, {cmdab:garcho:ption:(}{it:garch_option}{cmd:)}
 and {cmdab:archi:terate:(}{it:iterations}{cmd:)}
 determine the exakt specification of the (G)ARCH model.
 
@@ -225,7 +235,7 @@ will still be estimated based on trade-to-trade returns.
 
 {p 4 8 2}{cmdab:car1LB(}{it:CAR_window_1_lower_boundary}{cmd:)} to {cmdab:car10LB(}{it:CAR_window_10_lower_boundary}{cmd:)} specifies the lower boundary of the window over which cumulative (average) abnormal
 returns are to be calcuated. It is possible to specifiy up to 10 different windows. The default value is -20. The lower boundaries and upper boundaries (see option {cmdab:car1UB(}{it:CAR_window_1_upper_boundary}{cmd:)} to
-{cmdab:car10UB(}{it:CAR_window_10_upper_boundary}{cmd:)}) build pairs. For instance, specifying car1LB(-5) and car1LB(3) makes {hi:eventstudy2} calculating and reporting cumulative (average) abnormal returns or buy-and hold abnormal returns
+{cmdab:car10UB(}{it:CAR_window_10_upper_boundary}{cmd:)}) build pairs. For instance, specifying car1LB(-5) and car1UB(3) makes {hi:eventstudy2} calculating and reporting cumulative (average) abnormal returns or buy-and hold abnormal returns
 for the window [-5;3] relative to the event date.
 
 {p 4 8 2}{cmdab:car1UB(}{it:CAR_window_1_upper_boundary}{cmd:)} to {cmdab:car10UB(}{it:CAR_window_10_upper_boundary}{cmd:)} specifies the upper boundary of the window over which cumulative (average)
@@ -235,7 +245,13 @@ abnormal returns are to be calculated. It is possible to specifiy up to 10 diffe
 
 {p 4 8 2} Change your current working directory to a path were you can save sample files.
 
-{p 4 8 2}{stata net get eventstudy2.pkg}{p_end}
+{p 4 8 2} Needs to be run first to set the right download location of sample files:
+
+{p 4 8 2} {stata ssc describe eventstudy2}
+
+{p 4 8 2} Download sample files:
+
+{p 4 8 2}{stata net get eventstudy2}
 
 {p 4 8 2}{stata use Earnings_surprises.dta}{p_end}
 
@@ -272,8 +288,10 @@ Nonparametric event study tests. {it:Review of Quantitative Finance and Accounti
 The Cross-Section of Expected Stock Returns. {it:Journal of Finance} 47(2), 427-465. {p_end}
 {p 4 8 2}Fama, E. F., French, K. R. 1993.
 Common risk factors in the returns on stocks and bonds. {it:Journal of Financial Economics} 33(1), 3-36. {p_end}
-{p 4 8 2}Kolari, J. W., Pynn�nen, S. 2010.
+{p 4 8 2}Kolari, J. W., Pynnönen, S. 2010.
 Event study testing with cross-sectional correlation of abnormal returns. {it:Review of Financial Studies} 23(11), 3996-4025. {p_end}
+{p 4 8 2}Kolari, J. W., Pynnönen, S. 2011.
+Nonparametric rank tests for event studies. {it:Journal of Empirical Finance} 18(5), 953-971. {p_end}
 {p 4 8 2}Lyon, J.. D., Barber, B. M., Tsai, C.-L. 1999.
 Improved methods for tests of long-run abnormal stock returns. {it:Journal of Finance} 54(1), 165-201. {p_end}
 {p 4 8 2}Maynes, E., Rumsey, J. 1993.
@@ -282,6 +300,8 @@ Conducting event studies with thinly traded stocks. {it:Journal of Banking and F
 Corporate forecasts of earnings per share and stock price behavior: Empirical tests. {it:Journal of Accounting Research} 14(2), 246-276. {p_end}
 {p 4 8 2}Serra, A. P. 2002.
 Event study tests: A brief survey. {it:Working paper}. http://www.fep.up.pt/investigacao/workingpapers/wp117.pdf. {p_end}
+{p 4 8 2}Wilcoxon,F. 1945.
+Individual comparisons by ranking methods. {it:Biometrics Bulletin} 1(6), 80-83. {p_end}
 
 {title:Author}
 

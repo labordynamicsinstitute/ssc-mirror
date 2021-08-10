@@ -1,6 +1,6 @@
 d 'VCE2WAY': module to adjust a Stata command's standard errors for two-way clustering
 d
-d      -vce2way- is a module to adjust an existing Stata estimation
+d  vce2way is a module to adjust an existing Stata estimation
 d command's standard errors for two-way clustering.  The module
 d works with any Stata command which allows one-way clustering in
 d each dimension of interest separately via -vce(cluster varname)-
@@ -14,7 +14,7 @@ d KW: VCE
 d
 d Requires: Stata version 13.1
 d
-d Distribution-Date: 20170225
+d Distribution-Date: 20200219
 d
 d Author: Hong Il Yoo, Durham University
 d Support: email h.i.yoo@@durham.ac.uk

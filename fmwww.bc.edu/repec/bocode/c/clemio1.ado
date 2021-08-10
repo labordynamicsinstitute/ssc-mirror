@@ -10,6 +10,7 @@
 * 1.0.8 : add byable(recall)
 * 1.0.9 : remove OS X code
 * 1.0.10: guard against zero variance
+* 1.0.11: fix SMCL
 
 program define clemio1, rclass byable(recall)
 	version 8.2
@@ -143,7 +144,7 @@ program define clemio1, rclass byable(recall)
 //	if "$S_OS" == "MacOSX" {
 //		local ne = char(150)+char(142)
 //		}
-	di in gr _n "Clemente-Monta`ne's-Reyes unit-root test with single mean shift, IO model"
+	di in gr _n "Clemente-Monta{c n~}{c e'}s-Reyes unit-root test with single mean shift, IO model"
 	di in ye _n "`varlist'" in gr "    T =" %5.0f return(effN)  _col(25) " optimal breakpoint : " in ye `rts' return(Tb1) 
 	di in gr _n  "AR(" in ye %2.0f return(kopt) in gr ")" _col(22) "du1" _col(37) "(rho - 1)" _col(51) "const"  
 	di as text "{hline 73}" 
@@ -161,7 +162,7 @@ if "`graph'" ~= "" {
 	local minp = string(return(Tb1),"`rts'")
 	tsline `mint' if `mint'<., ti("Breakpoint t-statistic: min at `minp'") xline(`minx') nodraw name(mint,replace)
 	tsline `dvar' if `mint'<., ti("D.`varlist'") nodraw xline(`minx') name(ddv,replace)
-	graph combine ddv mint, col(1) ti("Clemente-Monta`ne's-Reyes single IO test for unit root") ///
+	graph combine ddv mint, col(1) ti("Clemente-Monta{c n~}{c e'}s-Reyes single IO test for unit root") ///
 		subti("in series: `varlist'")
 }
 	end

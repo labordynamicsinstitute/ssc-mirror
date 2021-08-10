@@ -1,545 +1,675 @@
-*! version 1.2.2 25sep2014 Daniel Klein, Rafael Reckmann
-
-pr kalpha ,by(r)
-	vers 11.2
+*! version 1.3.0 29dec2017 daniel klein and Rafael Reckmann
+program kalpha , byable(recall)
+	version 11.2
 	
-	sret clear
+	syntax varlist [ if ] [ in ] 	///
+	[ , 							///
+		Scale(passthru) 			///
+		Transpose 					///
+		XPOSE /// synonym for transpose; not documented
+		FORMAT(string) 				/// not documented
+		BOOTstrap 					///
+		BOOTstrap2(string) 			///
+	]
 	
-	syntax varlist [if] [in] ///
-	[ , SCale(str) TRANSPOSE XPOSE ///
-	FORMAT(str) BOOTstrap BOOTstrap2(str)]
+	kalpha_get_format `format'
 	
-	if mi("`format'") loc format %4.3f
-	else conf numeric fo `format'
-	if ("`xpose'" != "") loc transpose transpose
-	
-	marksample touse, nov strok
-	
-	cap conf numeric v `varlist'
-	loc strv = (_rc != 0)
-	if (`strv') cap conf str v `varlist'
-	loc strv = `strv' + (_rc)
-	
-	// set metric
-	if mi("`scale'") {
-		loc scale = cond(`strv', "nominal", "interval")
-	}
-	else {
-		ParseScaleOpt ,strv(`strv') `= strlower("`scale'")'
-		loc scale `s(scale)'
+	if ("`xpose'" != "") {
+		local transpose transpose
 	}
 	
-	// bootstrap option
-	if ("`bootstrap2'" != "") loc bootstrap bootstrap
-	if ("`bootstrap'" != "") {
-		ParseBootOpts ,isby(`= _by()') `bootstrap2'
-		loc reps `s(reps)'
-		loc level `s(level)'
-		loc mina `s(mina)'
-		loc seed `s(seed)'
-		loc dots `s(dots)'
-		loc dotn `s(dotn)'
-		loc return `s(return)'
-		loc draws `s(draws)'
-	}
+	marksample touse , novarlist
 	
-	// calculate alpha
-	m : mKalpha("`varlist'", "`touse'", `strv', "`scale'")
+	kalpha_get_scale `varlist' , `scale'
 	
-	// output
-	loc txt as txt
-	loc res as res
-	loc fmt `format'
-	
-	di `txt' _n "Krippendorff's Alpha-Reliability"
-	di `txt' "(" `res' r(metric) `txt' " data)" _n
-	
-	di `txt' %21s "No. of units " "= " `res' r(units)
-	di `txt' %21s "No. of observers " "= " `res' r(observers)
-	di `txt' %21s "Krippendorff's alpha " "= " `res' `fmt' r(kalpha)
-	
-	if ("`bootstrap'" != "") {
-		di `txt' _n "Bootstrap results" _n
-		di `txt' %21s "No. of coincidences " "= " `res' r(n)
-		di `txt' %21s "Replications " "= " `res' r(reps)  _n
-		di `txt' %12s "[`level'% " " Conf. Interval]"
-		di `res' _col(8) `fmt' r(ci_lb) _c
-		loc col = 29 - length("`: di `fmt' `r(ci_ub)''")
-		di `res' _col(`col') `fmt' r(ci_ub)
-		
-		if ("`mina'" != "") {
-			di `txt' _n _col(2) "Probability of failure to reach alpha"
-			di `txt' _n _col(8) "min. alpha" _col(`= `col' + 1') "q"
-			forv j = 1/`: word count `mina'' {
-				di `res' _col(8) `fmt' el(r(q), `j', 1) _c
-				di `res' _col(`col') `fmt' el(r(q), `j', 2)
-			}
+	if ("`bootstrap'`bootstrap2'" != "") {
+		kalpha_get_bootstrap , `bootstrap2'
+		if (("`seed'" != "") & _by()) {
+			display as err "option seed may not be combined with by"
+			exit 190
 		}
 	}
+	
+	local caller = _caller()
+	
+	mata : kalpha_ado()
+	
+	kalpha_display , format(`format')
 end
 
-pr ParseScaleOpt ,sclass
-	syntax [, STRV(numlist) ///
-	Nominal Ordinal Interval Ratio ///
-	Circular CIRCULARDeg ///
-	Circular2(str) CIRCULARDeg2(str) ///
-	Polar Polar2(str) ]
+program kalpha_get_format
+	version 11.2
 	
-	foreach copt in circular circulardeg {
-		if ("``copt'2'" != "") {
-			cap numlist "``copt'2'" ,int max(1) r(>0)
-			if (_rc) {
-				di as err _c "invalid option `copt'(): "
-				err _rc
-			}
-			loc U `r(numlist)'
-			loc `copt' `copt'
+	args format
+	
+	if (mi("`format'")) {
+		local format %4.3f
+	}
+	else {
+		confirm numeric format `format'
+	}
+	
+	c_local format : copy local format
+end
+
+program kalpha_get_scale
+	version 11.2
+	
+	syntax varlist [ , SCALE(string) ]
+	
+	capture confirm numeric variable `varlist'
+	local has_str = (_rc != 0)
+	capture confirm string variable `varlist'
+	local all_str = (_rc == 0)
+	
+	if (mi("`scale'")) {
+		local scale = cond(`has_str', "nominal", "interval")
+	}
+	else {
+		local scale = strlower("`scale'")
+	}
+	
+	local 0 , `scale'
+	syntax 						///
+	[ , 						///
+		Nominal 				///
+		Ordinal 				///
+		Interval 				///
+		Ratio 					///
+		Circular 				///
+		CIRCULARDeg 			///
+		Circular2(string) 		///
+		CIRCULARDeg2(string) 	///
+		Polar 					///
+		Polar2(string) 			///
+	]
+	
+	foreach C in circular circulardeg {
+		if (mi("``C'2'")) {
+			continue
 		}
+		capture numlist "``C'2'" , integer max(1) range(>0)
+		if (_rc) {
+			display as err _continue "invalid option `C'() -- "
+			error _rc
+		}
+		local U `r(numlist)'
+		local `C' `C'
 	}
-	if !inlist("", "`circular'", "`circulardeg'") {
-		di as err "only one of circular or circulardeg allowed"
-		e 198
-	}
-	loc U `circular2'`circulardeg2'
 	
 	if ("`polar2'" != "") {
-		cap numlist "`polar2'" ,asc min(2) max(2)
+		capture numlist "`polar2'" , ascending min(2) max(2)
 		if (_rc) {
-			di as err _c "invalid option polar(): "
-			err _rc
+			display as err _continue "invalid option polar() -- "
+			error _rc
 		}
-		token `r(numlist)'
-		loc Min `1'
-		loc Max `2'
-		loc polar polar
+		tokenize `r(numlist)'
+		local Min `1'
+		local Max `2'
+		local polar polar
 	}
 	
-	loc scale `nominal'`ordinal'`interval'`ratio'
-	loc scale `scale'`circular'`circulardeg'`polar'
+	local scale 		///
+		`nominal' 		///
+		`ordinal' 		///
+		`interval' 		///
+		`ratio' 		///
+		`circular' 		///
+		`circulardeg' 	///
+		`polar'
+		
 	if (`: word count `scale'' > 1) {
-		di as err "option scale() incorrectly specified"
-		e 198
+		display as err "option scale() incorrectly specified"
+		exit 198
 	}
 	
-	if (`strv') & ("`scale'" != "nominal") {
-		di as err "`scale' scale not allowed with string variables"
-		e 109
+	if ((`has_str') & ("`scale'" != "nominal")) {
+		display as err "`scale' scale not allowed with string variables"
+		exit 109
+	}
+		
+	if ("`circular'`circulardeg'" != "") {
+		local scale circular
+		local sine = cond(mi("`circulardeg'"), "pi", "180")
 	}
 	
-	sret loc scale `scale'
-	sret loc U `U'
-	sret loc Min `Min'
-	sret loc Max `Max'
+	if ("`polar'" != "") {
+		local scale bipolar
+	}
+	
+	c_local scale 	: copy local scale
+	c_local U 		: copy local U
+	c_local sine 	: copy local sine
+	c_local Min 	: copy local Min
+	c_local Max 	: copy local Max
+	c_local has_str : copy local has_str
+	c_local all_str : copy local all_str
 end
 
-pr ParseBootOpts, sclass
-	syntax [, ISBY(numlist) ///
-	Reps(int 20000) ///
-	Level(cilevel) ///
-	MINAlpha(numlist > 0 < 1) ///
-	SEED(str) ///
-	NODOTS DOTS DOTS2(numlist int max = 1 > 0) ///
-	RETURN DRAWs(numlist int max = 1 > 1) ]
+program kalpha_get_bootstrap
+	version 11.2
+	
+	syntax 									///
+	[ , 									///
+		Reps(integer 20000) 				///
+		Level(cilevel) 						///
+		MINAlpha(numlist > 0 < 1) 			///
+		SEED(string) 						///
+		NODOTS 								///
+		DOTS 								///
+		DOTS2(numlist integer max = 1 >= 0) ///
+		DRAWs(numlist integer max = 1 > 1) 	/// not documented
+		RETURN 								/// not documented
+	]
 	
 	if (`reps' < 2) {
-		di as err "reps() must be an integer greater than 1"
+		display as err "reps() must be an integer greater than 1"
 		e 198
 	}
 	
-	if (`"`seed'"' != "") & (`isby') {
-		di as err "option seed() may not be combined with by"
-		e 190
+	if (mi("`nodots'")) {
+		if mi("`dots2'") {
+			local dots = max(1, floor(`reps'/50))
+		}
+		else {
+			local dots : copy local dots2
+		}
+	}
+	else {
+		if ("`dots'`dots2'" != "") {
+			display as err "option nodots not allowed"
+			exit 198
+		}
+		local dots 0
 	}
 	
-	if ("`dots2'" != "") loc dots dots
-	if mi("`dots2'") & ("`dots'" != "") loc dots2 1
-	
-	sret loc reps `reps'
-	sret loc level `level'
-	sret loc mina `minalpha'
-	sret loc seed `seed'
-	sret loc dots `dots'
-	sret loc dotn `dots2'
-	sret loc return `return'
-	sret loc draws `draws'
+	c_local bootstrap 	bootstrap
+	c_local reps 		: copy local reps
+	c_local level 		: copy local level
+	c_local minalpha 	: copy local minalpha
+	c_local seed 		: copy local seed
+	c_local dots 		: copy local dots
+	c_local draws 		: copy local draws
+	c_local return 		: copy local return
 end
 
-vers 11.2
-m :
-void mKalpha(string scalar units,
-				string scalar tu,
-				real scalar strv,
-				string scalar sc)
-{
-	transmorphic matrix R
-	real matrix VbU, delta2, coin, Qmat
-	transmorphic colvector uqv
-	real colvector ndotc, balpha
-	real rowvector nudot, ci
-	real scalar nddot, Do, De, alpha, reps, levl
+program kalpha_display
+	version 11.2
 	
-	// get reliability matrix
-	R = mGetRelMat(tokens(units), tu, strv)
-	if (st_local("transpose") != "") R = R'
+	syntax , FORMAT(string)
 	
-	// get unique values (sorted)
-	uqv = uniqrows(vec(R))
-	uqv = select(uqv, (uqv :!= missingof(uqv)))
+	local txt as text
+	local res as res
 	
-	// set up values-by-units matrix
-	VbU = mGetVbUMat(R, uqv)
+	display `txt' _newline "Krippendorff's Alpha Reliability"
+	display `txt' "(" `res' r(metric) `txt' " data)" _newline
 	
-	// claculate marginal sums
-	nudot = colsum(VbU)
-	ndotc = rowsum(select(VbU, (nudot :> 1)))
-	nddot = colsum(ndotc)
+	display `txt' %21s "No. of units " "= " `res' r(units)
+	display `txt' %21s "No. of observers " "= " `res' r(observers)
+	display `txt' %21s "Krippendorff's alpha " "= " `res' `format' r(kalpha)
 	
-	// get delta matrix
-	delta2 = mGetDeltaMat(uqv, ndotc, sc)
-	
-	// calculate disagreement measures
-	if (length(R) > 1) {
-		Do = (nddot - 1) * mSumSum(VbU, delta2, nudot)
-		De = mSumSum(ndotc, delta2)
-	}
-	if ((Do == 0) & (De == 0)) alpha = 0
-	else alpha = 1 - (Do/De)
-	
-	// bootstrap
-	if (st_local("bootstrap") != "") {
-		reps = strtoreal(st_local("reps"))
-		levl = strtoreal(st_local("level"))
-		coin = mGetCoinMat(VbU, uqv, nudot)
-		balpha = mKalphaBoot(coin, rows(R), De, delta2, nddot, reps)
-		ci = mBootCI(balpha, levl, reps)
-		if (st_local("mina") != "") Qmat = mBootQ(balpha, reps)
+	if (mi(r(reps))) {
+		exit 0
 	}
 	
-	// return
-	st_rclear()
-	if (sc == "circulardeg") sc = "circular"
-	if (sc == "polar") sc = "bipolar"
-	st_global("r(metric)", sc)
-	
-	st_numscalar("r(kalpha)", alpha)
-	st_numscalar("r(observers)", rows(R))
-	st_numscalar("r(units)", rowsum(nudot :> 1))
-	st_numscalar("r(n)", nddot)
-	
-	st_matrix("r(csum)", nudot)
-	st_matrix("r(rsum)", ndotc)
-	st_matrix("r(delta2)", delta2)
-	st_matrix("r(vbu)", VbU)
-	if (!(strv)) {
-		st_matrix("r(uniqv)", uqv)
-		st_matrix("r(rel)", R)
-		uqv = strofreal(uqv, "%9.2g")
+	if (!r(reps)) {
+		display `txt' _newline "Bootstrapping does not apply"
+		exit 0
 	}
-	st_matrixcolstripe("r(delta2)", (J(rows(uqv), 1, ""), uqv))
-	st_matrixrowstripe("r(delta2)", (J(rows(uqv), 1, ""), uqv))
-	st_matrixrowstripe("r(vbu)", (J(rows(uqv), 1, ""), uqv))
 	
-	if (st_local("bootstrap") != "") {
-		st_numscalar("r(level)", strtoreal(st_local("level")))
-		st_numscalar("r(reps)", reps)
-		st_numscalar("r(ci_lb)", ci[1, 1])
-		st_numscalar("r(ci_ub)", ci[1, 2])
-		
-		st_matrix("r(coin)", coin)
-		if (st_local("return") != "") {
-			st_matrix("r(bkalpha)", balpha)
+	display `txt' _newline "Bootstrap results" _newline
+	display `txt' %21s "No. of coincidences " "= " `res' r(n)
+	display `txt' %21s "Replications " "= " `res' r(reps)
+	display _newline _continue
+	display `txt' %12s "[`r(level)'% " " Conf. Interval]"
+	display _column(8) `res' `format' r(ci_lb) _continue
+	local col = 29 - length("`: display `format' `r(ci_ub)''")
+	display _column(`col') `res' `format' r(ci_ub)
+	
+	if ("`r(q)'" == "matrix") {
+		local rows = rowsof(r(q))
+		display _newline _continue
+		display `txt' _column(2) "Probability of failure to reach alpha"
+		display `txt' _newline _column(8) "min. alpha" _column(`++col') "q"
+		forvalues j = 1/`rows' {
+			display `res' _column(8) `format' el(r(q), `j', 1) _continue
+			display `res' _column(`= `col' - 1') `format' el(r(q), `j', 2)
 		}
-		if (st_local("mina") != "") {
-			st_matrix("r(q)", Qmat)
-			st_matrixcolstripe("r(q)", ///
-			(("min."\ ""), ("alpha"\ "q")))
-		}
-	}
-}
-
-transmorphic matrix mGetRelMat(string rowvector vns, 
-								string scalar tu,
-								real scalar strv)
-{
-	transmorphic matrix X
-	real colvector rX
-	
-	if (!(strv)) X = st_data(., vns, tu)
-	else if (strv == 1) X = st_sdata(., vns, tu)
-	else {
-		X = J(colsum(st_data(., tu) :== 1), cols(vns), "")
-		for (i = 1; i <= cols(vns); ++i) {
-			if (st_isnumvar(vns[1, i])) {
-				rX = editmissing(st_data(., vns[1, i], tu), .)
-				X[., i] = editvalue(strofreal(rX, "%18.0g"), ".", "")
-			}
-			else X[., i] = st_sdata(., vns[1, i], tu)
-		}
-	}
-	X = select(X, (colsum(X :== missingof(X)) :< rows(X)))
-	X = select(X, (rowsum(X :== missingof(X)) :< cols(X)))
-	
-	return(X)
-}
-
-real matrix mGetVbUMat(transmorphic matrix R,
-						transmorphic colvector uqv)
-{
-	real matrix X
-	
-	X = J(rows(uqv), cols(R), .)
-	for (u = 1; u <= cols(X); ++u) {
-		for (c = 1; c <= rows(X); ++c) {
-			X[c, u] = colsum(R[., u] :== uqv[c, 1])
-		}
-	}
-	return(X)
-}
-
-real matrix mGetDeltaMat(transmorphic colvector uqv,
-							real colvector ndotc,
-							string scalar sc)
-{
-	real matrix X
-	real scalar U, Min, Max
-	
-	if ((sc == "circular") | (sc == "circulardeg")) {
-		U = strtoreal(st_global("s(U)"))
-		if (missing(U)) U = uqv[rows(uqv), 1] - uqv[1, 1] + 1
-	}
-	if (sc == "polar") {
-		Min = strtoreal(st_global("s(Min)"))
-		if (missing(Min)) {
-			Min = uqv[1, 1]
-			Max = uqv[rows(uqv), 1]
-		}
-		else Max = strtoreal(st_global("s(Max)"))
-	}
-	
-	X = J(rows(uqv), rows(uqv), 0)
-	
-	for (c = 1; c <= (rows(uqv) - 1); ++c) {
-		for (k = c + 1; k <= rows(uqv); ++k) {
-			if (sc == "nominal") X[c, k] = 1
-			if (sc == "ordinal") {
-				X[c, k] = (colsum(ndotc[(c..k), 1]) ///
-				- (ndotc[c, 1] + ndotc[k, 1])/2)^2
-			}
-			if (sc == "interval") {
-				X[c, k] = (uqv[c, 1] - uqv[k, 1])^2
-			}
-			if (sc == "ratio") {
-				X[c, k] = ///
-				((uqv[c, 1] - uqv[k, 1]) / ///
-				(uqv[c, 1] + uqv[k, 1]))^2
-			}
-			if (sc == "circular") {
-				X[c, k] = ///
-				(sin(c("pi")*((uqv[c, 1] - uqv[k, 1])/U)))^2
-			}
-			if (sc == "circulardeg") {
-				X[c, k] = ///
-				(sin(180*((uqv[c, 1] - uqv[k, 1])/U)))^2
-			}
-			if (sc == "polar") {
-				X[c, k] = (uqv[c, 1] - uqv[k, 1])^2 / ///
-				((uqv[c, 1] + uqv[k, 1] - 2*Min) * /// 
-				(2*Max - uqv[c, 1] - uqv[k, 1]))
-			}
-			X[k, c] = X[c, k]
-		}
-	}
-	
-	return(X)
-}
-
-real scalar mSumSum(real matrix X,
-					real matrix d2,
-					| real rowvector nudot)
-{
-	real scalar Ss	
-	
-	if (!length(nudot)) nudot = J(1, cols(X), 2)
-	
-	Ss = 0
-	
-	for (u = 1; u <= cols(X); ++u) {
-		if (colsum(X[., u] :== 0) >= (rows(X) - 1)) continue	
-		for (c = 1; c <= (rows(X) - 1); ++c) {
-			for (k = c + 1; k <= rows(X); ++k) {
-				Ss = Ss + ///
-				(1/(nudot[1, u] - 1)) * X[c, u] * X[k, u] * d2[c, k]
-			}
-		}
-	}
-	return(Ss)
-}
-
-real matrix mGetCoinMat(real matrix VbU, 
-						transmorphic colvector uqv, 
-						real rowvector nudot)
-{
-	real matrix X
-	
-	VbU = select(VbU, (nudot :> 1))
-	nudot = select(nudot, (nudot :> 1))
-	
-	X = J(rows(uqv), rows(uqv), 0)		
-	for (c = 1; c <= rows(uqv); ++c) {
-		for (k = c; k <= rows(uqv); ++k) {
-			for (u = 1; u <= cols(VbU); ++u) {	
-				if (c == k) {
-					X[k, c] = X[c, k] + ///
-					VbU[c, u] * (VbU[c, u] - 1) / (nudot[1, u] - 1)
-				}
-				else X[c, k] = X[c, k] + ///
-				(VbU[c, u] * VbU[k, u]) / (nudot[1, u] - 1)
-				X[k, c] = X[c, k]
-			}
-		}
-	}
-	
-	return(X)
-}
-
-real colvector mKalphaBoot(real matrix coin,
-							real scalar nobs,
-							real scalar De,
-							real matrix delta2,
-							real scalar nddot,
-							real scalar reps)
-{
-	real scalar M ,sfr, nx, prntd
-	real matrix pcoin, fr
-	real colvector r, balpha
-	
-	if (st_local("seed") != "") {
-		if (missing(strtoreal(st_local("seed")))) {
-			rseed(st_local("seed"))
-		}
-		else rseed(strtoreal(st_local("seed")))
-	}
-	
-	if (st_local("dots") != "") {
-		prntd = strtoreal(st_local("dotn"))
-	}
-	
-	// first: get M
-	M = strtoreal(st_local("draws"))
-	if (missing(M)) {
-		M = min(((25 * (sum(coin :!= 0))), ///
-		round((nddot * (nobs - 1)/2))))
-	}
-	
-	// second: create function
-	De = 2 * (De / (nddot * (nddot - 1)))
-	pcoin = (lowertriangle(coin) / nddot) ///
-	+ (lowertriangle(coin, 0) / nddot)	
-	fr = (runningsum(vech(pcoin)), vech(delta2) :/ (M * De))	
-	
-	// thrid: bootstrap
-	balpha = J(reps, 1, .)
-	for (rep = 1; rep <= reps; ++rep) {
-		
-		if (!(mod(rep, prntd))) {
-			printf("{txt}%s", ".")
-			displayflush()
-		}
-		if (!(mod(rep/prntd, 50))) printf("{txt}%6.0f\n", rep)
-		
-		r = runiform(M, 1)
-		sfr = 0
-		sfr = sfr + ///
-		colsum((r :>= 0) :& (r :<= fr[1, 1])) * fr[1, 2]
-		for (i = 1; i <= (rows(fr) - 1); ++i) {
-			sfr = sfr + (colsum((r :>= fr[i, 1]) ///
-			:& (r :<= fr[(i + 1), 1])) * fr[(i + 1), 2])
-		}
-		
-		balpha[rep, 1] = 1 - sfr
 	}	
+end
+
+version 11.2
+
+local S scalar
+local R rowvector
+local C colvector
+local M matrix
+
+local SS string `S'
+local SR string `R'
+local SC string `C'
+local SM string `M'
+
+local RS real `S'
+local RR real `R'
+local RC real `C'
+local RM real `M'
+
+local TS transmorphic `S'
+local TC transmorphic `C'
+local TM transmorphic `M'
+
+local stK struct_kalpha_def
+local stKS struct `stK' `S'
+
+mata :
+
+struct `stK' {
+	/* input */
+	`SR' varlist
+	`SS' touse
+	`RS' has_str
+	`RS' all_str
+	`RS' transpose
+	`SS' scale
+	`RS' U
+	`RS' sine
+	`RS' p_min
+	`RS' p_max
+	`RS' caller
+	/* input bootstrap */
+	`RS' bootstrap
+	`RS' reps
+	`RS' level
+	`RC' minalpha
+	`SS' seed
+	`RS' dots
+	`RS' draws
+	`RS' returnall
+	/* created */
+	`TM' R
+	`TC' levels
+	`RM' VbyU
+	`RS' nu_
+	`RS' n_c
+	`RS' n__
+	`RM' Ock
+	`RM' delta2
+	`RS' Do
+	`RS' De
+	`RS' kalpha
+	`RC' bkalpha
+	`RR' CI
+	`RM' Q
+}
+
+void kalpha_ado()
+{
+	`stKS' K
 	
-	// fourth: correct
-	if (colsum(balpha :< -1)) {
-		balpha = balpha - ((balpha :+ 1) :* (balpha :< -1))
+	kalpha_get_info(K)
+	kalpha_get_Rmat(K)
+	kalpha_get_VbyU(K)
+	kalpha_get_dmat(K)
+	kalpha_get_coef(K)
+	kalpha_get_boot(K)
+	kalpha_set_rres(K)
+}
+
+void kalpha_get_info(`stKS' K)
+{
+	K.varlist 		= tokens(st_local("varlist"))
+	K.touse 		= st_local("touse")
+	K.has_str 		= strtoreal(st_local("has_str"))
+	K.all_str 		= strtoreal(st_local("all_str"))
+	K.transpose 	= (st_local("transpose") != "")
+	K.scale 		= st_local("scale")
+	K.U 			= strtoreal(st_local("U"))
+	K.sine 			= (st_local("sine") == "pi") ? c("pi") : 180
+	K.p_min 		= strtoreal(st_local("Min"))
+	K.p_max 		= strtoreal(st_local("Max"))
+	
+	K.bootstrap 	= (st_local("bootstrap") != "")
+	K.reps 			= strtoreal(st_local("reps"))
+	K.level 		= strtoreal(st_local("level"))
+	K.minalpha 		= strtoreal(tokens(st_local("minalpha"))')
+	K.seed 			= st_local("seed")
+	K.dots 			= strtoreal(st_local("dots"))
+	K.draws 		= strtoreal(st_local("draws"))
+	K.returnall 	= (st_local("return") != "")
+	
+	K.caller 		= strtoreal(st_local("caller"))
+}
+
+void kalpha_get_Rmat(`stKS' K)
+{
+	`TM' R, r
+	
+	if (!K.has_str) {
+		K.R = st_data(., K.varlist, K.touse)
 	}
-	if (anyof(balpha, 1)) {
-		if ((colsum(diagonal(coin)) :> 0) == 1) {
-			balpha = balpha + ((balpha :== 1) :* (-1))
-		}
-		if ((colsum(diagonal(coin)) :> 0) > 1) {
-			nx = round(reps * colsum(diagonal(pcoin) :^ M))
-			if (nx >= (colsum(balpha :== 1))) {
-				balpha = balpha + ((balpha :== 1) :* (-1))
+	else if (K.all_str) {
+		K.R = st_sdata(., K.varlist, K.touse)
+	}
+	else {
+		R = J(colsum(st_data(., K.touse) :== 1), cols(K.varlist), "")
+		for (i = 1; i <= cols(K.varlist); ++i) {
+			if (st_isnumvar(K.varlist[i])) {
+				r = editmissing(st_data(., K.varlist[i], K.touse), .)
+				R[., i] = editvalue(strofreal(r, "%18.0g"), ".", "")
 			}
 			else {
-				balpha = sort(balpha, 1)
+				R[., i] = st_sdata(., K.varlist[i], K.touse)
+			}
+		}
+		K.R = R
+	}
+	
+	K.R = select(K.R, (colsum(K.R :== missingof(K.R)) :< rows(K.R)))
+	K.R = select(K.R, (rowsum(K.R :== missingof(K.R)) :< cols(K.R)))
+	
+	if (K.transpose) {
+		K.R = K.R'
+	}
+	
+	if (!length(K.R)) {
+		exit(error(2000))
+	}
+}
+
+void kalpha_get_VbyU(`stKS' K)
+{
+	K.levels = uniqrows(vec(K.R))
+	K.levels = select(K.levels, (K.levels :!= missingof(K.levels)))
+	
+	K.VbyU = J(rows(K.levels), cols(K.R), .)
+	for (i = 1; i <= rows(K.levels); ++i) {
+		K.VbyU[i, .] = colsum(K.R :== K.levels[i])
+	}
+	
+	K.nu_ = colsum(K.VbyU)
+	K.n_c = rowsum(select(K.VbyU, (K.nu_ :> 1)))
+	K.n__ = colsum(K.n_c)
+	
+	K.Ock = editmissing(K.VbyU:/(K.nu_:-1), 0)*K.VbyU'
+	_diag(K.Ock, quadrowsum(K.VbyU:*(K.VbyU:-1):/(K.nu_:-1)))
+}
+
+void kalpha_get_dmat(`stKS' K)
+{
+	`RM' c
+	`RM' k
+	`RS' rc
+	
+	if (K.scale == "nominal") {
+		K.delta2 = !I(rows(K.levels))
+	}
+	else if (K.scale == "ordinal") {
+		c = J(1, rows(K.n_c), K.n_c)
+		k = J(rows(K.n_c), 1, K.n_c')
+		K.delta2 = lowertriangle(c)
+		for (i = 1; i < cols(K.delta2); ++i) {
+			K.delta2[., i] = quadrunningsum(K.delta2[., i])
+		}
+		K.delta2 = makesymmetric((K.delta2 - (c+k)/2):^2)
+	}
+	else {
+		c = J(1, rows(K.levels), K.levels)
+		k = J(rows(K.levels), 1, K.levels')
+		if (K.scale == "interval") {
+			K.delta2 = (c-k):^2
+		}
+		else if (K.scale == "ratio") {
+			K.delta2 = ((c-k):/(c+k)):^2
+		}
+		else if (K.scale == "circular") {
+			if (missing(K.U)) {
+				K.U = K.levels[rows(K.levels)] - K.levels[1] + 1
+			}
+			K.delta2 = sin(K.sine*(c-k)/K.U):^2
+		}
+		else if (K.scale == "bipolar") {
+			if (missing(K.p_min)) {
+				K.p_min = K.levels[1]
+			}
+			if (missing(K.p_max)) {
+				K.p_max = K.levels[rows(K.levels)]
+			}
+			K.delta2 = (c+k:-2*K.p_min):*(2*K.p_max:-c:-k)
+			K.delta2 = ((c-k):^2):/K.delta2
+		}
+		else {
+			assert(0)
+				/* internal error */
+		}
+	}
+	_diag(K.delta2, 0)
+	
+	if (missing(K.delta2)) {
+		rc = 504
+	}
+	else if (!issymmetric(K.delta2)) {
+		rc = 505
+	}
+	else {
+		rc = 0
+	}
+	
+	if (rc) {
+		errprintf("invalid metric difference matrix %s\n", K.scale)
+		exit(rc)
+	}
+}
+
+void kalpha_get_coef(`stKS' K)
+{
+	K.Do = (K.n__-1)*quadsum(lowertriangle(K.Ock:*K.delta2))
+	K.De = quadcolsum(lowertriangle(J(1, rows(K.n_c), K.n_c):*K.delta2))*K.n_c
+	
+	if (((K.Do == 0) & (K.De == 0)) | (rowsum(K.nu_ :> 1) == 1)) {
+		K.kalpha = 0 // by definition
+	}
+	else {
+		K.kalpha = 1 - (K.Do/K.De)
+	}
+}
+
+void kalpha_get_boot(`stKS' K)
+{
+	`RS' De, nx
+	`RM' Pck, fr, sfr
+	`RC' r
+	
+	if (!K.bootstrap) {
+		return
+	}
+	
+	if (anyof((0, 1), K.kalpha)) {
+		K.reps = 0
+		return
+	}
+	
+	if (K.seed != "") {
+		if (!missing(strtoreal(K.seed))) {
+			K.seed = strtoreal(K.seed)
+		}
+		rseed(K.seed)
+	}
+	
+	// first : get M
+	if (missing(K.draws)) {
+		K.draws = min((25*sum(K.Ock:>0), round(K.n__*(rows(K.R)-1)/2)))
+	}
+	
+	// second : create function f(r)
+	De 	= 2*(K.De/(K.n__*(K.n__-1)))
+	Pck = (lowertriangle(K.Ock)/K.n__) + (lowertriangle(K.Ock, 0)/K.n__)
+	fr 	= (quadrunningsum(vech(Pck)), vech(K.delta2):/(K.draws*De))
+	
+	// third : bootstrap
+	K.bkalpha = J(K.reps, 1, .)
+	for (i = 1; i <= K.reps; ++i) {
+		if (!mod(i, K.dots)) {
+			printf("{txt}%s", ".")
+		}
+		if (!mod(i/K.dots, 50) | i == K.reps) {
+			printf("{txt}%6.0f\n", i)
+		}
+		displayflush()
+		
+		r 	= runiform(K.draws, 1)
+		sfr = 0
+		sfr = sfr + colsum(r:<=fr[1, 1])*fr[1, 2]
+		for (j = 1; j <= (rows(fr)-1); ++j) {
+			sfr = sfr + ///
+			(colsum((r:>=fr[j, 1]):&(r:<=fr[(j+1), 1]))*fr[(j+1), 2])
+		}
+		
+		K.bkalpha[i, 1] = 1 - sfr
+	}
+	
+	// fourth : correct
+	K.bkalpha = K.bkalpha - ((K.bkalpha:+1):*(K.bkalpha:<-1))
+	if (anyof(K.bkalpha, 1)) {
+		if ((colsum(diagonal(K.Ock)):>0) == 1) {
+			K.bkalpha = K.bkalpha + ((K.bkalpha:==1):*(-1))
+		}
+		if ((colsum(diagonal(K.Ock)):>0) > 1) {
+			nx = round(K.reps*colsum(diagonal(Pck):^K.draws))
+			if (nx >= (colsum(K.bkalpha:==1))) {
+				K.bkalpha = K.bkalpha + ((K.bkalpha:==1):*(-1))
+			}
+			else {
+				K.bkalpha = sort(K.bkalpha, 1)
 				for (i = 1; i <= nx; ++i) {
-					balpha[(rows(balpha) - (i - 1)), 1] = 0
+					K.bkalpha[(rows(K.bkalpha) - (i-1)), 1] = 0
 				}
 			}
 		}
 	}
 	
-	// fith: distribution
-	balpha = sort(balpha, 1)
+	// fith : distribution
+	K.bkalpha = sort(K.bkalpha, 1)
 	
-	return(balpha)
+	// CI
+	K.CI = J(1, 2, .)
+	K.CI[1] = K.bkalpha[max(((1-K.level/100)/2*K.reps, 1))]
+	K.CI[2] = K.bkalpha[floor(((1 - ((1-K.level/100)/2))*K.reps) + 1)]
+	
+	// q
+	K.Q = J(rows(K.minalpha), 1, .)
+	for (i = 1; i <= rows(K.Q); ++i) {
+		K.Q[i] = (colsum(K.bkalpha:<K.minalpha[i])/K.reps)
+	}
 }
 
-real rowvector mBootCI(real colvector balpha, 
-						real scalar levl, 
-						real scalar reps)
+void kalpha_set_rres(`stKS' K)
 {
-	real rowvector ci
+	`SM' names
 	
-	levl = 1 - (levl/100)
-	ci = balpha[max(((levl/2 * reps), 1)), 1]
-	ci = ci ,balpha[floor((((1 - (levl/2)) * reps) + 1)), 1]
+	st_rclear()
 	
-	return(ci)
-}
-
-real matrix mBootQ(real colvector balpha,
-					real scalar reps)
-{
-	real matrix q
+	/* macros */
+	st_global("r(metric)", K.scale)
 	
-	q = strtoreal(tokens(st_local("mina"))')
-	q = q, J(rows(q), 1, .)
-	for (i = 1; i <= rows(q); ++i) {
-		q[i, 2] = (colsum(balpha :< q[i, 1])/reps)
+	/* scalars */
+	st_numscalar("r(kalpha)", K.kalpha)
+	st_numscalar("r(observers)", rows(K.R))
+	st_numscalar("r(units)", rowsum(K.nu_ :> 1))
+	st_numscalar("r(n)", K.n__)
+	st_numscalar("r(Do)", K.Do)
+	st_numscalar("r(De)", K.De)
+	if (!missing(K.reps)) {
+		st_numscalar("r(level)", K.level)
+		st_numscalar("r(reps)", K.reps)
+		st_numscalar("r(ci_lb)", K.CI[1])
+		st_numscalar("r(ci_ub)", K.CI[2])
 	}
 	
-	return(q)
+	/* matrices */
+	st_matrix("r(coin)", K.Ock)
+	st_matrix("r(delta2)", K.delta2)
+	if (!K.has_str) {
+		st_matrix("r(uniqv)", K.levels)
+	}
+	if (K.bootstrap) {
+		if (rows(K.minalpha)) {
+			st_matrix("r(q)", (K.minalpha, K.Q))
+		}
+		if (K.returnall) {
+			st_matrix("r(bkalpha)", K.bkalpha)
+		}
+	}
+	if (K.caller < 15.2) {
+		st_matrix("r(csum)", K.nu_)
+		st_matrix("r(rsum)", K.n_c)
+		st_matrix("r(vbu)", K.VbyU)
+		if (!K.has_str) {
+			st_matrix("r(rel)", K.R)
+		}
+	}
+	
+	if (length(K.R)) {
+		names = (J(rows(K.levels), 1, "level"), strofreal(1::rows(K.levels)))
+		st_matrixrowstripe("r(coin)", names)
+		st_matrixcolstripe("r(coin)", names)
+		st_matrixrowstripe("r(delta2)", names)
+		st_matrixcolstripe("r(delta2)", names)
+		if (K.bootstrap) {
+			if (rows(K.minalpha)) {
+				st_matrixcolstripe("r(q)", (("min."\ ""), ("alpha"\ "q")))
+			}
+		}
+		
+		if (K.caller < 15.2) {
+			st_matrixrowstripe("r(vbu)", names)
+			names = (J(cols(K.VbyU), 1, "unit"), strofreal(1::cols(K.VbyU)))
+			st_matrixcolstripe("r(vbu)", names)
+			if (!K.has_str) {
+				st_matrixcolstripe("r(rel)", names)
+				names = (J(rows(K.R), 1, "observer"), strofreal(1::rows(K.R)))
+				st_matrixrowstripe("r(rel)", names)
+			}
+		}
+	}
 }
-end
-e
 
+end
+exit
+
+1.3.0	27dec2017	rewrite ado code with more subroutines
+					rewrite Mata code struct, matrix algebra replaces loops
+					option dots(max(1, floor(reps/50))) is default
+					return r(coin)
+					return r(Do) and r(De)
+					no longer return r(rel), r(vbu), r(rsum), r(csum)
+					old r-results preserved under version controll
+					extended help file
+					kalpha no longer supported; superseded by kappaetc
 1.2.2	25sep2014	bug fix -polar- default min and max
-1.2.1	14aug2014	bug fix all missing rows or cols in R
+1.2.1	14aug2014	bug fix all missing rows or cols in R matrix
 					may not combine option -seed- with by
-					extend and document -dots- option
+					extend and document dots[()] option
 					new rc for inappropriate scale with strings
 					minor code polish
-1.2.0	11jul2014	implement bootstrap algorithm
+1.2.0	11jul2014	implement bootstrap algorithm (Krippendorff 2013)
 					additional r-results
 					no longer return r(Do) and r(De)
-					option -format- (not documented)
-					option -dots- (not documented)
-					option -return- (not documented)
-					option -draws- (not documented)
-					sent to SSC
+					new option format() (not documented)
+					new option dots (not documented)
+					new option return (not documented)
+					new option draws() (not documented)
+					first release on SSC
 1.1.0 	07jul2014	allow string variables
 					alpha = 0 if Do == De == 0 (by definition)
-					fix conformability error if R matrix is scalar
+					bug fix conformability error if R matrix is scalar
 					return Do and De
-					-xpose- synonym for -transpose- (not documented)
-1.0.0 	03jul2014	first version
+					xpose as synonym for transpose (not documented)
+1.0.0 	03jul2014	first full version
 					display results
 					support all levels of measurement
-					new option -scale()-
-					new option -transpose-
+					new option scale()
+					new option transpose
 					byable
 					new Mata function calculates sums
 					sent to Jim Lemon and Alexander Staudt

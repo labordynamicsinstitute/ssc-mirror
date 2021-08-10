@@ -24,16 +24,16 @@ d KW: treatment cross-over
 d
 d Requires: Stata version 9
 d
-d Distribution-Date: 20151203
+d Distribution-Date: 20180418
 d
 d Author: Abdel Babiker, MRC Clinical Trials Unit
-d Support: email n/a
+d Support: email pr@@ctu.mrc.ac.uk
 d
 d Author: Sophie Barthel , MRC Clinical Trials Unit
-d Support: email n/a
+d Support: email 
 d
 d Author: Patrick Royston, MRC Clinical Trials Unit
-d Support: email pr@@ctu.mrc.ac.uk
+d Support: email 
 d
 f artbin.ado
 f art2bin.ado

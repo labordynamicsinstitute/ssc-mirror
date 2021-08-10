@@ -1,5 +1,8 @@
 program define _stddiff, rclass
 	version 13.0
+	* Ahmed Bayoumi
+	* version 2.1
+	* 8Mar2021
 	syntax varlist  [if] [in], by(varname) [continuous categorical cohensd hedgesg abs]
 	tempname m1 m2 v1 v2 s1 s2 res table output r
 	if("`continuous'"=="" & "`categorical'"==""){

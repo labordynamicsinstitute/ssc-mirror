@@ -1,4 +1,4 @@
-*! version 1.2.7  29mar2016  Ben Jann
+*! version 1.2.8  14jun2018  Ben Jann
 
 program pshare, eclass properties(svyb svyj)
     version 11
@@ -198,13 +198,15 @@ program Histogram
         VERTical HORizontal PROPortion NOGini Gini(str)                     ///
         keep(str) BYOPTs(str asis) LABels(str asis) BYLabels(str asis)      ///
         Level(passthru) noci CI2(str) CIOPTs(str asis) CIBelow              ///
-        step OVERlay psep PSEP2(str asis) SPIKEs SPIKEs2(numlist int >0 max=1) ///
+        step ADDStep ADDStep2(str asis)                                      ///
+        OVERlay psep PSEP2(str asis) SPIKEs SPIKEs2(numlist int >0 max=1)   ///
         prange(numlist min=2 max=2 >=0 <=100 ascending)                     ///
         base(numlist max=1) max(str asis) min(str asis)                     /// 
         recast(passthru) LEGend(passthru) fxsize(passthru) fysize(passthru) ///
         PSTYle(passthru) PCYCle(int 15) * ]
     // options
     if `"`labels'"'!="" local bylabels `"`labels'"'
+    if `"`addstep2'"'!="" local addstep addstep
     if `"`psep2'"'!="" local psep psep
     if "`spikes'"!="" local spikes 100
     if "`spikes2'"!="" local spikes `spikes2'
@@ -539,6 +541,7 @@ program Histogram
             if "`horizontal'"!="" local byopt legend(pos(3))
             else                  local byopt legend(pos(6))
         }
+        else if "`citype'"=="" local byopt legend(off)
         local byopt by(`BY', note("") `byopt' `byopts')
     }
     else {
@@ -551,18 +554,20 @@ program Histogram
         else local byopt
     }
     if "`e(ratio)'"!="" & `"`base'"'=="" local base 1
-    if "`base'"!="" {
-        local origin yscale(range(`base'))
-        local base base(`base')
-    }
-    else {
-        local origin yscale(range(0))
-    }
     if "`horizontal'"=="" {
+        local XY `Y' `X'
+        local cstyle c(J)
+        if "`base'"!="" local origin yscale(range(`base'))
+        else            local origin yscale(range(0))
+        local base base(`base')
         local xtitle xtitle("`xti'")
         local ytitle ytitle("`yti' (`e(type)')")
     }
     else {
+        local XY `X' `Y'
+        local cstyle c(stepstair)
+        if "`base'"!="" local origin xscale(range(`base'))
+        else            local origin xscale(range(0))
         local xtitle xtitle("`yti' (`e(type)')")
         local ytitle ytitle("`xti'")
     }
@@ -572,20 +577,21 @@ program Histogram
         foreach eq of local eqs {
             local ++i
             Parse_popts o `i', `options' // returns oopts_i, options
-            Parse_step o `i', `oopts_`i'' // returns ostep_i, oopts_i
-            if "`ostep_`i'"=="" local ostep_`i' `step'
+            Parse_oopts `i', `oopts_`i'' // returns step_i, addstep_i addstep2_i oopts_i
+            if "`step_`i''"=="" local step_`i' `step'
+            if "`addstep_`i''"=="" local addstep_`i' `addstep'
         }
         local legend
         local i 0
+        local j 0
         foreach eq of local eqs {
             local ++i
+            local ++j
             local k = mod(`i'-1, `pcycle') + 1
-            if "`ostep_`i''"!="" {
-                if "`horizontal'"=="" local XY `Y' `X'
-                else                  local XY `X' `Y'
+            if "`step_`i''"!="" {
                 local mainplot `mainplot' ///
-                    (line `XY' if `BY'==`i', c(J) ///
-                    pstyle(p`k') `options' `oopts_`i'')
+                    (line `XY' if `BY'==`i', `cstyle' ///
+                    pstyle(p`k'line) `options' `oopts_`i'')
             }
             else if "`spikes'"!="" {
                 local mainplot `mainplot' ///
@@ -595,9 +601,15 @@ program Histogram
             else {
                 local mainplot `mainplot' ///
                     (bar `Y' `X' if `BY'==`i', bartype(spanning) `base' ///
-                    `horizontal' pstyle(p`k') `options' `oopts_`i'')
+                    `horizontal' pstyle(p`k'bar) `options' `oopts_`i'')
             }
-            local legend `legend' `i' `"`:lab `BY' `i''"'
+            local legend `legend' `j' `"`:lab `BY' `i''"'
+            if "`addstep_`i''"!="" {
+                local ++j
+                local mainplot `mainplot' ///
+                    (line `XY' if `BY'==`i', `cstyle' ///
+                    pstyle(p`k'line) `addstep2' `addstep2_`i'')
+            }
         }
         local legend legend(order(`legend') all on)
     }
@@ -637,11 +649,9 @@ program Histogram
         forv i = 1/`bins' {
             local k = mod(`i'-1, `pcycle') + 1
             if "`step'"!="" {
-                if "`horizontal'"=="" local XY `Y' `X'
-                else                  local XY `X' `Y'
                 local mainplot `mainplot' ///
-                    (line `XY' if inlist(`PID',`i',`i'+1), c(J) ///
-                    pstyle(p`k') `options' `ppsty_`i'' `popts_`i'')
+                    (line `XY' if inlist(`PID',`i',`i'+1), `cstyle' ///
+                    pstyle(p`k'line) `options' `ppsty_`i'' `popts_`i'')
             }
             else if "`spikes'"!="" {
                 local mainplot `mainplot' ///
@@ -651,7 +661,7 @@ program Histogram
             else {
                 local mainplot `mainplot' ///
                     (bar `Y' `X' if inlist(`PID',`i',`i'+1), bartype(spanning) `base' ///
-                    `horizontal' pstyle(p`k') `options' `ppsty_`i'' `popts_`i'')
+                    `horizontal' pstyle(p`k'bar) `options' `ppsty_`i'' `popts_`i'')
             }
             if "`citype'"!="" {
                 local ciplot `ciplot' (rcap `LL' `UL' `MID' ///
@@ -659,13 +669,16 @@ program Histogram
                     pstyle(p`k') `pstyle' `ciopts' `ppsty_`i'' `pciopts_`i'')
             }
         }
+        if "`addstep'"!="" {
+            local mainplot `mainplot' (line `XY', `cstyle' ///
+                    pstyle(p1line) `addstep2')
+        }
     }
     else {
+        local j 2
         if "`step'"!="" {
-            if "`horizontal'"=="" local XY `Y' `X'
-            else                  local XY `X' `Y'
-            local mainplot (line `XY', c(J) ///
-                    pstyle(p1) `options')
+            local mainplot (line `XY', `cstyle' ///
+                    pstyle(p1line) `options')
         }
         else if "`spikes'"!="" {
             local mainplot (spike `Y' `X', `base' ///
@@ -673,13 +686,21 @@ program Histogram
         }
         else {
             local mainplot (bar `Y' `X', bartype(spanning) `base' ///
-                `horizontal' pstyle(p1) `options' )
+                `horizontal' pstyle(p1bar) `options' )
+        }
+        if "`addstep'"!="" {
+            local ++j
+            local mainplot `mainplot' (line `XY', `cstyle' ///
+                    pstyle(p1line) `addstep2')
         }
         if "`citype'"!="" {
-            if "`cibelow'"!="" local legend legend(order(2 1 "`cilevel'%`cilab' CI"))
-            else               local legend legend(order(1 2 "`cilevel'%`cilab' CI"))
+            if "`cibelow'"!="" ///
+                local legend legend(order(`j' 1 "`cilevel'%`cilab' CI"))
+            else               ///
+                local legend legend(order(1 `j' "`cilevel'%`cilab' CI"))
             local ciplot (rcap `LL' `UL' `MID', `horizontal' pstyle(p2) `ciopts')
         }
+        else if `"`byopt'"'=="" local legend legend(off)
     }
     if "`citype'"!="" {
         if "`cibelow'"!="" {
@@ -1033,12 +1054,14 @@ program Parse_popts
     c_local options `options'
 end
 
-program Parse_step
-    gettoken p 0 : 0, parse(" ,")
+program Parse_oopts
     gettoken j 0 : 0, parse(" ,")
-    syntax [, step * ]
-    c_local `p'step_`j' `step'
-    c_local `p'opts_`j' `options'
+    syntax [, step ADDStep ADDStep2(str asis) * ]
+    if `"`addstep2'"'!="" local addstep addstep
+    c_local step_`j' `step'
+    c_local addstep_`j' `addstep'
+    c_local addstep2_`j' `"`addstep2'"'
+    c_local oopts_`j' `options'
 end
 
 program Parse_ciopts
@@ -2413,6 +2436,7 @@ void pshare_compute_uvars( // sets the pseudo-variables for SE computation
 void pshare_compute_EY(real matrix S) // estimate E[Y|Z = Q_p] using local linear regression
 {
     real colvector q
+    real scalar    preserve, rc
     string scalar  y, z, w, s, at, yhat
     
     y = st_local("y0")
@@ -2420,21 +2444,63 @@ void pshare_compute_EY(real matrix S) // estimate E[Y|Z = Q_p] using local linea
     w = st_local("exp")
     s = st_local("touse")
     q = S[|1,8 \ rows(S)-1,8|]
+    preserve = (st_nobs()<rows(q))
+    if (preserve) {
+        stata("preserve")
+        stata("quietly set obs " + strofreal(rows(q)))
+    }
     at   = st_tempname()
     yhat = st_tempname()
     (void) st_addvar("double", at)
     st_store((1, rows(q)), at, q)
     if (w!="") {
-        stata("lpoly " + y + " " + z + " [aw=" + w + "] if " + s +
-            ", nograph degree(1) at(" + at + ") generate(" + yhat + ")")
+        rc = _stata("lpoly " + y + " " + z + " [aw=" + w + "] if " + s +
+            ", nograph degree(1) at(" + at + ") generate(" + yhat + ")", 1)
     }
     else {
-        stata("lpoly " + y + " " + z + " if " + s +
-            ", nograph degree(1) at(" + at + ") generate(" + yhat + ")")
+        rc = _stata("lpoly " + y + " " + z + " if " + s +
+            ", nograph degree(1) at(" + at + ") generate(" + yhat + ")", 1)
     }
-    S[|1,8 \ rows(q),8|] = st_data((1,rows(q)), yhat)
+    if (rc) S[|1,8 \ rows(q),8|] = J(rows(q), 1, .)
+    else S[|1,8 \ rows(q),8|] = pshare_compute_EY_ipolate(st_data((1,rows(q)), yhat), q)
+    pshare_compute_EY_mean(S) // should only happen if n<=2 
+    if (preserve) stata("restore")
 }
-
+real colvector pshare_compute_EY_ipolate(real colvector y, real colvector x)
+{   // interpolates y where y is missing (using linear interpolation)
+    // missing values at the start (end) of y are set to the first (last) 
+    // non-missing y value
+    // x is assumed to be complete, free of ties, and sorted
+    real scalar i, r, mi
+    
+    if (!hasmissing(y)) return(y)
+    r = rows(y)
+    mi = .
+    for (i=1; i<=r; i++) {
+        if (mi<.) {
+            if (y[i]>=.) continue
+            if (mi==1) y[|mi \ i-1|] = J(i-mi, 1, y[i]) // missings at start
+            else       y[|mi \ i-1|] = y[mi-1] :+ (y[i] - y[mi-1]) :* 
+                                (x[|mi \ i-1|] :- x[mi-1]) :/ (x[i] - x[mi-1])
+            mi = .
+            continue
+        }
+        if (y[i]>=.) mi = i
+    }
+    if (mi==1) return(y) // all missing
+    if (mi<.) y[|mi \ r|] = J(i-mi, 1, y[mi-1]) // missings at end
+    return(y)
+}
+void pshare_compute_EY_mean(real matrix S)
+{   // insert mean of y if there are still missings
+    real scalar m
+    
+    if (!hasmissing(S[|1,8 \ rows(S)-1,8|])) return
+    if (st_local("exp")=="") m = mean(st_data(., st_local("y0"), st_local("touse")))
+    else m = mean(st_data(., st_local("y0"), st_local("touse")), 
+                  st_data(., st_local("exp"), st_local("touse")))
+    S[|1,8 \ rows(S)-1,8|] = editmissing(S[|1,8 \ rows(S)-1,8|], m)
+}
 
 // concentration (Gini) index (data must be sorted by y)
 real scalar pshare_cindex(real colvector x, real colvector w, real colvector y)

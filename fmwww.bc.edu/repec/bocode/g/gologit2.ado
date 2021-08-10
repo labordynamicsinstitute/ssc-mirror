@@ -1,4 +1,4 @@
-*! version 3.1.1 18oct2016  Richard Williams, rwilliam@nd.edu
+*! version 3.2.5 17may2019 Richard Williams, rwilliam@nd.edu
 
 * 2.0.0 - Initial release of gologit2.ado
 * 2.0.1 - bugs with autofix, v1 and by fixed; Wald test for final model added
@@ -33,6 +33,13 @@
 * 3.1.0 - ereturns marginsdefault. In Stata 14+, this will cause the margins command 
 *         to default to using all the outcomes rather than just the first.
 * 3.1.1 - Minor tweaks to help file.
+* 3.1.2 - level option fixed. r(table) now gets returned.
+*         lincom replaced with gologit2_lincom. Adapted from Stata 11.2 because 
+*         15.1 lincom was zapping svy analysis.
+* 3.1.3 - Minor fixes to the code and documentation. Added recommendation on
+*         using subpop correctly.
+* 3.2.5 - Fixed problem with base category variables having very small values
+*         when they should be zero
 
 	program gologit2, eclass byable(recall) sortpreserve ///
         properties(svyr svyb svyj swml or rrr irr hr eform mi)
@@ -93,6 +100,7 @@ program Estimate, eclass
 		NOSVYadjust				///
 		COEFLegend				///
 		NOCNSReport				/// Don't report constrainsts
+		NOBCFix					/// Don't fix base category coefficients and variances         
 		svy *   		  		/// -mlopts, display options
 		]
 
@@ -146,11 +154,17 @@ program Estimate, eclass
 // with the necessary parameters and hence will also make syntax checks
 	if "`autofit'"!="" | "`autofit2'"!="" {
 		gologit2_autofit `0'
+
 		Replay, level(`level') `eform' `gamma' store(`store') ///
 			gamma2(`gamma2') `options' `coeflegend' `nocnsreport' `diopts'
 		// Under some conditions, predicted probabilities can be negative.  We check for that
 		// and issue a warning message
 		prediction_check
+
+// quietly replaying makes sure we don't lose r(table)
+		quietly Replay, level(`level') `eform' `gamma' store(`store') ///
+			gamma2(`gamma2') `options' `coeflegend' `nocnsreport' `diopts'
+
 
 		exit
 	}
@@ -417,6 +431,12 @@ else {
 // Use Y value labels if requested
 	if "`nolabel'"=="" Use_Value_Labels
 
+// gologit2 sometimes returns very small values for base
+// category coefficients when it should return zeroes
+// basecategoryfix fixes base category coefficients and variances
+	if "`nobcfix'" == "" basecategoryfix
+
+
 // Final cleanup
 
 	constraint drop `plconstraints'
@@ -432,7 +452,7 @@ else {
 	
 // display the results
 
-	Replay, `options' `eform' `gamma' store(`store') gamma2(`gamma2') ///
+	Replay, level(`level') `options' `eform' `gamma' store(`store') gamma2(`gamma2') ///
 		`noplay' `coeflegend' `nocnsreport' `diopts'
 	
 // Under some conditions, predicted probabilities can be negative.  We check for that
@@ -440,6 +460,10 @@ else {
 // final model
 	if "`noplay'"=="" prediction_check
 
+	// quietly replaying keeps r(table) from being zapped.
+	quietly Replay, level(`level') `options' `eform' `gamma' store(`store') gamma2(`gamma2') ///
+		`noplay' `coeflegend' `nocnsreport' `diopts'
+	
 end
 
 ************************
@@ -764,7 +788,7 @@ program gamma_parameterization, eclass
 			local nplcheck: list local(xvar) in local(nplvars)
 			* Only compute Gammas for Xs free to vary
 			if `nplcheck' !=0 {
-				quietly lincom [#`i']`xvar' - [#1]`xvar'
+				quietly gologit2_lincom [#`i']`xvar' - [#1]`xvar'
 				local eqnum = `eqnum' + 1
 				if "`r(est)'"!="" {
 					local lincom_estimate "r(est)"
@@ -944,6 +968,37 @@ end
 	
 	
 ************************
+program basecategoryfix, eclass
+* Fixes problems with base/omitted category coefficients
+* sometimes having super-small values instead of equaling zero.
+* Fixes the covariance too.
+* _ms_omit_info identifies columns that should have 0 values
+* and then the appropriate coefficients and covariances get zeroed out.
+
+	version 11.2
+
+	tempname b v omitted
+	matrix `b' = e(b)
+	matrix `v' = e(V)
+	local numrows = rowsof(`v')	
+	_ms_omit_info `v'
+	matrix `omitted' = r(omit)
+
+	forval colnum = 1 / `numrows' {
+		if `omitted'[1, `colnum'] ==1 {
+			matrix `b'[1, `colnum'] = 0
+			forval rownum = 1/`numrows' {
+				matrix `v'[`colnum', `rownum'] = 0
+				matrix `v'[`rownum', `colnum'] = 0
+			}
+		}
+	}
+	
+	* Replace old values with corrected zero values
+	ereturn repost b = `b' V = `v'
+
+end
+************************
 
 program Replay
 	syntax [,				///
@@ -953,7 +1008,14 @@ program Replay
 	COEFLegend NOCNSReport * ] 
 	
 	if "`gamma2'"!="" local gamma gamma
+	// redo gamma parameters in case they got zapped with svy:
+	quietly gamma_parameterization , level(`level') `or' `irr' `rrr' `hr' `eform'
+	// Store gamma estimates if so requested
+	if "`gamma2'"!="" g2b, gamma2(`gamma2')	
 	
+	// Store results if requested
+	if "`store'"!="" est store `store'
+
 	// Illegal display options are ignored on a replay but not during estimation
 	// This could be tidied up a little
 	_get_diopts diopts options, `options' 
@@ -962,20 +1024,11 @@ program Replay
 	if "`noplay'"=="" ml display , `diopts' noemptycells
 	
 	
-	// display alternative gamma format if requested.  But, we will get
-	// gamma results regardless.
-	
-	if "`gamma'"!="" & "`noplay'"=="" {
+	// display alternative gamma format if requested. 
+		if "`gamma'"!="" & "`noplay'"=="" {
 		gamma_parameterization , level(`level') `or' `irr' `rrr' `hr' `eform'
+		// Next command keeps r(table) correct
+		quietly ml display , `diopts' noemptycells
 	}
-	else {
-		quietly gamma_parameterization , level(`level') `or' `irr' `rrr' `hr' `eform'
-	}
-
-	// Store results if requested
-	if "`store'"!="" est store `store'
-	
-	// Store gamma estimates if so requested
-	if "`gamma2'"!="" g2b, gamma2(`gamma2')
 
 end

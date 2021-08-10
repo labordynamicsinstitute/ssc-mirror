@@ -1,12 +1,13 @@
-*! version 1.0.1 16aug2016
+*! version 1.1.2 14jan19
 * Contact jesse.wursten@kuleuven.be for bug reports/inquiries.
 * Many thanks to Daniel Klein for his suggestions and code snippets.
 
-program define timeit
+* Changelog
+** 14jan2019: Fixed space-before-colon issue
+** 27nov2018: Fixed space-in-command issue
+** 16apr2018: Fixed some parsing issues, added r-results (this is a pain) and incremental timer results
+program define timeit, rclass
 	version 11
-	** Store return results in case they were present
-	tempname r_results
-	_return hold `r_results'
 	
 	** Parse syntax
 	gettoken beforeColon afterColon : 0, parse(":") quotes
@@ -59,12 +60,16 @@ program define timeit
 	}
 	
 	*** User didn't enter a command
-	if "`theCommand'" == "" {
+	if `"`theCommand'"' == "" {
 		noisily di as error "You have to enter a command.  E.g. timeit `theTimer': sum someVariable"
 		exit 198
 	}
 	
 	** Check whether timer is already running
+	*** Store return results in case they were present
+	tempname r_results
+	_return hold `r_results'
+	
 	*** Check timer before stopping it
 	quietly timer list `theTimer'
 	local beforeStop = r(t`theTimer')
@@ -80,7 +85,7 @@ program define timeit
 	
 	** Return return results
 	_return restore `r_results'
-	
+
 
 	** Time and execute the command
 	** The nobreak + capture ... break combination ensures the timer stops when the user manually stops the program
@@ -91,18 +96,27 @@ program define timeit
 		timer off `theTimer'
 	}
 	
-	** Store result in "theName" if it was specified
-	if "`theName'" != "" {
-		** Store return results
-		_return hold `r_results'
-		
-		** Store timer in scalar
-		qui timer list
-		scalar `theName' = r(t`theTimer')
-		
-		** Return return results
-		_return restore `r_results'
-	}
+	** Store timer
+	*** Save existing r_results
+	return add
+	
+	*** Access timer
+	tempname timer_value timer_increment fakeReturnHold
+	qui timer list
+	scalar `timer_value' = r(t`theTimer')
+	_return hold `fakeReturnHold'
+
+	*** Calculate increment
+	if `afterStop' != .	scalar `timer_increment' = scalar(`timer_value') - `afterStop'
+	else 				scalar `timer_increment' = scalar(`timer_value')
+
+	*** Compile return()
+	return scalar t`theTimer' = scalar(`timer_value')
+	return scalar delta_t`theTimer' = scalar(`timer_increment')
+	if trim("`theName'") != "" return scalar `theName' = scalar(`timer_value')
+	
+	*** Compile r()
+	return add
 	
 	exit _rc
 end

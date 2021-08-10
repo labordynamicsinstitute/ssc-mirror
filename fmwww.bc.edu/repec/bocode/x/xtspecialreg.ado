@@ -8,12 +8,32 @@ within estimator.
 Create _xtspecialreg.ado along same lines as this routine.
 */
 
-prog drop _all
+capt prog drop xtspecialreg 
 program define xtspecialreg, eclass
 version 11.0
 syntax varlist(numeric min=2 max=2)  [if] [in], ENDOG(string) IV(string) ///
-              [EXOG(string) HETERO HETV(string) KDENS WINSOR TRIM(real 2.5) BS BSREPS(integer 10)] 
+              [EXOG(string) HETERO HETV(string) KDENS WINSOR TRIM(real 2.5) FIRST BS BSREPS(integer 10) XTIVREG2] 
 
+// check for ivreg2, ranktest if requested
+	loc est "xtivreg"
+	if "`xtivreg2'" == "xtivreg2" {
+		capt which ivreg2
+			if _rc != 0 {
+			di as err _n "You must install the ivreg2 package, via ssc install ivreg2"
+			error 198
+			}
+		capt which ranktest
+			if _rc != 0 {
+				di as err _n "You must install the ranktest package, via ssc install ranktest"
+			error 198
+			}
+		capt which xtivreg2
+			if _rc != 0 {
+				di as err _n "You must install the xtivreg2 package, via ssc install xtivreg2"
+			error 198
+			}
+		loc est "xtivreg2"
+	}
 // require panel
 	capt xtset
 	if _rc != 0 {
@@ -69,8 +89,7 @@ syntax varlist(numeric min=2 max=2)  [if] [in], ENDOG(string) IV(string) ///
 		if `bsreps' <= 1 | `bsreps' > 250 {
 			di as err "Invalid value for bsreps: must be 2-250"
 			error 198
-		}
-// MUST FIX TO ALLOW HYPHENATED VARLISTS		
+		}		
 		loc nelt: word count `exog' `endog' 
 		loc nelt = `nelt' + 2 // allow for V and constant
 		loc bscalc
@@ -86,7 +105,8 @@ syntax varlist(numeric min=2 max=2)  [if] [in], ENDOG(string) IV(string) ///
 		qui xtset
 		loc pv `r(panelvar)'
 		loc tv `r(timevar)'
-		qui g `idclu' = `pv' 
+// Apr2018: generate as double to allow for large ID values
+		qui g double `idclu' = `pv' 
 // per Bryce Durgin @StataCorp, must xtset by the idcluster variable to deal with multiple copies of a panel
 		qui xtset `idclu' `tv'
 		qui bootstrap `bscalc', reps(`bsreps') cluster(`pv') idcluster(`idclu') dots: ///
@@ -186,18 +206,13 @@ syntax varlist(numeric min=2 max=2)  [if] [in], ENDOG(string) IV(string) ///
 	}
 	loc action = cond("`winsor'"=="winsor", "winsorized", "trimmed")
 	di as text _n "`delta' observations `action': max abs value of transformed variable = " %5.2f `extreme' " sigma" _n
-	loc qq "qui"
-//	loc qq = cond("`bs'" == "bs", "qui", "noi")
-
-// special regression transformed depvar
-// di as err _n "transformed:"
-// su `T' if `touse'
+	loc qq = cond("`first'" != "first", "qui", "noi")
 
 // now apply within estimator to transformed depvar
 	
-    `qq'  xtivreg `T' `exog' (`endog' = `iv') if `touse', fe
+    `qq'  `est' `T' `exog' (`endog' = `iv') if `touse', fe `first'
 	ereturn local depvar "`D'"
-	if "`bs'" != "bs" {
+	if "`first'" != "first" {
 		di as text _n "Panel instrumental variables regression" _col(52) "Number of obs = " as res %11.0f e(N)
 		di as text _col(52) "Number of groups = " as res %8.0f e(N_g)
 		loc wdf = e(df_m) - e(N_g)
@@ -207,6 +222,10 @@ syntax varlist(numeric min=2 max=2)  [if] [in], ENDOG(string) IV(string) ///
 		ereturn display
 		di as text "Instrumented : `e(instd)'"
 		di as text "Instruments:   `e(insts)'"
+	}
+// to get around unavailable xb pred in xtivreg2, fe
+	if "`xtivreg2'" == "xtivreg2" {
+		qui xtivreg `T' `exog' (`endog' = `iv') if `touse', fe 
 	}
 	qui predict double `dxb' if e(sample), xb
 	qui replace `dxb' =`dxb' + `vee' if e(sample)
@@ -251,12 +270,13 @@ syntax varlist(numeric min=2 max=2)  [if] [in], ENDOG(string) IV(string) ///
 		matrix rownames `Vee' = `V' `en'
 		matrix colnames `Vee' = `V' `en'
     	eret post `bee' `Vee', depname(`D') esample(`touse')
-    	di "Marginal effects at the mean, average index function"
+    	di "Average marginal effects from average index function"
     	eret display  
 	}
 	else {
-		di as text _n "Marginal effects at the mean, average index function"
+		di as text _n "Average marginal effects from average index function"
 		mat li `mfx', noheader
+		eret matrix aif = `mfx'
 	}
 	eret local cmdname = "xtspecialreg"
 	eret scalar N = `enn'

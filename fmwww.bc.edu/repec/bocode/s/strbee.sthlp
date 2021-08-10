@@ -1,5 +1,6 @@
 {smcl}
-{* version 1.8.5   Ian White   27mar2017}{...}
+{* version 1.8.6   Ian White   17jan2018}{...}
+{* 17jan2018, updated to UCL}{...}
 {* 14mar2017, small changes to Introduction}{...}
 {title:Title}
 
@@ -348,7 +349,7 @@ test(wilcoxon) now works correctly.
 
 {pstd}Example using simulated data of immediate vs. deferred treatment:
 
-        {com}. {stata "use http://www.mrc-bsu.cam.ac.uk/IW_Stata/noncomp/immdef.dta, clear"}
+        {com}. {stata "use http://www.homepages.ucl.ac.uk/~rmjwiww/stata/noncomp/immdef.dta, clear"}
         {com}. {stata stset progyrs prog}{txt}
 
 {pstd}Intention-to-treat analysis
@@ -392,7 +393,7 @@ test(wilcoxon) now works correctly.
 
 {phang}4. Try updating the software (see below).
 
-{phang}If all else fails, feel free to email me, ian.white@mrc-bsu.cam.ac.uk, sending me a log file showing your problem. 
+{phang}If all else fails, feel free to email me, ian.white@ucl.ac.uk, sending me a log file showing your problem. 
 The log file should include at least {cmd:which strbee}, a summary of your data and an {cmd:strbee} call with the trace option. 
 It's very helpful if you can also send me some data to illustrate your problem.
 
@@ -402,7 +403,7 @@ It's very helpful if you can also send me some data to illustrate your problem.
 
 {phang}I put updates from time to time on my website.
 You can install them using 
-{stata "net install http://www.mrc-bsu.cam.ac.uk/IW_Stata/noncomp/strbee, replace"}.
+{stata "net install http://www.homepages.ucl.ac.uk/~rmjwiww/stata/noncomp/strbee, replace"}.
 
 
 
@@ -438,19 +439,19 @@ If results are appended to this file then {cmd:strbee} checks that the character
 
 {phang}{marker White06}White IR (2006).
 Estimating treatment effects in randomised trials with treatment switching.
-Statistics in Medicine 25: 1619–1622.       
+Statistics in Medicine 25: 1619-1622.       
 
 
 
 {title:Authors}
 
   Ian R. White
-  MRC Biostatistics Unit, Cambridge, UK
-  ian.white@mrc-bsu.cam.ac.uk
+  MRC Clinical Trials Unit at UCL, London, UK
+  ian.white@ucl.ac.uk
 
   Sarah Walker
-  MRC Clinical Trials Unit, London, UK
+  MRC Clinical Trials Unit at UCL, London, UK
 
   Abdel Babiker
-  MRC Clinical Trials Unit, London, UK
+  MRC Clinical Trials Unit at UCL, London, UK
 

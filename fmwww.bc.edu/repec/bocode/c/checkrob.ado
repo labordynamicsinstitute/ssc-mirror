@@ -1,3 +1,4 @@
+*! version 1.1  Updated June 2018. Issues with Capital letters in variable names fixed (Thanks to Ranmini Vithanagama). Performance improved. 
 program checkrob
 	version 9
 	// parse before/after colon
@@ -217,33 +218,34 @@ program checkrob
 			gen `mdum'=0
 			gen `tvalue'=0
 			foreach v of local kvars {
-				sum b_`v'
+
+				sum b_`=strlower("`v'")', meanonly
 				file write restab "`v'" "," "`r(max)'" "," "`r(min)'" "," "`r(mean)'" ","
-				sum se_`v'
+				sum se_`=strlower("`v'")', meanonly
 				file write restab "`r(mean)'" ","
-				replace `tdum'=(abs((b_`v')/(se_`v'))>1.96 & b_`v'~=.)
-				replace `tdum'=. if b_`v'==.
-				sum `tdum'
+				replace `tdum'=(abs((b_`=strlower("`v'")')/(se_`=strlower("`v'")'))>1.96 & b_`=strlower("`v'")'~=.)
+				replace `tdum'=. if b_`=strlower("`v'")'==.
+				sum `tdum', meanonly
 				file write restab "`r(mean)'" ","
-				replace `pdum'=(b_`v'>0)
-				replace `pdum'=. if b_`v'==.
-				sum `pdum'
+				replace `pdum'=(b_`=strlower("`v'")'>0)
+				replace `pdum'=. if b_`=strlower("`v'")'==.
+				sum `pdum', meanonly
 				file write restab "`r(mean)'" ","
-				replace `mdum'=(b_`v'<0)
-				replace `mdum'=. if b_`v'==.
-				sum `mdum'
+				replace `mdum'=(b_`=strlower("`v'")'<0)
+				replace `mdum'=. if b_`=strlower("`v'")'==.
+				sum `mdum', meanonly
 				file write restab "`r(mean)'" ","
-				replace `tvalue'=abs(b_`v'/se_`v')
-				replace `tvalue'=. if b_`v'==.
-				sum `tvalue'
+				replace `tvalue'=abs(b_`=strlower("`v'")'/se_`=strlower("`v'")')
+				replace `tvalue'=. if b_`=strlower("`v'")'==.
+				sum `tvalue', meanonly
 				file write restab "`r(mean)'" "," "`r(N)'"
 				forvalues j=1/`no_e' {
 					local q=strpos("`e_`j''","(")
 					local p=strpos("`e_`j''",")")
 					local tmp_str = "e" + lower(substr("`e_`j''",`=`q'+1',`=`p'-`q'-1'))
-					replace `dum'=`tmp_str' if b_`v'~=.
-					replace `dum'=. if b_`v'==.
-					sum `dum'
+					replace `dum'=`tmp_str' if b_`=strlower("`v'")'~=.
+					replace `dum'=. if b_`=strlower("`v'")'==.
+					sum `dum', meanonly
 					file write restab ", `r(mean)'"
 				}
 
@@ -253,34 +255,34 @@ program checkrob
 			file write restab "T-var,Max,Min,Mean,AvgSTD,PercSigni,Perc+,Perc-,AvgT,Obs" _n
 			
 			foreach v of local xvars {
-				sum b_`v'
+				sum b_`=strlower("`v'")', meanonly
 				file write restab "`v'" "," "`r(max)'" "," "`r(min)'" "," "`r(mean)'" ","
-				sum se_`v'
+				sum se_`=strlower("`v'")', meanonly
 				file write restab "`r(mean)'" ","
-				replace `tdum'=(abs((b_`v')/(se_`v'))>1.96 & b_`v'~=.)
-				replace `tdum'=. if b_`v'==.
-				sum `tdum'
+				replace `tdum'=(abs((b_`=strlower("`v'")')/(se_`=strlower("`v'")'))>1.96 & b_`=strlower("`v'")'~=.)
+				replace `tdum'=. if b_`=strlower("`v'")'==.
+				sum `tdum', meanonly
 				file write restab "`r(mean)'" ","
-				replace `pdum'=(b_`v'>0 & b_`v'~=. )
-				replace `pdum'=. if b_`v'==.
-				sum `pdum'
+				replace `pdum'=(b_`=strlower("`v'")'>0 & b_`=strlower("`v'")'~=. )
+				replace `pdum'=. if b_`=strlower("`v'")'==.
+				sum `pdum', meanonly
 				file write restab "`r(mean)'" ","
-				replace `mdum'=(b_`v'<0 & b_`v'~=.)
-				replace `mdum'=. if b_`v'==.
-				sum `mdum'
+				replace `mdum'=(b_`=strlower("`v'")'<0 & b_`=strlower("`v'")'~=.)
+				replace `mdum'=. if b_`=strlower("`v'")'==.
+				sum `mdum', meanonly
 				file write restab "`r(mean)'" ","
-				replace `tvalue'=abs((b_`v')/(se_`v'))
-				replace `tvalue'=. if b_`v'==.
-				sum `tvalue'
+				replace `tvalue'=abs((b_`=strlower("`v'")')/(se_`=strlower("`v'")'))
+				replace `tvalue'=. if b_`=strlower("`v'")'==.
+				sum `tvalue', meanonly
 				file write restab "`r(mean)'" "," "`r(N)'"
 
 				forvalues j=1/`no_e' {
 					local q=strpos("`e_`j''","(")
 					local p=strpos("`e_`j''",")")
 					local tmp_str = "e" + lower(substr("`e_`j''",`=`q'+1',`=`p'-`q'-1'))
-					replace `dum'=`tmp_str' if b_`v'~=.
-					replace `dum'=. if b_`v'==.
-					sum `dum'
+					replace `dum'=`tmp_str' if b_`=strlower("`v'")'~=.
+					replace `dum'=. if b_`=strlower("`v'")'==.
+					sum `dum', meanonly
 					file write restab ", `r(mean)'"
 				}
 

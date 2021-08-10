@@ -34,9 +34,9 @@ d KW: factmerg
 d
 d Requires: Stata version 11.0
 d
-d Distribution-Date: 20120220
+d Distribution-Date: 20201125
 d
-d Author: Roger Newson, National Heart and Lung Institute at Imperial College London
+d Author: Roger Newson,  Imperial College London
 d Support: email r.newson@@imperial.ac.uk
 d
 f fvregen.ado

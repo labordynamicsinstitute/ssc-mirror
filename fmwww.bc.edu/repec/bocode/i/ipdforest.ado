@@ -32,6 +32,8 @@
         - Improved the look of the graphs by using the _DISPGBY program used in metan
     v3.0, 12 April 2017
         - fully updated mi impute compatibility: using all imputations to plot study-specific effects
+    v3.1, 21 January 2018
+        - edited scalars to temp scalars to prevent some errors when users had similary names variables
 */
 
 /*stata version define*/
@@ -49,8 +51,22 @@ program define ipdforest, rclass
 	*/ DOUBLE BOXOPT(string) CLASSIC DIAMOPT(string) POINTOPT(string) CIOPT(string) /*
 	*/ OLINEOPT(string) noSTATS noWT]
     /*temp variables used in all methods*/
-    tempvar id sidrev weights eff1 lo95CI1 up95CI1 outcvar2 tempdummy lblsize cnst xb1 esample
+    tempvar id sidrev weights xeff1 lo95CI1 up95CI1 outcvar2 tempdummy lblsize cnst xb1 esample
     tempfile tempf tempsave tempimp tempx
+    tempname startpos endpos vcnt ipref fp cmdstrlen dumcnt tvlistcnt underscore catnum binexp ///
+        vcnt intertype maxnum minnum intertype clsize iatype boolval tausq tausqlo tausqup tsq_pl_lo ///
+        tsq_pl_up ssq regconst fcint maxstr ivBcnt ivCcnt effnum minval maxval numtot numcnt tempsc ///
+        tempse zval feff mincat maxcat sumcat duminc dumbas xfets rsres dumint t1 t2 t3 t4 regconst ///
+        fcint studynum casesnum cntr sfound dfres mltpl ztval Hsq Hsqlo Hsqup Isq Isqlo Isqup tstudynum sumweights
+    forvalues j=1(1)10 {
+        tempname cat`j' eff`j'se_ov eff`j'pe_ov eff`j' eff`j'se  eff`j'lo eff`j'up
+    }
+    forvalues i=1(1)200 {
+        tempname stid`i'
+        forvalues j=1(1)10 {
+            tempname st`i'_`j'eff st`i'_`j'se st`i'_`j'lo st`i'_`j'up eff`j'se_st`i' eff`j'pe_st`i'
+        }
+    }
 
     /*INITIAL STUFF*/
     /*make sure xtmixed or xtmelogit has been executed first*/
@@ -58,6 +74,7 @@ program define ipdforest, rclass
     di _newline(2)
     local temp = e(mi)
 	local prefx ""
+	capture drop labelvar
     if "`temp'"=="mi" {
         local cmloc = "cmd_mi"
         /*make sure -mi estimate- has been used with the -post- option*/
@@ -85,7 +102,7 @@ program define ipdforest, rclass
         scalar endpos = strpos("`tvnm'",")")
         local tvnm = substr("`tvnm'",`=startpos+1',`=endpos-startpos-1')
         //full mi dataset and 1st dataset
-         qui gen `esample'=`tvnm'      
+        qui gen `esample'=`tvnm'
 		qui save `tempimp', replace
 		qui gen `id'=_mi_id
         qui mi extract 1, clear
@@ -651,6 +668,7 @@ program define ipdforest, rclass
 
     /*create label temp variable*/
     if "`label'"=="" {
+		capture drop labelvar
         capture decode `clustervar', generate(labelvar) maxlength(30)
         if _rc!=0 {
             capture gen str30 labelvar = string(`clustervar')
@@ -808,7 +826,7 @@ program define ipdforest, rclass
                 local strout2 = "Interaction effect (`var1' x `intervar2')"
                 local graphname2 = "interaction_`var1'X`intervar2'"
                 scalar effnum = 2
-                tempvar eff2 lo95CI2 up95CI2
+                tempvar xeff2 lo95CI2 up95CI2
                 /*identify if it's fv format or xi expansion*/
                 capture scalar eff2se = _se[0.`var1'#c.`intervar2']
                 if _rc==0 {
@@ -886,7 +904,7 @@ program define ipdforest, rclass
                 }
                 /*temp vars for each category*/
                 forvalues x=2(1)`=effnum' {
-                    tempvar eff`x' lo95CI`x' up95CI`x'
+                    tempvar xeff`x' lo95CI`x' up95CI`x'
                 }
     
                 /*identify if it's fv format or xi expansion*/
@@ -956,7 +974,7 @@ program define ipdforest, rclass
                 local strout2 = "Interaction effect (`var1' x `intervar2')"
                 local graphname2 = "interaction_`var1'X`intervar2'"
                 scalar effnum = 2
-                tempvar eff2 lo95CI2 up95CI2
+                tempvar xeff2 lo95CI2 up95CI2
                 /*identify if it's fv format or xi expansion*/
                 capture scalar eff2se = _se[c.`var1'#c.`intervar2']
                 if _rc==0 {
@@ -1022,7 +1040,7 @@ program define ipdforest, rclass
                 /*here the format of the main effect coefficient can only be continuous*/
                 /*temp vars for each category*/
                 forvalues x=2(1)`=effnum' {
-                    tempvar eff`x' lo95CI`x' up95CI`x'
+                    tempvar xeff`x' lo95CI`x' up95CI`x'
                 }
                 /*identify if it's fv format or xi expansion*/
                 capture scalar tempse = _se[c.`var1'#`=maxval'.`intervar2']
@@ -1141,7 +1159,7 @@ program define ipdforest, rclass
                     if _rc==0 {
                         /*_cons is the intercept for the first study (_b[1.studyid]=0). _b[x.studyid]=difference of study x intercept compared to
                         study 1*/
-                        capture scalar fets = _b[_cons] + _b[`j'.`fets`i'']
+                        capture scalar xfets = _b[_cons] + _b[`j'.`fets`i'']
                         /*if saved coeff does not correspond to study numbers, exit with error - impossible t0 happen?*/
                         if _rc!=0 {
                             /*houston we have a problem*/
@@ -1152,7 +1170,7 @@ program define ipdforest, rclass
                         /*only change the prediction for the respective study*/
                         qui gen `tempdummy' = 0
                         qui replace `tempdummy' = 1 if `fets`i''==`j'
-                        qui replace `xb1' = `xb1' + fets*`tempdummy'
+                        qui replace `xb1' = `xb1' + xfets*`tempdummy'
                         qui drop `tempdummy'
                         /*if we are in here it can only be the intercept variable - add the nocons option for the individual regressions*/
                         local xtraopt = "nocons"
@@ -1160,7 +1178,7 @@ program define ipdforest, rclass
                     else {
                         /*the altertative is for the user to provide the common part of the dummy variables, up until the number - but it might be
                         dummies for the intercept OR the baseline scores*/
-                        capture scalar fets = _b[`fets`i''`j']
+                        capture scalar xfets = _b[`fets`i''`j']
                         scalar rsres=0
                         if _rc!=0 {
                             scalar rsres=1
@@ -1185,7 +1203,7 @@ program define ipdforest, rclass
                             /*if it is the first study and an estimate has not been found, assume it's the intercept one*/
                             if rsres==1 {
                                 local xtraopt = "nocons"
-                                scalar fets = _b[_cons]
+                                scalar xfets = _b[_cons]
                                 scalar rsres=0
                             }
                             /*if estimate was found and it was the fist dummy intercept, issue error*/
@@ -1201,7 +1219,7 @@ program define ipdforest, rclass
                         /*if it isn't the first variable, we need to correct estimates for intercept dummies*/
                         else {
                             if dumint==1 {
-                                scalar fets = _b[_cons] + _b[`fets`i''`j']
+                                scalar xfets = _b[_cons] + _b[`fets`i''`j']
                             }
                         }
                         /*if at this point there still isn't an estimate then issue error*/
@@ -1215,12 +1233,12 @@ program define ipdforest, rclass
                             if `j'==minnum & dumint==1  {
                                 qui gen `tempdummy' = 0
                                 qui replace `tempdummy' = 1 if `clustervar'==`j'
-                                qui replace `xb1' = `xb1' + fets*`tempdummy'
+                                qui replace `xb1' = `xb1' + xfets*`tempdummy'
                                 qui drop `tempdummy'
                             }
                             else {
                                 /*only change the prediction for the respective study since `fets`i'=0 for all other studies*/
-                                qui replace `xb1' = `xb1' + fets*`fets`i''`j'
+                                qui replace `xb1' = `xb1' + xfets*`fets`i''`j'
                             }
                         }
                     }
@@ -1371,19 +1389,21 @@ program define ipdforest, rclass
 		mi extract 1, clear
 	}	
     qui collapse (first) labelvar `var1' `sidrev' `weights', by(`clustervar')
+	//through esample there may have been studies that are completely dropped and need to be removed here
+	qui drop if labelvar==""	
     forvalues j=1(1)`=effnum' {
-        qui gen `eff`j''=.
+        qui gen `xeff`j''=.
         qui gen `lo95CI`j''=.
         qui gen `up95CI`j''=.
         forvalues i=1(1)`=studynum' {
-            qui replace `eff`j'' = st`i'_`j'eff if `sidrev'==`i'
+            qui replace `xeff`j'' = st`i'_`j'eff if `sidrev'==`i'
             qui replace `lo95CI`j'' = st`i'_`j'lo if `sidrev'==`i'
             qui replace `up95CI`j'' = st`i'_`j'up if `sidrev'==`i'
         }
     }
     sort `sidrev'
     /*debugging*/
-    *foreach x in sidrev weights eff1 lo95CI1 up95CI1 eff2 lo95CI2 up95CI2 {
+    *foreach x in sidrev weights xeff1 lo95CI1 up95CI1 xeff2 lo95CI2 up95CI2 {
     *    qui gen `x' = ``x''
     *}
 	
@@ -1406,11 +1426,10 @@ program define ipdforest, rclass
 
 	/*******************/
 	/*DISPLAY START*/
-	
 	/*add the overall effect(s) as extra observation(s)*/
 	qui set obs `=studynum+1'
 	forvalues j=1(1)`=effnum' {
-		qui replace `eff`j'' = eff`j' in `=studynum+1'
+		qui replace `xeff`j'' = eff`j' in `=studynum+1'
 		qui replace `lo95CI`j'' = eff`j'lo in `=studynum+1'
 		qui replace `up95CI`j'' = eff`j'up in `=studynum+1'
 	}
@@ -1429,9 +1448,9 @@ program define ipdforest, rclass
         /*save file since we will drop cases to deal with the binary/categorical interactions case*/
         qui save `tempf', replace
         scalar tstudynum = studynum
-        qui count if `eff`j''==.
+        qui count if `xeff`j''==.
         if r(N)>0 {
-            qui drop if `eff`j''==.
+            qui drop if `xeff`j''==.
             qui count
             scalar tstudynum = r(N)-1
             gsort -`clustervar'
@@ -1450,7 +1469,7 @@ program define ipdforest, rclass
         /*since we have the dataset ready use to export*/
         if "`export'"!="" {
             qui save `tempsave', replace
-            qui gen eff=`eff`j''
+            qui gen eff=`xeff`j''
             qui gen eff_lo=`lo95CI`j''
             qui gen eff_up=`up95CI`j''
             qui gen eff_se = (eff-eff_lo)/abs(invnormal(0.5*(1-c(level)/100)))
@@ -1497,13 +1516,13 @@ program define ipdforest, rclass
         di as text "{col 9}Study{col `=maxstr+2'}{c |}{col `=maxstr+6'}Effect{col `=maxstr+15'}[95% Conf. Interval]{col `=maxstr+37'} % Weight"
         di as text "{hline `=maxstr+1'}{c +}{hline `=maxstr+25'}
         forvalues i=`=tstudynum'(-1)1 {
-            di as text labelvar[`i'] "{col `=maxstr+2'}{c |}" as result _col(`=maxstr+5') %7.3f `eff`j''[`i'] _col(`=maxstr+16') %7.3f `lo95CI`j''[`i'] /*
+            di as text labelvar[`i'] "{col `=maxstr+2'}{c |}" as result _col(`=maxstr+5') %7.3f `xeff`j''[`i'] _col(`=maxstr+16') %7.3f `lo95CI`j''[`i'] /*
             */_col(`=maxstr+26') %7.3f `up95CI`j''[`i'] _col(`=maxstr+37') %7.2f `weights'[`i']*100
         }
         di as text "{hline `=maxstr+1'}{c +}{hline `=maxstr+25'}
         qui sum `weights'
         scalar sumweights = 100*r(sum)
-        di as text %-20s "Overall effect {col `=maxstr+2'}{c |}" as result _col(`=maxstr+5') %7.3f `eff`j''[`=tstudynum+1'] _col(`=maxstr+16') /*
+        di as text %-20s "Overall effect {col `=maxstr+2'}{c |}" as result _col(`=maxstr+5') %7.3f `xeff`j''[`=tstudynum+1'] _col(`=maxstr+16') /*
         */ %7.3f `lo95CI`j''[`=tstudynum+1'] _col(`=maxstr+26') %7.3f `up95CI`j''[`=tstudynum+1'] _col(`=maxstr+37') %7.2f sumweights
         di as text "{hline `=maxstr+1'}{c BT}{hline `=maxstr+25'}		
 
@@ -1543,7 +1562,7 @@ program define ipdforest, rclass
 		//list `clustervar' labelvar `use'
 		//list `clustervar' labelvar `use', nolabel
 		//call new graph
-		_dispgby `eff`j'' `lo95CI`j'' `up95CI`j'' `weights' `use' labelvar `rawdata' `tau2' `df', `log'    /*
+		_dispgby `xeff`j'' `lo95CI`j'' `up95CI`j'' `weights' `use' labelvar `rawdata' `tau2' `df', `log'    /*
 		*/ `xlabel' `xtick' `force' sumstat(`sumstat') `saving' `box' t1("`t1'") /*
 		*/ t2("`t2'")  b1("`b1'") b2("`b2'") lcols("`lcols'") rcols("`rcols'") `overall' `wt' `stats' `xcounts' `eform' /*
 		*/ `groupla' `cornfield'
@@ -1640,16 +1659,16 @@ end*/
 **********************************************************
 //"appropriated" with many thanks
 program define _dispgby
-version 9.0	
+version 9.0
 
 //	AXmin AXmax ARE THE OVERALL LEFT AND RIGHT COORDS
 //	DXmin dxMAX ARE THE LEFT AND RIGHT COORDS OF THE GRAPH PART
 
 #delimit ;
 syntax varlist(min=6 max=10 default=none ) [if] [in] [,
-  LOG XLAbel(string) XTICK(string) FORCE SAVING(string) noBOX SUMSTAT(string) 
+  LOG XLAbel(string) XTICK(string) FORCE SAVING(string) noBOX SUMSTAT(string)
   T1(string) T2(string) B1(string) B2(string) LCOLS(string) /* JUNK NOW */
-  RCOLS(string) noOVERALL noWT noSTATS COUNTS EFORM 
+  RCOLS(string) noOVERALL noWT noSTATS COUNTS EFORM
   noGROUPLA CORNFIELD];
 #delimit cr
 tempvar effect lci uci weight wtdisp use label tlabel id yrange xrange Ghsqrwt rawdata i2 mylabel

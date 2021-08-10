@@ -1,4 +1,4 @@
-version 10.0
+version 16.0
 mata:
 
 real colvector tidottree(real colvector x, real colvector y, | real colvector weight, real colvector xcen, real colvector ycen)
@@ -16,7 +16,7 @@ real colvector tidottree(real colvector x, real colvector y, | real colvector we
   ycen contains the censorship status of the Y-variable
     (-1 for left-censored, 0 for uncensored, 1 for right-censored).
 *! Author: Roger Newson
-*! Date: 11 August 2005
+*! Date: 15 September 2018
 */
 real scalar narg, nobs, nxval, nyval, i1, i2, i2min, i2max, root,
   ycur, xcencur, ycencur, wtcur, llcur, lgcur, glcur, ggcur, nodecur, yvalcur
@@ -101,22 +101,22 @@ for(i1=1;i1<=nxval;i1++) {
         yvalcur=yval[nodecur]
         if (ycur<yvalcur) {
           /* Enter left subtree */
-          if (ycencur<=0) lgcur = lgcur + swgt[nodecur] + (sweqnc[nodecur]+sweqrc[nodecur])
+          if (ycencur<=0) lgcur = quadsum((lgcur,swgt[nodecur],(sweqnc[nodecur]+sweqrc[nodecur])))
           nodecur=ytree[nodecur,1]
         }
         else if(ycur>yvalcur) {
           /* Enter right subtree */
-          if (ycencur>=0) llcur = llcur + swlt[nodecur] + (sweqlc[nodecur]+sweqnc[nodecur])
+          if (ycencur>=0) llcur = quadsum((llcur,swlt[nodecur],(sweqlc[nodecur]+sweqnc[nodecur])))
           nodecur=ytree[nodecur,2]
         }
         else {
           /* Current node has current Y-value */
-          if (ycencur<=0) lgcur = lgcur + swgt[nodecur]
-          if (ycencur>=0) llcur = llcur + swlt[nodecur]
+          if (ycencur<=0) lgcur = quadsum((lgcur,swgt[nodecur]))
+          if (ycencur>=0) llcur = quadsum((llcur,swlt[nodecur]))
           nodecur=0
         }
       }
-      tidot[i2] = tidot[i2] + (llcur-lgcur)
+      tidot[i2] = quadsum((tidot[i2],(llcur-lgcur)))
     }
     /*
       End of iteration for current observation.
@@ -145,19 +145,19 @@ for(i1=1;i1<=nxval;i1++) {
         yvalcur=yval[nodecur]
         if (ycur<yvalcur) {
           /* Enter left subtree */
-          if (ycencur<=0) swlt[nodecur] = swlt[nodecur] + wtcur
+          if (ycencur<=0) swlt[nodecur] = quadsum((swlt[nodecur],wtcur))
           nodecur=ytree[nodecur,1]
         }
         else if (ycur>yvalcur) {
           /* Enter right subtree */
-          if (ycencur>=0) swgt[nodecur] = swgt[nodecur] + wtcur
+          if (ycencur>=0) swgt[nodecur] = quadsum((swgt[nodecur],wtcur))
           nodecur=ytree[nodecur,2]
         }
         else {
           /* Current node has current Y-value */
-          if(ycencur<0) sweqlc[nodecur] = sweqlc[nodecur] + wtcur
-          else if (ycencur>0) sweqrc[nodecur] = sweqrc[nodecur] + wtcur
-          else sweqnc[nodecur] = sweqnc[nodecur] + wtcur
+          if(ycencur<0) sweqlc[nodecur] = quadsum((sweqlc[nodecur],wtcur))
+          else if (ycencur>0) sweqrc[nodecur] = quadsum((sweqrc[nodecur],wtcur))
+          else sweqnc[nodecur] = quadsum((sweqnc[nodecur],wtcur))
           nodecur=0
         }
       }
@@ -216,18 +216,18 @@ for(i1=nxval;i1>=1;i1--) {
         yvalcur=yval[nodecur]
         if (ycur<yvalcur) {
           /* Enter left subtree */
-          if (ycencur<=0) ggcur = ggcur + swgt[nodecur] + (sweqnc[nodecur]+sweqrc[nodecur])
+          if (ycencur<=0) ggcur = quadsum((ggcur,swgt[nodecur],(sweqnc[nodecur]+sweqrc[nodecur])))
           nodecur=ytree[nodecur,1]
         }
         else if(ycur>yvalcur) {
           /* Enter right subtree */
-          if (ycencur>=0) glcur = glcur + swlt[nodecur] + (sweqlc[nodecur]+sweqnc[nodecur])
+          if (ycencur>=0) glcur = quadsum((glcur,swlt[nodecur],(sweqlc[nodecur]+sweqnc[nodecur])))
           nodecur=ytree[nodecur,2]
         }
         else {
           /* Current node has current Y-value */
-          if (ycencur<=0) ggcur = ggcur + swgt[nodecur]
-          if (ycencur>=0) glcur = glcur + swlt[nodecur]
+          if (ycencur<=0) ggcur = quadsum((ggcur,swgt[nodecur]))
+          if (ycencur>=0) glcur = quadsum((glcur,swlt[nodecur]))
           nodecur=0
         }
       }
@@ -260,19 +260,19 @@ for(i1=nxval;i1>=1;i1--) {
         yvalcur=yval[nodecur]
         if (ycur<yvalcur) {
           /* Enter left subtree */
-          if (ycencur<=0) swlt[nodecur] = swlt[nodecur] + wtcur
+          if (ycencur<=0) swlt[nodecur] = quadsum((swlt[nodecur],wtcur))
           nodecur=ytree[nodecur,1]
         }
         else if (ycur>yvalcur) {
           /* Enter right subtree */
-          if (ycencur>=0) swgt[nodecur] = swgt[nodecur] + wtcur
+          if (ycencur>=0) swgt[nodecur] = quadsum((swgt[nodecur],wtcur))
           nodecur=ytree[nodecur,2]
         }
         else {
           /* Current node has current Y-value */
-          if(ycencur<0) sweqlc[nodecur] = sweqlc[nodecur] + wtcur
-          else if (ycencur>0) sweqrc[nodecur] = sweqrc[nodecur] + wtcur
-          else sweqnc[nodecur] = sweqnc[nodecur] + wtcur
+          if(ycencur<0) sweqlc[nodecur] = quadsum((sweqlc[nodecur],wtcur))
+          else if (ycencur>0) sweqrc[nodecur] = quadsum((sweqrc[nodecur],wtcur))
+          else sweqnc[nodecur] = quadsum((sweqnc[nodecur],wtcur))
           nodecur=0
         }
       }

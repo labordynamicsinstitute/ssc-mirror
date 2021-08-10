@@ -17,5 +17,6 @@ d
 d Author: Adrian Mander
 d Support: email Adrian.Mander@@mrc-hnr.cam.ac.uk
 d
-f plssas.ado
+f WIN64 plssas.ado
 f plssas.hlp
+h plssas.ado

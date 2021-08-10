@@ -1,6 +1,6 @@
 d 'PSHARE': module to compute and graph percentile shares
 d
-d  -pshare- computes and graphs percentile shares from individual
+d  pshare computes and graphs percentile shares from individual
 d level data. Percentile shares are often used in inequality
 d research to study the distribution of income or wealth. They are
 d defined as differences between Lorenz ordinates of the outcome
@@ -18,7 +18,7 @@ d KW: graphics
 d
 d Requires: Stata version 11 and moremata from SSC (q.v.)
 d
-d Distribution-Date: 20160516
+d Distribution-Date: 20180615
 d
 d Author: Ben Jann, University of Bern
 d Support: email jann@@soz.unibe.ch

@@ -1,6 +1,6 @@
 d 'ECLPLOT': module to generate estimates and confidence limits plots
 d
-d   eclplot creates a plot of estimates with lower and upper
+d    eclplot creates a plot of estimates with lower and upper
 d confidence limits	 on one axis against another numeric
 d variable on the other axis. The estimates	 and lower and
 d upper confidence limits are stored in three variables, in a	  
@@ -23,11 +23,10 @@ d KW: graphics
 d
 d Requires: Stata version 13
 d
+d Distribution-Date: 20210306
 d
 d Author: Roger Newson, National Heart and Lung Institute, Imperial College London
 d Support: email r.newson@@imperial.ac.uk
-d
-d Distribution-Date: 20150603
 d
 f eclplot.ado
 f eclplot.sthlp

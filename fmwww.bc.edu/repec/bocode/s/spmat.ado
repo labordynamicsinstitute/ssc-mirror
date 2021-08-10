@@ -1,4 +1,4 @@
-*! version 1.0.4  10nov2015
+*! version 1.0.5  26nov2018
 program define spmat, rclass
 
 	version 11.1
@@ -550,6 +550,7 @@ program define SPMAT_putmatrix, rclass
 		id(string)						///
 		eig(string)						///
 		replace							///
+		force							///
 		]
 	
 	local objname : word 1 of `namelist'
@@ -701,6 +702,7 @@ program define SPMAT_putmatrix_old
 		Bands(numlist integer >=0 min=1 max=2) 			///
 		id(string)						///
 		replace							///
+		force							///
 		]
 	
 	local words : word count `namelist'
@@ -1091,10 +1093,16 @@ program define SPMAT_dta
 	syntax anything [if] [in] ,			///
 		[ 					///
 		id(varname numeric) 			///
+		rcv					///
 	      	IDISTance 				///
 		NORMalize(string)			///
 		replace 				///
+		force					///
 	    	]
+	
+	if "`rcv'" != "" & "`id'" != "" {
+		opts_exclusive "id() rcv"
+	}
 	
 	gettoken objname vars : anything
 	unab varlist : `vars'
@@ -1105,6 +1113,14 @@ program define SPMAT_dta
 	local normalize `r(normalize)'
 	
 	marksample touse
+		
+	if ("`replace'" != "") capture spmat drop `objname'
+	
+	if "`rcv'" != "" {
+		mata: SPMAT_putdta_rcv("`objname'","`varlist'","`touse'", ///
+			"`idistance'","`normalize'")
+		exit
+	}
 	
 	tempname mat vec
 	c_local matanames `mat' `vec'
@@ -1113,8 +1129,6 @@ program define SPMAT_dta
 		mata: `vec' = st_data(.,"`id'","`touse'")
 	}
 	else mata: `vec' = J(0,1,0)
-	
-	if ("`replace'" != "") capture spmat drop `objname'
 	
 	mata : SPMAT_putdta("`objname'",`mat',"`idistance'","`normalize'",`vec')
 	
@@ -1177,6 +1191,7 @@ program define SPMAT_import
 		NORMalize(string)		///
 		IDISTance 			///
 		replace 			///
+		force				///
 		]
 	
 	if ("`nlist'"=="nlist" & "`idistance'"=="idistance") {
@@ -1536,6 +1551,10 @@ end
 exit
 
 Version history
+
+1.0.5
+
+spmat dta - now supports (row, column, value) format with option -rcv-
 
 1.0.4
 

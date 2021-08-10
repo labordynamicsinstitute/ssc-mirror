@@ -1,0 +1,16 @@
+use boxturtle
+circbw direction 
+circkden direction, h(29.82) saving(Fig7a, replace)
+circkden direction, h(29.82) circgph saving(Fig7b, replace)
+circkden direction, h(59.65) saving(Fig7c, replace)
+circkden direction, h(59.65) circgph saving(Fig7d, replace)
+circkden direction, h(119.3) saving(Fig7e, replace)
+circkden direction, h(119.3) circgph saving(Fig7f, replace)
+cirkdevm direction, h(13.92) saving(Fig8a, replace)
+cirkdevm direction, h(13.92) circgph saving(Fig8b, replace)
+cirkdevm direction, h(3.48) saving(Fig8c, replace)
+cirkdevm direction, h(3.48) circgph saving(Fig8d, replace)
+cirkdevm direction, h(.87) saving(Fig8e, replace)
+cirkdevm direction, h(.87) circgph saving(Fig8f, replace)
+graph combine Fig7a.gph Fig7c.gph Fig7e.gph Fig7b.gph Fig7d.gph Fig7f.gph, iscale(.5) title(Figura 7) saving(Fig7t, replace)
+graph combine Fig8a.gph Fig8c.gph Fig8e.gph Fig8b.gph Fig8d.gph Fig8f.gph, iscale(.5) title(Figura 8) saving(Fig8t, replace)

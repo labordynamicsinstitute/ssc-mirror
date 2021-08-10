@@ -1,29 +1,13 @@
-*                                    s2color.scheme
+*                                    plottigblind.scheme
 
-* s2 scheme family with a naturally white background (white plotregions and
-* lightly colored background) and color foreground (lines, symbols, text, etc).
 
-*  For p[#][stub] scheme references the corresponding style is resolved by
-*  searching the scheme ids with the following preference ordering:
-*
-*                p#stub
-*                pstub
-*                p#
-*                p
-*
-*  Thus it is possible to control the selected style to great detail, or let it
-*  default to common defaults.  In particular -p- or -pstub- without
-*  # can be used to designate a common plotting symbol, or back plotting
-*  symbol, or for that matter common color or sizes.
-*
-*  "style"s designated "special" are not styles at all, but direct signals to
-*  graphs, plots, or other classes and their parsers.  Their contents are
-*  specific to the use and may only be understood by the caller.
 
-*!  version 1.2.5   16jun2011
+*!  version 1.4   07aug2020
 
 sequence 1210
 label "s2 color"
+
+#include s2color
 
 system   naturally_white  1
 
@@ -32,7 +16,6 @@ clockdir legend_position     4
 numstyle legend_cols         1
 numstyle legend_rows         0
 gsize legend_key_xsize       5
-
 
 
 graphsize             5

@@ -24,8 +24,8 @@
 {synopt :{opt bknotstvc(knots list)}}boundary knots for time-dependent effects{p_end}
 {synopt :{cmdab:df(#)}}degrees of freedom for baseline hazard function{p_end}
 {synopt :{opt dftvc(df_list)}}degrees of freedom for each time-dependent effect{p_end}
-{synopt :{opt kn:ots(numlist)}}knot locations for baseline hazard{p_end}
-{synopt :{opt knotst:vc(numlist)}}knot locations for time-dependent effects{p_end}
+{synopt :{opt kn:ots(numlist)}}internal knot locations for baseline hazard{p_end}
+{synopt :{opt knotst:vc(numlist)}} internal knot locations for time-dependent effects{p_end}
 {synopt :{opt knscale(scale)}}scale for user-defined knots (default scale is time){p_end}
 {synopt :{opt tvc(varlist)}}varlist of time varying effects{p_end}
 
@@ -115,7 +115,7 @@ This will use 3 degrees of freedom for {cmd:x1}, 2 degrees of freedom for
 
 
 {phang}
-{opt knots(# [# ...])} specifies knot locations for the baseline distribution
+{opt knots(# [# ...])} specifies internal knot locations for the baseline distribution
 function, as opposed to the default locations set by {cmd:df()}. Note that
 the locations of the knots are placed on the scale defined by {cmd:knscale}.
 However, the scale used by the restricted cubic spline function is always

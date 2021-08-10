@@ -1,3 +1,4 @@
+*! 1.4.0 NJC 2 August 2020 
 *! 1.3.0 NJC 4 September 2015 
 * 1.2.1 NJC 14 August 2001 
 * 1.2.0 NJC 25 April 2001 
@@ -45,7 +46,10 @@ program cpcorr, rclass
 	matrix `p' = `matrix' 
 
 	if "`square'" != ""  local square "^2"  
-	if "`format'" == ""  local format "%5.4f"  
+	if "`format'" == ""  local format "%5.4f" 
+
+	qui count if `touse' 	 
+	local n = r(N) 
 
         qui forval i = 1/`nrow' {
                 local row`i' : word `i' of `rowvars'
@@ -55,13 +59,12 @@ program cpcorr, rclass
 			if "`covariance'" != "" {  
 				mat `matrix'[`i',`j'] = r(cov_12)
 			} 
-			else mat `matrix'[`i',`j'] = (r(rho))`square' 
-			mat `p'[`i',`j'] = r(p) 
+			else mat `matrix'[`i',`j'] = (r(rho))`square'
+			mat `p'[`i',`j'] =  min(2 * ttail(`n' - 2, abs(r(rho)) * sqrt(`n' - 2) / sqrt(1 - abs(r(rho))^2)), 1)
                 }
         }
 	
-        qui count if `touse' 	
-	di in g "(obs=`r(N)')"  
+	di in g "(obs=`n')"  
 	
 	mat rownames `matrix' = `rowvars'
 	mat colnames `matrix' = `varlist'

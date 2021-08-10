@@ -1,5 +1,5 @@
 {smcl}
-{* 23dec2014}{...}
+{* 17apr2018}{...}
 
 {title:Title}
 
@@ -13,6 +13,13 @@
 This file summarizes changes made to ART since its general release on 01nov2004.
 Please refer to individual ART dialogs and help files for further information.
 Most recent changes are listed first.
+
+
+{hline 8} {hi:update 17apr2018} {hline}
+
+{phang}
+1.	One-sided option for non-inferiority designs corrected.
+The previous version double-adjusted alpha.
 
 
 {hline 8} {hi:update 23dec2014} {hline}

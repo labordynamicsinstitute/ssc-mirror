@@ -6,15 +6,32 @@ version 10.0;
  with the option of passing parameters.
  Adapted from an example called dofile, given in net course 151,
  and installed at the KCL site by Jonathan Sterne.
-*! Author: Roger Newson
-*! Date: 10 January 2008
+*!Author: Roger Newson
+*!Date: 26 August 2018
 *;
- capture log close;
- log using `"`1'.log"', replace;
- display "Log file `1'.log opened on $S_DATE at $S_TIME";
- capture noisily do `0';
- local retcod = _rc;
- display "Log file `1'.log completed on $S_DATE at $S_TIME";
- log close;
- exit `retcod';
+
+syntax [ anything ] [ , * ];
+
+*
+ Extract do-file name (unabbreviated and abbreviated)
+ and argument list.
+*;
+gettoken dfname arglist : anything;
+if `"`dfname'"'=="" {;
+  disp as error "Do-file name required";
+  error 498;
+};
+mata: st_local("abdfname",pathrmsuffix(st_local("dfname")));
+
+*
+ Execute the do-file,
+ generating a log file.
+*;
+tempname currentlog;
+log using `"`abdfname'.log"', replace name(`currentlog');
+capture noisily do `"`dfname'"' `arglist', `options';
+local retcod = _rc;
+log close `currentlog';
+exit `retcod';
+
 end;

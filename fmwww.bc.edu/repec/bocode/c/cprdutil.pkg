@@ -23,9 +23,9 @@ d KW: data input
 d
 d Requires: Stata version 13 and keyby, lablist, addinby, chardef, intext from SSC (q.v.)
 d
-d Distribution-Date: 20161021
+d Distribution-Date: 20190224
 d
-d Author: Roger Newson, National Heart and Lung Institute at Imperial College London
+d Author: Roger Newson, Department of Primary Care and Public Health at Imperial College London
 d Support: email r.newson@@imperial.ac.uk
 d
 f cprd_additional.ado
@@ -65,6 +65,7 @@ f cprd_medical.sthlp
 f cprd_nonxyzlookup.sthlp
 f cprd_packtype.sthlp
 f cprd_patient.sthlp
+f cprd_patientobs.sthlp
 f cprd_practice.sthlp
 f cprd_product.sthlp
 f cprd_referral.sthlp

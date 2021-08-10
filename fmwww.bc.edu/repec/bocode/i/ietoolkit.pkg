@@ -17,33 +17,39 @@ d graphs based on common impact evaluation regression models. See
 d https://github.com/worldbank/ietoolkit for more details. 
 d
 d KW: impact evaluations
+d KW: data management
 d KW: survey data
+d KW: data analysis
+d KW: balance tables
+d KW: difference-in-differences
+d KW: matching
 d
 d Requires: Stata version 11 
 d
-d Distribution-Date: 20170731
+d Distribution-Date: 20191108
 d
-d Author: Kristoffer Bjärkefur, The World Bank, DECIE
-d Support: email  kbjarkefur@@worldbank.org
+d Author: DIME Analytics, The World Bank, DECIE
+d Support: email  lcardosodeandrad@@worldbank.org
 d
-d Author: Mrijan Rimal, The World Bank, DECIE
-d Support: email 
-d
+f ietoolkit.ado
+f ietoolkit.sthlp
 f iebaltab.ado
 f iebaltab.sthlp
 f ieboilsave.ado
 f ieboilsave.sthlp
 f ieboilstart.ado
 f ieboilstart.sthlp
-f iecompdup.ado
-f iecompdup.sthlp
+f ieddtab.ado
+f ieddtab.sthlp
 f iedropone.ado
 f iedropone.sthlp
-f ieduplicates.ado
-f ieduplicates.sthlp
 f iefolder.ado
 f iefolder.sthlp
+f iegitaddmd.ado
+f iegitaddmd.sthlp
 f iegraph.ado
 f iegraph.sthlp
+f iekdensity.ado
+f iekdensity.sthlp
 f iematch.ado
 f iematch.sthlp

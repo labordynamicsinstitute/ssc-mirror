@@ -58,6 +58,7 @@ class Factor
 	touse = ""
 	panel_is_setup = 0
 	extra = asarray_create("string", 1, 20)
+	is_sorted = 0
 }
 
 
@@ -321,7 +322,7 @@ class Factor
 	// Update the remaining properties
 	num_obs = num_obs - num_dropped_obs
 	num_levels = num_levels - num_dropped_levels
-	keys = select(keys, counts)
+	if (keys != J(0, 1, .)) keys = select(keys, counts)
 	counts = select(counts, counts) // must be at the end!
 
 	// Clear these out to prevent mistakes
@@ -340,6 +341,12 @@ class Factor
 	`Boolean'				has_fweight
 	`Vector'				weighted_counts
 
+	// - By default, this drops all singletons (obs where F.counts==1)
+	// - If fweights are provided, we'll only drop those singletons with fweight of 1
+	// - As a hack, if zero_threshold==1, we'll drop singletons AND all obs where 
+	//   "weighted_counts" (actually depvar) is zero
+	//   Also, we multiply by counts so we can track how many actual obs were dropped
+
 	if (zero_threshold == .) zero_threshold = 0
 
 	if (counts == J(0, 1, .)) {
@@ -354,7 +361,6 @@ class Factor
 		weighted_counts = `panelsum'(this.sort(fweight), this.info)
 		if (zero_threshold) {
 			mask = (!weighted_counts :| (counts :== 1)) :* counts
-			// drop if all cases of fweight are zero, or if there is only one fweight
 		}
 		else {
 			mask = weighted_counts :== 1
@@ -367,11 +373,11 @@ class Factor
 	num_singletons = sum(mask)
 	if (num_singletons == 0) return(J(0, 1, .))
 	counts = counts - mask
-	idx = `selectindex'(mask[levels])
+	idx = `selectindex'(mask[levels, .])
 
 	// Update and overwrite fweight
 	if (has_fweight) {
-		fweight = select(fweight, (!mask)[levels])
+		fweight = num_singletons == num_obs ? J(0, 1, .) : select(fweight, (!mask)[levels])
 	}
 	
 	// Update contents of F based on just idx and the updated F.counts
@@ -431,7 +437,7 @@ class Factor
 	`Integer'				i
 	`Boolean'				integers_only
 	`Boolean'				touse_is_selectvar
-	`String'				type, var, lbl
+	`String'				var, lbl
 	`Dict'					map
 	`Vector'				keys
 	`StringVector'			values
@@ -455,30 +461,29 @@ class Factor
 	else {
 		touse_is_selectvar = 0
 	}
-	data = __fload_data(vars, touse, touse_is_selectvar)
 
-	// Are the variables integers (so maybe we can use the fast hash)?
-	integers_only = 1
-	for (i=1; i<=cols(vars); i++) {
-		type = st_vartype(vars[i])
-		if (anyof(("byte", "int", "long"), type)) {
-			continue
+	if (method=="gtools") {
+		// Warning: touse can't be a vector
+		if (eltype(touse)=="real") {
+			assert_msg(touse == ., "touse must be a variable name")
+			touse = ""
 		}
-		else if (anyof(("float", "double"), type)) {
-			if (round(data[., i])==data[., i]) {
-				continue
-			}
-		}
-		integers_only = 0
-		break
+		F = __factor_gtools(vars, touse, verbose,
+		                    sort_levels, count_levels, save_keys)
 	}
-	
-	F = _factor(data, integers_only, verbose, method,
-	            sort_levels, count_levels, hash_ratio,
-	            save_keys,
-	            vars, touse)
+	else {
+		data = __fload_data(vars, touse, touse_is_selectvar)
+		integers_only = varlist_is_integers(vars, data) // Are the variables integers (so maybe we can use the fast hash)?
+		F = _factor(data, integers_only, verbose, method,
+		            sort_levels, count_levels, hash_ratio,
+		            save_keys,
+		            vars, touse)
+	}
+
 	F.sortedby = st_macroexpand("`" + ": sortedby" + "'")
-	F.is_sorted = strpos(F.sortedby, invtokens(vars))==1
+	if (!F.is_sorted) {
+		F.is_sorted = strpos(F.sortedby, invtokens(vars)) == 1
+	}
 	if (!F.is_sorted & integers_only & cols(data)==1 & rows(data)>1) {
 		F.is_sorted = all( data :<= (data[| 2, 1 \ rows(data), 1 |] \ .) )
 	}
@@ -625,7 +630,7 @@ class Factor
 		msg = "{txt} method: {res}%s{txt}; dict size: {res}%s{txt})\n"
 		printf(msg, method, method == "join" ? "n/a" : strofreal(dict_size, "%12.0gc"))
 	}
-	F.is_sorted = 0
+	F.is_sorted = F.num_levels == 1 // if there is only one level it is already sorted
 	return(F)
 }
 

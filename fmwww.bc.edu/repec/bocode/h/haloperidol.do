@@ -1,42 +1,56 @@
-* results as in paper 1
-prog drop _all
-set more off
-use "haloperidol to test simplemetamiss.dta", clear
+// Analyses of haloperidol data to illustrate metamiss command
 
-*local options xtitle(,size(large)) ytitle(,size(large)) xlabel(0.1, 1, 10, 100) force xsize(9) ysize(6) 
-local options nograph
+use "haloperidol.dta", clear
 
-metamiss r1 f1 m1 r2 f2 m2, `options' fixed id(author) aca name(aca, replace) title(ACA) 
 
-metamiss r1 f1 m1 r2 f2 m2, `options' fixed id(author) w4 ica0 name(ica0, replace) title(ICA-0)
+* Available case analysis (two equivalent commands):
 
-metamiss r1 f1 m1 r2 f2 m2, `options' fixed id(author) w4 ica1 name(ica1, replace) title(ICA-1)
+metan r1 f1 r2 f2, rr fixedi label(namevar=author)
 
-metamiss r1 f1 m1 r2 f2 m2, `options' fixed id(author) w4 icapc name(icapc, replace) title(ICA-pC)
+metamiss r1 f1 m1 r2 f2 m2, rr id(author) aca
 
-metamiss r1 f1 m1 r2 f2 m2, `options' fixed id(author) w4 icape name(icape, replace) title(ICA-pE)
 
-metamiss r1 f1 m1 r2 f2 m2, `options' fixed id(author) w4 icap name(icap, replace) title(ICA-p)
+* ICA-0, impute missing as zeroes (two equivalent commands):
 
-metamiss r1 f1 m1 r2 f2 m2, `options' fixed id(author) w4 ica0(df1 df2) ica1(ds1 ds2) icapc(dc1 dc2) icap(dg1 dg2) name(icar, replace) title(ICA-R)
+metamiss r1 f1 m1 r2 f2 m2, rr id(author) ica0 w4
 
-metamiss r1 f1 m1 r2 f2 m2, `options' fixed id(author) w4 icab name(icab, replace) title(ICA-B)
+metamiss r1 f1 m1 r2 f2 m2, rr id(author) ica0(m1 m2) w4
 
-metamiss r1 f1 m1 r2 f2 m2, `options' fixed id(author) w4 icaw name(icaw, replace) title(ICA-W)
 
-metamiss r1 f1 m1 r2 f2 m2, `options' fixed id(author) w4 icaimor imor(2 2) name(icaimor22, replace) title(ICA-IMOR: IMORs 2, 2)
+* Impute using reasons for missingness:
 
-metamiss r1 f1 m1 r2 f2 m2, `options' fixed id(author) w4 icaimor imor(1/2 1/2) name(icaimorhalfhalf, replace) title(ICA-IMOR: IMORs 1/2, 1/2)
+metamiss r1 f1 m1 r2 f2 m2, fixed id(author) ica0(df1 df2) ///
+	ica1(ds1 ds2) icapc(dc1 dc2) icap(dg1 dg2) w4
 
-metamiss r1 f1 m1 r2 f2 m2, `options' fixed id(author) w4 sdlogimor(1) logimor(0) name(N01, replace) title("logimor ~ N(0,1)")
+	
+* Fixed equal IMORs (two equivalent commands):
 
-metamiss r1 f1 m1 r2 f2 m2, `options' fixed id(author) w4 sdlogimor(2) logimor(0) name(N04, replace) title("logimor ~ N(0,2^2)")
+metamiss r1 f1 m1 r2 f2 m2, rr id(author) imor(2) nograph
 
-metamiss r1 f1 m1 r2 f2 m2, `options' fixed id(author) gamblehollis name(GH, replace) title(Gamble-Hollis)
+metamiss r1 f1 m1 r2 f2 m2, rr id(author) logimor(log(2)) nograph
 
-/* NB metan bug: 
-metan r1 f1 r2 f2, xsize(9) ysize(6) title("Gamble-Hollis") 
-fails
-metan r1 f1 r2 f2, title("Gamble-Hollis") 
-metan r1 f1 r2 f2, xsize(9) ysize(6) title(Gamble-Hollis) 
-*/
+
+* Fixed opposite IMORs:
+
+metamiss r1 f1 m1 r2 f2 m2, rr id(author) imor(2 1/2) nograph
+
+
+* Random equal IMORs:
+
+metamiss r1 f1 m1 r2 f2 m2, rr id(author) logimor(0) sdlogimor(1) ///
+        corrlogimor(1)
+
+		
+* Random uncorrelated IMORs:
+
+metamiss r1 f1 m1 r2 f2 m2, rr id(author) logimor(0) sdlogimor(1) ///
+	corrlogimor(0)
+
+	
+* Possible ways to improve - unlikely to make much difference in practice:
+
+metamiss r1 f1 m1 r2 f2 m2, rr id(author) logimor(0) sdlogimor(1) ///
+       corrlogimor(1) method(mc) reps(10000)
+
+metamiss r1 f1 m1 r2 f2 m2, rr id(author) logimor(0) sdlogimor(1) ///
+       corrlogimor(0) method(gh) nip(50)

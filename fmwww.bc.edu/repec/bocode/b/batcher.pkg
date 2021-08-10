@@ -1,0 +1,20 @@
+d 'BATCHER': module to parallelise tasks (Windows only)
+d
+d  Batcher is a straightforward way to parallelise tasks in Stata,
+d requiring no setup time and only simple coding adjustments. 
+d
+d KW: batch processing
+d KW: parallel processing
+d
+d Requires: Stata version 8 for Windows
+d
+d Distribution-Date: 20210105
+d
+d Author:  Jesse Wursten, KU Leuven
+d Support: email jesse.wursten@@kuleuven.be 
+d
+G WIN64 batcher.ado
+F batcher.sthlp
+F batcher_middleman.do
+F batcher_exampleDofile.do
+h batcher.ado

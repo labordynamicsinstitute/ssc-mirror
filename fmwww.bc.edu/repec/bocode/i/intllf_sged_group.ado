@@ -1,19 +1,22 @@
 /*This ado file gives the log likelihood function used in interval regressions
-for the SGED distribution. For use with grouped data.
+for the SGED distribution.
 It works with gintreg.ado
-v 1
+v 1.1
 Author--Jacob Orchard
-Update--8/8/2016*/
+Update--6/13/2016*/
 
 
 program intllf_sged_group
 version 13
-		args lnf mu lambda sigma p 
+		args lnf mu sigma p a 
 		tempvar Fu Fl zu zl 
 		qui gen double `Fu' = .
 		qui gen double `Fl' = .
 		qui gen double `zu' = . 
 		qui gen double `zl' = .
+		
+		tempvar lambda
+		qui gen `lambda' = (exp(`a') - 1) / (exp(`a') + 1)
 		
 		*Point data
 			tempvar x s l 
@@ -32,7 +35,7 @@ version 13
 		
 		*Interval data
 			qui replace `zu' = (abs($ML_y2 - `mu')^`p')/( ///
-								(`sigma'^`p')*(1+`lambda'*sign($ML_y2 -`mu'))^`p') ///
+								(exp(`sigma')^`p')*(1+`lambda'*sign($ML_y2 -`mu'))^`p') ///
 								if $ML_y1 != . & $ML_y2 != . &  $ML_y1 != $ML_y2
 								
 			qui replace `Fu' = .5*(1-`lambda') + .5*(1+`lambda'*sign($ML_y2- ///
@@ -40,7 +43,7 @@ version 13
 								if $ML_y1 != . & $ML_y2 != . &  $ML_y1 != $ML_y2
 								
 			qui replace `zl' = (abs($ML_y1 - `mu')^`p')/( ///
-								(`sigma'^`p')*(1+`lambda'*sign($ML_y1 -`mu'))^`p') ///
+								(exp(`sigma')^`p')*(1+`lambda'*sign($ML_y1 -`mu'))^`p') ///
 								if $ML_y1 != . & $ML_y2 != . &  $ML_y1 != $ML_y2
 								
 			qui replace `Fl' = .5*(1-`lambda') + .5*(1+`lambda'*sign($ML_y1- ///
@@ -52,7 +55,7 @@ version 13
 		
 		*Bottom coded data
 			qui replace `zl' = (abs($ML_y1 - `mu')^`p')/( ///
-								(`sigma'^`p')*(1+`lambda'*sign($ML_y1 -`mu'))^`p') ///
+								(exp(`sigma')^`p')*(1+`lambda'*sign($ML_y1 -`mu'))^`p') ///
 								if $ML_y1 != . & $ML_y2 == .
 								
 			qui replace `Fl' = .5*(1-`lambda') + .5*(1+`lambda'*sign($ML_y1- ///
@@ -63,7 +66,7 @@ version 13
 		
 		*Top coded data
 			qui replace `zu' = (abs($ML_y2 - `mu')^`p')/( ///
-								(`sigma'^`p')*(1+`lambda'*sign($ML_y2 -`mu'))^`p') ///
+								(exp(`sigma')^`p')*(1+`lambda'*sign($ML_y2 -`mu'))^`p') ///
 								if $ML_y2 != . & $ML_y1 == .
 								
 			qui replace `Fu' = .5*(1-`lambda') + .5*(1+`lambda'*sign($ML_y2- ///
@@ -75,7 +78,7 @@ version 13
 		*Missing values
 			qui replace `lnf' = 0 if $ML_y2 == . & $ML_y1 == .
 		
-		 *Group frequency
+		*Group frequency
 		 qui replace `lnf' = `lnf'*$group_per
 		
 end		

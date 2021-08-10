@@ -1,5 +1,5 @@
 {smcl}
-{* *! version 1.4.9  13feb2017 Ben Jann}{...}
+{* *! version 1.5.1  22feb2019 Ben Jann}{...}
 {vieweralsosee "[G-2] graph" "help graph"}{...}
 {vieweralsosee "[R] estimates" "help estimates"}{...}
 {vieweralsosee "[R] marginsplot" "help marginsplot"}{...}
@@ -48,13 +48,13 @@
     and {it:model} is
 
 {p 8 16 2}
-    {it:name} [{cmd:,} {help coefplot##modelopts:{it:modelopts}} ]
+    {it:namelist} [{cmd:,} {help coefplot##modelopts:{it:modelopts}} ]
 
 {pstd}
-    where {it:name} is the name of a stored model
+    where {it:namelist} is a list of names of stored models
     (see help {helpb estimates}; type {cmd:.} or leave blank to refer to
     the active model). The {cmd:*} and {cmd:?} wildcards are allowed
-    in {it:name}; see
+    in {it:namelist}; see
     {help coefplot##wildcards:{it:Using wildcards in model names}}. Furthermore,
     {it:model} may also be
 
@@ -102,7 +102,7 @@
     {p_end}
 {synopt:{helpb coefplot##df:df({it:spec})}}provide degrees of freedom
     {p_end}
-{synopt:{helpb coefplot##citype:citype(logit|{ul:norm}al)}}method to compute
+{synopt:{helpb coefplot##citype:citype({it:method})}}method to compute
     confidence intervals; default is {cmd:citype(normal)}
     {p_end}
 
@@ -129,7 +129,7 @@
 {synopt:{helpb coefplot##swapnames:{ul:swap}names}}swap coefficient names and
     equation names
     {p_end}
-{synopt:{helpb coefplot##mlabels:mlabels({it:matchlist})}}specify marker labels
+{synopt:{helpb coefplot##mlabels:mlabels({it:matchlist})}}add custom marker labels
     {p_end}
 
 {syntab:Auxiliary results}
@@ -172,7 +172,7 @@
 {synopt:{it:{help marker_options}}}change look of
     markers (color, size, etc.)
     {p_end}
-{synopt:{helpb coefplot##mlabel:{ul:ml}abel}}add coefficient values as marker
+{synopt:{helpb coefplot##mlabel:{ul:ml}abel{sf:[}({it:spec}){sf:]}}}add marker
     labels
     {p_end}
 {synopt:{it:{help marker_label_options}}}change the look and position of marker
@@ -187,6 +187,8 @@
     {p_end}
 {synopt:{helpb coefplot##citop:citop}}draw confidence spikes in front
     of markers
+    {p_end}
+{synopt:{helpb coefplot##cirecast:{ul:cire}cast({it:plottype})}}shorthand for {cmd:ciopts(recast())}
     {p_end}
 {synopt:{helpb coefplot##ciopts:{ul:ciop}ts({it:options})}}affect rendition
     of confidence spikes
@@ -546,28 +548,48 @@
 
 {marker citype}{...}
 {phang}
-    {cmd:citype()} specifies the method to be used to compute the limits of
-    confidence intervals. {cmd:citype(normal)}, the default, computes confidence
+    {cmd:citype(}{it:method}{cmd:)} specifies the method to be used to compute the limits of
+    confidence intervals. {it:method} can be {cmd:normal}, {cmd:logit}, {cmd:probit},
+    {cmd:atanh}, or {cmd:log}.
+
+{pmore}
+    {cmd:citype(normal)}, the default, computes confidence
     limits based on untransformed coefficients and standard errors. Let {it:b} be
     the point estimate, {it:se} the standard error, and {it:t} the (1-{it:a}/2)
     quantile of the standard normal distribution or the t-distribution (if degrees
     of freedom are available; see above), where {it:a} is 1 minus the
     confidence level (e.g. {it:a}=5% for a 95% confidence interval). Then the
-    limits of the {cmd:citype(normal)} confidence interval are defined as
+    limits of the confidence interval are computed as
 
             {it:b} +/- {it:t} * {it:se}
 
 {pmore}
     {cmd:citype(logit)} uses the logit transformation to compute the limits
     of confidence intervals. This is useful if the estimates to be plotted are
-    proportions and the confidence limits are supposed to lie between 0 and 1.
-    The limits of the {cmd:citype(logit)} confidence interval are computed as
+    proportions and the confidence limits are supposed to lie between 0 and
+    1. The limits are computed as
 
             invlogit(logit({it:b}) +/- {it:t} * {it:se} / ({it:b} * (1 - {it:b})))
 
 {pmore}
-    (see the "Methods and formulas" section in
-    {mansection R proportion:{bf:[R] proportion}}).
+    {cmd:citype(probit)} is an alternative to {cmd:citype(logit)} and computes the
+    limits as
+
+            normal(invnormal({it:b}) +/- {it:t} * {it:se} / normalden(invnormal({it:b})))
+
+{pmore}
+    {cmd:citype(atanh)} uses the inverse hyperbolic tangent to compute the
+    confidence intervals. This is useful for estimates that lie between -1 and
+    1, such as a correlation coefficient. The limits are computed as:
+
+            tanh(atanh({it:b}) +/- {it:t} * {it:se} / (1 - {it:b}^2))
+
+{pmore}
+    {cmd:citype(log)} computes log-transformed confidence intervals. This is useful
+    for estimates that may only be positive, such as a variance estimate. The limits
+    are computed as:
+
+            exp(ln({it:b}) +/- {it:t} * {it:se} / {it:b})
 
 {marker eform}{...}
 {phang}
@@ -690,7 +712,7 @@
 {marker mlabels}{...}
 {phang}
     {cmd:mlabels(}{it:matchlist}{cmd:)} specifies marker labels for
-    coefficients. {it:matchlist} is:
+    selected coefficients. {it:matchlist} is:
 
             {it:coeflist} {cmd:=} # "{it:label}" [{it:coeflist} {cmd:=} # "{it:label}" ...]
 
@@ -761,7 +783,8 @@
     positions. The default is to create automatic offsets to prevent
     overlap of confidence spikes as soon as there are
     multiple plots. The spacing between coefficients is one unit, so
-    # should usually be within -0.5 and 0.5.
+    {it:#} should usually be within -0.5 and 0.5. {it:#} may also be a scalar
+    expression such as, say, {cmd:1/6}.
 
 {marker ifopt}{...}
 {phang}
@@ -794,17 +817,48 @@
 
 {marker mlabel}{...}
 {phang}
-    {cmd:mlabel} adds point estimates as marker labels. Use global option
-    {helpb coefplot##format:format()} to set the display format. For adding
-    custom labels to specific markers see model option
-    {helpb coefplot##mlabels:mlabels()} above. Not all of Stata's plot types
-    support marker labels. For example, if you use
+    {cmd:mlabel}[{cmd:(}{it:spec}{cmd:)}] adds marker labels to the
+    plot. For adding custom labels to specific markers also see model option
+    {helpb coefplot##mlabels:mlabels()} above. Furthermore, note that
+    not all of Stata's plot types support marker labels. For example, if you use
     {helpb coefplot##recast:recast(bar)} to change the plot type to
     {helpb twoway_bar:bar}, no marker labels will be displayed.
 
+{pmore}
+    The {cmd:mlabel} option can be used in three different ways:
+
+{pmore2}
+    (1) {opt mlabel} without argument adds the values of the point estimates as
+    marker labels. Use global option
+    {helpb coefplot##format:format()} to set the display format.
+
+{pmore2}
+    (2) {opth mlabel(varname)} uses the values of the specified variable
+    as marker labels. {it:varname} may be an internal variable (see
+    {help coefplot##tempvar:Accessing internal temporary variables} below). For example,
+    {cmd:mlabel(@b)} is equivalent to {cmd:mlabel} without argument.
+
+{pmore2}
+    (3) {opt mlabel(strexp)} sets the marker labels to the evaluation of the
+    specified string expression. Internal variables can be used within {it:strexp}
+    (see {help coefplot##tempvar:Accessing internal temporary variables}
+    below). For example, you can type
+
+{pmore3}
+    mlabel("p = " + string(@pval,"%9.3f"))
+
+{pmore2}
+    to display labels such as "p = 0.001" or "p = 0.127". Furthermore,
+
+{pmore3}
+    mlabel(cond(@pval<.001, "***", cond(@pval<.01, "**", cond(@pval<.05, "*", ""))))
+
+{pmore2}
+    would display significance stars.
+
 {phang}
     {it:marker_label_options} change the look and
-    position of marker labels: see help {it:{help marker_label_options}}.
+    position of marker labels; see help {it:{help marker_label_options}}.
 
 {marker recast}{...}
 {phang}
@@ -831,6 +885,13 @@
     {cmd:citop} specifies that confidence intervals be drawn in front of
     the markers for point estimates; the default is to draw confidence intervals
     behind the markers.
+
+{marker cirecast}{...}
+{phang}
+    {cmd:cirecast(}{it:plottype}{cmd:)} is shorthand notation for
+    {helpb coefplot##ciopts:ciopts(recast())}. If both are provided, the plot types
+    specified in {cmd:ciopts(recast())} take precedence over the plot types
+    specified in {cmd:cirecast()}.
 
 {marker ciopts}{...}
 {phang}
@@ -1412,7 +1473,7 @@
     is equivalent to
 
 {com}{...}
-        . coefplot (est11 \ est12 \ est13, {txt:{it:opts1}}) (est21 \ est22 \ est23, {txt:{it:opts2}})
+        . coefplot (est11 est12 est13, {txt:{it:opts1}}) (est21 est22 est23, {txt:{it:opts2}})
 {txt}{...}
 
 {pstd}
@@ -1426,11 +1487,11 @@
     is equivalent to
 
 {com}{...}
-        . coefplot (est11, {txt:{it:opts1}} \ est21, {txt:{it:opts1}} \ est12, {txt:{it:opts2}} \ est22, {txt:{it:opts2}} \, {txt:{it:opts3}})
+        . coefplot (est11 est21, {txt:{it:opts1}} \ est12 est22, {txt:{it:opts2}} \, {txt:{it:opts3}})
 {txt}{...}
 
 {pstd}
-    Alternatively, if a name pattern is specified without parentheses,
+    If a name pattern is specified without parentheses,
     the matching models are treated as separate plots. For example, typing
 
 {com}{...}
@@ -1607,9 +1668,9 @@
     {helpb coefplot##df:df()}, and {helpb coefplot##aux:aux()} refer to regular
     matrices instead of {cmd:e()}-matrices. The matrix name may be omitted in these
     options if results are to be read from the same matrix; only the
-    relevant row or column numbers have to be provided (whether the
+    relevant row or column numbers have to be provided in this case (whether the
     numbers are interpreted as row or column numbers
-    depends what was specified in {cmd:matrix()}).
+    depends in how {cmd:matrix()} was specified).
 
 {pstd}
     For example, to plot medians and their confidence intervals as computed

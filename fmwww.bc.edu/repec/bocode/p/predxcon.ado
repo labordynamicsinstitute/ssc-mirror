@@ -1,4 +1,4 @@
-*! version 3.1.0 JMGarrett 30Aug04
+*! version 3.1.3 JMGarrett 19Feb14
 /*  Graphs predicted values for linear, quantile, or logistic models       */
 /*     (New: allows interactions with polynomials)                         */
 /*  Form:  predxcon y, xvar(xvar) f(#) t(#) i(#) options                   */
@@ -7,6 +7,7 @@
 /*  Note:  X variable should be continuous (interval or ordinal)           */
 /*  (added 30Jun03: tests for linear, squared, or cubed terms)             */ 
 /*  (added 30Aug04: add cluster option)                                    */
+/*  (added 19Feb14: added "xsectional option for table and y-axis label    */
 
 program define predxcon
   version 8.0
@@ -14,7 +15,7 @@ program define predxcon
     syntax varlist (min=1 max=1) [if] [in] [pweight], Xvar(varlist)
         [From(real 0) To(real 0) Inc(real 1) Poly(real 0) CLass(string)
          MODel Adjust(string) NOList GRaph LINear MEDian Level(real 95) 
-         CLuster(string) SAVepred(string) * ] ;
+         CLuster(string) SAVepred(string) XSECtional * ] ;
   #delimit cr
   marksample touse
   markout `touse' `xvar'
@@ -357,13 +358,23 @@ program define predxcon
      }
      display "  "
      if "`regtype'"=="lin" {
-        disp as text "Predicted Values and `level'% Confidence Intervals"
+        if "`xsectional'"=="" {
+           disp as text "Predicted Values and `level'% Confidence Intervals"
+           }
+        if "`xsectional'"=="xsectional" {
+           disp as text "Estimated Values and `level'% Confidence Intervals"
+           } 
         }
      if "`regtype'"=="med" {
         disp as text "Predicted Medians and `level'% Confidence Intervals"
         }
      if "`regtype'"=="log" {
-        disp as text "Predicted Probabilities and `level'% Confidence Intervals"
+        if "`xsectional'"=="" {
+           disp as text "Predicted Probabilities and `level'% Confidence Intervals"
+           }
+        if "`xsectional'"=="xsectional" {
+           disp as text "Estimated Proportions and `level'% Confidence Intervals"
+           } 
         }
      display "  "
      if "`regtype'"=="lin" {
@@ -572,14 +583,24 @@ program define predxcon
           local leg `varlblc'
           }
        if "`regtype'"=="lin" {
-          local l2title "Predicted Values and `level'% CI"
+          if "`xsectional'"=="" {
+              local l2title "Predicted Values and `level'% CI"
+              }
+           if "`xsectional'"=="xsectional" {
+              local l2title "Estimated Values and `level'% CI"
+              } 
           }
        if "`regtype'"=="med" {
           local l2title "Predicted Medians and `level'% CI"
           }
        if "`regtype'"=="log" {
-          local l2title "Predicted Probabilities and `level'% CI"
-          }
+           if "`xsectional'"=="" {
+              local l2title "Predicted Probabilities and `level'% CI"
+              }
+           if "`xsectional'"=="xsectional" {
+              local l2title "Estimated Proportions and `level'% CI"
+              } 
+           }
   
       twoway (connected pred_y `xvar', sort)                              /// 
           (connected upper `xvar', sort msymbol(none) clcolor(cranberry)  ///
@@ -592,14 +613,24 @@ program define predxcon
 
     if "`class'"~="" {
       if "`regtype'"=="lin" {
-         local l2title "Predicted Values"
+          if "`xsectional'"=="" {
+              local l2title "Predicted Values"
+              }
+           if "`xsectional'"=="xsectional" {
+              local l2title "Estimated Values"
+              } 
          }
       if "`regtype'"=="med" {
          local l2title "Predicted Medians"
          }
       if "`regtype'"=="log" {
-         local l2title "Predicted Probabilities"
-         }
+           if "`xsectional'"=="" {
+              local l2title "Predicted Probabilities"
+              }
+           if "`xsectional'"=="xsectional" {
+              local l2title "Estimated Proportions"
+              } 
+           }
       if "`varlblc'"=="" {
          local legtitle="`clvar'"
          }

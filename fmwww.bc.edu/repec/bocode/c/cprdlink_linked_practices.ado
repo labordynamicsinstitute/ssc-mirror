@@ -4,9 +4,9 @@ version 13.0;
 *
  Create dataset with 1 obs per linked practice.
   Add-on packages required:
- keyby
+ keyby, chardef
 *!Author: Roger Newson
-*!Date: 13 June 2016
+*!Date: 10 December 2018
 *;
 
 syntax using [ , CLEAR noKEY ];
@@ -18,9 +18,23 @@ syntax using [ , CLEAR noKEY ];
 *
  Input data
 *;
-import delimited `using', varnames(1) delim(tab) `clear';
-cap lab var pracid "CPRD GOLD Practice ID";
+import delimited `using', varnames(1) delim(tab) stringcols(_all) `clear';
 desc, fu;
+
+* Add variable labels *;
+cap lab var pracid "Practice ID";
+
+*
+ Convert string variables to numeric if necessary
+*;
+foreach X in pracid {;
+  cap conf string var `X';
+  if !_rc {;
+    destring `X', replace force;
+    charundef `X';
+  };
+};
+charundef _dta *;
 
 *
  Key dataset if requested
@@ -33,6 +47,5 @@ if "`key'"!="nokey" {;
  Describe dataset
 *;
 desc, fu;
-char list;
 
 end;

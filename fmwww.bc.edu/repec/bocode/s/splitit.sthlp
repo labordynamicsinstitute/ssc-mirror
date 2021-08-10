@@ -1,5 +1,5 @@
 {smcl}
-{* *! version 2.0.0  06 Jan 2017}{...}
+{* *! version 2.0.1  09 May 2018}{...}
 {vieweralsosee "" "--"}{...}
 {vieweralsosee "[R] help" "help help"}{...}
 {viewerjumpto "Syntax" "splitit##syntax"}{...}
@@ -59,7 +59,7 @@ A special feature of portioned processing optimizes the runtime and makes {cmd:s
 included.
 
 {pstd}
-The actual version 2.0.0 is adapted to work with Stata 14, and is tested to work with previous versions from Stata 11.2
+The versions from 2.0.0 are adapted to work with Stata 14, and are tested to work with previous versions from Stata 11.2
 
 {phang}
 {bf:Graphical example:}
@@ -223,4 +223,4 @@ Email {browse "mailto:firstname.givenname@domain":kerhardt@diw.de}
 Ralf Kuenster, NEPS, WZB Berlin
 Email {browse "mailto:firstname.givenname@domain":ralf.kuenster@wzb.eu}
 
-Edition: V.2.0.0, January 2017
+Edition: V.2.0.1, May 2018

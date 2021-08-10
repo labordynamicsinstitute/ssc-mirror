@@ -1,6 +1,6 @@
 {smcl}
-{* 11Jan2016 }{...}
-{cmd:help for do2screen}{hline 1} 
+{* 13dec2016 }{...}
+{cmd:help for do2screen <v 3.0>} 
 {hline}
 {* SYNTAX *}
 {title:Syntax}
@@ -47,6 +47,18 @@ Sections are presented under the following headings:
 
 {synopt:{opt replace}}Replace existing text file.{p_end}
 
+{syntab:{help do2screen##advanced:Advanced}}
+{synopt:{opt lrep}}Left quote handle (`). default LlLl{p_end}
+
+{synopt:{opt rrep}}Right quote handle ('). default RrRr{p_end}
+
+{synopt:{opt dblq}}Double quote handle (""). default DQDQ{p_end}
+
+{synopt:{opt scalar:name(string)}}Scalar name with returned output. Default is  s_varcode{p_end}
+
+{synopt:{opt comments}}Include comments on code. By default {cmd:do2screen} supresses comments but it makes the process slower. Use this option to speed up process but probably with undesired results.{p_end}
+
+{synopt:{opt nolinenumbers}}Supress line number from output. programers option{p_end}
 
 {marker desc}{...}
 {title:Description}
@@ -151,6 +163,27 @@ will save file {it:example.txt} in folder {it:C:\mydata\}
 {phang} {* Replace*}
 {opt replace} Replace existing text-file.{p_end}
 
+{marker advanced}{...}
+{dlgtab:Advanced}
+
+{phang} 
+{opt lrep, rrep, dblq.} {it:lrep} Left quote handle (`). default LlLl. 
+{it:rrep} Right quote handle ('). default RrRr. {it:dblq} Double quote handle ("").
+default DQDQ. Given that {cmd:do2screen} reads do-files and display them on the screen, 
+it needs to handle quotes in sufch a way that Stata do not interpret them as real local
+macros or strings. Thus, uring the process, do2screen replace each quote to the
+corresponding handle and replace it back at the end of the do-file. Use this option
+only if the default handles are actually in used in your code so that when the 
+replacement is done back again, it will mess up your code. 
+
+{phang} 
+{opt comments} By default, {cmd:do2screen} do not project any comment from your 
+code in the result window because it assumes that you only want to see real code. 
+However, removing all comments from a Stata script a lot of computational power. 
+If you are interested in see your comments or/and speed up the process. Uses this option. 
+
+
+
 
 {marker Examples}{...}
 {title:Examples}{p 40 20 2}
@@ -212,6 +245,10 @@ the other hand
 {p 4 6 2} ii) Export results to a text file (.txt) and replace existing txt file.
 
 {p 8 12}{cmd:do2screen using "test.do", var( weight expenditure ) text("text_file") replace}
+
+{title:Saved Results}
+{p 4 6 2} By default, {cmd:do2screen} saves the retrieved code in the scalar 
+{it:s_varcode}. If you have this name in used already, please use option {it:scalarname}.
 
 {title:Authors}
 

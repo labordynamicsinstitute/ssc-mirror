@@ -1,3 +1,4 @@
+*!!! 1.1.1 Ariel Linden 02Nov2020 // fixed error of not saving varname when using "save" option
 *!!! 1.1.0 Ariel Linden 26Oct2016 // added masd and mvr as return scalars
 *!!! NJC 3 June 2016 
 *!!! 1.0.0 Ariel Linden 23May2016
@@ -136,7 +137,8 @@ program define covbal, rclass byable(recall) sort
 
         label var varratio "variance ratio"
 
-        keep `newvars' 
+        keep varname `newvars'
+		order varname, first
         drop if tr_mean == .
         label data ""
     

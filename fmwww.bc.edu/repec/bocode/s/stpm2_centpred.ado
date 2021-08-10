@@ -1,4 +1,4 @@
-*! version 1.6.5 22Jul2016
+*! version 1.6.7 22Jul2016
 
 // program to generate centiles of the survival distribution for stpm2 models
 // this is called from stpm2_pred
@@ -6,7 +6,7 @@
 // when using predictnl combined with the centile option
 
 program define stpm2_centpred, 
-	syntax newvarname [if] [in] [, centile(string) CENTOL(real 0.000001) UPPERLIMIT(real 100) OFFSET(string) CI LEVel(real `c(level)')]
+	syntax newvarname [if] [in] [, centile(string) CENTOL(real 0.0000001) UPPERLIMIT(real 100) OFFSET(string) CI UNCURED LEVel(real `c(level)')]
 	local newvarname `varlist'
 	marksample touse, novarlist
 
@@ -28,37 +28,49 @@ program define stpm2_centpred,
 	if "`e(scale)'" == "theta" {
 		local theta = exp([ln_theta][_cons])
 	}
-	
+	if "`uncured'" != "" {
+		tempvar pi
+		predict `pi' if `touse', cure
+	}
 	quietly gen double `newvarname' = . if `touse'
 	mata centiletime()
-	if "`ci'" != "" {
+	if "`ci'" != ""  {
 		tempvar lnln_s lnln_s_se h tp_se
-		tempvar ln_cent_time
-		qui gen double `ln_cent_time' = ln(`newvarname') if `touse'
-		if "`e(scale)'" == "hazard" {
-			qui predictnl double `lnln_s' = predict(xb timevar(`newvarname') `offset') if `touse', se(`lnln_s_se') 
+		tempvar ln_cent_time s_tp		
+		if "`uncured'" == "" {
+			qui gen double `ln_cent_time' = ln(`newvarname') if `touse'
+			if "`e(scale)'" == "hazard" {
+				qui predictnl double `lnln_s' = predict(xb timevar(`newvarname') `offset') if `touse', se(`lnln_s_se')
+			}
+			else if "`e(scale)'" == "odds" {
+				qui predictnl double `lnln_s' = ln(ln(1+exp(predict(xb timevar(`newvarname') `offset')))) if `touse', se(`lnln_s_se')
+			}
+			else if "`e(scale)'" == "normal" {
+				qui predictnl double `lnln_s' = ln(-ln(normal(predict(xb timevar(`newvarname') `offset')))) if `touse', se(`lnln_s_se') 
+			}
+			else if "`e(scale)'" == "log" {
+				qui predictnl double `lnln_s' = ln(-ln(1 - exp(predict(xb timevar(`newvarname') `offset')))) if `touse', se(`lnln_s_se') 
+			}			
+			else if "`e(scale)'" == "theta" {
+				qui predictnl double `lnln_s' = ln(ln(exp(predict(xb timevar(`newvarname') `offset'))*exp(predict(xb timevar(`newvarname') `offset'))+1)/exp(xb(ln_theta))) if `touse', se(`lnln_s_se')
+			}
+			qui predict double `s_tp' if `touse', surv `offset' timevar(`newvarname')
+			qui predict double `h' if `touse', hazard timevar(`newvarname')  
 		}
-		else if "`e(scale)'" == "odds" {
-			qui predictnl double `lnln_s' = ln(ln(1+exp(predict(xb timevar(`newvarname') `offset')))) if `touse', se(`lnln_s_se')
+		else if  "`uncured'" != "" {
+			qui predictnl double `lnln_s' = ln(-(ln(predict(surv timevar(`newvarname')) - predict(cure) + 100*epsdouble()) - ln(1 - predict(cure)))) if `touse', se(`lnln_s_se') force
+			qui predict  `s_tp' if `touse', surv uncured `offset' timevar(`newvarname')
+			qui predict `h' if `touse', hazard uncured timevar(`newvarname')  
+			
 		}
-		else if "`e(scale)'" == "normal" {
-			qui predictnl double `lnln_s' = ln(-ln(normal(predict(xb timevar(`newvarname') `offset')))) if `touse', se(`lnln_s_se') 
-		}
-		else if "`e(scale)'" == "log" {
-			qui predictnl double `lnln_s' = ln(-ln(1 - exp(predict(xb timevar(`newvarname') `offset')))) if `touse', se(`lnln_s_se') 
-		}			
-		else if "`e(scale)'" == "theta" {
-			qui predictnl double `lnln_s' = ln(ln(exp(predict(xb timevar(`newvarname') `offset'))*exp(predict(xb timevar(`newvarname') `offset'))+1)/exp(xb(ln_theta))) if `touse', se(`lnln_s_se')
-		}
-		qui predict `h' if `touse', hazard timevar(`newvarname')  
-		tempvar s_tp
-		predict  `s_tp' if `touse', surv `offset' timevar(`newvarname')
 		qui replace `s_tp' = ln(`s_tp') if `touse'
 		qui gen double `tp_se' = -`s_tp'*`lnln_s_se'/`h' if `touse'
 		qui gen double `newvarname'_lci = `newvarname' - invnormal(1-0.5*(1-`level'/100))*`tp_se' if `touse'
 		qui gen double `newvarname'_uci = `newvarname' + invnormal(1-0.5*(1-`level'/100))*`tp_se' if `touse'
 	}
 end
+
+	
 
 mata:
 function brentsurvcent(x, 
@@ -77,23 +89,30 @@ function brentsurvcent(x,
 	hastvc = options[2]
 	orthog = options[3]
 	offset = options[4]
+	cure = options[5]
+	reverse = options[6]
 // covariates
-	if(orthog) X = Xcov, rcsgen_core(x,asarray(knots,"baseline"),0,asarray(Rmatrix,"baseline"))
-	else X = Xcov, rcsgen_core(x,asarray(knots,"baseline"),0)
+	if(orthog) X = Xcov, rcsgen_core(x,asarray(knots,"baseline"),0,reverse,asarray(Rmatrix,"baseline"))
+	else X = Xcov, rcsgen_core(x,asarray(knots,"baseline"),0,reverse)
 
 	for(i=1;i<=cols(tvclist);i++) {
-		if(orthog) X = X,tvccov[i]:*rcsgen_core(x,asarray(knots,tvclist[i]),0,asarray(Rmatrix,tvclist[i]))
-		else X = X,tvccov[i]:*rcsgen_core(x,asarray(knots,tvclist[i]),0)
+		if(orthog) X = X,tvccov[i]:*rcsgen_core(x,asarray(knots,tvclist[i]),0,reverse,asarray(Rmatrix,tvclist[i]))
+		else X = X,tvccov[i]:*rcsgen_core(x,asarray(knots,tvclist[i]),0,reverse)
 	}
 	if(hascons) X = X,1
 
 	
-// return function	
-	if(scale == "hazard")		return(lncentile + exp(offset + X*asarray(parameters,"beta")')) 
-	else if(scale == "odds")	return(lncentile + ln(1 + exp(offset + X*asarray(parameters,"beta")'))) 
-	else if(scale == "normal")	return(lncentile - lnnormal(-(offset + X*asarray(parameters,"beta")'))) 
-	else if(scale == "log")		return(lncentile - ln(1 - exp(offset + X*asarray(parameters,"beta")')))
-	else if(scale == "theta")	return(lncentile + 1:/asarray(parameters,"theta") :* log(asarray(parameters,"theta"):*exp(offset + X*asarray(parameters,"beta")') :+ 1)) 
+// return function
+	if(!cure) {
+		if(scale == "hazard")		return(lncentile + exp(offset + X*asarray(parameters,"beta")')) 
+		else if(scale == "odds")	return(lncentile + ln(1 + exp(offset + X*asarray(parameters,"beta")'))) 
+		else if(scale == "normal")	return(lncentile - lnnormal(-(offset + X*asarray(parameters,"beta")'))) 
+		else if(scale == "log")		return(lncentile - ln(1 - exp(offset + X*asarray(parameters,"beta")')))
+		else if(scale == "theta")	return(lncentile + 1:/asarray(parameters,"theta") :* log(asarray(parameters,"theta"):*exp(offset + X*asarray(parameters,"beta")') :+ 1)) 
+	}
+	else {
+		return(lncentile - ln(exp(-exp((offset + X*asarray(parameters,"beta")'))) - asarray(parameters,"pi") + epsilon(100)) + ln(1 - asarray(parameters,"pi")))
+	}
 }
 
 function centiletime()
@@ -110,17 +129,26 @@ function centiletime()
 	hasoffset = st_global("e(offset1)") != ""
 	hastvc = st_global("e(tvc)") != ""
 	tvclist = tokens(st_global("e(tvc)"))
+	hasvarlist = st_global("e(varlist)") != ""
+	cure = st_local("uncured") != ""
+	reverse = st_global("e(reverse)") != ""
+
 	if(hastvc) tvccov = st_data(.,tvclist,touse)
 	else tvccov = J(Nobs,0,.)
+	
 	if(hasoffset) offset = st_data(.,st_global("e(offset1)"),touse)
 	else offset = J(Nobs,1,0)	
 	parameters = asarray_create()
-	options = (hascons,hastvc,orthog,.)
+	options = (hascons,hastvc,orthog,.,.,.)
 	Nparameters = st_numscalar("e(nxbterms)")
 	asarray(parameters,"beta", st_matrix("e(b)")[1..Nparameters])
 	if(scale=="theta") asarray(parameters,"theta", strtoreal(st_local("theta")))
+	if(cure) pi = st_data(.,st_local("pi"),touse) 
 
-	Xcov = st_data(.,tokens(st_global("e(varlist)")),touse)
+	if(hasvarlist) {
+		Xcov = st_data(.,tokens(st_global("e(varlist)")),touse)
+	}
+	else Xcov = J(Nobs,0,.)
 	knots = asarray_create()
 	if(!rcsbaseoff) {
 		asarray(knots,"baseline",strtoreal(tokens(st_global("e(ln_bhknots)"))))
@@ -141,9 +169,11 @@ function centiletime()
 	}
 	tret = J(Nobs,1,.)
 	lncentile = ln(centile)
-	
 	for(i=1;i<=Nobs;i++) {
 		options[4] = offset[i]
+		options[5] = cure
+		options[6] = reverse
+		if(cure) asarray(parameters,"pi", pi[i]) 
 		tmp = mm_root(x=.,&brentsurvcent(),-100,upperlimit,centol,1000,lncentile[i],scale,parameters,options,
 		tvclist,tvccov[i,],knots,Xcov[i,],Rmatrix)
 		tret[i] = exp(x)
@@ -155,7 +185,8 @@ function centiletime()
 //calculate splines with provided knots
 real matrix rcsgen_core(	real colvector variable,	///
 							real rowvector knots, 		///
-							real scalar deriv,|			///
+							real scalar deriv,			///
+							real scalar reverse, |		///
 							real matrix rmatrix			///
 						)
 {
@@ -167,29 +198,51 @@ real matrix rcsgen_core(	real colvector variable,	///
 
 		Nobs 	= rows(variable)
 		Nknots 	= cols(knots)
-		kmin 	= knots[1,1]
-		kmax 	= knots[1,Nknots]
-	
-		if (Nknots==2) interior = 0
-		else interior = Nknots - 2
-		Nparams = interior + 1
-		
-		splines = J(Nobs,Nparams,.)
+		if(Nknots>1) {
+			kmin 	= knots[1,1]
+			kmax 	= knots[1,Nknots]
+			if (Nknots==2) interior = 0
+			else interior = Nknots - 2
+			Nparams = interior + 1		
+		}
+		else Nparams = 1
 
+		splines = J(Nobs,Nparams,.)
 	//======================================================================================================================================//
 	// Calculate splines
 
+	if(!reverse) {
 		if (Nparams>1) {
 			lambda = J(Nobs,1,(kmax:-knots[,2..Nparams]):/(kmax:-kmin))
 			knots2 = J(Nobs,1,knots[,2..Nparams])
 		}
-
+		
 		if (deriv==0) {
 			splines[,1] = variable
 			if (Nparams>1) {
 				splines[,2..Nparams] = (variable:-knots2):^3 :* (variable:>knots2) :- lambda:*((variable:-kmin):^3):*(variable:>kmin) :- (1:-lambda):*((variable:-kmax):^3):*(variable:>kmax) 
 			}
 		}
+	}
+	else if(reverse) {
+		knotsrev = sort(knots',-1)'
+		if (Nparams>1) {
+			lambda = J(Nobs,1,(knotsrev[,2..Nparams]  :-kmin):/(kmax:-kmin))
+			knots2 = J(Nobs,1,knotsrev[,2..Nparams])
+		}
+
+		
+		if (deriv==0) {
+			splines[,Nparams] = variable
+			if (Nparams>1) {
+				//splines[,2..Nparams] = (variable:-knots2):^3 :* (variable:>knots2) :- lambda:*((variable:-kmin):^3):*(variable:>kmin) :- (1:-lambda):*((variable:-kmax):^3):*(variable:>kmax) 
+				splines[,1..(Nparams-1)] = (knots2:-variable):^3 :* (knots2:>variable) :- lambda:*((kmax:-variable):^3):*(kmax:>variable) :- (1:-lambda):*((kmin:-variable):^3):*(kmin:>variable) 
+			}
+		}
+	}	
+	
+	
+/*
 		else if (deriv==1) {
 			splines[,1] = J(Nobs,1,1)
 			if (Nparams>1) {
@@ -208,13 +261,19 @@ real matrix rcsgen_core(	real colvector variable,	///
 				splines[,2..Nparams] = 6:*(variable:>knots2) :- lambda:*6:*(variable:>kmin) :- (1:-lambda):*6:*(variable:>kmax)
 			}
 		}
-	
+*/	
 		//orthog
-		if (args()==4) {
+		if (args()==5) {
 			real matrix rmat
 			rmat = luinv(rmatrix)
 			if (deriv==0) splines = (splines,J(Nobs,1,1)) * rmat[,1..Nparams]
 			else splines = splines * rmat[1..Nparams,1..Nparams]
+			if(reverse) {
+				sp_lastknot = J(1,Nparams,0)
+				sp_lastknot[1,Nparams] = kmax
+				splines = splines :- ((sp_lastknot,1)*rmat)[1,1..Nparams]
+			}
+			
 		}
 		
 		return(splines)

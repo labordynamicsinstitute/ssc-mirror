@@ -1,5 +1,4 @@
 // INTERFACE BETWEEN STATA AND MATA; REQUIRED TO ACCESS isPositiveDefinite AND makePositiveDefinite FROM STATA
-// TEST OF FUNCTIONS CAN BE FOUND IN xtIOU/do files/test compiling interfacePD isPositiveDefinite and makePositiveDefinite.do
 
 capture mata: mata drop interfacePD()
 
@@ -26,5 +25,3 @@ void interfacePD(string matrix stataMatrix) {
 	st_numscalar("r(isPositiveDefinite)", isPositiveDefinite)
 }	
 end
-
-mata: mata mosave interfacePD(), dir(PERSONAL) replace

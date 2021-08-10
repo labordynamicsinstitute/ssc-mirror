@@ -1,5 +1,5 @@
 {smcl}
-{* 3 July 2017/17 July 2017}{...}
+{* 3 July 2017/17 July 2017/6 April 2020}{...}
 {hline}
 help for {hi:multiline}
 {hline}
@@ -17,6 +17,7 @@ help for {hi:multiline}
 {cmd:by(}{it:by_options}{cmd:)}
 {cmd:mylabels(}{it:labelspec}{cmd:)} 
 {cmdab:miss:ing} 
+{cmdab:sep:arate}
 {it:line_options} 
 ]  
 
@@ -69,6 +70,13 @@ no lasting effect on the dataset used.
 {it:yvars} should be included in the sample. The default is to ignore 
 observations with any missing values. 
 
+{p 4 8 2}
+{cmd:separate} specifies that the {it:yvars} be plotted differently. 
+The default is to use the same style for all. With {cmd:separate} a legend will 
+spring into being, which you should usually suppress. 
+The line and marker defaults for your scheme might not be to your liking, 
+so you can change those as usual.
+
 {p 4 8 2}{it:line_options} are options of {help line}. 
 Note that the defaults are 
 {cmd:ytitle("") yla(, ang(h)) c(L) subtitle(, pos(9) bcolor(none) nobexpand place(e))}.  
@@ -82,6 +90,10 @@ Note that the defaults are
 {p 4 8 2}{cmd:. multiline invest mvalue kstock year if company == 1, recast(connected)}{p_end}
 {p 4 8 2}{cmd:. multiline invest mvalue kstock year if company == 1, recast(connected) mylabels(`" `" "Gross" "investment" "' `" "Market" "value" "' `" "Plant and" "equipment value" "' "')}{p_end}
 
+{p 4 8 2}{cmd:. multiline invest mvalue kstock year if company == 1 , xtitle("") recast(connected) separate}{p_end}
+{p 4 8 2}{cmd:. multiline invest mvalue kstock year if company == 1 , xtitle("") recast(connected) separate by(legend(off)) ms(O D T) lc(black orange blue) mc(black orange blue)}{p_end}
+
+
 {p 4 8 2}{cmd:. sysuse auto, clear}{p_end}
 {p 4 8 2}{cmd:. multiline mpg weight length displacement price, recast(scatter) c(none) by(col(2)) ms(Oh) subtitle(, orient(vertical))}{p_end}
 
@@ -90,6 +102,11 @@ Note that the defaults are
 
 {p 4 4 2}Nicholas J. Cox, University of Durham, U.K.{break} 
         n.j.cox@durham.ac.uk
+		
+
+{title:Acknowledgments}
+
+{p 4 4 2}Questions on Statalist led to improvements. The {cmd:separate} option arises from a question by Zeeshan Fareed. A bug fix was triggered by a problem reported by Shem Shen. 
 
 
 {title:Also see}

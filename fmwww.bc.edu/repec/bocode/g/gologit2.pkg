@@ -35,7 +35,7 @@ d KW: cauchit
 d
 d Requires: Stata version 11.2
 d
-d Distribution-Date: 20161021
+d Distribution-Date: 20190520
 d
 d Author: Richard Williams, University of Notre Dame
 d Support: email Richard.A.Williams.5@@ND.edu
@@ -48,3 +48,4 @@ f gologit2_svy_check.ado
 f gsvy.ado
 f gologit2_autofit.ado
 f gologit2.sthlp
+f gologit2_lincom.ado

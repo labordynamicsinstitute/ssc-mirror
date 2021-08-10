@@ -1,19 +1,21 @@
-*! version 1.2 16Jun2017
+*! version 2.3 11Nov2018
 
 program stpm2cr_pred, sortpreserve
-	version 13.1
+	version 14.1
 	syntax newvarname [if] [in], [CAUSE(numlist integer) CIF SUBhazard CUMODDS SUBDENSity CUMSUBhazard CSH XB DXB ///
 									AT(string) SURVivor SHRDenominator(string) SHRNumerator(string) ///
 									CHRDenominator(string) CHRNumerator(string) noOFFset CUREd UNCURED ///
 									CI LEVel(real `c(level)') TIMEvar(varname) STDP PER(real 1) CIFRATIO  ///
-									CIFDIFF1(string) CIFDIFF2(string) n(int 1000) zeros]
+									CIFDIFF1(string) CIFDIFF2(string) n(int 1000) zeros rml(string)]
 									
 	local newvarname `varlist'
 	
 	marksample touse, novarlist
 	
 	qui count if `touse'
-	if r(N)==0 {
+	local nobs = r(N)
+	
+	if `nobs'==0 {
 		error 2000          /* no observations */
 	}
 	
@@ -46,12 +48,13 @@ program stpm2cr_pred, sortpreserve
 	local hratiotmp = substr("`hrnumerator'",1,1)
 	local shratiotmp = substr("`shrnumerator'",1,1)
 	local cifdifftmp = substr("`cifdiff1'",1,1)
+	local rmltmp = substr("`rml'",1,1)
 
-	if wordcount(`"`cif' `subhazard' `cumsubhazard' `cumodds' `subdensity' `survivor' `xb' `csh' `cured' `uncured' `cifdifftmp'"') > 1 {
+	if wordcount(`"`cif' `subhazard' `cumsubhazard' `cumodds' `subdensity' `survivor' `xb' `csh' `cured' `uncured' `cifdifftmp' `rmltmp'"') > 1 {
 		display as error "You have specified more than one option for predict"
 		exit 198
 	}
-	if wordcount(`"`cif' `subhazard' `cumsubhazard' `cumodds' `subdensity' `shratiotmp' `hratiotmp' `survivor' `xb' `csh' `cured' `uncured' `cifratio' `cifdifftmp' `chrnumerator' `shrnumerator'"') == 0 {
+	if wordcount(`"`cif' `subhazard' `cumsubhazard' `cumodds' `subdensity' `shratiotmp' `hratiotmp' `survivor' `xb' `csh' `cured' `uncured' `cifratio' `cifdifftmp' `chrnumerator' `shrnumerator' `rml'"') == 0 {
 		display as error "You must specify one of the predict options"
 		exit 198
 	}
@@ -121,8 +124,8 @@ program stpm2cr_pred, sortpreserve
 	tempfile newvars 
 	preserve
 	
-	
-/* Calculate new spline terms if timevar option specified */
+	if "`rml'" == "" {
+	/* Calculate new spline terms if timevar option specified */
         foreach n in `e(causeList)' {
 			if "`timevar'" != "" & "`e(rcsbaseoff_c`n')'" == "" {
 					capture drop _rcs_c`n'_* _d_rcs_c`n'_*
@@ -228,6 +231,7 @@ program stpm2cr_pred, sortpreserve
 				mac shift 2
 			}
 		}
+	}
 	}
 	
 	
@@ -990,11 +994,298 @@ program stpm2cr_pred, sortpreserve
                                 }
                         }           
                 }               
-        }
-
-		
+        }		
 		
 	} /* End loop over all causes */
+	
+	/* Estimate restricted mean lifetime */
+	if "`rml'" != "" {
+		//code adapted from strcs and stgenreg
+		di "Calculating restricted mean lifetime"
+		// gen weights
+		// gen nodes and then use these nodes in rcsgen to get the generated spline variables
+		// then add these new spline variables to the xb's predicted from the model
+		// use gauss quad eqn
+		local k  = 1
+		
+		parse_opt `rml'
+		local tmin `s(tmin)'
+		local tmax `s(tmax)'
+		local nodes `s(nodes)'
+		local quadopt `s(quadopt)'
+		local quadtimeN `s(tpoints)'
+		
+		
+		//local nodes : word 1 of `rml'
+		//local quadopt : word 2 of `rml'
+		tempname knodes kweights
+		
+ 		gaussquad, n(`nodes') `quadopt'
+		matrix `knodes' = r(nodes)'
+		matrix `kweights' = r(weights)'
+		
+		qui gen double __tmpKnodes = . 
+		
+		/* Pass to Mata */
+		//qui rcsgen `lnt' if `touse', knots(`e(ln_bhknots_c`n')') gen(_rcs_c`n'_) dgen(_d_rcs_c`n'_) if2(`_d`n'') `e(reverse_c`n')' `rmatrixopt_c`n'' `e(nosecondder_c`n')' `e(nofirstder_c`n')'
+		local bhknots = "`e(ln_bhknots_c`k')'"
+		/*tempname rml_temp
+		mata: rml_setup("`rml_temp'")*/
+		
+		//mat li `knodes'
+		//mat li `kweights'
+		
+		qui summ `t'
+		local Nt = r(N)
+		if "`tmax'" == "-99" {
+			qui summ `t'
+			local tmax = r(max)
+		}
+		
+		qui gen `newvarname'_tbounds = .
+		qui gen weights = .
+		qui gen index = _n
+		//qui drop if index > `nodes'
+		
+		qui gen `newvarname'_rml = .
+		if "`ci'" != "" {
+			qui gen `newvarname'_rml_lci = .
+			qui gen `newvarname'_rml_uci = .
+		}
+		foreach n in `causeList' {
+			qui gen `newvarname'_c`n' = .
+			if "`ci'" != "" {
+				qui gen `newvarname'_c`n'_lci = .
+				qui gen `newvarname'_c`n'_uci = .
+			}
+		    if "`stdp'" != "" {
+				qui gen `newvarname'_c`n'_se = .
+		    }
+		}
+		//foreach tp in `tmax' {
+		
+		//save delete, replace
+		//exit
+		
+		
+		forvalue r = 1/`Nt' {	
+			local maxminusmin2 = (`t'[`r'] - `tmin')/2
+			local maxplusmin2 = (`t'[`r'] + `tmin')/2
+			
+			//di `t'[`r']
+			
+			tempvar lninttime
+			
+			local int_c1 `maxminusmin2' 
+			
+			forvalues m = 1/`nodes' {
+				local node`m' = `knodes'[1,`m']
+				local weight`m' = `kweights'[1,`m']
+				qui replace weights = `weight`m'' if index == `m'
+				qui replace `newvarname'_tbounds = (`node`m''*`maxminusmin2') + `maxplusmin2' if index == `m'
+			}
+			
+			qui gen double `lninttime' = ln(`newvarname'_tbounds) if `touse'
+			
+			local cifxb
+			foreach n in `causeList' {
+			
+					tokenize `e(causeList)'
+					forvalues i = 1/`e(n_causes)' {
+						if "``i''" == "`n'" {
+							local j = `i'
+						}
+					}
+					/* Calculate new spline terms for integration */
+					
+					//foreach n in `e(causeList)' {
+					//if "`timevar'" != "" & "`e(rcsbaseoff_c`n')'" == "" {
+							capture drop _rcs_c`n'_* _d_rcs_c`n'_*
+							if "`e(orthog)'" != "" {
+									tempname rmatrix_c`n'
+									matrix `rmatrix_c`n'' = e(R_bh_c`n')
+									local rmatrixopt_c`n' rmatrix(`rmatrix_c`n'')
+							}
+							qui rcsgen `lninttime' if `touse', knots(`e(ln_bhknots_c`n')') gen(_rcs_c`n'_) dgen(_d_rcs_c`n'_) if2(`_d`n'') `e(reverse_c`n')' `rmatrixopt_c`n'' `e(nosecondder_c`n')' `e(nofirstder_c`n')'
+							
+					//}
+					//}
+					// save knots from est command and refer to above in knots()
+				
+				
+					/* calculate new spline terms if timevar option, cdiff, hdiff or cdiff option is specified */
+					foreach tvcvar in `e(tvc_c`n')' {
+						if "`rml'" != "" & "`e(rcsbaseoff_c`n')'" == "" {
+							capture drop _rcs_`tvcvar'_c`n'_* _d_rcs_`tvcvar'_c`n'_*
+						}			
+						/*if (("`shrnumerator'" != "" | "`chrnumerator'" != "" | "`cifdiff1'" != "" | "`hdiff1'" != "") & "`timevar'" == "") | "`e(rcsbaseoff)'" != "" {
+							capture drop _rcs_`tvcvar'_c`n'_* _d_rcs_`tvcvar'_c`n'_*
+						}*/
+						if "`e(orthog)'" != "" {
+							tempname rmatrix_`tvcvar'_c`n'
+							matrix `rmatrix_`tvcvar'_c`n'' = e(R_`tvcvar'_c`n')
+							local rmatrixopt_c`n' rmatrix(`rmatrix_`tvcvar'_c`n'')
+						}
+						qui rcsgen `lninttime' if `touse',  gen(_rcs_`tvcvar'_c`n'_) knots(`e(ln_tvcknots_`tvcvar'_c`n')') dgen(_d_rcs_`tvcvar'_c`n'_) if2(`_d`n'') `rmatrixopt_c`n'' `e(reverse_c`n')'
+						if "`chrnumerator'" == "" & "`shrnumerator'" == "" & "`cifdiff1'"  == "" & "`hdiff1'" == "" {
+							forvalues i = 1/`e(df_`tvcvar'_c`n')'{
+								qui replace _rcs_`tvcvar'_c`n'_`i' = _rcs_`tvcvar'_c`n'_`i'*`tvcvar' if `touse'
+								qui replace _d_rcs_`tvcvar'_c`n'_`i' = _d_rcs_`tvcvar'_c`n'_`i'*`tvcvar' if `touse'
+							}
+						}
+					}
+					
+					/* Out of sample predictions using at() */
+					if "`at'" != "" {
+						tokenize `at'
+						while "`1'"!="" {
+							fvunab tmpfv: `1'
+							local 1 `tmpfv'
+							_ms_parse_parts `1'
+							if "`r(type)'"!="variable" {
+								display as error "level indicators of factor" /*
+												*/ " variables may not be individually set" /*
+												*/ " with the at() option; set one value" /*
+												*/ " for the entire factor variable"
+								exit 198
+							}
+							cap confirm var `2'
+							if _rc {
+								cap confirm num `2'
+								if _rc {
+									di as err "invalid at(... `1' `2' ...)"
+									exit 198
+								}
+							}
+
+							qui replace `1' = `2' if `touse'
+							if `"`: list posof `"`1'"' in etvc`n''"' != "0" {
+								local tvcvar `1'
+								if "`e(orthog)'" != "" {
+									tempname rmatrix_`tvcvar'_c`n'
+									matrix `rmatrix_`tvcvar'_c`n'' = e(R_`tvcvar'_c`n')
+									local rmatrixopt_c`n' rmatrix(`rmatrix_`tvcvar'_c`n'')
+								}
+								capture drop _rcs_`tvcvar'_c`n'_* _d_rcs_`tvcvar'_c`n'_*
+								qui rcsgen `lninttime' if `touse', knots(`e(ln_tvcknots_`tvcvar'_c`n')') gen(_rcs_`tvcvar'_c`n'_) dgen(_d_rcs_`tvcvar'_c`n'_) if2(`_d`n'') `rmatrixopt_c`n'' `e(reverse_c`n')'
+								forvalues i = 1/`e(df_`tvcvar'_c`n')'{
+									qui replace _rcs_`tvcvar'_c`n'_`i' = _rcs_`tvcvar'_c`n'_`i'*`tvcvar' if `touse'
+									qui replace _d_rcs_`tvcvar'_c`n'_`i' = _d_rcs_`tvcvar'_c`n'_`i'*`tvcvar' if `touse'
+								}
+							}
+							mac shift 2
+						}
+					}		
+		
+				//}
+				
+				/* set up for all cause RML */
+				//tempvar st_rml sumcif_rml
+				//foreach y in `e(causeList)' {
+					//tempvar cifxb_c`y'
+					//local j = `j' + 1				
+					if "`e(scale)'" =="hazard" {
+						local cifxb_c`n' (1 - exp(-exp(xb(#`j')))) 
+					}
+					if "`e(scale)'" =="odds" {
+						local cifxb_c`n' (exp(xb(#`j'))/(1 + exp(xb(#`j'))))
+					}
+					local cifxb `cifxb' `cifxb_c`n'' +
+				//}			
+				/**********************************/	
+			
+				//foreach n in `causeList' {
+					if "`ci'" != "" {
+						tempvar sxb_c`n'_lci sxb_c`n'_uci
+						local prednlopt ci(`sxb_c`n'_lci' `sxb_c`n'_uci')
+					}
+					else if "`stdp'" != "" {
+						tempvar sxb_c`n'_se
+						local prednlopt se(`sxb_c`n'_se')
+					}		
+					/* Transform back */
+					if "`e(scale)'" == "hazard" {
+						qui predictnl `newvarname'_c`n'_temp = sum(weights*(1 - exp(-exp(xb(#`j')))))*`maxminusmin2' if `touse', `prednlopt' level(`level')  
+						qui summ `newvarname'_c`n'_temp
+						local value_c`n' r(max)
+						qui replace `newvarname'_c`n' = r(max) in `r'
+						if "`ci'" != "" {
+							qui gen `newvarname'_c`n'_uci_temp = `sxb_c`n'_uci' if `touse'
+							qui gen `newvarname'_c`n'_lci_temp = `sxb_c`n'_lci' if `touse'
+							qui summ `newvarname'_c`n'_lci_temp
+							qui replace `newvarname'_c`n'_lci = r(max) in `r'
+							qui summ `newvarname'_c`n'_uci_temp
+							qui replace `newvarname'_c`n'_uci = r(max) in `r'
+						}
+						if "`stdp'" != "" {
+							qui gen `newvarname'_c`n'_se_temp = `sxb_c`n'_se' if `touse'
+							qui summ `newvarname'_c`n'_se_temp
+							qui replace `newvarname'_c`n'_se = r(max) in `r'
+						}
+					}
+					else if "`e(scale)'" == "odds" {
+						di "warning: not corrected"
+						qui predictnl double `newvarname'_c`n'_`tp' = sum(weights*(exp(xb(#`j'))/(1 +exp(xb(#`j')))))*`maxminusmin2'  if `touse', `prednlopt' level(`level')
+						qui summ `newvarname'_c`n'_`tp'
+						scalar rmlval_c`n' = r(max)
+						local value_c`n' rmlval_c`n'
+						if "`ci'" != "" {
+							qui gen `newvarname'_c`n'_lci_`tp' = `sxb_c`n'_lci' if `touse'
+							qui gen `newvarname'_c`n'_uci_`tp' = `sxb_c`n'_uci' if `touse'
+							
+							qui summ `newvarname'_c`n'_lci_`tp'
+							scalar rmlval_c`n'_lci = r(max)
+							local value_c`n'_lci = rmlval_c`n'_lci
+							qui summ `newvarname'_c`n'_uci
+							scalar rmlval_c`n'_uci = r(max)
+							local value_c`n'_uci rmlval_c`n'_uci
+						}
+						if "`stdp'" != "" {
+							qui gen `newvarname'_c`n'_se_`tp' = `sxb_c`n'_se' if `touse'
+							
+							qui summ `newvarname'_c`n'_se_`tp'
+							scalar rmlval_c`n'_se = r(max)
+							local value_c`n'_se rmlval_c`n'_se
+						}
+					}
+					/*if "`ci'" == "" & "`stdp'" == "" {
+						di in yellow "The expected number of life-years lost before `tmax' years for cause `n' = `value_c`n'' years"
+					}
+					if "`ci'" != "" {
+						di in yellow "The expected number of life-years lost before `tmax' years for cause `n' = `value_c`n''(`value_c`n'_lci', `value_c`n'_uci') years"
+					}
+					if "`stdp'" != "" {
+						di in yellow "The expected number of life-years lost before `tmax' years for cause `n' = `value_c`n''(`value_c`n'_se') years"		
+					}*/
+					qui capture drop `newvarname'_c`n'_temp
+					qui capture drop `newvarname'_c`n'_lci_temp `newvarname'_c`n'_uci_temp
+					qui capture drop `newvarname'_c`n'_se_temp
+			}
+			if "`ci'" != "" {
+				local prednlopt_rml ci(`newvarname'_rml_lci_temp `newvarname'_rml_uci_temp)
+			}
+			else if "`stdp'" != "" {
+				local prednlopt_rml se(`newvarname'_rml_se_temp)
+			}
+			local sumcif_rml `cifxb' 0
+			local st_rml (1 - (`cifxb' 0))
+			//di "`st_rml'"
+			qui predictnl double `newvarname'_rml_temp = sum(weights*(`st_rml'))*`maxminusmin2' if `touse', `prednlopt_rml' level(`level')
+			qui summ `newvarname'_rml_temp
+			qui replace `newvarname'_rml = r(max) in `r'
+			if "`ci'" != "" {
+				qui summ `newvarname'_rml_lci_temp
+				qui replace `newvarname'_rml_lci = r(max) in `r'
+				qui summ `newvarname'_rml_uci_temp
+				qui replace `newvarname'_rml_uci = r(max) in `r'
+			}
+
+		//exit
+		qui drop `newvarname'_rml_temp
+		qui capture drop `newvarname'_rml_lci_temp `newvarname'_rml_uci_temp
+		qui capture drop `newvarname'_rml_se_temp
+		}
+	}
 	
 	foreach n in `causeList' {
 		/* Store cause n in keep variable list */
@@ -1003,6 +1294,16 @@ program stpm2cr_pred, sortpreserve
 		}
 		if "`stdp'" != "" { 
 			local keepvarname `keepvarname' `newvarname'_c`n'_se
+		}
+		
+		if "`rml'" != "" { 
+			local keepvarname `keepvarname' `newvarname'_rml*
+			if "`ci'" != "" { 
+				local keepvarname `keepvarname' `newvarname'_rml_lci* `newvarname'_rml_uci*
+			}
+			if "`stdp'" != "" { 
+				local keepvarname `keepvarname' `newvarname'_rml_se*
+			}
 		}
 		
 		if "`cured'" != "" {
@@ -1015,7 +1316,7 @@ program stpm2cr_pred, sortpreserve
 			local keepvarname_se `keepvarname_se' `newvarname'_c`n'_se
 		} 
 		else if "`cured'" == "" {
-			local keepvarname `keepvarname' `newvarname'_c`n'
+			local keepvarname `keepvarname' `newvarname'_c`n'*
 			local keepvarname_lci `keepvarname_lci' `newvarname'_c`n'_lci
 			local keepvarname_uci `keepvarname_uci' `newvarname'_c`n'_uci
 			local keepvarname_se `keepvarname_se' `newvarname'_c`n'_se
@@ -1040,11 +1341,30 @@ end
 	
 	
 	
-	
-	
-	
-	
 /**** SUBPROGRAMS ****/
+/* Program for parsing option within option */
+program parse_opt, sclass
+    version 15.0
+    
+    syntax [anything] ///
+    [ , ///
+        tpoints(string) tmin(int 0) ///
+    ]
+    tokenize `anything'
+    
+	if "`tpoints'" == "" {
+		sreturn local tmax -99
+	}
+	else {
+		sreturn local tmax `tpoints' 
+	}
+	
+	sreturn local tmin `tmin'
+	sreturn local tpoints `tpoints'
+	sreturn local nodes `1'
+	sreturn local quadopt "leg"
+end
+
 
 /* 
 program Parse_list converts the options give in hrnum, hrdenom, hdiff1, hdiff2, sdiff1 and sdiff2 
@@ -1179,8 +1499,94 @@ program define Parse_list, rclass
 	}
 end
 
-	
-	
+*********************************
+* Gaussian quadrature 
 
-	
-	
+program define gaussquad, rclass
+        syntax [, N(integer -99) LEGendre CHEB1 CHEB2 HERmite JACobi LAGuerre alpha(real 0) beta(real 0)]
+        
+    if `n' < 0 {
+        display as err "need non-negative number of nodes"
+                exit 198
+        }
+        if wordcount(`"`legendre' `cheb1' `cheb2' `hermite' `jacobi' `laguerre'"') > 1 {
+                display as error "You have specified more than one integration option"
+                exit 198
+        }
+        local inttype `legendre'`cheb1'`cheb2'`hermite'`jacobi'`laguerre' 
+        if "`inttype'" == "" {
+                display as error "You must specify one of the integration type options"
+                exit 198
+        }
+
+        tempname weights nodes
+        mata gq("`weights'","`nodes'")
+        return matrix weights = `weights'
+        return matrix nodes = `nodes'
+end
+
+mata:
+        void gq(string scalar weightsname, string scalar nodesname)
+{
+        n =  strtoreal(st_local("n"))
+        inttype = st_local("inttype")
+        i = range(1,n,1)'
+        i1 = range(1,n-1,1)'
+        alpha = strtoreal(st_local("alpha"))
+        beta = strtoreal(st_local("beta"))
+                
+        if(inttype == "legendre") {
+                muzero = 2
+                a = J(1,n,0)
+                b = i1:/sqrt(4 :* i1:^2 :- 1)
+        }
+        else if(inttype == "cheb1") {
+                muzero = pi()
+                a = J(1,n,0)
+                b = J(1,n-1,0.5)
+                b[1] = sqrt(0.5)
+    }
+        else if(inttype == "cheb2") {
+                muzero = pi()/2
+                a = J(1,n,0)
+                b = J(1,n-1,0.5)
+        }
+        else if(inttype == "hermite") {
+                muzero = sqrt(pi())
+                a = J(1,n,0)
+                b = sqrt(i1:/2)
+        }
+        else if(inttype == "jacobi") {
+                ab = alpha + beta
+                muzero = 2:^(ab :+ 1) :* gamma(alpha :+ 1) * gamma(beta :+ 1):/gamma(ab :+ 2)
+                a = i
+                a[1] = (beta - alpha):/(ab :+ 2)
+                i2 = range(2,n,1)'
+                abi = ab :+ (2 :* i2)
+                a[i2] = (beta:^2 :- alpha^2):/(abi :- 2):/abi
+                b = i1
+        b[1] = sqrt(4 * (alpha + 1) * (beta + 1):/(ab :+ 2):^2:/(ab :+ 3))
+        i2 = i1[2..n-1]
+        abi = ab :+ 2 :* i2
+        b[i2] = sqrt(4 :* i2 :* (i2 :+ alpha) :* (i2 :+ beta) :* (i2 :+ ab):/(abi:^2 :- 1):/abi:^2)
+        }
+        else if(inttype == "laguerre") {
+                a = 2 :* i :- 1 :+ alpha
+                b = sqrt(i1 :* (i1 :+ alpha))
+                muzero = gamma(alpha :+ 1)
+    }
+
+        A= diag(a)
+        for(j=1;j<=n-1;j++){
+                A[j,j+1] = b[j]
+                A[j+1,j] = b[j]
+        }
+        symeigensystem(A,vec,nodes)
+        weights = (vec[1,]:^2:*muzero)'
+        weights = weights[order(nodes',1)]
+        nodes = nodes'[order(nodes',1)']
+        st_matrix(weightsname,weights)
+        st_matrix(nodesname,nodes)
+}
+                
+end

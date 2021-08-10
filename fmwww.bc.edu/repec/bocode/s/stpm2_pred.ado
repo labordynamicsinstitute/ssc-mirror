@@ -1,6 +1,16 @@
-*! version 1.6.6 14Jul2016
+*! version 1.7.4 12Feb2019
 /*
 History
+PL 12mar2019: meansurv with no timevar opton and td effects.
+PL 18jul2018: fixed bug with rcsbaseoff and meansurv
+PL 16jun2018: allow at(x1=x2) for example
+PL 10oct2017: Fix for using option for lifelost
+PL 04oct2017: Previous fix broke use of if statement
+PL 17sep2017: Fixed so meansurv now works with Stata version < 15 again.
+PL 10sep2017: added meanhazard option
+PL 11aug2017: corrected bugs in stpm2_centpred (did nt work with df(1) or with no covariates)
+PL 24may2017: fixed bug when standardising with cure models
+PL 05mar2017: tidied lifelost code
 PR 14jul2016: Fixed bug in rmst with tmin>0. Disallowed rsdst with tmin>0 (calc of rsdst not worked out).
 PL 20jun2016: Update centile option - now calls stpm2_centpred and used Brents algorithm.
 PR 21dec2015: Fixed bug in tmax() option, also deleted an erroneous blank line.
@@ -56,21 +66,23 @@ program stpm2_pred, sortpreserve
 									NLiter(string) CENTITER(int 100) ///
 									MERGEBY(string) DIAGAge(name) DIAGYear(name) BY(string) MAXYear(int 2050) ///
 									ATTAge(name) ATTYear(name) ID(name) MAXAge(int 99) NOBS(int 100) MAXT(real 10) ///
-									SURVProb(name) USIng(string) LIFelost OBSSurv GRpd STub(string) EXPSurv(name) ///
+									SURVProb(name) LIFelost OBSSurv GRpd STub(string) EXPSurv(name) ///
 									NODEs(int 50) TINF(int 50) TCOND(int 0) ///
-									IF2(string) noCOLLAPSEMEANSURV MEANSURVWT(passthru) ]									
+									IF2(string) noCOLLAPSEMEANSURV  *]									
 
 	local newvarname `varlist'
-
+	
 	if "`if'" != "" & "`if2'" != "" {
 		di in green "WARNING: if statement has been replaced by expression in if2() option"
-		}
-
+	}	
 	if "`if2'" != "" { 
 		local if `if2'
 	}
 	marksample touse, novarlist
 	
+	local 0 `", `options'"'
+	syntax [,MEANSURVWT(passthru) MEANHAZard MEANFT USIng(string)]
+
 	qui count if `touse'
 	if r(N)==0 {
 		error 2000          /* no observations */
@@ -146,17 +158,17 @@ program stpm2_pred, sortpreserve
 	local hratiotmp = substr("`hrnumerator'",1,1)
 	local sdifftmp = substr("`sdiff1'",1,1)
 	local hdifftmp = substr("`hdiff1'",1,1)
-	if wordcount(`"`survival' `hazard' `failure' `meansurv' `hratiotmp' `sdifftmp' `hdifftmp' `centile' `xb' `xbnobaseline' `dxb' `dzdy' `martingale' `deviance' `cumhazard' `cumodds' `normal' `density' `tvc' `cure' `rmst'  `obssurv' `lifelost'"') > 1 {
+	if wordcount(`"`survival' `hazard' `failure' `meansurv' `meanhazard' `meanft' `hratiotmp' `sdifftmp' `hdifftmp' `centile' `xb' `xbnobaseline' `dxb' `dzdy' `martingale' `deviance' `cumhazard' `cumodds' `normal' `density' `tvc' `cure' `rmst'  `obssurv' `lifelost'"') > 1 {
 		display as error "You have specified more than one option for predict"
 		exit 198
 	}
-	if wordcount(`"`survival' `hazard' `failure' `meansurv' `hrnumerator' `sdiff1'  `hdifftmp' `centile' `xb' `xbnobaseline' `dxb' `dzdy' `martingale' `deviance' `cumhazard' `cumodds' `normal' `density' `tvc' `cure' `rmst' `abc'  `obssurv' `lifelost'"') == 0 {
+	if wordcount(`"`survival' `hazard' `failure' `meansurv' `meanhazard' `meanft' `hrnumerator' `sdiff1'  `hdifftmp' `centile' `xb' `xbnobaseline' `dxb' `dzdy' `martingale' `deviance' `cumhazard' `cumodds' `normal' `density' `tvc' `cure' `rmst' `abc'  `obssurv' `lifelost'"') == 0 {
 		display as error "You must specify one of the predict options"
 		exit 198
 	}
 	
-	if `per' != 1 & "`hazard'" == "" & "`hdiff1'" == "" {
-		display as error "You can only use the per() option in combination with the hazard or hdiff1()/hdiff2() options."
+	if `per' != 1 & "`hazard'" == "" & "`hdiff1'" == "" & "`meanhazard'" == ""{
+		display as error "You can only use the per() option in combination with the hazard, hdiff1()/hdiff2() or meanhazard options."
 		exit 198		
 	}
 
@@ -172,13 +184,13 @@ program stpm2_pred, sortpreserve
 	}
 
 	if "`ci'" != "" & ///
-		wordcount(`"`survival' `hazard' `failure' `hrnumerator' `sdiff1' `hdiff1' `centile' `xb' `dxb' `xbnobaseline' `tvc' `meansurv' `cure' `rmst' `abc'  `obssurv' `lifelost'"') == 0 {
+		wordcount(`"`survival' `hazard' `failure' `hrnumerator' `sdiff1' `hdiff1' `centile' `xb' `dxb' `xbnobaseline' `tvc' `meansurv' `meanhazard' `cure' `rmst' `abc'  `obssurv' `lifelost'"') == 0 {
 		display as error "The ci option can not be used with this predict option."
 		exit 198
 	}
 	
-	if "`zeros'" != "" & "`meansurv'" != "" {
-		display as error "You can not specify the zero option with the meansurv option."
+	if "`zeros'" != "" & ("`meansurv'" != "" | "`meanhazard'" != "" | "`meanft'" != "") {
+		display as error "You can not specify the zero option with the `meansurv'`meanhazard'`meanft' option."
 		exit 198
 	}
 
@@ -226,24 +238,19 @@ program stpm2_pred, sortpreserve
 		exit 198
 	}
 	
-	if "`uncured'" != "" & "`survival'" == "" & "`hazard'" == "" & "`centile'" == "" {
+	if "`uncured'" != "" & "`survival'" == "" & "`hazard'" == "" & "`centile'" == "" & "`meansurv'" == "" {
 		display as error "You must specify the survival, hazard or centile option if you specify uncured"
 		exit 198
 	}
 
-	if `startunc' != -1 & ("`uncured'" == "" | "`centile'" == "") {
-		display as error "You must specifiy the uncured and the centile option if you set a starting value"
-		exit 198
-	}
 
-	
-	if "`meansurv'" == "" & "`meansurvwt'" != "" {
+	if ("`meansurv'" == "" & "`meanhazard'" == "" & "`meanft'" == "") & "`meansurvwt'" != "" {
 		display as error "You must specify the meansurv() option when using meansurvwt()."
 		exit 198
 	}
 /* call Stmeancurve if meansurv option specified */
-	if "`meansurv'" != "" {
-		Stmeancurve `newvarname' if `touse', timevar(`timevar') at(`at') atvar(`atvar') `collapsemeansurv' `meansurvwt' `ci' `offset' level(`level')
+	if "`meansurv'" != "" | "`meanhazard'" !="" | "`meanft'" != "" {
+		Stmeancurve `newvarname' if `touse', timevar(`timevar') at(`at') atvar(`atvar') `collapsemeansurv' `meansurvwt' `meanhazard' `meanft' `ci' `offset' `uncured' level(`level') per(`per')
 		exit
 	}
 
@@ -293,7 +300,7 @@ program stpm2_pred, sortpreserve
 		if "`attage'" == "" {
 			local attage _age
 		}
-		capture confirm variable `attage'
+		novarabbrev capture confirm variable `attage'
 		if _rc == 0 {
 			display as error "Attained age variable `attage' already exists in dataset. Delete or rename. See the attage() option."
 			exit 198
@@ -301,7 +308,7 @@ program stpm2_pred, sortpreserve
 		if "`attyear'" == "" {
 			local attyear _year
 		}		
-		capture confirm variable `attyear'
+		novarabbrev capture confirm variable `attyear'
 		if _rc == 0 {
 			display as error "Attained year variable `attyear' already exists in dataset. Delete or rename. See the attyear() option."
 			exit 198
@@ -312,7 +319,7 @@ program stpm2_pred, sortpreserve
 	if "`obssurv'" != "" {
 		Stobssurv `newvarname' if `touse', timevar(`timevar') `offset' mergeby(`mergeby') diagage(`diagage') diagyear(`diagyear') ///
 						by(`by') attage(`attage') attyear(`attyear') id(`id') maxage(`maxage') maxyear(`maxyear') `ci' level(`level') ///
-						survprob(`survprob') using(`"`using'"') `grpd' nobs(`nobs') maxt(`maxt')
+						survprob(`survprob') using(`"`using'"') `grpd' nobs(`nobs') maxt(`maxt') expsurv(`expsurv')
 		exit
 	}
 
@@ -431,7 +438,7 @@ program stpm2_pred, sortpreserve
 	local midt = (r(max) - r(min))/2
 	
 /* calculate startt for centile option if uncured option is specified*/
-
+	/*
 	if `startunc' == -1 {
 		summ _t, meanonly
 	 	local startt = (r(max) - r(min))/8
@@ -439,7 +446,7 @@ program stpm2_pred, sortpreserve
 	else {
 		local startt = `startunc'
 	}
-	
+	*/
 /* store time-dependent covariates and main varlist */
 	local etvc `e(tvc)'
 	local main_varlist `e(varlist)'
@@ -528,6 +535,7 @@ program stpm2_pred, sortpreserve
 	if "`at'" != "" {
 		tokenize `at'
 		while "`1'"!="" {
+			if "`1'" == "." continue, break
 			fvunab tmpfv: `1'
 			local 1 `tmpfv'
 			_ms_parse_parts `1'
@@ -538,16 +546,30 @@ program stpm2_pred, sortpreserve
 								*/ " for the entire factor variable"
 				exit 198
 			}
-			cap confirm var `2'
+			cap confirm var `1'
 			if _rc {
-				cap confirm num `2'
+				di "`1' is not in the data set"
+			}
+			if "`2'" != "=" {
 				if _rc {
-					di as err "invalid at(... `1' `2' ...)"
+					cap confirm num `2'
+					if _rc {
+						di as err "invalid at(... `1' `2' ...)"
+						exit 198
+					}
+				}
+				qui replace `1' = `2' if `touse'
+				local shift 2
+			}
+			else {
+				cap confirm var `3'
+				if _rc {
+					di as err "`var' is not in the data set"
 					exit 198
 				}
+				qui replace `1' = `3' if `touse'
+				local shift 3
 			}
-
-			qui replace `1' = `2' if `touse'
 			if `"`: list posof `"`1'"' in etvc'"' != "0" {
 				local tvcvar `1'
 				if "`e(orthog)'" != "" {
@@ -562,7 +584,7 @@ program stpm2_pred, sortpreserve
 					qui replace _d_rcs_`tvcvar'`i' = _d_rcs_`tvcvar'`i'*`tvcvar' if `touse'
 				}
 			}
-			mac shift 2
+			mac shift `shift'
 		}
 	}
 
@@ -897,7 +919,7 @@ program stpm2_pred, sortpreserve
 					}
 				}
 				if `"`: list posof `"`1'"' in etvc'"' != "0" & "`2'" != "0" {
-					if "`e(rcsbaseoff)'" == "" {
+					if "`e(rcsbaseoff)'" == "" | (`: list posof `"`1'"' in etvc'>1) {
 						local dxb0 `dxb0' +
 					}
 					local xb0_plus `xb0_plus' + 
@@ -1278,87 +1300,7 @@ program stpm2_pred, sortpreserve
 			else if "`centile'" != "" & "`uncured'" != ""{
 				tempvar centilevar	
 				gen `centilevar' = 1 - `centile'/100 if `touse'	
-				/* initial values */	
-				tempvar nr_time nr_time_old nr_surv nr_haz maxerr 
-				qui gen double `nr_time' = `startt'
-				qui gen double `nr_time_old' = `nr_time' if `touse'
-				/* loop */
-				local done 0
-				local itercount 0
-				while !`done' {
-					local itercount = `itercount' + 1
-					if `itercount'>=`centiter' {
-						continue, break
-					}
-					qui predict `nr_surv' if `touse', s uncured timevar(`nr_time_old')
-					qui predict `nr_haz' if `touse', h uncured timevar(`nr_time_old')
-					qui replace `nr_time' = exp(ln(`nr_time_old') - (`nr_surv' - `centilevar')/(-`nr_haz'*`nr_surv'*`nr_time_old')) if `touse'
-					qui gen double `maxerr' = abs(`nr_time' - `nr_time_old') if `touse'
-					summ `maxerr' if `touse', meanonly
-					if r(max)<`centol' {
-						local done 1
-					}
-					else {
-						drop `nr_surv' `nr_haz' `maxerr'
-						qui replace `nr_time_old' = `nr_time' if `touse'
-					}
-				}
-
-				qui gen double `newvarname' = `nr_time' if `touse'
-				
-				if "`ci'" != "" {
-					tempvar ln_nr_time lnln_s lnln_s_se h tp_se s_tp
-					drop _rcs*
-					drop _d_rcs*
-					qui gen double `ln_nr_time' = ln(`nr_time') if `touse'
-					if "`e(rcsbaseoff)'" == "" {
-						if "`e(orthog)'" != "" {
-							tempname rmatrix
-							matrix `rmatrix' = e(R_bh)
-							local rmatrixopt rmatrix(`rmatrix')
-						}
-						qui rcsgen `ln_nr_time'  if `touse', knots(`e(ln_bhknots)') gen(_rcs) dgen(_d_rcs) `e(reverse)' `rmatrixopt' `e(nosecondder)' `e(nofirstder)'	
-					}
-
-					foreach tvcvar in `e(tvc)' {
-						if "`e(orthog)'" != "" {
-							tempname rmatrix_`tvcvar'
-							matrix `rmatrix_`tvcvar'' = e(R_`tvcvar')
-							local rmatrixopt rmatrix(`rmatrix_`tvcvar'')
-						}
-						if `e(df_`tvcvar')' == 1 {
-							qui rcsgen `ln_nr_time' if `touse',  gen(_rcs_`tvcvar') dgen(_d_rcs_`tvcvar') `e(reverse)' `rmatrixopt' `e(nosecondder)' `e(nofirstder)'
-						}
-						else if `e(df_`tvcvar')' != 1 {
-							qui rcsgen `ln_nr_time' if `touse', knots(`e(ln_tvcknots_`tvcvar')') gen(_rcs_`tvcvar') dgen(_d_rcs_`tvcvar') `e(reverse)' `rmatrixopt' `e(nosecondder)' `e(nofirstder)'
-						}
-
-					
-						forvalues k = 1/`e(df_`tvcvar')' {
-							qui replace _rcs_`tvcvar'`k' = _rcs_`tvcvar'`k' * `tvcvar' if `touse'
-							qui replace _d_rcs_`tvcvar'`k' = _d_rcs_`tvcvar'`k' * `tvcvar' if `touse'
-						}
-					}	
-					local rcslisttp
-					forvalues i = 1/`e(dfbase)' {	
-						if "`rcslisttp'" == "" local rcslisttp [xb][_rcs`i']*_rcs`i'			
-						else local rcslisttp `rcslisttp' + [xb][_rcs`i']*_rcs`i'
-					}
-					foreach var in `e(tvc)' {
-						forvalues i = 1/`e(df_`var')' {
-							local rcslisttp `rcslisttp' + [xb][_rcs_`var'`i']*_rcs_`var'`i'
-						}
-					}
-					
-					local exprcstp exp(`rcslisttp') 		
-					qui predictnl double `lnln_s' = ln(-(ln(`pi'^(`exprcstp') - `pi') - ln(1 - `pi'))) if `touse', se(`lnln_s_se')
-					predict  `s_tp' if `touse', s uncured `offset' 
-					qui replace `s_tp' = ln(`s_tp') if `touse'
-					predict `h' if `touse', h uncured timevar(`nr_time')
-					qui gen double `tp_se' = abs(`s_tp'*`lnln_s_se'/`h') if `touse'
-					qui gen double `newvarname'_lci = `newvarname' - invnormal(1-0.5*(1-`level'/100))*`tp_se' if `touse'
-					qui gen double `newvarname'_uci = `newvarname' + invnormal(1-0.5*(1-`level'/100))*`tp_se' if `touse'
-				}	
+				stpm2_centpred `newvarname' if `touse', centile(`centilevar') centol(`centol') offset(`offset') `uncured' `ci' level(`level')
 			}		
 		}		
 	}
@@ -1394,19 +1336,22 @@ end
 
 program Stmeancurve, sortpreserve 
 	version 10.0
-	syntax newvarname [if] [in],[TIMEvar(varname) AT(string) ATVAR(string) noCOLLAPSEMEANSURV meansurvwt(varname) ci noOFFSET level(real `c(level)')] 
+	syntax newvarname [if] [in],[TIMEvar(varname) AT(string) ATVAR(string) noCOLLAPSEMEANSURV ///
+		meansurvwt(varname) ci noOFFSET UNCURED MEANHAZard MEANFT LEVEL(real `c(level)') per(integer 1)] 
 	marksample touse, novarlist
 	local newvarname `varlist'
 
 	tempvar t lnt touse_time
-		
 	preserve
+
+	if "`meanhazard'" == "" & "`meanft'" == "" local meansurv meansurv
 	
-	/* use timevar option or _t */
-	// removed "if touse" statement 
+	
+	// use timevar option or _t 
+	// do not use if
 	if "`timevar'" == "" {
-		qui gen `t' = _t //if `touse'
-		qui gen double `lnt' = ln(_t) //if `touse'
+		qui gen `t' = _t 
+		qui gen double `lnt' = ln(_t) 
 	}
 	else {
 		qui gen double `t' = `timevar' 
@@ -1414,49 +1359,75 @@ program Stmeancurve, sortpreserve
 	}
 
 	/* index which time units are selected */
-	gen `touse_time' = `t' != .
+	gen `touse_time' = `t' != . 
+	if "`meanhazard'" != "" | "`meanft'" != "" {
+		qui replace `touse_time' = 0 if `t' == 0
+	}
 	
 	/* generate ocons for use when orthogonalising splines */
 	tempvar ocons
 	gen `ocons' = 1
 
 	/* Calculate new spline terms */
-	if "`timevar'" != "" & "`e(rcsbaseoff)'" == "" {
-		drop _rcs* _d_rcs*
-		qui rcsgen `lnt' if `touse_time', knots(`e(ln_bhknots)') gen(_rcs) `e(reverse)' `e(nosecondder)' `e(nofirstder)'
+
+	if "`e(rcsbaseoff)'" == "" {
+		capture drop _rcs* _d_rcs*
 		if "`e(orthog)'" != "" {
-			mata st_store(.,tokens(st_global("e(rcsterms_base)")),"`touse_time'",(st_data(.,(tokens(st_global("e(rcsterms_base)") + " `ocons'" )),"`touse_time'")*luinv(st_matrix("e(R_bh)")))[,1..`e(dfbase)'])							
+			tempname rmatrix
+			matrix `rmatrix' = e(R_bh)
+			local rmatrixopt rmatrix(`rmatrix')
 		}
+		else local rmatrixopt ""
+		qui rcsgen `lnt' if `touse_time', knots(`e(ln_bhknots)') gen(_rcs) dgen(_d_rcs) `e(reverse)' `rmatrixopt' `e(nosecondder)' `e(nofirstder)'
 	}
-	
-	if "`e(tvc)'" != "" {
-         capture drop _rcs_* 
-    }
- 
+	if "`e(tvc)'" != ""  capture drop _rcs_* _d_rcs_*
 	foreach tvcvar in `e(tvc)' {
-		qui rcsgen `lnt' if `touse_time',  gen(_rcs_`tvcvar') knots(`e(ln_tvcknots_`tvcvar')') `e(reverse)' `e(nosecondder)' `e(nofirstder)'
 		if "`e(orthog)'" != "" {
-			mata st_store(.,tokens(st_global("e(rcsterms_`tvcvar')")),"`touse_time'",(st_data(.,(tokens(st_global("e(rcsterms_`tvcvar')") + " `ocons'" )),"`touse_time'")*luinv(st_matrix("e(R_`tvcvar')")))[,1..`e(df_`tvcvar')'])							
+			tempname rmatrix_`tvcvar'
+			matrix `rmatrix_`tvcvar'' = e(R_`tvcvar')
+			local rmatrixopt rmatrix(`rmatrix_`tvcvar'')
 		}
+		else local rmatrixopt ""
+		qui rcsgen `lnt' if `touse_time',  gen(_rcs_`tvcvar') knots(`e(ln_tvcknots_`tvcvar')') dgen(_d_rcs_`tvcvar') `e(reverse)' `rmatrixopt' `e(nosecondder)' `e(nofirstder)'
 	}
-	
+
 	/* Out of sample predictions using at() */
 	if "`at'" != "" {
 		tokenize `at'
 		while "`1'"!="" {
-			unab 1: `1'
-			cap confirm var `2'
+			if "`1'" == "." continue, break
+				unab 1: `1'
+			cap confirm var `1'
 			if _rc {
-				cap confirm num `2'
+				di "`1' is not in the data set"
+			}
+			if "`2'" != "=" {
 				if _rc {
-					di as err "invalid at(... `1' `2' ...)"
+					cap confirm num `2'
+					if _rc {
+						di as err "invalid at(... `1' `2' ...)"
+						exit 198
+					}
+				}
+				qui replace `1' = `2' if `touse'
+				local shift 2
+			}
+			else {
+				cap confirm var `3'
+				if _rc {
+					di as err "`var' is not in the data set"
 					exit 198
 				}
+				qui replace `1' = `3' if `touse'
+				local shift 3
 			}
-			qui replace `1' = `2' if `touse'
-			mac shift 2
+			mac shift `shift'
 		}
 	}
+	
+	
+			
+	
 
 	if "`atvar'" != "" {
 		// strip spaces before and after equals sign
@@ -1485,11 +1456,10 @@ program Stmeancurve, sortpreserve
 	
 	foreach tvcvar in `e(tvc)' {
 		local rcstvclist `rcstvclist' `e(rcsterms_`tvcvar')'
+		local drcstvclist `drcstvclist' `e(drcsterms_`tvcvar')'
 	}
 
-	if "`e(scale)'" == "theta" {
-		local theta = exp([ln_theta][_cons])
-	}
+	if "`e(scale)'" == "theta" 	local theta = exp([ln_theta][_cons])
 	
 	qui count if `touse_time'
 	local Nt `r(N)'
@@ -1512,17 +1482,22 @@ program Stmeancurve, sortpreserve
 		}
 		sort `tmpid'
 	}
+	tempname tmpb tmpV
+	matrix `tmpb' = e(b)
+	matrix `tmpV' = e(V)
+	_ms_findomitted `tmpb' `tmpV'
 
-	mata: msurvpop("`newvarname'","`touse_msurvpop'","`touse_time'","`rcstvclist'")
-
+	mata: msurvpop() 
 /* restore original data and merge in new variables */
 	qui replace `newvarname' = 1 if `t' == 0 & `touse_time'
 	local keep `newvarname'
 	if "`ci'" != "" { 
-		qui replace `newvarname'_lci = 1 if `t' == 0 & `touse_time'
-		qui replace `newvarname'_uci = 1 if `t' == 0 & `touse_time'		
-		qui replace `newvarname'_lci = 0 if `newvarname'_lci <0 & `touse_time'
-		qui replace `newvarname'_uci = 1 if `newvarname'_uci > 1 & `touse_time'
+		if "`meanhazard'" == "" {
+			qui replace `newvarname'_lci = 1 if `t' == 0 & `touse_time'
+			qui replace `newvarname'_uci = 1 if `t' == 0 & `touse_time'		
+			qui replace `newvarname'_lci = 0 if `newvarname'_lci <0 & `touse_time'
+			qui replace `newvarname'_uci = 1 if `newvarname'_uci > 1 & `touse_time'
+		}
 		local keep `keep' `newvarname'_lci `newvarname'_uci
 	}
 	else if "`stdp'" != "" {
@@ -1971,62 +1946,65 @@ if `s(k)' == 0 {
 end
 
 
-/* mata program to obtain mean survival */
+// mata program to obtain mean survival 
 mata:
-void msurvpop(string scalar newvar, string scalar touse, string scalar touse_time, | string scalar tvcrcslist) 
+void msurvpop() 
 {
-/* Transfer data from Stata */
+// Transfer data from Stata 
+	newvar = st_local("newvarname")
+	touse = st_local("touse_msurvpop")
+	touse_time = st_local("touse_time")
+	tvcrcslist = st_local("rcstvclist")
 	Nt = strtoreal(st_local("Nt"))
 	hascons = st_global("e(noconstant)") == ""	
-
+	uncured = st_local("uncured") != ""
+	meansurv_opt = st_local("meansurv") != ""
+	meanhazard_opt = st_local("meanhazard") != ""
+	per = strtoreal(st_local("per"))
+	meanft_opt = st_local("meanft") != ""
+	t = st_data( ., st_local("t"), touse_time)
 	if (st_global("e(rcsbaseoff)") == "") {
 		rcsbase = st_data( ., tokens(st_global("e(rcsterms_base)")), touse_time)
+		if(meanhazard_opt | meanft_opt) drcsbase = st_data( ., tokens(st_global("e(drcsterms_base)")), touse_time)
 	}
-	else {
-		rcsbase = J(Nt,0,0)
-	}
+	else rcsbase = J(Nt,0,0)
 
 	if (tvcrcslist != "") {
 		rcstvc = st_data( ., tokens(tvcrcslist), touse_time)
+		drcstvc = st_data( ., tokens(st_local("drcstvclist")), touse_time)
 	}
-	else {
-		rcstvc = I(0)
-	}
+	else rcstvc = I(0)
 	
 	if (st_global("e(varlist)") != "") {
 		x = st_data(.,tokens(st_global("e(varlist)")),touse)
 	}
-	else {
-		x = J(1,0,.)	
-	}
+	else x = J(1,0,.)
 
 	if (st_global("e(tvc)") != "") {
 		xtvc = st_data(.,tokens(st_global("e(tvc)")),touse)
 	}
-	else {
-		xtvc = J(1,0,.)	
-	}
+	else xtvc = J(1,0,.)
 	
 	tvcvar = tokens(st_global("e(tvc)"))
 	ntvc = cols(tvcvar)
+	Nvarlist = cols(tokens(st_global("e(varlist)")))
 
-	/* Beta matrix */		
-	beta = st_matrix("e(b)")'[1..cols(rcsbase)+cols(rcstvc) + cols(tokens(st_global("e(varlist)"))) + hascons,1]
-
+	// Beta matrix 
+	tmpb = st_local("tmpb")
+	beta = st_matrix(tmpb)'[1..cols(rcsbase)+cols(rcstvc) + Nvarlist + hascons,1]
+	betarcs = beta[(Nvarlist+1)..(Nvarlist + cols(rcsbase)+cols(rcstvc)),1]
 	scale = st_global("e(scale)")
 	if (scale == "theta") theta = strtoreal(st_local("theta"))
 
-/*	check whether to include offset */
+//	check whether to include offset 
 	offset_name = st_global("e(offset1)")
 	if (offset_name != "" & st_local("offset") != "nooffset") offset = st_data(.,offset_name,touse)
 	else offset = 0
 
 	startstop = J(ntvc,2,.)
 	tvcpos = J(ntvc,1,.)
-	
 	tmpstart = 1
-
-/* Loop over number of time observations */
+// Loop over number of time observations 
 	for (i=1;i<=ntvc;i++){
 		startstop[i,1] = tmpstart
 		tmpntvc = cols(tokens(st_global("e(rcsterms_"+tvcvar[1,i]+")")))
@@ -2049,35 +2027,53 @@ void msurvpop(string scalar newvar, string scalar touse, string scalar touse_tim
 	else {
 		wt = st_data(.,st_local("meansurvwt"),touse)
 	}
-/* Loop over all selected observations */
+// Loop over all selected observations 
 	meansurv = J(Nt,1,0)
-
-	if (hascons) {
-		addcons = J(Nt,1,1)
-	}
-	else {
-		addcons = J(Nt,0,0)
-	}
+	if(meanhazard_opt | meanft_opt) meanft = J(Nt,1,0)
+	if (hascons) addcons = J(Nt,1,1)
+	else addcons = J(Nt,0,0)
 	
+	if(uncured) {
+		pi_cure = exp(-exp((x[,])*(beta[1..Nvarlist]) :+ hascons :* beta[rows(beta)]))
+		start_exprcs = Nvarlist :+ 1
+		stop_exprcs = rows(beta) :- 1
+		if(!hascons) stop_exprcs = stop_exprcs :+ 1
+	}
 	for (i=1;i<=Nx;i++) {
 		tmprcs = J(Nt,0,.)
+		tmpdrcs = J(Nt,0,.)
 		for (j=1;j<=ntvc;j++) {
-			tmprcs = tmprcs, rcstvc[,startstop[j,1]..startstop[j,2]]:*	xtvc[i,j]
+			tmprcs = tmprcs, rcstvc[,startstop[j,1]..startstop[j,2]]:*xtvc[i,j]
+			tmpdrcs = tmpdrcs, drcstvc[,startstop[j,1]..startstop[j,2]]:*xtvc[i,j]
 		}
-		if (scale == "hazard")	{
-			meansurv = meansurv :+ wt[i,]:*covfreq[i,]:*exp(-exp((J(Nt,1,x[i,]),rcsbase, tmprcs,addcons)*beta :+ offset)):/Nobs
+		if(!uncured) {
+			if (scale == "hazard")	{
+				meansurv = meansurv :+ wt[i,]:*covfreq[i,]:*exp(-exp((J(Nt,1,x[i,]),rcsbase, tmprcs,addcons)*beta :+ offset)):/Nobs
+				if(meanhazard_opt | meanft_opt) {
+					meanft = meanft + wt[i,]:*covfreq[i,]:*1:/t :*((drcsbase,tmpdrcs)*betarcs):*exp((J(Nt,1,x[i,]),rcsbase, tmprcs,addcons)*beta - exp((J(Nt,1,x[i,]),rcsbase, tmprcs,addcons)*beta :+ offset)):/Nobs
+				}
+			}
+			else if (scale == "odds")	meansurv = meansurv :+ wt[i,]:*covfreq[i,]:*((1 :+ exp((J(Nt,1,x[i,]),rcsbase, tmprcs,addcons)*beta :+ offset)):^(-1)):/Nobs
+			else if (scale == "normal")	meansurv = meansurv :+ wt[i,]:*covfreq[i,]:* normal(-(J(Nt,1,x[i,]),rcsbase, tmprcs,addcons)*beta :+ offset):/Nobs
+			else if (scale == "theta")	meansurv = meansurv :+ wt[i,]:*covfreq[i,]:* ((theta:*exp((J(Nt,1,x[i,]),rcsbase, tmprcs,addcons)*beta :+ offset) :+ 1):^(-1/theta)):/Nobs
+		}			
+		else if(uncured) {
+			exprcs = exp((rcsbase,tmprcs) * beta[start_exprcs..stop_exprcs] :+ offset)
+			meansurv = meansurv :+ wt[i,]:*covfreq[i,]:* ((pi_cure[i]:^(exprcs) :- pi_cure[i]):/(1 :- pi_cure[i])):/Nobs
 		}
-		else if (scale == "odds")	meansurv = meansurv :+ wt[i,]:*covfreq[i,]:*((1 :+ exp((J(Nt,1,x[i,]),rcsbase, tmprcs,addcons)*beta :+ offset)):^(-1)):/Nobs
-		else if (scale == "normal")	meansurv = meansurv :+ wt[i,]:*covfreq[i,]:* normal(-(J(Nt,1,x[i,]),rcsbase, tmprcs,addcons)*beta :+ offset):/Nobs
-		else if (scale == "theta")	meansurv = meansurv :+ wt[i,]:*covfreq[i,]:* ((theta:*exp((J(Nt,1,x[i,]),rcsbase, tmprcs,addcons)*beta :+ offset) :+ 1):^(-1/theta)):/Nobs
+
 	}
-	(void) st_addvar("double",newvar)	
-	st_store(., newvar, touse_time, meansurv)
-	
+	(void) st_addvar("double",newvar)
+	if(meansurv_opt) st_store(., newvar, touse_time, meansurv)
+	else if(meanhazard_opt) {
+		meanhaz_result =  meanft:/meansurv
+		st_store(., newvar, touse_time, per:*meanhaz_result)
+	}
+	else if(meanft_opt) st_store(., newvar, touse_time, meanft)
 // Calculate CI using delta method	
 	if(st_local("ci") != "") {
 		Nparams = rows(beta)
-		stata("_ms_omit_info  e(b)")
+		stata("_ms_omit_info " + tmpb)
 		omitvars = st_matrix("r(omit)")[,1..Nparams]
 		V = st_matrix("e(V)")[1..Nparams,1..Nparams]
 		G = J(Nt,0,.)
@@ -2089,45 +2085,81 @@ void msurvpop(string scalar newvar, string scalar touse, string scalar touse_tim
 			h = sqrt(epsilon(1))*beta[k]
 			newbeta1 = beta
 			newbeta1[k] = beta[k] + h/2 
+			newbeta1rcs = newbeta1[(Nvarlist+1)..(Nvarlist + cols(rcsbase)+cols(rcstvc)),1]
 			newbeta2 = beta
 			newbeta2[k] = beta[k] - h/2 
+			newbeta2rcs = newbeta2[(Nvarlist+1)..(Nvarlist + cols(rcsbase)+cols(rcstvc)),1]
 			f1 = J(Nt,1,0)
 			f2 = J(Nt,1,0)
 			
+			
+			if(uncured) {
+				pi_cure1 = exp(-exp((x[,])*(newbeta1[1..Nvarlist]) :+ hascons :* newbeta1[rows(beta)]))
+				pi_cure2 = exp(-exp((x[,])*(newbeta2[1..Nvarlist]) :+ hascons :* newbeta2[rows(beta)]))
+			}
+			if(meanhazard_opt) {
+				f1b = J(Nt,1,0)
+				f2b = J(Nt,1,0)
+			}
+			// loop over unique x's 
 			for (i=1;i<=Nx;i++) {
 				tmprcs = J(Nt,0,.)
+				tmpdrcs = J(Nt,0,.)
 				for (j=1;j<=ntvc;j++) {
-					tmprcs = tmprcs, rcstvc[,startstop[j,1]..startstop[j,2]]:*	xtvc[i,j]
+					tmprcs = tmprcs, rcstvc[,startstop[j,1]..startstop[j,2]]:*xtvc[i,j]
+					tmpdrcs = tmpdrcs, drcstvc[,startstop[j,1]..startstop[j,2]]:*xtvc[i,j]
 				}
-				if (scale == "hazard")	{
-					f1 = f1 :+ wt[i,]:*covfreq[i,]:*exp(-exp((J(Nt,1,x[i,]),rcsbase, tmprcs,addcons)*newbeta1 :+ offset)):/Nobs
-					f2 = f2 :+ wt[i,]:*covfreq[i,]:*exp(-exp((J(Nt,1,x[i,]),rcsbase, tmprcs,addcons)*newbeta2 :+ offset)):/Nobs
+				if(!uncured) {
+					if (scale == "hazard")	{
+						f1 = f1 :+ wt[i,]:*covfreq[i,]:*exp(-exp((J(Nt,1,x[i,]),rcsbase, tmprcs,addcons)*newbeta1 :+ offset)):/Nobs
+						f2 = f2 :+ wt[i,]:*covfreq[i,]:*exp(-exp((J(Nt,1,x[i,]),rcsbase, tmprcs,addcons)*newbeta2 :+ offset)):/Nobs
+					}
+					else if(scale == "odds") {
+						f1 = f1 :+ wt[i,]:*covfreq[i,]:*((1 :+ exp((J(Nt,1,x[i,]),rcsbase, tmprcs,addcons)*newbeta1 :+ offset)):^(-1)):/Nobs				
+						f2 = f2 :+ wt[i,]:*covfreq[i,]:*((1 :+ exp((J(Nt,1,x[i,]),rcsbase, tmprcs,addcons)*newbeta2 :+ offset)):^(-1)):/Nobs				
+					}
+					else if(scale == "normal") {
+						f1 = f1 :+ wt[i,]:*covfreq[i,]:* normal(-(J(Nt,1,x[i,]),rcsbase, tmprcs,addcons)*newbeta1 :+ offset):/Nobs				
+						f2 = f2 :+ wt[i,]:*covfreq[i,]:* normal(-(J(Nt,1,x[i,]),rcsbase, tmprcs,addcons)*newbeta2 :+ offset):/Nobs				
+					}
+					else if(scale == "theta") {
+						f1 = f1 :+ wt[i,]:*covfreq[i,]:* ((theta:*exp((J(Nt,1,x[i,]),rcsbase, tmprcs,addcons)*newbeta1 :+ offset) :+ 1):^(-1/theta)):/Nobs				
+						f2 = f2 :+ wt[i,]:*covfreq[i,]:* ((theta:*exp((J(Nt,1,x[i,]),rcsbase, tmprcs,addcons)*newbeta2 :+ offset) :+ 1):^(-1/theta)):/Nobs				
+					}
 				}
-				else if(scale == "odds") {
-					f1 = f1 :+ wt[i,]:*covfreq[i,]:*((1 :+ exp((J(Nt,1,x[i,]),rcsbase, tmprcs,addcons)*newbeta1 :+ offset)):^(-1)):/Nobs				
-					f2 = f2 :+ wt[i,]:*covfreq[i,]:*((1 :+ exp((J(Nt,1,x[i,]),rcsbase, tmprcs,addcons)*newbeta2 :+ offset)):^(-1)):/Nobs				
+				else if(uncured) {
+					exprcs1 = exp((rcsbase,tmprcs) * newbeta1[start_exprcs..stop_exprcs] :+ offset)
+					exprcs2 = exp((rcsbase,tmprcs) * newbeta2[start_exprcs..stop_exprcs] :+ offset)
+					f1 = f1 :+ wt[i,]:*covfreq[i,]:*((pi_cure1[i]:^(exprcs1) :- pi_cure1[i]):/(1 :- pi_cure1[i])):/Nobs
+					f2 = f2 :+ wt[i,]:*covfreq[i,]:*((pi_cure2[i]:^(exprcs2) :- pi_cure2[i]):/(1 :- pi_cure2[i])):/Nobs
+					}
+				if(meanhazard_opt) {
+					if (scale == "hazard")	{
+						f1b = f1b :+ wt[i,]:*covfreq[i,]:*1:/t :*((drcsbase,tmpdrcs)*newbeta1rcs):*exp((J(Nt,1,x[i,]),rcsbase, tmprcs,addcons)*newbeta1 - exp((J(Nt,1,x[i,]),rcsbase, tmprcs,addcons)*newbeta1 :+ offset)):/Nobs
+						f2b = f2b :+ wt[i,]:*covfreq[i,]:*1:/t :*((drcsbase,tmpdrcs)*newbeta2rcs):*exp((J(Nt,1,x[i,]),rcsbase, tmprcs,addcons)*newbeta2 - exp((J(Nt,1,x[i,]),rcsbase, tmprcs,addcons)*newbeta2 :+ offset)):/Nobs
+					}
 				}
-				else if(scale == "normal") {
-					f1 = f1 :+ wt[i,]:*covfreq[i,]:* normal(-(J(Nt,1,x[i,]),rcsbase, tmprcs,addcons)*newbeta1 :+ offset):/Nobs				
-					f2 = f2 :+ wt[i,]:*covfreq[i,]:* normal(-(J(Nt,1,x[i,]),rcsbase, tmprcs,addcons)*newbeta2 :+ offset):/Nobs				
-				}
-				else if(scale == "theta") {
-					f1 = f1 :+ wt[i,]:*covfreq[i,]:* ((theta:*exp((J(Nt,1,x[i,]),rcsbase, tmprcs,addcons)*newbeta1 :+ offset) :+ 1):^(-1/theta)):/Nobs				
-					f2 = f2 :+ wt[i,]:*covfreq[i,]:* ((theta:*exp((J(Nt,1,x[i,]),rcsbase, tmprcs,addcons)*newbeta2 :+ offset) :+ 1):^(-1/theta)):/Nobs				
-				}
+				
 			}
-			G = (G,(log(f1) :- log(f2)):/h)	
+			if(meansurv_opt) G = (G,(log(f1) :- log(f2)):/h)	
+			else if(meanhazard_opt)G = (G,(log(f1b:/f1) :- log(f2b:/f2)):/h)	
 		}
-		se = sqrt(diagonal(G*V*G'))
-		
+		//se = sqrt(diagonal(G*V*G')) 
+		se = sqrt(rowsum((G*V):*G)) // This is quicker
 // calculate confidence interval
 		level = strtoreal(st_local("level"))
 		z =  abs(invnormal((1-(level/100))/2))
 		(void) st_addvar("double",newvar+"_lci")	
-		(void) st_addvar("double",newvar+"_uci")	
-		st_store(., newvar+"_lci", touse_time, exp(log(meansurv) - z*se))
-		st_store(., newvar+"_uci", touse_time, exp(log(meansurv) + z*se))
-	}
+		(void) st_addvar("double",newvar+"_uci")
+		if(meansurv_opt) {
+			st_store(., newvar+"_lci", touse_time, exp(log(meansurv) - z*se))
+			st_store(., newvar+"_uci", touse_time, exp(log(meansurv) + z*se))
+		}
+		else if(meanhazard_opt){
+			per
+			st_store(., newvar+"_lci", touse_time, exp(log(meanhaz_result) - z*se):*per)
+			st_store(., newvar+"_uci", touse_time, exp(log(meanhaz_result) + z*se):*per)
+		}	}
 }	
 end
 
@@ -2139,7 +2171,7 @@ end
 program Stobssurv, sortpreserve
 	version 11.1
 	syntax newvarname [if] [in],[TIMEvar(varname) noOFFSET MERGEBY(string) DIAGAge(name) DIAGYear(name) BY(string) GRpd ATTAge(name) ///
-								ATTyear(name) ID(name) MAXAge(int 99) MAXYear(int 2050) Nobs(int 100) CI LEVel(real `c(level)') MAXT(real 10) survprob(name) USIng(string)] 
+								ATTyear(name) ID(name) MAXAge(int 99) MAXYear(int 2050) Nobs(int 100) CI LEVel(real `c(level)') MAXT(real 10) survprob(name) USIng(string) EXPSURV(string)] 
 
 	marksample touse, novarlist
 	local newvarname `varlist'
@@ -2287,6 +2319,10 @@ program Stobssurv, sortpreserve
 	if "`ci'" != "" { 
 		local keep `keep' `newvarname'_lci `newvarname'_uci
 	}
+	if "`expsurv'" != "" {
+		gen `expsurv'= `St_star'
+		local keep `keep' `expsurv' 		
+	}
 	keep `keep'
 	tempfile newvars
 	qui save `newvars'
@@ -2363,8 +2399,8 @@ program Stlifelost, sortpreserve
 		tempvar S_star_`i' `attage' `attyear'
 		local j=`i'-1
 	
-		qui gen `attage'=floor(min(`diagage'+ `j',`maxage')) 
-		qui gen `attyear'=floor(min(`diagyear' + `j', `maxyear')) 
+		qui gen `attage'=floor(min(`diagage'+ `j',`maxage'))  if `touse'
+		qui gen `attyear'=floor(min(`diagyear' + `j', `maxyear')) if `touse' 
 		sort `mergeby'
 
 		qui merge m:1 `mergeby' using `"`using'"', nolabel keepusing(`survprob') ///
@@ -2478,7 +2514,7 @@ program Stlifelost, sortpreserve
 	* Restore original data and merge in new variables 
 	************************************************************
 	
-	local keep `newvarname'
+//	local keep `newvarname'
 	local keep `id' `newvarname'
 	
 	if "`ci'" != "" {

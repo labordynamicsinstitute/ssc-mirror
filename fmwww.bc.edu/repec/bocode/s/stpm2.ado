@@ -1,6 +1,8 @@
-*! version 1.6.6 27Oct2016
+*! version 1.7.4 20Apr2020
 /*
 History
+PL 20Mar2020: user-specififed knots for tvc fix
+PL 02Jul2018: Now autimatically uses the oldest option if Stata version < 15.1
 PL 27Oct2016: Correct bug for Cure models with delayed entry and orthogonalization
 PL 01Jun2015: Correct "lininit" bug for relative survival models
 PL 28Apr2015: Mata library now compiled in Stata 14: Uses "oldest" otherwise
@@ -76,7 +78,8 @@ program Estimate, eclass byable(recall)
 		INITTheta(real 1) CONSTheta(string) EForm ALLEQ KEEPCons BHAZard(varname) ///
 		LINinit STratify(varlist) THeta(string) OFFset(varname) RCSBASEOFF BHAZINIT(string) ///
 		/* !! PR */ STPMDF(int 0) VERBose SHOWCons MLMethod(string) ///
-		ALL RMAT REVerse CURE FAILCONVLININIT INITSTRATA(varlist) FROM(string) OLDEST] ///
+		ALL RMAT REVerse CURE FAILCONVLININIT INITSTRATA(varlist) FROM(string) OLDEST ///
+		NOFIRSTDER NOSECONDDER] ///
 	[                               ///
 	noLOg                           /// -ml model- options
 	noLRTEST                        /// 
@@ -101,8 +104,8 @@ local cmdline `"stpm2 `0'"'
 		exit  198
 	}
 	
-/* Use old estimation commands if Stata version <14.2 */
-	if `c(stata_version)' < 14.2 {
+/* Use old estimation commands if Stata version <15.1 */
+	if `c(stata_version)' < 15.1 {
 		local oldest oldest
 	}
 
@@ -359,6 +362,8 @@ local cmdline `"stpm2 `0'"'
 			macro shift 1
 		}
 	}
+
+  
 /* Check scale options specified */
 	if "`scale'" =="" {
 		display as error "The scale must be specified"
@@ -443,7 +448,6 @@ local cmdline `"stpm2 `0'"'
 		local upperknot = `r(c_2)'
 	}
 
-	
 	if "`bknotstvc'" != "" {
 		tokenize `bknotstvc'
 			while "`1'"!="" {
@@ -497,7 +501,7 @@ local cmdline `"stpm2 `0'"'
 			local upperknot_`tvcvar' = `upperknot'
 		}
 	}
-
+  
 /* Knot placement for baseline hazard (unless cure option is specified) */
 	if `nbhknots' == 0 & "`rcsbaseoff'" == "" & "`cure'" == "" {
 		if `df' == 1 {
@@ -687,7 +691,7 @@ local cmdline `"stpm2 `0'"'
 			if `tvc_`tvcvar'_df' != 1 {
 				if "`tvcknots_`tvcvar'_user'" != "" {
 					local n_`tvcvar': word count `tvcknots_`tvcvar'_user'
-					local tvcknots_`tvcvar' `lowerknot'
+					local tvcknots_`tvcvar' `lowerknot_`tvcvar''
  
 					forvalues i=1/`n_`tvcvar'' {
 						if substr("`knscale'",1,1) == "t" {
@@ -703,7 +707,7 @@ local cmdline `"stpm2 `0'"'
 						}
 						local tvcknots_`tvcvar' `tvcknots_`tvcvar'' `addknot'
 					}
-					local tvcknots_`tvcvar' `tvcknots_`tvcvar'' `upperknot'
+					local tvcknots_`tvcvar' `tvcknots_`tvcvar'' `upperknot_`tvcvar''
  				}
 				if  "`:list dups tvcknots_`tvcvar''" != "" {
 					display as error "You have duplicate knots positions for the time-dependent effect of `tvcvar'"
@@ -717,7 +721,7 @@ local cmdline `"stpm2 `0'"'
 			}
 		}
 	}
-	
+  
 	/* Added so R matrix is returned when using rmat option */
 	if "`rmat'" != "" {
 			local orthog orthog		
@@ -1258,6 +1262,7 @@ local cmdline `"stpm2 `0'"'
 			exit
 		}	
 	}
+	capture mata: rmexternal("`stpm2_struct'")
 	ereturn local cmdline `cmdline'
 	
 	ereturn local predict stpm2_pred
@@ -1268,6 +1273,8 @@ local cmdline `"stpm2 `0'"'
 	ereturn local tvc `tvc'
 	ereturn local constant `noconstant'
 	ereturn local rcsbaseoff `rcsbaseoff'
+	ereturn local nosecondder `nosecondder'
+	ereturn local nofirstder `nofirstder'
 	local exp_lowerknot = exp(`lowerknot')
 	local exp_upperknot = exp(`upperknot')
 	ereturn local boundary_knots "`exp_lowerknot' `exp_upperknot'"
@@ -1296,14 +1303,15 @@ local cmdline `"stpm2 `0'"'
 	else {
 		ereturn scalar ndxbterms = `r(k3)'
 	}
+  
 	foreach tvcvar in  `tvc' {
+		local exp_knots
 		ereturn scalar df_`tvcvar' = `tvc_`tvcvar'_df'
 		ereturn local rcsterms_`tvcvar' `rcsterms_`tvcvar''
 		ereturn local drcsterms_`tvcvar' `drcsterms_`tvcvar''
 		if `tvc_`tvcvar'_df'>1 {
-			local exp_knots
 			forvalues i = 2/`tvc_`tvcvar'_df' {
-				local addknot = exp(real(word("`tvcknots_`tvc''",`i')))
+				local addknot = exp(real(word("`tvcknots_`tvcvar''",`i')))
 				local exp_knots `exp_knots' `addknot' 
 			}
 			ereturn local tvcknots_`tvcvar' `exp_knots'
@@ -1313,6 +1321,7 @@ local cmdline `"stpm2 `0'"'
 			ereturn matrix R_`tvcvar' = `R_`tvcvar''
 		}
 	}
+  
 	if "`orthog'" != "" & "`rcsbaseoff'" == "" {
 		ereturn matrix R_bh = `R_bh'
 	}

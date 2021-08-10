@@ -1,9 +1,9 @@
-*! version 0.13.03  5mar2013
+*! version 0.21.04  5apr2021
 
 // Valor cuota de los fondos
 cap program drop valcuofon_afp
 program def valcuofon_afp
-	syntax [, AGNOInicio(integer 2013) AGNOFin(integer 2013) Fondo(string) Save(string) Clear]
+	syntax [, AGNOInicio(integer 2021) AGNOFin(integer 2021) Fondo(string) Save(string) Clear]
 	
 	vers 9.0
 	
@@ -21,7 +21,7 @@ program def valcuofon_afp
 	}
 	
 	qui insheet ///
-			using "http://www.spensiones.cl/apps/vcuofon/vcfAFPxls.php?aaaaini=`agnoinicio'&aaaafin=`agnofin'&tf=`fondo'&fecconf=`agnofin'1231", ///
+			using "https://www.spensiones.cl/apps/valoresCuotaFondo/vcfAFPxls.php?aaaaini=`agnoinicio'&aaaafin=`agnofin'&tf=`fondo'&fecconf=`agnofin'1231", ///
 			delim(";") clear	
 	
 	// Generando fecha
@@ -47,18 +47,18 @@ program def valcuofon_afp
 			
 			if `var'[3] != "" { // Verifica que la variable exista para la obs
 				// Cambia nombre
-				if length(`var'[1]) != 0 local afp = `var'[1]
+				if length(`var'[2]) != 0 local afp = `var'[2]
 				
-				local tmplab = `var'[2]+" fondo `fondo' `afp'"
+				local tmplab = `var'[3]+" fondo `fondo' `afp'"
 				lab var `var' "`tmplab'"
 				
-				local tmpname = lower(strtoname(`var'[2])+"_"+strtoname("`afp'"))
+				local tmpname = lower(strtoname(`var'[3])+"_"+strtoname("`afp'"))
 				ren `var' `tmpname'
 				
 				// Ajusta valores
 				qui {
 					replace `tmpname' = subinstr(`tmpname', ".", "", .)
-					replace `tmpname' = "" in 1/2
+					replace `tmpname' = "" in 1/3
 					destring `tmpname', replace dpcomma
 				}
 			}
@@ -67,6 +67,8 @@ program def valcuofon_afp
 		}
 		
 		qui drop in 1/2
+		
+		drop if fecha==.
 		
 		tempfile parte`i'
 		cap save `parte`i''
@@ -78,27 +80,16 @@ program def valcuofon_afp
 	
 	use `parte1'
 	forval i = 2/`grupoN' {
+	order fecha
 		append using `parte`i''
 	}
 	
-	order _all
+	
+	
+	order fecha
 	
 	label data "Valores cuota (fondo `fondo') y patrimonio de las AFP en el periodo `agnoinicio'-`agnofin'"
 	drop `grupo'
 	if length(`"`save'"') != 0 save `save', replace
 end
 
-/*
-getvcofon_afp, agnoi(2010) f(C)
-tsset fecha
-tsline valor_patrimonio_*
-
-
-// getvcofon_afp, agnoi(2012)
-
-// Reajustes e Intereses Penales para las AFP
-// "www.spensiones.cl/safpstats/stats/inf_estadistica/reaint/2012/ripAFP201201.csv"
-
-// Reajustes e Intereses Penales para las AFC
-// http://www.spensiones.cl/safpstats/stats/inf_estadistica/reaint/2012/ripAFC201201.csv
-*/

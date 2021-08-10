@@ -172,15 +172,15 @@ used.
 {phang2}{cmd:. replace high_wage = 1 if wage > 2.37 & inlf}{p_end}
 
 {pstd}Plot ROC curves using educ to predict high_wage{p_end}
-{phang2}{cmd:. heckroc high_wage educ, select(inlf = educ kidslt6 kidsge6 nwifeinc)}{p_end}
+{phang2}{cmd:. heckroc high_wage educ, select(inlf= educ kidslt6 kidsge6 nwifeinc)}{p_end}
   
 {pstd}After logit{p_end}
 {phang2}{cmd:. quietly logit high_wage educ age exper if inlf}{p_end}
-{phang2}{cmd:. predict p_hat if inlf}{p_end}
-{phang2}{cmd:. heckroc high_wage p_hat, select(inlf= educ kidslt6 kidsge6 nwifeinc)}{p_end}
+{phang2}{cmd:. predict predicted_xb, xb}{p_end}
+{phang2}{cmd:. heckroc high_wage predicted_xb, select(inlf= predicted_xb educ kidslt6 kidsge6 nwifeinc)}{p_end}
 
 {pstd}Including plot options{p_end}
-{phang2}{cmd:. heckroc high_wage p_hat, select(inlf= educ kidslt6 kidsge6 nwifeinc) noempirical cbands irocopts(lcolor(black) lwidth(medthick)) rlopts(lcolor(gray))}{p_end}
+{phang2}{cmd:. heckroc high_wage predicted_xb, select(inlf= predicted_xb educ kidslt6 kidsge6 nwifeinc) noempirical cbands irocopts(lcolor(black) lwidth(medthick)) rlopts(lcolor(gray))}{p_end}
 
 {cmd:Using provided data}
 
@@ -199,8 +199,8 @@ used.
 {p2col 5 20 24 2: Scalar}{p_end}
 {synopt:{cmd:e(AUC)}}AUC for the inferred ROC curve{p_end}
 {synopt:{cmd:e(EmpAUC)}}AUC for the empirical ROC curve{p_end}
-{synopt:{cmd:e(AUC_ub)}}Upper bound for AUC for the inferred ROC curve (not provided if option {opt noic} is used){p_end}
-{synopt:{cmd:e(AUC_lb)}}Lower bound for AUC for the inferred ROC curve (not provided if option {opt noic} is used){p_end}
+{synopt:{cmd:e(AUC_ub)}}Upper bound for AUC for the inferred ROC curve (not provided if option {opt noci} is used){p_end}
+{synopt:{cmd:e(AUC_lb)}}Lower bound for AUC for the inferred ROC curve (not provided if option {opt noci} is used){p_end}
 
 {title:Authors}
 
@@ -212,8 +212,8 @@ used.
 {title:References}
 
 {phang}
-Cook, J. 2017. ROC curves and nonrandom data. {it:Pattern Recognition Letters} 85: 35-41.
+Cook, J. 2017. ROC curves and nonrandom data. {it:Pattern Recognition Letters} 85: 35-41. {browse "https://doi.org/10.1016/j.patrec.2016.11.015"}
 
 {phang}
-Cook, J. and A. Rajbhandari 2017. heckroc: ROC curves for selected samples. {it:Working paper}.
+Cook, J. and A. Rajbhandari 2017. heckroc: ROC curves for selected samples. {it:Working paper}. {browse "https://papers.ssrn.com/sol3/papers.cfm?abstract_id=3043847"}
 

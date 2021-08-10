@@ -1,4 +1,4 @@
-/* 10.0 AMC 02mar2016 */
+/* 10.0 AMC 29sep2019 */
 
 program strmst2, rclass byable(recall)
 
@@ -387,7 +387,7 @@ program rmst1, rclass
 		g wkvar = 0
 		replace wkvar = nevent / (nrisk * (nrisk - nevent)) if nevent<.
 		g revareas = areas[`newobs' - _n + 1] if _n < `newobs'
-		g revwkvar = wkvar[`newobs' - _n + 1] if _n < `newobs'
+		g revwkvar = wkvar[`newobs' - _n ] if _n < `newobs'
 		g temp1 = sum(revareas)^2 *revwkvar
 		sum temp1
 		scalar rmstvar = r(sum)

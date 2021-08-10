@@ -19,8 +19,8 @@ end
 
 program _marginsplot
 
-	// NJGW ADDED -using- to syntax, plus filevarname() to coordinate with -combomarginsplot-
-	syntax [ using/ ] , [ Level(passthru) MCOMPare(passthru) filevarname(string) mpsaving(string asis) *]
+	// NJGW ADDED -using- to syntax, plus filevarname() to coordinate with -combomarginsplot-, and noplot
+	syntax [ using/ ] , [ Level(passthru) MCOMPare(passthru) filevarname(string) mpsaving(string asis) noPLOTdrawn *]
 	local 0 `", `options'"'
 
 	local maxticks  25			// max default x ticks
@@ -67,10 +67,10 @@ program _marginsplot
 		// documented as singular.  Same for option recastcis. option
 		// byoptions allowed, but undocumented.
 
-	syntax [, Xdimensions(string asis)				///
-		  PLOTdimensions(string asis)				///
-		  BYdimensions(string asis) 				///
-		  GRaphdimensions(string asis)				///
+	syntax [, Xdimensions(string asis)			///
+		  PLOTdimensions(string asis)			///
+		  BYdimensions(string asis) 			///
+		  GRaphdimensions(string asis)		///
 		  ALLXlabels						///
 		  NOLABels						///
 		  SEParator(string)					///
@@ -80,16 +80,16 @@ program _marginsplot
 		  recast(string)					///
 		  RECASTCIs(string)					///
 		  NOCI							///
-		  BYOPts(string asis)					///
+		  BYOPts(string asis)				///
 		  BYOPTIONs(string asis)				///
 		  HORIZontal						///
 		  NAME(string asis)					///
-		  UNIQue						///
+		  UNIQue							///
 		  CSORT							///
-		  PCYCle(integer -999)					///
-		  ADDPLOT(string asis)					///
-		  saving(string asis)					///
-		  *							///
+		  PCYCle(integer -999)				///
+		  ADDPLOT(string asis)				///
+		  saving(string asis)				///
+		  *								///
 		]
 
 
@@ -352,6 +352,11 @@ program _marginsplot
 		}
 	}
 	local citype = cond("`recastcis'" == "", "rcap", "`recastcis'")
+	* begin NJGW
+	if inlist("`citype'","rarea","rbar") {
+		local cistylename = substr("`citype'",2,.)
+	}
+	* end NJGW
 	local title = proper(`"`: char _dta[title]'"')
 	local title : subinstr local title " Of " " of "
 	if `"`termnm'"' != `""' & `"`termnm'"' != `"_cons"' {
@@ -464,17 +469,19 @@ program _marginsplot
 	sum `filemname', meanonly
 	local numfiles `r(max)'
 	
+	// Rename created variables (will only exist if this is a second-tier combied file)
+	preserveOldVars lplotnum fileopts fileciopts lplotopts lciopts
 	// NJGW create variable that index logical plot associated with each observation
 	MakeLPlotNums "`bylist'" "`filemname'" "`xlist'" "`pllist'"
 	sum lplotnum, meanonly
 	local k_lpl = r(max)
 	
-	// initiate string variables to hold additional plot options
+	// NJGW initiate string variables to hold additional plot options
 	qui {
-		gen fileopts = ""
+		gen fileopts   = ""
 		gen fileciopts = ""
-		gen lplotopts = ""
-		gen lciopts = ""
+		gen lplotopts  = ""
+		gen lciopts    = ""
 	}
 	
 	// NJGW grab file`i'opts and fileci`i'opts
@@ -522,7 +529,9 @@ program _marginsplot
 			FixPlotOpt ci`i'opts : `macval(ci`i'opts)' `macval(curfileciopts)' `macval(curlciopts)' 
 			*FixPlotOpt ci`i'opts : `macval(ci`i'opts)'
 			
-			local ci `"`sep'`citype' _ci_lb _ci_ub `xvar' `plif', pstyle(p`pstyle') `horizontal' `ciopts' `ci`i'opts'"'
+			*njgw replaced the following
+			*local ci `"`sep'`citype' _ci_lb _ci_ub `xvar' `plif', pstyle(p`pstyle')              `horizontal' `ciopts' `ci`i'opts'"'
+			local  ci `"`sep'`citype' _ci_lb _ci_ub `xvar' `plif', pstyle(p`pstyle'`cistylename') `horizontal' `ciopts' `ci`i'opts'"'
 			local sep "|| "
 
 			local ciplots `"`ciplots' `ci' "'
@@ -647,44 +656,51 @@ program _marginsplot
 	local titleopt `"title(`"`title'"', span size(*.9))"'
 	tempfile marginsdata
 
+	// njgw
+	if "`plotdrawn'"!="noplotdrawn" {
+		forvalues i = 1/`n_gr' {
+			qui levelsof `xvar'
+			local levs `r(levels)'
+			sum `xvar' if `grvar' == `i', meanonly
+			if !`xcontx' & (0`r(max)' < `maxticks' | "`allxlabels'" != "") {
+				local xlabopt "`xy'label(1(1)0`r(max)' `angle')"
+			}
+			else if (`:list sizeof levs' < `maxticks') {
+				local xlabopt "`xy'label(`levs' `angle')"
+			}
+			else if `"`angle'"' != `""' {
+				local xlabopt "`xy'label(`angle')"
+			}
+			if `n_gr' > 1 {
+			    local subtitleopt `"subtitle(`"`: label (`grvar') `i''"', span)"'
+			}
+			if ("`bylist'" != "") {
+				local by `"by(`byvar' , title(`"`macval(title)'"') `macval(subtitleopt)' note("") `bylegend' `macval(byoptions)')"'
+				local titleopt ""
+				local subtitleopt ""
+			}
 
-	forvalues i = 1/`n_gr' {
-		qui levelsof `xvar'
-		local levs `r(levels)'
-		sum `xvar' if `grvar' == `i', meanonly
-		if !`xcontx' & (0`r(max)' < `maxticks' | "`allxlabels'" != "") {
-			local xlabopt "`xy'label(1(1)0`r(max)' `angle')"
-		}
-		else if (`:list sizeof levs' < `maxticks') {
-			local xlabopt "`xy'label(`levs' `angle')"
-		}
-		else if `"`angle'"' != `""' {
-			local xlabopt "`xy'label(`angle')"
-		}
-		if `n_gr' > 1 {
-		    local subtitleopt `"subtitle(`"`: label (`grvar') `i''"', span)"'
-		}
-		if ("`bylist'" != "") {
-			local by `"by(`byvar' , title(`"`macval(title)'"') `macval(subtitleopt)' note("") `bylegend' `macval(byoptions)')"'
-			local titleopt ""
-			local subtitleopt ""
-		}
 
-		
-		`graph' || if `grvar' == `i' , `titleopt' `subtitleopt'	///
-			   `xlabopt' `xvlab' `macval(legend)' 		///
-			   /*`draw'*/ `name' `saving' `by' `macval(options)'
+			local cmd ///			
+			`graph' || if `grvar' == `i' , `titleopt' `subtitleopt'	///
+				   `xlabopt' `xvlab' `macval(legend)' 		///
+				   /*`draw'*/ `name' `saving' `by' `macval(options)'
 
-		if `"`addplot'"' != `""' {
-			qui save `"`marginsdata'"', replace
-			restore, preserve
-			graph addplot || , `macval(legend)' `saveadd' || ///
-				`addplot' 
-			qui use `"`marginsdata'"', replace
+// window push `cmd'
+			`cmd'
+
+			if `"`addplot'"' != `""' {
+				qui save `"`marginsdata'"', replace
+				restore, preserve
+				graph addplot || , `macval(legend)' `saveadd' || ///
+					`addplot' 
+				qui use `"`marginsdata'"', replace
+			}
 		}
 	}
-
 	if !mi(`"`mpsaving'"') {
+		// tempvars *should* be unnecessary to new call to cmp or mplotoffset
+		qui drop __*
 		save `mpsaving'
 	}
 
@@ -716,6 +732,8 @@ program ParseDim
 
 						// Make and check varlist
 	Ats                atlist
+noi di "atlist1: [`atlist']"
+	
 	MsBysValuesAtsRest truelist
 	MsBysAtsRest       fulllist
 	local vlist ""
@@ -724,7 +742,7 @@ program ParseDim
 			local 0 , `tok'
 			capture syntax , at(string)
 			if _rc {
-			    di as error "invalid dimension specification: `tok'
+			    di as error "invalid dimension specification: `tok'"
 			    exit 198
 			}
 			FindVar var : `at' 1 `atlist'
@@ -1096,13 +1114,14 @@ program MakeDim
 end
 
 program FixPlotOpt 
+noi di `"[`0']"'
 	gettoken plotopt  0    : 0
 	gettoken colon    opts : 0
 
 	local 0 `", `macval(opts)'"'
-	syntax [, mlabel(string asis) *]
+	syntax [, mlabel(string asis) xmlabel(string asis) *]
 
-	if "`mlabel'" == "" {
+	if "`mlabel'" == "" & "`xmlabel'"=="" {
 		c_local `plotopt' `"`macval(opts)'"'
 		exit
 	}
@@ -1113,7 +1132,11 @@ program FixPlotOpt
 		FindVar var : `nm' 2 `allvars'
 		local vlist `vlist' `var'
 	}
+	if missing(`"`vlist'"') {
+		local vlist `xmlabel'
+	}
 
+noi di `"[`vlist']"'
 	c_local `plotopt' mlabel(`vlist') `macval(options)'
 end
 
@@ -1125,7 +1148,22 @@ program MakeLPlotNums, sortpreserve
 
 end
 
-
+//NJGW
+program preserveOldVars
+	foreach var in `0' {
+		// if this is a second-tier combined file...
+		capture confirm variable `var'
+		if !_rc {
+			local nn 0
+			capture confirm variable `var'`nn'
+			while !_rc {
+				local nn = `nn'+1
+				capture confirm variable `var'`nn'
+			}
+			rename `var' `var'`nn'
+		}
+	}
+end
 
 exit
 

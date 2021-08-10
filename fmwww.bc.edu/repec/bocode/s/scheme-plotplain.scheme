@@ -1,9 +1,11 @@
-*                                    bischof.scheme
-
-* s1/s2 scheme family with a naturally white background and gray scale 
+*                                    plotplain.scheme
 
 
-*!  version 1.1  24dec2014
+*!  version 1.4  07aug2020
+
+sequence 1210
+label "plotplain"
+
 #include s1mono
 
 // Legend outside in lower right corner; 1 column; short signatures; no frame

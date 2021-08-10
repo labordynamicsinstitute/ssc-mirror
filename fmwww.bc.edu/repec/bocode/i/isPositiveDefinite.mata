@@ -1,5 +1,4 @@
-// TEST OF FUNCTIONS CAN BE FOUND IN xtIOU/do files/test compiling interfacePD isPositiveDefinite and makePositiveDefinite.do
-
+// TEST IF A MATRIX IS POSITIVE DEFINITE
 capture mata: mata drop isPositiveDefinite()
 
 mata:
@@ -32,7 +31,3 @@ real scalar isPositiveDefinite(real matrix C)
 	
 } 
 end
-
-mata: mata mosave isPositiveDefinite(), dir(PERSONAL) replace
-
-// END OF FILE

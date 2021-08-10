@@ -1,7 +1,8 @@
 program define stddiffi, rclass
 	version 13.0
 	* Ahmed Bayoumi
-	* version 1.0
+	* version 2.1
+	* 8Mar2021
 	syntax anything, [ /// mean1 sd1 mean 2 sd2 FOR CONTINUOUS OR #11 #12 [...] \ #21 #22 [...] FOR CATEGORICAL
 		COHensd  ///  report cohensd as calculated by esize
 		HEDgesg ///  report hedgesg as calculated by esize 
@@ -10,11 +11,7 @@ program define stddiffi, rclass
 		abs /// calculate absolute value
 		]
 	tempname rw tab
-/*	if("`continuous'"=="continuous" & "`categorical'"=="categorical"){
-		di as error "Continuous and categorical cannot both be specified"
-		error
-	}
-	if("`continuous'" == "" & "`categorical'"==""){ */
+
 	if(strpos("`anything'","\")==0){
 		local continuous = "continuous"
 	}

@@ -15,7 +15,7 @@ d effects, first differences, random effects, and the
 d Hausman-Taylor estimator.   A test of fixed vs. random effects is
 d also a test of overidentifying restrictions,	 and xtoverid will
 d report this test after a standard panel data estimation with
-d xtreg,re. 
+d xtreg,re.  This routine is now included in the overid package. 
 d
 d KW: instrumental variables
 d KW: Hausman test
@@ -29,13 +29,13 @@ d KW: Hausman-Taylor estimator
 d
 d Requires: Stata version 8.2 and ivreg2, ranktest from SSC
 d
-d Distribution-Date: 20160105
+d Distribution-Date: 20160115
 d
 d Author: Mark E Schaffer, Heriot-Watt University
 d Support: email m.e.schaffer@@hw.ac.uk
 d
-d Author: Steven Stillman, Motu Economic and Public Policy Research
-d Support: email stillman@@motu.org.nz
+d Author: Steven Stillman, Free University of Bozen-Bolzano
+d Support: email  Steven.Stillman@@unibz.it
 d
 f xtoverid.ado
 f xtoverid.hlp

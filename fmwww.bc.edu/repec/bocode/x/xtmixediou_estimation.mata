@@ -1602,5 +1602,3 @@ void tabulatingBeta(real colvector vec_estimates, real matrix mat_covariance, re
 	
 } // END OF FUNCTION tabulating()
 end	
-
-mata: mata mosave xtmixediou_estimation(), dir(PERSONAL) replace

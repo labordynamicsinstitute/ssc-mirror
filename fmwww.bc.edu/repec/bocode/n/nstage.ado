@@ -1,8 +1,13 @@
-*! nstage v3.0.1 29sep2014. 				
+*! nstage v4.0 28may2019. 				
 *! based on stage2, v. 1.0.0 SB 17Mar2004.
+* Allows for the specification of efficacy stopping bounds
+* Amends the correlation structure with efficacy stopping bounds when I!=D
+* Allows specification of binding/non-binding stopping boundaries
+* Includes option to find the alphaJ which controls the FWER
 
 cap program drop nstage
 cap mata mata drop mvnprob()
+set linesize 80
 
 program define nstage, rclass
 
@@ -21,17 +26,17 @@ program define nstage, rclass
 	arms.
 	
 	
-	Main changes in v3.0
-	--- calculate familywise error rate (FWER) by default using nstagefwer subroutine 
-	--- added -nofwer- option to circumvent this is desired
-	--- output of probs option corrected and calculation under global H1 removed
-	--- nstage output simplified
-	--- subroutine added to estimate between-stage correlation using simulation of patient data (-simcorr-)
-	--- HRs>1 can now be targeted under H0 and H1
-	
-	Changes in v3.0.1
-	--- overall power calculated using actual rather than nominal powers
-	--- use correct accrual rates in time and event algorithms
+	Main changes in v4.0
+	--- Allow for the specification of efficacy boundaries in calculation of the error rates
+		- Haybittle-Peto
+		- O'Brien Fleming alpha-spending approximation
+		- Custom p-values
+	--- Choice of which stopping approach to take with efficacy boundaries
+		- Separate stopping rule: Continue with remaining arms
+		- Simultaneous stopping rule: Terminate trial
+	--- Subroutine added for controlling the FWER at the specified level
+	--- Option added to assume non-binding futility stopping boundaries in calculation of the error rates
+	--- Re-formatted nstage output
 */
 
 
@@ -39,9 +44,8 @@ version 10.0
 syntax , Nstage(int) ACcrue(string) ALpha(string) ARms(string) HR0(string) HR1(string) ///
  Omega(string) [ARAtio(string) corr(real 0.6) noIterate INCludedroppedarms ///
  PRobs S(string) T(string) TStop(real 0) TOl(real 0.005) TUnit(int 1) SIMcorr(string) seed(int -1) ///
- OUTfile(string) NOFwer fwerreps(int 250000)]		
+ OUTfile(string) NOFwer fwerreps(int 250000) esb(string) NONBINDing FWERcontrol(string)]		
 											
-
 if `fwerreps'<1E5 {	
 	di as err "fwerreps() should be at least 100,000"
 	exit 198
@@ -62,521 +66,69 @@ if `corr' < 0 | `corr' > 1 {
 local c = 1.1 * `corr'
 
 
-local title1 "n-stage trial design                 version 3.0.1, 10 Sept 2014"	
-local title2 "based on Royston et al. (2011) Trials 12:81"
+local title1 "n-stage trial design                    version 4.0.1, 2 Nov 2018"	
+local title2 "based on Royston et al. (2011) Trials 12:81 and Blenkinsop et al."
+local title3 "(2019) Clinical Trials 16(2)"
 
 local hline = length("`title1'")
 
-***************************************************************************************
+/*******************************************************************************
+ Calculate sample size required
+*******************************************************************************/
 
-if "`t'"=="" {
-	di as err "must supply t(), the time for survival prob specified in s()"
-	exit 198
+samplesize, nstage(`nstage') accrue(`accrue') alpha(`alpha') arms(`arms') hr0(`hr0') hr1(`hr1') ///
+			omega(`omega') aratio(`aratio') s(`s') t(`t') tstop(`tstop') tunit(`tunit') seed(`seed') fwerreps(`fwerreps')
+forvalues j=1/`nstage'{
+	local armsS`j' = r(armsS`j')
+	local accrueS`j' = r(accrueS`j')
+	local hr0S`j' = r(hr0S`j')
+	local hr1S`j' = r(hr1S`j')
+	local lndelS`j' = r(lndelS`j')
+	local tS`j' = r(tS`j')
+	local etotS`j' = r(etotS`j')
+	local eS`j' = r(eS`j')
+	local eexpS`j' = r(eexpS`j')
+	local ntotS`j' = r(ntotS`j')
+	local nS`j' = r(nS`j')
+	local nexpS`j' = r(nexpS`j')
+	local alphaS`j' = r(alphaS`j')
+	local zalphaS`j' = r(zalphaS`j')
+	local omegaS`j' = r(omegaS`j')
+	local zomegaS`j' = r(zomegaS`j')
+	local acc0S`j' = r(acc0S`j')
+	local oaccS`j' = r(oaccS`j')
+	local eS`j'un = r(eS`j'un)
+	local eS`j'star = r(eS`j'star)
 }
-if `tstop'>0 {
-	local Tstop tstop(`tstop') 
-}
-else local Tstop
-if `nstage' < 1 {
-	di as err "nstage must be 1 or more"
-	exit 198
-}
-* Rstar is allocation ratio to E arm: #pts to 1E for 1 pt to C
-if "`aratio'"!="" {
-	confirm num `aratio'
-	local Rstar `aratio'
-}
-else local Rstar 1
-
-if (`tunit'<1 | `tunit'>7) local tunit 7
-tokenize `""one year" "6 months" "one quarter (3 months)" "one month" "one week" "one day" "unspecified""'
-local lperiod ``tunit''
-
-// t, (optionally) s, hr0 and hr1 are provided for stages 1 and final. Fill in values for intermediate stages.
-if "`s'" == "" {
-	local s 0.5
-}
-
-// Tidy up check on number of parameters in each option
-local maxval = cond(`nstage' > 1, 2, 1)
-local nopt: word count `s'
-local errcount 0
-if `nopt' > `maxval' {
-	local ++errcount
-	local error`errcount' "too many items specified for s() - maximum is `maxval'"
-}
-if `nstage' > 1 & `nopt' < 2 {
-	local s `s' 0.5
-}
-local opts hr0 hr1 t
-local nopts: word count `opts'
-tokenize `opts'
-forvalues i = 1 / `nopts' {
-	local opt ``i''
-	local nopt: word count ``opt''
-	if `nopt' > `maxval' {
-		local ++errcount
-		local error`errcount' "too many items specified for `opt'() - maximum is `maxval'"
-	}
-	if (`nopt' == 0) | (`nstage' > 1 & `nopt' < 2) {
-		local ++errcount
-		local error`errcount' "must specify `maxval' value(s) for `opt'()"
-	}
-	local stage S1
-	local `opt'`stage': word 1 of ``opt''
-	cap confirm number ``opt'`stage''
-	if c(rc) {
-		local ++errcount
-		local error`errcount' "'``opt'`stage''' found where number expected"
-	} 
-	if "`opt'" == "t" {
-		local surv : word 1 of `s'
-		cap confirm number `surv'
-		if c(rc) {
-			local ++errcount
-			local error`errcount' "'`surv'' found where number expected"
-		} 
-		else local hazard1 = -ln(`surv') / ``opt'`stage''
-	}
-	if `nstage' > 1 {
-		local stage S`nstage'
-		local `opt'`stage': word 2 of ``opt''
-		cap confirm number ``opt'`stage''
-		if c(rc) {
-			local ++errcount
-			local error`errcount' "'``opt'`stage''' found where number expected"
-		} 
-		else {
-			if "`opt'" == "t" {
-				local surv : word 2 of `s'
-				confirm number `surv'
-				local hazard`nstage' = -ln(`surv') / ``opt'`stage''
-			}
-			if `nstage' > 2 {
-				local ns1 = `nstage' - 1
-				forvalues j = 2 / `ns1' {
-					if "`opt'" == "t" {
-						local hazard`j' `hazard1'
-					}
-					else local `opt'S`j' ``opt'S1'
-				}
-			}
-		}
-	}
-}
-if `errcount' > 0 {
-	forvalues i = 1 / `errcount' {
-		di as err "`error`i''"
-	}
-	exit 198
-}
-
-
-// Determine if hazard ratio(s) are > 1, and set sign accordingly.					
-forvalues i = 1 / `nstage' {														
-	if (`hr1S`i'' > `hr0S`i'') local sign`i' -1
-	else local sign`i' 1
-}
-local median1 = ln(2) / `hazard1'
-local median`nstage' = ln(2) / `hazard`nstage''
-
-// Signal if have separate I- and D-outcomes according to equality of hazards
-local have_D = reldif(`hazard1', `hazard`nstage'') > 0.0001
-
-// Assign values of accrue alpha arms omega for all stages
-if `nstage' > 1 {
-	local es s
-}
-local opts accrue alpha arms omega
-local nopts: word count `opts'
-tokenize `opts'
-forvalues i = 1 / `nopts' {
-	local opt ``i''
-	local nopt: word count ``opt''
-	if `nopt' > `nstage' {
-		local ++errcount
-		local error`errcount' "too many items specified for `opt'() - `nstage' value`es' required"
-	}
-	if `nopt'<`nstage' {
-		local ++errcount
-		local error`errcount' "must specify `nstage' value`es' for `opt'()"
-	}
-	forvalues j = 1 / `nstage' {
-		local stage S`j'
-		local `opt'`stage': word `j' of ``opt''
-		cap confirm number ``opt'`stage''
-		if c(rc) {
-			local ++errcount
-			local error`errcount' "'``opt'`stage''' found where number expected"
-		} 
-	}
-}
-if `errcount' > 0 {
-	forvalues i = 1 / `errcount' {
-		di as err "`error`i''"
-	}
-	exit 198
-}
-***************** End of error checking and preliminary calculation **********
-
-// Compute control arm accrual from overall accrual, #arms and allocation ratio.
-forvalues i = 1 / `nstage' {
-	local A `accrueS`i''					// total accrual rate
-	local K = `armsS`i'' - 1				// #exp arms
-	local acc0S`i' = `A' / (1 + `Rstar' * `K') 	// control accrual rate		**
-	local acc1S`i' = `Rstar'*`acc0S`i''			// exp. accrual rate		**	
-	local oaccS`i' `A'					// overall accrual rate
-}
-
-local fac = 1 + 1 / `Rstar'	/* replaces factor 2 in expressions for eS1, eS`nstage' etc. */
-
-// Compute e_S1 and initial e_S`nstage' from alpha1, HR0_0
-local zalphaS1 = invnormal(`alphaS1')
-local zomegaS1 = invnormal(`omegaS1')
-local zomega = -`zomegaS1'
-
-* Stage 1
-* Compute initial est of control arm S1 I-events rounded up to nearest integer
-local eS1 = int(1 + `fac' * ((`zomegaS1' - `zalphaS1')/(ln(`hr0S1') - ln(`hr1S1')))^2)
-
-* Update eS1 and ln(deltaS1) to achieve desired power
-local eS1un `eS1'
-local haz0S1 = `hazard1' * `hr0S1'
-local haz1S1 = `hazard1' * `hr1S1'
-local iter 0
-local done 0
-quietly while !`done' {
-	* Compute delta_S1
-	local lndelS1 = ln(`hr0S1') + `sign1' * `zalphaS1' * sqrt(`fac' / `eS1')		
- 
-	* Compute time for stage 1
-	cap timetoevn4, accrual(`acc0S1') events(`eS1') hazard(`hazard1') `Tstop'
+	local median1 = r(median1)
+	local median`nstage' = r(median`nstage')
+	local have_D = r(have_D)
+	local Rstar = r(Rstar)
+	local fac = r(fac)
 	
-	if _rc {
-		di as err `"`r(errmess)'"'
-		exit 498
-	}
+	return scalar deltaS1 = exp(`lndelS1')
+	return scalar eS1un = `eS1un'
+	return scalar eS1 = `eS1'
+	return scalar eS1star = `eS1star'
+	return scalar nS1 = `nS1'
+	return scalar tS1 = `tS1'
+	return scalar ntotS1 = `ntotS1'
+	return scalar nexpS1 = `nexpS1'
+	return scalar etotS1 = `etotS1'
+	return scalar eexpS1 = `eexpS1'
+	return scalar omegaS1 = `omegaS1'
+if `nstage' == 1 exit
 
-	local tS1 = r(t1)
-	if "`iterate'" == "noiterate" {
-		* Calcs done under H0, no iteration necessary
-		if `Rstar' == 1 {
-			local eS1star `eS1'
-			local zomega `zomegaS1'
-		}
-		else {
-			local eS1star = int(1 + `Rstar' * `eS1')
-			local zomega = `sign1' * (`lndelS1' - ln(`hr1S1'))/sqrt(1 / `eS1' + 1 / `eS1star')			
-		}
-		local done 1
-	}
-	else {
-		* Compute I-events at end of stage 1 in experimental arm under H1.
-		evfromtin4, accrual(`acc1S1') times(`tS1') hazard(`haz1S1') `Tstop'
-		local eS1star = int(1+r(e1))			
-		if "`olddef'" != "" {
-			local zomega = `sign1' * (`lndelS1' - ln(`hr1S1')) / sqrt(4 / (`eS1' + `eS1star'))				
-		}
-		else {
-			local zomega = `sign1' * (`lndelS1' - ln(`hr1S1')) / sqrt(1 / `eS1' + 1 / `eS1star')				
-		}
-		* Update eS1
-		if `sign1'*`zomega' >= `sign1'*`zomegaS1' {						
-			local done 1
-		}
-		else {
-			local eS1 = `sign1' + `eS1'						
-			local ++iter
-		}
-	}
-}
-local omegaS1=normal(`zomega')
-local zomegaS1 = `zomega'
-
-* nS1 is total number of control-arm patients, stage 1
-if `tstop'>0 {
-	local nS1 = `acc0S1' * min(`tstop',`tS1')
-}
-else {
-	local nS1 = `acc0S1' * `tS1'
-}
-if `nS1' < `eS1' {
-	di as err "Design infeasible, accrual period too short"
-	exit 498
-}
-
-// Round off numbers of patients in experimental and control arms to nearest integer
-local nS1 = round(`nS1')								// total patients, C
-local nexpS1 = round(`nS1' *  (`armsS1' - 1) * `Rstar')	// total patients, all E
-local ntotS1 = `nS1' + `nexpS1'							// total patients, C+all E
-local etotS1 = `eS1' + (`armsS1' - 1) * `eS1star'		// total I-events, C+all E
-local eexpS1 = `etotS1' - `eS1'							// total S1-events, all E
-
-return scalar deltaS1 = exp(`lndelS1')
-return scalar eS1un = `eS1un'
-return scalar eS1 = `eS1'
-return scalar eS1star = `eS1star'
-return scalar nS1 = `nS1'
-return scalar tS1 = `tS1'
-return scalar ntotS1 = `ntotS1'
-return scalar nexpS1 = `nexpS1'
-return scalar etotS1 = `etotS1'
-return scalar eexpS1 = `eexpS1'
-return scalar omegaS1 = `omegaS1'
-
-if `nstage' == 1 {
-
-	// FWER + 95% CI for 1-stage design
-	if "`nofwer'"=="" {
-		mat def R = (1)
-		nstagefwer, nstage(`nstage') arms(`armsS1') alpha(`alpha') corr(R) aratio(`Rstar') ///
-					seed(`seed') reps(`fwerreps')
-		local fwerate = r(fwer)
-		local se_fwerate = r(se_fwer)
-		return scalar fwer = r(fwer)
-		return scalar se_fwer = r(se_fwer)
-	}
-	
-	local ww 9
-	* left-justified string format
-	local sfl %-`ww's
-	* centered string format
-	local sfc %~`ww's
-	* right-justified string format
-	local sfr %`ww's
-
-	local nitem 6
-	local dup = `nitem' * `ww'
-	
-		
-	di as text _n "`title1'" _n "{hline `hline'}"
-	di as text "Sample size for a " as res "`armsS1'" as text "-arm " as res "1" as txt "-stage trial with time-to-event outcome"
-	di as text "`title2'" _n "{hline `hline'}"
-	di as text _n "Median survival time: " as res round(`median1', 0.1) as text " time units"
-	di as text _n "Operating characteristics" _n "{hline `dup'}"
-	di as text %`ww'.3f "Alpha(1S)" `sfr' "Power" _col(23) "HR{c |}H0" _col(32) "HR{c |}H1" `sfr' "Crit. HR" `sfr' "Duration" _n "{hline `dup'}"
-	di as text %`ww'.3f `alphaS1' %`ww'.3f `omegaS1' %`ww'.3f `hr0S1' %`ww'.3f `hr1S1' %`ww'.3f as res exp(`lndelS1') %`ww'.3f as res `tS1' _n as txt "{hline `dup'}"
-	if `tstop' > 0 {
-		di as text "Patient accrual stopped at time " %6.3f `tstop'
-	}
-	if "`nofwer'"=="" & `armsS1'>2 di as text "Familywise error rate (SE) = " as res %4.3f `fwerate' ///
-		as text " (" as res %4.3f `se_fwerate' as text ")" 
-	di _n as text "Duration is expressed in " as res "`lperiod'" as txt " periods and assumes"
-	di as text "survival times are exponentially distributed"
-
-	local nitem 4
-	local dup = `nitem' * `ww'
-	di as text _n "Sample size and number of events" _n "{hline `dup'}"
-	di as text _skip(`ww') `sfr' "Overall" `sfr' "Control" `sfr' "Exper." _n "{hline `dup'}"
-	di as text `sfl' "Arms"      as txt %`ww'.0f `armsS1' %`ww'.0f 1 %`ww'.0f `armsS1'-1
-	di as text `sfl' "Acc. rate" as txt %`ww'.0f `oaccS1' %`ww'.0f `acc0S1' %`ww'.0f `acc0S1'*(`armsS1'-1)*`Rstar'
-	di as text `sfl' "Patients"  as res %`ww'.0f `ntotS1' %`ww'.0f `nS1' %`ww'.0f `nexpS1'
-	di as text `sfl' "Events"    as res %`ww'.0f `etotS1' %`ww'.0f `eS1' %`ww'.0f `eexpS1' as txt _n "{hline `dup'}"
-	if `Rstar' != 1 {
-		di as text "`Rstar' patients allocated to each E arm for every 1 to control arm."
-	}
-	if "`iterate'" == "noiterate" {
-		if `hr1S1'<1 di as text _n "[Note: computations carried out under H0. Sample sizes may be too low.]"
-		if `hr1S1'>1 di as text _n "[Note: computations carried out under H0. Sample sizes may be too high.]"	
-	}
-	exit
-}
-/*
-	Stages 2 - n
-	Update events and HR cutoffs to achieve desired power
-*/
-forvalues i = 2 / `nstage' {
-	local zalphaS`i' = invnormal(`alphaS`i'')
-	local zomegaS`i' = invnormal(`omegaS`i'')
-	local zomega`i' = -`zomegaS`i''	// initialisation of achieved power to a low value
-	local eS`i' = int(1 + `fac' * ((`zomegaS`i'' - `zalphaS`i'') / (ln(`hr0S`i'') - ln(`hr1S`i'')))^2)
-	local eS`i'un `eS`i''
-	local haz0S`i' = `hazard`i'' * `hr0S`i''
-	local haz1S`i' = `hazard`i'' * `hr1S`i''
-}
-forvalues m = 2 / `nstage' {
-	local acc0S
-	local acc1S
-	forvalues i = 1 / `m' {
-		local acc0S `acc0S' `acc0S`i''
-		local acc1S `acc1S' `acc1S`i''		
-	}
-	// Start iterative procedure to determine required control arm events
-	local iter 0
-	local done 0
-	quietly while !`done' {
-		// Compute log delta`m', HR threshold for stage `m'.
-		local lndelS`m' = ln(`hr0S`m'') + `sign`m'' * `zalphaS`m'' * sqrt(`fac' / `eS`m'')						
-
-		// Compute times to end of stages 1,...,`m' based on events in control arm (hazard haz0*)
-		local eS
-		forvalues i = 1 / `m' {
-			local eS `eS' `eS`i''
-		}
-		
-		cap timetoevn4, accrual(`acc0S') events(`eS') hazard(`hazard1' `hazard`m'') `Tstop'
-		
-		if _rc {
-			di as err `"`r(errmess)'"'
-			exit 498
-		}
-		if "`r(enough)'" == "enough" {
-			// Got enough events at stage m-1. Upgrade power.
-			local m1 = `m' - 1
-			local eS`m' = r(ev21)
-			local eS`m'star = int(1 + `Rstar' * `eS`m'')		// total events in 1 exp arm
-			local tS`m' = r(t`m')
-			local zomega`m' = `sign`m'' * (`lndelS`m'' - ln(`hr1S`m'')) / sqrt(1 / `eS`m'' + 1 / `eS`m'star')			
-			noi di as txt _n "[Note: stage `m1' already provides " as res round(`eS`m'') ///
-			 as txt " events, more than enough for stage " `m' "."
-			noi di as txt "Upgrading power for stage `m' from " as res %5.3f `omegaS`m'' ///
-			 as txt " to " as res %5.3f normal(`zomega`m'') ///
-			 as txt ". Stage `m' has zero length.]"
-			local done 1
-		}
-		else {
-			local tS
-			forvalues i = 1 / `m' {
-				local tS`i' = r(t`i')
-				local tS `tS' `tS`i''
-			}
-			if "`iterate'" == "noiterate" {
-				* Calcs done under H0, no iteration necessary
-				if `Rstar' == 1 {
-					local eS`m'star `eS`m''
-					local zomega`m' `zomegaS`m''
-				}
-				else {
-					local eS`m'star = int(1+`Rstar' * `eS`m'')
-					if "`olddef'"!="" {
-						local zomega`m' = `sign`m'' * (`lndelS`m'' - ln(`hr1S`m'')) / sqrt(4 / (`eS`m'' + `eS`m'star'))				
-					}
-					else {
-						local zomega`m' = `sign`m'' * (`lndelS`m'' - ln(`hr1S`m'')) / sqrt(1 / `eS`m'' + 1 / `eS`m'star')	
-					}
-				}
-				local done 1
-			}
-			else {
-				/*
-					Compute eS`m'star, total events at end of stage `m' in experimental arm (hazard haz1*).
-					(Events for stages 1,...,`m'-1 are not relevant, hence hazard is entered as ".").
-				*/
-				evfromtin4, accrual(`acc1S') times(`tS') hazard(. `haz1S`m'') `Tstop'
-				local eS`m'star = int(1+r(e`m'))		// total events in 1 exp arm
-				if "`olddef'"!="" {
-					local zomega`m' = `sign`m'' * (`lndelS`m'' - ln(`hr1S`m'')) / sqrt(4 / (`eS`m'' + `eS`m'star'))				
-				}
-				else {
-					local zomega`m' = `sign`m'' * (`lndelS`m'' - ln(`hr1S`m'')) / sqrt(1 / `eS`m'' + 1 / `eS`m'star')			
-				}
-				* Update eS`m'
-				if `sign`m''*`zomega`m'' >= `sign`m''*`zomegaS`m'' {															
-					local done 1
-				}
-				else {
-					local eS`m' = `sign`m''+`eS`m''							
-					local ++iter
-				}
-			}
-		}
-	}
-	local omegaS`m' = normal(`zomega`m'')
-	local zomegaS`m' = `zomega`m''
-}
-
-
-
-/*
-	nS`nstage' is total number of control-arm patients, stage 1 + stage 2
-	ntotS`nstage' is total patients, C + all E
-	nexpS`nstage' is total patients, all E
-	tSt`i' is accrual time in stage `i', i = 1 , ... , nstage
-*/
-local tSt1 `tS1'
-forvalues i = 2 / `nstage' {
-	local im1 = `i' - 1
-	local tSt`i' = `tS`i'' - `tS`im1''
-}
-if `tstop'>0 {
-	if `tstop'<`tS1' { 		// accrual stops in stage 1
-		local tSt1 `tstop'
-	}
-	forvalues i = 2 / `nstage' {
-		local im1 = `i' - 1
-		if `tstop' < `tS`i'' {	// accrual stops in stage `i'
-			local tSt`i' = max(0, `tstop' - `tS`im1'')
-		}
-	}
-}
-
-* Run for each stage
-local nS1 = `acc0S1' * `tSt1'
-local nexpS1 = `Rstar' * (`armsS1' - 1) * `acc0S1' * `tSt1'
-forvalues i = 2 / `nstage' {
-	local j = `i' - 1
-	local nS`i' = `nS`j'' + `acc0S`i'' * `tSt`i''
-	if `nS`i''<`eS`i'' {
-		di as err "Design infeasible - fewer patients (`nS`i'') than events (`eS`i'') in stage `i'"
-		exit 498
-	}
-	local nexpS`i' = `nexpS`j'' + `Rstar' * ((`armsS`i'' - 1) * `acc0S`i'' * `tSt`i'')
-}
-
-// Round off numbers of patients in experimental and control arms to nearest integer
-forvalues i = 1 / `nstage' {
-	local nexpS`i' = round(`nexpS`i'')
-	local nS`i' = round(`nS`i'')
-	local ntotS`i' = `nS`i'' + `nexpS`i''
-}
-/*
-	Compute etotS`nstage' = total events in all experimental arms.
-	First, compute e1S`nstage'drop = S`nstage'-events in 'dropped' arm (no accrual beyond stage 1)
-*/
-if `tstop'>0 {
-	local ts = min(`tS1', `tstop')
-}
-
-
-forvalues m = 2 / `nstage' {
-	local m1 = `m' - 1
-	// Hazards are appropriate to experimental arms
-	local haz `haz1S1' `haz1S`m''
-
-	local acc1S
-	local tS
-	forvalues i = 1 / `m' {
-		local acc1S `acc1S' `acc1S`i''
-		local tS `tS' `tS`i''
-	}
-	local eexpS`m' 0	// no. of events in exp arm in stage `m'
-	if "`includedroppedarms'" != "" {
-/*
-	Compute number of events in experimental "dropped" arms.
-	This involves notionally stopping recruitment at end of stage 1, 2, ...
-*/
-		forvalues i = 1 / `m1' {
-			local j = `i' + 1
-			if `armsS`i'' > `armsS`j'' {
-				qui evfromtin4, accrual(`acc1S') times(`tS') hazard(`haz') tstop(`tS`i'')
-				local edrop`i' =  r(e`m')
-				local eexpS`m' = `eexpS`m'' + (`armsS`i'' - `armsS`j'') * `edrop`i''
-			}
-		}
-	}
-	local eexpS`m' = `eexpS`m'' + (`armsS`m'' - 1) * `eS`m'star'
-	local etotS`m' = `eS`m'' + `eexpS`m''		/* total S`nstage'-events, C+all E */
-}
-
-
-
+/*******************************************************************************
+	Calculate between-stage correlation
+*******************************************************************************/
 
 tempname RH0 RH1
 
-
-/* 
-	Between-stage correlation
-*/
+if "`esb'" != "" & `have_D' & "`simcorr'"==""{		// NEW - Add condition that forces simulated correlation if esb specified when I!=D, to ensure correlation is based on D-D outcomes
+	local simcorr = 250
+	local corr 0.6
+}
 
 if "`simcorr'" != "" & `have_D' {
 	di as txt "Simulations are carried out to estimate the correlation structure."
@@ -602,9 +154,22 @@ if `nstage' == 2 {
 			forvalues k = 0/1 {	
 				local rH`k' = r(corrln1`nstage'H`k')
 				matrix `RH`k'' = (1, `rH`k'' \ `rH`k'', 1)
+				if "`esb'" != ""{
+					matrix `RH`k'' = r(Corrhr_EB`k')
+					forvalues j = 0/1 {
+						forvalues m = 1 / `nstage' {
+							local d`m'`j' = r(d`m'`j')
+							if `j'==0 return scalar D`m' = `d`m'`j''			// Store D-events at interim stages when I!=D
+						}
+					}
+				}
 			}
 			local pwalpha = binormal(`zalphaS1', `zalphaS`nstage'', `rH0')	// overall pairwise alpha
-			local pwomega = binormal(`zomegaS1', `zomegaS`nstage'', `rH1')	// overall pairwise power	
+			local pwomega = binormal(`zomegaS1', `zomegaS`nstage'', `rH1')	// overall pairwise power
+			if "`esb'" == "" {
+				local bindingpwer  = `pwalpha'
+				local bindingomega = `pwomega'
+			}
 		}
 
 		else {
@@ -618,7 +183,12 @@ if `nstage' == 2 {
 			local omega_max = min(`omegaS1', `omegaS`nstage'')
 			matrix `RH0' = (1, `rH0' \ `rH0', 1)
 			local pwalpha = binormal(`zalphaS1', `zalphaS`nstage'', `rH0')	// overall pairwise alpha
-			local pwomega = binormal(`zomegaS1', `zomegaS`nstage'', `rH0')	// overall pairwise power			
+			local pwomega = binormal(`zomegaS1', `zomegaS`nstage'', `rH0')	// overall pairwise power
+			if "`esb'" == "" {
+				local bindingpwer  = `pwalpha'
+				local bindingomega = `pwomega'		
+				//local pwalpha = `alphaS`nstage''		// CHECK
+			}
 		}
 	}
 
@@ -626,7 +196,7 @@ if `nstage' == 2 {
 			local rH0 = sqrt(`eS1' / `eS`nstage'')
 			matrix `RH0' = (1, `rH0' \ `rH0', 1)
 			local pwalpha = binormal(`zalphaS1', `zalphaS`nstage'', `rH0')	// overall pairwise alpha
-			local pwomega = binormal(`zomegaS1', `zomegaS`nstage'', `rH0')	// overall pairwise power			
+			local pwomega = binormal(`zomegaS1', `zomegaS`nstage'', `rH0')	// overall pairwise power
 	}
 }
 
@@ -643,7 +213,7 @@ else {
 	forvalues i = 1 / `ns1' {
 		local i1 = `i' + 1
 		forvalues j = `i1' / `nstage' {
-			local rH0 = min(sqrt(`eS`i'' / `eS`j''), 1)
+			local rH0 = min(sqrt(`eS`i'' / `eS`j''), 1)	// could add line under here: if esb, rH0 = min(sqrt(di1/dj1),1)?
 			local rH1 = `rH0'
 			
 			if (`have_D') & (`j' == `nstage') {
@@ -664,6 +234,17 @@ else {
 				matrix `RH`k''[`j', `i'] = `RH`k''[`i', `j']
 			}	
 		}
+		if `have_D' & "`simcorr'" != "" & "`esb'" != ""{
+			forvalues k = 0/1 {
+				matrix `RH`k'' = r(Corrhr_EB`k')
+			}
+			forvalues l = 0/1 {
+				forvalues m = 1 / `nstage' {
+					local d`m'`l' = r(d`m'`l')
+					if `l'==0 return scalar D`m' = `d`m'`l''			// Store D-events at interim stages when I!=D
+				}
+			}		
+		}
 	}
 
 	tempname zalpha zomega
@@ -683,59 +264,35 @@ else {
 	local pwalpha = r(p)
 	mata: mvnprob("`zomega'", "`RH1'", `rep')
 	local pwomega = r(p)
-
-	/*
-		Get lower bounds on overall significance level and power when R_is = 0.
-		alphaI and omegaI are sig level and power for the I-stages.
-	*/
-	/*
-	if `have_D' {
-		tempname R1H0 R1H1
-		matrix `R1H0' = `RH0'[1..`ns1', 1..`ns1']
-		matrix `R1H1' = `RH1'[1..`ns1', 1..`ns1']
-		local za `zalphaS1'
-		*local zo `zomegaS1'
-		local zo `zomega1'
-		
-		forvalues m = 2 / `ns1' {
-			local za `za' , `zalphaS`m''
-			*local zo `zo' , `zomegaS`m''
-			local zo `zo' , `zomega`m''
-			
-		}
-		matrix `zalpha' = (`za')
-		matrix `zomega' = (`zo')
-		mata: mvnprob("`zalpha'", "`R1H0'", `rep')
-		local alphaI = r(p)
-		mata: mvnprob("`zomega'", "`R1H1'", `rep')
-		local omegaI = r(p)
-		local alpha_min = `alphaI' * `alphaS`nstage''
-		local alpha_max = min(`alphaI', `alphaS`nstage'')
-		*local omega_min = `omegaI' * `omegaS`nstage''
-		*local omega_max = min(`omegaS1', `omegaS`nstage'')
-		local omega_min = `omegaI' * `omega`nstage''
-		local omega_max = min(`omega1', `omega`nstage'')
-		
+	if `have_D' & "`esb'" == "" {
+		local bindingpwer  = `pwalpha'
+		local bindingomega = `pwomega'
+		//local pwalpha 	   = `alphaS`nstage''
 	}
-	*/
 }
 
+/******************************************************************************* 
+ Calculate the FWER and probabilities	
+*******************************************************************************/
+if !`have_D' & "`fwercontrol'"!=""{		// If I=D and FWER control specified, assume non-binding boundaries
+	local nonbinding nonbinding
+}
 
-/*
-	FWER and probs calculations
-*/
 if "`nofwer'"=="" | "`probs'"!=""  {
 	local K = `armsS1'-1			
 
-	* 1 exp. arm -- calculate probs algebraically
-	if `K'==1 {
+	* 1 exp. arm -- calculate probs algebraically (unless efficacy boundaries or non-binding boundaries specified)
+	if `K'==1 & "`esb'" == "" & "`nonbinding'" == ""{
 		
+		noi di "Algebraic evaluation of operating characteristics"
 		if `nstage'==2 {
 			local p11 = `alphaS1'
 			local p10 = 1-`p11'
 			
 			local p21 = `pwalpha'
 			local p20 = 1-`p21'
+			local fwerate = `pwalpha'	// Added to allow FWERcontrol option for 2 stage, 1 arm trial
+			if `have_D' local maxfwer = `alphaS`nstage''	// 2 stage, 2 arm design with I!=D, maxfwer is just equal to final stage alpha
 		}
 		
 		else {
@@ -755,82 +312,379 @@ if "`nofwer'"=="" | "`probs'"!=""  {
 				mata: mvnprob("`z`j''", "`R`j''", `rep')
 				local p`j'1 = r(p)
 				local p`j'0 = 1-`p`j'1'
+				local fwerate = `pwalpha'
+				if `have_D' local maxfwer = `alphaS`nstage''
+				if `have_D' local pwomega = `omegaS`nstage''	
 			}	
 		}
 	}
 	
 	* Else use nstagefwer subroutine
 	else {
-		
 		if `have_D' local ineqd ineqd
-		
-		nstagefwer, nstage(`nstage') arms(`armsS1') alpha(`alpha') corr(`RH0') aratio(`Rstar') seed(`seed') ///
-			reps(`fwerreps') `ineqd'
+		if "`esb'" != "" {
+		if `fwerreps'!=250000 local fwerreps `fwerreps'
+		else local fwerreps 1000000
+		nstagefwer, nstage(`nstage') arms(`armsS1') alpha(`alpha') omega(`omega') corr(`RH0') aratio(`Rstar') seed(`seed') ///
+			reps(`fwerreps') `ineqd' esb(`esb') `nonbinding'
+			local edrops = r(edrops)
+			local esbstop = r(esbstop)
+			if "`esbstop'"!="."{
+				return local esbstop = "`esbstop'"
+			}
+		local pwalpha = r(pwer)
+		local pwomega = r(pwomega)
+		}
+		else {
+			nstagefwer, nstage(`nstage') arms(`armsS1') alpha(`alpha') omega(`omega') corr(`RH0') aratio(`Rstar') seed(`seed') ///
+				reps(`fwerreps') `ineqd' `nonbinding'
+		}
 		local fwerate = r(fwer)
 		local se_fwerate = r(se_fwer)
-
+		local fwomega = r(fwomega)
+		local allomega = r(allomega)
+		if "`nonbinding'" != ""{
+			local pwalpha = r(pwer)
+			local pwomega = r(pwomega)
+		}
+		
+		if `have_D' local maxpwomega = r(pwomega)
 		if `have_D' local maxfwer = r(maxfwer)
+		if `have_D' local mvnpmaxfwer = r(mvnpmaxfwer)
+		if `have_D' local se_maxfwer = r(se_maxfwer)
 		
 		forvalues j = 1/`nstage' {
-			
+			if "`esb'" != "" {
+				local E`j' = r(E`j')
+				return scalar E`j' = `E`j''
+				local lndelE`j' = ln(`hr1S`j'') + invnormal(`E`j'') * sqrt(`fac' / `eS`j'')
+				return scalar deltaE`j' = exp(`lndelE`j'')
+			}
+						
 			forvalues k = 0/`K' {
 				local p`j'`k' = r(p`j'`k')
 			}
 		}	
 	}
 	
-	* return matrix of probabilities of k = 0,...,K arms passing each stage
-	if "`probs'"!="" {
-		local rownames
-		local colnames
-		
-		forvalues j = 1/`nstage' {
-			local rownames `rownames' pass_stage`j'
+/******************************************************************************* 
+ Control FWER
+*******************************************************************************/
+		if "`fwercontrol'" !=""{
+			local fwercontrolpct = `fwercontrol'*100
+			di as text "        "
+			di as text "Searching for design which controls the FWER at `fwercontrolpct'%"
+			if `have_D' local ineqd ineqd
+			local targetfwer = `fwercontrol'
+			local count 0
 			
-			local prb`j' `p`j'0'
-			forvalues k = 1/`K' {
-				local prb`j' `prb`j'', `p`j'`k''
+			local x1 = `alphaS`nstage''			
+			
+			if `have_D'	{
+				local diff = `maxfwer' - `targetfwer'
+				local y1 = `maxfwer'
 			}
-		}
-		
-		forvalues k = 0/`K' {
-			local colnames `colnames' P(`k'arms)
-		}
-		
-		local prb `prb1'
-		forvalues j = 2/`nstage' {
-			local prb `prb' \ `prb`j''
-		}
-		mat P = (`prb')
-		mat rownames P = `rownames'
-		mat colnames P = `colnames'
-		return matrix P = P
-	}	
-}
+			else {
+				local diff = `fwerate' - `targetfwer'
+				local y1 = `fwerate'
+			}
+			local aJ = `targetfwer'/(2*`K') // Starting value for final-stage signficance level, aJ
+			
+			qui while `count'<3{
+				local alpha = `alphaS1'
+				local jm1 = `nstage' - 1
+				forvalues j = 2/`jm1' {
+					local alpha `alpha' `alphaS`j''
+				}	
+				local alpha `alpha' `aJ'
+				samplesize, nstage(`nstage') accrue(`accrue') alpha(`alpha') arms(`arms') hr0(`hr0') hr1(`hr1') ///
+							omega(`omega') aratio(`aratio') s(`s') t(`t') tstop(`tstop') tunit(`tunit') seed(`seed') fwerreps(`fwerreps')
+				forvalues j=1/`nstage'{
+					local armsS`j' = r(armsS`j')
+					local accrueS`j' = r(accrueS`j')
+					local hr0S`j' = r(hr0S`j')
+					local hr1S`j' = r(hr1S`j')
+					local lndelS`j' = r(lndelS`j')
+					local tS`j' = r(tS`j')
+					local etotS`j' = r(etotS`j')
+					local eS`j' = r(eS`j')
+					local eexpS`j' = r(eexpS`j')
+					local ntotS`j' = r(ntotS`j')
+					local nS`j' = r(nS`j')
+					local nexpS`j' = r(nexpS`j')
+					local alphaS`j' = r(alphaS`j')
+					local zalphaS`j' = r(zalphaS`j')
+					local omegaS`j' = r(omegaS`j')
+					local zomegaS`j' = r(zomegaS`j')
+					local acc0S`j' = r(acc0S`j')
+					local oaccS`j' = r(oaccS`j')
+					local eS`j'un = r(eS`j'un)
+					local eS`j'star = r(eS`j'star)
+				}
+					local median1 = r(median1)
+					local median`nstage' = r(median`nstage')
+*______________________________________________________________________
+				* Calculate Between-stage correlation *
+				tempname RH0 RH1
 
+				if "`esb'" != "" & `have_D' & "`simcorr'"==""{		// NEW - Add condition that forces simulated correlation if esb specified when I!=D, to ensure correlation is based on D-D outcomes
+					local simcorr = 250
+					local corr 0.6
+				}
 
+				if "`simcorr'" != "" & `have_D' {
+					di as txt "Simulations are carried out to estimate the correlation structure."
+					di as txt "Depending on the number of replicates, the results might take some minutes to appear."
+					di as txt "Progress is shown below."
+				}
+				local sampl
+				local events
+				forvalues i = 1 / `nstage' {
+					local sampl `sampl' `ntotS`i''
+					local events `events' `eS`i''
+				}
 
-/*
+				if `nstage' == 2 {
+					local rH0 = min(sqrt(`eS1' / `eS`nstage''), 1)
+					if `have_D' {						
+						if "`simcorr'" != "" {
+							hrcorrnstage, accrue(`accrue') hr0(`hr0') hr1(`hr1') n(`sampl') e(`events') t(`t') ///
+								aratio(`Rstar') nstage(`nstage') rep(`simcorr') rho(`corr') seed(`seed') savehr(`outfile')
+							forvalues k = 0/1 {	
+								local rH`k' = r(corrln1`nstage'H`k')
+								matrix `RH`k'' = (1, `rH`k'' \ `rH`k'', 1)
+								if "`esb'" != ""{
+									matrix `RH`k'' = r(Corrhr_EB`k')
+									forvalues j = 0/1 {
+										forvalues m = 1 / `nstage' {
+											local d`m'`j' = r(d`m'`j')
+											if `j'==0 return scalar D`m' = `d`m'`j''
+										}
+									}
+								}
+							}
+						}
+						else {
+							local i 1
+							local rH0 = `rH0' * `c'
+							matrix `RH0' = (1, `rH0' \ `rH0', 1)
+						}
+					}
+					else {			
+						local rH0 = sqrt(`eS1' / `eS`nstage'')
+						matrix `RH0' = (1, `rH0' \ `rH0', 1)
+					}
+					local pwalpha = binormal(`zalphaS1', `zalphaS`nstage'', `rH0')	// overall pairwise alpha
+					local pwomega = binormal(`zomegaS1', `zomegaS`nstage'', `rH0')	// overall pairwise power			
+					if `have_D' & "`esb'" == "" {
+						local bindingpwer  = `pwalpha'
+						local bindingomega = `pwomega'
+						//local pwalpha = `alphaS`nstage''		// CHECK
+					}
+				}
+				else {		
+					matrix `RH0' = I(`nstage')
+					matrix `RH1' = I(`nstage')
+							
+					if (`have_D') & ("`simcorr'" != "") {
+						hrcorrnstage, accrue(`accrue') hr0(`hr0') hr1(`hr1') n(`sampl') e(`events') t(`t') aratio(`Rstar') ///
+									  nstage(`nstage') rep(`simcorr') rho(`corr') seed(`seed') savehr(`outfile')		
+					}						
+					local ns1 = `nstage' - 1
+					forvalues i = 1 / `ns1' {
+						local i1 = `i' + 1
+						forvalues j = `i1' / `nstage' {
+							local rH0 = min(sqrt(`eS`i'' / `eS`j''), 1)
+							local rH1 = `rH0'
+							if (`have_D') & (`j' == `nstage') {								
+								if "`simcorr'" != "" {				
+									forvalues k = 0/1 {	
+										local rH`k' = r(corrln`i'`nstage'H`k')
+									}
+								}
+								else {
+									local rH0 = `rH0' * `c'
+									local rH1 = `rH0'
+								}
+							}
+							forvalues k = 0/1 {	
+								matrix `RH`k''[`i', `j'] = `rH`k''
+								matrix `RH`k''[`j', `i'] = `RH`k''[`i', `j']
+							}	
+						}
+					}
+					if `have_D' & "`simcorr'" != "" & "`esb'" != ""{
+					forvalues k = 0/1 {
+						matrix `RH`k'' = r(Corrhr_EB`k')
+					}
+					forvalues l = 0/1 {
+						forvalues m = 1 / `nstage' {
+							local d`m'`l' = r(d`m'`l')
+							if `l'==0 return scalar D`m' = `d`m'`l''	
+							}
+						}	
+					}
+					tempname zalpha zomega
+					local za `zalphaS1'
+					local zo `zomegaS1'
+					
+					forvalues m = 2 / `nstage' {
+						local za `za' , `zalphaS`m''
+						local zo `zo' , `zomegaS`m''		
+					}
+					matrix `zalpha' = (`za')
+					matrix `zomega' = (`zo')
+
+					local rep 2000
+					mata: mvnprob("`zalpha'", "`RH0'", `rep')
+					local pwalpha = r(p)
+					mata: mvnprob("`zomega'", "`RH1'", `rep')
+					local pwomega = r(p)
+					if `have_D' & "`esb'" == "" {
+						local bindingpwer  = `pwalpha'
+						local bindingomega = `pwomega'
+					}
+				}
+*______________________________________________________________________
+				* Call nstagefwer to calculate fwer using alphaJ *
+				if "`esb'"!="" {	
+					if `fwerreps'!=250000 local fwerreps `fwerreps'
+					else local fwerreps 1000000
+					nstagefwer, nstage(`nstage') arms(`armsS1') alpha(`alpha') omega(`omega') corr(`RH0') aratio(`Rstar') seed(`seed') ///
+					reps(`fwerreps') `ineqd' esb(`esb') `nonbinding'
+					local esbstop = r(esbstop)
+					if "`esbstop'"!="."{
+						return local esbstop = "`esbstop'"
+					}
+					local pwalpha = r(pwer)
+					local pwomega = r(pwomega)
+				}
+				else{
+					nstagefwer, nstage(`nstage') arms(`armsS1') alpha(`alpha') omega(`omega') corr(`RH0') aratio(`Rstar') seed(`seed') ///
+					reps(`fwerreps') `ineqd' `nonbinding'
+				}
+
+				local fwerate = r(fwer)
+				local se_fwerate = r(se_fwer)
+				local fwomega = r(fwomega)
+				local allomega = r(allomega)
+				if "`nonbinding'" != ""{
+					local pwalpha = r(pwer)
+					local pwomega = r(pwomega)
+				}
+				if `have_D' local fwerate = r(maxfwer)
+				if `have_D' local maxfwer = r(maxfwer)
+				if `have_D' local mvnpmaxfwer = r(mvnpmaxfwer)
+				if `have_D' local se_maxfwer = r(se_maxfwer)
+				forvalues j = 1/`nstage' {
+					if "`esb'" != "" {
+						local E`j' = r(E`j')
+						return scalar E`j' = `E`j''
+						local lndelE`j' = ln(`hr1S`j'') + invnormal(`E`j'') * sqrt(`fac' / `eS`j'')
+						return scalar deltaE`j' = exp(`lndelE`j'')
+					}
+					forvalues k = 0/`K' {
+						local p`j'`k' = r(p`j'`k')
+					}
+				}	
+				
+				if `count'==0{	// Use linear interpolation to get close to aJ
+					local x2 = `aJ'
+					if `have_D'	{
+						local y2 = `maxfwer'
+					}
+					else {
+						local y2 = `fwerate'
+					}
+					
+					local y3 = `targetfwer'
+					local x3 = ((`y2'-`y3')*`x1'+(`y3'-`y1')*`x2')/(`y2'-`y1')
+
+					local aJ = `x3'
+				}
+				if `count'==1{
+					if `have_D' local diff = `targetfwer' - `maxfwer'
+					else local diff = `targetfwer' - `fwerate'
+					if `diff'>0 local ++count
+					else local aJ = `aJ' + (`diff'/(`K'))
+				}
+				local ++count
+			}
+			return scalar aJ = `aJ'
+		}
+*__________________________________________________________________
+		if "`probs'"!="" {
+			local rownames
+			local colnames
+			
+			forvalues j = 1/`nstage' {
+				local rownames `rownames' pass_stage`j'
+				
+				local prb`j' `p`j'0'
+				forvalues k = 1/`K' {
+					local prb`j' `prb`j'', `p`j'`k''
+				}
+			}
+			
+			forvalues k = 0/`K' {
+				local colnames `colnames' P(`k'arms)
+			}
+			
+			local prb `prb1'
+			forvalues j = 2/`nstage' {
+				local prb `prb' \ `prb`j''
+			}
+			mat P = (`prb')
+			mat rownames P = `rownames'
+			mat colnames P = `colnames'
+			return matrix P = P
+		}	
+	}
+
+/*******************************************************************************
 	Output
-*/
-local ww 9
-local sfl %-`ww's
-local sfc %~`ww's
-local sfr %`ww's
+*******************************************************************************/
+if "`esb'" != ""{
+	local vw 7
+	local vx 10
+	local vy 6
+	local vz 9
+}
+	local ww 9
+	local sfl %-`ww's
+	local sfc %~`ww's
+	local sfr %`ww's
 
-local wx 14
-local sxl %-`wx's
-local sxc %~`wx's
-local sxr %`wx's
+	local wx 14
+	local sxl %-`wx's
+	local sxc %~`wx's
+	local sxr %`wx's
 
-local nitem 8
-local dup = (`nitem'-1) * `ww' + `wx'
+	local wy 5
+	local syl %-`wy's
+	local syc %~`wy's
+	local syr %`wy's
+
+	local wz 7
+	local szl %-`wz's
+	local szc %~`wz's
+	local szr %`wz's
+
+if "`esb'" != ""{	
+	local nitem 10
+	local dup = 80
+}
+else {
+	local nitem 8
+	local dup = (`nitem'-1) * `ww' + `wx'
+}
 local ww3 = `ww' * 3
 local ww4 = `ww' * 4
 
 di as text _n(2) "`title1'" _n "{hline `hline'}"
 di as text "Sample size for a " as res "`armsS1'" as text "-arm " as res "`nstage'" as txt "-stage trial with time-to-event outcome"
-di as text "`title2'" _n "{hline `hline'}"
+di as text "`title2'" 
+di as text "`title3'" _n "{hline `hline'}"
 
 
 if `have_D' {
@@ -844,8 +698,16 @@ else {
 }
 
 di as text _n "Operating characteristics"  _n "{hline `dup'}" 
-di as text _skip(`wx') `sfr' "Alpha(1S)" `sfr' "Power" _col(37) "HR{c |}H0" ///
- _col(46) "HR{c |}H1" `sfr' "Crit.HR" `sfr' "Length*" `sfr' "Time*" _n "{hline `dup'}" 
+
+if "`esb'" != ""{		// new
+	di as text "Stage" _col(9) "Alpha" _col(16) "Alpha" _col(23) "Power" _col(30) "HR{c |}H0" ///
+	_col(37) "HR{c |}H1" _col(45) "Crit.HR" _col(54) "Crit.HR" _col(64) "Length**" _col(74) "Time**"  
+	di as text _col(8) "(LOB)*" _col(16) "(ESB)*" _col(46) "(LOB)" _col(55) "(ESB)" _n "{hline `dup'}"
+}
+else {
+	di as text "Stage" _col(8) `syr' "Alpha(LOB)*" _col(23) "Power" _col(32) "HR{c |}H0" ///
+	_col(41) "HR{c |}H1" `sfr' "Crit.HR" `sfr' "Length**" `sfr' "Time**" _n "{hline `dup'}" 
+}
 
 forvalues m = 1 / `nstage' {
 	local m1 = `m' - 1
@@ -853,54 +715,52 @@ forvalues m = 1 / `nstage' {
 		local ts = `tS1'
 	}
 	else local ts = `tS`m'' - `tS`m1''
-	di as text `sxl' "Stage `m'" %`ww'.4f `alphaS`m'' %`ww'.3f `omegaS`m'' ///
-	%`ww'.3f as txt `hr0S`m'' %`ww'.3f as txt `hr1S`m'' as res %`ww'.3f ///
-	exp(`lndelS`m'') %`ww'.3f as res `ts' %`ww'.3f as res `tS`m'' 
+	if "`esb'" != "" {	
+		di as text %-`vy's "`m'" %`vw'.4f `alphaS`m'' %`vw'.4f `E`m'' %`vw'.3f `omegaS`m'' ///
+		%`vw'.3f as txt `hr0S`m'' %`vw'.3f as txt `hr1S`m'' as res %`vz'.3f ///
+		exp(`lndelS`m'') %`vz'.3f as res exp(`lndelE`m'') %`vx'.3f as res `ts' %`vx'.3f as res `tS`m'' 
+	}
+	else {
+		di as text `sfl' "`m'" %`ww'.4f `alphaS`m'' %`ww'.3f `omegaS`m'' ///
+		%`ww'.3f as txt `hr0S`m'' %`ww'.3f as txt `hr1S`m'' as res %`ww'.3f ///
+		exp(`lndelS`m'') %`ww'.3f as res `ts' %`ww'.3f as res `tS`m'' 
+	}
 }
 if `nstage' > 1 {
 	if `armsS1'>2 {
 		
-		// PWER and FWER under global HR0
-		if `have_D' {
-			di as text `sxl' "Pairwise**" %`ww'.4f as res `pwalpha' %`ww'.3f as res `pwomega' ///
-				_skip(`ww3') %`ww'.3f as res `tS`nstage''
-			
-			if "`nofwer'"=="" di as text `sxl' "Familywise(SE)**" as res %7.4f `fwerate'  ///
-					as text "  (" as res %5.4f `se_fwerate' as text ")"
-		}
-		
-		else {
-			di as text `sxl' "Pairwise" %`ww'.4f as res `pwalpha' %`ww'.3f as res `pwomega' ///
-				_skip(`ww3') %`ww'.3f as res `tS`nstage''
-				
-			if "`nofwer'"=="" di as text `sxl' "Familywise(SE)" as res %9.4f `fwerate'  ///
-					as text "  (" as res %5.4f `se_fwerate' as text ")"
-		}	
-			
 		di as text "{hline `dup'}"
 
-		
-		// Maximum PWER and FWER if I!=D		
 		if `have_D' {
-			di as text `sxl' "Maximum Pairwise Alpha " %`ww'.4f as res `alphaS`nstage'' _cont 
-			if "`nofwer'"=="" di as text _col(37) "Maximum Familywise Alpha " %`ww'.4f as res `maxfwer' _cont
-			
+			if "`esb'"=="" di as text `sxl' "Pairwise Error Rate" _col(34) %`ww'.4f as res `pwalpha' _cont
+			else di as text `sxl' "Max. Pairwise Error Rate" _col(34) %`ww'.4f as res `pwalpha' _cont
+			di as text _col(55) "Pairwise Power" %`ww'.4f as res `pwomega'
+			if "`nofwer'"=="" di as text "Max. Familywise Error Rate (SE)" _col(34) %`ww'.4f as res `maxfwer' as text " (" %5.4f as res `se_maxfwer' as text ")" _cont
+			di _n as txt "{hline `dup'}"
+		}
+		else {
+			di as text `sxl' "Pairwise Error Rate" _col(27) %`ww'.4f as res `pwalpha' _cont
+			di as text _col(50) "Pairwise Power" %`ww'.4f as res `pwomega'
+			if "`nofwer'"=="" di as text "Familywise Error Rate (SE)" _col(27) %`ww'.4f as res `fwerate' as text " (" %5.4f as res `se_fwerate' as text ")" _cont
 			di _n as txt "{hline `dup'}"
 		}
 	}
 	
 	else {
 		if `have_D' {
-			di as text `sxl' "Pairwise**" %`ww'.4f as res `pwalpha' %`ww'.3f as res `pwomega' ///
-				_skip(`ww3') %`ww'.3f as res `tS`nstage''
-			di as text `sxl' "Maximum" %`ww'.4f as res `alphaS`nstage''
-		}
-		
+		di as text "{hline `dup'}"
+		if "`esb'"=="" di as text `sxl' "Pairwise Error Rate" _col(21) %`ww'.4f as res `pwalpha'  _cont 
+		else  di as text `sxl' "Max. Pairwise Error Rate" _col(34) %`ww'.4f as res `pwalpha'  _cont 
+		if "`esb'"=="" di as text _col(42) "Pairwise Power" %`ww'.4f as res `bindingomega'
+		else di as text _col(55) "Pairwise Power" %`ww'.4f as res `pwomega'
+		if "`nofwer'"=="" & "`esb'"=="" di as text "Max. Error Rate" _col(21) %`ww'.4f as res `alphaS`nstage''
+		else if "`nofwer'"=="" di as text "Max. Error Rate" _col(34) %`ww'.4f as res `maxfwer'
+		}		
 		else {
-			di as text `sxl' "Pairwise" %`ww'.4f as res `pwalpha' %`ww'.3f as res `pwomega' ///
-				_skip(`ww3') %`ww'.3f as res `tS`nstage''
-		}
-		
+		di as text "{hline `dup'}"
+		di as text `sxl' "Pairwise Error Rate" %`ww'.4f as res `pwalpha' _cont 
+		di as text _col(37) "Pairwise Power" %`ww'.4f as res `pwomega'
+		}	
 		di as txt "{hline `dup'}"
 	}
 }
@@ -910,10 +770,16 @@ if `tstop'>0 {
 	di as text "Note: patient accrual stopped at time " %6.3f `tstop'
 } 
 
-di as text " *  Length (duration of each stage) is expressed in " as res "`lperiod'" as txt " periods and"
-di as text "    assumes survival times are exponentially distributed"
+di as text " *   All alphas are one-sided"
+if "`esbstop'"=="stop"{
+	di as text "     Error rates assume trial is terminated once an efficacious arm is identified"
+}
+di as text " **  Length (duration of each stage) is expressed in " as res "`lperiod'" as txt " periods and"
+di as text "     assumes survival times are exponentially distributed. Time is"
+di as text "     expressed in cumulative periods."
 
-if `have_D' di as text " ** Calculated under global null hypothesis for I and D outcomes"
+
+*if `have_D' di as text " *** Calculated under global null hypothesis for I and D outcomes"
 
 /*
 di as txt " ** Correlations between hazard ratios estimated internally by the program"
@@ -927,33 +793,16 @@ local nitem 7
 local dup = `nitem' * `ww'
 local dup2 = int((`ww' * (`nitem' - 1) / 2 - length("Stage 1")) / 2 - 0.5)
 local dup3 = 4 * `ww'
-local oddstages = 2 * int(`nstage' / 2) != `nstage'
-local evenstages = `nstage' - `oddstages'
-forvalues m = 1 (2) `evenstages' {
-	local m1 = `m' + 1
-	di as text _dup(`dup2') _col(12) "{c -}" "Stage `m'" _dup(`dup2') "{c -}" ///
-	 "  " _dup(`dup2') "{c -}" "Stage `m1'" _dup(`dup2') "{c -}"
-	di as text _skip(`ww') `sfr' "Overall" `sfr' "Control" `sfr' "Exper." ///
-	 `sfr' "Overall" `sfr' "Control" `sfr' "Exper." _n "{hline `dup'}"
-	di as text `sfl' "Arms"      as txt %`ww'.0f `armsS`m'' %`ww'.0f 1 %`ww'.0f `armsS`m''-1 ///
-	 as txt %`ww'.0f `armsS`m1'' %`ww'.0f 1 %`ww'.0f `armsS`m1''-1
-	di as text `sfl' "Acc. rate" as txt %`ww'.0f `oaccS`m'' %`ww'.0f `acc0S`m'' ///
-	 %`ww'.0f `acc0S`m''*(`armsS`m''-1)*`Rstar' as txt %`ww'.0f `oaccS`m1'' ///
-	 %`ww'.0f `acc0S`m1'' %`ww'.0f `acc0S`m1''*(`armsS`m1''-1)*`Rstar'
-	di as text `sfl' "Patients*" as res %`ww'.0f `ntotS`m'' %`ww'.0f `nS`m'' %`ww'.0f `nexpS`m'' ///
-	 as res %`ww'.0f `ntotS`m1'' %`ww'.0f `nS`m1'' %`ww'.0f `nexpS`m1''
-	di as text `sfl' "Events**"  as res %`ww'.0f `etotS`m'' %`ww'.0f `eS`m'' %`ww'.0f `eexpS`m'' ///
-	 as res %`ww'.0f `etotS`m1'' %`ww'.0f `eS`m1'' %`ww'.0f `eexpS`m1'' as txt _n "{hline `dup'}"
-}
-if `oddstages' {
-	local m `nstage'
+local dup4 = 2*`dup2' + length("Stage 1")
+forvalues m = 1/`nstage' {
 	di as text _dup(`dup2') _col(12) "{c -}" "Stage `m'" _dup(`dup2') "{c -}" 
-	di as text _skip(`ww') `sfr' "Overall" `sfr' "Control" `sfr' "Exper." _n "{hline `dup3'}" 
+	di as text _skip(`ww') `sfr' "Overall" `sfr' "Control" `sfr' "Exper." 
 	di as text `sfl' "Arms"      as txt %`ww'.0f `armsS`m'' %`ww'.0f 1 %`ww'.0f `armsS`m''-1 
-	di as text `sfl' "Acc. rate" as txt %`ww'.0f `oaccS`m'' %`ww'.0f `acc0S`m'' %`ww'.0f `acc0S`m''*(`armsS`m''- 1)*`Rstar' 
+	di as text `sfl' "Acc. rate" as txt %`ww'.0f `oaccS`m'' %`ww'.0f `acc0S`m'' %`ww'.0f `acc0S`m''*(`armsS`m''-1)*`Rstar' 
 	di as text `sfl' "Patients*" as res %`ww'.0f `ntotS`m'' %`ww'.0f `nS`m'' %`ww'.0f `nexpS`m'' 
-	di as text `sfl' "Events**"  as res %`ww'.0f `etotS`m'' %`ww'.0f `eS`m'' %`ww'.0f `eexpS`m'' as txt _n "{hline `dup3'}" 
+	di as text `sfl' "Events**"  as res %`ww'.0f `etotS`m'' %`ww'.0f `eS`m'' %`ww'.0f `eexpS`m'' 	
 }
+	di as text _col(12) _dup(`dup4') "{c -}"
 
 if `Rstar'!=1 {
 	di as text "`Rstar' patients allocated to each E arm for every 1 to control arm."
@@ -979,11 +828,6 @@ if "`iterate'" == "noiterate" {
 	di as text _n "[Note: computations carried out under H0, sample sizes may be too low.]"
 }
 
-
-
-/*
-	probs option output
-*/
 local wy 8
 if "`probs'"!="" {
 	local K = `armsS1'-1
@@ -1026,15 +870,34 @@ forvalues i = 2 / `nstage' {
 }
 
 return scalar alpha = `pwalpha'
-return scalar omega = `pwomega'
+if "`pwomega'" == "" return scalar omega = `pwomega'
 return matrix R = `RH0'
+if `have_D' & "`esb'" == "" {
+	return scalar bindingpwer  = `bindingpwer'
+	return scalar bindingomega = `bindingomega'
+}
+
+if "`nofwer'"=="" & `armsS2'==2 {
+	return scalar fwer = `fwerate'
+	if "`nonbinding'"!="" return scalar se_fwer = `se_fwerate'
+	return scalar pwomega = `pwomega'
+	if `have_D' return scalar maxfwer = `maxfwer'
+	if "`esb'"!="" if `have_D' return scalar se_maxfwer = `se_maxfwer'
+}
 
 if "`nofwer'"=="" & `armsS1'>2 {
 	return scalar fwer = `fwerate'
 	return scalar se_fwer = `se_fwerate'
-	if `have_D' return scalar max_fwer = `maxfwer'
+	if `have_D' return scalar maxfwer = `maxfwer'
+	if `have_D' return scalar mvnpmaxfwer = `mvnpmaxfwer'
+	if `have_D' return scalar se_maxfwer = `se_maxfwer'
+	return scalar pwomega = `pwomega'
+	return scalar fwomega = `fwomega'
+	return scalar allomega = `allomega'
 }
 
+noi di as txt "END OF NSTAGE"	
+		
 end
 
 mata:
@@ -1051,8 +914,6 @@ void mvnprob(string scalar xx, string scalar vv, real scalar reps)
 	st_numscalar("r(p)", p)
 }
 end
-
-
 
 ********************************************************************************************
 
@@ -1130,7 +991,10 @@ forvalues j = 1 / `nstage' {
 	local j1 = `j' - 1
 	local d`j' = `t`j'' - `t`j1''
 	if `d`j'' < 0 {
-		di as err red "Time `j' must not be less than time `j1'"
+		*di as err "Time `j' must not be less than time `j1'"
+		local errmess "Time `j' must not be less than time `j1'"
+		di as err `"`errmess'"'
+		return local errmess `errmess'
 		exit 198
 	}
 	if "`tstop'" != "" {
@@ -1269,13 +1133,25 @@ local t1 `median1'
 local i 0
 quietly while abs(`g')>`tol' & `i'<100 { // `g' is difference between actual and target events
 	if `tstop'==0 | `tstop' >= `t1' {
-		evfromtin4, accrual(`acc1') times(`t1') hazard(`hazard1')
+		cap evfromtin4, accrual(`acc1') times(`t1') hazard(`hazard1')
+		if _rc {
+			local errmess = r(errmess)
+			di as err `"`r(errmess)'"'
+			return local errmess `errmess'
+			exit 498
+		}
 		local g = `ev1' - r(e1)
 		F `t1' `hazard1'
 		local gprime = -`acc1' * r(F)
 	}
 	else {
-		evfromtin4, accrual(`acc1') times(`t1') hazard(`hazard1') tstop(`tstop')
+		cap evfromtin4, accrual(`acc1') times(`t1') hazard(`hazard1') tstop(`tstop')
+		if _rc {
+			local errmess = r(errmess)
+			di as err `"`r(errmess)'"'
+			return local errmess `errmess'
+			exit 498
+		}
 		local g = `ev1' - r(e1)
 		F `tstop' `hazard1'
 		local Ntstop = `acc1' * r(F) / `hazard1'	// no. at risk at tstop
@@ -1557,9 +1433,16 @@ tempname tmp
 tempfile output
 
 tempvar x1H0 x2H0 x1H1 x2H1 x3H0 x3H1 y1H0 y1H1 y2H0 y2H1 group lamb10 lamb20 lamb11 lamb21 ///
-	xtot1H0 xtot1H1 stage surid1H0 surid1H1 osH0 osH1 surid1_osH0 surid1_osH1 xtot1_x2H0 xtot1_x2H1
+	xtot1H0 xtot1H1 stage surid1H0 surid1H1 osH0 osH1 surid1_osH0 surid1_osH1 xtot1_x2H0 xtot1_x2H1 d10 d11
 local current 0
-postfile `tmp' `hrlistH0' `hrlistH1' `hroslistH0' `hroslistH1' using `"`output'"'
+local postf					
+forvalues j=1/`nstage'{
+	forvalues i=0/1 {
+		local postf "`postf' d`j'`i'"
+	}
+}
+
+postfile `tmp' `hrlistH0' `hrlistH1' `hroslistH0' `hroslistH1' `postf' using `"`output'"'
 	qui forvalues i=1/`rep' {
 		local aid `i'
 		drop _all
@@ -1646,6 +1529,11 @@ postfile `tmp' `hrlistH0' `hrlistH1' `hroslistH0' `hroslistH1' using `"`output'"
 			gen `osH`i'' = `x2H`i''
 			gen `xtot1_x2H`i'' = `osH`i'' + `y1H`i''		
 			gen byte `surid1_osH`i'' = (`xtot1_x2H`i'') <= (`timeev1H`i'')
+			*Find corresponding # D events when interim triggered by I events *
+			count if `surid1_osH`i''==1 & `group'==0
+			local `d1`i'' = r(N)
+			scalar d1`i' = r(N)
+			***************************************************
 			replace `osH`i'' = `timeev1H`i''-`y1H`i'' if `surid1_osH`i'' == 0 /*admin. censoring*/
 			replace `osH`i'' = 0 if `osH`i'' < 0
 			stset `osH`i'', failure(`surid1_osH`i'')
@@ -1672,7 +1560,7 @@ postfile `tmp' `hrlistH0' `hrlistH1' `hroslistH0' `hroslistH1' using `"`output'"
 			forvalues k = 2 / `intstage' {
 			
 				tempvar group2 x4H0 x4H1 x5H0 x5H1 la40 la50 la41 la51 y4H0 y4H1 y5H0 y5H1 stage2 xtot`k'H0 xtot`k'H1 ///
-				surid`k'H0 surid`k'H1 osH0 osH1 surid`k'_osH0 surid`k'_osH1 xtot`k'_x2H0 xtot`k'_x2H1
+				surid`k'H0 surid`k'H1 osH0 osH1 surid`k'_osH0 surid`k'_osH1 xtot`k'_x2H0 xtot`k'_x2H1 d`k'0 d`k'1
 
 				set obs `n`k''
 				local j=`k'-1
@@ -1798,6 +1686,11 @@ postfile `tmp' `hrlistH0' `hrlistH1' `hroslistH0' `hroslistH1' using `"`output'"
 					gen `osH`i''=`x2H`i''
 					gen `xtot`k'_x2H`i'' = `osH`i''+`y1H`i''	
 					gen byte `surid`k'_osH`i'' = (`xtot`k'_x2H`i'') <= (`timeev`k'H`i'')
+					* Find corresponding # D-events when interim k triggered by I-events
+					count if `surid`k'_osH`i''==1 & `group'==0
+					local `d`k'`i'' = r(N)
+					scalar d`k'`i' = r(N)
+					***************************************************
 					replace `osH`i'' = `timeev`k'H`i''-`y1H`i'' if `surid`k'_osH`i'' == 0 /*admin. censoring*/
 					replace `osH`i'' = 0 if `osH`i'' < 0
 					stset `osH`i'', failure(`surid`k'_osH`i'')
@@ -1814,7 +1707,7 @@ postfile `tmp' `hrlistH0' `hrlistH1' `hroslistH0' `hroslistH1' using `"`output'"
 		
 ************************ Last stage: anaylsis, i.e calculating the HR on primary outcome **********************
 
-		tempvar group2 x5H0 x5H1 y4H0 y4H1 y5H0 y5H1 stage`nstage' xtot`nstage'H0 xtot`nstage'H1 surid`nstage'H0 surid`nstage'H1
+		tempvar group2 x5H0 x5H1 y4H0 y4H1 y5H0 y5H1 stage`nstage' xtot`nstage'H0 xtot`nstage'H1 surid`nstage'H0 surid`nstage'H1 d`nstage'0 d`nstage'1
 
 		set obs `n`nstage''
 		local nD = `n`nstage'' - `n`intstage''
@@ -1861,6 +1754,11 @@ postfile `tmp' `hrlistH0' `hrlistH1' `hroslistH0' `hroslistH1' using `"`output'"
 			sort `group' `xtot`nstage'H`i''
 			local timeev`nstage'H`i' = `xtot`nstage'H`i''[`e`nstage'']
 			gen byte `surid`nstage'H`i'' = (`xtot`nstage'H`i'') <= (`timeev`nstage'H`i'')
+			* # D-events at final stage - should equal eJ input by user/nstage*
+			count if `surid`nstage'H`i''==1 & `group'==0
+			local `d`nstage'`i'' = r(N)
+			scalar d`nstage'`i' = r(N)
+			***************************************************
 			replace `x2H`i''=`timeev`nstage'H`i'' - `y1H`i'' if `surid`nstage'H`i''==0 /*admin censoring*/
 			stset `x2H`i'', failure(`surid`nstage'H`i'')
 
@@ -1894,7 +1792,15 @@ postfile `tmp' `hrlistH0' `hrlistH1' `hroslistH0' `hroslistH1' using `"`output'"
 			}
 		}
 
-		post `tmp' `hrspH0' `hrspH1' `hrosspH0' `hrosspH1'
+		local to_post					// NEW
+		forvalues j=1/`nstage'{
+			forvalues i=0/1 {
+				local to_post "`to_post' (d`j'`i')"
+			}
+		}
+		di "to_post = " `to_post'		// NEW
+		
+		post `tmp' `hrspH0' `hrspH1' `hrosspH0' `hrosspH1' `to_post'			// NEW
 		local aidperc = round(100*`aid'/`rep',0.5)
 		*if mod(`aid', 500) == 0 noi di as txt ".. `aidperc'%", _cont
 		
@@ -1915,6 +1821,15 @@ postfile `tmp' `hrlistH0' `hrlistH1' `hroslistH0' `hroslistH1' using `"`output'"
 	postclose `tmp'
 
 use `"`output'"', clear /* need to see whether clear is needed or use preserve-restore command*/
+
+* Get mean # OS events at each stage from postfile *
+forvalues j=1/`nstage' {
+	forvalues i=0/1 {
+		summ d`j'`i', meanonly
+		local d`j'`i' = r(mean)
+		local d`j'`i' = ceil(`d`j'`i'')
+	}
+}
 
 if "`savehr'" != "" {
 	label var hr`nstage'H0 "Estimated HR on primary outcome at the final stage under H0"
@@ -1998,6 +1913,7 @@ forvalues j = 0/1 {
 	tempname corrRIH`j'
 	matrix `corrRIH`j'' = I(`nstage')
 	forvalues m = 1 / `nstage' {
+		return scalar d`m'`j' = `d`m'`j''					// Saves D-events at interim analyses based on I-events
 		local m1 = `m'+1
 		forvalues n = `m1' / `nstage' {
 			local cor_RI`m'`n'H`j' = sqrt(`e`m''/`e`n'')  /* RI stands for Royston & Isham */
@@ -2026,83 +1942,6 @@ forvalues j = 0/1 {
 	matrix colnames `corrlnhrH`j'' = `loghrlistH`j''
 }
 
-/*This section is not needed anymore 
-
-
-if "`ci'" != "" {
-	forvalues m = 1 / `intstage' {
-		local m1 = `m'+1
-		forvalues n = `m1' / `nstage' {
-			local indcor`n'`m'=`corrhr'[`n',`m']
-			local fisherz`n'`m'=0.5*(log(1+`indcor`n'`m'')-log(1-`indcor`n'`m'')) /* Fisher Z transformation */
-			local sigmaz=1/sqrt(`rep'-1)
-			local prob =1-0.5*((100-`ci')/100)	/* 0.5*((100-`ci')/100) is the alpha/2 value */ 
-			local zvalue=invnormal(`prob') /* z(1-alpha/2) is the 100(1-alpha/2) point of the standard normal dis. */
-			local lfisherz`n'`m'=`fisherz`n'`m''-`zvalue'*`sigmaz' 
-			local ufisherz`n'`m'=`fisherz`n'`m''+`zvalue'*`sigmaz'
-			local lcorr`n'`m'=(exp(2*`lfisherz`n'`m'')-1)/(exp(2*`lfisherz`n'`m'')+1)
-			local ucorr`n'`m'=(exp(2*`ufisherz`n'`m'')-1)/(exp(2*`ufisherz`n'`m'')+1)
-			if `lcorr`n'`m'' < 0 { 
-				local lcorr`n'`m' = 0 
-			}
-		}
-	}
-}
-
-
-
-di as text _n(2) "CORRELATION STRUCTURE IN N-STAGE TRIAL DESIGNS" _col(48) " - version 1.1, 11 September 2009" _n "{hline 80}"
-di as text "A program for the correlation structure of n-stage trial designs by Babak Oskooei"
-di as text "& Patrick Royston" _n "{hline 80}"
-
-matlist `corrhr', format(%7.3f) title("CORRELATION STRUCTURE FOR `nstage' STAGE TRIAL FROM SIMULATION")
-
-if "`ci'" != "" {
-	di as text _n "`ci'% Confidence Intervals For Correlation Structure" as res " `nstage' " as txt "STAGES"
-	di as text _n 
-	forvalues m = 1 / `intstage' {
-		local m1 = `m' + 1
-		local coef = `m'*15
-		forvalues n = `m1' / `nstage' {
-			*nois dis `lcorr`m'`n''
-			di as text `sfl' "Corr(HR`m',HR`n'):" as res _col(`coef') "[" %5.3f as res `lcorr`n'`m'' as res ","  %5.3f as res `ucorr`n'`m'' as res "]"
-		}
-	}
-}
-matlist `corrRI', format(%7.3f) title("CORRELATION STRUCTURE FOR `nstage' STAGE TRIAL - NOMINAL VALUES* (ROYSTON & ISHAM)")
-di as text "{hline 50}" 
-di as text "* NOMINAL VALUES ARE BASED ON THE FORMULA DEVELOPED BY ROYSTON & ISHAM (BIOMETRIKA, 2009)
-
-*/
-
-
-/* The previous output code which was change after Patrick's suggestions
-
-****** Previous code for the initial output - Patrick sugested that the output is desplayed as a Matrix
-
-local gap 7
-local sfl %-`gap's
-local sfc %~`gap's
-local sfr %`gap's
-
-if "`intoutcome'"=="" | "`intoutcome'"=="I" {
-	di as text _n "CORRELATION STRUCTURE FOR " as res "`nstage' " as txt "STAGES WHEN I!=D"
-	forvalues m = 1 / `intstage' {
-		di as text `sfl' "Corr(HR`m',HR`nstage'):" %`gap'.3f as res `cor`m'`nstage''
-	}
-}
-else if "`intoutcome'"=="D" {
-	di as text _n "CORRELATION STRUCTURE FOR " as res "`nstage' " as txt "STAGES WHEN I=D"
-	di as text _n _skip(`gap') _col(18) "Nominal Corr *" _col(36) "Simulated Corr" _n "{hline 50}" 
-
-	forvalues m = 1 / `intstage' {
-		di as text `sfl' "Corr(HR`m',HR`nstage'):" _col(20) %`gap'.3f as res `cor_RI`m'`nstage'' _col(38) %`gap'.3f as res `cor`m'`nstage'' 
-	}
-	di as text "{hline 50}" 
-	di as text "* NOMINAL CORRELATION DEVELOPED BY ROYSTON & ISHAM (BIOMETRIKA, 2009)
-}
-*/
-
 forvalues k = 0/1 {
 	forvalues i = 1 / `intstage' {
 		local i1 = `i' + 1
@@ -2119,12 +1958,29 @@ forvalues k = 0/1 {
 	}	
 }
 	
+
+* Generate correlation matrix based on D-events for ESB when I!=D *
+if "`intoutcome'"=="" | "`intoutcome'"=="I" {
+	forvalues j = 0/1 {
+		tempname corrEB`j'
+		matrix `corrEB`j'' = I(`nstage')
+		forvalues m = 1 / `nstage' {
+			local m1 = `m'+1
+			forvalues n = `m1' / `nstage' {
+				local cor_EB`m'`n'H`j' = sqrt(`d`m'`j''/`d`n'`j'')  /* RI stands for Royston & Isham */
+				matrix `corrEB`j''[`n',`m'] = `cor_EB`m'`n'H`j''
+				matrix `corrEB`j''[`m',`n'] = `cor_EB`m'`n'H`j''
+			}
+		}
+	}
+}
+	
 forvalues j = 0/1 {
 	return matrix CorrhrH`j' = `corrhrH`j''
 	return matrix CorrlnhrH`j' = `corrlnhrH`j''
 	return matrix Corrhr_RIH`j' = `corrRIH`j''
+	return matrix Corrhr_EB`j' = `corrEB`j''	//NEW
 }
-
 
 clear
 erase `output'
@@ -2207,8 +2063,8 @@ end
 * mkbilogn2 using mkbilogn.ado version 1.1.1 spj revised 27 Jan 98   STB-48 sg105
 * Syntax: mkbilogn var1 var2, r(#) m1(#) s1(#) m2(#) s2(#)
 *			 [defaults #=0.5,0,1,0,1; respectively]
-cap program drop mkbilogn2
-prog def mkbilogn2
+cap program drop mkbilogn
+prog def mkbilogn
 	version 5.0
 	local varlist "req new min(2) max(2)"
 	local options "Rho(real 0.5) m1(real 0) m2(real 0) s1(real 1) s2(real 1)"
@@ -2664,8 +2520,8 @@ end
 
 
 * version 1.1.0  10/14/93              STB-16 ssi5
-cap program drop bisect2
-program define bisect2
+cap program drop bisect
+program define bisect
 	version 3.1
 	parse "`*'", parse(" X=")
 
@@ -2851,25 +2707,116 @@ version 10
 	v0.07 - remove probs calculation under H1 - not useful information
 	v0.08 - output SE for FWER & make probs calculation default
 	v0.09 - calculate maximum fwer when I!=D
+	v0.10 - allow efficacy bounds with separate or simultaneous stopping rule
+	      - estimate three measures of power for multi-arm designs
+		  - allow calculation of operating characteristics under non-binding futility boundaries
 */
 
-syntax, nstage(int) arms(int) alpha(string) corr(name) aratio(real) ///
-	[reps(int 250000) seed(int -1) ineqd]
-	
-	
+syntax, nstage(int) arms(int) alpha(string) omega(string) corr(name) aratio(real) ///
+	[reps(int 250000) seed(int -1) ineqd esb(string) NONBINDing]
+
 if `seed'>0 set seed `seed'
 	
 local J = `nstage'		// # stages
+local Jm1 = `J'-1		// # interim stages
 local K = `arms'-1	 	// # E arms
 local A = `aratio'		// Allocation ratio
 mat def S = `corr'		// correlation between stages under H0
 
-
-// Stagewise sig. levels 
+// Stagewise sig. levels and power levels NEW
 forvalues j = 1/`J' {
 	local alpha`j' : word `j' of `alpha'
+	local omega`j' : word `j' of `omega'
 }
 
+// Define efficacy boundaries (if specified by user)
+if "`esb'"!=""{
+	gettoken rule opts : esb, parse(" =,")	
+	forvalues j = 1/`J' {
+		local t`j' = S[`J',`j']^2				// Obtain information times for interim analyses
+		return scalar t`j' = `t`j''
+	}
+	gettoken rule opts : esb, parse(" =,")	
+	if "`rule'"=="hp" {
+		if "`opts'"!="" {
+			gettoken 1 2: opts, parse(",")
+			if "`2'"=="stop" local esbstop = "`2'"
+			if "`2'"!=""{
+				local pval = "`1'"
+				if "`pval'"=="," local pval = ""
+				gettoken 1 2: 2, parse(" =,")
+				if "`2'"=="stop" local esbstop = "`2'"
+			}
+			else { 
+				local pval = "`1'"
+			}
+		}
+		if "`pval'"!="" {					
+			gettoken eq pval : pval, parse(" =")	
+			forvalues j = 1/`J' {
+				local E`j' `pval'			
+			}
+		}
+		else {
+			forvalues j = 1/`J' {
+				local E`j' = 0.0005			
+			}
+		}
+	}
+	else if "`rule'"=="obf" {
+		if "`opts'"!=""{
+			gettoken 1 2: opts, parse(",")
+			local esbstop = "`2'"
+		}
+		forvalues j = 1/`J' {
+			local E`j'= 2*(1 - normal(invnormal(1 - `alpha`J''/2)/sqrt(`t`j'')))	// Approx. to O'Brien-Fleming rule - Lan & DeMets 1983
+			if round(`E`j'',0.001)>round(`alpha`J'',0.001){
+					di as error "Warning: efficacy boundary for stage `j' is larger than the final stage significance level"
+			}
+		}
+	}
+	else if "`rule'"=="custom" {
+		if "`opts'"!=""{
+			gettoken eq pval : opts, parse(" =")
+			forvalues j = 1/`J' {
+				local E`j' : word `j' of `pval'		
+				if `j'!=`J'{ 
+					capture confirm num `E`j''
+					if c(rc) {
+						di as error "no custom efficacy bound specified for stage `j'"
+						exit 198
+					}
+				}
+			}
+			if "`E`J''"!=""{
+				capture confirm num `E`J''
+				if c(rc)==0 {
+					di as error "cannot specify efficacy bound for final stage"
+				}
+			}
+			capture confirm num `E`Jm1''
+			if c(rc) {
+				gettoken E`Jm1' stop : E`Jm1', parse(",")
+				local esbstop = "stop"
+			}
+		}
+		else di as error "p values for custom stopping rule must be specified"
+	}
+		else {
+			di as error "efficacy boundary incorrectly specified"
+			exit 198
+		}
+	forvalues j = 1/`Jm1' {	// Check efficacy bounds are non-decreasing
+		local jm1 = `j'-1
+		local E0 = 0
+		if `E`j''<`E`jm1'' {
+			di as error "p-values must be non-decreasing"
+			exit 198
+		}
+		return scalar E`j' = `E`j''
+	}
+	return local esbstop = "`esbstop'"
+}
 
 // Correlation matrix between arms ( = A/A+1)
 matrix A = I(`K')
@@ -2881,7 +2828,6 @@ forvalues j = 1/`K' {
 		if `j'!=`k' mat def A[`j',`k'] = `A'/(`A'+1)
 	}
 }
-
 
 // Generate correlated standard normal RVs
 
@@ -2899,43 +2845,88 @@ forvalues k = 0/`K' {
 	qui drawnorm `X`k'', corr(S) sd(`sd') n(`reps') double
 }
 
-
 forvalues j = 1/`J' {	
 	forvalues k = 1/`K' {
 		gen double z`j'`k' = sqrt(`A'/(`A'+1))*x`j'0+sqrt(1/(`A'+1))*x`j'`k'
 	}
 }
 
-
-
-// Arm k pass stage j?
+// Flag arms which pass each stage k and any which are dropped for efficacy
 forvalues k = 1/`K' {
 	scalar pass0`k'=1
+	scalar powerpass0`k'=1			
+	
+	if "`esb'"!="" {
+		scalar edrop0`k'=0																		 
+	}
 	
 	forvalues j = 1/`J' {
 		local jm1 = `j'-1
 		gen byte pass`j'`k' = (z`j'`k'>invnormal(1-`alpha`j'') & pass`jm1'`k'==1)
+		gen byte powerpass`j'`k' = (z`j'`k'>invnormal(1-`omega`j'') & powerpass`jm1'`k'==1)		
+		if "`nonbinding'"!="" & `j'!=`J'{	
+			qui replace pass`j'`k' = 1
+			qui replace powerpass`j'`k' = 1
+		}
+		if "`esb'"!="" & `j'!=`J'{															
+				qui gen byte edrop`j'`k' = cond(edrop`jm1'`k'==1, 1, ///
+											cond(z`j'`k'>invnormal(1-`E`j'') & pass`jm1'`k'==1, 1, 0))	 
+				qui replace pass`j'`k' = 0 if edrop`j'`k'==1 									
+				qui replace powerpass`j'`k' = 0 if edrop`j'`k'==1		
+		}
 	}
 }
 
+// Apply simultaneous efficacy stopping rule if specified
+if "`esbstop'"!=""{
+	forvalues j=1/`Jm1'{
+		forvalues i=`j'/`J'{
+			forvalues k=1/`K'{
+				forvalues l=1/`K'{
+					if `l'!=`k'{
+						qui replace pass`i'`l' = 0 if edrop`j'`k'==1
+						qui replace powerpass`i'`l' = 0 if edrop`j'`k'==1
+					}
+				}
+			}
+		}
+	}
+}
+
+// Count the number of arms which were dropped for efficacy at some stage prior to stage J
+if "`esb'"!=""{
+	local esum = 0
+	forvalues k = 1/`K' {				
+		qui count if edrop`Jm1'`k'==1	
+		local esum = `esum'+r(N)		
+		}
+	return scalar esum = `esum'
+	egen byte edrop`Jm1' = rowtotal(edrop`Jm1'*)
+	qui count if edrop`Jm1'>0
+	local edrops = r(N)
+	return scalar edrops = `edrops'
+}
 
 // Number of arms passing stage j
 forvalues j = 1/`J' {
-	egen byte npass`j' = rowtotal(pass`j'*)
+	if "`esb'"!=""{
+		egen byte npass`j' = rowtotal(pass`j'* edrop`jm1'*)
+		egen byte powernpass`j' = rowtotal(powerpass`j'* edrop`jm1'*)
+	}
+	else {
+		egen byte npass`j' = rowtotal(pass`j'*)
+		egen byte powernpass`j' = rowtotal(powerpass`j'*)	
+	}
 }
-
-
 
 // Probability of k arms passing stage j
 forvalues j = 1/`J' {	
 	forvalues k = 0/`K' {
-	
 		qui count if npass`j'==`k'
 		local p`j'`k' = r(N)/`reps'
 		return scalar p`j'`k' = `p`j'`k''
 	}
 }
-
 
 // Pairwise type I error rate
 local sum = 0
@@ -2945,12 +2936,13 @@ forvalues k = 1/`K' {
 }
 
 local pwer = `sum'/(`K'*`reps')
+if "`esb'"!="" local pwer = (`sum'+`esum')/(`K'*`reps')	// Recalculate pwer if dropping for efficacy specified
 return scalar pwer = `pwer'
-
 
 // FWER
 qui count if npass`J'>0
 local fwer = r(N)/`reps'
+
 local se_fwer = sqrt(`fwer'*(1-`fwer')/`reps')
 local ll_fwer = `fwer'-invnormal(0.975)*`se_fwer'
 local ul_fwer = `fwer'+invnormal(0.975)*`se_fwer'
@@ -2960,30 +2952,699 @@ return scalar se_fwer = `se_fwer'
 return scalar ll_fwer = `ll_fwer'
 return scalar ul_fwer = `ul_fwer'
 
-
-restore
-
-// Maximum FWER if I not equal D
-if "`ineqd'"!="" {
-
-	local z = invnormal(1-`alpha`J'')
-	
-	// Vector of z values
-	local z1ma `z'
-	forvalues k = 2/`K' {
-		local z1ma `z1ma', `z'
-	}
-
-	tempname Z
-	matrix `Z' = (`z1ma')
-
-	tempname A
-	mat `A' = A
-	local rep = 5000
-	mata: mvnprob("`Z'", "`A'", `rep')
-	local maxfwer = 1-r(p)
-	return scalar maxfwer = `maxfwer'
+// Per-pair power		NEW
+local sum = 0			
+forvalues k = 1/`K' {
+	qui count if powerpass`J'`k'==1				// # trials in which arm k passes final stage
+	local sum = `sum'+r(N)						// Add totals for all arms
 }
 
+local pwomega = `sum'/(`K'*`reps')
+if "`esb'"!="" {
+	local pwomega = (`sum'+`esum')/(`K'*`reps')
+}
+return scalar pwomega = `pwomega'
+
+// Any-pair power		NEW
+qui count if powernpass`J'>0
+local fwomega = r(N)/`reps'
+
+local se_fwomega = sqrt(`fwomega'*(1-`fwomega')/`reps')
+local ll_fwomega = `fwomega'-invnormal(0.975)*`se_fwomega'
+local ul_fwomega = `fwomega'+invnormal(0.975)*`se_fwomega'
+
+return scalar fwomega = `fwomega'
+return scalar se_fwomega = `se_fwomega'
+return scalar ll_fwomega = `ll_fwomega'
+return scalar ul_fwomega = `ul_fwomega'
+
+// All-pair power	NEW
+qui count if powernpass`J'==`K'
+local allomega = r(N)/`reps'
+return scalar allomega = `allomega'
+
+// ------------------ Maximum FWER if I not equal D
+if "`ineqd'"!="" {
+	cap drop edrop*
+	cap drop pass*
+	cap drop npass*
+	cap drop power*
+	
+	forvalues k = 1/`K' {
+		scalar pass0`k'=1
+		scalar powerpass0`k'=1		
+		if "`esb'"!="" {
+			scalar edrop0`k'=0		
+		}
+		forvalues j = 1/`J' {
+			local jm1 = `j'-1
+			if `j'!=`J'{
+				// Up to stage J, all arms pass every stage or are only checked against efficacy bounds (if specified)
+				if "`esb'"!="" {
+					qui gen byte edrop`j'`k' = cond(edrop`jm1'`k'==1, 1, ///
+												cond(z`j'`k'>invnormal(1-`E`j'') & pass`jm1'`k'==1, 1, 0))	
+					qui gen byte pass`j'`k' = 1 if edrop`j'`k'==0 					
+					qui gen byte powerpass`j'`k' = 1 if edrop`j'`k'==0
+				}
+				else {
+					qui gen byte pass`j'`k' = 1 					
+					qui gen byte powerpass`j'`k' = 1
+				}
+			}
+			else {	// At final stage J, only check against futility bound, conditional on arm having passed stage J-1
+				qui gen byte pass`j'`k' = (z`j'`k'>invnormal(1-`alpha`j'') & pass`jm1'`k'==1)
+				qui gen byte powerpass`j'`k' = (z`j'`k'>invnormal(1-`omega`j'') & powerpass`jm1'`k'==1)
+			}
+		}
+		
+	}
+	
+	if "`esb'"!=""{
+		local Jm1 = `J'-1
+		local esum = 0
+		forvalues k = 1/`K' {	
+			qui count if edrop`Jm1'`k'==1	
+			local esum = `esum'+r(N)	
+			}
+		return scalar esum = `esum'	
+		
+		egen byte edrop`Jm1' = rowtotal(edrop`Jm1'*)	
+		qui count if edrop`Jm1'>0						// # trials with >1 arm dropped for efficacy
+		local edrops = r(N)
+		return scalar edrops = `edrops'
+	}
+	
+			// Max PWER
+		local pwer = `alpha`J'' // No ESBs, max PWER = alphaJ
+		if "`esb'"!=""{		// With ESBs, max PWER based on final stage simulation (plus arms dropped for efficacy early)
+			local sum = 0
+			forvalues k = 1/`K' {
+				qui count if pass`J'`k'==1
+				local sum = `sum'+r(N)
+				local pwer = (`sum'+`esum')/(`K'*`reps')	// Recalculate pwer if stopping arms for efficacy allowed
+			}
+		}
+		return scalar pwer = `pwer'
+				
+		// Max FWER
+		if "`esb'"!="" egen byte npass`J' = rowtotal(pass`J'* edrop`Jm1'*)
+		else egen byte npass`J' = rowtotal(pass`J'*)
+		qui count if npass`J' > 0		// Count # arms that pass per trial & # trials with >1 arm reaching stage J
+		local maxfwer = r(N)/`reps'		
+		local se_maxfwer = sqrt(`maxfwer'*(1-`maxfwer')/`reps')
+		return scalar maxfwer = `maxfwer'
+		return scalar se_maxfwer = `se_maxfwer'
+		
+		// Any-pair power
+		if "`esb'"!="" egen byte powernpass`J' = rowtotal(powerpass`J'* edrop`Jm1'*)
+		else egen byte powernpass`J' = rowtotal(powerpass`J'*)
+		qui count if powernpass`J'>0
+		local fwomega = r(N)/`reps'
+		return scalar fwomega = `fwomega'
+		
+		// Per-pair power
+		local sum = 0
+		forvalues k = 1/`K' {
+			qui count if powerpass`J'`k'==1
+			local sum = `sum'+r(N)	
+		}
+		local pwomega = `sum'/(`K'*`reps')
+		if "`esb'"!=""{
+			local pwomega = (`sum'+`esum')/(`K'*`reps')	// Recalculate pwer if dropping for efficacy specified
+		}
+		return scalar pwomega = `pwomega'
+
+		// All-pair power
+		qui count if powernpass`J'==`K'
+		local allomega = r(N)/`reps'
+		return scalar allomega = `allomega'
+
+		restore
+		
+		local z = invnormal(1-`alpha`J'')
+		// Vector of z values
+		local z1ma `z'
+		forvalues k = 2/`K' {
+			local z1ma `z1ma', `z'
+		}
+		tempname Z
+		matrix `Z' = (`z1ma')
+		tempname A
+		mat `A' = A
+		local rep = 5000
+		mata: mvnprob("`Z'", "`A'", `rep')	
+		local mvnpmaxfwer = 1-r(p)
+		return scalar mvnpmaxfwer = `mvnpmaxfwer'
+}
+
+end
+
+********************************************************************************
+
+********************************************************************************
+
+* Subroutine for calculating the sample size
+
+cap prog drop samplesize
+
+program define samplesize, rclass
+
+	syntax, Nstage(int) ACcrue(string) ALpha(string) ARms(string) HR0(string) HR1(string) ///
+		 Omega(string) [ARAtio(string) S(string) T(string) TStop(real 0) TUnit(int 1) seed(int -1) fwerreps(int 1000000)]
+****************************************************	
+
+if "`t'"=="" {		
+	di as err "must supply t(), the time for survival prob specified in s()"		
+	exit 198		
+}
+if `tstop'>0 {
+	local Tstop tstop(`tstop') 
+}
+else local Tstop
+if `nstage' < 1 {
+	di as err "nstage must be 1 or more"
+	exit 198
+}
+* Rstar is allocation ratio to E arm: #pts to 1E for 1 pt to C
+if "`aratio'"!="" {
+	confirm num `aratio'
+	local Rstar `aratio'
+}
+else local Rstar 1
+if (`tunit'<1 | `tunit'>7) local tunit 7		
+tokenize `""one year" "6 months" "one quarter (3 months)" "one month" "one week" "one day" "unspecified""'		
+local lperiod ``tunit''		
+// t, (optionally) s, hr0 and hr1 are provided for stages 1 and final. Fill in values for intermediate stages.
+
+if "`s'" == "" {
+	local s 0.5
+}
+
+// Tidy up check on number of parameters in each option
+local maxval = cond(`nstage' > 1, 2, 1)
+local nopt: word count `s'
+local errcount 0
+if `nopt' > `maxval' {
+	local ++errcount
+	local error`errcount' "too many items specified for s() - maximum is `maxval'"
+}
+if `nstage' > 1 & `nopt' < 2 {
+	local s `s' 0.5
+}
+local opts hr0 hr1 t
+local nopts: word count `opts'
+tokenize `opts'
+forvalues i = 1 / `nopts' {
+	local opt ``i''
+	local nopt: word count ``opt''
+	if `nopt' > `maxval' {
+		local ++errcount
+		local error`errcount' "too many items specified for `opt'() - maximum is `maxval'"
+	}
+	if (`nopt' == 0) | (`nstage' > 1 & `nopt' < 2) {
+		local ++errcount
+		local error`errcount' "must specify `maxval' value(s) for `opt'()"
+	}
+	local stage S1
+	local `opt'`stage': word 1 of ``opt''
+	cap confirm number ``opt'`stage''
+	if c(rc) {
+		local ++errcount
+		local error`errcount' "'``opt'`stage''' found where number expected"
+	} 
+	if "`opt'" == "t" {
+		local surv : word 1 of `s'
+		cap confirm number `surv'
+		if c(rc) {
+			local ++errcount
+			local error`errcount' "'`surv'' found where number expected"
+		} 
+		else local hazard1 = -ln(`surv') / ``opt'`stage''
+	}
+	if `nstage' > 1 {
+		local stage S`nstage'
+		local `opt'`stage': word 2 of ``opt''
+		cap confirm number ``opt'`stage''
+		if c(rc) {
+			local ++errcount
+			local error`errcount' "'``opt'`stage''' found where number expected"
+		} 
+		else {
+			if "`opt'" == "t" {
+				local surv : word 2 of `s'
+				confirm number `surv'
+				local hazard`nstage' = -ln(`surv') / ``opt'`stage''
+			}
+			if `nstage' > 2 {
+				local ns1 = `nstage' - 1
+				forvalues j = 2 / `ns1' {
+					if "`opt'" == "t" {
+						local hazard`j' `hazard1'
+					}
+					else local `opt'S`j' ``opt'S1'
+				}
+			}
+		}
+	}
+}
+if `errcount' > 0 {
+	forvalues i = 1 / `errcount' {
+		di as err "`error`i''"
+	}
+	exit 198
+}
+
+// Determine if hazard ratio(s) are > 1, and set sign accordingly.					
+forvalues i = 1 / `nstage' {														
+	if (`hr1S`i'' > `hr0S`i'') local sign`i' -1
+	else local sign`i' 1
+}
+local median1 = ln(2) / `hazard1'		
+local median`nstage' = ln(2) / `hazard`nstage''
+// Signal if have separate I- and D-outcomes according to equality of hazards
+local have_D = reldif(`hazard1', `hazard`nstage'') > 0.0001
+
+// Assign values of accrue alpha arms omega for all stages	
+if `nstage' > 1 {		
+	local es s		
+}
+****************************************	
+local opts accrue alpha arms omega
+local nopts: word count `opts'
+tokenize `opts'
+forvalues i = 1 / `nopts' {
+	local opt ``i''
+	local nopt: word count ``opt''
+	if `nopt' > `nstage' {
+		local ++errcount
+		local error`errcount' "too many items specified for `opt'() - `nstage' value`es' required"
+	}
+	if `nopt'<`nstage' {
+		local ++errcount
+		local error`errcount' "must specify `nstage' value`es' for `opt'()"
+	}
+	forvalues j = 1 / `nstage' {
+		local stage S`j'
+		local `opt'`stage': word `j' of ``opt''
+		cap confirm number ``opt'`stage''
+		if c(rc) {
+			local ++errcount
+			local error`errcount' "'``opt'`stage''' found where number expected"
+		}
+	}
+}
+// New: Check number of arms in each stage is the same or less as the previous stage
+forvalues i = 2 / `nstage' {
+	local im1 = `i'-1
+	if `armsS`i''>`armsS`im1''{
+		local ++errcount
+		local error`errcount' "number of arms in each stage must be strictly decreasing "
+	}
+}
+if `errcount' > 0 {
+	forvalues i = 1 / `errcount' {		
+		di as err "`error`i''"		
+	}		
+	exit 198		
+}		
+** End of error checking and preliminary calculation **********
+******************************************
+// Compute control arm accrual from overall accrual, #arms and allocation ratio.
+forvalues i = 1 / `nstage' {
+	local A `accrueS`i''					// total accrual rate
+	local K = `armsS`i'' - 1				// #exp arms
+	local acc0S`i' = `A' / (1 + `Rstar' * `K') 	// control accrual rate		**
+	local acc1S`i' = `Rstar'*`acc0S`i''			// exp. accrual rate		**	
+	local oaccS`i' `A'					// overall accrual rate
+}
+
+local fac = 1 + 1 / `Rstar'	/* replaces factor 2 in expressions for eS1, eS`nstage' etc. */
+
+// Compute e_S1 and initial e_S`nstage' from alpha1, HR0_0
+local zalphaS1 = invnormal(`alphaS1')
+local zomegaS1 = invnormal(`omegaS1')
+local zomega = -`zomegaS1'
+
+* Stage 1
+* Compute initial est of control arm S1 I-events rounded up to nearest integer
+local eS1 = int(1 + `fac' * ((`zomegaS1' - `zalphaS1')/(ln(`hr0S1') - ln(`hr1S1')))^2)
+
+* Update eS1 and ln(deltaS1) to achieve desired power
+local eS1un `eS1'
+local haz0S1 = `hazard1' * `hr0S1'
+local haz1S1 = `hazard1' * `hr1S1'
+local iter 0
+local done 0
+quietly while !`done' {
+	* Compute delta_S1
+	local lndelS1 = ln(`hr0S1') + `sign1' * `zalphaS1' * sqrt(`fac' / `eS1')		
+ 
+	* Compute time for stage 1
+	cap timetoevn4, accrual(`acc0S1') events(`eS1') hazard(`hazard1') `Tstop'
+	
+	if _rc {
+		local errmess = r(errmess)
+		di as err `"`r(errmess)'"'
+		return local errmess `errmess'
+		exit 498
+	}
+
+	local tS1 = r(t1)
+	if "`iterate'" == "noiterate" {
+		* Calcs done under H0, no iteration necessary
+		if `Rstar' == 1 {
+			local eS1star `eS1'
+			local zomega `zomegaS1'
+		}
+		else {
+			local eS1star = int(1 + `Rstar' * `eS1')
+			local zomega = `sign1' * (`lndelS1' - ln(`hr1S1'))/sqrt(1 / `eS1' + 1 / `eS1star')			
+		}
+		local done 1
+	}
+	else {
+		* Compute I-events at end of stage 1 in experimental arm under H1.
+		evfromtin4, accrual(`acc1S1') times(`tS1') hazard(`haz1S1') `Tstop'
+		local eS1star = int(1+r(e1))			
+		if "`olddef'" != "" {
+			local zomega = `sign1' * (`lndelS1' - ln(`hr1S1')) / sqrt(4 / (`eS1' + `eS1star'))				
+		}
+		else {
+			local zomega = `sign1' * (`lndelS1' - ln(`hr1S1')) / sqrt(1 / `eS1' + 1 / `eS1star')				
+		}
+		* Update eS1
+		if `sign1'*`zomega' >= `sign1'*`zomegaS1' {						
+			local done 1
+		}
+		else {
+			local eS1 = `sign1' + `eS1'						
+			local ++iter
+		}
+	}
+}
+local omegaS1=normal(`zomega')
+local zomegaS1 = `zomega'
+
+* nS1 is total number of control-arm patients, stage 1
+if `tstop'>0 {
+	local nS1 = `acc0S1' * min(`tstop',`tS1')
+}
+else {
+	local nS1 = `acc0S1' * `tS1'
+}
+if `nS1' < `eS1' {
+	di as err "Design infeasible, accrual period too short"
+	exit 498
+}
+
+// Round off numbers of patients in experimental and control arms to nearest integer
+local nS1 = round(`nS1')								// total patients, C
+local nexpS1 = round(`nS1' *  (`armsS1' - 1) * `Rstar')	// total patients, all E
+local ntotS1 = `nS1' + `nexpS1'							// total patients, C+all E
+local etotS1 = `eS1' + (`armsS1' - 1) * `eS1star'		// total I-events, C+all E
+local eexpS1 = `etotS1' - `eS1'							// total S1-events, all E
+
+return scalar deltaS1 = exp(`lndelS1')
+return scalar eS1un = `eS1un'
+return scalar eS1 = `eS1'
+return scalar eS1star = `eS1star'
+return scalar nS1 = `nS1'
+return scalar tS1 = `tS1'
+return scalar ntotS1 = `ntotS1'
+return scalar nexpS1 = `nexpS1'
+return scalar etotS1 = `etotS1'
+return scalar eexpS1 = `eexpS1'
+return scalar omegaS1 = `omegaS1'
+
+if `nstage' == 1 {		
+	// FWER + 95% CI for 1-stage design		
+	if "`nofwer'"=="" {		
+		mat def R = (1)		
+		nstagefwer, nstage(`nstage') arms(`armsS1') alpha(`alpha') omega(`omega') corr(R) aratio(`Rstar') ///		
+					seed(`seed') reps(`fwerreps')		
+		local fwerate = r(fwer)		
+		local se_fwerate = r(se_fwer)		
+		return scalar fwer = r(fwer)		
+		return scalar se_fwer = r(se_fwer)		
+	}		
+			
+	local ww 9		
+	* left-justified string format		
+	local sfl %-`ww's		
+	* centered string format		
+	local sfc %~`ww's		
+	* right-justified string format		
+	local sfr %`ww's		
+	local nitem 6		
+	local dup = `nitem' * `ww'		
+			
+				
+	di as text _n "`title1'" _n "{hline `hline'}"		
+	di as text "Sample size for a " as res "`armsS1'" as text "-arm " as res "1" as txt "-stage trial with time-to-event outcome"		
+	di as text "`title2'" 
+	di as text "`title3'" _n "{hline `hline'}"		
+	di as text _n "Median survival time: " as res round(`median1', 0.1) as text " time units"		
+	di as text _n "Operating characteristics" _n "{hline `dup'}"		
+	di as text %`ww'.3f "Alpha(1S)" `sfr' "Power" _col(23) "HR{c |}H0" _col(32) "HR{c |}H1" `sfr' "Crit. HR" `sfr' "Duration" _n "{hline `dup'}"		
+	di as text %`ww'.3f `alphaS1' %`ww'.3f `omegaS1' %`ww'.3f `hr0S1' %`ww'.3f `hr1S1' %`ww'.3f as res exp(`lndelS1') %`ww'.3f as res `tS1' _n as txt "{hline `dup'}"		
+	if `tstop' > 0 {		
+		di as text "Patient accrual stopped at time " %6.3f `tstop'		
+	}		
+	if "`nofwer'"=="" & `armsS1'>2 di as text "Familywise error rate (SE) = " as res %4.3f `fwerate' ///		
+		as text " (" as res %4.3f `se_fwerate' as text ")" 		
+	di _n as text "Duration is expressed in " as res "`lperiod'" as txt " periods and assumes"		
+	di as text "assumes survival times are exponentially distributed. Time is"
+	di as text "expressed in cumulative periods."
+	local nitem 4		
+	local dup = `nitem' * `ww'		
+	di as text _n "Sample size and number of events" _n "{hline `dup'}"		
+	di as text _skip(`ww') `sfr' "Overall" `sfr' "Control" `sfr' "Exper." _n "{hline `dup'}"		
+	di as text `sfl' "Arms"      as txt %`ww'.0f `armsS1' %`ww'.0f 1 %`ww'.0f `armsS1'-1		
+	di as text `sfl' "Acc. rate" as txt %`ww'.0f `oaccS1' %`ww'.0f `acc0S1' %`ww'.0f `acc0S1'*(`armsS1'-1)*`Rstar'		
+	di as text `sfl' "Patients"  as res %`ww'.0f `ntotS1' %`ww'.0f `nS1' %`ww'.0f `nexpS1'		
+	di as text `sfl' "Events"    as res %`ww'.0f `etotS1' %`ww'.0f `eS1' %`ww'.0f `eexpS1' as txt _n "{hline `dup'}"		
+	if `Rstar' != 1 {		
+		di as text "`Rstar' patients allocated to each E arm for every 1 to control arm."		
+	}		
+	if "`iterate'" == "noiterate" {		
+		if `hr1S1'<1 di as text _n "[Note: computations carried out under H0. Sample sizes may be too low.]"		
+		if `hr1S1'>1 di as text _n "[Note: computations carried out under H0. Sample sizes may be too high.]"			
+	}		
+	exit		
+}
+/*
+	Stages 2 - n
+	Update events and HR cutoffs to achieve desired power
+*/
+forvalues i = 2 / `nstage' {
+	local zalphaS`i' = invnormal(`alphaS`i'')
+	local zomegaS`i' = invnormal(`omegaS`i'')
+	local zomega`i' = -`zomegaS`i''	// initialisation of achieved power to a low value
+	local eS`i' = int(1 + `fac' * ((`zomegaS`i'' - `zalphaS`i'') / (ln(`hr0S`i'') - ln(`hr1S`i'')))^2)
+	local eS`i'un `eS`i''
+	local haz0S`i' = `hazard`i'' * `hr0S`i''
+	local haz1S`i' = `hazard`i'' * `hr1S`i''
+}
+forvalues m = 2 / `nstage' {
+	local acc0S
+	local acc1S
+	forvalues i = 1 / `m' {
+		local acc0S `acc0S' `acc0S`i''
+		local acc1S `acc1S' `acc1S`i''		
+	}
+	// Start iterative procedure to determine required control arm events
+	local iter 0
+	local done 0
+	quietly while !`done' {
+		// Compute log delta`m', HR threshold for stage `m'.
+		local lndelS`m' = ln(`hr0S`m'') + `sign`m'' * `zalphaS`m'' * sqrt(`fac' / `eS`m'')						
+
+		// Compute times to end of stages 1,...,`m' based on events in control arm (hazard haz0*)
+		local eS
+		forvalues i = 1 / `m' {
+			local eS `eS' `eS`i''
+		}
+		
+		cap timetoevn4, accrual(`acc0S') events(`eS') hazard(`hazard1' `hazard`m'') `Tstop'
+		
+		if _rc {
+			di as err `"`r(errmess)'"'
+			exit 498
+		}
+		if "`r(enough)'" == "enough" {
+			// Got enough events at stage m-1. Upgrade power.
+			local m1 = `m' - 1
+			local eS`m' = r(ev21)
+			local eS`m'star = int(1 + `Rstar' * `eS`m'')		// total events in 1 exp arm
+			local tS`m' = r(t`m')
+			local zomega`m' = `sign`m'' * (`lndelS`m'' - ln(`hr1S`m'')) / sqrt(1 / `eS`m'' + 1 / `eS`m'star')			
+			noi di as txt _n "[Note: stage `m1' already provides " as res round(`eS`m'') ///
+			 as txt " events, more than enough for stage " `m' "."
+			noi di as txt "Upgrading power for stage `m' from " as res %5.3f `omegaS`m'' ///
+			 as txt " to " as res %5.3f normal(`zomega`m'') ///
+			 as txt ". Stage `m' has zero length.]"
+			local done 1
+		}
+		else {
+			local tS
+			forvalues i = 1 / `m' {
+				local tS`i' = r(t`i')
+				local tS `tS' `tS`i''
+			}
+			if "`iterate'" == "noiterate" {
+				* Calcs done under H0, no iteration necessary
+				if `Rstar' == 1 {
+					local eS`m'star `eS`m''
+					local zomega`m' `zomegaS`m''
+				}
+				else {
+					local eS`m'star = int(1+`Rstar' * `eS`m'')
+					if "`olddef'"!="" {
+						local zomega`m' = `sign`m'' * (`lndelS`m'' - ln(`hr1S`m'')) / sqrt(4 / (`eS`m'' + `eS`m'star'))				
+					}
+					else {
+						local zomega`m' = `sign`m'' * (`lndelS`m'' - ln(`hr1S`m'')) / sqrt(1 / `eS`m'' + 1 / `eS`m'star')	
+					}
+				}
+				local done 1
+			}
+			else {
+				/*
+					Compute eS`m'star, total events at end of stage `m' in experimental arm (hazard haz1*).
+					(Events for stages 1,...,`m'-1 are not relevant, hence hazard is entered as ".").
+				*/
+				evfromtin4, accrual(`acc1S') times(`tS') hazard(. `haz1S`m'') `Tstop'
+				local eS`m'star = int(1+r(e`m'))		// total events in 1 exp arm
+				if "`olddef'"!="" {
+					local zomega`m' = `sign`m'' * (`lndelS`m'' - ln(`hr1S`m'')) / sqrt(4 / (`eS`m'' + `eS`m'star'))				
+				}
+				else {
+					local zomega`m' = `sign`m'' * (`lndelS`m'' - ln(`hr1S`m'')) / sqrt(1 / `eS`m'' + 1 / `eS`m'star')			
+				}
+				* Update eS`m'
+				if `sign`m''*`zomega`m'' >= `sign`m''*`zomegaS`m'' {															
+					local done 1
+				}
+				else {
+					local eS`m' = `sign`m''+`eS`m''							
+					local ++iter
+				}
+			}
+		}
+	}
+	local omegaS`m' = normal(`zomega`m'')
+	local zomegaS`m' = `zomega`m''
+}
+
+
+
+/*
+	nS`nstage' is total number of control-arm patients, stage 1 + stage 2
+	ntotS`nstage' is total patients, C + all E
+	nexpS`nstage' is total patients, all E
+	tSt`i' is accrual time in stage `i', i = 1 , ... , nstage
+*/
+local tSt1 `tS1'
+forvalues i = 2 / `nstage' {
+	local im1 = `i' - 1
+	local tSt`i' = `tS`i'' - `tS`im1''
+}
+if `tstop'>0 {
+	if `tstop'<`tS1' { 		// accrual stops in stage 1
+		local tSt1 `tstop'
+	}
+	forvalues i = 2 / `nstage' {
+		local im1 = `i' - 1
+		if `tstop' < `tS`i'' {	// accrual stops in stage `i'
+			local tSt`i' = max(0, `tstop' - `tS`im1'')
+		}
+	}
+}
+
+* Run for each stage
+local nS1 = `acc0S1' * `tSt1'
+local nexpS1 = `Rstar' * (`armsS1' - 1) * `acc0S1' * `tSt1'
+forvalues i = 2 / `nstage' {
+	local j = `i' - 1
+	local nS`i' = `nS`j'' + `acc0S`i'' * `tSt`i''
+	if `nS`i''<`eS`i'' {
+		di as err "Design infeasible - fewer patients (`nS`i'') than events (`eS`i'') in stage `i'"
+		exit 498
+	}
+	local nexpS`i' = `nexpS`j'' + `Rstar' * ((`armsS`i'' - 1) * `acc0S`i'' * `tSt`i'')
+}
+
+// Round off numbers of patients in experimental and control arms to nearest integer
+forvalues i = 1 / `nstage' {
+	local nexpS`i' = round(`nexpS`i'')
+	local nS`i' = round(`nS`i'')
+	local ntotS`i' = `nS`i'' + `nexpS`i''
+}
+/*
+	Compute etotS`nstage' = total events in all experimental arms.
+	First, compute e1S`nstage'drop = S`nstage'-events in 'dropped' arm (no accrual beyond stage 1)
+*/
+if `tstop'>0 {
+	local ts = min(`tS1', `tstop')
+}
+
+
+forvalues m = 2 / `nstage' {
+	local m1 = `m' - 1
+	// Hazards are appropriate to experimental arms
+	local haz `haz1S1' `haz1S`m''
+
+	local acc1S
+	local tS
+	forvalues i = 1 / `m' {
+		local acc1S `acc1S' `acc1S`i''
+		local tS `tS' `tS`i''
+	}
+	local eexpS`m' 0	// no. of events in exp arm in stage `m'
+	if "`includedroppedarms'" != "" {
+/*
+	Compute number of events in experimental "dropped" arms.
+	This involves notionally stopping recruitment at end of stage 1, 2, ...
+*/
+		forvalues i = 1 / `m1' {
+			local j = `i' + 1
+			if `armsS`i'' > `armsS`j'' {
+				qui evfromtin4, accrual(`acc1S') times(`tS') hazard(`haz') tstop(`tS`i'')
+				local edrop`i' =  r(e`m')
+				local eexpS`m' = `eexpS`m'' + (`armsS`i'' - `armsS`j'') * `edrop`i''
+			}
+		}
+	}
+	local eexpS`m' = `eexpS`m'' + (`armsS`m'' - 1) * `eS`m'star'
+	local etotS`m' = `eS`m'' + `eexpS`m''		/* total S`nstage'-events, C+all E */
+}
+
+forvalues j=1/`nstage'{
+	return scalar armsS`j' = `armsS`j''
+	return scalar accrueS`j' = `accrueS`j''
+	return scalar hr0S`j' = `hr0S`j''
+	return scalar hr1S`j' = `hr1S`j''
+	return scalar lndelS`j' = `lndelS`j''
+	return scalar tS`j' = `tS`j''
+	return scalar eS`j' = `eS`j''
+	return scalar etotS`j' = `etotS`j''
+	return scalar eexpS`j' = `eexpS`j''
+	return scalar ntotS`j' = `ntotS`j''
+	return scalar nS`j'	   = `nS`j''
+	return scalar nexpS`j' = `nexpS`j''
+	return scalar alphaS`j'  = `alphaS`j''
+	return scalar omegaS`j'  = `omegaS`j''
+	return scalar zalphaS`j' = `zalphaS`j''
+	return scalar zomegaS`j' = `zomegaS`j''
+	return scalar acc0S`j' = `acc0S`j''
+	return scalar oaccS`j' = `oaccS`j''
+	return scalar eS`j'un = `eS`j'un'
+	return scalar eS`j'star = `eS`j'star'
+}
+	return scalar median1 = `median1'
+	return scalar median`nstage' = `median`nstage''
+	return scalar Rstar = `Rstar'
+	return scalar have_D = `have_D'
+	return scalar fac = `fac'
 
 end

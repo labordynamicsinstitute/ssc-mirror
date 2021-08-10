@@ -1,5 +1,7 @@
 /*
-*! version 1.1 # Ian White # 27may2015
+*! Ian White # 6apr2018
+	improved advice to install network_graphs
+version 1.1 # Ian White # 27may2015
 19jun2015
     clearer instruction to upgrade networkplot
 15may2015
@@ -50,7 +52,8 @@ local improve = cond(mi("`improve'"),`improve2',10)
 // CHECK NETWORKPLOT
 cap which networkplot
 if _rc {
-    di as error `"Please install networkplot using {stata "net from http://www.mtm.uoi.gr"}"'
+    di as error `"networkplot is not installed"'
+    di as error `"Please install the network_graphs package using {stata "net from http://www.mtm.uoi.gr"}"'
     exit 498
 }
 cap vercheck networkplot 1.2

@@ -1,8 +1,8 @@
 #delimit ;
 program define polyspline, rclass;
-version 10.0;
+version 16.0;
 /*
- Create a basis for a polynomial or other unrestrictd spline
+ Create a basis for a polynomial or other unrestricted spline
  in an X-variable,
  with corresponding parameters equal to values of the spline
  at user-specified reference points,
@@ -10,7 +10,7 @@ version 10.0;
  This program is an easy-to-use front end
  for the bspline package.
 *! Author: Roger Newson
-*! Date: 15 March 2014
+*! Date: 03 April 2020
 */
 
 syntax varname [if] [in] , Generate(passthru)

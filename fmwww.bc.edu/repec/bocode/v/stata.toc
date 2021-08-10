@@ -3,12 +3,16 @@ p valcuofon module for downloading daily share values and assets balances of Chi
 p validly module to correct Stata’s handling of missing values in logical and relational expressions
 p validscale module to assess validity and reliability of a multidimensional scale
 p vallab module to pack values and labels into a new string variable
+p vallabdef module to define value labels from label name, value and label variables
+p vallabframe module to convert a list of value labels to variables in a new data frame 
+p vallabsave module to save and load label-only Stata datasets
 p vallist module to list distinct values of a variable
 p valtovar module to rename value labels to match variable names
 p valuesof module  to return the contents of a variable in a macro
 p vam module to compute teacher value-added measures
 p vanelteren module to perform van Elteren's test  (generalized Wilcoxon-Mann-Whitney ranksum test)
 p varcase module to toggle the case of variable names
+p vardistinct module to generate a variable representing the number(s) of distinct observations or values
 p variog module to calculate and graph semi-variograms 
 p varlab module to save and load variable labels
 p varlabdef module to define a value label with values corresponding to variables
@@ -19,6 +23,7 @@ p varprod module to Generate Row Product of Variables
 p varsearch program to search variable names and labels
 p vartyp module to set variable types for codebook2
 p vce2way module to adjust a Stata command's standard errors for two-way clustering
+p vcemway module to adjust a Stata command's standard errors for multi-way clustering
 p vcf module to import VCF (Variant Caller Format) Files into Stata and format genotype data
 p vclose module to close viewer windows
 p vecar module to estimate vector autoregressive (VAR) models

@@ -1,5 +1,5 @@
 {smcl}
-{* *! Version 2.0 21Jun2017}{...}
+{* *! Version 2.20 04JUN2019}{...}
 
 {title:Title}
 
@@ -11,14 +11,13 @@
 {title:Syntax}
 
 {p 8 17 2}
-{cmdab:qfa:ctor} {varlist} {ifin}
+{cmdab:qfactor} {varlist} {ifin}
 {cmd:,}
 {cmdab:nfa:ctor(#)} [{cmdab:ext:raction(string)} {cmdab:rot:ation(string)} 
-{cmdab:tra:nspose(string)} {cmdab:sta:tement(string)} {cmdab:sco:re(string)} 
-{cmdab:es:ize(string)} {cmdab:bip:olar(string)}] 
+{cmdab:sco:re(string)} {cmdab:es:ize(string)} {cmdab:bip:olar(string)}] 
 
 {p}
-{bf:varlist} includes Q-sorts that need to be factor-analyzed, it can include both transposed (inverted) or non-transposed Q-sorts.
+{bf:varlist} includes Q-sorts that need to be factor-analyzed.
 
 {title: Description}
 
@@ -44,8 +43,7 @@ It also provides number of Q-sorts loaded on each factor, distinguishing stateme
       {bf:pf}             principal factor
       {bf:pcf}            principal-component factor
       {bf:ipf}            iterated principal factor; the default
-      {bf:ml}             maximum-likelihood factor 
-
+      
 {synopt :{opt rotation(string)}}{cmd:qfactor} accommodates almost every rotation technique in Stata including:{p_end}
 {synoptline}
 {synopt:{opt none}}this option is used if no rotation is required{p_end}
@@ -55,16 +53,6 @@ It also provides number of Q-sorts loaded on each factor, distinguishing stateme
 {synopt:{opt promax(#)}}promax power # (implies oblique); default is promax(3){p_end}
 {synopt:{opt oblimin(#)}}oblimin with gamma=#; default is oblimin(0){p_end}
 {synopt:{opt target(Tg)}}rotate toward matrix Tg; this option accommodates theoretical rotation{p_end}
-
-{synopt :{opt tra:nspose(string)}}whether the data file needs to be transposed (inverted), options include:{p_end}
-{synoptline}
-{synopt:{opt no}}the data file does not need to be transposed, “no” is the default option. In this case, besides the Q-sorts the data file should include two additional variables, “StatNo” and “statement”.{p_end}
-{synopt:{opt yes}}the data file needs to be transposed. In this case you need to have another Stata file in your working directory which includes “StatNo” and “statement” as only variables.{p_end}
-
-{synopt :{opt sta:tement(string)}}this option is only used if “transpose” is “yes”. Otherwise, it is not needed{p_end}
-{synoptline}
-{synopt:{opt no}}the data file does not need to be transposed and Q-statements are included in the original file, “no” is the default option. In this case, besides the Q-sorts the data file should include two additional variables, “StatNo” and “statement”{p_end}
-{synopt:{opt filename}} {it:filename} is a Stata file in your working directory with two variables; “StatNo” and “statement”.{p_end}
 
 {synopt :{opt sco:re(string)}}it identifies how the factor scores to be calculated. The options include:{p_end}
 {synoptline}
@@ -76,9 +64,9 @@ It also provides number of Q-sorts loaded on each factor, distinguishing stateme
 {synopt :{opt es:ize(string)}}it specifies how the distinguishing statements to be identified for each factor. The options include:{p_end}
 {synoptline}
 {synopt:{opt stephenson}}distinguishing statements are identified based on Stephenson's formula as described by Brown (1980); {ul:this is the default option}.{p_end}
-{synopt:{opt any #}}for any # between zero and one (0<#<1) distinguishing statements are identified based on Cohen's d.{p_end}
+{synopt:{opt any #}}for any # between zero and one (0<#≤1) distinguishing statements are identified based on Cohen's d.{p_end}
 
-{synopt :{opt bip:olar(string)}}it identifies the criteria for bipolar factor and calculates the factor scores for any bipolar factor. The options include:{p_end}
+{synopt :{opt bip:olar(string)}}it identifies the criteria for bipolar factor and calculates the factor scores for any bipolar factor. Currently,  bipolar() option works only with Brown’s factor scores.The options include:{p_end}
 {synoptline}
 {synopt:{opt 0 or no}}indicates no assessment of a bipolar factor; the default option{p_end}
 {synopt:{opt any #}}any number more than 0 indicates number of negative loadings required for a bipolar factor.{p_end}
@@ -86,7 +74,7 @@ It also provides number of Q-sorts loaded on each factor, distinguishing stateme
 {title: Options for factor extraction}
 
 {phang}
-{opt pf}, {opt pcf}, {opt ipf}, and {opt ml}
+{opt pf}, {opt pcf}, and {opt ipf}
 indicate the type of extraction to be used. The default is {opt ipf}.
 
 {phang2}
@@ -105,35 +93,21 @@ The communalities are assumed to be 1.
 specifies that the iterated principal-factor method be used to analyze the correlation matrix. 
 This reestimates the communalities iteratively. ipf is the default.
 
-{phang2}
-{opt ml} 
-specifies the maximum-likelihood factor method, assuming multivariate normal observations. 
-This estimation method is equivalent to Rao's canonical-factor method and maximizes 
-the determinant of the partial correlation matrix.  Hence, this solution is also 
-meaningful as a descriptive method for nonnormal data.  ml is not available for 
-singular correlation matrices.  At least three variables must be specified with method ml.
 
-
-{title:Saved files}
+{title:Saved results}
 
 {phang}
-In addition to the common results, qfactor saves two files in your working directory for subsequent use;
-
-{phang2}
-{bf:FactorLoadings:} this file includes the following variables; Qsort (Qsort number), unrotated and rotated factor 
+In addition to the displayed results, qfactor saves a data file ({bf:FactorLoadings.dta}) in the working directory for subsequent use.
+The variables included in this file are Qsort (Qsort number), unrotated and rotated factor 
 loadings, unique (for the uniqueness of each Qsort), h2 (communality of the extracted factors), 
 Factor (which indicates which Q-sort was loaded on which factor). This file can be used for 
 subsequent analysis, e.g. producing loading-based graphs.
-
-{phang2}
-{bf:FactorScores:} this file includes the following variables; StatNo (statement number), 
-statement, zscore (composite zscores of statements for each factor), and rank (composite ranking of statements for each factor). 
 
 
 {title:Examples of qfactor}
 
 {phang} 
-1-mldataset.dta: This dataset includes 40 participants on their views on marijuana legalization. 
+1-{bf:mldataset.dta:} This dataset includes 40 participants on their views on marijuana legalization. 
 The study was conducted using 19 statements. Suppose the dataset is transposed 
 (each column represents a Q-sort) and Q-sorts are named v1, v2,…, v40. The following 
 commands will conduct qfactor analysis to extract 3 principal component factors using varimax:{p_end}
@@ -181,18 +155,8 @@ The same as above but with 40 Q-sorts and promax(3) rotation:
 {bf:qfactor v1-v40, nfa(3) rot(promax(3))}
 
 {phang}
-2-	With some non-transposed dataset: Suppose your non-transposed Q-sorts are named v1, v2,…, v30 (you have 30 statements) and 40 Q-sorts. Also suppose your statement file is named exmstat.dta. 
-    The following commands will conduct qfactor analysis to extract 5 principal component factors and varimax rotation:{p_end}
-
-{phang2}
-{bf:qfactor v*, nfa(5) ext(pcf) tra(yes) sta(exmstat)}
-
-{phang}
-Same as above with principal axis factor extraction and quartimax rotation:
-
-{phang2}
-{bf:qfactor v*, nfa(5) ext(pf) rot(quartimax) tra(yes) sta(exmstat)}
-
+2-	{bf:mldata2.dta} a non-transposed dataset: This non-transposed dataset includes 19 statements named v1, v2,…, v19 and 40 Q-sorts. The statement file is named Statements.dta. 
+    The following commands will conduct qfactor analysis to extract 3 principal component factors and varimax rotation:{p_end}
 
 {title:Stored results: Useful for Stata programmers}
 
@@ -206,17 +170,11 @@ Same as above with principal axis factor extraction and quartimax rotation:
       e(chi2_i)           likelihood-ratio test of "independence vs. saturated"
       e(df_i)             degrees of freedom of test of "independence vs.  saturated"
       e(p_i)              p-value of "independence vs. saturated"
-      e(ll_0)             log likelihood of null model (ml only)
-      e(ll)               log likelihood (ml only)
-      e(aic)              Akaike's AIC (ml only)
-      e(bic)              Schwarz's BIC (ml only)
-      e(chi2_1)           likelihood-ratio test of "# factors vs. saturated" (ml only)
-      e(df_1)             degrees of freedom of test of "# factors vs. saturated" (ml only)
 
     {bf:Macros}         
       e(cmd)              factor
       e(cmdline)          command as typed
-      e(method)           pf, pcf, ipf, or ml
+      e(method)           pf, pcf, or ipf
       e(wtype)            weight type (factor only)
       e(wexp)             weight expression (factor only)
       e(title)            Factor analysis
@@ -243,3 +201,8 @@ Same as above with principal axis factor extraction and quartimax rotation:
 
 {pstd}
 {bf:Noori Akhtar-Danesh} ({ul:daneshn@mcmaster.ca}), McMaster University, Hamilton, CANADA
+
+{title:Reference}
+
+{pstd}
+{bf:Akhtar-Danesh N.} qfactor: A command for Q-methodology analysis. {it:The Stata Journal}. 2018;18(2):432-446.

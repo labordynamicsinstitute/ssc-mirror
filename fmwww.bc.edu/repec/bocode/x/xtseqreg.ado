@@ -1,4 +1,4 @@
-*! version 1.1.2  04jun2017
+*! version 1.2.3  04aug2020
 *! Sebastian Kripfganz, www.kripfganz.de
 
 *==================================================*
@@ -6,9 +6,9 @@
 
 *** citation ***
 
-/*	Kripfganz, S., and C. Schwarz (2015).
+/*	Kripfganz, S., and C. Schwarz (2019).
 	Estimation of linear dynamic panel data models with time-invariant regressors.
-	ECB Working Paper 1838. European Central Bank.		*/
+	Journal of Applied Econometrics 34: 526-546.		*/
 
 *** version history at the end of the file ***
 
@@ -100,6 +100,7 @@ program define xtseqreg_gmm, eclass sort
 	tempvar dtouse
 	qui gen byte `dtouse' = `touse'
 	markout `dtouse' D.(`varlist')
+	qui replace `dtouse' = 0 if !(L.`touse')
 
 	*--------------------------------------------------*
 	*** time effects ***
@@ -185,10 +186,11 @@ program define xtseqreg_gmm, eclass sort
 	*--------------------------------------------------*
 	*** type of variance-covariance matrices ***
 	if `"`vce'"' != "" {
-		xtseqreg_parse_vce , `vce' `twostep'
+		xtseqreg_parse_vce if `touse' , `vce' `twostep'
 		loc vce				"`s(vce)'"
 		loc vcediff			= `s(vcediff)'
 		loc inconsistent	= `s(inconsistent)'
+		loc clustvar		"`s(clustvar)'"
 	}
 	else {
 		loc vce				"conventional"
@@ -325,15 +327,22 @@ program define xtseqreg_gmm, eclass sort
 
 	*--------------------------------------------------*
 	*** estimation ***
-	mata: xtseqreg_est(	"`depvar'",						/// dependent variable
-						"`indepvars'",					/// regressor variables
-						"`ivvars'",						/// standard instruments
-						"`gmmivvars'",					/// GMM instruments
-						"`divvars'",					/// standard instruments for first-differenced model
-						"`dgmmivvars'",					/// GMM instruments for first-differenced model
-						"`ecivvars'",					/// collapsed GMM homoskedasticity instruments for first-differenced model
-						"`ecgmmivvars'",				/// GMM homoskedasticity instruments for first-differenced model
-						"`firstvars'",					/// first-stage regressor variables
+	foreach tsvarlist in depvar indepvars ivvars gmmivvars divvars dgmmivvars ecivvars ecgmmivvars firstvars {
+		fvrevar ``tsvarlist'' if `touse'
+		loc t`tsvarlist'	"`r(varlist)'"
+	}
+	if "`clustvar'" != "" {
+		sort `clustvar' `_dta[_TSpanel]' `_dta[_TStvar]'
+	}
+	mata: xtseqreg_est(	"`tdepvar'",					/// dependent variable
+						"`tindepvars'",					/// regressor variables
+						"`tivvars'",					/// standard instruments
+						"`tgmmivvars'",					/// GMM instruments
+						"`tdivvars'",					/// standard instruments for first-differenced model
+						"`tdgmmivvars'",				/// GMM instruments for first-differenced model
+						"`tecivvars'",					/// collapsed GMM homoskedasticity instruments for first-differenced model
+						"`tecgmmivvars'",				/// GMM homoskedasticity instruments for first-differenced model
+						"`tfirstvars'",					/// first-stage regressor variables
 						"`influence'",					/// first-stage influence function variables
 						"`_dta[_TSpanel]'",				/// panel identifier
 						"`_dta[_TStvar]'",				/// time identifier
@@ -342,6 +351,7 @@ program define xtseqreg_gmm, eclass sort
 						"`b1'",							/// first-stage coefficient vector
 						"`V1'",							/// first-stage variance-covariance matrix
 						"`vce'",						/// type of the variance-covariance matrix
+						"`clustvar'",					/// cluster variable
 						`vcediff',						/// error variance from first-differenced residuals
 						"`wmatrix'",					/// type of the weighting matrix
 						`ratio',						/// random-effects variance ratio
@@ -365,6 +375,7 @@ program define xtseqreg_gmm, eclass sort
 	mat `W'				= r(W)
 	loc N				= r(N)
 	loc N_g				= r(N_g)
+	loc N_clust			= r(N_clust)
 	loc T_min			= r(T_min)
 	loc T_max			= r(T_max)
 	loc	k_all			= r(rank)
@@ -460,6 +471,9 @@ program define xtseqreg_gmm, eclass sort
 	}
 	else {
 		eret sca N_g		= `N_g'
+		if "`vce'" == "robust" {
+			eret sca N_clust	= `N_clust'
+		}
 		eret sca rank		= `k'
 	}
 	if "`vce'" != "robust" & !(`twostep' & "`vce'" == "conventional") {
@@ -476,7 +490,13 @@ program define xtseqreg_gmm, eclass sort
 	else if "`vce'" == "robust" {
 		eret loc vcetype	"Robust"
 	}
-	eret loc vce		"`vce'"
+	if "`clustvar'" == "" {
+		eret loc vce		"`vce'"
+	}
+	else {
+		eret loc vce		"cluster"
+		eret loc clustvar	"`clustvar'"
+	}
 	eret loc wmatrix	"`wmatrix', ratio(`ratio')"
 	if `firstvars' {
 		eret loc ecgmmivvars_2 "`ecgmmivvars'"
@@ -769,17 +789,21 @@ end
 **** syntax parsing for variance-covariance matrix ****
 program define xtseqreg_parse_vce, sclass
 	version 12.1
-	syntax , [VCE(passthru) TWOstep]
+	syntax [if] [in] , [VCE(passthru) TWOstep]
 
 	loc vcediff			= 0
 	loc inconsistent	= 0
-	cap _vce_parse , opt(CONVENTIONAL EC Robust) : , `vce'
+	cap _vce_parse , opt(CONVENTIONAL EC Robust) argopt(CLuster) : , `vce'
 	if "`r(vce)'" == "" {
 		cap _vce_parse , : , `vce'
 	}
 	if _rc != 0 {
-		cap _vce_parse , argopt(CONVENTIONAL EC Robust) : , `vce'
+		cap _vce_parse , argopt(CONVENTIONAL EC Robust CLuster) : , `vce'
 		if _rc != 0 {
+			if "`r(vce)'" == "cluster" {
+				di as err "option vce(cluster) incorrectly specified"
+				exit 198
+			}
 			_vce_parse , : , `vce'
 		}
 		loc vceargs			"`r(vceargs)'"
@@ -802,15 +826,50 @@ program define xtseqreg_parse_vce, sclass
 			}
 		}
 	}
+	loc vce				"`r(vce)'"
+	if "`vce'" == "cluster" {
+		if `: word count `r(cluster)'' > 1 {
+			di as err "option vce(cluster) incorrectly specified -- too many arguments"
+			exit 198
+		}
+		loc clustvar		"`r(cluster)'"
+		if "`clustvar'" != "`_dta[_TSpanel]'" {
+			xtseqreg_cluster `clustvar' `if' `in'
+		}
+	}
 
-	if "`r(vce)'" == "" {
+	if "`vce'" == "" {
 		sret loc vce		"conventional"
 	}
+	else if "`vce'" == "cluster" {
+		sret loc vce		"robust"
+		sret loc clustvar	"`clustvar'"
+	}
 	else {
-		sret loc vce		"`r(vce)'"
+		sret loc vce		"`vce'"
 	}
 	sret loc vcediff		= `vcediff'
 	sret loc inconsistent	= `inconsistent'
+end
+
+*==================================================*
+**** check if panel identifier is nested within cluster identifier ****
+// (inspired by _xtreg_chk_cl2.ado)
+program define xtseqreg_cluster, rclass sort
+	syntax varname [if] [in]
+	marksample touse
+	sort `varlist'
+
+	tempname aux aux2
+	qui by `varlist': gen long `aux' = cond(_n == 1, 1, 0) if `touse'
+	qui replace `aux' = sum(`aux')
+	sort `_dta[_TSpanel]' `varlist'
+	qui by `_dta[_TSpanel]': gen long `aux2' = `aux'[1] - `aux'[_N]
+	qui count if `aux2' != 0 & `touse'
+	if r(N) > 0 {
+		di as err "panels are not nested within clusters"
+		exit 498
+	}
 end
 
 *==================================================*
@@ -1117,6 +1176,10 @@ end
 
 *==================================================*
 *** version history ***
+* version 1.2.3  04aug2020  bug with if-condition fixed
+* version 1.2.2  02oct2017  bug fixed with option vce(cluster) and time-series operators
+* version 1.2.1  28sep2017  bug fixed with option vce(cluster) if data set is not sorted by cluster
+* version 1.2.0  13sep2017  option vce(cluster) added
 * version 1.1.2  04jun2017  reported weighting matrix rescaled by number of groups
 * version 1.1.1  31may2017  option scores replaces option influence for predict; difference-in-Hansen test added to estat overid; documentation for estat hausman added; improved display options; bug fixed for predict with Windmeijer-corrected scores
 * version 1.1.0  11apr2017  predict computes influence functions now with additional Windmeijer correction term; undocumented postestimation command estat hausman added

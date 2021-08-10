@@ -1,8 +1,8 @@
 /*
-*! version 1.2.1 # Ian White # 11dec2015
-    changes for disconnected network:
-        suggests running within a component
-        doesn't need force option when run within a component
+*! Ian White # 4apr2018
+	better error message for network meta without c/i or previous model
+version 1.2.1 # Ian White # 29jun2017 
+	- attempted bug fix in standard format with nested trt names - see line 467
 version 1.2.0 # Ian White # 3jul2015
     prints warning if MNAR has been set
 version 1.1.4 # Ian White # 1jul2015
@@ -68,7 +68,7 @@ if !mi("`anything'") {
     if substr("consistency",1,length("`anything'"))=="`anything'" local model consistency
     else if substr("inconsistency",1,length("`anything'"))=="`anything'" local model inconsistency
     else {
-    	di as error "Syntax: network meta c[onsistency]|i[nconsistency] [if] [in], ..."
+    	di as error "Syntax: network meta c[onsistency]|i[nconsistency], ..."
     	exit 198
     }
 }
@@ -81,19 +81,10 @@ if !mi("`luades'`luades2'") {
 }
 if mi("`ncomponents'") & `warn' di as error "Warning: can't check for disconnected network"
 else if `ncomponents'>1 {
-    summ `component' `if' `in', meanonly
-    if r(max)==r(min) di as text "Note: network is disconnected, but you are fitting network meta within one component"
-    else {
-        if mi("`force'") | `warn' di as error "Warning: you are trying to run network meta across components of a disconnected network"
-        if mi("`force'") {
-            di as error "To fit network meta within a component, try: "
-            di as error "    network meta `model' if `component'==# ... (where # = 1" _c
-            forvalues j=2/`ncomponents' {
-                di as error ",`j'" _c
-            }
-            di as error ")"
-            exit 498
-        }
+    if mi("`force'") | `warn' di as error "Warning: network is disconnected, so network meta models will be wrong"
+    if mi("`force'") {
+        di as error "(Use force option to override - at your own risk)"
+        exit 498
     }
 }
 if mi("`df_inconsistency'") di as error "Warning: can't check df for inconsistency"
@@ -149,11 +140,11 @@ else {
     cap vercheck mvmeta `minmvmetaversion'
     if _rc {
         if _rc == 601 {
-            di as error `"network requires mvmeta: click {stata "net install mvmeta, from(http://www.mrc-bsu.cam.ac.uk/IW_Stata/meta)":here} to install"'
+            di as error `"network requires mvmeta: click {stata "net install mvmeta, from(http://www.homepages.ucl.ac.uk/~rmjwiww/stata/meta)":here} to install"'
         }
         else if _rc == 498 {
             di as error "network requires mvmeta version `minmvmetaversion' or later"
-            di as error `"Click {stata "net install mvmeta, from(http://www.mrc-bsu.cam.ac.uk/IW_Stata/meta) replace":here} to update your version of mvmeta"'
+            di as error `"Click {stata "net install mvmeta, from(http://www.homepages.ucl.ac.uk/~rmjwiww/stata/meta) replace":here} to update your version of mvmeta"'
         }
         else di as error "vercheck: unknown error"
         exit _rc
@@ -422,6 +413,10 @@ if !mi("`model'") {
 }
 
 else {
+	if "`e(cmd)'"!="mvmeta" | !inlist("`e(network)'","consistency","inconsistency") {
+    	di as error "network meta must be followed by c[onsistency] or i[nconsistency] unless a previous network meta model is available for replay"
+    	exit 198
+	}
     di as text "Using last-run `e(network)' model"
     local fullcommand mvmeta, `i2' `options'
 }
@@ -475,6 +470,7 @@ foreach thisdes of local designs {
                 else if "`format'"=="standard" { 
                     foreach term in `e(xvars_1)' {
                         local termtrt = substr("`term'", length("`trtdiff'1_")+1,length("`trt'")) 
+                        local termtrt = substr("`term'", length("`trtdiff'1_")+1,.) // CORRECTION??
                         if "`termtrt'" != "`trt'" continue
     					local mult1 = (("`t2'"=="`termtrt'") - ("`t1'"=="`termtrt'")) 
                         local termdes = substr("`term'", length("`trtdiff'1_`trt'_")+1,.) 

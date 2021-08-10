@@ -1,5 +1,5 @@
 {smcl}
-{* *! version 1.0 24april2014}{...}
+{* *! version 1.1 29january2019}{...}
 
 {title:Title}
 
@@ -8,7 +8,7 @@
 
 {title:Syntax}
 
-{p 8 15 2} {cmd:pvw} {varlist} [if/], {opt casesens(real)} {opt contsens(real)} {opt casespec(real)} {opt contspec(real)} {opt outcome}({help varlist:varname})
+{p 8 15 2} {cmd:pvw} {varlist}, {opt casesens(real)} {opt contsens(real)} {opt casespec(real)} {opt contspec(real)} {opt outcome}({help varlist:varname})
 [ {opt othercov}({help varlist:varlist}) {opt cohort} {opt reps(#)} {opt seed(#)} ]
 
 {synoptset 25 tabbed}{...}
@@ -68,8 +68,8 @@ to be 0.9 in low birthweight and normal birthweight observations.{p_end}
 
 {title:Author}
 
-{pstd}Jonathan Bartlett, AstraZeneca, UK{break}
-jwb133@googlemail.com{break}
+{pstd}Jonathan Bartlett, University of Bath, UK{break}
+j.w.bartlett@bath.ac.uk{break}
 {browse "http://thestatsgeek.com":thestatsgeek.com}	
 
 

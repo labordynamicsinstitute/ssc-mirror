@@ -1,5 +1,5 @@
 {smcl}
-{* *! version 1.0  24 Feb 2017}{...}
+{* *! version 1.1  24 Apr 2018}{...}
 {vieweralsosee "" "--"}{...}
 {vieweralsosee "[D] label" "help label"}{...}
 {viewerjumpto "Syntax" "labeldatasyntax##syntax"}{...}
@@ -84,7 +84,7 @@ label variable badears "Has bad ears?" {break}
 {marker remarks}{...}
 {title:Remarks}
 
-{phang}i.   It is hoped that the .csv files provided in this package could be useful for users in 
+{phang}i.   It is hoped that the .xlsx (and/or .csv) files provided in this package could be useful for users in 
 communicating to data providers what is a convenient format to receive a data dictionary associated with a dataset.
 
 {phang}ii. All variables are optional. You just might not get many lines of syntax.
@@ -101,6 +101,16 @@ corresponding to a set of codings for categorical variables.
 
 {marker examples}{...}
 {title:Examples} (The examples assume the ancillary files have been downloaded to the current folder.) 
+
+{pmore}{txt}Example 0{break}
+{cmd}
+. import excel "Guide. How to share data from a project in Excel v2.xlsx", sheet("Data Dictionary1") cellrange(A2:D27) firstrow clear {break}
+. labeldatasyntax, saving("ex0_label.do") {break}
+. import excel "Guide. How to share data from a project in Excel v2.xlsx", sheet("Data1") cellrange(B2:K8) firstrow clear {break}
+. describe {break}
+. do "ex0_label.do" {break}
+. describe {break}
+. browse  {break}
  
 {pmore}{txt}Example 1{break}
 {cmd}
@@ -132,6 +142,6 @@ corresponding to a set of codings for categorical variables.
 
 {pstd}{txt}
 Mark Chatfield {break}
-Menzies School of Health Research, Charles Darwin University,{break}
-Darwin, Australia{break}
-Mark.Chatfield@menzies.edu.au{break}
+University of Queensland{break}
+Australia{break}
+M.Chatfield@uq.edu.au{break}

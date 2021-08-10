@@ -1,4 +1,4 @@
-*! version 3.1.1 JMGarrett 26Mar06  
+*! version 3.1.3 JMGarrett 19Feb14  
 /* Calculate adjusted means, medians, or probabilities for nominal       */
 /*  variables in linear, quantile, or logistic regression models         */
 /* Form: predxcat y, xvar(x1 x2) cov1 cov2...)                           */
@@ -7,13 +7,14 @@
 /* 06Jul03: uses new lrtest code                                         */
 /* 30Aug04: add cluster option                                           */
 /* 26Mar06: fixed -- interaction can now have more than 11 categories    */
+/* 19Feb14: Added "xsectional" option for table and y-axis label         */
 
 program define predxcat
   version 8.0
   #delimit ;
     syntax varlist (min=1 max=1) [if] [in] [pweight], Xvar(varlist)
       [Adjust(string) MODel Graph LINear MEDian Bar CLuster(string)
-       Level(real 95) SAVepred(string) * ] ;
+       Level(real 95) SAVepred(string) XSECtional * ] ;
   #delimit cr
   marksample touse
   markout `touse' `xvar'
@@ -273,10 +274,18 @@ program define predxcat
       quietly gen adjmed=adjval
       }
     if "`regtype'"=="log" {
-      #delimit ;
-        display as result "*" as text "Adjusted" as result "*" as text
-          " Probabilities and `level'% Confidence Intervals" ;
-      #delimit cr
+       if "`xsectional'"=="" {
+          #delimit ;
+             display as result "*" as text "Adjusted" as result "*" as text
+              " Probabilities and `level'% Confidence Intervals" ;
+          #delimit cr
+          }
+       if "`xsectional'"=="xsectional" {
+          #delimit ;
+             display as result "*" as text "Adjusted" as result "*" as text
+              " Proportions and `level'% Confidence Intervals" ;
+          #delimit cr
+          }
       local probtyp="adjprob"
       quietly gen adjprob=adjval
       format adjprob %8.3f
@@ -300,10 +309,18 @@ program define predxcat
       quietly gen median=adjval
       }
     if "`regtype'"=="log" {
-      #delimit ;
-        display as result "*" as text "Unadjusted" as result "*" as text
-          " Probabilites and `level'% Confidence Intervals";
-      #delimit cr
+       if "`xsectional'"=="" {
+          #delimit ;
+             display as result "*" as text "Unadjusted" as result "*" as text
+              " Probabilities and `level'% Confidence Intervals" ;
+          #delimit cr
+          }
+       if "`xsectional'"=="xsectional" {
+          #delimit ;
+             display as result "*" as text "Unadjusted" as result "*" as text
+              " Proportions and `level'% Confidence Intervals" ;
+          #delimit cr
+          }
       local probtyp="prob"
       quietly gen prob=adjval
       format prob %8.3f
@@ -498,11 +515,21 @@ program define predxcat
         }
       if "`regtype'"=="log" {
         if "`bar'"=="" {
-          local l2title "Unadjusted Probabilities and `level'% CI" 
-          }
+           if "`xsectional'"=="" {
+              local l2title "Unadjusted Probabilities and `level'% CI"
+              }
+           if "`xsectional'"=="xsectional" {
+              local l2title "Unadjusted Proportions and `level'% CI"
+              } 
+           }
         if "`bar'"=="bar" {
-          local l2title "Unadjusted Probabilities" 
-          }
+           if "`xsectional'"=="" {
+              local l2title "Unadjusted Probabilities"
+              }
+           if "`xsectional'"=="xsectional" {
+              local l2title "Unadjusted Proportions"
+              } 
+           }
         }
       }    
     if `numcov'>0 {
@@ -524,10 +551,20 @@ program define predxcat
         }
       if "`regtype'"=="log" {
         if "`bar'"=="" {
-          local l2title "Adjusted Probabilities and `level'% CI" 
-          }
+           if "`xsectional'"=="" {
+              local l2title "Adjusted Probabilities and `level'% CI"
+              }
+           if "`xsectional'"=="xsectional" {
+              local l2title "Adjusted Proportions and `level'% CI"
+              } 
+           }
         if "`bar'"=="bar" {
-          local l2title "Adjusted Probabilities"
+           if "`xsectional'"=="" {
+              local l2title "Adjusted Probabilities"
+              }
+           if "`xsectional'"=="xsectional" {
+              local l2title "Adjusted Proportions"
+              } 
           }
         }
       }

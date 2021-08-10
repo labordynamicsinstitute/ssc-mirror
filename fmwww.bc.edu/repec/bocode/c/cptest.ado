@@ -1,33 +1,44 @@
-*!version1.0 14jul2017
+*!version2.1 27Mar2020
 
 /* -----------------------------------------------------------------------------
 ** PROGRAM NAME: CPTEST
-** VERSION: 1.0
-** DATE: JULY 14, 2017
+** VERSION: 2.1
+** DATE: March 27, 2020
 ** -----------------------------------------------------------------------------
 ** CREATED BY: JOHN GALLIS, LIZ TURNER, FAN LI, HENGSHI YU
 ** -----------------------------------------------------------------------------
 ** PURPOSE: PERFORM CLUSTERED PERMUTATION TEST
 ** -----------------------------------------------------------------------------
-
+** UPDATES: March 23, 2020 - Fixed error where program was not removing extraneous rows from constrained matrix
+**						   - Program now allows for factor variables in the regression
+**						   - Program now allows for count outcomes
+**						   - Program now returns p-value to r(pval)
+**						   - Updated Marksample so that missing values are removed
+** 			March 27, 2020 - Minor update to give more detailed warning when string variable is included as a predictor
 ** -----------------------------------------------------------------------------
 */
 
+capture program drop cptest
 program define cptest, rclass
 	version 14
 	
 	#delimit ;
-	syntax varlist(min=1),
-		 clustername(varname) directory(string) cspacedatname(string) outcometype(string) [categorical(varlist)]
+	syntax varlist(fv min=1),
+		 clustername(varname) directory(string) cspacedatname(string) outcometype(string)
 	;
 	
 	#delimit cr
 	
-	marksample touse, novarlist
+	marksample touse
 	quietly count if `touse'
 	
-	/* error if there are no observations in the dataset */
+	preserve
+    qui keep if `touse'
+	
+	/* error if there are no observations in the dataset or to use */
 	if `r(N)' == 0 {
+		di as error "There are no observations to use."
+		di as error "Check if any of the predictors are coded as string variables.  If so, use the encode command to recode them as numeric."
 		error 2000
 	}
 	
@@ -36,34 +47,10 @@ program define cptest, rclass
 		exit 198
 	}
 
+	di " "
+	di " "
+	di as error "Note: Make sure the ordering of clusters matches the ordering during randomization!"
 	
-	if "`categorical'"!="" {
-		local ncatvars: word count `categorical'
-		tokenize `categorical'
-		
-		forval i=1/`ncatvars' {
-			/* generate dummy variables */
-			quietly tabulate ``i'', gen(``i''_)
-			/* give warning if variable only has one level */
-			if r(r) == 1 {
-				di as text "--"
-				di as text "Warning: variable ``i'' only has one level. It will not be used in the program"
-				di as text "--"
-			}
-			/* drop one of the dummy variables */
-			drop ``i''_1
-			/* count number of dummy variables */
-			local ``i''_num=r(r) - 1
-			forval j=1/```i''_num' {
-				local k=`j'+1
-				local add "``i''_`k'"
-				/* code that adds the dummy variables to `varlist' */
-				local varlist : list varlist | add
-			}
-			/* code that removes categorical variables from varlist */
-			local varlist : list varlist-categorical
-		}
-	}
 	
 	/* for error checking */
 	local outcome `: word 1 of `varlist''
@@ -96,12 +83,23 @@ program define cptest, rclass
 		predict double _resid, residuals
 		di as result "Logistic regression was performed"
 	}
+	else if "`outcometype'" == "count" | "`outcometype'" == "Count" {
+		quietly tab `outcome'
+		if `r(r)' <= 1 {
+			di as error "Error: Outcome does not have enough variability!"
+			exit 198
+		}
+		quietly poisson `varlist'
+		predict double _resid, residuals
+		di as result "Poisson regression was performed"
+	}
 	else {
-		di as err "Error: Invalid outcometype specification; must be either continuous or binary"
+		di as err "Error: Invalid outcometype specification; must be either continuous, binary, or count"
 		exit 198
 	}
 	
-	preserve
+	qui tempfile _temp
+    qui save "`_temp'"
 	local nvar: word count `clustername'
 	tokenize `clustername'
 	/* average residual by cluster */
@@ -125,50 +123,40 @@ program define cptest, rclass
 	quietly cd "`directory'"
 
 	mata: ptest("`spacedat'")
-	restore
+	use "`_temp'", clear
 	
-	/* drop dummy variables from the dataset */
-	if "`categorical'"!="" {
-		local ncatvars: word count `categorical'
-		tokenize `categorical'
-		
-		forval i=1/`ncatvars' {
-			quietly tabulate ``i'',
-			local ``i''_num=r(r) - 1
-			forval j=1/```i''_num' {
-				local k=`j'+1
-				local add "``i''_`k'"
-				/* code that drops the dummy variables  */
-				drop `add'
-			}
-			
-		}
-	}
+	return scalar pval=pval[1,1]
+	
 	/* drop residuals */
 	capture drop _resid _residmn
 	
+	restore
+	
 end
 
+
+capture mata: mata drop ptest()
 mata:
 matrix ptest(string scalar spacedat) {
 
 //stata(resdat)
-res=st_data(.,.)
+res=st_data(.,.,0)
 
 stata(spacedat)
-stata("drop chosen_scheme")
+stata("drop chosen_scheme RzSpaceRow Bscores")
 stata("quietly recode * (0=-1)")
 st_view(cspace=.,.,.)
 
 // column matrix of test statistics
 teststat=abs(cspace*res)
 
-
 stata(spacedat)
 stata("quietly keep if chosen_scheme==1")
-stata("quietly drop chosen_scheme")
+stata("quietly drop chosen_scheme RzSpaceRow Bscores")
 chosen=st_data(1,.)'
 printf("Final chosen scheme used by the cptest program:")
+printf(" \n")
+printf(" \n")
 chosen
 
 stata(spacedat)
@@ -186,6 +174,8 @@ pval = mean(indmat)
 printf(" \n")
 printf("Clustered permutation test p-value = %9.4f\n",pval)
 printf("Note: test may be anti-conservative if number of intervention clusters does not equal number of control clusters")
+
+st_matrix("pval",pval)
 
 }
 end

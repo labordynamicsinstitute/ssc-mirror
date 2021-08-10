@@ -2,10 +2,11 @@
 	Authors: Sebastien Fontenay (UCL - sebastien.fontenay@uclouvain.be)
 	         Sem Vandekerckhove (HIVA, KUL - sem.vandekerckhove@kuleuven.be)
 
-	Last update: September 2015
+	Version: 2.0
+	Last update: September 2018
  
-	This program uses syntax from Diego Jose Torres Torres (diegotorrestorres@gmail.com). 
-	We also thank Duarte Gonçalves for the early feedback and spontaneously sent help file. 
+	This program uses syntax from Diego Jose Torres Torres (diegotorrestorres@gmail.com).
+	We also thank Duarte Gonçalves for the early feedback and spontaneously sent help file.
 
 	**********************************************************************************************************************************
 	**********************************************************************************************************************************
@@ -38,11 +39,11 @@ if (c(changed) == 1) & (`"`clear'"' == "" ) {
     error 4
 }
 
-insheet using "http://ec.europa.eu/eurostat/estat-navtree-portlet-prod/BulkDownloadListing?sort=1&file=table_of_contents_en.txt"
+insheet using "https://ec.europa.eu/eurostat/estat-navtree-portlet-prod/BulkDownloadListing?sort=1&file=table_of_contents_en.txt"
 keep if code=="`indicator'"
 count
 if r(N)==0 {
-	noisily display in red "Dataset does not exist - Consult Eurostat website: http://ec.europa.eu/eurostat/data/database"
+	noisily display in red "Dataset does not exist - Consult Eurostat website: https://ec.europa.eu/eurostat/data/database"
 	clear
 	exit
 }
@@ -72,7 +73,7 @@ if c(os)=="Windows" {
 // Download data from Eurostat bulk download facility
 
 noisily di "Downloading and formating data ..."
-copy  "http://ec.europa.eu/eurostat/estat-navtree-portlet-prod/BulkDownloadListing?sort=1&file=data%2F`indicator'.tsv.gz" `indicator'.tsv.gz, replace
+copy  "https://ec.europa.eu/eurostat/estat-navtree-portlet-prod/BulkDownloadListing?sort=1&file=data%2F`indicator'.tsv.gz" `indicator'.tsv.gz, replace
 if c(os)=="Windows" {
 	shell "C:\Program Files\7-Zip\7zG.exe" x -y `indicator'.tsv.gz
 }
@@ -295,14 +296,14 @@ else {
 
 ds *`indicator'*, not
 foreach var of varlist `r(varlist)' {
-	insheet using "http://ec.europa.eu/eurostat/estat-navtree-portlet-prod/BulkDownloadListing?sort=1&file=dic%2Fen%2Fdimlst.dic", tab clear
+	insheet using "https://ec.europa.eu/eurostat/estat-navtree-portlet-prod/BulkDownloadListing?sort=1&file=dic%2Fen%2Fdimlst.dic", tab clear
 	replace v1=lower(v1)
 	keep if v1=="`var'"
 	local lb`var'=v2
 		if "`label'" == "nolabel" {
 		}
 		else {
-			cap insheet using "http://ec.europa.eu/eurostat/estat-navtree-portlet-prod/BulkDownloadListing?sort=1&file=dic%2Fen%2F`var'.dic", tab clear
+			cap insheet using "https://ec.europa.eu/eurostat/estat-navtree-portlet-prod/BulkDownloadListing?sort=1&file=dic%2Fen%2F`var'.dic", tab clear
 			cap tempfile `var'_file
 			cap rename v1 `var'
 			cap rename v2 `var'_label

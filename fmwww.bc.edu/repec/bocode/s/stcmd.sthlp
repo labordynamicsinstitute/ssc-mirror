@@ -48,7 +48,15 @@ unless the user uses the {helpb quietly} prefix.
 {pstd}
 These are usually prefixed by {cmd:/} under Windows and by {cmd:-} under Linux.
 A list of these switches can be found in the Stat/Transfer {cmd:.pdf} manual for the user's installation.
-Some Windows switches for Version 13 of Stat/Transfer are as follows:
+Some Windows switches for Version 15 of Stat/Transfer are as follows:
+
+{p 4 8 2}
+{cmd:/ex}{it:filename} tells Stat/Transfer to execute the commands
+in the Stat/Transfer command file {it:filename}
+before executing the supplied Stat/Transfer command.
+For instance, the switch {cmd:\exmysetup.stcmd}
+will cause Stat/Transfer to run {cmd:mysetup.stcmd}
+before executing the Stat/Transfer command.
 
 {p 4 8 2}
 {cmd:/o-} specifies that Stat/Transfer will not optimize the output data set to be as small as possible

@@ -1,5 +1,5 @@
 {smcl}
-{* *! version 0.0.1 08.03.2017}{...}
+{* *! version 1.0.1 29.10.2017}{...}
 
 {title:Title}
 
@@ -26,7 +26,9 @@
 {synopt:{opt cmax(#)}} which value should get the lowest value for color.{p_end}
 {synopt:{opt rgb_low(# # #)}} specify color low values of c. (default: red) {p_end}
 {synopt:{opt rgb_high(# # #)}} specify color high values of c. (default: blue) {p_end}
-
+{synopt:{opt symbol_opacity(#%)}} specify opacity. (default: blue) {p_end}
+{synopt:{opt tw_pre(twoway graph)}} draw another twoway graph underneath.  {p_end}
+{synopt:{opt tw_post(twoway graph)}} draw another twoway graph on top. {p_end}
 {marker description}{...}
 {title:Description}
 
@@ -54,7 +56,7 @@ This example generates a data set of 3 variables and plots a colored scatter plo
 {stata `"gen c = min(abs(x),abs(y))"'}
 {p_end}
 {phang}
-{stata `"colorscatter x y c, scatter_options(msymb(Oh)) title("Twowaytitle") rgb_low(255 0 0) rgb_high(0 255 0)"'}
+{stata `"colorscatter x y c, scatter_options(msymb(Oh)) title("Twowaytitle") rgb_low(255 0 0) rgb_high(0 255 0) tw_pre(line x y, lc(gray))"'}
 {p_end}
 
 {title:See also}
@@ -63,14 +65,17 @@ This example generates a data set of 3 variables and plots a colored scatter plo
 {help twoway},
 {help twoway scatter},
 
-
+{title:Acknowledgements}
+Eric Melse suggested and implemented the symbol_opacity option 
+{pstd}
+{p_end}
 {title:Author}
 
 {pstd}
-Simon Heﬂ, Goethe University Frankfurt, ({browse "mailto:hess@econ.uni-frankfurt.de":hess@econ.uni-frankfurt.de}){p_end}
+Simon He√ü, Goethe University Frankfurt.{p_end}
 
 {pstd}
 The latest version of colorscatter can always be obtained from {browse "https://github.com/simonheb/colorscatter"} or {browse "http://HessS.org"}.{p_end}
 
 {pstd}
-I am happy to receive comments and suggestions regarding bugs or possibilites for improvements/extensions.{p_end}
+I am happy to receive comments and suggestions regarding bugs or ideas for improvements/extensions via {browse "https://github.com/simonheb/colorscatter/issues"}.{p_end}

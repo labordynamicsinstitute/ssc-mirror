@@ -1,6 +1,6 @@
 d 'BSPLINE': modules to compute B-splines parameterized by their values at reference points
 d
-d bspline and frencurv, each of which generates a basis of splines
+d  bspline and frencurv, each of which generates a basis of splines
 d in an X-variable, for use in the varlist of a regression command
 d (such as regress or glm) for fitting a spline in the X-variable.
 d bspline generates a basis of Schoenberg B-splines, whereas
@@ -13,13 +13,12 @@ d KW: b-spline
 d KW: french curve
 d KW: reference spline
 d
-d Requires: Stata version 10.0
+d Requires: Stata version 16.0
 d
+d Distribution-Date: 20200405
 d
-d Author: Roger Newson, National Heart and Lung Institute, Imperial College London
+d Author: Roger Newson, Imperial College London
 d Support: email r.newson@@imperial.ac.uk
-d
-d Distribution-Date: 20140108
 d
 f bspline.ado
 f bspline.sthlp

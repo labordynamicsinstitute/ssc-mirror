@@ -1,4 +1,4 @@
-d 'XTCDF': module to perform Pesaran's D-test for cross-sectional dependence in panel context
+d 'XTCDF': module to perform Pesaran's CD-test for cross-sectional dependence in panel context
 d
 d   xtcdf calculates the CD-test for cross-sectional dependence
 d described in Pesaran (2004) and Pesaran (2015)    for a varlist

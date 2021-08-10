@@ -1,6 +1,6 @@
 {smcl}
 {hline}
-help {hi:bdiff}{right: 16July2016, Lian Yujun}
+help {hi:bdiff}{right: 24Nov2020, {browse "https://www.lianxh.cn/news/051e3a01cdb19.html":blog}}
 {hline}
 
 {title:Title}
@@ -230,15 +230,19 @@ then the samping is clusted by {it:id} vairable specified by {help xtset}. {p_en
 {p 4 13 2}
 Online:  help for {help chowtest} (if installed), {help bsample}, {help permute}, {help suest}. 
 
+{title: Acknowledgements}
+
+{pstd}   
+Thanks for Jingxin Hu (jhu109@syr.edu) from Syracuse University. 
+Hu helps me fix the bug of {opt seed(#)} option.
+
 
 {title:Author}
 
 {phang}
-{cmd:Yujun,Lian (Arlion)} Department of Finance, Lingnan College, Sun Yat-Sen University, China.{break}
+{cmd:Yujun,Lian (arlionn)} Department of Finance, Lingnan College, Sun Yat-Sen University.{break}
 E-mail: {browse "mailto:arlionn@163.com":arlionn@163.com}. {break}
-HomePage: {browse "http://www.lingnan.sysu.edu.cn/lnshizi/faculty_vch.asp?name=lianyj":http://www.lingnan.sysu.edu.cn/lnshizi/faculty_vch.asp?name=lianyj}. {break}
-MyCourse: {browse "http://www.peixun.net/author/3.html":http://www.peixun.net/author/3.html}. {break} 
-Youku Videos: {browse "http://i.youku.com/arlion":http://i.youku.com/arlion}. {break}
+Blog: {browse "https://www.lianxh.cn":https://www.lianxh.cn} {break}
 {p_end}
 
 
@@ -258,9 +262,12 @@ http://onlinelibrary.wiley.com/doi/10.1111/0022-1082.00121/full.{p_end}
 
 {p 4 8 2}
 Efron, B., Tibshirani, R., 1993. 
-An Introduction to the Bootstrap, Chapmann & Hall. 
+An Introduction to the Bootstrap, Chapmann & Hall. {p_end}
 
 {p 4 8 2} Lian, Y.J., J. Cheng, 2007. 
 Investment-cash flow sensitivity: Financial constraint or agency cost?
-Journal of Finance and Economics, 2007(2): 37-46. (In Chinese)  {p_end}
+Journal of Finance and Economics, 2007(2): 37-46. (In Chinese)  
+
+{p 4 8 2} 连玉君, 2016. 
+Stata: 如何检验分组回归后的组间系数差异？, {browse "https://www.lianxh.cn/news/051e3a01cdb19.html":https://www.lianxh.cn/news/051e3a01cdb19.html}{p_end}
 

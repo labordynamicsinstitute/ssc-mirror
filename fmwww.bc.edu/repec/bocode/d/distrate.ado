@@ -1,4 +1,4 @@
-*! version 1.1.5 18May2013
+*! version 1.1.7  26Jun2017
 *! Directly standardized rates with improved confidence intervals
 program define distrate, rclass
 	version 9.0
@@ -173,7 +173,7 @@ program define distrate, rclass
 	if "`format'" != "" format crude rateadj lb_g ub_g lb_dob ub_dob se_gam `stratio' `ubfay' `format'
 	tempname NDeath Nobs Crude Adj Se_gam Ub_G Lb_G Ub_D Lb_D 
 	if "`fay'"!= "" tempname Ub_F 
-	if "`stratio"!= "" tempname SRR Lb_S Ub_S
+	if "`stratio'"!= "" tempname SRR Lb_S Ub_S
 	mat `Ub_D'=J(1,`n',0)
 	mat `Lb_D'=J(1,`n',0)
 	mat `Ub_G'=J(1,`n',0)
@@ -184,7 +184,7 @@ program define distrate, rclass
 	mat `NDeath'=J(1,`n',0)
 	mat `Nobs'=J(1,`n',0)
 	if "`fay'"!= "" 	mat `Ub_F'=J(1,`n',0)
-	if "`stratio"!= "" {
+	if "`stratio'"!= "" {
 		mat `SRR'=J(1,`n',0)
 		mat `Lb_S'=J(1,`n',0)
 		mat `Ub_S'=J(1,`n',0)
@@ -273,4 +273,47 @@ di as txt "CI based on the gamma distribution (Fay and Feuer, 1997. Tiwari and a
 		}
 		save `stfile', `outrgro'
 	}
+end
+
+program define _crccip, rclass
+	version 6
+	tempname f fp x k topk lev
+* touched by kth  -- double saves in r() and S_#
+* touched by jml -- fix algorithm
+	scalar `k'= `1'
+	scalar `lev' = (100-`2')/200
+	scalar `x' = `k'
+	if `x'== 0 {
+		scalar `x' = .1  /* need a better starting point */
+	}
+	scalar `f' = 1-gammap(`k'+1,`x') - `lev'	/* Pr(k or fewer)*/
+	while ((abs(`f')> 1e-8)&(`x' < .)) { 
+		scalar `fp'= -dgammapdx(`k'+1,`x')
+		scalar `x' = `x' - `f'/`fp'
+		scalar `f' = 1-gammap(`k'+1,`x') - `lev'
+	}
+	global S_2 : di %16.0g `x'
+	ret scalar upper = `x'
+	if `k'==0 { 
+		global S_1 0
+		ret scalar lower = 0
+		exit
+	}
+	scalar `x' = `k'
+	scalar `topk'= `k'
+	scalar `f' = gammap(`k',`x') - `lev'	/* Pr(k or more)	*/
+	while ((abs(`f') > 1e-8)&(`x'<.)) { 
+		scalar `fp'=dgammapdx(`k',`x')
+		scalar `x' = `x' - `f'/`fp'
+		if `x'<0 { 
+			scalar `x' = 0 
+		}
+		else if `x'>`topk' { 
+			scalar `topk' = `topk' - .1
+			scalar  `x'= `topk'
+		}
+		scalar `f' = gammap(`k',`x') - `lev'
+	}
+	global S_1 : di %16.0g `x' 
+	ret scalar lower = `x'
 end

@@ -9,10 +9,10 @@ d KW: flexible parametric
 d
 d Requires: Stata version 8
 d
-d Distribution-Date: 20110122
+d Distribution-Date: 20200811
 d
 d Author: Patrick Royston, MRC Clinical Trials Unit
 d Support: email pr@@ctu.mrc.ac.uk
 d
 f stcstat2.ado
-f stcstat2.hlp
+f stcstat2.sthlp

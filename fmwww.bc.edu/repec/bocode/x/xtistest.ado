@@ -1,8 +1,9 @@
 * Inoue & Solon (2006) IS-test for serial correlation
-*! Version 1.0.5 4jan2017
+*! Version 1.1.0 06apr2018
 * Contact jesse.wursten@kuleuven.be for bug reports/inquiries.
 
 * Changelog
+** 06apr2018: Reference to Stata Journal article added.
 ** 4jan2017: Set 2 as default lag length again.
 ** 9nov2016: Crucial bug fix! Test would use completely wrong values if data were unbalanced.
 

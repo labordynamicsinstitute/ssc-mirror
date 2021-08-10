@@ -1,10 +1,10 @@
 {smcl}
-{* *! Version 1.0.4 9nov2016}{...}
+{* *! Version 1.1.0 06apr2018}{...}
 {findalias asfradohelp}{...}
 {title:xtistest}
 
 {phang}
-{bf:xtistest} {hline 2} Portmanteau test for panel serial correlation, see Inoue & Solon (2006)
+{bf:xtistest} {hline 2} Portmanteau test for panel serial correlation, see Inoue & Solon (2006) and Wursten (2018)
 
 
 {marker syntax}{...}
@@ -52,9 +52,12 @@ However, we include the original computation option in case anyone were to find 
 {pstd}
 Only valid for fixed effect models. Unbalanced panels of any sort are allowed (unlike {cmd:xtqptest} and {cmd:xthrtest}, this test allows gaps in the data).
 
-
 {pstd}
 Any mistakes are my own.
+
+{pstd}
+Just like academic papers, coding software takes time and effort. As a result, {bf:please cite the Stata Journal article}, Wursten (2018), when you make use of this command, just like you would cite a useful paper. A full reference can be found below.
+This article contains additional information about the tests, its usage and its strengths, as well as some Monte Carlo evidence.
 
 {marker examples}{...}
 {title:Examples}
@@ -130,6 +133,8 @@ Any mistakes are my own.
 
 {pstd}
 {it:A Portmanteau Test for Serially Correlated Errors in Fixed Effects Models}, Atsushi Inoue and Gary Solon, Econometric Theory 2006
+
+{pstd}{it:Testing for serial correlation in fixed-effects panel models}, Jesse Wursten, Stata Journal 2018
 
 {title:Author}
 Jesse Wursten

@@ -1,5 +1,5 @@
 {smcl}
-{* 14aug2015/17aug2015/18aug2015/19aug2015/20aug2015}{...}
+{* 14aug2015/17aug2015/18aug2015/19aug2015/20aug2015/9aug2017/1sep2017/12sep2017/25sep2017}{...}
 {cmd:help numdate}
 {hline}
 
@@ -11,15 +11,18 @@
 
 {title:Syntax}
 
-{p 4 8 2}{cmd:numdate} {it:datetimetype} {it:ndatevar} {cmd:=} {varlist} {ifin},{break}  
-{opt p:attern(pattern)} [ {opt f:ormat(format)} {opt d:ryrun} {opt t:opyear(topyear)} ] 
+{p 4 8 2}{cmd:numdate} {it:datetimetype} {it:newdatevar} {cmd:=} {varlist} {ifin},{break}  
+{opt p:attern(pattern)}
+{break}
+[ {opt d:ryrun} {opt f:ormat(format)} {opt t:opyear(topyear)} 
+{opt varlabel(variable label)} ] 
 
 
 {title:Description}
 
 {pstd}
 {cmd:numdate} is for generating a new Stata numeric date-time variable
-{it:ndatevar} from one or more existing variables {varlist} containing
+{it:newdatevar} from one or more existing variables {varlist} containing
 date or date-time or time information. 
 
 {pstd} 
@@ -100,8 +103,53 @@ beginnings, ends, or middles. For detailed discussion, see Cox (2010,
 {pstd}
 For the converse problem of generating a string variable containing date
 information, consider using {cmd:generate} {it:sdatevar} 
-{cmd:= string(}{it:ndatevar}{cmd:, "}{it:date_format}{cmd:")} or
+{cmd:= string(}{it:newdatevar}{cmd:, "}{it:date_format}{cmd:")} or
 alternatively {help tostring} with date format explicit. 
+
+
+{title:More remarks: What if numdate disappoints?} 
+
+{pstd} 
+When {cmd:numdate} works as you expect, you can be happy. When it does not, 
+then you need to know more about how it should work and what else you can do. 
+
+{pstd} 
+The main idea of {cmd:numdate} is to serve as a wrapper for whichever function 
+out of 
+
+    {cmd:clock()} 
+    {cmd:Clock()} 
+    {cmd:daily()} 
+    {cmd:weekly()} 
+    {cmd:monthly()} 
+    {cmd:quarterly()} 
+    {cmd:halfyearly()} or
+    {cmd:yearly()}
+
+{pstd}
+is appropriate for generating a new date variable. However, these functions are not equally smart. Thus, note that for example 
+
+{p 4 8 2}{cmd:. di monthly("20-09-17 11:22:33", "DM20Yhms")}
+
+{pstd}
+just yields missing, as {cmd:monthly()} 
+is not smart enough to ignore irrelevant detail. Short of adding work-arounds, 
+this can be considered a limitation of {cmd:numdate}. 
+
+{pstd}
+Experience is that this bites most often with generation of coarse dates from fine information. The positive advice to to use {help convdate}, part of the 
+same package. The following examples illustrates some technique.  
+
+{p 4 8 2}{cmd:. clear}{p_end}
+{p 4 8 2}{cmd:. set obs 1}{p_end}
+{p 4 8 2}{cmd:. gen sandbox = "20-09-17 11:22:33"}{p_end}
+{p 4 8 2}{cmd:. numdate clock call_end_c = sandbox, pattern(DM20Yhms) varlabel("Time of Call closure")}{p_end}
+{p 4 8 2}{cmd:. convdate daily call_end_d = call_end_c, varlabel("Date of Call closure")}{p_end}
+{p 4 8 2}{cmd:. convdate monthly call_end_m = call_end_c, varlabel("Month/Year of Call closure")}{p_end}
+{p 4 8 2}{cmd:. convdate yearly call_end_y = call_end_c, varlabel("Year of Call closure")}
+
+{pstd}In short, consider using {cmd:numdate} to generate the first date variable and 
+then {help convdate} to convert that to other dates. 
 
 
 {title:Options} 
@@ -134,14 +182,19 @@ a string composed of a sequence of these elements:
 	    {hline 6}{c BT}{hline 39}
 
 {pmore}
-For dates from weekly to half-yearly, a pair of numbers to be translated 
-{c -} one giving the year and the other the week, month, quarter or half-year {c -} 
-must be separated by a space or punctuation. Note that symbols such as 
-{cmd:w}, {cmd:m}, {cmd:q}, or {cmd:h} are acceptable punctuation. 
-Whenever {varlist} consists
-of two or more variables, {cmd:numdate} respects this automatically by
-combining values from different variables together with intervening
-spaces.  Otherwise no extra characters are allowed.  
+For dates from weekly to half-yearly, a pair of numbers to be translated {c -}
+one giving the year and the other the week, month, quarter or half-year {c -}
+shoud ideally be separated by a space or punctuation. Note that symbols such as
+{cmd:w}, {cmd:m}, {cmd:q}, or {cmd:h} are acceptable punctuation.  Whenever
+{varlist} consists of two or more variables, {cmd:numdate} respects this
+automatically by combining values from different variables together with
+intervening spaces.  Otherwise no extra characters are allowed.  
+
+{pmore}
+For dates from weekly to half-yearly that are run together, such as 20153 or 
+"20153", an attempt is made to parse into year and other parts. It is 
+especially advisable to use the {cmd:dryrun} option to check whether the 
+parsing was done correctly. 
 
 {pmore}
 For clock and daily dates or date-times, blanks are also allowed in {it:pattern}, which
@@ -174,6 +227,15 @@ the hour is to be ignored.  For example, {varlist} contains values like
 {cmd:"1-1-2010 at 15:23:17"} or values like {cmd:"1-1-2010 at 3:23:17 PM"}.
 
 {phang}
+{opt d:ryrun} indicates that results of the conversion should be shown
+without generating a new variable. Results are listed to show at most no
+more than 5 non-missing values of the implied date variable, and no more
+than 20 missing values, depending on which condition is satisfied first. 
+This dry run should allow the user to check assumptions about the
+structure of values of {varlist} and/or to see the results of a
+particular format, whether default or specified. 
+
+{phang}
 {opt f:ormat()} specifies a format other than the default for the
 particular date-time type. For full details, see help for 
 {help datetime_display_formats:datetime display formats}. 
@@ -187,20 +249,14 @@ supplied. The explanation here is based on that in
 What if our data include 01-12-06 14:22 and also   15-06-98 11:01?  We
 want to interpret the first year as 2006 and the second year as 1998.
 When you specify {it:topyear}, you are stating that when years in
-{varlist} are two digits, the full year is to be obtained by finding the
+{varlist} are two digits, so the full year is to be obtained by finding the
 largest year that does not exceed {it:topyear}.  Thus with
 {cmd:topyear(2020)} the two-digit year 06 would be interpreted as 2006
 because 2006 does not exceed 2020.  The two-digit year 98 would be
 interpreted as 1998 because 2098 does exceed 2020.
 
 {phang}
-{opt d:ryrun} indicates that results of the conversion should be shown
-without generating a new variable. Results are listed to show at most no
-more than 5 non-missing values of the implied date variable, and no more
-than 20 missing values, depending on which condition is satisfied first. 
-This dry run should allow the user to check assumptions about the
-structure of values of {varlist} and/or to see the results of a
-particular format, whether default or specified. 
+{opt varlabel()} specifies a variable label to override the default. 
 
 
 {title:Examples}
@@ -234,7 +290,6 @@ particular format, whether default or specified.
 {p 4 8 2}{cmd:. gen mtest1 = "Mar2015"}{p_end}
 {p 4 8 2}{cmd:. gen mtest2 = "2015 3"}{p_end}
 {p 4 8 2}{cmd:. gen mtest3 = "20153"}{p_end}
-{p 4 8 2}{cmd:. * previous returns missing: documented limitation of monthly()}{p_end}
 
 {p 4 8 2}{cmd:. numdate monthly m1 = mtest1, pattern(MY) dryrun}{p_end}
 {p 4 8 2}{cmd:. numdate monthly m1 = mtest1, pattern(MY)}{p_end}
@@ -281,7 +336,8 @@ particular format, whether default or specified.
 {title:Acknowledgments} 
 
 {pstd}Discussions with William Gould and Robert Picard were stimulating 
-and helpful. 
+and helpful. Rasool Baloch kindly reported a bug. Marc Kaulisch posted an 
+example which led to "More remarks" above. 
 
 
 {title:References} 
@@ -304,6 +360,9 @@ Stata tip 111: More on working with weeks, erratum.
 {title:Also see}
 
 {p2colset 5 35 37 2}{...}
+{synopt: {bf:{help convdate}}}Generate variable of other date-time type{p_end}
+{synopt: {bf:{help extrdate}}}Generate date-time component variable{p_end}
+
 {synopt: {bf:{help datetimes:[D] datetimes}}}Date and time values and variables
 {p_end}
 {synopt:{bf:{help datetime_display_formats:[D] datetime display formats}}}Display
@@ -314,7 +373,6 @@ Stata tip 111: More on working with weeks, erratum.
 {p_end}
 {p2colreset}{...}
 
-{vieweralsosee "[D] datetimes" "help datetimes"}{...}
-{vieweralsosee "[D] datetime display formats" "help datetime_display_formats"}{...}
-{vieweralsosee "[D] datetime translation" "help datetime_translation"}{...}
+
+ 
 

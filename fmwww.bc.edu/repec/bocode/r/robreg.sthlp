@@ -1,792 +1,1225 @@
 {smcl}
-{* 26jan2010}{...}
-{hi:help robreg}
+{* 08apr2021}{...}
+{hi:help robreg}{...}
+{right:{browse "http://github.com/benjann/robreg/"}}
 {hline}
+{p 0 0 2}
 
 {title:Title}
 
 {pstd}{hi:robreg} {hline 2} Robust regression
 
 
+{title:Contents}
+
+    {help robreg##syntax:Syntax}
+    {help robreg##description:Description}
+    {help robreg##options:Options}
+    {help robreg##examples:Examples}
+    {help robreg##results:Stored results}
+    {help robreg##references:References}
+    {help robreg##author:Author}
+    {help robreg##alsosee:Also see}
+
+
+{marker syntax}{...}
 {title:Syntax}
 
 {pstd}
-MM-estimator
+    Estimation
 
 {p 8 15 2}
-    {cmd:robreg mm} {depvar} {varlist} {ifin}
-    [{cmd:,} {help robreg##mm_opt:{it:mm_options}} ]
+    {cmd:robreg} {it:subcmd} {depvar} [{indepvars}] {ifin} {weight}
+    [{cmd:,} {help robreg##opts:{it:options}} ]
 
-{pstd}
-M-estimator
+{pmore}
+    where {it:subcmd} is
 
-{p 8 15 2}
-    {cmd:robreg m} {depvar} [{varlist}] {ifin}
-    [{cmd:,} {help robreg##m_opt:{it:m_options}} ]
+{p2colset 13 20 22 2}{...}
+{p2col:{opt ls}}least squares regression; equivalent to {helpb regress}{p_end}
+{p2col:{opt q}}quantile regression; similar to {helpb qreg}{p_end}
+{p2col:{opt m}}M regression{p_end}
+{p2col:{opt s}}S regression{p_end}
+{p2col:{opt mm}}MM regression{p_end}
+{p2col:{opt lts}}least trimmed squares regression{p_end}
+{p2col:{opt lqs}}least quantile of squares regression{p_end}
+{p2col:{opt lms}}least median of squares regression{p_end}
 
-{pstd}
-S-estimator
-
-{p 8 15 2}
-    {cmd:robreg s} {depvar} {varlist} {ifin}
-    [{cmd:,} {help robreg##s_opt:{it:s_options}} ]
-
-{pstd}
-LMS/LQS/LTS-estimator
-
-{p 8 15 2}
-    {cmd:robreg lms} {depvar} {varlist} {ifin}
-    [{cmd:,} {help robreg##lqs_opt:{it:lqs_options}} ]
+{pmore}
+    {it:indepvars} may contain factor variables; see {help fvvarlist}.
     {p_end}
-{p 8 15 2}
-    {cmd:robreg lqs} {depvar} {varlist} {ifin}
-    [{cmd:,} {help robreg##lqs_opt:{it:lqs_options}} ]
+{pmore}
+    {cmd:fweight}s and {cmd:pweight}s are allowed; see {help weight}.
     {p_end}
-{p 8 15 2}
-    {cmd:robreg lts} {depvar} {varlist} {ifin}
-    [{cmd:,} {help robreg##lqs_opt:{it:lqs_options}} ]
+{pmore}
+    The {helpb svy} prefix is allowed with {cmd:robreg ls}, {cmd:robreg q}, and {cmd:robreg m}.
 
 {pstd}
-Replay syntax
+    Refitting MM after {cmd:robreg s} or {cmd:robreg mm}
 
 {p 8 15 2}
-    {cmd:robreg} [{cmd:,} {opt l:evel(#)}
-    ]
+    {cmd:robreg} {cmd:mm} [{cmd:,} {help robreg##mm_refit_opts:{it:mm_refit_options}} ]
+
+{pstd}
+    Replaying results
+
+{p 8 15 2}
+    {cmd:robreg} [{cmd:,} {help robreg##repopts:{it:reporting_options}} ]
+
+{pstd}
+    Hausman test between models
+
+{p 8 15 2}
+    {cmd:robreg} {cmdab:haus:man} [{it:model1} [{it:model2}]] [{cmd:,}
+    {help robreg##hopts:{it:hausman_options}} ]
+
+{pmore}
+    where {it:model1} and {it:model2} are names of stored estimates from
+    {cmd:robreg} (or {cmd:.} for the active estimates). Omitting {it:model2}
+    is only allowed if applying {cmd:robreg hausman} to a model obtained
+    by {cmd:robreg mm} (the active estimates will be used if {it:model1} is also
+    omitted).
+
+{pstd}
+    Prediction
+
+{p 8 15 2}
+    {cmd:predict} [{help datatypes:{it:type}}]
+        {c -(}{newvar} |
+        {help newvarlist##stub*:{it:stub}}{cmd:*} |
+        {it:{help newvar:newvar1}} {it:{help newvar:newvar2}} {cmd:...}{c )-} {ifin}
+        [{cmd:,} {it:{help robreg##propts:predict_options}} ]
 
 
-{synoptset 20 tabbed}{...}
-{marker mm_opt}{col 5}{it:{help robreg##mm_options:mm_options}}{col 27}description
+{synoptset 21 tabbed}{...}
+{marker opts}{col 5}{it:{help robreg##options:options}}{col 28}description
 {synoptline}
 {syntab :Main}
-{synopt :{opt eff:iciency(#)}}gaussian efficiency;
-    # in 70(5)95; default is {cmd:efficiency(85)}
+{synopt :{opt nocons:tant}}suppress constant term
     {p_end}
-{synopt :{opt bp(#)}}breakdown point; {it:#} in .10(.05).50;
-    default is {cmd:bp(0.5)}
+{synopt :{opt nor2}}do not compute the (pseudo) R-squared
     {p_end}
 
-{syntab :Biweight M-estimate}
-{synopt :{opt k(#)}}tuning constant; not allowed
-    with {cmd:efficiency()}
+{syntab :Subcommand}
+{synopt :{help robreg##q_opts:{it:q_options}}}additional options for {cmd:robreg q}
     {p_end}
-{synopt :{opt tol:erance(#)}}tolerance for IRWLS weights; default is
-    {cmd:tolerance(1e-6)}
+{synopt :{help robreg##m_opts:{it:m_options}}}additional options for {cmd:robreg m}
     {p_end}
-{synopt :{opt iter:ate(#)}}maximum number of iterations; default
-    is {cmd:iterate(16000)}
+{synopt :{help robreg##s_opts:{it:s_options}}}additional options for {cmd:robreg s}
     {p_end}
-{synopt :{opt relax}}continue even if convergence not reached
+{synopt :{help robreg##mm_opts:{it:mm_options}}}additional options for {cmd:robreg mm}
     {p_end}
-{synopt :{opth g:enerate(newvar)}}store IRWLS weights
+{synopt :{help robreg##lts_opts:{it:lts_options}}}additional options for {cmd:robreg lts}
     {p_end}
-{synopt :{opt re:place}}overwrite existing variable
+{synopt :{help robreg##lqs_opts:{it:lqs/lms_options}}}additional options for {cmd:robreg lqs/lms}
     {p_end}
 
-{syntab :Initial S-estimate}
-{synopt :{opt n:samp(#)}}number of trial samples
+{syntab :VCE/SE}
+{synopt:{cmd:vce(}{it:{help robreg##vcetype:vcetype}}{cmd:)}}variance estimation method;
+    {it:vcetype} may be {cmdab:r:obust}, {cmdab:cl:uster} {it:clustvar},
+    {cmdab:boot:strap}, or {cmdab:jack:knife}
     {p_end}
-{synopt :{cmdab:s:opts(}{help robreg##s_opt:{it:s_options}}{cmd:)}}additional
-    options passed through to S-algorithm
+{synopt :{opt cl:uster(clustvar)}}synonym for
+    {cmd:vce(cluster} {it:clustvar}{cmd:)}
     {p_end}
-{synopt :{opt save(name)}}save S-estimate
+{synopt :{opt f:test}}report F tests rather then Wald tests
     {p_end}
-
-{syntab :Standard errors}
-{synopt :{cmd:vce(}{cmdab:nor:obust}{cmd:)}}traditional standard errors
-    {p_end}
-{synopt :{opt nor:obust}}synonym for {cmd:vce(norobust)}
+{synopt :{opt nose}}do not compute standard errors
     {p_end}
 
+{marker repopts}{...}
 {syntab :Reporting}
 {synopt :{opt l:evel(#)}}set confidence level; default is {cmd:level(95)}
     {p_end}
-{synopt :{opt first}}display initial S-estimate
+{synopt :{opt all}}report results from all equations (relevant for {cmd:robreg s} and {cmd:robreg mm})
     {p_end}
-{synopt :{opt nodot:s}}suppress progress dots of S-estimate
+{synopt :{help robreg##displayopts:{it:display_options}}}standard
+    reporting options as described in
+    {helpb estimation options:[R] estimation options}
     {p_end}
-{synopt :{opt lo:g}}display RWLS iteration log
+
+{marker optimopts}{...}
+{syntab :Optimization}
+{synopt :{opt tol:erance(#)}}tolerance for iterative algorithms
+    {p_end}
+{synopt :{opt iter:ate(#)}}maximum number of iterations
+    {p_end}
+{synopt :{opt relax}}do not return error if convergence is not reached
+    {p_end}
+{synopt :{opt noquad}}do not use quad precision when taking cross products
+    {p_end}
+{synopt :{opt nolog}}do not display progress information
     {p_end}
 {synoptline}
 
 
-{synoptset 20 tabbed}{...}
-{marker m_opt}{col 5}{it:{help robreg##m_options:m_options}}{col 27}description
+{marker q_opts}{col 5}{it:{help robreg##q_options:q_options}}{col 28}description
+{synoptline}
+{syntab :Main}
+{synopt :{opt q:uantile(#)}}estimate # quantile; the default is 0.5 (LAD or median regression)
+    {p_end}
+
+{syntab :VCE/SE}
+{synopt :{opt fit:ted}}alternative approach to estimate the sparsity function
+    {p_end}
+{synopt :{opt bo:finger}}use Bofinger's bandwidth rather than the Hall-Sheather bandwidth
+    {p_end}
+
+{syntab :Starting values}
+{synopt :{opt init(matname)}}use custom starting values
+    {p_end}
+{synoptline}
+
+
+{marker m_opts}{col 5}{it:{help robreg##m_options:m_options}}{col 28}description
 {synoptline}
 {syntab :Main}
 {synopt :{opt h:uber}}use Huber objective function; the default
     {p_end}
-{synopt :{opt bi:weight}}use biweight objective function; {opt bis:quare}
-    is a synonym
+{synopt :{opt bi:weight}}use biweight objective function
     {p_end}
-{synopt :{opt eff:iciency(#)}}gaussian efficiency;
-    # in 70(5)95; default is {cmd:efficiency(95)}
+{synopt :{opt bis:quare}}synonym for {cmd:biweight}
     {p_end}
-{synopt :{opt k(#)}}tuning constant; not allowed
-    with {cmd:efficiency()}
+{synopt :{opt eff:iciency(#)}}gaussian efficiency, in percent;
+    default is {cmd:efficiency(95)}
     {p_end}
-
-{syntab :IRWLS algorithm}
-{synopt :{opt tol:erance(#)}}tolerance for IRWLS weights; default is
-    {cmd:tolerance(1e-6)}
-    {p_end}
-{synopt :{opt iter:ate(#)}}maximum number of iterations; default
-    is {cmd:iterate(16000)}
-    {p_end}
-{synopt :{opt relax}}continue even if convergence not reached
-    {p_end}
-{synopt :{opth g:enerate(newvar)}}store IRWLS weights
-    {p_end}
-{synopt :{opt re:place}}overwrite existing variable
+{synopt :{opt k(#)}}tuning constant; alternative to {cmd:efficiency()}
     {p_end}
 
-{syntab :Initial estimate}
-{synopt :{opt init(arg)}}initial estimate; {it:arg} may be {cmd:lav},
-    {cmd:ols}, {it:name}, or {cmd:.}; default is {cmd:init(lav)}
+{syntab :Scale}
+{synopt :{opt s:cale(#)}}provide custom (starting) value for scale
     {p_end}
-{synopt :{opt save(name)}}save initial estimate
-    {p_end}
-
-{syntab :Scale estimate}
-{synopt :{opt s:cale(#)}}provide preliminary scale estimate
-    {p_end}
-{synopt :{opt update:scale}}update scale estimate in each iteration
+{synopt :{opt update:scale}}update scale in each iteration
     {p_end}
 {synopt :{opt cen:ter}}center residuals when computing scale
     {p_end}
 
-{syntab :Standard errors}
-{synopt :{cmd:vce(}{cmdab:nor:obust}{cmd:)}}traditional standard errors
-    {p_end}
-{synopt :{cmd:vce(}{cmd:pv}{cmd:)}}traditional standard errors using
-    pseudo-values approach
-    {p_end}
-{synopt :{opt nor:obust}}synonym for {cmd:vce(norobust)}
-    {p_end}
-{synopt :{opt nose}}skip computation of standard errors
-    {p_end}
-
-{syntab :Reporting}
-{synopt :{opt l:evel(#)}}set confidence level; default is {cmd:level(95)}
-    {p_end}
-{synopt :{opt first}}display initial estimate
-    {p_end}
-{synopt :{opt lo:g}}display RWLS iteration log
+{syntab :Starting values}
+{synopt :{cmd:init(}{help robreg##m_init:{it:arg}}{cmd:)}}set the starting values;
+    default is {cmd:init(lad)}
     {p_end}
 {synoptline}
 
 
-{synoptset 20 tabbed}{...}
-{marker s_opt}{col 5}{it:{help robreg##s_options:s_options}}{col 27}description
+{marker s_opts}{col 5}{it:{help robreg##s_options:s_options}}{col 28}description
 {synoptline}
 {syntab :Main}
-{synopt :{opt bp(#)}}breakdown point; {it:#} in .10(.05).50;
-    default is {cmd:bp(0.5)}
+{synopt :{opt bp(#)}}breakdown point, in percent; default is {cmd:bp(50)}
     {p_end}
-{synopt :{opt k(#)}}tuning constant; not allowed
-    with {cmd:bp()}
+{synopt :{opt k(#)}}tuning constant; alternative to {cmd:bp()}
+    {p_end}
+{synopt :{opt nohaus:man}}do not compute Hausman test of S against LS
+    {p_end}
+{synopt :{cmd:m(}{varlist} [{cmd:,} {it:{help robreg##s_mopt:opts}}]{cmd:)}}variables
+    to be partialled out in the subsampling algorithm
     {p_end}
 
-{syntab :Resampling algorithm}
-{synopt :{opt n:samp(#)}}number of trial samples
-    {p_end}
-{synopt :{opt alpha(#)}}maximum risk of bad solution; default is
-    {cmd:alpha(0.01)}
-    {p_end}
-{synopt :{opt eps:ilon(#)}}maximum contamination fraction; default
-    is {cmd:epsilon(0.2)}
-    {p_end}
-{synopt :{opt nk:eep(#)}}number of candidates to keep; default
-    is {cmd:nkeep(2)}
+{syntab :Subsampling algorithm}
+{synopt :{cmdab:n:samp(}{help robreg##s_nsamp:{it:args}}{cmd:)}}number of trial samples; {it:args} may be {it:#}
+    or {it:alpha} [{it:epsilon}]
     {p_end}
 {synopt :{opt rstep:s(#)}}number of local improvement steps; default
-    is {cmd:rsteps(1)}
+    is {cmd:rsteps(2)}
     {p_end}
-{synopt :{opt stol:erance(#)}}tolerance for scale estimate; default is
-    {cmd:stolerance(1e-6)}
+{synopt :{opt nk:eep(#)}}number of candidates to be kept for final refinement; default
+    is {cmd:nkeep(5)}
     {p_end}
-{synopt :{opt siter:ate(#)}}maximum number of iterations for scale
-    estimate; default is {cmd:siterate(16000)}
+{synopt :{opt naive}}use naive subsampling algorithm
     {p_end}
-{synopt :{opt tol:erance(#)}}tolerance for coefficient vector; default is
-    {cmd:tolerance(1e-6)}
+{synopt :{opt alt}}use alternative nonsingular subsampling algorithm
     {p_end}
-{synopt :{opt iter:ate(#)}}maximum number of RWLS iterations; default
-    is {cmd:iterate(16000)}
-    {p_end}
-{synopt :{opt sstep:s(#)}}number of scale approximation steps; default
-    is {cmd:ssteps(1)}
-    {p_end}
-{synopt :{opth g:enerate(newvar)}}store IRWLS weights
-    {p_end}
-{synopt :{opt re:place}}overwrite existing variable
-    {p_end}
-
-{syntab :Standard errors}
-{synopt :{cmd:vce(}{cmdab:nor:obust}{cmd:)}}traditional standard errors
-    {p_end}
-{synopt :{opt nor:obust}}synonym for {cmd:vce(norobust)}
-    {p_end}
-{synopt :{opt nose}}skip computation of standard errors
-    {p_end}
-
-{syntab :Reporting}
-{synopt :{opt l:evel(#)}}set confidence level; default is {cmd:level(95)}
-    {p_end}
-{synopt :{opt nodot:s}}suppress progress dots
+{synopt :{opt nostd}}do not standardize the data (not recommended)
     {p_end}
 {synoptline}
 
 
-{synoptset 20 tabbed}{...}
-{marker lqs_opt}{col 5}{it:{help robreg##lqs_options:lqs_options}}{col 27}description
+{marker mm_opts}{col 5}{it:{help robreg##mm_options:mm_options}}{col 28}description
 {synoptline}
 {syntab :Main}
-{p2coldent :* {opt bp(#)}}breakdown point; {it:#} in (0,0.5]; default is {cmd:bp(0.5)}
+{synopt :{opt eff:iciency(#)}}gaussian efficiency, in percent; default
+    is {cmd:efficiency(85)}
+    {p_end}
+{synopt :{opt k(#)}}tuning constant; alternative to {cmd:efficiency()}
+    {p_end}
+{synopt :{opt nohaus:man}}do not compute Hausman test of MM against S
     {p_end}
 
-{syntab :Resampling algorithm}
-{synopt :{opt n:samp(#)}}number of trial samples
+{syntab :S estimate}
+{synopt :{opt bp(#)}}breakdown point, in percent; default is {cmd:bp(50)}
     {p_end}
-{synopt :{opt alpha(#)}}maximum risk of bad solution; default is
-    {cmd:alpha(0.01)}
-    {p_end}
-{synopt :{opt eps:ilon(#)}}maximum contamination fraction; default
-    is {cmd:epsilon(0.2)}.
-    {p_end}
-{synopt :{opth g:enerate(newvar)}}store minimizing sample
-    {p_end}
-{synopt :{opt re:place}}overwrite existing variable
-    {p_end}
-
-{syntab :Reporting}
-{synopt :{opt nodot:s}}suppress progress dots
+{synopt :{opt sopt:s(options)}}other options passed through to the S algorithm
     {p_end}
 {synoptline}
-{p 4 6 2}* {opt bp()} is not allowed with {cmd:robreg lms}{p_end}
 
 
+{marker lts_opts}{col 5}{it:{help robreg##lts_options:lts_options}}{col 28}description
+{synoptline}
+{syntab :Main}
+{synopt :{opt bp(#)}}breakdown point, in percent; default is {cmd:bp(50)}
+    {p_end}
+
+{syntab :Subsampling algorithm}
+{synopt :{opt n:samp(args)}}number of trial samples; {it:args} may be {it:#}
+    or {it:alpha} [{it:epsilon}]
+    {p_end}
+{synopt :{opt cstep:s(#)}}number of concentration steps; default
+    is {cmd:csteps(2)}
+    {p_end}
+{synopt :{opt nk:eep(#)}}number of candidates to be kept for final refinement; default
+    is {cmd:nkeep(10)}
+    {p_end}
+{synopt :{opt naive}}use naive subsampling algorithm
+    {p_end}
+{synopt :{opt alt}}use alternative nonsingular subsampling algorithm
+    {p_end}
+{synopt :{opt nostd}}do not standardize the data (not recommended)
+    {p_end}
+{synoptline}
+
+
+{marker lqs_opts}{col 5}{it:{help robreg##lqs_options:lqs/lms_options}}{col 28}description
+{synoptline}
+{syntab :Main}
+{synopt :{opt bp(#)}}breakdown point, in percent (only allowed with {cmd:robreg lqs})
+    {p_end}
+
+{syntab :Subsampling algorithm}
+{synopt :{opt n:samp(args)}}number of trial samples; {it:args} may be {it:#}
+    or {it:alpha} [{it:epsilon}]
+    {p_end}
+{synopt :{opt naive}}use naive subsampling algorithm
+    {p_end}
+{synopt :{opt alt}}use alternative nonsingular subsampling algorithm
+    {p_end}
+{synopt :{opt nostd}}do not standardize the data (not recommended)
+    {p_end}
+{synoptline}
+
+
+{marker mm_refit_opts}{col 5}{it:{help robreg##mm_refit_options:mm_refit_options}}{col 28}description
+{synoptline}
+{synopt :{opt eff:iciency(#)}}gaussian efficiency, in percent; default
+    is {cmd:efficiency(85)}
+    {p_end}
+{synopt :{opt k(#)}}tuning constant; alternative to {cmd:efficiency()}
+    {p_end}
+{synopt :{opt nohaus:man}}do not compute Hausman test of MM against S
+    {p_end}
+{synopt :{opt f:test}}report F test rather then Wald test
+    {p_end}
+{synopt :{help robreg##repopts:{it:reporting_options}}}reporting options
+    {p_end}
+{synopt :{help robreg##optimopts:{it:optimization_options}}}optimization options
+    {p_end}
+{synoptline}
+
+
+{marker hopts}{col 5}{help robreg##hausman_options:{it:hausman_options}}{col 28}description
+{synoptline}
+{synopt:{opt cons:tant}}include constant in the test
+    {p_end}
+{synopt:{opt com:mon}}restrict the test to coefficients that exist in both models
+    {p_end}
+{synopt:{opt keep(names)}}coefficients to be included; may use {cmd:*} and {cmd:?} wildcards
+    {p_end}
+{synopt:{opt drop(names)}}coefficients to be excluded; may use {cmd:*} and {cmd:?} wildcards
+    {p_end}
+{synopt:{opt nod:etail}}do not report results by individual coefficients
+    {p_end}
+{synopt :{opt f:test}}report F tests rather then Wald tests
+    {p_end}
+{synopt :{opt l:evel(#)}}set confidence level; default is {cmd:level(95)}
+    {p_end}
+{synopt :{help robreg##displayopts:{it:display_options}}}standard
+    reporting options as described in
+    {helpb estimation options:[R] estimation options}
+    {p_end}
+{synopt :{opt post}}post results in {cmd:e()}
+    {p_end}
+{synoptline}
+
+
+{marker propts}{col 5}{help robreg##predict_options:{it:predict_options}}{col 28}description
+{synoptline}
+{synopt:{opt xb}}linear prediction
+    {p_end}
+{synopt:{opt r:esiduals}}residuals
+    {p_end}
+{synopt:{opt rs:tandard}}standardized residuals
+    {p_end}
+{synopt:{opt out:lier}[{cmd:(}{it:#}{cmd:)}]}outlier indicator
+    {p_end}
+{synopt:{opt in:lier}[{cmd:(}{it:#}{cmd:)}]}inlier indicator
+    {p_end}
+{synopt:{opt w:eights}}RLS weights ({cmd:m}, {cmd:s}, and {cmd:mm} only)
+    {p_end}
+{synopt:{opt sub:set}}H-subset indicator ({cmd:lts}, {cmd:lqs}, and {cmd:lms} only)
+    {p_end}
+{synopt:{opt sc:ores}}equation-level scores ({cmd:ls}, {cmd:q}, {cmd:m}, {cmd:s}, and {cmd:mm} only)
+    {p_end}
+{synopt:{opt if:s}}coefficient-level influence functions ({cmd:ls}, {cmd:q}, {cmd:m}, {cmd:s}, and {cmd:mm} only)
+    {p_end}
+{synopt:{opt rif:s}}recentered influence functions ({cmd:ls}, {cmd:q}, {cmd:m}, {cmd:s}, and {cmd:mm} only)
+    {p_end}
+{synoptline}
+
+
+{marker description}{...}
 {title:Description}
 
 {pstd}
     {cmd:robreg} provides a number of robust estimators for linear
-    regression models. The command accompanies Jann (2010), a survey paper
-    on robust regression in a German handbook on social science data
-    analysis.
+    regression models (see, e.g., Maronna et al. 2006 for an overview of robust
+    regression estimators).
 
 {pstd}
-    {cmd:robreg mm} fits the efficient high breakdown MM-estimator proposed
-    by Yohai (1987). On the first stage, a high breakdown S-estimator is
-    applied to estimate the residual scale and derive starting values for
-    the coefficients vector. On the second stage, an efficient bisquare
-    M-estimator is applied to obtain the final coefficient estimates.
+    {cmd:robreg ls} fits classical (non-robust) least-squared models. Results
+    are equivalent to results from official {helpb regress} (with robust
+    standard errors).
 
 {pstd}
-    {cmd:robreg m} fits regression M-estimators (Huber 1973) using
-    iteratively reweighted least squares (IRWLS).
+    {cmd:robreg q} fits quantile regression models (median or LAD regression by default)
+    using the interior point algorithm (Portnoy and Koenker 1997). {cmd:robreg q} is similar
+    to official {helpb qreg}.
 
 {pstd}
-    {cmd:robreg s} fits the high breakdown S-estimator introduced by Rousseeuw and Yohai
-    (1984) using the fast algorithm proposed by Salibian-Barrera and Yohai
-    (2006).
+    {cmd:robreg m} fits M regression models (Huber 1973) using
+    iteratively reweighted least squares (IRLS).
 
 {pstd}
-    {cmd:robreg lms}, {cmd:robreg lqs}, and {cmd:robreg lts} fit the least
-    median of squares (LMS), least quantile of squares (LQS; a
-    generalization of LMS), and the least trimmed squares (LTS) estimators
-    (Rousseeuw and Leroy 1987). Estimation is carried out using simple
-    resampling without local improvement (e.g. Rousseeuw and Leroy
-    1987:197). Computation of standard errors is not supported for LMS,
-    LQS, and LTS.
+    {cmd:robreg s} fits high breakdown S regression models (Rousseeuw and Yohai
+    1984) based on random subsampling with local refinement
+    (Salibian-Barrera and Yohai 2006; employing fast nonsingular subsampling as
+    suggested by Koller 2012).
 
 {pstd}
-    For a recent contribution of similar estimators in Stata also see
-    Verardi and Croux (2009).
+    {cmd:robreg mm} fits MM regression models (Yohai 1987), combining an initial
+    high breakdown S estimator with a subsequent redescending M estimator.
 
+{pstd}
+    {cmd:robreg lts} fits least trimmed squares (LTS) regression models
+    based on random subsampling with local concentration steps
+    (Rousseeuw and van Driessen 2002). Influence-function based variance
+    estimation is not supported by {cmd:robreg lts}.
 
-{title:Dependencies}
+{pstd}
+    {cmd:robreg lqs} and {cmd:robreg lms} fit least quantile of squares (LQS) and
+    least median of squares (LMS) regression models, respectively,
+    based on random subsampling (see Rousseeuw 1984,
+    Rousseeuw and Leroy 1987, Rousseeuw and Hubert 1997). Influence-function based variance
+    estimation is not supported by {cmd:robreg lqs} and {cmd:robreg lms}.
+
+{pstd}
+    {cmd:robreg hausman} can be used after {cmd:robreg ls}, {cmd:robreg q},
+    {cmd:robreg m}, {cmd:robreg s}, and {cmd:robreg mm} to perform
+    Hausman tests between models.
 
 {pstd}
     {cmd:robreg} requires {cmd:moremata}. See
     {net "describe moremata, from(http://fmwww.bc.edu/repec/bocode/m/)":ssc describe moremata}.
 
-{marker mm_options}
-{title:Options for robreg mm}
+
+{marker options}{...}
+{title:Options}
 
 {dlgtab:Main}
 
 {phang}
-    {opt efficiency(#)} sets the gaussian efficiency of the MM-estimator
-    (i.e. the asymptotic relative efficiency compared to the OLS or ML
-    estimator in case of i.i.d. normal errors). The efficiency is
-    determined by appropriate choice of the tuning constant for the
-    bisquare M-estimator in the second stage of the MM-algorithm. {it:#}
-    may be a number between 70 and 95 in steps of 5. The default for the
-    MM-estimator is {cmd:efficiency(85)}, as suggested by Maronna et al.
-    (2006: 144).
-
-{phang}
-    {opt bp(#)} sets the breakdown point of the MM-Estimator. The breakdown
-    point is determined by appropriate choice of the tuning constant for
-    the S-estimator in the first stage of the MM-algorithm. {it:#} may be a
-    number between 0.1 and 0.5 in steps of 0.05. The default is
-    {cmd:bp(0.5)}.
-
-{dlgtab:Biweight M-estimate}
-
-{phang}
-    {opt k(#)} specifies the tuning constant for the bisquare M-estimator
-    in the second stage of the MM-algorithm. {cmd:k()} not allowed if
-    {cmd:efficiency()} is specified.
-
-{phang}
-    {opt tolerance(#)} specifies the tolerance for the weights of the IRWLS
-    algorithm used to fit the bisquare M-estimator. When the maximum
-    absolute change in the weights from one iteration to the next is less
-    than or equal to {cmd:tolerance()}, the convergence criterion is
-    satisfied. The default is {cmd:tolerance(1e-6)}.
-
-{phang}
-    {opt iterate(#)} specifies the maximum number of iterations for the
-    IRWLS algorithm used to fit the bisquare M-estimator. If convergence is
-    not reached within {cmd:iterate()} iterations, the algorithm stops and
-    returns error. The default is {cmd:iterate(16000)} or as set by
-    {helpb set maxiter}.
-
-{phang}
-    {opt relax} causes the IRWLS algorithm to return the current results
-    instead of returning error if convergence is not reached.
-
-{phang}
-    {opth generate(newvar)} stores the final weights of the IRWLS algorithm
-    in variable {it:newvar}.
-
-{phang}
-    {opt replace} permits {cmd:robreg} to overwrite existing variables.
-
-{dlgtab:Initial S-estimate}
-
-{phang}
-    {opt nsamp(#)} specifies the number of trial samples for the search
-    algorithm of the S-estimator in the first stage of the MM-algorithm. The
-    default value is determined according to formula
-
-            ceil(ln(alpha) / ln(1 - (1 - epsilon)^p))
+    {cmd:noconstant} suppresses the constant term (intercept) in the model. With
+    robust estimators, omitting the constant typically only makes sense if the specified
+    model is equivalent to a model including an intercept, for example, if the model contains
+    a factor variable without base level (see operator {cmd:ibn.} in help
+    {helpb fvvarlist}).
 
 {pmore}
-    within a range of 50 to 10000, where p is the number of coefficients in
-    the model and alpha = 0.01 and epsilon = 0.2 (see Salibian-Barrera and
-    Yohai 2006 for a justification of the formula). The default values for
-    alpha and epsilon can be changed via {cmd:sopts()} (see below).
+    Note that {cmd:robreg} always computes the R-squared with respect to a
+    constant-only model, even if option {cmd:noconstant} has been specified
+    (similar to {helpb regress} with option {cmd:tsscons}).
 
 {phang}
-    {cmd:sopts(}{help robreg##s_opt:{it:s_options}}{cmd:)} specified
-    additional options to be passed through to the S-estimator. See the
-    section on {help robreg##s_options:options for {bf:robreg s}}.
+    {cmd:nor2} skips the computation of the (pseudo) R-squared. Use this option to
+    save computer time.
+
+{marker q_options}{...}
+{dlgtab:Additional options for robreg q}
 
 {phang}
-    {opt save(name)} saves the results of the S-estimator under {it:name}
-    using {helpb estimates store}.
-
-{dlgtab:Standard errors}
-
-{phang}
-    {cmd:vce(norobust)} causes standard errors to be computed
-    using traditional formulas assuming constant error variance. The default
-    is to compute robust standard errors as suggested by Croux et al
-    (2003; using formula Avar_1; the traditional formula is equivalent to
-    Avar_2s).
+    {opt quantile(#)} specifies the quantile to be estimated, with # as a proportion
+    between 0 and 1 (exclusive) (numbers between 1 and 100 will be interpreted as
+    percentages). The default is {cmd:quantile(0.5)} (LAD or median regression).
 
 {phang}
-    {opt norobust} is a synonym for {cmd:vce(norobust)}
-
-
-{dlgtab:Reporting}
-
-{phang}
-    {opt level(#)} specifies the level for confidence intervals. The
-    default is {cmd:level(95)} or as set by {helpb set level}.
+    {opt fitted} computes the sparsity function (which is needed for variance
+    estimation) based on fitted values from auxiliary quantile regressions
+    (approach suggested by Hendricks and Koenker 1992). The default is to
+    compute the sparsity function based on nonparametric kernel density
+    estimation (using a gaussian kernel) (approach suggested by Powell 1991). Also
+    see Section 3.4.2 in Koenker (2005).
 
 {phang}
-    {opt first} causes the first stage S-estimate to be displayed.
+    {opt bofinger} uses Bofinger's bandwidth for the estimation of the
+    sparsity function. The default is to use the Hall-Sheather bandwidth. See
+    Section 4.10.1 in Koenker (2005) for details. Note that the Hall-Sheather
+    bandwidth depends on the confidence level set by the {cmd:level()} option. For
+    the kernel-based approach (i.e. if {cmd:fitted} is not specified), the bandwidth
+    is further transformed as suggested by Koenker (2005, page 81).
 
 {phang}
-    {opt nodots} suppresses the progress dots of the S-estimator
-    search algorithm.
+    {opt init(matname)} provides a matrix containing custom starting values.
+    Coefficients will be matched by name (starting values for coefficients
+    without match will be set to zero). If {it:matname} has multiple rows, the first row
+    will be used. The default is to obtain the starting values from a
+    least-squares fit. The choice of starting values should only affects the
+    number of iterations, but not the resulting estimates.
 
-{phang}{opt log} displays the iteration log of the second stage IRWLS
-    algorithm.
-
-{marker m_options}
-{title:Options for robreg m}
-
-{dlgtab:Main}
-
-{phang}
-    {opt huber} causes the Huber objective function to be used
-    (monotone M-estimator). This is the default.
+{marker m_options}{...}
+{dlgtab:Additional options for robreg m}
 
 {phang}
-    {opt biweight} causes the biweight or bisquare objective function to be
-    used (redescending M-estimator). {cmd:bisquare} is a synonym for
-    {cmd:biweight}. The solution of a redescending M-estimator may depend on
+    {opt huber} uses the Huber objective function (monotone M estimator). This
+    is the default.
+
+{phang}
+    {opt biweight} uses the biweight objective function
+    (redescending M estimator). {cmd:bisquare} is a synonym for
+    {cmd:biweight}. The solution of a redescending M estimator may depend on
     the starting values.
 
 {phang}
-    {opt efficiency(#)} sets the gaussian efficiency (i.e. the asymptotic
-    relative efficiency compared to the OLS or ML estimator in case of
-    i.i.d. normal errors) by appropriate choice of the tuning constant.
-    {it:#} may be a number between 70 and 95 in steps of 5. The default is
-    {cmd:efficiency(95)}.
+    {opt efficiency(#)} sets the gaussian efficiency (the asymptotic
+    relative efficiency compared to the LS or ML estimator in case of
+    i.i.d. normal errors), in percent. {it:#} must be between 63.7 and 99.9 for {cmd:huber}
+    and between 1 and 99.9 for {cmd:biweight}. The default is {cmd:efficiency(95)}.
 
 {phang}
-    {opt k(#)} specifies the tuning constant. {cmd:k()} not allowed if
-    {cmd:efficiency()} is specified.
-
-{dlgtab:IRWLS algorithm}
-
-{phang}
-    {opt tolerance(#)} specifies the tolerance for the weights of the IRWLS
-    algorithm. When the maximum absolute change in the weights from one
-    iteration to the next is less than or equal to {cmd:tolerance()}, the
-    convergence criterion is satisfied. The default is
-    {cmd:tolerance(1e-6)}.
+    {opt k(#)} specifies a custom tuning constant. The default is to use a
+    tuning constant that is consistent with the requested gaussian
+    efficiency. {cmd:k()} and {cmd:efficiency()} are not both allowed.
 
 {phang}
-    {opt iterate(#)} specifies the maximum number of iterations for the
-    IRWLS algorithm. If convergence is not reached within {cmd:iterate()}
-    iterations, the algorithm stops and returns error. The default is
-    {cmd:iterate(16000)} or as set by {helpb set maxiter}.
+    {opt scale(#)} provides a custom (starting) value for the residual
+    scale. The default is to use the MADN (normalized median absolute deviation)
+    from the initial fit.
 
 {phang}
-    {opt relax} causes the IRWLS algorithm to return the current results
-    instead of returning error if convergence is not reached. For example,
-    to fit a one-step M-estimate specify {cmd:relax} together with
-    {cmd:iterate(1)}.
+    {opt updatescale} updates the scale in each iteration of the
+    IRLS algorithm. The default is to hold the scale fixed.
 
 {phang}
-    {opth generate(newvar)} stores the final weights of the IRWLS algorithm
-    in variable {it:newvar}.
+    {opt center} uses median-centered residuals to compute the MADN. The default
+    is to use raw residuals.
+
+{marker m_init}{...}
+{phang}
+    {opt init(arg)} determines the starting values of the IRLS algorithm. {it:arg}
+    may be {cmd:lad} (median regression; the default) or {cmd:ls} (least-squares
+    regression). Furthermore, {opt init(matname)} may be specified, in which case
+    the starting values will be taken from the first row of matrix {it:matname}
+    (coefficients will be matched by name; starting values for coefficients
+    without match will be set to zero).
+
+{marker s_options}{...}
+{dlgtab:Additional options for robreg s}
 
 {phang}
-    {opt replace} permits {cmd:robreg} to overwrite existing variables.
-
-{dlgtab:Initial estimate}
-
-{phang}
-    {opt init(arg)} determines the choice of the initial estimate that
-    provides the starting values for the IRWLS algorithm. {it:arg} may be
-    {cmd:lav} for the LAV-estimator (a.k.a. median regression; fitted
-    using {helpb qreg}), {cmd:ols} for the least squares estimator (fitted
-    using {helpb regress}), {it:name} for an estimation set stored under
-    {it:name}, or {cmd:.} for the currently active estimation results. The
-    default is {cmd:init(lav)}.
+    {opt bp(#)} sets the breakdown point, in percent, with {it:#}
+    between 1 and 50. The default is {cmd:bp(50)}.
 
 {phang}
-    {opt save(name)} saves initial {cmd:lav} or {cmd:ols} estimate under
-    {it:name} using {helpb estimates store}.
-
-{dlgtab:Scale estimate}
-
-{phang}
-    {opt scale(#)} provides a preliminary value for the residual scale that
-    will be held constant. The default is to use the normalized median of
-    the (N - number of coefficients) largest absolute residuals from the
-    initial fit as an estimate of the residual scale (MADN).
+    {opt k(#)} specifies a custom tuning constant. The default is to use a
+    tuning constant that is consistent with the requested breakdown
+    point. {cmd:k()} and {cmd:bp()} are not both allowed.
 
 {phang}
-    {opt updatescale} causes the MADN scale estimate to be updated in each
-    iteration of the IRWLS algorithm. {cmd:updatescale} has no effect if
-    {cmd:scale()} is specified.
+    {opt nohausman} suppresses the Hausman test of the S estimate against
+    the least-squares fit.
 
+{marker s_mopt}{...}
 {phang}
-    {opt center} causes the MADN scale estimate to be computed based on
-    median centered residuals. {cmd:center} has no effect if
-    {cmd:scale()} is specified.
+    {cmd:m(}{it:varlist} [{cmd:,} {it:options}]{cmd:)} identifies outlier-free variables to be
+    partialled out when searching for candidate estimates in the subsampling
+    algorithm. The specified variables must be a subset from {it:indepvars}. If option {cmd:m()}
+    is provided, the dependent variable and the remaining independent variables
+    are residualized by regressing them on {it:varlist} using a Huber M
+    estimator. In each replication, the subsampling algorithm then obtains a
+    non-singular candidate fit from the residualized data. The candidate fit
+    will be augmented by the coefficients of the M estimate of the dependent
+    variable on {it:varlist} and then refined in the usual way based on the
+    original data. Specifying {cmd:m()} can lead to significant improvements in
+    computational speed and can also have beneficial effects on the stability
+    of the results, but the variables included in {cmd:m()} must be known to be
+    free of outliers (e.g. categorical variables). {it:options} are
+    {cmd:efficiency()} or {cmd:k()} to set the tuning constant of the Huber M
+    estimator (see {help robreg##m_options:{it:m_options}} above); default is
+    {cmd:efficiency(95)}. The procedure invoked by the {cmd:m()} option is similar
+    to the M-S estimator proposed by Maronna and Yohai (2000), but it results in
+    a true S estimator (in contrast to the M-S estimator, the M part is only used
+    to generate suitable candidate estimates without falling into the
+    collinearity trap; the candidates are then optimized in the same way as without
+    {cmd:m()} option).
 
-{dlgtab:Standard errors}
-
+{marker s_nsamp}{...}
 {phang}
-    {cmd:vce(norobust)} causes standard errors to be computed
-    using traditional formulas assuming constant error variance. The
-    default is to compute robust standard errors as suggested by Croux et
-    al (2003; using formula Avar_1s; the traditional formula is equivalent
-    to Avar_2s).
+    {opt nsamp(args)} determines the number of trial samples for the search
+    algorithm. Specify {opt nsamp(#)} to use {it:#} trial samples. Alternatively,
+    specify {cmd:nsamp(}{it:alpha} [{it:epsilon}]{cmd:)} to determine the
+    number of trial samples as
 
-{phang}
-    {cmd:vce(pv)} causes traditional standard errors to be computed
-    using the pseudo-values approach (Street et al. 1988). {cmd:vce(pv)} is
-    equivalent to {cmd:vce(norobust)} but includes some small sample
-    correction.
-
-{phang}
-    {opt norobust} is a synonym for {cmd:vce(norobust)}
-
-{phang}
-    {opt nose} skips the computation of standard errors.
-
-{dlgtab:Reporting}
-
-{phang}
-    {opt level(#)} specifies the level for confidence intervals. The
-    default is {cmd:level(95)} or as set by {helpb set level}.
-
-{phang}
-    {opt first} causes the initial estimate to be displayed.
-
-{phang}{opt log} displays the iteration log of the second stage IRWLS
-    algorithm.
-
-{marker s_options}
-{title:Options for robreg s}
-
-{dlgtab:Main}
-
-{phang}
-    {opt bp(#)} sets the breakdown point by appropriate choice of the
-    tuning constant (this also determines the gaussian efficiency). {it:#}
-    may be a number between 0.1 and 0.5 in steps of 0.05. The default is
-    {cmd:bp(0.5)}.
-
-{phang}
-    {opt k(#)} specifies the tuning constant. {cmd:k()} not allowed if
-    {cmd:bp()} is specified.
-
-{dlgtab:Resampling algorithm}
-
-{phang}
-    {opt nsamp(#)} specifies the number of trial samples for the search
-    algorithm. The default value is determined according to formula
-
-            ceil(ln(alpha) / ln(1 - (1 - epsilon)^p))
+            ceil(ln({it:alpha}) / ln(1 - (1 - {it:epsilon})^{it:k}))
 
 {pmore}
-    within a range of 50 to 10000, where p is the number of coefficients in
-    the model and alpha and epsilon are set by {cmd:alpha()} and
-    {cmd:epsilon()} (see Salibian-Barrera and Yohai 2006 for a
-    justification of the formula).
+    with a minimum of 20 and a maximum of 1000, where {it:k} is the
+    number of predictors included in the subsampling algorithm. {it:alpha} is
+    the maximum admissible risk of drawing a set of samples of which none is
+    free of outliers; {it:epsilon} is the assumed maximum fraction of
+    contaminated data. The default is to determine the number of subsamples
+    according to the above formula with {it:alpha} = 0.01 and
+    {it:epsilon} = 0.2.
 
 {phang}
-    {opt alpha(#)} specifies the maximum admissible risk of drawing a set
-    of samples of which none is free of outliers. This is a parameter in
-    the formula for the computation of the required number samples (see
-    above). The default is {cmd:alpha(0.01)} (i.e. 1 percent).
-    {cmd:alpha()} has no effect if {cmd:nsamp()} is specified.
-
-{phang}
-    {opt epsilon(#)} specifies the assumed maximum fraction of contaminated
-    data.  This is a parameter in the formula for the computation of the
-    required number samples (see above). The default is {cmd:epsilon(0.2)}
-    (i.e. 20 percent). {cmd:epsilon()} has no effect if {cmd:nsamp()} is
-    specified.
+    {opt rsteps(#)} specifies the number of local improvement (refinement) steps
+    applied to the trial candidates. The default is {cmd:rsteps(2)}.
 
 {phang}
     {opt nkeep(#)} specifies the number of best candidates to be
-    kept for final refinement. The default is {cmd:nkeep(2)}.
+    kept for final refinement. The default is {cmd:nkeep(5)}.
 
 {phang}
-    {opt rsteps(#)} specifies the number of local improvement steps
-    applied to the candidates. The default is {cmd:rsteps(1)}.
+    {opt naive} uses a naive subsampling algorithm. In each replication, the
+    algorithm keeps on drawing random p-subsets until a non-singular subset is found
+    (the algorithm aborts with error after 10'000 unsuccessful attempts). The
+    default is to use the fast nonsingular subsampling algorithm suggested
+    by Koller (2012) that creates a non-singular random p-subset by adding suitable
+    observations one-by-one, until the desired subset size is reached.
 
 {phang}
-    {opt stolerance(#)} specifies the tolerance for the scale estimate of
-    the candidates. When the absolute relative change in the scale from one
-    iteration to the next is less than or equal to {cmd:stolerance()}, the
-    convergence criterion is satisfied. The default is
-    {cmd:stolerance(1e-6)}.
+    {opt alt} uses an alternative nonsingular subsampling algorithm that
+    expands the size of the random subset, instead of exchanging observations,
+    until it becomes nonsingular. The alternative algorithm is typically
+    somewhat faster than the default algorithm, but it may be less robust.
 
 {phang}
-    {opt siterate(#)} specifies the maximum number of iterations for the
-    scale estimate of the candidates. If convergence is not reached within
-    {cmd:siterate()} iterations, the algorithm stops and returns error.
-    The default is {cmd:siterate(16000)} or as set by {helpb set maxiter}.
+    {opt nostd} omits standardization of the data for the subsampling
+    algorithm. To avoid precision problems, the default is to apply the subsampling
+    algorithm to data that has been standardized by deducting medians and
+    dividing by MADNs (or only by dividing by MADNs if {cmd:noconstant}
+    has been specified). Specifying {cmd:nostd} is not recommended.
+
+{marker mm_options}{...}
+{dlgtab:Additional options for robreg mm}
 
 {phang}
-    {opt tolerance(#)} specifies the tolerance for the coefficients in the
-    refinement IRWLS algorithm. When the maximum relative change in the
-    coefficient vector from one iteration to the next is less than or equal
-    to {cmd:tolerance()}, the convergence criterion is satisfied. The
-    default is {cmd:tolerance(1e-6)}.
+    {opt efficiency(#)} sets the gaussian efficiency of the bisquare M
+    estimator, in percent. {it:#} must be between between 1 and 99.9. The
+    default is {cmd:efficiency(85)}.
 
 {phang}
-    {opt iterate(#)} specifies the maximum number of iterations for the
-    refinement IRWLS algorithm. If convergence is not reached within
-    {cmd:iterate()} iterations, the algorithm stops and returns error. The
-    default is {cmd:iterate(16000)} or as set by {helpb set maxiter}.
+    {opt k(#)} specifies a custom tuning constant for the bisquare M
+    estimator. The default is to use a tuning constant that is consistent with the
+    requested gaussian efficiency. {cmd:k()} and {cmd:efficiency()} are not
+    both allowed.
 
 {phang}
-    {opt ssteps(#)} specifies the number of approximation steps for the
-    scale estimate within each RWLS iteration. The default is
-    {cmd:ssteps(1)}.
+    {opt nohausman} suppresses the Hausman test of the MM estimate against
+    the S estimate.
 
 {phang}
-    {opth generate(newvar)} stores the final IRWLS weights from the best
-    solution in variable {it:newvar}.
+    {opt bp(#)} sets the breakdown point of the preliminary S estimator,
+    in percent. {it:#} must be between 1 and 50. The default is {cmd:bp(50)}.
 
 {phang}
-    {opt replace} permits {cmd:robreg} to overwrite existing variables.
+    {opt sopts(options)} are (other) options to be passed through to the preliminary
+    S estimator. {it:options} include all options listed above under
+    {help robreg##s_options:Additional options for robreg s} (except {cmd:nohausman})
+    as well as the options listed below under
+    {help robreg##optimoptions:Optimization} (the default is to use the same
+    optimization settings as for the bisquare M estimator, i.e., the settings
+    specified outside {cmd:sopts()}; optimization option specified within
+    {cmd:sopts()} will override these settings).
 
-{dlgtab:Standard errors}
+{marker lts_options}{...}
+{dlgtab:Additional options for robreg lts}
 
 {phang}
-    {cmd:vce(norobust)} causes standard errors to be computed using
-    traditional formulas assuming constant error variance. The default is
-    to compute robust standard errors as suggested by Croux et al (2003;
-    using formula Avar_1; the traditional formula is equivalent to Avar_2s).
+    {opt bp(#)} sets the breakdown point, in percent, with {it:#}
+    between 1 and 50. The default is {cmd:bp(50)}. {cmd:bp()}
+    determines the relative size of the H-subset with
+
+            {it:h} = (floor((1-#/100)*{it:N}) + floor(#/100*({it:K} + 1))) / {it:N}
+
+{pmore}
+    where {it:N} is the sample size and {it:K} is the number of (non-omitted)
+    coefficients in the model.
 
 {phang}
-    {opt norobust} is a synonym for {cmd:vce(norobust)}
+    {opt nsamp(args)} determines the number of trial samples for the search
+    algorithm. Specify {opt nsamp(#)} to use {it:#} trial samples. Alternatively,
+    specify {cmd:nsamp(}{it:alpha} [{it:epsilon}]{cmd:)} to determine the
+    number of trial samples as explained {help robreg##s_nsamp:above}
+    (with a minimum of 50 and a maximum of 10'000).
 
 {phang}
-    {opt nose} skips the computation of standard errors.
+    {opt csteps(#)} specifies the number of concentration steps
+    applied to the trial candidates. The default is {cmd:rsteps(2)}.
 
+{phang}
+    {opt nkeep(#)} specifies the number of best candidates to be
+    kept for final refinement. The default is {cmd:nkeep(10)}.
+
+{phang}
+    {opt naive}, {opt alt}, and {opt nostd} are described above under
+    {help robreg##s_options:Additional options for robreg s}.
+
+{marker lqs_options}{...}
+{dlgtab:Additional options for robreg lqs/lms}
+
+{phang}
+    {opt bp(#)} sets the breakdown point, in percent, with {it:#}
+    between 1 and 50 (only allowed with {cmd:robreg lqs}). The default is
+    {cmd:bp(50)}. {cmd:bp()} determines the relative size of the H-subset
+    (see {help robreg##lts_options:above}; for {cmd:robreg lms}, {it:h} is fixed at
+    0.5).
+
+{phang}
+    {opt nsamp(args)} determines the number of trial samples for the search
+    algorithm. Specify {opt nsamp(#)} to use {it:#} trial samples. Alternatively,
+    specify {cmd:nsamp(}{it:alpha} [{it:epsilon}]{cmd:)} to determine the
+    number of trial samples as explained {help robreg##s_nsamp:above}
+    (with a minimum of 500 and a maximum of 10'000).
+
+{phang}
+    {opt naive}, {opt alt}, and {opt nostd} are described above under
+    {help robreg##s_options:Additional options for robreg s}.
+
+{dlgtab:VCE/SE}
+
+{marker vcetype}{...}
+{phang}
+    {opt vce(vcetype)} determines how standard errors are computed. {it:vcetype} may be:
+
+            {opt r:obust}
+            {opt cl:uster} {it:clustvar}
+            {opt boot:strap} [{cmd:,} {help bootstrap:{it:bootstrap_options}} ]
+            {opt jack:knife} [{cmd:,} {help jackknife:{it:jackknife_options}} ]
+
+{pmore}
+    {cmd:vce(robust)}, the default, computes heteroscedasticity-robust standard
+    errors based on influence functions (equivalent to the approach proposed by
+    Croux et al. 2003). Likewise, {bind:{cmd:vce(cluster} {it:clustvar}{cmd:)}}
+    computes standard errors based on influence function allowing for intragroup
+    correlation, where {it:clustvar} specifies to which group each observation
+    belongs. {cmd:vce(bootstrap)} and {cmd:vce(jackknife)} compute standard errors
+    using {helpb bootstrap} or {helpb jackknife}, respectively; see help
+    {it:{help vce_option}}. {cmd:vce(robust)} and {cmd:vce(cluster)} are not
+    supported by {cmd:robreg lts}, {cmd:robreg lqs}, and {cmd:robreg lms}.
+
+{phang}
+    {opt cluster(clustvar)} can be used as a synonym for {cmd:vce(cluster} {it:clustvar}{cmd:)}.
+
+{phang}
+    {opt ftest} requests that the overall model test and the Hausman test (in case of
+    {cmd:robreg s} and {cmd:robreg mm}) be reported as F tests rather than
+    Wald chi-squared tests. The residual degrees of freedom for the F test will be determined
+    as the number of observations minus the number of (non-omitted) parameters
+    in the (main equation of the) model (or in case of clustered standard
+    errors, as the number of clusters minus one). The same residual degrees of freedom are
+    used for the t tests of the individual coefficients.
+
+{phang}
+    {cmd:nose} omits the computation of standard errors. Use this option to
+    save computer time.
+
+{marker repoptions}{...}
 {dlgtab:Reporting}
 
 {phang}
-    {opt level(#)} specifies the level for confidence intervals. The
-    default is {cmd:level(95)} or as set by {helpb set level}.
+    {opt level(#)} specifies the confidence level, as a percentage, for
+    confidence intervals. The default is {cmd:level(95)} or as set by
+    {helpb set level}.
 
 {phang}
-    {opt nodots} suppresses the progress dots of the search algorithm.
+    {opt all} report results from all equations in case of {cmd:robreg s} and
+    {cmd:robreg mm}. The default is to display only the main equation.
 
+{marker displayopts}{...}
+{phang}
+    {it:display_options} are standard reporting options such as {cmd:eform},
+    {cmd:cformat()}, or {cmd:coeflegend}; see {help eform_option:{bf:[R]} {it:eform_option}} and
+    the Reporting options in {helpb estimation options:[R] Estimation options}.
 
-{marker lqs_options}
-{title:Options for robreg lms/lqs/lts}
-
-{dlgtab:Main}
+{marker optimoptions}{...}
+{dlgtab:Optimization}
 
 {phang}
-    {opt bp(#)} sets the breakdown point, where # may be in (0,0.5]. {cmd:bp()}
-    determines the h parameter for the LQS and LTS estimators as follows:
-
-            h = floor((1-{cmd:bp()})*N) + floor({cmd:bp()}*(p + 1))
+    {opt tolerance(#)} specifies the convergence tolerance for iterative
+    estimation procedures. When the maximum relative difference in coefficients
+    from one iteration to the next is less than or equal to the specified tolerance,
+    the convergence criterion is satisfied. The default is {cmd:tolerance(1e-10)}.
 
 {pmore}
-    where N is the sample size and p is the number of coefficients. The
-    default is {cmd:bp(0.5)}. {cmd:bp()} is not allowed with
-    {cmd:robreg lms}.
-
-{dlgtab:Resampling algorithm}
+    An exception is {cmd:robreg q}, for which convergence is evaluated based on
+    the duality gap (convergence is reached if the duality gap is smaller than
+    the specified tolerance). The default for {cmd:robreg q} is {cmd:tolerance(1e-8)}.
 
 {phang}
-    {opt nsamp(#)} specifies the number of trial samples for the search
-    algorithm. The default value is determined according to formula
-
-            ceil(ln(alpha) / ln(1 - (1 - epsilon)^p))
-
-{pmore}
-    within a range of 500 to 10000, where p is the number of coefficients
-    in the model and alpha and epsilon are set by {cmd:alpha()} and
-    {cmd:epsilon()}.
+    {opt iterate(#)} specifies the maximum number of iterations. Error will be returned
+    if convergence is not reached within the specified maximum number of iterations. The default is as set by
+    {helpb set maxiter}.
 
 {phang}
-    {opt alpha(#)} specifies the maximum admissible risk of drawing a set
-    of samples of which none is free of outliers. This is a parameter in
-    the formula for the computation of the required number samples (see
-    above). The default is {cmd:alpha(0.01)} (i.e. 1 percent).
-    {cmd:alpha()} has no effect if {cmd:nsamp()} is specified.
+    {opt relax} causes {cmd:robreg} to proceed even if convergence is not reached.
 
 {phang}
-    {opt epsilon(#)} specifies the assumed maximum fraction of contaminated
-    data.  This is a parameter in the formula for the computation of the
-    required number samples (see above). The default is {cmd:epsilon(0.2)}
-    (i.e. 20 percent). {cmd:epsilon()} has no effect if {cmd:nsamp()} is
-    specified.
+    {opt noquad} requests that double precision be used rather than quad precision
+    when taking cross products in weighted least-squares fits. Specifying
+    {cmd:noquad} will speed up computations for most estimators, but has the risk
+    of precision loss if the data is not well behaved (unreasonable means,
+    high collinearity). Note that {cmd:noquad} has no effect on computations
+    performed within the subsampling algorithm employed by {cmd:robreg s} and
+    {cmd:robreg lts/lqs/lts} (the subsampling algorithm does not use
+    quad precision because it operates on standardized data; also
+    see the {cmd:nostd} option {help robreg##s_options:above}).
 
 {phang}
-    {opth generate(newvar)} stores a variable {it:newvar} that marks the
-    minimizing trial sample.
+    {opt nolog} suppresses the display of progress information.
+
+{marker mm_refit_options}{...}
+{dlgtab:Refitting options for robreg mm}
 
 {phang}
-    {opt replace} permits {cmd:robreg} to overwrite existing variables.
-
-{dlgtab:Reporting}
+    {opt efficiency(#)} sets the gaussian efficiency of the bisquare M
+    estimator, in percent. {it:#} must be between between 1 and 99.9. The
+    default is {cmd:efficiency(85)}.
 
 {phang}
-    {opt nodots} suppresses the progress dots of the search algorithm.
+    {opt k(#)} specifies a custom tuning constant for the bisquare M
+    estimator. The default is to use a tuning constant that is consistent with the
+    requested gaussian efficiency. {cmd:k()} and {cmd:efficiency()} are not
+    both allowed.
+
+{phang}
+    {opt nohausman} suppresses the Hausman test of the MM estimate against
+    the S estimate.
+
+{phang}
+    {opt ftest} requests that the overall model test and the Hausman test
+    be reported as F tests rather than
+    Wald chi-squared tests.
+
+{phang}
+    {it:reporting_options} are reporting options as described {help robreg##repoptions:above}.
+
+{phang}
+    {it:optimization_options} are optimization options as described {help robreg##optimoptions:above}.
+
+{marker hausman_options}{...}
+{dlgtab:Options for robreg hausman}
+
+{phang}
+    {opt constant} includes the constant in the test. The default is to exclude the constant.
+
+{phang}
+    {opt common} restricts the test to coefficients that exist in both models. The
+    default is to use all (first-equation) coefficients from both models and
+    treat coefficients that only exist in one model as constrained to zero in
+    the other model.
+
+{phang}
+    {opt keep(names)} provides a space-separated list of coefficients to be included
+    in the test. Wildcard characters {cmd:*} and {cmd:?} can be used in the names to
+    match multiple coefficients. The constant is handled by the {cmd:constant} option, 
+    independently of {cmd:keep()}.
+
+{phang}
+    {opt keep(names)} provides a space-separated list of coefficients to be excluded
+    from the test. Wildcard characters {cmd:*} and {cmd:?} can be used in the names to
+    match multiple coefficients. The constant is handled by the {cmd:constant} option, 
+    independently of {cmd:drop()}.
+
+{phang}
+    {opt nodetail} specifies that only the overall Hausman test be reported. By default,
+    a table containing t-tests for the differences between individual coefficients
+    is displayed below the overall test.
+
+{phang}
+    {opt ftest} requests that the overall test be reported as an F test rather
+    than a Wald chi-squared test. The residual degrees of freedom for the F
+    test will be determined as the number of observations (in the joint sample
+    across both models) minus the number of (non-omitted) parameters in the
+    (main equation of the) larger model (or in case of clustered standard
+    errors, as the number of clusters in the joint sample minus one). The same
+    residual degrees of freedom are also used for the t tests of the differences 
+    between coefficients
+
+{phang}
+    {opt level(#)} specifies the confidence level, as a percentage, for the
+    confidence intervals of the differences between coefficients. The default is
+    {cmd:level(95)} or as set by {helpb set level}.
+
+{phang}
+    {it:display_options} are standard reporting options such as {cmd:eform},
+    {cmd:cformat()}, or {cmd:coeflegend}; see {help eform_option:{bf:[R]} {it:eform_option}} and
+    the Reporting options in {helpb estimation options:[R] Estimation options}.
+
+{phang}
+    {opt post} stored the results in {cmd:e()}. The default is to store the results
+    in {cmd:r()}.
+
+{marker predict_options}{...}
+{dlgtab:Options for predict}
+
+{phang}
+    {opt xb} calculates linear predictions.
+
+{phang}
+    {opt residuals} calculates residuals.
+
+{phang}
+    {opt rstandard} calculates standardized residuals (residuals divided by {cmd:e(scale)}).
+
+{phang}
+    {opt outlier}[{cmd:(}{it:#}{cmd:)}] generates a 0/1 variable identifying
+    outliers (1 = outlier, 0 = inlier). Optional argument {it:#} in [0,100] specifies the
+    percentage of observations to be classified as outliers in normal data. That is,
+    observations with absolute standardized residuals larger than
+    invnormal(1 - #/200) will be classified as outliers. The default is {it:#} = 2.5.
+
+{phang}
+    {opt inlier}[{cmd:(}{it:#}{cmd:)}] generates a 0/1 variable identifying
+    inliers (1 = inlier, 0 = outlier). Optional argument {it:#} in [0,100] specifies the
+    percentage of observations to be classified as inliers in normal data. That is,
+    observations with absolute standardized residuals smaller than or equal to
+    invnormal(.5 + #/200) will be classified as inliers. The default is {it:#} = 97.5.
+
+{phang}
+    {opt weights} generates a variable containing weights corresponding to the final
+    RLS fit. {cmd:weights} is only allowed after {cmd:robreg m}, {cmd:robreg s}, 
+    and {cmd:robreg mm}.
+
+{phang}
+    {opt subset} generates a 0/1 variable identifying the H-subset. The variable
+    will be 1 for observations with squared residuals smaller than or equal to the
+    {cmd:e(h)} quantile of the squared residuals and 0 else. {cmd:subset} is only allowed after
+    {cmd:robreg lts}, {cmd:robreg lqs}, and {cmd:robreg lms}.
+
+{phang}
+    {opt scores} calculates equation-level scores. The scores can be used
+    together with the information stored in {cmd:e(V_modelbased)} to compute
+    the influence functions. {cmd:scores} is not allowed after
+    {cmd:robreg lts}, {cmd:robreg lqs}, or {cmd:robreg lts}. The scores
+    generated after {cmd:robreg ls} deviate from the scores obtained by
+    {cmd:predict} after {helpb regress} by factor 1/{cmd:e(scale)}^2.
+
+{phang}
+    {opt ifs} calculates coefficient-level influence functions. The
+    influence functions are defined in a way such that their total is
+    zero and the standard error of the total (as computed by command {helpb total})
+    provides an estimate of the standard error of the coefficient. {cmd:ifs} is
+    not allowed after {cmd:robreg lts}, {cmd:robreg lqs}, or {cmd:robreg lms}.
+
+{phang}
+    {opt rifs} calculates recentered influence functions. The
+    recentered influence functions are defined in a way such that their mean is
+    equal to the relevant coefficient and the standard error of the mean
+    (as computed by command {helpb mean}) provides an estimate of the standard
+    error of the coefficient. {cmd:rifs} is not allowed after
+    {cmd:robreg lts}, {cmd:robreg lqs}, or {cmd:robreg lms}.
 
 
+{marker examples}{...}
 {title:Examples}
 
-        {com}. sysuse auto
+{pstd}
+    Comparison of different estimators of the same model:
 
-        . robreg mm price mpg weight headroom foreign
-
-        . robreg m price mpg weight headroom foreign
-
-        . robreg m price mpg weight headroom foreign, biweight
-
-        . robreg s price mpg weight headroom foreign
-
-        . robreg lqs price mpg weight headroom foreign
-
-        . robreg lts price mpg weight headroom foreign
-        {txt}
-
-{title:Saved results}
+        . {stata sysuse auto, clear}
+        . {stata robreg ls price mpg weight headroom foreign}
+        . {stata robreg q price mpg weight headroom foreign}
+        . {stata robreg m price mpg weight headroom foreign}
+        . {stata robreg s price mpg weight headroom foreign}
+        . {stata robreg mm price mpg weight headroom foreign}
 
 {pstd}
-    {cmd:robreg} saves its results in {cmd:e()}. Type
-    {helpb ereturn list} to list the results after estimation.
+    We see, for example, that the effect of {cmd:headroom} has a p-value of 0.03
+    in the least-squares model, but is not significant in any of the robust
+    estimators. Furthermore, the Hausman test of S against LS indicates that
+    there are relevant outliers.
+
+{pstd}
+    Refitting MM with different efficiencies (without re-estimating the S):
+
+        . {stata sysuse auto, clear}
+        . {stata robreg s price mpg weight headroom foreign}
+        . {stata robreg mm, efficiency(75)}
+        . {stata robreg mm, efficiency(80)}
+        . {stata robreg mm, efficiency(85)}
+        . {stata robreg mm, efficiency(90)}
+        . {stata robreg mm, efficiency(95)}
+
+{pstd}
+    Performing Hausman tests between models: The following example illustrates
+    how one could do an interquantile range regression using {cmd:robreg q} followed
+    by {cmd:robreg hausman}.
+
+        . {stata sysuse auto, clear}
+        . {stata robreg q price mpg weight headroom foreign, quantile(0.25)}
+        . {stata estimates store q25}
+        . {stata robreg q price mpg weight headroom foreign, quantile(0.75)}
+        . {stata estimates store q75}
+        . {stata robreg hausman q75 q25, constant}
+
+{pstd}
+    Using {cmd:predict} to flag outliers:
+
+        . {stata sysuse auto, clear}
+        . {stata robreg mm price mpg weight headroom foreign}
+        . {stata predict outlier, outlier}
+        . {stata two scatter price weight if outlier==0 || scatter price weight if outlier==1}
+
+{pstd}
+    Using {cmd:predict} to generate recentered influence functions (the difference
+    in standard errors is because {cmd:robreg} divides by the residual degrees of freedom while
+    {cmd:mean} divides by N-1):
+
+        . {stata sysuse auto, clear}
+        . {stata robreg q price mpg weight headroom foreign}
+        . {stata predict RIF*, rifs}
+        . {stata mean RIF*}
 
 
+{marker results}{...}
+{title:Stored results}
+
+{pstd}
+    Depending on estimator and options, {cmd:robreg} saves a selection of the following
+    results in {cmd:e()}.
+
+{synoptset 20 tabbed}{...}
+{p2col 5 20 24 2: Scalars}{p_end}
+{synopt:{cmd:e(N)}}number of observations{p_end}
+{synopt:{cmd:e(N_clust)}}number of clusters (if {cmd:vce(cluster)}){p_end}
+{synopt:{cmd:e(k_eq)}}number of equations in {cmd:e(b)}{p_end}
+{synopt:{cmd:e(k_eform)}}number of equations to be affected by {cmd:eform} option{p_end}
+{synopt:{cmd:e(k_omit)}}number of omitted coefficients in {cmd:e(b)}{p_end}
+{synopt:{cmd:e(scale)}}estimate of residual scale{p_end}
+{synopt:{cmd:e(scale0)}}residual scale of empty model (unless {cmd:nor2}){p_end}
+{synopt:{cmd:e(s0)}}raw scale ({cmd:robreg lts/lqs/lms}){p_end}
+{synopt:{cmd:e(s0_0)}}raw scale of empty model ({cmd:robreg lts/lqs/lms}, unless {cmd:nor2}){p_end}
+{synopt:{cmd:e(r2)}}R-squared ({cmd:robreg ls}){p_end}
+{synopt:{cmd:e(r2_p)}}pseudo R-squared (all but {cmd:robreg ls}){p_end}
+{synopt:{cmd:e(r2_w)}}R-squared from final WLS fit ({cmd:robreg m/s/mm}){p_end}
+{synopt:{cmd:e(k)}}tuning constant ({cmd:robreg m/s/mm}){p_end}
+{synopt:{cmd:e(m_k)}}tuning constant of residualizing M ({cmd:robreg s/mm}, if {cmd:m()}){p_end}
+{synopt:{cmd:e(kS)}}tuning constant of S estimate ({cmd:robreg mm}){p_end}
+{synopt:{cmd:e(bp)}}breakdown point ({cmd:robreg s/mm/lts/lqs}){p_end}
+{synopt:{cmd:e(efficiency)}}gaussian efficiency ({cmd:robreg m/s/mm}){p_end}
+{synopt:{cmd:e(m_efficiency)}}gaussian efficiency of residualizing M ({cmd:robreg s/mm}, if {cmd:m()}){p_end}
+{synopt:{cmd:e(effS)}}gaussian efficiency of S estimate ({cmd:robreg mm}){p_end}
+{synopt:{cmd:e(delta)}}consistency parameter for scale estimation ({cmd:robreg s/mm}){p_end}
+{synopt:{cmd:e(h)}}relative size of H-subset ({cmd:robreg lts/lqs/lms}){p_end}
+{synopt:{cmd:e(q_h)}}h-quantile of squared residuals ({cmd:robreg lts/lqs/lms}){p_end}
+{synopt:{cmd:e(crit)}}value of optimization criterion ({cmd:robreg lts/lqs/lms}){p_end}
+{synopt:{cmd:e(nsamp)}}number of subsamples ({cmd:robreg s/mm/lts/lqs/lms}){p_end}
+{synopt:{cmd:e(rsteps)}}number of refinement steps ({cmd:robreg s/mm}){p_end}
+{synopt:{cmd:e(csteps)}}number of concentration steps ({cmd:robreg lts}){p_end}
+{synopt:{cmd:e(nkeep)}}number of candidates kept for final refinement ({cmd:robreg s/mm/lts}){p_end}
+{synopt:{cmd:e(sum_adev)}}sum of absolute deviations ({cmd:robreg q}){p_end}
+{synopt:{cmd:e(sum_rdev)}}sum of absolute deviations of empty model ({cmd:robreg q}, unless {cmd:nor2}){p_end}
+{synopt:{cmd:e(bwidth)}}bandwidth ({cmd:robreg q}){p_end}
+{synopt:{cmd:e(kbwidth)}}kernel bandwidth ({cmd:robreg q}, unless {cmd:fitted}){p_end}
+{synopt:{cmd:e(iterations)}}number of iterations ({cmd:robreg q/m/mm}){p_end}
+{synopt:{cmd:e(converged)}}1 if converged, 0 else ({cmd:robreg q/m/mm}){p_end}
+{synopt:{cmd:e(hausman_chi2)}}chi-squared statistic of Hausman test ({cmd:robreg s/mm}){p_end}
+{synopt:{cmd:e(hausman_F)}}F statistic of Hausman test ({cmd:robreg s/mm}, if {cmd:ftest}){p_end}
+{synopt:{cmd:e(hausman_p)}}p value of Hausman test ({cmd:robreg s/mm}){p_end}
+{synopt:{cmd:e(df_m)}}model degrees of freedom{p_end}
+{synopt:{cmd:e(df_r)}}residual degrees of freedom{p_end}
+{synopt:{cmd:e(chi2)}}chi-squared statistic of model test (unless {cmd:nose}){p_end}
+{synopt:{cmd:e(F)}}F statistic of model test (if {cmd:ftest}, unless {cmd:nose}){p_end}
+{synopt:{cmd:e(p)}}p value of model test (unless {cmd:nose}){p_end}
+{synopt:{cmd:e(rank)}}rank of {cmd:e(V)} (unless {cmd:nose}){p_end}
+{synopt:{cmd:e(level)}}confidence level (unless {cmd:nose}){p_end}
+
+{synoptset 20 tabbed}{...}
+{p2col 5 20 24 2: Macros}{p_end}
+{synopt:{cmd:e(cmd)}}{cmd:robreg}{p_end}
+{synopt:{cmd:e(subcmd)}}{cmd:ls}, {cmd:q}, {cmd:m}, {cmd:s}, {cmd:mm}, {cmd:lts}, {cmd:lqs}, or {cmd:lms}{p_end}
+{synopt:{cmd:e(predict)}}{cmd:robreg predict}{p_end}
+{synopt:{cmd:e(cmdline)}}command as typed{p_end}
+{synopt:{cmd:e(depvar)}}name of dependent variable{p_end}
+{synopt:{cmd:e(indepvars)}}names of independent variables{p_end}
+{synopt:{cmd:e(m)}}variable names from {cmd:m()} option{p_end}
+{synopt:{cmd:e(noconstant)}}{cmd:noconstant} or empty{p_end}
+{synopt:{cmd:e(nor2)}}{cmd:nor2} or empty{p_end}
+{synopt:{cmd:e(noquad)}}{cmd:noquad} or empty{p_end}
+{synopt:{cmd:e(denmethod)}}{cmd:kernel} or {cmd:fitted} ({cmd:robreg q}){p_end}
+{synopt:{cmd:e(denmethod)}}{cmd:gaussian} ({cmd:robreg q}){p_end}
+{synopt:{cmd:e(bofinger)}}{cmd:bofinger} or empty ({cmd:robreg q}){p_end}
+{synopt:{cmd:e(vce)}}{it:vcetype} specified in {cmd:vce()}{p_end}
+{synopt:{cmd:e(vcetype)}}title used to label Std. Err.{p_end}
+{synopt:{cmd:e(clustvar)}}name of cluster variable{p_end}
+{synopt:{cmd:e(wtype)}}weight type{p_end}
+{synopt:{cmd:e(wexp)}}weight expression{p_end}
+{synopt:{cmd:e(title)}}title in estimation output{p_end}
+{synopt:{cmd:e(properties)}}{cmd:b} or {cmd:b V}{p_end}
+
+{synoptset 20 tabbed}{...}
+{p2col 5 20 24 2: Matrices}{p_end}
+{synopt:{cmd:e(b)}}estimates{p_end}
+{synopt:{cmd:e(V)}}variance-covariance matrix of estimates (unless {cmd:nose}){p_end}
+{synopt:{cmd:e(omit)}}vector identifying omitted coefficients{p_end}
+{synopt:{cmd:e(V_modelbased)}}inverse of moment condition derivative matrix (unless {cmd:nose}){p_end}
+{synopt:{cmd:e(b0)}}empty model fit (unless {cmd:nor2}){p_end}
+{synopt:{cmd:e(b_init)}}starting values ({cmd:robreg q/m}){p_end}
+{synopt:{cmd:e(b_lo)}}lower auxiliary fit ({cmd:robreg q}, if {cmd:fitted}){p_end}
+{synopt:{cmd:e(b_up)}}upper auxiliary fit ({cmd:robreg q}, if {cmd:fitted}){p_end}
+{synopt:{cmd:e(IFoffset)}}influence function offsets ({cmd:robreg q}){p_end}
+
+{synoptset 20 tabbed}{...}
+{p2col 5 20 24 2: Functions}{p_end}
+{synopt:{cmd:e(sample)}}estimation sample{p_end}
+{p2colreset}{...}
+
+{pstd}
+    If {cmd:vce()} is {cmd:bootstrap} or {cmd:jackknife}, additional
+    results are stored in {cmd:e()}; see {helpb bootstrap} and
+    {helpb jackknife}, respectively.
+
+{pstd}
+    {cmd:robreg hausman} saves the following results in {cmd:r()}. If option
+    {cmd:post} is specified, the results are moved to {cmd:e()}.
+
+{synoptset 20 tabbed}{...}
+{p2col 5 20 24 2: Scalars}{p_end}
+{synopt:{cmd:r(N)}}number of observations{p_end}
+{synopt:{cmd:r(N_clust)}}number of clusters (if {cmd:vce(cluster)}){p_end}
+{synopt:{cmd:r(df_m)}}test constraints degrees of freedom{p_end}
+{synopt:{cmd:r(df_r)}}residual degrees of freedom{p_end}
+{synopt:{cmd:r(chi2)}}chi-squared statistic of Hausman test{p_end}
+{synopt:{cmd:r(F)}}F statistic of Hausman test (if {cmd:ftest}){p_end}
+{synopt:{cmd:r(p)}}p value of Hausman test{p_end}
+
+{synoptset 20 tabbed}{...}
+{p2col 5 20 24 2: Macros}{p_end}
+{synopt:{cmd:r(cmd)}}{cmd:robreg}{p_end}
+{synopt:{cmd:r(subcmd)}}{cmd:hausman}{p_end}
+{synopt:{cmd:r(wtype)}}weight type{p_end}
+{synopt:{cmd:r(wexp)}}weight expression{p_end}
+{synopt:{cmd:r(vce)}}{it:vcetype} specified in {cmd:vce()}{p_end}
+{synopt:{cmd:r(vcetype)}}title used to label Std. Err.{p_end}
+{synopt:{cmd:r(clustvar)}}name of cluster variable{p_end}
+{synopt:{cmd:r(title)}}title in estimation output{p_end}
+
+{synoptset 20 tabbed}{...}
+{p2col 5 20 24 2: Matrices}{p_end}
+{synopt:{cmd:r(b)}}coefficient differences{p_end}
+{synopt:{cmd:r(V)}}variance-covariance matrix{p_end}
+
+
+{marker refrerences}{...}
 {title:References}
 
 {phang}
-    Croux, C., G. Dhaene, D. Hoorelbeke (2003). Robust Standard Errors for
+    Croux, C., G. Dhaene, D. Hoorelbeke. 2003. Robust Standard Errors for
     Robust Estimators. Discussions Paper Series (DPS) 03.16. Center for
     Economic Studies.
-
+    {p_end}
 {phang}
-    Huber, P. J. (1973). Robust Regression: Asymptotics, Conjectures and
-    Monte Carlo. The Annals of Statistics 1: 799-821.
-
+    Hendricks, W., R. Koenker. 1992. Hierarchical Spline Models for Conditional
+    Quantiles and the Demand for Electricity. Journal of the American Statistical
+    Association 87:58-68.
+    {p_end}
 {phang}
-    Jann, B. (2010). Robuste Regression. In: Henning Best, Christof Wolf
-    (eds.). Handbuch der sozialwissenschaftlichen
-    Datenanalyse. Wiesbaden: VS-Verlag.
-
+    Huber, P.J. 1973. Robust Regression: Asymptotics, Conjectures and
+    Monte Carlo. The Annals of Statistics 1:799-821.
+    {p_end}
 {phang}
-    Salibian-Barrera, M., V. J. Yohai (2006). A Fast Algorithm for
+    Koenker, R. 2005. Quantile Regression. Cambridge: Cambridge University Press.
+    {p_end}
+{phang}
+    Koller, M. 2012. Nonsingular subsampling for S-estimators with categorical
+    predictors. {browse "https://arxiv.org/abs/1208.5595":arXiv:1208.5595}.
+    {p_end}
+{phang}
+    Maronna, R.A., V.J. Yohai. 2000. Robust regression with both
+    continuous and categorical predictors. Journal of Statistical
+    Planning and Inference 89:197-214.
+    {p_end}
+{phang}
+    Maronna, R.A., D.R. Martin, V.J. Yohai. 2006. Robust Statistics. Theory
+    and Methods. Chichester: Wiley.
+    {p_end}
+{phang}
+    Portnoy, S., R. Koenker. 1997. The Gaussian hare and the Laplacian
+    tortoise: computability of squared-error versus absolute-error
+    estimators. Statistical Science 12:279-300.
+    {p_end}
+{phang}
+    Powell, J.L. 1991. Estimation of monotonic regression models under quantile
+    restrictions. Pp. 357-384 in: W.A. Barnett, J. Powell, G.E. Tauchen (eds.). Nonparametric and
+    Semiparametric Methods in Econometrics and Statistics. Cambridge: Cambridge University Press.
+    {p_end}
+{phang}
+    Salibian-Barrera, M., V.J. Yohai. 2006. A Fast Algorithm for
     S-Regression Estimates. Journal of Computational and Graphical
-    Statistics 15: 414-427.
-
+    Statistics 15:414-427.
+    {p_end}
 {phang}
-    Street, J. O., R. J. Carroll, D. Ruppert (1988). A Note on Computing
-    Robust Regression Estimates Via Iteratively Reweighted Least
-    Squares. The American Statistician 42: 152-154.
-
+    Rousseeuw, P.J. 1984. Least Median of Squares Regression. Journal of the
+    American Statistical Association 79:871-880.
+    {p_end}
 {phang}
-    Rousseeuw, P., V. Yohai (1984). Robust Regression by Means of
-    S-Estimators. Pp. 256-272 in: Jürgen Franke, Wolfgang Hardle, and
-    Douglas Martin (eds.). Robust and Nonlinear Time Series Analysis.
+    Rousseeuw, P.J., M. Hubert. 1997. Recent developments in PROGRESS. Pp. 201-214
+    in: Y. Dodge (ed.). L1-Statistical Procedures and Related Topics. Hayward, CA: Institute of
+    Mathematical Statistics.
+    {p_end}
+{phang}
+    Rousseeuw, P.J., A.M. Leroy. 1987. Robust Regression and Outlier
+    Detection. New York: Wiley.
+    {p_end}
+{phang}
+    Rousseeuw, P.J., K. van Driessen. 2002. Computing LTS regression for
+    large data sets. Estadistica 54:163â€“190.
+    {p_end}
+{phang}
+    Rousseeuw, P., V. Yohai. 1984. Robust Regression by Means of
+    S-Estimators. Pp. 256-272 in: J. Franke, W. Hardle,
+    D. Martin (eds.). Robust and Nonlinear Time Series Analysis.
     Lecture Notes in Statistics Vol. 26. Berlin: Springer.
-
+    {p_end}
 {phang}
-    Yohai, V. J. (1987). High Breakdown-Point and High Efficiency Robust
+    Yohai, V.J. 1987. High Breakdown-Point and High Efficiency Robust
     Estimates for Regression. The Annals of Statistics 15: 642-656.
-
-{phang}
-    Verardi, V., C. Croux (2009). Robust regression in Stata. The Stata
-    Journal 9: 439-453.
+    {p_end}
 
 
+{marker author}{...}
 {title:Author}
 
 {pstd}
-    Ben Jann, ETH Zurich, jannb@ethz.ch
+    Ben Jann, University of Bern, ben.jann@soz.unibe.ch
 
 {pstd}
     Thanks for citing this software as follows:
 
 {pmore}
-    Jann, B. (2010). robreg: Stata module providing robust regression 
+    Jann, B. (2021). robreg: Stata module providing robust regression
     estimators. Available from http://ideas.repec.org/c/boc/bocode/s457114.html.
 
 
+{marker alsosee}{...}
 {title:Also see}
 
 {psee}
-    Online:  help for
+    Official Stata:
     {helpb regress},
     {helpb rreg},
     {helpb qreg}
+    {p_end}
+{psee}
+    SSC Archive:{space 4}
+    {helpb robstat},
+    {helpb dstat},
+    {helpb robbox},
+    {helpb robmv},
+    {helpb moremata}

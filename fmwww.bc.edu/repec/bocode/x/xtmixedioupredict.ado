@@ -1,4 +1,4 @@
-*! xtmixedioupredict: V1 (renamed V5); Rachael Hughes; 14th Septemeber 2016
+*! xtmixedioupredict: V2; Rachael Hughes; 26th June 2017
 
 cap program drop xtmixedioupredict
 program xtmixedioupredict, eclass
@@ -6,23 +6,6 @@ program xtmixedioupredict, eclass
 	syntax newvarname (generate) [if] [in] [, XB STDP FITted RESiduals]
 
 capture noisily {	
-	
-	/************************
-	  CREATE mo OBJECT FILES 
-	************************/
-	local dir_personal : sysdir PERSONAL
-	local n2 =   length("`dir_personal'") - 1
-	local dir_personal = substr("`dir_personal'", 1, `n2')	// REMOVES THE TRAILING CHARACTER FROM DIRECTORY
-	
-	local subfolder : adosubdir "xtmixediou_predict"
-	local pathway = "`dir_personal'" + "\" + "`subfolder'" + "\" + "xtmixediou_predict" + ".mata"
-	capture do "`pathway'"
-	local rc _rc 
-	if `rc'!=0 {
-		capture drop `varlist'
-		di as error "Error creating mo object for mata function xtmixediou_predict"
-		error `rc'
-	}	
 	
 	tempname G Wparameters noomit_b beta noomit_V varbeta
 	tempvar dataorder p_xb p_stdp p_fitted p_values intercept

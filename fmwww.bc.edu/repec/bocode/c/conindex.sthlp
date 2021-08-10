@@ -85,7 +85,8 @@ help for {cmd:conindex} {right: Erasmus University Rotterdam & NUI Galway}
 {col 5} {it:erreygers} {col 25} in conjunction with {it:bounded} and {it:limits(#1 #2)} requests the Erreygers Index.
 
 {col 5} {it:graph} {col 25} graph requests that a concentration curve be displayed. If no ranking variable is specified, a Lorenz curve is produced. In 
-{col 25} conjunction with {it:generalized}, one obtains the generalized Lorenz or concentration curve.
+{col 25} conjunction with {it:generalized}, one obtains the generalized Lorenz or concentration curve. {cmd:conindex} draws the Lorenz and concentration curves 
+{col 25} using the user-written {help lorenz} command by Ben Jahn. This must be installed prior to using the {it:graph} option. 
 
 {col 5} {it:loud} {col 25} shows the output from the regression used to generate the inequality indices.
 
@@ -195,9 +196,9 @@ help for {cmd:conindex} {right: Erasmus University Rotterdam & NUI Galway}
 
 {title:Author}
 
-{p 5 5 2} Owen O'Donnell, Erasmus School of Economics, Erasmus University Rotterdam, the Netherlands; Tinbergen Institute, the Netherlands; and University of Macedonia, Greece.
+{p 5 5 2} Owen O’Donnell, Erasmus School of Economics, Erasmus University Rotterdam, the Netherlands; Tinbergen Institute, the Netherlands; and University of Macedonia, Greece.
 
-{p 5 5 2} Stephen O'Neill (corresponding author), Department of Health Services Research and Policy, London School of Hygiene and Tropical Medicine, UK. stephen.oneill@lshtm.ac.uk
+{p 5 5 2} Stephen O’Neill (corresponding author), Department of Health Services Research and Policy, London School of Hygiene and Tropical Medicine, UK. stephen.oneill@lshtm.ac.uk
 
 {p 5 5 2} Tom Van Ourti, Erasmus School of Economics, Erasmus University Rotterdam, the Netherlands; Tinbergen Institute, the Netherlands.
 
@@ -206,7 +207,7 @@ help for {cmd:conindex} {right: Erasmus University Rotterdam & NUI Galway}
 
 {title:Also see}
 
-{p 5 5 2} Online:   help for {help concindc}, {help glcurve}, {help concindexi}, {help concindexg}, {help ineqdeco}, {help inequal}, {help povdeco}, {help ineqerr} if installed. {p_end}
+{p 5 5 2} Online:   help for {help concindc}, {help glcurve}, {help concindexi}, {help concindexg}, {help ineqdeco}, {help inequal}, {help povdeco}, {help ineqerr}, {help lorenz} if installed. {p_end}
 
 {title:References} 
 

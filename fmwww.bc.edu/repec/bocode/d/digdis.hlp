@@ -1,6 +1,7 @@
 {smcl}
-{* 28jun2007}{...}
-{hi:help digdis}
+{* 18jan2021}{...}
+{hi:help digdis}{...}
+{right:{browse "http://github.com/benjann/digdis/"}}
 {hline}
 
 {title:Title}
@@ -123,7 +124,7 @@
 {pstd}
     {cmd:digdis} sometimes displays notes such as
     "{err:x: 7 invalid observations}". An observation is considered invalid
-    if (1) it's value 0, (2) {cmd:position(#)}>1 is specified and the value
+    if (1) its value is 0, (2) {cmd:position(#)}>1 is specified and the value
     does not have a {it:#}-th digit, or (3) the input variable is string and contains
     a nonnumeric value.
 
@@ -226,7 +227,7 @@
     {opt j:effreys} (see help {helpb ci}). Alternatively, {it:type} may be
     {cmd:reference} in which case point-wise probability intervals are plotted
     around the reference distribution as a connected-line range plot (the intervals
-    are the shortest intervals with a probability mass of at least the value of the 
+    are the shortest intervals with a probability mass of at least the value of the
     confidence level).
 
 {phang}
@@ -474,7 +475,14 @@ one variable or if {cmd:by()} is specified.
 {title:Author}
 
 {pstd}
-    Ben Jann, ETH Zurich, jann@soz.gess.ethz.ch
+    Ben Jann, University of Bern, ben.jann@soz.unibe.ch
+
+{pstd}
+    Thanks for citing this software as follows:
+
+{pmore}
+    Jann, B. (2007). digdis: Stata module to analyze the distribution of digits. Available from 
+    {browse "http://ideas.repec.org/c/boc/bocode/s456853.html"}.
 
 
 {title:Also see}

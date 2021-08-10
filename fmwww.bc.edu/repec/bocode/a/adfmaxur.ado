@@ -1,6 +1,8 @@
 *! adfmaxur v1.0 JOtero 09dec2016
 *!          v1.1 CFBaum 24mar2017 Mata logic added
 *!          v1.2 CFBaum 25mar2017 reverse logic corrected, onepanel enabled
+*!          v1.3 CFBaum 26jan2018 guard against rounding values in alphas
+*!          v1.3 CFBaum 02apr2018 fix to guard against very low test statistics for which p-value approximation may not be good
 capture program drop adfmaxur
 program adfmaxur, rclass 
 version 13
@@ -256,7 +258,7 @@ restore
 end
 
 mata: mata clear
-version 12
+version 13
 mata
 void adfmaxur1(string scalar consts,
             string scalar adfmaxv)
@@ -287,11 +289,14 @@ for(c1=1; c1<=5; c1++) {
 	fix_qhat2 = fix_qhat:^2
 	fix_dist = abs(fix_qhat :- adfmax[c1])
 	minindex(fix_dist, 1, fix_place, w)
-	if (alphas[fix_place] <= 0.004) {
+// guard against rounding
+//	if (alphas[fix_place] <= 0.004) {
+	if (fix_place <= 7) {
 		fix_start = 1
 		fix_end   = 15
 	} 
-	else if (alphas[fix_place] >= 0.996) {
+//	else if (alphas[fix_place] >= 0.996) {
+	else if (fix_place >= 215) {
 		fix_start = 207
 		fix_end   = 221
 	}
@@ -299,13 +304,17 @@ for(c1=1; c1<=5; c1++) {
 		fix_start = fix_place - 7
 		fix_end   = fix_place + 7
 	}
-	y = fix_inormal[fix_start..fix_end]
-	iota = J(fix_end - fix_start + 1, 1, 1)
-	x = fix_qhat[fix_start..fix_end],fix_qhat2[fix_start..fix_end], iota
-	beta = invsym(quadcross(x,x)) * quadcross(x,y)
-	kon2 = adfmax[c1] , adfmax[c1]^2 , 1
-	fix_inormalhat = kon2 * beta
-	pv_fix = normal(fix_inormalhat)
+//  fix to guard against very low test statistics for which p-value approximation may not be good
+	pv_fix = 0
+	if (adfmax[c1] > fix_qhat[1]) {
+		y = fix_inormal[fix_start..fix_end]
+		iota = J(fix_end - fix_start + 1, 1, 1)
+		x = fix_qhat[fix_start..fix_end],fix_qhat2[fix_start..fix_end], iota
+		beta = invsym(quadcross(x,x)) * quadcross(x,y)
+		kon2 = adfmax[c1] , adfmax[c1]^2 , 1
+		fix_inormalhat = kon2 * beta
+		pv_fix = normal(fix_inormalhat)
+	}
 	cvfix_01 = fix_qhat[13]
     cvfix_05 = fix_qhat[21]
     cvfix_10 = fix_qhat[31]	

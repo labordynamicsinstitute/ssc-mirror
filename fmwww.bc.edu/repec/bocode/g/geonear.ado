@@ -1,4 +1,4 @@
-*! version 2.0.0  21feb2012 Robert Picard, picard@netbox.com
+*! version 2.0.3  04sep2019 Robert Picard, robertpicard@gmail.com
 program define geonear
 
 	version 9
@@ -343,7 +343,7 @@ program define geonear_recur
 			scalar `dnear' = r(min)
 		}
 		else {
-			sort d
+			sort d idn
 			scalar `dnear' = d[`minnbor']
 		}
 		
@@ -354,6 +354,7 @@ program define geonear_recur
 	
 	drop d
 	local n_nbor = _N
+
 
 	// recursion base case
 	if (`n_base' * `n_nbor' < `ops') | `n_base' <= 10 | `n_nbor' < 10 {
@@ -391,6 +392,7 @@ program define geonear_recur
 			scalar `rtime' = `runtime'
 			
 		}
+
 		
 	}
 	else {
@@ -463,7 +465,7 @@ program define geonear_base_wide
 		qui count if !mi(idb)
 		local nloop = r(N)
 		
-		gen nobs = _n
+		gen long nobs = _n
 		
 		local i 0
 		while `++i' <= `nloop' {
@@ -546,12 +548,14 @@ program define geonear_base_long
 
 	args sphere ignore nearcount limit dwithin R ell_a ell_f fb
 	
-	// it's possible that no neighbors are within()
 	local n_nbor = _N
-	if `n_nbor' > 0 {
+
+	// drop extra vars when no neighbors are within()
+	if `n_nbor' == 0 keep idn
+	else {
 	
 		// -expand- and -merge- is faster than -cross-
-		gen merge_id = _n
+		gen long merge_id = _n
 		sort merge_id
 		tempfile fnbors
 		qui save "`fnbors'"
@@ -559,7 +563,7 @@ program define geonear_base_long
 		qui use "`fb'"
 		qui expand `n_nbor'
 		sort idb
-		qui by idb: gen merge_id = _n
+		qui by idb: gen long merge_id = _n
 		sort merge_id
 		qui merge merge_id using "`fnbors'"
 		drop _merge merge_id
@@ -588,7 +592,7 @@ program define geonear_base_long
 			sort idb d idn
 			qui by idb: keep if _n <= `limit'
 		}
-	}
+	} 
 
 end
 

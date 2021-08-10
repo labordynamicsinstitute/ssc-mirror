@@ -1,4 +1,7 @@
-*! 2.7.0 NJC 6 April 2016 
+*! 2.8.0 NJC 2 July 2019 
+* 2.7.2 NJC 30 June 2017 
+* 2.7.1 NJC 12 February 2017 
+* 2.7.0 NJC 6 April 2016 
 * 2.6.1 NJC 19 October 2012 
 * 2.6.0 NJC 10 October 2011 
 * 2.5.2 NJC 21 September 2011 
@@ -33,12 +36,14 @@ program tabplot, sort
 	[, PERCent(varlist) PERCent2 FRaction(varlist) FRaction2 ///
 	PERMille(varlist) PERMille2                              ///
 	MISSing yasis xasis HORizontal Height(real 0.8)          ///
+        YREVerse XREVerse                                        /// 
 	SHOWval SHOWval2(str asis)                               ///
         YSCale(passthru) XSCale(passthru)                        ///
 	BY(str asis) recast(passthru) BARWidth(real 0.5)         ///
         SEParate(str) SEPerate(str)                              ///
 	MAXimum(numlist max=1) MINimum(numlist max=1)            ///
        `baropts' barall(str asis)                                ///
+	frame(numlist max=1) frameopts(str asis)                 /// 
         PLOT(str asis) ADDPLOT(str asis) * ]
 
 	if "`seperate'" != "" & "`separate'" == "" {  
@@ -83,6 +88,18 @@ program tabplot, sort
 	}
 	else local what "frequency" 
 
+	if "`xasis'" != "" & "`xreverse'" != "" { 
+		di as err "must choose between xasis and xreverse options" 
+		exit 198 
+	} 
+
+	if "`yasis'" != "" & "`yreverse'" != "" { 
+		di as err "must choose between yasis and yreverse options" 
+		exit 198 
+	} 
+
+	// ad hoc code if user specifies xsc(reverse) or ysc(reverse) 
+	// better advised to use xreverse or yreverse 
 	if index(`"`yscale'"', "rev") & !index(`"`yscale'"', "norev") {  
 		local ysign "-" 
 	} 	
@@ -173,18 +190,21 @@ program tabplot, sort
 		}
 	
 		if "`yasis'" == "" {
+			if "`yreverse'" == "" local yreverse "reverse" 
+			else local yreverse 
 			tempvar y 
 			// map to integers 1 ... and carry labels
-			axis `row' if `touse', gen(`y') `missing' reverse 
+			axis `row' if `touse', gen(`y') `missing' `yreverse'  
 			local row "`y'"
 			local noyti "noticks" 
 		}
 		capture levels `row', local(ylevels) 
 		
 		if "`xasis'" == "" {
+			if "`xreverse'" != "" local xreverse "reverse" 
 			tempvar x
 			// map to integers 1 ... and carry labels
-			axis `col' if `touse', gen(`x') `missing' 
+			axis `col' if `touse', gen(`x') `missing' `xreverse' 
 			local col "`x'"
 			local noxti "noticks" 
 		}
@@ -208,10 +228,21 @@ program tabplot, sort
 			exit 498 
 		}
 
+		if "`frame'" != "" { 
+			if `frame' > 0 	local BIGGEST = max(`biggest', `frame')
+			else if `frame' < 0 local BIGGEST = min(`biggest', `frame') 
+			tempvar FRAME 
+		} 
+		else local BIGGEST = `biggest' 
+
 		if "`horizontal'" != "" { 
-			replace `show' = `col' `xsign' `height' * `show' / abs(`biggest')
+			if "`frame'" != "" gen `FRAME' = `col' `xsign' `height' * `frame' / abs(`BIGGEST') 
+			replace `show' = `col' `xsign' `height' * `show' / abs(`BIGGEST')
 		}	
-		else replace `show' = `row' `ysign' `height' * `show' / abs(`biggest') 
+		else { 
+			if "`frame'" != "" gen `FRAME' = `row' `ysign' `height' * `frame' / abs(`BIGGEST') 
+			replace `show' = `row' `ysign' `height' * `show' / abs(`BIGGEST') 
+		}
 		
 		bysort `touse' `varlist' `byvars' : ///
 			gen byte `tag' = `touse' * (_n == 1)
@@ -314,8 +345,9 @@ program tabplot, sort
 		else if "`fraction'`fraction2'" != "" local format %4.3f 
 		else if "`pm'`pm2'" != "" local format %3.0f 		
 
-		local biggest = trim("`: di `format' `biggest''") 
-		local note "note(`text': `biggest')"
+		local biggest = trim("`: di `format' `biggest''")
+		if "`frame'" != "" local note "note(`text': `biggest'; frame: `frame')"  
+		else local note "note(`text': `biggest')"
  	}
 
 	if `"`by'"' == "" { 
@@ -350,9 +382,12 @@ program tabplot, sort
 		`one' `notwithby' `recast' yti("`ytitle'") `bw'          ///
 		`yscale' `xscale' `by' pstyle(p1bar) 
 
+		if "`frame'" != "" local framecall rbar `FRAME' `col' `row' if `tag', horizontal `bw' bfcolor(none) `frameopts' 
+
 		twoway scatter `row' `col' if `tag',                     ///
 		ms(none) yla(`ylevels', `noyti' nogrid ang(h) val)       ///
 		|| `showval'                                             /// 
+                || `framecall'                                           /// 
 		`barcall' `options'                                      ///
 		|| `plot'                                                ///
 		|| `addplot' 
@@ -374,11 +409,14 @@ program tabplot, sort
 		else local barcall || rbar `show' `row' `col' if `tag',       ///
 		xla(`xlevels', `noxti' val) xti("`xtitle'")              ///
 		`one' `notwithby' `recast' yti("`ytitle'") `bw'          ///
-		`yscale' `xscale' `by' pstyle(p1bar) 
+		`yscale' `xscale' `by' pstyle(p1bar)
+
+		if "`frame'" != "" local framecall rbar `FRAME' `row' `col' if `tag', `bw' bfcolor(none) `frameopts' 
 
 		twoway scatter `row' `col' if `tag',                     ///
 		ms(none) yla(`ylevels', `noyti' ang(h) val)              ///
 		|| `showval'                                             /// 
+                || `framecall'                                           /// 
 		`barcall' `options'                                      ///
 		|| `plot'                                                ///
 		|| `addplot' 
@@ -420,7 +458,7 @@ program axis, sort
 			local vlbl : label (`varlist') `=`varlist'[r(min)]' 
 		}
 		else local vlbl = `varlist'[r(min)] 
-		label def `lbl' `i' "`vlbl'", modify 
+		label def `lbl' `i' `"`vlbl'"', modify 
 	}
 		 	
 	label val `g' `lbl' 

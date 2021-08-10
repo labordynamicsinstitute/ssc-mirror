@@ -1,4 +1,4 @@
-*! mimix v1.3 26jul2017
+*! mimix v1.5 14feb2021
 cap prog drop mimix
 program define mimix, rclass 
 version 13.0
@@ -28,6 +28,10 @@ DESCRIPTION
 	       covariates can now be specified in any order in the command line. mimix internally re-orders data to correspond with order specified;
 		   note as order of variables changed internally when diff covariate specification used, diff mi results obtained with diff orders
 		   as order effects the stochastic process.
+	v1.4 - Transposed U (the cholesky decomposition of the conditional variance matrix) so U is now an upper triangular matrix as required.
+	       Note: examples in Cro, Morris, Kenward and Carpenter (2016) stata journal conducted using v1.3 
+	v1.5 - Bug in interim option resolved (line 602-3 and 1231 updated)
+	       Added imputed option to mi import command, line 1260  
 		   */
 
 syntax varlist, time(varname) id(varname) [ COVariates(varlist) methodvar(varname) METHOD(string) refgroupvar(varname) REFgroup(str) SAVing(string) clear m(integer 5) BURNin(integer 100) BURNBetween(integer 100) seed(integer 0) interim(string) iref(str) mixed regress]
@@ -591,11 +595,12 @@ qui {
 		keep if `inter1'==1
 		generate `mimix_intern_req'=""
 		if `ntime'==2{
-			replace `mimix_intern_req'= "`response'`1'" if `response'1==. & `response'2!=.
+			replace `mimix_intern_req'= "`response'1" if `response'1==. & `response'2!=.
 		}
 		if `ntime'>=2{
 			forvalues k=1/`ntimeminus'{
-				forvalues l=2/`ntime'{
+				local xxx=`k'+1
+				forvalues l=`xxx'/`ntime'{
 					replace `mimix_intern_req'= `mimix_intern_req' + " " + "`response'`k'" if `response'`k'==. & `response'`l'!=.
 				}
 			}
@@ -1103,7 +1108,7 @@ qui {
 				if `nonmiss_count'==0 {
 					mata: U = cholesky(Sigma)
 					mata: Z = invnormal(uniform(`counter',`miss_count'))
-					mata: mata_y1 = mata_Means + Z*U
+					mata: mata_y1 = mata_Means + Z*U'
 					mata: mata_new = mata_y1[.,.]
 					mata: GI=J(`counter',1,`trt_grp')
 					mata: II=J(`counter',1, `imp')	
@@ -1131,7 +1136,7 @@ qui {
 					mata: meanval = m2 + (raw1 - m1)*t
 					mata: U = cholesky(conds)
 					mata: Z = invnormal(uniform(`counter',`miss_count'))
-					mata: mata_y1 = meanval + Z*U
+					mata: mata_y1 = meanval + Z*U'
 					mata: mata_new =J(`counter', `nct',.)
 					mata: mata_new[.,mata_S_nonmiss] = mata_obs[.,mata_S_nonmiss]
 					mata: mata_new[.,mata_S_miss] = mata_y1[.,.]
@@ -1153,7 +1158,7 @@ qui {
 					mata: meanval = m2I + (raw1I - m1I)*t
 					mata: U = cholesky(conds)
 					mata: Z = invnormal(uniform(`counter',`miss_count'))
-					mata: mata_y1 = meanval + Z*U
+					mata: mata_y1 = meanval + Z*U'
 					mata: mata_newI =J(`counter', `nct',.)
 					mata: mata_newI[.,mata_S_nonmiss] = mata_obs[.,mata_S_nonmiss]
 					mata: mata_newI[.,mata_S_miss] = mata_y1[.,.]
@@ -1223,7 +1228,7 @@ qui {
 		*USE MAR IMPUTED VALUES FOR INTERIM MISSING RECORDS
 			local req = `mimix_intern_req'[`i']
 			foreach var of varlist `req' {
-				replace `var'=`var'MAR
+				replace `var'=`var'MAR in `i'
 			}
 		}
 		order `id', first
@@ -1253,7 +1258,7 @@ qui {
 }
 
 *MI SET THE NEW IMPUTED DATA SET
-qui mi import flong, m(_mj) id(`time' `id' ) clear 
+qui mi import flong, m(_mj) id(`time' `id' ) clear imputed(`response')
 qui drop _mj
 restore, not
 

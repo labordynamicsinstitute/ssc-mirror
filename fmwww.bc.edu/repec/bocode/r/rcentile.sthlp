@@ -11,6 +11,7 @@ help for {hi:rcentile}{right:(Roger Newson)}
 {cmdab:cl:uster}{cmd:(}{it:varname}{cmd:)}
 {cmdab:cfw:eight}{cmd:(}{it:expression}{cmd:)}
 {cmdab:td:ist} {cmdab:tr:ansf}{cmd:(}{it:transformation_name}{cmd:)}
+{cmd:fast}
 ]
 
 {pstd}
@@ -86,6 +87,11 @@ from which the confidence limits for the percentile differences are calculated.
 {cmd:z} (the default) specifies Fisher's {it:z} (the hyperbolic arctangent),
 {cmd:asin} specifies Daniels' arcsine,
 and {cmd:iden} specifies identity or untransformed.
+
+{p 4 8 2}
+{cmd:fast} is a programmer's option.
+It specifies that {cmd:rcentile} will not do any work to restore the original dataset
+if the user presses {help break:Break}.
 
 
 {marker rcentile_methods}{...}

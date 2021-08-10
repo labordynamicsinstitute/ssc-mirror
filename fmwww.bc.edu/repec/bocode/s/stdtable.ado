@@ -1,12 +1,20 @@
-*! version 1.1.0 20Jan2017 MLB
+*! version 1.3.0 18Nov2019 MLB
+* replace(framename) 
+* row and col allowed with by(,basline())
+* format also used for saved variables
 program define stdtable, rclass
-	version 11.2
+	if c(version) >= 16 {
+		version 16
+	}
+	else {
+		version 11.2
+	}
+	
 	syntax varlist(min=2 max=2) [if] [in] [aweight iweight fweight], ///
-       [raw replace by(string)                                       ///
+       [raw replace REPLACE2(string) by(string)                      ///
        BASERow(namelist min=1 max=1) BASECol(namelist min=1 max=1)   ///
-       TOLerance(real 1e-6) ITERate(integer `c(maxiter)') log        ///
+       TOLerance(real 1e-6) ITERate(integer 16000) log        ///
        Format(string) row col * ]
-
 
 	if "`weight'" != "" local wgt "[`weight'`exp']"
 
@@ -25,6 +33,30 @@ program define stdtable, rclass
 		capture display `format' 2
 		if _rc error 120
 	}
+	if "`replace'" != "" & `"`replace2'"' != "" {
+		di as err "{p}replace can only be specified once{p_end}"
+		exit 198
+	}
+	if c(version) < 16 & `"`replace2'"' != "" {
+		di as err "{p}frames can only be specified in the replace option in Stata >= 16{p_end}"
+		exit 198
+	}
+ 	
+	if `"`replace2'"' != "" {
+		Parseframe `replace2'
+		if r(iscurrent) {
+			local replace2 = ""
+			local replace  = "replace"
+		}
+		else {
+			local current       `r(current)' 
+			local frame         `r(frame)'
+			local framereplace  `r(framereplace)'
+			frame copy `current' `frame', `framereplace'
+			frame change `frame'
+		}
+	}
+	
 	
 	marksample touse, strok
 	gettoken by byopts : by, parse(",")
@@ -48,11 +80,6 @@ program define stdtable, rclass
 	if "`baserow'" != "" {
 		confirm matrix `baserow' `basecol'
 	}
-	if ("`baseline'" != "" | "`baserow'`basecol'" != "") & ///
-       ("`row'" != "" | "`col'" != "") {
-		di as err "{p}the row and col options cannot be specified with  the baseline(), baserow() or basecol() options{p_end}"
-		exit 198
-	}
 	if "`row'" != "" & "`col'" != "" {
 		di as err "the row and col options cannot be specified together"
 		exit 198
@@ -69,6 +96,14 @@ program define stdtable, rclass
 
 	gettoken r c : varlist
 
+	bys `r' : gen byte `mark' = _n == 1
+	qui count if `mark'
+	local kr = r(N)
+	qui bys `c' : replace `mark' = _n == 1 
+	qui count if `mark'
+	local kc = r(N)	
+	qui drop `mark'
+		
 	if "`baseline'" != "" {
 		if `"`=substr("`: type `by''",1,3)'"' == "str"{
 			local bybase `"(`by' == `"`baseline'"')"'
@@ -84,9 +119,6 @@ program define stdtable, rclass
 		qui by `r' : replace    `baser' = `baser'[_N]
 	}
 	else if "`baserow'`basecol'" != "" {
-		bys `r' : gen byte `mark' = _n == 1
-		qui count if `mark'
-		local kr = r(N)
 		if rowsof(`baserow') != 1 {
 			if colsof(`baserow') == 1 {
 				matrix `baserow' = `baserow''
@@ -104,10 +136,6 @@ program define stdtable, rclass
 		matrix `ones' = J(`kr',1,1)
 		matrix `sumrow' = `baserow'*`ones'
 
-
-		qui bys `c' : replace `mark' = _n == 1 
-		qui count if `mark'
-		local kc = r(N)
 		if rowsof(`basecol') != 1 {
 			if colsof(`basecol') == 1 {
 				matrix `basecol' = `basecol''
@@ -138,15 +166,9 @@ program define stdtable, rclass
 			`byby'         replace    `id'    = sum(`id')
 						   gen double `basec' = `basecol'[1, `id']
 		}
-		drop `mark' `id'
+		drop `id'
 	}
 	else {
-		bys `r' : gen byte `mark' = _n == 1 
-		qui count if `mark'
-		local kr = r(N)
-		qui bys `c' : replace `mark' = _n == 1
-		qui count if `mark'
-		local kc = r(N)
 		if `kc' == `kr' & "`row'`col'" != "" {
 			// the default is then to already show row and col percentages
 			local row ""
@@ -160,7 +182,6 @@ program define stdtable, rclass
 			gen double `basec' = 100
 			gen double `baser' = 100
 		}
-		drop `mark'
 	}
 
 	// estimate standardized counts
@@ -242,10 +263,12 @@ program define stdtable, rclass
 	}
 
 	if "`row'" != "" {
-		qui replace `muhat' = `kr'*`muhat' if `r' < .
+		qui bys `r' `by' (`c') : replace `muhat' = `muhat'/`muhat'[_N]*100 
+		qui bys `r' `by' (`c') : replace `freq' = `freq'/`freq'[_N]*100 
 	}
 	if "`col'" != "" {
-		qui replace `muhat' = `kc'*`muhat' if `c' < .
+		qui bys `c' `by' (`r') : replace `muhat' = `muhat'/`muhat'[_N]*100 
+		qui bys `c' `by' (`r') : replace `freq' = `freq'/`freq'[_N]*100 
 	}
 
 
@@ -259,12 +282,13 @@ program define stdtable, rclass
 	tabdisp `r' `c' , `byopt' cellvar(`muhat' `freqopt') totals format(`format') `options'
 
 	// restore or replace original data
-	if "`replace'" == "" {
+	if `"`replace'`replace2'"' == "" {
 		restore
 	}
 	else {
 		if "`raw'" != "" {
 			qui gen double _freq = `freq'
+			format _freq `format'
 			if "`weight'" == "pweight" {
 				label variable _freq "sum of weights"
 			}
@@ -274,8 +298,19 @@ program define stdtable, rclass
 		}
 		qui gen double std = `muhat'
 		label variable std "standardized counts"
+		format std `format'
 		restore, not
+		if "`current'" != "" {
+			frame change `current'
+		}
 	}
+	return local rowvar "`r'"
+	return local colvar "`c'"
+	return local byvar  "`by'"
+	return local kc = `kc'
+	return local kr = `kr'
+	if "`raw'" != "" return local raw "raw"	
+	return local cmd "stdtable"
 end
 
 program define Parseby, rclass
@@ -312,6 +347,26 @@ program define Parseby, rclass
 	return local by "`varlist'"
 end
 
+program define Parseframe, rclass
+	version 16
+	syntax name(name=frame), [replace]
+	
+	qui frames dir
+	local frames = r(frames)
+	if `: list frame in frames' & "`replace'" == "" {
+		di as err "{p}frame `frame' already exists{p_end}"
+		exit 110
+	}
+	qui frame
+	local current = "`r(currentframe)'"
+	if "`current'" == "`frame'" {
+		di as txt "{p}(note: `frame' is the current frame){p_end}"
+	}
+	return local  current      "`current'"
+	return scalar iscurrent =  "`current'" == "`frame'"
+	return local  frame        "`frame'"
+	return local  framereplace "`replace'"
+end
 
 * Based on contract version 1.2.4  17sep2004
 program define Contract_w

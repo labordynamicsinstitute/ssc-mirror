@@ -1,6 +1,6 @@
 d 'FACTREF': module to insert new observations with reference values for factors
 d
-d	  factref is used with factext, descsave, parmby and
+d	   factref is used with factext, descsave, parmby and
 d parmest (q.v.).  It takes, as      input, a data set created by
 d parmby or parmest, in which categorical      variables (factors)
 d have been created by descsave and factext. These factors	are
@@ -21,11 +21,10 @@ d KW: data manipulation
 d
 d Requires: Stata version 7.0
 d
+d Distribution-Date: 20070222
 d
 d Author: Roger Newson, National Heart and Lung Institute, Imperial College London
-d Support: email  r.newson@@imperial.ac.uk
+d Support: email r.newson@@imperial.ac.uk
 d
-d Distribution-Date: 20070222
-
 f factref.ado
 f factref.hlp

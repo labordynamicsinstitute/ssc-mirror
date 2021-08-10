@@ -2,7 +2,7 @@
 
 	this is a revised version
 
-	the original is included as pv1
+	the original is included as pv0
 
 	the new pv syntax can either be the original one or
 
@@ -75,7 +75,7 @@
 
 			tempname o cmds
 
-			foreach `o' in pv pv1 pv2 mdd mdd1 cmd cmdops jkzone jkrep jrr brr rw fays timss pirls pisa bs bsops jackknife jk rclass matrix weight {
+			foreach `o' in pv pv1 pv2 mdd mdd1 cmd cmdops jkzone jkrep jrr brr rw fays timss pirls pisa bs bsops jackknife jk rclass matrix weight jrrt2 {
 
 				local ``o'' `r(``o'')'
 
@@ -103,7 +103,7 @@
 
 				local cmd``o'' `r(cmd``o'')'
 
-				di in gr "     `cmd``o'''"
+				di in gr `"     `cmd``o'''"'
 
 			}
 
@@ -193,7 +193,7 @@
 
 			tempname def
 
-			if "`brr'" == "" & "`jrr'" == "" {
+			if "`brr'" == "" & "`jrr'" == "" & "`jrrt2'" == "" {
 
 				local `def' = "default"			
 
@@ -287,7 +287,7 @@
 
 						}
 
-							if "`mdd'" != "" {
+						if "`mdd'" != "" {
 	
 							local `v0' = word("`pv'", ``i'')
 
@@ -319,7 +319,7 @@
 
 						local `cmd_all' `"`msubinstr'"'
 
-						mata: msubinstr("``cmd_all''", "@2pv", "``v2''", .)
+						mata: msubinstr(`"``cmd_all''"', "@2pv", "``v2''", .)
 
 						local `cmd_all' `"`msubinstr'"'
 
@@ -327,15 +327,15 @@
 
 							tempname cmd_``cmd_n''
 
-							mata: msubinstr("`cmd``cmd_n'''", "@pv", "``v0''", .)
+							mata: msubinstr(`"`cmd``cmd_n'''"', "@pv", "``v0''", .)
 
 							local `cmd_``cmd_n''' `"`msubinstr'"'
 
-							mata: msubinstr("``cmd_``cmd_n''''", "@1pv", "``v1''", .)
+							mata: msubinstr(`"``cmd_``cmd_n''''"', "@1pv", "``v1''", .)
 
 							local `cmd_``cmd_n''' `"`msubinstr'"'
 
-							mata: msubinstr("``cmd_``cmd_n''''", "@2pv", "``v2''", .)
+							mata: msubinstr(`"``cmd_``cmd_n''''"', "@2pv", "``v2''", .)
 
 							local `cmd_``cmd_n''' `"`msubinstr'"'							
 						}
@@ -352,7 +352,21 @@
 
 						if "`jrr'" != "" & "`rw'" == "" {
 
-							qui _jrr  `options': ``cmd_all''
+							// if "`jrrt2'" == "" {
+
+								qui _jrr  `options': ``cmd_all''
+
+							// }
+
+						}
+
+						if "`jrrt2'" != "" & "`rw'" == "" {
+
+							// else {
+
+								qui _jrrt2  `options': ``cmd_all''
+
+							// }
 
 						}
 
@@ -531,7 +545,7 @@
 
 			// local `names' = subinstr("``names''", "``pv_n''", "pv", 1)
 
-			mata: msubinstr("``names''", "``pv_n''", "pv", 1)
+			mata: msubinstr(`"``names''"', "``pv_n''", "pv", 1)
 
 			local `names' `"`msubinstr'"'
 
@@ -545,7 +559,7 @@
 
 			// local `names' = subinstr("``names''", "``pv1_n''", "pv1", 1)
 
-			mata: msubinstr("``names''", "``pv1_n''", "pv1", 1)
+			mata: msubinstr(`"``names''"', "``pv1_n''", "pv1", 1)
 
 			local `names' `"`msubinstr'"'
 
@@ -559,7 +573,7 @@
 
 			// local `names' = subinstr("``names''", "``pv2_n''", "pv2", 1)
 
-			mata: msubinstr("``names''", "``pv2_n''", "pv2", 1)
+			mata: msubinstr(`"``names''"', "``pv2_n''", "pv2", 1)
 
 			local `names' `"`msubinstr'"'
 
@@ -683,13 +697,13 @@
 
 				// local `cmd_``cmd_n''' = subinstr("`cmd``cmd_n'''", "@w", "`weight'", .)
 
-				mata: msubinstr("`cmd``cmd_n'''", "@w", "`weight'", .)
+				mata: msubinstr(`"`cmd``cmd_n'''"', "@w", "`weight'", .)
 
 				local `cmd_``cmd_n''' `"`msubinstr'"'				
 
 				// local `cmd_``cmd_n''' = subinstr("``cmd_``cmd_n''''", "@1w", "``weight1''", .)
 
-				mata: msubinstr("``cmd_``cmd_n''''", "@1w", "``weight1''", .)
+				mata: msubinstr(`"``cmd_``cmd_n''''"', "@1w", "``weight1''", .)
 
 				local `cmd_``cmd_n''' `"`msubinstr'"'				
 							
@@ -776,13 +790,13 @@
 
 					// local `cmd_``cmd_n''' = subinstr("`cmd``cmd_n'''", "@w", "``v0''", .)
 
-					mata: msubinstr("`cmd``cmd_n'''", "@w", "``v0''", .)
+					mata: msubinstr(`"`cmd``cmd_n'''"', "@w", "``v0''", .)
 
 					local `cmd_``cmd_n''' `"`msubinstr'"'
 
 					// local `cmd_``cmd_n''' = subinstr("``cmd_``cmd_n''''", "@1w", "``v1''", .)
 
-					mata: msubinstr("``cmd_``cmd_n''''", "@1w", "``v1''", .)
+					mata: msubinstr(`"``cmd_``cmd_n''''"', "@1w", "``v1''", .)
 
 					local `cmd_``cmd_n''' `"`msubinstr'"'
 
@@ -913,11 +927,11 @@
 
 				tempname cmd_``cmd_n''
 
-				mata: msubinstr("`cmd``cmd_n'''", "@w", "`weight'", .)
+				mata: msubinstr(`"`cmd``cmd_n'''"', "@w", "`weight'", .)
 
 				local `cmd_``cmd_n''' `"`msubinstr'"'
 
-				mata: msubinstr("``cmd_``cmd_n''''", "@1w", "``weight1''", .)
+				mata: msubinstr(`"``cmd_``cmd_n''''"', "@1w", "``weight1''", .)
 
 				local `cmd_``cmd_n''' `"`msubinstr'"'
 							
@@ -960,7 +974,7 @@
 
 	/* 3. Accumulate Jackknife replicated VCE */
 
-		tempname w_ z varname
+		tempname w_ z repsperzone varname
 
 		local `w_' = 0
 
@@ -990,13 +1004,13 @@
 
 					// local `cmd_``cmd_n''' = subinstr("`cmd``cmd_n'''", "@w", "``varname''", .)
 
-					mata: msubinstr("`cmd``cmd_n'''", "@w", "``varname''", .)
+					mata: msubinstr(`"`cmd``cmd_n'''"', "@w", "``varname''", .)
 
 					local `cmd_``cmd_n''' `"`msubinstr'"'
 
 					// local `cmd_``cmd_n''' = subinstr("``cmd_``cmd_n''''", "@1w", "``weight1''", .)
 
-					mata: msubinstr("``cmd_``cmd_n''''", "@1w", "``weight1''", .)
+					mata: msubinstr(`"``cmd_``cmd_n''''"', "@1w", "``weight1''", .)
 
 					local `cmd_``cmd_n''' `"`msubinstr'"'
 							
@@ -1091,7 +1105,7 @@
 
 		_pvopsparse ``options''
 
-		foreach `o' in pv pv1 pv2 mdd mdd1 cmd cmdops jkzone jkrep jrr brr rw fays timss pirls pisa bs bsops jackknife jk rclass matrix weight {
+		foreach `o' in pv pv1 pv2 mdd mdd1 cmd cmdops jkzone jkrep jrr brr rw fays timss pirls pisa bs bsops jackknife jk rclass matrix weight jrrt2 {
 
 			tempname ``o''
 
@@ -1109,7 +1123,7 @@
 
 		return scalar cmds = ``cmds''
 
-		foreach `o' in pv pv1 pv2 mdd mdd1 cmd cmdops jkzone jkrep jrr brr rw fays timss pirls pisa bs bsops jackknife jk rclass matrix weight {
+		foreach `o' in pv pv1 pv2 mdd mdd1 cmd cmdops jkzone jkrep jrr brr rw fays timss pirls pisa bs bsops jackknife jk rclass matrix weight jrrt2 {
 
 			return local ``o'' `"````o''''"'
 
@@ -1127,11 +1141,11 @@
 
 	program define _pvopsparse, rclass
 
-		syntax [varlist(numeric default=none)] [pweight fweight aweight iweight] [if] [in], [pv(varlist numeric) pv1(varlist numeric) pv2(varlist numeric) mdd mdd1 cmd(string) cmdops(string) jkzone(varname numeric) jkrep(varname numeric) jrr brr rw(varlist numeric) fays(real 0) timss pirls pisa bs bsops(string) jackknife jk(real 0) rclass matrix weight(varname)]
+		syntax [varlist(numeric default=none)] [pweight fweight aweight iweight] [if] [in], [pv(varlist numeric) pv1(varlist numeric) pv2(varlist numeric) mdd mdd1 cmd(string) cmdops(string) jkzone(varname numeric) jkrep(varname numeric) jrr brr rw(varlist numeric) fays(real 0) timss pirls pisa bs bsops(string) jackknife jk(real 0) rclass matrix weight(varname) jrrt2]
 
 		tempname o i
 
-		foreach `o' in pv pv1 pv2 mdd mdd1 cmd cmdops jkzone jkrep jrr brr fays timss pirls pisa bs bsops jackknife jk rclass matrix weight rw {
+		foreach `o' in pv pv1 pv2 mdd mdd1 cmd cmdops jkzone jkrep jrr brr fays timss pirls pisa bs bsops jackknife jk rclass matrix weight rw jrrt2 {
 
 			return local ``o'' "```o'''"
 
@@ -1191,4 +1205,224 @@ void mstrpos(string scalar s, string scalar target)
 }
 
 end
+
+// =================================================================================================================================================================
+
+/* 8. _jrrt2: This program is for the TIMSS PIRLS updated jackknife estimation */
+
+	program define _jrrt2, eclass
+
+	/* 0. setup */
+
+		/* 0.1 parse the command line */
+
+			qui _pvparse `0'
+
+		/* 0.2 load options and commands as macros */
+
+			tempname o cmds
+
+			foreach `o' in pv pv1 pv2 mdd mdd1 cmd cmdops jkzone jkrep jrr brr rw fays timss pirls pisa bs bsops jackknife jk rclass matrix weight {
+
+				local ``o'' `r(``o'')'
+
+				if "```o'''" == "." local ``o'' = ""
+
+			}
+
+			local `cmds' = r(cmds)
+
+			forvalues `o' = 1 (1) ``cmds'' {
+
+				local cmd``o'' `"`r(cmd``o'')'"'
+
+			}
+
+			local commands `"`r(commands)'"'
+
+			local optsions `"`r(options)'"'
+
+		/* 0.3 check for errors in option specification */
+
+			if "`weight'" == "" {
+
+				di in re "weight option must be specified. Type --help pv-- for examples."
+
+				exit 100
+
+			}
+
+			if "`jkzone'" == "" | "`jkrep'" == "" {
+
+				di in re "jkzone and jkrep options must be specified.  Type --help pv-- for examples."
+
+				exit 100				
+
+			}
+
+			if strpos("`0'", "@w") == 0 {
+
+				di in re "@w required with brr and jrr. See --help pv-- for examples."
+
+				exit 100
+
+			}
+
+		/* 0.4 Caculate maximum jackknife zone */
+
+			qui sum `jkzone'
+
+			tempname maxzone
+
+			local `maxzone' = r(max)
+
+	/* 1. Run the command once to get the full sample estimate */
+
+		/* 1.1 replace @w with weight */
+
+			tempname cmd_n
+
+			forvalues `cmd_n' = 1 (1) ``cmds'' {
+
+				tempname cmd_``cmd_n''
+
+				mata: msubinstr(`"`cmd``cmd_n'''"', "@w", "`weight'", .)
+
+				local `cmd_``cmd_n''' `"`msubinstr'"'
+
+				mata: msubinstr(`"``cmd_``cmd_n''''"', "@1w", "``weight1''", .)
+
+				local `cmd_``cmd_n''' `"`msubinstr'"'
+							
+			}
+
+		/* 1.2 do the command */
+
+			forvalues `cmd_n' = 1 (1) ``cmds'' {
+
+				qui ``cmd_``cmd_n''''
+
+			}		
+
+		/* 1.3 record data */
+
+			tempname obs r2 b V V2 V20
+
+			local `obs' = e(N)
+
+			local `r2' = e(r2)
+
+			tempname e_b
+
+			local `e_b' = "e(b)"
+
+			if "`rclass'" != "" {
+
+				local `e_b' = "r(b)"
+						
+			}
+
+			if "`matrix'" != "" {
+
+				local `e_b' = "`matrix'"
+			}
+
+			mat `b' = ``e_b''
+
+			mat `V' = `b'' * `b' * 0
+
+			mat `V20' = `V'
+
+	/* 3. Accumulate Jackknife replicated VCE */
+
+		tempname w_ w2_ z z2 repsperzone varname
+
+		local `w_' = 0
+
+		forvalues `z' = 0 (1) ``maxzone'' {
+
+			qui count if `jkzone' == ``z''
+
+			if r(N) > 0 {
+
+				local `w_' = ``w_'' + 1
+
+				local `w2_' = 0
+
+				mat `V2' = `V20'
+
+				forvalues `z2' = 0 (1) 1 {
+
+					qui count if `jkrep' == ``z2'' & `jkzone' == ``z''
+
+					if r(N) > 0 {
+
+						local ++`w2_'
+
+						tempvar w
+
+						qui gen `w' = `weight' if `jkzone' != ``z''
+
+						qui replace `w' = `weight' *  2 if `jkzone' == ``z'' & `jkrep' == ``z2''
+
+						qui replace `w' = 0 if `jkzone' == ``z'' & `jkrep' == `=1-``z2'''
+
+						local `varname' = "`w'"
+
+					/* 3.1 replace @w with weight */
+
+						tempname cmd_n
+
+						forvalues `cmd_n' = 1 (1) ``cmds'' {
+
+							tempname cmd_``cmd_n''
+
+							// local `cmd_``cmd_n''' = subinstr("`cmd``cmd_n'''", "@w", "``varname''", .)
+
+							mata: msubinstr(`"`cmd``cmd_n'''"', "@w", "``varname''", .)
+
+							local `cmd_``cmd_n''' `"`msubinstr'"'
+
+							// local `cmd_``cmd_n''' = subinstr("``cmd_``cmd_n''''", "@1w", "``weight1''", .)
+	
+							mata: msubinstr(`"``cmd_``cmd_n''''"', "@1w", "``weight1''", .)
+
+							local `cmd_``cmd_n''' `"`msubinstr'"'
+							
+						}
+	
+					/* 3.2 do the command */
+
+						forvalues `cmd_n' = 1 (1) ``cmds'' {
+
+							qui ``cmd_``cmd_n''''
+
+						}		
+
+					/* 3.3 record results */
+
+						mat `V2' = `V2' + (``e_b'' - `b')' * (``e_b'' - `b')
+
+					}
+
+				}
+
+				mat `V' = `V' + `V2' / ``w2_''
+
+			}
+
+		}
+
+	/* 4. Post Estimates */
+
+		ereturn post `b' `V'
+
+		ereturn scalar N = ``obs''
+
+		ereturn scalar df_r = ``w_''
+
+		ereturn scalar r2 = ``r2''
+
+	end
+
 

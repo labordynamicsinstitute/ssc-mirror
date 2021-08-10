@@ -1,5 +1,8 @@
 /******************************************************************************
-*! version 3.1.4  Ian White  11feb2016
+*! version 3.2.0 # Ian White # 6apr2018
+	links corrected to UCL website
+	RELEASED TO UCL AND SSC
+version 3.1.4  Ian White  11feb2016
     improvments in i2 option:
         clearer note where terms are dropped in computing CI
         first column is widened if necessary to fit varnames

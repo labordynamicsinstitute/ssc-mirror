@@ -1,4 +1,5 @@
 *! -spmap_scalebar-: Auxiliary program for -spmap-                             
+*! Version 1.3.1 - 09 January 2018 - StataCorp edit for stroke align           
 *! Version 1.3.0 - 13 March 2017                                               
 *! Version 1.2.0 - 14 March 2008                                               
 *! Version 1.1.0 - 7 May 2007                                                  
@@ -34,9 +35,11 @@ syntax, [Units(string)]         ///
         [FColor(string asis)]   ///
         [OColor(string asis)]   ///
         [OSize(string)]         ///
+        [OAlign(string)]        ///
         [LAbel(string)]         ///
         [TColor(string asis)]   ///
         [TSize(string)]         ///
+        [TAlign(string)]        ///
                                 ///
          XMIN(string)           ///
          XMAX(string)           ///
@@ -165,6 +168,9 @@ if (`"`ocolor'"' == "") local ocolor "black"
 /* Set default outline size */
 if ("`osize'" == "") local osize "vthin"
 
+/* Set default outline alignment */
+if ("`oalign'" == "") local oalign "center"
+
 /* Set default label */
 if (`"`label'"' == "") local label "Units"
 
@@ -173,6 +179,9 @@ if (`"`tcolor'"' == "") local tcolor "black"
 
 /* Set default text size */
 if ("`tsize'" == "") local tsize "*1"
+
+/* Set default text alignment */
+if ("`talign'" == "") local talign "center"
 
 /* Set total bar length */
 local BLEN = `units' / `scale'
@@ -230,11 +239,17 @@ local ocolor : word 1 of `ocolor'
 /* Parse option osize() */
 local osize : word 1 of `osize'
 
+/* Parse option oalign() */
+local oalign : word 1 of `oalign'
+
 /* Parse option tcolor() */
 local tcolor : word 1 of `tcolor'
 
 /* Parse option tsize() */
 local tsize : word 1 of `tsize'
+
+/* Parse option talign() */
+local talign : word 1 of `talign'
 
 
 
@@ -243,18 +258,23 @@ local tsize : word 1 of `tsize'
 *  6. Compose command                                                          
 *  ----------------------------------------------------------------------------
 
+if c(stata_version) >= 15 {
+	local LA `"la("`oalign'")"'
+	local TA `"la("`talign'")"'
+}
+
 /* Compose command */
 local GRAPH `"(scatteri `Y1' `X1' `Y2' `X1' `Y2' `X2' `Y1' `X2',"'
 local GRAPH `"`GRAPH' recast(area) nodropbase cmissing(n) fc(`fcolor')"'
-local GRAPH `"`GRAPH' fi(100) lc(`ocolor') lw(`osize')) "'
+local GRAPH `"`GRAPH' fi(100) lc(`ocolor') lw(`osize') `LA') "'
 local GRAPH `"`GRAPH'(scatteri `Y1' `X1a' `Y2' `X1a' `Y2' `X2a'"'
 local GRAPH `"`GRAPH' `Y1' `X2a' . . `Y1' `X1b' `Y2' `X1b'"'
 local GRAPH `"`GRAPH' `Y2' `X2b' `Y1' `X2b', recast(area) nodropbase"'
-local GRAPH `"`GRAPH' cmissing(n) fc(white) lc(`ocolor') lw(`osize')) "'
+local GRAPH `"`GRAPH' cmissing(n) fc(white) lc(`ocolor') lw(`osize') `LA') "'
 local GRAPH `"`GRAPH'(scatteri `Y1' `XLBL' (6) "`label'""'
 local GRAPH `"`GRAPH' `Y2' `X1' (12) "0" `Y2' `X2' (12) "`units'","'
 local GRAPH `"`GRAPH' msymbol(i) mlabsize(`tsize') mlabcolor(`tcolor')"'
-local GRAPH `"`GRAPH' mlabgap(*0.1)) "'
+local GRAPH `"`GRAPH' mlabgap(*0.1) `TA') "'
 
 
 

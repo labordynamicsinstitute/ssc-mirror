@@ -9,7 +9,7 @@ d KW: exact test
 d
 d Requires: Stata version 9.0
 d
-d Distribution-Date: 20160223
+d Distribution-Date: 20190209
 d
 d Author: Jo Thori Lind, University of Oslo
 d Support: email j.t.lind@@econ.uio.no
@@ -18,4 +18,4 @@ d Author: Halvor Mehlum, University of Oslo
 d Support: email halvor.mehlum@@econ.uio.no
 d
 f utest.ado
-f utest.hlp
+f utest.sthlp

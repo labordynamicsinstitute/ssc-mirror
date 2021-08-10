@@ -1,7 +1,9 @@
-*! version 2.1.1  30december2012
+*! version 2.2.2  20july2018
+
 program define scores, byable(onecall) sortpreserve
   version 9.2
   gettoken newv 0 : 0, parse("=")
+  local newv = trim("`newv'")
   gettoken opt 0 : 0, parse("(")
   local opt = trim(subinstr("`opt'","=","",1))
   gettoken vars 0 : 0, match(parns)
@@ -52,6 +54,11 @@ program define scores, byable(onecall) sortpreserve
       version 11.2
     }
   }
+  if ("`varlist'")==("`newv'") {
+    tempvar nv
+	qui gen `nv' = `varlist'
+	local varlist = "`nv'"
+  }
   if subinword("`varlist'","`newv'"," ",.) != "`varlist'" {
     display as error "{hi:newvar (`newv')} may not be an element of {hi:varlist (`varlist')}"
     display "-scores- not executed"
@@ -63,7 +70,7 @@ program define scores, byable(onecall) sortpreserve
     display "-scores- not executed"
     exit 498
   }
-  if inlist("`score'","z","centered","pomp","prop","sprop") & "`opt'"!="mean" {
+  if inlist("`score'","z_2","z","centered","sd2","pomp","prop","sprop") & "`opt'"!="mean" {
     display as error "{hi:score(`score')} is a valid option only if {hi:{it:function}(varlist)} = {hi:{it:mean}}"
     display "-scores- not executed"
     exit 498
@@ -91,7 +98,7 @@ program define scores, byable(onecall) sortpreserve
       exit 498
     }
   }
-  if inlist("`score'","","z","centered","pomp","prop","sprop")==0 {
+  if inlist("`score'","","z_2","z","centered","sd2","pomp","prop","sprop")==0 {
     display as error "{hi:`score'} is an invalid argument of option {hi:score()}"
     display "-scores- not executed"
     exit 498
@@ -139,21 +146,27 @@ program define scores, byable(onecall) sortpreserve
       exit 498
     }
   }
-  if "`replace'"=="replace" {
+  if "`replace'"=="" {
     capture confirm new var `newv'
-    if _rc!=0 {
-      capture drop `newv'
+    if _rc > 0 {
+      di as error "variable {bf:`newv'} already defined
+	  exit 110
     }
+	else qui gen `newv' = .
   }
-  if inlist("`score'","z","centered","sprop") {  // prefix by: or weights are relevant
+  else {
+    capture confirm new var `newv'
+	if _rc==0 qui gen `newv' = .
+  }
+  if inlist("`score'","z_2","z","centered","sd2","sprop") {  // prefix by: or weights are relevant
     if "`_byvars'"=="" {
-      gen int `grcons' = 1
+      qui gen int `grcons' = 1
       local _byvars = "`grcons'"
     }
     qui egen `gr' = group(`_byvars'), missing
     qui replace `gr' = . if !`touse'
     qui levelsof `gr', local(K)
-    qui gen `newv' = .
+    qui replace `newv' = .
     foreach k of local K {
       cap drop `nvalid'
       cap drop `tmpscore'
@@ -163,8 +176,9 @@ program define scores, byable(onecall) sortpreserve
       if "`score'" != "" {
         qui sum `tmpscore' if `touse' & `gr'==`k' [`weight' `exp']
         if r(sum_w) > 0 {
-          if "`score'"=="z" {
+          if "`score'"=="z" | "`score'"=="z_2" {
             qui replace `tmpscore' = (`tmpscore'-r(mean))/r(sd)
+			if "`score'"=="z_2" qui replace `tmpscore' = `tmpscore'/2
             if r(sd)==0 {
               if "`_byvars'" == "`grcons'" {
                 di "Warning: Standard deviation of {hi:`tmpscore'} = 0,"
@@ -172,11 +186,15 @@ program define scores, byable(onecall) sortpreserve
               else {
                 di "Warning: Standard deviation of {hi:`tmpscore'} in group {hi:`k'} = 0,"
               }
-              di "z-scores of {hi:`tmpscore'} have been set to missing for all cases."
+			  if "`score'"=="z_2" di "z_2-scores of {hi:`tmpscore'} have been set to missing for all cases."
+              else di "z-scores of {hi:`tmpscore'} have been set to missing for all cases."
             }
           }
           else if "`score'"=="centered" {
             qui replace `tmpscore' = (`tmpscore'-r(mean))
+          }
+          else if "`score'"=="sd2" {
+            qui replace `tmpscore' = (`tmpscore'/(2*r(sd)))
           }
           else if "`score'"=="sprop" {
             qui replace `tmpscore' = (`tmpscore'-`minval')/(`maxval'-`minval')
@@ -201,17 +219,17 @@ program define scores, byable(onecall) sortpreserve
   }
   else {   //  prefix by: or weights are not relevant
     qui egen `nvalid'=rownonmiss(`varlist') if `touse'
-    qui egen double `newv' = row`opt'(`varlist') if `touse' `egenopt'
-    qui replace `newv' = cond(`nvalid'>=`minvalid',`newv', .)
+    qui egen double `tmpscore' = row`opt'(`varlist') if `touse' `egenopt'
+    qui replace `tmpscore' = cond(`nvalid'>=`minvalid',`tmpscore', .)
     if "`score'" != "" {
-      qui sum `newv' if `touse'
+      qui sum `tmpscore' if `touse'
       if r(N) > 0 {
         if inlist("`score'","pomp","prop") {
-          qui replace `newv' = (`newv'-`minval')/(`maxval'-`minval')
-          qui if "`score'"=="pomp" replace `newv' = 100*`newv'
+          qui replace `tmpscore' = (`tmpscore'-`minval')/(`maxval'-`minval')
+          qui if "`score'"=="pomp" replace `tmpscore' = 100*`tmpscore'
           if "`score'"=="prop" & float(`endshift') > 0 {
-            qui replace `newv' = `newv' + `endshift' if float(`newv')==0
-            qui replace `newv' = `newv' - `endshift' if float(`newv')==1
+            qui replace `tmpscore' = `tmpscore' + `endshift' if float(`tmpscore')==0
+            qui replace `tmpscore' = `tmpscore' - `endshift' if float(`tmpscore')==1
           }
           qui egen `m_stat' = rowmin(`varlist') if `touse'
           qui sum `m_stat' if `touse'
@@ -227,6 +245,7 @@ program define scores, byable(onecall) sortpreserve
         }
       }
     }
+    qui replace `newv' = `tmpscore'
   }
   qui sum `newv' if `touse' [`weight' `exp']  //  to create returns of -summarize- of the scores created
 end

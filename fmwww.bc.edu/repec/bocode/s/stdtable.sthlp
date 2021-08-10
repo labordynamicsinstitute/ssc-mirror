@@ -44,6 +44,8 @@ column percentages.{p_end}
 {synopt:{opth f:ormat(%fmt)}}specifies the display format for the output{p_end}
 {synopt:{opt raw}}also displays the raw counts.{p_end}
 {synopt:{opt replace}}replace current data with standardized (and raw) counts.{p_end}
+{synopt:{cmd:replace(}{it:framename} {cmd:[, replace] )}}replaces the data in 
+frame {it:framename} with standardized (and raw) counts. Requires stata 16 or higher{p_end}
 
 {syntab:IPF options}
 {synopt:{opt tol:erance(#)}}tolerance for the standardized counts; default is 1e-6{p_end}
@@ -133,24 +135,26 @@ removed from being a melting pot.
 
 {cmd} 
     . preserve
-    . use "http://www.maartenbuis.nl/software/interracial.dta", clear
-    . stdtable hrace wrace [fw=_freq], by(coh)
+    . use "http://www.maartenbuis.nl/software/homogamy.dta", clear
+    . stdtable racem racef [fw=freq], by(marcoh)
     . restore
 {txt}
 {p 4 4 2}({stata "stdtable_ex 3":click to run}){p_end}
 
 {pstd} The standardized table can be left in memory using the
 {cmd:replace} option, which can be useful for graphing that table.
-Nick Cox's {stata "ssc desc tabplot":tabplot} is nice for this.
+{stata "ssc desc twby":twby} from {help ssc :SSC} is nice for this.
 
 {cmd} 
     . preserve
-    . use "http://www.maartenbuis.nl/software/interracial.dta", clear
-    . stdtable hrace wrace [fw=_freq], by(coh) replace
-    . tabplot hrace coh [iw=std],                       ///
-    >    by(wrace, compact cols(3) note(""))            ///
-    >    xtitle("husband's birth cohort" "wife's race") ///
-    >    xlab(1(2)18,angle(35) labsize(vsmall))
+    . use "http://www.maartenbuis.nl/software/homogamy.dta", clear
+    . stdtable racem racef [fw=freq] , by(marcoh) replace format(%5.0f)
+    . gen y = -6
+    . twby racem racef, compact left xoffset(0.4) legend(off): ///
+    >     twoway bar std marcoh, barw(8) ||                    ///
+    >     scatter y marcoh, msymbol(i) mlab(std) mlabpos(0)    ///
+    >     yscale(range(0 100)) ylab(none) ytitle("")           ///
+    >     xlab(1950(10)2010, val angle(30))
     . restore
 {txt}
 {p 4 4 2}({stata "stdtable_ex 4":click to run}){p_end}
@@ -160,12 +164,39 @@ filtering out the effect for filtering out the effect of the
 marginal distributions, but is unrealistic. If we just want to
 filter out the effects of changes in the marginal distributions
 over time, we could fix all the margins to be equal to the margins
-of one cohort, say 1980.
+of one cohort, say 2010-2017. In the example below we look at how 
+the row percentages would have developed if the row and column totals
+would have stayed constant at the 2010-2017 levels. 
 
 {cmd} 
     . preserve
-    . use "http://www.maartenbuis.nl/software/interracial.dta", clear
-    . stdtable hrace wrace [fw=_freq], by(coh, baseline(1980))
+    . use "http://www.maartenbuis.nl/software/homogamy.dta", clear
+    . stdtable racem racef [fw=freq], ///
+    > by(marcoh, base(2010)) row raw replace format(%5.0f)
+
+    . gen marcoh1 = marcoh - 2 
+    . gen marcoh2 = marcoh + 2 
+    . gen y = -7
+
+    . twby racem racef , compact left xoffset(.4)                         ///
+    >   title("Raw row percentages and row percentages standardized"      ///
+    >         "to marginal distributions of marriage cohort 2010-2017") : ///
+    >   twoway bar _freq marcoh1 , barwidth(4) scheme(s1color)         || ///
+    >          bar std   marcoh2 , barwidth(4)                            ///
+    >          legend(order(1 "raw" 2 "standardized"))                    ///
+    >          ytitle(row percentages)                                    ///
+    >          xlab(1950 "1950-1959"                                      ///
+    >               1960 "1960-1969"                                      ///
+    >               1970 "1970-1979"                                      ///
+    >               1980 "1980-1989"                                      ///
+    >               1990 "1990-1999"                                      ///
+    >               2000 "2000-2009"                                      ///
+    >               2010 "2010-2017", angle(30))                          ///
+    >          yscale(off range(0 105)) ytitle("") ylab(none)          || ///
+    >          scatter y marcoh1 ,                                        ///
+    >          msymbol(i) mlab(_freq) mlabpos(0) mlabcolor(black)      || ///
+    >          scatter std marcoh2 ,                                      ///
+    >          msymbol(i) mlab(std) mlabpos(12) mlabcolor(black)    
     . restore
 {txt}
 {p 4 4 2}({stata "stdtable_ex 5":click to run}){p_end}
@@ -191,7 +222,7 @@ of one cohort, say 1980.
         standardized. The first cell corresponds to the lowest value of {it:colvar},
         the second cell to the second lowest value of {it:colvar}, etc.{p_end}
 
-{phang}
+{pmore}
 The default is to standardize to row and column totals of all 100s if the table
 is square. In that case the standardized counts can be interpreted as row percentages
 and as column percentages. if the table is not square, then the default is to 
@@ -201,22 +232,40 @@ as cell percentages.
 
 {phang}
 {opt row} Standardize such that the output can be interpreted as standardized
-row percentages.
+row percentages. Cannot be combined with the option {cmd:col}.
 
 {phang}
 {opt col} Standardize such that the output can be interpreted as standardized
-column percentages.
+column percentages. Cannot be combined with the option {cmd:row}.
+
+{pmore}{opt row} and {opt col} can be useful when the number of rows is not equal
+to the number of columns or when you used the {opt baseline()} sub-option in the 
+{cmd:by()} option.
 
 {phang}
-{opth f:ormat(%fmt)}specifies the display format for the output{p_end}
+{opth f:ormat(%fmt)} specifies the display format for the output table. This 
+format is also applied to variables left behind by the {cmd:replace} option. The 
+default is %9.3g. {p_end}
 
 {phang}
-{opt raw} also displays the raw counts.{p_end}
+{opt raw} also displays the raw counts when the {cmd:row} and {cmd:col} options 
+have not been specified, or raw row and column percentages when the options 
+{cmd:row} or {cmd:col} have been specified.{p_end}
 
 {phang}
 {opt replace} replace current data with standardized (and raw) counts. The row
 and column totals are returned in observations with missing values on {it:colvar}
 and {it:rowvar} respectively.
+{p_end}
+
+{phang}
+{cmd:replace(}{it:framename} {cmd:, [replace] )} replace data in frame {it:framename}
+with standardized (and raw) counts. Frame {it: framename} will be created if 
+frame {it:framename} does not exist. {cmd:stdtable} will exit with an error if 
+frame {it:framename} already exists and the {cmd:replace} sub-option has not 
+been specified. Stata 16 or higher is required. The row and column totals are 
+returned in observations with missing values on {it:colvar} and {it:rowvar} 
+respectively.
 {p_end}
 
 {dlgtab:IPF options}

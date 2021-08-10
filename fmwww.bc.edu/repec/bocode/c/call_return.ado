@@ -1,4 +1,4 @@
-*capture program drop import_stata
+//capture program drop call_return
 
 program call_return , rclass 
 	
@@ -11,6 +11,17 @@ program call_return , rclass
 	// if "stata_output" is created, then continue the process. Otherwise, return 
 	// an error, because "rc" must be returned anyway...
 	
+	/*
+	Point for future maintenance:
+	----------------------------
+	
+	Stata has a limit in terms of number of arguments, number of vector's numbers, 
+	literals, etc. Therefore, if the MATRIX returned from R has more than 550 
+	numbers, break the matrix and combine it in Stata. 
+	
+	THIS IS NOT A MATSIZE LIMIT. 
+	*/
+	
 	capture confirm file "`using'"
 	if _rc == 0 & substr(trim(`"`macval(0)'"'),1,3) != "q()" {
 		tempname hitch
@@ -19,14 +30,19 @@ program call_return , rclass
 		while r(eof) == 0 {
 			local jump									// reset
 			
+			
+			if !missing("`debug'") di as err " Rcall_synchronize_mode is : $Rcall_synchronize_mode"
+			if !missing("`debug'") di as err "Rcall_synchronize_mode3 is : $Rcall_synchronize_mode3"
+			
 			// NULL OBJECT 
 			// ===========================
 			if substr(`"`macval(line)'"',1,7) == "//NULL " {	
 				local line : subinstr local line "//NULL " ""
 				local line : subinstr local line "." "_", all //avoid "." in name
 				local name : di `"`macval(line)'"'
-				if "$Rcall_synchronize_mode" == "on" {
+				if "$Rcall_synchronize_mode" == "on" | "$Rcall_synchronize_mode3" == "on" {
 					scalar `name' = "NULL"
+					return local `name' "NULL"
 				}
 				else {
 					return local `name' "NULL"
@@ -40,12 +56,15 @@ program call_return , rclass
 				local line : subinstr local line "." "_", all //avoid "." in name
 				local name : di `"`macval(line)'"'
 				file read `hitch' line
-				if "`name'" == "rc" & "`line'" == "1" local Rerror 1
-				if "$Rcall_synchronize_mode" == "on" {
-					scalar `name' = `line'
-				}
-				else {
-					return scalar `name' = `line'
+				if "`name'" != "Rcall_counter" {
+					if "`name'" == "rc" & "`line'" == "1" local Rerror 1
+					if "$Rcall_synchronize_mode" == "on" | "$Rcall_synchronize_mode3" == "on" {
+						scalar `name' = `line'
+						return scalar `name' = `line'
+					}
+					else {
+						return scalar `name' = `line'
+					}
 				}
 			}
 			
@@ -96,7 +115,7 @@ program call_return , rclass
 					local errorMessage = `"`macval(multiline)'"'
 				}	
 				
-				if "$Rcall_synchronize_mode" == "on" {
+				if "$Rcall_synchronize_mode" == "on" | "$Rcall_synchronize_mode3" == "on" {
 					local test
 					capture local test : di `multiline'
 					if !missing("`test'") scalar `name' = `multiline'
@@ -129,9 +148,11 @@ program call_return , rclass
 				//CANNOT BE DEFINED IN STATA
 			}
 			
+			// -----------------------------------------------------------------
 			// MATRIX OBJECT (NUMERIC)
-			// ===========================
+			// =================================================================
 			if substr(`"`macval(line)'"',1,9) == "//MATRIX " {
+		
 				local line : subinstr local line "//MATRIX " ""
 				local line : subinstr local line "." "_", all //avoid "." in name
 				local line : subinstr local line "$" "_", all //avoid "$" in name
@@ -145,22 +166,79 @@ program call_return , rclass
 				}
 				
 				file read `hitch' line
+				
+				//GET COLUMN NAMES
+				if substr(`"`macval(line)'"',1,9) == "colnames:" {
+					local line : subinstr local line "colnames:" ""
+					local colname : di `"`macval(line)'"'
+					file read `hitch' line
+				}
+				
+				//GET ROW NAMES
+				if substr(`"`macval(line)'"',1,9) == "rownames:" {
+					local line : subinstr local line "rownames:" ""
+					local rowname : di `"`macval(line)'"'
+					file read `hitch' line
+				}
+				
+				// READ THE MATRIX
 				local content
 				while r(eof) == 0 & substr(`"`macval(line)'"',1,2) != "//" {
 					local content `content' `line' 
 					file read `hitch' line
 					local jump 1
 				}
-				matrix define `name' = (`content')
+				
+				
+				// AVOID STATA LIMITS IN TERMS OF NUMBER OF ARGUMENTS	
+				// ------------------------------------------------------------
+				if wordcount(`"`macval(content)'"') <= 500  {
+					matrix define `name' = (`content')
+				}
+				else {
+					tokenize "`content'"
+					while !missing("`1'") {
+						local n 0      //RESET
+						local content2 //RESET
+						while `n' <= 500 {
+							local n `++n'
+							local content2 `content2' `1'
+							macro shift
+						}
+						
+						// append pieces of the long returned matrix
+						if missing("`name'") {
+							matrix define `name' = (`content2') 
+						}
+						else {
+							matrix `name' = `name' , `content2'
+						}
+						macro shift
+					}
+				}
+				
+				// CREATE THE MATRIX IN MATA
 				*mat list `name'
 				mata: `name' = st_matrix("`name'") 
 				*mata: `name'
-				mata: st_matrix("`name'", rowshape(`name', `rownumber'))  
+				mata: st_matrix("`name'", rowshape(`name', `rownumber')) 
 				
-				if "$Rcall_synchronize_mode" == "on" {
+				// ADD COLUMN NAME
+				if !missing("`colname'") {
+					matrix colnames `name' = `colname'
+				}
+				
+				// ADD ROW NAME
+				if !missing("`rowname'") {
+					matrix rownames `name' = `rowname'
+				}
+
+				
+
+				if "$Rcall_synchronize_mode" == "on" | "$Rcall_synchronize_mode3" == "on" {
 					mat define `name'_copy = `name'
 					return matrix `name' = `name'
-					mat `name' = `name'_copy
+					mat `name' = `name'_copy				
 					mat drop `name'_copy
 				}	
 				else {
@@ -183,12 +261,14 @@ program call_return , rclass
 	
 	// generate error message
 	// -------------------------------------------------------------------------
-	// but do not stop Rcall, because error message should be returned by Rcall
+	// but do not stop rcall, because error message should be returned by rcall
 	// or the main caller program
 	if "`Rerror'" == "1" {
 		global RcallError 1
 		display as error `"{p}`macval(errorMessage)'"'
 	}
+	
+	macro drop Rcall_synchronize_mode3
 	
 end
 

@@ -1,7 +1,7 @@
 {smcl}
-{* Last revised October 18, 2016}{...}
+{* Last revised May 17, 2019}{...}
 {hline}
-help for {hi:gologit2} version 3.1.1
+help for {hi:gologit2} version 3.2.5
 {hline}
 
 {title:Generalized Ordered Logit Models for Ordinal Dependent Variables}
@@ -141,7 +141,7 @@ about other cautions when using Stata prefix commands.{p_end}
 
 {p 4 4 2} More information on the statistical theory behind
 {cmd:gologit2} as well as several worked examples and a troubleshooting
-FAQ can be found at {browse "http://www3.nd.edu/~rwilliam/gologit2/"}.
+FAQ can be found at {browse "https://www3.nd.edu/~rwilliam/gologit2/"}.
 
 {title:Options}
 
@@ -380,6 +380,13 @@ features of gologit2, such as the {cmd:autofit} and {cmd:gamma} options.
 {opt gsvy} and {opt gologit2_svy} are synonyms for each other and
 either can be used.
 
+{p 4 8 2} NOTE: If you want to use the {cmd:svy} subpop option, 
+if you don't already have one it is best to compute
+a 0/1 selection variable beforehand (e.g. mysample) and 
+then say something like
+{cmd:gsvy, subpop(mysample)}. More complicated subpop 
+statements can sometimes cause
+errors with gologit2.
 
 {title:Options for predict}
 
@@ -459,7 +466,7 @@ in which no variables are constrained to meet the assumption and
 contrasting it with a model in which all are so constrained (the
 latter is equivalent to the {cmd:ologit} model).
 
-{p 8 12 2}{cmd:. use http://www.indiana.edu/~jslsoc/stata/spex_data/ordwarm2.dta, clear}{p_end}
+{p 8 12 2}{cmd:. use https://www3.nd.edu/~rwilliam/statafiles/ordwarm2, clear}{p_end}
 {p 8 12 2}{cmd:. gologit2 warm i.yr89 i.male i.white age ed prst, store(unconstrained)}{p_end}
 {p 8 12 2}{cmd:. gologit2 warm i.yr89 i.male i.white age ed prst, pl store(constrained)}
 {p_end}
@@ -489,7 +496,7 @@ variable is met. Using the {cmd:autofit} and {cmd:gamma} options, we can (a)
 confirm that Lall came up with the correct partial proportional odds
 model, and (b) replicate the results from his Table 5.
 
-{p 8 12 2}{cmd:. use http://www3.nd.edu/~rwilliam/statafiles/lall.dta, clear}{p_end}
+{p 8 12 2}{cmd:. use https://www3.nd.edu/~rwilliam/statafiles/lall.dta, clear}{p_end}
 {p 8 12 2}{cmd:. gologit2 hstatus i.heart  i.smoke, gamma autofit}{p_end}
 
 {p 4 4 2} {it}Example 3: Complex survey data estimation.{sf} By using the
@@ -510,7 +517,7 @@ command supports the {cmd:pr} option (abbreviated {cmd:p}) for predicted
 probabilities; {cmd:pr} is the default option if nothing else is specified.
 For example,
 
-{p 8 12 2}{cmd:. use http://www.indiana.edu/~jslsoc/stata/spex_data/ordwarm2.dta, clear}{p_end}
+{p 8 12 2}{cmd:. use https://www3.nd.edu/~rwilliam/statafiles/ordwarm2, clear}{p_end}
 {p 8 12 2}{cmd:. quietly gologit2  warm i.yr89 i.male i.white age ed prst, pl(i.yr89 i.male)}{p_end}
 {p 8 12 2}{cmd:. predict p1 p2 p3 p4}{p_end}
 {p 8 12 2}{cmd:. list p1 p2 p3 p4 in 1/10}{p_end}
@@ -518,7 +525,7 @@ For example,
 {p 4 4 2} {it}Example 5.  Constrained logistic regression. {sf} 
 Here is an example of how you can impose your own linear constraints on variables.
 
-{p 8 12 2}{cmd:. use http://www.indiana.edu/~jslsoc/stata/spex_data/ordwarm2.dta, clear}{p_end}
+{p 8 12 2}{cmd:. use https://www3.nd.edu/~rwilliam/statafiles/ordwarm2, clear}{p_end}
 {p 8 12 2}{cmd:. recode warm (1 2  = 0)(3 4 = 1), gen(agree)}{p_end}
 {p 8 12 2}{cmd:. * Constrain the effects of male and white to be equal}{p_end}
 {p 8 12 2}{cmd:. constraint 1 1.male = 1.white}{p_end}
@@ -529,13 +536,14 @@ as its name implies. {cmd:gologit2} uses the logit link. If you
 prefer, however, you can specify probit, complementary log log, 
 log log, or cauchit links.  For example, to estimate a goprobit model,
 
-{p 8 12 2}{cmd:. use http://www.indiana.edu/~jslsoc/stata/spex_data/ordwarm2.dta, clear}{p_end}
+{p 8 12 2}{cmd:. use https://www3.nd.edu/~rwilliam/statafiles/ordwarm2, clear}{p_end}
 {p 8 12 2}{cmd:. gologit2 warm i.yr89 i.male i.white age ed prst, link(p)}{p_end}
 
 {p 4 4 2} {it}Example 7.  The margins command. {sf}
 
-{p 8 12 2}{cmd:. use http://www.indiana.edu/~jslsoc/stata/spex_data/ordwarm2.dta, clear}{p_end}
+{p 8 12 2}{cmd:. use https://www3.nd.edu/~rwilliam/statafiles/ordwarm2, clear}{p_end}
 {p 8 12 2}{cmd:. gologit2 warm i.yr89 i.male i.white age ed prst, pl}{p_end}
+{p 8 12 2}{cmd:. margins yr89 male white}{p_end}
 {p 8 12 2}{cmd:. margins yr89 male white, predict(outcome(1))}{p_end}
 {p 8 12 2}{cmd:. margins yr89 male white, predict(outcome(2))}{p_end}
 {p 8 12 2}{cmd:. margins yr89 male white, predict(outcome(3))}{p_end}
@@ -559,8 +567,8 @@ and multinomial models. Here is one simple example.
 {p 5 5}
 Richard Williams{break}
 Notre Dame Department of Sociology{break}
-Richard.A.Williams.5@ND.Edu{break}
-{browse "http://www3.nd.edu/~rwilliam/gologit2/"}{p_end}
+rwilliam@ND.Edu{break}
+{browse "https://www3.nd.edu/~rwilliam/gologit2/"}{p_end}
 
 
 {title:Acknowledgements}
@@ -623,7 +631,7 @@ Sociology, 40:1, 7-20,
 
 {p 5 5}Updates to the program that have been made since the 2006 Stata
 Journal article are summarized at
-{browse "http://www3.nd.edu/~rwilliam/gologit2/gologit2.pdf"}. 
+{browse "https://www3.nd.edu/~rwilliam/gologit2/gologit2.pdf"}. 
 
 
 

@@ -1,113 +1,60 @@
 // -------------------------------------------------------------
 // Display Regression Footnote
 // -------------------------------------------------------------
-
 program reghdfe_footnote
-syntax [, linesize(int 79)]
+syntax [, width(int 13)]
 
-	local skip1 = max(`s(width_col1)'-1, 12) // works with both _coef_table, ivreg2 and ivregress
-
-if ("`e(model)'"=="ols" & inlist("`e(vce)'", "unadjusted", "ols")) {
-	local dfa1  = e(df_a) + 1
-	local todisp `"F(`=e(df_a)-1', `e(df_r)') = "'
-	local skip3 = max(23-length(`"`todisp'"')-2,0)
-	local skip2 = max(14-length(`"`dfa1'"')-2,0)
-	local skip0 `skip1'
-
-	foreach fe in `e(extended_absvars)' {
-		local skip1 = max(`skip1', length("`fe'"))
+	if (`"`e(absvars)'"' == "_cons") {
+		exit
 	}
 
-	di as text %`skip0's "Absorbed" " {c |}" ///
-		_skip(`skip3') `"`todisp'"' ///
-		as res %10.3f e(F_absorb) %8.3f fprob(e(df_a),e(df_r),e(F_absorb)) ///
-		as text _skip(13) `"(Joint test)"'
+	tempname table
+	matrix `table' = e(dof_table)
+	mata: st_local("var_width", strofreal(max(strlen(st_matrixrowstripe("`table'")[., 2]))))
+	if (`var_width' > `width') loc width = `var_width'
+	loc rows = rowsof("`table'")
+	loc cols = rowsof("`table'")
+	local vars : rownames `table'
 
-	* Col width
-	local WX = `skip1' + 1
+	// Setup table
+	di as text _n "Absorbed degrees of freedom:"
+	tempname mytab
+	.`mytab' = ._tab.new, col(5) lmargin(0)
+	.`mytab'.width	 `width'  | 12  	    12    		14 			1 |
+	.`mytab'.pad		.		 1     		 1		   	 1			0
+	.`mytab'.numfmt		.		%9.0g		%9.0g		%9.0g	  	.
+	.`mytab'.numcolor	.		text 		text		result		.
+	.`mytab'.sep, top
 
-	* Show by-fe FStats
-	* Relevant macros: NUM_FE, FE1, .., FE_TARGET1, .., FE_VARLIST
-	local r2 = 1 - e(rss0)/e(tss)
-	local r2_report %4.3f `r2'
-	forval i = 1/`e(N_hdfe_extended)' {
-		local fe : word `i' of `e(extended_absvars)'
-		if (e(F_absorb`i')<.) {
-			di as text %`skip1's "`fe'" " {c |}" _continue
-			
-			local df_a_i = e(df_a`i') - (`i'==1)
-			local df_r_i = e(df_r`i')
-			local todisp `"F(`df_a_i', `df_r_i') = "'
-			local skip3 = max(23-length(`"`todisp'"')-2,0)
-			di as text _skip(`skip3') `"`todisp'"' _continue
-			
-			di as res %10.3f e(F_absorb`i') %8.3f fprob(e(df_a`i'),e(df_r`i'),e(F_absorb`i')) _continue
-			di as text _skip(12) `"(Nested test)"'
-
-			local r2 = 1 - e(rss`i')/e(tss)
-			local r2_report `r2_report' " -> " %4.3f `r2'
-			*local cats = e(K`i') - e(M`i')
-			*local data = "`e(K`i')' categories, `e(M`i')' collinear, `cats' unique"
-			*local skip = 62 - length("`data'")
-			*di as text _skip(`skip') `"(`data')"'
-		}
-	}
-	di as text "{hline `=1+`skip0''}{c BT}{hline 64}"
-	if (e(rss0)<.) di as text " R-squared as we add HDFEs: " `r2_report'
-} // regress-unadjusted specific
-else {
-	foreach fe in `e(absvars)' {
-		local skip1 = max(`skip1', length("`fe'"))
-	}
-	local WX = `skip1' + 1
-}
-
-* Show category data
-di as text
-di as text "Absorbed degrees of freedom:"
-di as text "{hline `WX'}{c TT}{hline 49}{c TRC}"   // {c TT}{hline 14}"
-di as text %`skip1's "Absorbed FE" " {c |}" ///
-	%13s "Num. Coefs." ///
-	%16s "=   Categories" ///
-	%15s "-   Redundant" ///
-	"     {c |} " _continue
-
-// if ("`e(corr1)'"!="") di as text %13s "Corr. w/xb" _continue
-di as text _n "{hline `WX'}{c +}{hline 49}{c RT}"  // {c +}{hline 14}"
-
-	local i 0
 	local explain_exact 0
 	local explain_nested 0
+	
+	// Header
+	.`mytab'.titles "Absorbed FE" "Categories" " - Redundant" "  = Num. Coefs" ""
+	.`mytab'.sep, middle
 
-	forval i = 1/`e(N_hdfe_extended)' {
-		local fe : word `i' of `e(extended_absvars)'
-
-
-		di as text %`skip1's "`fe'" " {c |}" _continue
-		local numcoefs = e(K`i') - e(M`i')
-		assert `numcoefs'<. & `numcoefs'>=0
-		local note = cond(`e(M`i'_exact)'==0, "?", " ")
-		if ("`note'"=="?") {
-			local explain_exact 1
+	// Body	
+	forval i = 1/`rows' {
+		local var : word `i' of `vars'
+		loc var = subinstr("`var'", "1.", "", .)
+		loc note " "
+		if (`=`table'[`i', 4]'==1) {
+			loc note "?"
+			loc explain_exact 1
 		}
-		else if (`e(M`i'_nested)'==1) {
-			local note *
-			local explain_nested 1
+		if (`=`table'[`i', 5]'==1) {
+			loc note "*"
+			loc explain_nested 1
 		}
-		
-		di as text %13s "`numcoefs'" _continue
-		di as text %16s "`e(K`i')'" _continue
-		
-		di as text %15s "`e(M`i')'" _continue
-		di as text %2s "`note'" "   {c |} " _continue
-		//if ("`e(corr`i')'"!="") {
-		//	di as text %13.4f `e(corr`i')' _continue
-		//}
-		di
+
+		// noabsorb
+		if (`rows'==1 & `=`table'[`i', 1]'==1 & strpos("`var'", "__")==1) loc var "_cons"
+
+		.`mytab'.row "`var'" `=`table'[`i', 1]' `=`table'[`i', 2]' `=`table'[`i', 3]' "`note'"
 	}
-di as text "{hline `WX'}{c BT}{hline 49}{c BRC}" // {c BT}{hline 14}"
-if (`explain_exact') di as text "? = number of redundant parameters may be higher"
-if (`explain_nested') di as text `"* = fixed effect nested within cluster; treated as redundant for DoF computation"'
-// di as text _skip(4) "Fixed effect indicators: " in ye "`e(absvars)'"
 
+	// Bottom
+	.`mytab'.sep, bottom
+	if (`explain_exact') di as text "? = number of redundant parameters may be higher"
+	if (`explain_nested') di as text `"* = FE nested within cluster; treated as redundant for DoF computation"'
 end

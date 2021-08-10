@@ -15,7 +15,7 @@ help for {cmd:bmjcip}{right:(Roger Newson)}
 {cmdab:he:adline(}{help char:{it:characteristic_name}} [, {help bmjcip##headline_subopts:{it:headline_suboptions}}]{cmd:)} ]
 
 {pstd}
-where {varlist} is a list of 1 to 4 numeric {help varname:variable names}, of the form
+where {varlist} is a list of 1 to 5 numeric {help varname:variable names}, of the form
 
 {pstd}
 {it:pvarname}

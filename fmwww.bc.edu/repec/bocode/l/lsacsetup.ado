@@ -1,4 +1,4 @@
-* *! Version 1.0.0 by Francisco Perales 22-June-2015
+* *! Version 1.4.0 by Francisco Perales  15-December-2020
 * Requires Stata version 12 or higher
 
 program define lsacsetup
@@ -28,6 +28,12 @@ if "`release'" == "5"{
 if "`release'" == "6"{
 	local release_number = "b0 b2 b3 b4 b5 b6 b8 b10 k4 k6 k7 k8 k9 k10 k12 k14"
 }
+if "`release'" == "7"{
+	local release_number = "b0 b2 b3 b4 b5 b6 b8 b10 b12 k4 k6 k7 k8 k9 k10 k12 k14 k16"
+}
+if "`release'" == "8"{
+	local release_number = "b0 b2 b3 b4 b5 b6 b8 b10 b12 b14 k4 k6 k7 k8 k9 k10 k12 k14 k16 k18"
+}
 quietly capture erase `filename'.dta
 quietly save `filename', replace emptyok
 display in yellow _newline(1) "Data management started"
@@ -52,11 +58,17 @@ foreach file in `release_number'{
 			if "`file'"=="b10"|"`file'"=="k10"{
 				local prefix = "f"
 			}
-			if "`file'"=="k12"{
+			if "`file'"=="b12"|"`file'"=="k12"{
 				local prefix = "g"
 			}
-			if "`file'"=="k14"{
+			if "`file'"=="b14"|"`file'"=="k14"{
 				local prefix = "h"
+			}
+			if "`file'"=="k16"{
+				local prefix = "i"
+			}
+			if "`file'"=="k18"{
+				local prefix = "j"
 			}
 			capture rename abroth broth
 			capture rename asist sist
@@ -119,10 +131,10 @@ if "`hhfile'" != ""{
 }
 if "`naplanfile'" != ""{
 	quietly{
-		if "`release'" != "6"{
+		if "`release'" != "6" & "`release'" != "7" & "`release'" != "8"{
 			use "`datadirectory'\lsacnaplanacara_gr", clear
 		}
-		if "`release'" == "6"{
+		if "`release'" == "6"|"`release'" == "7"|"`release'" == "8"{
 			use "`datadirectory'\lsacnaplan", clear
 		}
 		local list_naplan ""
@@ -155,6 +167,8 @@ foreach var of varlist _all{
 	local varlabel = regexr("`varlabel'","10/11 - ","")
 	local varlabel = regexr("`varlabel'","12/13 - ","")
 	local varlabel = regexr("`varlabel'","14/15 - ","")
+	local varlabel = regexr("`varlabel'","16/17 - ","")
+	local varlabel = regexr("`varlabel'","18/19 - ","")
 	lab var `var' "`varlabel'"
 }
 quietly recode wave 34=1

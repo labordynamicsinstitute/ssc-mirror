@@ -1,7 +1,7 @@
 {smcl}
-{* *! version 0.0.2 9Jun2013}{...}
+{* *! version 0.0.4 **Jun2020}{...}
 {cmd:help stnet} 
-{right:also see:  {help strs}}
+{right:also see:  {help strs} {help stpp}}
 {hline}
 
 {title:Title}
@@ -19,18 +19,22 @@
 [{cmd:in} {it:range}]
 [{cmdab:iw:eight}{it:=varname}]
 , 	
-{cmdab:br:eaks}{cmd:(}{it:range}{cmd:)} 
 {cmdab:m:ergeby}{cmd:(}{it:varlist}{cmd:)}
 {cmdab:diag:date}{cmd:(}{it:varname}{cmd:)}
 {cmdab:birth:date}{cmd:(}{it:varname}{cmd:)}
-[{cmd:by}{cmd:(}{it:varlist}{cmd:)}
+[{cmdab:br:eaks}{cmd:(}{it:range}{cmd:)} 
+{cmd:unique}
+{cmd:by}{cmd:(}{it:varlist}{cmd:)}
 {cmd:attage}{cmd:(}{it:newvar}{cmd:)}
 {cmd:attyear}{cmd:(}{it:newvar}{cmd:)}
 {cmd:survprob}{cmd:(}{it:varname}{cmd:)}
 {cmd:maxage}{cmd:(}{it:int 99}{cmd:)}
 {cmdab:ed:erer2}
 {cmdab:stand:strata}{cmd:(}{it:varname}{cmd:)}
+{cmd:brenner}
+{cmdab:indwe:ight}{cmd:(}{it:varname}{cmd:)}
 {cmdab:li:st}{cmd:(}{it:varlist}{cmd:)}
+{cmd:at(}{it:#}|{it:{help numlist}}{cmd:)}
 {cmd:listyearly}
 {cmdab:f:ormat:(%}{it:fmt}{cmd:)}
 {cmdab:notab:les}
@@ -65,16 +69,18 @@ The maximum age is specified using the {cmd:maxage()} option (default is 99).{p_
 
 {title:Options}
 
-{p 0 4}{cmdab:br:eaks}{cmd:(}{it:range}{cmd:)} specifies the cutpoints for the lifetable intervals as 
-{it:range} in the {help forvalues} command. The units must be years, e.g., use {cmd:breaks}{cmd:(}{it:0(0.08333333)5}{cmd:)} 
-for monthly intervals up to 5 years.
-
 {p 0 4}{cmdab:m:ergeby}{cmd:(}{it:varlist}{cmd:)} specifies the variables which uniquely determine the records 
 in the file of general population survival probabilities. This file must also be sorted by these variables.
 
 {p 0 4}{cmdab:diag:date}{cmd:(}{it:varname}{cmd:)} specifies the variable containing the date of diagnosis. 
 
 {p 0 4}{cmdab:birth:date}{cmd:(}{it:varname}{cmd:)} specifies the variable containing the date of birth.
+
+{p 0 4}{cmdab:br:eaks}{cmd:(}{it:range}{cmd:)} specifies the cutpoints for the lifetable intervals as 
+{it:range} in the {help forvalues} command. The units must be years, e.g., use {cmd:breaks}{cmd:(}{it:0(0.08333333)5}{cmd:)} 
+for monthly intervals up to 5 years.
+
+{p 0 4}{cmd:unique} specifies that cutpoints for the lifetable intervals must correspond to each observed survival time.
 
 {p 0 4}{cmdab:by}{cmd:(}{it:varlist}{cmd:)} specifies the life table stratification variables. One life table is
 estimated for each combination of these variables.
@@ -89,7 +95,7 @@ data file (it is created form the date of diagnosis plus follow-up time) but mus
 exist in the using file. Default is {it:_year}.
 
 {p 0 4}{cmdab:surv:prob}{cmd:(}{it:varname}{cmd:)} specifies the variable in the using file that contains 
-the general population survival probabilities. Default is {it:prob}.
+the g.eneral population survival probabilities. Default is {it:prob}.
 
 {p 0 4}{cmdab:maxage}{cmd:(}{it:int 99}{cmd:)} specifies the maximum age for which general  
 population survival probabilities are provided in the using file. Probabilities for 
@@ -102,10 +108,19 @@ are not exactly equal to those obtained by using {cmd:ltable}.
 {p 0 4}{cmdab:li:st}{cmd:(}{it:varlist}{cmd:)} specifies the variables to be listed in the life tables. The variables
 start and end are included by default, but if only one of these is specified in the list option then the other is suppressed.
 
+{p 0 4} {cmd:at(}{it:#}|{it:{help numlist}}{cmd:)} reports estimated net survival at specified times.
+
 {p 0 4}{cmd:listyearly} display the net survival estimates at the end of each year of the time of the follow-up.
 
 {p 0 4}{cmdab:stand:strata}{cmd:(}{it:varname}{cmd:)} specifies a variable defining strata across which
 to average the cumulative survival estimate. Weights must be given by [{cmd:iweight}{it:=varname}].
+
+{p 0 4}{cmd:brenner} specifies that the age adjustment be performed using the approach proposed by Brenner et al (2004). 
+This option requires that [iweight] and standstrata() are also specified.
+
+{p 0 4}{cmdab:indwe:ight}{cmd:(}{it:varname}{cmd:)} specifies a variable where individual weights are defined.
+This option allows the user to pass any kind of weights.
+When weights are supplied this way, {cmdab:stand:strata}{cmd:(}{it:varname}{cmd:)} and {cmd:brenner} cannot be used.
 
 {p 0 4}{cmdab:f:ormat:(%}{it:fmt}{cmd:)} specifies the {help format} for variables containing 
 survival estimates. Default is %6.4f.
@@ -125,6 +140,17 @@ observation for each life table interval.
 {title:Example: Net survival (Pohar Perme and coll.) by sex using 1 month as length of interval in the life table}
 
 {p 4 8 2}{cmd:. stnet using lifetab, br(0(.083333333)10) mergeby(_year sex _age) diagdate(dx) birthdate(bdate) by(sex)}
+
+
+
+{title:Example: Net survival (Pohar Perme and coll.) by sex where cutpoints of interval in the life table correspond to each observed survival time}
+
+{p 4 8 2}{cmd:. stnet using lifetab, unique mergeby(_year sex _age) diagdate(dx) birthdate(bdate) by(sex) at(1(1)10)}
+
+When using {cmd:unique}, results shown may be very long. Therefore, we also specifies {cmd:at(}{it:{help numlist}}{cmd:)} to show results only at specified {cmd:(}{it:{help numlist}}{cmd:)}
+
+Note that, when {cmd:unique} is specified, the time-scale is still split into a number of intervals and our life table approach is applied for the estimation of net survival.
+This is a different implementation to {cmd:stpp} and {cmd:stns}. In our experience results of both approaches are very close.  
 
 
 
@@ -159,6 +185,26 @@ The strata across which to average are defined using the {cmdab:standstrata(}{it
 containing the weights (which must be less than 1) must exist in the data set and be specified using the {cmdab:iweight=} option.
 
 {p}Standard errors are estimated using the approach described by Corazziari et al (2004).
+
+
+
+{title:Example: Age-adjusted estimates of net survival according to Brenner and Hakulinen approach}
+
+{p}When data are sparse the traditional age-standardisation can fail to produce age-adjusted net survival estimates.
+Rather than weighting based on the age distribution at the start, Brenner and Hakulinen (2004) propose using weights that change throughout follow-up time. 
+This approach allows to produce comparable net survival estimates even when data are sparse by assigning individual weights to each patient 
+and constructing a weighted life table. 
+
+{p 0}{cmd:. stnet using lifetab [iw=standwei], br(0(.083333334)10) mergeby(_year sex _age) diagdate(dx) birthdate(bdate) by(sex)  standstrata(agegroup) brenner}{p_end}
+ 
+{p}We can assign other user-defined individual weights by specifying {cmd: indweight(varname)}. For example, we can reproduce the above age-adjusted 
+net survival estimates by the following commands{p_end} 
+{p 0}{cmd:. local total = _N}{p_end}
+{p 0}{cmd:. bysort agegroup: gen a_age = _N/`total'}{p_end}
+{p 0}{cmd:. gen wt = (standwei/a_age)}{p_end}
+{p 0}{cmd:. stnet using lifetab , br(0(.083333334)10) mergeby(_year sex _age) diagdate(dx) birthdate(bdate) by(sex) indweight(wt)}{p_end}
+
+{p 0}When {cmd: indweight(varname)} are specified {cmd: standstrata(agegroup)} and {cmd: [iw=standwei]} no longer need.{p_end}
 
 
 
@@ -201,13 +247,13 @@ cause {cmd:stnet} underestimates NS computed by {it:rs.surv}.{p_end}
 
 {title:Authors}
 
-{p}Enzo Coviello ({browse "mailto:enzo.coviello@alice.it":enzo.coviello@alice.it}), Paul Dickman, Karri Seppa, and Arun Pokhrel.{p_end}
+{p}Enzo Coviello ({browse "mailto:enzocovi@gmail.com":enzocovi@gmail.com}), Paul Dickman, Karri Seppa, and Arun Pokhrel.{p_end}
 
 
+{title: Aknowledgments}
 
-{title:Aknowledgments}
-
-{p}I wish to thank Mark Rutherford for making available the code for the simulations of relative survival data and other tests of the command.{p_end}
+{p} I wish to thank Mark Rutherford for making available the code for the simulations of relative survival data and other tests of the command.
+Also thanks to Mark Rutherford and Paul Lambert for drawing attention to the usefulness of Brenner age-standardisation.{p_end}
 
 
 
@@ -228,6 +274,13 @@ cause {cmd:stnet} underestimates NS computed by {it:rs.surv}.{p_end}
 {browse "http://www.ncbi.nlm.nih.gov/pubmed/15454257":Standard cancer patient population for age standardising survival ratios},
 {it:European Journal of Cancer} 2004;40:2307-16.{p_end}
 
+{p} Brenner H., Arndt V., Gefeller O., Hakulinen T.  
+{browse "https://www.ncbi.nlm.nih.gov/pubmed/15454258":An alternative approach to age adjustment of cancer survival rates},
+{it:European Journal of Cancer 2004;40:2317-2322.{p_end}
+
+{p} Sasieni P, Brentnall A.R.
+{browse "https://www.ncbi.nlm.nih.gov/pmc/articles/PMC5507182/":On Standardized Relative Survival},
+{it:Biometrics} 2017;73:473-482.{p_end}
 
 
 {p 0 19}On-line:  help for {help stset}, {help strs}, {help ltable}

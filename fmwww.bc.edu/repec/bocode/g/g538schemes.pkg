@@ -1,0 +1,72 @@
+d 'G538SCHEMES': module to provide graphics schemes for http://fivethirtyeight.com
+d
+d  While stata's computational capabilities have intensively
+d increased over the last decade, the quality of its default figure
+d schemes is still a matter of debate amongst users. Clearly some
+d of the arguments speaking against stata figures are subject to
+d individual taste, but others are not, such as for instance:
+d horizontal labelling, unnecessary background tinting, missing
+d gridlines, oversized markers.  The schemes provided here
+d replicate the design of http://fivethirtyeight.com.  This package
+d provides users with three graphic schemes:  1) 538 (replicates
+d the figure design by http://fivethirtyeight.com) 2) 538w
+d (replicates the figure design by http://fivethirtyeight.com but
+d with a white background) 3) 538bw (replicates the figure design
+d by http://fivethirtyeight.com but in black and white)  Please
+d consult the relevant help files to retrieve more information on
+d the specific schemes. 
+d
+d KW: graphics
+d KW: schemes
+d KW: 538
+d KW: fivethirtyeight
+d
+d Requires: Stata version 12
+d
+d Distribution-Date: 20200807
+d
+d Author: Daniel Bischof, University of Zurich
+d Support: email bischof@@ipz.uzh.ch
+d
+f g538schemes.sthlp
+f 538.sthlp
+f 538bw.sthlp
+f ../s/scheme-538.scheme
+f ../s/scheme-538w.scheme
+f ../s/scheme-538bw.scheme
+f ../s/538.sthlp
+f ../s/538w.sthlp
+f ../s/538bw.sthlp
+f ../c/color-538rs11.style
+f ../c/color-538rs10.style
+f ../c/color-538rs9.style
+f ../c/color-538rs8.style
+f ../c/color-538rs7.style
+f ../c/color-538rs6.style
+f ../c/color-538rs5.style
+f ../c/color-538rs4.style
+f ../c/color-538rs3.style
+f ../c/color-538rs2.style
+f ../c/color-538rs1.style
+f ../c/color-538bs11.style
+f ../c/color-538bs10.style
+f ../c/color-538bs9.style
+f ../c/color-538bs8.style
+f ../c/color-538bs7.style
+f ../c/color-538bs6.style
+f ../c/color-538bs5.style
+f ../c/color-538bs4.style
+f ../c/color-538bs3.style
+f ../c/color-538bs2.style
+f ../c/color-538bs1.style
+f ../c/color-538b.style
+f ../c/color-538g.style
+f ../c/color-538m.style
+f ../c/color-538o.style
+f ../c/color-538p.style
+f ../c/color-538r.style
+f ../c/color-538t.style
+f ../c/color-538y.style
+f ../c/color-538label.style
+f ../c/color-538axis.style
+f ../c/color-538background.style

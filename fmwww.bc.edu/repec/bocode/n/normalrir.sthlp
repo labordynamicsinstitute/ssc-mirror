@@ -150,6 +150,8 @@ especially if the power calculations are multi-scenario.
 {pstd}
 For more about the estimation of Somers {it:D} and Harrell's {it:c} using Stata,
 see {help normalrir##normalrir_references:Newson (2006)}.
+For more about the details of the maths behind {cmd:normalrir},
+see Newson (2017).
 
 
 {title:Examples}
@@ -206,20 +208,27 @@ How to use ridit analysis.
 {it:Biometrics} 14(1): 18-38.
 
 {pstd}
-Newson R.
-2004.
-Generalized power calculations for generalized linear models and more.
-{it:The Stata Journal} 4(4): 379-401.
+Newson, R. B.
+2017.
+Asymptotic distributions of two-sample rank statistics for continuous outcomes.
 Download from
-{browse "http://www.stata-journal.com/article.html?article=st0074":The Stata Journal website}.
+{browse "http://www.rogernewsonresources.org.uk/papers.htm#miscellaneous_documents":Roger Newson's website}.
 
 {pstd}
-Newson R.
+Newson, R.
 2006.
 Confidence intervals for rank statistics: Somers' {it:D} and extensions.
 {it:The Stata Journal} 6(3): 309-334.
 Download from
 {browse "http://www.stata-journal.com/article.html?article=snp15_6":The Stata Journal website}.
+
+{pstd}
+Newson, R.
+2004.
+Generalized power calculations for generalized linear models and more.
+{it:The Stata Journal} 4(4): 379-401.
+Download from
+{browse "http://www.stata-journal.com/article.html?article=st0074":The Stata Journal website}.
 
 {pstd}
 Serfling R. J. 1980. Approxination Theorems of Mathematical Statistics. New York, NY: John Wiley & Sons.

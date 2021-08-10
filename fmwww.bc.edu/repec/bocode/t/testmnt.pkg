@@ -1,0 +1,15 @@
+d 'TESTMNT': module to test sshfs
+d
+d  this routine is just there to test sshfs 
+d
+d KW: sshfs
+d
+d Requires: Stata version 14
+d
+d Distribution-Date: 20210210
+d
+d Author: Kit Baum, BC
+d Support: email baum@@bc.edu
+d
+f testmnt.ado
+f testmnt.sthlp

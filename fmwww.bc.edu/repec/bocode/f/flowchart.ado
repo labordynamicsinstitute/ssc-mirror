@@ -1,4 +1,4 @@
-*! version 0.0.5  04aug2017  Isaac M. E. Dodd
+*! version 0.0.7  26aug2017  Isaac M. E. Dodd
 
 *##############################################################################*
 ********************************************************************************
@@ -10,7 +10,7 @@
 capture program drop flowchart
 program define flowchart
 	version 13
-	syntax [anything] [using/] [, name(string) value(string) input(string) output(string) arrow(string) *]
+	syntax [anything] [using/] [, name(string) value(string) template(string) output(string) arrow(string) *]
 	
 	if("`1'" == "" | "`1'" == "getstarted" | "`1'" == "firsttime" | ("`1'" == "get" & "`2'" == "started")) {
 		display ""
@@ -31,7 +31,7 @@ program define flowchart
 		display `"	  Study the documentation and examples on how to properly format 'writerow' commands."'
 		display `"	  Use the 'connect' command to draw arrows between the blocks in each row."'
 		display `"	  End a diagram with the 'flowchart finalize' command with 2 important options:"'
-		display `"	  - input("...") is the .texdoc file, is an ancillary file which you don't need to edit."'
+		display `"	  - template("...") is the .texdoc file, is an ancillary file which you don't need to edit."'
 		display `"	  - output("...") is the .tikz file which is automatically generated/regenerated."'
 		display ""
 		if("`1'" == "" | "`1'" == "firsttime") {
@@ -57,7 +57,7 @@ program define flowchart
 		display ""
 		flowchart_subtitle "License"
 		display "	GNU LGPL 2007 - By installing this program you agree to this license, available in full here:" //_newline
-		display `"	 	{browse "https://github.com/IsaacDodd/flowchart/blob/master/license.txt"}"'
+		display `"	 	{browse "https://github.com/IsaacDodd/flowchart/blob/master/LICENSE.txt"}"'
 		display ""
 		display "Read this message again at anytime by typing '{stata flowchart getstarted:flowchart getstarted}'"
 		display ""
@@ -99,7 +99,7 @@ program define flowchart
 			display "Closed."
 		}
 		capture file close FlowchartFile 
-		flowchart_tdfinalize, input("`input'") output("`output'")
+		flowchart_tdfinalize, template("`template'") output("`output'")
 	}
 	else if("`1'" == "setup" | "`1'" == "setup,") {
 		gettoken varfirst varothers : 0
@@ -549,7 +549,7 @@ program define flowchart_debug
 		capture log query DebugLog
 		* If a log has already been started, DebugLog will exist. If it is off (i.e., it was started but has been closed/turned off), 
 		* 	append to the existing log. If DebugLog does not exist (r(status) is blank) or it exists but is on already, replace the log.
-		flowchart_subtitle "DEBUG MODE ON"
+		flowchart_subtitle "DEBUG MODE: ON"
 		display ""
 		display "  Starting Debug Log..."
 		display ""
@@ -573,8 +573,14 @@ program define flowchart_debug
 	else if("`off'" == "off") {
 		global Flowchart_Debug = "off"
 		capture log off DebugLog
+		if(_rc) {
+			display as error "Could not turn off DebugLog."
+		}
+		else {
+			display "...DebugLog Off."
+		}
 		display ""
-		flowchart_footer "DEBUG LOG: OFF"
+		flowchart_footer "DEBUG MODE: OFF"
 		display ""
 		display ""
 	}
@@ -586,26 +592,41 @@ program define flowchart_debug
 		display ""
 	}
 	else if("`check'" == "check") {
-		flowchart_header "DEBUG INFO"
+		flowchart_hline
+		flowchart_header "DEBUG CHECK"
 		flowchart_debugcheck
 		flowchart_footer
+		flowchart_hline
 	}
 	else if("`logreset'" == "logreset") {
-		display "..."
 		capture log close DebugLog
-		flowchart_footer "DEBUG LOG RESET" // Close just the log without turning off $Flowchart_Debug
+		if(_rc) {
+			display as error "DebugLog could not be closed."
+			display _rc
+		}
+		else {
+			display "...DebugLog Closed."
+			display ""
+			flowchart_footer "DEBUG LOG RESET" // Close just the log without turning off $Flowchart_Debug
+		}
 	}
 	else if("`close'" == "close") {
 		global Flowchart_Debug = "off"
 		capture log close DebugLog	// Close the log and also turn off $Flowchart_Debug
-		display ""
-		flowchart_footer "DEBUG LOG CLOSED"
-		display ""
-		display ""
+		if(_rc) {
+			display as error "Could not close DebugLog."
+		}
+		else {
+			display "...DebugLog Closed."
+			display ""
+			flowchart_footer "DEBUG MODE: OFF"
+			display ""
+		}
 	}
 	else if("`info'" == "info") {
 		display ""
-		flowchart_header "DEBUG"
+		flowchart_hline
+		flowchart_header "DEBUG INFO"
 		display ""
 		flowchart_subtitle "Debug Options"
 		display ""
@@ -633,6 +654,7 @@ program define flowchart_debug
 		
 		display "Read this message again at anytime by typing '{stata flowchart debug info:flowchart debug info}'"
 		flowchart_footer
+		flowchart_hline
 	}
 	else if("`deletefiles'" == "deletefiles") {
 		if("`yes'" == "yes") {
@@ -658,17 +680,18 @@ end
 capture program drop flowchart_debugdeletefiles
 program define flowchart_debugdeletefiles
 	* DeleteFiles - This deletes the ancillary files from the current working directory - Use with caution.
-	rm methods--figure-flowchart.tex
-	rm methods--figure-flowchart.data
-	rm methods--figure-flowchart.tikz
-	rm manuscript.tex
-	rm license.txt
-	rm figure-flowchart.texdoc
-	rm example1output.pdf
-	rm example2output.pdf
-	rm flowchart_example1.do
-	rm flowchart_example2.do
-			display " ...Ancillary Files Deleted."
+	capture rm methods--figure-flowchart.tex
+	capture rm methods--figure-flowchart.data
+	capture rm methods--figure-flowchart.tikz
+	capture rm manuscript.tex
+	capture rm license.txt
+	capture rm figure-flowchart.texdoc
+	capture rm example1output.pdf
+	capture rm example2output.pdf
+	capture rm flowchart_example1.do
+	capture rm flowchart_example2.do
+	display ""
+	display " ...Ancillary Files Deleted."
 end
 capture program drop flowchart_debugcheck
 program define flowchart_debugcheck
@@ -763,12 +786,12 @@ end
 
 capture program drop flowchart_tdfinalize
 program define flowchart_tdfinalize
-	syntax , input(string) output(string)
+	syntax , template(string) output(string)
 	***\\ TIKZ PICTURE: Write the TikZ Picture to the file.
 	if("$Flowchart_Debug" == "on") {
-		display "`input' `output'"
+		display "`template' `output'"
 	}
-	texdoc do "`input'", init("`output'") replace
+	texdoc do "`template'", init("`output'") replace
 	* Important Note: The '.tikz' extension here is important since if it is not specified, calling 'texdoc do' in the Main Analysis Do File will overwrite the .tex file of the same name in the same directory.
 	texdoc close
 end

@@ -9,7 +9,7 @@ version 13.0;
  Add-on packages used:
  keyby
 *!Author: Roger Newson
-*!Date: 01 April 2016
+*!Date: 08 August 2017
 */
 
 syntax, TXTDirspec(string) [ DTADirspec(string) REPLACE ];
@@ -38,7 +38,7 @@ foreach TF in `tflist' {;
   local dspres: list ds in dslist;
   if `dspres' {;
     cprd_`ds' using `"`txtdirspec'/`TF'"', clear;
-    save `dtadirspec'/`ds'.dta, `replace';
+    save `"`dtadirspec'/`ds'.dta"', `replace';
     local newdslist "`newdslist' `ds'";
   };
 };

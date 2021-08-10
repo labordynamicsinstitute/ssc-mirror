@@ -1,5 +1,5 @@
 {smcl}
-{* 29APR2016}{...}
+{* 01JULY2016}{...}
 {hi:help mgbe}
 {hline}
 
@@ -10,7 +10,7 @@
 
 {title:Syntax}
 {p 8 16 2}
-{cmd:mgbe} cases min max {if} [, DISTribution(string) AIC BIC AVERAGE SAVing(string) BY(id)]
+{cmd:mgbe} cases min max [IF(exp)] [, DISTribution(string) AIC BIC AVERAGE SAVing(string) BY(id)]
 {p_end}
 
 {synoptset 25 tabbed}{...}
@@ -43,7 +43,8 @@ The null hypothesis that the distribution fits the data is typically rejected (p
  Binned data are commonly used to summarize the distribution of income or wealth across individuals, households, or families.
  From the binned data, {cmd:mgbe} estimates summary statistics including the mean, median, standard deviation, Gini, Theil, and other inequality statistics.
 
- {pstd} mgbe assumes that the commands savesome and egen_inequal have already been installed. To install those commands, type "ssc install egen_inequal" and "ssc install savesome".
+ {pstd} mgbe requires Stata/IC or Stata/MP and assumes that the commands savesome and egen_inequal have already been installed. To install those commands, type "ssc install egen_inequal".
+  Then "help egen_inequal" will offer more information on the inequality statistics that are output.
 
 {title:Estimation Details}
 
@@ -59,7 +60,7 @@ The null hypothesis that the distribution fits the data is typically rejected (p
 
 use county_bins, clear
 keep if fips <= 2000 /* Fit data from Alabama */
-by fips: mgbe households bin_min bin_max, dist(DAGUM GG) aic average
+mgbe households bin_min bin_max, dist(DAGUM GG) aic average by(fips)
 
 {title:Saved Results}
 
@@ -68,16 +69,13 @@ by fips: mgbe households bin_min bin_max, dist(DAGUM GG) aic average
 {title:Notes}
 
 {pstd}
-1. This program requires Stata/IC or Stata/MP.
+1. Running over all 10 distributions can be slow. Use fewer distributions for faster runtime. Start by eliminating the Pareto2, Lognormal, and Loglogistic, which are almost never the best-fitting distributions. 
 {p_end}
 {pstd}
-2. Running over all 10 distributions can be slow. Use fewer distributions for faster runtime. Start by eliminating the Pareto2, Lognormal, and Loglogistic, which are almost never the best-fitting distributions. 
+2. Running very large datafiles can be slow. Consider breaking large datafiles into smaller pieces. 
 {p_end}
 {pstd}
-3. Running very large datafiles can be slow. Consider breaking large datafiles into smaller pieces. 
-{p_end}
-{pstd}
-4. This program began with code from three programs by Austin Nichols: {help gbgfit}, {help smgfit}, and {help dagfit}. All errors and enhancements are our own.
+3. mgbe borrows some code from three programs by Austin Nichols: {help gbgfit}, {help smgfit}, and {help dagfit}. All errors and enhancements are our own.
 {p_end}
 
 
@@ -92,6 +90,6 @@ Paul T. von Hippel, University of Texas at Austin (paulvonhippel.utaustin@gmail.
 
 {title:References}
 
-{p 4 4 2} von Hippel, P.T., †Scarpino, S.V., & †Holas, I. (2016). “Robust estimation of inequality from binned incomes.” Sociological Methodology, accepted and published online ahead of print. Also available as arXiv e-print 1402.4061.
+{p 4 4 2} Von Hippel, P. T., Scarpino, S. V., & Holas, I. (2016). Robust estimation of inequality from binned incomes. Sociological Methodology, 46(1), 212-251. Also available as arXiv e-print 1402.4061.
  http://arxiv.org/abs/1402.4061.
 

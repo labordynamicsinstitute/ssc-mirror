@@ -17,12 +17,13 @@ d KW: outsheet
 d
 d Requires: Stata version 8
 d
-d Distribution-Date: 20160125
+d Distribution-Date: 20200412
 d
-d Author: Julian Reif , University of Chicago
-d Support: email jreif@@uchicago.edu
+d Author: Julian Reif , University of Illinois
+d Support: email jreif@@illinois.edu
 d
 f regsave.ado
 f regsave_tbl.ado
 f regsave.hlp
+f regsave_tbl.hlp
 f regsave_examples.do

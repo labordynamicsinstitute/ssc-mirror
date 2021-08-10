@@ -1,4 +1,4 @@
-*! version 1.0.2  08aug2016  Ben Jann
+*! version 1.0.3  14jun2018  Ben Jann
 
 program lorenz, eclass properties(svyb svyj)
     version 11
@@ -1902,7 +1902,7 @@ void lorenz_compute_uvars( // sets the pseudo-variables for SE computation
 void lorenz_compute_EY(real matrix S) // estimate E[Y|Z = Q_p] using local linear regression
 {
     real colvector q
-    real scalar    a, b
+    real scalar    a, b, preserve, rc
     string scalar  y, z, w, s, at, yhat
     
     y = st_local("y0")
@@ -1921,19 +1921,62 @@ void lorenz_compute_EY(real matrix S) // estimate E[Y|Z = Q_p] using local linea
     }
     if (b<a) return
     q = S[|a,3 \ b,3|]
+    preserve = (st_nobs()<rows(q))
+    if (preserve) {
+        stata("preserve")
+        stata("quietly set obs " + strofreal(rows(q)))
+    }
     at   = st_tempname()
     yhat = st_tempname()
     (void) st_addvar("double", at)
     st_store((1, rows(q)), at, q)
     if (w!="") {
-        stata("lpoly " + y + " " + z + " [aw=" + w + "] if " + s +
-            ", nograph degree(1) at(" + at + ") generate(" + yhat + ")")
+        rc = _stata("lpoly " + y + " " + z + " [aw=" + w + "] if " + s +
+            ", nograph degree(1) at(" + at + ") generate(" + yhat + ")", 1)
     }
     else {
-        stata("lpoly " + y + " " + z + " if " + s +
-            ", nograph degree(1) at(" + at + ") generate(" + yhat + ")")
+        rc = _stata("lpoly " + y + " " + z + " if " + s +
+            ", nograph degree(1) at(" + at + ") generate(" + yhat + ")", 1)
     }
-    S[|a,3 \ b,3|] = st_data((1,rows(q)), yhat)
+    if (rc) S[|a,3 \ b,3|] = J(b-a+1, 1, .)
+    else S[|a,3 \ b,3|] = lorenz_compute_EY_ipolate(st_data((1,rows(q)), yhat), q)
+    lorenz_compute_EY_mean(S, a, b) // should only happen if n<=2 
+    if (preserve) stata("restore")
+}
+real colvector lorenz_compute_EY_ipolate(real colvector y, real colvector x)
+{   // interpolates y where y is missing (using linear interpolation)
+    // missing values at the start (end) of y are set to the first (last) 
+    // non-missing y value
+    // x is assumed to be complete, free of ties, and sorted
+    real scalar i, r, mi
+    
+    if (!hasmissing(y)) return(y)
+    r = rows(y)
+    mi = .
+    for (i=1; i<=r; i++) {
+        if (mi<.) {
+            if (y[i]>=.) continue
+            if (mi==1) y[|mi \ i-1|] = J(i-mi, 1, y[i]) // missings at start
+            else       y[|mi \ i-1|] = y[mi-1] :+ (y[i] - y[mi-1]) :* 
+                                (x[|mi \ i-1|] :- x[mi-1]) :/ (x[i] - x[mi-1])
+            mi = .
+            continue
+        }
+        if (y[i]>=.) mi = i
+    }
+    if (mi==1) return(y) // all missing
+    if (mi<.) y[|mi \ r|] = J(i-mi, 1, y[mi-1]) // missings at end
+    return(y)
+}
+void lorenz_compute_EY_mean(real matrix S, real scalar a, real scalar b)
+{   // insert mean of y if there are still missings
+    real scalar m
+    
+    if (!hasmissing(S[|a,3 \ b,3|])) return
+    if (st_local("exp")=="") m = mean(st_data(., st_local("y0"), st_local("touse")))
+    else m = mean(st_data(., st_local("y0"), st_local("touse")), 
+                  st_data(., st_local("exp"), st_local("touse")))
+    S[|a,3 \ b,3|] = editmissing(S[|a,3 \ b,3|], m)
 }
 
 // concentration (Gini) index (data must be sorted by y)

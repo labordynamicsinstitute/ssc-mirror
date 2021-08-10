@@ -1,3 +1,4 @@
+*! 2.0.0 NJC 5 July 2018
 *! 1.0.0 NJC 20 November 2016
 program entropyetc, rclass    
         version 11.2
@@ -6,14 +7,14 @@ program entropyetc, rclass
 
 	quietly { 
 		marksample touse, strok  
-		if "`by'" != "" markout `touse' `by' 
+		if "`by'" != "" markout `touse' `by', strok 
 		count if `touse' 
 		if r(N) == 0 error 2000 
 
 		if "`generate'" != "" parsegenerate `generate' 
 		
 		tempvar group which Shannon Simpson Shannon2 Simpson2 dissim 
-	        tempname mylbl matname matrix vector 
+	        tempname mylbl matname matrix vector results 
 
 		if "`by'" != "" { 
 			egen `group' = group(`by') if `touse', label 
@@ -50,22 +51,23 @@ program entropyetc, rclass
 
 		forval i = 1/`ng' { 
 			matrix `vector' = `matrix'[`i', 1..`J'] 						
-			mata: my_entropyetc("`vector'") 
+			noisily mata: my_entropyetc("`vector'", "`results'") 
 	
 			su `which' if `group' == `i', meanonly  
 			local where = r(min) 
 
-	                replace `Shannon' = `H' in `where'
-		        replace `Simpson' = `lambda' in `where'
-        		replace `Shannon2' = exp(`H') in `where'
-	                replace `Simpson2' = 1/`lambda' in `where'
-			replace `dissim' = `D' in `where' 
+	                replace `Shannon' = `results'[1,1] in `where'
+		        replace `Simpson' = `results'[1,2] in `where'
+        		replace `Shannon2' = exp(`results'[1,1]) in `where'
+	                replace `Simpson2' = 1/`results'[1,2] in `where'
+			replace `dissim' = `results'[1,3] in `where' 
 		
-			mat `matname'[`i',1] = `H'
-			mat `matname'[`i',2] = exp(`H')
-			mat `matname'[`i',3] = `lambda' 
-			mat `matname'[`i',4] = 1/`lambda' 
-			mat `matname'[`i',5] = `D' 
+			mat `matname'[`i',1] = `results'[1,1]
+			mat `matname'[`i',2] = `results'[1,2]
+			mat `matname'[`i',3] = exp(`results'[1,1])
+			mat `matname'[`i',4] = 1/`results'[1, 2]
+			mat `matname'[`i',5] = `results'[1, 3]
+			
 			local V = trim(`"`: label (`group') `i''"')
 			local rownames `"`rownames' `"`V'"'"' 
 		} /// loop over groups 
@@ -108,13 +110,13 @@ end
 
 mata : 
 
-void my_entropyetc(string scalar matname) { 
+void my_entropyetc(string scalar matname, string scalar resultsname) { 
 	real colvector p 
+	real rowvector results 
 	p = st_matrix(matname') 
 	p = p / sum(p) 
-	st_local("H", strofreal(-sum(p :* ln(p)))) 
-	st_local("lambda", strofreal(sum(p:^2)))
-	st_local("D", strofreal(0.5 * sum(abs(p :- (1/cols(p))))))
+	results = -sum(p :* ln(p)), sum(p:^2), 0.5 * sum(abs(p :- (1/cols(p))))
+	st_matrix(resultsname, results) 
 } 
 
 end 

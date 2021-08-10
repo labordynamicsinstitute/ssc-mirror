@@ -17,6 +17,9 @@ Open a HTML file
 {cmdab:headf:rom}{cmd:(}{help filename:{it:filename}}{cmd:)}
 {break}
 {cmdab:bo:dy} {cmdab:bodya:ttributes}{cmd:(}{it:body_attributes_list}{cmd:)}
+{break}
+{opt bom(bom_option)}
+{break}
 ]
 
 {pstd}
@@ -25,7 +28,8 @@ Open a HTML file
 where {it:attributes_list} is a list of attributes for the {cmd:<html>} tag in HTML,
 {it:head_attributes_list} is a list of attributes for the {cmd:<head>} tag in HTML,
 {it:body_attributes_list} is a list of attributes for the {cmd:<body>} tag in HTML,
-and {it:handle} is a {help file:file handle} as recognized by the {helpb file} utility.
+{it:handle} is a {help file:file handle} as recognized by the {helpb file} utility,
+and {it:bom_option} can be an empty string or {cmd:utf-8}.
 
 {pstd}
 Insert an image in an open HTML file
@@ -142,6 +146,13 @@ with attributes specified by the {it:body_attributes_list}.
 The {cmd:bodyatributes()} option implies the {cmd:body()} option,
 even if {cmd:body()} is not specified by the user.
 
+{phang}
+{opt bom(bom_option)} specifies a byte order marker (BOM) to be the first byte of the HTML output file.
+It may be an empty string (the default, specifying no BOM)
+or {cmd:utf-8}, specifying the UTF-8 byte order marker {cmd:"\uFEFF"}.
+The option {cmd:bom(utf-8)} should be specified if the output HTML file is intended to be a UTF-8 file,
+as it should be if there will be {help unicode:Stata unicode strings} in it.
+
 
 {title:Options for {cmd:htmlimg}}
 
@@ -240,8 +251,8 @@ using a Web browser.
 {pstd}
 The {help ssc:SSC} package {helpb listtab} can be used for inserting HTML tables into a HTML file created using the {cmd:htmlutil} package.
 For more about {helpb listtab}, see {help htmlutil##newson2012:Newson (2012)}.
-For more about outputting HTML documents from Stata, see {help htmlutil##quintoetal2012:Quint{c o'} {it:et al.} (2012)}
-and {help htmlutil##jann2005:Jann (2005)}.
+For more about outputting HTML documents from Stata, see {help htmlutil##quintoetal2012:Quint{c o'} {it:et al.} (2012)},
+{help htmlutil##jann2005:Jann (2005)} and {help htmlutil##jann2017:Jann (2017)}.
 
 
 {title:Examples}
@@ -365,6 +376,12 @@ Jann, B.  2005.
 Making regression tables from stored estimates.
 {it:The Stata Journal} 5(3): 288-308.
 Download from {browse "http://www.stata-journal.com/article.html?article=st0085":{it:The Stata Journal} website}.
+
+{marker jann2017}{phang}
+Jann, B.  2017.
+Creating HTML or Markdown documents from within Stata using {cmd:webdoc}.
+{it:The Stata Journal} 17(1): 3-38.
+Download from {browse "https://www.stata-journal.com/article.html?article=pr0065":{it:The Stata Journal} website}.
 
 {marker newson2012}{phang}
 Newson, R. B.  2012.

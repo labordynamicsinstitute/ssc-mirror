@@ -1,4 +1,5 @@
 *! 0.1 HS, Sep 7, 2016
+*! 0.2 KBN, Jan 9, 2019
 
 
 pr define wtdtttdiag
@@ -6,17 +7,25 @@ version 14.0
 
 syntax varname [if] [in], ///
         [nbins(integer 0) ytitle(passthru) ///
-         legend(passthru) reverse nq(integer 300) ///
+         legend(passthru) nq(integer 300) ///
 	 lpattern(passthru) fcolor(passthru) ///
 	 replace *]
 qui{
-tempname coefs tstart tend delta
+tempname coefs tstart tend delta converged
 matrix `coefs' = e(b)
 local disttype = r(disttype)
 scalar `delta' = r(delta)
 local reverse = r(reverse)
-scalar `tstart' = r(start)
-scalar `tend' = r(end)
+scalar `converged' = e(converged)
+
+if r(start) != . & r(end) != . {
+	scalar `tstart' = r(start)
+	scalar `tend' = r(end)
+}
+else {
+	scalar `tstart' = r(samplestart)
+	scalar `tend' = r(sampleend)
+}
 
 preserve
 tokenize `varlist'
@@ -40,7 +49,7 @@ if "`if'" != "" | "`in'" != "" {
 count
 local nobs = r(N)
 if `nbins' == 0 {
-    local nbins = int(sqrt(`nobs'))
+    local nbins = int(min(sqrt(`nobs'), 10*log(`nobs')/log(10)))
 }
 
 local interwidth = `delta' / `nbins'
@@ -107,11 +116,18 @@ else {
     replace `tfit' = `tstart' + `tfit'
 }
 
+if `converged' == 1 {
+	twoway (bar `obsdens' `lowcutlev', bartype(spanning) ///
+		   bstyle(histogram) `fcolor') ///
+		   (line `fitdens' `tfit', `lpattern'), ///
+		   `ytitle' `legend' `options' xtitle(`xtitletxt')
+}
+else {
+	twoway (bar `obsdens' `lowcutlev', bartype(spanning) ///
+		   bstyle(histogram) `fcolor'), ///
+		   `ytitle' `legend' `options' xtitle(`xtitletxt')
+}
 
-twoway (bar `obsdens' `lowcutlev', bartype(spanning) ///
-       bstyle(histogram) `fcolor') ///
-       (line `fitdens' `tfit', `lpattern'), ///
-       `ytitle' `legend' `options' xtitle(`xtitletxt')
 
 if "`replace'" != "" {
     tempfile diagdat

@@ -15,7 +15,7 @@ d KW: categorical
 d
 d Requires: Stata version 13
 d
-d Distribution-Date: 20161129
+d Distribution-Date: 20210309
 d
 d Author: Ahmed M. Bayoumi, University of Toronto
 d Support: email ahmed.bayoumi@@utoronto.ca
@@ -24,4 +24,3 @@ f stddiff.ado
 f stddiff.sthlp
 f stddiffi.ado
 f ../_/_stddiff.ado
-f ../m/matasd.mo

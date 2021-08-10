@@ -1,4 +1,4 @@
-* Version 1.1 - 08/08/16
+* Version 1.3a - 30/04/20
 * By J.M.C. Santos Silva 
 * Please email jmcss@surrey.ac.uk for help and support
 
@@ -11,35 +11,53 @@
 
 program define aextlogit, eclass                                                                                   
 version 11.0
-
-syntax varlist(fv) [if] [in] [iweight] [, Betas NOlog vce(string)  ///  
+if replay() {
+             _prefix_display
+             exit
+            }
+            
+syntax varlist(fv) [if] [in] [iweight] [, Betas NOlog vce(string) group(string)  ///  
                    TECHnique(string) ITERate(integer 16000) TRace difficult GRADient showstep HESSian /// 
                    SHOWTOLerance TOLerance(real 1e-4) LTOLerance(real 1e-7) NRTOLerance(real 1e-5) ///
                    NONRTOLerance from(string) ]
                                                                    
 marksample touse  
 markout `touse'                                              
-tempname  _y  _rhs sb v
+tempname  _y  _rhs sb v id Z Z1 Z2
 gettoken _y _rhs: varlist  
+
+capture xtset
+if ("`group'"=="")&("`r(panelvar)'"!="") local group "`r(panelvar)'"
+if ("`group'"=="")&("`r(panelvar)'"=="") {
+ di
+ di as error "must specify panelvar; use xtset or the group option"
+ exit          
+ }
 
 
 qui su `_y' if `touse' [`weight'`exp'], mean 
 local yb=r(mean)
 local vy=r(mean)*(1-r(mean))/r(sum_w)
 local ny=r(sum_w)
-xtlogit `_y' `_rhs' if (`touse') [`weight'`exp'], fe technique(`technique') iterate(`iterate') vce(`vce') `nolog'  /// 
+
+clogit `_y' `_rhs' if (`touse') [`weight'`exp'], group(`group') technique(`technique') iterate(`iterate') vce(`vce') `nolog'  /// 
 `trace' `difficult'  `gradient' `showstep' `hessian' `showtolerance' tolerance(`tolerance') ///
 ltolerance(`ltolerance') nrtolerance(`nrtolerance') `nonrtolerance' from(`from')  nodisplay
+
+qui bysort `group': egen `Z1'=count(1) if e(sample)
+qui bysort `group': egen `Z2'=seq() if e(sample)
+qui su `Z1' if e(sample)&(`Z2'==1), meanonly
+drop `Z1'
   
   di 
   di "Conditional fixed-effects logistic regression" _continue
   di _column(49) "Number of obs      =" %10.0g e(N)
   di "Group variable: "  e(group) _continue
-  di _column(49) "Number of groups   =" %10.0g e(N_g)
-  di _column(49) "Obs per group: min =" %10.0g e(g_min)    
-  di _column(49) "               avg =" %10.0g e(g_avg)    
+  di _column(49) "Number of groups   =" %10.0g r(N)
+  di _column(49) "Obs per group: min =" %10.0g r(min)    
+  di _column(49) "               avg =" %10.1f r(mean)    
   di "Log likelihood  = " e(ll) _continue
-  di _column(49) "               max =" %10.0g e(g_max)  
+  di _column(49) "               max =" %10.0g r(max)  
   
    
   if "`betas'" == "betas" ereturn display, first 
@@ -55,7 +73,7 @@ ltolerance(`ltolerance') nrtolerance(`nrtolerance') `nonrtolerance' from(`from')
   ereturn scalar ybar = `yb'  
   ereturn scalar N_ybar = `ny'  
   di
-  di "                   Average (semi) elasticities of Pr(y=1|x,u)"
+  di as result "                   Average (semi) elasticities of Pr(y=1|x,u)"
   ereturn display, first 
   di "Average of `_y' = " `yb' " (Number of obs = " `ny' ")"
   

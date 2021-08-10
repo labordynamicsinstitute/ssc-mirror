@@ -1,5 +1,5 @@
 {smcl}
-{* *! version 1.0.4  24jan2012}{...}
+{* *! version 1.0.5  04jun2013}{...}
 {cmd:help spivreg}{right:also see:  {helpb spivreg postestimation:spivreg postestimation}}
 {right:{helpb spreg}{space 17}}
 {right:{helpb spmat}{space 17}}
@@ -30,7 +30,7 @@ spatial-autoregressive erros and additional endogenous variables{p_end}
 spatial-autoregressive term{p_end}
 {synopt:{cmd:{ul:el}mat(}{it:name}{cmd:)}}{helpb spmat:spmat} object used in the
 spatial-error term{p_end}
-{synopt:{opt nocon:stant}}suppress constant term{p_end}
+{synopt:{opt nocons:tant}}suppress constant term{p_end}
 {synopt:{opt het:eroskedastic}}use the formula for the heteroskedastic error term{p_end}
 {synopt:{cmd:impower(}{it:q}{cmd:)}}use {it:q} powers of matrix {bf:W} in forming the
 instrument matrix {bf:H}; default is {cmd:2}{p_end}

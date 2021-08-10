@@ -9,11 +9,11 @@ d KW: percentiles
 d KW: robust estimation
 d KW: cluster sampling
 d
-d Requires: Stata version 10.0 and somersd, scsomersd and expgen packages from SSC (q.v.)
+d Requires: Stata version 16 and somersd, scsomersd and expgen packages from SSC (q.v.)
 d
-d Distribution-Date: 20141004
+d Distribution-Date: 20200416
 d
-d Author: Roger Newson, National Heart and Lung Institute, Imperial College London
+d Author: Roger Newson,  Imperial College London
 d Support: email r.newson@@imperial.ac.uk
 d
 f rcentile.ado

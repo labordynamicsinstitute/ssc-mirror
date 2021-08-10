@@ -11,13 +11,15 @@ d KW: margins
 d KW: marginsplot
 d KW: cmp
 d
-d Requires: Stata version 12
+d Requires: Stata version 16
 d
-d Distribution-Date: 20150320
+d Distribution-Date: 20210228
 d
 d Author: Nick Winter, University of Virginia
 d Support: email  nwinter@@virginia.edu
 d
 f combomarginsplot.ado
-f cmp_marginsplot.ado
+f combomp.ado
+f cmpmargins.ado
+f combomarginsplot12.ado
 f combomarginsplot.sthlp

@@ -25,11 +25,11 @@ d KW: Somers' D
 d KW: Kendall tau-a
 d KW: Hodges-Lehmann difference
 d
-d Requires: Stata version 10.0 and somersd, expgen from SSC
+d Requires: Stata version 16 and somersd, expgen from SSC
 d
-d Distribution-Date: 20120203
+d Distribution-Date: 20200416
 d
-d Author: Roger Newson, National Heart and Lung Institute at Imperial College London
+d Author: Roger Newson, Imperial College London
 d Support: email r.newson@@imperial.ac.uk
 d
 f scsomersd.ado

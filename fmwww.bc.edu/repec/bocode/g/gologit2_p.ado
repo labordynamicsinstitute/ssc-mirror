@@ -1,4 +1,4 @@
-*! version 3.1.1 18oct2016  Richard Williams, rwilliam@nd.edu
+*! version 3.2.5 17may2019 Richard Williams, rwilliam@nd.edu
 
 * This adds support for the predict command to gologit2
 

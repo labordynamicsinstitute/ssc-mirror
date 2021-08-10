@@ -17,12 +17,14 @@ d KW: log
 d
 d Requires: Stata version 13
 d
-d Distribution-Date: 20170601
+d Distribution-Date: 20200826
 d
 d Author: Niels Henrik Bruun, Aarhus University
 d Support: email nhbr@@ph.au.dk
 d
 f log2markup.ado
+f ../d/do2docs.ado
 f llog2markup.mata
 f log2markup.sthlp
+f ../d/do2docs.sthlp
 f llog2markup.mlib

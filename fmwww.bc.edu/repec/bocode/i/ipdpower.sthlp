@@ -63,6 +63,8 @@ help for {hi:ipdpower}
 {p_end}
 {synopt :{opt bcb(#)}}Probability for the binary covariate (default is 0.5)
 {p_end}
+{synopt :{opt bsd(#)}}SD for varying probability for the binary covariate across higher level units (default is 0)
+{p_end}
 {synopt :{opt slcov}}Higher-level covariate, instead of patient-level (the default)
 {p_end}
 {synoptline}
@@ -101,6 +103,8 @@ help for {hi:ipdpower}
 {syntab :modelling}
 {synopt :{opt model(#)}}Model choice for analysis: 1 simple, 2 random effects for intercept, 3-7 various mixed effects options
 {p_end}
+{synopt :{opt clvl(#)}}Set confidence level
+{p_end}
 {synopt :{opt seed(#)}}Set seed number
 {p_end}
 {synopt :{opt nskip}}Add 'noskip' option to xtlogit or xtpoisson to return pseudo R^2
@@ -125,12 +129,12 @@ using {opt outc(string)}). Second, it uses regression modelling (selected using 
 Power indicates the percentage of iterations in which a model coefficient was found to be statistically significant and of the same direction as the hypothesised.
 Coverage indicates the percentage of confidence intervals that include the true coefficient and should correspond to the hypothesised alpha level. Binomial confidence
 intervals using the {cmd:cii} command are calculated for both power and coverage.
-Inputs {opt b0(#)},{opt b1(#)},{opt b2(#) and {opt b3(#)} always refer to coefficients (i.e. log odds ratios or log incidence rate ratios for binary and count outcomes respectively)
+Inputs {opt b0(#)}, {opt b1(#)}, {opt b2(#)} and {opt b3(#)} always refer to coefficients (i.e. log odds ratios or log incidence rate ratios for binary and count outcomes respectively)
 and the simulations always assume standardised exposure and covariate, when continuous. To help users define the correct coefficient values for hypothesised statistics,
 we have provided a supplementary file in MS Excel available {browse "http://www.statanalysis.co.uk/files/defining_betas.xlsx":here}. The command also returns aggregated simulation
 statistics, allowing users to double-check the hypothesised coefficients and adjust if necessary.
 {cmd:ipdpower} is flexible and the higher-level inputs can be ignored, for a simple power calculation of a sigle higher-level unit. In addition, if a parameter is
-not needed (say the covariate or the interaction) the user can just set the repsective coefficient to zero.
+not needed (say the covariate or the interaction) the user can just set the respective coefficient to zero.
 
 {title:Required}
 
@@ -227,13 +231,17 @@ consideration when deciding on b2 and b3.
 {opt bcb(#)} For binary covariate only, probability ({it:real}) that xcovar=1. The default is 0.5.
 
 {phang}
+{opt bsd(#)} For binary covariate only, standard deviation of the probability ({it:real}) that xcovar=1 across higher level units (default is 0). Allows for higher level units with very different
+composition in terms of the binary covariate (e.g. studies that only enrolled men or women).
+
+{phang}
 {opt slcov} Inform the command that the covariate is higher-level (e.g. study-level: recruitment setting) rather than patient-level(the default).
 
 {dlgtab:Random effects}
 
 {phang}
 {opt tsq0(#)} Random effect between higher level variance for the intercept. The default value is 0, which assumes homogeneity and no random effects. Heterogeneity for this model factor (intercept) would
-be calculated using tsq0 and errsd. For example I^2=100*tausq0/(tausq0+errsd^2) and H^2=1/(1-tausq0/(tausq0+errsd^2)). Solving for tausq0 we obtain tausq0=(I^2*errsd^2)/(100-I^2) and tausq0=H^2*errsd^2-errsd^2.
+be calculated using tsq0 and errsd. For example I^2=100*tausq0/(tausq0+errsd^2) and H^2=1/(1-tausq0/(tausq0+errsd^2)). Solving for tausq0 we obtain tausq0=(I^2/100*errsd^2)/(100-I^2/100) and tausq0=H^2*errsd^2-errsd^2.
 Although {cmd:ipdpower} does not allow I^2 or H^2 inputs for the random effects components, they can be easily calculated using these formulas. Additionally users can use the obtained
 hypothesised heterogeneity levels for the inputted within- and between- variance parameters (say in a small trial simulation, if unsure of calculations).
 
@@ -352,7 +360,8 @@ effects should be considered when modelling count data.
 {opt xnodts} Suppress simulation progress display. If option not specified, a '.' is displayed for each successful model run (i.e. converging) and an 'x' for each unsuccessful iteration.
 
 {phang}
-{opt nodi:splay} Do not display results at the end of the simulation process. Suppressed results include: simulation characteristics, average model fit, average statistics for the outcome, average b0-b3, hypothesised heterogeneity values, power and coverage.
+{opt nodi:splay} Do not display results at the end of the simulation process. Suppressed results include: simulation characteristics, average model fit, average statistics for the outcome,
+average b0-b3, hypothesised heterogeneity values, power and coverage.
 
 {phang}
 {opt moreon} Set {help more} on (default is off).
@@ -471,7 +480,7 @@ JSS, 2016, 74(12). Paper available {browse "https://www.jstatsoft.org/article/vi
 {title:Other references}
 
 {p 4 4 2}
-Ramberg JS, Dudewicz EJ, Tadikamalla PR and Mykytka EF. A probability distribution and its uses in fitting data. Technometrics 1979; 21(2): 201–214.
+Ramberg JS, Dudewicz EJ, Tadikamalla PR and Mykytka EF. A probability distribution and its uses in fitting data. Technometrics 1979; 21(2): 201â€“214.
 
 {p 4 4 2}
 Kontopantelis E and Reeves D. Performance of statistical methods for meta-analysis when true study effects are non-normally distributed: A simulation study.

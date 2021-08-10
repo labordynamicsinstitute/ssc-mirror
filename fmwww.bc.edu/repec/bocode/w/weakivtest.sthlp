@@ -171,6 +171,9 @@ are weak. {it:Review of Economics and Statistics} 86:797-810.
 	Su Wang, London School of Economics, London WC2A 2AE, United Kingdom
 	s.wang50@lse.ac.uk.
 
+        	We thank Peter Hull for pointing out and fixing an error with the weights. 
+		All remaining errors are our own. 
+
 {marker also}{...}
 {title:Also see}
 

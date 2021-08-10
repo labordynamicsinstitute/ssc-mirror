@@ -9,6 +9,7 @@
 //	"A robust test for weak instruments". Journal of Business and Economic Statistics 31:358-369.
 //	For more details of weakivtest routine, please refer to Pflueger, C. E. and Su Wang(2013)
 //	"A robust test for weak instruments in Stata." http://papers.ssrn.com/sol3/papers.cfm?abstract_id=2323012.
+* this version: 10/28/2020 - include noconstant option
  
 program weakivtest,rclass
 	version 10
@@ -29,12 +30,16 @@ program weakivtest,rclass
 		exit
 	}
 	
+	*CP 10/28/2020: allow for noconstant
+	/*
 	*weakivtest is a postestimation command to ivreg2 or ivregress with constant; otherwise display error message.
 	if ( "`e(constant)'"=="noconstant") | ( "`e(cons)'"=="0") {
 		di as err `"Noconstant option is not supported by weakivtest."'
 		exit
 	}
-	
+	*/
+	*Su 10/30/2020: check for noconst_flag
+	local noconst_flag=( "`e(constant)'"=="noconstant") | ( "`e(cons)'"=="0")
 	*weakivtest only allows one single endogenous regressor; otherwise display error message.
 	if  ( wordcount("`e(instd)'")!=1) {
 		di as err `"Weakivtest requires one endogenous regressor."'
@@ -70,6 +75,8 @@ program weakivtest,rclass
 		mat `F'=`e(cdf)'
 		
 		*Save vce type to be used in "avar" command to compute variance-covariance matrices. 
+		*** PH FIX 8/17/18: adjustment for clustering d.f.
+		local clustdfadj = 1
 		if strpos("`e(vce)'","bw"){
 			local vcet=regexr("`e(vce)'","ac bartlett", "")
 			local vcet=regexr("`vcet'","h", "")
@@ -77,6 +84,7 @@ program weakivtest,rclass
 		}
 		else if strpos("`e(vce)'","cluster"){
 			local vcet "robust cluster(`e(clustvar)')"
+			local clustdfadj = (`e(N)'/(`e(N)'-1))*(`e(N_clust)'-1)/(`e(N_clust)')
 		}
 		else {
 			local vcet `e(vce)'
@@ -113,6 +121,8 @@ program weakivtest,rclass
 		mat `F'=`r(mineig)'
 		
 		*Save vce type to be used in "avar" command to compute variance-covariance matrices. 
+		*** PH FIX 8/17/18: adjustment for clustering d.f.
+		local clustdfadj = 1
 		if strpos("`e(vce)'","unadjusted"){ 
 			local vcet ""
 		}
@@ -128,6 +138,7 @@ program weakivtest,rclass
 			}	
 			else if strpos("`e(cmdline)'","cluster"){
 				local vcet= "`vcet'"+ "cluster (" +"`e(clustvar)'" +")"
+				local clustdfadj = (`e(N)'/(`e(N)'-1))*(`e(N_clust)'-1)/(`e(N_clust)')
 			}
 			else {
 				local vcet `e(vce)'
@@ -241,17 +252,39 @@ program weakivtest,rclass
 	gen byte `touse' = e(sample)
    
 	* Demean endotemp, exexogtemp and depvartemp variables by regressing them on included exogenous regressors if there is any. 
+	*** PH FIX 8/17/18: adjustment for weights
+	if `"`e(wtype)'"' != "" {
+		local addweight "[`e(wtype)'`e(wexp)']"
+	}
+
+	*** PH FIX 8/17/18: adjustment for weights
 	foreach var in `depvartemp' `endotemp'{
 		tempvar rsd 
-		qui reg `var' `Zincltemp' if `touse'
+		
+		*CP 10/28/2020: allow for noconstant
+		if ( `noconst_flag'==1) {
+		qui reg `var' `Zincltemp' if `touse' `addweight', noconstant
+		}
+		else {
+		qui reg `var' `Zincltemp' if `touse' `addweight'	
+		}
+
 		qui predict double `rsd' if `touse' , r
 		drop `var'
 		rename `rsd' `var'
 	}
-
+	
+	*** PH FIX 8/17/18: adjustment for weights
 	foreach var in `exexogtemp' {
 		 tempvar exrsd 
-		 qui reg `var' `Zincltemp' if `touse'
+		 
+		 *CP 10/28/2020: allow for noconstant
+		 if (`noconst_flag'==1) {
+		 qui reg `var' `Zincltemp' if `touse' `addweight', noconstant
+		 }
+		 else{
+		 qui reg `var' `Zincltemp' if `touse' `addweight'
+		 }
 		 qui predict double `exrsd'  if `touse' , r
 		 drop `var'
 		 rename `exrsd' `var'
@@ -259,7 +292,8 @@ program weakivtest,rclass
 
 	* Orthogonalize the instruments.
 	tempname Zs 
-	qui orthog `exexogtemp' if `touse', gen(`Zs'*)
+	*** PH FIX 8/17/18: adjustment for weights
+	qui orthog `exexogtemp' if `touse' `addweight', gen(`Zs'*)
 
 	* Save matricies in mata.
 	mata `K'=st_matrix("`K'")
@@ -272,22 +306,40 @@ program weakivtest,rclass
 	tempname W W_1 W_2 W_12 Omega omega_22 res1 res2 v1 v2 F_eff 
 	
 	* Run first stage regression and save residuals as v1 in mata.
-	qui reg `endotemp' `Zs'*, noconstant
+	*** PH FIX 8/17/18: adjustment for weights
+	qui reg `endotemp' `Zs'* `addweight', noconstant
 	qui predict double `res1', r
 	mata  `v1' = st_data(., "`res1'")
 	
 	* Run second stage regression and save residuals as v2 in mata.
-	qui reg `depvartemp' `Zs'*, noconstant
+	*** PH FIX 8/17/18: adjustment for weights
+	qui reg `depvartemp' `Zs'* `addweight', noconstant
 	qui predict double `res2', r
 	mata  `v2' = st_data(., "`res2'")
 	
 	* Omega matrix is the unadjusted variance covariance matrix adjusted by the degree of freedom.
-	mat accum `Omega'= `res2' `res1', noconstant
+	*** PH FIX 8/17/18: adjustment for weights
+	mat accum `Omega'= `res2' `res1' `addweight', nocons
+	
+	*CP 10/28/2020: allow for noconstant
+	if ( `noconst_flag'==1) {
+	mata `Omega'=st_matrix("`Omega'")/(`S'-`K'-`L')
+			}
+			else{
 	mata `Omega'=st_matrix("`Omega'")/(`S'-`K'-`L'-1)
+	}
+	
 	
 	* W matrix is the variance-covariance matrix adjusted by the degree of freedom given the specified vce type.
-	qui avar (`res2' `res1') (`Zs'*), `vcet' noconstant
+	qui avar (`res2' `res1') (`Zs'*) `addweight', `vcet' noconstant
+	
+	*CP 10/28/2020: allow for noconstant
+	if ( `noconst_flag'==1) {
+	mata `W'=st_matrix("r(S)")*`S'/(`S'-`K'-`L')
+	}
+	else{
 	mata `W'=st_matrix("r(S)")*`S'/(`S'-`K'-`L'-1)
+	}
 	
 	* omega_22 is the submatrix of omega.
 	mata `omega_22'=`Omega'[2,2]
@@ -298,7 +350,8 @@ program weakivtest,rclass
 	mata `W_2'=`W'[1+`K'::2*`K',1+`K'..2*`K']
 	
 	* Compute effective F estimates and save it as scalar.
-	mata `F_eff'=`F'*(`K'*`omega_22')/trace(`W_2')
+	*** PH FIX 8/17/18: adjustment for clustering d.f.
+	mata `F_eff'=`clustdfadj'*`F'*(`K'*`omega_22')/trace(`W_2')
 	mata st_numscalar("F_eff", `F_eff')
 	
 /*Compute BTSLS and BLIML values.*/

@@ -1,4 +1,4 @@
-*! version 1.0.1  03jun2010
+*! version 1.0.2  09jun2015
 program define spreg_p, sortpreserve
 	
 	version 11.1
@@ -6,12 +6,13 @@ program define spreg_p, sortpreserve
 	syntax [anything] [if] [in] [, 			   ///
 			RForm 				   ///  default
 			LImited 			   ///
-			FUll  		   		   ///  UNDOCUMENTED
+			FUll  		   		   ///
 			NAive				   ///
 			xb				   ///
 			TOLerance(real .0000001) 	   ///  UNDOCUMENTED
 			ITERate(numlist max=1 integer >=0) ///  UNDOCUMENTED
 			RFTransform(string)		   ///  
+			*				   ///
 			]
 	
 	marksample touse 	// this is not e(sample)

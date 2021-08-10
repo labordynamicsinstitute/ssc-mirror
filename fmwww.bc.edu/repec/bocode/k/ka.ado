@@ -1,10 +1,10 @@
 * ==========================================================
 * ka: computing Krippendorff's alpha
 * program belongs to krippalpha
-* Version 1.3.1, 2015-01-14
+* Version 1.3.3, 2020-12-29
 * (Version 1.0.0 corresponds to 2013-10-18)
 * ==========================================================
-*! version 1.3.1, Alexander Staudt, Mona Krewel, 14jan2015
+*! version 1.3.3, Alexander Staudt, Mona Krewel, 29dec2020
 
 *mata mata clear
 *program drop _all
@@ -45,19 +45,20 @@ function kripp_alpha(string scalar method)
 {
 	vars = tokens(st_local("vars"))
 	vartype = J(1, length(vars), 0)
+	
 	for (i=1; i<=length(vars); i++)
 	{
 		vartype[i] = (st_isnumvar(vars[i]))
 	} 
 	if (sum(vartype) < length(vars)) _error(108, "Data have to be numeric.")
 	else daten = st_data(., .)
+	
 	daten = daten'
 	x = daten
+	
 	if (rows(x)<2) _error(102, "only one coder specified: intercoder reliabilitiy cannot be calculated.")
 	else {
-		levx = tokens(st_local("levx"))
-		levx = strtoreal(levx)
-		
+	
 		levx = unq(x)'
 		
 		zeilen = rows(x)
@@ -146,7 +147,8 @@ function unq(x)
 	
 	unq = J(length(y), 1, 1)
 	
-	for (i=2; i<=length(y); i++) {
+	for (i=2; i<=length(y); i++) 
+	{
 		unq[i] = y[i-1]!=y[i]
 	}
 	

@@ -45,13 +45,14 @@ saves results to disk.{p_end}
 {synopt :{bf:results(}{it:{help repest##results_options:results_options}}{bf:)}}keep, add, and combine estimation results.{p_end}
 {synopt :{bf:display}}displays results in output window.{p_end}
 {synopt :{bf:flag}}flags elements of results which should not be reported.{p_end}
+{synopt :{bf:coverage}}Reports coverage of estimation sample relative to target sample.{p_end}
 {synopt :{bf:{ul:svy}parms(}{it:{help repest##svy_options:svy_options}}{bf:)}}overrides default parameters set by {it:{help repest##svyname:svyname}}.{p_end}
 {synopt :{bf:fast}} when a {help repest##pv:pvvarlist} is specified, computes sampling variance only for the first plausible value. {p_end}
 {synopt :{bf:store(}{it:string}{bf:)}} saves the estimation results stored in e().{p_end}
 {synoptline}
 {p2colreset}{...}
 {p 4 6 2}
-{bf:PISA2015}, {bf:PISA}, {bf:PIAAC},  {bf:SVY}, {bf:TALISSCH}, {bf:TALISTCH}, {bf:ALL} and {bf:IALS} are valid {it:{help repest##svyname:svynames}}. Option {bf:svyparms()} is required with {bf:SVY}.
+{bf:ALL}, {bf:IALS}, {bf:IELS}, {bf:PIAAC}, {bf:PISA}, {bf:PISA2015}, {bf:PISAOOS}, {bf:SVY}, {bf:TALISSCH} and {bf:TALISTCH}  are valid {it:{help repest##svyname:svynames}}. Option {bf:svyparms()} is required with {bf:SVY}.
 {p_end}
 {p 4 6 2}
 You have to specify one {bf:{ul:est}imate()} option.
@@ -63,7 +64,7 @@ You have to specify one {bf:{ul:est}imate()} option.
 {pstd}
 {cmd:repest}  estimates statistics using replicate weights (BRR weights, Jackknife replicate 
 weights,...), thus accounting for complex survey designs in the estimation of sampling 
-variances. It is specially designed to be used with the PISA, PIAAC and TALIS datasets produced by 
+variances. It is specially designed to be used with the IELS, PIAAC, PISA and TALIS datasets produced by 
 the OECD, but works for ALL and IALS datasets as well.  It also allows for analyses with multiply imputed variables (plausible values); where 
 plausible values are included in a {help repest##pv:pvvarlist},  the average estimator across plausible values is 
 reported and the imputation error is added to the variance estimator.
@@ -71,8 +72,8 @@ reported and the imputation error is added to the variance estimator.
 {marker svyname}{...}
 {pstd}
 {it:svyname} is a shortcut for declaring survey settings. Use {it:svyname} to indicate the data 
-source. {it:svyname}  must be equal to {bf:PISA2015}, {bf:PISA}, {bf:PIAAC}, {bf:IALS}, {bf:ALL},
-{bf:TALISSCH} (for TALIS data, using school weights) or {bf:TALISTCH} (for TALIS data, using teacher weights).
+source. {it:svyname}  must be equal to {bf:ALL}, {bf:IALS}, {bf:IELS}, {bf:PIAAC}, {bf:PISA}, {bf:PISA2015}, {bf:PISAOOS}, {bf:TALISSCH} 
+(for TALIS data, using school weights) or {bf:TALISTCH} (for TALIS data, using teacher weights).
 In addition, {it:svyname} can be equal to {bf:SVY}: in this case, you must specify survey settings using option {bf:svyparms()}.
 Also see {help repest##svyremarks:remarks} below.
 
@@ -202,7 +203,7 @@ numerical. If more than one variable is specified, {help repest##of_options:long
 
 {phang2}
 {bf:test} computes the difference between estimates obtained for the 
-highest and the lowest values of {it:varname}. It is useful to test for differences. To report the opposite difference, type {bf:-test}. Also see {help repest##results_options:results(combine())}.
+highest and the lowest values of {it:varname}. It is useful to test for differences. Also see {help repest##results_options:results(combine())}.
 
 {phang}
 {marker results_options}{...}
@@ -244,7 +245,14 @@ Estimated results must be enclosed by {bf: _b[}{it:...}{bf:]} .
 {phang}
 {bf:flag} replaces estimation results which are based on fewer observations than required for reporting with a specific missing code ({bf:.f}) in the {bf: outfile}, and by (omitted) in {bf: display}. 
 {bf: repest PISA, flag} checks that each estimation result is based on at least 30 observations and 5 schools. {bf: repest PIAAC, flag} 
-checks that each estimation result is based on at least 30 observations.
+checks that each estimation result is based on at least 30 observations. {bf: repest TALISSCH, flag} checks that each estimation result is based on at least 10 schools.
+{bf: repest TALISTCH, flag} checks that each estimation result is based on at least 30 observations and 10 schools.
+
+{phang}
+{bf:coverage} computes the (weighted) proportion of observations in the target sample (i.e. accounting for any {ifin} statements) that is included in the estimation sample. 
+Coverage proportions are stored as additional coefficients in e(b).
+{it:Note}: if option {bf:over} is specified, the target population is restricted to observations where variables specified within this option are not missing; if, in addition, 
+suboption {bf:test} is specified within {bf:over}, the coverage reported for the difference corresponds to the lowest coverage of the two. 
 
 {phang}
 {bf:fast} When a {help repest##pv:pvvarlist} is specified, the share of variance accounted for by the sampling error is computed only for the first {bf: plausible value}. This is an unbiased shortcut that makes computation of the variance-covariance matrix faster.
@@ -305,6 +313,14 @@ exist in the dataset in use). These parameters can be overridden by values set i
 {p 10 15 15}{it:Note}: with PISA 2015 data, {bf: repest} automatically changes to {bf:PISA2015} options. {p_end}
 
 
+{p 10 10 15}{bf:PISAOOS}: PISA for Development - assessment of out-of-school youth {p_end}
+{p2line}
+{p2col:Final weight} {bf:spfwt0}{p_end}
+{p2col:Replicate weights} {bf:spfwt1-spfwt30}{p_end}
+{p2col:Variance factor} Jackknife 1 {p_end}
+{p2col:Number of replications} 30 {p_end}
+{p2col:Number of plausible values} 10 {p_end}
+
 {p 10 10 15}{bf:TALISTCH}: Teaching and Learning International Survey (teacher weights){p_end}
 {p2line}
 {p2col:Final weight} {bf:tchwgt}{p_end}
@@ -312,6 +328,7 @@ exist in the dataset in use). These parameters can be overridden by values set i
 {p2col:Variance method} balanced repeated replication with Fay's adjustment {p_end}
 {p2col:Fay's parameter} 0.5{p_end}
 {p2col:Number of replications} 100 {p_end}
+{p2col:Primary sampling unit (for flags)} {bf:cntry idschool}{p_end}
 
 
 {p 10 10 15}{bf:TALISSCH}: Teaching and Learning International Survey (school weights){p_end}
@@ -321,6 +338,24 @@ exist in the dataset in use). These parameters can be overridden by values set i
 {p2col:Variance method} balanced repeated replication with Fay's adjustment {p_end}
 {p2col:Fay's parameter} 0.5{p_end}
 {p2col:Number of replications} 100 {p_end}
+
+{p 10 10 15}{bf:TALISEC_STAFF}: Teaching and Learning International Survey - Starting Strong (staff weights){p_end}
+{p2line}
+{p2col:Final weight} {bf:staffwgt}{p_end}
+{p2col:Replicate weights} {bf:srwgt1-srwgt92}{p_end}
+{p2col:Variance method} balanced repeated replication with Fay's adjustment {p_end}
+{p2col:Fay's parameter} 0.5{p_end}
+{p2col:Number of replications} 92 {p_end}
+{p2col:Primary sampling unit (for flags)} {bf:idcntpop idcentre}{p_end}
+
+
+{p 10 10 15}{bf:TALISEC_LEADER}: Teaching and Learning International Survey - Starting Strong (leader weights){p_end}
+{p2line}
+{p2col:Final weight} {bf:cntrwgt}{p_end}
+{p2col:Replicate weights} {bf:crwgt1-crwgt92}{p_end}
+{p2col:Variance method} balanced repeated replication with Fay's adjustment {p_end}
+{p2col:Fay's parameter} 0.5{p_end}
+{p2col:Number of replications} 92 {p_end}
 
 
 {p 10 10 15}{bf:PIAAC}: Programme for the International Assessment of Adult Competencies{p_end}
@@ -347,6 +382,17 @@ this share is computed using {bf:spfwt0} weights.
 {p2col:Variance factor} Jackknife 2 {p_end}
 {p2col:Number of replications} 30 {p_end}
 {p2col:Number of plausible values} 10{p_end}
+
+{p 10 10 15}{bf:IELS}: International Early Learning Study {p_end}
+{p2line}
+{p2col:Final weight} {bf:CHILDWGT}{p_end}
+{p2col:Replicate weights} {bf:SRWGT1-SRWGT92}{p_end}
+{p2col:Variance method} balanced repeated replication with Fay's adjustment {p_end}
+{p2col:Fay's parameter} 0.5{p_end}
+{p2col:Number of replications} 92 {p_end}
+{p2col:Number of plausible values} 5 {p_end}
+{p2col:Primary sampling unit (for flags)} {bf:IDCNTRY IDCENTRE}{p_end}
+
 
 {p 10 10 15}{bf:SVY}: User-defined survey settings (requires option {bf:{ul:svy}parms()}){p_end}
 {p2line}
@@ -410,8 +456,8 @@ User-defined commands must accept aweights or pweights. A typical syntax stateme
     {hline}
 {pstd}User-defined estimation command: 1. simultaneous weighted quantile regressions{p_end}
 
-{phang2}{cmd:. cap program drop mysqreg }{p_end}
-{phang2}{cmd:. program define mysqreg, eclass}{p_end}
+{phang2}{cmd: cap program drop mysqreg }{p_end}
+{phang2}{cmd: program define mysqreg, eclass}{p_end}
 {asis}
         syntax varlist [if] [in] [pweight] [, flag Quantiles(numlist)]
         version 12.1
@@ -429,31 +475,31 @@ User-defined commands must accept aweights or pweights. A typical syntax stateme
         matrix `b' = [`results']
         ereturn post `b' 
 {smcl}
-{phang2}{cmd:. end}{p_end}
+{phang2}{cmd: end}{p_end}
 {phang}{cmd:. repest PISA, estimate(stata: mysqreg pv@math escs girl, q(25 75)) by(cnt) results(keep(q25_girl q75_girl) combine(qdiffgirl: _b[q75_girl] - _b[q25_girl]))}{p_end}
 
     {hline}
 {pstd}User-defined estimation command: 2. logit postestimation {p_end}
 
-{phang2}{cmd:. cap program drop mylogitmargins }{p_end}
-{phang2}{cmd:. program define mylogitmargins, eclass}{p_end}
+{phang2}{cmd: cap program drop mylogitmargins }{p_end}
+{phang2}{cmd: program define mylogitmargins, eclass}{p_end}
 {asis}
-		syntax [if] [in] [pweight], logit(string) [margins(string) loptions(string) moptions(string)]
-		tempname b m
-	// compute logit regressions, store results in vectors
-		logit `logit' [pw `exp'] `if' `in', `loptions'
-		matrix `b'= e(b)
-	// compute logit postestimation, store results in vectors
-		if "`margins'" != "" | "`moptions'" != ""{
-			margins `margins', post `moptions'
-			matrix `m' = e(b)
-			matrix colnames `m' =  margins:
-			matrix `b'= [`b', `m']
-			}
-	// post results
-		ereturn post `b' 
+        syntax [if] [in] [pweight], logit(string) [margins(string) loptions(string) moptions(string)]
+        tempname b m
+        // compute logit regressions, store results in vectors
+                logit `logit' [`weight' `exp'] `if' `in', `loptions'
+                matrix `b'= e(b)
+        // compute logit postestimation, store results in vectors
+                if "`margins'" != "" | "`moptions'" != ""{
+                        margins `margins', post `moptions'
+                        matrix `m' = e(b)
+                        matrix colnames `m' =  margins:
+                        matrix `b'= [`b', `m']
+                        }
+        // post results
+                ereturn post `b' 
 {smcl}
-{phang2}{cmd:. end}{p_end}
+{phang2}{cmd: end}{p_end}
 {phang}{cmd:. repest PISA, estimate(stata: mylogitmargins, logit(repeat pv@math escs ib1.st04q01) margins(st04q01) moptions(atmeans))} {p_end}
     {hline}
 

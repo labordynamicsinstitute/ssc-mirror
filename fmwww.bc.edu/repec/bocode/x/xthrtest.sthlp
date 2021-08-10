@@ -1,10 +1,10 @@
 {smcl}
-{* *! version 1.0.3  14sep2016}{...}
+{* *! version 1.1.2  06apr2018}{...}
 {findalias asfradohelp}{...}
 {title:xthrtest}
 
 {phang}
-{bf:xthrtest} {hline 2} Heteroskedasticity-robust HR-test for first order panel serial correlation, see Born & Breitung (2016)
+{bf:xthrtest} {hline 2} Heteroskedasticity-robust HR-test for first order panel serial correlation, see Born & Breitung (2016) and Wursten (2018)
 
 
 {marker syntax}{...}
@@ -53,6 +53,10 @@ You must use the {bf:ue}-option when predicting the residuals. That is, this tes
 {pstd}
 Any mistakes are my own.
 
+{pstd}
+Just like academic papers, coding software takes time and effort. As a result, {bf:please cite the Stata Journal article}, Wursten (2018), when you make use of this command, just like you would cite a useful paper. A full reference can be found below.
+This article contains additional information about the tests, its usage and its strengths, as well as some Monte Carlo evidence.
+
 {marker examples}{...}
 {title:Examples}
 
@@ -84,6 +88,9 @@ Any mistakes are my own.
 
 {pstd}
 {it:Testing for Serial Correlation in Fixed-Effects Panel Data Models}, Benjamin Born and Jörg Breitung, Econometric Reviews 2016
+
+{pstd}{it:Testing for serial correlation in fixed-effects panel models}, Jesse Wursten, Stata Journal 2018
+
 
 {title:Author}
 Jesse Wursten

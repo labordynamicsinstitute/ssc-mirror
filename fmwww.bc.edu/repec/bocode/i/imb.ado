@@ -1,7 +1,7 @@
 /*
-*  
+*
 * imb.ado - L1-distance balance checking
-* 
+*
 * Inputs: varlist: coviariates to balance on
 *         treatment(): name of the treatment variable
 *         breaks(): name of the break method to use.
@@ -33,7 +33,7 @@ if ("`useweights'" == "") {
 else {
   local uw = 1
 }
-  
+
 mata: imbalance("`varlist'","`breaks'","`treatment'",`uw',"`impvar'")
 
 dis ""

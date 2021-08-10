@@ -21,6 +21,16 @@
 {p 8 21 2}{cmd:combomarginsplot} {help combomarginsplot##filelist:{it:margins_file_list}} [{cmd:,} 
 {it:combomarginsplot_options} {help marginsplot##options:{it:marginsplot_options}}]
 
+{p 8 21 2}{cmd:combomp} {help combomarginsplot##filelist:{it:margins_file_list}} [{cmd:,} 
+{it:combomarginsplot_options} {help marginsplot##options:{it:marginsplot_options}}]
+
+{p 8 21 2}{cmd:cmpmargins} {help margins:{it:margins_spec}} [{cmd:,} 
+{it:margins_options} {cmdab:cmplabel(}{it:label}{cmdab:)}]
+
+{p 8 21 2}{cmd:combomarginsplot12} {help combomarginsplot##filelist:{it:margins_file_list}} [{cmd:,} 
+{it:combomarginsplot_options} {help marginsplot##options:{it:marginsplot_options}}]
+
+
 {synoptset 37 tabbed}{...}
 {synopthdr:combomarginsplot_options}
 {synoptline}
@@ -41,6 +51,14 @@
         confidence interval plot from each margins file{p_end}
 
 {syntab:Other}
+{synopt :{cmd:offset}}Offset the plotting symbols on the x-axis; this can help distinguish clearly overlapping confidence intervals from multiple margins.{p_end}
+{synopt :{cmdab:off:set(}{it:number}{cmd:)}}amount to offset x-axis categories. The default is 0.05.  This option implies {cmd:offset}.{p_end}
+{synopt :{cmdab:ovar(}{it:varname}{cmd:)}}Specify variable name to offset. Default is the variable that defines the plots.{p_end}
+
+{synopt :{cmdab:mlabfmt(}{it:{help format:%fmt}}{cmd:)}}Specify display format for any marker labels.  
+	Useful when you, e.g., label the plotted margins with their values, plotopt(mlabel(_margin)).{p_end}
+
+
 {synopt :{cmd:savefile(}{it:filename} [, replace]{cmd:)}}Save combined margins file. (Note that the {cmd:saving()} option, if 
 		specified, applies to {cmd:marginsplot} and saves the resulting graph.) {p_end}
 {synoptline}
@@ -64,6 +82,18 @@
 {pstd}Note that it is possible to create a combined margins file that is incoherent, which will either
 	cause {cmd:marginsplot} to return an error or create a nonsensical graph.  If you encounter a situation
 	where you do not get what you expect, however, please contact me!{p_end}
+
+{pstd}{cmd:combomp} is simply a shorter name for {cmd:combomarginsplot}.  Assuming you use this program 10 times a month, 
+type 40 words per minute, and work a 50-year career, the abbreviated version will save you 4.5 hours.
+
+{pstd}{cmd:cmpmargins} is a utility that can (optionally) be used in place of the standard {cmd:margins} command.  
+It behaves just like {cmd:margins}, except that it attaches an optional label (specified with the {cmd:cmplabel()} option) 
+to the saved margins file.  This will be used by {cmd:combomarginsplot} to label the resulting graph, unless {cmd:combomarginsplot}’s 
+{cmd:labels()} option is specified.  That is, labels for the different margins files can be specified when they are created,
+using the {cmd:cmpmargins} command with the {cmd:cmplabel()} option, or they can be specified when {cmd:combomarginsplot} is run, 
+using its {cmd:labels()} option.
+
+{pstd}{cmd:combomarginsplot12} is an older version of the program that should run correctly on Stata versions 12 through 15.  
 
 
 {marker options}{...}
@@ -122,7 +152,8 @@
 {marker examples}{...}
 {title:Examples}
 
-{pstd}Combining results from multiple parallel models{p_end}
+{pstd}Combining results from multiple parallel models.{p_end}
+
 {phang2}. {stata sysuse auto}{p_end}
 
 {phang2}. {stata oprobit rep78 i.foreign mpg price weight}{p_end}
@@ -145,8 +176,11 @@
 {phang2}Separating plots by a different variable{p_end}
 {phang2}. {stata combomarginsplot file1 file2 file3, labels("Full model" "Restricted model" "Gear Model") noci by(foreign)}{p_end}
 
+{phang2}Using transparency to make overlapping CIs visible, separating by model, and repositioning legend{p_end}
+{phang2}. {stata combomarginsplot file1 file2 file3, labels("Full model" "Restricted model" "Gear Model") by(_filenumber) byopt(legend(at(4) pos(0)) title("Probability of mediocre repair record")) recastci(rarea) ciopt(color(%20)) legend(col(1))}{p_end}
+
 	
-{pstd}Combining plots for multiple outcomes from one model{p_end}
+{pstd}Combining plots for multiple outcomes from one model.  ({it:Note that the stock {help marginsplot} command now handles multiple outcomes directly.}){p_end}
 {phang2}. {stata sysuse auto}{p_end}
 {phang2}. {stata oprobit rep78 i.foreign mpg price weight}{p_end}
 {phang2}. {stata margins foreign, at(mpg=(10(5)50)) expression(predict(outcome(1))+predict(outcome(2))) saving(file4, replace)}{p_end}

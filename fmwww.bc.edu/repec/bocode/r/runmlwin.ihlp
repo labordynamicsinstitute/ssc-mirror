@@ -192,6 +192,7 @@ where {it:levelvar} is a variable identifying the groups or clusters for the ran
 {synopt:{opt nocont:rast}}suppress table summarizing contrasts{p_end}
 {synopt:{opt nofet:able}}suppress fixed-effects table{p_end}
 {synopt:{opt noret:able}}suppress random-effects table{p_end}
+{synopt:{help runmlwin##display_options:display_options}}control column formats{p_end}
 
 {syntab:Reporting - MCMC only}
 {synopt:{opt nodiag:nostics}}do not calculate MCMC diagnostics{p_end}
@@ -786,6 +787,8 @@ Note that specifying this option will not allow the
 {phang}{opt zratio} reports classical z-ratios and p-values (i.e. under the assumption that the chains are normally distributed)
 {opt zratio} may be specified at estimation or when replaying previously estimated results.
 
+{marker display_options}{...}
+{phang}{opt display_options}  cformat({help fmt:%fmt}), pformat({help fmt:%fmt}), sformat({help fmt:%fmt}); see {help estimation options##display_options:[R] estimation options.}
 
 {marker options_post_estimation}{...}
 {dlgtab:Post-estimation}

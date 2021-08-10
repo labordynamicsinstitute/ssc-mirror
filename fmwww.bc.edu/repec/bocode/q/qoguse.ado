@@ -1,9 +1,11 @@
-*! version 2.1.0
-*! Christoph Thewes - thewes@uni-potsdam.de - 05.08.2017
+*! version 2.1.2
+*! Christoph Thewes - thewes@mailbox.org - 25.05.2020
 
 * 1.0.0: 10.05.2011: Initial release 
 * 2.0.0: 09.11.2012: added suport for different versions and formats of QoG
 * 2.1.0: 05.08.2017: added support for new versions/formats + new filenaming with date-suffix
+* 2.1.1: 31.08.2017: fixed QoG-filenaming for EQI-data
+* 2.1.2: 25.05.2020: fixed http > https
 
 program qoguse
 
@@ -11,8 +13,7 @@ version 11.0
 	
 	syntax [anything] [if] [in], Version(string) Format(string) [Years(numlist) clear]
 
-	local q_source "http://www.qogdata.pol.gu.se/data"
-
+	local q_source "https://www.qogdata.pol.gu.se/data/"
 
 	// CHECK FOR WRONG SPECIFIED OPTIONS
 	// ---------------------------------
@@ -58,47 +59,13 @@ version 11.0
 	// LOAD DATA
 	// ---------
 
-	*// Solution proposed by Daniel Klein, only working with Stata 13 and above
-	*local file = fileread("`q_source'/")
-	*local OK   = regexm(`"`file'"', "(qog_`version'_`format'_[a-z][a-z][a-z][0-9][0-9]\.dta)")
-	
-	*if "`version'"=="exp" {
-	*	local OK   = regexm(`"`file'"', "(qog_`version'_`format'_[0-9][0-9]\.dta)")
-	*}
-
-	*if "`version'"=="eqi" {
-	*	if "`format'" == "ind" {
-	*		local OK   = regexm(`"`file'"', "(qog_`version'_feb17.dta)")
-	*	}
-	*	if "`format'" == "agg" {
-	*		local OK   = regexm(`"`file'"', "(qog_`version'_jun15.dta)")
-	*	}
-	*}
-
-	*if (!`OK') {
-	*	di as err "Format unknown:"
-	*	error 601
-	*}
-
-	*local q_filename = regexs(1)
-
-
-	*// Solution proposed by William Lisowski, working with old Stata versions
+	*// Solution proposed by William Lisowski
 	preserve
 		tempfile gnxl
-		copy http://www.qogdata.pol.gu.se/data/ `gnxl'
+		copy https://www.qogdata.pol.gu.se/data/ `gnxl'
 		qui infix str line 1-500 using `gnxl', clear
-		if "`version'"!="eqi" {
-			qui generate file = regexs(1) if regexm(line,">(qog_`version'_`format'_.*dta)<")
-		}
-		if "`version'"=="eqi" {
-			if "`format'" == "ind" {
-				qui generate file = regexs(1) if regexm(line,">(qog_`version'_feb17.dta)<")
-			}
-			if "`format'" == "agg" {
-				qui generate file = regexs(1) if regexm(line,">(qog_`version'_jun15.dta)<")
-			}
-		}
+		qui generate file = regexs(1) if regexm(line,">(qog_`version'_`format'_.*dta)<")
+		
 		qui keep if !missing(file)
 		local q_filename = file[1]
 	restore

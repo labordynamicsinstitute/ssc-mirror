@@ -1,5 +1,5 @@
 {smcl}
-{* *! version 1.0.1  28June2017}{...}
+{* *! version 1.0.2  05August2017}{...}
 {cmd:help stbrier}
 {hline}
 
@@ -14,9 +14,9 @@
 
 {p 8 17 2}
 		{cmd:stbrier} {it:{help varlist:varlist}} {ifin} 
-		[{cmd:,}
+		{cmd:,}
 		{cmdab:bt:ime(}{it:#}{cmd:)}
-		{cmdab:d:istribution(}{it:string}{cmd:)} 
+		[ {cmdab:d:istribution(}{it:string}{cmd:)} 
 		{cmdab:comp:ete(}{it:crvar}[{cmd:==}{it:{help numlist}}]{cmd:)} 
 		{cmdab:i:pcw(}{it:{help varlist:varlist}}{cmd:)} 
 		{cmdab:g:en(}{it:string}{cmd:)}
@@ -29,7 +29,7 @@
 {synoptset 29 tabbed}{...}
 {synopthdr}
 {synoptline}
-{synopt:{cmdab:bt:ime}{cmd:(#}{cmd:)}}specify the timepoint at which the Brier score should be computed; default is the median survival time (see {helpb stsum}){p_end}
+{synopt:{cmdab:bt:ime}{cmd:(#}{cmd:)}}specify the timepoint at which the Brier score should be computed; {cmd:required} {p_end}
 {synopt:{cmdab:d:istribution}{cmd:(string}{cmd:)}}specify the survival distribution for an streg model; see {helpb streg} for available distributions {p_end}
 {synopt:{cmdab:comp:ete(}{it:crvar}[{cmd:==}{it:{help numlist}}]{cmd:)}}specify competing-risks event(s) for a competing-risk model; see {helpb stcrreg}{p_end}
 {synopt:{cmdab:i:pcw(}{it:{help varlist}}{cmd:)}}specify covariates for estimating the inverse probability of censoring weights (IPCW){p_end}
@@ -88,9 +88,8 @@ model.
 {phang} {opt btime(#)} specifies the timepoint (prediction horizon) at
 which the Brier score should be computed. Any {cmd:btime} value within
 the range of the follow-up times can be specified. An error is
-produced if the specified {cmd:btime} falls beyond the maximum
-follow-up time in the data. The default (when {cmd:btime} is not
-specified) is the median survival time; (see {helpb stsum}).
+produced if {opt btime} is either not specified, or if the specified {cmd:btime} falls 
+beyond the range of the data.
 
 {phang}
 {opt distribution(string)} specifies the survival distribution for an streg model; 
@@ -98,8 +97,8 @@ see {helpb streg} for available distributions. {helpb stcox} is implemented when
 {cmd:distribution()} and {cmd:compete()} are not specified.
 
 {phang}
-{cmd:compete(}{it:crvar}[{cmd:==}{it:{help numlist}}{cmd:])} is required and
-specifies the events that are associated with failure due to competing risks (see {helpb stcrreg}).
+{cmd:compete(}{it:crvar}[{cmd:==}{it:{help numlist}}{cmd:])} specifies the events 
+that are associated with failure due to competing risks (see {helpb stcrreg}).
 
 {pmore}
 If {opt compete(crvar)} is specified, {it:crvar} is interpreted as an 
@@ -144,10 +143,8 @@ is not equal, but asymptotically equivalent, to the Kaplan-Meier estimator){p_en
 
 {pstd}Estimate the stbrier score at the median survival time, specifying the {cmd:efron} option for ties, and generate a variable for
 individual-level stbrier scores{p_end}
-{phang2}{cmd:. stbrier i.horth ib2.menostat i.tgrade age tsize pnodes, efron ipcw(i.horth ib2.menostat i.tgrade age tsize pnodes) gen(brier)}{p_end}
-
-{pstd}Estimate the stbrier score at time 1990 with covariates using the {cmd:efron} option for ties{p_end}
-{phang2}{cmd:. stbrier i.horth ib2.menostat i.tgrade age tsize pnodes, bt(1990) efron ipcw(i.horth ib2.menostat i.tgrade age tsize pnodes)}{p_end}
+{phang2}{cmd:. stsum}{p_end}
+{phang2}{cmd:. stbrier i.horth ib2.menostat i.tgrade age tsize pnodes, efron ipcw(i.horth ib2.menostat i.tgrade age tsize pnodes) gen(brier) bt(1807)}{p_end}
 
 {pstd}Estimate the stbrier score with strata{p_end}
 {phang2}{cmd:. stbrier ib2.menostat i.tgrade age tsize pnodes, bt(1990) strata(horth) efron ipcw(ib2.menostat i.tgrade age tsize pnodes)}{p_end}
@@ -155,14 +152,14 @@ individual-level stbrier scores{p_end}
 
 {title:Example with parametric survival regression}
 
-{pstd} Estimate the stbrier score using an exponential distribution for the event time and no covariates in either the risk model or IPCW model{p_end}
+{pstd} Estimate the stbrier score at time 2000 using an exponential distribution for the event time and no covariates in either the risk model or IPCW model{p_end}
 {phang2}{cmd:. stbrier , d(expon) btime(2000)}{p_end}
 
-{pstd}Estimate the stbrier score using survival regression with an exponential distribution at the median survival time, specifiying certain covariates in the IPCW model, and
+{pstd}Estimate the stbrier score using survival regression with an exponential distribution, specifiying certain covariates in the IPCW model, and
 generating a variable for individual-level stbrier scores{p_end}
-{phang2}{cmd:. stbrier i.horth ib2.menostat i.tgrade age tsize pnodes, d(expon) ipcw(i.tgrade age tsize) gen(brier)}{p_end}
+{phang2}{cmd:. stbrier i.horth ib2.menostat i.tgrade age tsize pnodes, d(expon) ipcw(i.tgrade age tsize) gen(brier) btime(2000)}{p_end}
 
-{pstd}Estimate the stbrier score at time 2000 using a Weibull regression model, and generating a variable for individual-level stbrier
+{pstd}Estimate the stbrier score using a Weibull regression model, and generating a variable for individual-level stbrier
 scores{p_end}
 {phang2}{cmd:. stbrier i.horth ib2.menostat i.tgrade age tsize pnodes, d(weib) btime(2000) ipcw(i.tgrade age tsize) gen(brier)}{p_end}
 
@@ -208,9 +205,14 @@ the risk prediction model. We use covariates for the inverse probability of cens
 By default, {cmd:stbrier} returns the following results, which can be displayed by typing {cmd: return list} after 
 {cmd:stbrier} is finished (see {help return}).  
 
-{synoptset 15 tabbed}{...}
-{p2col 5 15 19 2: Scalars}{p_end}
+{synoptset 10 tabbed}{...}
+{p2col 5 20 24 2: Scalars}{p_end}
 {synopt:{cmd:r(brier)}} mean Brier score{p_end}
+
+{synoptset 10 tabbed}{...}
+{p2col 5 20 24 2: Matrices}{p_end}
+{synopt:{cmd:r(table)}} estimates from mean table{p_end}
+
 
 
 {title:References}
@@ -254,7 +256,7 @@ Assessing the performance of prediction models: a framework for some traditional
 to the research community, like a paper. Please cite it as such: {p_end}
 
 {p 4 8 2}
-Linden A, Gerds TA, Huber C. 2017. stbrier: Stata module for estimating the Brier score for survival (censored) data. 
+Linden A, Gerds TA, Huber C. (2017). STBRIER: Stata module for estimating the Brier score for survival (censored) data. {browse "https://ideas.repec.org/c/boc/bocode/s458368.html"} {p_end}
 
 
 {title:Authors}

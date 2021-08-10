@@ -10,11 +10,11 @@
 
 {p 8 14 2}{cmd:texsave} [{it:varlist}] {cmd:using} {it:filename} [if] [in] [, {cmd:title(}{it:string}{cmd:)} {cmd:size(}{it:string}{cmd:)}
 {cmd:width(}{it:string}{cmd:)} {cmd:align(}{it:string}{cmd:)} {cmdab:loc:ation(}{it:string}{cmd:)}
-{cmd:marker(}{it:string}{cmd:)} {cmd:autonumber} {cmd:hlines(}{it:numlist}{cmd:)} {cmd:footnote(}{it:footnote_options}{cmd:)}
-{cmdab:varlab:els} 
-{cmd:rowsep(}{it:string}{cmd:)} {cmd:frag} {cmd:nonames} {cmd:sw} {cmd:nofix} 
-{cmd:headerlines(}{it:stringlist}{cmd:)} {cmd:headlines(}{it:stringlist}{cmd:)} {cmd:footlines(}{it:stringlist}{cmd:)}
-{cmd:replace} {it:format_options}]
+{cmd:label(}{it:string}{cmd:)} {cmd:autonumber} {cmd:hlines(}{it:numlist}{cmd:)} {cmd:footnote(}{it:footnote_options}{cmd:)}
+{cmdab:varlab:els} {cmdab:land:scape}  {cmdab:geo:metry(}{it:string}{cmd:)}
+{cmd:rowsep(}{it:string}{cmd:)} {cmdab:decimal:align} {cmd:nonames} {cmd:nofix} {cmd:noendash}
+{cmd:preamble(}{it:stringlist}{cmd:)} {cmd:headlines(}{it:stringlist}{cmd:)} {cmd:headerlines(}{it:stringlist}{cmd:)}  
+{cmd:footlines(}{it:stringlist}{cmd:)} {cmd:sw} {cmd:frag} {cmd:replace} {it:format_options}]
 
 {p 4 4 2}where
 
@@ -24,7 +24,7 @@
 
 {p 8 14 2}{it:footnote_options} are
 
-{p 12 14 2}{cmd:footnote(}{it:string} [, {cmd:size(}{it:string}{cmd:)} {cmd:align(}{it:string}{cmd:)}]{cmd:)}
+{p 12 14 2}{cmd:footnote(}{it:string} [, {cmd:size(}{it:string}{cmd:)} {cmd:addlinespace(}{it:string}{cmd:)} {cmd:width(}{it:string}{cmd:)}]{cmd:)}
 
 {p 8 14 2}and {it:format_options} are
 
@@ -34,12 +34,11 @@
 
 {title:Description}
 
-{p 4 4 2}{cmd:texsave} outputs the dataset currently in memory to {it:filename} in LaTeX format. It uses the {it:booktabs} and {it:tabularx} packages in order
+{p 4 4 2}{cmd:texsave} outputs the dataset currently in memory to {it:filename} in LaTeX format. It uses the {it:booktabs}, {it:tabularx}, and {it:geometry} packages
 to produce publication-quality tables.
 
 
 {title:Options}
-
 
 {p 4 8 2}
 {cmd:title(}{it:string}{cmd:)} writes out {it:string} as a caption above the table.
@@ -51,7 +50,7 @@ Alternatively, the user may specify a numeric value between 1 and 10, where 1 co
 
 
 {p 4 8 2}
-{cmd:width(}{it:string}{cmd:)} specifies the width of your table. Lengths can be specified in the same way as for {cmd:rowsep} (see below). The default is {it:\textwidth}.
+{cmd:width(}{it:string}{cmd:)} specifies the width of your table. Lengths can be specified in the same way as for {cmd:rowsep} (see below). The default is {it:\linewidth}.
 
 
 {p 4 8 2}
@@ -64,6 +63,8 @@ Alternatively, the user may specify a numeric value between 1 and 10, where 1 co
 {p 8 8 2}C - a column of centered items; column spacing for all 'C' columns are always the same.
 
 {p 8 8 2}r - a column of right-aligned items
+
+{p 8 8 2}S - a column of numbers aligned at the decimal point; requires {cmd:decimalalign} option
 
 {p 8 8 2}| - a vertical line the full height and depth of the environment 
 
@@ -88,7 +89,7 @@ The default is to left-justify the first column and center and distribute space 
 
 
 {p 4 8 2}
-{cmd:marker(}{it:string}{cmd:)} uses LaTeX's \label option to mark your table with the key {it:string}.
+{cmd:label(}{it:string}{cmd:)} uses LaTeX's {it:\label} option to mark your table with the key {it:string}.
 
 
 {p 4 8 2}
@@ -102,13 +103,24 @@ values are interpreted as the distance from the end of the table.
 
 
 {p 4 8 2}
-{cmd:footnote(}{it:string} [, {cmd:size(}{it:string}{cmd:)} {cmd:align(}{it:string}{cmd:)}]{cmd:)} writes out {it:string}
-in a left-justified footnote at the bottom of the table.  The suboptions allow you to set the size and alignment of the 
-footnote, using the syntax described by the {cmd:size(}{it:string}{cmd:)} and {cmd:align(}{it:string}{cmd:)} options.
+{cmd:footnote(}{it:string} [, {cmd:size(}{it:string}{cmd:)} {cmd:width(}{it:string}{cmd:)}] {cmd:addlinespace(}{it:string}{cmd:)}{cmd:)} writes out {it:string}
+in a left-justified footnote at the bottom of the table.  The suboptions allow you to set the size and width of the 
+footnote, using the syntax described by the {cmd:size(}{it:string}{cmd:)} and {cmd:width(}{it:string}{cmd:)} options. The {cmd:addlinespace(}{it:string}{cmd:)}
+suboption writes out "\addlinespace[{it:string}]" just prior the footnote, allowing you to control the 
+amount of spacing between the table and the footnote. (See {cmd:rowsep()} for examples of valid units.}
+The default is "\addlinespace[\belowrulesep]".
 
 
 {p 4 8 2}
 {cmd:varlabels} specifies that variable labels be written in the table header instead of variable names.
+
+
+{p 4 8 2}
+{cmd:landscape} specifies a landscape orientation instead of a portrait orientation. This requires the {it:pdflscape} package.
+
+
+{p 4 8 2}
+{cmd:geometry(}{it:string}{cmd:)} specifies the page dimensions using the {it:geometry} package. The default is "margin=1in".
 
 
 {p 4 8 2}
@@ -117,9 +129,15 @@ The length can be expressed in the following units: {it:cm} (centimetres), {it:e
 (the height of the letter x in the current font), {it:in} (inches), {it:pc} (picas), {it:pt} (points) or {it:mm} (millimetres). 
 For example, {cmd:rowsep(}{it:1cm}{cmd:)} adds one centimeter of vertical space between rows.
 
+
 {p 4 8 2}
-{cmd:frag} omits from the output LaTeX code like {it:\begin{c -(}document{c )-}} that is needed to create a standalone document.  This makes {it:filename} a fragment, which
-is useful if you plan to link your table to another document via LaTeX's {it:\input{c -(}table{c )-}} command.
+{cmd:headersep(}{it:string}{cmd:)} adds vertical spacing of length {it:string} between the header row and the data rows via the {it:\addlinespace} command.
+It uses the same syntax as {cmd:rowsep(}{it:string}{cmd:)}.
+The default is "\addlinespace[\belowrulesep]".
+
+
+{p 4 8 2}
+{cmd:decimalalign} aligns numeric values at the decimal point using the {it:siunitx} package. 
 
 
 {p 4 8 2}
@@ -127,13 +145,21 @@ is useful if you plan to link your table to another document via LaTeX's {it:\in
 
 
 {p 4 8 2}
-{cmd:sw} instructs {cmd:texsave} to include macro code that can be read by Scientific Word (SW) so that full SW functionality is retained.
+{cmd:nofix} instructs {cmd:texsave} to write out all data, titles and footnotes exactly as they appear in Stata. 
+The following non-alphanumeric characters have special meaning in LaTeX: _ % # $ & ~  ^ \ { }.
+By default, {cmd:texsave} adds a backslash (\) in front of these characters in order to prevent LaTeX compile errors.
 
 
 {p 4 8 2}
-{cmd:nofix} instructs {cmd:texsave} to write out all data, titles and footnotes exactly as they appear in Stata.  Many of the non-alphanumeric characters have special meaning in LaTeX, namely _, %, #, $, &, ~, ^^, \, {, }.
-By default, {cmd:texsave} tries to fix this by adding a backslash (\) in front of these characters.  (It is not always successful, though).
-Specify {cmd:nofix} if you are intentionally outputting LaTeX code and don't want {cmd:texsave} to incorrectly modify it.
+{cmd:noendash} specifies that negative signs ("-") not be converted to en dashes ("--") in the dataset.
+
+
+{p 4 8 2}
+{cmd:preamble(}{it:stringlist}{cmd:)} specifies a list of lines of LaTeX code to appear before the "\begin{document}" code in the output.  Each line of code should be surrounded by quotation marks (see example 4 below).
+
+
+{p 4 8 2}
+{cmd:headlines(}{it:stringlist}{cmd:)} specifies a list of lines of LaTeX code to appear before the "\begin{table}" code in the output.  Each line of code should be surrounded by quotation marks (see example 4 below).
 
 
 {p 4 8 2}
@@ -141,11 +167,17 @@ Specify {cmd:nofix} if you are intentionally outputting LaTeX code and don't wan
 
 
 {p 4 8 2}
-{cmd:headlines(}{it:stringlist}{cmd:)} specifies a list of lines of LaTeX code to appear before the table code in the output.  Each line of code should be surrounded by quotation marks (see example 4 below).
+{cmd:footlines(}{it:stringlist}{cmd:)} specifies a list of lines of LaTeX code to appear after the "\end{table}" code in the output.  Each line of code should be surrounded by quotation marks (see example 4 below).
 
 
 {p 4 8 2}
-{cmd:footlines(}{it:stringlist}{cmd:)} specifies a list of lines of LaTeX code to appear after the table code in the output.  Each line of code should be surrounded by quotation marks (see example 4 below).
+{cmd:sw} instructs {cmd:texsave} to include macro code that can be read by Scientific Word (SW) so that full SW functionality is retained.
+
+
+{p 4 8 2}
+{cmd:frag} omits from the output LaTeX code like {it:\begin{c -(}document{c )-}} that is needed to create a standalone document. This makes {it:filename} a fragment, which
+is useful if you want to use LaTeX's {it:\input{c -(}table{c )-}} command to include your table as a subfile.
+An alternative is to use the LaTeX package {browse "http://ctan.org/pkg/standalone":standalone}, which instructs LaTeX to skip extra premables when including subfiles. 
 
 
 {p 4 8 2}
@@ -167,11 +199,45 @@ However, it does not check that tables with lots of alignment specifications etc
 It is your responsibility to ensure that you are supplying valid LaTeX code when specifying options such as {cmd:headlines()}, {cmd:align()} etc. 
 See {browse "http://en.wikibooks.org/wiki/LaTeX/Tables"} to learn more about writing LaTeX code for tables.
 
+{p 4 8 2} Occasionally you may want to modify a line in the output file that can't be automated using {cmd:texsave}'s options. 
+The {help filefilter:filefilter} command is helpful in these cases. For example, the following command will remove the "\centering" from the first line of the table output:
+
+{col 12}{cmd:. filefilter "myfile1.tex" "myfile2.tex", from("\begin{table}[tbp] \centering") to("\begin{table}[tbp]")}
+
 
 {title:Notes}
 
-{p 4 8 2}{cmd:texsave} has been tested on Scientific WorkPlace 5.0 and TeXShop 2.18 (as supplied by the August 28, 2008 distribution of MacTeX).
-Please contact the author if you notice problems with other compilers.
+{p 4 8 2}{cmd:texsave} creates a LaTeX table using the following basic structure:
+
+{space 9}{it:\documentclass{article}}
+{space 9}{it:\usepackage{booktabs}}
+{space 9}{it:\usepackage{tabularx}}
+{space 9}{it:\usepackage[margin=1in]{geometry}}
+{space 9}{cmd:preamble(}{it:stringlist}{cmd:)}
+
+{space 9}{it:\begin{document}}
+{space 9}{cmd:headlines(}{it:stringlist}{cmd:)}
+
+{space 9}{it:\begin{table}[tbp] \centering}
+{space 9}{it:\newcolumntype{C}{>{\centering\arraybackslash}X}}
+{space 9}{cmd:title(}{it:string}{cmd:)}
+{space 9}\begin{tabularx}{\linewidth}{lC...C}
+{space 9}{it:\toprule}
+{space 9}{cmd:autonumber}
+{space 9}{cmd:headerlines(}{it:stringlist}{cmd:)}
+
+{space 9}[variable names]
+{space 9}{it:\midrule\addlinespace[}{cmd:headersep(}{it:string}{cmd:)}{it:]}
+{space 9}[data]
+
+{space 9}{it:\bottomrule}
+{space 9}{it:\end{tabularx}}
+{space 9}{cmd:footnote(}{it:string}{cmd:)}
+{space 9}{it:\end{table}}
+
+{space 9}{cmd:footlines(}{it:stringlist}{cmd:)}
+{space 9}{it:\end{document}}
+
 
 {title:Examples}
 
@@ -206,7 +272,7 @@ Please contact the author if you notice problems with other compilers.
 
 {col 8}{cmd:. sysuse auto.dta, clear}
 
-{col 8}{cmd:. texsave make mpg trunk if price > 8000 using "example4.tex", loc(h) headlines("\begin{center}" "My headline" "\end{center}") footlines("My footline") replace}
+{col 8}{cmd:. texsave make mpg trunk if price > 8000 using "example4.tex", loc(h) preamble("\usepackage{amsfonts}") headlines("\begin{center}" "My headline" "\end{center}") footlines("My footline") replace}
 
 
 {p 4 4 2}5. Output a table with a complicated header and bold-face the first observation.
@@ -218,7 +284,7 @@ Please contact the author if you notice problems with other compilers.
 
 {title:Author}
 
-{p 4 4 2}Julian Reif, University of Illinois at Urbana-Champaign
+{p 4 4 2}Julian Reif, University of Illinois
 
 {p 4 4 2}jreif@illinois.edu
 
@@ -231,4 +297,4 @@ Please contact the author if you notice problems with other compilers.
 {p 4 4 2}
 {help regsave:regsave} (if installed),
 {help outreg2:outreg2} (if installed),
-{help listtex:listtex} (if installed)
+{help filefilter:filefilter}

@@ -1,5 +1,5 @@
 {smcl}
-{* *! version 1.6.6 22Jul2016}{...}
+{* *! version 1.7.1 16JuN2018}{...}
 {cmd:help stpm2 postestimation} 
 {right:also see:  {help stpm2}}
 {hline}
@@ -122,12 +122,13 @@ are valid with {opt abc}.
 {opt at(varname # [ varname # ...])} requests that the covariates specified by 
 the listed {it:varname}(s) be set to the listed {it:#} values. For example,
 {cmd:at(x1 1 x3 50)} would evaluate predictions at {cmd:x1} = 1 and
-{cmd:x3} = 50. This is a useful way to obtainThis is a useful way to obtain
+{cmd:x3} = This is a useful way to obtain
 out of sample predictions. Note that if {opt at()} is used together
 with {opt zeros} all covariates not listed in {opt at()}
 are set to zero. If {opt at()} is used without {opt zeros} then
 all covariates not listed in {opt at()} are set to their sample
-values. See also {opt zeros}.
+values. See also {opt zeros}. Sometime is is useful to specificy certain covariates to take values of a variable
+rather than a scalar. This can be done using {opt at(varname = varname)}. 
 
 {phang}
 {opt centile(#)} gives the {it:#}th centile of the survival time distribution,

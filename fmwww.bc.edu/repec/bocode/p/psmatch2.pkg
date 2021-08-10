@@ -19,12 +19,14 @@ d
 d Author: Barbara Sianesi, Institute for Fiscal Studies
 d Support: email barbara_s@@ifs.org.uk
 d
-d Distribution-Date: 20170502
+d Distribution-Date: 20180201
 d
 f psmatch2.ado
 f psmatch2.sthlp
 f psmatch2.dlg
 f pstest.ado
+f pstest2.ado
 f pstest.sthlp
+f ../d/density2.ado
 f psgraph.ado
 f psgraph.sthlp

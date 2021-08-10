@@ -1,18 +1,20 @@
 * Parametric likelihood definition for Waiting Time Distribution
 * with Weibull FRD and Uniform h, no censoring
 * Henrik Støvring, Dec 2001
-* Henrik Støvring, 11 Nov 2015 - switched parameter order to match with lnorm
-* Updated and simplified with invlogit, HS Aug 30, 2016
 
 program define mlwtd_wei
-        version 14.0
-	args lnf logitp lnbeta lnalpha 
+        version 7.0
+	args lnf transp lnalpha lnbeta 
 
+        tempname p alpha beta
 qui{
+        scalar `p' = exp(`transp')/(1+exp(`transp'))
+	scalar `alpha' = exp(`lnalpha')
+	scalar `beta' = exp(`lnbeta')
 	
-        replace `lnf' = ln(invlogit(`logitp')                   /*
-                        */ * exp(- (($ML_y1 * exp(`lnbeta') )^exp(`lnalpha')) /*
-                        */ - lngamma(1 + 1/exp(`lnalpha'))) * exp(`lnbeta') +  /*
-                        */ invlogit(- `logitp') / $wtddelta )
+        replace `lnf' = ln( `p'                   /*
+                        */ * exp(- (($ML_y1 * `beta' )^`alpha') /*
+                        */ - lngamma(1 + 1/`alpha')) * `beta' +  /*
+                        */ (1 - `p') )
       }
 end

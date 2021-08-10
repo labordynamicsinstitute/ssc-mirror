@@ -1,18 +1,45 @@
-*! Part of package matrixtools v. 0.2
-*! Support: Niels Henrik Bruun, nhbr@ph.au.dk
+*! Part of package matrixtools v. 0.27
+*! Support: Niels Henrik Bruun, niels.henrik.bruun@gmail.com
+/*
+2020-05-24 >    nhb_msa_variable_description() has been modified
+2019-06-11 >	Caption/Title added
+2017-08-31 >	When the dataset changed it is saved 
+2017-07-21 >	Bug in metadata regarding value labels fixed
+*/
 * TODO: Filters such as max filesize
+* TODO: Undgå at ikke gemte tilføjelser slettes med metadata
 program define metadata
 	version 12.1
-	syntax [anything(name=vlst)] [using/], ///
-			[SAvein(string) Keep noLog SEarchsubdirs noQuietly ///
-			Style(string) Caption(string) TOp(string) Undertop(string) Bottom(string)]
+	syntax [anything(name=vlst)] [using/], /*
+			*/[ /*
+			*/SAvein(string) /*
+			*/Keep /*
+			*/noLog /*
+			*/SEarchsubdirs /*
+			*/noQuietly /*
+			*/Style(string) /*
+			*/TItle(string) /*
+			*/CAPtion(string) /*
+			*/TOp(string) /*
+			*/Undertop(string) /*
+			*/Bottom(string) /*
+			*/]
 
 	local QUIETLY "quietly"
 	if "`quietly'" != "" local QUIETLY ""
 	if "`vlst'" == "" local vlst *
-	
+	if "`title'" != "" local caption `"`title'"'
+
 	`QUIETLY' {
-		if "`keep'" == "" local current_file = subinstr("$S_FN", "\", "/", .)
+		display "NoQuietly turned on"
+		if "`keep'" == "" {
+			if `c(changed)' {
+				tempfile tmpdata
+				save `tmpdata', replace
+				local current_file = `"`tmpdata'"'
+			}
+			else local current_file = subinstr("$S_FN", "\", "/", .)
+		}
 		if `"`using'"' != "" {
 			mata: __vd = metadata(`"`using'"', `"`vlst'"', `=`"`searchsubdirs'"' != ""')
 			mata: __justify = ("-", "-", "", "-", "", "-", "-", "-", "-", "")

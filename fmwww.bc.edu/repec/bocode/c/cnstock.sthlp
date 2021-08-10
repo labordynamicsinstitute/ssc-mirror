@@ -8,7 +8,7 @@
 
 {phang}
 {bf:cnstock} {hline 2} Downloads stock names and stock codes for China 's listed companies from China Finance Information
-                       Network(www.cfi.cn).
+                       Network(http://cfi.cn/).
 
 
 {title:Syntax}
@@ -45,6 +45,7 @@
 
 
 {title:Examples}
+
 {phang}
 {stata `"cnstock SHA"'}
 {p_end}
@@ -66,7 +67,6 @@ It will extract a list of all the stock codes and stock names for all the firms 
 {pstd}
 It will extract a list of all the stock codes and stock names for all the firms listed in Shenzhen's mainboard,Small and Medium-sized Enterprises board and the Growth Enterprise Board.
 
-
 {phang}
 {stata `"cnstock all,path(D:/temp/)"'}
 {p_end}
@@ -77,18 +77,19 @@ It will extract a list of all the stock codes and stock names for all the the li
 
 
 {title:Authors}
+
 {pstd}Chuntao LI{p_end}
-{pstd} School of Finance, Zhongnan University of Economics and Law{p_end}
+{pstd}China Stata Club(爬虫俱乐部){p_end}
 {pstd}Wuhan, China{p_end}
-{pstd}chtl@znufe.edu.cn{p_end}
+{pstd}chtl@zuel.edu.cn{p_end}
 
 {pstd}Zijian LI{p_end}
-{pstd} School of Finance, Zhongnan University of Economics and Law{p_end}
+{pstd}China Stata Club(爬虫俱乐部){p_end}
 {pstd}Wuhan, China{p_end}
 {pstd}jeremylee_41@163.com{p_end}
 
 {pstd}Yuan XUE{p_end}
-{pstd} School of Finance, Zhongnan University of Economics and Law{p_end}
+{pstd}China Stata Club(爬虫俱乐部){p_end}
 {pstd}Wuhan, China{p_end}
 {pstd}xueyuan19920310@163.com{p_end}
 

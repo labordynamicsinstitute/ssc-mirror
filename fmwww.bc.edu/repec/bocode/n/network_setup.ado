@@ -1,5 +1,14 @@
 /*
-*! version 1.2.5 # Ian White # 13mar2017
+*! Ian White # 6apr2018
+	aborts if #events out of range
+	aborts if treatment names are longer than 32 characters 
+		(which previously caused network map to fail)
+version 1.4.1 # Ian White # 4apr2018
+	bug fix: in wide format, existence of another variable with same stem caused failure
+	default changed from augment(1E-3) to augment(1E-5)
+version 1.3.1 # Ian White # 9oct2017
+	better error message if summary statistic variables are string
+version 1.2.5 # Ian White # 13mar2017
     final changes to network_components and help file
 version 1.2.4 # Ian White # 23feb2017
     network_components and help file updated to match Howard Thom's paper
@@ -52,7 +61,7 @@ nma version 0.1 30nov2012
 prog def network_setup
 syntax anything [if] [in], [ ///
     STUDyvar(varname) TRTvar(varname) ARMVars(string) /// describe data 
-    trtlist(string asis) alpha NUMcodes noCOdes /// how treatments are coded
+    TRTList(string asis) alpha NUMcodes noCOdes /// how treatments are coded
     format(string) or rr rd hr zeroadd(real 0.5) md smd sdpool(string) /// how to setup
     ref(string) augment(string) augmean(string) augsd(string) AUGOverall /// augment options
     GENPrefix(string) GENSuffix(string) /// what-to-output options
@@ -171,6 +180,8 @@ if "`trtvar'"!="" {
     isid `studyvar' `trtvar'
     qui levelsof `trtvar', local(trtvarlevels)
 
+	confirm numeric var `anything'  // 9oct2017
+
     * change `trtvar' to string
     cap confirm string var `trtvar'
     if _rc { // numeric
@@ -210,7 +221,11 @@ if "`trtvar'"!="" {
     tempvar trtcode
     qui gen `trtcode' = ""
     foreach trt in `trtlist' {
-        local ++r
+        if length("`trt'")>32 { // check added 6apr2018
+			di as error "Treatment name exceeds the 32 character limit: `trt'"
+			exit 498
+		}
+		local ++r
         if "`codes'"=="nocodes" { // don't code
             local thistrtcode = strtoname("`trt'",0)
         }
@@ -306,22 +321,24 @@ else {
     * identify treatments
     foreach nvar of varlist `n'* {
         if "`nvar'" != "`n'" {
-            local trt = substr("`nvar'",length("`n'")+1,.)
+            local missingvars
+			local trt = substr("`nvar'",length("`n'")+1,.)
             foreach rawvar in `rawvars' {
                 cap confirm var `rawvar'`trt'
-                if _rc {
-                    noi di as text "Warning: ignoring variable" as result " `nvar' " ///
-                        as text "because variable " as result "`rawvar'`trt'" as text " not found"
-                    continue
-                }
+                if _rc local missingvars `missingvars' `rawvar'`trt'
+			}
+			if !mi("`missingvars'") 	{
+				noi di as text "Warning: ignoring variable" as result " `nvar' " ///
+					as text "because variable(s) " as result "`missingvars'" as text " not found"
             }
-            local trtvarlevels `trtvarlevels' `trt'
-        }
-    }
+			else local trtvarlevels `trtvarlevels' `trt'
+		}
+	}
+
     if !mi(`"`trtlist'"') { // treatments specified: just check
         foreach trt in `trtlist' {
             foreach var in `rawvars' {
-                confirm var `var'`trt'
+                confirm numeric var `var'`trt' // numeric: 9oct2017
             }
         }
         local droptrts : list trtvarlevels - trtlist
@@ -355,7 +372,8 @@ else {
         local trtcodes `trtcodes' `thistrtcode'
         local trtname`thistrtcode' `trtname'
         foreach rawvar in `rawvars' {
-            qui rename `rawvar'`trtname' `rawvar'`thistrtcode'
+            confirm numeric var `rawvar'`trtname' // 9oct2017
+			qui rename `rawvar'`trtname' `rawvar'`thistrtcode'
             label var `rawvar'`thistrtcode' `"`rawvar' for `trtname'"'
         }
         `ifdebugnoi' di as text `"Treatment `trtname' has code `thistrtcode'"'
@@ -468,7 +486,7 @@ if "`outcome'"=="count" {
 // AUGMENT IF MISSING REF ARM
 
 * choose augment settings if not specified
-if mi("`augment'") local augment 0.001
+if mi("`augment'") local augment 0.00001
 if "`outcome'"=="count" local augsd 0
 local augmeanname `augmean'
 local augsdname `augsd'
@@ -537,8 +555,14 @@ if !mi("`augmentstudies'") & "`targetformat'"=="augmented" {
 // COMPUTE CONTRASTS AND THEIR VARIANCES
 if "`outcome'"=="count" {
     tempvar variance
-    foreach trt in `trtcodes' {
-        if "`or'"=="or" {
+    foreach trt in `trtcodes' { 
+		// check added 6apr2018
+		qui count if (`d'`trt'<0 | `d'`trt'>`n'`trt') & !mi(`d'`trt',`n'`trt') 
+		if r(N) {
+			di as error "Must have 0<#events<#total for treatment `trt'"
+			exit 498
+		}
+		if "`or'"=="or" {
             qui gen double `y'_`trt' = log(`d'`trt'/(`n'`trt'-`d'`trt'))
             qui gen double `variance'`trt' = 1/`d'`trt'+1/(`n'`trt'-`d'`trt')
         }

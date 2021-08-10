@@ -6,12 +6,11 @@
 
 *! tw3xls - Export three-way tables into Excel with formatting
 *! Andrey Ampilogov, a.ampilogov@gmail.com
-*! v1.6, 20-Apr-2017
-* v1.5, 19-Apr-2017
-* v1.2, 18-Apr-2017
-* v1.1, 16-Apr-2017
+*! v1.2, 26-Aug-2017
+* v1.1, 20-Apr-2017
 * v1.0, 08-Nov-2016
 
+cap program drop tw3xls
 
 program define tw3xls, sortpreserve rclass
 	version 14.2						//lowering the version will broke formatting of the putexcel commands, for example merge not working
@@ -74,32 +73,50 @@ program define tw3xls, sortpreserve rclass
 	* -contract- is much faster than looping over three levelsof with -summ `freq' if ... - ; -r(N)-
 	if `four' == -1 local list`4' = 1
 	foreach y of local list`4' {
+		//di "Category writen: `y'"
+		
 		local matcnt = `matcnt' + 1
 		tempname U`matcnt'
 	
 		preserve
 	* --> generate a frequencies dataset
-		contract `varlist', zero freq(_freq)
+		contract `varlist' `if' `in', zero freq(_freq)
 		
 		if `four' == -1 local happy 1
 		else if `four' == 0 qui keep if `4' == `y'
 		else if `four' == 1 qui keep if `4' == "`y'"
 		
-		qui egen `group' = group(`2' `3')
-		qui egen  index  = group(`1')
-		qui cap drop if `group'==. | index==.
-		qui keep `group' _freq index
-
-		qui reshape wide _freq, j(`group') i(index)
-		* keep encoded id (index) - adjust it in mergingcells later
-		order index, first
+		** some obs left after the -keep- command
+		if _N > 0 {
+			qui egen `group' = group(`2' `3')
+			qui egen  index  = group(`1')
+			qui cap drop if `group'==. | index==.
+			qui keep `group' _freq index
+		
+			qui reshape wide _freq, j(`group') i(index)
+			* keep encoded id (index) - adjust it in mergingcells later
+			order index, first
 	* --> set zero freq to missing or another number; less than 0.01 sec of computing
-		if `missing' == 12344  qui recode * (0=.)					// default option
-		else if `missing' != 0 qui recode * (0=`missing')			// user-defined
+			if `missing' == 12344  qui recode * (0=.)					// default option
+			else if `missing' != 0 qui recode * (0=`missing')			// user-defined
 	* --> save the matrix
-		mkmat _all, mat(`U`matcnt'')
-		restore
+			mkmat _all, mat(`U`matcnt'')
+		}
+		** in case no obs left 
+		else {
+			if `missing' == 12344 {
+				matrix `U`matcnt'' = J(`=scalar(`rows')',`=scalar(`cols')'+1,.)
+			}
+			else if `missing' == 0 {
+				matrix `U`matcnt'' = J(`=scalar(`rows')',`=scalar(`cols')'+1,0)
+			}
+			else {
+				matrix `U`matcnt'' = J(`=scalar(`rows')',`=scalar(`cols')'+1,`missing')
+			}
+			//mat list  `U`matcnt''
+		}
 		mata: `U`matcnt'' = st_matrix("`U`matcnt''")				//copy Stata matrix to mata
+		restore
 	}
 	
 	
@@ -162,16 +179,26 @@ program define tw3xls, sortpreserve rclass
 			local matcnt = `matcnt' + 1
 			
 			if "`coltot'" != "" & ("`sort'" != "" | "`rowtot'" != "" | `top'!=12344) {
+				mata: s1 = sum(`U`matcnt'')			//workaround for zero matrices
+				mata: st_local("s1", strofreal(s1))
+
 				* get row sum
 				mata: `U`matcnt'' = `U`matcnt'' , rowsum(`U`matcnt'')
 				* adjust rowsum by index value by substracting the first column (or rowid)
+				if `s1' > 0 {
 				mata: for (i=1; i<=rows(`U`matcnt''); i++) `U`matcnt''[i,cols(`U`matcnt'')] = `U`matcnt''[i,cols(`U`matcnt'')] - i
+				}
 				* get column sum
 				mata: `U`matcnt'' = `U`matcnt'' \ colsum(`U`matcnt'')				
 			}
 			else if "`sort'" != "" | "`rowtot'" != "" | `top'!=12344 {
+				mata: s1 = sum(`U`matcnt'')
+				mata: st_local("s1", strofreal(s1))
+				
 				* get row sum
+				if `s1' > 0 {
 				mata: `U`matcnt'' = `U`matcnt'' , rowsum(`U`matcnt'')
+				}
 				* adjust rowsum by index value by substracting the first column (or rowid)
 				mata: for (i=1; i<=rows(`U`matcnt''); i++) `U`matcnt''[i,cols(`U`matcnt'')] = `U`matcnt''[i,cols(`U`matcnt'')] - i
 			}

@@ -24,7 +24,7 @@ program msgraph
 			tempvar zeros
 			gen byte `zeros' = 0
 		}
-		if "`gen'"=="" local stub pred
+		if "`gen'"=="" local stub _prob_at1
 		else local stub `gen'
 		
 		cap numlist "`nstates'/1"

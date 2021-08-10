@@ -8,6 +8,9 @@ help for {hi:xcontract}{right:(Roger Newson)}
 {p 8 17 2}{cmd:xcontract} {it:varlist} [{it:weight}] [{cmd:if} {it:exp}] [{cmd:in} {it:range}] [{cmd:,}
  {break}
  {cmdab:li:st}{cmd:(} [{it:varlist}] [{cmd:if} {it:exp}] [{cmd:in} {it:range}] [ , [{it:list_options}] ] {cmd:)}
+ {break}
+ {cmdab:fra:me}{cmd:(} {it:framename} [ , replace {cmdab:ch:ange} ] {cmd:)}
+ {break}
  {cmdab:sa:ving}{cmd:(}{it:filename}[{cmd:,replace}]{cmd:)} {cmdab::no}{cmdab:re:store} {cmd:fast}
  {cmdab:fl:ist}{cmd:(}{it:global_macro_name}{cmd:)}
  {break}
@@ -24,7 +27,8 @@ help for {hi:xcontract}{right:(Roger Newson)}
  ]
 
 {p 4 4 2}
-{cmd:fweight}s are allowed; see help for {help weights}.
+{cmd:fweight}s, {cmd:aweight}s, {cmd:pweight}s, and {cmd:iweight}s are allowed, and are all treated in the same way;
+see help for {help weights}.
 
 
 {title:Description}
@@ -38,7 +42,7 @@ If the {cmd:by()} option is used, then the output data set
 has one observation per combination of values of the {it:varlist} variables per by-group,
 and percents are calculated within each by-group.
 The output data set created by {cmd:xcontract}
-may be listed to the Stata log, or saved to a disk file, or written to the memory
+may be listed to the Stata log, or saved to a {help frame:data frame}, or saved to a disk file, or written to the memory
 (overwriting any pre-existing data set).
 
 
@@ -57,7 +61,8 @@ may be listed to the Stata log, or saved to a disk file, or written to the memor
 
 {title:Output-destination options}
 
-{p 4 8 2}{cmd:list(}{it:varlist} [{cmd:if} {it:exp}] [{cmd:in} {it:range}] [, {it:list_options} ] {cmd:)}
+{p 4 8 2}
+{cmd:list(}{it:varlist} [{cmd:if} {it:exp}] [{cmd:in} {it:range}] [, {it:list_options} ] {cmd:)}
 specifies a list of variables in the output
 data set, which will be listed to the Stata log by {cmd:xcontract}.
 The {cmd:list()} option can be used with the {cmd:format()} option (see below)
@@ -69,35 +74,48 @@ or change the display style using a list of {it:list_options} allowed as options
 If {cmd:by(}{it:by_varlist}{cmd:)} is used, then the combinations are listed by the by-groups defined by
 {it:by_varlist}.
 
-{p 4 8 2}{cmd:saving(}{it:filename}[{cmd:,replace}]{cmd:)} saves the output data set to a disk file.
+{p 4 8 2}
+{cmd:frame(} {it:name}, [ {cmd:replace} {cmd:change} ] {cmd:)} specifies an output {help frame:data frame},
+to be generated to contain the output data set.
+If {cmd:replace} is specified, then any existing data frame of the same name is overwritten. 
+If {cmd:change} is specified,
+then the current data frame will be changed to the output data frame after the execution of {cmd:xcontract}.
+The {cmd:frame()} option may not specify the current data frame.
+To do this, use one of the options {cmd:norestore} or {cmd:fast}.
+
+{p 4 8 2}
+{cmd:saving(}{it:filename}[{cmd:,replace}]{cmd:)} saves the output data set to a disk file.
 If {cmd:replace} is specified, and a file of that name already exists,
 then the old file is overwritten.
 
-{p 4 8 2}{cmd:norestore} specifies that the output data set will be written to the memory,
+{p 4 8 2}
+{cmd:norestore} specifies that the output data set will be written to the memory,
 overwriting any pre-existing data set. This option is automatically set if {cmd:fast} is
 specified. Otherwise, if {cmd:norestore} is not specified, then the pre-existing data set is restored
 in the memory after the execution of {cmd:xcontract}.
 
-{p 4 8 2}{cmd:fast} is a stronger version of {cmd:norestore}, intended for use by programmers.
+{p 4 8 2}
+{cmd:fast} is a stronger version of {cmd:norestore}, intended for use by programmers.
 It specifies that the pre-existing data set in the memory will not be restored,
 even if the user presses {helpb break:Break} during the execution of {cmd:xcontract}.
 If {cmd:norestore} is specified and {cmd:fast} is absent,
 then {cmd:xcontract} will go to extra work so that
 it can restore the original data if the user presses {helpb break:Break}.
 
-{p 4 8 2}Note that the user must specify at least one of the four options {cmd:list()}, {cmd:saving()}, {cmd:norestore}
+{p 4 8 2}
+Note that the user must specify at least one of the four options {cmd:list()}, {cmd:saving()}, {cmd:norestore}
 and {cmd:fast}. These four options specify whether the output data set is listed to the Stata log,
 saved to a disk file, or written to the memory (overwriting any pre-existing data set). More than
 one of these options can be specified.
 
-{p 4 8 2}{cmd:flist(}{it:global_macro_name}{cmd:)} specifies the name of a global macro, containing
+{p 4 8 2}
+{cmd:flist(}{it:global_macro_name}{cmd:)} specifies the name of a global macro, containing
 a filename list (possibly empty). If {cmd:saving()} is also specified, then
 {cmd:xcontract} will append the name of the data set specified in the
 {cmd:saving()} option to the value of the global macro specified in {cmd:flist()}. This
 enables the user to build a list of filenames in a global macro, containing the
 output of a sequence of output data sets.
-These files may later be concatenated using {helpb append}, or using {helpb dsconcat}
-(downloadable from {help ssc:SSC}) if installed.
+These files may later be concatenated using {helpb append}.
 
 
 {title:Output-variable options}
@@ -139,7 +157,7 @@ and the number of observations, respectively, within the whole data set, not wit
 It is used to create a numeric variable, with default name {hi:idnum}, in the output data set,
 with that value for all observations.
 This is useful if the output data set is concatenated with other {cmd:xcontract} output data sets
-using {helpb append}, or using {helpb dsconcat} if installed.
+using {helpb append}.
 
 {p 4 8 2}{cmd:nidnum(}{it:newvarname}{cmd:)} specifies a name for the numeric ID variable
 evaluated by {cmd:idnum()}. If {cmd:idnum()} is present and {cmd:nidnum()} is absent,
@@ -149,7 +167,7 @@ then the name of the numeric ID variable is set to {hi:idnum}.
 It is used to create a string variable, with default name {hi:idstr} in the output data set,
 with that value for all observations.
 This is useful if the output data set is concatenated with other {cmd:xcontract} output data sets
-using {helpb append}, or using {helpb dsconcat} if installed.
+using {helpb append}.
 
 {p 4 8 2}{cmd:nidstr(}{it:newvarname}{cmd:)} specifies a name for the string ID variable
 evaluated by {cmd:idstr()}. If {cmd:idstr()} is present and {cmd:nidstr()} is absent,
@@ -220,6 +238,25 @@ The following examples use the {cmd:saving()} option to create an output data se
 
 {p 4 8 2}{cmd:. xcontract _all,  saving(myfreq5.dta,replace)}
 
+{p}
+The following examples use the {cmd:frame()} option to create an output data set in a data frame.
+
+{p 4 8 2}{cmd:. sysuse auto, clear}{p_end}
+{p 4 8 2}{cmd:. xcontract rep78, by(foreign) frame(outframe)}{p_end}
+{p 4 8 2}{cmd:. frame outframe {c -(}}{p_end}
+{p 4 8 2}{cmd:. describe, full}{p_end}
+{p 4 8 2}{cmd:. by foreign: list, abbr(32)}{p_end}
+{p 4 8 2}{cmd:. {c )-}}{p_end}
+{p 4 8 2}{cmd:. frame drop outframe}{p_end}
+
+{p 4 8 2}{cmd:. sysuse auto, clear}{p_end}
+{p 4 8 2}{cmd:. xcontract rep78, by(foreign) frame(outframe, replace change)}{p_end}
+{p 4 8 2}{cmd:. describe, full}{p_end}
+{p 4 8 2}{cmd:. twoway bar _percent rep78 [fweight=_freq], hori by(foreign, col(1)) yscale(reverse) ylab(1(1)5)}{p_end}
+{p 4 8 2}{cmd:. frame change default}{p_end}
+{p 4 8 2}{cmd:. describe, full}{p_end}
+{p 4 8 2}{cmd:. frame drop outframe}{p_end}
+
 
 {title:Acknowledgements}
 
@@ -227,14 +264,17 @@ The following examples use the {cmd:saving()} option to create an output data se
 I would like to thank Nicholas J. Cox of Durham University, UK
 for some very helpful advice about writing efficient code,
 and also for writing the original version of {helpb contract}, from which I re-engineered some of
-the code for {cmd:xcontract}. I would also like to thank StataCorp for writing {helpb fillin}, from which
+the code for {cmd:xcontract}.
+I would also like to thank Jeremy Freese of Stanford University for writing the {help ssc:SSC} package {helpb frameappend},
+from which I also re-engineered some of the code for {cmd:xcontract}.
+I would also like to thank StataCorp for writing {helpb fillin}, from which
 I also re-engineered some of the code for {cmd:xcontract}.
 
 
 {title:Author}
 
 {p}
-Roger Newson, National Heart and Lung Institute, Imperial College London, UK.
+Roger Newson, Imperial College London, UK.
 Email: {browse "mailto:r.newson@imperial.ac.uk":r.newson@imperial.ac.uk}
 
 
@@ -248,5 +288,5 @@ Manual:  {hi:[R] contract}, {hi:[R] collapse}, {hi:[R] fillin}, {hi:[R] compress
 {p 4 13 2}
 Online:  help for {helpb contract}, {helpb collapse}, {helpb fillin}, {helpb compress}, {helpb format},
 {helpb expand}, {helpb duplicates}
-{break} help for {helpb xcollapse}, {helpb dsconcat} if installed
+{break} help for {helpb xcollapse} if installed
 {p_end}

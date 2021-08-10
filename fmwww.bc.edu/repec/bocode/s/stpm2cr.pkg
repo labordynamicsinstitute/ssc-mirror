@@ -15,7 +15,7 @@ d KW: survival
 d
 d Requires: Stata version 14.1
 d
-d Distribution-Date: 20160926
+d Distribution-Date: 20210112
 d
 d Author:  Sarwar Islam, University of Leicester
 d Support: email  si113@@leicester.ac.uk
@@ -28,6 +28,9 @@ d Support: email  mark.rutherford@@leicester.ac.uk
 d
 f stpm2cr.ado
 f stpm2cr_pred.ado
+f stpm2cifgq.ado
+f stpm2_prefix.ado
+f stpm2cr_pred_csh.ado
 f stpm2cr_ml_lf_hazard.ado
 f stpm2cr_ml_lf_multi.ado
 f stpm2cr_ml_lf_odds.ado

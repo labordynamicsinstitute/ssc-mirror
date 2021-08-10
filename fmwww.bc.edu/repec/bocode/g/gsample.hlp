@@ -1,6 +1,7 @@
 {smcl}
-{* 13aug2014}{...}
-{cmd:help gsample}
+{* 25oct2020}{...}
+{cmd:help gsample}{...}
+{right:{browse "http://github.com/benjann/gsample/"}}
 {hline}
 
 {title:Title}
@@ -25,12 +26,16 @@
 {synoptline}
 {synopt :{opt p:ercent}}sample size is in percent{p_end}
 {synopt :{opt wor}}sample without replacement{p_end}
+{synopt :{opt alt}}use alternative (faster) SRSWOR algorithm{p_end}
+{synopt :{opt nowarn}}allow repetitions in case of UPSWOR{p_end}
 {synopt :{opth str:ata(varlist)}}variables identifying strata{p_end}
-{synopt :{opth cl:uster(varlist)}}variables identifying resampling clusters{p_end}
+{synopt :{opt rr:ound}}use random rounding for sample sizes across strata{p_end}
+{synopt :{opth cl:uster(varlist)}}variables identifying resampling clusters (primary sampling units){p_end}
 {synopt :{opth id:cluster(newvar)}}create new cluster ID variable{p_end}
 {synopt :{opt k:eep}}keep observations that do not meet {it:{help if}} and {it:{help in}}{p_end}
 {synopt :{opth g:enerate(newvar)}}store sampling frequencies in {it:newvar} {p_end}
 {synopt :{opt r:eplace}}overwrite existing variables{p_end}
+{synopt :{opt nopr:reserve}}do not restore original data on break or error{p_end}
 {synoptline}
 {p2colreset}{...}
 {p 4 6 2}
@@ -52,7 +57,8 @@ Alternatively, {cmd:gsample} may store a new variable containing the sampling
 frequencies of the observations (see the {opt generate(newvar)} option). In the
 case of sampling without replacement (see the {opt wor} option), the sample
 size must be less than or equal to the number of sampling units in the data.
-Sampling units are either single observations or clusters identified by the
+
+{pstd} Sampling units are either individual observations or clusters identified by the
 {opt cluster()} option. If {it:#} is not specified or if {it:#}==., the sample
 size is equal to the observed number of units in the data. For stratified
 sampling, {it:#} units will be selected from each stratum identified by the
@@ -61,10 +67,11 @@ where {it:varname} is a variable containing for each stratum a specific sample
 size. {it:varname} is assumed to be constant within strata.
 
 {pstd} Specifying weights causes unequal probability sampling (UPS/PPS) to be
-performed. The sampling probabilities of the observations will be proportional
-to the specified weights in this case (it doesn't matter whether you specify
+performed. The sampling probabilities of the units will be proportional
+to the specified weights in this case (it does not matter whether you specify
 {cmd:iweight}s or {cmd:aweight}s, the result will be the same; you may also
-simply type {cmd:w} instead of {cmd:iweight} or {cmd:aweight}).
+simply type {cmd:w} instead of {cmd:iweight} or {cmd:aweight}). The weights are
+assumed to be constant within clusters if option {cmd:cluster()} is specified.
 
 {pstd} {cmd:gsample} is implemented as a wrapper for the {cmd:mm_sample()}
 function from the {cmd:moremata} package. See help for 
@@ -91,24 +98,69 @@ number seed; see help {helpb generate}.
 
 {phang}
 {opt percent} indicates that {it:#} (or {it:varname}) specifies the percentage
-of observations to be sampled. For example,
+of sampling units (observations or clusters) 
+to be sampled. For example,
 
             {com}. gsample 50, percent{txt}
 
-{pmore} draws a 50% sample. For stratified sampling, a {it:#}-percent sample is
-drawn from each stratum, thus maintaining the proportion of each stratum.
+{pmore} draws a 50% sample. For stratified sampling, a {it:#}-percent sample of 
+units is drawn from each stratum, thus maintaining the proportion of each stratum
+(in terms sampling units). If option {cmd:cluster()} has been specified, the 
+sampling units are clusters, so that {it:#}-percent of clusters will be drawn, not {it:#}-percent 
+of observations. This implies that, in this case, the proportion of each stratum is 
+maintained with respect to the number clusters, not necessarily with 
+respect to the number of individual observations.
 
-{phang} {opt wor} causes the observations to be sampled without replacement
-(each observation may only be drawn once). The default is to sample with
-replacement (observations may be drawn multiple times).
+{phang} {opt wor} causes the units to be sampled without replacement
+(each unit may only be drawn once). The default is to sample with
+replacement (units may be drawn multiple times).
+
+{phang} {opt alt} uses an alternative (typically much faster) algorithm for
+simple random sampling without replacement (SRSWOR). {cmd:alt} is only relevant
+if {cmd:wor} is specified and if no weights are provided. The alternative algorithm
+is superior to the default algorithm, but has not been
+available in earlier version of {cmd:gsample}.
+
+{phang} {opt nowarn} allow repetitions in case of unequal probability 
+sampling without replacement (UPSWOR). {cmd:nowarn} is only relevant
+if {cmd:wor} is specified and if weights are provided. The default is to stop
+execution if the data configuration is such that unbiased UPSWOR is not 
+possible (see {help mf_mm_sample##r8:Unequal Probability Sampling/PPS Sampling} in 
+{helpb mf_mm_sample:mm_sample()} for an explanation of the problem). {cmd:nowarn}
+relaxes this restriction and returns a sample even if the conditions for UPSWOR 
+are not satisfied; single units may be drawn repeatedly in such a sample.
 
 {phang} {opth strata(varlist)} specifies the variables identifying strata. If
 {opt strata()} is specified, samples are selected within each stratum. The
 strata variables may be numeric or string.
 
+{phang} {opt rround} applies random rounding to non-integer sample sizes across
+strata. The option is only relevant if {cmd:strata()} has been specified. In general, 
+{cmd:gsample} rounds sample sizes to the next integer. For example, 45
+units will be sampled if the sample size is set to 45.3; likewise, 46 units
+are sampled if the sample size is set to 45.8. In case of stratified
+sampling, by default, such rounding is applied within each stratum 
+individually. Use {cmd:rround} to change this behavior. If {cmd:rround} is 
+specified, the total sample size is determined by rounding the
+sum of the (unrounded) sample sizes across all strata. Random rounding is then applied 
+within strata in a way such that the total sample size is maintained. For
+example, if you set the sample size to 33.3, the default behavior is to sample
+33 units from each stratum, yielding a total sample size of 99. If you specify,
+{cmd:rround} the total sample size will be 100 (since 3 times 33.3 is 
+99.9). {cmd:gsample} will then draw 33 observations from two of the strata and 34
+observations from the remaining stratum. The stratum from which 34 observations
+are drawn is determined randomly, using probabilities proportional to the
+non-integer parts of the strata-specific sample sizes. In the above example,
+each stratum has a probability of 1/3 (= 0.3/(.3+.3+.3)) to be selected as the
+one from which 34 observations are drawn. If the strata-specific sample sizes
+were 33.3 for the first two strata and 33.4 for third stratum, the probabilities would be
+30% each for the first two strata and 40% for the third stratum.
+
 {phang} {opth cluster(varlist)} specifies the variables identifying sampling
-clusters. If {opt cluster()} is specified, the sample drawn is a sample of
-clusters. The cluster variables may be numeric or string.
+clusters (i.e., the primary sampling units). If {opt cluster()} is specified, 
+the sample drawn is a sample of clusters. The cluster variables may be
+numeric or string. If weights are specified together with {cmd:cluster()}, the
+weights are assumed constant within each cluster.
 
 {phang} {opth idcluster(newvar)} creates a new variable containing a unique
 identifier for each sampled cluster. This is particularly useful when sampling
@@ -117,8 +169,8 @@ with replacement.
 {phang} {opt keep} causes observations that do not meet the optional 
 {it:{help if}} and {it:{help in}} criteria (and observations that are missing
 on any of the input variables or have zero weight) to be kept (sampled at
-100%). The default is to drop these observations. Alternatively, if {opt
-generate()} is specified, {opt keep} changes the stored sampling frequencies of
+100%). The default is to drop these observations. Alternatively, if 
+{cmd:generate()} is specified, {cmd:keep} changes the stored sampling frequencies of
 these observations from zero to one.
 
 {phang} {opth generate(newvar)} causes a variable containing sampling
@@ -131,6 +183,11 @@ input variables or have zero weight) depending on whether {opt keep} is
 specified or not.
 
 {phang} {opt replace} permits {cmd:gsample} to overwrite existing variables.
+
+{phang} {opt nopreserve} prevents {cmd:gsample} from restoring the original
+data if an error occurs or if the user presses {cmd:Break}. This saves a little
+bit of computer time. {cmd:nopreserve} is irrelevant if {cmd:generate()} has
+been specified.
 
 
 {title:Examples}
@@ -159,9 +216,9 @@ sampling probabilities proportional to {cmd:size}.
 
 {title:Author}
 
-{pstd} Ben Jann, University of Bern, jann@soz.unibe.ch
+{pstd} Ben Jann, University of Bern, ben.jann@soz.unibe.ch
 
-{pstd} You may cite this software as follows:
+{pstd} Please cite this software as follows:
 
 {pmore}
 Jann, B. (2006). gsample: Stata module to draw a random sample. Available from

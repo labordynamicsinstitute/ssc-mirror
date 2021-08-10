@@ -1,25 +1,23 @@
-d 'RUNMIXREGLS': module to run the MIXREGLS software from within Stata
-d
-d  This module runs the MIXREGLS mixed-effects location scale
-d software (Hedeker and Nordgren 2013) from within Stata. The
-d mixed-effects location scale model extends the standard two-level
-d random-intercept mixed-effects model for continuous responses
-d (xtreg, mle) in three ways. First, the (log of the) within- and
-d between-group variances are further modeled as functions of the
-d covariates. Second, a new random effect, referred to as the
-d random-scale effect, is then entered into the within-group
-d variance function to account for any unexplained group
-d differences in the residual variance. The existing
-d random-intercept effect is now referred to as the random-location
-d effect. Third, a group-level association between the location and
-d the scale may be allowed for by entering the random-location
-d effect into the within-group variance function using either a
-d linear or quadratic functional form. The regression coefficients
-d of these linear and quadratic terms are then estimated. The
-d distributions of the random- location and random-scale effects
-d are assumed to be Gaussian. 
-d
-d KW:  mixed-effects local scale model
+v 3
+d 'RUNMIXREGLS': Run the MIXREGLS software from within Stata
+d       
+d This module runs the MIXREGLS mixed-effects location scale software
+d (Hedeker and Nordgren 2013) from within Stata. The mixed-effects location
+d scale model extends the standard two-level random-intercept mixed-effects
+d model for continuous responses (xtreg, mle) in three ways. First, the (log
+d of the) within- and between-group variances are further modeled as
+d functions of the covariates. Second, a new random effect, referred to as
+d the random-scale effect, is then entered into the within-group variance
+d function to account for any unexplained group differences in the residual
+d variance. The existing random-intercept effect is now referred to as the
+d random-location effect. Third, a group-level association between the
+d location and the scale may be allowed for by entering the random-location
+d effect into the within-group variance function using either a linear or
+d quadratic functional form. The regression coefficients of these linear and
+d quadratic terms are then estimated. The distributions of the random-
+d location and random-scale effects are assumed to be Gaussian.
+d 
+d KW: mixed-effects local scale model
 d KW: mixed-effects model
 d KW: mixed model
 d KW: multilevel model
@@ -35,15 +33,52 @@ d KW: runmixregls
 d KW: MIXREGLS
 d KW: xtreg
 d KW: xtmixed
+d KW: mixed
+d KW: me
 d KW: runmlwin
 d KW: gllamm
-d
-d Requires: Stata version 12 and  mixregls software
-d
-d Distribution-Date: 20160627
-d
+d 
+d Requires: Stata version 12.0 or higher
+d 
+d Distribution-Date: 20210204
+d 
 d Author: George Leckie, Centre for Multilevel Modelling, University of Bristol
-d Support: email g.leckie@@bristol.ac.uk
+d Support: email g.leckie@bristol.ac.uk
+d
+d Author: Chris Charlton, Centre for Multilevel Modelling, University of Bristol
 d
 f runmixregls.ado
 f runmixregls.sthlp
+f runmixregmls.ado
+f runmixregmls.sthlp
+f runmixreg.ado
+g WIN32 mixregls_plugin.win32 mixregls.plugin
+g WIN32 mixreg_plugin.win32 mixreg.plugin
+G WIN32 mixregls_lib.win32 mixregls.dll
+G WIN32 mixreg_lib.win32 mixreg.dll
+g WIN64 mixregls_plugin.win64 mixregls.plugin
+g WIN64 mixreg_plugin.win64 mixreg.plugin
+G WIN64 mixregls_lib.win64 mixregls.dll
+G WIN64 mixreg_lib.win64 mixreg.dll
+g WIN64A mixregls_plugin.win64 mixregls.plugin
+g WIN64A mixreg_plugin.win64 mixreg.plugin
+G WIN64A mixregls_lib.win64 mixregls.dll
+G WIN64A mixreg_lib.win64 mixreg.dll
+g LINUX mixregls_plugin.lin32 mixregls.plugin
+g LINUX mixreg_plugin.lin32 mixreg.plugin
+G LINUX mixregls_lib.lin32 mixregls.so.1
+G LINUX mixreg_lib.lin32 mixreg.so.1
+g LINUX64 mixregls_plugin.lin64 mixregls.plugin
+g LINUX64 mixreg_plugin.lin64 mixreg.plugin
+G LINUX64 mixregls_lib.lin64 mixregls.so.1
+G LINUX64 mixreg_lib.lin64 mixreg.so.1
+g MACINTEL64 mixregls_plugin.mac mixregls.plugin
+g MACINTEL64 mixreg_plugin.mac mixreg.plugin
+G MACINTEL64 mixregls_lib.mac mixregls.dynlib
+G MACINTEL64 mixreg_lib.mac mixreg.dynlib
+g OSX.X8664 mixregls_plugin.mac mixregls.plugin
+g OSX.X8664 mixreg_plugin.mac mixreg.plugin
+G OSX.X8664 mixregls_lib.mac mixregls.dynlib
+G OSX.X8664 mixreg_lib.mac mixreg.dynlib
+h mixregls.plugin
+h mixreg.plugin

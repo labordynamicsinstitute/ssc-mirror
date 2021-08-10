@@ -12,13 +12,13 @@ d KW: Stata output
 d KW: Stata log
 d KW: reproducible research
 d
-d Requires: Stata version 9.2 
+d Requires: Stata version 10 
 d
-d Distribution-Date: 20170314
+d Distribution-Date: 20191111
 d
 d Author: Ben Jann, University of Bern
 d Support: email jann@@soz.unibe.ch
 d
 f webdoc.ado
-f webdoc.hlp
+f webdoc.sthlp
 f webdoc.zip

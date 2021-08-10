@@ -17,9 +17,9 @@ d Requires: Stata version 8.0
 d
 d
 d Author: Paul H. Bern, Syracuse University 
-d Support: email  PHBern@@syr.edu
+d Support: email PHBern@@syr.edu
 d
 d Distribution-Date: 20050330
-
+d
 f codebook2.ado
 f codebook2.hlp

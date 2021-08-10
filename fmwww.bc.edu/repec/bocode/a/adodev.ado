@@ -6,17 +6,10 @@ version 10.0;
  UPDATES, BASE, ., PERSONAL, PLUS, SITE and OLDPLACE
  (for development work).
 *!Author: Roger Newson
-*!Date: 29 March 2009
+*!Date: 10 November 2017
 *;
 
 qui{;
-  cap adopath - .;
-  cap dopath - BASE;
-  cap adopath - UPDATES;
-  cap adopath - PERSONAL;
-  cap adopath - PLUS;
-  cap adopath - SITE;
-  cap adopath - OLDPLACE;
   adopath ++ OLDPLACE;
   adopath ++ SITE;
   adopath ++ PLUS;

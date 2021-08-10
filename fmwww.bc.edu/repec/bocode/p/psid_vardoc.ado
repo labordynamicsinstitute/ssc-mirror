@@ -1,4 +1,4 @@
-*! version 1.1 Juni 3, 2015 @ 09:46:03
+*! version 1.1 Dezember 8, 2016 @ 14:13:57
 *! Show variable documentation from the Internet
 program psid_vardoc
 version 13
@@ -50,11 +50,12 @@ version 13
 
 	// Addvaluelabel
 	if "`addvaluelabel'" != "" {
-		tempfile htmlfile
-		tempname html
+		tempfile htmlfile cleaned
+		tempname html 
 		copy `"http://simba.isr.umich.edu/cb.aspx?vList=`item'"' `htmlfile'
-
-		file open `html' using `htmlfile', read
+		filefilter `htmlfile' `cleaned', from(`""\RQ"') to(`"""')
+		
+		file open `html' using `cleaned', read
 		file read `html' line
 		while r(eof)==0 {
 			if regexm(`"`macval(line)'"',`".+"codeValue".+>([0-9]+)+<"') {

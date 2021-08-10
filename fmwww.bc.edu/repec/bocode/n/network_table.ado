@@ -1,6 +1,9 @@
 /*
-*! version 1.1 # Ian White # 8jun2015 
-8jun2015: "binomial" changed to "count"
+*! version 1.3.0 # Ian White # 17aug2017 
+	drops unwanted variables before reshape 
+	(avoids failure e.g. if a variable starts "d")
+version 1.1 # Ian White # 8jun2015 
+	"binomial" changed to "count"
 14mar2015
 	for disconnected networks, tabulates by component
 version 1.0 # Ian White # 9Sep2014 
@@ -37,6 +40,15 @@ foreach trt in `ref' `trtlistnoref' {
         local keeplist `keeplist' `type'`trt'
 	}
 }
+
+* new 17aug2017: keep only variables needed
+local keepvars `studyvar'
+foreach rawvar of local rawvars {
+	foreach trt in `ref' `trtlistnoref' {
+		local keepvars `keepvars' `rawvar'`trt'
+	}
+}
+keep `keepvars'
 
 tempvar trt A stat
 * reformat data and display

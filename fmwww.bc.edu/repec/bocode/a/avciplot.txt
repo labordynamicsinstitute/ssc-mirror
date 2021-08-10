@@ -1,0 +1,35 @@
+TITLE
+      'AVCIPLOT': produces added-variable plots with confidence intervals
+
+DESCRIPTION/AUTHOR(S)
+      
+		-avciplot- produces added-variable plots after -regress- 
+		estimations to show the partial correlation of one 
+		regressor with the outcome variable, controlling for all 
+		the other regressors. This is similar to the Stata -avplot- 
+		command, but adds confidence intervals and other options.
+		
+		-avciplots- produces a combined graph of added-variable 
+		plots from all the regressors in the previous regression.	
+
+      KW: added-variable plot
+      KW: partial correlation
+      KW: confidence interval
+      KW: avplot
+      
+      Requires: Stata version 11
+      
+      Distribution-Date: 20190424
+      
+      Author: John Luke Gallup, Portland State University
+      Support: email jlgallup@pdx.edu
+      
+
+INSTALLATION FILES                               (type net install avciplot)
+	  avciplot_sj.pdf
+	  avciplot.ado
+	  avciplot.sthlp
+	  avciplot.zip
+	  avciplots.ado
+	  avciplots.sthlp
+	  test_avciplot.do

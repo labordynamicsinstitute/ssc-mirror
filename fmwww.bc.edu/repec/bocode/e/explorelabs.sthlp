@@ -99,11 +99,11 @@ Explore only those labels that contain "{input:answer}", take all labels into ac
 
 {title:Author}
 {p 4 4 2 70}
-Malte Kaukal, GESIS Leibniz Institute for the Social Sciences malte.kaukal@gesis.org
+Malte Kaukal, Hessen State Statistical Office malte.kaukal@gmx.de
 
 {pstd}Thank you for citing this software as follows:
 
-{pmore}Kaukal, Malte.2017. EXPLORELABS: Stata module to explore the use of value labels.
+{pmore}Kaukal, Malte.2017. EXPLORELABS: Stata module to explore the use of value labels. Available from https://EconPapers.repec.org/RePEc:boc:bocode:s458299.
 
 {title:Acknowledgement}
 {p 4 4 2}

@@ -1,4 +1,4 @@
-*! ranktest9 1.3.05 22Jan2015
+*! ranktest9 1.3.06 18Aug2015
 *! based on ranktest 1.3.04 and livreg2 Mata library 1.1.07
 *! author mes, based on code by fk
 *! see end of file for version comments
@@ -450,6 +450,9 @@ di "Test of rank=" %3.0f `rkmatrix'[`i',4] "  rk=" %8.2f `rkmatrix'[`i',1] /*
 	matrix colnames `S' = `cn'
 	matrix rownames `S' = `cn'
 	return matrix S `S'	
+
+	return local cmd		"ranktest9"
+	return local version	`lversion'
 end
 
 * Adopted from -canon-
@@ -1368,7 +1371,8 @@ end
 * 1.3.03  01Jan14. Fixed reporting bug with 2-way clustering and kernel-robust that would give
 *         wrong count for 2nd cluster variable.
 * 1.3.04  24Aug14. Fixed bug in markout - would include obs where some vars were missing
-* 1.3.05  22Jan14. First version of ranktest9. Mata library now internal with names incorporating "_ranktest9_".
+* 1.3.05  22Jan15. First version of ranktest9. Mata library now internal with names incorporating "_ranktest9_".
+* 1.3.06  18Aug15. Added r(cmd) and r(version) macros.
 
 * Version notes for imported version of Mata library
 * 1.1.01     First version of library.

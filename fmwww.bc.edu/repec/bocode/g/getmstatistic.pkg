@@ -1,7 +1,7 @@
 d 'GETMSTATISTIC': module to Quantify Systematic Heterogeneity in Meta-Analysis
 d
 d  getmstatistic computes M statistics to assess the contribution
-d of each participating study  in a meta-analysis. It's primary use
+d of each participating study  in a meta-analysis. Its primary use
 d is to identify outlier studies, which either	show "null" effects
 d or consistently show stronger or weaker genetic effects than
 d average,  across the panel of variants examined in a GWAS
@@ -15,9 +15,9 @@ d KW: M-statistic
 d KW: meta-analysis
 d KW: systematic heterogeneity
 d
-d Requires: Stata version 10
+d Requires: Stata version 10 and latabstat, metareg, savesome, qqvalue from SSC or SJ (q.v.)
 d
-d Distribution-Date: 20170518
+d Distribution-Date: 20180731
 d
 d Author: Lerato Magosi, University of Oxford 
 d Support: email  lerato.magosi@@keble.ox.ac.uk

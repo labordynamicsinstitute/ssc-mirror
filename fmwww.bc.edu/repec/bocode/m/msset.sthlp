@@ -60,7 +60,12 @@ case the state with the smallest transition number is chosen, with the other sta
 	{bf:_status}  status variable, indicating a transition (coded 1) or censoring (coded 0)
 	{bf:_flag}    indicator variable to show observations where changes to the original data have been made
 	
+{phang}
+{cmd:predictms} is part of the {cmd:multistate} package by Michael Crowther and Paul Lambert. Further 
+details here: {bf:{browse "https://www.mjcrowther.co.uk/software/multistate":mjcrowther.co.uk/software/multistate}}
+{p_end}
 
+	
 {marker options}{...}
 {title:Options}
 
@@ -123,6 +128,10 @@ is stored in {cmd:os}, with event indicator {cmd:osi}.
 
 {phang}
 Please report any errors you may find.{p_end}
+
+{phang}
+{cmd:msset} is part of the {cmd:multistate} package by Michael Crowther and Paul Lambert.
+{p_end}
 
 
 {title:References}

@@ -1,0 +1,367 @@
+/*===================================================================================*/
+/*	Comment																			*/
+/*	Application short title: OPTvTAM 														*/
+/*	Application full title: Gauss Module for Option Pricing via Two Alternative Methods 				*/
+/*	Authors: Abdulnasser Hatemi-J and Alan Mustafa											*/
+/*	The UAE University and the IEEE														*/
+/*	E-mails: (AHatemi@uaeu.ac.ae) and (alan.mustafa@ieee.org)								*/
+/*																					*/
+/*	Options as derivative securities are regularly used by investors and financial institutions. A  		*/
+/*	crucial issue within this context is to determine the fair price of an option. The Black and Scholes  	*/
+/*	(1973) model is regualarly applied for this purpose.  El-Khatib and Hatemi-J (2017) provide a model */
+/*	that can be useful for option pricing during a financial crisis. This Gauss module estimates the 	*/
+/*	premium for European call and put options using these two mentioned alternative models. 		*/
+/*	In addition, it calculates the price sensitivities (i.e. the Greeks) based on both models. 			*/																	
+/*																					*/
+/*	-Black F. and Scholes M. (1973), The Pricing of Options and Corporate Liabilities, Journal 		*/
+/*	of Political Economy, 81(3),  637-654.													*/
+/*																	                                */
+/*	--El-Khatib, Y. and Hatemi-J, A. (2017), 'Option valuation and hedging in markets with a crunch,	*/
+/*	Journal of Economic Studies, 44(5), 801-815. https://doi.org/10.1108/JES-04-2016-0083.			*/
+/*																					*/
+/*	This program code is the copyright of the authors. Applications are allowed only if proper reference	*/
+/*	and acknowledgments are provided. For non-Commercial applications only. No performance		*/
+/*	guarantee is made. Bug reports are welcome. If this code is used for research or in any other		*/
+/*	code, proper attribution needs to be included.											*/
+/*																					*/
+/*																					*/
+/*	� 2021 Prof. Abdulnasser Hatemi-J and Dr. Alan Mustafa									*/
+/*===================================================================================*/
+
+/*===================================================================================*/
+/*	INSTRUCTION ON USING THIS APPLICATION											*/
+/*																					*/
+/*	Step 1: Provide the inputs (i.e. the standard deviation, the risk free rate, spot price, maturity, exercise 
+        price, the dividend rate (default value is zero, the parameter for the crisis).				                */
+/*	Step 2: The code is ready to run.														*/
+/*===================================================================================*/
+
+/*=======================================================*/
+/*				Start of Clearing off the screen				*/
+/*=======================================================*/
+new;
+cls;
+/*=======================================================*/
+/*				End of Clearing off the screen					*/
+/*=======================================================*/
+
+/*===========================================================================*/
+/*			Start of Calculating Options											*/
+/*===========================================================================*/
+
+
+sig = 0.2;		/* The standard deviation of the original asset. */ 												/*B2*/ /*G2*/
+r = 0.05;		/*The risk free rate. */																	/*B3*/ /*G3*/
+s = 1200;		/*The spot price of the undelrying asset.*/													/*B4*/ /*B4*/
+T = 0.5;		/*Maturity as a proportion of a year.*/ 														/*G5*//*B5*/ /*G5*/
+k = 1250;		 /*Exercise price of the option.*/															/*B6*/ /*G6*/
+q = 0.02;		/*Dividend as a proportion of the share price.*/												/*J2*/
+beta = 0.5;	/*The parameter value that accounts for the effect of a crisis in the El-Khatib and Hatemi-J model.*/     	/*J3*/
+
+print "============================================================================================================";
+print "|																											|";
+print "|				Title of the Software Component: Gauss Module forOption Pricing  via Two Alternative Methods				|";
+print "|																											|";
+print "============================================================================================================";
+print "";
+
+print "===============================================================";
+print "			Input Variables";
+print "===============================================================";
+print "sig = " sig "	The standard deviation of the original asset.";
+print "r = " r "	The risk free rate.";
+print "s = " s "		The spot price of the underlying asset."';
+print "T = " T "	Maturity as a proportion of a year.";
+print "k = " k "		Exercise price of the option.";
+print "q = " q "	Dividend as a proportion of the share price.";
+/*print "beta = " beta "	The parameter value that accounts for the effect of a crisis in the El-Khatib and Hatemi-J model.";*/
+print "beta = " beta "	The parameter value that accounts for the";
+print "					effect of a crisis in the El-Khatib and Hatemi-J model.";
+
+print "===============================================================";
+print "";
+
+
+/*===========================================================================*/
+/*			Start of calculating Options based on Black and Scholes (1973) model		*/
+/*===========================================================================*/
+
+call Opt_BlackScholes(sig,r,s,T,k,q);
+
+proc Opt_BlackScholes(sig,r,s,T,k,q);
+
+print "===============================================================";
+print "			Via Black and Scholes (1973) model";
+print "===============================================================";
+
+local S_prime,D1,ND1,D2,ND2,Cc,N_negD1,Pp,N_negD2,Np_negD1,delta_call,delta_put,gama_call,gama_put,theta_call,theta_put,daily_theta_call,daily_theta_put,vega_call,vega_put,rho_call,rho_put;
+
+/*S_prime = B4*EXP(-E2*B5)*/							 /*E4*/
+S_prime = s * exp(-q*T);
+print "S_prime = " S_prime;
+
+/*D1 = (LN((B4)/(B6))+(B3+B2*B2*0.5)*B5)/(B2*SQRT(B5)) */		/*B8*/
+/*D1 = (LN((B4)/(B6))+(B3-E2+B2*B2*0.5)*B5)/(B2*SQRT(B5)) */	/*B8*/
+D1 = (ln(s/k) + (r + -q + sig * sig * 0.5) * T) / (sig * sqrt(T));
+print "D1 = " D1;
+
+/* N(D1) = NORM.S.DIST(B8,TRUE) */						/*D8*/
+ND1 = cdfn(D1);
+print "ND1 = " ND1;
+
+/*D2 = B8-B2*SQRT(B5)*/								/*B9*/
+D2 = D1 - sig * sqrt(T);
+print "D2 = " D2;
+
+/* N(D2) = NORM.S.DIST(B9,TRUE) */						/*D9*/
+ND2 = cdfn(D2);
+print "ND2 = " ND2;
+
+/*Cc = B4 * D8 - (EXP(-B3 * B5) * B6) * D9 */					/*B10*/
+/*Cc = E4 * D8 - (EXP(-B3 * B5) * B6) * D9 */					/*B10*/
+Cc = S_prime * ND1 - (exp(-r * T) * k) * ND2;
+print "Premium for the Call Option = " Cc;
+
+/* N(-D1) =NORM.S.DIST(-B8,TRUE) */						/*D10*/
+N_negD1 = cdfn(-D1);
+print "N_negD1 = " N_negD1;
+
+/*Pp = B6*EXP(-B3*B5)+B10-B4*/							/*B11*/
+/*Pp = B6*EXP(-B3*B5)+B10-E4*/							/*B11*/
+Pp = k * exp(-r * T) + Cc - S_prime;
+print "Premium for the Put Option = " Pp;
+
+/* N(-D2) =NORM.S.DIST(-B9,TRUE) */						/*D11*/
+N_negD2 = cdfn(-D2);
+print "N_negD2 = " N_negD2;
+
+/* N'(D1) =NORM.S.DIST(B8,FALSE) */						/*D12*/
+Np_negD1 = pdfn(D1);
+print "Np_negD1 = " Np_negD1;
+
+/*-----------------------------------------------------------------------------------------------------------------*/
+/*delat_call = EXP(-J2*B5)*D8*/							/*B13*/
+delta_call = exp(-q * T) * ND1;
+print "Delta for the Call Option = " delta_call;
+
+/*delat_put = 1 - D8*/									/*B14*/
+delta_put = 1 - ND1;
+print "Delta for the Put Option = " delta_put;
+
+/*gama_call = EXP(-J2*B5)*D12/(B4*B2*SQRT(B5))*/			/*B15*/
+gama_call = exp(-q * T) * Np_negD1 / (s * sig * sqrt(T));
+print "Gamma for the Call Option = " gama_call;
+
+/*gama_put = EXP(-J2*B5)*D12/(B4*B2*SQRT(B5))*/			/*B16*/
+gama_put = exp(-q * T) * Np_negD1 / (s * sig * sqrt(T));
+print "Gamma for the Put Option = " gama_put;
+
+/*theta_call = (-B4*H8*B2*EXP(-E2*B5)/(2*SQRT(B5))+E2*B4*D8*EXP(-E2*B5)-B3*B6*EXP(-B3*B5)*D9)*/
+theta_call = (-s * Np_negD1 * sig * exp(-q * T) / (2 * sqrt(T)) + q * s * ND1 * exp(-q * T) - r * k * exp(-r * T) * ND2);
+print "Theta for the Call Option = " theta_call;
+
+/*theta_put =(-B4*H8*B2*EXP(-E2*B5)/(2*SQRT(B5))-E2*B4*D10*EXP(-E2*B5)+B3*B6*EXP(-B3*B5)*D11)*/
+theta_put = (-s * Np_negD1 * sig * exp(-q * T) / (2 * sqrt(T)) - q * s * N_negD1 * exp(-q * T) + r * k * exp(-r * T) * N_negD2);
+print "Theta for the Put Option = " theta_put;
+
+/*daily_theta_call = F12/365*/
+daily_theta_call = theta_call / 365;
+print "Daily Theta for the Call Option = " daily_theta_call;
+
+/*daily_theta_put = F13/365*/
+daily_theta_put = theta_put / 365;
+print "Daily Theta for the Put Option = " daily_theta_put;
+
+/*vega_call =B4*SQRT(B5)*H8*EXP(-E2*B5)/100*/
+vega_call = s * sqrt(T) * Np_negD1 * exp(-q * T) / 100;
+print "Vega for the Call Option  = " vega_call;
+
+/*vega_put =B4*SQRT(B5)*H8*EXP(-E2*B5)/100*/
+vega_put = s * sqrt(T) * Np_negD1 * exp(-q * T) / 100;
+print "Vega for the Put Option = " vega_put;
+
+/*rho_call =B6*B5*EXP(-B3*B5)*D9/100*/
+rho_call = k * T * exp(-r * T) * ND2/ 100;
+print "Rho for the Call Option = " rho_call;
+
+/*rho_put =-B6*B5*EXP(-B3*B5)*D11/100*/
+rho_put = -k * T * exp(-r * T) * N_negD2/ 100;
+print "Rho for the Put Option = " rho_put;
+
+
+print "===============================================================";
+print "";
+retp(0);
+endp;
+/********************************************************************************************************************************************************/
+
+
+/*===========================================================================*/
+/*			Start of calculating Options based on El-Khatib and Hatemi-J (2017) model		*/
+/*===========================================================================*/
+
+call Opt_ElKhatib_Hatemi(sig,r,s,T,k,q,beta);
+
+proc Opt_ElKhatib_Hatemi(sig,r,s,T,k,q,beta);
+
+print "===============================================================";
+print "			Via El-Khatib and Hatemi-J (2017) model";
+print "===============================================================";
+
+local X, S_prime, D1,ND1,D2,ND2,Cc,N_negD1,Pp,N_negD2,Np_negD1;
+local delta_call,delta_put,gama_call,gama_put,theta_call, theta_put;
+local vega_call, vega_put, rho_call, rho_put, daily_theta_call, daily_theta_put;
+
+
+/*X =B4-J3/G2*/												/*G4*/
+X = s - beta / sig;
+print "X = " X;
+
+/*S_prime = G4*EXP(-J2*G5)*/									/*J4*/
+S_prime = X * exp(-q * T);
+print "The Spot Price Adjusted for the Dividend = " S_prime;
+
+
+/*D1 =(LN((G4)/(G6+(J3/G2)*EXP(G3*G5)))+(G3+G2*G2*0.5)*G5)/(G2*SQRT(G5)) */		/*G8*/
+D1 = (ln(X/(K + (beta/sig) * exp(r * T))) + (r + sig * sig * 0.5) * T)/(sig * sqrt(T));
+print "D1 = " D1;
+
+/*N(D1) =NORM.S.DIST(G8,TRUE) */											/*I8*/
+ND1 = cdfn(D1);
+print "ND1 = " ND1;
+
+
+/*D2 = G8-G2*SQRT(G5) */													/*G9*/
+D2 = D1 - sig * sqrt(T);
+print "D2 = " D2;
+
+/*N(D2) =NORM.S.DIST(G9,TRUE) */											/*I9*/
+ND2 = cdfn(D2);
+print "ND2 = " ND2;
+
+/*
+sig = 0.2;		/*B2*/ /*G2*/
+r = 0.05;		/*B3*/ /*G3*/
+s = 1200;		/*B4*/ /*B4*/
+T = 0.5;		/*B5*/ /*G5*/
+k = 1250;		/*B6*/ /*G6*/
+
+q = 0;		/*J2*/
+beta = 0.5;	/*J3*/
+*/
+/*Cc =J4*I8-(EXP(-G3*G5)*G6+J3/G2)*I9 */										/*G10*/
+Cc = S_prime * ND1 - (exp(-r * T) * k + beta/sig) * ND2;
+print "Premium for the Call Option= " Cc;
+
+/*N(-D1) =NORM.S.DIST(-G8,TRUE) */											/*I10*/
+N_negD1 = cdfn(-D1);
+print "N_negD1 = " N_negD1;
+
+/*Pp = G6*EXP(-G3*G5)+G10-J4 */												/*G11*/
+Pp = k * exp(-r * T) + Cc - S_prime;
+print "Premium for the Put Option= " Pp;
+
+/*N(-D2) =NORM.S.DIST(-G9,TRUE) */											/*I10*/
+N_negD2 = cdfn(-D2);
+print "N_negD2 = " N_negD2;
+
+/* N'(D1) =NORM.S.DIST(G8,FALSE) */											/*I12*/
+Np_negD1 = pdfn(D1);
+print "Np_negD1 = " Np_negD1;
+
+/*-----------------------------------------------------------------------------------------------------------------*/
+/*delat_call =EXP(-J2*G5)*I8 */												/*G13*/
+delta_call = exp(-q * T) * ND1;
+print "Delta for the Call Option = " delta_call;
+
+/*delat_put =G13-1 */														/*G14*/
+delta_put = ND1 -1;
+print "Delta for the Put Option = " delta_put;
+
+/*gama_call =EXP(-J2*G5)*I12/((G4*G2+J3*EXP(G3*G5))*SQRT(2*PI()*G5)) */			/*G15*/
+gama_call = exp(-q * T) * Np_negD1 / ((X * sig + beta * exp(r * T)) * sqrt(2 * pi * T));
+print "Gamma for the Call Option = " gama_call;
+
+/*gama_put =EXP(-J2*G5)*I12/(G4*G2*SQRT(G5))*/								/*G16*/
+gama_put = exp(-q * T) * Np_negD1 / (X * sig * sqrt(T));
+print "Gamma for the Put Option = " gama_put;
+
+/*
+sig = 0.2;		/*B2*/ /*G2*/
+r = 0.05;		/*B3*/ /*G3*/
+s = 1200;		/*B4*/ /*B4*/
+T = 0.5;		/*B5*/ /*G5*/
+k = 1250;		/*B6*/ /*G6*/
+
+q = 0;		/*J2*/
+beta = 0.5;	/*J3*/
+*/
+
+/*theta_call =0.5*I12*(-(G4*G2+J3*EXP(G3*G5))/SQRT(G5))+G3*(J3/G2)*EXP(G3*G5)*I8-((G3*G6*(EXP(-G3*G5)) +G3*(J3/G2)*EXP(G3*G5)))*I9 */			/*G17*/
+theta_call = 0.5 * Np_negD1 * (-(X * sig +  beta * exp(r * T))/ sqrt(T)) + r * (beta/sig) * exp(r * T) * ND1 - ((r * k * (exp(-r * T)) + r * (beta/sig) * exp(r * T))) * ND2;
+print "Theta for the Call Option = " theta_call;
+
+/*theta_put =G17+G3*G6*EXP(-G3*G5) */										/*G18*/
+theta_put = theta_call + r * k * exp(-r * T);
+print "Theta for the Put Option = " theta_put;
+
+/*local vega_call, vega_put, rho_call, rho_put, daily_theta_call, daily_theta_put;*/
+
+/*vega_call =((J3/(G2*G2))*(EXP(G3*G5))*(I9-I8)*0.01)+((I12*SQRT(G5)))*(G4+(EXP(G3*G5))*(J3/G2))*0.01 */			/*G19*/
+vega_call = ((beta/(sig * sig)) * (exp(r * T)) * (ND2 - ND1) * 0.01) + ((Np_negD1 * sqrt(T))) * (X + (exp(r * T)) * (beta / sig)) * 0.01;
+print "Vega for the Call Option = " vega_call;
+
+/*vega_put =G19-J3/G2/100 */																			/*G20*/
+vega_put = vega_call - beta/sig/100;
+print "Vega for the Put Option = " vega_put;
+
+/*rho_call =G6*G5*EXP(-G3*G5)*I9/100 +(J3*G5/G2)*(-I9+I8)*EXP(G3*G5)/100 */									/*G21*/
+rho_call = k * T * exp(-r * T) * ND2/100 + (beta * T / sig) * (-ND2 + ND1) * exp(r * T) / 100;
+print "Rho for the Call Option = " rho_call;
+
+/*rho_put =G21-G5*G6*EXP(-G3*G5)/100 */																/*G22*/
+rho_put = rho_call - T * k * exp(-r * T) / 100;
+print "Rho for the Put Option = " rho_put;
+
+/*daily_theta_call =G17/365 */																		/*G23*/
+daily_theta_call = theta_call / 365;
+print "Daily Theta for the Call Option = " daily_theta_call;
+
+/*daily_theta_put =G18/365 */																			/*G24*/
+daily_theta_put = theta_put / 365;
+print "Daily Theta for the Call Option = " daily_theta_put;
+
+
+print "===============================================================";
+
+retp(0);
+endp;
+
+/********************************************************************************************************************************************************/
+
+print "";
+	print "============================================================================================================";
+	print "|									REFERENCES																|";
+	print "|	-Black F. and Scholes M. (1973), 'The Pricing of Options and Corporate Liabilities', Journal of Political Economy,				|";
+	print "|  	81(3),  637-654.																							|";
+	print "|																											|";
+	print "|	- El-Khatib, Y. and Hatemi-J, A. (2017), 'Option valuation and hedging in markets with a crunch',							|";
+	print "|	Journal of Economic Studies, 44(5), 801-815. https://doi.org/10.1108/JES-04-2016-0083.       	        	       					|";
+	print "|																											|";
+	print "============================================================================================================";
+
+print "";
+	print "============================================================================================================";
+	print "|								ADDITIONAL INFORMATION														|";
+	print "|																											|";
+	print "|	This program code is the copyright of the authors. Applications are allowed only if proper reference and acknowledgments are 	|";
+	print "|	provided. For non-Commercial applications only. No performance guarantee is made. Bug reports are welcome. If this code is 	|";
+	print "|	is used for research or in any other code, proper attribution needs to be included.										|";
+	print "|																											|";
+	print "|	� 2021 Prof. Abdulnasser Hatemi-J and Dr. Alan Mustafa															|";
+	print "============================================================================================================";
+
+/*=======================================================*/
+/*						END								*/
+/*				Calculating Options							*/
+/*=======================================================*/

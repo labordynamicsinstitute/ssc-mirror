@@ -3,6 +3,8 @@
 *! version 2.00, Ben Jann, 20aug2003 ... with intermediate versions to:
 *  version 2.19, Ben Jann, 27apr2005
 *! version 2.20, Ben Jann, 25jun2007
+*! version 2.21, Ben Jann, 22jun2019
+*! version 2.22, Ben Jann, 16apr2020
 
 program define mrtab, rclass sortpreserve byable(recall)
     version 8.2
@@ -11,7 +13,7 @@ program define mrtab, rclass sortpreserve byable(recall)
      sort SORT2(numlist int max=1 >0) DEScending TItle(string) ///
      name(string) noLabel noNames Width(int 30) ABbrev Format(string) INTeger  ///
      by(varlist max=1) noFreq COlumn row CEll RCOLumn RCEll Wrap ///
-     CHi2 LRchi2 Mtest Mtest2(passthru) MLRchi2  ]
+     CHi2 LRchi2 warn Mtest Mtest2(passthru) MLRchi2  ]
 
 //SYNTAX INTEGRITY / PRELIMINARY OPTION PROCESSING
 //varlist
@@ -68,13 +70,19 @@ program define mrtab, rclass sortpreserve byable(recall)
 //two-way table options
     if "`by'"=="" {
         foreach X in row column cell rcolumn rcell wrap chi2 ///
-         lrchi2 mtest mtest2 mlrchi2 {
+         lrchi2 warn mtest mtest2 mlrchi2 {
             if "``X''"!="" {
                 di as error "option ``X'' not allowed"
                 exit 198
             }
         }
         local nby 1
+    }
+    else {
+        if "`chi2'`lrchi2'"=="" & "`warn'"!="" {
+            di as err "option 'warn' only allowed with 'chi2' or 'lrchi2'"
+            exit 198
+        }
     }
 
 //suppress frequencies table
@@ -109,9 +117,22 @@ program define mrtab, rclass sortpreserve byable(recall)
     if "`by'"!="" local bylabel="`label'"==""
     if `strvars' local label 1
     else {
-        local label="`label'"==""
-        if `poly'&`"`:val l `:word 1 of `varlist'''"'=="" local label 0
-        if !`poly'&`"`:var l `:word 1 of `varlist'''"'=="" local label 0
+        if "`label'"!="" local label 0
+        else {
+            local label 0
+            foreach var of local varlist {
+                if `poly' {
+                    local tmp: val l `var'
+                }
+                else {
+                    local tmp: var l `var'
+                }
+                if `"`tmp'"'!="" {
+                    local label 1
+                    continue, break
+                }
+            }
+        }
     }
     if `label'==0&"`names'"!="" {
         di as error "option nonames not allowed"
@@ -185,7 +206,9 @@ program define mrtab, rclass sortpreserve byable(recall)
                 qui gen byte `item`i'' = ( `temp' ) if ``i''<. & `touse'
             }
             local itemlist `"`itemlist'`item`i'' "'
-            qui lab var `item`i'' `"`:var l ``i'''"'
+            local tmp: var l ``i''
+            if `"`tmp'"'=="" local tmp `"``i''"'
+            qui lab var `item`i'' `"`tmp'"'
         }
     }
 
@@ -699,10 +722,44 @@ program define mrtab, rclass sortpreserve byable(recall)
         }
         tempvar pattern
         qui gen `pattern'=`temp' if `touse'&`sum'<.
+        if `"`warn'"'!="" {
+            tempname CELL ROW COL
+            local matopt matcell(`CELL')
+        }
         di
         di as txt "Overall Test(s) of Significance:"
-        di
-        ta `pattern' `by' [`weight'`exp'] if `touse'&`sum'<., `chi2' `lrchi2' nofreq
+        ta `pattern' `by' [`weight'`exp'] if `touse'&`sum'<., `chi2' `lrchi2' `matopt' nofreq
+        if `"`warn'"'!="" {
+            matrix `ROW' = J(`r(r)', 1, 0)
+            matrix `COL' = J(1, `r(c)', 0)
+            forv i = 1/`r(r)' {
+                forv j = 1/`r(c)' {
+                    matrix `ROW'[`i',1] = `ROW'[`i',1] + `CELL'[`i',`j']
+                    matrix `COL'[1,`j'] = `COL'[1,`j'] + `CELL'[`i',`j']
+                }
+            }
+            local expect5 = 0
+            local expect1 = 0
+            forv i = 1/`r(r)' {
+                forv j = 1/`r(c)' {
+                    mat `CELL'[`i', `j'] = (`ROW'[`i',1] * `COL'[1,`j']) / r(N)
+                    if `CELL'[`i', `j']<1 local expect1 = `expect1' + 1
+                    if `CELL'[`i', `j']<5 local expect5 = `expect5' + 1
+                }
+            }
+            local expect5 = `expect5' / (r(r) * r(c)) * 100
+            local warn = `expect5'>20 | `expect1'!=0
+            if `warn' {
+                di ""
+                di as txt "  Warning: " as res `expect5' _c
+                di as txt " percent of cells have expected frequency < 5"
+                di as txt "           " as res `expect1' _c
+                di as txt " cells have expected frequency < 1"
+            }
+            ret sca warn = `warn'
+            ret sca expect1 = `expect1'
+            ret sca expect5 = `expect5'
+        }
         ret sca df=(`r(r)'-1)*(`r(c)'-1)
         ret add
     }

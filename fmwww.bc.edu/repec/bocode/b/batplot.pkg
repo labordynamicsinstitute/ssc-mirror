@@ -13,13 +13,13 @@ d KW: Bland-Altman
 d KW: difference
 d KW: paired variables
 d
-d Requires: Stata version 9.2
+d Requires: Stata version 16.1
 d
-d Distribution-Date: 20120617
+d Distribution-Date: 20210323	
 d
 d Author: Adrian Mander 
 d Support: email Adrian.Mander@@mrc-hnr.cam.ac.uk
 d
 f batplot.ado
-f batplot.hlp
+f batplot.sthlp
 f batplot.do

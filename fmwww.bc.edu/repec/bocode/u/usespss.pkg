@@ -19,10 +19,11 @@ d
 d Author: Sergiy Radyakin, Development Economics Research Group, World Bank
 d Support: email sradyakin@@worldbank.org
 d
-g WIN usespss.ado
-g WIN usespss.hlp
-g WIN usespss.dlg
-g WIN ../d/desspss.ado
-g WIN ../_/_usespss.ado
-g WIN ../_/_desspss.ado
+f  WIN64 usespss.ado
+f  usespss.hlp
+f  usespss.dlg
+f  ../d/desspss.ado
+f  ../_/_usespss.ado
+f  ../_/_desspss.ado
 G WIN usespss.win32 usespss.plu
+h usespss.ado

@@ -1,4 +1,4 @@
-*! xtmixediou: V1 (Renamed xtiou V11); Rachael Hughes; 14th September 2016 
+*! xtmixediou: V3; Rachael Hughes; 26th June 2017 
 capture program drop xtmixediou
 program xtmixediou, eclass
 	version 11
@@ -11,30 +11,13 @@ if !replay() {
 		noLOg TRace GRADient HESSian SHOWSTEP ]
 	
 	tempvar intercept
-	tempname startingValues G Rparameters b V B ll_restricted table_beta table_theta g_max g_avg g_min N_g scheme omit noomit_b noomit_V
+	tempname startingValues G Rparameters b V B ll_restricted table_beta table_theta g_max g_avg g_min N_g scheme omit noomit_b noomit_V sv
 
 *****************************************************************************************************************************************************************************************************
 *                                                                         PARSING SECTION		
 	* ADD COMMAND NAME TO cmdline
 	local cmd "xtmixediou "
 	local cmdline : list cmd | cmdline
-	
-	* CREATE mo OBJECT FILES 
-	local dir_personal : sysdir PERSONAL
-	local n2 = length("`dir_personal'") - 1
-	local dir_personal = substr("`dir_personal'", 1, `n2')	// REMOVES THE TRAILING CHARACTER FROM DIRECTORY
-	
-	local listFunctions `"interfacePD isPositiveDefinite makePositiveDefinite xtmixediou_estimation"'
-	foreach function of local listFunctions {
-		local subfolder : adosubdir "`function'"
-		local pathway = "`dir_personal'" + "\" + "`subfolder'" + "\" + "`function'" + ".mata"
-		capture do "`pathway'"
-		local rc _rc 
-		if `rc'!=0 {
-			di as error "Error creating mo object for mata function `function'"
-			error `rc'
-		}	
-	}
 	
 	if `iterate' < 0 {
 		di as error "Maximum number of iterations must be greater than 0"
@@ -233,10 +216,13 @@ if !replay() {
 	
 	local numTheta = `numberOfGparas' + `numberOfRparas'
 
-	* PARAMETER NAMES FOR MATRICES b AND V: SECOND ADD THE NAMES OF THE PARAMETERS OF theta
+	* PARAMETER NAMES FOR MATRICES b AND V
 	local b_names : list exp_fenames | arctanGnames			// ADD G PARAMETERS
 	local b_names : list b_names | lnRnames      			// ADD THE NAMES OF THE R PARAMETERS	
 	local colsb : list sizeof b_names						
+	
+	* PARAMETER NAMES FOR MATRIX sv 
+	local sv_names : list G_names | R_names
 	
 	* LABEL ALL VARIANCE PARAMETERS AS NOT TO BE OMITTED - THIS DOES NOT HANDLE COLLINEAR RE-EFFECTS
 	matrix `omit' = (`omit',J(1,`numTheta',0))
@@ -311,7 +297,7 @@ if !replay() {
 			error 103
 		}	
 	}
-
+		
 *****************************************************************************************************************************************************************************************************
 *                                                                       ESTIMATION 
 	/*******************************
@@ -321,6 +307,8 @@ if !replay() {
 	quietly keep if `touse' == 1                                                                  	
 	quietly xtmixediou_sv `y' "`fevars'" "`reffects'" "`id'" `time' `svmethod' `Rparameterization'
 	matrix `startingValues' = r(sv_thetastar)
+	matrix `sv' = r(sv_theta)
+	matrix colnames `sv' = `sv_names'
 	restore, preserve
 	quietly keep if `touse' == 1     
 
@@ -431,6 +419,7 @@ if !replay() {
 	ereturn matrix g_avg `g_avg'
 	ereturn matrix g_min `g_min'
 	ereturn matrix N_g   `N_g'
+	ereturn matrix sv    `sv'
 	ereturn hidden matrix re_covariance `G'
 	ereturn hidden matrix res_parameters `Rparameters'
 	ereturn hidden matrix table_beta `table_beta'	

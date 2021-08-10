@@ -1,5 +1,5 @@
 {smcl}
-{* *!version 1.1.0 17/11/2016}{...}
+{* *!version 1.2.0 5/13/2020}{...}
 {cmd:help clean_name}
 {hline}
 
@@ -10,7 +10,7 @@
 {title:Syntax}
 {p 8 17 3}
 {cmdab:clean_name}
- {depvar}  
+ {varlist}  
 {cmd:,} {it:options}
 
 
@@ -18,7 +18,7 @@
 {synopthdr}
 {synoptline}
 {syntab:Main}
-{synopt:{opth case(upper|proper)}} specify whether the variable should be returned with proper or upper case. By default,   lower case variable is returned. {p_end} 
+{synopt:{opth case(upper|proper|lower)}} specify whether the variable should be returned with proper or upper case. By default, lower case variable is returned. {p_end} 
 {synoptline}
 
 
@@ -31,14 +31,14 @@
 {title:Syntax}
 
 {p 8 18 2}
-{cmdab:clean_fname} {varlist}
+{cmdab:clean_name} {varlist}
+{cmd:,} {it:options}
 
 {marker description}{...}
 {title:Description}
 
 {pstd}
-{opt clean_name} removes blanks, accents, full stops, hyphens, apostrophes and all uncommon characters (eszet, tilde, cedille, space and invisible characters...) from string variables. By default, it returns the lower version of the variables but upper and proper version can be specified in options. clean_name is particularly useful to clean non consistent identifiers (such as first and last name, school name, region name). The command proves itself very useful when merging using string variables (names, schools, villages) or to remove duplicates. 
-Please do not hesitate to contact me to add other "uncommon" characters to the list. 
+{opt clean_name} removes blanks, accents, full stops, hyphens, apostrophes and all uncommon characters (eszet, tilde, cedille, space and invisible characters...) from string variables. By default, clean_names returns a cleaned lower case variable. Upper and proper case can be specified in option. clean_name is particularly useful to clean non consistent identifiers (such as first and last name, school name, region name... ), merge using string variables or identify duplicate values.
 
 {marker examples}{...}
 {title:Examples}
@@ -50,6 +50,6 @@ Please do not hesitate to contact me to add other "uncommon" characters to the l
 
 {title:Author}
 {pstd}
-Adrien Bouguen, Mannheim Universitat, bouguen@uni-mannheim.de
+Adrien Bouguen, Santa Clara University
  {p_end}
 

@@ -1,15 +1,18 @@
+*! 1.1.0 NJC 13 Dec 2007
+* 1.0.0 NJC 8 July 2003
 program linkplot
-*! 1.0.0 NJC 8 July 2003
 	version 8.0
-	syntax varlist(numeric min=2) [if] [in]                  ///
-	[aweight fweight pweight], link(varname)                 ///
-	[ sort(varlist) CMISsing(str) ASYvars plot(str asis) * ]
+	syntax varlist(numeric min=2) [if] [in]                 ///
+	[aweight fweight pweight], link(varname) [ CASEwise       ///
+	sort(varlist) CMISsing(str) ASYvars plot(str asis) addplot(str asis) * ]
+
+	if "`casewise'" != "" local which "novarlist" 
 
 	if "`cmissing'" == "" | "`cmissing'" == "y"  { 
-		marksample touse 
+		// OK               
 	} 
 	else if "`cmissing'" == "n" { 
-		marksample touse, novarlist 
+		local which "novarlist" 
 	} 	
 	else { 
 		di as err "invalid cmissing() option: " /// 
@@ -17,6 +20,7 @@ program linkplot
 		exit 198 
 	}
 	
+	marksample touse, `which' 
 	qui count if `touse' 
 	if r(N) == 0 error 2000 
 
@@ -55,7 +59,8 @@ program linkplot
 	
 	twoway connected `Y' `x' [`weight' `exp'] ///
 	, cmissing(`cmissing') `options'          /// 
-	|| `plot' 
+	|| `plot'                                 /// 
+	|| `addplot' 
 	// blank 
 end
 

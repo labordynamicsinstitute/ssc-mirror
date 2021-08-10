@@ -16,7 +16,7 @@ d KW: OpenCage
 d
 d Requires: Stata version 12.1, insheetjson and libjson (q.v.) from SSC
 d
-d Distribution-Date: 20170207
+d Distribution-Date: 20180224
 d
 d Author:  Lars Zeigermann, Düsseldorf Institute for Competition Economics (DICE)
 d Support: email zeigermann@@dice.hhu.de
@@ -24,4 +24,4 @@ d
 f opencagegeo.ado
 f opencagegeoi.ado
 f opencagegeo.sthlp
-f opencage_DICE.pdf
+f opencagegeo.pdf

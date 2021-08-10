@@ -1,4 +1,4 @@
-*! version 1.0.2  24jan2012
+*! version 1.0.3  05nov2012
 program define spivreg, eclass
 	version 11.1
 
@@ -55,9 +55,9 @@ program define Estimate, eclass sortpreserve
 		spreg					///  UNDOCUMENTED
 		]
 	
-	marksample touse, novarlist
+	marksample touse, //!! novarlist
 	
-	local conly conly	// see comment at the end of file
+	local conly conly
 	
 	preserve
 	qui keep if `touse'
@@ -435,19 +435,9 @@ end
 
 exit
 
-Technical note
+Version history
 
-The GS2SLS estimator uses instruments H = (X, W*X, ..., (W^q)*X, M*X, M*W*X,
-..., M*(W^q)*X), where q = 2 worked well in Monte Carlo simulations (see Drukker
-et al. (2009) for details).  By default, the constant term is included
-in X; however, under certain conditions, this can result in the instrument
-projection matrix P = H*inv(H'H)*H' not being full rank.  If so, specify the
-conly option so that the constant term is included in H only once.
+1.0.3
 
-In testing, P was almost always not full rank, so we set conly to "conly" to
-spare users from the message "Instrument matrix is not full rank; try specifying
--conly- option".
-
-DM Drukker, P Egger and IR Prucha. (2009). On two-stage estimation of spatial
-autoregressive models with autoregressive disturbances and endogenous
-regressors. Technical report, Department of Economics, University of Maryland.
+Instrument matrix H was incorrectly computed as H = {X} in the case of the
+	spatial error model.  This has been fixed to H = {X, M*X}.

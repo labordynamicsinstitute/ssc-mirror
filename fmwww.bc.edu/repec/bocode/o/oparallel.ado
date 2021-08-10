@@ -1,4 +1,7 @@
-*! version 1.0.8 21Okt2013 MLB
+*! version 1.0.9 21Feb2018 MLB
+* accommodated changes in the names of cut of values in Stata 15
+*
+* version 1.0.8 21Okt2013 MLB
 * fixed df when using factor variables
 *
 * version 1.0.7 14Okt2013 MLB
@@ -36,6 +39,7 @@
 *!   -brant- version 1.6.0 3/29/01 by J. Scott Long and Jeremy Freese
 
 program define oparallel, rclass
+	local v = c(version)
 	version 11	
 	syntax , [score lr wald WOLFEgould brant asl ASL2(string) reps(integer 999)  ///
 	BSample mcci MCCI2(numlist min=1 max=1 >=10.00 <=99.99) nodots noisily       ///
@@ -236,7 +240,12 @@ program define oparallel, rclass
 	
 	// matrix of coefficients assuming -ologit- is correct
 	forvalues i = 1/`mm1' {
-		matrix `b0' = nullmat(`b0'), `bx', -1*[cut`i']_b[_cons]
+		if `v' >=15{
+			matrix `b0' = nullmat(`b0'), `bx', -1*[/]_b[cut`i']
+		}
+		else{
+			matrix `b0' = nullmat(`b0'), `bx', -1*[cut`i']_b[_cons]
+		}
 		local temp: subinstr local x " " " eq`i':", all
 		local coln `"`coln' eq`i':`temp' eq`i':_cons"'
 	}

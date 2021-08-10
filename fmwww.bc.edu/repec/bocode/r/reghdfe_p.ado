@@ -1,99 +1,78 @@
-program define reghdfe_p
-	* (Maybe refactor using _pred_se ??)
+program define reghdfe_p, rclass
+	* Note: we IGNORE typlist and generate the newvar as double
+	* Note: e(resid) is missing outside of e(sample), so we don't need to condition on e(sample)
 
-	local version `clip(`c(version)', 11.2, 13.1)' // 11.2 minimum, 13+ preferred
-	qui version `version'
-	
-	*if "`e(cmd)'" != "reghdfe" {
-	*	error 301
-	*}
-	syntax anything [if] [in] , [XB XBD D Residuals SCores STDP]
-	if (`"`scores'"' != "") {
-		_score_spec	`anything'
-		local varlist `s(varlist)'
-	}
-	else {
-		local 0 `anything'
-		syntax newvarname  // [if] [in] , [XB XBD D Residuals SCores]
+	* HACK: Intersect -score- and replace with -residuals-
+	cap syntax anything [if] [in], SCore
+	loc was_score = !c(rc)
+	if (`was_score') {
+		* Call _score_spec to get newvarname; discard type
+		* - This resolves wildcards that -margins- sends to predict (e.g. var* -> var1)
+		* - Do we really need to pass it `if' and `in' ?
+		_score_spec `anything', score
+		loc 0 `s(varlist)' `if' `in' , residuals
 	}
 
-	local weight "[`e(wtype)'`e(wexp)']" // After -syntax-!!!
-	local option `xb' `xbd' `d' `residuals' `scores' `stdp'
-	if ("`option'"=="") local option xb // The default, as in -areg-
-	local numoptions : word count `option'
-	if (`numoptions'!=1) {
-		di as error "(predict reghdfe) syntax error; specify one and only one option"
-		exit 112
+	syntax newvarname [if] [in] [, XB STDP Residuals D XBD DResiduals]
+
+	* Ensure there is only one option
+	opts_exclusive "`xb' `stdp' `residuals' `d' `xbd' `dresiduals'"
+
+	* Default option is xb
+	cap opts_exclusive "`xb' `stdp' `residuals' `d' `xbd' `dresiduals' placeholder"
+	if (!c(rc)) {
+		di as text "(option xb assumed; fitted values)"
+		loc xb "xb"
 	}
-	if ("`option'"=="scores") local option residuals
 
 	local fixed_effects "`e(absvars)'"
 
-	* Intercept stdp call
-	if ("`option'"=="stdp") {
-		_predict double `varlist' `if' `in', stdp
-		* la var `varlist' "STDP"
-		exit
+	* Except for xb and stdp, we need the previously computed residuals
+	if ("`xb'" == "" & "`stdp'" == "") {
+		_assert ("`e(resid)'" != ""), msg("you must add the {bf:resid} option to reghdfe before running this prediction")
+		conf numeric var `e(resid)', exact
 	}
 
-	* We need to have saved FEs and AvgEs for every option except -xb-
-	if ("`option'"!="xb") {
-		
-		* Only estimate using e(sample) except when computing xb (when we don't need -d- and can predict out-of-sample)
-		if (`"`if'"'!="") {
-			local if `if' & e(sample)==1
-		}
-		else {
-			local if "if e(sample)==1"
-		}
-
-		* Construct -d- (sum of FEs)
-		tempvar d
-		if ("`e(equation_d)'"=="") {
-				di as error "In order to predict, all the FEs need to be saved with the absorb option (#`g' was not)"
-				di as error "For instance, instead of {it:absorb(i.year i.firm)}, set absorb(FE_YEAR=i.year FE_FIRM=i.firm)"
-				exit 112
-		}
-		qui gen double `d' = `e(equation_d)' `if' `in'
-
-	} // Finished creating `d' if needed
-
-	tempvar xb // XB will eventually contain XBD and RESID if that's the output
-	_predict double `xb' `if' `in', xb
-
-	if ("`option'"=="xb") {
-		rename `xb' `varlist'
+	if ("`xb'" != "" | "`stdp'" != "") {
+		* xb: normal treatment
+		PredictXB `varlist' `if' `in', `xb' `stdp'
+	}
+	else if ("`residuals'" != "") {
+		* resid: just return the preexisting variable
+		gen double `varlist' = `e(resid)' `if' `in'
+		la var `varlist' "Residuals"
+		if (`was_score') return local scorevars `varlist'
+	}
+	else if ("`d'" != "") {
+		* d: y - xb - resid
+		tempvar xb
+		PredictXB `xb' `if' `in', xb
+		gen double `varlist' = `e(depvar)' -  `xb' - `e(resid)' `if' `in'
+		la var `varlist' "d[`fixed_effects']"
+	}
+	else if ("`xbd'" != "") {
+		* xbd: y - resid
+		gen double `varlist' = `e(depvar)' - `e(resid)' `if' `in'
+		la var `varlist' "Xb + d[`fixed_effects']"
+	}
+	else if ("`dresiduals'" != "") {
+		* dresid:	y - xb
+		tempvar xb
+		PredictXB `xb' `if' `in', xb
+		gen double `varlist' = `e(depvar)' -  `xb' `if' `in'
 	}
 	else {
-		* Make residual have mean zero (and add that to -d-)
-		su `e(depvar)' `if' `in' `weight', mean
-		local mean = r(mean)
-		su `xb' `if' `in' `weight', mean
-		local mean = `mean' - r(mean)
-		su `d' `if' `in' `weight', mean
-		local mean = `mean' - r(mean)
-		qui replace `d' = `d' + `mean' `if' `in'
-
-		if ("`option'"=="d") {
-			rename `d' `varlist'
-			la var `varlist' "d[`fixed_effects']"
-		}
-		else if ("`option'"=="xbd") {
-			qui replace `xb' = `xb' + `d' `if' `in'
-			rename `xb' `varlist'
-			la var `varlist' "Xb + d[`fixed_effects']"
-		}
-		else if ("`option'"=="residuals") {
-			qui replace `xb' = `e(depvar)' - `xb' - `d' `if' `in'
-			rename `xb' `varlist'
-			la var `varlist' "Residuals"
-		}
-		else {
-			error 112
-		}
+		error 100
 	}
+end
 
-	fvrevar `e(depvar)', list
-	local format : format `r(varlist)'
-	format `format' `varlist'
+program PredictXB
+	syntax newvarname [if] [in], [*]
+	cap matrix list e(b) // if there are no regressors, _predict fails
+	if (c(rc)) {
+		gen double `varlist' = 0 `if' `in'
+	}
+	else {
+		_predict double `varlist' `if' `in', `options'
+	}
 end

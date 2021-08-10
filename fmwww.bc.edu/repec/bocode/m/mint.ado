@@ -1,5 +1,5 @@
-*!minv version 1.0
-*!Written 25June2015
+*!minv version 2.0
+*!Written 23July2018
 *!Written by Mehmet Mehmetoglu
 capture program drop mint
 program mint
@@ -44,7 +44,7 @@ version 14
 			scalar `elp' =r(p_ms)
 			//di `elp'
 //equal loadings and intercepts - step3
-			qui `usersem' ginvariant(meanex mcoef mcons) 
+			qui `usersem' ginvariant(mcoef mcons) 
 			qui estat gof, stats(all)
 			//qui return list
             tempname elintchi2 elintdf elintrmsea elintcfi elinttli elintp
@@ -61,7 +61,7 @@ version 14
 			scalar `elintp' =r(p_ms)
 			//di `elintp'
 //equal loadings and error variances -step4
-			qui `usersem' ginvariant(meanex mcoef merrvar) 
+			qui `usersem' ginvariant(mcoef mcons merrvar) 
 			qui estat gof, stats(all)
 			//qui return list
             tempname elerchi2 elerdf elerrmsea elercfi elertli elerp
@@ -77,25 +77,8 @@ version 14
 			//di `elertli'
 			scalar `elerp' =r(p_ms)
 			//di `elerp'
-//equal loadings, errors and factor var/covariances - step5
-			qui `usersem' ginvariant(meanex mcoef merrvar covex) 
-			qui estat gof, stats(all)
-			//qui return list
-            tempname elercovchi2 elercovdf elercovrmsea elercovcfi elercovtli elercovp
-			scalar `elercovchi2' = r(chi2_ms)
-			//di `elercovchi2'
-			scalar `elercovdf' = r(df_ms)
-			//di `elercovdf'
-            scalar `elercovrmsea' = r(rmsea)
-			//di `elercovrmsea'
-            scalar `elercovcfi' = r(cfi)
-			//di `elercovcfi' 
-            scalar `elercovtli' = r(tli)
-			//di `elercovtli'
-			scalar `elercovp' =r(p_ms)
-			//di `elercovp'
-//comparing factor means - step6
-			qui `usersem' ginvariant(mcoef mcons) 
+//comparing factor means - step5
+			qui `usersem' ginvariant(mcoef mcons merrvar meanex) 
 			qui estat gof, stats(all)
 			//qui return list
             tempname fmchi2 fmdf fmrmsea fmcfi fmtli fmp
@@ -117,22 +100,18 @@ version 14
 			//di `x2diff21'
 				scalar `x2diff32' =  `elintchi2'-`elchi2'
 			//di `x2diff32'
-				scalar `x2diff42' =  `elerchi2'-`elchi2'
+				scalar `x2diff42' =  `elerchi2'-`elintchi2'
 			//di `x2diff42'
-				scalar `x2diff54' =  `elercovchi2'-`elerchi2'
-			//di `x2diff54'
-				scalar `x2diff62' =  `fmchi2'-`elchi2'
+				scalar `x2diff62' =  `fmchi2'-`elerchi2'
 			//di `x2diff62'
 		tempname dfdiff21 dfdiff32 dfdiff42 dfdiff54 dfdiff62
 			scalar `dfdiff21' =  `eldf'-`efdf'
 			//di `dfdiff21'
 				scalar `dfdiff32' =  `elintdf'-`eldf'
 			//di `dfdiff32'
-				scalar `dfdiff42' =  `elerdf'-`eldf'
+				scalar `dfdiff42' =  `elerdf'-`elintdf'
 			//di `dfdiff42'
-				scalar `dfdiff54' =  `elercovdf'-`elerdf'
-			//di `dfdiff54'
-				scalar `dfdiff62' =  `fmdf'-`eldf'
+				scalar `dfdiff62' =  `fmdf'-`elerdf'
 			//di `dfdiff62'
 		tempname pdiff21 pdiff32 pdiff42 pdiff54 pdiff62
 			scalar `pdiff21' = chi2tail(`dfdiff21',`x2diff21')
@@ -141,8 +120,6 @@ version 14
 			//di `pdiff32'
 				scalar `pdiff42' =  chi2tail(`dfdiff42',`x2diff42')
 			//di `pdiff42'
-				scalar `pdiff54' =  chi2tail(`dfdiff54',`x2diff54')
-			//di `pdiff54'
 				scalar `pdiff62' =  chi2tail(`dfdiff62',`x2diff62')
 			//di `pdiff62'	
 di ""
@@ -155,47 +132,38 @@ display in green "  1. Equal form"_col(31) "{c |} " %9.2f `efchi2' "(" `efdf' ")
 di ""
 	if `pdiff21' < 0.05 { 
 display in red "  2. Equal loadings"_col(31) "{c |} " %9.2f `elchi2' "(" `eldf' ")" "," %-4.2f `elp' _col(56) "{c |} ""2 vs 1"_col(69) "{c |} " %9.2f `x2diff21' "(" `dfdiff21' ")" "," %-4.2f `pdiff21' _col(92) "{c |} " %4.2f `elrmsea' _col(103) "{c |} " %-4.2f `elcfi' _col(115) "{c |} "%-4.2f `eltli'
-display in red "     (and form)" 
+
 									}
 	else {
 display in green "  2. Equal loadings"_col(31) "{c |} " %9.2f `elchi2' "(" `eldf' ")" "," %-4.2f `elp' _col(56) "{c |} ""2 vs 1"_col(69) "{c |} " %9.2f `x2diff21' "(" `dfdiff21' ")" "," %-4.2f `pdiff21' _col(92) "{c |} " %4.2f `elrmsea' _col(103) "{c |} " %-4.2f `elcfi' _col(115) "{c |} "%-4.2f `eltli'
-display in green "     (and form)" 
+
 			}
 di ""
 	if `pdiff32' < 0.05 { 
 display in red "  3. Equal intercepts"_col(31) "{c |} " %9.2f `elintchi2' "(" `elintdf' ")" "," %-4.2f `elintp' _col(56) "{c |} ""3 vs 2"_col(69) "{c |} " %9.2f `x2diff32' "(" `dfdiff32' ")" "," %-4.2f `pdiff32' _col(92) "{c |} " %4.2f `elintrmsea' _col(103) "{c |} " %-4.2f `elintcfi' _col(115) "{c |} "%-4.2f `elinttli'
-display in red "     (and loadings)" 
+
 									}
 	else {
 display in green "  3. Equal intercepts"_col(31) "{c |} " %9.2f `elintchi2' "(" `elintdf' ")" "," %-4.2f `elintp' _col(56) "{c |} ""3 vs 2"_col(69) "{c |} " %9.2f `x2diff32' "(" `dfdiff32' ")" "," %-4.2f `pdiff32' _col(92) "{c |} " %4.2f `elintrmsea' _col(103) "{c |} " %-4.2f `elintcfi' _col(115) "{c |} "%-4.2f `elinttli'
-display in green "     (and loadings)" 
+
 									}
 di ""
 	if `pdiff42' < 0.05 { 
-display in red "  4. Equal error variances"_col(31) "{c |} " %9.2f `elerchi2' "(" `elerdf' ")" "," %-4.2f `elerp' _col(56) "{c |} ""4 vs 2"_col(69) "{c |} " %9.2f `x2diff42' "(" `dfdiff42' ")" "," %-4.2f `pdiff42' _col(92) "{c |} " %4.2f `elerrmsea' _col(103) "{c |} " %-4.2f `elercfi' _col(115) "{c |} "%-4.2f `elertli'
-display in red "     (and loadings)" 
+display in red "  4. Equal error variances"_col(31) "{c |} " %9.2f `elerchi2' "(" `elerdf' ")" "," %-4.2f `elerp' _col(56) "{c |} ""4 vs 3"_col(69) "{c |} " %9.2f `x2diff42' "(" `dfdiff42' ")" "," %-4.2f `pdiff42' _col(92) "{c |} " %4.2f `elerrmsea' _col(103) "{c |} " %-4.2f `elercfi' _col(115) "{c |} "%-4.2f `elertli'
+
 									}
 	else {
-display in green "  4. Equal error variances"_col(31) "{c |} " %9.2f `elerchi2' "(" `elerdf' ")" "," %-4.2f `elerp' _col(56) "{c |} ""4 vs 2"_col(69) "{c |} " %9.2f `x2diff42' "(" `dfdiff42' ")" "," %-4.2f `pdiff42' _col(92) "{c |} " %4.2f `elerrmsea' _col(103) "{c |} " %-4.2f `elercfi' _col(115) "{c |} "%-4.2f `elertli'
-display in green "     (and loadings)" 
-			}
-di ""
-	if `pdiff54' < 0.05 { 
-display in red "  5. Equal factor var/cov"_col(31) "{c |} " %9.2f `elercovchi2' "(" `elercovdf' ")" "," %-4.2f `elercovp' _col(56) "{c |} ""5 vs 4"_col(69) "{c |} " %9.2f `x2diff54' "(" `dfdiff54' ")" "," %-4.2f `pdiff54' _col(92) "{c |} " %4.2f `elercovrmsea' _col(103) "{c |} " %-4.2f `elercovcfi' _col(115) "{c |} "%-4.2f `elercovtli'
-display in red "     (and loadings & errors)" 
-									}
-	else {
-display in green "  5. Equal factor var/cov"_col(31) "{c |} " %9.2f `elercovchi2' "(" `elercovdf' ")" "," %-4.2f `elercovp' _col(56) "{c |} ""5 vs 4"_col(69) "{c |} " %9.2f `x2diff54' "(" `dfdiff54' ")" "," %-4.2f `pdiff54' _col(92) "{c |} " %4.2f `elercovrmsea' _col(103) "{c |} " %-4.2f `elercovcfi' _col(115) "{c |} "%-4.2f `elercovtli'
-display in green "     (and loadings & errors)" 
+display in green "  4. Equal error variances"_col(31) "{c |} " %9.2f `elerchi2' "(" `elerdf' ")" "," %-4.2f `elerp' _col(56) "{c |} ""4 vs 3"_col(69) "{c |} " %9.2f `x2diff42' "(" `dfdiff42' ")" "," %-4.2f `pdiff42' _col(92) "{c |} " %4.2f `elerrmsea' _col(103) "{c |} " %-4.2f `elercfi' _col(115) "{c |} "%-4.2f `elertli'
+
 			}
 di ""
 	if `pdiff62' < 0.05 { 
-display in red "  6. Equal factor means"_col(31) "{c |} " %9.2f `fmchi2' "(" `fmdf' ")" "," %-4.2f `fmp' _col(56) "{c |} ""6 vs 2"_col(69) "{c |} " %9.2f `x2diff62' "(" `dfdiff62' ")" "," %-4.2f `pdiff62' _col(92) "{c |} " %4.2f `fmrmsea' _col(103) "{c |} " %-4.2f `fmcfi' _col(115) "{c |} "%-4.2f `fmtli'
-display in red "     (and loadings)" 
+display in red "  6. Equal factor means"_col(31) "{c |} " %9.2f `fmchi2' "(" `fmdf' ")" "," %-4.2f `fmp' _col(56) "{c |} ""5 vs 4"_col(69) "{c |} " %9.2f `x2diff62' "(" `dfdiff62' ")" "," %-4.2f `pdiff62' _col(92) "{c |} " %4.2f `fmrmsea' _col(103) "{c |} " %-4.2f `fmcfi' _col(115) "{c |} "%-4.2f `fmtli'
+
 									}
 	else {
-display in green "  6. Equal factor means"_col(31) "{c |} " %9.2f `fmchi2' "(" `fmdf' ")" "," %-4.2f `fmp' _col(56) "{c |} ""6 vs 2"_col(69) "{c |} " %9.2f `x2diff62' "(" `dfdiff62' ")" "," %-4.2f `pdiff62' _col(92) "{c |} " %4.2f `fmrmsea' _col(103) "{c |} " %-4.2f `fmcfi' _col(115) "{c |} "%-4.2f `fmtli'
-display in green "     (and loadings)" 
+display in green "  6. Equal factor means"_col(31) "{c |} " %9.2f `fmchi2' "(" `fmdf' ")" "," %-4.2f `fmp' _col(56) "{c |} ""5 vs 4"_col(69) "{c |} " %9.2f `x2diff62' "(" `dfdiff62' ")" "," %-4.2f `pdiff62' _col(92) "{c |} " %4.2f `fmrmsea' _col(103) "{c |} " %-4.2f `fmcfi' _col(115) "{c |} "%-4.2f `fmtli'
+ 
 			}
 di as smcl as txt "{c BLC}{hline 122}{c BRC}"
 di in yellow "     Note: Diff_X2(df),p value < 0.05 indicates differing estimates in that the restricted model worsens the fit!"			

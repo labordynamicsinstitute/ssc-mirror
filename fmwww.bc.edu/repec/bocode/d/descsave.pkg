@@ -1,6 +1,6 @@
 d 'DESCSAVE': module to export data set and machine-readable codebook
 d
-d descsave is an extension of describe, creating up to 2 output
+d  descsave is an extension of describe, creating up to 2 output
 d data sets. These are a Stata data file with 1 observation per
 d variable and data on the descriptive attributes of each variable
 d (name, storage type, format value label, variable label, and
@@ -20,13 +20,12 @@ d intervals.
 d
 d KW: data manipulation
 d
-d Requires: Stata version 10.0
+d Requires: Stata version 16.0
 d
+d Distribution-Date: 20210311
 d
-d Author: Roger Newson, National Heart and Lung Institute, Imperial College London
+d Author: Roger Newson,  Imperial College London
 d Support: email r.newson@@imperial.ac.uk
-d
-d Distribution-Date: 20170407
 d
 f descsave.ado
 f descsave.sthlp

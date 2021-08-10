@@ -2,8 +2,14 @@
 * "Immediate" form of admetan
 * for quick pooling of, say, 2 or 3 estimates
 
-*! version 1.0  David Fisher  11may2017
-*! (part of version 2.0 of -ipdmetan- package)
+* version 1.0  David Fisher  11may2017
+* (part of version 2.0 of -ipdmetan- package)
+
+* version 1.01  David Fisher  14sep2017
+* (part of version 2.1 of -ipdmetan- package)
+
+*! version 3.0  David Fisher  08nov2018
+* (N.B. only changed very slightly from v1.01 ... this is actually more v1.02!)
 
 
 program admetani, rclass
@@ -14,8 +20,8 @@ program admetani, rclass
 	// a matrix name, e.g. A
 	// a matrix inputted by hand, e.g. (1, 2 \ 3, 4); see help matrix define
 	// the syntax of tabi, e.g. 1 2 \ 3 4; see help tabi
-	cap syntax anything [, NPTS(numlist missingok) ROWNames ROWTitle(string) ///
-		noKEEPVars noRSample * ]
+	cap syntax anything [, NPTS(string) noKEEPVars noRSample ///
+		ROWNames ROWFullnames ROWEq Quoted ROWTitle(string) VARiances * ]
 	// (these last options are just needed to decide what to do with extra obs, if relevant)
 	
 	* If -syntax- didn't work, assume due to commas but no brackets
@@ -53,8 +59,8 @@ program admetani, rclass
 	}
 	
 	capture {
-		local nr = rowsof(matrix(`A'))
-		local nc = colsof(matrix(`A'))
+		local nr = rowsof(`A')
+		local nc = colsof(`A')
 	}
 	if _rc {
 		disp as err "matrix {bf:`A'} not found"
@@ -79,7 +85,7 @@ program admetani, rclass
 	capture {
 		local j = 1
 		while `j' <= `nc' {
-			gen `tv`j'' = matrix(`A'[_n, `j']) in 1/`nr'
+			qui gen `tv`j'' = matrix(`A'[_n, `j']) in 1/`nr'
 			local ++j
 		}
 	}
@@ -90,10 +96,13 @@ program admetani, rclass
 	cap compress `tv1'-`tv`nc''
 	
 	// extract rownames; pass to admetan as study names
-	if `"`rownames'"'!=`""' {
+	if `"`rownames'`rowfullnames'`roweq'"'!=`""' {
+		opts_exclusive `"`rownames' `rowfullnames' `roweq'"' `""' 184
+		local rownames `rownames'`rowfullnames'`roweq'
+	
 		tempvar study
 		qui gen `study' = ""
-		local names : rowfullnames `inputmat'
+		local names : `rownames' `A', `quoted'
 		tokenize `names'
 		local i = 1
 		while `"`1'"' != `""' {
@@ -111,20 +120,71 @@ program admetani, rclass
 	
 	// extract npts
 	if `"`npts'"'!=`""' {
-		cap assert `: word count `npts'' == `nr'
-		if _rc {
-			disp as err "Number of elements in {bf:npts()} does not match with dimensions of inputted data"
-			exit 198
-		}
 		tempvar nptsvar
 		qui gen long `nptsvar' = .
-		tokenize `npts'
-		forvalues i = 1/`nr' {
-			qui replace `nptsvar' = ``i'' in `i'
+		cap numlist "`npts'", missingok
+		
+		// if numlist
+		if !_rc {
+			cap assert `: word count `npts'' == `nr'
+			if _rc {
+				disp as err "Number of elements in {bf:npts()} does not match with dimensions of inputted data"
+				exit 198
+			}
+			tokenize `npts'
+			forvalues i = 1/`nr' {
+				qui replace `nptsvar' = ``i'' in `i'
+			}
+		}
+		
+		// else, test if vector
+		else {
+			cap {
+				assert `: word count `npts'' == 1
+				confirm matrix `npts'
+			}
+			if _rc {
+				disp as err "option {bf:npts()} should contain either a {it:numlist} or a matrix name"
+				exit 198
+			}
+			cap assert colsof(`npts')==1
+			if _rc {
+				cap assert rowsof(`npts')==1
+				if _rc {
+					disp as err "matrix {bf:npts()} is not of the required dimensions"
+					exit 198
+				}
+				cap assert colsof(`npts')==`nr'
+				if _rc {
+					disp as err "Number of elements in {bf:npts()} does not match with dimensions of inputted data"
+					exit 198
+				}
+				forvalues i = 1/`nr' {
+					qui replace `nptsvar' = `npts'[1, `i'] in `i'
+				}
+			}
+			else {
+				cap assert rowsof(`npts')==`nr'
+				if _rc {
+					disp as err "Number of elements in {bf:npts()} does not match with dimensions of inputted data"
+					exit 198
+				}
+				forvalues i = 1/`nr' {
+					qui replace `nptsvar' = `npts'[`i', 1] in `i'
+				}
+			}
 		}
 		
 		local options `"npts(`nptsvar') `options'"'
 	}	
+	
+	// convert variances to standard errors if necessary
+	if `"`variances'"'!=`""' {
+		if `nc'!=2 {
+			disp as err "option {bf:variances} is only relevant to two-element syntax, and will be ignored"
+		}
+		else qui replace `tv2' = sqrt(`tv2')
+	}
 	
 	// pass to admetan
 	cap nois admetan `tv1'-`tv`nc'', `keepvars' `rsample' `options'

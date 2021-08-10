@@ -1,6 +1,6 @@
 d 'ESTPARM': module to save results from a parmest resultsset and test equality
 d
-d	estparm is an inverse of parmest.  It inputs 2 or 3
+d	 estparm is an inverse of parmest.  It inputs 2 or 3
 d variables in	    the varlist, containing parameter estimates,
 d standard errors, and	    (optionally) degrees of freedom.  It
 d saves a set of estimation	 results for the parameters,
@@ -21,7 +21,7 @@ d Requires: Stata version 11.0
 d
 d Distribution-Date: 20090904
 d
-d Author: Roger Newson, National Heart and Lung Institute at Imperial College London
+d Author: Roger Newson,  Imperial College London
 d Support: email r.newson@@imperial.ac.uk
 d
 f estparm.ado

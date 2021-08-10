@@ -1,76 +1,97 @@
-*! Date    : 02 October 2015
-*! Version : 1.1
-*! Authors : Michael J. Grayling & Adrian P. Mander
+*! Date    : 03 Jan 2019
+*! Version : 1.3
+*! Authors : Michael J Grayling & Adrian P Mander
 
 /*
-  16/04/15 v1.0 Basic version complete
-  02/10/15 v1.1 Changed method to compute density for better stability               
+  16/04/15 v1.0 Basic version complete.
+  02/10/15 v1.1 Changed method for computing density for better stability.
+  08/09/17 v1.2 Added logdensity option.
+  03/01/19 v1.3 Converted mean and sigma to be optional with internal defaults.
 */
 
 program define mvnormalden, rclass
-version 11.0
-syntax , x(numlist) MEan(numlist) Sigma(string)
+version 15.0
+syntax , x(numlist) [MEan(numlist) Sigma(string) LOGdensity]
 
-// Perform checks on input variables
-if (colsof(`sigma') ~= rowsof(`sigma')) {
-  di "{error} Covariance matrix Sigma (sigma) must be square."
-  exit(198)
-}
-local lenx:list sizeof x
+///// Check input variables ////////////////////////////////////////////////////
+
+local lenx:list    sizeof x
 local lenmean:list sizeof mean
-if (`lenx' ~= `lenmean') {
-  di "{error} Vector of quantiles (x) and mean vector (mean) must be of equal length."
+if ((`lenmean' != 0) & (`lenx' != `lenmean')) {
+  di "{error}Vector of quantiles (x) and mean vector (mean) must be of equal length."
   exit(198)
 }
-if (`lenmean' ~= colsof(`sigma')) {
-  di "{error} Mean vector (mean) must be the same length as the dimension of covariance matrix Sigma (sigma)."
-  exit(198)
+if ("`sigma'" != "") {
+  if (colsof(`sigma') != rowsof(`sigma')) {
+    di "{error}Covariance matrix Sigma (sigma) must be square."
+    exit(198)
+  }
+  if (`lenx' != colsof(`sigma')) {
+    di "{error}Vector of quantiles (x) must be the same length as the dimension of covariance matrix Sigma (sigma)."
+    exit(198)
+  }
+  cap mat chol = cholesky(`sigma')
+  if (_rc > 0) {
+    di "{error}Covariance matrix Sigma (sigma) must be symmetric positive-definite."
+    exit(198)
+  }
 }
-cap mat C = cholesky(`sigma')
-if (_rc > 0) {
-  di "{error} Covariance matrix Sigma (sigma) must be symmetric positive-definite."
-  exit(198)
+else {
+  mat chol     = I(`lenx')
 }
 
-// Set up matrices to pass to mata
+///// Perform main computations ////////////////////////////////////////////////
+
 local matax ""
-foreach l of local x{
+foreach l of local x {
   if "`matax'" == "" local matax "`l'"
   else local matax "`matax',`l'"
 }
-mat x = (`matax')
-local matamean ""
-foreach l of local mean{
-  if "`matamean'" == "" local matamean "`l'"
-  else local matamean "`matamean',`l'"
+mat x      = (`matax')
+if (`lenmean' != 0) {
+  local matamean ""
+  foreach l of local mean {
+    if "`matamean'" == "" local matamean "`l'"
+    else local matamean "`matamean',`l'"
+  }
+  mat mean = (`matamean')
 }
-mat mean = (`matamean')
-mat sigma = (`sigma')
+else {
+  mat mean = J(1, `lenx', 0)
+}
+mata: mvnormalden_void()
 
-// Compute the value of the density in mata and return the result
-mata: dmvn()
-return scalar Density = returnscalar[1, 1]
-di "{txt}Density = {res}" returnscalar[1, 1]
+///// Output ///////////////////////////////////////////////////////////////////
+
+return scalar log_density = ret_density[2, 1]
+return scalar density     = ret_density[1, 1]
+if ("`logdensity'" == "") {
+  di "{txt}density = {res}" ret_density[1, 1] "{txt}"
+}
+else {
+  di "{txt}log(density) = {res}" ret_density[2, 1] "{txt}"
+}
 end
 
-// Start of mata
+///// Mata /////////////////////////////////////////////////////////////////////
+
 mata:
 
-void dmvn()
-{
-  // Acquire required stata variables
+void mvnormalden_void() {
   x    = st_matrix("x")
   mean = st_matrix("mean")
-  C    = st_matrix("C")
-  // Initialise all required variables
-  k = rows(C)
-  // Compute density
-  tmp        = lusolve(C, (x :- mean)')
-  rss        = colsum(tmp:^2)
-  logdensity = -sum(log(diagonal(C))) - 0.5*k*log(2*pi()) - 0.5*rss
-  density    = exp(logdensity)
-  // Return result to stata
-  st_matrix("returnscalar", density)
+  C    = st_matrix("chol")
+  st_matrix("ret_density", mvnormalden_mata(x, mean, ., C))
 }
 
-end // End of mata
+real colvector mvnormalden_mata(real vector x, real vector mean,
+                                real matrix Sigma,| real matrix C) {
+  if (args() < 4) {
+    C         = cholesky(Sigma)
+  }
+  log_density = -sum(log(diagonal(C))) -
+                  0.5*(rows(C)*log(2*pi()) + colsum(lusolve(C, (x - mean)'):^2))
+  return((exp(log_density) \ log_density))
+}
+
+end

@@ -24,14 +24,14 @@ d KW: instrumental variables
 d KW: heteroskedasticity
 d KW: identification
 d
-d Requires: Stata version 9  and ivreg2, ranktest from SSC
+d Requires: Stata version 9 and ivreg2, ranktest from SSC
 d
-d Distribution-Date: 20170324
+d Distribution-Date: 20200626
 d
 d Author: Christopher F Baum, Boston College 
 d Support: email baum@@bc.edu
 d
-d Author: Mark E Schaffer, DIW Berlin
+d Author: Mark E Schaffer, Heriot-Watt University
 d Support: email m.e.schaffer@@hw.ac.uk
 d
 f ivreg2h.ado

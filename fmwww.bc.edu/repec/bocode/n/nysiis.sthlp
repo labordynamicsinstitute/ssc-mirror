@@ -29,8 +29,8 @@
 
 {pstd} The algorithm consists of 7 Steps. In the first step, the initial letter(s) of a surname are examined and altered as necessary. In the second step, the same is done for the last letter(s) of the surname. In Step 3, the first
 letter of the NYSIIS coded surname is established. Steps 5 and 6 constitute an iterative procedure for creating the remaining letters of the NYSIIS-coded surname. In this iterative scheme, we begin with the second letter of the altered
-surname and scan each letter of the remaining letters of the surname using an imaginary “pointer.” In Step 5, one or more of the letters of the coded surname are established via a set of “rules.” The rules are reapplied each time
-the “pointer” is moved to the next letter of the name. In Step 7, the end portion of the NYSIIS code just created is subjected to a further check and changed as necessary.
+surname and scan each letter of the remaining letters of the surname using an imaginary Â“pointer.Â” In Step 5, one or more of the letters of the coded surname are established via a set of Â“rules.Â” The rules are reapplied each time
+the Â“pointerÂ” is moved to the next letter of the name. In Step 7, the end portion of the NYSIIS code just created is subjected to a further check and changed as necessary.
 
 {pstd} {cmd:nysiis} accepts one arguments, which must be a string variable. Cases are lowered within the algorithm. {p_end}
 
@@ -40,23 +40,23 @@ the “pointer” is moved to the next letter of the name. In Step 7, the end portio
 {p 4 12 2} {bf:Step 1:} Change the initial letter(s) of the surname as indicated (mac->mcc) (kn->nn) (k->c) (ph->ff) (pf->ff) (sch->sss). {p_end}
 {p 4 12 2} {bf:Step 2:} Change the last letter(s) of the surname as indicated (ee->y) (ie->y) (dt->d) (rt->d) (rd->d) (nt->d) (nd->d). {p_end}
 {p 4 12 2} {bf:Step 3:} The first character of the NYSIIS-coded surname is the first letter of the (possibly altered) surname.{p_end}
-{p 4 12 2} {bf:Step 4:} Position the “pointer” at the second letter of the (possibly altered) surname.{p_end}
-{p 4 12 2} {bf:Step 5:} (Change the current letter(s) of the surname – i.e., the one at the present position of the “pointer”.) Execute exactly one of the following operations, proceeding from top to bottom:{p_end}
+{p 4 12 2} {bf:Step 4:} Position the Â“pointerÂ” at the second letter of the (possibly altered) surname.{p_end}
+{p 4 12 2} {bf:Step 5:} (Change the current letter(s) of the surname Â– i.e., the one at the present position of the Â“pointerÂ”.) Execute exactly one of the following operations, proceeding from top to bottom:{p_end}
 
 {p 12 16 2}{bf:(a)} If blank, go to Step 7.{p_end}
-{p 12 16 2}{bf:(b)} If the current letter is “E” and the next letter is “V,” then change “EV” to “AF.”{p_end}
-{p 12 16 2}{bf:(c)} Change a vowel (“AEIOU”) to “A.”{p_end}
-{p 12 16 2}{bf:(d)} Change “Q” to “G.”{p_end}
-{p 12 16 2}{bf:(e)} Change “Z” to “S.”{p_end}
-{p 12 16 2}{bf:(f)} Change “M” to “N.”{p_end}
-{p 12 16 2}{bf:(g)} If the current letter is the letter “K,” then change “K” to “C” unless the next letter is “N.” If “K” is followed by “N,” then replace “KN” by “N.”{p_end}
-{p 12 16 2}{bf:(h)} Change “SCH” to “SSS.”{p_end}
-{p 12 16 2}{bf:(i)} Change “PH” to “FF.”{p_end}
-{p 12 16 2}{bf:(j)} If “H” is preceded by or followed by a letter that is not a vowel (AEIOU), then replace the current letter in the surname by the preceding letter.{p_end}
-{p 12 16 2}{bf:(k)} If “W” is preceded by a vowel, then replace the current letter in the surname with the preceding letter.{p_end}
+{p 12 16 2}{bf:(b)} If the current letter is Â“EÂ” and the next letter is Â“V,Â” then change Â“EVÂ” to Â“AF.Â”{p_end}
+{p 12 16 2}{bf:(c)} Change a vowel (Â“AEIOUÂ”) to Â“A.Â”{p_end}
+{p 12 16 2}{bf:(d)} Change Â“QÂ” to Â“G.Â”{p_end}
+{p 12 16 2}{bf:(e)} Change Â“ZÂ” to Â“S.Â”{p_end}
+{p 12 16 2}{bf:(f)} Change Â“MÂ” to Â“N.Â”{p_end}
+{p 12 16 2}{bf:(g)} If the current letter is the letter Â“K,Â” then change Â“KÂ” to Â“CÂ” unless the next letter is Â“N.Â” If Â“KÂ” is followed by Â“N,Â” then replace Â“KNÂ” by Â“N.Â”{p_end}
+{p 12 16 2}{bf:(h)} Change Â“SCHÂ” to Â“SSS.Â”{p_end}
+{p 12 16 2}{bf:(i)} Change Â“PHÂ” to Â“FF.Â”{p_end}
+{p 12 16 2}{bf:(j)} If Â“HÂ” is preceded by or followed by a letter that is not a vowel (AEIOU), then replace the current letter in the surname by the preceding letter.{p_end}
+{p 12 16 2}{bf:(k)} If "W" is preceded by a vowel, then replace the current letter in the surname with the preceding letter.{p_end}
 
 {p 4 12 2} {bf:Step 6:} The next character of the NYSIIS code is the current position letter in the surname after completing Step 5 (but omitting a letter that is equal to the last character already placed in the code). After putting a character into the code, move the pointer forward to the next letter of the surname. Then return to Step 5. {p_end}
-{p 4 12 2} {bf:Step 7:} (Change the last character(s) of the NYSIIS-coded surname.) If the last two characters of the NYSIIS-coded surname are “AY,” then replace “AY” by “Y.” If the last character of the NYSIIS-coded surname is either “S” or “A,” then delete it.{p_end} 
+{p 4 12 2} {bf:Step 7:} (Change the last character(s) of the NYSIIS-coded surname.) If the last two characters of the NYSIIS-coded surname are Â“AY,Â” then replace Â“AYÂ” by Â“Y.Â” If the last character of the NYSIIS-coded surname is either Â“SÂ” or Â“A,Â” then delete it.{p_end} 
 
 {title:Options}
 
@@ -94,6 +94,9 @@ the “pointer” is moved to the next letter of the name. In Step 7, the end portio
 {pstd} University of Bristol{p_end}
 {pstd} adrian.sayers@bristol.ac.uk {p_end}
 {pstd}  {p_end}
+
+{title:Acknowledgement}
+{pstd} Matthew Curtis mjdcurtis@gmail.com  spotted and fixed unusual behaviour in how steps 5j and 5k are implmented 07/2018 {p_end}
 
 {title:Also see}
 

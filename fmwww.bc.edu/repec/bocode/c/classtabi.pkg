@@ -1,4 +1,4 @@
-d 'CLASSTABI': module for  for generating classification statistics and table using summarized data 
+d 'CLASSTABI': module for generating classification statistics and table using summarized data 
 d
 d  classtabi is an immediate command that reports various summary
 d statistics, including a 2 x 2 table for discrete classification
@@ -15,7 +15,7 @@ d KW: accuracy
 d
 d Requires: Stata version 11
 d
-d Distribution-Date: 20160531
+d Distribution-Date: 20180715
 d
 d Author: Ariel Linden, Linden Consulting Group, LLC
 d Support: email alinden@@lindenconsulting.org

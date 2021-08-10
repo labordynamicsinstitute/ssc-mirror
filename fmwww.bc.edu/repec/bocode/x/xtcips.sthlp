@@ -36,7 +36,7 @@ data before using {cmd:xtcips}, using the panel form of {cmd:tsset}; see help {h
       i) Wald test of composite linear hypothesis about the parameters of the model ({bf:default})
       ii) Portmanteau (Q) test for white noise (see {cmd:q} option).
 
- - It reports the p-value of the serial correlation Breusch�Godfrey Lagrange multiplier test of each individual regression (see {cmdab:bgl:ags(}{it:numlist}{cmd:)} option)
+ - It reports the p-value of the serial correlation Breusch–Godfrey Lagrange multiplier test of each individual regression (see {cmdab:bgl:ags(}{it:numlist}{cmd:)} option)
   
 The null hypothesis is (homogeneous non-stationary):
 
@@ -59,7 +59,7 @@ with an iterative process from 0 to {bf:maxlags}, based on the test's significan
 -reject H0 (at 5% or below) in the Wald test or do not reject (at 95% or above) H0 in the Portmanteau (Q)- or {bf:maxlags}, whichever comes first.
 
 {p 0 4}{cmdab:bgl:ags(}{it:numlist}{cmd:)} sets the serial correlation order to be tasted with the 
-Breusch�Godfrey Lagrange multiplier test in each individual regression. If a single
+Breusch–Godfrey Lagrange multiplier test in each individual regression. If a single
 value is provided (positive integer), that order is used for all individuals. If a list of orders is 
 provided, its length must match the number of individuals in the panel.
 
@@ -79,20 +79,20 @@ provided, its length must match the number of individuals in the panel.
 {synopt:{cmd:r(cips)}}CIPS statistic{p_end}
 
 {p2col 5 15 19 2: Matrices}{p_end}
-{synopt:{cmd:r(cv)}}Critical values of average of individual cross-sectionally augmented Dickey–Fuller distribution{p_end}
+{synopt:{cmd:r(cv)}}Critical values of average of individual cross-sectionally augmented Dickeyâ€“Fuller distribution{p_end}
 {synopt:{cmd:r(W)}}Individual regression diagnostics{p_end}
 {p2colreset}{...}
 
 {title:References}
 
 Pesaran, M. H. (2007). "A Simple Panel Unit Root Test In The Presence Of Cross-section Dependence."
-Journal Of Applied Econometrics 22: 265�312
+Journal Of Applied Econometrics 22: 265–312
 
 
 {title:Acknowledgements}
 
 {p 0 0 2}This routine was made with the helpful advice of Tamara Burdisso. Any errors are my own.
-
+I acknowledge useful comments made by Dr. Predrag Petrović from Institute of Social Sciences in Belgrade.
 
 {title:Author}
 

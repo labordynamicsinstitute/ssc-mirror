@@ -1,10 +1,12 @@
+*! version 2.0.1  30Jun2017 P. Poppitz 
+*! update to versions >10
 *! version 2.0.0  13May2005 Biewen & Jenkins 
 *! Update to version 8.2, with minor other cosmetic changes
 *! version 1.1.1  1april2003  Biewen & Jenkins 
 *! Estimation of GE inequality indices from complex survey data
 
 program define svygei, eclass
-	version 8.2
+	version 10
 	if replay() {
 		if "`e(cmd)'" != "svygei" {
 			noi di in red "results for svygei not found"
@@ -70,12 +72,12 @@ program define Estimate, eclass
 
 				/* check that >1 PSU per stratum */
 
-		capture svymean `varlist' if `touse'
+		capture svy: mean `varlist' if `touse'
 			if _rc {
 				local rc = _rc
 				if `rc' == 460 {
 					di as error "stratum with only one psu detected"
-					di as error "locate using -svydes-"
+					di as error "locate using -svy: des-"
 					exit 460
 				}
 			}
@@ -90,7 +92,7 @@ program define Estimate, eclass
 
 			/* estimate totals */
 
-		svytotal `one' `varlist' `vua' `vum1' `vu2' `vt0' `vt1' if `touse',  `opt'  
+		svy: total `one' `varlist' `vua' `vum1' `vu2' `vt0' `vt1' if `touse',  `opt'  
 
 	}
 
@@ -137,7 +139,7 @@ program define Estimate, eclass
 			*/ + ((`alpha')^2-(`alpha'))^(-1)*`u0'^((`alpha')-1)*`u1'^(-(`alpha'))*`varlist'^(`alpha') if `touse'
 
 			/* calculate standard errors */
-		svytotal `rgem1' `rge0' `rge1' `rge2' `rgea' if `touse', `opt' 
+		svy: total `rgem1' `rge0' `rge1' `rge2' `rgea' if `touse', `opt' 
 	}
 
 	tempname cov sgem1 sge0 sge1 sge2 sgea
@@ -226,37 +228,37 @@ program define Display
 	di as text "GE(-1)" _col(10) "{c |} " %9.0g as result e(gem1) _c 
 	di as result _col(24) e(se_gem1) _col(31)  _c
 	di %9.2f as result e(gem1)/e(se_gem1) _col(40) _c
-	di %9.3f as result 2*(1-norm(`e(gem1)'/`e(se_gem1)')) _c
-	di _col(56) %9.0g as result e(gem1)+invnorm((100-`level')/200)*e(se_gem1) _c
-	di _col(67) %9.0g as result e(gem1)-invnorm((100-`level')/200)*e(se_gem1) 
+	di %9.3f as result 2*(1-normal(`e(gem1)'/`e(se_gem1)')) _c
+	di _col(56) %9.0g as result e(gem1)+invnormal((100-`level')/200)*e(se_gem1) _c
+	di _col(67) %9.0g as result e(gem1)-invnormal((100-`level')/200)*e(se_gem1) 
 
 	di as text "MLD" _col(10) "{c |} " %9.0g as result e(ge0) _c
 	di as result _col(24) e(se_ge0) _col(31)  _c
 	di %9.2f as result e(ge0)/e(se_ge0) _col(40) _c
-	di %9.3f as result 2*(1-norm(`e(ge0)'/`e(se_ge0)')) _c
-	di _col(56) %9.0g as result e(ge0)+invnorm((100-`level')/200)*e(se_ge0) _c
-	di _col(67) %9.0g as result e(ge0)-invnorm((100-`level')/200)*e(se_ge0) 
+	di %9.3f as result 2*(1-normal(`e(ge0)'/`e(se_ge0)')) _c
+	di _col(56) %9.0g as result e(ge0)+invnormal((100-`level')/200)*e(se_ge0) _c
+	di _col(67) %9.0g as result e(ge0)-invnormal((100-`level')/200)*e(se_ge0) 
 
 	di as text "Theil" _col(10) "{c |} " %9.0g as result e(ge1) _c
 	di as result _col(24) e(se_ge1) _col(31)  _c
 	di %9.2f as result e(ge1)/e(se_ge1) _col(40) _c
-	di %9.3f as result 2*(1-norm(`e(ge1)'/`e(se_ge1)')) _c
-	di _col(56) %9.0g as result e(ge1)+invnorm((100-`level')/200)*e(se_ge1) _c
-	di _col(67) %9.0g as result e(ge1)-invnorm((100-`level')/200)*e(se_ge1) 
+	di %9.3f as result 2*(1-normal(`e(ge1)'/`e(se_ge1)')) _c
+	di _col(56) %9.0g as result e(ge1)+invnormal((100-`level')/200)*e(se_ge1) _c
+	di _col(67) %9.0g as result e(ge1)-invnormal((100-`level')/200)*e(se_ge1) 
 
 	di as text "GE(2)" _col(10) "{c |} " %9.0g as result e(ge2) _c
 	di as result _col(24) e(se_ge2) _col(31)  _c
 	di %9.2f as result e(ge2)/e(se_ge2) _col(40) _c
-	di %9.3f as result 2*(1-norm(`e(ge2)'/`e(se_ge2)')) _c
-	di _col(56) %9.0g as result e(ge2)+invnorm((100-`level')/200)*e(se_ge2) _c
-	di _col(67) %9.0g as result e(ge2)-invnorm((100-`level')/200)*e(se_ge2)
+	di %9.3f as result 2*(1-normal(`e(ge2)'/`e(se_ge2)')) _c
+	di _col(56) %9.0g as result e(ge2)+invnormal((100-`level')/200)*e(se_ge2) _c
+	di _col(67) %9.0g as result e(ge2)-invnormal((100-`level')/200)*e(se_ge2)
  
 	di as text "GE(`e(alpha)')" _col(10) "{c |} " %9.0g as result e(gea) _c
 	di as result _col(24) e(se_gea) _col(31)  _c
 	di %9.2f as result e(gea)/e(se_gea) _col(40) _c
-	di %9.3f as result 2*(1-norm(`e(gea)'/`e(se_gea)')) _c
-	di _col(56) %9.0g as result e(gea)+invnorm((100-`level')/200)*e(se_gea) _c
-	di _col(67) %9.0g as result e(gea)-invnorm((100-`level')/200)*e(se_gea)
+	di %9.3f as result 2*(1-normal(`e(gea)'/`e(se_gea)')) _c
+	di _col(56) %9.0g as result e(gea)+invnormal((100-`level')/200)*e(se_gea) _c
+	di _col(67) %9.0g as result e(gea)-invnormal((100-`level')/200)*e(se_gea)
 
 	di as text "{hline 9}{c BT}{hline 65}"
 

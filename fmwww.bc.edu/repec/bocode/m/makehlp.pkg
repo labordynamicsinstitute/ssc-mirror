@@ -9,10 +9,10 @@ d KW: help
 d
 d Requires: Stata version 12
 d
-d Distribution-Date: 20151102
+d Distribution-Date: 20200715
 d
-d Author: Adrian Mander 
-d Support: email adrian.mander@@mrc-bsu.cam.ac.uk
+d Author: Adrian Mander , University of Cardiff
+d Support: email ManderA@@cardiff.ac.uk
 d
 f makehlp.ado
 f makehlp.sthlp

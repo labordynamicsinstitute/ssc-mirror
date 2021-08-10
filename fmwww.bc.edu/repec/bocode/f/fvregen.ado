@@ -5,11 +5,11 @@ version 11.0;
  Regenerate a newvarlist of factor variables
  from a parameter name variable containing e(b) column stripe elements.
 *!Author: Roger Newson
-*!Date: 19 February 2012
+*!Date: 25 November 2020
 */
 
 syntax [ newvarlist(default=none) ] [if] [in] [,
-  FRom(varlist string) DOfile(string) FMissing(name)
+  FRom(varlist string) DOfile(string) FMissing(name) FAST
   ];
 /*
   from() specifies the input parameter name variables
@@ -22,6 +22,8 @@ syntax [ newvarlist(default=none) ] [if] [in] [,
     zero values in observations with at least one monmissing value in a generated factor,
     and values of 1 in observations included by the if and in qualifiers
     with no nonmissing values in any generated factor.
+  fast specifies that no extra work will be done to restore the original dataset,
+    if the user presses Break.
 */
 
 
@@ -44,6 +46,12 @@ marksample touse, novarlist;
 
 * Count observations *;
 local nobs=_N;
+
+
+* Preserve if fast not secified *;
+if "`fast'"=="" {;
+  preserve;
+};
 
 
 *
@@ -159,6 +167,12 @@ if `"`fmissing'"'!="" {;
     qui replace `fmissing'=0 if `touse' & !missing(`X');
   };
   lab var `fmissing' "Missing:`varlist'";
+};
+
+
+* Restore if fast not secified *;
+if "`fast'"=="" {;
+  restore, not;
 };
 
 

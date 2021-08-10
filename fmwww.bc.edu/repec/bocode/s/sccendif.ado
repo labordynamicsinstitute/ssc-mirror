@@ -1,11 +1,11 @@
 #delim ;
 prog def sccendif, rclass byable(onecall) sortpreserve;
-version 10.0;
+version 16.0;
 /*
  Use cendif
  for a scenario comparison enabled by expgen.
 *!Author: Roger Newson
-*!Date: 01 February 2012
+*!Date: 16 April 2020
 */
 
 syntax anything(name=ylist) [if] [in] [fweight iweight pweight /] [ , 

@@ -1,3 +1,11 @@
+/*---------------------------
+22Dec2020 - version 2.0
+
+Output The Equation of a Regression
+
+Author: Liu Wei, Yunnan University of Finance and Economics
+E-mail: liuwei@ynufe.edu.cn
+---------------------------*/
 capture program drop equation
 program define equation
 version 9

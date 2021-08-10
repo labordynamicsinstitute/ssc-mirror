@@ -1,6 +1,6 @@
 d 'XGROUP': module to create a grouping variable with key values in an output dataset
 d
-d xgroup is an extended version of the egen function
+d  xgroup is an extended version of the egen function
 d group(varlist). It inputs a varlist of existing variables, and
 d generates as output a new variable, defining a grouping of the
 d observations by the varlist, and also an output dataset (or
@@ -23,7 +23,7 @@ d Requires: Stata version 10.0
 d
 d Distribution-Date: 20090204
 d
-d Author: Roger Newson, National Heart and Lung Institute at Imperial College London
+d Author: Roger Newson,  Imperial College London
 d Support: email r.newson@@imperial.ac.uk
 d
 f xgroup.ado

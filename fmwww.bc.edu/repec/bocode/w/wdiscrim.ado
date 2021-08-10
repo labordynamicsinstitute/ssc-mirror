@@ -1,4 +1,6 @@
-*! version 2.1.0 14MAr2014  -- Ph. Van Kerm  
+*! version 2.2.0 13Feb2021  -- Ph. Van Kerm
+* fix incompatilibty with v15 and 16 in matrix name  
+* version 2.1.0 14MAr2014  -- Ph. Van Kerm  
 * edit ref to del Rio et al. + calculate absolute and relative indices
 * version 2.0.0 03sep2009  -- Ph. Van Kerm   
 * - remove the -by- feature -- many problems with the -gen-, -tip*- options
@@ -82,7 +84,8 @@ program define wdiscrim , rclass sortpreserve
     * Use NJC's makematrix to compute means and percentiles of diff et log diff
     tempname Res1 
     qui makematrix `Res1' , from(r(mean) r(p10) r(p25) r(p50) r(p75) r(p90)) : su `diff' `logdiff' `relgap' `agap1' `rgap1' if `touse' [`weight'`exp'] , d 
-    matrix rownames `Res1' = `"Difference [r-y]"' `"Diff of logs [log(r)-log(y)]"' `"Rel diff [exp(log(r)-log(y))-1]"' `"Max(r-y,0)"' `"Max(1-y/r,0)"'
+    *matrix rownames `Res1' = `"Difference [r-y]"' `"Diff of logs [log(r)-log(y)]"' `"Rel diff [exp(log(r)-log(y))-1]"' `"Max(r-y,0)"' `"Max(1-y/r,0)"'  // Stat 15+ does not accept [ ] anymore
+    matrix rownames `Res1' = `"Difference: r-y"'   `"Diff of logs: log(r)-log(y)"'  `"Rel diff: exp(log(r)-log(y))-1"'  " Max(r-y,0)" " Max(1-y/r,0)"
 
     if ("`adgc'"!="") {
        tempname Res2 Res3 

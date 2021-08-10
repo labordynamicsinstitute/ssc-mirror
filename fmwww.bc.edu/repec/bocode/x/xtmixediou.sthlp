@@ -1,5 +1,5 @@
 {smcl}
-{* 08feb2016}{...}
+{* 26apr2017}{...}
 {cmd:help for xtmixediou}{right:Rachael Hughes}
 {hline}
 
@@ -27,14 +27,15 @@ where {it:levelvar} is a variable identifying the group structure for the random
 {synopt :{opt *id(levelvar)}}defines the group structure variable for the random effects{p_end}
 {synopt :{opt *time(timevar)}}variable for the measurement times of {it:depvar}{p_end}
 {synopt :{opt nofec:onstant}}suppresses the constant term for the fixed portion of the model{p_end}
-{synopt :{opt re:ffects(varlist)}}defines the random coefficients and intercept{p_end}
+{synopt :{opt re:ffects(varlist)}}defines the random effects of the model{p_end}
 {synopt :{opt norec:onstant}}suppresses the constant term for the random portion of the model{p_end}
-{synopt :{cmd:iou(}{help xtmixediou##ioutype:ioutype}{cmd:)}}specifies parameterization of the IOU process used in estimation{p_end}
-{synopt :{opt brown:ian}}specifies a Brownian Motion process, which is a special case of the IOU process{p_end}
+{synopt :{cmd:iou(}{help xtmixediou##ioutype:ioutype}{cmd:)}}specifies the parameterization of the IOU process used in estimation{p_end}
+{synopt :{opt brown:ian}}specifies a scaled Brownian Motion process, which is a special case of the IOU process{p_end}
 {synopt :{opt svdata:derived}}starting values derived from the data{p_end}
 {synopt :{opt alg:orithm(algorithm_spec)}}maximization algorithm{p_end}
 {synopt :{opt iter:ate(#)}}performs maximum of # iterations; default is iterate(16000){p_end}
-{synopt :{opt nolo:g}}displays an iteration log of the likelihood{p_end}
+{synopt :{opt dif:ficult}}uses a different stepping algorithm in nonconcave regions{p_end}
+{synopt :{opt nolo:g}}suppresses the display of the iteration log{p_end}
 {synopt :{opt tr:ace}}displays the current parameter vector in iteration log{p_end}
 {synopt :{opt grad:ient}}displays the current gradient in iteration log{p_end}
 {synopt :{opt showstep}}reports steps within an iteration log{p_end}
@@ -55,12 +56,12 @@ and {it:algorithm} is {c -(}{opt nr} {c |} {opt fs} {c |} {opt ai}{c )-}.{p_end}
 {marker ioutype}{...}
 {synopthdr :ioutype}
 {synoptline}
-{synopt :{opt at}}IOU parameterization is alpha and tau, the default{p_end}
+{synopt :{opt at}}IOU parameterization is {alpha} and tau, the default{p_end}
 {synopt :{opt ao}}IOU parameterization is alpha and omega = (tau{c 178}/alpha{c 178}){p_end}
-{synopt :{opt et}}IOU parameterization is eta = ln(alpha) and tau{p_end}
-{synopt :{opt eo}}IOU parameterization is eta = ln(alpha) and omega = (tau{c 178}/alpha{c 178}){p_end}
-{synopt :{opt it}}IOU parameterization is iota = 1/(alpha{c 178}) and tau{p_end}
-{synopt :{opt io}}IOU parameterization is eta = 1/(alpha{c 178}) and omega = (tau{c 178}/alpha{c 178}){p_end}
+{synopt :{opt lnat}}IOU parameterization is ln(alpha) and tau{p_end}
+{synopt :{opt lnao}}IOU parameterization is ln(alpha) and omega = (tau{c 178}/alpha{c 178}){p_end}
+{synopt :{opt isat}}IOU parameterization is 1/(alpha{c 178}) and tau{p_end}
+{synopt :{opt isao}}IOU parameterization is 1/(alpha{c 178}) and omega = (tau{c 178}/alpha{c 178}){p_end}
 {synoptline}
 
 {title:Description}
@@ -93,30 +94,35 @@ The overall error distribution of the linear mixed effects model is assumed to b
 {opt time(timevar)} defines the numeric variable for the observation timepoints of {it:depvar}. This is a required option.
 
 {phang}
-{opt nofeconstant} suppresses the constant (intercept) term for the fixed portion of the model.
+{opt nofeconstant} suppresses the constant term for the fixed portion of the model. By default a constant term is included in the fixed portion of the model.
 
 {phang}
-{opt reffects(varlist)} defines the random effects of the model. The model must contain at least one random effect. A random intercept is automatically included.
-For two or more random effects an unstructured covariance matrix is assumed (i.e., all variance and covariances are distinctly estimated). 
-When {opt reffects(varlist)} is not specified the default is a random intercept.
+{opt reffects(varlist)} defines the random effects of the model. xtmixediou automatically includes a constant term in the random effects. For two or more random effects
+an unstructured covariance matrix is assumed (i.e., all variances and covariances are distinctly estimated). Factor variables are not allowed. The default (when
+reffects(varlist) is not specified) is a random intercept.
 
 {phang}
-{opt noreconstant} suppresses the constant (intercept) term for the random effects of the model.
+{opt noreconstant} suppresses the constant term for the random effects of the model. By default a constant term is included in the random portion of the model.
 
 {phang}
 {opt iou(ioutype)} specifies the parameterization of the IOU process used during REML estimation. 
 Six different parameterizations of the IOU process are allowed (see {help xtmixediou##ioutype:ioutype}). 
 The default parameterization is alpha and tau ({it:ioutype=at}). Changing the IOU parameterization may improve convergence. 
-For example, parameterizations {it:eta} or {it:iota} may be useful if alpha is suspected to be large.
-There is no guarantee that any of the other parameterizations work better than the default.
+For example, parameterizations ln(alpha) or 1/(alpha{c 178}) may be useful if alpha is suspected to be large.
+There is no guarantee that any of the other parameterizations work better than the default; sometimes it is better and sometimes it is worse.
+
+{phang}
+{opt brownian} specifies a scaled Brownian Motion (BM) process, a special case of the IOU process, which is parameterized by a single parameter phi. The BM process represents no
+derivative tracking and the fitted model then becomes the linear mixed effects Brownian Motion model.
 
 {phang}
 {opt svdataderived} specifies that the starting values of all of the model's variance parameters (i.e., random effects variances and
-covariances, IOU or BM parameters and measurement error variance) are derived from the data. 
-The method assumes that the random effects includes either a random intercept and/or a random linear slope.    
-If {it:svdataderived} is not specified (i.e., the default) then a linear mixed effects model without an added IOU process is fitted and the resulting expectation maximization estimates are used as the 
-starting values for the random effects variances and covariances, and the measurement error variance; whilst the starting values for the IOU or BM parameters are set 
-to small positive values representing strong derivative tracking.
+covariances, IOU or BM parameters and measurement error variance) are derived from the data. svdataderived assumes the user has specified 
+(using options reffects() and/or noreconstant) that the random effects only include a random intercept and/or a random linear slope. 
+When svdataderived is not specified (i.e., the default) then a linear mixed effects model without an added IOU or BM process is 
+fitted (using Stata’s command mixed) and the resulting expectation maximization estimates are used as the starting values for the random effects variances 
+and covariances, and the measurement error variance; whilst the starting values for the IOU or BM parameters are set to small positive values 
+(i.e., representing strong derivative tracking). {cmd:xtmixediou} saves the starting values to matrix {cmd:e(sv)}.
 
 {phang}
 {opt algorithm(algorithm_spec)} specifies the optimization algorithm used to perform REML estimation. 
@@ -234,6 +240,7 @@ Random intercept and random slope IOU model, with estimation performed using 10 
     Matrices 
 {synopt :{cmd:e(b)}}coefficient vector{p_end}
 {synopt :{cmd:e(V)}}variance-covariance matrix of the estimators{p_end}
+{synopt :{cmd:e(sv)}}starting values of the variance parameters{p_end}
 {synopt :{cmd:e(N_g)}}group counts{p_end}
 {synopt :{cmd:e(g_min)}}group-size minimum{p_end}
 {synopt :{cmd:e(g_avg)}}group-size average{p_end}
@@ -241,7 +248,6 @@ Random intercept and random slope IOU model, with estimation performed using 10 
 
    Functions 
 {synopt :{cmd:e(sample)}}marks estimation sample{p_end}
-
 
 {title:References}
 

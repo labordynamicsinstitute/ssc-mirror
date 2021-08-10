@@ -1,62 +1,7 @@
 * ado-file for censored quantile IV estimation
 *
-* May 4, 2012
+* Sep 20, 2019
 * Sukjin Han / Amanda Kowalski
-*
-* 1.0.0: censored quantile IV, basic options, only continuous variables (so no logit), no btsp rep
-* 2.0.0: other options (censoring points, dropping rate)
-* 3.0.0: All debugged except matrix command part, basic ereturns,
-* 	erase label in coefficients and taucount, simplify coding for coefficients variables(WRONG),
-* 	use checkpoints
-* 4.0.0: ereturn doesn't allow missing values so change coding to distinguish no s.e. and boot s.e.,
-* 	bootstrap works, maybe you don't want to use "ereturn post" but just "ereturn"
-* 5.0.0: mata failed in ver 4 so use different coding for matrix "robust"
-* 6.0.0: local macro for entries of matrix "robust", basic ereturn matrix completed
-* 7.0.0: incorporating cqr and qiv option,
-* 	cqr: no first stage, drop ehat in the rest regressions,
-* 	qiv: no censored depvar (or set the censored point to be the min value of depvar),
-* 	deleted diagnosing above zero portion
-* 	NO `regressor' in first stage!!!!
-* 8.0.0: weighted bootstrap and cleanup, drop tabstat parts
-* 9.0.0: ADD cqr
-* 10.0.0: changed table label
-* 11.0.0: USE "tempvar" and NO "gen" / drop "save tempresults" / use "quietly save",
-* 	tempvar varname, and then, quietly gen `varname' = ~~~,
-* 	drop generating variables to store coefficients part (and "gen" instead of "replace"),
-* 	CAUTION USING "REPLACE" ONLY WITH TEMPVAR, otherwise use "gen",
-* 	drop meaningless s.e. part
-* 12.0.0: drop seed iter, display final tables, viewlog option, viewrobust option, top option,
-* 	CAUTION: key tempvar's before iteration loop
-* 13.0.0: first and second LDV options, weight and weight option, seedset option
-* 14.0.0: drop "capture drop" of tempvar, option for step size of quantiles and thresholds in first stage estimation,
-* 	change option names (use CI, norobust), dot for no CI case
-* 15.0.0: apply weight option, CAUTION: force pweight in ldv models, iter and seed as tempvar
-* 16.0.0: different options for quantiles and thresholds (CAUTION: no varname with `tau' since now it is not integer)
-* 17.0.0: force aweight for qreg, and pweight for LDV, and multiplication of weights in weighted bootstrap (OLS has the user-specified weights)
-* 18.0.0: weight for weightboot in front; bsample command alive CHECK THIS
-* 19.0.0: change errors in replacement of 3rd step coefficients with 2nd step ones
-* 20.0.0: incorporating marginal effects; in order to do so, switch variables `estimator'`var' and f`estimator'`var' to be local macros
-* 21.0.0: corrected errors in bootstrap rep of ver.20
-* 22.0.0: correct weighted bootstrap weight error, apply weightboot for ols, apply inverse normal in dist estimation
-* 23.0.0: if nthresh <= 1600 do existing foreach loop, else do forvalues
-* 24.0.0: all exogenous variables as IV
-* 25.0.0: alternative option for top
-* 26.0.0: exclude option: exclude exog variables in 1st stage
-* 27.0.0: different use of capture command in ALL tau loop
-* 28.0.0: use capture and _rc for estimations that are not converging
-* 29.0.0: use capture and _rc for dropped variables
-* 30.0.0: solve the problem of maxvar, by dropping unnecessary variables,
-* 31.0.0: by changing tempvar to local
-* 32.0.0: redefine outcome variables
-* 33.0.0: correct missing value problem in c`tau' and deltan, correct the calculation of mean of coeff by adding "if `itervar'~=1"
-* 34.0.0: data type, double, for fitted values; warnings for not converging run in bootstrap reps
-
-
-* CAUTION: NO TAG MACRO IN ADO FILE
-* CAUTION: NO COMMENTS ON THE SAME LINE WITH "*"; INSTEAD USE "/* */"
-* CAUTION: There are places where you need to forcefully drop temporary variables
-* CAUTION: For default values, need to be careful when writing error messages
-
 
 * CQIV.ADO
 program cqiv, eclass
@@ -65,18 +10,19 @@ version 10
 syntax anything(name=0) [if] [in] [aweight pweight]
  [,
  Quantiles(numlist >0 <100 sort)
- Censorpt(real 0)
+ Censorpt0(real 0)
+ censorvar(varname)
  Top
  Uncensored
  Exogenous
  Firststage(string)
- EXClude
+ firstvar(varlist)
  nquant(real 50)
  nthresh(real 50)
  ldv1(string)
  ldv2(string)
  drop1(real 10) drop2(real 3)
- COnfidence(string) Bootreps(real 20) Setseed(real 777)
+ COnfidence(string) CLUster(string) Bootreps(real 20) Setseed(real 777)
  LEvel(real 95)
  CORner
  NOrobust
@@ -108,13 +54,24 @@ syntax anything(name=0) [if] [in] [aweight pweight]
 	if "`confidence'"=="no"{
 		local reps "1"
 	}
+
 	if "`confidence'"=="boot" | "`confidence'"=="weightboot"{
 		local reps=`bootreps'+1
 		if "`confidence'"=="weightboot"{
-		qui gen eweight=-ln(1-uniform())
-		if "`weight'"!="" qui replace eweight `exp'*eweight
+			if "`cluster'"==""{
+				qui gen eweight=-ln(1-uniform())
+				if "`weight'"!="" qui replace eweight `exp'*eweight
+				}
+			else {
+				sort `cluster'
+				qui gen cluster_var = uniform()
+				by `cluster': gen eweight_proxy = cluster_var[1] 
+				qui gen eweight=-ln(1-eweight_proxy)                                                                                            
+				drop cluster_var eweight_proxy
+				}
 		}
 	}
+
 
 
 	
@@ -132,11 +89,11 @@ syntax anything(name=0) [if] [in] [aweight pweight]
 	
 	* Need to have correct estimation for these options (THIS IS WRONG, since numthresh and numquant always take default values)
 	* if "`firststage'"!="distribution" & "`numthresh'"!=""{
-	* 	di in red "Numthresh option only with distribution regression for the first stage estimation."
+	* 	di in red "numthresh option only with distribution regression for the first stage estimation."
 	* 	exit
 	* }
 	* if "`firststage'"!="quantile" & "`numquant'"!=""{
-	* 	di in red "Numquant option only with quantile regression for the first stage estimation."
+	* 	di in red "numquant option only with quantile regression for the first stage estimation."
 	* 	exit
 	* }
 	
@@ -186,21 +143,32 @@ syntax anything(name=0) [if] [in] [aweight pweight]
 	
 	quietly summarize `touse'
 	local obs = r(sum)
+	
+	
+	* Whether the censoring point is a constant or a variable
+	if "`censorvar'"!="" {
+		tempvar censorpt
+		gen `censorpt' = `censorvar'
+	}
+	else {
+		local censorpt = `censorpt0'
+	}
 
+	
 	* Check the censoring point is reasonable
+	if "`uncensored'"=="" {
 	qui sum `depvar'
 	if r(min)>`censorpt' | r(max)<`censorpt'{
 		di in red "Unreasonable censoring point; reasonable amount of observations should have the value of the censoring point."
 		exit
 	}
+	}
 	
-	
-	* Incorporate top option (Also at the last part of the code)
+	* Incorporate top option (see also at the last part of the code)
 	qui if "`top'"!="" {
 		replace `depvar' = -`depvar'
 		local censorpt = -`censorpt'
 	}
-	
 	
 	
 	* Put quantiles in a matrix
@@ -266,8 +234,8 @@ if `iter'==2 {
 	* Generate intermediate variables to store diagnostic test results
 	global tablelist ""
 	if "`uncensored'"=="" {
-	if "`top'"=="" local opt "complete c pctj0 censorpt pctabovecensorpt deltan pctj1 pctj0inj1 inj1notj0 obj1v obj2v thirdbetter"
-	else local opt "complete c pctj0 censorpt pctbelowcensorpt deltan pctj1 pctj0inj1 inj1notj0 obj1v obj2v thirdbetter"
+	if "`top'"=="" local opt "complete k0 pctj0 C pctabovecensorpt varsig pctj1 pctj0inj1 inj1notj0 obj1v obj2v thirdbetter"
+	else local opt "complete k0 pctj0 C pctbelowcensorpt varsig pctj1 pctj0inj1 inj1notj0 obj1v obj2v thirdbetter"
 	}
 	
 	
@@ -285,8 +253,8 @@ quietly {
 if "`viewlog'"!="" local viewlog "noisily"
 
 	if "`exogenous'"==""{
-		if "`exclude'"=="" local regressor1 "`regressor'"
-		else local regressor1 ""
+		if "`firstvar'"=="" local regressor1 "`regressor'"
+		else local regressor1 "`firstvar'"
 		
 		****************************************
 		* QUANTILE First Stage Regression
@@ -320,7 +288,7 @@ if "`viewlog'"!="" local viewlog "noisily"
 		}
 		
 		
-		qui if "`firststage'"=="distribution" {
+		if "`firststage'"=="distribution" {
 			gen `ehat'=.
 			local tot `=_N'
 			local penult= `tot' - 1
@@ -330,16 +298,16 @@ if "`viewlog'"!="" local viewlog "noisily"
 			
 			if `nthresh' <= 1600 {
 			foreach obss of numlist `fthreshrange' {
-				tempvar val yp
+				tempvar val yp reg1
 				egen `val' = pctile(`endogvar'), p(`obss')
 				gen `yp'=(`endogvar'<=`val')
-				if `iter'==1 `viewlog' `ldv1' `yp' `instrument' `regressor1' [`ldvweight'`exp']
+				if `iter'==1 `viewlog' `ldv1' `yp' `instrument' `regressor1' if `touse' [`ldvweight'`exp']
 				if `iter'~=1{
 					if "`confidence'"=="boot"{
-					`viewlog' `ldv1' `yp' `instrument' `regressor1' [`ldvweight'`exp']
+					`viewlog' `ldv1' `yp' `instrument' `regressor1' if `touse' [`ldvweight'`exp']
 					}
 					if "`confidence'"=="weightboot"{
-					`viewlog' `ldv1' `yp' `instrument' `regressor1' [pweight=eweight]
+					`viewlog' `ldv1' `yp' `instrument' `regressor1' if `touse' [pweight=eweight]
 					}
 				}
 				tempvar yhat
@@ -354,13 +322,13 @@ if "`viewlog'"!="" local viewlog "noisily"
 				tempvar val yp
 				egen `val' = pctile(`endogvar'), p(`obss')
 				gen `yp'=(`endogvar'<=`val')
-				if `iter'==1 `viewlog' `ldv1' `yp' `instrument' `regressor1' [`ldvweight'`exp']
+				if `iter'==1 `viewlog' `ldv1' `yp' `instrument' `regressor1' if `touse' [`ldvweight'`exp']
 				if `iter'~=1{
 					if "`confidence'"=="boot"{
-					`viewlog' `ldv1' `yp' `instrument' `regressor1' [`ldvweight'`exp']
+					`viewlog' `ldv1' `yp' `instrument' `regressor1' if `touse' [`ldvweight'`exp']
 					}
 					if "`confidence'"=="weightboot"{
-					`viewlog' `ldv1' `yp' `instrument' `regressor1' [pweight=eweight]
+					`viewlog' `ldv1' `yp' `instrument' `regressor1' if `touse' [pweight=eweight]
 					}
 				}
 				tempvar yhat
@@ -401,7 +369,6 @@ if "`viewlog'"!="" local viewlog "noisily"
 		tempvar uncensvar
 		qui gen `uncensvar'=(`depvar'>`censorpt')	/* local `censorpt' instead of variable censorpt */
 	}
-
 	
 	foreach tau of numlist `taurange' {
 	
@@ -433,9 +400,9 @@ if "`viewlog'"!="" local viewlog "noisily"
 			qui egen `cutoffvar'=pctile(`uncenhat') if `uncenhat'>(1-(`tau'/100)), p(`q')
 			* noi sum `cutoffvar'
 			* noi count if missing(`cutoffvar')
-			qui egen `cutoff'=mean(`cutoffvar')
-			* Report the value of c
-			local c`tau'=`cutoff'-(1-(`tau'/100)) in 1
+			qui egen `cutoff'=pctile(`cutoffvar'), p(50)
+			* Report the value of k0
+			local k0`tau'=`cutoff'-(1-(`tau'/100)) in 1
 
 			
 			* Keep in j0 if the predicted value is larger than the cutoff value
@@ -443,7 +410,7 @@ if "`viewlog'"!="" local viewlog "noisily"
 			qui gen `j0'=(`uncenhat'>`cutoffvar')
 			* The mean is the percent of the observations that have been selected for j0 
 			qui sum `j0'
-			local pctj0`tau'=r(mean)*100     
+			local pctj0`tau'=r(p50)*100     
 
 			drop `cutoffvar' `cutoff'
 			
@@ -487,16 +454,16 @@ if "`viewlog'"!="" local viewlog "noisily"
 			* I guarantee that fewer observations are thrown away than in the previous step by using q2<q1
 			tempvar cutoffvar2 cutoff2
 			qui egen `cutoffvar2'=pctile(`yhat`tau'') if `yhat`tau''>`censorpt', p(`q2')
-			* Report the value of deltan - would be different if I hadn't transformed the data to be censored at zero
-			qui egen `cutoff2'=mean(`cutoffvar2')	/* In order not to pick missing value */
-			local deltan`tau' = `cutoff2' in 1
+			* Report the value of varsig - would be different if I hadn't transformed the data to be censored at zero
+			qui egen `cutoff2'=pctile(`cutoffvar2'), p(50)	/* In order not to pick missing value */
+			local varsig`tau' = `cutoff2' in 1
 		  
 		  
 			* Keep in j1 if the predicted value is larger than cutoff2
 			tempvar j1
 			qui gen `j1'=(`yhat`tau''>`cutoffvar2')
 			qui sum `j1'
-			local pctj1`tau'=r(mean)*100
+			local pctj1`tau'=r(p50)*100
 
 			drop `cutoffvar2' `cutoff2'
 			
@@ -612,7 +579,7 @@ if "`viewlog'"!="" local viewlog "noisily"
 				tempvar cornerindic`tau'
 				gen `cornerindic`tau''=(`predq`tau''>=`censorpt')
 				replace `cornerindic`tau''=. if `predq`tau''==.
-				capt noi sum `cornerindic`tau''
+				capt qui sum `cornerindic`tau''
 				capt local cornerprob`tau' = `r(mean)'
 				if _rc!=0 local cornerprob`tau'=.
 				
@@ -622,19 +589,25 @@ if "`viewlog'"!="" local viewlog "noisily"
 				drop `cornerindic`tau'' `predq`tau''
 				
 			}
-
-			
+		
 			
 			if `iter'==1 {
+				if "`censorvar'"!="" {
+				tempvar C0
+				egen `C0' = pctile(`censorpt'), p(50)
+				local C = `C0' in 1
+				}
+				else {
+				local C = `censorpt'
+				}
 			#delimit;
-			matrix augm = [`complete`tau'', `c`tau'', `pctj0`tau'', `censorpt', `pctabovecensorpt`tau'',
-			 `deltan`tau'', `pctj1`tau'', `pctj0inj1`tau'', `inj1notj0`tau'', `obj1v`tau'', `obj2v`tau'', `thirdbetter`tau''];
+			matrix augm = [`complete`tau'', `k0`tau'', `pctj0`tau'', `C', `pctabovecensorpt`tau'',
+			 `varsig`tau'', `pctj1`tau'', `pctj0inj1`tau'', `inj1notj0`tau'', `obj1v`tau'', `obj2v`tau'', `thirdbetter`tau''];
 			matrix robust0 = robust0\augm;
 			#delimit cr
 			}
 		
 		}	
-	
 				
 		* NOW assign coefficients values in the variables defined right before the bootstrap loop
 		qui foreach i of local rhs {
@@ -689,39 +662,53 @@ foreach tau of numlist `taurange' {
 	capture quietly {
         local varnum=1	/* initial value for rhs variable loop */
         foreach var of local rhs { 	/* RECALL: local rhs "`endogvar' `regressor' _cons `ehat'" */
-                * In practice, if there are 100 observations, this gives the 3rd and 98th percentile
+              	
 		local `var'`tau'=`coeff`tau'`var'' in 1
-				local leftprob=50-`level'/2
-				local rightprob=50+`level'/2
-				tempvar l`tau'`var'
-                egen `l`tau'`var''=pctile(`coeff`tau'`var'') if `itervar'~=1, p(`leftprob') /* CAUTION: See "sum iter" to know what this means */
-                if "`confidence'"=="boot" | "`confidence'"=="weightboot" local l`var'=`l`tau'`var'' in 2
-                if "`confidence'"=="no" local l`var'=.	/* NO CI */
-                replace `l`tau'`var''=`l`var''
-                tempvar u`tau'`var'
-                egen `u`tau'`var''=pctile(`coeff`tau'`var'') if `itervar'~=1, p(`rightprob')
-                if "`confidence'"=="boot" | "`confidence'"=="weightboot" local u`var'=`u`tau'`var'' in 2
-                if "`confidence'"=="no" local u`var'=.	/* NO CI */
-                replace `u`tau'`var''=`u`var''
-                * Also calculate the mean of the bootstrapped replications
-                tempvar mean`var'
+	
+		* Calculate the mean of the bootstrapped replications
+		tempvar mean`var'
+		if "`confidence'"=="boot" | "`confidence'"=="weightboot" {
+					qui replace `coeff`tau'`var''=. in 1	/* calculate mean coefficient by only using bootstrap samples */
+		egen `mean`var''=mean(`coeff`tau'`var'') if `itervar'~=1
+		local mean`var'=`mean`var'' in 2
+		}
+		if "`confidence'"=="no" {
+		gen `mean`var''=.
+		local mean`var'=`mean`var'' in 1
+		}
+		
+		* Calculate the sd of the bootstrapped replications
+		tempvar sd`var'
                 if "`confidence'"=="boot" | "`confidence'"=="weightboot" {
 					qui replace `coeff`tau'`var''=. in 1	/* calculate mean coefficient by only using bootstrap samples */
-                	egen `mean`var''=mean(`coeff`tau'`var'') if `itervar'~=1
-                	local mean`var'=`mean`var'' in 2
+                	egen `sd`var''=sd(`coeff`tau'`var'') if `itervar'~=1
+                	local sd`var'=`sd`var'' in 2
                 	}
                 if "`confidence'"=="no" {
-                	gen `mean`var''=.
-                	local mean`var'=`mean`var'' in 1
+                	gen `sd`var''=.
+                	local sd`var'=`sd`var'' in 1
                 	}
-					matrix coeff`var' = [ ``var'`tau'' \ `mean`var'' \ `l`var'' \ `u`var'']
-				if `varnum'==1 matrix all`tau'=[`tau' \ coeff`var']
+	
+		*Calculate the lower and upper bound of symmetric CI
+		tempvar l`tau'`var'
+		gen `l`tau'`var''= ``var'`tau'' - invnormal( (1+`level'/100)/2 ) * `sd`var''  if `itervar'~=1
+		if "`confidence'"=="boot" | "`confidence'"=="weightboot" local l`var'=`l`tau'`var'' in 2
+		if "`confidence'"=="no" local l`var'=.	/* NO CI */
+		replace `l`tau'`var''=`l`var''		
+		tempvar u`tau'`var'
+		gen `u`tau'`var''= ``var'`tau'' + invnormal( (1+`level'/100)/2 ) * `sd`var''  if `itervar'~=1
+		if "`confidence'"=="boot" | "`confidence'"=="weightboot" local u`var'=`u`tau'`var'' in 2
+		if "`confidence'"=="no" local u`var'=.	/* NO CI */
+		replace `u`tau'`var''=`u`var''
+				
+		matrix coeff`var' = [ ``var'`tau'' , `mean`var'' , `sd`var'' , `l`var'' , `u`var'']
+				if `varnum'==1 matrix all`tau'=[coeff`var']
 				if `varnum'~=1 matrix all`tau'=[all`tau' \ coeff`var']
                 local varnum = `varnum' + 1
         }
 
         if `taunum'==1 matrix all= [ all`tau']
-        if `taunum'~=1 matrix all= [ all , all`tau']
+        if `taunum'~=1 matrix all= [ all \ all`tau']
         local taunum=`tau'+1
 
 		count if missing(`coeff`tau'`endogvar'') & `itervar'~=1
@@ -730,21 +717,27 @@ foreach tau of numlist `taurange' {
 		if "`bootreps'"!="`convreps'" {
 		noi di "`tau' quantile: Confidence intervals calculated using `convreps' of `bootreps' bootstrap replications because remaining replications did not run to completion."
 		}
+		
 	}
 }
 
 
 * Label row and column of matrices
-local tablelabels ""
+local rowlabels ""
 if "`exogenous'"=="" local rhs "`endogvar' `regressor' _cons ehat"	/* ehat instead `ehat' here */
 else local rhs "`regressor' _cons"	/* endogvar and ehat disappear above but not here, so drop them */
-	foreach var of local rhs {
-		local tablelabels "`tablelabels' `var':_b `var':mean `var':lower `var':upper"
+	
+	foreach tau of numlist `taurange' {
+		foreach var of local rhs {
+		local rowlabels "`rowlabels' q`tau':`var'"
+		}
 	}
 
-matrix all = all[2...,1...]	/* drop the first row (tau's) */
-matrix rownames all= `tablelabels'
-matrix colnames all= `taurange'
+local collabels "_b mean se lower upper"
+
+matrix all = all[1...,1...]	/* drop the first column (tau's) */
+matrix colnames all= `collabels'
+matrix rownames all= `rowlabels'
 
 if "`uncensored'"==""{
 	numlist "`taurange'"
@@ -754,13 +747,19 @@ if "`uncensored'"==""{
 
 
 
-* Incorporate top option (In line with the first part of the code)
+* Incorporate top option (in line with the first part of the code)
 qui if "`top'"!="" {
 	matrix all = -all
 	replace `depvar' = -`depvar'
-	local censorpt = -`censorpt'
+	
+	if "`censorvar'"!="" {
+		replace `censorpt' = -`censorpt'
+	}
+	else {
+		local censorpt = -`censorpt'
+	}
+	
 }
-
 
 
 
@@ -773,6 +772,7 @@ qui save "``tag'final'"
 * RETURNS IN ECLASS
 
 	* LOCAL
+	ereturn clear
 	ereturn local command "cqiv"
 	
 	if "`uncensored'"=="" & "`exogenous'"==""{
@@ -792,6 +792,11 @@ qui save "``tag'final'"
 		ereturn local firststage "`firststage'"
 		}
 	ereturn local regressors "`regressor'" 
+	
+	if "`censorvar'"!="" {
+		capture drop `censorpt'
+		ereturn local censorvar "`censorvar'"
+	}
 
 	if "`confidence'"=="no"{
 		ereturn local confidence="No standard error"
@@ -808,7 +813,9 @@ qui save "``tag'final'"
 	* SCALAR	
 	ereturn scalar obs=`obs'
 	if "`uncensored'"=="" {
-		ereturn scalar censorpt=`censorpt'
+		if "`censorvar'"=="" {
+			ereturn scalar censorpt=`censorpt'
+		}
 		ereturn scalar drop1=`drop1'
 		ereturn scalar drop2=`drop2'
 		}
@@ -838,8 +845,14 @@ if "`exogenous'"!=""{
 di in gr "Number of obs =" in ye %10.0g e(obs)
 
 if "`uncensored'"=="" {
-	if "`top'"=="" di in gr "Censoring point = " in ye %6.0g e(censorpt)
-	else di in gr "Censoring point = " in ye %6.0g e(censorpt) in gr " (Top)"
+	if "`censorvar'"!="" {
+			if "`top'"=="" di in gr "Censoring variable = " in ye %6.0g e(censorvar)
+	else di in gr "Censoring variable = " in ye %6.0g e(censorvar) in gr " (Top)"
+			}
+			else {
+			if "`top'"=="" di in gr "Censoring point = " in ye %6.0g e(censorpt)
+	else di in gr "Censoring point = " in ye %6.0g e(censorpt) in gr " (Top)"	
+			}
 	}
 if "`corner'"!="" {
 di in gr "Estimates are (average) corner solution estimates"
@@ -880,5 +893,9 @@ if "`norobust'"=="" & "`uncensored'"==""{
 	
 * Reload data	
 use "`temporigin'"
-	
+
+if "`confidence'"=="weightboot"{
+	capture drop eweight
+	}	
+
 end

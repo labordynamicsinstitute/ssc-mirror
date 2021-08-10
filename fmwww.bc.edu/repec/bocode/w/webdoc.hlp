@@ -1,5 +1,5 @@
 {smcl}
-{* 11jan2017}{...}
+{* 21dec2017}{...}
 {hi:help webdoc}{...}
 {right:Jump to: {help webdoc##syntax:Syntax}, {help webdoc##description:Description}, {help webdoc##options:Options}, {help webdoc##examples:Examples}, {help webdoc##remarks:Remarks}, {help webdoc##results:Stored results}}
 {right: Also see: {browse "http://repec.sowi.unibe.ch/stata/webdoc"}}
@@ -285,7 +285,7 @@ a table of contents
 {synopt:[{cmd:no}]{opt cert:ify}}whether to compare results against previous
     version; default is {cmd:nocertify}
     {p_end}
-{synopt:[{cmd:no}]{opt sthlp}[{cmd:(}{help webdoc##sthlp:{it:subst}}{cmd:)}]}({cmd:webdoc stlog using}
+{synopt:[{cmd:no}]{opt sthlp}[{cmd:(}{help webdoc##sthlp:{it:spec}}{cmd:)}]}({cmd:webdoc stlog using}
     only) whether to treat as a Stata help file
     {p_end}
 {synopt:{opt nostop}}({cmd:webdoc stlog using} only) do not stop execution on error
@@ -409,7 +409,11 @@ a table of contents
     the default is 0. {it:levels} must be an integer between 1 and 6-{it:offset};
     the default is 3. To add section numbers to the headings specify the
     {cmd:numbered} option; to look for Markdown headings (lines starting with
-    {cmd:#}, {cmd:##}, etc.) in addition to HTML headings, specify the {cmd:md} option.
+    {cmd:#}, {cmd:##}, etc.) in addition to HTML headings, specify the {cmd:md} 
+    option. In HTML headings, an id can be provided using the {cmd:id} 
+    attribute, as in {cmd:<h3 id="}{it:myid}{cmd:">}. {cmd:webdoc toc} will then
+    use {it:myid} to refer to the heading. If no id is specified, {cmd:webdoc toc}
+    makes up an own id.
 
 {pstd}
     To create a section containing Stata output, use the {cmd:webdoc stlog}
@@ -989,7 +993,7 @@ a table of contents
 
 {marker sthlp}{...}
 {phang}
-    [{cmd:no}]{cmd:sthlp}[{cmd:(}{it:subst}{cmd:)}] specifies whether to treat
+    [{cmd:no}]{cmd:sthlp}[{cmd:(}{it:spec}{cmd:)}] specifies whether to treat
     the provided file as a Stata help file. This is only allowed with
     {cmd:webdoc stlog using}. By default, files with a {cmd:.hlp} or
     {cmd:.sthlp} suffix are treated as help files; all other files are treated
@@ -1003,9 +1007,9 @@ a table of contents
     internal links in the output document; other help links will be converted
     to links pointing to the corresponding help file at
     {browse "http://www.stata.com":www.stata.com}. In addition, you may provide
-    a custom list of substitutions in {opt sthlp(subst)}, where {it:subst} is
+    a custom list of substitutions in {opt sthlp(spec)}, where {it:spec} is
 
-            {it:from} {it:to} [{it:from} {it:to} {it:...}]
+            [{it:from} {it:to} [{it:from} {it:to} {it:...}]] [{cmd:,} {opt noid} ]
 
 {pmore}
     The custom substitutions will be applied before converting the internal links
@@ -1014,7 +1018,9 @@ a table of contents
     constructed as {cmd:<a href="/help.cgi?}{it:...}{cmd:">}. Hence, you could,
     for example, type {cmd:sthlp(/help.cgi?mycommand mycommand.html)} convert
     the help links for {cmd:mycommand} to links pointing to the local
-    page {cmd:mycommand.html}.
+    page {cmd:mycommand.html}. Suboption {cmd:noid} requests that no log-id
+    be included in internal links. The default is to include a log-id to prevent
+    name conflicts.
 
 {pmore}
     Options {cmd:nolog}, {cmd:cmdlog}, and {cmd:dosave} are not allowed

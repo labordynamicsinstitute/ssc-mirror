@@ -53,16 +53,18 @@ a quick way to use the MRC's corporate palette of colours, and released on SSC i
 case it is of use to other MRC employees.
 
 {pstd}
-The {cmd:mrc} scheme alters some of the quirks in Stata's schemes and is fairly
+In writing this scheme I made some opinionated alterations to some of the defaults
+and quirks from Stata's own schemes. This scheme is fairly
 minimal in style. Colours used are from the MRC's (RGB) specification of seven
-colours, white, black or grey. There are horizontal grid lines but not vertical. A
+colours, white, black or grey. There are faint horizontal grid lines. A
 vertical axis line is given but no vertical gridlines. There are no ticks. Dots
 in scatterplots are hollow by default. The height-to-width ratio of plots
 is 4:5 by default.
 
 {pstd}
 Graph schemes are skeletons, giving default specfications for general graphs;
-any defaults can be changed within graph commands.
+any defaults can be changed within graph commands. For example, if ticks and
+vertical grid lines are desired, these can always be included.
 
 
 {marker colours}{...}
@@ -70,8 +72,8 @@ any defaults can be changed within graph commands.
 
 {pstd}
 The mrc scheme includes seven non-standard colours named mrcblue, mrcpurple,
-mrcred, mrcorange, mrcyellow, mrcgreen, and mrcgrey. These colours can be specified
-as with Stata's base colours.
+mrcred, mrcorange, mrcyellow, mrcgreen, and mrcgrey. These colours are packaged
+with the scheme and can be referred to in the same way as with Stata's base colours.
 
 
 {marker fonts}{...}
@@ -81,14 +83,15 @@ as with Stata's base colours.
 There are elements to the UK Medical Research Council's branding beyond
 colour. The corporate typefaces are Arial in general or Helvetica Neue
 for more professional materials. See {help graph_set} for details of how
-to change the font; fonts will need setting for whatever format you
-choose to output. For example, to draw a graph and export it as .eps,
-Windows users would first need to type
+to change the font. Note that this cannot be set within a graph scheme
+and setting the font will need setting explicitly for your desired output
+format. For example, to draw a graph and export it as .svg, Windows users
+would first need to type
 
 {p 8 16 2}
 {cmd:. graph}
 {cmd:set}
-{cmd:eps}
+{cmd:svg}
 {cmd:fontface}
 {cmd:"Arial"}
  
@@ -111,7 +114,7 @@ The code for setting a font when exporting as pdf is slightly different:
 {title:Author}
 
 {pstd}
-Tim Morris, MRC Clinical Trials Unit at UCL, London UK
+Tim P. Morris, MRC Clinical Trials Unit at UCL, London UK
 {break}
 Email: {browse "mailto:tim.morris@ucl.ac.uk":tim.morris@ucl.ac.uk}
 {break}

@@ -250,6 +250,7 @@ The row styles available are as follows:
 {cmd:tabular}     {cmd:""}          {cmd:"&"}             {cmd:`"\\"'}          {cmd:""}          LaTeX {cmd:\tabular} environment table rows
 {cmd:halign}      {cmd:""}          {cmd:"&"}             {cmd:"\cr"}           {cmd:""}          Plain TeX {cmd:\halign} table rows
 {cmd:settabs}     {cmd:"\+"}        {cmd:"&"}             {cmd:"\cr"}           {cmd:""}          Plain TeX {cmd:\settabs} table rows
+{cmd:markdown}    {cmd:"|"}         {cmd:"|"}             {cmd:"|"}             {cmd:""}          Markdown table rows
 {cmd:tabdelim}    {cmd:""}          {cmd:char(9)}         {cmd:""}              {cmd:""}          Tab-delimited text file rows
 {hline}
 
@@ -283,6 +284,8 @@ More about HTML can be found at
 {browse "http://www.w3.org/MarkUp/":The W3C HyperText Markup Language (HTML) Home Page at http://www.w3.org/MarkUp/}.
 More about RTF can be found in {help listtab##references:Burke (2003)},
 or at {browse "http://interglacial.com/rtf/":Sean Burke's RTF web page}.
+More about {help markdown:Markdown} can b found in the help for {helpb markdown},
+or at {browse "https://www.markdownguide.org/":the Markdown guide}.
 
 
 {title:Remarks}
@@ -414,6 +417,16 @@ To produce a HTML table of variable attributes using {cmd:listtab_vars} with the
 {p 8 12 2}{inp:. restore}{p_end}
 
 {pstd}
+To produce a Markdown table of car attributes using {cmd:listtab_vars} with the {helpb chardef} package
+(downloadable from {help ssc:SSC}):
+
+{p 8 12 2}{inp:. sysuse auto, clear}{p_end}
+{p 8 12 2}{inp:. describe, full}{p_end}
+{p 8 12 2}{inp:. chardef make weight mpg, char(underline) val("---")}{p_end}
+{p 8 12 2}{inp:. listtab_vars make weight mpg, rstyle(markdown) sub(varlab) lo(tabhead)}{p_end}
+{p 8 12 2}{inp:. listtab make weight mpg if foreign, type rstyle(markdown) head("`tabhead'") headc(underline)}{p_end}
+
+{pstd}
 For examples using Rich Text Format (RTF), see on-line help for {helpb rtfutil},
 if installed.
 The {helpb rtfutil} package can be downloaded from {help ssc:SSC}.
@@ -494,11 +507,11 @@ Download from {browse "http://www.stata-journal.com/article.html?article=st0043"
 {title:Also see}
 
 {psee}
-Manual:  {manlink D describe}, {manlink P file}, {manlink D insheet}, {manlink D list}, {manlink D outsheet}, {manlink R ssc}, {manlink D type}
+Manual:  {manlink D describe}, {manlink P file}, {manlink D insheet}, {manlink D list}, {manlink D outsheet}, {manlink R ssc}, {manlink D type}, {manlink RPT markdown}
 {p_end}
 
 {psee}
-{space 2}Help:  {manhelp describe D}, {manhelp file P}, {manhelp insheet D}, {manhelp list D}, {manhelp outsheet D}, {manhelp ssc R}, {manhelp type D}
+{space 2}Help:  {manhelp describe D}, {manhelp file P}, {manhelp insheet D}, {manhelp list D}, {manhelp outsheet D}, {manhelp ssc R}, {manhelp type D}, {manhelp markdown RPT}
 {break}
 {helpb descsave}, {helpb inccat}, {helpb ingap}, {helpb listtex}, {helpb rtfutil}, {helpb sdecode},
 {break}
@@ -509,4 +522,6 @@ Manual:  {manlink D describe}, {manlink P file}, {manlink D insheet}, {manlink D
 {space 1}Other:  {browse "http://www.w3.org/MarkUp/":The W3C HyperText Markup Language (HTML) Home Page at http://www.w3.org/MarkUp/}
 {break}
 {browse "http://interglacial.com/rtf/":Sean Burke's RTF web page}
+{break}
+{browse "https://www.markdownguide.org/":The Markdown guide}
 {p_end}

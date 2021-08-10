@@ -537,7 +537,7 @@ I hope it also works under Stata versions 9-11.
 
 {p 0 0 0}With methods of moments, none of wscorr(riley), bscov(prop) and bscov(corr) has been implemented: in fact we don't yet have methods.
 
-{p 0 0 0}Please report any other problems to ian.white@mrc-bsu.cam.ac.uk.
+{p 0 0 0}Please report any other problems to ian.white@ucl.ac.uk.
 
 
 {title:References}{marker references}
@@ -612,11 +612,11 @@ Research Synthesis Methods 2012; 3: 111-125.
 
 {title:Author and updates}{marker updates}
 
-{p}Ian White, MRC Biostatistics Unit, Cambridge, UK. 
-Email {browse "mailto:ian.white@mrc-bsu.cam.ac.uk":ian.white@mrc-bsu.cam.ac.uk}.
+{p}Ian White, MRC Clinical Trials Unit at UCL, London, UK. 
+Email {browse "mailto:ian.white@ucl.ac.uk":ian.white@ucl.ac.uk}.
 
 {p}You can get the latest version of this and my other Stata software using 
-{stata "net from http://www.mrc-bsu.cam.ac.uk/IW_Stata/"}.
+{stata "net from http://www.homepages.ucl.ac.uk/~rmjwiww/stata/"}.
 
 
 

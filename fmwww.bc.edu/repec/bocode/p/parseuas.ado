@@ -1,3 +1,4 @@
+*! version 1.4  18sep2020
 *! version 1.3  08jan2016
 *! version 1.2  26oct2015
 *! version 1.1  24jun2015
@@ -5,7 +6,7 @@
 
 *-------------------------------------------------------------------------------
 *
-*  Copyright (C) 2016  Joss Roßmann & Tobias Gummer
+*  Copyright (C) 2020  Joss Roßmann & Tobias Gummer
 *
 *  This program is free software: you can redistribute it and/or modify
 *  it under the terms of the GNU General Public License as published by
@@ -18,8 +19,8 @@
 *  GNU General Public License for more details <http://www.gnu.org/licenses/>.          
 *
 *  Recommended citation (APA Style, 6th ed.): 
-*  Roßmann, J., & Gummer, T. (2016): PARSEUAS: Stata module to extract detailed 
-*  information from user agent strings (Version: 1.3) [Computer Software]. 
+*  Roßmann, J., & Gummer, T. (2020): PARSEUAS: Stata module to extract detailed 
+*  information from user agent strings (Version: 1.4) [Computer Software]. 
 *  Chestnut Hill, MA: Boston College.
 *
 *-------------------------------------------------------------------------------
@@ -53,6 +54,16 @@ quietly {
 *--- Browser version ---*
 	gen str `tempbrowserversion'=""
 	lab var `tempbrowserversion' "Browser version"
+	*- UA hijacking Level 0 -*
+	*AppleWebKit
+	replace `tempbrowserversion' = "Apple WebKit "+regexs(1) if regexm(`varlist', "[i][P][aho][do].+AppleWebKit/"+"([.0-9]+)") & `touse'
+	*Android Webkit
+	replace `tempbrowserversion' = "Android Webkit (other)" if regexm(`varlist', "Android.*Version*Safari") & `touse'
+	replace `tempbrowserversion' = "Android Webkit (other)" if regexm(`varlist', "Dalvik.*Android.*") & `touse'
+	replace `tempbrowserversion' = "Android Webkit "+regexs(1) if regexm(`varlist', "Android.*Version/"+"([0-9\.]+).*Safari") & `touse'
+	*Netscape
+	replace `tempbrowserversion' = regexs(0)+" (other)" if regexm(`varlist', "Netscape") & `touse'
+	replace `tempbrowserversion' = "Netscape "+regexs(1) if regexm(`varlist', "Netscape/"+"([0-9\.]+)") & `touse'
 	*Firefox
 	replace `tempbrowserversion' = regexs(0)+" (other)" if regexm(`varlist', "Firefox") & `touse'
 	replace `tempbrowserversion' = "Firefox "+regexs(1) if regexm(`varlist', "Firefox/"+"([0-9\.]+)") & `touse'
@@ -63,6 +74,7 @@ quietly {
 	replace `tempbrowserversion' = "Internet Explorer 9.0" if regexm(`varlist', "MSIE.*Trident/5.0") & `touse'
 	replace `tempbrowserversion' = "Internet Explorer 10.0" if regexm(`varlist', "MSIE.*Trident/6.0") & `touse'
 	replace `tempbrowserversion' = "Internet Explorer 11.0" if regexm(`varlist', "Trident/7.0.*rv:11.0") & `touse'
+	*- UA hijacking Level 1 -*
 	*Safari
 	replace `tempbrowserversion' = regexs(0)+" (other)" if regexm(`varlist', "Safari") & `touse'
 	replace `tempbrowserversion' = "Safari "+regexs(1) if regexm(`varlist', "Version/"+"([0-9\.]+).*Safari") & `touse'
@@ -70,57 +82,68 @@ quietly {
 	replace `tempbrowserversion' = regexs(0)+" (other)" if regexm(`varlist', "Chrome") & `touse'
 	replace `tempbrowserversion' = "Chrome "+regexs(1) if regexm(`varlist', "Chrome/"+"([0-9\.]+)") & `touse'
 	replace `tempbrowserversion' = "Chrome "+regexs(1) if regexm(`varlist', "CriOS/"+"([0-9\.]+)") & `touse'
+	*Iceweasel
+	replace `tempbrowserversion' = regexs(0)+" (other)" if regexm(`varlist', "Iceweasel") & `touse'
+	replace `tempbrowserversion' = "Iceweasel "+regexs(1) if regexm(`varlist', "Iceweasel/"+"([0-9\.]+)") & `touse'
+	*K-Meleon
+	replace `tempbrowserversion' = regexs(0)+" (other)" if regexm(`varlist', "K-Meleon") & `touse'
+	replace `tempbrowserversion' = "K-Meleon "+regexs(1) if regexm(`varlist', "K-Meleon/"+"([0-9\.]+)") & `touse'
 	*Opera
 	replace `tempbrowserversion' = regexs(0)+" (other)" if regexm(`varlist', "Opera") & `touse'
 	replace `tempbrowserversion' = "Opera "+regexs(1) if regexm(`varlist', "Opera/"+"([0-9\.]+)") & `touse'
 	replace `tempbrowserversion' = "Opera "+regexs(1) if regexm(`varlist', "Opera/.*Version/"+"([0-9\.]+)") & `touse'
-	*Android Webkit
-	replace `tempbrowserversion' = "Android Webkit (other)" if regexm(`varlist', "Android.*Version*Safari") & `touse'
-	replace `tempbrowserversion' = "Android Webkit "+regexs(1) if regexm(`varlist', "Android.*Version/"+"([0-9\.]+).*Safari") & `touse'
-	*Edge
-	replace `tempbrowserversion' = regexs(0)+" (other)" if regexm(`varlist', "Edge") & `touse'
-	replace `tempbrowserversion' = "Edge "+regexs(1) if regexm(`varlist', "Edge/"+"([0-9\.]+)") & `touse'
+	replace `tempbrowserversion' = "Opera "+regexs(1) if regexm(`varlist', "OPR/"+"([0-9\.]+)") & `touse'
 	*SeaMonkey
-	replace `tempbrowserversion' = regexs(0)+" (other)" if regexm(`varlist', "SeaMonkey") & `touse'
-	replace `tempbrowserversion' = "SeaMonkey "+regexs(1) if regexm(`varlist', "SeaMonkey/"+"([0-9\.]+)") & `touse'
-	*Silk
-	replace `tempbrowserversion' = regexs(0)+" (other)" if regexm(`varlist', "Silk") & `touse'
-	replace `tempbrowserversion' = "Silk "+regexs(1) if regexm(`varlist', "Silk/"+"([0-9\.]+)") & `touse'
-	*K-Meleon
-	replace `tempbrowserversion' = regexs(0)+" (other)" if regexm(`varlist', "K-Meleon") & `touse'
-	replace `tempbrowserversion' = "K-Meleon "+regexs(1) if regexm(`varlist', "K-Meleon/"+"([0-9\.]+)") & `touse'
-	*Iceweasel
-	replace `tempbrowserversion' = regexs(0)+" (other)" if regexm(`varlist', "Iceweasel") & `touse'
-	replace `tempbrowserversion' = "Iceweasel "+regexs(1) if regexm(`varlist', "Iceweasel/"+"([0-9\.]+)") & `touse'
-	*Netscape
-	replace `tempbrowserversion' = regexs(0)+" (other)" if regexm(`varlist', "Netscape") & `touse'
-	replace `tempbrowserversion' = "Netscape "+regexs(1) if regexm(`varlist', "Netscape/"+"([0-9\.]+)") & `touse'
+	replace `tempbrowserversion' = regexs(0)+" (other)" if regexm(`varlist', "Sea[mM]onkey") & `touse'
+	replace `tempbrowserversion' = "SeaMonkey "+regexs(1) if regexm(`varlist', "Sea[mM]onkey/"+"([0-9\.]+)") & `touse'
+	*- UA hijacking Level 2 -*
+	*Edge
+	replace `tempbrowserversion' = "Edge (other)" if regexm(`varlist', "Edg") & `touse'
+	replace `tempbrowserversion' = "Edge "+regexs(1) if regexm(`varlist', "Edg[eiA]?[O]?[S]?/"+"([0-9\.]+)") & `touse'
+	*Firefox on iOS
+	replace `tempbrowserversion' = "Firefox "+regexs(1) if regexm(`varlist', "FxiOS/"+"([0-9\.]+)") & `touse'
+	*Google Search App
+	replace `tempbrowserversion' = "Google Search App "+regexs(1) if regexm(`varlist', "GSA/"+"([0-9\.]+)") & `touse'
 	*Iron
 	replace `tempbrowserversion' = regexs(0)+" (other)" if regexm(`varlist', "Iron") & `touse'
 	replace `tempbrowserversion' = "Iron "+regexs(1) if regexm(`varlist', "Iron/"+"([0-9\.]+)") & `touse'
-	*Iron
-	replace `tempbrowserversion' = regexs(0)+" (other)" if regexm(`varlist', "Maxthon") & `touse'
-	replace `tempbrowserversion' = "Maxthon "+regexs(1) if regexm(`varlist', "Maxthon/"+"([0-9\.]+)") & `touse'
+	*Maxthon
+	replace `tempbrowserversion' = regexs(0)+" (other)" if regexm(`varlist', "[mM][aA][xX][tT][hH][oO][nN]") & `touse'
+	replace `tempbrowserversion' = "Maxthon "+regexs(1) if regexm(`varlist', "[mM][aA][xX][tT][hH][oO][nN]/"+"([0-9\.]+)") & `touse'
+	*Samsung Internet Browser
+	replace `tempbrowserversion' = "Samsung Internet Browser "+regexs(1) if regexm(`varlist', "SamsungBrowser/"+"([0-9\.]+)") & `touse'
+	*Silk
+	replace `tempbrowserversion' = regexs(0)+" (other)" if regexm(`varlist', "Silk") & `touse'
+	replace `tempbrowserversion' = "Silk "+regexs(1) if regexm(`varlist', "Silk/"+"([0-9\.]+).*Chrome.*Safari") & `touse'
+	*Vivaldi
+	replace `tempbrowserversion' = "Vivaldi "+regexs(1) if regexm(`varlist', "Vivaldi/"+"([0-9\.]+)") & `touse'
+	*Yandex
+	replace `tempbrowserversion' = "Yandex "+regexs(1) if regexm(`varlist', "YaBrowser/"+"([0-9\.]+)") & `touse'
 	*Browser (other)
 	replace `tempbrowserversion' = "Browser (other)" if `tempbrowserversion'=="" & `varlist'!="" & `touse'
 
 *--- Browser ---*
 	gen str `tempbrowser'="" 
 	lab var `tempbrowser' "Browser name"
+	replace `tempbrowser' = regexs(0) if regexm(`tempbrowserversion', "Apple WebKit") & `touse'
+	replace `tempbrowser' = regexs(0) if regexm(`tempbrowserversion', "Android Webkit") & `touse'
+	replace `tempbrowser' = regexs(0) if regexm(`tempbrowserversion', "Netscape") & `touse'
 	replace `tempbrowser' = regexs(0) if regexm(`tempbrowserversion', "Firefox") & `touse'
 	replace `tempbrowser' = regexs(0) if regexm(`tempbrowserversion', "Internet Explorer") & `touse'
-	replace `tempbrowser' = regexs(0) if regexm(`tempbrowserversion', "Edge") & `touse'
 	replace `tempbrowser' = regexs(0) if regexm(`tempbrowserversion', "Safari") & `touse'
-	replace `tempbrowser' = regexs(0) if regexm(`tempbrowserversion', "Chrome") & `touse'
-	replace `tempbrowser' = regexs(0) if regexm(`tempbrowserversion', "Opera") & `touse'
-	replace `tempbrowser' = regexs(0) if regexm(`tempbrowserversion', "Android Webkit") & `touse'
-	replace `tempbrowser' = regexs(0) if regexm(`tempbrowserversion', "SeaMonkey") & `touse'
-	replace `tempbrowser' = regexs(0) if regexm(`tempbrowserversion', "Silk") & `touse'
-	replace `tempbrowser' = regexs(0) if regexm(`tempbrowserversion', "K-Meleon") & `touse'
+	replace `tempbrowser' = regexs(0) if regexm(`tempbrowserversion', "Chrome") & `touse'	
 	replace `tempbrowser' = regexs(0) if regexm(`tempbrowserversion', "Iceweasel") & `touse'
-	replace `tempbrowser' = regexs(0) if regexm(`tempbrowserversion', "Netscape") & `touse'
+	replace `tempbrowser' = regexs(0) if regexm(`tempbrowserversion', "K-Meleon") & `touse'	
+	replace `tempbrowser' = regexs(0) if regexm(`tempbrowserversion', "Opera") & `touse'
+	replace `tempbrowser' = regexs(0) if regexm(`tempbrowserversion', "SeaMonkey") & `touse'	
+	replace `tempbrowser' = regexs(0) if regexm(`tempbrowserversion', "Edge") & `touse'
+	replace `tempbrowser' = regexs(0) if regexm(`tempbrowserversion', "Google Search App") & `touse'
 	replace `tempbrowser' = regexs(0) if regexm(`tempbrowserversion', "Iron") & `touse'
-	replace `tempbrowser' = regexs(0) if regexm(`tempbrowserversion', "Maxthon") & `touse'
+	replace `tempbrowser' = regexs(0) if regexm(`tempbrowserversion', "Maxthon") & `touse'	
+	replace `tempbrowser' = regexs(0) if regexm(`tempbrowserversion', "Samsung Internet Browser") & `touse'
+	replace `tempbrowser' = regexs(0) if regexm(`tempbrowserversion', "Silk") & `touse'
+	replace `tempbrowser' = regexs(0) if regexm(`tempbrowserversion', "Vivaldi") & `touse'
+	replace `tempbrowser' = regexs(0) if regexm(`tempbrowserversion', "Yandex") & `touse'
 	replace `tempbrowser' = regexs(0) if regexm(`tempbrowserversion', "Browser \(other\)") & `touse'
 		
 *--- Operating system ---*
@@ -152,6 +175,10 @@ quietly {
 	replace `tempos' = "Linux Ubuntu "+regexs(1) if regexm(`varlist', "Ubuntu/"+"([0-9\.]+)") & `touse'
 	replace `tempos' = "Linux "+regexs(0)+" (other)" if regexm(`varlist', "SUSE") & `touse'
 	replace `tempos' = "Linux SUSE "+regexs(1) if regexm(`varlist', "SUSE/"+"([0-9\.-]+)") & `touse'
+	*Chrome OS
+	replace `tempos' = "Chrome OS "+regexs(1) if regexm(`varlist', "CrOS x86_64 "+"([0-9\.]+)") & `touse'
+	replace `tempos' = "Chrome OS "+regexs(1) if regexm(`varlist', "CrOS armv7l "+"([0-9\.]+)") & `touse'
+	replace `tempos' = "Chrome OS "+regexs(1) if regexm(`varlist', "CrOS aarch64 "+"([0-9\.]+)") & `touse'
 	*Android
 	replace `tempos' = regexs(0)+" (other)" if regexm(`varlist', "Android") & `touse'
 	replace `tempos' = "Android "+regexs(1) if regexm(`varlist', "Android "+"([0-9\.]+)") & `touse'
@@ -174,6 +201,22 @@ quietly {
 	*--- Device type ---*
 	gen str `tempdevice'=""
 	lab var `tempdevice' "Device type"
+	*"Android" without "Mobi" => tablet
+	replace `tempdevice' = "Tablet (Android)" if regexm(`varlist', "Android") & `touse'
+	*Mobile phone (other)
+	replace `tempdevice' = "Mobile phone (other)" if regexm(`varlist', "[mM]obi") & `touse'
+	replace `tempdevice' = "Mobile phone (other)" if regexm(`tempos', "BlackBerry") & `touse'
+	replace `tempdevice' = "Mobile phone (other)" if regexm(`tempos', "Symbian") & `touse'
+	replace `tempdevice' = "Mobile phone (other)" if regexm(`varlist', "GT-S8600") & `touse'
+	replace `tempdevice' = "Mobile phone (other)" if regexm(`varlist', "SAMSUNG-S8000") & `touse'
+	*Mobile phone (Android) 
+	replace `tempdevice' = "Mobile phone (Android)" if regexm(`varlist', "Android.*[mM]obi") & `touse'
+	*Mobile phone (iPhone)
+	replace `tempdevice' = "Mobile phone (iPhone)" if regexm(`varlist', "iPhone") & `touse'
+	replace `tempdevice' = "Mobile phone (iPhone)" if regexm(`varlist', "iPod") & `touse'
+	*Mobile phone (Windows)
+	replace `tempdevice' = "Mobile phone (Windows)" if regexm(`varlist', "Windows Phone") & `touse'
+	replace `tempdevice' = "Mobile phone (Windows)" if regexm(`varlist', "HTC_HD2_T8585") & `touse'
 	*Tablet (other)
 	replace `tempdevice' = "Tablet (other)" if regexm(`varlist', "Tablet") & `touse'
 	replace `tempdevice' = "Tablet (other)" if regexm(`varlist', "Kindle") & `touse'
@@ -181,23 +224,19 @@ quietly {
 	*Tablet (Windows)
 	replace `tempdevice' = "Tablet (Windows)" if regexm(`varlist', "Windows.*Tablet") & `touse'
 	*Tablet (Android)
-	replace `tempdevice' = "Tablet (Android)" if regexm(`varlist', "Android") & `touse'
+	replace `tempdevice' = "Tablet (Android)" if regexm(`varlist', "Android.*[tT]ab") & `touse'
 	replace `tempdevice' = "Tablet (Android)" if regexm(`varlist', "GT-P1000") & `touse'
 	*Tablet (iPad)
 	replace `tempdevice' = "Tablet (iPad)" if regexm(`varlist', "iPad") & `touse'
-	*Mobile phone (other)
-	replace `tempdevice' = "Mobile phone (other)" if regexm(`varlist', "Mobile ") & `touse'
-	replace `tempdevice' = "Mobile phone (other)" if regexm(`tempos', "BlackBerry") & `touse'
-	replace `tempdevice' = "Mobile phone (other)" if regexm(`tempos', "Symbian") & `touse'
-	replace `tempdevice' = "Mobile phone (other)" if regexm(`varlist', "GT-S8600") & `touse'
-	replace `tempdevice' = "Mobile phone (other)" if regexm(`varlist', "SAMSUNG-S8000") & `touse'
-	*Mobile phone (Android) 
-	replace `tempdevice' = "Mobile phone (Android)" if regexm(`varlist', "Android.*Mobi") & `touse'
-	*Mobile phone (iPhone)
-	replace `tempdevice' = "Mobile phone (iPhone)" if regexm(`varlist', "iPhone") & `touse'
-	*Mobile phone (Windows)
-	replace `tempdevice' = "Mobile phone (Windows)" if regexm(`varlist', "Windows Phone") & `touse'
-	replace `tempdevice' = "Mobile phone (Windows)" if regexm(`varlist', "HTC_HD2_T8585") & `touse'
+	*Video game console
+	replace `tempdevice' = "Video game console" if regexm(`varlist', "[pP][lL][aA][yY][sS][tT][aA][tT]") & `touse'
+	replace `tempdevice' = "Video game console" if regexm(`varlist', "[xX][bB][oO][xX]") & `touse'
+	replace `tempdevice' = "Video game console" if regexm(`varlist', "[nN][iI][nN][tT][eE][nN][dD][oO]") & `touse'
+	*Personal computer 
+	replace `tempdevice' = "Personal computer (Windows)" if `tempdevice'=="" & regexm(`tempos', "Windows") & `touse'
+	replace `tempdevice' = "Personal computer (Mac)" if `tempdevice'=="" & regexm(`tempos', "Mac OS X") & `touse'
+	replace `tempdevice' = "Personal computer (Linux)" if `tempdevice'=="" & regexm(`tempos', "Linux") & `touse'
+	replace `tempdevice' = "Personal computer (Chrome OS)" if `tempdevice'=="" & regexm(`tempos', "Chrome OS") & `touse'
 	*Device: other
 	replace `tempdevice' = "Device (other)" if `tempdevice'=="" & `varlist'!="" & `touse'
 			

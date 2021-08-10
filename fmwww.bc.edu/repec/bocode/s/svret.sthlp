@@ -94,12 +94,11 @@ For example, a format of %7.2f specifies that numbers are to be rounded to two d
 {col 8}{cmd:. {stata texsave using "table.tex", title(Price statistics (units in dollars)) footnote("Data obtained from Stata's built-in auto.dta dataset") size(large) replace}}
 
 
-
 {title:Author}
 
-{p 4 4 2}Julian Reif, University of Chicago
+{p 4 4 2}Julian Reif, University of Illinois
 
-{p 4 4 2}jreif@uchicago.edu
+{p 4 4 2}jreif@illinois.edu
 
 
 {title:Also see}

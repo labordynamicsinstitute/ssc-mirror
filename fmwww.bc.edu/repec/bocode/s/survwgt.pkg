@@ -18,8 +18,8 @@ d
 d Author: Nick Winter,  University of Virginia
 d Support: email nwinter@@virginia.edu
 d
-d Distribution-Date: 20150423
+d Distribution-Date: 20180211
 d
 f survwgt.ado
-f survwgt.hlp
-f ../b/brr_hadamardmatrixfile.ado.zip
+f survwgt.sthlp
+f ../b/brr_hadamardmatrixfile.ado

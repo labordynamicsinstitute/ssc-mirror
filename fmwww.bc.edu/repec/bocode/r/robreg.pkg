@@ -10,9 +10,11 @@ d provided. Note that the moremata package, also available from
 d SSC, is required. 
 d
 d KW: robust regression
-d KW: MM-estimate
-d KW: M-estimate
-d KW: S-estimate
+d KW: least-squares regression
+d KW: quantile regression
+d KW: MM regression
+d KW: M regression
+d KW: S regression
 d KW: LMS
 d KW: LTS
 d KW: LQS
@@ -20,13 +22,14 @@ d KW: high breakdown
 d KW: Huber
 d KW: biweight
 d KW: bisquare
+d KW: influence function
 d
-d Requires: Stata version 10.1
+d Requires: Stata version 11 and moremata from SSC (q.v.)
 d
-d Distribution-Date: 20100127
+d Distribution-Date: 20210411
 d
-d Author: Ben Jann, ETH Zurich
-d Support: email  jannb@@ethz.ch
+d Author: Ben Jann, University of Bern
+d Support: email jann@@soz.unibe.ch
 d
 f robreg.ado
 f robreg.sthlp

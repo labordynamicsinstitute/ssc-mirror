@@ -52,11 +52,19 @@ program preliminary_changes
 	replace Lp=84.2476 if year_t1==2016 & trim_t1==1
 	replace Lp=84.6486 if year_t1==2016 & trim_t1==2
 	replace Lp=84.7416 if year_t1==2016 & trim_t1==3
-	replace Lp=87.8046 if year_t1==2016 & trim_t1==4
-	replace Lp=85.5261 if year_t1==2017 & trim_t1==1
-	replace Lp=86.383 if year_t1==2017 & trim_t1==2
-	replace Lp=87.2484 if year_t1==2017 & trim_t1==3
-	replace Lp=88.1225 if year_t1==2017 & trim_t1==4
+	replace Lp=84.8009 if year_t1==2016 & trim_t1==4
+	replace Lp=85.05496 if year_t1==2017 & trim_t1==1
+	replace Lp=85.58148 if year_t1==2017 & trim_t1==2
+	replace Lp=84.97825 if year_t1==2017 & trim_t1==3
+	replace Lp=84.49375 if year_t1==2017 & trim_t1==4
+	replace Lp=84.93656 if year_t1==2018 & trim_t1==1
+	replace Lp=85.69883335 if year_t1==2018 & trim_t1==2
+	replace Lp=85.88480456 if year_t1==2018 & trim_t1==3
+	replace Lp=86.42369828 if year_t1==2018 & trim_t1==4
+	replace Lp=87.25565564 if year_t1==2019 & trim_t1==1
+	replace Lp=88.28330497 if year_t1==2019 & trim_t1==2
+	replace Lp=88.46927618 if year_t1==2019 & trim_t1==3
+	replace Lp=89.00816989 if year_t1==2019 & trim_t1==4
 
 
 
@@ -100,15 +108,23 @@ program preliminary_changes
 	replace Lpe=47.4786 if year_t1==2016 & trim_t1==1
 	replace Lpe=47.7045 if year_t1==2016 & trim_t1==2
 	replace Lpe=47.7569 if year_t1==2016 & trim_t1==3
-	replace Lpe=49.4831 if year_t1==2016 & trim_t1==4
-	replace Lpe=48.1990 if year_t1==2017 & trim_t1==1
-	replace Lpe=48.6819 if year_t1==2017 & trim_t1==2
-	replace Lpe=49.1696 if year_t1==2017 & trim_t1==3
-	replace Lpe=49.6622 if year_t1==2017 & trim_t1==4
+	replace Lpe=47.72093501 if year_t1==2016 & trim_t1==4
+	replace Lpe=47.93351302 if year_t1==2017 & trim_t1==1
+	replace Lpe=48.23024122 if year_t1==2017 & trim_t1==2
+	replace Lpe=47.89028494 if year_t1==2017 & trim_t1==3
+	replace Lpe=47.61724179 if year_t1==2017 & trim_t1==4
+	replace Lpe=47.86679207 if year_t1==2018 & trim_t1==1
+	replace Lpe=48.29637642 if year_t1==2018 & trim_t1==2
+	replace Lpe=48.40118223 if year_t1==2018 & trim_t1==3
+	replace Lpe=48.70488081 if year_t1==2018 & trim_t1==4
+	replace Lpe=49.17373813 if year_t1==2019 & trim_t1==1
+	replace Lpe=49.7528795 if year_t1==2019 & trim_t1==2
+	replace Lpe=49.85768531 if year_t1==2019 & trim_t1==3
+	replace Lpe=50.16138388 if year_t1==2019 & trim_t1==4
 	
-	***********************
-	* Poblation estimates *
-	***********************
+	************************
+	* Population estimates *
+	************************
 	* National estimation
 	g pob_t=.
 	replace pob_t = 13451227 if year_t1==2007
@@ -135,17 +151,14 @@ program preliminary_changes
 	***************************
 	* Estimating poverty in t *
 	***************************
+
 	cap ren fexp FEXP
 	svyset sector [pweight=FEXP]
-	svy: total pobreza if pobreza==1
-	local n_pobres =`e(N_pop)'
-	svy: total pobreza
-	global pobreza_t =round(`n_pobres'/`e(N_pop)'*100,.01)
+	sum pobreza [aweight=FEXP]
+	global pobreza_t =round(`r(mean)'*100,.01)
 	
-	svy: total epobreza if epobreza==1
-	local n_extrema =`e(N_pop)'
-	svy: total epobreza
-	global extrema_t =round(`n_extrema'/`e(N_pop)'*100,.01)
+	sum epobreza [aweight=FEXP]
+	global extrema_t =round(`r(mean)'*100,.01)
 		
 	***********************
 	* PRELIMINARY CHANGES *

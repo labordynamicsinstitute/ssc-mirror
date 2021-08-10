@@ -7,7 +7,7 @@ version 13.0;
   optionally replacing unlabelled input values with formatted values
   and/or including delimiters between the decoded values..
 *! Author: Roger Newson
-*! Date: 20 September 2013
+*! Date: 17 November 2020
 */
 
 syntax varlist(min=1 default=none) [if] [in] , Generate(name)
@@ -24,6 +24,7 @@ syntax varlist(min=1 default=none) [if] [in] , Generate(name)
   -prefix- specifies a prefix string (to be added on the left).
   -suffix- specifies a suffix string (to be added on the right).
   -xmlsub- specifies that XML substitution will be performed.
+  Other options are passed to sdecode
 */
 
 *

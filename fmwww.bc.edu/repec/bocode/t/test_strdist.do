@@ -1,10 +1,18 @@
-*! version 1.1  06may2017 Michael D Barker Felix Pöge
+*! version 1.2  09dec2017 Michael D Barker Felix Pöge
 
 /*
     Testing the strdist method using direct inputs.
 */
 
+clear all
+
 version 10
+
+noi di as result "Make sure that this is the correct strdist version."
+which strdist
+set more on
+more
+set more off
 
 // Tests for empty strings
 strdist "" ""
@@ -113,6 +121,78 @@ forvalues i = 1/`=r(N)' {
     drop strdist 
     noi di as text "`i' " _c
 }
+
+
+/*
+	Testing maximum string lengths
+*/
+clear
+set obs 1
+qui gen x = ""
+qui gen y = ""
+forvalues i = 1/100 {
+	qui replace x = x + " a"
+	qui replace y = y + " v"
+}
+strdist x y
+assert strdist == 100
+drop strdist
+
+strdist x y, maxdist(100)
+assert strdist == 100
+drop strdist
+
+strdist x y, maxdist(0)
+assert strdist == 100
+drop strdist
+
+strdist x y, maxdist(-1)
+assert strdist == 100
+drop strdist
+
+strdist x y, maxdist(1)
+assert missing(strdist)
+drop strdist
+
+strdist x y, maxdist(99)
+assert missing(strdist)
+drop strdist
+
+strdist x y, maxdist(10)
+assert missing(strdist)
+drop strdist
+
+// This here checks the first way strdist reacts to maxdist
+// - if the distance between the string lengths is already too large to
+// satisfy maxdist
+gen a = "abc"
+gen b = "abcdef"
+strdist a b
+assert strdist == 3
+drop strdist
+
+strdist a b, max(2)
+assert missing(strdist)
+drop strdist
+
+// These used to give some faulty behavior
+strdist "x" "yav", maxdist(1)
+assert r(d) == .
+
+strdist "mx" "yavz", maxdist(1)
+assert r(d) == .
+
+strdist "mx" "yavz", maxdist(2)
+assert r(d) == .
+
+strdist "yav" "x", maxdist(1)
+assert r(d) == .
+
+strdist "yavz" "mx", maxdist(1)
+assert r(d) == .
+
+strdist "yavz" "mx", maxdist(2)
+assert r(d) == .
 
 // Testing compatibility with several ascii examples
 forvalues i = 1/255 {

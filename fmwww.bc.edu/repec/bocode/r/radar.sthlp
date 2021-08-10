@@ -1,54 +1,70 @@
 {smcl}
-{* 10 Mar 2017}{...}
-{cmd:help radar}
-{hline}
-
+{* *! version 1.0 26 Nov 2020}{...}
+{vieweralsosee "" "--"}{...}
+{vieweralsosee "Install command2" "ssc install command2"}{...}
+{vieweralsosee "Help command2 (if installed)" "help command2"}{...}
+{viewerjumpto "Syntax" "radar##syntax"}{...}
+{viewerjumpto "Description" "radar##description"}{...}
+{viewerjumpto "Options" "radar##options"}{...}
+{viewerjumpto "Remarks" "radar##remarks"}{...}
+{viewerjumpto "Examples" "radar##examples"}{...}
 {title:Title}
+{phang}
+{bf:radar} {hline 2} Radar plots or Spider plots
 
-    {hi: Radar plots or Spider plots}
-
+{marker syntax}{...}
 {title:Syntax}
-
 {p 8 17 2}
-{cmdab:radar} {it:axes_labels var1 }[{it:var2 ... }] 
-[{cmd:,} {it:options}]
+{cmdab:radar}
+[{help varlist}]
+[{help if}]
+[{help in}]
+[{cmd:,}
+{it:options}]
 
 {synoptset 20 tabbed}{...}
 {synopthdr}
 {synoptline}
-{syntab:Main}
-{synopt:{opt lc}({help colorstyle}list)} specifies a list of colors for the observations (not axes).{p_end}
-{synopt:{opt lp}({help linepatternstyle}list)} specifies a list of patterns for the observations (not axes).{p_end}
-{synopt:{opt lw}({help linewidthstyle}list)} specifies a list of line widths for the observations (not axes).{p_end}
-{synopt:{opt ms}({help symbolstyle}list)} specifies a list of marker symbols to use for observations BUT must be used in conjunction with the connected option (not axes).{p_end}
-{synopt:{opt mc:olor}({help symbolstyle}list)} specifies a list of marker colors to use for observations BUT must be used in conjunction with the connected option (not axes).{p_end}
-{synopt:{opt axelc}(colorlist)} specifies a list of colors for the axes.{p_end}
-{synopt:{opt axelp}(patternlist)} specifies a list of patterns for the axes.{p_end}
-{synopt:{opt axeslw}(linewidthlist)} specifies a list of line widths for the axes.{p_end}
-{synopt:{opt labsize}({help textsizestyle})} specifies the text size of the node labels (not axes).{p_end}
-{synopt:{opt radial}({help varname})} specifies a variable is to plotted as spikes along the spokes of the plot.{p_end}
-{synopt:{opt connected}} specifies that rather than a line graph of observations but a connected line graph is drawn.{p_end}
-{synopt:{opt r:label}(numlist)} specifies the ticks and labels of the spokes.{p_end}
-{synopt:{help twoway_options} } specifies additional twoway options (not all of them area allowed), for example titles() and notes().{p_end}
+
+{syntab:Optional}
+{synopt:{opt lc(string)}} the string argument is a {help colorstyle}list and specifies the colors for the observations (not axes).
+
+{synopt:{opt lp(string)}} the string argument is a {help linepatternstyle}list and specifies the patterns for the observations (not axes).
+
+{synopt:{opt lw(string)}} the string argument is a {help linewidthstyle}list and specifies the line widths for the observations (not axes).
+
+{synopt:{opt ms(string)}} the string argument is a {help symbolstyle}list and specifies the marker symbols to use for observations BUT must be used in conjunction with the connected option (not axes).
+
+{synopt:{opt mc:olor(string)}} the string argument is a {help symbolstyle}list and specifies the marker colors to use for observations BUT must be used in conjunction with the connected option (not axes).
+
+{synopt:{opt r:label(numlist)}} specifies the ticks and labels of the spokes.
+
+{synopt:{opt labsize(string)}} the string argument is a {help textsizestyle} and specifies the text size of the node labels (not axes).
+
+{synopt:{opt radial(varname)}} specifies a variable to be plotted as spikes along the spokes of the plot.
+
+{synopt:{opt axelaboff}} specifies that axes labels are removed.
+
+{synopt:{opt axelc(string)}} the string argument is a colorlist and specifies the colors for the axes.
+
+{synopt:{opt axelw(string)}} the string argument is a linewidthlist and specifies the line widths for the axes.
+
+{synopt:{opt axelp(string)}} the string argument is a patternlist and specifies the patterns for the axes.
+
+{synopt:{opt connected}} specifies that rather than a line graph of observations but a connected line graph is drawn.
+
+{synopt:{opt *}}  additional {help twoway_options} can be specified, for example titles() and notes(), but not every possible option is allowed.{p_end}
 {synoptline}
 {p2colreset}{...}
+{p 4 6 2}
 
+{marker description}{...}
 {title:Description}
+{pstd}
 
 {pstd}
 {cmd:radar} produces a radar plot from at least two variables. The first variable must always contain the label for the axes
-and the second variable must be numeric. For example the dataset below,
-
-. list food level
-     +----------------+
-     |   food   level |
-     |----------------|
-  1. |   beer      12 |
-  2. | crisps       5 |
-  3. |  bread       3 |
-  4. |    veg      44 |
-  5. |  fruit       7 |
-     +----------------+
+and the second variable must be numeric. 
 
 {pstd}
 The axes of the radar plot will start at the top of the diagram and proceed in a clockwise direction. With the above dataset
@@ -58,113 +74,135 @@ the first axes will be labelled beer.
 Missing values are included in the radar plot as gaps in the line joining observations.
 This option is implemented using the {opt cmiss(n)} option of the twoway line graph, see help {help connect_options}.
 
+{marker options}{...}
 {title:Options}
-
 {dlgtab:Main}
 
 {phang}
-{opt lc}({help colorstyle}list) specifies a list of colors for the observations (not axes).
+{opt lc(string)}  the string argument is a {help colorstyle}list and specifies the colors for the observations (not axes).
 
 {phang}
-{opt lp}({help linepatternstyle}list) specifies a list of patterns for the observations (not axes).
+{opt lp(string)}  the string argument is a {help linepatternstyle}list and specifies the patterns for the observations (not axes).
 
 {phang}
-{opt lw}({help linewidthstyle}list) specifies a list of line widths for the observations (not axes).
+{opt lw(string)}  the string argument is a {help linewidthstyle}list and specifies the line widths for the observations (not axes).
 
 {phang}
-{opt ms}({help symbolstyle}list)} specifies a list of marker symbols to use for observations BUT must be used in conjunction with the connected option (not axes).{p_end}
+{opt ms(string)}  the string argument is a {help symbolstyle}list and specifies the marker symbols to use for observations BUT must be used in conjunction with the connected option (not axes).
 
 {phang}
-{opt mc:olor}({help symbolstyle}list)} specifies a list of marker colors to use for observations BUT must be used in conjunction with the connected option (not axes).{p_end}
+{opt mc:olor(string)}  the string argument is a {help symbolstyle}list and specifies the marker colors to use for observations BUT must be used in conjunction with the connected option (not axes).
 
 {phang}
-{opt axelc}(colorstylelist) specifies a list of colors for the axes.
-
-{phang}
-{opt axelp}(linepatternstylelist) specifies a list of patterns for the axes.
-
-{phang}
-{opt axelw}(linewidthstylelist) specifies a list of line widths for the axes.
-
-{phang}
-{opt labsize}(textsizestyle) specifies the text size of the node labels (not axes).
-
-{phang}
-{opt radial}(varname) specifies that the variable in the option be plotted as "spikes" along the spokes.
-
-{phang}
-{opt connected} specifies that rather than a line graph of observations but a connected line graph is drawn.{p_end}
-
-{phang}
-{opt r:label}(numlist) specifies the ticks and labels of the spokes. The default is to have 5 values displayed, note that the 
+{opt r:label(numlist)} specifies the ticks and labels of the spokes. The default is to have 5 values displayed, note that the
 value that is the centre or smallest tick is suppressed but the value is included as a note below the graph. The note can
 be overwritten by using the {hi: note()} option.
 
 {phang}
-{opt {help twoway_options}} specifies additional twoway options, for example titles() and notes().
+{opt labsize(string)}  the string argument is a {help textsizestyle} and specifies the text size of the node labels (not axes).
+
+{phang}
+{opt radial(varname)}  specifies a variable to be plotted as spikes along the spokes of the plot.
+
+{phang}
+{opt axelaboff}  specifies that axes labels are removed.
+
+{phang}
+{opt axelc(string)}  the string argument is a colorlist and specifies the colors for the axes.
+
+{phang}
+{opt axelw(string)}  the string argument is a linewidthlist and specifies the line widths for the axes.
+
+{phang}
+{opt axelp(string)}  the string argument is a patternlist and specifies the patterns for the axes.
+
+{phang}
+{opt connected}  specifies that rather than a line graph of observations but a connected line graph is drawn.
+
+{phang}
+{opt *}  additional {help twoway_options} can be specified, for example titles() and notes(), but not every possible option is allowed.
 
 
+{marker examples}{...}
 {title:Examples}
 
-{pstd}
+{phang}
 The examples below highlight the use of the {hi:radar} plot on the Auto dataset. The only limitation
-is the number of "spokes" hence the commands are limited to just the foreign cars. Technical note: the limitation on
-the number of spokes is unknown because the limit is due to the size of macros being returned as
-part of a rclass program.
+is the number of "spokes" hence the commands are limited to just the foreign cars. Technical note: 
+the limitation on the number of spokes is unknown because the limit is due to the size of macros 
+being returned as part of a rclass program. The aspect ratio should be set to 1 but occassionally 
+Stata's scaling of the plotregion can give skewed plots so the aspect() option can adjust any skew.
 
-{pstd}
+{phang}
 Click below to load dataset 
 
-{phang} 
+{pstd}
 {stata sysuse auto}
 
-{pstd}
+{phang}
 Click below (after the dataset is loaded to see the distribution of weight for the foreign makes of car
 
-{phang}
-{stata radar make weight if foreign}
-
 {pstd}
+{stata radar make weight if foreign, aspect(1)}
+
+{phang}
 Click below to see the distribution of turn mpg and trunk for each foreign make of car.
 
-{phang}
-{stata radar make turn mpg trunk if foreign} {p_end}
-{phang}
-{stata radar make turn mpg trunk if foreign, title(Nice Radar graph)} {p_end}
-{phang}
-{stata radar make turn mpg trunk if foreign, title(Nice Radar graph) lc(red blue green) lp(dash dot dash_dot)}
-
-{phang}
-{stata radar make turn mpg trunk if foreign, title(Nice Radar graph) lc(red blue green) r(0 12 14 18 50)}
-
-{phang}
-{stata radar make turn mpg trunk if foreign, title(Nice Radar graph) lc(red blue green) lw(*1 *2 *4) r(0 12 14 18 50)}
-
-{phang}
-{stata radar make turn mpg trunk if foreign, title(Nice Radar graph) lc(red blue green) lw(*1 *2 *4) r(0 12 14 18 50) labsize(*.5)}
-
-{phang}
-{stata radar make turn mpg trunk if foreign, title(Nice Radar graph) lc(red blue green) lw(*1 *2 *4) r(0 12 14 18 50) connected ms(D Oh S) labsize(*.5)}
+{pstd}
+{stata radar make turn mpg trunk if foreign, aspect(1)} {p_end}
 
 {pstd}
+{stata radar make turn mpg trunk if foreign, title(Nice Radar graph) aspect(1)} {p_end}
+
+{pstd}
+{stata radar make turn mpg trunk if foreign, title(Nice Radar graph) lc(red blue green) lp(dash dot dash_dot) aspect(1)}
+
+{pstd}
+{stata radar make turn mpg trunk if foreign, title(Nice Radar graph) lc(red blue green) r(0 12 14 18 50) aspect(1)}
+
+{pstd}
+{stata radar make turn mpg trunk if foreign, title(Nice Radar graph) lc(red blue green) lw(*1 *2 *4) r(0 12 14 18 50) aspect(1)}
+
+{pstd}
+{stata radar make turn mpg trunk if foreign, title(Nice Radar graph) lc(red blue green) lw(*1 *2 *4) r(0 12 14 18 50) labsize(*.5) aspect(1)}
+
+{pstd}
+{stata radar make turn mpg trunk if foreign, title(Nice Radar graph) lc(red blue green) lw(*1 *2 *4) r(0 12 14 18 50) connected ms(D Oh S) labsize(*.5) aspect(1)}
+
+{phang}
 There is no real advantage of a radar diagram compared to a scatter plot unless there was some sort of directional data.
 
-
-{phang}
 To add extra spikes for trunk instead of the contour
 
-{phang}
-{stata radar make turn mpg if foreign,radial(trunk) title(Nice Radar graph) lc(red blue green) lw(*1 *2 *4) r(0 12 14 18 50) labsize(*.5)}
+{pstd}
+{stata radar make turn mpg if foreign,radial(trunk) title(Nice Radar graph) lc(red blue green) lw(*1 *2 *4) r(0 12 14 18 50) labsize(*.5) aspect(1)}
+
+If you want to remove the labels from the axes use the axelaboff option
+
+{pstd}
+{stata radar make turn mpg if foreign,radial(trunk) title(Nice Radar graph) lc(red blue green) lw(*1 *2 *4) r(0 12 14 18 50) labsize(*.5) axelaboff aspect(1)}
+
+
+{title:Stored results}
+
+{synoptset 15 tabbed}{...}
+{p2col 5 15 19 2: Locals}{p_end}
+{synopt:{cmd:r(maxarea)}}  is the returned maximum area of the radar polygon given the maximum and minimum values on the plot {p_end}
+{synopt:{cmd:r(area_)}}  is the return area of the radar plot, the name of variable will be in the return name e.g. area_weight {p_end}
+
 
 {title:Author}
+{p}
 
-{pstd}
-Adrian Mander, MRC Biostatistics Unit, Cambridge, UK.
+Prof Adrian Mander, Centre for Trials Research, Cardiff University .
 
-{pstd}
-Email {browse "mailto:adrian.mander@mrc-bsu.cam.ac.uk":adrian.mander@mrc-bsu.cam.ac.uk}
+Email {browse "mailto:mandera@cardiff.ac.uk":mandera@cardiff.ac.uk}
+
+
 
 {title:See Also}
+Related commands:
+
 
 {pstd}
 Other Graphic Commands I have written: {p_end}
@@ -182,4 +220,5 @@ Other Graphic Commands I have written: {p_end}
 {synopt:{help surface}  (if installed)}   {stata ssc install surface}     (to install) {p_end}
 {synopt:{help trellis}  (if installed)}   {stata ssc install trellis}     (to install) {p_end}
 {p2colreset}{...}
+
 

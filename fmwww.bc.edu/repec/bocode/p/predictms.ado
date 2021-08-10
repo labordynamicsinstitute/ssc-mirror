@@ -1,7 +1,46 @@
-*! version 1.1.1 21nov2016 MJC
+*! version 2.3.2 13aug2019 MJC
 
 /*
 History
+MJC 13aug2019: version 2.3.2 - bug fix: missed an edit in 2.3.1 fix preventing aj to work in predictms (merlin function names); now fixed
+							 - error check added for streg, d(ggamma) combined with aj - not supported
+MJC 25jul2019: version 2.3.1 - bug fix: edits in merlin function names caused predictms to fail; now fixed
+                             - error check added for bhtime with strcs models - not currently supported
+MJC 03jun2019: version 2.3.0 - bug fix: stpm2 and strcs models failed, introduced in 2.2.0; now fixed
+							 - streg, dist(lognormal) now allowed with clock-forward models
+							 - bug fix: streg, dist(lognormal) with reset incorrectly assumed loglogistic; now fixed
+MJC 28may2019: version 2.2.0 - bug fix: with novcv() when ci not specified introduced in 2.1.0; now fixed
+							 - bug in error check for log normal requiring reset; now fixed
+							 - Generalised gamma streg model now supported when used in the models() syntax
+							 - bug fix in msaj when number of transitions was not equal to number dimension of transmatrix()
+MJC 15apr2019: version 2.1.0 - novcv() option added to use mean vector instead of draws in CI calculations
+MJC 19mar2019: version 2.0.1 - help file improved for msaj
+MJC 23feb2018: version 2.0.0 - bug fix: los was incorrectly scaled to 1, introduced in 1.2.0. Now fixed.
+							 - normal approximation for CIs is now the default. percentile option replaces normal.
+							 - bug fix: level() was ignored in CI calculations, always assumed 95%. Now fixed.
+							 - gen() removed
+							 - bug fix: in some cases mm_root_vec produced an error when solving the root. Now fixed.
+							 - all predictions now available in one call
+							 - infinite at#()s added (limited to 50 for error check reasons)
+							 - at() changed to at1()
+							 - difference option added
+							 - added atref(#) - default 1
+							 - standardise option added to calculate standardised (population-averaged) predictions
+							 - bug fix: with Stata 15 and streg (apart from dist(exp)), with at2(), the ancilary parameter constant was ignored. Now fixed.
+							 - _time = 0 now allowed with normal ci's
+							 - userfunction() added for user-defined prediction function, subroutines for probs and los
+							 - userlink() added for normal cis of userfunction() - default identity, can also be log or logit
+							 - cr option added to avoid specifying a transition matrix. For use with models() only.
+							 - bug fix: reset now synced with root-finding updates for stpm2 and strcs models
+							 - outsample added
+							 - stms added
+							 - enter() removed, now min(timevar or _t)
+							 - aj added for Aalen-Johansen estimator with Markov models
+							 - reversible transitions now allowed
+MJC 17nov2017: version 1.2.1 - bug fix with simulation from strcs models with delayed entry
+MJC 13nov2017: version 1.2.0 - tscale2() and time2() added for multiple timescales
+							 - probabilities/los scaled to 1/t
+release moved to website
 MJC 21nov2016: verison 1.1.1 - bug fix
 MJC 16nov2016: version 1.1.0 - some re-writes of source code for massive speed improvements when root-finding required
 							 - trans#() syntax removed, now parsing is done automatically and using covariates expanded using msset
@@ -36,82 +75,150 @@ MJC 31mar2015: version 1.0.0
 */
 
 program define predictms, sortpreserve properties(st) rclass
-	version 14.1
+	version 14.2
 	syntax 						, 											///
 																			///
 										[									///
 											TRANSMatrix(string)				///	-transition matrix-
 											MODels(string)					///	-est store objects-
-											GEN(string)						///	-new variable stub-
 											RESET							///	-use clock reset approach in simulations-
 											FROM(numlist >0 asc int)		/// -starting state for predictions-
 											OBS(string)						///	-Number of time points to calculate predictions at between mint() and maxt()-
 											MINT(string)					///	-minimum time to calculate predictions at-
 											MAXT(string)					///	-maximum time to calculate predictions at-
 											TIMEvar(varname numeric)		///	-prediction times-
-											enter(string)					///	-time that patients enter model, default 0, for forward predictions-
 											exit(string)					/// -time patients exit, for fixed horizon-
 											SEED(string)					///	-pass to set seed-
 											SURVival						///	-a single event survival model was fitted-
-											CR(string)						///
+											CR								/// -competing risks model was fitted-
 																			///
 											N(string)						/// -sample size-
 											M(numlist >=20 int max=1)		/// -number of parameter samples from MVN-
 											CI								/// -calculate confidence intevals for transprobs-
-											NORMAL							///	-calculate confidence intervals using a normal approximation-
-											Level(cilevel)					/// -level for normal approx. for CIs-
+											PERCentile						///	-calculate confidence intervals using percentiles-
+											NOVCV(string)					/// -transitions to skip VCV when calculating CIs-
+											Level(cilevel)					/// -level for CIs-
 																			///
 											LOS								///	-calculate length of stay in each state-
+											VISIT							/// -prob. of ever visiting each state within time window-
 																			///
-											AJ								/// -not documented-
-											STD								/// -not documented-
-											STDIF(string)					///	-not documented-
-											STDIF2(string)					///	-not documented-
-											CHECK							///	-not documented-
-											OUT								///	-not documented-
-											PROB							///	-not documented-
-											SURVSIM(string)					/// -not documented-
-											SURVSIMTOUSE(string)			/// -not documented-
+											DIFFerence						///	-calculate differences of predictions between at() and at2()-
+											RATIO							///	-calculate ratio of predictions between at() and at2()-
+																			///
+											ATREFerence(string)				///
+																			///
+											TSCALE2(string)					/// -transition models on a second timescale-
+											TIME2(string)					/// -time to add to main timescale-
+																			///
+											TSRESET(string)					/// -transition-specific resets-
+																			///
+											USERFunction(string)			///
+											USERLink(string)				///
+																			///
+											STANDardise						/// -standardised (pop.-averaged) predictions-
+																			///
+											OUTsample						///	-out of sample predictions-
+																			///
+											AJ								///
 																			///
 											GRAPH							///
 											GRAPHOPTS(string)				///
 																			///
-											AT(string)						/// 
+											VARAJ							/// -not documented-
+											STDIF(string)					///	-not documented-
+											STDIF2(string)					///	-not documented-
+											PROBINDEX						///	-not documented-
+											SURVSIM(string)					/// -not documented-
+											SURVSIMTOUSE(string)			/// -not documented-
 																			///
-																			/// // Comparison stats - default is difference
-											AT2(string)						/// -second covariate pattern for contrast-
-											RATIO							///	-calculate ratio of probabilities between at() and at2()-
+											DEVCODE1(string)				/// -not documented-
+											DEVCODE2(string)				/// -not documented-
+											DEVCODE3(string)				/// -not documented-
+											MARGinal						/// -not documented-
 																			///
+											INTERactive						/// -not documented-
+											JSONpath(string)				/// -not documented-
+																			///
+											*								/// -infinite ats-
 										]
 					
 	//================================================================================================================================================//
 	// Preliminaries
 	
+	capture which merlin
+	if _rc>0 {
+		display in yellow "You need to install the command merlin. This can be installed using,"
+		display in yellow ". {stata ssc install merlin}"
+		exit  198
+	}
+	
+	local ats `options'
+	
+	if "`aj'"!="" {
+		if "`reset'"!="" {
+			di as error "aj not allowed with reset"
+			exit 198
+		}
+		if "`exit'"!="" {
+			di as error "exit() not allowed with aj"
+			exit 198
+		}
+		if "`n'"!="" {
+			di as error "n() not needed with aj"
+			exit 198
+		}
+		if "`models'"=="" {
+			di as error "aj only available with models() syntax"
+			exit 198
+		}
+		if "`visit'"!="" {
+			di as error "visit not allowed with aj"
+			exit 198
+		}
+	}
+	
+	if "`standardise'"!="" {
+		local std std
+	}
 	local K = 1
 	if "`std'"!="" {
-		if "`out'"!="" | "`prob'"!="" {
+		if "`outsample'"!="" | "`probindex'"!="" {
 			exit 1986
 		}
 		tempvar stdtouse
 		if "`stdif'"!="" {
-			qui gen byte `stdtouse' = _trans1==1 & `stdif'==1
-			qui count if _trans1==1 & `stdif'==1
+			cap confirm var _trans1
+			if _rc {
+				qui gen byte `stdtouse' = `stdif'==1
+				qui count if `stdif'==1
+			}
+			else {
+				qui gen byte `stdtouse' = _trans1==1 & `stdif'==1
+				qui count if _trans1==1 & `stdif'==1
+			}
 		}
 		else {
-			qui gen byte `stdtouse' = _trans1==1
-			qui count if _trans1==1
+			cap confirm var _trans1
+			if _rc {
+				qui gen byte `stdtouse' = 1
+				qui count if `stdtouse'==1
+			}
+			else {
+				qui gen byte `stdtouse' = _trans1==1
+				qui count if _trans1==1
+			}
 		}
 		local K = r(N)	
 	}
 	
-	if "`out'"!="" {
+	if "`outsample'"!="" {
 		local out = 1
 	}
 	else local out = 0
 	
 	if `out' & "`timevar'"=="" {
-		di as error "timevar() must be specified with out"
-		exit 1986
+		di as error "timevar() must be specified with outsample"
+		exit 198
 	}
 	
 	if "`n'"=="" & "`ci'"=="" {
@@ -121,9 +228,9 @@ program define predictms, sortpreserve properties(st) rclass
 		local n = 10000
 	}
 	
-	if "`prob'"!="" & "`at2'"=="" {
-		di as error "at2() needed"
-		exit 1986
+	if ("`probindex'"!="" | "`difference'"!="" | "`ratio'"!="") & "`ats'"=="" {
+		di as error "at least at2() needed"
+		exit 198
 	}
 	
 	if "`seed'"!="" {
@@ -141,18 +248,24 @@ program define predictms, sortpreserve properties(st) rclass
 	
 	}
 	
+	if "`cr'"!="" & "`models'"=="" {
+		di as error "cr can only be used with models()"
+		exit 198
+	}
+	
 	if "`cr'"!="" {
 		if "`transmatrix'"!="" {
 			di in yellow  "transmatrix(`transmatrix') ignored"
 		}
+		local Ntrans : word count `models'
 		tempname transmatrix
-		mat `transmatrix' = J(`cr'+1,`cr'+1,.)
-		forvalues i=1/`cr' {
+		mat `transmatrix' = J(`Ntrans'+1,`Ntrans'+1,.)
+		forvalues i=1/`Ntrans' {
 			mat `transmatrix'[1,`i'+1] = `i'
 		}
 	}
 	
-	if "`graph'"!="" & ("`los'"!="" | "`at2'"!="") {
+	if "`graph'"!="" & ("`los'"!="" | "`hasats'"!="") {
 		di as error "graph not allowed with los or at2()"
 		exit 198
 	}
@@ -164,13 +277,18 @@ program define predictms, sortpreserve properties(st) rclass
 	}
 	mata: check_transmatrix()
 	
-	if "`ci'"=="" & "`m'"!="" {
-		di as error "Cannot specify m() without ci"
+	if ("`tscale2'"!="" & "`time2'"=="" ) | ("`tscale2'"=="" & "`time2'"!="" ) {
+		di as error "tscale2() and time2() must both be specified"
 		exit 198
 	}
 	
-	if "`enter'"!="" & "`exit'"!="" {
-		di as error "Cannot specify both enter() and exit()"
+	if "`tscale2'"!="" & "`reset'"!="" {
+		di as error "reset not allowed with tscale2()"
+		exit 198
+	}
+	
+	if "`ci'"=="" & "`m'"!="" {
+		di as error "Cannot specify m() without ci"
 		exit 198
 	}
 	
@@ -184,28 +302,17 @@ program define predictms, sortpreserve properties(st) rclass
 		di as error "You need to install the moremata library from SSC"
 		exit 198
 	}	
-	
-	//parse trans#()/model#() -> predictions calculated at these (essentially at() options), with zeros for everything else
-	if "`e(cmd)'"!="stms" {
-		local model = "`models'"!=""
-		if `model' {
-			local Nmodels : word count `models'
-			if `Ntrans'!=`Nmodels' {
-				di as error "Number of estimates objects in model() must be equal to number of transitions" 
-				exit 198
-			}
-			forvalues i=1/`Ntrans' {
-				local model`i' : word `i' of `models'
-			}
+
+	local model = "`models'"!=""
+	if `model' {
+		local Nmodels : word count `models'
+		if `Ntrans'!=`Nmodels' {
+			di as error "Number of estimates objects in model() must be equal to number of transitions" 
+			exit 198
 		}
-	}
-	else {
-		exit 1986
-	}
-	
-	if "`options'"!="" {
-		di as error "Unknown option(s): `options'"
-		exit 198
+		forvalues i=1/`Ntrans' {
+			local model`i' : word `i' of `models'
+		}
 	}
 		
 	//extended parsing of model#()
@@ -217,71 +324,101 @@ program define predictms, sortpreserve properties(st) rclass
 		}				
 	}
 	
-	local hasat = "`at'"!=""
-	local hasat2 = "`at2'"!=""
+	if "`standardise'"!="" & "`e(cmd)'"=="stms" {
+		di as error "standardise not available after stms"
+		exit 198
+	}
+	
+	if "`novcv'"!="" & "`models'"=="" {
+		di as error "novcv() only allowed with models()"
+		exit 198
+	}
+	
 	local sim = "`aj'"==""
 	
-	//Error checks on at() and at2()
-	if `hasat' & !`out' {
-		local varcount : word count `at'
-		local count = `varcount'/2			//!!add error check = integer
-		tokenize `at'
-		while "`1'"!="" {
-			unab 1: `1'
-			cap confirm var `1'
-			if _rc {
-				di in red "invalid at(... `1' `2' ...)"
-				exit 198
-			}
-			forvalues i=1/`Ntrans' {
-				if "`1'"=="_trans`i'" {
-					di as error "Cannot specify _trans# variables in at()"
-					exit 198				
+	
+	//===================================================================================================================//
+	//parse ats
+	
+	//check at#()
+	
+	local atind = 1
+	while "`ats'"!="" {
+		
+		if `atind'>50 {
+			di as error "at#() limit reached, or unrecognised option"
+			exit 198
+		}
+		
+		local 0 , `ats'
+		syntax , [at`atind'(string) *]
+		local ats `options'
+		
+		if !`out' {
+			local varcount : word count `at`atind''
+			local count = `varcount'/2			//!!add error check = integer
+			tokenize ``at`atind'''
+			while "`1'"!="" {
+				unab 1: `1'
+				cap confirm var `1'
+				if _rc {
+					di in red "invalid at`atind'(... `1' `2' ...)"
+					exit 198
 				}
-			}
-			cap confirm num `2'
-			if _rc {
-				di in red "invalid at(... `1' `2' ...)"
-				exit 198
-			}
-			mac shift 2
-		}  
+				forvalues i=1/`Ntrans' {
+					if "`1'"=="_trans`i'" {
+						di as error "Cannot specify _trans# variables in at`atind'()"
+						exit 198				
+					}
+				}
+				cap confirm num `2'
+				if _rc {
+					di in red "invalid at`atind'(... `1' `2' ...)"
+					exit 198
+				}
+				mac shift 2
+			}  
+		}
+		local atind = `atind'+1
+
 	}
-	if `hasat2' & !`out' {
-		local varcount : word count `at2'
-		local count = `varcount'/2			//!!add error check = integer
-		tokenize `at2'
-		while "`1'"!="" {
-			unab 1: `1'
-			cap confirm var `1'
-			if _rc {
-				di in red "invalid at2(... `1' `2' ...)"
-				exit 198
-			}
-			forvalues i=1/`Ntrans' {
-				if "`1'"=="_trans`i'" {
-					di as error "Cannot specify _trans# variables in at2()"
-					exit 198				
-				}
-			}
-			cap confirm num `2'
-			if _rc {
-				di in red "invalid at2(... `1' `2' ...)"
-				exit 198
-			}
-			mac shift 2
-		}  
+	if `atind'>1 {
+		local Nats = `atind'-1
+	}
+	else {
+		local Nats = 1
+	}
+
+	if "`atreference'"=="" {
+		local atref = 1
+	}
+	else {
+		cap confirm integer number `atreference'
+		if _rc {
+			di as error "atreference() must be an integer"
+			exit 198
+		}
+		if `atreference'<1 {
+			di as error "atreference() must be >=1"
+			exit 198		
+		}
+		local atref = `atreference'
 	}
 	
-	if "`ci'"=="" & "`aj'"=="" local m = 1
+	if `atref'>`Nats' & `Nats'>1 {
+		di as error "atreference(#) must be an at#()"
+		exit 198
+	}
+	
+	//==//
+
+	
+	if "`ci'"=="" local m = 1
 	
 	//default m for sims
-	if "`ci'"!="" & "`m'"=="" & "`aj'"=="" local m = 200
+	if "`ci'"!="" & "`m'"=="" local m = 200
 			
 	if "`from'"=="" local from 1
-	
-	cap set obs `obs'	
-	if "`aj'"=="" cap set obs `m'
 	
 	// prediction time variable
 	if "`timevar'"!="" & ("`mint'"!="" | "`maxt'"!="" | "`obs'"!="") {
@@ -296,30 +433,12 @@ program define predictms, sortpreserve properties(st) rclass
 				local maxt = `r(max)'
 			}
 			if "`mint'"=="" {
-				if "`enter'"=="" {
-					qui su _t, meanonly
-					local mint = `r(min)'
-					local enter = 0
-				}
-				else {
-					local mint = `enter'
-				}
+				local mint = 0
+				local enter = `mint'
 			}
 			else {
-				if "`enter'"=="" local enter = 0
+				local enter = `mint'
 			}
-			if `maxt'<`enter' {
-				di as error "maxt() must be > enter()"
-				exit 198
-			}
-			if `mint'<`enter' {
-				di as error "mint() must be >= enter()"
-				exit 198
-			}
-			if `mint'==`enter' & "`ci'"!="" & "`normal'"!="" & "`aj'"=="" {
-				di as error "mint() > enter() when confidence intervals with normal approximation are required"
-				exit 198
-			}			
 		}
 		else {
 			if "`aj'"!="" local enter = 0
@@ -327,8 +446,7 @@ program define predictms, sortpreserve properties(st) rclass
 				local maxt = `exit'
 			}
 			if "`mint'"=="" {
-				qui su _t, meanonly
-				local mint = `r(min)'
+				local mint = 0
 			}
 			if `maxt'>`exit' {
 				di as error "maxt() must be <= exit()"
@@ -338,14 +456,10 @@ program define predictms, sortpreserve properties(st) rclass
 				di as error "mint() must be < exit()"
 				exit 198
 			}
-			if `maxt'==`exit' & "`ci'"!="" & "`normal'"!="" & "`aj'"=="" {
-				di as error "maxt() < exit() when confidence intervals with normal approximation are required"
-				exit 198
-			}			
 		}
 		
 		if "`obs'"=="" & "`aj'"=="" local obs = 20
-		else if "`obs'"=="" & "`aj'"!="" local obs = 100
+		else if "`obs'"=="" & "`aj'"!="" local obs = 500
 		local timevar _time
 		cap drop _time
 		cap range2 _time `mint' `maxt' `obs'	
@@ -361,19 +475,15 @@ program define predictms, sortpreserve properties(st) rclass
 		qui gen byte `touse' = `timevar'!=.
 		qui count if `touse'==1
 		local obs = `r(N)'
-		if "`enter'"=="" local enter = 0
 		qui su `timevar', meanonly
 		if "`exit'"=="" {
+			local enter = `r(min)'
 			if `r(max)'<`enter' {
 				di as error "max(`timevar') must be > enter()"
 				exit 198
 			}
 			if `r(min)'<`enter' {
 				di as error "min(`timevar') must be >= enter()"
-				exit 198
-			}
-			if `r(min)'==`enter' & "`ci'"!="" & "`normal'"!="" {
-				di as error "min(`timevar') > enter() when confidence intervals with normal approximation are required"
 				exit 198
 			}
 		}
@@ -387,12 +497,55 @@ program define predictms, sortpreserve properties(st) rclass
 				di as error "min(`timevar') must be < exit()"
 				exit 198
 			}
-			if `r(max)'==`exit' & "`ci'"!="" & "`normal'"!="" {
+			if `r(max)'==`exit' & "`ci'"!="" & "`percentile'"=="" {
 				di as error "max(`timevar') < exit() when confidence intervals with normal approximation are required"
 				exit 198
 			}			
 		}
-	}	
+	}
+	
+	// Checks for interactive options
+	if "`jsonpath'" != "" & "`interactive'" == "" {
+		di as error "You have used the jsonpath option without using the interactive option."
+		exit 198
+	}
+	if "`interactive'" != "" {
+		if "`jsonpath'" != "" {
+			mata st_local("direxists",strofreal(direxists("`jsonpath'")))
+			if !`direxists' {
+				di as error "Folder `jsonpath' does not exist."
+				exit 198
+			}
+			mata st_local("jsonfile",pathjoin("`jsonpath'","msboxes_predictions.json"))
+			mata st_local("htmlfile",pathjoin("`jsonpath'","msboxes.html"))
+		}
+		else {
+			local jsonfile msboxes_predictions.json
+			local htmlfile msboxes.html
+		}
+		capture confirm file "`jsonfile'"
+		if !_rc {
+			capture erase "`jsonfile'"
+			if _rc {
+				display as error "`jsonfile' cannot be deleted'"
+			}
+		}
+		capture confirm file "`htmlfile'"
+		if _rc {
+			di as error "msboxes.html does not exist in folder `jsonpath'"
+		}
+		// hazard functions
+		forvalues i = 1/`Ntrans' {
+			qui estimates restore `model`i''
+			forvalues j=1/`Nats' {
+				tempname hazard_trans`i'_at`j'
+				if `Nats' == 1 & "`at1'" == "" local tmpat ""
+				else local tmpat at(`at`j'')
+				qui predict `hazard_trans`i'_at`j'', timevar(`timevar') hazard `tmpat'
+			}
+		}
+	}
+	
 
 	//get core stuff
 
@@ -420,69 +573,6 @@ program define predictms, sortpreserve properties(st) rclass
 		}
 	}
 	
-	//create variables to hold predictions
-	if !`survsimcall' {
-		if "`gen'"=="" {
-			cap drop pred_*
-			local stub pred
-		}
-		else {
-			cap drop `gen'_*
-			local stub `gen'
-		}
-		foreach fromstate in `from' {
-			forvalues i=1/`Nstates' {
-				qui gen double `stub'_`fromstate'_`i' = 0 if _n<= `obs'
-				local fromvars`fromstate' `fromvars`fromstate'' `stub'_`fromstate'_`i'
-				if "`los'"!="" {
-					if "`at2'"=="" {
-						label var `stub'_`fromstate'_`i' "Length of stay in state=`i', from state=`fromstate'"
-					}
-					else {
-						if "`ratio'"!="" {
-							label var `stub'_`fromstate'_`i' "LoS(at()) / LoS(at2()), in state=`i', from state=`fromstate'"
-						}
-						else {
-							label var `stub'_`fromstate'_`i' "LoS(at()) - LoS(at2()), in state=`i', from state=`fromstate'"
-						}
-					}
-				}
-				
-				if "`los'"=="" {
-					if "`at2'"=="" {
-						label var `stub'_`fromstate'_`i' "Transition prob. state=`i', from state=`fromstate'"
-					}
-					else {
-						if "`ratio'"=="" {
-							label var `stub'_`fromstate'_`i' "Transition prob(at()) - Transition prob(at2()) state=`i', from state=`fromstate'"
-						}
-						else {
-							label var `stub'_`fromstate'_`i' "Transition prob(at()) / Transition prob(at2()) state=`i', from state=`fromstate'"
-						}
-					}
-				}			
-				
-				if "`ci'"!="" & "`aj'"=="" {
-					if "`normal'"=="" {
-						qui gen double `stub'_`fromstate'_`i'_lci = 0 if _n<= `obs'
-						qui gen double `stub'_`fromstate'_`i'_uci = 0 if _n<= `obs'
-						local fromvarslci`fromstate' `fromvarslci`fromstate'' `stub'_`fromstate'_`i'_lci
-						local fromvarsuci`fromstate' `fromvarsuci`fromstate'' `stub'_`fromstate'_`i'_uci
-					}
-					else {
-						tempvar pred_`fromstate'_`i'_se
-						qui gen double `pred_`fromstate'_`i'_se' = 0 if _n<= `obs'
-						local probvars_`fromstate'_`i' `stub'_`fromstate'_`i' `pred_`fromstate'_`i'_se'
-					}
-				}
-				else if "`ci'"!="" & "`aj'"!="" {
-					qui gen double se_`stub'_`fromstate'_`i' = 0 if _n<= `obs'
-					local se_fromvars`fromstate' `se_fromvars`fromstate'' se_`stub'_`fromstate'_`i'
-				}
-			}	
-		}
-	}
-	
 	if "`ci'"!="" & "`aj'"=="" {
 		tempvar mvnind
 		gen byte `mvnind' = _n<=`m'
@@ -496,51 +586,39 @@ program define predictms, sortpreserve properties(st) rclass
 	// stacked model 
 	if !`model' {
 		
-		predictms_modelcheck			
+		predictms_modelcheck 0 "`aj'"
 				
 		if `sim' {
 		
+			local cmds `e(cmd)'
+			
 			//coefficients
 			tempname emat evmat
 			mat `emat' = e(b)
-			mat `evmat' = e(V)
-			
+			if "`ci'"!="" {
+				mat `evmat' = e(V)
+			}
 			if "`e(cmd)'"=="stpm2" {
 				mat `emat' = `emat'[1,"xb:"]
-				mat `evmat' =`evmat'["xb:","xb:"]
-			}
-			
-			forvalues i=1/`Ntrans' {
-				tempname emat`i'
-				mat `emat`i'' = `emat'
-				local cmds `cmds' `e(cmd)'				//to sync
+				if "`ci'"!="" {
+					mat `evmat' =`evmat'["xb:","xb:"]
+				}
 			}
 			local Nparams = colsof(`emat')
-			if "`ci'"!="" {
-				forvalues i=1/`Nparams' {
-					tempvar draws`i'
-					local drawvars `drawvars' `draws`i''
-				}
-				qui drawnorm `drawvars', means(`emat') cov(`evmat')	//!! this is simulating more than I need when _N or `obs' > m
-				forvalues i=1/`Ntrans' {
-					local drawvars`i' `drawvars'
-				}
-			}	
-		
-		
+
 			if "`e(cmd2)'"=="streg" {
 				
 				if "`e(cmd)'"=="ereg" {
 					local cmdline `e(cmdline)'
 					gettoken cmd 0 : cmdline
-					syntax varlist, [NOCONstant *]
+					syntax varlist, [NOCONStant *]
 					if "`noconstant'"=="" local addcons _cons
 					local corevars `varlist' `addcons'
 				}
 				else {
 					local cmdline `e(cmdline)'
 					gettoken cmd 0 : cmdline
-					syntax varlist, [NOCONstant ANCillary(varlist) *]
+					syntax varlist, [NOCONStant ANCillary(varlist) *]
 					if "`noconstant'"=="" local addcons _cons
 					local corevars `varlist' `addcons' `ancillary' _cons
 					//indices for lambda and gamma
@@ -556,58 +634,43 @@ program define predictms, sortpreserve properties(st) rclass
 					}
 				}
 				
-				//now loop over vars and update DM and indices
-				//can match variables in at() with varlist
-				forvalues i=1/`Ntrans' {
-										
-					//design matrix for each transition
-					tempname dm`i'
-					mat `dm`i'' = J(1,`Nparams',0)
-					if "`at2'"!="" {
-						tempname at2dm`i'
-						mat `at2dm`i'' = `dm`i''
-					}
+				forval a=1/`Nats' {
 				
-					local colindex = 1
-					foreach corevar in `corevars' {
-					
-						if "`corevar'"=="_cons" {
-							mat `dm`i''[1,`colindex'] = 1
-							if "`at2'"!="" mat `at2dm`i''[1,`colindex'] = 1
-						}
-						else {
-							local inat = 0
-							predictms_atparse, 	corevar(`corevar') colindex(`colindex') dmmat(`dm`i'') 		///
-										i(`i') ntrans(`Ntrans') at(`at') out(`out')
-							local inat = r(inat)
-							local todrop `todrop' `r(todrop)'
-							local inat2 = 0
-							if `hasat2' {
-								predictms_atparse, 	corevar(`corevar') colindex(`colindex') dmmat(`at2dm`i'') 	///
-											i(`i') ntrans(`Ntrans') at(`at2') out(`out')
-								local inat2 = r(inat)
-								local todrop `todrop' `r(todrop)'
-							}
-							
-							if !`inat' & "`std'"!="" {
-								predictms_stdparse `corevar' `i' `Ntrans'
-								if r(include) {
-									local stdvars`i' `stdvars`i'' `r(stdvar)'
-									local stdvarsindex`i' `stdvarsindex`i'' `colindex'
-								}
-							}
-							if `hasat2' & !`inat2' & "`std'"!="" {
-								predictms_stdparse `corevar' `i' `Ntrans'
-								if r(include) {
-									local at2stdvars`i' `sat2tdvars`i'' `r(stdvar)'
-									local at2stdvarsindex`i' `at2stdvarsindex`i'' `colindex'
-								}
-							}
-						}
-						local colindex = `colindex' + 1
+					//now loop over vars and update DM and indices
+					//can match variables in at() with varlist
+					forvalues i=1/`Ntrans' {
+											
+						//design matrix for each transition
+						tempname at`a'dm`i'
+						mat `at`a'dm`i'' = J(1,`Nparams',0)
 						
+						local colindex = 1
+						foreach corevar in `corevars' {
+						
+							if "`corevar'"=="_cons" {
+								mat `at`a'dm`i''[1,`colindex'] = 1
+							}
+							else {
+								local inat = 0
+								predictms_atparse, 	corevar(`corevar') colindex(`colindex') dmmat(`at`a'dm`i'') 	///
+											i(`i') ntrans(`Ntrans') at(`at`a'') out(`out')
+								local inat = r(inat)
+								local todrop `todrop' `r(todrop)'
+								
+								if !`inat' & "`std'"!="" {
+									predictms_stdparse `corevar' `i' `Ntrans'
+									if r(include) {
+										local at`a'stdvars`i' `at`a'stdvars`i'' `r(stdvar)'
+										local at`a'stdvarsindex`i' `at`a'stdvarsindex`i'' `colindex'
+									}
+								}
+								
+							}
+							local colindex = `colindex' + 1
+							
+						}
+					
 					}
-				
 				}
 			
 			}
@@ -622,46 +685,33 @@ program define predictms, sortpreserve properties(st) rclass
 				//design matrix for each transition
 				if `Ncovs' > 0 {
 
-					//now loop over trans# and update DM and indices
-					//can match variables in trans#() with varlist and ancillary
-					forvalues i=1/`Ntrans' {
-						tempname dm`i'
-						mat `dm`i'' = J(1,`Ncovs',0)
-						if "`at2'"!="" {
-							tempname at2dm`i'
-							mat `at2dm`i'' = `dm`i''
-						}
-						local colindex = 1
-						foreach corevar in `corevars' {
-						
-							local inat = 0
-							predictms_atparse, corevar(`corevar') colindex(`colindex') dmmat(`dm`i'') i(`i') ntrans(`Ntrans') at(`at') out(`out')
-							local inat = r(inat)
-							local todrop `todrop' `r(todrop)'
-							local inat2 = 0
-							if `hasat2' {
-								predictms_atparse, corevar(`corevar') colindex(`colindex') dmmat(`at2dm`i'') i(`i') ntrans(`Ntrans') at(`at2') out(`out')
-								local inat2 = r(inat)
-								local todrop `todrop' `r(todrop)'
-							}
+					forval a=1/`Nats' {
+					
+						//now loop over trans# and update DM and indices
+						//can match variables in at() with varlist and ancillary
+						forvalues i=1/`Ntrans' {
+							tempname at`a'dm`i'
+							mat `at`a'dm`i'' = J(1,`Ncovs',0)
+							local colindex = 1
+							foreach corevar in `corevars' {
 							
-							//standardising	-> kept out here as could standardise without at() and at2()
-							if !`inat' & "`std'"!="" {
-								predictms_stdparse `corevar' `i' `Ntrans'
-								if r(include) {
-									local stdvars`i' `stdvars`i'' `r(stdvar)'
-									local stdvarsindex`i' `stdvarsindex`i'' `colindex'
+								local inat = 0
+								predictms_atparse, corevar(`corevar') colindex(`colindex') dmmat(`at`a'dm`i'') i(`i') ntrans(`Ntrans') at(`at`a'') out(`out')
+								local inat = r(inat)
+								local todrop `todrop' `r(todrop)'
+								
+								//standardising	-> kept out here as could standardise without at()s
+								if !`inat' & "`std'"!="" {
+									predictms_stdparse `corevar' `i' `Ntrans'
+									if r(include) {
+										local at`a'stdvars`i' `at`a'stdvars`i'' `r(stdvar)'
+										local at`a'stdvarsindex`i' `at`a'stdvarsindex`i'' `colindex'
+									}
 								}
+								local colindex = `colindex' + 1
 							}
-							if `hasat2' & !`inat2' & "`std'"!="" {
-								predictms_stdparse `corevar' `i' `Ntrans'
-								if r(include) {
-									local at2stdvars`i' `at2stdvars`i'' `r(stdvar)'
-									local at2stdvarsindex`i' `at2stdvarsindex`i'' `colindex'
-								}
-							}
-							local colindex = `colindex' + 1
 						}
+						
 					}
 				}
 				
@@ -742,276 +792,115 @@ program define predictms, sortpreserve properties(st) rclass
 						local Ntvcvars`i' `Ntvcvars'
 					}
 					//tvc DM
-					forvalues i=1/`Ntrans' {
-						tempname dmtvc`i'
-						mat `dmtvc`i'' = J(1,`Ntvcvars`i'',0)
-						if `hasat2' {
-							tempname at2dmtvc`i'
-							mat `at2dmtvc`i'' = `dmtvc`i''
-						}
-						local colindex = 1
-						foreach corevar in `tvc`i'' {
-						
-							local inat = 0
-							predictms_atparse, corevar(`corevar') colindex(`colindex') dmmat(`dmtvc`i'') i(`i') ntrans(`Ntrans') at(`at') out(`out')
-							local inat = r(inat)
-							local todrop `todrop' `r(todrop)'
-							local inat2 = 0
-							if `hasat2' {
-								predictms_atparse, corevar(`corevar') colindex(`colindex') dmmat(`at2dmtvc`i'') i(`i') ntrans(`Ntrans') at(`at2') out(`out')
-								local inat2 = r(inat)
+					forval a=1/`Nats' {
+					
+						forvalues i=1/`Ntrans' {
+							tempname at`a'dmtvc`i'
+							mat `at`a'dmtvc`i'' = J(1,`Ntvcvars`i'',0)
+							local colindex = 1
+							foreach corevar in `tvc`i'' {
+							
+								local inat = 0
+								predictms_atparse, corevar(`corevar') colindex(`colindex') dmmat(`at`a'dmtvc`i'') i(`i') ntrans(`Ntrans') at(`at`a'') out(`out')
+								local inat = r(inat)
 								local todrop `todrop' `r(todrop)'
+								
+								//standardising
+								if "`std'"!="" {
+									if !`inat' {
+										predictms_stdparse `corevar' `i' `Ntrans'
+										if r(include) {
+											local at`a'tvcstdvars`i' `at`a'tvcstdvars`i'' `r(stdvar)'
+											local at`a'tvcstdvarsindex`i' `at`a'tvcstdvarsindex`i'' `colindex'
+										}
+									}						
+								}
+								local colindex = `colindex' + 1
+							}
+						}
+
+					}
+					
+				}
+			
+			}
+			else if "`e(cmd)'"=="stms" {
+			
+				local cmds `e(models)'
+				
+				//coefficients
+				tempname emat evmat
+				mat `emat' = e(b)
+				if "`ci'"!="" {
+					mat `evmat' = e(V)
+				}
+				
+				forval a=1/`Nats' {
+				
+					local ind = 1
+					
+					forvalues i=1/`Ntrans' {
+				
+						local stmodel : word `i' of `e(models)'		
+						
+						predictms_stms_model, trans(`i') model(`stmodel') bmat(`emat') at(`at`a'') 
+						//leaves stpm2 info behind in locals
+						
+						tempname at`a'dm`i'
+						mat `at`a'dm`i'' = r(dm)
+					
+						if `a'==1 {
+							
+							//index for extracting model specific betas
+							tempname stmsindex`i'
+							if `i'==1 {
+								mat `stmsindex`i'' = (`ind',`r(Nparams)')
+								if "`r(Nparams2)'"=="" {
+									local ind = `r(Nparams)' + 1
+								}
+								else {
+									local ind = `r(Nparams2)' + 1
+								}
+							}
+							else {
+								mat `stmsindex`i'' = (`ind',`=`ind'+`r(Nparams)'-1')
+								if "`r(Nparams2)'"=="" {
+									local ind = `ind' + `r(Nparams)'
+								}
+								else {
+									local ind = `ind' + `r(Nparams2)'
+								}
 							}
 							
-							//standardising
-							if "`std'"!="" {
-								if !`inat' {
-									predictms_stdparse `corevar' `i' `Ntrans'
-									if r(include) {
-										local tvcstdvars`i' `tvcstdvars`i'' `r(stdvar)'
-										local tvcstdvarsindex`i' `tvcstdvarsindex`i'' `colindex'
+							if "`stmodel'"!="stpm2" & "`stmodel'"!="ereg"{
+								tempname indices`i'
+								mat `indices`i'' = r(indices)
+							}
+							if "`stmodel'"=="stpm2" {
+								if "`e(orthog`i')'"=="orthog" {
+									tempname rmat`i'
+									mat `rmat`i'' = r(rmat)
+									if "`e(tvc`i')'"!="" {
+										forvalues j=1/`Ntvcvars`i'' {
+											tempname R`i'_`j'
+											mat `R`i'_`j'' = r(R_`j')
+										}
 									}
 								}
-								if `hasat2' & !`inat2' {
-									predictms_stdparse `corevar' `i' `Ntrans'
-									if r(include) {
-										local tvcat2stdvars`i' `tvcat2stdvars`i'' `r(stdvar)'
-										local tvcat2stdvarsindex`i' `tvcat2stdvarsindex`i'' `colindex'
-									}
-								}							
-							}
-							local colindex = `colindex' + 1
-						}
-					}
-					
-				}
-			
-			}
-			else if ""=="stms" {
-			
-				if "`ci'"!="" local count = 1
-			
-				forvalues i=1/`Ntrans' {
-			
-					local stmodel : word `i' of `e(models)'		
-					
-					predictms_stms_model `i' `stmodel' `emat' `at'
-				
-					tempname dm`i' emat`i' 
-					mat `dm`i'' = r(dm)
-					
-					local Nparams = r(Nparams)
-					
-					if "`ci'"=="" {
-						mat `emat`i'' = r(b)
-					}
-					else {
-						//get drawvar names for each transition model 
-						forvalues j=1/`Nparams' {
-							local drawvars`i' `drawvars`i'' `draws`count''
-							local count = `count' + 1
-						}
-						//need to skip dxb and s0xb
-						if "`stmodel'"=="stpm2" {
-							local count = `count' + `Nparams' - `: word count `e(varlist`i')'' - 1
-							if `: word `i' of `e(delentry)'' {
-								local count = `count' + `Nparams'
-							}
-						}
-					
-					}
-				
-					if "`stmodel'"!="stpm2" & "`stmodel'"!="ereg"{
-						tempname indices`i'
-						mat `indices`i'' = r(indices)
-					}
-					if "`stmodel'"=="stpm2" {
-						if "`e(orthog`i')'"=="orthog" {
-							tempname rmat`i'
-							mat `rmat`i'' = r(rmat)
-							if "`e(tvc`i')'"!="" {
-								forvalues j=1/`Ntvcvars`i'' {
-									tempname R`i'_`j'
-									mat `R`i'_`j'' = r(R_`j')
+								if "`e(tvc`i')'"!="" {
+									tempname at`a'dmtvc`i'
+									mat `at`a'dmtvc`i'' = r(dmtvc)
 								}
 							}
-						}
-						if "`e(tvc`i')'"!="" {
-							tempname dmtvc`i'
-							mat `dmtvc`i'' = r(dmtvc)
+							
 						}
 					}
-					
-					local cmds `cmds' `cmdname'
-					
-					//second DM for at2()
-					if `hasat2' {
-						predictms_stms_model_at2 `i' `stmodel' `Nparams' `at2'
-						tempname at2dm`i'
-						mat `at2dm`i'' = r(dm)
-						if "`stmodel'"=="stpm2" & "`e(tvc`i')'"!="" {
-							tempname at2dmtvc`i'
-							mat `at2dmtvc`i'' = r(dmtvc)
-						}
-					}
-					
 				}
 			
 			}
 			
 		}
 		
-		// stacked + AJ
-		else {
-		
-			if "`e(cmd2)'"=="streg" {
-				cap set obs `=`obs'+1'
-				tempvar ajtimevar ajtouse ajposttouse
-				qui gen `ajtimevar' = `timevar'
-				qui replace `ajtimevar' = `enter' if _n==`=`obs'+1'
-				qui gen byte `ajtouse' = _n<=`=`obs'+1'
-				qui gen byte `ajposttouse' = _n<=`obs'
-				
-				forvalues i=1/`Ntrans' {
-					tempvar ch`i'
-					if "`ci'"!="" {
-						tempvar varch`i' 
-						local varopt variance(`varch`i'')				
-						local varchvars `varchvars' `varch`i''
-					}
-					local trans`i' _trans`i' 1
-					qui streg_predict_ch `ch`i'' , touse2(`ajtouse') at(`trans`i'') timevar(`ajtimevar') zeros `varopt'
-					qui replace `ch`i'' = 0 if `ajtouse' & `ch`i''==.
-					if "`ci'"!="" qui replace `varch`i'' = 0 if `ajtouse' & `varch`i''==.
-					local chvars `chvars' `ch`i''
-				}	
-			}
-			else if "`e(cmd)'"=="stpm2" {
-			
-				cap set obs `=`obs'+1'
-				tempvar ajtimevar ajtouse ajposttouse
-				qui gen `ajtimevar' = `timevar'
-				qui replace `ajtimevar' = `enter' if _n==`=`obs'+1'
-				qui gen byte `ajtouse' = _n<=`=`obs'+1'
-				qui gen byte `ajposttouse' = _n<=`obs'
-				
-				//AJ
-				forvalues i=1/`Ntrans' {
-					tempvar ch`i'
-					if "`ci'"!="" {
-						tempvar varch`i' 
-						qui predictnl double `ch`i'' = predict(cumhazard at(`trans`i'') timevar(`ajtimevar') zeros) if `ajtouse', variance(`varch`i'')
-						local varchvars `varchvars' `varch`i''
-					}
-					else {
-						qui predict `ch`i'' if `ajtouse' , cumhazard at(`trans`i'') timevar(`ajtimevar') zeros
-					}
-					local chvars `chvars' `ch`i''
-				}	
-			}
-			else if "`e(cmd)'"=="cox" {
-			
-				
-				cap set obs `=`obs'+1'
-				tempvar ajtimevar ajtouse ajposttouse
-				qui gen `ajtimevar' = `timevar'
-				qui replace `ajtimevar' = `enter' if _n==`=`obs'+1'
-				qui gen byte `ajtouse' = _n<=`=`obs'+1'
-				qui gen byte `ajposttouse' = _n<=`obs'
-
-				//Get predicted baseline cumulative hazard function
-				tempvar basech
-				predict `basech', basech
-				
-				//sample and events
-				tempvar eventind
-				gen byte `eventind' = e(sample) & _d==1
-				
-				//indicator for each trans and events to read in basech
-				forvalues i= 1/`Ntrans' {
-					 tempvar chind`i'
-					 gen byte `chind`i'' = (e(sample) & `e(strata)'==`i' & _d==1)
-				}
-				
-				tempname emat
-				mat `emat' = e(b)
-				
-				//linear predictors
-				//overall design matrix for each transition, stacked
-				if `Nparams'>0 {
-					tempname dm indices
-					mat `dm' = J(`Ntrans',`Nparams',0)
-					if "`at2'"!="" {
-						tempname at2dm
-						mat `at2dm' = `dm'
-					}
-				}
-				local cmdline `e(cmdline)'
-				gettoken cmd 0 : cmdline
-				syntax [varlist(default=empty)] [if] [in], [*]
-				
-				//now loop over vars and update DM and indices
-				//can match variables in at() with varlist
-				forvalues i=1/`Ntrans' {
-					local colindex = 1
-					foreach corevar in `varlist' {
-						local inat = 0
-						if "`at'"!="" {
-							tokenize `at'
-							while "`1'"!="" {
-								unab 1: `1'
-								if "`corevar'"=="`1'_trans`i'" | "`corevar'"=="`1'" {
-									mat `dm'[`i',`colindex'] = `2'
-									local inat = 1
-								}
-								mac shift 2
-							} 
-						}
-						local inat2 = 0
-						if "`at2'"!="" {
-							tokenize `at2'
-							while "`1'"!="" {
-								unab 1: `1'
-								if "`corevar'"=="`1'_trans`i'" | "`corevar'"=="`1'" {
-									mat `at2dm'[`i',`colindex'] = `2'
-									local inat2 = 1
-								}
-								mac shift 2
-							} 
-						}
-						
-						if "`corevar'"=="_trans`i'" {
-							mat `dm'[`i',`colindex'] = 1
-							if "`at2'"!="" mat `at2dm'[`i',`colindex'] = 1
-						}
-						forvalues j=1/`Ntrans' {
-							if "`corevar'"=="_trans`j'" {
-								local inat = 1
-								if "`at2'"!="" local inat2 = 1
-							}
-						}
-						
-						if `hasat' & !`inat' & "`std'"!="" {
-							predictms_stdparse `corevar' `i' `Ntrans'
-							if r(include) {
-								local stdvars`i' `stdvars`i'' `r(stdvar)'
-								local stdvarsindex`i' `stdvarsindex`i'' `colindex'
-							}
-						}
-						if `hasat2' & !`inat2' & "`std'"!="" {
-							predictms_stdparse `corevar' `i' `Ntrans'
-							if r(include) {
-								local at2stdvars`i' `sat2tdvars`i'' `r(stdvar)'
-								local at2stdvarsindex`i' `at2stdvarsindex`i'' `colindex'
-							}
-						}
-						
-						local colindex = `colindex' + 1
-					}
-
-				}
-			}
-		}
 
 	}	
 	
@@ -1019,138 +908,94 @@ program define predictms, sortpreserve properties(st) rclass
 	// models framework
 	else {
 		
-		if `sim' {
-		
-			forvalues i=1/`Ntrans' {
-			
-				capture estimates restore `modelests`i''								//could also have use
-				if _rc {
-					di as error "model estimates `modelests`i'' not found"
-					exit 198			
-				}
-				predictms_modelcheck			
-				
-				tempname emat`i' evmat`i'
-				mat `emat`i'' = e(b)
-				mat `evmat`i'' = e(V)
-				
-				if "`e(cmd)'"=="stpm2" {
-					mat `emat`i'' = `emat`i''[1,"xb:"]
-					mat `evmat`i'' =`evmat`i''["xb:","xb:"]
-				}
-				
-				local Nparams`i' = colsof(`emat`i'')
-				if "`ci'"!="" {
-					forvalues j=1/`Nparams`i'' {
-						tempvar draws`i'`j'
-						local drawvars`i' `drawvars`i'' `draws`i'`j''
-					}
-					qui drawnorm `drawvars`i'', means(`emat`i'') cov(`evmat`i'')	//!! this is simulating more than I need when _N or `obs' > m -> move to Mata
-				}	
-				
-				predictms_model, trans(`i') nparams(`Nparams`i'') ntrans(`Ntrans') at(`at') `std' out(`out')
-				local todrop `todrop' `r(todrop)'
-				
-				if "`std'"!="" {
-					local stdvars`i' `r(stdvars)'
-					local stdvarsindex`i' `r(stdvarsindex)'
-				}
-				
-				tempname dm`i'
-				mat `dm`i'' = r(dm)
 
-				if "`e(cmd)'"!="stpm2" & "`e(cmd)'"!="ereg" & "`e(cmd)'"!="strcs" {
-					tempname indices`i'
-					mat `indices`i'' = r(indices)
-				}
-				if "`e(cmd)'"=="stpm2" | "`e(cmd)'"=="strcs" {
-					if "`e(orthog)'"=="orthog" {
-						tempname rmat`i'
-						mat `rmat`i'' = r(rmat)
+			forval a=1/`Nats' {
+
+				forvalues i=1/`Ntrans' {
+				
+					//error checks
+					cap estimates restore `modelests`i''
+						
+					if _rc>0 {
+						di as error "model estimates `modelests`i'' not found"
+						exit 198			
+					}
+					predictms_modelcheck 1 "`aj'"
+
+					//get estimates and variances
+					tempname emat`i'
+					mat `emat`i'' = e(b)
+					if "`e(cmd)'"=="stpm2" {
+						mat `emat`i'' = `emat`i''[1,"xb:"]
+					}
+					if "`ci'"!="" {
+						tempname  evmat`i'
+						mat `evmat`i'' = e(V)
+						if "`e(cmd)'"=="stpm2" {
+							mat `evmat`i'' =`evmat`i''["xb:","xb:"]
+						}
+					}
+					local Nparams`i' = colsof(`emat`i'')
+					
+					//get design matrix for at#() and other things
+					predictms_model, 	trans(`i') 					///
+										nparams(`Nparams`i'') 		///
+										ntrans(`Ntrans') 			///
+										at(`at`a'')					///
+										aind(`a')					///
+										`std' 						///
+										out(`out')
+					tempname at`a'dm`i'
+					mat `at`a'dm`i'' = r(dm)
+					
+					local todrop `todrop' `r(todrop)'
+					
+					if "`std'"!="" {
+						local at`a'stdvars`i' `r(stdvars)'
+						local at`a'stdvarsindex`i' `r(stdvarsindex)'
+					}
+
+					if `a'==1 & "`e(cmd)'"!="stpm2" & "`e(cmd)'"!="ereg" & "`e(cmd)'"!="strcs" & "`e(cmd)'"!="cox" {
+						tempname indices`i'
+						mat `indices`i'' = r(indices)
+					}
+					
+					if "`e(cmd)'"=="stpm2" | "`e(cmd)'"=="strcs" {
+						if `a'==1 & "`e(orthog)'"=="orthog" {
+							tempname rmat`i'
+							mat `rmat`i'' = r(rmat)
+							if "`e(tvc)'"!="" {
+								forvalues j=1/`Ntvcvars`i'' {
+									tempname R`i'_`j'
+									mat `R`i'_`j'' = r(R_`j')
+								}
+							}
+						}
 						if "`e(tvc)'"!="" {
-							forvalues j=1/`Ntvcvars`i'' {
-								tempname R`i'_`j'
-								mat `R`i'_`j'' = r(R_`j')
+							tempname at`a'dmtvc`i'
+							mat `at`a'dmtvc`i'' = r(dmtvc)
+							if "`std'"!="" {
+								local at`a'tvcstdvars`i' `r(tvcstdvars)'
+								local at`a'tvcstdvarsindex`i' `r(tvcstdvarsindex)'
 							}
 						}
 					}
-					if "`e(tvc)'"!="" {
-						tempname dmtvc`i'
-						mat `dmtvc`i'' = r(dmtvc)
-						if "`std'"!="" {
-							local tvcstdvars`i' `r(tvcstdvars)'
-							local tvcstdvarsindex`i' `r(tvcstdvarsindex)'
-						}
-					}
-				}
-				local cmds `cmds' `cmdname'
-				
-				//second DM for at2()
-				if "`at2'"!="" {
-				
-					predictms_model_at2, model(`e(cmd)') trans(`i') ntrans(`Ntrans') nparams(`Nparams`i'') at(`at2') `std' out(`out')
-
-					if "`std'"!="" {
-						local at2stdvars`i' `r(stdvars)'
-						local at2stdvarsindex`i' `r(stdvarsindex)'
-					}
-					
-					tempname at2dm`i'
-					mat `at2dm`i'' = r(dm)
-					if ("`e(cmd)'"=="stpm2" | "`e(cmd)'"=="strcs") & "`e(tvc)'"!="" {
-						tempname at2dmtvc`i'
-						mat `at2dmtvc`i'' = r(dmtvc)
-						if "`std'"!="" {
-							local tvcat2stdvars`i' `r(tvcstdvars)'
-							local tvcat2stdvarsindex`i' `r(tvcstdvarsindex)'
-						}
+					if `a'==1 {
+						local cmds `cmds' `cmdname'
 					}
 					
 				}
-				
 			}
-		
-		}	
-		else {
-			
-			cap set obs `=`obs'+1'
-			tempvar ajtimevar ajtouse ajposttouse
-			qui gen `ajtimevar' = `timevar'
-			qui replace `ajtimevar' = `enter' if _n==`=`obs'+1'
-			qui gen byte `ajtouse' = _n<=`=`obs'+1'
-			qui gen byte `ajposttouse' = _n<=`obs'
-			
-			forvalues i=1/`Ntrans' {
-				
-				capture estimates restore `modelests`i''								//could also have use
-				if _rc {
-					di as error "model`i'() estimates not found"
-					exit 198			
-				}
-				tempvar ch`i'
-				if "`e(cmd2)'"=="streg" {
-					qui streg_predict_ch `ch`i'' , touse2(`ajtouse') at(`at') timevar(`ajtimevar') zeros
-				}
-				else if "`e(cmd)'"=="stpm2" {
-					qui predict `ch`i'' if `ajtouse' , cumhazard at(`at') timevar(`ajtimevar') zeros
-				}
-				else if "`e(cmd)'"=="stgenreg" {
-					qui predict `ch`i'' if `ajtouse', cumhazard at(`at') timevar(`ajtimevar') zeros
-					qui replace `ch`i'' = 0 if `ajtouse' & `ch`i''==.
-				
-				}
-				local chvars `chvars' `ch`i''
-			
-			}
-		}
 	
 	}
 	
 	if "`std'"!="" {
 		local stdcheck = 0
-		forvalues i=1/`Ntrans' {
-			if "`check'"!="" di in yellow "Transition `i': Standardising over -> `stdvars`i''"
-			local stdcheck = `stdcheck' + ("`stdvars`i''"=="")
+		forval a=1/`Nats' {
+			forvalues i=1/`Ntrans' {
+				di as text "Transition `i', at`a'(): Standardising over -> `at`a'stdvars`i''"
+				local stdcheck = `stdcheck' + ("`at`a'stdvars`i''"=="")
+			}
 		}
 		if `stdcheck' {
 			di as error "No variables for standardising"
@@ -1158,77 +1003,34 @@ program define predictms, sortpreserve properties(st) rclass
 		}
 	}
 	
-	cap drop `todrop'	
-	if "`aj'"=="" & "`e(cmd)'"!="cox" {
-		mata: predictms()				
-	}
+	mata: predictms()				
+	
+	//tidy up
 	if `survsimcall' {
 		cap drop _time
 		exit
 	}
+	cap drop `todrop'	
 	
-	//=====================================================================================================================================================//
-	//normal approximation stuff
-	//transform back to prob scales
-	//if prediction = 1, need to replace uci and lci with 1's, as logit calc. will give missings
-	
-	quietly {
-		
-		if "`ci'"!="" & "`normal'"!="" & "`aj'"=="" {	
-			if "`los'"!="" {
-				local func exp
-				if "`at2'"!="" & "`ratio'"=="" local func
-			}
-			else {
-				local func invlogit
-				if "`at2'"!="" {
-					if "`ratio'"!="" local func exp
-					else local func tanh
-				}
-			}
-		
-			local siglev = abs(invnormal((100-`level')/200))
-			foreach fromstate in `from' {
-
-				forvalues i=1/`Nstates' {
-						
-					gen double `stub'_`fromstate'_`i'_lci = `stub'_`fromstate'_`i' - `siglev'* sqrt(`pred_`fromstate'_`i'_se') if _n<=`obs'
-					gen double `stub'_`fromstate'_`i'_uci = `stub'_`fromstate'_`i' + `siglev'* sqrt(`pred_`fromstate'_`i'_se') if _n<=`obs'
-					
-					replace `stub'_`fromstate'_`i' = `func'(`stub'_`fromstate'_`i') if _n<=`obs'
-					replace `stub'_`fromstate'_`i'_lci = `func'(`stub'_`fromstate'_`i'_lci) if _n<=`obs'
-					replace `stub'_`fromstate'_`i'_uci = `func'(`stub'_`fromstate'_`i'_uci) if _n<=`obs'
-					
-				}	
-			}
-		}
-		
-		if "`ci'"!="" & "`aj'"!="" {	
-	
-			local siglev = abs(invnormal((100-`level')/200))
-			foreach fromstate in `from' {
-
-				forvalues i=1/`Nstates' {
-					gen double `stub'_`fromstate'_`i'_lci = `stub'_`fromstate'_`i' - `siglev'* se_`stub'_`fromstate'_`i' if _n<=`obs'
-					gen double `stub'_`fromstate'_`i'_uci = `stub'_`fromstate'_`i' + `siglev'* se_`stub'_`fromstate'_`i' if _n<=`obs'
-				}	
-			}
-		}
-		
-	}
+	//=====================================================================================================================//
+	//finish
 	
 	if "`graph'"!="" {
 		if "`e(cmd)'"=="cox" local coxgraph cox
 		msgraph, from(`from') nstates(`Nstates') timevar(`timevar') enter(`enter') gen(`gen') `graphopts' `coxgraph'
 	}
 	
-	// return list
+	if "`interactive'" != "" {
+		mata: predictms_writejson()
+		display `"{browse "`htmlfile'":Click here for interative graphs}"'
+	}
+
+// return list
 	return matrix transmatrix = `transmatrix', copy
 	return local Nstates = `Nstates'
 	return local from `from'
 	return local stub `stub'
 	
-	cap mata: rmexternal(st_local("predictms_struct"))
 	//Done
 
 end
@@ -1271,26 +1073,33 @@ program define range2
 end
 
 program predictms_modelcheck
+	args model aj
 
-	if "`e(cmd)'"!="stms" & "`e(cmd)'"!="stpm2" & "`e(cmd)'"!="stgenreg" & "`e(cmd2)'"!="streg" & "`e(cmd)'"!="cox" & "`e(cmd)'"!="strcs" {
+	if "`e(cmd)'"!="merlin" & "`e(cmd)'"!="stms" & "`e(cmd)'"!="stpm2" & "`e(cmd)'"!="stgenreg" & "`e(cmd2)'"!="streg" & "`e(cmd)'"!="strcs" {
 		di as error "Last estimates not found"
 		exit 198	
 	}	
 	
-	if "`e(cmd2)'"=="streg" & "`e(cmd)'"=="gamma" {
-		di as error "Generalised gamma not supported"
+	if "`e(cmd2)'"=="streg" & "`e(cmd)'"=="gamma" & !`model' {
+		di as error "Generalised gamma only allowed when combined with models()"
 		exit 198
 	}
-
-	if "`e(cmd2)'"=="streg" & "`e(cmd)'"=="lnormal" & "`reset'"=="" {
-		di as error "Clock forward approach not allowed with streg, dist(lnormal), you must use the clock reset approach"
+	
+	if "`e(cmd2)'"=="streg" & "`e(cmd)'"=="gamma" & "`aj'"!="" {
+		di as error "Generalised gamma not allowed with aj"
 		exit 198
-	}	
+	}
 	
 	if "`e(cmd2)'"=="streg" & ("`e(cmd)'"=="weibull" | "`e(cmd)'"=="ereg") & "`e(frm2)'"== "time" {
 		di as error "streg, dist(weib|exp) time, not supported"
 		exit 198
 	}
+	
+	if "`e(cmd)'"=="strcs" & "`e(bhtime)'"!="" {
+		di as error "bhtime with a strcs model is not currently supported"
+		exit 198
+	}
+	
 end
 
 mata
@@ -1304,21 +1113,17 @@ void check_transmatrix()
 		errprintf("All elements on the diagonal of transmatrix() must be coded missing = .\n")
 		exit(198)
 	}
-	if (max(lowertriangle(tmat_ind))>0) {
-		errprintf("All elements of the lower triangle of transmatrix() must be coded missing = .\n")
-		exit(198)
-	}
 	row = 1
 	rtmat = rows(tmat)
 	trans = 1
 	while (row<rtmat) {
-		for (i=row+1;i<=rtmat;i++) {
+		for (i=1;i<=rtmat;i++) {
 			if (sum(tmat:==tmat[row,i])>1 & tmat[row,i]!=.) {
-				errprintf("Elements in the upper triangle of transmatrix() are not unique\n")
+				errprintf("Elements of transmatrix() are not unique\n")
 				exit(198)
 			}
 			if (tmat[row,i]!=. & tmat[row,i]!=trans){
-				errprintf("Elements in the upper triangle of transmatrix() must be sequentially numbered from 1,...,K, where K = number of transitions\n")
+				errprintf("Elements of transmatrix() must be sequentially numbered from 1,...,K, where K = number of transitions\n")
 				exit(198)
 			}		
 			if (tmat[row,i]!=.) trans++
@@ -1328,5 +1133,6 @@ void check_transmatrix()
 	st_local("Ntrans",strofreal(trans-1))
 
 }
+
 end
 

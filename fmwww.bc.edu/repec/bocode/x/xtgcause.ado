@@ -2,16 +2,27 @@
 **    Luciano Lopez & Sylvain Weber     **
 **        University of Neuchâtel       **
 **    Institute of Economic Research    **
-**      This version: July 29, 2017     **
+**    This version: October 20, 2017    **
 ******************************************
 
-*! version 2.2 Luciano Lopez & Sylvain Weber 29jul2017
+*! version 4.0 Luciano Lopez & Sylvain Weber 20oct2017
 program xtgcause, rclass
 version 10.0
 
 
 *** Syntax ***
-syntax varlist(min=2 max=2 numeric) [if] [in], [Lags(string) REGress]
+#d ;
+syntax varlist(min=2 max=2 numeric) [if] [in], 
+	[
+		Lags(string) 
+		REGress 
+		BOOTstrap BReps(numlist max=1) 
+		BLEVel(numlist max=1) BLENgth(numlist max=1) 
+		seed(numlist max=1) 
+		nodots
+	]
+;
+#d cr
 
 *Mark sample to be used
 marksample touse, novarlist
@@ -20,7 +31,6 @@ marksample touse, novarlist
 tokenize `varlist'
 local depvar `1'
 local indepvar `2'
-
 
 *** Checks ***
 *Data must be -xtset- before
@@ -97,6 +107,34 @@ if `T'-`K'<=`=5+2*`K'' {
 	exit 459
 }
 
+*Bootstrap options
+if "`bootstrap'"=="bootstrap" {
+	if "`breps'"=="" local breps = 1000
+	cap: confirm integer number `breps'
+	if _rc | `breps'<=0 {
+		di as error "Number of bootstrap replications must be a positive integer."
+		exit 198
+	}
+	if c(matsize)<`=`breps'+1' set matsize `=`breps'+1'
+	if "`blevel'"=="" local blevel = 95
+	if `blevel'<=0 | `blevel'>=100 {
+		di as error "Bootstrap significance level must be a positive number (strictly) below 100."
+		exit 198
+	}
+	if "`blength'"=="" local blength = 1
+	cap: confirm integer number `blength'
+	if `blength'<1 | `blength'>`T'-`K' {
+		di as error "Bootstrap block length must be between 1 and T-K (`=`T'-`K''). (It should be much smaller than T (`T').)"
+		exit 198
+	}
+}
+if "`bootstrap'"=="" {
+	if "`breps'"!="" | "`blevel'"!="" | "`blength'"!="" | "`seed'"!="" {
+		di as error "breps(#), blevel(#), blength(#) and seed(#) cannot be specified without bootstrap."
+		exit 198
+	}
+}
+
 
 *** Dumitrescu-Hurlin Granger causality test with # lags ***
 if !inlist("`ltype'","aic","bic","hqic") {
@@ -122,8 +160,8 @@ if !inlist("`ltype'","aic","bic","hqic") {
 			local ++i		
 			qui: test l`i'.`indepvar', accum
 		}
-		matrix W[`j',1] = `K'*r(F)
-		matrix PV[`j',1] = 1-F(`K',`e(df_r)',`r(F)')
+		mat W[`j',1] = `K'*r(F)
+		mat PV[`j',1] = 1-F(`K',`e(df_r)',`r(F)')
 	}
 
 	*Average Wald statistic
@@ -142,7 +180,6 @@ if inlist("`ltype'","aic","bic","hqic") {
 	forv k = 1/`Kmax' {
 	
 		*Initialize some matrices
-		mat IC = J(`N',1,0)
 		mat W = J(`N',1,0)
 		mat PV = J(`N',1,0)
 		mat IC = J(`N',1,0)
@@ -188,8 +225,8 @@ if inlist("`ltype'","aic","bic","hqic") {
 			local ++i		
 			qui: test l`i'.`indepvar', accum
 		}
-		matrix W[`j',1] = `K'*r(F)
-		matrix PV[`j',1] = 1-F(`K',`e(df_r)',`r(F)')
+		mat W[`j',1] = `K'*r(F)
+		mat PV[`j',1] = 1-F(`K',`e(df_r)',`r(F)')
 	}
 
 	*Average Wald statistic
@@ -200,48 +237,191 @@ if inlist("`ltype'","aic","bic","hqic") {
 }
 
 
-*** Compute and display results ***
-di _n(1) as text "Dumitrescu & Hurlin (2012) Granger non-causality test results:"
+*** Compute Z-bar and Z-bar tilde ***
+local zbar = sqrt(`N'/(2*`K')) * (`wbar'-`K') // Equation (9) in DH
+local zbar_pv = 2*(1-normal(abs(`zbar')))
+
+local zbart = sqrt(`N'/(2*`K') * ((`T'-`K')-2*`K'-5)/((`T'-`K')-`K'-3)) * (((`T'-`K')-2*`K'-3)/((`T'-`K')-2*`K'-1)*`wbar' - `K') // Equation (26) in DH adapted with T-K instead of T
+local zbart_pv = 2*(1-normal(abs(`zbart')))
+
+
+*** Bootstrap procedure ***
+if "`bootstrap'"=="bootstrap" {
+	if "`seed'"!="" set seed `seed'
+
+	local l = length("Bootstrap replications (`breps')")
+	di _n(1) _dup(`l') as txt "-"
+	di as txt "Bootstrap replications (" as res `breps' as txt ")"
+	di _dup(`l') as txt "-"
+
+	*H0 estimations (step 2)
+	tempvar epshat yhat
+	quietly: gen `epshat' = .
+	quietly: gen `yhat' = .
+	cap: levelsof `id' if `touse', local(idlist)
+	foreach i of local idlist {
+		qui: reg `depvar' l(1/`K').`depvar' /*l(1/`K').`indepvar' -> H0*/ if `id'==`i' & inrange(`time',`=`tmin'+`K'',`tmax')
+		*Store residuals
+		tempvar epshati /*yhati*/
+		quietly: predict `epshati' if `id'==`i', res
+		*quietly: predict `yhati' if `id'==`i', xb
+		quietly: replace `epshat' = `epshati' if `id'==`i'
+		*quietly: replace `yhat' = `yhati' if `id'==`i'
+		*Store coefficients
+		local alpha`i' = _b[_cons]
+		forv k = 1/`K' {
+			local beta`k'`i' = _b[L`k'.`depvar']
+		}
+	}
+
+	*Initialize some matrices
+	mat Wb = J(`N',1,0)
+	mat ZBARb = J(`breps',1,.)
+	mat ZBARTb = J(`breps',1,.)
+	
+	*Bootstrap replications
+	forv b = 1/`breps' {
+		*Display dots/iteration number
+		if "`dots'"!="nodots" _dots `b' 0
+
+		*Resample residuals (step 3)
+		tempvar epsb
+		qui: gen `epsb' = .
+		forv t = `=`tmin'+`K''(`blength')`tmax' {
+			local r = `tmin' + `K' + int((`T'-`K'-`blength'+1)*runiform())
+			foreach i of local idlist {
+				forv l = 1/`blength' {
+					qui: sum `epshat' if `id'==`i' & `time'==`=`r'+`l'-1'
+					qui: replace `epsb' = r(mean) if `id'==`i' & `time'==`=`t'+`l'-1'
+				}
+			}
+		}
+
+		*Generate vector of K initial conditions (step 4)
+		tempvar yb
+		qui: gen `yb' = .
+		local r = `tmin' + int((`T'-`K')*runiform())
+		foreach i of local idlist {
+			forv k = 1/`K' {
+				qui: sum `depvar' if `id'==`i' & `time'==`=`r'+`k'-1'
+				qui: replace `yb' = r(mean) if `id'==`i' & `time'==`=`tmin'+`k'-1'
+			}
+		}
+		
+		*Generate pseudo-panel data (step 5)
+		foreach i of local idlist {
+			local betalist
+			forv k = 1/`K' {
+				local betalist `betalist' `beta`k'`i''*L`k'.`yb'
+			}
+			local betalist = subinstr(`"`betalist'"'," "," + ",.)
+			qui: replace `yb' = `alpha`i'' + `betalist' + `epsb' if `id'==`i' & inrange(`time',`=`tmin'+`K'',`tmax')
+		}
+
+		*Individual Wald statistics (step 6)
+		local j 0 
+		foreach i of local idlist {
+			local ++j
+			qui: reg `yb' l(1/`K').`yb' l(1/`K').`indepvar' if `id'==`i' & inrange(`time',`=`tmin'+`K'',`tmax')
+			local i 0
+			while `i'<`K' {
+				local ++i		
+				qui: test l`i'.`indepvar', accum
+			}
+			mat Wb[`j',1] = `K'*r(F)
+		}
+
+		*Average Wald statistic
+		mat Ob = J(rowsof(Wb),1,1)
+		mat sumb = Ob'*Wb
+		mat wmeanb = sumb/rowsof(Wb)
+		local wbarb = wmeanb[1,1]
+		local zbarb = sqrt(`N'/(2*`K')) * (`wbarb'-`K')
+		local zbartb = sqrt(`N'/(2*`K') * ((`T'-`K')-2*`K'-5)/((`T'-`K')-`K'-3)) * (((`T'-`K')-2*`K'-3)/((`T'-`K')-2*`K'-1)*`wbarb' - `K')
+		
+		mat ZBARb[`b',1] = `zbarb'
+		mat ZBARTb[`b',1] = `zbartb'
+	}
+	qui: count
+	local Nobs = r(N) // store number of observations (useful in case number of replications > number of obs --> creation of new observations that will be dropped at the end)
+
+	*Compute Z-bar/Z-bar tilde p-values and critical values (step 8)
+	tempvar zbarb
+	qui: svmat ZBARb, name(`zbarb')
+	qui: replace `zbarb' = abs(`zbarb')
+	_pctile `zbarb', p(`blevel')
+	local zbarb_cv = r(r1)
+	qui: count if abs(`zbar')<`zbarb' & !mi(`zbarb')
+	local zbar_pv = r(N)/`breps'
+	
+	tempvar zbartb
+	qui: svmat ZBARTb, name(`zbartb')
+	qui: replace `zbartb' = abs(`zbartb')
+	_pctile `zbartb', p(`blevel')
+	local zbartb_cv = r(r1)
+	qui: count if abs(`zbart')<`zbartb' & !mi(`zbartb')
+	local zbart_pv = r(N)/`breps'
+}
+
+
+*** Display results ***
+*Title
+di _n(2) as txt "Dumitrescu & Hurlin (2012) Granger non-causality test results:"
 di _dup(62) "-"
+
+*Lag order
 if !inlist("`ltype'","aic","bic","hqic") {
-	di as text "Lag order: " as res "`K'"
+	di as txt "Lag order: " as res `K'
 }
 if inlist("`ltype'","aic","bic","hqic") {
-	di as text "Optimal number of lags (`=upper("`ltype'")'): " as res "`K'" as text " (lags tested: " as res "1" as text " to " as res "`Kmax'" as text ")."
+	di as txt "Optimal number of lags (`=upper("`ltype'")'): " as res `K' as txt " (lags tested: " as res "1" as txt " to " as res `Kmax' as txt ")."
 	local lags `K'
 }
 
-local wbar_d: di %9.4f `wbar'
-local upper = `T' - (2*`K') - 1 
-di as text "W-bar =" _col(15) as res "`wbar_d'" 
+*W-bar
+di as txt "W-bar =" _col(15) as res %9.4f `wbar' 
 
-local zbar = sqrt(`N'/(2*`K')) * (`wbar'-`K') // Equation (9) in DH
-local zbar_d: di %9.4f `zbar'
-local pvzbar = 2*(1-normal(abs(`zbar')))
-local pvzbar_d: di %5.4f `pvzbar'
-di as text "Z-bar =" _col(15) as res "`zbar_d'" _col(27) as text "(p-value = " as res "`pvzbar_d'" as text ")"
-
-local zbart = sqrt(`N'/(2*`K') * ((`T'-`K')-2*`K'-5)/((`T'-`K')-`K'-3)) * (((`T'-`K')-2*`K'-3)/((`T'-`K')-2*`K'-1)*`wbar' - `K') // Equation (26) in DH adapted with T-K instead of T
-local zbart_d: di %9.4f `zbart'
-local pvzbart = 2*(1-normal(abs(`zbart')))
-local pvzbart_d: di %5.4f `pvzbart'
-di as text "Z-bar tilde = " _col(15) as res "`zbart_d'" _col(27) as text "(p-value = " as res "`pvzbart_d'" as text ")"
-
-di _dup(62) "-"
-di as text "H0: " as input "`indepvar'" as text " does not Granger-cause " as input "`depvar'" as text "." 
-di "H1: " as input "`indepvar'" as text " does Granger-cause " as input "`depvar'" as text " for at least one panelvar (" as input "`id'" as text ")." 
-
-
-*** Store results ***
-foreach stat in pvzbart zbart pvzbar zbar K wbar {
-	if "`stat'"!="K" return scalar `stat' = ``stat''
-	if "`stat'"=="K" return scalar lags = ``stat''
+*Z-bar and Z-bar tilde
+if "`bootstrap'"=="" {
+	di as txt "Z-bar =" _col(15) as res %9.4f `zbar' _col(27) as txt "(p-value = " as res %5.4f `zbar_pv' as txt ")"
+	di as txt "Z-bar tilde = " _col(15) as res %9.4f `zbart' _col(27) as txt "(p-value = " as res %5.4f `zbart_pv' as txt ")"
+}
+if "`bootstrap'"=="bootstrap" {
+	di as txt "Z-bar =" _col(15) as res %9.4f `zbar' _col(27) as txt "(p-value* = " as res %5.4f `zbar_pv' as txt ", `blevel'% critical value = " as res %5.4f `zbarb_cv' as txt ")"
+	di as txt "Z-bar tilde = " _col(15) as res %9.4f `zbart' _col(27) as txt "(p-value* = " as res %5.4f `zbart_pv' as txt ", `blevel'% critical value = " as res %5.4f `zbartb_cv' as txt ")"
 }
 
-*Rename columns and rows of matrices
+di _dup(62) "-"
+di as txt "H0: " as input "`indepvar'" as txt " does not Granger-cause " as input "`depvar'" as txt "." 
+di "H1: " as input "`indepvar'" as txt " does Granger-cause " as input "`depvar'" as txt " for at least one panelvar (" as input "`id'" as txt ")." 
+if "`bootstrap'"!="" di as txt "*p-values computed using " as input `breps' as txt " bootstrap replications."
+
+*** Re-store initial number of observations (in case matrices ZBARd and ZBARTd were larger than dataset) ***
+if "`bootstrap'"!="" qui: keep in 1/`Nobs'
+
+*** Store results ***
+if "`bootstrap'"=="bootstrap" {
+	foreach stat in blength blevel breps zbartb_cv zbarb_cv {
+		return scalar `stat' = ``stat''
+	}
+	forv b = 1/`breps' {
+		local iter `iter' `b'
+	}
+	foreach M in ZBARTb ZBARb {
+		mat colnames `M' = `M'
+		mat rownames `M' = `iter'
+		return matrix `M' = `M'
+	}
+}
+local lags = `K'
+foreach stat in zbart_pv zbart zbar_pv zbar lags wbar {
+	return scalar `stat' = ``stat''
+}
+
+*Store matrices (columns and rows renamed)
 qui: levelsof `id' if `touse', local(levels)
 foreach i of local levels {
-	local rnames `rnames' `id'`i' 
+	local rnames `rnames' `id'`i'
 }
 foreach M in PV W {
 	mat colnames `M' = `M'i
@@ -253,7 +433,7 @@ end
 
 /*
 Update history:
-- v1.1 (10feb2017): 
+- v1.1 (10feb2017):
 	- A parenthesis was missing in line 251: sqrt(`N'/2*`lags') --> sqrt(`N'/(2*`lags'))
 	- Names of stored statistics modified/shortened: probz --> pvzbar, zbartilde --> zbart, probzbartilde --> pvzbart
 - v1.2 (23feb2017):
@@ -264,7 +444,6 @@ Update history:
 	  Eviews results correspond to xtgcause results (and Zbar-Stat. in Eviews = Z-bar tilde in xtgcause).
 	  Exec&Share results (DH) correspond to xtgcause results with the nosmall option.
 - v2.0 (13jul2017):
-	- Special thanks to Gareth Thomas.
 	- nosmall option removed.
 	- Selection of lags by AIC/BIC improved.
 - v2.1 (18jul2017):
@@ -273,4 +452,10 @@ Update history:
 - v2.2 (29jul2017)
 	- option -novarlist- added to -marksample- (line 17)
 	- Error messages formatted (colors)
+- v3.0 (11sep2017)
+	- Bootstrap options added
+- v4.0 (20oct2017)
+	- Initial conditions for bootstrap adapted: series re-constructed based on initial conditions
+	- Displaying dots using undocumented command _dots instead of own loop
+	- Matrices ZBARb and ZBARTb stored in returned results
 */

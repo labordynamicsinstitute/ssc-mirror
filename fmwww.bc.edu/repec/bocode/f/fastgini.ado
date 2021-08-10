@@ -196,4 +196,3 @@ real matrix function fastgini(real matrix X, | string scalar weight, real scalar
 }
 
 end
-

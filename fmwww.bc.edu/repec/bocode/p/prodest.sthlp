@@ -2,7 +2,7 @@
 {* *! version 1.0.1  15sep2016}{...}
 {* *! version 1.0.2  21sep2016}{...}
 
-{cmd:help prodest}{right:also see:  {help prodest predict:prodest_predict}}
+{cmd:help prodest}{right:also see:  {help prodest_p:prodest predict}}
 {hline}
 
 {title:Title}
@@ -17,32 +17,38 @@
 Olley and Pakes (OP, 1996) methodology
 
 {p 8 16 2}{cmd:prodest} {it:depvar} {ifin}
-, free(varlist) proxy(varlist) state(varlist) {cmdab:met:hod(op)} [control(varlist) acf id(varname) t(varname) reps(#)
-{cmdab:va:lueadded} {cmdab:l:evel(#)} poly(#) seed(#) {cmdab:fsres:idual(newname)} {cmdab:endo:genous(varlist)} {cmdab:trans:log} {it:{help prodest##optoptions:opt_options}} {it:{help prodest##opoptions:OP_options}}]
+, free(varlist) proxy(varlist) state(varlist) {cmdab:met:hod(op)} [control(varlist) {cmdab:acf} id(varname) t(varname) reps(#)
+{cmdab:va:lueadded} {cmdab:l:evel(#)} poly(#) {cmdab:fsres:idual(newname)} {cmdab:endo:genous(varlist)} {cmdab:trans:log} {it:{help prodest##optoptions:opt_options}} {it:{help prodest##opoptions:OP_options}}]
 
 {phang}
 Levinsohn and Petrin (LP, 2003) methodology
 
 {p 8 16 2}{cmd:prodest} {it:depvar} {ifin}
 , free(varlist) proxy(varlist) state(varlist) {cmdab:met:hod(lp)} [control(varlist) {cmdab:acf} id(varname) t(varname) reps(#)
-{cmdab:va:lueadded} {cmdab:l:evel(#)} poly(#) seed(#) {cmdab:fsres:idual(newname)} {cmdab:endo:genous(varlist)} {cmdab:trans:log} {it:{help prodest##optoptions:opt_options}} {it:{help prodest##lpoptions:LP_options}}]
+{cmdab:va:lueadded} {cmdab:l:evel(#)} poly(#) {cmdab:fsres:idual(newname)} {cmdab:endo:genous(varlist)} {cmdab:trans:log} {it:{help prodest##optoptions:opt_options}} {it:{help prodest##lpoptions:LP_options}}]
 
 {phang}
 Wooldridge (WRDG, 2009) methodology
 
 {p 8 16 2}{cmd:prodest} {it:depvar} {ifin}
-, free(varlist) proxy(varlist) state(varlist) {cmdab:met:hod(wrdg)} [control(varlist) {cmdab:acf} id(varname) t(varname) reps(#)
-{cmdab:va:lueadded} {cmdab:l:evel(#)} poly(#) seed(#) {cmdab:fsres:idual(newname)} lags(#) {cmdab:endo:genous(varlist)} {it:{help prodest##optoptions:opt_options}} {it:{help prodest##wrdgoptions:WRDG_options}}]
+, free(varlist) proxy(varlist) state(varlist) {cmdab:met:hod(wrdg)} [control(varlist) id(varname) t(varname) reps(#)
+{cmdab:va:lueadded} {cmdab:l:evel(#)} poly(#) {cmdab:fsres:idual(newname)} {cmdab:endo:genous(varlist)} {cmdab:over:identification} {cmdab:gmm} {it:{help prodest##optoptions:opt_options}} {it:{help prodest##wrdgoptions:WRDG_options}}]
+
+{tab}Robinson/Wooldridge (ROB, 2009) methodology
+
+{p 12 20 6}{cmd:prodest} {it:depvar} {ifin}
+, free(varlist) proxy(varlist) state(varlist) {cmdab:met:hod(rob)} [control(varlist) id(varname) t(varname) reps(#)
+{cmdab:va:lueadded} {cmdab:l:evel(#)} poly(#) {cmdab:fsres:idual(newname)} {cmdab:endo:genous(varlist)} {cmdab:over:identification} {it:{help prodest##optoptions:opt_options}} {it:{help prodest##roboptions:ROB_options}}]
 
 {phang}
 Mollisi and Rovigatti (MrEst, 2017) methodology
 
 {p 8 16 2}{cmd:prodest} {it:depvar} {ifin}
-, free(varlist) proxy(varlist) state(varlist) {cmdab:met:hod(mr)} [control(varlist) {cmdab:acf} id(varname) t(varname) reps(#)
-{cmdab:va:lueadded} {cmdab:l:evel(#)} poly(#) seed(#) {cmdab:fsres:idual(newname)} {cmdab:endo:genous(varlist)} {it:{help prodest##optoptions:opt_options}} {it:{help prodest##mroptions:Mr_options}}]
+, free(varlist) proxy(varlist) state(varlist) {cmdab:met:hod(mr)} [control(varlist) id(varname) t(varname) reps(#)
+{cmdab:va:lueadded} {cmdab:l:evel(#)} poly(#) {cmdab:fsres:idual(newname)} lags(#) {cmdab:endo:genous(varlist)} {cmdab:over:identification} {it:{help prodest##optoptions:opt_options}} {it:{help prodest##mroptions:Mr_options}}]
 
 {synoptline}
-{p 4 6 2}{cmdab:met:hod(name)} accepts values {it:{help prodest##opoptions:op}} (Olley-Pakes), {it:{help prodest##lpoptions:lp}} (Levinshon-Petrin), {it:{help prodest##wrdgoptions:wrdg}} (Wooldridge) and {it:{help prodest##mroptions:mr}} (MrEst). Default is {it:{help prodest##lpoptions:lp}}{p_end}
+{p 4 6 2}{cmdab:met:hod(name)} accepts values {it:{help prodest##opoptions:op}} (Olley-Pakes), {it:{help prodest##lpoptions:lp}} (Levinshon-Petrin), {it:{help prodest##wrdgoptions:wrdg}} (Wooldridge), {it:{help prodest##roboptions:rob}} (Robinson/Wooldridge) and {it:{help prodest##mroptions:mr}} (MrEst). Default is {it:{help prodest##lpoptions:lp}}{p_end}
 {p 4 6 2}A panel and a time variable must be specified. Use {helpb xtset} or the {opt id(varname)} and {opt t(varname)} options.{p_end}
 
 {synoptline}
@@ -64,15 +70,14 @@ Mollisi and Rovigatti (MrEst, 2017) methodology
 
 {syntab:Optimization}
 {synopt :{cmdab:opt:imizer(}{it:{help prodest##optimizers:opttype}})}available optimizers are Nelder-Mead (nm), modified Newton-Raphson (nr), 
-Davidon-Fletcher-Powell (dfp), Broyden-Fletcher-Goldfarb-Shanno (bfgs) and Berndt-Hall-Hall-Hausman (bhhh){p_end}
+Davidon-Fletcher-Powell (dfp), Broyden-Fletcher-Goldfarb-Shanno (bfgs), Berndt-Hall-Hall-Hausman (bhhh) and Gauss-Newton (gn){p_end}
 {synopt :{cmdab:max:iter}}max number of iterations, default is 10,000{p_end}
 
 {syntab:Other}
 {synopt :{cmdab:id(}{opt varname})}{it:panelvar} to {helpb xtset} the data{p_end}
 {synopt :{cmdab:t(}{opt varname})}{it:timevar} to {helpb xtset} the data{p_end}
 {synopt :{opt reps(#)}}number of bootstrap repetitions; minimum is 2, default is 5{p_end}
-{synopt :{opt poly(#)}}degree of polynomial approximations; ranges 3 to 6, default is 3{p_end}
-{synopt :{opt seed(#)}}seed to be set; integer, default is 12345{p_end}
+{synopt :{opt poly(#)}}degree of polynomial approximations; ranges 2 to 6, default is 3{p_end}
 {synopt :{cmdab:fsres:iduals(}{opt newname})}save first stage residuals in var {it:newname}{p_end}
 
 {syntab:Reporting}
@@ -97,15 +102,14 @@ Davidon-Fletcher-Powell (dfp), Broyden-Fletcher-Goldfarb-Shanno (bfgs) and Bernd
 
 {syntab:Optimization}
 {synopt :{cmdab:opt:imizer(}{it:{help prodest##optimizers:opttype}})}available optimizers are Nelder-Mead (nm), modified Newton-Raphson (nr), 
-Davidon-Fletcher-Powell (dfp), Broyden-Fletcher-Goldfarb-Shanno (bfgs) and Berndt-Hall-Hall-Hausman (bhhh){p_end}
+Davidon-Fletcher-Powell (dfp), Broyden-Fletcher-Goldfarb-Shanno (bfgs), Berndt-Hall-Hall-Hausman (bhhh) and Gauss-Newton (gn){p_end}
 {synopt :{cmdab:max:iter}}max number of iterations, default is 10,000{p_end}
 
 {syntab:Other}
 {synopt :{cmdab:id(}{opt varname})}{it:panelvar} to {helpb xtset} the data{p_end}
 {synopt :{cmdab:t(}{opt varname})}{it:timevar} to {helpb xtset} the data{p_end}
 {synopt :{opt reps(#)}}number of bootstrap repetitions; minimum is 2, default is 5{p_end}
-{synopt :{opt poly(#)}}degree of polynomial approximations; ranges 3 to 6, default is 3{p_end}
-{synopt :{opt seed(#)}}seed to be set; integer, default is 12345{p_end}
+{synopt :{opt poly(#)}}degree of polynomial approximations; ranges 2 to 6, default is 3{p_end}
 {synopt :{cmdab:fsres:iduals(}{opt newname})}save first stage residuals in var {it:newname}{p_end}
 
 {syntab:Reporting}
@@ -127,15 +131,43 @@ Davidon-Fletcher-Powell (dfp), Broyden-Fletcher-Goldfarb-Shanno (bfgs) and Bernd
 
 {syntab:Optimization}
 {synopt :{cmdab:opt:imizer(}{it:{help prodest##optimizers:opttype}})}available optimizers are Nelder-Mead (nm), modified Newton-Raphson (nr), 
-Davidon-Fletcher-Powell (dfp), Broyden-Fletcher-Goldfarb-Shanno (bfgs) and Berndt-Hall-Hall-Hausman (bhhh){p_end}
+Davidon-Fletcher-Powell (dfp), Broyden-Fletcher-Goldfarb-Shanno (bfgs), Berndt-Hall-Hall-Hausman (bhhh) and Gauss-Newton (gn){p_end}
 {synopt :{cmdab:max:iter}}max number of iterations, default is 10,000{p_end}
 
 {syntab:Other}
+{synopt :{cmdab:over:identification}}includes lagged polynomial in state and proxy among the instruments{p_end}
 {synopt :{cmdab:id(}{opt varname})}{it:panelvar} to {helpb xtset} the data{p_end}
 {synopt :{cmdab:t(}{opt varname})}{it:timevar} to {helpb xtset} the data{p_end}
-{synopt :{opt poly(#)}}degree of polynomial approximations; ranges 3 to 6, default is 3{p_end}
-{synopt :{opt seed(#)}}seed to be set; integer, default is 12345{p_end}
-{synopt :{cmdab:fsres:iduals(}{opt newname})}save first stage residuals in var {it:newname}{p_end}
+{synopt :{opt poly(#)}}degree of polynomial approximations; ranges 2 to 6, default is 3{p_end}
+{synopt :{opt gmm}}run the estimation with the gmm command{p_end}
+
+{syntab:Reporting}
+{synopt :{opt level(#)}}set confidence level; default is {cmd:level(95)}.{p_end}
+
+{synoptline}
+
+{marker roboptions}{...}
+{synoptset 29 tabbed}{...}
+{synopthdr :ROB_options}
+{synoptline}
+{syntab:Model}
+{p2coldent:* {cmdab:state(}{opt varlist)}}state variable(s). Ln(capital) in WRDG, 2009{p_end}
+{p2coldent:* {cmdab:free(}{opt varlist)}}free variable(s). Ln(labour) in WRDG, 2009{p_end}
+{p2coldent:* {cmdab:proxy(}{opt varlist)}}proxy variable(s). Ln(intermediate inputs) in WRDG, 2009{p_end}
+{synopt :{cmdab:control(}{opt varlist)}}control variable(s) to be included{p_end}
+{synopt :{cmdab:endo:genous(}{opt varlist)}}endogenous variable(s) to be included{p_end}
+{synopt :{cmdab:va:lueadded}}{it:depvar} is the value added of output. Default is gross output{p_end}
+
+{syntab:Optimization}
+{synopt :{cmdab:opt:imizer(}{it:{help prodest##optimizers:opttype}})}available optimizers are Nelder-Mead (nm), modified Newton-Raphson (nr), 
+Davidon-Fletcher-Powell (dfp), Broyden-Fletcher-Goldfarb-Shanno (bfgs), Berndt-Hall-Hall-Hausman (bhhh) and Gauss-Newton (gn){p_end}
+{synopt :{cmdab:max:iter}}max number of iterations, default is 10,000{p_end}
+
+{syntab:Other}
+{synopt :{cmdab:over:identification}}includes lagged polynomial in state and proxy among the instruments{p_end}
+{synopt :{cmdab:id(}{opt varname})}{it:panelvar} to {helpb xtset} the data{p_end}
+{synopt :{cmdab:t(}{opt varname})}{it:timevar} to {helpb xtset} the data{p_end}
+{synopt :{opt poly(#)}}degree of polynomial approximations; ranges 2 to 6, default is 3{p_end}
 
 {syntab:Reporting}
 {synopt :{opt level(#)}}set confidence level; default is {cmd:level(95)}.{p_end}
@@ -157,14 +189,14 @@ Davidon-Fletcher-Powell (dfp), Broyden-Fletcher-Goldfarb-Shanno (bfgs) and Bernd
 
 {syntab:Optimization}
 {synopt :{cmdab:opt:imizer(}{it:{help prodest##optimizers:opttype}})}available optimizers are Nelder-Mead (nm), modified Newton-Raphson (nr), 
-Davidon-Fletcher-Powell (dfp), Broyden-Fletcher-Goldfarb-Shanno (bfgs) and Berndt-Hall-Hall-Hausman (bhhh){p_end}
+Davidon-Fletcher-Powell (dfp), Broyden-Fletcher-Goldfarb-Shanno (bfgs), Berndt-Hall-Hall-Hausman (bhhh) and Gauss-Newton (gn){p_end}
 {synopt :{cmdab:max:iter}}max number of iterations, default is 10,000{p_end}
 
 {syntab:Other}
+{synopt :{cmdab:over:identification}} includes lagged polynomial in state and proxy among the instruments{p_end}
 {synopt :{cmdab:id(}{opt varname})}{it:panelvar} to {helpb xtset} the data{p_end}
 {synopt :{cmdab:t(}{opt varname})}{it:timevar} to {helpb xtset} the data{p_end}
-{synopt :{opt poly(#)}}degree of polynomial approximations; ranges 3 to 6, default is 3{p_end}
-{synopt :{opt seed(#)}}seed to be set; integer, default is 12345{p_end}
+{synopt :{opt poly(#)}}degree of polynomial approximations; ranges 2 to 6, default is 3{p_end}
 {synopt :{cmdab:fsres:iduals(}{opt newname})}save first stage residuals in var {it:newname}{p_end}
 
 {syntab:Reporting}
@@ -177,8 +209,8 @@ Davidon-Fletcher-Powell (dfp), Broyden-Fletcher-Goldfarb-Shanno (bfgs) and Bernd
 {synopthdr :Optimization Options}
 {synoptline}
 {syntab:Optimization}
-{synopt :{cmdab:opt:imizer}({it:{help prodest##optimizers:opttype}})}available optimizers are Gauss-Newton (gn), modified Newton-Raphson (nr), 
-Davidon-Fletcher-Powell (dfp) and Broyden-Fletcher-Goldfarb-Shanno (bfgs){p_end}
+{synopt :{cmdab:opt:imizer}({it:{help prodest##optimizers:opttype}})}available optimizers are Nelder-Mead (nm), modified Newton-Raphson (nr), 
+Davidon-Fletcher-Powell (dfp) and Broyden-Fletcher-Goldfarb-Shanno (bfgs), Berndt-Hall-Hall-Hausman (bhhh) and Gauss-Newton (gn){p_end}
 {synopt :{cmdab:max:iter}(#)}max number of iterations, default is 10,000{p_end}
 {synopt :{cmdab:eval:uator}({opt string})}{it:{help mf_optimize##i_evaluator:init_evaluator_type()}}, default is d0 (gf0 for bhhh){p_end}
 {synopt :{cmdab:tol:erance(#)}}{it:{help mf_optimize##i_ptol:init_conv_nrtol()}}, default is e-05{p_end}
@@ -297,9 +329,9 @@ Wooldridge's system gmm is based on the following assumptions:
  
 {pstd}Under the above set of assumptions, It is possible to construct a system gmm using the  vector of residuals from
              
-			y_i,t - alpha - w_i,t*beta - x_i,t*gamma - g(x_i,t , p_i,t)
+			y_i,t - alpha - w_i,t*beta - x_i,t*gamma - g(x_i,t , p_i,t)              (1) 
 	r_i,t = 
-			y_i,t - alpha - w_i,t*beta - x_i,t*gamma - f[g(x_i,t-1 , p_i,t-1)]
+			y_i,t - alpha - w_i,t*beta - x_i,t*gamma - f[g(x_i,t-1 , p_i,t-1)]       (2)
 			
 {pstd}where the unknown function f(.) is approximeted by a n-th polynomial and  g(x_i,t , m_i,t) = lambda_0 + c(x_i,t , m_i,t)*lambda. In particular, g(x_i,t , m_i,t) is a linear combination of functions in (x_i,t , m_i,t)
 where c_i,t are the addends of this linear combination. The residuals r_i,t are used to set the moment conditions 
@@ -310,7 +342,9 @@ where c_i,t are the addends of this linear combination. The residuals r_i,t are 
 
 		    z1_i,t = (1 , w_i,t , x_i,t , c_i,t)
 	Z_i,t =	
-		    z2_i,t = (w_i,t-1 , x_i,t , c_i,t)
+		    z2_i,t = (w_i , t-1 , x_i,t , c_i,t-1)
+			
+{pstd}Moreover, Wooldridge shows how - in an ACF setting - it is possible to consistently estimate beta and gamma by an instrumental variable version of Robinson (1988), using x_i,t , x_i,t-1 and m_i,t as included instruments and w_i,t-1 as excluded instrument for w_i,t , with f(.) and g(.) left unspecified.
 	
 {cmd:v)}
 {pstd}Previous lags of free and state variables are potentially valid instruments in a Wooldridge-type estimation framework. However, adding instruments in such context would lead to a reduced sample size, and this could be problematic given the "large N, small T" nature of most dataset used in the related literature.
@@ -378,17 +412,22 @@ Estimating Produciton Functions Using Inputs to Control for Unobservables.
 Review of Economic Studies, 70, pp. 317-341.
 
 {phang}
-Mollisi, V. and Rovigatti, G., 2017.
-Theory and Practice of TFP Estimation: the Control Function Approach Using Stata.
-CEIS Working Paper Series, No. 399.
-{it:({stata "!cmd /c start https://papers.ssrn.com/sol3/papers2.cfm?abstract_id=2916753":click to download - Windows})}
-{it:({stata "!xdg-open https://papers.ssrn.com/sol3/papers2.cfm?abstract_id=2916753":click to download - Unix})}
-{it:({stata "!open https://papers.ssrn.com/sol3/papers2.cfm?abstract_id=2916753":click to download - MacOSX})}
+Rovigatti, G. and Mollisi, V., 2018
+Theory and practice of total-factor productivity estimation: The control function approach using Stata.
+THE STATA JOURNAL, 18, (3), pp.618-662
+{it:({stata "!cmd /c start https://papers.ssrn.com/sol3/papers2.cfm?abstract_id=2916753":click to download WP - Windows})}
+{it:({stata "!xdg-open https://papers.ssrn.com/sol3/papers2.cfm?abstract_id=2916753":click to download WP - Unix})}
+{it:({stata "!open https://papers.ssrn.com/sol3/papers2.cfm?abstract_id=2916753":click to download WP - MacOSX})}
 
 {phang}
 Olley, S. O. and Pakes, A., 1996.
 The dynamics of productivity in the telecommunications equipment industry.
 Econometrica, 64, pp. 1263-1297. 
+
+{phang}
+Robinson, P.M., 1998.
+Root-N-Consistent Semiparametric Regression.
+Econometrica, 56, pp. 931-954. 
 
 {phang}
 Wooldridge, J., 2009. 
@@ -439,8 +478,7 @@ Economics Letters, 104, pp. 112-114.
 {title:Authors}
 
 {pstd}Gabriele Rovigatti{p_end}
-{pstd}University of Rome Tor Vergata{p_end}
-{pstd}Einaudi Institute for Economics and Finance{p_end}
+{pstd}Bank of Italy{p_end}
 {pstd}Rome, Italy{p_end}
 {pstd}gabriele.rovigatti@gmail.com{p_end}
 
@@ -468,6 +506,16 @@ The Stata Journal, 4, pp. 113-123.
 Manjon, M. and Manez, J., 2016.
 Production function estimation in Stata using the Ackerberg-Caves-Frazer method.
 The Stata Journal, 16, pp. 900-916.
+
+{phang}
+Rovigatti, G., and Mollisi, V., 2018. 
+Theory and practice of total-factor productivity estimation: The control function approach using Stata. 
+The Stata Journal, 18(3), pp. 618-662.
+
+{phang}
+Rovigatti, G., 2020. 
+Markup estimation using Stata: the Micro and the Macro approaches. 
+Working Paper
 
 {title:Bug Reporting}
 

@@ -1,10 +1,12 @@
+*! version 2.0.1  30Jun2017 P. Poppitz 
+*! update to versions >10
 *! version 2.0.0  13May2005 Biewen & Jenkins 
 *! Update to version 8.2, with minor other cosmetic changes
 *! version 1.1.1  1april2003  Biewen & Jenkins 
 *! Estimation of Atkinson inequality indices from complex survey data
 
 program define svyatk, eclass
-	version 8.2
+	version 10
 	if replay() {
 		if "`e(cmd)'" != "svyatk" {
 			noi di in red "results for svyatk not found"
@@ -71,12 +73,12 @@ program define Estimate, eclass
 
 				/* check that >1 PSU per stratum */
 
-		capture svymean `varlist' if `touse'
+		capture svy: mean `varlist' if `touse'
 			if _rc {
 				local rc = _rc
 				if `rc' == 460 {
 					di as error "stratum with only one psu detected"
-					di as error "locate using -svydes-"
+					di as error "locate using -svy: des-"
 					exit 460
 				}
 			}
@@ -90,7 +92,7 @@ program define Estimate, eclass
 		gen double `vt0' = log(`varlist') if `touse'
 
 			/* estimate totals */
-		 svytotal `one' `varlist' `vu1me' `vu05' `vum05' `vum1' `vt0' if `touse', `opt' 
+		 svy: total `one' `varlist' `vu1me' `vu05' `vum05' `vum1' `vt0' if `touse', `opt' 
 	}
 
 	tempname totals u0 u1 u1me u05 um05 um1 t0
@@ -138,7 +140,7 @@ program define Estimate, eclass
 			*/ - (1/(1-(`epsilon')))*`u0'^(-(`epsilon')/(1-(`epsilon')))*`u1'^(-1)*`u1me'^((`epsilon')/(1-(`epsilon')))*`varlist'^(1-(`epsilon')) if `touse'
 
 			/* calculate standard errors */
-		svytotal `ratk05' `ratk1' `ratk15' `ratk2' `ratkeps' if `touse', `opt'
+		svy: total `ratk05' `ratk1' `ratk15' `ratk2' `ratkeps' if `touse', `opt'
 	}
 
 	tempname cov satk05 satk1 satk15 satk2 satkeps
@@ -225,37 +227,37 @@ prog define Display
 	di as text "A(0.5)" _col(10) "{c |} " %9.0g as result e(atk05) _c 
 	di as result _col(24) e(se_atk05) _col(31)  _c
 	di %9.2f as result e(atk05)/e(se_atk05) _col(40) _c
-	di %9.3f as result 2*(1-norm(`e(atk05)'/`e(se_atk05)')) _c
-	di _col(56) %9.0g as result e(atk05)+invnorm((100-`level')/200)*e(se_atk05) _c
-	di _col(67) %9.0g as result e(atk05)-invnorm((100-`level')/200)*e(se_atk05) 
+	di %9.3f as result 2*(1-normal(`e(atk05)'/`e(se_atk05)')) _c
+	di _col(56) %9.0g as result e(atk05)+invnormal((100-`level')/200)*e(se_atk05) _c
+	di _col(67) %9.0g as result e(atk05)-invnormal((100-`level')/200)*e(se_atk05) 
 
 	di as text "A(1)" _col(10) "{c |} " %9.0g as result e(atk1) _c
 	di as result _col(24) e(se_atk1) _col(31)  _c
 	di %9.2f as result e(atk1)/e(se_atk1) _col(40) _c
-	di %9.3f as result 2*(1-norm(`e(atk1)'/`e(se_atk1)')) _c
-	di _col(56) %9.0g as result e(atk1)+invnorm((100-`level')/200)*e(se_atk1) _c
-	di _col(67) %9.0g as result e(atk1)-invnorm((100-`level')/200)*e(se_atk1) 
+	di %9.3f as result 2*(1-normal(`e(atk1)'/`e(se_atk1)')) _c
+	di _col(56) %9.0g as result e(atk1)+invnormal((100-`level')/200)*e(se_atk1) _c
+	di _col(67) %9.0g as result e(atk1)-invnormal((100-`level')/200)*e(se_atk1) 
 
 	di as text "A(1.5)" _col(10) "{c |} " %9.0g as result e(atk15) _c
 	di as result _col(24) e(se_atk15) _col(31)  _c
 	di %9.2f as result e(atk15)/e(se_atk15) _col(40) _c
-	di %9.3f as result 2*(1-norm(`e(atk15)'/`e(se_atk15)')) _c
-	di _col(56) %9.0g as result e(atk15)+invnorm((100-`level')/200)*e(se_atk15) _c
-	di _col(67) %9.0g as result e(atk15)-invnorm((100-`level')/200)*e(se_atk15) 
+	di %9.3f as result 2*(1-normal(`e(atk15)'/`e(se_atk15)')) _c
+	di _col(56) %9.0g as result e(atk15)+invnormal((100-`level')/200)*e(se_atk15) _c
+	di _col(67) %9.0g as result e(atk15)-invnormal((100-`level')/200)*e(se_atk15) 
 
 	di as text "A(2)" _col(10) "{c |} " %9.0g as result e(atk2) _c
 	di as result _col(24) e(se_atk2) _col(31)  _c
 	di %9.2f as result e(atk2)/e(se_atk2) _col(40) _c
-	di %9.3f as result 2*(1-norm(`e(atk2)'/`e(se_atk2)')) _c
-	di _col(56) %9.0g as result e(atk2)+invnorm((100-`level')/200)*e(se_atk2) _c
-	di _col(67) %9.0g as result e(atk2)-invnorm((100-`level')/200)*e(se_atk2)
+	di %9.3f as result 2*(1-normal(`e(atk2)'/`e(se_atk2)')) _c
+	di _col(56) %9.0g as result e(atk2)+invnormal((100-`level')/200)*e(se_atk2) _c
+	di _col(67) %9.0g as result e(atk2)-invnormal((100-`level')/200)*e(se_atk2)
  
 	di as text "A(`e(epsilon)')" _col(10) "{c |} " %9.0g as result e(atkeps) _c
 	di as result _col(24) e(se_atkeps) _col(31)  _c
 	di %9.2f as result e(atkeps)/e(se_atkeps) _col(40) _c
-	di %9.3f as result 2*(1-norm(`e(atkeps)'/`e(se_atkeps)')) _c
-	di _col(56) %9.0g as result e(atkeps)+invnorm((100-`level')/200)*e(se_atkeps) _c
-	di _col(67) %9.0g as result e(atkeps)-invnorm((100-`level')/200)*e(se_atkeps)
+	di %9.3f as result 2*(1-normal(`e(atkeps)'/`e(se_atkeps)')) _c
+	di _col(56) %9.0g as result e(atkeps)+invnormal((100-`level')/200)*e(se_atkeps) _c
+	di _col(67) %9.0g as result e(atkeps)-invnormal((100-`level')/200)*e(se_atkeps)
 
 	di as text "{hline 9}{c BT}{hline 65}"
 

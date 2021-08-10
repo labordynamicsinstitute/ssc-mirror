@@ -27,7 +27,7 @@ d KW: heteroskedastic OLS,
 d
 d Requires: Stata version 8.2 and ivreg2, ranktest from SSC
 d
-d Distribution-Date: 20150222
+d Distribution-Date: 20200626
 d
 d Author: Mark E Schaffer, Heriot-Watt University
 d Support: email m.e.schaffer@@hw.ac.uk

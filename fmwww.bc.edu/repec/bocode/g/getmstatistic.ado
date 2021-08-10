@@ -1,5 +1,10 @@
 capture program drop getmstatistic
-*! getmstatistic v0.1.0 LEMagosi 25may2016
+*! getmstatistic v0.1.1 LEMagosi 18july2018
+*  fixed a small bug where the expected standard deviation of the M statistic differed 
+*  depending on whether the last study evaluated in a meta-analysis had missing variants.
+*  Details of revision provided at end of program
+
+*  getmstatistic v0.1.0 LEMagosi 25may2016
 program define getmstatistic, rclass
     version 10.0
     syntax varlist(min=4 max=4) [if] [in] [, noPRInt LATexout NOGRaph SAVEdataset MM REML EB]
@@ -197,8 +202,8 @@ program define getmstatistic, rclass
 
         
                 *Top up allocates missing snps the average mean and sd 
-                *local topup = (`nsnps'-`uobs')*(1/`uobs')*0
-                local topup = (`nsnps'-`uobs')*((1/`uobs')*0)
+                *local topup = (`nsnps'-`uobs')*(1/`nsnps')*0
+                local topup = (`nsnps'-`uobs')*((1/`nsnps')*0)
 
 
                 local ulb = r(lb)
@@ -215,11 +220,11 @@ program define getmstatistic, rclass
 
                 *The expected mean under the Ho:
                 *local Mmu = 50*(1/50)*0
-                local Mmu = `nsnps'*(1/`uobs')*0
+                local Mmu = `nsnps'*(1/`nsnps')*0
 
                 *The expected spread under the Ho:
                 *local Msd = ((50*(1/50)^2)*1)^0.5
-                local Msd = ((`nsnps'*(1/`uobs')^2)*1)^0.5
+                local Msd = ((`nsnps'*(1/`nsnps')^2)*1)^0.5
 
                 di _n
                 di "expected mean M statistic = `Mmu', SD = `Msd', Snps = `nsnps'"
@@ -494,3 +499,14 @@ program define getmstatistic, rclass
 *And that's all folks
 
 end
+
+
+exit
+
+//    getmstatistic update
+//    v0.1.1 LEMagosi 18july2018
+//    Fixes:
+//    local topup = (`nsnps'-`uobs')*((1/`uobs')*0) has now become: local topup = (`nsnps'-`uobs')*((1/`nsnps')*0)
+//    local Mmu = `nsnps'*(1/`uobs')*0              has now become: local Mmu = `nsnps'*(1/`nsnps')*0
+//    local Msd = ((`nsnps'*(1/`uobs')^2)*1)^0.5    has now become: local Msd = ((`nsnps'*(1/`nsnps')^2)*1)^0.5
+

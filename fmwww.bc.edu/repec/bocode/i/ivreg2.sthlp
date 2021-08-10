@@ -1218,9 +1218,12 @@ Scalars
 {col 4}{cmd:e(redstat)}{col 18}LM statistic for instrument redundancy
 {col 4}{cmd:e(redp)}{col 18}p-value of LM statistic for instrument redundancy
 {col 4}{cmd:e(reddf)}{col 18}dof of LM statistic for instrument redundancy
-{col 4}{cmd:e(cstat)}{col 18}C-statistic
-{col 4}{cmd:e(cstatp)}{col 18}p-value of C-statistic
-{col 4}{cmd:e(cstatdf)}{col 18}Degrees of freedom of C-statistic
+{col 4}{cmd:e(cstat)}{col 18}GMM distance test statistic of exogeneity
+{col 4}{cmd:e(cstatp)}{col 18}p-value of GMM distance test statistic of exogeneity
+{col 4}{cmd:e(cstatdf)}{col 18}Degrees of freedom of GMM distance test statistic of exogeneity
+{col 4}{cmd:e(estat)}{col 18}GMM distance test statistic of endogeneity
+{col 4}{cmd:e(estatp)}{col 18}p-value of GMM distance test statistic of endogeneity
+{col 4}{cmd:e(estatdf)}{col 18}Degrees of freedom of GMM distance test statistic of endogeneity
 {col 4}{cmd:e(cons)}{col 18}1 when equation has a Stata-supplied constant; 0 otherwise
 {col 4}{cmd:e(center)}{col 18}1 when moments are mean-centered; 0 otherwise
 {col 4}{cmd:e(partialcons)}{col 18}as above but prior to partialling-out (see {cmd:e(partial)})

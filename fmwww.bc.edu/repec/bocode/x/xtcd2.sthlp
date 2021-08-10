@@ -7,9 +7,12 @@ help {hi:xtcd2}
 
 {title:Syntax}
 
-{p 4 13}{cmd:xtcd2} [{varname}(max=1)] [if] [{cmd:,}{cmdab:noest:imation} {cmd:rho} {cmdab:kden:sity} {cmd:name({it:string})} ]{p_end}
+{p 4 13}{cmd:xtcd2} [{varname}(max=1)] [if] [{cmd:,}{cmdab:noest:imation} {cmd:rho} {cmdab:kden:sity} {cmd:name({it:string})} 
+{cmd:heatplot[(}{cmdab:abs:olute} {it:options_heatplot}{cmd:)] contour[(}{cmdab:abs:olute} {it:options_contour}{cmd:)]}
+]{p_end}
 
 {p 4 4}{varname} is the name of residuals or variable to be tested for weak cross sectional dependence. 
+{it:varname} may contain time-series operators, see {help tsvarlist}. 
 {varname} is optional if the command is performed after an estimation (postestimation).{p_end}
 
 
@@ -28,25 +31,25 @@ help {hi:xtcd2}
 {p 4 4}{cmd:xtcd2} tests residuals or a variable for weak cross sectional dependence in a panel data.
 Cross sectional dependence in the error term occurs if dependence between cross sectional units in a regression is not accounted for.
 The dependence between units violates the basic OLS assumption of an independent and identically distributed error term.
-In the worst case cross sectional dependence in the error term can lead to endogeneity and therefore, to inconsistent estimates.
+In the worst case cross sectional dependence in the error term can lead to endogeneity and therefore to inconsistent estimates.
 Cross sectional dependence can be measured as the correlation between units.
-For example, the correlation of the errors of unit i and unit j can be calculated.
+For example the correlation of the errors of unit i and unit j can be calculated.
 Obviously, if the correlation is large, cross sectional dependence is present.{break}
 Pesaran (2015) develops a test for weak cross sectional dependence based on this principle.
 Weak cross sectional dependence means that the correlation between units at each point in time converges to zero as the number of cross section goes to infinity.
 Under strong dependence the correlation converges to a constant.
 The null hypothesis of the test is, that the error term (or variable) is weakly cross sectional dependent.
 This means that correlation between an observation of unit i in time t and unit j in time t is zero.
-More formally, the hypothesis is:{p_end}
+The hypothesis is:{p_end}
 
-{p 8} H0: E[u(i,t),u(j,t)] = 0, for all t and i != j.{p_end}
+{p 8} H0: errors are weakly cross sectional dependent.{p_end}
 
 {p 4 4}Pesaran (2015) derives a test statistic, which sums the correlation coefficients of the different units.
 The test statistic for a balanced panel is:{p_end}
 
 {p 8} CD = [2*T / (N*(N-1))]^(1/2) * sum(i=1,N-1) sum(j=i+1,N) rho(ij),{p_end}
 
-{p 4 4}and for an unbalanced panel:
+{p 4 4}and for an unbalanced panel (see Chudik, Pesaran, 2015):
 
 {p 8} CD = [2 / (N*(N-1))]^(1/2) * sum(i=1,N-1) sum(j=i+1,N) [T(ij)^(1/2) * rho(ij)],{p_end}
 
@@ -57,12 +60,20 @@ Under the null hypothesis the statistic is asymptotically{p_end}
 
 {p 4 4}distributed. 
 
-{p 4 4}{cmd:xtcd2} calculates the CD test statistic for a given variable, or if run after an estimation command which supports {cmd:predict, residuals} and {cmd:e(sample)}.
+{p 4 4}{cmd:xtcd2} calculates the CD test statistic for a given variable, or if run after an estimation command which supports {cmd:predict} and {cmd:e(sample)}.
 In the latter case {cmd:xtcd2} calculates the error term using {cmd:predict, residuals} and then applies the CD test from above.
 In the former case and if the option {cmd:noestimation} is set, {cmd:e(sample)} is not needed and any variable can be tested for cross sectional dependence.
 In this setting, all available observations are used. {cmd:xtcd2} supports balanced as well as unbalanced panels.
-Furthermore, by specifying the {cmd:kdensity} option, a kernel density plot with the distribution of the cross correlations is drawn.
+Furthermore by specifying the {cmd:kdensity} option, a kernel density plot with the distribution of the cross correlations is drawn.{p_end}
 
+{p 4 4}If {cmd:xtcd2} is used after {help xtreg}, then the residuals are calculated using {cmd: predict, e} rather than {cmd: predict, res}.
+That is the residuals including the fixed- or random-error componen, see {help xtreg postestimation##predict: xtreg postestimation}.
+In all other cases {cmd: predict, residuals} is used to calculate the residuals.{p_end}
+
+{p 4 4}{cmd:xtcd2} can draw {help heatplot:heatplots} and {help twoway contour:contour} plots 
+of the cross-correlations. 
+To draw heatplots Ben Jann's {help heatplot} is required.
+Contour plots are drawn using Stata's {help twoway contour}.{p_end}
 
 {marker options}{title:Options}
 
@@ -79,6 +90,14 @@ If {cmd:name({it:string})} is set, then the histogram is saved and not drawn.{p_
 
 {p 4 4}{cmd:name({it:string})} saves the kdensity.{p_end}
 
+{p 4 4}{cmd:heatplot[(}{cmdab:abs:olute} {it:options_heatplot}{cmd:)]} draws a {help heatplot} of the cross-correlations.
+{it: options_heatplot} are options to be passed to {help heatplot.}
+{cmdab:abs:olute} uses the absolute values of the cross-correlations.{p_end}
+
+{p 4 4}{cmd:contour[(}{cmdab:abs:olute} {it:options_contour}{cmd:)]} draws a {help contour} plot of the cross-correlations.
+{it: options_contour} are options to be passed to {help twoway contour.}
+{cmdab:abs:olute} uses the absolute values of the cross-correlations.{p_end}
+
 
 {marker saved_vales}{title:Saved Values}
 
@@ -93,7 +112,7 @@ If {cmd:name({it:string})} is set, then the histogram is saved and not drawn.{p_
 
 
 {marker examples}{title:Examples}
-{p 4 4}An example dataset of the Penn World Tables 8 is available for download {browse "https://www.dropbox.com/s/un3qv9ubjwsfrvw/dcce_testdataset11.dta?dl=0":here}.
+{p 4 4}An example dataset of the Penn World Tables 8 is available for download {browse "https://drive.google.com/open?id=1mL4s0X_pUjvTLTccmLbGNtfVBQ63Mon2":here}.
 The dataset contains yearly observations from 1960 until 2007 and is already tsset.
 Estimating a simple panel version of the Solow model and run the CD test afterwards:{p_end}
 
@@ -109,9 +128,9 @@ Estimating a simple panel version of the Solow model and run the CD test afterwa
 {p 4 4}The test statistic is 36.34 and the p-value is 0,
 therefore rejecting the null hypothesis of weak cross sectional dependence.{p_end}
 
-{p 4 4}To draw a histogram with the cross correlations the {cmd:histogram} option is used:{p_end}
+{p 4 4}To draw a density plot with the cross correlations the {cmd:kdensity} option is used:{p_end}
 
-{p 8}{stata xtcd2 res, histogram}{p_end}
+{p 8}{stata xtcd2 res, kdensity}{p_end}
 
 {p 4 4}Testing the variable {it:log_rgdpo} for cross sectional dependence reads:{p_end}
 
@@ -123,16 +142,19 @@ therefore rejecting the null hypothesis of weak cross sectional dependence.{p_en
 {p 4 8}Feenstra, R. C., R. Inklaar, and M. Timmer. 2015. The Next Generation of the Penn World Table.
 American Economic Review . www.ggdc.net/pwt{p_end}
 
+{p 4 8}Chudik, A., Pesaran, M. H. 2015. Large Panel Data Models with Cross-Sectional Dependence A Survey.
+Oxford Handbook of Panel Data. Edition 1. Editor Badi H. Baltagi.
+
 {p 4 8}Pesaran, M. H. 2015. Testing Weak Cross-Sectional Dependence in Large Panels.
 Econometric Reviews 34(6-10): 1089-1117.{p_end}
 
 {marker about}{title:Author}
 
 {p 4}Jan Ditzen (Heriot-Watt University){p_end}
-{p 4}Email: {browse "mailto:jd219@hw.ac.uk":jd219@hw.ac.uk}{p_end}
+{p 4}Email: {browse "mailto:j.ditzen@hw.ac.uk":j.ditzen@hw.ac.uk}{p_end}
 {p 4}Web: {browse "www.jan.ditzen.net":www.jan.ditzen.net}{p_end}
 
-{p 4}Thanks to Achim Ahrens for providing many helpful comments to the code and an anonymous referee for many helpful comments.{p_end}
+{p 4}Thanks to Achim Ahrens for providing many helpful comments to the code and an anonymous reviewer for many helpful comments.{p_end}
 
 {title:Also see}
-{p 4 4}See also: {help xtdcce2}
+{p 4 4}See also: {help xtdcce2} {help xtcse2}

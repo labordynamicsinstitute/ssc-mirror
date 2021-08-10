@@ -1,5 +1,5 @@
 {smcl}
-{* 09aug2004}{...}
+{* 22jun2019}{...}
 {hline}
 help for {hi:_mrsvmat}
 {hline}
@@ -93,7 +93,22 @@ relative frequencies. {cmd:stat(freq)} is the default.
 
 {title:Author}
 
-{p 4 4 2} Ben Jann, ETH Zurich, jann@soz.gess.ethz.ch
+{p 4 4 2} Ben Jann, University of Bern, ben.jann@soz.unibe.ch
+
+{p 4 4 2}
+    Thanks for citing this software as
+
+{p 8 8 2}
+    Jann, B. 2005. {browse "http://www.stata-journal.com/article.html?article=st0082":Tabulation of multiple responses}. The
+    Stata Journal 5(1): 92-122.
+
+{p 4 4 2}
+    or
+
+{p 8 8 2}
+    Jann, B., H. Schaeper 2004. MRTAB: Stata module to compute one- and two-way
+    tables of multiple responses. Available from
+    {browse "http://ideas.repec.org/c/boc/bocode/s437201.html"}.
 
 
 {title:Also see}

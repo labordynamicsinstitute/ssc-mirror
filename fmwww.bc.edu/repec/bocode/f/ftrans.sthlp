@@ -1,5 +1,5 @@
 {smcl}
-{* 19Jan2010}{* 28Jan2010}{* 1Oct2010}{...}
+{* 19Jan2010}{* 28Jan2010}{* 1Oct2010}{* 22Dec2020}{...}
 {hline}
 help for {hi:ftrans}{right: version 2.0}
 {right:{stata ssc install ftrans, replace: get the newest version}}
@@ -165,8 +165,8 @@ The codes to run Stat/Transfer st command are traced back to {cmd: Roger Newson}
 
 
 {pstd}
-{cmd:Author: Liu wei}, The School of Sociology and Population Studies, Renmin University of China. {cmd:Address: }Zhongguancun Street No. 59, Haidian District, Beijing, China. {cmd:ZIP Code:} 100872. 
-{cmd:E-mail:} {browse "mailto:liuv@ruc.edu.cn":liuv@ruc.edu.cn} {break}
+{cmd:Author: Liu wei}, Yunnan University of Finance and Economics. {cmd:Address: }Longquan Road 237, Wuhua District, Kunming, Yunnan, P.R.China. {cmd:ZIP Code:} 650221. 
+{cmd:E-mail:} {browse "mailto:liuwei@ynufe.edu.cn":liuwei@ynufe.edu.cn} {break}
 
 
 {title:Also see}

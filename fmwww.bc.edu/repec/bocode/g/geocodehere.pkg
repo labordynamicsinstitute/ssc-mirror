@@ -7,9 +7,9 @@ d KW: geocode
 d KW: Here Maps
 d KW: Nokia
 d
-d Requires: Stata version 11 and insheetjson from SSC (q.v.)
+d Requires: Stata version 11 and insheetjson, libjson from SSC (q.v.)
 d
-d Distribution-Date: 20170312
+d Distribution-Date: 20200521
 d
 d Author: Simon Hess
 d Support: email simon.h.hess@@gmail.com

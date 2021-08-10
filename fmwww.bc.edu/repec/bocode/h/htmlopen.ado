@@ -1,16 +1,17 @@
 #delim ;
 prog def htmlopen;
-version 10.0;
+version 14.0;
 /*
  Open a file for output using HTML.
 *|Author: Roger Newson
-*!Date: 28 March 2017
+*!Date: 18 December 2018
 */
 
 
 syntax name using/ [ , replace ATtributes(string)
   HEad HEADAttributes(string) HEADFrom(string) TItle(string)
   BOdy BODYAttributes(string)
+  BOM(string)
   ];
 /*
   replace specifies that the output must replace an existing file of the same name.
@@ -23,7 +24,24 @@ syntax name using/ [ , replace ATtributes(string)
   body specifies that a <body> tag will be written to the output file,
     initiating a HTML body.
   bodyattributes() specifies attributes for the <body> tag.
+  bom() specifies a type of byte order marker (BOM) to enable non-ASCII output files.
 */
+
+
+*
+ Check byte order marker (BOM)
+*;
+local bom=lower(`"`bom'"');
+if `"`bom'"'=="" {;
+  local bomvalue="";
+};
+else if `"`bom'"'=="utf-8" {;
+  local bomvalue=ustrunescape("\uFEFF");
+};
+else {;
+  disp as error `"Invalid bom(`bom')"';
+  error 498;
+};
 
 
 *
@@ -43,7 +61,7 @@ if `"`bodyattributes'"'!="" {;
  Open and output HTML tag
 *;
 file open `namelist' using `"`using'"' , text write `replace';
-file write `namelist' "<!DOCTYPE html>" _n;
+file write `namelist' `"`bomvalue'<!DOCTYPE html>"' _n;
 if `"`attributes'"'=="" {;
   file write `namelist' "<html>" _n;
 };

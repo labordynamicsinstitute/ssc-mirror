@@ -1,4 +1,4 @@
-*! -ralloc- version 3.7.5   Philip Ryan   August 12 2011
+*! -ralloc- version 3.7.6   Philip Ryan  January 28 2018
 *! random allocation in blocks
 * since STB-50:
 * optionally stratify;
@@ -31,6 +31,8 @@
 * unabbreviate var names in case a user has -set varabbrev off- as part of their usual Stata environment (3.6.2)
 * correct irritating feral punctuation chars in certain of the notes (3.6.2)
 * add option for stratum labels; trap strata with 0 counts specified (3.7.4)
+* fix filename suffix when using() option is specified (3.7.6)
+* update old display directives [in <colour>} to modern [as <style>] form. eg "in yellow" to "as result" (3.7.6)
 
 * 
 *!
@@ -60,7 +62,7 @@ program define ralloc
 
 version 9
 
-local versn "3.7.5"
+local versn "3.7.6"
 
 if "`1'" == "?" {
       which ralloc
@@ -104,30 +106,30 @@ local flav `=cond(`c(MP)',"MP",cond(`c(SE)',"SE","IC"))'
 *************************************************************
 
 if `nsubj' <=0 {
-di in re "number of subjects specified must be greater than 0"
+di as error "number of subjects specified must be greater than 0"
 exit=499
 }
 
 if !inlist("`xover'", "" , "stand" , "switch" , "extra")  {
-di in ye "xover" in r " must be 'stand', 'switch' or 'extra'"
+di as result "xover" as error " must be 'stand', 'switch' or 'extra'"
 exit = 499
 }
 
 
 if "`factor'" != "" & "`xover'" != "" {
-di in r "cannot specify both factor() and xover()"
+di as error "cannot specify both factor() and xover()"
 exit=499
 }
 
 if "`factor'" !="" & length("`3'") > 31 {
-di in r "<Treatmentvar> must be 31 characters or less in a factorial design"
+di as error "<Treatmentvar> must be 31 characters or less in a factorial design"
 exit=499
 }
 
 
 if "`factor'" != "" {
  if "`ntreat'" != "" {
- di in r "do not specify ntreat() in a factorial design"
+ di as error "do not specify ntreat() in a factorial design"
  exit=499
  }
 }
@@ -140,7 +142,7 @@ else {
    local ntreat = `ntreat'
   }
   else {
-    di in r "number of treatments given by ntreat() must be no more than `ntmax'"
+    di as error "number of treatments given by ntreat() must be no more than " as result "`ntmax'"
         exit=499
   }
  }
@@ -148,7 +150,7 @@ else {
 
 if "`xover'" != "" {
  if `ntreat' !=2 {
-di in r "number of treatments must be 2 for a crossover design"
+di as error "number of treatments must be 2 for a crossover design"
 exit=499
  }
 }
@@ -156,13 +158,13 @@ exit=499
 
 if "`flav'" == "IC" {
  if !inrange(`strata', 1, 800) {
- di in r "For Stata I/C the number of strata specified must not exceed 800"
+ di as error "For Stata I/C the number of strata specified must not exceed 800"
  exit=499
 }
 }
 else {
  if !inrange(`strata', 1, 11000) {
- di in r "For Stata S/E or M/P the number of strata specified must not exceed 11,000"
+ di as error "For Stata S/E or M/P the number of strata specified must not exceed 11,000"
  exit=499
 }
 }
@@ -174,7 +176,7 @@ local factor = subinstr("`factor'"," ","",.)
   & "`factor'" != "3*4" & "`factor'" != "4*3"  & "`factor'" != "4*4"  ///  
   & "`factor'" != "2*2*2"  & "`factor'" != "2*2*3"                    ///
   & "`factor'" != "2*3*3"  & "`factor'" != "3*3*3" {
-di in r "factorial design must be specified as 2*2, 2*3, 3*2, 3*3, "  ///
+di as error "factorial design must be specified as 2*2, 2*3, 3*2, 3*3, "  ///
          "2*4, 4*2, 3*4, 4*3, 4*4, 2*2*2, 2*2*3, 2*3*3 or 3*3*3"
 exit=499
 }
@@ -182,21 +184,21 @@ exit=499
 
 
 if (("`factor'" == "")|("`factor'" != "2*2")) & ("`fratio'" != "") {
-di in r "fratio() may only be specified for a 2x2 factorial design"
+di as error "fratio() may only be specified for a 2x2 factorial design"
 exit=499
 }
 
 
 if "`fratio'" != "" {
  if wordcount("`fratio'") != 2 { 
-di in r "fratio() must have two numeric arguments"
+di as error "fratio() must have two numeric arguments"
 exit=499 
 }
  
 tokenize `fratio'
 args  frat1  frat2
   if (("`frat1'" !="1" & "`frat1'" !="2" ) | ("`frat2'" !="1" & "`frat2'" !="2" )) {
-di in r "if specified, arguments of fratio must be (1 1), (1 2), (2 1), or (2 2)"
+di as error "if specified, arguments of fratio must be (1 1), (1 2), (2 1), or (2 2)"
 exit=499
 }
 }
@@ -237,19 +239,19 @@ local tfactor "`rx1fac'*`rx2fac'"
 *******
 
 if ("`factor'" != "" | "`xover'" != "") & "`ratio'" != "" {
-dis in r "do not specify ratio() for a factorial or crossover design"
+dis as error "do not specify ratio() for a factorial or crossover design"
 exit=499
 }
 
 
 if ("`factor'" != ""  | "`xover'" != "") & "`shape'" == "wide" {
-dis in r "shape of data must be long for factorial or crossover design"
+dis as error "shape of data must be long for factorial or crossover design"
 exit=499
 }
 
 
 if !inrange(`osize', 1,7) {
-display in r "The number of different block sizes (" in ye "osize" in r ") must be 1, 2, 3, 4, 5, 6 or 7"
+display as error "The number of different block sizes (" as result "osize" as error ") must be 1, 2, 3, 4, 5, 6 or 7"
 exit=499
 }
 
@@ -258,13 +260,13 @@ local shape = "long"
 }
 else {
  if ("`shape'" != "long" & "`shape'" != "wide") {
-di in r "-shape- must be either " in ye "wide " in re "or " in ye "long"
+di as error "-shape- must be either " as result "wide " as err "or " as result "long"
 exit=499
 }
 }
 
 if  !inlist("`ratio'", "", "1" , "2" , "3")  {
-di in r "ratio() must be unspecified or specified as 1, 2, or 3"
+di as error "ratio() must be unspecified or specified as 1, 2, or 3"
 exit=499
 }
 
@@ -277,11 +279,11 @@ local ratio = `ratio'
 
 if (`ratio' != 1) {
  if (`ntreat' != 2){
-  display in r "The number of treatments must be 2 if" in y " ratio " in r "> 1 is specified"
+  display as error "The number of treatments must be 2 if" as result " ratio " as error "> 1 is specified"
   exit=499
   }
  if (`ratio' != 2) & (`ratio' != 3){
-  display in r "ratio must be 2 or 3"
+  display as error "ratio must be 2 or 3"
   exit=499
  }
 }
@@ -292,11 +294,11 @@ if `init'==0 {
 
 if "`factor'" == "" {
  if mod(`init',(`ntreat'+(`ratio'==2)+(2*(`ratio'==3)))) != 0 {
- display in r "The " in y "init" in r "iating block size"         ///
+ display as error "The " as result "init" as error "iating block size"         ///
               " must be a multiple of the number of treatments,"
- display in r "or, in the case of a " in y "ratio " in            ///
-                r "> 1 specified for a 2 treatment trial, a"
- display in r "multiple of (" in y "ratio " in r "+ 1)."
+ display as error "or, in the case of a " as result "ratio " as            ///
+                err "> 1 specified for a 2 treatment trial, a"
+ display as error "multiple of (" as result "ratio " as error "+ 1)."
  exit=499
  }
 }
@@ -305,18 +307,18 @@ if "`factor'" == "" {
 if "`factor'" != "" {
  if "`fratio'" == "1 1" | "`fratio'" == "" {
   if mod(`init',`ntreat') != 0 {
-  display in r "For a factorial design with balanced allocation, the "
-  display in y "init" in r "iating block size must be a multiple of the number"
-  display in r "of treatment combinations"
+  display as error "For a factorial design with balanced allocation, the "
+  display as result "init" as error "iating block size must be a multiple of the number"
+  display as error "of treatment combinations"
   exit=499
   }
  }
  else {
   if mod(`init',((`frat1'+1)*(`frat2'+1)) ) != 0 {
-  display in r "For a factorial design with unbalanced allocation, the "
-  display in y "init" in r "iating block size must be a multiple of:
-  display in r "((1st arg of " in y "fratio" in r ") + 1) x ((2nd arg of " ///
-                  in y "fratio" in r ") + 1)"
+  display as error "For a factorial design with unbalanced allocation, the "
+  display as result "init" as error "iating block size must be a multiple of:
+  display as error "((1st arg of " as result "fratio" as error ") + 1) x ((2nd arg of " ///
+                  as result "fratio" as error ") + 1)"
   exit=499
   }
  }
@@ -326,18 +328,18 @@ if "`factor'" != "" {
 
 
 if "`countv'" != ""  & "`using'" == "" {
-di in r "You must specify a filename in -using()- if -countv()- is specified"
+di as error "You must specify a filename in -using()- if -countv()- is specified"
 exit=499
 }
 
 if "`countv'" =="" & "`using'" != "" {
-di in r "You must specify the name of the count variable in file  -`using'-"
-di in r " using the option  -countv()-"
+di as error "You must specify the name of the count variable in file  -`using'-"
+di as error " using the option  -countv()-"
 exit=499
 }
 
 if "`using'" != "" & "`stratlab'" != "" {
-di in r "You may not specify stratum labels in option <stratlab> if a <using> file is specified"
+di as error "You may not specify stratum labels in option <stratlab> if a <using> file is specified"
 exit=499
 }
 
@@ -346,19 +348,19 @@ if "`stratlab'" !="" & "`vallab'" != "" {
 * di "stratum labels are `stratlab'"
 qui capture assert `strata' == `: word count `stratlab''
 if _rc !=0 {
-di in r "number of stratum labels must equal number of strata"
+di as error "number of stratum labels must equal number of strata"
 exit=499
 }
 }
 
 if "`stratlab'" == "" & "`vallab'" != "" & "`using'" == "" {
-di _new in ye "no stratum value labels are specified in either option " in wh "stratlab" in ye " or in a " in wh "using" ///
-in ye " file: option " in wh "vallab" in ye " will be ignored"
+di _new as text "no stratum value labels are specified in either option " as result "stratlab" as text " or in a " as result "using" ///
+as text " file: option " as result "vallab" as text " will be ignored"
 }
 
 if "`stratlab'" !="" & "`vallab'" == "" {
-di _new in ye "stratum value labels specified in option " in wh "stratlab" in ye " will be ignored as option " ///
-in wh "vallab" in ye " was not specified"
+di _new as text "stratum value labels specified in option " as result "stratlab" as text " will be ignored as option " ///
+as result "vallab" as text " was not specified"
 }
 
 *************************************************************
@@ -382,7 +384,7 @@ local seed = 123456789
 else {
 if int(real("`seed'")) != real("`seed'") {
 noi di " "
-noi di in re "Warning: non-integer seed will be truncated to integer"
+noi di as error "Warning: non-integer seed will be truncated to integer"
 }
 local seed = int(real("`seed'"))
 }
@@ -434,7 +436,7 @@ if "`trtlab'" != "" {
 local ntlab: word count `trtlab'
 
 if `ntlab' > `maxtlab' {
-di in r "Max of `maxtlab' treatment labels may be specified for this design"
+di as error "Max of `maxtlab' treatment labels may be specified for this design"
 exit=499
 }
 
@@ -502,14 +504,14 @@ local c = `c' + 1
 if "`using'" != "" {
  if `nsubj' == 100 {
 di " "
-di in g "Counts defined in variable " in y "`countv'" in g " in file " in y "`using'" 
-di in g "will override the" in g " default number of subjects, n = 100"
+di as text "Counts defined in variable " as result "`countv'" as text " in file " as result "`using'" 
+di as text "will override the" as text " default number of subjects, n = 100"
 }
 
 if `nsubj' != 100 {
 di " "
-di in g "Counts defined in variable " in y "`countv'" in g " in file " in y "`using'"
-di in g "will override the number of subjects specified in option " in y "nsubj(`nsubj')" 
+di as text "Counts defined in variable " as result "`countv'" as text " in file " as result "`using'"
+di as text "will override the number of subjects specified in option " as result "nsubj(`nsubj')" 
 }
 
 preserve  /* keeps BlockID BlockSiz and Trt vars in dummy 1st obs */
@@ -519,7 +521,7 @@ qui describe
 local strata = r(N)
 qui capture conf v `countv'
 if _rc != 0 {
-di in r "Your specified count variable -`countv'- is not in file -`using'-"
+di as error "Your specified count variable -`countv'- is not in file -`using'-"
 restore
 clear
 exit=499
@@ -527,7 +529,7 @@ exit=499
 
 qui capture assert (`countv' >= 1) & ((`countv' -int(`countv'))   < 0.000000001 )
 if _rc != 0 {
-di _new in r "all values of " in wh "`countv'" in r " in the stratum definition file " in wh "`using'" in r " must be positive integers (1 and above)"
+di _new as error "all values of " as text "`countv'" as error " in the stratum definition file " as text "`using'" as error " must be positive integers (1 and above)"
 restore
 clear
 exit=499
@@ -537,12 +539,16 @@ local strat_sing_plural "strata"
 if `strata' == 1 {
 local strat_sing_plural "stratum"
 }
-di _new in g "`strata' `strat_sing_plural' read from file " in y "`using'" 
+
+
+di _new  as result "`strata' " as text "`strat_sing_plural'" as text " read from file " as result "`using'" 
+
+
 
 /*
 qui summ `countv'
 if r(min) < 1 {
-di in red "all specified stratum allocations must exceed 0"
+di as error "all specified stratum allocations must exceed 0"
 exit=499
 }
 */
@@ -566,7 +572,7 @@ unab allvar: _all
 local vcount: word count `allvar'
 local nstvars = `vcount' - 1
 di " "
-di in g "number of stratum variables is " in y "`nstvars'"
+di as text "number of stratum variables is " as result "`nstvars'"
 di " "
 
 tokenize `allvar'
@@ -580,12 +586,13 @@ local b = 1
 while `a' <= `nstvars' {
 
 replace `tempj' = `tempj'+ string(``a'')
+*****
 
-di in w "stratum variable `a' is " in y "``a''"
+di as text "stratum variable " as result `a' as text " is " as result "``a''"
 local str_ass : type ``a''
 capture assert substr("`str_ass'",1,3) != "str"
 if _rc != 0 {
-di in r "stratum variable ``a'' is string, not numeric!"
+di as error "stratum variable ``a'' is string, not numeric!"
 restore
 clear
 exit=999
@@ -594,7 +601,7 @@ summ ``a'', meanonly
 local numin`a' = r(max)
 local min`a' = r(min)
 if abs(`min`a'' - 1) > 0.000001 {
-di in r "levels of stratum variable -``a''- do not begin at 1"
+di as error "levels of stratum variable -``a''- do not begin at 1"
 restore
 clear
 exit=499
@@ -602,12 +609,13 @@ exit=499
 qui tab ``a''
 local lev`a' = r(r)
 if  abs(`lev`a'' - `numin`a'') > 0.000001 {
-di in r "levels of stratum var ``a'' do not progress by integer increments"
+di as error "levels of stratum var ``a'' do not progress by integer increments"
 restore
 clear
 exit=499
 }
-di in w "number of levels in " in y "``a''" in w " is " in y "`numin`a''"
+*********
+di as text "number of levels in " as result "``a''" as text " is " as result "`numin`a''"
 di " "
 local b=`b'*(`numin`a'')
 
@@ -631,7 +639,7 @@ lab def `vlv'  `vspec'
 lab val ``a'' `vlv'
 }
 
-*di in wh "value label for variable ``a'' is `vlv'"
+*di as text "value label for variable ``a'' is `vlv'"
 qui label save `vlv' using `USL'`a' , replace
 local allvlv  `allvlv'  `vlv'
 *di "allvlv is `allvlv'"
@@ -652,8 +660,8 @@ qui tab `tempj'
 * di "r(r) = " r(r)
 * di " number of strata is "`strata'
 if r(r) != `strata' {
-di in red "Strata defined in using file " in wh "`using'" in red " are not unique"
-di "number of strata is " in wh "`strata'" in re "; number of unique strata is " in wh "`r(r)'"
+di as error "Strata defined in using file " as result "`using'" as error " are not unique"
+di "number of strata is " as result "`strata'" as error "; number of unique strata is " as result "`r(r)'"
 restore
 clear
 exit=499
@@ -662,8 +670,8 @@ exit=499
 
 
 if  abs((`strata') - (`b')) > 0.00001 {
-di in w "Caution: " in y "number of rows (strata) in using file (" in w "`strata'" in y ") does not match the product of levels"
-di in y "over all stratum variables (" in w "`b'" in y "). You may wish to check completeness of stratum specifications."
+di as text "Caution: " as text "number of rows (strata) in using file (" as result "`strata'" as text ") does not match the product of levels"
+di as text "over all stratum variables (" as result "`b'" as text "). You may wish to check completeness of stratum specifications."
 *restore
 *clear
 *exit=499
@@ -672,7 +680,7 @@ di in y "over all stratum variables (" in w "`b'" in y "). You may wish to check
 
 sort `allvar'
 mkmat `allvar', matrix(`mystrat')
-di _new in w "the stratum design and allocation numbers are:"
+di _new as text "the stratum design and allocation numbers are:"
 mat li `mystrat', noheader
 local ncolm = colsof(`mystrat')
 local cnn ""
@@ -965,7 +973,7 @@ note: Seed used = `seed'
 *****
 if "`using'" != "" {
 note: Stratum definitions and numbers of allocations were defined /*
-*/in file '`using'.dta'
+*/in file '`using''
 }
 *****
 
@@ -1635,10 +1643,10 @@ qui save `"`saving'"', replace
 
 di " "
 if `strata' > 1 {
-di in ye "Allocations over all strata saved to file " in wh "`saving'.dta"
+di as text "Allocations over all strata saved to file " as result "`saving'.dta"
 }
 else {
-di in ye "Allocations saved to file " in wh "`saving'.dta"
+di as text "Allocations saved to file " as result "`saving'.dta"
 }
 di " "
 
@@ -1759,8 +1767,8 @@ local fullSIDlab `fullSIDlab' `hh' "`vlf'"
 
 capture mat drop `F'
 order  StratID 
-noi di in ye "....saving data from stratum " in w "`hh' `delimst'" in y/*
-*/ " to file " in w "`sfn'.dta"
+noi di as text "....saving data from stratum " as result "`hh' `delimst'" as text /*
+*/ " to file " as result "`sfn'.dta"
 
 if "`shape'" == "wide" {
 local stub "(stub)"
@@ -1791,8 +1799,8 @@ qui save `"`saving'"', replace
 }
 
 noi di " "
-noi di in ye "Data file " in w "`saving'.dta" in y " (all allocations) is now in memory"
-noi di in ye "Issue the " in w "-notes-" in y " command to review your specifications"
+noi di as text "Data file " as result "`saving'.dta" as text " (all allocations) is now in memory"
+noi di as text "Issue the " as result "-notes-" as text " command to review your specifications"
 } 
 /* end if multif" */
 

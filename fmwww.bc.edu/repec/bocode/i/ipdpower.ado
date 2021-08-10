@@ -11,12 +11,13 @@
 /*v1.1.0 25 Feb 2015:	debugged covariance matrix issue
                         beautified outputs*/
 /*v1.1.1 27 May 2016:	seed number is not set automatically any more*/
+/*v1.2.0 02 Aug 2017:	added high-level variability in distribution of binary covariate*/
 program define ipdpower, rclass
 	/*stata version define*/
 	version 12.1
     /*command syntax*/
     syntax, sn(integer) ssl(integer) ssh(integer) b0(real) b1(real) b2(real) b3(real) [minsh(integer 50) hpoisson icluster outc(string) cb(real 0.5) cexp cexpd(string) errsd(real 1) /*
-	*/ sderrsd(real 0) derr(string) bcov bcb(real 0.5) ccovd(string) slcov model(integer 1) tsq0(real 0) tsq1(real 0) tsq2(real 0) tsq3(real 0) dtp0(string) /*
+	*/ sderrsd(real 0) derr(string) bcov bcb(real 0.5) bsd(real 0) ccovd(string) slcov model(integer 1) tsq0(real 0) tsq1(real 0) tsq2(real 0) tsq3(real 0) dtp0(string) /*
 	*/ dtp1(string) dtp2(string) dtp3(string) covmat(name) missp(real -127.77) mar(real -127.77) mnar(real -127.77) minum(integer -127) mipmm(integer -127) /*
 	*/ clvl(real 95) seed(integer -127) nskip dnorm xnodts NODIsplay moreon]
 
@@ -375,6 +376,7 @@ program define ipdpower, rclass
 		scalar covsd=1
 		/*not needed*/
 		scalar covprob=.
+		scalar sdcovpb=.
 	}
 	/*binary covariate*/
 	else {
@@ -385,6 +387,12 @@ program define ipdpower, rclass
 			error 197
 		}
 		scalar covprob=`bcb'
+		/*varying probability across higher units*/
+		if `bsd'<0 {
+			di as error "SD for probability for the binary covariate needs to be positive"
+			error 197		
+		}
+		scalar sdcovpb=`bsd'
 		/*not needed*/
 		scalar dtype5=.
 		scalar covmn=.
@@ -509,7 +517,7 @@ program define ipdpower, rclass
 		/*call data generation*/
 		modout1 `=b0' `=b1' `=b2' `=b3' `=poolwithinvar' `=cdsd' `=tausq0' `=tausq1' `=tausq2' `=tausq3' /*
 		*/ `=dtype0' `=dtype1' `=dtype2' `=dtype3' `=slcov' `=totalsize' `=dtype4' /*
-		*/ `=dtype5' `=covmn' `=covsd' `=covprob' `=outtp' `=xcovmt' `=binexp'
+		*/ `=dtype5' `=covmn' `=covsd' `=covprob' `=outtp' `=xcovmt' `=binexp' `=sdcovpb'
 		/*get some characteristics for the outcome*/
 		if binexp==1 {
 			/*binary exposure and binary outcome*/
@@ -996,7 +1004,7 @@ program studybasics2
 	}
 end
 
-/*continuous outcome - continuous covariate*/
+/*data generation*/
 program modout1, rclass
 	/*inputs*/
 	scalar b0=`1'
@@ -1023,6 +1031,7 @@ program modout1, rclass
 	scalar outtp=`22'
 	scalar xcovmt=`23'
 	scalar binexp=`24'
+	scalar sdcovpb=`25'
 
 	/*if covariate is continuous*/
 	if covprob==. {
@@ -1071,9 +1080,17 @@ program modout1, rclass
 		/*patient-level covariate*/
 		else {
 			tempvar truni
-			qui gen `truni'=runiform()
-			qui gen xcovar=0
-			qui replace xcovar=1 if `truni'<=covprob
+			qui gen `truni'=runiform()		
+			qui gen xcovar=0			
+			if sdcovpb==0 {
+				qui replace xcovar=1 if `truni'<=covprob
+			}
+			else {
+				forvalues i=1(1)`=studynum' {
+					scalar temp = rnormal(`=covprob',`=sdcovpb')					
+					qui replace xcovar=1 if studyid==`i' & `truni'<=temp
+				}									
+			}
 		}
 	}
 
@@ -1228,7 +1245,7 @@ program marprg
 	qui drop `tempx' `tempy'
 end
 
-/*NMAR mechanism*/
+/*MNAR mechanism*/
 program mnarprg
 	scalar missrate=`1'	/*missing outcome %*/
 	scalar missor=`2'	/*odds ratio for missingness*/

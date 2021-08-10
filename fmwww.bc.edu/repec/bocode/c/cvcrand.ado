@@ -1,9 +1,9 @@
-*!version1.0 14jul2017
+*!version2.1 31JAN2020
 
 /* -----------------------------------------------------------------------------
 ** PROGRAM NAME: CVCRAND
-** VERSION: 1.0
-** DATE: JULY 14, 2017
+** VERSION: 2.1
+** DATE: JANUARY 31, 2020
 ** -----------------------------------------------------------------------------
 ** CREATED BY: JOHN GALLIS, LIZ TURNER, FAN LI, HENGSHI YU
 ** -----------------------------------------------------------------------------
@@ -13,6 +13,20 @@
 ** -----------------------------------------------------------------------------
 ** OPTIONS: SEE HELP FILE
 ** -----------------------------------------------------------------------------
+** MODIFIED: APRIL 16, 2018 - MINOR CODE FIX TO REMOVE OUTPUT OF NUMBER FROM ST_ADDVAR
+** -----------------------------------------------------------------------------
+** MODIFIED: MARCH 11, 2019 - NUMSCHEMES OPTION WASN'T NECESSARILY GIVING REPRODUCIBLE OUTPUT
+								WITH BALANCE SCORE TIES; FIXED BY ADDING ROW NUMBER TO SORT() FUNCTION
+							- ALSO ADDED A SEPARATE SORT ON ROW NUMBER AFTER SUBSETTING WHEN USING NUMSCHEMES OPTION,
+								IN ORDER TO MATCH RESULTS BETWEEN PERCENTILE CUTOFFS AND NUMBER OF SCHEMES CUTOFFS
+** -----------------------------------------------------------------------------
+** MODIFIED: APRIL 08, 2019 - ADDED A CHECK FOR VALIDITY
+							- REMOVED SUMMARIES USING "TABLE1".  USER CAN PRODUCE THEIR OWN SUMMARY STATISTICS AFTER THE FACT
+							- CONSTRAINED DATA IS NOW AUTOMATICALLY SAVED.  USER CAN NO LONGER "OPT OUT" OF SAVING THIS DATA.
+								- THIS DATASET NOW CONTAINS INFORMATION ON THE ROW OF THE RANDOMIZATION SPACE AND BSCORE
+** -----------------------------------------------------------------------------
+** MODIFIED: JANUARY 31, 2020 - MADE THE CHECK FOR VALIDITY OPTIONAL
+** -----------------------------------------------------------------------------
 */
 
 program define cvcrand, rclass
@@ -21,9 +35,9 @@ program define cvcrand, rclass
 	di "`clustername'"
 	#delimit ;
 	syntax varlist(min=1),
-		clusternum(integer) treatmentnum(integer) [clustername(varname) categorical(varlist) balancemetric(string) cutoff(real 0.1) 
+		ntotal_cluster(integer) ntrt_cluster(integer) [clustername(varname) categorical(varlist) stratify(varlist) balancemetric(string) cutoff(real 0.1) 
 													numschemes(integer 0) NOsim size(integer 50000)  
-													weights(numlist) seed(integer 12345) savedata(string) savebscores(string)]
+													weights(numlist) seed(integer 12345) directory(string) savedata(string) savebscores(string) validitycheck]
 	;
 	
 	#delimit cr
@@ -42,26 +56,24 @@ program define cvcrand, rclass
 		exit 499
 	}
 	
-	capture : which table1
-	if (_rc) {
-		display as error `"Please install package {it:table1} from SSC in order to run this program;"' _newline ///
-			`"you can do so by clicking this link: {stata "ssc install table1":auto-install table1}"'
-		exit 499
-	}
-	
-	local controlnum =`clusternum' - `treatmentnum'
+	local controlnum =`ntotal_cluster' - `ntrt_cluster'
 	/* message about number assigned to treatment and control */
-	di as result "Number of clusters assigned to treatment is `treatmentnum'; number assigned to control is `controlnum'"
+	di as result "Number of clusters assigned to treatment is `ntrt_cluster'; number assigned to control is `controlnum'"
+	di as result " "
 	
 	
 	/* check if total number of clusters specified is equal to total number of observations in dataset */
-	if `r(N)' != `clusternum' {
+	if `r(N)' != `ntotal_cluster' {
 		di as err "Error: Number of observations in dataset does not equal number of clusters specified"
 		exit 198
 	}
 	
 	/* set default string; l2 is the default balance metric */
 	if "`balancemetric'" == "" local balancemetric "l2"	
+	
+	
+	/* set default dataset name for saved constrained space */
+	if "`savedata'" == "" local savedata "constrained_space"	
 	
 	/* code to check if continuous and categorical variables are properly specified */
 	local contlist : list varlist - categorical	
@@ -91,7 +103,7 @@ program define cvcrand, rclass
 	}	
 	
 	/* check to make sure number in treatment clusters is less than total number of clusters */
-	if `treatmentnum' >= `clusternum' {
+	if `ntrt_cluster' >= `ntotal_cluster' {
 		di as err "Error: Number of clusters in treatment greater than or equal to total number of clusters"
 		exit 198
 	}
@@ -103,6 +115,23 @@ program define cvcrand, rclass
 		exit 198
 	}
 	
+	/* warnings about position of categorical variables */
+	if "`categorical'" != "" {
+		local length: list sizeof varlist
+		local lengthcat: list sizeof categorical
+		local checks
+		local ncatvars: word count `categorical'
+		tokenize `categorical'
+		forvalues i=1/`ncatvars' {
+			local pos: list posof "``i''" in varlist
+			local checks "`checks' `pos'"
+		}
+		local finalcheck: list length in checks
+		if `finalcheck' == 0 {
+			di as err "Error: Please specify all categorical variables last in varlist"
+			exit 198
+		}
+	}
 	
 	/* code to create dummy variables from categorical variables */
 	if "`categorical'"!="" {
@@ -127,11 +156,14 @@ program define cvcrand, rclass
 				local add "``i''_`k'"
 				/* code that adds the dummy variables to `varlist' */
 				local varlist : list varlist | add
+			
 			}
 			/* code that removes categorical variables from varlist */
 			local varlist : list varlist-categorical
+		
 		}
 	}
+
 	
 	/* code to check that number of weights specified equals number of variables */
 	if "`weights'"!="" {
@@ -145,6 +177,69 @@ program define cvcrand, rclass
 		}
 	}
 	
+	/* code to check if stratification variables are specified as a categorical variables */
+	local stratcheck: list stratify in categorical
+	if `stratcheck' == 0 {
+		di as err "Error: stratification variables must be specified as categorical"
+		exit 198
+	}
+	
+	if "`stratify'" != "" & "`weights'" != "" {
+		di as err "Error: cannot specify both weights option and stratify option"
+		exit 198
+	}
+	
+	/* code to process stratification variables */
+	if "`stratify'" != "" {
+		di as err "You have specified the stratify option.  Please be sure the stratification variables are placed at the end of the overall variable list," 
+		di as err "and last in the variable list of the categorical option."
+		di " "
+		local nstratvars: word count `stratify'
+		tokenize `stratify'
+		
+		local A
+		local newvarlist: list varlist - A
+		
+		/* obtain a list of stratification dummy variables */
+		preserve
+		forval i=1/`nstratvars' {		
+			drop ``i''_*
+			quietly tabulate ``i'', gen(``i''_)
+			local ``i''_num=r(r) - 1
+			drop ``i''_1
+			
+			forval j=1/```i''_num' {
+				local k=`j'+1
+				local addstrat "``i''_`k'"
+				local newvarlist: list newvarlist - addstrat
+			}
+		}
+		
+		local stratvarlist: list varlist - newvarlist
+		restore
+		
+		/* count the number of variables that aren't stratified */
+		local nnostrat: word count `newvarlist'
+		/* count the number of variables that are stratified */
+		local nstrat: word count `stratvarlist'
+		
+		local weights
+		
+		/* create a numlist of weights, with weights of 1000 for stratification variables */
+		forval i=1/`nnostrat' {
+			local wtnostrat = 1 
+			if `i' == 1 {
+				local weights "`wtnostrat'"
+			}
+			else {
+				local weights "`weights' `wtnostrat'"
+			}
+		}
+		forval i=1/`nstrat' {
+			local wtstrat = 1000
+			local weights "`weights' `wtstrat'"
+		}
+	}
 	
 	/* force program not to simulate, regardless of the total number of clusters */
 	if "`nosim'"=="nosim" {
@@ -156,17 +251,17 @@ program define cvcrand, rclass
 	
 	
 	if "`balancemetric'" == "l2" {
-		di "Using the l2 (squared) balance metric"
+		di as result "Using the l2 (squared) balance metric"
+		di " "
 	}
 	else if "`balancemetric'" == "l1" {
-		di "Using the l1 (absolute value) balance metric"
+		di as result "Using the l1 (absolute value) balance metric"
+		di " "
 	}
 	else {
 		di as err "Error: Invalid balance metric specification; specify either l1 or l2"
 		exit 198
 	}
-	
-	
 	
 	/* user-specified weights */
 	if "`weights'"!="" {
@@ -188,32 +283,22 @@ program define cvcrand, rclass
 		local clustername "clustname"
 	}
 	
-	di "`varlist'"
-	
-	
-	capture drop FinalScheme
-	
-	mata: constrained("`varlist'","`balancemetric'",`size',`clusternum',`treatmentnum',`cutoff',`sim',`seed',`wt',`numschemes',(`weights'))
-	
-	local cname "`clustername'"
-	list `cname' FinalScheme, abb(20)
-	
-		tokenize `contlist'
-		forval i=1/`ncontvars' {
-			table1, by(FinalScheme) vars(``i'' contn) format(%2.1f)
+		if "`directory'"!="" {
+			quietly cd "`directory'"
 		}
 		
-		if "`categorical'"!="" {
-		tokenize `categorical'
-		forval i=1/`ncatvars' {
-			table1, by(FinalScheme) vars(``i'' cat) format(%2.1f)
-		}
-		}
+		
+	capture drop _allocation
+	
+	mata: constrained("`varlist'","`balancemetric'",`size',`ntotal_cluster',`ntrt_cluster',`cutoff',`sim',`seed',`wt',`numschemes',(`weights'))
+	
+	local cname "`clustername'"
+	list `cname' _allocation, abb(20)
 		
 	if "`savebscores'" != "" {
 		preserve
 		local newvarname: di "Bscores"
-		mata: bscoreout("`newvarname'","`varlist'","`balancemetric'",`size',`clusternum',`treatmentnum',`cutoff',`sim',`seed',`wt',`numschemes',(`weights'))
+		mata: bscoreout("`newvarname'","`varlist'","`balancemetric'",`size',`ntotal_cluster',`ntrt_cluster',`cutoff',`sim',`seed',`wt',`numschemes',(`weights'))
 		if "`numschemes'" == "0" {
 			local centilesnew = `cutoff'*100
 		}
@@ -222,48 +307,117 @@ program define cvcrand, rclass
 			local centilesnew: di %6.2f `numschemes'/`r(N)'*100
 			
 		}
-			if "`balancemetric'" == "l2" {
-				quietly centile Bscores, centile(`centilesnew')
-				local forplot = r(c_1)
-				quietly count
-				local max = r(N)/11
-				hist Bscores, xlab(0(15)150) frequency addplot(pci 0 `forplot' `max' `forplot') legend(label(1 "Balance Scores") label(2 "Cutoff"))
-			}
-			else if "`balancemetric'" == "l1" {
-				quietly centile Bscores, centile(`centilesnew')
-				local forplot = r(c_1)
-				quietly count
-				local max = r(N)/15
-				hist Bscores, xlab(0(5)25) frequency addplot(pci 0 `forplot' `max' `forplot') legend(label(1 "Balance Scores") label(2 "Cutoff"))
+			/* only output histogram if weights are not specified */
+			if "`weights'" == "0" & "`stratify'" == "" {
+				if "`balancemetric'" == "l2" {
+					quietly centile Bscores, centile(`centilesnew')
+					local forplot = r(c_1)
+					quietly count
+					local max = r(N)/11
+					qui hist Bscores, xlab(0(15)150) frequency addplot(pci 0 `forplot' `max' `forplot') legend(label(1 "Balance Scores") label(2 "Cutoff"))
+				}
+				else if "`balancemetric'" == "l1" {
+					quietly centile Bscores, centile(`centilesnew')
+					local forplot = r(c_1)
+					quietly count
+					local max = r(N)/15
+					qui hist Bscores, xlab(0(5)25) frequency addplot(pci 0 `forplot' `max' `forplot') legend(label(1 "Balance Scores") label(2 "Cutoff"))
+				}
 			}
 		
-		*hist Bscores
-		save "`savebscores'.dta", replace
+		qui save "`savebscores'.dta", replace
 		restore
 	}
 		
-	if "`savedata'"!="" {
 		/* create a local macro containing names for the columns, which equals the total number of clusters */
-		forvalues i=1/`clusternum' {
+		forvalues i=1/`ntotal_cluster' {
 			local numclust`i': di "col`i'"
 		}
 		
 		
-		local clustnum: di `clusternum'-1
-		forvalues i=1/`clusternum' {
+		local clustnum: di `ntotal_cluster'-1
+		forvalues i=1/`ntotal_cluster' {
 			*local j=`i'+1
 			local numclust: list numclust | numclust`i'
 		}
 		
 		local alloc: di "chosen_scheme"
 		local numclust: list numclust | alloc
+		
+		/* APRIL 8, 2019 - ADDING BSCORES ONTO CONSTRAINED SPACE DATASET */
+		local spacerow: di "RzSpaceRow"
+		local numclust: list numclust | spacerow
+		
+		local bscore: di "Bscores"
+		local numclust: list numclust | bscore
 
 	preserve
-	mata: datout("`numclust'","`varlist'","`balancemetric'",`size',`clusternum',`treatmentnum',`cutoff',`sim',`seed',`wt',`numschemes',(`weights'))
-	save "`savedata'.dta", replace
+	mata: datout("`numclust'","`varlist'","`balancemetric'",`size',`ntotal_cluster',`ntrt_cluster',`cutoff',`sim',`seed',`wt',`numschemes',(`weights'))
+	rename col* cluster*
+	qui save "`savedata'.dta", replace
 	restore
-	}
 	
+	/* APRIL 8, 2019 - VALIDITY CHECK |||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||| */
+	*JAN 31, 2020 - MAKING IT OPTIONAL
+	if "`validitycheck'" == "validitycheck" {
+		preserve
+		use "`savedata'.dta", clear
+		qui des, short
+		local totclust = r(k)- 3
+		qui count
+		local totrows = r(N)
+			unab myvars: cluster1-cluster`totclust'
+			local j=1
+			foreach var1 of varlist cluster1-cluster`totclust' {
+				local myvars : list myvars - cluster1
+				
+				local k=1
+				foreach var2 of local myvars { 
+					if `k' > `j' {
+						quietly {
+							gen `var1'`var2' = `var1' - `var2'
+							gen samecount`j'`k' = 2 if `var1'`var2' != 0
+							replace samecount`j'`k' = 1 if `var1'`var2' == 0
+							replace samecount`j'`k' = 0 if samecount`j'`k' == 2
+							gen sameprop`j'`k' = samecount`j'`k'
+							
+							gen diffcount`j'`k' = 1 if `var1'`var2' != 0
+							replace diffcount`j'`k' = 0 if `var1'`var2' == 0
+							gen diffprop`j'`k' = diffcount`j'`k'
+							
+							gen clustercombo`j'`k' = "`j'_`k'"
+							drop `var1'`var2'
+						}	
+					}
+				local ++k
+				}
+			local ++j
+			}
+			
+		quietly {
+			drop chosen_scheme cluster1-cluster`totclust'
+			collapse (sum) samecount* diffcount* (mean) sameprop* diffprop* (first) clustercombo*
+			gen id = 1
+			reshape long samecount diffcount sameprop diffprop clustercombo, i(id) j(j)
+			drop i j
+			order clustercombo samecount sameprop diffcount diffprop
+		}
+		di "                                "
+		di " ****************************** "
+		di " ******* VALIDITY CHECKS ****** "
+		di " ****************************** "
+		di " "
+		di "sameprop: Proportion of times in the constrained space clusters are paired together"
+		di "diffprop: Proportion of times in the constrained space clusters are not paired"
+		di " "
+		tabstat sameprop diffprop, stat(mean sd min p25 med p75 max) col(stat) long format(%9.2f)
+		
+		qui save "`savedata'_vc.dta", replace
+		restore
+	}
+
+	
+	/* ||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||| */
 	
 	
 	/* drop dummy variables from the dataset */
@@ -359,8 +513,9 @@ if (combn<50000 | nosims==1) {
 			subset_bscore=select(Bscore,Bscore[.,2]:<=qbscore)
 		}
 		else if (numschemes>0) {
-			sortB=sort(Bscore,2)
-			subset_bscore=sortB[1..numschemes,.]
+			sortB=sort(Bscore,(2,1))
+			subset_bscore2=sortB[1..numschemes,.]
+			subset_bscore=sort(subset_bscore2,1)
 		}
 		
 		
@@ -464,8 +619,9 @@ if (combn<50000 | nosims==1) {
 		
 		// subset based on number of schemes
 		else if (numschemes>0) {
-			sortB=sort(Bscore,2)
-			subset_bscore=sortB[1..numschemes,.]
+			sortB=sort(Bscore,(2,1))
+			subset_bscore2=sortB[1..numschemes,.]
+			subset_bscore=sort(subset_bscore2,1)
 		}
 		
 		
@@ -562,8 +718,9 @@ if (combn<50000 | nosims==1) {
 			subset_bscore=select(Bscore,Bscore[.,2]:<=qbscore)
 		}
 		else if (numschemes>0) {
-			sortB=sort(Bscore,2)
-			subset_bscore=sortB[1..numschemes,.]
+			sortB=sort(Bscore,(2,1))
+			subset_bscore2=sortB[1..numschemes,.]
+			subset_bscore=sort(subset_bscore2,1)
 		}
 		
 		final=pmt[subset_bscore[.,1],]
@@ -575,9 +732,7 @@ if (combn<50000 | nosims==1) {
 		//choice of randomization scheme.  Needed for later analysis 
 		indmat=J(rows(final),1,0)
 		indmat[choice,1]=1
-		
-
-		final3=(final,indmat)
+		final3=(final,indmat,subset_bscore)
 		
 		st_addobs(rows(final3))
 		varidx = st_addvar("double", tokens(numclust))
@@ -673,8 +828,9 @@ if (combn<50000 | nosims==1) {
 		
 		// subset based on number of schemes
 		else if (numschemes>0) {
-			sortB=sort(Bscore,2)
-			subset_bscore=sortB[1..numschemes,.]
+			sortB=sort(Bscore,(2,1))
+			subset_bscore2=sortB[1..numschemes,.]
+			subset_bscore=sort(subset_bscore2,1)
 		}
 		
 		
@@ -687,7 +843,7 @@ if (combn<50000 | nosims==1) {
 		indmat=J(rows(final),1,0)
 		indmat[choice,1]=1
 	
-		final3=(final,indmat)
+		final3=(final,indmat,subset_bscore)
 		
 		st_addobs(rows(final3))
 		varidx = st_addvar("double", tokens(numclust))
@@ -784,7 +940,7 @@ matrix constrained(string scalar varlist, string scalar metric,  scalar s,scalar
 
 			// obtain the "cutoff" quantile of the bscore distribution ////////////
 			qbscore = mm_quantile(rowsum(abs(pmt*(numerator2:/denominator))),2,cut)
-		
+		 
 			}
 			// unweighted //////////////////////////////////////////////////////////
 			else {
@@ -802,15 +958,17 @@ matrix constrained(string scalar varlist, string scalar metric,  scalar s,scalar
 		}
 		// subset based on number of schemes ////////////////////////////
 		else if (numschemes>0) {
-			sortB=sort(Bscore,2)
-			subset_bscore=sortB[1..numschemes,.]
+			sortB=sort(Bscore,(2,1))
+			subset_bscore2=sortB[1..numschemes,.]
+			subset_bscore=sort(subset_bscore2,1)
 		}
+		
+	
+		
 			
 		// take a random sample of the ones below the cutoff ////////////
 		rseed(seed)
 		choice=mm_srswor(1,rows(subset_bscore))'
-		
-		
 		
 		printf("{txt}Summary Stats{space 1}{c |}  Balance Score \n")
 		printf("{hline 14}{c +}{hline 20}\n")
@@ -847,8 +1005,8 @@ matrix constrained(string scalar varlist, string scalar metric,  scalar s,scalar
 		final=pmt[subset_bscore[choice,1],]'
 		
 		// add "Final Scheme" back onto the dataset for reporting //////////////
-		st_addvar("float", ("FinalScheme"))
-		st_store(., ("FinalScheme"),final[.,1] )
+		(void) st_addvar("float", ("_allocation"))
+		st_store(., ("_allocation"),final[.,1] )
 	}
 	
 //////////////////////////////////////////////////////////////////////////////////////	
@@ -942,8 +1100,9 @@ matrix constrained(string scalar varlist, string scalar metric,  scalar s,scalar
 		
 		// subset based on number of schemes
 		else if (numschemes>0) {
-			sortB=sort(Bscore,2)
-			subset_bscore=sortB[1..numschemes,.]
+			sortB=sort(Bscore,(2,1))
+			subset_bscore2=sortB[1..numschemes,.]
+			subset_bscore=sort(subset_bscore2,1)
 		}
 			
 		
@@ -984,8 +1143,8 @@ matrix constrained(string scalar varlist, string scalar metric,  scalar s,scalar
 		// output the row from the pmt matrix that this sampled scheme is
 		final=pmt2[subset_bscore[choice,1],]'
 		
-		st_addvar("float", ("FinalScheme"))
-		st_store(., ("FinalScheme"),final[.,1] )
+		(void) st_addvar("float", ("_allocation"))
+		st_store(., ("_allocation"),final[.,1] )
 		
 		
 		display("Note: The result is based on simulations")

@@ -65,11 +65,11 @@ name as 'product code', indicated between brackets after the titles in
 the navigation tree.
 
 {pstd}
-Eurostat navigation tree: {browse "http://ec.europa.eu/eurostat/data/database"}.
+Eurostat navigation tree: {browse "https://ec.europa.eu/eurostat/data/database"}.
 
 {pstd}
-See also: {browse "http://ec.europa.eu/eurostat/data/bulkdownload"} 
-and {browse "http://ec.europa.eu/eurostat/estat-navtree-portlet-prod/BulkDownloadListing"}.
+See also: {browse "https://ec.europa.eu/eurostat/data/bulkdownload"} 
+and {browse "https://ec.europa.eu/eurostat/estat-navtree-portlet-prod/BulkDownloadListing"}.
 
 {marker options}{...}
 {title:Options}
@@ -121,7 +121,7 @@ not important and you should not use quotes for the values. {p_end}
 {title:Remarks}
 
 {pstd}
-The Eurostat repository at {browse "http://ec.europa.eu/eurostat/data/database"} 
+The Eurostat repository at {browse "https://ec.europa.eu/eurostat/data/database"} 
 contains a large number of EU policy data sets, generally time series (monthly, quarterly, annually).
 Each series is stored in a separate file that also contains a string-date variable and header
 with information about the series.  {p_end}
@@ -188,7 +188,7 @@ as {it:country_abbreviations} in {hi:geo()}.
 {cmd:. eurostatuse} une_ltu_a, noflags nolabel long geo(BE DE FR) {p_end}
 
 {phang}
-{cmd:. eurostatuse} namq_gdp_k, noflags start(2000Q1) keepdim(SWDA ; PCH_PRE ; B1GM P3 P5) {p_end}
+{cmd:. eurostatuse} namq_10_gdp, noflags start(2000Q1) keepdim(CLV_PCH_PRE ; SCA ; B1GQ P3 P51G) {p_end}
 
 
 {marker install}{...}

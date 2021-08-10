@@ -1,5 +1,5 @@
 {smcl}
-{* *! version 1.0 28.02.2016}{...}
+{* *! version 1.2.0 10.02.2018}{...}
 {* *! Lars Zeigermann}{...}
 
 {cmd:help opencagegeo}
@@ -32,7 +32,6 @@
 {synopt:{opt countrycode(varname or string)}} specifies the countrycode of the location{p_end}
 {synopt:{opt lang:uage(varname or string)}} specifies the response language {p_end}
 {synopt:{opt res:ume}} resume after the query limit was exceeded{p_end}
-{synopt:{opt paid:key}} specifies that a paid key instead of a free key is used{p_end}
 {synopt:{opt replace}} replace existing results {p_end}
 
 {syntab:Forward geocoding}
@@ -66,9 +65,10 @@ Note: for {cmd:opencagegeoi}, the immediate version of {cmd:opencagegeo}, the us
 {cmd:opencagegeoi} is the immediate version of {cmd:opencagegeo} for geocoding a single location. The location address to be geocoded is typed directly into the command window. The results are directly displayed in the output window and stored in r().{p_end}
 
 {pstd}
-For {cmd:opencagegeo}, an OpenCage Geocoder API key is required. 
-The key may be requested free of charge by signing up at {browse "https://geocoder.opencagedata.com"} and allows 2.500 queries per 24 hours. 
-For users in need of higher volumes per day, different costumer plans are available. Important: With a paid key, the user must use the {opt paidkey} option. Contrary to existing geocoders available for Stata, OpenCage Data does not restrict data usage and explicitly allows storage. All geocoded data obtained from {cmd:opencagegeo} is jointly licensed under {browse "http://opendatacommons.org/licenses/odbl/summary/":ODbL} and {browse "https://creativecommons.org/licenses/by-sa/2.0/":CC-BY-SA} licenses.{p_end}
+{cmd:opencagegeo} requires an OpenCage Data API key which can be obtained by signing up at {browse "https://geocoder.opencagedata.com/users/sign_up"}. The user can choose among a number of customer plans with different daily rate limits. The free trial plan allows 2.500 requests per day. If the rate limit is hit, opencagegeo will issue an error message and exit. To continue the task on the following day, the user may simply add the {opt resume} option to the orignal specification. {cmd:opencagegeo} will automatically detect which observations are still to be geocoded. The user is strongly advised not to make any changes to the data until geocoding of all observations is completed. A new day begins at 00:00:00 Coordinated Universal Time (UTC). {p_end}
+
+{pstd}
+Contrary to other geocoders routines available in Stata, OpenCage Data does not restrict data usage and explicitly allows storage. All geocoded data obtained from {cmd:opencagegeo} is jointly licensed under {browse "http://opendatacommons.org/licenses/odbl/summary/":ODbL} and {browse "https://creativecommons.org/licenses/by-sa/2.0/":CC-BY-SA} licenses.{p_end}
 
 {p 4 4 3}
 {cmd:opencagegeo} uses two user-written Stata libraries, {help insheetjson} and {help libjson}, for processing the JavaScript Object Notation (JSON) objects returned by the OpenCage Geocoder API.
@@ -87,7 +87,7 @@ They are available via Statistical Software Components.{p_end}
 {opt countrycode(varname or string)} allows the user to specify the country code of the location. 
 Providing a country code will restrict the results to the respective country. If all locations are in the same country, simply input the country code as a string.
 If the locations are in two or more countries, specify a variable containing the respective country codes.
-{cmd:opencagegeo} takes two character country codes as defined by the {browse "http://www.iso.org/iso/country_codes/iso_3166_code_lists/country_names_and_code_elements.htm":ISO 3166-1 Alpha 2} standard.
+{cmd:opencagegeo} takes two character country codes as defined by the {browse "https://www.iso.org/obp/ui/#search":ISO 3166-1 Alpha 2} standard.
 
 {phang}
 {opt language(varname or string)} allows the user to specify the language in which the results are returned. As with {opt countrycode()}, either a string or a string variable can be specified.
@@ -99,9 +99,7 @@ User of Stata 13 or older are advised to use the language carefully as many lang
 {opt replace} instructs {cmd:opencagegeo} to overwrite existing geocoded results. If either {opt in} or {opt if} are specified, only selected observations will be replaced.
 
 {phang}
-{opt resume} allows the user to continue geocoding the next day if the query limit of 2.500 was exceeded.
-A new day begins at 00:00:00 Coordinated Universal Time (UTC). {cmd:opencagegeo} displays the remaining time in hh:mm:ss till the limit is reset. 
-The user is strongly advised not to make any changes to the data set before geocoding of all observations is completed.
+{opt resume} allows the user to continue geocoding on the following day if the rate limit was hit. The user is strongly advised not to make any changes to the data set before geocoding of all observations is completed.
 
 {dlgtab:Forward Geocoding}
 
@@ -163,7 +161,7 @@ Generally, the OpenCage Geocoder is not case sensitive and can deal with commonl
 {title:Remarks for {cmd:opencagegeoi}}
 
 {pstd}
-For {cmd:opencagegeoi} the API key must be stored in a global macro mykey. This saves the user the trouble to enter the key every time. The use may further specify a global macro language containing the language in which the results shall be returned. The default is English. If the user sets the language to native, the results will be in the native language of the location - provided the underlying OpenStreetMap (OSM) data is available in that language.
+For {cmd:opencagegeoi} the API key must be stored in a global macro mykey. The user may further specify a global macro language containing the language in which the results shall be returned. The default is English. If the user sets the language to native, the results will be in the native language of the location - provided the underlying OpenStreetMap (OSM) data is available in that language.
 
 {pstd}
 For forward geocoding, addresses should be well-formatted as described above. For reverse geocoding, {cmd:opencagegeoi} takes a latitude longitude pair as input. The latitude must be stated first and both values need to be separated by a comma.
@@ -399,7 +397,7 @@ Required ssc packages: {help insheetjson}, {help libjson}
 {title:Author}
 
 {pstd}
-Lars Zeigermann, D{c u:}sseldorf Institute for Competition Economics (DICE), ({browse "mailto:zeigermann@dice.hhu.de":zeigermann@dice.hhu.de}){p_end}
+Lars Zeigermann, D{c u:}sseldorf Institute for Competition Economics (DICE) & Monopolies Commission, ({browse "mailto:lars.zeigermann@monopolkommission.bund.de":lars.zeigermann@monopolkommission.bund.de}){p_end}
 
 
 {title:Acknowledgements}

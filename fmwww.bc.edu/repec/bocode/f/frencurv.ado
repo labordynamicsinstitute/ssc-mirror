@@ -1,7 +1,7 @@
 #delimit ;
 capture program drop frencurv;
 program define frencurv,rclass;
-version 10.0;
+version 16.0;
 /*
  Create a set of splines of specified power
  corresponding to a specified X-variable
@@ -21,7 +21,7 @@ version 10.0;
  and variable labels generated using format labfmt if present,
  or format of X-variable otherwise.
 *! Author: Roger Newson
-*! Date: 06 January 2014
+*! Date: 03 April 2020
 */
 
 syntax [ newvarlist ] [if] [in] ,
@@ -305,11 +305,13 @@ matr rownames `refv'=`xvar';
 matr colnames `refv'=`splist';
 
 *
- Preserve original data
- (to create B-splines for reference values)
+ Create temporary dataframe
+ (in which to create B-splines for reference values)
+ and begin work in temporary frame (UNINDENTED).
 *;
-preserve;
-drop _all;
+tempname tempframe;
+frame create `tempframe';
+frame `tempframe' {;
 
 * Create x-variate of reference values *;
 matr def `refv'=`refv'';
@@ -355,8 +357,13 @@ tempname sptran;
 quietly mkmat `bsplist',matr(`sptran');
 matr rownames `sptran'=`splist';
 
-* Restore original data *;
-restore;
+*
+ End work in temporary frame (UNINDENTED), 
+ return to original data frame,
+ and drop temporary frame.
+*;
+};
+frame drop `tempframe';
 
 *
  Check that matrix of B-splines is non-singular,

@@ -1,6 +1,6 @@
 d 'CHECKROB': module to perform robustness check of alternative specifications
 d
-d checkrob estimates a set of regressions where the dependent
+d  checkrob estimates a set of regressions where the dependent
 d variable is regressed  (with whatever method is specified in
 d estimation command) on core variables - which are  included in
 d all regressions - and all possible combinations of other
@@ -21,7 +21,7 @@ d KW: robustness
 d
 d Requires: Stata version 9
 d
-d Distribution-Date: 20070413
+d Distribution-Date: 20180606
 d
 d Author: Mikkel Barslund, University of Copenhagen
 d Support: email Mikkel.Barslund@@econ.ku.dk

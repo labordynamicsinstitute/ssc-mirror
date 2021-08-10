@@ -11,7 +11,7 @@ d KW: CEQ
 d
 d Requires: Stata version 13
 d
-d Distribution-Date: 20170801
+d Distribution-Date: 20210325
 d
 d Author: Sean Higgins, University of California, Berkeley
 d Support: email seanhiggins@@berkeley.edu
@@ -84,11 +84,15 @@ f ceqpop.ado
 f ceqpop.sthlp
 f ceqppp.ado
 f ceqppp.sthlp
+f ceqrace.ado
+f ceqrace.sthlp
 f ceqstatsig.ado
 f ceqstatsig.sthlp
 f ceqtarget.ado
 f ceqtarget.sthlp
 f covconc.ado
+f covconc.sthlp
+f ceq_parse_using.ado
 f ../i/incomecdf.ado
 f ../i/incomecdf.sthlp
 f ../o/oppincidence.ado

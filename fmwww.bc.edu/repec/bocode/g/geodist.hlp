@@ -1,30 +1,30 @@
 {smcl}
-{* *! version 1.0.1  21feb2012}{...}
+{* *! version 1.1.0  20jun2019}{...}
 {cmd:help geodist}
 {hline}
 
 {title:Title}
 
 {phang}
-{bf:geodist} {hline 2} Computes geodetic distances.
+{bf:geodist} {hline 2} Calculates geographical distances.
 
-
+{marker syntax}{...}
 {title:Syntax}
 
 {phang}
-If one or more lat/lon coordinates are variables
+If one or more lat/lon coordinates are numeric variables
 
 {p 8 16 2}
 {cmd:geodist}
 {it:lat1 lon1 lat2 lon2} 
 {ifin} 
 {cmd:,} 
-{opth g:enerate(newvar)}
+{opt g:enerate(new_dist_var)}
 [{it:options}]
 
 
 {phang}
-If all lat/lon coordinates are scalars or strings of numerical coordinates
+If all lat/lon coordinates are numeric scalars or numbers
 
 {p 8 16 2}
 {cmd:geodist}
@@ -40,8 +40,7 @@ If all lat/lon coordinates are scalars or strings of numerical coordinates
 {synopt:{opt mi:les}}report distances in miles{p_end}
 
 {syntab:Ellipsoid}
-{synopt:{opt e:llipsoid(#1,#2)}}alternative ellipsoid parameters {it:(a,f)}{p_end}
-{synopt:{opt max:iter(#)}}maximum iterations {it:#}{p_end}
+{synopt:{opt e:llipsoid(#1,#2)}}custom ellipsoid parameters {it:(a,f)}{p_end}
 
 {syntab:Sphere}
 {synopt:{opt s:phere}}calculate great-circle distances{p_end}
@@ -50,35 +49,47 @@ If all lat/lon coordinates are scalars or strings of numerical coordinates
 {p2colreset}{...}
 
 
+{marker description}{...}
 {title:Description}
 
 {pstd}
-{cmd:geodist} computes geodetic distances, 
-i.e. the length of the shortest curve between two points along the
-surface of a mathematical model of the earth. 
-By default, the input coordinates are assumed to be based on the 
-WGS 1984 datum (the same used by Google Earth/Map and GPS devices)
-and {cmd:geodist} calculates ellipsoidal distances using
-Vincenty's (1975) equations. 
+{cmd:geodist} calculates 
+{browse "https://en.wikipedia.org/wiki/Geographical_distance":geographical distances }
+by measuring the length of
+the shortest path between two points along
+the surface of a mathematical model of the earth. 
 
 {pstd}
-If the {opt sphere} option is selected, {cmd:geodist} uses a sphere
-with a radius of 6371km to approximate the shape of the earth and
-computes great-circle distances. This is significantly faster than
-computing ellipsoidal distances. 
+By default, {cmd:geodist} implements 
+{browse "https://en.wikipedia.org/wiki/Vincenty%27s_formulae":Vincenty's (1975) formula}
+to calculate distances on a 
+{browse "https://en.wikipedia.org/wiki/Reference_ellipsoid":reference ellipsoid}.
+If the {opt sphere} option is specified,
+{cmd:geodist} calculates 
+{browse "https://en.wikipedia.org/wiki/Great-circle_distance":great-circle distances}
+using the 
+{browse "https://en.wikipedia.org/wiki/Haversine_formula":haversine formula}.
+Distances on an ellipsoid are more accurate but note that Vincenty's formula may
+fail to find a solution for 
+{browse "https://en.wikipedia.org/wiki/Antipodes":near-antipodal}
+ points.
+The haversine formula is much simpler and runs fast.
 
 {pstd}
-Coordinates may be specified in any combination of variables, scalars, 
-or strings of numerical coordinates. If one or more lat/lon coordinates 
-are variables, then {opth g:enerate(newvar)} must be specified and 
-{newvar} will be created to store the computed distances.
+Geographical coordinates must be in signed decimal degrees, 
+positive for north and east, and negative for south and west. 
+{browse "https://en.wikipedia.org/wiki/Latitude":Latitudes}
+range from -90 to 90 and 
+{browse "https://en.wikipedia.org/wiki/Longitude":longitudes}
+from -180 to 180.
+You may specify each {it:lat1 lon1 lat2 lon2} independently using either a numeric variable,
+a numeric scalar, or simply a number.
+If {it:lat1 lon1 lat2 lon2} include one or more variables,
+{cmd:geodist} will calculate a distance for each observation in the sample
+and store these in {help newvar:{it:new_dist_var}}.
 
-{pstd}
-Coordinates must be in signed decimal degrees, 
-positive for north and east, and negative for south and west. Latitudes 
-range from -90 to 90 and longitudes from -180 to 180.
 
-
+{marker options}{...}
 {title:Options}
 {dlgtab:Main}
 {phang}
@@ -87,169 +98,140 @@ distances are in kilometers.
 
 {dlgtab:Ellipsoid}
 {phang}
-{opt e:llipsoid(#1,#2)} is used to specify a reference
-ellipsoid other than the one used by default (WGS 1984). A reference ellipsoid is defined
-by two constants, ({it:a,f}). These are the length of the
-semi-major axis in meters (i.e. radius to the equator) and the 
-flattening ratio. For example, the Airy 1830 reference
-ellipsoid can be specified with {opt ellipsoid(6377563.396,299.3249646)}.
-
-{phang}
-{opt max:iter(#)} indicates the maximum number of iterations to
-perform when computing ellipsoidal distances. The default is 25. 
-Note that virtually all cases require less than 10 iterations. 
+{opt e:llipsoid(#1,#2)} is used to specify an alternate 
+{browse "https://en.wikipedia.org/wiki/Reference_ellipsoid":reference ellipsoid}.
+#1 is the length of the
+semi-major axis in meters (equatorial radius) and 
+#2 is the flattening ratio. 
+For example, the 
+{browse "https://en.wikipedia.org/wiki/Earth_ellipsoid#Historical_Earth_ellipsoids":Airy 1830}
+reference ellipsoid 
+can be specified with {opt ellipsoid(6377563.396,299.3249646)}.
+If omitted, {cmd:geodist} uses the
+{browse "https://en.wikipedia.org/wiki/World_Geodetic_System#WGS84":WGS 1984}
+reference ellipsoid, the same used by 
+{browse "https://en.wikipedia.org/wiki/Global_Positioning_System":GPS}
+devices. 
 
 {dlgtab:Sphere}
 {phang}
-{opt s:phere} requests that great-circle distances be computed instead
-of ellipsoidal distances. By default, a radius of 6371km is used; 
-this is the earth's mean radius
-(see {browse "http://en.wikipedia.org/wiki/Earth_radius#Mean_radii"}).
+{opt s:phere} requests great-circle distances.
 
 {phang}
-{opt r:adius(#)} specifies that great-circle distances are to be computed on
+{opt r:adius(#)} specifies that great-circle distances be computed on
 a sphere with a radius of {bind:{it:#} km.}
+The default is 6371 ({browse "https://en.wikipedia.org/wiki/Earth_radius#Mean_radius":Earth's mean radius}).
 
 
-{title:Accuracy and limitations}
-
-{pstd}
-{cmd:geodist} uses the Vincenty (1975) equations
-when computing distances on a reference ellipsoid. According to Thomas and
-Featherstone (2005), these are thought to maintain submillimeter accuracy
-between all locations. However, the Vincenty algorithm cannot accurately
-calculate distances for near-antipodal points. In such cases, {opt geodist} will replace the
-distance with the {help missing:extended missing value} {cmd:.a}. See 
-{browse "http://geographiclib.sourceforge.net/cgi-bin/Geod"} 
-for a calculator that does not have this limitation.
-
-{pstd}
-Obviously, most real-life data points will not be located on the reference
-ellipsoid. Since the reference ellipsoid is designed to approximate mean sea
-level (or more precisely the geoid), expect distances at sea level to be
-particularly accurate. However, when computing distances on Lake
-Titicaca, at 3.2km above the reference ellipsoid, expect an error in
-proportion to the increase in radius of the earth (6374.2/6371) or
-0.05%.
-
-{pstd}
-Most longitude and latitude datasets are based on the WGS 1984 datum, which is
-what GPS devices and Google Earth/Map use. There are other datums and it is
-important to understand that distances will not be accurate if points are 
-not based on the same datum. For example, here is a
-{browse "http://robertpicard.com/stata/_MG_2342.jpg":photo of my GPS} lying on
-the Prime Meridian line at the Royal Observatory in Greenwich, England. It
-is part of the OSGB 1936 datum and is about 100 meters to the west
-of the Reference Meridian of WGS 1984 ({stata geodist 51.47803 -0.00145 51.47803 0}).
-
-{pstd}
-When a sphere is used to approximate the shape of the earth, {cmd:geodist}
-computes great-circle distances using two formulas that are equivalent and
-mathematically exact. However, each is susceptible to computational errors. As
-Sinnott (1984) pointed out, the cos function is incapable of distinguishing
-small angles. This makes the spherical law of cosines formula unsuitable for
-distances between points that are near each other. On the other hand, the
-haversine formula is incapable of distinguishing small differences at angles
-around sin(pi/2), which makes it unsuitable for near-antipodal points.
-{cmd:geodist} makes the best of both worlds by using the haversine formula for
-almost all calculations and the law of cosines formula for near-antipodal
-points. This ensures submillimeter accuracy for all spherical distances computed
-by {cmd:geodist}.
-
-
+{marker examples}{...}
 {title:Examples}
 
 {pstd}
-Compute the distance between Ann Arbor, MI and Montreal, QC. The
-third line computes the distance on an ellipsoid with all flattening
-removed. Obviously, these are significantly different from driving
-distances, in this case 981km according to 
-{browse "http://maps.google.com/maps?f=d&source=s_d&saddr=45.545448+-73.639075&daddr=42.270873+-83.726329&hl=en&geocode=&mra=ls&sll=42.270953,-83.726218&sspn=0.010837,0.007682&g=42.270873+-83.726329&ie=UTF8&t=h&z=6":Google Maps}.
+You can use {cmd:geodist} to calculate the distance between two points
+if you know the latitude/longitude for each.
+For instance, the Michigan Stadium is located at 
+{browse "https://www.google.com/maps/search/?api=1&query=42.265837,-83.748696":42.265837,-83.748696}
+and the North Terminal of the Detroit Metro Airport is located at
+{browse "https://www.google.com/maps/search/?api=1&query=42.207667,-83.356022":42.207667,-83.356022}.
+The following example calculates the distance in miles between these two
+points. The first command calculates the distance on an ellipsoid and the
+second on a sphere.
 
-        {cmd:.} {stata geodist 42.270873 -83.726329 45.545448 -73.639075}
-        {cmd:.} {stata geodist 42.270873 -83.726329 45.545448 -73.639075, sphere}
-        {cmd:.} {stata geodist 42.270873 -83.726329 45.545448 -73.639075, ellipsoid(6371000,1e20)}
-        
-{pstd}
-With near anti-podal points, Vincenty's solution for distances along an
-ellipsoid will fail. Note that increasing the number of iterations may
-not make {cmd:geodist} converge:
-
-        {cmd:.} {stata geodist 0 0 0 179.3}
-        {cmd:.} {stata geodist 0 0 0 179.4}
-        {cmd:.} {stata geodist 0 0 0 179.4, maxiter(1000)}
-        
-{pstd}
-You can use the {browse "http://geographiclib.sourceforge.net/cgi-bin/Geod":Karney (2011)} 
-calculator if {cmd:geodist} fails to return a distance.
+{space 8}{hline 27} {it:example do-file content} {hline 27}
+{cmd}{...}
+{* example_start - example1}{...}
+	geodist 42.265837 -83.748696 42.207667 -83.356022, miles
+	geodist 42.265837 -83.748696 42.207667 -83.356022, miles sphere
+{* example_end}{...}
+{txt}{...}
+{space 8}{hline 80}
+{space 8}{it:({stata geodist_run example1 using geodist.hlp:click to run})}
 
 {pstd}
-When computing spherical distances, the average earth radius is just that, and
-may not be the best to approximate ellipsoidal distances depending on the
-location of the points on earth. For example, at the poles, the radius of a
-sphere that matches the curvature of the earth is 6399.6km.
-
-        {cmd:.} {stata geodist 88 0 88 180}
-        {cmd:.} {stata geodist 88 0 88 180, radius(6399.6)}
-        {cmd:.} {stata geodist 88 0 88 180, sphere}
+Note that these are "as the crow flies" distances.
+Compare these results with
+{browse "https://www.google.com/maps/dir/?api=1&origin=42.265837,-83.748696&destination=42.207667,-83.356022&travelmode=driving":Google Maps driving directions}.
 
 {pstd}
-Let's illustrate the same point for locations 
-distributed evenly over the State of Colorado. The
-northeast corner is at 41,-102 and the southwest corner is at 37,-109.
+If you have a dataset of points, you can calculate the distance between each
+point and a fixed location. 
+In the following example, we create a dataset with the location of
+four parks near the University of Michigan and then calculate the distance in kilometers
+(the default) between each park and the Michigan Stadium.
+Note that Stata's {hi:float} data type holds at most 7 digits of accuracy
+so coordinates should always be stored as {hi:double}s.
 
-        {cmd:.} {stata clear}
-        {cmd:.} {stata set obs 100}
-        {cmd:.} {stata set seed 1234}
-        {cmd:.} {stata gen double lat1 = 37 + (41 - 37) * uniform()}
-        {cmd:.} {stata gen double lon1 = -109 + (109 - 102) * uniform()}
-        {cmd:.} {stata gen double lat2 = 37 + (41 - 37) * uniform()}
-        {cmd:.} {stata gen double lon2 =-109 + (109 - 102) * uniform()}
-        {cmd:.} {stata sum lat1 lon1 lat2 lon2}
+{space 8}{hline 27} {it:example do-file content} {hline 27}
+{cmd}{...}
+{* example_start - example2}{...}
+	version 9.2
 
-        {cmd:.} {stata geodist lat1 lon1 lat2 lon2, gen(v)}
-        {cmd:.} {stata geodist lat1 lon1 lat2 lon2, gen(r6371) sphere}
-        {cmd:.} {stata geodist lat1 lon1 lat2 lon2, gen(r6377) radius(6377)}
-        {cmd:.} {stata gen diff1 = abs(r6371-v)}
-        {cmd:.} {stata gen pcerr1 = 100 * diff1 / v}
-        {cmd:.} {stata gen diff2 = abs(r6377-v)}
-        {cmd:.} {stata gen pcerr2 = 100 * diff2 / v}
-        {cmd:.} {stata sum}
+	clear
+	input long parkid str17 parkname double(lat lon)
+	1 "Gallup Park"       42.273170 -83.694174
+	2 "Argo Park"         42.291516 -83.744604
+	3 "Hudson Mills"      42.382194 -83.911197
+	4 "Nichols Arboretum" 42.281123 -83.725575
+	end
+	save "geodist_example.dta"
+
+	geodist 42.265837 -83.748696 lat lon, gen(d)
+	list
+{* erase "geodist_example.dta"}{...}
+{* example_end}{...}
+{txt}{...}
+{space 8}{hline 80}
+{space 8}{it:({stata geodist_run example2 using geodist.hlp:click to run})}
 
 {pstd}
-Any combination of variables and single lat/lon will work
+If you have two datasets of points and want to calculate the distance between
+each pair of points, you will have to find a way to combine the observations.
+Usually, this will involve using {help cross} or {help joinby} to form
+all pairwise combinations of points.
+You can use the same technique if you have a single dataset of points and
+want to calculate the distance to every other point.
+For example, here is how to find the nearest neighbor park:
 
-        {cmd:.} {stata geodist lat1 lon1 41 -102,  gen(v2)}
-        {cmd:.} {stata geodist lat1 lon1 lat2 -102, gen(v3)}
-        {cmd:.} {stata geodist lat1 -109 lat2 -102, gen(v4)}
+{space 8}{hline 27} {it:example do-file content} {hline 27}
+{cmd}{...}
+{* example_start - example3}{...}
+	version 9.2
+
+	clear
+	input long parkid str17 parkname double(lat lon)
+	1 "Gallup Park"       42.273170 -83.694174
+	2 "Argo Park"         42.291516 -83.744604
+	3 "Hudson Mills"      42.382194 -83.911197
+	4 "Nichols Arboretum" 42.281123 -83.725575
+	end
+	save "geodist_example.dta"
+
+	* rename all variables and form all pairwise combinations
+	rename parkid parkid0
+	rename parkname parkname0
+	rename lat lat0
+	rename lon lon0
+	cross using "geodist_example.dta"
+
+	* calculate distances and order by distance
+	geodist lat0 lon0 lat lon, gen(d)
+	sort parkid0 d parkid
+	list, sepby(parkid0)
+	
+	* drop distance to self and keep the nearest neighbor
+	drop if parkid0 == parkid
+	by parkid0: keep if _n == 1
+	list
+{* erase "geodist_example.dta"}{...}
+{* example_end}{...}
+{txt}{...}
+{space 8}{hline 80}
+{space 8}{it:({stata geodist_run example3 using geodist.hlp:click to run})}
 
 {pstd}
-If you want to compute the nearest neighbors, you can use {help cross} to
-create all pairwise combinations of points and then {help sort}.
-
-        {cmd:.} {stata clear}
-        {cmd:.} {stata set obs 100}
-        {cmd:.} {stata gen id2 = 2000 + _n}
-        {cmd:.} {stata gen double lat2 = 37 + (41 - 37) * uniform()}
-        {cmd:.} {stata gen double lon2 =-109 + (109 - 102) * uniform()}
-        {cmd:.} {stata tempfile f}
-        {cmd:.} {stata save "`f'"}
-        
-        {cmd:.} {stata clear}
-        {cmd:.} {stata set obs 100}
-        {cmd:.} {stata gen id1 = 1000 + _n}
-        {cmd:.} {stata gen double lat1 = 37 + (41 - 37) * uniform()}
-        {cmd:.} {stata gen double lon1 = -109 + (109 - 102) * uniform()}
-        {cmd:.} {stata cross using "`f'"}
-        {cmd:.} {stata geodist lat1 lon1 lat2 lon2, gen(d)}
-        {cmd:.} {stata sort id1 d id2}
-        {cmd:.} {stata "by id1: keep if _n == 1"}
-        
-{pstd}
-Alternatively, you can use {stata ssc des geonear:geonear}, available from SSC,
-to find the nearest neighbors:
-
-        {cmd:.} {stata geonear id1 lat1 lon1 using "`f'", n(id2 lat2 lon2) ell}
+The above works well for small datasets but you should use 
+{stata ssc des geonear:geonear} (from SSC) if you have more than
+a few thousand observations.
 
 
 {title:Saved results}
@@ -259,52 +241,60 @@ to find the nearest neighbors:
 
 {synoptset 15 tabbed}{...}
 {p2col 5 15 19 2: Scalars}{p_end}
-{synopt:{cmd:r(iterations)}}number of iterations for ellipsoidal distances{p_end}
+{synopt:{cmd:r(iterations)}}number of iterations (only for ellipsoidal distances){p_end}
 {synopt:{cmd:r(distance)}}distance{p_end}
 {p2colreset}{...}
 
 
-{title:References and acknowledgements}
+{title:References}
 
 {pstd}
-Many thanks to Chris Veness for the best web pages on the subject:
-
-        {browse "http://www.movable-type.co.uk/scripts/latlong-vincenty.html"}
-        {browse "http://www.movable-type.co.uk/scripts/latlong.html"}
-        
-{pstd}
-The definition of the World Geodetic System 1984 is available from
-
-        {browse "http://earth-info.nga.mil/GandG/publications/tr8350.2/wgs84fin.pdf"}
-   
-{pstd}
-See Appendix A.1 for a list of reference ellipsoids. 
+Sinnott, R. W., "Virtues of the Haversine", Sky and Telescope 68 (2), 159 (1984).
 
 {pstd}
-C. F. F. Karney, Geodesics on an ellipsoid of revolution, Feb. 2011; 
-preprint {browse "http://arxiv.org/abs/1102.1215":arxiv:1102.1215.}
+Veness, Chris,
+"Vincenty solutions of geodesics on the ellipsoid",
+{browse "http://www.movable-type.co.uk/scripts/latlong-vincenty.html"}
 
 {pstd}
-R. W. Sinnott, "Virtues of the Haversine", Sky and Telescope 68 (2), 159 (1984).
-Thanks to the University of Michigan's Shapiro Science Library.
-
-{pstd}
-C. M. Thomas and W. E. Featherstone, 
-Validation of Vincenty's Formulas for the Geodesic Using a New 
-Fourth-Order Extension of Kivioja's Formula, J. Surv. Engrg. Volume 131, 
-Issue 1, pp. 20-26 (February 2005). Available from:
-
-        {browse "http://www.cage.curtin.edu.au/~will/thomas-featherstone.pdf"}
+Veness, Chris,
+"Calculate distance, bearing and more between Latitude/Longitude points",
+{browse "http://www.movable-type.co.uk/scripts/latlong.html"}
 
 {pstd}
 Vincenty, T. (1975) Direct and inverse solutions of geodesics on the ellipsoid 
 with application of nested equations, Survey Review 22(176): 88-93.
-Available from:
-
-        {browse "http://www.ngs.noaa.gov/PUBS_LIB/inverse.pdf"}
+{browse "http://www.ngs.noaa.gov/PUBS_LIB/inverse.pdf"}
 
 
 {title:Author}
 
-{pstd}Robert Picard{p_end}
-{pstd}picard@netbox.com{p_end}
+{pstd}
+Robert Picard <robertpicard@gmail.com>
+
+
+{marker alsosee}{...}
+{title:Also see}
+
+{psee}
+Stata:  
+{help cross}, 
+{help joinby}
+{p_end}
+
+{psee}
+Stata 15 or higher:  
+{help sp}, 
+{help spdistance}
+{p_end}
+
+{psee}
+SSC:  
+{stata "ssc desc geonear":geonear},
+{stata "ssc desc runby":runby},
+{stata "ssc desc shp2dta":shp2dta},
+{stata "ssc desc geo2xy":geo2xy},
+{stata "ssc desc geoinpoly":geoinpoly}, 
+{stata "ssc desc mergepoly":mergepoly},
+{stata "ssc desc geocircles":geocircles}
+{p_end}

@@ -1,7 +1,6 @@
 {smcl}
 {* 08aug2016}{...}
-{hi:help lorenz}{...}
-{right:also see: {browse "http://ideas.repec.org/p/bss/wpaper/15.html"}}
+{hi:help lorenz}
 {hline}
 
 {title:Title}
@@ -225,7 +224,7 @@
     totals) or Lorenz/concentration curves that are normalized to a specified
     total can be computed. Variance estimation for complex samples is
     supported; for methodological details see 
-    {browse "http://ideas.repec.org/p/bss/wpaper/15.html":Jann (2016)}.
+    {help lorenz##jann2016:Jann (2016)}.
 
 {pstd}
     Given the results form {cmd:lorenz estimate} for several outcome variables
@@ -672,8 +671,7 @@
         . {stata lorenz graph, yline(0)}
 
 {pstd}
-    For further examples see 
-    {browse "http://ideas.repec.org/p/bss/wpaper/15.html":Jann (2016)}.
+    For further examples see {help lorenz##jann2016:Jann (2016)}.
 
 
 {title:Stored results}
@@ -747,10 +745,10 @@
     Inequality from Survey Data: An Application of the Estimating Equations
     Approach. Survey Methodology 21(2): 137-145.
 
+{marker jann2016}{...}
 {phang}
-    Jann, B. (2016). Estimating Lorenz and concentration curves in Stata. 
-    University of Bern Social Sciences Working Papers No. 15. Available from 
-    {browse "http://ideas.repec.org/p/bss/wpaper/15.html"}.
+    Jann, B. (2016). {browse "https://www.stata-journal.com/article.html?article=st0457":Estimating Lorenz and concentration curves}. The
+    Stata Journal 16(4):837–866. ({browse "http://ideas.repec.org/p/bss/wpaper/15.html":working paper})
 
 {phang}
     Kovacevic, M. S., D. A. Binder (1997). Variance Estimation for 

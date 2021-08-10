@@ -10,6 +10,7 @@ d contingency tables and  converges to maximum likelihood estimates
 d even when the likelihood is badly behaved. 
 d
 d KW: haplotype analysis
+d KW: model selection
 d
 d Requires: Stata version 8.0
 d
@@ -17,7 +18,7 @@ d
 d Author: Adrian Mander 
 d Support: email Adrian.Mander@@mrc-hnr.cam.ac.uk
 d
-d Distribution-Date: 20040407
+d Distribution-Date: 20200618
 d
 f swblock.ado
 f swblock.hlp

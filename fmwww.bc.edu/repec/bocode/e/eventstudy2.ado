@@ -1,27 +1,9 @@
 *eventstudy2.ado - performs state-of-the art event studies with raw returns or (multi)factor models and calculates various test statistics in Mata
-*! version 2.0.1 T Kaspereit October2016
-
-* Changes compared to previous version (2.0.0)	
-	* Removal of renaming of variable bug when BHAR is used
-	* Correct explanation of the option "return" in the help file 
-	* Option IDMARket need to specified in either the event file or the security returns file. 
-
-* Changes compared to previous version (1.1.0)
-	* eventstudy2 now allows to use parallel computing capabilities based on the user-written command "parallel" by George Vega Yon and Brian Quistoff (https://ideas.repec.org/c/boc/bocode/s457527.html)
-	* Removal of errors that occured when calculating out-of-sample forecast errors when the (G)ARCH option was selected
-	
-* Changes compared to previous version (1.0.0):
-	* All input returns are now interpreted as trade-to-trade return. The algorithm to handle missing returns is now implemented correctly and strictly follow Maynes and Rumsey (1993, pp. 148-149).
-	* Missing returns are no longer identified on the basis of missing previous prices but only missing previous returns, which is consistent with the assumption that all input return are calculated on a trade-top-trade basis
-	* If the model is BHAR or BHAR_raw, missing returns are considered zero returns (option "fill" is activated automatically)
-	* The dateline is now defined based on the availability of factors returns if a benchmark model (MA, FM, or BHAR) is used
-	* eventstudy2 now allows 15 factors in the FM model (previously: 5)
-	* several new options have been introduced that allow the estimation of (G)ARCH models when the model FM is used
-	* A programming bug that cause missing returns in constant mean return model (COMEAN) was fixed
-
-* Notes: Input (i.e. the event list that has to be hold in memory when starting eventstudy2) has two variables: security identifier and event date
-* The using file contains the returns of the securities in the event study (event firms). Security identifier and event date have to be the same denomination as in the event list, which is hold in memory.
-* The return file also contains the market identifier IDMAR, which must have the same denomination in the return file and the market return file, MARKETFILE
+*! version 3.1 T Kaspereit Apr2020
+* Changes relative to version 3.0:
+* Graphing of CAAR now assumes that missing abnormal returns are set to zero (corresponds to "fill" option")
+* Average abnormal return output now includes only returns from non-thinly traded firms, i.e., only those returns which are not confounded by cumulated unobservable returns on the prior day. Thus, AAR[0] is now equivalent to CAAR[0,0], and AAR[1] is now equivalent to CAAR[1,1], etc.
+* The "aarfile" output file does no longer contain CAARE and corresponding test statistics.
 
 * Models in this version of eventstudy2:
 	* No specification selected or "RAW"	-> 	Raw returns
@@ -42,19 +24,30 @@ quietly{
 
 	preserve
 
-	syntax varlist(min=2 max=2) using [if] [in], RETurns(str asis) [DIAGnosticsfile(str asis) GRAPHfile(str asis) AARfile(str asis) CARfile(str asis) ARfile(str asis) CROSSfile(str asis) REPLACE MODel(str asis) MARKETFILE(str asis) MARketreturns(str asis) IDMARket(str asis) FACTOR1(str asis) FACTOR2(str asis) FACTOR3(str asis) FACTOR4(str asis) FACTOR5(str asis) FACTOR6(str asis) FACTOR7(str asis) FACTOR8(str asis) FACTOR9(str asis) FACTOR10(str asis) FACTOR11(str asis) RISKfreerate(str asis) Prices(str asis) TRADINGvolume(str asis) ///
-		EVWLB(int -20) EVWUB(int 20) ESWLB(int -270) ESWUB(int -21) MINEVW(int 1) MINESW(int 30) /// 
-		CAR1LB(int -20) CAR1UB(int 20) CAR2LB(int -20) CAR2UB(int 20) CAR3LB(int -20) CAR3UB(int 20) CAR4LB(int -20) CAR4UB(int 20) ///
-		CAR5LB(int -20) CAR5UB(int 20) CAR6LB(int -20) CAR6UB(int 20) CAR7LB(int -20) CAR7UB(int 20) CAR8LB(int -20) CAR8UB(int 20) CAR9LB(int -20) CAR9UB(int 20) CAR10LB(int -20) CAR10UB(int 20) ///
-		LOGreturns THIN(real 0.00) FILL NOKOLari DELweekend DATELINEthreshold(real 0.00) SHIFT(int 3) GARCH ARCHOption(str asis) GARCHOption(str asis) ARCHIterate(int 20) ///
-		PARAllel PCLUSters(int 2) PROCessors(int 0) PARAPath(str asis) ARFILLEStimation ARFILLEVent SAVERAM]
+	syntax varlist(min=2 max=2) using [if] [in], RETurns(str asis) [DIAGnosticsfile(str asis) GRAPHfile(str asis) AARfile(str asis) CARfile(str asis) ARfile(str asis) CROSSfile(str asis) REPLACE MODel(str asis) MARKETFILE(str asis) MARketreturns(str asis) IDMARket(str asis) FACTOR1(str asis) FACTOR2(str asis) FACTOR3(str asis) FACTOR4(str asis) FACTOR5(str asis) FACTOR6(str asis) FACTOR7(str asis) FACTOR8(str asis) FACTOR9(str asis) FACTOR10(str asis) RISKfreerate(str asis) Prices(str asis) TRADINGvolume(str asis) EVWLB(int -20) EVWUB(int 20) ESWLB(int -270) ESWUB(int -21) MINEVW(int 1) MINESW(int 30) CAR1LB(int -20) CAR1UB(int 20) CAR2LB(int -20) CAR2UB(int 20) CAR3LB(int -20) CAR3UB(int 20) CAR4LB(int -20) CAR4UB(int 20) CAR5LB(int -20) CAR5UB(int 20) CAR6LB(int -20) CAR6UB(int 20) CAR7LB(int -20) CAR7UB(int 20) CAR8LB(int -20) CAR8UB(int 20) CAR9LB(int -20) CAR9UB(int 20) CAR10LB(int -20) CAR10UB(int 20) LOGreturns THIN(real 0.00) FILL NOKOLari DELweekend DATELINEthreshold(real 0.00) SHIFT(int 3) GARCH ARCHOption(str asis) GARCHOption(str asis) ARCHIterate(int 20) PARAllel PCLUSters(int 2) PROCessors(int 0) PARAPath(str asis) ARFILLEStimation ARFILLEVent SAVERAM CROSSONLY]
 		
+		
+	* Ensuring that all user-written commands are installed:
+	
+	capture mata: mm_meancolvar(1)
+		if _rc == 3499 {
+			di as error "Please install the user-written program moremata before running eventstudy2 (type > ssc install moremata < in the command line)"
+			exit = 3499
+		}
+	
+	foreach p in nearmrg distinct _gprod rmse parallel{
+		capture `p'
+			if _rc == 199 {
+				di as error "Please install the user-written program `p' before running eventstudy2 (type > ssc install `p' < in the command line)"
+				exit = 199
+			}
+	}
+	
+	
 	if "`parallel'" == "parallel"{
 	
-		capture: ssc install parallel
-	
 		parallel setclusters `pclusters'
-	
+
 		if "`parapath'" != ""{
 			capture: confirm file "`parapath'/eventstudy2_parallel.do"
 			
@@ -67,7 +60,7 @@ quietly{
 				capture: confirm file "`parapath'/eventstudy2_parallel.do"
 				
 				if _rc != 0{
-					di as error "WARNING: eventstudy2_parallel.do not found. eventstudy2 has switched to non-parallel computing mode. The file eventstudy2_parallel.do can be obtained by typing 'net get eventstudy2.pkg'."
+					di as error "WARNING: eventstudy2_parallel.do not found. eventstudy2 has switched to non-parallel computing mode. The file eventstudy2_parallel.do can be obtained by typing > net get eventstudy2 <."
 					local parallel = ""		
 				}
 			}
@@ -85,7 +78,7 @@ quietly{
 				capture: confirm file "`parapath'/eventstudy2_parallel.do"
 				
 				if _rc != 0{
-					di as error "WARNING: eventstudy2_parallel.do not found. eventstudy2 has switched to non-parallel computing mode. The file eventstudy2_parallel.do can be obtained by typing 'net get eventstudy2.pkg'."
+					di as error "WARNING: eventstudy2_parallel.do not found. eventstudy2 has switched to non-parallel computing mode. The file eventstudy2_parallel.do can be obtained by typing > net get eventstudy2 <."
 					local parallel = ""		
 				}
 			}
@@ -95,21 +88,15 @@ quietly{
 	if "`archoption'" == ""{
 		local archoption "1"
 	}
-	if "`grchoption'" == ""{
+	if "`garchoption'" == ""{
 		local garchoption "1"
 	}
-	
-	capture: ssc install nearmrg
-	capture: ssc install distinct
-	capture: ssc install _gprod
-	capture: ssc install moremata	
-	capture: ssc install rmse
 	
 	foreach v in NoDates dow dateline event_date original_event_date exp_id IPO DEL set eventcount group datenum target td dif thinvar event_window est_window factor_avail event_windowWithMKT count_event_obsWithMKT event_windowWithSecAndMKT count_event_obsWithSecAndMKT event_windowWithSec count_event_obsWithSec est_windowWithMKT est_windowWithSecAndMKT count_est_obsWithSecAndMKT est_windowWithSec count_est_obsWithSec count_est_obsWithMKT nvals predicted_return _id STDF zero p STDFtemp Acc N retp1 MKTp1 difp tstr acc cum_periods n cum_`returns' cum_intercept RMSE STDP t_arch last_AR last_AR_min first_cum_periods first_cum_periods_min{
 		tempvar `v'
 	}
 	
-	foreach v in `marketreturns' `factor1' `factor2' `factor3' `factor4' `factor5' `factor6' `factor7' `factor8' `factor9' `factor10' `factor11' `factor12' `factor13' `factor14' `factor15' `riskfreerate'{
+	foreach v in `marketreturns' `factor1' `factor2' `factor3' `factor4' `factor5' `factor6' `factor7' `factor8' `factor9' `factor10' `riskfreerate'{
 		tempvar cum_`v'
 	}
 	
@@ -155,11 +142,11 @@ quietly{
 
 	scalar `df' = 0
 	if "`model'" == "FM" {
-		foreach v in `factor1' `factor2' `factor3' `factor4' `factor5' `factor6' `factor7' `factor8' `factor9' `factor10' `factor11' `factor12' `factor13' `factor14' `factor15' {
+		foreach v in `factor1' `factor2' `factor3' `factor4' `factor5' `factor6' `factor7' `factor8' `factor9' `factor10' {
 			scalar `df' = `df' + 1
 		}
-		if `eswub' - `eswlb' < `df' + 2 {
-			di as error "Estimation window is chosen to short to calculate market or factor model."
+		if `eswub' - `eswlb' < (`df' + 2) {
+			di as error "Estimation window is chosen too short to calculate market or factor model."
 			exit
 		}
 	}
@@ -239,7 +226,6 @@ quietly{
 		save "`__Dateline'"
 		
 		
-	
 	noisily: display "...succeeded"
 
 	***** Preparation of the event list *****
@@ -462,7 +448,7 @@ quietly{
 	gen int `cum_periods' = 1
 		by `1': replace `cum_periods' = `cum_periods' + `cum_periods'[_n-1] if (`returns' == . | `thinvar' == 1) & `returns'[_n-1] == .
 		
-	if "`logreturns'" != "logreturns" & ("`model'" == "RAW" | "`model'" == "COMEAN") {
+	if "`logreturns'" != "logreturns" & ("`model'" == "RAW" | "`model'" == "COMEAN" | ) {
 		replace `returns' = ln(`returns'+1)
 	}
 
@@ -478,7 +464,7 @@ quietly{
 		merge m:1 `2' `idmarket' using "`__Market'", keep(1 3) nogen keepus(`marketreturns' `factor1' `factor2' `factor3' `factor4' `factor5' `factor6' `factor7' `factor8' `factor9' `factor10' `factor11' `factor12' `factor13' `factor14' `factor15' `riskfreerate') 
 		
 		if "`logreturns'" != "logreturns" & ("`model'" == "MA"  | "`model'" == "FM") {
-			foreach v in `marketreturns' `factor1' `factor2' `factor3' `factor4' `factor5' `factor6' `factor7' `factor8' `factor9' `factor10' `factor11' `factor12' `factor13' `factor14' `factor15' `riskfreerate'{
+			foreach v in `returns' `marketreturns' `factor1' `factor2' `factor3' `factor4' `factor5' `factor6' `factor7' `factor8' `factor9' `factor10' `factor11' `factor12' `factor13' `factor14' `factor15' `riskfreerate'{
 				replace `v' = ln(`v'+1)
 			}
 		}
@@ -521,7 +507,11 @@ quietly{
 
 	use "`__Eventdates.dta'", clear
 		bysort `1': gen `set'=_n
-		sort `1' `set'
+		capture sort `1' `set'
+		if _rc == 111{
+			di as error "Please ensure that at least some of your security returns and factor returns cover the event period; probably your security return data and/or market return data spans a time period that is different from the time period of your events."
+			exit = 111
+		}
 		capture: tostring `idmarket', replace
 		tempfile __Eventdates_set
 		save "`__Eventdates_set'", replace 
@@ -699,6 +689,10 @@ quietly{
 	
 	noisily: display "Calculating abnormal returns..."
 	
+	if "`model'" == "FM"{
+		gen _BETA = .
+	}
+	
 	gen `predicted_return' = .
 
 	egen `_id' = group(`1' `set') 
@@ -748,6 +742,14 @@ quietly{
 		if "`model'" != "BHAR" & "`model'" != "BHAR_raw" {
 			gen `zero' = 0
 			scalar `j' = 1
+			
+			
+			if "`model'" == "MA" {
+					
+				replace `cum_`returns'' = `cum_`returns'' - `cum_`marketreturns''
+				replace `returns' = `returns' - `marketreturns'
+			}
+								
 			while `j' <= `O' { 
 				ereturn clear
 		
@@ -756,14 +758,19 @@ quietly{
 				}						
 				if "`model'" == "COMEAN" {											
 					capture: reg `cum_`returns'' `cum_intercept' `zero'  if `_id' == `j' & `est_window' == 1, nocons
-					}
-				if "`model'" == "MA" {
-					gen `MAreturns' = `cum_`returns'' - `cum_`marketreturns''
-					capture: reg `MAreturns' `zero'  if `_id' == `j' & `est_window' == 1, nocons
-					drop `MAreturns'
 				}
+
+				if "`model'" == "MA" {	
+					capture: reg `cum_`returns'' `zero'  if `_id' == `j' & `est_window' == 1, nocons
+				}
+				
 				if "`model'" == "FM" & "`garch'" != "garch"{
 					capture: reg `cum_`returns'' `cum_intercept' `cum_`marketreturns'' `cum_`factor1'' `cum_`factor2'' `cum_`factor3'' `cum_`factor4'' `cum_`factor5'' `cum_`factor6'' `cum_`factor7'' `cum_`factor8'' `cum_`factor9'' `cum_`factor10'' `cum_`factor11'' `cum_`factor12'' `cum_`factor13'' `cum_`factor14'' `cum_`factor15'' if `_id' == `j' & `est_window' == 1, nocons
+				
+					if _rc == 0{
+						capture: replace _BETA = _b[`cum_`marketreturns''] if `_id' == `j'
+					}
+				
 				}
 				
 				if "`model'" == "FM" & "`garch'" == "garch"{
@@ -787,7 +794,7 @@ quietly{
 				replace `cum_intercept' = `cum_intercept' * sqrt(`cum_periods')
 				
 				tsset `_id' `2'
-				capture: predict `p' if `_id' ==`j'
+				capture: predict `p' if `_id' ==`j'			
 				capture: replace `predicted_return' = `p' if `_id'==`j' & e(N) 
 				
 				if "`garch'" != "garch"{
@@ -798,6 +805,7 @@ quietly{
 					foreach v in returns marketreturns factor1 factor2 factor3 factor4 factor5 factor6 factor7 factor8 factor9 factor10 factor11 factor12 factor13 factor14 factor15{
 						capture: replace `cum_``v''' = save`cum_``v''' 
 					}
+					
 					capture: replace `cum_intercept' = save`cum_intercept'
 					drop save*
 				}
@@ -821,7 +829,7 @@ quietly{
 				noisily: display `j' " out of " `O' " events completed."
 				scalar `j' = `j' + 1	
 			}
-			
+				
 			if "`garch'" == "garch"{
 				clear
 				local `U' = `O'
@@ -833,6 +841,8 @@ quietly{
 				}
 			} 
 		}
+		
+
 
 		if "`model'" == "BHAR" {
 			replace `predicted_return' = `marketreturns'
@@ -842,7 +852,7 @@ quietly{
 			replace `predicted_return' = 0
 		}
 
-		gen AR = `returns' - `predicted_return'
+		gen AR = `returns' - `predicted_return'		
 		rename `original_event_date' original_event_date
 	}
 	
@@ -850,12 +860,13 @@ quietly{
 	if "`arfillevent'" == "arfillevent"{
 		replace AR = 0 if AR == . & `event_window' == 1 
 	}
+	
 	if "`arfillestimation'" == "arfillestimation"{
 		replace AR = 0 if AR == . & `est_window' == 1
 	}
 	
 	sort `_id' `2'
-	
+
 	tempfile preserve
 	save `preserve', replace
 	capture: drop __*
@@ -864,8 +875,8 @@ quietly{
 
 	if "`model'" != "BHAR" & "`model'" != "BHAR_raw" {
 		forvalues i = 1/10 {
-			by `_id': egen CAR`i' = sum(AR) if `dif' >= `car`i'LB' & `dif' <= `car`i'UB' 
-			
+			by `_id': egen CAR`i' = sum(AR) if `dif' >= `car`i'LB' & `dif' <= `car`i'UB' 		
+		
 			if "`arfillevent'" != "arfillevent" {
 				gen `last_AR' = AR if `dif' == `car`i'UB'
 				by `_id': egen `last_AR_min' = min(`last_AR')
@@ -874,7 +885,7 @@ quietly{
 				gen `first_cum_periods' = `cum_periods' if `dif' == `car`i'LB'
 				by `_id': egen `first_cum_periods_min' = min(`first_cum_periods')
 				by `_id': replace `first_cum_periods' = `first_cum_periods_min'
-							
+					
 				replace CAR`i' = . if `last_AR' == . | `first_cum_periods' > 1
 				
 				drop `last_AR_min' `last_AR' `first_cum_periods' `first_cum_periods_min'
@@ -884,6 +895,7 @@ quietly{
 			by `_id': egen `CAR`i'temp' = min(CAR`i') 
 			by `_id': replace CAR`i' = `CAR`i'temp' 
 			drop `CAR`i'temp' 
+
 		}  
 	} 
 
@@ -954,6 +966,12 @@ quietly{
 	}
 	
 	save `crossfile', `replace'
+	
+	if "`crossonly'" == "crossonly"{
+		exit, clear
+	}
+	
+	
 	use `preserve2', clear
 	
 	noisily: display "...succeeded"
@@ -1009,6 +1027,19 @@ quietly{
 		
 			keep if `dif' >= `car`cari'LB' & `dif' <= `car`cari'UB'
 			
+			gen AR_for_GRAPH = AR
+			replace AR_for_GRAPH = 0 if AR_for_GRAPH == .
+			
+			tempfile preserve2
+			save `preserve2', replace
+			
+					gen `difp' = `dif' - `evwlb'
+					keep `_id' AR_for_GRAPH `difp'
+					reshape wide AR_for_GRAPH, i(`_id') j(`difp')
+					drop `_id'
+					mata ARE_for_GRAPH = st_data(.,.)'
+			use `preserve2', clear
+			
 			if `cari' != 0 & "`arfillevent'" != "arfillevent" {
 				gen `last_AR' = AR if `dif' == `car`cari'UB'
 				by `_id': egen `last_AR_min' = min(`last_AR')
@@ -1019,10 +1050,12 @@ quietly{
 				by `_id': replace `first_cum_periods' = `first_cum_periods_min'
 							
 				replace AR = . if `last_AR' == . | `first_cum_periods' > 1
-				
 				drop `last_AR_min' `last_AR' `first_cum_periods' `first_cum_periods_min'
 			}
-			
+			else if `cari' == 0 & "`arfillevent'" != "arfillevent"{
+				replace AR = . if `cum_periods' > 1
+			}
+	
 			gen `difp' = `dif' - `evwlb'
 			keep `_id' AR `difp'
 			reshape wide AR, i(`_id') j(`difp')
@@ -1055,17 +1088,18 @@ quietly{
 				mata: MRE = ARE :- ARE
 			}
 			
-			mata: TESTSTATS = TESTSTATS(df,AR,ARE,MR,MRE,KolariADJ,STDFE,NOMARKET)
+			mata: TESTSTATS = TESTSTATS(df,AR,ARE,ARE_for_GRAPH,MR,MRE,KolariADJ,STDFE,NOMARKET)
 			
 			clear
 			local obs = -`car`cari'LB' + `car`cari'UB' + 1
 			set obs `obs'
 			
-			foreach v in "NoFirms" "AARE" "NAAREt_test" "PAAREt_test" "NAARECDA" "PAARECDA" "NAAREPatell" "PAAREPatell" "NAAREBoehmer" "PAAREBoehmer" "NAAREKolari" "PAAREKolari" "NAARECorrado" "PAARECorrado" "NAAREZivney" "PAAREZivney" "NAAREGenSign" "PAAREGenSign"    "CAARE" "NCAAREt_test" "PCAAREt_test" "NCAARECDA" "PCAARECDA" "NCAAREPatell" "PCAAREPatell" "NCAAREBoehmer" "PCAAREBoehmer" "NCAAREKolari" "PCAAREKolari" "NCAARECorrado_Cowan" "PCAARECorrado_Cowan" "NCAAREZivney_Cowan" "PCAAREZivney_Cowan" "NCAAREGenSign" "PCAAREGenSign" {
+			foreach v in "NoFirms" "AARE" "NAAREt_test" "PAAREt_test" "NAARECDA" "PAARECDA" "NAAREPatell" "PAAREPatell" "NAAREPatellADJ" "PAAREPatellADJ" "NAAREBoehmer" "PAAREBoehmer" "NAAREKolari" "PAAREKolari" "NAARECorrado" "PAARECorrado" "NAAREZivney" "PAAREZivney" "NAAREGenSign" "PAAREGenSign"  "NAAREWilcox" "PAAREWilcox"  "CAARE" "CAARE_for_GRAPH" "NCAAREt_test" "PCAAREt_test" "NCAARECDA" "PCAARECDA" "NCAAREPatell" "PCAAREPatell" "NCAAREPatellADJ" "PCAAREPatellADJ" "NCAAREBoehmer" "PCAAREBoehmer" "NCAAREKolari" "PCAAREKolari" "NCAARECorrado_Cowan" "PCAARECorrado_Cowan" "NCAAREZivney_Cowan" "PCAAREZivney_Cowan" "NCAAREGenSign" "PCAAREGenSign" "NCAAREGRANKT" "PCAAREGRANKT" "NCAAREWilcox" "PCAAREWilcox"{
 				gen `v' = .
 			}
 			mata: r = 0
 			mata: st_view(r,.,.)
+			
 			mata: r[.,.] = TESTSTATS
 			
 			gen t= `car`cari'LB'
@@ -1080,16 +1114,20 @@ quietly{
 			label variable PAARECDA "p-val. avg. abn. returns CDA (Brown & Warner 1980/1985)"
 			label variable NAAREPatell "t-stat. avg. abn. stand. returns (Patell 1976)"
 			label variable PAAREPatell "p-val. avg. abn. stand. returns (Patell 1976)"
+			label variable NAAREPatellADJ "t-stat. avg. abn. stand. returns (Patell 1976) with KP (2010) adj."
+			label variable PAAREPatellADJ "p-val. avg. abn. stand. returns (Patell 1976) with KP (2010) adj."
 			label variable NAAREBoehmer "t-stat. avg. abn. cross. stand. returns (Boehmer et al. 1991)"
 			label variable PAAREBoehmer "p-val. avg. abn. cross. stand. returns (Boehmer et al. 1991)"
-			label variable NAAREKolari "t-stat. avg. abn. cross. stand. returns (Kolari and Pynnönen (2010))"
-			label variable PAAREKolari "p-val. avg. abn. cross. stand. returns (Kolari and Pynnönen (2010))"
+			label variable NAAREKolari "t-stat. avg. abn. cross. stand. returns (Kolari and PynnÃ¶nen (2010))"
+			label variable PAAREKolari "p-val. avg. abn. cross. stand. returns (Kolari and PynnÃ¶nen (2010))"
 			label variable NAARECorrado "n-stat. rank test (Corrado 1989 / Corrado & Zivney 1992)"
 			label variable PAARECorrado "p-val. rank test (Corrado 1989 / Corrado & Zivney 1992"
 			label variable NAAREZivney "n-stat. cross. stand. rank test (Corrado & Zivney 1992 / Cowan 1992)"
 			label variable PAAREZivney "p-val. cross. stand. rank test (Corrado & Zivney 1992 / Cowan 1992)"
 			label variable NAAREGenSign "n-stat. generalized sign test (Cowan 1992)"
 			label variable PAAREGenSign "p-val. generalized sign test test (Cowan 1992)"
+			label variable NAAREWilcox "n-stat. Wilcoxson (1945) rank rest"
+			label variable PAAREWilcox "p-val. Wilcoxson (1945) rank rest"
 
 			label variable CAARE "CAAR"
 			label variable NCAAREt_test "t-stat. cum. avg. abn. returns"
@@ -1098,18 +1136,25 @@ quietly{
 			label variable PCAARECDA "p-val. cum. avg. abn. returns CDA (Brown & Warner 1980/1985)"
 			label variable NCAAREPatell "t-stat. cum avg. abn. stand. returns (Patell 1976)"
 			label variable PCAAREPatell "p-val. cum avg. abn. stand returns (Patell 1976)"
+			label variable NCAAREPatellADJ "t-stat. cum avg. abn. stand. returns (Patell 1976) with KP (2010) adj."
+			label variable PCAAREPatellADJ "p-val. cum avg. abn. stand returns (Patell 1976) with KP (2010) adj."
 			label variable NCAAREBoehmer "t-stat. cum avg. abn. cross. stand. returns (Boehmer et al. 1991)"
 			label variable PCAAREBoehmer "p-val. cum avg. abn. cross. stand. returns (Boehmer et al. 1991)"
-			label variable NCAAREKolari "t-stat. cum avg. abn. cross. stand. returns (Boehmer et al. 1991 / Kolari and Pynnönen (2010))"
-			label variable PCAAREKolari "p-val. cum avg. abn. cross. stand. returns (Boehmer et al. 1991 / Kolari and Pynnönen(2010)"
+			label variable NCAAREKolari "t-stat. cum avg. abn. cross. stand. returns (Boehmer et al. 1991 / Kolari and PynnÃ¶nen (2010))"
+			label variable PCAAREKolari "p-val. cum avg. abn. cross. stand. returns (Boehmer et al. 1991 / Kolari and PynnÃ¶nen(2010)"
 			label variable NCAARECorrado_Cowan "n-stat. cum. rank test (Corrado & Zivney 1992 / Cowan 1992)"
 			label variable PCAARECorrado_Cowan "p-val. cum. rank test (Corrado & Zivney 1992 / Cowan 1992)"
 			label variable NCAAREZivney_Cowan "n-stat. cum. rank test (Corrado & Zivney 1992 / Cowan 1992)"
 			label variable PCAAREZivney_Cowan "p-val. cum. rank test (Corrado & Zivney 1992 / Cowan 1992)"
 			label variable NCAAREGenSign "n-stat. cum. generalized sign test (Cowan 1992)"
 			label variable PCAAREGenSign "p-val. cum. generalized sign test (Cowan 1992)"
+			label variable NCAAREGRANKT "t-stat. GRANK-T test (Kolari and PynnÃ¶nen (2011)"
+			label variable PCAAREGRANKT "p-val. GRANK-T test (Kolari and PynnÃ¶nen (2011)"
+			label variable NCAAREWilcox "n-stat. Wilcoxson (1945) rank rest"
+			label variable PCAAREWilcox "p-val. Wilcoxson (1945) rank rest"
 			
 			if `cari' == 0 {
+				drop NCAARE* PCAARE* CAARE
 				save `aarfile', `replace'
 			}
 			else{
@@ -1191,7 +1236,7 @@ quietly{
 	rename `tstr' t
 	order t
 	capture: keep CA* *CAA* t NoFirms
-
+	capture: drop CAARE_for_GRAPH
 	saveold `carfile', `replace'
 	
 	noisily: display "...succeeded"
@@ -1201,12 +1246,17 @@ quietly{
 	noisily: display "Diagnosing events that are excluded from the analysis..."
 
 	use "`__EventsOffDateline'", clear
+
+
 	gen categorymissing = 0
 	gen categorystring = "Event with event date off the dateline" if categorymissing == 0
 
 	append using "`__SecurityWithNoReturns'" 
 	replace categorymissing = 1 if categorymissing == . 
 	replace categorystring = "Firm/security for which no data is available in the security returns file" if categorymissing == 1
+	
+	di "`'"
+
 
 	if "`model'" =="FM" | "`model'" =="RAW" | "`model'" =="COMEAN" | "`model'" =="MA"{
 		append using "`__InsufficientEstObsSec'"
@@ -1233,8 +1283,9 @@ quietly{
 	append using "`__IPO_DEL_in_event_window'"
 	replace categorymissing = 6 if categorymissing == . 
 	replace categorystring = "Event for which the IPO (deletion) date of the event firm is later (earlier) than the first (last) day of the event window" if categorymissing == 6
-
-
+	
+	keep `1' `original_event_date' categorymissing categorystring
+	rename `original_event_date' `2'
 	save `diagnosticsfile', `replace'
 	
 	noisily: display "...succeeded"
@@ -1290,9 +1341,9 @@ if "`model'" == "BHAR" | "`model'" == "BHAR_raw" {
 	use `carfile', clear
 	
 	quietly {
-		gen Significance = "*" if (Sig90Low < 0 & Sig90Up < 0) | (Sig90Low > 0 & Sig90Up > 0)
-			replace Significance = "**" if (Sig95Low < 0 & Sig95Up < 0) | (Sig95Low > 0 & Sig95Up > 0)
-			replace Significance = "***" if (Sig99Low < 0 & Sig99Up < 0) | (Sig99Low > 0 & Sig99Up > 0)
+		gen Significance = "*" if (SkewAdjT < Sig90Low) | (SkewAdjT > Sig90Up)
+			replace Significance = "**" if (SkewAdjT < Sig95Low) | (SkewAdjT > Sig95Up)
+			replace Significance = "***" if (SkewAdjT < Sig99Low) | (SkewAdjT > Sig99Up)
 	}
 		
 	log using `diagnosticsfile', append
@@ -1301,11 +1352,13 @@ if "`model'" == "BHAR" | "`model'" == "BHAR_raw" {
 }
 else{
 
-	quietly: twoway (line CAARE t), nodraw
+	quietly: twoway (line CAARE_for_GRAPH t), nodraw
 	quietly: graph save "`graphfile'", `replace'
+	quietly: drop CAARE_for_GRAPH
+	quietly: save `aarfile', replace
 	
 	quietly {
-		foreach v in "t_test" "CDA" "Patell" "Boehmer" "Kolari" "Corrado" "Zivney" "GenSign" {
+		foreach v in "t_test" "CDA" "Patell" "PatellADJ" "Boehmer" "Kolari" "Corrado" "Zivney" "GenSign" "Wilcox" {
 			gen `v' = "*" if PAARE`v' < 0.1
 				replace `v' = "**" if PAARE`v' < 0.05
 				replace `v' = "***" if PAARE`v' < 0.01
@@ -1314,13 +1367,13 @@ else{
 		rename AARE AAR
 	}
 	log using `diagnosticsfile', append
-		list t NoFirms AAR t_test CDA Patell Boehmer Kolari Corrado Zivney GenSign, clean noobs ab(20) 
+		list t NoFirms AAR t_test CDA Patell PatellADJ Boehmer Kolari Corrado Zivney GenSign Wilcox, clean noobs ab(20) 
 	log close
 	
 	use `carfile', clear
 	
 	quietly {
-		foreach v in "t_test" "CDA" "Patell" "Boehmer" "Kolari" "Corrado_Cowan" "Zivney_Cowan" "GenSign" {
+		foreach v in "t_test" "CDA" "Patell" "PatellADJ" "Boehmer" "Kolari" "Corrado_Cowan" "Zivney_Cowan" "GenSign" "GRANKT" "Wilcox"{
 			gen `v' = "*" if PCAARE`v' < 0.1
 				replace `v' = "**" if PCAARE`v' < 0.05
 				replace `v' = "***" if PCAARE`v' < 0.01
@@ -1328,26 +1381,29 @@ else{
 		rename CAARE CAAR
 	}
 	log using `diagnosticsfile', append
-		list t NoFirms CAAR t_test CDA Patell Boehmer Kolari Corrado_Cowan Zivney_Cowan GenSign, clean noobs ab(20) 
+		list t NoFirms CAAR t_test CDA Patell PatellADJ Boehmer Kolari Corrado_Cowan Zivney_Cowan GenSign GRANKT Wilcox, clean noobs ab(20) 
 	log close
 }
 
 log using `diagnosticsfile', append
-	display "The following result files are available in the evenstata directory and are loaded into memory by clicking."
+	display "The following result files are available in the working directory and are loaded into memory by clicking."
 	if "`model'" != "BHAR" & "`model'" != "BHAR_raw" {
 		display "Graph of cumulative average abnormal returns: {stata graph use `graphfile': `graphfile'}"
+		if "`fill'" != "fill" & "`arfillevent'" != "arfillevent"{
+			display as error "Warning: The graphing routine always assumes zero abnormal returns where they are missing. Thus, the graph output cannot be reconciled with the tabulated results if there are missing returns and {it:fill} or {it:arfillevent} options are not enabled. Although often found in publications, I recommend against using CAAR graphs because they give the false impression that CAARs resemble the returns of a held portfolio of event firms." 
+		}
 	}
 	else {
-		display "Graph of average buy-and-hold abnormal returns: {stata graph use `graphfile': `graphfile'}"
+		display as result "Graph of average buy-and-hold abnormal returns: {stata graph use `graphfile': `graphfile'}"
 	}
 	if "`model'" != "BHAR" & "`model'" != "BHAR_raw" {
-		display "Average abnormal returns (daily basis): {stata use `aarfile', clear: `aarfile'}"
+		display as result "Average abnormal returns (daily basis): {stata use `aarfile', clear: `aarfile'}"
 	}
 	if "`model'" != "BHAR" & "`model'" != "BHAR_raw" {
-		display "Cumulative average abnormal returns: {stata use `carfile', clear: `carfile'}"
+		display as result "Cumulative average abnormal returns: {stata use `carfile', clear: `carfile'}"
 	}
 	else {
-		display "Cumulative average buy-and-hold abnormal returns: {stata use `carfile', clear: `carfile'}"
+		display as result "Cumulative average buy-and-hold abnormal returns: {stata use `carfile', clear: `carfile'}"
 	}
 	if "`model'" != "BHAR" & "`model'" != "BHAR_raw" {
 		display "Abnormal returns: {stata use `arfile', clear: `arfile'}"
@@ -1399,19 +1455,42 @@ function KOLARI(AR,STDF,df)
 end
 
 mata:
-function TESTSTATS(df,AR,ARE,MR,MRE,KolariADJ,STDFE,NOMARKET)
+function TESTSTATS(df,AR,ARE,ARE_for_GRAPH, MR,MRE,KolariADJ,STDFE,NOMARKET)
 {
 	T = colsum((AR:+100):/(AR:+100))
-	AAR = (mm_meancolvar(AR')[1,.])' 
+	AAR = (mm_meancolvar(AR')[1,.])' /* mm_meancolvar(AR') first, then taking the first row */
 	AARE = (mm_meancolvar(ARE')[1,.])'
 	CAARE = rowsum(mm_colrunsum(ARE):*((ARE:+100):/(ARE:+100))):/ rowsum(((ARE:+100):/(ARE:+100)))
+	CAARE_for_GRAPH = rowsum(mm_colrunsum(ARE_for_GRAPH):*((ARE_for_GRAPH:+100):/(ARE_for_GRAPH:+100))):/ rowsum(((ARE_for_GRAPH:+100):/(ARE_for_GRAPH:+100)))
 	
-	si = J(rows(ARE),1,(colsum(AR:^2):/(T:-(2+df))):^(0.5))
-	Cit = STDFE:/si
+	si = J(rows(ARE),1,(colsum(AR:^2):/(T:-(2+df))):^(0.5)) /* See Patell 1976 p. 255: df == zero for market model and 1 for market model plus 1 additional factor */
+	Cit = STDFE:/si /* See Patell 1976 p. 256 */  
+	/* Some code that proves that this is true: First generate arbitrtay dataset with variables est (dummy indicating estimation and event window), Ri and Rm
+		reg Ri Rm if est == 1
+		predict AR, resid
+		predict stdf, stdf
+		predict stdp, stdp
+		egen Rmbar = sum(Rm) if est == 1 
+		replace Rmbar = Rmbar / 10
+		gen Rmtau_minus_Rmbar_squared = (Rm - Rmbar)^2
+		egen sum_Rmtau_minus_Rmbar_squared = sum(Rmtau_minus_Rmbar_squared)
+		replace Rmbar = Rmbar[_n-1] if Rmbar[_n-1] != .
+		egen sit = sum(AR^2) if est == 1 
+		replace sit = sqrt(sit / (8))
+		replace sit = sit[_n-1] if sit[_n-1] != .
+		gen Cit = 1 + 1/10 + (Rm - Rmbar)^2 / sum_Rmtau_minus_Rmbar_squared
+		gen Cit_sqrt = sqrt(Cit)
+		gen sit_Cit_sqrt = Cit_sqrt * sit
+
+	*/
+	
 	Vit = ARE:/si:/(Cit:^(0.5))
 	Zvt = rowsum(Vit):/(rowsum( (T:-(2+df)):/(T:-(4+df)) )^(0.5))
 	NAAREPATELL = Zvt
 	PAAREPATELL = 2*normal(-abs(Zvt))
+	
+	NAAREPATELLADJ = Zvt :* KolariADJ
+	PAAREPATELLADJ = 2*normal(-abs(Zvt :* KolariADJ))
 	
 	L = mm_colrunsum((ARE:+100):/(ARE:+100)):* ((ARE:+100):/(ARE:+100))
 	WiL = mm_colrunsum(Vit:/(L:^(0.5))) :* ((ARE:+100):/(ARE:+100))
@@ -1419,10 +1498,14 @@ function TESTSTATS(df,AR,ARE,MR,MRE,KolariADJ,STDFE,NOMARKET)
 	NCAAREPATELL = ZWL
 	PCAAREPATELL = 2*normal(-abs(ZWL))
 	
+	NCAAREPATELLADJ = ZWL :* KolariADJ
+	PCAAREPATELLADJ = 2*normal(-abs(ZWL :* KolariADJ))
+	
 	SARAARE=(rowsum(STDFE:^2):/(rowsum((ARE:+100):/(ARE:+100)):^2)):^0.5 
 	NAARE=AARE:/SARAARE
 	PAARE=2*ttail(rows(AAR)-(2+df),abs(NAARE))
 	
+	/* What follows is the Theil 1971 correction for standard error of forecast, e.g. shown in Patell 1976 p. 256; though it does not account for the correction of degrees of freeding in the calculation of standard deviation of ARs as in Eq. (3) in Patell 1976 p. 255 */
 	RmbarE = J(rows(ARE),1,mm_meancolvar(MR)[1,.])
 	Rmbar = J(rows(AR),1,mm_meancolvar(MR)[1,.])
 	denom = J(rows(ARE),1,colsum((MR-Rmbar):^2))
@@ -1433,7 +1516,7 @@ function TESTSTATS(df,AR,ARE,MR,MRE,KolariADJ,STDFE,NOMARKET)
 	if (NOMARKET == 1){
 		Citcum = L
 	}
-	sicum = si:*((Citcum):^(0.5)) 
+	sicum = si:*((Citcum):^(0.5)) /* si is the standard deviation of ARs from the estimation period; Citcum take into account the length of the window */
 	CAARVARAR = 1:/(rowsum((ARE:+100):/(ARE:+100)):^2):*rowsum(sicum:^2)
 	NCAARE = CAARE:/((CAARVARAR):^(0.5)) 
 	PCAARE = 2*ttail(rows(AAR)-(2+df),abs(NCAARE)) 
@@ -1455,10 +1538,27 @@ function TESTSTATS(df,AR,ARE,MR,MRE,KolariADJ,STDFE,NOMARKET)
 	PAAREBOEHMERADJ = 2*ttail(rows(AAR)-(2+df),abs(NAAREBOEHMERADJ)) /*see Savickas 2003 p. 167 and keep in mind that the term of the variance also includes n-1*/   
 	NCAAREBOEHMERADJ = NCAAREBOEHMER:* KolariADJ
 	PCAAREBOEHMERADJ = 2*ttail(rows(AAR)-(2+df),abs(NCAAREBOEHMERADJ))
- 
+	
+	/*GRANK T*/
+	SCARstari = (WiL * KolariADJ) :/(((rowsum((ARE:+100):/(ARE:+100)):^(-1):*mm_colvar(WiL')'):^(0.5)) * J(1,cols(WiL),1)) /* WiL is equivalent to SCARitau because it is CAR adjusted for standard deviation of ARs (time-series) incl. prediction error Cit; KolariADJ see Fn 6 in K+P 2011; the remaining part equals the cross-sectional standard deviation of CARs */
+	SCARstariLASTROW = SCARstari[rows(SCARstari),.]
+	S_ARi = J(rows(AR),1,(colsum(AR:^2):/(T:-(2+df))):^(0.5))
+	SARit = AR :/ S_ARi
+	ARTOTALGRANK = (SARit\SCARstariLASTROW)
+	ARTOTALRANKGRANK = mm_ranks(ARTOTALGRANK)
+	ARTOTALRANKGRANK = ARTOTALRANKGRANK :*((ARTOTALGRANK:+100):/(ARTOTALGRANK:+100))
+	Uit = ARTOTALRANKGRANK:*((ARTOTALRANKGRANK:+100):/(ARTOTALRANKGRANK:+100)) :/J(rows(ARTOTALRANKGRANK),1,colsum((ARTOTALRANKGRANK:+100):/(ARTOTALRANKGRANK:+100)):+1)  :-0.5
+	U_tbar = rowsum(Uit):/ rowsum((Uit:+100):/(Uit:+100)) /* includes Ubar_0 in Eq 13 in K+P 2011 p. 956 */
+	T_GRANK = colsum((U_tbar:+100):/(U_tbar:+100)):-1
+	S_Ubar = sqrt(T_GRANK :^(-1)  :*  colsum(rowsum((Uit[1::(rows(U_tbar)-1),.]:+100):/(Uit[1::(rows(U_tbar)-1),.]:+100))     :/  rowsum((SCARstariLASTROW:+100):/(SCARstariLASTROW:+100))   :*     U_tbar[1::(rows(U_tbar)-1),.]:^2)  )
+	ZGRANK =  U_tbar[rows(U_tbar),.] :/ S_Ubar
+	tGRANK = ZGRANK * sqrt((T_GRANK- 2) /(T_GRANK -1 - ZGRANK^2))
+	NCAAREGRANKT = tGRANK * rowsum((SCARstari :+ 100) :/ (SCARstari :+ 100)) :/ rowsum((SCARstari :+ 100) :/ (SCARstari :+ 100))
+	PCAAREGRANKT =2*ttail(T_GRANK-2,abs(NCAAREGRANKT))
+	
 	ARTOTAL = (AR\ARE)
 	ARTOTALRANK = mm_ranks(ARTOTAL)
-	ARTOTALRANK = ARTOTALRANK :*((ARTOTAL:+100):/(ARTOTAL:+100))
+	ARTOTALRANK = ARTOTALRANK :*((ARTOTAL:+100):/(ARTOTAL:+100)) /* is Kit in Corrado 1989 p. 388 */
 	Onehundert25point5= colsum((ARTOTAL:+100):/(ARTOTAL:+100)) :/2 :+ 0.5
 	SKbracket = rowsum((ARTOTALRANK)-  J(rows(ARTOTAL),1,Onehundert25point5)) :/ rowsum((ARTOTAL:+100):/(ARTOTAL:+100))
 	SKbracketsqrt = SKbracket :^2
@@ -1470,10 +1570,10 @@ function TESTSTATS(df,AR,ARE,MR,MRE,KolariADJ,STDFE,NOMARKET)
 	NAARECORRADO = NCORRADO[(rows(AR)+1)::rows(ARTOTAL),1]
 	PAARECORRADO = 2*normal(-abs(NAARECORRADO)) 
 	
-	d12 = mm_colrunsum(J(rows(ARE), 1, 1)):^(0.5)
-	KDbar = (rowsum(mm_colrunsum(ARTOTALRANK[(rows(AR)+1)::rows(ARTOTAL),.])))  :/   mm_colrunsum(rowsum((ARE:+100):/(ARE:+100)))
+	d12 = mm_colrunsum(J(rows(ARE), 1, 1)):^(0.5) /* The number of cumulated days; Cowan 1992 p. 346 */
+	KDbar = (rowsum(mm_colrunsum(ARTOTALRANK[(rows(AR)+1)::rows(ARTOTAL),.])))  :/   mm_colrunsum(rowsum((ARE:+100):/(ARE:+100))) /* KD is the average rank across the n stocks and d days of the event window; Cowan 1992 p. 346 */
 	FiftySixNom = mm_colrunsum(rowsum((J(rows(ARE),1,colsum((ARTOTAL:+100):/(ARTOTAL:+100))) :/ 2 :+ 0.5) :* ((ARE:+100):/(ARE:+100))))   :/ mm_colrunsum(rowsum((ARE:+100):/(ARE:+100)))
-	Ktbar = rowsum(ARTOTALRANK):/ rowsum((ARTOTAL:+100):/(ARTOTAL:+100))
+	Ktbar = rowsum(ARTOTALRANK):/ rowsum((ARTOTAL:+100):/(ARTOTAL:+100)) /* Kt is the average rank across n stocks on day t of the 111 day combined estimation and event period; Cowan 1992 p. 346 */
 	onehundredeleven=colsum((Ktbar:+100):/(Ktbar:+100))
 	FiftySixDenom = rowsum((J(rows(ARTOTAL),1,colsum((ARTOTAL:+100):/(ARTOTAL:+100))) :/ 2 :+ 0.5) :* ((ARTOTAL:+100):/(ARTOTAL:+100)))   :/ rowsum((ARTOTAL:+100):/(ARTOTAL:+100))
 	denomCOWAN = (colsum((Ktbar - FiftySixDenom):^2) / onehundredeleven)^0.5
@@ -1517,9 +1617,37 @@ function TESTSTATS(df,AR,ARE,MR,MRE,KolariADJ,STDFE,NOMARKET)
 	NCAAREGENSIGN = ((rowsum(sign(sign(mm_colrunsum(ARE):*((ARE:+100):/(ARE:+100))):+1))):-(rowsum((ARE:+100):/(ARE:+100)):*p)) :/  ((rowsum((ARE:+100):/(ARE:+100)):*p:*(1:-p)):^(0.5))
 	PCAAREGENSIGN = 2*normal(-abs( NCAAREGENSIGN))
 	
+	/*Calculating Wilcoxson test*/ 
+	Sn=rowsum(sign(sign(ARE):+1):*mm_ranks((abs(ARE))')')
+	ESn=rowsum((ARE:+100):/(ARE:+100)):*(rowsum((ARE:+100):/(ARE:+100)):+1):/4
+	Sigma2Sn=rowsum((ARE:+100):/(ARE:+100)):*(rowsum((ARE:+100):/(ARE:+100)):+1) :*(2:*rowsum((ARE:+100):/(ARE:+100)):+1):/24
+	NAAREWILCOX=(Sn:-ESn):/(Sigma2Sn:^(0.5))
+	PAAREWILCOX=2*normal(-abs(NAAREWILCOX))
+
+	NCAAREWILCOXsave=.
+	PCAAREWILCOXsave=.
+  
+	rc=1
+	quietly: while (rc <= rows(ARE)) { 
+		Sn=rowsum(sign   (sign(   vec(ARE[1..rc,.]')  '):+1)  :*mm_ranks(abs(vec(ARE[1..rc,.]')')')')
+		
+		ESn=rowsum((vec(ARE[1..rc,.]')':+100):/(vec(ARE[1..rc,.]')':+100)):*(rowsum((vec(ARE[1..rc,.]')':+100):/(vec(ARE[1..rc,.]')':+100)):+1)  :/4
+		
+		Sigma2Sn= rowsum((vec(ARE[1..rc,.]')':+100):/(vec(ARE[1..rc,.]')':+100)):*(rowsum((vec(ARE[1..rc,.]')':+100):/(vec(ARE[1..rc,.]')':+100)):+1)    :*    (rowsum((vec(ARE[1..rc,.]')':+100):/(vec(ARE[1..rc,.]')':+100)) :*2 :+1)  :/ 24
+		
+		NCAAREWILCOX=(Sn:-ESn):/(Sigma2Sn:^(0.5))
+		PCAAREWILCOX=2*normal(-abs(NCAAREWILCOX))
+		vec(ARE[1..rc,.]')'
+		NCAAREWILCOXsave=NCAAREWILCOXsave\NCAAREWILCOX
+		PCAAREWILCOXsave=PCAAREWILCOXsave\PCAAREWILCOX
+		rc++
+	}
+	NCAAREWILCOX=NCAAREWILCOXsave[2..rows(NCAAREWILCOXsave),1..1]
+	PCAAREWILCOX=PCAAREWILCOXsave[2..rows(PCAAREWILCOXsave),1..1]
+	
 	NoFirms = rowsum((ARE:+100):/(ARE:+100))
 	
-	return(NoFirms,AARE,NAARE,PAARE,NAARECRUDE,PAARECRUDE,NAAREPATELL,PAAREPATELL,NAAREBOEHMER,PAAREBOEHMER,NAAREBOEHMERADJ,PAAREBOEHMERADJ,NAARECORRADO,PAARECORRADO,NAAREZIVNEY,PAAREZIVNEY,NAAREGENSIGN,PAAREGENSIGN,   CAARE,NCAARE,PCAARE,NCAARECRUDE,PCAARECRUDE,NCAAREPATELL,PCAAREPATELL,NCAAREBOEHMER,PCAAREBOEHMER,NCAAREBOEHMERADJ,PCAAREBOEHMERADJ,NCAARECORRADOCOWAN,PCAARECORRADOCOWAN,NCAAREZIVNEYCOWAN,PCAAREZIVNEYCOWAN,NCAAREGENSIGN,PCAAREGENSIGN)
+	return(NoFirms,AARE,NAARE,PAARE,NAARECRUDE,PAARECRUDE,NAAREPATELL,PAAREPATELL,NAAREPATELLADJ,PAAREPATELLADJ,NAAREBOEHMER,PAAREBOEHMER,NAAREBOEHMERADJ,PAAREBOEHMERADJ,NAARECORRADO,PAARECORRADO,NAAREZIVNEY,PAAREZIVNEY,NAAREGENSIGN,PAAREGENSIGN,NAAREWILCOX, PAAREWILCOX, CAARE,CAARE_for_GRAPH,NCAARE,PCAARE,NCAARECRUDE,PCAARECRUDE,NCAAREPATELL,PCAAREPATELL,NCAAREPATELLADJ,PCAAREPATELLADJ,NCAAREBOEHMER,PCAAREBOEHMER, NCAAREBOEHMERADJ,PCAAREBOEHMERADJ,NCAARECORRADOCOWAN,PCAARECORRADOCOWAN,NCAAREZIVNEYCOWAN,PCAAREZIVNEYCOWAN,NCAAREGENSIGN,PCAAREGENSIGN, NCAAREGRANKT, PCAAREGRANKT, NCAAREWILCOX, PCAAREWILCOX)
 }
 end
 
@@ -1528,7 +1656,7 @@ function SkewAdjtNonBS(X)
 {
 	ARb = mm_meancolvar(X)[1,.]
 	S = ARb:/(mm_colvar(X):^0.5)
-	y = colsum((X:+100):/(X:+100)) :/ (colsum((X:+100):/(X:+100)):-1 :/ colsum((X:+100):/(X:+100)):-2) :*   colsum((X:-J(rows(X),1,ARb)):^3) :/  (mm_colvar(X):^0.5):^3
+	y = sqrt(colsum((X:+100):/(X:+100)) :*        (colsum((X:+100):/(X:+100)):-1))           :/ (colsum((X:+100):/(X:+100)):-2)   :/ (colsum((X:+100):/(X:+100)))  :*   colsum((X:-J(rows(X),1,ARb)):^3) :/  (mm_colvar(X):^0.5):^3 /* Lyon and Barber 1999 p. 174 say that y is an estimate of the coefficient of skewness -> sample skewness, see https://www.itl.nist.gov/div898/handbook/eda/section3/eda35b.htm */ 
 	t = (colsum((X:+100):/(X:+100))):^0.5 :* (S + 1/3:*y:*S:^2 + 1/6:/colsum((X:+100):/(X:+100)):*y)
 	return(t)
 }
@@ -1538,8 +1666,9 @@ mata:
 function SkewAdjt(X,w,ARNonBS)
 {
 	ARb = mm_meancolvar(X)[1,.]
-	S = ARb:-ARNonBS:/(mm_colvar(X):^0.5)
-	y = colsum((X:+100):/(X:+100)) :/ (colsum((X:+100):/(X:+100)):-1 :/ colsum((X:+100):/(X:+100)):-2) :*   colsum((X:-J(rows(X),1,ARb)):^3) :/  (mm_colvar(X):^0.5):^3
+	S = (ARb:-ARNonBS):/(mm_colvar(X):^0.5)
+	y = sqrt(colsum((X:+100):/(X:+100)) :*        (colsum((X:+100):/(X:+100)):-1))           :/ (colsum((X:+100):/(X:+100)):-2)   :/ (colsum((X:+100):/(X:+100)))  :*   colsum((X:-J(rows(X),1,ARb)):^3) :/  (mm_colvar(X):^0.5):^3
+	/* Lyon and Barber 1999 p. 174 say that y is an estimate of the coefficient of skewness -> sample skewness, see https://www.itl.nist.gov/div898/handbook/eda/section3/eda35b.htm */ 
 	t = (colsum((X:+100):/(X:+100))):^0.5 :* (S + 1/3:*y:*S:^2 + 1/6:/colsum((X:+100):/(X:+100)):*y)
 	return(t)
 }
@@ -1549,7 +1678,7 @@ mata:
 function BHAR(BHRE,MRE,fill)
 {
 	BHRE1 = BHRE :+ 1
-	_editmissing(BHR1,1)
+	_editmissing(BHRE1,1)
 	  MRE1 = MRE :+ 1 
 	_editmissing(MRE1,1)
 	

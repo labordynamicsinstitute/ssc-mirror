@@ -4,7 +4,7 @@
 *ADO FILE FOR CEQ ETHNO RACIAL WORKBOOK
 
 *VERSION AND NOTES (changes between versions described under CHANGES)
-*! v2.3 1ago2016 For use with December 3 2015 version of Ethno Racial Workbook
+*! v2.4 29oct2016 For use with December 3 2015 version of Ethno Racial Workbook
 *! (beta version; please report any bugs), written by Rodrigo Aranda raranda@tulane.edu
 
 *CHANGES
@@ -205,7 +205,7 @@ di "hi!";
 	local dit display as text in smcl;
 	local die display as error in smcl;
 	local command ceqrace;
-		local version 2.3;
+		local version 2.4;
 	`dit' "Running version `version' of `command' on `c(current_date)' at `c(current_time)'" _n "(please report this information if reporting a bug to raranda@tulane.edu)";
 	local versionprint ("Results produced by version `version' of `command' on `c(current_date)' at `c(current_time)'");
 #delimit cr
@@ -339,7 +339,7 @@ program define f3_race;
 syntax  [if] [in] [pweight/] [using/] [,table(string) race1(varname) race2(varname) race3(varname) race4(varname) race5(varname) OPEN];
 di "Populations `'";
 local sheet="F3. Ethno-Racial Populations";
-local version 2.3;
+local version 2.4;
 local command ceqrace;
 local versionprint ("Results produced by version `version' of `command' on `c(current_date)' at `c(current_time)'");
 
@@ -456,7 +456,7 @@ syntax  [if] [in]  [pweight/] [using/] [,table(string) Market(varname) Disposabl
 			hhid(varname)];
 di "Composition `'";
 local sheet="F5. Composition";
-local version 2.3;
+local version 2.4;
 local command ceqrace;
 local versionprint ("Results produced by version `version' of `command' on `c(current_date)' at `c(current_time)'");
 
@@ -700,7 +700,7 @@ syntax  [if] [in] [pweight/] [using/] [,table(string) Disposable(varname)  race1
 			hhid(varname)];
 	di "Distribution `'";
 	local sheet="F6. Distribution";
-		local version 2.3;
+		local version 2.4;
 local command ceqrace;
 local versionprint ("Results produced by version `version' of `command' on `c(current_date)' at `c(current_time)'");
 
@@ -958,7 +958,7 @@ syntax  [if] [in] [pweight/] [using/] [,table(string) Market(varname) race1(varn
 			cut5(real 50)];
 	di "Poverty `'";
 	local sheet="F7. Poverty";
-		local version 2.3;
+		local version 2.4;
 local command ceqrace;
 local versionprint ("Results produced by version `version' of `command' on `c(current_date)' at `c(current_time)'");
 
@@ -1177,7 +1177,7 @@ syntax  [if] [in] [pweight/] [using/] [,table(string) Market(varname) race1(varn
 			cut5(real 50)];
 	di "Poverty Gap`'";
 	local sheet="F8. Poverty Gap";
-		local version 2.3;
+		local version 2.4;
 local command ceqrace;
 local versionprint ("Results produced by version `version' of `command' on `c(current_date)' at `c(current_time)'");
 
@@ -1286,20 +1286,20 @@ local versionprint ("Results produced by version `version' of `command' on `c(cu
 	local p3="`nextreme'";
 	local p4="`nmoderate'";
 
-	local incomes `market' `mpluspensions' `netmarket' `gross' `taxable' `disposable' `consumable' `final';
+	local incomes `market' `mpluspensions' `netmarket' `gross' `taxable' `disposable' `consumable' ;
 	local lines `p1' `p2' `p3' `p4';
 
 	di `incomes';
 
 	qui{;
-		matrix f8_1=J(4,8,.);
-		matrix f8_2=J(4,8,.);
-		matrix f8_3=J(4,8,.);
-		matrix f8_4=J(4,8,.);
-		matrix colnames f8_1=market mpluspensions netmarket gross taxable disposable consumable final;
-		matrix colnames f8_2=market mpluspensions netmarket gross taxable disposable consumable final;
-		matrix colnames f8_3=market mpluspensions netmarket gross taxable disposable consumable final;
-		matrix colnames f8_4=market mpluspensions netmarket gross taxable disposable consumable final;
+		matrix f8_1=J(4,7,.);
+		matrix f8_2=J(4,7,.);
+		matrix f8_3=J(4,7,.);
+		matrix f8_4=J(4,7,.);
+		matrix colnames f8_1=market mpluspensions netmarket gross taxable disposable consumable ;
+		matrix colnames f8_2=market mpluspensions netmarket gross taxable disposable consumable ;
+		matrix colnames f8_3=market mpluspensions netmarket gross taxable disposable consumable ;
+		matrix colnames f8_4=market mpluspensions netmarket gross taxable disposable consumable ;
 		matrix rownames f8_1=indig white afro national;
 		matrix rownames f8_2=indig white afro national;
 		matrix rownames f8_3=indig white afro national;
@@ -1400,7 +1400,7 @@ syntax  [if] [in] [pweight/] [using/] [,table(string) Market(varname) race1(varn
 
 	di "Poverty Gap Squared `'";
 	local sheet="F9. Poverty Gap Sq.";
-		local version 2.3;
+		local version 2.4;
 local command ceqrace;
 local versionprint ("Results produced by version `version' of `command' on `c(current_date)' at `c(current_time)'");
 
@@ -1506,20 +1506,20 @@ local versionprint ("Results produced by version `version' of `command' on `c(cu
 	local p4="`nmoderate'";
 
 
-	local incomes `market' `mpluspensions' `netmarket' `gross' `taxable' `disposable' `consumable' `final';
+	local incomes `market' `mpluspensions' `netmarket' `gross' `taxable' `disposable' `consumable' ;
 	local lines `p1' `p2' `p3' `p4';
 
 	di `incomes';
 
 	qui{;
-		matrix f9_1=J(4,8,.);
-		matrix f9_2=J(4,8,.);
-		matrix f9_3=J(4,8,.);
-		matrix f9_4=J(4,8,.);
-		matrix colnames f9_1=market mpluspensions netmarket gross taxable disposable consumable final;
-		matrix colnames f9_2=market mpluspensions netmarket gross taxable disposable consumable final;
-		matrix colnames f9_3=market mpluspensions netmarket gross taxable disposable consumable final;
-		matrix colnames f9_4=market mpluspensions netmarket gross taxable disposable consumable final;
+		matrix f9_1=J(4,7,.);
+		matrix f9_2=J(4,7,.);
+		matrix f9_3=J(4,7,.);
+		matrix f9_4=J(4,7,.);
+		matrix colnames f9_1=market mpluspensions netmarket gross taxable disposable consumable ;
+		matrix colnames f9_2=market mpluspensions netmarket gross taxable disposable consumable ;
+		matrix colnames f9_3=market mpluspensions netmarket gross taxable disposable consumable ;
+		matrix colnames f9_4=market mpluspensions netmarket gross taxable disposable consumable ;
 		matrix rownames f9_1=indig white afro national;
 		matrix rownames f9_2=indig white afro national;
 		matrix rownames f9_3=indig white afro national;
@@ -1606,7 +1606,7 @@ syntax  [if] [in] [pweight/] [using/] [,table(string) Market(varname) race1(varn
 		  ];
 	di "Inequality `'";
 	local sheet="F10. Inequality";
-		local version 2.3;
+		local version 2.4;
 	local command ceqrace;
 	local versionprint ("Results produced by version `version' of `command' on `c(current_date)' at `c(current_time)'");
 
@@ -1833,7 +1833,7 @@ syntax  [if] [in] [pweight/] [using/] [,table(string) Market(varname) race1(varn
 		   Consumable(varname)
 		   Final(varname) ];
 	local sheet="F11. Mean Income";
-		local version 2.3;
+		local version 2.4;
 	local command ceqrace;
 	local versionprint ("Results produced by version `version' of `command' on `c(current_date)' at `c(current_time)'");
 
@@ -1963,7 +1963,7 @@ syntax  [if] [in] [pweight/] [using/] [,table(string) Market(varname) race1(varn
 		   hhid(varname)];
 	di "Incidence (Decile) `'";
 	local sheet="F12. Incidence (Decile)";
-		local version 2.3;
+		local version 2.4;
 	local command ceqrace;
 	local versionprint ("Results produced by version `version' of `command' on `c(current_date)' at `c(current_time)'");
 
@@ -2228,7 +2228,7 @@ syntax  [if] [in] [pweight/] [using/] [,table(string) Market(varname) race1(varn
 			Original(varname)];
 	di "Incidence (Income groups) `'";
 	local sheet="F13. Incidence (Income groups)";
-		local version 2.3;
+		local version 2.4;
 	local command ceqrace;
 	local versionprint ("Results produced by version `version' of `command' on `c(current_date)' at `c(current_time)'");
 
@@ -2526,7 +2526,7 @@ syntax  [if] [in] [pweight/] [using/] [,table(string) Market(varname) race1(varn
 			cut4(real 10)
 			cut5(real 50)];
 	local sheet="F16. Fiscal Profile";
-		local version 2.3;
+		local version 2.4;
 	local command ceqrace;
 	local versionprint ("Results produced by version `version' of `command' on `c(current_date)' at `c(current_time)'");
 
@@ -2970,7 +2970,7 @@ syntax   [if] [in] [using/] [pweight/] [,table(string) Market(varname) race1(var
 			cut5(real 50)];
 	di "Coverage (Total)";
 	local sheet="F17. Coverage (Total)";
-		local version 2.3;
+		local version 2.4;
 	local command ceqrace;
 	local versionprint ("Results produced by version `version' of `command' on `c(current_date)' at `c(current_time)'");
 
@@ -3369,7 +3369,7 @@ syntax   [if] [in] [using/] [pweight/] [,table(string) Market(varname) race1(var
 			cut5(real 50)		   ];
 	di "Coverage (Target)";
 	local sheet="F18. Coverage (Target)";
-		local version 2.3;
+		local version 2.4;
 	local command ceqrace;
 	local versionprint ("Results produced by version `version' of `command' on `c(current_date)' at `c(current_time)'");
 
@@ -3767,7 +3767,7 @@ syntax  [if] [in] [pweight/] [using/] [,table(string) Market(varname) race1(varn
 			cut5(real 50)];
 di "Mobility `'";
 local sheet="F20. Mobility";
-local version 2.3;
+local version 2.4;
 local command ceqrace;
 local versionprint ("Results produced by version `version' of `command' on `c(current_date)' at `c(current_time)'");
 
@@ -4013,7 +4013,7 @@ syntax  [if] [in] [pweight/] [using/] [,table(string) Market(varname) race1(varn
 			cut5(real 50)];
 di "Education (populations) `'";
 local sheet="F21. Education (populations)";
-local version 2.3;
+local version 2.4;
 local command ceqrace;
 local versionprint ("Results produced by version `version' of `command' on `c(current_date)' at `c(current_time)'");
 
@@ -4337,7 +4337,7 @@ syntax  [if] [in] [pweight/] [using/] [,table(string) Market(varname) race1(varn
 			cut5(real 50)];
 di "Educational Probability `'";
 local sheet="F23. Educational Probability";
-local version 2.3;
+local version 2.4;
 local command ceqrace;
 local versionprint ("Results produced by version `version' of `command' on `c(current_date)' at `c(current_time)'");
 
@@ -4615,7 +4615,7 @@ syntax   [if] [in] [pweight/] [using/] [,table(string) Market(varname) race1(var
 			cut5(real 50)];
 	di "F24. Infrastructure Access";
 	local sheet="F24. Infrastructure Access";
-		local version 2.3;
+		local version 2.4;
 	local command ceqrace;
 	local versionprint ("Results produced by version `version' of `command' on `c(current_date)' at `c(current_time)'");
 
@@ -4941,7 +4941,7 @@ syntax  [if] [in] [pweight/] [using/] [,table(string) Market(varname) race1(varn
 		  ];
 di "F25. Theil Decomposition";
 local sheet="F25. Theil Decomposition";
-local version 2.3;
+local version 2.4;
 local command ceqrace;
 local versionprint ("Results produced by version `version' of `command' on `c(current_date)' at `c(current_time)'");
 
@@ -5082,7 +5082,7 @@ syntax  [if] [in] [pweight/] [using/] [,table(string) Market(varname) race1(varn
 		  ];
 di "IneqOfOpportunity `'";
 local sheet="F26. IneqOfOpportunity";
-local version 2.3;
+local version 2.4;
 local command ceqrace;
 local versionprint ("Results produced by version `version' of `command' on `c(current_date)' at `c(current_time)'");
 
@@ -5242,7 +5242,7 @@ syntax  [if] [in] [pweight/] [using/] [,table(string) Market(varname) race1(varn
 		  ];
 	di "F27. Significance";
 	local sheet="F27. Significance";
-		local version 2.3;
+		local version 2.4;
 	local command ceqrace;
 	local versionprint ("Results produced by version `version' of `command' on `c(current_date)' at `c(current_time)'");
 

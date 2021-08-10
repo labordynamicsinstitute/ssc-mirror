@@ -1,6 +1,6 @@
 capture program drop diff 
 program define diff, rclass
-*! 5.0 Mar2017
+*! 5.0.1 Dec2019
 version 10.0
 
 ************************************************************
@@ -72,6 +72,9 @@ else if "`bs'" == "" {
 	local inf t
 }
 
+if "`cluster'" != "" {
+	local clust cluster(`cluster')
+}
 
 ************
 * Warnings *
@@ -526,11 +529,12 @@ if "`test'" != "" & "`ddd'" == "" {
 		
 		*Outcome;
 		if `period' == 0 {;
-			qui: ttest `output' `in' `if', by(`treated');
+			qui: reg `output' `treated' `krn' `in' `if', `robust' `clust';
 			tempname `output'_ttest_mc `output'_ttest_mt `output'_ttest_t `output'_ttest_p;
-			scalar ``output'_ttest_mc' = r(mu_1);
-			scalar ``output'_ttest_mt' = r(mu_2);
-			scalar ``output'_ttest_t' = r(t);
+			scalar ``output'_ttest_mc' = _b[_cons];
+			scalar ``output'_ttest_mt' = _b[_cons]+_b[`treated'];
+			scalar ``output'_ttest_t' = _b[`treated']/_se[`treated'];
+			qui: test _b[`treated'] = 0;
 			scalar ``output'_ttest_p' = r(p);
 				if ``output'_ttest_p' < 0.01 & "`nostar'" == "" {;
 					local star`output' "***";
@@ -550,12 +554,14 @@ if "`test'" != "" & "`ddd'" == "" {
 			_col(79) in gr "{c |} " in wh %5.4f ``output'_ttest_p' "`star`output''";
 		
 		* Covariates;
+				
 			foreach cov of var `cov' {;
-				qui: ttest `cov' `in' `if', by(`treated');
+				qui: reg `cov' `treated' `krn' if `touse' `comsup', `robust' `clust';
 				tempname `cov'_ttest_mc `cov'_ttest_mt `cov'_ttest_t `cov'_ttest_p;
-				scalar ``cov'_ttest_mc' = r(mu_1);
-				scalar ``cov'_ttest_mt' = r(mu_2);
-				scalar ``cov'_ttest_t' = r(t);
+				scalar ``cov'_ttest_mc' = _b[_cons];
+				scalar ``cov'_ttest_mt' = _b[_cons]+_b[`treated'];
+				scalar ``cov'_ttest_t' = _b[`treated'] / _se[`treated'];
+				qui: test _b[`treated'] = 0;
 				scalar ``cov'_ttest_p' = r(p);
 					if ``cov'_ttest_p' < 0.01 & "`nostar'" == "" {;
 						local star`cov' "***";
@@ -618,8 +624,7 @@ if "`test'" != "" & "`ddd'" == "" {
 		*/"{hline 15}";
 
 		*Outcome;
-		
-		qui: reg `output' `treated' `krn' `in' `if';
+		qui: reg `output' `treated' `krn' `in' `if', `robust' `clust';
 		tempname `output'_ttest_mc `output'_ttest_mt `output'_ttest_t `output'_ttest_p;
 		scalar ``output'_ttest_mc' = _b[_cons];
 		scalar ``output'_ttest_mt' = _b[_cons]+_b[`treated'];
@@ -644,8 +649,9 @@ if "`test'" != "" & "`ddd'" == "" {
 		_col(79) in gr "{c |} " in wh %5.4f ``output'_ttest_p' "`star`output''";
 	
 	* Covariates;
+			
 		foreach cov of var `cov' {;
-			qui: reg `cov' `treated' `krn' if `touse' `comsup';
+			qui: reg `cov' `treated' `krn' if `touse' `comsup', `robust' `clust';
 			tempname `cov'_ttest_mc `cov'_ttest_mt `cov'_ttest_t `cov'_ttest_p;
 			scalar ``cov'_ttest_mc' = _b[_cons];
 			scalar ``cov'_ttest_mt' = _b[_cons]+_b[`treated'];
@@ -1255,7 +1261,7 @@ if "`ddd'" != "" {
 	di in gr "   Control (A):" in ye _col(16) `blo0a' _col(28) `flo0a' in gr _col(40) `flo0a' + `blo0a'
 	di in gr "   Control (B):" in ye _col(16) `blo0b' _col(28) `flo0b' in gr _col(40) `flo0b' + `blo0b'
 	di in gr "   Treated (A):" in ye _col(16) `blo1a' _col(28) `flo1a' in gr _col(40) `flo1a' + `blo1a'
-	di in gr "   Treated (A):" in ye _col(16) `blo1b' _col(28) `flo1b' in gr _col(40) `flo1b' + `blo1b'
+	di in gr "   Treated (B):" in ye _col(16) `blo1b' _col(28) `flo1b' in gr _col(40) `flo1b' + `blo1b'
 	di _col(16) `blo0a' + `blo0b' + `blo1a' + `blo1b' in gr _col(28) `flo0a' + `flo0b' + `flo1a' + `flo1b'
 
 	**********
@@ -1458,7 +1464,7 @@ else if "`ddd'" != "" {
 	return scalar mean_t0a = `treat0a'
 	return scalar mean_t0b = `treat0b'
 	return scalar diff0 = `diff0'
-	return scalar mean_c1a = `control1b'
+	return scalar mean_c1a = `control1a'
 	return scalar mean_c1b = `control1b'
 	return scalar mean_t1a = `treatment1a'
 	return scalar mean_t1b = `treatment1b'

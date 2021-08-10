@@ -1,4 +1,4 @@
-*! version 3.1.1 18oct2016  Richard Williams, rwilliam@nd.edu
+*! version 3.2.5 17may2019 Richard Williams, rwilliam@nd.edu
  
 * This is a rewrite of Vincent Kang Fu's goll.ado program
 * and is called by gologit2 written by Richard Williams

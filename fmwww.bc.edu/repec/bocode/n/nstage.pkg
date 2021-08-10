@@ -16,9 +16,9 @@ d KW: design
 d KW: multi-arm
 d KW: multi-stage
 d
-d Requires: Stata version 9.2
+d Requires: Stata version 10
 d
-d Distribution-Date: 20141025
+d Distribution-Date: 20191210
 d
 d Author: Patrick Royston, UK Medical Research Council
 d Support: email  j.royston@@ucl.ac.uk

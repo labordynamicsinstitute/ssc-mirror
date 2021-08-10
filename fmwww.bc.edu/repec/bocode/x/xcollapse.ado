@@ -1,17 +1,18 @@
 #delim ;
 prog def xcollapse;
-version 10.0;
+version 16.0;
 /*
   Extended version of -collapse- with by-groups
   and an output data set that can be listed to the Stata log,
   saved to a disk file, or written to memory
   (overwriting any pre-existing data set in memory).
 *! Author: Roger Newson
-*! Date: 27 September 2011
+*! Date: 06 April 2020
 */
 
 syntax anything(name=clist id=clist equalok)  [if] [in] [aw fw iw pw] [,
-  LIst(string asis) SAving(string asis) noREstore FAST FList(string)
+  LIst(string asis) FRAme(string asis) SAving(string asis) noREstore FAST
+  FList(string)
   by(varlist)
   IDNum(string) NIDNum(name) IDStr(string) NIDStr(name)
   FOrmat(string) float
@@ -22,6 +23,7 @@ syntax anything(name=clist id=clist equalok)  [if] [in] [aw fw iw pw] [,
   and referred to by the new names if REName is specified,
   together with optional if and/or in subsetting clauses and/or list_options
   as allowed by the list command.
+-frame- specifies a Stata data frame in which to create the output data set.
 -saving- specifies a data set in which to save the output data set.
 -norestore- specifies that the pre-existing data set
   is not restored after the output data set has been produced
@@ -78,15 +80,41 @@ if "`exp'"=="" {;local exp "= 1";};
 if "`fast'"!="" {;
     local restore="norestore";
 };
-if (`"`list'"'=="")&(`"`saving'"'=="")&("`restore'"!="norestore")&("`fast'"=="") {;
-    disp as error "You must specify at least one of the four options:"
-      _n "list(), saving(), norestore, and fast."
+if (`"`list'"'=="")&(`"`frame'"'=="")&(`"`saving'"'=="")&("`restore'"!="norestore")&("`fast'"=="") {;
+    disp as error "You must specify at least one of the five options:"
+      _n "list(), frame(), saving(), norestore, and fast."
       _n "If you specify list(), then the output variables specified are listed."
+      _n "f you specify frame(), then the new data set is output to a data frame."
       _n "If you specify saving(), then the new data set is output to a disk file."
       _n "If you specify norestore and/or fast, then the new data set is created in the memory,"
       _n "and any existing data set in the memory is destroyed."
       _n "For more details, see {help xcollapse:on-line help for xcollapse}.";
     error 498;
+};
+
+*
+ Parse frame() option if present
+*;
+if `"`frame'"'!="" {;
+  cap frameoption `frame';
+  if _rc {;
+    disp as error `"Illegal frame option: `frame'"';
+    error 498;
+  };
+  local framename "`r(namelist)'";
+  local framereplace "`r(replace)'";
+  local framechange "`r(change)'";
+  if `"`framename'"'=="`c(frame)'" {;
+    disp as error "frame() option may not specify current frame."
+      _n "Use norestore or fast instead.";
+    error 498;
+  };
+  if "`framereplace'"=="" {;
+    cap noi conf new frame `framename';
+    if _rc {;
+      error 498;
+    };
+  };
 };
 
 *
@@ -166,7 +194,6 @@ if `"`format'"'!="" {;
  List variables if requested
 *;
 if `"`list'"'!="" {;
-  disp _n as text "Listing of results:";
   list `list';
 };
 
@@ -196,6 +223,15 @@ if(`"`saving'"'!=""){;
 };
 
 *
+ Create new frame if requested
+*;
+local oldframe=c(frame);
+tempname tempframe;
+if `"`framename'"'!="" {;
+  frame copy `oldframe' `tempframe', `framereplace';
+};
+
+*
  Restore old data set if restore is set
  or if program fails when fast is unset
 *;
@@ -207,5 +243,33 @@ if "`fast'"=="" {;
         restore;
     };
 };
+
+*
+ Rename temporary frame to frame name (if frame is specified)
+ and change current frame to frame name (if requested)
+*;
+if "`framename'"!="" {;
+  if "`framereplace'"=="replace" {;
+    cap frame drop `framename';
+  };
+  frame rename `tempframe' `framename';
+  if "`framechange'"!="" {;
+    frame change `framename';
+  };
+};
+
+end;
+
+prog def frameoption, rclass;
+version 16.0;
+*
+ Parse frame() option
+*;
+
+syntax name [, replace CHange ];
+
+return local change "`change'";
+return local replace "`replace'";
+return local namelist "`namelist'";
 
 end;

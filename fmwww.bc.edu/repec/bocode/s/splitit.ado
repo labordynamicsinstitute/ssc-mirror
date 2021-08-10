@@ -1,4 +1,5 @@
-*! splitit, v2.0.0, Klaudia Erhardt & Ralf Kuenster, last updated: 2017-01-02
+*! splitit, v2.0.1, Klaudia Erhardt & Ralf Kuenster, last updated: 2018-05-09
+*! update v2.0.1 bug: misvals instead of values in splitvars of one-spell-cases (files with more than 200,000 obs) is now corrrected
 *! update v2.0.0 adapted to Stata14
 
 capture program drop splitit
@@ -431,9 +432,31 @@ program splitit
 		display " `message' "
 		display "  "
 	}
+	
+	/*##############################################################################################################
+	###################   merge the split file to the original file                    #############################
+	############################################################################################################# */
+
+	
 	local message "{col 3}Processing.... Please wait while the splits are merged to original file... "
 	display " `message' "
-	display "  "
+	display " 	 "
+	
+	quietly save "`spfile'", replace
+	restore 
+	by `fivevars' `srt': gen long `tempn' = _n  /* generate the key for merging */	
+	quietly merge 1:m `fivevars' `srt' `tempn' using "`spfile'"
+	drop _merge
+	drop `tempn'
+	
+	/* replacing the missvals in unsplit spells */
+	replace `bege' = `start' if `bege' == .
+	replace `ende' = `end' if `ende' == .
+
+	/*##################################################################################################################
+	############################   new casewise spell count and total no of spells per case  variables  ################
+	##################################################################################################################*/
+	*/
 
 	sort `id' `bege' `sptype' `srt' 
 	quietly {
@@ -465,21 +488,11 @@ program splitit
 		lab var `nlev2' "by `id': sum of isochronic spells"
 	}
 
-	scalar drop `cmax' `span' `a' `b'
-	
-	/*##############################################################################################################
-	###################   merge the split file to the original file                    #############################
-	############################################################################################################# */
+	scalar drop `cmax' `span' `a' `b'	
 
-	quietly save "`spfile'", replace
-	restore 
-	by `fivevars' `srt': gen long `tempn' = _n  /* generate the key for merging */	
-	quietly merge 1:m `fivevars' `srt' `tempn' using "`spfile'"
-	drop _merge
-	drop `tempn'
 	sort `id' `bege' `sptype' `srt' `spneu'
 	describe, short
-
+	
 /*##################################################################################################################
 ############################                                           #############################################
 ############################      DISPLAY RUNTIME OF THE PROGRAM       #############################################

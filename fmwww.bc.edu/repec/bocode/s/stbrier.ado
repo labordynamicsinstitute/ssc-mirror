@@ -1,3 +1,5 @@
+*! 1.02 Ariel Linden 05August2017 // fixed touse statements, made btime() required
+*! 1.01 Chuck Huber 26July2017 // fixed mean table output
 *! 1.00 Ariel Linden 06June2017
 
 program define stbrier, rclass 
@@ -5,8 +7,8 @@ program define stbrier, rclass
 version 13 
 
 	syntax [varlist(default=none fv)] [if] [in] ,  	///
-		[ BTime(numlist) 							/// desired timepoint for the estimation 
-		Distribution(string)						/// distribution for -streg-
+		BTime(numlist) 								/// desired timepoint for the estimation 
+		[ Distribution(string)						/// distribution for -streg-
 		COMPete(string)								/// competing risk for -stcreg-
 		Ipcw(varlist fv)							/// varlist for IPCW
 		Gen(string)  								/// generate brier score
@@ -37,7 +39,6 @@ version 13
     exit 198
     }
 
-	
 	tempvar Sh t_old xbi hazi hazti St_i xbC hazC Gt1 lasthazCi Gt Gt_i
 	
 quietly {	
@@ -47,20 +48,13 @@ quietly {
 	if "`distribution'" !="" {	
 	
 		// check if specified btime is in the range
-		if "`btime'" != "" {
-			sum _t , meanonly
-			if `btime' < r(min) | `btime' > r(max) {
-				di as err "The specified btime is beyond the range of the data:" ///
-				" check timevar and respecify btime accordingly"
-				exit 498
-			}
+		sum _t if `touse', meanonly
+		if `btime' < r(min) | `btime' > r(max) {
+			di as err "The specified btime is beyond the range of the data:" ///
+			" check timevar and respecify btime accordingly"
+			exit 498
 		}
-		// else, set btime to median survival time
-		else if "`btime'" == "" {
-			stsum
-			local btime = r(p50) 
-		}
-				
+								
 		// Generate St_i = adjusted hazard probability at btime  //
 		gsort _t -`event'
 		streg `varlist' if `touse', dist(`distribution') `options'
@@ -77,28 +71,20 @@ quietly {
 	else if ("`distribution'" == "") & ("`compete'" == "") {
 	
 		// check if btime exists within the data
-		if "`btime'" != "" {
-			sum _t , meanonly
-			if `btime' < r(min) | `btime' > r(max) {
-				di as err "The specified btime is beyond the range of the data:" ///
-				" check timevar and respecify btime accordingly"
-				exit 498
-			}
-			else if `btime' > r(min) | `btime' < r(max) {
-				count if _t == `btime'
-			}
-			* if btime is not in data, reset btime to previous value of _t
-			if r(N) == 0 {
-				sum _t if _t < `btime'
-				local btime = r(max)
-			}
-		} // end btime != ""
-
-		// else, set btime to median survival time
-		else if "`btime'" == "" {
-			stsum
-			local btime = r(p50) 
-		} // end btime == ""
+		sum _t if `touse', meanonly
+		if `btime' < r(min) | `btime' > r(max) {
+			di as err "The specified btime is beyond the range of the data:" ///
+			" check timevar and respecify btime accordingly"
+			exit 498
+		}
+		else if `btime' > r(min) | `btime' < r(max) {
+			count if _t == `btime' & `touse'
+		}
+		// if btime is not in data, reset btime to previous value of _t
+		if r(N) == 0 {
+			sum _t if _t < `btime' & `touse'
+			local btime = r(max)
+		}
 		
 		// Generate St_i = adjusted hazard probability at btime  //
 		gsort _t -`event'
@@ -106,7 +92,7 @@ quietly {
 		predict `xbi' if `touse', xb
 		predict `hazi' if `touse', basechazard
 		gen `hazti' = `hazi' if _t==`btime' & `touse'
-		sum `hazti', meanonly
+		sum `hazti' if `touse', meanonly
 		replace `hazti' = r(mean) if `touse'
 		gen `St_i' = 1-(exp(-`hazti')^exp(`xbi')) if `touse'
 	
@@ -117,35 +103,27 @@ quietly {
 	else if "`compete'" != "" {
 	
 		// check if btime exists within the data
-		if "`btime'" != "" {
-			sum _t , meanonly
-			if `btime' < r(min) | `btime' > r(max) {
-				di as err "The specified btime is beyond the range of the data:" ///
-				" check timevar and respecify btime accordingly"
-				exit 498
-			}
-			else if `btime' > r(min) | `btime' < r(max) {
-				count if _t == `btime'
-			}
-			* if btime is not in data, reset btime to previous value of _t
-			if r(N) == 0 {
-				sum _t if _t < `btime'
-				local btime = r(max)
-			}
-		} // end btime != ""
-
-		// else, set btime to median survival time
-		else if "`btime'" == "" {
-			stsum
-			local btime = r(p50) 
-		} // end btime == ""
-
+		sum _t if `touse', meanonly
+		if `btime' < r(min) | `btime' > r(max) {
+			di as err "The specified btime is beyond the range of the data:" ///
+			" check timevar and respecify btime accordingly"
+			exit 498
+		}
+		else if `btime' > r(min) | `btime' < r(max) {
+			count if _t == `btime' & `touse'
+		}
+		// if btime is not in data, reset btime to previous value of _t
+		if r(N) == 0 {
+			sum _t if _t < `btime' & `touse'
+			local btime = r(max)
+		}
+		
 		// Generate St_i = adjusted hazard probability at btime  //
 		gsort _t -`event'
 		stcrreg `varlist' if `touse', compete(`compete') `options'
 		predict `hazi' if `touse', basecif
 		gen `hazti' = `hazi' if _t==`btime' & `touse'
-		sum `hazti', meanonly
+		sum `hazti' if `touse', meanonly
 		replace `hazti' = r(mean) if `touse'
 
 		if "`varlist'" != "" {
@@ -166,9 +144,9 @@ quietly {
 	/********************** Generate IPCW ******************************/	
 		
 	// Check if btime exists in the data. If not, reset btime to previous value of _t	
-		count if _t == `btime'
+		count if _t == `btime' & `touse'
 		if r(N) == 0 {
-			sum _t if _t < `btime'
+			sum _t if _t < `btime' & `touse'
 			local btime = r(max)
 		}
 	
@@ -178,7 +156,7 @@ quietly {
 		predict `xbC' if `touse', xb  
 		predict `hazC' if `touse', basechazard
 		gen `Gt1' = `hazC' if _t==`btime' & `touse'
-		sum `Gt1', meanonly
+		sum `Gt1' if `touse', meanonly
 		replace `Gt1' = r(mean) if `touse'
 		gen `Gt' = (exp(-`Gt1')^exp(`xbC')) if `touse'
 
@@ -210,15 +188,54 @@ quietly {
 } // end quietly
 
 	// get mean brier score and save as scalar
-		mean `brier' if `touse'
+		quietly mean `brier' if `touse'
+		
+		// display the results
+		tempname meanout n mean se ll ul level
+		local `level' = r(level)
+		local `n' = e(N)
+		matrix `meanout' = r(table)
+		matrix colnames `meanout' = "brier"
+		scalar `mean' = `meanout'[1,1]
+		scalar `se'   = `meanout'[2,1]
+		scalar `ll'   = `meanout'[5,1]
+		scalar `ul'   = `meanout'[6,1]
+
+		disp ""
+		disp "Mean estimation                      Number of obs   = "  %9.0g as result  ``n''
+		disp ""
+		tempname mytab
+		.`mytab' = ._tab.new, col(5) lmargin(0)
+		.`mytab'.width    15   |12    12    12    12
+		.`mytab'.titlefmt  .     .    . %24s   .
+		.`mytab'.pad       .     2     3     3    3
+		.`mytab'.numfmt    . %9.0g %9.0g %9.0g %9.0g
+		.`mytab'.strcolor result  .  .  . . 
+		.`mytab'.strfmt    %14s  .  .  . .
+		.`mytab'.strcolor   text  .  .  . .
+		.`mytab'.sep, top
+		.`mytab'.titles " "           				/// 1
+				"Mean"								/// 2
+				"   Std. Err."                     	/// 3
+				"[``level''% Conf. Interval]" ""  	//  4 5
+		.`mytab'.sep, middle
+		.`mytab'.row    "Brier score" 				///
+			`mean'									///
+			`se' 									///
+			`ll'									///
+			`ul'
+		.`mytab'.sep, bottom
+		
+		
 		matrix br  = e(b)
 		return scalar brier = br[1,1]
+		return matrix table = `meanout'
 
 	// to save, or not to save, this is the question....
 	quietly {
 		if "`gen'" != "" {
 			gen `gen' = `brier'
-			label var `gen' "stbrier scores"
+			label var `gen' "brier scores"
 		}
 	} // end gen quietly	
 end 

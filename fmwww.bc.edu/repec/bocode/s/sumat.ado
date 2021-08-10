@@ -1,33 +1,42 @@
-*! Part of package matrixtools v. 0.2
-*! Support: Niels Henrik Bruun, nhbr@ph.au.dk
-*! 2016-08-24 >	Option hide added
-* TOTEST labels as option
-* TODO colby
+*! Part of package matrixtools v. 0.25
+*! Support: Niels Henrik Bruun, niels.henrik.bruun@gmail.com
+*! 2021-01-03 toxl added
+*2019-03-14 > Option transposed added
+*2017-10-09 > If only one variable is chosen, row names are set to row equations. And row euations are removed
+*2017-10-08 > Option COLby added
+*2017-10-08 > Smoothed data for percentiles
+*2017-10-08 > Option noLabel added
+*2017-10-08 > Option Verbose added
+
 * TODO proportion ci ?
 * TODO meta data statistics - integer booleans?
 
 program define sumat, rclass
 	version 12.1
 	syntax varlist [if] [in] [using], /*
-		*/STATistics(string)/*
-		*/[/*
-			*/coleq(string)/*
-			*/roweq(string)/*
+		*/STATistics(string) /*
+		*/[ /*
+			*/coleq(string) /*
+			*/roweq(string) /*
 			*/Ppct(integer 95)/*
-			*/ROWby(varname)/*
+			*/ROWby(varname) /*
+			*/COLby(varname) /*
 			*/Total /*
 			*/Full /*
 			*/noLabel /*
-			*/Hide(integer 0)/*
+			*/Hide(integer 0) /*
 			*/Verbose /*
+			*/TRanspose /*
+			*/noCleanupmata /*
 			matprint options
-			*/Style(passthru)/*
-			*/Decimals(passthru)/*
-			*/TItle(passthru)/*
-			*/TOp(passthru)/*
-			*/Undertop(passthru)/*
-			*/Bottom(passthru)/*
-			*/Replace(passthru)/*
+			*/Style(passthru) /*
+			*/Decimals(passthru) /*
+			*/TItle(passthru) /*
+			*/TOp(passthru) /*
+			*/Undertop(passthru) /*
+			*/Bottom(passthru) /*
+			*/Replace /*
+            */toxl(passthru) /*
 		*/]
 
 	if `hide' < 0 {
@@ -41,60 +50,130 @@ program define sumat, rclass
 	local __N `=r(sum)'
 	
 	mata: __add_quietly = !(__verbose=("`verbose'" != ""))
+	mata: __sumat = lmtable("`rowby'", "`colby'", "`total'" != "", "`varlist'", "`statistics'", ///
+		`ppct', `__N', `hide', `hide', "`label'" != "", __verbose, __add_quietly)
 
-	quietly capture matrix drop __out __tmp
-	if "`rowby'" != "" {
-		if "`full'" == "full" quietly levelsof `rowby', local(__levels)
-		else quietly levelsof `rowby' `if' `in', local(__levels)
-		foreach val in `__levels' {
-			foreach var of varlist `varlist' {
-				mata: __row = nhb_sae_summary_row("`var'", "`statistics'", "__tmp", ///
-						"if __if_in & `rowby' == `val'", "", `ppct', `__N', `hide', ///
-						"`label'" != "", __verbose, __add_quietly)
-				if "`label'" == "" {
-					local valuelbl "`:value label `rowby''"
-					if "`valuelbl'" != "" {
-						matrix roweq __tmp = `"`rowby'(`:label `valuelbl' `val'')"'
-						if `c(version)' >= 13 {
-							matrix rownames __tmp = `"`:variable label `var''"'
-						}
-						else {
-							matrix rownames __tmp = `"`=subinstr(`"`:variable label `var''"', ".", "", .)'"'
-						}
-					}
-					else {
-						display `"{error: No value label for rowby variable "`rowby'"}"'
-					}
-				}
-				else matrix roweq __tmp = "`rowby'(`val')"
-				matrix __out = nullmat(__out) \ __tmp
-			}
-		}
-	}
-	if "`total'" == "total" | "`rowby'" == "" { 
-		foreach var of varlist `varlist' {
-			mata: __row = nhb_sae_summary_row("`var'", "`statistics'", "__tmp", ///
-						"if __if_in", "", `ppct', `__N', `hide', "`label'" != "", ///
-						__verbose, __add_quietly)
-			if "`total'" == "total" matrix roweq __tmp = Total
-			matrix __out = nullmat(__out) \ __tmp
-		}
-	}
-	if "`coleq'" != "" matrix coleq __out = `"`coleq'"'
-	if "`roweq'" != "" {
-		mata: __rs = st_matrixrowstripe("__out")
-		mata: __rs[., 2] = any(__rs[., 1] :!= "") ? (__rs[., 1] :+ ", " :+ __rs[., 2]) : __rs[., 2]
-		mata: __rs[., 1] = J(rows(__rs), 1, "`roweq'")
-		mata __rs = abbrev(__rs, 32)
-		mata: st_matrixrowstripe("__out", __rs)
-	}
-	quietly capture matrix drop __tmp
-	quietly capture mata drop __row
+	if "`roweq'" != "" mata: __sumat.row_equations(`"`roweq'"')
+	if "`coleq'" != "" mata: __sumat.column_equations(`"`coleq'"')
+
+	mata: st_rclear()
+	if "`transpose'" == "" mata: __sumat.to_matrix("r(sumat)")
+	else mata: __sumat.transposed().to_matrix("r(sumat)")
 	
 	*** matprint ***************************************************************
-	matprint __out `using',	`style' `decimals' `title' `top' `undertop' `bottom' `replace'
+	matprint r(sumat) `using',	`style' `decimals' `title' `top' `undertop' `bottom' `replace' `toxl'
 	****************************************************************************
-
-	return matrix sumat = __out
 	capture drop __if_in
+	capture mata: mata drop __add_quietly
+	capture mata: mata drop __verbose
+	if `"`cleanupmata'"' == "" capture mata: mata drop __sumat
+	return add
+    
+end
+
+mata:
+	real rowvector values(string scalar var, | real scalar total)
+	{
+		real rowvector vals
+	
+		vals = nhb_sae_unique_values(var, "", "", 1)
+		if ( total != 0 | vals == J(1, 0, .) ) vals = vals, .t
+		return(vals)
+	}
+
+	string matrix conditions(string scalar rvar, string scalar cvar, | real scalar total)
+	{
+		real scalar r, c, R, C
+		real rowvector cvals, rvals
+		string scalar rcond, ccond
+		string matrix conds
+
+		cvals = values(cvar, total)
+		C = cols(cvals)
+		rvals = values(rvar, total)
+		R = cols(rvals)
+		conds = J(R, C, "")
+		for(r=1;r<=R;r++) {
+			rcond = rvals[r] == .t ? "" : sprintf("& %s == %f", rvar, rvals[r])
+			for(c=1;c<=C;c++) {
+				ccond = cvals[c] == .t ? "" : sprintf("& %s == %f", cvar, cvals[c])
+				conds[r,c] = sprintf("if __if_in %s %s", rcond, ccond)
+			}
+		}
+		return(conds)
+	}
+
+	class nhb_mt_labelmatrix scalar lmtable(	string scalar rvar, 
+												string scalar cvar, 
+												real scalar total,
+												string scalar varlist, 
+												string scalar statistics, 
+												real scalar ppct,
+												real scalar N,
+												real scalar smooth_width,
+												real scalar hide,
+												real scalar nolabel,
+												real scalar showcode,
+												real scalar addquietly						
+												)
+	{
+		colvector eq, nm
+		real scalar r, c, v, R, C, V, cval, rval
+		real rowvector cvals, rvals
+		string scalar rlbl, clbl, rvlbl, cvlbl
+		string rowvector vlst
+		string matrix conds
+		class nhb_mt_labelmatrix scalar rlm, clm, lmcell
+
+		rvals = values(rvar)
+		cvals = values(cvar)
+		conds = conditions(rvar, cvar, total)
+		C = cols(conds)
+		R = rows(conds)
+		vlst = tokens(varlist)
+		V = cols(vlst)
+		
+		if ( nolabel | ( rlbl = (rvar != "" ? st_varlabel(rvar) : "") ) == "" ) rlbl = rvar
+		if ( nolabel | ( clbl = (cvar != "" ? st_varlabel(cvar) : "") ) == "" ) clbl = cvar
+		for(c=1;c<=C;c++) {
+			if ( (cval=cvals[c]) == .t ) cvlbl = "Total"
+			else cvlbl = nolabel ? strofreal(cval) : nhb_sae_labelsof(cvar, cval)
+			for(r=1;r<=R;r++) {
+				if ( (rval=rvals[r]) == .t ) rvlbl = "Total"
+				else rvlbl = nolabel ? strofreal(rval) : nhb_sae_labelsof(rvar, rval)
+				for(v=1;v<=V;v++) {
+					lmcell = nhb_sae_summary_row(	vlst[v], 
+													statistics, 
+													"", 
+													conds[r,c], 
+													"", 
+													ppct, 
+													N, 
+													smooth_width, 
+													hide, 
+													nolabel, 
+													showcode, 
+													addquietly
+													)
+					if ( rvar != "" ) lmcell.row_equations(rval != .t ? sprintf("%s(%s)", rlbl, rvlbl) : "Total")
+					if ( cvar != "" ) lmcell.column_equations(cval != .t ? sprintf("%s(%s)", clbl, cvlbl) : "Total")
+					if ( r * v == 1 ) {
+						clm = lmcell
+					} else {
+						clm.append(lmcell)
+					}
+				}
+			}
+			if ( c == 1 ) rlm = clm
+			else {
+				rlm.add_sideways(clm)
+			}
+		}
+		
+		if ( V == 1 & rlm.row_equations() != "" ) {
+			rlm.row_names(rlm.row_equations())
+			rlm.row_equations("")
+		}
+		return(rlm)
+	}
 end

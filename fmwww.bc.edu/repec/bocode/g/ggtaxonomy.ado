@@ -1,15 +1,16 @@
 ***************************************************************************
 *! ggtaxonomy: Command for identifying your most suitable GG family model
-* A tribute to Professor ¡lvaro MuÒoz, in gratitude for his visit to Bogot·
-* ado by AndrÈs Gonz·lez Rangel
+* A tribute to Professor √Ålvaro Mu√±oz, in gratitude for his visit to Bogot√°
+* ado by Andr√©s Gonz√°lez Rangel
 * andres.gonzalez@iecas.org
 * Updated version by Usama Bilal
 * ubilal@jhmi.edu
 *! version 0.9 17may2013
 *! version 0.95 19aug2015
+*! version 0.96 14sep2017 (ensuring backwards compatibility with STATA 15)
 ***************************************************************************
 
-program ggtaxonomy
+program define ggtaxonomy, nclass
 	version 11.0
 	syntax
 
@@ -20,25 +21,35 @@ if regexm(e(cmd),"gamma") == 0 {
 }
 
 
-
 * 2. Obtaining coefficients
-local kapco = e(kappa)
-local kapub = e(kappa)+(_se[kappa:_cons]*invnorm(1-(1-c(level)/100)/2))
-local kaplb = e(kappa)-(_se[kappa:_cons]*invnorm(1-(1-c(level)/100)/2))
-local kapvar=(_se[kappa:_cons])^2
-local sigco = e(sigma)
-local sigub = exp(_b[ln_sig:_cons]+(_se[ln_sig:_cons]*invnorm(1-(1-c(level)/100)/2)))
-local siglb = exp(_b[ln_sig:_cons]-(_se[ln_sig:_cons]*invnorm(1-(1-c(level)/100)/2)))
-local lnsigco=ln(e(sigma))
-local lnsigvar=(_se[ln_sig:_cons])^2
 matrix vcov=e(V)
-matrix cov=vcov["ln_sig:_cons","kappa:_cons"]
+matrix variances=vecdiag(vcov)
+
+capture matrix kapvar=variances[1,"/:kappa"]
+capture matrix kapvar=variances[1,"kappa:_cons"]
+local kapse=sqrt(kapvar[1,1])
+local kapco = e(kappa)
+local kapub = e(kappa)+(`kapse'*invnorm(1-(1-c(level)/100)/2))
+local kaplb = e(kappa)-(`kapse'*invnorm(1-(1-c(level)/100)/2))
+local kapvar=(`kapse')^2
+
+capture matrix sigvar=variances[1,"/:lnsigma"]
+capture matrix sigvar=variances[1,"ln_sig:_cons"]
+local sigse=sqrt(sigvar[1,1])
+local sigco = e(sigma)
+local sigub = exp(ln(e(sigma))+(`sigse'*invnorm(1-(1-c(level)/100)/2)))
+local siglb = exp(ln(e(sigma))-(`sigse'*invnorm(1-(1-c(level)/100)/2)))
+local lnsigco=ln(e(sigma))
+local lnsigvar=(`sigse')^2
+
+capture matrix cov=vcov["/:lnsigma","/:kappa"]
+capture matrix cov=vcov["ln_sig:_cons","kappa:_cons"]
 local cov=cov[1,1]
 local corr=`cov'/(sqrt(`kapvar')*sqrt(`lnsigvar'))
 
 * 3. Text output
 di "Taxonomy of hazard functions for the generalized gamma distribution" _n ///
-"Cox C, Chu H, Schneider MF, MuÒoz A. Stat Med. 2007 Oct 15;26(23):4352-74" _n(2) ///
+"Cox C, Chu H, Schneider MF, Mu√±oz A. Stat Med. 2007 Oct 15;26(23):4352-74" _n(2) ///
 "Locate your model in the GG family map: kappa and sigma coefficients with their confidence intervals are plotted" _n ///
 "Reference lines for nested distributions are provided. See help ggtaxonomy for more information" _n(2)
 
@@ -83,12 +94,12 @@ quietly {
 	line gamma invgamma ammag invammag weibull invweibull lognormal s ///
 		, xtitle("Scale") ytitle("Shape", margin(right)) ylabel(, nogrid) aspectratio(.75) ///
 		title("Taxonomy of hazard functions", span) subtitle("for the generalized gamma distribution", margin(bottom) span) ///
-		note("Cox C, Chu H, Schneider MF, MuÒoz A. Stat Med. 2007 Oct 15;26(23):4352-74") ///
+		note("Cox C, Chu H, Schneider MF, Mu√±oz A. Stat Med. 2007 Oct 15;26(23):4352-74") ///
 		lpattern(solid shortdash solid shortdash dash shortdash dash) ///
 		lcolor(navy navy green green red red gold) ///
 		legend(symxsize(*.5) cols(1) position(3) size(vsmall) order(1 2 3 4 5 6 7 8 9) ///
 		label(1 "Standard Gamma") label(2 "Inverse Gamma") ///
-		label(3 "AmmagÆ") label(4 "Inverse AmmagÆ") ///
+		label(3 "Ammag¬Æ") label(4 "Inverse Ammag¬Æ") ///
 		label(5 "Weibull") label(6 "Inverse Weibull") ///
 		label(7 "Lognormal") label(9 "Kappa/Sigma CI") ///
 		label(8 "You are here")) ///

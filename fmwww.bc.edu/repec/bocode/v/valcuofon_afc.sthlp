@@ -1,5 +1,5 @@
 {smcl}
-{* *! version 0.13.03  5mar2013}{...}
+{* *! version 0.21.04  5apr2021}{...}
 {cmd:help valcuofon_afc}
 {hline}
 
@@ -21,7 +21,7 @@
 {synoptset 20 tabbed}{...}
 {synopthdr}
 {synoptline}
-{synopt:{opt a:gno}(#)}A{c n~}o que se desea descargar (por defecto 2013).{p_end}
+{synopt:{opt a:gno}(#)}A{c n~}o que se desea descargar (por defecto 2021).{p_end}
 {synopt:{opt s:ave}({it:filename})}Nombre del archivo (dta) al cual exportar los datos (preservar{c a'} la informaci{c o'}n cargada).{p_end}
 {synopt:{opt c:lear}}Reemplaza los datos actualmente cargados por los que se descargar{c a'}n.{p_end}
 {synoptline}
@@ -31,28 +31,27 @@
 
 {pstd}
 {cmd:valcuofon_afc} Se conecta directamente al centro de estad{c i'}sticas de la
-Superintendencia de Pensiones y, en base a a{c n~}o seleccionado, descarga los 
+Superintendencia de Pensiones y, en base al a{c n~}o seleccionado, descarga los 
 valores cuota y patrimonio diarios para los fondos CIC y FCS.{p_end}
 
 {title:Examples}
 
-{pstd}Descargando datos del 2013{p_end}
+{pstd}Descargando datos del 2021{p_end}
 {phang2}{cmd:. valcuofon_afc}{p_end}
 {phang2}{it:   ({stata valcuofon_afc:click para ejecutar})}{p_end}
 
-{pstd}Descargando datos del 2010 y guard{c a'}ndolos en {it:cuotas_y_patrimonio.dta}{p_end}
-{phang2}{cmd:. valcuofon_afc, agno(2010) save(cuotas_y_patrimonio.dta)}{p_end}
-{phang2}{it:   ({stata valcuofon_afc, agno(2010) save(cuotas_y_patrimonio.dta):click para ejecutar})}{p_end}
+{pstd}Descargando datos del 2020 y guard{c a'}ndolos en {it:cuotas_y_patrimonio.dta}{p_end}
+{phang2}{cmd:. valcuofon_afc, agno(2020) save(cuotas_y_patrimonio.dta)}{p_end}
+{phang2}{it:   ({stata valcuofon_afc, agno(2020) save(cuotas_y_patrimonio.dta):click para ejecutar})}{p_end}
 
 {title:References}
 
-{pstd}Superintendencia de Pensiones, {it:Centro de Estad{c i'}sticas} {browse "http://www.spensiones.cl/safpstats/stats/"}{p_end}
+{pstd}Superintendencia de Pensiones, {it:Estad{c i'}sticas e Informes} {browse "https://www.spensiones.cl/portal/institucional/594/w3-propertyname-621.html"}{p_end}
 
 {title:Author}
 
-{pstd}
-George Vega Yon, Superindentencia de Pensiones. {browse "mailto:gvega@spensiones.cl"}
-{p_end}
+{pstd} George Vega Yon, Superindentencia de Pensiones. {browse "mailto:gvega@spensiones.cl"} {p_end}
+{pstd} Eugenio Salvo Cifuentes, Superindentencia de Pensiones. {browse "mailto:esalvo@spensiones.cl"}{p_end}
 
 {title:Also see}
 

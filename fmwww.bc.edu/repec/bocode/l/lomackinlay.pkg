@@ -1,6 +1,6 @@
 d 'LOMACKINLAY': module to perform Lo-MacKinlay variance ratio test
 d
-d lomackinlay computes a overlapping variance-ratio test on a
+d  lomackinlay computes a overlapping variance-ratio test on a
 d timeseries. The timeseries	should be in level form; e.g., to
 d test that stock returns vary randomly around a constant    mean,
 d you consider the null hypothesis that the log price series is a
@@ -19,10 +19,10 @@ d KW: time series
 d
 d Requires: Stata version 9.2
 d
-d Distribution-Date: 20071114
+d Distribution-Date: 20190311
 d
 d Author: Christopher F Baum, Boston College
 d Support: email baum@@bc.edu
 d
 f lomackinlay.ado
-f lomackinlay.hlp
+f lomackinlay.sthlp

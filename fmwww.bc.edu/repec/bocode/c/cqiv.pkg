@@ -20,7 +20,7 @@ d KW: IV
 d
 d Requires: Stata version 10
 d
-d Distribution-Date: 20160831
+d Distribution-Date: 20190925
 d
 d Author: Victor Chernozhukov, MIT 
 d Support: email vchern@@mit.edu 
@@ -37,3 +37,4 @@ d
 f cqiv.ado
 f cqiv.sthlp
 f ../a/alcoholengel.dta
+f cqiv_article.pdf

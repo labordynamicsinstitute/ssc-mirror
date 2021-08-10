@@ -23,6 +23,7 @@ mata set matastrict on
 	asarray(funs, "quantile", &aggregate_quantile())
 	asarray(funs, "iqr", &aggregate_iqr())
 	asarray(funs, "sd", &aggregate_sd())
+	asarray(funs, "nansum", &aggregate_nansum())
 	// ...
 	return(funs)
 }
@@ -72,15 +73,13 @@ mata set matastrict on
 	else {
 		return( `panelsum'(editmissing(data, 0), weights, F.info) )
 	}
+}
 
-	// Older:
-	//`Integer'	            i
-	//`Vector'	            results
-	//results = J(F.num_levels, 1, .)
-	//for (i = 1; i <= F.num_levels; i++) {
-    //    results[i] = quadsum(panelsubmatrix(data, i, F.info))
-	//}
-	//return(results)
+
+`Vector' aggregate_nansum(`Factor' F, `Vector' data, `Vector' weights, `String' wtype)
+{
+	assert(wtype == "")
+	return( `panelsum'(editmissing(data, 0), 1, F.info) :/ (`panelsum'(data :<., 1, F.info) :> 0) )
 }
 
 

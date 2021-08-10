@@ -25,11 +25,12 @@ d KW: chartjunk
 d
 d Requires: Stata version 12
 d
-d Distribution-Date: 20170127
+d Distribution-Date: 20200807
 d
 d Author: Daniel Bischof, University of Zurich
 d Support: email bischof@@ipz.uzh.ch
 d
+f blindschemes.sthlp
 f ../s/scheme-plotplain.scheme
 f ../s/scheme-plotplainblind.scheme
 f ../s/scheme-plottig.scheme
@@ -38,12 +39,12 @@ f ../p/plotplain.sthlp
 f ../p/plotplainblind.sthlp
 f ../p/plottig.sthlp
 f ../p/plottigblind.sthlp
+f ../c/color-vermillion.style
 f ../c/color-sky.style
 f ../c/color-reddish.style
 f ../c/color-orangebrown.style
 f ../c/color-ananas.style
 f ../c/color-turquoise.style
-f ../c/color-vermillion.style
 f ../c/color-sea.style
 f ../c/color-plb1.style
 f ../c/color-plb2.style

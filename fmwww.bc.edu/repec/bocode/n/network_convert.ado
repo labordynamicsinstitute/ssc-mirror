@@ -1,5 +1,7 @@
 /*
-*! version 1.1 # Ian White # 8jun2015
+*! Ian White # 4apr2018
+	default changed from large(1E4) to large(1E5)
+version 1.1 # Ian White # 8jun2015
 8jun2015
     "binomial" changed to "count"
     minor bug fix: `large' was added multiple times; now added only once
@@ -37,7 +39,7 @@ else local diaserror di as error
 
 * large value for augmenting
 if "`newformat'"=="augmented" {
-    if `large'==0 local large 10000
+    if `large'==0 local large 100000
 }
 else if `large'!=0 {
     `diaserror' "large(`large') ignored because we're not converting to augmented format"

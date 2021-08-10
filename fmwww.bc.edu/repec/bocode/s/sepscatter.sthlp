@@ -1,5 +1,5 @@
 {smcl}
-{* 29apr2014/9may2014}{...}
+{* 29apr2014/9may2014/10dec2018}{...}
 {hline}
 help for {hi:sepscatter}
 {hline}
@@ -79,6 +79,7 @@ Only one of {cmd:mylabel()} and {cmd:mynumeric()} may be specified.
 
 {p 4 8 2}
 {it:graph_options} are options allowed with {help scatter}.  
+Note in particular that {cmd:addplot()} is supported. 
 
 {p 8 8 2}
 Particular attention is drawn to {help advanced_options:recast()}, which

@@ -19,7 +19,7 @@ respectively,
 and {it:transformation_name} can be one of
 
 {pstd}
-{cmd:log} | {cmd:logit} | {cmd:atanh} | {cmd:asin}
+{cmd:log} | {cmd:logit} | {cmd:loglog} | {cmd:cloglog} | {cmd:atanh} | {cmd:asin}
 
 
 {title:Description}
@@ -52,17 +52,32 @@ which are more likely to have the correct coverage probability.
 
 {p 4 8 2}
 {opt transformation(transformation_name)} must be specified.
-It can be one of {cmd:log}, {cmd:logit}, {cmd:atanh} or {cmd:asin},
-specifying the log, the logit, the hyperboloc arctangent (Fisher's {it:z}), of the arcsine, respectively.
+It can be one of {cmd:log}, {cmd:logit}, {cmd:loglog}, {cmd:cloglog}, {cmd:atanh} or {cmd:asin},
+specifying the log, the logit, the log-log, the complementary log-log,
+the hyperbolic arctangent (Fisher's {it:z}), or the arcsine, respectively.
 These are all standard Normalizing and/or variance-stabilizing transformations,
 used for a variety of parameters.
-Typically, we use the logit transform for proportions,
-the log transform for arithmetic means of non-negative-valued variables,
+Typically, we use the log transform for arithmetic means of non-negative-valued variables,
+the logit, log-log and complementary log-log transform for proportions,
 and the hyperbolic arctangent and arcsine parameters
 for differences between proportions.
 
 
 {title:Methods and formulas}
+
+{pstd}
+The log-log transform of {cmd:transformation(loglog)} is defined by the Stata formula
+
+{pstd}
+{cmd:y=cloglog(1-x)}
+
+{pstd}
+where {cmd:x} is a variable that should have values in the open interval between 0 and 1.
+The log-log transform is widely used in survival analysis
+to calculate confidence intervals for Kaplan-Meier survival probabilities
+(see help for {helpb sts}).
+The {cmd:transformation()} values {cmd:log}, {cmd:logit}, {cmd:cloglog}, {cmd:atanh} and {cmd:asin}
+are defined using the {help functions:Stata functions} of the same names.
 
 {pstd}
 {cmd:esetran} computes the transformed standard errors using the delta method.
@@ -211,6 +226,29 @@ and back-transforms using the {cmd:sin()} function.
 {phang2}{inp:. list, abbr(32)}{p_end}
 {phang2}{inp:. restore}{p_end}
 
+{pstd}
+The following example uses {helpb margins} and {helpb parmest}
+to create a dataset with 1 observation per smoking status
+and data on probabilities of low birthweight.
+We then use {cmd:esetran} to transform the estimates and standard errors,
+using the decreasing log-log transform.
+We then create the confidence limits using {helpb parmcip},
+back-transform the estimates and confidence limits,
+and use the {help ssc:SSC} package {helpb creplace}
+to exchange values between the back-transformed confidence limits.
+
+{phang2}{inp:. margins i.smoke}{p_end}
+{phang2}{inp:. preserve}{p_end}
+{phang2}{inp:. parmest, bmat(r(b)) vmat(r(V)) fast}{p_end}
+{phang2}{inp:. esetran estimate stderr, transform(loglog)}{p_end}
+{phang2}{inp:. parmcip, replace}{p_end}
+{phang2}{inp:. foreach Y of var estimate min* max* {c -(}}{p_end}
+{phang2}{inp:.   replace `Y'=1-invcloglog(`Y')}{p_end}
+{phang2}{inp:. {c )-}}{p_end}
+{phang2}{inp:. creplace min* max*}{p_end}
+{phang2}{inp:. list, abbr(32)}{p_end}
+{phang2}{inp:. restore}{p_end}
+
 
 {title:Author}
 
@@ -254,5 +292,5 @@ Presented at {browse "http://ideas.repec.org/s/boc/usug02.html" :the 8th United 
 {p_end}
 {p 4 13 2}
 On-line: help for {help data_types}, {helpb creturn}, {helpb margins}
-{break} help for {helpb parmest}, {helpb parmcip} if installed
+{break} help for {helpb parmest}, {helpb parmcip}, {helpb creplace} if installed
 {p_end}

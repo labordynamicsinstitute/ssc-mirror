@@ -1,4 +1,4 @@
-*! evaldes 1.2.0  06Jul2016
+*! evaldes 1.2.1  18Aug2017
 *! author arh
 
 program define evaldes, rclass sortpreserve
@@ -31,7 +31,6 @@ program define evaldes, rclass sortpreserve
 		
 	mata: dcreate_DESMAT = select(st_data(.,st_local("explist")),st_matrix(st_local("noomit")))
 	mata: dcreate_DEVMAT = J(strtoreal(st_local("nobs")),strtoreal(st_local("ncoef")),0)
-	mata: dcreate_P = J(strtoreal(st_local("nobs")),1,0)	
 	mata: dcreate_nalt = strtoreal(st_local("nalt"))
 	mata: dcreate_nobs = strtoreal(st_local("nobs"))
 	mata: dcreate_ncoef = strtoreal(st_local("ncoef"))
@@ -39,9 +38,9 @@ program define evaldes, rclass sortpreserve
 	if ("`vmat'" != "") {
 		mata: dcreate_HASV = 1
 		mata: dcreate_B = st_matrix(st_local("bmat"))'
-		mata: dcreate_B = dcreate_B :+ cholesky(st_matrix(st_local("vmat")))*invnormal(halton(dcreate_nrep,rows(dcreate_B),(1+dcreate_burn))')
 		mata: dcreate_nrep = strtoreal(st_local("nrep"))
 		mata: dcreate_burn = strtoreal(st_local("burn"))
+		mata: dcreate_B = dcreate_B :+ cholesky(st_matrix(st_local("vmat")))*invnormal(halton(dcreate_nrep,rows(dcreate_B),(1+dcreate_burn))')		
 	}	
 	else {
 		mata: dcreate_HASV = 0	
@@ -60,7 +59,7 @@ program define evaldes, rclass sortpreserve
 		exit 498			
 	}							
 	
-	mata: d = deffi(dcreate_DESMAT, dcreate_DEVMAT, dcreate_P, dcreate_B, dcreate_nalt, dcreate_ncoef)	
+	mata: d = deffi(dcreate_DESMAT, dcreate_DEVMAT, dcreate_B, dcreate_nalt, dcreate_ncoef)	
 	mata: st_numscalar("r(d_eff)", d)
 
 	if (r(d_eff) == 0) | (r(d_eff) >= .) {
@@ -95,9 +94,9 @@ program define evaldes, rclass sortpreserve
 			tempname breps
 			mata: st_matrix("`breps'",dcreate_B[.,`r'])		
 			clogit `y' `estvars', group(choice_set) iter(0) from(`breps', copy)
-			matrix `deff' = `deff' + det(e(V))^(-1/e(df_m))
+			matrix `deff' = `deff' + det(e(V))^(1/e(df_m))
 		}
-		matrix `deff' = `deff' / `nrep'
+		matrix `deff' = 1/(`deff'[1,1]/`nrep')
 		
 		if float(`deff'[1,1])==float(`d') {	
 			n di
@@ -132,7 +131,7 @@ end
 
 version 9.2
 mata: 
-function deffi(matrix XMAT, matrix DEVMAT, matrix P, matrix B, real scalar nalt, real scalar nvars)
+function deffi(matrix XMAT, matrix DEVMAT, matrix B, real scalar nalt, real scalar nvars)
 {
 	external dcreate_HASV
 
@@ -153,9 +152,9 @@ function deffi(matrix XMAT, matrix DEVMAT, matrix P, matrix B, real scalar nalt,
 				XP = colshape(XP',1)
 				DEVMAT[.,k] = XP
 			}
-			V = V :+ det(cross(DEVMAT, P, DEVMAT))^(1/nvars)	
+			V = V :+ det(cross(DEVMAT, P, DEVMAT))^(-1/nvars)	
 		}
-		return(V :/ dcreate_nrep)
+		return(1/(V:/dcreate_nrep))
 	}
 	else {
 		EV = exp(XMAT*B')
@@ -174,3 +173,4 @@ function deffi(matrix XMAT, matrix DEVMAT, matrix P, matrix B, real scalar nalt,
 	}
 }
 end
+

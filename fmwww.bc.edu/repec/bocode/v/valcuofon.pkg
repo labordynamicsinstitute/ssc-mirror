@@ -9,9 +9,9 @@ d
 d KW: data management
 d KW: internet access
 d
-d Requires: Stata version 10
+d Requires: Stata version 9
 d
-d Distribution-Date: 20130317
+d Distribution-Date: 20210406
 d
 d Author: George Vega Yon , Superintendencia de Pensiones, Chile
 d Support: email gvega@@spensiones.cl

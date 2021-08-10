@@ -335,7 +335,7 @@ A one by one matrix that contains the Root Mean Squared Prediction Error (RMSPE)
 {p 4 8 2}
 Load Example Data: This panel dataset contains information for 39 US States for the years 1970-2000
 (see Abadie, Diamond, and Hainmueller (2010) for details).{p_end}
-{p 4 8 2}{stata "sysuse smoking":. sysuse smoking}{p_end}
+{p 4 8 2}{stata "use synth_smoking":. use synth_smoking}{p_end}
 
 {p 4 8 2}
 Declare the dataset as panel:{p_end}
@@ -439,8 +439,8 @@ Vanderbei, R.J. 1999. LOQO: An interior point code for quadratic programming.
       Jens Hainmueller, jhain@stanford.edu
       Stanford
 
-      Alberto Abadie, alberto_abadie@harvard.edu
-      Harvard University
+      Alberto Abadie, abadie@mit.edu
+      MIT
 
       Alexis Diamond, adiamond@fas.harvard.edu
       IFC

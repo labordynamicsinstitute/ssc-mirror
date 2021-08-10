@@ -23,13 +23,13 @@ d KW: sample size
 d
 d Requires: Stata version 9
 d
-d Distribution-Date: 20170302
+d Distribution-Date: 20200918
 d
 d Author: Fiona Burlig , University of California, Berkeley
 d Support: email fiona.burlig@@berkeley.edu
 d
-d Author: Louis Preonas, University of California, Berkeley
-d Support: email lpreonas@@berkeley.edu
+d Author: Louis Preonas, University of Maryland
+d Support: email lpreonas@@umd.edu
 d
 d Author: Matt Woerman, University of California, Berkeley
 d Support: email matt.woerman@@berkeley.edu
@@ -40,3 +40,4 @@ f pc_dd_covar.ado
 f pc_dd_covar.sthlp
 f pc_simulate.ado
 f pc_simulate.sthlp
+f pcpanel.sthlp

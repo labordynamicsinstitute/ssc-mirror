@@ -1,9 +1,9 @@
 /*This ado file gives the log likelihood function used in interval regressions
-for the normal distribution. Used with grouped data.
+for the normal distribution.
 It works with gintreg.ado
 v 1
 Author--Jacob Orchard
-Update--8/8/2016*/
+Update--5/24/2016*/
 
 
 
@@ -19,34 +19,31 @@ version 13
 							& $ML_y2 != . & $ML_y1 == $ML_y2
 				
 		*Interval data
-		 qui replace `Fu' = normal(($ML_y2-`mu')/`sigma') if $ML_y1 != . & ///
+		 qui replace `Fu' = normal(($ML_y2-`mu')/exp(`sigma')) if $ML_y1 != . & ///
 							$ML_y2 != . &  $ML_y1 != $ML_y2
 							
-		 qui replace `Fl' = normal(($ML_y1-`mu')/`sigma') if $ML_y1 != . & ///
+		 qui replace `Fl' = normal(($ML_y1-`mu')/exp(`sigma')) if $ML_y1 != . & ///
 							$ML_y2 != . &  $ML_y1 != $ML_y2
 							
 		 qui replace `lnf' = log(`Fu' -`Fl') if $ML_y1 != . & $ML_y2 != . & ///
 							$ML_y1 != $ML_y2
 		
-		
 		*Bottom coded data
 			
-		 qui replace `Fl' = normal(($ML_y1-`mu')/`sigma') 
+		 qui replace `Fl' = normal(($ML_y1-`mu')/exp(`sigma')) 
 		 qui replace `lnf' = log(1-`Fl') if $ML_y1 != . & $ML_y2 == .
-	
-		
+		 
+
 		*Top coded data
 			
-		 qui replace `Fu' = normal(($ML_y2-`mu')/`sigma') if $ML_y2 != . & $ML_y1 == .
+		 qui replace `Fu' = normal(($ML_y2-`mu')/exp(`sigma')) if $ML_y2 != . & $ML_y1 == .
 		 qui replace `lnf' = log(`Fu') if $ML_y2 != . & $ML_y1 == .
 	
 		*Missing Values			 
 		qui replace `lnf' = 0 if $ML_y2 == . & $ML_y1 == .
-		
-		*Group frequency
-		qui replace `lnf' = `lnf'*$group_per
 				
-		
+		*Group frequency
+		 qui replace `lnf' = `lnf'*$group_per
 end		
 
 

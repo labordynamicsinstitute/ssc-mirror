@@ -1,16 +1,25 @@
 {smcl}
-{* *! version 1.0.0  30aug2016}{...}
+{* *! version 2.0  June 2018}{...}
 {viewerjumpto "Syntax" "sdmxuse##syntax"}{...}
 {viewerjumpto "Description" "sdmxuse##description"}{...}
 {viewerjumpto "Options" "sdmxuse##options"}{...}
-{viewerjumpto "Remarks" "sdmxuse##remarks"}{...}
 {viewerjumpto "Examples" "sdmxuse##examples"}{...}
+{viewerjumpto "Remarks" "sdmxuse##remarks"}{...}
 {viewerjumpto "Author" "sdmxuse##author"}{...}
 
 {title:Title}
 
 {phang}
 {bf:sdmxuse} {hline 2} Import data from statistical agencies using the SDMX standard
+
+{pstd}
+Available providers: {break}
+- European Central Bank (ECB) {break}
+- Eurostat (ESTAT) {break}
+- International Monetary Fund (IMF) {break}
+- Organisation for Economic Co-operation and Development (OECD) {break}
+- United Nations Statistics Division (UNSD) {break}
+- World Bank (WB) {p_end}
 
 {marker syntax}{...}
 {title:Syntax}
@@ -39,6 +48,9 @@
 {syntab:Reshape data}
 {synopt:{bf:timeseries}}reshapes dataset to obtain time series {p_end}
 {synopt:{bf:panel()}}reshapes dataset to obtain a panel {p_end}
+
+{syntab:Merge DSD}
+{synopt:{bf:mergedsd}}merges data (time series) and Data Structure Definition {p_end}
 {synoptline}
 {p2colreset}{...}
 
@@ -46,8 +58,8 @@
 {title:Description}
 
 {pstd}
-{cmd:sdmxuse} imports data from statistical agencies using the SDMX standard. Available providers are European Central Bank (ECB), Eurostat (ESTAT),
-International Monetary Fund (IMF), Organisation for Economic Co-operation and Development (OECD) and World Bank (WB).
+{cmd:sdmxuse} imports data from statistical agencies using the SDMX standard. Available providers are the European Central Bank (ECB), Eurostat (ESTAT),
+the International Monetary Fund (IMF), the Organisation for Economic Co-operation and Development (OECD), the United Nations Statistics Division (UNSD) and the World Bank (WB).
 
 {pstd}
 You can get a complete list of publicly available datasets from a provider by specifying the resource: dataflow.
@@ -63,7 +75,7 @@ indicated between brackets after the titles in the navigation tree: {browse "htt
 {dlgtab:Main}
 
 {phang}
-{opt attributes} gives additional information about the series or the observations, but does not affect the dataset structure itself. E.g. observations' flags. {p_end}
+{opt attributes} downloads attributes that give additional information about the series or the observations but do not affect the dataset structure itself (e.g. observations' flags). {p_end}
 
 {phang}
 {opt clear} clears data memory before proceeding. {p_end}
@@ -71,10 +83,9 @@ indicated between brackets after the titles in the navigation tree: {browse "htt
 {dlgtab:Select data}
 
 {phang}
-{opt dimensions()} allows customizing requests for data. You can choose which dimensions with which values you want to retrieve data for.
-The dimensions are separated with a dot "." character and must respect the order specified in the Data Structure Definition. 
-If a dimension is left blank, it will not be used to filter the series and all possible values will be provided. 
-If several values for a given dimension are chosen, they must be separated with a "+" character.{p_end}
+{opt dimensions()} allows customizing requests for data. Time series can be retrieved based on the value they take for each dimension.
+Dimensions should be separated by a dot "." character and must respect the order specified in the Data Structure Definition.
+A dimension can be left empty if all values are requested. Multiple values for a dimension are separated by a plus "+" sign. {p_end}
 
 {phang}
 {opt start()} defines the start period. You can specify the exact value (e.g. 2010-01) or just the year (e.g. 2010). {p_end}
@@ -85,21 +96,15 @@ If several values for a given dimension are chosen, they must be separated with 
 {dlgtab:Reshape data}
 
 {phang}
-{opt timeseries} reshapes the dataset so that each series is stored in a single variable. The variables' names are made of the values of the series for each dimension. {p_end}
+{opt timeseries} reshapes the dataset so that each series is stored in a single variable. Variables' names are made of dimensions' values. {p_end}
 
 {phang}
 {opt panel(panelvar)} reshapes the dataset into a panel. {it:panelvar} must be specified, it will often be the geographical dimension.  {p_end}
 
-{marker remarks}{...}
-{title:Remarks}
+{dlgtab:Merge DSD}
 
-{pstd}
-This program uses the package "moss" by Robert Picard & Nicholas J. Cox. You can install it from SSC: {stata ssc install moss} {p_end}
-
-{pstd}
-For queries larger than 30,000 cells, Eurostat will post the file to a different repository. 
-{cmd:sdmxuse} can accommodate this but processing time will be longer. 
-You can try with the following dataset: {cmd:sdmxuse} data ESTAT, clear dataset(nama_gdp_k) {p_end}
+{phang}
+{opt mergedsd} merges the data (time series) and the Data Structure Definition - particularly useful when dimensions' codes are not transparent (e.g. HRV is the ISO ALPHA-3 code for Croatia). {p_end}
 
 {marker examples}{...}
 {title:Examples}
@@ -119,10 +124,23 @@ You can try with the following dataset: {cmd:sdmxuse} data ESTAT, clear dataset(
 {phang}
 {cmd:. sdmxuse} data OECD, clear dataset(EO) dimensions(.GDPV_ANNPCT+CPIH.A) panel(location) {p_end}
 
+{phang}
+{cmd:. sdmxuse} data OECD, clear dataset(EO) dimensions(.GDPV_ANNPCT.A) mergedsd
+
+{marker remarks}{...}
+{title:Remarks}
+
+{pstd}
+The author is grateful to Robert Picard and Nicholas J. Cox for allowing him to reproduce their code of the package {cmd:moss} to deal with multiple occurrences of substrings. {p_end}
+
+{pstd}
+For queries larger than 30,000 cells, Eurostat will post the file to a different repository. 
+{cmd:sdmxuse} can accommodate this but processing time will be longer. {p_end}
+
 {marker author}{...}
 {title:Author}
 
 {pstd}
 	Sebastien Fontenay{break}
-	UCL - ESL & IRES{break}
+	Universite catholique de Louvain{break}
 	sebastien.fontenay@uclouvain.be {p_end}

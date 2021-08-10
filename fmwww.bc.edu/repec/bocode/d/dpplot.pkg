@@ -8,10 +8,17 @@ d Computation  24: 911-927. This version is a much expanded and
 d revised version  for Stata 8. The original version for Stata 7 is
 d also	included as dpplot7, but is otherwise unchanged. 
 d
-d Distribution-Date: 20040804
+d KW: graphics
+d KW: density probability plots
+d KW: distributions,
 d
-d Author: Nicholas J. Cox, University of Durham
+d Requires: Stata version 8.0 (7.0 for dpplot7)
+d
+d
+d Author: Nicholas J. Cox, Durham University
 d Support: email N.J.Cox@@durham.ac.uk
+d
+d Distribution-Date: 20040804
 d
 f dpplot.ado
 f dpplot.hlp

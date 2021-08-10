@@ -1,5 +1,5 @@
 {smcl}
-{* *! version Juni 4, 2015 @ 09:46:31}{...}
+{* *! version Oktober 26, 2017 @ 12:04:00}{...}
 {* link to other help files which could be of use}{...}
 {vieweralsosee "soepuse" "help soepuse "}{...}
 {vieweralsosee "psiduse" "help soepuse "}{...}
@@ -29,8 +29,16 @@
 {p 8 17 2}
    {cmd:psid install} 
    [ {help numlist:wavelist} ]
-   [ {help using} 
+   [ {help using} ] 
    [ {cmd:, }
+     {it:install_options}  
+   ]
+{p_end}
+
+{p 8 17 2}
+   {cmd:psid install} 
+    {help using} 
+   [ {cmd:, cnef }
      {it:install_options}  
    ]
 {p_end}
@@ -98,10 +106,13 @@
 {synoptline}
 {p2colreset}{...}
 
-{pstd} {help using} should point to the PSID-directory and defaults to
-the current working directory for {cmd:psid install} and to the
-directory specified in {cmd:psid use} for {cmd:psid add}. {it:newstub} and
-{it:varspecs} are described in detail {help psid##use:below}.
+{pstd} {help using} points to the PSID-directory for {cmd: psid use}
+and {cmd: psid add}. It defaults to the directory specified in
+{cmd:psid use} for {cmd:psid add}. For {cmd:psid install},
+{help using} specifies the directory holding the downloaded zip-files of
+PSID data. It defaults to the working directory.  {help using} is
+compulsory for {cmd:psid install} with option {cmd:cnef}; see the {help psid##install}.
+{it:newstub} and {it:varspecs} are described in detail {help psid##use:below}.
 
 {marker description}{...}
 {title:Description}
@@ -142,7 +153,7 @@ and should not be used for new projects. {p_end}
 {p 8 17 2}
    {cmd:psid install} 
    [ {help numlist:wavelist} ]
-   [ {help using} 
+    {help using} 
    [ {cmd:, }
      {it:install_options}  
    ]
@@ -247,16 +258,15 @@ old files untouched; however see option {opt replace}, below.{p_end}
 other PSID zip-files in the using directory.{p_end}
 
 {pstd}{cmd:psid install} with the option {cmd:cnef} installs the CNEF
-data available at {browse "http://cnef.ehe.osu.edu/cnef-data-files/"}
-in the current working directory. As the usage of the (American
-branch of the) CNEF does not require registration, the procedure is
-fully automatic. Thus,{p_end}
+to be accessible for {cmd:psid use} and {cmd:psid add}. Users have to
+downlaod a ZIP-file of the CNEF data on
+{browse "http://cnef.ehe.osu.edu/cnef-data-files/"}. The downloaded file
+must be specified in with {help using}, Thus,{p_end}
 
-{p 4 4 0}{cmd:. psid install, cnef}{p_end}
+{p 4 4 0}{cmd:. psid install using c:/downloads/foo.zip, cnef}{p_end}
 
-{pstd}downloads the most recent version of the CNEF from the internet,
-unpacks the files, and, if requested, erases the downloaded archive
-after installation of the data files. {p_end}
+{pstd}unpacks the downloaded file zoo.zip, and, installs CNEF file(s) in the
+current working directory. {help using} is required with option CNEF. {p_end}
 
 {marker installopt}{...}
 {title:Options of psid install}
@@ -277,22 +287,15 @@ be used. Option {cmd:replace} with option {cmd:cnef} implies options
 upper cased variable names. For Stata users upper cased variable names
 are a bit clumsy, so it is reasonable to use the option {cmd:lower} to
 downcase the variable names in all generated datasets. However, if the
-PSID datasets are accessed through {cmd:psid use} and/or {cmd:psid
-add} the usage of this option is not recommended.  Option {cmd:lower}
+PSID datasets are accessed through {cmd:psid use} and/or {cmd:psid add}
+the usage of this option is not recommended.  Option {cmd:lower}
 cannot be used togehter with option {cmd:cnef}{p_end}
 
 {phang}{opt upgrade} can be only used with option {cmd:cnef}. By
-default, {cmd:psid install, cnef} does not download a new version of
-the CNEF if the archive of the CNEF is already present in the
-installation directory. With option {cmd:upgrade} that archive
-will be replaced by a newly downloaded one.{p_end}
-
-{phang}{opt clean} can be only used with option {cmd:cnef}. By
-default, {cmd:psid install, cnef} downloads the ZIP-Archive of the CNEF
-delivery from the internet and keeps that archive in the installation
-directory. With option {cmd:clean} the archive is erased as soon as
-the the Stata datasets are unpacked.{p_end}
-
+default, {cmd:psid install, cnef} does not unpack a newly download zip-file if
+if a CNEF delivery is already present in the
+installation directory. With option {cmd:upgrade} that delivery 
+will be replaced by the newly downloaded one.{p_end}
 
 {phang}{opt longonly} Starting with the data delivery 2009, the CNEF is being delivered in
 long format, i.e. the data of all waves are being stored in one single Stata dataset. However,
@@ -300,11 +303,13 @@ the PSID-Tools expect data stored in one dataset for each wave. {cmd:psid intall
 single year datasets by default. The creation of single year dataset can be turned off with
 option {cmd:longonly}.{p_end}
 
-{phang}{opt replacelong} can be only used with option {cmd:cnef}. By
-default, {cmd:psid install, cnef} does not unzip the downloaded ZIP-Archive
-of the CNEF delivery from the internet if the "long" Stata dataset already exists.
-With option {cmd:replacelong} the existing file will be overwritten with the 
-Stata datasets in the ZIP-Archive. Option {cmd:replace} implies {cmd:replacelong}.{p_end}
+{phang}{opt clean} was used in older versions {cmd:psid install, cnef}. The option is still allowed but
+does nothing.
+{p_end}
+
+{phang}{opt replacelong} was used in older versions {cmd:psid install, cnef}. The option is still allowed but
+does nothing.
+{p_end}
 
 {phang}{opt replacesingle} can be only used with option {cmd:cnef}. By
 default, {cmd:psid install, cnef} does not create a datasets for a single year, if the
@@ -391,7 +396,6 @@ become{p_end}
 
 {pstd}{bf:Aside but very important:} You must have installed the cross year
 individual file (indCCYY.dta), to be able apply {cmd:psid use}{p_end}
-
 
 {pstd}In general, the programs {cmd:psid use} and {cmd:psid add}
 create datasets with all the variables identified by the {it:varspecs}

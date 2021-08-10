@@ -13,6 +13,8 @@
 			- all words/stubs as lowercase: capitals do not matter since the respective fields in the lookup files are turned to lowercase
 			- if words/stubs as capitals: will only be searched as capitals to avoid many false positives (e.g. UTI).
 			- codes are searched for exactly as inputed but at the start of the respective field. Hence search for "H33" would return H331.11 (Late onset asthma) but not 8H33.00 (Day hospital care)
+	v1.1, 13 June 2019
+		- updated to make compatible with Aurum. will automatically rename variables to the GOLD format
 */
 program pcdsearch
 	//Stata version
@@ -91,7 +93,7 @@ program pcdsearch
 	}
 	//verify the Read/OXMIS code file
 	 if "`pcdcodefnm'"!="" {
-		capture confirm file "`pcddir'\`pcdcodefnm'"
+		capture confirm file "`pcddir'/`pcdcodefnm'"
         if _rc!=0 {
             di as error "Specified pcdcodefnm (PCD code file) does not exist"
             error 601
@@ -116,7 +118,7 @@ program pcdsearch
 	}
 	//verify the Product code file
 	 if "`pcdprodfnm'"!="" {
-		capture confirm file "`pcddir'\`pcdprodfnm'"
+		capture confirm file "`pcddir'/`pcdprodfnm'"
         if _rc!=0 {
             di as error "Specified pcdprodfnm (PCD product/drug file) does not exist"
             error 601
@@ -136,29 +138,29 @@ program pcdsearch
 			di as error "Global macro pcdprodfilenm or command option pcdprodfnm (PCD product/drug file) have not been defined"
 			di as error "Define pcdprodfilenm either in profile.do or before calling pcdsearch, or use the pcdprodfnm option"
 			error 197
-		}	
+		}
 		local prodfilex "$pcdprodfilenm"
-	}	
+	}
 	//confirm existence of search info file
-	capture confirm file "`outdirx'\`outfnm'"
+	capture confirm file "`outdirx'/`outfnm'"
 	if _rc!=0 {
 		di as error "Search info file `outfnm' not found in `outdirx'"
 		error 601
 	}
-	
+
 	//display directories and files
 	di _newline(1) as text "Search info file:" _col(25) as result "`outfnm'"
 	di as text "Output directory:" _col(25) as result "`outdirx'"
-	di as text "Read/OXMIS code file:" _col(25) as result "`srcdirx'\`codefilex'"
-	di as text "Products(drugs) file:" _col(25) as result "`srcdirx'\`prodfilex'"
-	
+	di as text "Read/OXMIS code file:" _col(25) as result "`srcdirx'/`codefilex'"
+	di as text "Products(drugs) file:" _col(25) as result "`srcdirx'/`prodfilex'"
+
 	preserve
 	//open input excel/csv file
 	if `filetp'==0 {
-		qui import delimited "`outdirx'\`outfnm'", varnames(1) clear
+		qui import delimited "`outdirx'/`outfnm'", varnames(1) clear
 	}
 	else {
-		qui import excel "`outdirx'\`outfnm'", firstrow allstring clear
+		qui import excel "`outdirx'/`outfnm'", firstrow allstring clear
 	}
 	//get info from variables
 	qui ds
@@ -259,10 +261,10 @@ program pcdsearch
 
 	//open CPRD medical codes file and identify variables needed
 	if strpos("`codefilex'",".dta")>0  {
-    	qui use "`srcdirx'\`codefilex'",clear
+    	qui use "`srcdirx'/`codefilex'",clear
  	}
 	else {
-    	qui import delimited "`srcdirx'\`codefilex'",clear
+    	qui import delimited "`srcdirx'/`codefilex'",clear
 	}
 	local mlouttp=0
 	capture confirm variable medcode readcode desc
@@ -276,19 +278,26 @@ program pcdsearch
 		rename read_oxmis_code readcode
 		rename read_oxmis_name desc
 	}
+	capture confirm variable medcodeid originalreadcode term
+	if _rc==0 {
+		local mlouttp=3
+		rename medcodeid medcode
+		rename originalreadcode readcode
+		rename term desc
+	}	
 	if `mlouttp'==0 {
 		di as error "Layout in medical codes file not recognised"
 		di as error "Rename to medcode readcode desc for CPRD medical code, Read codes and description respectively"
 		error 197	
-	}	
+	}
 	qui save `tempx1', replace
 	
 	//open CPRD product codes file and identify variables needed
 	if strpos("`prodfilex'",".dta")>0  {
-    	qui use "`srcdirx'\`prodfilex'",clear
+    	qui use "`srcdirx'/`prodfilex'",clear
  	}
 	else {
-    	qui import delimited "`srcdirx'\`prodfilex'",clear
+    	qui import delimited "`srcdirx'/`prodfilex'",clear
 	}
 	local plouttp=0
 	capture confirm variable prodcode productname bnfchapter drugsubstance
@@ -303,6 +312,14 @@ program pcdsearch
 		rename mx_bnf_header bnfchapter
 		rename mx_drug_substance_name drugsubstance
 	}
+	capture confirm variable prodcodeid productname termfromemis drugsubstancename
+	if _rc==0 {
+		local plouttp=3
+		rename prodcodeid prodcode
+		rename bnfchapter bnfchapter_temp
+		rename termfromemis bnfchapter
+		rename drugsubstancename drugsubstance
+	}	
 	if `plouttp'==0 {
 		di as error "Layout in product codes file not recognised"
 		di as error "Rename to prodcode productname bnfchapter drugsubstance for CPRD prod code, prod name, bnf chapter name and drug substance name"
@@ -369,16 +386,23 @@ program pcdsearch
 		*error
         qui keep if tempinfo==1
         qui drop tempinfo
+		qui order medcode* read* desc*
         //OUTPUT
         di
-		//excel
-		if `filetp'==1 {
-        	export excel using "`outdirx'\`outfnm'", sheetreplace sheet("pcdsearch_med") firstrow(variables)
+        qui count
+        if r(N)>0 {
+  		    //excel
+  		    if `filetp'==1 {
+          	    export excel using "`outdirx'/`outfnm'", sheetreplace sheet("pcdsearch_med") firstrow(variables)
+    		}
+    		//csv
+    		else if `filetp'==0 {
+                outsheet using "`outdirx'/`stbnm'_pcdsearch_med.csv", replace comma
+  		    }
   		}
-  		//csv
-  		else if `filetp'==0 {
-            outsheet using "`outdirx'\`stbnm'_pcdsearch_med.csv", replace comma
-		}
+  		else {
+            di as result "no codes identified, nothing exported"  
+        }
     }
 
     /*DRUGS file search using strings*/
@@ -470,17 +494,43 @@ program pcdsearch
                 }
             }
         }
+		*set trace on
+		*set tracedepth 1
+        /*remove cases with words that should be excluded (doensn't work for combinations just words and phrases)*/
+        forvalues i=1(1)`wrdcnt2' {
+            if strpos("`sword2`i''","-")==1 {
+                local tstr = substr("`sword2`i''",2,.)
+                /*if search term is uppercase DON'T transform searched variable to lowercase*/
+                if upper("`tstr'") == "`tstr'" {
+                    qui replace tempinfo=0 if strpos(productname,"`tstr'")>0
+					qui replace tempinfo=0 if strpos(drugsubstance,"`tstr'")>0
+                }
+                else {
+					local tstr=lower("`tstr'")
+                    qui replace tempinfo=0 if strpos(lower(productname),"`tstr'")>0
+					qui replace tempinfo=0 if strpos(lower(drugsubstance),"`tstr'")>0
+                }
+            }
+        }
+		*set trace off
+		*error
         qui keep if tempinfo==1
         qui drop tempinfo
         qui capture duplicates drop prodcode, force
+		//rename back for products and Aurum
+		if `plouttp'==3 {
+			rename bnfchapter termfromemis
+			rename bnfchapter_temp bnfchapter
+		}
+		qui order prodcode* productname*
     	//OUTPUT
 		//excel
 		if `filetp'==1 {
-        	export excel using "`outdirx'\`outfnm'", sheetreplace sheet("pcdsearch_prod") firstrow(variables)
+        	export excel using "`outdirx'/`outfnm'", sheetreplace sheet("pcdsearch_prod") firstrow(variables)
   		}
   		//csv
   		else if `filetp'==0 {
-            outsheet using "`outdirx'\`stbnm'_pcdsearch_prod.csv", replace comma
+            outsheet using "`outdirx'/`stbnm'_pcdsearch_prod.csv", replace comma
 		}
     }
 	restore

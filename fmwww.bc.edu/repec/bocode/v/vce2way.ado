@@ -1,9 +1,10 @@
-// Hong Il Yoo (h.i.yoo@durham.ac.uk): 21/02/2017.
+// Hong Il Yoo (h.i.yoo@durham.ac.uk): 17/02/2020.
 // Two-Way Clustered Standard Errors
-// v1.0.0 
+// v1.0.2
+// v1.0.1
 program define vce2way, eclass 
 	version 13.1
-	syntax anything(id="command line" name=command_line), CLuster(varlist min=2 max=2) [*]  
+	syntax anything(id="command line" name=command_line) [if] [in] [fweight  aweight  pweight  iweight], CLuster(varlist min=2 max=2) [*]  
 	// Define temporary objects
 	tempname break b1 b2 b12 V1 V2 V12 V_2way V_2way_raw 
 	tempvar cluster12
@@ -12,22 +13,29 @@ program define vce2way, eclass
 	local cluster1: word 1 of `cluster'
 	local cluster2: word 2 of `cluster'
 
+	// Mark sample
+	marksample touse
+	markout `touse' `cluster', strok
+	
+	// Set up weight options
+	if ("`weight'" != "") local weight [`weight' `exp']		
+	
 	quietly {
 		// Step 1: cluster at `cluster1' and store covariance matrix
-		`command_line', vce(cluster `cluster1') `options'
+		`command_line' `weight' if `touse' `in', vce(cluster `cluster1') `options'
 		matrix `b1' = e(b)
 		matrix `V1' = e(V)
 		local N_clust1 = e(N_clust)
 
 		// Step 2: cluster at `cluster2' and store covariance matrix
-		`command_line', vce(cluster `cluster2') `options'
+		`command_line' `weight' if `touse' `in', vce(cluster `cluster2') `options'
 		matrix `b2' = e(b)
 		matrix `V2' = e(V)
 		local N_clust2 = e(N_clust)
 		
 		// Step 3: cluster at intersection of `cluster1' & `cluster2' and store covariance matrix
 		egen `cluster12' = group(`cluster1' `cluster2')
-		`command_line', vce(cluster `cluster12') `options'
+		`command_line' `weight' if `touse' `in', vce(cluster `cluster12') `options'
 		matrix `b12' = e(b)
 		matrix `V12' = e(V)		
 		
@@ -59,7 +67,9 @@ program define vce2way, eclass
 		ereturn local clustvar "`cluster1' and `cluster2'"
 		ereturn local clustvar1 "`cluster1'"
 		ereturn local clustvar2 "`cluster2'"
-		ereturn local N_clust "`N_clust1' clusters in `cluster1' and `N_clust2' clusters in `cluster2'"   
+		//ereturn local N_clust "`N_clust1' clusters in `cluster1' and `N_clust2' clusters in `cluster2'"   
+		if (`=int(c(stata_version))' > 15) ereturn local N_clust = .
+		else ereturn local N_clust "N_clust'i' reports the number of clusters in clustvar'i'"
 		
 		ereturn scalar N_clust1 = `N_clust1'
 		ereturn scalar N_clust2 = `N_clust2'
@@ -77,6 +87,8 @@ program define vce2way, eclass
 	
 	// Display any notes
 	di as text "Notes:"
+	di as text " 	As of June 2019, vce2way has been superseded by " as smcl `"{bf:{stata findit vcemway:vcemway}}"' as text "."
+	di as text ""
 	di as text "	Std. Err. adjusted for " as result `e(N_clust1)' as text " clusters in `e(clustvar1)', AND " ///
 	   as result `e(N_clust2)' as text " clusters in `e(clustvar2)'."
 	di as text ""

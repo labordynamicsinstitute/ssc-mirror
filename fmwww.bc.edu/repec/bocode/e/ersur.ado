@@ -1,6 +1,7 @@
 *! ersur v1.0 JOtero 09dec2016
 *!       v1.1 CFBaum 11mar2017 Mata logic added 
 *!       v1.2 CFBaum 01apr2017 onepanel added, returns modified
+*!       v1.3 CFBaum 26jan2018 guard against rounding values in alphas
 capture program drop ersur
 program ersur, rclass
 version 13
@@ -267,6 +268,7 @@ colmtx1 = (2, 10 \ 56, 64 \ 74, 82 \ 20, 28 \ 38, 46 \
 off = (trd != "" ? 5 : 0) 
 // result matrix, including 2 additional columns for labels
     res = J(5,6,.)
+
 for(c1=1; c1<=5; c1++) {
 	fc = colmtx1[c1+off,1]
 	lc = colmtx1[c1+off,2]
@@ -275,11 +277,14 @@ for(c1=1; c1<=5; c1++) {
 	fix_qhat2 = fix_qhat:^2
 	fix_dist = abs(fix_qhat :- ers[c1])
 	minindex(fix_dist, 1, fix_place, w)
-	if (alphas[fix_place] <= 0.004) {
+// guard against rounding
+//	if (alphas[fix_place] <= 0.004) {
+	if (fix_place <= 7) {
 		fix_start = 1
 		fix_end   = 15
 	} 
-	else if (alphas[fix_place] >= 0.996) {
+//	else if (alphas[fix_place] >= 0.996) {
+	else if (fix_place >= 215) {
 		fix_start = 207
 		fix_end   = 221
 	}

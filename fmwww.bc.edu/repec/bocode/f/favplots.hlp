@@ -1,5 +1,5 @@
 {smcl}
-{* 30apr2011}{...}
+{* 30apr2011/28apr2020}{...}
 {cmd:help favplot/favplots} 
 {hline}
 
@@ -86,7 +86,32 @@ been assigned, the variable name} for each {it:indepvar} shown. Example:
 added-variable plot, which shows the t statistic and b estimate for each
 {it:indepvar} shown. Example: {cmd:tbtitle(size(*1.4))}. 
 See {it:{help title_options}}. 
- 
+
+
+{title:Examples}
+
+{phang2}{cmd:. sysuse auto}{p_end}
+{phang2}{cmd:. regress price weight foreign##c.mpg}{p_end}
+
+{pstd}Added-variable plot{p_end}
+{phang2}{cmd:. favplot mpg}{p_end}
+
+{phang2}{cmd:. favplot 1.foreign}{p_end}
+
+{pstd}Added-variable plots for every regressor{p_end}
+{phang2}{cmd:. favplots}{p_end}
+
+{phang2}{cmd:. favplots, ms(Oh) yla(, ang(h))}{p_end}
+
+
+{title:Acknowledgments}
+
+{pstd}David Airey 
+({browse "https://www.stata.com/statalist/archive/2011-05/msg00613.html":https://www.stata.com/statalist/archive/2011-05/msg00613.html})
+and Nikos Kakouros 
+({browse "https://www.statalist.org/forums/forum/general-stata-discussion/general/1544070-graph-for-multiple-regression":https://www.statalist.org/forums/forum/general-stata-discussion/general/1544070-graph-for-multiple-regression}) 
+pointed out that these commands did not support factor variables. 
+
 
 {title:Author} 
 

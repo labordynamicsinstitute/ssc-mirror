@@ -1,12 +1,12 @@
 *pvw implements predictive value weighting, as proposed by Lyles and Lin, Stats in Med, 2010; 29: 2297-2309
-*version 1.0
+*version 1.1
 *Jonathan Bartlett
-*jwb133@googlemail.com
+*j.w.bartlett@bath.ac.uk
 
 capture program drop pvw
 program define pvw, eclass
 version 11.0
-syntax varlist(fv) [if/], casesens(real) casespec(real) contsens(real) contspec(real) misclass(varname) outcome(varname) [othercov(varlist fv)] [cohort] [reps(integer 200)] [seed(integer -1)]
+syntax varlist(fv), casesens(real) casespec(real) contsens(real) contspec(real) misclass(varname) outcome(varname) [othercov(varlist fv)] [cohort] [reps(integer 200)] [seed(integer -1)]
 
 *first run naive regression
 di as text "Naive regression ignoring misclassification"

@@ -9,12 +9,12 @@ help for {hi:sspecialreg, xtspecialreg}
 {p 8 14}{cmd:sspecialreg}{it: depvar specreg} [{cmd:if} {it:exp}] [{cmd:in} {it:range}] 
 , {cmd:endog(}{it:varlist}) {cmd:iv(}{it:varlist}) [
 {cmd:exog(}{it:varlist}) {cmd:hetero} {cmd:hetv(}{it:varlist}) {cmd:kdens} 
-{cmd:trim(}{it:real}) {cmd:winsor} {cmd:bs} {cmd:bsreps(}{it:integer}) ]
+{cmd:trim(}{it:real}) {cmd:winsor} {cmd:first} {cmd:ivreg2} {cmd:bs} {cmd:bsreps(}{it:integer}) ]
 
 {p 8 14}{cmd:xtspecialreg}{it: depvar specreg} [{cmd:if} {it:exp}] [{cmd:in} {it:range}] 
 , {cmd:endog(}{it:varlist}) {cmd:iv(}{it:varlist}) [
 {cmd:exog(}{it:varlist}) {cmd:hetero} {cmd:hetv(}{it:varlist}) {cmd:kdens} 
-{cmd:trim(}{it:real}) {cmd:winsor} {cmd:bs} {cmd:bsreps(}{it:integer}) ]
+{cmd:trim(}{it:real}) {cmd:winsor}  {cmd:first} {cmd:xtivreg2} {cmd:bs} {cmd:bsreps(}{it:integer}) ]
 
 {title:Description}
 
@@ -85,6 +85,20 @@ to be trimmed by a specified percentage, such as 2.5.
 {p 0 4}{cmd:winsor} specifies that the data are to be winsorized at the points specified
 by the trim() option. You must specify both trim() and winsor.
 
+{p 0 4}{cmd:first} specifies that the first stage regression estimates should be displayed.
+
+{p 0 4}{cmd:ivreg2} specifies that the instrumental variables estimation should be performed 
+with ivreg2 rather than ivregress. This requires that the ivreg2 and ranktest packages from
+the SSC archive are installed. If this option is combined with the first option, the additional
+diagnostics available in ivreg2 are presented, including tests for weak instruments, 
+underidentification, etc.
+
+{p 0 4}{cmd:xtivreg2} specifies that the instrumental variables estimation should be performed 
+with xtivreg2,fe rather than xtivreg,fe. This requires that the xtivreg2, ivreg2 and 
+ranktest packages from the SSC archive are installed. If this option is combined with 
+the first option, the additional diagnostics available in xtivreg2 are presented, 
+including tests for weak instruments, underidentification, etc.
+
 {p 0 4}{cmd:bs} specifies that bootstrap standard errors are to be computed for the 
 marginal effects.
 
@@ -133,8 +147,8 @@ Thanks to Arthur Lewbel for clarifying the modifications needed in a panel data
 setting. Implementation of a much faster version of the sorted data density estimator 
 was provided by Ben Jann.  Jann's {cmd:kdens} routine is used to provide the kernel density 
 estimates. Thanks to Christophe Bontemps for pointing out an error in the AIF code 
-(corrected in v1.1.6).  Thanks also to participants in the 2012 German Stata Users Meetings 
-and the 2012 Stata Conference for their helpful comments.
+(corrected in v1.1.6).  Thanks also to participants in the 2012 German Stata Users Meetings, 
+the 2012 Stata Conference and Manuel Denzer for their helpful comments.
 
 {title:References}
 

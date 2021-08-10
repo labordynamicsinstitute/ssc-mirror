@@ -1,30 +1,28 @@
 d 'IPDMETAN': module for performing two-stage IPD meta-analysis 
 d
 d  A set of routines for conducting two-stage individual
-d participant meta-analysis, aggregate (summary) data
-d meta-analysis, and for creating high-quality forest plots. The
-d two-stage routine, ipdmetan, loops over a series of categories,
-d fits the desired model to the data within each, and generates
-d pooled effects, heterogeneity statistics etc, as appropriate;
-d aggregate data may also be included from an external dataset. 
-d The aggregate-data routine, admetan, carries over much of the
-d functionality of the existing SSC command metan, but with a wider
-d range of random-effects and variance-correction models. There is
-d also an “immediate” version, admetani. The routine forestplot
-d is a stand-alone, re-written and extended version of the graphics
-d routine within the existing SSC command metan.  ipdover allows
-d ipdmetan to be used outside of the meta-analytic context, for
-d example for creating a forestplot of a series of (potentially
-d overlapping) subgroups within a single study. 
+d participant meta-analysis, and forest plots for trial subgroup
+d analysis. The two-stage routine, ‘ipdmetan’, loops over a
+d series of categories, fits the desired model to the data within
+d each, and generates pooled effects, heterogeneity statistics etc,
+d as appropriate; aggregate data may also be included from an
+d external dataset. ‘ipdover’ allows ‘ipdmetan’ to be used
+d outside of the meta-analytic context, for example for creating a
+d forest plot of a series of (potentially overlapping) subgroups
+d within a single randomized trial.  This package is dependent upon
+d the ‘metan’ package; please ensure that the latest version of
+d the ‘metan’ package is installed. 
 d
 d KW: meta-analysis
 d KW: forest plot
 d KW: binary data
 d KW: time-to-event data
+d KW: individual participant data
+d KW: ipd
 d
-d Requires: Stata version 10 
+d Requires: Stata version 11 and metan from SSC (q.v.)
 d
-d Distribution-Date: 20170511
+d Distribution-Date: 20210218
 d
 d Author: David Fisher, MRC Clinical Trials Unit at UCL
 d Support: email d.fisher@@ucl.ac.uk
@@ -33,11 +31,5 @@ f ipdmetan.ado
 f ipdmetan.sthlp
 f ipdover.ado
 f ipdover.sthlp
-f ../f/forestplot.ado
-f ../f/forestplot.sthlp
-f ../a/admetan.ado
-f ../a/admetan.sthlp
-f ../a/admetani.ado
-f ../a/admetani.sthlp
-f ../p/petometan.sthlp
+f ../m/metan_hlp_run.ado
 f ipdmetan_example.dta

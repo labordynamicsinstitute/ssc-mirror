@@ -1,4 +1,4 @@
-*! version 3.1.1 18oct2016  Richard Williams, rwilliam@nd.edu
+*! version 3.2.5 17may2019 Richard Williams, rwilliam@nd.edu
 
 program gologit2_autofit
 	// This is used when gologit2 is called with the autofit option.

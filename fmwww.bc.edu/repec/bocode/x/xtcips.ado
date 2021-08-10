@@ -1,8 +1,8 @@
 * Maximo Sangiacomo
-* Ene 2015
-* v 3.0
+* Nov. 2018
+* v 4.0
 * Based on: Pesaran, M. H. (2007). "A Simple Panel Unit Root Test In The Presence Of Cross-section Dependence." 
-* Journal Of Applied Econometrics 22: 265–312
+* Journal Of Applied Econometrics 22: 265â€“312
 
 program define xtcips, rclass
 version 9
@@ -412,9 +412,9 @@ forv t = 1/8 {
 	if `capt' <= `te'[1,`t'] {
 		forv n = 1/8 {
 			if `capn' <= `en'[1,`n'] {
-				return scalar cvag1 = `msdaag1'[`n',`t']
-				return scalar cvag5 = `msdaag5'[`n',`t']
-				return scalar cvag10 = `msdaag10'[`n',`t'] 
+				return scalar cvag1 = `msdaag1'[`t',`n']
+				return scalar cvag5 = `msdaag5'[`t',`n']
+				return scalar cvag10 = `msdaag10'[`t',`n'] 
 				continue,break
 			}
 		}

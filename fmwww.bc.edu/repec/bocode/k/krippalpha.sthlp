@@ -1,5 +1,5 @@
 {smcl}
-{* *! version 1.3.2 22jan2015}{...}
+{* *! version 1.3.3 29dec2020}{...}
 {* findalias asfradohelp}{...}
 {* vieweralsosee "" "--"}{...}
 {* vieweralsosee "[R] help" "help help"}{...}
@@ -134,8 +134,8 @@ The examples above compute coefficients for single variables. If one wants to co
 {marker author}{...}
 {title:Authors}
 
-{phang}Alexander Staudt, Universitaet Mannheim, astaudt@mail.uni-mannheim.de{p_end}
-{phang}Mona Krewel, Universitaet Mannheim, mona.krewel@mzes.uni-mannheim.de{p_end}
+{phang}Alexander Staudt, staudtlex@live.de{p_end}
+{phang}Mona Krewel, Victoria University of Wellington, mona.krewel@vuw.ac.nz{p_end}
 
 
 {marker references}{...}

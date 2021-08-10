@@ -54,7 +54,7 @@ in place of options {opt pcddir}, {opt filedir}, {opt pcdcodefnm} or {opt pcdpro
 {p 4 4 2}
 The {help pcdsearch##rules:search rules} are desribed in detail below, along with examples using Read codes and the Clinical Practice Research Datalink (CPRD)
 Gold version lookup files. Identified clinical codes and product lists are appended as additional MS Excel worksheets or saved as separate csv files, depending
-on the provided file type. Worksheet names in {it:filename} are irrelevant. If an Ms Excel file the command will alwasys import information from the first sheet.
+on the provided file type. Worksheet names in {it:filename} are irrelevant. If an Ms Excel file the command will always import information from the first sheet.
 Variable names are required (the first row is assumed to be variable names) but irrelevant. The order, however, is important and three variables/columns are
 expected: (1) Clinical name stubs, (2) Clinical codes, and (3) Product name stubs
 

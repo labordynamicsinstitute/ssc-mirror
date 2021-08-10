@@ -1,12 +1,12 @@
 {smcl}
-{* *! version 1.0.1  24jan2012}{...}
+{* *! version 1.0.2  24jan2012}{...}
 {cmd:help spmat putmatrix}
 {hline}
 
 {title:Title}
 
 {p2colset 5 24 27 2}{...}
-{p2col:{cmd:spmat putmatrix} {hline 2}}Copy a Mata matrix to an {bf:spmat}
+{p2col:{cmd:spmat putmatrix} {hline 2}}Put a Mata matrix into an {bf:spmat}
 object{p_end}
 {p2colreset}{...}
 
@@ -34,12 +34,12 @@ object{p_end}
 {title:Description}
 
 {pstd}
-{opt spmat putmatrix} copies Mata matrices to an existing {cmd:spmat} object
-{it:objname}.  If {it:objname} does not exist, {cmd:spmat putmatrix} will
-create a new {cmd:spmat} object.  The optional unique place identifiers can be
-provided in the {cmd:id()} option in a Mata vector {it:vecname} or in a Stata
-variable {it:varname}.  If {it:objname} does not exist and you do not specify
-place identifiers, {cmd:spmat putmatrix} will create the IDs {cmd:1}, ..., {it:n}.
+{opt spmat putmatrix} puts Mata matrices into an existing {cmd:spmat} object
+{it:objname}, or into a new {cmd:spmat} object, if the specified object does
+not exist.  The optional unique place identifiers can be provided in the
+{cmd:id()} option in a Mata vector {it:vecname} or in a Stata variable
+{it:varname}.  If {it:objname} does not exist and you do not specify place
+identifiers, {cmd:spmat putmatrix} will create the IDs {cmd:1}, ..., {it:n}.
 
 
 {title:Options}

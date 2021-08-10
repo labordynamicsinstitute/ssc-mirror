@@ -1,5 +1,5 @@
 {smcl}
-{* *! version 1.1 08Feb2017}{...}
+{* *! version 2.3 11Nov2018}{...}
 {cmd:help stpm2cr postestimation} 
 {right:also see:  {help stpm2cr}}
 {hline}

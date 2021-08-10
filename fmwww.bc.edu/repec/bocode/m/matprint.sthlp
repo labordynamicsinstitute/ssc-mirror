@@ -1,5 +1,5 @@
 {smcl}
-{* *! version 0.1  4 Jul 2016}{...}
+{* *! version 0.23}{...}
 {vieweralsosee "" "--"}{...}
 {vieweralsosee "Help matlist" "help matlist"}{...}
 {vieweralsosee "Help log2markup (if installed)" "help log2markup"}{...}
@@ -24,28 +24,40 @@
 {synopthdr}
 {synoptline}
 {syntab:Main}
-{synopt:{opt s:tyle(string)}} Style for output. One of the values {bf:smcl} (default), 
+{synopt:{opt s:tyle(string)}}Style for output. One of the values {bf:smcl} (default), 
 {bf:csv} (semicolon separated style), 
 {bf:latex or tex} (latex style),
 {bf:html} (html style) and
 {bf:md} (markdown style) 
-.{p_end}
-{synopt:{opt d:ecimals(string)}} Matrix of integers specifying numbers of 
+{p_end}
+{synopt:{opt d:ecimals(string)}}Matrix of integers specifying numbers of 
 decimals at cell level. If the matrix is smaller than the data matrix the right
 most column is copied to get the same number of columns. 
-And likewise for the bottom row.{p_end}
-{synopt:{opt ti:tle(string)}} Title/caption for the matrix output.{p_end}
-{synopt:{opt to:p(string)}} String containing text prior to table content.
-Default is dependent of the value of the style option.{p_end}
-{synopt:{opt u:ndertop(string)}} String containing text between header and table 
+And likewise for the bottom row{p_end}
+{synopt:{opt cap:tion(string)}}Caption for the output. Same as {opt ti:tle}{p_end}
+{synopt:{opt ti:tle(string)}}Title for the output. Same as {opt cap:tion}.
+{opt ti:tle} overwrites {opt cap:tion}{p_end}
+{synopt:{opt to:p(string)}}String containing text prior to table content.
+Default is dependent of the value of the style option{p_end}
+{synopt:{opt u:ndertop(string)}}String containing text between header and table 
 content.
-Default is dependent of the value of the style option.{p_end}
-{synopt:{opt b:ottom(string)}} String containing text after to table content.
-Default is dependent of the value of the style option.{p_end}
-{synopt:{opt r:eplace}} Delete an existing {help using:using} file before adding table.{p_end}
-{synopt:{opt noe:qstrip}} Do not remove duplicate successive roweq or coleq values.{p_end}
-{synopt:{opt h:idesmall(integer)}} If set hide all values below the set value.
-Default is the value 0, ie no hidding.{p_end}
+Default is dependent of the value of the style option{p_end}
+{synopt:{opt b:ottom(string)}}String containing text after to table content.
+Default is dependent of the value of the style option{p_end}
+{synopt:{opt r:eplace}}Delete an existing {help using:using} file before adding table{p_end}
+{synopt:{opt noe:qstrip}}Do not remove duplicate successive roweq or coleq values{p_end}
+{synopt:{opt h:idesmall(integer)}}If set hide all values below the set value.
+Default is the value 0, ie no hidding{p_end}
+{synopt:{opt noc:leanmata}}For debugging. Do not delete Mata values and instances{p_end}
+{synopthdr:version 13 and up}
+{synopt:{opt toxl:(string)}}A string containing up to 5 values separated 
+	by a comma. The values are:{break}
+	* path and filename on the excel book to save in. Excel book suffix is set/reset to {cmd:xls} for Stata 13 and to {cmd:xlsx} for Stata 14 and above{break}
+	* the sheet name to save output in{break}
+	* (Optional) replace - replace/overwrite the content in the sheet{break}
+	* (Optional) row, column numbers for the upper right corner of the table in the sheet{break}
+	* (Optional) columnn widths in parentheses. If more columns than widths the last column width is used for the rest
+	{p_end}
 {synoptline}
 {p2colreset}{...}
 {p 4 6 2}
@@ -53,7 +65,7 @@ Default is the value 0, ie no hidding.{p_end}
 {marker description}{...}
 {title:Description}
 {pstd}
-{cmd:matprint} prints and styles a matrix. The styles can be {help smcl:smcl} 
+{cmd:matprint} prints and styles a matrix in text. The styles can be {help smcl:smcl} 
 for nice outlook in the log (and when eg saved in the using file the output can 
 be used in smcl documentation files), csv for a semicolon separated output
 html, tex/latex and md (markdown).
@@ -68,20 +80,16 @@ names (option {opt r:owtitle1})
 
 {pstd}
 Number of decimals can be set at cell level in option {opt d:ecimals} by 
-specifying a matrix of integers. If the decimal matrix is smaller than the data
-matrix first the right most column of integers are copied and then the bottom
-row is also copied to get the same size.
+specifying a matrix of integers. {break}
+If the decimal matrix is smaller than the data matrix first the right most 
+column of integers are copied and then the bottom row is also copied to get the 
+same size.{break}
 If the decimal matrix is too big only the top left part of the decimals numbers
 matching the size of the data matrix is used.
 
 {pstd}
-{cmd:matprint} is a mix of {help matlist:matlist} and if installed 
-{help estout:estout} for matrices.
-The command {help matlist:matlist} to me is too detailed with respect to 
-controlling the smcl output and too little detailed with respect to styles.
-The command {help estout:estout} has the concept of styles and a simple setting
-of decimals. However presenting and styling matrices is not the main focus.
-And also here there are too much functionality.
+{cmd:matprint} has the concept of styles (for smcl, html, tex/latex, md for 
+markdown and csv) and a simple setting of decimals.
 
 {pstd}
 {cmd:matprint} is highly integrated with {help log2markup:log2markup} such that
@@ -92,13 +100,13 @@ generated by log2markup in the same style as the end document.
 {title:Examples}
 
 {pstd}Below is a set of examples. You can copy the code and insert it in the 
-command window or you can just click once on each blue line below.
+command window or you can just click once on each blue line below.{break}
 Then the command is automatically moved to the command window and executed.{p_end}
 {pstd}Note that there is progression in the examples such a command line may require 
 some of the previous lines to show the intended properly.{p_end}
 
 {pstd}In this example estimates and their confidence intervals for two regression
-models are combined into one summary matrix.{p_end}
+models are combined into one summary matrix{p_end}
 {phang}{stata `"sysuse auto ,clear"'}{p_end}
 
 {phang}First regession and matrix part b1:{p_end}
@@ -118,23 +126,31 @@ models are combined into one summary matrix.{p_end}
 {phang}{stata "matrix b12 = b12'"}{p_end}
 
 {phang}To see the matrix in the log window in smcl style and 3 decimals for the
-first column and 2 decimals for the rest.{p_end}
+first column and 2 decimals for the rest{p_end}
 {phang}{stata `"matprint b12, title(Regression summary table) decimals((3, 2))"'}{p_end}
 
 {phang}Sometimes eg when using {help log2markup:log2markup (if installed)} it is
 preferred that the output in the log is in latex/tex or html like below:{p_end}
 {phang}{stata `"matprint b12, title(Regression summary table) decimals(3) style(html)"'}{p_end}
-{phang}{stata `"matprint b12, title(Regression summary table) decimals(3) style(tex)"'}{p_end}
+
+{phang}The table output can also be saved in a file in the current directory:{p_end}
+{phang}{stata `"matprint b12 using table_b12.tex, title(Regression summary table) decimals(3) style(tex)"'}{p_end}
+
+{phang}Or table output can be saved in sheet "b12" at Excel workbook "tbls.xls(x)" in the 
+current directory:{p_end}
+{phang}{stata `"matprint b12, title(Regression summary table) decimals(3) toxl(tbls, b12)"'}{p_end}
+{phang}To see current directory:{p_end}
+{phang}{stata cd}{p_end}
+{phang}To see Excel workbook (stata 13):{p_end}
+{phang}{stata shell tbls.xls}{p_end}
+{phang}To see Excel workbook (stata 14 and up):{p_end}
+{phang}{stata shell tbls.xlsx}{p_end}
 
 {phang}Show replicated roweq and coleg values:{p_end}
-{phang}{stata `"matprint b12, noe"'}{p_end}
+{phang}{stata `"matprint b12, noeqstrip"'}{p_end}
 
 {phang}Hide values less than 5:{p_end}
 {phang}{stata `"matprint b12, hidesmall(5)"'}{p_end}
-
-{phang}The use of matprint is also demonstrated in {help sumat##examples:sumat examples}.{p_end}
-
-{browse "http://www.bruunisejs.dk/StataHacks/My%20commands/matprint/matprint_demo/":To see more examples}
 
 
 {marker author}{...}
@@ -142,10 +158,8 @@ preferred that the output in the log is in latex/tex or html like below:{p_end}
 
 {phang}{bf:Author:}{break}
  	Niels Henrik Bruun, {break}
-	Section for General Practice, {break}
-	Dept. Of Public Health, {break}
-	Aarhus University
+	Aalborg University Hospital
 {p_end}
 {phang}{bf:Support:} {break}
-	{browse "mailto:nhbr@ph.au.dk":nhbr@ph.au.dk}
+	{browse "mailto:niels.henrik.bruun@gmail.com":niels.henrik.bruun@gmail.com}
 {p_end}

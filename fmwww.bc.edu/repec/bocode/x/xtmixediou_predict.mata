@@ -91,5 +91,3 @@ void Browniancov(real rowvector Wparameters, real matrix oneMatrix, real matrix 
 
 } // END OF FUNCTION Browniancov()
 end
-
-mata: mata mosave xtmixediou_predict(), dir(PERSONAL) replace

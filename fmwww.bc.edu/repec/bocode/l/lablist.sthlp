@@ -6,7 +6,8 @@ help for {cmd:lablist}{right:(Roger Newson)}
 {title:List value labels (if present) for one or more variables}
 
 {p 8 21 2}
-{cmd:lablist} [ {varlist} ] [ , {cmdab:var:label} {cmd:no}{cmdab:un:labelled} ]
+{cmd:lablist} [ {varlist} ] [ , {cmdab:var:label} {cmd:no}{cmdab:un:labelled}
+{opt lo:cal(name)} ]
 
 
 {title:Description}
@@ -33,6 +34,10 @@ in addition to any value labels.
 {p 4 8 2}
 {cmd:nounlabelled} specifies that variables in the {varlist} without value labels
 will not be included in the printed output.
+
+{p 4 8 2}
+{opt lo:cal(name)} specifies the name of a local macro to contain a list of value label names
+used by variables in the {varlist}, in alphanumeeric order.
 
 
 {title:Examples}
@@ -63,11 +68,14 @@ will not be included in the printed output.
 {synopt:{cmd:r(max)}}maximum nonmissing value with a label{p_end}
 {synopt:{cmd:r(hasemiss)}}{cmd:1} if extended missing values labeled, {cmd:0}
                  otherwise{p_end}
+
+{p2col 5 20 24 2: Macros}{p_end}
+{synopt:{cmd:r(names)}}list of label names in alphanumeric order{p_end}
 {p2colreset}{...}
 
 {pstd}
 If multiple variables are specified in the {varlist},
-then the saved results are for the last variable in the {varlist} with a value label.
+then the saved scalar results are for the last variable in the {varlist} with a value label.
 
 
 {title:Author}

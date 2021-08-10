@@ -1,5 +1,5 @@
 {smcl}
-{* *! Version 1.0 15Mar2017}{...}
+{* *! Version 1.10 04JUN2019}{...}
 
 {title:Title}
 
@@ -23,7 +23,7 @@
 
 {pstd}
 {cmd:qconvert} coverts the raw Q-sort file into a new Q-sort file which is ready for analysis by qfactor program. 
-The raw data file should include one variable named “ranking” which shows the rankings based on the Q-sort table 
+The raw data file should include one variable named "{bf:ranking}" which shows the rankings based on the Q-sort table 
 from the left (e.g. -4 -4) to the right (e.g. +4 +4). 
 This variable should have the same number of entries as the number of statements (Q-sample or Q-set). The other variables are raw Q-sorts.
 
@@ -31,7 +31,7 @@ This variable should have the same number of entries as the number of statements
 To create your raw data file in Stata and convert it to a new file ready for Q-analysis by {cmd:qfactor} program follow these steps:  
 
 {phang}
-1.	Enter rankings of the q-sort table from left to right, e.g. 2 times -4, 3 time -3,..., 2 times +4.
+1.	Enter rankings of the q-sort table from left to right into a Stata column as a variable, e.g. 2 times -4, 3 time -3,..., 2 times +4.
 
 {phang}
 2.	Then, enter each Q-sort table as one separate variable: Enter the statement numbers in the 

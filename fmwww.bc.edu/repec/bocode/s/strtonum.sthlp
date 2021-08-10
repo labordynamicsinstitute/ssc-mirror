@@ -1,5 +1,5 @@
 {smcl}
-{* *! version 1.0 19 Sep 2016}{...}
+{* *! version 0.23}{...}
 {vieweralsosee "" "--"}{...}
 {vieweralsosee "strofnum" "help strofnum"}{...}
 {viewerjumpto "Syntax" "strtonum##syntax"}{...}
@@ -27,6 +27,10 @@ Default value is 1.{p_end}
 {synopt:{opt k:eep}} Option for keeping the original string variables.
 The original variable is renamed with a __ prefix and placed after the new 
 numeric variable{p_end}
+{synopt:{opt l:abel(name)}} specifies the name of the value label to be used
+and added to if the named value label already exists{p_end}
+{synopt:{opt e:xtend}} specifies that {varname} will be encoded if there are 
+values contained in {it:varname} that are not present in {opt l:abel(name)}{p_end}
 {synoptline}
 {p2colreset}{...}
 {p 4 6 2}
@@ -51,10 +55,8 @@ The variable label is copied to the new variable.
 
 {phang}{bf:Author:}{break}
  	Niels Henrik Bruun, {break}
-	Section for General Practice, {break}
-	Dept. Of Public Health, {break}
-	Aarhus University
+	Aalborg University Hospital
 {p_end}
 {phang}{bf:Support:} {break}
-	{browse "mailto:nhbr@ph.au.dk":nhbr@ph.au.dk}
+	{browse "mailto:niels.henrik.bruun@gmail.com":niels.henrik.bruun@gmail.com}
 {p_end}

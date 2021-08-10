@@ -10,9 +10,9 @@ d
 d KW: multidimensional scaling
 d KW: validity
 d
-d Requires: Stata version 12, kapci from st076 and delta, loevh, mi_twoway, detect, imputeitems, lstrfun from SSC (q.v.)
+d Requires: Stata version 12, kapci from st076, and delta, loevh, mi_twoway, detect, imputeitems, lstrfun from SSC (q.v.)
 d
-d Distribution-Date: 20170701
+d Distribution-Date: 20200322
 d
 d Author: Bastien Perrot, University of Nantes, France 
 d Support: email bastien.perrot@@univ-nantes.fr

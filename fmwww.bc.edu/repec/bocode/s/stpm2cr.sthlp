@@ -1,5 +1,5 @@
 {smcl}
-{* *! version 1.1 08Feb2017}{...}
+{* *! version 2.5 04Jan2021}{...}
 {cmd:help stpm2cr} 
 {right:also see:  {help stpm2}, {help stpm2cr postestimation}}
 {hline}
@@ -84,13 +84,12 @@ calculate the net probability of death in a hypothetical world where competing e
 {phang}
 {opt bknots(knotslist)} {it:knotslist} is a two-element {it:numlist} giving
 the boundary knots. By default these are located at the minimum and maximum
-of the uncensored survival times. They are specified on the scale defined
-by {cmd:knscale()}.
+of the uncensored survival times. They are specified on the normal time-scale.
 
 {phang}
 {opt bknotstvc(knotslist)} {it:knotslist} gives the boundary knots for 
 any time-dependent effects. By default these are the same as for the bknots
-option. They are specified on the scale defined by {cmd:knscale()}.
+option. They are specified on the normal time-scale.
 
 {pmore}
 For example,
@@ -155,7 +154,7 @@ This will use 3 degrees of freedom for {cmd:x1}, 2 degrees of freedom for
 {phang}
 {opt knots(# [# ...])} specifies knot locations for the baseline distribution
 function, as opposed to the default locations set by {cmd:df()}. Note that
-the locations of the knots are placed on the scale defined by {cmd:knscale}.
+the locations of the knots are placed on the normal time-scale.
 However, the scale used by the restricted cubic spline function is always
 log time. Default knot positions are determined by the {opt df()} option.
 
@@ -317,8 +316,8 @@ iteration.
 {title:Author}
 
 {pstd}
-Sarwar Islam, University of Leicester, UK.
-({browse "mailto:si113@leicester.ac.uk":si113@leicester.ac.uk})
+Sarwar I. Mozumder, University of Leicester, UK.
+({browse "mailto:sarwar.mozumder@leicester.ac.uk":sarwar.mozumder@leicester.ac.uk})
 
 {pstd}
 Paul Lambert, University of Leicester, UK and Karolinska Institutet, Stockholm, Sweden. 

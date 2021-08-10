@@ -1,3 +1,4 @@
+//needs to be in a separate file otherwise cannot call ml
 /* log-likelihood evaluator (method d0) for metaan.
 Estimates tau2 by REML.
 Variables :
@@ -5,7 +6,6 @@ $ML_y1 holds the y-vector of study estimates,
 $ML_y2 holds the within-study variances
 pretty much copied from metareg by Roger Harbord, thank you Roger! */
 program define metaan_reml
-    version 10.0
     /*d0 evaluator standards*/
     args todo b lnf
 	tempvar lnfj v r

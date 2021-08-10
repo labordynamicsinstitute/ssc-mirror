@@ -26,12 +26,14 @@ d test. Full documentation of the programs (including	   methods
 d and formulas) can be found in the ancillary files somersd.pdf,   
 d   cendif.pdf and censlope.pdf. 
 d
+d KW: sensitivity
+d KW: specificity
 d
-d Requires: Stata 12.1
+d Requires: Stata 16
 d
-d Distribution-Date: 20140506
+d Distribution-Date: 20200416
 d
-d Author: Roger Newson, National Heart and Lung Institute at Imperial College London
+d Author: Roger Newson, Imperial College London
 d Support: email r.newson@@imperial.ac.uk
 d
 f somersd.ado

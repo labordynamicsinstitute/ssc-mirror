@@ -21,8 +21,8 @@ d Requires: Stata version 12
 d
 d Distribution-Date: 20170428
 d
-d Author: Malte Kaukal, GESIS, Leibniz Institute for the Social Sciences
-d Support: email malte.kaukal@@gesis.org
+d Author: Malte Kaukal, Hessisches Statistisches Landesamt
+d Support: email malte.kaukal@@gmx.de
 d
 f scandata.ado
 f scandata.sthlp

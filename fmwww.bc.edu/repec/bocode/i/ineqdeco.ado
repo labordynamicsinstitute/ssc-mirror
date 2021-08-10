@@ -1,3 +1,4 @@
+*! 2.1.0 SPJ Feb 2021 Add pweight so that use PVK's -rhsbsample- & svy bootstrap 
 *! 2.0.2 SPJ May 2008 (fix bug arising if bygroup() and `touse' lead to no obs in a group)
 *!   bug fix method provided by Austin Nichols (many thanks!)
 *! 2.0.1 SPJ August 2006 (new vbles created as doubles)
@@ -10,7 +11,7 @@
 program ineqdeco, sortpreserve rclass 
 
 version 8.2 
-syntax varname(numeric) [aweight fweight] [if] [in] ///
+syntax varname(numeric) [aweight fweight pweight iweight] [if] [in] ///
 	[, BYgroup(varname numeric) Welfare Summarize ]
 
 if "`summarize'" != "" local summ "summ" 

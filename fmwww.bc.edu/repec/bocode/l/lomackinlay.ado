@@ -2,7 +2,7 @@ capt program drop lomackinlay
 *! version 1.0.7  14nov2007    C F Baum
 *  from kpss 1.2.1, ipshin 1.0.8,
 *  Lo & MacKinlay (LMK), A Non-Random Walk Down Wall Street (1999),
-*  http://press.princeton.edu/books/lo,
+*  https://www.jstor.org/stable/j.ctt7tccx.9
 *  Campbell, Lo, MacKinlay, Econometrics of Financial Markets (1997); 
 *  Lo and MacKinlay, "Stock market prices do not follow random walks: evidence
 *  from a simple specification test", Rev. Fin. Studies 1:1, 1988, 41-66; and

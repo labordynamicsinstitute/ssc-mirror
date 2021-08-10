@@ -1,20 +1,21 @@
-*! runmlwin.ado, George Leckie and Chris Charlton, 19May2016
+*! runmlwin.ado, George Leckie and Chris Charlton, 17Jun2019
 program runmlwin, eclass
-  if _caller() >= 12 version 12.0
-  if _caller() <= 9 version 9.0 
-  
+  if c(stata_version) >= 15 local user user
+  if _caller() >= 12 version 12.0, `user'
+  if _caller() <= 9 version 9.0, `user'
+
   display " " // display an empty line between the model command and the model output
   if replay() { // replay the results
     if ("`e(cmd)'" ~= "runmlwin") error 301
-    syntax [, Level(cilevel) noHEADer noGRoup noCONTrast noFETable noRETable SD CORrelations OR IRr RRr MOde MEdian Zratio *]
-    runmlwin_display, level(`level') `header' `group' `contrast' `fetable' `retable' `sd' `correlations' `or' `irr' `rrr' `mode' `median' `zratio' // display the results
+    syntax [, Level(cilevel) CFORMAT(string) PFORMAT(string) SFORMAT(string) noHEADer noGRoup noCONTrast noFETable noRETable SD CORrelations OR IRr RRr MOde MEdian Zratio *]
+    runmlwin_display, level(`level') cformat(`cformat') pformat(`pformat') sformat(`sformat') `header' `group' `contrast' `fetable' `retable' `sd' `correlations' `or' `irr' `rrr' `mode' `median' `zratio' // display the results
     makecns, displaycns
   }
   else { // fit the model
-    syntax anything [if] [in], [Level(cilevel) noHEADer noGRoup noCONTrast noFETable noRETable SD CORrelations OR IRr RRr MOde MEdian Zratio *]
+    syntax anything [if] [in], [Level(cilevel) CFORMAT(string) PFORMAT(string) SFORMAT(string) noHEADer noGRoup noCONTrast noFETable noRETable SD CORrelations OR IRr RRr MOde MEdian Zratio *]
     timer clear 99
     timer on 99
-    Estimates `0'   
+    Estimates `0'
     if "`e(mcmcnofit)'" == "1" { // If the user specifies the nofit option in MCMC then runmlwin needs to exit, but without error
       exit
     }
@@ -22,18 +23,15 @@ program runmlwin, eclass
     quietly timer list
     ereturn scalar time = r(t99)
     timer clear 99
-    runmlwin_display, level(`level') `header' `group' `contrast' `fetable' `retable' `sd' `correlations' `or' `irr' `rrr' `mode' `median' `zratio' // display the results
+    runmlwin_display, level(`level') cformat(`cformat') pformat(`pformat') sformat(`sformat') `header' `group' `contrast' `fetable' `retable' `sd' `correlations' `or' `irr' `rrr' `mode' `median' `zratio' // display the results
   }
 
 end
 
-
-
-
 program Estimates, eclass sortpreserve
   if _caller() >= 12 version 12.0
-  if _caller() <= 9 version 9.0 
-  
+  if _caller() <= 9 version 9.0
+
   * Locate and record highest level
   local runmlwin_cmdline `0'
   * Separate off options
@@ -48,7 +46,7 @@ program Estimates, eclass sortpreserve
         local maxlevels `lev'
       }
     }
-  } 
+  }
   if ("`verbose'"~="") display as text "Highest level: `maxlevels'"
 
   local levargs
@@ -56,7 +54,7 @@ program Estimates, eclass sortpreserve
     local levargs LEVEL`l'(string) `levargs'
   }
   #delimit ;
-    syntax anything(name=eqlist id="equations" equalok) [if] [in], 
+    syntax anything(name=eqlist id="equations" equalok) [if] [in],
       [
       `levargs' // min=2 as first var is id, second var is, e.g., cons
       ]
@@ -73,18 +71,54 @@ program Estimates, eclass sortpreserve
       MLWINPATH(string) MLWINSCRIPTPATH(string)
       VIEWMacro SAVEMacro(string) SAVEWorksheet(string) SAVEStata(string)
       USEWorksheet(string)
-      Level(cilevel) OR IRr RRr SD CORrelations MOde MEdian Zratio noHEADer noGRoup noCONTrast noFETable noRETable
-      noDrop FORCESort FORCERecast noMLWIN noPause BATCh noSORT
+      Level(cilevel) CFORMAT(string) PFORMAT(string) SFORMAT(string) OR IRr RRr SD CORrelations MOde MEdian Zratio noHEADer noGRoup noCONTrast noFETable noRETable
+      noDrop FORCESort FORCERecast noMLWIN noPause noVERSIONCHECK BATCh noSORT
       PLUGIN Verbose VIEWFULLMacro SAVEFULLMacro(string) SAVEEQuation(string)
       MLWINSETTINGS(string)
       ] ;
-  #delimit cr 
-  
+  #delimit cr
+
+  local doublevar 1
+
   if c(mode) == "batch" local batch = c(mode)
 
-  if "`mlwinpath'" == "" & "`mlwinscriptpath'" ~= "" & "`batch'" ~= "" local mlwinpath `mlwinscriptpath'    
+  if "`mlwinpath'" == "" & "`mlwinscriptpath'" ~= "" & "`batch'" ~= "" local mlwinpath `mlwinscriptpath'
   if "`mlwinpath'" == "" & "$MLwiNScript_path" ~= "" & "`batch'" ~= "" local mlwinpath $MLwiNScript_path
-  if "`mlwinpath'" == "" & "$MLwiN_path" ~= "" local mlwinpath $MLwiN_path  
+  if "`mlwinpath'" == "" & "$MLwiN_path" ~= "" local mlwinpath $MLwiN_path
+
+  // will need to allow for fact that users store MLwiN in different locations. User can put global in profile.do to allow this
+  // slightly unfortunate that the installation folder changes with each update from 2.20 to 2.21 etc at user has to keep on changing this to run this command
+  if "`mlwin'"~="nomlwin" & "`mlwinpath'" ~= "" {
+    capture confirm file "`mlwinpath'"
+    if _rc == 601 {
+      display as error "`mlwinpath' does not exist." _n
+      exit 198
+    }
+    if "`versioncheck'" ~= "noversioncheck" {
+      quietly capture runmlwin_verinfo `mlwinpath'
+      if _rc == 198 {
+        display as error "`mlwinpath' is not a valid version of MLwiN"
+        exit 198
+      }
+      local majorver `r(ver1)'
+      local minorver : display %02.0f `r(ver2)'
+      local versionok = 1
+      local versionold = 0
+      if (`majorver' < 2) | (`majorver' == 2 & `minorver' < 36) local versionok = 0
+      if (`majorver' < 3) | (`majorver' == 3 & `minorver' < 03) local versionold = 1
+      if `versionok' == 0 {
+        display as error "runmlwin assumes MLwiN version 2.36 or higher. You can download the latest version of MLwiN at:" _n "https://www.bristol.ac.uk/cmm/software/mlwin/download/upgrades.html." _n "If you want to ignore this warning and attempt to continue anyway you can use the noversioncheck option"
+        exit 198
+      }
+      if `versionold' == 1 display as error "WARNING: Your version of MLwiN is out of date. You can download the latest version of MLwiN at:" _n "https://www.bristol.ac.uk/cmm/software/mlwin/download/upgrades.html"
+    }
+    local mlwinversion `majorver'.`minorver'
+    if "`mlwinversion'" ~= "..." { // No version information found
+      if `mlwinversion' < 3 {
+        local doublevar 0
+      }
+    }
+  }
 
   * Mark the sample (Defines a 0/1 to-use variable that records which observations are to be used in subsequent code)
   marksample touse, novarlist // This gives the full sample which is sent to MLwiN. Not a listwise delete sample.
@@ -93,14 +127,14 @@ program Estimates, eclass sortpreserve
   if ("`discrete'"~="") {
     local 0 , `discrete'
     syntax , Distribution(string) [Link(namelist min=1 max=1) DEnominator(varlist numeric) Extra Offset(varname numeric) Proportion(varname) Basecategory(numlist integer min=1 max=1) MQL1 MQL2 PQL1 PQL2]
-  
+
     local validdistributions normal binomial poisson nbinomial multinomial
     local checkdistribution :list distribution & validdistributions
     if "`checkdistribution'"=="" {
       display as error "Invalid distribution(). Valid distributions are: normal, binomial, poisson, nbinomial, multinomial"
       exit 198
     }
-    
+
     * Method of linearization
     if ("`mql2'"=="" & "`pql1'"=="" & "`pql2'"=="") local linearization MQL1
     if ("`mql2'"~="") local linearization MQL2
@@ -118,7 +152,7 @@ program Estimates, eclass sortpreserve
         exit 198
       }
 
-      if ("`distribution'"=="poisson") local link log
+      if ("`distribution'"=="poisson" | "`distribution'"=="nbinomial") local link log
     }
 
     if "`link'" ~= "" {
@@ -129,19 +163,19 @@ program Estimates, eclass sortpreserve
         if  ~inlist("`link'","logit","probit","cloglog") {
           display as error "Invalid link() function. Valid link functions for the binomial distribution are: logit, probit and cloglog." _n
           exit 198
-        }       
+        }
       }
       if ("`distribution'"=="multinomial") {
         if  ~inlist("`link'","mlogit","ologit","oprobit","ocloglog") {
           display as error "Invalid link() function. Valid link functions for the multinomial distribution are: mlogit, ologit, oprobit, ocloglog." _n
           exit 198
-        }       
+        }
       }
       if ("`distribution'"=="poisson") {
         if  ~inlist("`link'","log") {
           display as error "Invalid link() function. Valid link functions for the poisson distribution are: log." _n
           exit 198
-        }       
+        }
       }
       if "`identity'" ~= "" local link identity
       if "`logit'" ~= "" local link logit
@@ -158,7 +192,6 @@ program Estimates, eclass sortpreserve
     local link identity
   }
 
-
   ******************************************************************************
   * (1A) PARSE RESPONSE AND FIXED PART PREDICTOR LIST
   ******************************************************************************
@@ -169,13 +202,12 @@ program Estimates, eclass sortpreserve
 
   local numstataeqns = `.`o'.eq count'
   if ("`verbose'"~="") display as text "number of eqns: `numstataeqns'"
-  
+
   * Derive model type
   if (`numstataeqns'==1 & "`distribution'" ~= "multinomial") local mtype univariate
   if ("`distribution'" == "multinomial") local mtype multinomial
   if (`numstataeqns'>1 &  "`distribution'" ~= "multinomial") local mtype multivariate
   assert"`mtype'"~=""
-
 
   local response
   local fp
@@ -193,23 +225,23 @@ program Estimates, eclass sortpreserve
         local name`eq'       `.`o'.eq name `e''
         local response`eq'   `.`o'.eq depvars `e''
         // Add to complete list
-        local response `response' `response`eq''        
+        local response `response' `response`eq''
         local ++nummlwineqns
       }
     }
-    
+
     * Reserve the first nummlwineqns for separate coefficients
-    
-    local numfpbrackets = `nummlwineqns' 
+
+    local numfpbrackets = `nummlwineqns'
     forvalues e = 1/`numstataeqns' {
       local 0 , `.`o'.eq options `e''
-      syntax [, EQuation(numlist integer)]    
+      syntax [, EQuation(numlist integer)]
       local eq `equation'
       if "`eq'" == "" {
         display as error "equation option not set for `e'"
         exit 198
       }
-      
+
       if `:list sizeof eq' == 1 {
         if ("`verbose'"~="") display as text "Separate coefficients"
         local fp`eq'         `.`o'.eq indepvars `e''
@@ -219,11 +251,11 @@ program Estimates, eclass sortpreserve
           display as error "`dups' are duplicated in the fixed part equation `eq'"
           exit 198
         }
-        
+
         foreach var of local fp`eq' {
           local fpname`eq' `fpname`eq'' `var'.`eq'
         }
-        
+
         local pat
         forvalues a = 1/`nummlwineqns' {
           if `:list a in eq' local pat `pat' 1
@@ -233,13 +265,13 @@ program Estimates, eclass sortpreserve
       }
       else {
         if ("`verbose'"~="") display as text "Common coefficients"
-                
+
         // NOTE: This may give unnecessary errors if the common equation comes before a corresponding separate one
-        if "`:list eq - valideqns'" ~= "" { 
+        if "`:list eq - valideqns'" ~= "" {
           display as error "invalid equation(s) specified"
           exit 198
-        }       
-        
+        }
+
         local ++numfpbrackets
         local fp`numfpbrackets'         `.`o'.eq depvars `e'' `.`o'.eq indepvars `e''
         local numfpvars`numfpbrackets'  :list sizeof fp`e'
@@ -258,47 +290,47 @@ program Estimates, eclass sortpreserve
           else local pat `pat' 0
         }
         local rpat`numfpbrackets' `pat'
-      }     
+      }
     }
-    
+
     forvalues e = 1/`numfpbrackets' {
       // Add to complete list
-      local fp `fp' `fp`e''         
+      local fp `fp' `fp`e''
     }
-    
+
     local numfpvars :list sizeof fp
   }
-  
+
   * Multinomial response
   if "`mtype'"=="multinomial" {
     local response1     `.`o'.eq depvars 1'
     capture tab `response1'
     local nummlwineqns `=`r(r)' - 1'
-    local numfpbrackets = `nummlwineqns' 
+    local numfpbrackets = `nummlwineqns'
     local valideqns
     forvalues e = 1/`nummlwineqns' {
       local valideqns `valideqns' `e'
     }
     if ("`verbose'"~="") display as text "Valid Equations: `valideqns'"
-        
+
     forvalues e = 2/`numstataeqns' {
       local 0 , `.`o'.eq options `e''
       syntax [, CONtrast(numlist integer)]
-      local cat `contrast' 
+      local cat `contrast'
       if ("`verbose'"~="") display as text "`cat'"
-      
+
       if "`cat'" == "" {
         display as error "cat option not set for `e'"
         exit 198
-      }     
-      
+      }
+
       if "`:list cat - valideqns'" ~= "" {
         display as error "Invalid contrast(s) specified. The contrast(s) specified in contrasts() must tally with the contrast(s) in the model, in this case: 1,2,...,`nummlwineqns'" _n
         exit 198
       }
       if `:list sizeof cat' == 1 {
         if ("`verbose'"~="") display as text "Separate coefficients"
-        local fp`cat' `.`o'.eq depvars `e'' `.`o'.eq indepvars `e''       
+        local fp`cat' `.`o'.eq depvars `e'' `.`o'.eq indepvars `e''
         local dups :list dups fp`cat'
         if "`dups'" ~= "" {
           display as error "`dups' are duplicated in the fixed part contrast `contrast'"
@@ -316,9 +348,9 @@ program Estimates, eclass sortpreserve
           display as error "`dups' are duplicated in the fixed part contrast `contrast'"
           exit 198
         }
-        
+
         capture levelsof `response1', local(responsecats)
-        
+
         local catvals
         local respnum = 1
         foreach catn of local responsecats {
@@ -326,23 +358,21 @@ program Estimates, eclass sortpreserve
             if `:list respnum in cat' local catvals `catvals' `catn'
             local ++respnum
           }
-        }         
-            
+        }
+
         foreach var of local fp`numfpbrackets' {
           local fpname`numfpbrackets' `fpname`numfpbrackets'' `var'.`=subinstr("`catvals'", " ", "", .)'
-        }       
-        
-        
+        }
+
         local pat
         forvalues a = 1/`nummlwineqns' {
           if `:list a in cat' local pat `pat' 1
           else local pat `pat' 0
         }
         local rpat`numfpbrackets' `pat'
-        
       }
     }
-        
+
     // Check there are at least nummlwineqns equations
     capture levelsof `response1', local(responsecats)
     local e = 1
@@ -357,29 +387,29 @@ program Estimates, eclass sortpreserve
         if "`dups'" ~= "" {
           display as error "`dups' are duplicated in the fixed part"
           exit 198
-        }       
-        local fpname`e'           
+        }
+        local fpname`e'
         foreach var of local fp`e' {
           local fpname`e' `fpname`e'' `var'.`cat'
         }
-        
+
         local pat
         forvalues a = 1/`nummlwineqns' {
           if `:list a in e' local pat `pat' 1
           else local pat `pat' 0
         }
-        local rpat`e' `pat' 
+        local rpat`e' `pat'
         local ++e
       }
-    }   
-    
+    }
+
     forvalues e = 1/`numfpbrackets' {
       // Add to complete list
-      local fp `fp' `fp`e''         
-    }     
+      local fp `fp' `fp`e''
+    }
     local numfpvars :list sizeof fp
   }
-  
+
   if "`mtype'" == "univariate" {
     local numfpbrackets = `numstataeqns'
     local nummlwineqns = `numstataeqns'
@@ -387,7 +417,7 @@ program Estimates, eclass sortpreserve
     forvalues e = 1/`numfpbrackets' {
       local name`e'       `.`o'.eq name `e''
       local response`e'   `.`o'.eq depvars `e''
-      
+
       if _caller() >= 11 {
         local 0 `.`o'.eq indepvars `e''
         syntax varlist(fv)
@@ -410,10 +440,10 @@ program Estimates, eclass sortpreserve
             display as text "note: `xname' omitted because of collinearity"
           }
           else {
-            if `:list x in newvars' & "`:type `x''" == "double" {
+            if "`:type `x''" == "double" & `:list x in newvars' & `doublevar' == 0{
               quietly recast float `x', force
               display as error "`xname' has more precision that MLwiN can handle, forcing to float"
-            }         
+            }
             local ++i
           }
         }
@@ -422,13 +452,13 @@ program Estimates, eclass sortpreserve
         local fpname`e' `.`o'.eq indepvars `e''
         local fp`e' `.`o'.eq indepvars `e''
       }
-      
+
       local dups :list dups fp`e'
       if "`dups'" ~= "" {
         display as error "`dups' are duplicated in the fixed part"
         exit 198
-      }     
-      
+      }
+
       local numfpvars`e'  :list sizeof fp`e'
 
       // Add to complete list
@@ -436,14 +466,13 @@ program Estimates, eclass sortpreserve
       local fp `fp' `fp`e''
     }
     local numfpvars :list sizeof fp
-  } 
-  
+  }
 
   local fpname
   forvalues e = 1/`numfpbrackets' {
     local fpname `fpname' `fpname`e''
   }
-  
+
   forvalues e = 1/`numfpbrackets' {
     if ("`=word("`distribution'", `e')'"=="binomial") {
       if ("`extra'" ~= "") {
@@ -464,10 +493,7 @@ program Estimates, eclass sortpreserve
     forvalues e = 1/`numfpbrackets' {
       display as result "FP EQUATION `e' " as text "Name: `name`e'', Response: `response`e'', Predictors: `fp`e'', Num. of predictors: `numfpvars`e'', Options: `opts`e''" _n
     }
-  } 
-
-
-
+  }
 
   ******************************************************************************
   * (1B) PARSE LEVELS
@@ -475,11 +501,10 @@ program Estimates, eclass sortpreserve
 
   * Level parsing (Level X identifier, random part covariates and options)
   local residualsall
-
   local factorson = 0
-  
+
   * Total number of random part variables (not total number of random part parameters)
-  local numrpvars = 0 
+  local numrpvars = 0
   local emptylevels
   forvalues l = `maxlevels'(-1)1 {
     if "`level`l''"~="" {
@@ -548,17 +573,16 @@ program Estimates, eclass sortpreserve
       .`o'.parse `rpeqlist'           // capture because in some models we may choose to include no predictors in the random part at a particular level (e.g. a bivariate normal response model fitted as a univariate response model has no random part at level 1)
       local numstataeqns`l' = `.`o'.eq count'
       local numrpbrackets`l' = `nummlwineqns'
-      
 
-      if ("`verbose'"~="") display as text "Valid Equations: `valideqns'"     
-      
+      if ("`verbose'"~="") display as text "Valid Equations: `valideqns'"
+
       forvalues e = 1/`numstataeqns`l'' {         // loop over the equations
         local 0 , `.`o'.eq options `e''
         syntax [, EQuation(numlist integer) CONtrast(numlist integer) *]
         if ("`contrast'" ~= "") local eq `contrast'
         else local eq `equation'
-        if ("`verbose'"~="") display as text "`eq'"     
-      
+        if ("`verbose'"~="") display as text "`eq'"
+
         if "`mtype'" == "univariate" {
           local rp`l'_`e'     `.`o'.eq depvars `e'' `.`o'.eq indepvars `e''
           local rp`l'name`e' `rp`l'_`e''
@@ -566,44 +590,43 @@ program Estimates, eclass sortpreserve
           if "`dups'" ~= "" {
             display as error "`dups' are duplicated in the random part level `l' equation `e'"
             exit 198
-          }           
+          }
         }
-        else {      
+        else {
           if "`eq'" == "" {
             if `e' == 1 {
               forvalues a = 1/`nummlwineqns' {
                 local name`a'       `.`o'.eq name `e''
                 local rp`l'_`a' `.`o'.eq depvars `e'' `.`o'.eq indepvars `e''
-                local rpeq`l'_`a'   `a' 
+                local rpeq`l'_`a'   `a'
                 local dups :list dups rp`l'_`a'
                 if "`dups'" ~= "" {
                   display as error "`dups' are duplicated in the random part level `l' contrast `a'"
                   exit 198
-                }               
-              }             
+                }
+              }
             }
             else {
               display as error "equation option not set for `e'"
               exit 198
-            }           
+            }
           }
           else {
-          
             if "`:list eq - valideqns'" ~= "" {
               display as error "invalid contrast(s) or equation(s) specified"
               exit 198
-            }         
-          
+            }
+
             if `:list sizeof eq' == 1 {
               // Separate
               local name`eq'       `name`eq'' `.`o'.eq name `e''
               local rp`l'_`eq'     `rp`l'_`eq'' `.`o'.eq depvars `e'' `.`o'.eq indepvars `e''
-              local rpeq`l'_`eq'   `eq'   
+              local rpeq`l'_`eq'   `eq'
               local dups :list dups rp`l'_`eq'
               if "`dups'" ~= "" {
                 display as error "`dups' are duplicated in the random part level `l' equation `eq'"
                 exit 198
-              }             
+              }
             }
             else {
               // Common
@@ -612,20 +635,20 @@ program Estimates, eclass sortpreserve
               local rp`l'_`numrpbrackets`l''     `.`o'.eq depvars `e'' `.`o'.eq indepvars `e''
               local numrpvars`numrpbrackets`l''  :list sizeof rp`l'_`numrpbrackets`l''
               local rpeq`l'_`numrpbrackets`l''   `eq'
-              local rp`l'name`numrpbrackets`l'' 
-              
+              local rp`l'name`numrpbrackets`l''
+
               local dups :list dups rp`l'_`numrpbrackets`l''
               if "`dups'" ~= "" {
                 display as error "`dups' are duplicated in the random part level `l' equation `eq'"
                 exit 198
-              }             
-              
+              }
+
               if "`mtype'" == "multivariate" {
                 foreach var of local rp`l'_`numrpbrackets`l''   {
                   local rp`l'name`numrpbrackets`l''  `rp`l'name`numrpbrackets`l'' ' `var'.`=subinstr("`eq'", " ", "", .)'
-                }               
+                }
               }
-              
+
               if "`mtype'" == "multinomial" {
                 capture levelsof `response1', local(responsecats)
                 local eqvals
@@ -635,23 +658,23 @@ program Estimates, eclass sortpreserve
                     if `:list respnum in eq' local eqvals `eqvals' `cat'
                     local ++respnum
                   }
-                }   
+                }
                 foreach var of local rp`l'_`numrpbrackets`l''   {
                   local rp`l'name`numrpbrackets`l''  `rp`l'name`numrpbrackets`l'' ' `var'.`=subinstr("`eqvals'", " ", "", .)'
-                }                   
+                }
               }
-              
+
               local pat
               forvalues a = 1/`nummlwineqns' {
                 if `:list a in eq' local pat `pat' 1
                 else local pat `pat' 0
               }
-              local rppat`l'_`numrpbrackets`l'' `pat' 
+              local rppat`l'_`numrpbrackets`l'' `pat'
             }
           }
         }
       }
-      
+
       if "`mtype'" == "multivariate" {
         forvalues eq = 1/`nummlwineqns' {
           if `l' == 1 & "`discrete'" ~= "" & "`=word("`distribution'", `eq')'"=="binomial" local rp`l'_`eq' bcons //_`eq'
@@ -659,10 +682,10 @@ program Estimates, eclass sortpreserve
           local rp`l'name`eq'
           foreach var of local rp`l'_`eq'  {
             local rp`l'name`eq' `rp`l'name`eq'' `var'.`=subinstr("`eq'", " ", "", .)'
-          } 
+          }
         }
       }
-      
+
       if "`mtype'" == "multinomial" {
         capture levelsof `response1', local(responsecats)
         local eq = 1
@@ -677,25 +700,24 @@ program Estimates, eclass sortpreserve
           }
         }
       }
-      
-      if "`mtype'" == "multivariate" || "`mtype'" == "multinomial" {        
-        forvalues eq = 1/`nummlwineqns' {     
+
+      if "`mtype'" == "multivariate" || "`mtype'" == "multinomial" {
+        forvalues eq = 1/`nummlwineqns' {
           local pat
           forvalues a = 1/`nummlwineqns' {
             if `:list a in eq' local pat `pat' 1
             else local pat `pat' 0
           }
-          local rppat`l'_`eq' `pat' 
-        } 
+          local rppat`l'_`eq' `pat'
+        }
       }
-      
+
       local rp`l'
       forvalues e = 1/`numrpbrackets`l'' {          // loop over the equations
         local rp`l' `rp`l'' `rp`l'_`e''
-        
         if "`mtype'" == "univariate" local rp`l'name`e' `rp`l'_`e''
       }
-      
+
   //    * Add in extra binomial variation parameters etc
   //    if `l' == 1 & "`discrete'" ~= "" & "`mtype'" ~= "multivariate"{
   //      if "`distribution'" == "multinomial" & "`link'"=="mlogit" local rp`l'name1 `rp`l'name1' P -P
@@ -708,12 +730,9 @@ program Estimates, eclass sortpreserve
   //      //if "`distribution'" == "multinomial" & ("`link'"=="ologit" | "`link'"=="oprobit" | "`link'"=="ocloglog") local rp`l'name1 `rp`l'name1' bcons.1
   //    }
 
-      
-      forvalues e = 1/`numrpbrackets`l'' {          // loop over the equations          
+      forvalues e = 1/`numrpbrackets`l'' {          // loop over the equations
         * Ensure random part names are in the correct order
-
         local origrp`l'name `origrp`l'name ' `rp`l'name`e''
-        
         local tmpname `rp`l'name`e''
         local rp`l'name `rp`l'name' `:list fpname & tmpname'
         local tmpname `:list tmpname - fpname'
@@ -731,7 +750,6 @@ program Estimates, eclass sortpreserve
         local rp`l'_1 `.`o'.eq depvars 1' `.`o'.eq indepvars 1'
         local rp`l' `rp`l'_1'
       }
-
 
       if ("`verbose'"~="") {
         display as result "LEVEL `l'"
@@ -757,13 +775,12 @@ program Estimates, eclass sortpreserve
           display as error "WARNING: In univariate continuous models, one or more variables should generally be included in the random part at level 1"
         }
       }
-              
-      
+
       * Residuals option
       local numresi`l' 0
-      if ("`residuals'"~="") {    
+      if ("`residuals'"~="") {
         local 0 `residuals'
-        syntax name(name = residname) [, VARiances STANDardised LEVerage INFluence DELetion SAMPling REFlated noRECODE SAVEChains(string)]
+        syntax name(name = residname) [, VARiances STANDardised LEVerage INFluence DELetion SAMPling REFlated noRECODE RPAdjust noAdjust SAVEChains(string)]
         if "`residname'" ~= "" {          // If a variable stub has been given for the residual options, then...
           if "`variances'" ~= "" & ("`leverage'" ~= "" | "`influence'" ~= "" | "`deletion'" ~= ""){
             display as error "variances option cannot be used with leverage, deletion or influence"
@@ -800,6 +817,10 @@ program Estimates, eclass sortpreserve
               exit 198
             }
           }
+          if "`rpadjust'" ~= "" & "`adjust'" == "noadjust" {
+            display as error "Cannot specify both RPAdjust and NOAjust at level `l'"
+            exit 198
+          }
           local residuals`l' `residname'
           local residstd`l' `standardised'
           local residlever`l' `leverage'
@@ -808,14 +829,16 @@ program Estimates, eclass sortpreserve
           local residsamp`l' `sampling'
           local residref`l' `reflated'
           local residvar`l' `variances'
+          local residrpadj`l' `rpadjust'
+          local residnoadj`l' `adjust'
           local residrecode`l' `recode'
           local residualsall :list residualsall | residname
         }
         local saveresiduals`l' `savechains'
       }
-      
+
       if "`flinits'" ~= "" | "`flconstraints'" ~= "" | "" ~= "`fvinits'" | "`fvconstraints'" ~= "" | "`fscores'" ~= "" local factorson = 1
-      
+
       if `factorson' == 1 {
         if "`mtype'" ~= "multivariate" | "`mcmc'" == "" | "`diagonal'" == "" {
           display as error "Factors can only be specified for multivariate MCMC models with a diagonal covariance matrix"
@@ -829,8 +852,8 @@ program Estimates, eclass sortpreserve
           display as error "Factor matrices are wrong dimensions"
           exit 198
         }
-        tempname tempmat
-        capture mat `tempmat' = cholesky(`fvinits')
+        tempname fvtempmat
+        capture mat `fvtempmat' = cholesky(`fvinits')
         if c(rc) == 506 {
           display as error "Factor variance matrix is not positive definite"
           exit 198
@@ -846,7 +869,7 @@ program Estimates, eclass sortpreserve
         if "`mtype'" ~= "univariate" | "`mcmc'" ~= "" {
           display as error "Weights are only valid for univariate models estimated using (R)IGLS"
           exit 198
-        }     
+        }
         local weight`l' `weightvar'
       }
 
@@ -854,23 +877,23 @@ program Estimates, eclass sortpreserve
         display as error "MM and CAR cannot both be specified at the same level"
         exit 198
       }
-      
+
       local car
       if "`carids'" ~= "" | "`carweights'" ~= "" {
         local mmids `carids'
         local mmweights `carweights'
         local car car
       }
-      
+
       if ("`mmids'" ~= "") {
         //if "`mcmc'" == "" | "`mtype'" ~= "univariate" {
         //  display as error "Multiple membership is only allowed in Univariate MCMC models"
         //  exit 198
         //}
-        //else 
+        //else
         local mmids`l' `mmids'
       }
-      
+
       if ("`mmweights'" ~= "") {
         if "`mcmc'" == "" | "`mmids`l''" == ""{
           display as error "Multiple membership weights are only allowed in MCMC models where multiple membership has been defined"
@@ -885,7 +908,7 @@ program Estimates, eclass sortpreserve
           //}
         }
       }
-      
+
       if "`car'" ~= "" {
         if "`mmids'" == "" | "`mmweights'" == "" {
           display as error "CAR is only valid for multiple membership models"
@@ -893,7 +916,7 @@ program Estimates, eclass sortpreserve
         }
         else local car`l' `car'
       }
-      
+
       if "`parexpansion'" ~= "" {
         if "`mcmc'" == "" {
           display as error "Parameter expansion is only valid for MCMC estimation"
@@ -926,21 +949,20 @@ program Estimates, eclass sortpreserve
         if "`none'" ~= "" local reset`l' none
       }
 
-
       * Design option
-      if ("`design'"~="") {   
+      if ("`design'"~="") {
         local 0 `design'
         syntax using [, FILE(string) Keep(string)]
         preserve
-          use `using', clear
+          use "`using'", clear
           if "`keep'"~="" {
             keep `keep'
             order `keep' // note that we sort the variables by the order that they are specified in the keep() option.
           }
           unab vars: *
-        
+
           if "`file'"=="" tempfile file
-          saveold `file', nolabel replace
+          saveold "`file'", nolabel replace
         restore
         local filedesign`l' `file'
         local design`l' `vars'
@@ -948,26 +970,25 @@ program Estimates, eclass sortpreserve
         if ("`verbose'"~="") display as text "Number of DESIGN vectors at level `l': `numdesign`l'' (`design`l'')"
       }
       else local numdesign`l' = 0
-      
+
       if `l' > 1 & `numrp`l'vars' == 0 local emptylevels `emptylevels' `l'
-    } 
+    }
     else {
       local numrp`l'vars 0
       local emptylevels `emptylevels' `l'
     }
   }
-  
+
   if ("`linearization'" == "MQL2" | "`linearization'" == "PQL1" | "`linearization'" == "PQL2" ) & "`emptylevels'" ~= "" {
     display as error "Only MQL1 can be specified if there are empty higher levels"
     exit 198
   }
 
-
-  * Generate an indicator for whether any design matrices have been specified at any levels 
+  * Generate an indicator for whether any design matrices have been specified at any levels
   forvalues l = 1/`maxlevels' {
     if ("`design`l''"~="")  local anydesign yes
   }
-  
+
   * Total number of variables (not total number of parameters) (not total number of columns used in MLwiN either as we have denom columns for example)
   local numvars = `numfpvars' + `numrpvars'
 
@@ -979,8 +1000,6 @@ program Estimates, eclass sortpreserve
 
   * Number of levels
   local numlevels :list sizeof levelorder
-
-
 
   ******************************************************************************
   * (1C) PARSE GENERAL OPTIONS
@@ -999,10 +1018,10 @@ program Estimates, eclass sortpreserve
     if "`standardisation'" == "" local weighttype standardised
     else local weighttype raw
   }
-  
+
   // Default weight type is standardised
   if "`weighttype'" == "" & `hasweights' == 1 local weighttype standardised
-  
+
   // Is this check correct?
   if "`weighttype'" == "standardised" {
     forvalues l = 2/`maxlevels' {
@@ -1010,12 +1029,12 @@ program Estimates, eclass sortpreserve
         display as error "Standardised weights have been requested for level `l', this requires non-equal standardised weights for all levels below `l'. Please define weights for these levels"
         exit 198
       }
-    } 
-  }   
-  
+    }
+  }
+
   * Assert that tolerance is integer
   local iglstolerance `tolerance'
-  
+
   * If special option plugin  is specified then do macro quietly (i.e. without pauses)
   if ("`plugin'"~="") local pause no
 
@@ -1023,16 +1042,16 @@ program Estimates, eclass sortpreserve
   if ("`savemacro'"~="") {
     local 0 `savemacro'
     syntax anything(name=savemacro), [REPLACE]
-    if "`replace'"=="" confirm new file `savemacro'
+    if "`replace'"=="" confirm new file "`savemacro'"
   }
-  
+
   * If savefullmacro option is specified then check the file extension
   if ("`savefullmacro'"~="") {
     local 0 `savefullmacro'
     syntax anything(name=savefullmacro), [REPLACE]
-    if "`replace'"=="" confirm new file `savefullmacro'
+    if "`replace'"=="" confirm new file "`savefullmacro'"
   }
-  
+
   if ("`saveequation'"~="") {
     if ("`plugin'" ~= "") {
       display as error "Cannot capture equation image in plugin mode"
@@ -1040,18 +1059,18 @@ program Estimates, eclass sortpreserve
     }
     local 0 `saveequation'
     syntax anything(name=saveequation), [REPLACE]
-    if "`replace'"=="" confirm new file `saveequation'
-  } 
-  
+    if "`replace'"=="" confirm new file "`saveequation'"
+  }
+
   * If saveworksheet option is specified then check the file extension
   if ("`saveworksheet'"~="") {
     local 0 `saveworksheet'
     syntax anything(name=saveworksheet), [REPLACE]
     if length("`saveworksheet'") < 5 local saveworksheet `saveworksheet'.wsz
     else if lower(substr("`saveworksheet'", -4, .)) ~= ".wsz" local saveworksheet `saveworksheet'.wsz
-    if "`replace'"=="" confirm new file `saveworksheet'
+    if "`replace'"=="" confirm new file "`saveworksheet'"
   }
-  
+
   if "`initsmodel'" ~= "" {
     quietly estimates dir
     local savedmodels `r(names)'
@@ -1065,21 +1084,20 @@ program Estimates, eclass sortpreserve
       local inits `matPREVIOUS_b'
       tempname matPREVIOUS_V
       matrix `matPREVIOUS_V' = e(V)
-      local initsV `matPREVIOUS_V'      
+      local initsV `matPREVIOUS_V'
       quietly capture estimates restore `currentmodel'
       quietly capture estimates drop `currentmodel'
     }
     else {
       display as error "saved model `initsmodel' not found"
       exit 198
-    }   
+    }
   }
-  
+
   if "`initsv'"~="" & "`initsb'" == "" {
     display as error "initsb must be specified if initsv is used"
     exit 198
   }
-
 
   * Parse initial values
   if ("`initsprevious'"~="" & "`initsb'"~="")  {
@@ -1097,28 +1115,27 @@ program Estimates, eclass sortpreserve
   }
 
   if ("`initsb'"~="")  {
-    local inits `initsb'  
+    local inits `initsb'
     if rowsof(`inits')~=1 {
-      display as error "The initsb() option expects a row vector as the first argument." _n 
+      display as error "The initsb() option expects a row vector as the first argument." _n
       exit 198
     }
   }
+
   if ("`initsv'"~="") local initsV `initsv'
-  
+
   if ("`seed'"~="") local standardseed = `seed'
-  
+
   if "`mlwinsettings'" ~= "" {
     local 0, `mlwinsettings'
-    syntax , [Size(numlist >0 integer min=1 max=1) Levels(numlist >=3 integer min=1 max=1) Columns(numlist >=1500 integer min=1 max=1) Variables(numlist >=1 integer min=1 max=1) TEMPMAT OPTIMAT]
+    syntax , [Size(numlist >0 integer min=1 max=1) Levels(numlist >=3 integer min=1 max=1) Columns(numlist >=1500 integer min=1 max=1) Variables(numlist >=1 integer min=1 max=1) TEMPMAT OPTIMAT RNGVersion(integer 10)]
     if "`verbose'" ~= "" display "Worksheet size (KCells): `size', Maximum number of levels: `levels', Number of columns: `columns', Maximum number of modelled variables: `variables'"
-    
+
     if "`levels'" ~= "" local toplevel `levels'
     if "`columns'" ~= "" local numwscolumns `columns'
     if "`variables'" ~= "" local maxexpl `variables'
-    if "`size'" ~= "" local worksize `size' 
+    if "`size'" ~= "" local worksize `size'
   }
-  
-  
 
   ******************************************************************************
   * (1D) PARSE DISCRETE SUBOPTIONS
@@ -1130,8 +1147,13 @@ program Estimates, eclass sortpreserve
       local distribution `distribution' normal
     }
   }
+  else {
+    if ("`nummlwineqns'" == "1" & "`distribution'" == "normal") {
+       display as error "The discrete option is unnecessary for univariate normal models"
+       exit 198
+    }
+  }
 
-  
   * Discrete moved higher from here
   if ("`verbose'"~="") {
     if ("`mtype'" == "multinomial") {
@@ -1219,7 +1241,7 @@ program Estimates, eclass sortpreserve
 
       if  ("`distribution`e''"=="poisson") {
         capture assert `response`e''>=0
-        if _rc~=0 {       
+        if _rc~=0 {
           di as error "The count response variable must be 0 or a positive integer."
           exit 198
         }
@@ -1227,7 +1249,7 @@ program Estimates, eclass sortpreserve
 
       if  ("`distribution`e''"=="nbinomial") {
         capture assert `response`e''>=0
-        if _rc~=0 {       
+        if _rc~=0 {
           di as error "The count response variable must be 0 or a positive integer."
           exit 198
         }
@@ -1244,7 +1266,7 @@ program Estimates, eclass sortpreserve
       display as error "You cannot make covariates random at level 1 when using the `distribution`e'' response distribution." _n
       exit 198
     }
-    
+
     * Check that the denominator has been specified
     if inlist("`distribution`e''","binomial") & "`denominator`e''"=="" {
       display as error "You must specify a denominator variable when using the `distribution`e'' response distribution. See the denom() option." _n
@@ -1285,12 +1307,10 @@ program Estimates, eclass sortpreserve
     }
   }
 
-
-
   ******************************************************************************
   * (1E) PARSE MCMC SUBOPTIONS
   ******************************************************************************
-  
+
   * Estimation model
   if ("`mcmc'"=="" & "`rigls'"=="") local emode IGLS
   if ("`mcmc'"=="" & "`rigls'"~="") local emode RIGLS
@@ -1302,26 +1322,25 @@ program Estimates, eclass sortpreserve
       display as error "When fitting models using MCMC, initial values must be specified; see initsprevious, initsmodel and initsb()/initsv() options."
       exit 198
     }
-  * The syntax for the burn-in is as follows: 
-  * 
+  * The syntax for the burn-in is as follows:
+  *
   * MCMC 0
   *   burn in for <value 1> iterations,
-  *   use adaptation method <value 2>, 
-  *   scale factor <value 3>, 
-  *   %acceptance <value 4>, 
-  *   tolerance <value 5> 
-  *   {residual starting values in C1, 
-  *   s.e. residual starting values) in C2} 
-  *   {priors in C3} 
-  *   fixed effect method <value 6> 
-  *   residual method <value 7> 
-  *   level 1 variance method <value 8> 
-  *   other levels variance method <value 9> 
-  *   default prior <value 10> 
-  *   model type <value 11>. 
+  *   use adaptation method <value 2>,
+  *   scale factor <value 3>,
+  *   %acceptance <value 4>,
+  *   tolerance <value 5>
+  *   {residual starting values in C1,
+  *   s.e. residual starting values) in C2}
+  *   {priors in C3}
+  *   fixed effect method <value 6>
+  *   residual method <value 7>
+  *   level 1 variance method <value 8>
+  *   other levels variance method <value 9>
+  *   default prior <value 10>
+  *   model type <value 11>.
 
-
-    local 0 , `mcmc'    
+    local 0 , `mcmc'
 
     #delimit ;
     syntax , [
@@ -1360,18 +1379,18 @@ program Estimates, eclass sortpreserve
       IMPUTESummaries
       ];
       #delimit cr
-      
+
     if `thinning' > 0.5*`chain' {
           display as error "Thinning must be less than half the chain length."
-          exit 198      
+          exit 198
     }
-    
+
     if ("`fpsandwich'"=="fpsandwich" | ("`weighttype'"~="" & "`fpsandwich'"=="")) | ("`rpsandwich'"=="rpsandwich" | ("`weighttype'"~="" & "`rpsandwich'"=="")){
       display as error "Sandwich estimates are not available for MCMC"
       exit 198
     }
-      
-    if "`hcentring'" ~= "" { 
+
+    if "`hcentring'" ~= "" {
       if `:list hcentring in emptylevels' {
         display as error "Hierarchical centring cannot be specified for empty levels"
         exit 198
@@ -1381,7 +1400,7 @@ program Estimates, eclass sortpreserve
         exit 198
       }
       if ("`mtype'"=="multivariate" | "`mtype'"=="multinomial") local ++hcentring
-    }   
+    }
 
     if "`imputeiterations'" ~= "" {
       foreach val of local imputeiterations {
@@ -1391,12 +1410,12 @@ program Estimates, eclass sortpreserve
         }
       }
     }
-      
+
     if ("`me'"~="") {
       if "`mtype'" == "multivariate" {
-        display as error "Measurement error not implemented for multivariate in MLwiN." _n  
-        exit 198    
-      }   
+        display as error "Measurement error not implemented for multivariate in MLwiN." _n
+        exit 198
+      }
       local 0 `me'
       syntax varlist(min=1), variances(numlist min=1 >=0)
       if `:list sizeof varlist' != `:list sizeof variances' {
@@ -1405,9 +1424,8 @@ program Estimates, eclass sortpreserve
       }
       local mevars `varlist'
     }
-    
-    
-    if ("`discrete'"=="")       local temp gibbs    
+
+    if ("`discrete'"=="")       local temp gibbs
     if ("`discrete'"~="")       local temp univariatemh // univariate MH  // NOTE SOMETIMES THIS WILL NEET TO BE MULTIVARITE MH
     if ("`femethod'"=="")       local femethod `temp'
     if ("`remethod'"=="")       local remethod `temp'
@@ -1418,7 +1436,11 @@ program Estimates, eclass sortpreserve
     if ("`savechains'"~="") {
       local 0 `savechains'
       syntax anything(name=savechains), [REPLACE]
-      if "`replace'" == "" confirm new file `savechains'
+      // Add .dta extension if this has been omitted
+      if lower(substr("`savechains'", -4, .)) ~= ".dta" {
+        local savechains `savechains'.dta
+      }
+      if "`replace'" == "" confirm new file "`savechains'"
     }
     else {
       tempfile savechains
@@ -1426,15 +1448,19 @@ program Estimates, eclass sortpreserve
       //file open `fh' using "`savechains'", write
       //file close `fh'
     }
-    
+
     forvalues l = 1/`maxlevels' {
       if "`saveresiduals`l''" ~= "" {
         local 0 `saveresiduals`l''
         syntax anything(name=saveresiduals`l'), [REPLACE]
-        if "`replace'" == "" confirm new file `saveresiduals`l''
+        // Add .dta extension if this has been omitted
+        if lower(substr("`saveresiduals`l''", -4, .)) ~= ".dta" {
+          local saveresiduals`l' `saveresiduals`l''.dta
+        }
+        if "`replace'" == "" confirm new file "`saveresiduals`l''"
       }
     }
-    
+
     local defaultprior 1
     local gama 0.001
     local gamb 0.001
@@ -1448,15 +1474,15 @@ program Estimates, eclass sortpreserve
       if "`uniform'" == "" & "`gamma'" == "" {
         display as error "You must specify uniform or gamma(a b) for priors"
         exit 198
-      }     
+      }
       if "`uniform'" ~= "" local defaultprior 0
       if "`gamma'" ~= "" {
           local defaultprior 1
-          local gama :word 1 of `gamma' 
-          local gamb :word 2 of `gamma' 
+          local gama :word 1 of `gamma'
+          local gamb :word 2 of `gamma'
       }
     }
-    
+
     if "`corresiduals'" ~= "" {
       local 0 , `corresiduals'
       syntax , [UNstructured EXchangeable AREQvars EQCORRSINDEPvars ARINDEPvars]
@@ -1478,10 +1504,10 @@ program Estimates, eclass sortpreserve
     local mcmc_acceptance = ceil(`acceptance'*100)        // MLwiN MCMC command option 4
     if `tolerance' < 0 | `tolerance' > 1 {
       display as error "Tolerance rate must be between zero and one inclusive"
-      exit 198      
+      exit 198
     }
     local mcmc_tolerance = ceil(`tolerance'* 100)         // MLwiN MCMC command option 5
-    
+
     local 0 , `femethod'
     syntax , [GIBBS UNIvariatemh MULTIvariatemh]
     if "`gibbs'" ~= "" local mcmc_femethod = 1      // 1 = gibbs
@@ -1489,7 +1515,7 @@ program Estimates, eclass sortpreserve
     if "`multivariatemh'" ~= "" local mcmc_femethod = 3     // 3 = multivariate MH
     if "`gibbs'" == "" & "`univariatemh'" == "" & "`multivariatemh'" == "" {
       display as error "`femethod' is not valid"
-      exit 198      
+      exit 198
     }
 
     local 0 , `remethod'
@@ -1499,7 +1525,7 @@ program Estimates, eclass sortpreserve
     if "`multivariatemh'" ~= "" local mcmc_remethod = 3     // 3 = multivariate MH
     if "`gibbs'" == "" & "`univariatemh'" == "" & "`multivariatemh'" == "" {
       display as error "`remethod' is not valid"
-      exit 198      
+      exit 198
     }
 
     * Looks like you can't set this through the GUI
@@ -1510,7 +1536,7 @@ program Estimates, eclass sortpreserve
     if "`multivariatemh'" ~= "" local mcmc_levelonevarmethod = 3    // 3 = multivariate MH
     if "`gibbs'" == "" & "`univariatemh'" == "" & "`multivariatemh'" == "" {
       display as error "`levelonevarmethod' is not valid"
-      exit 198      
+      exit 198
     }
 
     local 0 , `higherlevelsvarmethod'
@@ -1520,7 +1546,7 @@ program Estimates, eclass sortpreserve
     if "`multivariatemh'" ~= "" local mcmc_higherlevelsvarmethod = 3    // 3 = multivariate MH
     if "`gibbs'" == "" & "`univariatemh'" == "" & "`multivariatemh'" == "" {
       display as error "`higherlevelsvarmethod' is not valid"
-      exit 198      
+      exit 198
     }
 
     local mcmc_defaultprior = `defaultprior'      // MLwiN MCMC command option 10
@@ -1529,11 +1555,12 @@ program Estimates, eclass sortpreserve
     if "`mtype'" == "univariate" & "`distribution'"=="normal"   local mcmc_modeltype = 1 // Normal models
     if "`mtype'" == "univariate" & "`distribution'"=="binomial" local mcmc_modeltype = 2 // Binomial models
     if "`mtype'" == "univariate" & "`distribution'"=="poisson"  local mcmc_modeltype = 3 // Poisson models
+    if "`mtype'" == "univariate" & "`distribution'"=="nbinomial"  local mcmc_modeltype = 8 // Poisson models
     if "`mtype'" == "multivariate" & "`discrete'" == ""         local mcmc_modeltype = 4 // Multivariate normal models
     if "`mtype'" == "multivariate" & "`discrete'" ~= ""         local mcmc_modeltype = 5 // Multivariate mixed models (must be normal/binomial with probit link)
     if "`mtype'" == "multinomial" & "`link'"=="mlogit"          local mcmc_modeltype = 6 // Unordered multinomial models
     if "`mtype'" == "multinomial" & ("`link'"=="ologit"|"`link'"=="oprobit"|"`link'"=="ocloglog") local mcmc_modeltype = 7 // Ordered multinomial models
-    capture assert inlist(`mcmc_modeltype',1,2,3,4,5,6,7)
+    capture assert inlist(`mcmc_modeltype',1,2,3,4,5,6,7,8)
     if _rc {
       display as error "The selected distribution is not available for MCMC"
       exit 198
@@ -1545,7 +1572,7 @@ program Estimates, eclass sortpreserve
         local ++i
       }
     }
-    
+
     local resptype
     local mixed 0
     if "`distribution'" == "binomial" local resptype 0
@@ -1571,26 +1598,30 @@ program Estimates, eclass sortpreserve
           display as error "Poisson is currently unavailable in multivariate models for MCMC estimation"
           exit 198
         }
-        if "`dist'" == "nbinomial" local resptype 2
+        if "`dist'" == "nbinomial" {
+          local resptype 2
+          display as error "Poisson is currently unavailable in multivariate models for MCMC estimation"
+          exit 198
+        }
       }
     }
-    
-    if "`resptype'" == "2" {
-      display as error "Negative binomial is currently unavailable for MCMC estimation"
-      exit 198    
-    }
+
+    //if "`resptype'" == "2" {
+    //  display as error "Negative binomial is currently unavailable for MCMC estimation"
+    //  exit 198
+    //}
 
     local allnormal 1
     local resptypes `distribution'
     forvalues n = 1/`:list sizeof resptypes' {
       if "`=word("`resptypes'", `n')'" != "normal" local allnormal 0
-    }   
-    
+    }
+
     local mcmc_chain = `chain'
     local mcmc_thinning = `thinning'
     local mcmc_refresh = `refresh'
     local mcmc_seed = `seed'
-    
+
     forvalues l = 2/`maxlevels' {
       if "`mmids`l''"~="" |"`mmweights`l''"~="" {
         if `:list sizeof mmweights`l'' ~= `:list sizeof mmids`l'' {
@@ -1604,40 +1635,39 @@ program Estimates, eclass sortpreserve
         local mm on
       }
     }
-    
+
     /*
     Valid MCMC options:
-    
+
     smcmc   smvn    orth    hcen    parexpansion
     1     0     0     0     0
     0     1     0     0     0
     0     0     1     1     1
-    
+
     */
-    
+
     local anyparexpansion = 0
     forvalues l = 2/`maxlevels' {
       if "`parexpansion`l''" ~= "" local anyparexpansion = 1
-    }   
-    
+    }
+
     if "`smcmc'" ~= "" & ("`smvn'" ~= "" | "`orthogonal'" ~= "" | "`hcentring'" ~= "" | `anyparexpansion' > 0) {
       display as error "SMCMC is exclusive to SMVN, ORTHogonal, HCEN and PAREXpansion"
       exit 198
     }
-    
+
     if "`smvn'" ~= "" & ("`smcmc'" ~= "" | "`orthogonal'" ~= "" | "`hcentring'" ~= "" | `anyparexpansion' > 0) {
       display as error "SMVN is exclusive to SMCMC, ORTHogonal, HCEN and PAREXpansion"
       exit 198
     }
-    
+
     if "`smcmc'" ~= "" & ("`mtype'" ~= "univariate" | "`discrete'" ~= "" | "`numrp1vars'" ~= "1" | "`maxlevels'" ~= "2") {
       display as error "SMCMC is only valid for two-level normal response models with no complex level 1."
       exit 198
     }
 
   }
-  
-  
+
   local carlev = 0
   forvalues l = 1/`maxlevels' {
     if ("`car`l''"~="" & "`carcentre'"=="") {
@@ -1647,7 +1677,7 @@ program Estimates, eclass sortpreserve
       }
       else local carlev = `l'
     }
-  } 
+  }
 
   ******************************************************************************
   * (2) GENERATE THE EMPTY VECTOR OF PARAMETER ESTIMATES
@@ -1675,16 +1705,16 @@ program Estimates, eclass sortpreserve
   forvalues r = 1/`numfpbrackets' {
     mat `matFP_b' = (nullmat(`matFP_b'),`FP_b`r'')
   }
-  
+
   * Random part parameter vector (some terms may still need to be deleted)
   forvalues l = `maxlevels'(-1)1 {
     tempname RP`l'_b // define matrix names as locals
     if `:list sizeof rp`l'name'>=1 {
       runmlwin_rplpars , rpname(`rp`l'name')
       local rp`l'pars `r(rplong)'
-      
+
       runmlwin_rplpars , rpname(`origrp`l'name')
-      local origrp`l'pars `r(rplong)'     
+      local origrp`l'pars `r(rplong)'
 
     //  if "`mtype'"=="multinomial" & "`link'"=="mlogit" {
     //    * Remove non-existant parameter from multinomial model
@@ -1698,7 +1728,7 @@ program Estimates, eclass sortpreserve
       * Remove non-existant parameter from negative-binomial model
       // local tmpname cov(bcons_1\bcons2_1)
       // if "`distribution'"=="nbinomial" local rp`l'pars `:list rp`l'pars - tmpname'
-      
+
       local numrp`l'pars: word count `rp`l'pars'
       if `numrp`l'pars' > 0 {
         mat `RP`l'_b' = J(1,`numrp`l'pars',.)
@@ -1725,16 +1755,15 @@ program Estimates, eclass sortpreserve
           local ++c
         }
 
-
         * Remove elements from RP_b
         tempname matTEMP
-        local names : colnames `RP`l'_b'    
-        
+        local names : colnames `RP`l'_b'
+
         local keepnames
         forvalues i = 1/`=colsof(`elements`l'')' {
           if (`elements`l''[1,`i']==1) local keepnames `keepnames' `:word `i' of `origrp`l'pars''
         }
-        
+
         foreach p of local names {
           if `:list p in keepnames' matrix `matTEMP' = (nullmat(`matTEMP'), `RP`l'_b'[1,"RP`l':`p'"])
         }
@@ -1749,14 +1778,14 @@ program Estimates, eclass sortpreserve
         forvalues r=1/`R' {
           forvalues c=1/`C' {
             if `c'<=`r' mat `matTEMP2' = (nullmat(`matTEMP2'), `matTEMP1'[`r',`c'])
-          }       
+          }
         }
 
         * Remove elements from RP_b
         // This code is same as that in the elements`l' statement above. Code could be made more efficient
         tempname matTEMP3
         local c = 1
-        local names : colfullnames `RP`l'_b'    
+        local names : colfullnames `RP`l'_b'
         foreach p of local names {
           if (`matTEMP2'[1,`c']==1) matrix `matTEMP3' = (nullmat(`matTEMP3'), `RP`l'_b'[1,"`p'"])
           local ++c
@@ -1774,7 +1803,7 @@ program Estimates, eclass sortpreserve
       }
     }
   }
-  
+
   if "`distribution'" == "binomial" | "`distribution'" == "poisson" | "`distribution'" == "nbinomial" | "`distribution'" == "multinomial"{
     tempname mat_OD
     if "`distribution'" == "nbinomial" local odvars bcons_1 bcons2_1
@@ -1786,7 +1815,7 @@ program Estimates, eclass sortpreserve
     mat coleq `mat_OD' = OD
     mat `matRP_b' = (nullmat(`matRP_b'), `mat_OD')
   }
-  
+
   * Random part design
   forvalues l = `maxlevels'(-1)1 {
     if "`design`l''"~="" {
@@ -1814,7 +1843,7 @@ program Estimates, eclass sortpreserve
       }
     }
   }
-  
+
   tempname mat_RP_b_factvar
   forvalues l = 1/`maxlevels' {
     if "`flinit`l''" ~= "" {
@@ -1832,26 +1861,26 @@ program Estimates, eclass sortpreserve
       mat `mat_RP_b_factvar' = (nullmat(`mat_RP_b_factvar'), `matTEMP')
     }
   }
-  
+
   local C = colsof(`matFP_b')
   local namesV : colfullnames `matFP_b'
   tempname matFP_V
   mat `matFP_V' = J(`C',`C',0)
   matrix rownames `matFP_V' = `namesV'
-  matrix colnames `matFP_V' = `namesV'    
-  
+  matrix colnames `matFP_V' = `namesV'
+
   * Put MLwiN values back into RP_V
   local C = colsof(`matRP_b')
-  local namesV : colfullnames `matRP_b' 
+  local namesV : colfullnames `matRP_b'
   tempname matRP_V
   mat `matRP_V' = J(`C',`C',0)
   matrix rownames `matRP_V' = `namesV'
-  matrix colnames `matRP_V' = `namesV'  
+  matrix colnames `matRP_V' = `namesV'
 
   * Full parameter matrix (this is what Stata expects MLwiN to return)
 
   * Create matb with the correct dimensions
-  
+
   tempname matb
   mat `matb' = (`matFP_b',`matRP_b', nullmat(`mat_RP_b_fact'), nullmat(`mat_RP_b_factvar'))
   mat rowname `matb' = `response1'
@@ -1862,7 +1891,7 @@ program Estimates, eclass sortpreserve
   local namesV : colfullnames `matb'
   mat rownames `matV' = `namesV'
   mat colnames `matV' = `namesV'
-    
+
   if ("`constraints'"~="") {
     * Parse contraint(s)
     local C = colsof(`matb')
@@ -1871,7 +1900,7 @@ program Estimates, eclass sortpreserve
     }
 
     ereturn post `matb' // Need to create e(b) for the current model in order to set constraints
-    tempname matb 
+    tempname matb
     mat `matb' = e(b)
     if ("`verbose'"~="") mat list e(b)
     forvalues c=1/`C' {
@@ -1883,12 +1912,11 @@ program Estimates, eclass sortpreserve
     tempname consC
     makecns `constraints', displaycns
     matcproc `consT' `consa' `consC'
-    
+
     if "`verbose'" ~= "" display "Constraints:"
     if "`verbose'" ~= "" mat list `consC'
 
     * Extract the fixed part constraint submatrix (note that some rows will refer to random part constraints, we delete these below)
-
     tempname FPCtemp
     mat `FPCtemp' = (`consC'[.,1..`numfpvars'],`consC'[.,`=colsof(`consC')'..`=colsof(`consC')'])
 
@@ -1896,7 +1924,7 @@ program Estimates, eclass sortpreserve
     local temp = `numfpvars' + 1
     tempname RPCtemp
     mat `RPCtemp' = (`consC'[.,`temp'...])
-    
+
     if "`verbose'" ~= "" display "FPCtemp"
     if "`verbose'" ~= "" mat list `FPCtemp'
     if "`verbose'" ~= "" display "RPCtemp"
@@ -1904,7 +1932,7 @@ program Estimates, eclass sortpreserve
 
     local numconstraints = rowsof(`consC')
 
-    * Work out which constraints and how many constraints are FP constraints  
+    * Work out which constraints and how many constraints are FP constraints
     tempname isFPconstraint
     mat `isFPconstraint' = J(`numconstraints',1,.)
     forvalues r=1/`=rowsof(`FPCtemp')'{
@@ -1913,13 +1941,12 @@ program Estimates, eclass sortpreserve
         if `FPCtemp'[`r',`c'] ~= 0 local flag = 1
       }
       mat `isFPconstraint'[`r',1]==`flag'
-      
     }
     tempname mat_sum
     mat `mat_sum' = J(1,`numconstraints',1)*`isFPconstraint'
     local numFPconstraints = `mat_sum'[1,1]
-    
-    * Work out which constraints and how many constraints are RP constraints  
+
+    * Work out which constraints and how many constraints are RP constraints
     tempname isRPconstraint
     mat `isRPconstraint' = J(`numconstraints',1,.)
     forvalues r=1/`=rowsof(`RPCtemp')'  {
@@ -1927,18 +1954,18 @@ program Estimates, eclass sortpreserve
       forvalues c=1/`=colsof(`RPCtemp')-1' {
         if `RPCtemp'[`r',`c'] ~= 0 local flag = 1
       }
-      mat `isRPconstraint'[`r',1]==`flag'     
+      mat `isRPconstraint'[`r',1]==`flag'
     }
     mat `mat_sum' = J(1,`numconstraints',1)*`isRPconstraint'
     local numRPconstraints = `mat_sum'[1,1]
-    
+
     if "`verbose'" ~= "" display "num fp vars: `numfpvars', num rp vars: `numrpvars'"
     if "`verbose'" ~= "" display "isFPconstraint:"
     if "`verbose'" ~= "" mat list `isFPconstraint'
     if "`verbose'" ~= "" display "isRPconstraint:"
     if "`verbose'" ~= "" mat list `isRPconstraint'
     if "`verbose'" ~= "" display "num constraints: `numconstraints', num FP constraints: `numFPconstraints', num RP constraints: `numRPconstraints'"
-    
+
     * Check that each constraint relates to only the fixed part or only the random part
     tempname matTEMP
     mat `matTEMP' = `isFPconstraint' + `isRPconstraint'
@@ -1950,7 +1977,6 @@ program Estimates, eclass sortpreserve
       }
     }
 
-
     * Strip out redundant rows of the fixed part constraint matrix (these relate to the random part)
     tempname FPC
     if `numFPconstraints'>0 {
@@ -1959,7 +1985,7 @@ program Estimates, eclass sortpreserve
       }
       local fpconstraints `FPC'
     }
-  
+
     * Strip out redundant rows of the random part constraint matrix (these relate to the fixed part)
     tempname RPC
     if `numRPconstraints'>0 {
@@ -1967,10 +1993,9 @@ program Estimates, eclass sortpreserve
         if (`isRPconstraint'[`r',1]==1) mat `RPC' = (nullmat(`RPC') \ `RPCtemp'[`r',1...])
       }
       local rpconstraints `RPC'
-    } 
+    }
     ereturn clear // As we don't want an e(b) kicking around
   }
-
 
   * Store the fixed part constraint(s) as strings in locals ready to insert into MLwiN macro
   if ("`fpconstraints'"~="") {
@@ -1983,11 +2008,10 @@ program Estimates, eclass sortpreserve
         local fpconstraint`r' `fpconstraint`r'' `temp' // put second, third,... elements of constraint into the string
       }
     }
-    
+
     if "`verbose'" ~= "" display("Fixed part constraints:")
     if "`verbose'" ~= "" mat list `fpconstraints'
   }
-  
 
   * Store the random part constraint(s) as strings in locals ready to insert into MLwiN macro
   if "`rpconstraints'"~="" {
@@ -2004,7 +2028,6 @@ program Estimates, eclass sortpreserve
     if "`verbose'" ~= "" mat list `rpconstraints'
   }
 
-  
   * Substitute initial values into the parameter vector
   if "`inits'"~="" | "`initsmodel'" ~= "" {
     if "`initsprevious'"~="" | "`initsmodel'" ~= "" {
@@ -2024,7 +2047,7 @@ program Estimates, eclass sortpreserve
           matrix `destcolidx' = (nullmat(`destcolidx'), `=colnumb(`matb',"`p'")')
         }
       }
-      
+
       if `match' == 1 {
         mata: copymatrix("`inits'", "`srcrowidx'", "`srccolidx'", "`matb'", "`destrowidx'", "`destcolidx'");
       }
@@ -2033,12 +2056,12 @@ program Estimates, eclass sortpreserve
         if "`initsmodel'" ~= "" display as error "The initsmodel option is invalid: No parameters in the stored model match those specified in the current model"
         exit 198
       }
-      
+
       matrix drop `srcrowidx'
       matrix drop `destrowidx'
       matrix drop `srccolidx'
       matrix drop `destcolidx'
-      
+
       local match 0
       foreach p1 of local namesV {
         local cidx = colnumb(`initsV',"`p1'")
@@ -2051,7 +2074,7 @@ program Estimates, eclass sortpreserve
           matrix `destcolidx' = (nullmat(`destcolidx'), `=colnumb(`matV', "`p1'")')
         }
       }
-      
+
       if `match' == 1 {
         mata: copymatrix("`initsV'", "`srcrowidx'", "`srccolidx'", "`matV'", "`destrowidx'", "`destcolidx'");
       }
@@ -2060,7 +2083,7 @@ program Estimates, eclass sortpreserve
         if "`initsmodel'" ~= "" display as error "The initsmodel option is invalid: No parameters in the stored model match those specified in the current model"
         exit 198
       }
-      
+
       matrix drop `srcrowidx'
       matrix drop `destrowidx'
       matrix drop `srccolidx'
@@ -2071,7 +2094,7 @@ program Estimates, eclass sortpreserve
         display as error "The row vector `inits' of initial values in initsb() is of length `=colsof(`inits')', but -runmlwin- expects the row vector to be of length `=colsof(`matFP_b')+colsof(`matRP_b')'."
         exit 198
       }
-      
+
       matrix `matb'[1,1] = `inits'
       * Note this is not currently used as we always check there are two inits matrices
       if "`initsV'" == "" {
@@ -2079,17 +2102,17 @@ program Estimates, eclass sortpreserve
           matrix `matV'[`i', `i'] = (`inits'[1,`i']/2)*(`inits'[1,`i']/2)
         }
       }
-    }   
+    }
     if "`initsv'"~="" {
       if colsof(`initsV') ~= `=colsof(`matFP_b')+colsof(`matRP_b')' | rowsof(`initsV') ~= `=colsof(`matFP_b')+colsof(`matRP_b')' {
         display as error "The matrix of initial variance values in initsv() is of a different length to that expected by -runmlwin-."
         exit 198
       }
-      
+
       matrix `matV'[1,1] = `initsV'
     }
   }
-  
+
   if "`mlwin'" == "nomlwin" {
     ereturn clear
     ereturn matrix matb = `matb'
@@ -2112,14 +2135,13 @@ program Estimates, eclass sortpreserve
 
 
   * Keep the estimation sample
-  qui keep if `touse' 
+  qui keep if `touse'
   local _nobs = _N
-
 
   * List of values of the response variable
   if ("`mtype'"=="multinomial") {
     qui levelsof `response1', local(responsecats)
-    
+
     if "`proportion'" ~= "" {
 
       capture assert `proportion' >= 0 & `proportion' <= 1
@@ -2128,7 +2150,6 @@ program Estimates, eclass sortpreserve
         exit 198
       }
       tempvar propsum
-
 
       if ("`cc'"~="") local hier `lev1id'
       else {
@@ -2140,7 +2161,7 @@ program Estimates, eclass sortpreserve
         }
         local hier `hier' `lev1id'
       }
-      
+
       bysort `hier': egen `propsum' = total(`proportion')
       capture assert inrange(`propsum',0.995,1.005) // >= 0 & `propsum' <= 1
       if _rc {
@@ -2151,26 +2172,25 @@ program Estimates, eclass sortpreserve
       sort `_sortindex'
       drop `_sortindex'
       quietly reshape wide `proportion', i(`lev1id') j(`response1')
-      gen `_sortindex' = _n 
+      gen `_sortindex' = _n
       gen `response1' = 1
       local propvars
       local propvarnames
-      local i = 1     
+      local i = 1
       foreach r of local responsecats {
         if `r' ~= `basecategory' local propvars `propvars' `proportion'`r'
         if `r' ~= `basecategory' local propvarnames `propvarnames' '`proportion'`r''
         quietly replace `response1' = `r' in `i'
         local ++i
       }
-    }       
+    }
 
     tempname newvaluelabel
     foreach r of local responsecats {
       label define `newvaluelabel' `r' "`: label (`response1') `r''", add
-    } 
+    }
     label values `response1' `newvaluelabel'
 
-    
     if "`link'"=="ologit"|"`link'"=="oprobit"|"`link'"=="ocloglog" {
       local firstvalue = real(word("`responsecats'",1))
       local lastvalue = real(word("`responsecats'",-1))
@@ -2179,14 +2199,13 @@ program Estimates, eclass sortpreserve
         exit 198
       }
     }
-    
   }
 
   * List of ID variables
   local idvars
   forvalues l = `maxlevels'(-1)1 {
     local idvars `idvars' `lev`l'id'
-    
+
     // MM IDs are added consecutively in case MM IDs share variables with level IDs (what if ID is used in more than one level?)
     if "`mmids`l''" ~= "" local idvars `idvars' `mmids`l''
   }
@@ -2207,7 +2226,7 @@ program Estimates, eclass sortpreserve
   else {
     local denomvars `denominator'
   }
-  
+
   * List of multiple membership weight variables
   local mmweightvars
   forvalues l = 2/`maxlevels' {
@@ -2221,25 +2240,23 @@ program Estimates, eclass sortpreserve
   //    local mmweightids `mmweightids' `mmids`l''
   //  }
   //}
-  
+
   * List of (R)IGLS sampling weight variables
   local weightvars
   forvalues l = 1/`maxlevels' {
     if "`weight`l''" ~= "" local weightvars `weightvars' `weight`l''
   }
 
-
-
   * Keep variables that appear in model
   local allvarsformlwin ///
     `idvars' ///
-    `response' /// 
+    `response' ///
     `fp' ///
     `rp' ///
-    `denomvars' `offset' `fpconst' `rpconst' `mmweightvars' `mmweightids' `weightvars' `_sortindex' `propvars' 
-    
+    `denomvars' `offset' `fpconst' `rpconst' `mmweightvars' `mmweightids' `weightvars' `_sortindex' `propvars'
+
   local data_has_missing_values = 0
-  
+
   foreach var of local allvarsformlwin {
     if "`var'" ~= "bcons" {
       quietly count if missing(`var')
@@ -2252,37 +2269,37 @@ program Estimates, eclass sortpreserve
       }
     }
   }
-    
-  * If a multivariate response model, create and add bcons variable to the list of variables sent to MLwiN  
+
+  * If a multivariate response model, create and add bcons variable to the list of variables sent to MLwiN
   if "`mtype'" == "multivariate" gen byte bcons = 1
-  
+
   * Keep variables
   if "`drop'"=="" keep `allvarsformlwin'
   order `allvarsformlwin'
-  
-  * Strip off the value labels of all fixed or random part covariates 
+
+  * Strip off the value labels of all fixed or random part covariates
   local temp `fp' `rp'
   foreach var of local temp {
     label values `var'
   }
 
-  * Calculate number of columns that will be used in the worksheet  
+  * Calculate number of columns that will be used in the worksheet
   qui describe
   local numcolumns = r(k)
   local N = r(N)
 
   local explvars
-  
+
   forvalues e = 1/`numfpbrackets' {
     local explvars `:list explvars | fpname`e''
   }
-  
+
   forvalues l = `maxlevels'(-1)1 {
     forvalues e = 1/`numrpbrackets`l'' {
       local explvars `:list explvars | rp`l'name`e''
     }
   }
-  
+
   local numrpparam = colsof(`matRP_b')
   if "`mtype'" == "multivariate" & "`discrete'" ~= "" { // Account for adding bcons parameters with SETV in multivariate (i.e. add off-diagonal)
     local numrpparam = `numrpparam' + (((`nummlwineqns' * (`nummlwineqns'+1)) /2) - `nummlwineqns')
@@ -2291,15 +2308,15 @@ program Estimates, eclass sortpreserve
 
   * Allow for bcons.1
   if "`distribution'" == "binomial" | "`distribution'" == "poisson" | "`distribution'" == "nbinomial" | "`mtype'" == "multinomial" local ++numexpl
-  
+
   * Allow for bcons2.1
   if "`distribution'" == "nbinomial" local ++numexpl
 
   * Allow for P parameter
   if "`mtype'" == "multinomial" local ++numexpl
-  
+
   if "`maxexpl'" == "" local maxexpl = `numexpl' + 1 // MLwiN appears to allow one fewer than specified
-  
+
   if "`toplevel'" == "" {
     local toplevel `maxlevels'
     if ("`mtype'"=="multivariate" | "`mtype'"=="multinomial") local ++toplevel
@@ -2307,137 +2324,16 @@ program Estimates, eclass sortpreserve
     if `toplevel' < 3 local toplevel = 3
   }
   if "`numwscolumns'" == "" local numwscolumns 1500
-  
+
   * Attempt to estimate how large the data will be after expansion
   if "`worksize'" == "" {
-
-    local datasize = `numcolumns' * `N' 
-  
-    if "`mtype'" == "multinomial" | "`mtype'" == "multivariate" {
-      local longN = `numfpbrackets' * `N'
-      local extravars `denomvars' `offset' `fpname'
-      local numexpand = 2 // resp, resp_indicator
-      forvalues l = `maxlevels'(-1)1 {
-        local ++numexpand // level ID
-        forvalues e = 1/`numrpbrackets`l'' {
-          local extravars `extravars' `rp`l'name`e''
-        }
-      }
-      
-      local nonexp P -P
-      local extravars `:list extravars - nonexp'
-      local extravars `:list uniq extravars'    
-      if ("`verbose'"~="") display as text "Expanded variables: `extravars'"
-      local numexpand = `numexpand' + `:list sizeof extravars' 
-      local sheetsize = ((`numfpbrackets' * `N') * `numexpand')
-    }
-    else {
-      local longN = `N'
-      local sheetsize = `datasize'
-    }
-    
-    * Discrete macros make a copy of columns in the model
-    if "`discrete'" ~= "" {
-      local sheetsize = `sheetsize' * 2
-      if "`mtype'" == "multinomial" {
-        * c1177, c1178 : P, c1179 : -P, c1180 : H, c1181 : F~(H), c1182 : H*, c1183 : Pi, c1189 : Y-VAR,  * c1471
-        local sheetsize = `sheetsize' + `=`longN'*8' + colsof(`matb')
-      }
-      else {
-        * c1180 : H, c1181 : F~(H), c1182 : H*, c1183 : P, c1189: Y-VAR * c1191
-        local sheetsize = `sheetsize' + `=`N'*5' + colsof(`matb')
-        if "`linearization'" == "MQL2" {
-          * c1186: f~~(H), c1192:
-          local sheetsize = `sheetsize' + `=`N'*2'
-        }
-        
-        * c1490:
-        if "`linearization'" == "PQL1" local sheetsize = `sheetsize' + `N'
-
-        * c1185:, c1186: f~~(H), c1192:, c1201:, c1202:, c1490:
-        if "`linearization'" == "PQL2" local sheetsize = `sheetsize' + `=`N'*6'   
-      }
-    }
-    
-    if "`mtype'" == "multivariate" {
-      * c1180 : H, c1181 : F~(H), c1182 : H*, c1193 : P, c1189 : Y-VAR,  * c1493
-      local sheetsize = `sheetsize' + `=`longN'*5' + colsof(`matb') 
-    }
-    
-    * c1094 : Missing indicator, c1095 : Filter column * c1096/c1098 : Estimates * c1097/c1099 : S.E.
-    local sheetsize = `sheetsize' + `=`longN'*2' + colsof(`matb') + colsof(`matV')
-    
-    * Original variables remain on the worksheet after expansion
-    if "`mtype'" == "multinomial" | "`mtype'" == "multivariate" local sheetsize = `sheetsize' + `datasize' 
-    
-    * Simulated response
-    if "`simulate'" ~= "" local sheetsize = `sheetsize' + `longN'
-    
-    if "`mcmc'" ~= "" {
-      * Parameter chains * Deviance chain
-      local sheetsize = `sheetsize' + (colsof(`matb') * (`mcmc_chain'/`mcmc_thinning')) + (`mcmc_chain'/`mcmc_thinning')
-      
-      * Imputed response chains
-      if "`imputeiterations'" ~= "" local sheetsize = `sheetsize' + (`longN' * `:list sizeof imputeiterations')
-      * Imputed summary + s.e.
-      if "`imputesummaries'" ~= "" local sheetsize = `sheetsize' + (`longN' * `:list sizeof imputeiterations' * 2)
-      * Length of residual chains
-      forvalues l = `maxlevels'(-1)1 {
-        if ("`cc'"=="") local hier `hier' `lev`l'id'
-        if ("`cc'"~="") local hier `lev`l'id'
-        if "`saveresiduals`l''" ~= "" {
-          tempvar temp1
-          qui bysort `hier': gen byte `temp1' = 1 if _n==1
-          qui count if `temp1'==1
-          drop `temp1'
-          //local numresi `numrp`l'vars'
-          //if `numresi' == 0 local numresi = 1
-          local sheetsize = `sheetsize' + (`r(N)' * `numresi`l'' * (`mcmc_chain'/`mcmc_thinning'))
-        }
-      }
-      sort `_sortindex'
-    }
-    
-    local maxunits = 0
-    local hier
-
-    if `maxlevels' > 1 {
-      forvalues l = `maxlevels'(-1)1 {
-        local hier `hier' `lev`l'id'
-        tempvar temp1
-        qui bysort `hier': gen `temp1' = _N if _n==1
-        qui sum `temp1'
-        drop `temp1'
-        if `r(max)' > `maxunits' local maxunits `r(max)'
-      }
-      sort `_sortindex'
-    }
-    else local maxunits = _N
-
-    local maxdim = `maxunits'
-    if `maxdim' > 300 local maxdim = 300
-    local maxdim = max(`maxdim', `numexpl')   
-    
-    local extrasize = (`maxdim' * (`maxdim' + 1) / 2 * 4) + ((2 + 1) * `maxunits' * `numexpl') + (`:list sizeof fpname' * `maxunits')
-    local maxparams = 0
-    forvalues l = `maxlevels'(-1)1 {
-      local k `:list sizeof rp`l'name'
-      local extrasize = `extrasize' + 4 * `k' * `maxunits'
-      if `k' > `maxparams' local maxparams = `:list sizeof rp`l'name'
-    }
-    local extrasize = `extrasize' + (max(2 * `maxparams' * `maxunits', `:list sizeof fpname' * `maxunits')) + (`N') + (`numrpvars' * (`numrpvars' + 1) / 2 * 4 + `numexpl' * (`numexpl' + 1) /2) + (2 * `numrpvars' + `:list sizeof fpname' * (`:list sizeof fpname' + 1) /2 * 3 + 2 * `:list sizeof fpname') + (`maxunits')
-    local sheetsize = `sheetsize' + `extrasize'
-  
-    * Allow some working space
-    if "`tempmat'" ~= "" local sheetsize = `sheetsize' * 5
-    local worksize = round((`sheetsize' * 4) / 1000)
-    if `worksize' < 10000 local worksize = 10000
+    local worksize = 10000
   }
 
   if ("`verbose'"~="") display as text "Expanded variables: Count: `numexpand', Length: `longN' Estimated sheet size: `sheetsize'"
-  
-  qui compress  
-  
+
+  qui compress
+
   * Assert that the data is sorted according to the model hierarchy
   if "`cc'"=="" && "`sort'" == "" {
     if "`mtype'" == "univariate" local bottomlev 1
@@ -2469,10 +2365,10 @@ program Estimates, eclass sortpreserve
         drop `sortorder1' `sortorder2'
       }
     }
-  } 
-  
+  }
+
   foreach var of varlist * {
-    if "`:type `var''" == "double" {
+    if "`:type `var''" == "double" & `doublevar' == 0 {
       if "`forcerecast'" ~= "" {
         recast float `var', force
         display as error "Warning: `var' has been recast to float, this has reduced precision"
@@ -2483,11 +2379,22 @@ program Estimates, eclass sortpreserve
       }
     }
     if "`:type `var''" == "long" {
-      capture recast float `var'
+      if `doublevar' == 0 {
+        capture recast float `var'
+      }
+      else {
+        capture recast double `var'
+      }
       if `r(N)' > 0 {
         if "`forcerecast'" ~= "" {
-          recast float `var', force
-          display as error "Warning: `var' has been recast to float, if this is an ID variable its meaning may have changed"
+          if `doublevar' == 0 {
+            recast float `var', force
+            display as error "Warning: `var' has been recast to float, if this is an ID variable its meaning may have changed"
+          }
+          else {
+            recast double `var', force
+            display as error "Warning: `var' has been recast to double, if this is an ID variable its meaning may have changed"
+          }
         }
         else {
           display as error "`var' is held to more precision than MLwiN can handle, it must be recoded so that values lie in the range +/- 16,777,215"
@@ -2496,9 +2403,9 @@ program Estimates, eclass sortpreserve
       }
     }
   }
-  
+
   tempfile filedata
-  
+
   qui saveold "`filedata'", replace
 
   ******************************************************************************
@@ -2507,57 +2414,58 @@ program Estimates, eclass sortpreserve
   tempname macro1
   if "`savemacro'" ~= "" local filemacro1 `savemacro'
   else tempfile filemacro1
-  
+
   if "`batch'" ~= "" local pause nopause
-  
+
   qui file open `macro1' using "`filemacro1'", write replace
 
     if ("`pause'"=="nopause" | "`plugin'" ~= "") file write `macro1' "ECHO 0" _n
-  
+
     * Give details about runmlwin and date and time stamp the macro
     file write `macro1' "NOTE   ***********************************************************************" _n
     file write `macro1' "NOTE   MLwiN macro created by runmlwin Stata command: `c(current_date)', `c(current_time)'" _n
     file write `macro1' "NOTE   See: www.bristol.ac.uk/cmm/runmlwin for help" _n
     file write `macro1' "NOTE   ***********************************************************************" _n(2)
-    
+
     if "`verbose'" ~= "" display as text "Estimated worksheet size: `worksize'"
     if "`verbose'" ~= "" display as text "Number of levels: `toplevel'"
     if "`verbose'" ~= "" display as text "Number of explanatory variables/random parameters: `maxexpl' (`explvars')"
-    
+
     if "`verbose'" ~= "" file write `macro1' "ECHO 1" _n
     file write `macro1' "NOTE   Initialise MLwiN storage" _n "INIT `toplevel' `worksize' `numwscolumns' `maxexpl' 30" _n(2)
     if "`optimat'" == "" file write `macro1' "OPTS 0" _n
     else file write `macro1' "OPTS 1" _n
     if "`tempmat'" == "" file write `macro1' "NOTE   Don't use worksheet for matrix storage" _n "MEMS 1" _n(2)
     else file write `macro1' "NOTE   Use worksheet for matrix storage" _n "MEMS 0" _n(2)
-    
-    file write `macro1' "MONI 0" _n 
-	file write `macro1' "MARK 0" _n 
+
+    file write `macro1' "MONI 0" _n
+    file write `macro1' "MARK 0" _n
     if "`batch'" ~= "" {
-      file write `macro1' "NOTE divert error messages to a file" _n "ERRO 0" _n 
+      file write `macro1' "NOTE divert error messages to a file" _n "ERRO 0" _n
       tempfile errlog
       //tempname fh
       //file open `fh' using "`errlog'", write
       //file close `fh'
       file write `macro1' "LOGO '`errlog'' 1" _n(2)
     }
-    
+
     * Open the equations window
     if ("`pause'"=="") {
       file write `macro1' "NOTE   Open the equations window" _n
       file write `macro1' "WSET 15 1" _n    // open the equations window
       file write `macro1' "EXPA 2" _n     // expand from response equation to include first model equation then random effects equations
-      file write `macro1' "ESTM 1" _n(2)  // switch from black symbols to coloured symbols (but not point estimates)  
-    }   
-    
+      file write `macro1' "ESTM 1" _n(2)  // switch from black symbols to coloured symbols (but not point estimates)
+    }
+
     if "`useworksheet'" ~= "" {
       file write `macro1' "NOTE   Load previously saved model state into MLwiN" _n "ZRET   '`useworksheet''" _n(2)
     }
     else {
-
       * Load the data set
       file write `macro1' "NOTE   Import the Stata data set into MLwiN" _n "RSTA   '`filedata''" _n(2)
-      
+
+      if "`rngversion'" ~= "" file write `macro1' "NOTE   Set the random number generator version" _n "RNGV `rngversion'" _n
+
       * Load design vectors if specified
       forvalues l = `maxlevels'(-1)1 {
         if "`design`l''"~="" {
@@ -2568,7 +2476,7 @@ program Estimates, eclass sortpreserve
 
       * Convergence tolerance
       if "`iglstolerance'" ~= "" file write `macro1' "NOTE   Specify the (R)IGLS convergence tolerance" _n "TOLE `iglstolerance'" _n(2)
-      
+
       * Specify the univariate response variable
       file write `macro1' "NOTE   Specify the response variable(s)" _n
       if ("`mtype'"~="multivariate" & "`mtype'"~="multinomial") file write `macro1' "RESP   '`response1''" _n
@@ -2586,7 +2494,7 @@ program Estimates, eclass sortpreserve
       if ("`distribution'"=="multinomial") {
         local cresp = `numcolumns' + 1
         local cresp_indicator = `numcolumns' + 2
-        
+
         * Expand the data
         file write `macro1' "NAME   c`cresp' 'resp' c`cresp_indicator' 'resp_indicator'" _n
         if "`link'" == "mlogit" file write `macro1' "MNOM 0 '`response1'' 'resp' 'resp_indicator'  `basecategory'" _n
@@ -2600,12 +2508,12 @@ program Estimates, eclass sortpreserve
         file write `macro1' "DOFF 1 '`denominator''" _n
         if ("`extra'" ~= "") file write `macro1' "EXTR 1" _n
       }
-      
+
       if "`proportion'" ~= "" file write `macro1' "VECT `=`:list sizeof responsecats'-1' `propvarnames' 'resp'" _n
-      
-      if ("`pause'"=="") file write `macro1' "PAUS 1" _n    
+
+      if ("`pause'"=="") file write `macro1' "PAUS 1" _n
       file write `macro1' _n
-      
+
       * Loop over responses (equations)
       forvalues e = 1/`numfpbrackets' {
 
@@ -2619,7 +2527,7 @@ program Estimates, eclass sortpreserve
           if ("`link'"=="logit" | "`link'"=="") file write `macro1' "LFUN 0" _n
           file write `macro1' "DOFF `e' '`denominator`e'''" _n
           if ("`extra'" ~= "") file write `macro1' "EXTR 1" _n
-          if ("`pause'"=="") file write `macro1' "PAUS 1" _n    
+          if ("`pause'"=="") file write `macro1' "PAUS 1" _n
           file write `macro1' _n
         }
 
@@ -2630,7 +2538,7 @@ program Estimates, eclass sortpreserve
           file write `macro1' "RDIS `e' 1" _n "LFUN 3" _n
           if ("`extra'" ~= "") file write `macro1' "EXTR 1" _n
           if ("`offset'"~="") file write `macro1' "DOFF `e' '`offset''" _n
-          if ("`pause'"=="") file write `macro1' "PAUS 1" _n    
+          if ("`pause'"=="") file write `macro1' "PAUS 1" _n
           file write `macro1' _n
         }
 
@@ -2641,10 +2549,10 @@ program Estimates, eclass sortpreserve
           file write `macro1' "RDIS `e' 2" _n "LFUN 3" _n
           if ("`extra'" ~= "") file write `macro1' "EXTR 1" _n
           if ("`offset'"~="") file write `macro1' "DOFF `e' '`offset''" _n
-          if ("`pause'"=="") file write `macro1' "PAUS 1" _n    
+          if ("`pause'"=="") file write `macro1' "PAUS 1" _n
           file write `macro1' _n
         }
-      }   
+      }
 
       * Levels/Classification identifiers
       file write `macro1' "NOTE   Specify the level identifier(s)" _n
@@ -2654,7 +2562,7 @@ program Estimates, eclass sortpreserve
         if ("`lev`l'id'"~="") file write `macro1' "IDEN `ll' '`lev`l'id''" _n
       }
       if ("`mtype'"=="multivariate" | "`mtype'"=="multinomial") file write `macro1' "IDEN 1 'resp_indicator'" _n
-      if ("`pause'"=="")  file write `macro1' "PAUS 1" _n   
+      if ("`pause'"=="")  file write `macro1' "PAUS 1" _n
       file write `macro1' _n
 
       * Specify covariate(s) used anywhere in the model
@@ -2682,7 +2590,7 @@ program Estimates, eclass sortpreserve
             }
             file write `macro1' "RPAT" _n
           }
-          
+
           if `e' <= `nummlwineqns' {
             forvalues l = `maxlevels'(-1)1 {
               if "`rp`l'_`e''" ~= "" {
@@ -2697,7 +2605,7 @@ program Estimates, eclass sortpreserve
             }
           }
         }
-    
+
         forvalues l = `maxlevels'(-1)1 {
           forvalues e = `=`nummlwineqns'+1'/`numrpbrackets`l'' {
             if "`rp`l'_`e''" ~= "" {
@@ -2711,13 +2619,13 @@ program Estimates, eclass sortpreserve
             }
           }
         }
-      }     
-      
+      }
+
       if ("`mtype'"=="univariate") {
         forvalues e = 1/`numfpbrackets' {
           foreach var of varlist `fp`e''{
             file write `macro1' "ADDT   '`var''" _n
-          } 
+          }
         }
 
         * Add to the model any variables in the random part which are not in the fixed part
@@ -2733,7 +2641,7 @@ program Estimates, eclass sortpreserve
         }
       }
 
-      if ("`pause'"=="") file write `macro1' "PAUS 1" _n    
+      if ("`pause'"=="") file write `macro1' "PAUS 1" _n
       file write `macro1' _n
 
       forvalues l = `maxlevels'(-1)1 {
@@ -2771,20 +2679,20 @@ program Estimates, eclass sortpreserve
                 local rowvar `=regexs(2)'
                 local colvar `=regexs(2)'
                 capture unab rowvar:  `rowvar'
-                capture unab colvar:  `colvar'              
+                capture unab colvar:  `colvar'
               }
-            
+
               assert inlist("`partype'","var","cov")
               if `:list p in elenames' {
                 if "`mtype'" == "multivariate" {
                   local rowvar = reverse(subinstr(reverse("`rowvar'"), "_", ".", 1))
                   local colvar = reverse(subinstr(reverse("`colvar'"), "_", ".", 1))
                 }
-                file write `macro1' "SETE `ll' '`rowvar'' '`colvar''" _n 
-              }           
+                file write `macro1' "SETE `ll' '`rowvar'' '`colvar''" _n
+              }
             }
           }
-          if ("`pause'"=="") file write `macro1' "PAUS 1" _n    
+          if ("`pause'"=="") file write `macro1' "PAUS 1" _n
           file write `macro1' _n
         }
       }
@@ -2796,7 +2704,7 @@ program Estimates, eclass sortpreserve
           foreach alphaname of local design`l' {
             file write `macro1' "SETD `l' '`alphaname''" _n
           }
-          file write `macro1' _n      
+          file write `macro1' _n
         }
       }
 
@@ -2811,7 +2719,7 @@ program Estimates, eclass sortpreserve
 
         //file write `macro1' "MAXI 2" _n "BATCH 1" _n "STAR" _n "ITNU 0" _n(2)
         file write `macro1' "MAXI 2" _n "BATCH 1" _n "STAR" _n(2)
-        
+
         // set the maximum iterations back to the default if not set
         if "`maxiterations'" == "" local maxiterations 20
         local modelstarted 1
@@ -2837,7 +2745,7 @@ program Estimates, eclass sortpreserve
           //file write `macro1' "JOIN   c1002 `rpconstraint`r'' c1002" _n
         }
         //file write `macro1' "RCON   c1002" _n(2) // note that this column will not be free if multinomial or multivariate has been specified
-      }       
+      }
     }
 
     * Edit vector of initial values
@@ -2849,7 +2757,7 @@ program Estimates, eclass sortpreserve
       if ("`pause'"=="") file write `macro1' "PAUS 1" _n  // update equations window
       file write `macro1' _n
     }
-    
+
     *************************
     * Fit model using (R)IGLS
     *************************
@@ -2862,12 +2770,12 @@ program Estimates, eclass sortpreserve
         else {
           file write `macro1' "NOTE   Set estimation method to be IGLS" _n "METH 1" _n(2)
         }
-        
+
         * Specify maximum number of iterations
         if "`maxiterations'"~="" {
           file write `macro1' "NOTE   Set maximum number of (R)IGLS iterations" _n "MAXI `maxiterations'" _n(2)
         }
-            
+
         // Why is MQL2 the default in MLwiN for poisson models?
         // What about negbin is there the same problem?
         if "`distribution'"=="poisson" & "`linearization'"=="MQL1" file write `macro1' "NOTE   Set estimation method to be MQL1" _n "LINE 0 1" _n(2)
@@ -2883,19 +2791,19 @@ program Estimates, eclass sortpreserve
         if `reseton' == 1 {
           file write `macro1' "NOTE   Specify element reset options for variance-covariance matrices" _n
           forvalues l = `maxlevels'(-1)1 {
-            if "`reset`l''"=="all" file write `macro1' "RESE `l' 0" _n  
-            if "`reset`l''"=="variances" file write `macro1' "RESE `l' 1" _n  
-            if "`reset`l''"=="none" file write `macro1' "RESE `l' 2" _n 
+            if "`reset`l''"=="all" file write `macro1' "RESE `l' 0" _n
+            if "`reset`l''"=="variances" file write `macro1' "RESE `l' 1" _n
+            if "`reset`l''"=="none" file write `macro1' "RESE `l' 2" _n
           }
-          file write `macro1' "" _n 
+          file write `macro1' "" _n
         }
-        
+
         * Weights
         forvalues l = `maxlevels'(-1)1 {
           if "`weight`l''" ~= "" | "`weighttype'" ~= "" {
 
             if "`weight`l''" ~= "" {
-              file write `macro1' "NOTE   Specify sampling weights at level `l'" _n "WEIG `l' 1 '`weight`l'''" _n(2)  
+              file write `macro1' "NOTE   Specify sampling weights at level `l'" _n "WEIG `l' 1 '`weight`l'''" _n(2)
             }
             else {
               file write `macro1' "NOTE   Specify equal weights at level `l'" _n "WEIG `l' 1" _n(2)
@@ -2927,12 +2835,12 @@ program Estimates, eclass sortpreserve
         if "`fpsandwich'"=="fpsandwich" | ("`weighttype'"~="" & "`fpsandwich'"==""){
           file write `macro1' "NOTE   Turn on sandwich estimators for the fixed part parameter standard errors" _n "FSDE 2" _n(2)
         }
-          
+
         if "`rpsandwich'"=="rpsandwich" | ("`weighttype'"~="" & "`rpsandwich'"==""){
           file write `macro1' "NOTE   Turn on sandwich estimators for the random part parameter standard errors" _n "RSDE 2" _n(2)
-        }   
+        }
       }
-      
+
       * Pause
       if ("`pause'"=="") {
         file write `macro1' "NOTE   Pause the macro to allow the user to examine the model specification" _n "PAUS" _n(2)
@@ -2958,39 +2866,38 @@ program Estimates, eclass sortpreserve
       file write `macro1' "MONI 1" _n
       file write `macro1' "ITNU 0 b21" _n
       file write `macro1' "CONV b22" _n
-      
-      if ("`pause'"=="") file write `macro1' "PAUS 1" _n    
+
+      if ("`pause'"=="") file write `macro1' "PAUS 1" _n
       file write `macro1' _n
     }
 
     **********************
     * Fit model using MCMC
     **********************
-    if ("`mcmc'"~="") { // i.e. MCMC  
+    if ("`mcmc'"~="") { // i.e. MCMC
 
       if "`useworksheet'" == "" {
-    
         * Model specification: Cross-classifications
         file write `macro1' "NOTE   Set estimation method to MCMC" _n
         file write `macro1' "EMODe 3" _n
         if ("`pause'"=="") file write `macro1' "EXPA 3" _n // Expand to show priors
         file write `macro1' _n
-        
+
         * MM Weights
         if "`carcentre'" ~= "" file write `macro1' "CARC 1" _n
         forvalues l = 2/`maxlevels' {
           local ll = `l'
           if ("`mtype'"=="multivariate" | "`mtype'"=="multinomial") local ++ll
-        
+
           if "`mmweights`l''" ~= "" {
-            file write `macro1' "NOTE   Declare weights at level `l'" _n          
+            file write `macro1' "NOTE   Declare weights at level `l'" _n
             if "`car`l''"~="" {
               file write `macro1' "MULM `ll' `:list sizeof mmweights`l'' '`=word("`mmweights`l''", 1)'' '`=word("`mmids`l''", 1)''" _n "CARP `ll' 1" _n
             }
             else {
               if "`=word("`mmids`l''", 1)'" ~= "`lev`l'id'" {
                 display as error "The first var in mmids`l'() must match the level `l' ID specified in level`l'()."
-                exit 198      
+                exit 198
               }
               if "`mtype'"~="multivariate" {
                 file write `macro1' "MULM `ll' `:list sizeof mmweights`l'' '`=word("`mmweights`l''", 1)''" _n
@@ -3000,16 +2907,15 @@ program Estimates, eclass sortpreserve
               }
             }
           }
-        }         
-        
+        }
+
         * Cross-classified models
         if ("`cc'"~="") {
           file write `macro1' "NOTE   Declare model to be a cross-classifed model and switch to classification notation" _n "XCLA 1" _n /* switch on cross-classifications */ "INDE 1" _n(2) /* switch on classification notation */
         }
-        
-      
+
         * Define measurement error if defined
-        if "`me'"~="" {     
+        if "`me'"~="" {
           * measurement error
           file write `macro1' "NOTE   Specify measurement error" _n
           local mecols
@@ -3019,77 +2925,77 @@ program Estimates, eclass sortpreserve
             local ++i
           }
           file write `macro1' "MERR `:list sizeof mevars' `mecols'" _n
-          file write `macro1' _n        
-        }       
-        
+          file write `macro1' _n
+        }
+
         * Correlated residuals
         if "`corresiduals'" ~= "" {
           file write `macro1' "NOTE   Set up correlated residuals" _n
           //if "`corresiduals'" == "full" { // default
           //  file write `macro1' "NOTE   full covariance matrix" _n
-          //  file write `macro1' "MCCO 0" _n 
+          //  file write `macro1' "MCCO 0" _n
           //}
-          if "`corresiduals'" == "exchangeable" file write `macro1' "NOTE   all correlations equal and all variances equal" _n "MCCO 1" _n 
-          if "`corresiduals'" == "areqvars" file write `macro1' "NOTE   an AR1 structure with all variances equal" _n "MCCO 2" _n 
-          if "`corresiduals'" == "eqcorrsindepvars" file write `macro1' "NOTE   all correlations equal but independent variances" _n "MCCO 3" _n 
+          if "`corresiduals'" == "exchangeable" file write `macro1' "NOTE   all correlations equal and all variances equal" _n "MCCO 1" _n
+          if "`corresiduals'" == "areqvars" file write `macro1' "NOTE   an AR1 structure with all variances equal" _n "MCCO 2" _n
+          if "`corresiduals'" == "eqcorrsindepvars" file write `macro1' "NOTE   all correlations equal but independent variances" _n "MCCO 3" _n
           if "`corresiduals'" == "arindepvars" file write `macro1' "NOTE   an AR1 structure with independent variances" _n "MCCO 4" _n
-        } 
-        
+        }
+
         * Use multiple subscripts notation
         if ("`msubscripts'"~="") {
           file write `macro1' "NOTE   Use multiple subscripts notation" _n
-          file write `macro1' "INDE 1" _n(2)    
+          file write `macro1' "INDE 1" _n(2)
         }
-        
+
         * Set MCMC seed
-        file write `macro1' "NOTE   Set MCMC seed" _n "MCRS `mcmc_seed'" _n(2)    
-        
+        file write `macro1' "NOTE   Set MCMC seed" _n "MCRS `mcmc_seed'" _n(2)
+
         if "`smcmc'" ~= "" {
           file write `macro1' "NOTE   Turn on structured MCMC" _n
-          file write `macro1' "SMCM 1" _n(2)        
+          file write `macro1' "SMCM 1" _n(2)
         }
-        
+
         if "`smvn'" ~= "" {
           file write `macro1' "NOTE   Turn on structured MVN" _n
-          file write `macro1' "SMVN 1" _n(2)        
+          file write `macro1' "SMVN 1" _n(2)
         }
-        
+
         if "`orthogonal'" ~= "" {
           file write `macro1' "NOTE   Turn on orthogonal parameterisation" _n
-          file write `macro1' "ORTH 1" _n(2)        
-        } 
-        
+          file write `macro1' "ORTH 1" _n(2)
+        }
+
         if "`hcentring'" ~= "" {
           file write `macro1' "NOTE   Turn on hierarchical centring" _n
-          file write `macro1' "HCEN 1 `hcentring'" _n(2)        
-        }   
-        
+          file write `macro1' "HCEN 1 `hcentring'" _n(2)
+        }
+
         if "`logformulation'" ~= "" {
           file write `macro1' "NOTE   Use log formulation" _n
-          file write `macro1' "LCLO 1" _n(2)        
+          file write `macro1' "LCLO 1" _n(2)
         }
-        
+
         if `defaultprior' == 1 {
           file write `macro1' "NOTE   Set prior distribution parameters" _n
           file write `macro1' "GAMP `gama' `gamb'" _n(2)
         }
-        
+
         forvalues l = 2/`maxlevels' {
           local ll = `l'
           if ("`mtype'"=="multivariate" | "`mtype'"=="multinomial") local ++ll
-          
+
           if "`parexpansion`l''" ~= "" {
             file write `macro1' "NOTE   Turn on parameter expansion at level `l'" _n
-            file write `macro1' "PAEX `ll' 1" _n(2)       
+            file write `macro1' "PAEX `ll' 1" _n(2)
           }
         }
-        
+
         * Informative priors
         if "`priormatrix'" ~= "" {
           local priorcol c1092
           runmlwin_writepriors, maxlevels(`maxlevels') priormat(`priormatrix') fpb(`matFP_b') rpb(`matRP_b') macro1(`macro1') priorcol(`priorcol')
         }
-        
+
         * Add factors if specified
         local numfact = 0
         local numcorr = 0
@@ -3127,19 +3033,18 @@ program Estimates, eclass sortpreserve
               }
             }
           }
-        }     
-        
-        
+        }
+
         if "`factstr'" ~= "" {
           file write `macro1' "NOTE set up factors" _n
           file write `macro1' "FACT `nummlwineqns' `numfact' `numcorr' `factstr'" _n
         }
-        
+
         local useresid "1" // Use IGLS residuals as starting values
-        
+
         local residcol
         local residsecol
-        
+
         // Simulate residuals from the covariance matrix
         if "`simresiduals'" ~= "" {
           file write `macro1' "LINK 2 G27" _n // Starting residuals columns
@@ -3147,15 +3052,15 @@ program Estimates, eclass sortpreserve
           local hasres = 0
           local residcol G27[1]
           local residsecol G27[2]
-          
+
           local useresid = ""
           forvalues l = 1/`maxlevels' {
             local ll = `l'
             if ("`mtype'"=="multivariate" | "`mtype'"=="multinomial") local ++ll
-          
-            file write `macro1' "LINK 1 G22" _n 
-            file write `macro1' "LINK `numresi`l'' G23" _n 
-            
+
+            file write `macro1' "LINK 1 G22" _n
+            file write `macro1' "LINK `numresi`l'' G23" _n
+
             if "`numrp`l'pars'" ~= "" {
               file write `macro1' "OMEGa `ll' G22[1]" _n
               file write `macro1' "CALC G22[1] = HSYM(G22[1])" _n
@@ -3169,18 +3074,17 @@ program Estimates, eclass sortpreserve
                 file write `macro1' "JOIN G27[1] G23 G27[1]" _n
               }
             }
-            file write `macro1' "ERASe G22" _n 
-            file write `macro1' "ERASe G23" _n 
-            file write `macro1' "LINK 0 G22" _n "LINK 0 G23" _n 
-            
+            file write `macro1' "ERASe G22" _n
+            file write `macro1' "ERASe G23" _n
+            file write `macro1' "LINK 0 G22" _n "LINK 0 G23" _n
+
           }
           file write `macro1' "CALC G27[2] = G27[1] * 0" _n
         }
-        
 
         if "`useresid'" ~= "" & "`cc'" == "" & (`maxlevels' > 1 | "`mtype'" == "multivariate" | ("`mtype'" == "multinomial" & "`link'"=="mlogit")){
           * Calculate MCMC starting values for level `l' residuals
-          
+
           // set up PRE and POST file
           if `allnormal' == 1 {
             file write `macro1' "PREF 0" _n
@@ -3211,18 +3115,18 @@ program Estimates, eclass sortpreserve
                 local revpath `=substr("`revpath'", `=strpos("`revpath'", "\")+1' , .)'
                 local path `=reverse("`revpath'")'
                 capture confirm file `"`path'\discrete\PRE"'
-                if !_rc file write `macro1' "FPAT '`path'\discrete'" _n           
+                if !_rc file write `macro1' "FPAT '`path'\discrete'" _n
               }
             }
             file write `macro1' "PREF 'PRE'" _n
             file write `macro1' "POST 'POST'" _n
             file write `macro1' "PREF 1" _n
-            file write `macro1' "POST 1" _n                     
-            
+            file write `macro1' "POST 1" _n
+
             if "`mtype'" == "multinomial" {
               file write `macro1' "SETV 1 'bcons.1'" _n
-            }         
-        
+            }
+
             if "`linearization'" == "PQL2" & "`maxlevels'" == "1" {
               forvalues lev = `maxlevels'/5 {
                 file write `macro1' "OFFS `lev'" _n
@@ -3236,10 +3140,9 @@ program Estimates, eclass sortpreserve
             if "`linearization'"=="MQL2" file write `macro1' "LINE 0 2" _n
             if "`linearization'"=="PQL1" file write `macro1' "LINE 1 1" _n
             if "`linearization'"=="PQL2" file write `macro1' "LINE 1 2" _n
-            
+
             // Extra is not valid for MCMC estimation
             file write `macro1' "EXTR 0" _n // cmjc added for poisson
-            
 
             local llev = 1
             if "`mtype'"=="multivariate" | "`mtype'"=="multinomial" local ++llev
@@ -3249,15 +3152,15 @@ program Estimates, eclass sortpreserve
             }
 
             if "`mtype'" ~= "multivariate" { // i.e. univariate response models
-              local b 
-      
+              local b
+
               foreach var of local rp1name {
                 if "`var'" ~= "P" & "`var'" ~= "-P" local b `b' '`var''
               }
-              
-              if "`distribution'" == "nbinomial" local b 'bcons.1' 'bcons.2'
+
+              if "`distribution'" == "nbinomial" local b 'bcons.1' 'bcons2.1'
               else local b 'bcons.1'
-              
+
               if `:list sizeof b' == 0 & "`mtype'" ~= "multinomial" display as error "Level 1 random structure must be specified for discrete response models"
               if `:list sizeof b' ~= 0 file write `macro1' "LINK `b' g9" _n
 
@@ -3265,11 +3168,11 @@ program Estimates, eclass sortpreserve
                 display as error "link function must be mlogit, ologit, oprobit or ocloglog"
                 exit 198
               }
-              
+
               if "`mtype'"=="multinomial"  {
                 if "`link'"=="mlogit" file write `macro1' "SET b10 0" _n
                 if "`link'"=="ologit"|"`link'"=="oprobit"|"`link'"=="ocloglog" file write `macro1' "SET b10 1" _n
-              } 
+              }
               else file write `macro1' "SET b10 `resptype'" _n // i.e. a univariate response which is not multinomial
 
               file write `macro1' "SET b15 1" _n
@@ -3301,28 +3204,28 @@ program Estimates, eclass sortpreserve
             file write `macro1' "LINK -5 g19 1" _n
             file write `macro1' "LINK 0 g18" _n
             file write `macro1' "CALC g18=g19" _n
-            
+
             file write `macro1' "ITNU 1 2" _n // Set R(IGLS) iteration to 2 so that residuals are calculated correctly
           }
 
-          file write `macro1' "MISR 0" _n // Don't set small residuals to system missing        
+          file write `macro1' "MISR 0" _n // Don't set small residuals to system missing
           file write `macro1' "LINK 2 G27" _n // Starting residuals columns
           file write `macro1' "FILL G27" _n
           local hasres = 0
           local residcol G27[1]
           local residsecol G27[2]
-          
+
           forvalues l = 1/`maxlevels' {
             local ll = `l'
             if "`mtype'"=="multivariate" | "`mtype'"=="multinomial" local ++ll
             local numresi = `numrp`l'vars'
             if "`mtype'"=="multinomial" & "`link'"=="mlogit" & `l' == 1 local numresi = `numresi' + 2
-            if (`numresi'>=1 & `ll' != 1) {   
+            if (`numresi'>=1 & `ll' != 1) {
               file write `macro1' "LINK `numresi' G22" _n
               file write `macro1' "FILL G22" _n
               file write `macro1' "LINK 1 G23" _n
               file write `macro1' "FILL G23" _n
-            
+
               file write `macro1' "NOTE   Calculate MCMC starting values for level `l' residuals" _n
               file write `macro1' "RLEV `ll'" _n
               file write `macro1' "RFUN" _n
@@ -3339,19 +3242,18 @@ program Estimates, eclass sortpreserve
               file write `macro1' "LINK 0 G22" _n "LINK 0 G23" _n(2)
             }
           }
-          
-          
-          file write `macro1' "MISR 1" _n       
-          
+
+          file write `macro1' "MISR 1" _n
+
           if `allnormal' != 1 {
             // UNLINK
             file write `macro1' "CALC g19=g18" _n
             file write `macro1' "ERASe g18" _n
             file write `macro1' "LINK 0 g18" _n
-          }       
-        }       
+          }
+        }
       }
-    
+
       * Pause
       // AT THIS POINT THE MULTIVARIATE WISHART DATA INFORMED PRIOR FOR THE LEVEL 2 MATRIX OF A TWO-LEVEL RANDOM SLOPES MODEL HAS NOT BEEN SET
       if ("`pause'"=="") {
@@ -3362,20 +3264,20 @@ program Estimates, eclass sortpreserve
       * MCMC Estimation algorithm
       if ("`distribution'"=="normal") file write `macro1' "NOTE   Fit the model in MCMC using Gibbs algorithm (response is normal)" _n // But probit is fit with GIBBS
       if ("`distribution'"~="normal") file write `macro1' "NOTE   Fit the model in MCMC using Metropolis Hastings algorithm (response is discrete)" _n
-      
+
       if ("`savewinbugs'"~="") {
         local 0 , `savewinbugs'
         syntax , Model(string) Inits(string) Data(string) [noFit]
-        
+
         local 0 `inits'
         syntax anything(name=inits), [REPLACE]
-        if "`replace'" == "" confirm new file `inits'
+        if "`replace'" == "" confirm new file "`inits'"
         local 0 `data'
         syntax anything(name=data), [REPLACE]
-        if "`replace'" == "" confirm new file `data'
+        if "`replace'" == "" confirm new file "`data'"
         local 0 `model'
         syntax anything(name=model), [REPLACE]
-        if "`replace'" == "" confirm new file `model'
+        if "`replace'" == "" confirm new file "`model'"
         local linkcode 0 // needs to be set (0 for logit, 1 for probit, 2 for complementary log-log and 3 for log link)
         if "`link'" == "logit" local linkcode 0
         if "`link'" == "probit" local linkcode 1
@@ -3389,15 +3291,15 @@ program Estimates, eclass sortpreserve
 
         file write `macro1' "BUGO 6 `mcmc_modeltype' `linkcode' `residcol' `priorcol' '`model'' '`inits'' '`data''" _n // MCMC chains
       }
-      
+
       local chaincols 0
       forvalues l = 1/`maxlevels' {
         if "`saveresiduals`l''" ~= "" local ++chaincols
       }
       if "`factstr'" ~= "" local chaincols = `chaincols' + 2
-      
+
       if `chaincols' > 0 file write `macro1' "LINK `chaincols' G22" _n
-      
+
       local i = 1
       forvalues l = 1/`maxlevels' {
         local ll = `l'
@@ -3410,8 +3312,8 @@ program Estimates, eclass sortpreserve
           file write `macro1' "SMRE `ll' 'RESID_CHAIN_LEVEL`l''" _n(2)
           local ++i
         }
-      }     
-      
+      }
+
       if "`factstr'" ~= "" {
         file write `macro1' "NAME G22[`i'] '_FACT_LOAD_CHAIN'" _n
         local ++i
@@ -3420,8 +3322,8 @@ program Estimates, eclass sortpreserve
         file write `macro1' "SMFA 1 '_FACT_LOAD_CHAIN'" _n
         file write `macro1' "SMFA 2 '_FACT_VAR_CHAIN'" _n
         file write `macro1' "LINK 0 G22" _n(2)
-      }       
-        
+      }
+
       if "`fit'" ~= "nofit" {
         if "`useworksheet'" == "" {
           if "`mtype'" == "multinomial" file write `macro1' "CLRV 2" _n // I'm not sure why this is needed
@@ -3436,7 +3338,7 @@ program Estimates, eclass sortpreserve
           local curriter 0 // Unthinned iterations
           if "`imputeiterations'" ~= "" {
             local nextimpute `:word 1 of `imputeiterations''
-            local imputeiterations `:list imputeiterations - nextimpute'            
+            local imputeiterations `:list imputeiterations - nextimpute'
           }
           while `curriter' + (`mcmc_refresh' * `mcmc_thinning') <= `mcmc_chain' {
             local curriter = `curriter' + (`mcmc_refresh' * `mcmc_thinning')
@@ -3456,34 +3358,34 @@ program Estimates, eclass sortpreserve
                 tempfile impfile
                 //tempname fh
                 //file open `fh' using "`impfile'", write
-                //file close `fh'               
-                
+                //file close `fh'
+
                 file write `macro1' "PSTA '`impfile'' '`_sortindex'' G22" _n
-                local imputefiles `imputefiles' `impfile'
+                local imputefiles `" `imputefiles' "`impfile'" "'
                 file write `macro1' "ERAS G21 G22" _n
                 file write `macro1' "LINK 0 G21" _n "LINK 0 G22" _n
                 file write `macro1' "PUPN c1003 c1004" _n
                 file write `macro1' "AVER c1091 b99 b100" _n
-                file write `macro1' "PAUS 1" _n(2)                  
+                file write `macro1' "PAUS 1" _n(2)
                 local nextimpute `:word 1 of `imputeiterations''
-                local imputeiterations `:list imputeiterations - nextimpute'            
+                local imputeiterations `:list imputeiterations - nextimpute'
                 if "`nextimpute'" == "" continue, break
               }
               local nextstop = ceil((`curriter' - `impiter') / `mcmc_thinning')
               if `nextstop' ~= 0 {
                 file write `macro1' "MCMC 1 `nextstop' `mcmc_thinning' c1090 c1091 c1003 c1004 1 `mcmc_modeltype'" _n
-                file write `macro1' "PUPN c1003 c1004" _n "AVER c1091 b99 b100" _n "PAUS 1" _n(2)             
+                file write `macro1' "PUPN c1003 c1004" _n "AVER c1091 b99 b100" _n "PAUS 1" _n(2)
               }
             }
             else {
               file write `macro1' "MCMC 1 `mcmc_refresh' `mcmc_thinning' c1090 c1091 c1003 c1004 1 `mcmc_modeltype'" _n
-              file write `macro1' "PUPN c1003 c1004" _n "AVER c1091 b99 b100" _n "PAUS 1" _n(2) 
+              file write `macro1' "PUPN c1003 c1004" _n "AVER c1091 b99 b100" _n "PAUS 1" _n(2)
             }
           }
           if `mcmc_chain' - `curriter' ~= 0 {
             local remainder = ceil((`mcmc_chain' - `curriter') / `mcmc_thinning')
             file write `macro1' "MCMC 1 `remainder' `mcmc_thinning' c1090 c1091 c1003 c1004 1 `mcmc_modeltype'" _n
-            file write `macro1' "PUPN c1003 c1004" _n "AVER c1091 b99 b100" _n "PAUS 1" _n(2)       
+            file write `macro1' "PUPN c1003 c1004" _n "AVER c1091 b99 b100" _n "PAUS 1" _n(2)
           }
         }
         else {
@@ -3497,7 +3399,7 @@ program Estimates, eclass sortpreserve
               file write `macro1' "MCMC 1 `nextstop' `mcmc_thinning' c1090 c1091 c1003 c1004 1 `mcmc_modeltype'" _n(2)
               file write `macro1' "LINK 1 G21" _n
               file write `macro1' "DAMI 0 G21[1]" _n // Impute
-              file write `macro1' "LINK `nummlwineqns' G22" _n              
+              file write `macro1' "LINK `nummlwineqns' G22" _n
               file write `macro1' "SPLI G21[1] 'resp_indicator' G22" _n
               forvalues e = 1/`nummlwineqns' {
                 file write `macro1' "NAME G22[`e'] 'imp`response`e'''" _n
@@ -3505,12 +3407,12 @@ program Estimates, eclass sortpreserve
               tempfile impfile
               //tempname fh
               //file open `fh' using "`impfile'", write
-              //file close `fh'     
-                
+              //file close `fh'
+
               file write `macro1' "PSTA '`impfile'' '`_sortindex'' G22" _n
-              local imputefiles `imputefiles' `impfile'
+              local imputefiles `" `imputefiles' "`impfile'" "'
               file write `macro1' "ERAS G21 G22" _n
-              file write `macro1' "LINK 0 G21" _n "LINK 0 G22" _n             
+              file write `macro1' "LINK 0 G21" _n "LINK 0 G22" _n
               file write `macro1' "PUPN c1003 c1004" _n
               file write `macro1' "AVER c1091 b99 b100" _n(2)
             }
@@ -3518,9 +3420,9 @@ program Estimates, eclass sortpreserve
             if `nextstop' ~= 0 {
               file write `macro1' "MCMC 1 `nextstop' `mcmc_thinning' c1090 c1091 c1003 c1004 1 `mcmc_modeltype'" _n(2)
               file write `macro1' "PUPN c1003 c1004" _n
-              file write `macro1' "AVER c1091 b99 b100" _n(2) 
+              file write `macro1' "AVER c1091 b99 b100" _n(2)
             }
-          } 
+          }
           else {
             file write `macro1' "MCMC 1 `total_stored' `mcmc_thinning' c1090 c1091 c1003 c1004 1 `mcmc_modeltype'" _n(2)
             file write `macro1' "PUPN c1003 c1004" _n
@@ -3529,11 +3431,11 @@ program Estimates, eclass sortpreserve
         }
         if ("`pause'"=="") file write `macro1' "PAUS 1" _n(2)
       }
-    } 
-    
+    }
+
     if "`fit'" ~= "nofit" {
       if "`imputesummaries'" ~= "" {
-        file write `macro1' "LINK 2 G21" _n 
+        file write `macro1' "LINK 2 G21" _n
         file write `macro1' "DAMI 2 G21[1] G21[2]" _n // Impute
         file write `macro1' "LINK `nummlwineqns' G22" _n
         file write `macro1' "SPLI G21[1] 'resp_indicator' G22" _n
@@ -3545,16 +3447,16 @@ program Estimates, eclass sortpreserve
         forvalues e = 1/`nummlwineqns' {
           file write `macro1' "NAME G23[`e'] '_sisd_`response`e'''" _n
         }
-        
+
         tempfile imputesummaries
         //tempname fh
         //file open `fh' using "`imputesummaries'", write
-        //file close `fh'     
-                
+        //file close `fh'
+
         file write `macro1' "PSTA '`imputesummaries'' '`_sortindex'' G22 G23" _n
         file write `macro1' "ERAS G21 G22 G23" _n
         file write `macro1' "LINK 0 G21" _n "LINK 0 G22" _n "LINK 0 G23" _n
-      } 
+      }
 
       if "`batch'" == "" {
         * Open the equations window
@@ -3564,15 +3466,15 @@ program Estimates, eclass sortpreserve
           file write `macro1' "EXPA 3" _n
           file write `macro1' "ESTM 2" _n
         }
-        
+
         * If any random part design matrices have been specified then open the output window and display the random part parameters
-        if "`anydesign'"=="yes"{  
-          file write `macro1' "WSET 20 1" _n        
-          file write `macro1' "ECHO 1" _n   
-          file write `macro1' "FIXE" _n   
-          file write `macro1' "RAND" _n   
-          file write `macro1' "ECHO 0" _n   
-        }     
+        if "`anydesign'"=="yes"{
+          file write `macro1' "WSET 20 1" _n
+          file write `macro1' "ECHO 1" _n
+          file write `macro1' "FIXE" _n
+          file write `macro1' "RAND" _n
+          file write `macro1' "ECHO 0" _n
+        }
       }
 
       *******************
@@ -3588,17 +3490,17 @@ program Estimates, eclass sortpreserve
           forvalues lev = `maxlevels'(-1)1 {
             local lids `lids' lev`lev'id(`lev`lev'id')
           }
-          runmlwin_calcresiduals , level(`l') levxid(`lev`l'id') numrpxvars(`numresi`l'') rpxvars(`resivars`l'') residualsx(`residuals`l'') mtype(`mtype') `residstd`l'' `residlever`l'' `residinfl`l'' `residdel`l'' `residsamp`l'' `residref`l'' `residvar`l'' `residrecode`l'' macro(`macro1') mcmc(`mcmc') residfile(`residfile`l'') cc(`cc') maxlevels(`maxlevels') mmid(`mmids`l'') `lids'
+          runmlwin_calcresiduals , level(`l') levxid(`lev`l'id') numrpxvars(`numresi`l'') rpxvars(`resivars`l'') residualsx(`residuals`l'') mtype(`mtype') `residstd`l'' `residlever`l'' `residinfl`l'' `residdel`l'' `residsamp`l'' `residref`l'' `residvar`l'' `residrecode`l'' `residrpadj`l'' `residnoadj`l'' macro(`macro1') mcmc(`mcmc') residfile(`residfile`l'') cc(`cc') maxlevels(`maxlevels') mmid(`mmids`l'') `lids'
         }
       }
-      
+
       *******************
       * Calculate Factor values
       *******************
       if `factorson' == 1 {
         file write `macro1' "LINK 3 G21" _n
         file write `macro1' "JOIN 1 G21[3] G21[3]" _n
-        file write `macro1' "NOBS 2 b33 b34" _n     
+        file write `macro1' "NOBS 2 b33 b34" _n
         file write `macro1' "DAFA G21[1] G21[2]" _n
         file write `macro1' "SET b35 1" _n
         forvalues l = 1/`maxlevels' {
@@ -3606,12 +3508,12 @@ program Estimates, eclass sortpreserve
             tempfile fscoresfile`l'
             //tempname fh
             //file open `fh' using "`fscoresfile`l''", write
-            //file close `fh'             
+            //file close `fh'
             local count = `=colsof(`flinit`l'')' * 2
             file write `macro1' "LINK `count' G22" _n
-            
+
           }
-        
+
           local i = 1
           forvalues fact = 1/`=colsof(`flinit`l'')' { {
             if ("`fscores`l''"~=""){
@@ -3629,11 +3531,11 @@ program Estimates, eclass sortpreserve
           if ("`fscores`l''"~=""){
             file write `macro1' "GENErate 1 b31 1 G21[3]" _n
             file write `macro1' "NAME G21[3] '_fscoreid'" _n
-            file write `macro1' "PSTA '`fscoresfile`l''' '_fscoreid' G22" _n            
+            file write `macro1' "PSTA '`fscoresfile`l''' '_fscoreid' G22" _n
             file write `macro1' "ERASE '_fscoreid' G22" _n
             file write `macro1' "LINK 0 G22" _n
           }
-        } 
+        }
         file write `macro1' "ERASE G21" _n
         file write `macro1' "LINK 0 G21" _n
       }
@@ -3645,7 +3547,7 @@ program Estimates, eclass sortpreserve
         // Note if user does not specify seed option then seed is set to zero and runmlwin does not write the seed command to the macro
         // If the user specifies the seed option then runmlwin will write the seed command to the macro (unless that is if the user specifies the seed to be 0!)
         file write `macro1' "NOTE   Set seed" _n
-        file write `macro1' "SEED `standardseed'" _n(2)   
+        file write `macro1' "SEED `standardseed'" _n(2)
       }
 
       **********************
@@ -3659,22 +3561,22 @@ program Estimates, eclass sortpreserve
       ****************
       * Save the model
       ****************
-      
+
       if "`saveworksheet'" ~= "" {
         file write `macro1' "NOTE   Save the MLwiN worksheet" _n
         file write `macro1' "ZSAV  '`saveworksheet''" _n(2)
       }
-      
+
       * Pause
       if ("`pause'"=="") {
         file write `macro1' "NOTE   Pause the macro to allow the user to examine the model results" _n
-        file write `macro1' "PAUS" _n(2)    
+        file write `macro1' "PAUS" _n(2)
       }
-      
+
       if "`saveequation'" ~= "" {
         file write `macro1' "NOTE   Save an image of the equations window" _n
-        file write `macro1' "WCAP 15 0 '`saveequation''" _n 
-      }     
+        file write `macro1' "WCAP 15 0 '`saveequation''" _n
+      }
     }
 
     file write `macro1' "NOTE   ***********************************************************************" _n(2)
@@ -3694,7 +3596,7 @@ program Estimates, eclass sortpreserve
     tempname macro2
     tempfile filemacro2
     qui file open `macro2' using "`filemacro2'", write replace
-      
+
     * Export the model results and exit
     file write `macro2' "NOTE   ***********************************************************************" _n
     file write `macro2' "NOTE   Export the model results to Stata" _n
@@ -3702,7 +3604,7 @@ program Estimates, eclass sortpreserve
 
     if "`fit'" ~= "nofit" {
       file write `macro2' "LINK 1 G30" _n
-      
+
       * Store number of cases and number in use
       //file write `macro2' "NOBS 1 b31 b32" _n
       //file write `macro2' "EDIT 1 G30[1] b31" _n  // Total Cases
@@ -3718,10 +3620,10 @@ program Estimates, eclass sortpreserve
       }
       if ("`mcmc'"~="" & "`me'"=="" & `factorson' == 0 & ("`mtype'" ~= "multivariate" | "`discrete'" == "")) { // BDIC doesn't work for models with measurement error or mixed responses
         file write `macro2' "BDIC b1 b2 b3 b4" _n
-        file write `macro2' "EDIT 3 G30[1] b1" _n     // DIC 
+        file write `macro2' "EDIT 3 G30[1] b1" _n     // DIC
         file write `macro2' "EDIT 4 G30[1] b2" _n     // pD - effective number of parameters
         file write `macro2' "EDIT 5 G30[1] b3" _n     // Mean deviance Dbar
-        file write `macro2' "EDIT 6 G30[1] b4" _n     // Deviance at mean parameter values D(thetabar) 
+        file write `macro2' "EDIT 6 G30[1] b4" _n     // Deviance at mean parameter values D(thetabar)
       }
       file write `macro2' "EDIT 7 G30[1] b21" _n  // Number of iterations
       file write `macro2' "EDIT 8 G30[1] b22" _n  // Converged
@@ -3732,42 +3634,42 @@ program Estimates, eclass sortpreserve
       //  file write `macro2' "NOBS `l' b33 b34" _n
       //  file write `macro2' "EDIT `nextrownum' G30[1] b33" _n // Total Cases
       //  local ++nextrownum
-      //  file write `macro2' "EDIT `nextrownum' G30[1] b34" _n // Cases in use   
+      //  file write `macro2' "EDIT `nextrownum' G30[1] b34" _n // Cases in use
       //  local ++nextrownum
       //}
-      
+
       file write `macro2' "NAME   c1098 '_FP_b'" _n
       file write `macro2' "NAME   c1099 '_FP_v'" _n
       file write `macro2' "NAME   c1096 '_RP_b'" _n
-      file write `macro2' "NAME   c1097 '_RP_v'" _n 
-      
+      file write `macro2' "NAME   c1097 '_RP_v'" _n
+
       file write `macro2' "NAME   c1094 '_esample'" _n
       file write `macro2' "SUM '_esample' b1" _n
       file write `macro2' "EDIT 9 G30[1] b1" _n // Number of missing rows
-      
+
       if `factorson' == 1 {
-        file write `macro2' "LINK 4 G29" _n 
-        file write `macro2' "NAME   G29[1] '_FACT_b'" _n  
-        file write `macro2' "NAME   G29[2] '_FACT_v'" _n  
-        file write `macro2' "DAFL   G29[1] G29[2]" _n 
-        file write `macro2' "NAME   G29[3] '_FACTVAR_b'" _n 
-        file write `macro2' "NAME   G29[4] '_FACTVAR_v'" _n 
-        file write `macro2' "DAFV   G29[3] G29[4]" _n 
+        file write `macro2' "LINK 4 G29" _n
+        file write `macro2' "NAME   G29[1] '_FACT_b'" _n
+        file write `macro2' "NAME   G29[2] '_FACT_v'" _n
+        file write `macro2' "DAFL   G29[1] G29[2]" _n
+        file write `macro2' "NAME   G29[3] '_FACTVAR_b'" _n
+        file write `macro2' "NAME   G29[4] '_FACTVAR_v'" _n
+        file write `macro2' "DAFV   G29[3] G29[4]" _n
       }
 
       if "`savestata'" == "" {
         tempfile fileresults
         //tempname fh
         //file open `fh' using "`fileresults'", write
-        //file close `fh'             
+        //file close `fh'
       }
       else {
         local 0 `savestata'
         syntax anything(name=savestata), [REPLACE]
-        if "`replace'" == "" confirm new file `savestata'
+        if "`replace'" == "" confirm new file "`savestata'"
         local fileresults `savestata'
       }
-      
+
       if `factorson' == 1 {
         file write `macro2' "PSTA  '`fileresults'' '_FP_b' '_FP_v' '_RP_b' '_RP_v' '_Stats' '_FACT_b' '_FACT_v' '_FACTVAR_b' '_FACTVAR_v'" _n
         file write `macro2' "ERAS '_Stats' '_FACT_b' '_FACT_v' '_FACTVAR_b' '_FACTVAR_v'" _n
@@ -3778,17 +3680,16 @@ program Estimates, eclass sortpreserve
         file write `macro2' "ERAS '_Stats'" _n
       }
       file write `macro2' "LINK 0 G30" _n
-      
-      
+
       tempfile fileesample
       runmlwin_saveesample, fileesample(`fileesample') nummlwineqns(`nummlwineqns') sortindex(`_sortindex') macro2(`macro2')
-      
-      if "`mcmc'" ~= "" { 
+
+      if "`mcmc'" ~= "" {
         file write `macro2' "LINK 0 G21" _n /* Residuals */ "LINK 0 G22" _n /* Factors */ "LINK 0 G23" _n /* Factor variances */
         local paramlength = colsof(`matFP_b') + colsof(`matRP_b') // numvars is 4 here
         //local chainlength =`mcmc_chain'/`mcmc_thinning'
         local chainnames `:colfullnames `matFP_b'' `:colfullnames `matRP_b''
-        if "`mtype'"=="multinomial" & ("`link'"=="ologit"|"`link'"=="oprobit"|"`link'"=="ocloglog") { 
+        if "`mtype'"=="multinomial" & ("`link'"=="ologit"|"`link'"=="oprobit"|"`link'"=="ocloglog") {
           local paramlength = `paramlength' - 1
           //local tmp RP1:var(bcons_1)
           //display "`chainnames'"
@@ -3797,10 +3698,10 @@ program Estimates, eclass sortpreserve
         }
         // Export parameter chains
         file write `macro2' "NOTE   export parameter chain" _n
-        
-        file write `macro2' "NAME   c1091 'deviance'" _n  
-        file write `macro2' "NAME   c1090 'mcmcchains'" _n  
-        
+
+        file write `macro2' "NAME   c1091 'deviance'" _n
+        file write `macro2' "NAME   c1090 'mcmcchains'" _n
+
         file write `macro2' "COUNt 'deviance' b40" _n   // Thinned iterations
         file write `macro2' "CALC b41 = b40 * `thinning'" _n // Unthinned iterations
 
@@ -3809,26 +3710,26 @@ program Estimates, eclass sortpreserve
         file write `macro2' "FILL G21" _n
         foreach var of local chainnames {
           if _caller() >= 11 {
-            file write `macro2' "NAME   G21[`i'] '`=strtoname("`var'")''" _n  
+            file write `macro2' "NAME   G21[`i'] '`=strtoname("`var'")''" _n
           }
           else {
             mata: st_local("tmpname", validname("`var'"))
             file write `macro2' "NAME   G21[`i'] '`=abbrev("`tmpname'", 32)''" _n
           }
-          file write `macro2' "DESC   G21[`i'] '`var''" _n        
+          file write `macro2' "DESC   G21[`i'] '`var''" _n
           local ++i
-        }       
+        }
 
         file write `macro2' "LINK 2 G25" _n
-        file write `macro2' "NAME   G25[1] 'parnum'" _n     
-        file write `macro2' "NAME   G25[2] 'iteration'" _n    
+        file write `macro2' "NAME   G25[1] 'parnum'" _n
+        file write `macro2' "NAME   G25[2] 'iteration'" _n
         file write `macro2' "DESC   G25[2] '\Iteration'" _n
         file write `macro2' "LINK 0 G25" _n
-        
-        file write `macro2' "CODE   `paramlength' 1 b40 'parnum'" _n 
+
+        file write `macro2' "CODE   `paramlength' 1 b40 'parnum'" _n
         file write `macro2' "GENE   1 b41 `thinning' 'iteration'" _n
-        file write `macro2' "SPLIt 'mcmcchains' 'parnum' G21" _n        
-        if "`mtype'"=="multinomial" & ("`link'"=="ologit"|"`link'"=="oprobit"|"`link'"=="ocloglog") { 
+        file write `macro2' "SPLIt 'mcmcchains' 'parnum' G21" _n
+        if "`mtype'"=="multinomial" & ("`link'"=="ologit"|"`link'"=="oprobit"|"`link'"=="ocloglog") {
           file write `macro2' "LINK 1 G25" _n
           file write `macro2' "PUT   b40 1  G25[1]'" _n
           if _caller() >= 11 {
@@ -3845,24 +3746,24 @@ program Estimates, eclass sortpreserve
           file write `macro2' "GSET 2 G21 G25 G21" _n
           file write `macro2' "LINK 0 G25" _n
         }
-        
+
         if `factorson' == 1 {
           file write `macro2' "LINK 2 G25" _n
           file write `macro2' "NAME   G25[1] 'factnum'" _n
-          file write `macro2' "NAME   G25[2] 'factvarnum'" _n   
-          file write `macro2' "CODE `=`numfact'*`nummlwineqns'' 1 b40 'factnum'" _n 
-          file write `macro2' "CODE `=(`numfact'*(`numfact'+1))/2' 1 b40 'factvarnum'" _n 
+          file write `macro2' "NAME   G25[2] 'factvarnum'" _n
+          file write `macro2' "CODE `=`numfact'*`nummlwineqns'' 1 b40 'factnum'" _n
+          file write `macro2' "CODE `=(`numfact'*(`numfact'+1))/2' 1 b40 'factvarnum'" _n
           file write `macro2' "LINK 0 G25" _n
-          
+
           local count = 0
           forvalues l = 1/`maxlevels' {
             if "`flinit`l''" ~= "" {
               local count = `count' + (`=colsof(`flinit`l'')' * `=rowsof(`flinit`l'')')
             }
           }
-          
+
           file write `macro2' "LINK `count' G25" _n
-          
+
           local i = 1
           forvalues l = 1/`maxlevels' {
             if "`flinit`l''" ~= "" {
@@ -3870,7 +3771,7 @@ program Estimates, eclass sortpreserve
                 forvalues resp = 1/`=rowsof(`flinit`l'')' {
                   file write `macro2' "NAME G25[`i'] 'RP`l'FL_f`fact'_`resp''" _n
                   file write `macro2' "DESC G25[`i'] 'RP`l'FL:f`fact'_`resp''" _n
-                  local ++i                 
+                  local ++i
                 }
               }
             }
@@ -3888,10 +3789,10 @@ program Estimates, eclass sortpreserve
               }
               local basefact = `basefact' + colsof(`flinit`l'')
             }
-          }         
-          
+          }
+
           file write `macro2' "LINK `count' G25" _n
-          
+
           local i = 1
           local basefact = 0
           forvalues l = 1/`maxlevels' {
@@ -3905,7 +3806,7 @@ program Estimates, eclass sortpreserve
                   }
                   else {
                     file write `macro2' "NAME G25[`i'] 'RP`l'FV_cov_f`fact1'_f`fact2'_'" _n
-                    file write `macro2' "DESC G25[`i'] 'RP`l'FV:cov(f`fact1',f`fact2')'" _n             
+                    file write `macro2' "DESC G25[`i'] 'RP`l'FV:cov(f`fact1',f`fact2')'" _n
                   }
                   local ++i
                 }
@@ -3913,24 +3814,24 @@ program Estimates, eclass sortpreserve
               local basefact = `basefact' + colsof(`flinit`l'')
             }
           }
-          file write `macro2' "SPLIt '_FACT_VAR_CHAIN' 'factvarnum' G25" _n   
+          file write `macro2' "SPLIt '_FACT_VAR_CHAIN' 'factvarnum' G25" _n
           file write `macro2' "GSET 2 G21 G25 G21" _n
-          file write `macro2' "LINK 0 G25" _n         
-          
+          file write `macro2' "LINK 0 G25" _n
+
           file write `macro2' "ERAS 'factnum' 'factvarnum'" _n
-        }               
-        
+        }
+
         if ("`savechains'"=="") {
           tempfile savechains
           //tempname fh
           //file open `fh' using "`savechains'", write
-          //file close `fh'             
-        }     
-        
+          //file close `fh'
+        }
+
         file write `macro2' "PSTA '`savechains'' 'iteration' 'deviance' G21" _n
         file write `macro2' "ERAS 'parnum' 'iteration' G21" _n
         file write `macro2' "LINK 0 G21" _n
-              
+
         // Export residual chains
         forvalues l = 1/`maxlevels' {
           if "`saveresiduals`l''" ~= "" {
@@ -3941,11 +3842,11 @@ program Estimates, eclass sortpreserve
             //local numresi = `numrp`l'vars'
             //if `numresi' == 0 local numresi = 1
             file write `macro2' "NOBS `ll' b31 b32" _n
-            file write `macro2' "CALC b33 = b31 * `numresi`l''" _n      
-            file write `macro2' "CALC b34 = b31 * b40" _n     
-            
+            file write `macro2' "CALC b33 = b31 * `numresi`l''" _n
+            file write `macro2' "CALC b34 = b31 * b40" _n
+
             file write `macro2' "LINK 4 G25" _n
-            
+
             // Generate ID column the same length as the residuals
             if ("`cc'"=="") {
               local hier
@@ -3965,9 +3866,9 @@ program Estimates, eclass sortpreserve
               file write `macro2' "OMIT 0 G25[2] G25[2]" _n
             }
             else file write `macro2' "UNIQ '`lev`l'id'' G25[2]" _n
-            
+
             file write `macro2' "ERAS G25[1]" _n
-            file write `macro2' "REPE `numresi' G25[2] G25[3]" _n
+            file write `macro2' "REPE `numresi`l'' G25[2] G25[3]" _n
             file write `macro2' "ERAS G25[2]" _n
             file write `macro2' "LOOP b42 1 b40" _n
             //forvalues i = 1/`=`chainlength'' {
@@ -3980,27 +3881,27 @@ program Estimates, eclass sortpreserve
             file write `macro2' "NAME G25[1] '`lev`l'id''" _n
             file write `macro2' "DESC G25[1] '\\`:variable label `lev`l'id'''" _n
             file write `macro2' "CODE b40 b33  1 G25[2]" _n // iteration number
-            file write `macro2' "CALC G25[2] = G25[2] * `thinning'" _n 
-            file write `macro2' "NAME G25[2] 'iteration'" _n 
-            file write `macro2' "DESC G25[2] '\Iteration'" _n             
-            file write `macro2' "CODE `numresi' 1 b34 G25[3]" _n // residual number
+            file write `macro2' "CALC G25[2] = ((G25[2] - 1) * `thinning') + 1" _n
+            file write `macro2' "NAME G25[2] 'iteration'" _n
+            file write `macro2' "DESC G25[2] '\Iteration'" _n
+            file write `macro2' "CODE `numresi`l'' 1 b34 G25[3]" _n // residual number
             file write `macro2' "CALC G25[3] = G25[3] - 1" _n // Renumber to start at zero
-            file write `macro2' "NAME G25[3] 'residual'" _n 
-            file write `macro2' "DESC G25[3] '\Residual'" _n 
-            file write `macro2' "CODE b31 `numresi' b40 G25[4]" _n // id number
-            file write `macro2' "NAME G25[4] 'idnum'" _n      
-            file write `macro2' "DESC G25[4] 'Unit number'" _n 
-            file write `macro2' "NAME 'RESID_CHAIN_LEVEL`l'' 'value'" _n 
+            file write `macro2' "NAME G25[3] 'residual'" _n
+            file write `macro2' "DESC G25[3] '\Residual'" _n
+            file write `macro2' "CODE b31 `numresi`l'' b40 G25[4]" _n // id number
+            file write `macro2' "NAME G25[4] 'idnum'" _n
+            file write `macro2' "DESC G25[4] 'Unit number'" _n
+            file write `macro2' "NAME 'RESID_CHAIN_LEVEL`l'' 'value'" _n
             file write `macro2' "PSTA '`saveresiduals`l''' 'iteration' 'residual' 'idnum' '`lev`l'id'' 'value'" _n
             file write `macro2' "ERAS 'iteration' 'residual' 'idnum' '`lev`l'id'' 'value'" _n
             file write `macro2' "LINK 0 G25" _n
             // Restore level ID column name
             file write `macro2' "NAME '_`lev`l'id'' '`lev`l'id''" _n
           }
-        } 
+        }
       }
     }
-      
+
   if ("`plugin'"=="") file write `macro2' "EXIT" _n
   file close `macro2'
 
@@ -4037,48 +3938,21 @@ program Estimates, eclass sortpreserve
     exit 198
   }
 
-// will need to allow for fact that users store MLwiN in different locations. User can put global in profile.do to allow this
-// slightly unfortunate that the installation folder changes with each update from 2.20 to 2.21 etc at user has to keep on changing this to run this command
-
-  if "`mlwinpath'" ~= "" {
-    capture confirm file "`mlwinpath'"
-    if _rc == 601 {
-      display as error "`mlwinpath' does not exist." _n
-      exit 198
-    }
-    local versionok = 1
-    local versionold = 0
-    quietly capture runmlwin_verinfo `mlwinpath'
-    if _rc == 198 {
-      display as error "`mlwinpath' is not a valid version of MLwiN"
-      exit 198
-    }
-    if (`r(ver1)' < 2) | (`r(ver1)' == 2 & `r(ver2)' < 25) local versionok = 0
-    if (`r(ver1)' < 2) | (`r(ver1)' == 2 & `r(ver2)' < 28) local versionold = 1
-
-    if `versionok' == 0 {
-      display as error "runmlwin requires MLwiN version 2.25 or higher. You can download the latest version of MLwiN at: http://www.bristol.ac.uk/cmm/software/mlwin/download/upgrades.html"
-      exit 198
-    }
-    if `versionold' == 1 display as error "WARNING: Your version of MLwiN is out of date. You can download the latest version of MLwiN at: http://www.bristol.ac.uk/cmm/software/mlwin/download/upgrades.html"
-    local mlwinversion `r(ver1)'.`r(ver2)'
-  }
-
   * Call either MLwiN.exe or MLwiN.plugin
   if "`plugin'"~="" quietly mlncommand OBEY '`filemacro3''
   else {
     if "`mlwinpath'"=="" {
       di as error "You must specify the file address for MLwiN.exe using either:" _n(2)
-      di as error "(1) the mlwinpath() option; for example mlwinpath(C:\Program Files (x86)\MLwiN v2.31\i386\mlwin.exe)" _n
-      di as error "(2) a global called MLwiN_path; for example: . global MLwiN_path C:\Program Files (x86)\MLwiN v2.31\i386\mlwin.exe" _n(2) 
+      di as error "(1) the mlwinpath() option; for example mlwinpath(C:\Program Files\MLwiN v3.03\mlwin.exe)" _n
+      di as error "(2) a global called MLwiN_path; for example: . global MLwiN_path C:\Program Files\MLwiN v3.03\mlwin.exe" _n(2)
       di as error "We recommend (2) and that the user places this global macro command in profile.do, see help profile." _n(2)
       di as error "IMPORTANT: Make sure that you are using the latest version of MLwiN. This is available at: http://www.bristol.ac.uk/cmm/MLwiN/index.shtml" _n
 
       exit 198
     }
-    if "`batch'" == "" quietly runmlwin_qshell "`mlwinpath'" /run `filemacro3'
+    if "`batch'" == "" quietly runmlwin_qshell "`mlwinpath'" /run "`filemacro3'"
     else {
-      quietly runmlwin_qshell "`mlwinpath'" /nogui /run `filemacro3'
+      quietly runmlwin_qshell "`mlwinpath'" /nogui /run "`filemacro3'"
       display as text " --- Begin MLwiN error log --- "
       type `errlog'
       display as text " --- End MLwiN error log --- " _n
@@ -4087,14 +3961,14 @@ program Estimates, eclass sortpreserve
 
   if "`fit'" == "nofit" {
     di as txt "The savewinbugs nofit option caused runmlwin to end prematurely."
-    ereturn scalar mcmcnofit = 1 
+    ereturn scalar mcmcnofit = 1
     exit
   }
 
   ******************************************************************************
   * IMPORT MLWIN MODEL RESULTS BACK INTO STATA
   ******************************************************************************
-  
+
   capture use "`fileresults'", clear
 
   if _rc {
@@ -4102,9 +3976,9 @@ program Estimates, eclass sortpreserve
     if ("`pause'"=="nopause") display as error "The model did not run properly in MLwiN. Re-run the model without the nopause option to debug the model in MLwiN." _n
     exit 198
   }
-  
+
   local missrows = _Stats[9]
-  
+
   qui gen _FP_name = ""
   qui gen _RP_name = ""
   order _FP_name _FP_b _FP_v _RP_name _RP_b _RP_v
@@ -4112,13 +3986,13 @@ program Estimates, eclass sortpreserve
   * Check the MLwiN columns are the expected length
   qui sum _FP_b
   capture assert r(N)==colsof(`matFP_b')
-  if _rc~=0 {       
+  if _rc~=0 {
     di as error "runmlwin has encountered an error importing the model results from MLwiN. Check that the model has run properly in MLwiN." _n
     exit 198
   }
   qui sum _RP_b
   capture assert r(N)==colsof(`matRP_b')
-  if _rc~=0 {       
+  if _rc~=0 {
     di as error "runmlwin has encountered an error importing the model results from MLwiN. Check that the model has run properly in MLwiN." _n
     exit 198
   }
@@ -4139,28 +4013,28 @@ program Estimates, eclass sortpreserve
     forvalues c = 1/`=`numfact'*`nummlwineqns'' {
       mat `matb'[1,`=`startrow'+`c''] = _FACT_b[`c']
     }
-    
+
     local i = 1
     local startrow = `startrow' + `=`numfact'*`nummlwineqns''
     local basefact = 0
     forvalues l = 1/`maxlevels' {
       if "`flinit`l''" ~= "" {
         forvalues fact1 = 1/`=colsof(`flinit`l'')' {
-          forvalues fact2 = 1/`fact1' {   
+          forvalues fact2 = 1/`fact1' {
             mat `matb'[1,`=`startrow'+`i''] = _FACTVAR_b[`=((`basefact'+`fact1' - 1) * `basefact'+`fact1' / 2) + `basefact'+`fact2'']
             local ++i
           }
         }
         local basefact = `basefact' + colsof(`flinit`l'')
       }
-    }   
+    }
   }
-  
+
   * Stack b
-  
+
   // MLwiN has precision problems with constraints so round covariance matrix to 6s.f
   local sf = 6
-  
+
   * Put MLwiN values back into FP_V
   local i = 1
   forvalues r = 1/`=colsof(`matFP_b')' {
@@ -4188,20 +4062,20 @@ program Estimates, eclass sortpreserve
       local ++i
     }
   }
-  
+
   if `factorson' == 1 {
     local startrow = `startrow' + colsof(`matRP_b')
     forvalues c = 1/`=`numfact'*`nummlwineqns'' {
       mat `matV'[`=`startrow'+`c'',`=`startrow'+`c''] = (_FACT_v[`c'])^2
     }
-    
+
     local i = 1
     local startrow = `startrow' + `=`numfact'*`nummlwineqns''
     local basefact = 0
     forvalues l = 1/`maxlevels' {
       if "`flinit`l''" ~= "" {
         forvalues fact1 = 1/`=colsof(`flinit`l'')' {
-          forvalues fact2 = 1/`fact1' {   
+          forvalues fact2 = 1/`fact1' {
             mat `matV'[`=`startrow'+`i'',`=`startrow'+`i''] = (_FACTVAR_v[`=((`basefact'+`fact1' - 1) * `basefact'+`fact1' / 2) + `basefact'+`fact2''])^2
             local ++i
           }
@@ -4212,19 +4086,19 @@ program Estimates, eclass sortpreserve
   }
 
   * Stack V
-    
+
   * List MLwiN model results
   ereturn clear
-  
+
   if ("`verbose'"~="") display "b and V matrices imported from MLwiN:"
   if ("`verbose'"~="") mat list `matb'
   if ("`verbose'"~="") mat list `matV'
-  
+
   if "`consC'" == "" capture noisily ereturn post `matb' `matV'
   else capture noisily ereturn post `matb' `matV' `consC'
-  
+
   if ("`verbose'"~="") display "ereturn error code was: " _rc
-  
+
   if _rc {
     display as error "Warning - runmlwin has experienced difficulties importing the standard errors, all standard errors have been set to zero"
     tempname zeromat
@@ -4234,7 +4108,7 @@ program Estimates, eclass sortpreserve
     if "`consC'" == "" ereturn post `matb' `zeromat'
     else ereturn post `matb' `zeromat' `consC'
   }
-  
+
   tempname rptmp
   mat `rptmp' = e(b)
   forvalues l = `maxlevels'(-1)1 {
@@ -4276,12 +4150,12 @@ program Estimates, eclass sortpreserve
           local ++c
         }
         local ++r
-        local c = 1     
+        local c = 1
       }
       ereturn matrix RP`l' = RP`l'
     }
-  } 
-  
+  }
+
   ereturn scalar numlevels        = `maxlevels'
   ereturn scalar k_f = colsof(`matFP_b')
   ereturn scalar k_r = colsof(`matRP_b')
@@ -4296,7 +4170,7 @@ program Estimates, eclass sortpreserve
   ereturn scalar variables = `maxexpl'
   if "`tempmat'" == "" ereturn scalar tempmat = 0
   else ereturn scalar tempmat = 1
-  
+
   if ("`distribution'"~="multinomial") ereturn local depvars `response'
   if ("`distribution'"=="multinomial") ereturn local depvars :list uniq response
 
@@ -4310,7 +4184,7 @@ program Estimates, eclass sortpreserve
   ereturn local linearization       `linearization'
   if "`extra'" ~= "" ereturn scalar extrabinomial = 1
   else ereturn scalar extrabinomial = 0
-  
+
   if "`mtype'" == "multinomial" {
     ereturn local basecategory `basecategory'
     ereturn local respcategories `responsecats'
@@ -4326,7 +4200,6 @@ program Estimates, eclass sortpreserve
   if ("`e(distribution)'"=="nbinomial")                 ereturn local title Negative binomial response model
   if (wordcount("`e(distribution)'")>1)                 ereturn local title Multivariate response model
 
-
   * Level IDs
   ereturn local level1var `lev1id'
   local ivars
@@ -4335,13 +4208,13 @@ program Estimates, eclass sortpreserve
   }
   ereturn local ivars `ivars'
 
-//  * Number of units at each level 
+//  * Number of units at each level
 //  if `maxlevels'>1 {
 //    matrix N_g = J(1, `=`maxlevels'-1', .)
 //    local nextrownum = 9
 //    forvalues l = `maxlevels'(-1)2 {
 //      matrix N_g[1, `=`maxlevels' -`l'+1'] = _Stats[`nextrownum']
-//      local nextrownum = `nextrownum' + 2 
+//      local nextrownum = `nextrownum' + 2
 //    }
 //    ereturn matrix N_g = N_g
 //  }
@@ -4357,7 +4230,7 @@ program Estimates, eclass sortpreserve
   }
   ereturn local weightvar `weightvar'
   ereturn local weighttype `weighttype'
-  
+
   * Model fit
   //if ("`mcmc'"=="") ereturn scalar ll     = -_Stats[3]/2
   //if ("`mcmc'"=="") ereturn scalar deviance   = _Stats[3]
@@ -4365,7 +4238,7 @@ program Estimates, eclass sortpreserve
   if ("`discrete'"=="" & "`mcmc'"=="") ereturn scalar deviance  = _Stats[3]
   ereturn scalar iterations         = _Stats[7]
   if ("`mcmc'"=="") {
-    ereturn scalar converged          = (_Stats[8]==1)  
+    ereturn scalar converged          = (_Stats[8]==1)
   }
 
   * Save MCMC chains and calculate 95% credible interval and ESS and store as matrices
@@ -4375,9 +4248,9 @@ program Estimates, eclass sortpreserve
     ereturn scalar thinning         = `mcmc_thinning'
     ereturn scalar dic          = _Stats[3]   // DIC
     ereturn scalar pd           = _Stats[4]   // pD - effective number of parameters
-    ereturn scalar dbar           = _Stats[5]   // Dbar - Mean deviance 
+    ereturn scalar dbar           = _Stats[5]   // Dbar - Mean deviance
     ereturn scalar dthetabar        = _Stats[6] // D(thetabar) - Deviance at mean parameter values
-  
+
     ereturn scalar converged = 1
     ereturn scalar mcmcdiagnostics = ("`diagnostics'"~="nodiagnostics")
     if ("`diagnostics'"~="nodiagnostics") {
@@ -4386,7 +4259,7 @@ program Estimates, eclass sortpreserve
       if `factorson' == 1 {
         local chainnames `chainnames' `:colfullnames `mat_RP_b_fact'' `:colfullnames `mat_RP_b_factvar''
       }
-	  //ereturn local parnames "`chainnames'"
+      //ereturn local parnames "`chainnames'"
       local temp = `:list sizeof chainnames'
       runmlwin_savechains, parnames(`chainnames') chainresults(`savechains')
 
@@ -4404,13 +4277,13 @@ program Estimates, eclass sortpreserve
       use `savechainnames' using "`savechains'", clear
       foreach stat in meanmcse sd mode ess lb ub rl1 rl2 bd pvalmean pvalmedian pvalmode {
         mat `stat' = e(b)
-      }   
+      }
 
       local acfpoints = 100
       local pacfpoints = 10
       local mcsepoints = 1000
       local kdpoints = 1000
-      
+
       matrix ACF = J(`acfpoints', `=1 + `temp'', .)
       matrix colnames ACF = point `chainnames'
       tempname tmpacf
@@ -4421,7 +4294,7 @@ program Estimates, eclass sortpreserve
 
       matrix quantiles = J(9, `=1 + `temp'', .)
       matrix colnames quantiles = quant `chainnames'
-      tempname tmpquantiles 
+      tempname tmpquantiles
 
       tempname mataMCSE
       mata: `mataMCSE' = J(`mcsepoints',`=1 + `temp'',.)
@@ -4434,10 +4307,10 @@ program Estimates, eclass sortpreserve
       local i = 1
       foreach par of local savechainnames {
 
-        // set posit(1) for the variance parameters   
+        // set posit(1) for the variance parameters
         local posit = 0
         if regexm("`par'", "RP[0-9]+_var_([a-zA-Z0-9_]+)_") == 1 local posit = 1
-        
+
         quietly runmlwin_mcmcdiag `par', level(`level') thinning(`thinning') posit(`posit') acfpoints(`acfpoints') pacfpoints(`pacfpoints') mcsepoints(`mcsepoints') kernalpoints(`kdpoints') `eform' // Need to add prior option
 
         matrix meanmcse[1,`i'] = r(meanmcse)
@@ -4457,13 +4330,13 @@ program Estimates, eclass sortpreserve
         if `i' == 1 matrix ACF[1, 1] = `tmpacf'[1..., 2]
         matrix ACF[1, `=1 + `i''] = `tmpacf'[1..., 1]
 
-        matrix `tmppacf' = r(PACF)      
+        matrix `tmppacf' = r(PACF)
         if `i' == 1 matrix PACF[1, 1] = `tmppacf'[1..., 2]
-        matrix PACF[1, `=1 + `i''] = `tmppacf'[1..., 1]     
+        matrix PACF[1, `=1 + `i''] = `tmppacf'[1..., 1]
 
-        matrix `tmpquantiles' = r(quantiles)      
+        matrix `tmpquantiles' = r(quantiles)
         if `i' == 1 matrix quantiles[1, 1] = `tmpquantiles'[1..., 1]
-        matrix quantiles[1, `=1 + `i''] = `tmpquantiles'[1..., 2]       
+        matrix quantiles[1, `=1 + `i''] = `tmpquantiles'[1..., 2]
 
         if `i' == 1 mata: `mataMCSE'[1..., 1] = st_matrix("r(MCSE)")[1..., 2]
         mata: `mataMCSE'[1..., `=1 + `i''] = st_matrix("r(MCSE)")[1..., 1]
@@ -4473,9 +4346,9 @@ program Estimates, eclass sortpreserve
 
         local ++i
       }
-      
+
       ereturn scalar level        = `level'
-      
+
       mata: st_matrix("MCSE", `mataMCSE')
       mata: mata drop `mataMCSE'
       matrix colnames MCSE = point `chainnames'
@@ -4489,19 +4362,18 @@ program Estimates, eclass sortpreserve
       ereturn local chains "runmlwin_chains"
       foreach stat in meanmcse sd mode ess lb ub rl1 rl2 bd pvalmean pvalmedian pvalmode {
         ereturn matrix `stat' = `stat'
-      }   
+      }
       ereturn matrix ACF = ACF
       ereturn matrix PACF = PACF
       ereturn matrix quantiles = quantiles
       ereturn matrix MCSE = MCSE
       ereturn matrix KD1 = KD1
       ereturn matrix KD2 = KD2
-
     }
   }
 
   * Multiple Imputation - remove _mi_ prefix from response
-  if "`imputefiles'" ~= "" {
+  if `:list sizeof imputefiles' ~= 0 {
     foreach impfile of local imputefiles {
       use "`impfile'", clear
       if _caller() >= 12 rename _mi_* *
@@ -4512,7 +4384,7 @@ program Estimates, eclass sortpreserve
 
   * Restore the original data set
   restore
-  
+
   * Merge in esample
   if `missrows' > 0 {
     if _caller() >= 11 quietly merge m:1 `_sortindex' using "`fileesample'", assert(master match) nogenerate
@@ -4524,11 +4396,11 @@ program Estimates, eclass sortpreserve
     qui recode _esample (.=0)
   }
   else qui gen _esample = `touse'
-  
+
   ereturn repost, esample(_esample)
 
   * Calculate the sample size
-  qui count if e(sample) 
+  qui count if e(sample)
   ereturn scalar N = r(N)
 
   * Calculate the min, mean and max number of units at each level
@@ -4537,12 +4409,12 @@ program Estimates, eclass sortpreserve
     matrix g_min = J(1, `=`maxlevels'-1', .)
     matrix g_avg = J(1, `=`maxlevels'-1', .)
     matrix g_max = J(1, `=`maxlevels'-1', .)
-    
+
     local hier
     forvalues l = `maxlevels'(-1)2 {
       if ("`cc'"=="") local hier `hier' `lev`l'id'
       if ("`cc'"~="") local hier `lev`l'id'
-      
+
       tempvar esample temp1 temp2
       quietly gen `esample' = (e(sample)==1)
       qui bysort `hier' `esample': gen byte `temp1' = 1 if _n==1 & `esample'==1
@@ -4560,7 +4432,7 @@ program Estimates, eclass sortpreserve
     ereturn matrix g_min = g_min
     ereturn matrix g_avg = g_avg
     ereturn matrix g_max = g_max
-  } 
+  }
 
   * Merge residuals at each level into the original data set
   forvalues l = `maxlevels'(-1)1 {
@@ -4576,7 +4448,7 @@ program Estimates, eclass sortpreserve
 
   * Merge simulated response into the original data set
   if ("`simulate'"~="") runmlwin_mergesimresp, simfile(`simfile')
-  
+
   if "`imputesummaries'" ~= "" {
     if _caller() >= 11 qui merge m:1 `_sortindex' using "`imputesummaries'", assert(match) nogenerate
     else {
@@ -4585,11 +4457,9 @@ program Estimates, eclass sortpreserve
       drop _merge
     }
   }
-  
-
 
   * Append multiple imputed data sets
-  if "`imputefiles'" ~= "" {
+  if `:list sizeof imputefiles' ~= 0 {
     if _caller() >= 11 {
       mi import flongsep tmpimpfile, using(`imputefiles') id(`_sortindex') imputed(`response') clear
       mi convert mlong
@@ -4602,31 +4472,30 @@ program Estimates, eclass sortpreserve
       foreach resp of local response {
         rename `resp' `resp'_mi_m0
       }
-      
-      
+
       local i = 1
       foreach imputedfile of local imputefiles {
         merge `_sortindex' using `imputedfile', unique sort
         drop _merge
-      
+
         foreach resp of local response {
           rename `resp' `resp'_mi_m`i'
-        } 
+        }
         local ++i
       }
-      
+
       quietly reshape long `=subinstr("`response' "," ","_mi_m ",.)', i(`_sortindex') j(_mi_m)
-      
+
       foreach resp of local response {
         rename `resp'_mi_m `resp'
       }
-      
+
       quietly drop if `tag'~=1 & _mi_m>0
       drop `tag'
 
       gen _mi_id = `_sortindex'
-      quietly gen _mi_miss = 1 if missing(`=subinstr("`response'"," ",",",.)')    
-      
+      quietly gen _mi_miss = 1 if missing(`=subinstr("`response'"," ",",",.)')
+
       unab vars : *
       local mivar _mi_m
       local vars `:list vars - mivar'
@@ -4636,15 +4505,11 @@ program Estimates, eclass sortpreserve
   }
 
   * Sort the data by original sort order
-  if "`imputefiles'" ~= "" { // Because data set has extra rows!
-    sort `_sortindex' _mi_m 
+  if `: list sizeof imputefiles' ~= 0 { // Because data set has extra rows!
+    sort `_sortindex' _mi_m
     quietly replace `_sortindex' = _n // :sortorder should still be okay, as the data is sorted the same as before, but expanded upwards by the imputed data sets
   }
 end
-
-
-
-
 
 ******************************************************************************
 * CREATES PARAMETER NAMES FOR RP_B (I.E. SIGMA2_U0, SIGMA_U01, SIGMA2_U1, SIGMA2_E)
@@ -4656,7 +4521,7 @@ end
 capture program drop runmlwin_rplpars
 program define runmlwin_rplpars, rclass
   if _caller() >= 12 version 12.0
-  if _caller() <= 9 version 9.0 
+  if _caller() <= 9 version 9.0
   syntax , RPName(string)
   local rplong
   local r = 1
@@ -4668,7 +4533,7 @@ program define runmlwin_rplpars, rclass
     foreach col of local rpname {
       if _caller() < 11 {
         mata: st_local("col", validname("`col'"))
-      }   
+      }
       if `c' < `r' {
         if _caller() >= 11 {
           local rplong `rplong' cov(`=abbrev(strtoname("`col'"),13)'\\`=abbrev(strtoname("`row'"),13)') // Note that `col' and `row' are deliberately the wrong way around in order to follow MLwiN convention
@@ -4698,16 +4563,16 @@ end
 capture program drop runmlwin_saveesample
 program define runmlwin_saveesample
   if _caller() >= 12 version 12.0
-  if _caller() <= 9 version 9.0 
+  if _caller() <= 9 version 9.0
 
   syntax, FILEESAMPLE(string) NUMMLWINEQNS(string) SORTINDEX(string) MACRO2(string)
 
   local _sortindex `sortindex'
-  
+
   tempname fh
   file open `fh' using "`fileesample'", write
-  file close `fh'   
-    
+  file close `fh'
+
   file write `macro2' "NOTE generate esample for Stata if there a missing values" _n
   file write `macro2' "SWIT b1" _n
   file write `macro2' "CASE 0:" _n
@@ -4726,20 +4591,20 @@ program define runmlwin_saveesample
     file write `macro2' "LINK 0 G21" _n
   }
   file write `macro2' "PSTA  '`fileesample'' '`_sortindex'' '_esample'" _n
-  file write `macro2' "ENDS" _n 
+  file write `macro2' "ENDS" _n
 end
 
 capture program drop runmlwin_simresp
 program define runmlwin_simresp
   if _caller() >= 12 version 12.0
-  if _caller() <= 9 version 9.0 
+  if _caller() <= 9 version 9.0
 
   syntax, SIMFILE(string) SIMULATE(string) SIMFILE(string) MACRO1(string)
-  
+
   tempname fh
   file open `fh' using "`simfile'", write
-  file close `fh'     
-  
+  file close `fh'
+
   file write `macro1' "NOTE   Simulate new response variable" _n
   file write `macro1' "LINK 2 G21" _n
   file write `macro1' "SIMU G21[1]" _n
@@ -4750,13 +4615,12 @@ program define runmlwin_simresp
   file write `macro1' "PSTA '`simfile'' '`simulate'' '_simprespid'" _n
   file write `macro1' "ERAS '`simulate'' '_simprespid'" _n
   file write `macro1' "LINK 0 G21" _n
-
 end
 
 capture program drop runmlwin_setinit
 program define runmlwin_setinit
   if _caller() >= 12 version 12.0
-  if _caller() <= 9 version 9.0 
+  if _caller() <= 9 version 9.0
   syntax , FPB(string) FPV(string) RPB(string) RPV(string) INITB(string) INITV(string) MTYPE(string) LINK(string) [MCMC(string)] MACRO1(string)
   local matFP_b `fpb'
   local matFP_V `fpv'
@@ -4764,9 +4628,9 @@ program define runmlwin_setinit
   local matRP_V `rpv'
   local matb `initb'
   local matV `initv'
-  
+
   tempname matINIT
-  
+
   * Fixed part initial values
   file write `macro1' "NOTE   Specify fixed part initial values" _n
   local names : colfullnames `matFP_b'
@@ -4778,15 +4642,15 @@ program define runmlwin_setinit
     local ++i
   }
   file write `macro1' _n
-  
+
   * Fixed part initial values sampling (co)variances
   file write `macro1' "NOTE   Specify fixed part initial sampling (co)variances values" _n
   local names : colfullnames `matFP_V'
   local i = 1
   local e = 1
-  
+
   file write `macro1' "PUT `=(`=rowsof(`matFP_V')'*(`=rowsof(`matFP_V')' + 1))/2' 0 c1099" _n
-  
+
   foreach p1 of local names {
     local j = 1
     foreach p2 of local names {
@@ -4801,8 +4665,7 @@ program define runmlwin_setinit
     local ++i
   }
 
-  file write `macro1' _n      
-  
+  file write `macro1' _n
 
   * Random part initial values
   // Need to check that the correct number of initial values have been specified
@@ -4820,8 +4683,7 @@ program define runmlwin_setinit
     }
   }
   //if "`mtype'"=="multinomial" & "`link'"=="mlogit" file write `macro1' "EDIT `i' c1096  1" _n
-  file write `macro1' _n      
-
+  file write `macro1' _n
 
   * Random part initial values standard errors
   // Need to check that the correct number of initial values have been specified
@@ -4832,8 +4694,8 @@ program define runmlwin_setinit
   if ("`mtype'"=="multinomial" & "`link'"=="mlogit") local P = `P' - 1 // Note we might have to add unordered to the if statement as I think ordered models do not have this problem
   local i = 1
   local e = 1
-  
-  file write `macro1' "PUT `=(`=rowsof(`matRP_V')'*(`=rowsof(`matRP_V')' + 1))/2' 0 c1097" _n     
+
+  file write `macro1' "PUT `=(`=rowsof(`matRP_V')'*(`=rowsof(`matRP_V')' + 1))/2' 0 c1097" _n
 
   foreach p1 of local names {
     local j = 1
@@ -4855,22 +4717,22 @@ end
 capture program drop runmlwin_writepriors
 program define runmlwin_writepriors
   if _caller() >= 12 version 12.0
-  if _caller() <= 9 version 9.0 
+  if _caller() <= 9 version 9.0
   syntax , MAXLevels(integer) PRIORMAT(string) FPB(string) RPB(string) MACRO1(string) PRIORCOL(string)
-  
+
   local priormatrix `priormat'
   local matFP_b `fpb'
   local matRP_b `rpb'
-  
+
   tempname matprior
   tempname matpriorSD
   tempname mateq
 
   if rowsof(`priormatrix')~=2 {
     display "The prior matrix must have two rows. The 1st row is for the means. The 2nd row is for the SDs."
-    exit 198        
+    exit 198
   }
-  
+
   local r = 1
 
   local names :colfullnames `matFP_b'
@@ -4879,6 +4741,7 @@ program define runmlwin_writepriors
     mat `matpriorSD' = `priormatrix'[2, "`var'"]
     local prior = `matprior'[1,1]
     local priorsd = `matpriorSD'[1,1]
+    file write `macro1' "NOTE fixed part prior for `var'" _n
     if `prior' ~= . {
       file write `macro1' "EDIT `r' `priorcol' 1" _n
       local ++r
@@ -4894,53 +4757,65 @@ program define runmlwin_writepriors
   }
 
   forvalues l = `maxlevels'(-1)1 {
-    matrix `mateq' = `matRP_b'[1, "RP`l':"]
     local hasprior = 0
-    local names :colfullnames `mateq'
-    local first = 1
-    foreach var of local names {
-      mat `matprior' = `priormatrix'[1, "`var'"]
-      mat `matpriorSD' = `priormatrix'[2, "`var'"]
-      if (`matprior'[1,1] == . & `matpriorSD'[1,1] ~= .) | (`matprior'[1,1] ~= . & `matpriorSD'[1,1] == .) {
-        display as error "Either both mean and SD have to be specified, nor neither"
-        exit 198
-      }
-      if `first' ~= 1 {
-        if (`hasprior' == 1 & `matprior'[1,1] == .) | (`hasprior' == 0 & `matprior'[1,1] ~= .) {
-          display as error "Whole matrix must be specified for random part priors"
-          exit 198
-        }
-        if `priorsd' ~= `matpriorSD'[1,1] {
-          display as error "Inconsistent sample size"
-          exit 198
-        }
-      }
-      else {
-        local priorsd = `matpriorSD'[1,1]
-      }
-      if `matprior'[1,1] ~= . local hasprior = 1
-      local first = 0
+    local eqnames : coleq  `matRP_b'
+    local levname "RP`l'"
+    local match : list levname in eqnames
+
+    if `l' == 1 & `match' == 0 {
+      local levname "OD"
+      local match : list levname in eqnames
     }
-    if `hasprior' == 1 {
-      file write `macro1' "EDIT `r' `priorcol' 1" _n
-      local ++r
+
+    if `match' == 1 {
+      matrix `mateq' = `matRP_b'[1, "`levname':"]
+      local names :colfullnames `mateq'
+      local first = 1
       foreach var of local names {
         mat `matprior' = `priormatrix'[1, "`var'"]
-        local prior = `matprior'[1,1]
-        file write `macro1' "EDIT `r' `priorcol' `prior'" _n
+        mat `matpriorSD' = `priormatrix'[2, "`var'"]
+        if (`matprior'[1,1] == . & `matpriorSD'[1,1] ~= .) | (`matprior'[1,1] ~= . & `matpriorSD'[1,1] == .) {
+          display as error "Either both mean and SD have to be specified, nor neither"
+          exit 198
+        }
+        if `first' ~= 1 {
+          if (`hasprior' == 1 & `matprior'[1,1] == .) | (`hasprior' == 0 & `matprior'[1,1] ~= .) {
+            display as error "Whole matrix must be specified for random part priors"
+            exit 198
+          }
+          if `priorsd' ~= `matpriorSD'[1,1] {
+            display as error "Inconsistent sample size"
+            exit 198
+          }
+        }
+        else {
+          local priorsd = `matpriorSD'[1,1]
+        }
+        if `matprior'[1,1] ~= . local hasprior = 1
+        local first = 0
+      }
+      file write `macro1' "NOTE random part prior for level `l'" _n
+      if `hasprior' == 1 {
+        file write `macro1' "EDIT `r' `priorcol' 1" _n
+        local ++r
+        foreach var of local names {
+          mat `matprior' = `priormatrix'[1, "`var'"]
+          local prior = `matprior'[1,1]
+          file write `macro1' "EDIT `r' `priorcol' `prior'" _n
+          local ++r
+        }
+        // Check this is a positive integer
+        if floor(`priorsd') ~= `priorsd' | `priorsd' < 0 {
+          display as error "Sample size must be a positive integer"
+          exit 198
+        }
+        file write `macro1' "EDIT `r' `priorcol' `priorsd'" _n
         local ++r
       }
-      // Check this is a positive integer
-      if floor(`priorsd') ~= `priorsd' | `priorsd' < 0 {
-        display as error "Sample size must be a positive integer"
-        exit 198
+      else {
+        file write `macro1' "EDIT `r' `priorcol' 0" _n
+        local ++r
       }
-      file write `macro1' "EDIT `r' `priorcol' `priorsd'" _n
-      local ++r
-    }
-    else {
-      file write `macro1' "EDIT `r' `priorcol' 0" _n
-      local ++r
     }
   }
   file write `macro1' "PRIO `priorcol'" _n
@@ -4953,25 +4828,25 @@ capture program drop runmlwin_calcresiduals
 program define runmlwin_calcresiduals
   if _caller() >= 12 version 12.0
   if _caller() <= 9 version 9.0
-  
-  syntax , LEVEL(integer) LEVXID(string) NUMRPXVARS(string) RPXVARS(string) RESIDUALSX(string) MTYPE(string) [STANDardised LEVerage INFluence DELetion SAMPling REFlated VARiances noRECode MCMC(string) CC(string) MMID(string) *] MACRO1(string) RESIDFile(string) MAXLEVELS(integer)
-  
+
+  syntax , LEVEL(integer) LEVXID(string) NUMRPXVARS(string) RPXVARS(string) RESIDUALSX(string) MTYPE(string) [STANDardised LEVerage INFluence DELetion SAMPling REFlated VARiances noRECode RPAdjust noAdjust MCMC(string) CC(string) MMID(string) *] MACRO1(string) RESIDFile(string) MAXLEVELS(integer)
+
   local lids
   forvalues lev = `maxlevels'(-1)1 {
     local lids `lids' lev`lev'id(string)
-  }   
-  
+  }
+
   local 0 ,`options'
   syntax, `lids'
-  
+
   //if "`numrpxvars'" == "0" | "`mcmc'" ~= "" local numrpxvars "1"
   if "`numrpxvars'" == "0" local numrpxvars "1"
-  
+
   file write `macro1' "NOTE   Store level `level' residuals" _n
   if "`recode'" ~= "" {
     file write `macro1' "MISR 0" _n
   }
-  
+
   file write `macro1' "LINK 0 G21" _n // Residual Estimates
   file write `macro1' "LINK 0 G22" _n // Residual Standard Errors/Variance
   file write `macro1' "LINK 0 G23" _n // Standardised Residual Estimates
@@ -4982,34 +4857,34 @@ program define runmlwin_calcresiduals
   file write `macro1' "LINK 0 G28" _n // Sampling Residuals
   file write `macro1' "LINK 0 G29" _n // Temp
   file write `macro1' "LINK 0 G30" _n // Temp
-  
+
   file write `macro1' "LINK `numrpxvars' G21" _n
   file write `macro1' "FILL G21" _n
   file write `macro1' "LINK `numrpxvars' G22" _n
   file write `macro1' "FILL G22" _n
-  
+
   forvalues i = 1/`numrpxvars' {
     * Name the columns of residual estimates
     file write `macro1' "NAME  G21[`i'] '`residualsx'`=`i' - 1''" _n
     file write `macro1' "DESC  G21[`i'] '`residualsx'`=`i' - 1' residual estimate'" _n
   }
-  
+
   if "`variances'" == "" {
     forvalues i = 1/`numrpxvars' {
       * Name the columns of residual standard errors
-      file write `macro1' "NAME  G22[`i'] '`residualsx'`=`i' - 1'se'" _n 
-      file write `macro1' "DESC  G22[`i'] '`residualsx'`=`i' - 1'se residual standard error'" _n 
+      file write `macro1' "NAME  G22[`i'] '`residualsx'`=`i' - 1'se'" _n
+      file write `macro1' "DESC  G22[`i'] '`residualsx'`=`i' - 1'se residual standard error'" _n
     }
   }
   else {
     local residual_var
     forvalues i = 1/`numrpxvars' {
       * Name the columns of residual standard errors
-      file write `macro1' "NAME  G22[`i'] '`residualsx'`=`i' - 1'var'" _n 
-      file write `macro1' "DESC  G22[`i'] '`residualsx'`=`i' - 1'var residual variance'" _n 
-    } 
+      file write `macro1' "NAME  G22[`i'] '`residualsx'`=`i' - 1'var'" _n
+      file write `macro1' "DESC  G22[`i'] '`residualsx'`=`i' - 1'var residual variance'" _n
+    }
   }
-  
+
   file write `macro1' "RFUN" _n
   if "`variances'" == "" file write `macro1' "ROUT G21 G22" _n      // Designate column c300 for residuals and column C301 for their associated variances
   else file write `macro1' "ROUT G21 G22" _n      // Designate column c300 for residuals and column C301 for their associated variances
@@ -5018,7 +4893,7 @@ program define runmlwin_calcresiduals
   if ("`mtype'"=="multivariate" | "`mtype'"=="multinomial") local ++ll
   file write `macro1' "RLEV `ll'" _n              // Specify the level at which variances are to be calculated
   file write `macro1' "RCOV 1" _n               // Output residuals and their variances
-  
+
   if "`standardised'" ~= "" | "`deletion'" ~= "" | "`leverage'" ~= ""{      // deletion requires standardised to be calculated, leverage requires standard error calculated here
     file write `macro1' "LINK `numrpxvars' G23" _n
     file write `macro1' "FILL G23" _n
@@ -5026,22 +4901,22 @@ program define runmlwin_calcresiduals
       * Name the columns of standardised residual estimates
       file write `macro1' "NAME  G23[`i'] '`residualsx'`=`i' - 1'std'" _n
       file write `macro1' "DESC  G23[`i'] '`residualsx'`=`i' - 1'std standardised residual'" _n
-    }   
+    }
     file write `macro1' "RTYP 0" _n               // Compute diagnostic variances
     if "`mcmc'" ~= "" {
-      file write `macro1' "MCRE" _n               // Save the residuals and the variances 
+      file write `macro1' "MCRE" _n               // Save the residuals and the variances
     }
     else {
-      file write `macro1' "RESI" _n               // Save the residuals and the variances 
+      file write `macro1' "RESI" _n               // Save the residuals and the variances
     }
     local ccount = 1
     //if "`standardised'" ~= "" {
     forvalues i = 1/`numrpxvars' {
       file write `macro1' "CALC  G23[`i'] = G21[`i']/sqrt(G22[`i'])" _n         // Convert the variances to standard errors
-    } 
+    }
     //}
   }
-  
+
   // NOTE leverage depends on residuals with rtype 0
   if "`leverage'" ~= "" | "`influence'" ~= "" { // influence requires leverage to be calculated
     file write `macro1' "LINK `numrpxvars' G24" _n
@@ -5052,29 +4927,38 @@ program define runmlwin_calcresiduals
       file write `macro1' "NAME  G24[`i'] '`residualsx'`=`i' - 1'lev'" _n
       file write `macro1' "DESC  G24[`i'] '`residualsx'`=`i' - 1'lev leverage residual'" _n
     }
-    
+
     forvalues i = 1/`numrpxvars' {
       file write `macro1' "LINK 1 G30" _n
       file write `macro1' "OMEGa `ll' '`=word("`rpxvars'", `i')'' G30[1]" _n // retrieve variance for corresponding random parameter
       file write `macro1' "PICK 1 G30[1] b50" _n
       file write `macro1' "ERASe G30[1]" _n
       file write `macro1' "LINK 0 G30" _n
-      file write `macro1' "CALC G24[`i'] = 1 - sqrt(G22[`i']) / sqrt(b50)" _n 
+      file write `macro1' "CALC G24[`i'] = 1 - sqrt(G22[`i']) / sqrt(b50)" _n
     }
     if "`standardised'" == "" & "`deletion'" == "" {
       file write `macro1' "ERASE G23" _n
       file write `macro1' "LINK 0 G23" _n
-    } 
-  } 
-  
-  file write `macro1' "RTYP 1" _n                 // Compute comparative variances
-  if "`mcmc'" ~= "" {
-    file write `macro1' "MCRE" _n                 // Save the residuals and the variances 
+    }
+  }
+
+  if "`adjust'" == "noadjust" {
+    file write `macro1' "RTYP 3" _n                 // No adjustment
+  }
+  else if "`rpadjust'" ~= "" {
+    file write `macro1' "RTYP 2" _n                 // Fixed and Random part adjustment
   }
   else {
-    file write `macro1' "RESI" _n                 // Save the residuals and the variances 
+    file write `macro1' "RTYP 1" _n                 // Fixed part adjustment
   }
-  
+
+  if "`mcmc'" ~= "" {
+    file write `macro1' "MCRE" _n                 // Save the residuals and the variances
+  }
+  else {
+    file write `macro1' "RESI" _n                 // Save the residuals and the variances
+  }
+
   if "`reflated'" ~= "" {
     file write `macro1' "LINK `numrpxvars' G25" _n
     file write `macro1' "FILL G25" _n
@@ -5083,18 +4967,18 @@ program define runmlwin_calcresiduals
       file write `macro1' "NAME G25[`i'] '`residualsx'`=`i' - 1'ref'" _n
       file write `macro1' "DESC G25[`i'] '`residualsx'`=`i' - 1' reflated residual estimate'" _n
     }
-  } 
-  
+  }
+
   if "`reflated'" ~= "" {
     file write `macro1' "REFLate G21 G25" _n
   }
 
   if "`variances'" == "" {
-    forvalues i = 1/`numrpxvars' {    
+    forvalues i = 1/`numrpxvars' {
       file write `macro1' "CALC G22[`i'] = sqrt(G22[`i'])" _n         // Convert the variances to standard errors
     }
   }
-  
+
   if "`deletion'" ~= "" | "`influence'" ~= "" { // influence requires deletion to be calculated
     forvalues i = 1/`numrpxvars' {
       file write `macro1' "LINK `numrpxvars' G26" _n
@@ -5102,34 +4986,34 @@ program define runmlwin_calcresiduals
       * Name the columns of deletion residual estimates
       file write `macro1' "NAME  G26[`i'] '`residualsx'`=`i' - 1'del'" _n
       file write `macro1' "DESC  G26[`i'] '`residualsx'`=`i' - 1'del deletion residual'" _n
-    }     
-    
+    }
+
     file write `macro1' "NOBS `ll' b31 b32" _n
     forvalues i = 1/`numrpxvars' {
-      file write `macro1' "CALC  G26[`i'] = G23[`i'] / sqrt((b31 - 1 - G23[`i'] ^2)/(b31 - 2))" _n 
-    } 
-    
+      file write `macro1' "CALC  G26[`i'] = G23[`i'] / sqrt((b31 - 1 - G23[`i'] ^2)/(b31 - 2))" _n
+    }
+
     if "`standardised'" == "" & "`leverage'" == ""{
       file write `macro1' "ERASE G23" _n
       file write `macro1' "LINK 0 G23" _n
-    } 
+    }
   }
-    
-  if "`influence'" ~= "" { 
+
+  if "`influence'" ~= "" {
     forvalues i = 1/`numrpxvars' {
       file write `macro1' "LINK `numrpxvars' G27" _n
       file write `macro1' "FILL G27" _n
       * Name the columns of influence residual estimates
       file write `macro1' "NAME  G27[`i'] '`residualsx'`=`i' - 1'inf'" _n
       file write `macro1' "DESC  G27[`i'] '`residualsx'`=`i' - 1'inf influence residual'" _n
-    }   
-    
-    forvalues i = 1/`numrpxvars' {    
+    }
+
+    forvalues i = 1/`numrpxvars' {
       file write `macro1' "SUM G24[`i'] b50" _n
       file write `macro1' "CALC G27[`i'] = G24[`i'] / b50" _n
-      file write `macro1' "CALC G27[`i'] = sqrt(G27[`i'] / (1 - G27[`i'])) * abso(G26[`i'])" _n 
-    }     
-    
+      file write `macro1' "CALC G27[`i'] = sqrt(G27[`i'] / (1 - G27[`i'])) * abso(G26[`i'])" _n
+    }
+
     if "`deletion'" == "" {
       file write `macro1' "ERASE G26" _n
       file write `macro1' "LINK 0 G26" _n
@@ -5138,12 +5022,11 @@ program define runmlwin_calcresiduals
       file write `macro1' "ERASE G24" _n
       file write `macro1' "LINK 0 G24" _n
     }
-  } 
+  }
 
   if "`sampling'" ~= "" {
-    
     file write `macro1' "LINK `=(`numrpxvars'*(`numrpxvars'+1))/2' G28" _n
-    
+
     local numcombs = 0
     forvalues i = 1/`numrpxvars' {
       forvalues j = 1/`i' {
@@ -5158,36 +5041,36 @@ program define runmlwin_calcresiduals
         }
       }
     }
-    
+
     file write `macro1' "LINK `numrpxvars' G29" _n
     file write `macro1' "FILL G29" _n
-    
+
     file write `macro1' "LINK 2 G30" _n
     file write `macro1' "FILL G30" _n
-    
-    file write `macro1' "RFUN " _n 
+
+    file write `macro1' "RFUN " _n
     file write `macro1' "ROUT G29 G30[2]" _n
     file write `macro1' "RCOV 2" _n
-    file write `macro1' "RESI" _n     
-    
+    file write `macro1' "RESI" _n
+
     // NOTE: This is square rooted, as the residual covariances are sometimes negative
     file write `macro1' "NOBS `ll' b31 b32" _n
-    file write `macro1' "CODE `numcombs' 1 b31 G30[1]" _n 
-    file write `macro1' "SPLIt G30[2] G30[1] G28" _n 
-    file write `macro1' "ERAS G30" _n 
-    file write `macro1' "LINK 0 G30" _n 
-    file write `macro1' "ERAS G29" _n 
-    file write `macro1' "LINK 0 G29" _n 
+    file write `macro1' "CODE `numcombs' 1 b31 G30[1]" _n
+    file write `macro1' "SPLIt G30[2] G30[1] G28" _n
+    file write `macro1' "ERAS G30" _n
+    file write `macro1' "LINK 0 G30" _n
+    file write `macro1' "ERAS G29" _n
+    file write `macro1' "LINK 0 G29" _n
   }
 
   file write `macro1' _n
-  
-  file write `macro1' "LINK 1 G30" _n 
+
+  file write `macro1' "LINK 1 G30" _n
   file write `macro1' "NOBS `ll' b30 b31" _n
   file write `macro1' "GENE 1 b30 1 G30[1]" _n
   file write `macro1' "NAME G30[1] '_residualid'" _n
-  
-  file write `macro1' "LINK 4 G29" _n 
+
+  file write `macro1' "LINK 4 G29" _n
   // Generate ID column the same length as the residuals
   if ("`cc'"=="") {
     local hier
@@ -5210,8 +5093,8 @@ program define runmlwin_calcresiduals
   // Temporary rename level ID column so there isn't a duplicate
   file write `macro1' "NAME '`lev`level'id'' '_`lev`level'id''" _n
   file write `macro1' "NAME G29[2] '`lev`level'id''" _n
-  file write `macro1' "DESC G29[2] '\\`:variable label `lev`level'id'''" _n 
-  
+  file write `macro1' "DESC G29[2] '\\`:variable label `lev`level'id'''" _n
+
   if ("`cc'"~="") { // Ensure the data is sorted by ID variable, as the residual ID is based on it this should already be the case
     file write `macro1' "SORT 1 '`lev`level'id'' '_residualid' G21 G22 G23 G24 G25 G26 G27 G28 '`lev`level'id'' '_residualid' G21 G22 G23 G24 G25 G26 G27 G28" _n
   }
@@ -5226,15 +5109,14 @@ program define runmlwin_calcresiduals
   file write `macro1' "LINK 0 G27" _n
   file write `macro1' "LINK 0 G28" _n
   file write `macro1' "LINK 0 G29" _n
-  
+
   // Restore level ID column name
-  file write `macro1' "NAME '_`lev`level'id'' '`lev`level'id''" _n  
-  
+  file write `macro1' "NAME '_`lev`level'id'' '`lev`level'id''" _n
+
   if "`recode'" ~= "" {
     file write `macro1' "MISR 1" _n
   }
 end
-
 
 ******************************************************************************
 * MERGE THE SAVED MLWIN RESIDUALS BACK TO THE ORIGINAL STATA DATA SET
@@ -5242,17 +5124,17 @@ end
 capture program drop runmlwin_mergeresiduals
 program define runmlwin_mergeresiduals, sortpreserve
   if _caller() >= 12 version 12.0
-  if _caller() <= 9 version 9.0 
+  if _caller() <= 9 version 9.0
   syntax , NUMLevels(int) TOUSE(string) HIER(string) [CC(string) LEVELID(string) SORT(string) MMID(string)] RESIDFile(string)
-  
+
   if "`sort'" ~= "" & "`cc'" == "" & `numlevels' > 1 {
     display as error "Residuals cannot be reliably merged back when nosort is specified"
     exit 198
   }
-  
+
   local levXid_and_higher_levels `hier' // use this if hierarchical model
   local levXid `levelid'      // Use this if XC model
-  
+
   if `numlevels'==1 {     // In single level models the observation/row number is the unique ID
     quietly gen _residualid = _n if `touse' == 1
     if _caller() >= 11 {
@@ -5267,10 +5149,10 @@ program define runmlwin_mergeresiduals, sortpreserve
     }
     drop _residualid
   }
-  else {  
+  else {
     if ("`cc'"~="") {       // cross-classified models in MCMC can have non-nested IDs in which case user must specify unique IDs
       //tempvar temp
-      //gen `temp' = `levXid' 
+      //gen `temp' = `levXid'
       //replace `temp' = `c(minfloat)' if `levXid'==.
       //quietly egen _residualid = group(`temp') if `touse' == 1, missing
       if "`mmid'" ~= "" {
@@ -5283,7 +5165,7 @@ program define runmlwin_mergeresiduals, sortpreserve
           else {
             gen `levelid' = `var'
           }
-          unab oldvars: *         
+          unab oldvars: *
           if _caller() >= 11 {
             qui merge m:1 `levelid' using "`residfile'", keep(master match) nogenerate noreport
           }
@@ -5340,12 +5222,12 @@ program define runmlwin_mergeresiduals, sortpreserve
         quietly merge _residualid using "`residfile'", uniqusing //sort
         assert inlist(_merge,1,3)
         drop _merge
-      }     
+      }
       drop _residualid
     }
   }
 
-  
+
 end
 
 ******************************************************************************
@@ -5354,21 +5236,21 @@ end
 capture program drop runmlwin_mergefscores
 program define runmlwin_mergefscores, sortpreserve
   if _caller() >= 12 version 12.0
-  if _caller() <= 9 version 9.0 
+  if _caller() <= 9 version 9.0
   syntax , NUMLevels(int) TOUSE(string) HIER(string) [CC(string) LEVELID(string) SORT(string)] FSCORESFile(string)
 
   if "`sort'" ~= "" & "`cc'" == "" & `numlevels' > 1 {
     display as error "Factor scores cannot be reliably merged back when nosort is specified"
     exit 198
   }
-  
+
   local levXid_and_higher_levels `hier' // use this if hierarchical model
   local levXid `levelid'      // Use this if XC model
-  
+
   if `numlevels'==1 {     // In single level models the observation/row number is the unique ID
     quietly gen _fscoreid = _n if `touse' == 1
   }
-  else {  
+  else {
     if ("`cc'"~="") {       // cross-classified models in MCMC can have non-nested IDs in which case user must specify unique IDs
       quietly egen _fscoreid = group(`levXid') if `touse' == 1, missing
     }
@@ -5382,7 +5264,7 @@ program define runmlwin_mergefscores, sortpreserve
   }
   else {
     mata: setsortorder("`fscoresfile'", "_fscoreid")
-  
+
     sort _fscoreid
     quietly merge _fscoreid using "`fscoresfile'", uniqusing //sort
     assert inlist(_merge,1,3)
@@ -5391,14 +5273,13 @@ program define runmlwin_mergefscores, sortpreserve
   drop _fscoreid
 end
 
-
 ******************************************************************************
 * MERGE THE SAVED MLWIN SIMULATED RESPONSE BACK TO THE ORIGINAL STATA DATA SET
 ******************************************************************************
 capture program drop runmlwin_mergesimresp
 program define runmlwin_mergesimresp
   if _caller() >= 12 version 12.0
-  if _caller() <= 9 version 9.0 
+  if _caller() <= 9 version 9.0
   syntax , SIMFile(string)
   quietly gen _simprespid = _n
 
@@ -5413,17 +5294,15 @@ program define runmlwin_mergesimresp
   drop _simprespid
 end
 
-
-
 ******************************************************************************
 * SAVE THE MCMC CHAIN RESIDUALS AT EACH LEVEL TO STATA DATA SETS
 ******************************************************************************
 capture program drop runmlwin_savechains
 program define runmlwin_savechains
   if _caller() >= 12 version 12.0
-  if _caller() <= 9 version 9.0 
+  if _caller() <= 9 version 9.0
   syntax , PARNames(string) CHAINResults(string)
-  
+
   use "`chainresults'", clear
 
   local colnames
@@ -5442,10 +5321,8 @@ program define runmlwin_savechains
   else {
     mata: runmlwin_chains = st_data(., ("iteration" `colnames', "deviance"))
   }
-  
+
 end
-
-
 
 ******************************************************************************
 * DISPLAY MODEL RESULTS
@@ -5453,18 +5330,18 @@ end
 capture program drop runmlwin_display
 program runmlwin_display
   if _caller() >= 12 version 12.0
-  if _caller() <= 9 version 9.0 
-  syntax [, OR IRr RRr SD CORrelations level(cilevel) noHEADer noGRoup noCONTrast noFETable noRETable MOde MEdian ZRatio * ]
-  
+  if _caller() <= 9 version 9.0
+  syntax [, OR IRr RRr SD CORrelations level(cilevel) CFORMAT(string) PFORMAT(string) SFORMAT(string) noHEADer noGRoup noCONTrast noFETable noRETable MOde MEdian ZRatio * ]
+
   if "`or'" ~= "" & !inlist("`e(link)'", "logit", "ologit") {
     display as error "Odds ratio options is only valid for univariate logit models"
     exit 198
   }
-  
+
   if "`rrr'" ~= "" & "`e(link)'" ~= "mlogit" {
     display as error "Relative-rate ratio options is only valid for univariate unordered multinomial logit models"
     exit 198
-  } 
+  }
 
   local tmppois "poisson"
   local tmpnbin "nbinomial"
@@ -5473,12 +5350,12 @@ program runmlwin_display
     display as error "Incidence-rate ratio options is only valid for univariate poisson or negative binomial models"
     exit 198
   }
-  
+
   if "`mode'" ~= "" & "`median'" ~= "" {
     display as error "Only specify one of mode or median"
     exit 198
   }
-  
+
   if "`mode'" ~= "" {
     local esttype mode
   }
@@ -5488,10 +5365,10 @@ program runmlwin_display
   else {
     local esttype mean
   }
-    
+
   local eform = 0
   if "`or'" ~= "" | "`irr'" ~= "" | "`rrr'" ~= "" local eform = 1
-  
+
   * Univariate or Multinomial model
   local mtype univariate
   if "`e(distribution)'" == "multinomial" {
@@ -5514,9 +5391,41 @@ program runmlwin_display
   local multiplier = invnormal(1 - ((100 - `level')/2)/100) // returns 1.96 if 95% confidence intervals are requested
   local kk = length("`level'") // as in 95 is two characters but 7 is only 1 character
 
+  * Numeric formatting
+  if `"`cformat'"' == "" {
+    local cformat `c(cformat)'
+  }
+  if `"`cformat'"' == "" {
+    local cformat %9.0g
+  }
+  if fmtwidth(`"`cformat'"') > 9 {
+    local cformat %9.0g
+    display as text "note: invalid cformat(), using default"
+  }
+  if `"`pformat'"' == "" {
+    local pformat `c(pformat)'
+  }
+  if `"`pformat'"' == "" {
+    local pformat %5.3f
+  }
+  if fmtwidth(`"`pformat'"') > 5 {
+    local pformat %5.3f
+    display as text "note: invalid pformat(), using default"
+  }
+  if `"`sformat'"' == "" {
+    local sformat `c(sformat)'
+  }
+  if `"`sformat'"' == "" {
+    local sformat %8.2f
+  }
+  if fmtwidth(`"`sformat'"') > 8 {
+    local sformat %8.2f
+    display as text "note: invalid sformat(), using default"
+  }
+
   * Header
   if "`header'" == "" {
-    * Display estimation algorithm    
+    * Display estimation algorithm
     quietly runmlwin_verinfo $MLwiN_path // This may be inaccurate if the user changes version between estimation and display (or uses the plugin)
     display as text "MLwiN `e(version)' multilevel model" _c
     display _col(49) as text "Number of obs" _col(68) "=" _col(70) as result %9.0g e(N)
@@ -5538,15 +5447,15 @@ program runmlwin_display
           mat `Ng' = e(N_g)
           mat `min' = e(g_min)
           mat `avg' = e(g_avg)
-          mat `max' = e(g_max)        
-          
+          mat `max' = e(g_max)
+
           di
           di as txt "{hline 16}{c TT}{hline 42}
           di as txt _col(17) "{c |}" _col(21) "No. of" _continue
           di as txt _col(34) "Observations per Group"
           di as txt _col(2) "Level Variable" _col(17) "{c |}" _continue
           di as txt _col(21) "Groups" _col(31) "Minimum" _continue
-          di as txt _col(42) "Average" _col(53) "Maximum" 
+          di as txt _col(42) "Average" _col(53) "Maximum"
           di as txt "{hline 16}{c +}{hline 42}"
           local i 1
           foreach k of local levels {
@@ -5557,17 +5466,14 @@ program runmlwin_display
             di as res _col(19) %8.0g `Ng'[1,`i'] _continue
             di as res _col(29) %9.0g `min'[1,`i'] _continue
             di as res _col(40) %9.1f `avg'[1,`i'] _continue
-            di as res _col(51) %9.0g `max'[1,`i'] 
-            local ++i 
+            di as res _col(51) %9.0g `max'[1,`i']
+            local ++i
           }
-          di as txt "{hline 16}{c BT}{hline 42}" 
+          di as txt "{hline 16}{c BT}{hline 42}"
         }
       }
     }
-    
-  
-  
-  
+
     * Weights
     //         1         2         3         4         5         6         7
     //123456789012345678901234567890123456789012345678901234567890123456789012345678
@@ -5577,7 +5483,7 @@ program runmlwin_display
     //----------------+--------------------------
     //        Unit ID | ############ standardised
     //-------------------------------------------
-                     
+
     local maxlevels = e(numlevels)
     local hasweights = 0
     forvalues l = `maxlevels'(-1)1 {
@@ -5585,32 +5491,32 @@ program runmlwin_display
         local hasweights = 1
       }
     }
-    
+
     if "`hasweights'" == "1" {
       local ivars `e(ivars)'
       local levels : list uniq ivars
       di
       di as txt "{hline 16}{c TT}{hline 26}
       di as txt _col(17) "{c |}" _col(29) "Weights"
-      di as txt _col(2) "Level Variable" _col(17) "{c |}" _col(23) "Variable" _col(40) "Type" 
+      di as txt _col(2) "Level Variable" _col(17) "{c |}" _col(23) "Variable" _col(40) "Type"
       di as txt "{hline 16}{c +}{hline 26}"
       forvalues l = `maxlevels'(-1)1 {
         if "`e(weighttype`l')'" ~= "" {
           if "`l'" ~= "1" {
             local lev = abbrev(word("`levels'", `=`l'-1') ,12)
-          } 
+          }
           else {
             local lev `e(level1var)'
           }
-  
+
           local weightvar = abbrev("`e(weightvar`l')'",12)
           local p1 = 16 - length("`lev'")
           local p2 = 31 - length("`weightvar'")
           local p3 = 44 - length("`e(weighttype`l')'")
-          di as res _col(`p1') "`lev'" as txt _col(17) "{c |}"  as txt _col(`p2') "`weightvar'" _col(`p3') "`e(weighttype`l')'" 
+          di as res _col(`p1') "`lev'" as txt _col(17) "{c |}"  as txt _col(`p2') "`weightvar'" _col(`p3') "`e(weighttype`l')'"
         }
       }
-      di as txt "{hline 16}{c BT}{hline 26}"      
+      di as txt "{hline 16}{c BT}{hline 26}"
     }
 
     * Key for the contrasts in multinomial models
@@ -5630,8 +5536,7 @@ program runmlwin_display
           _col(16) "Log-odds"
         di as txt "{hline 13}{c +}{hline 20}"
 
-
-        * Unordered         
+        * Unordered
         if "`e(link)'"=="mlogit" {
           local contrast_denom = `basecategory'
           local contrast_numers : list respcategories - contrast_denom
@@ -5640,7 +5545,7 @@ program runmlwin_display
             local p = 13 - length("`contrast'")
 
             di as res  _col(`p') "`contrast'" as txt _col(14) "{c |}" _c
-            di as res " `respcategory'" as txt " vs. " as res "`basecategory'" 
+            di as res " `respcategory'" as txt " vs. " as res "`basecategory'"
           }
         }
 
@@ -5670,51 +5575,50 @@ program runmlwin_display
 
           }
 
-
         }
-        di as txt "{hline 13}{c BT}{hline 20}" 
+        di as txt "{hline 13}{c BT}{hline 20}"
       }
     }
+
     * Display model fit statistics
     if e(method)=="IGLS" | e(method)=="RIGLS" {
       display ""
       if e(method)=="IGLS" & `allnormal'==1 {
-        display as text "Run time (seconds)"    _col(22) "= " as result %10.2f e(time)  
+        display as text "Run time (seconds)"    _col(22) "= " as result %10.2f e(time)
         display as text "Number of iterations"  _col(22) "= " as result %10.0f e(iterations)
         if `e(ll)' == . {
           display as error "Caution. MLwiN was unable to calculate the log likelihood, there may be a problem with your model"
         }
-        display as text "Log likelihood"  _col(22) "= " as result %10.0g e(ll)    
+        display as text "Log likelihood"  _col(22) "= " as result %10.0g e(ll)
         display as text "Deviance"    _col(22) "= " as result %10.0g -2*e(ll)
       }
       if e(method)=="RIGLS" & `allnormal'==1 {
-        display as text "Run time (seconds)"      _col(27) "= " as result %10.2f e(time)  
+        display as text "Run time (seconds)"      _col(27) "= " as result %10.2f e(time)
         display as text "Number of iterations"    _col(27) "= " as result %10.0f e(iterations)
         if `e(ll)' == . {
           display as error "Caution. MLwiN was unable to calculate the log likelihood, there may be a problem with your model"
         }
-        display as text "Log restricted-likelihood"   _col(27) "= " as result %10.0g e(ll)    
+        display as text "Log restricted-likelihood"   _col(27) "= " as result %10.0g e(ll)
         display as text "Restricted-deviance"     _col(27) "= " as result %10.0g -2*e(ll)
       }
       if `allnormal'==0 {
-        display as text "Run time (seconds)"      _col(22) "= " as result %10.2f e(time)  
+        display as text "Run time (seconds)"      _col(22) "= " as result %10.2f e(time)
         display as text "Number of iterations"    _col(22) "= " as result %10.0f e(iterations)
-      }     
+      }
     }
-  
+
     if e(method)=="MCMC" {
       display ""
       display as text "Burnin"      _col(28) "= " as result %10.0f e(burnin)
       display as text "Chain"       _col(28) "= " as result %10.0f e(chain)
       display as text "Thinning"        _col(28) "= " as result %10.0f e(thinning)
-      display as text "Run time (seconds)"            _col(28) "= " as result %10.3g e(time)  
+      display as text "Run time (seconds)"            _col(28) "= " as result %10.3g e(time)
       display as text "Deviance (dbar)"     _col(28) "= " as result %10.2f e(dbar)
       display as text "Deviance (thetabar)"     _col(28) "= " as result %10.2f e(dthetabar)
       display as text "Effective no. of pars (pd)"  _col(28) "= " as result %10.2f e(pd)
       display as text "Bayesian DIC"      _col(28) "= " as result %10.2f e(dic)
     }
   }
-
 
   * FE table
   // IGLS FP
@@ -5723,7 +5627,7 @@ program runmlwin_display
   //------------------------------------------------------------------------------
   //    normexam |      Coef.   Std. Err.      z    P>|z|     [95% Conf. Interval]
   //-------------+----------------------------------------------------------------
-  //        cons |  #########  #########  #######   #####    #########   #########
+  //        cons |  #########  #########  ########  ######   #########   #########
   //------------------------------------------------------------------------------
   // MCMC FP
   //         1         2         3         4         5         6         7
@@ -5731,16 +5635,16 @@ program runmlwin_display
   //------------------------------------------------------------------------------
   //    normexam |      Mean    Std. Dev.      z      ESS     [95% Cred. Interval]
   //-------------+----------------------------------------------------------------
-  //        cons |  #########  #########  #######  ######    #########   #########
+  //        cons |  #########  #########  ########  ######   #########   #########
   //------------------------------------------------------------------------------
   if "`fetable'" == "" {
     * Display fixed part of the model
     display as txt "{hline 13}{c TT}{hline 64}
 
     if ("`mtype'"=="univariate") {
-      local p = 13 - length("`e(depvars)'")
+      local p = 13 - length("`=abbrev("`e(depvars)'", 12)'")
       if e(method)~="MCMC" {
-        display as txt _col(`p') "`e(depvars)'" _continue
+        display as txt _col(`p') "`=abbrev("`e(depvars)'", 12)'" _continue
         display as txt _col(14) "{c |}" _continue
         if "`or'" ~= "" display as txt _col(16) "Odds Ratio" _continue
         if "`irr'" ~= "" display as txt _col(23) "IRR" _continue
@@ -5749,13 +5653,13 @@ program runmlwin_display
         display as txt _col(29) "Std. Err." _continue
         display as txt _col(44) "z" _continue
         display as txt _col(49) "P>|z|" _continue
-        display as txt _col(`=61 -`kk'') `"[`=strsubdp("`level'")'% Conf. Interval]"'   
+        display as txt _col(`=61 -`kk'') `"[`=strsubdp("`level'")'% Conf. Interval]"'
       }
       if e(method)=="MCMC" {
-        display as txt _col(`p') "`e(depvars)'" _continue
+        display as txt _col(`p') "`=abbrev("`e(depvars)'", 12)'" _continue
         display as txt _col(14) "{c |}" _continue
         if "`or'" ~= "" display as txt _col(16) "Odds Ratio" _continue
-        if "`irr'" ~= "" display as txt _col(23) "IRR" _continue          
+        if "`irr'" ~= "" display as txt _col(23) "IRR" _continue
         if "`rrr'" ~= "" display as txt _col(23) "RRR" _continue
         if "`or'" == "" & "`irr'" == "" & "`rrr'" == "" {
           if "`esttype'" == "mode" {
@@ -5777,7 +5681,7 @@ program runmlwin_display
           display as txt _col(43) "ESS" _continue
           display as txt _col(51) "P" _continue
         }
-        display as txt _col(`=61 -`kk'') `"[`=strsubdp("`level'")'% Cred. Interval]"'   
+        display as txt _col(`=61 -`kk'') `"[`=strsubdp("`level'")'% Cred. Interval]"'
       }
     }
     else {
@@ -5790,12 +5694,12 @@ program runmlwin_display
         display as txt _col(29) "Std. Err." _continue
         display as txt _col(44) "z" _continue
         display as txt _col(49) "P>|z|" _continue
-        display as txt _col(`=61 -`kk'') `"[`=strsubdp("`level'")'% Conf. Interval]"' 
+        display as txt _col(`=61 -`kk'') `"[`=strsubdp("`level'")'% Conf. Interval]"'
       }
       if e(method)=="MCMC" {
         display as txt _col(14) "{c |}" _continue
         if "`or'" ~= "" display as txt _col(16) "Odds Ratio" _continue
-        if "`irr'" ~= "" display as txt _col(23) "IRR" _continue          
+        if "`irr'" ~= "" display as txt _col(23) "IRR" _continue
         if "`rrr'" ~= "" display as txt _col(23) "RRR" _continue
         if "`or'" == "" & "`irr'" == "" & "`rrr'" == "" {
           if "`esttype'" == "mode" {
@@ -5817,36 +5721,35 @@ program runmlwin_display
           display as txt _col(43) "ESS" _continue
           display as txt _col(51) "P" _continue
         }
-        display as txt _col(`=61 -`kk'') `"[`=strsubdp("`level'")'% Cred. Interval]"' 
-      }   
+        display as txt _col(`=61 -`kk'') `"[`=strsubdp("`level'")'% Cred. Interval]"'
+      }
     }
 
     local eqlist :coleq e(b)
     local eqlist :list uniq eqlist
     local fpeqlist
     foreach eq of local eqlist {
-      if (substr("`eq'",1,2)=="FP") local fpeqlist `fpeqlist' `eq'    
+      if (substr("`eq'",1,2)=="FP") local fpeqlist `fpeqlist' `eq'
     }
 
     local eqnum 0
     foreach eq in `fpeqlist' {
       local ++eqnum
-      display as txt "{hline 13}{c +}{hline 64}"  
+      display as txt "{hline 13}{c +}{hline 64}"
       if "`mtype'" == "multivariate" && `:list sizeof responses' >= `eqnum'{
         display as res "`=word("`responses'", `eqnum')'" as txt _col(14) "{c |}"
       }
 
       if "`mtype'" == "multinomial" && `:list sizeof respcats' > `eqnum'{
-        display as res "Contrast `eqnum'" as txt _col(14) "{c |}" 
-      } 
-      
+        display as res "Contrast `eqnum'" as txt _col(14) "{c |}"
+      }
+
       local r = 1
       tempname matb matV matb_eq matV_eq
       matrix `matb' = e(b)
       matrix `matV' = e(V)
-      matrix `matb_eq' = `matb'[1, "`eq':"] 
+      matrix `matb_eq' = `matb'[1, "`eq':"]
       matrix `matV_eq' = `matV'["`eq':", "`eq':"]
-      
 
       if e(method)=="MCMC" & e(mcmcdiagnostics)==1 {
         tempname matress matrlb matrub matrmode matrmedian matp matess_eq matlb_eq matub_eq matmode_eq matmedian_eq matp_eq
@@ -5863,7 +5766,7 @@ program runmlwin_display
         }
         else {
           matrix `matp' = e(pvalmean)
-        }       
+        }
         matrix `matess_eq' = `matress'[1, "`eq':"]
         matrix `matlb_eq' = `matrlb'[1, "`eq':"]
         matrix `matub_eq' = `matrub'[1, "`eq':"]
@@ -5900,7 +5803,7 @@ program runmlwin_display
             local posit = 0
             if regexm("`par'", "(var)[\(]([a-zA-Z0-9_]+)[\)]") == 1 {
               local posit = 1
-            }           
+            }
             quietly runmlwin_mcmcdiag `expchain', level(`level') thinning(e(thinning)) posit(`posit') `eform'
             mat `matest' = r(mean)
             mat `matse' = r(sd)*r(sd)
@@ -5911,25 +5814,25 @@ program runmlwin_display
             mat `matmedian' = r(quantiles)
             * NOTE: This assumes that the median is always the fifth row
             mat `matmedian' = `matmedian'[5, 2]
-            restore                   
+            restore
           }
           * (R)IGLS
-          else {      
+          else {
             capture quietly nlcom (eform: exp([`eq']`par'))
             if !_rc {
               mat `matlb' = exp(`matb_eq'[1, `r'] - `multiplier'*sqrt(`matV_eq'[`r',`r']))
-              mat `matub' = exp(`matb_eq'[1, `r'] + `multiplier'*sqrt(`matV_eq'[`r',`r']))            
+              mat `matub' = exp(`matb_eq'[1, `r'] + `multiplier'*sqrt(`matV_eq'[`r',`r']))
               mat `matest' = r(b)
               mat `matse' = r(V)
               mat `matest' = `matest'[1,1]
-              mat `matse' = `matse'[1,1]            
+              mat `matse' = `matse'[1,1]
             }
             else {
               mat `matest' = J(1, 1, .)
               mat `matse' = J(1, 1, .)
               mat `matlb' = J(1, 1, .)
               mat `matub' = J(1, 1, .)
-            }                   
+            }
           }
         }
         * Original estimation metric
@@ -5937,8 +5840,8 @@ program runmlwin_display
           matrix `matest' = `matb_eq'[1, `r']
           matrix `matse' = `matV_eq'[`r',`r']
           matrix `matlb' = `matest'[1, 1] - `multiplier'*sqrt(`matse'[1, 1])
-          matrix `matub' = `matest'[1, 1] + `multiplier'*sqrt(`matse'[1, 1])          
-          
+          matrix `matub' = `matest'[1, 1] + `multiplier'*sqrt(`matse'[1, 1])
+
           * MCMC
           if e(method)=="MCMC" & e(mcmcdiagnostics)==1 {
             if e(level) == `level' {
@@ -5954,7 +5857,7 @@ program runmlwin_display
               mata: `estchain' = runmlwin_chains[ , `=`:list posof "`eq':`par'" in colnames' + 1']
               preserve
               drop _all
-              label drop _all             
+              label drop _all
               if _caller() >= 11.1 {
                 getmata (`estchain') = `estchain'
               }
@@ -5971,52 +5874,52 @@ program runmlwin_display
               quietly runmlwin_mcmcdiag `estchain', level(`level') thinning(e(thinning)) posit(`posit') `eform'
               mat `matlb' = r(lb)
               mat `matub' = r(ub)
-      
-              restore                   
+
+              restore
             }
-          }         
-        }           
-      
+          }
+        }
+
         local varname `=abbrev("`par'", 12)'
         local k = length("`varname'")
         local p = 13 - `k'
         if e(method)~="MCMC" {
           display as txt _col(`p') "`varname'" _continue
           display as txt _col(14) "{c |}" _continue
-          display as res _col(17) %9.0g `matest'[1, 1] _continue
-          display as res _col(28) %9.0g sqrt(`matse'[1, 1]) _continue
-          display as res _col(36) %9.2f `matb_eq'[1, `r']/sqrt(`matV_eq'[`r',`r']) _continue
-          display as res _col(49) %4.3f 2*normal(-abs(`matb_eq'[1, `r']/sqrt(`matV_eq'[`r',`r']))) _continue
-          display as res _col(58) %9.0g `matlb'[1, 1] _continue
-          display as res _col(70) %9.0g `matub'[1, 1]
+          display as res _col(17) `cformat' `matest'[1, 1] _continue
+          display as res _col(28) `cformat' sqrt(`matse'[1, 1]) _continue
+          display as res _col(36) `sformat' `matb_eq'[1, `r']/sqrt(`matV_eq'[`r',`r']) _continue
+          display as res _col(49) `pformat' 2*normal(-abs(`matb_eq'[1, `r']/sqrt(`matV_eq'[`r',`r']))) _continue
+          display as res _col(58) `cformat' `matlb'[1, 1] _continue
+          display as res _col(70) `cformat' `matub'[1, 1]
           local ++r
         }
         if e(method)=="MCMC" {
           display as txt _col(`p') "`varname'" _continue
           display as txt _col(14) "{c |}" _continue
           if "`esttype'" == "mode" {
-            display as res _col(17) %9.0g `matmode'[1, 1] _continue
+            display as res _col(17) `cformat' `matmode'[1, 1] _continue
           }
           else if "`esttype'" == "median" {
-            display as res _col(17) %9.0g `matmedian'[1, 1] _continue
+            display as res _col(17) `cformat' `matmedian'[1, 1] _continue
           }
           else {
-            display as res _col(17) %9.0g `matest'[1, 1] _continue
+            display as res _col(17) `cformat' `matest'[1, 1] _continue
           }
-          display as res _col(28) %9.0g sqrt(`matse'[1, 1]) _continue
+          display as res _col(28) `cformat' sqrt(`matse'[1, 1]) _continue
           if "`zratio'" == "" {
             if e(mcmcdiagnostics)==1 {
               display as res _col(36) %9.0f `matess'[1, 1] _continue
-              display as res _col(49) %4.3f `matp_eq'[1, `r'] _continue
+              display as res _col(49) `pformat' `matp_eq'[1, `r'] _continue
             }
           }
           else {
-            display as res _col(36) %9.2f `matb_eq'[1, `r']/sqrt(`matV_eq'[`r',`r']) _continue
-            display as res _col(49) %4.3f 2*normal(-abs(`matb_eq'[1, `r']/sqrt(`matV_eq'[`r',`r']))) _continue
+            display as res _col(36) `sformat' `matb_eq'[1, `r']/sqrt(`matV_eq'[`r',`r']) _continue
+            display as res _col(49) `pformat' 2*normal(-abs(`matb_eq'[1, `r']/sqrt(`matV_eq'[`r',`r']))) _continue
           }
           if e(mcmcdiagnostics)==1 {
-            display as res _col(58) %9.0g `matlb'[1, 1] _continue
-            display as res _col(70) %9.0g `matub'[1, 1] _continue
+            display as res _col(58) `cformat' `matlb'[1, 1] _continue
+            display as res _col(70) `cformat' `matub'[1, 1] _continue
           }
           display
           local ++r
@@ -6025,7 +5928,6 @@ program runmlwin_display
     }
     display as txt "{hline 13}{c BT}{hline 64}"
     display ""
-
   }
 
   * RE Table
@@ -6049,7 +5951,6 @@ program runmlwin_display
   //                   var(cons) | ######### ######### ######  ######### #########
   //------------------------------------------------------------------------------
   if "`retable'" == "" {
-  
     * Display random part of the model
     // Need to allow the display at level 1 if we allow for extra binomial variation
     //if ~(`e(numlevels)'==1 & ~regexm("`e(distribution)'","normal")==1) {
@@ -6077,35 +5978,35 @@ program runmlwin_display
           }
           local ++i
         }
-        
+
         //if `:list posof "OD" in eqlist' > 0 {
         //  local ordlist `ordlist' OD
         //  local ordlist`i'des  Overdispersion Parameters
         //  local ++i
-        //}       
+        //}
 
         if `:list posof "RP`l'D" in eqlist' > 0 {
           local ordlist `ordlist' RP`l'D
           local ordlist`i'des  Level `l': `e(level`l')' (Design)
           local ++i
         }
-        
+
         if `:list posof "RP`l'FL" in eqlist' > 0 {
           local ordlist `ordlist' RP`l'FL
           local ordlist`i'des  Level `l' factors:
           local ++i
-        }       
-        
+        }
+
         if `:list posof "RP`l'FV" in eqlist' > 0 {
           local ordlist `ordlist' RP`l'FV
           local ordlist`i'des  Level `l' factor covariances:
           local ++i
-        }       
+        }
       }
 
       local i = 1
-      local iLAST = wordcount("`ordlist'")      
-      
+      local iLAST = wordcount("`ordlist'")
+
       // Here we want to display the random part only if variables have been specified
       if `:list sizeof ordlist' > 0 {
         //if ~(`i'==`iLAST' & regexm("`e(distribution)'","normal")==0) {
@@ -6116,7 +6017,7 @@ program runmlwin_display
             display as txt _col(30) "{c |}" _continue
             display as txt _col(34) "Estimate" _continue
             display as txt _col(45) "Std. Err." _continue
-            display as txt _col(`=61 -`kk'') `"[`=strsubdp("`level'")'% Conf. Interval]"'       
+            display as txt _col(`=61 -`kk'') `"[`=strsubdp("`level'")'% Conf. Interval]"'
           }
           if e(method)=="MCMC" {
             display as txt _col(4) "Random-effects Parameters" _continue
@@ -6129,24 +6030,24 @@ program runmlwin_display
             }
             else {
               display as txt _col(36) "Mean" _continue
-            }         
+            }
             display as txt _col(43) "Std. Dev." _continue
             display as txt _col(55) "ESS" _continue
-            display as txt _col(`=65 -`kk'') `"[`=strsubdp("`level'")'% Cred. Int]"'        
+            display as txt _col(`=65 -`kk'') `"[`=strsubdp("`level'")'% Cred. Int]"'
           }
-    
+
           foreach eq in `ordlist' {
             //if "`eq'"~="RP1" | wordcount("`e(distribution)'") ~= 1 | "`e(distribution)'"=="normal" | "`e(extrabinomial)'" == "1" {
             //if "`eq'"~="RP1" | regexm("`e(distribution)'","normal")==1 | regexm("`e(distribution)'","nbinomial")==1 | "`e(extrabinomial)'" == "1" {
               local r = 1
-              display as txt "{hline 29}{c +}{hline 48}"    
+              display as txt "{hline 29}{c +}{hline 48}"
               display as res "`ordlist`i'des'" _continue
               display as txt _col(30) "{c |}"
 
               tempname matb matv matb_eq matV_eq
               matrix `matb' = e(b)
-              matrix `matV' = e(V)            
-              matrix `matb_eq' = `matb'[1, "`eq':"] 
+              matrix `matV' = e(V)
+              matrix `matb_eq' = `matb'[1, "`eq':"]
               matrix `matV_eq' = `matV'["`eq':", "`eq':"]
               if e(method)=="MCMC" & e(mcmcdiagnostics)==1 {
                 tempname matress matrlb matrub matrmode matrmedian matess_eq matlb_eq matub_eq matmode_eq matmedian_eq
@@ -6160,33 +6061,33 @@ program runmlwin_display
                 matrix `matub_eq' = `matrub'[1, "`eq':"]
                 matrix `matmode_eq' = `matrmode'[1, "`eq':"]
                 * NOTE: This assumes that the median is always the fifth row
-                matrix `matmedian_eq' = `matrmedian'[5, "`eq':"]                
+                matrix `matmedian_eq' = `matrmedian'[5, "`eq':"]
               }
-              
+
               tempname matest matse matess matlb matub matmode matmedian
 
               local names :colnames `matb_eq'
               foreach par of local names {
-              
+
                 // Don't display when constrained to one
                 //if "`eq'" == "RP1" & "`e(distribution)'"~="normal" & "`par'" == "var(bcons_1)" & "`e(extrabinomial)'" == "0" {
                 //  local ++r
                 //  continue
                 //}
-              
+
                 local partype
                 if regexm("`par'", "(var)[\(]([a-zA-Z0-9_]+)[\)]") == 1 {
                   local partype `=regexs(1)'
                   local par1 `=regexs(2)'
-                  local par2 `=regexs(2)'   
+                  local par2 `=regexs(2)'
                 }
-                
+
                 if regexm("`par'", "(cov)[\(]([a-zA-Z0-9_~]+)[\\]([a-zA-Z0-9_~]+)[\)]") == 1 {
                   local partype `=regexs(1)'
                   local par1 `=regexs(2)'
                   local par2 `=regexs(3)'
                 }
-              
+
                 * SD specified and parameter is a variance
                 if "`sd'" ~= "" & "`partype'" == "var" {
 
@@ -6197,7 +6098,7 @@ program runmlwin_display
                     mata: `sdchain' = sqrt(runmlwin_chains[ , `=`:list posof "`eq':`par'" in colnames' + 1'])
                     preserve
                     drop _all
-                    label drop _all                   
+                    label drop _all
                     if _caller() >= 11.1 {
                       getmata (`sdchain') = `sdchain'
                     }
@@ -6216,31 +6117,31 @@ program runmlwin_display
                     mat `matmode' = r(mode)
                     mat `matmedian' = r(quantiles)
                     * NOTE: This assumes that the median is always the fifth row
-                    mat `matmedian' = `matmedian'[5, 2]                     
-                    restore                   
+                    mat `matmedian' = `matmedian'[5, 2]
+                    restore
                   }
                   * (R)IGLS
                   else {
                     capture quietly nlcom (sd: sqrt([`eq']`par'))
                     if !_rc {
                       mat `matlb' = sqrt(`matb_eq'[1, `r'] - `multiplier'*sqrt(`matV_eq'[`r',`r']))
-                      mat `matub' = sqrt(`matb_eq'[1, `r'] + `multiplier'*sqrt(`matV_eq'[`r',`r']))                 
+                      mat `matub' = sqrt(`matb_eq'[1, `r'] + `multiplier'*sqrt(`matV_eq'[`r',`r']))
                       mat `matest' = r(b)
-                      mat `matse' = r(V)    
+                      mat `matse' = r(V)
                       mat `matest' = `matest'[1,1]
-                      mat `matse' = `matse'[1,1]  
+                      mat `matse' = `matse'[1,1]
                     }
                     else {
                       mat `matest' = J(1, 1, .)
                       mat `matse' = J(1, 1, .)
-                      mat `matlb' = J(1, 1, .)        
-                      mat `matub' = J(1, 1, .)                
-                    }       
+                      mat `matlb' = J(1, 1, .)
+                      mat `matub' = J(1, 1, .)
+                    }
                   }
                   local par sd(`=abbrev("`par1'", 24)')
                 }
                 * CORR specified and parameter is a covariance
-                else if "`correlations'" ~= "" & "`partype'" == "cov" {             
+                else if "`correlations'" ~= "" & "`partype'" == "cov" {
                   // Search for corresponding variances
                   local possnames :colnames `matb_eq'
                   local posspar1
@@ -6252,7 +6153,7 @@ program runmlwin_display
                       if "`=abbrev("`poss'", 12)'" == "`par2'" local posspar2 `posspar2' "`poss'"
                     }
                   }
-                  
+
                   if `:list sizeof posspar1' != 1 | `:list sizeof posspar2' != 1 {
                     display as error "Unable to identify unique variance parameters for `par'. Don't use the corr option."
                     exit 198
@@ -6269,7 +6170,7 @@ program runmlwin_display
                     mata: `corrchain' = runmlwin_chains[ , `=`:list posof "`eq':`par'" in colnames' + 1'] :/ sqrt(runmlwin_chains[ , `=`:list posof "`eq':var(`=abbrev("`par1'", 24)')" in colnames' + 1'] :* runmlwin_chains[ , `=`:list posof "`eq':var(`=abbrev("`par2'", 24)')" in colnames' + 1'])
                     preserve
                     drop _all
-                    label drop _all                   
+                    label drop _all
                     if _caller() >= 11.1 {
                       getmata (`corrchain') = `corrchain'
                     }
@@ -6288,12 +6189,12 @@ program runmlwin_display
                     mat `matmode' = r(mode)
                     mat `matmedian' = r(quantiles)
                     * NOTE: This assumes that the median is always the fifth row
-                    mat `matmedian' = `matmedian'[5, 2]                     
+                    mat `matmedian' = `matmedian'[5, 2]
                     restore
                   }
                   * (R)IGLS
                   else {
-                    capture quietly nlcom (corr: [`eq']`par' / sqrt([`eq']var(`=abbrev("`par1'", 24)') * [`eq']var(`=abbrev("`par2'", 24)')))                 
+                    capture quietly nlcom (corr: [`eq']`par' / sqrt([`eq']var(`=abbrev("`par1'", 24)') * [`eq']var(`=abbrev("`par2'", 24)')))
                     if !_rc {
                       mat `matest' = r(b)
                       mat `matse' = r(V)
@@ -6307,8 +6208,8 @@ program runmlwin_display
                       mat `matse' = J(1, 1, .)
                       mat `matlb' = J(1, 1, .)
                       mat `matub' = J(1, 1, .)
-                    }   
-                  }             
+                    }
+                  }
                   local par corr(`=abbrev("`par1'", 12)',`=abbrev("`par2'", 12)')
                 }
                 * All other cases
@@ -6322,11 +6223,11 @@ program runmlwin_display
                   mat `matest' = `matb_eq'[1, `r']
                   mat `matse' = `matV_eq'[`r',`r']
                   mat `matlb' = `matest'[1, 1] - `multiplier'*sqrt(`matse'[1, 1])
-                  mat `matub' = `matest'[1, 1] + `multiplier'*sqrt(`matse'[1, 1])               
+                  mat `matub' = `matest'[1, 1] + `multiplier'*sqrt(`matse'[1, 1])
                   if e(method)=="MCMC" & e(mcmcdiagnostics)==1 {
                     mat `matess' = `matess_eq'[1, `r']
                     mat `matmode' = `matmode_eq'[1, `r']
-                    mat `matmedian' = `matmedian_eq'[1, `r']                      
+                    mat `matmedian' = `matmedian_eq'[1, `r']
                     if e(level) == `level' {
                       mat `matlb' = `matlb_eq'[1, `r']
                       mat `matub' = `matub_eq'[1, `r']
@@ -6337,7 +6238,7 @@ program runmlwin_display
                       mata: `estchain' = runmlwin_chains[ , `=`:list posof "`eq':`par'" in colnames' + 1']
                       preserve
                       drop _all
-                      label drop _all                     
+                      label drop _all
                       if _caller() >= 11.1 {
                         getmata (`estchain') = `estchain'
                       }
@@ -6350,44 +6251,43 @@ program runmlwin_display
                       local posit = 0
                       if "`partype'" == "var" {
                         local posit = 1
-                      }                     
+                      }
                       quietly runmlwin_mcmcdiag `estchain', level(`level') thinning(e(thinning)) posit(`posit') `eform'
                       mat `matlb' = r(lb)
                       mat `matub' = r(ub)
-                      restore                         
+                      restore
                     }
                   }
                 }
-              
-              
+
                 local k = length("`par'")
                 local p = 29 - `k'
                 if e(method)~="MCMC" {
                   display as txt _col(`p') "`par'" _continue
                   display as txt _col(30) "{c |}" _continue
-                  display as res _col(33) %9.0g `matest'[1, 1] _continue
-                  display as res _col(44) %9.0g sqrt(`matse'[1,1]) _continue
-                  display as res _col(58) %9.0g `matlb'[1, 1] _continue
-                  display as res _col(70) %9.0g `matub'[1, 1]
+                  display as res _col(33) `cformat' `matest'[1, 1] _continue
+                  display as res _col(44) `cformat' sqrt(`matse'[1,1]) _continue
+                  display as res _col(58) `cformat' `matlb'[1, 1] _continue
+                  display as res _col(70) `cformat' `matub'[1, 1]
                   local ++r
                 }
                 if e(method)=="MCMC" {
-                  display as txt _col(`p') "`par'" _continue 
-                  display as txt _col(30) "{c |}" _continue 
+                  display as txt _col(`p') "`par'" _continue
+                  display as txt _col(30) "{c |}" _continue
                   if "`esttype'" == "mode" {
-                    display as res _col(32) %9.0g `matmode'[1, 1] _continue
+                    display as res _col(32) `cformat' `matmode'[1, 1] _continue
                   }
                   else if "`esttype'" == "median" {
-                    display as res _col(32) %9.0g `matmedian'[1, 1] _continue
+                    display as res _col(32) `cformat' `matmedian'[1, 1] _continue
                   }
                   else {
-                    display as res _col(32) %9.0g `matest'[1, 1] _continue 
-                  }                 
-                  display as res _col(42) %9.0g sqrt(`matse'[1, 1]) _continue
+                    display as res _col(32) `cformat' `matest'[1, 1] _continue
+                  }
+                  display as res _col(42) `cformat' sqrt(`matse'[1, 1]) _continue
                   if e(mcmcdiagnostics)==1 {
-                    display as res _col(52) %6.0f `matess'[1, 1] _continue 
-                    display as res _col(60) %9.0g `matlb'[1, 1] _continue 
-                    display as res _col(70) %9.0g `matub'[1, 1] _continue 
+                    display as res _col(52) %6.0f `matess'[1, 1] _continue
+                    display as res _col(60) `cformat' `matlb'[1, 1] _continue
+                    display as res _col(70) `cformat' `matub'[1, 1] _continue
                   }
                   display
                   local ++r
@@ -6398,22 +6298,21 @@ program runmlwin_display
           }
           * Horizontal line
           display as txt "{hline 29}{c BT}{hline 48}
-        
-        
+
         }
       //}
-    //} 
+    //}
   }
-  
+
   local eqlist :coleq e(b)
   local eqlist :list uniq eqlist
 
   if `:list posof "OD" in eqlist' > 0 & ("`e(extrabinomial)'" == "1" | "`e(distribution)'" == "nbinomial") {
     tempname matodb_eq
     tempname matodV_eq
-    matrix `matodb_eq' = `matb'[1, "OD:"] 
-    matrix `matodV_eq' = `matV'["OD:", "OD:"] 
-    
+    matrix `matodb_eq' = `matb'[1, "OD:"]
+    matrix `matodV_eq' = `matV'["OD:", "OD:"]
+
     if e(method)=="MCMC" & e(mcmcdiagnostics)==1 {
       tempname matress matrlb matrub matrmode matrmedian matodess_eq matodlb_eq matodub_eq matodmode_eq matodmedian_eq
       matrix `matress' = e(ess)
@@ -6426,19 +6325,18 @@ program runmlwin_display
       matrix `matodub_eq' = `matrub'[1, "OD:"]
       matrix `matodmode_eq' = `matrmode'[1, "OD:"]
       * NOTE: This assumes that the median is always the fifth row
-      matrix `matodmedian_eq' = `matrmedian'[5, "OD:"]                
-    }   
-    
-    
+      matrix `matodmedian_eq' = `matrmedian'[5, "OD:"]
+    }
+
     local names :colnames `matodb_eq'
     display as txt "{hline 29}{c TT}{hline 48}"
-    
+
     if e(method)~="MCMC" {
       display as txt _col(4) "Overdispersion Parameters" _continue
       display as txt _col(30) "{c |}" _continue
       display as txt _col(34) "Estimate" _continue
       display as txt _col(45) "Std. Err." _continue
-      display as txt _col(`=61 -`kk'') `"[`=strsubdp("`level'")'% Conf. Interval]"'       
+      display as txt _col(`=61 -`kk'') `"[`=strsubdp("`level'")'% Conf. Interval]"'
     }
     if e(method)=="MCMC" {
       display as txt _col(4) "Overdispersion Parameters" _continue
@@ -6451,32 +6349,31 @@ program runmlwin_display
       }
       else {
         display as txt _col(36) "Mean" _continue
-      }         
+      }
       display as txt _col(43) "Std. Dev." _continue
       display as txt _col(55) "ESS" _continue
-      display as txt _col(`=65 -`kk'') `"[`=strsubdp("`level'")'% Cred. Int]"'        
-    }   
-    
+      display as txt _col(`=65 -`kk'') `"[`=strsubdp("`level'")'% Cred. Int]"'
+    }
+
     * Horizontal line
     display as txt "{hline 29}{c +}{hline 48}
-    
+
     local r = 1
     foreach par of local names {
-    
       if "`r'" == "1" && "`e(distribution)'" == "nbinomial" && "`e(extrabinomial)'" == "0"  {
         local ++r
         continue
       }
-    
+
       mat `matest' = `matodb_eq'[1, `r']
       mat `matse' = `matodV_eq'[`r',`r']
       mat `matlb' = `matest'[1, 1] - `multiplier'*sqrt(`matse'[1, 1])
-      mat `matub' = `matest'[1, 1] + `multiplier'*sqrt(`matse'[1, 1])               
-      
+      mat `matub' = `matest'[1, 1] + `multiplier'*sqrt(`matse'[1, 1])
+
       if e(method)=="MCMC" & e(mcmcdiagnostics)==1 {
         mat `matess' = `matodess_eq'[1, `r']
         mat `matmode' = `matodmode_eq'[1, `r']
-        mat `matmedian' = `matodmedian_eq'[1, `r']                      
+        mat `matmedian' = `matodmedian_eq'[1, `r']
         if e(level) == `level' {
           mat `matlb' = `matodlb_eq'[1, `r']
           mat `matub' = `matodub_eq'[1, `r']
@@ -6487,7 +6384,7 @@ program runmlwin_display
           mata: `estchain' = runmlwin_chains[ , `=`:list posof "`eq':`par'" in colnames' + 1']
           preserve
           drop _all
-          label drop _all                     
+          label drop _all
           if _caller() >= 11.1 {
             getmata (`estchain') = `estchain'
           }
@@ -6500,53 +6397,52 @@ program runmlwin_display
           local posit = 0
           if "`partype'" == "var" {
             local posit = 1
-          }                     
+          }
           quietly runmlwin_mcmcdiag `estchain', level(`level') thinning(e(thinning)) posit(`posit') `eform'
           mat `matlb' = r(lb)
           mat `matub' = r(ub)
-          restore                         
+          restore
         }
       }
-      
+
       local k = length("`par'")
       local p = 29 - `k'
-      
+
       if e(method)~="MCMC" {
         display as txt _col(`p') "`par'" _continue
         display as txt _col(30) "{c |}" _continue
-        display as res _col(33) %9.0g `matest'[1, 1] _continue
-        display as res _col(44) %9.0g sqrt(`matse'[1,1]) _continue
-        display as res _col(58) %9.0g `matlb'[1, 1] _continue
-        display as res _col(70) %9.0g `matub'[1, 1]
+        display as res _col(33) `cformat' `matest'[1, 1] _continue
+        display as res _col(44) `cformat' sqrt(`matse'[1,1]) _continue
+        display as res _col(58) `cformat' `matlb'[1, 1] _continue
+        display as res _col(70) `cformat' `matub'[1, 1]
         local ++r
       }
       if e(method)=="MCMC" {
-        display as txt _col(`p') "`par'" _continue 
-        display as txt _col(30) "{c |}" _continue 
+        display as txt _col(`p') "`par'" _continue
+        display as txt _col(30) "{c |}" _continue
         if "`esttype'" == "mode" {
-          display as res _col(32) %9.0g `matmode'[1, 1] _continue
+          display as res _col(32) `cformat' `matmode'[1, 1] _continue
         }
         else if "`esttype'" == "median" {
-          display as res _col(32) %9.0g `matmedian'[1, 1] _continue
+          display as res _col(32) `cformat' `matmedian'[1, 1] _continue
         }
         else {
-          display as res _col(32) %9.0g `matest'[1, 1] _continue 
-        }                 
-        display as res _col(42) %9.0g sqrt(`matse'[1, 1]) _continue
+          display as res _col(32) `cformat' `matest'[1, 1] _continue
+        }
+        display as res _col(42) `cformat' sqrt(`matse'[1, 1]) _continue
         if e(mcmcdiagnostics)==1 {
-          display as res _col(52) %6.0f `matess'[1, 1] _continue 
-          display as res _col(60) %9.0g `matlb'[1, 1] _continue 
-          display as res _col(70) %9.0g `matub'[1, 1] _continue 
+          display as res _col(52) %6.0f `matess'[1, 1] _continue
+          display as res _col(60) `cformat' `matlb'[1, 1] _continue
+          display as res _col(70) `cformat' `matub'[1, 1] _continue
         }
         display
         local ++r
-      } 
+      }
     }
     * Horizontal line
-    display as txt "{hline 29}{c BT}{hline 48}    
-  }   
+    display as txt "{hline 29}{c BT}{hline 48}
+  }
 
-  
   * Notes
   if e(method)=="IGLS" & e(converged)==0 display _n as error "WARNING: IGLS algorithm failed to converge. Increase the number of iterations. See the maxiterations() option."
   if e(method)=="RIGLS" & e(converged)==0 display _n as error "WARNING: RIGLS algorithm failed to converge. Increase the number of iterations. See the maxiterations() option."
@@ -6555,25 +6451,25 @@ end
 mata:
 
   void copymatrix(string scalar srcmat, string scalar srcrowidxmat, string scalar srccolidxmat, string scalar destmat, string scalar destrowidxmat, string scalar destcolidxmat) {
-  
+
     real colvector srcrowidx;
     real colvector srccolidx;
     real colvector destrowidx;
     real colvector destcolidx;
     real matrix temp;
-  
+
     src = st_matrix(srcmat);
-    srcrowidx = st_matrix(srcrowidxmat);    
+    srcrowidx = st_matrix(srcrowidxmat);
     srccolidx = st_matrix(srccolidxmat);
-    destrowidx = st_matrix(destrowidxmat);    
+    destrowidx = st_matrix(destrowidxmat);
     destcolidx = st_matrix(destcolidxmat);
-    
-    temp = st_matrix(destmat);    
+
+    temp = st_matrix(destmat);
     temp[destrowidx, destcolidx] = src[srcrowidx, srccolidx];
     _editmissing(temp, 0);
     st_replacematrix(destmat, temp);
   }
-  
+
   void checkmm(string scalar mmids, string scalar mmweights) {
     real matrix idmat;
     real matrix weightmat;
@@ -6588,12 +6484,12 @@ mata:
       st_view(idmat, ., tokens(mmids));
       st_view(weightmat, ., tokens(mmweights));
     }
-    
+
     for (i = 1; i <= rows(idmat); i++) {
       for (j = 1; j <= cols(idmat); j++) {
         if (idmat[i, j] != 0 && weightmat[i, j] == 0) {
           errprintf("Error, the MM ID variable %g for observation %g is present but a zero MM weight has been specified for it\n", j, i);
-          exit(198);  
+          exit(198);
         }
         if (idmat[i, j] == 0 && weightmat[i, j] != 0) {
           errprintf("Error, the MM ID variable %g for observation %g is absent but a positive MM weight has been specified for it\n", j, i);
@@ -6612,7 +6508,7 @@ mata:
   string scalar validname(string scalar name) {
     real rowvector codes;
     real rowvector valid;
-    
+
     codes = ascii(name);
     if (codes[1] >=48 && codes[1] <= 57) {
       codes = 95,codes;
@@ -6624,14 +6520,14 @@ mata:
       }
     }
     // The following code would truncate to 32 characters
-    /*  
+    /*
     if (length(codes) > 32) {
       codes = codes[|1\32|];
     }
     */
     name = char(codes);
     return(name);
-  } 
+  }
 
   void setsortorder(string scalar filename, string scalar sortorder) {
     string rowvector order;

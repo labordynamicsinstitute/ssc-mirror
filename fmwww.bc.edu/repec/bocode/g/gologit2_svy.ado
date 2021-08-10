@@ -1,4 +1,5 @@
-*! version 3.1.1 18oct2016  Richard Williams, rwilliam@nd.edu
+*! version 3.2.5 17may2019 Richard Williams, rwilliam@nd.edu
+
 * Specialized svy prefix for gologit2 - handles otherwise
 * problematic options. Use this instead of svy:,
 * at least when using autofit.
@@ -79,15 +80,17 @@ program gologit2_svy
 		gologit2_autofit `varlist' `if' `in', ///
 			svyprefix(`prefix') `autofit' `autofit2' `options' gsvy
 		gologit2, `options'
-// Otherwise call gologit2 direcly with the svy prefix and requested options
+// Otherwise call gologit2 directly with the svy prefix and requested options
 // Problematic options (gamma, store) are left off and dealt with later.
 	}
 	else {
-		`prefix'gologit2 `varlist' `if' `in' `wgt', ///
+		quietly `prefix'gologit2 `varlist' `if' `in' `wgt', ///
 			`modelspec' `eform' `options'  gsvy
-		quietly gologit2, `options'
+		gologit2, `options'
 	}
 	prediction_check
+	// quiet replays insure r(table) is right
+	quietly gologit2, `options'
 end
 
 

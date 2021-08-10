@@ -1,12 +1,12 @@
 #delim ;
 program define cendif, rclass byable(recall);
-version 12.0;
+version 16.0;
 /*
  Robust confidence limits for median difference
  and other percentile differences
  between two sub-populations.
 *! Author: Roger Newson
-*! Date: 20 May 2013
+*! Date: 16 April 2020
 */
 syntax varname(numeric) [using/] [in] [if] [fweight iweight pweight]
   ,BY(varname)
@@ -54,9 +54,10 @@ local ncent:word count `centile';
  Create list of target Dstar values
  corresponding to centile list
 *;
-local Dslist "";local i1=0;
+local Dslist "";
+local i1=0;
 while(`i1'<`ncent'){;local i1=`i1'+1;
-  local q:word `i1' of `centile';
+  local q: word `i1' of `centile';
   local Ds=(100 - 2*`q')/100;
   if("`Dslist'"==""){;local Dslist "`Ds'";};
   else{;local Dslist "`Dslist' `Ds'";};
@@ -162,53 +163,76 @@ qui {;
 
 *
  Create data set of differences
- (unless using is specified)
- and first version of CI matrix
+ (unless using is specified
+ in which case import data set of differences)
 *;
-tempname cimat;
-preserve;
+tempname diffdset;
 if("`using'"!=""){;
   * Input data set of differences *;
-  local dds `"`using'"';
-  use "`dds'",clear;
-  * Check that it is a valid data set of differences *;
-  capture{;
-    confirm numeric variable diff;
-    confirm numeric variable Dstar;
-    confirm numeric variable weight;
-    tempvar valid;
-    assert diff!=.;
-    assert ((Dstar>-1)&(Dstar<1));
-    assert ((_n==_N)|(Dstar>Dstar[_n+1]));
-    assert ((Dstar_r>=-1)&(Dstar_r<1));
-    assert ((_n==_N)|(Dstar_r>Dstar_r[_n+1]));
-    assert Dstar>Dstar_r;
-    assert ((_n==_N)|(diff<diff[_n+1]));
-  };
-  if(_rc!=0){;
-    disp as error
-     "Data set `using' is not a valid difference data set";
-    error 498;
+  frame create `diffdset';
+  frame `diffdset' {;
+    local dds `"`using'"';
+    use "`dds'",clear;
+    * Check that it is a valid data set of differences *;
+    capture{;
+      confirm numeric variable diff;
+      confirm numeric variable Dstar;
+      confirm numeric variable weight;
+      tempvar valid;
+      assert diff!=.;
+      assert ((Dstar>-1)&(Dstar<1));
+      assert ((_n==_N)|(Dstar>Dstar[_n+1]));
+      assert ((Dstar_r>=-1)&(Dstar_r<1));
+        assert ((_n==_N)|(Dstar_r>Dstar_r[_n+1]));
+      assert Dstar>Dstar_r;
+      assert ((_n==_N)|(diff<diff[_n+1]));
+    };
+    if(_rc!=0){;
+      disp as error
+       "Data set `using' is not a valid difference data set";
+      error 498;
+    };
   };
 };
-else{;
+else {;
   * Create data set of differences *;
-  tempfile dds;
-  diffds `yvar' `group1' if[`touse'] [`weight'`exp'], fast
-   saving(`"`dds'"',replace) cluster(`cluster') cfweight(`cfweight') funtype(`funtype');
+  frame create `diffdset';
+  frame copy `c(frame)' `diffdset', replace;
+  frame `diffdset' {;
+    diffds `yvar' `group1' if[`touse'] [`weight'`exp'],
+      cluster(`cluster') cfweight(`cfweight') funtype(`funtype');
+  };
 };
-* Create first version of CI matrix *;
-matrix define `cimat'=J(`ncent',4,0);
-matr colnames `cimat'=Percent Pctl_Dif Minimum Maximum;
-local i1=0;
-while(`i1'<`ncent'){;local i1=`i1'+1;
-  local ci1:word `i1' of `centile';
-  matr def `cimat'[`i1',1]=`ci1';
-  local Dstar0:word `i1' of `Dslist';
-  finddiff,ds(`Dstar0') pr(centre);
-  matr def `cimat'[`i1',2]=r(diff0);
+
+
+*
+ Save difference dataset if requested
+*;
+frame `diffdset' {;
+  if("`saving'"!=""){;
+    save `saving';
+  };
 };
-restore;
+
+
+*
+ Create first version of CI matrix
+*;
+tempname cimat Dstar0;
+frame `diffdset' {;
+  matrix define `cimat'=J(`ncent',4,0);
+  matr colnames `cimat'=Percent Pctl_Dif Minimum Maximum;
+  local i1=0;
+  while(`i1'<`ncent'){;local i1=`i1'+1;
+    local ci1:word `i1' of `centile';
+    matr def `cimat'[`i1',1]=`ci1';
+    local Ds0: word `i1' of `Dslist';
+    scal `Dstar0'=`Ds0';
+    finddiff, ds(`Dstar0') pr(centre);
+    matr def `cimat'[`i1',2]=r(diff0);
+  };
+};
+
 
 *
  Create ystar variables,
@@ -217,21 +241,31 @@ restore;
  for observations in Group 2
 *;
 tempname pd;
-local i1=0;local yslist "";
-while(`i1'<`ncent'){;local i1=`i1'+1;
+local i1=0;
+local yslist "";
+while(`i1'<`ncent'){;
+  local i1=`i1'+1;
   scal `pd'=`cimat'[`i1',2];
   tempvar ys`i1';
   qui gene double `ys`i1''=`yvar'+(!`group1')*`pd' if(`touse');
   qui compress `ys`i1'';
-  if("`yslist'"==""){;local yslist "`ys`i1''";};
-  else{;local yslist "`yslist' `ys`i1''";};
+  if("`yslist'"==""){;
+    local yslist "`ys`i1''";
+  };
+  else {;
+    local yslist "`yslist' `ys`i1''";
+  };
 };
+
 
 *
  Hold any estimation results (unless asked not to do so)
 *;
 tempname oldest;
-if("`hold'"!="nohold"){;capture esti hold `oldest';};
+if("`hold'"!="nohold"){;
+  capture esti hold `oldest';
+};
+
 
 *
  Calculate Somers' D with confidence limits
@@ -253,6 +287,7 @@ capture noisily {;
 local rc=_rc;
 if(`rc'!=0){;error `rc';};
 
+
 *
  Restore old estimation results (unless asked not to)
 *;
@@ -261,37 +296,44 @@ if("`hold'"!="nohold"){;
     capture esti unhold `oldest';
 };
 
-*
- Calculate lower and upper CI limits
- for percentile differences
-*;
-preserve;
-use `"`dds'"', clear;
-local i1=0;
-while(`i1'<`ncent'){;local i1=`i1'+1;
-  local Dstar0=`somdci'[`i1',3];
-  finddiff,ds(`Dstar0') pr(left);
-  matr def `cimat'[`i1',3]=r(diff0);
-  local Dstar0=`somdci'[`i1',2];
-  finddiff,ds(`Dstar0') pr(right);
-  matr def `cimat'[`i1',4]=r(diff0);
-};
 
 *
- Create matrix dsmat
- containing dstar ranges for percentile differences
+ Finalize output matrices
+ containng confidence limits for percentile differences
+ and for dstar ranges for percentile differences
 *;
 tempname Dsmat;
-matr def `Dsmat'=`cimat';
-matr def `Dsmat'[1,2]=`somdci';
-matr colnames `Dsmat'=Percent Dstar Minimum Maximum;
-
-* Save saving data set if requested *;
-if("`saving'"!=""){;
-  save `saving';
+frame `diffdset' {;
+  *
+   Calculate lower and upper CI limits
+   for percentile differences
+  *;
+  tempname Dstar0;
+  local i1=0;
+  while(`i1'<`ncent'){;
+    local i1=`i1'+1;
+    scal `Dstar0'=`somdci'[`i1',3];
+    finddiff, ds(`Dstar0') pr(left);
+    matr def `cimat'[`i1',3]=r(diff0);
+    scal `Dstar0'=`somdci'[`i1',2];
+    finddiff, ds(`Dstar0') pr(right);
+    matr def `cimat'[`i1',4]=r(diff0);
+  };
+  *
+   Create matrix dsmat
+   containing dstar ranges for percentile differences
+  *;
+  matr def `Dsmat'=`cimat';
+  matr def `Dsmat'[1,2]=`somdci';
+  matr colnames `Dsmat'=Percent Dstar Minimum Maximum;
 };
 
-restore;
+
+*
+ Drop difference dataset to save space
+*;
+frame drop `diffdset';
+
 
 *
  Exponentiate CI matrix if eform is specified
@@ -320,6 +362,15 @@ if("`eform'"!=""){;
   };
 };
 
+
+*
+  Create ystargenerate variables if requested.
+*;
+if `"`ystargenerate'"'!="" {;
+  _ystargenerate `ystargenerate' if `touse', cimat(`cimat') yvar(`yvar') xvar(`group1');
+};
+
+
 * Functional type prefix *;
 if "`funtype'"=="wcluster" {;
   local funtypepref "within-cluster ";
@@ -327,6 +378,7 @@ if "`funtype'"=="wcluster" {;
 else if "`funtype'"=="vonmises" {;
   local funtypepref "Von Mises ";
 };
+
 
 *
  List confidence limits for percentile differences
@@ -347,13 +399,6 @@ else{;
   disp as text "between values of exp(`yvar') in first and second groups:";
 };
 matlist `cimat', noheader noblank nohalf lines(none) names(columns) format(%10.0g);
-
-*
-  Create ystargenerate variables if requested.
-*;
-if `"`ystargenerate'"'!="" {;
-  _ystargenerate `ystargenerate' if `touse', cimat(`cimat') yvar(`yvar') xvar(`group1');
-};
 
 *
  Return saved results
@@ -384,23 +429,23 @@ if `"`cfweight'"'!="" {;
 };
 return local clustvar "`clustva'";
 
+
 end;
 
+
 program define diffds, rclass;
-version 12.0;
+version 16.0;
 *
  Take, as input, a data set with a y-variable
  and a binary x-variable.
- Create a data set with 1 obs per between-cluster difference
+ Replace this with a data set with 1 obs per between-cluster difference
  between values of y-variable for obs where x-variable is true
  and values of y-variable for obs where x-variable is false. 
 *;
 syntax varlist(numeric min=2 max=2) [if] [in] [fweight iweight pweight]
- [,SAving(string) CLuster(string) CFWeight(string asis) FUntype(string) FAST];
+  [, CLuster(string) CFWeight(string asis) FUntype(string) ];
 local y:word 1 of `varlist';
 local x:word 2 of `varlist';
-
-if("`fast'"==""){;preserve;};
 
 *
  Calculate temporary variables wei and cfwei,
@@ -444,7 +489,7 @@ if "`cluster'"!="" & inlist("`funtype'","wcluster","bcluster") {;
   *;
   tempvar mincfwei;
   sort `x' `y' `clseq', stable;
-  qui collapse (sum) `wei' (max) `cfwei' (min) `mincfwei'=`cfwei', by(`x' `y' `clseq');
+  qui collapse (sum) `wei' (max) `cfwei' (min) `mincfwei'=`cfwei', by(`x' `y' `clseq') fast;
   cap assert `mincfwei'==`cfwei';
   if _rc!=0 {;
     disp as error "Cluster frequency weights are not constant within clusters";
@@ -459,13 +504,13 @@ else {;
   *;
   sort `x' `y' `clseq', stable;
   qui replace `wei'=`wei'*`cfwei';
-  qui collapse (sum) `wei', by (`x' `y');
+  qui collapse (sum) `wei', by (`x' `y') fast;
   qui gene byte `cfwei'=1;
   qui gene long `clseq'=_n;
 };
 
 * Find minimum and maximum obs where `x' and !`x' are true *;
-qui{;
+qui {;
   tempvar seqnum;gene long `seqnum'=_n;
   summ `seqnum' if(!`x'),meanonly;
   local nx0=r(N);local minx0=r(min);local maxx0=r(max);
@@ -473,15 +518,17 @@ qui{;
   local nx1=r(N);local minx1=r(min);local maxx1=r(max);
   drop `seqnum';
 };
-if((`nx1'<1)|(`nx0'<1)){;
+if((`nx1'<1)|(`nx0'<1)) {;
   disp as error "X-variable not binary";
   error 420;
 };
 
-* Create first version of output data set *;
-tempfile diffds1;tempname diff1;
+*
+ Create first version of output data set
+*;
+tempname fdiffds;
+frame create `fdiffds' diff weight;
 tempname wi1wi2;
-qui postfile `diff1' diff weight using `"`diffds1'"', double replace;
 local i1=`minx1'-1;
 * Create dataset for specified functional type *;
 if "`funtype'"=="bcluster" {;
@@ -492,7 +539,7 @@ if "`funtype'"=="bcluster" {;
     while(`i2'<`maxx0'){;local i2=`i2'+1;
       if(`clseq'[`i1']!=`clseq'[`i2']){;
         scal `wi1wi2'=`wei'[`i1']*`wei'[`i2'];
-        post `diff1' (`y'[`i1']-`y'[`i2']) (`wi1wi2');
+        frame post `fdiffds' (`y'[`i1']-`y'[`i2']) (`wi1wi2');
       };
     };
   };
@@ -504,7 +551,7 @@ else if "`funtype'"=="wcluster" {;
     while(`i2'<`maxx0'){;local i2=`i2'+1;
       if(`clseq'[`i1']==`clseq'[`i2']){;
         scal `wi1wi2'=`cfwei'[`i1']*`wei'[`i1']*`wei'[`i2'];
-        post `diff1' (`y'[`i1']-`y'[`i2']) (`wi1wi2');
+        frame post `fdiffds' (`y'[`i1']-`y'[`i2']) (`wi1wi2');
       };
     };
   };
@@ -515,29 +562,28 @@ else if "`funtype'"=="vonmises" {;
     local i2=`minx0'-1;
     while(`i2'<`maxx0'){;local i2=`i2'+1;
         scal `wi1wi2'=`wei'[`i1']*`wei'[`i2'];
-        post `diff1' (`y'[`i1']-`y'[`i2']) (`wi1wi2');
+        frame post `fdiffds' (`y'[`i1']-`y'[`i2']) (`wi1wi2');
     };
   };
 };
-qui postclose `diff1';
 
 *
  Input first version of output data set into memory
  and create second version of output data set
  with 1 obs per difference value
 *;
-qui use `"`diffds1'"', clear;label data;
+frame copy `fdiffds' `c(frame)', replace;
 cap count if missing(diff);
 if r(N)>0 {;
   disp as error r(N) " between-group pairwise differences missing";
   error 498;
 };
 qui compress diff;
-qui collapse (sum) weight, by(diff);
+qui collapse (sum) weight, by(diff) fast;
 lab var diff "Difference";
 lab var weight "Sum of product weights";
 * Create variable Dstar *;
-qui{;
+qui {;
   tempname totwgt;
   summ weight, meanonly;
   scal `totwgt'=r(sum);
@@ -553,21 +599,11 @@ qui{;
   lab var Dstar_r "D-star to right of difference";
 };
 
-* Save data set if specified *;
-if("`saving'"==""){;
-  local saved=0;
-};
-else{;
-  capture save `saving';
-  local saved=_rc==0;
-};
-
-if(("`fast'"=="")&("`saving'"=="")){;restore,not;};
-
 end;
 
+
 program define finddiff,rclass;
-version 12.0;
+version 16.0;
 *
  Find difference corresponding to dstar0 value
  (assuming the data set in memory
@@ -575,7 +611,7 @@ version 12.0;
  preferring to left, right or centre
  according to value of prefer
 *;
-syntax,DStar0(real) PRefer(string);
+syntax, DStar0(name) PRefer(string);
 local prefer=upper(substr("`prefer'",1,1));
 
 *
@@ -591,22 +627,10 @@ tempname diff0;
 *
  Find value for `diff0' corresponding to `dstar0'
 *;
-/*
-if(`dstar0'<=-1){;
-  if("`prefer'"=="R"){;scal `diff0'=`infty';};
-  else{;scal `diff0'=diff[_N];};
-};
-else if(`dstar0'>=1){;
-  if("`prefer'"=="L"){;scal `diff0'=`minfty';};
-  else{;scal `diff0'=diff[1];};
-};
-*/
-* Changed version 25 Jan 2001 *;
 if((`dstar0'<=-1)&("`prefer'"=="R")){;scal `diff0'=`infty';};
 else if((`dstar0'<=-1)&("`prefer'"!="R")){;scal `diff0'=diff[_N];};
 else if((`dstar0'>=1)&("`prefer'"=="L")){;scal `diff0'=`minfty';};
 else if((`dstar0'>=1)&("`prefer'"!="L")){;scal `diff0'=diff[1];};
-* End of changed version 25 Jan 2001 *;
 else if(`dstar0'<Dstar[_N]){;scal `diff0'=diff[_N];};
 else if(`dstar0'>Dstar[1]){;scal `diff0'=diff[1];};
 else{;
@@ -640,7 +664,7 @@ return scalar diff0=`diff0';
 end;
 
 program define altest, eclass;
-version 12.0;
+version 16.0;
 syntax, NEwb(numlist) DEpvar(string);
 *
  Replace estimates in e(b) with numbers in `newb',
@@ -679,8 +703,9 @@ ereturn repost b=`newbmat' V=`newVmat',rename;
 
 end;
 
+
 prog def _ystargenerate;
-version 12.0;
+version 16.0;
 /*
   Create ystar variables
   corresponding to a matrix of Theil-Sen median slopes.
@@ -716,8 +741,9 @@ forv i1=1(1)`nystar' {;
 
 end;
 
+
 #delim cr
-version 12.0
+version 16.0
 /*
   Private Mata programs used by cendif
 */

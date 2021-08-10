@@ -1,18 +1,24 @@
-*! Part of package matrixtools v. 0.2
-*! Support: Niels Henrik Bruun, nhbr@ph.au.dk
+*! Part of package matrixtools v. 0.27
+*! Support: Niels Henrik Bruun, niels.henrik.bruun@gmail.com
+*! 2019-03-13 nhb >	Zipsettings added
+*! 2019-03-12 nhb >	Label on blank separator line
 program matrix2stata, rclass
 	version 12.1
-	syntax anything(name=matrixexp), [Clear Ziprows]
-	
+	syntax anything(name=matrixexp), [Clear Ziprows ZIpsettings(string)]
+	local ziprows = "`ziprows'" != "" | "`zipsettings'" != ""
+	local 0 , `zipsettings'
+	syntax, [Bold, Zipheadertemplate]
+	mata: zipheadertemplate = "%s"
+	if "`Zipheadertemplate'" != "" mata: zipheadertemplate = "`Zipheadertemplate'" 
+	if "`bold'" != "" mata: zipheadertemplate = "{bf:%s}" 
 	* TODO: prefix
 	tempname varnames matrixname
 	capture matrix `matrixname' = `matrixexp'
 	if ! _rc {
 		`clear'
-		mata: st_local("varnames", matrix2stata("`matrixname'", "`matrixexp'", "`ziprows'" != ""))
+		mata: st_local("varnames", matrix2stata("`matrixname'", "`matrixexp'", `ziprows', zipheadertemplate))
 		tokenize `"`varnames'"'
-		if "`ziprows'" == "" strtonum `1' `2'
-		*else drop if `1' == " "
+		if !`ziprows' strtonum `1' `2'
 		return local variable_names = `"`varnames'"'
 	}
 	else return local variable_names = ""
@@ -20,9 +26,40 @@ end
 
 
 mata:
+	function nhb_mt_matrix_stripe(	string scalar matrixname, 
+								real scalar col,
+								|real scalar collapse
+								)
+	{
+		real scalar r
+		string scalar eq_duplicate_value
+		string matrix stripe
+	
+		if ( args() == 2 ) collapse = 1
+		if ( col ) {
+			stripe = st_matrixcolstripe(matrixname)
+		} else {
+			stripe = st_matrixrowstripe(matrixname)
+		}
+		if ( collapse ) {
+			eq_duplicate_value = stripe[1,1]
+			for (r=2; r<=rows(stripe); r++) {
+				if ( eq_duplicate_value != "" ) {
+					if ( eq_duplicate_value == stripe[r,1] ) {
+						stripe[r,1] = ""
+					} else {
+						eq_duplicate_value = stripe[r,1]
+					}
+				}
+			}
+		}
+		return( col ? stripe' : stripe)
+	}
+
 	function matrix2stata(	string scalar matname, 
 							string scalar matexp,
-							real scalar ziprows)
+							real scalar ziprows,
+							string scalar zipheadertemplate)
 	{
 		string rowvector names1, names2, roweqnames, tmpnm
 		real scalar rc, r, R, C, place
@@ -37,21 +74,24 @@ mata:
 				R = rows(values)
 				C = cols(values)
 				tmpnm = roweqnames
-				roweqnames = tmpnm[1,1] \ tmpnm[1,2]
+				roweqnames = sprintf(zipheadertemplate, tmpnm[1,1]) \ tmpnm[1,2]
 				tmpval = values
 				values = J (1, C, .) \ tmpval[1,.]
 				position = 1::2
 				place = 2
 				for(r=2;r<=R;r++) {
 					if ( tmpnm[r-1,1] != tmpnm[r,1] ) {
-						roweqnames = roweqnames \ tmpnm[r,1]
-						position = position \ (place=place+2)
-						values = values \ J (1, C, .)
+						roweqnames = roweqnames \ "   " \ sprintf(zipheadertemplate, tmpnm[r,1])
+						position = position \ place+1 \ (place=place+2)
+						values = values \ J (2, C, .)
 					}
 					roweqnames = roweqnames \ tmpnm[r,2]
 					position = position \ ++place
 					values = values \ tmpval[r,.]
 				}
+			roweqnames = roweqnames \ "   "
+			position = position \ place+1
+			values = values \ J (1, C, .)
 			position = (place+1) :- position // reverse order
 			rc = nhb_sae_addvars(names1, position)
 			st_vldrop(names1)

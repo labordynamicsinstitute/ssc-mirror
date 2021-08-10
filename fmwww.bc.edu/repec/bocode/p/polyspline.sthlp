@@ -108,7 +108,7 @@ of the spline at the reference points.
 {cmd:include(}{help numlist:{it:numlist}}{cmd:)} specifies a list of additional numbers
 to be included within the boundaries of the completeness region of the spline basis,
 which is the interval on the {it:X}-axis in which the generated splines are valid.
-This completness region will always include the available values of the input {it:X}-variable,
+This completeness region will always include the available values of the input {it:X}-variable,
 and also the {cmd:refpts()} values.
 The {cmd:include()} option allows the user to specify a non-default minimum and/or maximum
 for the completeness region.
@@ -284,10 +284,10 @@ instead of being interpolated quartically.
 {synopt:{cmd:r(power)}}power (or degree) of splines{p_end}
 {synopt:{cmd:r(omit)}}omitted reference point specified by {cmd:omit()}{p_end}
 {synopt:{cmd:r(base)}}base reference point specified by {cmd:base()}{p_end}
-{synopt:{cmd:r(refpts)}}final list of reference points{p_end}
 
 {p2col 5 20 24 2: Macros}{p_end}
 {synopt:{cmd:r(knots)}}final list of knots{p_end}
+{synopt:{cmd:r(refpts)}}final list of reference points{p_end}
 {synopt:{cmd:r(splist)}}{it:varlist} of generated splines{p_end}
 {synopt:{cmd:r(labfmt)}}format used in spline variable labels{p_end}
 {synopt:{cmd:r(labprefix)}}prefix used in spline variable labels{p_end}

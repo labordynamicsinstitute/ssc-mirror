@@ -11,15 +11,52 @@
 * detect
 * imputeitems
 * lstrfun
+* svmat2
+
+* Version 1.1 (September 3, 2018)  /*updated the dialog box for Stata 15, fixed a bug with cfarmsea, cfacfi and cfacovs, fixed a bug with descitems when the first observation contained missing data*/
+* Version 1.2 August 13, 2019 /* filessave and dirsave options */
+* Version 1.2.1 August 28, 2019 /* cfa is now a wrapper for sem command; that means that most options of sem_estimation_options should work for cfa */
+* Version 1.2.2 February 17, 2020 /* check if svmat2 is installed */
+
+
+
 *************************************************************************************************************
 
 program define validscale, rclass
 version 12.0
-syntax varlist [if], PARTition(numlist integer >0) [HTML(string) CATegories(numlist) SCOREName(string) scores(varlist) IMPute(string) NORound COMPScore(string) DESCitems GRAPHs cfa CFAMethod(string) cfasb CFAStand CFACov(string) CFARmsea(real -999) CFACFi(real -999) CFAOR CFANOCOVDim CONVdiv TCONVdiv(real 0.4) CONVDIVBoxplots Alpha(real 0.7) Delta(real 0.9) h(real 0.3) HJmin(real 0.3) REPet(varlist) scores2(varlist) KAPpa ICKAPpa(integer 0) kgv(varlist) KGVBoxplots KGVGroupboxplots conc(varlist) tconc(real 0.4)]
+syntax varlist [if], PARTition(numlist integer >0) [HTML(string) CATegories(numlist) SCOREName(string) scores(varlist) IMPute(string) NORound COMPScore(string) DESCitems GRAPHs cfa CFAMethod(string) cfasb CFAStand CFACov(string) CFARmsea(real -999) CFACFi(real -999) CFAOR CFANOCOVDim CONVdiv TCONVdiv(real 0.4) CONVDIVBoxplots Alpha(real 0.7) Delta(real 0.9) h(real 0.3) HJmin(real 0.3) REPet(varlist) scores2(varlist) KAPpa ICKAPpa(integer 0) kgv(varlist) KGVBoxplots KGVGroupboxplots conc(varlist) tconc(real 0.4) DIRsave(string) FILESsave *]
 preserve
+
+
+foreach c in delta loevh mi_twoway detect imputeitems lstrfun{
+	capture which "`c'"
+	if _rc qui ssc install "`c'"
+}
+
+capture which kapci
+if _rc qui net install st0076, from(http://www.stata-journal.com/software/sj4-4/)
+
+capture which svmat2 
+if _rc qui net install dm79, from(http://www.stata.com/stb/stb56)
+
 
 if "`if'"!="" {
    qui keep `if'
+}
+
+global html
+global dirsave
+global filessave
+
+if "`filessave'" != "" {
+	global filessave = "`filessave'"
+}
+
+if "`dirsave'" != "" {
+	global dirsave = "`dirsave'"
+}
+else {
+	global dirsave "`c(pwd)'"
 }
 
 if "`html'" != "" {
@@ -375,7 +412,7 @@ if "`convdiv'" != "" {
 }
 
 if "`cfa'" != "" {
-	cfa `varlist', partition(`partition') cfamethod(`cfamethod') `cfasb' `cfastand' cfacov(`cfacov') cfarmsea(`cfarmsea') cfacfi(`cfacfi') `cfaor' `cfanocovdim'
+	cfa `varlist', partition(`partition') cfamethod(`cfamethod') `cfasb' `cfastand' cfacov(`cfacov') cfarmsea(`cfarmsea') cfacfi(`cfacfi') `cfaor' `cfanocovdim' `options'
 	di
 }
 
@@ -1009,9 +1046,9 @@ foreach v in `varlist' {
 local dec = 10
 local col = `dec'
 
-tokenize `varlist'
-local minm = `1'
-local maxm = `1'
+
+local minm = 999
+local maxm = -999
 foreach mod in $categories {
 	if `mod' < `minm' local minm = `mod'
 	if `mod' > `maxm' local maxm = `mod'
@@ -1083,10 +1120,10 @@ foreach p in `partition' {
 		forvalues m = `minm'/`maxm' {
 			qui count if round(`varo`z'') == `m'
 			local n = r(N)
-			if `m' == `maxm' & round(`varo`z'')>`maxm' {
+			if `m' == `maxm' & round(`varo`z'')>`maxm' & `varo`z''!=.{
 				local n = `n' + 1
 			}
-			if `m' == `minm' & round(`varo`z'')<`minm' {
+			if `m' == `minm' & round(`varo`z'')<`minm' & `varo`z''!=.{
 				local n = `n' + 1
 			}
 			qui count if `varo`z'' != . 
@@ -1137,13 +1174,14 @@ if "$compscore" == "mean" local w = 0.5
 
 
 
+
 if "`html'"!="" {
 	//set graphics off
 	foreach s in $scorename {
 		qui local saving "saving(`c(tmpdir)'/`html'_`s',replace) nodraw"
 		qui hist `s', name(`s',replace) percent fcolor(emidblue) lcolor(none) width(`w') bin(`b') `saving'
 		qui graph use `c(tmpdir)'/`html'_`s'.gph
-		qui graph export `c(tmpdir)'/`html'_`s'.eps, replace
+		qui graph export `c(tmpdir)'/`html'_`s'.png, replace
 		//di "<img src=" _char(34) "/data/`html'_`s'.png" _char(34) 
 		//di " class=" _char(34) "resgraph" _char(34) " alt=" _char(34) "hist score" _char(34) " title= " _char(34) "hist score - click to enlarge" _char(34) " width=" _char(34) "300" _char(34) " height=" _char(34) "200" _char(34) ">"
 
@@ -1155,17 +1193,17 @@ if "`html'"!="" {
 	qui local saving "saving(`c(tmpdir)'/`html'_group,replace) nodraw"
 	qui gr combine $scorename, name(group,replace) title("Distribution of scores") `saving'  
 	qui graph use `c(tmpdir)'/`html'_group.gph
-	qui graph export `c(tmpdir)'/`html'_group.eps, replace
-	di "<img src=" _char(34) "/data/`html'_group.png" _char(34) 
-	di " class=" _char(34) "resgraph" _char(34) " alt=" _char(34) "group" _char(34) " title= " _char(34) "Distributions of scores - click to enlarge" _char(34) " width=" _char(34) "300" _char(34) " height=" _char(34) "200" _char(34) ">"
+	qui graph export `c(tmpdir)'/`html'_group.png, replace
+	//di "<img src=" _char(34) "/data/`html'_group.png" _char(34) 
+	//di " class=" _char(34) "resgraph" _char(34) " alt=" _char(34) "group" _char(34) " title= " _char(34) "Distributions of scores - click to enlarge" _char(34) " width=" _char(34) "300" _char(34) " height=" _char(34) "200" _char(34) ">"
 
 	
 	qui local saving "saving(`c(tmpdir)'/`html'_scores,replace) nodraw"
 	qui biplot $scorename, name("Biplot_scores",replace) norow std title("Correlations between scores") xtitle("") ytitle("") `saving'
 	qui graph use `c(tmpdir)'/`html'_scores.gph
-	qui graph export `c(tmpdir)'/`html'_scores.eps, replace
-	di "<img src=" _char(34) "/data/`html'_scores.png" _char(34) 
-	di " class=" _char(34) "resgraph" _char(34) " alt=" _char(34) "Correlations scores" _char(34) " title= " _char(34) "Correlations between scores - click to enlarge" _char(34) " width=" _char(34) "300" _char(34) " height=" _char(34) "200" _char(34) ">"
+	qui graph export `c(tmpdir)'/`html'_scores.png, replace
+	//di "<img src=" _char(34) "/data/`html'_scores.png" _char(34) 
+	//di " class=" _char(34) "resgraph" _char(34) " alt=" _char(34) "Correlations scores" _char(34) " title= " _char(34) "Correlations between scores - click to enlarge" _char(34) " width=" _char(34) "300" _char(34) " height=" _char(34) "200" _char(34) ">"
 }
 
 else {
@@ -1175,8 +1213,12 @@ else {
 	}
 	set graphics on
 
-	gr combine $scorename, name("Histograms_scores",replace)  
+	gr combine $scorename, name("Histograms_scores",replace)
+	if ("$filessave"!="") qui graph export ${dirsave}/Histograms_scores.png, replace
+
 	capture biplot $scorename, name("Biplot_scores",replace) norow std title("") xtitle("") ytitle("")
+	if ("$filessave"!="") qui graph export ${dirsave}/Biplot_scores.png, replace
+
 }
 
 
@@ -1235,12 +1277,14 @@ if "`html'" != "" {
 	qui local saving "saving(`c(tmpdir)'/`html'_items,replace) nodraw"
 	qui twoway `call' name("items",replace) legend(off) xscale(range(`mina1' `maxa1x')) yscale(range(`mina2' `maxa2')) title("Correlations between items") xtitle("") ytitle("") xsize(`xsize') ysize(`ysize') `saving'
 	qui graph use `c(tmpdir)'/`html'_items.gph
-	qui graph export `c(tmpdir)'/`html'_items.eps, replace
-	di "<img src=" _char(34) "/data/`html'_items.png" _char(34) 
-	di " class=" _char(34) "resgraph" _char(34) " alt=" _char(34) "Correlations items" _char(34) " title= " _char(34) "Correlations between items - click to enlarge" _char(34) " width=" _char(34) "300" _char(34) " height=" _char(34) "200" _char(34) ">"
+	qui graph export `c(tmpdir)'/`html'_items.png, replace
+	//di "<img src=" _char(34) "/data/`html'_items.png" _char(34) 
+	//di " class=" _char(34) "resgraph" _char(34) " alt=" _char(34) "Correlations items" _char(34) " title= " _char(34) "Correlations between items - click to enlarge" _char(34) " width=" _char(34) "300" _char(34) " height=" _char(34) "200" _char(34) ">"
 }
 else {
 	qui twoway `call' name("Biplot_items",replace) legend(off) xscale(range(`mina1' `maxa1x')) yscale(range(`mina2' `maxa2')) xtitle("") ytitle("")
+	if ("$filessave"!="") qui graph export ${dirsave}/Biplot_items.png, replace
+
 }
 
 
@@ -1579,7 +1623,7 @@ if "`convdivboxplots'" != "" {
 			qui local saving "saving(`c(tmpdir)'/`html'_Conv_div_``h'',replace) nodraw"
 			qui graph box `call', name("Conv_div_``h''",replace) `callbox' legend(order(`"`callleg'"') stack rows(1) size(small)) title(Correlations between items of ``h'' and scores) yline(`tconvdiv', lpattern(dot) lcolor(black)) `saving'  
 			qui graph use `c(tmpdir)'/`html'_Conv_div_``h''.gph
-			qui graph export `c(tmpdir)'/`html'_Conv_div_``h''.eps, replace
+			qui graph export `c(tmpdir)'/`html'_Conv_div_``h''.png, replace
 			
 			di "<img src=" _char(34) "/data/`html'_Conv_div_``h''.png" _char(34) 
 			di "style="_char(34) "margin-bottom:10px;margin-right:22px" _char(34)" class=" _char(34) "resgraph" _char(34) " alt=" _char(34) "convdiv boxplots" _char(34) " title= " _char(34) "Correlations between items of ``h'' and scores - click to enlarge" _char(34) " width=" _char(34) "225" _char(34) " height=" _char(34) "150" _char(34) ">"
@@ -1606,7 +1650,10 @@ if "`convdivboxplots'" != "" {
 			local lab = `"`lab'"'
 			local callleg `callleg' `j' "`lab'"
 		}
+		di "ok1"
 		graph box `call', name("Conv_div_``h''",replace) `callbox' legend(order(`"`callleg'"') stack rows(1) size(small)) title(Correlations between items of ``h'' and scores) yline(`tconvdiv', lpattern(dot) lcolor(black))
+		di "ok2"
+		if ("$filessave"!="") qui graph export ${dirsave}/Conv_div_``h''.png, replace
 		qui set autotabgraphs on
 		}
 	}
@@ -1634,11 +1681,8 @@ end
 
 capture program drop cfa
 program cfa,rclass
-syntax varlist, PARTition(numlist integer >0) [CFAMethod(string) cfasb CFAStand CFACov(string) CFARmsea(real -999) CFACfi(real -999) CFAOR CFANOCOVDim] 
+syntax varlist, PARTition(numlist integer >0) [CFAMethod(string) cfasb CFAStand CFACov(string) CFARmsea(real -999) CFACfi(real -999) CFAOR CFANOCOVDim *] 
 preserve
-
-
-
 
 if "`cfasb'"!="" & `cfacfi'!=-999 {
 	di in red "You cannot use both cfasb and cfacfi()"
@@ -1755,7 +1799,8 @@ di as result "{hline 105}"
 
 local exitloop = 0
 foreach v in `varlist' {
-		qui su `v'
+		local low = lower("`v'")
+		qui su `low'
 		local range = r(max)-r(min)+1
 		if `range' < 5 & "`cfamethod'"=="ml"{
 			local message "Warning: some items have less than 5 response categories. If multivariate normality assumption does not hold, maximum likelihood estimation might not be appropriate. Consider using cfamethod(adf)."
@@ -1775,17 +1820,20 @@ local stop = 0
 
 while (`ii' == 1 | "`covsi'" != "") & `stop'!=1 {
 	if `ii' == 1 & ("`cfarmsea'"!="" | "`cfacfi'"!="") {
-		di "step 1 (model without covariances between errors)" 
+		di
+		di as text "step 1 (model without covariances between errors)" 
 	}
 	if "`covs'" != "" & ("`cfarmsea'"!="" | "`cfacfi'"!="") di _n "{bf:step `ii':} {text:`covsi'}"
 	local covsi
 	
+	
 	if "`cfanocovdim'" == "" {
-		qui sem `zz', method(`cfamethod') `cfastand' cov(`covs') iterate(50) `cfasb'
+		qui sem `zz', method(`cfamethod') `cfastand' cov(`covs') `cfasb' `options'
 	}
 	else {
-		qui sem `zz', method(`cfamethod') `cfastand' cov(`covs') iterate(50) covstruct(_lexogenous, diagonal) `cfasb'
+		qui sem `zz', method(`cfamethod') `cfastand' cov(`covs') covstruct(_lexogenous, diagonal) `cfasb' `options'
 	}
+	local vce = e(vce)
 	
 	/* factor loadings */
 
@@ -1874,15 +1922,25 @@ while (`ii' == 1 | "`covsi'" != "") & `stop'!=1 {
 	
 	matrix r = r(table)
 	local P:word count `partition'
-	local n = `nbvars'*3+1+`P'
+	if `P' > 1 {
+		local one = 1
+	}
+	else{
+		local one = 0
+	}
+	local n = `nbvars'*3+`one'+`P'
 	
 	
 	if "`cfanocovdim'" == "" {
+		//mat li r
 		matrix r = r[1,`n'...]
 		//mat li r
 		matrix c = J(`P',`P',.)
 		
-		local k = 1
+		local nbcov:word count `cfacov'
+		local `++nbcov'
+		
+		local k = `nbcov'
 		forvalues c = 1/`P' { 
 			forvalues r = 2/`P' {
 				if `r'>`c' {
@@ -1913,6 +1971,7 @@ while (`ii' == 1 | "`covsi'" != "") & `stop'!=1 {
 			}
 			//else local stoprmsea = 0
 		}
+		else local stoprmsea = 1
 		if "`cfacfi'"!="" {
 			qui estat gof
 			di "cfi =" round(r(cfi),0.001)
@@ -1921,6 +1980,10 @@ while (`ii' == 1 | "`covsi'" != "") & `stop'!=1 {
 			}
 			//else local stopcfi = 0
 		}
+		else local stopcfi = 1
+		
+	
+		
 		/* OR */ 
 		if "`cfaor'"!="" {
 			if `stoprmsea'==1 | `stopcfi'==1 {
@@ -2001,7 +2064,7 @@ while (`ii' == 1 | "`covsi'" != "") & `stop'!=1 {
 
 	}
 	
-	if e(converged) == 0 di in red "Warning : model did not converge after 50 iterations"
+	if e(converged) == 0 di in red "Warning : model did not converge after `e(ic)' iterations"
 	local `++ii'
 	
 }
@@ -2029,7 +2092,7 @@ local dec2 = `dec'+`max2'+5
 
 local a = e(N)
 di
-if e(converged) == 0 di in red "Warning : model did not converge after 50 iterations"
+if e(converged) == 0 di in red "Warning : model did not converge after `e(ic)' iterations"
 di as result ""
 if "`covs'" != "" {
 	di as result "{bf:Covariances between errors added:} {text:`covs'}"
@@ -2113,7 +2176,7 @@ foreach x in `partition' {
 qui estat gof, stats(all)
 
 
-if "`cfasb'" != "" {
+if "`cfasb'" != "" | "`vce'"=="sbentler"{
 	local chi2 = r(chi2sb_ms)
 	local p = r(psb_ms)
 	local ddl = r(df_ms)
@@ -2152,7 +2215,7 @@ if "`cfanocovdim'" == "" {
 }
 
 di
-if "`cfasb'" != "" {
+if "`cfasb'" != "" | "`vce'"=="sbentler" {
 	di "{bf:Goodness of fit (with Satorra-Bentler correction):}"
 }
 else {
@@ -2758,7 +2821,7 @@ if "`kgvboxplots'" != "" {
 					qui local saving "saving(`c(tmpdir)'/`html'_kgv`s',replace) nodraw"
 					qui graph box `s', over(`c') name("`s'_`c'",replace) b1title("`c' (p=`pp')") `saving'  
 					qui graph use `c(tmpdir)'/`html'_kgv`s'.gph
-					qui graph export `c(tmpdir)'/`html'_kgv`s'.eps, replace
+					qui graph export `c(tmpdir)'/`html'_kgv`s'.png, replace
 						
 						
 					local g `g' `s'_`c'
@@ -2770,9 +2833,9 @@ if "`kgvboxplots'" != "" {
 			qui local saving "saving(`c(tmpdir)'/`html'_kgv,replace) nodraw"
 			qui gr combine `g', name(kgv,replace) `saving'
 			qui graph use `c(tmpdir)'/`html'_kgv.gph
-			qui graph export `c(tmpdir)'/`html'_kgv.eps, replace
-			di "<img src=" _char(34) "/data/`html'_kgv.png" _char(34) 
-			di "style="_char(34) "margin-bottom:10px;margin-right:22px" _char(34)" class=" _char(34) "resgraph" _char(34) " alt=" _char(34) "kgv" _char(34) " title= " _char(34) "kgv - click to enlarge" _char(34) " width=" _char(34) "225" _char(34) " height=" _char(34) "150" _char(34) ">"
+			qui graph export `c(tmpdir)'/`html'_kgv.png, replace
+			//di "<img src=" _char(34) "/data/`html'_kgv.png" _char(34) 
+			//di "style="_char(34) "margin-bottom:10px;margin-right:22px" _char(34)" class=" _char(34) "resgraph" _char(34) " alt=" _char(34) "kgv" _char(34) " title= " _char(34) "kgv - click to enlarge" _char(34) " width=" _char(34) "225" _char(34) " height=" _char(34) "150" _char(34) ">"
 							
 		}
 		else {
@@ -2786,9 +2849,9 @@ if "`kgvboxplots'" != "" {
 					qui local saving "saving(`c(tmpdir)'/`html'_kgv`s',replace) nodraw"
 					qui graph box `s', over(`c') name("`s'_`c'",replace) b1title("`c' (p=`pp')") `saving'  
 					qui graph use `c(tmpdir)'/`html'_kgv`s'.gph
-					qui graph export `c(tmpdir)'/`html'_kgv`s'.eps, replace
-					di "<img src=" _char(34) "/data/`html'_kgv`s'.png" _char(34) 
-					di "style="_char(34) "margin-bottom:10px;margin-right:22px" _char(34)" class=" _char(34) "resgraph" _char(34) " alt=" _char(34) "kgv" _char(34) " title= " _char(34) "kgv - click to enlarge" _char(34) " width=" _char(34) "225" _char(34) " height=" _char(34) "150" _char(34) ">"
+					qui graph export `c(tmpdir)'/`html'_kgv`s'.png, replace
+					//di "<img src=" _char(34) "/data/`html'_kgv`s'.png" _char(34) 
+					//di "style="_char(34) "margin-bottom:10px;margin-right:22px" _char(34)" class=" _char(34) "resgraph" _char(34) " alt=" _char(34) "kgv" _char(34) " title= " _char(34) "kgv - click to enlarge" _char(34) " width=" _char(34) "225" _char(34) " height=" _char(34) "150" _char(34) ">"
 									
 					local g `g' `s'_`c' 
 					local k = `k'+1
@@ -2814,6 +2877,8 @@ if "`kgvboxplots'" != "" {
 				local cc = `cc'+1
 			}
 			gr combine `g', name(Known_groups_validity,replace)
+			if ("$filessave"!="") qui graph export ${dirsave}/Known_groups_validity.png, replace
+
 		}
 		else {
 			local cc = 1
@@ -2822,6 +2887,7 @@ if "`kgvboxplots'" != "" {
 				foreach s in `varlist' {
 					local pp = round(`p`k'_`cc'',0.001)
 					graph box `s', over(`c') name("`s'_`c'",replace) b1title("`c' (p=`pp')")
+					if ("$filessave"!="") qui graph export ${dirsave}/Known_groups_validity_`c'_`s'.png, replace
 					local g `g' `s'_`c' 
 					local k = `k'+1
 				}

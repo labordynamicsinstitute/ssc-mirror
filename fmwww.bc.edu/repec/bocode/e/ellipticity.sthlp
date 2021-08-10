@@ -1,5 +1,5 @@
 {smcl}
-{* *! version 1.1.0  3jan2013}{...}
+{* *! version 1.2.0  11feb2021}{...}
 {cmd:help ellipticity} {right: (Vincenzo Verardi and Catherine Vermandele)}
 {hline}
 
@@ -75,20 +75,24 @@ is {cmd:level(0.95)} or as set by {helpb set level}.
 {synopt:{cmd:r(crit)}}The critical value{p_end}
 {synopt:{cmd:r(df)}}The degrees of freedom{p_end}
 {synopt:{cmd:r(p)}}The p-value{p_end}
-
+{synopt:{cmd:r(N)}}The number of observations{p_end}
+{synopt:{cmd:e(.)}}All the outputs available from "robmv s" with the option whilferty called{p_end}
 
 {title:References}
 
 
-Cassart, D. (2007). Optimal Tests for Symmetry. PhD dissertation,Université Libre de Bruxelles.
+Cassart, D. (2007). Optimal Tests for Symmetry. PhD dissertation,UniversitÃ© Libre de Bruxelles.
 
 Hallin, M. and Paindaveine D. (2006). Semiparametrically efficient rank-based inference for shape. I. Optimal rank-based tests for 
 sphericity. Annals of Statistics 34, 2707-2756.
 
 Verardi, V. and Croux, C. (2009). Robust regression in Stata. Stata Journal 9(3), 439-453.
 
+{title:Remark}
+Please type "ssc install robmv" to install robmv, module needed for robust multivariate estimation 
+of location and scatter. Note that moremata is needed to run robmv. To install it, please type "ssc install moremata"
+ 
 {title:Also see}
-
 {psee}
-Manual:  {manlink R mvtest}  {break}
- {manhelp smultiv R} (if installed) {p_end}
+Online:  help for {helpb robmv} (if installed)
+

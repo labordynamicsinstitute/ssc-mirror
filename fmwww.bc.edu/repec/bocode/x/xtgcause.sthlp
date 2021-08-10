@@ -1,5 +1,5 @@
 ﻿{smcl}
-{* *! 29jul2017}{...}
+{* *! 20oct2017}{...}
 {cmd:help xtgcause}
 {hline}
 
@@ -7,25 +7,31 @@
 {title:Title}
 
 {p 4 18 2}
-{hi:xtgcause} {hline 2} Testing for Granger causality in panel data.
+{hi:xtgcause} {hline 2} Testing for Granger causality in panel data
 {p_end}
 
 
 {title:Syntax}
 
 {p 4 12 2}
-{cmd:xtgcause} {varlist}
+{cmd:xtgcause} {it:depvar} {it:indepvar}
 {ifin}{cmd:,} 
 [{cmdab:l:ags(}{it:lags_spec}{cmd:)}
-{cmdab:reg:ress}]
+{cmdab:reg:ress}
+{cmdab:boot:strap}
+{cmdab:br:eps(}{it:#}{cmd:)}
+{cmdab:blev:el(}{it:#}{cmd:)}
+{cmdab:blen:gth(}{it:#}{cmd:)}
+{cmd:seed(}{it:#}{cmd:)}
+{cmd: nodots}]
 
 
 
 {title:Description}
 
 {pstd}
-{cmd:xtgcause} allows to test for Granger non-causality in heterogeneous panels
-using the procedure proposed by Dumitrescu & Hurlin (2012).
+{cmd:xtgcause} allows to test for Granger non-causality from {it:indepvar} to {it:depvar} 
+in heterogeneous panels using the procedure proposed by Dumitrescu & Hurlin (2012).
 
 
 {title:Options}
@@ -39,22 +45,59 @@ followed by a positive integer.
 By default, {cmd:lags(}{it:lags_spec}{cmd:)} is set to {cmd:lags(}1{cmd:)}.
 
 {pmore}
-Specifying {cmd:lags(}{it:#}{cmd:)} requests that # lag(s) of the series 
+Specifying {cmd:lags(}{it:#}{cmd:)} requests that {it:#} lag(s) of the series 
 be used in the regressions. The maximum authorized number of lags is such 
-that T > 5+3#.
+that {it:T > 5+3#}.
 
 {pmore}
 Specifying {cmd:lags(}{it:aic|bic|hqic [#]}{cmd:)} requests that the number of lags of the 
 series be chosen such that the average Akaike/Bayesian/Hannan-Quinn information criterion (AIC/BIC/HQIC) 
-for the set of regressions is minimized. Regressions with 1 to # lags will be conducted, 
-restricting the number of observations to T-# for all estimations to make the models nested 
+for the set of regressions is minimized. Regressions with 1 to {it:#} lags will be conducted, 
+restricting the number of observations to {it:T-#} for all estimations to make the models nested 
 and therefore comparable. Displayed statistics come from the set of regressions for which 
 the average AIC/BIC/HQIC is minimized (re-estimated using the total number of observations available). 
-If {it:#} is not specified in {cmd:lags(}{it:aic|bic|hqic [#]}{cmd:)}, then the maximum 
-authorized number of lags is used.
+If {it:#} is not specified in {cmd:lags(}{it:aic|bic|hqic [#]}{cmd:)}, then it is set to the maximum 
+number of lags authorized.
 
-{phang}{cmd:regress} requests that the regression results be displayed.
+{phang}{cmd:regress} can be used to display the results of the {it:N} individual regressions 
+on which the test is based. This option is useful to have a look at the coefficients of 
+individual regressions. When the number of individuals in the panel is large, this option 
+will result in a very long output.
 
+{phang}{cmd:bootstrap} requests p-values and critical values to be computed
+using a bootstrap procedure proposed in section 6.2 of Dumitrescu & Hurlin (2012).
+Boostrap is useful in presence of cross-sectional dependence.
+
+{pmore}
+{cmd:breps(}{it:#}{cmd:)} indicates the number of bootstrap replications
+to perform. By default, it is set to 1000.
+
+{pmore}
+{cmd:blevel(}{it:#}{cmd:)} indicates the number of significance level (in %)
+for computing the bootstrapped critical values. By default, it is set to 95%.
+
+{pmore}
+{cmd:blength(}{it:#}{cmd:)} indicates the size of the block length to 
+be used in the bootstrap. By default, each time period is sampled
+independently with replacement ({cmd:blength(}1{cmd:)}). 
+{cmd:blength(}{it:#}{cmd:)} allows to implement the bootstrap by dividing the 
+sample into block of {it:#} time periods and sampling the blocks independently 
+with replacement. Using blocks of more than one time periods is useful if 
+autocorrelation is suspected.
+
+{pmore}
+{cmd:seed(}{it:#}{cmd:)} can be used to set the random-number seed.
+By default, the seed is not set. 
+
+{pmore}
+{cmd:nodots} suppresses replication dots. By default, a dot is printed
+for each replication to provide an indication of the evolution of the
+bootstrap.
+
+{pmore}
+{cmd:breps}, {cmd:blevel}, {cmd:blength}, {cmd:seed}, and {cmd:nodots}
+are {cmd:bootstrap} suboptions. They can only be used if {cmd:bootstrap} is 
+also specified.
 
 
 {title:Saved results}
@@ -64,17 +107,28 @@ authorized number of lags is used.
 
 {synoptset 20 tabbed}{...}
 {p2col 5 20 24 2: Scalars}{p_end}
-{synopt:{cmd:r(wbar)}}Average Wald statistic{p_end}
-{synopt:{cmd:r(lags)}}Number of lags used for the test{p_end}
+{synopt:{cmd:r(wbar)}}average Wald statistic{p_end}
+{synopt:{cmd:r(lags)}}number of lags used for the test{p_end}
 {synopt:{cmd:r(zbar)}}Z-bar statistic{p_end}
-{synopt:{cmd:r(pvzbar)}}P-value of the Z-bar statistic{p_end}
+{synopt:{cmd:r(zbar_pv)}}p-value of the Z-bar statistic{p_end}
 {synopt:{cmd:r(zbart)}}Z-bar tilde statistic{p_end}
-{synopt:{cmd:r(pvzbart)}}P-value of the Z-bar tilde statistic{p_end}
+{synopt:{cmd:r(zbart_pv)}}p-value of the Z-bar tilde statistic{p_end}
+
+{p2col 5 20 24 2: Additional scalars if bootstrap is used}{p_end}
+{synopt:{cmd:r(zbarb_cv)}}critical value for the Z-bar statistic{p_end}
+{synopt:{cmd:r(zbartb_cv)}}critical value for the Z-bar tilde statistic{p_end}
+{synopt:{cmd:r(breps)}}number of bootstrap replications{p_end}
+{synopt:{cmd:r(blevel)}}significance level for bootstrap critical values{p_end}
+{synopt:{cmd:r(blength)}}size of the block length{p_end}
 
 {synoptset 20 tabbed}{...}
 {p2col 5 20 24 2: Matrices}{p_end}
-{synopt:{cmd:r(Wi)}}Individual Wald statistics{p_end}
-{synopt:{cmd:r(PVi)}}P-values of the individual Wald statistics{p_end}
+{synopt:{cmd:r(Wi)}}individual Wald statistics{p_end}
+{synopt:{cmd:r(PVi)}}p-values of the individual Wald statistics{p_end}
+
+{p2col 5 20 24 2: Additional matrices if bootstrap is used}{p_end}
+{synopt:{cmd:r(ZBARb)}}Z-bar statistics from bootstrap procedure{p_end}
+{synopt:{cmd:r(ZBARTb)}}Z-bar tilde statistics from bootstrap procedure{p_end}
 
 
 {title:Example}
@@ -124,5 +178,7 @@ Neuchâtel, Switzerland{break}
 {title:Acknowledgement}
 
 {pstd}
-Special thanks to Gareth Thomas for suggestions 
-that led to improvements of the command.
+We are indebted to David Ardia (University of Neuchâtel) for his valuable advice 
+on the bootstrap procedure. We also thank Gareth Thomas (IHS Markit EViews) for 
+his comments regarding the procedure to determine the optimal lag order 
+based on information criteria.

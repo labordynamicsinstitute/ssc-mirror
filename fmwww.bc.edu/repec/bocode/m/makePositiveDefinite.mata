@@ -1,7 +1,5 @@
-// TEST OF FUNCTIONS CAN BE FOUND IN xtIOU/do files/test compiling interfacePD isPositiveDefinite and makePositiveDefinite.do
-// VERSION 2 OF MATA FUNCTION (IN DO FILES REFERRED TO AS makePositiveDefiniteV2)
-
 capture mata: mata drop makePositiveDefinite()
+
 mata:
 real matrix makePositiveDefinite(real matrix C)
 {
@@ -30,7 +28,3 @@ real matrix makePositiveDefinite(real matrix C)
 	return(Ctilde)
 }
 end
-
-mata: mata mosave makePositiveDefinite(), dir(PERSONAL) replace
-
-// END OF FILE

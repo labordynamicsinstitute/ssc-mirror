@@ -1,4 +1,4 @@
-*! version 2.0 August 26, 2013 @ 17:11:01
+*! version 2.1 August 5, 2020 @ 14:22:08 UK
 *! Sequence-Index-Plot
 
 * Version 1.1: Original SJ contribution
@@ -13,6 +13,7 @@
 * Version 1.9: Option rbar implemented
 * Version 1.9a: color(string asis)
 * Version 2: Wrong scaling if minimum time > 1 -> fixed
+* Version 2.1: color() with cmyk, rgb wired -> fixed
 
 program define sqindexplot
 version 9
@@ -177,8 +178,8 @@ version 9
 			local legorder  `"`legorder' `j' `"`:label (`_dta[SQis]') `k''"'"'
 
 			if `"`color'"' != `""' {
-				local colopt1 `"lcolor(`:word `i' of `color'')"'
-				local colopt2 `"color(`:word `i' of `color'')"'
+				local colopt1 `"lcolor(`"`:word `i' of `color''"')"'
+				local colopt2 `"color(`"`:word `i' of `color''"')"'
 			}
 			else local colopt2 bstyle(p`i')
 

@@ -1,3 +1,17 @@
+*! version 1.14 beta RhMD 11 Nov 2013
+*! with "specific" added as a new mediation option. This allows the user
+*! to specify two values of a single continuous exposure for which all
+*! effects are to be defined.
+*!
+*! version 1.13 beta RhMD 13 Aug 2013
+*! with "proportion mediated" added to the mediation output
+*!
+*! version 1.12 beta RhMD 21 May 2013
+*! with logOR and logRR options added for mediation - instead of giving 
+*! TCE, NDE, NIE, CDE as risk differences, if one of these options is 
+*! selected, the results will be given on either the logOR or logRR scales, 
+*! respectively.
+*!
 *! version 1.11 beta RhMD 14 Jan 2013
 *! with the "bug" that simulates L independently for different values of
 *! X "fixed" so that the errors are always perfectly correlated across
@@ -99,8 +113,8 @@
 |                                                              |
 |                                                              |
 |  Author: Rhian Daniel                                        |
-|  Date: 14th Jan 2013                                         |
-|  Version: 1.11 beta                                          |
+|  Date: 21st May 2013                                         |
+|  Version: 1.12 beta                                          |
 |                                                              |
 |                                                              |
 |                                                              | 
@@ -124,9 +138,9 @@ version 11
 syntax varlist(min=2 numeric) [if] [in] , OUTcome(varname) COMmands(string) EQuations(string) [Idvar(varname) ///
     Tvar(varname) VARyingcovariates(varlist) intvars(varlist) interventions(string) monotreat dynamic eofu pooled death(varname) ///
     derived(varlist) derrules(string) FIXedcovariates(varlist) LAGgedvars(varlist) lagrules(string) msm(string) ///
-    mediation EXposure(varlist) mediator(varlist) control(string) baseline(string) base_confs(varlist) /// 
+    mediation EXposure(varlist) mediator(varlist) control(string) baseline(string) alternative(string) base_confs(varlist) /// 
     post_confs(varlist) impute(varlist) imp_eq(string) imp_cmd(string) imp_cycles(int 10) SIMulations(int 99999) ///
-	SAMples(int 1000) seed(int 0) obe oce boceam linexp minsim moreMC all graph saving(string) replace]
+	SAMples(int 1000) seed(int 0) obe oce specific boceam linexp minsim moreMC logOR logRR all graph saving(string) replace]
 preserve
 keep `varlist'
 if "`in'"!="" {
@@ -381,6 +395,9 @@ if "`mediation'"=="" {
 	if `simulations'==99999 {
 		local simulations=`maxid'
 	}
+	if "`logOR'"!="" | "`logRR'"!="" {
+		noi di as err "Warning: options logOR and logRR are for use with the mediation option only and hence will be ignored."
+	}
 }
 else {
 	if _N<`simulations' & "`moreMC'"=="" {
@@ -392,6 +409,10 @@ else {
 	}
 	if `simulations'==99999 {
 		local simulations=_N
+	}
+	if "`logOR'"!="" & "`logRR'"!="" {
+		noi di as err "Error: you cannot specify BOTH logOR and logRR."
+		exit 198
 	}
 }
 if "`mediation'"=="" & "`idvar'"=="" {
@@ -426,10 +447,10 @@ if "`mediation'"!="" & "`baseline'"=="" & "`obe'"=="" & "`oce'"=="" & "`linexp'"
 	noi di as err "Error: With the mediation option, either baseline(), obe, oce or linexp must be specified."
 	exit 198
 }
-if "`obe'"!="" | "`oce'"!="" | "`linexp'"!=="" {
+if "`obe'"!="" | "`oce'"!="" | "`linexp'"!=="" | "`specific'"!=="" {
 	local nexp: word count `exposure'
 	if `nexp'>1 {
-		noi di as err "Error: options obe, oce or linexp cannot be specified when there is more than one exposure."
+		noi di as err "Error: options obe, oce, specific or linexp cannot be specified when there is more than one exposure."
 		exit 198
 	}
 }
@@ -449,6 +470,18 @@ if "`obe'"!="" & "`oce'"!="" {
 		noi di as err "Warning: You cannot specify both obe and oce."
 		exit 198
 	}
+}
+if "`obe'"!="" & "`specific'"!="" {
+	noi di as err "Warning: You cannot specify both obe and specific."
+	exit 198
+}
+if "`oce'"!="" & "`specific'"!="" {
+	noi di as err "Warning: You cannot specify both oce and specific."
+	exit 198
+}
+if "`linexp'"!="" & "`specific'"!="" {
+	noi di as err "Warning: You cannot specify both linexp and specific."
+	exit 198
 }
 if "`obe'"!="" & "`linexp'"!="" {
 	cap tab `exposure'
@@ -518,6 +551,10 @@ if "`obe'"!="" & "`mediation'"=="" {
 	noi di as err "Warning: Option obe not relevant for the time-varying confounding analysis. Try dropping it."
 	exit 198
 }
+if "`specific'"!="" & "`mediation'"=="" {
+	noi di as err "Warning: Option specific not relevant for the time-varying confounding analysis. Try dropping it."
+	exit 198
+}
 if "`oce'"!="" & "`mediation'"=="" {
 	noi di as err "Warning: Option oce not relevant for the time-varying confounding analysis. Try dropping it."
 	exit 198
@@ -528,6 +565,10 @@ if "`linexp'"!="" & "`mediation'"=="" {
 }
 if "`obe'"!="" & "`baseline'"!="" {
 	noi di as err "Warning: Option baseline() is irrelevant when obe is also specified. Try dropping it."
+	exit 198
+}
+if "`specific'"!="" & ("`baseline'"=="" | "`alternative'"=="") {
+	noi di as err "Warning: Options baseline() and alternative() must be specified when specific is also specified."
 	exit 198
 }
 if "`linexp'"!="" & "`baseline'"!="" {
@@ -885,9 +926,9 @@ if "`mediation'"=="" {
 gformula_ `varlist' `if' `in', out(`outcome') com(`commands') eq(`equations') i(`idvar') t(`tvar') ///
 	var(`varyingcovariates') intvars(`intvars') interventions(`interventions') `monotreat' `eofu' `pooled' death(`death') ///
     derived(`derived') derrules(`derrules') fix(`fixedcovariates') lag(`laggedvars') lagrules(`lagrules') ///
-    msm(`msm') `mediation' ex(`exposure') mediator(`mediator') control(`control') baseline(`baseline') ///
+    msm(`msm') `mediation' ex(`exposure') mediator(`mediator') control(`control') baseline(`baseline') alternative(`alternative') ///
     base_confs(`base_confs') post_confs(`post_confs') impute(`impute') imp_eq(`imp_eq') imp_cmd(`imp_cmd') ///
-	imp_cycles(`imp_cycles') sim(`simulations') `obe' `oce' `boceam' `linexp' `minsim' `moreMC' `graph' saving(`saving') `replace'
+	imp_cycles(`imp_cycles') sim(`simulations') `obe' `oce' `specific' `boceam' `linexp' `minsim' `moreMC' `logOR' `logRR' `graph' saving(`saving') `replace'
 
 if "`mediation'"=="" {	
 	local _b=""
@@ -950,7 +991,7 @@ else {
 		}
 	}	
 	if "`oce'"=="" {
-		local _po="r(tce) r(nde) r(nie) r(cde)"
+		local _po="r(tce) r(nde) r(nie) r(pm) r(cde)"
 	}
 	else {
 		local _po=""
@@ -966,6 +1007,9 @@ else {
 			local _po="`_po'"+"r(nie_`j')"
 		}
 		forvalues j=1/`nexplev' {
+			local _po="`_po'"+"r(pm_`j')"
+		}
+		forvalues j=1/`nexplev' {
 			local _po="`_po'"+"r(cde_`j')"
 		}
 	}
@@ -974,9 +1018,9 @@ bootstrap `_b' `_po' `_cinc', reps(`samples') `bca' noheader nolegend notable no
     out(`outcome') com(`commands') eq(`equations') i(`idvar') t(`tvar') var(`varyingcovariates') ///
     intvars(`intvars') interventions(`interventions') `monotreat' `eofu' `pooled' death(`death') derived(`derived') ///
     derrules(`derrules') fix(`fixedcovariates') lag(`laggedvars') lagrules(`lagrules') msm(`msm') `mediation' ///
-    ex(`exposure') mediator(`mediator') control(`control') baseline(`baseline') base_confs(`base_confs') ///
+    ex(`exposure') mediator(`mediator') control(`control') baseline(`baseline') alternative(`alternative') base_confs(`base_confs') ///
     post_confs(`post_confs') impute(`impute') imp_eq(`imp_eq') imp_cmd(`imp_cmd') imp_cycles(`imp_cycles') ///
-	sim(`simulations') `obe' `oce' `boceam' `linexp' `minsim' `moreMC' saving(`saving') `replace'
+	sim(`simulations') `obe' `oce' `specific' `boceam' `linexp' `minsim' `moreMC' `logOR' `logRR' saving(`saving') `replace'
 mat b=e(b)
 mat se=e(se)
 mat ci_normal=e(ci_normal)
@@ -1001,6 +1045,8 @@ if "`msm'"!="" {
 	if "`all'"=="" {
 		noi di as text _col(2)  "{hline 13}{c TT}{hline 68}"
 		noi di as text _col(15) "{c |}" _col(18)  "G-computation" 
+		
+		
 		noi di as text _col(15) "{c |}" _col(19) "estimate of" _col(34) "Bootstrap" _col(68) "Normal-based"
 		local w=14-length(abbrev("`outcome'",12))
 		if "`eofu'"!="" {
@@ -1646,17 +1692,25 @@ else {
         noi di as text "and the controlled direct effect"
     }
     noi di
-	if "`obe'"=="" & "`oce'"=="" & "`linexp'"=="" {
-		noi di as text _col(5) "Note: The total causal effect (" as result "TCE" as text ") is the difference between the"
+	if "`obe'"=="" & "`oce'"=="" & "`linexp'"=="" & "`specific'"=="" {
+		noi di as text _col(5) "Note: The total causal effect (" as result "TCE" as text ") is a comparison between the"
 		noi di as text _col(11) "mean outcome under the observational regime and the mean potential"
 		noi di as text _col(11) "outcome if, contrary to fact, all subjects' exposure(s) were"
 		noi di as text _col(11) "set at the baseline values. Writing X for the exposure(s), M"
 		noi di as text _col(11) "for the mediator(s), Y for the outcome and 0 for the baseline"
-		noi di as text _col(11) "value(s) of the exosure(s), then:"
+		noi di as text _col(11) "value(s) of the exposure(s), then:"
 		noi di
-		noi di as result _col(23) "TCE" as text "=E[Y{X,M(X)}]-E[Y{0,M(0)}]"
+		if "`logOR'"=="" & "`logRR'"=="" {
+			noi di as result _col(23) "TCE" as text "=E[Y{X,M(X)}]-E[Y{0,M(0)}]"
+		}
+		if "`logOR'"!="" & "`logRR'"=="" {
+			noi di as result _col(23) "TCE" as text "=log{E[Y{X,M(X)}]/(1-E[Y{X,M(X)}])}-log{E[Y{0,M(0)}]/(1-E[Y{0,M(0)}])}"
+		}
+		if "`logOR'"=="" & "`logRR'"!="" {
+			noi di as result _col(23) "TCE" as text "=log(E[Y{X,M(X)}])-log(E[Y{0,M(0)}])"
+		}
 		noi di
-		noi di as text _col(11) "The natural direct effect (" as result "NDE" as text ") is the difference between the"
+		noi di as text _col(11) "The natural direct effect (" as result "NDE" as text ") is a comparison between the"
 		noi di as text _col(11) "mean of two potential outcomes. The first is the potential"
 		noi di as text _col(11) "outcome if, contrary to fact, all subjects' mediator(s) were" 
 		noi di as text _col(11) "set to their potential value(s) under the baseline value(s)" 
@@ -1665,15 +1719,34 @@ else {
 		noi di as text _col(11) "potential outcome if, contrary to fact, all subjects'" 
 		noi di as text _col(11) "exposure(s) were set at the baseline value(s). That is:"
 		noi di
-		noi di as result _col(23) "NDE" as text "=E[Y{X,M(0)}]-E[Y{0,M(0)}]"
+		if "`logOR'"=="" & "`logRR'"=="" {
+			noi di as result _col(23) "NDE" as text "=E[Y{X,M(0)}]-E[Y{0,M(0)}]"
+		}
+		if "`logOR'"!="" & "`logRR'"=="" {
+			noi di as result _col(23) "NDE" as text "=log{E[Y{X,M(0)}]/(1-E[Y{X,M(0)}])}-log{E[Y{0,M(0)}]/(1-E[Y{0,M(0)}])}"
+		}
+		if "`logOR'"=="" & "`logRR'"!="" {
+			noi di as result _col(23) "NDE" as text "=log(E[Y{X,M(0)}])-log(E[Y{0,M(0)}])"
+		}
 		noi di
 		noi di as text _col(11) "The natural indirect effect (" as result "NIE" as text ") is the difference between"
 		noi di as text _col(11) "the " as result "TCE" as text " and the " as result "NDE" as text ". That is:"
 		noi di
-		noi di as result _col(19) "NIE" as text "=" as result "TCE" as text "-" as result "NDE" as text "=E[Y{X,M(X)}]-E[Y{X,M(0)}]"
+		if "`logOR'"=="" & "`logRR'"=="" {
+			noi di as result _col(19) "NIE" as text "=" as result "TCE" as text "-" as result "NDE" as text "=E[Y{X,M(X)}]-E[Y{X,M(0)}]"
+		}
+		if "`logOR'"!="" & "`logRR'"=="" {
+			noi di as result _col(19) "NIE" as text "=" as result "TCE" as text "-" as result "NDE" as text "=log{E[Y{X,M(X)}]/(1-E[Y{X,M(X)}])}-log{E[Y{X,M(0)}]/(1-E[Y{X,M(0)}])}"
+		}
+		if "`logOR'"=="" & "`logRR'"!="" {
+			noi di as result _col(19) "NIE" as text "=" as result "TCE" as text "-" as result "NDE" as text "=log(E[Y{X,M(X)}])-log(E[Y{X,M(0)}])"
+		}
+		noi di
+		noi di as text _col(11) "The proportion mediated (" as result "PM" as text ") is the " as result "NIE " as text "divided by"
+		noi di as text _col(11) "the " as result "TCE" as text "."
 		noi di
 		if "`control'"!="" {
-			noi di as text _col(11) "The controlled direct effect (" as result "CDE" as text ") is the difference between"
+			noi di as text _col(11) "The controlled direct effect (" as result "CDE" as text ") is a comparison between"
 			noi di as text _col(11) "the mean potential outcome when subjects' exposure value(s)"
 			noi di as text _col(11) "were those actually observed under the observational regime and" 
 			noi di as text _col(11) "the mean potential outcome when, contrary to fact, all" 
@@ -1682,73 +1755,143 @@ else {
 			noi di as text _col(11) "control value(s). Write m for the control value(s) of the" 
 			noi di as text _col(11) "mediator(s), then:"
 			noi di
-			noi di as result _col(23) "CDE" as text "=E{Y(X,m)}-E{Y(0,m)}"
+			if "`logOR'"=="" & "`logRR'"=="" {
+				noi di as result _col(23) "CDE" as text "=E{Y(X,m)}-E{Y(0,m)}"
+			}
+			if "`logOR'"!="" & "`logRR'"=="" {
+				noi di as result _col(23) "CDE" as text "=log(E{Y(X,m)}/[1-E{Y(X,m)}])-log(E{Y(0,m)}/[1-E{Y(0,m)}])"
+			}
+			if "`logOR'"=="" & "`logRR'"!="" {
+				noi di as result _col(23) "CDE" as text "=log[E{Y(X,m)}]-log[E{Y(0,m)}]"
+			}
 			noi di
 		}
 	}
 	else {
 		if "`obe'"!="" {
-			noi di as text _col(5) "Note: The total causal effect (" as result "TCE" as text ") is the difference between the"
+			noi di as text _col(5) "Note: The total causal effect (" as result "TCE" as text ") is a comparison between the"
 			noi di as text _col(11) "mean potential outcome if, contrary to fact, all subjects were"
 			noi di as text _col(11) "exposed, and the mean potential outcome if all subjects were"
 			noi di as text _col(11) "unexposed. Writing X for the exposure, M for the mediator(s),"
 			noi di as text _col(11) "and Y for the outcome and 0 for the baseline, then:"
 			noi di
-			noi di as result _col(19) "TCE" as text "=E[Y{X=1,M(X=1)}]-E[Y{X=0,M(X=0)}]"
+			if "`logOR'"=="" & "`logRR'"=="" {
+				noi di as result _col(19) "TCE" as text "=E[Y{X=1,M(X=1)}]-E[Y{X=0,M(X=0)}]"
+			}
+			if "`logOR'"!="" & "`logRR'"=="" {
+				noi di as result _col(19) "TCE" as text "=log{E[Y{X=1,M(X=1)}]/(1-E[Y{X=1,M(X=1)}])}-log{E[Y{X=0,M(X=0)}]/(1-E[Y{X=0,M(X=0)}])}"
+			}
+			if "`logOR'"=="" & "`logRR'"!="" {
+				noi di as result _col(19) "TCE" as text "=log(E[Y{X=1,M(X=1)}])-log(E[Y{X=0,M(X=0)}])"
+			}
 			noi di
-			noi di as text _col(11) "The natural direct effect (" as result "NDE" as text ") is the difference between the"
+			noi di as text _col(11) "The natural direct effect (" as result "NDE" as text ") is a comparison between the"
 			noi di as text _col(11) "mean of two potential outcomes. The first is the potential"
 			noi di as text _col(11) "outcome if, contrary to fact, all subjects were exposed, and"
 			noi di as text _col(11) "subjects' mediator(s) were set to their potential value(s)"
 			noi di as text _col(11) "under no exposure. The second is the potential outcome if,"
 			noi di as text _col(11) "contrary to fact, all subjects were unexposed. That is:"
 			noi di
-			noi di as result _col(19) "NDE" as text "=E[Y{X=1,M(X=0)}]-E[Y{X=0,M(X=0)}]"
+			if "`logOR'"=="" & "`logRR'"=="" {
+				noi di as result _col(19) "NDE" as text "=E[Y{X=1,M(X=0)}]-E[Y{X=0,M(X=0)}]"
+			}
+			if "`logOR'"!="" & "`logRR'"=="" {
+				noi di as result _col(19) "NDE" as text "=log{E[Y{X=1,M(X=0)}]/(1-E[Y{X=1,M(X=0)}])}-log{E[Y{X=0,M(X=0)}]/(1-E[Y{X=0,M(X=0)}])}"
+			}
+			if "`logOR'"=="" & "`logRR'"!="" {
+				noi di as result _col(19) "NDE" as text "=log(E[Y{X=1,M(X=0)}])-log(E[Y{X=0,M(X=0)}])"
+			}
 			noi di
 			noi di as text _col(11) "The natural indirect effect (" as result "NIE" as text ") is the difference between"
 			noi di as text _col(11) "the " as result "TCE" as text " and the " as result "NDE" as text ". That is:"
 			noi di
-			noi di as result _col(15) "NIE" as text "=" as result "TCE" as text "-" as result "NDE" as text "=E[Y{X=1,M(X=1)}]-E[Y{X=1,M(X=0)}]"
+			if "`logOR'"=="" & "`logRR'"=="" {
+				noi di as result _col(15) "NIE" as text "=" as result "TCE" as text "-" as result "NDE" as text "=E[Y{X=1,M(X=1)}]-E[Y{X=1,M(X=0)}]"
+			}
+			if "`logOR'"!="" & "`logRR'"=="" {
+				noi di as result _col(15) "NIE" as text "=" as result "TCE" as text "-" as result "NDE" as text "=log{E[Y{X=1,M(X=1)}]/(1-E[Y{X=1,M(X=1)}])}-log{E[Y{X=1,M(X=0)}]/(1-E[Y{X=1,M(X=0)}])}"
+			}
+			if "`logOR'"=="" & "`logRR'"!="" {
+				noi di as result _col(15) "NIE" as text "=" as result "TCE" as text "-" as result "NDE" as text "=log(E[Y{X=1,M(X=1)}])-log(E[Y{X=1,M(X=0)}])"
+			}
+			noi di
+			noi di as text _col(11) "The proportion mediated (" as result "PM" as text ") is the " as result "NIE " as text "divided by"
+			noi di as text _col(11) "the " as result "TCE" as text "."
 			noi di
 			if "`control'"!="" {
-				noi di as text _col(11) "The controlled direct effect (" as result "CDE" as text ") is the difference between"
+				noi di as text _col(11) "The controlled direct effect (" as result "CDE" as text ") is a comparison between"
 				noi di as text _col(11) "the mean potential outcome when all subjects were exposed"
 				noi di as text _col(11) "and the mean potential outcome when all subjects were"
 				noi di as text _col(11) "unexposed; and, in addition, in both cases, the mediator(s)"
 				noi di as text _col(11) "were set to their control value(s). Write m for the control"
 				noi di as text _col(11) "value(s) of the mediator(s), then:"
 				noi di
-				noi di as result _col(19) "CDE" as text "=E{Y(X=1,M=m)}-E{Y(X=0,M=m)}"
+				if "`logOR'"=="" & "`logRR'"=="" {
+					noi di as result _col(19) "CDE" as text "=E{Y(X=1,M=m)}-E{Y(X=0,M=m)}"
+				}	
+				if "`logOR'"!="" & "`logRR'"=="" {
+					noi di as result _col(19) "CDE" as text "=log(E{Y(X=1,M=m)}/[1-E{Y(X=1,M=m)}])-log(E{Y(X=0,M=m)}/[1-E{Y(X=0,M=m)}])"
+				}
+				if "`logOR'"=="" & "`logRR'"!="" {
+					noi di as result _col(19) "CDE" as text "=log[E{Y(X=1,M=m)}]-log[E{Y(X=0,M=m)}]"
+				}
 				noi di
 			}
 		}
 		else {
-			if "`oce'"=="" {
-				noi di as text _col(5) "Note: The total causal effect (" as result "TCE" as text ") is the difference between the"
+			if "`oce'"=="" & "`specific'"=="" {
+				noi di as text _col(5) "Note: The total causal effect (" as result "TCE" as text ") is a comparison between the"
 				noi di as text _col(11) "mean potential outcome if, contrary to fact, all subjects'" 
 				noi di as text _col(11) "exposure were set to one value higher than they were in the"
 				noi di as text _col(11) "observed data, and the mean outcome when the exposures are left"
 				noi di as text _col(11) "unchanged. Writing X for the exposure, M for the mediator(s)" 
 				noi di as text _col(11) "and Y for the outcome, then:"
 				noi di
-				noi di as result _col(23) "TCE" as text "=E[Y{X+1,M(X+1)}]-E[Y{X,M(X)}]"
+				if "`logOR'"=="" & "`logRR'"=="" {
+					noi di as result _col(23) "TCE" as text "=E[Y{X+1,M(X+1)}]-E[Y{X,M(X)}]"
+				}
+				if "`logOR'"!="" & "`logRR'"=="" {
+					noi di as result _col(23) "TCE" as text "=log{E[Y{X+1,M(X+1)}]/(1-E[Y{X+1,M(X+1)}])}-log{E[Y{X,M(X)}]/(1-E[Y{X,M(X)}])}"
+				}
+				if "`logOR'"=="" & "`logRR'"!="" {
+					noi di as result _col(23) "TCE" as text "=log(E[Y{X+1,M(X+1)}])-log(E[Y{X,M(X)}])"
+				}
 				noi di
-				noi di as text _col(11) "The natural direct effect (" as result "NDE" as text ") is also the difference between"
+				noi di as text _col(11) "The natural direct effect (" as result "NDE" as text ") is also a comparison between"
 				noi di as text _col(11) "the mean of a potential outcome and the mean of the actual" 
 				noi di as text _col(11) "outcome. The potential outcome in question here is the one we"
 				noi di as text _col(11) "would observe if, contrary to fact, all subjects' exposure" 
 				noi di as text _col(11) "value were increased by 1, but their mediator value(s) are" 
 				noi di as text _col(11) "those actually observed in the observational data. That is:"
 				noi di
-				noi di as result _col(23) "NDE" as text "=E[Y{X+1,M(X)}]-E[Y{X,M(X)}]"
+				if "`logOR'"=="" & "`logRR'"=="" {
+					noi di as result _col(23) "NDE" as text "=E[Y{X+1,M(X)}]-E[Y{X,M(X)}]"
+				}
+				if "`logOR'"!="" & "`logRR'"=="" {
+					noi di as result _col(23) "NDE" as text "=log{E[Y{X+1,M(X)}]/(1-E[Y{X+1,M(X)}])}-log{E[Y{X,M(X)}]/(1-E[Y{X,M(X)}])}"
+				}
+				if "`logOR'"=="" & "`logRR'"!="" {
+					noi di as result _col(23) "NDE" as text "=log(E[Y{X+1,M(X)}])-log(E[Y{X,M(X)}])"
+				}				
 				noi di
 				noi di as text _col(11) "The natural indirect effect (" as result "NIE" as text ") is the difference between"
 				noi di as text _col(11) "the " as result "TCE" as text " and the " as result "NDE" as text ". That is:"
 				noi di
-				noi di as result _col(19) "NIE" as text "=" as result "TCE" as text "-" as result "NDE" as text "=E[Y{X+1,M(X+1)}]-E[Y{X+1,M(X)}]"
+				if "`logOR'"=="" & "`logRR'"=="" {
+					noi di as result _col(19) "NIE" as text "=" as result "TCE" as text "-" as result "NDE" as text "=E[Y{X+1,M(X+1)}]-E[Y{X+1,M(X)}]"
+				}
+				if "`logOR'"!="" & "`logRR'"=="" {
+					noi di as result _col(19) "NIE" as text "=" as result "TCE" as text "-" as result "NDE" as text "=log{E[Y{X+1,M(X+1)}]/(1-E[Y{X+1,M(X+1)}])}-log{E[Y{X+1,M(X)}]/(1-E[Y{X+1,M(X)}])}"
+				}
+				if "`logOR'"=="" & "`logRR'"!="" {
+					noi di as result _col(19) "NIE" as text "=" as result "TCE" as text "-" as result "NDE" as text "=log(E[Y{X+1,M(X+1)}])-log(E[Y{X+1,M(X)}])"
+				}				
+				noi di
+				noi di as text _col(11) "The proportion mediated (" as result "PM" as text ") is the " as result "NIE " as text "divided by"
+				noi di as text _col(11) "the " as result "TCE" as text "."
 				noi di
 				if "`control'"!="" {
-					noi di as text _col(11) "The controlled direct effect (" as result "CDE" as text ") is the difference between"
+					noi di as text _col(11) "The controlled direct effect (" as result "CDE" as text ") is a comparison between"
 					noi di as text _col(11) "the mean potential outcome when subjects' exposure values"
 					noi di as text _col(11) "were increased by 1 and the mean potential outcome when, the" 
 					noi di as text _col(11) "subjects' exposures were left unchaged; and, in addition, in"
@@ -1757,45 +1900,162 @@ else {
 					noi di as text _col(11) "mediator(s), then:"
 					noi di
 					noi di as result _col(23) "CDE" as text "=E{Y(X+1,m)}-E{Y(X,m)}"
+					if "`logOR'"=="" & "`logRR'"=="" {
+						noi di as result _col(23) "CDE" as text "=E{Y(X+1,m)}-E{Y(X,m)}"
+					}	
+					if "`logOR'"!="" & "`logRR'"=="" {
+						noi di as result _col(23) "CDE" as text "=log(E{Y(X+1,m)}/[1-E{Y(X+1,m)}])-log(E{Y(X,m)}/[1-E{Y(X,m)}])"
+					}
+					if "`logOR'"=="" & "`logRR'"!="" {
+						noi di as result _col(23) "CDE" as text "=log[E{Y(X+1,m)}]-log[E{Y(X,m)}]"
+					}					
 					noi di
 				}
 			}
 			else {
-				noi di as text _col(5) "Note: The total causal effect (" as result "TCE(k)" as text "), comparing level k"
-				noi di as text _col(11) "of the exposure against the baseline, is the difference" 
-				noi di as text _col(11) "between the mean potential outcome if, contrary to fact," 
-				noi di as text _col(11) "all subjects were exposed at level k, and the mean"
-				noi di as text _col(11) "potential outcome if all subjects received the baseline" 
-				noi di as text _col(11) "level of exposure. Writing X for the exposure, M for the" 
-				noi di as text _col(11) "mediator(s), Y for the outcome, and 0 for the baseline:"
-				noi di
-				noi di as result _col(19) "TCE(k)" as text "=E[Y{X=k,M(X=k)}]-E[Y{X=0,M(X=0)}]"
-				noi di
-				noi di as text _col(11) "The natural direct effect (" as result "NDE(k)" as text ") is the difference between the"
-				noi di as text _col(11) "mean of two potential outcomes. The first is the potential"
-				noi di as text _col(11) "outcome if, contrary to fact, all subjects received exposure" 
-				noi di as text _col(11) "k, and subjects' mediator(s) were set to their potential"
-				noi di as text _col(11) "value(s) under baseline exposure. The second is the potential"
-				noi di as text _col(11) "outcome if, contrary to fact, all subjects experienced the"
-				noi di as text _col(11) "baseline exposure. That is:"
-				noi di
-				noi di as result _col(19) "NDE" as text "=E[Y{X=k,M(X=0)}]-E[Y{X=0,M(X=0)}]"
-				noi di
-				noi di as text _col(11) "The natural indirect effect (" as result "NIE(k)" as text ") is the difference between"
-				noi di as text _col(11) "the " as result "TCE(k)" as text " and the " as result "NDE(k)" as text ". That is:"
-				noi di
-				noi di as result _col(15) "NIE(k)" as text "=" as result "TCE(k)" as text "-" as result "NDE(k)" as text "=E[Y{X=k,M(X=k)}]-E[Y{X=k,M(X=0)}]"
-				noi di
-				if "`control'"!="" {
-					noi di as text _col(11) "The controlled direct effect (" as result "CDE(k,m)" as text ") is the difference between"
-					noi di as text _col(11) "the mean potential outcome if all subjects were exposed at"
-					noi di as text _col(11) "level k, and the mean potential outcome if all subjects" 
-					noi di as text _col(11) "received the baseline exposure; and, in addition, in both"
-					noi di as text _col(11) "cases, the mediator(s) were set to their control value(s)."
-					noi di as text _col(11) "Write m for the control value(s) of the mediator(s), then:"
+				if "`specific'"!="" {
+
+					noi di as text _col(5) "Note: The total causal effect (" as result "TCE" as text ") is a comparison between the"
+					noi di as text _col(11) "mean potential outcome if, contrary to fact, all subjects were"
+					noi di as text _col(11) "exposed to x1, and the mean potential outcome if all subjects were"
+					noi di as text _col(11) "exposed to x0. Writing X for the exposure, M for the mediator(s),"
+					noi di as text _col(11) "and Y for the outcome, then:"
 					noi di
-					noi di as result _col(19) "CDE(k,m)" as text "=E{Y(X=k,M=m)}-E{Y(X=0,M=m)}"
+					if "`logOR'"=="" & "`logRR'"=="" {
+						noi di as result _col(19) "TCE" as text "=E[Y{X=x1,M(X=x1)}]-E[Y{X=x0,M(X=x0)}]"
+					}
+					if "`logOR'"!="" & "`logRR'"=="" {
+						noi di as result _col(19) "TCE" as text "=log{E[Y{X=x1,M(X=x1)}]/(1-E[Y{X=x1,M(X=x1)}])}-log{E[Y{X=x0,M(X=x0)}]/(1-E[Y{X=x0,M(X=x0)}])}"
+					}
+					if "`logOR'"=="" & "`logRR'"!="" {
+						noi di as result _col(19) "TCE" as text "=log(E[Y{X=x1,M(X=x1)}])-log(E[Y{X=x0,M(X=x0)}])"
+					}
 					noi di
+					noi di as text _col(11) "The natural direct effect (" as result "NDE" as text ") is a comparison between the"
+					noi di as text _col(11) "mean of two potential outcomes. The first is the potential"
+					noi di as text _col(11) "outcome if, contrary to fact, all subjects were exposed to x1, and"
+					noi di as text _col(11) "subjects' mediator(s) were set to their potential value(s)"
+					noi di as text _col(11) "under exposure to x0. The second is the potential outcome if,"
+					noi di as text _col(11) "contrary to fact, all subjects were exposed to x0. That is:"
+					noi di
+					if "`logOR'"=="" & "`logRR'"=="" {
+						noi di as result _col(19) "NDE" as text "=E[Y{X=x1,M(X=x0)}]-E[Y{X=x0,M(X=x0)}]"
+					}
+					if "`logOR'"!="" & "`logRR'"=="" {
+						noi di as result _col(19) "NDE" as text "=log{E[Y{X=x1,M(X=x0)}]/(1-E[Y{X=x1,M(X=x0)}])}-log{E[Y{X=x0,M(X=x0)}]/(1-E[Y{X=x0,M(X=x0)}])}"
+					}
+					if "`logOR'"=="" & "`logRR'"!="" {
+						noi di as result _col(19) "NDE" as text "=log(E[Y{X=x1,M(X=x0)}])-log(E[Y{X=x0,M(X=x0)}])"
+					}
+					noi di
+					noi di as text _col(11) "The natural indirect effect (" as result "NIE" as text ") is the difference between"
+					noi di as text _col(11) "the " as result "TCE" as text " and the " as result "NDE" as text ". That is:"
+					noi di
+					if "`logOR'"=="" & "`logRR'"=="" {
+						noi di as result _col(15) "NIE" as text "=" as result "TCE" as text "-" as result "NDE" as text "=E[Y{X=x1,M(X=x1)}]-E[Y{X=x1,M(X=x0)}]"
+					}
+					if "`logOR'"!="" & "`logRR'"=="" {
+						noi di as result _col(15) "NIE" as text "=" as result "TCE" as text "-" as result "NDE" as text "=log{E[Y{X=x1,M(X=x1)}]/(1-E[Y{X=x1,M(X=x1)}])}-log{E[Y{X=x1,M(X=x0)}]/(1-E[Y{X=x1,M(X=x0)}])}"
+					}
+					if "`logOR'"=="" & "`logRR'"!="" {
+						noi di as result _col(15) "NIE" as text "=" as result "TCE" as text "-" as result "NDE" as text "=log(E[Y{X=x1,M(X=x1)}])-log(E[Y{X=x1,M(X=x0)}])"
+					}
+					noi di
+					noi di as text _col(11) "The proportion mediated (" as result "PM" as text ") is the " as result "NIE " as text "divided by"
+					noi di as text _col(11) "the " as result "TCE" as text "."
+					noi di
+					if "`control'"!="" {
+						noi di as text _col(11) "The controlled direct effect (" as result "CDE" as text ") is a comparison between"
+						noi di as text _col(11) "the mean potential outcome when all subjects were exposed to x1"
+						noi di as text _col(11) "and the mean potential outcome when all subjects were"
+						noi di as text _col(11) "exposed to x0; and, in addition, in both cases, the mediator(s)"
+						noi di as text _col(11) "were set to their control value(s). Write m for the control"
+						noi di as text _col(11) "value(s) of the mediator(s), then:"
+						noi di
+						if "`logOR'"=="" & "`logRR'"=="" {
+							noi di as result _col(19) "CDE" as text "=E{Y(X=x1,M=m)}-E{Y(X=x0,M=m)}"
+						}	
+						if "`logOR'"!="" & "`logRR'"=="" {
+							noi di as result _col(19) "CDE" as text "=log(E{Y(X=x1,M=m)}/[1-E{Y(X=x1,M=m)}])-log(E{Y(X=x0,M=m)}/[1-E{Y(X=x0,M=m)}])"
+						}
+						if "`logOR'"=="" & "`logRR'"!="" {
+							noi di as result _col(19) "CDE" as text "=log[E{Y(X=x1,M=m)}]-log[E{Y(X=x0,M=m)}]"
+						}
+						noi di
+					}			
+				}
+				else {
+					noi di as text _col(5) "Note: The total causal effect (" as result "TCE(k)" as text "), comparing level k"
+					noi di as text _col(11) "of the exposure against the baseline, is a comparison" 
+					noi di as text _col(11) "between the mean potential outcome if, contrary to fact," 
+					noi di as text _col(11) "all subjects were exposed at level k, and the mean"
+					noi di as text _col(11) "potential outcome if all subjects received the baseline" 
+					noi di as text _col(11) "level of exposure. Writing X for the exposure, M for the" 
+					noi di as text _col(11) "mediator(s), Y for the outcome, and 0 for the baseline:"
+					noi di
+					if "`logOR'"=="" & "`logRR'"=="" {
+						noi di as result _col(19) "TCE(k)" as text "=E[Y{X=k,M(X=k)}]-E[Y{X=0,M(X=0)}]"
+					}	
+					if "`logOR'"!="" & "`logRR'"=="" {
+						noi di as result _col(19) "TCE(k)" as text "=log{E[Y{X=k,M(X=k)}]/(1-E[Y{X=k,M(X=k)}])}-log{E[Y{X=0,M(X=0)}]/(1-E[Y{X=0,M(X=0)}])}"
+					}
+					if "`logOR'"=="" & "`logRR'"!="" {
+						noi di as result _col(19) "TCE(k)" as text "=log(E[Y{X=k,M(X=k)}])-log(E[Y{X=0,M(X=0)}])"
+					}	
+					noi di
+					noi di as text _col(11) "The natural direct effect (" as result "NDE(k)" as text ") is a comparison between the"
+					noi di as text _col(11) "mean of two potential outcomes. The first is the potential"
+					noi di as text _col(11) "outcome if, contrary to fact, all subjects received exposure" 
+					noi di as text _col(11) "k, and subjects' mediator(s) were set to their potential"
+					noi di as text _col(11) "value(s) under baseline exposure. The second is the potential"
+					noi di as text _col(11) "outcome if, contrary to fact, all subjects experienced the"
+					noi di as text _col(11) "baseline exposure. That is:"
+					noi di
+					if "`logOR'"=="" & "`logRR'"=="" {
+						noi di as result _col(19) "NDE(k)" as text "=E[Y{X=k,M(X=0)}]-E[Y{X=0,M(X=0)}]"
+					}
+					if "`logOR'"!="" & "`logRR'"=="" {
+						noi di as result _col(19) "NDE(k)" as text "=log{E[Y{X=k,M(X=0)}]/(1-E[Y{X=k,M(X=0)}])}-log{E[Y{X=0,M(X=0)}]/(1-E[Y{X=0,M(X=0)}])}"
+					}
+					if "`logOR'"=="" & "`logRR'"!="" {
+						noi di as result _col(19) "NDE(k)" as text "=log(E[Y{X=k,M(X=0)}])-log(E[Y{X=0,M(X=0)}])"
+					}
+					noi di
+					noi di as text _col(11) "The natural indirect effect (" as result "NIE(k)" as text ") is the difference between"
+					noi di as text _col(11) "the " as result "TCE(k)" as text " and the " as result "NDE(k)" as text ". That is:"
+					noi di
+					if "`logOR'"=="" & "`logRR'"=="" {
+						noi di as result _col(15) "NIE(k)" as text "=" as result "TCE(k)" as text "-" as result "NDE(k)" as text "=E[Y{X=k,M(X=k)}]-E[Y{X=k,M(X=0)}]"
+					}
+					if "`logOR'"!="" & "`logRR'"=="" {
+						noi di as result _col(15) "NIE(k)" as text "=" as result "TCE(k)" as text "-" as result "NDE(k)" as text "=log{E[Y{X=k,M(X=k)}]/(1-E[Y{X=k,M(X=k)}])}-log{E[Y{X=k,M(X=0)}]/(1-E[Y{X=k,M(X=0)}])}"
+					}
+					if "`logOR'"=="" & "`logRR'"!="" {
+						noi di as result _col(15) "NIE(k)" as text "=" as result "TCE(k)" as text "-" as result "NDE(k)" as text "=log(E[Y{X=k,M(X=k)}])-log(E[Y{X=k,M(X=0)}])"
+					}				
+					noi di
+					noi di as text _col(11) "The proportion mediated (" as result "PM(k)" as text ") is the " as result "NIE(k) " as text "divided by"
+					noi di as text _col(11) "the " as result "TCE(k)" as text "."
+					noi di
+					if "`control'"!="" {
+						noi di as text _col(11) "The controlled direct effect (" as result "CDE(k,m)" as text ") is a comparison between"
+						noi di as text _col(11) "the mean potential outcome if all subjects were exposed at"
+						noi di as text _col(11) "level k, and the mean potential outcome if all subjects" 
+						noi di as text _col(11) "received the baseline exposure; and, in addition, in both"
+						noi di as text _col(11) "cases, the mediator(s) were set to their control value(s)."
+						noi di as text _col(11) "Write m for the control value(s) of the mediator(s), then:"
+						noi di
+						if "`logOR'"=="" & "`logRR'"=="" {
+							noi di as result _col(19) "CDE(k,m)" as text "=E{Y(X=k,M=m)}-E{Y(X=0,M=m)}"
+						}
+						if "`logOR'"!="" & "`logRR'"=="" {
+							noi di as result _col(19) "CDE(k,m)" as text "=log(E{Y(X=k,M=m)}/[1-E{Y(X=k,M=m)}])-log(E{Y(X=0,M=m)}/[1-E{Y(X=0,M=m)}])"
+						}	
+						if "`logOR'"=="" & "`logRR'"!="" {
+							noi di as result _col(19) "CDE(k,m)" as text "=log[E{Y(X=k,M=m)}]-log[E{Y(X=0,M=m)}]"
+						}					
+						noi di
+					}
 				}
 			}
 		}
@@ -1845,6 +2105,29 @@ else {
 			noi di as result "`baseline`i''"
 		}
 	}
+	if "`specific'"!="" {
+		noi di as text _col(10) "Alternative value(s): "
+		tokenize "`exposure'"
+		local nbase 0 			
+		while "`1'"!="" {
+			if "`1'"!="," {
+				local nbase=`nbase'+1
+				local expos`nbase' "`1'"
+			}
+			mac shift
+		}
+		detangle "`alternative'" alternative "`exposure'"
+		forvalues i=1/`nbase' {
+			if "${S_`i'}"!="" {
+				local alternative`i' ${S_`i'}
+			}
+		}
+		forvalues i=1/`nbase' {
+			local expos`i'="`expos`i''"+" "
+			noi di as text _col(15) subinstr("`expos`i''","_ ","",.) "=" _cont
+			noi di as result "`alternative`i''"
+		}
+	}
     if "`control'"!="" {
     	noi di as text " "
     	noi di as text _col(10) "Control value(s): "
@@ -1856,16 +2139,26 @@ else {
     }
 	noi di as text " "
 	if "`all'"=="" {
-		noi di as text _col(2)  "{hline 13}{c TT}{hline 68}"
-		noi di as text _col(15) "{c |}" _col(18) "G-computation" _col(34) "Bootstrap" _col(68) "Normal-based"
-		noi di as text _col(15) "{c |}" _col(20) "estimate" _col(34) "Std. Err." _col(49) ///
-            "z" _col(54) "P>|z|" _col(64) "[95% Conf. Interval]"         
-		noi di as text _col(2)  "{hline 13}{c +}{hline 68}"
+		noi di as text _col(2)  "{hline 13}{c TT}{hline 71}"
+		noi di as text _col(15) "{c |}" _col(18) "G-computation" _col(37) "Bootstrap" _col(71) "Normal-based"
+		if "`logOR'"=="" & "`logRR'"=="" {
+			noi di as text _col(15) "{c |}" _col(18) "estimate (MD)" _col(37) "Std. Err." _col(52) ///
+            "z" _col(57) "P>|z|" _col(67) "[95% Conf. Interval]"         
+		}
+		if "`logOR'"!="" & "`logRR'"=="" {
+			noi di as text _col(15) "{c |}" _col(18) "estimate (logOR)" _col(37) "Std. Err." _col(52) ///
+            "z" _col(57) "P>|z|" _col(67) "[95% Conf. Interval]"         
+		}
+		if "`logOR'"=="" & "`logRR'"!="" {
+			noi di as text _col(15) "{c |}" _col(18) "estimate (logRR)" _col(37) "Std. Err." _col(52) ///
+            "z" _col(57) "P>|z|" _col(67) "[95% Conf. Interval]"         
+		}		
+		noi di as text _col(2)  "{hline 13}{c +}{hline 71}"
 		if "`control'"=="" {
-			local maxrowtab=3
+			local maxrowtab=4
 		}
 		else {
-			local maxrowtab=4
+			local maxrowtab=5
 		}
 		if "`oce'"!="" {
 			qui tab `exposure', matrow(_matrow)
@@ -1944,6 +2237,28 @@ else {
 				}
 				if `i'==4 {
 					if `nexplev'==1 {
+						noi di as text _col(8) "PM" _col(15) "{c |}" _cont
+					}
+					else {
+						local checkbase=0
+						forvalues jj=1/`j' {
+							local kk=_matrow[`jj',1]
+							if `kk'==`baseline1' {
+								local checkbase=1
+							}
+						}
+						if `checkbase'==0 {
+							local k=_matrow[`j',1]
+						}
+						else {
+							local kkk=`j'+1
+							local k=_matrow[`kkk',1]
+						}
+						noi di as text _col(5) "PM(" as result "`k'" as text")" _col(15) "{c |}" _cont
+					}
+				}
+				if `i'==5 {
+					if `nexplev'==1 {
 						noi di as text _col(8) "CDE" _col(15) "{c |}" _cont
 					}
 					else {
@@ -1966,80 +2281,90 @@ else {
 				}
 				if "`oce'"=="" {
 					noi di as result %9.0g _col(19) b[1,`i'] _cont 
-					noi di as result _col(33) %9.0g se[1,`i'] _cont
+					noi di as result _col(37) %9.0g se[1,`i'] _cont
 					if b[1,`i']<0 {
-						local w=47-max(ceil(log10(abs(round(b[1,`i']/se[1,`i']),0.01))),0)
+						local w=50-max(ceil(log10(abs(round(b[1,`i']/se[1,`i']),0.01))),0)
 						noi di as result _col(`w') round(b[1,`i']/se[1,`i'],0.01) _cont
 					}		
 					else {
-						local w=48-max(ceil(log10(abs(round(b[1,`i']/se[1,`i']),0.01))),0)
+						local w=51-max(ceil(log10(abs(round(b[1,`i']/se[1,`i']),0.01))),0)
 						noi di as result _col(`w') round(b[1,`i']/se[1,`i'],0.01) _cont
 					}
 					if round(2*(1-normal(abs(b[1,`i']/se[1,`i']))),0.001)>0 {
-						noi di as result _col(54) "0" _col(55) round(2*(1-normal(abs(b[1,`i']/se[1,`i']))),0.001) _cont
+						noi di as result _col(57) "0" _col(58) round(2*(1-normal(abs(b[1,`i']/se[1,`i']))),0.001) _cont
 						if round(2*(1-normal(abs(b[1,`i']/se[1,`i']))),0.001)== ///
 							round(round(2*(1-normal(abs(b[1,`i']/se[1,`i']))),0.001),0.1) {
-							noi di _col(57) "00" _cont
+							noi di _col(60) "00" _cont
 						}
 						else {
 							if round(2*(1-normal(abs(b[1,`i']/se[1,`i']))),0.001)== ///
 								round(round(2*(1-normal(abs(b[1,`i']/se[1,`i']))),0.001),0.01) {
-								noi di _col(58) "0" _cont
+								noi di _col(61) "0" _cont
 							}
 						}
 					}
 					else {
-						noi di as result _col(54) "0.000" _cont
+						noi di as result _col(57) "0.000" _cont
 					}
-					noi di as result _col(63) %9.0g ci_normal[1,`i'] _cont
-					noi di as result _col(75) %9.0g ci_normal[2,`i']  
+					noi di as result _col(66) %9.0g ci_normal[1,`i'] _cont
+					noi di as result _col(78) %9.0g ci_normal[2,`i']  
 				}
 				else {
 					qui tab `exposure', matrow(_matrow)
 					local nexplev=r(r)-1
 					local ii=(`i'-1)*`nexplev'+`j'
 					noi di as result %9.0g _col(19) b[1,`ii'] _cont 
-					noi di as result _col(33) %9.0g se[1,`ii'] _cont
+					noi di as result _col(36) %9.0g se[1,`ii'] _cont
 					if b[1,`ii']<0 {
-						local w=47-max(ceil(log10(abs(round(b[1,`ii']/se[1,`ii']),0.01))),0)
+						local w=50-max(ceil(log10(abs(round(b[1,`ii']/se[1,`ii']),0.01))),0)
 						noi di as result _col(`w') round(b[1,`ii']/se[1,`ii'],0.01) _cont
 					}			
 					else {
-						local w=48-max(ceil(log10(abs(round(b[1,`ii']/se[1,`ii']),0.01))),0)
+						local w=51-max(ceil(log10(abs(round(b[1,`ii']/se[1,`ii']),0.01))),0)
 						noi di as result _col(`w') round(b[1,`ii']/se[1,`ii'],0.01) _cont
 					}
 					if round(2*(1-normal(abs(b[1,`ii']/se[1,`ii']))),0.001)>0 {
-						noi di as result _col(54) "0" _col(55) round(2*(1-normal(abs(b[1,`ii']/se[1,`ii']))),0.001) _cont
+						noi di as result _col(57) "0" _col(58) round(2*(1-normal(abs(b[1,`ii']/se[1,`ii']))),0.001) _cont
 						if round(2*(1-normal(abs(b[1,`ii']/se[1,`ii']))),0.001)== ///
 							round(round(2*(1-normal(abs(b[1,`ii']/se[1,`ii']))),0.001),0.1) {
-							noi di _col(57) "00" _cont
+							noi di _col(60) "00" _cont
 						}
 						else {
 							if round(2*(1-normal(abs(b[1,`ii']/se[1,`ii']))),0.001)== ///
 								round(round(2*(1-normal(abs(b[1,`ii']/se[1,`ii']))),0.001),0.01) {
-								noi di _col(58) "0" _cont
+								noi di _col(60) "0" _cont
 							}
 						}
 					}
 					else {
-						noi di as result _col(54) "0.000" _cont
+						noi di as result _col(57) "0.000" _cont
 					}
-					noi di as result _col(63) %9.0g ci_normal[1,`ii'] _cont
-					noi di as result _col(75) %9.0g ci_normal[2,`ii']
+					noi di as result _col(66) %9.0g ci_normal[1,`ii'] _cont
+					noi di as result _col(78) %9.0g ci_normal[2,`ii']
 					if `j'==`nexplev' & `i'!=`maxrowtab' {
-						noi di as text _col(2)  "{hline 13}{c +}{hline 68}"
+						noi di as text _col(2)  "{hline 13}{c +}{hline 71}"
 					}
 				}
 			}	
 		}
-		noi di as text _col(2)  "{hline 13}{c BT}{hline 68}"
+		noi di as text _col(2)  "{hline 13}{c BT}{hline 71}"
 	}
 	else {
-		noi di as text _col(2)  "{hline 13}{c TT}{hline 74}"
-		noi di as text _col(15) "{c |}" _col(18) "G-computation" _col(34) "Bootstrap"
-		noi di as text _col(15) "{c |}" _col(20) "estimate" _col(34) "Std. Err." _col(49) ///
-            "z" _col(54) "P>|z|" _col(64) "[95% Conf. Interval]"         
-		noi di as text _col(2)  "{hline 13}{c +}{hline 74}"
+		noi di as text _col(2)  "{hline 13}{c TT}{hline 77}"
+		noi di as text _col(15) "{c |}" _col(18) "G-computation" _col(37) "Bootstrap"
+		if "`logOR'"=="" & "`logRR'"=="" {
+			noi di as text _col(15) "{c |}" _col(18) "estimate (MD)" _col(37) "Std. Err." _col(52) ///
+            "z" _col(57) "P>|z|" _col(67) "[95% Conf. Interval]"         
+		}
+		if "`logOR'"!="" & "`logRR'"=="" {
+			noi di as text _col(15) "{c |}" _col(18) "estimate (logOR)" _col(37) "Std. Err." _col(52) ///
+            "z" _col(57) "P>|z|" _col(67) "[95% Conf. Interval]"         
+		}
+		if "`logOR'"=="" & "`logRR'"!="" {
+			noi di as text _col(15) "{c |}" _col(18) "estimate (logRR)" _col(37) "Std. Err." _col(52) ///
+            "z" _col(57) "P>|z|" _col(67) "[95% Conf. Interval]"         
+		}		
+		noi di as text _col(2)  "{hline 13}{c +}{hline 77}"
         if "`control'"=="" {
             local maxrowtab=3
         }
@@ -2123,6 +2448,28 @@ else {
 				}
 				if `i'==4 {
 					if `nexplev'==1 {
+						noi di as text _col(8) "PM" _col(15) "{c |}" _cont
+					}
+					else {
+						local checkbase=0
+						forvalues jj=1/`j' {
+							local kk=_matrow[`jj',1]
+							if `kk'==`baseline1' {
+								local checkbase=1
+							}
+						}
+						if `checkbase'==0 {
+							local k=_matrow[`j',1]
+						}
+						else {
+							local kkk=`j'+1
+							local k=_matrow[`kkk',1]
+						}
+						noi di as text _col(5) "PM(" as result "`k'" as text")" _col(15) "{c |}" _cont
+					}
+				}
+				if `i'==5 {
+					if `nexplev'==1 {
 						noi di as text _col(8) "CDE" _col(15) "{c |}" _cont
 					}
 					else {
@@ -2145,45 +2492,45 @@ else {
 				}
 				if "`oce'"=="" {
 			   	   	noi di as result %9.0g _col(19) b[1,`i'] _cont 
-					noi di as result _col(33) %9.0g se[1,`i'] _cont
+					noi di as result _col(36) %9.0g se[1,`i'] _cont
 					if b[1,`i']<0 {
-						local w=47-max(ceil(log10(abs(round(b[1,`i']/se[1,`i']),0.01))),0)
+						local w=50-max(ceil(log10(abs(round(b[1,`i']/se[1,`i']),0.01))),0)
 						noi di as result _col(`w') round(b[1,`i']/se[1,`i'],0.01) _cont
 					}		
 					else {
-						local w=48-max(ceil(log10(abs(round(b[1,`i']/se[1,`i']),0.01))),0)
+						local w=51-max(ceil(log10(abs(round(b[1,`i']/se[1,`i']),0.01))),0)
 						noi di as result _col(`w') round(b[1,`i']/se[1,`i'],0.01) _cont
 					}
 					if round(2*(1-normal(abs(b[1,`i']/se[1,`i']))),0.001)>0 {
-						noi di as result _col(54) "0" _col(55) round(2*(1-normal(abs(b[1,`i']/se[1,`i']))),0.001) _cont
+						noi di as result _col(57) "0" _col(58) round(2*(1-normal(abs(b[1,`i']/se[1,`i']))),0.001) _cont
 						if round(2*(1-normal(abs(b[1,`i']/se[1,`i']))),0.001)== ///
 							round(round(2*(1-normal(abs(b[1,`i']/se[1,`i']))),0.001),0.1) {
-							noi di _col(57) "00" _cont
+							noi di _col(58) "00" _cont
 						}
 						else {
 							if round(2*(1-normal(abs(b[1,`i']/se[1,`i']))),0.001)== ///
 								round(round(2*(1-normal(abs(b[1,`i']/se[1,`i']))),0.001),0.01) {
-								noi di _col(58) "0" _cont
+								noi di _col(61) "0" _cont
 							}
 						}
 					}
 					else {
-						noi di as result _col(54) "0.000" _cont
+						noi di as result _col(57) "0.000" _cont
 					}
-					noi di as result _col(63) %9.0g ci_normal[1,`i'] _cont
-					noi di as result _col(75) %9.0g ci_normal[2,`i'] _cont
+					noi di as result _col(66) %9.0g ci_normal[1,`i'] _cont
+					noi di as result _col(78) %9.0g ci_normal[2,`i'] _cont
 					noi di as text "   (N)"
-					noi di as text _col(15) "{c |}" _cont
-					noi di as result _col(63) %9.0g ci_percentile[1,`i'] _cont
-					noi di as result _col(75) %9.0g ci_percentile[2,`i'] _cont
+					noi di as text _col(18) "{c |}" _cont
+					noi di as result _col(66) %9.0g ci_percentile[1,`i'] _cont
+					noi di as result _col(78) %9.0g ci_percentile[2,`i'] _cont
 					noi di as text "   (P)"
 					noi di as text _col(15) "{c |}" _cont
-					noi di as result _col(63) %9.0g ci_bc[1,`i'] _cont
-					noi di as result _col(75) %9.0g ci_bc[2,`i'] _cont
+					noi di as result _col(66) %9.0g ci_bc[1,`i'] _cont
+					noi di as result _col(78) %9.0g ci_bc[2,`i'] _cont
 					noi di as text "  (BC)"
 					noi di as text _col(15) "{c |}" _cont
-					noi di as result _col(63) %9.0g ci_bca[1,`i'] _cont
-					noi di as result _col(75) %9.0g ci_bca[2,`i'] _cont
+					noi di as result _col(66) %9.0g ci_bca[1,`i'] _cont
+					noi di as result _col(78) %9.0g ci_bca[2,`i'] _cont
 					noi di as text " (BCa)"
 				}
 				else {
@@ -2191,53 +2538,53 @@ else {
 					local nexplev=r(r)-1
 					local ii=(`i'-1)*`nexplev'+`j'
 					noi di as result %9.0g _col(19) b[1,`ii'] _cont 
-					noi di as result _col(33) %9.0g se[1,`ii'] _cont
+					noi di as result _col(36) %9.0g se[1,`ii'] _cont
 					if b[1,`ii']<0 {
-						local w=47-max(ceil(log10(abs(round(b[1,`ii']/se[1,`ii']),0.01))),0)
+						local w=50-max(ceil(log10(abs(round(b[1,`ii']/se[1,`ii']),0.01))),0)
 						noi di as result _col(`w') round(b[1,`ii']/se[1,`ii'],0.01) _cont
 					}		
 					else {
-						local w=48-max(ceil(log10(abs(round(b[1,`ii']/se[1,`ii']),0.01))),0)
+						local w=51-max(ceil(log10(abs(round(b[1,`ii']/se[1,`ii']),0.01))),0)
 						noi di as result _col(`w') round(b[1,`ii']/se[1,`ii'],0.01) _cont
 					}
 					if round(2*(1-normal(abs(b[1,`ii']/se[1,`ii']))),0.001)>0 {
-						noi di as result _col(54) "0" _col(55) round(2*(1-normal(abs(b[1,`ii']/se[1,`ii']))),0.001) _cont
+						noi di as result _col(57) "0" _col(58) round(2*(1-normal(abs(b[1,`ii']/se[1,`ii']))),0.001) _cont
 						if round(2*(1-normal(abs(b[1,`ii']/se[1,`ii']))),0.001)== ///
 							round(round(2*(1-normal(abs(b[1,`ii']/se[1,`ii']))),0.001),0.1) {
-							noi di _col(57) "00" _cont
+							noi di _col(60) "00" _cont
 						}
 						else {
 							if round(2*(1-normal(abs(b[1,`ii']/se[1,`ii']))),0.001)== ///
 								round(round(2*(1-normal(abs(b[1,`ii']/se[1,`ii']))),0.001),0.01) {
-								noi di _col(58) "0" _cont
+								noi di _col(61) "0" _cont
 							}
 						}
 					}
 					else {
-						noi di as result _col(54) "0.000" _cont
+						noi di as result _col(57) "0.000" _cont
 					}
-					noi di as result _col(63) %9.0g ci_normal[1,`ii'] _cont
-					noi di as result _col(75) %9.0g ci_normal[2,`ii'] _cont
+					noi di as result _col(66) %9.0g ci_normal[1,`ii'] _cont
+					noi di as result _col(78) %9.0g ci_normal[2,`ii'] _cont
 					noi di as text "   (N)"
 					noi di as text _col(15) "{c |}" _cont
-					noi di as result _col(63) %9.0g ci_percentile[1,`ii'] _cont
-					noi di as result _col(75) %9.0g ci_percentile[2,`ii'] _cont
+					noi di as result _col(66) %9.0g ci_percentile[1,`ii'] _cont
+					noi di as result _col(78) %9.0g ci_percentile[2,`ii'] _cont
 					noi di as text "   (P)"
 					noi di as text _col(15) "{c |}" _cont
-					noi di as result _col(63) %9.0g ci_bc[1,`ii'] _cont
-					noi di as result _col(75) %9.0g ci_bc[2,`ii'] _cont
+					noi di as result _col(66) %9.0g ci_bc[1,`ii'] _cont
+					noi di as result _col(78) %9.0g ci_bc[2,`ii'] _cont
 					noi di as text "  (BC)"
 					noi di as text _col(15) "{c |}" _cont
-					noi di as result _col(63) %9.0g ci_bca[1,`ii'] _cont
-					noi di as result _col(75) %9.0g ci_bca[2,`ii'] _cont
+					noi di as result _col(66) %9.0g ci_bca[1,`ii'] _cont
+					noi di as result _col(78) %9.0g ci_bca[2,`ii'] _cont
 					noi di as text " (BCa)"
 					if `j'==`nexplev' & `i'!=`maxrowtab' {
-						noi di as text _col(2)  "{hline 13}{c +}{hline 74}"
+						noi di as text _col(2)  "{hline 13}{c +}{hline 77}"
 					}
 				}
 			}
 		}
-		noi di as text _col(2)  "{hline 13}{c BT}{hline 74}"
+		noi di as text _col(2)  "{hline 13}{c BT}{hline 77}"
 		noi di as text " (N)    normal confidence interval"
 		noi di as text " (P)    percentile confidence interval"
 		noi di as text " (BC)   bias-corrected confidence interval"
@@ -2257,22 +2604,26 @@ if "`msm'"=="" {
 			return scalar tce=b[1,1]
 			return scalar nde=b[1,2]
 			return scalar nie=b[1,3]
-			return scalar cde=b[1,4]
+			return scalar pm=b[1,4]
+			return scalar cde=b[1,5]
 			return scalar se_tce=se[1,1]
 			return scalar se_nde=se[1,2]
 			return scalar se_nie=se[1,3]
-			return scalar se_cde=se[1,4]
+			return scalar se_pm=se[1,4]
+			return scalar se_cde=se[1,5]
 		}
 		else {
 			forvalues j=1/`nexplev' {
 				return scalar tce_`j'=b[1,`j']
 				return scalar nde_`j'=b[1,`nexplev'+`j']
 				return scalar nie_`j'=b[1,2*`nexplev'+`j']
-				return scalar cde_`j'=b[1,3*`nexplev'+`j']
+				return scalar pm_`j'=b[1,3*`nexplev'+`j']
+				return scalar cde_`j'=b[1,4*`nexplev'+`j']
 				return scalar se_tce_`j'=se[1,`j']
 				return scalar se_nde_`j'=se[1,`nexplev'+`j']
 				return scalar se_nie_`j'=se[1,2*`nexplev'+`j']
-				return scalar se_cde_`j'=se[1,3*`nexplev'+`j']
+				return scalar se_pm_`j'=se[1,3*`nexplev'+`j']
+				return scalar se_cde_`j'=se[1,4*`nexplev'+`j']
 			}
 		}
 	}

@@ -1,15 +1,17 @@
 * ==========================================================
 * cibar: creating bargraphs with confidence-intervals
 * Author: Alexander Staudt 
-* Version 1.1.4, 2017-01-24
+* Version 1.1.8, 2020-12-29
 * ==========================================================
-*! version 1.1.4, Alexander Staudt, 24jan2017
+*! version 1.1.8, Alexander Staudt, 29dec2020
 
-program drop _all
+*program drop _all
 program define cibar
 version 13.0
-syntax anything(name=var) [if] [aw fw iw pw], over1(string) [over2(string) over3(string) ///
-	Level(cilevel) BAROPts(string asis) BARColor(string asis) BARGap(integer 0) Gap(integer 67) ///
+syntax anything(name=var) [if] [aw fw iw pw], [over(passthru) over1(string) over2(string) over3(string) ///
+	VCE(passthru) Level(cilevel) ///
+	NOISily ///
+	BAROPts(string asis) BARColor(string asis) BARGap(integer 0) Gap(integer 67) ///
 	CIopts(string asis) GRaphopts(string asis) ///
 	BARLabel(string) BLFmt(string) BLPosition(string) BLOrientation(string) BLSize(string) BLcolor(string) BLGap(real 0)] ///
 	
@@ -18,10 +20,62 @@ syntax anything(name=var) [if] [aw fw iw pw], over1(string) [over2(string) over3
 	mark touse `if'
 	quietly keep if touse == 1
 	
-	local bylist = "`over1' `over2' `over3'"
-	local overs = wordcount("`bylist'")
+	* define grouping variables in one single call of "over()" via over(passthru).
+	* for compatibility reasons, also keep old syntax using over1() valid.
+	* over(passthru) however takes precedence over over1() etc.
+	
+	* test which over-option was specified
+	capture confirm existence `over'
+	scalar _rc_over = _rc
+	
+	capture confirm existence `over1'
+	scalar _rc_over1 = _rc
+	
+	* use over(passthru) if specified, otherwise over1(). 
+	* if both are specified, display message that over(passthru) will be used
+	if _rc_over == 6 & _rc_over1 == 6 {
+		display as error "option {bf:over()} required"
+		exit 198
+	}
+	else if _rc_over == 6 & _rc_over1 == 0 {
+		local bylist = "`over1' `over2' `over3'"
+		local overs = wordcount("`bylist'")
+		
+		local over_list = "over(`bylist')"
+	}
+	else if _rc_over == 0 & _rc_over1 == 6 {
+		local bylist = subinstr("`over'", "over(", "", .)
+		local bylist = subinstr("`bylist'", ")", "", .)
+		local overs = wordcount("`bylist'")
+		
+		local over_list = "`over'"
+	}
+	else {
+		display as result "Note: grouping variables specified via {bf:over()}, hence ignoring {bf:over1()} (and {bf:over2()}, {bf:over3()} if specified)."
+		
+		local bylist = subinstr("`over'", "over(", "", .)
+		local bylist = subinstr("`bylist'", ")", "", .)
+		local overs = wordcount("`bylist'")
+		
+		local over_list = "`over'"
+	}
+	
+	* make sure only up to three grouping variables are used for computations,
+	* discard any additionally specified grouping variables 
+	if `overs' > 3 {
+		display as result "Note: cibar only supports up to three grouping variables. Any additional grouping variable will be ignored."
+		local bylist = word("`bylist'", 1) + " " + word("`bylist'", 2) + " " + word("`bylist'", 3)
+		local overs = wordcount("`bylist'")
+		local over_list = "over(`bylist')"
+	}
+	
+	* over1, over2, over3 still required for plotting.
+	local over1 = word("`bylist'", 1)
+	local over2 = word("`bylist'", 2)
+	local over3 = word("`bylist'", 3)
+	
 	local bg = `bargap'/100
-	local gap = `gap'/100-1
+	local gap = (`gap'/100) - 1
 	
 	capture confirm existence `baropts'
 	if _rc == 6 local baropts = "fintensity(inten100)"
@@ -57,7 +111,15 @@ syntax anything(name=var) [if] [aw fw iw pw], over1(string) [over2(string) over3
 	
 	* get mean and confidence intervals
 	*di `level'
-	qui mean `var' [`weight'`exp'], over(`bylist') level(`level')
+	// show numeric results
+	// add vce-option
+	capture confirm existence `noisily'
+	if _rc == 6 {
+		qui mean `var' [`weight'`exp'], `over_list' level(`level') `vce'
+	}
+	else {
+		mean `var' [`weight'`exp'], `over_list' level(`level') `vce'
+	}
 	
 	* save results in matrices
 	matrix define results = r(table)
@@ -126,7 +188,7 @@ syntax anything(name=var) [if] [aw fw iw pw], over1(string) [over2(string) over3
 	* ======================================================
 	* Bei einer over-Angabe
 	* ======================================================
-	if `overs'==1 {
+	if `overs' == 1 {
 		qui keep if over1_n < .
 		
 		qui tab over1_n
@@ -143,7 +205,7 @@ syntax anything(name=var) [if] [aw fw iw pw], over1(string) [over2(string) over3
 	* ======================================================
 	* Bei zwei over-Angaben
 	* ======================================================
-	if `overs'==2 {	
+	if `overs' == 2 {	
 		qui keep if over1_n < . & over2_n < .			
 		
 		* Hinzufügen fehlender Variablen:

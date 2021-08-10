@@ -4,7 +4,7 @@
 * background) and coloured foreground (lines, symbols, text, etc).
 
 
-*!  version 1.0   11apr2013    Tim Morris, MRC Clinical Trials Unit
+*!  version 1.1   25sep2017    Tim Morris, MRC Clinical Trials Unit at UCL
 
 sequence 1210
 label "TFL Scheme"
@@ -1326,6 +1326,60 @@ areastyle p12sunflowerdark   p2
 areastyle p13sunflowerdark   p8
 areastyle p14sunflowerdark   p13
 areastyle p15sunflowerdark   p3
+
+alignstroke          default
+alignstroke default  default
+alignstroke inside   inside
+alignstroke outside  outside
+alignstroke center   center
+
+alignstroke axisline           default
+alignstroke background         default
+alignstroke ci_area            default
+alignstroke ci                 default
+alignstroke clegend            default
+alignstroke dendrogram         default
+alignstroke dot_area           default
+alignstroke dot                default
+alignstroke dotmark            default
+alignstroke dots               default
+alignstroke foreground         default
+alignstroke grid               default
+alignstroke histogram          default
+alignstroke legend             default
+alignstroke major_grid         default
+alignstroke map                center
+alignstroke matrixmark         default
+alignstroke matrix_plotregion  default
+alignstroke minor_grid         default
+alignstroke minortick          default
+alignstroke pie                default
+alignstroke p                  default
+alignstroke plotregion         default
+alignstroke refline            default
+alignstroke refmarker          default
+alignstroke reverse_big        default
+alignstroke sunflower          default
+alignstroke text_option        default
+alignstroke tick               default
+alignstroke xyline             default
+alignstroke zyx2               default
+
+alignstroke p1    default
+alignstroke p2    default
+alignstroke p3    default
+alignstroke p4    default
+alignstroke p5    default
+alignstroke p6    default
+alignstroke p7    default
+alignstroke p8    default
+alignstroke p9    default
+alignstroke p10   default
+alignstroke p11   default
+alignstroke p12   default
+alignstroke p13   default
+alignstroke p14   default
+alignstroke p15   default
 
 horizontal              center
 horizontal heading      center

@@ -1,4 +1,4 @@
-*! version 1.2.0 PR 10apr2017
+*! version 1.3.0 PR 04jan2018
 program define marginscontplot2
 version 12.1
 
@@ -8,10 +8,14 @@ if "`e(cmd)'" == "" {
 
 syntax [anything(name=xlist)] [if] [in] [, at(string) at1(string) at2(string) ///
  ci Formatlegend(string) MARgopts(string) name(string) nograph PLOTopts(string) ///
- SHowmarginscmd SAVing(string) var1(string) var2(string) ///
+ PREfix(string) SHowmarginscmd SAVing(string) var1(string) var2(string) ///
  AREAopts(string) COMBopts(string) LINEopts(string) ]
 
 if "`name'" != "" local name name(`name')
+
+if (`"`saving'"' == "") & ("`prefix'" != "") {
+	di as txt "[prefix(`prefix') ignored]"
+}
 
 if `"`plotopts'"' != "" & `"`areaopts'`combopts'`lineopts'"' != "" {
 	di as err "plotopts() may not be used with areaopts(), combopts() or lineopts()"
@@ -505,12 +509,6 @@ quietly {
 			qui replace `x1' = `at1`i'' in `i'
 		}
 	}
-	if `"`saving'"' != "" {
-		_prefix_saving `saving'
-		local saving `"`s(filename)'"'
-		local replace `"`s(replace)'"'
-		save `"`saving'"', `replace'
-	}
 }
 // Plot
 if "`graph'" != "nograph" {
@@ -533,6 +531,18 @@ if "`graph'" != "nograph" {
 			twoway (rarea _ci_lb _ci_ub `x', sort pstyle(ci) `areaopts') ///
 			 (line _margin `x', sort lstyle(refline) `lineopts'), `leg' `plotopts' `name'
 		}
+	}
+	if `"`saving'"' != "" {
+		_prefix_saving `saving'
+		local saving `"`s(filename)'"'
+		local replace `"`s(replace)'"'
+		// Rename margins-related variables with prefix `prefix'
+		if "`prefix'" != "" {
+			foreach v of varlist _margin* _ci_lb* _ci_ub* {
+				rename `v' `prefix'`v'
+			}
+		}
+		save `"`saving'"', `replace'
 	}
 }
 end

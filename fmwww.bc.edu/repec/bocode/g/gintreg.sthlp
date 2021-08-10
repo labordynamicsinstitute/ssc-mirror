@@ -51,16 +51,16 @@ If using grouped data then the form will be similar:
 {synopthdr}
 {synoptline}
 {syntab:Main}
-{synopt:{opt dist:ribution}(dist_type)} dist_type may be gb2, gg, lnormal, sgt, sged, or
+{synopt:{opt dist:ribution}(dist_type)} dist_type may be gb2, br12, br3, gg, gamma, ln, sgt, st, gt sged, ged, t, slaplace or
 normal; default is normal. {p_end}
 {synopt:{opth const:raints(numlist)}} specified linear constraints by number to be applied. Can use this option along with {opt dist:ribution} to allow for any distribution in the SGT or GB2 family trees.{p_end}
 {synopt:{opth freq:uency(varlist)}} if using group data specify variable that denotes frequency. {p_end}
 
 {syntab: Model}
-{synopt:{cmdab: sigma(}{varlist}{cmd:)}} allow sigma to vary as a function of independent variables; can use with dist_type normal, lnormal, sgt, or sged. {p_end}
+{synopt:{cmdab: sigma(}{varlist}{cmd:)}} allow the {opt log of sigma} to vary as a function of independent variables; can use with dist_type normal, lnormal, gg, gb2, sgt, or sged. {p_end}
 {synopt:{cmdab: lambda(}{varlist}{cmd:)}} allow lambda to vary as a function of independent variables; can use with dist_type sgt or sged. {p_end}
-{synopt:{cmdab: p(}{varlist}{cmd:)}} allow p to vary as a function of independent variables; can use with dist_type gb2, gg, sgt, or sged. {p_end}
-{synopt:{cmdab: q(}{varlist}{cmd:)}} allow q to vary as a function of independent variables; can use with dist_type gb2 or sgt. {p_end}
+{synopt:{cmdab: p(}{varlist}{cmd:)}} allow p to vary as a linear function of independent variables; can use with dist_type gb2, gg, sgt, or sged. {p_end}
+{synopt:{cmdab: q(}{varlist}{cmd:)}} allow q to vary as a linear function of independent variables; can use with dist_type gb2 or sgt. {p_end}
 
 {syntab: SE/Robust}
 
@@ -71,7 +71,7 @@ unit {varlist}. {p_end}
 
 
 {syntab: Estimation}
-{synopt:{opth init:ial(numlist)}} initial values for constant only parameters.{p_end}
+{synopt:{opth init:ial(numlist)}} initial values for p,q and lambda in that order. if the distribution does not have p, q or lambda, key in initial values for mu and lnsigma in that order.{p_end}
 {synopt:{it:{help ml##noninteractive_maxopts:maximize_options}}}control the
 maximization process{p_end}
 
@@ -97,7 +97,7 @@ in the Skewed Generalized T family and Generalized Beta of the Second Kind tree.
 
 {pstd}
  The assumed model for interval regression is y = XB + eps where only the 
- thresholds containtin the latent variable y are observed, X is a vector of
+ thresholds containing the latent variable y are observed, X is a vector of
  explanatory variables with a corresponding coefficient vector B and eps is assumed
  to be independently and identically distributed random distrubances. The upper and 
  lower thresholds for y can be denoted by U and L respectively.
@@ -120,7 +120,7 @@ in the Skewed Generalized T family and Generalized Beta of the Second Kind tree.
 {phang}
 {opt dist:ribution}(dist_type) specifies the type of distribution used in the interval regressions.
 {cmd: gintreg} will use a log-likelihood function composed of the pdf and cdf of this distribution
-(pdf for point data and cdf for intervals and censored observations). dist_type may be gb2, gg, lnormal, sgt, sged, or
+(pdf for point data and cdf for intervals and censored observations). dist_type may be gb2, gg, ln, sgt, sged, or
 normal; Default is normal. 
 
 {phang}
@@ -133,7 +133,7 @@ command; see {manhelp constraint R}.
 {opt freq:uency}({it:{help varlist)}} if using grouped data, specify the variable 
 that denotes the frequency of the observation. Can be in percentage terms or 
 levels as {cmd: gintreg} will normalize by summing the value of 
-frequency for all observations.
+frequency for all observations. E.g. {it: gintreg depvar1 depvar2 indepvars, freq(freqvar)}
 
 {dlgtab: Model}
 
@@ -146,19 +146,19 @@ will indicate an error; e.g. specifying independent variables for q when using t
 Generalized Gamma distribution.
 
 {phang}
-{cmd:sigma(}{it:{help varlist)}} allows sigma to be a function of {varlist}  and can 
+{cmd:sigma(}{it:{help varlist)}} allows the {opt log of sigma} to be a function of {varlist}  and can 
 model heteroskedasticity.
 
 {phang}
-{cmd:lambda(}{it:{help varlist)}} allows lambda to be a function of {varlist}  
+{cmd:lambda(}{it:{help varlist)}} allows lambda to be a function of {varlist} that bounds lambda to be between -1 and 1 
 and can model skewness.
 
 {phang}
-{cmd:p(}{it:{help varlist)}} allows p to be a function of {varlist}. A shape parameter
+{cmd:p(}{it:{help varlist)}} allows p to be a linear function of {varlist}. A shape parameter
 that impacts the tail thickness and peakedness of the distribution.
 
 {phang}
-{cmd:q(}{it:{help varlist)}} allows q to be a function of {varlist}. A shape parameter
+{cmd:q(}{it:{help varlist)}} allows q to be a linear function of {varlist}. A shape parameter
 that impacts the tail thickness and peakedness of the distribution.
 
 
@@ -184,8 +184,8 @@ unit {varlist}.
 {cmd: initial(}{it: {help numlist}}{cmd:)} 
 list of numbers that specifies the initial values of the parameters in the constant
 only model. This must be equal to the number of distributional parameters; 
-i.e. two for the normal and log-normal, three for the Generalized Gamma, four for
-the GB2 and the SGED, and five for the SGT. 
+i.e. two for the normal and log-normal (mu, sigma), one for the Generalized Gamma (p), two for
+the GB2 (p, q) and the SGED (p, lambda), and three for the SGT(p, q, lambda). 
 
 {phang}{marker noninteractive_maxopts}
 {it:maximize_options}:
@@ -242,7 +242,7 @@ If stat is not specified then the independent variables will be taken at their m
 {title:Remarks}
 
 {pstd}
-If the optimization is not working, try using the difficult option. You can also use the option {cmd: technique(bfgs)}, or the other two {cmd: technique} options,
+If the optimization is not working, try using the {opt dif:ficult} option. You can also use the option {cmd: technique(bfgs)}, or the other two {cmd: technique} options,
  which are often more robust than the default {cmd: technique(nr)}.
 
 
@@ -257,28 +257,31 @@ the observations on wages appear below
 {p 8 27 2}20{space 7}25{space 6} meaning  20000 <= wages <= 25000{p_end}
 {p 8 27 2}50{space 8}.{space 6} meaning 50000 <= wages
 
-{pstd}Setup{p_end}
+{pstd}Load the example dataset{p_end}
 {phang2}{cmd:. webuse intregxmpl}{p_end}
 
 {pstd}Interval regression with a normal distribution{p_end}
-{phang2}{cmd:. gintreg wage1 wage2 age c.age#c.age nev_mar rural school tenure}
+{phang2}{cmd:. gintreg wage1 wage2 age nev_mar rural school tenure}
 
 {pstd}Interval regression with a gb2 distribution (use difficult option) {p_end}
-{phang2}{cmd:. gintreg wage1 wage2 age c.age#c.age nev_mar rural school, distribution(gb2) difficult}
+{phang2}{cmd:. gintreg wage1 wage2 age nev_mar rural school, distribution(gb2) difficult}
 
 {pstd}Interval regression with a gb2 distribution with the expected value of the 
 dependent variable evaluated when the independent variables are at the 25 percentile (E[Y|X] appears 
 at the end of the printout {p_end}
-{phang2}{cmd:. gintreg wage1 wage2 age c.age#c.age, distribution(gb2) eyx(p25) difficult}
+{phang2}{cmd:. gintreg wage1 wage2 age, distribution(gb2) eyx(p25) difficult}
 
 
 {pstd}Interval regression with a sgt distribution allowing sigma to vary as a function of independent variables{p_end}
-{phang2}{cmd:. gintreg wage1 wage2 age c.age#c.age nev_mar rural school tenure, distribution(sgt) sigma(age)}
+{phang2}{cmd:. gintreg wage1 wage2 age nev_mar rural school tenure, distribution(sgt) sigma(age nev_mar rural school tenure)}
 
 {pstd}Interval regression using the burr3 distribution {p_end}
 {phang2}{cmd:. constraint define 1 [q]_cons=1}
 
-{phang2}{cmd:. gintreg wage1 wage2 age c.age#c.age nev_mar rural school tenure, distribution(gb2) constraints( 1 )}
+{phang2}{cmd:. gintreg wage1 wage2 age nev_mar rural school tenure, distribution(gb2) constraints( 1 )}
+
+{pstd}Interval regression with a gg distribution with initial values specified p value{p_end}
+{phang2}{cmd:. gintreg wage1 wage2 age nev_mar rural school tenure, distribution(gg) initial(1)}
 
 {marker author}{...}
 {title:Author}

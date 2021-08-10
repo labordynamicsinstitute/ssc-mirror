@@ -1,3 +1,4 @@
+*! 2.2.1 SPJ Feb 2021 Add pweight so that use PVK's -rhsbsample- & svy bootstrap 
 *! version 2.2.0 CV Fiorio and SPJenkins, 02April2010
 *! 	fix bug in -noconstant- case (thanks to A. Peichl & N. Pestel)
 *! version 2.1.0 CV Fiorio and SPJenkins, 07december2008
@@ -13,7 +14,7 @@ program define ineqrbd, sortpreserve rclass
 
     version 8.2
 
-    syntax varlist(min=2 numeric) [aweight fweight] [if] [in] ///
+    syntax varlist(min=2 numeric) [aweight fweight pweight iweight] [if] [in] ///
 	[, i2 Stats noCONStant noREGression Fields ]
 
     return local varlist "`varlist'"

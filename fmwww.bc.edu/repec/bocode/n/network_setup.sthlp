@@ -1,4 +1,6 @@
 {smcl}
+{* *! 6apr018 - limit on treatment name length}{...}
+{* *! version 1.4.1 4apr018 - more on maxvar}{...}
 {* *! version 1.2.5 13mar2017}{...}
 {vieweralsosee "Main network help page" "network"}{...}
 {viewerjumpto "Syntax" "network_setup##syntax"}{...}
@@ -55,7 +57,7 @@ should be handled: whether they should all be dropped, all kept, or specified on
 Otherwise, extra arm-level variables cause an error.{p_end}
 
 {syntab:How treatments are coded}
-{synopt:{opt trtlist(string)}}List of names of treatments to be used 
+{synopt:{opt trtl:ist(string)}}List of names of treatments to be used 
 - useful if you want to omit some treatments e.g. for a sensitivity analysis. 
 Also useful to specify how the treatments will be coded (first treatment will be A, etc.).
 The default is to use all treatments found in alphabetical order
@@ -98,9 +100,15 @@ and
 For multi-arm studies, {opt sdpool(on)} pools across all arms.{p_end}
 
 {syntab:Augment options}
-{synopt:{opt ref(string)}}Name of reference treatment{p_end}
+{synopt:{opt ref(string)}}Name of reference treatment.
+Different choices should give the same results, but numerical stability may be greater
+when the reference treatment is fairly central  in  the network 
+(e.g. it is one of the better connected treatments).{p_end}
 {synopt:{opt augment(exp)}}Number of individuals to use to augment missing reference treatment arms.
-Default is 0.001.{p_end}
+Default is 0.00001.
+If errors occur, it may be worth increasing this parameter.
+If discrepancies occur, for example between different formats, 
+then it may be worth decreasing this parameter.{p_end}
 {synopt:{opt augmean(exp)}}Mean outcome to use to augment missing reference treatment arms.
 Default is for each augmented study to use the weighted average of its
 arm-specific means.{p_end}
@@ -201,6 +209,8 @@ in which the variables refer to the 1st, 2nd etc. study arms, as follows:
         {cmd:drop arm}
         {cmd:network setup d n, studyvar(study) trtvar(trt)}
 
+{pstd}Treatment names may not exceed 32 characters in length in any format.
+
 
 {marker manytrts}{...}
 {title:Networks with large numbers of treatments}
@@ -212,12 +222,14 @@ When treatments are coded numerically, up to 9 treatments are coded 1, 2, 3,...
 and more than 9 treatments are coded 01, 02, 03, ... (or 001, 002, 003, ... if necessary).
 
 {pstd}
-With large numbers of treatments, however, 
-you may exceed Stata's permitted numbers of variables.
-If you are running Stata/IC then this limit is about 45 treatments and cannot be changed. 
-If you are running Stata/MP or Stata/SE then the default limit is about 80 treatments 
-and can be increased by increasing {help memory:maxvar} above its default of 5000, 
-e.g. {cmd:set maxvar 10000} is adequate for 100 treatments; you may also need to increase {help matsize}.
+With large numbers of treatments, however, the number of variables required by the augmented format may exceed Stata's permitted numbers of variables.
+If you are running Stata/IC, then this limit is about 45 treatments, and cannot be changed. 
+If you are running Stata/MP or Stata/SE, then the default limit is about 70 treatments, 
+and can be increased by increasing {help memory:maxvar} to at least the square of the number of treatments;
+you may also need to increase {help matsize}.
+
+{pstd}
+Technical  note: it is not possible at present to circumvent these restrictions by using other formats, because the augmented format is always used as an intermediary.
 
 
 {marker smd}{...}

@@ -1,5 +1,6 @@
 prog drop _all
 *! xtiletest  1.0.0  cfb 11dec2015
+*! 1.1.0 cfb 30dec2020 added aw, fw, pw
 // based on Use of Pearson’s Chi-Square for Testing
 // Equality of Percentile Profiles across
 // Multiple Populations, WD Johnson et al.,
@@ -7,12 +8,12 @@ prog drop _all
 // http://dx.doi.org/10.4236/ojs.2015.55043 
 prog xtiletest, rclass
 version 12
-syntax varname(numeric) [if] [in], BY(string) XTile(string)
+syntax varname(numeric) [if] [in]  [fweight], BY(string) XTile(string)
 tempvar touse rcode
 tempname fmat rowprop df
 marksample touse
 confirm numeric variable `by', exact
-capt _pctile `varlist' if `touse', p(`xtile')
+capt _pctile `varlist' if `touse' [`weight'`exp'], p(`xtile')
 if _rc != 0 {
 	di as err _n "Error: percentiles in xtile() must be integer in ascending order"
 	error 198
@@ -32,7 +33,7 @@ di as res _n "Evaluating equality of quantiles of `varlist' by `by'"
 di "Quantiles `xtile' define `nbin' bins"
 di "H0: quantiles do not differ by `by'"
 
-tab `by' `rcode' if `touse', row chi2 matcell(`fmat')
+tab `by' `rcode' if `touse' [`weight'`exp'], row chi2 matcell(`fmat')
 sca `df' = (`r(r)' - 1)*(`r(c)' - 1)
 return local cmdname xtiletest
 return local varname `varlist'

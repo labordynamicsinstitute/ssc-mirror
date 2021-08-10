@@ -1,8 +1,11 @@
-*! version 0.12.3 IRW 10feb2017
+*! version 0.12.4 IRW 13dec2018
 /*******************************************************************************
 TO DO
 	why are *.tmp files sometimes created? e.g. MFC6AD7.tmp
 HISTORY
+version 0.12.4 13dec2018 - ON UCL WEBSITE AND SSC
+	minor updates to help file
+	no change to ado file
 version 0.12.3 10feb2017
     also ereturn delta, auxiliary, weights (not/stabilised), model & estmethod instead of old method
     all sensitivity options moved to suboptions of sens()
@@ -95,7 +98,7 @@ version 0.2.1  21may2010  drops use of dicmd
 version 0.2    16mar2010  rand() changed to sens(); gphoptions now added `loose'; new options debug robust lpattern() nograph; now calls rctmiss_*.ado not mnar_*.ado; various bug fixes
 
 Test script:
-    H:\missing\sensanal\RCTmiss\rctmiss_testscript.do
+    rctmiss_testscript.do
 ********************************************************************************/
 
 prog def rctmiss, eclass
@@ -114,8 +117,9 @@ if "`command'"=="" {
         di as error "last estimates not found"
         exit 301
     }
-    ereturn display `prefix'
-    exit
+    cap noi ereturn display `prefix'
+	if _rc di as error "Did you omit the regression command after the colon?"
+    exit _rc
 }
 
 *** PARSE REGRESSION COMMAND ***

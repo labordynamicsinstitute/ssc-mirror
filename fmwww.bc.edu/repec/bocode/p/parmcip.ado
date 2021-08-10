@@ -1,6 +1,6 @@
 #delim ;
 prog def parmcip, byable(onecall);
-version 11.0;
+version 16.0;
 /*
   Input a dataset with 1 obs per parameter
   and variables containing estimates, standard errors
@@ -8,7 +8,7 @@ version 11.0;
   Add output variables containing z-statistics or t-statistics,
   confidence limits and P-values.
 *! Author: Roger Newson
-*! Date: 07 October 2015
+*! Date: 09 April 2020
 */
 
 syntax [if] [in] [, noTDist EForm FLOAT FAST

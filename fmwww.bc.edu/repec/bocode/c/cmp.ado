@@ -1,5 +1,5 @@
-*! cmp 8.0.4 4 July 2017
-*! Copyright (C) 2007-17 David Roodman 
+*! cmp 8.5.2 24 March 2021
+*! Copyright (C) 2007-21 David Roodman 
 
 * This program is free software: you can redistribute it and/or modify
 * it under the terms of the GNU General Public License as published by
@@ -78,7 +78,13 @@ program define _cmp
 			cap findfile "lcmp.mlib"
 		}
 		qui findfile "cmp.mata"
-		run "`r(fn)'"
+		cap run "`r(fn)'"
+		if _rc & c(stata_version) >= 13 {
+			di _n "Warning: Could not recompile cmp.mata, probably for lack of write access to the directory where it is stored."
+			di    "For backward compatibility, cmp is distributed as compiled in Stata 11. Recompiling in Stata 13 or later"
+			di   `"makes it to run faster in some cases. To compile it manually, type or click on {stata "which cmp.mata"};"'
+			di    "then run the displayed file like a Stata .do file. This only needs to be done once per installation." _n
+		}
 	}
 
 	cap ghk2version
@@ -104,7 +110,9 @@ program define _cmp
 	mata _mod = cmp_model()
 
 	global parse_wtypeL `weight'
-	global parse_wexpL `"`exp'"'
+	tokenize `exp'
+	macro shift // get rid of = prefix
+	global parse_wexpL `*'
 
 	local structural = "`structural'" != ""
 	global cmp_reverse = "`reverse'" != ""
@@ -124,23 +132,35 @@ program define _cmp
 	local mldiopts `s(diopts)'
 
 	if "`svy'" != "" {
-		svymarkout `touse'
-		svyopts modopts svydiopts options, `s(options)'
-		local meff `s(meff)'
-
-		if `"`s(subpop)'"' != "" {
-			cap confirm var `s(subpop)'
-			if _rc {
-				tempname subpop
-				qui gen byte `subpop' = `s(subpop)' & `touse'
+		if "`_dta[_svy_stages]'"=="" {
+			di as res _n "Warning: data not svyset. Ignoring " as inp "svy" as res "."
+			local svy
+		}
+		else {
+			svymarkout `touse'
+			svyopts modopts svydiopts options, `s(options)'
+			local meff `s(meff)'
+			local 0, `modopts'
+			local _options `options'
+			syntax, [subpop(string) *]
+			local modopts `options'
+			local options `_options'
+			if `"`subpop'"' != "" {
+				cap confirm var `subpop'
+				if _rc {
+					tempvar subpop
+					qui gen byte `subpop' = `s(subpop)' & `touse'
+				}
 			}
-			else local subpop `s(subpop)'
 		}
 	}
 	else local options `s(options)'
 
 	local diopts `eformopts' `mldiopts' `svydiopts' level(`level') resultsform(`resultsform')
 	mlopts mlopts, `options'
+	local 0, `mlopts'
+	syntax, [iterate(passthru) *]
+	local mlopts `options'
 
 	ParseEqs `model' // parse the equations
 	global cmp_d $parse_d
@@ -149,10 +169,12 @@ program define _cmp
 		if `"`redraws'"'=="" {
 			if "`intmethod'"'!="" {
 				local 0 `intmethod'
-				syntax [anything(name=intmethod)], [TOLerance(real 1e-8) ITERate(integer 1001)]
+				local _iterate `iterate'
+        syntax [anything(name=intmethod)], [TOLerance(real 1e-8) ITERate(integer 1001)]
 				if `tolerance'<=0 cmp_error 198 "Adaptive quadrature tolerance must be positive."
-				if `iterate'<=0 cmp_error 198 "Maximum adaptive quadrature iterations must be positive."
+				if   `iterate'<=0 cmp_error 198 "Maximum adaptive quadrature iterations must be positive."
 				mata _mod.set_QuadTol(`tolerance'); _mod.set_QuadIter(`iterate')
+        local iterate `_iterate'
 			}
 			else mata _mod.set_QuadTol(1e-3); _mod.set_QuadIter(1001)
 			if "`intmethod'"'=="" local intmethod mvaghermite
@@ -163,12 +185,11 @@ program define _cmp
 			if `t' global cmp_IntMethod = `t' - 1
 				else cmp_error 198 `"The {cmdab:intm:ethod()} option, if included, should be "ghermite" or "mvaghermite"."'
 			
-			if `"`vce'"'=="" local vce oim
-			if `"`technique'"'=="" {
+			if `"`vce'`svy'`robust'`cluster'"'=="" local vce oim
+			if "`technique'"=="" & !("`svy'"!="" & date(c(born_date),"DMY")<d(30jan2018)) {  // moptimize() would crash with BHHH & svy & gfX evaluators
 				local technique bhhh
 				di as res _n "For quadrature, defaulting to technique(bhhh) for speed."
 			}
-			else if inlist(`"`technique'"', "dfp", "bfgs") di as res _n `"Warning {cmd:technique(`technique')} does not work with adaptive quadrature. Try {cmd:nr} or {cmd:bhhh}."'
 		}
 		else global cmp_IntMethod 0
 	}
@@ -200,7 +221,9 @@ program define _cmp
 		local scramble
 	}
 	if 0`ghkdraws' mata CheckPrime(`ghkdraws')
-	mata _mod.set_ghkType("`ghktype'"); _mod.set_ghkAnti("`antithetics'"!="" | "`ghkanti'"!=""'); _mod.set_ghkDraws(0`ghkdraws'); _mod.set_ghkScramble("`scramble'")
+	local ghkanti = "`antithetics'`ghkanti'"!=""
+	mata _mod.set_ghkType("`ghktype'"); _mod.set_ghkAnti(`ghkanti'); _mod.set_ghkDraws(0`ghkdraws'); _mod.set_ghkScramble("`scramble'")
+	local ghkscramble `scramble'
 
 	if `"`covariance'"' == "" {
 		forvalues l=1/$parse_L {
@@ -332,15 +355,12 @@ program define _cmp
 				if `"`1'"' == ")" continue
 				local asprobit_eq 1
 				local first_asprobit_eq `cmp_eqno'
-				if "${parse_x`parse_eqno'}" == "" { // assure nocons for first eq in asprobit group or leave cons in but constrained to 0
-					constraint free
-					local _constraints `_constraints' `r(free)'
-					constraint `r(free)' [${parse_eq`parse_eqno'}]_cons
-				}
-				else global parse_xc`parse_eqno' nocons			
+
+				if "${parse_x`parse_eqno'}" != "" global parse_xc`parse_eqno' nocons  // put nocons for first eq in asprobit group or (below, after eq gets its name) leave cons in but constrained to 0
 			}
 
-			gen byte _cmp_ind`cmp_eqno' = `1'
+			cap gen byte _cmp_ind`cmp_eqno' = `1'
+			if _rc cmp_error 198 `"Error building indicator variable for equation `cmp_eqno' from expression `1'. Did you forget to type {stata "cmp setup"}?"'
 			if "${parse_y`parse_eqno'}"=="." {
 				cap assert inlist(_cmp_ind`cmp_eqno', ., 0) if `touse', `fast'
 				if _rc cmp_error 198 `"Indicator for ${parse_eq`parse_eqno'} equation must only evaluate to missing (".") or 0 since the dependent variable is unobserved."'
@@ -408,17 +428,25 @@ program define _cmp
 			else {
 				global cmp_truncreg`cmp_eqno' 0
 				mat cmp_trunceqs = nullmat(cmp_trunceqs), 0
+				global cmp_Lt`cmp_eqno' .
+				global cmp_Ut`cmp_eqno' .
 			}
 
 			global cmp_eq`cmp_eqno' = cond("${parse_eq`parse_eqno'}"=="eq`parse_eqno'", subinstr("`: word 1 of ${parse_y`parse_eqno'}'", ".", "", .), "${parse_eq`parse_eqno'}")
 			if "`:list eqnames & global(cmp_eq`cmp_eqno')'" != "" global cmp_eq`cmp_eqno' `=substr("${cmp_eq`cmp_eqno'}",1,29)'`cmp_eqno'
 			local eqnames `eqnames' ${cmp_eq`cmp_eqno'}
 
+      if 0`first_asprobit_eq' == `cmp_eqno' & "${parse_x`parse_eqno'}" == "" { // if this is an mprobit base case with no regressors, leave cons in but constrain to 0
+        constraint free
+        local _constraints `_constraints' `r(free)'
+        constraint `r(free)' [${cmp_eq`parse_eqno'}]_cons
+      }	
+
 			replace `_touse' = `_touse' | _cmp_ind`cmp_eqno'
 
 			cap assert _cmp_ind`cmp_eqno' != $cmp_oprobit if `touse', `fast'
 			if _rc { // ordered probit
-				GroupCategoricalVar if ${cmp_y`cmp_eqno'} < . & `touse', predict(`predict') cmp_eqno(`cmp_eqno')
+				GroupCategoricalVar if ${cmp_y`cmp_eqno'} < . & `touse' & _cmp_ind`cmp_eqno', predict(`predict') cmp_eqno(`cmp_eqno')
 				mat cmp_cat`cmp_eqno' = r(cat)
 				local t = colsof(cmp_cat`cmp_eqno') - 1
 				mat cmp_num_cuts = nullmat(cmp_num_cuts) \ `t'
@@ -533,7 +561,7 @@ program define _cmp
 
 			cap assert ${cmp_y`cmp_eqno'}==. & _cmp_ind`cmp_eqno'!=$cmp_int if `touse', `fast'
 			if _rc==0 global cmp_y`cmp_eqno' .
-			qui replace _cmp_ind`cmp_eqno' = 0 if `touse' & ${cmp_y`cmp_eqno'}==. & _cmp_ind`cmp_eqno'!=$cmp_int
+			qui replace _cmp_ind`cmp_eqno' = 0 if `touse' & mi(${cmp_y`cmp_eqno'}) & _cmp_ind`cmp_eqno'!=$cmp_int
 
 			forvalues i=`cmp_eqno'/`=`cmp_eqno'+`NAlts'*(`asprobit_eq'==0)' { // do once unless expanding non-as mprobit eq
 
@@ -588,7 +616,7 @@ program define _cmp
 
 				global cmp_id`i' ${parse_id`parse_eqno'}
 
-				replace _cmp_ind`i' = $cmp_probity1 if `touse' & _cmp_ind`i'==$cmp_probit & ${cmp_y`i'} // to streamline likelihood computation split probit samples into y=0 and y!=0
+				replace _cmp_ind`i' = $cmp_probity1 if `touse' & _cmp_ind`i'==$cmp_probit & `:word 1 of ${cmp_y`i'}' // to streamline likelihood computation split probit samples into y=0 and y!=0
 
 				forvalues l=1/`=$parse_L-1' {
 					if cmp_fixed_sigs`l'[1,`i'] { // suppress RC and RE lists if this is a base case without structural, so sigs=0
@@ -617,18 +645,21 @@ program define _cmp
 		}
 
 		replace `touse' = `touse' & `_touse'
-
 		global cmp_d `cmp_eqno'
 		forvalues eq=1/$cmp_d {
 			global cmp_eq $cmp_eq ${cmp_eq`eq'}
-			global cmp_y $cmp_y ${cmp_y`eq'}
 			global cmp_Lt $cmp_Lt ${cmp_Lt`eq'}
 			global cmp_Ut $cmp_Ut ${cmp_Ut`eq'}
 			global cmp_yL $cmp_yL ${cmp_y`eq'_L}
 			global cmp_ind $cmp_ind _cmp_ind`eq'
 		}
 		mata _mod.set_d($cmp_d); _mod.set_L($parse_L); _mod.set_MaxCuts($cmp_max_cuts)
-		mata _mod.set_yVars("$cmp_y"); _mod.set_UtVars("$cmp_Ut"); _mod.set_LtVars("$cmp_Lt"); _mod.set_yLVars("$cmp_yL"); _mod.set_indVars("$cmp_ind")
+		mata _mod.set_UtVars("$cmp_Ut"); _mod.set_LtVars("$cmp_Lt"); _mod.set_yLVars("$cmp_yL"); _mod.set_indVars("$cmp_ind")
+
+		drop `_touse'
+		egen byte `_touse' = rowmax($cmp_ind) if `touse'
+		replace `touse' = 0 if `_touse'==0 | `_touse'==. // drop obs for which all outcomes unobserved
+		drop `_touse'
 
 		global cmpHasGamma 0
 		tempname Gamma GammaINobs GammaI GammaId
@@ -717,10 +748,12 @@ program define _cmp
 		}
 	}
 
-	if $parse_L == 1 { // for 1-level models, ml will handle weights
+	if $parse_L == 1 { // for 1-level models, ml/svy will handle weights
 		if `"$parse_wexpL"' != "" {
 			tempvar wvar
-			qui gen double `wvar' $parse_wexpL if `touse'
+			cap confirm var $parse_wexpL
+			if _rc qui gen double `wvar' = $parse_wexpL if `touse'
+			  else local wvar $parse_wexpL
 			local wgtexp [$parse_wtypeL = `wvar']
 			local awgtexp [aw = `wvar']
 			markout `touse' `wvar'
@@ -730,16 +763,23 @@ program define _cmp
 		sort _cmp_id*, stable
 
 		global parse_wtype$parse_L $parse_wtypeL
-		global parse_wexp$parse_L `"$parse_wexpL"'
+		global parse_wexp$parse_L $parse_wexpL
 		forvalues l = 1/$parse_L {
+			tempvar weight`l'
 			local cmp_ids `cmp_ids' _cmp_id`l'
 			if "${parse_wtype`l'}" != "" {
-				qui gen double _cmp_weight`l' ${parse_wexp`l'} if `touse'
-				markout `touse' _cmp_weight`l'
-				replace `touse' = 0 if _cmp_weight`l'<=0
+				if 0 & "`svy'"!="" cmp_error 101 "weights not allowed with the {bf:svy} option; the {bf:svy} option assumes survey weights were already specified using svyset"
+
+				cap confirm var ${parse_wexp`l'}
+				if _rc qui gen double `weight`l'' = ${parse_wexp`l'} if `touse'
+				  else local weight`l' ${parse_wexp`l'}
+				global cmp_weight`l' `weight`l''
+
+				markout `touse' `weight`l''
+				replace `touse' = 0 if `weight`l''<=0
 
 				if "${parse_wtype`l'}" == "fweight" {
-					cap assert mod(_cmp_weight`l', 1)==0 if `touse', `fast'
+					cap assert mod(`weight`l'', 1)==0 if `touse', `fast'
 					if _rc cmp_error 401 "Frequency weights must be integers."
 				}
 					
@@ -747,20 +787,20 @@ program define _cmp
 					local wcluster 1
 					if "`cluster'" != "`:word `l' of $parse_id'" {
 						if "`cluster'`robust'" != "" {
-							di as res _n "Warning: " as txt `"[pweight ${parse_wexp`l'}]"' as res " would usually imply " as txt "vce(cluster `:word `l' of $parse_id')."
+							di as res _n "Warning: " as txt `"[pweight = ${parse_wexp`l'}]"' as res " would usually imply " as txt "vce(cluster `:word `l' of $parse_id')."
 							di as res "Implementing " as txt `"`=cond("`cluster'"=="", "robust", "cluster `cluster'")'"' as res " instead."
 						}
 						else {
 							local vce vce(`=cond(`l'<$parse_L, "cluster `:word `l' of $parse_id'", "robust")')
 							local lrtest pweight
-							di as res _n "Note: " as txt `"[pweight ${parse_wexp`l'}]"' as res " implies `vce'"
+							di as res _n "Note: " as txt `"[pweight = ${parse_wexp`l'}]"' as res " implies `vce'"
 						}
 					}
 				}
 
 				if `l' < $parse_L {
 					tempvar t
-					qui by `cmp_ids': egen float `t' = sd(_cmp_weight`l') if `touse'
+					qui by `cmp_ids': egen float `t' = mad(`weight`l'') if `touse'
 					qui assert inlist(`t', 0, .) if `touse', `fast'
 					if _rc cmp_error 101 "Weights for level {res}`:word `l' of $parse_id'{err} must be constant within groups."
 					drop `t'
@@ -768,6 +808,15 @@ program define _cmp
 			}
 		}
 
+		if "`svy'"!="" {
+			if "`: char _dta[_svy_wvar]'" != "" local wvar: char _dta[_svy_wvar]
+			if "`wvar'" != "" {
+				local wgtexp  [pw = `wvar']
+				local awgtexp [aw = `wvar']
+				markout `touse' `wvar'
+			}
+		}
+		
 		tokenize $parse_id // rebuild id's in case weights<=0 nix some groups
 		local ids
 		qui forvalues l = 1/`=$parse_L-1' {
@@ -781,7 +830,6 @@ program define _cmp
 	qui count if `touse'
 	if r(N)==0 cmp_error 2000 "No observations."
 
-	local method_spec lf`="`lf'"==""' cmp_lnL()
 	mata _mod.set_todo("`lf'"=="")
 
 	if "`predict'" != "" {
@@ -791,7 +839,6 @@ program define _cmp
 		}
 		global cmp_num_scores = e(num_scores)
 		mata _mod.set_NumREDraws(strtoreal(tokens("`redraws'"))')
-		global cmpN = e(N)
 		
 		constraint drop `_constraints' `initconstraints' `1onlyinitconstraints'
 	}
@@ -876,11 +923,11 @@ program define _cmp
 		_est hold `hold', copy restore
 		local model `e(model)'
 		version 11: ml model `:subinstr local model ": . =" ": _cmp_ind1 =", all' if e(sample) & `if', collinear missing
-		mata _mod.set_todo("`scores'"!=""); _mod.cmp_init()
+		mata _mod.set_todo("`scores'"!=""); _mod.cmp_init($ML_M)
 		_est unhold `hold'
 		mata _lnf=_S=_H=.
 		mata moptimize_init_userinfo($ML_M, 1, &_mod)
-		mata (void) cmp_lnL($ML_M, "`scores'"!="", st_matrix("e(b)"), _lnf, _S, _H)
+		mata (void) cmp_lf1($ML_M, "`scores'"!="", st_matrix("e(b)"), _lnf, _S, _H)
 		if "`lnl'"!="" mata st_view(_H, ., "`lnl'"   , st_global("ML_samp")); _H[,] = _lnf
 		  else         mata st_view(_H, ., "`scores'", st_global("ML_samp")); _H[,] = _S[,"`equation'"==""?.:strtoreal(tokens("`equation'"))]
 		cmp_clear
@@ -892,9 +939,10 @@ program define _cmp
 	// Do InitSearch even if user specifies init() to check for that and to build fully labelled parameter vector for constraint work in Estimate
 	if "`init'" == "" {
 		di as res _n "Fitting individual models as starting point for full model fit."
-		di as res "Note: For programming reasons, these initial estimates may deviate from your specification."
-		di as res "      For exact fits of each equation alone, run cmp separately on each."
+		`quietly' di as res "Note: For programming reasons, these initial estimates may deviate from your specification."
+		`quietly' di as res "      For exact fits of each equation alone, run cmp separately on each."
 	}
+
 	`quietly' DoInitSearch InitSearch if `touse' `=cond("`subpop'"!="","& `subpop'","")' `wgtexp', `svy' adjustprobitsample `drop' auxparams(`auxparams') `=cond("`init'" == "", "", "quietly")' mlopts(`mlopts')
 	mat `cmpInitFull' = r(b)
 	local ParamsDisplay `r(ParamsDisplay)'
@@ -931,16 +979,6 @@ program define _cmp
 		sort _cmp_id*, stable
 	}
 
-	if $parse_L>1 {
-		tempname cmpN
-		global cmpN `cmpN'
-		qui gen long `t' = _n
-		sum `t' if `touse' `wgtexp', meanonly
-		drop `t'
-		global cmpObs1 = r(min)
-		scalar `cmpN' = r(N)
-	}
-
 	forvalues i=1/$cmp_d { // save these for full fit in case they get modified by 1only or meff calls to InitSearch
 		local cmp_x`i' ${cmp_x`i'}
 		local cmp_xc`i' ${cmp_xc`i'}
@@ -950,8 +988,8 @@ program define _cmp
 		di as res _n "Fitting misspecified model."
 		qui InitSearch if `touse' `=cond("`subpop'"!="","& `subpop'","")', `drop' auxparams(`auxparams') mlopts(`mlopts')
 		mat `b' = r(b)
-		Estimate `method_spec' if `touse'  `=cond("`subpop'"!="","& `subpop'","")', init(`init') cmpinit(`b') `vce' auxparams(`auxparams') psampling(`psampling') resteps(`steps') ///
-			`constraints' _constraints(`_constraints' `initconstraints') `autoconstrain' mlopts(`mlopts') `technique' `quietly' redraws(`redraws') paramsdisplay(`r(ParamsDisplay)') `interactive'
+		Estimate if `touse' `=cond("`subpop'"!="","& `subpop'","")', init(`init') cmpinit(`b') `vce' auxparams(`auxparams') psampling(`psampling') resteps(`steps') `lf' ///
+			`constraints' _constraints(`_constraints' `initconstraints') `autoconstrain' mlopts(`mlopts') `iterate' `technique' `quietly' redraws(`redraws') paramsdisplay(`r(ParamsDisplay)') `interactive'
 		if _rc==0 {
 			tempname vsmp
 			mat `vsmp' = e(V)
@@ -968,8 +1006,8 @@ program define _cmp
 		qui InitSearch if `touse' `=cond("`subpop'"!="","& `subpop'","")' `wgtexp', `svy' 1only  auxparams(`auxparams') mlopts(`mlopts')
 		local 1onlyinitconstraints `r(initconstraints)'
 		mat `b' = r(b)
-		qui Estimate `method_spec' if `touse' `wgtexp', cmpinit(`b') `constraints' _constraints(`_constraints' `1onlyinitconstraints') `autoconstrain' psampling(`psampling') resteps(`steps') ///
-		                `svy' subpop(`subpop') modopts(`modopts') mlopts(`mlopts') `technique' auxparams(`r(auxparams)') 1only `quietly' redraws(`redraws') paramsdisplay(`r(ParamsDisplay)') `interactive'
+		qui Estimate if `touse' `wgtexp', cmpinit(`b') `constraints' _constraints(`_constraints' `1onlyinitconstraints') `autoconstrain' psampling(`psampling') resteps(`steps') `lf' ///
+		                `svy' subpop(`subpop') modopts(`modopts') mlopts(`mlopts') `iterate' `technique' auxparams(`r(auxparams)') 1only `quietly' redraws(`redraws') paramsdisplay(`r(ParamsDisplay)') `interactive'
 		if _rc==0 local lf0opt lf0(`e(rank)' `e(ll)')
 
 		global cmpHasGamma `HasGamma'
@@ -1000,8 +1038,8 @@ program define _cmp
 			global cmp_xc`eq' `cmp_xc`eq''
 		}
 
-		replace _cmp_ind`cmp_eqno' = $cmp_probit   if `touse' & _cmp_ind`cmp_eqno' == $cmp_frac & ${cmp_y`cmp_eqno'}==0 // for speed, model frac probit boundary values as probit
-		replace _cmp_ind`cmp_eqno' = $cmp_probity1 if `touse' & _cmp_ind`cmp_eqno' == $cmp_frac & ${cmp_y`cmp_eqno'}==1
+		replace _cmp_ind`cmp_eqno' = $cmp_probit   if `touse' & _cmp_ind`cmp_eqno' == $cmp_frac & `:word 1 of ${cmp_y`cmp_eqno'}'==0 // for speed, model frac probit boundary values as probit
+		replace _cmp_ind`cmp_eqno' = $cmp_probity1 if `touse' & _cmp_ind`cmp_eqno' == $cmp_frac & `:word 1 of ${cmp_y`cmp_eqno'}'==1
 	}
 
 	if $parse_L==1 & $cmpSigXform {
@@ -1017,13 +1055,12 @@ program define _cmp
 
 	di as res _n "Fitting full model."
 
-	cmp_full_model `method_spec' if `touse' `wgtexp', `vce' `lf0opt' modopts(`modopts') mlopts(`mlopts') `technique' paramsdisplay(`ParamsDisplay') xvarsall(`XVarsAll') ///
+	cmp_full_model if `touse' `wgtexp', `vce' `lf0opt' modopts(`modopts') mlopts(`mlopts') `iterate' `technique' `lf' paramsdisplay(`ParamsDisplay') xvarsall(`XVarsAll') ///
 		`constraints' _constraints(`_constraints' `initconstraints') init(`init') cmpinit(`cmpInitFull') `svy' subpop(`subpop') psampling(`psampling') ///
 		`quietly' auxparams(`auxparams') cmdline(`"`cmdline'"') resteps(`steps') redraws(`redraws') intpoints(`intpoints') ///
-		vsmp(`vsmp') meff(`meff') ghkanti(`ghkanti') ghkdraws(`ghkdraws') ghktype(`ghktype') diparmopt(`diparmopt') `interactive'
-
+		vsmp(`vsmp') meff(`meff') ghkanti(`ghkanti') ghkdraws(`ghkdraws') ghktype(`ghktype') ghkscramble(`ghkscramble') diparmopt(`diparmopt') `interactive'
 	constraint drop `_constraints' `initconstraints' `1onlyinitconstraints'
-
+	
 	if e(cmd)=="cmp" Display, `diopts'
 end
 
@@ -1113,17 +1150,19 @@ program define ParseEqs
 			macro shift 2
 		
 			local 0 `*'
-			syntax [varlist(fv ts default=none)] [fw aw pw iw], [noCONStant COVariance(string)]
+			syntax [varlist(fv ts default=none)] [fw aw pw iw/], [noCONStant COVariance(string)]
 
 			if "`varlist'"!="" fvunab varlist: `varlist'
 			local t: list varlist - global(parse_x$parse_d)
 
-			if `"${parse_wtype`L'}${parse_wexp`L'}"' == ""  {
-				global parse_wtype`L' `weight'
-				global parse_wexp`L' `"`exp'"'
-				if "`weight'"=="fweight" global parse_fweight 1
+			if `"`weight'`exp'"' != "" {
+				if `"${parse_wtype`L'}${parse_wexp`L'}"' == ""  {
+					global parse_wtype`L' `weight'
+					global parse_wexp`L' `"`exp'"'
+					if "`weight'"=="fweight" global parse_fweight 1
+				}
+				else if "${parse_wtype`L'}"!="`weight'" | `"${parse_wexp`L'}"'!=`"`exp'"' cmp_error 198 "Weights for the `id' level specified more than once."
 			}
-			else if "${parse_wtype`L'}"!="`weight'" | `"${parse_wexp`L'}"!=`"`exp'"' cmp_error 198 "Weights more than once for the `id' level specified more than once."
 
 			if "`varlist'"=="" & "`constant'"!="" di as res "Warning: No random effect or coefficients specified for the `id' level of the ${parse_y$parse_d} equation."
 
@@ -1169,6 +1208,21 @@ program define ParseEqs
 			di as err "Don't include this equation in the " as res "indicators()" as err " option."
 			cmp_error 110
 		}
+
+		forvalues l=1/$parse_L { // rearrange RE and RC macros to reflect any corrections to level numbers assigned in initial parsing pass.
+			forvalues i=1/$parse_d {
+				foreach macro in re rc cov {
+					mata st_local("_parse_`macro'`l'_`i'", st_global("parse_`macro'"+strofreal(_p[`l'])+"_`i'"))
+				}
+			}
+		}
+		forvalues l=1/$parse_L {
+			forvalues i=1/$parse_d {
+				foreach macro in re rc cov {
+					global parse_`macro'`l'_`i' `_parse_`macro'`l'_`i''
+				}
+			}
+		}
 	}
 
 	local i 0
@@ -1197,7 +1251,7 @@ program define ParseEqs
 	forvalues j=1/$parse_d { // will cause to generate and extract /atanhrho params to work correctly for bottom level
 		global parse_re$parse_L_`j' _cons
 	}
-	
+
 	local t: list dups eqnames
 	if "`t'" != "" cmp_error 110 "Multiply defined equations: `t'"
 	
@@ -1258,11 +1312,11 @@ end
 cap program drop cmp_full_model
 program define cmp_full_model, eclass
 	version 11
-	syntax anything if/ [pw fw aw iw], [auxparams(string) vsmp(string) meff(string) paramsdisplay(string) xvarsall(string) ///
-					ghkanti(string) ghkdraws(string) ghktype(string) diparmopt(string) cmdline(string) ///
-					redraws(string) resteps(string) retype(string) reanti(string) intpoints(string) *]
+	syntax if/ [pw fw aw iw], [auxparams(string) vsmp(string) meff(string) paramsdisplay(string) xvarsall(string) ///
+					ghkanti(string) ghkdraws(string) ghktype(string) ghkscramble(string) diparmopt(string) cmdline(string) ///
+					redraws(string) resteps(string) retype(string) reanti(string) intpoints(string) svy *]
 
-	Estimate `anything' if `if' [`weight'`exp'], auxparams(`auxparams') paramsdisplay(`paramsdisplay') resteps(`resteps') redraws(`redraws') `options'
+	Estimate if `if' [`weight'`exp'], auxparams(`auxparams') paramsdisplay(`paramsdisplay') resteps(`resteps') redraws(`redraws') `svy' `options'
 
 	if _rc==0 {
 		if "`meff'" != "" _svy_mkmeff `vsmp'
@@ -1271,13 +1325,13 @@ program define cmp_full_model, eclass
 		ereturn scalar L = $parse_L
 		ereturn local ivars $parse_id
 		ereturn mat NumEff = cmp_NumEff
-		forvalues l=1/$parse_L {
+		forvalues l=$parse_L(-1)1 {
 			ereturn mat fixed_rhos`l' = cmp_fixed_rhos`l'
 			ereturn mat fixed_sigs`l' = cmp_fixed_sigs`l'
 			cap ereturn mat sig_score_inds`l' = cmpSigScoreInds`l'
-			ereturn local covariance `e(covariance)' ${cmp_cov`l'}
-			forvalues eq=1/$cmp_d {
-				ereturn local covariance`eq' `e(covariance`eq')' ${cmp_cov`l'_`eq'}
+			ereturn local covariance ${cmp_cov`l'} `e(covariance)'
+			forvalues eq=$cmp_d(-1)1 {
+				ereturn local covariance`eq' ${cmp_cov`l'_`eq'} `e(covariance`eq')'
 				ereturn local EffNames`l'_`eq' ${cmp_rc`l'_`eq'} ${cmp_re`l'_`eq'}
 			}
 		}
@@ -1370,8 +1424,13 @@ program define cmp_full_model, eclass
 			}
 		}
 
-		if "$parse_wexpL"!="" ereturn local wexp `"$parse_wexpL"' // careful not to zap e(wexp) because it may have been set by svy option
-		forvalues eq=1/$cmp_d {
+		if "`svy'" != "" & "`: char _dta[_svy_wvar]'" != "" { // compensate for bug in Stata 14, 15 in which ml model, svy puts references to temp var in these macros
+			ereturn local wvar: char _dta[_svy_wvar]
+			ereturn local wexp "= `e(wvar)'"
+		}
+		else if "$parse_wexpL"!="" ereturn local wexp `"= $parse_wexpL"'
+
+		forvalues eq=$cmp_d(-1)1 {  // doing in reverse order seems to get proper order in displayed results
 			qui count if e(sample) & _cmp_ind`eq'
 			ereturn scalar N`eq' = r(N)
 		}
@@ -1387,6 +1446,7 @@ program define cmp_full_model, eclass
 			mat `cat' = nullmat(`cat') \ `t'
 		}
 		mat rownames `cat' = $cmp_eq
+
 		ereturn mat cat = `cat'
 		mat `t' = cmp_num_cuts
 		mat rownames `t' = $cmp_eq
@@ -1398,10 +1458,12 @@ program define cmp_full_model, eclass
 		}
 	
 		ereturn scalar num_scores = $cmp_num_scores
+		mata st_local("ghkdraws", strofreal(_mod.get_ghkDraws()))
 		foreach macro in diparmopt ghkanti ghkdraws ghktype retype reanti intpoints {
 			ereturn local `macro' ``macro''
 		}
 		if `resteps' > 1 ereturn local resteps `resteps'
+		ereturn local ghkscramble `ghkscramble'
 		ereturn local depvar $parse_y
 		ereturn local indicators = `"`indicators'"'
 		ereturn local eqnames $cmp_eq `:subinstr local auxparams "/" "", all'
@@ -1426,10 +1488,14 @@ end
 cap program drop Estimate
 program Estimate, eclass
 	version 11.0
-	syntax anything(name=method_spec) if/ [fw aw pw iw], [auxparams(string) psampling(string) svy subpop(passthru) autoconstrain paramsdisplay(string) ///
-		modopts(string) mlopts(string) init(string) cmpinit(string) constraints(string) _constraints(string) technique(string) 1only quietly resteps(string) redraws(string) interactive *]
+	syntax if/ [fw aw pw iw], [auxparams(string) psampling(string) svy subpop(passthru) autoconstrain paramsdisplay(string) ///
+		modopts(string) mlopts(string) iterate(passthru) init(string) cmpinit(string) constraints(string) _constraints(string) technique(string) vce(string) 1only quietly resteps(string) redraws(string) interactive lf *]
 
-	if "`weight'" != "" local awgtexp [aw`exp']
+	if "`svy'" == "" {
+  	if "`weight'" != "" local awgtexp [aw`exp']
+    local weightexp `weight'`exp'
+  }
+
 	tempname _init
 	if "`init'" == "" local _init `cmpinit'
 		else {
@@ -1449,7 +1515,7 @@ program Estimate, eclass
 		local model `model', ${cmp_xc`eq'} offset(${cmp_xo`eq'}) exposure(${cmp_xe`eq'}))
 	}
 	if "`1only'"=="" local model `model' $cmp_gammaparams
-	local model `method_spec' `model' `auxparams'
+	local model `model' `auxparams'
 	local modeldisplay: subinstr local model ": `ind1' =" ": . =", all
 
 	if "`constraints'" != "" {
@@ -1500,66 +1566,6 @@ program Estimate, eclass
 			}
 		}
 	}
-*		constraint drop `_constraints'
-
-/*	tempname CnsCoef CnsCoefCols a C
-		if $parse_L>1 & "`autoconstrain'"=="" {
-				mata _Cns = st_matrix("e(Cns)")
-				// probit of y on nothing makes $cmpNumCoefs=0 and next statement crashes
-				mata _Cns = select(_Cns, rowsum(abs(_Cns[,1.._NumCoefs]):==1):==2) // constraints that equate two coefficients (up to sign)
-				mata st_matrix("`CnsCoefCols'", rowminmax(editvalue(abs(_Cns) :* J(rows(_Cns), 1, 1..cols(_Cns)), 0, .))) // cols affected by each constraint (2 each)
-				local colnames: colfullnames `cmpinit'
-				forvalues l=1/`=$parse_L-1' {
-					mata __Cns = _Cns
-					local NewCnsCt 0
-					forvalues c1=1/$cmpNumCoefs { // Use Guassian elimination to minimize constraints refering to coefs lacking /lnsigs in this level
-						local eq1         : list posof "`:word `c1' of `:coleq    `cmpinit'''" in global(cmp_eq)
-						local coef1       : list posof "`:word `c1' of `:colnames `cmpinit'''" in global(cmp_x`eq1')
-						local lnsigcol`c1': list posof `"`ln'sig`=cond(`coef1',"_`coef1'","")'_`l'_`eq1':_cons"' in colnames
-						if `lnsigcol`c1''==0 mata __Cns = eliminate(__Cns, `c1')
-						forvalues c2=1/$cmpNumCoefs { // Use Guassian elimination to minimize constraints refering to coefs lacking /lnsigs in this level
-							local eq2     : list posof "`:word `c2' of `:coleq    `cmpinit'''" in global(cmp_eq)
-							local coef2   : list posof "`:word `c2' of `:colnames `cmpinit'''" in global(cmp_x`eq2')
-							local eqlabel = cond(`coef1'+`coef2' | `eq1'==`eq2', `"_`=cond(`coef1', "`coef1'", "`=1+`:word count ${cmp_x`eq1'}''")'_`=cond(`coef2', "`coef2'", "`=1+`:word count ${cmp_x`eq2'}''")'"', "")
-							local atanhrhocol`c1'_`c2': list posof `"`atanh'rho`eqlabel'_`l'_`eq1'`=cond(`eq1'==`eq2',"","`eq2'")':_cons"' in colnames
-						}
-					}
-					mata st_matrix("`CnsCoef'", __Cns)
-					cap confirm matrix `CnsCoef'
-					if _rc==0 {
-						forvalues r1=1/`=rowsof(`CnsCoef')' { // auto-constrain corresponding lnsigs
-							mat `Cns' = `Cns' \ J(1, colsof(`Cns'), 0)
-							local ++NewCnsCt
-							forvalues ci1=1/2 {
-								local c1 = `CnsCoefCols'[`r1',`ci1']
-								cap mat `Cns'[`=rowsof(`Cns')', `lnsigcol`c1'] = `CnsCoef'[`r1',`c1']
-								if _rc {
-									mat `Cns' = `Cns'[1..`=rowsof(`Cns')-1', 1...]
-									local --NewCnsCt
-									continue, break
-								}
-							}
-							forvalues r2=1/`=rowsof(`CnsCoef')' { // auto-constrain atanhrhos corresponding to pairs of constraints
-								mat `Cns' = `Cns' \ J(1, colsof(`Cns'), 0)
-								local ++NewCnsCt
-								forvalues ci1=1/2 {
-									local c1 = `CnsCoefCols'[`r1',`ci1']
-									forvalues ci2=1/2 {
-										local c2 = `CnsCoefCols'[`r1',`ci2']
-										cap mat `Cns'[`=rowsof(`Cns')', ``atanhrhocol`c1'_`c2''] = (-1)^(`c1'+`c2')
-										if _rc {
-											mat `Cns' = `Cns'[1..`=rowsof(`Cns')-1', 1...]
-											local --NewCnsCt
-											continue, break
-										}
-										if _rc continue, break
-									}
-								}
-							}
-						}
-					}
-				}
-			}*/
 
 	tempname b sample
 	mata _mod.set_WillAdapt($cmp_IntMethod)
@@ -1579,6 +1585,8 @@ program Estimate, eclass
 		gen `u' = uniform() if `if'
 	}
 
+	local gf = $parse_L>1 & "`1only'"==""
+
 	while `psampling_cutoff' < `psampling_rate' {
 		if "`psampling'" != "" {
 			if `psampling_cutoff' < 1 di as res _n "Fitting on approximately " %1.0f `psampling_cutoff'*`N' " observations (approximately " %1.0f `psampling_cutoff'*100 "% of the sample)."
@@ -1595,64 +1603,89 @@ program Estimate, eclass
 
 			mata _mod.set_NumREDraws(ceil(_NumREDraws))
 
+			local _if if (`if') `=cond("`psampling'" != "", "& (`psampling_cutoff'>=1 | `u'<=.001+`psampling_cutoff')", "")'
+
+			local method = cond(`gf' & "`svy'"!="", "gf`="`lf'"==""' cmp_gf1()", `"lf`="`lf'"==""' cmp_lf1()"')
+
 			local final = `psampling_cutoff'>=1 & `restep'==`resteps'
+
 			if `final' {
-				local this_mlopts `mlopts'
 				local this_technique `technique'
+				local this_iterate `iterate'
+				if `gf' & "`svy'"=="" & "`vce'"!="opg" {
+					local this_vce opg // faster than oim for lf1, gf1; this interim VCV ignored anyway
+					local this_mlopts
+				}
+				else  {
+					local this_mlopts `mlopts'
+					local this_vce `vce'
+				}
 			}
 			else {
-				local this_mlopts nonrtolerance tolerance(0.1)
+				local this_mlopts nrtol(.001) tolerance(.001)
 				local this_technique = cond($cmp_IntMethod, "bhhh", "nr")
+				local this_technique nr
+				local this_vce opg // faster than oim for lf1, gf1; this interim VCV ignored anyway
 			}
 
-			local _if if (`if') `=cond("`psampling'" != "", "& (`psampling_cutoff'>=1 | `u'<=.001+`psampling_cutoff')", "")'
-			local mlmodelcmd `quietly' ml model `model' `=cond(`final',"[`weight'`exp'] `_if', `options'", "`awgtexp' `_if',")' ///
-				`svy' `subpop' constraints(`constraints') nocnsnotes nopreserve missing collinear `modopts' technique(`this_technique')
-			local mlmaxcmd `quietly' ml max, search(off) `this_mlopts' nooutput
-			`mlmodelcmd' `initopt'
-			mata moptimize_init_userinfo($ML_M, 1, &_mod)
+			local mlmodelcmd `model' `=cond(`final' & "`1only'"=="","[`weightexp'] `_if', `options'", "`awgtexp' `_if',")' ///
+				`svy' `subpop' constraints(`constraints') nocnsnotes nopreserve missing collinear `modopts'
+			local mlmaxcmd `quietly' ml max, search(off) nooutput
 
-			mata _mod.cmp_init()
-			capture noisily `mlmaxcmd'
+			`quietly' ml model `method' `mlmodelcmd' vce(`this_vce') `initopt' technique(`this_technique') `=cond(`gf' & "`svy'"!="", "group(_cmp_id1)", "")'
+
+			mata moptimize_init_userinfo($ML_M, 1, &_mod)
+			mata _mod.cmp_init($ML_M)
+
+			capture noisily `mlmaxcmd' noclear `this_mlopts' `iterate'  // Estimate!
 
 			if _rc==1400 {
 				di as res "Restarting search with parameters all 0."
 				tempname zeroes
 				mat `zeroes' = J(1, `=colsof(`_init')', 0)
-				`mlmodelcmd' init(`zeroes', copy)
-				capture noisiliy `mlmaxcmd'
+				`quietly' ml model `method' `mlmodelcmd' vce(`this_vce') init(`zeroes', copy) technique(`this_technique')
+				capture noisiliy `mlmaxcmd' `this_mlopts' `iterate'
 			}
 			if _rc==1 {
 				if "`interactive'"=="" cmp_clear
 				error 1
 			}
-			if _rc continue
+			error _rc
+			
+			mat `_init' = e(b)
 
-			ereturn local marginsok Pr XB default
-			cap _ms_op_info e(b)
-			if _rc==0 & r(fvops) {
-				if 0$cmpAnyOprobit {
-					ereturn repost, buildfvinfo ADDCONS
-					ereturn local marginsprop `e(marginsprop)' addcons
-				}
-				else ereturn repost, buildfvinfo
-			}
-
-			cap local _a // reset _rc to 0
-
-			if `restep' < `resteps' {
-				if "`quietly'"=="" noi version 11: ml di
-				mat `_init' = e(b)
-			}
+			if !`final' & "`quietly'"=="" noi version 11: ml di
 		} // resteps loop
 
 		local psampling_cutoff = `psampling_cutoff' * `psampling_rate'
-		if `psampling_cutoff' < `psampling_rate' {
-			noi version 11: ml di
-			mat `_init' = e(b)
-		}
 	} // psampling loop
-	
+
+	if `gf' & "`svy'"=="" & "`vce'"!="opg" { // Non-svy hierarchical models use fast lf1 search, which doesn't quite give right Hessian; get correct VCV via honest gf1
+		tempname hold V
+		_est hold `hold'
+		`quietly' ml model gf`="`lf'"==""' cmp_gf1() `mlmodelcmd' vce(`vce') init(`_init') group(_cmp_id1)
+		mata moptimize_init_userinfo($ML_M, 1, &_mod)
+		quietly ml max, search(off) `mlopts' iter(0) // nooutput
+		mat `V' = e(V)
+		local vce `e(vce)'
+		local vcetype `e(vcetype)'
+		_est unhold `hold'
+		ereturn	repost V = `V'
+		ereturn local vce `vce'
+		ereturn local vcetype `vcetype'
+	}
+
+	cap local _a // reset _rc to 0
+	ereturn local marginsok Pr XB default
+	cap _ms_op_info e(b)
+	if _rc==0 & r(fvops) {
+		if 0$cmpAnyOprobit {
+			ereturn repost, buildfvinfo ADDCONS
+			ereturn local marginsprop `e(marginsprop)' addcons
+		}
+		else ereturn repost, buildfvinfo
+	}
+
 	ereturn scalar k_gamma = $cmpHasGamma
 	ereturn scalar k_aux = `:word count `auxparams'' + e(k_gamma)
 	ereturn scalar k_eq = $cmp_d + e(k_aux)
@@ -1663,7 +1696,7 @@ program Estimate, eclass
 		error `rc'
 	}
 
-	ereturn local model `modeldisplay'
+	ereturn local model `method' `modeldisplay'
 end
 
 // if estimating, transform a categorical variable with the equivalent of egen group(), storing the transformation in cmp_y`cmp_eqno'_label
@@ -1683,11 +1716,8 @@ program define GroupCategoricalVar, rclass
 		}
 		mat `cat' = `cat'' // should extract numerically exact representation of doubles
 	}
-	else {
-		mat `num_cuts' = e(num_cuts)
-		mat `cat' = e(cat)
-		mat `cat' = `cat'[`cmp_eqno', 1..1+`num_cuts'[`cmp_eqno',1]]
-	}
+	else mata st_matrix("`cat'", select(st_matrix("e(cat)")[`cmp_eqno',], st_matrix("e(cat)")[`cmp_eqno',]:<.))
+
 	forvalues i=1/`=colsof(`cat')' {
 		local recode `recode' (`=string(`cat'[1,`i'], "%21x")' = `i') 
 	}
@@ -1803,7 +1833,18 @@ program InitSearch, rclass
 				cap confirm variable _mp_cmp_y`eq' // check for cmp-made dummies for non-as mprobit
 				`quietly' `svy' probit `=cond(_rc, "${cmp_y`eq'}", "_mp_cmp_y`eq'")' `xvars' `iwgtexp' ///
 					if `if' & (inlist(_cmp_ind`eq',$cmp_probit,$cmp_probity1,$cmp_mprobit) | (_cmp_ind`eq' > $cmp_mprobit_ind_base & _cmp_ind`eq' < $cmp_roprobit_ind_base)), ${cmp_xc`eq'} offset(${cmp_xo`eq'}) `mlopts'
-				if "`adjustprobitsample'" != "" qui replace _cmp_ind`eq' = 0 if e(sample)==0
+
+        if "`adjustprobitsample'" != "" {
+          forvalues r=1/$cmp_num_mprobit_groups {  // for mprobit obs that got zapped for perfect prediction, remove from all eqs in group
+            if cmp_mprobit_group_inds[`r',1] <= `eq' & `eq' <= cmp_mprobit_group_inds[`r',2] {
+              qui forvalues c=`=cmp_mprobit_group_inds[`r',1]'/`=cmp_mprobit_group_inds[`r',2]' {
+                if `c' != `eq' replace _cmp_ind`c' = 0 if `if' & e(sample)==0 & _cmp_ind`eq'
+              }
+            }
+          }
+          qui replace _cmp_ind`eq' = 0 if e(sample)==0
+        }
+        
 				mat `beta' = e(b)
 				mat `V' = e(V)
 				scalar `sig' = 0
@@ -1871,7 +1912,7 @@ program InitSearch, rclass
 						tempname e
 						predict `e' if e(sample), resid
 						svyset
-						sum `e' [iw `r(wexp)'] if e(sample)
+						sum `e' `=cond(`"`r(wexp)'"'!="", `"[iw `r(wexp)']"', "")' if e(sample)
 						scalar `sig' = r(sd)
 					}
 				mat `V' = e(V)
@@ -1891,7 +1932,7 @@ program InitSearch, rclass
 						tempname e
 						predict `e' if e(sample), resid
 						svyset
-						sum `e' [iw `r(wexp)'] if e(sample)
+						sum `e' `=cond(`"`r(wexp)'"'!="", `"[iw `r(wexp)']"', "")' if e(sample)
 						scalar `sig' = ln(r(sd))
 					}
 				mat `V' = e(V)
@@ -1997,19 +2038,22 @@ program InitSearch, rclass
 		mat `betavec' = `betavec', `gammavec'
 	}
 
-	if "`adjustprobitsample'" != "" & $cmp_num_mprobit_groups { // for mprobit obs which in some eq got zapped for perfect prediction, remove from all eqs in group
-		tempname t
-		qui forvalues r=1/$cmp_num_mprobit_groups {
-			gen byte `t' = 0 if `if'
-			forvalues c=`=cmp_mprobit_group_inds[`r',1]'/`=cmp_mprobit_group_inds[`r',2]' {
-				replace `t' = 1 if `if' & _cmp_ind`c'==0
-			}
-			forvalues c=`=cmp_mprobit_group_inds[`r',1]'/`=cmp_mprobit_group_inds[`r',2]' {
-				replace _cmp_ind`c' = 0 if `if' & `t'
-			}
+  if "`adjustprobitsample'" != "" {  // for mprobit obs which in some eq got zapped for perfect prediction, see if only base case remains or chosen case dropped and drop obs if so
+    tempvar t
+    qui forvalues r=1/$cmp_num_mprobit_groups {
+    	gen byte `t' = 1 if `if'
+      forvalues c=`=cmp_mprobit_group_inds[`r',1]+1'/`=cmp_mprobit_group_inds[`r',2]' {
+      	replace `t' = 0 if `if' & _cmp_ind`c'
+      }
+      forvalues c=`=cmp_mprobit_group_inds[`r',1]+1'/`=cmp_mprobit_group_inds[`r',2]' {  // but zap if obs for chosen case dropped
+      	replace `t' = 1 if `if' & _cmp_ind`c'==0 & _cmp_ind`=cmp_mprobit_group_inds[`r',1]'==$cmp_mprobit_ind_base + `c' - cmp_mprobit_group_inds[`r',1] + 1
+      }
+      forvalues c=`=cmp_mprobit_group_inds[`r',1]'/`=cmp_mprobit_group_inds[`r',2]' {
+        replace _cmp_ind`c' = 0 if `if' & `t'
+      }
 			drop `t'
-		}
-	}
+    }
+  }
 
 	if "${cmp_cov$parse_L}" == "exchangeable" cap mata st_matrix("`sigvec'", mean(st_matrix("`sigvec'")'))   // can fail if sigvec is empty because all sigs fixed
 
@@ -2090,7 +2134,7 @@ program InitSearch, rclass
 										}
 										else {
 											if `c1'==1 & `c2'==1  {
-												di as res _n "Samples for `level_l'equations `eq1' and `eq2' do not overlap. Removing associated correlation paramter(s) from model."
+												di as res _n "Samples for `level_l'equations `eq1' and `eq2' do not overlap. Removing associated correlation parameter(s) from model."
 												mat cmp_fixed_rhos`l'[`eq2',`eq1'] = 0
 											}
 											local t /`param'
@@ -2163,15 +2207,11 @@ program Display, eclass
 					mat `V' = e(V`form')
 					mat `Cns' = e(Cns`form')
 					if `Cns'[1,1]==. local Cns
-					mat `b`curform'' = e(b)
-					mat `V`curform'' = e(V)
-					cap mat `Cns`curform'' = e(Cns)
-					if _rc local Cns`curform'
 
 					local scalars : e(scalars)
 					local macros  : e(macros)
 					local matrices: e(matrices)
-					local t b V Cns br Vr bs Vs Cnss
+					local t b V Cns
 					local matrices: list matrices - t
 					foreach t in `scalars' {
 						tempname `t'
@@ -2239,8 +2279,6 @@ program Display, eclass
 							ereturn local covariance`eq' ``covariance_reducedform`eq'''
 						}
 					}
-					ereturn mat b`curform' = `b`curform''
-					ereturn mat V`curform' = `V`curform''
 					ereturn local resultsform = cond("`form'"=="s", "structural", "reduced")
 				}
 			}
@@ -2386,7 +2424,7 @@ program Display, eclass
 
 			mat `fixed_sigs' = e(fixed_sigs`e(L)')
 			mat `fixed_rhos' = e(fixed_rhos`e(L)')
-			di "Level: " as res "Residuals" _col(37) as txt "{c |}"
+			di "Level: " as res "Observations" _col(37) as txt "{c |}"
 			di " Standard " plural(e(k_dv), "deviation") _col(37) "{c |} " as res  _c
 			if "`:word `e(L)' of `e(covariance)''" == "exchangeable" {
 				local paramname /`ln'sigEx
@@ -2487,6 +2525,44 @@ program define cmp_error
 end
 
 * Version history
+* 8.5.2 Fixed crash on non-hierarchical svy models
+* 8.5.1 Small speed-ups
+* 8.5.0 Made predict, pr factor in error variance in all cases, not assume it's 1
+* 8.4.1 Fixed 8.4.0 bug causing crash
+* 8.4.0 Fixed bugs in handling mprobits in which observable (not-chosen!) cases vary by observation
+* 8.3.9 Fixed crash on use of intmethod()
+* 8.3.8 Prevented crash when using svy on data svyset with pweights or when combining svy with multi-level
+* 8.3.7 Better error message on syntax error in indicator variable definition caused most likely by not doing "cmp setup"
+* 8.3.6 Return e(ghkdraws) even when option not set by user; fixes crash in predict or margins for models with mprobits with >3 categories
+* 8.3.5 Fixed 8.3.0 bug, 4/1/2019: e(covariance...) terms in backwards order, sometimes causing crash on results display
+* 8.3.4 Fixed crash on predict/margins of probabilities (pr) after estimation with mprobit/roprobit + other equations
+* 8.3.3 Streamlined Predict code; made cmp always store e(bs) and e(br) regardless of current resultsform
+* 8.3.2 Fixed bug causing wrong predictions after gamma models
+* 8.3.1 Prevented crash when it can't recompile boottest.mata; instead issues an explanatory warning
+* 8.3.0 Fixed bug introduced in 8.2.3, 7/17/2018: without "nolr" option, mprobit, asprobit, and gamma models estimated wrongly/didn't converge
+* 8.2.9 Fixed crashes in multi-equation, multilevel models when diferent equations have effects at different levels.
+* 8.2.8 Fixed bugs in predict after mprobit
+* 8.2.7 Fixed new "option vce() not allowed" bug in hierarchical models
+* 8.2.6 Fixed loss of user's vce() option in 8.2.3
+* 8.2.5 Fixed crash when oprobit eq's take more values in full sample than in eq's sample.
+* 8.2.4 Fixed crashes in hierarchical models with "lf", introduced in 8.0.0.
+* 8.2.3 After 8.2.0 changes, in hierarchichal models, allowed iter() to affect pre-refinement estimation too.
+*       Got rid of "refining" stage for hierarchical models: first stage fully fits with lf1, second just computes proper VCV with iter(0).
+*       Fully redefined ml model for latter stage to prevent crashes in some contexts.
+* 8.2.2 Extended predictions of multinomial probabilities to predictions of being top-ranked for roprobit models.
+*       Fixed false error in parsing of upper-level weights in multilevel models
+* 8.2.1 Fixed 8.2.0 bug: fully loosened convergence criteria before "refining" multilevel model search
+* 8.2.0 Created gf1 evaluator for proper multilevel modeling (Hessian not quite right under lf1 trick)
+*       Added predictions of multinomial probit probabilities
+*       Fixed bugs when RC on a var not in other eqs
+* 8.1.2 Fixed svy hierarchical model crashes, partly by writing gf1 wrapper for lf1 evaluator. Stopped default of bhhh for such models because of moptimize() bug for svy/gf1.
+* 8.1.1 Compensated for Stata 14, 15 bug in which ml model, svy leaves behind reference to temp var in e(wexp), e(wvar)
+* 8.1.0 Fixed 8.0.9 crash in fully uncensored models
+* 8.0.9 Fixed bug in models mixing fractional probits with non-censored models, or varying which fractional probit eqs are included
+* 8.0.8 Added reference to $ML_samp in one call of st_data(), preventing crash in hierarchical models not fit to all data
+* 8.0.7 Fixed 6.9.1 bug causing crash on subpop()
+* 8.0.6 Fixed crash when all included eqs have unobserved outcomes
+* 8.0.5 Fixed crash in multi-equation models with only some eqs truncated
 * 8.0.4 Fixed another bug causing crash in quadrature models with nolrtest. Restored broken LR test.
 * 8.0.3 Changes to cmp.pkg and stata.toc only, on GitHub
 * 8.0.2 Workaround for Stata 15 bug: prevent varabbrev from affecting _b[] and _se[] references in printing output. Fixed crash in adaptive quadrature models without nolrtest.
@@ -2507,7 +2583,7 @@ end
 *       Set GHK draw set width = max # of censored dimensions, not number of equations. Fixed 6.8.5 bug in labelling mprobit equations when outcome present in depvar but not realized in estimation sample
 * 6.9.4 Fixed crash when GHK needed, at least one eq is oprobit/intreg and at least one eq is not (default lower bound in F -> . for minus infinity, not 0)
 * 6.9.3 Fixed crash on "[]" as weight clause
-* 6.9.2 Fixed crash parsing intemethod(ghermite); crash on results display when adaptive quad never works for some groups; contraint-dropping bug introduced in 6.8.8; failure to drop atanhrho's at all levels in hierarchical models
+* 6.9.2 Fixed crash parsing intmethod(ghermite); crash on results display when adaptive quad never works for some groups; contraint-dropping bug introduced in 6.8.8; failure to drop atanhrho's at all levels in hierarchical models
 * 6.9.1 Added support for if clause in subpop()
 * 6.9.0 Fixed bugs causing crash on svy option and obscuring properties of cmp
 * 6.8.9 Fixed small 6.8.8 bugs

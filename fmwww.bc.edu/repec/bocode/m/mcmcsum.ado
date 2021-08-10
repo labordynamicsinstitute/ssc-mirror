@@ -1,4 +1,4 @@
-*! mcmcsum.ado, Chris Charlton and George Leckie, 19May2016
+*! mcmcsum.ado, Chris Charlton and George Leckie, 17Jun2019
 program mcmcsum, rclass
 	if _caller() >= 12 version 12.0
 	if _caller() <= 9 version 9.0 
@@ -10,7 +10,7 @@ program mcmcsum, rclass
 			Eform SQrt MOde MEdian Zratio ///
 			Level(cilevel) Width(integer 13) Detail ///
 			TRAJectories DENSities FIVEway ///
-			FOrmat FOrmat2(str) ///
+			CFORMAT(string) PFORMAT(string) SFORMAT(string) ///
 			NAME(string) ///
 		]
 		
@@ -27,22 +27,39 @@ program mcmcsum, rclass
 		}
 	}
 
+	if `"`cformat'"' == "" {
+		local cformat `c(cformat)'
+	}
+	if `"`cformat'"' == "" {
+		local cformat %9.0g
+	}
+	if fmtwidth(`"`cformat'"') > 9 {
+		local cformat %9.0g
+		display as text "note: invalid cformat(), using default"
+	}
 
-	
-	
-	// Check supplied format (borrowed from tabstat.ado)
-	if "`format'" != "" & `"`format2'"' != "" {
-			di as err "may not specify both format and format()"
-			exit 198
+	if `"`pformat'"' == "" {
+		local pformat `c(pformat)'
 	}
-	if `"`format2'"' != "" {
-			capture local tmp : display `format2' 1
-			if _rc {
-					di as err `"invalid %fmt in format(): `format2'"'
-					exit 120
-			}
+	if `"`pformat'"' == "" {
+		local pformat %5.3f
 	}
-	
+	if fmtwidth(`"`pformat'"') > 5 {
+		local pformat %5.3f
+		display as text "note: invalid pformat(), using default"
+	}
+
+	if `"`sformat'"' == "" {
+		local sformat `c(sformat)'
+	}
+	if `"`sformat'"' == "" {
+		local sformat %8.2f
+	}
+	if fmtwidth(`"`sformat'"') > 8 {
+    		local sformat %8.2f
+    		display as text "note: invalid sformat(), using default"
+	}
+
 	// Separate off variable list
 	// Parse if/in if needed
 	local part parnames
@@ -260,7 +277,7 @@ program mcmcsum, rclass
 		local thinning = e(thinning)
 		local colnames `varnames'
 		tempfile filechains
-		quietly saveold `filechains'
+		quietly saveold "`filechains'"
 	}
 	
 	if "`variables'" ~= "" {
@@ -308,18 +325,7 @@ program mcmcsum, rclass
 		display as txt "{hline `width'}{c +}{hline 64}"	
 		
 		foreach col of local colnames {
-			local dispfmt %9.0g
-		
 			if "`variables'" ~= "" {
-
-				if "`format'" ~= "" {
-					local dispfmt : format `col'
-				}
-				
-				if "`format2'" ~= "" {
-					local dispfmt `format2'
-				}				
-			
 				local posit = 0
 				if regexm("`col'", "RP[0-9]+_var_([a-zA-Z0-9_]+)_") == 1 {
 					local posit = 1
@@ -347,10 +353,6 @@ program mcmcsum, rclass
 				local pvalmedian = r(pvalmedian)
 			}			
 			else {
-				if "`format2'" ~= "" {
-					local dispfmt `format2'
-				}		
-			
 				* Pull all statistics back from ereturn
 				local MATstats b quantiles bd rl1 rl2 lb ub ess meanmcse pvalmean pvalmode pvalmedian
 				tempname MATstat
@@ -384,22 +386,22 @@ program mcmcsum, rclass
 			local p = `width' - length("`par'")
 			display as txt _col(`p') "`par'" _continue
 			display as txt _col(`=`width' + 1') "{c |}" _continue
-			if "`mean'" ~= "" display as res _col(17) `dispfmt' `meanval' _continue
-			if "`median'" ~= "" display as res _col(17) `dispfmt' `quantiles'[5, `quantcol'] _continue
-			if "`mode'" ~= "" display as res _col(17) `dispfmt' `modeval' _continue
-			display as res _col(28) `dispfmt' `sdval' _continue
+			if "`mean'" ~= "" display as res _col(17) `cformat' `meanval' _continue
+			if "`median'" ~= "" display as res _col(17) `cformat' `quantiles'[5, `quantcol'] _continue
+			if "`mode'" ~= "" display as res _col(17) `cformat' `modeval' _continue
+			display as res _col(28) `cformat' `sdval' _continue
 			if "`zratio'" ~= "" {
-				display as res _col(36) %9.2f `meanval'/`sdval' _continue
-				display as res _col(49) %4.3f 2*normal(-abs(`meanval'/`sdval')) _continue
+				display as res _col(36) `sformat' `meanval'/`sdval' _continue
+				display as res _col(49) `pformat' 2*normal(-abs(`meanval'/`sdval')) _continue
 			}
 			else {
 				display as res _col(36) %9.0f `ess' _continue
-				if "`mean'" ~= "" display as res _col(49) %4.3f `pvalmean' _continue
-				if "`median'" ~= "" display as res _col(49) %4.3f `pvalmedian' _continue
-				if "`mode'" ~= "" display as res _col(49) %4.3f `pvalmode' _continue			
+				if "`mean'" ~= "" display as res _col(49) `pformat' `pvalmean' _continue
+				if "`median'" ~= "" display as res _col(49) `pformat' `pvalmedian' _continue
+				if "`mode'" ~= "" display as res _col(49) `pformat' `pvalmode' _continue			
 			}
-			display as res _col(58) `dispfmt' `lb' _continue
-			display as res _col(70) `dispfmt' `ub' 
+			display as res _col(58) `cformat' `lb' _continue
+			display as res _col(70) `cformat' `ub' 
 
 
 			local ++i
@@ -437,25 +439,13 @@ program mcmcsum, rclass
 		* Display the MCMC summary statistics and diagnostics
 		local i = 1
 		foreach col of local colnames {
-		
-			local dispfmt %9.0g
-		
 			if "`variables'" ~= "" {
-
-				if "`format'" ~= "" {
-					local dispfmt : format `col'
-				}
-				
-				if "`format2'" ~= "" {
-					local dispfmt `format2'
-				}				
-			
 				local posit = 0
 				if regexm("`col'", "RP[0-9]+_var_([a-zA-Z0-9_]+)_") == 1 {
 					local posit = 1
 				}
 			
-				quietly runmlwin_mcmcdiag `col' `if' `in',  thinning(`thinning') posit(`posit') `options' `eform'
+				quietly runmlwin_mcmcdiag `col' `if' `in', thinning(`thinning') posit(`posit') `options' `eform'
 				local MATstats quantiles BD RL1 RL2 lb ub ESS meanmcse	
 				foreach stat of local MATstats {
 					local `=lower("`stat'")' r(`stat')
@@ -475,10 +465,6 @@ program mcmcsum, rclass
 				local pvalmedian = r(pvalmedian)
 			}			
 			else {
-				if "`format2'" ~= "" {
-					local dispfmt `format2'
-				}
-			
 				* Pull all statistics back from ereturn
 				local MATstats b quantiles bd rl1 rl2 lb ub ess meanmcse pvalmean pvalmode pvalmedian
 				tempname MATstat
@@ -502,7 +488,6 @@ program mcmcsum, rclass
 				local quantcol = colnumb(e(quantiles),"`col'")
 				local thinnedchain = floor(e(chain)/e(thinning))
 			}
-
 
 			local rllb = `rl1'
 			local rlub = `rl2'
@@ -532,17 +517,17 @@ program mcmcsum, rclass
 			display _n(1) _col(`title_col') as txt "`currentpar'"
 			display as txt "{hline 78}"
 			display as txt _col(33) "Percentiles"
-			display as txt "Mean"           _col(14) as res `dispfmt' `meanval'	 _col(27) as txt %4.1f = 100*`=`quantiles'[1, 1]' "%" _col(34) as result `dispfmt' `quantiles'[1, `quantcol'] _col(48) as txt "Thinned Chain Length"  _col(70) as res %9.0g `thinnedchain'
-			display as txt "MCSE of Mean"   _col(14) as res `dispfmt' `meanmcse' _col(27) as txt %4.1f = 100*`=`quantiles'[2, 1]' "%" _col(34) as result `dispfmt' `quantiles'[2, `quantcol'] _col(48) as txt "Effective Sample Size" _col(70) as res %9.0g `ess'
-			display as txt "Std. Dev."      _col(14) as res `dispfmt' sqrt(`V')  _col(27) as txt %4.0f = 100*`=`quantiles'[3, 1]' "%" _col(34) as result `dispfmt' `quantiles'[3, `quantcol'] _col(48) as txt "Raftery Lewis (2.5%)"  _col(70) as res %9.0g `rllb'
-			display as txt "Mode"           _col(14) as res `dispfmt' `modeval'	 _col(27) as txt %4.0f = 100*`=`quantiles'[4, 1]' "%" _col(34) as result `dispfmt' `quantiles'[4, `quantcol'] _col(48) as txt "Raftery Lewis (97.5%)" _col(70) as res %9.0g `rlub'
-			display as txt "P(mean)"        _col(14) as res %9.0g `pvalmean'                                                                                                          _col(48) as txt "Brooks Draper (mean)"  _col(70) as res %9.0g `bd'
-			display as txt "P(mode)"        _col(14) as res %9.0g `pvalmode' _col(27) as txt %4.0f = 100*`=`quantiles'[5, 1]' "%" _col(34) as result `dispfmt' `quantiles'[5, `quantcol'] _col(48)
-			display as txt "P(median)"      _col(14) as res %9.0g `pvalmedian'
-			display as txt                                                   _col(27) as txt %4.0f = 100*`=`quantiles'[6, 1]' "%" _col(34) as result `dispfmt' `quantiles'[6, `quantcol'] _col(48) 
-			display as txt                                                   _col(27) as txt %4.0f = 100*`=`quantiles'[7, 1]' "%" _col(34) as result `dispfmt' `quantiles'[7, `quantcol'] _col(48)
-			display as txt                                                   _col(27) as txt %4.1f = 100*`=`quantiles'[8, 1]' "%" _col(34) as result `dispfmt' `quantiles'[8, `quantcol'] _col(48)
-			display as txt                                                   _col(27) as txt %4.1f = 100*`=`quantiles'[9, 1]' "%" _col(34) as result `dispfmt' `quantiles'[9, `quantcol'] _col(48)
+			display as txt "Mean"           _col(14) as res `cformat' `meanval'	 _col(27) as txt %4.1f = 100*`=`quantiles'[1, 1]' "%" _col(34) as result `cformat' `quantiles'[1, `quantcol'] _col(48) as txt "Thinned Chain Length"  _col(70) as res %9.0g `thinnedchain'
+			display as txt "MCSE of Mean"   _col(14) as res `cformat' `meanmcse' _col(27) as txt %4.1f = 100*`=`quantiles'[2, 1]' "%" _col(34) as result `cformat' `quantiles'[2, `quantcol'] _col(48) as txt "Effective Sample Size" _col(70) as res %9.0g `ess'
+			display as txt "Std. Dev."      _col(14) as res `cformat' sqrt(`V')  _col(27) as txt %4.0f = 100*`=`quantiles'[3, 1]' "%" _col(34) as result `cformat' `quantiles'[3, `quantcol'] _col(48) as txt "Raftery Lewis (2.5%)"  _col(70) as res %9.0g `rllb'
+			display as txt "Mode"           _col(14) as res `cformat' `modeval'	 _col(27) as txt %4.0f = 100*`=`quantiles'[4, 1]' "%" _col(34) as result `cformat' `quantiles'[4, `quantcol'] _col(48) as txt "Raftery Lewis (97.5%)" _col(70) as res %9.0g `rlub'
+			display as txt "P(mean)"        _col(14) as res `pformat' `pvalmean'                                                                                                          _col(48) as txt "Brooks Draper (mean)"  _col(70) as res %9.0g `bd'
+			display as txt "P(mode)"        _col(14) as res `pformat' `pvalmode' _col(27) as txt %4.0f = 100*`=`quantiles'[5, 1]' "%" _col(34) as result `cformat' `quantiles'[5, `quantcol'] _col(48)
+			display as txt "P(median)"      _col(14) as res `pformat' `pvalmedian'
+			display as txt                                                   _col(27) as txt %4.0f = 100*`=`quantiles'[6, 1]' "%" _col(34) as result `cformat' `quantiles'[6, `quantcol'] _col(48) 
+			display as txt                                                   _col(27) as txt %4.0f = 100*`=`quantiles'[7, 1]' "%" _col(34) as result `cformat' `quantiles'[7, `quantcol'] _col(48)
+			display as txt                                                   _col(27) as txt %4.1f = 100*`=`quantiles'[8, 1]' "%" _col(34) as result `cformat' `quantiles'[8, `quantcol'] _col(48)
+			display as txt                                                   _col(27) as txt %4.1f = 100*`=`quantiles'[9, 1]' "%" _col(34) as result `cformat' `quantiles'[9, `quantcol'] _col(48)
 
 			local i = `i' + 1
 
@@ -717,7 +702,7 @@ program mcmcsum, rclass
 					restore, preserve
 				}
 				else {
-					use `filechains', clear
+					use "`filechains'", clear
 				}
 			}				
 		}

@@ -1,4 +1,4 @@
-*! version 1.1.2  04jun2017
+*! version 1.2.3  04aug2020
 *! Sebastian Kripfganz, www.kripfganz.de
 
 *==================================================*
@@ -8,7 +8,7 @@
 
 /*	Kripfganz, S., and C. Schwarz (2015).
 	Estimation of linear dynamic panel data models with time-invariant regressors.
-	ECB Working Paper 1838. European Central Bank.		*/
+	Journal of Applied Econometrics 34: 526-546.		*/
 
 program define xtseqreg_estat, rclass
 	version 12.1
@@ -33,7 +33,7 @@ end
 
 *==================================================*
 **** computation of serial-correlation test statistics ****
-program define xtseqreg_estat_serial, rclass
+program define xtseqreg_estat_serial, rclass sort
 	version 12.1
 	syntax [, AR(numlist int >0)]
 
@@ -52,9 +52,10 @@ program define xtseqreg_estat_serial, rclass
 	loc indepvars		: coln `b'
 	loc indepvars		: subinstr loc indepvars "_cons" "`smpl'", w
 	loc K				: word count `indepvars'
+	tempname influence
 	forv k = 1/`K' {
-		tempname influence`k'
-		loc influence		"`influence' `influence`k''"
+		tempvar `influence'`k'
+		loc influencevars	"`influencevars' `influence'`k'"
 		loc var				: word `k' of `indepvars'
 		_ms_parse_parts `var'
 		if "`r(type)'" == "factor" {
@@ -65,7 +66,7 @@ program define xtseqreg_estat_serial, rclass
 	}
 	loc sigma2e			= e(sigma2e)
 	if `sigma2e' == . {
-		qui predict double `influence' if `smpl', score
+		qui predict double `influence'* if `smpl', score
 		cap conf mat e(V_modelbased)
 		if _rc == 0 {
 			loc V				"e(V_modelbased)"
@@ -73,17 +74,31 @@ program define xtseqreg_estat_serial, rclass
 		else {
 			loc V				"e(V)"
 		}
-		mata: xtseqreg_influence("`influence'", "`V'", "", "`smpl'")
+		mata: xtseqreg_influence("`influencevars'", "`V'", "", "`smpl'")
+		loc clustvar		"`e(clustvar)'"
 	}
+	if "`clustvar'" == "" {
+		loc clustvar		"`e(ivar)'"
+	}
+
 	di _n as txt "Arellano-Bond test for autocorrelation of the first-differenced residuals"
 	foreach order of num `ar' {
 		qui gen byte `dsmpl' = `smpl'
 		markout `dsmpl' D.`e' L`order'D.`e'
-		mata: xtseqreg_serial(	"D.`e'",				///
-								"L`order'D.`e'",		///
-								"`dindepvars'",			///
-								"`influence'",			///
-								"`e(ivar)'",			///
+		tsrevar D.`e' if `smpl'
+		loc tde				"`r(varlist)'"
+		tsrevar L`order'D.`e' if `smpl'
+		loc tlde			"`r(varlist)'"
+		fvrevar `dindepvars' if `smpl'
+		loc tdindepvars		"`r(varlist)'"
+		if "`clustvar'" != "`_dta[_TSpanel]'" {
+			sort `clustvar' `_dta[_TSpanel]' `_dta[_TStvar]'
+		}
+		mata: xtseqreg_serial(	"`tde'",				///
+								"`tlde'",				///
+								"`tdindepvars'",		///
+								"`influencevars'",		///
+								"`clustvar'",			///
 								"`smpl'",				///
 								"`dsmpl'",				///
 								"e(V)",					///
@@ -92,6 +107,9 @@ program define xtseqreg_estat_serial, rclass
 		loc p`order'		= 2 * normal(- abs(`z`order''))
 		qui drop `dsmpl'
 		di as txt "H0: no autocorrelation of order " as res `order' as txt ":" _col(40) "z = " as res %9.4f `z`order'' _col(56) as txt "Prob > |z|" _col(68) "=" _col(73) as res %6.4f `p`order''
+		if "`clustvar'" != "`_dta[_TSpanel]'" {
+			qui xtset
+		}
 	}
 
 	foreach order of num `ar' {
@@ -218,7 +236,7 @@ end
 
 *==================================================*
 **** computation of generalized Hausman test statistic ****
-program define xtseqreg_estat_hausman, rclass
+program define xtseqreg_estat_hausman, rclass sort
 	version 12.1
 	syntax anything(id="estimation results") , [DF(integer 0) noNEsted]
 	gettoken estname anything : anything , match(paren) bind
@@ -257,6 +275,18 @@ program define xtseqreg_estat_hausman, rclass
 			}
 			di as err "estat hausman not allowed after xtseqreg with two equations"
 			exit 322
+		}
+		loc clustvar`e'		"`e(clustvar)'"
+		if "`clustvar`e''" == "" {
+			loc clustvar`e'		"`e(ivar)'"
+		}
+		if `e' == 2 {
+			if "`clustvar1'" != "`clustvar2'" {
+				qui est res `xtseqreg_e'
+				est drop `xtseqreg_e'
+				di as err "cannot compare estimates based on different cluster variables"
+				exit 322
+			}
 		}
 		tempname b`e'
 		mat `b`e''			= e(b)
@@ -297,11 +327,12 @@ program define xtseqreg_estat_hausman, rclass
 			di as err "`: list varlist - bvars`e'' not found"
 			exit 111
 		}
+		tempname influence`e'
 		forv k = 1/`: word count `bvars`e''' {
-			tempvar influence`e'_`k'
-			loc influence_all`e' "`influence_all`e'' `influence`e'_`k''"
+			tempvar `influence`e''`k'
+			loc influence_all`e' "`influence_all`e'' `influence`e''`k'"
 		}
-		qui predict double `influence_all`e'' if `touse', score
+		qui predict double `influence`e''* if `touse', score
 		cap conf mat e(V_modelbased)
 		if _rc == 0 {
 			loc V				"e(V_modelbased)"
@@ -313,11 +344,11 @@ program define xtseqreg_estat_hausman, rclass
 		tempname aux
 		foreach var of loc varlist {
 			loc k				: list posof "`var'" in bvars`e'
-			loc influence`e'	"`influence`e'' `: word `k' of `influence_all`e'''"
+			loc influencevars`e' "`influencevars`e'' `: word `k' of `influence_all`e'''"
 			mat `aux'			= (nullmat(`aux'), `b`e''[1, "`var'"])
 		}
 		mat `b`e''			= `aux'
-		cap drop `: list influence_all`e' - influence`e''
+		cap drop `: list influence_all`e' - influencevars`e''
 		if `df' == 0 {
 			tempname stats
 			mat `stats'			= e(stats)
@@ -328,9 +359,12 @@ program define xtseqreg_estat_hausman, rclass
 	qui est res `xtseqreg_e'
 	est drop `xtseqreg_e'
 
-	mata: xtseqreg_hausman(	"`influence1'",			///
-							"`influence2'",			///
-							"`e(ivar)'",			///
+	if "`clustvar1'" != "`_dta[_TSpanel]'" {
+		sort `clustvar1' `_dta[_TSpanel]' `_dta[_TStvar]'
+	}
+	mata: xtseqreg_hausman(	"`influencevars1'",		///
+							"`influencevars2'",		///
+							"`clustvar1'",			///
 							"`touse'",				///
 							"`b1'",					///
 							"`b2'")
@@ -343,7 +377,7 @@ program define xtseqreg_estat_hausman, rclass
 	}
 	loc p				= chi2tail(`df', `chi2')
 	di _n as txt "Generalized Hausman test" _col(56) "chi2(" as res `df' as txt ")" _col(68) "=" _col(70) as res %9.4f `chi2'
-	di as txt _col(56) "Prob > chi2" _col(68) "=" _col(73) as res %6.4f `p'
+	di as txt "H0: coefficients do not systematically differ" _col(56) "Prob > chi2" _col(68) "=" _col(73) as res %6.4f `p'
 
 	ret sca p			= `p'
 	ret sca df			= `df'

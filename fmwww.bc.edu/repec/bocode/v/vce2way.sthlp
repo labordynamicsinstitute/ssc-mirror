@@ -1,5 +1,5 @@
 {smcl}
-{* 21February2017/}{...}
+{* 23June2019/}{...}
 {cmd:help vce2way}
 {hline}
 
@@ -19,6 +19,8 @@
 [{it:cmdline_options}]
 
 {title:Description}
+
+{pstd}{it:Notes:} As of June 2019, {cmd:vce2way} has been superseded by {search vcemway:{bf:vcemway}} that allows for robust inference with m-way clustering, where m is 2 or larger.
 
 {pstd}{cmd:vce2way} is a module to adjust an existing Stata estimation command's standard errors for two-way clustering in {it: varname1} and {it:varname2}. 
 The module works with any Stata command which allows one-way clustering in each dimension separately via built-in {cmd:vce(cluster } {it:varname}{cmd:)} option. 

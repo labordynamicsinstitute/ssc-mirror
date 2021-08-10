@@ -34,9 +34,9 @@ d KW: xtmepoisson
 d KW: xtreg
 d KW: gllamm
 d 
-d Requires: Stata version 9.0 and MLwiN version 2.27 or higher
+d Requires: Stata version 9.0 and MLwiN version 2.36 or higher
 d 
-d Distribution-Date: 20160523
+d Distribution-Date: 20190617
 d 
 d Author: George Leckie, Centre for Multilevel Modelling, University of Bristol
 d Support: email g.leckie@@bristol.ac.uk
@@ -76,7 +76,5 @@ g MAC runmlwin_mcmcdiagnostics.mac runmlwin_mcmcdiagnostics.plugin
 g OSX.PPC runmlwin_mcmcdiagnostics.mac runmlwin_mcmcdiagnostics.plugin
 g LINUX runmlwin_mcmcdiagnostics.lin32 runmlwin_mcmcdiagnostics.plugin
 g LINUX64 runmlwin_mcmcdiagnostics.lin64 runmlwin_mcmcdiagnostics.plugin
-g SOL64 runmlwin_mcmcdiagnostics.sol64 runmlwin_mcmcdiagnostics.plugin
-g SOLX8664 runmlwin_mcmcdiagnostics.sol64 runmlwin_mcmcdiagnostics.plugin
 h runmlwin_mcmcdiagnostics.plugin
 

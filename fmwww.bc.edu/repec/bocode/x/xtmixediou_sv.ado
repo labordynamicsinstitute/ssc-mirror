@@ -2,7 +2,7 @@
 * RETURNS A ROW VECTOR OF STARTING VALUES 
 	* sv_thetastar = (vech(logcholGstar)',aLpha,taustar)
 
-*! xtmixediou_sv: V1 (renamed xtiou V6); Rachael Hughes; 14th September 2016; generates starting values for xtmixediou
+*! xtmixediou_sv: V2; Rachael Hughes; 26th June 2017; generates starting values for xtmixediou
 capture program drop xtmixediou_sv
 program xtmixediou_sv, rclass
 	version 11
@@ -10,7 +10,7 @@ program xtmixediou_sv, rclass
 	
 	tempname sv_G sv_Wvalues sv_Wstarvalues sv_Gstar sv_cholGstar sv_theta sv_thetastar 
 	
-	svmethod`svmethod' `y' "`fevars'" "`reffects'" "`id'" "`time'" `Rparameterization'
+	quietly svmethod`svmethod' `y' "`fevars'" "`reffects'" "`id'" "`time'" `Rparameterization'
 	local sv_sigma = r(sv_sigma)
 	matrix `sv_G' = r(sv_G)
 	matrix `sv_Wvalues' = r(sv_Wvalues)
@@ -159,7 +159,7 @@ program svmethod2, rclass
 		}
 		local svstring = "`svstring'" + "_un `obsvar' `obstime' `obscov1t' `RIposition'"
 	}
-	
+		
 	/********************************************************************
 	  DETERMINE THE MEDIAN TIME INTERVAL BETWEEN CONSECUTIVE MEASUREMENTS
 	*********************************************************************/
@@ -170,15 +170,15 @@ quietly {
 	keep `id' `record' `time1'
 	save `temporary', replace
 	
-	drop if `record'==1
+	quietly drop if `record'==1
 	drop `record'
 	sort `id' `time1', stable
-	egen `record' = seq(), by(`id')
+	quietly egen `record' = seq(), by(`id')
 	rename `time1' `time2'
 	
-	merge 1:1 `id' `record' using `temporary'
+	quietly merge 1:1 `id' `record' using `temporary'
 	gen `timediff' = `time2' - `time1'
-	summarize `timediff', detail
+	quietly summarize `timediff', detail
 	local medianInterval = r(p50)
 	
 	// ROUND MEDIAN INTERVAL TO 2 SIGNIFICANT PLACES
@@ -189,8 +189,8 @@ quietly {
 	di as text "The median interval is `interval'"
 
 	/**********************************************************************
-	  OBTAIN THE RESIDUALS 
-	LOOK AT THE VARIANCE STRUCTURE AFTER ACCOUNTING FOR THE MEAN STRUCTURE  
+	 OBTAIN THE RESIDUALS 
+	 LOOK AT THE VARIANCE STRUCTURE AFTER ACCOUNTING FOR THE MEAN STRUCTURE  
 	***********************************************************************/
 	quietly use `initial', clear
 	capture regress `y' `fevars', nocons
@@ -227,8 +227,8 @@ quietly {
 	di as text "The number of records is `numrecords'"
 	
 	drop `residuals'
-	merge 1:m `record' using `temporary'
-	keep if _merge==3
+	quietly merge 1:m `record' using `temporary'
+	quietly keep if _merge==3
 	drop _merge
 	
 	summarize `record'
@@ -236,23 +236,24 @@ quietly {
 	local max_ni = r(max)
 	di as text "The first record is `min_ni' and the last record is `max_ni'"
 	
-	quietly reshape wide `residuals' `time', i(`id') j(`record')
-
+	reshape wide `residuals' `time', i(`id') j(`record')
+	
 	/***********************************
 	  CALCULATE MEANS AND CORRELATIONS
 	************************************/
-	matrix `obs' = J(`numrecords',3,0)
+	matrix `obs' = J(`numrecords',3,.)
 	
 	local row 0
 	forvalues t=`min_ni'(1)`max_ni' {
+		*di "t=`t'"
 		quietly summarize `residuals'`t'
 		if r(N) > 0 { 
 			local row = `row' + 1
 			matrix `obs'[`row',1] = r(Var)
 			quietly summarize `time'`t'
 			matrix `obs'[`row',2] = r(mean)
-			quietly correlate `residuals'`min_ni' `residuals'`t', cov
-			matrix `obs'[`row',3] = r(cov_12)
+			capture correlate `residuals'`min_ni' `residuals'`t', cov
+			if _rc==0 matrix `obs'[`row',3] = r(cov_12)
 		}
 	}
 	
@@ -262,6 +263,7 @@ quietly {
 	rename `obs'2 `obstime'
 	rename `obs'3 `obscov1t'
 	quietly replace `obscov1t' = . in 1
+
 }	// END OF QUIETLY
 
 	/**************************************************

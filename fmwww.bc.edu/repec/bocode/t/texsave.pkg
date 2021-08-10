@@ -11,10 +11,10 @@ d KW: LaTeX
 d
 d Requires: Stata version 10
 d
-d Distribution-Date: 20150507
+d Distribution-Date: 20201129
 d
-d Author: Julian Reif , University of Chicago
-d Support: email jreif@@uchicago.edu
+d Author: Julian Reif , University of Illinois
+d Support: email jreif@@illinois.edu
 d
 f texsave.ado
 f texsave.sthlp

@@ -1,10 +1,10 @@
 /*---------------------------
-10Apr2010 - version 4.0
+22Dec2020 - version 5.0
 
 Curve Estimation
 
-Author: Liu Wei, The School of Sociology and Population Studies, Renmin University of China
-E-mail: liuv@ruc.edu.cn
+Author: Liu Wei, Yunnan University of Finance and Economics
+E-mail: liuwei@ynufe.edu.cn
 ---------------------------*/
 capture prog drop curvefit
 prog define curvefit

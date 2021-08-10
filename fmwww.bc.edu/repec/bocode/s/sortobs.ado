@@ -1,4 +1,4 @@
-*! orderobs 1.1 16sep2010 by Julian Reif
+*! sortobs 1.1 16sep2010 by Julian Reif
 
 * 1.1: added before and after options. Removed reverse option
 

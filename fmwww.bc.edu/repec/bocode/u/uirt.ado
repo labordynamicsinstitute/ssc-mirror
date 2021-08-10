@@ -1,12 +1,12 @@
 *uirt.ado 
-*ver 1.0.0
-*2016.10.04
-*b.kondratek@ibe.edu.pl
+*ver 2.0.1
+*2020.03.28
+*everythingthatcounts@gmail.com
 
 capture prog drop uirt
 program define uirt, eclass
-version 12
-syntax [varlist] [if] [in] [,GRoupvar(varname numeric) REFerence(numlist max=1) dist NOUPD_quad_betw_em ERRors(str) pcm(varlist) gpcm(varlist) GUEssing(varlist)  guessing_attempts(integer 5) guessing_lrcrit(numlist max=1 >0 <=1) dif(varlist) THeta THName(namelist max=1) theta_nip(numlist integer max=1 >=2 <=195) SAVingname(namelist max=1) FIXIMatrix(namelist max=1) INITIMatrix(namelist max=1) INITDMatrix(namelist max=1) TRace(numlist integer max=1 >=0 <=2) NOTable nip(numlist integer max=1 >=2 <=195) nit(numlist integer max=1 >=0) NINrf(numlist integer max=1 >=0) pv(numlist integer max=1 >=0) pvreg(str) crit_ll(numlist max=1 >0 <1) crit_par(numlist max=1 >0 <1) icc icc_vars(varlist) icc_nofit icc_bins(numlist integer max=1 >=1) icc_pvbin(numlist max=1 >100 <100000) icc_format(str)]
+version 10
+syntax [varlist] [if] [in] [,GRoupvar(varname numeric) REFerence(numlist max=1) dist NOUPD_quad_betw_em ERRors(str) pcm(varlist) gpcm(varlist) GUEssing(varlist)  guessing_attempts(integer 5) guessing_lrcrit(numlist max=1 >0 <=1) dif(varlist) THeta THName(namelist max=1) theta_nip(numlist integer max=1 >=2 <=195) SAVingname(namelist max=1) FIXIMatrix(namelist max=1) INITIMatrix(namelist max=1) INITDMatrix(namelist max=1) TRace(numlist integer max=1 >=0 <=2) NOTable nip(numlist integer max=1 >=2 <=195) nit(numlist integer max=1 >=0) NINrf(numlist integer max=1 >=0) pv(numlist integer max=1 >=0) pvreg(str) crit_ll(numlist max=1 >0 <1) crit_par(numlist max=1 >0 <1) fit fit_vars(varlist) fit_sx2 fit_sx2_vars(varlist) icc icc_vars(varlist) icc_noobs icc_pv icc_bins(numlist integer max=1 >=1) icc_pvbin(numlist max=1 >100 <100000) icc_format(str)]
 	
 
 	if replay() {
@@ -91,6 +91,9 @@ syntax [varlist] [if] [in] [,GRoupvar(varname numeric) REFerence(numlist max=1) 
 			}
 			tempvar verify_xtmixed
 			qui gen `verify_xtmixed'=rnormal() if `touse'
+			if(`c(stata_version)'>=12){
+				version `c(stata_version)'
+			}
 			cap xtmixed `verify_xtmixed' `pvreg',iter(0)
 			if(_rc){
 				di as err "there seem to be something wrong with the pvreg() option;"
@@ -100,6 +103,13 @@ syntax [varlist] [if] [in] [,GRoupvar(varname numeric) REFerence(numlist max=1) 
 			else{
 				qui drop `verify_xtmixed'
 			}
+			if((`c(stata_version)'<12)&(`e(k_r)')>1){
+				if(strpos("`pvreg'","||")){
+					di as err "Multilevel syntax is not allowed in the pvreg() option if Stata version is lower than 12.0"
+					exit 198
+				}
+			}
+			version 10
 		}
 		
 		if(strlen("`errors'")==0){
@@ -111,7 +121,7 @@ syntax [varlist] [if] [in] [,GRoupvar(varname numeric) REFerence(numlist max=1) 
 			}
 			else{
 				di as err "`errors' is not a valid errors() value;"
-				di as err "only: cdm | rem | sem | cp entries are allowed"
+				di as err "allowed values are: cdm | rem | sem | cp"
 				exit 198
 			}
 		}
@@ -355,12 +365,57 @@ syntax [varlist] [if] [in] [,GRoupvar(varname numeric) REFerence(numlist max=1) 
 			}
 		}
 		
-		if("`icc_nofit'"==""){
-			local icc_fit=1
+		if("`icc_noobs'"==""){
+			local icc_obs=1
 		}
 		else{
-			local icc_fit=0
+			local icc_obs=0
 		}
+		
+		if(strlen("`fit'")>0){
+			m: fitlist=tokens("`items'")'
+		}
+		else{
+			if(strlen("`fit_vars'")>0){
+				unab fit_list: `fit_vars'
+				
+				m: st_local("fit_missinall",*compare_varlist("`items'","`fit_list'")[4])
+				if(`fit_missinall'>0){
+					di as err "`fit_missinall' items in fit_vars() are not declared in the main list of items:"
+					m: st_local("fit_misslist",*compare_varlist("`items'","`fit_list'")[3])
+					di as err "`fit_misslist'"
+					exit 198
+				}
+				
+				m: fitlist=tokens("`fit_list'")'
+			}
+			else{
+				m: fitlist=J(0,1,"")
+			}
+		}
+		
+		if(strlen("`fit_sx2'")>0){
+			m: sx2_fitlist=tokens("`items'")'
+		}
+		else{
+			if(strlen("`fit_sx2_vars'")>0){
+				unab sx2_fit_list: `fit_sx2_vars'
+				
+				m: st_local("fit_missinall",*compare_varlist("`items'","`sx2_fit_list'")[4])
+				if(`fit_missinall'>0){
+					di as err "`fit_missinall' items in fit_sx2_vars() are not declared in the main list of items:"
+					m: st_local("fit_misslist",*compare_varlist("`items'","`sx2_fit_list'")[3])
+					di as err "`fit_misslist'"
+					exit 198
+				}
+				
+				m: sx2_fitlist=tokens("`sx2_fit_list'")'
+			}
+			else{
+				m: sx2_fitlist=J(0,1,"")
+			}
+		}		
+		
 		
 		
 		if (strlen("`dif'")>0){
@@ -413,6 +468,18 @@ syntax [varlist] [if] [in] [,GRoupvar(varname numeric) REFerence(numlist max=1) 
 			m: diflist=J(0,1,"")
 		}
 	
+		if("`icc_pv'"==""){
+			if("`icc_pvbin'"!=""){
+				di "Note: icc_pvbin(`icc_pvbin') will not take effect unless you add icc_pv option; observed proportions will be computed by numerical itegration"	
+			}
+			local icc_pvbin=0
+		}
+		else{
+			if("`icc_pvbin'"==""){
+				local icc_pvbin=10000
+			}
+		}
+		
 		if("`guessing_lrcrit'"==""){
 			local guessing_lrcrit=0.05
 		}	
@@ -429,9 +496,6 @@ syntax [varlist] [if] [in] [,GRoupvar(varname numeric) REFerence(numlist max=1) 
 		if("`crit_par'"==""){
 			local crit_par=10^-4
 		}
-		if("`icc_pvbin'"==""){
-			local icc_pvbin=10000
-		}
 		if("`icc_bins'"==""){
 			local icc_bins=100
 		}
@@ -446,7 +510,7 @@ syntax [varlist] [if] [in] [,GRoupvar(varname numeric) REFerence(numlist max=1) 
 		}
 		
 				
-		m: uirt("`touse'","`items'","`group'",`reference',`estimate_dist',`upd_quad_betw_em',"`errors'",pcmlist,gpcmlist,guesslist,`guessing_attempts',`guessing_lrcrit', diflist,`add_theta',"`theta_name'",`theta_nip',"`savingname'","`fiximatrix'","`initimatrix'","`initdmatrix'",`icc_fit',icclist,`trace',`nip',`nit',`ninrf',`pv',"`pvreg'",`crit_ll',`crit_par',`icc_bins',`icc_pvbin',"`icc_format'")
+		m: uirt("`touse'","`items'","`group'",`reference',`estimate_dist',`upd_quad_betw_em',"`errors'",pcmlist,gpcmlist,guesslist,`guessing_attempts',`guessing_lrcrit', diflist,`add_theta',"`theta_name'",`theta_nip',"`savingname'","`fiximatrix'","`initimatrix'","`initdmatrix'",`icc_obs',icclist,fitlist,sx2_fitlist,`trace',`nip',`nit',`ninrf',`pv',"`pvreg'",`crit_ll',`crit_par',`icc_bins',`icc_pvbin',"`icc_format'")
 		
 		m: stata("ereturn local cmdline "+char(34)+eret_cmdline+char(34))
 	
@@ -465,7 +529,7 @@ syntax [varlist] [if] [in] [,GRoupvar(varname numeric) REFerence(numlist max=1) 
 end
 
 mata:
-	void uirt(string scalar touse, string scalar items, string scalar group, real scalar ref, real scalar estimate_dist, real scalar upd_quad_betw_em, string scalar errors, string matrix pcmlist,string matrix gpcmlist, string matrix guesslist, real scalar guessing_attempts, real scalar guessing_lrcrit, string matrix diflist, real scalar add_theta, string scalar theta_name, real scalar theta_nip, string scalar savingname , string scalar fiximatrix, string scalar initimatrix, string scalar initdmatrix, real scalar icc_fit, string matrix icclist, real scalar trace, real scalar nip,real scalar nit,real scalar nnirf,real scalar pv,string scalar pvreg, real scalar crit_ll, real scalar crit_par, real scalar icc_bins, real scalar icc_pvbin,string scalar icc_format){
+	void uirt(string scalar touse, string scalar items, string scalar group, real scalar ref, real scalar estimate_dist, real scalar upd_quad_betw_em, string scalar errors, string matrix pcmlist,string matrix gpcmlist, string matrix guesslist, real scalar guessing_attempts, real scalar guessing_lrcrit, string matrix diflist, real scalar add_theta, string scalar theta_name, real scalar theta_nip, string scalar savingname , string scalar fiximatrix, string scalar initimatrix, string scalar initdmatrix, real scalar icc_obs, string matrix icclist, string matrix fitlist,string matrix sx2_fitlist, real scalar trace, real scalar nip,real scalar nit,real scalar nnirf,real scalar pv,string scalar pvreg, real scalar crit_ll, real scalar crit_par, real scalar icc_bins, real scalar icc_pvbin,string scalar icc_format){
 
 		itemlist	= tokens(items)'
 		I 			= rows(itemlist)	
@@ -502,9 +566,10 @@ mata:
 			
 			
 			N_gr = rows(group_vals)
-				
-// model_curr_asked - current, asked model and number of item categories
 			
+
+// model_curr_asked - current, asked model and number of item categories
+// fixing overrides asking (initating does not); you cannot initiate 2plm with 3plm etc			
 			for(i=1;i<=I;i++){
 				if(sum(item_fix_init_indicator[i,.])==0){
 					if(item_n_cat[i]==2 & sum(guesslist:==itemlist[i])){
@@ -541,8 +606,7 @@ mata:
 					}
 				}							
 			}
-			
-			
+					
 			// if item is fixed 0-max_cat is assumed; 
 			// in future an option to provide original categories should be introduced
 			if(sum(item_fix_init_indicator[.,1])){
@@ -558,7 +622,7 @@ mata:
 					}
 				}
 			}
-						
+					
 			model_curr_asked=model_curr_asked,strofreal(item_n_cat)				
 			
 			dropped_items_range=select((1::I),   (item_n_cat:==0)  :+  ((item_n_cat:==1):*(item_fix_init_indicator[.,1]:==0))   )
@@ -592,8 +656,7 @@ mata:
 			if(sum(item_fix_init_indicator[.,1])==0 & estimate_dist){
 				estimate_dist=0
 				stata("di in red "+char(34)+"Warning: parameters of reference group will remain fixed; dist requires fixing parameters of at least one item"+char(34))
-			}		
-				
+			}
 		
 			Theta_id = select((1::J_all),group_rec_data:!=.)
 			N_Theta_id=rows(Theta_id)
@@ -746,7 +809,7 @@ mata:
 			DIST=st_matrix(initdmatrix)
 			
 			saved_group_vals=st_matrixcolstripe(initdmatrix)
-			saved_group_vals=strtoreal(subinstr(st_matrixcolstripe(initdmatrix)[.,2],"Group=_",""))
+			saved_group_vals=strtoreal(subinstr(st_matrixcolstripe(initdmatrix)[.,2],"group_",""))
 			
 			if(rows(saved_group_vals)!=rows(group_vals)){
 				_error("number of groups in matrix "+initdmatrix+" is not " +strofreal(rows(group_vals)))
@@ -770,7 +833,77 @@ mata:
 		if(estimate_dist==0 & sum(model_curr_asked[.,2]:=="pcm")>0 ){
 			Cns_DIST[.,1]=(1\0)
 		}
+		
+
+
+		//checking if sx2 can be computed
+		if(rows(sx2_fitlist)){
+		
+			if(N_gr==1){
+			
+				viable_for_sx2=J(rows(itemlist),N_gr,1)
+				for(g=1;g<=N_gr;g++){
+					viable_for_sx2[.,g] = ( item_group_totalobs[.,g]:==group_uniq_total_obs[g,2] )
+				}
+				for(g=1;g<=N_gr;g++){
+					viable_for_sx2[.,g] =  viable_for_sx2[.,g]:*( item_n_cat:==2)
+				}
+				viable_for_sx2=(rowsum(viable_for_sx2):==cols(viable_for_sx2))
+				
+				if_fit_sx2=J(rows(itemlist),1,0)
+				items_missing_or_ncat="     "
+				N_missing_or_ncat=0
+				for(i=1;i<=rows(sx2_fitlist);i++){
+					if(sum( (itemlist:==sx2_fitlist[i]):*viable_for_sx2 )){
+						if_fit_sx2=if_fit_sx2:+(itemlist:==sx2_fitlist[i])
+					}
+					else{
+						items_missing_or_ncat=items_missing_or_ncat+" "+sx2_fitlist[i]
+						N_missing_or_ncat=N_missing_or_ncat+1
+					}
+				}
+							
+				N_for_sx2_required=3
+				viable_for_sx2_models=select(model_curr_asked[.,1],viable_for_sx2)
+				if(sum(viable_for_sx2_models:=="3plm")){
+					N_for_sx2_required=N_for_sx2_required+3
+				}
+				else{
+					if(sum(viable_for_sx2_models:=="2plm")){
+						N_for_sx2_required=N_for_sx2_required+2
+					}
+					else{
+						if(sum(viable_for_sx2_models:=="1plm")){
+							N_for_sx2_required=N_for_sx2_required+1
+						}
+					}
+				}
+				
+				if(N_missing_or_ncat){
+					display("Note: "+strofreal(N_missing_or_ncat)+" items specified for SX2 fit statistic have either missing responses or are polytomous:")
+					display(items_missing_or_ncat)
+					if(sum(if_fit_sx2)){
+						display( "      "+ strofreal(sum(if_fit_sx2)) + " items left for SX2")
+					}
+					else{
+						display( "      no valid items left for SX2")
+					}
+				}
 	
+				if(sum(if_fit_sx2)){			
+					if(N_for_sx2_required>sum(viable_for_sx2)){
+						display("Note: To compute SX2 fit statistic there need to be at least "+strofreal(N_for_sx2_required)+" dichotomously scored items with no missing values in your test,")
+						display("      there is only "+strofreal(sum(viable_for_sx2))+" such items, SX2 will not be computed")
+					}
+				}
+			}
+			else{
+				if_fit_sx2=J(rows(itemlist),1,0)
+				display("Note: SX2 is implemented only for a single group setting, you defined "+strofreal(N_gr)+" groups, SX2 will not be computed")
+			}
+			
+		}
+		
 		
 // THE EM
 			em_results				= em(N_iter, trace, errors, crit_ll, model_curr_asked, guessing_attempts, guessing_lrcrit, add_theta, theta_name, theta_nip, Theta_id, Theta_dup, savingname, group_vals                   ,                       Cns_parameters, Cns_DIST, itemlist, item_n_cat, item_fix_init_indicator, point_item_cats, item_group_totalobs, group_uniq_total_obs, parameters, X_k , A_k, point_Uigc, point_Fg                 ,                 DIST, upd_quad_betw_em, N_iter_NRF, crit_par)
@@ -871,15 +1004,65 @@ mata:
 				if_makeicc=if_makeicc+(itemlist:==icclist[i])
 			}
 			
-			if(icc_fit){
-				Pj_centile = Pj_centile_pv(if_makeicc, Theta_dup, point_Uigc, point_Fg , parameters, item_group_totalobs,model_curr_asked, group_uniq_total_obs  ,  A_k, X_k, DIST ,  icc_pvbin, icc_bins,V)
+			if(icc_obs){
+				if(icc_pvbin){
+					Pj_centile = Pj_centile_pv(if_makeicc, Theta_dup, point_Uigc, point_Fg , parameters, item_group_totalobs,model_curr_asked, group_uniq_total_obs  ,  A_k, X_k, DIST ,  icc_pvbin, icc_bins,V)
+				}
+				else{
+					Pj_centile = Pj_centile_integrated(item_n_cat, point_Uigc,  point_Fg,  parameters, item_group_totalobs, model_curr_asked, group_uniq_total_obs , DIST, icc_bins)
+				}
 			}
 			else{
 				Pj_centile=J(0,0,.)
 			}
 			
-			icc_graph(Pj_centile,if_makeicc,icc_format,itemlist,parameters,model_curr_asked, item_group_totalobs ,point_Uigc,point_Fg,group_labels,theta_name)
+			icc_graph(Pj_centile,if_makeicc,icc_format,itemlist,parameters,model_curr_asked, item_group_totalobs ,point_Uigc,point_Fg,group_labels,theta_name,point_item_cats,J(0,0,.))
 		}
+		
+// FIT		
+		if(rows(fitlist)){
+
+			fit_N_intervals=10
+			fit_npq_crit=20
+			report_min_npq=0
+			
+			if_fit=J(rows(itemlist),1,0)
+			for(i=1;i<=rows(fitlist);i++){
+				if_fit=if_fit+(itemlist:==fitlist[i])
+			}
+			fitlist=select(itemlist,if_fit)
+			
+			if_df_loss=J(sum(if_fit),1,1)
+			
+			chi2W_results=chi2W(if_fit, fit_N_intervals, fit_npq_crit, if_df_loss,  item_n_cat, item_group_totalobs , model_curr_asked,  group_uniq_total_obs, parameters , point_Uigc, point_Fg, DIST)
+			
+			if(report_min_npq){
+				st_matrix("item_fit_chi2W",chi2W_results)
+				st_matrixcolstripe("item_fit_chi2W", (J(5,1,""),("chi2W","p-val","df","n_par","min_npq")'))
+				st_matrixrowstripe("item_fit_chi2W", (J(rows(fitlist),1,""),fitlist))
+			}
+			else{
+				st_matrix("item_fit_chi2W",chi2W_results[.,1..4])
+				st_matrixcolstripe("item_fit_chi2W", (J(4,1,""),("chi2W","p-val","df","n_par")'))
+				st_matrixrowstripe("item_fit_chi2W", (J(rows(fitlist),1,""),fitlist))
+			}
+		}
+		
+		if(sum(if_fit_sx2)){
+		
+			sx2_fitlist=select(itemlist,if_fit_sx2)
+			
+			sx2_min_freq=1
+			if_df_loss=J(sum(if_fit_sx2),1,1)
+					
+			SX2_results=SX2(if_fit_sx2, viable_for_sx2, if_df_loss, sx2_min_freq,  item_n_cat , model_curr_asked, parameters , point_Uigc, point_Fg, DIST)
+			
+			st_matrix("item_fit_SX2",SX2_results)
+			st_matrixcolstripe("item_fit_SX2", (J(4,1,""),("SX2","p-val","df","n_par")'))
+			st_matrixrowstripe("item_fit_SX2", (J(rows(sx2_fitlist),1,""),sx2_fitlist))
+			
+		}
+		
 // DIF
 		if(rows(diflist)>0){	
 		
@@ -887,7 +1070,7 @@ mata:
 			dif_results = dif(diflist, logL, group_labels, icc_format       ,    N_iter, crit_ll, model_curr_asked, theta_nip, Theta_id, Theta_dup, group_vals                   ,                       Cns_parameters, Cns_DIST, itemlist, item_group_totalobs, group_uniq_total_obs, item_fix_init_indicator, parameters, X_k , A_k, point_Uigc, point_Fg                 ,                 DIST, upd_quad_betw_em, N_iter_NRF, crit_par, point_item_cats,     theta_name)
 			
 			st_matrix("dif_results",dif_results)
-			st_matrixcolstripe("dif_results", (J(8,1,""),("LR","p-value","P-DIF|G1","P-DIF|G2","E(par1,G1)","E(par2,G1)","E(par1,G2)","E(par2,G2)")'))
+			st_matrixcolstripe("dif_results", (J(8,1,""),("LR","p-value","P-DIF|GR","P-DIF|GF","E(parR,GR)","E(parF,GR)","E(parR,GF)","E(parF,GF)")'))
 			st_matrixrowstripe("dif_results", (J(rows(diflist),1,""),diflist))
 			
 		}
@@ -956,6 +1139,14 @@ mata:
 	if(rows(diflist)>0){	
 		stata("ereturn matrix dif_results dif_results")
 	}
+	if(rows(fitlist)>0){	
+		stata("ereturn matrix item_fit_chi2W item_fit_chi2W")
+	}
+
+	if(sum(if_fit_sx2)>0){	
+		stata("ereturn matrix item_fit_SX2 item_fit_SX2")
+	}
+	
 	stata("ereturn matrix item_cats item_cats")
 	stata("ereturn matrix item_group_N item_group_N")
 	stata("ereturn matrix group_N group_N")
@@ -975,7 +1166,7 @@ mata:
 	stata("ereturn local depvar "+char(34)+eret_depvar+char(34))
 
 // SCALARS	
-	stata("ereturn scalar ll="+strofreal(sum(logL)))
+	stata("ereturn scalar ll="+strofreal(sum(logL),"%15.4f"))
 	stata("ereturn scalar df_m="+strofreal(cols(eret_b)))
 	stata("ereturn scalar N_items="+strofreal(I))
 	stata("ereturn scalar N_gr="+strofreal(N_gr))
@@ -1540,12 +1731,13 @@ mata:
 			point_item_cats_dif		= point_item_cats[dif_reindex]
 			parameters_dif			= parameters[dif_reindex,.]	
 			item_group_totalobs_dif	= item_group_totalobs[no_dif_range,.] 	\ ( item_group_totalobs[dif_range,.] :* (1,0\0,1) )		
-			itemlist_dif			= itemlist[no_dif_range] \ (diflist[i]+"_G1") \ (diflist[i]+"_G2")
+			itemlist_dif			= itemlist[no_dif_range] \ (diflist[i]+"_GR") \ (diflist[i]+"_GF")
 			model_curr_asked_dif	= model_curr_asked[dif_reindex,.]
 			Cns_parameters_dif		= Cns_parameters[dif_reindex,.]
 			
 			em_results				= em(N_iter, 0, ".", crit_ll, model_curr_asked_dif, 0 , 1 ,0, ".", theta_nip, Theta_id, Theta_dup, ".", group_vals                  ,                       Cns_parameters_dif, Cns_DIST, itemlist_dif, item_n_cat_dif, item_fix_init_indicator_dif, point_item_cats_dif, item_group_totalobs_dif, group_uniq_total_obs, parameters_dif, X_k[.,.] , A_k, point_Uigc_dif, point_Fg                 ,                 DIST[.,.], upd_quad_betw_em, N_iter_NRF, crit_par)
 			
+			DIST_resdif				= *em_results[1]
 			parameters_resdif		= (*em_results[2])[(I::I+1),.]
 			logL_resdif				= *em_results[3]
 			X_k_resdif				= *em_results[4]
@@ -1566,35 +1758,35 @@ mata:
 	
 			
 			if(n_cat == 2 & model_resdif[1,1]!="pcm"){
-				mean1G1 = sum(f_PiXk_01(parameters_resdif[1,.],model_resdif[1,.],X_k_resdif[.,1])*A_k[.,1])
-				mean2G1 = sum(f_PiXk_01(parameters_resdif[2,.],model_resdif[2,.],X_k_resdif[.,1])*A_k[.,1])
-				mean1G2 = sum(f_PiXk_01(parameters_resdif[1,.],model_resdif[1,.],X_k_resdif[.,2])*A_k[.,2])
-				mean2G2 = sum(f_PiXk_01(parameters_resdif[2,.],model_resdif[2,.],X_k_resdif[.,2])*A_k[.,2])
+				mean1GR = sum(f_PiXk_01(parameters_resdif[1,.],model_resdif[1,.],X_k_resdif[.,1])*A_k[.,1])
+				mean2GR = sum(f_PiXk_01(parameters_resdif[2,.],model_resdif[2,.],X_k_resdif[.,1])*A_k[.,1])
+				mean1GF = sum(f_PiXk_01(parameters_resdif[1,.],model_resdif[1,.],X_k_resdif[.,2])*A_k[.,2])
+				mean2GF = sum(f_PiXk_01(parameters_resdif[2,.],model_resdif[2,.],X_k_resdif[.,2])*A_k[.,2])
 			}
 			else{
-				mean1G1 = 0
-				mean2G1 = 0
-				mean1G2 = 0
-				mean2G2 = 0
+				mean1GR = 0
+				mean2GR = 0
+				mean1GF = 0
+				mean2GF = 0
 				PiXk_11 = f_PiXk_0c(parameters_resdif[1,.],model_resdif[1,.],X_k_resdif[.,1])
 				PiXk_21 = f_PiXk_0c(parameters_resdif[2,.],model_resdif[2,.],X_k_resdif[.,1])
 				PiXk_12 = f_PiXk_0c(parameters_resdif[1,.],model_resdif[1,.],X_k_resdif[.,2])
 				PiXk_22 = f_PiXk_0c(parameters_resdif[2,.],model_resdif[2,.],X_k_resdif[.,2])
 				for(c=2;c<=n_cat;c++){
-					mean1G1 = mean1G1 + (c-1)*sum(PiXk_11[c,.]*A_k[.,1])
-					mean2G1 = mean2G1 + (c-1)*sum(PiXk_21[c,.]*A_k[.,1])
-					mean1G2 = mean1G2 + (c-1)*sum(PiXk_12[c,.]*A_k[.,2])
-					mean2G2 = mean2G2 + (c-1)*sum(PiXk_22[c,.]*A_k[.,2])		
+					mean1GR = mean1GR + (c-1)*sum(PiXk_11[c,.]*A_k[.,1])
+					mean2GR = mean2GR + (c-1)*sum(PiXk_21[c,.]*A_k[.,1])
+					mean1GF = mean1GF + (c-1)*sum(PiXk_12[c,.]*A_k[.,2])
+					mean2GF = mean2GF + (c-1)*sum(PiXk_22[c,.]*A_k[.,2])		
 				}
 			}
 			
 			
 			display("")
 			display("_____________________________________________________________________")
-			display("DIF analysis of item "+diflist[i]+" (G1: gr()="+strofreal(group_vals[1])+" , G2: gr()= "+strofreal(group_vals[2])+")")
+			display("DIF analysis of item "+diflist[i]+" (GR: gr()="+strofreal(group_vals[1])+" , GF: gr()="+strofreal(group_vals[2])+")")
 							
 			display("")
-			stata("display _col(10) %10s "+char(34)+"G1"+char(34)+" _col(20)  %10s "+char(34)+"G2"+char(34))	
+			stata("display _col(10) %10s "+char(34)+"GR"+char(34)+" _col(20)  %10s "+char(34)+"GF"+char(34))	
 			stata("display %10s "+char(34)+"a"+char(34)+" _col(10) %10.4f "+strofreal(parameters_resdif[1,1])+" _col(20) %10.4f "+strofreal(parameters_resdif[2,1]))
 			if(nonmissing(parameters_resdif[.,2])){
 				stata("display %10s "+char(34)+"b"+char(34)+" _col(10) %10.4f "+strofreal(parameters_resdif[1,2])+" _col(20) %10.4f "+strofreal(parameters_resdif[2,2]))
@@ -1609,21 +1801,22 @@ mata:
 			}		
 			
 			display("")
-			stata("display %15s "+char(34)+"E(par1,G1)"+char(34)+" _col(15)  %15s "+char(34)+"E(par2,G1)"+char(34)+" _col(30)  %15s "+char(34)+"E(par1,G2)"+char(34)+" _col(45)  %15s "+char(34)+"E(par2,G2)"+char(34))
-			stata("display %15.4f "+strofreal(mean1G1)+" _col(15) %15.4f "+strofreal(mean2G1)+" _col(30) %15.4f "+strofreal(mean1G2)+" _col(45) %15.4f "+strofreal(mean2G2))
+			stata("display %15s "+char(34)+"E(parR,GR)"+char(34)+" _col(15)  %15s "+char(34)+"E(parF,GR)"+char(34)+" _col(30)  %15s "+char(34)+"E(parR,GF)"+char(34)+" _col(45)  %15s "+char(34)+"E(parF,GF)"+char(34))
+			stata("display %15.4f "+strofreal(mean1GR)+" _col(15) %15.4f "+strofreal(mean2GR)+" _col(30) %15.4f "+strofreal(mean1GF)+" _col(45) %15.4f "+strofreal(mean2GF))
 
 			display("")			
 			if(print_notnested){
 				display("Note: DIF model is not nested because item has different IRF between groups, p-value not computed")
 				display("")		
 			}
-			stata("display %10s "+char(34)+"LR"+char(34)+" _col(10)  %10s "+char(34)+"p-value"+char(34)+" _col(20)  %10s "+char(34)+"P-DIF|G1"+char(34)+" _col(30)  %10s "+char(34)+"P-DIF|G2"+char(34))
-			stata("display %10.4f "+strofreal(LR)+" _col(10) %10.4f "+strofreal(pvalue)+" _col(20) %10.4f "+strofreal(mean2G1-mean1G1)+" _col(30) %10.4f "+strofreal(mean1G2-mean2G2))
+			stata("display %10s "+char(34)+"LR"+char(34)+" _col(10)  %10s "+char(34)+"p-value"+char(34)+" _col(20)  %10s "+char(34)+"P-DIF|GR"+char(34)+" _col(30)  %10s "+char(34)+"P-DIF|GF"+char(34))
+			stata("display %10.4f "+strofreal(LR)+" _col(10) %10.4f "+strofreal(pvalue)+" _col(20) %10.4f "+strofreal(mean2GR-mean1GR)+" _col(30) %10.4f "+strofreal(mean1GF-mean2GF))
 			
 				
-			dif_results[i,.]=(LR,pvalue,mean2G1-mean1G1, mean1G2-mean2G2, mean1G1,mean2G1,mean1G2,mean2G2)
+			dif_results[i,.]=(LR,pvalue,mean2GR-mean1GR, mean1GF-mean2GF, mean1GR,mean2GR,mean1GF,mean2GF)
 			
-			icc_graph(J(0,0,.),(1\1),icc_format,(diflist[i]+"#G1"\diflist[i]+"#G2"),parameters_resdif ,model_resdif, item_group_totalobs,point_Uigc_dif , point_Fg,group_labels,theta_name)
+			point_item_cats_resdif=point_item_cats_dif[(I::I+1),.]
+			icc_graph(J(0,0,.),(1\1),icc_format,(diflist[i]\diflist[i]),parameters_resdif ,model_resdif, item_group_totalobs,point_Uigc_dif , point_Fg,group_labels,theta_name,point_item_cats_resdif,DIST_resdif)
 		
 		}
 		
@@ -1852,7 +2045,7 @@ mata:
 			tempvarlist=tempvarlist+" "+ItemMean_var
 			index_temp=st_addvar("double",ItemMean_var)
 			st_store((1::icc_intervals),ItemMean_var,P_item[(1::icc_intervals)])
-			stata_command=stata_command+"(scatter  "+ItemMean_var+" "+ThetaMode_var+", mcolor("+colours_vector[2]+") msize(vsmall)) || "		
+			stata_command=stata_command+"(scatter  "+ItemMean_var+" "+ThetaMode_var+", mcolor("+substr(colours_vector[2],1,strlen(colours_vector[2])-1)+"*0.5"+char(34)+") msize(vsmall)) || "	
 		}
 		else{
 			for(c=1;c<=n_cat;c++){
@@ -1860,7 +2053,7 @@ mata:
 				tempvarlist=tempvarlist+" "+ItemMean_var
 				index_temp=st_addvar("double",ItemMean_var)
 				st_store((1::icc_intervals),ItemMean_var,P_item[(1::icc_intervals),c])
-				stata_command=stata_command+"(scatter  "+ItemMean_var+" "+ThetaMode_var+", mcolor("+colours_vector[c,1]+") msize(vsmall)) || "
+				stata_command=stata_command+"(scatter  "+ItemMean_var+" "+ThetaMode_var+", mcolor("+substr(colours_vector[c,1],1,strlen(colours_vector[c,1])-1)+"*0.5"+char(34)+") msize(vsmall)) || "
 			}
 		}
 		
@@ -1872,7 +2065,7 @@ mata:
 	}
 
 	
-	void icc_graph(real matrix Pj_centile, real matrix if_makeicc, string scalar icc_format, string matrix itemlist,real matrix parameters, string matrix model_curr_asked, real matrix item_group_totalobs, pointer matrix point_Uigc, pointer matrix point_Fg, string matrix group_labels, string scalar theta_name){
+	void icc_graph(real matrix Pj_centile, real matrix if_makeicc, string scalar icc_format, string matrix itemlist,real matrix parameters, string matrix model_curr_asked, real matrix item_group_totalobs, pointer matrix point_Uigc, pointer matrix point_Fg, string matrix group_labels, string scalar theta_name, pointer matrix point_item_cats,real matrix DIST_for_dif){
 		
 		if(sum(if_makeicc)){
 		
@@ -1887,35 +2080,38 @@ mata:
 			}
 	
 			if(rows(Pj_centile)>0){
-				icc_fit=1
+				icc_obs=1
 			}
 			else{
-				icc_fit=0
+				icc_obs=0
 			}
 			
 	// DIF graph
-			if(I==2 & sum(strpos(itemlist,"#"))>0){
-				
+			if(I==2 & rows(DIST_for_dif)>0){
 				groupvarname="Group"
 			
 				colours_vector=J(30,1,("red","blue"))
-				itemname=substr(itemlist[1,1],1,strpos(itemlist[1,1],"#")-1)			
+				itemname=itemlist[1,1]			
 				stata_command="qui twoway "
 
 				n_cat = strtoreal(model_curr_asked[1,3])
+				shift_legend=(0\0)
 				if(n_cat == 2){
-					title_cat="1"
+					shift_legend=shift_legend:+(model_curr_asked[1::2,1]:=="3plm")
+					title_cat=strofreal((*point_item_cats[1])[2])
 				}
 				else{
+					shift_legend=shift_legend:+(n_cat-1)
 					title_cat="cat"
 				}
 				for(g=1;g<=N_gr;g++){
 					stata_command=stata_command+icc_graph_function(parameters[g,.],model_curr_asked[g,.], colours_vector[.,g])
+					stata_command=stata_command+ " (function normalden(x,"+strofreal(DIST_for_dif[1,g])+","+strofreal(DIST_for_dif[2,g])+"), range(-4 4) lcolor("+colours_vector[1,g]+"*0.5) lpattern(dash)) "
 				}
 				
 				lab_1=group_labels[1]
 				lab_2=group_labels[2]
-				stata_command=stata_command+", legend(off) xtitle("+char(34)+"theta"+thetan+char(34)+") xscale(range(-4 4)) ytitle("+char(34)+"P("+itemname+"="+title_cat+")"+char(34)+") yscale(range(0 1)) text(-0.1 -3.2 "+char(34)+groupvarname+"="+lab_1+char(34)+", color(red)) text(-0.14 -3.2 "+char(34)+groupvarname+"="+lab_2+char(34)+", color(blue))"
+				stata_command=stata_command+",  legend(cols(2) order(1 "+char(34)+"P(item="+title_cat+"|{&theta};GR)"+char(34)+" "+strofreal(2+shift_legend[1])+" "+char(34)+"{&psi}({&theta};GR)"+char(34)+" "+strofreal(3+shift_legend[1])+" "+char(34)+"P(item="+title_cat+"|{&theta};GF)"+char(34)+" "+strofreal(4+sum(shift_legend))+" "+char(34)+"{&psi}({&theta};GF)"+char(34)+" )) xtitle("+char(34)+"theta"+thetan+char(34)+") xscale(range(-4 4)) ytitle("+char(34)+"P("+itemname+"="+title_cat+")"+char(34)+") yscale(range(0 1)) ylabel(0(0.2)1) graphregion(color(white)) bgcolor(white)"
 				stata(stata_command)
 				if(icc_format=="gph"){
 					stata("qui graph save DIF_"+itemname+", replace")
@@ -1951,13 +2147,25 @@ mata:
 						itemname		= itemlist[i,1]
 						stata_command	= "qui twoway "
 						n_cat 			= strtoreal(model_curr_asked[i,3])
+						
+						catcaption=" "
+						catcaption_pos=1
+						marginsize=strofreal(7+2*max(strlen(strofreal(*point_item_cats[i]))))
 						if(n_cat == 2){
-							title_cat="1"
+							title_cat=strofreal((*point_item_cats[i])[2])
+							for(c=2;c<=rows(*point_item_cats[i]);c++){
+								catcaption=catcaption+" text("+strofreal(catcaption_pos)+" 4.15 "+char(34)+"cat="+strofreal((*point_item_cats[i])[c])+char(34)+",color("+colours_vector[c]+") place(e)) "
+								catcaption_pos=catcaption_pos-0.04
+							}
 						}
 						else{
 							title_cat="cat"
+							for(c=1;c<=rows(*point_item_cats[i]);c++){
+								catcaption=catcaption+" text("+strofreal(catcaption_pos)+" 4.15 "+char(34)+"cat="+strofreal((*point_item_cats[i])[c])+char(34)+",color("+colours_vector[c]+") place(e)) "
+								catcaption_pos=catcaption_pos-0.04
+							}
 						}
-						if(icc_fit==1){
+						if(icc_obs==1){
 							 point_Uixx = J(1,N_gr,NULL)
 							for(g=1;g<=N_gr;g++){
 								if(item_group_totalobs[i,g]>0){
@@ -1974,7 +2182,7 @@ mata:
 						}
 						stata_command = stata_command+icc_graph_function(parameters[i,.],model_curr_asked[i,.], colours_vector)
 						
-						stata_command=stata_command+", legend(off) xtitle("+char(34)+"theta"+thetan+char(34)+") xscale(range(-4 4)) ytitle("+char(34)+"P("+itemname+"="+title_cat+")"+char(34)+") yscale(range(0 1))"		
+						stata_command=stata_command+", legend(off) xtitle("+char(34)+"theta"+thetan+char(34)+") xscale(range(-4 4)) ytitle("+char(34)+"P("+itemname+"="+title_cat+")"+char(34)+") yscale(range(0 1)) ylabel(0(0.2)1) graphregion(color(white)) bgcolor(white) graphregion(margin(r="+marginsize+"))"+ catcaption		
 		
 						stata(stata_command)
 						if(icc_format=="gph"){
@@ -2001,7 +2209,7 @@ mata:
 								}
 							}
 						}
-						if(icc_fit==1){
+						if(icc_obs==1){
 							stata( "qui drop "+(*icc_graph_emppoints_res[2]) )
 						}
 					}
@@ -2042,12 +2250,13 @@ mata:
 
 		
 		haywire_list=""
+		haywire_guess_list=""
 		if_em_converged=1
 		for(iter=1;iter<=N_iter;iter++){
 			if(( (max(abs(delta))>crit_par) | (max(abs(delta_DIST))>crit_par) ) & delta_ll>crit_ll){
 			
 				previous_DIST=DIST
-				if(iter==1 | haywire_list!=""){
+				if(iter==1 | haywire_list!="" | haywire_guess_list!=""){
 					previous_ll=-10^20	
 				}
 				else{
@@ -2069,12 +2278,24 @@ mata:
 
 				print_iter(iter,DIST,delta,logL,group_vals,trace,Cns_parameters, Cns_DIST,model_curr_asked)
 				
+// adding 3plm items that have guessing<0 to haywire_list (	delta[i,.]==delta[i,.]*0)
+				haywire_guess_ind=select((1::I),(model_curr_asked[.,1]:=="3plm") :* (parameters[.,3]:<0) )
+				if(rows(haywire_guess_ind)){
+					delta[haywire_guess_ind,.]=delta[haywire_guess_ind,.]:*0
+				}
+				
 				haywire_list=""
+				haywire_guess_list=""
 				haywire_indexes=J(0,1,.)
 				ok_indexes=J(0,1,.)
 				for(i=1;i<=rows(delta);i++){
 					if(max(abs(delta[i,.]))==0 & item_fix_init_indicator[i,1]==0){
-						haywire_list=haywire_list+" "+itemlist[i]
+						if(sum(haywire_guess_ind:==i)){
+							haywire_guess_list=haywire_guess_list+" "+itemlist[i]
+						}
+						else{
+							haywire_list=haywire_list+" "+itemlist[i]
+						}
 						haywire_indexes=haywire_indexes\i
 					}
 					else{
@@ -2082,8 +2303,15 @@ mata:
 					}
 				}	
 				if(rows(haywire_indexes)){
-					display("estimates of folowing items went haywire (|delta_par|>5), their starting values will be refined, logL may increase:" )
-					display(haywire_list)
+				
+					if(strlen(haywire_list)){
+						display("estimates of folowing items went haywire (|delta_par|>5), their starting values will be refined, logL may increase:")
+						display(haywire_list)
+					}
+					if(strlen(haywire_guess_list)){
+						display("guessing parameter turned negative (c<0) for the following items, their starting values will be refined, logL may increase:")
+						display(haywire_guess_list)
+					}
 					
 					ll_theta_se = return_ll_theta_se(1 ,195, item_n_cat[ok_indexes,.], item_group_totalobs[ok_indexes,.], model_curr_asked[ok_indexes,.], group_uniq_total_obs, X_k , A_k, parameters[ok_indexes,.], DIST, point_Uigc[ok_indexes,.], point_Fg)
 					
@@ -2373,7 +2601,7 @@ mata:
 					
 		}
 		
-		results = J(6,1,NULL)
+		results = J(5,1,NULL)
 		results[1] = &logL
 		results[2] = &A_k_estimated
 		results[3] = &p_ik
@@ -2973,7 +3201,7 @@ void store_matrices(string matrix model_curr_asked, string scalar temporary_suff
 				
 		st_matrix("dist"+temporary_suffix, DIST)
 		st_matrixrowstripe("dist"+temporary_suffix, (J(2,1,""),("mean"\"sd")))
-		st_matrixcolstripe("dist"+temporary_suffix, (J(N_gr,1,""),("group" :+ strtoname(strofreal(group_vals)))))
+		st_matrixcolstripe("dist"+temporary_suffix, (J(N_gr,1,""),("group" :+ "_":+strofreal(group_vals))))
 
 		st_matrix("items_se"+temporary_suffix, item_parameters_err)
 		st_matrixrowstripe("items_se"+temporary_suffix, (itemlist,model_curr_asked[.,1]))
@@ -2981,15 +3209,15 @@ void store_matrices(string matrix model_curr_asked, string scalar temporary_suff
 				
 		st_matrix("dist_se"+temporary_suffix, DIST_err)
 		st_matrixrowstripe("dist_se"+temporary_suffix, (J(2,1,""),("se_mean"\"se_sd")))
-		st_matrixcolstripe("dist_se"+temporary_suffix, (J(N_gr,1,""),("group" :+ strtoname(strofreal(group_vals)))))
+		st_matrixcolstripe("dist_se"+temporary_suffix, (J(N_gr,1,""),("group" :+ "_":+strofreal(group_vals))))
 		
 		st_matrix("ll"+temporary_suffix, logL')
 		st_matrixrowstripe("ll"+temporary_suffix, ("","logL"))
-		st_matrixcolstripe("ll"+temporary_suffix, (J(N_gr,1,""),("group" :+ strtoname(strofreal(group_vals)))))
+		st_matrixcolstripe("ll"+temporary_suffix, (J(N_gr,1,""),("group" :+ "_":+strofreal(group_vals))))
 		
 		st_matrix("item_group_N",item_group_totalobs)
 		st_matrixrowstripe("item_group_N",(J(I,1,""),itemlist))
-		st_matrixcolstripe("item_group_N",(J(N_gr,1,""),("group":+strtoname(strofreal(group_vals)))) )
+		st_matrixcolstripe("item_group_N",(J(N_gr,1,""),("group":+"_":+strofreal(group_vals))) )
 		
 		item_cats=J(I,max(item_n_cat),.)
 		for(i=1;i<=I;i++){
@@ -3002,7 +3230,7 @@ void store_matrices(string matrix model_curr_asked, string scalar temporary_suff
 		group_N=group_uniq_total_obs[.,2]'
 		st_matrix("group_N",group_N)
 		st_matrixrowstripe("group_N",("","N"))
-		st_matrixcolstripe("group_N",(J(N_gr,1,""),("group":+strtoname(strofreal(group_vals)))))
+		st_matrixcolstripe("group_N",(J(N_gr,1,""),("group":+"_":+strofreal(group_vals))))
 
 	}
 	
@@ -3565,13 +3793,17 @@ void store_matrices(string matrix model_curr_asked, string scalar temporary_suff
 				if(pvreg=="." | (i+burn)>ceil(burn/2)){
 					theta_tt = mcmc_step(theta_tt, sd_prop , prior_mean, prior_sd, parameters_perturbed, model_curr_asked, item_group_totalobs, point_Uigc_dup)
 				}
-				else{  // MUST be repeated reveral times, otherwise estimates are biased downwards!!
+				else{  // MUST be repeated several times, otherwise estimates are biased downwards!!
 					
 				
 					current_pv_name			= st_tempname()
 					current_pv_index		= st_addvar("double",current_pv_name)
 					st_store(Theta_id,current_pv_index,theta_tt)
-					
+
+	//xtmixed in Stata 10 does not handle factor notation					
+					if(stataversion()>=1200){
+						statasetversion(stataversion())
+					}
 					stata("qui xtmixed "+current_pv_name+" "+pvreg+",iter(50)")
 					k_random_effects		= st_numscalar("e(k_r)")
 					
@@ -3590,6 +3822,8 @@ void store_matrices(string matrix model_curr_asked, string scalar temporary_suff
 						}
 						current_prior_S		= sqrt(current_prior_S)
 					}
+					
+					statasetversion(1000) // resetting to Stata 1000
 					
 					prior_nonmiss			= select((1::rows(current_prior_E)),current_prior_E:!=.)
 					
@@ -3646,12 +3880,11 @@ void store_matrices(string matrix model_curr_asked, string scalar temporary_suff
 		if(rows(theta_tt_select)){
 			theta_tt[theta_tt_select]=theta_t[theta_tt_select]
 		}
-		
+				
 		return(theta_tt)
 
 	}
 	
-
 	real colvector likelihood(real colvector theta, real matrix parameters,string matrix model_curr_asked, real matrix item_group_totalobs, pointer matrix point_Uigc_dup){
 	
 		I=rows(parameters)		
@@ -3811,6 +4044,80 @@ void store_matrices(string matrix model_curr_asked, string scalar temporary_suff
 	}
 
 	
+	pointer PXk_Uj_all(real colvector item_n_cat, real matrix item_group_totalobs ,string matrix model_curr_asked,  real matrix group_uniq_total_obs, real matrix X_k , real matrix A_k, real matrix parameters , pointer matrix point_Uigc, pointer matrix point_Fg){
+		
+		N_gr=rows(group_uniq_total_obs)
+		K=rows(A_k)	
+		I=rows(parameters)
+				
+		PXk_Uj_all	=J(sum(group_uniq_total_obs[.,1]),K,1)
+				
+		range_start=1
+		range_stop=0
+		for(g=1;g<=N_gr;g++){
+				
+				range_stop=range_stop+group_uniq_total_obs[g,1]
+				
+				itemselectrange_g 	= select((1::I),item_group_totalobs[.,g]:>0)
+				parameters_g 		= parameters[itemselectrange_g,.]
+				item_n_cat_g 		= item_n_cat[itemselectrange_g]
+				model_curr_asked_g	= model_curr_asked[itemselectrange_g,.]
+				
+				PXk_Uj_all[range_start::range_stop,.]= *( PXk_Uj_fit_g(X_k[.,g],A_k[.,g],point_Uigc[.,g],parameters_g,item_n_cat_g, model_curr_asked_g,group_uniq_total_obs[g,1],0)[1] )
+				
+				range_start=range_stop+1
+		}
+		
+		results=J(1,1,NULL)
+		results[1]=return_pointer(PXk_Uj_all)
+		return(results)
+		
+	}		
+	
+
+	function Pj_centile_integrated(real colvector item_n_cat, pointer matrix point_Uigc, pointer matrix point_Fg, real matrix parameters, real matrix item_group_totalobs,string matrix model_curr_asked, real matrix group_uniq_total_obs , real matrix DIST, real scalar icc_bins){
+	
+		N_gr=cols(DIST)	
+	
+		K=151
+		X_k_A_k	= gauss_hermite(K)
+		quadpts 	= J(1,N_gr,X_k_A_k[.,1])
+		P_quadpts 	= J(1,N_gr,X_k_A_k[.,2])
+		for(g=1;g<=N_gr;g++){
+			quadpts[.,g]=quadpts[.,g]:*DIST[2,g]:+DIST[1,g]	
+		}
+		
+		P_all=	rowsum( *( PXk_Uj_all( item_n_cat,  item_group_totalobs , model_curr_asked,   group_uniq_total_obs, quadpts , P_quadpts,  parameters , point_Uigc,  point_Fg)[1] ) )
+		
+		
+		borders_icc=-100,invnormal((1..icc_bins-1):/icc_bins),100
+		
+		K=15
+		legendreRW = return_legendreRW(K)'
+		Pj_centile=J(rows(P_all),icc_bins,.)
+		for(d=1;d<=icc_bins;d++){		
+			
+			U=borders_icc[d+1]
+			L=borders_icc[d]	
+			quadpts		= J(K,N_gr,.)
+			P_quadpts	= J(K,N_gr,.)
+			for(g=1;g<=N_gr;g++){				
+				quadpts[.,g]= ( (U-L) :* legendreRW[.,1] :+ (U+L) ) :/2  
+				P_quadpts[.,g]= (U-L) :* legendreRW[.,2] :* normalden( quadpts[.,g],DIST[1,g],DIST[2,g]  )/2
+			}
+			
+			Pj_centile[.,d]= rowsum( *( PXk_Uj_all( item_n_cat,  item_group_totalobs , model_curr_asked,   group_uniq_total_obs, quadpts , P_quadpts,  parameters , point_Uigc,  point_Fg,)[1] ) )
+			
+		}
+	
+		Pj_centile=Pj_centile:/P_all
+		
+		return(Pj_centile)
+	}
+	
+	
+	
+	
 	pointer colvector starting_values_fixORinit(string matrix itemlist, string scalar fiximatrix, string scalar initimatrix){
 		
 		I			 			= rows(itemlist)
@@ -3886,13 +4193,13 @@ void store_matrices(string matrix model_curr_asked, string scalar temporary_suff
 			if(item_fix_init_indicator[i,1]){
 				parameters[i,.] = saved_fix_iprs[item_fix_init_indicator[i,1],.]
 				model_curr_asked[i,1]=saved_fix_rown[item_fix_init_indicator[i,1],2]
-				// fixing overrides asking (initating does not)
 				model_curr_asked[i,2]=model_curr_asked[i,1]
 				item_fix_init_indicator[i,1] = 1
 			}
 			else if(item_fix_init_indicator[i,2]){
 				parameters[i,.] = saved_init_iprs[item_fix_init_indicator[i,2],.]
 				model_curr_asked[i,1]=saved_init_rown[item_fix_init_indicator[i,2],2]
+				model_curr_asked[i,2]=model_curr_asked[i,1]
 				item_fix_init_indicator[i,2] = 1				
 			}
 			if(sum(item_fix_init_indicator[i,.]):==0){
@@ -3990,6 +4297,7 @@ void store_matrices(string matrix model_curr_asked, string scalar temporary_suff
 		
 		return(X_k,A_k)
 	}
+	
 
 	function return_pointer(real matrix input_matrix){
 		return(	&input_matrix )
@@ -4094,7 +4402,7 @@ void store_matrices(string matrix model_curr_asked, string scalar temporary_suff
 				}
 			}
 			else{
-				group_labels=strtoname(strofreal(group_vals))
+				group_labels="_":+strofreal(group_vals)
 			}
 			group_labels[1]="[ref] "+group_labels[1]
 			
@@ -4232,13 +4540,13 @@ void store_matrices(string matrix model_curr_asked, string scalar temporary_suff
 		if(theta_name=="."){
 			s=sum(_st_varindex( ("pv_":+strofreal((1..pv))) ):<.)
 			if(s){
-				existlist=existlist+"pv_..(x"+strofreal(s)+")"
+				existlist=existlist+"pv_.. (x"+strofreal(s)+")"
 			}
 		}
 		else{
 			s=sum(_st_varindex( ("pv_":+strofreal((1..pv)):+"_":+theta_name) ):<.)
 			if(s){
-				existlist=existlist+"pv_.._"+theta_name+"(x"+strofreal(s)+")"
+				existlist=existlist+"pv_.._"+theta_name+" (x"+strofreal(s)+")"
 			}
 		}
 		return(existlist)
@@ -4270,7 +4578,750 @@ void store_matrices(string matrix model_curr_asked, string scalar temporary_suff
 		results[4] = &strofreal(missin1_n)
 		return(results)
 	}
-
 	
+// FIT functions
+		
+	real matrix SX2(real colvector if_fit_sx2, real colvector viable_for_sx2, real colvector if_df_loss, real scalar sx2_min_freq, real colvector item_n_cat ,string matrix model_curr_asked, real matrix parameters , pointer matrix point_Uigc, pointer matrix point_Fg, real matrix DIST){
+	
+		I=rows(parameters)
+		item_indx=select((1::I),if_fit_sx2)
+		I_fit=rows(item_indx)
+		
+		S=sx2_S(viable_for_sx2, point_Uigc, point_Fg)
+		
+		SX2_results=J(I_fit,4,.)	
+		for(i=1;i<=I_fit;i++){
+		
+			LW_results=sx2_lord_wingersky(item_indx[i],viable_for_sx2, parameters, model_curr_asked, DIST)
+			Eik_i=*LW_results[1]
+			Sk_all_i=*LW_results[2]
+			
+			collapse_cats_results=sx2_collapse_cats(Eik_i,Sk_all_i,sx2_min_freq, sum(*point_Fg[1]))
+			Eik=*collapse_cats_results[1]
+			score_range=*collapse_cats_results[2]
+			
+			if(if_df_loss[i]){
+				if(model_curr_asked[item_indx[i],1]=="2plm"){
+					n_est_par=2
+				}
+				if(model_curr_asked[item_indx[i],1]=="3plm"){
+					n_est_par=3
+				}
+				if(model_curr_asked[item_indx[i],1]=="pcm"){
+					n_est_par=item_n_cat[item_indx[i]]-1
+				}
+				if(model_curr_asked[item_indx[i],1]=="gpcm"){
+					n_est_par=item_n_cat[item_indx[i]]
+				}
+				if(model_curr_asked[item_indx[i],1]=="grm"){
+					n_est_par=item_n_cat[item_indx[i]]
+				}
+			}
+			else{
+				n_est_par=0
+			}
+			
+			SX2_item_results	=	sx2_orlando_thissen(item_indx[i], Eik, score_range, S, n_est_par, point_Uigc, point_Fg)
+			SX2_results[i,]=(*SX2_item_results[1],*SX2_item_results[2],*SX2_item_results[3],n_est_par)
+						
+		}
+	
+		return(SX2_results)
+		
+	}
+	
+
+	pointer sx2_orlando_thissen(real scalar item_for_fit, real matrix Eik, real matrix score_range, real matrix S, real scalar n_est_par, pointer matrix point_Uigc, pointer matrix point_Fg ){
+	
+		obs_i=J(rows(*point_Fg[1]),1,0)
+		ord_ic = (*(*point_Uigc[item_for_fit,1])[2])
+		if(rows(ord_ic)){
+			obs_i[ord_ic]=J(rows(ord_ic),1,1)
+		}
+		
+		Oik=J(rows(Eik),1,0)
+		Nik=J(rows(Eik),1,0)
+		for(i=1;i<=rows(Eik);i++){
+			sel_i=select((1::rows(obs_i)), (S:>=score_range[i,1] ):* (S:<=score_range[i,2] ))
+			if(rows(sel_i)){
+				Nik[i]=sum((*point_Fg[1])[sel_i])
+				Oik[i]=cross( (*point_Fg[1])[sel_i] , obs_i[sel_i])/ Nik[i]
+			}
+		}
+		
+		SX2=sum(( Nik:*(Oik:-Eik):*(Oik:-Eik)):/(Eik:*(1:-Eik)))
+		
+		df=rows(Eik)-n_est_par
+		
+		pvalue=(1:-chi2(df,SX2))
+		
+		results=J(5,1,NULL)
+		results[1]=return_pointer(SX2)
+		results[2]=return_pointer(pvalue)
+		results[3]=return_pointer(df)
+		results[4]=return_pointer(Oik)
+		results[5]=return_pointer(Nik)
+		
+		return(results)
+	
+	}	
+	
+	pointer sx2_collapse_cats(real matrix Eik_in, real matrix Sk_all_in, real scalar sx2_min_freq, real scalar N_obs){
+	
+		Eik=Eik_in
+		Sk_all=Sk_all_in
+		N=N_obs
+		
+		warning=""
+
+		N=N-N*(Sk_all[1]+Sk_all[rows(Sk_all)])
+		Sk_all=Sk_all[2::rows(Sk_all)-1]
+		
+		n_sc=rows(Sk_all)
+		score_range=(1::n_sc),(1::n_sc)
+		exp_freq_1=N:*Sk_all:*Eik
+		for(i=1;i<=n_sc;i++){
+			if(exp_freq_1[i]<sx2_min_freq){
+				if(rows(score_range)>2){
+					if(i==1){
+						Eik = ( (Eik[i::i+1]'*Sk_all[i::i+1])/sum(Sk_all[i::i+1]) ) \ Eik[i+2::n_sc]
+						Sk_all = sum(Sk_all[i::i+1])\ Sk_all[i+2::n_sc]
+						score_range = (score_range[i,1],score_range[i+1,2]) \ score_range[i+2::n_sc,]
+					}
+					if(i>1 & i<=n_sc-2){
+						Eik = Eik[1::i-1] \ ( (Eik[i::i+1]'*Sk_all[i::i+1])/sum(Sk_all[i::i+1]) ) \ Eik[i+2::n_sc]
+						Sk_all = Sk_all[1::i-1] \ sum(Sk_all[i::i+1]) \ Sk_all[i+2::n_sc]
+						score_range = score_range[1::i-1,] \ (score_range[i,1],score_range[i+1,2]) \ score_range[i+2::n_sc,]
+					}
+					if(i==n_sc-1){
+						Eik = Eik[1::i-1] \ ( (Eik[i::i+1]'*Sk_all[i::i+1])/sum(Sk_all[i::i+1]) )
+						Sk_all = Sk_all[1::i-1] \ sum(Sk_all[i::i+1])
+						score_range = score_range[1::i-1,] \ (score_range[i,1],score_range[i+1,2])
+					}
+					if(i==n_sc){
+						Eik = Eik[1::i-2] \ ( (Eik[i-1::i]'*Sk_all[i-1::i])/sum(Sk_all[i-1::i]) )  
+						Sk_all = Sk_all[1::i-2] \ sum(Sk_all[i-1::i])
+						score_range = score_range[1::i-2,] \ (score_range[i-1,1],score_range[i,2])
+					}
+					exp_freq_1=N:*Sk_all:*Eik
+					n_sc=n_sc-1
+					i=i-1
+				}
+				else{
+					warning="could not collapse cats with sx2_min_freq="+strofreal(sx2_min_freq)
+				}
+			}
+		}
+		
+		exp_freq_0=N:*Sk_all:*(1:-Eik)
+		i=n_sc
+		while(n_sc>1 & i>2){
+			if(exp_freq_0[i]<sx2_min_freq){
+				if(rows(score_range)>2){
+					if(i==n_sc){
+						Eik = Eik[1::i-2] \ ( (Eik[i-1::i]'*Sk_all[i-1::i])/sum(Sk_all[i-1::i]) )  
+						Sk_all = Sk_all[1::i-2] \ sum(Sk_all[i-1::i])
+						score_range = score_range[1::i-2,] \ (score_range[i-1,1],score_range[i,2])
+					}
+					else{
+						Eik= Eik[1::i-2] \ ( (Eik[i-1::i]'*Sk_all[i-1::i])/sum(Sk_all[i-1::i]) ) \ Eik[i+1::n_sc]
+						Sk_all= Sk_all[1::i-2] \ sum(Sk_all[i-1::i]) \ Sk_all[i+1::n_sc]
+						score_range= score_range[1::i-2,] \ (score_range[i-1,1],score_range[i,2]) \ score_range[i+1::n_sc,]
+					}
+					exp_freq_0=N:*Sk_all:*(1:-Eik)
+					n_sc=n_sc-1
+				}
+				else{
+					warning="could not collapse cats with sx2_min_freq="+strofreal(sx2_min_freq)
+				}
+			}
+			i=i-1
+		}
+		exp_freq_1=N:*Sk_all:*Eik
+		
+		results=J(6,1,NULL)
+		results[1]=return_pointer(Eik)
+		results[2]=return_pointer(score_range)
+		results[3]=return_pointer(Sk_all)
+		results[4]=return_pointer(exp_freq_1)
+		results[5]=return_pointer(exp_freq_0)
+		results[6]=&warning
+		
+		return(results)
+	
+	}
+	
+		
+	pointer sx2_lord_wingersky(real scalar item_for_fit, real colvector viable_for_sx2, real matrix parameters, string matrix model_curr_asked, real matrix DIST_g){
+	
+		I=rows(parameters)
+		itemselectrange_g 	= select((1::I),viable_for_sx2)
+		itemselectrange_g	= select(itemselectrange_g,itemselectrange_g:!=item_for_fit)\item_for_fit
+		parameters_g 		= parameters[itemselectrange_g,.]
+		model_curr_asked_g	= model_curr_asked[itemselectrange_g,.]
+		I=rows(parameters_g)
+		
+		
+		K=151
+		P_kX_k=gauss_hermite(K)
+		P_quadpts	= P_kX_k[.,2]'
+		quadpts 	= P_kX_k[.,1]':*DIST_g[2,1]:+DIST_g[1,1]
+		
+		f_PiXk_matrix=J(I,K,.)
+		for(i=1;i<=I;i++){
+			if(model_curr_asked_g[i,1]!="pcm"){
+				f_PiXk_matrix[i,.]=f_PiXk_01(parameters_g[i,.],model_curr_asked_g[i,.],quadpts')
+			}
+			else{
+				f_PiXk_matrix[i,.]=f_PiXk_0c(parameters_g[i,.],model_curr_asked_g[i,.],quadpts')[2,.]
+			}
+		}
+		
+		Sk_less=J(I+1,K,1)
+		
+		Sk_less[1,]=(1:-f_PiXk_matrix[1,]) 
+		Sk_less[2,]=f_PiXk_matrix[1,] 
+		
+		for(i=2;i<=I-1;i++){
+			current=Sk_less[1,]
+			Sk_less[1,]=current :*(1:-f_PiXk_matrix[i,]) 
+			for(s=2;s<=i;s++){
+				previous=current
+				current=Sk_less[s,]
+				Sk_less[s,]=  ( previous :*f_PiXk_matrix[i,] ) :+ ( current :*(1:-f_PiXk_matrix[i,]) ) 
+			}
+			previous=current
+			Sk_less[i+1,]= ( previous :*f_PiXk_matrix[i,] )
+		}
+		
+		Sk_all=Sk_less
+		
+		for(i=I;i<=I;i++){
+			current=Sk_all[1,]
+			Sk_all[1,]= current :*(1:-f_PiXk_matrix[i,]) 
+			for(s=2;s<=i;s++){
+				previous=current
+				current=Sk_all[s,]
+				Sk_all[s,]= ( previous :*f_PiXk_matrix[i,] ) :+ ( current :*(1:-f_PiXk_matrix[i,]) )
+			}
+			previous=current
+			Sk_all[i+1,]=  ( previous :*f_PiXk_matrix[i,] ) 
+		}
+		
+		Eik=J(I-1,1,.)
+		for(i=1;i<=I-1;i++){
+			Eik[i] =	rowsum(P_quadpts :* (f_PiXk_matrix[I,] :* Sk_less[i,]) ):/ rowsum(P_quadpts :* Sk_all[i+1,])
+		}	
+		
+		results=J(2,1,NULL)
+		results[1]=return_pointer(Eik)
+		results[2]=return_pointer(rowsum(P_quadpts :* Sk_all))
+		return(results)
+	
+	}
+	
+	function sx2_S(real colvector viable_for_sx2,pointer matrix point_Uigc, pointer matrix point_Fg){
+		S=J(rows(*point_Fg[1]),1,0)
+		for(i=1;i<=rows(viable_for_sx2);i++){
+			if( viable_for_sx2[i]){
+				ord_ic = (*(*point_Uigc[i,1])[2])
+				if(rows(ord_ic)){
+					S[ord_ic]=S[ord_ic]:+1
+				}
+			}
+		}
+		return(S)
+	}
+	
+	
+	real matrix chi2W(real colvector if_fit, real scalar fit_N_intervals, real scalar fit_npq_crit, real colvector if_df_loss, real colvector item_n_cat, real matrix item_group_totalobs ,string matrix model_curr_asked,  real matrix group_uniq_total_obs, real matrix parameters , pointer matrix point_Uigc, pointer matrix point_Fg, real matrix DIST){
+	
+		I=rows(parameters)
+		item_indx=select((1::I),if_fit)
+		I_fit=rows(item_indx)
+		
+		chi2W_results=J(I_fit,5,.)	
+		for(i=1;i<=I_fit;i++){
+			
+			if(if_df_loss[i]){
+				if(model_curr_asked[item_indx[i],1]=="2plm"){
+					n_est_par=2
+				}
+				if(model_curr_asked[item_indx[i],1]=="3plm"){
+					n_est_par=3
+				}
+				if(model_curr_asked[item_indx[i],1]=="pcm"){
+					n_est_par=item_n_cat[item_indx[i]]-1
+				}
+				if(model_curr_asked[item_indx[i],1]=="gpcm"){
+					n_est_par=item_n_cat[item_indx[i]]
+				}
+				if(model_curr_asked[item_indx[i],1]=="grm"){
+					n_est_par=item_n_cat[item_indx[i]]
+				}
+			}
+			else{
+				n_est_par=0
+			}
+
+			
+			chi2W_item_results	=	chi2W_item(item_indx[i], n_est_par, fit_N_intervals , fit_npq_crit, item_n_cat, item_group_totalobs , model_curr_asked, group_uniq_total_obs, parameters ,  point_Uigc, point_Fg,  DIST)
+			
+			
+			chi2W_results[i,]=(*chi2W_item_results[1],*chi2W_item_results[2],*chi2W_item_results[3],n_est_par,min(*chi2W_item_results[8]))
+						
+		}
+	
+		return(chi2W_results)
+		
+	}
+
+	pointer chi2W_item(real scalar item_for_fit, real scalar n_est_par, real scalar N_Intervals, real scalar npq_crit, real colvector item_n_cat, real matrix item_group_totalobs ,string matrix model_curr_asked,  real matrix group_uniq_total_obs, real matrix parameters , pointer matrix point_Uigc, pointer matrix point_Fg, real matrix DIST){
+	
+		N_gr=cols(DIST)	
+	
+		K=151
+		X_k_A_k	= gauss_hermite(K)
+		quadpts 	= J(1,N_gr,X_k_A_k[.,1])
+		P_quadpts 	= J(1,N_gr,X_k_A_k[.,2])
+		for(g=1;g<=N_gr;g++){
+			quadpts[.,g]=quadpts[.,g]:*DIST[2,g]:+DIST[1,g]	
+		}
+
+		PXk_Uj_fit_results=	PXk_Uj_fit( item_n_cat,  item_group_totalobs , model_curr_asked,   group_uniq_total_obs, quadpts , P_quadpts,  parameters , point_Uigc,  point_Fg, item_for_fit, 1)
+		
+		borders=*chi2W_collapse_intervals(item_for_fit, N_Intervals, npq_crit,  n_est_par , model_curr_asked, parameters ,  PXk_Uj_fit_results)[1]
+		N_interv=cols(borders)-1
+
+		P_all	=	*PXk_Uj_fit_results[1]
+		P_all	=	rowsum(P_all)
+		
+		Fg_i=*PXk_Uj_fit_results[3]
+		Y_i=*PXk_Uj_fit_results[5]
+		nonmiss_U_ig_count=*PXk_Uj_fit_results[6]
+
+		n_cat_i=strtoreal(model_curr_asked[item_for_fit,3])
+		model_i=model_curr_asked[item_for_fit,.]
+		
+		K=30
+		legendreRW = return_legendreRW(K)'
+		Pkq=J(rows(P_all),N_interv,.)
+		Ekq=J(rows(P_all),N_interv,.)
+		Pkq_less_i=J(rows(P_all),N_interv,.)
+		for(d=1;d<=N_interv;d++){		
+			
+			U=borders[d+1]
+			L=borders[d]	
+			quadpts		= J(K,N_gr,.)
+			P_quadpts	= J(K,N_gr,.)
+			for(g=1;g<=N_gr;g++){				
+				quadpts[.,g]= ( (U-L) :* legendreRW[.,1] :+ (U+L) ) :/2  
+				P_quadpts[.,g]= (U-L) :* legendreRW[.,2] :* normalden( quadpts[.,g],DIST[1,g],DIST[2,g]  )/2
+			}
+			
+			PXk_Uj_fit_results=PXk_Uj_fit( item_n_cat,  item_group_totalobs , model_curr_asked,   group_uniq_total_obs, quadpts , P_quadpts,  parameters , point_Uigc,  point_Fg, item_for_fit,0)
+			Pkq[.,d]=rowsum( (*PXk_Uj_fit_results[1]) )
+			Pkq_less_i[.,d]=rowsum( (*PXk_Uj_fit_results[2]) )
+			
+			E_quadpts=J(rows(P_all),K,.)
+			range_start=1
+			range_stop=0
+			for(g=1;g<=N_gr;g++){
+				if(nonmiss_U_ig_count[g]){
+					range_stop=range_stop+nonmiss_U_ig_count[g]
+					
+						if(n_cat_i==2  & model_i[1]!="pcm"){
+							PiXk_0c=(1 :- f_PiXk_01(parameters[item_for_fit,.],model_i,quadpts[.,g])) \ f_PiXk_01(parameters[item_for_fit,.],model_i,quadpts[.,g])
+						}
+						else{
+							PiXk_0c=f_PiXk_0c(parameters[item_for_fit,.],model_i,quadpts[.,g])
+						}
+						
+						E_temp=J(1,K,0)
+						for(c=2;c<=n_cat_i;c++){
+								E_temp = E_temp :+ ((c-1) :* PiXk_0c[c,.])
+						}
+					
+						E_quadpts[range_start::range_stop,.]=J(nonmiss_U_ig_count[g],1,E_temp)
+					
+					range_start=range_stop+1
+				}
+			}
+			Ekq[.,d]=rowsum( (*PXk_Uj_fit_results[2]) :* E_quadpts)
+		}
+	
+		Pkq_simplex=Pkq:/P_all
+		
+		exp_N=colsum(Fg_i:*Pkq_simplex)
+		
+		E=colsum(Fg_i:*(Ekq:/Pkq_less_i):*Pkq_simplex):/exp_N
+		
+		O=colsum(Fg_i:*Pkq_simplex:*Y_i):/exp_N
+		
+		inv_COV_D=invsym(quadcross((sqrt(Fg_i):*Pkq_simplex:*(Y_i:-J(rows(Y_i),1,O) ):/exp_N),(sqrt(Fg_i):*Pkq_simplex:*(Y_i:-J(rows(Y_i),1,O) ):/exp_N)))
+		
+		d=(O-E)
+		
+		NPQ=exp_N:*E:*((n_cat_i-1):-E)
+		
+		W			=	d*inv_COV_D*d'
+		df_W		=	rank(inv_COV_D)-n_est_par
+		pvalue		=	1:-chi2(df_W,W)
+		sign_W		=	(pvalue< 0.05)
+		
+		
+		results = J(9,1,NULL)
+		results[1] = return_pointer(W)
+		results[2] = return_pointer(pvalue)
+		results[3] = return_pointer(df_W)
+		results[4] = return_pointer(sign_W)
+		results[5] = return_pointer(E)
+		results[6] = return_pointer(O)
+		results[7] = return_pointer(exp_N)		
+		results[8] = return_pointer(NPQ)
+		results[9] = return_pointer(borders)
+		
+		return(results)
+	}		
+
+
+
+	pointer chi2W_collapse_intervals(real scalar item_for_fit, real scalar N_Intervals, real scalar npq_crit, real scalar n_est_par ,string matrix model_curr_asked, real matrix parameters , pointer matrix PXk_Uj_fit_results){
+	
+		warning=""
+		
+		if(N_Intervals-n_est_par<1){
+			N_interv=n_est_par+5
+		}
+		else{
+			N_interv=N_Intervals
+		}
+		
+		P_all=*PXk_Uj_fit_results[1]
+		Fg_i=*PXk_Uj_fit_results[3]
+		quadpts=*PXk_Uj_fit_results[4]
+		nonmiss_U_ig_count=*PXk_Uj_fit_results[6]
+		
+		N_gr=cols(quadpts)		
+
+		n_cat_i=strtoreal(model_curr_asked[item_for_fit,3])
+		model_i=model_curr_asked[item_for_fit,.]
+		
+		K=cols(P_all)
+		E_quadpts=J(rows(P_all),K,.)
+		range_start=1
+		range_stop=0
+		for(g=1;g<=N_gr;g++){
+			if(nonmiss_U_ig_count[g]){
+			
+				range_stop=range_stop+nonmiss_U_ig_count[g]
+				
+					if(n_cat_i==2  & model_i[1]!="pcm"){
+						PiXk_0c=(1 :- f_PiXk_01(parameters[item_for_fit,.],model_i,quadpts[.,g])) \ f_PiXk_01(parameters[item_for_fit,.],model_i,quadpts[.,g])
+					}
+					else{
+						PiXk_0c=f_PiXk_0c(parameters[item_for_fit,.],model_i,quadpts[.,g])
+					}
+					
+					E_temp=J(1,K,0)
+					for(c=2;c<=n_cat_i;c++){
+							E_temp = E_temp :+ ((c-1) :* PiXk_0c[c,.])
+					}
+				
+					E_quadpts[range_start::range_stop,.]=J(nonmiss_U_ig_count[g],1,E_temp)
+				
+				range_start=range_stop+1
+				
+			}
+		}
+		
+		PQ_quadpts=E_quadpts:*((n_cat_i-1):-E_quadpts)
+		
+		
+		
+		NPQ_all=sum( Fg_i :* P_all :* PQ_quadpts :/ rowsum(P_all) )
+		P_all=	rowsum(Fg_i :* P_all)
+		
+		if( (NPQ_all/N_interv) < npq_crit ){
+			N_interv = floor(NPQ_all/npq_crit)
+		}
+		
+		if(N_interv-n_est_par<1){
+			N_interv=n_est_par+1
+			warning="N*p*q~"+substr(strofreal(NPQ_all/N_interv),1,4)+"<10, chi2 approximation may be unreliable"
+		}
+		
+		NPQ_d_crit=NPQ_all/N_interv
+		
+		
+		K=9
+		legendreRW = return_legendreRW(K)'
+		N_int=10000
+		bord=-10,invnormal((1..N_int-1):/N_int),10
+		E_d=J(1,N_int,.)	
+		for(d=1;d<=N_int;d++){
+			U=bord[d+1]
+			L=bord[d]
+			quadpts= ( (U-L) :* legendreRW[.,1] :+ (U+L) ) :/2  
+			P_N01_quadpts= (U-L) :* legendreRW[.,2] :* normalden( quadpts  )/2
+			
+			if(n_cat_i==2  & model_i[1]!="pcm"){
+				PiXk_0c=(1 :- f_PiXk_01(parameters[item_for_fit,.],model_i,quadpts)) \ f_PiXk_01(parameters[item_for_fit,.],model_i,quadpts)
+			}
+			else{
+				PiXk_0c=f_PiXk_0c(parameters[item_for_fit,.],model_i,quadpts)
+			}
+			
+			E_temp=J(1,K,0)
+			for(c=2;c<=n_cat_i;c++){
+					E_temp = E_temp :+ ((c-1) :* PiXk_0c[c,.])
+			}
+			
+			E_d[d]=E_temp*P_N01_quadpts/sum(P_N01_quadpts)
+			
+		}
+		
+		NPQ=(sum(Fg_i)/N_int):*E_d:*((n_cat_i-1):-E_d)
+	
+		NPQ_crit=NPQ_d_crit*0.99*(sum(NPQ)/NPQ_all)
+		borders=-10,J(1,N_interv-1,.),10
+		up=1
+		b_up=2
+		b_down=N_interv
+		int_up=1
+		int_down=N_int
+		proceed=1
+		for(k=1;k<=N_interv-1;k++){
+			if(proceed){
+				if(up){
+					S=0
+					int_start=int_up
+					while(S<NPQ_crit){
+						S=sum(NPQ[int_start..int_up])
+						int_up++
+					}
+					borders[b_up]=bord[int_up]
+					b_up++
+					up=0
+				}
+				else{
+					S=0
+					int_start=int_down
+					while(S<NPQ_crit){
+						S=sum(NPQ[int_down..int_start])
+						int_down--
+					}
+					borders[b_down]=bord[int_down]
+					b_down--
+					up=1
+				}
+				
+				proceed=-1
+				r_int_span=(int_down-int_up)/(N_interv-k)
+				for(r=1;r<=N_interv-k;r++){
+					if( sum(NPQ[int_up+floor((r-1)*r_int_span)+1..int_up+floor(r*r_int_span)]) < NPQ_crit ){
+						proceed=1
+					}
+				}
+				
+			}
+
+			if(proceed==-1){
+				r=1
+				for(b=b_up;b<=b_down;b++){
+					borders[b]=bord[int_up+floor(r*r_int_span)+1]
+					r++
+				}
+				proceed=0
+			}
+		}	
+		
+					
+		results = J(2,1,NULL)
+		results[1] = return_pointer(borders)
+		results[2] = &warning
+		
+		return(results)
+
+	}
+	
+	
+	
+	pointer PXk_Uj_fit(real colvector item_n_cat, real matrix item_group_totalobs ,string matrix model_curr_asked,  real matrix group_uniq_total_obs, real matrix X_k , real matrix A_k, real matrix parameters , pointer matrix point_Uigc, pointer matrix point_Fg, real scalar item_for_fit, real scalar if_FY){
+	
+		item_group_totalobs_i=item_group_totalobs[item_for_fit,.]
+		n_cat_i=strtoreal(model_curr_asked[item_for_fit,3])
+		
+		N_gr=rows(group_uniq_total_obs)
+		K=rows(A_k)	
+		I=rows(parameters)
+		
+		point_Uixx = J(1,N_gr,NULL)
+		for(g=1;g<=N_gr;g++){
+			if(item_group_totalobs_i[g]){
+				i_g = sum(item_group_totalobs[1::item_for_fit,g]:>0)
+				point_Uixx[g]	= point_Uigc[i_g,g]
+			}
+			else{
+				point_Uixx[g]	= &J(0,0,.)
+			}
+		}
+		
+		
+		PXk_Uj_i	=J(sum(group_uniq_total_obs[.,1]),K,1)
+		PXk_Uj_less_i=J(sum(group_uniq_total_obs[.,1]),K,1)
+		if(if_FY){
+			Fg_i	=	J(sum(group_uniq_total_obs[.,1]),1,1)
+			Y_i		=	J(sum(group_uniq_total_obs[.,1]),1,1)
+		}
+		else{
+			Fg_i	=	J(0,0,.)
+			Y_i		=	J(0,0,.)		
+		}
+				
+		range_start=1
+		range_stop=0
+		nonmiss_U_ig_count=J(N_gr,1,0)
+		for(g=1;g<=N_gr;g++){
+			if(item_group_totalobs_i[g]){
+				
+				nonmiss_U_ig_vector	=J(0,1,.)
+				Y_ig				= J(0,1,.)
+				for(c=1;c<=n_cat_i;c++){
+					ord_ic 		= (*(*point_Uixx[g])[c])
+					nonmiss_U_ig_vector=nonmiss_U_ig_vector\ord_ic
+					if(if_FY){
+						Y_ig= Y_ig\J(rows(ord_ic),1,c-1)
+					}
+				}
+				nonmiss_U_ig_count[g]=rows(nonmiss_U_ig_vector)
+				
+				range_stop=range_stop+nonmiss_U_ig_count[g]
+				
+				itemselectrange_g 	= select((1::I),item_group_totalobs[.,g]:>0)
+				parameters_g 		= parameters[itemselectrange_g,.]
+				item_n_cat_g 		= item_n_cat[itemselectrange_g]
+				model_curr_asked_g	= model_curr_asked[itemselectrange_g,.]
+				item_for_fit_g=select((1::rows(itemselectrange_g)),itemselectrange_g:==item_for_fit)
+				
+				PXk_Uj_fit_g_results= PXk_Uj_fit_g(X_k[.,g],A_k[.,g],point_Uigc[.,g],parameters_g,item_n_cat_g, model_curr_asked_g,group_uniq_total_obs[g,1],item_for_fit_g)
+				
+				PXk_Uj_i[range_start::range_stop,.]			=	(*PXk_Uj_fit_g_results[1])[nonmiss_U_ig_vector,.]
+				PXk_Uj_less_i[range_start::range_stop,.]	=	(*PXk_Uj_fit_g_results[2])[nonmiss_U_ig_vector,.]
+				if(if_FY){
+					Fg_i[range_start::range_stop,.]				=	(*point_Fg[g])[nonmiss_U_ig_vector]
+					Y_i[range_start::range_stop,.]				=	Y_ig
+				}
+			
+				range_start=range_stop+1
+				
+			}
+		}
+		
+		PXk_Uj_i=PXk_Uj_i[1::range_stop,.]
+		PXk_Uj_less_i=PXk_Uj_less_i[1::range_stop,.]
+		if(if_FY){
+			Fg_i	=	Fg_i[1::range_stop]
+			Y_i		=	Y_i[1::range_stop]
+		}	
+		
+		results=J(6,1,NULL)
+		results[1]=return_pointer(PXk_Uj_i)
+		results[2]=return_pointer(PXk_Uj_less_i)
+		results[3]=return_pointer(Fg_i)
+		results[4]=return_pointer(X_k)
+		results[5]=return_pointer(Y_i)
+		results[6]=return_pointer(nonmiss_U_ig_count)
+		return(results)
+		
+	}		
+	
+
+	pointer PXk_Uj_fit_g(real matrix X_k,real matrix A_k, pointer matrix point_Uxgx, real matrix parameters, real colvector item_n_cat,string matrix model_curr_asked, real scalar Obs_g, real scalar item_for_fit){
+		I=rows(parameters)
+		K=rows(X_k)
+		
+		LXk_Uj=J(Obs_g,K,1)
+		for(i=1;i<=item_for_fit-1;i++){
+			n_cat	= item_n_cat[i]
+			model	= model_curr_asked[i,.]
+			if(n_cat==2  & model[1]!="pcm"){
+				PiXk_0c=(1 :- f_PiXk_01(parameters[i,.],model,X_k)) \ f_PiXk_01(parameters[i,.],model,X_k)
+			}
+			else{
+				PiXk_0c=f_PiXk_0c(parameters[i,.],model,X_k)
+			}
+	
+			for(c=1;c<=n_cat;c++){
+				ord_ic = *(*point_Uxgx[i])[c]
+				if(rows(ord_ic)){ // in case of fixing and missing
+					LXk_Uj[ord_ic,.] = LXk_Uj[ord_ic,.] :* PiXk_0c[c,.]
+				}
+			}
+		}
+		for(i=item_for_fit+1;i<=I;i++){
+			n_cat	= item_n_cat[i]
+			model	= model_curr_asked[i,.]
+			if(n_cat==2  & model[1]!="pcm"){
+				PiXk_0c=(1 :- f_PiXk_01(parameters[i,.],model,X_k)) \ f_PiXk_01(parameters[i,.],model,X_k)
+			}
+			else{
+				PiXk_0c=f_PiXk_0c(parameters[i,.],model,X_k)
+			}
+	
+			for(c=1;c<=n_cat;c++){
+				ord_ic = *(*point_Uxgx[i])[c]
+				if(rows(ord_ic)){ // in case of fixing and missing
+					LXk_Uj[ord_ic,.] = LXk_Uj[ord_ic,.] :* PiXk_0c[c,.]
+				}
+			}
+		}
+	
+		if(item_for_fit){
+			PXk_Uj_less_i=A_k' :* LXk_Uj
+			
+			i=item_for_fit
+			n_cat	= item_n_cat[i]
+			model	= model_curr_asked[i,.]
+			if(n_cat==2  & model[1]!="pcm"){
+				PiXk_0c=(1 :- f_PiXk_01(parameters[i,.],model,X_k)) \ f_PiXk_01(parameters[i,.],model,X_k)
+			}
+			else{
+				PiXk_0c=f_PiXk_0c(parameters[i,.],model,X_k)
+			}
+	
+			for(c=1;c<=n_cat;c++){
+				ord_ic = *(*point_Uxgx[i])[c]
+				if(rows(ord_ic)){ // in case of fixing and missing
+					LXk_Uj[ord_ic,.] = LXk_Uj[ord_ic,.] :* PiXk_0c[c,.]
+				}
+			}
+		}
+		else{
+			PXk_Uj_less_i=J(0,0,.)
+		}
+		PXk_Uj=A_k' :* LXk_Uj
+		
+		results=J(2,1,NULL)
+		results[1]=return_pointer(PXk_Uj)
+		results[2]=return_pointer(PXk_Uj_less_i)
+		return(results)
+	}
+	
+	// return_legendreRW() function below adapts a code from:
+	// Adrian Mander, 2012. "INTEGRATE: Stata module to perform one-dimensional integration," 
+	// Statistical Software Components S457429, Boston College Department of Economics, revised 10 Aug 2018.
+	function return_legendreRW(real scalar nip){
+	  i = (1..nip-1)
+	  b = i:/sqrt(4:*i:^2:-1) 
+	  z1 = J(1,nip,0)
+	  z2 = J(1,nip-1,0)
+	  CM = ((z2',diag(b))\z1) + (z1\(diag(b),z2'))
+	  V=.
+	  L=.
+	  symeigensystem(CM, V, L)
+	  w = (2:* V':^2)[,1]
+	  return( L \ w') 
+	}	
 	
 end

@@ -15,10 +15,10 @@ d KW: means
 d
 d Requires: Stata version 13
 d
-d Distribution-Date: 20170202
+d Distribution-Date: 20190624
 d
-d Author: Alexander Staudt, Universität Mannheim
-d Support: email astaudt@@mail.uni-mannheim.de
+d Author: Alexander Staudt, N/A
+d Support: email staudtlex@@live.de
 d
 f cibar.ado
 f cibar.sthlp

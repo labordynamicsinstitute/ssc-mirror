@@ -1,5 +1,5 @@
 {smcl}
-{* *! version 1.0.4  24jan2012}{...}
+{* *! version 1.0.5  04jun2013}{...}
 {cmd:help spreg}{right:also see:  {helpb spreg postestimation}}
 {right:{helpb spivreg}{space 13}}
 {right:{helpb spmat}{space 15}}
@@ -36,7 +36,7 @@ spatial-autoregressive disturbances{p_end}
 spatial-autoregressive term{p_end}
 {synopt:{cmd:{ul:el}mat(}{it:name}[{cmd:, eig}]{cmd:)}}{helpb spmat:spmat} object used in the
 spatial-error term{p_end}
-{synopt:{opt nocon:stant}}suppress constant term{p_end}
+{synopt:{opt nocons:tant}}suppress constant term{p_end}
 
 {syntab :ML estimator}
 {synopt:{opt grid:search(#)}}search for initial values{p_end}

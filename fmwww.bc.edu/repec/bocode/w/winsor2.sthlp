@@ -1,7 +1,7 @@
 {smcl}
-{* 20 Feb 2002/19 Jul 2006}{...}
+{* *! version 2.0 2020/11/24}{...}
 {hline}
-help for {hi:winsor2}
+{cmd:help for {hi:winsor2}}{right: ({browse "https://www.lianxh.cn":blog})}
 {hline}
 
 {title:Winsorizing or Trimming variables}
@@ -30,7 +30,7 @@ In defult, new variables will be generated with a suffix "_w" or "_tr", which ca
 specifying {bf:suffix()} option. 
 The {bf:replace} option replaces the variables with their winsorized or trimmed ones.
 
-{error}{dlgtab:Difference between winsorizing and trimming}{text}
+{text}{dlgtab:Difference between winsorizing and trimming}{text}
 
 {p 4 4 2}
 Winsorizing is not equivalent to simply excluding data, 
@@ -120,7 +120,7 @@ percentile. Specify {bf: cuts(1 99)} or {bf: cuts(99 1)} makes no difference.
 
 {title:References}
 
-{p 4 8 2}Anonymous. 1951. In memoriam: Charles P. winsor2.
+{p 4 8 2}Anonymous. 1951. In memoriam: Charles P. Winsor.
 {it:Biometrics} 7: 221.
 
 {p 4 8 2}Barnett, V. and Lewis, T. 1994. {it:Outliers in statistical data.}
@@ -140,11 +140,23 @@ have been incorporated.
 {title:Author}
 
 {phang}
-{cmd:Yujun,Lian (Arlion)} Department of Finance, Lingnan College, Sun Yat-Sen University.{break}
+{cmd:Yujun,Lian (arlionn)} Department of Finance, Lingnan College, Sun Yat-Sen University.{break}
 E-mail: {browse "mailto:arlionn@163.com":arlionn@163.com}. {break}
-Blog: {browse "http://blog.cnfol.com/arlion":http://blog.cnfol.com/arlion}. {break}
-Homepage: {browse "http://www.lingnan.sysu.edu.cn/lnshizi/faculty_vch.asp?name=lianyj":http://www.lingnan.sysu.edu.cn/lnshizi/faculty_vch.asp?name=lianyj}. {break}
+Blog: {browse "https://www.lianxh.cn":https://www.lianxh.cn} {break}
 {p_end}
+
+
+{title:Other Commands I have written}
+
+{pstd}
+
+{synoptset 30 }{...}
+{synopt:{help lianxh} (if installed)} {stata ssc install lianxh} (to install){p_end}
+{synopt:{help bdiff} (if installed)} {stata ssc install bdiff} (to install){p_end}
+{synopt:{help hhi5} (if installed)} {stata ssc install hhi5} (to install){p_end}
+{synopt:{help uall} (if installed)} {stata ssc install uall} (to install){p_end}
+{synopt:{help xtbalance} (if installed)} {stata ssc install xtbalance} (to install){p_end}
+{p2colreset}{...}
 
 
 {title:Also see}

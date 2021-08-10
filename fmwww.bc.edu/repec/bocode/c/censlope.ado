@@ -1,6 +1,6 @@
 #delim ;
 program define censlope, rclass byable(recall);
-version 12.0;
+version 16.0;
 /*
   Confidence intervals for Theil-Sen percentile slopes.
   Input 2 variables (a Y-variable and an X-variable)
@@ -8,7 +8,7 @@ version 12.0;
   and data on confidence intervals for percentile slopes,
   which may be exponentiated to provide percentile ratios.
 *! Author: Roger Newson
-*! Date: 30 May 2012
+*! Date: 15 April 2020
 */
 
 syntax varlist(min=2 max=2 numeric) [if] [in] [fweight iweight pweight]
@@ -268,7 +268,7 @@ end;
 
 
 prog def _ystargenerate;
-version 12.0;
+version 16.0;
 /*
   Create ystar variables
   corresponding to a matrix of Theil-Sen median slopes.
@@ -306,7 +306,7 @@ end;
 
 
 prog def _estaddr, eclass;
-version 12.0;
+version 16.0;
 /*
   Add r() results to e() results created by somersd
   (mainly for use by parmby).
@@ -336,7 +336,7 @@ end;
 
 
 #delim cr
-version 12.0
+version 16.0
 /*
   Private Mata programs used by censlope
 */

@@ -169,7 +169,7 @@ for all the treated:
     {cmd:index}
     {cmd:logit}
     {cmd:ties}
-    {cmdab:nowarn:ings}
+    {cmdab:warn:ings}
     {cmdab:qui:etly}
     {cmd:ate}]
 
@@ -193,7 +193,7 @@ for all the treated:
     {cmd:index}
     {cmd:logit}
     {cmd:ties}
-    {cmdab:nowarn:ings}
+    {cmdab:warn:ings}
     {cmdab:qui:etly}
     {cmd:ate}]
 
@@ -288,7 +288,7 @@ for all the treated:
     {cmd:index}
     {cmd:logit}
     {cmd:ties}
-    {cmdab:nowarn:ings}
+    {cmdab:warn:ings}
     {cmdab:qui:etly}
     {cmd:ate}]
 
@@ -408,7 +408,7 @@ In this case:
 {cmd:index} use the latent variable index instead of the probability.
 
 {phang}
-{cmdab:nowarn:ings} do not test for control observations with duplicate propensity score values.
+{cmdab:warn:ings} test for control observations with duplicate propensity score values.
 
 
 {title:Options: Imposition of common support}

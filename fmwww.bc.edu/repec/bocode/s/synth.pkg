@@ -5,7 +5,7 @@ d inference in comparative case studies as described in "Synthetic
 d Control Methods for Comparative Case Studies of Aggregate
 d Interventions:  Estimating the Effect of California's Tobacco
 d Control Programm.  Journal of the American Statistical
-d Association. 105(490): 493-505. 2010. 
+d Association. 105(490): 493-505, 2010. 
 d
 d KW: synthetic control
 d KW: causal inference
@@ -13,11 +13,13 @@ d KW: comparative case studies
 d
 d Requires: Stata version 9.2
 d
-d Distribution-Date: 20140128
+d Distribution-Date: 20200509
 d
-d Author: Alberto Abadie, Kennedy School of Government, Harvard University
+d Author: Alberto Abadie, MIT
+d Support: email abadie@mit.edu
 d
-d Author: Alexis Diamond, IFC 
+d Author: Alexis Diamond, IFC
+d Support: email adiamond@@fas.harvard.edu
 d
 d Author: Jens Hainmueller, Stanford University
 d Support: email  jhain@@stanford.edu
@@ -26,9 +28,12 @@ f synth.ado
 f synth_ll.ado
 f synth.sthlp
 f ../l/lsynth_mata_subr.mlib
-f smoking.dta
-g WIN synthopt.win32       synthopt.plugin
-g WIN64A synthopt.win64    synthopt.plugin
-g LINUX synthopt.linux32   synthopt.plugin
-g LINUX64 synthopt.linux64 synthopt.plugin
-g MACINTEL64 synthopt.mac  synthopt.plugin
+f synth_smoking.dta
+G WIN32      synthopt.win32   synthopt.plugin 
+G WIN64      synthopt.win64   synthopt.plugin  
+G WIN64A     synthopt.win64   synthopt.plugin  
+G LINUX      synthopt.linux32 synthopt.plugin 
+G LINUX64    synthopt.linux64 synthopt.plugin 
+G MACINTEL64 synthopt.mac     synthopt.plugin 
+G OSX.X8664  synthopt.mac     synthopt.plugin 
+h synthopt.plugin

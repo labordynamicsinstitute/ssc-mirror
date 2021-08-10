@@ -24,11 +24,11 @@ d
 d KW: CPRD. data management
 d KW: data input
 d
-d Requires: Stata version 13 and keyby, lablist from SSC (q.v.)
+d Requires: Stata version 13 and keyby, chardef from SSC (q.v.)
 d
-d Distribution-Date: 20170623
+d Distribution-Date: 20181210
 d
-d Author: Roger Newson, National Heart and Lung Institute at Imperial College London
+d Author: Roger Newson,  Imperial College London
 d Support: email r.newson@@imperial.ac.uk
 d
 f cprdlink_linkage_coverage.ado

@@ -1,6 +1,6 @@
 d 'PARMEST': module to create new data set with one observation per parameter of most recent model
 d
-d	 The parmest package has 4 modules: parmest, parmby,
+d	  The parmest package has 4 modules: parmest, parmby,
 d parmcip and metaparm. parmest creates an output dataset, with 1
 d observation per parameter of the most recent estimation results,
 d and variables corresponding to parameter names, estimates,
@@ -24,13 +24,12 @@ d The confidence intervals, P-values and other parameter attributes
 d in the dataset may be listed and/or plotted and/or tabulated. 
 d
 d
-d Requires: Stata version 11.0
+d Requires: Stata version 16.0
 d
+d Distribution-Date: 20210101
 d
-d Author: Roger Newson, National Heart and Lung Institute at Imperial College London
+d Author: Roger Newson, Imperial College London
 d Support: email r.newson@@imperial.ac.uk
-d
-d Distribution-Date: 20170113
 d
 f parmest.ado
 f parmest.sthlp

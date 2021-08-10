@@ -1,5 +1,5 @@
 {smcl}
-{* 28 Jul 2017}{...}
+{* 5 Nov 2019}{...}
 {hline}
 help for {hi:iebaltab}
 {hline}
@@ -8,15 +8,18 @@ help for {hi:iebaltab}
 
 {phang2}{cmdab:iebaltab} {hline 2} produces balance tables with multiple groups or treatment arms
 
+{phang2}For a more descriptive discussion on the intended usage and work flow of this
+command please see the {browse "https://dimewiki.worldbank.org/wiki/Iebaltab":DIME Wiki}.
+
 {title:Syntax}
 
 {phang2}
-{cmdab:iebaltab} {it:balancevarlist} [{help if:if}] [{help in:in}]
+{cmdab:iebaltab} {it:balancevarlist} [{help if:if}] [{help in:in}] [{help weight}]
 , {cmdab:grpv:ar(}{it:varname}{cmd:)} {c -(} {cmdab:save(}{it:{help filename}}{cmd:)} | {cmdab:savet:ex(}{it:{help filename}}{cmd:)} | {cmdab:browse} {c )-}
 [
-{it:{help iebaltab##columnoptions:column_options} {help iebaltab##labeloptions:label_options}} 
-{it:{help iebaltab##statsoptions:stats_options} {help iebaltab##ftestoptions:ftest_options}} 
-{it: {help iebaltab##display:display_options} {help iebaltab##exportoptions:export_options}}  
+{it:{help iebaltab##columnoptions:column_options} {help iebaltab##labeloptions:label_options}}
+{it:{help iebaltab##statsoptions:stats_options} {help iebaltab##ftestoptions:ftest_options}}
+{it: {help iebaltab##displayoptioins:display_options} {help iebaltab##exportoptions:export_options}}
 ]
 
 {phang2}where {it:balancevarlist} is one or several variables (from here on called balance variables) for which the command
@@ -46,7 +49,7 @@ will test for differences across the catagories in grpvar({it:varname}).
 {marker labeloptions}{...}
 {pstd}{it:    Column and row labels:}{p_end}
 {synopt :{cmdab:grpc:odes}}Use the treatment arm codes as group column titles{p_end}
-{synopt :{cmdab:grpl:abels(}{it:codetitles}{cmd:)}}Manually set the group column titles. See details on {it:codetitels} below.{p_end}
+{synopt :{cmdab:grpl:abels(}{it:codetitles}{cmd:)}}Manually set the group column titles. See details on {it:codetitles} below.{p_end}
 {synopt :{cmdab:totall:abel(}{it:string}{cmd:)}}Manually set the total column title{p_end}
 {synopt :{cmdab:rowv:arlabels}}Use the variable labels instead of variable name as row titles{p_end}
 {synopt :{cmdab:rowl:abels(}{it:nametitles}{cmd:)}}Manually set the row titles. See details on {it:nametitles} below.{p_end}
@@ -55,27 +58,30 @@ will test for differences across the catagories in grpvar({it:varname}).
 {marker statsoptions}{...}
 {pstd}{it:    Statistics and data modification:}{p_end}
 {synopt :{cmdab:balmiss:(}{it:reptype}{cmd:)}}Replaces missing values in balance variables with either zeros, the mean or the group mean. See details on {it:reptype} below.{p_end}
-{synopt :{cmdab:balmissr:eg(}{it:reptype}{cmd:)}}Similar to {cmd:misszero} but treats {help missing:extended missing values} still as missing.  See details on {it:reptype} below.{p_end}
+{synopt :{cmdab:balmissr:eg(}{it:reptype}{cmd:)}}Similar to {cmd:balmiss()} but treats {help missing:extended missing values} still as missing.  See details on {it:reptype} below.{p_end}
 {synopt :{cmdab:vce:(}{it:{help vce_option:vce_types}}{cmd:)}}Options for variance estimation. {hi:Robust}, {hi:cluster} {it:clustervar} or {hi:bootstrap}{p_end}
 {synopt :{cmdab:fix:edeffect(}{it:varname}{cmd:)}}Include fixed effects in the regressions for t-tests (and for F-tests if applicable){p_end}
 {synopt :{cmdab:cov:ariates(}{it:{help varlist}}{cmd:)}}Include covariates (control variables) in the regressions for t-tests (and for F-tests if applicable){p_end}
 {synopt :{cmd:covarmissok}}Allows for observations to be dropped due to missing values in covariate variables{p_end}
 {synopt :{cmdab:covmiss:(}{it:reptype}{cmd:)}}Replaces missing values in covariate variables with either zeros, the mean or the group mean. See details on {it:reptype} below.{p_end}
-{synopt :{cmdab:covmissr:eg(}{it:reptype}{cmd:)}}Similar to {cmd:covmisszero} but treats {help missing:extended missing values} still as missing. See details on {it:reptype} below.{p_end}
+{synopt :{cmdab:covmissr:eg(}{it:reptype}{cmd:)}}Similar to {cmd:covmiss()} but treats {help missing:extended missing values} still as missing. See details on {it:reptype} below.{p_end}
 {synopt :{cmdab:missmin:mean(}{it:{help numlist:numlist}}{cmd:)}}Sets a minimum number of observations that a mean or group mean must be based on in options requiring {it:reptype}.{p_end}
-{synopt :{cmdab:weight(}{it:weight_option}{cmd:)}}Determines weight variable and method. aweights, fweights, iweights, and pweights are allowed {it:reptype}.{p_end}
 
 {marker ftestoptions}{...}
 {pstd}{it:    F-test:}{p_end}
-{synopt :{cmdab:ft:est}}Include an F-test for joint significance{p_end}
+{synopt :{cmdab:ft:est}}Include a row with the F-test for joint significance of all balance variables{p_end}
 {synopt :{cmdab:fm:issok}}Suppress the error caused by missing values in F-test{p_end}
 {synopt :{cmd:fnoobs}}Do not display number of observations from the F-test regressions{p_end}
 
 {marker displayoptions}{...}
 {pstd}{it:    Table display options:}{p_end}
-{synopt :{cmdab:pt:test}}Show p-values instead of difference-in-mean between the groups in the column for t-tests{p_end}
-{synopt :{cmdab:pf:test}}Show p-values instead of F-statistics in the row for F-tests{p_end}
+{synopt :{cmdab:pt:test}}Show p-values instead of difference-in-means between the groups in the column for t-tests{p_end}
+{synopt :{cmdab:not:test}}Suppresses the column for pairwise t-tests{p_end}
+{synopt :{cmdab:normd:iff}}Adds a column with pairwise normalized differences{p_end}
+{synopt :{cmdab:feqt:est}}Adds a column with F-test for joint orthogonality of each balance variable across all treatment arms{p_end}
+{synopt :{cmdab:pf:test}}Show p-values instead of F-statistics for all F-tests{p_end}
 {synopt :{cmdab:pb:oth}}Identical to specifying both {cmd:pttest} and {cmd:pftest}{p_end}
+{synopt :{cmdab:std:ev}}Displays standard deviations instead of standard errors{p_end}
 {synopt :{cmdab:star:levels(}{it:{help numlist:numlist}}{cmd:)}}Manually set the three significance levels used for significance stars{p_end}
 {synopt :{cmdab:starsno:add}}Do not add any stars to the table{p_end}
 {synopt :{cmdab:form:at(}{it:{help format:%fmt}}{cmd:)}}Apply Stata formats to the values outputted in the table{p_end}
@@ -105,14 +111,14 @@ will test for differences across the catagories in grpvar({it:varname}).
 	types of variance estimators.
 
 {pstd}A lot of attention has also been spent on providing helpful error messages when the command is
-	miss specified. The command will also issue errors or warnings when the command is specified
+	misspecified. The command will also issue errors or warnings when the command is specified
 	correctly but the nature of the data leaves potential for the results to be misinterpreted , or
 	simply invalid. For example, if an observation has a missing value in a variable that is
 	used in an F-test for joint significance, then Stata cannot do anything but drop that observation.
 	This command will throw an error unless the user specify the option that suppresses that error or if
 	the user specify any of the options that tells the command how to interpret missing values.
 
-{pstd}The command also attaches notes to the bottom of the table with infomration on, for example,
+{pstd}The command also attaches notes to the bottom of the table with information on, for example,
 	which significance levels are used for stars, which fixed effects or covariates that were included (if any) etc.
 
 {pstd}The command estimates the descriptive stats, the t-test, and the F-tests using the following regressions:
@@ -125,7 +131,7 @@ will test for differences across the catagories in grpvar({it:varname}).
 {pmore}{input:reg balancevarname if groupvar = groupcode}
 
 {pstd}where  _b[cons] from the returned results is the group mean and _se[cons] is the standard
-	error in the group mean. Fixed effects and covaraiates are never included in this regression.
+	error in the group mean. Fixed effects and covariates are never included in this regression.
 
 {pstd}{hi:t-tests}
 {break}In the following t-test regression, {it:balancevarname} refers to the variables (one at the time)
@@ -175,7 +181,7 @@ for the tests are obtained in the same way as described above.
 
 {pstd}{hi:Standard errors estimators}
 {break}In the following t-test and F-test regressions including the non-default
-variance estimators, {it:vcetype} is the varaince estimator specfied. See {help vce_option :vcetype}
+variance estimators, {it:vcetype} is the variance estimator specified. See {help vce_option :vcetype}
 for more details.
 
 {pmore}{input:reg balancevarname testgroupdummy, vce(vcetype)}
@@ -198,17 +204,17 @@ for more details.
 {phang}{cmdab:grpv:ar(}{it:varname}{cmd:)} specifies the variable indicating groups (or treatment arms) across which
 	the command will test for difference in mean of the balance var. The group variable can only be one variable and
 	it must be numeric and may only hold integers. See {help egen:egen group} for help on creating a single variable with
-	an integer representing each category from string varibles and/or multiple variables. Observations with missing values
+	an integer representing each category from string variables and/or multiple variables. Observations with missing values
 	in this variable will be excluded when running this command.
 
 {phang}{cmdab:save(}{it:{help filename}}{cmd:)} saves the balance table to an Excel file on disk using {it:filename}. This
-	command cannot be used in combinaton with {cmd:browse}. {p_end}
+	command cannot be used in combination with {cmd:browse}. {p_end}
 
 {phang}{cmdab:savetex(}{it:{help filename}}{cmd:)} saves the balance table to a LaTeX file on disk using {it:filename}. This
-	command cannot be used in combinaton with {cmd:browse}.
+	command cannot be used in combination with {cmd:browse}.
 
 {phang}{cmdab:browse} displays the table in the browse window instead of saving it to file. This command cannot be
-	used in combinaton with {cmd:save()}. WARNING: Note that this option clears the data currently in working memory. Either
+	used in combination with {cmd:save()}. WARNING: Note that this option clears the data currently in working memory. Either
 	save your data before using this command, use {help preserve:preserve/restore} or {help tempfile:tempfiles} to
 	not lose data.{p_end}
 
@@ -221,7 +227,7 @@ are tested against for difference in means and where {it:groupcode} is an intege
 The default is that all groups are tested against each other. The control group will be listed first
 (leftmost) in the table unless another order is specified in {cmd:order()}.{p_end}
 
-{phang}{cmdab:or:der(}{it:codetitels}{cmd:)} manually sets the column order of the groups in the table. {it:codetitels} is
+{phang}{cmdab:or:der(}{it:codetitles}{cmd:)} manually sets the column order of the groups in the table. {it:codetitles} is
  a list of integers used in {cmd:grpvar(}{it:varname}{cmd:)}. The default order is ascending order of the group
  codes in {cmdab:grpv:ar(}{it:varname}{cmd:)}. Any groups omitted from this option will, in ascending order,
  follow the groups included.{p_end}
@@ -234,7 +240,7 @@ The default is that all groups are tested against each other. The control group 
 is to use the value labels used in {cmdab:grpv:ar(}{it:varname}{cmd:)}. If no value labels are used, then this option does
 not make a difference.{p_end}
 
-{phang}{cmdab:grpl:abels(}{it:codetitels}{cmd:)} manually sets the group column titles. {it:codetitels} is a string
+{phang}{cmdab:grpl:abels(}{it:codetitles}{cmd:)} manually sets the group column titles. {it:codetitles} is a string
 on the following format {it:"code1 title1 @ code2 title2 @ code3 title3"} etc. where code1, code2 etc. are group codes used
 in {cmd:grpvar(}{it:varname}{cmd:)} and title1, title2 etc. are the corresponding titles. The character "@" may not be used
 in any of the titles. Codes omitted from this option will be assigned a column title as if this option was not used. This option
@@ -245,7 +251,7 @@ or a "@" will be included in the title.{p_end}
 {phang}{cmdab:totall:abel(}{it:string}{cmd:)} manually sets the column title for the total column.{p_end}
 
 {phang}{cmdab:rowv:arlabels} use the variable labels instead of variable name as row titles. The default is to use the
-variable name. For variables with no variable label defined, the variable name is used regerdless.{p_end}
+variable name. For variables with no variable label defined, the variable name is used regardless.{p_end}
 
 {phang}{cmdab:rowl:abels(}{it:nametitles}{cmd:)} manually sets the row titles for each of the balance variables in the
 table. {it:nametitles} is a string in the following format {it:"name1 title1 @ name2 title2 @ name3 title3"} etc. where
@@ -256,7 +262,7 @@ in the {it:nametitlestring}. The title can consist of several words. Everything 
 of a string or a "@" will be included in the title.{p_end}
 
 {phang}{cmdab:onerow} displays the number of observations in additional row at the bottom of the table if each group has the same
-number of observations for all variables in {it:balancevarlist}. This also applies to number of clusters. If not specified, the 
+number of observations for all variables in {it:balancevarlist}. This also applies to number of clusters. If not specified, the
 number of observations (and clusters) per variable per group is displayed on the same row in additional column besides the mean value.{p_end}
 
 {pstd}{it:    Statistics and data modification:}{p_end}
@@ -269,25 +275,22 @@ missing values in the dependent variable or in any of the independent variables 
 command to replace all missing values in the balance variables with a non-missing value. That will make it possible to include the observations with
 missing values in the balance table. WARNING: while technically possible it is far from certain this option generates a valid result.
 There is no guarantee that a missing value can correctly be assumed to be zero without making the interpretation of the balance table invalid. Best
-practice is most certainly to manually replace or omitt these values manually before running this command. This option is only included to enable
+practice is most certainly to manually replace or omit these values manually before running this command. This option is only included to enable
 quick balance tables on raw data before the data has been cleaned.{p_end}
 
 {phang}{cmdab:balmissr:eg(}{it:reptype}{cmd:)} makes the command replace all regular missing values in balance variables with either zeros, the mean or
-the group mean of the variable. See {cmd:misszero} for details and warning.
+the group mean of the variable. See {cmd:balmiss()} for details and warning.
 The difference is that this option still treats {help missing:extended missing values} as missing, but regular missing values will be replaced.{p_end}
 
 {phang}{cmdab:missmin:mean(}{it:{help numlist:numlist}}{cmd:)} sets a minimum number of observations that a mean or group mean must be based
 on in {cmd:balmiss()}, {cmd:balmissreg()}, {cmd:covmiss()} and {cmd:covmissreg()}. The arbitrary default is 10.{p_end}
-
-{phang}{cmdab:weight(}{it:weight_option}{cmd:)} defines a variable to be used as weight. {it:weight_option} is a string in the following format {it:"weight_type = weight_variable"}, where
-weight_type is a Stata {help weight:weight} option, and weight_variable is a numeric variable.{p_end}
 
 {phang}{cmdab:vce:(}{it:{help vce_option:vce_types}{cmd:)}} sets the type of variance estimator to be used in all regressions for this
 command. See {help vce_option:vce_types} for more details. The only vce types allowed in this command are {hi:robust}, {hi:cluster} {it:clustervar} or {hi:bootstrap}.{p_end}
 
 {phang}{cmdab:fix:edeffect(}{it:varname}{cmd:)}includes the variable specified as fixed effects in the regressions for t-tests (and
 for F-tests if applicable). See the description section above for details on how the fixed effects are included in the estimation regressions.
-The variable specified must be a numeric variable. Only one varaible may be specified. See {help egen:egen group} for
+The variable specified must be a numeric variable. Only one variable may be specified. See {help egen:egen group} for
 help on creating a single variable with an integer representing each category from string variables and/or multiple variables.{p_end}
 
 {phang}{cmdab:cov:ariates(}{it:{help varlist}{cmd:)}} includes the variables specified in the regressions for t-tests (and for
@@ -296,25 +299,25 @@ F-tests if applicable) as covariate variables (control variables). See the descr
 
 {phang}{cmd:covarmissok} allows for observations to be dropped due to missing values in covariate variables. Stata always drops observations
 with missing values in at least one the variables used in a regression. This command throws an error if any observation has missing
-values in any of the variables specified in {cmd:covariates()}. To suppress that error, use this option and therby accept that some observations
-are excluded from the balance table. Also see {cmd:covmisszero} and {cmd:covmissregzero} for other solutions to this issue.{p_end}
+values in any of the variables specified in {cmd:covariates()}. To suppress that error, use this option and thereby accept that some observations
+are excluded from the balance table. Also see {cmd:covmiss()} and {cmd:covmissreg()} for other solutions to this issue.{p_end}
 
 {phang}{cmdab:covmiss(}{it:reptype}{cmd:)} makes the command replace all missing values in covariate variables with either zeros, the mean or the group mean of the variable. See {cmd:balmiss} for more
 details and the warning that applies to this command as well.{p_end}
 
 {phang}{cmdab:covmissr:eg(}{it:reptype}{cmd:)} makes the command replace all regular missing values in covariate variables with either zeros, the mean or the group mean of the variable. See {cmd:balmiss} for more
-details and the warning that applies to this command as well. The difference from {cmd:covmisszero} that this option still treat {help missing:extended missing values} as
+details and the warning that applies to this command as well. The difference from {cmd:covmiss()} that this option still treat {help missing:extended missing values} as
 missing, but regular missing values will be replaced.{p_end}
 
 {pstd}{it:    F-test:}{p_end}
 
-{phang}{cmdab:ft:est} includes an F-test for joint significance across all balance variables. See the description section above for details on how the F-test estimation
-regressions are specified. All options specified in the {it:Statistics and data modification} section above, also applies to the F-tests.{p_end}
+{phang}{cmdab:ft:est} includes a row with an F-test for joint significance of all balance variables. See the description section above for details on how the F-test estimation
+regressions are specified. All options specified in the {it:Statistics and data modification} section above also apply to the F-tests.{p_end}
 
 {phang}{cmdab:fm:issok} suppress the error caused by missing values in any of the balance variables in the F-test. Stata always drops observations
 with missing values in at least one the variables used in a regression. This command throws an error if any observation has missing
-values in any of the balance variables. To suppress that error, use this option and therby accept that some observations
-are excluded from F-tests. Also see {cmd:misszero} and {cmd:missregzero} for other solutions to this issue.{p_end}
+values in any of the balance variables. To suppress that error, use this option and thereby accept that some observations
+are excluded from F-tests. Also see {cmd:balmiss()} and {cmd:balmissreg()} for other solutions to this issue.{p_end}
 
 {phang}{cmd:fnoobs} excludes the row with number of observations in the F-test regressions from displaying in the table.{p_end}
 
@@ -322,9 +325,18 @@ are excluded from F-tests. Also see {cmd:misszero} and {cmd:missregzero} for oth
 
 {phang}{cmdab:pt:test} makes this command show p-values instead of difference-in-mean between the groups in the column for t-tests.{p_end}
 
-{phang}{cmdab:pf:test} makes this command show p-values instead of F-statistics in the row for F-tests.{p_end}
+{phang}{cmdab:not:test} suppresses the column for pairwise t-tests across treatment arms.{p_end}
+
+{phang}{cmdab:normd:iff} adds a column with pairwise normalized difference across treatment arms.{p_end}
+
+{phang}{cmdab:feqt:est} adds a column with an F-test for joint orthogonality of each variable across all treatment arms. Please note that this F-test is different from the one performed by option {cmd:ftest},
+which adds a row indicating if all variables are jointly significant when each pair of treatment arms is compared.{p_end}
+
+{phang}{cmdab:pf:test} makes this command show p-values instead of F-statistics in the row for F-tests created using option {cmd:ftest} and/or the columns for F-test created using option {cmd:feqtest}.{p_end}
 
 {phang}{cmdab:pb:oth} is identical to specifying both {cmd:pttest} and {cmd:pftest}.{p_end}
+
+{phang}{cmdab:std:ev} displays standard deviations in parenthesis instead of standard errors.{p_end}
 
 {phang}{cmdab:star:levels(}{it:{help numlist:numlist}}{cmd:)} manually sets the three significance levels
 used for significance stars. Use decimals in descending order. The default is (.1 .05 .01) where .1 corresponds
@@ -337,7 +349,7 @@ with {cmd:pttest}, {cmd:pftest} or {cmd:pboth} but is possible to use by itself 
 in the table. All values apart from integers, for example number of observations, for which the format is always %9.0f.{p_end}
 
 {phang}{cmdab:tbln:ote(}{it:string}{cmd:)} adds a manually entered note to the bottom of the table. This note will
-be added in addition to the notes automtcally generated by the command unless {cmd:tblnonote} is specified, then
+be added in addition to the notes automatcally generated by the command unless {cmd:tblnonote} is specified, then
 only this manually entered note will be added to the table.{p_end}
 
 {phang}{cmdab:notec:ombine} combines all notes (manually entered or automatically generated) into one row. The default
@@ -353,18 +365,18 @@ only this manually entered note will be added to the table.{p_end}
 {phang}{cmdab:savebr:owse} views the table in the browser window similarly to {cmd:browse} after saving the table to file using {cmd:save}.{p_end}
 
 {phang}{cmdab:texn:otewidth(}{it:{help numlist:numlist}}{cmd:)} manually adjusts the width of the note to fit the size of the table.
-The note width is a multiple of text width. If not specified, default width is text width.{p_end}
+The note width is a multiple of text width. If not specified, default is one, which makes the table width equal to text width.{p_end}
 
-{phang}{cmdab:texc:aption(}{it:string}{cmd:)} writes table's caption in LaTeX file.{p_end}
+{phang}{cmdab:texc:aption(}{it:string}{cmd:)} writes table's caption in TeX file. Can only be used with option texdocument.{p_end}
 
-{phang}{cmdab:texl:abel(}{it:string}{cmd:)} specifies table's label, used for meta-reference across TeX file.{p_end}
+{phang}{cmdab:texl:abel(}{it:string}{cmd:)} specifies table's label, used for meta-reference across TeX file. Can only be used with option texdocument.{p_end}
 
 {phang}{cmdab:texdoc:ument}  creates a stand-alone TeX document that can be readily compiled, without the need to import it to a different file.
  As default, {cmd:savetex()} creates a fragmented TeX file consisting only of a tabular environment.{p_end}
 
-{phang}{cmd:texvspace(}{it:string}{cmd:)} sets the size of the line space between two variable rows. {it:string} must consist of a numeric value 
-and one of the following units: "cm", "mm", "pt", "in", "ex" or "em". Note that the resulting line space displayed will be equal to the 
-specified value minus the height of one line of text. Default is "3ex". For more information on units, 
+{phang}{cmd:texvspace(}{it:string}{cmd:)} sets the size of the line space between two variable rows. {it:string} must consist of a numeric value
+and one of the following units: "cm", "mm", "pt", "in", "ex" or "em". Note that the resulting line space displayed will be equal to the
+specified value minus the height of one line of text. Default is "3ex". For more information on units,
 {browse "https://en.wikibooks.org/wiki/LaTeX/Lengths":check LaTeX lengths manual}. {p_end}
 
 {phang}{cmd:texcolwidth(}{it:string}{cmd:)} limits the width of table's first column so that a line break is added when a variable's name
@@ -396,7 +408,7 @@ For more information on these units, {browse "https://en.wikibooks.org/wiki/LaTe
 
 {pmore}Example 3 builds on example 2. There are now 3 variables listed as balance variables. In option {cmd:rowlabels()} two
  of those balance variables have been given a new label to be displayed as row title instead of the variable name. Instead of outcome1
- the row title will be "Outcome variable 1", and instead of outcome2 the rowtitle will be "Second outcome variable". For balance variable
+ the row title will be "Outcome variable 1", and instead of outcome2 the row title will be "Second outcome variable". For balance variable
  outcome3 that is not included in {cmd:rowlabels()}, the command will use the variable label defined for outcome3 as row title since
  option {cms:rowarlabels} was specified. If outcome3 does not have any row variable defined, then the variable name will be used
  as row title, just like the default.
@@ -408,14 +420,13 @@ For more information on these units, {browse "https://en.wikibooks.org/wiki/LaTe
 
 {title:Author}
 
-{phang}Luiza Cardoso De Andrade, The World Bank, DECIE{p_end}
-{phang}Kristoffer Bjarkefur, The World Bank, DECIE{p_end}
+{phang}All commands in ietoolkit is developed by DIME Analytics at DECIE, The World Bank's unit for Development Impact Evaluations.
+
+{phang}Main author: Kristoffer Bjarkefur, Luiza Cardoso De Andrade, DIME Analytics, The World Bank Group
 
 {phang}Please send bug-reports, suggestions and requests for clarifications
 		 writing "ietoolkit iebaltab" in the subject line to:{break}
-		 kbjarkefur@worldbank.org
+		 dimeanalytics@worldbank.org
 
 {phang}You can also see the code, make comments to the code, see the version
-		 history of the code, and submit additions or edits to the code through
-		 the github repository of ietoolkit:{break}
-		 {browse "https://github.com/worldbank/ietoolkit"}
+		 history of the code, and submit additions or edits to the code through {browse "https://github.com/worldbank/ietoolkit":the GitHub repository of ietoolkit}.{p_end}

@@ -18,13 +18,14 @@ d KW: codings
 d
 d Requires: Stata version 14
 d
-d Distribution-Date: 20170225
+d Distribution-Date: 20180428
 d
 d Author: Mark Chatfield, Menzies School of Health Research
 d Support: email mark.chatfield@@menzies.edu.au 
 d
 f labeldatasyntax.ado
 f labeldatasyntax.sthlp
+f labeldatasyntax.xlsx
 f ../e/ex1_datadictionary.csv
 f ../e/ex2_datadictionary.csv
 f ../e/ex3_codesetinfo_a.csv

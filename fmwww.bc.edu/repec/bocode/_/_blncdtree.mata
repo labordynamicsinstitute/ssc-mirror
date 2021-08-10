@@ -1,4 +1,4 @@
-version 10.0
+version 16.0
 mata:
 
 void _blncdtree(real matrix tree, real scalar imin, real scalar imax)

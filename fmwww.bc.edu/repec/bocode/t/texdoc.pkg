@@ -12,14 +12,14 @@ d KW: Stata output
 d KW: Stata log
 d KW: reproducible research
 d
-d Requires: Stata version 9.2 and sjlatex from http://www.stata-journal.com/production
+d Requires: Stata version 10 and sjlatex from http://www.stata-journal.com/production
 d
-d Distribution-Date: 20170202
+d Distribution-Date: 20180418
 d
 d Author: Ben Jann, University of Bern
 d Support: email jann@@soz.unibe.ch
 d
 f texdoc.ado
-f texdoc.hlp
+f texdoc.sthlp
 f tex.ado
 f texdoc.zip

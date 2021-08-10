@@ -10,6 +10,8 @@ help for {hi:xcollapse}{right:(Roger Newson)}
          {break}
          {cmdab:li:st}{cmd:(} [{it:varlist}] [{cmd:if} {it:exp}] [{cmd:in} {it:range}] [ , [{it:list_options}] ] {cmd:)}
          {break}
+         {cmdab:fra:me}{cmd:(} {it:framename} [ , replace {cmdab:ch:ange} ] {cmd:)}
+         {break}
          {cmdab:sa:ving}{cmd:(}{it:filename}[{cmd:,replace}]{cmd:)}
          {break}
          {cmdab::no}{cmdab:re:store} {cmd:fast}
@@ -39,7 +41,8 @@ See help for {helpb collapse} for details of how these are handled.
 {p 4 4 2}
 {cmd:xcollapse} is an extended version of {helpb collapse}.
 It creates an output dataset of means, sums, medians, and other summary statistics.
-This output dataset may be listed to the Stata log, or saved to a disk file,
+This output dataset may be listed to the Stata log, or saved to a {help frame:data frame},
+or saved to a disk file,
 or written to the memory (overwriting any pre-existing dataset).
 
 
@@ -67,6 +70,14 @@ The user may optionally also specify {helpb if} or {helpb in} qualifiers to list
 of variable values,
 or change the display style using a list of {it:list_options} allowed as options by the {helpb list} command.
 
+{p 4 8 2}{cmd:frame(} {it:name}, [ {cmd:replace} {cmd:change} ] {cmd:)} specifies an output {help frame:data frame},
+to be generated to contain the output data set.
+If {cmd:replace} is specified, then any existing data frame of the same name is overwritten. 
+If {cmd:change} is specified,
+then the current data frame will be changed to the output data frame after the execution of {cmd:xcollapse}.
+The {cmd:frame()} option may not specify the current data frame.
+To do this, use one of the options {cmd:norestore} or {cmd:fast}.
+
 {p 4 8 2}{cmd:saving(}{it:filename}[{cmd:,replace}]{cmd:)} saves the output dataset to a disk file.
 If {cmd:replace} is specified, and a file of that name already exists,
 then the old file is overwritten.
@@ -83,9 +94,9 @@ If {cmd:norestore} is specified and {cmd:fast} is absent,
 then {cmd:xcollapse} will go to extra work so that
 it can restore the original data if the user presses {helpb break:Break}.
 
-{p 4 8 2}Note that the user must specify at least one of the four options {cmd:list()}, {cmd:saving()},
-{cmd:norestore} and {cmd:fast}. These four options specify whether the output dataset
-is listed to the Stata log, saved to a disk file, or written to the memory
+{p 4 8 2}Note that the user must specify at least one of the five options {cmd:list()}, {cmd:frame()}, {cmd:saving()},
+{cmd:norestore} and {cmd:fast}. These five options specify whether the output dataset
+is listed to the Stata log, saved to a data frame, saved to a disk file, or written to the memory
 (overwriting any pre-existing dataset). More than one of these options can be specified.
 
 {p 4 8 2}{cmd:flist(}{it:global_macro_name}{cmd:)} specifies the name of a global macro, containing
@@ -197,11 +208,23 @@ The following examples use the {cmd:saving()} option to create an output dataset
 
 {p 4 8 2}{cmd:. xcollapse (count) nmpg=mpg nweight=weight nprice=price (median) medmpg=mpg medweight=weight medprice=price, by(foreign rep78) format(med* %8.2f) saving(mysumm5,replace)}
 
+{p 4 4 2}
+The following example uses the {cmd:frame()} option to create an output data frame {cmd:nutty} in memory.
+This data frame is described, listed and dropped after changing the frame back to {cmd:default}.
+
+{p 4 8 2}{cmd:. sysuse auto, clear}{p_end}
+{p 4 8 2}{cmd:. xcollapse (count) N=mpg (mean) mpg, frame(nutty, replace change))}{p_end}
+{p 4 8 2}{cmd:. describe, full}{p_end}
+{p 4 8 2}{cmd:. list, abbr(32)}{p_end}
+{p 4 8 2}{cmd:. frame change default}{p_end}
+{p 4 8 2}{cmd:. frame drop nutty}{p_end}
+{p 4 8 2}{cmd:. frame dir}{p_end}
+
 
 {title:Author}
 
 {p}
-Roger Newson, National Heart and Lung Institute, Imperial College London, UK.
+Roger Newson, Imperial College London, UK.
 Email: {browse "mailto:r.newson@imperial.ac.uk":r.newson@imperial.ac.uk}
 
 

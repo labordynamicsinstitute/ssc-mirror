@@ -50,11 +50,10 @@ Missing values have to be system/extended missing values like {input:. , .a, .b}
 
 {title:Author}
 {pstd}
-Malte Kaukal, GESIS Leibniz Institute for the Social Sciences {p_end}
+Malte Kaukal, Hessen State Statistical Office {p_end}
 {pstd}
-malte.kaukal@gesis.org
+malte.kaukal@gmx.de
 
 {title:Acknowledgments}
 {pstd}
 I would like to acknowledge the support of my colleagues at GESIS which lead to the creation of findsysmis. 
-

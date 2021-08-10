@@ -1,6 +1,6 @@
 #delim ;
 program define parmest,rclass;
-version 11.0;
+version 16.0;
 /*
  If current estimation matrices exist,
  then extract the parameter names, estimates,
@@ -9,11 +9,11 @@ version 11.0;
  (replacing the current one, in the manner of the collapse command,
  if the user explicitly requests this).
 *! Author: Roger Newson
-*! Date: 07 October 2015
+*! Date: 10 April 2020
 */
 
 
-syntax [, LIst(string asis) SAving(string asis) noREstore FAST FList(string)
+syntax [, LIst(string asis) FRAme(string asis) SAving(string asis) noREstore FAST FList(string)
     EForm Dof(string)
     LEvel(numlist >=0 <100 sort) CLNumber(passthru) MCOMPare(passthru) MCOMCi(passthru)
     BMATrix(string) VMATrix(string) DFMATrix(string)
@@ -29,6 +29,7 @@ LIst() contains a varlist of variables to be listed,
   and referred to by the new names if REName is specified,
   together with optional if and/or in subsetting clauses and/or list_options
   as allowed by the list command.
+FRAme specifies a Stata data frame in which to create the output data set.
 SAving() specifies a data set in which to save the output data set.
 noREstore specifies that the pre-existing data set
   is not restored after the output data set has been produced
@@ -152,25 +153,47 @@ NUllvalue specifies the parameter values under the null hypotheses tested
 *
  Set restore to norestore if fast is present
  and check that the user has specified one of the four options:
- list and/or saving and/or norestore and/or fast.
- (This section is duplicated in parmby
- and might possibly be removed in a future version to save space
- if parmest ceases to be supported as an independent program
- and is incorporated into parmby.
- Roger Newson 03 January 2003.)
+ list and/or nd/or frame and/or saving and/or norestore and/or fast.
 *;
 if "`fast'"!="" {;
     local restore="norestore";
 };
-if (`"`list'"'=="")&(`"`saving'"'=="")&("`restore'"!="norestore")&("`fast'"=="") {;
-    disp as error "You must specify at least one of the four options:"
-      _n "list(), saving(), norestore, and fast."
+if (`"`list'"'=="")&(`"`frame'"'=="")&(`"`saving'"'=="")&("`restore'"!="norestore")&("`fast'"=="") {;
+    disp as error "You must specify at least one of the five options:"
+      _n "list(), frame(), saving(), norestore, and fast."
       _n "If you specify list(), then the output variables specified are listed."
+      _n "f you specify frame(), then the new data set is output to a data frame."
       _n "If you specify saving(), then the new data set is output to a disk file."
-      _n "If you specify norestore and/or fast, then the new data set is created in the memory,"
-      _n "and any existing data set in the memory is destroyed."
+      _n "If you specify norestore and/or fast, then the new data set is created in the current ata frame,"
+      _n "and any existing data set in the current data frame is destroyed."
       _n "For more details, see {help parmest:on-line help for parmby and parmest}.";
     error 498;
+};
+
+
+*
+ Parse frame() option if present
+*;
+if `"`frame'"'!="" {;
+  cap frameoption `frame';
+  if _rc {;
+    disp as error `"Illegal frame option: `frame'"';
+    error 498;
+  };
+  local framename "`r(namelist)'";
+  local framereplace "`r(replace)'";
+  local framechange "`r(change)'";
+  if `"`framename'"'=="`c(frame)'" {;
+    disp as error "frame() option may not specify current frame."
+      _n "Use norestore or fast instead.";
+    error 498;
+  };
+  if "`framereplace'"=="" {;
+    cap noi conf new frame `framename';
+    if _rc {;
+      error 498;
+    };
+  };
 };
 
 
@@ -437,11 +460,12 @@ if "`ylabel'"!="" {;
 
 
 *
- Preserve old data set if restore is set or fast unset
+ Beginning of frame block (NOT INDENTED)
 *;
-if("`fast'"==""){;
-    preserve;
-};
+local oldframe=c(frame);
+tempname tempframe;
+frame create `tempframe';
+frame `tempframe' {;
 
 
 *
@@ -518,11 +542,13 @@ if "`empty'"!="" {;
 
 * Add label if requested *;
 if "`label'" != "" {;
+        tempname labscal;
         qui gene str1 label = "";
         local i1 = 0;
         while `i1' < `nxv' {;
                 local i1 = `i1' + 1;
-                qui replace label = `"`lab`i1''"' in `i1';
+                mata: st_strscalar("`labscal'",st_local("lab`i1'"));
+                qui replace label = `labscal' in `i1';
         };
         order eq parm label;
         label variable label "Parameter label";
@@ -531,9 +557,11 @@ if "`label'" != "" {;
 
 * Add ylabel if requested *;
 if "`ylabel'" != "" {;
+        tempname ylabscal;
         qui gene str1 ylabel = "";
         forv i1=1(1)`nyv' {;
-            qui replace ylabel=`"`ylab`i1''"' in `i1';
+                mata: st_strscalar("`ylabscal'",st_local("ylab`i1'"));
+                qui replace ylabel = `ylabscal' in `i1';
         };
         if "`label'"=="" {;
           order eq parm ylabel;
@@ -784,11 +812,7 @@ if "`float'"!="" {;
 
 *
  Rename variables if requested
- (This section is duplicated in parmby
- and might possibly be removed in a future version to save space
- if parmest ceases to be supported as an independent program
- and is incorporated into parmby.
- Roger Newson 22 May 2002.)
+ (This section is duplicated in parmby.)
 *;
 if "`rename'"!="" {;
     local nrename:word count `rename';
@@ -820,11 +844,7 @@ if "`rename'"!="" {;
 
 *
  Format variables if requested
- (This section is duplicated in parmby
- and might possibly be removed in a future version to save space
- if parmest ceases to be supported as an independent program
- and is incorporated into parmby.
- Roger Newson 03 January 2003.)
+ (This section is duplicated in parmby.)
 *;
 if `"`format'"'!="" {;
     local vlcur "";
@@ -846,11 +866,7 @@ if `"`format'"'!="" {;
 
 *
  List variables if requested
- (This section is nearly duplicated in parmby
- and might possibly be removed in a future version to save space
- if parmest ceases to be supported as an independent program
- and is incorporated into parmby.
- Roger Newson 03 January 2003.)
+ (This section is nearly duplicated in parmby.)
 *;
 if `"`list'"'!="" {;
     list `list';
@@ -859,11 +875,7 @@ if `"`list'"'!="" {;
 
 *
  Save data set if requested
- (This section is duplicated in parmby
- and might possibly be removed in a future version to save space
- if parmest ceases to be supported as an independent program
- and is incorporated into parmby.
- Roger Newson 22 May 2002.)
+ (This section is duplicated in parmby.)
 *;
 if(`"`saving'"'!=""){;
     capture noisily save `saving';
@@ -889,21 +901,31 @@ if(`"`saving'"'!=""){;
 
 
 *
- Restore old data set if restore is set
- or if program fails when fast is unset
- (This section is duplicated in parmby
- and might possibly be removed in a future version to save space
- if parmest ceases to be supported as an independent program
- and is incorporated into parmby.
- Roger Newson 10 November 2002.)
+ Copy new frame to old frame if requested
 *;
-if "`fast'"=="" {;
-    if "`restore'"=="norestore" {;
-        restore,not;
-    };
-    else {;
-        restore;
-    };
+if "`restore'"=="norestore" {;
+  frame copy `tempframe' `oldframe', replace;
+};
+
+
+};
+*
+ End of frame block (NOT INDENTED)
+*;
+
+
+*
+ Rename temporary frame to frame name (if frame is specified)
+ and change current frame to frame name (if requested)
+*;
+if "`framename'"!="" {;
+  if "`framereplace'"=="replace" {;
+    cap frame drop `framename';
+  };
+  frame rename `tempframe' `framename';
+  if "`framechange'"!="" {;
+    frame change `framename';
+  };
 };
 
 
@@ -988,5 +1010,19 @@ while  `rowind' < `nrow' {;
         local namec : rownames(`tempmat');
         qui replace `rowname' = "`namec'" in `rowind';
 };
+
+end;
+
+prog def frameoption, rclass;
+version 16.0;
+*
+ Parse frame() option
+*;
+
+syntax name [, replace CHange ];
+
+return local change "`change'";
+return local replace "`replace'";
+return local namelist "`namelist'";
 
 end;

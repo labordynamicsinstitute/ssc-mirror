@@ -14,14 +14,14 @@ d "switchback" or "extra period" design (Jones and Kenward 1989). A
 d typical      use of ralloc is in a randomised controlled clinical
 d trial (RCT), and, in	    particular, in a multicentred trial
 d where balance in treatment allocations may be      desirable
-d within centre and other defined strata. This is version 3.7.5 of
+d within centre and other defined strata. This is version 3.7.6 of
 d the	   software, updated from the version published in STB-54.
 d A test data file is included	    in raltest6.dta. 
 d
 d Author: Philip Ryan, University of Adelaide
 d Support: email philip.ryan@@adelaide.edu.au
 d
-d Distribution-Date: 20110813
+d Distribution-Date: 20180128
 d
 f ralloc.ado
 f ralloc.sthlp

@@ -1,10 +1,9 @@
 {smcl}
-{* *! version 1.0  David Fisher  11may2017}{...}
-{vieweralsosee "admetan" "help admetan"}{...}
+{* *! version 3.3  David Fisher  25nov2020}{...}
+{vieweralsosee "metan" "help metan"}{...}
+{vieweralsosee "forestplot" "help forestplot"}{...}
 {vieweralsosee "ipdmetan" "help ipdmetan"}{...}
 {vieweralsosee "ipdover" "help ipdover"}{...}
-{vieweralsosee "forestplot" "help forestplot"}{...}
-{vieweralsosee "metan" "help metan"}{...}
 {viewerjumpto "Syntax" "admetani##syntax"}{...}
 {viewerjumpto "Description" "admetani##description"}{...}
 {viewerjumpto "Options" "admetani##options"}{...}
@@ -13,6 +12,12 @@
 
 {phang}
 {cmd:admetani} {hline 2} Immediate form of {bf:{help admetan}}
+
+{phang}
+{bf:{ul:NOTE:}}{ul: As of November 2020, this command is no longer maintained. Please use {cmd:metani} from the latest version of {bf:{help metan}} instead.}
+
+{phang}
+(The commands {bf:{help ipdmetan}} and {bf:{help ipdover}} continue to be maintained under the package name {bf:ipdmetan}, available from SSC.)
 
 
 {marker syntax}{...}
@@ -43,11 +48,14 @@ Using a previously-defined matrix:
 {synoptset 34 tabbed}{...}
 {synopthdr}
 {synoptline}
+{synopt :{bf:npts(}{it:{help numlist}}{bf:)}}specify participant numbers for each row of data (study){p_end}
+{synopt :{opt rown:ames}}use matrix {help matrix_rownames:{it:rownames}} to label studies in the table and forest plot{p_end}
+{synopt :{opt rowf:ullnames}}use matrix {help matmacfunc:{it:rowfullnames}} to label studies in the table and forest plot{p_end}
+{synopt :{opt rowe:q}}use matrix {help matrix_rownames:{it:roweqnames}} to label studies in the table and forest plot{p_end}
+{synopt :{opt rowt:itle(string)}}specify {help label:variable label} for studies in the table and forest plot{p_end}
+{synopt :{opt var:iances}}specify that variances are supplied instead of standard errors{p_end}
 {synopt :{it:{help admetan##options:admetan_options}}}any {bf:{help admetan}} options except {opt npts()}
 and others requiring a {it:varname}{p_end}
-{synopt :{bf:npts(}{it:{help numlist}}{bf:)}}specify participant numbers for each row of data (study){p_end}
-{synopt :{opt rown:ames}}use matrix rownames to label studies in the table and forest plot{p_end}
-{synopt :{opt rowt:itle(string)}}specify "variable label" for studies in the table and forest plot{p_end}
 {synoptline}
 
 
@@ -58,6 +66,8 @@ and others requiring a {it:varname}{p_end}
 {cmd:admetani} performs meta-analysis on figures supplied directly to the command,
 and is intended for situations where a quick calculation of the pooled effect of a small number of studies
 is desired, without the relevant data being entered into variables.
+It may also be useful for constructing a forest plot of estimates from a regression or from {bf:{help margins}},
+by passing to {cmd:admetani} a matrix derived from a coefficient vector and variance-covariance matrix.
 {cmd:admetani} is not a true immediate command (see {help immed}) since by default it leaves behind
 the same {help admetan##saved_results:new variables} as does {cmd:admetan} (although this may be suppressed with {opt nokeepvars}).
 However, the functionality is otherwise similar.
@@ -75,12 +85,18 @@ If two or three elements, participant numbers may be supplied in the form of a {
 {bf:npts(}{it:{help numlist}}{bf:)} specifies the number of participants associated with each study, for display in tables and forest plots.
 
 {phang}
-{opt rownames} extracts {help matrix_rownames:row names} from matrix {it:A} to form the study names (c.f. {opt study(varname)} in {bf:{help admetan}}).
-If row names are not set, the default names {bf:r1}, {bf:r2} etc. will be used.
+{opt rownames}, {opt rowfullnames}, {opt roweq} extract the row names, {it:fullname}s (defined as {it:roweqname}{bf::}{it:rowname})
+or equation names from matrix {it:A} to form the study names (c.f. {opt study(varname)} in {bf:{help admetan}}).
+In the absence of one of these options, or if row names are not set, the default names {bf:r1}, {bf:r2} etc. will be used.
 
 {phang}
 {opt rowtitle(string)} specifies a title for the study names extracted from matrix row names,
 equivalent to the {help label:variable label} of {opt study(varname)} in {bf:{help admetan}}.
+If not supplied, the default variable label "Matrix rowname" is used.
+
+{phang}
+{opt variances} specifies that the second of two columns supplied to {cmd:admetani} contains variances rather than standard errors.
+This may be useful if passing a matrix to {cmd:admetani} which was derived from a coefficient vector and variance-covariance matrix.
 
 
 {marker saved_results}{...}

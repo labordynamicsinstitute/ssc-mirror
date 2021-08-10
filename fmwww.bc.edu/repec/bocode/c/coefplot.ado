@@ -1,4 +1,4 @@
-*! version 1.8.0  14feb2017  Ben Jann
+*! version 1.8.4  17dec2020  Ben Jann
 
 program coefplot
     version 11
@@ -52,7 +52,18 @@ program _coefplot, rclass
             if (`i'>`N_plots') {    // get p#() from twoplotopts0
                 parse_get_popt_i `i', `macval(twplotopts0)' // returns twplotopts0, plotopts
                 if `"`macval(plotopts)'"'!="" {
-                    merge_plotopts, `macval(opts)' _opts0(`macval(plotopts)')
+                    merge_plotopts, `macval(plotopts)'  // to isolate the modelopts
+                    local popt_mopts_`i' `macval(modelopts2)'
+                    merge_plotopts, `macval(opts)' ///
+                        _opts0(`macval(modelopts2)' `plotopts' `_opts0' `options')
+                        // returns plotopts, modelopts2, options, _opts0
+                    local opts `macval(modelopts2)' `plotopts' `_opts0' `options' 
+                }
+            }
+            else {
+                if `"`macval(popt_mopts_`i')'"'!="" { // add modelopts from p#()
+                    merge_plotopts, `macval(opts)' _opts0(`macval(popt_mopts_`i')')
+                        // returns plotopts, modelopts2, options, _opts0
                     local opts `macval(modelopts2)' `plotopts' `_opts0' `options' 
                 }
             }
@@ -133,8 +144,8 @@ program _coefplot, rclass
     }
     forv i = 1/`N_plots' { // expand ciopts
         if `n_ci_`i''>0 {
-            parse_ciopts_nocilwincr `i', `ciopts_`i'' // returns nocilwincr_#
-            parse_ciopts `i' `n_ci_`i'' `ciopts_`i''
+            parse_ciopts_nocilwincr `i', `ciopts_`i'' `cirecast_`i'' // returns nocilwincr_#
+            parse_ciopts `i' `n_ci_`i'' `ciopts_`i'' `cirecast_`i''
         }
     }
     mata: coefplot_set_r(COEFPLOT_STRUCT) // returns r, N_ci, N_aux, mlbllen
@@ -251,10 +262,6 @@ program _coefplot, rclass
     }
     if `"`generate'"'!="" {
         preserve
-        if "`replace'"!="" {
-            capt label drop `generate'by 
-            capt label drop `generate'plot
-        }
         local returnvars
         local i 0
         foreach v in by plot at mlbl mlpos b V se t df pval {
@@ -315,7 +322,6 @@ program _coefplot, rclass
     mata: coefplot_put(COEFPLOT_STRUCT)
     mata: coefplot_apply_transform(COEFPLOT_STRUCT)
     qui compress `at' `df' `plot' `by' `eq' `grp' `mlpos' // not really needed
-
     // get labels
     set_by_and_plot_labels `plot' `by'
     if `"`plotlabels'"'!="" {
@@ -403,14 +409,18 @@ program _coefplot, rclass
         }
     }
     else if `atmode'==0 & `"`offsets'"'=="" & `N_plots'>1 {
-        if "`recycle'"=="" | `n_subgr'==1 {
-            qui replace `at' = `at' - 0.5 + `plot'/(`N_plots'+1)
-        }
-        else {
-            forv j=1/`n_subgr' {
-                qui replace `at' = `at' - 0.5 + ///
-                    (`plot'-`firstplot_`j''+1) / ///
-                    (`lastplot_`j''-`firstplot_`j''+2) if `by'==`j'
+        capt mata: coefplot_at_unique(COEFPLOT_STRUCT) // error if not true
+        if _rc==1 exit _rc
+        if _rc {
+            if "`recycle'"=="" | `n_subgr'==1 {
+                qui replace `at' = `at' - 0.5 + `plot'/(`N_plots'+1)
+            }
+            else {
+                forv j=1/`n_subgr' {
+                    qui replace `at' = `at' - 0.5 + ///
+                        (`plot'-`firstplot_`j''+1) / ///
+                        (`lastplot_`j''-`firstplot_`j''+2) if `by'==`j'
+                }
             }
         }
     }
@@ -421,6 +431,22 @@ program _coefplot, rclass
             if `"``opt'_`i''"'!="" {
                 mata: coefplot_inject_temvars("`opt'_`i'", `N_ci', `N_aux')
             }
+        }
+    }
+    
+    // handle string expressions in mlabel()
+    forv i=1/`N_plots' {
+        if `"`mlabel_`i''"'!="" {
+            if `"`mlabel_`i''"'=="mlabel(`mlbl')" continue
+            parse_mlabel_exp, `mlabel_`i'' // returns mlblexp
+            capt confirm variable `mlblexp'
+            if _rc==0 continue
+            capt replace `mlbl' = `mlblexp' if `plot'==`i'
+            if _rc {
+                di as err "invalid expression in mlabel()"
+                exit 198
+            }
+            local mlabel_`i' mlabel(`mlbl')
         }
     }
 
@@ -696,16 +722,19 @@ program parse_globalopts
         LEGend(passthru)            ///
         BYOPts(str asis)            ///
         Bname(passthru)             /// so that b() is not b1title()
-        /// twoway_options and global modelopts, subgropts, plotopts
         rename(passthru)            ///
         EQREName(passthru)          ///
         PCYCle(int 15)              ///
+        /// twoway options not captured by _get_gropts, gettwoway
+        play(passthru)              ///
+        XOVERHANGs                  ///
+        YOVERHANGs                  ///
         fxsize(passthru)            ///
         fysize(passthru)            ///
         *                           ///
         ]
     _get_gropts, graphopts(`options') gettwoway
-    local twopts `s(twowayopts)' `fxsize' `fysize'
+    local twopts `s(twowayopts)' `play' `xoverhangs' `yoverhangs' `fxsize' `fysize'
     local opts0 `bname' `macval(rename)' `macval(eqrename)' `s(graphopts)'
     if `"`sort'`sort2'"'!="" {
         parse_sort `sort2' // returns local sort
@@ -727,7 +756,7 @@ program parse_globalopts
     if `"`clinteract'"'=="" {
         local clinteract `"" # ""'
     }
-    parse_eqlabels `eqlabels'
+    parse_eqlabels "`noeqlabels'" `eqlabels'
         // returns eqlabels, eqashead, eqxlab
         // if eqashead=="": also eqgap, eqwrap, eqtrunc, eqbreak, eqopts
         // if eqashead!="": also hoff, hgap, hwrap, htrunc, hbreak, hopts
@@ -950,15 +979,21 @@ program parse_coeflabels
 end
 
 program parse_eqlabels
+    gettoken noeqlabels 0 : 0
+    mata: st_local("0", strltrim(st_local("0")))
     mata: coefplot_parsecomma("eqlabels", "0", "0")
     syntax [, LABels LABels2(str asis) ///
-        OFFset(real 0) ASHEADings noGap Gap2(real 1)   ///
+        OFFset(real 0) ASHEADings noGap Gap2(numlist max=1) ///
         Truncate(numlist integer max=1 >0)      ///
         Wrap(numlist integer max=1 >0) noBreak * ]
     if "`labels'"!="" & `"`labels2'"'=="" {
         local labels2 `"" # ""'
     }
     if "`gap'"!="" local gap2 0
+    else if "`gap2'"=="" {
+        if "`noeqlabels'"!="" local gap2 0
+        else                  local gap2 1
+    }
     if "`asheadings'"!="" {
         c_local hoff    `offset'
         c_local hgap    `gap2'
@@ -1214,6 +1249,7 @@ program _merge_plotopts
         citop                           ///
         CISmooths CISmooth(passthru)    ///
         CIOPts(passthru)                ///
+        CIREcast(passthru)              ///
         IFopt(passthru)                 ///
         Weightopt(passthru)             ///
         NOKEY key KEY2(passthru)        ///
@@ -1232,6 +1268,7 @@ program _merge_plotopts
         citop               ///
         cismooths cismooth  ///
         ciopts              ///
+        cirecast            ///
         ifopt               ///
         weightopt           ///
         nokey key key2
@@ -1245,7 +1282,7 @@ end
 program parse_plotopts
     syntax anything [,                      ///
         LABel(str asis)                     ///
-        offset(passthru)                    ///
+        offset(str asis)                    ///
         PSTYle(passthru)                    ///
         AXis(numlist integer max=1 >0 <10)  ///
         recast(str)                         ///
@@ -1255,6 +1292,7 @@ program parse_plotopts
         citop                               ///
         CISmooths CISmooth(str asis)        ///
         CIOPts(str asis)                    ///
+        CIREcast(str)                       ///
         IFopt(str asis)                     ///
         Weightopt(str asis)                 ///
         NOKEY key KEY2(str)                 ///
@@ -1268,8 +1306,13 @@ program parse_plotopts
     }
     if `"`mlabels'"'!="" local mlabel mlabel(@b)
     if `"`cismooths'"'!="" local cismooth cismooth
+    if `"`cirecast'"'!="" local cirecast recast(`cirecast')
     if `"`offset'"'!="" {
-        parse_offset, `offset'
+        capt parse_offset `offset'
+        if _rc {
+            di as err `"invalid offset(): `offset'"'
+            exit 198
+        }
     }
     if `"`ifopt'"'!="" local ifopt `" & (`ifopt')"'
     if `"`weightopt'"'!="" local weightopt `" [aw=`weightopt']"'
@@ -1312,6 +1355,7 @@ program parse_plotopts
         citop           ///
         cismooth        ///
         ciopts          ///
+        cirecast        ///
         ifopt           ///
         weightopt       ///
         key             ///
@@ -1321,7 +1365,9 @@ program parse_plotopts
 end
 
 program parse_offset
-    syntax [, offset(real 0) ]
+    local offset = `0'
+    local 0 `", offset(`offset')"'
+    syntax [, offset(numlist max=1) ]
     c_local offset `offset'
 end
 
@@ -1347,23 +1393,22 @@ program parse_models // input: "j k model \ model ..., opts"
         }
         if `"`model'`macval(opts)'"'!="" {          // skip last if empty
             local empty 0
-            local estexpand 0                       // expand wildcards?
-            if strpos(`"`model'"',"(")==0 {         // - not it "mat(...)"
-                if strpos(`"`model'"',"*") | strpos(`"`model'"',"?") {
-                    local estexpand 1
-                }
-            }
-            if `estexpand' {
-                qui estimates dir `model'
-                foreach model in `r(names)' {
-                    local ++i
-                    c_local model_`j'_`k'_`i' `"`model'`macval(opts)'"'
-                }
+            if strpos(`"`model'"',"(") {            // mat(...)
+                local ++i
+                c_local model_`j'_`k'_`i' `"`model'`macval(opts)'"'
             }
             else {
-                local ++i
                 if `"`model'"'=="" local model .
-                c_local model_`j'_`k'_`i' `"`model'`macval(opts)'"'
+                foreach ename of local model {
+                    if strpos(`"`ename'"',"*") | strpos(`"`ename'"',"?") {
+                        qui estimates dir `ename'
+                        local ename `"`r(names)'"'
+                    }
+                    foreach mm of local ename {
+                        local ++i
+                        c_local model_`j'_`k'_`i' `"`mm'`macval(opts)'"'
+                    }
+                }
             }
         }
     }
@@ -1623,12 +1668,15 @@ program parse_aux // remove spaces in aux()
 end
 
 program parse_citype
-    syntax [, logit NORMal ]
-    if "`logit'"!="" & "`normal'"!="" {
-        di as err "citype(): only one of logit and normal allowed"
+    local citypes logit probit atanh log
+    syntax [, `citypes' NORMal ]
+    local citype `logit' `probit' `atanh' `log' `normal'
+    if `: list sizeof citype'>1 {
+        di as err "citype(): only one of logit, probit, atanh, log, and normal allowed"
         exit 198
     }
-    c_local citype `logit'`normal'
+    local citype: list posof "`citype'" in citypes
+    c_local citype `citype'
 end
 
 program parse_cilevels
@@ -1833,6 +1881,11 @@ program parse_ciopts
     }
 end
 
+program parse_mlabel_exp
+    syntax [ , MLabel(str asis) ]
+    c_local mlblexp `"`mlabel'"'
+end
+
 program coeflbls
     args labels interact
     mata: coefplot_get_coefs(COEFPLOT_STRUCT)
@@ -1912,6 +1965,7 @@ end
 program set_by_and_plot_labels
     args plot by
     // plot
+    capt label drop `plot'
     qui levelsof `plot', local(levels)
     foreach l of local levels {
         mata: coefplot_get_plotlbl(COEFPLOT_STRUCT, `l') // returns plotlbl
@@ -1919,6 +1973,7 @@ program set_by_and_plot_labels
     }
     lab val `plot' `plot', nofix
     // by
+    capt label drop `by'
     qui levelsof `by', local(levels)
     foreach l of local levels {
         mata: coefplot_get_bylbl(COEFPLOT_STRUCT, `l') // returns bylbl
@@ -2097,7 +2152,7 @@ struct coefplot_struct scalar coefplot_struct_init()
 void coefplot_keepdrop(struct coefplot_struct scalar C)
 {
     real scalar         i, j, level, r, brow, bcol, row, col, emode, 
-                        firsteqonly, meqs, cilogit
+                        firsteqonly, meqs, citype
     real colvector      b, p, at, V, se, t, df, pval, mlpos
     real matrix         ci, aux, tmp
     string scalar       model, bname, cname, rename, attrans, attmp
@@ -2207,7 +2262,7 @@ void coefplot_keepdrop(struct coefplot_struct scalar C)
     if (st_local("ci")=="") {
         cnames = tokens(st_local("ciname"))
         levels = tokens(st_local("levels"))
-        cilogit = (st_local("citype")=="logit")
+        citype = strtoreal(st_local("citype"))
         for (j=1; j<=cols(levels); j++) {
             ci = ci, J(r, 2, .)
             if ((cname = strtrim(cnames[j]))!="") {
@@ -2253,15 +2308,29 @@ void coefplot_keepdrop(struct coefplot_struct scalar C)
                 level = 1 - (1 - strtoreal(levels[j])/100)/2
                 tmp = J(r, 1, .)
                 for (i=1; i<=r; i++) {
-                    tmp[i] = df[i]>=. ? invnormal(level) : 
+                    tmp[i] = df[i]>2e17 ? invnormal(level) : 
                         invttail(df[i], 1-level)
                 }
-                if (cilogit) {
+                if (citype==1) { // logit
                     tmp = tmp :* se :/ (b:* (1 :- b))
                     ci[|1,(j*2-1) \ .,(j*2)|] = 
                         invlogit((logit(b) :- tmp, logit(b) :+ tmp)) 
                 }
-                else {
+                else if (citype==2) { // probit
+                    tmp = tmp :* se :/ normalden(invnormal(b))
+                    ci[|1,(j*2-1) \ .,(j*2)|] = 
+                        normal((invnormal(b) :- tmp, invnormal(b) :+ tmp)) 
+                }
+                else if (citype==3) { // atanh
+                    tmp = tmp :* se :/ (1 :- b:^2) // missing if b in {-1,1}
+                    ci[|1,(j*2-1) \ .,(j*2)|] = 
+                        tanh((atanh(b) :- tmp, atanh(b) :+ tmp))
+                }
+                else if (citype==4) { // log
+                    tmp = tmp :* se :/ b
+                    ci[|1,(j*2-1) \ .,(j*2)|] = exp((ln(b) :- tmp, ln(b) :+ tmp)) 
+                }
+                else { // normal
                     ci[|1,(j*2-1) \ .,(j*2)|] = (b :- tmp:*se, b :+ tmp:*se)
                 }
             }
@@ -2617,9 +2686,11 @@ void coefplot_eform(real colvector b, real matrix ci, string colvector eq,
     for (i=1; i<=rows(eform); i++) {
         p = select(1::rows(match), strmatch(eq, eform[i,1]) :&
             strmatch(coef, eform[i,2]))
+        if (rows(p)==0) continue
         match[p] = J(rows(p), 1, 1)
     }
     p = select(1::rows(match), match)
+    if (rows(p)==0) return
     b[p] = exp(b[p])
     ci[p,] = exp(ci[p,.])
 }
@@ -2651,6 +2722,7 @@ void coefplot_rescale(real colvector b, real matrix ci, string colvector eq,
             for (j=1; j<=rows(names); j++) {
                 p = select(1::rows(match), strmatch(eq, names[j,1]) :&
                     strmatch(coef, names[j,2]) :& (match:==0))
+                if (rows(p)==0) continue
                 c[p]     = J(rows(p), 1, strtoreal(rescale[i,2]))
                 match[p] = J(rows(p), 1, 1)
             }
@@ -2680,6 +2752,7 @@ string colvector coefplot_collect_transforms(string colvector eq,
         for (j=1; j<=rows(names); j++) {
             p = select(1::rows(match), strmatch(eq, names[j,1]) :&
                 strmatch(coef, names[j,2]) :& (match:==0))
+            if (rows(p)==0) continue
             T[p]     = J(rows(p), 1, trans[i,2])
             match[p] = J(rows(p), 1, 1)
         }
@@ -3596,6 +3669,11 @@ void coefplot_put(struct coefplot_struct scalar C)
     st_store((1,C.r), vi, C.aux)
 }
 
+void coefplot_at_unique(struct coefplot_struct scalar C)
+{
+    assert(rows(uniqrows((C.by,C.at)))==C.r)
+}
+
 void coefplot_apply_transform(struct coefplot_struct scalar C)
 {
     real scalar      i, j, rc, x0, x1, mis
@@ -3715,7 +3793,7 @@ void coefplot_combine_ciopts()
     p = substr(opt, 2, strpos(opt,"(")-2)   // get # from "p#(...)"
     if (strtoreal(p)<.) {
         opt = substr(opt, 3+strlen(p), strlen(opt)-3-strlen(p)) // get contents
-        st_local("opt_"+p, st_local("opt_"+p) + " " + opt)        
+        st_local("opt_"+p, st_local("opt_"+p) + " " + opt)
     }
     else {
         st_local("options", st_local("options") + " " + opt)

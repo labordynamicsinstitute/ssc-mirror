@@ -11,11 +11,11 @@ d
 d KW: matrix
 d KW: data management
 d
-d Requires: Stata version 10.0
+d Requires: Stata version 16.0
 d
-d Distribution-Date: 20130930
+d Distribution-Date: 20200411
 d
-d Author: Roger Newson, National Heart and Lung Institute at Imperial College London
+d Author: Roger Newson, Imperial College London
 d Support: email r.newson@@imperial.ac.uk
 d
 f xsvmat.ado

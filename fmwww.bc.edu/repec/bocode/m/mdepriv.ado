@@ -1,4 +1,11 @@
-*! v2.0.0, 2014-03-14, Maria Noel Pi Alperin and Philippe Van Kerm, Synthetic indicators of multiple deprivation
+*! v2.2.0, 2020-01-22 Maria Noel Pi Alperin and Philippe Van Kerm, Synthetic indicators of multiple deprivation
+* v2.2.0, 2020-01-22 Maria Noel Pi Alperin and Philippe Van Kerm, Synthetic indicators of multiple deprivation
+* use -polychoric- instead of -tetrachoric- in all instances to allow aw
+* v2.1.0, 2019-11-15 Maria Noel Pi Alperin and Philippe Van Kerm, Synthetic indicators of multiple deprivation
+* fix rounding issue in estimation of rhoh (use midpoint in the largest gap to get round the problem).
+* update Stas Kolenikov website adress
+* thanks Aldo Benini for pointing this out!
+* v2.0.0, 2014-03-14, Maria Noel Pi Alperin and Philippe Van Kerm, Synthetic indicators of multiple deprivation
 * clean up, post on SSC
 * v1.1.0, 2009-02-04, Maria Noel Pi Alperin and Philippe Van Kerm, Synthetic indicators of multiple deprivation
 * correct and uncorrect bug which turned out not to be a bug. Drop the 'alternative' definitions.
@@ -172,7 +179,8 @@ pr def mdepriv , rclass sortpreserve
             loc corrcmd "correlate"
           }
           else if ("`tetrachoric'" != "" ) {
-            loc corrcmd "tetrachoric"
+            // loc corrcmd "tetrachoric"  --> use polychoric to allow aweights
+            loc corrcmd "polychoric"
           }          
           else if ("`polychoric'" != "" ) {
             loc corrcmd "polychoric"
@@ -185,7 +193,8 @@ pr def mdepriv , rclass sortpreserve
             qui su `values' if `touse', meanonly
             loc nval2 = r(sum)
             if (`nval1'<=2) & (`nval2'<=2) { 
-              loc corrcmd "tetrachoric"
+			  // loc corrcmd "tetrachoric"  --> use polychoric to allow aweights
+              loc corrcmd "polychoric"
             }  
             else if (`nval1'>10) & (`nval2'>10) {
               loc corrcmd "correlate"
@@ -213,8 +222,9 @@ pr def mdepriv , rclass sortpreserve
         mata: rhos = strtoreal(tokens(rhos)')
         mata: _sort(rhos,1)
         mata: step = rhos[(2..rows(rhos)),1] - rhos[(1..rows(rhos)-1),1] 
-        mata: rhoh = rhos[order(-step,1)[1,1]+1,1]
-        mata: st_local("rhoh",strofreal(rhoh))
+        // mata: rhoh = rhos[order(-step,1)[1,1]+1,1]
+		mata: rhoh = (rhos[order(-step,1):+1,1]+rhos[order(-step,1),1]) /2
+        mata: st_local("rhoh",strofreal(rhoh[1,1]))
       }
       else {
         loc rhoh = `rhos'
@@ -464,7 +474,7 @@ pr def _check_dependencies
     cap which polychoric 
     if (_rc>0) {
       di as text `"[1] Package {stata "findit polychoric":polychoric} by Stas Kolenikov is missing and required when using -method(bv)- (except if forcing -method(bv ,pearson)- or -method(bv, tetrachoric)-) "' _c
-      di as text `"[{stata "net install polychoric , replace from(http://web.missouri.edu/~kolenikovs/stata)":click to download and install}]"'
+      di as text `"[{stata "net install polychoric , replace from(http://staskolenikov.net/stata)":click to download and install}]"'
       loc stop 1
     }
     else  di as text "[1] Package {help polychoric} by Stas Kolenikov already installed."

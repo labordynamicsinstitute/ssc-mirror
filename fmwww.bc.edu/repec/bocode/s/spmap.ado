@@ -1,4 +1,6 @@
 *! -spmap-: Visualization of spatial data                                      
+*! Version 1.3.2 - 09 January 2018 - StataCorp edit for stroke align           
+*! Version 1.3.1 - 29 March 2017 - StataCorp edit to tempfile macros           
 *! Version 1.3.0 - 13 March 2017                                               
 *! Version 1.2.0 - 14 March 2008                                               
 *! Version 1.1.0 - 7 May 2007                                                  
@@ -35,6 +37,7 @@ syntax [varname(numeric default=none)] [if] [in] using/ ,   ///
        [MOColor(string asis)]                               ///
        [MOSize(string)]                                     ///
        [MOPattern(string asis)]                             ///
+       [MOAlign(string asis)]                               ///
                                                             ///
        [CLMethod(name)]                                     /// 1.3.0 Bug fix
        [CLNumber(numlist max=1 >=2)]                        ///
@@ -45,12 +48,14 @@ syntax [varname(numeric default=none)] [if] [in] using/ ,   ///
        [NDOcolor(string asis)]                              ///
        [NDSize(string asis)]                                ///
        [NDPattern(string asis)]                             /// 1.3.0
+       [NDAlign(string asis)]                               ///
        [NDLabel(string)]                                    ///
                                                             ///
        [FColor(string asis)]                                ///
        [OColor(string asis)]                                ///
        [OSize(string)]                                      ///
        [OPattern(string)]                                   /// 1.3.0
+       [OAlign(string)]                                     ///
                                                             ///
        [LEGENDA(string)]                                    ///
        [LEGTitle(string asis)]                              ///
@@ -271,11 +276,11 @@ if ("`area'" != "") {
       keep _ID `V'
       sort _ID
       tempfile CTG
-      save `CTG', replace
+      save `"`CTG'"', replace
       if ("`MAP'" == "using") {
          tempfile _ID
          keep _ID
-         save `_ID', replace
+         save `"`_ID'"', replace
       }
       use `"`using'"', clear
       cap drop _ID2
@@ -301,7 +306,7 @@ if ("`area'" != "") {
 		by _ID2 : replace `CY' = `CY'[_N] / (6 * `AREA')
 		replace `AREA' = abs(`AREA')
 		collapse `AREA' `CX' `CY', by(_ID _ID2)
-      merge _ID using `CTG'
+      merge _ID using `"`CTG'"'
       keep if _merge == 3
       sort _ID _ID2
       by _ID : replace `AREA' = sum(`AREA')
@@ -313,7 +318,7 @@ if ("`area'" != "") {
       gen `BETA' = sqrt(`AREA2' / `AREA')
       keep _ID2 `CX' `CY' `BETA'
       sort _ID2
-      save `CTG', replace
+      save `"`CTG'"', replace
       use `"`using'"', clear
       cap drop _ID2 _ID0
       gen _ID0 = _ID
@@ -323,7 +328,7 @@ if ("`area'" != "") {
          replace _ID2 = sum(_ID2)
       }
       sort _ID2, stable
-      merge _ID2 using `CTG'
+      merge _ID2 using `"`CTG'"'
       keep if _merge == 3
       cap drop __CTG_*
       gen __CTG_X = `CX' + (_X - `CX') * `BETA'
@@ -333,18 +338,18 @@ if ("`area'" != "") {
       ren __CTG_X _X
       ren __CTG_Y _Y
       sort _ID0 _ID, stable
-      save `CTG', replace
+      save `"`CTG'"', replace
       if (`"`map'"' != "") {
          use `"`map'"', clear
          if ("`MAP'" == "using") {
-            merge _ID using `_ID'
+            merge _ID using `"`_ID'"'
             keep if _merge == 3
          }
          ren _X __MAP_X
          ren _Y __MAP_Y
          keep __MAP_*
          tempfile BMAP
-         save `BMAP', replace
+         save `"`BMAP'"', replace
          su __MAP_X
          local MAP_XMIN = r(min)
          local MAP_XMAX = r(max)
@@ -519,6 +524,9 @@ if ("`area'" != "") & ("`map'" != "") {
    /* Set default background map outline pattern */
    if ("`mopattern'" == "") local mopattern "solid"
 
+   /* Set default background map outline alignment */
+   if ("`moalign'" == "") local moalign "center"
+
 /* End */
 }
 
@@ -543,6 +551,9 @@ if ("`varlist'" != "") {
 
    /* Set default outline pattern for empty polygons */
    if (`"`ndpattern'"' == "") local ndpattern "solid"
+
+   /* Set default outline alignment for empty polygons */
+   if (`"`ndalign'"' == "") local ndalign "center"
 
    /* Set default label for empty polygons */
    if (`"`ndlabel'"' == "") local ndlabel "No data"
@@ -577,6 +588,10 @@ if ("`osize'" == "") local osize "`osize_d' ..."
 /* Set default outline pattern */
 local opattern_d "solid"
 if ("`opattern'" == "") local opattern "`opattern_d' ..."
+
+/* Set default outline alignment */
+local oalign_d "center"
+if ("`oalign'" == "") local oalign "`oalign_d' ..."
 
 
 /* Set default legend */
@@ -981,6 +996,9 @@ if ("`area'" != "") & ("`map'" != "") {
    /* Parse option mopattern() */
    local mopattern : word 1 of `mopattern'
 
+   /* Parse option moalign() */
+   local moalign : word 1 of `moalign'
+
 /* End */
 }
 
@@ -996,6 +1014,9 @@ if ("`varlist'" != "") local ndsize : word 1 of `ndsize'
 
 /* Parse option ndpattern() */
 if ("`varlist'" != "") local ndpattern : word 1 of `ndpattern'
+
+/* Parse option ndalign() */
+if ("`varlist'" != "") local ndalign : word 1 of `ndalign'
 
 
 /* Parse option fcolor() */
@@ -1044,6 +1065,10 @@ local osize `"`s(pl)'"'
 spmap_psl, l(`opattern') m(`MAX') o({bf:{ul:op}attern()}) d(`opattern_d')
 local opattern `"`s(pl)'"'
 
+/* Parse option oalign() */
+spmap_psl, l(`oalign') m(`MAX') o({bf:{ul:oa}lign()}) d(`oalign_d')
+local oalign `"`s(pl)'"'
+
 
 
 
@@ -1065,11 +1090,11 @@ if ("`varlist'" == "") {
       keep _ID* _class
       if ("`area'" != "") sort _ID0 _ID
       else sort _ID
-      save `IDFILE'
-      if ("`area'" != "") use `CTG', clear
+      save `"`IDFILE'"'
+      if ("`area'" != "") use `"`CTG'"', clear
       else use `"`using'"', clear
-      if ("`area'" != "") merge _ID0 using `IDFILE'
-      else merge _ID using `IDFILE'
+      if ("`area'" != "") merge _ID0 using `"`IDFILE'"'
+      else merge _ID using `"`IDFILE'"'
       keep if _merge == 3
       drop _merge
    }
@@ -1084,11 +1109,11 @@ if ("`varlist'" != "") {
       keep _ID* _class
       if ("`area'" != "") sort _ID0 _ID
       else sort _ID
-      save `IDFILE'
-      if ("`area'" != "") use `CTG', clear
+      save `"`IDFILE'"'
+      if ("`area'" != "") use `"`CTG'"', clear
       else use `"`using'"', clear
-      if ("`area'" != "") merge _ID0 using `IDFILE'
-      else merge _ID using `IDFILE'
+      if ("`area'" != "") merge _ID0 using `"`IDFILE'"'
+      else merge _ID using `"`IDFILE'"'
       keep if _merge == 3
       drop _merge
       count if _class == 999
@@ -1234,15 +1259,19 @@ if (`"`POL_C'"' != "") & ("`polyfirst'" != "") {
 /* Base map */
 if ("`area'" != "") & (`"`map'"' != "") {
    cap drop _merge
-   qui merge using `BMAP'
+   qui merge using `"`BMAP'"'
   	local FC "`mfcolor'"
    local OC "`mocolor'"
    if ("`OC'" == "none") local OC "`FC'"
    local OS "`mosize'"
    local OP "`mopattern'"
+   local OA "`moalign'"
+   if c(stata_version) >= 15 {
+	local LA `"la("`OA'")"'
+   }
    local GRAPH `"`GRAPH'(area __MAP_Y __MAP_X, nodropbase cmissing(n)"'
   	local GRAPH `"`GRAPH' fc("`FC'") fi(100) lc("`OC'") lw("`OS'")"'
-  	local GRAPH `"`GRAPH' lp("`OP'")) "'
+  	local GRAPH `"`GRAPH' lp("`OP'") `LA') "'
 }
 local EMBPOL = 0
 cap confirm variable _EMBEDDED
@@ -1260,36 +1289,52 @@ if `EMBPOL' {
    if ("`OC'" == "none") local OC "`FC'"
    local OS "`ndsize'"
    local OP "`ndpattern'"
+   local OA "`ndalign'"
+   if c(stata_version) >= 15 {
+	local LA `"la("`OA'")"'
+   }
    local GRAPH `"`GRAPH'(area _Y _X if _class == 999 & _EMBEDDED == 0,"'
    local GRAPH `"`GRAPH' nodropbase cmissing(n) fc("`FC'") fi(100)"'
-   local GRAPH `"`GRAPH' lc("`OC'") lw("`OS'") lp("`OP'")) "'
+   local GRAPH `"`GRAPH' lc("`OC'") lw("`OS'") lp("`OP'") `LA') "'
    forval i = 1/`NC' {
       local FC : word `i' of `fcolor'
       local OC : word `i' of `ocolor'
       if ("`OC'" == "none") local OC "`FC'"
       local OS : word `i' of `osize'
       local OP : word `i' of `opattern'
+      local OA : word `i' of `oalign'
+      if c(stata_version) >= 15 {
+	local LA `"la("`OA'")"'
+      }
       local GRAPH `"`GRAPH'(area _Y _X if _class == `i' & _EMBEDDED == 0,"'
       local GRAPH `"`GRAPH' nodropbase cmissing(n) fc("`FC'") fi(100)"'
-      local GRAPH `"`GRAPH' lc("`OC'") lw("`OS'") lp("`OP'")) "'
+      local GRAPH `"`GRAPH' lc("`OC'") lw("`OS'") lp("`OP'") `LA') "'
    }
    local FC "`ndfcolor'"
    local OC "`ndocolor'"
    if ("`OC'" == "none") local OC "`FC'"
    local OS "`ndsize'"
    local OP "`ndpattern'"
+   local OA "`ndalign'"
+   if c(stata_version) >= 15 {
+	local LA `"la("`OA'")"'
+   }
    local GRAPH `"`GRAPH'(area _Y _X if _class == 999 & _EMBEDDED == 1,"'
    local GRAPH `"`GRAPH' nodropbase cmissing(n) fc("`FC'") fi(100)"'
-   local GRAPH `"`GRAPH' lc("`OC'") lw("`OS'") lp("`OP'")) "'
+   local GRAPH `"`GRAPH' lc("`OC'") lw("`OS'") lp("`OP'") `LA') "'
    forval i = 1/`NC' {
       local FC : word `i' of `fcolor'
       local OC : word `i' of `ocolor'
       if ("`OC'" == "none") local OC "`FC'"
       local OS : word `i' of `osize'
       local OP : word `i' of `opattern'
+      local OA : word `i' of `oalign'
+      if c(stata_version) >= 15 {
+	local LA `"la("`OA'")"'
+      }
       local GRAPH `"`GRAPH'(area _Y _X if _class == `i' & _EMBEDDED == 1,"'
       local GRAPH `"`GRAPH' nodropbase cmissing(n) fc("`FC'") fi(100)"'
-      local GRAPH `"`GRAPH' lc("`OC'") lw("`OS'") lp("`OP'")) "'
+      local GRAPH `"`GRAPH' lc("`OC'") lw("`OS'") lp("`OP'") `LA') "'
    }
 }
 else {
@@ -1298,18 +1343,26 @@ else {
    if ("`OC'" == "none") local OC "`FC'"
    local OS "`ndsize'"
    local OP "`ndpattern'"
+   local OA "`ndalign'"
+   if c(stata_version) >= 15 {
+	local LA `"la("`OA'")"'
+   }
    local GRAPH `"`GRAPH'(area _Y _X if _class == 999, nodropbase cmissing(n)"'
    local GRAPH `"`GRAPH' fc("`FC'") fi(100) lc("`OC'") lw("`OS'")"'
-   local GRAPH `"`GRAPH' lp("`OP'")) "'
+   local GRAPH `"`GRAPH' lp("`OP'") `LA') "'
    forval i = 1/`NC' {
       local FC : word `i' of `fcolor'
       local OC : word `i' of `ocolor'
       if ("`OC'" == "none") local OC "`FC'"
       local OS : word `i' of `osize'
       local OP : word `i' of `opattern'
+      local OA : word `i' of `oalign'
+      if c(stata_version) >= 15 {
+	local LA `"la("`OA'")"'
+      }
       local GRAPH `"`GRAPH'(area _Y _X if _class == `i', nodropbase"'
       local GRAPH `"`GRAPH' cmissing(n) fc("`FC'") fi(100) lc("`OC'")"'
-      local GRAPH `"`GRAPH' lw("`OS'") lp("`OP'")) "'
+      local GRAPH `"`GRAPH' lw("`OS'") lp("`OP'") `LA') "'
    }
 }
 

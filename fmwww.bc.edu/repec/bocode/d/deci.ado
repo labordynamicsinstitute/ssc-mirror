@@ -1,10 +1,10 @@
 /*---------------------------
-01Feb2010 - version 1.0
+22Dec2020 - version 2.0
 
 Variable Base conversion
 
-Author: Liu Wei, The School of Sociology and Population Studies, Renmin University of China
-E-mail: liuv@ruc.edu.cn
+Author: Liu Wei, Yunnan University of Finance and Economics
+E-mail: liuwei@ynufe.edu.cn
 ---------------------------*/
 cap prog drop deci
 prog define deci

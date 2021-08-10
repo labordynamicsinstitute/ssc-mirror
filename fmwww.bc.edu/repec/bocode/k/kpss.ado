@@ -1,4 +1,4 @@
-*! version 1.2.2     25jun2006     C F Baum
+*! version 1.2.3     13may2018     C F Baum
 *  from dfgls 1.2.0, 0405 and J.Barkoulas RATS procedure kpss.src
 *  mod to use gen, predict double
 *  0925: corr for missing initial obs (like dfgls)
@@ -6,6 +6,7 @@
 *  0A03: corr to use all available obs in autocorrel fn, validate vs N-P
 *  1717: mod Schwert to use 12 for monthly (or undef), 4 otherwise
 *  1.2.2: Stata 8 syntax, make byable(recall) and onepanel
+*  1.2.3: add additional returns
 
 program define kpss, rclass byable(recall)
 	version 8.2
@@ -169,7 +170,12 @@ program define kpss, rclass byable(recall)
 	}
 	return scalar N = `nobs'
 	return scalar kpss0 = `kpss0'
+	return scalar p01 = `p1'
+	return scalar p025 = `p2h'
+	return scalar p05 = `p5'
+	return scalar p10 = `p10'
 	if `maxlag'>0 {
+		return scalar maxlag = `maxlag'
 		local l 1
 		while `l'<=`maxlag' {
 		if `nt'>0 & `maxlag'==`l' | `nt'==0 {

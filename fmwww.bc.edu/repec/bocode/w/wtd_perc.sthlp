@@ -1,5 +1,5 @@
 {smcl}
-{* *! version 1.0  17mar2016}{...}
+{* *! version 1.0  January 9, 2018 @ 09:46:35}{...}
 {vieweralsosee "[R] ml" "help ml"}{...}
 {viewerjumpto "Syntax" "wtd_perc##syntax"}{...}
 {viewerjumpto "Description" "wtd_perc##description"}{...}
@@ -38,6 +38,9 @@ Inter-Arrival Distribution (IAD) (between 0 and 1)
 prevalent users{p_end}
 {synopt:{opt perc:format(string)}}Format for displaying percentile of
 IAD{p_end}
+{synopt:{opt start(date)}}Date where time window starts{p_end}
+{synopt:{opt end(date)}}Date where time window ends{p_end}
+{synopt:{opt delta(#)}}Length of time window{p_end}
 {synoptline}
 {p2colreset}{...}
 
@@ -94,6 +97,22 @@ estimated proportion of prevalent users in the sample. Defaults to
 {opt percformat} Numerical format to be used for displaying the
 estimated percentile of the IAD. Defaults to
 %4.3f, see help {help format}.
+
+{phang}
+{opt start} is a string such as "1Jan2014" which gives the start date
+of the observation window. Strings must conform to requirements for
+the date function {help td}(). When specified, an end date must also be
+given. Default time for start of time window is 0. When specified, an
+end date must also be given. 
+
+{phang}
+{opt end} is a string such as "31dec2014" which gives the end date
+of the observation window. Strings must conform to requirements for
+the date function {help td}(). When specified, a start date must also be
+given.
+
+{phang} {opt delta} specifies the length of the observation window. If
+specified, no start and end date can be stated. Default value is 1.
 
 {marker remarks}{...}
 {title:Remarks - Methods and Formulas}

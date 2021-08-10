@@ -1,4 +1,5 @@
 *! -spmap_polygon-: Auxiliary program for -spmap-                              
+*! Version 1.3.1 - 09 January 2018 - StataCorp edit for stroke align           
 *! Version 1.3.0 - 13 March 2017                                               
 *! Version 1.2.0 - 14 March 2008                                               
 *! Version 1.1.0 - 7 May 2007                                                  
@@ -33,6 +34,7 @@ syntax, [Data(string)]            ///
         [OColor(string asis)]     ///
         [OSize(string)]           ///
         [OPattern(string)]        /// 1.3.0
+        [OAlign(string)]          ///
                                   ///
         [LEGENDA(string)]         ///
         [LEGTitle(string asis)]   ///
@@ -182,6 +184,10 @@ if ("`osize'" == "") local osize "`osize_d' ..."
 local opattern_d "solid"
 if ("`opattern'" == "") local opattern "`opattern_d' ..."
 
+/* Set default outline alignment */
+local oalign_d "center"
+if ("`oalign'" == "") local oalign "`oalign_d' ..."
+
 /* Set default legend */
 if ("`legenda'" == "") local legenda "off"
 
@@ -287,6 +293,10 @@ local osize `"`s(pl)'"'
 spmap_psl, l(`opattern') m(`NG') o({bf:{ul:op}attern()}) d(`opattern_d')
 local opattern `"`s(pl)'"'
 
+/* Parse option oalign() */
+spmap_psl, l(`oalign') m(`NG') o({bf:{ul:op}attern()}) d(`oalign_d')
+local oalign `"`s(pl)'"'
+
 
 
 
@@ -301,9 +311,13 @@ forval i = 1/`NG' {
    if ("`OC'" == "none") local OC "`FC'"
 	local OS : word `i' of `osize'
    local OP : word `i' of `opattern'
+   local OA : word `i' of `oalign'
+   if c(stata_version) >= 15 {
+	local LA `"la("`OA'")"'
+   }
    local GRAPH `"`GRAPH'(area __POL_Y __POL_X if __POL_G == `i', nodropbase"'
    local GRAPH `"`GRAPH' cmissing(n) fc("`FC'") fi(100) lc("`OC'")"'
-   local GRAPH `"`GRAPH' lw("`OS'") lp("`OP'")) "'
+   local GRAPH `"`GRAPH' lw("`OS'") lp("`OP'") `LA') "'
 }
 
 

@@ -1,45 +1,52 @@
-d 'SIMARWILSON': module to perform Simar & Wilson efficiency analysis
+d 'SIMARWILSON': module to perform Simar & Wilson (2007) efficiency analysis
 d
-d   simarwilson implements the procedure proposed by Simar and
-d Wilson (J. Econometrics, 2007) for regression analysis of DEA
-d (data envelopment analysis) efficiency scores. Unlike naive
-d two-step approaches, the Simar and Wilson procedure accounts for
-d (i) DEA efficiency scores being bounded - depending on how
-d inefficiency is defined - from above or from below at the value
-d of one, and (ii) for DEA generating a complex and generally
-d unknown correlation pattern among estimated efficiency scores. In
-d technical terms a multi-step procedure is pursued that involves
-d (i) truncated regression analysis, (ii) simulating the unknown
-d error correlation, and (iii) calculating bootstrap standard
-d errors and CIs. One may interpret simarwilson as a procedure for
-d correcting the standard errors one gets from using truncreg for
-d regressing DEA scores on explanatory variables. DEA efficiency
-d scores that enter the model as dependent variable have to be
-d estimated prior to running simarwilson. The user-written commands
-d dea (Ji and Lee, 2010) and teradial, as well as the accompanying
-d commands teradialbc and nptestrts, (Badunenko and Mozharovskyi,
-d 2016) allow for this using stata. Primarily, algorithm #1 (Simar
-d and Wilson, 2007) is implemented by simarwilson. Yet, the command
-d also allows for applying (the double-bootstrap) algorithm #2
-d (Simar and Wilson, 2007) by choosing bias-corrected efficiency
-d estimates as dependent variable. The user-written command
-d teradialbc (Badunenko and Mozharovskyi, 2016) allows for
-d obtaining such estimates. With the (smoothed) heterogeneous
-d option specified, teradialbc approximates the procedure suggested
-d in Simar and Wilson (2007) to obtain bias-corrected efficiency
-d estimates, which is one step in algorithm #2. 
+d   simarwilson implements the procedures proposed by Simar and
+d Wilson (2007) for regression analysis of DEA (data envelopment
+d analysis) efficiency scores. Unlike naive two-step approaches,
+d the Simar and Wilson procedure accounts for (i) DEA efficiency
+d scores being bounded - depending on how inefficiency is defined -
+d from above or from below at the value of one, and (ii) for DEA
+d generating a complex and generally unknown correlation pattern
+d among estimated efficiency scores. In technical terms a
+d multi-step procedure is pursued that involves (i) estimation of a
+d radial measure of technical efficiency, (ii) truncated regression
+d analysis, (iii) simulating the unknown error correlation, and
+d (iv) calculating bootstrap standard errors and CIs. From a purely
+d technical perspective, one may interpret simarwilson as a
+d procedure for correcting the standard errors one gets from using
+d truncreg for regressing DEA scores on explanatory variables.
+d Simar and Wilson (2007) propose two algorithms (alg. #1 and alg.
+d #2) that differ in either using uncorrected (alg. #1) or
+d bias-corrected (alg. #2) efficiency scores. Both algorithms are
+d implemented. simarwilson allows for either using externally
+d estimated DEA scores (spec. depvar) or for internally conducting
+d the DEA (sepc. (outputs = inputs)). For the latter simarwilson
+d requires the user-written command teradial (Badunenko and
+d Mozharovskyi, 2016). Note that the procedure for bias correction
+d suggested in Simar & Wilson (2007) - though similar - deviates
+d from what is implemented in the user-written program teradialbc
+d (Badunenko and Mozharovskyi, 2016) and is closely linked to the
+d regression analysis on the second stage of the procedure. For
+d this reason, it is recommended not to use externally estimated
+d scores, if one wants to apply algorithm #2. 
 d
 d KW: efficiency analysis
 d KW: two-step approach
 d KW: data envelopment analysis
 d KW: truncated regression
 d
-d Requires: Stata version 12 and rtnorm from SSC (q.v.)
+d Requires: Stata version 12 and teradial (st0444) from SJ16:3 (q.v.)
 d
-d Distribution-Date: 20170413
+d Distribution-Date: 20210224
+d
+d Author: Oleg Badunenko, University of Portsmouth 
+d Support: email oleg.badunenko@@port.ac.uk
 d
 d Author: Harald Tauchmann, Friedrich-Alexander-Universität Erlangen-Nürnberg
 d Support: email harald.tauchmann@@fau.de
 d
 f simarwilson.ado
 f simarwilson.sthlp
+f ../f/ftruncreg.ado
+f ../f/ftruncreg_p.ado
+f ../f/ftruncreg.sthlp

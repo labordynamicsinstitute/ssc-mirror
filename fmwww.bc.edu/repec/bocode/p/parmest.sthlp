@@ -58,8 +58,10 @@ containing parameter names, estimates, standard errors, {it:z}-test or {it:t}-te
 {cmd:parmby} executes an {help est:estimation command} for each by-group specified by the by-variables,
 and then creates an output dataset with one observation for each estimated parameter
 in each by-group for which the command executed successfully, and all the variables in the {cmd:parmest}
-output dataset, together with the by-variables.  The output dataset created by {cmd:parmby} or {cmd:parmest}
-may be listed to the Stata log, or saved to a disk file, or written to the memory
+output dataset, together with the by-variables.
+The output dataset created by {cmd:parmby} or {cmd:parmest}
+may be listed to the Stata log, or saved to a  new data frame,
+or saved to a disk file, or written to the current data frame
 (overwriting any pre-existing dataset).
 
 
@@ -93,6 +95,7 @@ These output datasets (or resultssets) are described in detail in {help parmest_
 {synopthdr}
 {synoptline}
 {synopt:{opt li:st(list_spec)}}List output dataset to Stata log and/or Results window{p_end}
+{synopt:{cmdab:fra:me}{cmd:(}{it:framename}[,replace {cmdab:cha:nge}]{cmd:)}}Save output dataset to a data frame{p_end}
 {synopt:{cmdab:sa:ving}{cmd:(}{it:filename}[{cmd:,replace}]{cmd:)}}Save output dataset to a disk file{p_end}
 {synopt:{cmdab::no}{cmdab:re:store}}Write output dataset to memory{p_end}
 {synopt:{opt fast}}Write output dataset to memory without precautions{p_end}
@@ -284,7 +287,7 @@ overwriting any pre-existing dataset.
 {p 16 20}{inp:. svyset [pwei=pw1],clear}{p_end}
 {p 16 20}{inp:. parmby "svy :mean mpg weight price, over(foreign)", norestore ylabel ev(_N _N_subp) es(N)}{p_end}
 {p 16 20}{inp:. describe}{p_end}
-{p 16 20}{inp:. list eq ylabel parm ev_* es_* estimate min95 max95}{p_end}
+{p 16 20}{inp:. list ylabel parm ev_* es_* estimate min95 max95}{p_end}
 
 
 {pstd}
@@ -414,6 +417,9 @@ and also the following:
 {pstd}
 I would like to thank Nicholas J. Cox of Durham University, UK,
 for coining the word resultsset to describe an output dataset created by a Stata program such as {cmd:parmest}.
+I would also like to thank Jeremy Freese of Stanford University, CA, USA
+for writing the {help ssc:SSC} package {helpb frameappend},
+from which I have modified some code for use in {cmd:parmby} for appending frames.
 
 
 {title:Author}
@@ -469,5 +475,5 @@ Manual:  {findalias frestimate},{break}
 {help parmest_outdest_opts:{it:parmest_outdest_opts}}, {it:{help parmest_ci_opts}},
 {help parmest_varadd_opts:{it:parmest_varadd_opts}}, {help parmest_varmod_opts:{it:parmest_varmod_opts}},
 {help parmby_only_opts:{it:parmby_only_opts}}, {help parmest_resultssets:{it:parmest_resultssets}}
-{break}{helpb lincomest} if installed
+{break}{helpb lincomest}, {helpb frameappend} if installed
 {p_end}

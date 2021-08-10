@@ -1,0 +1,5 @@
+'WTDTTT': module to estimate parameters of the ordinary and reverse
+Waiting Time Distribution (WTD) by maximum likelihood. Covariates can
+be used to improve precision of predicted prescription durations.
+Diagnostic plots can be obtained to assess fit of the model.
+

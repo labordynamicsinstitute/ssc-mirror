@@ -1,15 +1,14 @@
 *pvwcalc is a subroutine called by pvw, which implements predictive value weighting, as proposed by Lyles and Lin, Stats in Med, 2010; 29: 2297-2309
-*version 1.0
+*version 1.1
 *Jonathan Bartlett
-*jwb133@googlemail.com
+*j.w.bartlett@bath.ac.uk
 
 *this program actually runs PVW
 capture program drop pvwcalc
 program define pvwcalc, eclass
 version 11.0
-syntax varlist(fv) [if/], casesens(real) casespec(real) contsens(real) contspec(real) z(varname) y(varname) [c(varlist fv)]
+syntax varlist(fv), casesens(real) casespec(real) contsens(real) contspec(real) z(varname) y(varname) [c(varlist fv)]
 preserve
-capture keep if `if'
 logistic `z' `varlist'
 predict piycstar, pr
 
@@ -41,7 +40,6 @@ local sampsize = e(N)/2
 
 restore
 gen included=1
-capture replace included=0 if !`if'
 summ included
 ereturn post B, obs(`sampsize') esample(included)
 

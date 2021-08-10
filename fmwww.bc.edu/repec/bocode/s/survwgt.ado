@@ -1,5 +1,8 @@
-*! survwgt 1.2.1 23apr2015 NJGW
+*! survwgt 1.2.4 06feb2018 NJGW
 *
+* 1.2.4	fixed -modify- option in (typical) case where by variable doesn't index -touse- categories 
+* 1.2.3   fixed variable labelling with modify not to add "(raked)" repeatedly
+* 1.2.2	added -modify- option to -rake- (and therefore -poststratify-) to allow adjustment for subset of observations
 * 1.2.1   fixed crash when path to hadfile includes spaces
 * 1.2.0	applied v1.1.0 changes to -nonresponse- routine
 * 1.1.0	added "all", "pw", "rw" variable specification option to -rake-
@@ -382,7 +385,8 @@ program define Rake
 	syntax anything(name=vspec id="variable specification") [if] [in] , /*
 		*/ 		BY(varlist min=1 max=8) Totvars(varlist numeric) /*
 		*/ 		[ ATol(real 1e-3) RTol(real 1e-5) MAXRep(integer 10) /*
-		*/ 		GENerate(string) stem(string) PREfix(string) replace check(int 1) noUPdate ]
+		*/ 		GENerate(string) stem(string) PREfix(string) replace modify /*
+		*/		check(int 1) noUPdate ]
 
 	local process=cond(`check',"raked","post-stratified")
 	local startnum 1
@@ -416,13 +420,13 @@ program define Rake
 	local ndim : word count `by'
 	local ntot : word count `totvars'
 
-	local ngen : word count `stem' `prefix' `replace'
+	local ngen : word count `stem' `prefix' `replace' `modify'
 	if "`generate'"!="" {
 		local ngen=`ngen'+1
 	}
 
 	if `ngen'!=1 {
-		di as error "{p}Must specify " cond(`ngen'==0,"","only ") "one of generate(), stem(), prefix(), replace"
+		di as error "{p}Must specify " cond(`ngen'==0,"","only ") "one of generate(), stem(), prefix(), replace, modify"
 		exit 198
 	}
 
@@ -446,8 +450,9 @@ program define Rake
 		qui gen double `Tot`i'' = .
 		local by`i' : word `i' of `by'			/* index for dimension i */
 		local tot`i' : word `i' of `totvars'		/* goal total for dim i*/
+		
 		if `check' {
-			capture bysort `by`i'' : assert `tot`i''==`tot`i''[1] if `touse'
+			capture bysort `touse' `by`i'' : assert `tot`i''==`tot`i''[1] if `touse'
 			if _rc {
 				di as error "Control total `tot`i'' not constant within categories of dimension `by`i''"
 				exit 198
@@ -497,16 +502,16 @@ program define Rake
 			local reps 0
 
 			while (`amax' > `atol') & (`rmax' > `rtol') & (`reps' < `maxrep') {
-				replace `pguess' = `guess'
-				replace `diff' = 0
-				replace `reld' = 0
+				replace `pguess' = `guess' if `touse'
+				replace `diff' = 0 if `touse'
+				replace `reld' = 0 if `touse'
 				forval i=1/`ndim' {
-					bysort `by`i'' : replace `Tot`i'' = sum(`guess')
-					bysort `by`i'' : replace `Tot`i'' = `Tot`i''[_N]
+					bysort `touse' `by`i'' : replace `Tot`i'' = sum(`guess') if `touse'
+					bysort `touse' `by`i'' : replace `Tot`i'' = `Tot`i''[_N] if `touse'
 
-					replace `guess' = `guess' * `tot`i'' / `Tot`i''
-					replace `diff' = max(`diff',abs(`Tot`i'' - `tot`i''))
-					replace `reld' = max(`reld',`diff'/`tot`i'')
+					replace `guess' = `guess' * `tot`i'' / `Tot`i'' if `touse'
+					replace `diff' = max(`diff',abs(`Tot`i'' - `tot`i'')) if `touse'
+					replace `reld' = max(`reld',`diff'/`tot`i'') if `touse'
 						/*	for each obs, diff will be the largest absolute difference
 							between a single control total and the new guess
 
@@ -516,9 +521,9 @@ program define Rake
 							over the relevant control total
 						*/
 				}
-				su `diff', meanonly
+				su `diff' if `touse', meanonly
 				local amax = r(max)
-				su `reld', meanonly
+				su `reld' if `touse', meanonly
 				local rmax = r(max)
 				local reps =`reps'+1
 			}
@@ -533,7 +538,7 @@ program define Rake
 			}
 
 			tempvar tempvar`j'
-			gen double `tempvar`j'' = `guess'		/* new variables, as tempvars */
+			gen double `tempvar`j'' = `guess' if `touse'		/* new variables, as tempvars */
 
 			if "`generate'" != "" {
 				local gvar : word `j' of `generate'
@@ -545,10 +550,10 @@ program define Rake
 			else if "`prefix'"!="" {
 				local gvar `prefix'`curvar'
 			}
-			else if "`replace'"!="" {
+			else if "`replace'"!="" | "`modify'"!="" {
 				local gvar `curvar'
 			}
-			if "`replace'"=="" {
+			if "`replace'"=="" & "`modify'"=="" {
 				confirm new variable `gvar'
 			}
 			local newlist "`newlist' `gvar'"		/* list of variables to create */
@@ -561,7 +566,20 @@ program define Rake
 			if "`replace'"!="" {
 				drop `new'
 			}
-			gen double `new' = `tempvar`j''
+			if "`modify'"=="" {
+				gen double `new' = `tempvar`j'' if `touse'
+			}
+			else {
+				// doing modify only on `touse' observations
+				// 'new' is not actually new
+				count if `tempvar`j''!=`new' & `touse'
+				//noi di "`r(N)' replacements:"
+				replace `new' = `tempvar`j'' if `touse'
+				noi di `"{txt}Modified {res}`new'{txt} for [{res}`if'`in'{txt}]; {res}`r(N)'{txt} real changes made"'
+			}
+			if "`modify'"=="modify" {
+				local vlab : subinstr local vlab " (`process')" "", all
+			}
 			la var `new' "`vlab' (`process')"
 		}
 		if "`update'"!="noupdate" & "`newpw'`newrw'"!="" {

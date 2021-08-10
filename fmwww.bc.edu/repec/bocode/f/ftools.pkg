@@ -22,12 +22,13 @@ d KW: Mata
 d
 d Requires: Stata version 11.2
 d
-d Distribution-Date: 20170722
+d Distribution-Date: 20191118
 d
-d Author: Sergio Correia, Duke University
-d Support: email sergio.correia@@duke.edu
+d Author: Sergio Correia, Board of Governors of the Federal Reserve System
+d Support: email sergio.correia@@gmail.com
 d
 f ftools.ado
+f ftools.mata
 f ftools.sthlp
 f fcollapse.ado
 f fcollapse.sthlp
@@ -43,11 +44,11 @@ f fmerge.sthlp
 f freshape.ado
 f fsort.ado
 f fsort.sthlp
+f ftab.ado
 f ../j/join.ado
 f ../j/join.sthlp
 f ../l/local_inlist.ado
 f ../l/local_inlist.sthlp
-f ftab.ado
 f fcollapse_functions.mata
 f fcollapse_main.mata
 f ftools_type_aliases.mata
@@ -55,7 +56,11 @@ f ftools.mata
 f ftools_common.mata
 f ftools_hash1.mata
 f ftools_main.mata
+f ftools_experimental.mata
+f ftools_plugin.mata
+f ftools_type_aliases.mata
 f ../m/ms_compile_mata.ado
+f ../m/ms_expand_varlist.ado
 f ../m/ms_fvstrip.ado
 f ../m/ms_fvstrip.sthlp
 f ../m/ms_fvunab.ado
@@ -63,3 +68,4 @@ f ../m/ms_get_version.ado
 f ../m/ms_parse_absvars.ado
 f ../m/ms_parse_varlist.ado
 f ../m/ms_parse_vce.ado
+f ../m/ms_add_comma.ado

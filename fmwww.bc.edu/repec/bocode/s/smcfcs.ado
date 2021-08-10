@@ -4,7 +4,7 @@
 capture program drop smcfcs
 program define smcfcs,eclass
 version 11.0
-syntax anything(name=smstring), [REGress(varlist)] [LOGIt(varlist)] [poisson(varlist)] [nbreg(varlist)] [mlogit(varlist)] [ologit(varlist)] [time(varname)] [enter(varname)] [failure(varname)] [ITERations(integer 10)] [m(integer 5)] [rjlimit(integer 1000)] [passive(string)] [eq(string)] [rseed(string)] [chainonly] [savetrace(string)] [NOIsily] [by(varlist)] [clear]
+syntax anything(name=smstring), [REGress(varlist)] [LOGIt(varlist)] [poisson(varlist)] [nbreg(varlist)] [mlogit(varlist)] [ologit(varlist)] [time(varname)] [enter(varname)] [failure(varname)] [ITERations(integer 10)] [m(integer 5)] [rjlimit(integer 1000)] [passive(string)] [eq(string)] [rseed(string)] [chainonly] [savetrace(string)] [NOIsily] [by(varlist)] [clear] [exposure(varname)]
 
 *check mi has not been set already
 quietly mi query
@@ -19,7 +19,6 @@ if "`r(style)'" != "" {
   }
 }
 
-
 if "`rseed'"!="" {
 	set seed `rseed'
 }
@@ -31,12 +30,12 @@ macro shift
 
 *check that outcome regression command is one of those supported
 if "`smcmd'"=="reg" {
-	local smcmd = regress
+	local smcmd = "regress"
 }
 if "`smcmd'"=="logit" {
-	local smcmd = logistic
+	local smcmd = "logistic"
 }
-if (inlist("`smcmd'","stcox","logistic","regress","compet")==0) {
+if (inlist("`smcmd'","stcox","logistic","regress","compet", "poisson")==0) {
 		display as error "Specified substantive model regression command (`smcmd') not supported by smcfcs"
 		exit 0
 }
@@ -112,6 +111,7 @@ foreach var in `smcov' {
 if `exit'==1 {
 	exit
 }
+
 
 local allCovariates `partiallyObserved' `fullyObserved'
 
@@ -440,6 +440,9 @@ else {
 			if "`smcmd'"=="compet" {
 				local outcomeModelCommand stcox `smcov'
 			}
+			else if ("`smcmd'"=="poisson") & ("`exposure'"!="") {
+				local outcomeModelCommand `smcmd' `smout' `smcov', exposure(`exposure')
+			}
 			else {
 				local outcomeModelCommand `smcmd' `smout' `smcov'
 			}
@@ -557,8 +560,6 @@ void outcomeImp(string scalar missingnessIndicatorVarName)
 	smcmd = st_local("smcmd")
 	smout = st_local("smout")
 	smcov = st_local("smcov")
-	st_view(r, ., missingnessIndicatorVarName)
-	st_view(outcomeVar, ., smout)
 
 	/*fit substantive model to those with outcome observed only, since this should speed up convergence */
 	outcomeModelCommand = smcmd + " " + smout + " " + smcov + " if " + missingnessIndicatorVarName + "==1"
@@ -583,8 +584,9 @@ void outcomeImp(string scalar missingnessIndicatorVarName)
 	}
 	
 	n = st_nobs()
+	st_view(r, ., missingnessIndicatorVarName)
 	imputationNeeded = select(transposeonly(1..n),J(n,1,1)-r)
-	
+	st_view(outcomeVar, ., smout)
 	if (outcomeModelCmd=="regress") {
 		outcomeVar[imputationNeeded] = rnormal(1,1,fittedMean[imputationNeeded],newsigmasq^0.5)
 	}
@@ -663,6 +665,7 @@ void covImp(string scalar missingnessIndicatorVarName)
 	smcmd = st_local("smcmd")
 	smout = st_local("smout")
 	smcov = st_local("smcov")
+	exposureTime = st_local("exposure")
 	if (smcmd=="compet") {
 		d = st_data(., st_local("failure"))
 		numFailures = max(d)
@@ -709,7 +712,12 @@ void covImp(string scalar missingnessIndicatorVarName)
 			}
 		}
 		else {
-			outcomeModelCommand = smcmd + " " + smout + " " + smcov
+			if ((smcmd=="poisson") & (exposureTime!="")) {
+				outcomeModelCommand = smcmd + " " + smout + " " + smcov + ", exposure(" + exposureTime + ")"
+			}
+			else {
+				outcomeModelCommand = smcmd + " " + smout + " " + smcov
+			}
 			stata(outcomeModelCommand)
 			postdraw()
 			y = st_data(., smout)
@@ -723,8 +731,8 @@ void covImp(string scalar missingnessIndicatorVarName)
 	
 	stata("predict smcoutmodxb, xb")
 	
-	st_view(xMis, ., st_local("var"))
-	st_view(outmodxb, ., "smcoutmodxb")
+	/*st_view(xMis, ., st_local("var"))
+	st_view(outmodxb, ., "smcoutmodxb")*/
 	
 	if (smcmd=="compet") {
 		outmodxbMat = J(n,numFailures,0)
@@ -739,7 +747,7 @@ void covImp(string scalar missingnessIndicatorVarName)
 		
 		outcomeDensCovDens = J(length(imputationNeeded),numberOutcomes,0)
 		for (xMisVal=1; xMisVal<=numberOutcomes; xMisVal++) {
-			
+			st_view(xMis, ., st_local("var"))
 			if (covariateModelCmd=="logistic") {
 				xMis[imputationNeeded] = J(length(imputationNeeded),1,xMisVal-1)
 			}
@@ -765,6 +773,7 @@ void covImp(string scalar missingnessIndicatorVarName)
 					stata("ereturn repost b=tempmat")
 					st_dropvar("smcoutmodxb")
 					stata("predict smcoutmodxb, xb")
+					st_view(outmodxb, ., "smcoutmodxb")
 					outmodxbMat[,i] = outmodxb[.,.]
 				}
 			
@@ -776,7 +785,8 @@ void covImp(string scalar missingnessIndicatorVarName)
 			else {
 				st_dropvar("smcoutmodxb")
 				stata("predict smcoutmodxb, xb")
-
+				st_view(outmodxb, ., "smcoutmodxb")
+				
 				if (smcmd=="regress") {
 					deviation = y[imputationNeeded] - outmodxb[imputationNeeded]
 					outcomeDens = normalden(deviation:/(outcomeModResVar^0.5))/(outcomeModResVar^0.5)
@@ -786,6 +796,9 @@ void covImp(string scalar missingnessIndicatorVarName)
 					ysub = y[imputationNeeded]
 					outcomeDens = prob :* ysub + (J(length(imputationNeeded),1,1) :- prob) :* (J(length(imputationNeeded),1,1) :- ysub)
 				}
+				else if (smcmd=="poisson") {
+					outcomeDens = poissonp(exp(outmodxb[imputationNeeded]),y[imputationNeeded])
+				}
 				else if (smcmd=="stcox") {
 					outcomeDens = exp(-H0[imputationNeeded] :* exp(outmodxb[imputationNeeded])) :* (exp(outmodxb[imputationNeeded]):^d[imputationNeeded])
 				}
@@ -794,7 +807,7 @@ void covImp(string scalar missingnessIndicatorVarName)
 		}
 		
 		directImpProbs = outcomeDensCovDens :/ rowsum(outcomeDensCovDens)
-		
+		st_view(xMis, ., st_local("var"))
 		if (covariateModelCmd=="logistic") {
 		
 			directImpProbs = directImpProbs[.,2]
@@ -830,6 +843,7 @@ void covImp(string scalar missingnessIndicatorVarName)
 		j=1
 		
 		while ((length(imputationNeeded)>0) & (j<rjLimit)) {
+			st_view(xMis, ., st_local("var"))
 			if (covariateModelCmd=="regress") {
 				xMis[imputationNeeded] = rnormal(1,1,fittedMean[imputationNeeded],newsigmasq^0.5)
 			}
@@ -869,6 +883,7 @@ void covImp(string scalar missingnessIndicatorVarName)
 			
 			st_dropvar("smcoutmodxb")
 			stata("predict smcoutmodxb, xb")
+			st_view(outmodxb, ., "smcoutmodxb")
 			
 			if (smcmd=="regress") {
 				deviation = y[imputationNeeded] - outmodxb[imputationNeeded]
@@ -878,6 +893,10 @@ void covImp(string scalar missingnessIndicatorVarName)
 				prob = invlogit(outmodxb[imputationNeeded])
 				ysub = y[imputationNeeded]
 				prob = prob :* ysub + (J(length(imputationNeeded),1,1) :- prob) :* (J(length(imputationNeeded),1,1) :- ysub)
+				reject = uDraw :> prob
+			}
+			else if (smcmd=="poisson") {
+				prob = poissonp(exp(outmodxb[imputationNeeded]),y[imputationNeeded])
 				reject = uDraw :> prob
 			}
 			else if (smcmd=="stcox") {
@@ -892,6 +911,7 @@ void covImp(string scalar missingnessIndicatorVarName)
 					stata("ereturn repost b=tempmat")
 					st_dropvar("smcoutmodxb")
 					stata("predict smcoutmodxb, xb")
+					st_view(outmodxb, ., "smcoutmodxb")
 					outmodxbMat[,i] = outmodxb[.,.]
 				}
 				s_t = exp(-H0Mat[imputationNeeded,1] :* exp(outmodxbMat[imputationNeeded,1]))
@@ -927,6 +947,8 @@ exit
 
 History of smcfcs
 
+08/02/2019  Fixed bug related to st_view in Mata that caused invalid results under Stata 15
+16/05/2018  Added functionality for Poisson substantive models, with optional exposure time
 28/05/2015  Added functionality for competing risks substantive models, with Cox model for each competing risk
 20/05/2015  Changed savetrace behaviour so that it saved estimates of substantive model parameters, rather than
 			means and SDs of imputed variables.

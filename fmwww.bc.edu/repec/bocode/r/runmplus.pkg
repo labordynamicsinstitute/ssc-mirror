@@ -26,15 +26,21 @@ d Support: email richard_jones@@brown.edu
 d
 f runmplus.ado
 f runmplus.sthlp
+f ../e/eme.ado
 f ../l/lli.ado
 f ../l/lli.sthlp
 f read_convergence.ado
 f read_convergence.sthlp
+f read_differencetest.ado
+f read_differencetest.sthlp
+f read_parameterestimates_indirect.ado
+f read_parameterestimates_indirect.sthlp
 f read_parameterestimates_general.ado
 f read_parameterestimates_general.sthlp
 f read_parameterestimates.ado
 f read_parameterestimates.sthlp
 f read_residual_variance.ado
+f read_residual_variance.sthlp
 f runmplus_fits.ado
 f runmplus_fits.sthlp
 f runmplus_load_savedata.ado

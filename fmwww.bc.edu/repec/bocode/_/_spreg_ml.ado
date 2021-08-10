@@ -36,7 +36,7 @@ program define _spreg_ml, eclass sortpreserve
 	if "`iterate'" == "" local iterate = c(maxiter)
 	if "`technique'" == "" local technique = "nr"
 	
-	marksample touse, novarlist
+	marksample touse, //!!novarlist
 	
 	preserve
 	qui keep if `touse'
@@ -176,7 +176,7 @@ program define ObjCheck
 		x(string) 		///
 		o2(string) 		///
 		]
-	
+
 	capture mata: SPMAT_assert_object("`objname'")
 	if _rc {
 		di "{inp}`objname' {err}is not a valid {help spmat} object"
@@ -424,7 +424,6 @@ program define GetNames, rclass
 		local lbl `lbl' `varlist':`v'
 	}
 	if "`constant'"=="" local lbl `lbl' `varlist':_cons
-	
 	
 	if `case'==2 local lbl `lbl' lambda:_cons sigma2:_cons
 	if `case'==3 local lbl `lbl' rho:_cons sigma2:_cons

@@ -1,4 +1,5 @@
-*!*** version 1.9_2 17mar2017
+*!*** version 1.11.2 06012019
+
 ** L256 over(var) conditionn dans average 23/03
 ** L260 correction display average long_over: line 260 is now ignored and even deleted (29/05/15)  -- 16 apr 2015
 ** L 305 511 512 1443 proper dealing of missing values -- 23 apr 2015 and 29 may 2015
@@ -32,6 +33,14 @@
 *L254 Correction option fast not working with PV+over+test 21 fev 2017
 *PISA 2015 parameters and identifying PISA2015 based on weights mar 2017
 
+** added flags for TALIS in Line 742, 762; adding groupflag_name in TALIS options (L989-990) -- 02/10/2018
+** added coverage option to report "coverage" of estimation sample -- 02/10/2018
+** modified flagging rule for freq: check only denominator -- 02/10/2018
+** corrected bug with coverage when tests are requested
+** corrected flagging rule (minimum cases) for TALISSSCH - 29/1/2019
+** coverage option with tests made compatible with earlier versions of stata.
+**inclusion of TALIS3S - 18/4/2019
+*condition on weights being not missing (FLAG) l 794-5
 
 global regressions_command="cnsreg etregress glm intreg nl regress tobit truncreg" ///
 	+" sem  stcox  streg biprobit cloglog  hetprobit logistic logit   probit scobit"  /// 
@@ -54,7 +63,7 @@ program define repest, eclass
 	local 0 `"`leftbis' `right'"'
  	
  	syntax   name(name=svyname id="data name") [if] [in] ,  ESTimate(string) [ by(string) ///
-		over(string) outfile(string) debug(string) results(string) flag display SVYparms(string) betalog(string) fast store(string)]  
+		over(string) outfile(string) debug(string) results(string) flag display SVYparms(string) betalog(string) fast store(string) coverage pisacoverage]  
 		
 // ----------------------Parsing of parameters and definition of local variables
 // -------------------------------------------------commmon to the whole program
@@ -68,9 +77,9 @@ program define repest, eclass
 			qui gen `mygroup`i''=.
 			}
 		}
-	repest_parser  `svyname' `if' `in'  , list_mygroup(`list_mygroup') estimate(`estimate') by(`by') over(`over') outfile(`outfile')   `display'  ifarobas(`list_with_arobas')  svyparms(`svyparms') `fast' store(`store')
+	repest_parser  `svyname' `if' `in'  , list_mygroup(`list_mygroup') estimate(`estimate') by(`by') over(`over') outfile(`outfile')   `display'  ifarobas(`list_with_arobas')  svyparms(`svyparms') `fast' store(`store') `coverage' `flag' `pisacoverage'
 	foreach local_var in pvalue long_over command_type list_weight over_first over_last  rep_weight_name	final_weight_name  	varlist_to_keep  list_weight  overlevels by_levels by_var variancefactor  ///
-			 NBpv pv_here average_levels by_var over_test over_var	type_out display filename command_options  command 	NREP pvvarlist over_var_test store {
+			 NBpv pv_here average_levels by_var over_test over_var	type_out display filename command_options  command 	NREP pvvarlist over_var_test store coverage dcoverage flag {
 		local `local_var' `"`r(`local_var')'"'
 		}
 		if `=wordcount("`over_var_test'")'>1 {
@@ -204,10 +213,20 @@ local firstover = 1
 			else local list_weight2 = "`list_weight'"
 			foreach current_weight in `list_weight2' {
 				ereturn clear
-									//n_commands compute themselves flags
-				if "`current_weight'"=="`final_weight_name'" & ("`ip'"=="" | "`ip'"=="1") & "`flag'"!="" & "`command_type'"=="special" & "`command_options_loop'"!="" local flag_loop="flag"
-				else if "`current_weight'"=="`final_weight_name'" & ("`ip'"=="" | "`ip'"=="1") & "`flag'"!="" & "`command_type'"=="special" & "`command_options_loop'"=="" local flag_loop=", flag"
-				else local flag_loop=""
+									//n_commands compute themselves flags and coverage
+						local flag_loop=""
+						if "`command_type'"=="special"  {
+							if "`command_options_loop'"!="" {
+								if "`current_weight'"=="`final_weight_name'" & ("`ip'"=="" | "`ip'"=="1") & "`flag'"!="" {
+									local flag_loop="flag"
+									}
+								}
+							else {
+								if "`current_weight'"=="`final_weight_name'" & ("`ip'"=="" | "`ip'"=="1") & "`flag'"!="" {
+									local flag_loop=", flag"
+									}
+								} 
+							}
   				  cap qui    `command_loop'   `in' [aw = `current_weight'] `command_options_loop' `flag_loop' //Core of the program
 				if _rc==101 {
    				 cap qui `command_loop'  `in' [pw = `current_weight'] `command_options_loop' `flag_loop' //Core of the program
@@ -221,7 +240,7 @@ local firstover = 1
 									// dummies in regressions.
 					if "`current_weight'"=="`final_weight_name'" & ("`ip'"=="" | "`ip'"=="1") & "`flag'"!="" local flag_loop="flag"
 					else local flag_loop=""
- 					repest_read_flag_results , beta(`beta`ip'') bvar(`bvar`ip'') results(`results_loop') ip("`ip'") pv_here(`pv_here')  current_weight(`current_weight') rep_weight_name(`rep_weight_name') final_weight_name(`final_weight_name')  `flag_loop' pvvarlist(`pvvarlist') 
+ 					repest_read_flag_results , beta(`beta`ip'') bvar(`bvar`ip'') results(`results_loop') ip("`ip'") pv_here(`pv_here')  current_weight(`current_weight') rep_weight_name(`rep_weight_name') final_weight_name(`final_weight_name')  `flag_loop' pvvarlist(`pvvarlist') `coverage'
 					if "`current_weight'"!="`final_weight_name'" matrix `bvar`ip'' = r(bvar_post)
 					else if "`current_weight'"=="`final_weight_name'" {
 						if "`colnames'"=="" local colnames "`r(colnames)'"
@@ -253,9 +272,9 @@ local firstover = 1
 			if "`over_test'"=="test" | "`over_test'"=="-test" {
 				if "`error_test'"!="1" & ( "`over_level'"=="`over_first'" | "`over_level'"=="`over_last'") {
 					if "`fast'"=="fast" {
-						matrix `bvar`ip''=`bvar1'
+						 if "`ip'"!="" matrix `bvar`ip''=`bvar1'
 						}
-					repest_create_diff,overlevel(`over_level') overfirst(`over_first') overlast(`over_last') beta(`beta`ip'') bvar(`bvar`ip'') beta_diff(`beta_d`ip'') bvar_diff(`bvar_d`ip'') flag_d(`flag_bylevel_d')  flag(`flag_bylevel') test(`over_test') 
+					repest_create_diff,overlevel(`over_level') overfirst(`over_first') overlast(`over_last') beta(`beta`ip'') bvar(`bvar`ip'') beta_diff(`beta_d`ip'') bvar_diff(`bvar_d`ip'') flag_d(`flag_bylevel_d')  flag(`flag_bylevel') test(`over_test') `dcoverage'
 					matrix `bvar_d`ip''= r(bvar_return)
 					matrix `beta_d`ip''= r(beta_return)
  					if "`flag'"!="" matrix `flag_bylevel_d'= r(flags)
@@ -458,6 +477,7 @@ if "`average_levels'"!="" {
 
 					}
  		qui save "`filename'", replace
+		if "`pisacoverage'" != "" qui repest_pisacoverage , outfile(`filename')
  		
 	}
 
@@ -610,7 +630,7 @@ end
 
 cap program drop repest_create_diff
 program define repest_create_diff,rclass
-syntax, overlevel(string) overfirst(string) overlast(string) beta(string) bvar(string) beta_diff(string) bvar_diff(string) test(string) [flag(string) flag_d(string)]
+syntax, overlevel(string) overfirst(string) overlast(string) beta(string) bvar(string) beta_diff(string) bvar_diff(string) test(string) [flag(string) flag_d(string) coverage]
 	tempname bvar_return beta_return flags
 		if "`test'" == "test" local t = 1
 		else if "`test'" == "-test" local t = -1
@@ -620,8 +640,48 @@ syntax, overlevel(string) overfirst(string) overlast(string) beta(string) bvar(s
 					if "`flag'"!="" matrix `flags'=`flag'
 					}
 				if "`overlevel'"== "`overlast'" {
-					matrix `bvar_return'=  `bvar_diff'+`t'*`bvar'
-					matrix `beta_return'= `beta_diff'+`t'*`beta'
+					if "`coverage'" == "" {
+						matrix `bvar_return'=  `bvar_diff'+`t'*`bvar'
+						matrix `beta_return'= `beta_diff'+`t'*`beta'
+						}
+					else if "`coverage'" == "coverage" {
+						*** make sure coverage of difference is not difference in coverage ****
+							local names: colnames `beta', quoted
+							local ncols=colsof(`beta')
+							tokenize `"`names'"' 
+							local dlist ""
+							local xlist ""
+							forval coeff = 1/`ncols' {
+								if regexm("``coeff''","e_coverage") | regexm("``coeff''","^x_") | regexm("``coeff''","_x$") local xlist "`xlist' `coeff'"
+								else local dlist "`dlist' `coeff'"
+								}
+							foreach x in `xlist' {
+*								matrix `beta_diff'[1,`x'] = . 
+								}
+						matrix `bvar_return'=  `bvar_diff'+`t'*`bvar'
+						matrix `beta_return'= `beta_diff'+`t'*`beta'	
+							foreach x in `xlist' {
+								tempname x1 x2 xmin`x'
+								scalar `x1' = `beta_diff'[1,`x']
+								scalar `x2' = `beta'[1,`x']
+								if abs(`x1') < abs(`x2') scalar `xmin`x'' = 1
+								else scalar `xmin`x'' = 2
+								if `xmin`x'' == 1 {
+									matrix `beta_return'[1,`x']= abs(`x1')
+									local reps = rowsof(`bvar_return')
+									forval i = 1/`reps' {
+										matrix `bvar_return'[`i',`x']= `bvar_diff'[`i',`x']					
+										}
+								}	
+								else if `xmin`x'' == 2 {
+									matrix `beta_return'[1,`x']= abs(`x2')					
+									local reps = rowsof(`bvar_return')
+									forval i = 1/`reps' {
+										matrix `bvar_return'[`i',`x']= `bvar'[`i',`x']					
+										}
+									}
+							}
+						}
 					if "`flag'"!="" matrix `flags'=`flag'+`flag_d'
 					}	
 				return matrix bvar_return=`bvar_return'	
@@ -632,11 +692,12 @@ syntax, overlevel(string) overfirst(string) overlast(string) beta(string) bvar(s
 	
 cap program drop repest_read_flag_results
  program define repest_read_flag_results ,rclass
- syntax, current_weight(string) rep_weight_name(string) final_weight_name(string) beta(string) bvar(string)  [ results(string) ip(string) pv_here(string) flag pvvarlist(string) ]
+ syntax, current_weight(string) rep_weight_name(string) final_weight_name(string) beta(string) bvar(string)  [ results(string) ip(string) pv_here(string) flag pvvarlist(string) coverage]
 	tempname bvar_post	beta_post flags stats
 		local error_everywhere_level="no"
 		local results_pv : subinstr local results "@"  "`ip'", all
-		repest_getresults, est_list(b) `results_pv' //format the previous ereturn
+		if "`coverage'" != "" local coverage "coverage(`current_weight')"
+		repest_getresults, est_list(b) `results_pv' `coverage' //format the previous ereturn
 		local combine "`r(combine)'"
 		local raw_statlab_list "`r(statlab_list)'"
 		local colnames "`r(statlab_list)'"
@@ -685,11 +746,11 @@ cap program drop repest_read_flag_results
  			}
 			
  		if "`combine'" != "" & "`flag'"!="" {
- 			tokenize "`combine'", parse(",")
+ 			tokenize "`combine'", parse(";")
 			local current 1
 			
 			while "``current''" != "" {
-				if "``current''" != "," {
+				if "``current''" != ";" {
 					gettoken name `current' : `current',  parse(":")
 					local name = strltrim(strrtrim("`name'"))
 					gettoken equals myexp : `current',  parse(":")
@@ -727,9 +788,11 @@ end
 cap program drop repest_flags
 program define repest_flags,rclass
 	syntax [varlist(default=none fv)]  [if] [in] [pweight aweight]  ,    [mingroups(integer 5) minind(integer 30) binarytest] 
+	if "${svyname}"=="TALISTCH" | "${svyname}"=="STAFF_TALISEC" | "${svyname}"=="TALISEC_LEADER" local mingroups = 10
+	if "${svyname}"=="TALISSCH" | "${svyname}"=="LEADER_TALISEC" | "${svyname}"=="TALISEC_LEADER" local minind = 10
   	if "`varlist'"!="" {
-		if "`if'"!="" local if="`if' & missing(`varlist')==0"
-		if "`if'"=="" local if="if missing(`varlist')==0"
+		if "`if'"!="" local if="`if' & missing(`varlist')==0 & missing(`=substr("`exp'",2,.)')==0"
+		if "`if'"=="" local if="if missing(`varlist')==0 & missing(`=substr("`exp'",2,.)')==0"
 		}
 	if  "`binarytest'"!="" & "`varlist'"!="" {
 		qui su `varlist' `if'
@@ -738,7 +801,7 @@ program define repest_flags,rclass
 		capture assert inlist(`varlist',`min_value',`max_value') `if'
 		local isbinary= (_rc==0)
 		}
-	if "${svyname}"=="PISA" | "${svyname}"=="PISA2015" {	
+	if "${svyname}"=="PISA" | "${svyname}"=="PISA2015" | "${svyname}"=="TALISTCH" | "${svyname}"=="IELS"  | "${svyname}"=="STAFF_TALISEC" | "${svyname}"=="TALISEC_LEADER" {	
 		if "`binarytest'"!="" & "`isbinary'"=="1" & "`varlist'"!="" {
 			qui count  `if' & `varlist'==`min_value'
 			local nobs0 = r(N)
@@ -758,7 +821,7 @@ program define repest_flags,rclass
 			return local flag = (`nobs' < `minind' | `ngrp' < `mingroups'  )
 			}
 		}	
-	if "${svyname}"=="PIAAC" {			
+	if "${svyname}"=="PIAAC" | "${svyname}"=="TALISSCH" | "${svyname}"=="PISAOOS" | "${svyname}"=="LEADER_TALISEC" | "${svyname}"=="TALISEC_LEADER" {			
 		if "`binarytest'"!="" & "`isbinary'"=="1" & "`varlist'"!="" {
 			qui count  `if' & `varlist'==`min_value'
 			local nobs0 = r(N)
@@ -869,8 +932,8 @@ program define repest_post_memhold_bylevel
 	if "`flag'"!=""{
 		forval i = 1/`nc' {
 			if `flag'[1,`i'] {
-				matrix `beta'[1,`i']==.f
-				matrix `se'[1,`i']==.f
+				if !missing(`beta'[1,`i']) matrix `beta'[1,`i']==.f
+				if !missing(`se'[1,`i']) matrix `se'[1,`i']==.f
 				}
 				
 			}
@@ -907,8 +970,10 @@ program define repest_post_memhold_bylevel
 cap program drop repest_parser
 program define repest_parser, rclass
 	syntax   name(name=svyname id="data name") [if] [in] [ , list_mygroup(namelist)  estimate(string) by(string) ///
-	over(string) outfile(string)  display  ifarobas(string) svyparms(string) fast store(string)]
+	over(string) outfile(string)  display  ifarobas(string) svyparms(string) fast store(string) coverage flag pisacoverage]
 	*estimate
+	if "`pisacoverage'" != "" local coverage "coverage"
+	if regexm("`over'","test") local dcoverage "coverage" // coverage always needed if over, test
 	forv i=1/10 {
 		local mygroup`i'=word("`list_mygroup'",`i')
 		}
@@ -922,6 +987,20 @@ program define repest_parser, rclass
 	gettoken command  command_options :  estimate , parse( ",")
 		local command  "repest_`command'"
  		local command_type="special"
+		if "`coverage'" != "" {	// for n_cmds, coverage is a command option
+			if "`command_options'"!="" {
+				local command_options "`command_options' `coverage'" 
+				}
+			else  {
+				local command_options ",  `coverage'"
+				}
+			local coverage "" // blank out overall coverage option
+			}
+		if regexm("`command'","repest_quantiletable") & regexm("`command_options'","( relr)|( odds)|( su)|( reg)") & "`flag'" != ""{
+				di as err `"Warning: option "flag" has been suppressed!"'
+				di as err `"         flags only work with quantiletable without options RELRisk ODDSratio SUmmarize REGress "'
+				local flag ""
+				}
 		}	
 	else {
 		error 198
@@ -953,7 +1032,7 @@ program define repest_parser, rclass
 	if regexm("`by_options '","levels\(([^\)]*)")   local by_levels=regexs(1)
 	if regexm("`by_options '","average\(([^\)]*)")   local average_levels=regexs(1)
  	local pv_here=regexm("`estimate' `ifarobas' `over_var'","@")
- 	*we define here also PISA, PIAAC, TALIS, ALL and IALS parameters
+ 	*we define here also PISA, PIAAC, TALIS, ALL and IALS parameters ** version 1.11.1:  PISAOOS and IELS added
 		*NBpv tells how many turns the main loop has. it's only one loop when there are no variable with plausible values
 		if "${svyname}"=="PISA" {
 			tempname confirm_min confirm_maj
@@ -984,6 +1063,8 @@ program define repest_parser, rclass
 			local rep_weight_name="trwgt"	
 			local variancefactor=1/25
 			local NREP = 100
+			local groupflag_name="idschool"
+			local keepsvy "cntry idschool"
 			}
 			
 		else if "${svyname}"=="PISA2015" {
@@ -1017,6 +1098,39 @@ program define repest_parser, rclass
 			local rep_weight_name="REPLIC"	
 			local variancefactor = 1 
 			local NREP = 30
+			}
+		else if "${svyname}"=="IELS"  {
+			local NBpv=5*(`pv_here'==1)+1*(`pv_here'==0)
+			local final_weight_name="CHILDWGT"
+			local rep_weight_name="SRWGT"	
+			local variancefactor = 1/23
+			local NREP = 92
+			local groupflag_name="IDCENTRE"
+			local keepsvy "IDCENTRE"
+			}
+		else if "${svyname}"=="PISAOOS" {
+			local NBpv=10*(`pv_here'==1)+1*(`pv_here'==0)
+			local final_weight_name="spfwt0"
+			local rep_weight_name="spfwt"	
+			local variancefactor = 29/30 
+			local NREP = 30
+			}
+		else if "${svyname}"=="LEADER_TALISEC" | "${svyname}"=="TALISEC_LEADER"{
+			local NBpv=1
+			local final_weight_name="cntrwgt"
+			local rep_weight_name="crwgt"	
+			local variancefactor=1/23
+			local NREP = 92
+			}
+		else if "${svyname}"=="STAFF_TALISEC" | "${svyname}"=="TALISEC_STAFF"{
+			local NBpv=1
+			
+			local final_weight_name="staffwgt"
+			local rep_weight_name="srwgt"	
+			local variancefactor=1/23 
+			local groupflag_name="idcentre"
+			local keepsvy "idcentre"
+			local NREP = 92
 			}
 		else if "${svyname}"!="SVY" error 198
 		if "`svyparms'" != "" {
@@ -1172,7 +1286,7 @@ program define repest_parser, rclass
 	*string
 	foreach output in long_over pvalue command_type groupflag_name overlevels by_levels by_var   rep_weight_name over_first over_last ///
 			final_weight_name   average_levels by_var over_test over_var	type_out display filename command_options  over_var_test fast ///
-			command	varlist_to_keep	list_weight pvvarlist store {
+			command	varlist_to_keep	list_weight pvvarlist store coverage dcoverage flag pisacoverage {
 		return local `output' `"``output''"'
 		}
 	foreach output in		pv_here  variancefactor NBpv NREP {
@@ -1213,7 +1327,7 @@ end
 
 cap program drop repest_getresults
 program define repest_getresults , rclass
-	syntax , est_list(string) [Keep(string) Add(string) COMbine(string)]
+	syntax , est_list(string) [Keep(string) Add(string) COMbine(string) coverage(string)]
 	cap confirm matrix e(b)
 	if _rc == 111 di as error "option estimate does not contain an estimation command; only eclass commands that set e(b) can be used"
  	local stats_list=""
@@ -1287,11 +1401,11 @@ program define repest_getresults , rclass
 	****
 	* combination of results:
 	if "`combine'" != "" {
-			tokenize "`combine'", parse(",")
+			tokenize "`combine'", parse(";")
 	
 			local current 1
  			while "``current''" != "" {
-				if "``current''" != "," {
+				if "``current''" != ";" {
 					gettoken name `current' : `current',  parse(":")
 					gettoken equals myexp : `current',  parse(":")
 					if `"`name'"'==":" {
@@ -1320,7 +1434,20 @@ program define repest_getresults , rclass
 				}
 			}
  	****
- 
+ 	****
+	* coverage
+	if "`coverage'" != "" {
+					tempvar sample
+					gen `sample' = e(sample) 
+					su `sample' [aw = `coverage'], meanonly 
+					tempname sample
+					matrix `sample' = r(mean)
+					local colnames_results : colnames `results'
+					matrix `results' = [`results',`sample']
+					local res_names  "`res_names' e_coverage"
+					matrix colnames `results'  = `colnames_results' e_coverage
+			}
+****
 
 	local coln= colsof(`results')
 	return scalar ncoeff =`coln'
@@ -1391,7 +1518,7 @@ end
 
 cap program drop  repest_means
 program define  repest_means, eclass
-	syntax varlist [if] [in] [aweight pweight] [, flag pct]
+	syntax varlist [if] [in] [aweight pweight] [, flag pct coverage]
 
 	local pct =  ("`pct'"!="")
  
@@ -1422,8 +1549,19 @@ program define  repest_means, eclass
 								
 				local flag_list   "`flag_list' `lamf'   "
 				}	
-		
-
+		if "`coverage'" !=""  {
+					tempvar sample
+					gen `sample' = 1- missing(`var') `if' `in'
+					su `sample' [aw `exp'], meanonly 
+					tempname `var'_x 
+					scalar ``var'_x' = r(mean)
+					local stat_list   "`stat_list', ``var'_x'   "
+					local name_list   "`name_list' `var'_x"  
+					if "`flag'" !="" {	// repeat flag for mean on coverage index
+						if regexm("`lamf'",",") local flag_list   "`flag_list' `lamf'   " 
+						else local flag_list   "`flag_list', `lamf'   " 
+						}
+				}			
 			}
 		}
 		
@@ -1438,8 +1576,7 @@ program define  repest_means, eclass
 	matrix  `b' = r(beta)
 	matrix colnames  `b' = `r(betanames)'
 	ereturn post `b' 
-	if "`flag'" !="" ereturn matrix flags=`flags'
-
+ 	if "`flag'" !="" ereturn matrix flags=`flags'
 end
 
 * **** *
@@ -1448,7 +1585,7 @@ end
 
 cap program drop repest_freq
 program define repest_freq,eclass
-	syntax varname [if] [in] [pweight aweight]  , levels(string) [flag count] 
+	syntax varname [if] [in] [pweight aweight]  , levels(string) [flag count coverage] 
 	
 	tempname total cell tab uniqlevels
 	
@@ -1485,10 +1622,23 @@ program define repest_freq,eclass
 			if ``varlist'_`lev'' == . scalar ``varlist'_`lev'' = 0
 			}
 		}
-		
+*** OLD flags for freq: check numerator		
+*		if "`flag'" !=""  {
+*			foreach level in `levels' { 
+*				repest_flags  if `varlist'==`level'
+*				if "`flag_list'"=="" {
+*								local lamf `" `r(flag)'"'
+*									}
+*								else {
+*									local lamf `", `r(flag)'"'
+*								}
+*				local flag_list   "`flag_list' `lamf'  "
+*				}
+*		}	
+** NEW flags for freq: check denominator	(gives consistent flags with means,pct)	
 		if "`flag'" !=""  {
+			repest_flags  `varlist' `if' `in'
 			foreach level in `levels' { 
-				repest_flags  if `varlist'==`level'
 				if "`flag_list'"=="" {
 								local lamf `" `r(flag)'"'
 									}
@@ -1496,10 +1646,21 @@ program define repest_freq,eclass
 									local lamf `", `r(flag)'"'
 								}
 				local flag_list   "`flag_list' `lamf'  "
- 				}
-			}	
-		
-
+				}
+		}			
+		if "`coverage'" !=""  {
+					tempvar sample
+					gen `sample' = 1- missing(`varlist') `if' `in'
+					su `sample' [aw `exp'], meanonly 
+					tempname `varlist'_x 
+					scalar ``varlist'_x' = r(mean)
+					local stat_list   "`stat_list', ``varlist'_x'   "
+					local name_list   "`name_list' `varlist'_x"  
+					if "`flag'" !="" {	// repeat flag for mean on coverage index
+						if regexm("`lamf'",",") local flag_list   "`flag_list' `lamf'   " 
+						else local flag_list   "`flag_list', `lamf'   " 
+						}
+				}	
 	// store stats
 	tempname b flags
  	matrix  `b' = [`stat_list']
@@ -1522,7 +1683,7 @@ end
 
 cap program drop repest_summarize
 program define repest_summarize,eclass
-	syntax varlist [if] [in] [aweight pweight] , stats(string) [flag ]
+	syntax varlist [if] [in] [aweight pweight] , stats(string) [flag coverage]
 	// check syntax
  	foreach stat in `stats' {
 		if regexm("mean sd min max sum_w p1 p5 p10 p25 p50 p75 p90 p95 p99 skewness kurtosis sum N Var","`stat'") != 1 {
@@ -1569,8 +1730,21 @@ program define repest_summarize,eclass
 
 				}
 			}
+		if "`coverage'" !=""  {
+					tempvar sample
+					gen `sample' = 1- missing(`outcome') `if' `in'
+					su `sample' [aw `exp'], meanonly 
+					tempname `outcome'_x 
+					scalar ``outcome'_x' = r(mean)
+					local stat_list   "`stat_list', ``outcome'_x'   "
+					local name_list   "`name_list' `outcome'_x"  
+					if "`flag'" !="" {	// repeat flag for mean on coverage index
+						if regexm("`lamf'",",") local flag_list   "`flag_list' `lamf'   " 
+						else local flag_list   "`flag_list', `lamf'   " 
+						}
+				}	
 		}
-		
+
 	// store stats 
 	tempname b flags
 	matrix  `b' = [`stat_list']
@@ -1591,7 +1765,7 @@ end
 
 cap program drop repest_quantiletable
 program define repest_quantiletable,eclass
-	syntax varlist(numeric min=2 max=2) [if/] [in] [pweight aweight] [, flag NQuantiles(integer 4) noINDEXQuantiles noOUTCOMEQuantiles RELRisk ODDSratio SUmmarize(varname) REGress(varlist numeric min=2 max=2) test ]
+	syntax varlist(numeric min=2 max=2) [if/] [in] [pweight aweight] [, flag NQuantiles(integer 4) noINDEXQuantiles noOUTCOMEQuantiles RELRisk ODDSratio SUmmarize(varname) REGress(varlist numeric min=2 max=2) test coverage]
 
 	if "`if'" != "" local if "& `if'"
 	tokenize `varlist'
@@ -1599,7 +1773,8 @@ program define repest_quantiletable,eclass
 	local outcome "`2'"
 	*flags work only when  RELRisk ODDSratio SUmmarize REGress are unspecified
 	if "`relrisk'"!="" | "`oddsratio'"!="" |  "`summarize'"!="" |  "`regress'"!="" {
-		dis "flags only work with quantiletable when RELRisk ODDSratio SUmmarize REGress are unspecified"
+		di as err `"Warning: option "flag" has been suppressed!"'
+		di as err `"         flags only work with quantiletable without options RELRisk ODDSratio SUmmarize REGress "'
 		local flag=""
 		}
 
@@ -1736,7 +1911,8 @@ program define repest_quantiletable,eclass
 		scalar `beta' = _b[`indepvar']
 		scalar `r2' = 100*e(r2)
 		}
-		
+
+	
 
 	// store stats
 	foreach stat in `mean' `index_quantiles' `sd' `outcome_quantiles' `coeff' `otherstats' `rsq' `test' {
@@ -1748,6 +1924,15 @@ program define repest_quantiletable,eclass
 			local flag_list= "`flag_list' `=``stat'''  , " 
 			}
 		}
+	if "`coverage'" !=""  {
+				tempvar sample
+				gen `sample' = 1- missing(`index',`outcome') `if' `in'
+				su `sample' [aw `exp'], meanonly 
+				tempname e_coverage 
+				scalar `e_coverage' = r(mean)
+				local stat_list   "`stat_list' `e_coverage'   "
+				local name_list   "`name_list' e_coverage"  
+			}	
 	tempname b flags
 	local stat_list=regexr("`stat_list'", "\,.$" ,"")
 	if "`flag'"!=""  local flag_list=regexr("`flag_list'", "\,.$" ,"")
@@ -1776,7 +1961,7 @@ end
 
 cap program drop  repest_corr
 program define  repest_corr, eclass
-	syntax varlist(min = 2) [if] [in] [aweight pweight] [, pairwise flag]
+	syntax varlist(min = 2) [if] [in] [aweight pweight] [, pairwise flag coverage]
 	marksample touse
 	tempname corr
 	local ncol : word count `varlist'
@@ -1795,7 +1980,7 @@ program define  repest_corr, eclass
 				local name_list   "`name_list' c_`=substr(word("`varlist'",`i'),1,12)'_`=substr(word("`varlist'",`j'),1,12)' "
 				}
 			}
-		if "`flags"!="" {
+		if "`flag'"!="" {
 			repest_flags if `touse' 
 			forval i = 1/`ncol' {
 				local z = `i' + 1 
@@ -1809,7 +1994,18 @@ program define  repest_corr, eclass
 					local flag_list   "`flag_list' `lamf'   "
 					}
 				}
-			}		
+			}
+			if "`coverage'" !=""  {
+				su `touse' `if' `in' [aw `exp'], meanonly 
+				tempname e_coverage 
+				scalar `e_coverage' = r(mean)
+				local stat_list   "`stat_list', `e_coverage'   "
+				local name_list   "`name_list' e_coverage"  
+					if "`flag'" !="" {	// repeat flag for mean on coverage index
+						if regexm("`lamf'",",") local flag_list   "`flag_list' `lamf'   " 
+						else local flag_list   "`flag_list', `lamf'   " 
+						}
+			}	
 		}
 	else {
 		tokenize `varlist'
@@ -1830,7 +2026,7 @@ program define  repest_corr, eclass
 				local name_list   "`name_list' pwc_`=substr(word("`varlist'",`i'),1,12)'_`=substr(word("`varlist'",`j'),1,12)' "
 				}
 			}
-		if "`flags"!="" {
+		if "`flag'"!="" {
 					forval i = 1/`ncol' {
 						local z = `i' + 1 
 						forval j = `z'/`ncol' {
@@ -1844,12 +2040,30 @@ program define  repest_corr, eclass
 							local flag_list   "`flag_list' `lamf'   "
 							}
 						}
-				}			
+				}
+		if "`coverage'" !=""  {
+					forval i = 1/`ncol' {
+						local z = `i' + 1 
+						forval j = `z'/`ncol' {
+							tempvar sample
+							gen `sample' = 1- missing(``i'',``j'') `if' `in'
+							su `sample' `if' `in' [aw `exp'], meanonly 
+							tempname e_coverage 
+							scalar `e_coverage' = r(mean)
+							local stat_list   "`stat_list', `e_coverage'   "
+							local name_list   "`name_list' x_`=substr(word("`varlist'",`i'),1,12)'_`=substr(word("`varlist'",`j'),1,12)'"  
+							if "`flag'" !="" {	// repeat flag for mean on coverage index
+								if regexm("`lamf'",",") local flag_list   "`flag_list' `lamf'   " 
+								else local flag_list   "`flag_list', `lamf'   " 
+								}
+							}
+						}
+				}	
 		}
 		
 	// store stats
 	tempname b  flags 
-	if "`flags"!="" matrix  `flags' = [`flag_list']
+	if "`flag'"!="" matrix  `flags' = [`flag_list']
 
 	matrix  `b' = [`stat_list']
 	matrix colnames  `b' = `name_list'
@@ -1859,4 +2073,77 @@ program define  repest_corr, eclass
 	ereturn post `b' 
   	if "`flag'" !="" ereturn matrix flags=`flags'
 
+end
+
+
+* **** *
+* PISA Coverage  - report coverage with daggers *
+* **** *
+
+
+cap program drop repest_pisacoverage
+program define repest_pisacoverage
+*set trace on
+	syntax  , outfile(string) [level1(real 75) level2(real 50) ]
+	if `level1'>1 local level1 = `level1'/100
+	if `level2'>1 local level2 = `level2'/100
+	if "`symbol1'" == "" local symbol1 "*"
+	if "`symbol2'" == "" local symbol2 "**"
+preserve
+			use "`outfile'", clear
+			foreach var of varlist *_b {
+				if !(regexm("`var'","e_coverage_b") | regexm("`var'","_x_b$") | regexm("`var'","^x_")) {
+					local sevar = reverse(regexr(reverse("`var'"),"b_","es_"))	// std err
+					local cflagvar = reverse(regexr(reverse("`var'"),"b_","c_"))	// generate coverage flag
+					gen `cflagvar' = ""
+					order `cflagvar', after(`sevar')
+					cap confirm variable e_coverage_b 
+					if !_rc {
+						local xvar "e_coverage_b"
+						}
+					else {
+						cap ds *_e_coverage_b 
+						if !_rc {
+							local overcat =  ustrregexra(r(varlist),"_e_coverage_b","") 
+							foreach cat in `overcat' {
+								if regexm("`var'","^`cat'") local xvar "`cat'_e_coverage_b"
+								}
+							}
+						else {
+							local xvar = reverse(regexr(reverse("`var'"),"^b_","b_x_")) 
+							cap confirm variable `xvar'
+							if _rc == 111 {
+								local xvar ""
+								if regexm("`var'","_m_b$") | regexm("`var'","_mean_b$")| regexm("`var'","_sd_b$") | regexm("`var'","_kurtosis_b$") | regexm("`var'","_skewness_b$") | regexm("`var'","_min_b$") | regexm("`var'","_max_b$")  | regexm("`var'","_p[1|5]_b$")  | regexm("`var'","_p[1|2|5|7|9][0|5|9]_b$") | regexm("`var'","_Var_b$") | regexm("`var'","_Var_b$") | regexm("`var'","_N_b$") | regexm("`var'","_sum_w_b$") | regexm("`var'","_[m]*[0-9]+_b$") {
+									local xvar = reverse(regexr(reverse("`var'"),"^b_[a-z0-9]+_","b_x_")) 
+									cap confirm variable `xvar'
+									if _rc == 111 di as err "coverage was not computed"
+									}
+								else if regexm("`var'","^pwc_") {
+									local xvar = regexr("`var'","^pwc_","x_") 
+									cap confirm variable `xvar'
+									if _rc == 111 di as err "coverage was not computed"
+									}
+								}
+							}
+						}
+					di "`var' `cflagvar' `xvar'"
+					if "`xvar'" != "" {
+						replace `cflagvar' = "†" if `xvar' < `level1' & `xvar' != 0
+						replace `cflagvar' = "‡" if `xvar' < `level2' & `xvar' != 0
+						}
+					else {
+						replace `cflagvar' = "."
+						di as err `"coverage was not computed for `var'; `cflagvar'  is equal to "." "'
+						}
+					}
+				}
+			foreach var of varlist *_b *_se {
+				if (regexm("`var'","e_coverage") | regexm("`var'","_x_[b|e|f|s]+$") | regexm("`var'","^x_")) {
+					drop `var'
+					}
+				}
+			qui save "`outfile'", replace
+			di as res "dta file `outfile' replaced" 
+restore
 end

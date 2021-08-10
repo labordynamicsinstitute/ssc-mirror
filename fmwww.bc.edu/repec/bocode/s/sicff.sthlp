@@ -38,5 +38,5 @@
 
 {title:Author}
 Tyson Van Alfen
-Email: ty.vanalfen@gmail.com
-Website: http://www.tysonvanalfen.com
+Email: tyson@vanalfen.io
+Website: https://vanalfen.io

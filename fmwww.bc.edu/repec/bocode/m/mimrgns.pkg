@@ -13,7 +13,7 @@ d KW: marginsplot
 d
 d Requires: Stata version 11.2
 d
-d Distribution-Date: 20170409
+d Distribution-Date: 20210228
 d
 d Author: Daniel Klein, Universität Kassel
 d Support: email daniel.klein@@uni-kassel.de
@@ -21,4 +21,3 @@ d
 f mimrgns.ado
 f mimrgns_estimate.ado
 f mimrgns.sthlp
-f mimrgns_work.class

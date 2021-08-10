@@ -1,5 +1,5 @@
 {smcl}
-{* *! version 1.2.0  June 27, 2017 @ 22:35:09}{...}
+{* *! version 1.2.0  November 10, 2017 @ 10:21:51}{...}
 {cmd:help unique}
 {hline}
 
@@ -15,7 +15,7 @@
 {cmd:unique} {varlist}
 {ifin}
 [{cmd:,}
-{opth by(varname)}
+{opth by(varlist)}
 {opth gen:erate(newvar)}
 {opt d:etail}]
 
@@ -33,7 +33,7 @@ refers to a visit by a subject.
 {title:Options}
 
 {phang}
-{opth by(varname)} counts unique values within levels of {it:varname} and stores them in a new variable named {bf:_Unique}.
+{opth by(varlist)} counts unique values within levels of {it:varlist} and stores them in a new variable named {bf:_Unique}.
 
 {phang}
 {opth generate(varname)} supplies an alternative name for the new variable created by {bf:by}.

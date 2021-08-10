@@ -1,5 +1,5 @@
 {smcl}
-{* *! version 2  27jun2016}{...}
+{* *! version 2  01Fen2021}{...}
 {vieweralsosee "[XT] xtreg" "help xtreg"}{...}
 {vieweralsosee "[ME] mixed" "help mixed"}{...}
 {vieweralsosee "runmlwin" "help runmlwin"}{...}
@@ -31,13 +31,13 @@ where {varlist} specifies variables in the mean function.
 {synoptline}
 {syntab:Model}
 {synopt:{opt nocons:tant}}suppress constant term in the mean function{p_end}
-{synopt:{opt b:etween}{cmd:(}{varlist}[{cmd:,} {cmdab:nocons:tant}]{cmd:)}}specify variables in between-group variance function{p_end}
+{synopt:{opt b:etween}{cmd:(}{varlist}[{cmd:,} {cmdab:nocons:tant} {cmd:}]{cmd:)}}specify variables in between-group variance function{p_end}
 {synopt:{opt w:ithin}{cmd:(}{varlist}[{cmd:,} {cmdab:nocons:tant}]{cmd:)}}specify variables in within-group variance function{p_end}
 {synopt:{cmdab: a:ssociation(}{it:{help runmixregls##atype:atype}}{cmd:)}}specify the group-level association between the (log of the) within-group variance and the random-location effects;
 default is {cmd:association(linear)}{p_end}
 
 {syntab:Random effects/Residuals}
-{synopt:{opt reffects}{cmd:(}{newvar:1}{cmd: }{newvar:2}{cmd:)}}retrieve standardized random-location and random-scale effects{p_end}
+{synopt:{opt reffects}{cmd:(}{it:stub{bf:*}}{cmd:)}}retrieve standardized random-location and random-scale effects{p_end}
 {synopt:{opth residuals(newvar)}}retrieve standardized residual errors{p_end}
 
 {syntab:Integration}
@@ -48,17 +48,7 @@ default is {cmd:association(linear)}{p_end}
 {synopt:{opt iterate(#)}}maximum number of iterations; default is {cmd:iterate(200)}{p_end}
 {synopt:{opt tol:erance(#)}}tolerance; default is {cmd:tolerance(0.0005)}{p_end}
 {synopt:{opt stand:ardize}}standardize all covariates{p_end}
-
-{syntab:MIXREGLS software path}
-{synopt:{opth mixreglspath(filename)}}MIXREGLS executable (.exe) fully qualified filename{p_end}
-
-{syntab:MIXREGLS model files}
-{synopt:{opt typedat:file}}display MIXREGLS model data file in results window{p_end}
-{synopt:{opt typedef:file}}display MIXREGLS model definition file in results window{p_end}
-{synopt:{opt typeout:file}}display MIXREGLS model output file in results window{p_end}
-{synopt:{cmdab:savedef:file(}{it:filename}[{opt , replace}]{cmd:)}}save the MIXREGLS model data file{p_end}
-{synopt:{cmdab:savedef:file(}{it:filename}[{opt , replace}]{cmd:)}}save the MIXREGLS model definition file{p_end}
-{synopt:{cmdab:saveout:file(}{it:filename}[{opt , replace}]{cmd:)}}save the MIXREGLS model output file{p_end}
+{synopt:{opt ridge:in(#)}}initial value for ridge; default is {cmd:ridgein(0)}{p_end}
 
 {syntab:Reporting}
 {synopt:{opt l:evel(#)}}set confidence level; default is {cmd:level(95)}{p_end}
@@ -89,13 +79,16 @@ A panel variable must be specified. Use {helpb xtset}. {p_end}
 
 {pstd}
 {cmd:runmixregls} runs the
-{browse "http://publichealth.uic.edu/departments/epidemiologyandbiostatistics/centerforbiostatisticaldevelopment/projects/":MIXREGLS}
+{browse "http://publichealth.uic.edu/epidemiology-and-biostatistics/projects":MIXREGLS}
 mixed-effects location scale software
 ({help runmixregls##HN2013:Hedeker and Nordgren 2013}) from within Stata.
 
 {pstd}
-The mixed-effects location scale model extends the standard two-level
-random-intercept mixed-effects model for continuous responses ({cmd:xtreg, mle}) in three ways.
+The software can fit two-level random-intercept mixed-effects location scale models for continuous responses.
+
+{pstd}
+The random-intercept mixed-effects location scale model extends the conventional 
+random-intercept mixed-effects model ({cmd:xtreg, mle} and {cmd:mixed}) in three ways.
 
 {p 8 12 2}
 (1) The (log of the) within- and between-group variances are further modeled as functions of the covariates.
@@ -106,13 +99,25 @@ is then entered into the within-group variance function to account for any unexp
 The existing random-intercept effect is now referred to as the random-location effect. 
 
 {p 8 12 2}
-(3) A group-level association between the location and the scale may be allowed for by entering the 
+(3) A group-level association between the location and the scale may be allowed for by entering the standardized 
 random-location effect into the within-group variance function using either a linear or quadratic functional form.
 The regression coefficients of these linear and quadratic terms are then estimated.
 
 {pstd}
 The distributions of the random-location and random-scale effects are assumed to be Gaussian.  
 
+{pstd}
+runmixregls is the sister command to the newer runmixregmls command which runs the MIXREGMLS mixed-effects location scale software from within Stata. 
+The difference between the two commands is that runmixregmls can fit both two-level random-intercept and -coefficient versions of the mixed-effects 
+location scale model for continuous responses, but in contrast to runmixregls cannot additionally allow the log of the between-group variance to be modelled as a function of the variables. 
+The two commands also differ in their parameterisation of the model.
+
+{pstd}
+Both runmixregls and runmixregmls can therefore fit two-level random-intercept models with a constant between-group variance and a log within-group 
+variance further modeled as functions of the covariates and a new scale random-scale effect, but both commands allow different extensions to this 
+model and that will dictate which command is used. 
+Where only this simplest model is desired, the two commands implement different parameterisations of this model and so while the model fit 
+statistics will be identical, the model estimates will differ correspondingly.
 
 {marker options}{...}
 {title:Options}
@@ -132,25 +137,28 @@ specifies the variables in the between-group variance function.
 specifies the variables in the within-group variance function.
 
 {phang}
-{opt association(atype)}, where {it:atype} is
+{opt association(atype)}specifies the group-level association between the (log of the) within-group variance and the random-location effects. atype is one of the following: {cmd:none}, {cmd:linear}, {cmd:quadratic}.
 
-{phang3}
-{cmd:none}{c |}{cmd:linear}{c |}{cmd:quadratic}
+{p 8 12 2}
+{cmd:none} assumes no association
 
-{pmore}
-specifies the group-level association between the (log of the) within-group variance and the random-location effects.
-The default is {cmd:association(linear)}.
+{p 8 12 2}
+{cmd:linear} assumes a linear association
+
+{p 8 12 2}
+{cmd:quadratic} assumes a quadratic association
+
+{p 8 12 2}
+{cmd:association(linear)} is the default.
 
 
 {dlgtab:Random effects/Residuals}
 
 {phang}
-{opt reffects}{cmd:(}{newvar:1}{cmd: }{newvar:2}{cmd:)}
+{opt reffects}{cmd:(}{it:stub{bf:*}}{cmd:)}
 retrieves the best linear unbiased predictions (BLUPs) of the standardized random effects from MIXREGLS.
-BLUPs are also known as empirical Bayes estimates.
-The standardized random-location effects are placed in {newvar:1}
-while the standardized random-scale effects are placed in {newvar:2}
-The associated standard errors are placed in {newvar:1}_se and {newvar:2}_se.
+BLUPs are also known as empirical Bayes estimates. The sampling variances and covariances are also returned. 
+Postestimation, the standard errors can be calculated as the square root of the sampling variances.
 
 {phang}
 {opth residuals(newvar)} retrieves the standardized residual errors from MIXREGLS.
@@ -186,38 +194,10 @@ You should seldom have to use this option.
 This ensures all covariates are on the same numerical scale with mean 0 and variance 1.
 This can be helpful if the model "blows up" or does not converge to the solution.
 
-
-{dlgtab:MIXREGLS software path}
-
 {phang}
-{opth mixreglspath(filename)} specifies the fully qualified filename for the MIXREGLS executable (the MIXREGLS .exe file).
-For example {cmd:mixreglspath(C:\MIXREGLS\mixreglsb.exe)}.
-Users must substitute the fully qualified filename which is correct for them.
-This option takes precedance over the mixreglspath {helpb global} macro if it exists. 
-
- 
-{dlgtab:MIXREGLS model files}
-
-{phang}
-{opt typedatfile} displays the MIXREGLS model data file in the results window.
-
-{phang}
-{opt typedeffile} displays the MIXREGLS model definition file in the results window.
-
-{phang}
-{opt typeoutfile} displays the MIXREGLS model output file in the results window.
-
-{phang}{opt savedatfile(filename[, replace])} saves the MIXREGLS model data file.
-A fully qualified filename should be specified.
-The {opt replace} option overwrites the MIXREGLS model definition file if it already exists.
-
-{phang}{opt savedeffile(filename[, replace])} saves the MIXREGLS model definition file.
-A fully qualified filename should be specified.
-The {opt replace} option overwrites the MIXREGLS model definition file if it already exists.
-
-{phang}{opt saveoutfile(filename[, replace])} saves the MIXREGLS model output file.
-A fully qualified filename should be specified.
-The {opt replace} option overwrites the MIXREGLS output file if it already exists.
+{opt ridgein(#)} specifies the initial value for the ridge parameter.
+The default is {cmd:ridgein(200)}.
+This is a numeric value that adds to the diagonal of the second derivative matrix, which can aid in convergence of the solution; usually set to 0 or some small fractional value.
 
 
 {dlgtab:Reporting}
@@ -257,18 +237,17 @@ the output; only the coefficient table is displayed.
 {pstd}
 Remarks are presented under the following headings:
 
-            {help runmixregls##remarks_model:Remarks on the mixed-effects location scale model}
+            {help runmixregls##remarks_ri_model:Remarks on the random-intercept mixed-effects location scale model}
             {help runmixregls##remarks_first_time:Remarks on getting runmixregls working for the first time}
-            {help runmixregls##remarks_how_runmixregls_works:Remarks on how runmixregls works}
             {help runmixregls##remarks_mixregls_estimation:Remarks on MIXREGLS estimation}
             {help runmixregls##remarks_runmixregls_output:Remarks on runmixregls output}
 
 
-{marker remarks_model}{...}
-{title:Remarks on the mixed-effects location scale model}
+{marker remarks_ri_model}{...}
+{title:Remarks on the random-intercept mixed-effects location scale model}
 
 {pstd}
-The mixed-effects location scale model fitted by MIXREGLS consists of three functions
+The random-intercept mixed-effects location scale model fitted by MIXREGLS consists of three functions
 
 {p 8 12 2}
 (1) the mean function,
@@ -280,25 +259,28 @@ The mixed-effects location scale model fitted by MIXREGLS consists of three func
 (3) the within-group variance function.
 
 {pstd}
-These three functions can be written as
+For simplicity, consider a model with a single covariate x_ij.
+
+{pstd}
+These three functions can then be written as
 
 {pmore}
-y_ij = b_1*x1_ij + sigma_u_ij*theta1_j + e_ij,{space 3}i=1,...,n_j;{space 3}j=1,...,J,
+y_ij = b0 + b1*x_ij + sigma_u_ij*theta_u_j + e_ij,   i=1,...,n_j;   j=1,...,J,
 
 {pmore}
-log(sigma2_u_ij) = b_2*x2_ij,
+log(sigma2_u_ij) = d0 + d1*x_ij,
 
 {pmore}
-log(sigma2_e_ij) = b_3*x3_ij + a_l*theta1_j + a_q*theta1_j^2 + sigma_v*theta2_j,
+log(sigma2_e_ij) = a0 + a1*x_ij + al*theta_u_j + aq*theta_u_j^2 + sigma_v*theta_v_j,
 
 {pstd}
 where
 
 {pmore}
-theta1_j ~ N(0,1),
+theta_u_j ~ N(0,1),
 
 {pmore}
-theta2_j ~ N(0,1),
+theta_v_j ~ N(0,1),
 
 {pmore}
 e_ij ~ N(0,sigma2_e_ij),
@@ -310,48 +292,32 @@ and
 y_ij is the continuous response variable,
 
 {pmore}
-x1_ij, x2_ij and x3_ij are vectors of observation- and group-level covariates,
+x_ij is the covariate,
 
 {pmore}
-b_1, b_2 and b_3 are vectors of parameters to be estimated,
+b0, b1, d0, d1, a0, a1 are regression coefficients to be estimated,
 
 {pmore}
-theta1_j are the unobserved standardized random-location effects,
+theta_u_j is the unobserved standardized random-location effect,
 
 {pmore}
-theta2_j are the unobserved standardized random-scale effects,
+theta_v_j is the unobserved standardized random-scale effect,
 
 {pmore}
-a_l and a_q are scalar parameters to be estimated,
+al and aq are scalar parameters to be estimated,
 
 {pmore}
 e_ij are the observation-specific errors.
 
 {pstd}
-See {help runmixregls##HN2013:Hedeker and Nordgren 2013} for further details on the mixed-effects location scale model.
+The theta_u_j and theta_v_j are modeled as independent. 
+The optional association between the (log of the) within-group variance and the random-location effects is induced by the optional appearance of theta_u_j in the within-group variance function.
 
+{pstd}
+See {help runmixregls##HN2013:Hedeker and Nordgren 2013} for further details on the mixed-effects location scale model.
 
 {marker remarks_first_time}{...}
 {title:Remarks on getting runmixregls working for the first time}
-
-{pstd}
-In order to get {cmd:runmixregls} working, you must: 
-
-{p 8 12 2}
-(1) install MIXREGLS;
-
-{p 8 12 2}
-(2) install {cmd:runmixregls};
-
-{p 8 12 2}
-(3) declare the fully qualified filename for the MIXREGLS executable (the MIXREGLS .exe file)
-using either {opth mixreglspath(filename)} or, preferably a {helpb global} macro called mixreglspath.
-
-{pstd}
-MIXREGLS can be  downloaded from
-
-{p 8 12 2}
-{browse "https://hedeker-sites.uchicago.edu/sites/hedeker.uchicago.edu/files/uploads/MixregLS_RevisedSept2013.zip":https://hedeker-sites.uchicago.edu/sites/hedeker.uchicago.edu/files/uploads/MixregLS_RevisedSept2013.zip}.
 
 {pstd}
 {cmd:runmixregls} can be installed from the Statistical Software Components (SSC) archive by typing the following
@@ -366,44 +332,6 @@ by typing the following command:
 
 {phang2}{stata "adoupdate runmixregls":. adoupdate runmixregls}{p_end}
 
-{pstd}
-Advanced users may wish to declare the fully qualified filename for MIXREGLS 
-every time Stata is started by simply inserting
-the following line into the profile do-file profile.do (See {helpb profile}).
-
-{p 8 12 2}
-{cmd:. global mixreglspath "C:\MIXREGLS\mixreglsb.exe"}
-
-{pstd}
-Users must substitute the fully qualified filename which is correct for them.
-
-
-{marker remarks_how_runmixregls_works}{...}
-{title:Remarks on how runmixregls works}
-
-{pstd}
-{cmd:runmixregls} works by carrying out the following steps:
-
-{p 8 12 2}
-(1) Write the MIXREGLS data file for the specified model;
-
-{p 8 12 2}
-(2) Write the MIXREGLS model definition file for the specified model;
-
-{p 8 12 2}
-(3) Run MIXREGLS using (1) and (2) and output the MIXREGLS model output file;
-
-{p 8 12 2}
-(4) Import the model results from the MIXREGLS model output file and store them as a Stata estimation command;
-
-{p 8 12 2}
-(5) Display the model results in the results window.
-
-{pstd}
-The MIXREGLS data file contains all data to be read by MIXREGLS.
-The MIXREGLS definition file contains the specification that determines the statistical model to be fit to the data.
-The MIXREGLS output file contains the results of the analysis.
-
 
 {marker remarks_mixregls_estimation}{...}
 {title:Remarks on MIXREGLS estimation}
@@ -412,7 +340,7 @@ The MIXREGLS output file contains the results of the analysis.
 MIXREGLS uses maximum likelihood estimation, utilizing both the EM algorithm and a Newton-Raphson solution.
 Because the log likelihood for this model has no closed form, it is approximated by adaptive Gaussian quadrature.
 Estimation of the random effects is accomplished using empirical Bayes methods.
-The full model is estimated in three sequential stages:
+The full model is estimated in three sequential stages. For simplicity we focus here on the random-intercept version of the model:
 
 {p 8 18 2}
 (1) Standard random-intercept model + between-group variance function regression coefficients
@@ -429,7 +357,7 @@ Prior to Stage 1, 20 iterations are performed of the EM algorithm
 to estimate the parameters of a standard random-intercept model 
 (regression coefficients, between-group variance, within-group variance, and random-location effects).
 These estimates are then used as starting values for Stage 1
-Estimates at each stage are used as starting values for the next stage, 
+estimates at each stage are used as starting values for the next stage, 
 which improves the convergence of the final model.
 This also provides a way of assessing the statistical significance of the additional parameters in each stage via likelihood-ratio tests.
 The results of each stage as well as these likelihood-ratio tests are provided in the {help runmixregls##saved_results:saved results}.
@@ -458,7 +386,7 @@ Within-group variance function regression coefficients (log scale)
 
 {p 8 12 2}
 Association:{space 1}
-Group-level association parameters between the (log of the) within-group function and the random-location effects
+Group-level association parameters between the (log of the) within-group function and the standardized random-location effects
 
 {p 8 12 2}
 Scale:{space 7}
@@ -466,12 +394,30 @@ Random-scale standard deviation
 
 
 {marker examples}{...}
-{title:Example: Replicate Hedeker and Nordgren 2013 (pages 10-18)}
 
-{pstd}
-The following example will only work once you have installed MIXREGLS and once you have
-declared the file address for the MIXREGLS executable.
-See {it:{help runmixregls##remarks_first_time:Remarks on getting runmixregls working for the first time}}.
+{title:Example:} 
+
+{pstd}Load the data{p_end}
+
+{phang2}{bf:{stata "use http://www.bristol.ac.uk/cmm/media/runmixregls/tutorial, clear":. use http://www.bristol.ac.uk/cmm/media/runmixregls/tutorial, clear}}
+
+{pstd}Declare panel variable to be school{p_end}
+
+{phang2}{bf:{stata "xtset school":. xtset school}}
+
+{pstd}Fit the two-level random-intercept mixed-effects location scale model with no covariates{p_end}
+
+{phang2}{bf:{stata "runmixregls normexam":. runmixregls normexam}}
+
+{pstd}Refit the model adding covariates to the mean model{p_end}
+
+{phang2}{bf:{stata "runmixregls normexam standlrt girl":. runmixregls normexam standlrt girl}}
+
+{pstd}Refit the model adding covariates to the within-group variance function{p_end}
+
+{phang2}{bf:{stata "runmixregls normexam standlrt girl, within(standlrt girl)":. runmixregls normexam standlrt girl, within(standlrt girl)}}
+
+{title:Example: Replicate Hedeker and Nordgren 2013 (pages 10-18)}
 
 {pstd}Load the data{p_end}
 {phang2}{bf:{stata "use http://www.bristol.ac.uk/cmm/media/runmixregls/reisby, clear":. use http://www.bristol.ac.uk/cmm/media/runmixregls/reisby, clear}}
@@ -482,11 +428,11 @@ See {it:{help runmixregls##remarks_first_time:Remarks on getting runmixregls wor
 {pstd}Declare panel variable to be id{p_end}
 {phang2}{bf:{stata "xtset id":. xtset id}}
 
-{pstd}Fit the mixed-effects location scale model{p_end}
+{pstd}Fit the two-level random-intercept mixed-effects location scale model{p_end}
 {phang2}{bf:{stata "runmixregls hamdep week endog endweek, between(endog) within(week endog)":. runmixregls hamdep week endog endweek, between(endog) within(week endog)}}
 
 {pstd}Refit the model, this time retrieving the BLUPs of the standardized random-location and random-scale effects, and their associated standard errors{p_end}
-{phang2}{bf:{stata "runmixregls hamdep week endog endweek, between(endog) within(week endog) reffects(theta1 theta2)":. runmixregls hamdep week endog endweek, between(endog) within(week endog) reffects(theta1 theta2)}}
+{phang2}{bf:{stata "runmixregls hamdep week endog endweek, between(endog) within(week endog) reffects(theta)":. runmixregls hamdep week endog endweek, between(endog) within(week endog) reffects(theta1 theta2)}}
 
 {pstd}Examine a scatter plot of the BLUPs of the standardized random-scale effects against
 the standardized random-location effects{p_end}
@@ -542,6 +488,7 @@ the standardized random-location effects{p_end}
 {synopt:{cmd:e(n_quad)}}number of integration points{p_end}
 {synopt:{cmd:e(iterate)}}maximum number of iterations{p_end}
 {synopt:{cmd:e(tolerance)}}tolerance{p_end}
+{synopt:{cmd:e(ridgein)}}initial ridge{p_end}
 {synopt:{cmd:e(standardize)}}standardized variables{p_end}
 {synopt:{cmd:e(properties)}}b V{p_end}
 
@@ -591,6 +538,10 @@ URL: {browse "http://www.jstatsoft.org/v52/i12":http://www.jstatsoft.org/v52/i12
 {p 4}{browse "mailto:g.leckie@bristol.ac.uk":g.leckie@bristol.ac.uk}{p_end}
 {p 4}{browse "http://www.bristol.ac.uk/cmm/team/leckie.html":http://www.bristol.ac.uk/cmm/team/leckie.html}{p_end}
 
+{p 4}Chris Charlton{p_end}
+{p 4}Centre for Multilevel Modelling{p_end}
+{p 4}University of Bristol{p_end}
+
 
 {marker acknowledgments}{...}
 {title:Acknowledgments}
@@ -621,5 +572,5 @@ URL: {browse "http://www.jstatsoft.org/v52/i12":http://www.jstatsoft.org/v52/i12
 Manual:  {bf:[XT] xtreg} {bf:[ME] mixed} 
 
 {psee}
-Online:  {manhelp xtreg XT}, {manhelp mixed ME}, {bf:{help runmlwin}}, {bf:{help gllamm}}
+Online:  {manhelp xtreg XT}, {manhelp mixed ME}, {bf:{help runmixregls}}, {bf:{help runmlwin}}, {bf:{help gllamm}}
 {p_end}

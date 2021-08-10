@@ -1,3 +1,4 @@
+*! 2.1.0 SPJ Feb 2021 Add pweight so that use PVK's -rhsbsample- & svy bootstrap 
 *! 2.0.2 SPJ January 2008 (typo in a saved result fixed -- thanks John Haisken-DeN)
 *! 2.0.1 SPJ August 2006 (new vbles created as doubles)
 *! 2.0.0 SPJ August 2006 (port to Stata 8.2; additional saved results)
@@ -8,7 +9,7 @@
 program define povdeco, rclass sortpreserve
 	version 8.2
 
-	syntax varname(numeric) [aweight fweight] [if] [in] ///
+	syntax varname(numeric) [aweight fweight pweight iweight] [if] [in] ///
 		[, BYgroup(varname numeric)  PLine(real 0) Varpline(string) ///
 		   Summarize  ]
 

@@ -1,5 +1,5 @@
 {smcl}
-{* *! version 5.0 01Mar2017}{...}
+{* *! version 5.0.3 27Dec2019}{...}
 {cmd:help diff} 
 {hline}
 
@@ -23,11 +23,11 @@
 {title:Description}
 
 {pstd}
-{opt diff} performs several difference in differences (diff-in-diff) treatment effect estimations of 
+{opt diff} runs several difference in differences (diff-in-diff) treatment effect estimations of 
 a given outcome variable from a pooled baseline and follow up dataset: Single Diff-in-Diff, Diff-in-Diff
  accounting for covariates, Kernel Propensity Score Matching diff-in-diff, and the Quantile Diff-in-Diff.
 {opt diff} is also suitable for estimating repeated cross sections diff-in-diff (including the {opt k:ernel} option)
- and the triple difference analysis.
+ and the triple difference-in-differences analysis.
 
 
 {title:Options}
@@ -36,11 +36,14 @@ a given outcome variable from a pooled baseline and follow up dataset: Single Di
 {synopthdr}
 {synoptline}
 {syntab:Model - Required}
-{synopt :{opt p:eriod(varname)}}Indicates the binary period variable (0: base line; 1: follow up).{p_end}
+{synopt :{opt p:eriod(varname)}}Indicates the binary period variable (0: before; 1: after). Note: if your data contains a periodical 
+frequency (monthly, quarterly, yearly, etc.), it is suggested to specify option {opt p:eriod(varname)} and include a binary variable
+for each frequency in option {opt c:ov(varlist)}.{p_end}
 {synopt :{opt t:reated(varname)}}Indicates the binary treatment variable (0: controls; 1:treated).{p_end}
 
 {syntab: Optional}
-{synopt :{opt c:ov(varlist)}}Specifies the pre-treatment covariates of the model. When
+{synopt :{opt c:ov(varlist)}}Specifies the pre-treatment covariates of the model. Also use this option to specify time fixed-effects
+in the case of multiple time-frequency data (e.g. monthly, yearly, quarterly, etc.). When
 option {opt k:ernel} is selected these variables are used to estimate the propensity score.{p_end}
 {synopt :{opt k:ernel}}Performs the Kernel-based Propensity Score Matching diff-in-diff. This option
 generates  the variable _weights containing the weights derived from the Kernel Propensity Score Matching,
@@ -62,7 +65,8 @@ do not vary over time.{p_end}
 {synopt :{opt lo:git}}Specifies logit estimation of the Propensity Score. The default is Probit.{p_end}
 {synopt :{opt sup:port}}Performs {opt diff} on the common support of the propensity score given the option {opt k:ernel}.{p_end}
 {synopt :{opt add:cov(varlist)}}Indicates additional covariates in addition to those specified
-in the estimation of the propensity score.{p_end}
+in the estimation of the propensity score. Also use this option to specify time fixed-effects
+in the case of multiple time-frequency data (e.g. monthly, yearly, quarterly, etc.).{p_end}
 {synopt :{opt ddd(varname)}}Additional category for triple difference estimation. {opt t:reated(varname)} is deemed as the
 first category and {opt ddd(varname)} the second category. This option is not compatible with options {opt k:ernel}, {opt test}
 or {opt qd:id(quantile)}.{p_end}
@@ -95,7 +99,7 @@ with double difference:{p_end}
 {col 9}{phang}{txt}outreg2 using table_diff, ctitle(`r(depvar)') addstat(Mean control t(0), r(mean_c0), Mean treated t(0), r(mean_t0), Diff t(0), r(diff0), Mean control t(1), r(mean_c1), Mean treated t(1), r(mean_t1), Diff t(1), r(diff1)) label  adec(3) excel  keep(_diff) nocons{p_end}
 
 {phang}    Run the following command after {cmd: diff} with triple difference:{p_end}
-{col 9}{phang}{txt}outreg2 using output, ctitle(`r(depvar)') addstat(Mean control - A t(0), r(mean_c0a), Mean control - B t(0), r(mean_c0b), Mean treated A - t(0),	r(mean_t0a), Mean treated B - t(0),	r(mean_t0b), Diff t(0), r(diff0), Mean control - A t(1), r(mean_c1a), Mean control - B t(1), r(mean_c1b), Mean treated - (A) t(1), r(mean_t1a), Mean treated - B t(1), r(mean_t1b), Diff t(1), r(diff1)) label excel keep(_diff) nocons dec(4) {p_end}
+{col 9}{phang}{txt}outreg2 using output, ctitle(`r(depvar)') addstat(Mean control - A t(0), r(mean_c0a), Mean control - B t(0), r(mean_c0b), Mean treated A - t(0),	r(mean_t0a), Mean treated B - t(0),	r(mean_t0b), Diff t(0), r(diff0), Mean control - A t(1), r(mean_c1a), Mean control - B t(1), r(mean_c1b), Mean treated - A t(1), r(mean_t1a), Mean treated - B t(1), r(mean_t1b), Diff t(1), r(diff1)) label excel keep(_diff) nocons dec(4) {p_end}
 
 {phang}    Results will be stored in the working directory (also see {cmd: help outreg2} for further options).{p_end}
 
@@ -216,7 +220,7 @@ treated and control groups in == 0 {p_end}
 {synopt:{cmd:r(se_dd)}}			standard errors of the difference in difference{p_end}
 {p2colreset}{...}
 
-{title:References}
+{title:Recommended references}
 
 Single diff-in-diff:
 
@@ -241,7 +245,7 @@ Quantile diff-in-diff:
 {phang}Meyer, B., Viscusi, W. "Workers' Compensation and Injury Duration: Evidence from a Natural Experiment". The American 
 Economic Review, Vol. 85, No.3 (Jun., 1995), pp. 322-340.{p_end}
 
-Triple difference:
+Triple difference in differences:
 
 {phang}Imbens, G., Wooldridge, J. "Difference-in-Differences Estimation. Lecture Notes 10, Summer '07". NBER (Jul., 2007), pp. 322-340.{p_end}
 
@@ -252,10 +256,13 @@ Triple difference:
 {phang}The University of Manchester{p_end}
 {phang}juan.villa@manchester.ac.uk{p_end}
 
+{phang}Colpensiones{p_end}
+{phang}{p_end}
+
 {phang}Please cite as: Villa, J.M., 2016. diff: Simplifying the estimation of 
 difference-in-differences treatment effects. Stata Journal 16, pp. 52-71.{p_end}
 
-{phang}Update: March - 2017.{stata "ssc install diff, replace" : Click here periodically} to get the lastest version.{p_end}
+{phang}This version: December - 2019.{stata "ssc install diff, replace" : Click here periodically} to get the lastest version.{p_end}
 {phang}*Acknowledgements to Kit Baum for valuable comments. The Kernel matching is based on the command {stata "ssc des psmatch2":psmatch2} developved by Edwin 
 Leuven and Barbara Sianesi.{p_end}
 

@@ -1,4 +1,9 @@
-*! 1.4.1 NJC 29 September 2015 
+*! 1.5.3 NJC 12 September 2017 
+*! 1.5.2 NJC 31 August 2017 
+* 1.5.1 NJC 9 August 2017 
+* 1.5.0 NJC 10 July 2017 
+* 1.4.2 NJC 26 August 2016 
+* 1.4.1 NJC 29 September 2015 
 * 1.4.0 NJC 21 August 2015 
 * 1.3.0 NJC 19 August 2015 
 * 1.2.0 NJC 18 August 2015 
@@ -58,7 +63,8 @@ program numdate
 	/// rest of syntax
 	/// clean() undocumented
 	syntax varlist [if] [in] , ///
-	Pattern(str) [Format(str) Dryrun Topyear(numlist int max=1) Clean] 
+	Pattern(str) [Format(str) Dryrun Topyear(numlist int max=1) ///
+	varlabel(str) Clean] 
 
 	marksample touse, strok 
 	quietly count if `touse' 
@@ -67,7 +73,7 @@ program numdate
 	/// existing variable(s) could be string or numeric 
 	local oldvar `varlist' 
 
-    /// if format requested check consistency with date type 
+	/// if format requested check consistency with date type 
 	/// else default format assigned 
 	local t = substr("`dtype'", 1, 1)  
 	if "`format'" != "" { 
@@ -80,12 +86,15 @@ program numdate
 	} 
 	else local format %t`t'
 
+	local flag = 0 
+
 	/// concatenate multiple input into one string variable 
 	local nvars : word count `oldvar' 
 	if `nvars' > 1 { 
 		tempvar combined 
 		egen `combined' = concat(`oldvar'), p(" ") 
 		local oldvar `combined' 
+		local flag = 1 
 	} 
 
 	/// optionally clean strings of non-numeric characters 
@@ -106,14 +115,76 @@ program numdate
 		}
 
 		local oldvar "`s'" 
+		local flag = 1 
+	} 
+
+	/// string: commas to stops (periods) 
+	/// numeric: try split into "year whatever" or "whatever year") 
+	quietly { 
+		capture confirm str var `oldvar' 
+
+		if _rc == 0 {
+			tempvar s
+			gen `s' = `oldvar'  
+			count if strpos(`s', ",") & `touse' 
+
+			if r(N) { 
+				replace `s' = subinstr(`s', ",", ".", .) 
+				noi di as txt "commas converted to periods"  
+    			}
+
+			local oldvar `s' 
+			local flag = 1 
+
+			if !strpos("`dtype'", "d") { 
+				count if real(`s') < . & `touse' 
+				if r(N) { 
+					tempvar start end length combined 
+					if substr(lower("`pattern'"), 1, 1) == "y" { 
+						gen `start' = substr(`s', 1, 4)
+						gen `end' = substr(`s', 5, .) 
+					} 
+					else {
+						gen `length' = length(`s') 
+						gen `start' = substr(`s', 1, `length' - 4)
+						gen `end' = substr(`s', -4, 4)	
+					} 
+					egen `combined' = concat(`start' `end'), p(" ") 
+					local oldvar `combined' 
+				}
+			}
+		}
+		else if !strpos("`dtype'", "d") { 
+			tempvar start end length combined 
+			if substr(lower("`pattern'"), 1, 1) == "y" { 
+				gen `start' = substr(string(`oldvar'), 1, 4)
+				gen `end' = substr(string(`oldvar'), 5, .) 
+			} 
+			else {
+				gen `length' = length(string(`oldvar')) 
+				gen `start' = substr(string(`oldvar'), 1, `length' - 4)
+				gen `end' = substr(string(`oldvar'), -4, 4)	
+			} 
+			egen `combined' = concat(`start' `end'), p(" ") 
+			local oldvar `combined' 
+			local flag = 1 
+		} 
 	} 
 
 	/// dry run or for real 	
     if "`dryrun'" != "" { 
+		preserve 
 		char `oldvar'[varname] "`varlist'" 
-		Tryit `touse' `newvar' `oldvar' `dtype' "`pattern'" `format' `topyear' 
+		if `flag' char `oldvar'[varname] "(input)" 
+		Tryit `touse' `newvar' `oldvar' `dtype' "`pattern'" `format' `topyear'  
 	} 
-	else Doit `touse' `newvar' `oldvar' `dtype' "`pattern'" `format' `topyear' 
+	else { 
+		Doit `touse' `newvar' `oldvar' `dtype' "`pattern'" `format' `topyear'  
+		if `"`varlabel'"' == "" {  		
+			label var `newvar' "`utype' date from `varlist'" 
+		}
+		else label var `newvar' `"`varlabel'"' 
+	} 
 end 
 
 program Tryit 

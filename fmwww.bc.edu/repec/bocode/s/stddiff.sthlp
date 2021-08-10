@@ -64,8 +64,8 @@ Immediate form of standardized differences for categorical variables
 {title:Description}
 
 {pstd}
-{cmd:stddiff} calculates the standardized difference between two groups for both continuous and categorical variables. Standardized difference estimates are increasingly used to describe to compare groups in clinical trials 
-and observational studies, in preference over p-values. Some have proposed that an absolute standardized difference of 0.10 or more indicates that covariates are imbalanced between groups (see {help stddiff##Austin:Austin} 2001.
+{cmd:stddiff} calculates the standardized difference between two groups for both continuous and categorical variables. Standardized difference estimates are increasingly used to compare groups in clinical trials 
+and observational studies, in preference over p-values. Some have proposed that an absolute standardized difference of 0.10 or more indicates that covariates are imbalanced between groups (see {help stddiff##Austin:Austin} 2001).
 
 {pstd}
 {cmd:stddiff} calculaates standardized differences using the method of {help stddiff##Yang:Yange and Dalton} for both continuous and categorical variables. Categorical variables must be entered using Stata's factor variable notation (e.g., i.var)

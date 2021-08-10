@@ -9,7 +9,9 @@ help for {cmd:factext} {right:(Roger Newson)}
 {p 8 15}{cmd:factext} [{it:newvarlist}] {ifin} [ {cmd:,}
  {cmdab:fr:om}{cmd:(}{it:varlist}{cmd:)} {cmdab:st:ring}
  {cmdab:do:file}{cmd:(}{it:dofilename}{cmd:)}
- {cmdab:pa:rse}{cmd:(}{it:parse_string}{cmd:)} {cmdab:fm:issing}{cmd:(}{it:newvarname}{cmd:)} ]
+ {cmdab:pa:rse}{cmd:(}{it:parse_string}{cmd:)} {cmdab:fm:issing}{cmd:(}{it:newvarname}{cmd:)}
+ {cmd:fast}
+ ]
 
 
 {title:Description}
@@ -24,7 +26,8 @@ original dataset, indicating individual values of these factors.
 These dummy variables are usually created
 by {helpb xi}, by {helpb tabulate}, by John Hendrickx's {helpb desmat} package.
 For continuous predictor variables, similar dummy-like variables, known as reference splines,
-can be created using the {helpb factref} module of the {help ssc:SSC} package {helpb bspline},
+can be created using the {help ssc:SSC} package {helpb polyspline},
+or the {helpb flexcurv} and {helpb frencurv} modules of the {help ssc:SSC} package {helpb bspline},
 with the {helpb labprefix()} option.
 {cmd:factext} is used to create new factors with the same names in the new dataset created by {helpb parmest}.
 These new factors can be used to make confidence interval plots and/or tables.
@@ -34,7 +37,7 @@ in other observations.
 The values of these factors are usually extracted from the {hi:label} variable in the dataset
 created by {helpb parmby} or {helpb parmest}.
 If the model contains categorical factors,
-then the {hi:label} variable will
+then the {cmd::label} variable will
 have values of the form
 
 {pstd}
@@ -47,17 +50,11 @@ re-created are specified in the {it:newvarlist} if it is present, and otherwise 
 {it:factor_name}s.
 The factor values are specified in the {it:value}s.
 
-{pstd}
-Users of {help version:Stata versions 11 or above} should probably not use {cmd:factext}.
-Instead, they should probably use the {helpb fvregen} package, also downloadable from {help ssc:SSC},
-which regenerates factor variables (introduced in Stata version 11) in a {helpb parmest} output dataset
-by extracting their names and values from the parameter name variable,
-whose default name is {cmd:parm}.
-
 
 {title:Options}
 
-{p 0 4}{cmd:from(}{it:varlist}{cmd:)} specifies a list of input string variables, from which the factors
+{phang}
+{cmd:from(}{it:varlist}{cmd:)} specifies a list of input string variables, from which the factors
 and their values are extracted.
 If this option is absent, then {cmd:factext} attempts to extract the
 factors from a single string variable named {hi:label}.
@@ -67,29 +64,51 @@ and specify these as the {cmd:from()} option (see Remarks).
 Factor values found in later variables in the
 {cmd:from()} list overwrite values for the same factors found in earlier variables in the {cmd:from()} list.
 
-{p 0 4}{cmd:string} specifies that the factors generated will be string variables.
+{phang}
+{cmd:string} specifies that the factors generated will be string variables.
 Otherwise they will be
 numeric variables.
 
-{p 0 4}{cmd:dofile(}{it:dofilename}{cmd:)} specifies a Stata do-file to be called by {cmd:factext} after the
+{phang}
+{cmd:dofile(}{it:dofilename}{cmd:)} specifies a Stata do-file to be called by {cmd:factext} after the
 new factors have been created.
 This do-file is usually created by {helpb descsave}, and contains commands
 to reconstruct the new factors with the storage types, display formats, value labels,
 variable labels and selected characteristics of the old factors with the same names in the original dataset.
 
-{p 0 4}{cmd:parse(}{it:parse_string}{cmd:)} specifies the string used to parse the input string variables
+{phang}
+{cmd:parse(}{it:parse_string}{cmd:)} specifies the string used to parse the input string variables
 specified in the {cmd:from()} option.
 This {it:parse_string} separates the {it:factor_name}s from the
 {it:value}s.
 If absent, it defaults to {cmd:"=="}.
 
-{p 0 4}{cmd:fmissing(}{it:newvarname}{cmd:)} specifies the name of a new binary variable to be generated,
+{phang}
+{cmd:fmissing(}{it:newvarname}{cmd:)} specifies the name of a new binary variable to be generated,
 containing missing values for observations excluded by the {helpb if} and {helpb in} qualifiers,
 1 for other observations in which all the generated factors are missing, and 0 for other observations
 in which at least one of the generated factors is nonmissing.
+Note that, if no factors are generated, then the {cmd:fmissing()} variable is not generated.
+
+{phang}
+{cmd:fast} is an option for programmers processing large datasets.
+It specifies that {cmd:factext} will not do any extra work to restore the original dataset
+if the user presses {help break:Break}.
 
 
 {title:Remarks}
+
+{pstd}
+Most users will probably not use {cmd:factext}.
+Instead, they will probably use the {helpb fvregen} package, also downloadable from {help ssc:SSC},
+which regenerates factor variables (introduced in Stata version 11) in a {helpb parmest} output dataset
+by extracting their names and values from the parameter name variable,
+whose default name is {cmd:parm}.
+However, {cmd:factext} is useful for users who still create indicator variables
+using {helpb tabulate}, {helpb desmat} or the officially-deprecated {helpb xi:xi:} prefix,
+or who include continuous factors in a model using reference spline bases,
+generated using the {help ssc:SSC} package {helpb polyspline},
+or using the {helpb flexcurv} or {helpb frencurv} modules of the {help ssc:SSC} package {helpb bspline}.
 
 {pstd}
 {cmd:factext} is typically used with the {helpb parmest} and {helpb descsave} packages to create a new dataset
@@ -131,7 +150,8 @@ These new string variables may then be input as the {cmd:from()} option of {cmd:
 
 {pstd}
 If the model contains reference splines
-generated using the {helpb flexcurv} module of the {help ssc:SSC} package {helpb bspline},
+generated using the {help ssc:SSC} package {helpb polyspline},
+or using the {helpb flexcurv} or {helpb frencurv} modules of the {help ssc:SSC} package {helpb bspline},
 and the user has used {helpb flexcurv} with the option {cmd:labprefix("}{it:variable_name}{cmd:==")},
 where {it:variable_name} is the {it:X}-axis variable input to {helpb flexcurv},
 then the {hi:label} variable may contain values of the form
@@ -142,15 +162,11 @@ then the {hi:label} variable may contain values of the form
 {pstd}
 and {cmd:factext} can create a variable in the output dataset
 with the name and reference values of the {it:X}-axis variable.
-See the on-line help for {helpb bspline} if installed.
+See the on-line help for {helpb polyspline} or {helpb bspline} if installed.
 
 {pstd}
-To add extra observations to the dataset containing reference levels for the factors created by {cmd:factext},
-the user may use the {helpb factref} package, or merge in a dataset created using {helpb xcontract}.
 To merge multiple factors and generate string variables containing the factor values, names and labels,
-use the {helpb factmerg} package.
-The {helpb factmerg}, {helpb factref} and {helpb xcontract} packages
-can be downloaded from {help ssc:SSC}.
+use the {help ssc:SSC} package {helpb factmerg}.
 
 
 {title:Examples}
@@ -242,5 +258,5 @@ Download from
 {p 0 10}
 On-line:   help for {helpb describe}, {helpb label}, {helpb tabulate}, {helpb xi}, {helpb split}, {helpb graph}
  {break} help for {helpb parmest}, {helpb descsave}, {helpb desmat}, {helpb factref}, {helpb factmerg},
- {helpb eclplot}, {helpb xcontract}, {helpb fvregen}, {helpb bspline} if installed
+ {helpb eclplot}, {helpb xcontract}, {helpb fvregen}, {helpb bspline}, {helpb frencurv}, {helpb flexcurv}, {helpb polyspline} if installed
 {p_end}

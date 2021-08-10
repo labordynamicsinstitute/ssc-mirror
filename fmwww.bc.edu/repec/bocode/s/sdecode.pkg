@@ -1,6 +1,6 @@
 d 'SDECODE': module to decode a numeric variable into a string variable
 d
-d  sdecode (super decode) creates an output string variable with
+d   sdecode (super decode) creates an output string variable with
 d values from the input numeric variable varname, using labels if
 d present and formats otherwise. The output string variable may
 d either replace the input numeric variable or be generated as a
@@ -22,11 +22,10 @@ d KW: value labels
 d
 d Requires: Stata version 13.0
 d
+d Distribution-Date: 20201122
 d
-d Author: Roger Newson, National Heart and Lung Institute, Imperial College London
+d Author: Roger Newson, Imperial College London
 d Support: email r.newson@@imperial.ac.uk
-d
-d Distribution-Date: 20130930
 d
 f sdecode.ado
 f sdecode.sthlp

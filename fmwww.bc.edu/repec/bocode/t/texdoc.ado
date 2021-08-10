@@ -1,4 +1,4 @@
-*! version 2.3.9  30jan2017  Ben Jann
+*! version 2.4.0  13apr2018  Ben Jann
 
 program texdoc
     version 10.1
@@ -40,11 +40,12 @@ program texdoc
         }
         gettoken mname 0 : 0, parse(" =:")
         if `"${TeXdoc_stnodo}"'=="" {
-            local meval`macval(0)'
+            capt n local meval`macval(0)'
+            if _rc local meval "ERROR"
             texdoc_local_put `mname' `"`macval(meval)'"'
         }
         else {
-            capt texdoc_local_get `mname'
+            capt n texdoc_local_get `mname'
             if _rc di as txt "(backup of `mname' not found)"
         }
         c_local `mname' `"`macval(meval)'"'
@@ -90,14 +91,14 @@ program texdoc
         }
         local caller : di _caller()
         local do_globals snippets replace append logdir logdir2 noprefix ///
-            prefix prefix2 stpath stpath2 logall nodo nolog cmdlog ///
+            prefix prefix2 stpath stpath2 logall nodo nolog cmdlog beamer ///
             verbatim hardcode nokeep custom cmdstrip lbstrip gtstrip ///
             matastrip nooutput noltrim gropts grdir alert tag certify linesize
-        local init_globals nodo nolog cmdlog verbatim hardcode nokeep custom ///
+        local init_globals nodo nolog cmdlog beamer verbatim hardcode nokeep custom ///
             cmdstrip lbstrip gtstrip matastrip nooutput noltrim gropts grdir ///
             alert tag certify linesize stpath prefix prefix0 logdir path0 path ///
             logall basename docname0 docname docname_FH substitute
-        local st_globals nodo nolog cmdlog verbatim hardcode nokeep custom cmdstrip ///
+        local st_globals nodo nolog cmdlog beamer verbatim hardcode nokeep custom cmdstrip ///
             lbstrip gtstrip matastrip nooutput noltrim indent grcounter filename ///
             filename0 texname texname0 name0 name alert tag certify linesize ///
             linesize0 status loc
@@ -196,7 +197,7 @@ program _texdoc_cleanup
     // close file handle
     capture mata: texdoc_closeout_fh(${TeXdoc_docname_FH})
     // clear texdoc init globals
-    foreach g in nodo nolog cmdlog verbatim hardcode nokeep custom cmdstrip ///
+    foreach g in nodo nolog cmdlog beamer verbatim hardcode nokeep custom cmdstrip ///
         lbstrip gtstrip matastrip nooutput noltrim gropts grdir alert tag ///
         certify linesize stcounter stpath prefix prefix0 logdir path0 path ///
         logall basename docname0 docname docname_FH substitute {
@@ -206,7 +207,7 @@ end
 
 program _texdoc_cleanup_stlog
     // clear texdoc stlog globals
-    foreach g in nodo nolog cmdlog verbatim hardcode nokeep custom cmdstrip ///
+    foreach g in nodo nolog cmdlog beamer verbatim hardcode nokeep custom cmdstrip ///
         lbstrip gtstrip matastrip nooutput noltrim indent grcounter filename ///
         filename0 texname texname0 name0 name alert tag certify linesize ///
         linesize0 status loc {
@@ -219,7 +220,7 @@ program _texdoc_cleanup_do
     capt log close TeXdoc_stlog
     // clear texdoc do globals
     foreach g in snippets replace append logdir logdir2 noprefix prefix ///
-        prefix2 stpath stpath2 logall nodo nolog cmdlog verbatim hardcode ///
+        prefix2 stpath stpath2 logall nodo nolog cmdlog beamer verbatim hardcode ///
         nokeep custom cmdstrip lbstrip gtstrip matastrip nooutput noltrim ///
         gropts grdir alert tag certify linesize {
         global TeXdoc_do_`g' ""
@@ -335,9 +336,9 @@ program texdoc_init
         exit 499
     }
     syntax [anything(id="document name")] [, force ///
-        Replace Append NOLOGDIR logdir LOGDIR2(str) NOLOGALL LOGAll ///
+        Replace Append NOLOGDIR logdir LOGDIR2(str) NOLOGALL LOGALL ///
         NOPrefix Prefix Prefix2(str) NOSTPATH stpath STPATH2(str) ///
-        NODO DO NOLOG LOG NOCMDLog CMDLog NOVERBatim VERBatim ///
+        NODO DO NOLOG LOG NOCMDLog CMDLog NOBEAMER BEAMER NOVERBatim VERBatim ///
         NOHardcode Hardcode NOKeep Keep NOCustom Custom NOCMDStrip CMDStrip ///
         NOLBStrip LBStrip NOGTStrip GTStrip NOMatastrip Matastrip ///
         NOOutput Output NOLTRIM LTRIM GRopts(str asis) grdir(str) ///
@@ -365,7 +366,7 @@ program texdoc_init
             exit 198
         }
     }
-    foreach opt in logall do log cmdlog verbatim hardcode keep custom ///
+    foreach opt in logall do log cmdlog beamer verbatim hardcode keep custom ///
         cmdstrip lbstrip gtstrip matastrip output ltrim certify {
         if "``opt''"!="" & "`no`opt''"!="" {
             di as err "`opt' and no`opt' not both allowed"
@@ -400,7 +401,7 @@ program texdoc_init
             foreach opt in do log keep output ltrim {
                 if "``opt''`no`opt''"=="" local no`opt' `"${TeXdoc_do_no`opt'}"'
             }
-            foreach opt in logall cmdlog verbatim hardcode custom cmdstrip ///
+            foreach opt in logall cmdlog beamer verbatim hardcode custom cmdstrip ///
                 lbstrip gtstrip matastrip certify {
                 if "``opt''`no`opt''"=="" local `opt' `"${TeXdoc_do_`opt'}"'
             }
@@ -469,7 +470,7 @@ program texdoc_init
         foreach opt in do log keep output ltrim {
             if "``opt''`no`opt''"!="" global TeXdoc_no`opt' `no`opt''
         }
-        foreach opt in logall cmdlog verbatim hardcode custom cmdstrip ///
+        foreach opt in logall cmdlog beamer verbatim hardcode custom cmdstrip ///
             lbstrip gtstrip matastrip certify {
             if "``opt''`no`opt''"!="" global TeXdoc_`opt' ``opt''
         }
@@ -501,8 +502,8 @@ program texdoc_close, sclass
     _texdoc_makelink `"${TeXdoc_docname}"' // returns local link
     di as txt `"(texdoc output written to {`link':${TeXdoc_docname0}})"'
     sreturn clear
-    foreach s in certify custom nokeep hardcode alert tag verbatim cmdlog nooutput ///
-        noltrim gtstrip lbstrip cmdstrip matastrip nolog nodo linesize ///
+    foreach s in certify custom nokeep hardcode alert tag verbatim cmdlog beamer ///
+        nooutput noltrim gtstrip lbstrip cmdstrip matastrip nolog nodo linesize ///
         gropts grdir stpath prefix logdir path logall basename docname {
         mata: st_local("`s'", st_global("TeXdoc_`s'"))
         sreturn local `s' `"`macval(`s')'"'
@@ -558,7 +559,7 @@ program texdoc_stlog_open
     else local hascolon 0
     // parse syntax and update settings
     syntax [anything(name=name0)] [using/] [, nostop ///
-        NODO DO NOLOG LOG NOCMDLog CMDLog NOVERBatim VERBatim ///
+        NODO DO NOLOG LOG NOCMDLog CMDLog NOBEAMER BEAMER NOVERBatim VERBatim ///
         NOHardcode Hardcode NOKeep Keep NOCustom Custom NOCMDStrip CMDStrip ///
         NOLBStrip LBStrip NOGTStrip GTStrip NOMatastrip Matastrip ///
         NOOutput Output NOLTRIM LTRIM ///
@@ -599,7 +600,7 @@ program texdoc_stlog_open
         if "``opt''`no`opt''"=="" local no`opt' ${TeXdoc_no`opt'}
         global TeXdoc_stno`opt' `no`opt''
     }
-    foreach opt in cmdlog verbatim hardcode custom cmdstrip lbstrip ///
+    foreach opt in cmdlog beamer verbatim hardcode custom cmdstrip lbstrip ///
         gtstrip matastrip certify {
         if "``opt''"!="" & "`no`opt''"!="" {
             di as err "`opt' and no`opt' not both allowed"
@@ -729,7 +730,7 @@ program texdoc_stlog_close, sclass
     global TeXdoc_ststatus ""
     syntax [, _cmdlog(str) _cmdlog0(str) _indent(int 0) ]
     // read settings
-    foreach opt in nodo nolog cmdlog verbatim hardcode nokeep custom cmdstrip ///
+    foreach opt in nodo nolog cmdlog beamer verbatim hardcode nokeep custom cmdstrip ///
         lbstrip gtstrip matastrip nooutput noltrim certify grcounter filename ///
         filename0 texname texname0 name0 name {
         local `opt' ${TeXdoc_st`opt'}
@@ -740,7 +741,8 @@ program texdoc_stlog_close, sclass
     if `"`linesize0'"'!="" {
         set linesize `linesize0'
     }
-    // backup current r-retruns
+    if "`beamer'"!="" local beamer "[beamer]"
+    // backup current r-returns
     tempname rcurrent
     _return hold `rcurrent'
     // process cmdlog
@@ -828,7 +830,7 @@ program texdoc_stlog_close, sclass
                 texdoc_write write \begin{stverbatim}
                 texdoc_write write \begin{verbatim}
             } 
-            else texdoc_write write \begin{stlog}
+            else texdoc_write write \begin{stlog}`beamer'
             capt confirm file `"`filename'"'
             if _rc di as txt `"(`filename' not found)"'
             else {
@@ -853,17 +855,17 @@ program texdoc_stlog_close, sclass
             }
             else if strpos(`"`texname'"', "-") { // "-" causes problem for \input{}
                 texdoc_write write {\def\TeXdocstname{`texname'}
-                texdoc_write write \begin{stlog}\input{\TeXdocstname}\end{stlog}}
+                texdoc_write write \begin{stlog}`beamer'\input{\TeXdocstname}\end{stlog}}
             }
             else {
-                texdoc_write write \begin{stlog}\input{`texname'}\end{stlog}
+                texdoc_write write \begin{stlog}`beamer'\input{`texname'}\end{stlog}
             }
         }
     }
     // s-returns
     mata: st_local("indent", " " * `_indent')
     sreturn clear
-    foreach s in certify custom nokeep hardcode tag alert verbatim cmdlog ///
+    foreach s in certify custom nokeep hardcode tag alert verbatim cmdlog beamer ///
         nooutput noltrim gtstrip lbstrip cmdstrip matastrip nolog nodo ///
         linesize indent texname0 texname filename0 filename name0 name {
         sreturn local `s' `"``s''"'
@@ -1161,9 +1163,9 @@ program texdoc_do
 end
 
 program _texdoc_do
-    syntax [, Replace Append NOLOGDIR logdir LOGDIR2(str) NOLOGALL LOGAll ///
+    syntax [, Replace Append NOLOGDIR logdir LOGDIR2(str) NOLOGALL LOGALL ///
         NOPrefix Prefix Prefix2(str) NOSTPATH stpath STPATH2(str) ///
-        NODO DO NOLOG LOG NOCMDLog CMDLog NOVERBatim VERBatim ///
+        NODO DO NOLOG LOG NOCMDLog CMDLog NOBEAMER BEAMER NOVERBatim VERBatim ///
         NOHardcode Hardcode NOKeep Keep NOCustom Custom NOCMDStrip CMDStrip ///
         NOLBStrip LBStrip NOGTStrip GTStrip NOMatastrip Matastrip ///
         NOOutput Output NOLTRIM LTRIM GRopts(str asis) grdir(str) ///
@@ -1191,7 +1193,7 @@ program _texdoc_do
             exit 198
         }
     }
-    foreach opt in logall do log cmdlog verbatim hardcode keep custom ///
+    foreach opt in logall do log cmdlog beamer verbatim hardcode keep custom ///
         cmdstrip lbstrip gtstrip matastrip output ltrim certify {
         if "``opt''"!="" & "`no`opt''"!="" {
             di as err "`opt' and no`opt' not both allowed"
@@ -1220,7 +1222,7 @@ program _texdoc_do
         foreach opt in do log keep output ltrim {
             if "``opt''`no`opt''"=="" local no`opt' `"${TeXdoc_do_no`opt'}"'
         }
-        foreach opt in logall cmdlog verbatim hardcode custom cmdstrip ///
+        foreach opt in logall cmdlog beamer verbatim hardcode custom cmdstrip ///
             lbstrip gtstrip matastrip certify {
             if "``opt''`no`opt''"=="" local `opt' `"${TeXdoc_do_`opt'}"'
         }
@@ -1232,7 +1234,7 @@ program _texdoc_do
         }
     }
     foreach opt in replace append logdir logdir2 noprefix prefix prefix2 stpath ///
-        stpath2 logall nodo nolog cmdlog verbatim hardcode nokeep custom ///
+        stpath2 logall nodo nolog cmdlog beamer verbatim hardcode nokeep custom ///
         cmdstrip lbstrip gtstrip matastrip nooutput noltrim gropts grdir ///
         alert tag certify linesize {
         global TeXdoc_do_`opt' `"`macval(`opt')'"'
@@ -1421,6 +1423,7 @@ void texdoc_init()
     st_global("TeXdoc_nodo",          st_local("nodo"))
     st_global("TeXdoc_nolog",         st_local("nolog"))
     st_global("TeXdoc_cmdlog",        st_local("cmdlog"))
+    st_global("TeXdoc_beamer",        st_local("beamer"))
     st_global("TeXdoc_verbatim",      st_local("verbatim"))
     st_global("TeXdoc_hardcode",      st_local("hardcode"))
     st_global("TeXdoc_nokeep",        st_local("nokeep"))
@@ -2001,7 +2004,7 @@ void texdoc_add_abspath(string scalar macname)
     st_local(macname, fn)
 }
 
-// return path from filename in local cd
+// return path from filename in local path
 void texdoc_get_path(string scalar fn)
 {
     string scalar path, basename

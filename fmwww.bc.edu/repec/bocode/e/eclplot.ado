@@ -6,7 +6,7 @@ version 13.0;
   (vertical or horizontal)
   against a numeric parameter ID variable..
 *! Author: Roger Newson
-*! Date: 30 September 2012
+*! Date: 06 March 2021
 */
 
 *
@@ -183,13 +183,15 @@ else {;
   local 0 `"`supby'"';
   syntax varname [ , Missing Truncate(passthru) SPAceby(real 0) OFFset(real 0) ];
   local supbyvar "`varlist'";
+  cap conf numeric var `supbyvar';
+  local stringsupbyvar=_rc;
   *
    Create superimposed plot sequence variable
   *;
   tempvar supseqvar;
   tempname supseqlab;
   qui egen `supseqvar'=group(`supbyvar') `ifin', `missing' label lname(`supseqlab') `truncate';
-  qui summ `supseqvar';
+  summ `supseqvar', meanonly;
   local nsupby=r(max);
   if missing(`nsupby') {;
     disp as error "No valid values for supby() variable: `supbyvar'";
@@ -203,17 +205,25 @@ else {;
    Create legend order and default legend
   *;
   local legord "";
-  forv i1=1(1)`nsupby' {;
+  qui levelsof `supbyvar' `ifin', `missing' lo(supbylevs);
+  local i1=0;
+  foreach SBL in `supbylevs' {;
+    local i1=`i1'+1;
     * Key sequence number for estimates plot *;
     local keyseq=2*`i1';
     if "`ciforeground'"=="ciforeground" {;
       local keyseq=`keyseq'-1;
     };
-    local keytext: label (`supseqvar') `i1';
+    if `stringsupbyvar' {;
+      local keytext `"`SBL'"';
+    };
+    else {;
+      local keytext: label (`supbyvar') `SBL';
+    };
     * Add -keytext- to legend order if quotable in double quotes *;
     cap local junk1=`"`macval(keytext)'"';
     if _rc==0 {;
-      local legord `"`legord' `keyseq' `"`macval(keytext)'"'"';
+      local legord `"`legord' `keyseq' `"`keytext'"'"';
     };
     else {;
       local legord `"`legord' `keyseq' `""'"';

@@ -1,0 +1,6 @@
+*! version 1.0.1  16jul2020
+sequence 961
+* label "YGS5"
+label resource "COLOR-YGS5"
+
+set rgb "249 249 249"

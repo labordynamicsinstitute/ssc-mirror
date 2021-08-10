@@ -20,5 +20,8 @@ d Requires: Stata version 9 and nwcommands from http://www.nwcommands.org
 d
 d Distribution-Date: 20170616
 d
+d Author: Charlie Joyez, Paris-Dauphine University 
+d Support: email charlie.joyez@@dauphine.fr 
+d
 f nw_fromlist.ado
 f nw_fromlist.sthlp

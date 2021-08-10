@@ -36,6 +36,8 @@ help for {hi:validscale}{right:Bastien Perrot}
 {synopt : {help validscale##kgv_options:{it:kgv_options}}}options for known-groups validity assessment{p_end}
 {synopt : {opt conc(varlist)}}assess concurrent validity{p_end}
 {synopt : {help validscale##conc_options:{it:conc_options}}}options for concurrent validity assessment{p_end}
+{synopt : {opt * }}options from {help sem_estimation_options} command (additional estimation options for {help validscale##cfa_options:{it:cfa_options}}) {p_end}
+
 
 {p2colreset}{...}
 
@@ -110,6 +112,8 @@ added.
 {phang2} {opt cfaor} option is useful when both {opt cfar:msea} and {opt cfacf:i} are used. By default, covariances between measurement errors are added and the model is estimated until both RMSEA
 and CFI criteria are met. If cfaor is used, the estimations stop when one of the two
 criteria is met.
+
+{phang2} {opt *} options from {help sem_estimation_options} (e.g. {opt iterate(#)}, {opt vce(vcetype)}, etc.)
 
 {marker convdiv_options}{...}
 {phang}{opt conv:div} assesses convergent and divergent validities. The option displays the matrix of correlations between items and rest-scores. If {opt scores(varlist)} is used, then the correlations coefficients are computed between

@@ -1,9 +1,9 @@
 * ==========================================================
 * krippalpha: compute Krippendorff's alpha intercoder reliability coefficient
-* Version 1.3.1, 2015-01-14
+* Version 1.3.3, 2020-12-29
 * (Version 1.0.0 corresponds to 2013-10-18)
 * ==========================================================
-*! version 1.3.1, Alexander Staudt, Mona Krewel, 14jan2015
+*! version 1.3.3, Alexander Staudt, Mona Krewel, 29dec2020
 
 *mata mata clear
 *program drop _all

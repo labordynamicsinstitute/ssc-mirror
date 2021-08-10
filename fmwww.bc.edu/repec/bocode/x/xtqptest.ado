@@ -1,11 +1,12 @@
 * Born and Breitung (2016) QP/LM-test for serial correlation
-*! Version 1.1.0 21nov16
+*! Version 1.1.1  06apr2018
 * Contact jesse.wursten@kuleuven.be for bug reports/inquiries.
 
 * Changelog
-** 16sep2016: Thanks to Sebastian Kripfganz for spotting an error.
-** 9nov2016: Crucial bug fix! Test would use completely wrong values if data were unbalanced.
+** 06apr2018: Reference to Stata Journal article added.
 ** 21nov2016: Crucial bug fix! Test was calculating the mean incorrectly if data were unbalanced (due to row-wise deletion in mata).
+** 9nov2016: Crucial bug fix! Test would use completely wrong values if data were unbalanced.
+** 16sep2016: Thanks to Sebastian Kripfganz for spotting an error.
 
 /*
 cap mata mata drop qp_statistic()

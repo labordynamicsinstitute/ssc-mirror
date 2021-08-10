@@ -26,10 +26,11 @@ d
 d Author: Nicholas J. Cox, University of Durham
 d Support: email N.J.Cox@@durham.ac.uk
 d
-d Distribution-Date: 20161219
+d Distribution-Date: 20200622
 d
 f ../c/chitest.ado
 f ../c/chitest.hlp
+f tabchi.sthlp
 f ../c/chitesti.ado
 f ../c/chitesti.hlp
 f ../c/chitest6.ado

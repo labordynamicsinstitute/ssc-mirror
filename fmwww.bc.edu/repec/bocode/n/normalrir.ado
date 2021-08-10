@@ -9,7 +9,7 @@ version 10.0;
  and a mean and standard deviation for the Normal population
  with respect to which the ridits are defined.
 *! Author: Roger Newson
-*! Date: 01 May 2012
+*! Date: 02 April 2018
 */
 syntax newvarname [if] [in] , Uniform(string asis) [
   MU(string asis) SD(string asis) MUZero(string asis) SDZero(string asis)

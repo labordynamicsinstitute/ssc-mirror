@@ -5,13 +5,38 @@ pr define wtd_perc, rclass
 version 14.0
 
 syntax varname [if] [in], ///
-    DISTtype(string) IADPercentile(real) /// 
-        [PREVFormat(string) PERCFormat(string)]
+    DISTtype(string) IADPercentile(real) [start(string) end(string) ///
+        PREVFormat(string) PERCFormat(string) delta(real 1)]
 qui {
 tokenize `varlist'
 local obstime `1'
 
 tempname resmat covarmat prevpr selogitprev timeperc beta mu sigma alpha
+
+if ("`start'" != "" & "`end'" == "") | ("`start'" == "" & "`end'" != "") {
+    di in red "If you specify -start()- or -end() you must specify both"
+    error 119
+}
+if ("`start'" != "" & "`end'" != "") {
+    local delta = (td(`end') - td(`start')) + 1
+    if "`reverse'" != "" {
+        replace `obstime' = td(`end') + .5 - `obstime'
+    }
+    else {
+        replace `obstime' = `obstime' - (d(`start') - .5)
+    }
+    local tstart = td(`start') - .5
+    local tend = td(`end') + .5
+}
+else {
+    local tstart = 0
+    local tend = `delta'
+    if "`reverse'" != "" {
+        replace `obstime' = `tend' - `obstime'
+    }
+}    
+global wtddelta = `delta'
+
     
 * Exponential FRD
 if "`disttype'" == "exp" {

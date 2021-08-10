@@ -17,9 +17,9 @@ d KW: RTF
 d
 d Requires: Stata version 11.0
 d
-d Distribution-Date: 20151013
+d Distribution-Date: 20200921
 d
-d Author: Roger Newson, National Heart and Lung Institute at Imperial College London
+d Author: Roger Newson, Imperial College London
 d Support: email r.newson@@imperial.ac.uk
 d
 f listtab.ado

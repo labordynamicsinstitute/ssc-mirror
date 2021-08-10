@@ -100,14 +100,14 @@ You can get the detailed quotation records for Vanke Real Estate and Pudong Deve
 {title:Author}
 
 {pstd}Chuntao LI{p_end}
-{pstd}School of Finance, Zhongnan University of Economics and Law{p_end}
+{pstd}China Stata Club(爬虫俱乐部){p_end}
 {pstd}Wuhan, China{p_end}
 {pstd}chtl@zuel.edu.cn{p_end}
 
 {pstd}Yuan XUE{p_end}
-{pstd} School of Finance, Zhongnan University of Economics and Law{p_end}
+{pstd}China Stata Club(爬虫俱乐部){p_end}
 {pstd}Wuhan, China{p_end}
-{pstd}xueyuan19920310@163.com{p_end}
+{pstd}xueyuan@hust.edu.cn{p_end}
 
 
 

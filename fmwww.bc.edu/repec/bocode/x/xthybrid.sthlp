@@ -34,6 +34,7 @@ Main
 {synopt:{opt star}} requests stars to denote statistically significant parameters on model variables{p_end}
 {synopt:{opt vce}} specifies the type of standard error to be reported{p_end}
 {synopt:{opt it:erations}} requests that the command is executed noisily{p_end}
+{synopt:{opt keep:vars}} requests that any new variables created by the command are retained {p_end}
 {synopt:{opt meglm:opts}{it:(list})} enables the user to request options from the {cmd:meglm} command{p_end}
 {hline}
 
@@ -112,6 +113,9 @@ When the {cmd: test} option is specified with the {cmd: nonlinearities} option, 
 Specyfying the {cmdab:star} option overrules {cmd:se}, {cmd:p} and {cmd:t}. Note that specifying the option {cmd:full} overcomes this.
 
 {p 0 4}{cmdab:vce} specifies the type of standard error to be reported. This option supports the following error types: 'oim', 'robust' and 'cluster' {it:clustervar}.
+
+{p 0 4}{cmdab:keep:vars} requests that any new variables created by the command are retained. The names for these new variables will begin with the prefix B__, W__ or R__.
+Users will need to manually remove these variables from the data before executing {cmd:xthybrid} again.
 
 {p 0 4}{cmdab:it:erations} requests that the command is executed noisily.
 

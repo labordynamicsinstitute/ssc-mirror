@@ -1,5 +1,5 @@
 {smcl}
-{* *! version 1.04 18 March 2017}{...}
+{* *! version 1.10 06 December 2017}{...}
 {viewerjumpto "Syntax" "estquant##syntax"}{...}
 {viewerjumpto "Description" "estquant##description"}{...}
 {viewerjumpto "Options" "estquant##options"}{...}
@@ -18,7 +18,7 @@
 {title:Syntax}
 {p 8 17 2}
 {cmdab:estquant} {varname} {ifin}, {cmd:cat({varname})} 
-[{opt sh:ift} {opt di:lation} {opt tr:uncation} qrange(#) {opt bvar:iable}{bf:([on|off])} 
+[{opt sh:ift} {opt di:lation} {opt tr:uncation} {opt initr(#)} {opt qrange(#)} {opt bvar:iable}{bf:([on|off])} 
 {opt brep:lication(#)} {opt bsam:pling(#)} {opt strata} {opt maxit:eration(#)} {opt eps1(#)} {opt eps2(#)} 
 {opt ci}{bf:([normal|bootstrap])} {opt l:evel(#)} ]
 
@@ -34,6 +34,8 @@
 {synopt:{opt di:lation}} estimates the relative dilation parameter {it:D}.
 {p_end}
 {synopt:{opt tr:uncation}} estimates the relative truncation parameter {it:S}.
+{p_end}
+{synopt:{opt initr(#)}} specifies the initial value of the relative truncation parameter {it:S} for numerical optimization.
 {p_end}
 {synopt:{opt qrange(#)}} specifies the range of quantile function.
 {p_end}
@@ -90,6 +92,10 @@ specified, the relative dilation parameter is constrained as {it:D} = 1.
 {phang}
 {opt tr:uncation} estimates the relative truncation parameter {it:S}. When this option is not 
 specified, the relative truncation parameter is constrained as {it:S} = 0.
+{p_end}
+
+{phang}
+{opt initr(#)} specifies the initial value of the relative truncation parameter {it:S} for numerical optimization. In the default setting, the initial value is automatically selected by the grid search.
 {p_end}
 
 {phang}
@@ -180,6 +186,6 @@ large cities: Distinguishing agglomeration from firm selection," {it:Econometric
 
 {marker K2017}{...}
 {phang}
-Kondo, K. (2017) "Quantile approach for distinguishing agglomeration from firm selection in Stata," Mimeo.
+Kondo, K. (2017) "Quantile approach for distinguishing agglomeration from firm selection in Stata," RIETI TP 17-T-001.
 {p_end}
 

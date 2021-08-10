@@ -1,5 +1,5 @@
 ﻿{smcl}
-{* 19Sep2016}{...}
+{* 26Sep2017}{...}
 {hi:help chinagcode}
 {hline}
 
@@ -63,28 +63,28 @@ Both {cmd:chinagcode} and {cmd:chinaaddress} require Stata version 14 or higher.
 {dlgtab:Address}
 
 {phang}
-{opt province(varname)} specifies the string variable that contains the name of province. {p_end}
+{opt pro:vince(varname)} specifies the string variable that contains the name of province. {p_end}
 
 {phang}
-{opt city(varname)} specifies the string variable that contains the name of city. {p_end}
+{opt cit:y(varname)} specifies the string variable that contains the name of city. {p_end}
 
 {phang}
-{opt district(varname)} specifies the string variable that contains the name of district. {p_end}
+{opt dis:trict(varname)} specifies the string variable that contains the name of district. {p_end}
 
 {phang}
-{opt address(varname)} specifies the string variable that contains the address. {p_end}
+{opt add:ress(varname)} specifies the string variable that contains the address. {p_end}
 
 {phang}
-{opt fulladdress(varname)} specifies the string variable that contains the full address. {p_end}
+{opt fulladd:ress(varname)} specifies the string variable that contains the full address. {p_end}
 
 
 {dlgtab:Response switches}
 
 {phang}
-{opt lat(newvar)} is required when you want to specify the name of the variable that contains latitude. Default choice is longitude. {p_end}
+{opt lat:itude(newvar)} is required when you want to specify the name of the variable that contains latitude. Default choice is longitude. {p_end}
 
 {phang}
-{opt long(newvar)} is required when you want to specify the name of the variable that contains longitude. Default choice is latitude. {p_end}
+{opt long:itude(newvar)} is required when you want to specify the name of the variable that contains longitude. Default choice is latitude. {p_end}
 
 {phang}
 {opt ffirst:} If the location yield from the combination address is different from the return location from the full address, {opt ffirst} specifies that the location from the full location is a first priority.
@@ -103,31 +103,31 @@ Both {cmd:chinagcode} and {cmd:chinaaddress} require Stata version 14 or higher.
 {dlgtab:Location(required)}
 
 {phang}
-{opt lat(varname)} specifies the numeric variable that contains latitude. {p_end}
+{opt lat:itude(varname)} specifies the numeric variable that contains latitude. {p_end}
 
 {phang}
-{opt long(varname)} specifies the numeric variable that contains longitude. {p_end}
+{opt long:itude(varname)} specifies the numeric variable that contains longitude. {p_end}
 
 
 {dlgtab:Response switches}
 
 {phang}
-{opt province(newvar)} is required when you want to specify the name of the variable that contains the name of province. {p_end}
+{opt pro:vince(newvar)} is required when you want to specify the name of the variable that contains the name of province. {p_end}
 
 {phang}
-{opt city(newvar)} is required when you want to specify the name of the variable that contains the name of city. {p_end}
+{opt cit:y(newvar)} is required when you want to specify the name of the variable that contains the name of city. {p_end}
 
 {phang}
-{opt district(newvar)} is required when you want to specify the name of the variable that contains the name of district. {p_end}
+{opt dis:trict(newvar)} is required when you want to specify the name of the variable that contains the name of district. {p_end}
 
 {phang}
-{opt street(newvar)} is required when you want to specify the name of the variable that contains the name of street. {p_end}
+{opt str:eet(newvar)} is required when you want to specify the name of the variable that contains the name of street. {p_end}
 
 {phang}
-{opt address(newvar)} is required when you want to specify the name of the variable that contains the full address. {p_end}
+{opt add:ress(newvar)} is required when you want to specify the name of the variable that contains the full address. {p_end}
 
 {phang}
-{opt description(newvar)} is required when you want to specify the name of the variable that contains the sematic description of the location from Baidu Map. {p_end}
+{opt des:cription(newvar)} is required when you want to specify the name of the variable that contains the sematic description of the location from Baidu Map. {p_end}
 
 
 
@@ -221,12 +221,12 @@ extract Chinese address of location defined by longitude and latitude
 {title:Author}
 
 {pstd}Chuntao LI{p_end}
-{pstd}School of Finance, Zhongnan University of Economics and Law{p_end}
+{pstd}China Stata Club(爬虫俱乐部){p_end}
 {pstd}Wuhan, China{p_end}
 {pstd}chtl@zuel.edu.cn{p_end}
 
 {pstd}Yuan XUE{p_end}
-{pstd} School of Finance, Zhongnan University of Economics and Law{p_end}
+{pstd}China Stata Club(爬虫俱乐部){p_end}
 {pstd}Wuhan, China{p_end}
 {pstd}xueyuan19920310@163.com{p_end}
 

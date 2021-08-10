@@ -1,4 +1,4 @@
-* 1.0.0 13 June 2017 Laura Bellows, laura.bellows@duke.edu
+* 1.0.2 3 January 2018 Laura Bellows, laura.bellows@duke.edu
 
 /*** Unlicense (abridged):
 This is free and unencumbered software released into the public domain.
@@ -17,7 +17,7 @@ program define caterpillar, rclass byable(recall) sortpreserve
          	exit 498
 	}
 
-	syntax varlist (min=3 max=3) [if] [in]  [, BY(varlist) GRaph CENter]
+	syntax varlist (min=3 max=3) [if] [in]  [, BY(varlist) GRaph CENter SAVing(string asis)]
 	
 	marksample touse, novarlist
 	
@@ -38,10 +38,18 @@ program define caterpillar, rclass byable(recall) sortpreserve
 	}
 	
 	if "`by'"!="" {
-		isid `by' `i'
+		qui duplicates report `by' `i' if `touse'
+		if `r(N)'!=`r(unique_value)' {
+			di as err "ID does not uniquely identify within group"
+			exit 198
+		}	 
 	}
 	else {
-		isid `i'
+		qui duplicates report `i' if `touse'
+		if `r(N)'!=`r(unique_value)' {
+			di as err "ID does not uniquely identify"
+			exit 198
+		}
 	}
 
 	capture confirm numeric variable `e' `s'
@@ -70,7 +78,7 @@ program define caterpillar, rclass byable(recall) sortpreserve
 		
 		tempvar wtmean
 		if "`by'"!="" {
-			bysort `by': egen `wtmean' = wtmean(`e') if `touse', weight(`precision')
+			bysort `by' `touse': egen `wtmean' = wtmean(`e'), weight(`precision')
 		}
 		else {
 			egen `wtmean' = wtmean(`e') if `touse', weight(`precision')
@@ -90,7 +98,7 @@ program define caterpillar, rclass byable(recall) sortpreserve
 
 		tempvar count
 		if "`by'"!="" {
-			egen `count' = count(`i') if `touse', by(`by')
+			egen `count' = count(`i'), by(`by' `touse')
 		}
 		else {
 			egen `count' = count(`i') if `touse'
@@ -148,25 +156,27 @@ program define caterpillar, rclass byable(recall) sortpreserve
 		label variable null_quantile 	"Null Distribution"
 
 		if "`by'"!="" {
-			tempvar Q P df_Q p_Q E_s2 sd_est var_est tau2 tau rho_Q 
-			bysort `by': egen `Q' = sum(`contrast'^2*`precision') if `touse'
-			bysort `by': egen `P' = count(`contrast') if `touse'
-			gen `df_Q' = `P' - 1 if `touse'
-			gen `p_Q' = 1 - chi2(`df_Q',`Q') if `touse'
-			bysort `by': egen `E_s2'=mean(`s'^2) if `touse'
-			bysort `by': egen `sd_est'=sd(`contrast') if `touse'
-			gen `var_est' = `sd_est'^2 if `touse'
-			gen `tau2' = `var_est' - `E_s2' if `touse'
-			gen `tau' = sqrt(`tau2') if `touse'
-			replace `tau'=0 if `tau2'<0 & `touse'
-			gen `rho_Q' = 1 - `df_Q' / `Q' if `touse'
-			replace `rho_Q' = 0 if `rho_Q'<0 & `touse'
-
 			preserve
 
 			keep if `touse'
+
+			tempvar Q P df_Q p_Q E_s2 sd_est var_est tau2 tau rho_Q 
+			bysort `by': egen `Q' = sum(`contrast'^2*`precision') 
+			bysort `by': egen `P' = count(`contrast') 
+			gen `df_Q' = `P' - 1 
+			gen `p_Q' = 1 - chi2(`df_Q',`Q') 
+			bysort `by': egen `E_s2'=mean(`s'^2) 
+			bysort `by': egen `sd_est'=sd(`contrast') 
+			gen `var_est' = `sd_est'^2 
+			gen `tau2' = `var_est' - `E_s2' 
+			gen `tau' = sqrt(`tau2') 
+			replace `tau'=0 if `tau2'<0 
+			gen `rho_Q' = 1 - `df_Q' / `Q' 
+			replace `rho_Q' = 0 if `rho_Q'<0 
+
 			keep `by' `Q' `df_Q' `p_Q' `tau' `rho_Q'
 			duplicates drop
+
 			tempname mat_Q mat_df_Q mat_p_Q mat_tau mat_rho_Q
 			mkmat `Q', matrix(`mat_Q')
 			mkmat `df_Q', matrix(`mat_df_Q')
@@ -189,8 +199,15 @@ program define caterpillar, rclass byable(recall) sortpreserve
 
 			local val_list ""
 			forvalues n=1(1)`ncount' {
+				local list`n' "-> "
 				local totalby`n' ""
 				forvalues i=1(1)`wcount' {
+					if `i'!=`wcount' {
+						local list`n' "`list`n'' ``i''=`=``i''[`n']',"
+					}
+					else if `i'==`wcount' {
+						local list`n' "`list`n'' ``i''=`=``i''[`n']'"
+					}
 					cap confirm string variable ``i'' 
 					if _rc==0 {
 						replace ``i'' = stritrim(``i'')
@@ -209,8 +226,34 @@ program define caterpillar, rclass byable(recall) sortpreserve
 				else {
 					local val_list "`val_list' `totalby`n''"
 				}
+
+				noi display _newline(1) "`list`n''"
+				noi display _newline(1) "Cochran's Q" _col(40) %9.0f `=`Q'[`n']' 
+				noi display "Degrees of Freedom" _col(40) %9.0f `=`df_Q'[`n']' 
+				noi display "P-Value" _col(40) %9.3f `=`p_Q'[`n']'
+				noi display "Hetereogeneity Standard Deviation" _col(40) %9.3f `=`tau'[`n']'
+				noi display "Reliability" _col(40) %9.3f `=`rho_Q'[`n']' _newline(1)
+				
 			}
+
 			return local levels "`val_list'"
+
+			if `""`saving'""'!="" & `""`saving'""'!=`""""' {
+				foreach y in Q df_Q p_Q tau rho_Q {
+					gen `y' = ``y''
+				}
+				la var Q "Cochran's Q" 
+				la var df_Q "Degrees of Freedom for Cochran's Q"
+				la var p_Q "P-value for Cochran's Q"
+				la var tau "Heterogeneity Standard Deviation"
+				la var rho "Reliability"
+				format %9.0f Q df_Q
+				format %9.3f p_Q tau rho_Q
+
+				drop `Q' `df_Q' `p_Q' `tau' `rho_Q' 
+				
+				noi save `saving'
+			}
 			
 			restore
 
@@ -237,6 +280,37 @@ program define caterpillar, rclass byable(recall) sortpreserve
 			return scalar p = `=`p_Q'[1]'
 			return scalar tau = `=`tau'[1]'
 			return scalar rho = `=`rho_Q'[1]'
+
+			noi display _newline(1) "Cochran's Q" _col(40) %9.0f `=`Q'[1]' 
+			noi display "Degrees of Freedom" _col(40) %9.0f `=`df_Q'[1]' 
+			noi display "P-Value" _col(40) %9.3f `=`p_Q'[1]'
+			noi display "Hetereogeneity Standard Deviation" _col(40) %9.3f `=`tau'[1]'
+			noi display "Reliability" _col(40) %9.3f `=`rho_Q'[1]' _newline(1)
+
+			if `""`saving'""'!="" & `""`saving'""'!=`""""' {
+				preserve
+			
+				keep if `touse'
+				keep `Q' `df_Q' `p_Q' `tau' `rho_Q'
+				duplicates drop
+			
+				foreach y in Q df_Q p_Q tau rho_Q {
+					gen `y' = ``y''
+				}
+				la var Q "Cochran's Q" 
+				la var df_Q "Degrees of Freedom for Cochran's Q"
+				la var p_Q "P-value for Cochran's Q"
+				la var tau "Hetereogeneity Standard Deviation"
+				la var rho "Reliability"
+				format %9.0f Q df_Q
+				format %9.3f p_Q tau rho_Q
+
+				drop `Q' `df_Q' `p_Q' `tau' `rho_Q' 
+				
+				noi save `saving'
+
+				restore
+			}
 		}
 
 		if "`graph'"!="" {
@@ -271,6 +345,7 @@ program define caterpillar, rclass byable(recall) sortpreserve
 		}
 
 		drop `zero' `precision' `contrast'
+
 	}
 	
 end 

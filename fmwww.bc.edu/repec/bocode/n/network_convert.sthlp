@@ -24,7 +24,10 @@
 {synoptline}
 {syntab:Options available when converting to augmented format}
 {synopt:{opt large(#)}}Value used for variance of contrasts with the reference treatment in trials without the reference treatment.
-Default value is 10000.{p_end}
+Default value is 100000.
+If errors occur, it may be worth decreasing this parameter.
+If discrepancies occur, for example between different formats, 
+then it may be worth increasing this parameter.{p_end}
 {synopt:{opt ref(trtcode)}}Changes the reference treatment. {p_end}
 {synoptline}
 {p2colreset}{...}

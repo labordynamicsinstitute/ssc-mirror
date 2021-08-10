@@ -153,6 +153,10 @@ by the value of the {it:expression}, which must be non-negative.
 {cmd:supby(}{it:supby_varname} [, {it:supby_suboptions}]{cmd:)} specifies that multiple superimposed plots
 of estimates and confidence limits will be created,
 one for each value of the variable {it:supby_varname}, with distinct styles.
+The variable specified by {it:supby_varname} can be numeric
+(in which case the plots are ordered in its numeric order and labelled using its value labels in the legend)
+or string
+(in which case the plots are ordered in its alphabetic order and labelled using its string values in the legend).
 There can be up to 15 superimposed plots.
 Unless the user specifies otherwise, a legend will be created,
 identifying each plot with a value of the variable {it:supby_varname}.

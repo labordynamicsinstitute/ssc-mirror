@@ -1,8 +1,11 @@
 {smcl}
-{* *! version 1.0  May 17, 2017 @ 16:07:17}{...}
+{* *! version 1.0  January 15, 2020 @ 13:36:49}{...}
+{* *! version 1.1  September 9, 2018 @ 18:13:10}{...}
 {vieweralsosee "[R] ml" "help ml"}{...}
+{vieweralsosee "ranwtdttt" "help ranwtdttt"}{...}
 {vieweralsosee "wtdtttdiag" "help wtdtttdiag"}{...}
-{vieweralsosee "wtdtttprob" "help wtdtttprob"}{...}
+{vieweralsosee "wtdtttpredprob" "help wtdtttpredprob"}{...}
+{vieweralsosee "wtdtttpreddur" "help wtdtttpreddur"}{...}
 {viewerjumpto "Syntax" "wtdttt##syntax"}{...}
 {viewerjumpto "Description" "wtdttt##description"}{...}
 {viewerjumpto "Options" "wtdttt##options"}{...}
@@ -25,7 +28,7 @@ inter-arrival density together with regression coefficients.
 {p 8 17 2}
 {cmd:wtdttt}
 {varname}
-{cmd:,} {bf:disttype(}{it:recurrence_dens}{bf:)} [{it:options}]
+{cmd:,} {bf:disttype(}{it:recurrence_dens}{bf:)} {bf:start(}{it:time}{bf:)} {bf:end(}{it:time}{bf:)} [{it:options}]
 
 {synoptset 25 tabbed}{...}
 {synopthdr}
@@ -36,9 +39,9 @@ Backward Recurrence Density (FRD/BRD){p_end}
 
 {syntab:Time window}
 {synopt:{opt reverse}}Estimate reverse WTD{p_end}
-{synopt:{opt start(date)}}Date where time window starts{p_end}
-{synopt:{opt end(date)}}Date where time window ends{p_end}
-{synopt:{opt delta(#)}}Length of time window{p_end}
+{synopt:{opt start(string)}}Start of observation window{p_end}
+{synopt:{opt end(string)}}End of observation window{p_end}
+{synopt:{opt conttime}}Estimate durations for continuous data{p_end}
 
 {syntab:Covariates}
 {synopt:{opt logitp:covar}({help fvvarlist})}Covariates for logit({it:p}){p_end}
@@ -55,9 +58,12 @@ log({it:alpha}) (exp | wei){p_end}
 {synopt:{opt iadp:ercentile(#)}}Percentile to estimate in the
 Inter-Arrival Distribution (IAD); default is 0.8 (80th percentile){p_end}
 {synopt:{opt eform(string)}}Report exponentiated regression coefficients{p_end}
+
+{syntab:Maximum likelihood options (all options available with {help ml})}
+{synopt:{opt niter(#)}}perform maximum of # iterations; default is niter(50){p_end}
+
 {synoptline}
 {p2colreset}{...}
-
 
 {marker description}{...}
 {title:Description}
@@ -86,14 +92,20 @@ this with something like the following two lines of code:
 
 {pstd} Here {cmd: pid} is a variable containing a person identifier
 and {cmd: rxdate} is a variable containing the time of observed
-prescription redemptions, typically dates.
+prescription redemptions, typically dates. Before estimation it is
+advisable to make a histogram of the variable {cmd:rxdate} to ensure
+that its distribution has the shape of a WTD, ordinary or reverse.
 
 {pstd} To assess the fit, the command {help wtdtttdiag} can be used to
 obtain diagnostic plots.
 
-{pstd} After estimation, the command {help wtdtttprob} allows prediction
-of treatment probabilities on dates of interest based on observed
-prescription redemptions.
+{pstd} After estimation, the command {help wtdtttpredprob} allows
+prediction of treatment probabilities on times of interest based on
+observed prescription redemptions. Similarly the command
+{help wtdtttpreddur} allows prediction of prescription durations
+based on a specified percentile of the inter-arrival distribution.
+
+{pstd} A key requirement for the WTD is that the index date is chosen independently of the individual redemption processes. Instead of using a fixed index date for the WTD and identical observation windows for each individual, it is possible to randomly sample index dates. The is implemented with the command {help ranwtdttt} which takes an entire dataset of prescription redemption dates as input. It then uniformly samples unique index dates for each individual, such that only the first prescription subsequent to (ordinary WTD) or the last prescription prior to (reverse WTD) the random index date for each individual are considered in the WTD estimation.
 
 {marker options}{...}
 {title:Options}
@@ -117,20 +129,19 @@ are assumed to be first prescription redemptions and the ordinary WTD
 is estimated.
 
 {phang}
-{opt start} is a string such as "1Jan2014" which gives the start date
-of the observation window. Strings must conform to requirements for
-the date function {help td}(). When specified an end date must also be
-given. Default time for start of time window is 0. When specified, an
-end date must also be given. 
+{opt start} is either a string such as "1Jan2014" (a date for discrete data) 
+or "0" (a number for continuous data) which gives the start of the observation 
+window. In the discrete case (default) the string must conform to requirements 
+for the date function {help td}(). 
 
 {phang}
-{opt end} is a string such as "31dec2014" which gives the end date
-of the observation window. Strings must conform to requirements for
-the date function {help td}(). When specified, a start date must also be
-given.
+{opt end} is either a string such as "31Dec2014" (a date for discrete data) 
+or "1" (a number for continuous data) which gives the end of the observation 
+window. In the discrete case (default) the string must conform to requirements
+for the date function {help td}().
 
-{phang} {opt delta} specifies the length of the observation. If
-specified no start and end date can be stated. Default value is 1.
+{phang} {opt conttime} indicates that the data is continuous. If not 
+specified (default), observations are assumed to be discrete.
 
 {dlgtab:Covariates}
 {phang}
@@ -163,7 +174,6 @@ equations for the parameters.
 estimated specified as a fraction between 0 and 1 (default is 0.8).
 
 
-
 {marker remarks}{...}
 {title:Remarks - Methods and Formulas}
 
@@ -194,7 +204,7 @@ one. {it: g(t)} is given by
 
 {pstd} where {it:F(t)} is the cumulative distribution function for
 {it:f(t)} and {it:M} is the mean for {it:f(t)}. 
-{* Parametrizations!!!}
+
 
 {pstd}
 The actual parametrizations used are:
@@ -207,20 +217,20 @@ The actual parametrizations used are:
 
 {pstd} {bf:Weibull}:
 
-{p 16 24 2} {it:f(t) = exp(-(exp(lnbeta) * t) ^exp(lnalpha))}
+{p 16 24 2} {it:f(t) = exp(-(exp(lnbeta) * t)^exp(lnalpha))}
 
 {p 8 12 2} where {it:lnalpha = ln(alpha)} and {it:lnbeta = ln(beta)}.
 
 {pstd} {bf:Log-Normal}:
 
-{p 16 24 2} {it:f(t) = normprob(-(ln(x) - mu)/exp(lnsigma)) }
+{p 16 24 2} {it:f(t) = normprob(-(ln(x) - mu) / exp(lnsigma)) }
 
 {p 8 12 2} where {it:lnsigma = ln(sigma)}.
 
 {pstd} The ML procedure reports estimates of {it:lnbeta}
 (Exponential), {it:(lnalpha, lnbeta)} (Weibull) or {it:(mu, lnsigma)}
 (Log-Normal) together with an estimate of the log-odds of prevalent
-users {it:logitp}. The latter is also reported as the estimated proportion
+users, {it:logitp}. The latter is also reported as the estimated proportion
 of prevalent users in the sample after an
 inverse-logit-transformation, i.e. {it: exp(logitp)/(1 + exp(logitp))}
 accompanied by a 95% confidence interval.
@@ -230,7 +240,9 @@ accompanied by a 95% confidence interval.
 {title:Examples}
 
 {phang}
-{cmd:. wtdttt rx1time, disttype(lnorm) iadpercentile(0.8)}{p_end}
+{cmd:. wtdttt rx1time, disttype(lnorm) start(1jan2014) end(31dec2014)}{p_end}
+
+{phang}{cmd: . wtdttt last_rxtime, disttype(lnorm) start(0) end(1) conttime reverse mucovar(i.packsize) logitpcovar(i.packsize)}{p_end}
 
 {pstd}
 To get bootstrap confidence intervals we can do the following - notice
@@ -238,14 +250,14 @@ the use of {cmd:eform} in the second statement to obtain the
 percentile itself and not its logarithm:
 
 {phang}{cmd:. bootstrap logtimeperc = r(logtimeperc), reps(50): ///}{p_end}
-{phang2}{cmd:wtdttt rx1time, disttype(lnorm) iadpercentile(0.8)}{p_end}
+{phang2}{cmd:wtdttt rx1time, disttype(lnorm) start(1jan2014) end(31dec2014)}{p_end}
 
 {phang}{cmd:. bootstrap, eform}
 
-{pstd}
-Further examples are provided in the example do-file
+{pstd} Further examples are provided in the example do-file
 {it:wtdttt_ex.do}, which contains analyses based on the datafile
-{it:wtddat.dta} - a simulated dataset, which is also enclosed.
+{it:wtddat.dta} - a simulated dataset, which is also enclosed. Be sure
+to read comments in the do-file for further explanations.
 
 
 
@@ -286,27 +298,34 @@ help {help ml}.
 prescription durations by using observed covariates in
 pharmacoepidemiological databases: an application of the reverse
 waiting time distribution. Pharmacoepidemiol Drug Saf. 2017.
-doi:10.1002/pds.4216.{p_end}
+doi:10.1002/pds.4216. {browse "http://dx.doi.org/10.1002/pds.4216":http://dx.doi.org/10.1002/pds.4216}
+{p_end}
 
 {p 4 8 2} Støvring H, Pottegård A, Hallas J. Estimating medication
 stopping fraction and real-time prevalence of drug use in
 pharmaco-epidemiologic databases. An application of the reverse
 waiting time distribution. Pharmacoepidemiol Drug Saf. 2017.
-doi:10.1002/pds.4217.{p_end}
+doi:10.1002/pds.4217. {browse "http://dx.doi.org/10.1002/pds.4217":http://dx.doi.org/10.1002/pds.4217}
+{p_end}
 
 {p 4 8 2} Støvring H, Pottegård A, Hallas J. Determining prescription
 durations based on the parametric waiting time distribution.
-Pharmacoepidemiol Drug Saf. 2016. doi:10.1002/pds.4114.{p_end}
+Pharmacoepidemiol Drug Saf. 2016. doi:10.1002/pds.4114. {browse "http://dx.doi.org/10.1002/pds.4114":http://dx.doi.org/10.1002/pds.4114}
+{p_end}
 
 {p 4 8 2} Hallas J, Gaist D, Bjerrum L. The Waiting Time Distribution
 as a Graphical Approach to Epidemiologic Measures of Drug Utilization.
-Epidemiology. 1997;8:666-670.{p_end}
+Epidemiology. 1997;8:666-670. {browse "http://insights.ovid.com/pubmed?pmid=9345667":http://insights.ovid.com/pubmed?pmid=9345667}
+{p_end}
 
 {p 4 8 2} Stovring H, Vach W. Estimation of prevalence and incidence
 based on occurrence of health-related events. Stat Med.
-2005;24(20):3139-3154. {p_end}
+2005;24(20):3139-3154. {browse "https://doi.org/10.1002/sim.2142":https://doi.org/10.1002/sim.2142}
+{p_end}
 
 {title:Author}
 
-{pstd}
-Henrik Støvring, Aarhus University, stovring@ph.au.dk
+{pstd}Katrine Bødkergaard Nielsen, Aarhus University, kani@ph.au.dk.
+
+{pstd}Henrik Støvring, Aarhus University, stovring@ph.au.dk.
+

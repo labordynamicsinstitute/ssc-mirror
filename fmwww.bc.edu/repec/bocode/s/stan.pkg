@@ -12,7 +12,9 @@ d regarded as	 a package along with windowsmonitor and the
 d various stan_* commands to populate specific models.	In   
 d essence, it is a wrapper for the CmdStan command-line interface. 
 d Data and results are passed	 between Stata and Stan via text
-d files. 
+d files. For Stata version 16+ with support for Python built in,
+d anyone who wants to use Stan from Stata should do so through
+d PyStan or CmdStanPy. 
 d
 d KW: stan
 d KW: Bayes
@@ -21,7 +23,7 @@ d KW: StataStan
 d
 d Requires: Stata version 11 
 d
-d Distribution-Date: 20170304
+d Distribution-Date: 20210304
 d
 d Author: Robert Grant, Kingston University 
 d Support: email Robert.Grant@@sgul.kingston.ac.uk

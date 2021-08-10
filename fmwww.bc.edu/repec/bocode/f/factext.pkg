@@ -1,6 +1,6 @@
 d 'FACTEXT': module to extract factor values from a label variable created by parmest
 d
-d	factext is used to extract factors (categorical variables)
+d	 factext is used to extract factors (categorical variables)
 d from a      label variable in an output data set created by the
 d parmest package.	The parmest package creates a data set with
 d 1 obs per estimated parameter      and data on the parameter
@@ -18,13 +18,12 @@ d factext can be used together with the descsave package (q.v.)
 d
 d KW: data manipulation
 d
-d Requires: Stata version 10.0
+d Requires: Stata version 16
 d
+d Distribution-Date: 20201125
 d
-d Author: Roger Newson, National Heart and Lung Institute, Imperial College London
-d Support: email  r.newson@@imperial.ac.uk
-d
-d Distribution-Date: 20110126
+d Author: Roger Newson, Imperial College London
+d Support: email r.newson@@imperial.ac.uk
 d
 f factext.ado
 f factext.sthlp

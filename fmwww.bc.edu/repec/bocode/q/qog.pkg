@@ -11,10 +11,10 @@ d KW: qog
 d
 d Requires: Stata version 11
 d
-d Distribution-Date: 20170805
+d Distribution-Date: 20200527
 d
 d Author: Christoph Thewes, University of Potsdam
-d Support: email thewes@@uni-potsdam.de
+d Support: email thewes@@mailbox.org 
 d
 f qog.sthlp
 f qoguse.ado

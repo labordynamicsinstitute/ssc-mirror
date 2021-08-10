@@ -12,19 +12,32 @@ d KW: high dimension fixed effects
 d
 d Requires: Stata version 11.2
 d
-d Distribution-Date: 20160806
+d Distribution-Date: 20191118
 d
-d Author: Sergio Correia, Duke University
-d Support: email sergio.correia@@duke.edu
+d Author: Sergio Correia, Board of Governors of the Federal Reserve System
+d Support: email sergio.correia@@gmail.com
 d
 f reghdfe.ado
+f reghdfe.mata
 f reghdfe_old.ado
 f reghdfe_p.ado
 f reghdfe_old_p.ado
 f reghdfe_estat.ado
+f reghdfe_parse.ado
 f reghdfe_footnote.ado
 f reghdfe_old_estat.ado
 f reghdfe_old_footnote.ado
 f ../e/estfe.ado
+f reghdfe_header.ado
+f reghdfe_store_alphas.ado
 f reghdfe.sthlp
 f reghdfe_old.sthlp
+f reghdfe_accelerations.mata
+f reghdfe_bipartite.mata
+f reghdfe_class.mata
+f reghdfe_common.mata
+f reghdfe_constructor.mata
+f reghdfe_lsmr.mata
+f reghdfe_projections.mata
+f reghdfe_transforms.mata
+f reghdfe_mata.sthlp

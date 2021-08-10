@@ -1,6 +1,6 @@
 d 'XTABOND2': module to extend xtabond dynamic panel data estimator 
 d
-d     xtabond2 can fit two closely related dynamic panel data
+d      xtabond2 can fit two closely related dynamic panel data
 d models. The first is the    Arellano-Bond (1991) estimator, which
 d is also available with xtabond without the two-step	
 d finite-sample correction described below.  The second is an
@@ -50,11 +50,10 @@ d KW: Windmeijer
 d
 d Requires: Stata version 7.0 (with 21jun2002 update); version 9.0 for Mata version
 d
+d Distribution-Date: 20201123
 d
 d Author: David Roodman
 d Support: email david@@davidroodman.com
-d
-d Distribution-Date: 20151001
 d
 f xtabond2.ado
 f xtabond2.mata

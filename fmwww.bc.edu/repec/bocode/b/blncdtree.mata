@@ -1,4 +1,4 @@
-version 10.0
+version 16.0
 mata:
 
 real matrix blncdtree(real scalar nnode)

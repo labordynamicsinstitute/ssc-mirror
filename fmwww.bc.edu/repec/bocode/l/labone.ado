@@ -1,4 +1,4 @@
-*! version 1.1  14july2016
+*! version 1.2  25Nov2017
 *! written by Kerry Du, kerrydu@sdu.edu.cn
 
 cap program drop labone
@@ -6,7 +6,7 @@ program define labone
         version 12.1
         syntax [varlist], [Nrow(numlist) noSpace Concat(str asis)]
 
-        if r(N) == 0 {
+        if _N == 0 {
                 error 2000
         }
 

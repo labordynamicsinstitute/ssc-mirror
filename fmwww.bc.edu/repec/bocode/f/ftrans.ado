@@ -1,10 +1,10 @@
 /*---------------------------
-28Jan2010 - version 2.0
+22Dec2020 - version 3.0
 
 Batch File Format Converter
 
-Author: Liu Wei, The School of Sociology and Population Studies, Renmin University of China
-E-mail: liuv@ruc.edu.cn
+Author: Liu Wei, Yunnan University of Finance and Economics
+E-mail: liuwei@ynufe.edu.cn
 ---------------------------*/
 capture prog drop ftrans
 prog define ftrans

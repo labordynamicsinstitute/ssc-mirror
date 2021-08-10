@@ -259,7 +259,7 @@ one for US-made cars and one for non-US-made cars.
 {title:Author}
 
 {pstd}
-Roger B. Newson, National Heart and Lung Institute, Imperial College London, UK.
+Roger B. Newson, Imperial College London, UK.
 Email: {browse "mailto:r.newson@imperial.ac.uk":r.newson@imperial.ac.uk}
 
 
@@ -268,7 +268,7 @@ Email: {browse "mailto:r.newson@imperial.ac.uk":r.newson@imperial.ac.uk}
 {marker newson_2013}{...}
 {phang}
 Newson, R. B.  2013.
-Bonferroni and Holm approximations for Šidák and Holland-Copenhaver {it:q}-values.
+Bonferroni and Holm approximations for {c 138}id{c 225}k and Holland-Copenhaver {it:q}-values.
 {it:The Stata Journal} 13(2): 379-381.
 Download from
 {browse "http://www.stata-journal.com/article.html?article=st0300":{it:The Stata Journal} website}.
@@ -308,7 +308,7 @@ Presented at
 Storey, J. D.  2003.
 The positive false discovery rate: a Bayesian interpretation and the {it:q}-value.
 {it:The Annals of Statistics}
-31(6):  2013–2035.
+31(6):  2013-2035.
 
 
 {title:Also see}

@@ -1,4 +1,4 @@
-version 10.0
+version 16.0
 mata:
 
 void _somdtransf(string scalar transf, real matrix theta, real matrix zeta , | real matrix dzeta)

@@ -1,5 +1,5 @@
 {smcl}
-{* *! version 1.1.4, Alexander Staudt, 05nov2015}{...}
+{* *! version 1.1.8, Alexander Staudt, 29dec2020}{...}
 {* findalias asfradohelp}{...}
 {* vieweralsosee "" "--"}{...}
 {* vieweralsosee "[R] help" "help help"}{...}
@@ -19,7 +19,7 @@
 {title:Syntax}
 {p 8 17 2}
 {cmdab:cibar:}
-{it:varname} [{it:{help if}}] [{it:{help weight}}], {cmd: over1(}{it:varname}{cmd:)} [{it:options}]
+{it:varname} [{it:{help if}}] [{it:{help weight}}], {cmd: over(}{it:varlist}{cmd:)} [{it:options}]
 
 {p2colreset}{...}
 {p 4 6 2}
@@ -28,9 +28,11 @@
 {synopthdr}
 {synoptline}
 {syntab:Main}
-{synopt:{opt over2(:}{it:varname}{opt ):}}additional over-variable{p_end}
-{synopt:{opt over3(:}{it:varname}{opt ):}}additional over-variable. over3() can't be used without specifying over2().{p_end}
 {synopt:{opt l:evel(#)}}set confidence level; default is 95.{p_end}
+{synopt:{opt vce(:}{help vcetype}{opt ):}}{it:vcetype} may be {cmd: analytic} (the default), {cmd: cluster} {it:clustvar}, {cmd: bootstrap}, or {cmd: jackknife}.{p_end}
+{synopt:{opt over1(:}{it:varname}{opt ):}}first over-variable (for compatibility with previous versions. See {help cibar##note:note}).{p_end}
+{synopt:{opt over2(:}{it:varname}{opt ):}}additional over-variable.{p_end}
+{synopt:{opt over3(:}{it:varname}{opt ):}}additional over-variable. over3() can't be used without specifying over2().{p_end}
 
 {syntab:Advanced}
 {synopt:{opt barg:ap(#)}}specify gap within bargroups; default is 0.{p_end}
@@ -65,17 +67,32 @@
 {title:Examples}
 
 {phang}{cmd:. sysuse auto}{p_end}
-{phang}{cmd:. cibar price, over1(foreign)}{p_end}
-{phang}{cmd:. cibar price, over1(foreign) over2(turn)}{p_end}
-{phang}{cmd:. cibar price, over1(foreign) over2(turn) level(90)}{p_end}
-{phang}{cmd:. cibar price, over1(foreign) over2(turn) ciopts(lcolor(red)) graphopts(title("Price over 'foreign' over 'turn'") name(graph_1, replace)) }{p_end}
+{phang}{cmd:. cibar price, over(foreign)}{p_end}
+{phang}{cmd:. cibar price, over(foreign turn)}{p_end}
+{phang}{cmd:. cibar price, over(foreign turn) level(90)}{p_end}
+{phang}{cmd:. cibar price, over(foreign turn) ciopts(lcolor(red)) graphopts(title("Price over 'foreign' over 'turn'") name(graph_1, replace)) }{p_end}
+
+{phang}Using the old syntax{p_end}
+{phang}{cmd:. cibar price, over1(foreign) over2(turn) ciopts(lcolor(red)) graphopts(title("Price over 'foreign' over 'turn'") name(graph_2, replace)) }{p_end}
+
 
 {phang}Using weights{p_end}
 {phang}{cmd:. webuse total}{p_end}
-{phang}{cmd:. cibar heartatk, over1(sex) over2(race)}{p_end}
-{phang}{cmd:. cibar heartatk, over1(sex) over2(race) barcol(gs0 gs10) graphopts(ylabel(, nogrid) graphregion(color(white)))}{p_end}
-{phang}{cmd:. cibar heartatk [pweight=swgt], over1(sex) over2(race) graphopts(name(graph_1, replace))}{p_end}
+{phang}{cmd:. cibar heartatk, over(sex race)}{p_end}
+{phang}{cmd:. cibar heartatk, over(sex race) barcol(gs0 gs10) graphopts(ylabel(, nogrid) graphregion(color(white)))}{p_end}
+{phang}{cmd:. cibar heartatk [pweight=swgt], over(sex race) graphopts(name(graph_1, replace))}{p_end}
+{phang}{cmd:. cibar heartatk [pweight=swgt], over(sex race) graphopts(name(graph_2, replace)) barlabel(on) blf(%9.3f)}{p_end}
+
+{phang}Using the old syntax{p_end}
 {phang}{cmd:. cibar heartatk [pweight=swgt], over1(sex) over2(race) graphopts(name(graph_2, replace)) barlabel(on) blf(%9.3f)}{p_end}
+
+
+{marker note}{...}
+{title:Note}
+
+{pstd}
+{cmd:over(}{it:varlist}{cmd:)} is the preferred way to specify over-variables as of version 1.1.6. For now, {cmd:over1(}{it:varname}{cmd:)}, {cmd:over2(}{it:varname}{cmd:)}, {cmd:over3(}{it:varname}{cmd:)} remain valid alternatives. 
+{cmd:over(}{it:varlist}{cmd:)} takes precedence over {cmd: over1(}{it:varname}{cmd:)} when mixing old and new syntax.
 
 {marker remarks}{...}
 {title:Remarks}
@@ -88,7 +105,7 @@
 but this specification will lead to less useful graphs, as confidence intervals will still be displayed vertically. Furthermore, there will be issues concerning the x and y-axis.
 
 {pstd}
-The option {cmd: barcolor} sets the colors for the categories of -over1- (see examples).  
+The option {cmd: barcolor} sets the colors for the categories of the first over-variable (see {help cibar##examples:examples}).  
 
 {pstd}
 The option {cmd: blgap} sets the distance of the barlabels from its default position. The horizontal position of the barlabels is determined by the corresponding group means and the options passed to {cmd: blposition} and {cmd: blorientation}. 
@@ -97,10 +114,10 @@ To draw the bar height (group means), {cmd: cibar} uses Stata's {help added_text
 {pstd} For the computation of confidence intervals using weights, {cmd: cibar} uses {help mean}.
 
 {pstd}
-The code for this .ado is inspired by a how-to of the {it:Institute for Digital Research and Education} (IDRE), that can be found at {browse "http://www.ats.ucla.edu/stat/stata/faq/barcap.htm"}.
+The code for this .ado is inspired by a how-to of the {it:Institute for Digital Research and Education} (IDRE), that can be found at {browse "https://stats.idre.ucla.edu/stata/faq/how-can-i-make-a-bar-graph-with-error-bars/"}.
 
 
 {marker author}{...}
 {title:Author}
 
-{phang}Alexander Staudt, Universitaet Mannheim, astaudt@mail.uni-mannheim.de{p_end}
+{phang}Alexander Staudt, staudtlex@live.de{p_end}

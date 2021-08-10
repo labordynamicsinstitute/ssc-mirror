@@ -1,15 +1,17 @@
 program define ppml_panel_sg, eclass
 
 *! PPML (Panel) Structural Gravity Estimation, by Tom Zylkin
-*! Department of Economics, National University of Singapore
+*! Department of Economics, University of Richmond, Richmond, Virginia USA.
 *! Options for multi-way clustering are thanks to Joschka Wanner and Mario Larch.
-*! This version: v1.1, April 2017
+*! This version: v1.11, July 2018
 *!
 *! Suggested citation: Larch, Wanner, Yotov, & Zylkin (2017): 
 *! "The Currency Union Effect: A PPML Re-assessment with High-dimensional Fixed Effects"
 *! Drexel University School of Economics Working Paper 2017-07
 
 // requires: reghdfe (if "olsguess" option used), hdfe
+
+// v1.11  - added "dropsingletons" option
 
 // v1.1   - now uses hdfe for faster computation of standard errors
 //        - now supports multi-way clustering (with thanks to Joschka Wanner & Mario Larch)
@@ -80,6 +82,7 @@ syntax varlist [if] [in],      ///
 	SYMmetric                  /// Symmetric pair fixed effects (ignored if nopair)
 	TREND					   /// use pair-specific linear time trends (ignored if nopair)
 	NOCHeck					   /// will skip the check for existence
+	DROPSINGletons			   /// Will drop singletons beforehand
 	STRICT					   /// will mimic ppml "strict" option
 	KEEP					   /// will mimic ppml "keep" option
 	OLSguess                   /// use reghfe to guess betas upfront
@@ -247,6 +250,18 @@ else {
 		scalar `which' = 0
 		local _fes = "`exp_time' `imp_time' `panel_id'"
 	}
+}
+
+if "`dropsingletons'" != "" {
+	* drop singletons
+	tempvar ln_LHS 
+	qui gen `ln_LHS' = ln(`X_ij'+1) - `offset'
+	qui reghdfe `ln_LHS' `policyvars' if `touse', absorb(`_fes')                // See Correia (2015): Singletons, Cluster-robust Standard Errors & Fixed Effects: A Bad Mix
+	qui sum `X_ij' if e(sample)==0 &`touse'
+	di "Number of singleton observations dropped = " as result r(N)
+	qui replace `exclude'=1 if e(sample)==0
+	qui replace `touse' = 0 if `exclude' 
+	qui replace `X_ij' = `trade' * (1-`exclude') * (`touse')
 }
 
 //EnsureExist borrows concepts from "RemoveCollinear" by Sergio Correia, originally from -reghdfe-

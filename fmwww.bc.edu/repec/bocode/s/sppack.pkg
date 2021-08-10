@@ -32,13 +32,13 @@ d KW: banded
 d
 d Requires: Stata version 11.2
 d
-d Distribution-Date: 20151111
+d Distribution-Date: 20181204
 d
 d Author: David M. Drukker , StataCorp LP
 d Support: email ddrukker@@stata.com
 d
 d Author: Hua Peng, StataCorp LP
-d Support: email hpeng@@stata.com.
+d Support: email hpeng@@stata.com
 d
 d Author: Ingmar Prucha, Department of Economics, University of Maryland, College Park, MD.
 d Support: email prucha@@econ.umd.edu

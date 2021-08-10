@@ -43,7 +43,8 @@ program predictms_model_at2, rclass
 			}
 			local colindex = `colindex' + 1
 		}
-		if "`e(noconstant)'"=="" {
+
+		if "`noconstant'"=="" {
 			mat `dm'[1,`colindex'] = 1
 			local colindex = `colindex' + 1
 		}
@@ -65,9 +66,10 @@ program predictms_model_at2, rclass
 				}
 				local colindex = `colindex' + 1
 			}
+
 			mat `dm'[1,`colindex'] = 1
 			local colindex = `colindex' + 1
-				
+
 			if "`model'"=="gamma" {
 				local Nmleqns = 3
 				foreach corevar in `anc2' {

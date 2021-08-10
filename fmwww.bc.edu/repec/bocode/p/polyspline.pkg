@@ -17,11 +17,11 @@ d KW: polynomial
 d KW: reference spline
 d KW: regression
 d
-d Requires: Stata version 13 and bspline from SSC (q.v.)
+d Requires: Stata version 16 and bspline from SSC (q.v.)
 d
-d Distribution-Date: 20141004
+d Distribution-Date: 20200405
 d
-d Author: Roger Newson, National Heart and Lung Institute at Imperial College London
+d Author: Roger Newson, Imperial College London
 d Support: email r.newson@@imperial.ac.uk
 d
 f polyspline.ado

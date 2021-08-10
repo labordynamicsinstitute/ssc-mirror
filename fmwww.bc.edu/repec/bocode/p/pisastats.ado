@@ -1,5 +1,8 @@
-* version 4 NOV2013
-* Maciej Jakubowski, OECD
+* version APR2020, updated by Maciej Jakubowski
+* Developed by:
+* Maciej Jakubowski, Evidence Institute and University of Warsaw, Poland
+* Artur Pokropek, Institute of Philosophy and Sociology, Polish Academy of Sciences
+* contact: mj@evidin.pl 
 * basic statistics with PISA data
 
 cap program drop pisastats
@@ -7,18 +10,29 @@ cap program drop pisastats
 program define pisastats
 
 syntax [varlist(default=none)] [if] [in] , cnt(string) save(string) ///
-[stats(string) pv(string) over(varname numeric) cycle(integer 2012) ///
+[stats(string) pv(string) over(varname numeric) cycle(integer 2018) ///
 fast round(integer 2) sas bold]
 
-version 10.0
+version 12.0
 
 local n_stats: word count `stats'
 
-if inlist(`cycle',2000,2003,2006,2009,2012)==0 {
+if inlist(`cycle',2000,2003,2006,2009,2012,2015,2018)==0 {
 	di as error "There was no PISA `cycle'. Please specify a proper cycle year"
 	exit 198
 	}
-if `cycle'==. local cycle=2012
+if `cycle'==. local cycle=2018
+
+if `cycle'==2015 | `cycle'==2018 {
+	local ilepv=10
+	local schoolid="cntschid"
+	local repwt="w_fsturwt"
+	}
+else {
+	local ilepv=5
+	local schoolid="schoolid"
+	local repwt="w_fstr"
+	}
 	
 if "`over'"!="" {
 	tab `over', nofreq matrow(over_values)
@@ -39,7 +53,6 @@ if "`if'"=="" {
 	local if=" if "
 	}
 else local if="`if' "+" & "
-
 
 tempname tempfile
 file open `tempfile' using "`save'.html", write replace
@@ -132,11 +145,11 @@ local decimal=0.1^`round'
 
 if `n_stats'==0 local stats="mean"
 
-if "`fast'"!="" qui svyset schoolid [pw=w_fstuwt]
+if "`fast'"!="" qui svyset `schoolid' [pw=w_fstuwt]
 if "`bold'"!="" local bold="<b>"
 else local bold=""
 
-local tokeep="`varlist' w_fst* schoolid"
+local tokeep="`varlist' w_fst* cnt `schoolid'"
 if "`pv'"!="" local tokeep="`tokeep' pv*`pv'"
 
 foreach l in `cnt' {
@@ -182,16 +195,20 @@ foreach l in `cnt' {
 	else {
 		_cnt `l'
 		local name=r(name)
+		if `cycle'==2015 & "`l'"=="QAR" {
+				local name="CABA (Argentina)" 
+				}
 		file write `tempfile' "<tr><td>" "`name'" "</td>"
 		
 	   	if "`pv'"!="" {
 			di as text "`pv': " _continue
 			
 			forvalues i=1(1)`n_over' {
+			 cap restore
 			 if 1!=`n_over' di as input "`i' " _c
 			 qui count if pv1`pv'!=. & cnt=="`l'" & `over'==over_values[`i',1]
 			 local obs=r(N)
-			 cap tab schoolid if pv1`pv'!=. & cnt=="`l'" & `over'==over_values[`i',1], nofreq
+			 cap tab `schoolid' if pv1`pv'!=. & cnt=="`l'" & `over'==over_values[`i',1], nofreq
 			 if `obs'>30 & r(r)>5 {
 			 
 			 cap drop `probka'
@@ -206,7 +223,7 @@ foreach l in `cnt' {
 			   
 			   if "`fast'"=="" {
 			  
-			    forvalues ip=1(1)5 {
+			    forvalues ip=1(1)`ilepv' {
 					di as input "." _c
 					qui sum pv`ip'`pv' [aw=w_fstuwt], detail
 					if "`stat'"=="sd" & "`SAS'"!="" local mean`ip'=`r(sd)'*sqrt((`r(N)'-1)/`r(N)')
@@ -214,50 +231,70 @@ foreach l in `cnt' {
 																
 					local variance`ip'=0
 					if "`stat'"=="mean" forvalues j=1(1)80 {
-								sum pv`ip'`pv' [aw=w_fstr`j'], meanonly
+								sum pv`ip'`pv' [aw=`repwt'`j'], meanonly
 								local variance`ip'=`variance`ip''+(`mean`ip''-`r(mean)')^2
 								}
 						else if "`SAS'"!="" forvalues j=1(1)80 {
-										qui sum pv`ip'`pv' [aw=w_fstr`j'], detail
+										qui sum pv`ip'`pv' [aw=`repwt'`j'], detail
 										if "`stat'"=="sd" local variance`ip'=`variance`ip''+(`mean`ip''- `r(sd)'* sqrt((`r(N)'-1)/`r(N)'))^2 	
 										else local variance`ip'=`variance`ip''+(`mean`ip''-`r(`stat')')^2
 										}
 							else forvalues j=1(1)80 {
-									qui sum pv`ip'`pv' [aw=w_fstr`j'] , detail
+									qui sum pv`ip'`pv' [aw=`repwt'`j'] , detail
 									local variance`ip'=`variance`ip''+(`mean`ip''-`r(`stat')')^2
 									}
 					}
 					
 					local variance=0
 					local mean=0
-					forvalues ip=1(1)5 {
+					forvalues ip=1(1)`ilepv' {
 						local mean=`mean'+`mean`ip''
 						local variance=`variance'+(`variance`ip''/20)
 						}
-					local mean=`mean'/5
+					local mean=`mean'/`ilepv'
 					local imp_var=0
-					forvalues ip=1(1)5 {
+					forvalues ip=1(1)`ilepv' {
 						local imp_var=`imp_var'+(`mean'-`mean`ip'')^2
 						}
-					local variance=`variance'/5+1.2*`imp_var'/4
-										
+						
+					if `cycle'==2015 | `cycle'==2018 {
+						local variance=`variance'/`ilepv'+1.1*`imp_var'/9
+						}
+					else {
+						local variance=`variance'/`ilepv'+1.2*`imp_var'/4
+						}
+						
 					local se=sqrt(`variance')
 					}
 				else if "`fast'"!="" {
 					if "`stat'"=="mean" {
-						qui svy: mean pv1`pv' pv2`pv' pv3`pv' pv4`pv' pv5`pv' 
-						local mean=(_b[pv1`pv']+_b[pv2`pv']+_b[pv3`pv']+_b[pv4`pv']+_b[pv5`pv'])/5
-						local U=(_se[pv1`pv']^2+_se[pv2`pv']^2+_se[pv3`pv']^2+_se[pv4`pv']^2+_se[pv5`pv']^2)/5
-						local imp=( (`mean'-_b[pv1`pv'])^2+(`mean'-_b[pv2`pv'])^2+(`mean'-_b[pv3`pv'])^2+(`mean'-_b[pv4`pv'])^2+(`mean'-_b[pv5`pv'])^2 )/4
-						local se=sqrt(`U'+1.2*`imp')
+						if `cycle'==2015 | `cycle'==2018 {
+							qui svy: mean pv1`pv' pv2`pv' pv3`pv' pv4`pv' pv5`pv' pv6`pv' pv7`pv' pv8`pv' pv9`pv' pv10`pv' 
+							local mean=(_b[pv1`pv']+_b[pv2`pv']+_b[pv3`pv']+_b[pv4`pv']+_b[pv5`pv']+_b[pv6`pv']+_b[pv7`pv']+_b[pv8`pv']+_b[pv9`pv']+_b[pv10`pv'])/10
+							local U=(_se[pv1`pv']^2+_se[pv2`pv']^2+_se[pv3`pv']^2+_se[pv4`pv']^2+_se[pv5`pv']^2+_se[pv6`pv']^2+_se[pv7`pv']^2+_se[pv8`pv']^2+_se[pv9`pv']^2+_se[pv10`pv']^2)/10
+							local imp=( (`mean'-_b[pv1`pv'])^2+(`mean'-_b[pv2`pv'])^2+(`mean'-_b[pv3`pv'])^2+(`mean'-_b[pv4`pv'])^2+(`mean'-_b[pv5`pv'])^2+(`mean'-_b[pv6`pv'])^2+(`mean'-_b[pv7`pv'])^2+(`mean'-_b[pv8`pv'])^2+(`mean'-_b[pv9`pv'])^2+(`mean'-_b[pv10`pv'])^2 )/9
+							local se=sqrt(`U'+1.1*`imp')
+							}
+						else {
+							qui svy: mean pv1`pv' pv2`pv' pv3`pv' pv4`pv' pv5`pv' 
+							local mean=(_b[pv1`pv']+_b[pv2`pv']+_b[pv3`pv']+_b[pv4`pv']+_b[pv5`pv'])/5
+							local U=(_se[pv1`pv']^2+_se[pv2`pv']^2+_se[pv3`pv']^2+_se[pv4`pv']^2+_se[pv5`pv']^2)/5
+							local imp=( (`mean'-_b[pv1`pv'])^2+(`mean'-_b[pv2`pv'])^2+(`mean'-_b[pv3`pv'])^2+(`mean'-_b[pv4`pv'])^2+(`mean'-_b[pv5`pv'])^2 )/4
+							local se=sqrt(`U'+1.2*`imp')
+							}
 						}
 					else {
-						forvalues ip=1(1)5 {
+						forvalues ip=1(1)`ilepv' {
 							qui sum pv`ip'`pv' [aw=w_fstuwt] , detail
 							if "`stat'"=="sd" & "`SAS'"!="" local mean`ip'=`r(sd)'*sqrt((`r(N)'-1)/`r(N)')
 							else local mean`ip'=r(`stat')
 							}							
-						local mean=(`mean1'+`mean2'+`mean3'+`mean4'+`mean5')/5
+						if `cycle'==2015 | `cycle'==2018 {
+							local mean=(`mean1'+`mean2'+`mean3'+`mean4'+`mean5'+`mean6'+`mean7'+`mean8'+`mean9'+`mean10')/10
+							}
+						else {
+							local mean=(`mean1'+`mean2'+`mean3'+`mean4'+`mean5')/5
+							}
 						local se=0						
 						}
 					}
@@ -280,8 +317,7 @@ foreach l in `cnt' {
 					file write `tempfile' `"<td style="text-align:center">m</td>"' `"<td style="text-align:center">m</td>"'
 					}
 				}
-			 }
-			restore
+			  }
 			}
 					
 
@@ -290,7 +326,7 @@ foreach l in `cnt' {
 						
 			forvalues i=1(1)`n_over' {
 			 if 1!=`n_over' di as input "`i' " _c
-				
+				cap restore
 				cap drop `probka'
 				qui gen `probka'=1 `if' cnt=="`l'" & `over'==over_values[`i',1] `in'
 			 
@@ -301,7 +337,7 @@ foreach l in `cnt' {
 			  foreach stat in `stats' {
 			  di as input "`stat' " _c
 			
-			  cap tab schoolid if `var'!=. , nofreq
+			  cap tab `schoolid' if `var'!=. , nofreq
 			  local no_of_schools=`r(r)'
 			  qui sum `var' [aw=w_fstuwt], detail
 			  local obs=`r(N)'
@@ -314,16 +350,16 @@ foreach l in `cnt' {
 				local variance=0
 				if "`fast'"=="" {
 					if "`stat'"=="mean" forvalues j=1(1)80 {
-						sum `var' [aw=w_fstr`j'] , meanonly
+						sum `var' [aw=`repwt'`j'] , meanonly
 						local variance=`variance'+(`mean'-`r(mean)')^2
 						}
 					else if "`SAS'"!="" forvalues j=1(1)80 {
-										qui sum `var' [aw=w_fstr`j'] , detail
+										qui sum `var' [aw=`repwt'`j'] , detail
 										if "`stat'"=="sd" local variance=`variance'+(`mean'-`r(sd)'*sqrt((`r(N)'-1)/`r(N)'))^2 	
 										else local variance=`variance'+(`mean'-`r(`stat')')^2
 										}
 						else forvalues j=1(1)80 {
-									qui sum `var' [aw=w_fstr`j'] , detail
+									qui sum `var' [aw=`repwt'`j'] , detail
 									local variance=`variance'+(`mean'-`r(`stat')')^2
 									}
 					local se=sqrt(`variance'/20)
@@ -358,9 +394,7 @@ foreach l in `cnt' {
 			  else if `obs'!=0 file write `tempfile' `"<td style="text-align:center">c</td>"' `"<td style="text-align:center">c</td>"'
 				else file write `tempfile' `"<td style="text-align:center">m</td>"' `"<td style="text-align:center">m</td>"'
 			}
-		}
-				
-		restore
+		 }
 		}
 	}
 }
@@ -389,23 +423,29 @@ program define _cnt, rclass
 	if "`l'"=="AZE" local name="Azerbaijan"
 	if "`l'"=="BEL" local name="Belgium"
 	if "`l'"=="BGR" local name="Bulgaria"
+	if "`l'"=="BIH" local name="Bosnia and Herzegovina"
+	if "`l'"=="BLR" local name="Belarus"
 	if "`l'"=="BRA" local name="Brazil"
+	if "`l'"=="BRN" local name="Brunei Darussalam"
 	if "`l'"=="CAN" local name="Canada"
 	if "`l'"=="CHE" local name="Switzerland"
 	if "`l'"=="CHL" local name="Chile"
-	if "`l'"=="CHN" local name="Shanghai-China"
+	if "`l'"=="CHN" local name="Shanghai (China)"
 	if "`l'"=="COL" local name="Colombia"
 	if "`l'"=="CRI" local name="Costa Rica"
 	if "`l'"=="CZE" local name="Czech Republic"
 	if "`l'"=="DEU" local name="Germany"
+	if "`l'"=="DOM" local name="Dominican Republic"
 	if "`l'"=="DNK" local name="Denmark"
+	if "`l'"=="DZA" local name="Algeria"
 	if "`l'"=="ESP" local name="Spain"
 	if "`l'"=="EST" local name="Estonia"
 	if "`l'"=="FIN" local name="Finland"
 	if "`l'"=="FRA" local name="France"
 	if "`l'"=="GBR" local name="United Kingdom"
+	if "`l'"=="GEO" local name="Georgia"
 	if "`l'"=="GRC" local name="Greece"
-	if "`l'"=="HKG" local name="Hong Kong-China"
+	if "`l'"=="HKG" local name="Hong Kong (China)"
 	if "`l'"=="HRV" local name="Croatia"
 	if "`l'"=="HUN" local name="Hungary"
 	if "`l'"=="IDN" local name="Indonesia"
@@ -418,13 +458,18 @@ program define _cnt, rclass
 	if "`l'"=="KAZ" local name="Kazakhstan"
 	if "`l'"=="KGZ" local name="Kyrgyzstan"
 	if "`l'"=="KOR" local name="Korea"
+	if "`l'"=="KSV" local name="Kosovo"
+	if "`l'"=="LBN" local name="Lebanon"
 	if "`l'"=="LIE" local name="Liechtenstein"
 	if "`l'"=="LTU" local name="Lithuania"
 	if "`l'"=="LUX" local name="Luxembourg"
 	if "`l'"=="LVA" local name="Latvia"
-	if "`l'"=="MAC" local name="Macao-China"
+	if "`l'"=="MAC" local name="Macao (China)"
+	if "`l'"=="MAR" local name="Morocco"
+	if "`l'"=="MDA" local name="Moldova"
 	if "`l'"=="MEX" local name="Mexico"
-	if "`l'"=="MKD" local name="Macedonia"
+	if "`l'"=="MKD" local name="North Macedonia"
+	if "`l'"=="MLT" local name="Malta"
 	if "`l'"=="MNE" local name="Montenegro"
 	if "`l'"=="MYS" local name="Malaysia"
 	if "`l'"=="NLD" local name="Netherlands"
@@ -432,17 +477,24 @@ program define _cnt, rclass
 	if "`l'"=="NZL" local name="New Zealand"
 	if "`l'"=="PAN" local name="Panama"
 	if "`l'"=="PER" local name="Peru"
+	if "`l'"=="PHL" local name="Philippines"
 	if "`l'"=="POL" local name="Poland"
 	if "`l'"=="PRT" local name="Portugal"
 	if "`l'"=="QAT" local name="Qatar"
-	if "`l'"=="QCN" local name="Shanghai-China"
+	if "`l'"=="QCN" local name="Shanghai (China)"
 	if "`l'"=="QAR" local name="Dubai (UAE)"
-	if "`l'"=="QRS" local name="Perm(Russian Federation)"
+	if "`l'"=="QAZ" local name="Baku (Azerbaijan)"
+	if "`l'"=="QCI" local name="B-S-J-Z (China)"
+	if "`l'"=="QMR" local name="Moscow Region (RUS)"
+	if "`l'"=="QRT" local name="Tatarstan (RUS)"
+	if "`l'"=="QCH" local name="B-S-J-G (China)"
+	if "`l'"=="QRS" local name="Perm (RUS)"
 	if "`l'"=="QUA" local name="Florida (USA)"
 	if "`l'"=="QUB" local name="Connecticut (USA)"
 	if "`l'"=="QUC" local name="Massachusetts (USA)"
 	if "`l'"=="ROU" | "`l'"=="ROM" local name="Romania"
-	if "`l'"=="RUS" local name="Russian Federation"
+	if "`l'"=="RUS" local name="Russia"
+	if "`l'"=="SAU" local name="Saudi Arabia"
 	if "`l'"=="SGP" local name="Singapore"
 	if "`l'"=="SRB" local name="Serbia"
 	if "`l'"=="SVK" local name="Slovak Republic"
@@ -453,6 +505,7 @@ program define _cnt, rclass
 	if "`l'"=="TTO" local name="Trinidad and Tobago"
 	if "`l'"=="TUN" local name="Tunisia"
 	if "`l'"=="TUR" local name="Turkey"
+	if "`l'"=="UKR" local name="Ukraine"
 	if "`l'"=="URY" local name="Uruguay"
 	if "`l'"=="USA" local name="United States"
 	if "`l'"=="VNM" local name="Viet Nam"
@@ -495,8 +548,19 @@ program define _country_list, rclass
 			else if "`cnt'"=="PISA" local cnt "AUS AUT BEL CAN CHL CZE DNK EST FIN FRA DEU GRC HUN ISL IRL ISR ITA JPN KOR LUX MEX NLD NZL NOR POL PRT SVK SVN ESP SWE CHE TUR GBR USA OECD ALB ARG BRA BGR COL CRI HRV HKG IDN JOR KAZ LVA LIE LTU MAC MYS MNE PER QAT ROU RUS SRB QCN SGP TAP THA TUN ARE URY VNM"
 				else if "`cnt'"=="ALL" | "`cnt'"=="" qui levelsof cnt, local(cnt)
 		}
-	
-			
+	else if `cycle'==2015 {
+		if "`cnt'"=="OECD" local cnt = "AUS AUT BEL CAN CHL CZE DNK EST FIN FRA DEU GRC HUN ISL IRL ISR ITA JPN KOR LVA LUX MEX NLD NZL NOR POL PRT SVK SVN ESP SWE CHE TUR GBR USA OECD"
+		else if "`cnt'"=="PARTNERS" local cnt = "ALB DZA BRA QCH BGR QAR COL CRI HRV DOM MKD GEO HKG IDN JOR KSV LBN LTU MAC MLT MDA MNE PER QAT ROU RUS SGP TAP THA TTO TUN ARE URY VNM"
+			else if "`cnt'"=="PISA" local cnt "AUS AUT BEL CAN CHL CZE DNK EST FIN FRA DEU GRC HUN ISL IRL ISR ITA JPN KOR LVA LUX MEX NLD NZL NOR POL PRT SVK SVN ESP SWE CHE TUR GBR USA OECD ALB DZA BRA QCH BGR QAR COL CRI HRV DOM MKD GEO HKG IDN JOR KSV LBN LTU MAC MLT MDA MNE PER QAT ROU RUS SGP TAP THA TTO TUN ARE URY VNM"
+				else if "`cnt'"=="ALL" | "`cnt'"=="" qui levelsof cnt, local(cnt)
+		}
+	else if `cycle'==2018 {
+		if "`cnt'"=="OECD" local cnt = "AUS AUT BEL CAN CHL COL CZE DNK EST FIN FRA DEU GRC HUN ISL IRL ISR ITA JPN KOR LVA LTU LUX MEX NLD NZL NOR POL PRT SVK SVN ESP SWE CHE TUR GBR USA OECD"
+		else if "`cnt'"=="PARTNERS" local cnt = "ALB ARG QAZ BLR BIH BRA BRN QCI BGR CRI HRV DOM GEO HKG IDN JOR KAZ KSV LBN MAC MYS MLT MDA MNE MAR MKD PAN PER PHL QAT ROU RUS SAU SRB SGP TAP THA UKR ARE URY VNM"
+			else if "`cnt'"=="PISA" local cnt "AUS AUT BEL CAN CHL COL CZE DNK EST FIN FRA DEU GRC HUN ISL IRL ISR ITA JPN KOR LVA LTU LUX MEX NLD NZL NOR POL PRT SVK SVN ESP SWE CHE TUR GBR USA OECD ALB ARG QAZ BLR BIH BRA BRN QCI BGR CRI HRV DOM GEO HKG IDN JOR KAZ KSV LBN MAC MYS MLT MDA MNE MAR MKD PAN PER PHL QAT ROU RUS SAU SRB SGP TAP THA UKR ARE URY VNM"
+				else if "`cnt'"=="ALL" | "`cnt'"=="" qui levelsof cnt, local(cnt)
+		}
+		
 	return local cnt "`cnt'"
 	
 end

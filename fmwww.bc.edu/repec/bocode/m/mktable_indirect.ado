@@ -1,10 +1,10 @@
 *!mktable_indirect version 0.1.0
-*!Written 09Sept2016
+*!Written 01Oct2017
 *!Written by Sergio Venturini and Mehmet Mehmetoglu
 *!The following code is distributed under GNU General Public License version 3 (GPL-3)
 
 program mktable_indirect
-	version 10
+	version 15.1
 	syntax , matrix(string) [ FIRSTCOLName(string) FIRSTCOLWidth(integer 25) ///
 		COLWidth(integer 15) Title(string) HLines(numlist >0 integer sort) ///
 		NOVLines DIGits(integer 3) Boot(numlist min=1 max=1) Level(real 0.95) ]

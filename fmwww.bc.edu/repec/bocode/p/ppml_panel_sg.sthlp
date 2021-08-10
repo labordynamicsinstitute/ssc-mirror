@@ -83,6 +83,8 @@ origin-destination-industry-specific.{p_end}
 
 {synopt: {opt ro:bust}}Use robust standard errors. This is the default if {opt nopair} is enabled.{p_end}
 
+{synopt: {opt dropsing:letons}}Drop “singletons” beforehad à la {browse "https://ideas.repec.org/c/boc/bocode/s457874.html":reghdfe}.{p_end}
+
 {synopt: {opt multi:way}}Automatic three-way clustering by {it:exp_id}, {it:imp_id}, 
 and {it:time_id}. {p_end}
 
@@ -220,8 +222,8 @@ suggestions for improvements, please feel free to contact the author.{p_end}
 {title:Author}
 
 {pstd}Thomas Zylkin{break}
-Department of Economics & GPN@NUS{break}
-National University of Singapore{break}
+Department of Economics, Robins School of Business{break}
+University of Richmond{break}
 Email: {browse "mailto:tomzylkin@gmail.com":tomzylkin@gmail.com}
 {p_end}
 
@@ -230,10 +232,10 @@ Email: {browse "mailto:tomzylkin@gmail.com":tomzylkin@gmail.com}
 
 If you are using this command in your research I would appreciate if you would cite
 
-{pstd}• Larch, Mario, Wanner, Joschka, Yotov, Yoto V., Zylkin Thomas (2017), “The Currency Union Effect: A
-PPML Re-assessment with High-dimensional Fixed Effects”, Drexel University School of Economics Working Paper 2017-07.{p_end}
+{pstd}• Larch, Mario, Wanner, Joschka, Yotov, Yoto V., Zylkin Thomas (2018), “Currency Unions and Trade: A
+PPML Re-assessment with High-dimensional Fixed Effects”, {it:Oxford Bulletin of Economics and Statistics} (forthcoming).{p_end}
 
-which also provides a technical companion for those interested in understanding how the command works.
+The appendix of this paper provides a technical companion for those interested in understanding how the command works. Note that it replaces an older working paper from 2017 entitled “The Currency Union Effect: A PPML Re-assessment with High-dimensional Fixed Effects”.
 
 {marker acknowledgements}{...}
 {title:Acknowledgements}
@@ -261,7 +263,9 @@ offer feedback and suggest improvements.{p_end}
 {pstd}• Estimating models with high dimensional fixed effects: Guimarães & Portugal (2010);
 Figueiredo, Guimarães, & Woodward (2015); Correia (2016){p_end}
 
-{pstd}• Multi-way clustering: Cameron, Gelbach, and Miller (2011){p_end}
+{pstd}• Multi-way clustering: Cameron, Gelbach, & Miller (2011); Egger & Tarlea (2015) {p_end}
+
+{pstd}• Singletons: Correia (2015) {p_end}
 
 
 {marker references}{...}
@@ -289,12 +293,19 @@ Cameron, A. C., Gelbach, J. B., & Miller, D. L. (2011), “Robust Inference With
 {p_end}
 
 {phang}
-Correia, S. (2016), “REGHDFE: Stata module to perform linear or instrumental-variable regression absorbing any
-number of high-dimensional fixed effects”.{p_end}
+Correia, S. (2015), “Singletons, Cluster-Robust Standard Errors and Fixed Effects: A Bad Mix”.{p_end}
+
+{phang}
+Correia, S. (2016), “A Feasible Estimator for Linear Models with
+Multi-Way Fixed Effects”.{p_end}
 
 {phang}
 Dai, M., Yotov, Y. V., & Zylkin, T. (2014), “On the trade-diversion effects of free trade agreements”,
 {it:Economics Letters} 122(2), 321-325.{p_end}
+
+{phang}
+Egger, P.H., & Tarlea, F. (2015), “Multi-way clustering of standard errors in gravity models”,
+{it:Economics Letters} 134, 144-147.{p_end}
 
 {phang}
 Fally, T. (2015), “Structural gravity and fixed effects”, {it:Journal of International Economics} 97(1), 76-85.{p_end}

@@ -1,4 +1,4 @@
-*! version 2.13.4 07jul2017
+*! version 2.36.1 13feb2019
 program define join
 
 // Parse --------------------------------------------------------------------
@@ -16,13 +16,14 @@ program define join
 		[KEEPNone] ///
 		[noNOTEs] ///
 		[noREPort] ///
-		[Verbose]
+		[Verbose] ///
+		[METHOD(string)] // empty, or hash0, hash1, etc.
 
 	* Parse details of using dataset
 	_assert (`"`from'"' != "") + (`"`into'"' != "") == 1, ///
 		msg("specify either from() or into()")
-	ParseUsing `from' `into' // Return -filename- and -if-
-	
+	ParseUsing `from'`into' // Return -filename- and -if-
+
 	* Parse _merge indicator
 	_assert ("`generate'" != "") + ("`nogenerate'" != "") < 2, ///
 		msg("generate() and nogenerate are mutually exclusive")
@@ -33,7 +34,7 @@ program define join
 	else {
 		tempvar generate
 	}
-	
+
 	* Parse booleans
 	loc is_from = (`"`from'"' != "")
 	loc uniquemaster = ("`uniquemaster'" != "")
@@ -50,7 +51,7 @@ program define join
 		keep_nums: {1, 3, 1 3} depending on whether we keep master/match
 		assert_nums: as above but to assert only these exist (besides using)
 		keep_words assert_words: as above but with words instead of nums
-	*/ 
+	*/
 
 	* Parse -key- variables
 	ParseBy `is_from' `by' /// Return -master_keys- and -using_keys-
@@ -61,9 +62,23 @@ program define join
 	* Load -using- dataset
 	if (`is_from') {
 		preserve
-		use "`filename'", clear
-		unab using_keys : `using_keys' // continuation of ParseBy
-		if ("`if'" != "") qui keep `if'
+        if (substr("`filename'", -8, 8) == ".parquet") {
+            if ("`anything'" != "" | "`keepnone'" != "") {
+                loc vars "`using_keys' `anything' using"
+        	}
+            cap noi parquet use `vars' "`filename'", clear
+            if (_rc != 0) {
+				di as err "Parquet reading failed"
+                di as err "Try reading parquet file directly to see full error:"
+				di as err "    parquet use `vars' `filename'"
+                exit _rc
+            }
+        }
+        else {
+            use "`filename'", clear
+            unab using_keys : `using_keys' // continuation of ParseBy
+        }
+		if (`"`if'"' != "") qui keep `if'
 
 		loc cmd restore
 	}
@@ -71,7 +86,7 @@ program define join
 		loc cmd `"qui use `if' using "`filename'", clear"'
 	}
 
-	if ("`anything'" != "" | "`keepnone'"!=""}) {
+	if ("`anything'" != "" | "`keepnone'" != "") {
 		keep `using_keys' `anything'
 	}
 	else {
@@ -87,7 +102,7 @@ program define join
 	    `"`cmd'"', "`generate'", `uniquemaster', ///
 	    `keep_using', `assert_not_using', ///
 	    `label', `notes', ///
-	    `verbose')
+	    `verbose', "`method'")
 
 
 // Apply requirements on _merge variable ------------------------------------
@@ -109,14 +124,19 @@ program define join
 	if (`report') {
 		Table `generate'
 	}
+
+	if ("`nogenerate'" != "") {
+		label drop _merge
+	}
 end
 
 
 program define ParseUsing
 	* SAMPLE INPUT: somefile.dta if foreign==true
 	gettoken filename if : 0,
-	c_local filename `filename'
-	c_local if `if'
+	c_local filename `"`filename'"'
+	loc if `if' // remove leading/trailing spaces
+	c_local if `"`if'"'
 end
 
 
@@ -159,7 +179,7 @@ program define ParseMerge
 		c_local `cat'_nums `nums'
 	}
 	c_local keep_using `keep_using'
-	c_local assert_not_using `assert_not_using'	
+	c_local assert_not_using `assert_not_using'
 end
 
 
@@ -197,7 +217,7 @@ program define Table
 	forval i = 1/3 {
 		loc m`i' 0
 	}
-	
+
 	if (c(N)) {
 		tempname freqs values
 		tab `varlist', nolabel nofreq matcell(`freqs') matrow(`values')
@@ -218,7 +238,7 @@ program define Table
 	di as smcl as txt _col(5) "{hline 41}"
 	di as smcl as txt _col(5) "not matched" ///
 	        _col(30) as res %16.0fc (`m1'+`m2')
-	if (`m1'|`m2') { 
+	if (`m1'|`m2') {
 	        di as smcl as txt _col(9) "from master" ///
 	                _col(30) as res %16.0fc `m1' as txt "  `v1'"
 	        di as smcl as txt _col(9) "from using" ///
@@ -231,8 +251,7 @@ program define Table
 end
 
 
-ftools, check
-findfile "ftools_type_aliases.mata"
+findfile "ftools.mata"
 include "`r(fn)'"
 
 
@@ -250,33 +269,39 @@ void join(`String' using_keys,
                `Boolean' assert_not_using,
                `Boolean' join_labels,
                `Boolean' join_chars,
-               `Boolean' verbose)
+               `Boolean' verbose,
+               `String' method)
 {
 	`Varlist'				pk_names, fk_names, varformats
 	`Varlist'				varnames_num, varnames_str, deck
 	`Varlist'				vartypes_num, vartypes_str
-	`Variables'				pk
+	`Variables'				pk, fk
 	`Integer'				N, i, val, j, k
 	`Factor'				F
 	`DataFrame'				data_num, reshaped_num, data_str, reshaped_str
 	`Vector'				index, range, mask
-	
+
 	`Boolean'				integers_only
 	`Boolean'				has_using
 	`Varname'				var
 	`String'				msg
 
-	`StringVector'			varlabels, varvaluelabels
+	`StringVector'			varlabels, varvaluelabels, pk_varvaluelabels
 	`Dict'					label_values, label_text
 	`Vector'				values
 	`StringVector'			text
 	`String'				label
+
+	`Integer'				old_width, new_width
 
 	`Integer'				num_chars
 	`StringMatrix'			chars
 	`StringVector'			charnames
 	`String'				char_name, char_val
 
+	// Note:
+	// - On the -using- dataset the keys will be unique, hence why they are the PKs (primary keys)
+	// - On the -master- dataset we allow duplicates (unless -uniquemaster- is set), hence whey they are FKs (foreign keys)
 
 	// Using
 	pk_names = tokens(using_keys)
@@ -284,8 +309,8 @@ void join(`String' using_keys,
 	N = rows(pk)
 
 	// Assert keys are unique IDs in using
-	integers_only = is_integers_only(pk_names)
-	F = _factor(pk, integers_only, verbose, "", 0)
+	integers_only = is_integers_only(pk_names, pk)
+	F = _factor(pk, integers_only, verbose, method, 0)
 	assert_is_id(F, using_keys, "using")
 
 	varnames_num = varnames_str = deck = tokens(varlist)
@@ -294,6 +319,7 @@ void join(`String' using_keys,
 	varformats = J(1, cols(deck), "")
 	varlabels = J(1, cols(deck), "")
 	varvaluelabels = J(1, cols(deck), "")
+	pk_varvaluelabels = J(1, cols(pk_names), "")
 	label_values = asarray_create("string", 1)
 	label_text = asarray_create("string", 1)
 	text = ""
@@ -335,8 +361,22 @@ void join(`String' using_keys,
 		}
 	}
 
+	// Save value labels from the by() variables
+	if (join_labels) {
+		for (i=1; i<=cols(pk_names); i++) {
+			var = pk_names[i]
+			label = st_varvaluelabel(var)
+			if (label != "" ? st_vlexists(label) : 0) {
+				pk_varvaluelabels[i] = label
+				st_vlload(label, values, text)
+				asarray(label_values, label, values)
+				asarray(label_text, label, text)
+			}
+		}
+	}
+
 	// Save chars
-	// Note: we are NOT saving chars (or labels) from the by() variables!
+	// Note: we are NOT saving chars from the by() variables
 	if (join_chars) {
 		chars = J(num_chars, 3, "")
 		j = 0
@@ -385,21 +425,30 @@ void join(`String' using_keys,
 		}
 	}
 	if (verbose) printf("{txt}variables added: {res}%s{txt}\n", invtokens(deck))
-	
+
 	fk_names = tokens(master_keys)
-	integers_only = integers_only & is_integers_only(fk_names)
+	fk = __fload_data(fk_names)
+	if (integers_only) {
+		integers_only = is_integers_only(fk_names, fk)
+	}
+
 	if (verbose) {
 		printf("{txt}(integers only? {res}%s{txt})\n", integers_only ? "true" : "false")
 	}
-	F = _factor(pk \ __fload_data(fk_names), integers_only, verbose, "", 0)
+	F = _factor(pk \ fk, integers_only, verbose, method, 0)
 
-	index = F.levels[| 1 \ N |]
+	// Fill -reshaped_num- matrix with data from -using-
+	// 1. Start with the matrix full of MVs, for levels that appear only in -master- (_merge==1)
 	reshaped_num = J(F.num_levels, cols(data_num)-1, .) , J(F.num_levels, 1, 1) // _merge==1
+	// 2. Get the levels that also appear in -using-
+	index = F.levels[| 1 \ N |] // Note that F.levels is unique in 1..N only because the keys are unique in -using-
+	// 3. Populate the rows that are also in -using- with the data from using
 	reshaped_num[index, .] = data_num
 	if (cols(varnames_str) > 0) {
 		reshaped_str = J(F.num_levels, cols(data_str), "")
 		reshaped_str[index, .] = data_str
 	}
+	// 4. Rearrange and optionally expand the matrix to conform to the -master- dataset
 	index = F.levels[| N+1 \ . |]
 	reshaped_num = reshaped_num[index , .]
 	if (cols(varnames_str) > 0) {
@@ -416,11 +465,11 @@ void join(`String' using_keys,
 	if (cols(varnames_str) > 0) {
 		st_sstore(., st_addvar(vartypes_str, varnames_str, 1), reshaped_str)
 	}
-	
+
 	reshaped_num = reshaped_str = . // conserve memory
 	(void) setbreakintr(val)
 
-	// Add labels
+	// Add labels of new variables
 	msg = "{err}(warning: value label %s already exists; values overwritten)"
 	for (i=1; i<=cols(deck); i++) {
 		var = deck[i]
@@ -429,11 +478,11 @@ void join(`String' using_keys,
 		if (varlabels[i] != "") {
 			st_varlabel(var, varlabels[i])
 		}
-		
+
 		st_varformat(var, varformats[i])
 
 		label = varvaluelabels[i]
-		
+
 		if (label != "") {
 			// label values <varlist> <label>
 			st_varvaluelabel(var, label)
@@ -444,10 +493,24 @@ void join(`String' using_keys,
 					printf(msg, label)
 				}
 				// label define <label> <#> <text> <...>
-				st_vlmodify(label, 
+				st_vlmodify(label,
 				            asarray(label_values, label),
 				            asarray(label_text, label))
 			}
+		}
+	}
+
+	// Add value labels of by variables
+	if (join_labels) {
+		for (i=1; i<=cols(pk_names); i++) {
+			var = pk_names[i]
+			label = pk_varvaluelabels[i]
+			if (label == "") continue // Continue if no value label
+			if (st_vlexists(label)) printf(msg, label) // Warn
+			st_vlmodify(label,
+			            asarray(label_values, label),
+			            asarray(label_text, label))
+			st_varvaluelabel(var, label)
 		}
 	}
 
@@ -457,7 +520,7 @@ void join(`String' using_keys,
 			var = chars[i, 1]
 			char_name = chars[i, 2]
 			char_val = chars[i, 3]
-			if (char_name == "note0") {
+			if (anyof(("note0", "iis", "tis", "_TSpanel", "_TStvar", "_TSitrvl", "_TSdelta"), char_name)) {
 				continue
 			}
 			else if (strpos(char_name, "note")==1) {
@@ -480,16 +543,29 @@ void join(`String' using_keys,
 		}
 
 		if (keep_using & has_using) {
-			
+
 			// Store keys (numeric or string)
 			pk = select(pk, mask)
 			range = st_nobs() + 1 :: st_nobs() + rows(pk)
 			st_addobs(rows(pk))
+
 			if (eltype(pk)=="string") {
+				// We might need to recast the variables
+				for (i=1; i<=cols(pk); i++) {
+					new_width = max(strlen(pk[., i]))
+					old_width = strtoreal(substr(st_vartype(fk_names[i]), 4, .))
+					if (old_width < new_width) {
+						// Recast fails; perhaps there is a bug in recast.ado
+						// or a conflict with this program
+						// Thus, we resort to a hack
+						stata(sprintf("assert mi(%s) in -1", fk_names[i]))
+						stata(sprintf(`"replace %s = "%s" in -1"', fk_names[i], " " * new_width))
+					}
+				}
 				st_sstore(range, fk_names, pk)
 			}
 			else {
-				st_store(range, fk_names, pk)	
+				st_store(range, fk_names, pk)
 			}
 
 			// Store numeric vars
@@ -510,18 +586,20 @@ void join(`String' using_keys,
 	// Ensure that the keys are unique in master
 	// (This changes F so must be run at the end)
 	if (uniquemaster) {
-		F.keep_obs(N + 1 :: st_nobs())
+		F.drop_obs(1 :: N)
 		assert_is_id(F, master_keys, "master")
 	}
 
 }
 
 
-`Boolean' is_integers_only(`Varlist' vars)
+`Boolean' is_integers_only(`Varlist' vars, `DataFrame' data)
 {
 	`Boolean'				integers_only
 	`Integer'				i
 	`String'				type
+
+	// First look at the variable types
 	for (i = integers_only = 1; i <= cols(vars); i++) {
 		type = st_vartype(vars[i])
 		if (!anyof(("byte", "int", "long"), type)) {
@@ -529,6 +607,13 @@ void join(`String' using_keys,
 			break
 		}
 	}
+
+	// However, long IDs can be doubles.
+	// If there is only one ID and it's a double, verify if it's an integer
+	if (!integers_only & cols(vars)==1 & st_vartype(vars[1]) == "double") {
+		integers_only = !any(mod(data, 1)) // all(data :== floor(data))
+	}
+
 	return(integers_only)
 }
 
@@ -536,10 +621,15 @@ void join(`String' using_keys,
 void assert_is_id(`Factor' F, `String' keys, `String' dta)
 {
 	`String'				msg
-	msg = sprintf("<%s> do not uniquely identify obs. in the %s data",
-	              keys, dta)
+	`Boolean'				plural
+	plural = length(tokens(keys)) > 1
+	msg = sprintf("variable%s %s do%s not uniquely identify observations in the %s data",
+	              plural ? "s" : "", keys, plural ? "" : "es", dta)
 	if (!F.is_id()) {
-		_error(msg)
+		// Graceful error handling, as in The Mata Book (Appendix A.4)
+		errprintf(msg)
+		exit(459)
+		// NotReached
 	}
 }
 

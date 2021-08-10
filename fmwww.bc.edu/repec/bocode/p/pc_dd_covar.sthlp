@@ -1,5 +1,5 @@
 {smcl}
-{* *! version 1.1 23feb2017}{...}
+{* *! version 3.1 sep172020}{...}
 {vieweralsosee "[R] power" "help power"}{...}
 {vieweralsosee "[R] pc_simulate" "help pc_simulate"}{...}
 {vieweralsosee "[R] pc_dd_analytic" "help pc_dd_analytic"}{...}
@@ -86,14 +86,15 @@ a variance of much less than 10, and for greater numbers of time periods this re
 
 {pstd}
 As a result, directly plugging in these estimates into
-an analytic power calculation formula will produce an inaccurate minimum detectable effect. {help pc_dd_analytic} corrects for this estimation error in expectation using the result derived in Appendix E of: 
+an analytic power calculation formula will produce an inaccurate minimum detectable effect. {help pc_dd_analytic} 
+corrects for this estimation error in expectation using the result derived in Appendix E of: 
 
 {phang2}
-{browse "https://ei.haas.berkeley.edu/research/papers/WP277.pdf":Burlig, Fiona, Louis Preonas, and Matt Woerman (2017). "Panel Data and Experimental Design." Energy Institute at Haas Working Paper #277. University of California Berkeley.}
+{browse "https://www.louispreonas.com/s/BPW_power_calcs_appendix.pdf":Burlig, Fiona, Louis Preonas, and Matt Woerman (2022). "Panel Data and Experimental Design." {it:Journal of Development Economics} 144: 102548.}
 {p_end}
 
 {pstd}
-{browse "https://ei.haas.berkeley.edu/research/papers/WP277Appendix.pdf":Appendix D.1} of this paper
+{browse "https://www.louispreonas.com/s/BPW_power_calcs_appendix.pdf":Appendix D.1} of this paper
 outlines the full variance-covariance estimation procedure implemented by {cmd:pc_dd_covar}.
 
 {hline}
@@ -114,7 +115,7 @@ outlines the full variance-covariance estimation procedure implemented by {cmd:p
 {pstd}
 The first 4 terms correspond to estimates of {it:sigma^2_[omega^hat]}, {it:psi^B_[omega^hat]}, {it:psi^A_[omega^hat]}, and {it:psi^X_[omega^hat]} using the
 notation of 
-{browse "https://ei.haas.berkeley.edu/research/papers/WP277.pdf":Burlig, Preonas, and Woerman (2017)}.{p_end}
+{browse "https://www.louispreonas.com/s/BPW_power_calcs_appendix.pdf":Burlig, Preonas, and Woerman (2020)}.{p_end}
 
 {pstd}
 {cmd:r(n_units)} reports the average number of cross-sectional
@@ -172,7 +173,8 @@ first {it:pre} and the last {it:post} time periods in the specific {it:pre+post}
 
 {pstd}
 One note of caution: using this algorithm to estimate variance and covariance 
-parameters from regression residuals will {cmd:not} recover the {it:population parameters} governing the data-generating process of the error term. To take one simple example, suppose an AR(1) error structure
+parameters from regression residuals will {cmd:not} recover the {it:population parameters} governing the data-generating process of the error term. 
+To take one simple example, suppose an AR(1) error structure
 {it:e_it = 0.8*e_i{t-1} + v_it}, where {it:var(v_it)=3.6}, implying that {it:var(e_it)=10}. In a model with {it:pre=1} and {it:post=1}, the average
 covariance across pre- and post-treatment periods is simply the AR(1) correlation scaled by the variance of {it:e_it}, or {it:cov(e_ipre,e_ipost)=8}. However, 
 partialing out fixed effects from the outcome variable recovers {it:residuals} that are not equal to {it:e_it}, due to estimation error. The {it:residual} 
@@ -189,11 +191,11 @@ be variance estimated from a long time series of residuals and covariances estim
 {pstd}
 The underlying analytic formula used in {cmd:pc_dd_analytic} will depend on whether users input population parameters or estimates 
 of population parameters. For population parameters specified using options {opt var:iance}, {opt ar1}, or {opt trueparam:eters}, {cmd:pc_dd_analytic} will 
-apply the serial-correlation-robust power calculation formula from Burlig, Preonas, and Woerman (2017). Otherwise,
+apply the serial-correlation-robust power calculation formula from Burlig, Preonas, and Woerman (2020). Otherwise,
 {cmd:pc_dd_analytic} will automatically apply the 
 correction factors for estimated parameter values, as derived in 
-{browse "https://ei.haas.berkeley.edu/research/papers/WP277Appendix.pdf":Appendix E}
-of Burlig, Preonas, and Woerman (2017).
+{browse "https://www.louispreonas.com/s/BPW_power_calcs_appendix.pdf":Appendix E}
+of Burlig, Preonas, and Woerman (2020).
 
 {hline}
 
@@ -213,9 +215,8 @@ of Burlig, Preonas, and Woerman (2017).
 
 {pstd}Louis Preonas{break}
 Department of Agricultural and Resource Economics{break}
-Energy Institute at Haas{break}
-UC Berkeley{break}
-Email: {browse "mailto:lpreonas@berkeley.edu":lpreonas@berkeley.edu}
+University of Maryland{break}
+Email: {browse "mailto:lpreonas@umd.edu":lpreonas@umd.edu}
 {p_end}
 
 {pstd}This program is part of the {help ssc} package {cmd:pcpanel}.{p_end}

@@ -12,10 +12,10 @@ d KW: French
 d
 d Requires: Stata version 10
 d
-d Distribution-Date: 20170724
+d Distribution-Date: 20200202
 d
 d Author:   Tyson Van Alfen
-d Support: email ty.vanalfen@@gmail.com
+d Support: email tyson@@vanalfen.io
 d
 f sicff.ado
 f sicff.sthlp

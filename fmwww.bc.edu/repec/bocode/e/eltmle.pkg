@@ -27,12 +27,10 @@ d KW: binary treatment
 d
 d Requires: Stata version 13.2 and R
 d
-d Distribution-Date: 20170701
+d Distribution-Date: 20190730
 d
 d Author:  Miguel Angel Luque-Fernandez , LSHTM, NCDE, Cancer Survival Group, London, UK
 d Support: email miguel-angel.luque@@lshtm.ac.uk
 d
- ../m/meltmle.ado
- ../m/meltmle.sthlp
- ../w/weltmle.ado
- ../w/weltmle.sthlp
+f eltmle.ado
+f eltmle.sthlp

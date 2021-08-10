@@ -16,5 +16,5 @@ d
 d Author:  Doug Hemken, Social Science Computing Coop, Univ. of Wisconsin-Madison
 d Support: email dehemken@@wisc.edu
 d
-f std_beta.ado
-f std_beta.sthlp
+f stdbeta.ado
+f stdbeta.sthlp

@@ -1,17 +1,29 @@
-function [betanonp  tstats Fnp]=nonparamReg(y,x);
-% Nonparametric regression estimation basaed on Birkess and Dogges' Alternative
-% Methods of Regression 
+function [betanonp, tstats, Fnp, PValues, itration, SRWRfull]=nonparamreg(y,x)
 
-% Written by Shapour Mohammmadi,University of Tehran
-% Inputs: x as vectors of independent variables.(without vector of ones)
-% and y as a vector dependent variable.
-% Outputs: betanonp is the estimated coefficients, ityration is number of
-% t-stats is t-students of the coefficients and Fnp stands for nonparametric 
-% F-statistic.
 
+%________________ Nonparametric Regression Estimation _____________________
+
+% Inputs:
+%   x as vectors of independent variables. (without vector of ones) and
+%   y as a vector dependent variable.
+
+% Outputs:
+%   betanonp is the estimated coefficients; iteration is the number of
+%   t-stats are t-students of the coefficients and Fnp stands for
+%   nonparametric F-statstic.
+
+% References:
+% 1- David Birkes Yadolah Dodge, (1993). Alternative Methods of Regression,
+% John Wiley & Sons, Inc.DOI:10.1002/9781118150238.
+
+% This code is much faster than the old version(about 566 times in aregression with 5 
+% explabnatory variables and 500 observations): 
+% http://fmwww.bc.edu/repec/bocode/n/nonparamreg.m
+% Copyright(c) Shapour Mohammmadi,University of Tehran, 2020.
+% shmohmad@ut.ac.ir
 %__________________________________________________________________________
 ry=length(y);
-[rx cx]=size(x);
+[rx, cx]=size(x);
 %finding first estimates by OLS method
 b0=regress(y,[ones(ry,1) x]);
 %defining beta star
@@ -21,8 +33,7 @@ bstar(:,1)=b0(2:cx+1,1);
 for i=1:cx
 Xc(:,i)=x(:,i)-mu(1,i);
 end
-%__________________________________________________________________________
-%itrations fpr foiinding NOnparamerteric estimates
+%_____________itrations for finding Nonparamerteric estimates______________
 tstar=1;
 itration=0;
 while tstar>.000001 && itration<500
@@ -34,53 +45,41 @@ while tstar>.000001 && itration<500
     IIII=find(z(i,1)==rankkk);
     Index(i,1)=mean(IIII);
     end
-  
+
     u=Index(:,1)-0.5*(ry+1);
     d=(Xc'*Xc)^(-1)*Xc'*u;
     w=x*d;
-    
-    count0=0;
+  
   for s=1:ry-1
-        for k=s+1:ry
-            if w(k,1)~=w(s,1) ;  
-            count0=count0+1;
-    weight1(count0,1)=abs(w(k,1)-w(s,1));
-            end
-        end
+         k=s+1;
+    weight1(s,1)=sum(abs(w(k:ry,1)-w(s,1))); 
   end  
-    
+
     sumweight=sum(weight1);
-    
-    count1=0;
+    tstar1=[];
+    weight=[];
+ 
     for s=1:ry-1
-        for k=s+1:ry
-            if w(k,1)~=w(s,1) ;  
-                count1=count1+1;
-    tstar1(count1,1)=(z(k,1)-z(s,1))/(w(k,1)-w(s,1));
-    weight(count1,1)=abs(w(k,1)-w(s,1))/sumweight;
-            end
-        end
+         k=s+1;
+                wdiff=w(k:ry)-w(s,1);
+                ww=w(k:ry,1);
+                zz=z(k:ry,1);
+                www=ww(wdiff~=0);
+    tstar10=(zz(wdiff~=0)-z(s,1))./(www-w(s,1));
+    weight0=abs(www-w(s,1))/sumweight;
+        tstar1=[tstar1;tstar10];
+        weight=[weight;weight0]; 
     end
-    
-    sortedtstar=sort(tstar1);
-    rtstar1=length(tstar1);
-    
-    Indextstar=find(sortedtstar(1)==tstar1);;
-    for eee=2:rtstar1
-    Index2=find(sortedtstar(eee)==tstar1);
-    if sortedtstar(eee)~=sortedtstar(eee-1)
-    Indextstar=[Indextstar ;Index2];
-    end
-    end
-     sortedweights=weight(Indextstar);
-    
+
+    [sortedtstar, IX]=sort(tstar1);
+     sortedweights=weight(IX);
+     
     cumsumweights=cumsum(sortedweights);
     Index3=find(cumsumweights>0.5);
     tstar=sortedtstar(Index3(1,1));
     bstar=bstar+tstar*d;
 end
-%__________________________________________________________________________
-%final values are Nonparametric estimates
+%___________final values are Nonparametric estimates_______________________
 
 %estimation of BETA0:for the estimation of BETA0 one should get median of
 %Y-X*BETA^ where BETA^ is the estimated values of slopes(without BETA0)
@@ -90,18 +89,16 @@ beta0=median(Yhat1);
 betanonp=[beta0;bstar];
 
 
-%__________________________________________________________________________
-%Estimation of t-stats and F
+%_______________Estimation of t-stats and F________________________________
 
 %t-stats
 et=y-[ones(rx,1) x]*betanonp;
 nt=length(et);
-countt=0;
+Aij=[];
 for it=1:nt
-    for jt=it:nt
-        countt=countt+1;
-        Aij(countt,1)=(et(it,1)+et(jt,1))/2;
-    end
+     jt=it;
+        Aij0=(et(it,1)+et(jt:nt,1))/2;
+    Aij=[Aij;Aij0];
 end
 A=sort(Aij);
 a=(nt*(nt+1))/4;
@@ -138,13 +135,17 @@ ereduc=y;
     Fnp=(SRWRreduc-SRWRfull)/(cx*c*tauhat);
     PValueF=1-fcdf(Fnp,cx,ry-cx-1);
 
-%Display REsults
+%_______________________Display REsults____________________________________
+
 disp(' ')
 disp('  Results of Nonparametric Regression       ' )
-disp(' ')
+disp('___________________________________________ ')
 disp('   Coef.     Std.Err.   t-stats   PValues')
+disp('___________________________________________ ')
 disp(  [ betanonp     ,      stderrors   ,        tstats,  PValues ] )
+disp('___________________________________________ ')
 disp('    Tauhat   Fnp        PValue.F')
 disp([tauhat          ,        Fnp      ,          PValueF])
-  
-        
+disp('___________________________________________ ')
+disp(' ')
+    

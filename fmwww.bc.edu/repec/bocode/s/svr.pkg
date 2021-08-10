@@ -19,13 +19,13 @@ d Requires: Stata version 7.0
 d
 d
 d Author: Nick Winter,  University of Virginia
-d Support: email  nwinter@@virginia.edu
+d Support: email nwinter@@virginia.edu
 d
-d Distribution-Date: 20080905
-
+d Distribution-Date: 20180201
+d
 f svr.hlp
 f survwgt.ado
-f survwgt.hlp
+f survwgt.sthlp
 f svrcalc.ado
 f svrcorr.ado
 f svrcorr.hlp

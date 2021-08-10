@@ -1,8 +1,8 @@
-*! ctreatreg v2.2 GCerulli 26/02/2017
+*! ctreatreg v4 GCerulli 25/10/2017
 program ctreatreg, eclass
 version 13
 #delimit ;     
-syntax varlist [if] [in] [fweight iweight pweight] [,
+syntax varlist [if] [in] [fweight pweight iweight] [,
 hetero(varlist numeric)
 estype(string)
 ct(varlist numeric)
@@ -160,7 +160,7 @@ local treat `r(output)'
 *************************************************
 * Estimate the regression model and calculate ATE
 *************************************************
-regress `y' `w' `xvars' `xvar2' `treat' if `touse' , vce(`vce') `beta' `const' `head' level(`conf') 
+regress `y' `w' `xvars' `xvar2' `treat' if `touse' [`weight'`exp'] , vce(`vce') `beta' `const' `head' level(`conf') 
 ereturn scalar ate = _b[`w']
 capture drop ATE
 gen ATE=_b[`w']
@@ -242,7 +242,6 @@ ereturn scalar N_untreat=r(N)
 *****************************************************
 * CALCULATE FIRST [h(t)-E(h(t)] FOR t>0: 
 tempvar h2
-tempvar h2
 gen `h2' = 0
 forvalues j=1/`m'{
 replace `h2'=`h2'+ dTw_`j'*`ct'^`j' if `touse' & `w'==1
@@ -269,7 +268,7 @@ qui sum ATENT_t
 * GENERATE THE "DOSE-RESPONSE FUNCTION" = ATE(t) 
 * GENERATE "ATE(t;delta)" 
 *********************************************************************
-* WE DEFINE A NEW CAUSAL PARAMETER, ATE (t, delta), 
+* WE DEFINE A NEW CAUSAL PARAMETER, ATE(t, delta), 
 * DEFINED AS: ATE(t; delta)=E [y(t + delta)-y(t)]. 
 * IT MEASURES THE DIFFERENCE IN AVERAGE OUTCOME 
 * FOR TWO DIFFERENT SITUATIONS: THE ONE WHERE THE 
@@ -408,7 +407,7 @@ local treat `r(output)'
 *************************************************
 * Estimate the regression model and calculate ATE
 *************************************************
-xtreg `y' `w' `xvars' `xvar2' `treat' if `touse' , fe vce(`vce') `const' `head' level(`conf') 
+xtreg `y' `w' `xvars' `xvar2' `treat' if `touse' [`weight'`exp'] , fe vce(`vce') `const' `head' level(`conf') 
 ereturn scalar ate = _b[`w']
 capture drop ATE
 gen ATE=_b[`w']
@@ -613,10 +612,10 @@ local xvars `*'
 * ESTIMATE THE "BIVARIATE SAMPLE SELECTION MODEL" BY "heckman"
 **************************************************************
 if "`estype'"=="twostep"{
-heckman `ct' `xvars' `iv_t' if `touse' , select(`w' = `xvars' `iv_w') twostep heckvce(`heckvce')
+heckman `ct' `xvars' `iv_t' if `touse' , select(`w' = `xvars' `iv_w') twostep vce(`heckvce')
 }
 else if "`estype'"=="ml"{
-heckman `ct' `xvars' `iv_t' if `touse' , select(`w' = `xvars' `iv_w') heckvce(`heckvce')
+heckman `ct' `xvars' `iv_t' if `touse' , select(`w' = `xvars' `iv_w') vce(`heckvce')
 }
 capture drop mills
 predict mills , mills
@@ -729,7 +728,7 @@ local treatw `r(output)'
 *******************************************************************
 * ESTIMATE THE IV REGRESSION USING AS INSTRUMENTS: 
 *******************************************************************
-ivreg `y'  (`w' `xvar2' `treatw'  =  probw  `xvar3' `treat_hatp') `xvars' if `touse' , `const' `head' 
+ivreg `y'  (`w' `xvar2' `treatw'  =  probw  `xvar3' `treat_hatp') `xvars' if `touse' [`weight'`exp'] , `const' `head' 
 ereturn scalar ate = _b[`w']
 capture drop ATE
 gen ATE=_b[`w']
@@ -929,7 +928,7 @@ local mymodel ctreatreg `y' `w' `xvars' , ///
 hetero(`hetero') model(`model') ct(`ct') ///
 ci(`ci') m(`m') estype(`estype') vce(`vce') ///
 `beta' const(`const') head(`head') ///
-iv_t(`iv_t') iv_w(`iv_w') heckvce(`heckvce')
+iv_t(`iv_t') iv_w(`iv_w') vce(`heckvce')
 ereturn local cdmline `mymodel'
 ereturn local depvar `y'
 ereturn local treat `w'
@@ -1111,7 +1110,7 @@ graph twoway mspline ATE_t_delta `t' if `t'>0, clwidth(medium) clcolor(blue) clc
         ||   mspline `lower3' `t' if `t'>0, clpattern(dash) clwidth(thin) clcolor(black) ///
         ||   ,   ///
 		     name(DeltaDRFIC)    ///
-             note("Model: `model'")   ///
+             note("Model: `model' ; delta = `delta'")   ///
 			 xlabel(0 10 20 30 40 50 60 70 80 90 100, labsize(2.5)) ///
              ylabel(,   labsize(2.5)) ///
              yscale(noline) ///
@@ -1126,8 +1125,7 @@ graph twoway mspline ATE_t_delta `t' if `t'>0, clwidth(medium) clcolor(blue) clc
              ysca(titlegap(2)) ///
              ytitle("ATE(t;delta)", size(3)) ///
              scheme(s2mono) graphregion(fcolor(white))
-} // close option for "delta"
-			 
+} // close option for "delta"		 
 *
 capture graph drop DRF1
 graph twoway (mspline ATE_t `t'  if `t'>0, name(DRF1) ///
@@ -1141,25 +1139,24 @@ if "`delta'"!=""{  // allows option for "delta"
 capture graph drop DRF2
 graph twoway (mspline ATE_t_delta `t' if `t'>0, name(DRF2) ///
 title("Model `model': Estimation of ATE(t;delta) = E[y(t+delta)-y(t)]", size(medlarge)) ///
-note(NOTE: y = `outcome' ; delta=`delta') xtitle(Dose (t), size(3)) ytitle(ATE(t,delta)) ///
+note(NOTE: y = `outcome' ; delta = `delta') xtitle(Dose (t), size(3)) ytitle(ATE(t,delta)) ///
 scheme(s2mono) graphregion(fcolor(white)) ///
 scale(1) lpattern(solid) lwidth(medthick) legend(off) legend(label(1 "Spline"))) 
 } // close option for "delta"
 *
-
 capture graph drop DRF3
 graph twoway (mspline der_ATE_t `t' if `t'>0, name(DRF3) ///
 title("Model `model': Derivative of the Dose Response Function", size(medlarge)) ///
 note(NOTE: y = `outcome') ///
-xtitle(Dose (t), size(3)) ytitle(ATE(t,delta)) ///
+xtitle(Dose (t), size(3)) ytitle(ATE'(t)) ///
 scheme(s2mono) graphregion(fcolor(white)) ///
 scale(1) lpattern(solid) lwidth(medthick) legend(off) legend(label(1 "Spline"))) 
 *
 capture graph drop DRF4
 graph twoway (mspline std_ATE_t `t' if `t'>0, name(DRF4)  ///
 title("Model `model': Dose Response Function and its Derivative", ///
-size(medlarge)) note(NOTE: y = `outcome' ; delta -> 0; Standardized values.) ///
-xtitle(Dose (t), size(3)) ytitle(ATE(t,delta -> 0); ATE(t)) ///
+size(medlarge)) note(NOTE: y = `outcome' ; Standardized values.) ///
+xtitle(Dose (t), size(3)) ytitle(ATE(t); ATE'(t)) ///
 scheme(s2mono) graphregion(fcolor(white)) ///
 scale(1) lpattern(solid) lwidth(medthick) legend(on) ///
 legend(label(1 "DFR") label(2 "Derivative of the DRF"))) ///

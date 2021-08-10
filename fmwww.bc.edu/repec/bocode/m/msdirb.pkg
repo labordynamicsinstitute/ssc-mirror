@@ -23,10 +23,11 @@ d Requires: Stata version 10.0 for Windows
 d
 d Distribution-Date: 20150507
 d
-d Author: Roger Newson, National Heart and Lung Institute, Imperial College London
+d Author: Roger Newson,  Imperial College London
 d Support: email r.newson@@imperial.ac.uk
 d
-f msdirb.ado
+f WIN64 msdirb.ado
 f msdirb.sthlp
 f ../l/lmsdirb.ado
 f ../l/lmsdirb.sthlp
+h msdirb.ado

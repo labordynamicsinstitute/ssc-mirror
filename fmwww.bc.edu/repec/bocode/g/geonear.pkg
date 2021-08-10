@@ -29,10 +29,10 @@ d KW: neighbor
 d
 d Requires: Stata version 9.2
 d
-d Distribution-Date: 20120222
+d Distribution-Date: 20190914
 d
 d Author: Robert Picard
-d Support: email picard@@netbox.com
+d Support: email robertpicard@@gmail.com
 d
 f geonear.ado
 f geonear.hlp

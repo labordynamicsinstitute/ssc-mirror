@@ -213,7 +213,7 @@ the data are randomly resampled for each replication. This contrasts with the pa
 
 {phang}{cmd:small(}{c -(}{opt cs} | {opt bs} [{cmd:,} {opt r:eps(#)}]{c )-}{cmd:)} requests bias correction. ML has o(1/N) bias, which can be significant for small samples. {cmd:small(cs)} requests the
 analytical Cox-Snell (1968) bias correction; this is available for xi>-0.2, so if xi<=-.2 no correction is made. The CS correction for 
-the GPD is derived in Giles, Feng, and Godwin (2015). The correction for the GEV, including for multiple order statistics, is new, and its write-up is pending.
+the GPD is derived in Giles, Feng, and Godwin (2015). The correction for the GEV, including for multiple order statistics, is from Roodman (2017).
 
 {pin}Alternatively, {cmd:small(bs)} requests a simulation-based bias correction. A parametric bootstrap
 is performed--"parametric" meaning that instead of resampling the data as with {cmd:vce(bs)}, simulations of the modeled variable are repeatedly drawn from the 
@@ -510,6 +510,7 @@ All examples are clickable.
 {p 4 8 2}Giles, D.A., H. Feng, and R.T. Godwin. 2015. Bias-corrected maximum likelihood estimation of the parameters of the generalized Pareto
 distribution. {it:Communications in Statistics - Theory and Methods}.{p_end}
 {p 4 8 2}Horwitz, J.L. 2001. The bootstrap. {it:Handbook of Econometrics}. Elsevier Science.{p_end}
+{p 4 8 2}Roodman, D. 2017. Bias and size corrections in extreme value modeling. {it:Communications in Statistics - Theory and Methods}. DOI: 10.1080/03610926.2017.1353630.{p_end}
 
 {title:Author}
 

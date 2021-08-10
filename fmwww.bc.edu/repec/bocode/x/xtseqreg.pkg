@@ -2,22 +2,22 @@ d 'XTSEQREG': module to perform sequential estimation of linear panel data model
 d
 d  xtseqreg implements sequential estimators for linear panel data
 d models with the analytical second-stage standard error correction
-d of Kripfganz and Schwarz (2015, ECB Working Paper 1838). The
-d command can be used to fit both stages of a sequential regression
-d or either stage separately. One-step and two-step GMM estimation
-d is possible at both stages including system-GMM estimation based
-d on linear moment functions for the first-differenced and the
-d levels model. Available postestimation statistics include the
-d Arellano-Bond test for autocorrelation of the residuals and
-d Hansen's J-test for the validity of the overidentifying
-d restrictions. 
+d of Kripfganz and Schwarz (2019, Journal of Applied Econometrics).
+d The command can be used to fit both stages of a sequential
+d regression or either stage separately. One-step and two-step GMM
+d estimation is possible at both stages including system-GMM
+d estimation based on linear moment functions for the
+d first-differenced and the levels model. Available postestimation
+d statistics include the Arellano-Bond test for autocorrelation of
+d the residuals and Hansen's J-test for the validity of the
+d overidentifying restrictions. 
 d
 d KW: panel data
 d KW: sequential estimation
 d
 d Requires: Stata version 12.1
 d
-d Distribution-Date: 20170607
+d Distribution-Date: 20200810
 d
 d Author: Sebastian Kripfganz, University of Exeter
 d Support: email S.Kripfganz@@exeter.ac.uk

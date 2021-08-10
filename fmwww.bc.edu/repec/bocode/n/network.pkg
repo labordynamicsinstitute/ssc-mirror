@@ -12,10 +12,10 @@ d KW: metareg
 d
 d Requires: Stata version 13
 d
-d Distribution-Date: 20170316
+d Distribution-Date: 20180407
 d
 d Author: Ian White, MRC Biostatistics Unit
-d Support: email ian.white@@mrc-bsu.cam.ac.uk
+d Support: email ian.white@@ucl.ac.uk
 d
 f network.ado
 f network.sthlp

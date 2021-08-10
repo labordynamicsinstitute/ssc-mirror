@@ -24,10 +24,16 @@ p labvalpool module to change value labels
 p labvars module to attach a list of labels to varlist
 p lambda module for Goodman and Kruskal's lambda measures for two-way tables
 p landemets module to compute boundaries for group sequential clinical trials using alpha spending functions
+p laplacereg module to perform Laplace regression for censored data
 p lars module to perform least angle regression
+p lasagna module to produce lasagna plots
+p lassopack module for lasso, square-root lasso, elastic net, ridge, adaptive lasso estimation and cross-validation
+p lastupto module to collapse a dataset to have 1 observation for each of a list of X-values
 p latab module to generate LaTeX output from tabulate
 p lbpower module to calculate approximate power (or sample size) for longitudinal studies with binary response and two equally sized treatment groups
+p lbsvmat module to create labeled variables from a matrix
 p lclogit module  to fit latent class conditional logit models via EM algorithm
+p lclogit2 module to estimate latent class conditional logit models
 p lcmc module to estimate latent class missing covariate model for continous main response, ordinal covariate with missing values, and informative selection
 p ldecomp module decomposing the total effects in a logistic regression into direct and indirect effects
 p ldtest module to compute Lorenz Dominance tests
@@ -38,9 +44,11 @@ p levels module to report distinct levels of integer or string variable
 p levene module to test for equal population variances
 p levinlin module to perform Levin-Lin-Chu panel unit root test
 p levpredict module to compute log-linear level predictions reducing retransformation bias
+p lfk module to compute LFK index and Doi plot for detection of publication bias in meta-analysis
 p lfsum modules to describe variables located by name fragments
 p lgamma2 module to estimate two-parameter log-gamma regression
 p lgraph module to draw line graphs with optional error bars
+p lianxh module to Search and share Stata resources and blogs within Stata Command Window
 p libd3 module providing D3js Mata library
 p libhtml module providing an object oriented implementation of HTML in Mata
 p libjson module to provide Mata class library for obtaining and parsing JSON strings into object trees
@@ -49,6 +57,7 @@ p lincom2 module to compute multiple linear combinations
 p lincomest module to generate linear combinations of estimators saved as estimation results
 p linequate module to calculate linear equating constants using the Tucker and Levine Methods
 p linkplot module for linked (connected) scatter plots
+p lintrend module to graph observed proportions or means for a continuous or ordinal X variable
 p linuxlsd1 module to create a dataset of file records from the output of a Linux ls -d1 command
 p linuxlsdl module to create a dataset of file records from the output of a Linux ls -d1 command
 p lisrelinput module to generate input for pasting into LISREL
@@ -101,6 +110,7 @@ p lmcovreg3 module to Compute Breusch-Pagan Lagrange Multiplier Diagonal Covaria
 p lmcovsem module to perform  Overall System Structural Equation Modeling (SEM) Breusch-Pagan Lagrange Multiplier Diagonal Covariance Matrix Test
 p lmcovvar module to compute (VAR) Breusch-Pagan Diagonal Covariance Matrix Test
 p lmcovxt module to Compute Breusch-Pagan Lagrange Multiplier Diagonal Covariance Matrix Test for Panel Data
+p lmdi module to compute Logarithmic Mean Divisia Index (LMDI) Decomposition
 p lmeg module to compute Augmented Engle-Granger Cointegration Test at Higher Order AR(p)
 p lmfreg module to Compute OLS Linear vs Log-Linear Functional Form Tests
 p lmfreg2 module to compute 2SLS-IV Linear vs Log-Linear Functional Form Tests
@@ -154,6 +164,7 @@ p lmnwhitext module to compute Panel Data Non Normality White Test
 p lmoments module to generate L-moments and derived statistics
 p lms module to perform least median squares regression fit
 p lmsrd module to compute Spurious Regression Diagnostic after OLS Regression
+p lmtest module to perform Lagrange multiplier test after constrained maximum likelihood estimation
 p localp module for kernel-weighted local polynomial smoothing  
 p locpr module for semi-parametric estimation
 p loevh module to compute Guttman errors and Loevinger H coefficients
@@ -163,6 +174,7 @@ p log2markup module to transform a Stata text log into a markup document
 p logitcprplot module to graph component-plus-residual plot for logistic regression
 p logitfe module to compute analytical and jackknife bias corrections for fixed effects estimators of panel logit models with individual and time effects
 p logithetm module to estimate Logit Multiplicative Heteroscedasticity Regression
+p logittorisk module for conversion of logistic regression output to differences and ratios of risk
 p lognfit module to fit lognormal distribution by maximum likelihood
 p logout module to convert log or ASCII files into various output formats
 p logpred module to calculate logistic regression probabilities
@@ -174,11 +186,13 @@ p longplot module to produce exploratory plot for longitudinal data
 p longshape module to reshape long (limited alternative version)
 p looclass module for generating classification statistics of Leave-One-Out cross-validation for binary outcomes 
 p loocv module to perform Leave-One-Out Cross-Validation
+p lookfor2 module to search for string in variable names, variable labels, value labels, and notes
 p lookfor_all module to search for variables/patterns in .dta files
 p lookfor_val module to search the current dataset for values that match a specified pattern
 p lookforit module to search variable names and labels for some string or strings
 p loopplot modules to generate scatter plots with loops
 p lorenz module to estimate and display Lorenz curves and concentration curves
+p louvain module to find communities in weighted graph
 p lowyseattle module for managing settings and recompiling
 p lowyseattlea module for tables, statistics, data management, output
 p lowyseattleb module for creating, transforming, labeling, variables
@@ -194,6 +208,8 @@ p lstack module to stack variables with labelled _stack
 p lstrfun module to modify long local macros 
 p ltable2 module to generate life tables for rare events
 p ltimbimata module containing six general-purpose Mata functions
+p luvain module to find communities in weighted graph
 p lvalues module for letter value calculation
 p lvr2plot2 module to produce leverage versus squared residual plot with Cook's D
 p lxpct_2 module to calculate multistate life expectancies
+p lrdrop1	module to calculate likelihood-ratio test after dropping one term

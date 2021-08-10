@@ -30,7 +30,7 @@ and with one observation per event of the type recorded by the linkage-data sour
 Datasets produced by {cmd:cprdlinkutil} contain information on patients and practices known to CPRD,
 and on the times at which patients in these practices can be said to be at risk
 of experiencing recorded events of the types recorded by each linkage-data source.
-{cmd:cprdlinkutil} uses the {help ssc:SSC} packages {helpb keyby} and {helpb lablist},
+{cmd:cprdlinkutil} uses the {help ssc:SSC} packages {helpb keyby} and {helpb chardef},
 which need to be installed for {cmd:cprdlinkutil} to work.
 
 
@@ -88,9 +88,21 @@ with 1 observation per practice providing information allowing linkage to other 
 
 {title:Examples}
 
-{p 8 12 2}{cmd:. cprdlink_linked_practices using "./txtdata/linked_practices.txt", clear}{p_end}
+{pstd}
+The following examples will work if the current folder has a sister folder {cmd:../cprdlinkdata},
+containing tab-delimited text datasets {cmd:linked_practices.txt}, {cmd:linkage_coverage.txt},
+and {cmd:linkage_eligibility.txt},
+with the correct variables for linked practices, linkage coverage, and patient linkage eligibility,
+respectively.
 
-{p 8 12 2}{cmd:. cprdlink_linkage_coverage using "./txtdata/linkage_coverage.txt", clear nokey}{p_end}
+{p 8 12 2}{cmd:. cprdlink_linked_practices using "../cprdlinkdata/linked_practices.txt", clear}{p_end}
+{p 8 12 2}{cmd:. summ pracid, de}{p_end}
+
+{p 8 12 2}{cmd:. cprdlink_linkage_coverage using "../cprdlinkdata/linkage_coverage.txt", clear nokey}{p_end}
+{p 8 12 2}{cmd:. list, abbr(32)}{p_end}
+
+{p 8 12 2}{cmd:. cprdlink_linkage_eligibility using "../cprdlinkdata/linkage_eligibility.txt", clear}{p_end}
+{p 8 12 2}{cmd:. summ linkdate_n, de format}{p_end}
 
 
 {title:Author}
@@ -104,5 +116,5 @@ Email: {browse "mailto:r.newson@imperial.ac.uk":r.newson@imperial.ac.uk}
 
 {psee}
 {space 2}Help:  {browse "http://www.cprd.com":Clinical Practice Research Datalink (CPRD)}{break}
-{helpb cprdutil}, {helpb cprdhesutil} if installed
+{helpb cprdutil}, {helpb cprdhesutil}, {helpb keyby}, {helpb chardef} if installed
 {p_end}

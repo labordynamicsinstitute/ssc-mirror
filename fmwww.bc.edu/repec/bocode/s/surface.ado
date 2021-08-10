@@ -1,7 +1,7 @@
-*! Date    : 31 Jul 2013
-*! Version : 1.06
+*! Date    : 21 Jun 2019
+*! Version : 1.08
 *! Author  : Adrian Mander
-*! Email   : adrian.mander@mrc-bsu.cam.ac.uk
+*! Email   : mandera@cardiff.ac.uk
 
 /*
 14 Jul 08 v1.01 Sort out the rounding issues around axes labels
@@ -10,14 +10,130 @@
 30 May 12 v1.04	Added in the xtra option just in case
 12 Jun 12 v1.05	Tiny datasets of obs <16 need sorting to have more observations need at least 16 obs to construct the axes
 31 Jul 13 v1.06 Sort out the issues around looping x and y over all values and the storing floats problem, really just made strings instead
+16 Nov 17 v1.07 Adds color control of the wireframe
+21 Jun 19 v1.08 update the function and alter colors by a variable
 */
+/* START HELP FILE
+
+title[Produce a Wireframe Surface plot]
+
+opt[saving(filename) saves the graph to a specified file name. Use the option saving(filename,replace) to overwrite a previous file.]
+opt[round(#) specifies the precision of the x and y variables so that a wireframe can be drawn.]
+opt[nlines() specifies the number of lines to be used in the surface, the default is 40.]
+opt[labelround(#) specifies the precision of the x, y and z automatic axes labels.]
+opt[orient(string) specifies which axes should be the x, y and z-axes.]
+opt[nowire() specifies that the data is plotted as a point and a dropline.]
+opt[xtitle(string) specifies the title for the x-axis.]
+opt[ytitle(string) specifies the title for the y-axis.]
+opt[ztitle(string) specifies the title for the z-axis.]
+opt[xlabel(numlist) specifies the labelling on the x-axis.]
+opt[ylabel(numlist) specifies the labelling on the y-axis.]
+opt[zlabel(numlist) specifies the labelling on the z-axis.]
+opt[wcolor(string) specifies the color of the wireframe lines.]
+opt[nobox() suppresses the drawing of the box around the surface.]
+opt[colorif() specifies a series of if statements and colors to vary the colours in some of the surface plots]
+opt[* twoway options]
+
+desc[
+    The function attempts to draw a wireframe plot from three variables.  Var1 specifies the x-coordinate, var2 the y-coordinate and var3 the
+    z-coordinate. Alternatively the function can draw a circle at each point and add a straight line going down to the lowest point.
+
+    This function can handle data that is not in the form of a matrix of values.  However if there are too many x- and y- values the function will
+    attempt to round the dataset values into a more reasonable spread of values. This will result in very messy figures. However in such a case it is
+    the impression that is needed. Many other statistical packages require a full matrix of values. This is not a problem using the nowire option.
+
+    At present the state of rotating the diagram is limited to interchanging the axes.
+]
+
+opt2[saving() this will save the resulting graph in filename.gph. If the file already exists then use the replace suboption.]
+
+opt2[nowire this suppresses the drawing of the wire frame in exchange for lines]
+
+opt2[round(#), data is automatically rounded if there are too many x and y values. This option controls the amount of rounding, for example round(1)
+        rounds the x and y values to the nearest integer.]
+		
+opt2[labelround(#) specifies the precision of the x, y and z automatic axes labels.]
+
+opt2[orient(string ) this function must take the letters xyz or a combination of them. Whichever letter comes first is the x-axis, second is y-axis and
+        third is the z-axis. Thus orient(zxy) means that var1 is now the y coordinates, var2 is the z-coordinates and var3 is the x-coordinates. This
+        is different from changing the variables around since the wireframe is still draw across the original x and y values. This is a crude attempt
+        to implement rotation to obtain a clearer picture.]
+		
+opt2[colorif() specifies a series of if statements and colors to vary the colours in some of the surface plots. For example the scatter points could be coloured
+red for low values and blue for high values.]
+
+example[
+
+    surface x y z, saving(myfile) round(10) orient(zxy)
+
+    surface x y z, xtitle(my x title) ytitle(my y title) ztitle(my z title) saving(myfile,replace)
+
+    An "immediate" example without using a dataset. Please click the commands in order to avoid problems.
+
+    {stata clear} <--- NOTE all data is removed you may want to preserve first
+    
+	{stata set obs 900}
+    
+	{stata gen x = int((_n - mod(_n-1,30) -1 ) /30 )}
+    
+	{stata gen y = mod(_n-1,30)}
+    
+	{stata gen z = normalden(x,10,3)*normalden(y,15,5)}
+    
+	{stata surface x y z}
+    
+	{stata surface x y z, zlabel(0 0.005 0.012) labelround(1) xtitle(X-variable)}
+    
+	{stata surface x y z, zlabel(0 0.005 0.012) labelround(1) xtitle(X-variable) title(My surface plot)}
+	
+    {stata surface x y z, zlabel(0 0.005 0.012) labelround(1) xtitle(X-variable) title(My surface plot) wc(red*.5)}
+	
+    {stata surface x y z, zlabel(0 0.005 0.012) labelround(1) colorif(z<0.004 red z>0.004 blue) xtitle(X-variable) title(My surface plot) nowire}
+]
+seealso[
+{pstd}
+Other Graphic Commands I have written: {p_end}
+
+{synoptset 27 }{...}
+{synopt:{help batplot} (if installed)} {stata ssc install batplot}   (to install) {p_end}
+{synopt:{help cdfplot} (if installed)} {stata ssc install cdfplot}   (to install) {p_end}
+{synopt:{help contour} (if installed)}   {stata ssc install contour}     (to install) {p_end}
+{synopt:{help drarea}  (if installed)}   {stata ssc install drarea}      (to install) {p_end}
+{synopt:{help graphbinary} (if installed)}   {stata ssc install graphbinary} (to install) {p_end}
+{synopt:{help metagraph} (if installed)}   {stata ssc install metagraph}   (to install) {p_end}
+{synopt:{help palette_all} (if installed)}   {stata ssc install palette_all} (to install) {p_end}
+{synopt:{help plotbeta} (if installed)}   {stata ssc install plotbeta}    (to install) {p_end}
+{synopt:{help plotmatrix} (if installed)}   {stata ssc install plotmatrix}  (to install) {p_end}
+{synopt:{help radar}  (if installed)}   {stata ssc install radar}     (to install) {p_end}
+{synopt:{help trellis}  (if installed)}   {stata ssc install trellis}     (to install) {p_end}
+{p2colreset}{...}
+]
+
+author[Prof Adrian Mander]
+institute[Cardiff University]
+email[mandera@cardiff.ac.uk]
+
+
+END HELP FILE */
 
 program define surface
-preserve
-version 10.0
-syntax varlist(min=3 max=3) [, SAVING(string) Box(string) EYE(string) ROUND(int 5) LABELround(int 2) NLINES(int 40) /*
-*/ NOBOX ORIENT(string) XLABel(numlist) YLABel(numlist) ZLABel(numlist) NOWIRE XTITLE(string) YTITLE(string) ZTITLE(string) *]
-/**********************************************************
+ preserve
+ /* Allow use on earlier versions of stata that have not been fully tested */
+ local version = _caller()
+ local myversion = 15.1
+ if `version' < `myversion' {
+    di "{err}WARNING: Tested only for Stata version `myversion' and higher."
+    di "{err}Your Stata version `version' is not officially supported."
+ }
+ else {
+   version `myversion'
+ }
+ 
+ syntax varlist(min=3 max=3) [, SAVING(string) ROUND(int 5) LABELround(int 2) NLINES(int 40) /*
+ */ NOBOX ORIENT(string) XLABel(numlist) YLABel(numlist) ZLABel(numlist) NOWIRE XTITLE(string) YTITLE(string) ZTITLE(string) /*
+ */ WColor(string) COLORIF(string) *]
+
+ /**********************************************************
  * I am allowing any extra options that the user specifies 
  * but I am not checking this
  **********************************************************/
@@ -56,6 +172,10 @@ if "`ztitle'"=="" {
  * Find out the limits of the data
  **********************************************************/
 qui su `x', de
+if (`r(N)'==0) {
+  di "{err}ERROR these is no data"
+  exit
+}
 local xmin = `r(min)'
 local xmax = `r(max)'
 local xmed = `r(p50)'
@@ -176,24 +296,44 @@ if "`saving'"~="" local opt `"`opt' saving(`saving')"'
 /**********************************************************
  * This is the drawing bit
  **********************************************************/
-if "`scatter'"~="" twoway (line axesy axesx, lc(edkblue))(scatter newy newx)`tickst', `opt' `xopt'
-if "`dropline'"~="" twoway (line axesy axesx, lc(edkblue))(scatter newy newx)(pcspike newy newx newbasey newbasex)`tickst', `opt' `xopt'
+if "`colorif'"=="" {
+  if "`scatter'"~="" twoway (line axesy axesx, lc(edkblue))(scatter newy newx)`tickst', `opt' `xopt'
+  if "`dropline'"~="" twoway (line axesy axesx, lc(edkblue))(scatter newy newx)(pcspike newy newx newbasey newbasex)`tickst', `opt' `xopt'
+}
+else {
+  local gscatter ""
+  tokenize `colorif' 
+  if "`scatter'"~="" {
+    while("`1'"~="") {
+	  di "IF `1'  in color `2'"
+      local gscatter "`gscatter'(scatter newy newx if `1', mc(`2'))"
+      mac shift 2
+	}
+  }
+  if "`scatter'"~="" twoway (line axesy axesx, lc(edkblue)) `gscatter' `tickst', `opt' `xopt'
+  if "`dropline'"~="" twoway (line axesy axesx, lc(edkblue)) `gscatter' `tickst', `opt' `xopt'
+}
+
+
 
 /* Unfortunately need to loop through every line */
 if "`wire'"~="" {
+  if "`wcolor'"~="" local wc "`wcolor'"
+  else local wc "gs1"
+  
   local g ""
   tempvar xstr
   gen `xstr' = string(`x')
   qui levelsof `xstr', local(levels)
   foreach l of local levels {
-    local g "`g' (line newy newx if `xstr'=="`l'", lc(gs1) sort)"
+    local g "`g' (line newy newx if `xstr'=="`l'", lc(`wc') sort)"
   } 
   local g2 ""
   tempvar ystr
   gen `ystr'=string(`y')
   qui levelsof `ystr', local(levels)
   foreach l of local levels {
-    local g2 "`g2' (line newy newx if `ystr'=="`l'", lc(gs0) sort)"
+    local g2 "`g2' (line newy newx if `ystr'=="`l'", lc(`wc') sort)"
   } 
 /* This is the old way of handling real values in x and y
   qui levelsof `x', local(levels)
@@ -340,7 +480,7 @@ return local gzlabt `"`gzlabt'"'
 end
 
 /***********************************************************************
- * ALL the stuff for a 3D scatter plot 
+ * ALL the coordinates for a 3D scatter plot 
  ***********************************************************************/
 pr _project3d
 syntax varlist(max=3 min=3) , zh(real) zl(real) yh(real) yl(real) xh(real) xl(real)

@@ -1,18 +1,18 @@
 #delim ;
 prog def xdir;
-version 10.0;
+version 16.0;
 /*
  Create a resultsset with 1 obs per file
  in a specified directory with a specified pattern.
 *! Author: Roger Newson
-*! Date: 03 April 2017
+*! Date: 08 April 2020
 */
 
 
 syntax [,
   DIRname(string) PAttern(string) FType(string) noFAil RESpectcase
-  LIst(string asis) SAving(string asis) noREstore FAST FList(string)
-  LOcal(name)
+  LIst(string asis) FRame(string asis) SAving(string asis) noREstore FAST FList(string)
+  LOcal(name) PLOcal(name)
   PATH IDNum(string) IDStr(string) REName(string) GSort(string) KEep(namelist)
   ];
 /*
@@ -30,6 +30,7 @@ LIst() contains a varlist of variables to be listed,
   and referred to by the new names if REName is specified,
   together with optional if and/or in subsetting clauses and/or list_options
   as allowed by the list command.
+FRame() specifies a frame in which to save the output dataset.
 SAving() specifies a data set in which to save the output data set.
 noREstore specifies that the pre-existing data set
   is not restored after the output data set has been produced
@@ -51,8 +52,10 @@ FList() is a global macro name,
   in a global macro,
   containing the output of a sequence of model fits,
   which may later be concatenated using dsconcat (if installed) or append.
-LOcal specifies the name of a local macro in the calling program,
+LOcal() specifies the name of a local macro in the calling program,
   to contain the file list.
+PLOcal() specifies the name of a local macro in the calling program,
+  to contain the list of full file paths (including the directory name).
 PAth specifies that a new variable path will be created,
   contaiing the entire file path
   (directory name plus delimiter plus filename).
@@ -122,17 +125,19 @@ local outflist: list sort outflist;
 
 *
  Set restore to norestore if fast is present
- and check that the user has specified one of the five options:
- local and/or list and/or saving and/or norestore and/or fast.
+ and check that the user has specified one of the seven options:
+ local and/or plocal and/or list and/or frame and/or saving and/or norestore and/or fast.
 *;
 if "`fast'"!="" {;
     local restore="norestore";
 };
-if ("`local'"=="" & `"`list'"'=="") & (`"`saving'"'=="") & ("`restore'"!="norestore") & ("`fast'"=="") {;
-    disp as error "You must specify at least one of the five options:"
-      _n "local(), list(), saving(), norestore, and fast."
+if ("`local'"=="" & "`plocal'"=="" & `"`list'"'=="") & `"`frame'"'=="" & (`"`saving'"'=="") & ("`restore'"!="norestore") & ("`fast'"=="") {;
+    disp as error "You must specify at least one of the 7 options:"
+      _n "local(), plocal(), list(), frame(), saving(), norestore, and fast."
       _n "If you specify local(), then the file name list is output to a local macro."
+      _n "If you specify plocal(), then the path name list is output to a local macro."
       _n "If you specify list(), then the output variables specified are listed."
+      _n "If you specify frame(), then the new data set is output to a data frame."
       _n "If you specify saving(), then the new data set is output to a disk file."
       _n "If you specify norestore and/or fast, then the new data set is created in the memory,"
       _n "and any existing data set in the memory is destroyed."
@@ -142,25 +147,61 @@ if ("`local'"=="" & `"`list'"'=="") & (`"`saving'"'=="") & ("`restore'"!="norest
 
 
 *
- Return local result if requested
+ Return local() and/or plocal() results if requested
 *;
 if "`local'"!="" {;
   c_local `local': copy local outflist;
+};
+if "`plocal'"!="" {;
+  local poutflist "";
+  foreach FN in `outflist' {;
+    local PFN="`dirname'"+c(dirsep)+`"`FN'"';
+    local poutflist `"`poutflist' `"`PFN'"'"';
+  };
+  local poutflist: list retokenize poutflist;
+  c_local `plocal': copy local poutflist;
 };
 
 
 *
  Beginning of resultsset-generating section (NOT INDENTED)
 *;
-if (`"`list'"'!="") | (`"`saving'"'!="") | ("`restore'"=="norestore") | ("`fast'"!="") {;
+if (`"`list'"'!="") | (`"`frame'"'!="") | (`"`saving'"'!="") | ("`restore'"=="norestore") | ("`fast'"!="") {;
 
 
 *
- Preserve old data set if restore is set or fast unset
+ Parse frame option if present
 *;
-if("`fast'"==""){;
-    preserve;
+if `"`frame'"'!="" {;
+  cap frameoption `frame';
+  if _rc {;
+    disp as error `"Illegal frame option: `frame'"';
+    error 498;
+  };
+  local framename "`r(namelist)'";
+  local framereplace "`r(replace)'";
+  local framechange "`r(change)'";
+  if `"`framename'"'=="`c(frame)'" {;
+    disp as error "frame() option may not specify current frame."
+      _n "Use norestore or fast instead.";
+    error 498;
+  };
+  if "`framereplace'"=="" {;
+    cap noi conf new frame `framename';
+    if _rc {;
+      error 498;
+    };
+  };
 };
+
+
+*
+ Beginning of frame block (NOT INDENTED)
+*;
+local oldframe=c(frame);
+tempname tempframe;
+frame create `tempframe';
+frame `tempframe' {;
 
 
 *
@@ -196,21 +237,6 @@ if "`path'"!="" {;
 
 
 *
- Left-justify formats for all character variables
- in the base output variable set
-*;
-unab outvars: *;
-foreach X of var `outvars' {;
-    local typecur: type `X';
-    if strpos("`typecur'","str")==1 {;
-        local formcur: format `X';
-        local formcur=subinstr("`formcur'","%","%-",1);
-        format `X' `formcur';
-    };
-};
-
-
-*
  Create numeric and/or string ID variables if requested
  and move them to the beginning of the variable order
 *;
@@ -226,6 +252,21 @@ if("`idnum'"!=""){;
     qui compress idnum;
     qui order idnum;
     lab var idnum "Numeric ID";
+};
+
+
+*
+ Left-justify formats for all character variables
+ in the base output variable set
+*;
+unab outvars: *;
+foreach X of var `outvars' {;
+    local typecur: type `X';
+    if strpos("`typecur'","str")==1 {;
+        local formcur: format `X';
+        local formcur=subinstr("`formcur'","%","%-",1);
+        format `X' `formcur';
+    };
 };
 
 
@@ -317,16 +358,31 @@ if(`"`saving'"'!=""){;
 
 
 *
- Restore old data set if restore is set
- or if program fails when fast is unset
+ Copy new frame to old frame if requested
 *;
-if "`fast'"=="" {;
-    if "`restore'"=="norestore" {;
-        restore, not;
-    };
-    else {;
-        restore;
-    };
+if "`restore'"=="norestore" {;
+  frame copy `tempframe' `oldframe', replace;
+};
+
+
+};
+*
+ End of frame block (NOT INDENTED)
+*;
+
+
+*
+ Rename temporary frame to frame name (if frame is specified)
+ and change current frame to frame name (if requested)
+*;
+if "`framename'"!="" {;
+  if "`framereplace'"=="replace" {;
+    cap frame drop `framename';
+  };
+  frame rename `tempframe' `framename';
+  if "`framechange'"!="" {;
+    frame change `framename';
+  };
 };
 
 
@@ -335,5 +391,19 @@ if "`fast'"=="" {;
  End of resultsset-generating section (NOT INDENTED)
 *;
 
+
+end;
+
+prog def frameoption, rclass;
+version 16.0;
+*
+ Parse frame() option
+*;
+
+syntax name [, replace CHange ];
+
+return local change "`change'";
+return local replace "`replace'";
+return local namelist "`namelist'";
 
 end;

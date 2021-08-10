@@ -12,9 +12,9 @@ version 13.0;
  to be used when value labels are needed
  in the extraction datasets.
  Add-on packages used:
- linuxlsd1, msdirb, keyby, tfconcat
+ keyby, tfconcat
 *!Author: Roger Newson
-*!Date: 31 March 2016
+*!Date: 11 October 2017
 */
 
 syntax, TXTDirspec(string) [ DTADirspec(string) REPLACE DOfile(string asis) ];
@@ -38,17 +38,20 @@ forv i1=1(1)`Nxyzlookup' {;
   local lookuplab: word `i1' of `tfnames';
   local txtname `"`txtdirspec'/`lookuplab'"';
   local lookuplab=lower(subinstr(`"`lookuplab'"',".txt","",1));
+  if(length(`"`lookuplab'"'))!=3 {;
+    continue;
+  };
   local dtaname=`"`lookuplab'"'+".dta";
   clear;
   disp _n as text "Inputting lookup dataset: " as result "`lookuplab'";
-  import delimited using `"`txtname'"', varnames(1);
+  import delimited using `"`txtname'"', varnames(1) numericcols(1) stringcols(2);
   desc, fu;
   unab vlist: *;
   local vcount: word count `vlist';
-  cap assert `vcount'==2;
+  cap assert `vcount'>=2;
   if _rc {;
-    disp as error "XYZ lookup dataset has `vcount' variables. There should be 2.";
-    error 498;
+    disp as error "XYZ lookup dataset has `vcount' variables. There should be at least 2.";
+    continue;
   };
   local codevar: word 1 of `vlist';
   local labvar: word 2 of `vlist';
@@ -56,9 +59,19 @@ forv i1=1(1)`Nxyzlookup' {;
   cap assert "`codevar'"=="code";
   if _rc {;
     disp as error "First variable in XYZ lookup dataset is named `codevar'. It should be named code.";
-    error 498;
+    continue;
   };
   label data `"`labvarlab'"';
+  *
+   Remove entities with missing code
+   (after justifying this)
+  *;
+  qui count if missing(code);
+  disp as text "Observations with missing code: " as result r(N)
+    _n as text "List of observations with missing code (to be discarded):";
+  list if missing(code), abbr(32);
+  drop if missing(code);
+  * code should now be non-missing *;
   keyby code;
   desc, fu;
   char list;
@@ -105,6 +118,6 @@ syntax [anything] using/ [, REPLACE ];
 tfconcat `anything', gene(cmdline) tfid(dofile) obsseq(cmdseq) length(`=c(maxstrvarlen)');
 keyby dofile cmdseq;
 outfile cmdline1 using `"`using'"', runtogether `replace';
-disp _n as text `"Do-file `using' saved"';
+disp _n as text `"Do-file saved: "' as result `"`using'"';
 
 end;

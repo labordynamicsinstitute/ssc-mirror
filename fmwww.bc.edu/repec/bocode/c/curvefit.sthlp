@@ -1,5 +1,5 @@
 {smcl}
-{* 10Apr2013}{* 09Apr2013}{* 30Mar2013}{* 13Mar2013}{* 15Mar2010}{* 1Oct2010}{...}
+{* 10Apr2013}{* 09Apr2013}{* 30Mar2013}{* 13Mar2013}{* 15Mar2010}{* 1Oct2010}{* 22Dec2020}{...}
 {hline}
 help for {hi:curvefit}{right: version 4.0}
 {right:{stata ssc install curvefit, replace: get the newest version}}
@@ -142,8 +142,8 @@ I wish to thank Richard Williams (Notre Dame Dept of Sociology) for his good adv
 
 
 {pstd}
-{cmd:Author: Liu wei}, The School of Sociology and Population Studies, Renmin University of China. {cmd:Address: }Zhongguancun Street No. 59, Haidian District, Beijing, China. {cmd:ZIP Code:} 100872. 
-{cmd:E-mail:} {browse "mailto:liuv@ruc.edu.cn":liuv@ruc.edu.cn} {break}
+{cmd:Author: Liu wei}, Yunnan University of Finance and Economics. {cmd:Address: }Longquan Road 237, Wuhua District, Kunming, Yunnan, P.R.China. {cmd:ZIP Code:} 650221. 
+{cmd:E-mail:} {browse "mailto:liuwei@ynufe.edu.cn":liuwei@ynufe.edu.cn} {break}
 
 
 {title:Also see}

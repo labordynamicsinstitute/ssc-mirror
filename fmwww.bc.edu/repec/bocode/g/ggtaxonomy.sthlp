@@ -1,5 +1,5 @@
 {smcl}
-{* *! version 0.95 18aug2015}{...}
+{* *! version 0.96 14sep2017}{...}
 {cmd:help ggtaxonomy}
 {hline}
 
@@ -53,7 +53,7 @@ as well as the generalized Gamma model itself.
 {title:Reference}
 
 {pstd}
-Cox C, Chu H, Schneider MF, Muñoz A. Parametric survival analysis and taxonomy of hazard functions for the generalized gamma distribution.
+Cox C, Chu H, Schneider MF, MuÃ±oz A. Parametric survival analysis and taxonomy of hazard functions for the generalized gamma distribution.
 Statistics in medicine. 2007 Oct 15;26(23):4352-74.
 
 
@@ -72,18 +72,18 @@ Statistics in medicine. 2007 Oct 15;26(23):4352-74.
 {title:Acknowledgements}
 
 {pstd}
-This command is a tribute to Professor Álvaro Muñoz, in gratitude to his visit to Bogotá.
+This command is a tribute to Professor Alvaro MuÃ±oz, in gratitude to his visit to Bogota.
 
 
 {title:Authors}
 
-{phang}Andrés González Rangel{p_end}
+{phang}Andres Gonzalez Rangel{p_end}
 {phang}MD, MSc Clinical Epidemiology{p_end}
-{phang}Instituto para la Evaluación de la Calidad y Atención en Salud - IECAS{p_end}
+{phang}Instituto para la Evaluacion de la Calidad y Atencion en Salud - IECAS{p_end}
 {phang}andres.gonzalez@iecas.org{p_end}
 
 {phang}(Updated Version){p_end}
 {phang}Usama Bilal{p_end}
-{phang}MD, MPH{p_end}
+{phang}MD, MPH, PhD{p_end}
 {phang}Johns Hopkins Bloomberg School of Public Health{p_end}
 {phang}ubilal@jhmi.edu{p_end}

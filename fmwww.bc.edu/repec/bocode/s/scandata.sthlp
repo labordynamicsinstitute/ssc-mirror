@@ -151,7 +151,7 @@ Using all checks with default settings but one different value for the third cri
 
 {title:Author}
 {p 4 4 2 70}
-Malte Kaukal, GESIS Leibniz Institute for the Social Sciences malte.kaukal@gesis.org
+Malte Kaukal, Hessen State Statistical Office malte.kaukal@gmx.de
 
 {pstd}Thank your for citing this software as follows:
 

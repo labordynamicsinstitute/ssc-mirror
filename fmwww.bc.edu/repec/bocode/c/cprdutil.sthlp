@@ -42,21 +42,21 @@ Input a single CPRD non-{it:XYX} lookup from a single text file into memory:
 {pstd}
 Input a single CPRD non-lookup dataset from a single text file into memory:
 
-{p 8 21 2}{cmd:cprd_additional} {cmd:using} {it:filename} [ , {cmd:clear} {opt do:file(filename)} ]{p_end}
+{p 8 21 2}{cmd:cprd_additional} {cmd:using} {it:filename} [ , {cmd:clear} {opt do:file(filename)} {cmdab::no}{cmdab:key} ]{p_end}
 
 {p 8 21 2}{cmd:cprd_clinical} {cmd:using} {it:filename} [ , {cmd:clear} {opt do:file(filename)} ]{p_end}
 
-{p 8 21 2}{cmd:cprd_consultation} {cmd:using} {it:filename} [ , {cmd:clear} {opt do:file(filename)} ]{p_end}
+{p 8 21 2}{cmd:cprd_consultation} {cmd:using} {it:filename} [ , {cmd:clear} {opt do:file(filename)} {cmdab::no}{cmdab:key} ]{p_end}
 
 {p 8 21 2}{cmd:cprd_immunisation} {cmd:using} {it:filename} [ , {cmd:clear} {opt do:file(filename)} ]{p_end}
 
-{p 8 21 2}{cmd:cprd_patient} {cmd:using} {it:filename} [ , {cmd:clear} {opt do:file(filename)} ]{p_end}
+{p 8 21 2}{cmd:cprd_patient} {cmd:using} {it:filename} [ , {cmd:clear} {opt do:file(filename)} {cmdab::no}{cmdab:key} ]{p_end}
 
-{p 8 21 2}{cmd:cprd_practice} {cmd:using} {it:filename} [ , {cmd:clear} {opt do:file(filename)} ]{p_end}
+{p 8 21 2}{cmd:cprd_practice} {cmd:using} {it:filename} [ , {cmd:clear} {opt do:file(filename)} {cmdab::no}{cmdab:key} ]{p_end}
 
 {p 8 21 2}{cmd:cprd_referral} {cmd:using} {it:filename} [ , {cmd:clear} {opt do:file(filename)} ]{p_end}
 
-{p 8 21 2}{cmd:cprd_staff} {cmd:using} {it:filename} [ , {cmd:clear} {opt do:file(filename)} ]{p_end}
+{p 8 21 2}{cmd:cprd_staff} {cmd:using} {it:filename} [ , {cmd:clear} {opt do:file(filename)} {cmdab::no}{cmdab:key} ]{p_end}
 
 {p 8 21 2}{cmd:cprd_test} {cmd:using} {it:filename} [ , {cmd:clear} {opt do:file(filename)} ]{p_end}
 
@@ -197,6 +197,7 @@ Tab-delimited text data files of various types can be retrieved,
 containing data on things known to these practices,
 such as practices, patients, staff members, clinical events, additional details on clinical events,
 consultations, immunisations, referrals, tests, and prescribed therapies.
+More information about CPRD and {cmd:cprdutil} can be found in a presentation by {help cprdutil##newson_2018:Newson (2018)}.
 
 {pstd}
 When a CPRD data retrieval is made, a set of lookup tables may also be provided,
@@ -306,31 +307,34 @@ and is zero if {cmd:obscalc} is zero,
 and otherwise is 1 if and only if {cmd:entrydate <= exitdate}, and zero otherwise.
 Outside the observation window from {cmd:entrydate} to {cmd:exitdate} (inclusive),
 a patient cannot be considered to be at risk of a CPRD event,
-such as a clinical event or a therapy diagnosis.
+such as a therapy event or a clinical diagnosis.
 
 
 {title:Examples}
 
 {pstd}
-The following commands use a standard CPRD-format look-ups directory {cmd:./Lookups}
-to produce a do-file {cmd:mydofile.do} to create {help label:Stata value labels}
+These examples all assume that the CPRD text data are stored in a folder {cmd:../cprddata},
+with subfolders {cmd:/Lookups}, {cmd:/Data} and {cmd:/Browserexports},
+containing the lookups, the non-lookup data, and the browser exports,
+respectively.
+
+{pstd}
+The following commands produce a do-file {cmd:xyzlookuplabs.do} to create {help label:Stata value labels}
 corresponding to the {it:XYZ} lookups,
 a set of {it:XYZ} lookup datasets in the directory {cmd:./xyzlookupdta},
 and a set of non-{it:XYZ} lookups in the directory {cmd:./nonxyzlookupdta}.
 Note that all the directories must already exist for these commands to work.
 
-{p 8 12 2}{cmd:. cprd_xyzlookup, txtdir("./Lookups/TXTFILES") dtadir("./xyzlookupdta") replace dofile(mydofile.do, replace)}{p_end}
-{p 8 12 2}{cmd:. cprd_nonxyzlookup, txtdir("./Lookups") dtadir("./nonxyzlookupdta") replace}{p_end}
+{p 8 12 2}{cmd:. cprd_xyzlookup, txtdir("../cprddata/Lookups/TXTFILES") dtadir("./xyzlookupdta") replace dofile(xyzlookuplabs.do, replace)}{p_end}
+{p 8 12 2}{cmd:. cprd_nonxyzlookup, txtdir("../cprddata/Lookups") dtadir("./nonxyzlookupdta") replace}{p_end}
 
 {pstd}
 The following command creates a CPRD practice dataset in memory,
-using a text data file named {cmd:practice.txt}
-in the subdirectory {cmd:./nonLookups},
-which is assumed to contain a set of text files from a CPRD retrieval.
-Value labels for the new dataset in memory are created using the do-file {cmd:mydofile.do},
+using a text data file named {cmd:practice.txt}.
+Value labels for the new dataset in memory are created using the do-file {cmd:xyzlookuplabs.do},
 which was produced by the previous commands.
 
-{p 8 12 2}{cmd:. cprd_practice using "./nonLookups/practice.txt", clear dofile(mydofile.do)}{p_end}
+{p 8 12 2}{cmd:. cprd_practice using "../cprddata/Data/practice.txt", clear dofile(xyzlookuplabs.do)}{p_end}
 
 {pstd}
 The user can save the dataset created in memory to a disk file, using {helpb save}.
@@ -338,18 +342,18 @@ It is also possible to produce patient datasets, clinical-event datasets, and ot
 
 {pstd}
 The following command creates a non-{it:XYZ} lookup dataset in memory
-from the lookup file {cmd:medical.txt} in the directory {cmd:./Lookups},
+from the lookup file {cmd:medical.txt} in the subfolder {cmd:/Lookups},
 with 1 observation per CPRD medical code specified by the variable {cmd:medcode},
 and data on the Read codes and verbal descriptions of these CPRD medical codes.
 
-{p 8 12 2}{cmd:. cprd_medical using "./Lookups/medical.txt", clear}{p_end}
+{p 8 12 2}{cmd:. cprd_medical using "../cprddata/Lookups/medical.txt", clear}{p_end}
 
 {pstd}
 The {cmd:cprdutil} package frequently produces a lot of output to the {help log:Stata log}.
 However, the user can prevent this by using the {helpb quietly} prefix.
 For instance, the previous example could have been written as follows:
 
-{p 8 12 2}{cmd:. quietly cprd_medical using "./Lookups/medical.txt", clear}{p_end}
+{p 8 12 2}{cmd:. quietly cprd_medical using "../cprddata/Lookups/medical.txt", clear}{p_end}
 
 {pstd}
 This would have produced no output to the {help log:Stata log}.
@@ -358,8 +362,8 @@ for a large research study.
 
 {pstd}
 The following command sequence creates disk-file Stata datasets in the directory {cmd:./nonlookupdta},
-using text data files in the folder {cmd:./nonLookups}
-and the do-file {cmd:mydofile.do} created in the first example.
+using text data files in the {cmd:/Data} subfolder
+and the do-file {cmd:xyzlookuplabs.do} created in the first example.
 First, we create a practice dataset in {cmd:practice.dta}.
 Then, we create a patient dataset in {cmd:patient.dta},
 with added patient observation-window variables,
@@ -367,9 +371,9 @@ computed using the {cmd:cprd_patientobs} module
 to input practice information from {cmd:practice.dta}.
 We then tabulate, summarize and plot the patient observation-window variables.
 
-{p 8 12 2}{cmd:. cprd_practice using "./nonLookups/practice.txt", clear dofile(mydofile.do)}{p_end}
+{p 8 12 2}{cmd:. cprd_practice using "../cprddata/Data/practice.txt", clear dofile(xyzlookuplabs.do)}{p_end}
 {p 8 12 2}{cmd:. save "./nonlookupdta/practice.dta", replace}{p_end}
-{p 8 12 2}{cmd:. cprd_patient using "./nonLookups/patient.txt", clear dofile(mydofile.do)}{p_end}
+{p 8 12 2}{cmd:. cprd_patient using "../cprddata/Data/patient.txt", clear dofile(xyzlookuplabs.do)}{p_end}
 {p 8 12 2}{cmd:. cprd_patientobs using "./nonlookupdta/practice.dta", accept}{p_end}
 {p 8 12 2}{cmd:. save "./nonlookupdta/patient.dta", replace}{p_end}
 {p 8 12 2}{cmd:. tab accept obscalc, miss}{p_end}
@@ -382,21 +386,21 @@ We then tabulate, summarize and plot the patient observation-window variables.
 
 {pstd}
 The following command sequence uses the {cmd:cprd_browser_product} command
-to input a CPRD browser-export text file in the directory {cmd:./browserexports}
+to input a CPRD browser-export text file in the {cmd:/Browserexports} subfolder
 and produce a CPRD browser-export dataset on disk in the directory {cmd:./browserexportdta},
 with 1 observation per product code appearing in the text file.
 We then use the command {cmd:cprd_therapy} to input a CPRD therapy text file
-in the directory {cmd:./nonLookups},
+in the {cmd:/Data} subfolder,
 producing a CPRD therapy dataset in memory,
 and then use the {help ssc:SSC} package {helpb addinby:addinby}
 to drop all therapy records with product codes not matched in the browser-export disk dataset.
 Finally, we tabulate the frequency distribution of the other product codes,
 which are matched in the browser-export disk dataset.
 
-{p 8 12 2}{cmd:. cprd_browser_product using "./browserexports/myprodcodes.txt", clear}{p_end}
+{p 8 12 2}{cmd:. cprd_browser_product using "../cprddata/Browserexports/myprodcodes.txt", clear}{p_end}
 {p 8 12 2}{cmd:. list, abbr(32)}{p_end}
 {p 8 12 2}{cmd:. save "./browserexportdta/myprodcodes.dta", replace}{p_end}
-{p 8 12 2}{cmd:. cprd_therapy using "./nonLookups/therapy.txt", clear}{p_end}
+{p 8 12 2}{cmd:. cprd_therapy using "../cprddata/Data/therapy.txt", clear}{p_end}
 {p 8 12 2}{cmd:. addinby prodcode using "./browserexportdta/myprodcodes.dta", unm(drop) keep(prodcode)}{p_end}
 {p 8 12 2}{cmd:. describe, full}{p_end}
 {p 8 12 2}{cmd:. tab prodcode, miss}{p_end}
@@ -405,9 +409,10 @@ which are matched in the browser-export disk dataset.
 {title:Acknowledgments}
 
 {pstd}
-I would like to thank Sophia Amjad of the CPRD Knowledge Centre for providing me with a simulated sample CPRD-format library of text datasets,
+I would like to thank Sophia Amjad and Sarah Cousins of CPRD Enquiries
+for providing me with simulated sample CPRD-format libraries of text datasets,
 complete with a full set of lookups and documents.
-I found this sample library to be very useful when validating {cmd:cprdutil}.
+I found these sample libraries to be very useful when validating {cmd:cprdutil}.
 
 
 {title:Author}
@@ -415,6 +420,14 @@ I found this sample library to be very useful when validating {cmd:cprdutil}.
 {pstd}
 Roger Newson, Imperial College London, UK.{break}
 Email: {browse "mailto:r.newson@imperial.ac.uk":r.newson@imperial.ac.uk}
+
+
+{title:References}
+
+{marker newson_2018}{...}
+{phang}
+Newson, R. B.  2018.  A fleet of packages for inputting United Kingdom primary care data.
+Presented at {browse "https://ideas.repec.org/p/boc/usug18/01.html":the 2018 London Stata Conference, 8-9 September, 2018}.
 
 
 {title:Also see}

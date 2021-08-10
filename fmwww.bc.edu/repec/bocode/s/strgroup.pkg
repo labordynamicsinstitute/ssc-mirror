@@ -23,7 +23,7 @@ f strgroup.ado
 f strgroup.hlp
 f ../l/levenshtein.ado
 f ../l/levenshtein.hlp
-g MACINTEL64 strgroup.Macintosh.MacOSX.plugin      strgroup.plugin
-g LINUX64 strgroup.PC.Unix64.plugin                strgroup.plugin
-g WIN64A strgroup.PC(64-bit_x86-64).Windows.plugin strgroup.plugin
-g WIN strgroup.PC.Windows.plugin                   strgroup.plugin
+f strgroup.Macintosh.MacOSX.plugin
+f strgroup.PC.Unix64.plugin
+f strgroup.PC(64-bit_x86-64).Windows.plugin
+f strgroup.PC.Windows.plugin

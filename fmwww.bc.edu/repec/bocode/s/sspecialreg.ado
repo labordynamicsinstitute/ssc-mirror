@@ -7,20 +7,39 @@
 *! version 1.1.5: C430 hetv() implies hetero, clean up display of results
 *! version 1.1.6: corrections in derivative of AIF from Yingying's message of 19Jun2015
 *! version 1.1.7: handle hyphenated varlists, zap e(stat_cmd)
+*! version 1.1.8: ereturn mfx from non-bs calcs, add overid option
+*! version 1.1.9: rename marginal effects at mean -> average marginal effects
+*! version 1.1.10: enable first option 
+*! version 1.1.11: add ivreg2 option
 
 * to do: add aweights per Austin Nichols' suggestion? Not sure that cluster VCE would be of any use
 
-prog drop _all
+capt prog drop sspecialreg
 program define sspecialreg, eclass
 version 11.0
 syntax varlist(numeric min=2 max=2)  [if] [in], ENDOG(string) IV(string) ///
-              [EXOG(string) HETERO HETV(string) KDENS WINSOR TRIM(real 2.5) BS BSREPS(integer 10)] 
+              [EXOG(string) HETERO HETV(string) KDENS WINSOR TRIM(real 2.5) BS BSREPS(integer 10) OVERID FIRST IVREG2] 
 
 // check for _kdens
 	capt which _kdens
 	if _rc != 0 {
 		di as err _n "You must install the kdens package, via ssc install kdens"
 		error 198
+	}
+// check for ivreg2, ranktest if requested
+	loc est "ivregress 2sls"
+	if "`ivreg2'" == "ivreg2" {
+		capt which ivreg2
+			if _rc != 0 {
+			di as err _n "You must install the ivreg2 package, via ssc install ivreg2"
+			error 198
+			}
+		capt which ranktest
+			if _rc != 0 {
+				di as err _n "You must install the ranktest package, via ssc install ranktest"
+			error 198
+			}
+		loc est "ivreg2"
 	}
 // require endog and iv lists
 // unabbreviate lists to deal with hyphens
@@ -159,11 +178,10 @@ syntax varlist(numeric min=2 max=2)  [if] [in], ENDOG(string) IV(string) ///
 	}
 	loc action = cond("`winsor'"=="winsor", "winsorized", "trimmed")
 	di as text _n "`delta' observations `action': max abs value of transformed variable = " %5.2f `extreme' " sigma" _n
-	loc qq "qui"
-//	loc qq = cond("`bs'" == "bs", "qui", "noi")
-	`qq' ivregress 2sls `T' `exog' (`endog' = `iv') if `touse'
+	loc qq = cond("`first'" != "first", "qui", "noi")
+	`qq' `est' `T' `exog' (`endog' = `iv') if `touse', `first'
 	ereturn local depvar "`D'"
-	if "`bs'" != "bs" {
+	if "`first'" != "first" {
 		di as text _n "Instrumental variables regression" _col(55) "Number of obs = " as res %8.0f e(N)
 		di as text _col(55) "Wald chi2(`e(df_m)')  = " as res %8.2f e(chi2)
 		di as text _col(55) "Prob > chi2   = " as res %8.4f chi2tail(e(df_m), e(chi2))
@@ -172,9 +190,17 @@ syntax varlist(numeric min=2 max=2)  [if] [in], ENDOG(string) IV(string) ///
 		di as text "Instrumented : `e(instd)'"
 		di as text "Instruments:   `e(insts)'"
 	}
+	
+		if "`overid'" != "" {
+			capt which overid
+			if _rc != 0 {
+				di as err _n "Error: overid must be installed"
+				error 111
+			}
+			overid
+		}
 	qui predict double `dxb' if e(sample), xb
 	qui replace `dxb' =`dxb' + `vee' if e(sample)
-
 	qui su `dxb'
 	loc k2 = r(N)
 	qui g double `h' = 0.9 * r(sd) * r(N)^(-1/5)
@@ -210,19 +236,17 @@ syntax varlist(numeric min=2 max=2)  [if] [in], ENDOG(string) IV(string) ///
 	matrix rownames `mfx' = `V' `en'
 
 	if "`bs'" == "bs" {
-// mat li `mfx'
-// set trace on
-// mat li `Vee'
 		mat `bee' = (`mfx')'
 		matrix rownames `Vee' = `V' `en'
 		matrix colnames `Vee' = `V' `en'
     	eret post `bee' `Vee', depname(`D') esample(`touse')
-    	di "Marginal effects at the mean, average index function"
+    	di "Average marginal effects from average index function"
     	eret display  
 	}
 	else {
-		di as text _n "Marginal effects at the mean, average index function"
+		di as text _n "Average marginal effects from average index function"
 		mat li `mfx', noheader
+		eret matrix aif = `mfx'
 	}
 	eret local cmdname = "sspecialreg"
 	eret scalar N = `enn'

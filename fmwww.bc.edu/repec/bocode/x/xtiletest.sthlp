@@ -7,7 +7,7 @@ help for {hi:xtiletest}
 {title:Test equality of percentiles across groups of observations}
 
 {p 8 14}{cmd:xtiletest}{it: varname} [{cmd:if} {it:exp}] [{cmd:in} {it:range}], 
-{cmd:by(}{it:string}) {cmdab:xt:ile(}{it:numlist}) 
+{cmd:[weight]} {cmd:by(}{it:string}) {cmdab:xt:ile(}{it:numlist}) 
 
 {title:Description}
 
@@ -17,6 +17,7 @@ that the hypothesis of equality of percentiles across groups
 can be expressed as a standard Chi-squared goodness of fit test, as produced by Stata's 
 {cmd:tabulate} command. Under the null that {it:m} specified percentiles are equal over {it:n} 
 groups, the test statistic is distributed Chi-square with {it:(m-1)(n-1)} degrees of freedom.
+fweights are allowed.
 
 {title:Options}
 

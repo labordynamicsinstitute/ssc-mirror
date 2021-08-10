@@ -17,9 +17,9 @@ d KW: partial least squares
 d KW: structural equation model
 d KW: latent variables
 d
-d Requires: Stata version 10
+d Requires: Stata version 14.2
 d
-d Distribution-Date: 20170601
+d Distribution-Date: 20200804
 d
 d Author:   Sergio Venturini,     Department of Decision Sciences, Università Bocconi, Italy
 d Support: email     sergio.venturini@@unibocconi.it
@@ -29,19 +29,23 @@ d Support: email     mehmetm@@svt.ntnu.no
 d
 f plssem.ado
 f plssem.sthlp
+f plssemc.ado
+f plssemc.sthlp
+f plssemcmat.ado
+f plssemmat.ado
 f plssem_estat.ado
+f plssemc_estat.ado
 f plssemplot.ado
+f plssem_p.ado
 f ../m/mktable_corr.ado
 f ../m/mktable.ado
 f ../m/mktable_indirect.ado
+f ../m/mktable_mediate.ado
 f ../m/mkheader.ado
 f plssemplot.sthlp
 f plssem_postestimation.sthlp
-f ../r/rebus_cm.mo
-f ../r/rebus_gqi.mo
-f ../s/scale.mo
-f ../s/sd.mo
-f ../w/which.mo
+f plssemc_postestimation.sthlp
+f ../l/lplssem.mlib
 f ../w/workout2.dta
 f ../e/ecsimobi.dta
 f plssem_application.do

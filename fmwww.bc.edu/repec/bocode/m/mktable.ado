@@ -1,14 +1,14 @@
 *!mktable version 0.2.0
-*!Written 12May2017
+*!Written 05May2018
 *!Written by Sergio Venturini and Mehmet Mehmetoglu
 *!The following code is distributed under GNU General Public License version 3 (GPL-3)
 
 program mktable
-	version 10
+	version 15.1
 	syntax , matrix(string) [ FIRSTCOLName(string) FIRSTCOLWidth(integer 25) ///
 		COLWidth(integer 15) Title(string) HLines(numlist >0 integer sort) ///
 		NOVLines DIGits(integer 3) Path STats TOTal CORr CUToff(real 0) ///
-		BINary(namelist min=1) REBus ]
+		BINary(namelist min=1) REBus FIMix CONsistent ]
 
 	/* Options:
 	   --------
@@ -27,8 +27,11 @@ program mktable
 		 corr												--> correlation table
 		 cutoff(real 0)							--> do not show correlation smaller than cutoff
 		 binary(namelist min=1)			--> binary indicators/latent variables
-		 rebus											--> indicator that the table refers to REBUS
+		 rebus											--> indicator that the table refers to REBUS-PLS
+																		or FIMIX-PLS results
+		 fimix											--> indicator that the table refers to FIMIX-PLS
 																		results
+		 consistent									--> indicator for consistent PLS (PLSc)
 	 */
 	
 	local skip0 = 0
@@ -44,6 +47,10 @@ program mktable
 		display as error "'colwidth' option must be larger than 8 to properly show the table"
 		exit
 	}
+
+	local props = e(properties)
+	local boot_lbl "bootstrap"
+	local isboot : list boot_lbl in props
 
 	local firstcolwidth_p1 = `firstcolwidth' + 1
 	local ncols = colsof(`matrix')
@@ -120,7 +127,7 @@ program mktable
 		}
 		local todisp : word `j' of `matcolnames'
 		if (strpos("`todisp'", "_")) {
-			local todisp = subinstr("`todisp'", "_", " ", .)
+			//local todisp = subinstr("`todisp'", "_", " ", .)
 		}
 		if (strlen("`todisp'") > `usable') {
 			local todisp = abbrev("`todisp'", `usable')
@@ -143,7 +150,7 @@ program mktable
 	}
 	local todisp : word `ncols' of `matcolnames'
 	if (strpos("`todisp'", "_")) {
-		local todisp = subinstr("`todisp'", "_", " ", .)
+		//local todisp = subinstr("`todisp'", "_", " ", .)
 	}
 	if (strlen("`todisp'") > `usable') {
 		local todisp = abbrev("`todisp'", `usable')
@@ -165,6 +172,9 @@ program mktable
 	forvalues i = 1/`nrows' {
 		local rownametodisp : word `i' of `matrownames'
 		if ("`rownametodisp'" != ".") {
+			if ("`fimix'" != "") {
+				local rownametodisp = subinstr("`rownametodisp'", "%%", " ", 1)
+			}
 			if ("`total'" != "") {
 				local rownametodisp = subinstr("`rownametodisp'", "->", " -> ", 1)
 			}
@@ -276,7 +286,12 @@ program mktable
 	}
 	
 	if ("`path'" != "") {
-		display as text _skip(`skip1') "p-values in parentheses"
+		if (("`consistent'" != "") & (!`isboot')) {
+			display as text _skip(`skip1') "p-values not shown (use the 'boot' option)"
+		}
+		else {
+			display as text _skip(`skip1') "p-values in parentheses"
+		}
 	}
 
 	if ("`binary'" != "") {

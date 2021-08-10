@@ -1,5 +1,5 @@
 {smcl}
-{* *! version 0.1  6 Nov 2016}{...}
+{* *! version 0.23}{...}
 {vieweralsosee "" "--"}{...}
 {vieweralsosee "filelist (If installed)" "help filelist"}{...}
 {vieweralsosee "Help describe" "help describe"}{...}
@@ -20,34 +20,36 @@
 [{cmd:,}
 {it:options}]
 
-{synoptset 20 tabbed}{...}
+{synoptset 22 tabbed}{...}
 {synopthdr}
 {synoptline}
 {syntab:Main}
-{synopt:{opt sa:vein(string)}} Specify file to save metadata within. The 
+{synopt:{opt sa:vein(string)}}Specify file to save metadata within. The 
 filename must have one of the suffix dta or one of the styles from the 
 {opt s:tyle} option.{break}
-{red:The suffix overrules the {opt s:tyle} option below}.{p_end}
-{synopt:{opt k:eep}} Keep metadata in Data editor.{p_end}
-{synopt:{opt nol:og}} Do not show any output in the log.{p_end}
-{synopt:{opt se:archsubdirs}} If this option is set subdirectories are also 
+{red:The suffix overrules the {opt s:tyle} option below}{p_end}
+{synopt:{opt k:eep}}Keep metadata in Data editor{p_end}
+{synopt:{opt nol:og}}Do not show any output in the log{p_end}
+{synopt:{opt se:archsubdirs}}If this option is set subdirectories are also 
 searched for dataset for which to include metadata. If not set only the specified
-directory is searched for datasets.{p_end}
-{syntab: {help matprint:matprint} options}
-{synopt:{opt s:tyle(string)}} Style for output. One of the values {bf:smcl} (default), 
+directory is searched for datasets{p_end}
+{syntab:{help matprint:matprint} options}
+{synopt:{opt s:tyle(string)}}Style for output. One of the values {bf:smcl} (default), 
 {bf:csv} (semicolon separated style), 
 {bf:latex or tex} (latex style),
-{bf:html} (html style) and
+{bf:html} (html style) or
 {bf:md} (markdown style) 
-.{p_end}
-{synopt:{opt c:aption(string)}} Title/caption for the matrix output.{p_end}
-{synopt:{opt to:p(string)}} String containing text prior to table content.
-Default is dependent of the value of the style option.{p_end}
-{synopt:{opt u:ndertop(string)}} String containing text between header and table 
+{p_end}
+{synopt:{opt cap:tion(string)}}Caption for the output. Same as {opt ti:tle}{p_end}
+{synopt:{opt ti:tle(string)}}Title for the output. Same as {opt cap:tion}.
+{opt ti:tle} overwrites {opt cap:tion}{p_end}
+{synopt:{opt to:p(string)}}String containing text prior to table content.
+Default is dependent of the value of the style option{p_end}
+{synopt:{opt u:ndertop(string)}}String containing text between header and table 
 content.
-Default is dependent of the value of the style option.{p_end}
-{synopt:{opt b:ottom(string)}} String containing text after to table content.
-Default is dependent of the value of the style option.{p_end}
+Default is dependent of the value of the style option{p_end}
+{synopt:{opt b:ottom(string)}}String containing text after to table content.
+Default is dependent of the value of the style option{p_end}
 {synoptline}
 {p2colreset}{...}
 {p 4 6 2}
@@ -124,13 +126,10 @@ keys to merge upon.{p_end}
 
 {marker author}{...}
 {title:Author and support}
-
 {phang}{bf:Author:}{break}
  	Niels Henrik Bruun, {break}
-	Section for General Practice, {break}
-	Dept. Of Public Health, {break}
-	Aarhus University
+	Aalborg University Hospital
 {p_end}
 {phang}{bf:Support:} {break}
-	{browse "mailto:nhbr@ph.au.dk":nhbr@ph.au.dk}
+	{browse "mailto:niels.henrik.bruun@gmail.com":niels.henrik.bruun@gmail.com}
 {p_end}

@@ -1,7 +1,6 @@
-*C:\ado\personal\r\read_residual_variance.ado
 {smcl}
 {hline}
-Help file for {hi:residual_variance}
+Help file for {hi:read_parameterestimates}
 {hline}
 
 

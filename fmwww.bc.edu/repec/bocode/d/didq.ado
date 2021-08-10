@@ -1,13 +1,5 @@
-*! version 1.5 17Sep2015
+*! version 1.6 March2021
 *! authors Ricardo Mora & Iliana Reggio
-
-// V 1.5 correction: cambiamos el nombre del comando a requerimiento de Stata Journal
-// V 1.4 correction: convertimos el ado en un eclass file, ponemos labels en las headings de r(beta)
-// V 1.3 correction: introducimos opciones Auxiliary y FORCE
-// V 1.2 correction: s=s-1 tests, all tests checked with command test
-// to do:
-// nodynamics option: effect is constant throughout all post-treatment period
-// estimations with a range of Parallel-q assumptions
 
 program didq, eclass byable(recall) 
 	version 10.1
@@ -30,7 +22,8 @@ quietly {
 					 FORCE					///
 					 ]
 	marksample touse
-	tempname Post PostD trendD quadD I DIb DIo DIa alpha std_alp tests p_tests p rf info b V cols_a cols_b common beta Vbeta
+	tempname Post PostD trendD quadD I DIb DIo DIa alpha std_alp tests p_tests p rf info ///
+		 b V cols_a cols_b common beta Vbeta
 
 	if ("`varlist'" == "") {
                   di as err "you must specify a dependent variable"
@@ -183,12 +176,15 @@ quietly {
 			local lista = "`depvar' `DIo'* `treated' `I'* `DIa'*"
 			local var_names = "`DIos' `treated' `Is' `DIas'"
 			}
+	// pesos
+	if "`weight'`exp'" != "" local weights = "[`weight'`exp']"
+
 	// standard errors
 	if "`cluster'"=="" local rob "robust"
 	else local rob "vce(cluster `cluster')"
 
 	// Flexible Model
-	reg `lista' `controls' if `touse', `rob'
+	reg `lista' `controls' if `touse' `weights', `rob'
 	local var_names = "`var_names' `controls' _cons"
 	mat define cols_b=colsof(e(b))
 	if e(rank)<cols_b[1,1] & "`force'"!="force" {
@@ -208,7 +204,7 @@ quietly {
 	// Standard Models	
 	local cols_a = colsof(`alpha')
 	if "`model'" == "standard" {
-			reg `depvar' `PostD' `treated' `I'* `controls' if `touse', `rob'
+			reg `depvar' `PostD' `treated' `I'* `controls' if `touse'  `weights', `rob'
 			local var_names = "Postx`treated' `treated' `Is' `controls' _cons"
 			matrix define `b'=e(b)
 			matrix define `V'=e(V)
@@ -219,7 +215,7 @@ quietly {
 			matrix define `alpha'=_coef[`PostD'],`tests'[1,1]
 			matrix define `std_alp'=_se[`PostD'],`p_tests'[1,1]
 			// standard with flexible dynamics
-			reg `depvar' `DIo'* `treated' `I'* `controls' if `touse', `rob'
+			reg `depvar' `DIo'* `treated' `I'* `controls' if `touse' `weights', `rob'
 			// testing flexible dynamics
 			local rango = `max'-`min'+1
 			forvalues indice = 1/`rango' {
@@ -239,21 +235,21 @@ quietly {
 			}
 
 	if "`model'" == "linear" {
-			reg `depvar' `PostD' `trendD' `treated' `I'* `controls' if `touse', `rob'
-			local var_names = "Postx`treated' trendx`treated' `treated' `Is' `controls' _cons"
-			matrix define `b'=e(b)
-			matrix define `V'=e(V)
-		        matrix rownames `V' = `var_names'
-		        matrix colnames `V' = `var_names'
-		        matrix colnames `b' = `var_names'
-		        matrix rownames `b' = `depvar'
-			matrix define `alpha'=_coef[`PostD'],`tests'[2,1]
-			matrix define `std_alp'=_se[`PostD'],`p_tests'[2,1]
-			// linear with flexible dynamics
-			reg `depvar' `DIo'* `trendD' `treated' `I'* `controls' if `touse', `rob'
-			// testing flexible dynamics
-			local rango = `max'-`min'+1
-			forvalues indice = 1/`rango' {
+		reg `depvar' `PostD' `trendD' `treated' `I'* `controls' if `touse' `weights', `rob'
+		local var_names = "Postx`treated' trendx`treated' `treated' `Is' `controls' _cons"
+		matrix define `b'=e(b)
+		matrix define `V'=e(V)
+		matrix rownames `V' = `var_names'
+		matrix colnames `V' = `var_names'
+		matrix colnames `b' = `var_names'
+		matrix rownames `b' = `depvar'
+		matrix define `alpha'=_coef[`PostD'],`tests'[2,1]
+		matrix define `std_alp'=_se[`PostD'],`p_tests'[2,1]
+		// linear with flexible dynamics
+		reg `depvar' `DIo'* `trendD' `treated' `I'* `controls' if `touse' `weights', `rob'
+		// testing flexible dynamics
+		local rango = `max'-`min'+1
+		forvalues indice = 1/`rango' {
 				local anyo=`min'+`indice'-1
 				if `indice'> 1 {
 					if `anyo'>=`begin' & `anyo'< `end'{
@@ -261,31 +257,31 @@ quietly {
 						test `DIo'`indice'= `DIo'`indice1', accumulate
 						}
 					}
-				}
-				scalar `rf'=r(F)
-				scalar `p'=chi2tail(r(df),r(F))
-				if `rf'==. scalar `rf'=0
-				matrix define `alpha'=`alpha',`rf'
-				matrix define `std_alp'=`std_alp',`p'
 			}
+			scalar `rf'=r(F)
+			scalar `p'=chi2tail(r(df),r(F))
+			if `rf'==. scalar `rf'=0
+			matrix define `alpha'=`alpha',`rf'
+			matrix define `std_alp'=`std_alp',`p'
+	}
 
 
 	if "`model'" == "quadratic" {
-			reg `depvar' `PostD' `trendD' `quadD' `treated' `I'* `controls' if `touse', `rob'
-			local var_names = "Postx`treated' trendx`treated' trend2x`treated' `treated' `Is' `controls' _cons"
-			matrix define `b'=e(b)
-			matrix define `V'=e(V)
-		        matrix rownames `V' = `var_names'
-		        matrix colnames `V' = `var_names'
-		        matrix colnames `b' = `var_names'
-		        matrix rownames `b' = `depvar'
-			matrix define `alpha'=_coef[`PostD'],`tests'[3,1]
-			matrix define `std_alp'=_se[`PostD'],`p_tests'[3,1]
-			// quadratic with flexible dynamics
-			reg `depvar' `DIo'* `trendD' `quadD' `treated' `I'* `controls' if `touse', `rob'
-			// testing flexible dynamics
-			local rango = `max'-`min'+1
-			forvalues indice = 1/`rango' {
+	 reg `depvar' `PostD' `trendD' `quadD' `treated' `I'* `controls' if `touse' `weights', `rob'
+	 local var_names = "Postx`treated' trendx`treated' trend2x`treated' `treated' `Is' `controls' _cons"
+		matrix define `b'=e(b)
+		matrix define `V'=e(V)
+		matrix rownames `V' = `var_names'
+		matrix colnames `V' = `var_names'
+		matrix colnames `b' = `var_names'
+		matrix rownames `b' = `depvar'
+		matrix define `alpha'=_coef[`PostD'],`tests'[3,1]
+		matrix define `std_alp'=_se[`PostD'],`p_tests'[3,1]
+		// quadratic with flexible dynamics
+		reg `depvar' `DIo'* `trendD' `quadD' `treated' `I'* `controls' if `touse' `weights', `rob'
+		// testing flexible dynamics
+		local rango = `max'-`min'+1
+		forvalues indice = 1/`rango' {
 				local anyo=`min'+`indice'-1
 				if `indice'> 1 {
 					if `anyo'>=`begin' & `anyo'< `end'{
@@ -299,7 +295,7 @@ quietly {
 				if `rf'==. scalar `rf'=0
 				matrix define `alpha'=`alpha',`rf'
 				matrix define `std_alp'=`std_alp',`p'
-			}
+		}
 	count if `touse'	
 	matrix `info' = (`min',`max',`begin',`end', r(N))
 	noi _didq_out, alp(`alpha') stdalp(`std_alp') cluster(`cluster') model(`model')  ///
@@ -364,7 +360,7 @@ quietly {
 		noi dis _newline _col(5) as txt "Treatment Period: " in y `info'[1,3] ":" `info'[1,4] _continue
 		if `alp'[1,`cols_a'-1]!=0 {
 			noi dis _col(63) as txt "p-value = "  _continue
-			noi dis %~7s in y string(`stdalp'[1,`cols_a'-1],"%7.4g") _continue
+			noi dis %~7s in y string(`stdalp'[1,`cols_a'-1],"%7.4f") _continue
 		}
 
 		// Wide format

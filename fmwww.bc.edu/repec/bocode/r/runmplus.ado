@@ -13,19 +13,19 @@
 *  Sep 4  2007 fixed miterations option
 *  Jul 22 2008 Revererted to July 17 2008 version
 *  Oct 28 2008 added define option
-*  DEC 11 2008 KNOWN BUG - when reading parameter estimates, if an IRT model is estimated 
-*              (Mplus returns IRT parameter estimates) the matrix of returned parameter 
-*              includes duplicate entries, i.e.  does distinguish regular parameter 
+*  DEC 11 2008 KNOWN BUG - when reading parameter estimates, if an IRT model is estimated
+*              (Mplus returns IRT parameter estimates) the matrix of returned parameter
+*              includes duplicate entries, i.e.  does distinguish regular parameter
 *              estimates from IRT-scaled parameter estimates.
 * Jul 27 2009  Adam Carle provided wtscale option
-*              It’s not well known (i.e., not documented in the actual manual), but, 
-*              when including weights in multilevel models or complex data, Mplus 
-*              automatically scales the weights. For numerous reasons, one may wish 
-*              to scale their weights on their own outside the program (e.g., different 
-*              scaling methods, same scaling method but using a zero weighting 
-*              technique to subpop, etc.). One can tell Mplus not to scale the 
-*              weights. But, like I said, the manual doesn’t show it. 
-*              I added a bit of code to runmplus to allow this. 
+*              It’s not well known (i.e., not documented in the actual manual), but,
+*              when including weights in multilevel models or complex data, Mplus
+*              automatically scales the weights. For numerous reasons, one may wish
+*              to scale their weights on their own outside the program (e.g., different
+*              scaling methods, same scaling method but using a zero weighting
+*              technique to subpop, etc.). One can tell Mplus not to scale the
+*              weights. But, like I said, the manual doesn’t show it.
+*              I added a bit of code to runmplus to allow this.
 * Apr 28 2010  Added code for post-processing of models using Bayesian estimation
 *              for Mplus version 6
 * Oct 03 2010  Added output processing for Monte Carlo
@@ -35,14 +35,28 @@
 * Dec 03 2011  Added some return of fit statistics after EFA
 * Jun 05 2012  Fixed parsing of priors in model statement
 * Jun 17 2012  Added extraction of Tech 11 and Tech 14 results
-capture program drop runmplus 
+* Jul 30 2013  Fixed version call bug
+* Aug 19 2013  Addressed classname in r(estimate) under LCA/Bayes
+* Aug 20 2013  Added model missing for montecarlo runs
+* Aug 21 2013  Fixed how bayesian estimation is determined for post-processing
+* Oct 14 2013  Added extract of wald test of parameter constraints
+* Nov 16 2013  Added po(string) option, to process output only
+* Nov 16 2013  Fixed issue in read_convergence. Mplus apparently no longer automatically
+*              reports when the model estimation terminates normally, in all model types
+* Nov 22 2013  Added Data Missing command
+* Jan 01 2015  Added aux shortcut
+* Mar 01 2015  Added read_parameterestimates_indirect which reads and returns MODEL INDIRECT output
+* Jun 13 2019  Update contributed to SSC. Minor bug fixes.
+capture program drop runmplus
 program define runmplus , rclass
 version 10
   #d ;
-  syntax [varlist] [if] [in] , 
-          [ TScores(string)
+  syntax [varlist] [if] [in] ,
+          [ debug po(string)
+            TScores(string)
             TItle(string)
             DATa(string)
+            DATAMissing(string)
             VARiable(string)
             DEFine(string)
             ANalysis(string)
@@ -59,13 +73,13 @@ version 10
             log(string)
             SUBPOPulation(string)
             STRATification(string)
-            wgt(string) 
+            wgt(string)
             wtscale(string)
             CLUSter(string)
             variance(string)
             iterations(string)
             sditerations(string)
-            h1iterations(string) 
+            h1iterations(string)
             miterations(string)
             mciterations(string)
             muiterations(string)
@@ -83,7 +97,7 @@ version 10
             ucellsize(string)
             algorithm(string)
             integration(string)
-            missing(int -9999) 
+            missing(int -9999)
             NGroups(string)
             CATegorical(string)
             tech(string)
@@ -100,13 +114,111 @@ version 10
             population(string)
             AUXiliary(string)
             CLASSes(string)
+            modelmissing(string)
             * ] ;
 #d cr
 
+if "`aux'" ~= "" & "`auxiliary'" == "" {
+   local auxiliary "`aux'"
+}
+
+
+#d ;
+if "`debug'"=="debug" { ;
+   noisily di in green "debugging mode: review of submitted options" _n ;
+   foreach x in  
+            algorithm
+            analysis
+            auxiliary
+            aux
+            between
+            categorical
+            centering
+            classes
+            cluster
+            convergence
+            coverage
+            data
+            dataimputation
+            datamissing
+            debug 
+            define
+            estimator
+            grouping
+            h1convergence
+            h1iterations
+            idvariable
+            if 
+            in  
+            integration
+            iterations
+            log
+            logcriterion
+            loghigh
+            loglow
+            matrix
+            mc
+            mcconvergence
+            mciterations
+            mconvergence
+            missing
+            miterations
+            mixc
+            mixu
+            model
+            modelmissing
+            modindices
+            montecarlo
+            muconvergence
+            muiterations
+            ngroups
+            output
+            parameterization
+            plot
+            po
+            population
+            savedata
+            saveinputdatafile
+            saveinputfile
+            savelogfile
+            sditerations
+            stratification
+            subpopulation
+            tech
+            title
+            tscores
+            type
+            ucellsize
+            variable
+            variance
+            varlist 
+            wgt
+            within
+            wtscale 
+            options { ;
+      if "`x'"~="" { ;
+         di _col(5) in green "`x'" _col(23) "->" _col(27) in yellow "``x''" ;
+      } ; /* close if */
+   } ; /* close foreach x */
+} ; /* close if debug */
+
+#d cr
+ 
+
+
+   
 local omatsize=`c(matsize)'
+
+
+if "`po'"=="" { // only do the model setup and running mplus steps if po option not specified
+* po option will skip right to the output processing of the file specified in the (string)
+* part of po
+* RNJ 2013 Nov 16
+
 preserve
 
-local varlist "`varlist' `cluster'  `auxiliary' `idvariable' "
+
+local varlist "`varlist' `cluster'  `auxiliary' `aux' `idvariable' "
 local varlist : list uniq varlist
 local numvars = wordcount("`varlist'")
 local novarlist=0
@@ -114,7 +226,7 @@ if `numvars'==0 {
    local novarlist=1
 }
 
- 
+
 
 * 18-May-2010
 * too many options, had to move to anything
@@ -131,7 +243,8 @@ foreach x in ///
    h1se varnocheck ///
    demo7 demo6 demo4 ///
    version5 version6 ///
-   debug {
+   debug ///
+   extractmatrices {
    local foo=lower("`x'")
    if regexm(lower("`options'"),lower("`x'"))==1 {
       local `foo' = "`x'"
@@ -147,7 +260,7 @@ if "`debug'"=="debug" {
    di in green "version5" _col(20) " -> " in yellow "`version5'"
    di in green "version6" _col(20) " -> " in yellow "`version6'"
 }
-   
+
 
 local agrp "samps    stand        res      fsdet         fscoef        cint      noch        h1te    pat"
 local bgrp "sampstat standardized residual fsdeterminacy fscoefficeint cinterval nochisquare h1tech3 patterns"
@@ -163,7 +276,7 @@ forvalues i = 1/`n' {
 
 * check for summary data, monte carlo
 #d ;
-if "`mc'"~="" | "`montecarlo'"~="" | 
+if "`mc'"~="" | "`montecarlo'"~="" |
    strpos("`data'","imputation")>0 |
    strpos("`data'","montecarlo")>0 |
    strpos("`data'","covar")>0 |
@@ -183,7 +296,7 @@ if `isdatatypeimputation'~=0 {
 }
 
 * if a montecarlo run is requested, strike the varlist
-* or if type=imputation 
+* or if type=imputation
 if ("`mc'"~="" | "`montecarlo'"~="") {
    local varlist = ""
 }
@@ -197,10 +310,10 @@ if "`varlist'"~="" | "`novarlist'"~="1" {
    qui marksample touse, novarlist
    qui keep if `touse'
    order `varlist'
-   keep `varlist' 
+   keep `varlist'
    * convert char to numeric
    foreach var of local varlist {
-      local vartype : type `var' 
+      local vartype : type `var'
       if (substr("`vartype'",1,3)=="str") {
          display "encoding `var'"
          tempvar tempenc
@@ -210,9 +323,9 @@ if "`varlist'"~="" | "`novarlist'"~="1" {
        }
       * added 6-27-2008
       if (substr("`vartype'",1,3)~="str") {
-         qui recast float `var' 
+         qui recast float `var'
        }
-      
+
     }
     foreach var of local varlist {
        quietly replace `var' = `missing' if `var' >= .
@@ -235,7 +348,7 @@ qui {
 }
 
 *
-* ------------------- TITLE ------------------- 
+* ------------------- TITLE -------------------
 *
 file write `out' "TITLE: " _newline
 if "`title'"~="" {
@@ -251,7 +364,7 @@ if "`varlist'"~=""|"`novarlist'"=="1" {
       makelab `var' `out' `ncases'
    }
    file write `out' " " _newline
-   
+
    *
    * ------------------- DATA
    *
@@ -282,15 +395,15 @@ if "`varlist'"~=""|"`novarlist'"=="1" {
       }
       file write `out' " " _newline
    }
-           
+
    * ------------------- VARIABLE
    *
    * added July 26 2007
-   * Checkpoint - if variable is not blank but does not include the 
-   * names option, then we presume what is in variable is to be appended 
+   * Checkpoint - if variable is not blank but does not include the
+   * names option, then we presume what is in variable is to be appended
    * to what is automatically generated by runmplus. Otherwise, we parse out
    * what is in the variable command and ignore automatically generated stuff
-   
+
    local test278=0
    if "`montecarlo'"~="" { // added 12-15-2011
       local test278=1
@@ -304,21 +417,21 @@ if "`varlist'"~=""|"`novarlist'"=="1" {
    if "`isdatatypeimputation'"=="1" {
       local test278=1
    }
-   
+
    *noisily {
    *   foreach x in montecarlo varlist isdatatypeimputation test278 {
    *      di "`x'" _col(30) "-> ``x''"
    *   }
    *}
-         
-  
+
+
    *if ("`variable'"=="" | regexm(lower("`variable'"),"name")==0) ///
    *   | "`isdatatypeimputation'"=="1" {
    if "`test278'"~="1" {
          *noisily di in red "got here"
-         file write `out' "VARIABLE:" _newline 
+         file write `out' "VARIABLE:" _newline
          if "`varlist'"~="" {
-            file write `out' "  NAMES = " _newline "    " 
+            file write `out' "  NAMES = " _newline "    "
             local len = 0
             lw , out(`out') line(`"`varlist'"')
          }
@@ -335,7 +448,7 @@ if "`varlist'"~=""|"`novarlist'"=="1" {
                lw , out(`out') line(`"`avars'"')
          }
          }
-         
+
          if "`categorical'"~="" {
             file write `out' "  CATEGORICAL = " _newline
             tokenize `categorical'
@@ -375,14 +488,14 @@ if "`varlist'"~=""|"`novarlist'"=="1" {
             *file write `out' "  BETWEEN = `between' ;" _newline
             file write `out' "  BETWEEN = " _n
             lw , out(`out') line(`"`between'"')
-   
+
          }
          if "`tscores'" ~= "" {
             *file write `out' "  TSCORES = `tscores' ;" _newline
             file write `out' "  TSCORES = " _n
             lw , out(`out') line(`"`tscores'"')
       }
-      
+
       * added 6-10-2008
       if "`auxiliary'" ~= "" {
          *** 2-24-2011 file write `out' "  AUXILIARY = `auxiliary' ;" _newline
@@ -421,12 +534,12 @@ if "`varlist'"~=""|"`novarlist'"=="1" {
       if "`ttype'" ~= "" {
          file write `out' "  TTYPE = `ttype' ;" _newline
       }
-   } 
+   }
    if "`variable'"~="" {
-      * VARIABLE: only gets written if variable is not blank AND DOES 
+      * VARIABLE: only gets written if variable is not blank AND DOES
       * include the keyword name
       if regexm(lower("`variable'"),"name")==1  {
-         file write `out' "VARIABLE:" _newline 
+         file write `out' "VARIABLE:" _newline
       }
       tokenize `variable' , parse(";")
       while "`1'"~="" {
@@ -441,7 +554,7 @@ if "`varlist'"~=""|"`novarlist'"=="1" {
    * ------------------- DEFINE
    *
    if "`define'"~="" {
-      file write `out' "DEFINE: " _newline   
+      file write `out' "DEFINE: " _newline
       tokenize `define' , parse(";")
       while "`1'"~="" {
          if "`1'"~=";" {
@@ -452,7 +565,7 @@ if "`varlist'"~=""|"`novarlist'"=="1" {
       file write `out' " " _newline
    }
 
-} // closes the condition on a varlist being specified 
+} // closes the condition on a varlist being specified
 
 *
 * ------------------- ANALYSIS
@@ -467,7 +580,7 @@ foreach field in ///
    mixu         loghigh       loghigh       loglow               ///
    ucellsize    algorithm     integration   {
    if "``field''"~="" {
-      local __x1 = upper("`field'") 
+      local __x1 = upper("`field'")
       file write `out' "   `__x1' = ``field'' ;" _newline
    }
 }
@@ -485,7 +598,7 @@ if "`analysis'"~="" {
 *
 * ------------------- OUTPUT
 *
-file write `out' "OUTPUT: " _newline   
+file write `out' "OUTPUT: " _newline
 if "`modindices'"~="" {
    file write `out' "   MODINDICES(`modindices'); " _n
 }
@@ -495,7 +608,7 @@ foreach field in ///
    sampstat   standardized   residual   cinterval   nochisquare ///
    h1se       h1tech3        patterns   fscoefficeint   fsdeterminacy   {
    if "``field''"~="" {
-      local __x1 = upper("`field'") 
+      local __x1 = upper("`field'")
       file write `out' "   `__x1' ;" _newline
    }
 }
@@ -524,7 +637,7 @@ if "`output'"~="" {
 * ------------------- PLOT
 *
 if "`plot'"~="" {
-   file write `out' "PLOT: " _newline   
+   file write `out' "PLOT: " _newline
    tokenize `plot' , parse(";")
    while "`1'"~="" {
       if "`1'"~=";" {
@@ -539,7 +652,7 @@ if "`plot'"~="" {
 * ------------------- SAVEDATA
 *
 if "`savedata'"~="" {
-   file write `out' "SAVEDATA: " _newline   
+   file write `out' "SAVEDATA: " _newline
    tokenize `savedata' , parse(";")
    while "`1'"~="" {
       if "`1'"~=";" {
@@ -549,7 +662,7 @@ if "`savedata'"~="" {
    }
    file write `out' " " _newline
 }
-     
+
 
 *
 * ------------------- MONTECARLO
@@ -560,7 +673,7 @@ if "`montecarlo'"~="" & "`mc'"~="" {
 }
 
 if "`montecarlo'"~="" {
-  file write `out' "MONTECARLO: " _newline   
+  file write `out' "MONTECARLO: " _newline
   tokenize `montecarlo' , parse(";")
   while "`1'"~="" {
      if "`1'"~=";" {
@@ -572,7 +685,7 @@ if "`montecarlo'"~="" {
 }
 
 if "`mc'"~="" {
-  file write `out' "MONTECARLO: " _newline   
+  file write `out' "MONTECARLO: " _newline
   tokenize `mc' , parse(";")
   while "`1'"~="" {
      if "`1'"~=";" {
@@ -584,13 +697,56 @@ if "`mc'"~="" {
 }
 
 
-* ADDED 7-27-2006
+* ADDED 7-27-2006 
 *
-* ------------------- MODEL POPULATION
+* ------------------- MODEL POPULATION 
 *
+***** file write `out' "MODEL: " _newline
+***** tokenize "`model'" , parse(";")
+***** while "`1'"~="" {
+*****    if "`1'"~=";" {
+*****             lw , out(`out') line(`"`1'"')
+*****    }
+*****    mac shift 1
+***** }
+***** file write `out' " " _newline
+***** file close `out'
+*****
+*****
 if "`population'"~="" {
-   file write `out' "MODEL POPULATION: " _newline   
-   tokenize `population' , parse(";")
+   file write `out' "MODEL POPULATION: " _newline
+   tokenize "`population'" , parse(";")
+   while "`1'"~="" {
+      if "`1'"~=";" {
+            lw , out(`out') line(`"`1'"')
+      }
+      mac shift 1
+   }
+   file write `out' " " _newline
+}
+
+* ADDED 11-22-2013
+*
+* ------------------- Data MISSING
+*
+if "`datamissing'"~="" {
+   file write `out' "DATA MISSING: " _newline
+   tokenize `datamissing' , parse(";")
+   while "`1'"~="" {
+      if "`1'"~=";" {
+            lw , out(`out') line(`"`1'"')
+      }
+      mac shift 1
+   }
+   file write `out' " " _newline
+}
+* ADDED 8-20-2013
+*
+* ------------------- MODEL MISSING
+*
+if "`modelmissing'"~="" {
+   file write `out' "MODEL MISSING: " _newline
+   tokenize `modelmissing' , parse(";")
    while "`1'"~="" {
       if "`1'"~=";" {
             lw , out(`out') line(`"`1'"')
@@ -605,7 +761,7 @@ if "`population'"~="" {
 * ------------------- DATA IMPUTATION
 *
 if "`dataimputation'"~="" {
-   file write `out' "DATA IMPUTATION: " _newline   
+   file write `out' "DATA IMPUTATION: " _newline
    tokenize `dataimputation' , parse(";")
    while "`1'"~="" {
       if "`1'"~=";" {
@@ -619,7 +775,7 @@ if "`dataimputation'"~="" {
 *
 * ------------------- MODEL
 *
-file write `out' "MODEL: " _newline   
+file write `out' "MODEL: " _newline
 tokenize "`model'" , parse(";")
 while "`1'"~="" {
    if "`1'"~=";" {
@@ -631,59 +787,59 @@ file write `out' " " _newline
 file close `out'
 
 * 7-23-2008
-* edit the inp file to accomodate % 
+* edit the inp file to accomodate %
 ****
 qui {
    tempname newusing
    capture erase `newusing'.inp
    ****
    filefilter `using'.inp `newusing'.inp , from("% ;") to("%") replace
-   local nchanges = r(occurrences) 
+   local nchanges = r(occurrences)
    if `nchanges'>0 {
       erase `using'.inp
       while `nchanges'~=0 {
          filefilter `newusing'.inp `using'.inp , from("% ;") to("%") replace
          filefilter `using'.inp `newusing'.inp , from("% ;") to("%") replace
-         local nchanges = r(occurrences) 
+         local nchanges = r(occurrences)
       }
    }
    erase `using'.inp
-   copy `newusing'.inp `using'.inp
+   qui copy `newusing'.inp `using'.inp
    erase `newusing'.inp
    ****
    filefilter `using'.inp `newusing'.inp , from("%;") to("%") replace
-   local nchanges = r(occurrences) 
+   local nchanges = r(occurrences)
    if `nchanges'>0 {
       erase `using'.inp
       while `nchanges'~=0 {
          filefilter `newusing'.inp `using'.inp , from("%;") to("%") replace
          filefilter `using'.inp `newusing'.inp , from("%;") to("%") replace
-         local nchanges = r(occurrences) 
+         local nchanges = r(occurrences)
       }
    }
    erase `using'.inp
-   copy `newusing'.inp `using'.inp
+   qui copy `newusing'.inp `using'.inp
    erase `newusing'.inp
     ****
    filefilter `using'.inp `newusing'.inp , from(\037d) to("#$#") replace
    filefilter `newusing'.inp `using'.inp , from("#$# ") to(\037d\W) replace
    filefilter `using'.inp `newusing'.inp , from("#$#") to(\037d) replace
    erase `using'.inp
-   copy `newusing'.inp `using'.inp
+   qui copy `newusing'.inp `using'.inp
    erase `newusing'.inp
    ****
    filefilter `using'.inp `newusing'.inp , from(\W\W\W) to(\W\W) replace
-   local nchanges = r(occurrences) 
+   local nchanges = r(occurrences)
    if `nchanges'>0 {
       erase `using'.inp
       while `nchanges'~=0 {
          filefilter `newusing'.inp `using'.inp , from(\W\W\W) to(\W\W) replace
          filefilter `using'.inp `newusing'.inp , from(\W\W\W) to(\W\W) replace
-         local nchanges = r(occurrences) 
+         local nchanges = r(occurrences)
       }
    }
    erase `using'.inp
-   copy `newusing'.inp `using'.inp
+   qui copy `newusing'.inp `using'.inp
    erase `newusing'.inp
 }
 
@@ -692,7 +848,7 @@ if "`saveinputfile'"~="" {
       saveinp , using(`using') saveinputfile(`saveinputfile') saveinputdatafile(`saveinputdatafile')
    }
    else {
-      saveinp , using(`using') saveinputfile(`saveinputfile') 
+      saveinp , using(`using') saveinputfile(`saveinputfile')
    }
 }
 
@@ -707,19 +863,19 @@ if "`saveinputfile'"~="" {
 * if demo6 is not specified, we'll run a little check anyways
 /* Retired this section 5-1-2013
 if "`demo7'"~="demo7" |"`demo6'"~="demo6" | "`demo4'"~="demo4" {
-   capture confirm file C:\PROGRA~1\MPLUS\Mplus.exe 
+   capture confirm file C:\PROGRA~1\MPLUS\Mplus.exe
    if _rc~=0 {
-      capture confirm file C:\PROGRA~2\MPLUS\Mplus.exe 
+      capture confirm file C:\PROGRA~2\MPLUS\Mplus.exe
       if _rc~=0 {
-         capture confirm file C:\PROGRA~1\MPLUSD~1\Mpdemo6.exe 
+         capture confirm file C:\PROGRA~1\MPLUSD~1\Mpdemo6.exe
          if _rc~=0 {
-            capture confirm file C:\PROGRA~2\MPLUSD~1\Mpdemo6.exe 
+            capture confirm file C:\PROGRA~2\MPLUSD~1\Mpdemo6.exe
             if _rc==0 {
                local demo6 = "demo6"
             }
-            capture confirm file C:\PROGRA~1\MPLUSD~1\Mpdemo7.exe 
+            capture confirm file C:\PROGRA~1\MPLUSD~1\Mpdemo7.exe
             if _rc~=0 {
-               capture confirm file C:\PROGRA~2\MPLUSD~1\Mpdemo7.exe 
+               capture confirm file C:\PROGRA~2\MPLUSD~1\Mpdemo7.exe
                if _rc==0 {
                   local demo7 = "demo7"
                }
@@ -731,13 +887,13 @@ if "`demo7'"~="demo7" |"`demo6'"~="demo6" | "`demo4'"~="demo4" {
       }
    }
 }
-      
+
 
 
 if "`demo7'"~="demo7" ///
    & "`demo6'"~="demo6" ///
    & "`demo4'"~="demo4" ///
-   & "`demo5'"~="demo5" /// 
+   & "`demo5'"~="demo5" ///
    & "`version5'" ~= "version5" ///
    & "`version6'" ~= "version6" {
    !mplus `using'.inp
@@ -759,7 +915,7 @@ if "`demo6'"~="" & "`demo4'"~="" & "`version5'"~="" | {
 
 if "`demo7'"=="demo7" | "`demo6'"=="demo6" | "`demo4'"=="demo4" {
    local ver=substr(reverse(itrim("`demo7'`demo6'`demo4'")),1,1)
-   capture confirm file C:\PROGRA~1\MPLUSD~1\Mpdemo`ver'.exe 
+   capture confirm file C:\PROGRA~1\MPLUSD~1\Mpdemo`ver'.exe
    if _rc==0 {
       !C:\PROGRA~1\MPLUSD~1\Mpdemo`ver' `using'.inp
    }
@@ -776,8 +932,13 @@ if "`demo7'"=="demo7" | "`demo6'"=="demo6" | "`demo4'"=="demo4" {
 * find Mplus executable
 * Windows only
 if "`c(os)'"~="Windows" {
-   global mplus_path "/applications/mplus/mplus"
-   local mplusexe "/applications/mplus/mplus"
+   if "$mplus_path"=="" {
+      global mplus_path "/applications/mplus/mplus"
+      local mplusexe "/applications/mplus/mplus"
+   }
+   else {
+      local mplusexe "$mplus_path"
+   }
 }
 
 if "$mplus_path"=="" { // if the mplus_path has not be set, for example in profile.do
@@ -794,11 +955,11 @@ if "$mplus_path"=="" { // if the mplus_path has not be set, for example in profi
 }
 * demo version
 forvalues i=4/7 {
-   if ("$mplus_path"=="" | "$mplusdemo`i'_path"=="")|"`demo`i''"~="" { 
-      foreach j in 2 1 {
+   if ("$mplus_path"=="" | "$mplusdemo`i'_path"=="")|"`demo`i''"~="" {
+      foreach j in 1 2 {
          cap confirm file c:\progra~`j'\mplusd~1\mpdemo`i'.exe
          if _rc==0 {
-            if "$mplus_path"=="" { 
+            if "$mplus_path"=="" {
                global mplus_path "c:\progra~`j'\mplusd~1\mpdemo`i'.exe"
             }
             global mplusdemo`i'_path "c:\progra~`j'\mplusd~1\mpdemo`i'.exe"
@@ -827,10 +988,11 @@ if "`version1'"=="version1" { // if old version specifically requested
          cap confirm file c:\progra~`j'\mplus1\mplus.exe
          if _rc==0 {
             global mplus1_path "c:\progra~`j'\mplus1\mplus.exe"
-            local mplusexe "$mplus1_path"
+
          }
       }
    }
+   local mplusexe "$mplus1_path"
 }
 
 if "`version2'"=="version2" { // if old version specifically requested
@@ -839,10 +1001,11 @@ if "`version2'"=="version2" { // if old version specifically requested
          cap confirm file c:\progra~`j'\mplus2\mplus.exe
          if _rc==0 {
             global mplus2_path "c:\progra~`j'\mplus2\mplus.exe"
-            local mplusexe "$mplus2_path"
+
          }
       }
    }
+   local mplusexe "$mplus2_path"
 }
 
 if "`version3'"=="version3" { // if old version specifically requested
@@ -851,10 +1014,11 @@ if "`version3'"=="version3" { // if old version specifically requested
          cap confirm file c:\progra~`j'\mplus3\mplus.exe
          if _rc==0 {
             global mplus3_path "c:\progra~`j'\mplus3\mplus.exe"
-            local mplusexe "$mplus3_path"
+
          }
       }
    }
+   local mplusexe "$mplus3_path"
 }
 
 if "`version4'"=="version4" { // if old version specifically requested
@@ -863,10 +1027,11 @@ if "`version4'"=="version4" { // if old version specifically requested
          cap confirm file c:\progra~`j'\mplus4\mplus.exe
          if _rc==0 {
             global mplus4_path "c:\progra~`j'\mplus4\mplus.exe"
-            local mplusexe "$mplus4_path"
+
          }
       }
    }
+   local mplusexe "$mplus4_path"
 }
 
 if "`version5'"=="version5" { // if old version specifically requested
@@ -875,10 +1040,11 @@ if "`version5'"=="version5" { // if old version specifically requested
          cap confirm file c:\progra~`j'\mplus5\mplus.exe
          if _rc==0 {
             global mplus5_path "c:\progra~`j'\mplus5\mplus.exe"
-            local mplusexe "$mplus5_path"
+
          }
       }
    }
+   local mplusexe "$mplus5_path"
 }
 
 if "`version6'"=="version6" { // if old version specifically requested
@@ -887,10 +1053,17 @@ if "`version6'"=="version6" { // if old version specifically requested
          cap confirm file c:\progra~`j'\mplus6\mplus.exe
          if _rc==0 {
             global mplus6_path "c:\progra~`j'\mplus6\mplus.exe"
-            local mplusexe "$mplus6_path"
+            ** this was here
          }
       }
    }
+   local mplusexe "$mplus6_path" // now it is here 20130730
+   if "`debug'"=="debug" {
+      noisily di "version6 was called"
+      noisily di "$mplus6_path <- Mplus version 6 path"
+      noisily di "`mplusexe' <- local mplusexe"
+   }
+
 }
 
 * Note:
@@ -908,7 +1081,7 @@ forvalues i=1/12 { // robust to version 12
 if `check813'>1 {
    qui {
       noisily di in red _n ///
-         "   please specify only one legacy version or one demo version" _n 
+         "   please specify only one legacy version or one demo version" _n
    }
    exit
 }
@@ -924,7 +1097,7 @@ if "`mplusexe'"=="" {
          "   runmplus.ado can't find the right mplus executable" _n ///
          "   after looking in some likely places. You can avoid this" _n ///
          "   error by setting a global called mplus_path in your " _n ///
-         "   profile.do See example at " 
+         "   profile.do See example at "
       noisily di as txt `"   {browse "https://sites.google.com/site/ifarwf/home/your-profiledo"}"'
    }
    exit
@@ -940,18 +1113,59 @@ if "`c(os)'"=="Windows" {
             "   runmplus.ado can't find the right mplus executable" _n ///
             "   after looking in some likely places. You can avoid this" _n ///
             "   error by setting a global called mplus_path in your " _n ///
-            "   profile.do See example at " 
+            "   profile.do See example at "
          noisily di as txt `"   {browse "https://sites.google.com/site/ifarwf/home/your-profiledo"}"'
       }
       exit
    }
 }
+
 * end of looking for Mplus executable
 
 * run Mplus
 !`mplusexe' `using'.inp
-   
+
 * Not sure if I need this bracket x}x
+
+} // this closes the if po!="" condition
+
+
+* new 20131116
+if "`po'"~="" { 
+   preserve
+   
+   * if po is specified, take that file specified in string and and use it as the output
+   tempname using
+   qui copy `po' `using'.out , replace public
+   if "`debug'"=="debug" {
+      noisily di in red "GOt here"
+      noisily di "local po -> `po'"
+      noisily di "local using -> `using'.out"
+      noisily cap confirm file `using'.out
+   }
+   
+   * isdatatypeimputation
+   if "`isdatatypeimputation'"=="" {
+      local isdatatypeimputation=0
+      *
+      tempname fh
+      local linenum = 0
+      file open `fh' using `"`using'.out"', read
+      file read `fh' line
+      while r(eof)==0 & "`isdatatypeimputation'"~="1" {
+         local linenum = `linenum' + 1
+         if regexm(lower(`"`macval(line)'"'),"data imputation")==1 | ///
+            regexm(lower(`"`macval(line)'"'),"multiple data files from")==1 {
+            local isdatatypeimputation=1
+            local foo=1
+            return local fooisdatatypeimputation `foo'
+         }
+         file read `fh' line
+      }
+      file close `fh'
+   }
+}
+
 
 
 
@@ -963,10 +1177,10 @@ if "`r(error)'"=="1" {
 }
 
 
-
+   
 * ------------------- SAVE OUTPUT FILE IF REQUESTED TO DO SO
 if "`savelogfile'"~="" {
-   copy `using'.out "`savelogfile'.out" , replace // thanks to Elan Cohen MS
+   qui copy `using'.out "`savelogfile'.out" , replace // thanks to Elan Cohen MS
 }
 
 ************************************************************************************
@@ -992,31 +1206,67 @@ if `isdatatypeimputation'==1 {
    * fit statistics
    gen numberofsuccessfulcomputations=linenum if substr(line,1,33)=="Number of successful computations"
    qui levelsof numberofsuccessfulcomputations , clean
+   if "`debug'"=="debug" {
+      di in red "inside multiple imputation output processing"
+      di in red "`r(levels)'"
+   }
    foreach x in `r(levels)' {
       local w=`x'-4
       local fitstat=lower(word(line[`w'],1))
-      if substr("`fitstat'",1,7)=="degrees" {
-         local fitstat="chisquare"
-         local chisquaredf=substr("`fitstatline'",42,10)
+      if "`debug'"=="debug" {
+         noisily di "`fitstat'<-fitstat"
       }
-      local w=`w'+2
-      local fitstatmean=reverse(word(reverse(line[`w']),1))
-      local w=`w'+1
-      local fitstatsd=reverse(word(reverse(line[`w']),1))
-      local w=`w'+1
-      local fitstatnsc=reverse(word(reverse(line[`w']),1))
-      return local `fitstat' = `fitstatmean'
-      return local `fitstat'sd = `fitstatsd'
-      return local `fitstat'nsc = `fitstatnsc'
+      if "`fitstat'"~="" {
+         if substr("`fitstat'",1,7)=="degrees" {
+            local fitstat="chisquare"
+            local chisquaredf=substr("`fitstatline'",42,10)
+         }
+         local w=`w'+2
+         local fitstatmean=reverse(word(reverse(line[`w']),1))
+         local w=`w'+1
+         local fitstatsd=reverse(word(reverse(line[`w']),1))
+         local w=`w'+1
+         local fitstatnsc=reverse(word(reverse(line[`w']),1))
+         return local `fitstat' = `fitstatmean'
+         return local `fitstat'sd = `fitstatsd'
+         return local `fitstat'nsc = `fitstatnsc'
+      }
+   }
+   * new 10-16-2013      
+   * wald test
+   local i=0
+   while `i'<`c(N)' {
+      if substr(trim(line[`++i']),1,34)=="Wald Test of Parameter Constraints" {
+         local j=`i'+2
+         local k=`i'+3
+         local l=`i'+4
+         return local WaldTest    = reverse(word(reverse(line[`j']),1))
+         return local WaldTest_df = reverse(word(reverse(line[`k']),1))
+         return local WaldTest_P  = reverse(word(reverse(line[`l']),1))
+         local i=`c(N)'
+      }
+   }
+   local i=0
+   while `i'<`c(N)' {
+      if substr(trim(line[`++i']),1,25)=="Number of Free Parameters" {
+         return local free_parameters = reverse(word(reverse(line[`i']),1))
+         local i=`c(N)'
+      }
    }
    
-   local MS=_N*2
-   capture set matsize `MS'
-   if _rc==0 {
-      set matsize `MS'
-   }
 
-   read_parameterestimates_general , out(`using'.out) `debug'
+         
+
+   **** local MS=_N
+   **** if `ms'>800 {
+   ****       capture set matsize `MS'
+   **** }
+
+   if "`debug'"=="debug" {
+      noisily di in yellow _n "This is line 1252 of runmplus.ado and" ///
+         _n "you are about to call " in green "read_parameterestimates_general" _n _n
+   }
+   read_parameterestimates_general , out(`using'.out) `debug' `extractmatrices'
    if "`r(outmatrices)'"~="" {
       foreach x in `r(outmatrices)' {
          matrix `x' = r(`x')
@@ -1027,14 +1277,36 @@ if `isdatatypeimputation'==1 {
    cap return matrix StdEstimates = StdEstimates
    matrix estimate = r(estimate)
    matrix se = r(se)
+   cap matrix z = r(z)
+   if _rc==0 {
+      matrix z = z
+      return matrix z = z
+   }
+
    capture matrix CI = r(CI)
    capture return matrix CI = CI
    return matrix estimate = estimate
    return matrix se = se
-   read_residual_variance , out(`using'.out)
-   matrix residual_variance = r(residual_variance)
-   return matrix residual_variance = residual_variance
-   
+   read_residual_variance , out(`using'.out) `debug'
+   cap matrix residual_variance = r(residual_variance)
+   cap return matrix residual_variance = residual_variance
+   local note "output processing for multiple imputation"
+   return local note "`note'"
+
+   * Added 20150301
+   if "`debug'"=="debug" {
+      noisily di in yellow _n "This is line 1285 of runmplus.ado and" ///
+         _n "you are about to call " in green "read_parameterestimates_indirect" _n _n
+   }
+   read_parameterestimates_indirect , out(`using'.out) 
+   if "`r(outmatrices)'"~="" {
+      foreach x in `r(outmatrices)' {
+         matrix `x' = r(`x')
+         cap return mat `x' = `x'
+      }
+   }
+   * End added 20150301
+
 } // close output processing for multiple imputation
 
 if "`mc'"=="" & "`montecarlo'"=="" & `isdatatypeimputation'==0 {
@@ -1044,7 +1316,8 @@ if "`mc'"=="" & "`montecarlo'"=="" & `isdatatypeimputation'==0 {
    * Step 1 read output and determine if estimator was bayes
    qui infix str line 1-85 using `using'.out , clear
    format line %85s
-   gen keep=regexm(line,"BAYES") & regexm(line,"Estimator")
+   * edit 8/21/2013
+   gen keep=trim(line)=="Specifications for Bayesian Estimation" // regexm(line,"BAYES") & regexm(line,"Estimator")
    qui su keep
    local BAYES = 0
    if r(max)==1 {
@@ -1120,11 +1393,21 @@ if "`mc'"=="" & "`montecarlo'"=="" & `isdatatypeimputation'==0 {
          qui infix str line 1-85 ///
                str name 1-19 ///
                str value 20-85 ///
-               using `using'.out 
+               using `using'.out
          format line %85s
       * IDENTIFY START AND END OF Parameter estimates
          gen linenum=_n
-         gen x1=_n if (trim(line)=="MODEL RESULTS")|(substr(trim(line),1,15)=="Beginning Time:")
+         gen x1=_n if ///
+             trim(line)=="MODEL RESULTS"
+         gen x2=_n if ///
+            (substr(trim(line),1,15)=="Beginning Time:") | ///
+            ( ///
+               substr(        trim(line), 1,9)=="TECHNICAL" & ///
+               substr(reverse(trim(line)),1,6)==reverse("OUTPUT") ///
+            ) | ///
+            (substr(trim(line),1,28)=="RESULTS IN PROBABILITY SCALE")
+         qui su x2
+         replace x1=x2 if x1==. & x2==`r(min)'
          summarize x1
          keep if inrange(linenum,r(min)+1,r(max)-1)
          drop if trim(line)==""
@@ -1134,8 +1417,8 @@ if "`mc'"=="" & "`montecarlo'"=="" & `isdatatypeimputation'==0 {
          * cleanup
          drop if substr(trim(line),1,9)=="Posterior"
          drop if substr(trim(line),1,8)=="Estimate"
-         * suffix
-         gen suffix= lower(word(trim(line),2)) if wordcount(line)==2 & (substr(trim(line),1,5)=="Group"|substr(trim(line),1,5)=="Class")
+         * suffix line 1152
+         gen suffix= lower(word(trim(line),3)) if wordcount(line)==3 & (substr(trim(line),1,5)=="Group"|substr(trim(line),1,12)=="Latent Class")
          replace suffix=suffix[_n-1] if _n>1 & suffix==""
          *prefix
          gen prefix=line if (wordcount(line)==2|wordcount(line)==1) & (wordcount(line)==2 & (substr(trim(line),1,5)=="Group"|substr(trim(line),1,12)=="Class"))~=1
@@ -1151,22 +1434,37 @@ if "`mc'"=="" & "`montecarlo'"=="" & `isdatatypeimputation'==0 {
          replace eset = subinstr(eset,"standardization","",.)
          replace eset = eset[_n-1] if _n>1 & eset==""
          * parameter
-         gen parameter = lower(word(trim(line),1)) if (wordcount(line)==2 & substr(trim(line),1,5)=="Group")~=1
+         * different if parameter is latent class proportion
+         gen parameter = lower(word(trim(line),1)) if ///
+            (wordcount(line)<4)~=1 | ///
+            (substr(trim(line),1,5)=="Group")~=1 | ///
+            (substr(trim(line),1,5)=="Class")~=1 
+         replace parameter = lower(word(trim(line),1)) + lower(word(trim(line),2)) if ///
+            (wordcount(line)>4) & ///
+            (substr(trim(line),1,5)=="Class")==1 
          * estimate
-         gen estimate=word(trim(line),2)
-         gen sd=word(trim(line),3)
-         gen pv=word(trim(line),4)
-         gen lci=word(trim(line),5)
-         gen uci=word(trim(line),6)
+         gen estimate=word(trim(line),2) if (substr(trim(line),1,5)=="Class")~=1 
+         gen sd=word(trim(line),3) if (substr(trim(line),1,5)=="Class")~=1 
+         gen pv=word(trim(line),4) if (substr(trim(line),1,5)=="Class")~=1 
+         gen lci=word(trim(line),5) if (substr(trim(line),1,5)=="Class")~=1 
+         gen uci=word(trim(line),6) if (substr(trim(line),1,5)=="Class")~=1 
+         replace estimate=word(trim(line),3) if (substr(trim(line),1,5)=="Class")==1 
+         replace sd=word(trim(line),4) if (substr(trim(line),1,5)=="Class")==1          
+         replace pv=word(trim(line),5) if (substr(trim(line),1,5)=="Class")==1 
+         replace lci=word(trim(line),6) if (substr(trim(line),1,5)=="Class")==1 
+         replace uci=word(trim(line),7) if (substr(trim(line),1,5)=="Class")==1 
          foreach foo in estimate sd pv lci uci {
-            replace `foo'=" " if estimate=="Undefined" 
+            replace `foo'=" " if estimate=="Undefined"
          }
          foreach foo in estimate sd pv lci uci {
             destring `foo', force replace
          }
+         drop if estimate==.
          drop if sd==. & eset~="r-square"
          drop if eset=="r-square" & real(word(line),2)==.
-         gen x = eset + " " + prefix + " " + parameter + " " + suffix
+         *gen x = eset + " " + prefix + " " + parameter + " " + suffix 
+         gen x = eset + " " + prefix + " " + parameter + " " + suffix if lower(prefix)~="class proportions"
+         replace x = eset + " " + prefix + " " + parameter if lower(prefix)=="class proportions"
          replace x= eset + " " + word(line,1) + suffix if eset=="r-square"
          replace x=lower(x)
          replace x=trim(x)
@@ -1182,11 +1480,13 @@ if "`mc'"=="" & "`montecarlo'"=="" & `isdatatypeimputation'==0 {
          foreach foo in estimate sd pv lci uci {
             capture matrix drop `foo'
          }
-         local MS=_N
-         capture set matsize `MS'
-         if _rc==0 {
-            set matsize `MS'
-         }
+         **** local MS=_N
+         **** if `MS'>800 {
+         ****    capture set matsize `MS'
+         ****    if _rc==0 {
+         ****       set matsize `MS'
+         ****    }
+         **** }
          foreach foo in estimate sd pv lci uci {
             mkmat `foo' , rownames(x)
          }
@@ -1197,25 +1497,25 @@ if "`mc'"=="" & "`montecarlo'"=="" & `isdatatypeimputation'==0 {
          }
       }
    }
-   
+
    ************************************************************************************
    **************************                               ***************************
    ***************************  NON-BAYES OUTPUT PROCESSING   *************************
    **************************                               ***************************
    ************************************************************************************
-   
+
    if `BAYES'~=1 {
       * stuff in this section is prior to 28APR2010
       * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
       * BEGIN MODEL TERMINATION DISPLAY COMMAND SECTION
-      * Read in MPLUS log file and 
+      * Read in MPLUS log file and
       * display line if model estimation terminated normally
-      * Read in stata log file and 
+      * Read in stata log file and
       * display fit statistics
       * create dictionary file
       * NOTE: not relevant for EFA, at least
       local out = "`using'"+".out"
-      
+
       * new 12/3/2011
       * fit statistics for EFA
       if substr(lower("`type'"),1,3)=="efa" {
@@ -1365,12 +1665,12 @@ if "`mc'"=="" & "`montecarlo'"=="" & `isdatatypeimputation'==0 {
          }
       } // end output processing for efa
       * end new 12/3/2011
-      
+
       if substr(lower("`type'"),1,3)~="efa" { // & "`mc'"~="" & "`montecarlo'"~=""  {
-         
+
          * new on 8/17/2012
          * for Kate Xu
-         * always read the sample size 
+         * always read the sample size
          * (only works for single group models)
          * "Number of observations"
          tempname fh
@@ -1386,10 +1686,10 @@ if "`mc'"=="" & "`montecarlo'"=="" & `isdatatypeimputation'==0 {
             file read `fh' line
          }
          file close `fh'
-         
-         
+
+
          * another from Kate Xu 9/18/2012
-         * display warnings 
+         * display warnings
          * THE STANDARD ERRORS OF THE MODEL PARAMETER ESTIMATES MAY NOT BE
          local linenum = 0
          macro drop _bump
@@ -1421,12 +1721,12 @@ if "`mc'"=="" & "`montecarlo'"=="" & `isdatatypeimputation'==0 {
             file read `fh' line
          }
          file close `fh'
-         
-         
-         
+
+
+
          * end new on 8/17/2012
-         
-         
+
+
          read_convergence , out(`out')
          local termination = "`r(termination)'"
          local stop = "`r(stop)'"
@@ -1436,7 +1736,11 @@ if "`mc'"=="" & "`montecarlo'"=="" & `isdatatypeimputation'==0 {
       ** Get parameter estimates
       ** new 6-23-2008
       if substr(lower("`type'"),1,3)~="efa" & substr(lower(trim("`termination'")),1,6)=="normal" {
-         read_parameterestimates_general , out(`out') `debug'
+         if "`debug'"=="debug" {
+            noisily di in yellow _n "This is line 1706 of runmplus.ado and" ///
+                                 _n "you are about to call " in green "x_general" _n _n
+         }
+         read_parameterestimates_general , out(`out') `debug' `extractmatrices'
          *** new 6/29/2011
          if "`r(outmatrices)'"~="" {
             foreach x in `r(outmatrices)' {
@@ -1448,19 +1752,46 @@ if "`mc'"=="" & "`montecarlo'"=="" & `isdatatypeimputation'==0 {
          matrix estimate = r(estimate)
          matrix se = r(se)
          capture matrix CI = r(CI)
+         capture matrix z=r(z)
          capture return matrix CI = CI
+         capture return matrix z = z
+         capture matrix rsquare = r(rsquare)
+         capture return matrix rsquare = rsquare
          return matrix estimate = estimate
          return matrix se = se
-         read_residual_variance , out(`out')
-         matrix residual_variance = r(residual_variance)
-         return matrix residual_variance = residual_variance
+         
+            * Added 20150301
+            if "`debug'"=="debug" {
+               noisily di in yellow _n "This is line 1285 of runmplus.ado and" ///
+                  _n "you are about to call " in green "read_parameterestimates_indirect" _n _n
+            }
+            read_parameterestimates_indirect , out(`using'.out) 
+            if "`r(outmatrices)'"~="" {
+               foreach x in `r(outmatrices)' {
+                  matrix `x' = r(`x')
+                  cap return mat `x' = `x'
+               }
+            }
+            * End added 20150301
+
+         
+         if "`debug'"=="debug" {
+            di in yellow _n "This is line 1733 of runmplus.ado and you are about" _n ///
+                            " to call " in green "read_residual_variance.ado" _n _n
+         }
+         read_residual_variance , out(`out') `debug' 
+         if "`debug'"=="debug" {
+            di in yellow _n "Good news. " in green "read_residual_variance seems to have gone through OK" _n _n
+         }
+         cap matrix residual_variance = r(residual_variance)
+         cap return matrix residual_variance = residual_variance
       }
       ** end new 6-23-2008
 
       ** new 10-9-2008
       ** This part of the code is ported from read_modelinfo.ado
       qui {
-         infix str line 1-85 using `out' , clear
+         qui infix str line 1-85 using `out' , clear
          format line %85s
          * IDENTIFY START AND END OF MODEL INFO
          gen linenum=_n
@@ -1489,7 +1820,7 @@ if "`mc'"=="" & "`montecarlo'"=="" & `isdatatypeimputation'==0 {
                return local SCF  = substr(trim(line[`n']),29,12)
             }
          }
-         *** END OF 6-25-2009 PATCH      
+         *** END OF 6-25-2009 PATCH
          drop if substr(line,1,10) == "*   The ch"
          drop if substr(line,1,10) == "    for ch"
          drop if substr(line,1,10) == "    testin"
@@ -1527,6 +1858,8 @@ if "`mc'"=="" & "`montecarlo'"=="" & `isdatatypeimputation'==0 {
          local info22 = "Likelihood Ratio Chi-Square"
          local info23 = "Chi-Square Test for Difference Testing"
          local info24 = "Entropy"
+         local info25 = "Wald Test of Parameter Constraints"
+         local info26 = "SRMR (Standardized Root Mean Square Residual)"
          * easy ones 1 2 3 9 10 11 13 18 19 20 24
          local lab1   = "obs"
          local lab2   = "estimator"
@@ -1539,13 +1872,15 @@ if "`mc'"=="" & "`montecarlo'"=="" & `isdatatypeimputation'==0 {
          local lab19  = "BIC"
          local lab20  = "aBIC"
          local lab17  = "free_parameters"
-         local lab24  = "Entropy" 
+         local lab24  = "Entropy"
+         local lab25  = "WaldTest"
+         local lab26  = "SRMR"
          * loglikelihood
          local lab101 "LL_H0"
          local lab102 "LL_H1"
          local info101 = "H0 Value"
          local info102 = "H1 Value"
-         foreach i of numlist 1/24 101 102 {
+         foreach i of numlist 1/25 101 102 26 {
             local l = length("`info`i''")
             replace x1=linenum if substr(trim(line),1,`l') == "`info`i''"
          }
@@ -1555,6 +1890,9 @@ if "`mc'"=="" & "`montecarlo'"=="" & `isdatatypeimputation'==0 {
          local dim = _N
          gen id=1
          su linenum
+         
+        
+         
          if r(N)>0 {
             reshape wide line, i(id) j(linenum)
             drop id
@@ -1562,16 +1900,24 @@ if "`mc'"=="" & "`montecarlo'"=="" & `isdatatypeimputation'==0 {
             foreach i in 101 102 {
                *foreach j of numlist 1/`dim' {
                forvalues j = 1/`dim' {
-                  local l = length("`info`i''") 
+                  local l = length("`info`i''")
                   if substr(trim(line`j'),1,`l')=="`info`i''" {
                      return local `lab`i'' = trim(substr(line`j',`l'+1,.))
                   }
                }
             }
+            * added SRMR 3 Mar 2015
+            forvalues j = 1/`dim' {
+               if substr(trim(line`j'),1,4)=="SRMR" {
+                  local k = `j'+1
+                  return local SRMR= trim(substr(trim(line`k'),6,.))
+               }
+             }   // closes SRMR
+
             foreach i of numlist 1 2 3 9 10 11 13 17 18 19 20 24 {
                *foreach j of numlist 1/`dim' {
                forvalues j = 1/`dim' {
-                  local l = length("`info`i''") 
+                  local l = length("`info`i''")
                   if substr(trim(line`j'),1,`l')=="`info`i''" {
                      return local `lab`i'' = trim(substr(line`j',`l'+1,.))
                      if `i'==2 {
@@ -1588,7 +1934,19 @@ if "`mc'"=="" & "`montecarlo'"=="" & `isdatatypeimputation'==0 {
                }
             }
             * now the hard ones
-            * chi-square test of model fit
+            * start added 2013.10.15
+            forvalues j = 1/`dim' {
+               if substr(trim(line`j'),1,34)=="Wald Test of Parameter Constraints" {
+                  local k = `j'+1
+                  local l = `j'+2
+                  local m = `j'+3
+                  local WaldTest = trim(substr(trim(line`k'),6,.))
+                  local WaldTest_df = trim(substr(trim(line`l'),21,.))
+                  return local WaldTest = subinstr("`WaldTest'",char(42),"",.)
+                  return local WaldTest_df = subinstr("`WaldTest_df'",char(42),"",.)
+                  return local WaldTest_P  = trim(substr(trim(line`m'),8,.))
+               }
+            }
             if "`estimator'"~="MLR" {
                *foreach j of numlist 1/`dim' {
                forvalues j = 1/`dim' {
@@ -1617,7 +1975,7 @@ if "`mc'"=="" & "`montecarlo'"=="" & `isdatatypeimputation'==0 {
                      return local BL_chisquare_df = subinstr("`baseline_chisquare_df'",char(42),"",.)
                      return local BL_chisquare_P  = trim(substr(trim(line`m'),8,.))
                   }
-               } // closes condition for chi-square with estimator not MLR 
+               } // closes condition for chi-square with estimator not MLR
                * Chi-Square Test for Difference Testing
                *foreach j of numlist 1/`dim' {
                forvalues j = 1/`dim' {
@@ -1628,7 +1986,7 @@ if "`mc'"=="" & "`montecarlo'"=="" & `isdatatypeimputation'==0 {
                      return local difftest_chisquare    = trim(substr(trim(line`k'),6,.))
                      return local difftest_chisquare_df = trim(substr(trim(line`l'),21,.))
                   }
-               } // closes condition for chi-square with estimator not MLR 
+               } // closes condition for chi-square with estimator not MLR
             }
             if "`estimator'"=="MLR" {
                * Loglikelihood
@@ -1640,7 +1998,7 @@ if "`mc'"=="" & "`montecarlo'"=="" & `isdatatypeimputation'==0 {
                      return local Loglikelihood   = trim(substr(trim(line`k'),9,.))
                      return local Loglikelihood_cf = trim(substr(trim(line`l'),31,.))
                   }
-               } // closes loglikelihood 
+               } // closes loglikelihood
                * Pearson Chi-square
                *foreach j of numlist 1/`dim' {
                forvalues j = 1/`dim' {
@@ -1652,7 +2010,7 @@ if "`mc'"=="" & "`montecarlo'"=="" & `isdatatypeimputation'==0 {
                      return local Pearson_chi2_df = trim(substr(trim(line`l'),21,.))
                      return local Pearson_chi2_P = trim(substr(trim(line`m'),8,.))
                   }
-               }   // closes Pearson 
+               }   // closes Pearson
                * Likelihood Ratio Chi-Square
                *foreach j of numlist 1/`dim' {
                forvalues j = 1/`dim' {
@@ -1673,12 +2031,12 @@ if "`mc'"=="" & "`montecarlo'"=="" & `isdatatypeimputation'==0 {
                         return local LR_chi2_P = trim(substr(trim(line`m'),8,.))
                      }
                   }
-               } // closes Likelihood Ratio Chi-Square 
-            } // closes condition if estimator is MLR 
-         } // closes qui on model info section 
-      } // closes condition on linenum 
-   } // closes condition if BAYES ~=1 
-} // closes condition if not montecarlo 
+               } // closes Likelihood Ratio Chi-Square
+            } // closes condition if estimator is MLR
+         } // closes qui on model info section
+      } // closes condition on linenum
+   } // closes condition if BAYES ~=1
+} // closes condition if not montecarlo
 if ("`mc'"~="" | "`montecarlo'"~="" ) & `isdatatypeimputation'==0 {
    *********************************************
    *********************************************
@@ -1690,7 +2048,7 @@ if ("`mc'"~="" | "`montecarlo'"~="" ) & `isdatatypeimputation'==0 {
    qui infix str line 1-85 ///
          str name 1-19 ///
          str value 20-85 ///
-         using `using'.out 
+         using `using'.out
    format line %85s
    gen linenum=_n
    *list line
@@ -1707,7 +2065,7 @@ if ("`mc'"~="" | "`montecarlo'"~="" ) & `isdatatypeimputation'==0 {
    gen linenum = _n
    * cleanup
    drop if substr(trim(lower(line)),1,9)=="estimates"
-   * suffix
+   * suffix line 1725
    gen suffix= lower(word(trim(line),2)) if wordcount(line)==2 & (substr(trim(line),1,5)=="Group"|substr(trim(line),1,5)=="Class")
    replace suffix=suffix[_n-1] if _n>1 & suffix==""
    *prefix
@@ -1726,7 +2084,7 @@ if ("`mc'"~="" | "`montecarlo'"~="" ) & `isdatatypeimputation'==0 {
    gen sig_coef_pct=word(trim(line),8)
    local resultsset "population average sd se_average mse coverage95 sig_coef_pct "
    foreach foo in `resultsset' {
-      replace `foo'=" " if population=="Undefined" 
+      replace `foo'=" " if population=="Undefined"
    }
    foreach foo in `resultsset' {
       destring `foo', force replace
@@ -1739,8 +2097,10 @@ if ("`mc'"~="" | "`montecarlo'"~="" ) & `isdatatypeimputation'==0 {
    replace x=subinstr(x," ","_",.)
    replace x=subinstr(x,"$","_",.)
    drop if regexm(x,"category")==1
-   local MS=_N*10
-   capture set matsize `MS'
+   **** local MS=_N*10
+   **** if `MS'>800 {
+   ****    capture set matsize `MS'
+   **** }
    keep x `resultsset'
    mkmat `resultsset' , rownames(x) matrix(model_results)
    return matrix model_results = model_results
@@ -1759,7 +2119,7 @@ if ("`mc'"~="" | "`montecarlo'"~="" ) & `isdatatypeimputation'==0 {
    local mcfit6="Akaike (AIC)"
    local mcfit7="Sample-Size Adjusted BIC (n* = (n + 2) / 24)"
    local mcfit8="SRMR (Standardized Root Mean Square Residual)"
-   
+
    *-----
    * short names
    local smcfit1="Chi-Square"
@@ -1777,7 +2137,7 @@ if ("`mc'"~="" | "`montecarlo'"~="" ) & `isdatatypeimputation'==0 {
       qui infix str line 1-85 ///
             str name 1-19 ///
             str value 20-85 ///
-            using `using'.out 
+            using `using'.out
       format line %85s
       gen linenum=_n
       *list line
@@ -1839,7 +2199,7 @@ if ///
    * Tech 11 output
    qui {
       if regexm(lower("`output'"),"tech11")==1 | regexm(lower("`tech'"),"11")==1  {
-         infix str line 1-85 using `out' , clear
+         qui infix str line 1-85 using `out' , clear
          format line %85s
          drop if trim(line)==""
          local dim=`c(N)'
@@ -1909,34 +2269,40 @@ if ///
 * ------------------- SAVE INPUT and DATA FILE IF REQUESTED TO DO SO
 *
 if "`saveinputfile'"~="" {
-   * new on 7-20-2009
-   if "`saveinputdatafile'"~="" {
-      tempname foo foo2
-      capture erase `foo'.inp
-      local `foo2' : subinstr local saveinputdatafile "\" "\BS" , all
-      local `foo2' = "``foo2''"+".dat"
-      qui filefilter `using'.inp `foo'.inp ///
-         , from("`using'.dat")  ///
-           to(`"``foo2''"') replace
-      capture erase `saveinputfile'.inp
-      capture erase `using'.inp
-      qui copy `foo'.inp `using'.inp , replace
+   cap confirm file `using'.inp
+   if _rc==0 {
+      * new on 7-20-2009
+      if "`saveinputdatafile'"~="" {
+         tempname foo foo2
+         capture erase `foo'.inp
+         local `foo2' : subinstr local saveinputdatafile "\" "\BS" , all
+         local `foo2' = "``foo2''"+".dat"
+         qui filefilter `using'.inp `foo'.inp ///
+            , from("`using'.dat")  ///
+              to(`"``foo2''"') replace
+         capture erase `saveinputfile'.inp
+         capture erase `using'.inp
+         qui copy `foo'.inp `using'.inp , replace
+      }
+      capture erase "`saveinputfile'.inp"
+      qui copy `using'.inp "`saveinputfile'.inp" , replace
    }
-   capture erase "`saveinputfile'.inp"
-   qui copy `using'.inp "`saveinputfile'.inp" , replace
-}
-if "`saveinputdatafile'"~="" {
-   qui copy `using'.dat "`saveinputdatafile'.dat" , replace
+   
+   if "`saveinputdatafile'"~="" {
+      cap confirm file `using'.dat
+      if _rc==0 {
+         qui copy `using'.dat "`saveinputdatafile'.dat" , replace
+      }
+   }
 }
 
-
-restore
+capture restore
 
 if "`log'"=="off" {
    di in green "log suppressed"
 }
 else {
-   type `using'.out 
+   type `using'.out
 }
 
 capture erase `using'.inp
@@ -1945,7 +2311,7 @@ capture erase `using'.dat
 capture erase `r1'.dat
 
 * reset matsize
-qui set matsize `omatsize'
+qui cap set matsize `omatsize'
 
 end
 
@@ -2001,7 +2367,7 @@ program define makelab
 
   sort `var'
   by `var' : gen `first' = (_n == 1) & `lvar' != ""
- 
+
   local casenum = 1
   while (`casenum' <= `n') {
     if `first'[`casenum'] {
@@ -2010,7 +2376,7 @@ program define makelab
       file write `myout' "    `v1': `v2'" _newline
     }
     local casenum = `casenum' + 1
-  } 
+  }
 end
 
 ** ========================================================================
@@ -2019,23 +2385,34 @@ capture program drop saveinp
 program def saveinp
 syntax , using(string) [saveinputfile(string) saveinputdatafile(string)]
 if "`saveinputfile'"~="" {
-   * new on 7-20-2009
-   if "`saveinputdatafile'"~="" {
-      copy `using'.dat `"`saveinputdatafile'.dat"' , replace
-      tempname foo foo2
-      capture erase `foo'.inp
-      local `foo2' : subinstr local saveinputdatafile "\" "\BS" , all
-      local `foo2' = "``foo2''"+".dat"
-      filefilter `using'.inp `foo'.inp ///
-         , from("`using'.dat")  ///
-           to(`"``foo2''"')
+   cap confirm file `using'.inp
+   if _rc==0 {
+      * new on 7-20-2009
+      if "`saveinputdatafile'"~="" {
+			* new on 6-13-2019
+			cap confirm file `using'.dat
+			if _rc==0 {
+				qui copy `using'.dat `"`saveinputdatafile'.dat"' , replace
+			}
+         tempname foo foo2
+         capture erase `foo'.inp
+         local `foo2' : subinstr local saveinputdatafile "\" "\BS" , all
+         local `foo2' = "``foo2''"+".dat"
+         filefilter `using'.inp `foo'.inp ///
+            , from("`using'.dat")  ///
+              to(`"``foo2''"')
+         qui capture erase `saveinputfile'.inp
+         qui capture erase `using'.inp
+         qui copy `foo'.inp `using'.inp , replace
+			* new on 6-13-a
+			cap confirm file `using'.dat
+			if _rc==0 {
+				qui copy `using'.dat `"`foo2'"' , replace
+			}
+      }
       qui capture erase `saveinputfile'.inp
-      qui capture erase `using'.inp
-      qui copy `foo'.inp `using'.inp , replace
-      qui copy `using'.dat `"`foo2'"' , replace
+      qui copy `using'.inp `saveinputfile'.inp , replace
    }
-   qui capture erase `saveinputfile'.inp
-   qui copy `using'.inp `saveinputfile'.inp , replace
 }
 end
 

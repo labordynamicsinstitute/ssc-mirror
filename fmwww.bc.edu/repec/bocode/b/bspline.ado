@@ -1,7 +1,7 @@
 #delimit ;
 capture program drop bspline;
 program define bspline, rclass;
-version 10.0;
+version 16.0;
 /*
  Create a set of B-splines of specified power
  corresponding to a specified X-variable and a specified set of knots.
@@ -15,7 +15,7 @@ version 10.0;
  and variable labels generateed using format labfmt if present,
  or format of X-variable otherwise.
 *! Author: Roger Newson
-*! Date: 08 February 2011
+*! Date: 03 April 2020
 */
 
 syntax [ newvarlist ] [if] [in] ,

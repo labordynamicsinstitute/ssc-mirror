@@ -3,8 +3,10 @@ prog def cprd_therapy;
 version 13.0;
 *
  Create dataset therapy with 1 obs per therapy event.
+ Add-on packages required:
+ chardef
 *!Author: Roger Newson
-*!Date: 22 March 2016
+*!Date: 29 September 2017
 *;
 
 syntax using [ , CLEAR DOfile(string) ];
@@ -12,12 +14,11 @@ syntax using [ , CLEAR DOfile(string) ];
 *
  Input data
 *;
-import delimited `using', varnames(1) `clear';
+import delimited `using', varnames(1) stringcols(_all) `clear';
 desc, fu;
-char list;
 
 *
- Label variables
+ Add variable labels
 *;
 cap lab var patid "Patient Identifier";
 cap lab var eventdate "Event Date";
@@ -25,6 +26,9 @@ cap lab var sysdate "System Date";
 cap lab var consid "Consultation Identifier";
 cap lab var prodcode "Product Code";
 cap lab var staffid "Staff Identifier";
+* New format dosage ID *;
+cap lab var dosageid "Dosage Identifier";
+* Old format text ID *;
 cap lab var textid "Text Identifier";
 cap lab var bnfcode "BNF Code";
 cap lab var qty "Total Quantity";
@@ -35,16 +39,32 @@ cap lab var packtype "Pack Type";
 cap lab var issueseq "Issue Sequence Number";
 
 *
- Create numeric date variables
+ Convert string variables to numeric if necessary
 *;
-foreach X of var eventdate sysdate {;
-  gene long `X'_n=date(`X',"DMY");
-  compress `X'_n;
-  format `X'_n %tdCCYY/NN/DD;
+foreach X in patid consid prodcode staffid bnfcode qty ndd numdays numpacks packtype issueseq {;
+  cap conf string var `X';
+  if !_rc {;
+    destring `X', replace force;
+    charundef `X';
+  };
 };
-lab var eventdate_n "Event date";
-lab var sysdate_n "Event system entry date";
+charundef _dta *;
 
+*
+ Add numeric date variables
+*;
+foreach X in eventdate sysdate {;
+  cap conf string var `X';
+  if !_rc {;
+    gene long `X'_n=date(`X',"DMY");
+    compress `X'_n;
+    format `X'_n %tdCCYY/NN/DD;
+  };
+};
+cap lab var eventdate_n "Event date";
+cap lab var sysdate_n "Event system entry date";
+
+* Describe variables *;
 desc, fu;
 
 end;

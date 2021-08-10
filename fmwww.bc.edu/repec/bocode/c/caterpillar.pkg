@@ -21,7 +21,7 @@ d KW: confidence intervals
 d
 d Requires: Stata version 13
 d
-d Distribution-Date: 20170623
+d Distribution-Date: 20200202
 d
 d Author:  Laura Bellows, Duke University
 d Support: email laura.bellows@@duke.edu
@@ -31,3 +31,5 @@ d Support: email paulvonhippel.utaustin@@gmail.com
 d
 f caterpillar.ado
 f caterpillar.sthlp
+f ../v/vonhippelbellows2018.do
+f caterpillar_replication.dta

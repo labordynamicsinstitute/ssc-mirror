@@ -142,8 +142,7 @@
 {synopt :{opth edpar:(varname)}}Parent's Education {p_end}
 
 {syntab:{cmd:Survey Information}}
-{synopt :{opth hs:ize(varname)}}Number of members in the household
-	(should be used when each observation in the data set is a household){p_end}
+{synopt :{opth hs:ize(varname)}}Number of members in the household{p_end}
 {synopt :{opth psu(varname)}}Primary sampling unit; can also be set using {help svyset:svyset}{p_end}
 {synopt :{opth s:trata(varname)}}Strata (used with complex sampling designs); can also be set using {help svyet:svyset}{p_end}
    	
@@ -161,9 +160,6 @@ The variables given by {opth race(varname)} must be dummy variables that identif
 {p_end}
 {pstd} 
 This program uses the {cmd:table({it:name})} option to identify which table to generate and uses the {cmd:putexcel} command to export to Excel. Options vary depending on the table that is being exported (for more information see below in section {cmd:Tables and Examples}.
-{p_end}
-{pstd} 
-If the data set is at the individual level (each observation is an individual), the {opth hs:ize(varname)} option should not be specified. If the data set is at the household level, the number of members in the household should be specified in {opth hs:ize(varname)}. In either case, the weight used should be the household sampling weight and should not be multiplied by the number of members in the household since the program will do this multiplication automatically in the case of household-level data.
 {p_end}
 {pstd} 
 This program uses the following built in programs from DASP {cmd: digini}, {cmd: dientropy} and {cmd: dinineq}. It uses {cmd: ineqdeco} and {cmd: ceq} as well.

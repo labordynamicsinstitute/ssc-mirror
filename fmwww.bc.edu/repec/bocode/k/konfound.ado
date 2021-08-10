@@ -165,10 +165,11 @@ if ttt_[1]!=. {
  drop thres_ esti_ id_ ttt_ 
 
 
-
-
+local NN = e(N)
+local dfm = e(df_m)
+local Ng = e(N_g)
 local prsq= e(r2_p)
- local Dep= e(depvar)
+local Dep= e(depvar)
 gen samused_=e(sample)
 local Rsq = e(r2)
 quietly sum `Dep' if samused_==1
@@ -205,30 +206,32 @@ else  {
   local `x'sd=sqrt(el(r(V),1,1))
   }
 
- 
+}
+
+foreach x in `varlist'  { 
   
  if `onetail'==1 {
  
-  if e(N_g)==. {
-local `x'criticalt =sign(``x'coef' - `nu') *  invttail(e(N)-e(df_m),`sig')
+  if `Ng'==. {
+local `x'criticalt =sign(``x'coef' - `nu') *  invttail(`NN'-`dfm',`sig')
 local `x'be_th = ``x'criticalt' * ``x'sd' +`nu'
 local `x't_critr = ``x'be_th'/``x'sd'
-local `x'r_crit = ``x't_critr'/sqrt((``x't_critr')^2 + e(N)-e(df_m)-2)
-local `x'r_obs = (``x'coef'/``x'sd')/sqrt((``x'coef'/``x'sd')^2 +e(N)-e(df_m)-2)
+local `x'r_crit = ``x't_critr'/sqrt((``x't_critr')^2 + `NN'-`dfm'-2)
+local `x'r_obs = (``x'coef'/``x'sd')/sqrt((``x'coef'/``x'sd')^2 +`NN'-`dfm'-2)
 }
 
 else {
-local `x'criticalt =sign(``x'coef' - `nu') *  invttail(e(N)-e(df_m)-e(N_g)+1,`sig')
+local `x'criticalt =sign(``x'coef' - `nu') *  invttail(`NN'-`dfm'-`Ng'+1,`sig')
 local `x'be_th = ``x'criticalt' * ``x'sd' +`nu'
 local `x't_critr = ``x'be_th'/``x'sd'
-local `x'r_crit = ``x't_critr'/sqrt((``x't_critr')^2 + e(N)-e(df_m)-e(N_g)-2)
-local `x'r_obs = (``x'coef'/``x'sd')/sqrt((``x'coef'/``x'sd')^2 +e(N)-e(df_m)-e(N_g)-2)
+local `x'r_crit = ``x't_critr'/sqrt((``x't_critr')^2 + `NN'-`dfm'-`Ng'-2)
+local `x'r_obs = (``x'coef'/``x'sd')/sqrt((``x'coef'/``x'sd')^2 +`NN'-`dfm'-`Ng'-2)
 }
 
 local `x'RsqYZ = ((``x'r_obs')^2 - `Rsq')/((``x'r_obs')^2 - 1)
 quietly sum `x' if samused_==1
 local `x'VarX= r(Var)
-local `x'RsqXZ = max(0, 1 - ((`VarY'*(1-`Rsq'))/(``x'VarX'*(e(N)-e(df_m)-2)*((``x'sd')^2)))) 
+local `x'RsqXZ = max(0, 1 - ((`VarY'*(1-`Rsq'))/(``x'VarX'*(`NN'-`dfm'-2)*((``x'sd')^2)))) 
 
   if (``x'r_obs' - ``x'r_crit') >= 0 {
   local `x'itcv = (``x'r_obs' - ``x'r_crit')/(1-``x'r_crit')
@@ -318,25 +321,25 @@ dis "These thresholds can be compared with the impacts of observed covariates be
   
 else {
 
-  if e(N_g)==. {
-local `x'criticalt =sign(``x'coef' - `nu') *  invttail(e(N)-e(df_m),`sig'/2)
+  if `Ng'==. {
+local `x'criticalt =sign(``x'coef' - `nu') *  invttail(`NN'-`dfm',`sig'/2)
 local `x'be_th = ``x'criticalt' * ``x'sd' +`nu'
 local `x't_critr = ``x'be_th'/``x'sd'
-local `x'r_crit = ``x't_critr'/sqrt((``x't_critr')^2 + e(N)-e(df_m)-2)
-local `x'r_obs = (``x'coef'/``x'sd')/sqrt((``x'coef'/``x'sd')^2 +e(N)-e(df_m)-2)
+local `x'r_crit = ``x't_critr'/sqrt((``x't_critr')^2 + `NN'-`dfm'-2)
+local `x'r_obs = (``x'coef'/``x'sd')/sqrt((``x'coef'/``x'sd')^2 +`NN'-`dfm'-2)
 }
 else {
-local `x'criticalt =sign(``x'coef' - `nu') *  invttail(e(N)-e(df_m)-e(N_g)+1,`sig'/2)
+local `x'criticalt =sign(``x'coef' - `nu') *  invttail(`NN'-`dfm'-`Ng'+1,`sig'/2)
 local `x'be_th = ``x'criticalt' * ``x'sd' +`nu'
 local `x't_critr = ``x'be_th'/``x'sd'
-local `x'r_crit = ``x't_critr'/sqrt((``x't_critr')^2 + e(N)-e(df_m)-e(N_g)-2)
-local `x'r_obs = (``x'coef'/``x'sd')/sqrt((``x'coef'/``x'sd')^2 +e(N)-e(df_m)-2)
+local `x'r_crit = ``x't_critr'/sqrt((``x't_critr')^2 + `NN'-`dfm'-`Ng'-2)
+local `x'r_obs = (``x'coef'/``x'sd')/sqrt((``x'coef'/``x'sd')^2 +`NN'-`dfm'-2)
 }
 
 local `x'RsqYZ = ((``x'r_obs')^2 - `Rsq')/((``x'r_obs')^2 - 1)
 quietly sum `x' if samused_==1
 local `x'VarX= r(Var)
-local `x'RsqXZ = max(0, 1 - ((`VarY'*(1-`Rsq'))/(``x'VarX'*(e(N)-e(df_m)-2)*((``x'sd')^2)))) 
+local `x'RsqXZ = max(0, 1 - ((`VarY'*(1-`Rsq'))/(``x'VarX'*(`NN'-`dfm'-2)*((``x'sd')^2)))) 
 
   if (``x'r_obs' - ``x'r_crit') >= 0 {
   local `x'itcv = (``x'r_obs' - ``x'r_crit')/(1-``x'r_crit')

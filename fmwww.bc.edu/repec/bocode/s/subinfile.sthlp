@@ -1,5 +1,5 @@
 ﻿{smcl}
-{* 19Sep2016}{...}
+{* 15Sep2017}{...}
 {hi:help subinfile}
 {hline}
 
@@ -39,15 +39,20 @@
 {opt indexregex} specifies that the contents you specify in index() is to be interpreted as a regular expression. {p_end}
 
 {phang}
-{opt from(string)} and {opt to(string)} specifies the string which is to be replaced whereas the to() option specifies the new string which 
-will be used to replace the old one. {p_end}
+{opt drop(string)} specifies the line which contains it will be dropped. Those lines without the key string specified by drop() option will be kept. {p_end}
+
+{phang}
+{opt dropregex} specifies that the contents you specify in drop() is to be interpreted as a regular expression. {p_end}
+
+{phang}
+{opt from(string1 [string2...])} and {opt to(string1 [string2...])} specifies the strings which are to be replaced whereas the to() option specifies the new strings which 
+will be used to replace the old strings. {p_end}
 
 {phang}
 {opt fromregex} specifies that the contents you specify in from() is to be interpreted as a regular expression. {p_end}
 
 {phang}
-{opt dropempty} drops the empty line. If you specify both from() and dropempty, Stata will first replace the string 
-you specify and then drop the empty line. {p_end}
+{opt dropblank} drops the blank line. {p_end}
 
 {phang}
 {opt save(string)} specifies the path and the file name to be saved. If you do not sepcify the format of the file, 
@@ -57,9 +62,16 @@ it will be saved as .txt by default. {p_end}
 {opt replace} permits save to overwrite an existing file which is not read-only. If you do not specify the option save(string), the original file
 will be replaced. {p_end}
 
+{phang}
+{opt append} permits save to append an existing file which is not read-only. If you do not specify the option save(string), the original file
+will be appended. {p_end}
+
+{phang}
+{opt order(string)} Sets the order in which the options are executed. You can only specify index, drop, from, dropblank in order(){p_end}
+
 {pstd}
-If you sepcify the option {opt index(string)}, {opt from(string)} and {opt dropempty} in one command at the same time, the 
-option {opt index(string)} will be executed first, then {opt from(string)}, and {opt dropempty} at last. {p_end}
+If you do not sepcify the option order(), the option {opt index(string)} will be executed first, then {opt drop(string)} and 
+{opt from(string)}, and {opt dropempty} at last. {p_end}
 
 
 {marker example}{...}
@@ -70,9 +82,6 @@ Use command {cmdab:file} to creat a text file to test subinfile
 
 {phang}
 {stata `"clear"'}
-{p_end}
-{phang}
-{stata `"set more off"'}
 {p_end}
 {phang}
 {stata `"tempname temp"'}
@@ -122,10 +131,39 @@ Use command {cmdab:subinfile} and regular expression to delete "123456789".
 {p_end}
 
 {pstd}
-Use command {cmdab:subinfile} to drop all letters and then drop empty line.
+Use command {cmdab:subinfile} and regular expression to substitute "stata" to "STATA" and "1234" to "asdf".
 
 {phang}
-{stata `"subinfile D:\temp.txt, from([a-zA-Z]) fromregex dropempty replace"'}
+{stata `"subinfile D:\temp.txt, from("stata" "1234") to("STATA" "asdf") save("D:\temp5.txt") replace"'}
+{p_end}
+
+{pstd}
+Use command {cmdab:subinfile} to execute all options without order().
+
+{phang}
+{stata `"subinfile temp.txt, index("[a-z]") indexregex drop("stata") from("[a-z]") to("X") fromregex save("temp6.txt") replace"'}
+{p_end}
+
+{pstd}
+Use command {cmdab:subinfile} to execute all options with order().
+
+{phang}
+{stata `"subinfile temp.txt, index("[a-z]") indexregex drop("stata") from("[a-z]") to("X") fromregex order(index from drop) save("temp7.txt") replace"'}
+{p_end}
+
+{pstd}
+Use command {cmdab:subinfile} to extract information from source code of website.
+
+{phang}
+{stata `"copy "https://ideas.repec.org/s/boc/bocode.html" "temp.txt", replace"'}
+{p_end}
+
+{phang}
+{stata `"subinfile temp.txt, index(`"<LI class=""') from("(<A HREF=.*?>)|(</A></B><BR><I>)" "(^\s+)|(\s+$)|(<.*?>)") fromregex to("!@#$%^&*()_+" "") replace"'}
+{p_end}
+
+{phang}
+{stata `"import delimited using temp.txt, clear delimiter("!@#$%^&*()_+", asstring)"'}
 {p_end}
 
 
@@ -140,10 +178,3 @@ Use command {cmdab:subinfile} to drop all letters and then drop empty line.
 {pstd}China Stata Club(爬虫俱乐部){p_end}
 {pstd}Wuhan, China{p_end}
 {pstd}xueyuan19920310@163.com{p_end}
-
-{pstd}Rong GAO{p_end}
-{pstd}Guangxi University Of Finance and Economics{p_end}
-{pstd}Nanning, China{p_end}
-{pstd}highsun_gao@163.com{p_end}
-
-

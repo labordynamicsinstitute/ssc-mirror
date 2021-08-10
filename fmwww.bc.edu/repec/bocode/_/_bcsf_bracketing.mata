@@ -1,4 +1,4 @@
-version 10.0
+version 16.0
 mata:
 
 real scalar _bcsf_bracketing(pointer (real scalar function) scalar yfun,

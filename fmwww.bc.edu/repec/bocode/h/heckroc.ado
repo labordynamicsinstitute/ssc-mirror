@@ -244,8 +244,8 @@ program heckroc, rclass
 		qui integ `TPR_ub' `FPR_ub'
 		local AUC_ub=r(integral)
 		
-		di as txt _n "{col 2}Empirical {col 15}Inferred {col 28} -Asymptotic Normal-"
-		di as txt "{col 2}ROC area {col 15}ROC area {col 28} [`level'% Conf. Interval]"
+		di as txt _n "{col 2}Empirical {col 15}Inferred {col 31} Inferred AUC"
+		di as txt "{col 2}ROC area {col 15}ROC area {col 28} `level'% Conf. Interval"
 		
 		di as txt "{hline 50}
 		di as res %8.04f `emp_auc' _col(14) %8.04f `AUC' _col(28) %8.04f 	 ///

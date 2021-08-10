@@ -1,16 +1,19 @@
 #delim ;
 prog def xsvmat;
-version 10.0;
+version 16.0;
 /*
   Extended version of svmat
   producing a resultssset and (optionally) extra variables.
 *!Author: Roger B. Newson
-*!Date: 25 September 2013
+*!Date: 11 April 2020
 */
 
 syntax [ anything(id="input matrix specification") ]  [ ,
   FRom(string asis)
-  LIst(string asis) SAving(string asis) noREstore FAST FList(string)
+  LIst(string asis)
+  FRAme(string asis)
+  SAving(string asis)  
+  noREstore FAST FList(string)
   IDNum(string) NIDNum(name) IDStr(string) NIDStr(name)
   ROWEq(name) ROWNames(name) ROWEQNames(name) ROWLabels(name)
   COLEq(name) COLNames(name) COLEQNames(name) COLLabels(name)
@@ -27,12 +30,13 @@ Input-source options:
 
 Output-destination options:
 
--list- contains a varlist of variables to be listed,
+-list()- contains a varlist of variables to be listed,
   expected to be present in the output data set
   and referred to by the new names if REName is specified,
   together with optional if and/or in subsetting clauses and/or list_options
   as allowed by the list command.
--saving- specifies a data set in which to save the output data set.
+-frame()- specifies a frame to contain the output dataset.
+-saving()- specifies a data set in which to save the output data set.
 -norestore- specifies that the pre-existing data set
   is not restored after the output data set has been produced
   (set to norestore if FAST is present).
@@ -56,34 +60,34 @@ Output-destination options:
 
 Output-variable options:
 
--idnum- is an ID number for the output data set,
+-idnum()- is an ID number for the output data set,
   used to create a numeric variable idnum in the output data set
   with the same value for all observations.
   This is useful if the output data set is concatenated
   with other output data sets using -dsconcat- (if installed) or -append-.
--nidnum- specifies a name for the numeric ID variable (defaulting to -idnum-).
--idstr- is an ID string for the output data set,
+-nidnum()- specifies a name for the numeric ID variable (defaulting to -idnum-).
+-idstr()- is an ID string for the output data set,
   used to create a string variable (defaulting to -idstr-) in the output data set
   with the same value for all observations.
--nidstr- specifies a name for the numeric ID variable (defaulting to -idstr-).
--roweq- specifies a name for a new variable containing row equations.
--rownames- specifies the name of a new variable containing row names.
--roweqnames- specifies the name of a new variable
+-nidstr{}- specifies a name for the numeric ID variable (defaulting to -idstr-).
+-roweq()- specifies a name for a new variable containing row equations.
+-rownames()- specifies the name of a new variable containing row names.
+-roweqnames()- specifies the name of a new variable
   containing row equations and names,
   separated with semicolons if necessary.
--rowlabels- specifies the name of a new variable containing row labels.
--coleq- specifies a name for a variable characteristic
+-rowlabels()- specifies the name of a new variable containing row labels.
+-coleq()- specifies a name for a variable characteristic
   containing column equations.
 -colnames- specifies the name of a variable characteristic
   containing column names.
--coleqnames- specifies the name of a variable characteristic
+-coleqnames()- specifies the name of a variable characteristic
   containing column equations and names,
   separated with semicolons if necessary.
--collabels- specifies the name of a variable characteristic
+-collabels()- specifies the name of a variable characteristic
  containing column labels.
--rename- specifies a paired list of old and new variable names for renaming,
+-rename()- specifies a paired list of old and new variable names for renaming,
  similar to the option of the same name for -parmest-.
--format- contains a list of the form varlist1 format1 ... varlistn formatn,
+-format()- contains a list of the form varlist1 format1 ... varlistn formatn,
   where the varlists are lists of variables in the output data set
   and the formats are formats to be used for these variables
   in the output data sets.
@@ -156,21 +160,48 @@ else if `"`A'"'=="" {;
 
 *
  Set restore to norestore if fast is present
- and check that the user has specified one of the four options:
- list and/or saving and/or norestore and/or fast.
+ and check that the user has specified one of the five options:
+ list and/or frame and/or saving and/or norestore and/or fast.
 *;
 if "`fast'"!="" {;
     local restore="norestore";
 };
-if (`"`list'"'=="")&(`"`saving'"'=="")&("`restore'"!="norestore")&("`fast'"=="") {;
-    disp as error "You must specify at least one of the four options:"
-      _n "list(), saving(), norestore, and fast."
+if (`"`list'"'=="")&(`"`frame'"'=="")&(`"`saving'"'=="")&("`restore'"!="norestore")&("`fast'"=="") {;
+    disp as error "You must specify at least one of the five options:"
+      _n "list(), frame(), saving(), norestore, and fast."
       _n "If you specify list(), then the output variables specified are listed."
+      _n "If you specify frame()(), then the new data set is output to a ddat frame."
       _n "If you specify saving(), then the new data set is output to a disk file."
       _n "If you specify norestore and/or fast, then the new data set is created in the memory,"
       _n "and any existing data set in the memory is destroyed."
       _n "For more details, see {help xsvmat:on-line help for xsvmat}.";
     error 498;
+};
+
+
+*
+ Parse frame() option if present
+*;
+if `"`frame'"'!="" {;
+  cap frameoption `frame';
+  if _rc {;
+    disp as error `"Illegal frame option: `frame'"';
+    error 498;
+  };
+  local framename "`r(namelist)'";
+  local framereplace "`r(replace)'";
+  local framechange "`r(change)'";
+  if `"`framename'"'=="`c(frame)'" {;
+    disp as error "frame() option may not specify current frame."
+      _n "Use norestore or fast instead.";
+    error 498;
+  };
+  if "`framereplace'"=="" {;
+    cap noi conf new frame `framename';
+    if _rc {;
+      error 498;
+    };
+  };
 };
 
 
@@ -219,11 +250,12 @@ if "`collabels'" != "" {;
 
 
 *
- Preserve old data set if restore is set or fast unset
+ Beginning of frame block (NOT INDENTED)
 *;
-if("`fast'"==""){;
-    preserve;
-};
+local oldframe=c(frame);
+tempname tempframe;
+frame create `tempframe';
+frame `tempframe' {;
 
 
 *
@@ -231,7 +263,6 @@ if("`fast'"==""){;
  with 1 obs per matrix row
 *;
 local nrowsA=rowsof(`A');
-drop _all;
 qui set obs `nrowsA';
 local exmore=c(more);
 set more off;
@@ -422,16 +453,31 @@ if(`"`saving'"'!=""){;
 
 
 *
- Restore old data set if restore is set
- or if program fails when fast is unset
+ Copy new frame to old frame if requested
 *;
-if "`fast'"=="" {;
-    if "`restore'"=="norestore" {;
-        restore,not;
-    };
-    else {;
-        restore;
-    };
+if "`restore'"=="norestore" {;
+  frame copy `tempframe' `oldframe', replace;
+};
+
+
+};
+*
+ End of frame block (NOT INDENTED)
+*;
+
+
+*
+ Rename temporary frame to frame name (if frame is specified)
+ and change current frame to frame name (if requested)
+*;
+if "`framename'"!="" {;
+  if "`framereplace'"=="replace" {;
+    cap frame drop `framename';
+  };
+  frame rename `tempframe' `framename';
+  if "`framechange'"!="" {;
+    frame change `framename';
+  };
 };
 
 
@@ -500,5 +546,19 @@ while  `rowind' < `nrow' {;
         local namec : rownames(`tempmat');
         qui replace `rowname' = "`namec'" in `rowind';
 };
+
+end;
+
+prog def frameoption, rclass;
+version 16.0;
+*
+ Parse frame() option
+*;
+
+syntax name [, replace CHange ];
+
+return local change "`change'";
+return local replace "`replace'";
+return local namelist "`namelist'";
 
 end;

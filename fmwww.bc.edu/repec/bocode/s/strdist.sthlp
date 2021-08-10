@@ -1,5 +1,5 @@
 {smcl}
-{* *! version 1.1  06may2017 Michael D Barker Felix Pöge}{...}
+{* *! version 1.2  09dec2017 Michael D Barker Felix Pöge}{...}
 {cmd:help strdist}
 {hline}
 
@@ -16,7 +16,7 @@
 {c -(}{varname:1}|{cmd:"}{it:string1}{cmd:"}{c )-}
 {c -(}{varname:2}|{cmd:"}{it:string2}{cmd:"}{c )-}
 {ifin}
-[{cmd:,} {opth g:enerate(newvar)} ]
+[{cmd:,} {opth g:enerate(newvar)} {opth max:dist(integer)}]
 
 
 {title:Description}
@@ -52,6 +52,10 @@ edit distance(s). If the arguments include a string variable without
 the {opt generate()} option, a new variable will be created with
 default name {bf:strdist}.
 
+{phang}
+{opth maxdist(integer)} Calculate string distances only up to an upper bound.
+If the string distance exceeds that bound, the result is set
+to missing (.). Only values of 1 or higher are valid upper bounds.
 
 {title:Examples}
 
@@ -59,7 +63,7 @@ default name {bf:strdist}.
 
 {phang}{cmd:. sysuse census} 
 
-{phang}{cmd:. strdist state "west virginia" , gen(wvdist)} 
+{phang}{cmd:. strdist state "west virginia", gen(wvdist)} 
 
 
 {title:Saved results}
@@ -84,10 +88,11 @@ default name {bf:strdist}.
 {pstd} Georgetown University {p_end}
 {pstd} mdb96@georgetown.edu {p_end}
 
-{pstd} Felix Pöge {p_end}
+{pstd} Felix P{c o:}ge {p_end}
 {pstd} Max Planck Institute for Innovation and Competition {p_end}
 {pstd} felix.poege@ip.mpg.de {p_end}
 
+We thank Sergio Correia for his suggestions on how to improve strdist's performance.
 
 {title:Also see}
 

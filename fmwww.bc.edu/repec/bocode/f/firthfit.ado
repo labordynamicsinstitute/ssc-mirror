@@ -1,9 +1,9 @@
 * ==========================================================
 * firthfit: compute model fit for Firth's logit models
 * Author: Alexander Staudt 
-* Version 1.0.0, 2016-04-18
+* Version 1.0.1, 2020-12-29
 * ==========================================================
-*! version 1.0.0, Alexander Staudt, 18apr2016
+*! version 1.0.1, Alexander Staudt, 29dec2020
 
 program define firthfit, rclass
 	

@@ -1,4 +1,10 @@
-*! regsave_tbl 1.1.2 16dec2015 by Julian Reif
+*! regsave_tbl 1.1.8 30mar2020 by Julian Reif
+* 1.1.8: fixed autoid bug
+* 1.1.7: fixed minor sigfig() bug
+* 1.1.6: fixed bug with sigfig() formatting
+* 1.1.5: fixed bug with sigfig() option and brackets
+* 1.1.4: added sigfig() option. Edited df() option to allow missing.
+* 1.1.3: added error checking for case where user calls regsave_tbl directly
 * 1.1.2: added saveold option
 * 1.1.1: autoid is now passed on through command arguments rather than detected directly
 * 1.1  : another update to the df issue.
@@ -16,11 +22,28 @@
 program define regsave_tbl, rclass
 	version 8.2
 
-	syntax [varlist] [using/] [if] [in], name(name) [order(string) format(string) PARENtheses(namelist max=6) BRACKets(namelist max=6) allnumeric ASTERisk(numlist descending integer min=0 max=3 >=0 <=100) df(string) autoid append replace saveold(integer -999)]
-		
+	syntax [varlist] [using/] [if] [in], name(name) [order(string) format(string) sigfig(numlist integer min=1 max=1 >=1 <=16) PARENtheses(namelist max=6) BRACKets(namelist max=6) allnumeric ASTERisk(numlist descending integer min=0 max=3 >=0 <=100) df(numlist min=1 max=1 >=0 missingokay) autoid append replace saveold(numlist integer min=1 max=1 >=11)]
+
 	**********************************
 	* Error check option selections  *
 	**********************************
+	
+	* Error check basic issues that may arise if user calls regsave_tbl directly
+	foreach v in var coef  {
+		cap confirm var `v'
+		if _rc {
+			di as error "Variable `v' is missing. Make sure dataset in memory was created by regsave."
+			exit 198
+		}
+		
+		if "`v'"=="var" cap confirm string var `v'
+		else            cap confirm numeric var `v'
+		if _rc {
+			di as error "Variable `v' has incorrect format. Make sure dataset in memory was created by regsave."
+			exit 198			
+		}
+	}
+	
 	* File options
 	if "`append'`replace'"!="" & "`using'"=="" {
 		di as error "Must specify a filename with `append'`replace'"
@@ -45,12 +68,21 @@ program define regsave_tbl, rclass
 	* Saveold options, if specified
 	local save save
 	local saveold_opts ""
-	if "`saveold'"!="-999" {
+	if "`saveold'"!="" {
 		local save "saveold"
 		local saveold_opts "version(`saveold')"
 		
 		* Reuse in regsave_tbl subcommand:
 		local sv_old "saveold(`saveold')"
+	}
+	
+	* sigfig option
+	if "`sigfig'"!=""   {
+		if "`format'"!="" {
+			di as error "Cannot specify both the sigfig and format options."
+			exit 198					
+		}
+		local format "%18.`sigfig'gc"
 	}
 	
 	preserve
@@ -126,10 +158,11 @@ program define regsave_tbl, rclass
 
 	* Asterisk option: *-**-*** for 10% / 5% / 1% significance is the default
 	if "`asterisk'"!="" {
-		qui gen coef2 = coef // used only in one case below
+		tempvar coef2
+		qui gen `coef2' = coef // used only in one case below
 		qui tostring coef, replace force format(`format')
 		local allnumeric // allnumeric must be blank with asterisks
-		
+	
 		* Grab the significance levels. Set them to missing if they were not specified.
 		forval x=1/3 {
 			tokenize "`asterisk'"
@@ -163,7 +196,7 @@ program define regsave_tbl, rclass
 			else {
 				cap d stderr
 				if _rc==0 {
-					qui gen `double' tstat = coef2/stderr 
+					qui gen `double' tstat = `coef2'/stderr 
 					if "`df'"=="." {
 						qui gen `double' pval = 2*(1-normprob(abs(tstat)))
 					}
@@ -177,7 +210,7 @@ program define regsave_tbl, rclass
 				}	
 			}
 		}
-		drop coef2
+		drop `coef2'
 		qui tostring *, replace force format(`format') // All variables need to be string now, in preparation for the reshape
 	}
 	
@@ -245,7 +278,6 @@ program define regsave_tbl, rclass
 			* 1) Store the statistic
 			qui replace `tbl' = `v'[`scount'] in `row'
 
-
 			* 2) Store (correct) name of the variable
 			local vname : word `v_index' of `originals'
 			qui replace var = "`vname'_`s'" in `row'
@@ -285,16 +317,17 @@ program define regsave_tbl, rclass
 	* Make vars into strings, if necessary
 	if "`allnumeric'"=="" {
 		
-		* Determine which variables need formatting
+		* Determine which variables need formatting. Store list of integer vars for later use by sigfig() option
 		foreach v of local varnames {
 			local value = `v'[1]
 			cap confirm integer number `value'
 			if _rc!= 0 local float_vars "`float_vars' `v'" 
+			else local int_vars "`int_vars' `v'"
 		}
+		
 		qui cap tostring `float_vars', force replace format(`format')
 		if "`format'"!="" local format "%15.0fc"
 		qui tostring *, force replace format(`format')
-		
 	}
 
 	* Put into one column
@@ -310,11 +343,72 @@ program define regsave_tbl, rclass
 	keep var `table'
 	order var
 
+	* Add trailing and leading zeros, if sigfig option was specified
+	qui if "`sigfig'"!="" {
+
+		cap confirm string var `table'
+		if !_rc {
+			tempvar tmp diff tail numast intvar orig lngth
+			
+			gen `intvar'=0
+			tokenize `"`int_vars'"'
+			while "`1'"!= "" {
+				replace `intvar'=1 if var=="`1'" | `table'=="."
+				macro shift
+			}
+			
+			gen `orig' = `table'
+			
+			gen     `tmp' = subinstr(`table',".","",1)
+			replace `tmp' = subinstr(`tmp',".","",1)
+			replace `tmp' = subinstr(`tmp',"(","",1)
+			replace `tmp' = subinstr(`tmp',")","",1)
+			replace `tmp' = subinstr(`tmp',"[","",1)
+			replace `tmp' = subinstr(`tmp',"]","",1)
+			replace `tmp' = subinstr(`tmp',"*","",.)
+			replace `tmp' = subinstr(`tmp',"-","",.)
+			
+			* Remove leading zero's following the decimal point (they don't count towards sig figs)
+			gen `lngth' = length(`tmp')
+			summ `lngth'
+			forval x = `r(max)'(-1)1 {
+				replace `tmp' = subinstr(`tmp', "0"*`x',"",1) if substr(`tmp',1,`x')=="0"*`x'
+			}			
+			
+			gen `diff' = `sigfig' - length(`tmp')
+			gen `tail' = "0"*`diff'
+			gen `numast' = length(`table') - length(subinstr(`table', "*", "", .))
+
+			* Leading zero's
+			replace `table' = "0"  + `table'                   if substr(`table',1,1)=="."
+			replace `table' = subinstr(`table',"-.","-0.",1)   if substr(`table',1,2)=="-."
+			replace `table' = subinstr(`table',"(.","(0.",1)   if substr(`table',1,2)=="(."
+			replace `table' = subinstr(`table',"[.","[0.",1)   if substr(`table',1,2)=="[."
+			replace `table' = subinstr(`table',"(-.","(-0.",1) if substr(`table',1,3)=="(-."
+			replace `table' = subinstr(`table',"[-.","[-0.",1) if substr(`table',1,3)=="[-."
+
+			* Trailing zero's (note: asterisks can't occur with ")" or "]", because those are only for stderrs/tstats/ci)
+			replace `table' = `table' +       `tail'                                                 if strpos(`table',".")!=0 & strpos(`table',"*")==0 & substr(`table',1,1)!="(" & substr(`table',1,1)!="[" & !mi(`tail')
+			replace `table' = `table' + "." + `tail'                                                 if strpos(`table',".")==0 & strpos(`table',"*")==0 & substr(`table',1,1)!="(" & substr(`table',1,1)!="[" & !mi(`tail')
+			
+			replace `table' = substr(`table',1,length(`table')-`numast') +       `tail' + "*"*`numast'     if strpos(`table',".")!=0 & strpos(`table',"*")!=0 & substr(`table',1,1)!="(" & substr(`table',1,1)!="[" & !mi(`tail')
+			replace `table' = substr(`table',1,length(`table')-`numast') + "." + `tail' + "*"*`numast'     if strpos(`table',".")==0 & strpos(`table',"*")!=0 & substr(`table',1,1)!="(" & substr(`table',1,1)!="[" & !mi(`tail')
+			
+			replace `table' = subinstr(`table',")",`tail'+")",1) if strpos(`table',".")!=0 & substr(`table',1,1)=="("
+			replace `table' = subinstr(`table',"]",`tail'+"]",1) if strpos(`table',".")!=0 & substr(`table',1,1)=="["
+			
+			* Variables that were stored as integers (or missing) are exact and shouldn't be altered
+			replace `table' = `orig' if `intvar'==1
+			
+			drop `tmp' `diff' `tail' `numast' `intvar' `orig' `lngth'
+		}
+	}	
+
 	* Merge with dataset if specified
 	if "`append'"!= "" {
 
 		* Take care that the sorting is not messed up by the merge (and add extra joinby option for Version 8 of Stata)
-		tempname sortid
+		tempvar sortid
 		gen `sortid' = _n
 		cap qui merge var using `"`using'"', sort
 		if _rc !=0 {
@@ -339,7 +433,9 @@ program define regsave_tbl, rclass
 					if `max_id' < `tmp_id' local max_id = `tmp_id'
 				}
 			}
-			qui replace `table' = `max_id'+1 if var=="_id"
+			capture confirm string variable `table'
+			if _rc qui replace `table' = `max_id'+1      if var=="_id"
+			else   qui replace `table' = "`=`max_id'+1'" if var=="_id"
 		}
 
 		
@@ -382,7 +478,7 @@ program define regsave_tbl, rclass
 		}		
 		sort index, stable
 		drop index
-	}	
+	}
 
 	* Restore dataset if necessary
 	if "`using'"!= "" {
@@ -390,7 +486,7 @@ program define regsave_tbl, rclass
 		restore	
 	}
 	else restore, not
-	
+
 	* Return shape of new dataset
 	return clear
 	qui count

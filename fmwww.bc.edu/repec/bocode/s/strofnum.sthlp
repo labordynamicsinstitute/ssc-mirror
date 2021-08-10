@@ -1,5 +1,5 @@
 {smcl}
-{* *! version 1.0 19 Sep 2016}{...}
+{* *! version 0.23}{...}
 {vieweralsosee "" "--"}{...}
 {vieweralsosee "strtonum" "help strtonum"}{...}
 {viewerjumpto "Syntax" "strofnum##syntax"}{...}
@@ -52,10 +52,8 @@ The variable label is copied to the new variable.
 
 {phang}{bf:Author:}{break}
  	Niels Henrik Bruun, {break}
-	Section for General Practice, {break}
-	Dept. Of Public Health, {break}
-	Aarhus University
+	Aalborg University Hospital
 {p_end}
 {phang}{bf:Support:} {break}
-	{browse "mailto:nhbr@ph.au.dk":nhbr@ph.au.dk}
+	{browse "mailto:niels.henrik.bruun@gmail.com":niels.henrik.bruun@gmail.com}
 {p_end}

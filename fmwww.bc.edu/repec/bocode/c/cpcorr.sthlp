@@ -1,5 +1,5 @@
 {smcl}
-{* 3sep2015/16sep2015}{...}
+{* 3sep2015/16sep2015/11aug2020}{...}
 {hi:help cpcorr}
 {hline}
 
@@ -87,6 +87,11 @@ includes {cmd:format(%5.4f)}.
 {pstd}
 Nicholas J. Cox, Durham University, U.K.{break} 
 n.j.cox@durham.ac.uk
+
+
+{title:Acknowledgments} 
+
+{pstd}Torsten Neilands helpfully reported a bug.
 
 
 {title:Saved results} 

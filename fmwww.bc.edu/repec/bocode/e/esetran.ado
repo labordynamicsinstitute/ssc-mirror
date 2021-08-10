@@ -9,7 +9,7 @@ version 10.0;
  and recoding non-missing values beyond system limits
  to system limits.
 *!Author: Roger Newson
-*!Date: 14 April 2015
+*!Date: 27 July 2018
 */
 
 syntax varlist(numeric min=2 max=2) [if] [in] , TRansformation(string);
@@ -22,7 +22,7 @@ syntax varlist(numeric min=2 max=2) [if] [in] , TRansformation(string);
 *
  Check transformation
 *;
-cap assert inlist(`"`transformation'"',"log","logit","atanh","asin");
+cap assert inlist(`"`transformation'"',"log","logit","loglog","cloglog","atanh","asin");
 if _rc {;
   disp as error "Unrecognised transf(" `"`transformation'"' ")";
   error 498;
@@ -57,6 +57,26 @@ else if "`transformation'"=="logit" {;
     replace `estimate'=1-c(epsdouble) if `touse' & `estimate'<=1 & `estimate'>1-c(epsdouble);
     replace `stderr'=`stderr'*( 1/`estimate' + 1/(1-`estimate') ) if `touse';
     replace `estimate'=logit(`estimate') if `touse';
+  };
+};
+else if "`transformation'"=="loglog" {;
+  qui {;
+    replace `estimate'=. if `touse' & `estimate'<0;
+    replace `estimate'=. if `touse' & `estimate'>1;
+    replace `estimate'=c(smallestdouble) if `touse' & `estimate'>=0 & `estimate'<c(smallestdouble);
+    replace `estimate'=1-c(epsdouble) if `touse' & `estimate'<=1 & `estimate'>1-c(epsdouble);
+    replace `stderr'=`stderr'/abs(`estimate'*log(`estimate')) if `touse';
+    replace `estimate'=cloglog(1-`estimate') if `touse';
+  };
+};
+else if "`transformation'"=="cloglog" {;
+  qui {;
+    replace `estimate'=. if `touse' & `estimate'<0;
+    replace `estimate'=. if `touse' & `estimate'>1;
+    replace `estimate'=c(smallestdouble) if `touse' & `estimate'>=0 & `estimate'<c(smallestdouble);
+    replace `estimate'=1-c(epsdouble) if `touse' & `estimate'<=1 & `estimate'>1-c(epsdouble);
+    replace `stderr'=`stderr'/((`estimate'-1)*log(1-`estimate')) if `touse';
+    replace `estimate'=cloglog(`estimate') if `touse';
   };
 };
 else if "`transformation'"=="atanh" {;

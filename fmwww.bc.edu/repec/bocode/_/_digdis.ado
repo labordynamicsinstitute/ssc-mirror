@@ -1,4 +1,4 @@
-*! version 1.0.0  28jun2007  Ben Jann
+*! version 1.0.1  18jan2021  Ben Jann
 
 program _digdis
     version 9.2
@@ -165,8 +165,9 @@ program define digdis_tabulate, rclass
 
     if "`by'"!="" {
         marksample touse
-        markout `touse' `by'
+        markout `touse' `by', strok
         qui levelsof `by', local(levels)
+        local byisstr = substr(`"`: type `by''"',1,3)=="str"
     }
     else {
         marksample touse, novarlist
@@ -186,17 +187,23 @@ program define digdis_tabulate, rclass
         }
         else {
             local var "`varlist'"
-            local ifby "& `by'==`l'"
-            local lab "`l'"
-            di "-> `by' = `l'"
-
+            if `byisstr' {
+                local ifby `"& `by'==`"`l'"'"'
+                local lab `"`l'"'
+                local lab: subinstr local lab " " "_", all
+            }
+            else {
+                local ifby "& `by'==`l'"
+                local lab "`l'"
+            }
+            di `"-> `by' = `l'"'
         }
         _digdis_tabulate `var' if `touse'`ifby' [`weight'`exp'] , ///
             `dist' `origvarname' `options'
         if r(N)==0 continue
         foreach mat in N mad pvals {
             mat `tmp' = r(`mat')
-            mat coln `tmp' = `lab'
+            mat coln `tmp' = `"`lab'"'
             mat ``mat'' = nullmat(``mat''), `tmp'
         }
         mat `tmp' = r(count)
@@ -418,7 +425,7 @@ program define digdis_test, rclass
     local i 0
     foreach name of local coln {
         local ++i
-        di _n as txt %12s "`name'" " {c |}" " " as res %9.0g `N'[1,`i']  _c
+        di _n as txt %12s `"`name'"' " {c |}" " " as res %9.0g `N'[1,`i']  _c
         foreach stat of local stats {
             di "  " %9.0g `v_`stat''[1,`i'] "  " %9.4f `p_`stat''[1,`i'] _c
         }

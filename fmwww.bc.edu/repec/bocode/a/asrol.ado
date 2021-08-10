@@ -1,167 +1,223 @@
-*! Attaullah Shah 3.1.0 4Mar2015
+*! Attaullah Shah 4.6 May 22, 2019
 *! Email: attaullah.shah@imsciences.edu.pk
+*! Version 4.6 Improves the calculation of gmean for large numbers
+*! Version 4.5 Gmean improvement
+*! Version 4.4 10May2018: product fuction improvement
 *! Support website: www.OpenDoors.Pk
-
+*! This version supports multiple variables and multiple statistics
 cap prog drop asrol
 prog asrol, byable(onecall) sortpreserve
-version 13
-	syntax                 ///
-	varname(numeric)      ///
-	[in] [if],           ///
-	Stat(str) 		    ///
-	[Generate(str)     ///
-	Window(string)    ///
-	SMiss 			 ///
-	MINimum(real 0) ///
-	by(varlist)    ///
-	] 
+	version 11
+	syntax                    	    ///
+	    varlist(numeric)    	   ///
+		[in] [if],          	  ///
+		Stat(str) 		   		 ///
+		[Generate(str)    	    ///
+		Window(string)   	   ///
+		Perc(str)			  ///
+		MINimum(real 0) 	 ///
+		by(varlist)    	    ///
+		XFocal(string) 	   ///
+		ADD (real 0)      ///
+		IGnorezero       ///
+		] 
+	preserve
 	marksample touse, nov
-	if "`stat'"~="mean" & "`stat'"~="sd" & "`stat'"~="sum" &   ///
-		"`stat'"~="median" & "`stat'"~="count" & "`stat'"~="min"  ///
-		& "`stat'"~="max" & "`stat'"~="first" & "`stat'"~="last" ///
-		& "`stat'"~="missing" { 
-		display as error " Incorrect statistics specified!"
-		display as text "You have entered {cmd: `stat'} in the {cmd: stat option}. However, only the following staticts are allowed with {help asrol}"
-		dis as res "mean, sd, sum, median, count, min, max, first, last, missing"
+	local Z : word count `stat'
+	local V : word count `varlist'
+	loc mult = `Z' * `V'
+	if "`generate'"! = "" & `mult'> 1 {
+		display as error "Option {opt g:en} is not allowed with multiple variables or statistics"
 		exit
 	}
-	local nwindow : word count `window'
-	if `nwindow'!=2 & `nwindow'!=1{
-		dis in red "The rolling window accepts minimum one and maximum two arguments. You have entered " `nwindow'
-	exit
-	}
-	if `nwindow'==2 {
-		tokenize `window'
-		gettoken    rangevar window : window
-		gettoken  rollwindow window : window
-	}
-	else{ // if only rangevar is not specified
-		local rollwindow `window'
-	}
-	if `rollwindow'<=0 {
-		dis as error "The rolling window should have minimum value of 1 or greater"
-		exit
-	}
-	tempvar GByVars dup first n 
-	if "`by'"!="" {
-		if "`rangevar'"=="" {
-			local rangevar "`_dta[_TStvar]'"
+
+	foreach  z of local stat {
+		if "`z'"~="mean" & "`z'"~ = "gmean" & "`z'"~="sd"        ///
+			& "`z'"~="sum" & "`z'"~="product" & "`z'"~="median"  ///
+			& "`z'"~="count" & "`z'"~="min" & "`z'"~="max"       ///
+			& "`z'"~="first" & "`z'"~="last" & "`z'"~="missing" { 
+			display as error " Incorrect statistics specified!"
+			display as text "You have entered {cmd: `z'} in the {cmd: stat option}. However, only the following staticts are allowed with {help asrol}"
+			dis as res "mean, gmean, sd, sum, product, median, count, min, max, first, last, missing"
+			exit
 		}
-		gen `n'=_n
-		bysort `by' (`rangevar' `n'): gen  `first' = _n == 1
-		gen `GByVars'=sum(`first')
-		drop `first' `n'
-		sort `GByVars' `rangevar'
-		by `GByVars' `rangevar' : gen `dup'=_N
-		qui sum `dup', meanonly
-		if r(max) > 1 {
-			local IsPanel "No"
-		}
-		else {
-			local IsPanel "Yes"
-		}
-	}
-	else{ 
-		if "`_dta[_TSpanel]'"!=""{
-			local GByVars "`_dta[_TSpanel]'"
-			local IsPanel "Yes"
-			if "`rangevar'"=="" {
-				local rangevar "`_dta[_TStvar]'"
-				
+		if "`z'"!="median" & "`perc'"!="" dis as error "option {cmd: perc()} is used only when finding {cmd: percentiles with option median}, see help file {help asrol}"
+		if "`z'"=="median" {
+			if "`perc'"==""{
+				global Q = .5
+			}
+			else {
+				confirm number `perc'
+				global Q = `perc'
 			}
 		}
-		else { 
-			
-			if "`_dta[_TStvar]'"!=""{
-			local IsPanel "Yes"
-				if "`rangevar'"=="" {
-					local rangevar "`_dta[_TStvar]'"
-					tempvar GByVars
-					qui gen `GByVars'=1
-					
+	}
+	if "`xfocal'"=="" {
+		local XF = 1
+	}
+	else{ 
+		cap confirm numeric variable `xfocal'
+		if _rc==0 {
+			local varfocal "yes"
+		}
+		if "`xfocal'"~="focal" & "`varfocal'"!="yes"{
+			display as error " Option xfocal either accepts the word focal or name of an existing numeric variable"
+			display as text "For example, you can specify xfocal option as {cmd: xfocal(focal)} or {cmd: xfocal(year)}"
+			exit
+		}
+		if "`xfocal'"=="focal" { 
+			local XF = 2
+		}
+		else{ 
+			local XF = 3
+		}
+	}
+	global addtofunc = `add'
+	global ignorezero `ignorezero'
+	if "`XF'" != "1" global XF 1
+	else global XF 0
+
+	if "`window'"!=""{
+		local nwindow : word count `window'
+		if `nwindow'!=2 {
+			dis ""
+			display as error "Option window must have two arguments: rangevar and length of the rolling window"
+			display as text " e.g, If your range variable is year, then the syntax would be {opt window(year 10)}"
+			exit
+		}
+		else if `nwindow'==2 {
+			tokenize `window'
+			gettoken    rangevar window : window
+			gettoken  rollwindow window : window
+		}
+		confirm number `rollwindow'
+		confirm numeric variable `rangevar'
+		if `rollwindow' <=1 {
+			dis ""
+			display as error "Length of the rolling window should be at least 1"
+			display as res " Alternatively, If you are interested in statistics over a grouping variable, you should omit the {opt w:indow} otpion"
+			exit
+		}
+		if "`_byvars'"!="" {
+			local by "`_byvars'"
+		}
+		if "`by'"=="" {
+			tempvar by
+			qui gen `by' = 1
+		}
+		local cversion =`c(version)'
+		tempvar __GByVars __000first __0dIf
+		qui bysort `by' (`rangevar'): gen  `__000first' = _n == 1
+		qui gen `__GByVars'=sum(`__000first')
+		qui drop `__000first' 
+		qui by `by' : gen `__0dIf' = `rangevar' - `rangevar'[_n-1]
+
+		if  `mult'<=1 {
+			if "`stat'"=="median" {
+				if "`perc'"==""{
+					global Q = .5
+				}
+				else {
+					confirm number `perc'
+					global Q = `perc'
+				}
+			}
+
+			if "`generate'" == "" local generate "`stat'`rollwindow'_`varlist'"
+			mata: asrolw(				      ///
+				"`varlist'", 		         ///
+				"`__GByVars'" ,	    		///
+				"`generate'" , 	  		   ///
+				`rollwindow',			  /// 
+				"`stat'", 	    		 ///
+				"`minimum'", 	   		///
+				"`rangevar'",	  	   /// 
+				`XF' ,    			  ///
+				"`__0dIf'" ,		 ///
+				`cversion',	        ///
+				"`touse'" 		      )
+			cap qui label var `generate' "`stat' of `varlist' in a `rollwindow'-periods rol. wind."
+		}
+		else {
+			foreach v of varlist `varlist'  {
+				foreach z  of  local    stat    {
+					local generate "`z'`rollwindow'_`v'"
+					mata: asrolw(				      ///
+						"`v'", 		                 ///
+						"`__GByVars'" ,	    		///
+						"`generate'" , 	  		   ///
+						`rollwindow',			  /// 
+						"`z'", 	    		     ///
+						"`minimum'", 	   		///
+						"`rangevar'",	  	   /// 
+						`XF' ,    			  ///
+						"`__0dIf'" ,		 ///
+						`cversion',	        ///
+						"`touse'" 		      )
+					cap qui label variable `generate' "`z' of `v' in a `rollwindow'-periods rol. wind."
 				}
 			}
 		}
 	}
-		if "`rangevar'"==""{
-			dis as error "The data is not declared as panel or time series data"
-			dis as text "If your data is not time series or panel, you can specify range variable {break} in the option {cmd: window} as a first argument. For example, {cmd: window(year 5)} where {break} {cmd: year} is the range variable and {cmd: 5} is the length of the rolling window."
-			exit
+
+	else { 
+		local rollwindow = 0
+		tempvar GByVars dup first n  dif
+		if "`_byvars'"!="" {
+			local by "`_byvars'"
+		}
+		if "`by'"!="" {
+			if `XF'==3 { 
+				local rangevar "`xfocal'"
+			}
+
+			gen `n'=_n
+			bysort `by' (`rangevar' `n'): gen  `first' = _n == 1
+			qui gen `GByVars'=sum(`first')
+			drop `first' `n'
+		}
+		if "`by'"=="" {
+			tempvar GByVars
+			qui gen `GByVars' = 1
+			if `XF'==3{
+				local rangevar "`xfocal'"
+				sort `GByVars' `rangevar'
+			}
 		}
 
-	if "`generate'"=="" {
-		local generate "`stat'`rollwindow'_`varlist'"
-	}
-	
-	local nmiss: word count `smiss'
-	if `nmiss'==1 {
-		local nomiss = 1
-	}
-	else{
-		local nomiss =2
-	}
-	
-	if "`IsPanel'" =="Yes" {
-		qui tsf, panel(`GByVars') timevar(`rangevar')
-	}
-	
-	mata: fasrol("`varlist'", 		     ///
-	              "`GByVars'" ,		    ///
-				  "`generate'" , 	   ///
-	              `rollwindow',		  /// 
-				  "`stat'", 	     ///
-				  `nomiss' , 		///
-				  `minimum', 	   ///
-				  "`rangevar'",	  /// 
-				  "`IsPanel'", 	 ///
-				  "`touse'"		///
-				  )
-	if "`IsPanel'" =="Yes" {
-		qui drop if TimeDiff==. 
-		drop TimeDiff
-	}
-	cap qui label variable `generate' "`stat' of `varlist' in a `rollwindow'-periods rol. wind."
-	end
-*! tsf is based on Stata's official 'tsfill' program
-program define tsf, rclass
-syntax , timevar(varlist) [panel(varlist)] 
-	if "`panel'" != ""   {
-		local bypfx "qui by `panel': "
-	}
-	else    local bypfx "qui "  
-	tempvar numreps TimeDiff
-	noi cap `bypfx' gen double TimeDiff = `timevar'[_n+1] - `timevar'
-	if _rc {
-		sort `panel' `timevar'
-		cap `bypfx' gen double TimeDiff = `timevar'[_n+1] - `timevar'
-	}
-	`bypfx' replace TimeDiff =  0 if _n == _N
-	`bypfx' gen double `numreps' = TimeDiff 
-	qui replace `numreps' = 0 if `numreps' == .
-	local orign = _N
-	qui count if  `numreps'  > 1
-	local addns `r(N)'
-	if `addns' > 0 {
-		local newobs = `orign' + `addns'
-		qui replace `numreps' = - `numreps'
-		sort `numreps'
-		qui replace `numreps' = - `numreps'
-		qui set obs `newobs'
-		local orign1 = `orign' + 1
-		qui replace `numreps' = `numreps'[_n-`orign']  in `orign1'/l
-		qui replace `timevar' = `timevar'[_n-`orign']  in `orign1'/l
-		if "`panel'" != "" {
-			qui replace `panel' = `panel'[_n-`orign']  in `orign1'/l
+		if  `mult' <= 1 {
+			if   "`generate'" == ""  local    generate   "`stat'_`varlist'"
+			mata: asrolnw(		 		     ///
+				"`varlist'", 	   	 	    ///
+				"`GByVars'" ,	           ///
+				"`generate'" ,       	  ///
+				"`stat'", 	    		 ///
+				`minimum',        		///
+				"`rangevar'", 		   /// 
+				`XF' ,   	 	      ///
+				"`touse'"   	     ///
+				                       )
+capture    quietly       label    variable  `generate' "`stat' of `varlist'"
+		
 		}
-		qui replace `numreps' = 0  in 1/`orign'
-		qui replace `numreps' = `numreps' - 1  if `numreps'
-		qui expand `numreps'
-		sort `panel' `timevar' `numreps'
-		qui by `panel' `timevar': replace `timevar' = `timevar' + /*
-			*/ 1 * (`numreps' - _n + 2)  if `numreps' > 0
-		drop  `numreps'
-		sort `panel' `timevar'
+	    else{
+			foreach v of varlist `varlist' {
+				foreach z of local stat       {
+					local generate "`z'_`v'"
+					mata: asrolnw(		 		   ///
+						"`v'", 	  	    	 	  ///
+						"`GByVars'" ,	         ///
+						"`generate'" ,          ///
+						"`z'", 	       		   ///
+						`minimum',            ///
+						"`rangevar'", 	     /// 
+						`XF' ,   	 		///
+						"`touse'"          ///
+						                     )
+capture  quietly  label  variable  `generate'   "`z' of `v'"
+				}
+			}
+		}
 	}
-
+	restore, not
 end
-

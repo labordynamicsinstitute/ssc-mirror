@@ -1,0 +1,2291 @@
+/* 
+
+   Survey Solutions API class
+   Sergiy Radyakin, Тhе Wоrld Bаnk, 2020-2021
+   
+*/
+
+class SuSo {
+  
+  string wrapperver="1.0"
+  
+  string initdate
+  string inittime
+  string versionstr
+  
+  string server
+  string username
+  string password
+  
+  // workspace for API queries
+  string workspace = "primary" // default workspace that is always present and can't be removed
+  
+  string userid     // GUID, no dashes.
+  string userroles  // if empty - APIUSER is implied, space delimited if multiple. 
+  string userworkspaces // space delimited list of workspaces to which the user has access, may be empty.
+  string userworkspacese // a subset of .userworkspaces, which are enabled (may be empty).
+  
+  string verbose="false"
+}, inherit(SuSoBase)
+
+python:
+import numbers
+import time
+import requests
+from sfi import Macro, Data, Scalar, SFIToolkit
+
+# // Python globals:
+ajheader={'Content-type': 'application/json'}
+ajpheader={'Content-type': 'application/json-patch+json'}
+
+def checkurl(url):
+  try:
+    r = requests.get(url)
+  except requests.ConnectionError as e:
+    # // Handle exception here
+    Macro.setLocal("downloaded",str(-631))
+    return -631
+  return 0
+
+def checkserver():
+
+  try:
+    r = requests.get(get_server() + "/.hc")
+    if (r.status_code==404):
+      Macro.setLocal("downloaded",str(-10404))
+      return -10404
+  except requests.ConnectionError as e:
+    # // Handle exception here
+    Macro.setLocal("downloaded",str(-631))
+    return -631
+  return 0
+  
+def checkapi():
+  try:
+    y=requests.get(
+      f"{get_server_url()}/api/v1/settings/globalnotice/",
+      headers=ajheader, 
+      data={},
+      auth=get_credentials())
+    
+    if (y.status_code!=200):
+      return -y.status_code
+    if (y.json()['Message']==None):
+      print("The server does not display any global message.")
+    else:
+      print(y.json()['Message'])
+  except:
+    return -1
+  return 0
+  
+def check():
+  c=checkurl(get_server())
+  if (c < 0):
+    return -1
+  c=checkserver()
+  if (c < 0):
+    return -1
+  c=checkapi()
+  if (c < 0):
+    if (c==-401):
+      SFIToolkit.errprintln("Server responded: 401 Unauthorized.")
+      SFIToolkit.errprintln("Please check that the API user name and password are valid for this server.")
+      return c
+    if (c==-403):
+      SFIToolkit.errprintln("Server responded: 403 Forbidden.")
+      SFIToolkit.errprintln("Please check that the API user is given access to the requested resource for this server.")
+      return c
+    return -1
+
+  print("Server OK")
+  return 0
+
+def read_property(s):
+    return SFIToolkit.macroExpand(f"`=char(96)'macval(.{s})`=char(39)'")
+  
+def get_server():
+    return read_property("server")
+    
+def get_workspace():
+    return read_property("workspace")
+  
+def get_server_url():
+    return f"{get_server()}/{get_workspace()}" 
+
+def get_credentials():
+    return (read_property("username"), read_property("password"))  
+
+def export():
+  # // Returns number of bytes in the saved file 
+  # // or a negative code if failed
+  
+  server=get_server_url()
+  c=check()
+  if (c < 0):
+    Macro.setLocal("downloaded",str(c))
+    return
+  
+  const_delay=0.2
+  const_maxcycles=180
+
+  qry=Macro.getLocal("qry")
+  saveto=Macro.getLocal("saveto")
+  URL=server+'/api/v2/export/'
+
+  x = requests.post(
+    URL,
+    data=qry,
+    headers=ajheader,
+    auth=get_credentials())
+  
+  if (x.ok):
+    code=x.status_code
+    jobid=x.json()['JobId']
+    if (read_property("verbose")=="true"):
+      print('Set up new export job with ID:', jobid)
+    y=requests.get(
+      URL+str(jobid),
+      headers=ajheader, 
+      data={},
+      auth=get_credentials())
+    if (y.ok):
+      c=1
+      exportStatus=y.json()['ExportStatus']
+      while((exportStatus!='Completed') and (c<const_maxcycles)):
+        c=c+1
+        if (read_property("verbose")=="true"):
+          print(exportStatus, y.json()['Progress'],"%")
+        time.sleep(const_delay)
+        y=requests.get(
+          URL+str(jobid),
+          headers=ajheaders, 
+          data={},
+          auth=get_credentials())
+        exportStatus=y.json()['ExportStatus']
+    else:
+      SFIToolkit.errprintln("Something went wrong! Could not initiate a new data export job.")
+      Macro.setLocal("downloaded",str(-1))
+      return
+
+    if (read_property("verbose")=="true"):
+      print(exportStatus, y.json()['Progress'],"%")
+    if (not y.json()['HasExportFile']):
+      SFIToolkit.errprintln("Something went wrong! The data export job has been completed, but the export file was not produced by the server.")
+      Macro.setLocal("downloaded",str(-1))
+      return
+
+    links=y.json()['Links']
+    file=links['Download']
+
+    # // temporary fix until the problem with 'download not ready' is solved
+    # // temporary fix is retained to be suitable for not updated versions
+    if (read_property("verbose")=="true"):
+      print("Downloading: "+file)
+    c=1
+    s=400
+    while((s!=200) and (c<const_maxcycles)):
+      filedata = requests.get(file, auth=get_credentials(), allow_redirects=True)
+      s=filedata.status_code
+      if (read_property("verbose")=="true"):
+        print(c," ",s)
+      c=c+1
+
+    with open(saveto, 'wb') as file:
+      file.write(filedata.content)
+    Macro.setLocal("downloaded",str(len(filedata.content)))
+  else:
+    if (read_property("verbose")=="true"):
+      print(x.status_code)
+    if (x.status_code==401):
+      SFIToolkit.errprint("Server responded: 401 Unauthorized.")
+      SFIToolkit.errprintln("Please check that the API user name and password are valid for this server.")
+      Macro.setLocal("downloaded",str(-401))
+      return
+    if (x.status_code==404):
+      SFIToolkit.errprint("Server responded: 404 Not found.")
+      SFIToolkit.errprintln("Please check that the requested survey questionnaire was imported to this server.")
+      Macro.setLocal("downloaded",str(-404))
+      return
+    Macro.setLocal("downloaded",str(-1))
+
+def qx_doc(qguid, qversion):
+  # // Returns the questionnaire document
+  # // This is currently a JSON-formatted text document
+  
+  URL=f"{get_server_url()}/api/v1/questionnaires/{qguid}/{str(qversion)}/document"
+  filedata=requests.get(URL, headers=ajheader, data={}, auth=get_credentials())
+  if (read_property("verbose")=="true"):
+    print(filedata)
+  saveto=Macro.getLocal("saveto")
+  with open(saveto, 'wb') as file:
+    file.write(filedata.content)
+    
+def qx_list():
+  # returns the list of questionnaires in the current data area
+  # in this query 'offset' is in fact a 'page number'
+  
+  URL=f"{get_server_url()}/api/v1/questionnaires/"
+  y=requests.get(URL, headers=ajheader, data={}, auth=get_credentials())
+  
+  totalcount=y.json()["TotalCount"]
+  if (read_property("verbose")=="true"):
+    print(totalcount, " questionnaires on the server")
+  
+  const_pagesize=40
+  page=0
+  while(const_pagesize*page<totalcount):
+    page=page+1
+    URL=f"{get_server_url()}/api/v1/questionnaires/?limit={str(const_pagesize)}&offset={str(page)}"
+    if (read_property("verbose")=="true"):
+      print("Processing page: ", page)
+    y=requests.get(URL, headers=ajheader, data={}, auth=get_credentials())
+    if (read_property("verbose")=="true"):
+      print(y.status_code)   # // need error processing here
+
+    qxs=y.json()["Questionnaires"]
+    for q in qxs:
+        Data.addObs(1)
+        n=Data.getObsTotal()-1
+        Data.storeAt("qx_identity",n,q["QuestionnaireIdentity"])
+        Data.storeAt("qx_id",n,q["QuestionnaireId"])
+        Data.storeAt("qx_version",n,q["Version"])
+        Data.storeAt("qx_title",n,q["Title"])
+        Data.storeAt("qx_var",n,q["Variable"])
+        Data.storeAt("qx_lastentry",n,q["LastEntryDate"])
+
+def qx_interviews(qguid, qversion):
+  # // Returns the list of questionnaires in the current data area
+  # // In this query 'offset' is in fact a 'page number'
+  
+  URL=f"{get_server_url()}/api/v1/questionnaires/{qguid}/{str(qversion)}/interviews"
+  y=requests.get(URL, headers=ajheader, data={}, auth=get_credentials())
+  
+  totalcount=y.json()["TotalCount"]
+  if (read_property("verbose")=="true"):
+    print(totalcount, " interviews of this questionnaire on the server")
+
+  const_pagesize=40
+  page=0
+  while(const_pagesize*page<totalcount):
+    page=page+1
+    URL=f"{get_server_url()}/api/v1/questionnaires/{qguid}/{str(qversion)}/interviews?limit={str(const_pagesize)}&offset={str(page)}"
+    if (read_property("verbose")=="true"):
+      print("Processing page: ", page)
+    y=requests.get(URL, headers=ajheader, data={}, auth=get_credentials())
+
+    qxs=y.json()["Interviews"]
+    for iview in qxs:
+        Data.addObs(1)
+        n=Data.getObsTotal()-1
+        Data.storeAt("interview__id",             n,iview["InterviewId"])
+        Data.storeAt("qx_guid",                   n,iview["QuestionnaireId"])
+        Data.storeAt("qx_version",                n,iview["QuestionnaireVersion"])
+        Data.storeAt("assignment_id",             n,iview["AssignmentId"])
+        Data.storeAt("responsible_guid",          n,iview["ResponsibleId"])
+        Data.storeAt("responsible_name",          n,iview["ResponsibleName"])
+        Data.storeAt("errors_count",              n,iview["ErrorsCount"])
+        Data.storeAt("status",                    n,iview["Status"])
+        Data.storeAt("lastentry",                 n,iview["LastEntryDate"])
+        Data.storeAt("received_by_device",        n,iview["ReceivedByDevice"])
+        if (iview["ReceivedByDeviceAtUtc"]!=None):
+          Data.storeAt("received_by_device_at_utc", n, iview["ReceivedByDeviceAtUtc"])
+
+def notice_set(message):
+  # // Sets global notice on the server
+  content={"Message": message}
+
+  URL=f"{get_server_url()}/api/v1/settings/globalnotice"
+  response=requests.put(
+    URL, 
+    headers=ajpheader, 
+    json=content,
+    auth=get_credentials())
+
+def notice_get():
+  # // Retrieves global notice from the server
+  URL=f"{get_server_url()}/api/v1/settings/globalnotice"
+  response=requests.get(URL, headers=ajheader, data={}, auth=get_credentials()) 
+  Macro.setLocal("message",response.json()["Message"])
+  
+def notice_delete():
+  # // Delete global notice on the server
+  URL=get_server_url()+'/api/v1/settings/globalnotice'
+  response=requests.delete(URL, headers=ajpheader, auth=get_credentials())
+
+def users_supervisors() :
+  # // Get the list of supervisors
+  credentials=get_credentials()
+  URL=get_server_url()+'/api/v1/supervisors'
+  response=requests.get(URL, headers=ajheader, data={}, auth=credentials)
+  totalcount=response.json()["TotalCount"]
+  if (read_property("verbose")=="true"):
+    print(totalcount, " supervisors on the server")
+
+  const_pagesize=40
+  page=0
+  while(const_pagesize*page<totalcount):
+    page=page+1
+    URL=f"{get_server_url()}/api/v1/supervisors/?limit={str(const_pagesize)}&offset={str(page)}"
+    if (read_property("verbose")=="true"):
+      print("Processing page: ", page)
+    response=requests.get(URL, headers=ajheader, data={}, auth=credentials)
+    for s in response.json()["Users"]:
+        Data.addObs(1)
+        n=Data.getObsTotal()-1
+        Data.storeAt("user_name",    n,s["UserName"])
+        Data.storeAt("user_id",      n,s["UserId"])
+        Data.storeAt("creation_date",n,s["CreationDate"])
+        Data.storeAt("is_locked",    n,s["IsLocked"])
+
+def users_supervisor(guid) :
+  # // Get details for a supervisor
+  URL=f"{get_server_url()}/api/v1/supervisors/{guid}"
+  response=requests.get(URL, headers=ajheader, data={}, auth=get_credentials())
+  r=response.json()
+  
+  Macro.setGlobal("r(UserName)", r["UserName"])
+  Macro.setGlobal("r(FullName)", r["FullName"])
+  Macro.setGlobal("r(Email)", r["Email"])
+  Macro.setGlobal("r(PhoneNumber)", r["PhoneNumber"])
+  Macro.setGlobal("r(CreationDate)", r["CreationDate"])
+  a=0
+  if r["IsArchived"]:
+    a=1
+    
+  l=0
+  if r["IsLocked"]:
+    l=1
+    
+  Scalar.setValue("r(IsArchived)", a)
+  Scalar.setValue("r(IsLocked)", l)
+
+def users_interviewer(guid) :
+  # // Get details for an interviewer
+  
+  URL=f"{get_server_url()}/api/v1/interviewers/{guid}"
+  response=requests.get(URL, headers=ajheader, data={}, auth=get_credentials())
+  r=response.json()
+  
+  Macro.setGlobal("r(UserName)"    , r["UserName"])
+  Macro.setGlobal("r(CreationDate)", r["CreationDate"])
+  Macro.setGlobal("r(SupervisorName)",r["SupervisorName"])
+  Macro.setGlobal("r(SupervisorId)", r["SupervisorId"])
+  
+  # // these are optional
+  if "FullName" in r:
+    Macro.setGlobal("r(FullName)"    , r["FullName"])
+  
+  if "Email" in r:
+    Macro.setGlobal("r(Email)"       , r["Email"])
+  
+  if "PhoneNumber" in r:
+    Macro.setGlobal("r(PhoneNumber)" , r["PhoneNumber"])
+     
+  a=0
+  if r["IsArchived"]:
+    a=1
+    
+  l=0
+  if r["IsLocked"]:
+    l=1
+    
+  ls=0
+  if r["IsLockedBySupervisor"]:
+    ls=1
+  
+  lh=0
+  if r["IsLockedByHeadquarters"]: 
+    lh=1
+    
+  Scalar.setValue("r(IsArchived)", a)
+  Scalar.setValue("r(IsLocked)", l)
+  Scalar.setValue("r(IsLockedBySupervisor)", ls)
+  Scalar.setValue("r(IsLockedByHeadquarters)", lh)
+  
+def users_user(guid) :
+  # // Get details for a user
+  URL=f"{get_server_url()}/api/v1/users/{guid}"
+  response=requests.get(URL, headers=ajheader, data={}, auth=get_credentials())
+  r=response.json()
+  
+  Macro.setGlobal("r(UserName)"    , r["UserName"])
+  Macro.setGlobal("r(CreationDate)", r["CreationDate"])
+  Macro.setGlobal("r(UserId)", r["UserId"])
+  Macro.setGlobal("r(Role)" , r["Roles"][0])
+  
+  # // these are optional
+  if "FullName" in r:
+    Macro.setGlobal("r(FullName)"    , r["FullName"])
+  
+  if "Email" in r:
+    Macro.setGlobal("r(Email)"       , r["Email"])
+  
+  if "PhoneNumber" in r:
+    Macro.setGlobal("r(PhoneNumber)" , r["PhoneNumber"])
+  
+  # // these are rare
+  a=0
+  if r["IsArchived"]:
+    a=1
+    
+  l=0
+  if r["IsLocked"]:
+    l=1
+    
+  Scalar.setValue("r(IsArchived)", a)
+  Scalar.setValue("r(IsLocked)", l)
+
+def users_create():
+  # // Creates a new user on the server
+    qry=Macro.getLocal("qry")
+    URL=f"{get_server_url()}/api/v1/users/"
+    response=requests.post(URL, headers=ajheader, data=qry, auth=get_credentials())
+    r=response.json()
+    
+    # // normal response=200 and new user ID is returned in the response
+    # // {"UserId":"01277a045f5748beb61df6a196e3d06b","Errors":[]}
+    
+    # // if user exists: =  400
+    # // {"UserId":null,"Errors":["Please choose another username"]}
+    if (r["UserId"]!=None):
+      Macro.setGlobal("r(UserID)", r["UserId"])
+    if (r["Errors"]!=None):
+      i=1
+      for e in r["Errors"]:
+        Macro.setGlobal("r(Error"+str(i)+ ")", e)
+
+def users_archive(guid):
+    # // Archives a user on the server
+    URL=f"{get_server_url()}/api/v1/users/{guid}/archive"
+    response=requests.patch(URL, headers=ajheader, data={}, auth=get_credentials())
+
+def users_unarchive(guid):
+    # // Unarchives a user on the server
+    URL=f"{get_server_url()}/api/v1/users/{guid}/unarchive"
+    response=requests.patch(URL, headers=ajheader, data={}, auth=get_credentials())
+
+def users_interviewers(guid):
+    # // Returns the list of interviewers in the team of a supervisor
+    URL=f"{get_server_url()}/api/v1/supervisors/{guid}/interviewers"
+    response=requests.get(URL, headers=ajheader, data={}, auth=get_credentials())
+    totalcount=response.json()["TotalCount"]
+    if (read_property("verbose")=="true"):
+      print(totalcount, " interviewers in team of supervisor")
+
+    const_pagesize=10
+    page=0
+    while(const_pagesize*page<totalcount):
+      page=page+1
+      URL=f"{get_server_url()}/api/v1/supervisors/{guid}/interviewers?limit={str(const_pagesize)}&offset={str(page)}"
+      if (read_property("verbose")=="true"):
+        print(URL)
+        print("Processing page: ", page)
+      response=requests.get(URL, headers=ajheader, data={}, auth=get_credentials())
+      for s in response.json()["Users"]:
+        Data.addObs(1)
+        n=Data.getObsTotal()-1
+        Data.storeAt("user_name",    n,s["UserName"])
+        Data.storeAt("user_id",      n,s["UserId"])
+        Data.storeAt("creation_date",n,s["CreationDate"])
+        Data.storeAt("is_locked",    n,s["IsLocked"])
+
+def users_actionslog(guid, datefrom, dateto):
+    # // Returns the actions log of a particular interviewer
+    # // Options -from- and -to- are expected in the same format as the server wants them.
+
+    period=""
+    if (datefrom!=""):
+      period=f"start={datefrom}&end={dateto}"
+    
+    URL=f"{get_server_url()}/api/v1/interviewers/'+guid+'/actions-log?{period}"
+
+    response=requests.get(URL, headers=ajheader, data={}, auth=get_credentials())
+
+    for s in response.json():
+        Data.addObs(1)
+        n=Data.getObsTotal()-1
+        Data.storeAt("time",    n,s["Time"])
+        Data.storeAt("message", n,s["Message"])
+
+def servepatch(URL):
+    # // Serves a PATCH request using an "application/json" header
+    response=requests.patch(URL,headers=ajheader,data={},auth=get_credentials())
+    if (read_property("verbose")=="true"):
+      print(response.status_code)
+    return response
+    
+def servepatchdata(URL, content):
+    # // Serves a PATCH request with data
+    response=requests.patch(URL,headers=ajpheader,json=content,auth=get_credentials())
+    if (read_property("verbose")=="true"):
+      print(response.status_code)
+    return response
+
+def servepostdata(URL, content):
+    # // Serves a POST request with data
+    response=requests.post(URL,headers=ajpheader,json=content,auth=get_credentials())
+    if (read_property("verbose")=="true"):
+      print(response.status_code)
+    return response
+
+def serveget(URL):
+    # // Serves a GET request
+    response=requests.get(URL,headers=ajheader,data={},auth=get_credentials())
+    if (read_property("verbose")=="true"):
+      print(response.status_code)
+    return response
+
+def servedelete(URL):
+    # // Serves a DELETE request
+    response=requests.delete(URL,headers=ajheader,data={},auth=get_credentials())
+    if (read_property("verbose")=="true"):
+      print(response.status_code)
+    return response
+
+def interviews_approve(guid, comment):
+    # // Approves interview
+    URL=f"{get_server_url()}/api/v1/interviews/{guid}/approve?comment={requests.utils.quote(comment)}"
+    response=servepatch(URL)
+
+def interviews_reject(guid, comment, responsibleguid):
+    # // Rejects interview
+    URL=f"{get_server_url()}/api/v1/interviews/{guid}/reject?comment={requests.utils.quote(comment)}&responsibleId={responsibleguid}"
+    response=servepatch(URL)
+
+def interviews_hqunapprove(guid, comment):
+    # // HQ-recalls interview from approved status
+    URL=f"{get_server_url()}/api/v1/interviews/{guid}/hqunapprove?comment={requests.utils.quote(comment)}"
+    response=servepatch(URL)
+
+def interviews_approve(guid, comment):
+    # // HQ-approves interview
+    URL=f"{get_server_url()}/api/v1/interviews/{guid}/hqapprove?comment={requests.utils.quote(comment)}"
+    response=servepatch(URL)
+    
+def interviews_hqreject(guid, comment, responsibleguid):
+    # // HQ-rejects interview
+    URL=f"{get_server_url()}/api/v1/interviews/{guid}/hqreject?comment={requests.utils.quote(comment)}&responsibleId={responsibleguid}"
+    response=servepatch(URL)
+
+def interviews_getpdf(guid):
+    # // Get a transcript of interview in PDF
+    URL=f"{get_server_url()}/api/v1/interviews/{guid}/pdf"
+    response=serveget(URL)
+    saveto=Macro.getLocal("saveto")
+    with open(saveto, 'wb') as file:
+      file.write(response.content)
+
+def users_interviewersall():
+    # // Experimental, get all interviewers
+    # // Works only with HQ credentials
+    # // TODO: use workspace from the properties
+    workspace=Macro.getLocal("workspace")
+    URL=f"{get_server_url()}/{workspace}/UsersApi/AllInterviewers?exportType=excel"
+    response=serveget(URL)
+    saveto=Macro.getLocal("saveto")
+    with open(saveto, 'wb') as file:
+      file.write(response.content)
+
+def interviews_getstats(guid):
+    # // Get statistics of interview
+    URL=f"{get_server_url()}/api/v1/interviews/{guid}/stats"
+    response=serveget(URL)
+    rsavejson(response.json())
+    
+def interviews_gethistory(guid):
+    # // Get history of interview
+    URL=f"{get_server_url()}/api/v1/interviews/{guid}/history"
+    response=serveget(URL)
+    for a in response.json()["Records"]:
+      Data.addObs(1)
+      n=Data.getObsTotal()-1
+      if a["Timestamp"]!=None: 
+        Data.storeAt("timestamp",       n, a["Timestamp"])
+      if a["Offset"]!=None: 
+        Data.storeAt("offset",          n, a["Offset"])
+      if a["Action"]!=None: 
+        Data.storeAt("action",          n, a["Action"])
+      if a["OriginatorName"]!=None: 
+        Data.storeAt("originator_name", n, a["OriginatorName"])
+      if a["OriginatorRole"]!=None: 
+        Data.storeAt("originator_role", n, a["OriginatorRole"])
+      if a["Parameters"]!=None: 
+        Data.storeAt("parameters",      n, str(a["Parameters"]))
+        
+def interviews_getanswers(guid):
+    # // Get answers of interview
+    URL=f"{get_server_url()}/api/v1/interviews/{guid}"
+    response=serveget(URL)
+    for a in response.json()["Answers"]:
+      Data.addObs(1)
+      n=Data.getObsTotal()-1
+      if a["VariableName"]!=None: 
+        Data.storeAt("variablename", n, a["VariableName"])
+
+      qid=a["QuestionId"]
+
+      if qid!=None:
+        Data.storeAt("questionid",   n, qid["Id"])
+        if qid["RosterVector"]!=None: 
+          Data.storeAt("rostervector", n, str(qid["RosterVector"]))
+
+      if a["Answer"]!=None: 
+        Data.storeAt("answer",       n, a["Answer"])
+
+def rsavejson(jsonobj):
+    # // Saves JSON object to r()-results
+    rsavejsonpfix(jsonobj,"")
+
+def rsavejsonpfix(jsonobj,pfix):
+    # // Saves JSON object to r()-results with prefix (unsafe)
+    if (pfix!=""):
+      pfix=pfix+"_"
+    for (k, v) in jsonobj.items ():
+      if (isinstance(v,str)):
+        Macro.setGlobal(f"r({pfix}{k})", v)
+      else:
+        if (isinstance(v, numbers.Number)):
+          Scalar.setValue(f"r({pfix}{k})", v)
+        else:
+          if (isinstance(v,bool)):
+            if v:
+              Scalar.setValue(f"r({pfix}{k})", 1)
+            else:
+              Scalar.setValue(f"r({pfix}{k})", 0)
+        
+def interviews_delete(guid):
+  # // Delete an interview from the server
+  URL=f"{get_server_url()}/api/v1/interviews/{guid}"
+  response=requests.delete(URL, headers=ajpheader, auth=get_credentials())
+  if (read_property("verbose")=="true"):
+    print(response)
+  Macro.setLocal('status_code', str(response.status_code))
+  # // 406 for completed interviews ???
+  
+def interviews_assign(intguid, responsibleguid):
+    # // Assigns interview to interviewer
+    URL=f"{get_server_url()}/api/v1/interviews/{intguid}/assign"
+    data={"ResponsibleId":responsibleguid}
+    response=servepatchdata(URL,data)  
+
+def interviews_assignsupervisor(intguid, responsibleguid):
+    # // Assigns interview to supervisor
+    URL=f"{get_server_url()}/api/v1/interviews/{intguid}/assignsupervisor"
+    data={"ResponsibleId":responsibleguid}
+    response=servepatchdata(URL,data)  
+
+def interviews_comment(interviewguid, questionguid, comment):
+    # // Add comment to question in interview
+    URL=f"{get_server_url()}/api/v1/interviews/{interviewguid}/comment/{questionguid}?comment={requests.utils.quote(comment)}"
+    response=servepostdata(URL, None)
+
+def interviews_varcomment(interviewguid, varname, rosteraddress, comment):
+    # // Add comment to question in interview
+    URL=f"{get_server_url()}/api/v1/interviews/{interviewguid}/comment-by-variable/{varname}?{rosteraddress}comment={requests.utils.quote(comment)}"
+    response=servepostdata(URL, None)
+        
+
+        
+        
+def assignments_close(assignmentid):
+    response = requests.post(f'{get_server_url()}/api/v1/assignments/{assignmentid}/close', data={}, auth=get_credentials())
+    if (read_property("verbose")=="true"): 
+      print(response.status_code)
+    # // todo: define error handling
+    Macro.setScalar('r(status_code)', str(response.status_code))
+    
+def assignments_getquantitysettings(assignmentid):
+    response = requests.get(f'{get_server_url()}/api/v1/assignments/{assignmentid}/assignmentQuantitySettings', data={}, auth=get_credentials())
+    Scalar.setValue('r(status_code)', response.status_code)
+    if (response.status_code==200):
+      Scalar.setValue('r(can_change_quantity)',response.json()['CanChangeQuantity'])
+    
+def assignments_archive(assignmentid):
+    response = requests.patch(f"{get_server_url()}/api/v1/assignments/{assignmentid}/archive", data={}, auth=get_credentials())
+    Scalar.setValue("r(status_code)", response.status_code)
+
+def assignments_unarchive(assignmentid):
+    response = requests.patch(f"{get_server_url()}/api/v1/assignments/{assignmentid}/unarchive", data={}, auth=get_credentials())
+    Scalar.setValue("r(status_code)", response.status_code)
+    
+def assignments_getaudio(assignmentid):
+    response = requests.get(f"{get_server_url()}/api/v1/assignments/{assignmentid}/recordAudio", data={}, auth=get_credentials())
+    Scalar.setValue("r(status_code)", response.status_code)
+    if (response.ok):
+      Scalar.setValue("r(record_audio)", response.json()['Enabled'])
+      
+def qx_setaudio(qxguid, qxversion, audio):
+    URL=f"{get_server_url()}/api/v1/questionnaires/{qxguid}/{qxversion}/recordAudio"
+    response = requests.post(URL, headers=ajpheader, json={'Enabled':audio}, auth=get_credentials())  
+    Scalar.setValue('r(status_code)', response.status_code)
+    
+def qx_getaudio(qxguid, qxversion):
+    URL=f"{get_server_url()}/api/v1/questionnaires/{qxguid}/{qxversion}/recordAudio"
+    response = requests.get(URL, data={}, auth=get_credentials())
+    Scalar.setValue("r(status_code)", response.status_code)
+    if (response.ok):
+      Scalar.setValue("r(record_audio)", response.json()['isAudioRecordingEnabled'])   # // For assignments it is: 'Enabled' Why??
+
+def assignments_setaudio(assignmentid, audio):
+    # // TODO: standardize this
+    enabled=(audio!=0)
+    URL=f"{get_server_url()}/api/v1/assignments/{assignmentid}/recordAudio"
+    response = requests.patch(URL, json={'Enabled':enabled}, auth=get_credentials())
+    Scalar.setValue("r(status_code)", response.status_code)
+
+def assignments_changequantity(assignmentid, num):
+    URL=f"{get_server_url()}/api/v1/assignments/{assignmentid}/changequantity"
+    response=servepatchdata(URL,str(num))
+    Scalar.setValue('r(status_code)', response.status_code)    
+
+
+def assignments_history(assignmentid):
+  # // Returns the history of the assignment in the current data area
+
+  URL=f'{get_server_url()}/api/v1/assignments/{assignmentid}/history'
+  y=requests.get(URL, headers=ajheader, data={}, auth=get_credentials())
+  if (y.status_code==404):
+    Scalar.setValue('r(status_code)',-10404)
+    return -10404
+      
+  totalcount=y.json()["RecordsFiltered"]
+  if (read_property("verbose")=="true"):
+    print(totalcount, " events in the history of assignment ", assignmentid)
+  
+  const_pagesize=30
+  page=0
+  while(const_pagesize*page<totalcount):
+    page=page+1
+    URL=f"{get_server_url()}/api/v1/assignments/{assignmentid}/history?length={const_pagesize}&start={const_pagesize*(page-1)}"
+    if (read_property("verbose")=="true"):
+      print("Processing page: ", page)
+    y=requests.get(URL, headers=ajheader, data={}, auth=get_credentials())
+    
+    items=y.json()["History"]
+    for h in items:
+        if (read_property("verbose")=="true"):
+          print(h)
+        Data.addObs(1)
+        n=Data.getObsTotal()-1
+        if (h["Action"]!=None):
+          Data.storeAt("action",n,h["Action"])
+        if (h["ActorName"]!=None):
+          Data.storeAt("actor_name",n,h["ActorName"])
+        if (h["UtcDate"]!=None):
+          Data.storeAt("utc_date",n,h["UtcDate"])
+        if (h["AdditionalData"]!=None):
+          Data.storeAt("additional_data",n,str(h["AdditionalData"]))
+   
+def assignments_setresponsible(assignmentid, responsibleLogin):
+    URL=f"{get_server_url()}/api/v1/assignments/{assignmentid}/assign"
+    response = requests.patch(
+      URL, 
+      json={'Responsible':responsibleLogin}, 
+      auth=get_credentials())
+    Scalar.setValue("r(status_code)", response.status_code)
+   
+def assignments_getdetails(assignmentid):
+    # // Get assignment details
+    URL=f"{get_server_url()}/api/v1/assignments/{assignmentid}"
+    response=serveget(URL)
+    r=response.json()
+    rsavejson(r)
+    identif=r["IdentifyingData"]
+
+    # // Answers to all question types are stored as strings
+    c=1
+    for x in identif:
+      Macro.setGlobal(f"r(id_guid{c})", x["Identity"])
+      Macro.setGlobal(f"r(id_variable{c})", x["Variable"])
+      Macro.setGlobal(f"r(id_answer{c})", x["Answer"])
+      c=c+1
+    Macro.setGlobal(f"r(id_count)", str(c-1))
+    
+    # // NB: Answers to preloaded questions that are 
+    # // not identifying are not returned !!
+
+
+def graphql_qry():
+    # // run a graphql query using the query macro defined in Stata code
+    qry=Macro.getLocal("qry")
+    url=Macro.getLocal("url")
+    run_query(url, qry)
+        
+def run_query(URL, query):
+    request = requests.post(URL, json={'query': query}, auth=get_credentials())
+    if request.status_code == 200:
+        result=request.json()
+        if ('errors' in result):
+          SFIToolkit.errprintln("Query was completed with error(s):")
+          z=1
+          for e in result['errors']:
+            SFIToolkit.errprintln(str(z)+" "+e['message'])
+            z=z+1
+          raise Exception("Query was completed with an error!")
+        return result
+    else:
+        raise Exception("Query failed to run by returning code of {}. {}".format(request.status_code, query))
+
+
+def users_reflect(URL):
+
+    query = """
+      query viewer {
+        viewer {
+          id,
+          roles,
+          workspaces
+        }
+      }
+    """
+
+    result = run_query(URL, query) # Execute the query
+    Macro.setLocal("userid",result['data']['viewer']['id'])
+    roles=' '.join(map(str, result['data']['viewer']['roles']))
+    if roles=="":
+      roles="APIUSER"
+    Macro.setLocal("userroles",roles)
+    Macro.setLocal("userworkspaces",' '.join(map(str, result['data']['viewer']['workspaces'])))
+
+def maps_getmaps(URL, fm, fu):
+
+    query = """
+    {
+      maps {
+        totalCount  
+        nodes {
+          fileName,
+          importDate,
+          size,
+          xMaxVal,
+          yMaxVal,
+          xMinVal,
+          yMinVal,
+          wkid,
+          maxScale,
+          minScale,
+          users{
+            userName
+          }
+        }
+      }
+    }
+    """
+
+    result = run_query(URL, query) # Execute the query
+    maps=result['data']['maps']
+
+    SFIToolkit.stata("frame change "+fm)
+    for node in maps['nodes']:
+        Data.addObs(1)
+        n=Data.getObsTotal()-1
+        Data.storeAt("filename", n, node["fileName"])
+        Data.storeAt("importdate", n, node["importDate"])
+        Data.storeAt("size",  n, node["size"])
+        Data.storeAt("users", n, len(node["users"]))
+        
+        Data.storeAt("xminval", n, node["xMinVal"])
+        Data.storeAt("xmaxval", n, node["xMaxVal"])
+        Data.storeAt("yminval", n, node["yMinVal"])
+        Data.storeAt("ymaxval", n, node["yMaxVal"])
+        Data.storeAt("minscale", n, node["minScale"])
+        Data.storeAt("maxscale", n, node["maxScale"])
+        Data.storeAt("wkid", n, node["wkid"])
+        
+        if (fu!=""):
+            SFIToolkit.stata("frame change "+fu)
+            for u in node["users"]:
+                Data.addObs(1)
+                n=Data.getObsTotal()-1
+                Data.storeAt("filename", n, node["fileName"])
+                Data.storeAt("username", n, u["userName"])
+            SFIToolkit.stata("frame change "+fm)        
+        
+
+def maps_addusertomap(URL, map, user, workspace):
+    query="""
+      mutation {
+        addUserToMap(
+          fileName: "%s",
+          userName: "%s",
+          workspace: "%s"
+        )
+        {
+          fileName
+        }
+      }""" % (map, user, workspace)
+    result = run_query(URL, query) # Execute the query
+    # // 'Map was not found.'
+    # // 'Map can be assigned only to existing non archived interviewer.'
+    # // 'Provided map already assigned to specified interviewer.'
+
+def maps_deleteuserfrommap(URL, map, user, workspace):
+    query="""
+      mutation {
+        deleteUserFromMap(
+          fileName: "%s",
+          userName: "%s",
+          workspace: "%s"
+        )
+        {
+          fileName
+        }
+      }""" % (map, user, workspace)
+    result = run_query(URL, query) # Execute the query
+
+def maps_deletemap(URL, map, workspace):
+    query="""
+      mutation {
+        deleteMap(
+          fileName: "%s",
+          workspace: "%s"
+        )
+        {
+          fileName
+        }
+      }""" % (map, workspace)
+    result = run_query(URL, query) # Execute the query
+
+def interview_properties(URL, workspace, interviewKey):
+    query="""
+    { #
+  interviews(workspace: "%s", where: {key:{eq:"%s"}}) {
+   nodes {
+        actionFlags
+        assignmentId
+        id
+        status
+        responsibleName
+        responsibleId
+        responsibleRole
+        supervisorName
+        wasCompleted
+        createdDate
+        key
+        clientKey
+        updateDateUtc
+        receivedByInterviewerAtUtc
+        errorsCount
+        questionnaireId
+        questionnaireVariable
+        questionnaireVersion
+        identifyingData {
+          entity {
+            identifying
+            label
+            options {
+              parentValue
+              title
+              value
+            }
+            questionText
+            scope
+            type
+            variable
+          }
+          answerValue
+          value
+        }
+        notAnsweredCount
+        calendarEvent {
+          assignmentId
+          comment
+          creatorUserId
+          interviewId
+          interviewKey
+          isCompleted
+          publicKey
+          startTimezone
+          startUtc
+          updateDateUtc
+        }
+       }
+      }
+    }
+    """ % (workspace, interviewKey)
+    if (read_property("verbose")=="true"):
+      print(URL, query)
+    result=run_query(URL, query)
+    if (read_property("verbose")=="true"):
+      print(result)
+    rsavejson(result['data']['interviews']['nodes'][0])
+    
+    ce=result['data']['interviews']['nodes'][0]['calendarEvent']
+    if (ce!=None):
+      rsavejsonpfix(ce,"ce")
+    i=result['data']['interviews']['nodes'][0]['identifyingData']
+    if (read_property("verbose")=="true"):
+      print(i)
+    
+    # // Question type is any of the: SINGLEOPTION, MULTYOPTION, NUMERIC, DATETIME, GPSCOORDINATES, TEXT, TEXTLIST, QRBARCODE, MULTIMEDIA, AREA, AUDIO
+    # // Identifying can be only: SINGLEOPTION, NUMERIC, DATETIME, GPSCOORDINATES, TEXT
+    if (i!=None and len(i)>0):
+      # // rsavejsonpfix(i,"i")
+      for id in i:
+        entity=id['entity']
+        t=entity['type']
+        if (t=="NUMERIC" or t=="DATETIME"):
+          v=id['value']
+        else:
+          v=id['answerValue']
+        if (read_property("verbose")=="true"):
+          print(id['entity']['variable'],v)
+
+def workspaces_getdetails(name):
+    response = serveget(f"{get_server_url()}/api/v1/workspaces/{name}")
+    if (response.status_code==200):
+      rsavejson(response.json())
+          
+def workspaces_disable(name):
+    response = servepostdata(f"{get_server_url()}/api/v1/workspaces/{name}/disable",None)
+    print(response)
+    
+def workspaces_enable(name):
+    response = servepostdata(f"{get_server_url()}/api/v1/workspaces/{name}/enable",None)
+    print(response)
+
+def workspaces_update(name, newtitle):
+    URL=f"{get_server_url()}/api/v1/workspaces/{name}/"
+    data={"DisplayName":newtitle}
+    response = servepatchdata(URL,data)
+    
+def workspaces_create(name, newtitle):
+    URL=f"{get_server_url()}/api/v1/workspaces"
+    data={"Name":name, "DisplayName":newtitle}
+    response = servepostdata(URL,data)
+    print(response)
+    # // Normal: 201
+
+def workspaces_delete(name):
+    URL=f"{get_server_url()}/api/v1/workspaces/{name}/"
+    data={}
+    response = requests.delete(URL, headers=ajpheader, auth=get_credentials())
+    print(response)
+    # // Normal: 200
+
+def workspaces_status(name):
+    # // why not /{name}/status??
+    URL=f"{get_server_url()}/api/v1/workspaces/status/{name}/" 
+    data={}
+    response = serveget(URL)
+    print(response)
+    print(response.json())
+    rsavejson(response.json())
+    # // Normal: 200
+    
+def workspaces_assign(workspaces, users, mode):
+    URL=f"{get_server_url()}/api/v1/workspaces/assign"
+    # // todo: check behavior for multiple users/multiple workspaces
+    data={"UserIds":users.split(" "), "Workspaces":workspaces.split(" "), "Mode":mode}
+    response = servepostdata(URL,data)
+    Scalar.setValue("r(status_code)", response.status_code)
+    # // Normal: 204
+    # // For non-existant user or workspace: 400
+    
+def workspaces_list(userguid, includedisabled):
+  # // Returns the list of workspaces
+  # // - for a particular user with GUID=userguid
+  # // - includes disabled if includedisabled is TRUE
+
+  sfx=""
+  if (userguid!=""):
+    sfx=f"UserId={userguid}"
+  if (includedisabled):
+    sfx=f"{sfx}&IncludeDisabled=true"
+  print(sfx)
+  URL=f'{get_server()}/api/v1/workspaces?{sfx}'
+  print(URL)
+  y=requests.get(URL, headers=ajheader, data={}, auth=get_credentials())
+  if (y.status_code==404):
+    Scalar.setValue('r(status_code)',-10404)
+    return -10404
+  print(y.json())
+  totalcount=y.json()["TotalCount"]
+  if (read_property("verbose")=="true"):
+    print(totalcount, " workspaces on the server ")
+  
+  const_pagesize=30
+  page=0
+  while(const_pagesize*page<totalcount):
+    page=page+1
+    URL=f"{get_server()}/api/v1/workspaces?length={const_pagesize}&start={const_pagesize*(page-1)}{sfx}"
+    if (read_property("verbose")=="true"):
+      print("Processing page: ", page)
+    y=requests.get(URL, headers=ajheader, data={}, auth=get_credentials())
+    if (read_property("verbose")=="true"):
+      print(y)
+    
+    items=y.json()["Workspaces"]
+    for h in items:
+        if (read_property("verbose")=="true"):
+          print(h)
+        Data.addObs(1)
+        n=Data.getObsTotal()-1
+        if (h["Name"]!=None):
+          Data.storeAt("name",n,h["Name"])
+        if (h["DisplayName"]!=None):
+          Data.storeAt("display_name",n,h["DisplayName"])
+        if (h["DisabledAtUtc"]!=None):
+          Data.storeAt("disabled_at_utc",n,h["DisabledAtUtc"])
+
+
+def assignments_create():
+  # // Creates a new assignment
+  
+  URL=f"{get_server_url()}/api/v1/assignments"
+  qry=Macro.getLocal("qry")
+  result=requests.post(URL, headers=ajpheader, data=qry, auth=get_credentials())
+  print(result)
+  print(result.status_code)
+  
+
+def statistics_questionnaires():
+  # returns the list of questionnaires in the current workspace area
+  
+  URL=f"{get_server_url()}/api/v1/statistics/questionnaires/"
+  y=requests.get(URL, headers=ajheader, data={}, auth=get_credentials())
+  if (read_property("verbose")=="true"):
+    print(y.json())
+  
+  qxs=y.json()
+  for q in qxs:
+    Data.addObs(1)
+    n=Data.getObsTotal()-1
+    Data.storeAt("id",n,q["Id"])
+    Data.storeAt("title",n,q["Title"])
+    Data.storeAt("version",n,q["Version"])  
+
+end 
+
+// === END OF PYTHON DEFINITIONS ===
+
+
+
+// =============================================================================
+
+
+program define .new
+    
+    .inittime=`"`c(current_time)'"'
+    .initdate=`"`c(current_date)'"'
+
+    if `"$SUSOAPIVERBOSE"' != "" {
+        .verbose=`"$SUSOAPIVERBOSE"'
+    }
+    
+    if (`"`inittime'"'!=`"`c(current_time)'"') {
+      .inittime=`"`c(current_time)'"'
+      .initdate=`"`c(current_date)'"'
+    }    
+    
+    if `"`0'"' != "" {
+        .set `0'
+    }
+    
+    // Get the server version (not from API)
+    tempfile tmp
+    copy `"`.server'/.version"' `"`tmp'"'
+    .versionstr=fileread(`"`tmp'"')
+    erase `"`tmp'"'
+
+    // display greeting
+    display as text "{break}"    
+    display as text `"Survey Solutions API wrapper for Stata version `.wrapperver' {stata "adoupdate susoapi":(check for updates)}"'
+    display as result `"Running in "'
+    display as result `"- Stata `c(version)' `c(os)' `c(osdtl)'"'
+    display as result `"- Python "' _continue
+    python : import sys ; print(sys.version)
+
+    display as text "{break}"
+    display as text `"Survey Solutions data server"'
+    display as text `"{browse "`.server'":`.server'}"'
+    display as text `"`.versionstr'"'
+
+    quietly pwf
+    local cframe `"`=r(currentframe)'"'
+
+    local printable ""
+    local enabledws ""
+    .users_reflect
+    quietly foreach w in `.userworkspaces' {
+        quietly ds // needed here, do not remove
+        .workspace="`w'"
+        capture noisily .workspaces_getdetails `w'
+        if (!missing(`"`r(Name)'"')) {
+          local enabledws=strtrim(`"`enabledws' `w'"')
+          local printable=strtrim(`"`printable' `w'"')
+        }
+        else {
+          local printable=strtrim(`"`printable' `w'*"')
+        }
+    }
+    
+    .workspace="`:word 1 of `enabledws''"
+    // todo: stop if there are no active workspaces
+    
+    // Now check the server for responding
+    python: Macro.setLocal("c",str(check()))
+    if (`c' < 0) exit 3333
+    
+    // Now display the user identity
+    .users_reflect
+    display as text "{break}"    
+    display as text "User `.username':"
+    display as text "- identity: " as result "`.userid'"
+    display as text "- role: " as result "`.userroles'"
+    display as text "- access to workspaces: " as result "`printable'"
+    display as text "{break}"
+    display as text "API client will use workspace {result:`.workspace'} unless you change it."
+    
+    display as text "{break}"
+    display as text "Here are just some things you could do:"
+    display as text `"- {stata ".`.objkey'.qx_list":get list of all questionnaires}"'
+    display as text `"- {stata ".`.objkey'.users_supervisors":get list of all supervisors}"'
+    
+    display as text "{break}"
+    display as text "Additional information:"
+    display as text `"- Survey Solutions {browse "`.server'/apidocs/":API documentation}"'
+    display as text `"- Survey Solutions {browse "https://support.mysurvey.solutions":support site}"'
+    display as text `"- Source code of this application at {browse "https://github.com/radyakin/susoapi":github}"'
+    
+end
+
+program define .set
+    args server username password workspace
+    .server    = "`server'"
+    .username  = "`username'"
+    .password  = "`password'"
+    .workspace = "`workspace'"
+end
+
+program define .qx_document
+    version 16.0
+    syntax , qguid(string) qversion(integer) ///
+             saveto(string) [replace]
+    capture confirm new file `"`saveto'"'
+    if (_rc & `"`replace'"'=="") {
+        error 602
+    }
+    python : qx_doc("`qguid'", `qversion')
+end
+
+
+program define .qx_list
+    version 16.0
+    syntax , [frame(string)]
+  
+    if (`"`frame'"'=="") clear
+    else {
+      frame create `frame'
+      frame change `frame'
+    }
+    generate str40 qx_identity=""
+    generate str32 qx_id=""
+    generate long  qx_version=.
+    generate strL  qx_title=""
+    generate str32 qx_var=""
+    generate strL  qx_lastentry=""  
+
+    python : qx_list()
+end
+
+program define qx_interviews
+    version 16.0
+    syntax , qguid(string) qversion(integer) [frame(string)]
+
+    if (`"`frame'"'=="") clear
+    else {
+        frame create `frame'
+        frame change `frame'
+    }
+
+    generate str36 interview__id=""
+    generate str36 qx_guid=""
+    generate long qx_version=.
+    generate long assignment_id=.
+    generate str36 responsible_guid=""
+    generate str36 responsible_name=""
+    generate long errors_count=.
+    generate str36 status=""
+    generate strL lastentry=""
+    generate byte received_by_device=.
+    generate strL received_by_device_at_utc=""
+
+    python : qx_interviews("`qguid'", `qversion')
+
+end
+
+program define .qx_setaudio
+    version 16.0
+    args qguid qversion audio
+    .boolstandard `audio'
+    local audio = "`r(result)'"
+    python: qx_setaudio("`qguid'", "`qversion'", "`audio'")
+end
+
+program define .qx_getaudio
+    version 16.0
+    args qguid qversion
+    python: qx_getaudio("`qguid'", "`qversion'")
+end
+
+
+program define .notice_set
+    version 16.0
+    args message
+    python: notice_set("`message'")
+end
+
+program define .notice_get
+    version 16.0
+    python: notice_get()
+    class exit `"`message'"'
+end
+
+program define .notice_delete
+    version 16.0
+    python: notice_delete()
+end
+
+program define .users_supervisors
+    version 16.0
+    args framename
+    if !missing(`"`framename'"') {
+      frame create `framename'
+      frame change `framename'
+    }
+    clear
+    generate strL user_name=""
+    generate str36 user_id=""
+    generate str40 creation_date=""
+    generate byte is_locked=.
+    python: users_supervisors()
+end
+
+program define .users_supervisor
+    version 16.0
+    args guid
+    python: users_supervisor("`guid'")
+end
+
+program define .users_interviewer
+    version 16.0
+    args guid
+    python: users_interviewer("`guid'")
+end
+
+program define .users_user
+    version 16.0
+    args guid
+    python: users_user("`guid'")
+end
+
+program define .users_create
+    version 16.0
+    syntax , role(string) username(string) password(string) ///
+             [supervisor(string)] ///
+             [fullname(string) phonenumber(string) email(string)]
+             
+    local role2=strlower(`"`role'"')
+    if !inlist(`"`role2'"',"interviewer","supervisor","headquarters") {
+      display as error "Error! Users may be created only in the following roles: interviewer, supervisor, headquarters. The role `role' is not valid."
+      error 197
+    }
+    
+    if (`"`role2'"'=="interviewer") {
+      if (missing(`"`supervisor'"')) {
+        display as error "Error! A supervisor must be specified for any new interviewer account!"
+        error 198
+      }
+    }
+    
+    local mailcontact ""
+    if (!missing(`"`email'"')) {
+      local mailcontact `", "Email":"`email'""'
+    }
+    
+    local qry `"{ "Role": "`role'", "UserName": "`username'", "FullName": "`fullname'","PhoneNumber": "`phonenumber'"`mailcontact',"Password": "`password'","Supervisor": "`supervisor'" }"'
+    display `"`qry'"'
+    
+    python: users_create()
+    if missing(r(UserID)) {
+        display as error "Error! User was not created"
+        error 196
+    }
+end
+
+program define .users_archive
+    version 16.0
+    args guid
+    python: users_archive("`guid'")
+end
+
+program define .users_unarchive
+    version 16.0
+    args guid
+    python: users_unarchive("`guid'")
+end
+
+program define .users_interviewers
+    version 16.0
+    args guid framename
+    if !missing(`"`framename'"') {
+      frame create `framename'
+      frame change `framename'
+    }
+    clear
+    generate strL user_name=""
+    generate str36 user_id=""
+    generate str40 creation_date=""
+    generate is_locked=.
+    
+    python: users_interviewers("`guid'")
+end
+
+program define .users_interviewersall
+    version 16.0
+    args saveto
+    local workspace `"`.workspace'"'
+    python: users_interviewersall()
+end
+
+
+program define .users_actionslog
+    version 16.0
+    syntax , user(string) [framename(string)] from(string) to(string)
+    if !missing(`"`framename'"') {
+      frame create `framename'
+      frame change `framename'
+    }
+    clear
+    
+    generate str40 time=""
+    generate strL message=""
+    
+    local froms=subinstr(`"`from'"',"T"," ",.)
+    local tos=subinstr(`"`to'"',"T"," ",.)
+    local froms=subinstr(`"`froms'"',"Z","",.)
+    local tos=subinstr(`"`tos'"',"Z","",.)
+    note: "Detailed actions log of user `user' from `froms' to `tos'"    
+    
+    local from=subinstr(`"`from'"',":","%3A",.)
+    local to=subinstr(`"`to'"',":","%3A",.)
+    
+    python: users_actionslog("`user'", "`from'", "`to'")
+    
+end
+
+program define .export2
+  version 16.0
+  syntax , qid(string) ///
+           saveto(string) [replace] ///
+           [ translationid(string) includemeta ///
+           status(string) exporttype(string) ///
+           from(string) to(string) ]
+
+           // # timestamp is expected in the following format:
+           // # "2021-01-02T19:23:43.375Z"
+
+  capture confirm new file `"`saveto'"'
+  if _rc {
+    // check if can delete the existing file
+    if (`"`replace'"'!="") {
+      erase `"`saveto'"'
+      capture noisily confirm new file `"`saveto'"'
+    }
+    if (_rc) {
+      display as error "Error! Cannot save to `saveto' !"
+      error 691
+    }
+  }
+  
+  if (`"`.server'"'=="") {
+    display as error "Error! Server name may not be empty!"
+    error 101
+  }
+
+  if (`"`qid'"'=="") {
+    display as error "Error! Questionnaire identity may not be empty!"
+    error 101
+  }
+
+  local t=strpos(`"`macval(qid)'"',`"`=char(36)'"')
+
+  if (`t'==0 | `t'==strlen(`"`macval(qid)'"')) {
+    display as error "Error! Questionnaire identity must include the version!"
+    error 101
+  }
+
+  if (`"`translationid'"'=="") {
+    display as result ///
+    "Warning! Translation ID not specified.{break}Downloading in the default language!"
+  }
+
+  local includemeta=cond(`"`includemeta'"'=="","false","true") 
+
+  if missing(`"`status'"') local status="All"
+  if (!inlist(`"`status'"', ///
+    "All", "InterviewerAssigned", "Completed", ///
+    "ApprovedBySupervisor", "ApprovedByHeadquarters")) {
+    display as error `"Error! Invalid filter by status: `status'"'
+    error 101
+  }
+
+  if missing(`"`exporttype'"') local exporttype="STATA"
+  if (!inlist(`"`exporttype'"', ///
+    "Tabular", "STATA", "SPSS", "Binary", "DDI", "Paradata")) {
+    display as error `"Error! Invalid data export type: `exporttype'"'
+    error 101
+  }
+  
+  if (`"`includemeta'"'=="true" & inlist("`exporttype'", "Binary", "DDI", "Paradata")) {
+    display as error `"Error! Questionnaire metadata is not available in this format: `exporttype'"'
+    error 198
+  }
+  
+  if ((missing(`"`from'"') & !missing(`"`to'"')) | ///
+     (!missing(`"`from'"') & missing(`"`to'"'))) {
+    display as error ///
+    `"Error! Either both or none of the options from() and to() must be specified!"'
+    error 198
+  }
+  else {
+    local datefilter=`", "From": "`from'", "To": "`to'" "'
+    // # must start with a comma, must not end with a comma
+  }
+
+  local qry = `" { "ExportType": "`exporttype'", "QuestionnaireId": "`qid'", "TranslationId": "`translationid'", "InterviewStatus": "`status'" `datefilter', "IncludeMeta":"`includemeta'" } "'
+  
+  local downloaded=0
+  
+  capture noisily python : export()
+  
+  if (_rc==7102) {
+    display as error ///
+    `"Error! Could not place an export job. Most likely incorrect address of the server: `.server'"'
+    error 601
+  }
+  
+  if (`downloaded'==22) {
+    display as result "Warning! Empty downloaded an empty file."
+  }
+  
+  if (`downloaded'==-401) {
+    error 673
+  }
+  
+  if (`downloaded'==-631) {
+    error 631
+  }
+  
+  if (`downloaded'==-10404) {
+    display as error "Not a Survey Solutions server!"
+    error 601
+  }
+  
+  if (`downloaded'<0) {
+    display as error "Error! Could not export data!"
+    error 601
+  }
+  
+  display as text `"file `saveto' saved (`=string(`downloaded',"%20.0gc")' bytes)"'
+end
+
+program define .interviews_reject
+    version 16.0
+    args guid comment responsible
+    python: interviews_reject("`guid'", "`comment'","`responsible'")
+end
+
+program define .interviews_approve
+    version 16.0
+    args guid comment
+    python: interviews_approve("`guid'", "`comment'")
+end
+
+program define .interviews_hqreject
+    version 16.0
+    args guid comment responsible
+    python: interviews_hqreject("`guid'", "`comment'","`responsible'")
+end
+
+program define .interviews_hqapprove
+    version 16.0
+    args guid comment
+    python: interviews_hqapprove("`guid'", "`comment'")
+end
+
+program define .interviews_hqunapprove
+    version 16.0
+    args guid comment
+    python: interviews_hqunapprove("`guid'", "`comment'")
+end
+
+program define .interviews_getpdf
+    version 16.0
+    args guid saveto
+    python: interviews_getpdf("`guid'")
+end
+
+program define .interviews_getstats
+    version 16.0
+    args guid
+    python: interviews_getstats("`guid'")
+end
+
+program define .interviews_gethistory
+    version 16.0
+    args guid framename
+     if !missing(`"`framename'"') {
+      frame create `framename'
+      frame change `framename'
+    }
+    clear
+    
+    generate str40 timestamp=""
+    generate str20 offset=""
+    generate str40 action=""
+    generate str40 originator_name=""
+    generate str40 originator_role=""
+    generate strL parameters=""
+    
+    python: interviews_gethistory("`guid'")
+    compress
+end
+
+program define .interviews_getanswers
+    version 16.0
+    args guid framename
+     if !missing(`"`framename'"') {
+      frame create `framename'
+      frame change `framename'
+    }
+    clear
+    
+    generate str32 variablename=""
+    generate str40 questionid  =""
+    generate strL  rostervector=""
+    generate strL  answer      =""
+    
+    python: interviews_getanswers("`guid'")
+    compress
+end
+
+program define .interviews_delete
+    version 16.0
+    args guid
+    
+    .guidstandard `guid', format(dash)
+    local guid="`r(result)'"
+
+    python: interviews_delete("`guid'")
+
+    if (`status_code'==404) {
+        display as error "Error! Interview `guid' is not found."
+        error 10101
+    }
+    if (`status_code'==406) {
+        display as error "Error! Interview `guid' may not be deleted."
+        error 10102
+    }
+end
+
+program define .interviews_assign
+    // by responsible GUID only
+    version 16.0
+    args intguid responsibleguid
+    python: interviews_assign("`intguid'","`responsibleguid'")
+end
+
+program define .interviews_assignsupervisor
+    // by responsible GUID only
+    version 16.0
+    args intguid responsibleguid
+    python: interviews_assignsupervisor("`intguid'","`responsibleguid'")
+end
+
+program define .interviews_comment
+    // Add comment to a particular question
+    version 16.0
+    syntax, interviewguid(string) questionguid(string) ///
+            comment(string) [rostervector(string)]
+    local questionguid=subinstr(`"`questionguid'"',"-","",.) + "_`rostervector'"
+    // rostervector (if specified) is expected to be formatted 
+    // according to the Survey Solutions rules:
+    // specifically as #, or #-#, or #-#-#, or #-#-#-#
+    // todo: add validation here
+    python: interviews_comment("`interviewguid'", "`questionguid'", "`comment'")
+end
+
+program define .interviews_varcomment
+    version 16.0
+    syntax, interviewguid(string) varname(string) ///
+            comment(string) [rostervector(string)]
+    // Add comment to a particular question
+    .rostervectoraddress `rostervector'
+    local rva=r(result)
+    python: interviews_varcomment("`interviewguid'", "`varname'", "`rva'", "`comment'")
+     // Undocumented server response 406 if rosterVector is misspecified
+end
+
+program define .assignments_close
+    // Closes an existing assignment by assignment ID
+    version 16.0
+    args assignmentid
+    if (missing(`"`assignmentid'"')) {
+        display as error "Error! Assignment ID (numeric) is required."
+        exit 5001
+    }
+    
+    python: assignments_close(`assignmentid')
+end
+
+program define .assignments_getquantitysettings
+    // Returns of the quantity of an assignment may be changed
+    version 16.0
+    args assignmentid
+    if (missing(`"`assignmentid'"')) {
+        display as error "Error! Assignment ID (numeric) is required."
+        exit 5001
+    }
+    
+    python: assignments_getquantitysettings(`assignmentid')
+end
+
+program define .assignments_archive
+    // Archives an assignment by assignment ID
+    version 16.0
+    args assignmentid
+    if (missing(`"`assignmentid'"')) {
+        display as error "Error! Assignment ID (numeric) is required."
+        exit 5001
+    }
+    
+    python: assignments_archive(`assignmentid')
+end
+
+program define .assignments_unarchive
+    // Unarchives an assignment by assignment ID
+    version 16.0
+    args assignmentid
+    if (missing(`"`assignmentid'"')) {
+        display as error "Error! Assignment ID (numeric) is required."
+        exit 5001
+    }
+    
+    python: assignments_unarchive(`assignmentid')
+end
+
+program define .assignments_getaudio
+    // Returns returns the status of audio recording of an assignment by assignment ID
+    version 16.0
+    args assignmentid
+    if (missing(`"`assignmentid'"')) {
+        display as error "Error! Assignment ID (numeric) is required."
+        exit 5001
+    }
+    return clear
+    python: assignments_getaudio(`assignmentid')
+end
+
+
+program define .assignments_setaudio
+    // # Returns the status of audio recording of an assignment by assignment ID
+    version 16.0
+    args assignmentid audio
+    if (missing(`"`assignmentid'"')) {
+        display as error "Error! Assignment ID (numeric) is required."
+        exit 5001
+    }
+    
+    if (missing(`"`audio'"')) {
+        display as error "Error! Value (numeric) for audio audit is required. Use 1 for enabled, 0 for disabled."
+        exit 5002
+    }
+    local audio=(`audio'!=0)
+    python: assignments_setaudio(`assignmentid', `audio')
+end
+
+program define .assignments_changequantity
+    // # Tries to set the quantity in an assignment by assignment ID
+    version 16.0
+    args assignmentid num
+    if (missing(`"`assignmentid'"')) {
+        display as error "Error! Assignment ID (numeric) is required."
+        exit 5001
+    }
+    
+    if (missing(`"`num'"')) {
+        display as error "Error! Must specify a new number of interviews in an assignment."
+        exit 5002
+    }
+    
+    python: assignments_changequantity(`assignmentid', `num')
+end
+
+
+
+program define .assignments_history
+    // Returns the history of an assignment in the data area
+    version 16.0
+    args assignmentid framename
+    
+    if (missing(`"`assignmentid'"')) {
+        display as error "Error! Assignment ID (numeric) is required."
+        exit 5001
+    }
+    
+    if !missing(`"`framename'"') {
+      frame create `framename'
+      frame change `framename'
+    }
+    clear
+    
+    generate str32 utc_date        =""
+    generate str32 action          =""
+    generate str32 actor_name      =""
+    generate strL  additional_data =""
+    
+    python: assignments_history("`assignmentid'")
+    compress
+end
+
+program define .assignments_assign
+    // # Assign new responsible for an assignment identified by assignment ID and responsible identified by login name.
+    version 16.0
+    args assignmentid responsiblelogin
+    if (missing(`"`assignmentid'"')) {
+        display as error "Error! Assignment ID (numeric) is required."
+        exit 5001
+    }
+    
+    if (missing(`"`responsiblelogin'"')) {
+        display as error "Error! Responsible person's login name is required."
+        exit 5002
+    }
+
+    python: assignments_setresponsible(`assignmentid', "`responsiblelogin'")
+end
+
+program define .assignments_getdetails
+    // # Returns assignment details
+    version 16.0
+    args assignmentid
+    //todo: further confirm that the assignment ID is a number.
+    if (missing(`"`assignmentid'"')) {
+        display as error "Error! Assignment ID (numeric) is required."
+        exit 5001
+    }
+    python: assignments_getdetails(`assignmentid')
+end
+
+program define .maps_getmaps
+    // Get the list of maps and map users
+    version 16.0
+    args maps users
+    
+    capture frame drop `maps'
+    frame create `maps'
+    frame change `maps'
+    
+    generate filename   = ""
+    generate importdate = ""
+    generate long size  = .
+    generate long users = .
+    
+    generate long wkid=.
+    generate double minscale=.
+    generate double maxscale=.
+    generate double xminval=.
+    generate double xmaxval=.
+    generate double yminval=.
+    generate double ymaxval=.
+
+    if !missing(`"`users'"') {
+        frame create `users'
+        frame change `users'
+        generate filename=""
+        generate username=""
+        frame change default
+    }
+    
+    python: maps_getmaps("`.graphql'","`maps'","`users'")
+end
+
+program define .users_reflect
+    // Get properties of the current user
+    version 16.0
+    python: users_reflect("`.graphql'")
+    .userroles="`userroles'"
+    .userworkspaces="`userworkspaces'"
+    .userid="`userid'"
+    
+    
+end
+
+program define .actualize_workspaces
+    version 16.0
+    
+    // preserve currently active workspace
+    local w=`"`.workspace'"'
+    
+    quietly foreach w in `.userworkspaces' {
+        quietly ds // needed here, do not remove
+        .workspace="`w'"
+        capture noisily .workspaces_getdetails `w'
+        if (!missing(`"`r(Name)'"')) {
+          local enabledws=strtrim(`"`enabledws' `w'"')
+        }
+    }
+    
+    .userworkspacese = `"`enabledws'"'
+    
+    // may be incorrect to set the active workspace to a workspace that 
+    // may have been deleted, disabled, or became inaccessible to the 
+    // user due to permissions
+    
+    .workspace="`w'"
+end
+
+
+program define .maps_addusertomap
+    // Adds a user to a map
+    version 16.0
+    args map user
+    
+    python: maps_addusertomap("`.graphql'","`map'","`user'","`.workspace'")
+    // may result in error messages:
+    //  Provided map already assigned to specified interviewer.
+    //  Map can be assigned only to existing non archived interviewer.
+end
+
+
+program define .maps_deleteuserfrommap
+    // Deletes a user from map
+    version 16.0
+    args map user
+    
+    python: maps_deleteuserfrommap("`.graphql'","`map'","`user'","`.workspace'")
+end
+
+
+program define .maps_deletemap
+    // Deletes a map from the server
+    version 16.0
+    args map 
+    
+    python: maps_deletemap("`.graphql'","`map'","`.workspace'")
+    // No error is displayed if there is no such map
+end
+
+
+program define .interviewproperties
+    version 16.0
+    args interviewkey
+    
+    python: interview_properties("`.graphql'", "`.workspace'", "`interviewkey'")
+end
+
+
+program define .ce_addupdate
+    // Add or update a calendar event to an interview
+    version 16.0
+    args interviewkey date tz text
+    .interviewproperties "`interviewkey'"
+    local interviewid="`r(id)'"
+    local ceid="`r(ce_publicKey)'"
+    if (`"`ceid'"'!="") {
+        // update
+        ._ce_modify "`ceid'" "`date'" "`tz'" "`text'"
+    }
+    else {
+        // add
+        ._ce_add "`interviewkey'" "`interviewid'" "`date'" "`tz'" "`text'"
+    }
+end
+
+program define .ce_add
+    // Add a calendar event to an interview
+    version 16.0
+    args interviewkey date tz text
+    .interviewproperties "`interviewkey'"
+    local interviewid="`r(id)'"
+    local ceid="`r(ce_publicKey)'"
+    if (`"`ceid'"'!="") {
+        display as error "Cannot add calendar event for interview with key=`interviewkey', because a calendar event already exists. Only one calendar event is supported in this version."
+        error 197
+    }
+    ._ce_add "`interviewkey'" "`interviewid'" "`date'" "`tz'" "`text'"
+end
+
+program define .ce_update
+    version 16.0
+    args interviewkey date tz text
+    
+    .interviewproperties "`interviewkey'"
+    local ceid="`r(ce_publicKey)'"
+    if (`"`ceid'"'=="") {
+        display as error "Cannot update calendar event for interview with key=`interviewkey', because the calendar event doesn't exist yet."
+        error 197
+    }
+    
+    ._ce_modify "`ceid'" "`date'" "`tz'" "`text'"
+end
+
+program define ._ce_modify
+    version 16.0
+    // Internal, do not run directly
+    args eventkey date tz text
+    
+    local qry = `"mutation {addOrUpdateCalendarEvent(workspace: "`.workspace'", publicKey:"`eventkey'", newStart:"`date'", startTimezone:"`tz'", comment: "`text'"){comment}} "'
+    local url="`.graphql'"
+    python: graphql_qry()
+end
+
+program define ._ce_add
+    version 16.0
+    // Internal, do not run directly
+    args interviewkey interviewid date tz text
+    
+    local qry = `"mutation {addOrUpdateCalendarEvent(workspace: "`.workspace'", interviewKey:"`interviewkey'", interviewId:"`interviewid'" newStart:"`date'", startTimezone:"`tz'", comment: "`text'"){comment}} "'
+    local url="`.graphql'"
+    python: graphql_qry()
+end
+
+program define .ce_delete
+    version 16.0
+    // Deletes calendar event
+    args interviewkey
+    
+    .interviewproperties "`interviewkey'"
+    local ceid="`r(ce_publicKey)'"
+    if (`"`ceid'"'=="") {
+        display as error "Cannot delete a calendar event for interview with key=`interviewkey', because the calendar event doesn't exist for this interview."
+        error 197
+    } 
+    
+    ._ce_delete `ceid'
+end
+
+program define ._ce_delete
+    // Internal, do not run directly. Deletes a calendar event by public key.
+    version 16.0
+    args publickey
+    local qry = `"mutation {deleteCalendarEvent(workspace: "`.workspace'", publicKey:"`publickey'"){publicKey}} "'
+    local url="`.graphql'"
+    python: graphql_qry()
+end
+
+program define .graphql
+    // Returns API endpoint on the server for GraphQL queries
+    // Intended for internal use
+    version 16.0
+    class exit "`.server'/graphql"
+end
+    
+// TODO: Calendar events for assignments
+// TODO: Identification fields for interview details from GraphQL
+
+program define .workspaces_getdetails
+    version 16.0
+    args name
+    if (missing(`"`name'"')) {
+        display as error "Error! Workspace name is required!"
+        error 5001
+    }
+    python: workspaces_getdetails("`name'")
+end
+
+program define .workspaces_disable
+    version 16.0
+    args name
+    if (missing(`"`name'"')) {
+        display as error "Error! Workspace name is required!"
+        error 5001
+    }
+    python: workspaces_disable("`name'")
+end
+
+program define .workspaces_enable
+    version 16.0
+    args name
+    if (missing(`"`name'"')) {
+        display as error "Error! Workspace name is required!"
+        error 5001
+    }
+    python: workspaces_enable("`name'")
+end
+
+program define .workspaces_update
+    version 16.0
+    args name newtitle
+    if (missing(`"`name'"')) {
+        display as error "Error! Workspace name is required!"
+        error 5001
+    }
+    python: workspaces_update("`name'", "`newtitle'")
+end
+
+program define .workspaces_create
+    version 16.0
+    args name title
+    if (missing(`"`name'"')) {
+        display as error "Error! Workspace name is required!"
+        error 5001
+    }
+    // Title is optional, if not specified the name is also used as the title.
+    if (missing(`"`title'"')) local title `"`name'"'
+    python: workspaces_create("`name'", "`title'")
+    // 400 if a workspace with that name already exists
+end
+
+program define .workspaces_delete
+    version 16.0
+    syntax anything, irreversible
+    // option 'irreversible' is always required
+    if (missing(`"`anything'"')) {
+        display as error "Error! Workspace name is required!"
+        error 5001
+    }
+    python: workspaces_delete("`anything'")
+end
+
+program define .workspaces_status
+    version 16.0
+    args name
+    if (missing(`"`name'"')) {
+        display as error "Error! Workspace name is required!"
+        error 5001
+    }
+    python: workspaces_status("`name'")
+    // returns 500, then crashes in Python with 7102 when the workspace doesn't exist
+end
+
+program define .workspaces_assign
+    version 16.0
+
+    /* MODES:
+       - add    = give the user(s) access to specified workspace(s) 
+                  in addition to any other workspaces she currently 
+                  has access to.
+       - remove = take away the access permission to the specified
+                  workspace(s) leaving any other access permissions
+                  unaffected.
+       - assign = replace current access permissions with the 
+                  access only to specified workspaces. */
+    
+    syntax anything, users(string) workspaces(string)
+    local mode "`anything'"
+    assert inlist(`"`mode'"', "assign", "add", "remove")
+    local mode=strproper("`mode'")
+    
+    if (missing(`"`workspaces'"')) {
+        display as error "Error! Workspace name is required!"
+        error 5001
+    }
+    if (missing(`"`users'"')) {
+        display as error "Error! User name is required!"
+        error 5002
+    }
+
+    python: workspaces_assign("`workspaces'", "`users'", "`mode'")
+    if (r(status_code)==400) {
+        display as error "Server responded 400 Bad Request."
+        display as error "Check that the specified workspaces and users exist on this server."
+        error -10400
+    }
+end
+
+program define .workspaces_list
+    // Get the list of workspaces
+    version 16.0
+    syntax , [frame(string) userguid(string) includedisabled]
+    local disab="False"
+    if !missing(`"`includedisabled'"') local disab="True"
+    
+    if !missing(`"`userguid'"') {
+        .guidstandard `userguid', format(dash)
+        local userguid `"`r(result)'"'
+    }
+    
+    if !missing(`"`frame'"') {
+        capture frame drop `frame'
+        frame create `frame'
+        frame change `frame'
+    }
+    
+    clear
+    generate name=""
+    generate display_name=""
+    generate disabled_at_utc=""
+
+    python: workspaces_list("`userguid'", `disab')
+end
+
+
+program define .assignments_create, rclass
+    syntax , responsible(string) qxguid(string) [qxversion(integer 1)] ///
+             [quantity(integer 1)] /// 
+             [email(string) password(string) webmode(integer 0)] ///
+             [audio(integer 0) comment(string)] ///
+             [protected(string)] [data(string)]
+    
+    if (!missing("`password'") & !`webmode') {
+    	display as error "Error! Password may be specified only in web mode!"
+        error 7001
+    }
+    
+    if (!missing("`email'") & !`webmode') {
+    	display as error "Error! Email may be specified only in web mode!"
+        error 7002
+    }
+    
+    if (`quantity'>1 & !missing(`"`email'"')) {
+    	display as error "Error! For web assignments with specified email the quantity must be equal to 1."
+        error 7003
+    }
+    if (!`webmode' & `audio') {
+    	display as result "Warning! Audio recording is not available on the web, only on the tablets."
+    }
+    
+    
+    .boolstandard `audio'
+    local bool_audio = "`r(result)'"  
+    
+    .boolstandard `webmode'
+    local bool_web = "`r(result)'"
+    
+    // todo: ids and protected
+    
+    local qry `"{ "Responsible": "`responsible'", "Quantity": `quantity', "QuestionnaireId": "`qxguid'\$`qxversion'", "Email": "`email'", "Password": "`password'", "WebMode": `bool_web', "IsAudioRecordingEnabled": `bool_audio', "Comments": "`comment'", "IdentifyingData": [`data'], "ProtectedVariables": ["`protected'"] }"'
+
+    display `"`macval(qry)'"'
+    python: assignments_create()       
+        
+end
+
+
+program define statistics_questionnaires
+    version 16.0
+    syntax , [frame(string)]
+    
+    if !missing(`"`frame'"') {
+        capture frame drop `frame'
+        frame create `frame'
+        frame change `frame'
+    }
+    
+    clear
+    generate id=""
+    generate version=.
+    generate title=""
+    
+    label variable id "Questionnaire ID (GUID)"
+    label variable version "Questionnaire version"
+    label variable title "Questionnaire title"
+    python: statistics_questionnaires()    
+    
+end
+
+
+// END OF FILE

@@ -1,5 +1,5 @@
 {smcl}
-{* *! version 1.2 23April2014}{...}
+{* *! version 2.0 21dev2020}{...}
 {cmd:help xtsemipar} {right: ({browse "http://www.stata-journal.com/article.html?article=st0296":SJ13-2: st0296})}
 {hline}
 
@@ -26,15 +26,18 @@
 fit used in the Epanechnikov kernel if {cmd:spline} is not specified (see
 {helpb lpoly}); if {cmd:spline} is specified, {cmd:degree()} specifies the power (or degree) of
 the splines; default is {cmd:degree(4)} (see {helpb bspline}){p_end}
-{synopt:{cmd:knots1(}{it:{help numlist:numlist}}{cmd:)}}specify a list of at least two ascending knots used for the spline interpolation that allows removal of fixed effects{p_end}
+{synopt:{cmd:knots1(}{it:{help numlist:numlist}}{cmd:)}}specify a list of at least two ascending knots used for the spline interpolation allowing to remove fixed effects{p_end}
 {synopt :{opt nog:raph}}suppress graph{p_end}
-{synopt:{opt spline}}use B-splines to perform the nonparametric fit instead of kernel-weighted local polynomial smoothing, the default (see {helpb lpoly}){p_end}
+{synopt:{opt spline}}use B-splines to perform the nonparametric fit instead of kernel-weighted local polynomial smoothing, the default (see {helpb bspline}){p_end}
 {synopt:{cmd:knots2(}{it:{help numlist:numlist}}{cmd:)}}specify a list of at least two ascending knots used for the last-step spline interpolation, which yields the graph{p_end}
+{synopt:{cmdab:ker:nel(}{it:{help lpoly:kernel}}{cmd:)}}specify kernel function to be used in the local linear regression; default is {cmd:kernel(epanechnikov)} (see {helpb lpoly}){p_end}
+
 {synopt:{cmdab:bw:idth(}{it:#}{cmd:)}}specify kernel bandwidth{p_end}
 {synopt :{opt robust}}specify that the type of standard error reported is corrected using the Huber/White/sandwich estimator{p_end}
 {synopt :{cmd:cluster(}{help varname:{it:varname}}{cmd:)}}specify that the type of standard error reported is corrected using the clustered sandwich estimator{p_end}
 {synopt :{opt ci}}plot confidence bands{p_end}
 {synopt :{opt level(#)}}set confidence level; default is {cmd:level(95)}{p_end}
+
 {synoptline}
 {p2colreset}{...}
 {p 4 6 2}* {cmd:nonpar()} is required.{p_end}
@@ -45,8 +48,7 @@ the splines; default is {cmd:degree(4)} (see {helpb bspline}){p_end}
 
 {pstd}{opt xtsemipar} estimates Baltagi and Li's (2002) series
 semiparametric fixed-effects regression estimator.  The main options
-allow the use of a classical nonparametric estimator based on an
-Epanechnikov-kernel-weighted local polynomial fit or a spline
+allow the use of a classical nonparametric estimator based on a local polynomial fit or a spline
 interpolation.  This last technique yields similar results to the
 polynomial interpolation but better approximates complex shapes and does
 not suffer from Runge's phenomenon.
@@ -58,14 +60,13 @@ not suffer from Runge's phenomenon.
 (continuous) variable that nonlinearly enters the model.  {cmd:nonpar()}
 is required.
 
-{phang}{cmd:generate(}[{it:string1}] {it:string2}{cmd:)} stores the
+{phang}{cmd:generate(}{it:string1} [{it:string2}]{cmd:)} stores the
 (centered) nonparametric fit evaluated at the values of the
-{cmd:nonpar()} variable.  {it:string1} stores the (centered)
+{cmd:nonpar()} variable.  {it:string2} stores the (centered)
 partialled-out residuals, that is, the part of the dependent variable
 that is not explained by the parametric part of the estimation.  These
 residuals are used to estimate the local polynomial smooth or the
-splines.  This option is particularly handy if additional tests or
-estimations have to be done on the residuals of the semiparametric fit.
+splines.  This option is particularly handy if users want to perform additional tests or estimations based on the residuals of the semiparametric fit.
 
 {phang}{opt degree(#)} (a nonnegative integer) specifies the degree of
 the polynomial to be used in the polynomial smoothing or the power of
@@ -74,10 +75,10 @@ the series estimator in the spline smoothing.  The default is
 
 {phang}{cmd:knots1(}{it:{help numlist:numlist}}{cmd:)} specifies a list
 of at least two ascending knots on which the splines estimated to remove
-fixed effects is based.  This option is seldom used.  If {cmd:knots1()}
-is not specified, {cmd:bspline} will set the list to the minimum, the maximum 
-and each decile of {opt nonpar()} and allow extending the list of knots outside 
-of the completeness range (see Newson (2012) for more details).  
+fixed effects are based.  This option is seldom used.  If {cmd:knots1()}
+is not specified, {cmd:bspline} will initialize the list to the minimum
+and maximum of {opt nonpar()}.  The number of knots will then be chosen
+optimally.
 
 {phang}{cmd:nograph} suppresses drawing the graph of the estimated
 smooth.
@@ -91,12 +92,13 @@ polynomial fit, such as Runge's phenomenon.
 
 {phang}{cmd:knots2(}{it:{help numlist:numlist}}{cmd:)} specifies a list of at
 least two ascending knots on which the spline interpolation appearing in
-the graph is based.  This option is seldom used.  If {cmd:knots2()} is
-not specified, {cmd:bspline} will set the list to the minimum, the
-maximum and each decile of {opt nonpar()} and allow extending the list of knots 
-outside of the completeness range (see Newson (2012) for more details). 
-If {cmd:knots2()} is not specified while {cmd:knots1()} is, then {cmd:knots2()}
- is set equal to {cmd:knots1()} by default.
+the graph are based.  This option is seldom used.  If {cmd:knots2()} is
+not specified, {cmd:bspline} will initialize the list to the minimum and
+maximum of {opt nonpar()}.  The number of knots will then be chosen
+optimally.
+
+{phang}{cmd:kernel({it:{help lpoly:kernel}})} defines the kernel used in the local linear regression underlying the graph of the relationship between the variables entering the model non-linearly and the dependent variable.
+The default option is epanechnikov kernel (see {helpb lpoly}).
 
 {phang}{opt bwidth(#)} specifies the half-width of the kernel, the width
 of the smoothing window around each point.  If {opt bwidth()} is not
@@ -104,7 +106,7 @@ specified, a rule-of-thumb bandwidth estimator is calculated and used.
 
 {phang}{opt robust} uses the Huber/White/sandwich variance estimator to
 compute standard errors of the estimated parameters.  All the inference
-and confidence intervals will be corrected.
+and confidence intervals will be corrected accordingly.
 
 {phang}{cmd:cluster(}{it:{help varname:varname}}{cmd:)} computes
 cluster-corrected standard errors of the estimated parameters and
@@ -116,7 +118,7 @@ in {opt level()}.
 
 {phang}{opt level(#)} specifies the confidence level, as a percentage,
 for confidence intervals.  The default is {cmd:level(95)} or as set by
-{helpb set level}.
+{helpb set level}.{p_end}
 
 
 {title:Requirement}
@@ -139,7 +141,7 @@ data through the {helpb xtset} or {helpb tsset} command.  Before using
 {phang2}{cmd:.} {bf:{stata "xi: xtsemipar logi logm i.time, nonpar(logs)"}}{p_end}
 
 {pstd}Same as above but with quartic spline smoothing, confidence intervals, and standard errors clustered at company level{p_end}
-{phang2}{cmd:.} {bf:{stata "xi: xtsemipar logi logm i.time, nonpar(logs) spline knots1(0(2)8) ci cluster(company)"}}{p_end}
+{phang2}{cmd:.} {bf:{stata "xi: xtsemipar logi logm i.time, nonpar(logs) spline ci cluster(company)"}}{p_end}
 
 {pstd}Same as above but with smoothed values (a) and partialled-out residuals (b) as variables instead of graphing{p_end}
 {phang2}{cmd:.} {bf:{stata "xi: xtsemipar logi logm i.time, nonpar(logs) generate(a b) nograph"}}{p_end}
@@ -188,33 +190,30 @@ data through the {helpb xtset} or {helpb tsset} command.  Before using
 linear panel data models with fixed effects. 
 {it:Annals of Economics and Finance} 3: 103-116.
 
-{phang}Newson, R.  2000.  B-splines and splines parameterized by their
+{phang}Newson, R.  2000.  sg151: B-splines and splines parameterized by their
 values at reference points on the x-axis. 
 {browse "http://www.stata.com/products/stb/journals/stb57.pdf":{it:Stata Technical Bulletin} 57}: 20-27.  Reprinted in 
 {it:Stata Technical Bulletin Reprints}, vol. 10, pp. 221-230.  College Station, TX: Stata Press.
 
-{phang}Newson, R.  2012.  Sensible parameters for univariate and multivariate splines.
-{browse "http://www.stata-journal.com/article.html?article=sg151_2":{it:Stata Journal} 12-3}: 479-504.  College Station, TX: Stata Press.
 
 {title:Authors}
 
 {pstd}Fran{c c,}ois Libois{p_end}
-{pstd}University of Namur{p_end}
-{pstd}Centre for Research in the Economics of Development (CRED){p_end}
-{pstd}Namur, Belgium{p_end}
-{pstd}francois.libois@unamur.be{p_end}
+{pstd}Professor at Paris School of Economics{p_end}
+{pstd}Researcher INRAE{p_end}
+{pstd}Paris, France{p_end}
+{pstd}francois.libois@psemail.eu{p_end}
 
 {pstd}Vincenzo Verardi{p_end}
 {pstd}University of Namur{p_end}
 {pstd}Centre for Research in the Economics of Development (CRED){p_end}
 {pstd}Namur, Belgium{p_end}
-{pstd}and {p_end}
-{pstd}Universit{c e'} Libre de Bruxelles{p_end}
-{pstd}European Center for Advanced Research in Economics and Statistics
-(ECARES) and
-Center for Knowledge Economics (CKE){p_end}
-{pstd}Brussels, Belgium{p_end}
-{pstd}vincenzo.verardi@unamur.be{p_end}
+{pstd}vincenzo.verardi@fundp.ac.be{p_end}
+
+{title: Warning}
+
+{pstd} Users of Stata versions older than 16 should use older versions of bspline as well that can be installed 
+by typing, e.g. "net install sg151_2.pkg" {p_end}
 
 
 {title:Also see}

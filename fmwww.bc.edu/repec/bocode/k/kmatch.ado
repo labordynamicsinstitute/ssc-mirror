@@ -1,21 +1,28 @@
-*! version 1.0.6  14jun2017  Ben Jann
+*! version 1.1.5  12aug2020  Ben Jann
 
-program kmatch, eclass
+local rc 0
+capt findfile lmoremata.mlib
+if _rc {
+    di as error "-moremata- is required; type {stata ssc install moremata}"
+    error 499
+}
+
+program kmatch, eclass prop(svyb svyj)
     version 11
     if replay() {
         Display `0'
         exit
     }
     gettoken subcmd: 0, parse(", ")
-    if `"`subcmd'"'== substr("summarize",1,max(2,strlen(`"`subcmd'"'))) {
+    if `"`subcmd'"'==substr("summarize",1,max(2,strlen(`"`subcmd'"'))) {
         Postest summarize `0'
         exit
     }
-    if `"`subcmd'"'== substr("density",1,max(4,strlen(`"`subcmd'"'))) {
+    if `"`subcmd'"'==substr("density",1,max(4,strlen(`"`subcmd'"'))) {
         Postest density `0'
         exit
     }
-    if `"`subcmd'"'== substr("cumul",1,max(3,strlen(`"`subcmd'"'))) {
+    if `"`subcmd'"'==substr("cumul",1,max(3,strlen(`"`subcmd'"'))) {
         Postest cumul `0'
         exit
     }
@@ -23,15 +30,15 @@ program kmatch, eclass
         Postest box `0'
         exit
     }
-    if `"`subcmd'"'== substr("csummarize",1,max(3,strlen(`"`subcmd'"'))) {
+    if `"`subcmd'"'==substr("csummarize",1,max(3,strlen(`"`subcmd'"'))) {
         Postest csummarize `0'
         exit
     }
-    if `"`subcmd'"'== substr("cdensity",1,max(5,strlen(`"`subcmd'"'))) {
+    if `"`subcmd'"'==substr("cdensity",1,max(5,strlen(`"`subcmd'"'))) {
         Postest cdensity `0'
         exit
     }
-    if `"`subcmd'"'== substr("ccumul",1,max(4,strlen(`"`subcmd'"'))) {
+    if `"`subcmd'"'==substr("ccumul",1,max(4,strlen(`"`subcmd'"'))) {
         Postest ccumul `0'
         exit
     }
@@ -39,133 +46,166 @@ program kmatch, eclass
         Postest cbox `0'
         exit
     }
-    if `"`subcmd'"'== substr("cvplot",1,max(2,strlen(`"`subcmd'"'))) {
+    if `"`subcmd'"'==substr("cvplot",1,max(2,strlen(`"`subcmd'"'))) {
         Postest_cvplot `0'
         exit
     }
+    if `"`subcmd'"'=="predict" {
+        gettoken subcmd 0 : 0, parse(", ")
+        kmatch_p `0'
+        exit
+    }
     local version : di "version " string(_caller()) ":"
-    Parse_hasvceopt `0'
-    if `hasvceopt' {
+    Parse_svy_or_vceprefix `0' // return svy_or_vceprefix
+    if `svy_or_vceprefix'>1 {
         `version' VCE_Estimate `0' // returns diopts
     }
+    else if `svy_or_vceprefix' {
+        `version' SVY_Estimate `0' // returns diopts
+    }
     else {
-        Estimate `0' // returns diopts
+        Estimate `0' // returns diopts, nogenlist
     }
     ereturn local cmdline `"kmatch `0'"'
     Display, `diopts'
-    if `"`e(generate)'`e(dy)'"'!="" {
+    if "`nogenlist'"!="" exit
+    local generate `e(generate)' `e(wgenerate)' `e(dygenerate)' ///
+        `e(cemgenerate)' `e(ifgenerate)' `e(idgenerate)' `e(dxgenerate)'
+    if `:list sizeof generate' {
         tempname rcurrent
         _return hold `rcurrent'
         di as txt _n "Stored variables" _c
-        describe `e(generate)' `e(dy)', fullnames
+        describe `generate', fullnames
         _return restore `rcurrent'
     }
 end
 
-program Parse_hasvceopt
+program Parse_svy_or_vceprefix
     _parse comma lhs 0 : 0
-    syntax [, vce(passthru) * ]
-    if strpos(`"`lhs'"',"(")==0 & `"`vce'"'!="" {
-        di as err "outcome variable required if option vce() is specified"
-        exit 198
+    syntax [, svy vce(str) * ]
+    if `"`svy'"'!="" {
+        if `"`vce'"'!="" {
+            di as err "svy and vce() not both allowed"
+            exit 198
+        }
+        c_local svy_or_vceprefix 1
+        exit
     }
-    c_local hasvceopt = `"`vce'"'!=""
+    _parse comma vce rest : vce
+    if `"`vce'"'== substr("bootstrap",1,max(4,strlen(`"`vce'"'))) {
+        c_local svy_or_vceprefix 2
+        exit
+    }
+    if `"`vce'"'== substr("jackknife",1,max(4,strlen(`"`vce'"'))) {
+        c_local svy_or_vceprefix 3
+        exit
+    }
+    c_local svy_or_vceprefix 0
 end
 
 program VCE_Estimate, eclass
     local version : di "version " string(_caller()) ":"
     gettoken subcmd 0: 0, parse(", ")
-    syntax anything(equalok) [if] [in] [pw iw fw] [, vce(str) nn NN2(passthru) ///
-        BWidth(str) GENerate GENerate2(passthru) DY DY2(passthru) replace ///
+    syntax anything(equalok) [if] [in] [pw iw fw] [, vce(str) nose ///
+        nn NN2(passthru) BWidth(str) CALiper(str) BWADJust(passthru) ///
         noHEader noTABle noMTABle Level(passthru) * ]
-    local options `nn' `nn2' `level' `options' 
+    if "`se'"!="" {
+        di as err "nose and vce() not both allowed"
+        exit 198
+    }
+    if `"`caliper'"'!="" {
+        if `"`bwidth'"'!="" {
+            di as err "bwidth() and caliper() not both allowed"
+            exit 198
+        }
+        local bwidth `"`caliper'"'
+        local caliper
+    }
+    local options `nn' `nn2' `level' `options'
     _get_diopts diopts options, `options'
     c_local diopts `header' `table' `mtable' `diopts'
-    local genopts `generate' `generate2' `dy' `dy2' `replace'
     if "`weight'"!="" local wgt [`weight'`exp']
-    Parse_vceopt `vce' // returns vcecmd, vcevars, vceopts
-
-    // compute bandwidth and generate variables, if needed
-    capt numlist `"`bwidth'"', min(1)
-    local getbw = _rc
-    if `"`bwidth'"'!="" local bwidth bwidth(`bwidth')
-    if `"`nn'`nn2'"'!="" local getbw = 0
-    local hasgen = `"`genopts'"'!=""
-    if `getbw' | `hasgen' {
-        Parse_eq `anything' // returns tvar, xvars, novars, ovars, ovar_#, xvars_#, opts_#
+    Parse_vceprefix `vce' // returns vcecmd, vcevars, vceopts
+    Parse_eq `subcmd' `anything' // returns tvar, xvars, ematch, novars, ovars, ovar_#, ovarnm_#, xvars_#
+    if `novars'==0 {
+        di as err "vce(`vcecmd') requires that at least one outcome variable is specified"
+        exit 198
+    }
+    Parse_generate_notallowed, errornote("vce(`vcecmd')") `options'
+    
+    // compute bandwidth, if needed
+    local getbw 0
+    if `"`subcmd'"'=="md" | `"`subcmd'"'=="ps" {
+        if `"`nn'`nn2'"'=="" {
+            capt numlist `"`bwidth'"', min(1)
+            local getbw = _rc
+        }
+    }
+    if `"`bwidth'"'!="" local bwidth bwidth(`bwidth') 
+    local bwidth `bwidth' `bwadjust'
+    if `getbw' {
         marksample touse
         markout `touse' `vcevars'
         forv i=1/`novars' {
             markout `touse' `ovar_`i'' `xvars_`i''
         }
-        Estimate `subcmd' `tvar' `xvars' if `touse' `wgt', ///
-            `bwidth' `genopts' `options'
-        local e_generate `"`e(generate)'"'
-        local e_dy `"`e(dy)'"'
-        if `getbw' {
-            display ""
-            local e_bw_method `"`e(bw_method)'"'
-            if `"`e(pm_quantile)'"'!="" {
-                tempname e_pm_quantile
-                scalar `e_pm_quantile' = e(pm_quantile)
-            }
-            if `"`e(pm_factor)'"'!="" {
-                tempname e_pm_factor
-                scalar `e_pm_factor' = e(pm_factor)
-            }
-            if `"`e(cv_factor)'"'!="" {
-                tempname e_cv_factor
-                scalar `e_cv_factor' = e(cv_factor)
-            }
-            local e_cv_weighted  `"`e(cv_weighted)'"'
-            local e_cv_nopenalty `"`e(cv_nopenalty)'"'
-            local e_cv_nolimit   `"`e(cv_nolimit)'"'
-            local e_cv_outcome   `"`e(cv_outcome)'"'
-            local e_cv_exact     `"`e(cv_exact)'"'
-            capt confirm matrix e(cv)
-            if _rc==0 {
-                tempname e_cv
-                matrix `e_cv' = e(cv)
-            }
-            capt confirm matrix e(cv_treated)
-            if _rc==0 {
-                tempname e_cv_treated
-                matrix `e_cv_treated' = e(cv_treated)
-            }
-            capt confirm matrix e(cv_untreated)
-            if _rc==0 {
-                tempname e_cv_untreated
-                matrix `e_cv_untreated' = e(cv_untreated)
-            }
-            tempname BW
-            mat `BW' = e(bwidth)
-            local bwidth
-            local c = colsof(`BW')
-            forv i = 1/`=rowsof(`BW')' {
-                forv j = 1/`c' {
-                    local bw = `BW'[`i',`j']
-                    local bwidth `bwidth' `bw'
-                }
-            }
-            local bwidth bwidth(`bwidth')
+        local cmdline `subcmd' `tvar' `xvars' if `touse' `wgt', nose /*
+            */`bwidth' `options'
+        //di `"`cmdline'"'
+        Estimate `cmdline'
+        display ""
+        local e_bw_method `"`e(bw_method)'"'
+        if `"`e(pm_quantile)'"'!="" {
+            tempname e_pm_quantile
+            scalar `e_pm_quantile' = e(pm_quantile)
         }
+        if `"`e(pm_factor)'"'!="" {
+            tempname e_pm_factor
+            scalar `e_pm_factor' = e(pm_factor)
+        }
+        if `"`e(cv_factor)'"'!="" {
+            tempname e_cv_factor
+            scalar `e_cv_factor' = e(cv_factor)
+        }
+        local e_cv_weighted  `"`e(cv_weighted)'"'
+        local e_cv_nopenalty `"`e(cv_nopenalty)'"'
+        local e_cv_nolimit   `"`e(cv_nolimit)'"'
+        local e_cv_outcome   `"`e(cv_outcome)'"'
+        local e_cv_exact     `"`e(cv_exact)'"'
+        capt confirm matrix e(cv)
+        if _rc==0 {
+            tempname e_cv
+            matrix `e_cv' = e(cv)
+        }
+        capt confirm matrix e(cv_treated)
+        if _rc==0 {
+            tempname e_cv_treated
+            matrix `e_cv_treated' = e(cv_treated)
+        }
+        capt confirm matrix e(cv_untreated)
+        if _rc==0 {
+            tempname e_cv_untreated
+            matrix `e_cv_untreated' = e(cv_untreated)
+        }
+        tempname BW
+        mat `BW' = e(bwidth)
+        local bwidth
+        local c = colsof(`BW')
+        forv i = 1/`=rowsof(`BW')' {
+            forv j = 1/`c' {
+                local bw = `BW'[`i',`j']
+                local bwidth `bwidth' `bw'
+            }
+        }
+        local bwidth bwidth(`bwidth')
     }
     
     // run vcecmd
-    capt noisily `version' ///
-        `vcecmd', noheader notable reject(e(k_omit)) `vceopts' `level': ///
-        kmatch `subcmd' `anything' `if' `in' `wgt', noheader notable ///
-        nomtable `bwidth' `options'
-    if _rc {
-        if `hasgen' {
-            drop `e_generate' `e_dy'
-        }
-        exit _rc
-    }
-    if `hasgen' {
-        eret local generate `"`e_generate'"'
-        eret local dy `"`e_dy'"'
-    }
+    local cmdline kmatch `subcmd' `anything' `if' `in' `wgt', nose noheader/*
+        */ notable nomtable `bwidth' `options'
+    //di `"`cmdline'"'
+    `version' `vcecmd', noheader notable reject(e(k_omit)) `vceopts' `level': ///
+        `cmdline'
     if `getbw' {
         eret local bw_method `"`e_bw_method'"'
         if "`e_pm_quantile'"!="" {
@@ -194,7 +234,7 @@ program VCE_Estimate, eclass
     }
 end
 
-program Parse_vceopt
+program Parse_vceprefix
     _parse comma vcecmd 0 : 0
     if `"`vcecmd'"'== substr("bootstrap",1,max(4,strlen(`"`vcecmd'"'))) {
         c_local vcecmd bootstrap
@@ -203,7 +243,7 @@ program Parse_vceopt
         c_local vcecmd jackknife
     }
     else {
-        di as err `"`vcecmd' not allowed in vce()"'
+        di as err "vcetype '" `"`vcecmd'"' "' not allowed"
         exit 198
     }
     syntax [, STRata(varlist) CLuster(varlist) group(varname) JACKknifeopts(str) * ]
@@ -220,6 +260,97 @@ program Parse_vceopt_jack
     c_local vcevars `cluster'
 end
 
+program Parse_generate_notallowed
+    syntax [, errornote(str) ///
+    GENerate GENerate2(passthru) DYgenerate DYgenerate2(passthru) ///
+    WGENerate WGENerate2(passthru) CEMGENerate CEMGENerate2(passthru) ///
+    IDGENerate IDGENerate2(passthru) DXGENerate DXGENerate2(passthru) ///
+    IFGENerate IFGENerate2(passthru) * ]
+    foreach gen in "" "dy" "w" "cem" "id" "dx" "if" {
+        if `"``gen'generate'``gen'generate2'"'!="" {
+            di as err `"`gen'generate() not allowed with `errornote'"'
+            exit 198
+        }
+    }
+end
+
+program SVY_Estimate, eclass
+    // syntax
+    local version : di "version " string(_caller()) ":"
+    syntax anything(equalok) [if] [in] [pw iw fw] [, ///
+        nose svy SUBpop(passthru) ///
+        IFGENerate IFGENerate2(passthru) ///
+        ate att atc nate po ///
+        noHEader noTABle noMTABle Level(passthru) * ]
+    if "`se'"!="" {
+        di as err "nose and svy not both allowed"
+        exit 198
+    }
+    if "`weight'"!="" {
+        di as err "weights not allowed with svy; supply weights to {help svyset}"
+        exit 101
+    }
+    local options `level' `options'
+    _get_diopts diopts options, `options'
+    c_local diopts `header' `table' `mtable' `diopts'
+    Parse_eq `anything' // returns tvar, xvars, ematch, novars, ovars, ovar_#, ovarnm_#, xvars_#
+    if `novars'==0 {
+        di as err "svy requires that at least one outcome variable is specified"
+        exit 198
+    }
+    qui svyset
+    if `"`r(settings)'"'==", clear" {
+         di as err "data not set up for svy, use {helpb svyset}"
+         exit 119
+    }
+    local vcetype `"`r(vce)'"'
+    local notable notable
+    if c(stata_version)<12 local notable // (this is unfortunate ...)
+    
+    // run svy: kmatch ...
+    if `"`vcetype'"'!="linearized" {
+        Parse_generate_notallowed, errornote("svy's vce(`vcetype')") ///
+            `ifgenerate' `ifgenerate2' `options'
+        local cmdline kmatch `anything' `if' `in', nose /*
+            */ `ate' `att' `atc' `nate' `po' `options'
+        //di `"`cmdline'"'
+        `version' svy `vcetype', `subpop' `level' noheader `notable': `cmdline' 
+    }
+    else {
+        // compile option to generate IFs
+        local userifgen = (`"`ifgenerate'`ifgenerate2'"'!="")
+        if `userifgen'==0 {
+            local k = ("`ate'"!="" | "`att'`atc'"=="")
+            local k = `k' + ("`att'"!="")
+            local k = `k' + ("`atc'"!="")
+            local k = `k' + ("`nate'"!="")
+            local k = `k' * `novars'
+            if "`po'"!="" local k = `k' * 3
+            forv i = 1/`k' {
+                tempname IF
+                local IFs `IFs' `IF'
+            }
+            local ifgenerate2 ifgenerate(`IFs')
+        }
+        // run svy linearized: kmatch
+        local cmdline kmatch_svyr `anything' `if' `in', nose /*
+            */ `ifgenerate' `ifgenerate2' /*
+            */ `ate' `att' `atc' `nate' `po' `options'
+        //di `"`cmdline'"'
+        `version' svy linearized, `subpop' `level' noheader `notable': `cmdline' 
+        // relabel results
+        tempname b
+        mat `b' = e(b)
+        mata: Kmatch_svylbl_b_undo()    // returns k_eq
+        ereturn repost b=`b', rename
+        eret scalar k_eq = `k_eq'
+        if `userifgen'==0 {
+            eret local ifgenerate ""
+        }
+        eret local predict ""
+    }
+end
+
 program Display
     if `"`e(cmd)'"'!="kmatch" {
         di as err "last kmatch results not found"
@@ -227,24 +358,34 @@ program Display
     }
     syntax [, noHEader noTABle noMTABle * ]
     _get_diopts diopts, `options'
+    local subcmd `"`e(subcmd)'"'
+    local linesize = max(79, c(linesize))
+    local novars = e(N_ovars)
     if `"`header'"'=="" {
         _coef_table_header, nomodeltest
         if `"`e(nn)'"'!="" {
-            di as txt _col(49) "Neighbors:" _col(63) "min" _col(67) "= " as res %10.0g e(nn_min)
+            di as txt _col(49) "Neighbors:" _col(63) "min" _col(67) "= " ///
+                as res %10.0g e(nn_min)
         }
-        else {
+        else if `"`e(kernel)'"'!="" {
             di as txt _col(49) "Kernel" _col(67) "= " as res %10s e(kernel)
         }
-        di as txt "Treatment : " e(tvar) " = " as res e(tval) _c
+        else if `"`subcmd'"'=="eb" {
+            di as txt _col(49) "Balance tolerance" _col(67) "= " ///
+                as res %10.0g e(btolerance)
+        }
+        else di ""
+        di as txt "Treatment   : " e(tvar) " = " as res e(tval) _c
         if `"`e(nn)'"'!="" {
             di as txt _col(63) "max" _col(67) "= " as res %10.0g e(nn_max)
         }
         else if `"`e(ridge)'"'!="" {
-            di as txt _col(49) "Ridge parameter" _col(67) "= " as res %10.0g e(ridge)
+            di as txt _col(49) "Ridge parameter" _col(67) "= " ///
+                as res %10.0g e(ridge)
         }
         else di ""
-        if `"`e(subcmd)'"'=="md" {
-            di as txt "Metric    : " as res e(metric) _c
+        if `"`subcmd'"'=="md" {
+            di as txt "Metric      : " as res e(metric) _c
             if `"`e(metric)'"'=="matrix" {
                 di as txt " (user)"
             }
@@ -253,104 +394,188 @@ program Display
             }
             else di ""
         }
-        local covars `"`e(xvars)'"'
-        if strlen(`"`covars'"')>66 {
-            local covars: piece 1 62 of `"`covars'"'
-            local covars `"`covars' ..."'
+        else if `"`subcmd'"'=="eb" {
+            di as txt "Targets     : " as res e(targets) _c
+            if `"`e(covariances)'"'!="" {
+                di as txt " + covariances"
+            }
+            else di ""
         }
-        if `"`covars'"'=="" local covars "(none)"
-        di as txt "Covariates: " `"`covars'"'
-        if `"`e(ematch)'"'!="" {
-            local covars `"`e(ematch)'"'
-            if strlen(`"`covars'"')>66 {
-                local covars: piece 1 62 of `"`covars'"'
+        if `"`subcmd'"'!="ra" {
+            if `"`subcmd'"'=="em" {
+                local covars `"`e(emxvars)'"'
+            }
+            else {
+                local covars `"`e(xvars)'"'
+            }
+            if `"`covars'"'=="" local covars "(none)"
+            if strlen(`"`covars'"')>(`linesize'-14) {
+                local covars: piece 1 `=`linesize'-18' of `"`covars'"'
                 local covars `"`covars' ..."'
             }
-            di as txt "Exact     : " `"`covars'"'
+            di as txt "Covariates  : " `"`covars'"'
+        }
+        if `"`e(ematch)'"'!="" {
+            if `"`subcmd'"'!="em" {
+                local covars `"`e(emxvars)'"'
+                if strlen(`"`covars'"')>(`linesize'-14) {
+                    local covars: piece 1 `=`linesize'-18' of `"`covars'"'
+                    local covars `"`covars' ..."'
+                }
+                di as txt "Exact       : " `"`covars'"'
+            }
         }
         if `"`e(pscore)'"'!="" {
-            di as txt "Pscore    : " e(pscore)
+            di as txt "Pscore      : " e(pscore)
         }
         else if `"`e(pscmd)'"'!="" {
-            di as txt "PS model  : " as res e(pscmd) ///
+            di as txt "PS model    : " as res e(pscmd) ///
                 as txt " (" as res e(pspredict) as txt ")"
             if `"`e(psvars)'"'!="" {
                 local covars `"`e(psvars)'"'
-                if strlen(`"`covars'"')>66 {
-                    local covars: piece 1 62 of `"`covars'"'
+                if strlen(`"`covars'"')>(`linesize'-14) {
+                    local covars: piece 1 `=`linesize'-18' of `"`covars'"'
                     local covars `"`covars' ..."'
                 }
-                di as txt "PS covars : " `"`covars'"'
+                di as txt "PS covars   : " `"`covars'"'
             }
         }
+        // optional entropy balancing
+        if `"`e(ebalance)'"'!="" {
+            di as txt "Entropy bal.: targets = " as res e(targets) _c
+            if `"`e(covariances)'"'!="" {
+                di as txt " + covariances"
+            }
+            else di ""
+            di as txt _col(15) "balance tolerance = " as res e(btolerance)
+            local covars `"`e(ebvars)'"'
+            if `"`covars'"'=="" {
+                local covars `"`e(xvars)'"'
+            }
+            if `"`covars'"'=="" local covars "(none)"
+            local covars `"covariates = `covars'"'
+            if strlen(`"`covars'"')>(`linesize'-14) {
+                local covars: piece 1 `=`linesize'-18' of `"`covars'"'
+                local covars `"`covars' ..."'
+            }
+            di as txt _col(15) `"`covars'"'
+            di as txt _col(15) "basis = " _c
+            if `"`e(csonly)'"'!="" di "common support"
+            else                   di "matching weights"
+        }
+        // regression adjustment
+        local tmp
+        local regadj 0
+        forv i = 1/`novars' {
+            local regadj = `regadj' + (`"`e(avars`i')'"'!=`"`tmp'"')
+            local tmp `"`e(avars`i')'"'
+        }
+        if `regadj' {
+            di as txt "RA equations: " _c
+            forv i = 1/`novars' {
+                local covars `"`e(avars`i')'"'
+                if `"`covars'"'=="" local covars "_cons"
+                else  local covars `"`covars' _cons"'
+                local covars `"`e(ovar`i')' = `covars'"'
+                if `novars'>1 {
+                    local covars `"(`i') `covars'"'
+                }
+                if strlen(`"`covars'"')>(`linesize'-14) {
+                    local covars: piece 1 `=`linesize'-18' of `"`covars'"'
+                    local covars `"`covars' ..."'
+                }
+                if `i'==1 di `"`covars'"'
+                else      di _col(15) `"`covars'"'
+            }
+        }
+        // over groups
         if `"`e(over)'"'!="" {
-            di as txt ""
+            di as txt "Over groups :" _c
             forv i = 1/`e(N_over)' {
                 local oval: word `i' of `e(over_namelist)'
                 local olab: word `i' of `e(over_labels) '
-                di as txt %10s "`oval'" ": " e(over) " = " as res "`olab'"
+                di as txt _col(15) "`oval'" ": " e(over) " = " as res "`olab'"
             }
         }
     }
     if `"`mtable'"'=="" {
-        tempname N BW
-        mat `BW' = e(bwidth)
-        forv i=1/`e(N_over)' {
-            mat `N' = nullmat(`N') \ `BW'[`i',1...]'
-            if `"`e(ate)'"'!="" mat `N' = `N' \ .
+        tempname N
+        local hasbwcol 0
+        if `"`subcmd'"'=="eb" {
+            local hasbwcol 1
+            tempname LOSS
+            mat `LOSS' = e(loss)
+            forv i=1/`e(N_over)' {
+                mat `N' = nullmat(`N') \ `LOSS'[`i',1...]'
+                if `"`e(ate)'"'!="" mat `N' = `N' \ .z
+            }
+            local bwlabel `""Balance:loss_""'
         }
-        mat coln `N' = "Band-:width_"
-        mat `N' = e(_N), `N' 
+        else {
+            capt confirm matrix e(bwidth)
+            if _rc==0 {
+                local hasbwcol 1
+                tempname BW
+                mat `BW' = e(bwidth)
+                forv i=1/`e(N_over)' {
+                    mat `N' = nullmat(`N') \ `BW'[`i',1...]'
+                    if `"`e(ate)'"'!="" mat `N' = `N' \ .z
+                }
+                if `"`e(nn)'"'!="" local bwlabel `""Caliper:{space 1}""'
+                else               local bwlabel `""Bandwidth:{space 1}""'
+            }
+            if `"`e(ebalance)'"'!="" {
+                local ++hasbwcol
+                if `hasbwcol'>1 {
+                    tempname N0
+                    mat rename `N' `N0'
+                }
+                tempname LOSS
+                mat `LOSS' = e(loss)
+                forv i=1/`e(N_over)' {
+                    mat `N' = nullmat(`N') \ `LOSS'[`i',1...]'
+                    if `"`e(ate)'"'!="" mat `N' = `N' \ .z
+                }
+                if `hasbwcol'>1 {
+                    mat `N' = `N0', `N'
+                    local bwlabel `"`bwlabel' "Balance:loss_""'
+                }
+                else local bwlabel `""Balance:loss_""'
+            }
+        }
+        
+        if `hasbwcol' {
+            mat coln `N' = `bwlabel'
+            mat `N' = e(_N), `N'
+            if `hasbwcol'==1 {
+                if      `linesize'>=90 local fmt %9.0g
+                else if `linesize'>=84 local fmt %8.0g
+                else                   local fmt %7.0g
+                mata: st_local("cspec", 2*(" | `fmt' & `fmt' & `fmt'"))
+                local cspec "& %10s`cspec' | %9.0g &"
+            }
+            else {
+                if      `linesize'>=102 local fmt %9.0g
+                else if `linesize'>=96  local fmt %8.0g
+                else                    local fmt %7.0g
+                mata: st_local("cspec", 2*(" | `fmt' & `fmt' & `fmt'"))
+                local cspec "& %10s`cspec' | %9.0g | %9.0g &"
+            }
+        }
+        else {
+            mat `N' = e(_N)
+            mata: st_local("cspec", 2*(" | %9.0g & %9.0g & %9.0g"))
+            local cspec "& %10s`cspec' &"
+        }
+        mata: st_local("rspec", `=e(N_over)'*("-"+((`=rowsof(`N')'/`=e(N_over)')-1)*"&"))
+        local rspec "-`rspec'-"
         di _n as txt "Matching statistics"
-        matlist `N', twidth(11) border(top bottom) format(%7.0g) noblank ///
-            showcoleq(combined) underscore
+        matlist `N', cspec(`cspec') rspec(`rspec') noblank ///
+            showcoleq(combined) underscore nodotz
     } 
-    if `"`table'"'=="" & e(N_ovars) {
+    if `"`table'"'=="" & `novars' {
         di _n as txt "Treatment-effects estimation"
         eret di, `options'
-        if e(N_ovars)==1 {
-            if `"`e(avars)'"'!="" {
-                local covars `"adjusted for `e(avars)'"'
-                if strlen(`"`covars'"')>78 {
-                    local covars: piece 1 74 of `"`covars'"'
-                    local covars `"`covars' ..."'
-                }
-                di as txt `"`covars'"'
-            }
-            exit
-        }
-        local d 0
-        local covars `"`e(avars1)'"'
-        forv i = 2/`e(N_ovars)' {
-            if `"`e(avars`i')'"'!=`"`covars'"' {
-                local d 1
-                continue, break
-            }
-            local covars `"`e(avars`i')'"'
-        }
-        if `d'==0 {
-            local covars `"`e(avars1)'"'
-            if `"`covars'"'!="" {
-                local covars `"adjusted for `covars'"'
-                if strlen(`"`covars'"')>78 {
-                    local covars: piece 1 74 of `"`covars'"'
-                    local covars `"`covars' ..."'
-                }
-                di as txt `"`covars'"'
-            }
-            exit
-        }
-        forv i = 1/`e(N_ovars)' {
-            local covars `"`e(avars`i')'"'
-            if `"`covars'"'!="" {
-                local covars `"`e(ovar`i')': adjusted for `covars'"'
-                if strlen(`"`covars'"')>78 {
-                    local covars: piece 1 74 of `"`covars'"'
-                    local covars `"`covars' ..."'
-                }
-                di as txt `"`covars'"'
-            }
-        }
     }
 end
 
@@ -362,9 +587,9 @@ program Postest
     if `"`e(generate)'"'=="" {
         di as txt "(refitting the model using the {cmd:generate()} option)"
         tempname ecurrent
-        tempvar TREAT NC NM MW PS
+        tempvar TREAT NC NM MW GEN5 GEN6 // GEN5/6: pscore and/or strata
         _est hold `ecurrent', restore copy
-        Refit_with_generate, generate(`TREAT' `NC' `NM' `MW' `PS')
+        Refit_with_generate, generate(`TREAT' `NC' `NM' `MW' `GEN5' `GEN6')
     }
     gettoken subcmd 0 : 0
     gettoken tmp 0 : 0, parse(", ")
@@ -388,14 +613,39 @@ end
 
 program Refit_with_generate
     syntax, generate(passthru)
-    local cmd `e(subcmd)'
+    local subcmd `"`e(subcmd)'"'
+    local cmd `subcmd'
     local cmd `cmd' `e(tvar)'
-    local cmd `cmd' `e(xvars)'
+    if `"`subcmd'"'=="em" {
+        local cmd `cmd' `e(ematch)'
+    }
+    else {
+        local cmd `cmd' `e(xvars)'
+    }
     if `"`e(wtype)'"'!="" {
         local cmd `cmd' [`e(wtype)' `e(wexp)']
     }
-    local cmd `cmd' if e(sample), `generate'
-    if `"`e(ematch)'"'!="" {
+    if `"`e(subpop)'"'!="" {
+        tempvar touse
+        qui gen byte `touse' = 0
+        Refit_with_generate_subpop `e(subpop)'
+        if `"`subif'`subin'"'!="" {
+            qui replace `touse' = 1 `subif' `subin'
+            qui replace `touse' = 0 if e(sample)==0 | e(sample)>=.
+        }
+        else {
+            qui replace `touse' = 1 if e(sample) & e(sample)<.
+        }
+        if "`subvar'"!="" {
+            qui replace `touse' = 0 if `subvar'==0 | `subvar'>=.
+        }
+        local cmd `cmd' if `touse'
+    }
+    else {
+        local cmd `cmd' if e(sample)
+    }
+    local cmd `cmd', `generate'
+    if `"`e(ematch)'"'!="" & `"`subcmd'"'!="em" {
         local cmd `cmd' ematch(`e(ematch)')
     }
     if `"`e(over)'"'!="" {
@@ -404,31 +654,35 @@ program Refit_with_generate
     if e(tval)!=1 {
         local cmd `cmd' tvalue(`e(tval)')
     }
-    local isnn 0
-    if `"`e(nn)'"'!="" {
-        local isnn 1
-        local cmd `cmd' nn(`e(nn)')
-    }
-    else {
-        local cmd `cmd' kernel(`e(kernel)')
-        if `"`e(ridge)'"'!="" {
-            local cmd `cmd' ridge(`e(ridge)')
+    if `"`subcmd'"'=="md" | `"`subcmd'"'=="ps" {
+        local isnn 0
+        if `"`e(nn)'"'!="" {
+            local isnn 1
+            local cmd `cmd' nn(`e(nn)')
+            local cmd `cmd' `e(keepall)'
+            local cmd `cmd' `e(wor)'
         }
-    }
-    tempname BW 
-    mat `BW' = e(bwidth)
-    if `isnn'==0 | matmissing(`BW')==0 {
-        local bwidth
-        local c = colsof(`BW')
-        forv i = 1/`=rowsof(`BW')' {
-            forv j = 1/`c' {
-                local bw = `BW'[`i',`j']
-                local bwidth `bwidth' `bw'
+        else {
+            local cmd `cmd' kernel(`e(kernel)')
+            if `"`e(ridge)'"'!="" {
+                local cmd `cmd' ridge(`e(ridge)')
             }
         }
-        local cmd `cmd' bwidth(`bwidth')
+        tempname BW 
+        mat `BW' = e(bwidth)
+        if `isnn'==0 | matmissing(`BW')==0 {
+            local bwidth
+            local c = colsof(`BW')
+            forv i = 1/`=rowsof(`BW')' {
+                forv j = 1/`c' {
+                    local bw = `BW'[`i',`j']
+                    local bwidth `bwidth' `bw'
+                }
+            }
+            local cmd `cmd' bwidth(`bwidth')
+        }
     }
-    if `"`e(subcmd)'"'=="md" {
+    if `"`subcmd'"'=="md" {
         if `"`e(metric)'"'=="euclidean" {
             local cmd `cmd' metric(euclidean)
         }
@@ -444,6 +698,32 @@ program Refit_with_generate
             local cmd `cmd' psvars(`e(psvars)')
         }
     }
+    if `"`e(ebalance)'"'!="" {
+        if `"`e(ebvars)'"'!="" {
+            local cmd `cmd' ebalance(`e(ebvars)')
+        }
+        else {
+            local cmd `cmd' ebalance
+        }
+        local cmd `cmd' `e(csonly)'
+    }
+    if `"`subcmd'"'=="eb" | `"`e(ebalance)'"'!="" {
+        if `"`e(targets)'"'!="" {
+            local cmd `cmd' targets(`e(targets)')
+        }
+        local cmd `cmd' `e(covariances)'
+        if `"`e(btolerance)'"'!="" {
+            local cmd `cmd' btolerance(`e(btolerance)')
+        }
+        if `"`e(fitopts)'"'!="" {
+            local cmd `cmd' fitopts(`e(fitopts)')
+        }
+    }
+    if `"`subcmd'"'=="eb" | `"`subcmd'"'=="ra" {
+        if `"`e(psvars)'"'!="" {
+            local cmd `cmd' psvars(`e(psvars)')
+        }
+    }
     if `"`e(pscore)'"'!="" {
         local cmd `cmd' pscore(`e(pscore)')
     }
@@ -453,28 +733,37 @@ program Refit_with_generate
     if `"`e(psopts)'"'!="" {
         local cmd `cmd' psopts(`e(psopts)')
     }
+    if `"`e(maxiter)'"'!="" {
+        local cmd `cmd' maxiter(`e(maxiter)')
+    }
     if `"`e(pspredict)'"'!="" {
         local cmd `cmd' pspredict(`e(pspredict)')
     }
-    if e(comsup_lb)<. {
-        local comsup `e(comsup_lb)'
-        if e(comsup_ub)<. {
-            local comsup `comsup' `e(comsup_ub)'
-        }
-        local cmd `cmd' comsup(`comsup')
+    if `"`e(comsup)'"'!="" {
+        if `"`e(comsup)'"'=="comsup" local comsup comsup
+        else                         local comsup comsup(`e(comsup)')
+        local cmd `cmd' `comsup'
     }
     local cmd `cmd' `e(ate)' `e(att)' `e(atc)'
     //di `"`cmd'"'
     quietly Estimate `cmd'
 end
 
+program Refit_with_generate_subpop
+        syntax [varname(default=none numeric)] [if] [in]
+        c_local subvar `varlist'
+        c_local subif `"`if'"'
+        c_local subin `"`in'"'
+end
+
 program Postest_summarize, rclass
     syntax [ varlist(default=none fv numeric) ] [ , ate att atc ///
-        sd meanonly varonly ]
-    if "`meanonly'"!="" & "`varonly'"!="" {
-        di as err "only one of meanonly and varonly allowed"
+        sd meanonly varonly SKewness skewonly ]
+    if "`meanonly'"!="" & "`varonly'"!="" & "`skewonly'"!="" {
+        di as err "only one of meanonly, varonly, and skewonly allowed"
         exit 198
     }
+    if "`skewonly'"!="" local skewness skewness
     
     // Reference statistic
     _Postest_refstat, `ate' `att' `atc' // returns refstat
@@ -485,13 +774,12 @@ program Postest_summarize, rclass
     gettoken nc vlist : vlist
     gettoken nm vlist : vlist
     gettoken mw vlist : vlist
-    gettoken ps vlist : vlist
     
     // set varlist
     if "`varlist'"=="" {
         local varlist "`e(xvars)'"
     }
-    fvexpand `varlist' if e(sample)
+    fvexpand `varlist' if `treat'<.
     local xvars
     foreach v in `r(varlist)' {
         if strpos(`"`v'"', "b.") continue // remove base levels
@@ -503,64 +791,71 @@ program Postest_summarize, rclass
         di "(no variables specified; nothing to do)"
         exit
     }
-
-    // sample, variables, weights
-    tempname touse
-    qui gen byte `touse' = (e(sample)==1)
-    local wtype "`e(wtype)'"
-    if "`wtype'"!="" {
-        tempvar wvar
-        qui gen double `wvar' `e(wexp)'
-        if "`wtype'"=="pweight" {
-            local wgt "[aweight = `wvar']"
-        }
-        else local wgt "[`wtype' = `wvar']"
-        if "`wtype'"=="fweight" {
-            tempvar mwvar
-            qui gen double `mwvar' = `mw' * `wvar' if `touse'
-            local mw `mwvar' 
-        }
-    }
-    if "`refstat'"=="ate" {
-        if "`wtype'"!="" {
-            local Cwgt "[iweight = `wvar'*(`nc'>0) + `mw']"
-            local Twgt "[iweight = `wvar'*(`nc'>0) + `mw']"
-        }
-        else {
-            local Cwgt "[iweight = (`nc'>0) + `mw']"
-            local Twgt "[iweight = (`nc'>0) + `mw']"
-        }
-    }
-    else if "`refstat'"=="att" {
-        if "`wtype'"!="" {
-            local Cwgt "[iweight = `mw']"
-            local Twgt "[iweight = `wvar'*(`nc'>0)]"
-        }
-        else {
-            local Cwgt "[iweight = `mw']"
-            local Twgt "[iweight = (`nc'>0)]"
-        }
-    }
-    else if "`refstat'"=="atc" {
-        if "`wtype'"!="" {
-            local Cwgt "[iweight = `wvar'*(`nc'>0)]"
-            local Twgt "[iweight = `mw']"
-        }
-        else {
-            local Cwgt "[iweight = (`nc'>0)]"
-            local Twgt "[iweight = `mw']"
-        }
-    }
-    else exit 499
     
-    // compute results
-    tempname M0 M V S
+    // over groups
     if `"`e(over)'"'!="" {
         local over `"`e(over)'"'
         local overlevels `"`e(over_namelist)'"'
         local nover: list sizeof overlevels
     }
     else local nover 1
+
+    // sample, variables, weights
+    tempname touse
+    qui gen byte `touse' = (`treat'<.)
+    local wtype "`e(wtype)'"
+    if "`wtype'"!="" {
+        tempvar wvar
+        qui gen double `wvar' `e(wexp)'
+    }
+    tempvar mwvar
+    qui gen double `mwvar' = `mw' if `touse' & `nm'!=0
+    if "`wtype'"=="fweight" {
+        qui replace `mwvar' = `mwvar' * `wvar' if `touse'
+    }
+    if "`refstat'"=="ate" {
+        if "`wtype'"!="" qui replace `mwvar' = `mwvar' + `wvar' if `touse' & `nc'!=0
+        else             qui replace `mwvar' = `mwvar' + 1 if `touse' & `nc'!=0
+    }
+    else if "`refstat'"=="att" {
+        if "`wtype'"!="" qui replace `mwvar' = `wvar' if `treat'==1 & `nc'!=0 & `touse'
+        else             qui replace `mwvar' = 1 if `treat'==1 & `nc'!=0 & `touse'
+    }
+    else if "`refstat'"=="atc" {
+        if "`wtype'"!="" qui replace `mwvar' = `wvar' if `treat'==0 & `nc'!=0 & `touse'
+        else             qui replace `mwvar' = 1 if `treat'==0 & `nc'!=0 & `touse'
+    }
+    else exit 499
+    
+    // rescale frequency weights so that results for variance/sd are as if 
+    // computed on expanded data
+    if "`wtype'"=="fweight" {
+        tempname FW
+        forv j=1/`nover' {
+            if `"`over'"'!="" {
+                local l: word `j' of `overlevels'
+                local oif `"& `over'==`l'"'
+            }
+            else local oif
+            if "`refstat'"=="ate" | "`refstat'"=="att" {
+                su `mwvar' if `touse' & `treat'==0 `oif', meanonly
+                scalar `FW' = r(sum)
+                su `wvar' if `mwvar'<. & `touse' & `treat'==0 `oif', meanonly
+                qui replace `mwvar' = `mwvar' * (r(sum) / `FW') if `touse' & `treat'==0 `oif'
+            }
+            if "`refstat'"=="ate" | "`refstat'"=="atc" {
+                su `mwvar' if `touse' & `treat'==1 `oif', meanonly
+                scalar `FW' = r(sum)
+                su `wvar' if `mwvar'<. & `touse' & `treat'==1 `oif', meanonly
+                qui replace `mwvar' = `mwvar' * (r(sum) / `FW') if `touse' & `treat'==1 `oif'
+            }
+        }
+    }
+    
+    // compute results
+    tempvar touse2
+    qui gen byte `touse2' = .
+    tempname M0 M V S
     mat `M0' = J(`nvars',6,.)
     mat rown `M0' = `xvars'
     forv j=1/`nover' {
@@ -570,6 +865,10 @@ program Postest_summarize, rclass
     }
     mat `V' = `M'
     mat `S' = `M'[1..., 1]
+    if "`skewness'"!="" {
+        tempname SK
+        mat `SK' = `M'
+    }
     forv j=1/`nover' {
         if `"`over'"'!="" {
             local l: word `j' of `overlevels'
@@ -580,55 +879,94 @@ program Postest_summarize, rclass
         foreach v of local xvars {
             local ++i
             local r = (`j'-1)*`nvars' + `i'
-            qui su `v' `wgt' if `touse' & `treat'==1 `oif'
+            mata: Kmatch_sum("`v'", "`wvar'", "`wtype'", "`touse2'", ///
+                 `"`touse' & `treat'==1 `oif'"', "`skewness'"!="")
             mat `M'[`r', 1] = r(mean)
-            mat `V'[`r', 1] = r(Var)
-            if "`sd'"!="" mat `V'[`r', 1] = sqrt(`V'[`r', 1])
+            if "`sd'"!="" mat `V'[`r', 1] = r(sd)
+            else          mat `V'[`r', 1] = r(Var)
             mat `S'[`r', 1] = r(Var)
-            qui su `v' `wgt' if `touse' & `treat'==0 `oif'
+            if "`skewness'"!="" {
+                mat `SK'[`r', 1] = r(skewness)
+            }
+            mata: Kmatch_sum("`v'", "`wvar'", "`wtype'", "`touse2'", ///
+                 `"`touse' & `treat'==0 `oif'"', "`skewness'"!="")
             mat `M'[`r', 2] = r(mean)
-            mat `V'[`r', 2] = r(Var)
-            if "`sd'"!="" mat `V'[`r', 2] = sqrt(`V'[`r', 2])
+            if "`sd'"!="" mat `V'[`r', 2] = r(sd)
+            else          mat `V'[`r', 2] = r(Var)
             mat `S'[`r', 1] = sqrt((r(Var) + `S'[`r', 1])/2)
             mat `M'[`r', 3] = (`M'[`r', 1]-`M'[`r', 2])/`S'[`r', 1]
             mat `V'[`r', 3] = `V'[`r', 1]/`V'[`r', 2]
-            qui su `v' `Twgt' if `touse' & `treat'==1 `oif'
+            if "`skewness'"!="" {
+                mat `SK'[`r', 2] = r(skewness)
+                mat `SK'[`r', 3] = `SK'[`r', 1] - `SK'[`r', 2]
+            }
+            mata: Kmatch_sum("`v'", "`mwvar'", "`wtype'", "`touse2'", ///
+                 `"`touse' & `mwvar'<. & `treat'==1 `oif'"', "`skewness'"!="")
             mat `M'[`r', 4] = r(mean)
-            mat `V'[`r', 4] = r(Var)
-            if "`sd'"!="" mat `V'[`r', 4] = sqrt(`V'[`r', 4])
-            qui su `v' `Cwgt' if `touse' & `treat'==0 `oif'
+            if "`sd'"!="" mat `V'[`r', 4] = r(sd)
+            else          mat `V'[`r', 4] = r(Var)
+            if "`skewness'"!="" {
+                mat `SK'[`r', 4] = r(skewness)
+            }
+            mata: Kmatch_sum("`v'", "`mwvar'", "`wtype'", "`touse2'", ///
+                 `"`touse' & `mwvar'<. & `treat'==0 `oif'"', "`skewness'"!="")
             mat `M'[`r', 5] = r(mean)
-            mat `V'[`r', 5] = r(Var)
-            if "`sd'"!="" mat `V'[`r', 5] = sqrt(`V'[`r', 5])
+            if "`sd'"!="" mat `V'[`r', 5] = r(sd)
+            else          mat `V'[`r', 5] = r(Var)
             mat `M'[`r', 6] = (`M'[`r', 4]-`M'[`r', 5])/`S'[`r', 1]
             mat `V'[`r', 6] = `V'[`r', 4]/`V'[`r', 5]
+            if "`skewness'"!="" {
+                mat `SK'[`r', 5] = r(skewness)
+                mat `SK'[`r', 6] = `SK'[`r', 4] - `SK'[`r', 5]
+            }
         }
     }
     
     // display
-    local mlbl `"Matched (`=strupper("`refstat'")')"'
-    local twidth 0
-    foreach v of local xvars {
-        local twidth = max(`twidth',strlen("`v'"))
+    local linesize = c(linesize) - 1
+    if `linesize'>79 {
+        local fmt %9.0g
+        local maxtw = `linesize' - 68
     }
-    local twidth = max(12, min(`twidth'+1, c(linesize)-63))
+    else {
+        local fmt %8.0g
+        local maxtw = `linesize' - 62
+    }
+    local tw 0
+    foreach v of local xvars {
+        local tw = max(`tw',strlen("`v'"))
+    }
+    local tw = max(12, min(`tw', `maxtw'))
+    mata: st_local("cspec", 2*(" | `fmt' & `fmt' & `fmt'"))
+    local cspec "& %`tw's`cspec' &"
+    mata: st_local("rspec", `nover'*("-"+(`nvars'-1)*"&"))
+    local rspec "-`rspec'-"
+    local mlbl `"Matched (`=strupper("`refstat'")')"'
     mat coln `M' = "Raw:Treated"    "Raw:Untreated"    "Raw:StdDif" ///
                 "`mlbl':Treated" "`mlbl':Untreated" "`mlbl':StdDif"
-    if "`varonly'"=="" {
-        matlist `M', border(top bottom) format(%8.0g) showcoleq(combined) ///
-            rowtitle(Means) twidth(`twidth')
+    if "`varonly'`skewonly'"=="" {
+        matlist `M', cspec(`cspec') rspec(`rspec') showcoleq(combined) ///
+            rowtitle(Means)
     }
     if "`sd'"=="" local ti "Variances"
     else {
-        if `twidth'<14      local ti "Std dev"
-        else if `twidth'<19 local ti "Std deviation"
-        else                local ti "Standard deviation"
+        if `tw'<14      local ti "Std dev"
+        else if `tw'<19 local ti "Std deviation"
+        else            local ti "Standard deviation"
     }
     mat coln `V' = "Raw:Treated"    "Raw:Untreated"    "Raw:Ratio" ///
                 "`mlbl':Treated" "`mlbl':Untreated" "`mlbl':Ratio"
-    if "`meanonly'"=="" {
-        matlist `V', border(top bottom) format(%8.0g) showcoleq(combined) ///
-        rowtitle(`ti') twidth(`twidth')
+    if "`meanonly'`skewonly'"=="" {
+        matlist `V', cspec(`cspec') rspec(`rspec') showcoleq(combined) ///
+            rowtitle(`ti')
+    }
+    if "`skewness'"!="" {
+        mat coln `SK' = "Raw:Treated"    "Raw:Untreated"    "Raw:Diff" ///
+                     "`mlbl':Treated" "`mlbl':Untreated" "`mlbl':Diff"
+        if "`meanonly'`varonly'"=="" {
+            matlist `SK', cspec(`cspec') rspec(`rspec') showcoleq(combined) ///
+                rowtitle(Skewness)
+        }
     }
     
     // returns
@@ -639,6 +977,9 @@ program Postest_summarize, rclass
     }
     else {
         ret matrix SD = `V'
+    }
+    if "`skewness'"!="" {
+        ret matrix SK = `SK'
     }
     ret matrix S = `S'
 end
@@ -681,11 +1022,12 @@ end
 
 program Postest_csummarize, rclass
     syntax [ varlist(default=none fv numeric) ] [ , ate att atc ///
-        sd meanonly varonly ]
-    if "`meanonly'"!="" & "`varonly'"!="" {
-        di as err "only one of meanonly and varonly allowed"
+        sd meanonly varonly SKewness skewonly ]
+    if "`meanonly'"!="" & "`varonly'"!="" & "`skewonly'"!="" {
+        di as err "only one of meanonly, varonly, and skewonly allowed"
         exit 198
     }
+    if "`skewonly'"!="" local skewness skewness
     
     // Reference statistic
     _Postest_refstat, `ate' `att' `atc' // returns refstat
@@ -699,7 +1041,7 @@ program Postest_csummarize, rclass
     if "`varlist'"=="" {
         local varlist "`e(xvars)'"
     }
-    fvexpand `varlist' if e(sample)
+    fvexpand `varlist' if `treat'<.
     local xvars
     foreach v in `r(varlist)' {
         if strpos(`"`v'"', "b.") continue // remove base levels
@@ -714,15 +1056,11 @@ program Postest_csummarize, rclass
 
     // sample, variables, weights
     tempname touse
-    qui gen byte `touse' = (e(sample)==1)
+    qui gen byte `touse' = (`treat'<.)
     local wtype "`e(wtype)'"
     if "`wtype'"!="" {
         tempvar wvar
         qui gen double `wvar' `e(wexp)'
-        if "`wtype'"=="pweight" {
-            local wgt "[aweight = `wvar']"
-        }
-        else local wgt "[`wtype' = `wvar']"
     }
     if "`refstat'"=="ate" {
         // do nothing
@@ -736,6 +1074,8 @@ program Postest_csummarize, rclass
     else exit 499
     
     // compute results
+    tempvar touse2
+    qui gen byte `touse2' = .
     tempname M0 M V S
     if `"`e(over)'"'!="" {
         local over `"`e(over)'"'
@@ -752,6 +1092,10 @@ program Postest_csummarize, rclass
     }
     mat `V' = `M'
     mat `S' = `M'[1..., 1]
+    if "`skewness'"!="" {
+        tempname SK
+        mat `SK' = `M'
+    }
     forv j=1/`nover' {
         if `"`over'"'!="" {
             local l: word `j' of `overlevels'
@@ -762,56 +1106,94 @@ program Postest_csummarize, rclass
         foreach v of local xvars {
             local ++i
             local r = (`j'-1)*`nvars' + `i'
-            qui su `v' `wgt' if `touse' & `nc' `oif'
-            mat `S'[`r', 1] = r(sd)
+            mata: Kmatch_sum("`v'", "`wvar'", "`wtype'", "`touse2'", ///
+                 `"`touse' & `nc' `oif'"', "`skewness'"!="")
             mat `M'[`r', 1] = r(mean)
-            mat `V'[`r', 1] = r(Var)
-            if "`sd'"!="" mat `V'[`r', 1] = sqrt(`V'[`r', 1])
-            qui su `v' `wgt' if `touse' & `nc'==0 `oif' 
+            if "`sd'"!="" mat `V'[`r', 1] = r(sd)
+            else          mat `V'[`r', 1] = r(Var)
+            if "`skewness'"!="" {
+                mat `SK'[`r', 1] = r(skewness)
+            }
+            mata: Kmatch_sum("`v'", "`wvar'", "`wtype'", "`touse2'", ///
+                 `"`touse' & `nc'==0 `oif'"', "`skewness'"!="")
             mat `M'[`r', 2] = r(mean)
-            mat `V'[`r', 2] = r(Var)
-            if "`sd'"!="" mat `V'[`r', 2] = sqrt(`V'[`r', 2])
-            qui su `v' `wgt' if `touse' `oif'
+            if "`sd'"!="" mat `V'[`r', 2] = r(sd)
+            else          mat `V'[`r', 2] = r(Var)
+            if "`skewness'"!="" {
+                mat `SK'[`r', 2] = r(skewness)
+            }
+            mata: Kmatch_sum("`v'", "`wvar'", "`wtype'", "`touse2'", ///
+                 `"`touse' `oif'"', "`skewness'"!="")
+            mat `S'[`r', 1] = r(sd)
             mat `M'[`r', 3] = r(mean)
-            mat `V'[`r', 3] = r(Var)
-            if "`sd'"!="" mat `V'[`r', 3] = sqrt(`V'[`r', 3])
+            if "`sd'"!="" mat `V'[`r', 3] = r(sd)
+            else          mat `V'[`r', 3] = r(Var)
+            if "`skewness'"!="" {
+                mat `SK'[`r', 3] = r(skewness)
+            }
             mat `M'[`r', 4] = (`M'[`r', 1]-`M'[`r', 3])/`S'[`r', 1]
             mat `M'[`r', 5] = (`M'[`r', 2]-`M'[`r', 3])/`S'[`r', 1]
             mat `M'[`r', 6] = (`M'[`r', 1]-`M'[`r', 2])/`S'[`r', 1]
-
             mat `V'[`r', 4] = `V'[`r', 1]/`V'[`r', 3]
             mat `V'[`r', 5] = `V'[`r', 2]/`V'[`r', 3]
             mat `V'[`r', 6] = `V'[`r', 1]/`V'[`r', 2]
+            if "`skewness'"!="" {
+                mat `SK'[`r', 4] = `SK'[`r', 1] - `SK'[`r', 3]
+                mat `SK'[`r', 5] = `SK'[`r', 2] - `SK'[`r', 3]
+                mat `SK'[`r', 6] = `SK'[`r', 1] - `SK'[`r', 2]
+            }
         }
     }
     
     // display
+    local linesize = c(linesize) - 1
+    if `linesize'>79 {
+        local fmt %9.0g
+        local maxtw = `linesize' - 68
+    }
+    else {
+        local fmt %8.0g
+        local maxtw = `linesize' - 62
+    }
+    local tw 0
+    foreach v of local xvars {
+        local tw = max(`tw',strlen("`v'"))
+    }
+    local tw = max(12, min(`tw', `maxtw'))
+    mata: st_local("cspec", 2*(" | `fmt' & `fmt' & `fmt'"))
+    local cspec "& %`tw's`cspec' &"
+    mata: st_local("rspec", `nover'*("-"+(`nvars'-1)*"&"))
+    local rspec "-`rspec'-"
     local slbl "Common support"
     if "`refstat'"=="att" local slbl "`slbl' (treated)"
     else if "`refstat'"=="atc" local slbl "`slbl' (untreated)"
-    local twidth 0
-    foreach v of local xvars {
-        local twidth = max(`twidth',strlen("`v'"))
-    }
-    local twidth = max(12, min(`twidth'+1, c(linesize)-63))
     local sdlb "Standardized difference"
     mat coln `M' = "`slbl':Matched"   "`slbl':Unmatched" "`slbl':Total" ///
                    "`sdlb':(1)-(3)" "`sdlb':(2)-(3)" "`sdlb':(1)-(2)"
-    if "`varonly'"=="" {
-        matlist `M', border(top bottom) format(%8.0g) showcoleq(combined) ///
-            rowtitle(Means) twidth(`twidth')
+    if "`varonly'`skewonly'"=="" {
+        matlist `M', cspec(`cspec') rspec(`rspec') showcoleq(combined) ///
+            rowtitle(Means)
     }
     if "`sd'"=="" local ti "Variances"
     else {
-        if `twidth'<14      local ti "Std dev"
-        else if `twidth'<19 local ti "Std deviation"
-        else                local ti "Standard deviation"
+        if `tw'<14      local ti "Std dev"
+        else if `tw'<19 local ti "Std deviation"
+        else            local ti "Standard deviation"
     }
     mat coln `V' = "`slbl':Matched"   "`slbl':Unmatched" "`slbl':Total" ///
                     "Ratio:(1)/(3)" "Ratio:(2)/(3)"  "Ratio:(1)/(2)"
-    if "`meanonly'"=="" {
-        matlist `V', border(top bottom) format(%8.0g) showcoleq(combined) ///
-        rowtitle(`ti') twidth(`twidth')
+    if "`meanonly'`skewonly'"=="" {
+        matlist `V', cspec(`cspec') rspec(`rspec') showcoleq(combined) ///
+            rowtitle(`ti')
+    }
+    if "`skewness'"!="" {
+        local sdlb "Difference"
+        mat coln `SK' = "`slbl':Matched"   "`slbl':Unmatched" "`slbl':Total" ///
+                         "`sdlb':(1)-(3)" "`sdlb':(2)-(3)" "`sdlb':(1)-(2)"
+        if "`meanonly'`varonly'"=="" {
+            matlist `SK', cspec(`cspec') rspec(`rspec') showcoleq(combined) ///
+                rowtitle(Skewness)
+        }
     }
     di as txt "(1) matched, (2) unmatched, (3) total"
     
@@ -824,25 +1206,14 @@ program Postest_csummarize, rclass
     else {
         ret matrix SD = `V'
     }
+    if "`skewness'"!="" {
+        ret matrix SK = `SK'
+    }
     ret matrix S = `S'
 end
 
 program Postest_graph, rclass
     gettoken subcmd 0 : 0
-    if inlist("`subcmd'", "density", "cdensity") {
-        local rc 0
-        capt findfile lmoremata.mlib
-        if _rc {
-            di as error "-moremata- is required; type {stata ssc install moremata}"
-            local rc = _rc
-        }
-        capt findfile lkdens.mlib
-        if _rc {
-            di as error "-kdens- is required; type {stata ssc install kdens}"
-            local rc = _rc
-        }
-        if `rc' error 499
-    }
     syntax [ varlist(default=none numeric) ] [, ate att atc ///
         Overlevels(numlist int >=0) TItles(str asis) ///
         COMBopts(str) name(passthru) nodraw * ]
@@ -851,19 +1222,24 @@ program Postest_graph, rclass
     _Postest_refstat, `ate' `att' `atc' // returns refstat
 
     // get kmatch variables
+    local mcmd "`e(subcmd)'"
+    if "`mcmd'"=="md" | "`mcmd'"=="ps" | "`mcmd'"=="em" local nvars0 5
+    else                                                local nvars0 4
     local vlist `"`e(generate)'"'
+    local nvars1: list sizeof vlist
     gettoken treat vlist : vlist
     gettoken nc vlist : vlist
     gettoken nm vlist : vlist
     gettoken mw vlist : vlist
-    gettoken ps vlist : vlist
+    if `nvars1'>`nvars0' gettoken ps vlist : vlist
+    gettoken strata vlist : vlist
     if inlist("`subcmd'", "density", "cdensity") {
         local psname "psname(`ps')"
     }
     
     // set varlist
     if "`varlist'"=="" {
-        if `"`e(subcmd)'"'=="ps" {
+        if "`mcmd'"=="ps" | "`mcmd'"=="ipw" {
             local varlist `ps'
             local vnm4note vnm4note(propensity score)
         }
@@ -877,7 +1253,7 @@ program Postest_graph, rclass
     if `"`overlevels'"'!="" {
         if `"`e(over)'"'=="" {
             di as err "{bf:overlevels()} only allowed if option {bf:over()}" ///
-                " has been applied when calling {bf:kmatch `e(subcmd)'}"
+                " has been applied when calling {bf:kmatch `mcmd'}"
             exit 198
         }
         local overlvls `"`e(over_namelist)'"'
@@ -947,7 +1323,7 @@ program Postest_density
     if `"`vnm4note'"'=="" local vnm4note `"`varlist'"'
     
     // sample, variables, weights
-    qui keep if e(sample)==1
+    qui keep if `treat'<.
     if `"`overlevel'"'!="" {
         qui keep if `e(over)'==`overlevel'
         if `"`title'"'=="" local title title("`e(over)' = `overlevel'")
@@ -970,6 +1346,13 @@ program Postest_density
     keep `varlist' `treat' `nc' `mw' `wvar'
     if _N<`n' {
         qui set obs `n'
+    }
+    su `mw', meanonly
+    if r(min)<0 {
+        tempvar mwvar
+        qui gen double `mwvar' = max(`mw', 0) if `mw'<.
+        local mw `mwvar' 
+        di as txt "(negative matching weights reset to zero)"
     }
     
     // evaluation grid
@@ -1054,19 +1437,18 @@ program Postest_density
     tempvar d0 d1 md0 md1
     local kopts n(`n') `kernel' `ll' `ul' `reflection' `lc' `adaptive' `adaptive2'
     if `AT0' | `AT1' {  // determine bandwidth
-        qui _kdens `varlist' `wgt', gen(`d0') at(`at0') bw(`bwidth') `adjust' `kopts'
+        Kdens `varlist' `wgt', bw(`bwidth') `adjust' `kopts'
         local bwidth = r(width)
-        drop `d0'
     }
     else local bwidth .
     local kopts `kopts' bw(`bwidth')
     di as txt "(`overtag'bandwidth for `vnm4note' = " `bwidth' ")"
     if `AT0' {
-        qui _kdens `varlist' if `treat'==0 `wgt', gen(`d0') at(`at0') `kopts'
+        Kdens `varlist' if `treat'==0 `wgt', gen(`d0') at(`at0') `kopts'
     }
     else qui gen byte `d0' = .
     if `AT1' {
-        qui _kdens `varlist' if `treat'==1 `wgt', gen(`d1') at(`at1') `kopts'
+        Kdens `varlist' if `treat'==1 `wgt', gen(`d1') at(`at1') `kopts'
     }
     else qui gen byte `d1' = .
     if "`refstat'"=="ate" {
@@ -1074,12 +1456,12 @@ program Postest_density
         if "`wvar'"!="" qui gen double `ww' = `wvar'*(`nc'>0) + `mw'
         else            qui gen double `ww' = (`nc'>0) + `mw'
         if `MAT0' {
-            qui _kdens `varlist' if `treat'==0 [aw = `ww'], ///
+            Kdens `varlist' if `treat'==0 [aw = `ww'], ///
                 gen(`md0') at(`mat0') `kopts'
         }
         else qui gen byte `md0' = .
         if `MAT1' {
-            qui _kdens `varlist' if `treat'==1 [aw = `ww'], ///
+            Kdens `varlist' if `treat'==1 [aw = `ww'], ///
                 gen(`md1') at(`mat1') `kopts'
         }
         else qui gen byte `md1' = .
@@ -1087,24 +1469,24 @@ program Postest_density
     }
     else if "`refstat'"=="att" {
         if `MAT0' {
-            qui _kdens `varlist' if `treat'==0 [aw = `mw'], ///
+            Kdens `varlist' if `treat'==0 [aw = `mw'], ///
                 gen(`md0') at(`mat0') `kopts'
         }
         else qui gen byte `md0' = .
         if `MAT1' {
-            qui _kdens `varlist' if `treat'==1 & `nc' `wgt', ///
+            Kdens `varlist' if `treat'==1 & `nc' `wgt', ///
                 gen(`md1') at(`mat1') `kopts'
         }
         else qui gen byte `md1' = .
     }
     else if "`refstat'"=="atc" {
         if `MAT0' {
-            qui _kdens `varlist' if `treat'==0 & `nc' `wgt', ///
+            Kdens `varlist' if `treat'==0 & `nc' `wgt', ///
                 gen(`md0') at(`mat0') `kopts'
         }
         else qui gen byte `md0' = .
         if `MAT1' {
-            qui _kdens `varlist' if `treat'==1 [aw = `mw'], ///
+            Kdens `varlist' if `treat'==1 [aw = `mw'], ///
                 gen(`md1') at(`mat1') `kopts'
         }
         else qui gen byte `md1' = .
@@ -1151,6 +1533,54 @@ program Postest_density
         yti("Density") xti(`"`xti'"') `options'
 end
 
+program Kdens, rclass
+    syntax varname [if] [in] [aw/], [ gen(str) at(str) ///
+        n(str) bw(str) Kernel(name) ll(numlist max=1) ul(numlist max=1) ///
+        REFLection lc ///
+        ADJust(numlist max=1 >0) Adaptive Adaptive2(numlist int max=1 >=0) ]
+    if `"`kernel'"'=="" local kernel epan2
+    local napprox = max(`n', 512) // use approximation grid of at least 512 points
+    if "`adjust'"=="" local adjust 1
+    if "`adaptive2'"=="" {
+        if "`adaptive'"!="" local adaptive2 1
+        else                local adaptive2 0
+    }
+    if "`lc'"!="" local lc "linear correction"
+    local bc `reflection' `lc'
+    capt confirm number `bw'
+    if _rc==0 local bw bw(`bw')
+    Kdens_parse_bw, `bw'    // returns dpilevel, bw, bwtype
+    if "`bw'"!="" & `"`gen'"'=="" {
+        return local width = `bw' * `adjust'
+        exit
+    }
+    marksample touse
+    if `"`gen'"'!="" {
+        qui gen double `gen' = .
+    }
+    mata: Kmatch_Kdens()
+    return local width = `bw'
+end
+
+program Kdens_parse_bw
+    syntax [ , bw(numlist max=1 >0) Dpi Dpi2(numlist int max=1 >=0) * ]
+    if "`dpi2'"!="" {
+        local dpi dpi
+        c_local dpilevel `dpi2'
+    }
+    else c_local dpilevel 2
+    if "`bw'"!="" {
+        c_local bw `bw'
+        c_local bwtype
+    }
+    else {
+        c_local bw
+        local bwtype `dpi' `options'
+        if `"`bwtype'"'=="" local bwtype silverman
+        c_local bwtype `bwtype'
+    }
+end
+
 program Postest_cdensity
     syntax varlist [, psname(str) vnm4note(str) ///
         TItle(passthru) refstat(str) overlevel(str) ///
@@ -1168,7 +1598,7 @@ program Postest_cdensity
     if `"`vnm4note'"'=="" local vnm4note `"`varlist'"'
     
     // sample, variables, weights
-    qui keep if e(sample)==1
+    qui keep if `treat'<.
     if `"`overlevel'"'!="" {
         qui keep if `e(over)'==`overlevel'
         if `"`title'"'=="" local title title("`e(over)' = `overlevel'")
@@ -1267,7 +1697,7 @@ program Postest_cdensity
     tempvar d1 d2 d3
     local kopts n(`n') `kernel' `ll' `ul' `reflection' `lc' `adaptive' `adaptive2'
     if `AT1' {  // determine bandwidth
-        qui _kdens `varlist' `wgt', gen(`d1') at(`at1') bw(`bwidth') `adjust' `kopts'
+        Kdens `varlist' `wgt', gen(`d1') at(`at1') bw(`bwidth') `adjust' `kopts'
         local bwidth = r(width)
     }
     else {
@@ -1277,11 +1707,11 @@ program Postest_cdensity
     local kopts `kopts' bw(`bwidth')
     di as txt "(`overtag'bandwidth for `vnm4note' = " `bwidth' ")"
     if `AT2' {
-        qui _kdens `varlist' if `nc'==0 `wgt', gen(`d2') at(`at2') `kopts'
+        Kdens `varlist' if `nc'==0 `wgt', gen(`d2') at(`at2') `kopts'
     }
     else qui gen byte `d2' = .
     if `AT3' {
-        qui _kdens `varlist' if `nc' `wgt', gen(`d3') at(`at3') `kopts'
+        Kdens `varlist' if `nc' `wgt', gen(`d3') at(`at3') `kopts'
     }
     else qui gen byte `d3' = .
     
@@ -1322,7 +1752,7 @@ program Postest_cumul
     if `"`vnm4note'"'=="" local vnm4note `"`varlist'"'
     
     // sample, variables, weights
-    qui keep if e(sample)==1
+    qui keep if `treat'<.
     if `"`overlevel'"'!="" {
         qui keep if `e(over)'==`overlevel'
         if `"`title'"'=="" local title title("`e(over)' = `overlevel'")
@@ -1405,7 +1835,7 @@ program Postest_ccumul
     if `"`vnm4note'"'=="" local vnm4note `"`varlist'"'
     
     // sample, variables, weights
-    qui keep if e(sample)==1
+    qui keep if `treat'<.
     if `"`overlevel'"'!="" {
         qui keep if `e(over)'==`overlevel'
         if `"`title'"'=="" local title title("`e(over)' = `overlevel'")
@@ -1484,7 +1914,7 @@ program Postest_box
     if `"`vnm4note'"'=="" local vnm4note `"`varlist'"'
 
     // sample, variables, weights
-    qui keep if e(sample)==1
+    qui keep if `treat'<.
     if `"`overlevel'"'!="" {
         qui keep if `e(over)'==`overlevel'
         if `"`title'"'=="" local title title("`e(over)' = `overlevel'")
@@ -1505,6 +1935,13 @@ program Postest_box
     }
     else qui gen byte `wvar' = 1
     keep `varlist' `treat' `nc' `mw' `wvar'
+    su `mw', meanonly
+    if r(min)<0 {
+        tempvar mwvar
+        qui gen double `mwvar' = max(`mw', 0) if `mw'<.
+        local mw `mwvar' 
+        di as txt "(negative matching weights reset to zero)"
+    }
     
     // prepare data
     tempname treatlbl
@@ -1557,7 +1994,7 @@ program Postest_cbox
     if `"`vnm4note'"'=="" local vnm4note `"`varlist'"'
 
     // sample, variables, weights
-    qui keep if e(sample)==1
+    qui keep if `treat'<.
     if `"`overlevel'"'!="" {
         qui keep if `e(over)'==`overlevel'
         if `"`title'"'=="" local title title("`e(over)' = `overlevel'")
@@ -1786,16 +2223,39 @@ program _Postest_cvplot
         xti("Bandwidth") ytitle("`yti'") `title' `options'
 end
 
-
 program Estimate, eclass sortpreserve
-    // subcommand
+    // subcommand and options
+    local matchopts ridge RIDGE2(numlist max=1 >=0) nn NN2(int 0) keepall ///
+        wor BWidth(str) CALiper(str) SHaredbwidth BWADJust(numlist >0) ///
+        Kernel(str) ematch(str)
+    local matchopts2 IDGENerate IDGENerate2(str) IDvar(varname) ///
+        DXGENerate DXGENerate2(str) CEMGENerate CEMGENerate2(str)
+    local pscoreopts pscmd(str) PSOPTs(str) PSPRedict(str)  ///
+        MAXIter(numlist integer max=1 >=0 <=16000) pscore(varname numeric) ///
+        comsup COMSUP2(numlist ascending max=2 missingok)
+    local ebopts TARgets(numlist int >=1 <=3) COVariances ///
+            BTOLerance(numlist missingok max=1 >0) FITopts(str)
+    local ebalopts EBalance2(varlist numeric fv) CSOnly `ebopts'
     gettoken subcmd 0: 0, parse(", ")
     if "`subcmd'"=="ps" {
-        local options
+        local options `matchopts' `matchopts2' `pscoreopts' EBalance `ebalopts'
     }
     else if "`subcmd'"=="md" {
-        local options Metric(str asis) mdmethod(numlist int >=0 <=2 max=1) ///
-             PSVars(varlist numeric fv) PSWeight(numlist >0 max=1) 
+        local options `matchopts' `matchopts2' `pscoreopts' EBalance `ebalopts' ///
+            Metric(str asis) mdmethod(numlist int >=0 <=2 max=1) ///
+            PSVars(varlist numeric fv) PSWeight(numlist >0 max=1) 
+    }
+    else if "`subcmd'"=="em" {
+        local options `matchopts2' `ebalopts'
+    }
+    else if "`subcmd'"=="eb" {
+        local options `ebopts' `pscoreopts' PSVars(varlist numeric fv)
+    }
+    else if "`subcmd'"=="ipw" {
+        local options `pscoreopts' noNORMalize EBalance `ebalopts'
+    }
+    else if "`subcmd'"=="ra" {
+        local options `pscoreopts' PSVars(varlist numeric fv)
     }
     else {
         di as err `"invalid subcommand: `subcmd'"'
@@ -1803,15 +2263,45 @@ program Estimate, eclass sortpreserve
     }
     
     // syntax
-    syntax anything(equalok id="tvar") [if] [in] [pw iw fw] [,                ///
-        over(varname numeric) TVALue(int 1) ate att atc nate po               ///
-        Kernel(str) BWidth(str) SHaredbwidth                                  ///
-        ridge RIDGE2(numlist max=1 >=0) nn NN2(int 0)                         ///
-        ematch(varlist numeric) GENerate GENerate2(str) DY DY2(str) replace   ///
-        pscore(varname numeric) pscmd(str) PSOPTs(str) PSPRedict(str)         ///
-        comsup(numlist ascending max=2 missingok) `options' NOIsily           ///
-        noHEader noTABle noMTABle * ///
+    syntax anything(equalok id="tvar") [if] [in] [pw iw fw/] [,               ///
+        over(varname numeric) TVALue(int 1) ate att atc nate po `options'     ///
+        GENerate GENerate2(str) DYgenerate DYgenerate2(str)                   ///
+        WGENerate WGENerate2(str) replace                                     ///
+        nose vce(passthru) IFGENerate IFGENerate2(str)                        ///
+        NOIsily noHEader noTABle noMTABle NOGENLIST *                         ///
         ]
+    if `"`nn2'"'=="" local nn2 0
+    if "`wor'"!="" {
+        if `nn2'==0 {
+            di as err "wor only allowed together with nn()"
+            exit 198
+        }
+        if "`weight'"=="fweight" {
+            di as err "wor not allowed with fweights"
+            exit 198
+        }
+        local keepall
+    }
+    if "`comsup2'"!="" local comsup comsup
+    if `"`vce'"'!="" & "`se'"!="" {
+        di as err "nose and vce() not both allowed"
+        exit 198
+    }
+    Parse_vce, `vce' // returns vcetype, clustvar
+    if `"`caliper'"'!="" {
+        if `"`bwidth'"'!="" {
+            di as err "bwidth() and caliper() not both allowed"
+            exit 198
+        }
+        local bwidth `"`caliper'"'
+        local caliper
+    }
+    if `"`ebalance2'"'!="" local ebalance ebalance
+    if `"`fitopts'"'!="" { // entropy balancing options
+        Parse_eb_fitopts, `fitopts' // returns eb_* locals 
+    }
+    Parse_generate_prefix0 idgenerate "`idgenerate'" `"`idgenerate2'"' _ID_
+    Parse_generate_prefix0 dxgenerate "`dxgenerate'" `"`dxgenerate2'"' _DX_
     
     // nnmatch
     if `nn2'>0 {
@@ -1842,10 +2332,20 @@ program Estimate, eclass sortpreserve
     _get_diopts diopts options, `options'
     OptNotAllowed, `options'
     c_local diopts `header' `table' `mtable' `diopts'
+    c_local nogenlist `nogenlist'
     
     // parse equations
-    Parse_eq `anything' // returns tvar, xvars, novars, ovars, ovar_#, xvars_#, opts_#
-    if "`subcmd'"=="ps" {
+    Parse_eq `subcmd' `anything' // returns tvar, xvars, ematch, novars, ovars, ovar_#, ovarnm_#, xvars_#
+    if "`subcmd'"=="ra" {
+        if `"`xvars'"'!="" {
+            di as err "{it:xvars} not allowed with {bf:kmatch ra}"
+            exit 198
+        }
+    }
+    if `"`ematch'"'!="" {
+        Parse_ematch `ematch' // returns emxvars, emrules
+    }
+    if "`subcmd'"=="ps" | "`subcmd'"=="ipw" {
         if "`pscore'"!="" & `"`xvars'"'!="" {
             di as txt "(propensity score provided by user; covariates will be ignored)"
             local xvars
@@ -1855,122 +2355,223 @@ program Estimate, eclass sortpreserve
         di as err "only one of psvars() and pscore() allowed"
         exit 198
     }
-    if "`subcmd'"=="ps" | `"`pscore'`psvars'"'!="" local ps ps
-    else local ps
-    
-    // generate: construct names check whether variables already exist
-    if "`generate'"!="" local generate _KM_
-    if `"`generate2'"'!="" {
-        if `: list sizeof generate2'==1 & substr(`"`generate2'"',-1,.)=="*" {
-            local generate = substr(`"`generate2'"',1,strlen(`"`generate2'"')-1)
-            capt confirm name `generate'
-            if _rc {
-                di as error "generate(): invalid name"
-                exit 198
-            }
-            local generate2
-        }
+    if      "`subcmd'"=="ps" | "`subcmd'"=="ipw"        local ps ps
+    else if "`subcmd'"=="md" & `"`pscore'`psvars'"'!="" local ps ps
+    else if "`subcmd'"=="eb" & "`comsup'"!=""           local ps ps
+    else if "`subcmd'"=="ra" {
+        if `"`pscore'`psvars'"'!="" & "`comsup'"!="" local ps ps
         else {
-            capt confirm names `generate2'
-            if _rc {
-                di as error "generate(): invalid names"
-                exit 198
-            }
-            local generate _KM_
+            local pscore
+            local psvars
+            local comsup
         }
     }
-    if "`generate'"!="" & "`replace'"=="" {
+    else local ps
+    if `novars'==0 {
+        local se "nose"
+        local dygenerate
+        local dygenerate2
+        local ifgenerate
+        local ifgenerate2
+    }
+    
+    // generate(): construct names check whether variables already exist
+    if "`subcmd'"=="md" | "`subcmd'"=="ps" | "`subcmd'"=="em" {
+        local hasstrataid strata
+    }
+    Parse_generate_prefix generate "`generate'" `"`generate2'"' _KM_
+    if "`generate'"!="" {
+        local GENVARS
         local i 0
-        foreach v in treat nc nm mw `ps' {
+        foreach v in treat nc nm mw `ps' `hasstrataid' {
             local ++i
             local vname: word `i' of `generate2'
             if `"`vname'"'=="" local vname `generate'`v'
-            confirm new variable `vname'
+            local GENVARS `GENVARS' `vname'
         }
+        Parse_generate_checkvars generate "`GENVARS'" `replace'
     }
-    if "`dy'"!="" local dy _DY_
-    if `"`dy2'"'!="" {
-        if `: list sizeof dy2'==1 & substr(`"`dy2'"',-1,.)=="*" {
-            local dy = substr(`"`dy2'"',1,strlen(`"`dy2'"')-1)
-            capt confirm name `dy'
-            if _rc {
-                di as error "dy(): invalid name"
-                exit 198
+
+    // dygenerate(): construct names check whether variables already exist
+    Parse_generate_prefix dygenerate "`dygenerate'" `"`dygenerate2'"' _DY_
+    if "`dygenerate'"!="" {
+        local DYVARS
+        forv i=1/`novars' {
+            local vname: word `i' of `dygenerate2'
+            if `"`vname'"'=="" {
+                local vname = substr(`"`dygenerate'`ovarnm_`i''"', 1, 32)
             }
-            local dy2
+            local DYVARS `DYVARS' `vname'
         }
-        else {
-            capt confirm names `dy2'
-            if _rc {
-                di as error "dy(): invalid names"
-                exit 198
-            }
-            local dy _DY_
-        }
+        Parse_generate_checkvars dygenerate "`DYVARS'" `replace'
     }
-    if "`dy'"!="" & "`replace'"=="" {
+
+    // wgenerate(): construct names check whether variables already exist
+    Parse_generate_prefix wgenerate "`wgenerate'" `"`wgenerate2'"' _W_
+    if "`wgenerate'"!="" {
+        local WVARS
         local i 0
-        foreach v of local ovars {
+        foreach v in `ate' `att' `atc' {
             local ++i
-            local vname: word `i' of `dy2'
-            if `"`vname'"'=="" local vname `dy'`v'
-            confirm new variable `vname'
+            local v = strupper("`v'")
+            local vname: word `i' of `wgenerate2'
+            if `"`vname'"'=="" local vname `wgenerate'`v'
+            local WVARS `WVARS' `vname'
+        }
+        Parse_generate_checkvars wgenerate "`WVARS'" `replace'
+    }
+
+    // cemgenerate(): construct names check whether variables already exist
+    Parse_generate_prefix cemgenerate "`cemgenerate'" `"`cemgenerate2'"' _CEM_
+    if "`cemgenerate'"!="" {
+        local CEMVARS
+        local i 0
+        foreach emrule of local emrules {
+            local ++i
+            if "`emrule'"=="" continue
+            gettoken vname cemgenerate2 : cemgenerate2
+            if `"`vname'"'=="" {
+                local vname: word `i' of `emxvars'
+                local vname = substr(`"`cemgenerate'`vname'"', 1, 32)
+            }
+            local CEMVARS `CEMVARS' `vname'
+        }
+        Parse_generate_checkvars cemgenerate "`CEMVARS'" `replace'
+    }
+
+    // ifgenerate(): generate names and check whether variables already exist
+    Parse_generate_prefix ifgenerate "`ifgenerate'" `"`ifgenerate2'"' _IF_
+    local IFVARS
+    local IFLBLs
+    local IFs
+    local oIFs
+    if "`ifgenerate'"!="" | "`se'"=="" {
+        local i 0
+        forv j=1/`novars' {
+            local oIF
+            foreach te in `ate' `att' `atc' `nate' {
+                tempname IF
+                local oIF `oIF' `IF'
+                if "`ifgenerate'"!="" {
+                    local te = strupper("`te'")
+                    local ++i
+                    local vname: word `i' of `ifgenerate2'
+                    if `"`vname'"'=="" {
+                        if `novars'==1 local vname `ifgenerate'`te'
+                        else           local vname `ifgenerate'`j'_`te'
+                    }
+                    local IFVARS `IFVARS' `vname'
+                    local IFLBL "Influence function of"
+                    if `novars'==1 local IFLBL "`IFLBL' `te'"
+                    else           local IFLBL "`IFLBL' `ovarnm_`j'':`te'"
+                    local IFLBLs `"`IFLBLs'"`IFLBL'" "'
+                }
+                if "`po'"!="" {
+                    tempname IF1 IF0
+                    local oIF `oIF' `IF1' `IF0'
+                    if "`ifgenerate'"!="" {
+                        local ++i
+                        local vname: word `i' of `ifgenerate2'
+                        if `"`vname'"'=="" {
+                            if `novars'==1 local vname `ifgenerate'Y1_`te'
+                            else           local vname `ifgenerate'`j'_Y1_`te'
+                        }
+                        local IFVARS `IFVARS' `vname'
+                        local IFLBL "Influence function of"
+                        if `novars'==1 local IFLBL "`IFLBL' Y1(`te')"
+                        else           local IFLBL "`IFLBL' `ovarnm_`j'':Y1(`te')"
+                        local IFLBLs `"`IFLBLs'"`IFLBL'" "'
+                        local ++i
+                        local vname: word `i' of `ifgenerate2'
+                        if `"`vname'"'=="" {
+                            if `novars'==1 local vname `ifgenerate'Y0_`te'
+                            else           local vname `ifgenerate'`j'_Y0_`te'
+                        }
+                        local IFVARS `IFVARS' `vname'
+                        local IFLBL "Influence function of"
+                        if `novars'==1 local IFLBL "`IFLBL' Y0(`te')"
+                        else           local IFLBL "`IFLBL' `ovarnm_`j'':Y0(`te')"
+                        local IFLBLs `"`IFLBLs'"`IFLBL'" "'
+                    }
+                }
+            }
+            local IFs `IFs' `oIF'
+            local oIFs `"`oIFs' "`oIF'""'
+        }
+        if "`ifgenerate'"!="" {
+            Parse_generate_checkvars ifgenerate "`IFVARS'" `replace'
         }
     }
     
     // parse bwidth()
-    capt numlist `"`bwidth'"', min(1)
-    if _rc==0 {
-        capt n numlist `"`bwidth'"', min(1) range(>0)
-        if _rc {
-            di as err "invalid numlist in bwidth()"
-            exit _rc
+    if "`subcmd'"=="md" | "`subcmd'"=="ps" {
+        capt numlist `"`bwidth'"', min(1)
+        if _rc==0 {
+            capt n numlist `"`bwidth'"', min(1) range(>0)
+            if _rc {
+                di as err "invalid numlist in bwidth()"
+                exit _rc
+            }
+            local bwidth "`r(numlist)'"
         }
-        local bwidth "`r(numlist)'"
-    }
-    else if `nn2' {
-        if `"`bwidth'"'!="" {
-            di as err "bwidth() may only contain numlist if nn() is specified"
-            exit 198
+        else if `nn2' {
+            if `"`bwidth'"'!="" {
+                di as err "bwidth() may only contain numlist if nn() is specified"
+                exit 198
+            }
         }
-    }
-    else if `"`xvars'`psvars'`pscore'"'=="" {
-        if `"`bwidth'"'!="" {
-            di as txt "(skipping bandwidth estimation due to lack of covariates)"
+        else if `"`xvars'`psvars'`pscore'"'=="" {
+            if `"`bwidth'"'!="" {
+                di as txt "(skipping bandwidth estimation due to lack of covariates)"
+            }
+            local bwidth = smallestdouble()
         }
-        local bwidth = smallestdouble()
-    }
-    else {
-        _parse comma bw_method bw_opts : bwidth
-        gettoken bw_method bw_rest : bw_method
-        if `"`bw_method'"'=="" local bw_method pm
-        if !inlist(`"`bw_method'"', "pm", "cv") {
-            di as err `"bwidth(): `bw_method' not allowed"'
-            exit 198
+        else {
+            _parse comma bw_method bw_opts : bwidth
+            gettoken bw_method bw_rest : bw_method
+            if `"`bw_method'"'=="" local bw_method pm
+            if !inlist(`"`bw_method'"', "pm", "cv") {
+                di as err `"bwidth(): `bw_method' not allowed"'
+                exit 198
+            }
+            if "`bw_method'"=="pm" { // pair-matching method
+                Parse_bw_pm `subcmd' `bw_rest' `bw_opts'
+            }
+            else {  // cross-validation
+                Parse_bw_cv `subcmd' `bw_rest' `bw_opts'
+            }
+            local bwidth
         }
-        if "`bw_method'"=="pm" { // pair-matching method
-            Parse_bw_pm `subcmd' `bw_rest' `bw_opts'
-        }
-        else {  // cross-validation
-            Parse_bw_cv `subcmd' `bw_rest' `bw_opts'
-        }
-        local bwidth
     }
     
     // mark sample
     marksample touse
-    markout `touse' `tvar' `xvars' `over' `ematch' `psvars' `pscore' `cv_outcome'
+    markout `touse' `tvar' `xvars' `emxvars' `over' `psvars' `pscore' ///
+        `ebalance2' `cv_outcome' `clustvar'
+    if "`idvar'"!="" {
+         markout `touse' `idvar', strok
+    }
     forv i=1/`novars' {
         markout `touse' `ovar_`i'' `xvars_`i''
-        // can there be variables in opts_# that might need to be taken into account?
     }
     qui count if `touse'
     if (r(N)==0) error 2000
-    
+    if "`idgenerate'"!="" {
+        if "`idvar'"=="" local idvar `_sortindex'
+    }
+
     // weights
     if "`weight'"!="" {
-        tempvar wvar
-        qui gen double `wvar' `exp' if `touse'
+        capt confirm variable `exp'
+        if _rc {
+            tempvar wvar
+            qui gen double `wvar' = `exp'
+        }
+        else {
+            unab exp: `exp', min(1) max(1)
+            local wvar `exp'
+        }
+        local exp `"= `exp'"'
         local wexp `"[`weight' = `wvar']"'
         local swexp `"`wexp'"'
         if "`weight'"=="pweight" | "`weight'"=="iweight" {
@@ -1999,8 +2600,35 @@ program Estimate, eclass sortpreserve
         qui levelsof `over' if `touse'
         local overlevels `r(levels)'
         local nover: list sizeof overlevels
+        local overopt over(`over')
     }
     else local nover 1
+    
+    // coarsen exact matching variables
+    if `"`emxvars'"'!="" {
+        local emtvars
+        local cemxvars
+        local CEMTVARS
+        local i 0
+        foreach emxvar of local emxvars {
+            gettoken emrule emrules : emrules
+            if "`emrule'"=="" {
+                local emtvars `emtvars' `emxvar'
+                local cemxvars `cemxvars' `emxvar'
+                continue
+            }
+            local ++i
+            local cemxvars `cemxvars' [`emxvar']
+            local cem_`i' `emxvar'
+            tempvar tmp CEM_`i'
+            Coarsen `tmp' `emxvar' "`emrule'" `CEM_`i'' ///
+                `touse' `"`swexp'"' `wvar' `nover' `"`over'"' `"`overlevels'"'
+            local emtvars `emtvars' `tmp'
+            local CEMTVARS `CEMTVARS' `tmp'
+            // local cem_# contains name of variable to be coarsened
+            // matrix CEM_# contains cut points (rows are over-groups)
+        }
+    }
     
     // prepare main output tempvars
     tempvar nc nm mw
@@ -2011,9 +2639,13 @@ program Estimate, eclass sortpreserve
     
     // estimate propensity score
     if "`ps'"!="" {
+        if `"`maxiter'"'=="" local maxiter = min(c(maxiter), 50)
         tempname PS
         if "`pscore'"=="" {
-            if "`subcmd'"=="ps"    local psvars `xvars'
+            if "`subcmd'"=="md" | "`subcmd'"=="eb" {
+                if `"`psvars'"'=="" local psvars `xvars'
+            }
+            else if "`subcmd'"!="md" & "`subcmd'"!="ra" local psvars `xvars'
             if `"`pscmd'"'==""     local pscmd logit    // the default
             if `"`pspredict'"'=="" local pspredict pr   // the default
             if `"`over'"'!="" {
@@ -2029,12 +2661,19 @@ program Estimate, eclass sortpreserve
                     else {
                         qui `noisily' di as txt _n ///
                             "Propensity score estimation for `over'=`l'"
-                        capture `noisily' `pscmd' `treat' `psvars' `wexp' ///
-                            if `touse' & (`over'==`l'), `psopts'
-                        if _rc {
-                            di as err "`over'=`l': propensity score" ///
-                                " estimation failed"
-                            exit 198
+                        nobreak {
+                            local maxiter0 = c(maxiter)
+                            set maxiter `maxiter'
+                            capture `noisily' break ///
+                                `pscmd' `treat' `psvars' `wexp' ///
+                                    if `touse' & (`over'==`l'), `psopts'
+                            set maxiter `maxiter0'
+                            if _rc==1 exit _rc
+                            if _rc {
+                                di as err "`over'=`l': propensity score" ///
+                                    " estimation failed"
+                                exit 198
+                            }
                         }
                         quietly predict double `PStmp' if e(sample), `pspredict'
                     }
@@ -2051,11 +2690,17 @@ program Estimate, eclass sortpreserve
                 }
                 else {
                     qui `noisily' di as txt _n "Propensity score estimation"
-                    capture `noisily' `pscmd' `treat' `psvars' `wexp' ///
-                        if `touse', `psopts'
-                    if _rc {
-                        di as err "propensity score estimation failed"
-                        exit 198
+                    nobreak {
+                        local maxiter0 = c(maxiter)
+                        set maxiter `maxiter'
+                        capture `noisily' break ///
+                            `pscmd' `treat' `psvars' `wexp' if `touse', `psopts'
+                        set maxiter `maxiter0'
+                        if _rc==1 exit _rc
+                        if _rc {
+                            di as err "propensity score estimation failed"
+                            exit 198
+                        }
                     }
                     quietly predict double `PS' if e(sample), `pspredict'
                 }
@@ -2074,29 +2719,46 @@ program Estimate, eclass sortpreserve
             qui gen double `PS' = `pscore' if `touse'
         }
         // common support
-        if `"`comsup'"'!="" {
+        if "`comsup'"!="" {
             tempname PS2
-            local comsup_lb: word 1 of `comsup'
-            qui count if `touse' & `PS'<`comsup_lb'
-            local comsup_lb_n = r(N)
-            quietly gen double `PS2' = `PS' if `touse' & `PS'>=`comsup_lb'
-            local comsup_ub: word 2 of `comsup'
-            if `"`comsup_ub'"'=="" local comsup_ub "."
-            local comsup_ub_n = 0
-            if `comsup_ub'<. {
-                qui count if `touse' & `PS'>`comsup_ub' & `PS'<.
-                local comsup_ub_n = r(N)
-                quietly replace `PS2' = . if `touse' & `PS2'>`comsup_ub' & `PS2'<.
+            quietly gen double `PS2' = `PS' if `touse'
+            if "`comsup2'"=="" {
+                tempname comsup_lb comsup_ub
+                forv i = 1 / `nover' {
+                    if `"`over'"'!="" {
+                        local l: word `i' of `overlevels'
+                        local touse1 "`touse' & (`over'==`l')"
+                    }
+                    else local touse1 `touse'
+                    su `PS' if `treat'==1 & `touse1', meanonly
+                    scalar `comsup_lb' = r(min)
+                    scalar `comsup_ub' = r(max)
+                    su `PS' if `treat'==0 & `touse1', meanonly
+                    scalar `comsup_lb' = max(r(min),`comsup_lb')
+                    scalar `comsup_ub' = min(r(max),`comsup_ub')
+                    quietly replace `PS2' = . if ///
+                        (`PS'<`comsup_lb' | `PS'>`comsup_ub') & `touse1'
+                }
             }
-            di as txt "(comsup: {res:`comsup_lb_n'} obs with PS < `comsup_lb'" _c
-            if `comsup_ub'<. di ", {res:`comsup_ub_n'} obs with PS > `comsup_ub'" _c
-            di ")"
+            else {
+                local comsup_lb: word 1 of `comsup2'
+                quietly replace `PS2' = . if `PS'<`comsup_lb' & `touse'
+                local comsup_ub: word 2 of `comsup2'
+                if "`comsup_ub'"=="." local comsup_ub
+                if "`comsup_ub'"!="" {
+                    quietly replace `PS2' = . if `PS'>`comsup_ub' & `touse' 
+                }
+            }
+            sum `touse' `swexp' if `PS2'>=. & `PS'<. & `touse', meanonly
+            local comsup_n = r(N)
+            di as txt "({res:`comsup_n'} observations with PS outside common support)"
         }
         else local PS2 `PS'
     }
-    
-    // md: determine scaling matrix
-    if "`subcmd'"=="md" {
+
+    // md/eb: handle factor variables
+    if "`subcmd'"=="md" | "`subcmd'"=="eb" | ///
+        ("`ebalance'"!="" & `"`ebalance2'"'=="") {
         // - expand factor variables
         fvexpand `xvars' if `touse'
         local xxvars
@@ -2109,16 +2771,39 @@ program Estimate, eclass sortpreserve
         local txvars
         foreach v of local xxvars {
             capt confirm variable `v', exact
+            if _rc==1 exit _rc
             if _rc {
-                tempvar V
-                qui gen double `V' = `v' if `touse'
-                qui compress `V'
-                local txvars `txvars' `V'
+                tempvar vv
+                qui gen double `vv' = `v' if `touse'
+                qui compress `vv'
+                local txvars `txvars' `vv'
                 continue
             }
             local txvars `txvars' `v'
         }
-        // - add propensity score
+    }
+    if `"`ebalance2'"'!="" {
+        fvexpand `ebalance2' if `touse'
+        local tebvars
+        foreach v in `r(varlist)' {
+            if strpos(`"`v'"', "b.") continue // remove base levels
+            if strpos(`"`v'"', "o.") continue // remove omitted
+            capt confirm variable `v', exact
+            if _rc==1 exit _rc
+            if _rc {
+                tempvar vv
+                qui gen double `vv' = `v' if `touse'
+                qui compress `vv'
+                local tebvars `tebvars' `vv'
+                continue
+            }
+            local tebvars `tebvars' `v'
+        }
+    }
+    
+    // md: determine scaling matrix
+    if "`subcmd'"=="md" {
+        // - add propensity score to covariates
         if "`pscore'"!=""  local xxvars `xxvars' `pscore'
         else if "`PS'"!="" local xxvars `xxvars' _PS_
         local txvars `txvars' `PS2'
@@ -2129,65 +2814,82 @@ program Estimate, eclass sortpreserve
     }
     
     // kernel and bandwidth
-    tempname BW
-    if "`ate'"!="" | ("`att'"!="" & "`atc'"!="") {
-        mat `BW' = J(`nover', 2, .)
-        mat coln `BW' = "att" "atc"
-    }
-    else if "`att'"!="" {
-        mat `BW' = J(`nover', 1, .)
-        mat coln `BW' = "att"
-        local sharedbwidth
-    } 
-    else if "`atc'"!="" {
-        mat `BW' = J(`nover', 1, .)
-        mat coln `BW' = "atc"
-        local sharedbwidth
-    } 
-    if "`over'"!="" {
-         mat rown `BW' = `overlevels'
-    }
-    else {
-        mat rown `BW' = "bwidth"
-    }
-    if `"`bwidth'"'!="" {
-        local bwidth0 `bwidth'
-        forv i=1/`nover' {
-            forv j=1/`=colsof(`BW')' {
-                gettoken bwidthi bwidth0: bwidth0
-                mat `BW'[`i',`j'] = `bwidthi'
-                if `"`bwidth0'"'=="" {
-                    local bwidth0 `bwidth'
-                }
-                if "`sharedbwidth'"!="" {
-                    mat `BW'[`i',colsof(`BW')] = `BW'[`i',1]
-                    continue, break
+    if "`subcmd'"=="md" | "`subcmd'"=="ps" {
+        tempname BW
+        if "`ate'"!="" | ("`att'"!="" & "`atc'"!="") {
+            mat `BW' = J(`nover', 2, .)
+            mat coln `BW' = "att" "atc"
+        }
+        else if "`att'"!="" {
+            mat `BW' = J(`nover', 1, .)
+            mat coln `BW' = "att"
+            local sharedbwidth
+        } 
+        else if "`atc'"!="" {
+            mat `BW' = J(`nover', 1, .)
+            mat coln `BW' = "atc"
+            local sharedbwidth
+        } 
+        if "`over'"!="" {
+             mat rown `BW' = `overlevels'
+        }
+        else {
+            mat rown `BW' = "bwidth"
+        }
+        if `"`bwidth'"'!="" {
+            local bwidth0 `bwidth'
+            forv i=1/`nover' {
+                forv j=1/`=colsof(`BW')' {
+                    gettoken bwidthi bwidth0: bwidth0
+                    mat `BW'[`i',`j'] = `bwidthi'
+                    if `"`bwidth0'"'=="" {
+                        local bwidth0 `bwidth'
+                    }
+                    if "`sharedbwidth'"!="" {
+                        mat `BW'[`i',colsof(`BW')] = `BW'[`i',1]
+                        continue, break
+                    }
                 }
             }
         }
-    }
-    else if `nn2'==0 {
-        tempname cv_att cv_atc
-    }
-    Parse_kernel, `kernel' // returns kernel
-    if `nn2'==0 {
-        if "`ridge2'"!="" local ridge `ridge2'
-        else if "`ridge'"!="" {
-            if "`kernel'"=="epan"           local ridge = 5/16
-            //else if "`kernel'"=="gaussian"  local ridge = 2^-1.5
-            else if "`kernel'"=="rectangle" local ridge = 1/4
-            else if "`kernel'"=="triangle"  local ridge = 3/8
-            else if "`kernel'"=="biweight"  local ridge = 21/64
-            else if "`kernel'"=="triweight" local ridge = 429/1280
-            else if "`kernel'"=="cosine"    local ridge = 1/3
-            else if "`kernel'"=="parzen"    local ridge = 105/302
-            else error 499
+        else if `nn2'==0 {
+            tempname cv_att cv_atc
+        }
+        tempname BWADJ
+        mat `BWADJ' = J(`nover', colsof(`BW'), 1)
+        if `"`bwadjust'"'!="" {
+            local bwidth0 `bwadjust'
+            forv i=1/`nover' {
+                forv j=1/`=colsof(`BWADJ')' {
+                    gettoken bwidthi bwidth0: bwidth0
+                    mat `BWADJ'[`i',`j'] = `bwidthi'
+                    if `"`bwidth0'"'=="" {
+                        local bwidth0 `bwadjust'
+                    }
+                }
+            }
+        }
+        Parse_kernel, `kernel' // returns kernel
+        if `nn2'==0 {
+            if "`ridge2'"!="" local ridge `ridge2'
+            else if "`ridge'"!="" {
+                if "`kernel'"=="epan"           local ridge = 5/16
+                //else if "`kernel'"=="gaussian"  local ridge = 2^-1.5
+                else if "`kernel'"=="rectangle" local ridge = 1/4
+                else if "`kernel'"=="triangle"  local ridge = 3/8
+                else if "`kernel'"=="biweight"  local ridge = 21/64
+                else if "`kernel'"=="triweight" local ridge = 429/1280
+                else if "`kernel'"=="cosine"    local ridge = 1/3
+                else if "`kernel'"=="parzen"    local ridge = 105/302
+                else error 499
+            }
         }
     }
     
     // prepare DY tempvars
+    local dynotset dynotset
     local dyvars
-    if "`dy'"!="" {
+    if "`dygenerate'"!="" {
         forv i=1/`novars' {
             tempvar dy_`i'
             qui gen double `dy_`i'' = .
@@ -2195,16 +2897,168 @@ program Estimate, eclass sortpreserve
         }
     }
     
-    // run Kmatch()
-    local sortvars `touse' `over' `ematch' `treat' `txvars' `PS2'
-    if "`weight'"!="" {
-        local sortvars `sortvars' `wvar'
+    // perform matching or compute weights
+    if "`subcmd'"=="md" | "`subcmd'"=="ps" | "`subcmd'"=="em" {
+        local sortvars `touse' `over' `emtvars' `treat' `txvars' `PS2'
+        if "`weight'"!="" {
+            local sortvars `sortvars' `wvar'
+        }
+        sort `sortvars' `cv_outcome' `_sortindex'
+        tempvar byindex
+        qui by `touse' `over' `emtvars': gen byte `byindex' = _n==1 if `touse'
+        qui by `touse' `over': replace `byindex' = sum(`byindex') if `touse'
+        if "`subcmd'"=="em" {
+            mata: Kmatch("`subcmd'")
+        }
+        else {
+            mata: Kmatch("`subcmd'", &Kmatch_`kernel'())
+        }
+        local dynotset
     }
-    sort `sortvars' `cv_outcome' `_sortindex'
-    tempvar byindex
-    by `touse' `over' `ematch': gen byte `byindex' = _n==1
-    qui by `touse' `over': replace `byindex' = sum(`byindex')
-    mata: Kmatch("`subcmd'", &Kmatch_`kernel'())
+    else if "`subcmd'"=="ipw" {
+        local touse0 "(`PS2'>=0 & `PS2'<=1 & `touse')"
+        if "`ate'`att'"!="" {
+            qui replace `nc' = 0 if `treat' & `touse'
+            qui replace `nm' = 0 if `control' & `touse'
+            qui replace `mw' = cond(`touse0', `PS2'/(1-`PS2'), 0) if `control' & `touse'
+            if "`normalize'"=="" | "`weight'"!="fweight" {
+                qui replace `mw' = `wvar' * `mw' if `control' & `touse0'
+            }
+        }
+        if "`ate'`atc'"!="" {
+            qui replace `nc' = 0 if `control' & `touse'
+            qui replace `nm' = 0 if `treat' & `touse'
+            qui replace `mw' = cond(`touse0', (1-`PS2')/`PS2', 0) if `treat' & `touse'
+            if "`normalize'"=="" | "`weight'"!="fweight" {
+                qui replace `mw' = `wvar' * `mw' if `treat' & `touse0'
+            }
+        }
+        Fillin_nc_nm "`ate'" "`att'" "`atc'" `treat' `control' `nc' `nm' ///
+            "`touse0'" `"`over'"' `nover' `"`overlevels'"' `"`swexp'"' ///
+            "`normalize'" `mw' `wvar' "`weight'"
+    }
+    else if "`subcmd'"=="ra" {
+        if "`comsup'"!="" local touse0 "(`PS2'<. & `touse')"
+        else              local touse0 `touse'
+        if "`ate'`att'"!="" {
+            qui replace `nc' = 0 if `treat' & `touse'
+            qui replace `nm' = 0 if `control' & `touse'
+            qui replace `mw' = cond(`touse0', `wvar', 0) if `control' & `touse'
+        }
+        if "`ate'`atc'"!="" {
+            qui replace `nc' = 0 if `control' & `touse'
+            qui replace `nm' = 0 if `treat' & `touse'
+            qui replace `mw' = cond(`touse0', `wvar', 0) if `treat' & `touse'
+        }
+        Fillin_nc_nm "`ate'" "`att'" "`atc'" `treat' `control' `nc' `nm' ///
+            "`touse0'" `"`over'"' `nover' `"`overlevels'"' `"`swexp'"' ///
+            "" `mw' `wvar' "`weight'"
+    }
+    if "`subcmd'"=="eb" | "`ebalance'"!="" {
+        if `"`targets'"'==""        local targets 1
+        if `"`btolerance'"'==""     local btolerance 1e-5
+        if "`subcmd'"=="eb"         local ebvars `txvars'
+        else if `"`ebalance2'"'=="" local ebvars `txvars'
+        else                        local ebvars `tebvars'
+        if "`ebalance'"=="" {
+            if "`comsup'"!="" local touse0 "(`PS2'<. & `touse')"
+            else              local touse0 `touse'
+            if "`ate'`att'"!="" {
+                qui replace `nc' = 0 if `treat' & `touse'
+                qui replace `nm' = 0 if `control' & `touse'
+                qui replace `mw' = 0 if `control' & `touse'
+            }
+            if "`ate'`atc'"!="" {
+                qui replace `nc' = 0 if `control' & `touse'
+                qui replace `nm' = 0 if `treat' & `touse'
+                qui replace `mw' = 0 if `treat' & `touse'
+            }
+            Fillin_nc_nm "`ate'" "`att'" "`atc'" `treat' `control' `nc' `nm' ///
+                "`touse0'" `"`over'"' `nover' `"`overlevels'"' `"`swexp'"' ///
+                "nonormalize"
+        }
+        else {
+            if "`csonly'"!="" {
+                // do not use dy computed by matching in this case
+                local dynotset dynotset
+            }
+        }
+        // prepare matrix for fit statistics (max difference)
+        tempname LOSS BALANCED ITER
+        if "`ate'"!="" | ("`att'"!="" & "`atc'"!="") {
+            mat `LOSS' = J(`nover', 2, .)
+            mat coln `LOSS' = "att" "atc"
+        }
+        else if "`att'"!="" {
+            mat `LOSS' = J(`nover', 1, .)
+            mat coln `LOSS' = "att"
+        } 
+        else if "`atc'"!="" {
+            mat `LOSS' = J(`nover', 1, .)
+            mat coln `LOSS' = "atc"
+        }
+        mat `BALANCED' = `LOSS'
+        mat `ITER' = `LOSS'
+        if `"`over'"'!="" {
+            mat rown `LOSS' = `overlevels'
+            mat rown `BALANCED' = `overlevels'
+            mat rown `ITER' = `overlevels'
+        }
+        else {
+            mat rown `LOSS' = "loss"
+            mat rown `BALANCED' = "balanced"
+            mat rown `ITER' = "iterations"
+        }
+        // compute balancing weights
+        tempname maxdif balanced iterations
+        tempvar ebtreat ebcontrol
+        qui gen byte `ebtreat'   = .
+        qui gen byte `ebcontrol' = .
+        forv i = 1 / `nover' {
+            if `"`over'"'!="" {
+                local l: word `i' of `overlevels'
+                local overlbl1 "`over'=`l': "
+                local overlbl2 " for `over'=`l'"
+            }
+            else {
+                local overlbl1
+                local overlbl2
+            }
+            local j 0
+            local jj 0
+            foreach mdir in "`ate'`att'" "`ate'`atc'" {
+                local ++j
+                if "`mdir'"=="" continue
+                local mdirlbl
+                if "`ate'`att'"!="" & "`ate'`atc'"!="" {
+                    local mdirlbl: word `j' of "ATT " "ATC "
+                }
+                if `j'==1 {
+                    qui replace `ebtreat'   = `treat'   & (`nc'!=0) & `touse'
+                    qui replace `ebcontrol' = `control' & (`nm'!=0) & `touse'
+                }
+                else {
+                    qui replace `ebtreat'   = `control' & (`nc'!=0) & `touse'
+                    qui replace `ebcontrol' = `treat'   & (`nm'!=0) & `touse'
+                }
+                if `"`over'"'!="" {
+                    qui replace `ebtreat'   = 0 if (`over'!=`l') & `ebtreat'==1
+                    qui replace `ebcontrol' = 0 if (`over'!=`l') & `ebcontrol'==1
+                }
+                if "`noisily'"=="" di as txt "(`overlbl1'fitting `mdirlbl'balancing weights ..." _c
+                else               di as txt _n "Fitting `mdirlbl'balancing weights`overlbl2'"
+                mata: Kmatch_ebalance()
+                matrix `LOSS'[`i', `++jj'] = `maxdif'
+                matrix `BALANCED'[`i', `jj'] = `balanced'
+                matrix `ITER'[`i', `jj'] = `iterations'
+                if "`noisily'"=="" {
+                    if `balanced'==0 di as res " balance not achieved" as txt ")"
+                    else di as txt " done)"
+                }
+                else if `balanced'==0 di as res "balance not achieved"
+            }
+        }
+    }
     qui compress `nc' `nm'
     
     // number of observations, common support
@@ -2224,7 +3078,7 @@ program Estimate, eclass sortpreserve
             local N = `N' + r(N)
         }
     }
-    if `nn2' {
+    if `nn2' | "`subcmd'"=="em" {
         su `nc' if `touse' & `nc'>0, meanonly
         local nn_min = r(min)
         local nn_max = r(max)
@@ -2233,113 +3087,185 @@ program Estimate, eclass sortpreserve
     // treatment effects
     if `novars' {
         tempname b b0
+        if "`se'"=="" tempname V
+        foreach IF of local IFs {
+            qui gen double `IF' = 0 if `touse'
+        }
     }
     forv i=1/`nover' {
         local l: word `i' of `overlevels'
+        local tmp `"`oIFs'"'
+        if "`subcmd'"=="eb" | "`ebalance'"!="" {
+            local attnotok
+            local atcnotok
+            local j 0
+            if "`ate'`att'"!="" {
+                if `BALANCED'[`i', `++j']==0 local attnotok attnotok
+            }
+            if "`ate'`atc'"!="" {
+                if `BALANCED'[`i', `++j']==0 local atcnotok atcnotok
+            }
+        }
         forv j=1/`novars' {
+            gettoken oIF tmp : tmp
             Estimate_teffect "`ate'" "`att'" "`atc'" "`nate'" "`po'" ///
                 `touse' `treat' `control' `nc' `nm' `mw' `novars' `ovar_`j'' ///
-                "`dy_`j''" "`xvars_`j''" `"`swexp'"' "`weight'" "`wvar'" ///
-                "`over'" "`l'" "`noisily'"
+                `ovarnm_`j'' "`dy_`j''" "`xvars_`j''" `"`swexp'"' "`weight'" ///
+                "`wvar'" "`over'" "`l'" "`noisily'" "`oIF'" ///
+                "`attnotok'" "`atcnotok'" "`ebalance'" "`dynotset'"
             mat `b' = nullmat(`b'), r(b)
         }
     }
     local k_omit 0
     if `novars' {
-        mata: st_local("k_omit", strofreal(FlagOmitted("`b'")))
+        mata: st_local("k_omit", strofreal(Kmatch_FlagOmitted("`b'")))
+        if "`se'"=="" {
+            qui total `IFs' `wexp' if `touse', `overopt' `vce'
+            //qui mean `IFs' `wexp' if `touse', `overopt' `vce'
+            mat `V' = e(V)
+            local df_r = e(df_r)
+            if "`vcetype'"=="cluster" {
+                local N_clust = e(N_clust)
+            }
+            if `"`overopt'"'!="" {
+                mata: Kmatch_flip_V()
+            }
+        }
     }
     
     // potential outcome differences
-    if "`dy'"!="" & ("`ate'"!="" | "`atc'"!="") {
+    if "`dygenerate'"!="" & ("`ate'"!="" | "`atc'"!="") {
         forv j=1/`novars' {
             qui replace `dy_`j'' = `dy_`j'' - `ovar_`j'' if `touse' & `control'
         }
     }
-    if "`dy'"!="" & ("`ate'"!="" | "`att'"!="") {
+    if "`dygenerate'"!="" & ("`ate'"!="" | "`att'"!="") {
         forv j=1/`novars' {
             qui replace `dy_`j'' = `ovar_`j'' - `dy_`j''  if `touse' & `treat'
         }
     }
-
+    
     // post results
     if `novars' {
-        eret post `b', obs(`N') esample(`touse')
+        if "`se'"=="" {
+            mat coln `V' = `: colfullnames `b''
+            mat rown `V' = `: colfullnames `b''
+        }
+        eret post `b' `V', obs(`N') esample(`touse')
     }
     else {
         eret post, obs(`N') esample(`touse')
     }
     eret local cmd              "kmatch"
     eret local subcmd           "`subcmd'"
-    if "`subcmd'"=="ps"         local title "Propensity-score"
-    else                        local title "Multivariate-distance"
-    if `nn2'                    local title "`title' nearest-neighbor"
-    else if `"`ridge'"'==""     local title "`title' kernel"
-    else                        local title "`title' ridge"
-    eret local title            "`title' matching"
+    if "`subcmd'"=="ipw" {
+        eret local title        "Inverse probability weighting"
+    }
+    else if "`subcmd'"=="eb" {
+        eret local title        "Entropy balancing"
+    }
+    else if "`subcmd'"=="ra" {
+        eret local title        "Regression adjustment"
+    }
+    else if "`subcmd'"=="em" {
+        if `"`cem_1'"'=="" eret local title "Exact matching"
+        else               eret local title "Coarsened exact matching" 
+        local xvars `emxvars' // will be used by kmatch sum/csum
+    }
+    else {
+        if "`subcmd'"=="ps"     local title "Propensity-score"
+        else                    local title "Multivariate-distance"
+        if `nn2'                local title "`title' nearest-neighbor"
+        else if `"`ridge'"'=="" local title "`title' kernel"
+        else                    local title "`title' ridge"
+                                local title "`title' matching"
+        if "`wor'"!=""          local title "`title' (without replacement)"
+        eret local title        "`title'"
+    }
     eret local tvar             "`tvar'"
     eret scalar tval            = `tvalue'
     eret local xvars            "`xvars'"
-    eret local ematch           "`ematch'"
-    if `nn2' {
+    if `"`ematch'"'!="" {
+        eret local ematch       `"`ematch'"'
+        eret local emxvars      `"`cemxvars'"'
+        local i 0
+        while (1) {
+            local ++i
+            if `"`cem_`i''"'=="" continue, break
+            eret matrix C_`cem_`i'' = `CEM_`i''
+        }
+    }
+    if `nn2' | "`subcmd'"=="em" {
+        if `nn2' {
+            eret local keepall  "`keepall'"
+            eret local wor      "`wor'"
+        }
         eret scalar nn          = `nn2'
         eret scalar nn_min      = `nn_min'
         eret scalar nn_max      = `nn_max'
     }
-    else {
+    else if "`subcmd'"=="ps" | "`subcmd'"=="md" {
         eret local kernel       "`kernel'"
         if "`ridge'"!="" {
             eret scalar ridge   = `ridge'
         }
     }
-    eret matrix bwidth          = `BW'
-    if `"`bwidth'"'=="" & `nn2'==0 {
-        eret local bw_method    "`bw_method'"
-        if "`bw_method'"=="pm" {
-            eret scalar pm_quantile = `pm_quantile'
-            eret scalar pm_factor   = `pm_factor'
-        }
-        else {
-            eret local cv_nolimit "`cv_nolimit'"
-            if "`cv_grid'`cv_range'"=="" {
-                eret scalar pm_quantile = `pm_quantile'
-                eret scalar pm_factor   = `pm_factor'
-                eret scalar cv_factor   = `cv_factor'
-            }
-            if "`cv_outcome'"!="" {
-                eret local cv_weighted  "`cv_weighted'"
-                eret local cv_nopenalty "`cv_nopenalty'"
-                eret local cv_outcome   "`cv_outcome'"
-            }
-            else if "`ridge'"!="" {
-                eret local cv_exact     "`cv_exact'"
-            }
-            if "`sharedbwidth'"!="" {
-                eret matrix cv = `cv_att'
-            }
-            else if ("`ate'"!="" | ("`att'"!="" & "`atc'"!="")) {
-                mat roweq `cv_att' = "treated"
-                mat roweq `cv_atc' = "untreated"
-                mat `cv_att' = `cv_att' \ `cv_atc'
-                eret matrix cv = `cv_att'
-            }
-            else if `"`att'"'!="" {
-                eret matrix cv = `cv_att'
-            }
-            else if `"`atc'"'!="" {
-                eret matrix cv = `cv_atc'
+    if "`subcmd'"=="ps" | "`subcmd'"=="md" {
+        if `"`bwidth'"'!="" | `nn2'==0 {
+            eret matrix bwidth = `BW'
+            if `"`bwidth'"'=="" {
+                eret local bw_method    "`bw_method'"
+                if "`bw_method'"=="pm" {
+                    eret scalar pm_quantile = `pm_quantile'
+                    eret scalar pm_factor   = `pm_factor'
+                }
+                else {
+                    eret local cv_nolimit "`cv_nolimit'"
+                    if "`cv_grid'`cv_range'"=="" {
+                        eret scalar pm_quantile = `pm_quantile'
+                        eret scalar pm_factor   = `pm_factor'
+                        eret scalar cv_factor   = `cv_factor'
+                    }
+                    if "`cv_outcome'"!="" {
+                        eret local cv_weighted  "`cv_weighted'"
+                        eret local cv_nopenalty "`cv_nopenalty'"
+                        eret local cv_outcome   "`cv_outcome'"
+                    }
+                    else if "`ridge'"!="" {
+                        eret local cv_exact     "`cv_exact'"
+                    }
+                    if "`sharedbwidth'"!="" {
+                        eret matrix cv = `cv_att'
+                    }
+                    else if ("`ate'"!="" | ("`att'"!="" & "`atc'"!="")) {
+                        mat roweq `cv_att' = "treated"
+                        mat roweq `cv_atc' = "untreated"
+                        mat `cv_att' = `cv_att' \ `cv_atc'
+                        eret matrix cv = `cv_att'
+                    }
+                    else if `"`att'"'!="" {
+                        eret matrix cv = `cv_att'
+                    }
+                    else if `"`atc'"'!="" {
+                        eret matrix cv = `cv_atc'
+                    }
+                }
             }
         }
     }
     if "`ps'"!="" {
-        eret local pscore       "`pscore'"
-        eret local pscmd        "`pscmd'"
-        eret local pspredict    "`pspredict'"
-        eret local psopts       `"`psopts'"'
-        if `"`comsup'"'!="" {
-            eret scalar comsup_lb   = `comsup_lb'
-            eret scalar comsup_ub   = `comsup_ub'
-            eret scalar comsup_lb_n = `comsup_lb_n'
-            eret scalar comsup_ub_n = `comsup_ub_n'
+        eret local  pscore       "`pscore'"
+        eret local  pscmd        "`pscmd'"
+        eret local  pspredict    "`pspredict'"
+        eret local  psopts       `"`psopts'"'
+        eret scalar maxiter      = `maxiter'
+        if "`comsup'"!="" {
+            eret scalar N_outsup = `comsup_n'
+            if "`comsup2'"!="" eret local comsup "`comsup2'"
+            else               eret local comsup "comsup"
+        }
+        if  "`subcmd'"=="md" | "`subcmd'"=="eb" | "`subcmd'"=="ra" {
+            eret local  psvars    "`psvars'"
         }
     }
     if "`subcmd'"=="md" {
@@ -2350,7 +3276,21 @@ program Estimate, eclass sortpreserve
         eret local mdmethod     "`mdmethod'"
         eret local metric_units   `metric_units'
         eret local metric_weights `metric_weights'
-        eret local psvars       "`psvars'"
+    }
+    if "`subcmd'"=="eb" | "`ebalance'"!="" {
+        eret local  targets      `"`targets'"'
+        eret local  covariances  `"`covariances'"'
+        eret local  nconstraint  `"`nconstraint'"'
+        eret local  fitopts      `"`fitopts'"'
+        eret scalar btolerance   = `btolerance'
+        eret matrix balanced     = `BALANCED'
+        eret matrix loss         = `LOSS'
+        eret matrix iterations   = `ITER'
+    }
+    if "`ebalance'"!="" {
+        eret local  csonly       "`csonly'"
+        eret local  ebvars       `"`ebalance2'"'
+        eret local  ebalance     "`ebalance'"
     }
     eret local ate              "`ate'"
     eret local att              "`att'"
@@ -2364,56 +3304,161 @@ program Estimate, eclass sortpreserve
     eret scalar N_ovars         = `novars'
     if `novars'==1 {
         eret local depvar       "`ovars'"
+        eret local ovar         "`ovar_1'"
+        eret local avars        "`xvars_1'"
     }
     forv i=1/`novars' {
-        local ii `i'
-        if `novars'==1 local ii
-        eret local ovar`ii'     "`ovar_`i''"
-        eret local avars`ii'    "`xvars_`i''"
+        eret local ovar`i'     "`ovar_`i''"
+        eret local avars`i'    "`xvars_`i''"
     }
     eret local wtype            "`weight'"
     eret local wexp             `"`exp'"'
     eret scalar k_omit          = `k_omit'
     eret matrix _N              = `_N'
+    if "`se'"=="" {
+        if `"`df_r'"'!="" {
+            eret scalar df_r = `df_r'
+        }
+        eret local vce "`vcetype'"
+        if "`vcetype'"=="cluster" {
+            eret scalar N_clust = `N_clust'
+            eret local clustvar "`clustvar'"
+        }
+    }
     
     // return variables
-    if "`generate'"!="" {
-        local genvars
-        local i 0
-        foreach v in treat nc nm mw `ps' {
-            local ++i
-            local vname: word `i' of `generate2'
-            if `"`vname'"'=="" local vname `generate'`v'
-            capt confirm new variable `vname'
-            if _rc drop `vname'
-            if "`v'"=="ps" local v PS
-            rename ``v'' `vname'
-            local lbl: word `i' of ///
-                "Treatment indicator" ///
-                "Number of matched controls" ///
-                "Number of times used as a match" ///
-                "Matching weight" ///
-                "Propensity score"
-            lab var `vname' "`lbl'"
-            local genvars `genvars' `vname'
+    // - idgenerate() and dxgenerate() (do first because there might be name conflicts)
+    if `"`idgenvars'"'!="" | `"`dxgenvars'"'!="" {
+        if "`replace'"=="" {
+            local i 0
+            foreach v of local idgenvars {
+                local ++i
+                confirm new variable `idgenerate2'`i'
+            }
+            local i 0
+            foreach v of local dxgenvars {
+                local ++i
+                confirm new variable `dxgenerate2'`i'
+            }
         }
-        eret local generate `genvars'
-    }
-    if "`dy'"!="" {
-        local genvars
+        local IDGENVARS
         local i 0
-        foreach v of local ovars {
+        foreach v of local idgenvars {
             local ++i
-            local vname: word `i' of `dy2'
-            if `"`vname'"'=="" local vname `dy'`v'
-            capt confirm new variable `vname'
-            if _rc drop `vname'
-            rename `dy_`i'' `vname'
-            lab var `vname' "Matched difference in `v'"
-            local genvars `genvars' `vname'
+            local vname `idgenerate2'`i'
+            if "`replace'"!="" {
+                capt confirm new variable `vname'
+                if _rc==1 exit _rc
+                if _rc drop `vname'
+            }
+            rename `v' `vname'
+            lab var `vname' "ID of control `i'"
+            local IDGENVARS `IDGENVARS' `vname'
         }
-        eret local dy `genvars'
+        eret local idgenerate `"`IDGENVARS'"'
+        local DXGENVARS
+        local i 0
+        foreach v of local dxgenvars {
+            local ++i
+            local vname `dxgenerate2'`i'
+            if "`replace'"!="" {
+                capt confirm new variable `vname'
+                if _rc==1 exit _rc
+                if _rc drop `vname'
+            }
+            rename `v' `vname'
+            lab var `vname' "DX of control `i'"
+            local DXGENVARS `DXGENVARS' `vname'
+        }
+        eret local dxgenerate `"`DXGENVARS'"'
     }
+    // - wgenerate(): do before handling generate()
+    local i 0
+    foreach vname of local WVARS {
+        local ++i
+        local v: word `i' of `ate' `att' `atc'
+        local v = strupper("`v'")
+        capt confirm new variable `vname'
+        if _rc==1 exit _rc
+        if _rc drop `vname'
+        qui generate double `vname' = 0 if `treat'<.
+        if "`weight'"=="fweight" local timesfw "*`wvar'"
+        else                     local timesfw
+        if "`v'"=="ATE" {
+            qui replace `vname' = `wvar'         if `nc'>0 & `nc'<. & `treat'<.
+            qui replace `vname' = `vname' + `mw'`timesfw' if `mw'<. & `treat'<.
+        }
+        else if "`v'"=="ATT" {
+            qui replace `vname' = `wvar' if `nc'>0 & `nc'<. & `treat'==1
+            qui replace `vname' = `mw'`timesfw'   if `mw'<. & `treat'==0
+        }
+        else if "`v'"=="ATC" {
+            qui replace `vname' = `wvar' if `nc'>0 & `nc'<. & `treat'==0
+            qui replace `vname' = `mw'`timesfw'   if `mw'<. & `treat'==1
+        }
+        lab var `vname' "Matching weights for `v'"
+    }
+    eret local wgenerate "`WVARS'"
+    // - generate()
+    local i 0
+    foreach vname of local GENVARS {
+        local ++i
+        local v: word `i' of treat nc nm mw `ps' `hasstrataid'
+        local lbl: word `i' of ///
+            "Treatment indicator" ///
+            "Number of matched controls" ///
+            "Number of times used as a match" ///
+            "Matching weight"
+        if "`v'"=="ps" {
+            local v PS
+            local lbl "Propensity score"
+        }
+        else if "`v'"=="strata" {
+            local lbl "Matching stratum"
+            local v byindex
+        }
+        capt confirm new variable `vname'
+        if _rc==1 exit _rc
+        if _rc drop `vname'
+        rename ``v'' `vname'
+        lab var `vname' "`lbl'"
+    }
+    eret local generate "`GENVARS'"
+    // - dygenerate()
+    local i 0
+    foreach vname of local DYVARS {
+        local ++i
+        capt confirm new variable `vname'
+        if _rc==1 exit _rc
+        if _rc drop `vname'
+        rename `dy_`i'' `vname'
+        lab var `vname' "Matched difference in `ovar_`i''"
+    }
+    eret local dygenerate "`DYVARS'"
+    // - cemgenerate()
+    local i 0
+    foreach vname of local CEMVARS {
+        local ++i
+        gettoken CEMT CEMTVARS : CEMTVARS
+        capt confirm new variable `vname'
+        if _rc==1 exit _rc
+        if _rc drop `vname'
+        rename `CEMT' `vname'
+        lab var `vname' "Coarsened `cem_`i''"
+    }
+    eret local cemgenerate "`CEMVARS'"
+    // - ifgenerate()
+    foreach vname of local IFVARS {
+        gettoken IF IFs : IFs
+        gettoken IFLBL IFLBLs : IFLBLs
+        capt confirm new variable `vname'
+        if _rc==1 exit _rc
+        if _rc drop `vname'
+        rename `IF' `vname'
+        lab var `vname' "`IFLBL'"
+    }
+    eret local ifgenerate "`IFVARS'"
+    
     Return_clear 
 end
 program Return_clear, rclass
@@ -2427,23 +3472,94 @@ program OptNotAllowed
     }
 end
 
+program Parse_eb_fitopts
+    syntax [, ///
+        DFCorrection NConstraint noSTandardize DIFficult ///
+        MAXIter(numlist integer max=1 >=0 <=16000) ///
+        PTOLerance(numlist missingok max=1 >=0) ///
+        VTOLerance(numlist missingok max=1 >=0) ///
+        ]
+    c_local eb_dfcorrection "`dfcorrection'"
+    c_local eb_nconstraint  "`nconstraint'"
+    c_local eb_standardize  "`standardize'"
+    c_local eb_difficult    "`difficult'"
+    c_local eb_maxiter      "`maxiter'"
+    c_local eb_ptolerance   "`ptolerance'"
+    c_local eb_vtolerance   "`vtolerance'"
+end
+
+program Parse_vce
+    syntax [, vce(str) ]
+    if `"`vce'"'=="" {
+        c_local vcetype "analytic"
+        c_local clustvar ""
+        exit
+    }
+    gettoken vcetype 0 : vce, parse(", ")
+    if `"`vcetype'"'=="analytic" {
+        if `"`0'"'!="" {
+            di as err `"invalid vce() option"'
+            exit 198
+        }
+        c_local vcetype "analytic"
+        c_local clustvar
+        exit
+    }
+    if `"`vcetype'"'== substr("cluster",1,max(2,strlen(`"`vcetype'"'))) {
+        syntax varlist
+        c_local vcetype "cluster"
+        c_local clustvar `"`varlist'"'
+        exit
+    }
+    di as err "vcetype '" `"`vcetype'"' "' not allowed"
+    exit 198
+end
+
 program Parse_eq
-    // main equation: treatment variables and covariates
-    gettoken tvar rest : 0, parse("(")
-    gettoken 0 xvars : tvar
+    gettoken subcmd 0 : 0
+    // treatment variable
+    gettoken 0 rest : 0
     capt n syntax varname(numeric)
+    if _rc==1 exit _rc
     if _rc {
         di as err "invalid treatment variable specification"
         exit _rc
     }
     c_local tvar `varlist'
-    local 0 `"`xvars'"'
-    capt n syntax [varlist(numeric fv default=none)]
-    if _rc {
-        di as err "invalid control variables specification"
-        exit _rc
+    // emvars
+    if (`"`subcmd'"'=="em") {
+        mata: Kmatch_parse_emvars() // returns ematch and rest
+        c_local xvars ""
+        c_local ematch `"`ematch'"'
     }
-    c_local xvars `varlist'
+    // xvars
+    else {
+        local xvars
+        while (`"`rest'"'!="") {
+            gettoken 0 rest : rest, match(par) bind
+            if `"`par'"'=="(" {
+                // check whether '0' is an outcome equation "(...)"
+                // => true if 'rest' is empty, starts with a blank, or with "("
+                if inlist(strtrim(substr(`"`rest'"',1,1)),"","(") {
+                    local rest `"(`0')`rest'"'
+                    continue, break
+                }
+                // else: get next token without matching parentheses such that,
+                // e.g., "(x y)#z" is read as a single token
+                local rest `"(`0')`rest'"'
+                gettoken 0 rest : rest, bind
+            }
+            local xvars `"`xvars' `0'"'
+        }
+        local 0 `"`xvars'"'
+        capt n syntax [varlist(numeric fv default=none)]
+        if _rc==1 exit _rc
+        if _rc {
+            di as err "invalid control variables specification"
+            exit _rc
+        }
+        c_local xvars `varlist'
+    }
     // outcome equations
     local i 0
     local ovars
@@ -2453,7 +3569,6 @@ program Parse_eq
             di as err "invalid outcome equation specification"
             exit 198
         }
-        _parse comma eq opts: eq
         gettoken 0 eq : eq, parse("=")
         gettoken eqsign xvars : eq, parse("=")
         if `"`eqsign'"'!="" {
@@ -2463,6 +3578,7 @@ program Parse_eq
             }
         }
         capt n syntax varlist(numeric)
+        if _rc==1 exit _rc
         if _rc {
             di as err "invalid outcome variable specification"
             exit _rc
@@ -2470,6 +3586,7 @@ program Parse_eq
         local ovarsi `varlist'
         local 0 `"`xvars'"'
         capt n syntax [varlist(numeric fv default=none)]
+        if _rc==1 exit _rc
         if _rc {
             di as err "invalid adjustment variables specification"
             exit _rc
@@ -2477,27 +3594,163 @@ program Parse_eq
         local xvars `varlist'
         foreach v of local ovarsi {
             local ++i
+            else local vname `v'
             local ovars `ovars' `v'
-            c_local ovar_`i' `v'
-            c_local xvars_`i' `xvars'
-            c_local opts_`i' `opts'
+            local ovar_`i' `v'
+            local xvars_`i' `xvars'
         }
     }
-    local dups: list dups ovars
-    if `"`dups'"'!="" {
-        gettoken dups : dups
-        di as err `"`dups' not allowed"'
-        di as err `"outcome variables must be unique"'
+    local novars `i'
+    local tmp: list uniq ovars
+    local hasdupl = (`:list sizeof tmp' != `:list sizeof ovars')
+    forv i=1/`novars' {
+        local v `ovar_`i''
+        if `hasdupl' {
+            local vname = substr(`"`i'_`v'"', 1, 32)
+        }
+        else local vname `v'
+        c_local ovar_`i' `v'
+        c_local ovarnm_`i' `vname'
+        c_local xvars_`i' `xvars_`i''
+        local tmp `tmp' `v'
+    }
+    c_local novars `novars'
+    c_local ovars `ovars'
+end
+
+program Parse_generate_prefix0
+    args gnm g g2 prefix
+    if `"`g2'"'!="" local g `gnm'
+    if "`g'"!="" {
+        if `"`g2'"'!="" {
+            if `: list sizeof g2'!=1 {
+                di as error "`gnm'() contains invalid prefix"
+                exit 198
+            }
+            if substr(`"`g2'"', -1, .)=="*" {
+                local g2 = substr(`"`g2'"', 1, strlen(`"`g2'"')-1)
+            }
+            capt confirm name `g2'
+            if _rc {
+                di as error "`gnm'() contains invalid prefix"
+                exit 198
+            }
+        }
+        else local g2 `prefix'
+    }
+    c_local `gnm'  `g'
+    c_local `gnm'2 "`g2'"
+end
+
+program Parse_generate_prefix
+    args gnm g g2 prefix
+    if "`g'"!="" local g `prefix'
+    if `"`g2'"'!="" {
+        if `: list sizeof g2'==1 & substr(`"`g2'"',-1,.)=="*" {
+            local g = substr(`"`g2'"', 1, strlen(`"`g2'"')-1)
+            capt confirm name `g'
+            if _rc {
+                di as error "`gnm'() contains invalid prefix"
+                exit 198
+            }
+            local g2
+        }
+        else {
+            capt confirm names `g2'
+            if _rc {
+                di as error "`gnm'() contains invalid name(s)"
+                exit 198
+            }
+            local g `prefix'
+        }
+    }
+    c_local `gnm'  `g'
+    c_local `gnm'2 "`g2'"
+end
+
+program Parse_generate_checkvars
+    args nm vars replace
+    local VARS: list uniq vars
+    if `:list sizeof VARS'!=`:list sizeof vars' {
+        di as err "`nm'(): `vars'"
+        di as err "variable names must be unique"
         exit 198
     }
-    c_local novars `i'
-    c_local ovars `ovars'
+    if "`replace'"=="" {
+        foreach v of local vars {
+            confirm new variable `v'
+        }
+    }
+end
+
+program Parse_ematch
+    // add leading "(asis)" if list does not start with a rule
+    gettoken rule : 0, match(par)
+    if ("`par'"=="") {
+        local 0 `"(asis) `0'"'
+    }
+    // process list
+    local terms `"`0'"'
+    local 0
+    while (`"`terms'"'!="") {
+        // get rule
+        gettoken rule terms : terms, match(par)
+        if ("`par'"!="(") {
+            di as err "unexpected error; invalid ematch specification"
+            exit 198
+        }
+        local rule = strtrim(`"`rule'"')
+        if inlist(`"`rule'"', "asis", ".", "") local rule ""
+        else if substr(`"`rule'"',1,1)=="#" {
+            local num = strtrim(substr(`"`rule'"',2,.))
+            capt confirm integer number `num'
+            if _rc==1 exit 1 // break
+            if _rc {
+                di as err "'" `"`rule'"' "': invalid coarsening rule"
+                exit 198
+            }
+            if `num'==0 local rule ""
+            else {
+                if `num'<1 {
+                    di as err "'" `"`rule'"' "': invalid coarsening rule"
+                    exit 198
+                }
+                local rule "#`num'"
+            }
+        }
+        else if !inlist(`"`rule'"', "hist", "sturges", "rice", "doane", ///
+            "scott", "fd") {
+            capt numlist `"`rule'"'
+            if _rc==1 exit 1 // break
+            if _rc {
+                di as err "'" `"`rule'"' "': invalid coarsening rule"
+                exit 198
+            }
+        }
+        // get variables
+        gettoken 0 terms : terms, parse("(")
+        if `"`0'"'=="(" {
+            local terms `"`0'`terms'"'
+            gettoken rule : terms, match(par)
+            di as err `"'(`rule')' found where {it:varlist} expected"'
+            exit 198
+        }
+        syntax varlist(numeric)
+        local xvars `xvars' `varlist'
+        foreach v of local varlist {
+            local rules `"`rules'`space'"`rule'""'
+            local space " "
+        }
+    }
+    c_local emxvars `xvars'
+    c_local emrules `"`rules'"'
 end
 
 program Parse_bw_pm
     gettoken subcmd 0 : 0
     syntax [anything] [, QUIetly ]
     capt n numlist `"`anything'"', min(0) max(2) range(>0)
+    if _rc==1 exit _rc
     if _rc {
         di as err "invalid bwidth()"
         exit _rc
@@ -2544,6 +3797,95 @@ program Parse_bw_cv
     c_local cv_nolimit   `nolimit'
     c_local cv_exact     `exact'
     c_local bw_quietly   `quietly'
+end
+
+program Coarsen
+    args v x rule CEM touse0 wgt wvar nover over overlevels
+    qui gen byte `v' = 1 if `touse0'
+    if      "`rule'"=="hist"          local ctype 2
+    else if "`rule'"=="sturges"       local ctype 3
+    else if "`rule'"=="rice"          local ctype 4
+    else if "`rule'"=="doane"         local ctype 5
+    else if "`rule'"=="scott"         local ctype 6
+    else if "`rule'"=="fd"            local ctype 7
+    else if substr("`rule'",1,1)=="#" local ctype 1
+    else                              local ctype 0 // fixed cuts
+    tempname h // bin width
+    if `ctype' {
+        if `ctype'==1 {                             // #c
+            local c = substr("`rule'",2,.)
+        }
+        matrix `CEM' = J(`nover', 1, .)
+        forv i = 1 / `nover' {
+            if `"`over'"'!="" {
+                local l: word `i' of `overlevels'
+                local touse "`touse0' & (`over'==`l')"
+            }
+            else local touse `touse0'
+            if `ctype'==1 {                         // #c
+                su `x' if `touse', meanonly
+            }
+            else if `ctype'==2 {                    // hist
+                su `x' `wgt' if `touse', meanonly
+                local c = ceil(min(sqrt(r(N)), 10*ln(r(N))/ln(10))) - 1
+            }
+            else if `ctype'==3 {                    // sturges
+                su `x' `wgt' if `touse', meanonly
+                local c = ceil(ln(r(N))/ln(2))
+            }
+            else if `ctype'==4 {                    // rice
+                su `x' `wgt' if `touse', meanonly
+                local c = ceil(2 * r(N)^(1/3)) - 1
+            }
+            else if `ctype'==5 {                    // doane
+                qui su `x' `wgt' if `touse', detail
+                local c = ln(r(N)) / ln(2) + ln(1 + abs(r(skewness)) ///
+                        / sqrt(6 * (r(N)-2) / ((r(N)+1) * (r(N)+3)))) / ln(2)
+                local c = ceil(`c')
+            }
+            else if `ctype'==6 {                    // scott
+                qui su `x' `wgt' if `touse'
+                scalar `h' = 3.5 * r(sd) / r(N)^(1/3)
+                local c = ceil((r(max)-r(min))/`h') - 1 
+            }
+            else if `ctype'==7 {                    // fd
+                qui su `x' `wgt' if `touse', detail
+                scalar `h' = 2 * (r(p75)-r(p25)) / r(N)^(1/3)
+                local c = ceil((r(max)-r(min))/`h') - 1
+            }
+            local c = max(`c', 1)       // make sure that never zero
+            if `c'>colsof(`CEM') {
+                matrix `CEM' = `CEM', J(`nover', `c'-colsof(`CEM'), .)
+            }
+            scalar `h' =  (r(max) - r(min)) / (`c' + 1)
+            forv j = 1 / `c' {
+                matrix `CEM'[`i', `j'] = r(min) + `j' * `h'
+            }
+            forv j = 1 / `c' {
+                qui replace `v' = (`j'+1) if `x'>`CEM'[`i',`j'] & `touse'
+            }
+        }
+    }
+    else {
+        numlist "`rule'", sort
+        local cuts `r(numlist)'
+        local j 1
+        foreach cut of local cuts {
+            local ++j
+            qui replace `v' = `j' if `x'>`cut' & `touse0'
+        }
+        mata: st_matrix(st_local("CEM"), J(`nover', 1, ///
+            strtoreal(tokens(st_local("cuts")))))
+    }
+    // column and row names
+    local coln
+    forv j = 1 / `=colsof(`CEM')' {
+        local coln `coln' cut`j'
+    }
+    matrix coln `CEM' = `coln'
+    if `"`over'"'!="" {
+        matrix rown `CEM' = `overlevels'
+    }
 end
 
 program Parse_metric
@@ -2696,6 +4038,48 @@ program Parse_kernel
     c_local kernel `kernel'
 end
 
+program Fillin_nc_nm
+    args ate att atc treat control nc nm touse0 over nover overlevels swexp ///
+        normalize mw wvar weight
+    tempname Nt Nc
+    if "`normalize'"=="" tempname W
+    forv i = 1 / `nover' {
+        if `"`over'"'!="" {
+            local l: word `i' of `overlevels'
+            local touse "`touse0' & (`over'==`l')"
+        }
+        else local touse `touse0'
+        su `treat' `swexp' if `treat' & `touse', meanonly
+        scalar `Nt' = r(N)
+        if "`normalize'"=="" {
+            scalar `W' = r(sum_w)
+            su `mw' if `control' & `touse', meanonly
+            qui replace `mw' = `mw' * (`W'/r(sum)) if `control' & `touse'
+            if "`weight'"=="fweight" {
+                qui replace `mw' = `mw' / `wvar' if `control' & `touse'
+            }
+        }
+        su `control' `swexp' if `control' & `touse', meanonly
+        scalar `Nc' = r(N)
+        if "`normalize'"=="" {
+            scalar `W' = r(sum_w)
+            su `mw' if `treat' & `touse', meanonly
+            qui replace `mw' = `mw' * (`W'/r(sum)) if `treat' & `touse'
+            if "`weight'"=="fweight" {
+                qui replace `mw' = `mw' / `wvar' if `treat' & `touse'
+            }
+        }
+        if "`ate'`att'"!="" {
+            qui replace `nc' = `Nc' if `treat' & `touse'
+            qui replace `nm' = `Nt' if `control' & `touse'
+        }
+        if "`ate'`atc'"!="" {
+            qui replace `nc' = `Nt' if `control' & `touse'
+            qui replace `nm' = `Nc' if `treat' & `touse'
+        }
+    }
+end
+
 program Count_obs, rclass
     args ate att atc treat nc nm touse weight wvar over l
     local fw = "`weight'"=="fweight"
@@ -2750,9 +4134,15 @@ program Count_obs_i
 end
 
 program Estimate_teffect, rclass
-    args ate att atc nate po touse treat control nc nm mw novars ovar ///
-        dyvar xvars swexp wtype wvar over l noi
-    if "`over'"!="" local touse "`touse' & (`over'==`l')"
+    args ate att atc nate po touse0 treat control nc nm mw novars ovar ///
+        ovarnm dyvar xvars swexp wtype wvar over l noi IFs attnotok atcnotok ///
+        ebalance dynotset
+    local se: list sizeof IFs
+    if "`over'"!="" {
+        tempvar touse
+        qui gen byte `touse' = `touse0' & (`over'==`l')
+    }
+    else local touse `touse0'
     local po = "`po'"!=""
     if `"`xvars'"'=="" local noi // suppress display if no covariates
     if "`wtype'"=="fweight" {
@@ -2765,13 +4155,20 @@ program Estimate_teffect, rclass
     if `po'            mat `b0' = J(1, 3, .)
     else               mat `b0' = J(1, 1, .)
     if "`over'"!="" {
-        if `novars'>1  mat coleq `b0' = `l'_`ovar'
+        if `novars'>1  mat coleq `b0' = `l'_`ovarnm'
         else           mat coleq `b0' = `l'
     }
-    else if `novars'>1 mat coleq `b0' = `ovar'
+    else if `novars'>1 mat coleq `b0' = `ovarnm'
     // regression adjustment
-    tempname Y1 Y0 R
-    if "`ate'"!="" | "`atc'"!="" {
+    tempname Y1 Y0 R 
+    if `se' {
+        tempname B1 B0 Q1 Q0
+        if "`xvars'"!="" {  // make sure all terms are included in regressions
+            fvexpand `xvars'
+            local xvars `r(varlist)'
+        }
+    }
+    if "`ate'`atc'"!="" {
         qui count if `touse' & `treat' & `nm'
         if r(N)==0 { // no controls
             qui generate double `Y1' = .
@@ -2784,14 +4181,23 @@ program Estimate_teffect, rclass
             else          qui `noi' di ""
             qui `noi' regress `ovar' `xvars' [iw=`mw'] ///
                 if `touse' & `treat' & `nm', noheader
-            // qui `noi' Regress `ovar' `xvars' [iw=`mw'] ///
-            //     if `touse' & `treat' & `nm'
+            if `se' {
+                matrix `B1' = e(b)
+                sum `mw' if e(sample), meanonly // because e(N) is rounded
+                capt matrix `Q1' = e(V) / e(rmse)^2 * r(sum)
+                if _rc==1 exit _rc
+            }
             qui predict double `Y1' if `touse' & `control' & `nc'
-            if "`dyvar'"!="" & "`xvars'"!="" {  // update potential outcomes
-                qui regress `dyvar' `xvars' `swexp' if `touse' & `control' & `nc'
-                qui predict double `R' if `touse' & `control' & `nc', residuals
-                qui replace `dyvar' = `Y1' + `R' if `touse' & `control' & `nc'
-                drop `R'
+            if "`dyvar'"!="" {  // update potential outcomes
+                if "`dynotset'"!="" {
+                    qui replace `dyvar' = `Y1' if `touse' & `control' & `nc'
+                }
+                else if "`xvars'"!="" | "`ebalance'"!="" {
+                    qui regress `dyvar' `xvars' `swexp' if `touse' & `control' & `nc'
+                    qui predict double `R' if `touse' & `control' & `nc', residuals
+                    qui replace `dyvar' = `Y1' + `R' if `touse' & `control' & `nc'
+                    drop `R'
+                }
             }
         }
         qui replace `Y1' = `ovar' if `touse' & `treat' & `nc' & `nc'<.
@@ -2799,7 +4205,7 @@ program Estimate_teffect, rclass
     else {
         qui generate double `Y1' = `ovar' if `touse' & `treat' & `nc' & `nc'<.
     }
-    if "`ate'"!="" | "`att'"!="" {
+    if "`ate'`att'"!="" {
         qui count if `touse' & `control' & `nm'
         if r(N)==0 { // no controls
             qui generate double `Y0' = .
@@ -2812,20 +4218,61 @@ program Estimate_teffect, rclass
             else          qui `noi' di ""
             qui `noi' regress `ovar' `xvars' [iw=`mw'] ///
                 if `touse' & `control' & `nm', noheader
-            // qui `noi' Regress `ovar' `xvars' [iw=`mw'] ///
-            //     if `touse' & `control' & `nm'
+            if `se' {
+                matrix `B0' = e(b)
+                sum `mw' if e(sample), meanonly // because e(N) is rounded
+                capt matrix `Q0' = e(V) / e(rmse)^2 * r(sum)
+                if _rc==1 exit _rc
+            }
             qui predict double `Y0' if `touse' & `treat' & `nc'
-            if "`dyvar'"!="" & "`xvars'"!="" {  // update potential outcomes
-                qui regress `dyvar' `xvars' `swexp' if `touse' & `treat' & `nc'
-                qui predict double `R' if `touse' & `treat' & `nc', residuals
-                qui replace `dyvar' = `Y0' + `R' if `touse' & `treat' & `nc'
-                drop `R'
+            if "`dyvar'"!="" {  // update potential outcomes
+                if "`dynotset'"!=""{
+                    qui replace `dyvar' = `Y0' if `touse' & `treat' & `nc'
+                }
+                else if "`xvars'"!="" | "`ebalance'"!="" {
+                    qui regress `dyvar' `xvars' `swexp' if `touse' & `treat' & `nc'
+                    qui predict double `R' if `touse' & `treat' & `nc', residuals
+                    qui replace `dyvar' = `Y0' + `R' if `touse' & `treat' & `nc'
+                    drop `R'
+                }
             }
         }
         qui replace `Y0' = `ovar' if `touse' & `control' & `nc' & `nc'<.
     }
     else {
         qui generate double `Y0' = `ovar' if `touse' & `control' & `nc' & `nc'<.
+    }
+    // basic influence functions
+    if `se' {
+        if "`ate'"!="" {
+            gettoken ATE IFs : IFs
+            if `po' {
+                gettoken E1 IFs : IFs
+                gettoken E0 IFs : IFs
+            }
+        }
+        if "`att'"!="" {
+            gettoken ATT IFs : IFs
+            if `po' {
+                gettoken E11 IFs : IFs
+                gettoken E01 IFs : IFs
+            }
+        }
+        if "`atc'"!="" {
+            gettoken ATC IFs : IFs
+            if `po' {
+                gettoken E10 IFs : IFs
+                gettoken E00 IFs : IFs
+            }
+        }
+        if "`nate'"!="" {
+            gettoken NATE IFs : IFs
+            if `po' {
+                gettoken E_1 IFs : IFs
+                gettoken E_0 IFs : IFs
+            }
+        }
+        mata: Kmatch_IF()
     }
     // ATE
     if "`ate'"!="" {
@@ -2841,6 +4288,7 @@ program Estimate_teffect, rclass
             else                      local coln `coln' Y1(ATE) Y0(ATE)
         }
         mat coln `b0' = `coln'
+        if "`attnotok'`atcnotok'"!="" mat `b0' = `b0' * .
         mat `b' = nullmat(`b'), `b0'
     }
     // ATT
@@ -2857,6 +4305,7 @@ program Estimate_teffect, rclass
             else                      local coln `coln' Y1(ATT) Y0(ATT)
         }
         mat coln `b0' = `coln'
+        if "`attnotok'"!="" mat `b0' = `b0' * .
         mat `b' = nullmat(`b'), `b0'
     }
     // ATC
@@ -2873,6 +4322,7 @@ program Estimate_teffect, rclass
             else                      local coln `coln' Y1(ATC) Y0(ATC)
         }
         mat coln `b0' = `coln'
+        if "`atcnotok'"!="" mat `b0' = `b0' * .
         mat `b' = nullmat(`b'), `b0'
     }
     // NATE
@@ -2895,31 +4345,34 @@ program Estimate_teffect, rclass
     return matrix b = `b'
 end
 
-/*
-program Regress, eclass
-    syntax varlist(fv) [if] [iw/]
-    marksample touse
-    gettoken depvar xvars : varlist
-    fvexpand `xvars'
-    local xvars `"`r(varlist)'"'
-    tempname b
-                        local DEPV `"st_data(., "`depvar'", "`touse'")"'
-    if `"`weight'"'=="" local WGT  1
-    else                local WGT  `"st_data(., "`exp'", "`touse'")"'
-    if `"`xvars'"'==""  local XVARS "J(0,0,.)"
-    else                local XVARS `"st_data(., tokens(st_local("xvars")), "`touse'")"'
-    mata: st_matrix(st_local("b"), Kmatch_regress(`DEPV', `WGT', `XVARS')')
-    mat coln `b' = `xvars' _cons
-    eret post `b', esample(`touse') depname("`depvar'")
-    eret di
-end
-*/
-
 version 11
 mata:
 mata set matastrict on
 
-real scalar FlagOmitted(string scalar bname)
+void Kmatch_parse_emvars()
+{
+    transmorphic     t
+    real scalar      i
+    string colvector S
+    
+    // tokenize
+    t = tokeninit()
+    tokenqchars(t, ( "()"))
+    tokenset(t, st_local("rest"))
+    S = tokengetall(t)
+    // identify outcome equations
+    for (i=length(S); i; i--) {
+        if (substr(S[i],1,1)!="(") break
+    }
+    // return emvars
+    if (i>0) st_local("ematch", invtokens(S[|1\i|]))
+    else     st_local("ematch", "")
+    // return outcome equations
+    if (i<length(S)) st_local("rest", invtokens(S[|i+1\.|]))
+    else             st_local("rest", "")
+}
+
+real scalar Kmatch_FlagOmitted(string scalar bname)
 {
     real scalar k
     real matrix b
@@ -2933,6 +4386,27 @@ real scalar FlagOmitted(string scalar bname)
     st_matrixcolstripe(bname, cstripe)
     st_replacematrix(bname, editmissing(b,0))
     return(k)
+}
+
+void Kmatch_sum(string scalar x, string scalar w, string scalar wtype,
+    string scalar touse, string scalar select, real scalar skew)
+{
+    real colvector X, W, mV
+    
+    stata("qui replace " + touse + " = (" + select + ")")
+    X = st_data(., x, touse)
+    if (w!="") {
+        W = st_data(., w, touse)
+        if (wtype!="fweight") W = W * rows(W) / quadsum(W) // normalize weights
+    }
+    else W = 1
+    mV = quadmeanvariance(X,W)
+    st_rclear()
+    st_numscalar("r(mean)", mV[1])
+    st_numscalar("r(Var)", mV[2])
+    st_numscalar("r(sd)", sqrt(mV[2]))
+    if (skew) st_numscalar("r(skewness)", 
+        (mean((X :- mV[1]):^3, W) :* mean((X :- mV[1]):^2, W):^(-3/2)))
 }
 
 struct KmatchSet {
@@ -2956,12 +4430,21 @@ struct KmatchSet {
     real matrix    O        // indices of over groups
     // exact matching
     real scalar    ematch   // index of ematch variable 
-    // kernel
+    // kernel/nn
     pointer scalar K        // kernel function
     real scalar    r        // ridge parameter
     real scalar    nn       // nearest-neighbor matching
+    real scalar    keepall  // do not enforce minimum number of nearest neighbors
+    real scalar    wor      // nn matching without replacement
+    real scalar    ID       // record IDs of matches (1 = ID, 2 = DX, 3 = ID + DX)
+    real scalar    IDvar    // index of ID variable (sortindex) (if S.ID!=1,3)
+    real scalar    nID      // max number of IDs (if S.ID!=1,3)
+    real rowvector mIDs     // variable indices to store match IDs (if S.ID=1,3)
+    real rowvector mDXs     // variable indices to store match DXs (if S.ID=2,3)
+    real scalar    IDstr    // string IDs (if S.ID!=1,3)
     // bandwidth
     real matrix    h        // bandwidths
+    real matrix    hadj     // bandwidth adjustments
     real scalar    sharedbw // use same bw for both matching directions
     real scalar    bw       // whether to use bandwidth search algorithm
     real scalar    bwnoi    // whether to display progress dots
@@ -2982,6 +4465,8 @@ struct KmatchSet {
     real matrix    tmise    // CV MISE (ATT)
     real matrix    cgrid    // CV grid (ATC)
     real matrix    cmise    // CV MISE (ATC)
+    // exact matching
+    real scalar    em       // exact matching (not as an option)
     // PS matching
     real scalar    ps       // index of PS variable
     // MD matching
@@ -3018,11 +4503,14 @@ struct KmatchG {
     real colvector w        // weights (from data)
     real colvector fw       // frequency weights / number of ties
     real matrix    Y        // outcome variables
+    transmorphic colvector ID // id of observation (if S.ID!=1,3)
     // output
     real matrix    Yc       // potential outcomes
     real colvector nc       // number of matches (with weight > 0)
     real colvector mw       // matching weights
     real colvector nm       // number of times used as a match
+    transmorphic matrix mIDs // matrix to hold match IDs (if S.ID!=1,3)
+    real matrix    mDXs     // matrix to hold match DXs (if S.ID!=2,3)
     // bandwidth search
     real colvector Z        // outcome variable for cross-validation
     real rowvector grid     // search grid 
@@ -3032,7 +4520,7 @@ struct KmatchG {
     real colvector C2       // container for auxiliary results
 }
 
-void Kmatch(string scalar cmd, pointer scalar K)
+void Kmatch(string scalar cmd, | pointer scalar K)
 {
     real scalar             i
     real rowvector          xvars
@@ -3042,6 +4530,7 @@ void Kmatch(string scalar cmd, pointer scalar K)
     pragma unset            L
     
     // settings
+    S.em = (cmd=="em")
     // - target statistics
     S.att = (st_local("ate")!="") | (st_local("att")!="")
     S.atc = (st_local("ate")!="") | (st_local("atc")!="")
@@ -3058,47 +4547,66 @@ void Kmatch(string scalar cmd, pointer scalar K)
     if (S.oname!="") S.over = st_varindex(st_local("over"))
     // - exact matching
     if (st_local("ematch")!="") S.ematch = st_varindex(st_local("byindex"))
-    // - kernel
-    S.K = K
-    S.r = strtoreal(st_local("ridge"))
-    S.nn = strtoreal(st_local("nn2"))
-    // - bandwidth
-    S.h = st_matrix(st_local("BW"))
-    S.sharedbw = st_local("sharedbwidth")!="" & S.att & S.atc
-    S.bw = st_local("bw_method")!=""
-    S.cv = 0
-    S.cvs = 0
-    if (S.bw) {
-        S.bwnoi = st_local("bw_quietly")==""
-        S.pmq = strtoreal(st_local("pm_quantile"))
-        S.pmf = strtoreal(st_local("pm_factor"))
-        S.cv = st_local("bw_method")=="cv"
-        if (S.cv) {
-            if (st_local("cv_grid")!="") {
-                S.grid = strtoreal(tokens(st_local("cv_grid")))
-                S.cvn = cols(S.grid)
-            }
-            else {
-                S.cvn = strtoreal(st_local("cv_n"))
-                if (st_local("cv_range")!="") {
-                    S.grid = strtoreal(tokens(st_local("cv_range")))
-                    S.grid = rangen(S.grid[1], S.grid[2], S.cvn)'
-                }
-                else S.cvf = strtoreal(st_local("cv_factor"))
-            }
-            S.weighted = st_local("cv_weighted")!=""
-            S.penalty  = st_local("cv_nopenalty")==""
-            S.limit    = st_local("cv_nolimit")==""
-            if (st_local("cv_outcome")!="") {
-                S.Zvar = st_varindex(st_local("cv_outcome"))
-            }
-            S.cvsexact = st_local("cv_exact")!="" & S.r<.
+    // - kernel/nn/match IDs/DXs
+    if (S.em==0) {
+        S.K = K
+        S.r = strtoreal(st_local("ridge"))
+        S.nn = strtoreal(st_local("nn2"))
+        S.wor = st_local("wor")!=""
+        S.keepall = st_local("keepall")!=""
+    }
+    S.ID = (st_local("idgenerate")!="") + 2*(st_local("dxgenerate")!="")
+    if (S.ID) { // 1 = idgenerate, 2 = dxgenerate, 3 = idgenerate and dxgenerate
+        S.nID = 0
+        if (S.ID!=2) {
+            S.IDvar = st_varindex(st_local("idvar"))
+            S.IDstr = st_isstrvar(S.IDvar)
         }
     }
+    // - bandwidth
+    if (S.em==0) {
+        S.h = st_matrix(st_local("BW"))
+        S.hadj = st_matrix(st_local("BWADJ"))
+        S.sharedbw = st_local("sharedbwidth")!="" & S.att & S.atc
+        S.bw = st_local("bw_method")!=""
+        S.cv = 0
+        S.cvs = 0
+        if (S.bw) {
+            S.bwnoi = st_local("bw_quietly")==""
+            S.pmq = strtoreal(st_local("pm_quantile"))
+            S.pmf = strtoreal(st_local("pm_factor"))
+            S.cv = st_local("bw_method")=="cv"
+            if (S.cv) {
+                if (st_local("cv_grid")!="") {
+                    S.grid = strtoreal(tokens(st_local("cv_grid")))
+                    S.cvn = cols(S.grid)
+                }
+                else {
+                    S.cvn = strtoreal(st_local("cv_n"))
+                    if (st_local("cv_range")!="") {
+                        S.grid = strtoreal(tokens(st_local("cv_range")))
+                        S.grid = rangen(S.grid[1], S.grid[2], S.cvn)'
+                    }
+                    else S.cvf = strtoreal(st_local("cv_factor"))
+                }
+                S.weighted = st_local("cv_weighted")!=""
+                S.penalty  = st_local("cv_nopenalty")==""
+                S.limit    = st_local("cv_nolimit")==""
+                if (st_local("cv_outcome")!="") {
+                    S.Zvar = st_varindex(st_local("cv_outcome"))
+                }
+                S.cvsexact = st_local("cv_exact")!="" & S.r<.
+            }
+        }
+    }
+    // - exact matching
+    if (S.em) S.md = 0
     // - PS matching
-    if (cmd=="ps") {
+    else if (cmd=="ps") {
         S.md = 0
-        if (S.nn) S.match = &Kmatch_i_PS_nn()
+        if (S.nn) {
+            if (S.wor==0) S.match = &Kmatch_i_PS_nn()
+        }
         else {
             S.match = &Kmatch_i_PS()
             S.mindist = &Kmatch_mindist_i_PS()
@@ -3109,7 +4617,9 @@ void Kmatch(string scalar cmd, pointer scalar K)
     // - MD matching
     else {
         S.md = 1
-        if (S.nn) S.match = &Kmatch_i_MD_nn()
+        if (S.nn) {
+            if (S.wor==0) S.match = &Kmatch_i_MD_nn()
+        }
         else {
             S.match = &Kmatch_i_MD()
             S.mindist = &Kmatch_mindist_i_MD()
@@ -3130,7 +4640,7 @@ void Kmatch(string scalar cmd, pointer scalar K)
         }
     }
     // - outcomes
-    S.Y = (st_local("ovars")!="") & (st_local("dy")!="")
+    S.Y = (st_local("ovars")!="") & (st_local("dygenerate")!="")
     if (S.Y) {
         S.yvars = st_varindex(tokens(st_local("ovars")))
         S.dyvars = st_varindex(tokens(st_local("dyvars")))
@@ -3144,9 +4654,11 @@ void Kmatch(string scalar cmd, pointer scalar K)
     Kmatch_o_index(S)
     
     // prepare containers for cross-validation bandwidth search
-    if (S.cv) {
-        if (S.att) S.tgrid = S.tmise = J(rows(S.O), S.cvn, .)
-        if (S.atc & S.sharedbw==0) S.cgrid = S.cmise = J(rows(S.O), S.cvn, .)
+    if (S.em==0) {
+        if (S.cv) {
+            if (S.att) S.tgrid = S.tmise = J(rows(S.O), S.cvn, .)
+            if (S.atc & S.sharedbw==0) S.cgrid = S.cmise = J(rows(S.O), S.cvn, .)
+        }
     }
     
     // apply matching to each over group
@@ -3161,24 +4673,32 @@ void Kmatch(string scalar cmd, pointer scalar K)
     }
     
     // update bandwidth info
-    if (S.bw) st_replacematrix(st_local("BW"), S.h)
-    if (S.cv) {
-        if (S.att) cvatt = J(rows(S.O)*2, S.cvn, .)
-        if (S.atc & S.sharedbw==0) cvatc = J(rows(S.O)*2, S.cvn, .)
-        cstripe = J(rows(S.O), 1, ("", "h")\("","MISE"))
-        for (i=1;i<=rows(S.O);i++) {
-            if (S.over<.) cstripe[|i*2-1,1 \ i*2,1|] = J(2,1,strofreal(S.O[i,1]))
-            if (S.att) cvatt[|i*2-1,1 \ i*2,.|] = S.tgrid[i,] \ S.tmise[i,]
-            if (S.atc & S.sharedbw==0) cvatc[|i*2-1,1 \ i*2,.|] = S.cgrid[i,] \ S.cmise[i,]
+    if (S.em==0) {
+        st_replacematrix(st_local("BW"), S.h)
+        if (S.cv) {
+            if (S.att) cvatt = J(rows(S.O)*2, S.cvn, .)
+            if (S.atc & S.sharedbw==0) cvatc = J(rows(S.O)*2, S.cvn, .)
+            cstripe = J(rows(S.O), 1, ("", "h")\("","MISE"))
+            for (i=1;i<=rows(S.O);i++) {
+                if (S.over<.) cstripe[|i*2-1,1 \ i*2,1|] = J(2,1,strofreal(S.O[i,1]))
+                if (S.att) cvatt[|i*2-1,1 \ i*2,.|] = S.tgrid[i,] \ S.tmise[i,]
+                if (S.atc & S.sharedbw==0) cvatc[|i*2-1,1 \ i*2,.|] = S.cgrid[i,] \ S.cmise[i,]
+            }
+            if (S.att) {
+                st_matrix(st_local("cv_att"), cvatt')
+                st_matrixcolstripe(st_local("cv_att"), cstripe)
+            }
+            if (S.atc & S.sharedbw==0) {
+                st_matrix(st_local("cv_atc"), cvatc')
+                st_matrixcolstripe(st_local("cv_atc"), cstripe)
+            }
         }
-        if (S.att) {
-            st_matrix(st_local("cv_att"), cvatt')
-            st_matrixcolstripe(st_local("cv_att"), cstripe)
-        }
-        if (S.atc & S.sharedbw==0) {
-            st_matrix(st_local("cv_atc"), cvatc')
-            st_matrixcolstripe(st_local("cv_atc"), cstripe)
-        }
+    }
+    
+    // return names of variables containing matching IDs
+    if (S.ID) {
+        if (S.ID!=2) st_local("idgenvars", invtokens(st_varname(S.mIDs)))
+        if (S.ID!=1) st_local("dxgenvars", invtokens(st_varname(S.mDXs)))
     }
 }
 
@@ -3295,7 +4815,7 @@ real matrix Kmatch_get_Vdiag(struct KmatchSet scalar S, real rowvector r)
 void Kmatch_o(struct KmatchSet scalar S, real scalar o, 
     real rowvector xvars, real matrix L)
 {
-    real scalar             i
+    real scalar             i, ID
     real rowvector          r
     real matrix             E
     struct KmatchG scalar   T, C
@@ -3313,42 +4833,52 @@ void Kmatch_o(struct KmatchSet scalar S, real scalar o,
     E = Kmatch_e_index(T, C, S)
     
     // bandwidth selection
-    if (S.bw) {
-        if (S.cv & S.md==0 & S.limit) S.sdPS = Kmatch_o_sdPS(T, C, S)
+    if (S.em==0) {
+        ID = S.ID; S.ID = 0 // bypass collecting IDs/DXs
+        if (S.bw) {
+            if (S.cv & S.md==0 & S.limit) S.sdPS = Kmatch_o_sdPS(T, C, S)
+            if (S.att) {
+                if (S.bwnoi) {
+                    printf("{txt}(")
+                    if (S.over<.) printf("%s=%g: ", S.oname, S.O[o,1])
+                    printf("computing bandwidth ")
+                    if (S.atc & S.sharedbw==0) printf("for ATT ")
+                    displayflush()
+                }
+                Kmatch_bw(T, C, E, S)
+                S.h[o,1] = T.h
+                if (S.sharedbw) S.h[o,2] = T.h
+                if (S.cv) {
+                    S.tgrid[o,] = T.grid
+                    S.tmise[o,] = T.mise
+                }
+            }
+            if (S.atc & S.sharedbw==0) {
+                if (S.bwnoi) {
+                    printf("{txt}(")
+                    if (S.over<.) printf("%s=%g: ", S.oname, S.O[o,1])
+                    printf("computing bandwidth ")
+                    if (S.att) printf("for ATC ")
+                    displayflush()
+                }
+                Kmatch_bw(C, T, E[,(3,4,1,2)], S)
+                S.h[o,1+S.att] = C.h
+                if (S.cv) {
+                    S.cgrid[o,] = C.grid
+                    S.cmise[o,] = C.mise
+                }
+            }
+        }
         if (S.att) {
-            if (S.bwnoi) {
-                printf("{txt}(")
-                if (S.over<.) printf("%s=%g: ", S.oname, S.O[o,1])
-                printf("computing bandwidth ")
-                if (S.atc & S.sharedbw==0) printf("for treated ")
-                displayflush()
-            }
-            Kmatch_bw(T, C, E, S)
-            S.h[o,1] = T.h
-            if (S.sharedbw) S.h[o,2] = T.h
-            if (S.cv) {
-                S.tgrid[o,] = T.grid
-                S.tmise[o,] = T.mise
-            }
+            if (S.hadj[o,1]!=1) S.h[o,1] = S.h[o,1] * S.hadj[o,1]
+            T.h = S.h[o,1]
         }
-        if (S.atc & S.sharedbw==0) {
-            if (S.bwnoi) {
-                printf("{txt}(")
-                if (S.over<.) printf("%s=%g: ", S.oname, S.O[o,1])
-                printf("computing bandwidth ")
-                if (S.att) printf("for untreated ")
-                displayflush()
-            }
-            Kmatch_bw(C, T, E[,(3,4,1,2)], S)
-            S.h[o,1+S.att] = C.h
-            if (S.cv) {
-                S.cgrid[o,] = C.grid
-                S.cmise[o,] = C.mise
-            }
+        if (S.atc) {
+            if (S.hadj[o,1+S.att]!=1) S.h[o,1+S.att] = S.h[o,1+S.att] * S.hadj[o,1+S.att]
+            C.h = S.h[o,1+S.att]
         }
+        S.ID = ID // restore S.ID
     }
-    if (S.att) T.h = S.h[o,1]
-    if (S.atc) C.h = S.h[o,1+S.att]
     
     // apply matching to each ematch group
     if (S.md & S.nn==0) { // MD search window
@@ -3371,16 +4901,45 @@ void Kmatch_o(struct KmatchSet scalar S, real scalar o,
     }
     if (S.att) {
         if (S.Y) st_store(T.p, S.dyvars, T.Yc[T.pe,])
-        st_store(T.p, S.nc, T.nc[T.pe])
-        st_store(C.p, S.mw, C.mw[C.pe])
-        st_store(C.p, S.nm, C.nm[C.pe])
+        st_store(T.p, S.nc, T.nc[T.pe,])
+        st_store(C.p, S.mw, C.mw[C.pe,])
+        st_store(C.p, S.nm, C.nm[C.pe,])
+        if (S.ID) {
+            if (S.ID!=2) Kmatch_o_store_mIDs(T, S)
+            if (S.ID!=1) Kmatch_o_store_mDXs(T, S)
+        }
     }
     if (S.atc) {
         if (S.Y) st_store(C.p, S.dyvars, C.Yc[C.pe,])
-        st_store(C.p, S.nc, C.nc[C.pe])
-        st_store(T.p, S.mw, T.mw[T.pe])
-        st_store(T.p, S.nm, T.nm[T.pe])
+        st_store(C.p, S.nc, C.nc[C.pe,])
+        st_store(T.p, S.mw, T.mw[T.pe,])
+        st_store(T.p, S.nm, T.nm[T.pe,])
+        if (S.ID) {
+            if (S.ID!=2) Kmatch_o_store_mIDs(C, S)
+            if (S.ID!=1) Kmatch_o_store_mDXs(C, S)
+        }
     }
+}
+
+void Kmatch_o_store_mIDs(struct KmatchG scalar T, struct KmatchSet scalar S)
+{
+    real scalar j
+
+    if (S.nID>cols(S.mIDs)) {
+        S.mIDs = S.mIDs, st_addvar(st_vartype(S.IDvar), st_tempname(S.nID-cols(S.mIDs)))
+    }
+    if (S.IDstr) st_sstore(T.p, S.mIDs[|1\cols(T.mIDs)|], T.mIDs) // T.pe not needed because data
+    else         st_store(T.p, S.mIDs[|1\cols(T.mIDs)|], T.mIDs)  // has not been compressed
+}
+
+void Kmatch_o_store_mDXs(struct KmatchG scalar T, struct KmatchSet scalar S)
+{
+    real scalar j
+
+    if (S.nID>cols(S.mDXs)) {
+        S.mDXs = S.mDXs, st_addvar("double", st_tempname(S.nID-cols(S.mDXs)))
+    }
+    st_store(T.p, S.mDXs[|1\cols(T.mDXs)|], T.mDXs)  // T.pe not needed ...
 }
 
 real scalar Kmatch_o_sdPS(struct KmatchG scalar T, struct KmatchG scalar C,
@@ -3403,7 +4962,11 @@ void Kmatch_o_get_data(real rowvector r, real scalar g,
     real rowvector xvars, real matrix L)
 {
     if (S.ematch<.) G.E = st_data(r, S.ematch, g)
-    if (S.md) {
+    if (S.em) {
+        G.p = select(r[1]::r[2], st_data(r, g):==1)
+        G.S = J(rows(G.p), 1, 0)
+    }
+    else if (S.md) {
         if (cols(xvars)<1) { // (no xvars)
             G.p = select(r[1]::r[2], st_data(r, g):==1)
             G.X = G.S = J(rows(G.p), 1, 0)
@@ -3429,8 +4992,9 @@ void Kmatch_o_get_data(real rowvector r, real scalar g,
                 }
             }
             else G.S = rowsum(G.X, 1)
-            if (S.ematch<.) G.p = order((G.E, G.S, (1::rows(G.S))), (1,2,3))
-            else            G.p = order((G.S, (1::rows(G.S))), (1,2))
+            if (rows(G.S)==0)    G.p = J(0, 1, .) // empty group
+            else if (S.ematch<.) G.p = order((G.E, G.S, (1::rows(G.S))), (1,2,3))
+            else                 G.p = order((G.S, (1::rows(G.S))), (1,2))
             _collate(G.X, G.p); _collate(G.S, G.p)
             if (rows(G.XWX)>0) _collate(G.XWX, G.p)
             G.p = select(r[1]::r[2], st_data(r, g):==1)[G.p]
@@ -3451,6 +5015,14 @@ void Kmatch_o_get_data(real rowvector r, real scalar g,
     if (S.w) G.w = st_data(G.p, S.wvar)
     if (S.Y) G.Y  = st_data(G.p, S.yvars)
     if (S.Zvar<.) G.Z = st_data(G.p, S.Zvar)
+    if (S.ID) {
+        if (S.ID!=2) {
+            if (S.IDstr) G.ID = st_sdata(G.p, S.IDvar)
+            else         G.ID = st_data(G.p, S.IDvar)
+            G.mIDs = J(G.n, S.nID, missingof(G.ID))
+        }
+        if (S.ID!=1) G.mDXs = J(G.n, S.nID, .)
+    }
 }
 
 void Kmatch_compress(struct KmatchG scalar G, struct KmatchSet scalar S)
@@ -3459,6 +5031,15 @@ void Kmatch_compress(struct KmatchG scalar G, struct KmatchSet scalar S)
     real colvector s
     real rowvector Xa, Xb
     
+    // empty group
+    if (G.n==0) return
+    // do not compress
+    if (S.ID | S.wor) {
+        if (S.w==2) G.fw = G.w
+        else        G.fw = J(G.n, 1, 1)
+        G.pe = 1::G.n
+        return
+    }
     // find ties
     G.fw = G.pe = s = J(G.n,1,.)
     i = j = a = b = 1
@@ -3482,17 +5063,19 @@ void Kmatch_compress(struct KmatchG scalar G, struct KmatchSet scalar S)
     s = s[|1 \ j|]
     G.fw = G.fw[s]
     G.S = G.S[s]
-    if (S.w)            G.w = G.w[s]
-    if (cols(G.X)>0)    G.X = G.X[s,]
-    if (cols(G.XWX)>0)  G.XWX = G.XWX[s,]
-    if (G.Xs!=NULL) {
-        if (G.Xs!=(&G.X)) {
-            if (cols(*G.Xs)>0) G.Xs = &((*G.Xs)[s,])
+    if (S.w)     G.w = G.w[s]
+    if (S.md) {
+        if (cols(G.X)>0)    G.X = G.X[s,]
+        if (cols(G.XWX)>0)  G.XWX = G.XWX[s,]
+        if (G.Xs!=NULL) {
+            if (G.Xs!=(&G.X)) {
+                if (cols(*G.Xs)>0) G.Xs = &((*G.Xs)[s,])
+            }
         }
     }
-    if (S.ematch<.)     G.E = G.E[s]
-    if (S.Y)            G.Y = G.Y[s,]
-    if (S.Zvar<.)       G.Z = G.Z[s]
+    if (S.ematch<.) G.E = G.E[s]
+    if (S.Y)        G.Y = G.Y[s,]
+    if (S.Zvar<.)   G.Z = G.Z[s]
 }
 
 void Kmatch_compress_update(real scalar j, real scalar a, real scalar b, 
@@ -3529,6 +5112,7 @@ real matrix Kmatch_e_index(struct KmatchG scalar T, struct KmatchG scalar C,
     
     // ematch: build dictionary
     E = J(min((T.n, C.n)), 4, .)
+    if (rows(E)==0) return(E) // empty group
     k = 0; j = 1
     for (i=1; i<=T.n; i++) {
         if (T.S[i]>=.) continue
@@ -3551,6 +5135,7 @@ real matrix Kmatch_e_index(struct KmatchG scalar T, struct KmatchG scalar C,
         E[++k,] = (i, i1, j, j1)
         i = i1
     }
+    if (k==0) return(J(0, cols(E), .))
     return(E[|1,1 \ k, .|])
 }
 
@@ -3559,12 +5144,127 @@ void Kmatch_e(struct KmatchG scalar T, real scalar t0, real scalar t1,
     struct KmatchSet scalar S)
 {
     real scalar i, a, b
-
+    
+    if (S.em) {
+        Kmatch_EM(T, t0, t1, C, c0, c1, S)
+        return
+    }
+    if (S.wor) {
+        Kmatch_WOR(T, t0, t1, C, c0, c1, S)
+        return
+    }
     a = b = c0
     for (i=t0;i<=t1;i++) {
         (*S.match)(T, C, i, a, b, t1, c0, c1, S)
         if (a>c1) break
     }
+}
+
+void Kmatch_EM(struct KmatchG scalar T, real scalar t0, real scalar t1, 
+    struct KmatchG scalar C, real scalar c0, real scalar c1, 
+    struct KmatchSet scalar S)
+{
+    real scalar    nc
+    real colvector mw, Cfw, Tfw
+    
+    if ((t0==t1) & (c0==c1) & S.ID==0) {
+        // simple case with just one obs per group
+        T.nc[t1] = C.fw[c1]
+        C.nm[c1] = T.fw[t1]
+        if (S.w==1) C.mw[c1] = C.w[c1] * (T.w[t1] * T.fw[t1]) / (C.w[c1] * C.fw[c1])
+        else        C.mw[c1] = T.fw[t1] / C.fw[c1]
+        if (S.Y) T.Yc[t1,.] = C.Y[c1,.]
+        return
+    }
+    Cfw = C.fw[|c0\c1|]
+    Tfw = T.fw[|t0\t1|]
+    T.nc[|t0\t1|] = J(t1-t0+1, 1, sum(Cfw))
+    C.nm[|c0\c1|] = J(c1-c0+1, 1, sum(Tfw))
+    if (S.w==1) {
+        mw = C.w[|c0\c1|]
+        mw = mw * (quadsum(T.w[|t0\t1|] :* Tfw) / quadsum(mw :* Cfw))
+    }
+    else {
+        mw = J(c1-c0+1, 1, C.nm[c1]/*=sum(Tfw)*/ / T.nc[t1]/*=sum(Cfw)*/)
+    }
+    C.mw[|c0\c1|] = mw
+    if (S.Y) T.Yc[|t0,1 \ t1,.|] = J(t1-t0+1, 1, mean(C.Y[|c0,1 \ c1,.|], mw))
+    if (S.ID) {
+        nc = (c1-c0+1)
+        if (nc>S.nID) S.nID = nc
+        if (S.ID!=2) {
+            if (S.nID>cols(T.mIDs)) 
+                T.mIDs = T.mIDs, J(T.n, S.nID-cols(T.mIDs), missingof(T.mIDs))
+            T.mIDs[|t0,1 \ t1,nc|] = J(t1-t0+1, 1, C.ID[|c0\c1|]')
+        }
+        if (S.ID!=1) {
+            if (S.nID>cols(T.mDXs)) 
+                T.mDXs = T.mDXs, J(T.n, S.nID-cols(T.mDXs), .)
+            T.mDXs[|t0,1 \ t1,nc|] = J(t1-t0+1, nc, 0)
+        }
+    }
+}
+
+void Kmatch_WOR(struct KmatchG scalar T, real scalar t0, real scalar t1, 
+    struct KmatchG scalar C, real scalar c0, real scalar c1, 
+    struct KmatchSet scalar S)
+{
+    real scalar    i, j, r
+    real matrix    P
+    real colvector p, w, d
+    
+    // find matches
+    if (S.md) P = mm_greedy(T.X[|t0,1 \ t1,.|], C.X[|c0,1 \ c1,.|], S.nn, T.h, 
+                  &Kmatch_WOR_MD(), S)
+    else      P = mm_greedy(T.S[|t0\t1|], C.S[|c0\c1|], S.nn, T.h, 
+                  &Kmatch_WOR_PS())
+    // shift control indices
+    P = P :+ (c0-1)
+    // process matches
+    r = 0
+    for (i=t0; i<=t1; i++) {
+        r++
+        if (P[r,1]>=.) continue // no matches
+        p = J(S.nn, 1, .)
+        for (j=1; j<=S.nn; j++) {
+            p[j] = P[r,j]
+            if (p[j]>=.) {  // no more matches
+                p = p[|1\j-1|]
+                break
+            }
+        }
+        T.nc[i] = length(p) // can ignore fw; is always 1 for wor
+        // weights
+        if (S.w==1) {
+            w = C.w[p]
+            w = w / quadsum(w)
+        }
+        else w = J(length(p),1,1/length(p))
+        // update control group info
+        if (S.ID) {
+            if (S.ID!=1) {
+                if (S.md)  d = sqrt(Kmatch_WOR_MD(T.X[i,.], C.X[p,.], S))
+                else       d = C.S[p] :- T.S[i]
+            }
+        }
+        Kmatch_i_MD_info(T, C, i, p, i, w, 1, S, d)
+    }
+}
+
+real colvector Kmatch_WOR_PS(real rowvector T, real matrix C, transmorphic arg)
+{
+    pragma unused arg
+    return(abs(C:-T))
+}
+
+real colvector Kmatch_WOR_MD(real rowvector T, real matrix C, struct KmatchSet scalar S) 
+{
+    real matrix Xm
+    
+    if (S.mdmethod==1) return(rowsum((C :- T):^2, 1))
+    Xm = C :- T
+    return(rowsum((Xm * S.Vinv) :* Xm, 1))
+    // S.mdmethod==2 not supported
 }
 
 void Kmatch_i_PS(struct KmatchG scalar T, struct KmatchG scalar C, real scalar i,
@@ -3680,11 +5380,27 @@ void Kmatch_i_PS_info(struct KmatchG scalar T, struct KmatchG scalar C,
     real scalar c, real colvector w, real colvector fw, 
     struct KmatchSet scalar S)
 {
-    real scalar    nm
+    real scalar    nm, nc
     real colvector mw
-    
+
     // potential outcomes
     if (S.Y) T.Yc[i,.] = mean(C.Y[|a,1 \ b,.|], w:*fw)
+    // match IDs/DXs
+    if (S.ID) {
+        nc = (b-a+1)
+        if (nc>S.nID) S.nID = nc
+        if (S.ID!=2) {
+            if (S.nID>cols(T.mIDs)) 
+                T.mIDs = T.mIDs, J(T.n, S.nID-cols(T.mIDs), missingof(T.mIDs))
+            T.mIDs[|i,1 \ i,nc|] = C.ID[|a\b|]'
+        }
+        if (S.ID!=1) {
+            if (S.nID>cols(T.mDXs)) 
+                T.mDXs = T.mDXs, J(T.n, S.nID-cols(T.mDXs), .)
+            T.mDXs[|i,1 \ i,nc|] = C.S[|a\b|]' :- T.S[i]
+            
+        }
+    }
     // number of matches/matching weights
     if (S.w==1) {
         nm = T.fw[i]
@@ -3694,6 +5410,10 @@ void Kmatch_i_PS_info(struct KmatchG scalar T, struct KmatchG scalar C,
             if (T.S[i+1]==c) {
                 T.nc[i+1] = T.nc[i]
                 if (S.Y) T.Yc[i+1,.] = T.Yc[i,.]
+                if (S.ID) {
+                    if (S.ID!=2) T.mIDs[i+1,.] = T.mIDs[i,.]
+                    if (S.ID!=1) T.mDXs[i+1,.] = T.mDXs[i,.]
+                }
                 i++
                 nm = nm + T.fw[i]
                 mw = mw + w * (T.w[i] * T.fw[i])
@@ -3814,14 +5534,17 @@ void Kmatch_i_PS_nn(struct KmatchG scalar T, struct KmatchG scalar C,
         fw = C.fw[|a\b|]
         n = sum(fw)
     }
-    if (n < S.nn) { // exclude if less than nn() neighbors
-        if (S.w==1) { // skip ties
-            while (i<t1) {
-                if (T.S[i+1]==c) i++
-                else break
+    if (S.keepall==0) {
+        // exclude if less than nn() neighbors
+        if (n < S.nn) {
+            if (S.w==1) { // skip ties
+                while (i<t1) {
+                    if (T.S[i+1]==c) i++
+                    else break
+                }
             }
+            return
         }
-        return
     }
     T.nc[i] = n
     // weights
@@ -3869,7 +5592,7 @@ void Kmatch_i_MD(struct KmatchG scalar T, struct KmatchG scalar C, real scalar i
     // compute multivariate distance
     MD = Kmatch_MD2(T, i, C, (a,1 \ b,.), S)
     // select controls within kernel window
-    p = selectindex(MD:<max((T.h^2,smallestdouble())))
+    p = Kmatch_selectindex(MD:<max((T.h^2,smallestdouble())))
     MD = MD[p]
     p = (a::b)[p]
     if (length(p)==0) {
@@ -3897,7 +5620,7 @@ void Kmatch_i_MD(struct KmatchG scalar T, struct KmatchG scalar C, real scalar i
     if (S.r<.) w = Kmatch_Ridge(w, fw, 0, MD, T.h, S.r)
     else       w = w / quadsum(w:*fw)
     // update control group info (using mean updating for sum of weights)
-    Kmatch_i_MD_info(T, C, i, p, t1, w, fw, S)
+    Kmatch_i_MD_info(T, C, i, p, t1, w, fw, S, MD)
 }
 
 void Kmatch_i_MD_cvs(struct KmatchG scalar T, struct KmatchG scalar C, 
@@ -3958,13 +5681,28 @@ void Kmatch_i_MD_cvs(struct KmatchG scalar T, struct KmatchG scalar C,
 
 void Kmatch_i_MD_info(struct KmatchG scalar T, struct KmatchG scalar C,
     real scalar i, real colvector p, real scalar t1, real colvector w, 
-    real colvector fw,  struct KmatchSet scalar S)
+    real colvector fw,  struct KmatchSet scalar S, real colvector MD)
 {
-    real scalar    nm
+    real scalar    nm, nc
     real colvector mw
     
     // potential outcomes
     if (S.Y) T.Yc[i,.] = mean(C.Y[p,], w:*fw)
+    // match IDs/DXs
+    if (S.ID) {
+        nc = length(p)
+        if (nc>S.nID) S.nID = nc
+        if (S.ID!=2) {
+            if (S.nID>cols(T.mIDs))
+                T.mIDs = T.mIDs, J(T.n, S.nID-cols(T.mIDs), missingof(T.mIDs))
+            T.mIDs[|i,1 \ i,nc|] = C.ID[p]'
+        }
+        if (S.ID!=1) {
+            if (S.nID>cols(T.mDXs)) 
+                T.mDXs = T.mDXs, J(T.n, S.nID-cols(T.mDXs), .)
+            T.mDXs[|i,1 \ i,nc|] = MD'
+        }
+    }
     // number of matches/matching weights
     if (S.w==1) {
         nm = T.fw[i]
@@ -3974,6 +5712,10 @@ void Kmatch_i_MD_info(struct KmatchG scalar T, struct KmatchG scalar C,
             if (T.X[i+1,]==T.X[i,]) {
                 T.nc[i+1] = T.nc[i]
                 if (S.Y) T.Yc[i+1,.] = T.Yc[i,.]
+                if (S.ID) {
+                    if (S.ID!=2) T.mIDs[i+1,.] = T.mIDs[i,.]
+                    if (S.ID!=1) T.mDXs[i+1,.] = T.mDXs[i,.]
+                }
                 i++
                 nm = nm + T.fw[i]
                 mw = mw + w * (T.w[i] * T.fw[i])
@@ -4053,20 +5795,26 @@ void Kmatch_i_MD_nn(struct KmatchG scalar T, struct KmatchG scalar C,
     if (j>rows(I)) j = rows(I)
     p = p[|1 \ I[j,1]+I[j,2]-1|]
     if (T.h<.) {
-        MD = MD[p]
-        p = select(p, MD:<max((T.h^2,smallestdouble())))
+        p = select(p, MD[p]:<max((T.h^2,smallestdouble())))
+        if (cols(p)==0) p = J(0,1,.)
         fw = fw[p]
         n = sum(fw)
     }
     else fw = fw[p]
-    if (n<S.nn) { // exclude if less than nn() neighbors
-        if (S.w==1) { // skip ties
-            while (i<t1) {
-                if (T.X[i+1,]==T.X[i,]) i++
-                else break
+    if (S.ID) {
+        if (S.ID!=1) MD = sqrt(MD[p])
+    }
+    if (S.keepall==0) {
+        // exclude if less than nn() neighbors
+        if (n<S.nn) {
+            if (S.w==1) { // skip ties
+                while (i<t1) {
+                    if (T.X[i+1,]==T.X[i,]) i++
+                    else break
+                }
             }
+            return
         }
-        return
     }
     p = (aa-1) :+ p
     T.nc[i] = n
@@ -4077,7 +5825,7 @@ void Kmatch_i_MD_nn(struct KmatchG scalar T, struct KmatchG scalar C,
     }
     else w = J(length(p),1,1/n)
     // update control group info
-    Kmatch_i_MD_info(T, C, i, p, t1, w, fw, S)
+    Kmatch_i_MD_info(T, C, i, p, t1, w, fw, S, MD)
 }
 
 real colvector Kmatch_Ridge(real colvector w, real colvector fw, 
@@ -4127,9 +5875,9 @@ void Kmatch_bw(struct KmatchG scalar T, struct KmatchG scalar C,
             if (S.pmq==1) T.h = max((T.C1 \ C.C1)) * S.pmf
             else {
                 // only use nonzero (and non-missing) distances
-                p = selectindex(((T.C1 \ C.C1):<.):&((T.C1 \ C.C1):>0))
+                p = Kmatch_selectindex(((T.C1 \ C.C1):<.):&((T.C1 \ C.C1):>0))
                 if (length(p)==0) T.h = 0
-                else T.h = Kmatch_quantile((T.C1 \ C.C1)[p], 
+                else T.h = mm_quantile((T.C1 \ C.C1)[p], 
                     (S.w==1 ? (T.w \ C.w)[p]:*(T.fw \ C.fw)[p] : 
                     (T.fw \ C.fw)[p]), S.pmq) * S.pmf
             }
@@ -4139,9 +5887,9 @@ void Kmatch_bw(struct KmatchG scalar T, struct KmatchG scalar C,
             if (S.pmq==1) T.h = max(T.C1) * S.pmf
             else {
                 // only use nonzero (and non-missing) distances
-                p = selectindex((T.C1:<.):&(T.C1:>0)) 
+                p = Kmatch_selectindex((T.C1:<.):&(T.C1:>0)) 
                 if (length(p)==0) T.h = 0
-                else T.h = Kmatch_quantile(T.C1[p], 
+                else T.h = mm_quantile(T.C1[p], 
                     (S.w==1 ? T.w[p]:*T.fw[p] : T.fw[p]), S.pmq) * S.pmf
             }
         }
@@ -4444,13 +6192,15 @@ void Kmatch_cvo_expand(struct KmatchG scalar G, real matrix E,
     G2 = G; G2.Y = J(0,0,.)
     G2.Z = st_data(G2.p, S.Zvar)
     G2.n = rows(G2.Z)
-    G2.S = G2.S[G2.pe]
+    G2.S = G2.S[G2.pe,]
     if (S.w==2)         G2.w = st_data(G2.p, S.wvar)
-    else if (S.w)       G2.w = G2.w[G2.pe]
-    if (cols(G2.X)>0)   G2.X = G2.X[G2.pe,]
-    if (cols(G2.XWX)>0) G2.XWX = G2.XWX[G2.pe,]
-    if (S.ematch<.)     G2.E = G2.E[G2.pe]
-    eI = eI[G2.pe]
+    else if (S.w)       G2.w = G2.w[G2.pe,]
+    if (S.md) {
+        if (cols(G2.X)>0)   G2.X = G2.X[G2.pe,]
+        if (cols(G2.XWX)>0) G2.XWX = G2.XWX[G2.pe,]
+    }
+    if (S.ematch<.)     G2.E = G2.E[G2.pe,]
+    eI = eI[G2.pe,]
     
     // recompress
     E2 = E2, Kmatch_cvo_compress(G2, J(rows(E2),2,.), eI, S)
@@ -4463,6 +6213,8 @@ real matrix Kmatch_cvo_compress(struct KmatchG scalar G, real matrix E,
     real colvector s
     real rowvector Xa, Xb
     
+    // empty group
+    if (G.n==0) return(E)
     // find ties
     G.fw = s = J(G.n,1,.)
     i = j = a = b = 1
@@ -4499,10 +6251,12 @@ real matrix Kmatch_cvo_compress(struct KmatchG scalar G, real matrix E,
     G.fw = G.fw[s]
     G.S = G.S[s]
     G.Z = G.Z[s]
-    if (S.w)            G.w = G.w[s]
-    if (cols(G.X)>0)    G.X = G.X[s,]
-    if (cols(G.XWX)>0)  G.XWX = G.XWX[s,]
-    if (S.ematch<.)     G.E = G.E[s]
+    if (S.w) G.w = G.w[s]
+    if (S.md) {
+        if (cols(G.X)>0)    G.X = G.X[s,]
+        if (cols(G.XWX)>0)  G.XWX = G.XWX[s,]
+    }
+    if (S.ematch<.) G.E = G.E[s]
     swap(G.pe, s)
     return(E)
 }
@@ -4532,8 +6286,8 @@ real scalar _Kmatch_cvo(struct KmatchG scalar C2, real matrix E2,
         for (i=1; i<=rows(E); i++) {
             Kmatch_e(T, E[i,1], E[i,2], C, E[i,3], E[i,4], S)
         }
-        C2.nm = (C.nm[C.pe])[C2.pe]
-        C2.mw = (C.mw[C.pe])[C2.pe]
+        C2.nm = (C.nm[C.pe,])[C2.pe]
+        C2.mw = (C.mw[C.pe,])[C2.pe]
     }
     C2.C1 = C2.C2 = J(C2.n,1,0)
     C2.h = C.h; C2.h2 = C.h2
@@ -4654,7 +6408,7 @@ void Kmatch_cvo_i_MD(struct KmatchG scalar T, struct KmatchG scalar C,
     // compute multivariate distance
     MD = Kmatch_MD2(T, i, C, (a,1 \ b,.), S)
     // select controls within kernel window
-    p = selectindex(MD:<max((T.h^2,smallestdouble())))
+    p = Kmatch_selectindex(MD:<max((T.h^2,smallestdouble())))
     MD = MD[p]
     p = (a::b)[p]
     // check whether at least one additional obs in window
@@ -4748,6 +6502,18 @@ real colvector Kmatch_MD2(struct KmatchG scalar T, real scalar i,
     }
 }
 
+real vector Kmatch_selectindex(real vector v)
+{   // selectindex() not available in Stata versions < 13
+    real vector s
+    
+    if (stataversion()>=1300) return(_Kmatch_selectindex(v))
+    if (rows(v)!=1) s = select(1::rows(v), v)
+    else            s = select(1..cols(v), v)
+    if (rows(s)==0 & cols(s)==0) return(J(1,0,.))
+    return(s)
+}
+real vector _Kmatch_selectindex(real vector v) return(selectindex(v))
+
 real matrix Kmatch_epan(real matrix x)
 {
     return((.75:-.75*x:^2):*(abs(x):<1))
@@ -4784,292 +6550,292 @@ real matrix Kmatch_parzen(real matrix x)
         ((8*(1:-abs(x)):^3/3):*(abs(x):>.5:&abs(x):<1)))
 }
 
-/*
-real colvector Kmatch_regress(real colvector y, real colvector w, real matrix X)
+void Kmatch_IF()    // compute influence functions
 {
-    real scalar     ymean, intercept
-    real colvector  ybar, p, Xy, beta, b
-    real rowvector  means
-    real matrix     Xbar, XX, S
+    real scalar     att, atc, ate, nate, po
+    real scalar     W, N, N0, N1, W0, W1, p, ybar0, ybar1, k
+    real colvector  b0, b1
+    real rowvector  xbar0, xbar1, wgt, wgtT, wgtC, w
+    real colvector  Y, T, C, S, E1, E0
+    real matrix     X, F0, F1
+    string scalar   touse
     
-    // 0. no covariates
-    
-    if (cols(X)==0) return(mean(y, w))
-    
-    // Bill Gould, 22.9.2015:
-    //
-    // Here's what -regress- does:
-    //
-    // First, -regress- uses separate code for models with an intercept and
-    // those without.  I will discuss only models with an intercept.  There's
-    // not as much one can do to calculate models without an intercept
-    // accurately.
-    //
-    // Let matrix X and vector y be the data, excluding missing values.
-    //
-    // Our goal is to calculate b = invsym(X'X)*(X'y) and s^2*(X'X), but to do
-    // so accurately.
-    //
-    // There are two things we are going to do to obtain accurate results:
-    //
-    //     1.  Use X and y in mean-deviated form.
-    //
-    //     2.  Use LU decomposition (backsolver) to obtain beta from
-    //         X'X and X'y.
-    //
-    // We will then have to patch things up to add an extra parameter (the
-    // intercept) to the coefficient vector and variance matrix.
-    //
-    // Using mean-deviated form causes an extra problem at the outset, too.
-    // Somehow, we have to detect the collinear variables and remove them
-    // because LU decomposition requires X'X be full rank..
-    //
-    // The solution to that problem is to calculate invsym(X'X) (X deviated), and
-    // then examine the result to determine which variables were omitted.
-    // invsym() handles collinearity by omitting variables (columns), so we can
-    // identify the collinear variables, temporarily remove them
-    // to do the bulk of the calculation, and put everything back together
-    // when we are finished.
-    //
-    //
-    // Regress proceeds as follows:
-    //
-    // First, X has p-1 columns, not p.  We DO NOT add a columns of 1s (_cons)
-    // as an extra last column to X.
-    //
-    // Our first problem is to omit the collinear variables from the calcuation:
-    //
-    //     1.  Calculate mean-removed XX = X'X.
-    //
-    //         1.1  First get accurate column means of X, use quadsum().
-    //
-    //         1.2  Form Xbar = X :- means.  There is no gain to be had from
-    //              doing this calculation in quad precision.
-    //
-    //         1.3  Don't bother to form mean removed ybar = y yet.
-    //
-    //         1.4  Obtain XX = Xbar'Xbar using quadcross().
-    
-    means = mean(X, w) // mean() uses quad precision
-    Xbar = X :- means
-    XX = quadcross(Xbar, w, Xbar)
-    
-    //     2.  Calculate S = invsym(XX).  We will NOT use S to obtain beta.
-    //         We will use S to detect to remove collinear variables, and we
-    //         will use S as an ingredient to obtaining the variance matrix
-    //         of beta, and hence the SEs.
-    
-    S = invsym(XX)
-    
-    //     3.  Remove collinear variables; S[i,i]==0 for collinear variables.
-    //
-    //         3.1  Drop columns from Xbar for which S[i,i]==0.
-    //
-    //         3.2  Drop rows and columns from XX for which S[i,i]==0.
-    //
-    //         3.3  Drop rows and columns for S for which S[i,i]==0.
-    
-    p = select(1::cols(X), diagonal(S):!=0)
-    if (length(p)>0) {
-        Xbar = Xbar[,p]
-        XX = XX[p,p]
-        means = means[p]
-        //S = S[p,p]
-    }
-    
-    //     4.  Form Xy = mean removed X'y.
-    //
-    //         4.1  We already have X with means removed.
-    //
-    //         4.2  Form ybar = mean removed y.  Do that the standard way
-    //              quadsum(y), divide by rows(X), and ybar = y :- ymean.
-    //
-    //         4.3  Form Xy = mean removed X'y.  We already have Xbar and ybar.
-    //              Use quadcross().
-    
-    ymean = mean(y, w) 
-    ybar = y :- ymean
-    Xy = quadcross(Xbar, w, ybar)
-    
-    //     5.  Form beta.  Use lusolve() on XX and Xy.
-    //         At this point, beta is whoppingly accurate.
-    
-    beta = lusolve(XX, Xy)
-    
-    //     6.  Form the mean-removed predictions yhat = X*beta.  This may be done
-    //         ion double precision.
-    //
-    //     7.  Calculate the intercept.
-    //         Quad precision, please.
-
-    intercept = ymean - quadcross(means', beta)
-    
-    //     8.  Calculate error sum of squares (ESS), which is sum of (y-yhat)^2.
-    //         Quad precision, please.
-    //
-    //     9.  Calculate s^2, the variance of the residual.
-    //
-    //    10.  Add a row and column to S containing covaraiances and variance
-    //         of the intercept.  I've forgotten the formulas.
-    //         At this point (s^2)*S is
-    //         the variance matrix excluding the intercept.  We just need to
-    //         add another row and column.
-    //
-    //    11.  Finally, you have to insert the 0s into the coefficient vector
-    //         and 0 rows and columns into S to account for the omitted variables.
-    
-    b = J(cols(X), 1, 0)
-    b[p] = beta
-    return((b \ intercept))
-}
-*/
-
-// renamed copy of mm_quantile() from -moremata-
-real matrix Kmatch_quantile(real matrix X, | real colvector w,
- real matrix P, real scalar altdef)
-{
-    real rowvector result
-    real scalar c, cX, cP, r, i
-
-    if (args()<2) w = 1
-    if (args()<3) P = (0, .25, .50, .75, 1)'
-    if (args()<4) altdef = 0
-    if (cols(X)==1 & cols(P)!=1 & rows(P)==1)
-     return(Kmatch_quantile(X, w, P', altdef)')
-    if (missing(P) | missing(X) | missing(w)) _error(3351)
-    if (rows(w)!=1 & rows(w)!=rows(X)) _error(3200)
-    r = rows(P)
-    c = max(((cX=cols(X)), (cP=cols(P))))
-    if (cX!=1 & cX<c) _error(3200)
-    if (cP!=1 & cP<c) _error(3200)
-    if (rows(X)==0 | r==0 | c==0) return(J(r,c,.))
-    if (c==1) return(_Kmatch_quantile(X, w, P, altdef))
-    result = J(r, c, .)
-    if (cP==1) for (i=1; i<=c; i++)
-     result[,i] = _Kmatch_quantile(X[,i], w, P, altdef)
-    else if (cX==1) for (i=1; i<=c; i++)
-     result[,i] = _Kmatch_quantile(X, w, P[,i], altdef)
-    else for (i=1; i<=c; i++)
-     result[,i] = _Kmatch_quantile(X[,i], w, P[,i], altdef)
-    return(result)
-}
-
-real colvector _Kmatch_quantile(
- real colvector X,
- real colvector w,
- real colvector P,
- real scalar altdef)
-{
-    real colvector g, j, j1, p
-    real scalar N
-
-    if (w!=1) return(_Kmatch_quantilew(X, w, P, altdef))
-    N = rows(X)
-    p = order(X,1)
-    if (altdef) g = P*N + P
-    else g = P*N
-    j = floor(g)
-    if (altdef) g = g - j
-    else g = 0.5 :+ 0.5*((g - j):>0)
-    j1 = j:+1
-    j = j :* (j:>=1)
-    _editvalue(j, 0, 1)
-    j = j :* (j:<=N)
-    _editvalue(j, 0, N)
-    j1 = j1 :* (j1:>=1)
-    _editvalue(j1, 0, 1)
-    j1 = j1 :* (j1:<=N)
-    _editvalue(j1, 0, N)
-    return((1:-g):*X[p[j]] + g:*X[p[j1]])
-}
-
-real colvector _Kmatch_quantilew(
- real colvector X,
- real colvector w,
- real colvector P,
- real scalar altdef)
-{
-    real colvector Q, pi, pj
-    real scalar i, I, j, jj, J, rsum, W
-    pointer scalar ww
-
-    I  = rows(X)
-    ww = (rows(w)==1 ? &J(I,1,w) : &w)
-    if (altdef) return(_Kmatch_quantilewalt(X, *ww, P))
-    W  = quadsum(*ww)
-    pi = order(X, 1)
-    if (anyof(*ww, 0)) {
-        pi = select(pi,(*ww)[pi]:!=0)
-        I = rows(pi)
-    }
-    pj = order(P, 1)
-    J  = rows(P)
-    Q  = J(J, 1, .)
-    j  = 1
-    jj = pj[1]
-    rsum = 0
-    for (i=1; i<=I; i++) {
-        rsum = rsum + (*ww)[pi[i]]
-        if (i<I) {
-            if (rsum<P[jj]*W) continue
-            if (X[pi[i]]==X[pi[i+1]]) continue
+    att  = st_local("att")!=""
+    atc  = st_local("atc")!=""
+    ate  = st_local("ate")!=""
+    nate = st_local("nate")!=""
+    po   = st_local("po")=="1"
+    touse = st_local("touse")
+    Y = st_data(., st_local("ovar"), touse)
+    T = st_data(., st_local("treat"), touse)
+    if (any(T)==0) return
+    C = st_data(., st_local("control"), touse)
+    if (any(C)==0) return
+    if (st_local("wvar")!="1") wgt = st_data(., st_local("wvar"), touse)
+    else                       wgt = J(rows(T), 1, 1)
+    W = sum(wgt)
+    // first handle NATE
+    if (nate) {
+        ybar1 = mean(select(Y,T), select(wgt,T))
+        ybar0 = mean(select(Y,C), select(wgt,C))
+        E1 = T*(W/sum(wgt:*T)) :* (Y :- ybar1)
+        E0 = C*(W/sum(wgt:*C)) :* (Y :- ybar0)
+        E1 = E1 / W; E0 = E0 / W    // rescale for use with -total-
+        if (hasmissing(E1)) E1 = J(0,1,.)
+        if (hasmissing(E0)) E0 = J(0,1,.)
+        if (Kmatch_iscons(E1)==0 & Kmatch_iscons(E0)==0) {
+            st_store(., st_local("NATE"), touse, E1-E0)
         }
-        while (1) {
-            if (rsum>P[jj]*W | i==I) Q[jj] = X[pi[i]]
-            else Q[jj] = (X[pi[i]] + X[pi[i+1]])/2
-            j++
-            if (j>J) break
-            jj = pj[j]
-            if (i<I & rsum<P[jj]*W) break
+        if (po) {
+            if (rows(E1)) st_store(., st_local("E_1"), touse, E1)
+            if (rows(E0)) st_store(., st_local("E_0"), touse, E0)
         }
-        if (j>J) break
     }
-    return(Q)
+    if (st_local("attnotok")!="") {; att = 0; ate = 0; }
+    if (st_local("atcnotok")!="") {; atc = 0; ate = 0; }
+    if (att==0 & atc==0 & ate==0) return
+    // common support
+    S = st_data(., st_local("nc"), touse)
+    S = (S:>0) :& (S:<.)
+    // get matching weights
+    w = st_data(., st_local("mw"), touse) 
+    _editmissing(w, 0) // set to zero if not defined
+    if (att | ate) W0 = sum(select(w, C))
+    if (atc | ate) W1 = sum(select(w, T))
+    if (st_local("wvar")!="1") {
+        w = w :/ wgt // remove base weight
+        _editmissing(w, 0) // in case wgt==0
+    }
+    // set weighs to zero outside support and determine size
+    wgt = wgt :* S
+    N   = sum(wgt)
+    // get X
+    X = J(rows(Y), 1, 1)
+    if (st_local("xvars")!="") X = st_data(., st_local("xvars"), touse), X
+    k = cols(X)
+    // prepare inputs
+    if (att | ate) {
+        wgtT = select(wgt, T)
+        N1   = sum(wgtT)
+        ybar1 = mean(select(Y,T), wgtT)
+        xbar1 = mean(select(X,T), wgtT)
+        b0 = st_matrix(st_local("B0"))'
+        if (length(b0)!=k) b0 = J(k, 1, .)
+        F0 = st_matrix(st_local("Q0"))
+        if (rows(F0)!=k | cols(F0)!=k) F0 = J(k, k, .)
+        F0 = (Y :- X*b0) :* X * F0 * xbar1'
+    }
+    if (atc | ate) {
+        wgtC = select(wgt, C)
+        N0   = sum(wgtC)
+        ybar0 = mean(select(Y,C), wgtC)
+        xbar0 = mean(select(X,C), wgtC)
+        b1 = st_matrix(st_local("B1"))'
+        if (length(b1)!=k) b1 = J(k, 1, .)
+        F1 = st_matrix(st_local("Q1"))
+        if (rows(F1)!=k | cols(F1)!=k) F1 = J(k, k, .)
+        F1 = (Y :- X*b1) :* X * F1 * xbar0'
+    }
+    // compute IFs
+    if (ate) {
+        p = N1 / N
+        E1 = w :* (T*(W/W1) * (1-p) :* F1) + 
+             S :* (T*(W/N1) * p :* (Y :- ybar1) +  
+                   C*(W/N0) * (1-p) :* ((X :- xbar0) * b1) +
+                     (W/N)  * (ybar1 :- xbar0*b1) :* (T :- p))
+        E0 = w :* (C*(W/W0) * p :* F0) +
+             S :* (C*(W/N0) * (1-p) :* (Y :- ybar0) +
+                   T*(W/N1) * p :* ((X :- xbar1) * b0) +
+                     (W/N)  * (xbar1*b0 :- ybar0) :* (T :- p))
+        if (hasmissing(E1)) E1 = J(0,1,.)
+        if (hasmissing(E0)) E0 = J(0,1,.)
+        E1 = E1 / W; E0 = E0 / W    // rescale for use with -total-
+        if (Kmatch_iscons(E1)==0 & Kmatch_iscons(E0)==0) {
+            st_store(., st_local("ATE"), touse, E1-E0)
+        }
+        if (po) {
+            if (rows(E1)) st_store(., st_local("E1"), touse, E1)
+            if (rows(E0)) st_store(., st_local("E0"), touse, E0)
+        }
+    }
+    if (att) {
+        E1 = S :* (T*(W/N1) :* (Y :- ybar1))
+        E0 = w :* (C*(W/W0) :* F0) + S :* (T*(W/N1) :* ((X :- xbar1)*b0))
+        if (hasmissing(E1)) E1 = J(0,1,.)
+        if (hasmissing(E0)) E0 = J(0,1,.)
+        E1 = E1 / W; E0 = E0 / W    // rescale for use with -total-
+        if (Kmatch_iscons(E1)==0 & Kmatch_iscons(E0)==0) {
+            st_store(., st_local("ATT"), touse, E1-E0)
+        }
+        if (po) {
+            if (rows(E1)) st_store(., st_local("E11"), touse, E1)
+            if (rows(E0)) st_store(., st_local("E01"), touse, E0)
+        }
+    }
+    if (atc) {
+        E1 = w :* (T*(W/W1) :* F1) + S :* (C*(W/N0) :* ((X :- xbar0)*b1))
+        E0 = S :* (C*(W/N0) :* (Y :- ybar0))
+        if (hasmissing(E1)) E1 = J(0,1,.)
+        if (hasmissing(E0)) E0 = J(0,1,.)
+        E1 = E1 / W; E0 = E0 / W    // rescale for use with -total-
+        if (Kmatch_iscons(E1)==0 & Kmatch_iscons(E0)==0) {
+            st_store(., st_local("ATC"), touse, E1-E0)
+        }
+        if (po) {
+            if (rows(E1)) st_store(., st_local("E10"), touse, E1)
+            if (rows(E0)) st_store(., st_local("E00"), touse, E0)
+        }
+    }
 }
 
-real colvector _Kmatch_quantilewalt(
- real colvector X,
- real colvector w,
- real colvector P)
+real scalar Kmatch_iscons(real colvector Y)
 {
-    real colvector Q, pi, pj
-    real scalar i, I, j, jj, J, rsum, rsum0, W, ub, g
-
-    W  = quadsum(w) + 1
-    pi = order(X, 1)
-    if (anyof(w, 0)) pi = select(pi, w[pi]:!=0)
-    I  = rows(pi)
-    pj = order(P, 1)
-    J  = rows(P)
-    Q  = J(J, 1, .)
-    rsum = w[pi[1]]
-    for (j=1; j<=J; j++) {
-        jj = pj[j]
-        if (P[jj]*W <= rsum) Q[jj] = X[pi[1]]
-        else break
-    }
-    for (i=2; i<=I; i++) {
-        rsum0 = rsum
-        rsum = rsum + w[pi[i]]
-        if (i<I & rsum < P[jj]*W) continue
-        while (1) {
-            ub = rsum0+1
-            if (P[jj]*W>=ub | X[pi[i]]==X[pi[i-1]]) Q[jj] = X[pi[i]]
-            else {
-                g = (ub - P[jj]*W) / (ub - rsum0)
-                Q[jj] = X[pi[i-1]]*g + X[pi[i]]*(1-g)
-            }
-            j++
-            if (j>J) break
-            jj = pj[j]
-            if (i<I & rsum < P[jj]*W) break
+    real scalar i, c
+    
+    c = 1
+    i = rows(Y)-1
+    if (i<1) return(c)
+    for (; i; i--) {
+        if (Y[i]!=Y[i+1]) {
+            c = 0
+            break
         }
-        if (j>J) break
     }
-    return(Q)
+    return(c)
+}
+
+void Kmatch_flip_V()
+{
+    real scalar    l, i, j, I, J
+    real colvector p
+    
+    I = st_numscalar("e(N_over)")
+    J = st_numscalar("e(k_eq)")
+    p = J(I*J, 1, .)
+    l = 0
+    for (i=1;i<=I;i++) {
+        for (j=1;j<=J;j++) {
+            p[++l] = (j-1)*I + i
+        }
+    }
+    st_replacematrix(st_local("V"), st_matrix(st_local("V"))[p,p])
+}
+
+void Kmatch_svylbl_b_undo()
+{
+    real colvector pos
+    string matrix  cstripe
+    
+    cstripe = st_matrixcolstripe(st_local("b"))
+    pos = strpos(cstripe[,1], "@")
+    cstripe[,2] = substr(cstripe[,1],pos:+1,.)
+    cstripe[,1] = substr(cstripe[,1],1,pos:-1)
+    st_local("k_eq", strofreal(rows(uniqrows(cstripe[,1]))))
+    st_matrixcolstripe(st_local("b"), cstripe)
+}
+
+void Kmatch_ebalance()
+{
+    transmorphic   S
+    real scalar    balanced, N1, W1
+    real colvector mw, w1, w0
+    real rowvector xvars
+    string scalar  wtype
+
+    wtype = st_local("weight")
+    // prepare treatment group base weights
+    if (wtype=="") w1 = 1
+    else {
+        w1 = st_data(., st_local("wvar"), st_local("ebtreat"))
+        if (wtype!="fweight") {
+            N1 = rows(w1)
+            W1 = sum(w1)
+            w1 = w1 * (N1 / W1)
+        }
+    }
+    // prepare control group base weights
+    if (st_local("subcmd")=="eb" | st_local("csonly")!="") {
+        if (wtype=="") w0 = 1
+        else {
+            w0 = st_data(., st_local("wvar"), st_local("ebcontrol"))
+            if (wtype!="fweight") w0 = w0 * (rows(w0) / sum(w0))
+        }
+    }
+    else {
+        w0 = st_data(., st_local("mw"), st_local("ebcontrol"))
+        w0 = w0 * (rows(w0) / sum(w0))
+        if (wtype=="fweight") {
+            w0 = w0 * st_data(., st_local("wvar"), st_local("ebcontrol"))
+        }
+    }
+    // compute balancing weights
+    xvars = st_varindex(tokens(st_local("ebvars")))
+    S = mm_ebal_init(
+        st_data(., xvars, st_local("ebtreat"))  , w1, 
+        st_data(., xvars, st_local("ebcontrol")), w0,
+        strtoreal(tokens(st_local("targets"))),
+        st_local("covariances")!="",
+        st_local("eb_nconstraint")!="",
+        st_local("eb_dfcorrection")!="",
+        st_local("eb_standardize")!="")
+    mm_ebal_btol(S, strtoreal(st_local("btolerance")))
+    if (st_local("noisily")=="") {
+        mm_ebal_trace(S, "none")
+        mm_ebal_nowarn(S, 1)
+    }
+    if (st_local("eb_difficult")!="")  mm_ebal_difficult(S, 1)
+    if (st_local("eb_maxiter")!="")    mm_ebal_maxiter(S, strtoreal(st_local("eb_maxiter")))
+    if (st_local("eb_ptolerance")!="") mm_ebal_ptol(S, strtoreal(st_local("eb_ptolerance")))
+    if (st_local("eb_vtolerance")!="") mm_ebal_vtol(S, strtoreal(st_local("eb_vtolerance")))
+    balanced = mm_ebal(S)
+    mw = mm_ebal_W(S)
+    // rescale balancing weights weights
+    if (wtype!="") {
+        if (wtype=="fweight") {
+            // remove the base weights (cannot use w0 because w0 may also 
+            // contain pre-processing weights)
+            mw = mw :/ st_data(., st_local("wvar"), st_local("ebcontrol"))
+        }
+        else {
+            // rescale balancing weights such that their sum is equal to sum of
+            // the base weights in treatment group (i.e. not to the number of 
+            // observations)
+            mw = mw * (W1 / N1)
+        }
+    }
+    // return results
+    st_numscalar(st_local("balanced"), balanced)
+    st_numscalar(st_local("maxdif"), mm_ebal_v(S))
+    st_numscalar(st_local("iterations"), mm_ebal_i(S))
+    st_store(., st_local("mw"), st_local("ebcontrol"), mw)
+}
+
+void Kmatch_Kdens()
+{
+    real scalar n
+    real colvector x, w
+    class mm_density scalar D
+    
+    D.kernel(st_local("kernel"), strtoreal(st_local("adaptive2")))
+    D.bw(st_local("bw")!="" ? strtoreal(st_local("bw")) : st_local("bwtype"),
+        strtoreal(st_local("adjust")), strtoreal(st_local("dpilevel")), 1)
+    D.support((strtoreal(st_local("ll")),strtoreal(st_local("ul"))), st_local("bc"), 0)
+    D.n(strtoreal(st_local("napprox")))
+    x = st_data(., st_local("varlist"), st_local("touse"))
+    if (st_local("weight")!="") {
+        w = st_data(., st_local("exp"), st_local("touse"))
+        w = w * rows(x) / sum(w) // normalize weights
+    }
+    else w = 1
+    D.data(x, w)
+    if (st_local("at")!="") {
+        n = strtoreal(st_local("n"))
+        st_store((1,n), st_local("gen"), D.d(st_data((1,n), st_local("at")), 0))
+    }
+    st_local("bw", strofreal(D.h(), "%18.0g"))
 }
 
 end
-exit
 
+exit
 

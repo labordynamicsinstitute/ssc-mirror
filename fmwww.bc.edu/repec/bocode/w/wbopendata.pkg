@@ -20,22 +20,39 @@ d KW: development indicators
 d
 d Requires: Stata version 9
 d
-d Distribution-Date: 20160210
+d Distribution-Date: 20200709
 d
 d Author: Joao Pedro Azevedo, World Bank
 d Support: email jazevedo@@worldbank.org
 d
 f wbopendata.ado
 f wbopendata_populate_list.ado
-f ../_/_pecats2.ado
-f ../_/_query.ado
-f ../_/_query_metadata.ado
-f ../_/_tknz.ado
 f wbopendata_examples.ado
 f wbopendata.sthlp
-f wbopendata_indicators.hlp
+f wbopendata_indicators.sthlp
+f wbopendata_adminregion.sthlp
+f wbopendata_incomelevel.sthlp
+f wbopendata_lendingtype.sthlp
+f wbopendata_region.sthlp
+f wbopendata_sourceid.sthlp
+f wbopendata_topicid.sthlp
 f wbopendata.dlg
+f ../_/_api_read_indicators.ado
+f ../_/_api_read.ado
+f ../_/_countrymetadata.ado
+f ../_/_parameters.ado
+f ../_/_query_indicators.ado
+f ../_/_query_metadata.ado
+f ../_/_query.ado
+f ../_/_tknz.ado
+f ../_/_update_countrymetadata.ado
+f ../_/_update_indicators.ado
+f ../_/_update_wbopendata.ado
+f ../_/_wbod_tmpfile1.ado
+f ../_/_wbod_tmpfile2.ado
+f ../_/_wbod_tmpfile3.ado
+f ../_/_website.ado
 F ../i/indicators.txt
 F ../c/country.txt
-f world-c.dta
-f world-d.dta
+F world-c.dta
+F world-d.dta

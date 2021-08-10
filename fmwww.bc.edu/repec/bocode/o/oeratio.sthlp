@@ -1,5 +1,5 @@
 {smcl}
-{* *!1.0.0  Brent Mcsharry brent@focused-light.net 6Mar2011}{...}
+{* *!1.0.1  Brent Mcsharry brent@focused-light.net 6May2018}{...}
 {cmd:help oeratio}
 {hline}
 
@@ -27,13 +27,13 @@
 {synoptline}
 {p2colreset}{...}
 {p 4 6 2}
-{cmd:by} is allowed; see {manhelp by D}.{p_end}
-
+{cmd:by} is allowed; see {manhelp by D}.
+{p_end}
 
 {title:Description}
 
 {pstd}
-{cmd:oeratio} calculates the ratio of the number of observed and expected outcomes of note. 
+{cmd:oeratio} calculates the ratio of the number of observed and expected outcomes. 
 If {depvar} and {it:predictvar} (the variable specifying the individual probability of a 
 positive outcome for each subject) are not specified, the command must follow a {cmd:logit} 
 or {cmd:logistic} command.
@@ -59,6 +59,12 @@ variable: variance = sum(p*(1-p)). In its current form the standard error, confi
 intervals and z-score calculated do not take into account the error of the model.
 
 {pstd}
+When the command is used without arguments (following a {cmd:logit} 
+or {cmd:logistic} command) and no {ifin} arguments are provided, only the estimation sample {cmd:e(sample)} is used. 
+If you want to use the entire data set for the calculation, not just the estimation sample, you can specify {cmd:oeratio if 1}. When providing the {depvar predictvar} variable names,
+any observations in which {it:either} variable contains missing will be excluded from the calculation.
+
+{pstd}
 This command was developed in order to calculate the standardized mortality ratio (SMR) 
 for intensive care units (ICU) when applying logistic mortality prediction models such as
 MPM, APACHE, PRISM or PIM models to unit data as part of benchmarking procedures.
@@ -81,7 +87,7 @@ MPM, APACHE, PRISM or PIM models to unit data as part of benchmarking procedures
 {title:Saved Results}
 
 {pstd}
-{cmd:logit} saves the following in {cmd:r()}:
+{cmd:oeratio} saves the following in {cmd:r()}:
 
 {synoptset 15 tabbed}{...}
 {p2col 5 15 19 2: Scalars}{p_end}

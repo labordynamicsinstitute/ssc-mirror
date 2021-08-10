@@ -19,9 +19,9 @@ d
 d KW: OECD
 d KW: PISA data
 d
-d Requires: Stata version 10.0
+d Requires: Stata version 12
 d
-d Distribution-Date: 20131221
+d Distribution-Date: 20200506
 d
 d Author: Maciej Jakubowski, Faculty of Economic Sciences, Warsaw University
 d Support: email mjakubowski@@uw.edu.pl

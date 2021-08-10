@@ -1,4 +1,4 @@
-*! version 1.1.2  04jun2017
+*! version 1.2.3  04aug2020
 *! Sebastian Kripfganz, www.kripfganz.de
 
 *==================================================*
@@ -8,7 +8,7 @@
 
 /*	Kripfganz, S., and C. Schwarz (2015).
 	Estimation of linear dynamic panel data models with time-invariant regressors.
-	ECB Working Paper 1838. European Central Bank.		*/
+	Journal of Applied Econometrics 34: 526-546.		*/
 
 program define xtseqreg_p, sort
 	version 12.1
@@ -89,13 +89,13 @@ end
 
 *==================================================*
 **** computation of parameter-level scores ****
-program define xtseqreg_p_scores, rclass
+program define xtseqreg_p_scores, rclass sort
 	version 12.1
 	syntax [anything] [if] [in] , SCores
 	marksample touse
 
 	if rowsof(e(stats)) == 2 {
-		di as err "option influence not allowed after xtseqreg with two equations"
+		di as err "option scores not allowed after xtseqreg with two equations"
 		exit 198
 	}
 	tempvar smpl
@@ -103,11 +103,12 @@ program define xtseqreg_p_scores, rclass
 	tempname b
 	mat `b'				= e(b)
 	loc indepvars		: coln `b'
+	loc K				: word count `indepvars'
 	loc indepvars		: subinstr loc indepvars "_cons" "`smpl'", w
 	_stubstar2names `anything', nvars(`: word count `indepvars'') noverify
-	loc vtyp			"`s(typlist)'"
+	loc vtypes			"`s(typlist)'"
 	loc varn			"`s(varlist)'"
-	if `: word count `varn'' != `: word count `indepvars'' {
+	if `: word count `varn'' != `K' {
 		error 102
 	}
 	loc ivvars			"`e(ivvars_1)'"
@@ -117,6 +118,7 @@ program define xtseqreg_p_scores, rclass
 		qui gen byte `dsmpl' = `smpl'
 		loc teffects		"`e(teffects)'"
 		markout `dsmpl' D.`e(depvar)' D.(`: list indepvars - teffects')
+		qui replace `dsmpl' = 0 if !(L.`smpl')
 	}
 	foreach var of loc varn {
 		tempvar gen`var'
@@ -130,14 +132,26 @@ program define xtseqreg_p_scores, rclass
 	}
 	tempvar e
 	qui predict double `e' if `smpl', ue
-	mata: xtseqreg_projection(	"`indepvars'",				///
+	fvrevar `indepvars' if `smpl'
+	loc tindepvars		"`r(varlist)'"
+	fvrevar `ivvars' if `smpl'
+	loc tivvars			"`r(varlist)'"
+	foreach tsvarlist in gmmivvars_1 divvars_1 dgmmivvars_1 ecivvars_1 ecgmmivvars_1 {
+		fvrevar `e(`tsvarlist')' if `smpl'
+		loc t`tsvarlist'	"`r(varlist)'"
+	}
+	if "`e(clustvar)'" != "" {
+		sort `e(clustvar)' `_dta[_TSpanel]' `_dta[_TStvar]'
+	}
+
+	mata: xtseqreg_projection(	"`tindepvars'",				///
 								"`projection'",				///
-								"`ivvars'",					///
-								"`e(gmmivvars_1)'",			///
-								"`e(divvars_1)'",			///
-								"`e(dgmmivvars_1)'",		///
-								"`e(ecivvars_1)'",			///
-								"`e(ecgmmivvars_1)'",		///
+								"`tivvars'",				///
+								"`tgmmivvars_1'",			///
+								"`tdivvars_1'",				///
+								"`tdgmmivvars_1'",			///
+								"`tecivvars_1'",			///
+								"`tecgmmivvars_1'",			///
 								"`e(ivar)'",				///
 								"`e(tvar)'",				///
 								"`smpl'",					///
@@ -145,12 +159,16 @@ program define xtseqreg_p_scores, rclass
 								"",							///
 								"",							///
 								"e(W)",						///
-								"")
+								"",							///
+								"`e(clustvar)'")
 	foreach var of loc varn {
 		qui replace `gen`var'' = `gen`var'' * `e' if `smpl'
 	}
 
 	if "`e(vcetype)'" == "WC-Robust" {				// Windmeijer correction
+		if "`e(clustvar)'" != "" {
+			qui xtset
+		}
 		tempname xtseqreg_e
 		est sto `xtseqreg_e'
 		xtseqreg_p_onestep
@@ -158,14 +176,18 @@ program define xtseqreg_p_scores, rclass
 		qui predict double `e1' if `smpl', ue
 		qui est res `xtseqreg_e'
 		est drop `xtseqreg_e'
-		mata: xtseqreg_projection(	"`indepvars'",				///
+		if "`e(clustvar)'" != "" {
+			sort `e(clustvar)' `_dta[_TSpanel]' `_dta[_TStvar]'
+		}
+
+		mata: xtseqreg_projection(	"`tindepvars'",				///
 									"`projection1'",			///
-									"`ivvars'",					///
-									"`e(gmmivvars_1)'",			///
-									"`e(divvars_1)'",			///
-									"`e(dgmmivvars_1)'",		///
-									"`e(ecivvars_1)'",			///
-									"`e(ecgmmivvars_1)'",		///
+									"`tivvars'",				///
+									"`tgmmivvars_1'",			///
+									"`tdivvars_1'",				///
+									"`tdgmmivvars_1'",			///
+									"`tecivvars_1'",			///
+									"`tecgmmivvars_1'",			///
 									"`e(ivar)'",				///
 									"`e(tvar)'",				///
 									"`smpl'",					///
@@ -173,22 +195,27 @@ program define xtseqreg_p_scores, rclass
 									"`e1'",						///
 									"`e'",						///
 									"e(W_onestep)",				///
-									"e(W)")
+									"e(W)",						///
+									"`e(clustvar)'")
 		foreach var of loc varn {
 			qui replace `aux`var'' = `aux`var'' * `e1' if `smpl'
 		}
 		mata: xtseqreg_influence("`projection1'", "e(V_onestep)", "r(D)", "`smpl'")
-		foreach var of loc varn {
+		forv k = 1 / `K' {
+			loc var				: word `k' of `varn'
+			loc vtyp			: word `k' of `vtypes'
 			gen `vtyp' `var' = `gen`var'' + `aux`var'' if `touse'
 			lab var `var' "parameter-level score from `e(cmd)'"
 		}
 	}
 	else {
-		foreach var of loc varn {
+		forv k = 1 / `K' {
+			loc var				: word `k' of `varn'
+			loc vtyp			: word `k' of `vtypes'
 			gen `vtyp' `var' = `gen`var'' if `touse'
 			lab var `var' "parameter-level score from `e(cmd)'"
 		}
 	}
 
-	ret loc scorevars `varn'
+	ret loc scorevars	`varn'
 end

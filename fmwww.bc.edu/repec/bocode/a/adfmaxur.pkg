@@ -18,7 +18,7 @@ d KW: response surfaces
 d
 d Requires: Stata version 13
 d
-d Distribution-Date: 20170730
+d Distribution-Date: 20180419
 d
 d Author: Jesús Otero, Universidad del Rosario
 d Support: email jesus.otero@@urosario.edu.co
@@ -30,4 +30,5 @@ f adfmaxur.ado
 f adfmaxur.sthlp
 f ../r/rerdata.dta
 f ../r/rerdata_long.dta
+f ../u/usurates.dta
 F adfmaxur.mtx

@@ -19,12 +19,13 @@ d KW: missing at random
 d
 d Requires: Stata version 10 
 d
-d Distribution-Date: 20170212
+d Distribution-Date: 20181226
 d
 d Author: Ian White, MRC Clinical Trials Unit at UCL
 d Support: email  ian.white@@ucl.ac.uk
 d
 f rctmiss.ado
+f rctmiss.do
 f rctmiss_smlik.ado
 f rctmiss.sthlp
 f ../u/UK500.dta

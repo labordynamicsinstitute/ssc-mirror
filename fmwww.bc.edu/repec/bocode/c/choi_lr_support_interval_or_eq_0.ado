@@ -46,6 +46,7 @@ version 14
     scalar psi = [psi]_b[_cons]
     scalar dummy = [dummy]_b[_cons]
     scalar LRsupport_ub = exp(psi)
+    scalar LRsupport_lb = 0
     choi_lr_hyperg_prob n1 n2 y1 y2 psi
 
     local k_alpha =strofreal($k_global,"%-10.7g")

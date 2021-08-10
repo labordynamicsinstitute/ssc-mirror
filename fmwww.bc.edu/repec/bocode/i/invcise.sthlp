@@ -139,7 +139,7 @@ If the {cmd:eformestimate()} option is specified, then the formula used is
 and is
 
 {pstd}
-{it:SE = 0.5*eformestimate*(lof(ub) - log(lb))/t(df,alpha)}
+{it:SE = 0.5*eformestimate*(log(ub) - log(lb))/t(df,alpha)}
 
 {pstd}
 if a degrees of freedom variable is specified.
@@ -316,7 +316,7 @@ respectively.
 {title:Author}
 
 {pstd}
-Roger Newson, National Heart and Lung Institute, Imperial College London, UK.{break}
+Roger Newson, Imperial College London, UK.{break}
 Email: {browse "mailto:r.newson@imperial.ac.uk":r.newson@imperial.ac.uk}
 
 
@@ -356,5 +356,5 @@ Estimating the variance of the sample median.
 {p_end}
 {p 4 13 2}
 On-line: help for {helpb centile}, {helpb statsby}
-{break} help for {helpb parmest}, {helpb parmby}, {helpb parmcip}, {helpb metaparm}, {helpb somersd}, {helpb censlope}, {helpb cendif} if installed
+{break} help for {helpb parmest}, {helpb parmby}, {helpb parmcip}, {helpb metaparm}, {helpb somersd}, {helpb censlope}, {helpb cendif}, {help rcentile} if installed
 {p_end}

@@ -1,5 +1,5 @@
 {smcl}
-{* revised 09jun2015}{...}
+{* revised 17may2019}{...}
 {cmd:help filelist}
 {hline}
 
@@ -73,10 +73,12 @@ The default is to search all subdirectories recursively.
 {title:Limitations}
 
 {pstd}
-The previous version of {cmd:filelist} would fail to list
-files from a directory that contained too many files (more than
-would fit in a Stata macro). This new version has no limits
-on the number of files in a directory.
+{cmd:filelist} can recursively scan a directory and return an unlimited 
+number of files (it will happily scan a whole hard disk if you ask for it).
+Note however that {cmd:filelist} is written in Mata and unfortunately the
+{cmd:dir()} function can only return 10,000 filenames from a single directory.
+As of May 17, 2019, this hard coded limit is still present in the all versions
+of Stata. 
 
 {pstd}
 If the directory structure is deep enough,

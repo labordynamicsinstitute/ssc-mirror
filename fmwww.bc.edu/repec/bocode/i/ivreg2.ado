@@ -1,4 +1,4 @@
-*! ivreg2 4.1.10  9Feb2016
+*! ivreg2 4.1.11  22Nov2019
 *! authors cfb & mes
 *! see end of file for version comments
 
@@ -36,7 +36,10 @@ if c(version) < 12 & c(version) >= 9 {
 * Parent program, forks to versions as appropriate after version call
 * Requires byable(onecall)
 program define ivreg2, eclass byable(onecall) /* properties(svyj) */ sortpreserve
-	local lversion 04.1.10
+	local lversion 04.1.11
+
+* local to store Stata version of calling program
+	local caller = _caller()
 
 * Minimum of version 8 required for parent program (earliest ivreg2 is ivreg28)
 	version 8
@@ -78,8 +81,8 @@ di as err "invalid syntax - cannot use by with replay"
 * If calling version is < 11, pass control to earlier version
 * Note that this means calls from version 11.0 will not go to legacy version
 * but will fail requirement of version 11.2 in main code.
-	if _caller() < 11 {
-		local ver = round(_caller())
+	if `caller' < 11 {
+		local ver = round(`caller')
 		local ivreg2cmd ivreg2`ver'
 * If replay, change e(cmd) macro to name of legacy ivreg2 before calling it, then change back
 * Note by not allowed with replay; caught above so prefix not needed here.
@@ -107,11 +110,16 @@ di as err "invalid syntax - cannot use by with replay"
 	}
 // If not replay, call ivreg211 and then add macros
 	else {
-		`BY' ivreg211 `0'
+		// use to separate main args from options
+		syntax [anything] [if] [in] [aw fw pw iw] [, * ]
+		// append caller(.) to options
+		`BY' ivreg211 `anything' `if' `in' [`weight' `exp'], `options' caller(`caller')
+//		`BY' ivreg211 `0'
 		ereturn local cmd "ivreg2"
 		ereturn local ivreg2cmd "ivreg2"
 		ereturn local version `lversion'
 		ereturn local predict ivreg2_p
+		ereturn local cmdline ivreg2 `0'		//  `0' rather than `*' in case of any "s in string
 	}
 
 end
@@ -139,11 +147,9 @@ if c(stata_version) < 11 {
 * Main estimation program
 program define ivreg211, eclass byable(recall) sortpreserve
 	version 11.2
-	local ranktestversion 01.3.02
 
 	local ivreg2cmd "ivreg211"			//  actual command name
 	local ivreg2name "ivreg2"			//  name used in command line and for default naming of equations etc.
-	local ranktestcmd "ranktest"
 
 	if replay() {
 		syntax [, 												///
@@ -155,6 +161,7 @@ program define ivreg211, eclass byable(recall) sortpreserve
 				NOOMITTED vsquish noemptycells					///
 				baselevels allbaselevels 						///
 				VERsion											///
+				caller(real 0)									///
 				]
 		if "`version'" != "" & "`first'`ffirst'`rf'`noheader'`nofooter'`dropfirst'`droprf'`eform'`plus'" != "" {
 			di as err "option version not allowed"
@@ -187,10 +194,6 @@ program define ivreg211, eclass byable(recall) sortpreserve
 	}
 	else {
 // MAIN CODE BLOCK
-		local cmdline `ivreg2name' `0'		//  `0' rather than `*' in case of any "s in string
-
-//  Confirm ranktest is installed (necessary component).
-		checkversion_ranktest `ranktestcmd' `ranktestversion'
 
 // Start parsing
 		syntax [anything(name=0)] [if] [in] [aw fw pw iw/] [,		///
@@ -217,7 +220,12 @@ program define ivreg211, eclass byable(recall) sortpreserve
 				dofminus(integer 0) sdofminus(integer 0)			///
 				NOPARTIALSMALL										///
 				fvall fvsep											///
+				caller(real 0)										///
 				]
+
+//  Confirm ranktest is installed (necessary component).
+		checkversion_ranktest `caller'
+		local ranktestcmd `r(ranktestcmd)'
 
 // Parse after clearing any sreturn macros (can be left behind in Stata 11)
 		sreturn clear
@@ -1640,6 +1648,9 @@ di as err "Please drop one or more estimation results using -estimates drop-"
 								 `clopt'				///
 								 `bwopt'				///
 								 `kernopt'
+// Returned in e(.) macro:
+			local rkcmd `r(ranktestcmd)'
+
 // Canonical correlations returned in r(ccorr), sorted in descending order.
 // If largest = 1, collinearities so enter error block.
 			local rkerror		= _rc>0 | r(chi2)==.
@@ -2114,7 +2125,7 @@ di in red "Error: estimation failed - could not post estimation results"
 			ereturn local wtype `weight'
 		}
 		ereturn local cmd			`ivreg2cmd'
-		ereturn local cmdline		`cmdline'
+		ereturn local ranktestcmd	`rkcmd'
 		ereturn local version		`lversion'
 		ereturn scalar nocollin		=("`nocollin'"~="")
 		ereturn scalar partialcons	=`partialcons'
@@ -4512,25 +4523,34 @@ program define matchnames, rclass
 end
 
 
-program define checkversion_ranktest
+program define checkversion_ranktest, rclass
 	version 11.2
-	args ranktestcmd ranktestversion
+	args caller
 
 * Check that -ranktest- is installed
-		capture `ranktestcmd', version
+		capture ranktest, version
 		if _rc != 0 {
-di as err "Error: must have ranktest version `ranktestversion' or greater installed"
+di as err "Error: must have ranktest version 01.3.02 or greater installed"
 di as err "To install, from within Stata type " _c
 di in smcl "{stata ssc install ranktest :ssc install ranktest}"
 			exit 601
 		}
 		local vernum "`r(version)'"
-		if ("`vernum'" < "`ranktestversion'") | ("`vernum'" > "09.9.99") {
-di as err "Error: must have ranktest version `ranktestversion' or greater installed"
+		if ("`vernum'" < "01.3.02") | ("`vernum'" > "09.9.99") {
+di as err "Error: must have ranktest version 01.3.02 or greater installed"
 di as err "Currently installed version is `vernum'"
 di as err "To update, from within Stata type " _c
 di in smcl "{stata ssc install ranktest, replace :ssc install ranktest, replace}"
 			exit 601
+		}
+
+* Minimum Stata version required for ranktest ver 2.0 or higher is Stata 16.
+* If calling version is <16 then forks to ranktest ver 1.4 (aka ranktest11).
+		if `caller' >= 16 {
+			return local ranktestcmd	version `caller': ranktest
+		}
+		else {
+			return local ranktestcmd	version 11.2: ranktest
 		}
 end
 
@@ -6781,3 +6801,9 @@ exit		//  exit before loading comments
 *          e(cmdline) now saves original string including any "s (i.e., saves `0' instead of `*').
 * 4.1.10   Fixed bug with posting first-stage results if sort had been disrupted by Mata code.
 *          Fixed bug which mean endog(.) and orthog(.) varlists weren't saved or displayed.
+* 4.1.11   22Nov19. Added caller(.) option to ivreg211 subroutine to pass version of parent Stata _caller(.).
+*          Local macro with this parent Stata version is `caller'.
+*          Changed calls to ranktest so that if parent Stata is less than version 16,
+*          ranktest is called under version control as version 11.2: ranktest ...,
+*          otherwise it is called as version `caller': ranktest ... .
+*          Added macro e(ranktestcmd); will be ranktest, or ranktest11, or ....

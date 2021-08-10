@@ -1,12 +1,13 @@
-*! xtscc, version 1.3, Daniel Hoechle, 10oct2011
+*! xtscc, version 1.4, Daniel Hoechle, 01dec2017
 *
 * This program largely is a translation of Driscoll and Kraay's procedure for GAUSS.
 * Differences between Driscoll and Kraay's GAUSS-program and -xtscc-:
 *
 * 1) -xtscc- is able to handle missing values and unbalanced panels. 
 * 2) -xtscc- can estimate fixed effects (within) regression models.
-* 3) -xtscc- can estimate pooled OLS models with analytic weights 
-*    (i.e. pooled WLS models).
+* 3) -xtscc- can estimate random effects regression models (GLS estimator only).
+* 3) -xtscc- can estimate pooled OLS as well as fixed effects regression models
+*     with analytic weights.
 * 4) -xtscc- does not offer the opportunity to estimate two stage least squares (2SLS)
 *    regression models as does Driscoll and Kraay's original GAUSS program.
 *
@@ -14,9 +15,9 @@
 * Syntax:
 * =======
 *
-*   xtscc2 depvar [indepvar] [if] [in] [aweight=exp] [, FE POOLed LAG(nlags) Level(cilevel)]
-*   xtscc2 is byable.
-*   Weighted estimation does not work with option FE.
+*   xtscc depvar [indepvar] [if] [in] [aweight=exp] [, FE RE POOLed LAG(nlags) Level(cilevel) NOConstant ASE]
+*   xtscc is byable.
+*
 *
 * Notes:
 * ======
@@ -28,10 +29,18 @@
 * (4) Version 1.3 of the program adds option -noconstant- for estimating
 *     OLS regressions without intercept and for and option -ase- for estimating
 *     Driscoll-Kraay SE without small sample adjustment.
+* (5) Version 1.4 of the program allows -xtscc, fe- to also estimate
+*     fixed effects regressions with analytical weights. Thereby, the
+*     within transform works as in Stata's official -areg- command.
+* (6) Version 1.4 of the program allows -xtscc- to estimate random effects models.
+*     Thereby, the coefficient estimates match those from official Stata's 
+*     -xtreg, re- command.
+* (7) Thanks to Sergio Correia, version 1.4 of the program now also handles
+*     factor variables as explanatory variables.
 *
 * ==============================================================
 * Daniel Hoechle
-* This version:  10. October 2011
+* This version:  30. October 2017
 * First version: 27. February 2007
 * ==============================================================
 
@@ -49,9 +58,12 @@ program define xtscc , eclass sortpreserve byable(recall) prop(sw)
 
   if !replay() {
       tempname b V
+			tempname ratio sigma_e sigma_u rho 
+			tempname r2 r2_w r2_b rmse
+			tempname N_conseqTPeriods N_Tperiods NObs df_m sse N_g
       tempvar cons TransVar2
       ereturn clear
-      syntax varlist(numeric) [if] [in] [aweight/] [, LAG(integer 9999) Level(cilevel) FE POOLed NOConstant ASE]
+      syntax varlist(numeric fv ts) [if] [in] [aweight/] [, LAG(integer 9999) Level(cilevel) FE RE POOLed NOConstant ASE]
       marksample touse
       
       * Check if the dataset is tsset:
@@ -61,32 +73,37 @@ program define xtscc , eclass sortpreserve byable(recall) prop(sw)
         
       * Check if the panel dataset's timevar is regularly spaced
         qui tab `timevar'
-		scalar N_Tperiods=r(r)
-		sum `timevar', meanonly
-		scalar N_conseqTPeriods=r(max)-r(min)+1
-		if N_Tperiods<N_conseqTPeriods {
-		  di as err "`timevar' is not regularly spaced: there are contemporaneous gap(s) across all subjects in `panelvar'"
-		  exit 101
-		}
+				scalar `N_Tperiods'=r(r)
+				sum `timevar', meanonly
+				scalar `N_conseqTPeriods'=r(max)-r(min)+1
+				if `N_Tperiods'<`N_conseqTPeriods' {
+					di as err "`timevar' is not regularly spaced: there are contemporaneous gap(s) across all subjects in `panelvar'"
+					exit 101
+				}
       
         
       * Generate a variable for the regression constant 
         local lag = abs(`lag')
         if "`noconstant'"=="" {
-           gen double `cons'=1    // regression constant
+           qui gen double `cons'=1    // regression constant
         }
 
       * Split varlist into dependent and independent variables:
-        tokenize `varlist'
-        local lhsvar "`1'"
-        macro shift 1
-        local rhsvars "`*'"
+        fvexpand `varlist'
+        loc expanded_varlist `r(varlist)'
+        gettoken expanded_rhsvar expanded_rhsvars : expanded_varlist, bind
+
+        fvrevar `expanded_varlist'
+        loc varlist `r(varlist)'
+        gettoken lhsvar rhsvars : varlist, bind
+				if "`weight'"==""   qui gen double `TransVar2' = 1          // perform equal weighted estimation
+				else                qui gen double `TransVar2' = `exp'      // perform weighted estimation
+				
 
       * Estimate the consistent covariance matrix as described in Driscoll and Kraay (1998):
-        if "`fe'"=="" {
-          if "`weight'"==""   gen double `TransVar2' = 1          // perform pooled OLS
-          else                gen double `TransVar2' = `exp'      // perform pooled WLS
-          * WLS-transform:
+        if "`fe'"=="" & "`re'"=="" {  // Pooled OLS/WLS case
+				          
+					* WLS-transform:
           qui foreach var of local varlist {
               tempvar w`var'
               local tname "`w`var''"
@@ -97,48 +114,118 @@ program define xtscc , eclass sortpreserve byable(recall) prop(sw)
           if "`noconstant'"=="" {
              qui replace `cons' = sqrt(`TransVar2') * `cons'
           }
+					
+					
+			* Use official Stata's -reg- command to obtain the R-squared and RMSE:
+					if "`noconstant'"=="" {
+						 qui reg `lhsvar' `rhsvars' [aweight=`TransVar2'] if `touse' 
+					}
+					else {
+						 qui reg `lhsvar' `rhsvars' [aweight=`TransVar2'] if `touse', noconstant
+					}
+					scalar `r2' = e(r2)
+					scalar `rmse' = e(rmse)
+					local df_m = e(df_m)
+					local rank = e(rank)
+					ereturn clear
+				
         }
-        else {
-          if "`weight'"!=""  {
-            di as err "weights are not allowed with option fe"
-            exit 101
-          }
+        else if "`fe'"=="fe" | "`re'"=="re" {  // FE or GLS RE case
+				           			
           if "`noconstant'"!="" {
-            di as err "option `noconstant' not allowed with option fe"
+            di as err "option `noconstant' not allowed with option `fe'`re'"
             exit 101
           }
-          * Within-transformation of the data (improved version as proposed by Bill Gould and David Drukker):
+					
+          * Within-transformation of the data (FE and GLS RE estimation)
             sort `panelvar' `timevar'
             tempname TotMean
-            tempvar  tmp ti
-            by `panelvar': gen double `ti' = sum(`touse')
-            qui by `panelvar': replace `ti' = `ti'[_N]
+            tempvar ti
+						qui {
+							by `panelvar': egen double `ti' = total(`TransVar2') if `touse'
+						}
             qui foreach var of local varlist {
-                tempvar w`var'
-                local tname "`w`var''"
-                by `panelvar': gen double `tmp' = sum(cond(`touse', `var', 0))
-                by `panelvar': replace `tmp' = `tmp'[_N]/`ti' if `touse'
-                sum `var' if `touse', meanonly
-                scalar `TotMean' = r(mean)
-                gen double `w`var'' = `var' - `tmp' + `TotMean' if `touse'
-                if "`var'"=="`lhsvar'"    local lvar "`tname'"
-                else                      local rvar "`rvar' `tname'"
-                drop `tmp'
-            }
-        }
-      
-      * Before we produce the Driscoll-Kraay standard errors, we estimate a simple
-      * OLS regression and save the R-squared and the rmse as they do not change with the 
-      * method of obtaining the standard error:
-        if "`noconstant'"=="" {
-           qui reg `lvar' `rvar' if `touse'
-        }
-        else {
-           qui reg `lvar' `rvar' if `touse', noconstant
-        }
-        scalar r2_xtscc = e(r2)
-        scalar rmse_xtscc = e(rmse)
-        ereturn clear
+						
+							tempvar w`var' b`var'
+							
+							* Time average per subject
+							local bname "`b`var''"
+							by `panelvar': egen double `b`var'' = total(`var'*`TransVar2') if `touse'
+							replace `b`var'' = `b`var''/`ti'
+							if "`var'"=="`lhsvar'"    local blvar "`bname'"
+							else                      local brvar "`brvar' `bname'"
+							
+							* Within-transform
+							local wname "`w`var''"            
+							sum `var' if `touse' [aweight=`TransVar2'], meanonly
+							scalar `TotMean' = r(mean)
+							gen double `w`var'' = `var' - `b`var'' + `TotMean' if `touse'
+							if "`var'"=="`lhsvar'"    local lvar "`wname'"
+							else                      local rvar "`rvar' `wname'"
+
+						}
+						
+					* Count the number of subjects
+						tempvar UseXS	
+						sort `touse' `panelvar' `timevar'
+						by `touse' `panelvar': gen `UseXS' = (_n==1)
+						sum `UseXS' if `touse', meanonly
+						scalar `N_g' = r(sum)
+						
+						
+					* Use official Stata's -reg- command to obtain the R-squared and other stats:
+						qui reg `lvar' `rvar' [aweight=`TransVar2'] if `touse' 
+						scalar `r2_w' = e(r2)
+						scalar `sse' = e(rss)
+						scalar `NObs' = e(N)
+						scalar `df_m' = e(df_m)
+						scalar `sigma_e' = sqrt(`sse'/(`NObs' - `df_m' - `N_g'))
+						local rank = e(rank)
+						ereturn clear
+						
+					
+					* Option RE
+					if "`re'"=="re" {   // Implementation of the GLS transform
+											
+						* Number of observations per subject & dummy defining first obs per subject
+						  tempvar Ti tmp
+							//sort `touse' `panelvar' `timevar'				
+							by `touse' `panelvar': gen `Ti' = _N
+							by `touse' `panelvar': gen `tmp' = 1/_N
+							sum `tmp' if `UseXS' & `touse', meanonly
+							tempname Tbar
+							scalar `Tbar' = 1/r(mean)
+							drop `tmp'		
+											
+						* BE estimation and formation of key stats
+							qui reg `blvar' `brvar' if `UseXS' & `touse'
+							//qui reg `blvar' `brvar' [aweight=`ti'] if `UseXS' & `touse'
+							scalar `sigma_u' = max(sqrt(e(rmse)^2 - `sigma_e'^2/`Tbar'), 0)
+							scalar `r2_b' = e(r2)
+							scalar `rho' = `sigma_u'^2/(`sigma_u'^2+`sigma_e'^2)		
+							scalar `ratio' = `sigma_u'/`sigma_e'				
+							tempvar ti theta_i
+							gen double `theta_i' = 1 - 1 / sqrt(`Ti'*(`ratio')^2 + 1) if `touse'
+							ereturn clear				
+											
+						* GLS transform
+							qui tsset
+							qui foreach var of local varlist {
+									replace `w`var'' = `var' - `theta_i'*`b`var'' if `touse'
+							}
+							qui replace `cons' = 1 - `theta_i'
+
+					}	
+						
+						
+          * WLS-transform of the data
+          qui foreach var of local varlist {
+								replace `w`var'' = sqrt(`TransVar2') * `w`var'' if `touse'  
+          }
+					qui replace `cons' = sqrt(`TransVar2') * `cons' if `touse'
+						
+        } 
+				
       
       * Sort the dataset for use in mata:
         sort `timevar' `panelvar'
@@ -154,59 +241,86 @@ program define xtscc , eclass sortpreserve byable(recall) prop(sw)
       * Next, we have to attach row and column names to the produced matrices:
         foreach Vector in "Beta" "se_beta" "t_beta" {
            if "`noconstant'"=="" {
-              matrix rownames `Vector' = `rhsvars' _cons
+              matrix rownames `Vector' = `expanded_rhsvars' _cons
            }
            else {
-              matrix rownames `Vector' = `rhsvars'
+              matrix rownames `Vector' = `expanded_rhsvars'
            }
            matrix colnames `Vector' = y1
         }
         if "`noconstant'"=="" {
-           matrix rownames VCV = `rhsvars' _cons
-           matrix colnames VCV = `rhsvars' _cons
+           matrix rownames VCV = `expanded_rhsvars' _cons
+           matrix colnames VCV = `expanded_rhsvars' _cons
         }
         else {
-           matrix rownames VCV = `rhsvars'
-           matrix colnames VCV = `rhsvars'
+           matrix rownames VCV = `expanded_rhsvars'
+           matrix colnames VCV = `expanded_rhsvars'
         }
 
       * Then we prepare the matrices for upload into e() ...
         matrix `b' = Beta'
         if "`ase'"=="" {
-        	matrix `V' = (TT/(TT-1))*((nObs-1)/(nObs-nVars))*VCV
+						matrix `V' = (TT/(TT-1))*((nObs-1)/(nObs-`rank'))*VCV
         }
         else {
             matrix `V' = VCV
         }
-        matrix se_beta = se_beta'
-        matrix t_beta = t_beta'
+				
+			* Compute the overall R-squared in case of RE estimation
+			  if "`re'"=="re" {
+				    tempvar XB
+				    tempname r2_o		
+						qui gen double `XB' = `b'[1,_cons] if `touse'
+						local j = 1
+            qui foreach var of local rhsvars {
+						   replace `XB' = `XB' + `b'[1, `j']*`var' if `touse'
+               local j = `j' + 1
+						}	
+						qui corr `XB' `lhsvar' [aweight=`TransVar2'] if `touse'
+						scalar `r2_o' = r(rho)^2
+				}
 
       * ... post the results in e():
+			  ereturn clear
         ereturn post `b' `V', esample(`touse') depname("`lhsvar'")
         ereturn scalar N = nObs
         ereturn scalar N_g = nGroups
-        ereturn scalar df_m = nVars - 1
-        ereturn scalar df_r = TT - 1  //corrected from: nGroups - 1
-        qui if "`rhsvars'"!=""  test `rhsvars', min   // Perform the F-Test
-        ereturn scalar F = r(F)
+        ereturn scalar df_m = `df_m'
+        ereturn scalar df_r = TT - 1
+				
+				
+			* Model fit test
+ 				qui if "`rhsvars'"!=""  test `expanded_rhsvars', min   // Perform the F-Test
+			  if "`re'"=="" {
+				  ereturn scalar F = r(F)
+				}
+				else {
+					ereturn scalar chi2 = r(F) * `df_m'
+				}
+				
 
-        * Post the R-squared and the RMSE from the ordinary OLS-regression:
-          if "`fe'"=="" ereturn scalar r2 = r2_xtscc
-          else          ereturn scalar r2_w = r2_xtscc
-          
-          if "`fe'"=="" ereturn scalar rmse = rmse_xtscc
+        * Post the R-squared and RMSE
+          if "`fe'"=="" & "`re'"==""     ereturn scalar r2 = `r2'
+          else if "`fe'"=="fe"           ereturn scalar r2_w = `r2_w'
+					else if "`re'"=="re" 			     ereturn scalar r2_o = `r2_o'			
+					if "`fe'"=="" & "`re'"==""     ereturn scalar rmse = `rmse'
 
-        ereturn scalar lag = lag_f
-        ereturn matrix se_beta = se_beta
-        ereturn matrix t = t_beta
-        ereturn local groupvar "`panelvar'"
-        ereturn local title "Regression with Driscoll-Kraay standard errors"
-        ereturn local vcetype "Drisc/Kraay"
-        ereturn local depvar "`lhsvar'"
-        if "`fe'"=="" ereturn local method "Pooled OLS"
-        else          ereturn local method "Fixed-effects regression"
-        ereturn local predict "xtscc_p"
-        ereturn local cmd "xtscc"
+				* Post the remaining results
+					ereturn scalar lag = lag_f
+					if "`re'"=="re" {
+						ereturn scalar sigma_e = `sigma_e'
+						ereturn scalar sigma_u = `sigma_u'
+						ereturn scalar rho = `rho'
+					}
+					ereturn local groupvar "`panelvar'"
+					ereturn local title "Regression with Driscoll-Kraay standard errors"
+					ereturn local vcetype "Drisc/Kraay"
+					ereturn local depvar "`lhsvar'"
+					if "`fe'"=="" & "`re'"==""    ereturn local method "Pooled OLS"
+					else if "`fe'"=="fe"          ereturn local method "Fixed-effects regression"
+					else                          ereturn local method "Random-effects GLS regression"
+					ereturn local predict "xtscc_p"
+					ereturn local cmd "xtscc"
   }
   else {      // Replay of the estimation results
         if "`e(cmd)'"!="xtscc" error 301
@@ -214,19 +328,33 @@ program define xtscc , eclass sortpreserve byable(recall) prop(sw)
   }
   
   * Display the results
-        if "`e(method)'"!="Fixed-effects regression" {
+	
+        if "`e(method)'"=="Pooled OLS" {
             local R2text "R-squared         =    "
             local R2ret "e(r2)"
-            local RMSE1 "_col(50) in green"
-            local RMSE2 "Root MSE          =  "
-            local RMSE3 "in yellow %8.4f e(rmse) _n"
+						local RMSE1 "_col(50) in green"
+						local RMSE2 "Root MSE          =  "
+						local RMSE3 "in yellow %8.4f e(rmse) _n"
         }
-        else {
+        else if "`e(method)'"=="Fixed-effects regression" {
             local R2text "within R-squared  =    "
             local R2ret "e(r2_w)"
         }
+				else if "`e(method)'"=="Random-effects GLS regression" {
+				    local R2text "overall R-squared =    "
+            local R2ret "e(r2_o)"
+						local re1 "in green"
+						local re2 "corr(u_i, Xb) = "
+						local re3 "in yellow "
+						local re4 "0 " 
+						local re5 "in green "
+						local re6 "(assumed)"
+				}
+				
               
       * Header
+			if "`re'"=="" {
+			
         #delimit ;
         disp _n
           in green `"`e(title)'"'
@@ -236,18 +364,74 @@ program define xtscc , eclass sortpreserve byable(recall) prop(sw)
           in green `"Group variable (i): "' in yellow abbrev(`"`e(groupvar)'"',16)
           _col(50) in green `"F("' in yellow %3.0f e(df_m) in green `","' in yellow %6.0f e(df_r)
           in green `")"' _col(68) `"="' in yellow %10.2f e(F) _n
-          in green `"maximum lag: "' in yellow e(lag)   
+          in green `"maximum lag: "' in yellow e(lag)  
           _col(50) in green `"Prob > F          =    "' 
           in yellow %6.4f fprob(e(df_m),e(df_r),e(F)) _n 
           _col(50) in green `"`R2text'"' in yellow %5.4f `R2ret' _n
           `RMSE1' `"`RMSE2'"' `RMSE3'
           ;
         #delimit cr
+				
+			}
+			else {
+
+			  #delimit ;
+        disp _n
+          in green `"`e(title)'"'
+          _col(50) in green `"Number of obs     ="' in yellow %10.0f e(N) _n
+          in green `"Method: "' in yellow "`e(method)'"
+          _col(50) in green `"Number of groups  ="' in yellow %10.0f e(N_g) _n
+          in green `"Group variable (i): "' in yellow abbrev(`"`e(groupvar)'"',16)
+          _col(50) in green `"Wald chi2("' in yellow e(df_m) in green `")"' 
+					_col(68) `"="' in yellow %10.2f e(chi2) _n
+          in green `"maximum lag: "' in yellow e(lag)   
+          _col(50) in green `"Prob > chi2       =    "' 
+          in yellow %6.4f chiprob(e(df_m),e(chi2)) _n 
+					`re1' `"`re2'"' `re3' `"`re4'"' `re5' `"`re6'"'
+          _col(50) in green `"`R2text'"' in yellow %5.4f `R2ret' _n
+          `RMSE1' `"`RMSE2'"' `RMSE3'
+          ;
+        #delimit cr
+
+			
+			}
         
-      * Estimation results
-        ereturn display, level(`level')
-        disp ""
-        
+      * Display estimation results
+			if "`re'"=="" {  
+				ereturn display, level(`level')
+				disp ""
+			}
+			else {  // With RE estimation, information on sigma_u and sigma_e is added
+				ereturn display, level(`level') plus
+				
+				local c1 = `"`s(width_col1)'"'
+				local w = `"`s(width)'"'
+				if "`c1'"=="" {
+					local c1 13
+				}
+				else {
+					local c1 = int(`c1')
+				}
+				if "`w'"=="" {
+					local w 78
+				}
+				else {
+					local w = int(`w')
+				}
+				
+				local c = `c1' - 1
+				local rest = `w' - `c1' - 1
+				local rho	: display %10.0g e(rho)
+				local sigma_u	: display %10.0g e(sigma_u)
+				local sigma_e	: display %10.0g e(sigma_e)
+				di in smcl in gr %`c's "sigma_u" " {c |} " in ye %10s "`sigma_u'"
+				di in smcl in gr %`c's "sigma_e" " {c |} " in ye %10s "`sigma_e'"
+				di in smcl in gr %`c's "rho" " {c |} " in ye %10s "`rho'" /*
+					*/ in gr "   (fraction of variance due to u_i)"
+				di in smcl in gr "{hline `c1'}{c BT}{hline `rest'}"
+				disp ""
+			}
+	
 end
 
 
@@ -292,10 +476,10 @@ mata void driscoll(string scalar depvar,            ///
            nObs = rows(X)
            nGroups = distinct(Panelmat[.,2])
         
-        // Obtain the OLS estimator beta and the estimated residuals resid:
+        // Obtain the OLS estimator beta, and the estimated residuals (resid):
            beta = invsym(cross(X,X))*cross(X,y)
            resid = y - X*beta
- 
+					 
         // Next, we form the TxnVars matrix h. The rows of matrix h are 1xnVars vectors
         // of cross-sectional averages of the moment conditions evaluated at
         // beta, ht(beta).

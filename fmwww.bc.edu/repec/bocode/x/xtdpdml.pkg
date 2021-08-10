@@ -19,7 +19,8 @@ d inclusion of time-invariant variables in the model; takes
 d advantage of Stata's ability to use full information maximum
 d likelihood (FIML) for dealing with missing data; provides an
 d overall goodness of fit measure by default and provides easy
-d access to others; and can also generate code for use with Mplus. 
+d access to others; and can  also generate code for use with Mplus
+d or lavaan. 
 d
 d KW:  Dynamic panel data models
 d KW: Structural Equation Modeling
@@ -29,7 +30,7 @@ d KW: Mplus
 d
 d Requires: Stata version 13.1
 d
-d Distribution-Date: 20161117
+d Distribution-Date: 20190707
 d
 d Author: Richard Williams, University of Notre Dame
 d Support: email Richard.A.Williams.5@@ND.edu

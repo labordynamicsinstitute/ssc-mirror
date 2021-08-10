@@ -1,4 +1,4 @@
-*! version 1.1.1  14may2017 Robert Picard
+*! version 1.1.2  25nov2017 Robert Picard
 *! requires -rangestat- version 1.1.0, available from SSC
 program define rangejoin
 
@@ -98,7 +98,7 @@ program define rangejoin
 	
 	// if vkey is in the master, it will be renamed in the using
 	local vkey0 `vkey'
-	if `hasvkey' local vkey `prefix'`vkey'`suffix'
+	if `hasvkey' | "`all'" != "" local vkey `prefix'`vkey'`suffix'
 	
 	if _N == 0 error 2000
 

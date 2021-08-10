@@ -21,13 +21,16 @@ d KW: censored data
 d
 d Requires: Stata version 13
 d
-d Distribution-Date: 20160820
+d Distribution-Date: 20180606
 d
 d Author:  Jake Orchard
 d Support: email  orchard.jake@@gmail.com 
 d
 f gintreg.ado
 f gintreg.sthlp
+f ../f/fastgini.ado
+f ../i/intllf_gb2exp_group.ado
+f ../i/intllf_gb2exp.ado
 f ../i/intllf_gb2sigma_group.ado
 f ../i/intllf_gb2sigma.ado
 f ../i/intllf_ggsigma_group.ado
@@ -39,4 +42,6 @@ f ../i/intllf_normal.ado
 f ../i/intllf_sged_group.ado
 f ../i/intllf_sged.ado
 f ../i/intllf_sgt_group.ado
+f ../i/intllf_sgt_condition.ado
 f ../i/intllf_sgt.ado
+f ../i/intllf_slaplace.ado

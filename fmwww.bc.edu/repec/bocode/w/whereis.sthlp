@@ -4,7 +4,7 @@
 
 {phang}
 {bf:whereis} {hline 2} maintains a directory of external programs
- and ancillary files
+ and ancillary files and folders
 
 {title:Syntax}
 
@@ -14,9 +14,8 @@
 {title:Description}
 
 {pstd}
-This command may be called to get or set the location of an
-external program or other file that may be used by a Stata 
-command, but is not in the usual search path.
+This command may be called to get or set the location of an external program, 
+or an ancillary file or folder that may be used by a Stata command or program. 
 
 {title:Arguments}
 
@@ -26,9 +25,9 @@ This should be a single word  conforming to Stata conventions for names.
 For example {bf:pandoc}.
 
 {phang}
-{it:location} is used when registering a resource and should be a
-full path specifying the location of the file. Thus mist conform to
-Stata conventions for file names, see {help filename}. 
+{it:location} is used when registering a resource and should be a full path 
+specifying the location of the file or folder. This must conform to Stata 
+conventions for file or folder names, see {help filename}. 
 In particular, the path should be enclosed in quotes if it contains spaces.
 For example the location of {bf:pandoc} may be 
 {bf:"c:\program files (x86)\pandoc\pandoc.exe"}.
@@ -36,10 +35,9 @@ For example the location of {bf:pandoc} may be
 {title:Output}
 
 {pstd}
-The {cmd:whereis} command displays the location as specified
-or retrieved and stores it in a macro called {cmd:r(name)} 
-using the name of the resource. For example a call to 
-{bf:whereis pandoc} will return the location in the macro 
+The {cmd:whereis} command displays the location as specified or retrieved and 
+stores it in a macro called {cmd:r(name)} using the name of the resource. 
+For example a call to {bf:whereis pandoc} will return the location in the macro 
 {bf:r(pandoc)}.
 
 {pstd}
@@ -99,11 +97,17 @@ For example to execute {cmd:pandoc} one could code
 Some programmers ask users to store resource locations using global
 macros defined in the user's profile.do file. 
 The {bf:whereis} command has the advantage of running on demand 
-and checking that the file is in fact at the specified location, 
+and checking that the file or folder is in fact at the specified location, 
 both when storing and retrieving the resource location.
+
+{title:Acknowledgement}
+
+{pstd}
+Diana Goldemberg suggested using {bf:whereis} to store folders as well as files
+and indicated how to modify the code to enable this extension.
 
 {title:Author}
 
 {pstd}
 Germ{c a'}n Rodr{c i'}guez <grodri@princeton.edu>
-{browse "http://data.princeton.edu/stata/whereis":data.princeton.edu/stata/whereis}.
+{browse "https://data.princeton.edu/stata/whereis":data.princeton.edu/stata/whereis}.

@@ -11,10 +11,19 @@ d ineqdeco are not defined for zero and negative      values of the
 d variable of interest.)       This version is for Stata versions
 d 8.2 onwards. For versions 5 to 8.1,	   use ineqdeco5 instead. 
 d
+d KW:  inequality
+d KW: Gini
+d KW: generalized Entropy index
+d KW: Atkinson index
+d KW: decomposition
+d
+d Requires: Stata version 8.2 (5.0 for ineqdeco5)
+d
+d
 d Author: Stephen P. Jenkins, London School of Economics
 d Support: email s.jenkins@@lse.ac.uk
 d
-d Distribution-Date: 20150122
+d Distribution-Date: 20210215
 d
 f ineqdec0.ado
 f ineqdec0.hlp

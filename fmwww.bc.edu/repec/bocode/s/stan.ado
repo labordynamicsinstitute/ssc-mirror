@@ -8,7 +8,7 @@ syntax varlist [if] [in] [, DATAfile(string) MODELfile(string) ///
 	CHAINFile(string) WINLOGfile(string) SEED(integer -1) CHAINS(integer 1) ///
 	WARMUP(integer -1) ITER(integer -1) THIN(integer -1) CMDstandir(string) ///
 	MODE SKipmissing MATrices(string) GLobals(string) KEEPFiles ///
-	STEPSIZE(real 1) STEPSIZEJITTER(real 0)]
+	STEPSIZE(real 1) STEPSIZEJITTER(real 0) NOPywarn]
 
 /* options:
 	datafile: name to write data into in R/S format (in working dir)
@@ -50,6 +50,7 @@ syntax varlist [if] [in] [, DATAfile(string) MODELfile(string) ///
 		the chainfile.
 	stepsize: HMC stepsize, gets passed to CmdStan
 	stepsize_jitter: HMC stepsize jitter, gets passed to CmdStan
+	nopywarn: do not show the warning for Stata version 16 and up, advising use of Python
 
 Notes:
 	non-existent globals and matrices, and non-numeric globals, get quietly ignored
@@ -58,7 +59,12 @@ Notes:
 		have anything called output.csv or modes.csv etc. - these will be overwritten!
 */
 
-local statastanversion="1.2.3"
+local statacurrentversion=c(stata_version)
+if `statacurrentversion'>15.9 & "`nopywarn'"=="" {
+	display as text "Note! Since Stata version 16.0, Stan can be accessed via Python integration. Stan developers recommend this for speed and stability. StataStan (the -stan- command) is not maintained for Stata 16.0 and later versions."
+}
+
+local statastanversion="1.2.4"
 local wdir="`c(pwd)'"
 local cdir="`cmdstandir'"
 
@@ -77,10 +83,10 @@ dis as result "StataStan version: `statastanversion'"
 dis as result "CmdStan version: `cmdstanversion'"
 file close cv
 if lower("$S_OS")=="windows" {
-	shell del "`cmdstanversioncheck'"
+	qui shell del "`cmdstanversioncheck'"
 }
 else {
-	shell rm "`cmdstanversioncheck'"
+	qui shell rm "`cmdstanversioncheck'"
 }
 
 // defaults
@@ -394,7 +400,7 @@ if "`matrices'"!="" {
 				}
 				// write final cell
 				local mval=`mat'[`mrow',`mcol']
-				file write dataf "`mval'), .Dim=c(`mrow',`mcol'))"
+				file write dataf "`mval'), .Dim=c(`mrow',`mcol'))" _n
 			}
 		}
 	}
@@ -442,7 +448,7 @@ if lower("$S_OS")=="windows" {
 	}
 
 	! copy "`cdir'\`winlogfile'" "`wdir'\winlog1"
-	cd "`cdir'"
+	qui cd "`cdir'"
 
 	if "`rerun'"=="" {
 		dis as result "###############################"
@@ -585,20 +591,20 @@ if lower("$S_OS")=="windows" {
 	}
 
 	// tidy up files
-	!del "`winlogfile'"
-	!del "wmbatch.bat"
-	!del "`modelfile'"
-	!copy "`cppfile'" "`wdir'\\`cppfile'"
-	!copy "`execfile'" "`wdir'\\`execfile'"
+	qui shell del "`winlogfile'"
+	qui shell del "wmbatch.bat"
+	qui shell del "`modelfile'"
+	qui shell copy "`cppfile'" "`wdir'\\`cppfile'"
+	qui shell copy "`execfile'" "`wdir'\\`execfile'"
 	if "`keepfiles'"=="" {
-		!del "`wdir'\\`winlogfile'"
-		!del "`wdir'\\wmbatch.bat"
-		!del "`wdir'\\`outputfile'*.csv"
+		qui shell del "`wdir'\\`winlogfile'"
+		qui shell del "`wdir'\\wmbatch.bat"
+		qui shell del "`wdir'\\`outputfile'*.csv"
 	}
-	!del "`cdir'\\`cppfile'"
-	!del "`cdir'\\`execfile'"
+	qui shell del "`cdir'\\`cppfile'"
+	qui shell del "`cdir'\\`execfile'"
 
-	cd "`wdir'"
+	qui cd "`wdir'"
 }
 
 /*#######################################################
@@ -628,7 +634,7 @@ else {
 	else {
 		shell cp "`wdir'/`execfile'" "`cdir'/`execfile'"
 	}
-	cd "`cdir'"
+	qui cd "`cdir'"
 
 	if "`rerun'"=="" {
 		dis as result "###############################"
@@ -636,7 +642,7 @@ else {
 		dis as result "###############################"
 		shell make "`execfile'"
 		// leave modelfile in cdir so make can check need to re-compile
-		// shell rm "`cdir'/`modelfile'"
+		// qui shell rm "`cdir'/`modelfile'"
 	}
 
 	dis as result "##############################"
@@ -760,19 +766,19 @@ else {
 	}
 
 		// tidy up files
-	!rm "`winlogfile'"
-	!rm "wmbatch.bat"
-	!rm "`modelfile'"
-	!cp "`cppfile'" "`wdir'/`cppfile'"
-	!cp "`execfile'" "`wdir'/`execfile'"
+	qui shell rm "`winlogfile'"
+	qui shell rm "wmbatch.bat"
+	qui shell rm "`modelfile'"
+	qui shell cp "`cppfile'" "`wdir'/`cppfile'"
+	qui shell cp "`execfile'" "`wdir'/`execfile'"
 	if "`keepfiles'"=="" {
-		!rm "`wdir'/`outputfile'.csv"
+		qui shell rm "`wdir'/`outputfile'.csv"
 	}
-	!rm "`cdir'/`cppfile'"
-	!rm "`cdir'/`execfile'"
+	qui shell rm "`cdir'/`cppfile'"
+	qui shell rm "`cdir'/`execfile'"
 
 
-	cd "`wdir'"
+	qui cd "`wdir'"
 }
 
 if "`load'"=="load" {

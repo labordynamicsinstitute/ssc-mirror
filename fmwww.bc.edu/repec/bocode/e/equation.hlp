@@ -1,5 +1,5 @@
 {smcl}
-{* 24Dec2013}{* 5March2011}{...}
+{* 22Dec2020}{* 24Dec2013}{* 5March2011}{...}
 {hline}
 help for {hi:equation}{right: version 2.0}
 {right:{stata ssc install equation, replace: get the newest version}}
@@ -63,8 +63,8 @@ I wish to thank Lian Yujun (Lingnan College, Sun Yat-Sen University) for his goo
 
 
 {pstd}
-{cmd:Author: Liu wei}, The School of Sociology and Population Studies, Renmin University of China. {cmd:Address: }Zhongguancun Street No. 59, Haidian District, Beijing, China. {cmd:ZIP Code:} 100872. 
-{cmd:E-mail:} {browse "mailto:liuv@ruc.edu.cn":liuv@ruc.edu.cn} {break}
+{cmd:Author: Liu wei}, Yunnan University of Finance and Economics. {cmd:Address: }Longquan Road 237, Wuhua District, Kunming, Yunnan, P.R.China. {cmd:ZIP Code:} 650221. 
+{cmd:E-mail:} {browse "mailto:liuwei@ynufe.edu.cn":liuwei@ynufe.edu.cn} {break}
 
 
 {title:Also see}

@@ -1,13 +1,13 @@
 {smcl}
 {hline}
-index of NJC's Stata stuff (version 11 June 2017) 
+index of NJC's Stata stuff (version 10 March 2021)
 {hline}
 
 {title:Description}
 
 {p 4 4 2}This is a list of my Stata packages or commands that are in the public
 domain. Most commonly you might want to search this file in the Viewer. If a
-help file is not accessible to you, use {help findit} to find out where the
+help file is not accessible to you, use {help search} to find out where the
 files are. The help files carry details on people who kindly reported bugs or
 made useful suggestions. What I regard as my best packages and commands are
 listed thematically at {help njc_best_stuff:NJC best stuff}. 
@@ -18,6 +18,7 @@ listed thematically at {help njc_best_stuff:NJC best stuff}.
 {space 4}command             version added
 {space 4}{hline 33} 
 {space 4}
+{space 4}{help dataex}              14.2, 15.1 update 
 {space 4}{help clonevar}            8 update 
 {space 4}{help tostring}            8 update 
 {space 4}{help ci}                  8 update (advisor) 
@@ -116,7 +117,7 @@ listed thematically at {help njc_best_stuff:NJC best stuff}.
 {space 4}{help betafit}
 {space 4}SSC (M.L. Buis, NJC, S.P. Jenkins)
 {space 4}fit two-parameter beta distribution
-{space 4}+
+{space 4}psup(OS betareg)
 
 {space 4}{help bincoverage}
 {space 4}www.stata.com/users/rgutierrez (R.G. Gutierrez, NJC)
@@ -326,12 +327,22 @@ listed thematically at {help njc_best_stuff:NJC best stuff}.
 {space 4}{help corrci}, {help corrcii} 
 {space 4}pr0041 sj8-3 (NJC) 
 {space 4}correlation with z-based confidence intervals (1)  
-{space 4}sup(SJ 10-4) 
+{space 4}sup(SJ 20-4) 
 
 {space 4}{help corrci}, {help corrcii} 
 {space 4}pr0041_1 sj10-4 (NJC) 
 {space 4}correlation with z-based confidence intervals (2) 
-{space 4}+
+{space 4}sup(SJ 20-4)
+
+{space 4}{help corrci}, {help corrcii} 
+{space 4}pr0041_2 sj17-3 (NJC) 
+{space 4}correlation with z-based confidence intervals (3) 
+{space 4}sup(SJ 20-4)
+
+{space 4}{help corrci}, {help corrcii} 
+{space 4}pr0041_3 sj20-4 (NJC) 
+{space 4}correlation with z-based confidence intervals (4)
+{space 4}+         
 
 {space 4}{help corrtable} 
 {space 4}SSC (NJC) 
@@ -341,6 +352,11 @@ listed thematically at {help njc_best_stuff:NJC best stuff}.
 {space 4}{help countmatch}
 {space 4}SSC (NJC)
 {space 4}count matching values for one variable in another
+
+{space 4}{help countvalues} 
+{space 4}SSC (NJC)
+{space 4}list counts of integer values across variables
+{space 4}+ 
 
 {space 4}{help cp}
 {space 4}ip27 stb45 (NJC)
@@ -400,6 +416,11 @@ listed thematically at {help njc_best_stuff:NJC best stuff}.
 {space 4}generate a properly formatted data example for Statalist
 {space 4}+
 
+{space 4}{help dataex} 
+{space 4}Stata 14.2+, 15.1+ (R. Picard, NJC) 
+{space 4}generate a properly formatted data example for Statalist
+{space 4}+
+
 {space 4}{help depthplot}, {help wallplot} 
 {space 4}SSC (NJC) 
 {space 4}plot one or more variables with depth as vertical axis 
@@ -407,17 +428,27 @@ listed thematically at {help njc_best_stuff:NJC best stuff}.
 
 {space 4}{help designplot}
 {space 4}SSC (NJC) 
-{space 4}graphical summary of response given one or more factors 
-{space 4}sup(SJ 15-2)
+{space 4}graphical summary of response given one or more factors (1)  
+{space 4}sup(SJ 19-3)
 
 {space 4}{help designplot}
 {space 4}gr0061 sj14-4 (NJC) 
-{space 4}graphical summary of response given one or more factors 
-{space 4}sup(SJ 15-2) 
+{space 4}graphical summary of response given one or more factors (2) 
+{space 4}sup(SJ 19-3) 
 
 {space 4}{help designplot}
 {space 4}gr0061_1 sj15-2 (NJC) 
-{space 4}graphical summary of response given one or more factors 
+{space 4}graphical summary of response given one or more factors (3) 
+{space 4}sup(SJ 19-3) 
+
+{space 4}{help designplot}
+{space 4}gr0061_2 sj17-3 (NJC) 
+{space 4}graphical summary of response given one or more factors (4) 
+{space 4}sup(SJ 19-3)
+
+{space 4}{help designplot}
+{space 4}gr0061_3 sj19-3 (NJC) 
+{space 4}graphical summary of response given one or more factors (5) 
 {space 4}+
 
 {space 4}{help destring}
@@ -473,9 +504,10 @@ listed thematically at {help njc_best_stuff:NJC best stuff}.
 {space 4}SSC (NJC)
 {space 4}demarcating disjoint spells
 
-{space 4}{help dissim}
+{space 4}dissim ({help dissim_index})
 {space 4}SSC (NJC)
 {space 4}dissimilarity index
+{space 4}note: {help dissim} now used by StataCorp  
 
 {space 4}{help distinct}
 {space 4}SSC (G. Longton, NJC)
@@ -485,47 +517,57 @@ listed thematically at {help njc_best_stuff:NJC best stuff}.
 {space 4}{help distinct}
 {space 4}dm0042 sj8-4 (G. Longton, NJC)
 {space 4}display number of distinct values of variables
-{space 4}sup(SJ 12-2) 
+{space 4}sup(SJ 20-4) 
 
 {space 4}{help distinct}
 {space 4}dm0042_1 sj12-2 (G. Longton, NJC)
 {space 4}display number of distinct values of variables
-{space 4}sup(SJ 15-3) 
+{space 4}sup(SJ 20-4) 
 
 {space 4}{help distinct}
 {space 4}dm0042_2 sj15-3 (G. Longton, NJC)
+{space 4}display number of distinct values of variables
+{space 4}sup(SJ 20-4)
+ 
+{space 4}{help distinct}
+{space 4}dm0042_3 sj20-4 (G. Longton, NJC)
 {space 4}display number of distinct values of variables
 {space 4}+            
 
 {space 4}{help distplot}
 {space 4}SSC (NJC)
 {space 4}distribution function plots (1) 
-{space 4}sup(SJ 10-1)
+{space 4}sup(SJ 19-1)
 
 {space 4}{help distplot}
 {space 4}gr41 stb51 (NJC)
 {space 4}distribution function plots (2) 
-{space 4}sup(SJ 10-1)
+{space 4}sup(SJ 19-1)
 
 {space 4}{help distplot}
 {space 4}gr41_1 sj3-2 (NJC)
 {space 4}distribution function plots (3)
-{space 4}sup(SJ 10-1)
+{space 4}sup(SJ 19-1)
 
 {space 4}{help distplot}
 {space 4}gr41_2 sj3-4 (NJC)
 {space 4}distribution function plots (4)
-{space 4}sup(SJ 10-1)
+{space 4}sup(SJ 19-1)
 
 {space 4}{help distplot}
 {space 4}gr41_3 sj5-3 (NJC)
 {space 4}distribution function plots (5)
-{space 4}sup(SJ 10-1) 
+{space 4}sup(SJ 19-1) 
 
 {space 4}{help distplot}
 {space 4}gr41_4 sj10-1 (NJC)
 {space 4}distribution function plots (6)
-{space 4}+
+{space 4}sup(SJ 19-1) 
+
+{space 4}{help distplot}
+{space 4}gr41_5 sj19-1 (NJC)
+{space 4}distribution function plots (7)
+{space 4}+            
 
 {space 4}{help dlist}
 {space 4}SSC (NJC)
@@ -677,6 +719,11 @@ listed thematically at {help njc_best_stuff:NJC best stuff}.
 {space 4}list extreme values of a variable
 {space 4}+
 
+{space 4}{help fabplot}
+{space 4}SSC (NJC)
+{space 4}plots for each subset, rest of data as backdrop 
+{space 4}+
+
 {space 4}{help favplots}
 {space 4}SSC (NJC)
 {space 4}formatted added-variable plot(s)
@@ -699,27 +746,32 @@ listed thematically at {help njc_best_stuff:NJC best stuff}.
 {space 4}{help findname}
 {space 4}SSC (NJC)
 {space 4}list variables matching name patterns or other properties
-{space 4}sup(SJ 15-2)
+{space 4}sup(SJ 20-2)
 
 {space 4}{help findname}
 {space 4}dm0048 sj10-2 (NJC) 
 {space 4}list variables matching name patterns or other properties
-{space 4}sup(SJ 15-2)
+{space 4}sup(SJ 20-2)
 
 {space 4}{help findname}
 {space 4}dm0048_1 sj10-4 (NJC) 
 {space 4}list variables matching name patterns or other properties
-{space 4}sup(SJ 15-2)
+{space 4}sup(SJ 20-2)
 
 {space 4}{help findname}
 {space 4}dm0048_2 sj12-1 (NJC) 
 {space 4}list variables matching name patterns or other properties
-{space 4}sup(SJ 15-2) 
+{space 4}sup(SJ 20-2) 
 
 {space 4}{help findname}
 {space 4}dm0048_3 sj15-2 (NJC) 
 {space 4}list variables matching name patterns or other properties
-{space 4}+ 
+{space 4}sup(SJ 20-2) 
+
+{space 4}{help findname}
+{space 4}dm0048_4 sj20-2 (NJC) 
+{space 4}list variables matching name patterns or other properties
+{space 4}+
 
 {space 4}{help firstdigit}
 {space 4}SSC (NJC)
@@ -786,7 +838,17 @@ listed thematically at {help njc_best_stuff:NJC best stuff}.
 
 {space 4}{help groups}
 {space 4}SSC (NJC)
-{space 4}list group frequencies
+{space 4}list group frequencies (1)
+{space 4}+
+
+{space 4}{help groups}
+{space 4}st0496 sj17-3  (NJC)
+{space 4}list group frequencies (2) 
+{space 4}sup(SJ 18-1) 
+
+{space 4}{help groups}
+{space 4}st0496_1 sj18-1  (NJC)
+{space 4}list group frequencies (3)
 {space 4}+
 
 {space 4}{help gumbelfit}
@@ -1018,6 +1080,7 @@ listed thematically at {help njc_best_stuff:NJC best stuff}.
 {space 4}{help mdensity}
 {space 4}SSC (NJC)
 {space 4}univariate kernel density estimation, for variables or groups
+{space 4}sup(SSC multidensity}
 
 {space 4}{help mipolate}
 {space 4}SSC (NJC) 
@@ -1031,13 +1094,23 @@ listed thematically at {help njc_best_stuff:NJC best stuff}.
 
 {space 4}{help missings} 
 {space 4}SSC (NJC) 
-{space 4}various utilities for managing missing values
-{space 4}+ 
+{space 4}various utilities for managing missing values (1) 
+{space 4}sup(SJ 20-4) 
 
 {space 4}{help missings} 
 {space 4}dm0085 sj15-4  
-{space 4}various utilities for managing missing values
-{space 4}+ 
+{space 4}various utilities for managing missing values (2) 
+{space 4}sup(SJ 20-4)
+
+{space 4}{help missings} 
+{space 4}dm0085_1 sj17-3  
+{space 4}various utilities for managing missing values (3) 
+{space 4}sup(SJ 20-4)
+
+{space 4}{help missings} 
+{space 4}dm0085_2 sj20-4  
+{space 4}various utilities for managing missing values (3) 
+{space 4}+           
 
 {space 4}{help mlowess}
 {space 4}SSC (NJC)
@@ -1115,8 +1188,28 @@ listed thematically at {help njc_best_stuff:NJC best stuff}.
 {space 4}encode multiple string variables into numeric 
 {space 4}+
 
+{space 4}{help multidensity} 
+{space 4}SSC (NJC) 
+{space 4}Kernel density estimation for one or more variables or groups
+{space 4}+
+
+{space 4}{help multidot}
+{space 4}SSC (NJC)
+{space 4}multiple panel dot charts and similar 
+{space 4}+ 
+
+{space 4}{help multiline}
+{space 4}SSC (NJC)
+{space 4}multiple panel line plots 
+{space 4}+ 
+
 {space 4}{help multqplot}
 {space 4}gr0053 sj12-3 (NJC) 
+{space 4}multiple quantile plots
+{space 4}sup(SJ 19-3)
+
+{space 4}{help multqplot}
+{space 4}gr0053_1 sj19-3 (NJC) 
 {space 4}multiple quantile plots
 {space 4}+
 
@@ -1140,6 +1233,11 @@ listed thematically at {help njc_best_stuff:NJC best stuff}.
 {space 4}moving-window descriptive statistics in time series
 {space 4}pobs(OS rolling)
 
+{space 4}{help mycolours}
+{space 4}SSC (NJC)
+{space 4}set palette of colours through local macros 
+{space 4}+
+
 {space 4}{help mylabels}
 {space 4}SSC (NJC, S. Merryman)
 {space 4}axis labels or ticks on transformed scales
@@ -1160,6 +1258,21 @@ listed thematically at {help njc_best_stuff:NJC best stuff}.
 {space 4}{help nicedates}
 {space 4}SSC (NJC)
 {space 4}nice dates, especially for time series graphs
+
+{space 4}{help niceloglabels}
+{space 4}SSC (NJC)
+{space 4}nice axis labels for logarithmic scales (1)
+{space 4}sup(SJ 20-4)
+
+{space 4}{help niceloglabels}
+{space 4}gr0072 sj18-1 (NJC)
+{space 4}nice axis labels for logarithmic scales (2)
+{space 4}sup(SJ 20-4)
+
+{space 4}{help niceloglabels}
+{space 4}gr0072_1 sj20-4 (NJC)
+{space 4}nice axis labels for logarithmic scales (3)
+{space 4}+         
 
 {space 4}{help nmissing}
 {space 4}dm67 stb49 (NJC)
@@ -1347,31 +1460,36 @@ listed thematically at {help njc_best_stuff:NJC best stuff}.
 {space 4}{help qplot}
 {space 4}gr42_2 sj4-1 (NJC)
 {space 4}quantile plots, generalized (4)
-{space 4}sup(SJ 16-3)
+{space 4}sup(SJ 19-3)
 
 {space 4}{help qplot}
 {space 4}gr42_3 sj5-3 (NJC)
 {space 4}quantile plots, generalized (5)
-{space 4}sup(SJ 16-3)
+{space 4}sup(SJ 19-3)
 
 {space 4}{help qplot}
 {space 4}gr42_4 sj6-4 (NJC)
 {space 4}quantile plots, generalized (6) 
-{space 4}sup(SJ 16-3)
+{space 4}sup(SJ 19-3)
 
 {space 4}{help qplot}
 {space 4}gr42_5 sj10-4 (NJC)
 {space 4}quantile plots, generalized (7) 
-{space 4}sup(SJ 16-3)         
+{space 4}sup(SJ 19-3)         
 
 {space 4}{help qplot}
 {space 4}gr42_6 sj12-1 (NJC)
 {space 4}quantile plots, generalized (8) 
-{space 4}sup(SJ 16-3)         
+{space 4}sup(SJ 19-3)         
 
 {space 4}{help qplot}
 {space 4}gr42_6 sj16-3 (NJC)
-{space 4}quantile plots, generalized (8) 
+{space 4}quantile plots, generalized (9) 
+{space 4}sup(SJ 19-3)
+
+{space 4}{help qplot}
+{space 4}gr42_7 sj19-3 (NJC)
+{space 4}quantile plots, generalized (10) 
 {space 4}+                    
 
 {space 4}{help qqplot2}
@@ -1410,7 +1528,7 @@ listed thematically at {help njc_best_stuff:NJC best stuff}.
 {space 4}+
 
 {space 4}{help rangestat} 
-{space 4}SSC (R. Picard, R. Ferrer, NJC)
+{space 4}SSC (R. Picard, NJC, R. Ferrer)
 {space 4}generate statistics using observations within range
 {space 4}+
 
@@ -1501,13 +1619,9 @@ listed thematically at {help njc_best_stuff:NJC best stuff}.
 
 {space 4}{help sbplot}
 {space 4}SSC (NJC)
-{space 4}scatter plots, one y variable shown by vertical bars (for Stata 6)
-{space 4}obs(OS graph)
 
 {space 4}{help sbplot5}
 {space 4}SSC (NJC)
-{space 4}scatter plots, one y variable shown by vertical bars (for Stata 5)
-{space 4}obs(OS graph)
 
 {space 4}{help scat3}
 {space 4}SSC (NJC)
@@ -1611,17 +1725,17 @@ listed thematically at {help njc_best_stuff:NJC best stuff}.
 
 {space 4}{help spineplot}
 {space 4}SSC (NJC)
-{space 4}spine plots for two-way categorical data 
+{space 4}spine plots for two-way categorical data (1)  
 {space 4}sup(SJ 16-2) 
 
 {space 4}{help spineplot}
 {space 4}gr0031 sj8-1 (NJC)
-{space 4}spine plots for two-way categorical data 
+{space 4}spine plots for two-way categorical data (2)
 {space 4}sup(SJ 16-2) 
 
 {space 4}{help spineplot}
 {space 4}gr0031_1 sj16-2 (NJC)
-{space 4}spine plots for two-way categorical data 
+{space 4}spine plots for two-way categorical data (3) 
 {space 4}+
 
 {space 4}{help split}
@@ -1777,13 +1891,23 @@ listed thematically at {help njc_best_stuff:NJC best stuff}.
 {space 4}tabulate report on {help merge}
 
 {space 4}{help tabplot}
-{space 4}SSC (NJC)
-{space 4}one-, two- and three-way bar charts for tables 
-{space 4}+
+{space 4}gr0066 sj16-2 (NJC)
+{space 4}one-, two- and three-way bar charts for tables (1) 
+{space 4}sup(SJ 20-3)
 
 {space 4}{help tabplot}
-{space 4}gr0066 sj16-2 (NJC)
-{space 4}one-, two- and three-way bar charts for tables 
+{space 4}gr0066_1 sj17-3 (NJC)
+{space 4}one-, two- and three-way bar charts for tables (2)
+{space 4}sup(SJ 20-3) 
+
+{space 4}{help tabplot}
+{space 4}SSC (NJC)
+{space 4}one-, two- and three-way bar charts for tables (3) 
+{space 4}+ 
+
+{space 4}{help tabplot}
+{space 4}gr0066_2 sj20-3 (NJC)
+{space 4}one-, two- and three-way bar charts for tables (4) 
 {space 4}+
 
 {space 4}tails
@@ -1802,12 +1926,12 @@ listed thematically at {help njc_best_stuff:NJC best stuff}.
 {space 4}{help tkdensity}
 {space 4}SSC (NJC) 
 {space 4}kernel density estimation, calculation on transformed scale
-{space 4}+
+{space 4}sup(SSC multidensity) 
 
 {space 4}{help todate}
 {space 4}SSC (NJC)
 {space 4}generate date variables from run-together date variables
-{space 4}psup(OS {help date()})
+{space 4}psup(OS {help date()}), pobs(numdate) 
 
 {space 4}{help tolower}
 {space 4}SSC (NJC)
@@ -1852,6 +1976,11 @@ listed thematically at {help njc_best_stuff:NJC best stuff}.
 {space 4}SSC (NJC)
 {space 4}help files for transformations
 {space 4}+
+
+{space 4}transplot 
+{space 4}SSC (NJC) 
+{space 4}plots for trying out transformations 
+{space 4}+ 
 
 {space 4}{help trimmean}
 {space 4}SSC, st0313 sj13-3 (NJC)
@@ -1931,7 +2060,6 @@ listed thematically at {help njc_best_stuff:NJC best stuff}.
 {space 4}close viewer windows
 
 {space 4}{help vplplot}
-{space 4}SSC (NJC)
 {space 4}paired data plots
 {space 4}sup(pairplot)
 

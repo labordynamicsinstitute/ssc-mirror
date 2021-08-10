@@ -1,9 +1,9 @@
 /*** DO NOT EDIT THIS LINE -----------------------------------------------------
 Version:
 Title: matconvert
-Description: __matconvert__ belongs to {help Rcall} package. It takes the 
+Description: __matconvert__ belongs to {help rcall} package. It takes the 
 name of a Stata matrix and returns a code for constructing the same matrix in R.
-for more information visit [Rcall homepage](http://www.haghish.com/packages/Rcall.php).
+for more information visit [rcall homepage](http://www.haghish.com/packages/Rcall.php).
 ----------------------------------------------------- DO NOT EDIT THIS LINE ***/
 
 
@@ -36,12 +36,18 @@ Package Updates on [Twitter](http://www.twitter.com/Haghish)
 This help file was dynamically produced by {help markdoc:MarkDoc Literate Programming package}
 ***/
 
-
+*cap prog drop matconvert
 program matconvert, rclass
 
 	//Get number of rows
 	local row = rowsof(`0')
 	local col = colsof(`0')
+	
+	//Get the names
+	local rownames : rownames `0'
+	local colnames : colnames `0'
+
+	
 	
 	local data
 	//extract the scalars
@@ -56,10 +62,20 @@ program matconvert, rclass
 		}
 	}
 	
-	local code "matrix(c(`data'), nrow=`row', byrow = TRUE)"
-	display as txt "{p}`code'"
+	
+	if !missing("`rownames'") | !missing("`colnames'") {
+		local code : display "matrix(c(`data'), nrow=`row', byrow = TRUE, " ///
+			"dimnames=list(unlist(strsplit("`"""' "`rownames'" ""  `"""' ", split=" `"""' " " `"""' ")), " ///
+			"unlist(strsplit("`"""' "`colnames'" ""  `"""' ", split=" `"""' " " `"""' ")) ))"
+	}
+	else {
+		local code "matrix(c(`data'), nrow=`row', byrow = TRUE)"
+	}
+	
+	display as txt `"{p}`code'"'
 	return local `0' "`code'"
 end
+
 
 // Create help file
 // ============================================

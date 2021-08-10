@@ -12,7 +12,7 @@ help for {cmd:sdecode} and {cmd:msdecode} {right:(Roger Newson)}
  [ {cmdab:maxl:ength}{cmd:(}{it:#}{cmd:)} {cmdab:fo:rmat}{cmd:(}{it:{help format:format_spec}}{cmd:)}
    {cmdab:labo:nly} {cmdab:m:issing}
    {cmdab:ftr:im} {cmdab:xmls:ub} {cmdab:es:ub(}{it:esubstitution_rule} [, {cmdab:elz:ero}]{cmd:)}
-   {cmdab:pr:efix}{cmd:(}{it:string}{cmd:)} {cmdab:su:ffix}{cmd:(}{it:string}{cmd:)}
+   {cmdab:pr:efix}{cmd:(}{it:string}{cmd:)} {cmdab:su:ffix}{cmd:(}{it:string}{cmd:)} {cmd:fast}
   ]
 
 {p 8 21 2}
@@ -21,7 +21,7 @@ help for {cmd:sdecode} and {cmd:msdecode} {right:(Roger Newson)}
    {cmdab:maxl:ength}{cmd:(}{it:#}{cmd:)} {cmdab:fo:rmat}{cmd:(}{it:{help format:format_spec}}{cmd:)}
    {cmdab:labo:nly} {cmdab:m:issing}
    {cmdab:ftr:im} {cmdab:xmls:ub} {cmdab:es:ub(}{it:esubstitution_rule} [, {cmdab:elz:ero}]{cmd:)}
-   {cmdab:pr:efix}{cmd:(}{it:string}{cmd:)} {cmdab:su:ffix}{cmd:(}{it:string}{cmd:)}
+   {cmdab:pr:efix}{cmd:(}{it:string}{cmd:)} {cmdab:su:ffix}{cmd:(}{it:string}{cmd:)} {cmd:fast}
  ]
 
 {pstd}
@@ -151,6 +151,11 @@ It specifies a prefix string, to be added to the left of the generated string va
 {cmd:suffix(}{it:string}{cmd:)} is optional.
 It specifies a suffix string, to be added to the right of the generated string variable.
 
+{phang}
+{cmd:fast} is intended for use by programmers working with large datasets.
+It specifies that {cmd:sdecode} or {cmd:msdecode} will not do any extra work
+to restore the original dataset if the user presses {helpb break:Break}.
+
 
 {marker esub_rules}{...}
 {title:Substitution rules for the {cmd:esub()} option}
@@ -277,7 +282,7 @@ Email: {browse "mailto:r.newson@imperial.ac.uk":r.newson@imperial.ac.uk}
 Newson, R. B.
 2013.
 Creating factor variables in resultssets and other datasets.
-Presented at {browse "http://ideas.repec.org/p/boc/usug13/01.html":the 19th United Kingdom Stata Users' Group Meeting, 12–13 September, 2013}.
+Presented at {browse "http://ideas.repec.org/p/boc/usug13/01.html":the 19th United Kingdom Stata Users' Group Meeting, 12-13 September, 2013}.
 
 {marker newson_2012}{...}
 {phang}

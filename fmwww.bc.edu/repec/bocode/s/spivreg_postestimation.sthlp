@@ -1,5 +1,5 @@
 {smcl}
-{* *! version 1.0.3  11feb2011}{...}
+{* *! version 1.0.4  09jun2015}{...}
 {cmd:help spivreg postestimation} {right:also see:  {helpb spivreg}  }
 {hline}
 
@@ -15,10 +15,12 @@
 {pstd}
 The following postestimation commands are available after {cmd:spivreg}:
 
-{synoptset 13 notes}{...}
+{synoptset 17 notes}{...}
 {p2coldent :command}description{p_end}
 {synoptline}
-INCLUDE help post_estat
+INCLUDE help post_estatic
+INCLUDE help post_estatsum
+INCLUDE help post_estatvce
 INCLUDE help post_estimates
 INCLUDE help post_lincom
 INCLUDE help post_lrtest

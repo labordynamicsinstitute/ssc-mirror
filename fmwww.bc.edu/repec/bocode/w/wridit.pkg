@@ -7,12 +7,14 @@ d
 d KW: weights
 d KW: ridit
 d
-d Requires: Stata version 10
+d Requires: Stata version 16
 d
-d Distribution-Date: 20160721
+d Distribution-Date: 20201026
 d
-d Author: Roger Newson, National Heart and Lung Institute at Imperial College London
+d Author: Roger Newson,  Imperial College London
 d Support: email r.newson@@imperial.ac.uk
 d
 f wridit.ado
 f wridit.sthlp
+f ../f/fridit.ado
+f ../f/fridit.sthlp

@@ -3,9 +3,10 @@ estat for xtdcce2
 Requires xtdcce2 version 1.2
 Changelog
 12.01.2017 - fixed bug if ts vars used
+16.10.2017 - fixed bug in box
 */
 
-capture program drop xtdcce2_estat
+*capture program drop xtdcce2_estat
 program define xtdcce2_estat , rclass
 	syntax anything [if] [in] , [Combine(string asis) Individual(string asis) nomg CLEARGraph ]
 	
@@ -69,7 +70,19 @@ program define xtdcce2_estat , rclass
 			if "`cleargraph'" == "" {
 				local gbox `"title("Mean Group Variables") name(xtdcce2_combine, replace)"'
 			}
-			graph box `graph_vars_mg' if `touse'  , `gbox' `individual'
+			foreach var in `graph_vars_mg'  {
+				capture drop `var'
+				if "`var'" == "_cons" {
+					rename `coeff'__cons constant
+					local box_vars `box_vars' constant
+				}
+				else {
+					local var = subinstr("`var'",".","_",.)
+					rename `coeff'_`var' `var'
+					local box_vars `box_vars' `var'
+				}
+			}
+			graph box `box_vars' if `touse'  , `gbox'  
 		}
 		if "`type'" == "rcap" {
 			tempname se coeff

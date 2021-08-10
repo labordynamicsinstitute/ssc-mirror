@@ -132,8 +132,12 @@ Example 5: With local data
 
 {title:Author}
 
-{pstd}Christoph Thewes, University of Potsdam, thewes@uni-potsdam.de{p_end}
+{pstd}Christoph Thewes, University of Potsdam, thewes@mailbox.org{p_end}
+
+{pstd}The QoG-data is provided by {it:University of Gothenburg: The Quality of Government Institute}{p_end}
+{pstd}({it:Thanks to William Lisowski and Daniel Klein for useful help}){p_end}
 {pstd}({it:Code-snippet from {net "describe http://fmwww.bc.edu/RePEc/bocode/c/confirmdir":confirmdir}. By Dan Blanchette})
+
 
 {title:Also see}
 
@@ -147,12 +151,5 @@ Example 5: With local data
 {psee} Data: {hi:http://www.qog.pol.gu.se/data/}
 
 {title:Version}
-{psee}2.1.0: 05/08/2017
-
-
-
-
-
-
-
+{psee}2.1.2: 25/05/2020
 

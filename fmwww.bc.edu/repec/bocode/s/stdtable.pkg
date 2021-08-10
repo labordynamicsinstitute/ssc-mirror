@@ -15,7 +15,7 @@ d KW: Iterative Proportional Fitting
 d
 d Requires: Stata version 11.2
 d
-d Distribution-Date: 20170125
+d Distribution-Date: 20200112
 d
 d Author: Maarten L. Buis, University of Konstanz
 d Support: email maarten.buis@@uni-konstanz.de
@@ -26,3 +26,4 @@ f stdtable_foot.sthlp
 f stdtable_ex.ado
 f ../i/interracial.dta
 f ../m/mob.dta
+f ../h/homogamy.dta

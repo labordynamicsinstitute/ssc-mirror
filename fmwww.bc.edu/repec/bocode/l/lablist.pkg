@@ -4,12 +4,12 @@ d	   lablist produces a list of the values and value labels
 d used by the	   value label sets belonging to each of a list of
 d variables, if such	  value label sets are defined. If no
 d varlist is specified, then	  lablist uses the full list of
-d variables in the dataset currently	  in	  the memory.
-d lablist is therefore similar to label list, but it	  requires
-d the user to specify only the variable name(s) in the	   
-d varlist, instead of specifying the value label set(s) belonging
-d to	  the variable(s). It is often used with tabulate, or with
-d the SSC      package xcontract. 
+d variables in the dataset currently	  in the memory. lablist is
+d therefore similar to label list, but it      requires the user to
+d specify only the variable name(s) in the	varlist, instead of
+d specifying the value label set(s) belonging to      the
+d variable(s). It is often used with tabulate, or with the SSC	   
+d package xcontract. 
 d
 d KW: data manipulation
 d KW: labels
@@ -17,9 +17,9 @@ d KW: value labels
 d
 d Requires: Stata version 10.0
 d
-d Distribution-Date: 20151107
+d Distribution-Date: 20180118
 d
-d Author: Roger Newson, National Heart and Lung Institute at Imperial College London
+d Author: Roger Newson,  Imperial College London
 d Support: email r.newson@@imperial.ac.uk
 d
 f lablist.ado

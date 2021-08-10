@@ -10,7 +10,13 @@ help for {hi:xsvmat}{right:(Roger Newson)}
  {cmdab:fr:om}{cmd:(}{help matrix:{it:matrix_expression}}{cmd:)}
  {break}
  {cmdab:li:st}{cmd:(} [{varlist}] {ifin} [ , [{it:list_options}] ] {cmd:)}
- {cmdab:sa:ving}{cmd:(}{it:filename}[{cmd:, replace}]{cmd:)} {cmdab::no}{cmdab:re:store} {cmd:fast}
+ {break}
+ {cmdab:fra:me}{cmd:(} {it:framename} [ , replace {cmdab:ch:ange} ] {cmd:)}
+ {break}
+ {cmdab:sa:ving}{cmd:(}{it:filename}[{cmd:, replace}]{cmd:)}
+ {break}
+ {cmdab::no}{cmdab:re:store} {cmd:fast}
+ {break}
  {cmdab:fl:ist}{cmd:(}{it:global_macro_name}{cmd:)}
  {break}
  {cmdab:n:ames:(col}|{cmd:eqcol}|{cmd:matcol}|{it:string}{cmd:)}
@@ -50,7 +56,9 @@ with one observation per row of either an existing matrix or the result of a mat
 and data on the values of the column entries in that row,
 and, optionally, extra variables specified by the user.
 The output dataset created by {cmd:xsvmat}
-may be listed to the Stata log, or saved to a disk file,
+may be listed to the Stata log,
+or saved to a {help frame:data frame},
+or saved to a disk file,
 or written to the memory (overwriting any pre-existing dataset).
 
 
@@ -87,6 +95,14 @@ The user may optionally also specify {helpb if} or {helpb in} qualifiers to list
 of variable values,
 or change the display style using a list of {it:list_options} allowed as options by the {helpb list} command.
 
+{phang}{cmd:frame(} {it:name}, [ {cmd:replace} {cmd:change} ] {cmd:)} specifies an output {help frame:data frame},
+containing the output dataset.
+If {cmd:replace} is specified, then any existing data frame of the same name is overwritten. 
+If {cmd:change} is specified,
+then the current data frame will be changed to the output data frame after the execution of {cmd:xsvmat}.
+The {cmd:frame()} option may not specify the current data frame.
+To do this, use one of the options {cmd:norestore} or {cmd:fast}.
+
 {phang}{cmd:saving(}{it:filename}[{cmd:, replace}]{cmd:)} saves the output dataset to a disk file.
 If {cmd:replace} is specified, and a file of that name already exists,
 then the old file is overwritten.
@@ -97,16 +113,12 @@ This option is automatically set if {cmd:fast} is specified.
 Otherwise, if {cmd:norestore} is not specified, then the pre-existing dataset is restored
 in the memory after the execution of {cmd:xsvmat}.
 
-{phang}{cmd:fast} is a stronger version of {cmd:norestore}, intended for use by programmers.
-It specifies that the pre-existing dataset in the memory will not be restored,
-even if the user presses {helpb break:Break} during the execution of {cmd:xsvmat}.
-If {cmd:norestore} is specified and {cmd:fast} is absent,
-then {cmd:xsvmat} will go to extra work so that
-it can restore the original data if the user presses {helpb break:Break}.
+{phang}{cmd:fast} is an alternative way of specifying {cmd:norestore}
 
-{phang}Note that the user must specify at least one of the four options
-{cmd:list()}, {cmd:saving()}, {cmd:norestore} and {cmd:fast}.
-These four options specify whether the output dataset is listed to the Stata log,
+{phang}Note that the user must specify at least one of the five options
+{cmd:list()}, {cmd:frame()}, {cmd:saving()}, {cmd:norestore} and {cmd:fast}.
+These five options specify whether the output dataset is listed to the Stata log,
+saved to a data frame,
 saved to a disk file, or written to the memory (overwriting any pre-existing dataset).
 More than one of these options can be specified.
 
@@ -117,8 +129,7 @@ If {cmd:saving()} is also specified, then
 {cmd:saving()} option to the value of the {help macro:global macro} specified in {cmd:flist()}.
 This enables the user to build a list of filenames in a {help macro:global macro}, containing the
 output of a sequence of output datasets.
-These files may later be concatenated using {helpb append}, or using {helpb dsconcat}
-(downloadable from {help ssc:SSC}) if installed.
+These files may later be concatenated using {helpb append}.
 
 
 {title:Output-variable options}
@@ -150,7 +161,7 @@ If {cmd:names()} is not specified, the variables are named
 It is used to create a numeric variable, with default name {hi:idnum}, in the output dataset,
 with that value for all observations.
 This is useful if the output dataset is concatenated with other {cmd:xsvmat} output datasets
-using {helpb append}, or using {helpb dsconcat} if installed.
+using {helpb append}.
 
 {phang}{cmd:nidnum(}{it:newvarname}{cmd:)} specifies a name for the numeric ID variable
 evaluated by {cmd:idnum()}.
@@ -161,7 +172,7 @@ then the name of the numeric ID variable is set to {hi:idnum}.
 It is used to create a string variable, with default name {hi:idstr} in the output dataset,
 with that value for all observations.
 This is useful if the output dataset is concatenated with other {cmd:xsvmat} output datasets
-using {helpb append}, or using {helpb dsconcat} if installed.
+using {helpb append}.
 
 {phang}{cmd:nidstr(}{it:newvarname}{cmd:)} specifies a name for the string ID variable
 evaluated by {cmd:idstr()}.
@@ -275,11 +286,27 @@ with 1 observation per parameter of a fitted model.
 {phang}{cmd:. regress mpg weight length price foreign}{p_end}
 {phang}{cmd:. xsvmat, from(r(table)') rowname(parm) names(col) rowlab(label) list(,)}{p_end}
 
+{pstd}
+The following example uses the {cmd:from()} option to create an output dataset
+in a new data frame {cmd:outframe},
+with 1 observation per parameter of a fitted model.
+It then uses {helpb describe} and {helpb list}
+to describe and list the output data set,
+before dropping the output data frame.
+
+{phang}{cmd:. regress mpg weight length price foreign}{p_end}
+{phang}{cmd:. xsvmat, from(r(table)') rowname(parm) names(col) rowlab(label) frame(outframe, replace)}{p_end}
+{phang}{cmd:. frame outframe {c -(}}{p_end}
+{phang}{cmd:. describe, full}{p_end}
+{phang}{cmd:. list, abbr(32)}{p_end}
+{phang}{cmd:. {c )-}}{p_end}
+{phang}{cmd:. frame drop outframe}{p_end}
+
 
 {title:Author}
 
 {pstd}
-Roger Newson, National Heart and Lung Institute, Imperial College London, UK.
+Roger Newson, Imperial College London, UK.
 Email: {browse "mailto:r.newson@imperial.ac.uk":r.newson@imperial.ac.uk}
 
 
@@ -291,5 +318,4 @@ Manual:  {hi:[P] matrix mkmat}, {hi:[D] append}, {hi:[D] format}
 
 {p 4 13 2}
 Online:  help for {helpb svmat}, {helpb mkmat}, {helpb append}, {helpb format}
-{break} help for {helpb dsconcat} if installed
 {p_end}

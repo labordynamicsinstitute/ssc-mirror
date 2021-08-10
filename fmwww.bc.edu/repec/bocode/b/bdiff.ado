@@ -1,18 +1,17 @@
-*-¿ÉÒÔ²Î¿¼ logout.ado Éè¶¨¸üÎªÒ»°ã»¯µÄÑ¡ÏîºÍÃüÁî¸ñÊ½
-*-Ôö¼ÓÒ»¸ö Cluster(varname) Ñ¡Ïî
-*-Ôö¼ÓÒ»¸ö set(varlist) Ñ¡Ïî£¬¾Ö²¿ÏÔÊ¾½á¹û
-*-Èç¹ûÃüÁîÀï°üº¬ xt ¿ªÍ·µÄ×ÖÑù£¬Ôò×Ô¶¯Ö´ĞĞ cluster 
-*-¾ØÕóµÄ¶¨Òå¶¼ÓÃÔİÊ±ĞÔÔªËØ
-*-Ä¬ÈÏÎªpermute test, ÈôÌí¼Ó bsample Ñ¡Ïî£¬ÔòÖ´ĞĞ bsample ¶¯×÷
-*
-*   2016-06-13  help matlist  the format of matrix
+*! Version 1.04  24Nov2020
+*  Author: Yujun Lian, Sun Yat-sen University
+*          Email: arlionn@163.com
+*          Blog: https://www.lianxh.cn
+*  Version 1.01  14Jun2016
+*  Version 1.02  20Apr2019
 
 *-References:
 *  Efron, B., Tibshirani, R., 1993. 
 *    An Introduction to the Bootstrap, Chapmann & Hall.
 
-*!  Author: Yujun Lian, Sun Yat-sen University, Email: arlionn@163.com
-*!  Version 1.01  14Jun2016
+*-update list
+* 2019/4/20 fix the bug of -seed()- option, thanks Jingxin Hu from Syracuse University
+
 
 cap program drop bdiff
 program define bdiff, rclass
@@ -41,7 +40,7 @@ syntax , ///
     *local group "rep78"
     qui tab `group'
 	if `r(r)'!=2{
-	  di in red "variable `group' in group() option must be a dummy variable (0/1)"
+	  di in red "variable `group' in group() option must be a dummy vairable (0/1)"
 	  exit 198
 	}
 	
@@ -67,7 +66,16 @@ syntax , ///
 	  qui timer on    99
 	}
 	 
-	 
+  *-seed
+    if `seed'==-13579999{
+	   local tempseed = int(uniform()*10^8)
+	   set seed  `tempseed'
+	}
+	else{
+	   set seed `seed'
+	}	
+	
+	
 preserve   //=========================================preserve================
   
     qui keep if `group'!=.
@@ -109,7 +117,7 @@ preserve   //=========================================preserve================
 
 
 	
- *-Record the observed difference of coefficients, ¼ÇÂ¼ÕæÊµÏµÊı²îÒì
+ *-Record the observed difference of coefficients, è®°å½•çœŸå®ç³»æ•°å·®å¼‚
      *tempname g1 g2
        qui `cmdvlist' if `group'==0 `opts'
 	   est store GrouP1
@@ -117,9 +125,9 @@ preserve   //=========================================preserve================
          mat b1 = e(b)  
 		 global k = colsof(b1)
 		 local k1 = colsof(b1)
-		 global n1 = e(N)  //µÚÒ»×é¹«Ë¾µÄ¹Û²ìÖµ¸öÊı
+		 global n1 = e(N)  //ç¬¬ä¸€ç»„å…¬å¸çš„è§‚å¯Ÿå€¼ä¸ªæ•°
 		 if ("`cmdtype'"=="xt"){ 
-		    global Ng1 = e(N_g)  //¹«Ë¾¸öÊı
+		    global Ng1 = e(N_g)  //å…¬å¸ä¸ªæ•°
 		 }
        qui `cmdvlist' if `group'==1 `opts'  
 	     est store GrouP2
@@ -173,18 +181,10 @@ preserve   //=========================================preserve================
 	     set matsize `reps'
 	   }
 	   
-       mat D = J(`reps', $k, .)   // ´æ´¢½á¹ûµÄ¾ØÕó
+       mat D = J(`reps', $k, .)   // å­˜å‚¨ç»“æœçš„çŸ©é˜µ
        forvalues j = 1/`reps'{
 	    *-Bootstrap the sample
-          if "`bsample'"!=""{ 
-		    if `seed'==-13579999{
-			   local tempseed = int(uniform()*10^8)
-		       set seed  `tempseed'
-			}
-			else{
-			   set seed `seed'
-			}
-			
+          if "`bsample'"!=""{ 		
 		    qui use "`_origdata'.dta", clear
 		    if ("`cmdtype'"=="cs"){      // cross-sectional data
 			   bsample
@@ -220,14 +220,14 @@ preserve   //=========================================preserve================
 		  }
           matrix diff = b1 - b2
           mat D[`j',1] = diff
-		  `quidots'  dis "." _c  //ÆÁÄ»ÉÏ´òµã
+		  `quidots'  dis "." _c  //å±å¹•ä¸Šæ‰“ç‚¹
 		  
        }  
      *--------------------------------------------------------------------
        *qui dropvars diff*
 	   tempvar diff
        svmat D, names(`diff')  
-       mat P = J($k,3,.)  // ¼ÇÂ¼ÏµÊıÕæÊµ²îÒìºÍ¾­ÑépÖµµÄ¾ØÕó
+       mat P = J($k,3,.)  // è®°å½•ç³»æ•°çœŸå®å·®å¼‚å’Œç»éªŒpå€¼çš„çŸ©é˜µ
        forvalues j = 1/$k{
           local diff0_`j' = D0[1,`j']
           qui count if (`diff'`j'>=`diff0_`j'')&`diff'`j'!= .
@@ -313,7 +313,7 @@ preserve   //=========================================preserve================
           cspec(& %12s | %10.`bdec'f & %6.`mdec'f & %10.`pdec'f &) rspec(&-`a7')
 
 	   
-	   *-ÈôÓÃ»§Éè¶¨ÁË onevariable() Ñ¡Ïî£¬Ôò»¹ĞèÒªÔÚÕâÀïÈ·¶¨¸Ä±äÁ¿ÔÚÄ£ĞÍÖĞµÄÎ»ÖÃ
+	   *-è‹¥ç”¨æˆ·è®¾å®šäº† onevariable() é€‰é¡¹ï¼Œåˆ™è¿˜éœ€è¦åœ¨è¿™é‡Œç¡®å®šæ”¹å˜é‡åœ¨æ¨¡å‹ä¸­çš„ä½ç½®
 	   if "`first'"!=""{
 	      local var1 : word 1 of `indepvar'
           local bdiff = P2[1,1]
@@ -399,3 +399,14 @@ program NotSupported
 		}
 	}
 end
+
+
+
+*-å¯ä»¥å‚è€ƒ logout.ado è®¾å®šæ›´ä¸ºä¸€èˆ¬åŒ–çš„é€‰é¡¹å’Œå‘½ä»¤æ ¼å¼
+*-å¢åŠ ä¸€ä¸ª Cluster(varname) é€‰é¡¹
+*-å¢åŠ ä¸€ä¸ª set(varlist) é€‰é¡¹ï¼Œå±€éƒ¨æ˜¾ç¤ºç»“æœ
+*-å¦‚æœå‘½ä»¤é‡ŒåŒ…å« xt å¼€å¤´çš„å­—æ ·ï¼Œåˆ™è‡ªåŠ¨æ‰§è¡Œ cluster 
+*-çŸ©é˜µçš„å®šä¹‰éƒ½ç”¨æš‚æ—¶æ€§å…ƒç´ 
+*-é»˜è®¤ä¸ºpermute test, è‹¥æ·»åŠ  bsample é€‰é¡¹ï¼Œåˆ™æ‰§è¡Œ bsample åŠ¨ä½œ
+*
+*   2016-06-13  help matlist  the format of matrix

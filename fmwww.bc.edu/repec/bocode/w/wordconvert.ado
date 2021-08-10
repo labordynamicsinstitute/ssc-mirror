@@ -24,12 +24,12 @@ program define wordconvert
 		error 198
 	}
 
-	if regexm(`"`1'"', "(\.doc|\.docx|\.dot|\.rtf)$") == 0 {
+	if regexm(`"`1'"', "(\.doc|\.docx|\.dot|\.pdf|\.xps|\.rtf|\.htm|\.html)$") == 0 {
 		disp as error `"filename extension is not specified correctly in `1'"'
 		error 198
 	}
 
-	if regexm(`"`2'"', "(\.doc|\.docx|\.dot|\.pdf|\.xps|\.rtf)$") == 0 {
+	if regexm(`"`2'"', "(\.doc|\.docx|\.dot|\.pdf|\.xps|\.rtf|\.htm|\.html)$") == 0 {
 		disp as error `"filename extension is not specified correctly in `2'"'
 		error 198
 	}
@@ -72,6 +72,9 @@ program define wordconvert
 		}
 		else if regexm(`"`2'"', "(\.doc|\.dot)$") {
 			file write `handle' `"\$format = 0"' _n
+		}
+		else if regexm(`"`2'"', "(\.htm|\.html)$"){
+			file write `handle' `"\$format = 10"' _n
 		}
 		else {
 			file write `handle' `"\$format = 12"' _n

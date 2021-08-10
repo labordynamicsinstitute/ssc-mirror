@@ -1,11 +1,12 @@
 {smcl}
-{* version 1.3}{...}
-{* 08jan2016}{...}
+{* version 1.4}{...}
+{* 18sep2020}{...}
 {viewerjumpto "Syntax" "parseuas##syn"}{...}
 {viewerjumpto "Options" "parseuas##opt"}{...}
 {viewerjumpto "Description" "parseuas##des"}{...}
 {viewerjumpto "Examples" "parseuas##exa"}{...}
 {viewerjumpto "Authors" "parseuas##aut"}{...}
+{viewerjumpto "References" "parseuas##ref"}{...}
 {viewerjumpto "Notes" "parseuas##not"}{...}
 {title:Title}
 
@@ -47,22 +48,25 @@ in a user agent header field. The header contains the so-called user agent
 string. In general, user agent strings include information on the browser 
 name, the browser version, the operating system, and the device type. 
 The {cmd:parseuas} module displays and optionally stores this information in new 
-variables as specified by the user. 
+variables as specified by the user. For more details regarding user agent strings and how 
+{cmd:parseuas} extracts information we refer to {browse "http://dx.doi.org/10.18637/jss.v092.c01":Roßmann, Gummer, & Kaczmirek (2020)}.
 
 {p 4 4 2}Example for a user agent string: 
-"Mozilla/5.0 (Windows NT 6.1; WOW64; rv:31.0) Gecko/20100101 Firefox/31.0" 
-(Windows 7 running on a 64-bit personal computer. The browser is Mozilla Firefox version 31.0). 
+"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/85.0.4183.102 Safari/537.36" 
+(Windows 10 running on a 64-bit personal computer. The browser is Chrome version 85.0.4183.102). 
 
 {p 4 8 2} The parseuas module gives the names and versions of several popular web {hi:browsers} and a residual category: 
-Android Webkit, Chrome, Edge, Firefox, Iceweasel, Internet Explorer, Iron, K-Meleon, 
-Maxthon, Netscape, Opera, Safari, SeaMonkey, Silk, and Browser (other) 
+Android Webkit, Apple Webkit, Chrome, Edge, Firefox, Internet Explorer, Opera, 
+Safari, Samsung Internet Browser, Silk, Vivaldi, Yandex, and Browser (other) 
 	
 {p 4 8 2} It codes several types and versions of some widely used {hi: operating systems} and a residual category: 
-Android, BlackBerry OS, Linux, Mac OS X, Symbian, Windows, iOS, and OS (other)
+Android, Chrome OS, iOS, Linux, Mac OS X, Windows, and OS (other)
 
 {p 4 8 2} The parseuas module also codes several categories for the {hi:device type}: 
 Mobile phone (Android), Mobile phone (Windows), Mobile phone (iPhone), Mobile phone (other), 
-Tablet (Android), Tablet (Windows), Tablet (iPad), Tablet (other), and Device (other)
+Personal computer (Chrome OS), Personal computer (Linux), Personal computer (Mac), 
+Personal computer (Windows), Tablet (Android), Tablet (Windows), Tablet (iPad), Tablet (other), 
+Video game console, and Device (other)
 	
 {marker exa}
 {title:Examples}
@@ -101,7 +105,7 @@ variables for all cases of group one.
 
 {p 4 8 2} Tobias Gummer, GESIS - Leibniz Institute for the Social Sciences, tobias.gummer@gesis.org
 
-{p 4 8 2} Copyright (C) 2016  Joss Roßmann & Tobias Gummer
+{p 4 8 2} Copyright (C) 2020  Joss Roßmann & Tobias Gummer
 
 {p 4 8 2} This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -114,13 +118,19 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details <http://www.gnu.org/licenses/>.
 
 {p 4 8 2} Recommended citation (APA Style, 6th ed.): {break}
-Roßmann, J., & Gummer, T. (2016): PARSEUAS: Stata module to extract detailed 
-information from user agent strings (Version: 1.3) [Computer Software]. 
+Roßmann, J., & Gummer, T. (2020): PARSEUAS: Stata module to extract detailed 
+information from user agent strings (Version: 1.4) [Computer Software]. 
 Chestnut Hill, MA: Boston College.
+
+{marker ref}
+{title:References}
+
+{p 4 8 2} Roßmann, J., Gummer, T., & Kaczmirek, L. (2020). Working with User Agent Strings in Stata: The parseuas Command. Journal of Statistical Software, 92(1), 1-16. 
+doi: {browse "http://dx.doi.org/10.18637/jss.v092.c01":10.18637/jss.v092.c01}
 
 {marker not}
 {title:Notes}
 
 {p 4 8 2} The {cmd:parseuas} module partly draws on dictionaries for coding. Use 
 {it:{help adoupdate:adoupdate}} to get the latest version. 
-The installed version is 1.3 (08-Jan-2016). 
+The installed version is 1.4 (18-Sep-2020). 

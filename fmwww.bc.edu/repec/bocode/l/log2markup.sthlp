@@ -24,13 +24,13 @@
 {synopt:{opt replace}} replace existing markdown file{p_end}
 {synopt:{opt log}} direct markdown to result window instead of a file{p_end}
 {synopt:{opt extension}} extension to put on the markup modified log file{p_end}
-{synopt:{opt code_start}} set your markdown coding for code start, eg 
+{synopt:{opt codestart}} set your markdown coding for code start, eg 
 \begin{stlog} if the document is intended for the Stata Journal{p_end}
-{synopt:{opt code_end}} set your markdown coding for code end, eg 
+{synopt:{opt codeend}} set your markdown coding for code end, eg 
 \end{stlog} if the document is intended for the Stata Journal{p_end}
-{synopt:{opt sample_start}} set your markdown coding for sample start, eg 
+{synopt:{opt samplestart}} set your markdown coding for sample start, eg 
 {\smallskip}\begin{stlog} if the document is intended for the Stata Journal{p_end}
-{synopt:{opt sample_end}} set your markdown coding for sample end, eg 
+{synopt:{opt sampleend}} set your markdown coding for sample end, eg 
 \begin{stlog} if the document is intended for the Stata Journal{p_end}
 {synoptline}
 {p2colreset}{...}
@@ -371,12 +371,10 @@ document (Example inspired by texdoc documentation):
 
 {phang}{bf:Author:}{break}
  	Niels Henrik Bruun, {break}
-	Section for General Practice, {break}
-	Dept. Of Public Health, {break}
-	Aarhus University
+	Aalborg University Hospital
 {p_end}
 {phang}{bf:Support:} {break}
-	{browse "mailto:nhbr@ph.au.dk":nhbr@ph.au.dk}
+	{browse "mailto:niels.henrik.bruun@gmail.com":niels.henrik.bruun@gmail.com}
 {p_end}
 
 

@@ -1,6 +1,6 @@
 {smcl}
 {hline}
-help for {cmd:addinby}{right:(Roger Newson)}
+help for {cmd:addinby} and {cmd:fraddinby}{right:(Roger Newson)}
 {hline}
 
 {title:Add in data from a disk dataset using a foreign key}
@@ -10,6 +10,12 @@ help for {cmd:addinby}{right:(Roger Newson)}
   {opt m:issing} {opt un:matched(action_spec)} {opt noc:omplete} {cmdab:fast}
   {opth keep(varlist)} {opth gen:erate(newvar)} {opt sorted} {break}
   {opt nol:abel} {opt nonote:s} {opt update} {opt replace}
+  ]
+
+{p 8 21 2}
+{cmd:fraddinby} {help varlist:{it:keyvarlist}} , {opt fra:me(frame_name)} [ {break}
+  {opt m:issing} {opt un:matched(action_spec)} {opt noc:omplete}
+  {opth keep(varlist)} {opth gen:erate(newvar)}
   ]
 
 {pstd}
@@ -35,27 +41,32 @@ and never adds any additional observations,
 and only generates a matching information variable if requested to do so.
 However, {cmd:addinby} may optionally check that there are no unmatched observations in the master dataset,
 and/or check that there are no missing values in the foreign key variables in the master dataset.
+{cmd:fraddinby} is similar to {cmd:addinby},
+but it adds variables from a dataset in a {help frame:data frame},
+instead of from a dataset in a disk file.
 
 
-{title:Options}
+{title:Options for {cmd:addinby} or {cmd:fraddinby}}
 
 {phang}
 {opt missing} specifies that missing values are allowed in the variables
 in the {help varlist:{it:keyvarlist}} in the master dataset.
 If {cmd:missing} is not specified,
-then missing values in the variables in the {help varlist:{it:keyvarlist}} cause {cmd:addinby} to fail.
+then missing values in the variables in the {help varlist:{it:keyvarlist}}
+cause {cmd:addinby} or {cmd:fraddinby} to fail.
 
 {phang}
 {opt unmatched(action_spec)} specifies the action to be taken with observations in the master dataset
 which are unmatched by the foreign key in the using dataset.
 The possible values of {it:action_spec} are {cmd:drop}, {cmd:keep} and {cmd:fail}.
 If {cmd:drop} is specified, then unmatched observations are dropped from the master dataset,
- and {cmd:addinby} completes execution without error.
+ and {cmd:addinby} or {cmd:fraddinby} completes execution without error.
 If {cmd:keep} is specified, then unmatched observations are kept in the master dataset
 (with {help missing:missing values} in any variables added from the using dataset),
-and {cmd:addinby} completes execution without error.
+and {cmd:addinby} or {cmd:fraddinby} completes execution without error.
 If {cmd:fail} is specified,
-then {cmd:addinby} fails with an error message if there are any unmatched observations in the master dataset.
+then {cmd:addinby} or {cmd:fraddinby} fails with an error message
+if there are any unmatched observations in the master dataset.
 If the {cmd:unmatched()} option is not specified, then {cmd:unmatched(fail)} is assumed.
 
 {phang}
@@ -63,15 +74,14 @@ If the {cmd:unmatched()} option is not specified, then {cmd:unmatched(fail)} is 
 It is ignored if the {cmd:unmatched()} option is specified.
 
 {phang}
-{opt fast} is an option for programmers.
-It specifies that {cmd:addinby} will take no action
-to restore the existing master dataset in memory in the event of failure.
-If {cmd:fast} is not specified, then {cmd:addinby} will take this action,
-which uses an amount of time depending on the size of the dataset in memory.
-
-{phang}
-{opth keep(varlist)} specifies the variables to be kept from the using dataset.
+{opth keep(varlist)} specifies the variables to be kept
+from the {cmd:using} dataset for {cmd:addinby},
+or from the {help frame:data frame}
+specified by the {cmd:frame()} option for {cmd:fraddinby}.
 If {opt keep()} is not specified, then all variables are kept.
+
+
+{title:Options for {cmd:addinby} only}
 
 {phang}
 {opth generate(newvar)} specifies the name of a new variable to be generated,
@@ -81,7 +91,14 @@ If {cmd:generate()} is not specified,
 then no match results variable is generated.
 
 {phang}
-{opt sorted} specifies that the using dataset is already sorted by the {help varlist:{it:keyvarlist}}.
+{opt fast} is an option for programmers.
+It specifies that {cmd:addinby} will take no action
+to restore the existing master dataset in memory in the event of failure.
+If {cmd:fast} is not specified, then {cmd:addinby} will take this action,
+which uses an amount of time depending on the size of the dataset in memory.
+
+{phang}
+{opt sorted} specifies that the {cmd:using} dataset is already sorted by the {help varlist:{it:keyvarlist}}.
 If {opt sorted} is not specified,
 then {cmd:addinby} creates a temporary copy of the using dataset in the memory,
 and sorts it before merging it into the master dataset.
@@ -92,6 +109,22 @@ which may possibly be saved by specifying {opt sorted}.
 {phang}
 {opt nolabel}, {opt nonotes}, {opt update} and {opt replace} function
 as the options of the same names for {helpb merge}.
+
+
+{title:Options for {cmd:fraddinby} only}
+
+{phang}
+{opt frame(frame_name)} must be present.
+It specifies a {help frame:data frame},
+containing a dataset,
+from which the new variables will be extracted using the foreign key.
+
+{phang}
+{opth generate(newvar)} specifies the name of a new variable to be generated,
+containing linkage information.
+It is similar to the option of the same name for {helpb frlink}.
+If {cmd:generate()} is not specified,
+then no linkage information variable is generated.
 
 
 {title:Remarks}
@@ -117,41 +150,77 @@ which ensures that the observations in a dataset are identified, as well as sort
 And {cmd:addinby} is a "clean" version of {helpb merge:merge m:1},
 which ensures that these observations stay identified, and sorted,
 after the additional data have been merged in.
+And {cmd:fraddinby} is similar to {cmd:addinby},
+but merges in new variables from a dataset in a {help frame:data frame},
+instead of from a dataset in a disk file.
 
 
 {title:Examples}
 
-{phang2}{cmd:.webuse autotech, clear}{p_end}
-{phang2}{cmd:.describe}{p_end}
-{phang2}{cmd:.describe using http://www.stata-press.com/data/r10/autocost}{p_end}
-{phang2}{cmd:.addinby make using http://www.stata-press.com/data/r10/autocost}{p_end}
-{phang2}{cmd:.describe}{p_end}
+{pstd}
+The following example inputs the {cmd:autotech} dataset
+and adds in variables from the {cmd:autocost} dataset,
+using {cmd:addinby}:
 
-{phang2}{cmd:.webuse dollars, clear}{p_end}
-{phang2}{cmd:.describe}{p_end}
-{phang2}{cmd:.list}{p_end}
-{phang2}{cmd:.webuse sforce, clear}{p_end}
-{phang2}{cmd:.describe}{p_end}
-{phang2}{cmd:.list}{p_end}
-{phang2}{cmd:.addinby region using http://www.stata-press.com/data/r10/dollars}{p_end}
-{phang2}{cmd:.describe}{p_end}
-{phang2}{cmd:.list}{p_end}
+{phang2}{cmd:. webuse autotech, clear}{p_end}
+{phang2}{cmd:. describe}{p_end}
+{phang2}{cmd:. describe using http://www.stata-press.com/data/r10/autocost}{p_end}
+{phang2}{cmd:. addinby make using http://www.stata-press.com/data/r10/autocost}{p_end}
+{phang2}{cmd:. describe}{p_end}
+
+{pstd}
+The following example inputs the {cmd:sforce} dataset
+and adds in variables from the {cmd:dollars} dataset,
+using {cmd:addinby}:
+
+{phang2}{cmd:. webuse dollars, clear}{p_end}
+{phang2}{cmd:. describe}{p_end}
+{phang2}{cmd:. list}{p_end}
+{phang2}{cmd:. webuse sforce, clear}{p_end}
+{phang2}{cmd:. describe}{p_end}
+{phang2}{cmd:. list}{p_end}
+{phang2}{cmd:. addinby region using http://www.stata-press.com/data/r10/dollars}{p_end}
+{phang2}{cmd:. describe}{p_end}
+{phang2}{cmd:. list}{p_end}
+
+{pstd}
+The following example performs the same task as the previous example, using {cmd:fraddinby}.
+It inputs the {cmd:dollars} dataset into a data frame called {cmd:frieda}.
+It then inputs the {cmd:sforce} dataset,
+and adds in the variables from the {cmd:dollars} dataset
+from the data frame {cmd:frieda},
+using {cmd:fraddinby}.
+The frame {cmd:frieda} is then dropped
+
+{phang2}{cmd:. frame create frieda}{p_end}
+{phang2}{cmd:. frame frieda {c -(}}{p_end}
+{phang2}{cmd:. webuse dollars, clear}{p_end}
+{phang2}{cmd:. describe}{p_end}
+{phang2}{cmd:. list}{p_end}
+{phang2}{cmd:. {c )-}}{p_end}
+{phang2}{cmd:. webuse sforce, clear}{p_end}
+{phang2}{cmd:. describe}{p_end}
+{phang2}{cmd:. list}{p_end}
+{phang2}{cmd:. fraddinby region, frame(frieda)}{p_end}
+{phang2}{cmd:. describe}{p_end}
+{phang2}{cmd:. list}{p_end}
+{phang2}{cmd:. frame drop frieda}{p_end}
 
 
 {title:Author}
 
 {pstd}
-Roger Newson, National Heart and Lung Institute, Imperial College London, UK.{break}
+Roger Newson, Imperial College London, UK.{break}
 Email: {browse "mailto:r.newson@imperial.ac.uk":r.newson@imperial.ac.uk}
 
 
 {title:Also see}
 
 {psee}
-Manual:  {manlink D sort}, {manlink D gsort}, {manlink D merge}, {manlink D order}, {manlink U 12.2.1 Missing values}
+Manual:  {manlink D sort}, {manlink D gsort}, {manlink D merge}, {manlink D order}, {manlink D frames}, {manlink U 12.2.1 Missing values}
 {p_end}
 
 {psee}
-{space 2}Help:  {manhelp sort D}, {manhelp gsort D}, {manhelp merge D}, {manhelp order D}, {manhelp missing U:12.2.1 Missing values}{break}
+{space 2}Help:  {manhelp sort D}, {manhelp gsort D}, {manhelp merge D}, {manhelp order D}, {manhelp frames D}, {manhelp missing U:12.2.1 Missing values}{break}
 {helpb keyby}, {helpb keybygen} if installed
 {p_end}

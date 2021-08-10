@@ -1,7 +1,7 @@
 {smcl}
-{* 24dec2014}{...}
+{* 19feb2019}{...}
 {hline}
-help for {hi:scheme_plottig}{right:(Version 1.0.0)}
+help for {hi:scheme_plottig}{right:(Version 1.3.0)}
 {hline}
 
 {title:Title}

@@ -1,5 +1,5 @@
 {smcl}
-{* 20 June 2017}{…}
+{* 4 January 2018}{…}
 {hline}
 help for {hi:caterpillar} 
 {hline}
@@ -10,7 +10,7 @@ help for {hi:caterpillar}
 
 {title:Syntax}
 
-{pstd}{cmd:caterpillar} {it:est} {it:se} {it:id} {ifin}, [by(id) {it: options}]
+{pstd}{cmd:caterpillar} {it:est} {it:se} {it:id} {ifin}, [saving(dataset) by(id) {it: options}]
 
 {synoptset 25 tabbed}{...}
 {marker opt}{synopthdr:options}
@@ -23,16 +23,17 @@ help for {hi:caterpillar}
 
 {title:Description}
 
-{pstd}{cmd:caterpillar} takes a set of estimates and {it:est} standard errors {it:se}, along with a unique identifier {it:id} for each estimate. 
+{pstd}{cmd:caterpillar} takes a set of estimates {it:est} and standard errors {it:se}, along with a unique identifier {it:id} for each estimate. 
 The estimates may represent the effects of different programs (as in von Hippel & Bellows, 2017) or the results of different studies (as in a meta-analysis).
 
 {pstd}{cmd:caterpillar} outputs a "caterpillar plot" containing point estimates (sorted in ascending order), along with 95% pointwise confidence intervals, Bonferroni-corrected 95% confidence intervals, and an estimate of the null distribution. 
 The null distribution represents what the distribution of estimates would look like under homogeneity -- i.e., if there were no differences between the effects, and the estimates differed only because of random estimation error.
 
-{pstd}{cmd:caterpillar} prints summary statistics on the plot, including Cochran's Q test (with degrees of freedom and p value), a method-of-moments estimate of the heterogeneity standard deviation (tau), and the Higgins-Thompson estimate of the reliability (rho). 
-All calculations described in von Hippel and Bellows (2017). 
+{pstd}{cmd:caterpillar} prints summary statistics on the plot, including Cochran's Q test (with degrees of freedom and p value), a method-of-moments estimate of the heterogeneity standard deviation (tau), and the Higgins-Thompson estimate of the reliability (rho). All calculations described in von Hippel and Bellows (2018). 
 
 {pstd}The program generates five variables, {it:CI_lo}, {it:CI_hi}, {it:CI_lo_bon}, {it:CI_hi_bon}, and {it:null_quantile}, that contain the confidence intervals and quantiles of the null distribution. 
+
+{pstd}{cmd:caterpillar} optionally saves Cochran's Q test, degrees of freedom for Cochran's Q, p value for Cochran's Q, the heterogeneity standard deviation, and the reliability into a separate dataset. 
 
 
 {title:Remarks} 
@@ -42,14 +43,30 @@ All calculations described in von Hippel and Bellows (2017).
 {pstd}{cmd:caterpillar} requires a unique identifier for estimates and will not complete if a unique identifier is not given. If the -by- option is used, {cmd:caterpillar} requires that the identifier is unique within each group. 
 
 {title:Examples}
-Example uses dataset from {cmd:metaan}.
 
-. net describe st0201, from(http://www.stata-journal.com/software/sj10-3/)
-. net get st0201
-. use metaan_example.dta, clear
-. caterpillar effsize se study, graph
-. use metaan_example.dta, clear
-. caterpillar effsize se study, graph center
+{pstd}This example uses the dataset {it:caterpillar_replication.dta} to replicate some results from von Hippel & Bellows (2018). 
+To replicate von Hippel & Bellows more completely, run the code in {it:vonHippelBellows2018.do}. 
+
+Use install {it:caterpillar_replication.dta} and {it:vonHippelBellows2018.do} in the working directory, run {}cmd:ssc install caterpillar, all}.
+
+. // Graph CIs, Bonferroni-corrected CIs, and null distribution 
+. // for all New York City teacher preparation programs (TPPs) in math
+. use caterpillar_replication, clear
+. caterpillar est se tpp if state=="NYC" & subject=="Math" ///
+. 	& size=="All", graph center
+
+. // Re-graph without the outlier. 
+. // The Q test becomes non-significant, and 
+. // the heterogeneity and reliability estimates go to 0.
+. use caterpillar_replication, clear
+. caterpillar est se tpp if state=="NYC" & subject=="Math" ///
+. 	& size=="All" & est<.4, graph center
+
+. // Generate the same statistics (except for graph) separately for different states and test subjects (math, reading, etc.), 
+. //  as well as different data subsets and modeling decisions described in von Hippel & Bellows (2018).
+. use caterpillar_replication, clear
+. caterpillar est se tpp, by(state subject size schlfe experienced se_inflation) ///
+. 	center saving(tpp_estimates, replace)
 
 {title:Saved Results}
 
@@ -82,7 +99,8 @@ paulvonhippel.utaustin@gmail.com
 
 {title:References}
 
-{pstd}von Hippel, Paul T., and Laura Bellows (2017). "How Much Does Teacher Quality Vary Across Teacher Preparation Programs? Reanalyzing Results from 6 States." SSRN Working Paper.
+{pstd}von Hippel, Paul T., and Laura Bellows (2018). "How Much Does Teacher Quality Vary Across Teacher Preparation Programs? Reanalyses from 6 States." Economics of Education Review, in press. 
+Also available as SSRN Working Paper, https://papers.ssrn.com/sol3/papers.cfm?abstract_id=2990498.
 
 {pstd}Higgins, J. P. T., & Thompson, S. G. (2002). Quantifying heterogeneity in a meta-analysis. Statistics in Medicine, 21(11), 1539–1558. https://doi.org/10.1002/sim.1186
 

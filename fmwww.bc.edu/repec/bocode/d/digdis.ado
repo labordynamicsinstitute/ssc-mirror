@@ -1,4 +1,4 @@
-*! version 1.0.0  28jun2007  Ben Jann
+*! version 1.0.1  18jan2021  Ben Jann
 
 program define digdis, rclass byable(recall)
     version 9.2
@@ -35,7 +35,7 @@ program define digdis, rclass byable(recall)
     }
 
 /// mark sample
-    marksample touse
+    marksample touse, strok
 
 /// extract
     if "`generate'"=="" {

@@ -1,10 +1,19 @@
-*! version 1.1  06may2017 Michael D Barker Felix Pöge
+*! version 1.2  09dec2017 Michael D Barker Felix Pöge
 
 /*
     Testing the ustrdist method using direct inputs.
 */
 
+clear all
+
 version 14
+
+noi di as result "Make sure that this is the correct ustrdist version."
+which ustrdist
+set more on
+more
+set more off
+
 
 // How many unicode characters to test.
 local unicode_max_test = 10000
@@ -116,6 +125,78 @@ forvalues i = 1/`=r(N)' {
     drop strdist 
     noi di as text "`i' " _c
 }
+
+
+/*
+	Testing maximum string lengths
+*/
+clear
+set obs 1
+qui gen x = ""
+qui gen y = ""
+forvalues i = 1/100 {
+	qui replace x = x + " a"
+	qui replace y = y + " v"
+}
+ustrdist x y
+assert strdist == 100
+drop strdist
+
+ustrdist x y, maxdist(100)
+assert strdist == 100
+drop strdist
+
+ustrdist x y, maxdist(0)
+assert strdist == 100
+drop strdist
+
+ustrdist x y, maxdist(-1)
+assert strdist == 100
+drop strdist
+
+ustrdist x y, maxdist(1)
+assert missing(strdist)
+drop strdist
+
+ustrdist x y, maxdist(99)
+assert missing(strdist)
+drop strdist
+
+ustrdist x y, maxdist(10)
+assert missing(strdist)
+drop strdist
+
+// This here checks the first way strdist reacts to ma xdist
+// - if the distance between the string lengths is already too large to
+// satisfy maxdist
+gen a = "abc"
+gen b = "abcdef"
+strdist a b
+assert strdist == 3
+drop strdist
+
+ustrdist a b, max(2)
+assert missing(strdist)
+drop strdist
+
+// These used to give some faulty behavior
+ustrdist "x" "yav", maxdist(1)
+assert r(d) == .
+
+ustrdist "mx" "yavz", maxdist(1)
+assert r(d) == .
+
+ustrdist "mx" "yavz", maxdist(2)
+assert r(d) == .
+
+ustrdist "yav" "x", maxdist(1)
+assert r(d) == .
+
+ustrdist "yavz" "mx", maxdist(1)
+assert r(d) == .
+
+ustrdist "yavz" "mx", maxdist(2)
+assert r(d) == .
 
 // Testing compatibility with several unicode examples
 forvalues i = 1/`unicode_max_test' {

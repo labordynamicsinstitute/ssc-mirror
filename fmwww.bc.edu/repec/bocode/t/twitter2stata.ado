@@ -1,4 +1,4 @@
-*! version 1.0.2 25jul2017
+*! version 1.0.3 14dec2017
 /*
 Copyright 2007 Yusuke Yamamoto
 
@@ -14,10 +14,24 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 */
+/*
+12dec2017
+	Fix to extend the new 280 character limit for tweets.
+    Fixed stack trace for -searchtweets- and -tweets- when no results were found
+       Now these commands state -0 obs-.
+14dec2017
+	Fixed proxy bug so that -twitter2stata- now works with firewalls.
+*/
 
 program define twitter2stata
 	version 15
 
+	global twitter2stata_jar_ver `""twitter2stata-1.0.4.jar""'
+
+	javacall com.stata.drd.stTwitter setProxySettings, args(`"`c(httpproxy)'"' ///
+		`"`c(httpproxyhost)'"' `"`c(httpproxyport)'"' `"`c(httpproxyauth)'"' ///
+		`"`c(httpproxyuser)'"' `"`c(httpproxypw)'"') jars($twitter2stata_jar_ver)
+	
 	gettoken subcmd 0 : 0, parse(" ,")
 
 	if `"`subcmd'"' == "get"		twitterGetPin `macval(0)'
@@ -76,14 +90,14 @@ end
 
 program twitterGetPin
 	version 15
-	javacall com.stata.drd.stTwitter getPinUrl, args() jars(sttwitter.jar)
+	javacall com.stata.drd.stTwitter getPinUrl, args() jars($twitter2stata_jar_ver)
 end
 
 program twitterSetPin
 	version 15
 
 	syntax anything(name=pin id="pin")
-	javacall com.stata.drd.stTwitter setPin, args(`"`pin'"') jars(sttwitter.jar)
+	javacall com.stata.drd.stTwitter setPin, args(`"`pin'"') jars($twitter2stata_jar_ver)
 end
 
 program twitterSetKey
@@ -113,7 +127,7 @@ program twitterSetKey
 		exit 198
 	}
 
-	javacall com.stata.drd.stTwitter setKeys, args(`"`1'"' `"`2'"' `"`3'"' `"`4'"') jars(sttwitter.jar)
+	javacall com.stata.drd.stTwitter setKeys, args(`"`1'"' `"`2'"' `"`3'"' `"`4'"') jars($twitter2stata_jar_ver)
 end
 
 program twitterSetAccess
@@ -131,7 +145,7 @@ program twitterSetAccess
 		exit 100
 	}
 
-	javacall com.stata.drd.stTwitter setAccess, args(`"`1'"' `"`2'"') jars(sttwitter.jar)
+	javacall com.stata.drd.stTwitter setAccess, args(`"`1'"' `"`2'"') jars($twitter2stata_jar_ver)
 end
 
 program twitterSearch, rclass
@@ -369,7 +383,7 @@ program twitterSearch, rclass
 
 	javacall com.stata.drd.stTwitter searchTwitter, args(`"`srch'"' ///
 		`"`numtweets'"' `"`lang'"' `"`locale'"' `"`since'"' `"`until'"' `"`sinceid'"' ///
-		`"`maxid'"' `"`geocode'"' `"`type'"' `"`verbose'"') jars(sttwitter.jar)
+		`"`maxid'"' `"`geocode'"' `"`type'"' `"`verbose'"') jars($twitter2stata_jar_ver)
 
 	restore, not
 
@@ -398,7 +412,7 @@ program twitterFav
 		clear
 	}
 
-	javacall com.stata.drd.stTwitter getFavorites, args(`"`user'"' `"`sinceid'"' `"`verbose'"' `"`numtweets'"') jars(sttwitter.jar)
+	javacall com.stata.drd.stTwitter getFavorites, args(`"`user'"' `"`sinceid'"' `"`verbose'"' `"`numtweets'"') jars($twitter2stata_jar_ver)
 	convertToDate "tweet_created_at"
 	convertToDate "user_account_timestamp"
 
@@ -423,7 +437,7 @@ program twitterFri
 		clear
 	}
 
-	javacall com.stata.drd.stTwitter getFriendsList, args(`"`user'"' `"`verbose'"' `"`numusers'"') jars(sttwitter.jar)
+	javacall com.stata.drd.stTwitter getFriendsList, args(`"`user'"' `"`verbose'"' `"`numusers'"') jars($twitter2stata_jar_ver)
 	convertToDate "user_account_timestamp"
 
 	restore, not
@@ -447,7 +461,7 @@ program twitterFol
 		clear
 	}
 
-	javacall com.stata.drd.stTwitter getFollowersList, args(`"`user'"' `"`verbose'"' `"`numusers'"') jars(sttwitter.jar)
+	javacall com.stata.drd.stTwitter getFollowersList, args(`"`user'"' `"`verbose'"' `"`numusers'"') jars($twitter2stata_jar_ver)
 	convertToDate "user_account_timestamp"
 
 	restore, not
@@ -471,10 +485,10 @@ program twitterUserLists
 	}
 
 	if `"`members'"' != "" {
-		javacall com.stata.drd.stTwitter getUserListMemberships, args(`"`user'"') jars(sttwitter.jar)
+		javacall com.stata.drd.stTwitter getUserListMemberships, args(`"`user'"') jars($twitter2stata_jar_ver)
 	}
 	else {
-		javacall com.stata.drd.stTwitter getUserListSubscriptions, args(`"`user'"') jars(sttwitter.jar)
+		javacall com.stata.drd.stTwitter getUserListSubscriptions, args(`"`user'"') jars($twitter2stata_jar_ver)
 	}
 	convertToDate "list_created_at"
 
@@ -508,16 +522,16 @@ program twitterListUsers
 	}
 
 	if `"`members'"' == "" & `"`2'"' == "" {
-		javacall com.stata.drd.stTwitter getUserListSubscribers, args(`"`listId'"') jars(sttwitter.jar)
+		javacall com.stata.drd.stTwitter getUserListSubscribers, args(`"`listId'"') jars($twitter2stata_jar_ver)
 	}
 	else if `"`members'"' == "" & `"`2'"' != "" {
-		javacall com.stata.drd.stTwitter getUserListSubscribers, args(`"`slug'"' `"`owner'"') jars(sttwitter.jar)
+		javacall com.stata.drd.stTwitter getUserListSubscribers, args(`"`slug'"' `"`owner'"') jars($twitter2stata_jar_ver)
 	}
 	else if `"`members'"' != "" & `"`2'"' == "" {
-		javacall com.stata.drd.stTwitter getUserListMembers, args(`"`listId'"') jars(sttwitter.jar)
+		javacall com.stata.drd.stTwitter getUserListMembers, args(`"`listId'"') jars($twitter2stata_jar_ver)
 	}
 	else {
-		javacall com.stata.drd.stTwitter getUserListMembers, args(`"`slug'"' `"`owner'"') jars(sttwitter.jar)
+		javacall com.stata.drd.stTwitter getUserListMembers, args(`"`slug'"' `"`owner'"') jars($twitter2stata_jar_ver)
 	}
 	convertToDate "user_account_timestamp"
 
@@ -553,11 +567,11 @@ program twitterListTweets
 
 	if `"`2'"' == "" {
 		javacall com.stata.drd.stTwitter getUserListStatuses, args(`"`numtweets'"' `"`sinceid'"' ///
-			`"`maxid'"' `"`verbose'"' `"`listId'"') jars(sttwitter.jar)
+			`"`maxid'"' `"`verbose'"' `"`listId'"') jars($twitter2stata_jar_ver)
 	}
 	else {
 		javacall com.stata.drd.stTwitter getUserListStatuses, args(`"`numtweets'"' `"`sinceid'"' ///
-			`"`maxid'"' `"`verbose'"' `"`slug'"' `"`owner'"') jars(sttwitter.jar)
+			`"`maxid'"' `"`verbose'"' `"`slug'"' `"`owner'"') jars($twitter2stata_jar_ver)
 	}
 	convertToDate "tweet_created_at"
 	convertToDate "user_account_timestamp"
@@ -583,7 +597,7 @@ program twitterSearchUsers
 		clear
 	}
 
-	javacall com.stata.drd.stTwitter searchUsers, args(`"`srch'"' `"`numusers'"') jars(sttwitter.jar)
+	javacall com.stata.drd.stTwitter searchUsers, args(`"`srch'"' `"`numusers'"') jars($twitter2stata_jar_ver)
 	convertToDate "user_account_timestamp"
 
 	restore, not
@@ -608,7 +622,7 @@ program twitterGetUserTweets
 		clear
 	}
 
-	javacall com.stata.drd.stTwitter getUserTweets, args(`"`user'"' `"`numtweets'"' `"`sinceid'"' `"`maxid'"' `"`verbose'"') jars(sttwitter.jar)
+	javacall com.stata.drd.stTwitter getUserTweets, args(`"`user'"' `"`numtweets'"' `"`sinceid'"' `"`maxid'"' `"`verbose'"') jars($twitter2stata_jar_ver)
 	convertToDate "tweet_created_at"
 	convertToDate "user_account_timestamp"
 
@@ -632,7 +646,7 @@ program twitterGetUser
 		clear
 	}
 
-	javacall com.stata.drd.stTwitter getUser, args(`"`user'"') jars(sttwitter.jar)
+	javacall com.stata.drd.stTwitter getUser, args(`"`user'"') jars($twitter2stata_jar_ver)
 	convertToDate "user_account_timestamp"
 
 	restore, not
@@ -655,7 +669,7 @@ program twitterGetStatus
 		clear
 	}
 
-	javacall com.stata.drd.stTwitter getStatus, args(`"`status'"') jars(sttwitter.jar)
+	javacall com.stata.drd.stTwitter getStatus, args(`"`status'"') jars($twitter2stata_jar_ver)
 	convertToDate "tweet_created_at"
 	convertToDate "user_account_timestamp"
 
@@ -724,7 +738,7 @@ program twitterPlace2Shp
 	preserve
 	keep `varname'
 
-	javacall com.stata.drd.stTwitter place2shp, args(`"`varname'"') jars(sttwitter.jar)
+	javacall com.stata.drd.stTwitter place2shp, args(`"`varname'"') jars($twitter2stata_jar_ver)
 
 	capture {
 		quietly drop if _ID == .

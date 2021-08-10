@@ -1,70 +1,66 @@
 d 'MOREMATA': module (Mata) to provide various functions
 d
-d   This package includes various Mata functions. kern(): various
+d  This package includes various Mata functions. kern(): various
 d kernel functions; kint(): kernel integral functions; kdel0():
-d canonical	   bandwidth of kernel; quantile(): quantile
-d function; median(): median;	     iqrange(): inter-quartile
-d range; ecdf(): cumulative distribution	function;
-d relrank(): grade transformation; ranks(): ranks/cumulative	   
-d frequencies; freq(): compute frequency counts; histogram():
-d produce	 histogram data; mgof(): multinomial
-d goodness-of-fit tests;	collapse(): summary statistics by
-d subgroups; _collapse(): summary	 statistics by subgroups;
-d gini(): Gini coefficient; sample(): draw	  random sample;
-d srswr(): SRS with replacement; srswor(): SRS without	     
+d canonical bandwidth of kernel; quantile(): quantile function;
+d median(): median; iqrange(): inter-quartile range; ecdf():
+d cumulative distribution function; relrank(): grade
+d transformation; ranks(): ranks/cumulative frequencies; freq():
+d compute frequency counts; histogram(): produce histogram data;
+d mgof(): multinomial goodness-of-fit tests; collapse(): summary
+d statistics by subgroups; _collapse(): summary statistics by
+d subgroups; gini(): Gini coefficient; sample(): draw random
+d sample; srswr(): SRS with replacement; srswor(): SRS without
 d replacement; upswr(): UPS with replacement; upswor(): UPS without
-d	 replacement; bs(): bootstrap estimation; bs2(): bootstrap
-d estimation;	     bs_report(): report bootstrap results; jk():
-d jackknife estimation;        jk_report(): report jackknife
-d results; subset(): obtain subsets, one	at a time;
-d composition(): obtain compositions, one by one;	
-d ncompositions(): determine number of compositions; partition():  
-d      obtain partitions, one at a time; npartitionss(): determine
-d number of	   partitions; rsubset(): draw random subset;
-d rcomposition(): draw	      random composition; colvar():
-d variance, by column; meancolvar(): mean	 and variance, by
-d column; variance0(): population variance;	   meanvariance0():
-d mean and population variance; mse(): mean squared	   error;
-d colmse(): mean squared error, by column; sse(): sum of squared   
-d     errors; colsse(): sum of squared errors, by column;
-d benford():	    Benford distribution; cauchy(): cumulative
-d Cauchy-Lorentz dist.;        cauchyden(): Cauchy-Lorentz density;
-d cauchytail(): reverse cumulative	  Cauchy-Lorentz;
-d invcauchy(): inverse cumulative Cauchy-Lorentz;	
-d rbinomial(): generate binomial random numbers; cebinomial():
-d cond.        expect. of binomial r.v.; root(): Brent's univariate
-d zero finder;	      nrroot(): Newton-Raphson zero finder;
-d finvert(): univariate function	inverter; integrate_sr():
-d univariate function integration (Simpson's	    rule);
-d integrate_38(): univariate function integration (Simpson's 3/8   
-d     rule); ipolate(): linear interpolation; polint(): polynomial 
-d	inter-/extrapolation; plot(): Draw twoway plot; _plot():
-d Draw twoway	     plot; panels(): identify nested panel
-d structure; _panels(): identify	panel sizes; npanels():
-d identify number of panels; nunique(): count	     number of
-d distinct values; nuniqrows(): count number of unique rows;	   
-d isconstant(): whether matrix is constant; nobs(): number of	   
-d  observations; colrunsum(): running sum of each column; linbin():
-d	 linear binning; fastlinbin(): fast linear binning;
-d exactbin(): exact	   binning; makegrid(): equally spaced grid
-d points; cut(): categorize	   data vector; posof(): find
-d element in vector; which(): positions of	  nonzero elements;
-d locate(): search an ordered vector; hunt():	     consecutive
-d search; cond(): matrix conditional operator; expand():       
-d duplicate single rows/columns; _expand(): duplicate rows/columns
-d in	    place; repeat(): duplicate contents as a whole;
-d _repeat(): duplicate	      contents in place; unorder2(): stable
-d version of unorder();        jumble2(): stable version of
-d jumble(); _jumble2(): stable version of	 _jumble();
-d pieces(): break string into pieces; npieces(): count	     
-d number of pieces; _npieces(): count number of pieces;
-d invtokens():	      reverse of tokens(); realofstr(): convert
-d string into real;	   strexpand(): expand string argument;
-d matlist(): display a (real)	     matrix; insheet(): read
-d spreadsheet file; infile(): read free-format	      file;
-d outsheet(): write spreadsheet file; callf(): pass optional args  
-d      to function; callf_setup(): setup for mm_callf(); sqrt():
-d square root of a s.p.d. matrix.	
+d replacement; bs(): bootstrap estimation; bs2(): bootstrap
+d estimation; bs_report(): report bootstrap results; jk():
+d jackknife estimation; jk_report(): report jackknife results;
+d subset(): obtain subsets, one at a time; composition(): obtain
+d compositions, one by one; ncompositions(): determine number of
+d compositions; partition(): obtain partitions, one at a time;
+d npartitionss(): determine number of partitions; rsubset(): draw
+d random subset; rcomposition(): draw random composition; greedy():
+d one-to-one and one-to-many matching; ebal(): entropy balancing
+d (Stata 11 required); colvar(): variance, by column; meancolvar():
+d mean and variance, by column; variance0(): population variance;
+d meanvariance0(): mean and population variance; mse(): mean
+d squared error; colmse(): mean squared error, by column; sse():
+d sum of squared errors; colsse(): sum of squared errors, by
+d column; benford(): Benford distribution; cauchy(): cumulative
+d Cauchy-Lorentz dist.; cauchyden(): Cauchy-Lorentz density;
+d cauchytail(): reverse cumulative Cauchy-Lorentz; invcauchy():
+d inverse cumulative Cauchy-Lorentz; rbinomial(): generate binomial
+d random numbers; cebinomial(): cond. expect. of binomial r.v.;
+d root(): Brent's univariate zero finder; nrroot(): Newton-Raphson
+d zero finder; finvert(): univariate function inverter;
+d integrate_sr(): univariate function integration (Simpson's rule);
+d integrate_38(): univariate function integration (Simpson's 3/8
+d rule); ipolate(): linear interpolation; polint(): polynomial
+d inter-/extrapolation; sqrt(): square root of a symmetric positive
+d definite matrix; plot(): Draw twoway plot; _plot(): Draw twoway
+d plot; panels(): identify nested panel structure; _panels():
+d identify panel sizes; npanels(): identify number of panels;
+d nunique(): count number of distinct values; nuniqrows(): count
+d number of unique rows; isconstant(): whether matrix is constant;
+d nobs(): number of observations; colrunsum(): running sum of each
+d column; linbin(): linear binning; fastlinbin(): fast linear
+d binning; exactbin(): exact binning; makegrid(): equally spaced
+d grid points; cut(): categorize data vector; posof(): find element
+d in vector; which(): positions of nonzero elements; locate():
+d search an ordered vector; hunt(): consecutive search; cond():
+d matrix conditional operator; expand(): duplicate single
+d rows/columns; _expand(): duplicate rows/columns in place;
+d repeat(): duplicate contents as a whole; _repeat(): duplicate
+d contents in place; unorder2(): stable version of unorder();
+d jumble2(): stable version of jumble(); _jumble2(): stable version
+d of _jumble(); pieces(): break string into pieces; npieces():
+d count number of pieces; _npieces(): count number of pieces;
+d regexr(): regular expression replace; invtokens(): reverse of
+d tokens(); realofstr(): convert string into real; strexpand():
+d expand string argument; matlist(): display a (real) matrix;
+d insheet(): read spreadsheet file; infile(): read free-format
+d file; outsheet(): write spreadsheet file; callf(): pass optional
+d args to function; callf_setup(): setup for mm_callf().     
 d
 d KW: Mata
 d KW:  quantile
@@ -91,7 +87,7 @@ d KW: histogram
 d
 d Requires: Stata version 9
 d
-d Distribution-Date: 20170531
+d Distribution-Date: 20210411
 d
 d Author: Ben Jann, University of Bern
 d Support: email jann@@soz.unibe.ch
@@ -99,11 +95,13 @@ d
 f moremata.zip
 f ../l/lmoremata.mlib
 f ../l/lmoremata10.mlib
+f ../l/lmoremata11.mlib
 f ../l/lmoremata14.mlib
 f mf_mm_sample.hlp
 f moremata.hlp
 f moremata_source.hlp
 f moremata10_source.hlp
+f moremata11_source.hlp
 f moremata14_source.hlp
 f mf_mm_unorder2.hlp
 f mf_mm_panels.hlp
@@ -128,6 +126,7 @@ f mf_mm_bs.hlp
 f mf_mm_callf.hlp
 f mf_mm_expand.hlp
 f mf_mm_finvert.hlp
+f mf_mm_greedy.hlp
 f mf_mm_jk.hlp
 f mf_mm_kern.hlp
 f mf_mm_locate.hlp
@@ -149,3 +148,19 @@ f mf_mm_collapse.hlp
 f mf_mm_integrate.hlp
 f mf_mm_regexr.hlp
 f mf_mm_sqrt.hlp
+f mf_mm_ebal.sthlp
+f mf_mm_clip.hlp
+f mf_mm_ddens.hlp
+f mf_mm_density.sthlp
+f mf_mm_diff.hlp
+f mf_mm_group.hlp
+f mf_mm_minim.hlp
+f mf_mm_prod.hlp
+f mf_mm_ranks.hlp
+f mf_mm_relrank.hlp
+f mf_mm_seq.hlp
+f mf_mm_sort.hlp
+f mf_mm_hl.hlp
+f mf_mm_mloc.hlp
+f mf_mm_ls.hlp
+f mf_mm_qr.sthlp

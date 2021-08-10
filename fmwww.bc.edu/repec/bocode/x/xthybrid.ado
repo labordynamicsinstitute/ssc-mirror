@@ -1,11 +1,12 @@
-* *! Version 1.1.0 by Francisco Perales & Reinhard Schunck 16-March-2017
+* *! Version 1.2.0 by Francisco Perales & Reinhard Schunck 01-April-2020
 * Version 1.1.0: Corrects issues which emerged when the names of existing user variables begun with certain prefixes
+* Version 1.2.0: Adds the option 'keepvars' to retain newly created variables into the data
 
 program define xthybrid, rclass
-syntax varlist(min=2) [if] [in] , Clusterid(varname) [Family(string) Link(string) cre Nonlinearities(string) RANDOMslope(varlist) Use(string) PERCentage(integer 0) TEst Full STats(string) vce(string) se t p star iterations MEGLMopts(string)]
+syntax varlist(min=2) [if] [in] , Clusterid(varname) [Family(string) Link(string) cre Nonlinearities(string) RANDOMslope(varlist) Use(string) PERCentage(integer 0) TEst Full STats(string) vce(string) se t p star iterations MEGLMopts(string) KEEPvars]
 
 version 12
-preserve
+if "`keepvars'"=="" preserve
 
 foreach badprefix in W__ D__ B__ R__ mEaN__ dIfF__{
 	capture quietly des `badprefix'*
@@ -31,7 +32,7 @@ if "`family'"!="gaussian" & "`family'"!="bernoulli" & "`family'"!="binomial" & "
 
 if "`link'" == "" local link "identity"
 if "`link'"!="identity" & "`link'"!="log" & "`link'"!="logit" & "`link'"!="probit" & "`link'"!="cloglog"{
-	disp in red "The option 'link' supports the following: identity, log, logit, probit, cloglog."
+		disp in red "The option 'link' supports the following: identity, log, logit, probit, cloglog."
 	exit
 }
 
@@ -46,7 +47,7 @@ gettoken depvar indvars : varlist
 quietly xtreg `depvar' if `touse', i(`clusterid')
 local within_dep "floor((1-`e(rho)')*100)"
 	if `within_dep' == 0{
-	disp in red "The dependent variable (`depvar') does not vary within clusters."
+		disp in red "The dependent variable (`depvar') does not vary within clusters."
 	exit
 }
 
@@ -80,7 +81,7 @@ foreach var of varlist `used_variables'{
 		if `within' == 0 | `within'<`percentage'{
 			disp in green "The variable '`var'' does not vary sufficiently within clusters"
 			disp in green "and will not be used to create additional regressors."
-			disp in yellow "[" `within' "% of the total variance in '`var'' is within clusters]"
+			disp in yellow "[~" `within' "% of the total variance in '`var'' is within clusters]"
 			local invariant_vars "`invariant_vars' `var'"
 		}
 }
@@ -106,7 +107,7 @@ if "`cre'" == ""{
 	rename dIfF__* W__*
 	foreach variable in `indvars'{
 		capture des B__`variable', varlist
-		if _rc rename `variable' R__`variable'
+		if _rc gen R__`variable' = `variable' 
 	}
 	local model_name "Hybrid model. Family: `family'. Link: `link'."
 }
@@ -163,8 +164,8 @@ if "`full'" == "" & "`iterations'"==""{
 if "`full'" != "" est rep model
 
 if "`new_vars'" == ""{
-	disp in red "None of the independent variables `text'varies within clusters."
-	disp in red "Neither cluster-mean nor mean-differenced variables were added to the mixed-effects model."
+	display in red "None of the independent variables `text'varies within clusters."
+	display in red "Neither cluster-mean nor mean-differenced variables were added to the mixed-effects model."
 }
 
 if "`test'"!=""{
@@ -180,6 +181,8 @@ if "`test'"!=""{
 		}
 	}
 }
-
-restore
+if "`keepvars'"!=""{
+	display in yellow "Please remember to remove any variables beginning with the prefix B__, W__ or R__ from the data before executing xthybrid again"
+}
+if "`keepvars'"=="" restore
 end

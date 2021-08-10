@@ -1,5 +1,5 @@
 {smcl}
-{* *! version 1.0.2  11feb2011}{...}
+{* *! version 1.0.3  09jun2015}{...}
 {cmd:help spreg postestimation} {right:also see:  {helpb spreg}  }
 {hline}
 
@@ -15,10 +15,12 @@
 {pstd}
 The following postestimation commands are available after {cmd:spreg}:
 
-{synoptset 13 notes}{...}
+{synoptset 17 notes}{...}
 {p2coldent :command}description{p_end}
 {synoptline}
-INCLUDE help post_estat
+INCLUDE help post_estatic
+INCLUDE help post_estatsum
+INCLUDE help post_estatvce
 INCLUDE help post_estimates
 INCLUDE help post_lincom
 INCLUDE help post_lrtest
@@ -43,6 +45,7 @@ INCLUDE help post_testnl
 {syntab :Main}
 {synopt :{opt rf:orm}}reduced-form predicted values; the default{p_end}
 {synopt :{opt li:mited}}predictions based on a limited information set{p_end}
+{synopt :{opt full}}predictions based on a full information set{p_end}
 {synopt :{opt na:ive}}predictions based on the observed values of {bf:y}{p_end}
 {synopt :{opt xb}}linear prediction{p_end}
 {synopt :{opt rft:ransform(real matrix T)}}user-provided ({bf:I}-{it:lambda}*{bf:W})^(-1){p_end}
@@ -63,6 +66,10 @@ INCLUDE help post_testnl
 This option is available only for a model with homoskedastically-distributed errors.
 
 {phang}
+{opt full} predicted values based on the full information set.
+This option is available only for a model with homoskedastically-distributed errors.
+
+{phang}
 {opt naive} predicted values based on the observed values of {bf:y},
 {it:lambda}*{bf:W}*{bf:y} + {bf:X}*{bf:b}.
 
@@ -74,7 +81,7 @@ See {it:{help spreg_postestimation##remarks:Remarks}} below for a detailed
 explanation of the {bf:predict} options.
 
 {phang}
-{opt rftransform()} tells {cmd:predict} use the user-specified inverse of
+{opt rftransform()} tells {cmd:predict} to use the user-specified inverse of
 ({bf:I}-{it:lambda}*{bf:W}).  The matrix {it:T} should reside in Mata memory.
 This option is available only with the reduced-form predictor.
 
@@ -114,23 +121,21 @@ Let
 
 	{bf:U} = ({bf:I}-{it:rho}*{bf:M})^(-1) * ({bf:I}-{it:rho}*{bf:M}')^(-1)
 	
-	{bf:Y} = ({bf:I}-{it:lambda}*{bf:W})^(-1) * ({bf:I}-{it:lambda}*{bf:W}')^(-1)
+	{bf:Y} = ({bf:I}-{it:lambda}*{bf:W})^(-1) * {bf:U} * ({bf:I}-{it:lambda}*{bf:W}')^(-1)
 	
 	E({it:w_i}*{bf:y}) = {it:w_i} * ({bf:I}-{it:lambda}*{bf:W})^(-1) * {bf:X}*{bf:b}
 	
-	cov({it:u_i},{it:w_i}*{bf:y}) = {it:sigma}^2 * {it:w_i}*{bf:Y}*{it:w_i}'
+	var({it:w_i}*{bf:y}) = {it:sigma}^2 * {it:w_i}*{bf:Y}*{it:w_i}'
 	
-	var({it:w_i}*{bf:y}) = {it:sigma}^2 * {it:u_i}*({bf:I}-{it:lambda}*{bf:W}')^(-1)*{it:w_i}'
+	cov({it:u_i},{it:w_i}*{bf:y}) = {it:sigma}^2 * {it:u_i}*({bf:I}-{it:lambda}*{bf:W}')^(-1)*{it:w_i}'
 
 {pstd}
 where {it:w_i} and {it:u_i} denote the {it:i}th row of {bf:W} and {bf:U}, respectively.
 The limited information set predictor for observation {it:i} is given by
 
-
 	                       cov({it:u_i},{it:w_i}*{bf:y})
 	{it:lambda}*{it:w_i}*{bf:y} + {it:x_i}*{bf:b} + -------------- * [{it:w_i}*{bf:y} - E({it:w_i}*{bf:y})]
 	                         var({it:w_i}*{bf:y})
-
 
 {pstd}
 where {it:x_i} denotes the {it:i}th row of {bf:X}.  Because the formula involves
@@ -143,6 +148,34 @@ The limited information set predictor includes additionally the linear
 combination {bf:W}*{bf:y}, thus it is more efficient than the reduced-form
 predictor.  Both predictors are unbiased predictors conditional on their
 information set.
+
+{pstd}
+The full information set predictor is described in Kalejian and Prucha (2007).
+It is based on the largest information set and is an efficient minimum mean
+square error predictor.
+Let {bf:S_i} denote an {{it:n}-1} x {it:n} selector matrix which is identical
+to an {it:n} x {it:n} identity matrix {bf:I} except that the {it:i}th row of
+{bf:I} is deleted.  Let {bf:y_i} be the available {it:n}-1 observations on
+the dependent variable.
+
+{pstd}
+Define
+	
+	E({bf:y_i}) = {bf:S_i} * ({bf:I}-{it:lambda}*{bf:W})^(-1) * {bf:X}*{bf:b}
+	
+	VC({bf:y_i}) = {it:sigma}^2 * {bf:S_i}*{bf:Y}*{bf:S_i}'
+	
+	cov({it:u_i},{bf:y_i}) = {it:sigma}^2 * {it:u_i}*({bf:I}-{it:lambda}*{bf:W}')^(-1)*{bf:S_i}'
+
+{pstd}
+The full information set predictor for observation {it:i} is given by
+
+	{it:lambda}*{it:w_i}*{bf:y} + {it:x_i}*{bf:b} + cov({it:u_i},{bf:y_i}) * (VC({bf:y_i}))^(-1) * [{bf:y_i} - E({bf:y_i})]
+
+{pstd}
+Because the formula involves
+the {it:sigma}^2 term, this predictor is available only for a model
+with homoskedastically-distributed errors.
 
 {pstd}
 The naive predictor is obtained by treating the values of {bf:y} on the

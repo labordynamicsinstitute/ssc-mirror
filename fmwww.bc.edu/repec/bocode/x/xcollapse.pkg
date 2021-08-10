@@ -1,6 +1,6 @@
 d 'XCOLLAPSE': module to make data set of summary statistics on disk or in memory
 d
-d	     xcollapse is an extended version of collapse, which
+d	      xcollapse is an extended version of collapse, which
 d creates a data set with      one observation per combination of
 d values of a list of variables in the	    existing data set and
 d new variables containing summary statistics of other	   
@@ -13,13 +13,12 @@ d
 d KW: data manipulation
 d KW: summary statistics
 d
-d Requires: Stata version 10.0
+d Requires: Stata version 16
 d
+d Distribution-Date: 20200407
 d
-d Author: Roger Newson, National Heart and Lung Institute, Imperial College London
+d Author: Roger Newson,  Imperial College London
 d Support: email r.newson@@imperial.ac.uk
-d
-d Distribution-Date: 20120322
 d
 f xcollapse.ado
 f xcollapse.sthlp

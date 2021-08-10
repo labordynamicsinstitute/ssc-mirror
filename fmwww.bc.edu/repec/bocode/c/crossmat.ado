@@ -1,5 +1,6 @@
-*! Part of package matrixtools v. 0.2
-*! Support: Niels Henrik Bruun, nhbr@ph.au.dk
+*! Part of package matrixtools v. 0.27
+*! Support: Niels Henrik Bruun, niels.henrik.bruun@gmail.com
+*! 2020-06-10 > frequency weights are now working
 
 * TODO crossmat option hide
 
@@ -9,7 +10,7 @@ program define crossmat, rclass
 		[Exact(integer 0) Label Missing Verbose]
 	tokenize `varlist'
 
-	mata: chitabulate("`1'", "`2'", "`if'", "`in'", "`weight'`exp'", `exact', ///
+	mata: chitabulate("`1'", "`2'", "`if'", "`in'", "[`weight'`exp']", `exact', ///
 						"`verbose'" != "", "`missing'" != "", "`label'" != "")
 	capture confirm matrix __mc
 	if ! _rc {
@@ -44,8 +45,10 @@ mata:
 	{
 		class nhb_mt_chi2tabulate scalar chi2
 		
-		if ( verbose ) chi2.verbose(1,0)
-		chi2.set(var1, var2, str_if, str_in, str_weight, exactno, missing, no_vlbl)
+		if ( verbose ) {
+		    chi2.set(var1, var2, str_if, str_in, str_weight, exactno, missing, no_vlbl, 1, 0)
+		}
+		else chi2.set(var1, var2, str_if, str_in, str_weight, exactno, missing, no_vlbl)
 		chi2.counts_with_totals().to_matrix("__mc", 1) // 1 = replace
 		chi2.proportions().to_matrix("__pct", 1)
 		if ( var2 != "" ) {

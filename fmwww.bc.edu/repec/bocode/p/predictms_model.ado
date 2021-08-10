@@ -1,8 +1,12 @@
 
 program predictms_model, rclass
-	syntax [, TRANS(string) NPARAMS(string) Ntrans(real 1) AT(string) STD  out(real 0)]
+	syntax [, TRANS(string) NPARAMS(string) Ntrans(real 1) AT(string) STD  out(real 0) aind(string)]
 	
 	local cmdname "`e(cmd)'"
+	if `aind'==1 {
+		c_local cmdname `cmdname'
+	}
+
 	if "`e(cmd2)'"=="streg" {
 		
 		//design matrix for transition
@@ -49,13 +53,17 @@ program predictms_model, rclass
 	
 		}
 		else {
-		
+			
+			local isgamma = "`e(cmd)'"=="gamma"
 			local Nmleqns = 2
+			if `isgamma' {
+				local Nmleqns = 3
+			}
 			local cmdline `e(cmdline)'
 			gettoken cmd 0 : cmdline
 			
 			if `out' {
-				syntax [anything(everything)],  [NOCONstant ANCillary(varlist) *]	
+				syntax [anything(everything)],  [NOCONstant ANCillary(varlist) ANC2(varlist) *]	
 				//strip off if and in
 				local t1 = strpos("`anything'"," if ")
 				if `t1' local anything = substr("`anything'",1,`t1')
@@ -64,10 +72,11 @@ program predictms_model, rclass
 				local varlist `anything'
 			}
 			else {
-				syntax [varlist(default=empty)] [if] [in], [NOCONstant ANCillary(varlist) *]	
+				syntax [varlist(default=empty)] [if] [in], [NOCONstant ANCillary(varlist) ANC2(varlist) *]	
 			}
 			local corevars1 `varlist'		
 			local corevars2 `ancillary'
+			local corevars3 `anc2'
 			
 			//now update DM and indices
 			//can match variables in at() with varlist and ancillary
@@ -107,23 +116,57 @@ program predictms_model, rclass
 				local colindex = `colindex' + 1
 			}
 			mat `dm'[1,`colindex'] = 1
+			local colindex = `colindex' + 1
+			
+			if `isgamma' {
+				foreach corevar in `corevars3' {
+					local inat = 0
+					predictms_atparse, 	corevar(`corevar') colindex(`colindex') dmmat(`dm') 		///
+								i(`trans') ntrans(`ntrans') at(`at') out(`out')
+					local inat = r(inat)
+					local todrop `todrop' `r(todrop)'
+					if !`inat' & "`std'"!="" {
+						predictms_stdparse `corevar' `trans' `ntrans'
+						if r(include) {
+							local stdvars `stdvars' `r(stdvar)'
+							local stdvarsindex `stdvarsindex' `colindex'
+						}
+					}
+					local colindex = `colindex' + 1
+				}
+				mat `dm'[1,`colindex'] = 1			
+			}
 			
 			//indices
-			mat `indices' = J(2,`Nmleqns',1)
-			local colindex = 1
-			foreach corevar in `corevars1' {
+			if `aind'==1 {
+				mat `indices' = J(2,`Nmleqns',1)
+				local colindex = 1
+				foreach corevar in `corevars1' {
+					local colindex = `colindex' + 1
+				}
+				if "`noconstant'"=="" {
+					local colindex = `colindex' + 1
+				}
+				mat `indices'[2,1] = `colindex' - 1
+				
+				mat `indices'[1,2] = `colindex'
+				foreach corevar in `corevars2' {
+					local colindex = `colindex' + 1
+				}
 				local colindex = `colindex' + 1
+				mat `indices'[2,2] = `colindex' - 1
+				if `isgamma' {
+					mat `indices'[1,3] = `colindex'
+					foreach corevar in `corevars3' {
+						local colindex = `colindex' + 1
+					}
+					local colindex = `colindex' + 1
+					mat `indices'[2,3] = `colindex' - 1
+				}
+				
+				return matrix indices = `indices'
 			}
-			if "`noconstant'"=="" {
-				local colindex = `colindex' + 1
-			}
-			mat `indices'[2,1] = `colindex' - 1
-			mat `indices'[1,2] = `colindex'
-			mat `indices'[2,2] = `nparams'
-			
-			return matrix indices = `indices'
 		}
-		
 		return matrix dm = `dm'
 	}
 	else if "`e(cmd)'"=="stpm2" | "`e(cmd)'"=="strcs" {
@@ -131,12 +174,15 @@ program predictms_model, rclass
 		//DM is only for varlist, tvc splines and base splines are handled separately
 		local corevars `e(varlist)'
 		local Ncovs : word count `corevars'
-		c_local Ncovs`trans' `Ncovs'
-		c_local nocons`trans' `e(noconstant)'
-		c_local orthog`trans' `e(orthog)'
-		c_local scale`trans' `e(scale)'
+		if `aind'==1 {
+			c_local Ncovs`trans' `Ncovs'
+			c_local nocons`trans' `e(noconstant)'
+			c_local orthog`trans' `e(orthog)'
+			c_local scale`trans' `e(scale)'
+			c_local bhazard`trans' `e(bhazard)'
+		}
 		
-		//overall design matrix for each transition, stacked
+		//design matrix 
 		if `Ncovs' > 0 {
 			tempname dm 
 			mat `dm' = J(1,`Ncovs',0)
@@ -161,31 +207,35 @@ program predictms_model, rclass
 			return matrix dm = `dm'
 		}
 		
-		c_local rcsbaseoff`trans' `e(rcsbaseoff)'
-		if "`e(rcsbaseoff)'"=="" {
-			local Nsplines : word count `e(rcsterms_base)'
-			if "`e(cmd)'"=="stpm2" {
-				local ln_bknots`trans' `e(ln_bhknots)'										//all log baseline knots including boundary knots
-				if "`ln_bknots`trans''"=="" {	//this is empty when df(1)
-					local ln_bknots`trans' `=log(`: word 1 of `e(boundary_knots)'')' `=log(`: word 2 of `e(boundary_knots)'')'
+		if `aind'==1 {
+			c_local rcsbaseoff`trans' `e(rcsbaseoff)'
+			if "`e(rcsbaseoff)'"=="" {
+				local Nsplines : word count `e(rcsterms_base)'
+				if "`e(cmd)'"=="stpm2" {
+					local ln_bknots`trans' `e(ln_bhknots)'										//all log baseline knots including boundary knots
+					if "`ln_bknots`trans''"=="" {	//this is empty when df(1)
+						local ln_bknots`trans' `=log(`: word 1 of `e(boundary_knots)'')' `=log(`: word 2 of `e(boundary_knots)'')'
+					}
 				}
-			}
-			else {
-				local ln_bknots`trans' `e(bhknots)'										//all log baseline knots including boundary knots
-				if "`ln_bknots`trans''"=="" {	//this is empty when df(1)
-					local ln_bknots`trans' -5 10 //fudge - these values are not used
+				else {
+					local ln_bknots`trans' `e(bhknots)'										//all log baseline knots including boundary knots
+					if "`ln_bknots`trans''"=="" {	//this is empty when df(1)
+						local ln_bknots`trans' -5 10 //fudge - these values are not used
+					}
 				}
+				c_local ln_bknots`trans' `ln_bknots`trans''
+				if "`e(orthog)'"=="orthog" {
+					tempname rmat
+					matrix `rmat' = e(R_bh)
+					return matrix rmat = `rmat'
+				}			
 			}
-			c_local ln_bknots`trans' `ln_bknots`trans''
-			if "`e(orthog)'"=="orthog" {
-				tempname rmat
-				matrix `rmat' = e(R_bh)
-				return matrix rmat = `rmat'
-			}			
+					
+			c_local tvc`trans' `e(tvc)'
 		}
-				
-		c_local tvc`trans' `e(tvc)'
+		
 		if "`e(tvc)'"!="" {
+		
 			local i = 1
 			foreach tvcvar in `e(tvc)' {
 				local boundary_knots_`i' `e(boundary_knots_`tvcvar')'
@@ -206,12 +256,16 @@ program predictms_model, rclass
 					mat `R_`i'' = e(R_`tvcvar')
 					return matrix R_`i' = `R_`i''
 				}
-				c_local ln_tvcknots`trans'_`i' `ln_tvcknots`trans'_`i''
+				if `aind'==1 {
+					c_local ln_tvcknots`trans'_`i' `ln_tvcknots`trans'_`i''
+				}
 				local i = `i' + 1
 			}
 			local Ntvcvars = `i' - 1
-			c_local Ntvcvars`trans' = `Ntvcvars'
-
+			if `aind'==1 {
+				c_local Ntvcvars`trans' = `Ntvcvars'
+			}
+			
 			//tvc DM
 			tempname dmtvc
 			mat `dmtvc' = J(1,`Ntvcvars',0)
@@ -237,12 +291,34 @@ program predictms_model, rclass
 		}
 	
 	}
+	else if "`e(cmd)'"=="merlin" {
+	
+		local varlist `e(allvars)'
+		tempname dm 
+		local nv : word count `varlist'
+		mat `dm' = J(1,`nv',0)
+		
+		local colindex = 1
+		foreach corevar in `varlist' {
+			local inat = 0
+			predictms_atparse, 	corevar(`corevar') colindex(`colindex') 	///
+								at(`at') out(`out') ntrans(`ntrans') dmmat(`dm')
+			local inat = r(inat)
+			local todrop `todrop' `r(todrop)'
+			if !`inat' & "`std'"!="" {
+				predictms_stdparse `corevar' `trans' `ntrans'
+				if r(include) {
+					local stdvars `stdvars' `r(stdvar)'
+				}
+			}
+			local colindex = `colindex' + 1
+		}
+	
+	}
 	
 	return local stdvars `stdvars'
 	return local stdvarsindex `stdvarsindex'
 	return local todrop `todrop'
-	c_local cmdname `cmdname'
-
 
 end
 

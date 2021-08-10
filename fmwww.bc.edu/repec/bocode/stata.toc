@@ -1,4 +1,4 @@
-d -- Mirrored on 2017-08-10 --
+d -- Mirrored on 2021-04-15 --
 d 
 d Mirror of:
 d Statistical Software Components Archive dd Maintained by: Kit Baum      email: baum@@bc.edud Boston College Economics     fax  : +1-617-552-2308d Chestnut Hill MA 02467 USAdd This facility mirrors the contents of RePEc seriesd "Statistical Software Components," available from IDEASd (^http://ideas.repec.org/s/boc/bocode.html^) and EconPapersd (^http://econpapers.repec.org/software/bocbocode/^). You ared urged to use those services' search facilities to locate components.d You should use the -ssc- or -adoupdate- commands to download routinesd from this archive.t a t bt ct dt et ft gt ht it jt kt lt mt nt ot pt qt rt st tt u t vt wt xt y t zt _
