@@ -1,0 +1,125 @@
+<pre>
+<b><u>Title</u></b>
+<p>
+    <b>savewsz</b> -- Save Stata dataset as MLwiN worksheet
+<p>
+<p>
+<a name="syntax"></a><b><u>Syntax</u></b>
+<p>
+    Save data in memory to MLwiN worksheet
+<p>
+        <b>savewsz</b> [<i>filename</i>] [<b>,</b> <i>savewsz_options</i>]
+<p>
+<p>
+<a name="savewsz_options"></a>    <i>savewsz_options</i>    Description
+    -------------------------------------------------------------------------
+    <b><u>forcer</u></b><b>ecast</b>        forces a recast of all variables saved as long or
+                         double to float
+    <b>batch</b>              prevents any MLwiN GUI windows being displayed
+    <b><u>nol</u></b><b>abel</b>            omit value labels from the saved worksheet
+    <b><u>ver</u></b><b>sion(</b><i>#</i><b>)</b>         MLwiN file version
+    <b><u>nocomp</u></b><b>ress</b>         do not compress data
+    <b>mlwinpath(</b><i>string</i><b>)</b>  mlwin.exe file address, including the file name
+    <b>replace</b>            overwrite existing worksheet
+    -------------------------------------------------------------------------
+<p>
+<p>
+<a name="description"></a><b><u>Description</u></b>
+<p>
+    <b>savewsz</b> stores the dataset currently in memory as an MLwiN worksheet
+    under the name <i>filename</i>.  If <i>filename</i> is not specified, the name under
+    which the data were last known to Stata (<b>c(filename)</b>) is used.  If
+    <i>filename</i> is specified without an extension, <b>.wsz</b> or <b>.ws</b> is used depending
+    on whether compression is requested.  If your <i>filename</i> contains embedded
+    spaces, remember to enclose it in double quotes.
+<p>
+<p>
+<a name="options_savewsz"></a><b><u>Options for savewsz</u></b>
+<p>
+    <b>forcerecast</b> forces a recast of all variables saved as long or double to
+        float.
+<p>
+    <b>batch</b> prevents any MLwiN GUI windows being displayed.
+<p>
+    <b>nolabel</b> omits value labels from the saved worksheet.
+<p>
+    <b>version(</b><i>#</i><b>)</b> selects the worksheet version to use. Possible values are:
+<p>
+        1: MLwiN 1.00 worksheet
+<p>
+        2: MLwiN 1.10 worksheet
+<p>
+        3: MLwiN 2.00 worksheet
+<p>
+        4: Current MLwiN version worksheet
+<p>
+    <b>nocompress</b> prevents the MLwiN worksheet from being saved in compressed
+        format.
+<p>
+    <b>mlwinpath(</b><i>string</i><b>)</b> specifies the file address for mlwin.exe, including the
+        file name.  For example: <b>mlwinpath(C:\Program Files\MLwiN</b>
+        <b>v2.26\i386\mlwin.exe)</b>.
+<p>
+    <b>replace</b> permits <b>savewsz</b> to overwrite an existing worksheet.
+<p>
+<p>
+<a name="remarks"></a><b><u>Remarks</u></b>
+<p>
+    In order to get <b>savewsz</b> working, the user must then:
+<p>
+        (1) install the latest version of MLwiN on their computer;
+<p>
+        (2) set the MLwiN path using <b>mlwinpath(</b><i>string</i><b>)</b> or a <b>global</b> macro
+            called MLwiN_path.
+<p>
+    If you don't have the latest version of MLwiN, visit:
+<p>
+        http://www.bristol.ac.uk/cmm/software/mlwin.
+<p>
+    MLwiN is free for UK academics (thanks to support from the UK Economic
+    and Social Research Council).  A fully unrestricted 30-day trial version
+    is available for non-UK academics.
+<p>
+    Advanced users may wish to set the MLwiN path every time Stata is started
+    by simply inserting the following line into the profile do-file
+    profile.do.  See <b>profile</b>.
+<p>
+        <b>. global MLwiN_path "C:\Program Files\MLwiN v2.26\i386\mlwin.exe"</b>
+<p>
+    Where you must substitute the MLwiN path that is correct for your
+    computer for the path given in quotes in the above example.
+<p>
+<p>
+<a name="examples"></a><b><u>Examples</u></b>
+<p>
+    Setup
+        <b>. sysuse auto, clear</b>
+<p>
+    Save data in memory to MLwiN worksheet
+        <b>. savewsz myauto</b>
+<p>
+    Resave <b>myauto</b> after changing the data
+        <b>. generate price1000 = price/1000</b>
+        <b>. savewsz myauto, replace</b>
+<p>
+    Equivalent to above command
+        <b>. savewsz, replace</b>
+<p>
+<p>
+<a name="authors"></a><b><u>Authors</u></b>
+<p>
+    Chris Charlton
+    Centre for Multilevel Modelling
+    University of Bristol
+    c.charlton@bristol.ac.uk
+<p>
+    George Leckie
+    Centre for Multilevel Modelling
+    University of Bristol
+<p>
+<p>
+<b><u>Also see</u></b>
+<p>
+    Online:  <b>runmlwin</b>, <b>mcmcsum</b>
+<p>
+</pre>

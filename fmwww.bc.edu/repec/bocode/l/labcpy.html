@@ -1,0 +1,83 @@
+<pre>
+<b>help labcpy</b>
+-------------------------------------------------------------------------------
+<p>
+<b><u>Title</u></b>
+<p>
+     <b>labcpy</b> -- Modify copy of value label
+<p>
+<p>
+<b><u>Syntax</u></b>
+<p>
+        <b>labcpy</b> <i>oldlblname</i> <i>newlblname</i> [ <i>modifications</i> ] [<b>, replace</b> <b><u>val</u></b><b>ues(</b>
+<i>varlist</i><b>)</b>]
+<p>
+<p>
+     where the form of <i>modifications</i> is one of
+<p>
+        <i>#</i> <b>"</b><i>label</i><b>"</b> [<i>#</i> <b>"</b><i>label</i><b>"</b> <i>...</i>]
+<p>
+        <b>(</b><i>numlist</i> <b>=</b> <i>numlist</i><b>)</b> [<i>...</i>]
+<p>
+<p>
+<b><u>Description</u></b>
+<p>
+    <b>labcpy</b> defines <i>newlblname</i> as a (modified) copy of <i>oldlblname</i>. If no
+    <i>modifications</i> are specified, <i>oldlblname</i> is copied as is.
+<p>
+<p>
+<b><u>Options</u></b>
+<p>
+    <b>replace</b> redefines the copied value label. This option might be useful to
+        delete multiple values from <i>newlblname</i>. The option is not allowed if
+        <i>modifications</i> are specified as <i>rules</i>. Note that <i>newlblname</i> must not
+        exist, regradless of whether <b>replace</b> is specified or not.
+<p>
+    <b>values(</b><i>varlist</i><b>)</b> attaches <i>newlblname</i> to <i>varlist</i>.
+<p>
+<p>
+<b><u>Remarks</u></b>
+<p>
+    Modifications may either be specified as integer-to-text mappings or as
+    <i>rules</i>. Integer-to-text mappings are specified the same way as with label
+    define. Modification <i>rules</i> are similar to those used with recode, with
+    few exceptions. Recoding into a <i>numlist</i> is allowed. Instead of
+<p>
+        <b>(1 = 4)(2 = 3)(3 = 2)(4 = 1)</b>
+<p>
+    you may code
+<p>
+        <b>(1/4 = 4/1)</b>
+<p>
+    Note, however, that <i>numlists</i> must define one-to-one mappings. You may
+    delete values from copied value labels by mapping them to <b>sysmiss</b> (<b>.</b>). It
+    is not allowed to specify labels in <i>rules</i>.
+<p>
+<p>
+<b><u>Examples</u></b>
+<p>
+        <b>. sysuse auto</b>
+        <b>. labcpy origin org 1 "German" 2 "Other"</b>
+<p>
+        <b>. sysuse nlsw88</b>
+        <b>. generate byte race2 = race * 10</b>
+        <b>. labcpy racelbl race2 (1/3 = 10(10)30) ,values(race2)</b>
+<p>
+<p>
+<b><u>Acknowledgments</u></b>
+<p>
+    Modifying value labels by specifying <i>rules</i> is inspired by labvalch (Nick
+    Cox).
+<p>
+<p>
+<b><u>Author</u></b>
+<p>
+    Daniel Klein, University of Bamberg, klein.daniel.81@gmail.com
+<p>
+<p>
+<b><u>Also see</u></b>
+<p>
+    Online: label
+<p>
+    if installed: labvalclone, labvalch, labutil2
+</pre>

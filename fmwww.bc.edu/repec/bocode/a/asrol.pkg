@@ -1,0 +1,24 @@
+d 'ASROL': module to generate rolling-window descriptive statistics in time series or panel data
+d
+d   This program calculates descriptive statistics in a user's
+d defined rolling-window.    For example, in time series or panel
+d data, a user might be interested in knowing standard deviation   
+d or coefficient of variation of a variable in a rolling window of
+d last 4 years. asrol provides	  efficient and simple way of
+d finding such statistics. It also offers various options to
+d specify minimum    number of observations required for
+d calculation of desired statistics in a rolling window. 
+d
+d KW: descriptive statistics
+d KW: rolling window
+d
+d Requires: Stata version 11
+d
+d Distribution-Date: 20170310
+d
+d Author: Attaullah Shah, Institute of Management Sciences
+d Support: email attashah15@@hotmail.com
+d
+f asrol.ado
+f asrol.sthlp
+f ../l/lasrol.mlib

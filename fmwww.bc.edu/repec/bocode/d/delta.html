@@ -1,0 +1,75 @@
+<pre>
+-------------------------------------------------------------------------------
+help for <b>delta</b>                                             Jean-Benoit Hardouin
+-------------------------------------------------------------------------------
+<p>
+<b><u>Syntax</u></b>
+<p>
+        <b>delta</b> <i>varlist</i> [<b>if</b> <i>exp</i>] [<b>in</b> <i>range</i>] [, <b>ci</b>(<i>#</i>) <b><u>nod</u></b><b>ots</b> <b><u>min</u></b><b>score</b>(<i>#</i>)
+              <b><u>max</u></b><b>score</b>(<i>#</i>)]
+<p>
+<b><u>Description</u></b>
+<p>
+    <b>delta</b> computes the generalized delta index of scale discrimination
+        developed by Hankins (2007) based on the original work of Ferguson
+        (1949). This index measures the scale's ability to distinguish
+        between individuals.  A value of 1 indicates that the test has
+        maximal discrimination (all possible scores occur with the same
+        frequency) and a value of 0 means that the test has minimal
+        discrimination (all the respondents have the same score).  A value of
+        0.9 results from a set of scores that is normally distributed. A
+        value of 1 is observed if the scores follow a uniform distribution.
+        Individuals with a missing score are omitted.
+<p>
+<b><u>Options</u></b>
+<p>
+    If <i>varlist</i> is composed of only one variable, the <b>delta</b> module considers
+        that this variable is the score of the individuals.
+<p>
+    <b>ci</b>(<i>#</i>) estimates the confidence interval by boostrap. <i>#</i> is the number of
+        replications to be performed. By default, no confidence interval is
+        calculated.
+<p>
+    <b>nodots</b> avoids displaying a dot for each replication (only with <b>ci</b>).
+<p>
+    <b>minscore</b>(<i>#</i>) defines the minimal value of the score. By default, this
+        value is fixed to 0.
+<p>
+    <b>maxscore</b>(<i>#</i>) defines the maximal value of the score. By default, the
+        maximal observed score is used.
+<p>
+<b><u>Output</u></b>
+<p>
+    <b>r(delta)</b>: Observed value of the delta index.
+<p>
+<b><u>Examples</u></b>
+<p>
+    <b>. delta itemA*</b>
+<p>
+    <b>. delta itemA*, ci(500) dots</b>
+<p>
+    <b>. delta score, scoremax(8)</b>
+<p>
+<b><u> References</u></b>
+<p>
+    Ferguson G. A. (1949) On the theory of test discrimination.
+        <i>Psychometrika</i>, 14: 61-68.
+<p>
+    Hankins M. (2007) Questionnaire discrimination: (re)- introducting
+        coefficient delta. <i>BMC Medical Research Methodology</i>, 7: 19.
+<p>
+<b><u>Author</u></b>
+<p>
+    Jean-Benoit Hardouin, PhD, assistant professor
+    Team of Biostatistics, Clinical Research and Subjective Measures in
+        Health Sciences
+    University of Nantes - Faculty of Pharmaceutical Sciences
+    1, rue Gaston Veil - BP 53508
+    44035 Nantes Cedex 1 - FRANCE
+    Email:  jean-benoit.hardouin@univ-nantes.fr
+    Websites AnaQol and FreeIRT
+<p>
+<b><u>Also see</u></b>
+<p>
+    Online: help for alpha and loevH if installed.
+</pre>

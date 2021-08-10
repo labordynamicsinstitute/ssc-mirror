@@ -1,0 +1,151 @@
+<pre>
+-------------------------------------------------------------------------------
+help for <b>reg2hdfe</b>                                                            ()
+-------------------------------------------------------------------------------
+ 
+<b><u>Title</u></b>
+<p>
+reg2hdfe - Estimates a Linear Regression Model with two High Dimensional Fixed 
+&gt; Effects.
+<p>
+<b><u>Syntax</u></b>
+<p>
+        <b>reg2hdfe</b> <i>depvar</i> [<i>indepvar</i>] [if] [in] , <b>id1(</b><i>varname</i><b>)</b> <b>id2(</b><i>varname</i><b>)</b>
+               [<i>options</i>]
+<p>
+<p>
+<b><u>Description</u></b>
+<p>
+This command implements the algorithm of Guimaraes &amp; Portugal for estimation of
+a linear regression model with two high dimensional fixed effects. The command
+is particularly suited for use with large data sets because in a first step you
+can remove the high dimensional fixed effects from the data and then use the
+transformed regression variables to try alternative specifications of the
+model.
+<p>
+<b><u>Options</u></b>
+<p>
+<b>fe1(</b><i>new varname</i><b>)</b> <b>fe2(</b><i>new varname</i><b>)</b>:  Stores the estimates of the two fixed
+    effects.
+<p>
+<b>cluster(</b><i>varname</i><b>)</b> Computes clustered standard errors.
+<p>
+<b><u>group</u></b><b>id (</b><i>new varname</i><b>)</b> Creates a new variable containing a unique identifier for
+    the mobility groups.
+<p>
+<b><u>out</u></b><b>data(</b><i>string</i><b>)</b> Saves the transformed regression variables.
+<p>
+<b><u>in</u></b><b>data(</b><i>string</i><b>)</b> To be used after <b>outdata(</b><i>string</i><b>)</b>. Performs the regression with
+    previously transformed variables. This is the fastest way to implement
+    regressions.
+<p>
+<b><u>imp</u></b><b>rove(</b><i>string</i><b>)</b> To be used after <b>outdata(</b><i>string</i><b>)</b>. Improves convergence for a
+    single variable.
+<p>
+<b>tol(</b><i>float</i><b>)</b> Specify the convergence criterion for the iteration method. Default
+    is 1.000e-06.
+<p>
+<b>simple</b> Disables acceleration of convergence for the algorithm.
+<p>
+<b>op1(</b><i>integer</i><b>)</b> Iteration number after which convergence is accelerated. Default
+    is 3.
+<p>
+<b>op2(</b><i>integer</i><b>)</b> Parameter that defines the rate of acceleration at every iteration
+    of the algorithm.  Default is 1. The parameter is adjusted as the algorithm
+    evolves. If convergence is monotonous the parameter is increased and if the
+    algorithm starts diverging the parameter goes back to its default value.
+<p>
+<b>op3(</b><i>integer</i><b>)</b> Parameter that defines a periodic attempt to accelerate
+    convergence. Default is 10.  This means that every 10 iterations the
+    algorithm tries an additional correction to improve convergence.
+<p>
+<b>op4(</b><i>integer</i><b>)</b> Parameter that defines the rate of acceleration for the periodic
+    correction.  Default is 1000.
+<p>
+<b>op5(</b><i>integer</i><b>)</b> Periodic corrections are only applied if estimated values in two
+    consecutived periodic corrections differ by less than this parameter. The
+    default is 0.001.
+<p>
+<b>autoff(</b><i>integer</i><b>)</b> Parameter OP2 remains at its base level.
+<p>
+<b>check</b> Checks for convergence by computing additional regressions that use the
+    fixed effects estimates as regressors. With successful convergence the
+    coefficients for the fixed effects should equal one.  To check convergence
+    of the final regression you must store the two fixed effects (use options
+    <b>fe1()</b> and <b>fe2()</b>).
+<p>
+<b><u>max</u></b><b>iter(</b><i>integer</i><b>)</b> Specify a maximum number of iterations.
+<p>
+<b>nodots</b> Suppress dots indicating the progress of the iteration algorithm.
+<p>
+<b><u>noreg</u></b><b>ress</b> Transforms the variables but does not estimate the regression.
+<p>
+<b>param1</b> The estimates of the fixed effects for id1() sum to zero within each
+    group.
+<p>
+<b>param2</b> The estimates of the fixed effects for id2() sum to zero within each
+    group.
+<p>
+<b><u>verb</u></b><b>ose</b> Gives more information during estimation.
+<p>
+<b><u>Examples</u></b>
+<p>
+Example 1:
+Estimates a model with two high dimensional fixed effects
+<p>
+        . reg2hdfe y x1 x2 x3, id1(i) id2(j)
+<p>
+Example2:
+<p>
+Estimate a model saving the transformed variables
+<p>
+        . reg2hdfe y x1 x2 x3, id1(i) id2(j) outdata(data1)
+<p>
+and then run a (much faster) alternative specification.
+<p>
+        . reg2hdfe y x1 x2, id1(i) id2(j) indata(data1)
+ 
+Example 3:
+<p>
+For faster results estimate a model with a low tolerance level.
+<p>
+        . reg2hdfe y x1 x2 x3, id1(i) id2(j) outdata(data1) check tol(0.001)
+ 
+<p>
+The "check" option gives an idea how well the model converged. Next we improve
+convergence for a single variable, say x1,  
+<p>
+        . reg2hdfe x1, id1(i) id2(j) improve(data1) check tol(0.000001)
+ 
+<p>
+and then reestimate the model.
+<p>
+        . reg2hdfe y x1 x2, id1(i) id2(j) indata(data1) check
+ 
+<p>
+<b><u>Author</u></b>
+<p>
+Paulo Guimaraes, Universidade do Porto, Portugal
+<p>
+Email: pguimaraes@fep.up.pt
+<p>
+Comments welcome!
+<p>
+<b><u>Acknowledgements</u></b>
+This program makes use of Amine Quazad's a2group Stata algorithm to compute the
+&gt;  connected groups.
+<p>
+<b><u>Reference</u></b>
+<p>
+If you use this program in your research cite:
+<p>
+Paulo Guimaraes and Pedro Portugal. "A Simple Feasible Alternative Procedure to
+&gt;  Estimate Models with 
+High-Dimensional Fixed Effects", Stata Journal, 10(4), 628-649, 2010.
+<p>
+<b><u>Also see</u></b>
+<p>
+gpreg (if installed), a2reg (if installed), a2group (if installed), felsdvreg
+                     (if installed).
+<p>
+</pre>

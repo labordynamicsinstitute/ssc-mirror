@@ -1,0 +1,124 @@
+<pre>
+-------------------------------------------------------------------------------
+help for <b>anovaplot</b>
+-------------------------------------------------------------------------------
+<p>
+<b><u>Plots of ANOVA fit, including interaction plots</u></b> 
+<p>
+        <b>anovaplot</b> [<b>,</b> <b>scatter(</b><i>scatter_options</i><b>)</b> <i>connected_options</i> <b>plot(</b><i>plot</i><b>)</b> ]
+                 ]
+<p>
+        <b>anovaplot</b> <i>varlist</i> [<b>,</b> <b>scatter(</b><i>scatter_options</i><b>)</b> <i>connected_options</i>
+                 <b>plot(</b><i>plot</i><b>)</b> ] ]
+<p>
+<p>
+<b><u>Description</u></b>
+<p>
+    <b>anovaplot</b> plots fitted or predicted values from an immediately previous
+    one-, two- or three-way <b>anova</b>. By default the data for the response are
+    also plotted. In particular, <b>anovaplot</b> can show interaction plots.
+<p>
+<p>
+<b><u>Remarks</u></b> 
+<p>
+    With the first syntax, no <i>varlist</i> is specified.  <b>anovaplot</b> shows the
+    response and predicted values on the <i>y</i> axis; the predictor named first in
+    the <b>anova</b> command on the <i>x</i> axis; any predictor named second in the <b>anova</b>
+    command by separate groups within a twoway plot; and any predictor named
+    third in the <b>anova</b> command by separate images using a <b>by()</b> option. Thus
+    with this syntax the appearance of the plot, although not the values
+    shown, is sensitive to the order in which predictors are specified in the
+    <b>anova</b> command.
+<p>
+    With the second syntax, a <i>varlist</i> is supplied, which must be a
+    permutation of the predictors previously used. The order of the
+    predictors in the varlist is used to determine the form of the graph, as
+    above. This permits changing graphs without reissuing the <b>anova</b> command.
+<p>
+    Note especially that the graph format produced by <b>anovaplot</b> is
+    appropriate for models with at most one continuous predictor, which
+    should always be the predictor named first. With that caveat, <b>anovaplot</b>
+    offers a way of showing parallel and diverging regression lines for
+    models with one continuous predictor.
+<p>
+<p>
+<b><u>Options</u></b>
+<p>
+    <b>scatter()</b> specifies options of scatter which should be specified to
+        control plotting of fitted values.
+<p>
+        To suppress plotting of response data, specify <b>scatter(ms(i))</b>.
+<p>
+        To separate tied values of response, specify <b>scatter(jitter(1))</b>.
+<p>
+    <i>connected_options</i> are options of twoway connected which should be
+        specified to control plotting of fitted values.
+<p>
+    <b>plot(</b>plot<b>)</b> provides a way to add other plots to the generated graph; see 
+        plot_option.
+<p>
+<p>
+<b><u>Examples</u></b>
+<p>
+    <b>. webuse systolic</b>
+<p>
+    One-way anova: <b>systolic</b> as response on <i>y</i> axis, <b>drug</b> as factor on <i>x</i> axis:
+<p>
+    <b>. anova systolic drug</b>
+    <b>. anovaplot</b>
+<p>
+    Two-way anova, no interaction term: <b>systolic</b> as response on <i>y</i> axis,
+    <b>disease</b> and <b>drug</b> as factors, with <b>disease</b> on <i>x</i> axis, and levels of <b>drug</b>
+    defining separate profiles:
+<p>
+    <b>. anova systolic disease drug</b>
+    <b>. anovaplot</b>
+<p>
+    Better to reverse order of predictors:
+<p>
+    <b>. anovaplot drug disease</b>
+<p>
+    Example of interaction term:
+<p>
+    <b>. anova systolic drug disease drug * disease</b>
+    <b>. anovaplot</b>
+<p>
+    As above, but no plotting of data:
+<p>
+    <b>. anovaplot, scatter(ms(i))</b>
+<p>
+    Examples with one continuous predictor:
+<p>
+    <b>. sysuse auto</b>
+    <b>. decode foreign, gen(Foreign)</b>
+    <b>. gen F = substr(Foreign,1,1)</b>
+<p>
+    The continuous predictor is named just after the response:
+<p>
+    <b>. anova price weight foreign, cont(weight)</b>
+<p>
+    (N.B. parallel regression lines)
+<p>
+    <b>. anovaplot, scatter(ms(i) mla(F) mlabpos(0))</b>
+<p>
+    <b>. anova price weight foreign weight*foreign, cont(weight)</b>
+<p>
+    (N.B. diverging regression lines)
+<p>
+    <b>. anovaplot, scatter(ms(i) mla(F) mlabpos(0))</b>
+<p>
+<p>
+<b><u>Author</u></b>
+<p>
+    Nicholas J. Cox, University of Durham, U.K.
+    n.j.cox@durham.ac.uk
+<p>
+<p>
+<b><u>Acknowledgements</u></b> 
+<p>
+    Ken Higbee provided very helpful comments.
+<p>
+<p>
+<b><u>Also see</u></b>
+<p>
+</pre>

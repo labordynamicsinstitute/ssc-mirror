@@ -1,0 +1,21 @@
+d 'USMAPS': module to provide US state map coordinates for tmap
+d
+d This package contains several Stata datafiles with US state
+d geocode coordinates for use with Pisati's tmap package (Stata
+d Journal, 4:4, 2004). A do-file illustrates their usage. 
+d
+d KW: maps
+d KW: states
+d KW: GIS
+d KW: geocodes
+d
+d Requires: Stata version 8.2
+d
+d Distribution-Date: 20041216
+d
+d Author: Scott Merryman, Risk Management Agency, USDA
+d Support: email scott.merryman@@gmail.com
+d
+f usmaps.do
+f usmap.zip
+f usW_MW_Emap.zip

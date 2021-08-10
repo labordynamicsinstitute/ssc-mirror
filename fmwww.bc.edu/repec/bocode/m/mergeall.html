@@ -1,0 +1,79 @@
+<pre>
+<b>help mergeall</b>
+-------------------------------------------------------------------------------
+<p>
+<b><u>Title</u></b>
+<p>
+    <b>mergeall</b> -- A safe way to merge many files
+<p>
+<b><u>Syntax</u></b>
+<p>
+        <b>mergeall</b> <i>varlist</i><b> using</b><i> folder</i> [<b>,</b> <i>options</i>]
+<p>
+varlist is the match variables that uniquely identify observations. It is requi
+&gt; red.
+<p>
+    <i>options</i>               Description
+    -------------------------------------------------------------------------
+      <b>csv</b>                 files to be merged are .csv (default)
+      <b>txt</b>                 files to be merged are .txt
+      <b>dta</b>                 files to be merged are .dta
+      <b>tab</b>                 insheet tab delimited data
+      <b>comma</b>               insheet comma delimited data
+      <b>double</b>              insheet all numeric variables as double. See format
+      <b>format</b>              specify a format to be used in the event that a
+                            numberic variable must be converted to string.
+                            See tostring and format
+      <b>do(</b><i>filename</i><b>)</b>        runs the specified do file on each individual file
+                            before merging
+      <b>strings(</b><i>varlist</i><b>)</b>    force the varlist to string format and all others
+                            to numeric
+      <b>force</b>               forces conversion to string or numeric. Required
+                            with the string option.
+      <b>showsource</b>          generates a new string variable containing the name
+                            of the file each observation was drawn from.
+    -------------------------------------------------------------------------
+<p>
+<p>
+<b><u>Description</u></b>
+<p>
+    <b>mergeall</b> merges all of the files in a folder without loss of data due to
+    variable storage types or duplicate unique identifiers.
+<p>
+<b><u>Remarks</u></b>
+<p>
+    <b>mergeall</b> loops through all of the files in the folder you specify,
+    checking variable types before merging.  It sets all variables that are
+    string in any file to be string in every file to prevent loss of data. By
+    default, Stata forces the variable type of the master file on the using
+    file, which can result in lost data.
+<p>
+    <b>mergeall</b> requires a unique identifier to be specified and exits with
+    error if the identifier is not unique within files.  A unique identifier
+    is required because Stata can sometimes merge in unexpected ways when
+    there is no unique identifier, and the goal of mergeall is to make
+    merging many files super-safe.
+<p>
+    <b>mergeall</b> Performs 1 to 1 merges using Stata10 style merging and creates a
+    new variable, <i>_disagreement</i>, which equals 1 if an observation exists in
+    two or more datasets, and the datasets disagree on its value.  If
+    <i>_disagreement</i> equals 1, you have lost information.
+<p>
+    If you are so inclined, you can run a cleaning .do file on each dataset
+    before merging using <b>do(</b><i>filename</i><b>)</b> (this is useful for fixing errors in
+    unique identifiers, for example).
+<p>
+    <b>strings</b> is probably a bad idea because it can result in the loss of data,
+    but if you are very sure you won't lose data, it runs a little faster.
+<p>
+    The <b>showsource</b> option is useful for troubleshooting when you want to
+    return to the raw data to check values, but you don't know which raw file
+    contains the observation you are looking for.
+<p>
+<b><u>Also see</u></b>
+<p>
+    Online:  <b>[D] merge</b> <b>[D] append</b>, <b>[D] cross</b>, <b>[D] joinby</b>, <b>[D] save</b>, <b>[D] sort</b>
+<p>
+<b><u>Author</u></b>
+<p>
+</pre>

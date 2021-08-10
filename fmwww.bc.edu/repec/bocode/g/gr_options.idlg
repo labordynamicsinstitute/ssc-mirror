@@ -1,0 +1,424 @@
+
+DIALOG gr_options ,  tabtitle("Graph Options")
+BEGIN
+  DEFINE colu0  00
+  DEFINE colu1 70
+  DEFINE colu2 180
+  DEFINE colu3 290
+  DEFINE colu4 380
+  DEFINE colu5 430
+  DEFINE colu6 520
+  DEFINE colu7 620
+  DEFINE colu8 740
+  
+  DEFINE coluwd0 55
+  DEFINE coluwd1 100
+
+
+
+
+  CHECKBOX ck_graphs     10    20     560    75,             ///
+        groupbox label("Graphs: Select the graphs to be produced")                 ///
+        onclickon(program pgr_options_graphs)                      ///
+        onclickoff(script  gr_options_graphs)
+  TEXT     tx_gra    20 _ss     400   .,              ///
+        label("Specify the codes of graphs (type off to do not produce any graph):")
+  
+  
+  EDIT     ed_gra     @       _ss     500  .,              ///
+        option(gjobs)                          
+  BUTTON   bu_gra     530 @       15      .,              ///
+        label("?") onpush(view help jgraphs)        ///
+        tooltip("Help - List of graphs and their codes")
+  
+  
+  CHECKBOX ck_folgr     10    +40     560    75,             ///
+ groupbox label("Select the folder of graph results")       ///
+        onclickon(program pgr_options_folgr)                      ///
+        onclickoff(script  gr_options_folgr)             
+    
+
+TEXT  tx_folgr     +40    +25    80      .,                 ///  
+label ("Folder")
+	   
+EDIT  ed_folgr      100    @     300      .,                 ///
+label ("Browse...")    option("folgr") 
+ 
+  
+  TEXT     tx_frg colu1         +60      100    .,           ///
+          label("Min")
+  
+  TEXT     tx_frg2 colu2         @      100    .,           ///
+          label("Max")
+		  
+  TEXT     tx_psg colu3          @      300    .,           ///
+        label("Other ¨twoway graph options")		  
+  
+  
+
+  
+
+  
+  
+   TEXT     tx_gr1 colu0      +20       60    .,           ///
+        label("Graph_1") right
+  
+  
+   EDIT   en_min1    colu1     @         coluwd1    .,           ///
+        label("")      option(min) default()
+		
+   EDIT   en_max1    colu2     @         coluwd1    .,           ///
+        label("")      option(max) default()
+		
+		
+   EDIT   en_opt1    colu3     @         500    .,           ///
+        label("")      option(ogr) default()
+	
+  
+    TEXT     tx_gr2 colu0      +30       60    .,           ///
+        label("Graph_2") right
+  
+  
+   EDIT   en_min2    colu1     @         coluwd1    .,           ///
+        label("")      option(min)  default()
+		
+   EDIT   en_max2    colu2     @         coluwd1    .,           ///
+        label("")      option(max)  default()
+		
+   EDIT   en_opt2    colu3     @         500   .,           ///
+        label("")      option(ogr)  default()
+     
+	
+	TEXT     tx_gr3 colu0      +30       60    .,           ///
+        label("Graph_3") right
+  
+  
+   EDIT   en_min3    colu1     @         coluwd1    .,           ///
+        label("")      option(min)  default()
+		
+   EDIT   en_max3    colu2     @         coluwd1    .,           ///
+        label("")      option(max)  default()
+		
+   EDIT   en_opt3    colu3     @         500   .,           ///
+        label("")      option(ogr)  default()
+
+
+  TEXT     tx_gr4 colu0      +30       60    .,           ///
+        label("Graph_4") right
+  
+  
+   EDIT   en_min4    colu1     @         coluwd1    .,           ///
+        label("")      option(min)  default()
+		
+   EDIT   en_max4    colu2     @         coluwd1    .,           ///
+        label("")      option(max)  default()
+		
+   EDIT   en_opt4    colu3     @         500   .,           ///
+        label("")      option(ogr)  default()
+		
+		
+	TEXT     tx_gr5 colu0      +30       60    .,           ///
+        label("Graph_5") right
+  
+  
+   EDIT   en_min5    colu1     @         coluwd1    .,           ///
+        label("")      option(min)  default()
+		
+   EDIT   en_max5    colu2     @         coluwd1    .,           ///
+        label("")      option(max)  default()
+		
+   EDIT   en_opt5    colu3     @         500   .,           ///
+        label("")      option(ogr)  default()		
+   
+   
+  TEXT     tx_gr6 colu0      +30       60    .,           ///
+        label("Graph_6") right
+  
+  
+   EDIT   en_min6    colu1     @         coluwd1    .,           ///
+        label("")      option(min)  default()
+		
+   EDIT   en_max6    colu2     @         coluwd1    .,           ///
+        label("")      option(max)  default()
+		
+   EDIT   en_opt6    colu3     @         500   .,           ///
+        label("")      option(ogr)  default()
+		
+		
+  TEXT     tx_gr7 colu0      +30       60    .,           ///
+        label("Graph_7") right
+  
+  
+   EDIT   en_min7    colu1     @         coluwd1    .,           ///
+        label("")      option(min)  default()
+		
+   EDIT   en_max7    colu2     @         coluwd1    .,           ///
+        label("")      option(max)  default()
+		
+   EDIT   en_opt7    colu3     @         500   .,           ///
+        label("")      option(ogr)  default()
+		
+		
+	 TEXT     tx_gr8 colu0      +30       60    .,           ///
+        label("Graph_8") right
+  
+  
+   EDIT   en_min8    colu1     @         coluwd1    .,           ///
+        label("")      option(min)  default()
+		
+   EDIT   en_max8    colu2     @         coluwd1    .,           ///
+        label("")      option(max)  default()
+		
+   EDIT   en_opt8    colu3     @         500   .,           ///
+        label("")      option(ogr)  default()
+		
+   TEXT     tx_gr9 colu0      +30       60    .,           ///
+        label("Graph_9") right
+  
+  
+   EDIT   en_min9    colu1     @         coluwd1    .,           ///
+        label("")      option(min)  default()
+		
+   EDIT   en_max9    colu2     @         coluwd1    .,           ///
+        label("")      option(max)  default()
+		
+   EDIT   en_opt9    colu3     @         500   .,           ///
+        label("")      option(ogr)  default()
+	
+	
+  TEXT     tx_gr10 colu0      +30       60    .,           ///
+        label("Graph_10") right
+  
+  
+   EDIT   en_min10    colu1     @         coluwd1    .,           ///
+        label("")      option(min)  default()
+		
+   EDIT   en_max10    colu2     @         coluwd1    .,           ///
+        label("")      option(max)  default()
+		
+   EDIT   en_opt10    colu3     @         500   .,           ///
+        label("")      option(ogr)  default()
+   
+
+   
+   
+	
+		
+ END
+
+
+
+
+PROGRAM gra_output
+
+BEGIN
+     if !gr_options.en_min1.isdefault() |  !gr_options.en_max1.isdefault() |  !gr_options.en_opt1.isdefault() {
+	 put "opgr1("
+     if !gr_options.en_min1.isdefault(){
+                        optionarg gr_options.en_min1
+                        }
+						
+	 if !gr_options.en_max1.isdefault(){
+                        optionarg gr_options.en_max1
+                        }
+     if !gr_options.en_opt1.isdefault(){
+                        optionarg gr_options.en_opt1
+                        }
+	 put ")"					
+	 }
+	
+	 if !gr_options.en_min2.isdefault() |  !gr_options.en_max2.isdefault() |  !gr_options.en_opt2.isdefault() {
+	 put "opgr2("
+     if !gr_options.en_min2.isdefault(){
+                        optionarg gr_options.en_min2
+                        }
+						
+	 if !gr_options.en_max2.isdefault(){
+                        optionarg gr_options.en_max2
+                        }
+     if !gr_options.en_opt2.isdefault(){
+                        optionarg gr_options.en_opt2
+                        }
+	 put ")"					
+	 }
+	 
+	      if !gr_options.en_min3.isdefault() |  !gr_options.en_max3.isdefault() | !gr_options.en_opt3.isdefault() {
+	 put "opgr3("
+     if !gr_options.en_min3.isdefault(){
+                        optionarg gr_options.en_min3
+                        }
+						
+	 if !gr_options.en_max3.isdefault(){
+                        optionarg gr_options.en_max3
+                        }
+     if !gr_options.en_opt3.isdefault(){
+                        optionarg gr_options.en_opt3
+                        }
+	 put ")"					
+	 }
+	 
+	      if !gr_options.en_min4.isdefault() |  !gr_options.en_max4.isdefault() |  !gr_options.en_opt4.isdefault() {
+	 put "opgr4("
+     if !gr_options.en_min4.isdefault(){
+                        optionarg gr_options.en_min4
+                        }
+						
+	 if !gr_options.en_max4.isdefault(){
+                        optionarg gr_options.en_max4
+                        }
+     if !gr_options.en_opt4.isdefault(){
+                        optionarg gr_options.en_opt4
+                        }
+	 put ")"					
+	 }
+	 
+	      if !gr_options.en_min5.isdefault() |  !gr_options.en_max5.isdefault() |  !gr_options.en_opt5.isdefault() {
+	 put "opgr5("
+     if !gr_options.en_min5.isdefault(){
+                        optionarg gr_options.en_min5
+                        }
+						
+	 if !gr_options.en_max5.isdefault(){
+                        optionarg gr_options.en_max5
+                        }
+     if !gr_options.en_opt5.isdefault(){
+                        optionarg gr_options.en_opt5
+                        }
+	 put ")"					
+	 }
+	 
+	      if !gr_options.en_min6.isdefault() |  !gr_options.en_max6.isdefault() |  !gr_options.en_opt6.isdefault() {
+	 put "opgr6("
+     if !gr_options.en_min6.isdefault(){
+                        optionarg gr_options.en_min6
+                        }
+						
+	 if !gr_options.en_max6.isdefault(){
+                        optionarg gr_options.en_max6
+                        }
+     if !gr_options.en_opt6.isdefault(){
+                        optionarg gr_options.en_opt6
+                        }
+	 put ")"					
+	 }
+	 
+	      if !gr_options.en_min7.isdefault() |  !gr_options.en_max7.isdefault() |  !gr_options.en_opt7.isdefault() {
+	 put "opgr7("
+     if !gr_options.en_min7.isdefault(){
+                        optionarg gr_options.en_min7
+                        }
+						
+	 if !gr_options.en_max7.isdefault(){
+                        optionarg gr_options.en_max7
+                        }
+     if !gr_options.en_opt7.isdefault(){
+                        optionarg gr_options.en_opt7
+                        }
+	 put ")"					
+	 }
+	 
+	     if !gr_options.en_min8.isdefault() |  !gr_options.en_max8.isdefault() |  !gr_options.en_opt8.isdefault() {
+	 put "opgr8("
+     if !gr_options.en_min8.isdefault(){
+                        optionarg gr_options.en_min8
+                        }
+						
+	 if !gr_options.en_max8.isdefault(){
+                        optionarg gr_options.en_max8
+                        }
+     if !gr_options.en_opt8.isdefault(){
+                        optionarg gr_options.en_opt8
+                        }
+	 put ")"					
+	 }
+	 
+	      if !gr_options.en_min9.isdefault() | !gr_options.en_max9.isdefault() | !gr_options.en_opt9.isdefault() {
+	 put "opgr9("
+     if !gr_options.en_min9.isdefault(){
+                        optionarg gr_options.en_min9
+                        }
+						
+	 if !gr_options.en_max9.isdefault(){
+                        optionarg gr_options.en_max9
+                        }
+     if !gr_options.en_opt9.isdefault(){
+                        optionarg gr_options.en_opt9
+                        }
+	 put ")"					
+	 }
+	 
+	 
+	      if !gr_options.en_min10.isdefault() | !gr_options.en_max10.isdefault() | !gr_options.en_opt10.isdefault() {
+	 put "opgr10("
+     if !gr_options.en_min10.isdefault(){
+                        optionarg gr_options.en_min10
+                        }
+						
+	 if !gr_options.en_max10.isdefault(){
+                        optionarg gr_options.en_max10
+                        }
+     if !gr_options.en_opt10.isdefault(){
+                        optionarg gr_options.en_opt10
+                        }
+	 put ")"					
+	 }
+							
+END
+
+
+
+
+
+PROGRAM pgr_options_graphs
+BEGIN
+        if gr_options.ck_graphs {
+                call gr_options.tx_gra.enable
+                call gr_options.ed_gra.enable
+                call gr_options.bu_gra.enable
+        }
+		
+	 if !gr_options.ck_graphs {
+                call gr_options.tx_gra.disable
+                call gr_options.ed_gra.disable
+                call gr_options.bu_gra.disable
+        }
+END
+
+
+SCRIPT gr_options_graphs
+BEGIN
+                gr_options.tx_gra.disable
+                gr_options.ed_gra.disable
+                gr_options.bu_gra.disable
+
+END
+
+
+
+PROGRAM pgr_options_folgr
+BEGIN
+        if gr_options.ck_folgr {
+                call gr_options.tx_folgr.enable
+                call gr_options.ed_folgr.enable
+        }
+		
+	   if !gr_options.ck_folgr {
+                call gr_options.tx_folgr.disable
+                call gr_options.ed_folgr.disable
+        }
+END
+
+
+SCRIPT gr_options_folgr
+BEGIN
+                gr_options.tx_folgr.disable
+                gr_options.ed_folgr.disable
+END
+
+
+
+
+
+
+
+

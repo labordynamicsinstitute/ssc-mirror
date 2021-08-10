@@ -1,0 +1,252 @@
+<pre>
+<b>fastcc</b>
+-------------------------------------------------------------------------------
+<p>
+<b><u>Title</u></b>
+<p>
+    <b>fastcc -- ("fast copycode") run -copycode- with standard options</b>
+<p>
+<p>
+<a name="syntax"></a><b><u>Syntax</u></b>
+<p>
+        <b>fastcc</b> [<i>projectname</i>] [<b>,</b> <b>{</b> <b><u>set</u></b><b>tings(</b><i>set_arg</i>[<b>:</b><i>set_value</i>]<b>)</b> |
+                 <i>fastcc_options</i> <i>copycode_options</i> <b>}</b> ]
+<p>
+    <i>main_options</i>                      Description
+    -------------------------------------------------------------------------
+      <i>projectname</i>                     Name of project to be processed
+      <b><u>set</u></b><b>tings(</b><i>set_arg</i>[<b>:</b><i>set_value</i>]<b>)</b>   Record <b>fastcc</b> settings to ini file
+                                      
+    <i>fastcc_options</i>                    Description
+    -------------------------------------------------------------------------
+      <b><u>alld</u></b><b>epon(</b><i>depfilename</i><b>)</b>           Process all projects that use file
+                                        <i>depfilename</i>
+      <b><u>v</u></b><b>erbose</b>                         Show detailed <b>copycode</b> output instead
+                                        of <b>fastcc</b>'s summary output
+                                      
+    <i>copycode_options</i>                  Description
+    -------------------------------------------------------------------------
+      <b><u>noc</u></b><b>opy</b>                          See copycode
+      <b><u>si</u></b><b>mplemode</b>                      See copycode
+      <b>force</b>                           See copycode
+      <b><u>st</u></b><b>arbang(</b><i>stb_mode</i><b>)</b>              See copycode
+      <b><u>nop</u></b><b>rogdrop</b>                      See copycode
+    -------------------------------------------------------------------------
+<p>
+<p>
+<a name="description"></a><b><u>Description</u></b>
+<p>
+    You must be familiar with copycode before you can understand what <b>fastcc</b>
+    is doing.
+<p>
+    <b>fastcc</b> has two main uses. First, it runs copycode with standard options
+    so you do not have to type them at the command line.
+<p>
+    Secondly, <b>fastcc</b> can re-process all projects that depend on one
+    particular file.  This is done by option <b>alldepon</b>.
+<p>
+<p>
+<a name="option"></a><b><u>Options</u></b>
+<p>
+    <b>projectname</b> will process project <i>projectname</i>.
+<p>
+    <b>settings(</b><i>set_arg</i><b>[</b><i>:set_value</i><b>])</b> displays and sets values recorded in
+        <b>fastcc</b>'s ini file.  This option is exclusive: You may not use it in
+        conjunction with any other option.
+<p>
+        The values of the path to the input file and to the target directory
+        of the target file are stored in the text file
+        `c(sysdir_plus)'/f/fastcc.ini (the "ini file").  If you wish, you can
+        open and modify this file directly.  Alternatively, issuing
+<p>
+        <b>. fastcc, settings(inputfile: </b><i>inputfilepathandname</i><b>)</b>
+        <b>. fastcc, settings(targetdir: </b><i>targetdirpath</i><b>)</b>
+<p>
+        will record your settings in the ini file.  Each <i>set_arg</i> (inputfile
+        or targetdir) must be followed by a colon and by a valid path to a
+        file (inputfile) or directory (targetdir).  <b>fastcc</b> assumes an output
+        file name of <i>projectname</i>.ado which it will append to <i>targetdirpath</i>.
+        Relative file paths are not allowed in the ini file.  Settings
+        arguments may not exceed 244 characters.
+<p>
+        In addition,
+<p>
+        <b>. fastcc, settings(list)</b>
+<p>
+        will list the current ini file entries.
+<p>
+    <b>alldepon(depfilename)</b> will process all projects that depend on file
+        <i>depfilename</i>.  Note that <i>depfilename</i> must be supplied with extension
+        since <b>fastcc</b> must be able to identify the file among .mata, .stp,
+        .adv, etc. files.
+<p>
+        The interaction of this option with option <b>simplemode</b> is of
+        particular importance.  If you leave out option <b>simplemode</b>, <b>fastcc</b>
+        runs through all projects in the input file and determines for each
+        project whether the condition for ado mode are given (i.e. the
+        project has a "main adv").  If so, it compiles a list of all
+        first-order and higher-order dependencies; if <i>depfilename</i> is among
+        them, it includes this project among the projects to be processed.
+        If the conditions for ado mode for a particular project are not met,
+        <b>fastcc</b> checks only the direct dependencies for the occurence of
+        <i>depfilename</i>.  If they inlcude <i>depfilename</i>, the project is added to
+        the list of projects to be processed.
+<p>
+        If you do use option <b>simplemode</b>, <b>fastcc</b> checks for each project only
+        the direct dependencies for the occurence of <i>depfilename</i>.
+<p>
+        If you use option <b>alldepon</b>, you cannot specify <i>projectname</i>.
+<p>
+    <b>verbose</b> will display detailed output from <b>copycode</b> instead of the summary
+        output from <b>fastcc</b>.
+<p>
+    <b>nocopy</b>, <b>simplemode</b>, <b>force</b>, <b>starbang</b>, and <b>noprogdrop</b> fully correspond to
+        <b>copycode</b> options and are passed to each <b>copycode</b> call made by <b>fastcc</b>.
+<p>
+<p>
+<a name="remarks"></a><b><u>Remarks</u></b>
+<p>
+    You can use <b>fastcc</b> to work more efficiently with copycode.  <b>fastcc</b> runs
+    copycode with standard options.  These standard options are:
+<p>
+       <i>copycode option</i>       <i>fastcc</i><i> equivalent</i>
+       ------------------------------------------------------------------------
+       inputfile             as recorded in <b>fastcc</b>'s ini file
+       targetfile            path join of target directory as recorded in
+                             <b>fastcc</b>'s ini file and the output file name, which
+                             is assumed to be the project name plus ado file
+                             extension
+       replace               is always assumed
+<p>
+    That way, a copycode statement like
+<p>
+        <b>. copycode myproject, input(pathtoinput/input.txt)</b>
+          <b>target(pathtotarget/myproject.ado) replace</b>
+<p>
+    conveniently collapses into
+<p>
+        <b>. fastcc myproject</b>
+<p>
+    If you are in the process of developing and testing an ado file and you
+    are constantly making small changes and re-processing the project, this
+    saves a good bit of typing.
+<p>
+    The standard options are based on a set of assumptions that are typically
+    true in practice:
+<p>
+         - You are using only one input file that lists all of your projects.
+           Very rarely will you have several versions of an input file or
+           several input files for different purposes.
+         - The project names correspond to the names of the ado files you want
+           to create.
+         - You know what you are doing when executing <b>fastcc</b> and it is ok to
+           overwrite existing ado files.
+         - Your self-written ados reside in one directory (e.g.
+           c:\ado\personal).
+<p>
+    The second main purpose of <b>fastcc</b> is related to the following problem:
+    Suppose you have made changes to a file called <i>depfilename</i> that goes into
+    several of your projects.  You do not know, however, the list of projects
+    that directly or indirectly depend on <i>depfilename</i>.  The statement
+<p>
+        <b>. fastcc, alldepon(depfilename) nocopy</b>
+<p>
+    will provide you with screen output on the list of projects in question.
+    This list will also be saved in <b>r()</b>.
+<p>
+    If you leave out option <b>nocopy</b> from the above statement, all of these
+    projects will be re-processed.  That way, after making changes to one
+    particular file you can quickly bring all of your ado projects to the
+    latest stage of your code development.  After a succesful run of the
+    certification scripts for the projects that have been re-processed (or,
+    ideally, after running certification scripts on all your ado projects)
+    you are all set.
+<p>
+    <b><u>--- Warning ---</u></b>
+    There is no <b>replace</b> option in <b>fastcc</b>.  Unless option <i>nocopy</i> is supplied,
+    <b>fastcc</b> will always create or <b>overwrite</b> a file called <i>projectname</i>.ado.
+    Similarly, when using option <b>alldepon</b>, it will create or <b>overwrite</b> files
+    <i>projectname1</i>.ado, <i>projectname2</i>.ado, ..., where these file names
+    correspond to the projects that have been processed.  Be sure that you
+    know what you are doing when using <b>fastcc</b>.
+<p>
+<p>
+<a name="examples"></a><b><u>Examples</u></b>
+<p>
+    Before you can use <b>fastcc</b> you first have to set the default input file
+    path and the target directory for output files.  This requires running
+    two statements (here: with bogus arguments)
+<p>
+        <b>. fastcc, settings(inputfile : c:\mypath\input.txt)</b>
+        <b>. fastcc, settings(targetdir : c:\mytargetdir)</b>
+<p>
+    Since they are stored in a file, these settings are kept in between Stata
+    sessions and reboots.  If you want to change these settings you simply
+    re-issue these commands using different arguments.  You can always query
+    the current settings by
+<p>
+        <b>. fastcc, settings(list)</b>
+<p>
+    Continuing the examples from copycode, the command
+<p>
+        <b>. fastcc proj_a</b>
+<p>
+    is identical to the <b>copycode</b> statement of the first copycode example:
+<p>
+        <b>. copycode proj_a, inputfile(c:\mypath\input.txt)</b>
+            <b>targetfile(c:\mytargetdir\proj_a.ado) replace</b>
+<p>
+    and will produce an identical outputfile.  Note the implied <b>replace</b>
+    option by the usage of <b>fastcc</b>.
+<p>
+    Applying option <b>alldepon</b>,
+<p>
+        <b>. fastcc, alldepon(proj_a.adv)</b>
+<p>
+    is identical to the two <b>copycode</b> statements of the first copycode example
+    and the second copycode example:
+<p>
+        <b>. copycode proj_a, inputfile(c:\mypath\input.txt)</b>
+            <b>targetfile(c:\mytargetdir\proj_a.ado) replace</b>
+        <b>. copycode proj_b, inputfile(c:\mypath\input.txt)</b>
+            <b>targetfile(c:\mytargetdir\proj_b.ado) replace</b>
+<p>
+    and will produce identical output files.  This is because both proj_a and
+    proj_b depend on proj_a.adv.
+<p>
+<p>
+<a name="savedresults"></a><b><u>Saved results</u></b>
+<p>
+    <b>fastcc</b> saves the following in <b>r()</b>:
+<p>
+    Macros         
+                          When supplying <i>projectname</i>, results saved will
+                            correspond exactly to the ones returned by
+                            <b>copycode</b>.
+                          
+                          When using option <b>alldepon</b>, saved results are
+                            instead:
+      <b>r(projectlist)</b>      List of projects that depend on <i>depfilename</i>.
+                            Contains tokens from r(failed_make) but not from
+                            r(failed_check).
+      <b>r(failed_make)</b>      List of projects that could not be processed
+                            because errors occured
+      <b>r(failed_check)</b>     List of projects that could not be checked for
+                            dependencies because errors occured
+<p>
+    All returned values are lower case, irrespective of what the actual
+    casing of the files on disk or in the input file is.
+<p>
+<p>
+<a name="author"></a><b><u>Author</u></b>
+<p>
+    Daniel C. Schneider, Goethe University Frankfurt,
+        schneider_daniel@hotmail.com
+<p>
+<p>
+<a name="references"></a><b><u>References</u></b>
+<p>
+    Schneider, D.C. (2012).  Modular Programming in Stata.  Presentation at
+        the German Stata Users Group Meeting 2012, Berlin.  Available at
+        http://www.stata.com/meeting/germany12/abstracts/desug12_schneider.pd
+</pre>

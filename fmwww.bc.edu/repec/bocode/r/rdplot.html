@@ -1,0 +1,104 @@
+<pre>
+-------------------------------------------------------------------------------
+help for <b>rdplot</b>
+-------------------------------------------------------------------------------
+<p>
+<b><u>Plot residual distribution after model fit</u></b>
+<p>
+        <b>rdplot</b> [<i>plottype</i>] [<b>,</b> <i>residualtype</i> <b><u>rsc</u></b><b>ale(</b><i>exp</i><b>)</b> <b>by(</b><i>varname</i><b>)</b>
+                 [<b>at(</b><i>numlist</i><b>)</b> | <b><u>g</u></b><b>roup(</b><i>#</i><b>)</b>] <i>graph_options</i> <b>plot(</b><i>plot</i><b>)</b> ]
+<p>
+<p>
+<b><u>Description</u></b>
+<p>
+    <b>rdplot</b> is for use after <b>regress</b> and similar commands; see help on the
+    command of interest.
+<p>
+    <b>rdplot</b> graphs residual distributions. The residuals are, by default,
+    those calculated by <b>predict, residuals</b> or (if the previous estimation
+    command was <b>glm</b>) by<b> predict, response</b>.
+<p>
+    The graph by default is a single or multiple dotplot, as produced by
+    <b>dotplot</b>.
+<p>
+    Histograms or box plots may be selected by specifying either <b>histogram</b> or
+    <b>hbox</b> or <b>box</b> as <i>plottype</i>.
+<p>
+    Oneway plots as implemented by <b>onewayplot</b>, skewness plots as implemented
+    by <b>skewplot</b>, or quantile plots as implemented by <b>qplot</b> may be selected by
+    specifying <b>onewayplot</b> or <b>skewplot</b> or <b>qplot</b> as <i>plottype</i>.
+<p>
+        In the latter three cases, <b>onewayplot</b> or <b>skewplot</b> or <b>qplot</b> must be
+        installed first.  In the last case, <b>qplot</b> plottypes may be specified
+        in full (e.g. as <b>qplot line</b>); by default <b>qplot</b> or an abbreviation of
+        it means <b>qplot connected</b>.
+<p>
+    <i>plottype</i> may be abbreviated unambiguously, i.e. down as far as <b>d</b>, <b>hi</b>, <b>hb</b>,
+    <b>b</b>, <b>o</b> or <b>s</b> or <b>q</b>.
+<p>
+<p>
+<b><u>Options</u></b>
+<p>
+    <i>residualtype</i> specifies a type of residual other than the default.  The
+        following types are currently supported: <b><u>a</u></b><b>nscombe</b>, <b><u>d</u></b><b>eviance</b>,
+        <b><u>l</u></b><b>ikelihood</b>, <b><u>p</u></b><b>earson</b>, <b><u>r</u></b><b>esiduals</b>, <b><u>resp</u></b><b>onse</b>, <b><u>rsta</u></b><b>ndard</b>, <b><u>rstu</u></b><b>dent</b>, <b><u>s</u></b><b>core</b>,
+        <b><u>w</u></b><b>orking</b>.
+<p>
+    <b>rscale(</b><i>exp</i><b>)</b> specifies a transformed scale on which to show the residuals
+        using Stata syntax and <b>X</b> as a placeholder for the residual variable
+        name. Thus <b>rscale(X^2)</b> specifies squaring, to show relative
+        contribution to residual variance; <b>rscale(abs(X))</b> specifies absolute
+        value, to set aside sign; <b>rscale(sqrt(abs(X)))</b> specifies root of
+        absolute value, a useful scale on which to check for
+        heteroscedasticity.
+<p>
+    <b>by(</b><i>varname</i><b>)</b> specifies that plots should be given for groups of <i>varname</i>.
+        If <b>at()</b> or <b>group()</b> is also specified, as below, groups are as
+        specified by that option. Otherwise, groups are the distinct values
+        of <i>varname</i>.
+<p>
+    <b>at(</b><i>numlist</i><b>)</b> or <b>group(</b><i>#</i><b>)</b> specifies how groups of a classifying variable
+        are to be determined.  If <b>by(</b><i>varname</i><b>)</b> is specified, as above, <b>at()</b> or
+        <b>group()</b> is applied to that variable. Otherwise, the first-named
+        predictor or covariate used in the previous regression-type command
+        is used. <b>at()</b> and <b>group()</b> are options of <b>egen, cut()</b>: see help on 
+        egen. In brief, <b>at()</b> specifies lower limits of user-defined classes
+        and <b>group()</b> specifies the number of quantile-based groups with
+        (approximately) equal frequency to be used. (With <b>at()</b>, supply one
+        high value beyond the maximum of the data for best results.)
+<p>
+    <i>graph_options</i> are any of the options allowed with whichever of dotplot,
+        histogram, graph hbox, graph box, onewayplot or skewplot is selected
+        as <i>plottype</i>.
+<p>
+    <b>plot(</b>plot<b>)</b> provides a way to add other plots to the generated graph; see 
+        plot_option. <b>plot()</b> is allowed whenever <i>plottype</i> permits (and so not
+        with <b>dotplot</b>, <b>box</b> or <b>hbox</b>).
+<p>
+<p>
+<b><u>Examples</u></b>
+<p>
+    <b>. reg width length</b>
+    <b>. rdplot, g(3)</b>
+    <b>. foreach v in width length {</b>
+    <b>.         gen log`v' = log(`v')</b>
+    <b>. }</b>
+    <b>. reg logwidth loglength</b>
+    <b>. rdplot, g(3)</b>
+    <b>. rdplot b, g(3)</b>
+    <b>. rdplot hb, g(3)</b>
+    <b>. rdplot hi, g(3)</b>
+<p>
+    <b>. glm price weight, link(log)</b>
+    <b>. rdplot hi, anscombe yli(0) normal</b>
+<p>
+<p>
+<b><u>Author</u></b>
+<p>
+    Nicholas J. Cox, University of Durham, U.K.
+        n.j.cox@durham.ac.uk
+<p>
+<p>
+<b><u>Also see</u></b>
+<p>
+</pre>

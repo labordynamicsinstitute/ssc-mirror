@@ -1,0 +1,23 @@
+Title: LagOrder: GAUSS module to determine the optimal lag order in the VAR model based on Information Criteria
+
+Authors: Scott Hacker and Abdulnasser Hatemi-J
+
+Abstract: 
+This GAUSS module calculates four multivariate information criteria (namely- AIC, SBC, HQC and HJC) to determine the optimal lag order in a vector autoregressive (VAR) model. 
+It also provides the matrix of coefficients based on suggested lag length by each information criterion.
+
+Applications are allowed only if proper reference is provided. For non-Commercial applications only.
+
+No performance guarantee is made. Bug reports are welcome.
+
+References: 
+1. Hatemi-J A. (2003) “A New Method to Choose Optimal Lag Order in Stable and Unstable VAR models” Applied Economics Letters, Vol 10(3), 135-137.
+2. Hatemi-J A. (2008) "Forecasting Properties of a New Method to Determine Optimal Lag Order in Stable and Unstable VAR models". Applied Economics Letters, vol 15(4), 239 – 243.
+3. Hacker R. S. and Hatemi-J A. (2008) “Optimal Lag Length Choice in the Stable and Unstable VAR Models under Situations of Homoscedasticity and ARCH”. 
+Journal of Applied Statistics, vol 35(6), 601-615.
+
+Keywords: VAR, Lag order, Information Criterion
+
+Files needed: data file in text format.
+
+          

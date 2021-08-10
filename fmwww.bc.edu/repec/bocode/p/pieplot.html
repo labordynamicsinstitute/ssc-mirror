@@ -1,0 +1,110 @@
+<pre>
+-------------------------------------------------------------------------------
+help for <b>pieplot</b>
+-------------------------------------------------------------------------------
+<p>
+<b><u>Plot pie charts of categorical frequencies</u></b> 
+<p>
+        <b>pieplot</b> <i>yvar</i> [<i>xvar</i>] [<b>if</b> <i>exp</i>] [<b>in</b> <i>range</i>] [<i>weight</i>] [, { <b>sum</b> | <b><u>per</u></b><b>cent</b> }
+                 <b>format(</b>%fmt<b>)</b> <b>gap(</b>relativesize<b>)</b>
+                 <b>plabelsubopts(</b><i>plabel_suboptions</i><b>)</b> <i>graph_pie_options</i> ]
+<p>
+    <b>aweight</b>s, <b>fweight</b>s, and <b>pweight</b>s are allowed; see weight.
+<p>
+<p>
+<b><u>Description</u></b> 
+<p>
+    <b>pieplot</b> plots pie charts of categorical frequencies.
+<p>
+    <b>pieplot</b> <i>yvar</i> plots a pie chart showing the relative frequencies of the
+    distinct values of <i>yvar</i>.
+<p>
+    <b>pieplot</b> <i>yvar</i> <i>xvar</i> plots a set of pie charts showing the relative
+    frequencies of the distinct values of <i>yvar</i> for each distinct value of
+    <i>xvar</i>.
+<p>
+    Typically, but not necessarily, <i>yvar</i> will be a response or outcome or
+    dependent variable, and <i>xvar</i>, whenever specified, will be an explanatory
+    or predictor or independent variable.
+<p>
+    By default pie slices are named according to the categories of <i>yvar</i>. See
+    also the <b>sum</b> and <b>percent</b> options.
+<p>
+    As an aid to learning the syntax of the ultimately more flexible command
+    <b>graph pie</b>, the syntax used to call <b>graph pie</b> is echoed to the Results
+    window by <b>pieplot</b>.
+<p>
+<p>
+<b><u>Remarks</u></b> 
+<p>
+    This command is a convenience command providing an alternative to <b>graph</b>
+    <b>pie, over()</b> for pie charts showing categorical frequencies.
+<p>
+    graph pie supports three syntaxes. The first two are for calculating pie
+    charts from sums of supplied variables and are not of concern here. The
+    third is for counting observations in different categories. <b>pieplot</b>
+    offers an alternative syntax to this third syntax of <b>graph pie</b>.
+<p>
+    A disadvantage of this third syntax is that it is unlike any other <b>graph</b>
+    syntax in that no variable list is expected. In addition, it is unlike
+    other syntax that users may issue with categorical variables.  Thus users
+    must switch between (say) <b>tabulate</b> <i>yvar</i> and <b>graph pie, over(</b><i>yvar</i><b>)</b> or
+    <b>tabulate</b> <i>yvar xvar</i> and <b>graph pie, over(</b><i>yvar</i><b>) by(</b><i>xvar</i><b>)</b>.  <b>pieplot</b> is thus
+    offered as a bridge to ease learning of the third syntax of <b>graph pie</b>.
+<p>
+    A limitation of <b>pieplot</b> is that it does not offer complete control of the
+    presentation of <i>individual</i> pie slice labels. Users desiring such control
+    are encouraged to consider use of the Graph Editor or to switch to <b>graph</b>
+    <b>pie</b>, as appropriate.
+<p>
+<p>
+<b><u>Options</u></b> 
+ 
+    <b>sum</b> specifies that pie slices show sums, typically the number of
+        observations in each category, or more generally the sum of weights
+        in each category. The default is to show names of categories on each
+        slice.
+<p>
+    <b>percent</b> specifies that pie slices show percents, typically the percent of
+        observations in each category, or more generally the percent of the
+        total weight in each category. The default is to show names of
+        categories on each slice.
+<p>
+        Only one of <b>sum</b> and <b>percent</b> may be specified.
+<p>
+    <b>format(</b>%fmt<b>)</b> specifies a numeric format controlling the presentation of
+        sums or percents on all slices.
+<p>
+    <b>gap(</b>relativesize<b>)</b> specifies additional radial distances affecting all
+        slices.
+<p>
+    <b>plabelsubopts()</b> may be used to specify additional suboptions of <b>graph</b>
+        <b>pie, plabel()</b> affecting all slices.
+<p>
+    <i>graph_pie_options</i> are options of graph pie other than <b>plabel()</b>, <b>over()</b>
+        and <b>by()</b>.
+<p>
+<p>
+<b><u>Examples</u></b>
+<p>
+    <b>. sysuse auto, clear</b>
+    <b>. pieplot rep78</b>
+    <b>. pieplot rep78 foreign</b>
+    <b>. pieplot rep78 foreign, sum</b>
+    <b>. pieplot rep78 foreign, sum plabelsubopts(size(*2))</b>
+    <b>. pieplot rep78 foreign, sum plabelsubopts(size(*2)) pie(1, color(red*2))</b>
+        <b>pie(2, color(red)) pie(3, color(red*0.7)) pie(4, color(red*0.5))</b>
+        <b>pie(5, color(red*0.3)) legend(row(1))</b>
+<p>
+<p>
+<b><u>Author</u></b>
+<p>
+    Nicholas J. Cox, Durham University
+    n.j.cox@durham.ac.uk
+<p>
+<p>
+<b><u>Also see</u></b>
+<p>
+    On-line:  help for graph pie
+<p>
+</pre>

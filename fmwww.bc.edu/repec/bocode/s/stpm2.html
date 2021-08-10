@@ -1,0 +1,392 @@
+<pre>
+<b>help stpm2</b> 
+                                          also see:  stpm, stpm2 postestimation
+-------------------------------------------------------------------------------
+<p>
+<b><u>Title</u></b>
+<p>
+    <b>stpm2</b> -- Flexible parametric survival models
+<p>
+<b><u>Syntax</u></b>
+<p>
+        <b>stpm2</b> [<i>varlist</i>] [<i>if</i>] [<i>in</i>] [<b>,</b> <i>options</i>]
+<p>
+<p>
+<a name="options"></a>    <i>options</i>                        Description
+    -------------------------------------------------------------------------
+    Model
+      <b><u>bhaz</u></b><b>ard(</b><i>varname</i><b>)</b>             invokes relative survival models where
+                                     <i>varname</i> holds the expected mortality
+                                     rate (hazard) at the time of death
+      <b><u>bk</u></b><b>nots(</b><i>numlist</i><b>)</b>              boundary knots for baseline
+      <b>bknotstvc(</b><i>knots list</i><b>)</b>        boundary knots for time-dependent effects
+      <b>cure</b>                         fit a cure model
+      <b>df(#)</b>                        degrees of freedom for baseline hazard
+                                     function
+      <b><u>dft</u></b><b>vc(</b><i>df_list</i><b>)</b>               degrees of freedom for each time-dependent
+                                     effect
+      <b>failconvlininit</b>              automatically try lininit option if
+                                     convergence fails
+      <b>knots(</b><i>numlist</i><b>)</b>               knot locations for baseline hazard
+      <b><u>knotst</u></b><b>vc(</b><i>numlist</i><b>)</b>            knot locations for time-dependent effects
+      <b>knscale(</b><i>scale</i><b>)</b>               scale for user-defined knots (default
+                                     scale is time)
+      <b><u>nocon</u></b><b>stant</b>                   suppress constant term
+      <b>rcsbaseoff</b>                   do not include baseline spline variables
+      <b><u>noorth</u></b><b>og</b>                     do not use orthogonal transformation of
+                                     splines variables
+      <b><u>sc</u></b><b>ale(</b><i>scalename</i><b>)</b>             specifies the scale on which the survival
+                                     model is to be fitted
+      <b><u>st</u></b><b>ratify(</b><i>varlist</i><b>)</b>            for backward comapatibility with stpm
+      <b><u>th</u></b><b>eta(</b><i>est</i>|<i>#</i><b>)</b>                 for backward comapatibility with stpm
+      <b>tvc(</b><i>varlist</i><b>)</b>                 varlist of time varying effects
+<p>
+    Reporting
+      <b>alleq</b>                        report all equations
+      <b><u>ef</u></b><b>orm</b>                        exponentiate coefficients
+      <b><u>keepc</u></b><b>ons</b>                     do not drop constraints used in ml routine
+      <b><u>l</u></b><b>evel(</b><i>#</i><b>)</b>                     set confidence level; default is <b>level(95)</b>
+      <b><u>showc</u></b><b>ons</b>                     list constraints in output
+<p>
+    Max options
+      <b><u>const</u></b><b>heta(</b><i>#</i><b>)</b>                 constrain value of theta when using
+                                     Aranda-Ordaz family of link functions
+      <b><u>initt</u></b><b>heta(</b><i>#</i><b>)</b>                 initial value of theta (default 1: log
+                                     cumulative odds scale)
+      <b><u>lin</u></b><b>init</b>                      obtain initial values by first fitting a
+                                     linear function of ln(time)
+      <i>maximize_options</i>             control the maximization process; seldom
+                                     used
+    -------------------------------------------------------------------------
+    You must <b>stset</b> your data before using <b>stpm2</b>; see <b>[ST] stset</b>.
+    <b>fweights</b>, <b>iweights</b>, and <b>pweights</b> may be specified using stset; <b>[ST]</b>
+      <b>stset</b>.
+<p>
+<b><u>Description</u></b>
+<p>
+    <b>stpm2</b> fits flexible parametric survival models (Royston-Parmar models).
+    <b>stpm2</b> can be used with single- or multiple-record or single- or
+    multiple-failure <b>st</b> data.  Survival models can be fitted on the log
+    cumulative hazard scale, the log cumulative odds scale, the standard
+    normal deviate (probit) scale, or on a scale defined by the value of
+    <i>theta</i> using the Aranda-Ordaz family of link functions.
+<p>
+    <b>stpm2</b> can fit the same models as <b>stpm</b>, but is more flexible in that it
+    does not force the knots for time-dependent effects to be the same as
+    those used for the baseline distribution function. In addition, <b>stpm2</b> can
+    fit relative survival models by use of the <b>bhazard()</b> option.
+    Post-estimation commands have been extended over what is available in
+    <b>stpm</b>. <b>stpm2</b> is noticeably faster than <b>stpm</b>.
+<p>
+    See <b>[ST] streg</b> for other (standard) parametric survival models.
+<p>
+<p>
+<b><u>Options</u></b>
+<p>
+        +-------+
+    ----+ Model +------------------------------------------------------------
+<p>
+    <b>bhazard(</b><i>varname</i><b>)</b> is used when fitting relative survival models.  <i>varname</i>
+        gives the expected mortality rate at the time of death/censoring.
+        <b>stpm2</b> gives an error message when there are missing values of
+        <i>varname</i>, since this usually indicates that an error has occurred when
+        merging the expected mortality rates.
+<p>
+    <b>bknots(</b><i>knotslist</i><b>)</b> <i>knotslist</i> is a two-element <i>numlist</i> giving the boundary
+        knots. By default these are located at the minimum and maximum of the
+        uncensored survival times. They are specified on the scale defined by
+        <b>knscale()</b>.
+<p>
+    <b>bknotstvc(</b><i>knotslist</i><b>)</b> <i>knotslist</i> gives the boundary knots for any
+        time-dependent effects. By default these are the same as for the
+        bknots option. They are specified on the scale defined by <b>knscale()</b>.
+<p>
+        For example,
+<p>
+        <b>bknotstvc(x1 0.01 10 x2 0.01 8)</b>
+<p>
+    <b>cure</b> is used when fitting cure models. It forces the cumulative hazard to
+        be constant after the last knot. When the <b>df()</b> option is used
+        together with the <b>cure</b> option the internal knots are placed evenly
+        according to centiles of the distribution of the uncensored log
+        survival times except one that is placed at the 95th centile. Cure
+        models can only be used when modelling on the log cumulative hazard
+        scale (<b>scale(hazard)</b>
+<p>
+    <b>df(</b><i>#</i><b>)</b> specifies the degrees of freedom for the restricted cubic spline
+        function used for the baseline function. <i>#</i> must be between 1 and 10,
+        but usually a value between 1 and 4 is sufficient, with 3 being the
+        default. The <b>knots()</b> option is not applicable if the <b>df()</b> option is
+        specified. The knots are placed at the following centiles of the
+        distribution of the uncensored log survival times:
+<p>
+        ------------------------------------------------------------
+        df  knots        Centile positions
+        ------------------------------------------------------------
+         1    0    (no knots)
+         2    1    50
+         3    2    33 67
+         4    3    25 50 75
+         5    4    20 40 60 80
+         6    5    17 33 50 67 83
+         7    6    14 29 43 57 71 86
+         8    7    12.5 25 37.5 50 62.5 75 87.5
+         9    8    11.1 22.2 33.3 44.4 55.6 66.7 77.8 88.9
+        10    9    10 20 30 40 50 60 70 80 90     
+        ------------------------------------------------------------
+        
+        Note that these are <i>interior knots</i> and there are also boundary knots
+        placed at the minimum and maximum of the distribution of uncensored
+        survival times.
+<p>
+        When the <b>cure</b> option is used df must be between 3 and 11 and the
+        default location of the knots are as follows.
+<p>
+        ------------------------------------------------------------
+        df  knots        Centile positions
+        ------------------------------------------------------------
+         3    2    50 95
+         4    3    33 67 95
+         5    4    25 50 75 95
+         6    5    20 40 60 80 95
+         7    6    17 33 50 67 83 95
+         8    7    14 29 43 57 71 86 95
+         9    8    12.5 25 37.5 50 62.5 75 87.5 95
+        10    9    11.1 22.2 33.3 44.4 55.6 66.7 77.8 88.9 95
+        11   10    10 20 30 40 50 60 70 80 90 95                
+        ------------------------------------------------------------
+<p>
+<p>
+    <b>dftvc(</b><i>df_list</i><b>)</b> gives the degrees of freedom for time-dependent effects in
+        <i>df_list</i>. The potential degrees of freedom are listed under the <b>df()</b>
+        option. With 1 degree of freedom a linear effect of log time is
+        fitted.  If there is more than one time-dependent effect and
+        different degress of freedom are requested for each time-dependent
+        effect then the following syntax applies:
+<p>
+        <b>dftvc(x1:3 x2:2 1)</b>
+<p>
+        This will use 3 degrees of freedom for <b>x1</b>, 2 degrees of freedom for
+        <b>x2</b> and 1 degree of freedom for all remaining time-dependent effects.
+<p>
+    <b>failconvlininit</b> automatically tries the <b>lininit</b> option of the model fails
+        to converge.
+<p>
+    <b>knots(</b><i># </i>[<i># </i>...]<b>)</b> specifies knot locations for the baseline distribution
+        function, as opposed to the default locations set by <b>df()</b>. Note that
+        the locations of the knots are placed on the scale defined by
+        <b>knscale</b>.  However, the scale used by the restricted cubic spline
+        function is always log time. Default knot positions are determined by
+        the <b>df()</b> option.
+<p>
+    <b>knotstvc(</b><i>knotslist</i><b>)</b> defines numlist <i>knotslist</i> as the location of the
+        interior knots for time-dependent effects. If different knots are
+        required for different time-dependent effects the option is
+        specified, for example, as follows:
+<p>
+        <b>knotstvc(x1 1 2 3 x2 1.5 3.5)</b>
+<p>
+    <b>knscale(</b><i>scale</i><b>)</b> sets the scale on which user-defined knots are specified.
+        <b>knscale(time)</b> denotes the original time scale, <b>knscale(log)</b> the log
+        time scale and <b>knscale(centile)</b> specifies that the knots are taken to
+        be centile positions in the distribution of the uncensored log
+        survival times. The default is <b>knscale(time)</b>.
+<p>
+    <b>noconstant</b>; see <b>[ST] estimation options</b>.
+<p>
+    <b>noorthog</b> suppresses orthogonal transformation of spline variables.
+<p>
+    <b>rcsbaseoff</b> drops baseline spline variables from the model. With this
+        option you will generally want to specify your baseline separatly in
+        two or more strata. For example, the following code will fit a
+        separate baseline hazard for males and females.
+<p>
+        <b>stpm2 males females, scale(hazard) tvc(males females) dftvc(3) nocons</b>
+        <b>rcsbaseoff</b>
+<p>
+    Note that identical fitted values would be obtained if using the
+        following.
+<p>
+        <b>stpm2 females, df(3) scale(hazard) tvc(females) dftvc(3)</b>
+<p>
+    <b>scale(</b><i>scalename</i><b>)</b> specifies on which scale the survival model is to be
+        fitted.
+<p>
+        <b>scale(</b><b><u>h</u></b><b>azard)</b> fits a model on the log cumulative hazard scale, i.e.
+        the scale of ln(-ln S(t)). If no time-dependent effects are
+        specified, the resulting model has proportional hazards.
+<p>
+        <b>scale(</b><b><u>o</u></b><b>dds)</b> fits a model on the log cumulative odds scale, i.e. ln((1
+        - S(t))/S(t)). If no time-dependent effects are specified then this
+        is a gives a proportional odds model.
+<p>
+        <b>scale(</b><b><u>n</u></b><b>ormal)</b> fits a model on the normal equivalent deviate scale
+        (i.e. a probit link for the survival function, invnorm(1 - S(t))).
+<p>
+        <b>scale(</b><b><u>t</u></b><b>heta)</b> fits a model on a scale defined by the value of theta
+        for the Aranda-Ordaz family of link functions, i.e.
+        ln((S(t)^(-<i>theta</i>) - 1)/<i>theta</i>). Note that theta = 1 corresponds to a
+        proportional odds model and theta = 0 to a proportional cumulative
+        hazards model.
+<p>
+    <b>stratify(</b><i>varlist</i><b>)</b> is provided for compatibility with stpm.  Members of
+        <i>varlist</i> are modelled with time-dependent effects. See the <b>tvc()</b> and
+        <b>dftvc()</b> options for <b>stpm2</b>'s way of specifying time-dependent effects.
+<p>
+    <b>theta(est</b>|<i>#</i><b>)</b> is provided for compatibility with stpm. <b>est</b> requests that
+        theta be estimated, whereas <i>#</i> fixes theta to <i>#</i>. See <b>constheta()</b> and
+        <b>inittheta()</b> for <b>stpm2</b>'s way of specifying theta.
+<p>
+    <b>tvc(</b><i>varlist</i><b>)</b> gives the name of the variables that are time-dependent.
+        Time-dependent effects are fitted using restricted cubic splines.
+        The degrees of freedom are specified using the <b>dftvc()</b> option.
+<p>
+<p>
+        +-----------+
+    ----+ Reporting +--------------------------------------------------------
+<p>
+    <b>alleq</b> reports all equations used by ml. The models are fitted by using
+        various constraints for parameters associated with the derivatives of
+        the spline functions. These parameters are generally not of interest
+        and thus are not shown by default. In addition, an extra equation is
+        used when fitting delayed entry models, and again this is not shown
+        by default.
+<p>
+    <b>eform</b> reports the exponentiated coefficents. For models on the log
+        cumulative hazard scale <b>scale(</b><i>hazard</i><b>)</b> this gives hazard ratios if the
+        covariate is not-time dependent. Similarly, for models on the log
+        cumulative odds scale <b>scale(</b><i>odds</i><b>)</b> this option will give odds ratios
+        for non time-dependent effects.
+<p>
+    <b>keepcons</b> prevents the constraints imposed by <b>stpm2</b> on the derivatives of
+        the spline function when fitting delayed entry models being dropped.
+        By default, the constraints are dropped.
+<p>
+    <b>level(</b><i>#</i><b>)</b> specifies the confidence level, as a percentage, for confidence
+        intervals.  The default is <b>level(95)</b> or as set by <b>set level</b>.
+<p>
+    <b>showcons</b> The constraints used by <b>stpm2</b> for the derivatives of the spline
+        function and when fitting delayed entry models are not listed by
+        default. Use of this option lists them in the output.
+<p>
+<a name="maximize_options"></a>        +-------------+
+    ----+ Max options +------------------------------------------------------
+ 
+    <b>constheta(</b><i>#</i><b>)</b> constrains the value of theta, i.e. it is treated as a known
+        constant.
+<p>
+    <b>inittheta(</b><i>#</i><b>)</b> gives an initial value for theta in the Aranda-Ordaz family
+        of link functions.
+<p>
+    <b>lininit</b> This obtains initial values by fitting only the first spline
+        basis function (i.e. a linear function of log survival time).  This
+        option is seldom needed.
+<p>
+    <i>maximize_options</i>; <b><u>dif</u></b><b>ficult</b>, <b><u>tech</u></b><b>nique(</b><i>algorithm_spec</i><b>)</b>, <b><u>iter</u></b><b>ate(</b><i>#</i><b>)</b>,
+        [<b>no</b>]<b><u>lo</u></b><b>g</b>, <b><u>tr</u></b><b>ace</b>, <b><u>grad</u></b><b>ient</b>, <b>showstep</b>, <b><u>hess</u></b><b>ian</b>, <b><u>shownr</u></b><b>tolerance</b>,
+        <b><u>tol</u></b><b>erance(</b><i>#</i><b>)</b>, <b><u>ltol</u></b><b>erance(</b><i>#</i><b>)</b> <b><u>gtol</u></b><b>erance(</b><i>#</i><b>)</b>, <b><u>nrtol</u></b><b>erance(</b><i>#</i><b>)</b>,
+        <b><u>nonrtol</u></b><b>erance</b>, <b>from(</b><i>init_specs</i><b>)</b>; see <b>[R] maximize</b>.  These options are
+        seldom used, but the <b>difficult</b> option may be useful if there are
+        convergence problems when fitting models that use Aranda-Ordaz family
+        of link functions.
+<p>
+<p>
+<b><u>Remarks</u></b>
+<p>
+    Let t denote time. <b>stpm2</b> works by first calculating the survival function
+    after fitting a Cox proportional hazards model. The procedure is
+    illustrated for proportional hazards models, specified by option
+    <b>scale(hazard)</b>. S(t) is converted to an estimate of the log cumulative
+    hazard function Z(t) by the formula
+<p>
+        Z(t) = ln(-ln S(t))
+<p>
+    This estimate of Z(t) is then smoothed on ln(t) using regression splines
+    with knots placed at certain quantiles of the distribution of t. The knot
+    positions are chosen automatically if the spline complexity is specified
+    by the <b>df()</b> option, or manually by way of the <b>knots()</b> option. (Note that
+    the knots are placed on values of ln(t), not t.) Denote the predicted
+    values of the log cumulative hazard function by Z_hat(t). The density
+    function f(t) is
+<p>
+        f(t) = -dS(t)/dt = dS/dZ_hat dZ_hat/dt = S(t) exp(Z_hat) dZ_hat(t)/dt
+<p>
+    dZ_hat(t)/dt is computed from the regression coefficients of the fitted
+    spline function. The estimated survival function is calculated as
+<p>
+        S_hat(t) = exp(-exp Z_hat(t)).
+<p>
+    The hazard function is calculated as f(t)/S_hat(t).
+<p>
+    If <i>varlist</i> is specified, the baseline survival function (i.e. at zero
+    values of the covariates) is used instead of the survival function of the
+    raw observations. With <b>df(1)</b> a Weibull model is fitted.
+<p>
+    With <b>scale(normal)</b>, smoothing is of the Normal quantile function,
+    invnorm(1 - S(t)), instead of the log cumulative hazard function. With
+    <b>df(1)</b> a lognormal model is fitted.
+<p>
+    With <b>scale(odds)</b>, smoothing is of the log odds of failure function, ln((1
+    - S(t))/S(t)), instead of the log cumulative hazard function. With <b>df(1)</b>
+    a log-logistic model is fitted.
+<p>
+    Estimation is performed by maximum likelihood. Optimisation uses the
+    default technique (<b>nr</b>, meaning Stata's version of Newton-Raphson
+    iteration.
+<p>
+<p>
+<b><u>Examples</u></b>
+<p>
+    ---------------------------------------------------------------------------
+    Setup
+<p>
+        webuse brcancer
+        stset rectime, failure(censrec = 1)
+<p>
+    Proportional hazards model
+        stpm2 hormon, scale(hazard) df(4) eform
+<p>
+    Proportional odds model
+        stpm2 hormon, scale(odds) df(4) eform
+<p>
+    Time-dependent effects on cumulative hazard scale
+        stpm2 hormon, scale(hazard) df(4) tvc(hormon) dftvc(3)
+<p>
+    User defined knots at centiles of uncensored event times
+        stpm2 hormon, scale(hazard) knots(20 50 80) knscale(centile)
+<p>
+<p>
+<b><u>Author</u></b>
+<p>
+    Paul Lambert, University of Leicester, UK.  (
+    paul.lambert@leicester.ac.uk)
+<p>
+    The option to fit cure models was implemented by Therese Andersson,
+    Karolinska Institutet, Stockholm, Sweden (therese.m-l.andersson@ki.se)
+<p>
+    Various other additions and suggestions by Patrick Royston, MRC Clinical
+    Trials Unit, London, UK.  (pr@ctu.mrc.ac.uk)
+<p>
+<p>
+<b><u>References</u></b>
+<p>
+    P. C. Lambert and P. Royston. 2009. Further development of flexible
+        parametric models for survival analysis. Stata Journal, in press.
+<p>
+    C. P. Nelson, P. C. Lambert, I. B. Squire and D. R. Jones. 2007.
+        Flexible parametric models for relative survival, with application in
+        coronary heart disease. Statistics in Medicine 26:5486–5498.
+<p>
+    P. Royston. 2001. Flexible alternatives to the Cox model, and more.  The
+        Stata Journal 1:1-28.
+<p>
+    P. Royston and M. K. B. Parmar. 2002. Flexible proportional-hazards and
+        proportional-odds models for censored survival data, with application
+        to prognostic modelling and estimation of treatment effects.
+        Statistics in Medicine 21:2175-2197.
+<p>
+<p>
+<b><u>Also see</u></b>
+<p>
+    Online:  <b>[ST] stpm2 postestimation</b>; <b>[ST] stset</b>, stpm
+</pre>

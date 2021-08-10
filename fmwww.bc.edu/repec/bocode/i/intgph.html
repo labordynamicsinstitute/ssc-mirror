@@ -1,0 +1,268 @@
+<pre>
+<b>help intgph</b>                                   <b> Bennet Zelner and Dan Blanchette</b>
+-------------------------------------------------------------------------------
+<p>
+<b><u>Title</u></b>
+<p>
+         <b>intgph</b> -- Employs King et al.'s (2000) simulation-based approach to
+                     interpret interaction effects in selected nonlinear
+                     models and presents the results graphically in the
+                     manner suggested in Zelner (2009)
+<p>
+<p>
+<b><u>Syntax</u></b>
+<p>
+        <b>intgph</b> <i>modelname</i> depvar [<i>indepvars</i>] [<i>if exp</i>] [<i>in range</i>] [<i>weight</i>] <b>,</b>
+                options
+<p>
+<p>
+    <i>options</i>                 Description
+    -------------------------------------------------------------------------
+    Required
+<p>
+      <b>ivars(</b><i>varlist</i><b>)</b>         names of the two variables to be interacted
+<p>
+    Optional
+<p>
+      <b>cmdopts(</b><i>options</i><b>)</b>       valid options for the estimation command
+                              specified by <i>modelname</i>
+      <b><u>l</u></b><b>evel(</b><i>#</i><b>)</b>               a positive integer between <b>1</b> and <b>99</b> (default
+                              value is <b>95</b>)
+      <b>sims(</b><i>#</i><b>)</b>                a positive integer (default value is <b>1000</b>)
+      <b>setx(</b><i>options</i><b>)</b>          options for <b>setx</b> command
+      <b>genname(</b><i>newvars</i><b>)</b>       <b>genname</b> option for <b>estsimp</b> command
+      <b>difvals(</b><i>numlist</i><b>)</b>       pair of values of the second interacted variable
+                              used to calculate the difference in predicted
+                              values plotted on the chart's y-axis
+      <b>xinc(</b><i>#</i><b>)</b>                positive integer specifying the number of points
+                              on the chart's x-axis
+      <b>gphdif</b>                 produces a chart showing two sets of predicted
+                              values rather than difference in predicted
+                              values
+      <b>gphsym</b>                 produces chart with symbols denoting statistical
+                              significance instead of confidence interval
+                              bars
+      <b><u>xt</u></b><b>itle(</b><i>axis_title</i><b>)</b>     title for chart's <b>X</b> axis
+      <b><u>yt</u></b><b>itle(</b><i>axis_title</i><b>)</b>     title for chart's <b>Y</b> axis
+      <b><u>g</u></b><b>phopts(</b><i>options</i><b>)</b>       additional twoway options
+      <b><u>slopet</u></b><b>est(</b><i>numlist</i><b>)</b>     pair of x-axis values used to test corresponding
+                              predicted values against the null hypothesis
+                              that they are equal to one another
+      <b><u>mod</u></b><b>data</b>                permits dataset in memory to be modified
+      <b>verbose</b>                runs <b>intgph</b> with more output to results window
+<p>
+<p>
+<b><u>Description</u></b>
+<p>
+    <b>intgph</b> estimates a selected nonlinear model that includes a
+    multiplicative interaction term, and uses simulated parameters generated
+    by King et al.'s (2000) <b>estsimp</b> command (part of the "Clarify" suite of
+    commands) to evaluate and graphically portray the effect of one
+    interacted variable conditional on different values of the other
+    interacted variable. The first interacted variable must be continuous and
+    the second interacted variable (whose effect is assessed conditional on
+    the first interacted variable) may be either continuous or binary.
+    Neither of the interacted variables should appear in a higher-order term
+    in the model. Currently supported models include <b>logit</b>, <b>probit</b>, <b>poisson</b>
+    and <b>nbreg</b>
+<p>
+    The default chart produced by <b>intgph</b> is the type illustrated in Zelner
+    (2009). The y-axis of the chart measures the change in the predicted
+    probability of a positive outcome (for <b>logit</b> and <b>probit</b> models) or
+    incidence (for <b>poisson</b> and <b>nbreg</b> models) associated with a discrete
+    change in the value of the second interacted variable.  <b>intgph</b> plots this
+    quantity and (by default) the confidence interval that surrounds it
+    against the observed range of values of the first interacted variable,
+    measured on the x-axis. Alternatively, <b>intgph</b> can also produce a chart
+    showing the predicted values themselves (rather than the difference in
+    predicted values). <b>intgph</b> optionally creates a series of new variables
+    that can be used to produce additional charts or conduct hypothesis
+    tests.
+<p>
+<a name="options"></a><b><u>Options</u></b>
+<p>
+    <b>ivars(</b><i>varlist</i><b>)</b> identifies the two variables, <b>ivar1</b> and <b>ivar2</b>, to be
+        included in the interaction term.  The variables should not appear
+        explicitly in <i>indepvars</i>; <b>intgph</b> will automatically add them to the
+        model along with the interaction term. <b>ivar1</b> must be continuous and
+        <b>ivar2</b> may be either binary or continuous.
+<p>
+    <b><u>l</u></b><b>evel(</b><i>#</i><b>)</b> sets the significance level used to plot confidence intervals,
+        conduct hypothesis tests etc. The value of <b>level</b> must be an integer
+        between <b>1</b> and <b>99</b>. If unspecified, <b>level</b> takes a default value of <b>95</b>.
+<p>
+    <b>cmdopts(</b><i>options</i><b>)</b> allows the user to add command options to the estimation
+        command specified by <i>modelname</i>.  Options should be typed as they
+        normally would, e.g., <b>cmdopts(vce(r))</b> produces robust standard
+        errors.
+<p>
+    <b>sims(</b><i>#</i><b>)</b> is a positive integer specifying the number of simulations
+        performed by <b>estsimp</b>. The default is <b>1000</b> simulations.  For more
+        information, consult the help entry for <b>estsimp</b>.
+<p>
+    <b>genname(</b><i>newvar</i><b>)</b> specifies a stub name for the newly created variables
+        containing the simulated coefficient values created by <b>estsimp</b>. The
+        default variable names are <b>b1</b>, <b>b2</b>, ... , <b>bk</b>. For more information,
+        consult the help entry for <b>estsimp</b>.
+<p>
+    <b>setx(</b><i>options</i><b>)</b> sets the values of the variables in <i>indepvars</i> for purposes
+        of creating the chart. If the <b>setx</b> option is not specified, <b>intgph</b>
+        will automatically set the value of each non-binary variable in
+        <i>indepvars</i> to its estimating sample mean, and each binary variable to
+        its estimating sample mode. If the <b>setx</b> option is specified (using
+        the syntax described in the help entry for <b>setx</b>) to assign values to
+        any of the variables in <i>indepvars</i>, then these values will override
+        the default values set by <b>intgph</b>, and the remaining variables in
+        <i>indepvars</i> will retain their default values. In no case will the <b>setx</b>
+        option affect the values of <b>ivar1</b> and <b>ivar2</b> used to create the chart.
+<p>
+    <b>difvals(</b><i>numlist</i><b>)</b> sets the two values of the second interacted variable
+        used to calculate the difference in predicted values plotted on the
+        chart's y-axis by default. This difference is equal to
+        <b>Pr(Y=1|ivar2 = hi_val) - Pr(Y=1|ivar2 = lo_val)</b> for <b>logit</b> and <b>probit</b>
+        models, and <b>E(Y|ivar2 = </b><i>hi_val</i><b>) - E(Y|ivar2 = </b><i>lo_val</i><b>)</b> for <b>poisson</b> and
+        <b>nbreg</b> models. If <b>difvals</b> is not specified and <b>ivar2</b> is binary, then
+        <b>lo_val</b> takes a default value of <b>0</b> and <b>hi_val</b> takes a default value of
+        1. If <b>difvals</b> is not specified and <b>ivar2</b> is continuous, then <b>lo_val</b>
+        takes a default value of <b>ivar2</b>'s estimating sample mean and <b>hi_val</b>
+        takes a default value of <b>ivar2</b>'s estimating sample mean plus one
+        standard deviation. Note that the <b>gphdif</b> option can be used to plot
+        the predicted values themselves rather than the difference in
+        predicted values.
+<p>
+    <b>xinc(</b><i>#</i><b>)</b> is a positive integer specifying the number of points on the
+        chart's x-axis for which the values on the y-axis are calculated and
+        plotted. The x-axis points are evenly spaced between <b>ivar2</b>'s
+        estimating sample minimum and maximum. If <b>xinc</b> is not specified, it
+        takes a default value of <b>100</b>. Higher values of <b>xinc</b> will increase the
+        amount of time it takes <b>intgph</b> to run.
+<p>
+    <b>gphdif</b> produces a chart showing the two sets of predicted values
+        associated with <b>lo_val</b> and <b>hi_val</b> from the <b>difvals(</b><i>numlist</i><b>)</b> option
+        rather than the difference between these predicted values. If <b>gphdif</b>
+        is specified, then for <b>logit</b> and <b>probit</b> models, the chart will
+        include separate schedules for <b>Pr(Y=1|ivar2 = hi_val)</b> and
+        <b>Pr(Y=1|ivar2 = lo_val)</b>, and for <b>poisson</b> and <b>nbreg</b> models, the chart
+        will include separate schedules for <b>E(Y|ivar2 = </b><i>hi_val</i><b>)</b> and
+        <b>E(Y|ivar2 = </b><i>lo_val</i><b>)</b>.
+<p>
+    <b>gphsym</b> produces a chart that uses symbols to denote the regions in which
+        the values plotted on the y-axis differ significantly from zero at
+        the level specified in <b><u>l</u></b><b>evel(</b><i>#</i><b>)</b>}. If <b>gphsym</b> is specified, the chart
+        will not include confidence interval bars.
+<p>
+    <b><u>xt</u></b><b>itle(</b><i>axis_title</i><b>)</b> sets the x-axis title (specified as a string
+        surrounded by quotation marks) for the chart produced by <b>intgph</b>. If
+        not specified, the default title for the x-axis is the variable name
+        of <b>ivar1</b>.
+<p>
+    <b><u>yt</u></b><b>itle(</b><i>axis_title</i><b>)</b> sets the y-axis title (specified as a string
+        surrounded by quotation marks) for the chart produced by <b>intgph</b>. If
+        not specified, <b>intgph</b> will choose an appropriate default title.
+<p>
+    <b><u>g</u></b><b>phopts(</b><i>options</i><b>)</b>} specifies additional <b>twoway_options</b> options for the
+        chart. For more information, consult the help entry for 
+        <b>twoway_options</b>.
+<p>
+    <b><u>slopet</u></b><b>est(</b><i>numlist</i><b>)</b> tests whether the "slope" of a specified segment of
+        the schedule representing the difference in predicted probabilities
+        in the default chart type (i.e., when <b>gphdif</b> is not specified) is
+        significantly different from zero at the level specified in <b><u>l</u></b><b>evel(</b><i>#</i><b>)</b>
+        (95% by default). Because the confidence intervals calculated by
+        <b>intgph</b> are derived using the simulation-based approach, there is no
+        mathematical formula for these intervals or related inferential
+        statistics. The "slope" test is thus a test of the null hypothesis
+        that a double difference--the difference between the difference in
+        predicted values associated with one value of the variable appearing
+        on the x-axis differs from that associated with a second value--is
+        different from zero. The arguments of <b><u>slopet</u></b><b>est(</b><i>numlist</i><b>)</b> are the two
+        values of the variable on the x-axis for which one- and two-tailed
+        versions of this test are performed. <b><u>slopet</u></b><b>est(</b><i>numlist</i><b>)</b> accepts
+        multiple pairs of x-axis variable values.
+<p>
+    <b><u>mod</u></b><b>data</b> instructs <b>intgph</b> to leave variables that it creates in the
+        dataset. These include the simulated coefficient values and the
+        variables used to produce the charts: <b>X</b>, which contains the values of
+        <b>ivar1</b> used to plot the chart; <b>Y0</b>, which contains the predicted value
+        associated with the first of the two values to which <b>ivar2</b> is set
+        using the <b>difvals</b> option; <b>Y1</b>, which contains the predicted value
+        associated with the second of the two values to which <b>ivar2</b> is set
+        using the <b>difvals</b> option; <b>dY</b>, the difference between the predicted
+        values <b>Y1</b> and <b>Y0</b>; and six variables ending in the stub <b>lb</b> or <b>ub</b>,
+        which respectively represent the lower and upper bounds of the
+        confidence intervals surrounding <b>Y0</b>, <b>Y1</b>, and <b>dY</b>.
+ 
+<p>
+    <b>verbose</b> creates additional screen output showing the intermediate steps
+        used to construct the chart.
+<p>
+<p>
+<p>
+<b><u>Examples</u></b>
+<p>
+    Setup
+    <b>. webuse union</b>
+<p>
+    Logit model with black and time variables interacted
+    <b>. intgph logit union south age grade not_smsa, ivars(t0 black)</b>
+<p>
+    Same as above + robust standard errors
+    <b>. intgph logit union south age grade not_smsa, ivars(t0 black) cmdopts(r)</b>
+<p>
+    Same as above + set value of south to 1 when producing the chart
+    <b>. intgph logit union south age grade not_smsa, ivars(t0 black) cmdopts(r)</b>
+        <b>setx(south 1)</b>
+<p>
+    Same as above + include second interaction term and set relevant variable
+    values meaningfully
+    <b>. intgph logit union south age grade not_smsa southXt, ivars(t0 black)</b>
+        <b>cmdopts(r) setx(south 1 t0 5 southXt 5)</b>
+       
+    Same as above + perform hypothesis test that Pr(union=1|t0=5) ~=
+    Pr(union=1|t0=15)
+    <b>. intgph logit union south age grade not_smsa southXt, ivars(t0 black)</b>
+        <b>cmdopts(r) setx(south 1 t0 5 southXt 5) slopetest(5 15)</b>
+<p>
+    Same as above + plot predicted probabilities rather than difference in
+    predicted probabilities}
+    <b>. intgph logit union south age grade not_smsa southXt, ivars(t0 black)</b>
+        <b>cmdopts(r) setx(south 1 t0 5 southXt 5) slopetest(5 15) gphdif</b>
+<p>
+<p>
+<p>
+<p>
+<b><u>Reference</u></b>
+<p>
+    If you use this program, please cite:
+<p>
+        Zelner, Bennet A. 2009. "Using simulation to interpret results
+        from logit, probit, and other nonlinear models." Strategic
+        Management Journal. doi: 10.1002/smj.783 (print version forthcoming).
+ 
+    and:
+<p>
+        Gary King, Michael Tomz, and Jason Wittenberg. 2000. "Making
+        the most of statistical analyses: improving interpretation and
+        presentation." American Journal of Political Science 44, no. 2
+        (April): 347-61.
+<p>
+<p>
+<p>
+<b><u>Authors</u></b>
+<p>
+    Bennet A. Zelner
+    Assistant Professor of Strategy
+    Duke University's Fuqua School of Business
+    bzelner@duke.edu
+<p>
+    Dan Blanchette
+    Center for Entrepreneurship and Innovation
+    Duke University's Fuqua School of Business
+    Dan.Blanchette@Duke.edu
+<p>
+<p>
+<b><u>Also see</u></b>
+<p>
+    Online: <b>estsimp</b>, <b>simqi</b>, <b>setx</b>, <b>twoway options</b>, <b>logit</b>, <b>probit</b>, <b>poisson</b> and 
+             <b>nbreg</b>
+</pre>

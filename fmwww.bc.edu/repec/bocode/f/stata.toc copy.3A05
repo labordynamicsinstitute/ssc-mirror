@@ -1,0 +1,23 @@
+p factext module to extract factors from a variable created by parmest
+p fastcd module to automate changing directories
+p fbar module to produce bar charts showing frequencies of categorical variables 
+p fedit module to find and edit text file from within Stata
+p fsum module to generate and format summary statistics
+p full_palette module to display color palette
+p far5	module to compute floating absolute risk for Cox and conditional logit regression
+p feldti	module to compare two independent coefficients of reliability
+p finddup	module to find non-unique values or observations
+p findval	module to find a specific value
+p fitmacro	module to evaluate fit  of loglinear GLM Poisson models
+p fitstat	module to compute fit statistics for single equation regression models
+p flower	module to draw sunflower plots
+p fndmtch	module to find matching values
+p fndmtch2	module to find matching values for one variable in another 
+p forfile	module to execute command for each matching file
+p fracdiff	module to generate fractionally-differenced timeseries
+p fracirf	module to compute impulse response function for fractionally-integrated timeseries
+p fsreg	module for forward search regression
+p fodstr	modules to handle fractional day calculations 
+p for211	modules to document features of for and extend the for command 
+p fourier	module to generate Fourier series
+p fulltab	module to generate 'full tables' which can be stacked into matrices

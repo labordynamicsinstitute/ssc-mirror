@@ -1,0 +1,375 @@
+<pre>
+-------------------------------------------------------------------------------
+help for <b>somersd</b>               (SJ6-3: snp15_6; SJ5-3: snp15_5; SJ3-3: snp15_4;
+                               STB-61: snp15_3; STB-58: snp15_2; STB-57: snp15)
+-------------------------------------------------------------------------------
+<p>
+<b><u>Somers' D or Kendall's tau-a with confidence intervals</u></b>
+<p>
+        <b>somersd</b> <i>varlist</i> [<i>weight</i>] [<i>if</i>] [<i>in</i>] [<b>,</b> <b><u>ta</u></b><b>ua</b>
+                     <b><u>tr</u></b><b>ansf(</b><i>transformation_name</i><b>)</b> <b><u>td</u></b><b>ist</b> <b><u>ce</u></b><b>nind(</b><i>cenind_list</i><b>)</b>
+                     <b><u>cl</u></b><b>uster(</b><i>varname</i><b>)</b> <b><u>cfw</u></b><b>eight(</b><i>expression</i><b>)</b>
+                     <b><u>fu</u></b><b>ntype(</b><i>functional_type</i><b>)</b> <b><u>ws</u></b><b>trata(</b><i>varlist</i><b>)</b>
+                     <b><u>bs</u></b><b>trata(</b><i>varlist</i> | <b>_n)</b> <b>no</b><b><u>tre</u></b><b>e</b> <b><u>l</u></b><b>evel(</b><i>#</i><b>)</b>
+                     <b><u>ci</u></b><b>matrix(</b><i>new_matrix</i><b>)</b> ]
+<p>
+    where <i>transformation_name</i> is one of
+<p>
+        <b>iden</b> | <b>z</b> | <b>asin</b> | <b>rho</b> | <b>zrho</b> | <b>c</b>
+<p>
+    and <i>functional_type</i> is one of
+<p>
+        <b><u>w</u></b><b>cluster</b> | <b><u>b</u></b><b>cluster</b> | <b><u>v</u></b><b>onmises</b>
+<p>
+    and <i>cenind_list</i> is a list of variable names and/or zeros.
+<p>
+    <b>fweight</b>s, <b>iweight</b>s, and <b>pweight</b>s are allowed; see weight.
+<p>
+    <b>bootstrap</b>, <b>by</b>, <b>jackknife</b>, <b>statsby</b>, <b>svy jackknife</b>, <b>svy bootstrap</b>, <b>svy brr</b>
+    and <b>svy sdr</b> are allowed; see <b>prefix</b>.
+<p>
+<p>
+<b><u>Description</u></b>
+<p>
+    <b>somersd</b> computes confidence intervals for a wide range of rank
+    statistics.  It includes 3 component modules, each with a .pdf manual,
+    which is distributed with the <b>somersd</b> package as an ancillary file.  The
+    modules are as follows:
+<p>
+   Module    File          Calculates confidence intervals for
+   --------------------------------------------------------------------------
+   <b>somersd</b>   <b>somersd.pdf</b>   Kendall's tau-a and Somers' D
+   <b>censlope</b>  <b>censlope.pdf</b>  Theil-Sen median (and other percentile) slopes
+   <b>cendif</b>    <b>cendif.pdf</b>    Hodges-Lehmann median (and other percentile)
+                               differences
+<p>
+    The modules <b>censlope</b> and <b>cendif</b> require the module <b>somersd</b> in order to
+    work and use a lot of the same options.
+<p>
+    The module <b>somersd</b> calculates values of Somers' D or Kendall's tau-a for
+    the first variable of <i>varlist</i> as a predictor of each of the other
+    variables in <i>varlist</i>, with estimates and jackknife variances and
+    confidence intervals output as if for the parameters of a maximum
+    likelihood fit. It is possible to use <b>lincom</b> to output confidence limits
+    for differences between the population Somers' D or tau-a values.
+<p>
+<p>
+<b><u>Options for use with somersd</u></b>
+<p>
+    <b>taua</b> causes <b>somersd</b> to calculate Kendall's tau-a. If <b>taua</b> is absent, then
+        Somers' D is calculated.
+<p>
+    <b>transf(</b><i>transformation_name</i><b>)</b> specifies that the estimates are to be
+        transformed, defining a confidence level for the transformed
+        population value. <b>iden</b> (identity or untransformed) is the default. <b>z</b>
+        specifies Fisher's z (the hyperbolic arctangent), <b>asin</b> specifies
+        Daniels' arcsine, <b>rho</b> specifies Greiner's rho (Pearson correlation
+        estimated using Greiner's relation), <b>zrho</b> specifies the <b>z</b>-transform
+        of Greiner's rho, and <b>c</b> specifies Harrell's c.  If the first variable
+        of the <i>varlist</i> is a binary indicator of a disease and the other
+        variables are quantitative predictors for that disease, then
+        Harrell's c is the area under the receiver operating characteristic
+        (ROC) curve.  <b>somersd</b> recognizes the transformation names <b>arctanh</b> and
+        <b>atanh</b> as synonyms for <b>z</b>, <b>arcsin</b> and <b>arsin</b> as synonyms for <b>asin</b>, <b>sinph</b>
+        as a synonym for <b>rho</b>, <b>zsinph</b> as a synonym for <b>zrho</b>, and <b>roc</b> and <b>auroc</b>
+        as synonyms for <b>c</b>.  It also recognizes unambiguous abbreviations for
+        transformation names, such as <b>id</b> for <b>iden</b> or <b>aur</b> for <b>auroc</b>.  The
+        transformations are calculated using a Mata function.
+<p>
+    <b>tdist</b> specifies that the estimates are assumed to have a t distribution
+        with <b>N-1</b> degrees of freedom, where <b>N</b> is the number of clusters if
+        <b>cluster()</b> is specified, or the number of observations if <b>cluster()</b> is
+        not specified.  If <b>tdist</b> is not specified, then the standardized
+        Somers' D estimates are assumed to be sampled from a standard Normal
+        distribution.  Simulation study data suggest that the <b>tdist</b> option
+        should be recommended.
+<p>
+    <b>cenind(</b><i>cenind_list</i><b>)</b> specifies a list of left- or right-censorship
+        indicators, corresponding to the variables mentioned in the <i>varlist</i>.
+        Each censorship indicator is either a variable name or a zero.  If
+        the censorship indicator corresponding to a variable is the name of a
+        second variable, then this second variable is used to indicate the
+        censorship status of the first variable, which is assumed to be
+        left-censored (at or below its stated value) in observations in which
+        the second variable is negative, right-censored (at or above its
+        stated value) in observations in which the second variable is
+        positive, and uncensored (equal to its stated value) in observations
+        in which the second variable is zero. If the censorship indicator
+        corresponding to a variable is a zero, then the variable is assumed
+        to be uncensored.  If <b>cenind()</b> is unspecified, then all variables in
+        the <b>varlist</b> are assumed to be uncensored. If the list of censorship
+        indicators specified by <b>cenind()</b> is shorter than the list of
+        variables specified in the <i>varlist</i>, then the list of censorship
+        indicators is completed with the required number of zeros on the
+        right.
+<p>
+    <b>cluster(</b><i>varname</i><b>)</b> specifies the variable which defines sampling clusters.
+        If <b>cluster()</b> is specified, then the variances and confidence limits
+        are calculated assuming that the data represent a sample of clusters
+        from a population of clusters, rather than a sample of observations
+        from a population of observations.
+<p>
+    <b>cfweight(</b><i>expression</i><b>)</b> specifies an expression giving the cluster frequency
+        weights.  These cluster frequency weights must have the same value
+        for all observations in a cluster.  If <b>cfweight()</b> and <b>cluster()</b> are
+        both specified, then each cluster in the dataset is assumed to
+        represent a number of identical clusters equal to the cluster
+        frequency weight for that cluster. If <b>cfweight()</b> is specified and
+        <b>cluster()</b> is unspecified, then each observation in the dataset is
+        treated as a cluster, and assumed to represent a number of identical
+        one-observation clusters equal to the cluster frequency weight.  For
+        more details on the interpretation of weights, see <b>Interpretation of</b>
+        <b>weights</b> below.
+<p>
+    <b>funtype(</b><i>functional_type</i><b>)</b> specifies whether the Somers' D or Kendall's
+        tau-a functionals estimated are between-cluster, within-cluster or
+        Von Mises functionals.  These three functional types are specified by
+        the options <b>funtype(bcluster)</b>, <b>funtype(wcluster)</b> or
+        <b>funtype(vonmises)</b>, respectively. If <b>funtype()</b> is not specified, then
+        <b>funtype(bcluster)</b> is assumed, and between-cluster functionals are
+        estimated. The within-cluster Somers' D is a generalization of the
+        confidence interval corresponding to the sign test.  The Gini
+        coefficient is a special case of the clustered Von Mises Somers' D.
+        For further details, see the manual <b>somersd.pdf</b>, distributed with
+        <b>somersd</b> as an ancillary file.
+<p>
+    <b>wstrata(</b><i>varlist</i><b>)</b> specifies a list of variables whose value combinations
+        are the W strata. If <b>wstrata()</b> is specified, then <b>somersd</b> estimates
+        stratified Somers' D or Kendall's tau-a parameters, applying only to
+        pairs of observations within the same W stratum. These parameters can
+        be used to measure associations within strata, such as associations
+        between an outcome and an exposure within groups defined by values of
+        a confounder, or by values of a propensity score based on multiple
+        confounders.
+<p>
+    <b>bstrata(</b><i>varlist</i> | <b>_n)</b> specifies the B strata.  If <b>bstrata()</b> is specified,
+        then <b>somersd</b> estimates Somers' D or Kendall's tau-a parameters
+        specific to pairs of observations from different B strata.  These B
+        strata are either combinations of values of a list of variables (if
+        <i>varlist</i> is specified) or the individual observations (if <b>_n</b> is
+        specified).  B strata will not often be required. However, if we are
+        estimating the within-cluster Kendall's tau-a (using the options <b>taua</b>
+        <b>funtype(wcluster)</b>), then the additional option <b>bstrata(_n)</b> will
+        ensure that the within-cluster Kendall's tau-a can take the whole
+        range of values from -1 (in the case of complete discordance within
+        clusters) to +1 (in the case of complete concordance within
+        clusters).
+<p>
+    <b>notree</b> specifies that <b>somersd</b> does not use the default search tree
+        algorithm based on Newson (2006a), but instead uses a trivial
+        algorithm, which compares every pair of observations and requires
+        much more time with large datasets. This option is rarely used except
+        to compare performance.  Both algorithms are implemented in Mata,
+        using a set of Mata functions, whose source code is distributed with
+        the <b>somersd</b> package.
+<p>
+    <b>level(</b><i>#</i><b>)</b> specifies the confidence level, as a percentage, for confidence
+        intervals of the estimates; see <b>level</b>.
+<p>
+    <b>cimatrix(</b><i>new_matrix</i><b>)</b> specifies an output matrix to be created, containing
+        estimates and confidence limits for the untransformed Somers' D,
+        Kendall's tau-a or Greiner's rho parameters. If <b>transf()</b> is
+        specified, then the confidence limits will be asymmetric and based on
+        symmetric confidence limits for the transformed parameters. This
+        option (like <b>level()</b> may be used in replay mode as well as in
+        nonreplay mode.
+<p>
+<p>
+<b><u>Remarks</u></b>
+<p>
+    For uncensored variables X and Y, Kendall's tau-a is defined as
+<p>
+        <b>tau_a(X,Y) = E[sign(X1-X2)*sign(Y1-Y2)]</b>
+<p>
+    where (X1,Y1) and (X2,Y2) are sampled from the bivariate distribution of
+    X and Y.  In the case of censored variables X and Y, with censorship
+    indicators R and S, respectively, which are negative for left-censorship,
+    positive for right-censorship, and zero for noncensorship, we define
+    Kendall's tau-a as
+<p>
+        <b>tau_a(X,Y) = E[csign(X1,R1,X2,R2)*csign(Y1,S1,Y2,S2)]</b>
+<p>
+    where the function
+<p>
+        <b>csign(U,P,V,Q)</b>
+<p>
+    is defined as 1 if U&gt;V and P&gt;=0&gt;=Q, -1 if U&lt;V, P&lt;=0&lt;=Q, and 0 otherwise.
+<p>
+    Somers' D is defined as
+<p>
+        <b>D(Y|X) = tau_a(X,Y)/tau_a(X,X)</b>
+<p>
+    In the case of a binary X-variable, Somers' D is the parameter tested for
+    a zero value by the Mann-Whitney U test. If X is a disease indicator and
+    Y is a quantitative diagnostic measure, then Somers' D is related to the
+    area A under the ROC curve by the formula
+<p>
+        <b>A=[D(Y|X)+1]/2</b>
+<p>
+    and confidence limits for A can be calculated by specifying the option
+    <b>transf(c)</b>.  The covariance matrix is estimated by jackknifing the
+    underlying U statistics and using Taylor polynomials. Confidence
+    intervals for differences and other contrasts can be calculated using 
+    <b>lincom</b>. Confidence intervals for Theil-Senn median (and other percentile)
+    slopes (or per-unit ratios) can be calculated using <b>censlope</b>, which is
+    distributed as part of the <b>somersd</b> package.  Confidence intervals for
+    Hodges-Lehmann median (and other percentile) differences (and ratios)
+    between two groups can be calculated using <b>cendif</b>, which is also
+    distributed as part of the <b>somersd</b> package.
+<p>
+    Full documentation of the <b>somersd</b> package (including methods and
+    formulas) is provided in the files <b>somersd.pdf</b>, <b>censlope.pdf</b>, and
+    <b>cendif.pdf</b>, which are distributed with the <b>somersd</b> package (see <b>net</b>).
+    They can be viewed using the Adobe Acrobat Reader, which can be
+    downloaded from the Adobe Acrobat website.  <b>somersd</b> uses a library of
+    Mata functions, and the source code for these functions is distributed
+    with <b>somersd</b> as installation files.
+<p>
+    For a comprehensive review of Kendall's tau-a, Somers' D and median
+    differences, see Newson (2002).  The statistical and computational
+    methods used by the <b>somersd</b> package are described in detail in Newson
+    (2006a), Newson (2006b) and Newson (2006c).
+<p>
+<p>
+<b><u>Interpretation of weights</u></b>
+<p>
+    <b>somersd</b> inputs up to two weight expressions, which are the ordinary Stata
+    weights given by the <i>weight</i> and the cluster frequency weights given by
+    the <b>cfweight()</b> option.  Internally, <b>somersd</b> defines and uses three
+    distinct sets of weights, which are the cluster frequency weights, the
+    observation frequency weights, and the importance weights.
+<p>
+    The cluster frequency weights must be the same for different observations
+    in a cluster, and imply that each cluster in the input dataset represents
+    a number of identical clusters equal to the cluster frequency weight in
+    that cluster.  If <b>cluster()</b> is not specified, then the individual
+    observations are clusters, and the cluster frequency weight implies that
+    each one-observation cluster represents a number of identical
+    one-observation clusters equal to the cluster frequency weight. The
+    cluster frequency weights are given by <b>cfweight()</b> if that option is
+    specified; are set to 1 if <b>cfweight()</b> is unspecified and <b>cluster()</b> is
+    specified; are equal to the ordinary Stata weights if neither <b>cluster()</b>
+    nor <b>cfweight()</b> is specified and the ordinary Stata weights are <b>fweight</b>s;
+    and are equal to 1 otherwise.
+<p>
+    The observation frequency weights are summed over all observations in the
+    input dataset to produce the number of observations reported by <b>somersd</b>
+    and returned in the estimation result <b>e(N)</b>, and are not used in any other
+    way. They are set by <b>cfweight()</b> if that option is specified and the
+    ordinary Stata weights are not <b>fweight</b>s, are equal to the ordinary Stata
+    weights if <b>cfweight()</b> is unspecified and the ordinary Stata weights are
+    <b>fweight</b>s, are equal to the product of the <b>cfweight()</b> expression and the
+    ordinary Stata weights if <b>cfweight()</b> is specified and the ordinary Stata
+    weights are <b>fweight</b>s, and are equal to 1 otherwise.
+<p>
+    The importance weights are used as described in the <b>Methods and Formulas</b>
+    section of the file <b>somersd.pdf</b> distributed with the <b>somersd</b> package.
+    They are equal to the ordinary Stata weights if these are specified and
+    either <b>cluster()</b> or <b>cfweight()</b> is specified, are equal to the ordinary
+    Stata weights if neither of these two options is specified and the
+    ordinary Stata weights are specified as <b>pweight</b>s or <b>iweight</b>s, and are
+    equal to 1 otherwise.
+<p>
+<p>
+<b><u>Examples</u></b>
+<p>
+        <b>. somersd foreign mpg weight, tr(z)</b>
+<p>
+        <b>. somersd us gpm weight</b>
+        <b>. lincom (weight-gpm)/2</b>
+<p>
+        <b>. somersd us gpm weight, tr(c)</b>
+        <b>. lincom weight-gpm</b>
+<p>
+        <b>. somersd mpg weight displ, taua tr(z) cluster(manuf)</b>
+<p>
+    The following example demonstrates the <b>cenind()</b> option:
+<p>
+        <b>. use http://www.stata-press.com/data/r9/drugtr, clear</b>
+        <b>. gene youth=100-age</b>
+        <b>. gene byte censind=1-died</b>
+        <b>. somersd studytime drug youth, tr(c) cenind(censind)</b>
+        <b>. lincom drug-youth</b>
+        <b>. sts test drug, wilcoxon</b>
+        <b>. somersd drug studytime, tr(z) cenind(0 censind)</b>
+<p>
+<p>
+<b><u>Saved results</u></b>
+<p>
+    <b>somersd</b> saves the following in <b>e()</b>:
+<p>
+    Scalars        
+      <b>e(N)</b>                number of observations
+      <b>e(N_clust)</b>          number of clusters
+      <b>e(df_r)</b>             residual degrees of freedom
+      <b>e(denominator)</b>      common denominator
+      <b>e(depvarsum)</b>        sum of <i>X</i>-variable in estimation sample
+<p>
+    Macros         
+      <b>e(cmd)</b>              <b>somersd</b>
+      <b>e(cmdline)</b>          command as typed
+      <b>e(param)</b>            parameter (<b>somersd</b> or <b>taua</b>)
+      <b>e(parmlab)</b>          parameter label in output
+      <b>e(tdist)</b>            <b>tdist</b> if specified
+      <b>e(depvar)</b>           name of <i>X</i>-variable
+      <b>e(clustvar)</b>         name of cluster variable
+      <b>e(vcetype)</b>          title used to label standard error
+      <b>e(wtype)</b>            weight type
+      <b>e(wexp)</b>             weight expression
+      <b>e(cfweight)</b>         <b>cfweight()</b> expression
+      <b>e(funtype)</b>          <b>funtype()</b> option
+      <b>e(wstrata)</b>          <b>wstrata()</b> option
+      <b>e(bstrata)</b>          <b>bstrata()</b> option
+      <b>e(predict)</b>          program called by <b>predict</b> (<b>somers_p</b>)
+      <b>e(transf)</b>           transformation specified by <b>transf()</b>
+      <b>e(tranlab)</b>          transformation label in output
+      <b>e(properties)</b>       <b>b V</b>
+<p>
+    Matrices       
+      <b>e(b)</b>                coefficient vector
+      <b>e(V)</b>                variance-covariance matrix of the estimators
+<p>
+    Functions      
+      <b>e(sample)</b>           marks estimation sample
+<p>
+    Note that (confusingly) <b>e(depvar)</b> is the <i>X</i>-variable, or predictor
+    variable, in the conventional terminology for defining Somers' D.
+    <b>somersd</b> is also different from most estimation commands in that its
+    results are not designed to be used by <b>predict</b>.  If the user tries to do
+    so, then the program <b>somers_p</b> is called, and tells the user that <b>predict</b>
+    should not be used after <b>somersd</b>.  The scalar <b>e(denominator)</b> contains the
+    common denominator used in calculating the Somers' D or Kendall's tau-a
+    statistics.
+<p>
+<p>
+<b><u>Author</u></b>
+<p>
+    Roger Newson, Imperial College London, UK.
+    Email: r.newson@imperial.ac.uk
+<p>
+<p>
+<b><u>References</u></b>
+<p>
+    Newson, R.  2002.  Parameters behind "nonparametric" statistics:
+        Kendall's tau, Somers' D and median differences.  <i>Stata Journal</i> 2:
+        45-64.
+<p>
+    Newson, R.  2006a.  Efficient calculation of jackknife confidence
+        intervals for rank statistics.  <i>Journal of Statistical Software</i> 15:
+        1-10.
+<p>
+    Newson, R.  2006b.  Confidence intervals for rank statistics:  Somers' D
+        and extensions.  <i>Stata Journal</i> 6: 309-334.
+<p>
+    Newson, R.  2006c.  Confidence intervals for rank statistics:  Percentile
+        slopes, differences, and ratios.  <i>Stata Journal</i> 6: 497-520.
+<p>
+<p>
+<b><u>Also see</u></b>
+<p>
+     Manual: <b>[R] spearman</b>, <b>[R] ranksum</b>, <b>[R] signrank</b>, <b>[R] roc</b>
+       STB:  STB-52: sg123, STB-55: snp15, STB-57: snp15.1, STB-58: snp15.2,
+             STB-58: snp16; STB-61: snp15.3; STB-61: snp16.1.
+    Online:  <b>ktau</b>, <b>ranksum</b>, <b>signrank</b>, <b>roc</b>, <b>lincom</b>, <b>jknife</b>,
+             <b>cendif</b>, <b>censlope</b>, if installed
+</pre>

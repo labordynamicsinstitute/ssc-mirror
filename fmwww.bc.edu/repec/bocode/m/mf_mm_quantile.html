@@ -1,0 +1,145 @@
+<pre>
+<b>help mata mm_quantile()</b>
+-------------------------------------------------------------------------------
+<p>
+<b><u>Title</u></b>
+<p>
+    <b>mm_quantile() -- Empirical quantile function</b>
+<p>
+<p>
+<b><u>Syntax</u></b>
+<p>
+        <i>real matrix</i>    <b>mm_quantile(</b><i>X</i> [<b>,</b> <i>w</i><b>,</b> <i>P</i><b>,</b> <i>altdef</i>]<b>)</b>
+<p>
+        <i>real rowvector</i> <b>mm_median(</b><i>X</i> [<b>,</b> <i>w</i>]<b>)</b>
+<p>
+        <i>real rowvector</i> <b>mm_iqrange(</b><i>X</i> [<b>,</b> <i>w</i><b>,</b> <i>altdef</i>]<b>)</b>
+<p>
+<p>
+    where
+<p>
+              <i>X</i>:  <i>real matrix</i> containing data (rows are observations, columns
+                  variables)
+<p>
+              <i>w</i>:  <i>real colvector</i> containing weights
+<p>
+              <i>P</i>:  <i>real matrix</i> containing probabilities (default is <i>P</i> = (0,
+                  .25, .5, .75, 1)')
+<p>
+         <i>altdef</i>:  <i>real scalar</i> causing interpolation formula to be used
+<p>
+<p>
+<b><u>Description</u></b>
+<p>
+    <b>mm_quantile()</b> applies to <i>P</i> the inverse empirical cumulative distribution
+    function of <i>X</i> (the so called quantile function). That is, <b>mm_quantile()</b>
+    returns the quantiles <i>X</i> corresponding to the probabilities provided by <i>P</i>.
+    For example,
+<p>
+        <b>mm_quantile(x, 1, 0.25)</b>
+<p>
+    returns the first quartile (i.e. the 0.25-quantile) of <b>x</b>.
+<p>
+    Note that <b>mm_quantile()</b> works column by column. If <i>P</i> has one column and <i>X</i>
+    has several columns, then the quantiles corresponding to <i>P</i> are computed
+    for each column of <i>X</i>. If <i>X</i> has one column and <i>P</i> has several columns, then
+    the quantile function of <i>X</i> is applied to each column of <i>P</i>. If <i>X</i> and <i>P</i>
+    both have several columns, then the number of columns is required to be
+    the same and quantiles are computed column by column.
+<p>
+    <b>mm_median()</b> and <b>mm_iqrange()</b> are wrappers for <b>mm_quantile()</b> and return
+    the median (the 0.5-quantile) and the inter-quartile range (IQR =
+    0.75-quantile - 0.25-quantile).
+<p>
+    <i>w</i> specifies weights associated with the observations (rows) in <i>X</i>. Omit <i>w</i>,
+    or specify <i>w</i> as 1 to obtain unweighted results. Note that the arguments
+    in the above functions must not contain missing values.
+<p>
+    <i>altdef</i>!=0 in <b>mm_quantile()</b> and <b>mm_iqrange()</b> uses an interpolation formula
+    for calculating the quantiles (see remarks below).
+<p>
+<p>
+<b><u>Remarks</u></b>
+<p>
+    Example:
+<p>
+        : x = invnormal(uniform(10000,1))
+        
+        : mm_quantile(x, 1, (0.25 \ 0.5 \ 0.75))
+                          1
+            +----------------+
+          1 |  -.6673752219  |
+          2 |  -.0021958246  |
+          3 |   .6880046299  |
+            +----------------+
+<p>
+        : mm_median(x, 1), mm_iqrange(x, 1)
+                          1              2
+            +-------------------------------+
+          1 |  -.0021958246    1.355379852  |
+            +-------------------------------+
+<p>
+    The default for <b>mm_quantile()</b> is to apply a discontinuous quantile
+    function using averages where the empirical distribution function is flat
+    (this corresponds to Definition 2 in Hyndman and Fan 1996). The same
+    method is used by <b>summarize</b> and is the default method in <b>_pctile</b>.
+    However, if <i>altdef</i>!=0 is specified, a piecewise linear continuous
+    function according to Definition 6 in Hyndman and Fan (1996) is applied.
+    This is also used by <b>centile</b> and by <b>_pctile</b> with the <b>altdef</b> option.
+<p>
+    Unlike <b>centile</b> and <b>_pctile</b>, <b>mm_quantile()</b> allows using weights with the
+    interpolation method (<i>altdef</i>!=0). This functionality, however, is only
+    intended to be used with (integer) frequency weights.
+<p>
+<p>
+<b><u>Conformability</u></b>
+<p>
+    <b>mm_quantile(</b><i>X</i><b>,</b> <i>w</i><b>,</b> <i>P</i><b>,</b> <i>altdef</i><b>)</b>:
+             <i>X</i>:  n <i>x</i> 1 or n <i>x</i> k
+             <i>w</i>:  n <i>x</i> 1 or 1 <i>x</i> 1
+             <i>P</i>:  r <i>x</i> 1 or r <i>x</i> k
+        <i>altdef</i>:  1 <i>x</i> 1
+        <i>result</i>:  r <i>x</i> 1 or r <i>x</i> k
+<p>
+    <b>mm_median(</b><i>X</i><b>,</b> <i>w</i><b>)</b>:
+             <i>X</i>:  n <i>x</i> k
+             <i>w</i>:  n <i>x</i> 1 or 1 <i>x</i> 1
+        <i>result</i>:  1 <i>x</i> k
+<p>
+    <b>mm_iqrange(</b><i>X</i><b>,</b> <i>w</i><b>,</b> <i>altdef</i><b>)</b>:
+             <i>X</i>:  n <i>x</i> k
+             <i>w</i>:  n <i>x</i> 1 or 1 <i>x</i> 1
+        <i>altdef</i>:  1 <i>x</i> 1
+        <i>result</i>:  1 <i>x</i> k
+<p>
+<p>
+<b><u>Diagnostics</u></b>
+<p>
+    <b>mm_quantile()</b>: <i>p</i> &lt; 0 is treated as <i>p</i> = 0, <i>p</i> &gt; 1 as <i>p</i> = 1.
+<p>
+    Weights should not be negative.
+<p>
+    Results may be misleading if <i>altdef</i>!=0 is used with non-integer weights.
+<p>
+<p>
+<b><u>Source code</u></b>
+<p>
+    mm_quantile.mata, mm_median.mata, mm_iqrange.mata
+<p>
+<p>
+<b><u>References</u></b>
+<p>
+    Hyndman, R. J., Fan, Y. (1996). Sample Quantiles in Statistical Packages.
+        The American Statistician 50:361-365.
+<p>
+<p>
+<b><u>Author</u></b>
+<p>
+    Ben Jann, ETH Zurich, jann@soz.gess.ethz.ch
+<p>
+<p>
+<b><u>Also see</u></b>
+<p>
+    Online:  help for <b>mm_ecdf()</b>, <b>summarize</b>, <b>pctile</b>, <b>centile</b>, <b>invcdf</b> (if
+             installed), <b>moremata</b>
+</pre>

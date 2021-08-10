@@ -1,0 +1,276 @@
+<pre>
+<b>help reffadjust4nlcom</b>                                                          
+-------------------------------------------------------------------------------
+<p>
+<b><u>Title</u></b>
+<p>
+     <b>reffadjust4nlcom</b> -- random effects adjustment: regression coefficient
+formula to pass to <b>nlcom</b>
+<p>
+<p>
+<a name="syntax"></a><b><u>Syntax</u></b>
+<p>
+        <b>reffadjust4nlcom</b> <i>depvar</i> <i>indepvars</i> <b>,</b> <b>eqn(</b>string<b>)</b> [<i>options</i>]
+<p>
+<p>
+<a name="options"></a>    <i>options</i>                         Description
+    -------------------------------------------------------------------------
+      <b>eqn(</b><i>string</i><b>)</b>                   name of the equation the adjusted
+                                      coefficients are to be extracted from
+      <b>mcmcsum</b>                       returned local in format for use with
+                                      chains from <b>mcmcsum</b>
+      <b>sf(</b><i>numlist</i><b>)</b>                   scaling factors corresponding to each
+                                      coefficient
+      <b><u>sub</u></b><b>level(</b><i>#</i><b>)</b>                   sublevel of a repeated group variable
+    -------------------------------------------------------------------------
+<p>
+<p>
+<a name="description"></a><b><u>Description</u></b>
+<p>
+    <b>reffadjust4nlcom</b> is a postestimation command to perform adjustment of
+    random effects estimates.  It runs with estimates from <b>runmlwin</b> or chains
+    from <b>runmlwin</b> by <b>mcmcsum</b> (Leckie and Charlton, 2011), <b>xtmixed</b>, <b>xtmelogit</b>,
+    and <b>xtmepoisson</b>.  It returns the formula for a regression coefficient to
+    pass to <b>nlcom</b> to generate a delta-method confidence interval.
+<p>
+    For example, for an outcome variable <i>Y</i> (<i>depvar</i>) and covariate <i>X1</i>
+    (<i>indepvar</i>) the formula for the regression coefficient <i>beta_X1</i> is:
+<p>
+        <i>beta_X1</i> = cov(<i>Y</i>,<i>X1</i>)/var(<i>X1</i>).
+<p>
+    The approach is described in more detail in Macdonald-Wallis et al.
+    (2011, submitted).  Further details are given in <b>reffadjust</b>.
+<p>
+    <b>reffadjust4nlcom</b> can return the formulae for upto four covariates and
+    returns locals for all specified covariates.  The covariates (<i>indepvars</i>)
+    can be specified in any order.  <b>reffadjustsim</b> can adjust for more
+    covariates.
+<p>
+    See Buis (2011) for a description of how to retrieve random effect
+    variances and correlations from <b>xt</b> commands.
+<p>
+    <b>Note on multivariate response models:</b>  Covariates (<i>indepvars</i>) in <b>runmlwin</b>
+    estimates from multivariate response models have suffix <b>_#</b>, where # is
+    the corresponding equation number.  For example, from equation 1 <i>cons</i>
+    would be referred to as <i>cons_1</i>.
+<p>
+    <b>Note on shrinkage estimates:</b>  <b>reffadjust4nlcom</b> uses the estimated random
+    effect variances and covariances from the model.  It does not use the
+    shrinkage estimates of these parameters, i.e. the variances and
+    covariances of the residuals (see chapter 3 of the MLwiN User Manual).
+<p>
+    <b>Warning about P-values for these estimates</b> The P-values associated with
+    these estimates from <b>nlcom</b> may be affected by boundary value issues in
+    the estimation of the random effect variances and covariances (see
+    Distribution theory for likelihood ratio tests subsection in <b>[XT]</b>
+    <i>xtmixed</i>, Gutierrez et al. 2001).
+<p>
+    <b>Interpretation of coefficients:</b>  The coefficients estimated by
+    <b>reffadjust4nlcom</b> represent the mean difference in the random effect
+    entered as the dependent variable, which is associated with a unit
+    increase in each of the random effects entered as independent variables,
+    whilst adjusting for the other random effects included as independent
+    variables.
+<p>
+    <b>Parameters estimated with zero variance:</b>  Sometimes a multilevel model
+    can be declared as converged but some parameters (especially random
+    effect variances and covariances) may not have a standard error.  A
+    warning is issued that resulting confidence intervals may not be valid in
+    this case.
+<p>
+<p>
+<a name="options"></a><b><u>Options</u></b>
+<p>
+    <b>eqn(</b><i>string</i><b>)</b> the name of the equation the coefficients are to be extracted
+        from.  For example a two level random effects model from <b>runmlwin</b>
+        will typically return four equations (FP1, FP2, RP1, RP2).
+<p>
+    <b>mcmcsum</b> specifies that the returned local is to use variable names of
+        chains which are returned from MLwiN Bayesian MCMC estimation by
+        <b>mcmcsum, getchains</b>.  Only allowed with <b>runmlwin</b> estimates.
+<p>
+    <b>sf(</b><i>numlist</i><b>)</b> a numlist of scaling factors.  If specified each number
+        corresponds to the respective covariate (<i>indepvar</i>), i.e. the first
+        number is the scaling factor for the first coefficient and so on.  If
+        specified the <i>numlist</i> must be the same length as the number of
+        covariates.  To scale the coefficient by 2 times the dependent
+        variable (<i>Y</i>), for example, then with one covariate (<i>X</i>) specify sf(2).
+        To scale the coefficient by 2 times the covariate specify sf(.5)
+        because the coefficient is by 2/2^2 since a regression coefficient is
+        given by: cov(<i>X</i>,<i>Y</i>)/var(<i>X</i>).
+<p>
+    <b><u>sub</u></b><b>level(</b><i>#</i><b>)</b> the sublevel of a repeated group variable.  For example, in
+        the following model
+<p>
+        <b>. xtmixed</b> <i>f_p</i> <b>|| school: z1 z2, nocons cov(id) || school: z3 z4,</b>
+            <b>nocons cov(un)</b> <i>options</i>
+<p>
+        <b>z1</b> and <b>z2</b> are at sublevel 1 and <b>z3</b> and <b>z4</b> are at sublevel 2 of
+        the <b>school</b> group variable.
+        Only valid with <b>xtmixed</b>, <b>xtmelogit</b>, and <b>xtmepoisson</b>.
+<p>
+<p>
+<a name="examples"></a><b><u>Examples</u></b>
+<p>
+    ---------------------------------------------------------------------------
+    Examples 1 &amp; 2 assume the path to the MLwiN executable is set in <b>global</b>
+    <b>MLwiN_path</b>; see runmlwin
+<p>
+    <b>Example 1: Two level continuous response model</b> (see page 59 of the MLwiN
+    User Manual)
+<p>
+    <b>. * read in data</b>
+    <b>. </b><b>use http://www.bristol.ac.uk/cmm/media/runmlwin/tutorial, clear</b>
+<p>
+    <b>. * fit model using MLwiN via runmlwin</b>
+    <b>. </b><b>runmlwin normexam cons standlrt, level1(student: cons) level2(school:</b>
+        <b>cons standlrt) batch</b>
+<p>
+    <b>. * report coefficient and delta-method confidence interval</b>
+    <b>. </b><b>reffadjust4nlcom cons standlrt, eqn(RP2)</b>
+    <b>. </b><b>nlcom `r(beta_standlrt)'</b>
+<p>
+    <b>. * compare reporting coefficient as median with 2.5 &amp; 97.5 percentiles</b>
+    <b>. </b><b>reffadjustsim cons standlrt, eqn(RP2) seed(12345)</b>
+<p>
+    <b>. * compare reporting coefficient as mean &amp; Wald-type confidence interval</b>
+    <b>. * Warning: mean and Wald-type confidence are inaccurate in this example</b>
+    <b>. </b><b>reffadjustsim cons standlrt, eqn(RP2) seed(12345) waldtype</b>
+<p>
+    <b>. * to view just the coefficient or string expression for the coefficient</b>
+    <b>. </b><b>reffadjust4nlcom cons standlrt, eqn(RP2)</b>
+    <b>. </b><b>display `r(beta_standlrt)'</b>
+    <b>. </b><b>mata st_macroexpand("`r(beta_standlrt)'")</b>
+<p>
+    <b>. * compare with Bayesian posterior distribution</b>
+    <b>. </b><b>runmlwin normexam cons standlrt, level1(student: cons) level2(school:</b>
+        <b>cons standlrt) batch mcmc(on) initsprevious seed(121211)</b>
+    <b>. </b><b>mcmcsum, getchains</b>
+    <b>. </b><b>reffadjust4nlcom cons standlrt, eqn(RP2) mcmcsum</b>
+    <b>. </b><b>gen beta_standlrt = `r(beta_standlrt)'</b>
+    <b>. </b><b>mcmcsum beta_standlrt, variables</b>
+<p>
+<p>
+    <b>Example 2: Multivariate response model</b> (see page 214 of the MLwiN User
+    Manual)
+<p>
+    <b>. * read in data</b>
+    <b>. </b><b>use http://www.bristol.ac.uk/cmm/media/runmlwin/gcsemv1, clear</b>
+<p>
+    <b>. * fit model using MLwiN via runmlwin</b>
+    <b>. </b><b>runmlwin (written cons female, eq(1)) (csework cons female, eq(2)),</b>
+        <b>level1(student: (cons, eq(1)) (cons, eq(2))) level2(school: (cons,</b>
+        <b>eq(1)) (cons, eq(2))) batch</b>
+<p>
+    <b>. * report coefficient and delta-method confidence interval</b>
+    <b>. </b><b>reffadjust4nlcom cons_1 cons_2, eqn(RP2)</b>
+    <b>. </b><b>nlcom `r(beta_cons_2)'</b>
+<p>
+    <b>. * compare reporting coefficient as median with 2.5 and 97.5 percentiles</b>
+    <b>. </b><b>reffadjustsim cons_1 cons_2, eqn(RP2) seed(12345)</b>
+   
+    <b>. * compare reporting coefficient as mean with Wald-type confidence</b>
+        <b>interval</b>
+    <b>. </b><b>reffadjustsim cons_1 cons_2, eqn(RP2) seed(12345) waldtype</b>
+<p>
+    <b>. * to view just the coefficient or string expression for the coefficient</b>
+    <b>. </b><b>reffadjust4nlcom cons_1 cons_2, eqn(RP2)</b>
+    <b>. </b><b>display `r(beta_cons_2)'</b>
+    <b>. </b><b>mata st_macroexpand("`r(beta_cons_2)'")</b>
+<p>
+    <b>. * compare with Bayesian posterior distribution</b>
+    <b>. </b><b>runmlwin (written cons female, eq(1)) (csework cons female, eq(2)),</b>
+        <b>level1(student: (cons, eq(1)) (cons, eq(2))) level2(school: (cons,</b>
+        <b>eq(1)) (cons, eq(2))) batch mcmc(on) initsprevious seed(121211)</b>
+    <b>. </b><b>mcmcsum, getchains</b>
+    <b>. </b><b>reffadjust4nlcom cons_1 cons_2, eqn(RP2) mcmcsum</b>
+    <b>. </b><b>gen beta_cons_2 = `r(beta_cons_2)'</b>
+    <b>. </b><b>mcmcsum beta_cons_2, variables</b>
+<p>
+<p>
+    <b>Example 3: based on xtmixed helpfile</b>
+    <b>. </b><b>webuse nlswork, clear</b>
+    <b>. </b><b>xtmixed ln_w grade age c.age#c.age ttl_exp tenure c.tenure#c.tenure ||</b>
+        <b>idcode: tenure, cov(uns) var</b>
+    <b>. </b><b>reffadjust4nlcom _cons tenure, eqn(idcode)</b>
+    <b>. </b><b>nlcom `r(beta_tenure)'</b>
+<p>
+<p>
+    <b>Example 4: based on xtmelogit helpfile</b>
+    <b>. </b><b>webuse bangladesh, clear</b>
+    <b>. </b><b>xtmelogit c_use urban age child* || district: urban, cov(uns) var</b>
+    <b>. </b><b>reffadjust4nlcom _cons urban, eqn(district)</b>
+    <b>. </b><b>nlcom `r(beta_urban)'</b>
+<p>
+<p>
+    <b>Example 5: based on xtmepoisson helpfile</b>
+    <b>. </b><b>webuse epilepsy, clear</b>
+    <b>. </b><b>xtmepoisson seizures treat lbas lbas_trt lage visit || subject: visit,</b>
+        <b>cov(uns) var intpoints(9)</b>
+    <b>. </b><b>reffadjust4nlcom _cons visit, eqn(subject)</b>
+    <b>. </b><b>nlcom `r(beta_visit)'</b>
+<p>
+<p>
+    <b>Example 6: repeated group variable</b>
+    <b>. </b><b>webuse nlswork, clear</b>
+    <b>. </b><b>xtmixed ln_w grade age || idcode: tenure union, cov(uns) || idcode:</b>
+        <b>race, cov(uns) var</b>
+    <b>. </b><b>reffadjust4nlcom tenure union, eqn(idcode) sub(1)</b>
+    <b>. </b><b>nlcom `r(beta_union)'</b>
+    <b>. </b><b>reffadjust4nlcom race _cons, eqn(idcode) sub(2)</b>
+    <b>. </b><b>nlcom `r(beta__cons)'</b>
+    ---------------------------------------------------------------------------
+<p>
+<p>
+<a name="saved_results"></a><b><u>Saved results</u></b>
+<p>
+    <b>reffadjust4nlcom</b> saves the following in <b>r()</b>:
+<p>
+    Macros         
+      <b>r(beta_indepvar)</b>    Formula for beta_indepvar
+<p>
+<p>
+<a name="references"></a><b><u>References</u></b>
+<p>
+    Buis ML. 2011. Stata tip 97: Getting at rho's and sigma's. The Stata
+        Journal. 11(2) 315-317.
+<p>
+    Gutierrez RG, Carter S, Drukker DM. 2001. sg160: On boundary-value
+        likelihood ratio tests. Stata Technical Bulletin. 60. 15-18.
+<p>
+    Leckie G, Charlton C. 2011. <b>runmlwin</b>: Stata module for fitting multilevel
+        models in the MLwiN software package. Centre for Multilevel
+        Modelling, University of Bristol, UK. 
+        http://www.bristol.ac.uk/cmm/software/runmlwin/
+<p>
+    Macdonald-Wallis C, Lawlor DA, Palmer TM, Tilling K. 2011 (submitted).
+        Multivariate multilevel spline models for parallel growth processes:
+        application to weight and mean arterial pressure in pregnancy.
+        Statistics in Medicine.
+<p>
+    Rasbash J, Charlton C, Browne WJ, Healy M, Cameron B. 2009. MLwiN version
+        2.1. Centre for Multilevel Modelling, University of Bristol, UK. 
+        http://www.bristol.ac.uk/cmm/software/mlwin.
+<p>
+    Rasbash J, Steele F, Browne WJ, Goldstein H. 2009. A user's guide to
+        MLwiN, v2.10. Centre for Multilevel Modelling, University of Bristol,
+        UK. 
+        http://www.bristol.ac.uk/cmm/software/mlwin/download/manuals.html.
+<p>
+<p>
+<a name="authors"></a><b><u>Authors</u></b>
+<p>
+    Tom Palmer, MRC Centre for Causal Analyses in Translational Epidemiology,
+        School of Social and Community Medicine, University of Bristol, UK.
+        tom.palmer@bristol.ac.uk.
+<p>
+    Corrie Macdonald-Wallis, MRC Centre for Causal Analyses in Translational
+        Epidemiology, School of Social and Community Medicine, University of
+        Bristol, UK.  c.macdonald-wallis@bristol.ac.uk.
+<p>
+<p>
+<b><u>Also see</u></b>
+<p>
+      Help:  <b>reffadjust</b>, <b>reffadjustsim</b>, <b>runmlwin</b> (if installed), <b>mcmcsum</b> (if
+             installed), <b>nlcom</b>, <b>xtmixed</b>, <b>xtmelogit</b>, <b>xtmepoisson</b>
+</pre>

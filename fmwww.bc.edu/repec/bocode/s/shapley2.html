@@ -1,0 +1,170 @@
+<pre>
+-------------------------------------------------------------------------------
+help for <b>shapley2</b>                                                   Version 1.0
+-------------------------------------------------------------------------------
+<p>
+<b><u> Computing the shapley values after a regression command</u></b>
+<p>
+<p>
+        <b>shapley2</b> , <b><u>s</u></b><b>tat(</b><i>str</i><b>)</b> [<b><u>c</u></b><b>ommand(</b><i>str</i><b>)</b> <b><u>d</u></b><b>epvar(</b><i>depvarlist</i><b>)</b> <b><u>i</u></b><b>ndepvars(</b>
+                 <i>indepvars</i><b>)</b> <b><u>gr</u></b><b>oups(</b><i>special</i><b>)</b> <b>force</b> <b><u>mem</u></b><b>ory</b> <b>noisily</b>]
+<p>
+<b><u>Description</u></b>
+<p>
+    This command performs a Shorrocks-Shapely decomposition of many
+    estimation statistics such as the R squared in the OLS regression. It
+    provides an additive decomposition of the statistic, allowing you to see
+    the relative contribution of each regressor. The command is thought as a
+    post-estimation command, hence you should use it right after the
+    estimation.
+<p>
+    <b>Comparison shapley vs. shapley2</b>
+<p>
+        - <b>shapley2</b> is faster than shapley but yields to the same results
+          (numerical differences are possible). However, the computation
+          still takes some time and the maximum amount of RHS variables is
+          20.
+<p>
+        - <b>shapley2</b> allows you to regroup several regressors into groups and
+          to compute the relative importance of the whole group. This allows
+          as well to accelerate the computation.
+<p>
+        - <b>shapley2</b> is designed as a post-command routine. The model
+          specifications are extracted from the previous estimation (ols,
+          probit).
+<p>
+    All four columns are stored as matrices in the estimation (type ereturn
+    list to see all stored values), hence you can use them for instance with
+    <i>estout</i> to publish the results in LaTeX.
+<p>
+<b><u>Options</u></b>
+<p>
+    <b><u>s</u></b><b>tat(</b><i>str</i><b>)</b> Indicate here the eclass-statistic for which you want to
+        perform the decomposition. For instance, if you want to decompose the
+        Rsquared of the OLS estimation use <i>r2</i>, for the pseudo Rsquared of a
+        probit <i>r2_p</i>. To find you want statistics are available, type {it:
+        ereturn list after the estimation.
+<p>
+    <b><u>c</u></b><b>ommand(</b><i>varlist</i><b>)</b> Normally the command extracts from the previous
+        estimation the model to estimate, if you want to overwrite this, you
+        can use this option, for instance <i>command(probit)</i> to estimate a
+        probit instead of a dprobit.
+<p>
+    <b><u>d</u></b><b>epvar(</b><i>varlist</i><b>)</b> Normally the command extracts from the previous
+        estimation the dependent variable. If you want to change it or if the
+        command does it wrongly, you can specify it here.
+<p>
+    <b><u>i</u></b><b>ndepvars(</b><i>varlist</i><b>)</b> Normally the independent variables are directly
+        extracted from the previous estimation, however, you can change it
+        specifying this option.
+<p>
+    <b><u>gr</u></b><b>oups(</b><i>special</i><b>)</b> Instead of computing the shapley value for each variable,
+        it might be interesting to do it by groups of variables. This allows
+        computing the shapley value also when having a lot of variables.
+        Write as a string all variables you want to analyze and separate the
+        groups by comma. Make sure all variables of the regression are in the
+        list. For instance, if you have four variables x1,x2,x3 and x4 you
+        can use the option 'group("x1 x2,x3 x4")' to treat the first two
+        variables as a group and the latter two as a second group.
+<p>
+    <b>force</b> The command is limited to 20 RHS variables, because otherwise the
+        number of runs becomes to large. If you still want to perform it, use
+        the option <b>force</b> (this might take a long tiem though)
+<p>
+ 
+    <b><u>mem</u></b><b>ory</b> Use this option if you want to allow <b>shapley2</b> to change the memory
+        used by Stata. This is no longer needed for Stata 12, since memory
+        adapts on the fly.
+<p>
+ 
+    <b><u>n</u></b><b>oisily</b> Use this option to see some of the intermediate estimations.
+<p>
+<p>
+<b><u>Example</u></b>
+<p>
+. webuse auto,clear
+(1978 Automobile Data)
+<p>
+. reg price mpg headroom trunk
+<p>
+      Source |       SS       df       MS              Number of obs =      74
+-------------+------------------------------           F(  3,    70) =    7.46
+       Model |   153861671     3  51287223.7           Prob &gt; F      =  0.0002
+    Residual |   481203725    70  6874338.93           R-squared     =  0.2423
+-------------+------------------------------           Adj R-squared =  0.2098
+       Total |   635065396    73  8699525.97           Root MSE      =  2621.9
+<p>
+------------------------------------------------------------------------------
+       price |      Coef.   Std. Err.      t    P&gt;|t|     [95% Conf. Interval]
+-------------+----------------------------------------------------------------
+         mpg |  -224.3597   65.27511    -3.44   0.001    -354.5468   -94.17263
+    headroom |   -659.463   484.5101    -1.36   0.178    -1625.788    306.8619
+       trunk |   126.6049   107.2399     1.18   0.242    -87.27846    340.4882
+       _cons |   11175.77   2431.134     4.60   0.000     6327.029    16024.52
+------------------------------------------------------------------------------
+<p>
+. shapley2, stat(r2)
+<p>
+Factor     | Shapley value |  Per cent | Shapley value|   Per cent  
+           |  (estimate)   | (estimate)| (normalized) | (normalized)
+-----------+---------------+-----------+--------------+-------------
+mpg        |  0.17124      |   70.68 % | 0.17302      |  71.41 %
+headroom   |  0.01409      |    5.82 % | 0.01424      |   5.88 %
+trunk      |  0.05445      |   22.48 % | 0.05502      |  22.71 %
+-----------+---------------+-----------+--------------+-------------
+Residual   |  0.00249      |    1.03 % |              |
+-----------+---------------+-----------+--------------+-------------
+TOTAL      |  0.24228      |  100.00 % | 0.24228      | 100.00 %
+-----------+---------------+-----------+--------------+-------------
+<p>
+<p>
+. shapley2, stat(r2) group(mpg,headroom trunk)
+<p>
+Factor     | Shapley value |  Per cent | Shapley value|   Per cent  
+           |  (estimate)   | (estimate)| (normalized) | (normalized)
+-----------+---------------+-----------+--------------+-------------
+Group 1    |  0.17373      |   71.71 % | 0.17373      |  71.71 %
+Group 2    |  0.06854      |   28.29 % | 0.06854      |  28.29 %
+-----------+---------------+-----------+--------------+-------------
+Residual   |  0.00000      |    0.00 % |              |
+-----------+---------------+-----------+--------------+-------------
+TOTAL      |  0.24228      |  100.00 % | 0.24228      | 100.00 %
+-----------+---------------+-----------+--------------+-------------
+Groups are:
+Group 1: mpg
+Group 2: headroom trunk
+<p>
+    This very simple example computed the additive decomposition of the R
+    squared for the case of a simple OLS estimation. The results shows above
+    indicate that <i>mpg</i> accounts for about 70% of the R squared, while the
+    contribution of <i>headroom</i> is less than 6%. In the second shapley2 command
+    the two latter regressors are regrouped. Note that there are some small
+    numerical differences, since this is an abbreviated version to compute
+    the shapley value. The numerical differences are very small in general.
+<p>
+<p>
+<b><u>Known issues</u></b>
+    - The program has been tested on OLS, probit, logit and ordered logit
+      model. It is supposed to work also for other models, as long as there
+      is only one parameter by regressor (e.g. for mlogit the method is not
+      defined and the program will not work.}
+<p>
+    - The shapley values in the first column do not add up to the true value.
+      This is true whenever the regressors are correlated. In this case, the
+      residual part is indicated, which corresponds to the part of the
+      analyzed statistic that could not be attributed. The last two columns
+      ignore this residual and normalize the values in order to add up to the
+      true value (or 100%).
+<p>
+    - If you find another issue, please send me an email indicating the
+      problem.
+<p>
+<b><u>Author</u></b>
+<p>
+    Florian Wendelspiess Chávez Juárez. University of Geneva, Department of
+    Economics:  florian@chavezjuarez.com
+<p>
+<b><u>References</u></b>
+    Shorrocks, Anthony. "Decomposition by Factor Components", <i>Econometrica</i>,
+    Vol. 50, No. 1 (Jan., 1982), pp. 193-211. Available at:
+</pre>

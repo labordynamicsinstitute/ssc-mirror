@@ -1,0 +1,63 @@
+<pre>
+<p>
+-------------------------------------------------------------------------------
+help for <b>variancemat</b>
+-------------------------------------------------------------------------------
+<p>
+<b><u>Generate a matrix of variances</u></b>
+<p>
+        <b>variancemat</b> <i>varlist</i> [<b>if</b> <i>exp</i>] [<b>in</b> <i>range</i>] [<i>weight</i>]<b>, matname(</b><i>matrix</i><b>)</b>
+                 [<b>common</b>]
+<p>
+<p>
+<b><u>Description</u></b>
+<p>
+    <b>variancemat</b> generates an n by 1 matrix of the variances of the variables
+    in <i>varlist</i>.
+<p>
+    The rownames of <i>matrix</i> will be the variable names in <i>varlist</i>; the colname
+    of column 1 will be "variance".
+<p>
+    <b>aweight</b>s, <b>iweight</b>s, and <b>fweight</b>s are allowed; <b>aweight</b> is the default.
+<p>
+<p>
+<b><u>Required Options</u></b>
+<p>
+    <b>matname(</b><i>matrix</i><b>)</b> specifies the name of the matrix to be created.  If
+    <i>matrix</i> already exists as a scalar or matrix, it will be overwritten.
+<p>
+<b><u>Optional Options</u></b>
+<p>
+    <b>common</b> specifies that the variances are to be calculated on the common
+    set of observations that are nonmissing for all variables in <i>varlist</i>.
+    The default is for variances to be calculated for each variable
+    independently. In either case, the variance calculations are additionally
+    restricted by any [<b>if</b> <i>exp</i>] or [<b>in</b> <i>range</i>] conditions that may be present.
+<p>
+<p>
+<b><u>Examples</u></b>
+<p>
+    <b>. variancemat age income numkids, matname(m)</b>
+<p>
+    <b>. variancemat age income numkids, matname(m) common</b>
+<p>
+    <b>. variancemat age income numkids if numkids&gt;0, matname(m)</b>
+<p>
+    <b>. variancemat age income numkids [aw= wgt1], matname(m)</b>
+<p>
+<p>
+<b><u>Remarks</u></b>
+<p>
+    <b>variancemat</b> was written for use by an earlier version of mahapick, but
+    has been superseded by covariancemat in that application.  It may be of
+    use in other circumstances.
+<p>
+<p>
+<b><u>Author</u></b>
+    David Kantor; initial development was done at The Institute for Policy
+    Studies, Johns Hopkins University.  Email kantor.d@att.net if you observe
+    any problems.
+<p>
+<b><u>Also See</u></b>
+    covariancemat, mahapick, mahascore, mahascores, mahascore2, 
+</pre>

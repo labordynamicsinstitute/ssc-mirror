@@ -1,0 +1,167 @@
+<pre>
+<b>help ckchar</b>                                                   dialog: <b>ckvaredit</b>
+-------------------------------------------------------------------------------
+<p>
+<b><u>Title</u></b>
+<p>
+<b>Details About Using Characteristics to Do Validation, Error Checking, or Scorin</b>
+<b>&gt; g</b>
+<p>
+<b><u>Description</u></b>
+<p>
+    This help file explains the characteristics (or chars in Stata parlance)
+    used by ckvar to validate, error-check or score values of variables in a
+    dataset. These are the details about where ckvar finds the information it
+    needs. Most of what is needed to use ckvar can be found in ckvaredit.
+<p>
+<b><u>Remarks</u></b>
+    Remarks are presented under the headings
+<p>
+1. Introduction
+<p>
+2. Naming Conventions for Characteristics
+<p>
+2.1 Stubs
+2.1.1 The valid stub
+2.1.2 The score stub
+<p>
+2.2 Suffixes
+2.2.1 Common Suffixes
+2.2.1.1 The check suffix
+2.2.1.2 The required suffix
+2.2.1.3 The missing_value suffix
+2.2.1.4 The other_vars_needed suffix
+<p>
+2.2.2 Esoteric Suffixes
+2.2.2.1 The varname suffix
+2.2.2.2 The vlabel_name suffix
+2.2.2.3 The vlabel suffix
+2.2.2.4 The wt suffix
+<p>
+<a name="intro"></a><b><u>1. Introduction</u></b>
+<p>
+    ckvar works by reading information from characteristics attached to each
+    variable, and then using the information to generate new variables (such
+    as variables which mark observations containing errors) and attach value
+    labels to the new variables. It looks for the information it needs in
+    specifically named characteristics, substituting default values if the
+    characteristics are blank. This file explains the naming.
+<p>
+<a name="chars"></a><b><u>2. Naming Conventions for Characteristics</u></b>
+<p>
+    All the names of characteristics used by ckvar consist of a prefix, or
+    <i>stub</i>, an underscore (_), and then a suffix. In all cases, the stub gives
+    the general overall purpose, such as <i>valid</i> for validation/error-checking
+    or <i>score</i> for scoring, and the suffix gives the information to which the
+    contents of the characteristic pertains, such as <i>required</i> for stating
+    whether non-missing values are required. For example, the characteristic
+    <b>valid_rule</b> has a stub of <b>valid</b>, meaning it is used for validation, and a
+    suffix of <b>rule</b> because it is a rule which can be evaluated.
+<p>
+    Each of the stubs and suffixes are explained below.
+<p>
+<a name="stubs"></a><b><u>2.1 Stubs</u></b>
+<p>
+    Stubs are used to denote the purpose of the characteristic. The reason
+    for using a stub is that it will then gather all characteristics of a
+    similar purpose together if a <b>char list</b> command is given.
+<p>
+    There are two common stubs used by ckvar:  valid and score. These are not
+    restrictive, because the user can specify any other stub to use with 
+    ckvar. Using other stubs should be done only if completely necessary.
+    (One rare situation would be if there are multiple different scoring
+    rules which need to be distinguished from one another.) In any other
+    case, using the default stub names is better, because they are what other
+    users of the dataset will be expecting to see.
+<p>
+<a name="stubValid"></a><b><u>2.1.1 The </u></b><b><u>valid</u></b><b><u> stub</u></b>
+<p>
+    The <b>valid</b> stub is used for saving characteristics which correspond to
+    data validation or error checking.
+<p>
+<a name="stubScore"></a><b><u>2.1.2 The </u></b><b><u>score</u></b><b><u> stub</u></b>
+<p>
+    The <b>score</b> stub is used for saving characteristics which correspond to
+    computing a score from values of the variable. For example, if the
+    variables were responses to test or instrument questions, and such
+    questions were combined to get a score (or scores), the <b>score</b> stub would
+    be used for all characteristics.
+<p>
+<a name="suffix"></a><b><u>2.2 Suffixes</u></b>
+<p>
+    Suffixes are used to denote particular tasks, or rules, which are
+    associated with checking the variable. These are restricted to a
+    particular set of suffixes, and will be explained below. The list of
+    suffixes is split into two groups:  The those that are commonly used, and
+    which currently can be set by using the dialog box created by ckvaredit,
+    and those that are a bit more esoteric.
+<p>
+<a name="commonSuffix"></a><b><u>2.2.1 Common Suffixes</u></b>
+<p>
+<a name="suffixCheck"></a><b><u>2.2.1.1 The </u></b><b><u>rule</u></b><b><u> suffix</u></b>
+<p>
+    The <b>rule</b> suffix is used to hold rules with which the data contained in a
+    variable is validated or scored.  (Note: This suffix was <b>_check</b> in
+    earlier versions <b>ckvar</b> earlier than 3.2.0. See ckvarupdate for updating
+    instructions.)
+<p>
+<a name="suffixRequired"></a><b><u>2.2.1.2 The </u></b><b><u>required</u></b><b><u> suffix</u></b>
+<p>
+    The <b>required</b> suffix states whether missing values are errors or not. If
+    the <b>required</b> suffix is "yes", "true", or "1" (or any abbreviation of
+    these), then missing values are considered to be errors. Otherwise,
+    missing values are not errors.
+<p>
+<a name="suffixMissingValue"></a><b><u>2.2.1.3 The </u></b><b><u>missing_value</u></b><b><u> suffix</u></b>
+<p>
+    By default, if missing values are considered errors, they are marked with
+    a value of -1, so that errors of commission and errors of omission are
+    kept separate. If another value is desired, it goes with the suffix
+    <b>missing_value</b>.
+<p>
+<a name="suffixOtherVars"></a><b><u>2.2.1.4 The </u></b><b><u>other_vars_needed</u></b><b><u> suffix</u></b>
+<p>
+    If other variables are needed for validating or scoring the variable in
+    question, their names go in the suffix <b>other_vars_needed</b>. This suffix is
+    used by ckvar as well as ckdrop, ckkeep, and ckrename.
+<p>
+<a name="esotericSuffix"></a><b><u>2.2.2 Esoteric Suffixes</u></b>
+<p>
+<a name="suffixVarname"></a><b><u>2.2.2.1 The </u></b><b><u>varname</u></b><b><u> suffix</u></b>
+<p>
+    By default, all variables which hold indicators for errors start with
+    <b>error</b>, and all variables which the scoring routines generate start with
+    <b>score</b>. If another prefix for these variables is desired, it can be put in
+    the suffix <b>varname</b>.
+<p>
+<a name="suffixVlabelName"></a><b><u>2.2.2.2 The </u></b><b><u>vlabel_name</u></b><b><u> suffix</u></b>
+<p>
+    The <b>vlabel_name</b> suffix contains a name of a value label that should be
+    used for labeling the values of the generated variable. Note that this
+    value label name will typically get overwritten when doing validation
+    checks.
+<p>
+<a name="suffixVLabel"></a><b><u>2.2.2.3 The </u></b><b><u>vlabel</u></b><b><u> suffix</u></b>
+<p>
+    The <b>vlabel</b> suffix contains a list of value and label pairs (as is used in
+    label define). It would typically be used for scoring, when the computed
+    scores take on known integer values.
+<p>
+<a name="suffixWt"></a><b><u>2.2.2.4 The </u></b><b><u>wt</u></b><b><u> suffix</u></b>
+<p>
+    The <b>wt</b> suffix is for weighting scores. It can be a number only, and it is
+    applied to all the scores from that variable. Think of a point value for
+    a question on an exam, or a weighting for a question on an instrument.
+<p>
+<b><u>Notes</u></b>
+<p>
+    If you become interested in writing more complicated error checkers, the
+    general rules for programming with charactaristics and the dochar command
+    are given in the docharprog.
+<p>
+<b><u>Author</u></b>
+<p>
+    Bill Rising, StataCorp
+    email: brising@stata.com
+    web: http://homepage.mac.com/brising
+</pre>

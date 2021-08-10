@@ -1,0 +1,65 @@
+<pre>
+<b>help doubleb</b>
+-------------------------------------------------------------------------------
+<p>
+<b><u>Title</u></b>
+<p>
+    <b>doubleb</b> --    Contingent Valuation using Double-Bounded Dichotomous
+                   Choice
+<p>
+<p>
+<b><u>Syntax</u></b>
+<p>
+        <b>doubleb</b> <i>varlist</i> [<i>if</i>] [<i>in</i>] [<i>weight</i>] [<b>,</b> <b>level(</b><i>#</i><b>)</b> <b>noconstant</b> ]
+<p>
+<p>
+<b><u>Description</u></b>
+<p>
+    This command uses maximum likelihood (under the assumption of normality)
+    to estimate the double-bounded dichotomous choice model for contingent
+    valuation proposed by Hanemann, Loomis and Kanninen (1991). Haab and
+    McConnell (2002, pp. 123-125) refer to this as the Interval Data Model.
+<p>
+<b><u>Remarks</u></b>
+<p>
+    The first and second variables in <i>varlist</i> should be the first and second
+    bid variables, respectively. The third and fourth variables should be the
+    dummies for the response to the first and second dichotomous choice
+    questions, respectively. The remaining variables will be interpreted as
+    covariates or control variables.
+<p>
+<p>
+Note that the second bid variable refers to the actual bid offered after the in
+&gt; dividual has answered to the first bid.{p_end}
+<p>
+<b><u>Examples</u></b>
+<p>
+        <b>. doubleb bid1 bid2 response1 response2</b>
+<p>
+        <b>. doubleb bid1 bid2 response1 response2 x1 x2</b>
+<p>
+    Use file doubleb.dta to do the examples
+<p>
+<p>
+<b><u>Author</u></b>
+<p>
+    Alejandro Lopez-Feldman
+    Centro de Investigacion y Docencia Economicas, CIDE
+    Email:  lopezfeldman@gmail.com
+<p>
+<p>
+<b><u>References</u></b>
+<p>
+    Hanemann, M., Loomis, J and B. Kanninen. 1991. Statistical Efficiency of
+        Double-Bounded Dichotomous Choice Contingent Valuation. <i>American</i>
+        <i>Journal of Agricultural Economics</i> 73: 1255-63.
+<p>
+    Haab, T. and K, McConnell. 2002. <i>Valuing Environmental and Natural</i>
+        <i>Resources. The Econometrics of Non-Market Valuation.</i>  Edward Elgar,
+        Massachusetts.
+<p>
+<p>
+<b><u>Acknowledgments</u></b>
+<p>
+    I thank Brett Day for sharing the Stata code that helped me to get
+</pre>

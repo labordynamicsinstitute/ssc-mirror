@@ -1,0 +1,59 @@
+<pre>
+-------------------------------------------------------------------------------
+help for <b>find</b>
+-------------------------------------------------------------------------------
+<p>
+<b><u>Find specified text in multiple files</u></b>
+<p>
+<b><u>Syntax</u></b>
+<p>
+      <b>find</b> [<i>filenames</i>] [<b>,</b> <b><u>m</u></b><b>atch(</b><i>string</i><b>)</b> <b><u>s</u></b><b>how</b> <b><u>z</u></b><b>ero</b> ]
+<p>
+<a name="description"></a>        +-------------+
+    ----+ Description +------------------------------------------------------
+<p>
+<b>find</b> looks for matching strings across multiple files in the current directory
+(pwd). File names that contain an asterix are expanded into lists of files
+following dir. If no files are specified, <b>find</b> looks for matching strings
+across all files in the current working directory (see also pwd and cd).
+Depending on your operating system, you may prefer grep (*nix), find or findstr
+(Windows/DOS), or mdfind (Mac).
+<p>
+<a name="examples"></a>        +----------+
+    ----+ Examples +---------------------------------------------------------
+<p>
+Cut and paste the entire block of example code to the Command window, or click
+on commands one by one to run:
+<p>
+      cd `c(sysdir_base)'a
+      loc t : dir . file "*.ado"
+      find `t', m(version 8) s
+      find, m(version 8)
+      find *.class
+<p>
+<a name="options"></a>        +-----------------+
+    ----+ Options summary +--------------------------------------------------
+<p>
+    <b><u>m</u></b><b>atch(</b><i>string</i><b>)</b> specifies the string to look for.
+<p>
+    <b><u>s</u></b><b>how</b> asks for lines in which the string occurs to be echoed to the
+        screen.  Line numbers are also shown, and single quotes (ASCII codes
+        96 and 39) are converted into similar-looking but meaningless single
+        quotes (ASCII codes 145 and 146, respectively).  See also display and
+        smcl.
+<p>
+    <b><u>z</u></b><b>ero</b> specifies that file names in the <i>filenames</i> list with zero matches
+        should also be listed.
+<p>
+<b><u>Author</u></b>
+<p>
+    Austin Nichols
+    Urban Institute
+    Washington, DC, USA
+    austinnichols@gmail.com
+<p>
+<b><u>Also see</u></b>
+<p>
+ On-line: help for type, findfile, file, filefilter, hexdump, pwd, cd, dir,
+          etc.
+</pre>

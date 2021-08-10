@@ -1,0 +1,117 @@
+<pre>
+-------------------------------------------------------------------------------
+help for <b>hnblogit</b>                                                (Joseph Hilbe)
+-------------------------------------------------------------------------------
+<p>
+<b><u>Negative binomial-logit hurdle regression</u></b>
+<p>
+        <b>hnblogit</b>  <i>depvar</i> [<i>varlist</i>] [<b>if</b> <i>exp</i>] [<b>in</b> <i>range</i>] [, <b><u>off</u></b><b>set(</b><i>varname</i><b>)</b>
+             <b><u>exp</u></b><b>osure(</b><i>varname</i><b>)</b> <b><u>cl</u></b><b>uster(</b><i>varname</i><b>)</b> <b><u>l</u></b><b>evel(</b><i>#</i><b>)</b> <b><u>from</u></b><b>(</b><i>asis</i><b>)</b> <b><u>ir</u></b><b>r</b>
+             <b><u>rob</u></b><b>ust</b> <b>nolog</b> <i>maximize_options</i> <i>survey_options</i>]
+<p>
+<p>
+<p>
+    <b>aweight</b>s, <b>fweight</b>s, <b>iweight</b>s, and <b>pweight</b>s are allowed; see help weights.
+<p>
+    <b>hnblogit</b> provides access to all <i>maximize</i> options; see help maximize.
+<p>
+    <b>hnblogit</b> provides access to all <i>survey</i> options; see help svy.
+<p>
+<p>
+<b><u>Description</u></b>
+<p>
+    <b>hnblogit</b> fits a negative binomial-logit maximum-likelihood hurdle model
+    of <i>depvar</i> on <i>indepvars</i>, where <i>depvar</i> is a non-negative count variable.
+<p>
+    <b>hnblogit</b> acccepts all of the <i>help maximize</i> options, the <i>constraint()</i>
+    option, and all survey options and capabilities documented in <b>[SVY]</b>;
+    including multi-level surveys; poststratification; and BRR, jackknife,
+    and linearization VCE estimators.
+<p>
+    This program uses <b>ml lf</b> method.
+<p>
+<p>
+<b><u>Options</u></b>
+<p>
+        +-------+
+    ----+ Model +------------------------------------------------------------
+<p>
+    <b>offset(</b><i>varname</i><b>)</b> specifies a <i>varname</i> in model with coefficient constrained
+        to 1.
+<p>
+    <b>exposure(</b><i>varname</i><b>)</b> specifies a <i>ln(varname)</i> in model with coefficient
+        constrained to 1.
+<p>
+    <b>constraints(</b><i>constraints</i><b>)</b> apply specified linear constraints.
+<p>
+<p>
+<p>
+        +-----------+
+    ----+ SE/Robust +--------------------------------------------------------
+<p>
+    <b>cluster(</b><i>varname</i><b>)</b>
+<p>
+    <b>robust</b> specifies that the Huber/White/sandwich estimator of variance is
+        to be used in place of the traditional calculation.  <b>robust</b> combined
+        with <b>cluster()</b> allows observations which are not independent within
+        cluster (although they must be independent between clusters).  If you
+        specify <b>pweight</b>s, <b>robust</b> is implied.
+<p>
+    <b>vce(</b><i>options</i><b>)</b> allowed. <b>vce()</b> supports <i>robust</i>, <i>opg</i>, and <i>native</i>.  <b>vce</b> does
+        not support options <i>bootstrap</i> or <i>jacknife</i>, However, <b>hnblogit</b> does
+        support the <b>bootstrap</b> and <b>jacknife</b> commands, so these modeling
+        capabilities are allowed.
+<p>
+<p>
+        +-----------+
+    ----+ Reporting +--------------------------------------------------------
+   
+    <b>level(</b><i>#</i><b>)</b> specifies the confidence level, in percent, for confidence
+        intervals of the coefficients; see help level.
+<p>
+    <b>nolog</b> suppresses the iteration log.
+<p>
+<p>
+        +-------------+
+    ----+ max options +------------------------------------------------------
+<p>
+<p>
+    <i>maximize_options</i>: technique(algorithm_spec), [no]log, trace, hessian,
+        gradient, showstep, shownrtolerance, difficult, iterate(#),
+        tolerance(#), ltolerance(#), gtolerance(#), nrtolerance(#),
+        nonrtolerance, from(init_specs); see maximize.
+<p>
+<p>
+        +-------------+
+    ----+ svy options +------------------------------------------------------
+<p>
+    <i>survey_options</i> are all available. See help svy
+<p>
+<p>
+<p>
+<p>
+<b><u>Author and support</u></b>
+<p>
+    <b>Joseph Hilbe</b>,<b> Arizona State University</b>:<b>  jhilbe@aol.com</b>
+<p>
+<p>
+<b><u>Remarks</u></b>
+<p>
+    <b>hnblogit</b> is a user authored program. Support is by author. <b>hnblogit</b> is
+    one of a suite of hurdle programs created by the author. 2Oct2005
+<p>
+    <b>hnblogit</b> requires a response with counts including a number of 0's. <b>irr</b>
+    for binary model.
+<p>
+<p>
+<b><u>Examples</u></b>
+<p>
+    <b>. hnblogit accident co_70_74 co_75_79 op_75_79, nolog exposure(service)</b>
+<p>
+    <b>. hnblogit accident co_70_74 co_75_79 op_75_79, nolog exposure(service)</b>
+        <b>cluster(ship)</b>
+<p>
+    <b>. bootstrap: hnblogit accident co_70_74 co_75_79 op_75_79, nolog</b>
+        <b>exposure(service)</b>
+<p>
+</pre>

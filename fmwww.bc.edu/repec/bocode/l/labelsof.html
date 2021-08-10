@@ -1,0 +1,74 @@
+<pre>
+<b>help labelsof</b>
+-------------------------------------------------------------------------------
+<p>
+<b><u>Title</u></b>
+<p>
+    <b>labelsof</b> -- Obtain list of labeled values
+<p>
+<p>
+<b><u>Syntax</u></b>
+<p>
+        <b>labelsof</b> <i>varname</i> [ <b>,</b> <b><u>l</u></b><b>abel</b> ]
+<p>
+<p>
+<b><u>Description</u></b>
+<p>
+    <b>labelsof</b> displays and returns in <b>r(values)</b> and <b>r(labels)</b> the labeled
+    values of <i>varname</i>. <b>labelsof</b> returns nothing if <i>varname</i> has no value
+    labels assigned.
+<p>
+<p>
+<b><u>Options</u></b>
+<p>
+    <b>label</b> causes the specified name to be interpreted as a value label name
+        rather than a variable name and returns the values and labels
+        contained in this set of value label definitions.
+<p>
+<p>
+<b><u>Examples</u></b>
+<p>
+        . sysuse auto
+        (1978 Automobile Data)
+        
+        . labelsof foreign
+        
+        foreign (origin):
+        
+                   0 Domestic
+                   1 Foreign
+        
+        . ret list
+        
+        macros:
+                      r(name) : "origin"
+                    r(values) : "0 1"
+                    r(labels) : "`"Domestic"' `"Foreign"'"
+        
+        . label define yesno 1 "yes" 2 "no" .a "no answer"
+        
+        . labelsof yesno, label
+        
+        yesno:
+                   1 yes
+                   2 no
+                  .a no answer
+        
+        . ret list
+        
+        macros:
+                      r(name) : "yesno"
+                    r(values) : "1 2 .a"
+                    r(labels) : "`"yes"' `"no"' `"no answer"'"
+        
+<p>
+<b><u>Author</u></b>
+<p>
+    Ben Jann, ETH Zurich, jann@soz.gess.ethz.ch
+<p>
+<p>
+<b><u>Also see</u></b>
+<p>
+    Online:  <b>label</b>, <b>labelbook</b>
+<p>
+</pre>

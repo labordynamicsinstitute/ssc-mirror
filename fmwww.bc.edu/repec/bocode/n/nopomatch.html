@@ -1,0 +1,135 @@
+<pre>
+<p>
+<b>help nopomatch</b>
+-------------------------------------------------------------------------------
+<p>
+<b><u>Title</u></b>
+    <b>nopomatch</b> -- Decomposition of Nopo (2008)
+<p>
+<b><u>Syntax</u></b>
+        <b>nopomatch</b> <i>matchvar</i> [<i>matchvar(s)</i>] [if] <b>,</b> outcome(<i>varname</i>) by(<i>varname</i>)
+                 [<i>options</i>]
+<p>
+<b><u>Parameters</u></b>
+      <i>matchvar(s):</i>                   list of variables used to match
+                                      observations of the groups defined by
+                                      <i>by()</i>.
+      <i>outcome:</i>                       outcome for which the gap will be
+                                      computed. (e.g.: wage)
+      <i>by:</i>                            dummy (0/1) that discriminates the
+                                      sample to perform the computation of
+                                      the gap. (e.g.: gender).
+<p>
+<p>
+    <i>options</i>                         Description
+    -------------------------------------------------------------------------
+    Main
+      <b>sd</b>                             computes standard deviations.
+      <b>replace</b>                        deletes the _match and _supp variables
+                                      previously created (if any).
+      <b>reportby(</b><i>varname</i><b>)</b>              split the results for different groups
+                                      of observations.
+      <b>fact(</b><i>factor-variable</i><b>)</b>          specifies the use of frequency weights.
+      <b>filename(</b><i>file-name</i><b>)</b>            saves output in STATA file.
+    -------------------------------------------------------------------------
+<p>
+<p>
+<b><u>Description</u></b>
+    <b>nopomatch</b> -- module to decompose the gap in an outcome between two groups
+    using matching, following the methodology developed by Nopo (2008).
+    <b>nopomatch</b> performs the matching, computes the gap decomposition and
+    provides the standard deviation of the unexplained component of the gap.
+<p>
+<b><u>Options</u></b>
+        +------+
+    ----+ Main +-------------------------------------------------------------
+    <b>sd</b> computes standard deviations of the unexplained components of the gap.
+        Note that the usage of this option substancially increases
+        significantly the computation time.
+<p>
+    <b>replace</b> deletes the _match and _supp variables previously created (if
+        any).
+<p>
+    <b>reportby(</b><i>varname</i><b>)</b> repeats the command for each group of observations of
+        each category of <i>varname</i>.
+<p>
+    <b>fact(</b><i>varname</i><b>)</b> specifies the use of a weighting factor variable (frequency
+        weight) in the data.
+<p>
+    <b>filename(</b><i>string</i><b>)</b> creates an output STATA file (<i>string.dta</i>) with the
+        results of the decomposition.
+<p>
+<b><u>Output</u></b>
+<p>
+A typical output of the <b>nopomatch</b> module looks like this:
+<p>
+****************************************************
+*****  Gap in <i>matchvar(s)</i> decomposition 
+****************************************************
+<p>
+      D = #     is the total gap, the difference between averages in the
+                  outcome-variable of the comparing groups. It is expressed
+                  as a percentage of the average of outcome-variable for the
+                  group in which by-variable=0
+      D0= #     is the unexplained part of the gap.
+      DM= #     is the part of the gap that can be explained by the
+                  differences in characteristics between two groups of the
+                  individuals with by-variable=1, that are in and out of the
+                  common support of the variables defined by
+                  <i>match-variable(s)</i>
+      DF= #     is the part of the gap that can be explained by the
+                  differences in characteristics between two groups of the
+                  individuals with by-variable=0, that are in and out of the
+                  common support of the variables defined by
+                  <i>match-variable(s)</i>
+      DX= #     is the part of the gap that can be explained by differences
+                  in the distribution of characteristics of the two groups
+                  discriminated by by-variable in the common support of the
+                  variables defined by <i>match-variable(s)</i>
+****************************************************
+      percM= #  is the percentage of the individuals with <i>by-variable</i>=1 that
+                  are in the common support of the variables defined by
+                  <i>match-variable(s)</i>
+      percF= #  is the percentage of the individuals with <i>by-variable</i>=0 that
+                  are in the common support of the variables defined by
+                  <i>match-variable(s)</i>
+****************************************************
+<p>
+<p>
+Note that D = DO + DM + DF + DX. For technical details see Nopo (2008). 
+<p>
+<b><u>Examples</u></b>
+<p>
+    <b>. nopomatch age education, outcome(wage) by(male)</b>
+<p>
+    <b>. nopomatch age education, outcome(wage) by(male) fact(freqweight) sd</b>
+        <b>replace filename(example1)</b>
+<p>
+    <b>. nopomatch age education occupation sector, outcome(wage) by(male)</b>
+        <b>fact(freqweight) reportby(education)</b>
+<p>
+    <b>. nopomatch age education occupation sector, outcome(wage) by(male) sd</b>
+        <b>replace fact(freqweight) reportby(firmsize) filename(example2)</b>
+<p>
+<p>
+<b><u>References</u></b>
+<p>
+Nopo, H. 2008. Matching as a Tool to Decompose Wage Gaps <i>Review of Economics an</i>
+<i>&gt; d Statistics</i>, 90(2): 290-299.
+<p>
+<b><u>Acknowledgements</u></b>
+<p>
+This code was built from previous versions developed by Sebastian Calónico and 
+&gt; Luana Marques.
+<p>
+<b><u>Disclaimer</u></b>
+<p>
+This program is provided without warranty of any kind. The authors are not resp
+&gt; onsible for any cost derived by the usage of this program.
+<p>
+<b><u>Authors</u></b>
+<p>
+Atal, Juan Pablo; Hoyos, Alejandro and Hugo Nopo. If you observe any problems m
+&gt; ailto:hugon@iadb.org 
+<p>
+</pre>

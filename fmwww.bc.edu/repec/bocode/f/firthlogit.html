@@ -1,0 +1,137 @@
+<pre>
+<b>help firthlogit</b>                                          Version 1.0 2008-07-11
+<p>
+-------------------------------------------------------------------------------
+<p>
+<b><u>Title</u></b>
+<p>
+        <b>firthlogit</b> -- Penalized maximum likelihood logistic regression
+<p>
+<b><u>Syntax</u></b>
+<p>
+        <b>firthlogit</b> <i>depvar</i> [<i>indepvars</i>] [<i>if</i>] [<i>in</i>] [<i>weight</i>] [<b>,</b> <i>options</i>]
+<p>
+<p>
+    <i>options</i>               Description
+    -------------------------------------------------------------------------
+    Main
+      <b><u>l</u></b><b>evel(</b><i>#</i><b>)</b>            set confidence level; default is prevailing setting
+                            (see creturn)
+      <b>or</b>                  report odds ratios
+      <i>maximize_options</i>    maximization options
+    -------------------------------------------------------------------------
+    <b>by</b> may be used with <b>firthlogit</b>; see <b>by</b>.
+    <b>fweight</b>s are allowed with <b>firthlogit</b>; see weight.
+<p>
+<p>
+<b><u>Description</u></b>
+<p>
+    <b>firthlogit</b> fits logistic models by penalized maximum likelihood
+    regression. The method originally was proposed to reduce bias in maximum
+    likelihood estimates in generalized linear models. It also has utility in
+    logistic regression in circumstances in which "separation" is
+    problematic.
+<p>
+<p>
+<b><u>Options</u></b>
+<p>
+        +------+
+    ----+ Main +-------------------------------------------------------------
+<p>
+    <b>level</b> set confidence level; default is the Stata level setting.
+<p>
+    <b>or</b> is another reporting option, displaying coefficients as odds ratios.
+<p>
+    <i>maximize_options</i> many of the conventional <b>ml</b> options are available, the
+        most important of which is <b>constraint()</b>, which is used in penalized
+        likelihood ratio tests.  Options not available with <i>d0</i> estimators are
+        not available; see ml.
+<p>
+<p>
+<b><u>Remarks</u></b>
+<p>
+    Firth (1993) suggested a modification of the score equations in order to
+    reduce bias seen in generalized linear models.  Heinze and Schemper
+    (2002) suggested using Firth's method to overcome the problem of
+    "separation" in logistic regression, a condition in the data in which
+    maximum likelihood estimates tend to infinity (become inestimable). The
+    method allows convergence to finite estimates in cases of separation in
+    logistic regression.
+<p>
+    The method penalizes the log-likelihood with one-half of the logarithm of
+    the determinant of the information matrix.  <b>firthlogit</b> uses <b>ml</b> with a <i>d0</i>
+    log-likelihood estimator program. <i>d0</i> estimators use numerical
+    derivatives, and so are slower and slightly less accurate than linear
+    form <i>lf</i>, <i>d1</i> or <i>d2</i> estimator types.  Nevertheless, differences in standard
+    errors of the estimates between <b>firthlogit</b> and other software packages
+    are very minor. At least one of the latter uses the <i>unpenalized</i> Hessian
+    in the Newton-Raphson algorithm in order to avoid resorting to numerical
+    derivatives there.
+<p>
+    When the method is used in fitting logistic models in datasets giving
+    rise to separation, the affected estimate is typically approaching a
+    boundary condition.  As a result, the likelihood profile is often
+    asymmetric under these conditions; Wald tests and confidence intervals
+    are liable to be inaccurate. In these circumstances, Heinze and coworkers
+    recommend using likelihood ratio tests and profile likelihood confidence
+    intervals in lieu of Wald-based statistics. Calculation of likelihood
+    ratio test statistics with the method is done differently by Heinze and
+    coworkers from what is conventionally done: instead of omitting the
+    variable of interest and refitting the reduced model, the coefficient of
+    interest is constrained to zero and left in the model in order to allow
+    its contributing to the penalization. The test statistic is then computed
+    as twice the difference in penalized log likelihood values of the
+    unconstrained and constrained models by <b>lrtest</b> in a manner directly
+    analogous to that of conventional likelihood ratio tests.
+<p>
+    The penalization that allows for convergence to finite estimates in
+    conditions of separation also allows convergence to finite estimates with
+    very sparse data.  In these circumstances, the penalization tends to
+    over-correct for bias.
+<p>
+<p>
+<b><u>Examples</u></b>
+<p>
+    <b>. webuse hiv1</b>
+<p>
+    <b>. firthlogit hiv cd4 cd8</b>
+<p>
+    <b>. firthlogit, or</b>
+<p>
+    <b>. estimates store Full</b>
+<p>
+    <b>. constraint define 1 cd4</b>
+<p>
+    <b>. firthlogit hiv cd4 cd8, constraint(1)</b>
+<p>
+    <b>. lrtest Full .</b>
+<p>
+<p>
+<b><u>References</u></b>
+<p>
+    Firth, D. 1993. Bias reduction of maximum likelihood estimates.
+    <i>Biometrika</i> <b>80</b>:27-38.
+<p>
+    Heinze, G. and Schemper, M. 2002. A solution to the problem of separation
+    in logistic regression. <i>Statistics in Medicine</i> <b>21</b>:2409-19.
+<p>
+<p>
+<b><u>Acknowledgements</u></b>
+<p>
+    Jeff Pitblado provided a valuable pointer in displaying the results
+    correctly. The command is named so as to acknowledge David Firth as the
+    source of the method.  Note that Professor Firth is not otherwise
+    associated with or responsible for this command: contact the author
+    (below) to report bugs or other problems with the command.
+<p>
+<p>
+<b><u>Author</u></b>
+<p>
+    Joseph Coveney jcoveney@bigplanet.com
+<p>
+<p>
+<b><u>Also see</u></b>
+<p>
+    Manual:  <b>[R] exlogistic</b>
+<p>
+</pre>

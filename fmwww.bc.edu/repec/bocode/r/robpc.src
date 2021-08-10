@@ -1,0 +1,145 @@
+* @ROBPC(option) NB NE R
+* # list of series from which a correlation matrix is to be computed
+*
+* NB = the first observation in the series
+* NE = the last observation in the series
+* R = a robust correlation matrix produced by ROBPC
+*
+* OPTION:
+*
+*    STAN = 1  to retain the series in standardized form (default)
+*    STAN = 0  to return the series to their original units
+*
+* Before estimating the correlation matrix, ROBPC standardizes
+* each series as (X - median(X))/median absolute deviation(X).
+* If the correlation matrix will be used subsequently to
+* compute principal components, the data should remain in
+* this standardized form.
+*
+* Given several data series of equal length, the
+* procedure ROBPC computes a robust correlation
+* matrix for principal-component analysis, omitting
+* high-leverage observations that can distort the
+* usual product-moment correlation matrix. To find
+* such observations, ROBPC estimates the median center
+* of the data, then omits points whose euclidean
+* distance from the median center exceed a cutoff
+* value based on the chi-square distribution.
+*
+* Since it is equivariant for orthogonal transformations,
+* the robust correlation matrix is appropriate for principal-
+* component analysis.
+
+PROCEDURE ROBPC NB NE R
+
+TYPE SYMMETRIC *R
+TYPE INTEGER NB NE
+LOCAL VEC[INTEGER] NV
+LOCAL VEC B MED MAD CS50 CS975
+LOCAL INTEGER I K
+LOCAL SERIES XVAR YVAR
+LOCAL REAL MEDCEN
+OPTION SWITCH STAN 1
+
+ENTER(VARYING) NV
+INQUIRE(MATRIX=NV) K
+
+DIM R(K,K) NV(K) B(K) MED(K) MAD(K)
+DIM CS50(20) CS975(20)
+NONLIN B
+
+COMPUTE [VECTOR[REAL]] CS975 =  $
+|| 5.02,7.38,9.35,11.14,12.83,14.45,16.01,17.54,19.02,20.48, $
+21.92,23.34,24.74,26.12,27.49,28.85,30.19,31.53,32.85,34.17 ||
+
+COMPUTE [VECTOR[REAL]] CS50 =  $
+|| 0.455,1.39,2.37,3.36,4.35,5.35,6.35,7.34,8.34,9.34,  $
+10.3,11.3,12.3,13.3,14.3,15.3,16.3,17.3,18.3, 19.3 ||
+
+* PERFORM A ROBUST STANDARDIZATION OF THE VARIABLES
+
+COMPUTE I = 0
+DOFOR XVAR = NV
+COMPUTE I = I+1
+STATISTICS(NOPRINT,NOMOMENTS,FRACTILES) XVAR NB NE
+COMPUTE MED(I) = %MEDIAN
+SET XVAR NB NE = XVAR-MED(I)
+SET YVAR NB NE = ABS(XVAR)
+STATISTICS(NOPRINT,NOMOMENTS,FRACTILES) YVAR NB NE
+COMPUTE MAD(I) = 1.4826*%MEDIAN
+SET XVAR NB NE = XVAR/MAD(I)
+END DOFOR
+
+* USE THE COORDINATE-WISE MEDIAN TO INITIALIZE B
+
+COMPUTE B = MED
+
+* ESTIMATE THE MEDIAN CENTER OF THE DATA
+
+FIND(METHOD=BFGS) MIN MEDCEN
+{
+SET YVAR NB NE = 0.0
+COMPUTE I = 0
+DOFOR XVAR = NV
+COMPUTE I = I+1
+SET YVAR NB NE = YVAR + (XVAR-B(I))**2
+END DOFOR
+SET YVAR NB NE = SQRT(YVAR)
+STATISTICS(NOPRINT,FRACTILES) YVAR NB NE
+COMPUTE YMED = %MEDIAN
+COMPUTE MEDCEN = %MEAN
+}
+END FIND
+
+* IDENTIFY PROBABLE LEVERAGE POINTS
+
+SET YVAR NB NE = YVAR .LT. YMED*SQRT(CS975(K)/CS50(K))
+
+* STATISTICS YVAR NB NE
+
+* PRINT NB NE YVAR
+
+* COMPUTE THE ROBUST CORRELATION MATRIX
+
+CMOMENT(SMPL=YVAR,CORR)
+# NV
+COMPUTE R = %CMOM
+
+* IF STAN = 0, RETRANSFORM THE VARIABLES
+
+IF STAN .EQ. 1
+BEGIN
+BRANCH 10
+END
+COMPUTE I = 0
+DOFOR XVAR = NV
+COMPUTE I = I+1
+SET XVAR NB NE = XVAR*MAD(I) + MED(I)
+END DOFOR
+: 10 DISPLAY '   '
+
+END ROBPC
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

@@ -1,0 +1,178 @@
+<pre>
+<b>help spivreg</b>                                  also see:  <b>spivreg postestimation</b>
+                                                         <b>spreg</b>                 
+                                                         <b>spmat</b>                 
+-------------------------------------------------------------------------------
+<p>
+<p>
+<b><u>Title</u></b>
+<p>
+    <b>spivreg</b> -- Spatial-autoregressive model with spatial-autoregressive erros
+                 and additional endogenous variables
+<p>
+<p>
+<b><u>Syntax</u></b>
+<p>
+        <b>spivreg</b> <i>depvar</i> [<i>varlist1</i>] <b>(</b><i>varlist2</i> <b>=</b> [<i>varlist_iv</i>]<b>)</b> [<i>if</i>] [<i>in</i>]<b>,</b>
+              <b>id(</b><i>varname</i><b>)</b> [<i>options</i>]
+<p>
+<p>
+    <i>options</i>                         Description
+    -------------------------------------------------------------------------
+    Model
+    * <b>id(</b><i>varname</i><b>)</b>                   ID variable
+      <b><u>dl</u></b><b>mat(</b><i>name</i><b>)</b>                   <b>spmat</b> object used in the
+                                      spatial-autoregressive term
+      <b><u>el</u></b><b>mat(</b><i>name</i><b>)</b>                   <b>spmat</b> object used in the spatial-error
+                                      term
+      <b><u>nocon</u></b><b>stant</b>                    suppress constant term
+      <b><u>het</u></b><b>eroskedastic</b>               use the formula for the heteroskedastic
+                                      error term
+      <b>impower(</b><i>q</i><b>)</b>                    use <i>q</i> powers of matrix <b>W</b> in forming the
+                                      instrument matrix <b>H</b>; default is <b>2</b>
+<p>
+    Maximization
+      <i>maximize_options</i>              control the maximization process; seldom
+                                      used
+    -------------------------------------------------------------------------
+    * Required
+<p>
+<p>
+<b><u>Description</u></b>
+<p>
+    <b>spivreg</b> estimates the parameters of a cross-sectional
+    spatial-autoregressive model with spatial-autoregressive disturbances
+    which is known as a SARAR model when there are additional endogenous
+    regressors.
+<p>
+    A SARAR model includes a weighted average of the dependent variable,
+    known as a spatial lag, as a right-hand-side variable and it allows the
+    disturbance term to depend on a weighted average of the disturbances
+    corresponding to other units.  The weights may differ for each
+    observation and are frequently inversely related to the distance from the
+    current observation.  These weights must be stored in a spatial-weighting
+    matrix created by <b>spmat</b>.
+<p>
+    <b>spivreg</b> estimates the parameters by generalized spatial two-stage least
+    squares (GS2SLS).
+<p>
+    You can download Drukker, Prucha, and Raciborski (2011), which documents
+    this command, from 
+    http://econweb.umd.edu/~prucha/Papers/WP_spivreg_2011.pdf.
+<p>
+<p>
+<b><u>Options</u></b>
+<p>
+        +-------+
+    ----+ Model +------------------------------------------------------------
+<p>
+    <b>id(</b><i>varname</i><b>)</b> specifies a numeric variable that contains a unique
+        identifier for each observation. This option is required.
+<p>
+    <b>dlmat(</b><i>name</i><b>)</b> specifies an <b>spmat</b> object that contains the spatial-weighting
+        matrix <b>W</b> to be used in the spatial-autoregressive term.
+<p>
+    <b>elmat(</b><i>name</i><b>)</b> specifies an <b>spmat</b> object that contains the spatial-weighting
+        matrix <b>M</b> to be used in the spatial-error term.
+<p>
+    <b>noconstant</b> suppresses the constant term in the model.
+<p>
+    <b>heteroskedastic</b> specifies that <b>spivreg</b> use an estimator that allows <b>e</b> to
+        be heteroskedastically distributed over the observations.  By
+        default, <b>spivreg</b> uses an estimator that assumes homoskedasticity.
+<p>
+    <b>impower(</b><i>q</i><b>)</b> specifies how many powers of the matrix <b>W</b> to include in
+        calculating the instrument matrix <b>H</b>.  Integers in the set {2, 3, ...,
+        <b>floor(sqrt(cols(W)))</b>} are allowed, with <i>q</i> = <b>2</b> being the default.
+<p>
+<a name="maximize_options"></a>        +--------------+
+    ----+ Maximization +-----------------------------------------------------
+<p>
+    <i>maximize_options</i>:  <b><u>iter</u></b><b>ate(</b><i>#</i><b>)</b>, [<b><u>no</u></b>]<b><u>lo</u></b><b>g</b>, <b><u>tr</u></b><b>ace</b>, <b><u>grad</u></b><b>ient</b>, <b>showstep</b>,
+        <b><u>showtol</u></b><b>erance</b>, <b><u>tol</u></b><b>erance(</b><i>#</i><b>)</b>, <b><u>ltol</u></b><b>erance(</b><i>#</i><b>)</b>, <b>from(</b><i>init_specs</i><b>)</b>; see <b>[R]</b>
+        <b>maximize</b>.  These options are seldom used.
+<p>
+<p>
+<b><u>Example</u></b>
+<p>
+    Setup
+        <b>. use pollute</b>
+        <b>. spmat use cobj using pollute.spmat</b>
+<p>
+    Estimate the SARAR parameters
+        <b>. spivreg pollution area (factories = penalties), id(id) dlmat(cobj)</b>
+            <b>elmat(cobj)</b>
+<p>
+<p>
+<b><u>Saved results</u></b>
+<p>
+    <b>spivreg</b> saves the following in <b>e()</b>:
+<p>
+    Scalars        
+      <b>e(N)</b>                number of observations
+      <b>e(k)</b>                number of parameters
+      <b>e(rho_2sls)</b>         initial estimate of <i>rho</i>
+      <b>e(iterations)</b>       number of GMM iterations
+      <b>e(iterations_2sls)</b>  number of 2SLS iterations
+      <b>e(converged)</b>        <b>1</b> if GMM stage converged, <b>0</b> otherwise
+      <b>e(converged_2sls)</b>   <b>1</b> if 2SLS stage converged, <b>0</b> otherwise
+<p>
+    Macros         
+      <b>e(cmdline)</b>          command as typed
+      <b>e(cmd)</b>              <b>spivreg</b>
+      <b>e(model)</b>            <b>sarar</b>, <b>sar</b>, <b>sare</b>, or <b>lr</b>
+      <b>e(het)</b>              <b>heteroskedastic</b> or <b>homoskedastic</b>
+      <b>e(title)</b>            title in estimation output
+      <b>e(depvar)</b>           name of dependent variable
+      <b>e(indeps)</b>           names of independent variables
+      <b>e(exogr)</b>            exogenous regressors
+      <b>e(insts)</b>            instruments
+      <b>e(instd)</b>            instrumented variables
+      <b>e(constant)</b>         <b>noconstant</b> or <b>hasconstant</b>
+      <b>e(H_omitted)</b>        names of omitted instruments in <b>H</b>
+      <b>e(idvar)</b>            name of ID variable
+      <b>e(dlmat)</b>            name of <b>spmat</b> object in <b>dlmat()</b>
+      <b>e(elmat)</b>            name of <b>spmat</b> object in <b>elmat()</b>
+      <b>e(predict)</b>          program used to implement <b>predict</b>
+      <b>e(estat_cmd)</b>        program used to implement <b>estat</b>
+      <b>e(properties)</b>       <b>b V</b>
+<p>
+    Matrices       
+      <b>e(b)</b>                coefficient vector
+      <b>e(V)</b>                variance-covariance matrix of the estimators
+      <b>e(delta_2sls)</b>       initial estimate of <i>lambda</i> and <b>b</b>
+<p>
+    Functions      
+      <b>e(sample)</b>           marks estimation sample
+<p>
+<p>
+<b><u>References</u></b>
+<p>
+    Drukker, D. M., I. R. Prucha, and R. Raciborski. 2011.  A command for
+        estimating spatial-autoregressive models with spatial autoregressive
+        disturbances and additional endogenous variables.  Working paper, The
+        University of Maryland, Department of Economics, 
+        http://econweb.umd.edu/~prucha/Papers/WP_spivreg_2011.pdf.
+<p>
+<p>
+<b><u>Authors</u></b>
+<p>
+    David Drukker, StataCorp, College Station, TX.  ddrukker@stata.com.
+<p>
+    Ingmar Prucha, Department of Economics, University of Maryland, College
+        Park, MD.  prucha@econ.umd.edu.
+<p>
+    Rafal Raciborski, StataCorp, College Station, TX.  rraciborski@stata.com.
+<p>
+<p>
+<b><u>Acknowledgment</u></b>
+<p>
+    We gratefully acknowledge financial support from the National Institute
+    of Health through the SBIR grant R43 AG027622 and R44 AG027622.
+<p>
+<p>
+<b><u>Also see</u></b>
+<p>
+    Online:  <b>spmat</b>, <b>spreg</b>, <b>spmap</b>, <b>shp2dta</b>, <b>mif2dta</b> (if installed)
+<p>
+</pre>

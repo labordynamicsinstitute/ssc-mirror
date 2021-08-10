@@ -1,0 +1,68 @@
+<pre>
+-------------------------------------------------------------------------------
+help for <b>sqr</b>
+-------------------------------------------------------------------------------
+<p>
+<b><u>Make graphs square </u></b>-<b><u> or any other shape</u></b> 
+<p>
+        <b>sqr</b> <i>graph_command</i> <i>varlist</i> [<b>if</b> <i>exp</i>] [<b>in</b> <i>range</i>] [[<i>weight</i>]]
+            [ <b>,</b> <b><u>a</u></b><b>spectratio(</b><i>#</i><b>)</b> <i>graph_command_options</i> ]
+<p>
+<p>
+Note: This program requires Stata 7 as a minimum. In Stata 8 and up, it applies
+only to old-style graphs produced by <b>gr7</b>. The only reason to try to use it in
+Stata 8 and up is to apply it to such graphs, in which case <b>graph</b> here should
+be understood as <b>gr7</b>. Otherwise, find the <b>aspectratio()</b> option.
+<p>
+<p>
+<b><u>Description</u></b> 
+<p>
+<b>sqr</b> is a command prefix to place before any graph command to make graphs
+square. Optionally, other aspect ratios may be specified.  For example, many
+time series plots look better with low aspect ratios such that individual line
+segments are closer to 45 degrees from horizontal.
+<p>
+<p>
+<b><u>Remarks</u></b> 
+<p>
+<p>
+<b>sqr</b> works by using the <b>bbox()</b> option of <b>graph</b>. This will be possible so long as
+either (1) <i>graph_command</i> is itself <b>graph</b> or (2) it is set up to call <b>graph</b> with
+any user-specified options of <b>graph</b>, and does not specify <b>bbox()</b> itself.
+<p>
+<b>sqr</b> does not control the shape of the data region, but the shape of the whole
+graph image. Nor is any adjustment made to (e.g.) size or positioning of
+lettering.
+<p>
+<p>
+<b><u>Options</u></b>
+<p>
+<b>aspectratio(</b><i>#</i><b>)</b> specifies an aspect ratio (height / width) for the total graph
+    image. In practice, aspect ratios between about 0.2 and 2 are possible. The
+    default is 1 (square).
+<p>
+<i>graph_command_options</i> are whatever options apart from <b>bbox()</b> are allowed with
+    <i>graph_command</i>.
+<p>
+<p>
+<b><u>Examples (Stata 7)</u></b>
+<p>
+    . sqr graph mpg, by(foreign) box
+<p>
+    . sqr tsgraph vol, a(0.4)
+<p>
+    . for num 0.2(0.1)2, pause: sqr graph mpg weight, a(X)
+<p>
+<p>
+<b><u>Author</u></b> 
+<p>
+         Nicholas J. Cox, University of Durham, U.K.
+         n.j.cox@durham.ac.uk
+<p>
+<p>
+<b><u>Also see</u></b>
+<p>
+On-line: help for gph 
+ Manual: <b>[G] gph</b> (Stata 7 only) 
+    FAQ: http://www.stata.com/support/faqs/graphics/sqgraph.html
+</pre>

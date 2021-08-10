@@ -1,0 +1,681 @@
+<pre>
+-------------------------------------------------------------------------------
+help for <b>tabout</b>
+-------------------------------------------------------------------------------
+<p>
+<b><u>Title</u></b>
+<p>
+    <b>tabout</b> -- Building publication quality tables for export to a text file
+<p>
+<b><u>Table of contents</u></b>
+<p>
+     Syntax
+     Description
+     Options
+     Examples
+<p>
+<p>
+<a name="syn"></a><p>
+<b><u>Syntax</u></b>
+<p>
+        <b>tabout</b> [ <i>varlist</i> ] [ <b>if</b> <i>exp</i> ] [ <b>in</b> <i>range</i> ] [ <i>weight</i><b> = </b><i>exp</i> ] <b>using</b>
+               <i>filename</i> [ <b>,</b> <i>options</i> ]
+<p>
+<p>
+    <i>options</i>                          alternatives
+    ----------------------------------------------------------------------
+    
+        core options
+      <b><u>rep</u></b><b>lace</b> <b><u>app</u></b><b>end</b> 
+      <b><u>c</u></b><b>ells(</b><i>contents</i><b>)</b>                see below
+      <b><u>f</u></b><b>ormat(</b><i>string</i><b>)</b>
+      <b>clab(</b><i>string</i><b>)</b>
+      <b><u>lay</u></b><b>out(</b><i>layouts</i><b>)</b>                 col row cblock rblock
+      <b>one</b>way
+      <b>sum</b>
+      <b>stats(</b><i>statstypes</i><b>)</b>               chi2 gamma V taub lrchi2
+    sample size (n) options  
+      <b>npos(</b><i>positions</i><b>)</b>                 col row both lab tufte
+      <b>nlab(</b><i>string</i><b>)</b>
+      <b>nwt(</b><i>string</i><b>)</b>
+      <b>nnoc</b>
+      <b><u>noff</u></b><b>set(</b><i>string</i><b>)</b>
+    survey options       
+      <b>svy</b>
+      <b><u>seb</u></b><b>none</b>
+      <b><u>cib</u></b><b>none</b>
+      <b>cisep</b><i>string</i><b>)</b>
+      <b>ci2col</b>
+      <b>per</b>cent
+      <b><u>l</u></b><b>evel(</b><i>#</i><b>)</b>
+      <b>pop</b>
+    total options    
+      <b><u>tot</u></b><b>al(</b><i>string</i><b>)</b>
+      <b><u>ptot</u></b><b>al(</b><i>totaltype</i><b>)</b>               none single all
+      <b>h1(</b><i>string</i><b>)</b>
+      <b>h2(</b><i>string</i><b>)</b>
+      <b>h3(</b><i>string</i><b>)</b>
+    style options        
+      <b>style(</b><i>styles</i><b>)</b>                   tab tex htm csv semi
+      <b>lines(</b><i>linetypes</i><b>)</b>                single double none
+      <b>font(</b><i>fontstyles</i><b>)</b>                bold italic
+      <b>bt</b>
+      <b><u>rot</u></b><b>ate(</b><i>#</i><b>)</b>
+      <b>cl1(</b><i>#-#</i><b>)</b>
+      <b>cl2(</b><i>#-#</i><b>)</b>
+      <b>cltr1(</b><i>string</i><b>)</b>
+      <b>cltr2(</b><i>string</i><b>)</b>
+    additional output options    
+      <b>body</b>
+      <b>topf(</b><i>string</i><b>)</b>
+      <b>botf(</b><i>string</i><b>)</b>
+      <b>topstr(</b><i>string</i><b>)</b>
+      <b>botstr(</b><i>string</i><b>)</b>
+      <b><u>ps</u></b><b>ymbol(</b><i>string</i><b>)</b>
+      <b>delim(</b><i>string</i><b>)</b>
+    miscellaneous options    
+      <b><u>dpc</u></b><b>omma</b>
+      <b><u>mon</u></b><b>ey(</b><i>string</i><b>)</b>
+      <b>mi</b>
+      <b>sort</b>
+      <b><u>chkwt</u></b><b>none</b>
+      <b>debug</b>
+      <b><u>nobord</u></b><b>er</b>
+      <b>show(</b><i>showtypes</i><b>)</b>                 output none all 
+      <b>wide(</b><i>#</i><b>)</b>
+<p>
+<p>
+        <b>where:</b>
+<p>
+            <i>varlist</i> is [list] of vertical (row) variables, followed by the
+            horizontal (column) variable last. if the <b>oneway</b> option is
+            specified, then all the variables are regarded as vertical.
+<p>
+            <i>contents</i> for basic tables any of the following are permitted:
+            <i>freq cell row col cum</i>. The default is<i> freq</i>.
+<p>
+            For summary tables any of the following are permitted:
+<p>
+                <i>N count mean median var sd skewness kurtosis uwsum</i>
+                <i>sum min max p1 p5 p10 p25 p50 p75 p90 p95 p99 iqr</i>
+                <i>r9010 r9050 r7525 r1050</i>
+<p>
+<p>
+            Note that you may enter the median as either <i>p50</i> or <i>median</i> and
+            you may enter N as either <i>N</i> or <i>count</i>.
+<p>
+            When the<b> svy</b> option is used, you can also specify any of the
+            following:<i>  se ci lb ub</i>
+<p>
+        <b>fweights aweights iweights</b> and<b> pweights</b> are allowed with<b> tabout</b>,
+        depending on the underlying command; see Manual: <b>[U] 14.1.6 weight</b>
+        and individual entries for<b> [R] tabulate</b> and<b> [R] summarize</b>. For tables
+        of summary statistics, <b>iweight</b>s are not allowed, because <b>tabout</b> uses
+        the <b>detail</b> option in <i>Stata</i>'s summarize command (which does not allow
+        <b>iweight</b>s). The<b> svy</b> option requires that the data be already<b> svyset</b>
+        and an error message reminds you of this if you forget.
+<p>
+        Note that<b> tabout</b> will work under Stata 9.2 onward. An older version
+        of <b>tabout</b> (which works with Stata 8.2) called <b>tabout8</b> is available
+        here: http://www.ianwatson.com.au/stata/tabout8.ado.
+<p>
+<a name="des"></a><p>
+<b><u>Description</u></b>
+<p>
+    <b>tabout</b> is a table building program for oneway and twoway tables of
+    frequencies and percentages, and for summary tables. It produces
+    publication quality tables for export to a text file. These tables can
+    then be used with spreadsheets, word processors, web browsers or
+    compilers like LaTeX. The tables produced by <b>tabout</b> allow multiple panels
+    so that a number of variables can be included in the one table. <b>tabout</b>
+    also provides standard errors and confidence intervals, as well as a
+    range of table statistics (chi2 etc). The output from <b>tabout</b> matches
+    <i>Stata's</i><b> tabulate</b>, most of<b> tabstat</b> and some of<b> table</b>.
+<p>
+    <b>tabout</b> has a comprehensive tutorial which includes numerous examples.
+    This is available from the SSC with this help file. The tutorial is also
+    available here: http://www.ianwatson.com.au/stata/tabout_tutorial.pdf.
+<p>
+<p>
+<a name="opt"></a><p>
+<b><u>Options</u></b>
+<p>
+    Contents
+<p>
+     core options
+     sample size (n) options 
+     survey options      
+     total options   
+     style options       
+     additional output options   
+     miscellaneous options   
+<a name="cor"></a><p>
+        +--------------+
+    ----+ core options +-----------------------------------------------------
+<p>
+    <b>using</b> is required, and indicates the filename for the output. Some
+        applications (particularly MS Excel) "lock" files when they're open.
+        <b>tabout</b> cannot write to these files and consequently issues an error
+        message, warning you to check if the file is already open in another
+        application.
+<p>
+    <b>replace</b> and<b> append</b> are file options, and determine whether the current
+        output will overwrite an existing file, or be appended to the end of
+        that file. If you omit<b> append</b> or<b> replace</b>,<b> tabout</b> issues a warning if
+        the file already exists.
+<p>
+    <b>cells</b> determines the contents of table cells. As the table below shows,
+        you can enter any one or more of<i> freq cell row col cum</i> in a basic
+        table.  They can be in any order. When you choose the<b> svy</b> option, you
+        can only have one of these choices, and it must come first.  The
+        additional choices which are then available are:<i>  se ci lb ub</i>.
+<p>
+        For summary tables, you can have any of the<i> contents</i> listed earlier.
+        If you are creating a twoway table, only one summary statistic may go
+        in a cell (eg.<i>  median wage</i>); if it's a oneway table, any number of
+        statistics (followed by a variable name) may go in the cell (eg.
+        <i>median wage mean age iqr weight</i>). When you choose the<b> svy</b> option with
+        summary tables, only <i>mean</i> is allowed (eg.<b>  mean wage se ci</b>.)
+<p>
+        +----------------------------------------------------------------------
+--------------+
+        | <i>Type of table</i>        |      <i>Allowable cell contents</i>         |   <i>Avail</i>
+<i>&gt; able layout</i>   |
+        |                      |             <i>cells( )</i>                 |     <i>lay</i>
+<i>&gt; out( )</i>        |
+        |----------------------+--------------------------------------+--------
+--------------|
+        | <b>basic</b>                | freq cell row col cum                | col row
+&gt;   cb rb       |
+        |                      | <b>any number of above, in any order</b>    |        
+&gt;               |
+        |                      | <i>for example: cells(freq col)</i>         |        
+&gt;               |
+        |----------------------+--------------------------------------+--------
+--------------|
+        | <b>basic with SE or CI</b>  | freq cell row col se ci lb ub        | col row
+&gt;  cb rb        |
+        |                      | <b>only one of:</b> freq cell row col       |        
+&gt;               |
+        | (turn on <i>svy</i> option) | <i>(must come first in the cell)</i>        |        
+&gt;               |
+        |                      | <b>and any number of:</b> se ci lb ub       |        
+&gt;               |
+        |                      | <i>for example: cells(col se lb ub)</i>     |        
+&gt;               |
+        |----------------------+--------------------------------------+--------
+--------------|
+        | <b>summary</b>              | <b>any number of:</b> N mean var sd skewness| no opti
+&gt; ons (fixed)   |
+        | -as a oneway table   | kurtosis sum uwsum min max count     |        
+&gt;               |
+        |                      | median iqr r9010 r9050 r7525 r1050   |        
+&gt;               |
+        | (turn on <i>sum</i> option; | p1 p5 p10 p25 p50 p75 p90 p95 p99    |        
+&gt;               |
+        | also may need to turn| <b>with each followed by variable name</b>  |        
+&gt;               |
+        | on <i>oneway</i> option)    | <i>for example: cells(min wage mean age)</i>|        
+&gt;               |
+        |----------------------+--------------------------------------+--------
+--------------|
+        | <b>summary</b>              | <b>only one of:</b> N mean var sd skewness  | no opti
+&gt; ons (fixed)   |
+        | -as a twoway table   | kurtosis sum uwsum min max count     |        
+&gt;               |
+        |                      | median iqr r9010 r9050 r7525 r1050   |        
+&gt;               |
+        | (turn on <i>sum</i> option) | p1 p5 p10 p25 p50 p75 p90 p95 p99    |        
+&gt;               |
+        |                      | <b>followed by one variable name</b>        |        
+&gt;               |
+        |                      | <i>for example: cells(sum income)</i>       |        
+&gt;               |
+        |----------------------+--------------------------------------+--------
+--------------|
+        | <b>summary with SE or CI</b>| mean <b>followed by one variable name</b>   | col row
+&gt;  cb rb        |
+        | turn on <i>sum</i> option   | <b>and any number of:</b> se ci lb ub       |        
+&gt;               |
+        | and <i>svy</i> option)      | <i>for example: cells(mean weight se ci)</i>|        
+&gt;               |
+        +----------------------------------------------------------------------
+--------------+
+<p>
+<p>
+    <b>format</b> indicates the number of decimal points. Unlike mainstream <i>Stata</i>,
+        this option only requires a number. Do not enter % or f symbols. You
+        can however, enter<b> c</b> for comma,<b> p</b> for percentage, and<b> m</b> for money
+        (currency) and you can use the<b> money</b> option (see below) to specify
+        the currency. For example, you might enter<b> f(0c 1p 1p 2)</b> to produce:
+        1,291 9.2% 10.3% 23.93. The entries should be in the same order as
+        the<b> cells</b> order, that is, if<b> freq</b> comes first, then<b> 0c</b> should come
+        first if you want 0 decimal points (with commas) as the format for
+        frequencies. You do not have to type in the same number of format
+        entries as there are cell entries. If you include more,<b> tabout</b>
+        ignores them; if you include less, the last<b> format</b> entry is repeated
+        for the remaining cell entries.
+<p>
+    <b>clab</b> determines the column headings for the third row of the table, that
+        is, the headings just above the data. By default,<b> tabout</b> places the
+        horizontal variable's name in the first row, its value labels in the
+        second row, and an abbreviation for the cell contents (eg. No. Row %
+        etc) in the third row. You can over-ride all of these defaults using
+        the<b> h1 h2</b> and<b> h3</b> options (see below). Most of the time, however, it
+        will only be the third row which you need to change, so the<b> clab</b>
+        option makes this easy for you.  Just enter the column titles as you
+        want them to display, without quote marks or other symbols. <i>However</i>,
+        you must include underscores between words if there are spaces in the
+        column title, for example<b> clab(No. Row_% Col_%)</b>. You do not have to
+        type in the same number of<b> clab</b> entries as there are cell entries. If
+        you include more,<b> tabout</b> ignores them; if you include less, the last
+        <b>clab</b> entry is repeated for the remaining cell entries. For example if
+        your cell entry was<b> freq col row cum</b> you could just enter<b> clab(No.</b>
+        <b>%)</b>and all but the first column of data would have % symbols at the
+        top.
+<p>
+    <b>layout</b> determines how the columns will be laid out. They can be in
+        alternating columns (No. % No. % No. %) and alternating rows (No. on
+        the first row, % on the next two, then back to No. and so on). They
+        can be in column blocks, or in row blocks, where the data is kept
+        contiguous, for example: No. No. No. % % %. The exception to this is
+        summary tables where the layout is fixed and you have no choice.
+        (However, an exception to this is the<b> svy</b> option, which can be laid
+        out using all of these options. See the earlier table for
+        clarification.)
+<p>
+    <b>oneway</b> tells<b> tabout</b> that the list of variables are all vertical.
+        Normally,<b> tabout</b> assumes that the last variable in the list is the
+        horizontal variable, to be used in a twoway cross-tabulation. To
+        override this default behaviour, specify<b> oneway</b>.
+<p>
+    <b>sum</b> tells<b> tabout</b> that the table is to be a summary table.  Normally,
+        <b>tabout</b> assumes that the table will be a basic table and checks to see
+        if the<b> cells</b> contents have the correct entries (<b> freq row col</b> etc).
+        By telling<b> tabout</b> that the table is a summary table, this checking
+        process includes checks for the various summary statistics and the
+        variables in the data set. The<b> sum</b> option is essential if you wish to
+        produce a summary table.
+<p>
+    <b>stats</b> allows you to include additional information based on the various
+        statistics available in<b> tabulate</b>.  Note that, unlike<b> tabulate</b>,<b> tabout</b>
+        requires that you enter the full term (and not an abbreviation) and
+        will only allow <i>one</i> statistic in a table. You must enter<b> chi2</b>, not
+        just<b> chi</b>.
+<p>
+<a name="sam"></a><p>
+        +-------------------------+
+    ----+ sample size (n) options +------------------------------------------
+<p>
+    <b>npos</b> determines where the n information will be place. The various n
+        options (<b> npos nlab nwt nnoc</b>) provide sample counts for the table.
+        You need only enter one of these options for the n to be included.
+        For the options you have not entered,<b> tabout</b> places make use of the
+        default values.
+<p>
+    <b>lab</b> determines the label for the n counts. The default for<b> col</b> and<b> row</b>
+        positions is a simple uppercase N; for the<b> lab</b> position it is<b> (n=#)</b>
+        where # stands for number; and for the<b> tufte</b> position it is<b> (#%)</b>. You
+        can change all of these except the<b> tufte</b> position (which is fixed),
+        and if you wish to alter the<b> lab</b> position, use the # symbol to
+        indicate where the number should go. For example, {cmd: npos(lab)
+        nlab(Sample count=#)}.  The<b> npos(tufte)</b> option provides a convenient
+        way of displaying a percentage breakdown, rather than a count, for
+        the main vertical variables. The name comes from the approach adopted
+        by Edward Tufte in his construction of a supertable, which he
+        designed for the <i>New York Times</i> in 1980.
+<p>
+    <b>nwt</b> indicates that the n count be weighted by this variable. This can be
+        useful for producing population estimates in a table, rather than
+        just sample counts. Note that<b> tabout</b> always uses <i>Stata</i>'s<b> iweight</b>
+        option for this weighting.
+<p>
+    <b>nnoc</b> stands for n-no-comma and turns off the comma in the n count.
+        Because<b> tabout</b> does not provide a<b> format</b> option for n counts (decimal
+        points don't really make sense here), the default behaviour is to
+        include commas. The<b> nnoc</b> option over-rides this default behaviour.
+<p>
+    <b>noffset</b>stands for n offset and determines where the n counts should be
+        placed. The default is 1, which means the n counts will be in the
+        first data column and/or the first data row in a table.  Setting
+        <b>noff(2)</b> for example, allows you to shift the n counts further along
+        (or down) in the table, into either the second data column or the
+        second data row. If you are using block layouts (<b>layout(cb)</b> or
+        <b>layout(rb)</b>), the<b> noffset</b> option applies to blocks rather than
+        individual columns or rows.
+<p>
+<a name="sur"></a><p>
+        +----------------+
+    ----+ survey options +---------------------------------------------------
+<p>
+    <b>svy</b> tells<b> tabout</b> that the<b> cell</b> contents include survey output, and so the
+        checking procedure (mentioned earlier) looks for things like<b> se</b>,<b> ci</b>
+        and so forth. You must turn on<b> svy</b> is you wish to include survey
+        output in your table.
+<p>
+    <b>sebnone</b> stands for se-brackets-none and tells<b> tabout</b> to suppress the
+        parentheses which normally surround the standard errors.
+<p>
+    <b>cibnone</b> stands for ci-brackets-none and tells<b> tabout</b> to suppress the
+        square brackets which normally surround the confidence intervals.
+<p>
+    <b>cisep</b> stands for ci-separator and tells<b> tabout</b> to replace the default
+        (which is a comma) by whatever the user enters (for example, a dash).
+<p>
+    <b>ci2col</b> stands for ci-in-two-columns and tells<b> tabout</b> to place the<b> lb</b> and
+        <b>ub</b> estimates in two columns (as it normally does), and to place a [
+        and a , in the first column, and a ] in the second column.  This can
+        be useful for layout in a word processor, because the first column
+        can be right aligned (to the comma) and the second column can be left
+        aligned, and it appears that you have a single column for your ci,
+        which is neatly aligned according to the commas. Note that if you
+        select<b> ci</b> in the<b> cells</b>,<b> tabout</b> normally places both the lower bound
+        and the upper bound in a single cell and includes brackets and
+        separator. The<b> ci2col</b> does not apply in this case. For it to work,
+        you need to specify the upper and lower bound options, for example:
+        {cmd: cell(freq lb ub) ci2col}.
+<p>
+    <b>percent</b> tells<b> tabout</b> that the<b> svy</b> output should be shown as percentages,
+        not proportions. This follows the default behaviour of<b> svy:tab</b>.
+<p>
+    <b>level</b> specifies the level for the<b> svy</b> estimates. The default is 95%.
+<p>
+    <b>pop</b> specifies that a weighted population estimate should be provided for
+        the n in the table, rather than the sample size. This option makes
+        use of the weight specified by the<b> nwt</b> option. This makes the<b> svy</b>
+        option work the same as the<b> nwt</b> option with non-survey tables.
+<p>
+<a name="tot"></a><p>
+        +---------------+
+    ----+ total options +----------------------------------------------------
+<p>
+    <b>total</b> tells<b> tabout</b> what labels to use for totals. The vertical total
+        comes first, the horizontal second. The default labels for these
+        variables are<i> Total</i>. If there are spaces in either of the labels
+        which you wish to enter, use underscores. For example,
+        <i>total(All_persons Total)</i>.
+<p>
+    <b>ptotal</b> tells<b> tabout</b> how to treat the totals for each panel, when you have
+        multiple panels in a table. The default behaviour is to show all
+        totals, but this can sometimes be repetitive, so you can specify
+        <b>ptotal(single)</b> to have a single total row shown at the bottom of the
+        table. You can also turn off all totals with<b> ptotal(none)</b>.
+<p>
+    <b>h1</b> through to<b> h3</b> over-ride the default headings for a table.  If you
+        choose to use these, there are a couple of requirements. If you have
+        selected either<b> tex</b> or<b> htm</b> as your output style, you are responsible
+        for all the various code needed.<b>  tabout</b> does not make <i>any</i>
+        adjustments to what you enter, it just outputs it as it finds it.  If
+        you have chosen<b> tab</b> or<b> csv</b> as your output style, you must enter a
+        delimiter to indicate where the columns are in your heading. Unlike
+        the usual<b> tabout</b> practice, you do not need to worry about spaces in
+        your titles (no need for underscores!) because this column delimiter
+        takes care of things. However, the number of delimiters must match
+        the number of columns in the table or the headings may be out of
+        alignment. You might enter:<b>  h2( | Very good | Good | Bad | Very bad</b>
+        <b>| Total | N)</b> and the first column heading would be empty, and the
+        remaining columns would have the appropriate labels. Note that the
+        <b>npos(col)</b> option usually places the<b> nlab</b> on the<b> h2</b> line so you may
+        need to include this yourself in your<b> h2</b> label, as in the example
+        just given. To suppress the display of any of these headings, enter
+        `nil' into the appropriate option (for example,<b> h3(nil)</b>).
+<p>
+<a name="sty"></a><p>
+        +---------------+
+    ----+ style options +----------------------------------------------------
+<p>
+    <b>style</b> The default is<b> style(tab)</b>, which is useful for importing into
+        spreadsheets or word processors. Note that the first row always has
+        the correct number of tabs, even when a single title is involved.
+        This helps other applications parse the table correctly. Note also
+        that the repetition of labels in headings can be easily dealt with by
+        using a merge cells command in your spreadsheet or word processor.
+        The<b> style(csv)</b> option is useful for importing into spreadsheets (like
+        MS Excel) because it opens immediately as a spreadsheet. The
+        <b>style(semi)</b> uses semi-colons as the delimiter.  Note, however, that
+        some spreadsheets ignore trailing 0s, so this may muck up your neat
+        formatting. To avoid this, export the table from<b> tabout</b> as<b> style(tab)</b>
+        and use the wizard in your spreadsheet to indicate that all columns
+        are text rather than general.
+<p>
+    <b>lines</b> indicates how much space (for<b> style(tab)</b> and<b> style(csv)</b>) or how
+        many lines (for<b> style(tex)</b>) should separate tables between panels.
+        The default is<b> single</b>.
+<p>
+    <b>font</b> only applies to<b> style(tex)</b> and<b> style(htm)</b> and provides bold and
+        italic fonts for the vertical variable names and the horizontal
+        variable names and value labels. The totals are also given this font.
+        You can also use the<b> h1</b> to<b> h3</b> options to manually set up fonts for
+        your titles.
+<p>
+    <b>bt</b> only applies to users of LaTeX, and requires that you have the
+        <b>booktabs</b> package installed. This allows the use of the toprule,
+        midrule and bottomrule commands, rather than the usual hline command.
+        It produces more pleasing output.
+<p>
+    <b>rotate</b> only applies to users of LaTeX, and can be used to rotate the
+        horizontal variable's labels through whatever angle is entered in
+        this option. For example,<b> rotate(60)</b> produces quite a pleasing
+        effect.
+<p>
+<p>
+    <b>cl1</b> and<b> cl2</b> only apply to users of LaTeX, and also requires that you use
+        the booktabs package in your LaTeX document. These options can be
+        used to place column lines (hence cl) between the first and second
+        heading rows, and between the second and third heading rows (hence
+        two sets). You enter the column numbers which you wish to span,
+        separated with a dash. For example, to place a line under the
+        horizontal variable's name, you might enter:<b>  cl1(2-6)</b> in a table
+        with six columns. If you are entering lines spanning blocks of
+        columns (2-4 5-7), you might need to fine tune the gap between them
+        using<b> cltr1</b> and<b> cltr2</b>. By default, whenever you specify either of the
+        <b>cl</b> options,<b> tabout</b> places a small gap (0.75em) between adjacent
+        lines.
+<p>
+    <b>cltr1</b> and<b> cltr2</b> stand for column-line-trim, and allow you to specify an
+        amount of trim to be applied to the left side of the<b> cl1</b> or<b> cl2</b> lines
+        which you have entered. You can specify the amount in whatever
+        acceptable tex measurement you like. For example:<b>  cl2(2-3 4-5 6-7)</b>
+        <b>cltr2(1.5em)</b>. As just noted, the default amount is 0.75em.
+<p>
+<a name="add"></a><p>
+        +---------------------------+
+    ----+ additional output options +----------------------------------------
+<p>
+    <b>body</b> is used to insert some basic html or LaTeX code above and below the
+        table. This allows you to view the table without further coding.
+<p>
+    <b>topf</b> and<b> botf</b> allow you to insert code stored in files which<b> tabout</b> can
+        insert above and below the tables. These are particularly useful for
+        html and LaTeX users, and allow you to control the layout of the
+        tables more precisely. All users will find them useful as a way of
+        inserting additional information above and below the table, such as
+        notes, populations, data sources (for the bottom of the table) and
+        titles (for the top of the table).
+<p>
+    <b>topstr</b> and<b> botstr</b> contain text which you can pass to the<b> topf</b> and<b> botf</b>
+        files. This text will be inserted into the files where ever the
+        placeholder (default #) has been placed. Note that each placeholder
+        must be on a separate line in these files. The strings designated in
+        the<b> topstr</b> and<b> botstr</b> must be separated with the pipe delimiter (or
+        other user-chosen delimiter) if there is more than one block of text
+        being passed.
+<p>
+    <b>psymbol</b> stands for placeholder-symbol and can be any symbol the user
+        chooses. The default is # and it provides a placeholder in the stored
+        files (the<b> topf</b> and<b> botf</b>) which<b> tabout</b> places above and below the
+        tables.
+<p>
+    <b>delimit</b> can be any symbol the user chooses. The default is the pipe
+        delimiter (|) as shown in the earlier example. It is used to specify
+        columns within the<b> h1</b> to<b> h3</b> options, and for separating the contents
+        of the<b> topstr</b> and<b> botstr</b> options. Note, unlike earlier versions of
+        <b>tabout</b>, the delimit symbol is no longer used for labels. Instead,
+        underscores are used to close-up spaces and parsing is done on the
+        remaining spaces.
+<p>
+<a name="mis"></a><p>
+        +-----------------------+
+    ----+ miscellaneous options +--------------------------------------------
+<p>
+    <b>dpcomma</b> specifies that<b> tabout</b> should use commas for decimal points and
+        periods (full-stops) for thousand separators. This style is common in
+        many European countries. This option affects the presentation of both
+        the tabular output and the statistics when these are requested (such
+        as chi2).
+<p>
+    <b>money</b> indicates the currency to be used if you have chosen the money
+        format. For example,<b> format(2m) money(\pounds)</b>. You can enter any
+        symbol that your keyboard allows. For LaTeX users, you can enter any
+        text which LaTeX accepts, though you may need to include quotes.
+<p>
+    <b>mi</b> specifies that tabout should display missing values. This works the
+        same as the mi option in Stata's tabulate command.
+<p>
+    <b>sort</b> specifies that tabout should display values in descending order of
+        frequecy.  This works the same as the sort option in Stata's tabulate
+        oneway command. Note that you cannot use this option with twoway
+        tables.
+<p>
+    <b>chkwtnone</b> prevents <b>tabout</b> from checking the legality of your weights.
+        <b>Stata</b> commands will not allow you to use non-integer frequency
+        weights and <b>tabout</b> normally checks for this. You can over-ride this
+        behaviour with the <b>chkwtnone</b> option. Note that this option does not
+        stop <b>Stata</b> itself from refusing to use non-integer frequency weights.
+<p>
+    <b>debug</b> shows you most of the underlying <i>Stata</i> commands (though not for
+        summary tables) from which the tables are built. This can be useful
+        for confirming your results.
+<p>
+    <b>noborder</b> only applies to html output, and determines whether the table
+        and cells should be surrounded by borders. This only applies when the
+        <b>body</b> option is turned on.
+<p>
+    <b>show</b> determines what will be seen on the screen. The<b> show(all)</b> option
+        displays the final table output as well as the Mata string matrices
+        which are used to build this final output. The contents of these
+        matrices may not exactly match the final output, in terms of
+        formatting and labelling. The<b> show(none)</b> option suppresses all output
+        except for the name of the file to which the table has been exported.
+        The default option is to show the output which has been sent to a
+        file. It may look messy on the screen, but open it in the appropriate
+        application to check it first before panicking.
+<p>
+    <b>wide</b> is used in conjunction with<b> show(all)</b> and specifies the width of the
+        columns in the Mata matrices. The default is 10 spaces. Note that
+        even if you reduce this to a very small number,<b> tabout</b> will always
+        increase the width of the columns to accommodate the widest cell
+        entry in the data.
+<p>
+<a name="exa"></a><p>
+<b><u>Examples</u></b>
+<p>
+    The best examples are to be found in the tutorial (
+    http://www.ianwatson.com.au/stata/tabout_tutorial.pdf) where both the
+    syntax and the final table can be viewed, side by side. The following
+    examples illustrate each of the types of table outlined earlier.  The
+    datasets used in the following examples are all built-in Stata datasets,
+    namely, nlsw88.dta and voter.dta.
+<p>
+<p>
+        +--------------+
+    ----+ basic tables +-----------------------------------------------------
+<p>
+        . sysuse nlsw88.dta, clear
+         tabout south race smsa coll [iw=wt] ///
+         using  table2.txt, /// 
+         c(freq row col) f(0c 1p 1p) clab(_ _ _) ///  
+         layout(rb) h3(nil) 
+        
+        . tabout race south smsa coll [iw=wt] ///
+         using  table3.txt, c(freq row col) f(0c 1p 1p) /// 
+         layout(cb) h1(nil) h3(nil) npos(row) 
+<p>
+        . tabout coll smsa south race ///
+         using table4.txt, c(col) f(1) ///
+         clab(Col_%) stats(gamma) npos(row) 
+<p>
+        . tabout occupation industry south /// 
+         using table5.txt, c(col cell) f(1) ///
+         clab(Col_% Cell_%) npos(row) nlab(Sample size)
+        
+        . tabout occupation industry south ///
+         using table6.txt, c(col cell) f(1) ///
+         npos(row) nlab(Sample size) layout(cb) 
+<p>
+        +-------------------------------+
+    ----+ Basic tables with survey data +------------------------------------
+<p>
+        . tabout coll race smsa south using table7.txt, ///
+         c(row ci) f(1 1) clab(Row_% 95%_CI) svy stats(chi2) /// 
+        {txt] npos(lab) per
+<p>
+        . tabout smsa race south using table8.txt, ///
+         c(mean wage lb ub) f(2m) svy sum 
+<p>
+        +----------------+
+    ----+ Summary tables +---------------------------------------------------
+<p>
+        . sysuse voter, clear
+        . tabout inc candidat using table9.txt,  ///
+         c(mean pfrac) f(1) clab(%) sum 
+           
+         . tabout rep78 foreign using table10.txt, ///
+         c(iqr weight) f(0c) sum h3(nil) npos(both)
+           
+        . tabout foreign rep78 using table11.txt, ///
+         c(mean mpg mean weight mean length median price median headroom) ///
+         f(1c 1c 1c 2cm 1c) ///
+         clab(MPG Weight_(lbs) Length_(in) Price Headroom_(in))  ///
+         sum npos(tufte) 
+<p>
+<p>
+        +---------------------------------+
+    ----+ Summary tables with survey data +----------------------------------
+<p>
+        . tabout occ south race coll using table12.txt, /// 
+         c(mean wage se) f(2 2) clab(Mean_wage SE) ///
+         sum svy npos(lab) 
+           
+        . tabout south race coll using table13.txt,  ///
+         c(mean wage se ci) f(2 2) sum svy npos(lab) layout(row) ///
+         level(90) clab(_ (SE) (90%_CI)) ///
+         h3( | Average wage | Average wage | Average wage) 
+           
+        . tabout south race coll using table14.txt, ///
+         c(mean wage lb ub) f(2 2) sum svy /// 
+         npos(lab) nlab((Sample size = #)) ///
+         layout(row) level(90) clab(_  Lower_bound Upper_bound) /// 
+         h3( | | Average wage | )
+<p>
+<p>
+<b><u>Acknowledgements</u></b>
+<p>
+    Numerous people have provided feedback and advice over the last two years
+    and I am very grateful for their comments. In particular I'd like to
+    thank:  Mitch Abdon, Ulrich Atz, JP Azevedo, Megan Blaxland, Eric Booth,
+    Simon Coulombe, Enzo Coviello, Nick Cox, Axel Engellandt, David L.
+    Eckles, Richard Fox, Jonathan Gardner, Johannes Geyer, Bill Gould, Daniel
+    Hoechle, Ben Jann, Stephen Jenkins, Stas Kolenikov, Thomas Masterson,
+    Scott Merryman, Nirmala Devi Naidoo, Thomas Odeny, Cathy Redmond, Mikko
+    Ronkko, Rafael Martins de Souza, Benjamin Schirge, Urvi Shah, Tim
+    Stegmann, Herve Stolowy, Amanda Tzy-Chyi Yu and Chris Wallace.
+<p>
+    Thanks also to Arjan Soede for contributing the code for the dpcomma
+    option.
+<p>
+<b><u>Author</u></b>
+<p>
+   Ian Watson
+   Freelance researcher and
+   Visiting Senior Research Fellow
+   Macquarie University and
+   Social Policy Research Centre
+   University of New South Wales
+   Sydney Australia
+   mail@ianwatson.com.au
+   www.ianwatson.com.au
+<p>
+<p>
+Version 2.0.6 26nov2012
+</pre>

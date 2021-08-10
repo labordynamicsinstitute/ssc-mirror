@@ -1,0 +1,70 @@
+<pre>
+-------------------------------------------------------------------------------
+help for <b>utest</b>                                                      Version 1.0
+-------------------------------------------------------------------------------
+<p>
+<b><u>Title</u></b>
+<p>
+    <b>utest</b> --      Test for U-shaped relationship
+<p>
+<p>
+<b><u>Syntax</u></b>
+<p>
+        <b>utest</b> x f(x) [<b>,</b> <i>options</i>]
+<p>
+    <i>options</i>           Description
+    -------------------------------------------------------------------------
+      <b><u>mi</u></b><b>n(</b><i>#</i><b>)</b>          Use <i>#</i> as lower
+      <b><u>ma</u></b><b>x(</b><i>#</i><b>)</b>          Use <i>#</i> as upper
+      <b><u>q</u></b><b>uadratic</b>       Force quadratic specification
+      <b><u>i</u></b><b>nverse</b>         Force inverse specification
+      <b><u>f</u></b><b>ieller</b>         Include Fieller-interval of extreme point
+      <b><u>l</u></b><b>evel(</b><i>#</i><b>)</b>        set confidence level for Fieller interval; default is
+                        <b>level(95)</b>
+    -------------------------------------------------------------------------
+<p>
+<p>
+<p>
+<b><u>Description</u></b>
+<p>
+    <b>utest</b> provides the exact test of the presence of a U shaped (or inverse U
+    shaped) relationship on an interval.
+<p>
+    <b>utest</b> is used after estimation commands to test for the presence of a
+    U-shaped or inverse U-shaped relationship between an explanatory variable
+    and the outcome variable on a specific interval.
+<p>
+    The estimation must contain the level of the explanatory variable (i.e.
+    x) and a non-linear term , either quadratic or inverse (i.e. f(x)). <b>utest</b>
+    will determine which of the two is used and report test results from the
+    test of the hypothesis that the relationship is decreasing at the start
+    of the interval and increasing at the end or vice versa.
+<p>
+    The interval is by default taken as the data range, but can be controlled
+    by setting the options <b>minimum(#)</b> and <b>maximum(#)</b>.
+<p>
+    A Fieller interval for the extreme point is also provided by the option
+    <b>fieller</b>.  This interval is correct even for finite samples.
+<p>
+<b><u>Remarks</u></b>
+<p>
+For full details about the test, see Lind and Mehlum: With or Without U? - The 
+&gt; appropriate test for a U shaped relationship
+<p>
+<b><u>Examples</u></b>
+<p>
+   <b>. utest x xsquared</b>
+<p>
+   <b>. utest x xinv, min(.3) fieller </b>
+<p>
+<p>
+<b><u> Author</u></b>
+<p>
+Contact Jo Thori Lind or Halvor Mehlum if you observe problems.
+<p>
+<p>
+<b><u>Also see</u></b>
+<p>
+<p>
+    Online:  <b>fieller</b>
+</pre>

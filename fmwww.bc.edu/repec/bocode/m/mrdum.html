@@ -1,0 +1,80 @@
+<pre>
+-------------------------------------------------------------------------------
+help for <b>mrdum</b>                                    version 1.3.1 25 October 2002
+-------------------------------------------------------------------------------
+<p>
+<b><u>Creation of dummy variables and summary table for multiple response data</u></b>
+<p>
+        <b>mrdum</b> <i>varlist</i> [<b>if</b> <i>exp</i>] [<b>in</b> <i>range</i>]<b>,</b> <b><u>s</u></b><b>tub(</b><i>string</i><b>)</b> [<b><u>res</u></b><b>ponses(</b><i>numlist</i><b>)</b>
+              <b><u>lab</u></b><b>els</b>[<b>(</b><i>valuelabelname</i><b>)</b>]]
+<p>
+<p>
+<b><u>Description</u></b>
+<p>
+For general use, <b>mrdum</b> searches across <i>varlist</i> for integer codes and creates
+corresponding binary dummy variables. Each dummy is equal to 1 if the integer
+code was found anywhere in <i>varlist</i>, 0 if not, and missing if all of <i>varlist</i> is
+missing. It also displays a table summarizing the results.
+<p>
+This program was created specifically to deal with survey questions wherein the
+respondent can give multiple responses to a single question (e.g. "Check all
+that apply"). Sometimes these data are coded as a series of variables with the
+responses entered in the order that the respondent indicated them.  Often,
+however, it is useful to have instead a set of binary dummy variables that
+indicate whether the respondent indicated a particular response regardless of
+the order in which it was indicated.
+<p>
+If you are interested in the order that responses were indicated, see Eric
+Zbinden's <b>zb_qrm</b>.
+<p>
+<p>
+<b><u>Options</u></b>
+<p>
+<b>stub(</b><i>string</i><b>)</b> specifies a stub for the resulting dummy variables. The stub
+    should be short enough for all the complete names to be legal. This is a
+    required option.
+ 
+<b>responses(</b><i>numlist</i><b>)</b> allows the user to specify exactly which responses (integer
+    codes) are of interest. If this option is not specified, the command will
+    assume that the responses are coded from 1 to <i>n</i>, where <i>n</i> is the number of
+    variables in <i>varlist</i>.
+<p>
+<b>labels</b> has two possible syntaxes. With no argument, this option displays any
+    value labels attached rather than the numeric codes. Any or all of <i>varlist</i>
+    can be labelled. This option can also take a previously defined value label
+    name as an argument.
+<p>
+<p>
+<b><u>Examples</u></b>
+<p>
+        . mrdum f4m1-f4m7, stub(q4) lab
+            This produces seven dummy variables for responses coded 1-7
+            plus a dummy to indicate which cases are completely missing
+            (if there are any that are completely missing). The table
+            produced will show value labels rather than numeric codes.
+<p>
+        . mrdum f4m1-f4m7, stub(q4) res(1/4,7)
+            This produces four dummy variables for responses coded 1-4,
+            one dummy for responses coded 7, and one to indicate which
+            cases are completely missing.
+<p>
+        . lab define colour 1 "red" 2 "blue" 3 "green"
+        . mrdum f4m1-f4m3, stub(q4) labels(colour)
+<p>
+<p>
+<b><u>Author</u></b>
+<p>
+        Lee E. Sieswerda
+        Thunder Bay District Health Unit
+        Lee.Sieswerda@tbdhu.com
+<p>
+<p>
+<b><u>Acknowledgements</u></b> 
+<p>
+        Nicholas J. Cox made significant improvements to the code.
+<p>
+  Manual: <b>[R] numlist, [U] 14.1.8 numlist, [R] egen, eqany</b>
+ On-line: help for numlist; egen
+See Also: help for zb_qrm if installed
+<p>
+</pre>

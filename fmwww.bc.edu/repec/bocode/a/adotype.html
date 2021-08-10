@@ -1,0 +1,61 @@
+<pre>
+.-
+help for ^adotype^
+.-
+<p>
+Type ado file
+-------------
+<p>
+    ^adotype^ cmdname
+<p>
+Description
+-----------
+<p>
+^adotype^ types whichever ado file named cmdname.^ado^ is first on the 
+current adopath. If none exists, ^which^ cmdname is invoked. 
+<p>
+^adotype^ cmdname^.ado^ is tolerated.  
+<p>
+<p>
+Saved results
+-------------
+<p>
+^r(file)^   full filename of cmdname.^ado^ 
+<p>
+<p>
+Examples
+--------
+<p>
+    . ^adotype reshape^
+<p>
+    To edit your own ado files, have a file like this:  
+<p>
+        ^program def^ myedit 
+                ^version 6.0^
+                ^if "`2'" != "" { error 198 }^  
+                ^args fname^
+                ^qui adotype `fname'^
+                ^if `"`r(file)'"' == "" { which `fname' }^ 
+                ^else^ path-leading-to-editor ^`"`r(file)'"'^ 
+        ^end^   
+  
+ 
+Author
+------
+<p>
+         Nicholas J. Cox, University of Durham, U.K.
+         n.j.cox@@durham.ac.uk
+<p>
+<p>
+Acknowledgements
+----------------
+<p>
+Kit Baum and Vince Wiggins made useful suggestions. 
+<p>
+<p>
+Also see
+--------
+<p>
+On-line: help for @adopath@, @which@ 
+<p>
+</pre>

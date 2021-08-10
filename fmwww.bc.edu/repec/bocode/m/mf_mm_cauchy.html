@@ -1,0 +1,96 @@
+<pre>
+<b>help mata mm_cauchy()</b>
+-------------------------------------------------------------------------------
+<p>
+<b><u>Title</u></b>
+<p>
+    <b>mm_cauchy() -- Cauchy-Lorentz distribution</b>
+<p>
+<p>
+<b><u>Syntax</u></b>
+<p>
+        <i>real matrix</i>  <b>mm_cauchyden(</b><i>x</i><b>,</b> <i>x0</i><b>,</b> <i>gamma</i><b>)</b>
+<p>
+        <i>real matrix</i>  <b>mm_cauchy(</b><i>x</i><b>,</b> <i>x0</i><b>,</b> <i>gamma</i><b>)</b>
+<p>
+        <i>real matrix</i>  <b>mm_cauchytail(</b><i>x</i><b>,</b> <i>x0</i><b>,</b> <i>gamma</i><b>)</b>
+<p>
+        <i>real matrix</i>  <b>mm_invcauchy(</b><i>p</i><b>,</b> <i>x0</i><b>,</b> <i>gamma</i><b>)</b>
+<p>
+<p>
+    where
+<p>
+            <i>x</i>:  <i>real matrix x</i>
+<p>
+            <i>p</i>:  <i>real matrix p</i>
+<p>
+           <i>x0</i>:  <i>real scalar x0</i>
+<p>
+        <i>gamma</i>:  <i>real scalar gamma</i>
+<p>
+<p>
+<b><u>Description</u></b>
+<p>
+    <b>mm_cauchyden()</b> returns the density of the Cauchy-Lorentz distribution for
+    the location parameter <i>x0</i> and the scale parameter <i>gamma</i>.
+<p>
+    <b>mm_cauchy()</b> returns the cumulative distribution function of the
+    Cauchy-Lorentz distribution for the location parameter <i>x0</i> and the scale
+    parameter <i>gamma</i>.
+<p>
+    <b>mm_cauchytail()</b> returns the right tail probability function of the
+    Cauchy-Lorenz distribution for the location parameter <i>x0</i> and the scale
+    parameter <i>gamma</i>.
+<p>
+    <b>mm_invcauchy()</b> returns the inverse cumulative distribution function of
+    the Cauchy-Lorentz distribution for the location parameter <i>x0</i> and the
+    scale parameter <i>gamma</i>.
+<p>
+<p>
+<b><u>Remarks</u></b>
+<p>
+    cauchy(x,0,1) (the standard Cauchy distribution) is the Student t
+    distribution with one degree of freedom.
+<p>
+<p>
+<b><u>Conformability</u></b>
+<p>
+    <b>mm_cauchyden(</b><i>x</i><b>,</b> <i>x0</i><b>,</b> <i>gamma</i><b>)</b>,
+    <b>mm_cauchy(</b><i>x</i><b>,</b> <i>x0</i><b>,</b> <i>gamma</i><b>)</b>,
+    <b>mm_cauchytail(</b><i>x</i><b>,</b> <i>x0</i><b>,</b> <i>gamma</i><b>)</b>:    
+         <i>x</i>:  <i>r x c</i>
+        <i>x0</i>:  1 <i>x</i> 1
+     <i>gamma</i>:  1 <i>x</i> 1
+    <i>result</i>:  <i>r x c</i>.
+<p>
+    <b>mm_invcauchy(</b><i>p</i><b>,</b> <i>x0</i><b>,</b> <i>gamma</i><b>)</b>:
+         <i>p</i>:  <i>r x c</i>
+        <i>x0</i>:  1 <i>x</i> 1
+     <i>gamma</i>:  1 <i>x</i> 1
+    <i>result</i>:  <i>r x c</i>.
+<p>
+<p>
+<b><u>Diagnostics</u></b>
+<p>
+    The functions return missing if <i>gamma</i> is not strictly positive.
+    <b>mm_invcauchy()</b> returns missing if <i>p</i> is not in the unit interval.
+<p>
+<p>
+<b><u>Source code</u></b>
+<p>
+    mm_cauchy.mata
+<p>
+<p>
+<b><u>References</u></b>
+<p>
+    Programmed from http://en.wikipedia.org/wiki/Cauchy_distribution.
+<p>
+<p>
+<b><u>Author</u></b>
+<p>
+    Christopher F Baum, Boston College
+<p>
+<p>
+<b><u>Also see</u></b>
+<p>
+</pre>

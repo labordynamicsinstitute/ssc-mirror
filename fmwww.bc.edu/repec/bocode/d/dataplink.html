@@ -1,0 +1,49 @@
+<pre>
+<b>help dataplink</b>                                                   (version 1.0) 
+Daniel Elwood Cook {Danielecook@gmail.com}                   www.Elwoodcook.com
+-------------------------------------------------------------------------------
+<p>
+    <b>dataplink</b> --<b> Import .ped and .map files from recoded, tab delimited,</b>
+    <b>plink files into Stata</b>
+<p>
+<a name="syntax"></a><b><u>Syntax</u></b>
+<p>
+    <b>dataplink</b> using<i> filename (Do not include .PED or .MAP)</i>
+<p>
+<a name="description"></a><b><u>Description</u></b>
+<p>
+     <b>dataplink</b> is a simple program for importing recoded data from
+     plink. Dataplink imports genotypic from <b>.ped</b> files and also
+     imports variable names (snp names) from <b>.map</b> files.
+<p>
+     Data from plink must be exported using the following commands:
+<p>
+         --recode / --recode12
+         --tab
+<p>
+     Once your data is exported from plink, you should have two files
+     of the same name but with different extensions: <b>.ped</b> and <b>.map</b>.
+     The <b>.ped</b> file contains genotype data while the <b>.map</b> file
+     contains the names of the SNPs.
+<p>
+     <b>! Important:</b> When you specify the <i>filename</i> do not use extensions
+     (i.e. do not add <b>.ped</b> or <b>.map</b>). Dataplink will look for a .map
+     and .ped file of the same name
+<p>
+<a name="usage"></a><b><u>Usage</u></b>
+<p>
+     <b>Example Input</b>
+<p>
+          dataplink using "C:/my/dir/chrom1segment"
+<p>
+     <b>! Important:</b> Notice that the file extension <b>.map</b> and <b>.ped</b> are
+     not included!
+<p>
+     <b>! Important LIMIT:</b> Stata can import a maximum of 32,767
+     variables in SE and MP flavors and 2,047 in IC. This means you
+     can only import ~32,000 SNPs and ~2,000 depending on your
+     version.
+<p>
+<p>
+<p>
+</pre>

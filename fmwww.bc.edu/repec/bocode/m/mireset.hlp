@@ -1,0 +1,32 @@
+{smcl}
+{* 18sep2002}{...}
+{hline}
+help for {cmd: mireset}{right:(SJ3-3: st0000)}
+{hline}
+
+{title:Erase temporary datasets and global macros created by miset}
+
+{p 8 27 2}{cmd:mireset}
+
+
+{title:Description}
+
+{p 4 4 2}{cmd:mireset} erases the temporary datasets, {cmd:_mitemp1.dta}, ...,
+{cmd:_mitemp}{it:m}{cmd:.dta}, created by {help miset} (if they exist in the
+current working directory), as well as clearing the global macros created by
+{help miset}.  
+
+
+{title:Authors}
+
+{p 4 4 2} Ning Li, Philip Greenwood, and John Carlin, Clinical Epidemiology &
+Biostatistics Unit, Murdoch Children's Research Institute and University of
+Melbourne. Email: 
+{browse "mailto:jbcarlin@unimelb.edu.au":jbcarlin@unimelb.edu.au}
+
+
+{title:Also see}
+
+{p 4 14 2}Online: help for {help miappend}, {help mido}, {help mici}, 
+{help mifit}, {help milincom}, {help mimerge}, {help misave}, {help miset}
+{p_end}

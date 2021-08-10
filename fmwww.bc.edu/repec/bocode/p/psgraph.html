@@ -1,0 +1,40 @@
+<pre>
+-------------------------------------------------------------------------------
+help for <b>psgraph</b>
+-------------------------------------------------------------------------------
+<p>
+<b><u>Graph propensity score histogram</u></b>
+<p>
+        <b>psgraph</b> <b>[,</b> <b>bin(</b><i>#</i><b>)</b> <b><u>t</u></b><b>reated(</b><i>varname</i><b>)</b> <b><u>sup</u></b><b>port(</b><i>varname</i><b>)</b> <b><u>p</u></b><b>score(</b><i>varname</i><b>)</b>
+                     <i>graph_options</i>]
+<p>
+<b><u>Description</u></b>
+<p>
+    <b>psgraph</b> graphs the propensity score histogram by treatment status.
+<p>
+    <b>psgraph</b> can be called without options after <b>psmatch2</b>. In this case
+    <b>psgraph</b> will use the generate variables <i>_treated</i> and <i>_pscore</i>. The options
+    treated and pscore override this behavior.
+<p>
+<b><u>Options</u></b>
+<p>
+    <b>bin(</b><i>#</i><b>)</b> specifies the number of intervals to use for accumulating the
+        histogram. The default is <b>bin(20)</b>.
+<p>
+    <b><u>t</u></b><b>reated(</b><i>varname</i><b>)</b> specifies treatment indicator variable.  Assumes the
+        following: 0 = controls, 1 = treated.
+<p>
+    <b><u>sup</u></b><b>port(</b><i>varname</i><b>)</b> Common support indicator (0/1).
+<p>
+    <b><u>p</u></b><b>score(</b><i>varname</i><b>)</b> specifies the propensity score.
+<p>
+<b><u>Also see</u></b>
+<p>
+    The commands psmatch2, pstest.
+<p>
+<b><u>Author</u></b>
+<p>
+    Edwin Leuven, École Nationale de la Statistique et de l'Administration
+    Économique. If you observe any problems mailto:leuven@ensae.fr.
+<p>
+</pre>

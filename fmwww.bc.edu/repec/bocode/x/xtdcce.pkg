@@ -1,0 +1,26 @@
+d 'XTDCCE': module to estimate heterogeneous coefficient models using common correlated effects in a dynamic panel
+d
+d   xtdcce estimates a heterogeneous coefficient model in a dynamic
+d panel with dependence between cross sectional units.	It supports
+d the Common Correlated Effects Estimator (CCE) by Pesaran (2006),
+d the Dynamic Common Correlated Effects Estimator (DCCE), proposed
+d by Chudik and Pesaran (2015) and the Mean Group Estimator (MG,
+d Pesaran and Smith, 1995) and the Pooled Mean Group Estimator
+d (PMG, Shin et. Al 1999).  Additionally xtdcce tests for cross
+d sectional dependence (if xtcd2 installed)  and supports
+d instrumental variable estimations (if ivreg2 installed). 
+d
+d KW: dynamic panel
+d KW: common correlated effects
+d
+d Requires: Stata version 10, ivreg2 and moremata from SSC (q.v.)
+d
+d Distribution-Date: 20160721
+d
+d Author: Jan Ditzen, Heriot-Watt University
+d Support: email jd219@@hw.ac.uk
+d
+f xtdcce.ado
+f xtdcce.sthlp
+f xtdcce_xtcd_sample.do
+f xtdcce_sample_dataset.dta

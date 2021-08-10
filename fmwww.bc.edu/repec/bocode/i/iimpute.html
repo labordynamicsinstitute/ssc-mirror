@@ -1,0 +1,247 @@
+<pre>
+<b>help iimpute</b>
+-------------------------------------------------------------------------------
+<p>
+<b><u>Title</u></b>
+<p>
+    iimpute --     Incremental simple (or multiple separate) imputation(s) of
+                     a set of variables
+<p>
+<p>
+<b><u>Syntax</u></b>
+<p>
+        <b>iimpute</b> <i>varlist</i> [<b>,</b> <i>options</i>]
+<p>
+    <i>options</i>                    Description
+    -------------------------------------------------------------------------
+      <b><u>add</u></b><b>itional(</b><i>varlist</i><b>)</b>      additional variables to include in the
+                                 imputation model
+      <b><u>con</u></b><b>textvars(</b><i>varlist</i><b>)</b>     a set of variables identifying different
+                                 electoral contexts (by default all cases are
+                                 treated as part of the same context).
+      <b><u>sta</u></b><b>ckid(</b><i>varname</i><b>)</b>         a variable identifying different "stacks", for
+                                 which values will be separately imputed if
+                                 <b>iimpute</b> is issued after stacking.
+      <b><u>nos</u></b><b>tack</b>                  override the default behavior that treats each
+                                 stack as a separate context).
+      <b><u>min</u></b><b>ofrange(</b><i>#</i><b>)</b>            minimum value of the item range (used for
+                                 recoding imputed values)
+      <b><u>max</u></b><b>ofrange(</b><i>#</i><b>)</b>            maximum value of the item range (used for
+                                 recoding imputed values)
+      <b><u>ipr</u></b><b>efix(</b><i>name</i><b>)</b>            prefix for generated imputed variables
+                                 (default is "i_")
+      <b><u>mpr</u></b><b>efix(</b><i>name</i><b>)</b>            prefix for generated variables indicating
+                                 original missingness of a variable (default
+                                 is "m_")
+      <b><u>mco</u></b><b>untname(</b><i>name</i><b>)</b>         name of a generated variable reporting
+                                 original number of missing items (default is
+                                 "_iimpute_mc")
+      <b><u>mim</u></b><b>putedcountname(</b><i>name</i><b>)</b>  name of a generated variable reporting number
+                                 of missing items after imputation (default
+                                 is "_iimpute_mic")
+      <b><u>noi</u></b><b>nflate</b>                do not inflate the variance of imputed values
+                                 to match the variance of original item
+                                 values (default is to add random
+                                 perturbations to these values, as required).
+      <b><u>rou</u></b><b>nd</b>                    round each final value (after inflation,
+                                 unless that was suppressed) to the nearest
+                                 integer (default is to leave values
+                                 unrounded).
+      <b><u>lim</u></b><b>itdiag(</b><i>#</i><b>)</b>             number of contexts for which to display full
+                                 diagnostics (these can be quite voluminous)
+                                 as imputation progresses (default is to
+                                 display diagnostics for all contexts).
+      <b><u>rep</u></b><b>lace</b>                  drops all original variables in <b>varlist</b> after
+                                 imputation.
+<p>
+<p>
+    -------------------------------------------------------------------------
+<p>
+<b><u>Description</u></b>
+<p>
+    Though <b>iimpute</b> can impute missing values for a single variable (by
+    calling Stata's <b>impute</b>, but with various options as described below) its
+    primary function is to impute multiple variables according to an
+    incremental procedure which - if required - is applied separately to
+    electoral contexts identified by <i>contextvars</i>:
+<p>
+    1) Within each context, observations are split into groups, based on the
+    number of missing items.  Observations for which only one variable has a
+    missing value are processed first, and so on.
+<p>
+    2) Within each of the above groups, variables are ranked according to the
+    number of missing observations. Variables with fewer missing observations
+    are processed first, and so on.
+<p>
+    3) According to the order defined in step 2 (and within each group
+    defined in step 1), variables are imputed through simple imputation
+    (using Stata's <b>impute</b> command).
+<p>
+        This implements the incremental nature of the procedure.  Since
+        observations with fewer missing variables are imputed first, and
+        (within each group) items with fewer missing observations are imputed
+        first, later imputations (that have to impute more data) will use a
+        more complete (partially imputed) dataset.
+<p>
+        The imputation model is based on all valid values of variables in
+        <i>varlist</i>, plus all variables specified in the <b>additional()</b> option,
+        which - understandably - would be crucial for imputation of those
+        observations where all variables in <i>varlist</i> have missing values (but
+        there might be theoretical reasons for basing imputation only on the
+        values of other members of a battery).
+<p>
+        Please note that Stata's <b>impute</b> command's <b>regsample()</b> option is used,
+        with a dummy variable generated from the actual value of <i>contextvar</i>.
+        This means that the sample used in the imputation model is the whole
+        electoral context and not only the restricted group defined in step
+        1.
+<p>
+        NOTE that the number of independent variables upon which to base the
+        imputation (the total of <b>varlist</b> and <b>additional</b>) is limited to 30
+        because that is the limit for Stata's <b>impute</b> command. This limitation
+        might lead the user to prefer to issue the <b>iimpute</b> command after
+        <b>genstacks</b> and <b>genyhats</b> have reduced the number of indeps in the
+        dataset.
+<p>
+    4) The variance of imputed item values is then inflated to match the
+    variance of original item values, as recommended in the literature. If
+    this is not wanted then the option <b>noinflate</b> should be employed.
+<p>
+    5) Imputed values are finally rounded, if <b>round</b> is optioned. Specifying
+    the <b>minofrange()</b> and/or <b>maxofrange()</b> options further constrains the
+    imputed values to a specific range.  While such options are not useful
+    when imputing heterogeneous variables,they can be useful when a battery
+    of analogous items is being imputed. This may suggest calling <b>iimpute</b>
+    multiple times with different settings for these constraints. By default
+    no constraint is applied.
+<p>
+    The <b>iimpute</b> command can be issued before or after stacking. If issued
+    after stacking, by default it treats each stack as a separate context to
+    take into account along with any higher-level contexts. However, the
+    <b>nostack</b> option can be employed to force <b>iimpute</b> to ignore the
+    stack-specific contexts. In addition, the <b>iimpute</b> command can be employed
+    with or without distinguishing between higher-level contexts, if any,
+    (with or without the <b>contextvars</b> option) depending on what makes
+    methodological sense.
+<p>
+<b><u>Multiple Imputation</u></b>
+<p>
+    It is possible to impute multiple different datasets by using Stata's
+    <b>set_seed</b> command to supply a different seed for the random number
+    generator called by <b>iimpute</b> that inflates the variance of the imputed
+    values returned by Stata's <b>impute</b>. Each dataset created in this way needs
+    to be separately saved before changing the seed to impute a different
+    dataset.  The resulting datasets can be imported into Stata's <b>mi</b> or used
+    to arrive at separate estimates that are then combined manually. NOTE
+    that, if Stata's <b>seed</b> command is not employed, the separate datasets will
+    still be different from each other (a different dataset would be created
+    on each occasion because by default Stata employs a different random seed
+    each time it inflates the variance of imputed values), but these
+    differences will not be replicable.
+<p>
+<b><u>Options</u></b>
+<p>
+    <b>additional(</b><i>varlist</i><b>)</b> if specified, additional variables to include in the
+        imputation model beyond those in <i>varlist</i>. These additional variables
+        will not have any missing values imputed.
+<p>
+    <b>contextvars(</b><i>varlist</i><b>)</b> if specified, variables whose combinations identify
+        different electoral contexts (default is to treat all cases as part
+        of the same context)
+<p>
+    <b>stackid(</b><i>varname</i><b>)</b> if specified, a variable identifying different "stacks"
+        for which values will be separately imputed in the absence of the
+        <b>nostack</b> option. The default is to use the "genstacks_stack" variable
+        if the <b>iimpute</b> command is issued after stacking.
+<p>
+    <b>nostack</b> if present, overrides the default behavior of treating each stack
+        as a separate context (has no effect if the <b>iimpute</b> command is issued
+        before stacking).
+<p>
+    <b>minofrange(</b><i>name</i><b>)</b> if specified, minimum value of the item range (used for
+        constraining imputed values).
+<p>
+    <b>maxofrange(</b><i>name</i><b>)</b> if specified, maximum value of the item range (used for
+        constraining imputed values).
+<p>
+    <b>iprefix(</b><i>name</i><b>)</b> if specified, prefix for generated imputed variables
+        (default is "i_")
+<p>
+    <b>mprefix(</b><i>name</i><b>)</b> if specified, prefix for generating variables that indicate
+        original missingness of a variable (default is "m_")
+<p>
+    <b>mcountname(</b><i>name</i><b>)</b> if specified, name of a generated variable reporting
+        number of missing items before imputation (default is "_iimpute_mc")
+<p>
+    <b>mimputedcountname(</b><i>name</i><b>)</b> if specified, name of a generated variable
+        reporting number of missing items after imputation, which could still
+        be non-zero if all variables in the imputation model are missing for
+        certain cases (default is "_iimpute_mic")
+<p>
+    <b>noinflate</b> if specified, do not inflate the variance of imputed values to
+        match the variance of original item values (default is to add random
+        perturbations to these values, as required)
+<p>
+    <b>round</b> if specified, round each final value (after inflation, if any) to
+        the closest integer (default is to leave values unrounded)
+<p>
+    <b>limitdiag(</b><i>#</i><b>)</b> if specified, limits the number of contexts for which full
+        diagnostics are displayed to # (default is to display diagnostics for
+        all contexts, which can be quite voluminous)
+<p>
+    <b>replace</b> if specified, drops all original variables for which imputed
+        versions have been created (default is to keep original as well as
+        new variables)
+<p>
+<p>
+<b><u>Examples:</u></b>
+<p>
+    The following command imputes PTVs stored in variables whose names begin
+    with <i>ptv</i>, (using standard Stata variable variable list conventions) in a
+    dataset where observations are nested in contexts defined by <i>cid</i>. The
+    imputation model is based only on the PTV variables.  Imputed values will
+    be rounded to the nearest integer between 0 and 10. The data are assumed
+    to not be already stacked.
+<p>
+<p>
+        <b>. iimpute ptv*, context(cid) min(0) max(10) round</b>
+<p>
+    The following command imputes variables <i>ptv</i> and <i>lrresp</i> in a dataset that
+    had already been stacked and where observations are nested in contexts
+    defined by <i>cid</i>. The imputation model is based on these variables plus a
+    variety of y-hat affinity varlables and one party-level variable (seats).
+    Imputed values will not be constrained in any way. Such a command might
+    well be issued prior to a call on gendist to create euclidean distances
+    between lrresp (if that was left-right respondent location) and a battery
+    of party location variables.
+<p>
+<p>
+        <b>. iimpute ptv lrresp, additional(y_class-y_churchatt seats)</b>
+            <b>contextvars(cid)</b>
+<p>
+<p>
+<b><u>Generated variables</u></b>
+<p>
+    <b>iimpute</b> saves the following variables and variable sets:
+<p>
+      i_<i>name1</i> i_<i>name2</i> ...  a set of variables with names matching the
+                            original variables (which are left unchanged) for
+                            which missing data has been imputed.
+      m_<i>name1</i> m_<i>name2</i> ...  a set of dummy variables indicating whether each
+                            specific variable was imputed in a specific
+                            observation (i.e. was originally missing).
+      _iimpute_mc          a variable showing the original count of missing
+                            items for each case.
+      _iimpute_mic         a variable showing the count of items that are
+                            still missing for each case after imputation.
+                            This might happen, eg., if the variables
+                            specified in <i>additional</i> also have mostly missing
+                            values on the same observations where all
+                            variables in <i>varlist</i> are missing.
+<p>
+    NOTE that a subsequent invocation of <b>iimpute</b> will replace <i>_iimpute_mc</i> and
+        <i>_iimpute_mic</i> with new counts of missing values for that invocation of
+        <b>iimpute</b>. So the user should save these values after issuing the
+        previous command, if they will be of later interest.
+<p>
+</pre>

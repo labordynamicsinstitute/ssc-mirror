@@ -1,0 +1,309 @@
+<pre>
+-------------------------------------------------------------------------------
+<b>help metapowplot</b>                                     also see: <b>metasim</b>, <b>metapow</b>
+-------------------------------------------------------------------------------
+<p>
+<b><u>Title</u></b>
+<p>
+    <b>metapowplot</b> -- Produces power plots based on meta-analysis
+<p>
+<p>
+<b><u>Syntax</u></b>
+<p>
+        <b>metapowplot</b> <i>varlist</i> <b>,</b> <b>start(</b><i>#</i><b>)</b> <b>stop(</b><i>#</i><b>)</b> <b>step(</b><i>#</i><b>)</b> <b>nit(</b><i>#</i><b>)</b> <b>type(</b><i>string</i><b>)</b>
+            <b>pow(</b><i>numlist</i><b>)</b> [<i>options</i>]
+<p>
+<p>
+    <i>options</i>             Description
+    -------------------------------------------------------------------------
+    Main
+      <b>start(</b><i>#</i><b>)</b>           minimum number of subjects in group 1 (see below)
+      <b>stop(</b><i>#</i><b>)</b>            maximum number of subjects in group 1 (see below)
+      <b>step(</b><i>#</i><b>)</b>            step size between start and stop sample sizes
+      <b><u>ty</u></b><b>pe(</b><i>string</i><b>)</b>       type of study being simulated
+      <b>nit(</b><i>#</i><b>)</b>             number of simulations the power calculation is based
+                          on
+      <b>pow(</b><i>numlist</i><b>)</b>       cut-off value for determining power
+<p>
+    Optional
+      <b><u>meas</u></b><b>ure(</b><i>string</i><b>)</b>    outcome measure used in meta-analysis
+      <b><u>inf</u></b><b>erence(</b><i>string</i><b>)</b>  inference statistic on which power is based
+      <b>p(</b><i>#</i><b>)</b>               event rate or probability of being diseased
+                          dependent on (<i>type</i>)
+      <b>r(</b><i>#</i><b>)</b>               ratio of patients in two groups; treatment and
+                          control or diseased and healthy
+      <b><u>st</u></b><b>udies(</b><i>#</i><b>)</b>         number of new studies to be simulated
+      <b><u>mod</u></b><b>el(</b><i>string</i><b>)</b>      meta-analysis model used on pre-existing data
+      <b>npow(</b><i>numlist</i><b>)</b>      additional inference statistic on which power is
+                          based
+      <b>ci(</b><i>#</i><b>)</b>              width of confidence interval for power estimate
+                          (default=95%)
+      <b>dist(</b><i>string</i><b>)</b>       distribution of effect sizes used to simulate the
+                          new study from
+      <b>ind</b>                calculates power for new study on its own
+      <b>nip(</b><i>#</i><b>)</b>             number of integration points used for quadrature in
+                          bivariate model
+      <b>sos(</b><i>string</i><b>)</b>        inference option for sensitivity and specificity to
+                          be used with <i>ciwidth</i> or <i>lci</i>
+      <b><u>gr</u></b><b>aph(</b><i>string</i><b>)</b>      type of graph to be plotted
+      <b>noci</b>               prevents confidence intervals from being displayed
+                          on the graph
+      <b>regraph</b>            allows the user to re-graph the power curve using
+                          alternative graph options
+      <b>level(</b><i>cilevel</i><b>)</b>     specifies the confidence level for the study
+                          confidence intervals
+    -------------------------------------------------------------------------
+<p>
+<p>
+<b><u>Description</u></b>
+<p>
+    <b>metapowplot</b> estimates the power of an updated meta-analysis including a
+    new study and plots each value against a range of sample sizes. The
+    program calls on the program <b>metapow</b> to generate the power estimates. The
+    user needs to input a minimum and a maximum sample size for which they
+    want to calculate a power estimate. The power estimates are stored with
+    their confidence intervals in a file called temppow3 within the working
+    directory.
+<p>
+<p>
+<b><u>Options</u></b>
+<p>
+        +------+
+    ----+ Main +-------------------------------------------------------------
+<p>
+    <b>start(</b><i>integer</i><b>)</b> is the smallest total sample size for a new study that the
+        user wishes to calculate a power value for.
+<p>
+    <b>stop(</b><i>integer</i><b>)</b> is the largest total sample size for a new study that the
+        user wishes to calculate the power value for.
+<p>
+    <b>step(</b><i>integer</i><b>)</b> is the step size to be used within the range of total
+        sample sizes specified by <b>start</b> and <b>stop</b>.  A step size of 10 between
+        the range of 10 to 30 would mean that the power would be estimated
+        for sample sizes of 10, 20 and 30.
+<p>
+    <b>type(</b><i>clinical/diagnostic</i><b>)</b> specifies the type of new study that the user
+        would like to simulate; either a 2-arm clinical trial or a diagnostic
+        test accuracy study.
+<p>
+    <b>nit(</b><i>integer</i><b>)</b> is the number of simulations that are run on which the
+        estimated poweris based. The larger the number specified the more
+        accurate the estimate will be, but the longer the analysis will take.
+<p>
+    <b>pow(</b><i>numlist</i><b>)</b> specifies the value used as a cut-off in determining the
+        power. One or two values can be inputted.  The value/s represents
+        different things depending on the option chosen for <i>inference</i>.
+<p>
+        +----------+
+    ----+ Optional +---------------------------------------------------------
+<p>
+    <b>measure(</b><i>or/rr/rd/nostandard/dor/ss</i><b>)</b> specifies the outcome measure used in
+        the meta-analysis to pool the results. The odds ratio (<i>or</i>), relative
+        risk (<i>rr</i>), risk difference (<i>rd</i>) and unstandardised mean difference
+        (<i>nostandard</i>) can only be used when simulating a new clinical study.
+        The diagnostic odds ratio (<i>dor</i>) and sensitivity and specificity (<i>ss</i>)
+        can only be used when simulating a new diagnostic accuracy study. The
+        default for a clinical <b>type</b> study with 4 variables entered into the
+        <i>varlist</i> is relative risk (<i>rr</i>, the default for a clinical <b>type</b> study
+        with 6 variables entered into the<i> varlist</i> is unstandardised mean
+        difference (<i>nostandard</i> and the default for a diagnostic <b>type</b> study is
+        sensitivity and specificity (<i>ss</i>).
+<p>
+    <b>inference(</b><i>ciwidth/pvalue/lci/uci</i><b>)</b> defines the approach to inference used
+        to calculate power. The default is the confidence interval width
+        (<i>ciwidth</i>). This counts the number of times that the confidence
+        interval width of the estimate/s from the updated meta-analysis (i.e.
+        with the simulated study(ies) included) is less than the specified
+        value/s. This option can be used regardless of the measure of
+        accuracy. Two other approaches to inference available are <i>lci</i> and
+        <i>uci</i>. These will count the number of times that the lower or upper
+        confidence interval is higher or lower than a given value
+        respectively. The <i>lci</i> option can be used regardless of the measure of
+        accuracy. However, the <i>uci</i> option is currently only available when
+        working with clinical trial data and not diagnostic data. A final
+        option only available when using clinical trial data is the <i>pvalue</i>.
+        This counts the number of times that a p-value is significant to a
+        specified level. When using sensitivity and specificity two values
+        may be inputted into <i>pow</i> for <i>ciwidth</i> and <i>lci</i>.  This will instruct the
+        program to count the number of times that the confidence interval
+        widths for both sensitivity and specificity are less than their
+        respective specified values. These must be given in the order
+        sensitivity and specificity to be calculated correctly. In order to
+        use the <i>ciwidth</i> or <i>lci</i> options for just sensitivity or just
+        specificity the <i>sos</i> option should be used in addition to this option.
+<p>
+    <b>p(</b><i>real</i><b>)</b> if simulating a new clinical study then this is the estimated
+        event rate in the control group in the new study. When simulating a
+        new diagnostic study this is the estimated probability of being
+        diseased given a positive result in the new study. When this option
+        is not specified by the user, the program will calculate this value
+        by averaging the probabilities across the studies included in the
+        dataset memory. Note that <b>p</b> is only relevant in the diagnostic
+        framework when using the diagnostic odds ratio (<i> dor</i>) as the option
+        in <b>measure</b>.
+<p>
+    <b>r(</b><i>real</i><b>)</b> is the ratio of patients in the control group to the treatment
+        group when simulating a new clinical study. When simulating a new
+        diagnostic accuracy study this is the ratio of diseased to healthy
+        people if using sensitivity and specificity and the ratio of positive
+        to negative results if using the DOR (default 1).
+<p>
+    <b>studies(</b><i>integer</i><b>)</b> specifies the number of new studies to be simulated
+        (default 1).  When more than one are specified they are all assumed
+        to have the same sample size.
+<p>
+    <b>model(</b><i>fixed/fixedi/random/randomi/bivariate</i><b>)</b> defines the type of model
+        used to meta-analyse the pre-existing data. The default is the fixed
+        effect Mantel-Haenszel method (<i>fixed</i>) unless the outcome measure is
+        the nonstandardised mean difference in which case the default is the
+        inverse variance method (<i>fixedi</i>).  The (<i>fixedi</i>) option specifies a
+        fixed effect model using the inverse variance method.  The (<i>random</i>)
+        option uses the random effect DerSimonian &amp; Laird method, taking the
+        estimate for heterogeneity from the Mantel-Haenszel method. The
+        (<i>randomi</i>) option specifies a random effects model using the method of
+        DerSimonian and Laird, with the estimate of heterogeneity being taken
+        from the inverse-variance fixed-effect model. All of the above
+        options call on the <b>metan</b> command within the program. The final
+        option is the bivariate random effects model (<i>bivariate</i>). This method
+        calls on a combination of the <b>metandi</b> and <b>midas</b> commands. It may only
+        be specified when simulating a new diagnostic accuracy study.
+<p>
+    <b>npow(</b><i>numlist</i><b>)</b> recalculates the power using a newly specified value for
+        the same <i>inference</i> without having to re-run the whole program.
+        Instead, it uses the data that is stored in temppow2 and allows
+        alternative approaches to inference to be explored. This is
+        particularly valuable when the required simulation time is lengthy.
+<p>
+    <b>ci(</b><i>real</i><b>)</b> specifies the width of the confidence interval for the
+        corresponding power estimate (default 95%).
+<p>
+    <b>dist(</b><i>normal/t</i><b>)</b> specifies the distribution of effect sizes used to sample
+        a value from in order to simulate a new study(ies).  The default for
+        the (<i>random</i>) and (<i>randomi</i>) is a predictive distribution based on the
+        t-distribution (<i>t</i>) allowing for heterogeneity between studies (and
+        the uncertainty in the heterogeneity).  The default for all other
+        models is the (<i>normal</i>) distribution based on the mean and variance
+        entered in <b>es</b> and <b>var</b>.
+<p>
+    <b>ind</b> instructs the program to calculate the power for the newly simulated
+        study on its own in addition to the newly updated meta-analysis.
+<p>
+    <b>nip(</b><i>integer</i><b>)</b> specifies the number of integration points used for
+        quadrature when the bivariate model is selected. Higher values should
+        result in greater accuracy but typically at the expense of longer
+        execution times (see Rabe-Hesketh, Skrondal, and Pickles 2005, app.
+        B).
+<p>
+    <b>sos(</b><i>sens/spec</i><b>)</b> used in addition to the <i>inference</i> option this specifies
+        whether inferences are focused on sensitivity or specificity when
+        using <i>ciwidth</i> or <i>lci</i> as inference options. The default option is to
+        use sensitivity. If <b>sos</b> is not specified then the inferences are
+        based on both the sensitivity and specificity and two values should
+        be entered for <b>pow</b>.
+<p>
+    <b>graph(</b><i>lowess/connected/overlay</i><b>)</b> allows the user to choose the type of
+        line used to connect the specific estimates of power at the specified
+        sample sizes.  The default option is a <i>connected</i> graph which plots
+        each point and connects them with a line. The other options are a
+        <i>lowess</i> plot, which plots a smoothed line to the specific points, and
+        an <i>overlay</i> plot, which plots both the points and the lowess curve.
+        Since power is estimated through simulation, there is sampling error
+        in each estimate which will decrease with the number of simulations
+        specified (but also increase evaluation time). Thus smoothing may be
+        desirable if several different but inaccurate estimates are
+        considered. The lowess line should be similar to the connected option
+        for larger simulations.
+<p>
+    <b>noci</b> prevents the program from plotting confidence intervals (indicating
+        the sampling error in the estimation of power at specified sample
+        sizes) on the graph.
+<p>
+    <b>regraph</b> allows the user to re-graph the power curves with alternative
+        graph options without having to run the simulations for the specified
+        range of sample sizes again.
+<p>
+    <b>level</b> specifies the confidence level, as a percentage, for the individual
+        study and pooled confidence intervals. This is the level that is
+        given in the <b>metan</b>, <b>metandi</b> and <b>midas</b> commands when called on to
+        meta-analyses the current data set. The default is level(95).
+<p>
+<p>
+<b><u>Examples</u></b>
+<p>
+    Fixed effect Mantel-Haenszel method meta-analysis of clinical trial data
+    using the odds ratio outcome for sample sizes ranging from 10 to 1010 in
+    both the control group and the treatment group of the new study (in
+    increments of 100) and using a p-value of 0.05 for the hypothesis test
+    that the pooled treatment effect is different from 0 to calculate power
+    through 100 iterations for each sample size (i.e. power is based on the
+    proportion os the simulations in which the p-value for the treatment
+    effect being different from 0 is less than 0.05). Note that the program
+    will plot the power curve against the total sample size for the treatment
+    and control groups combined.
+<p>
+    <b>. metapowplot e_trt ne_trt e_ctrl ne_ctrl, nit(100) start(10) step(100)</b>
+        <b>stop(1010) measure(or) model(fixed) type(clinical) pow(0.05)</b>
+        <b>inference(pvalue)</b>
+<p>
+<p>
+    Bivariate random effects model for combining diagnostic test accuracy
+    data is used. Both sensitivity and specificity are considered for
+    inferences purposes for sample sizes ranging from 100 to 5000 (in steps
+    of 100) in both the diseased group and the healthy group of the new study
+    and using confidence interval widths of 0.2 and 0.1 for sensitivity and
+    specificity respectively to calculate power through 1000 iterations (i.e.
+    the width of each confidence interval has to be less than these values
+    for the meta-analysis to be considered "significant").
+<p>
+    <b>. metapowplot TP FP FN TN, nit(1000) start(100) step(100) stop(5000)</b>
+        <b>measure(ss) model(bivariate) type(diagnostic) pow(0.2 0.1)</b>
+        <b>inference(ciwidth)</b>
+<p>
+<p>
+    Unstandardised mean difference comparing exercise to no treatment in
+    patients with chronic back pain (Ferreira et al. 2012). We investigate
+    the power of the updated meta-analysis when comparing the lower
+    confidence interval to a reduction in pain of 20 points. We vary the
+    sample size of each arm of the new study from 50 to 550 patients in steps
+    of 100.
+<p>
+    <b>. use http://fmwww.bc.edu/repec/bocode/m/metapow_eg1</b>
+    <b>. metapowplot nrxpain rxmeanpain rxsdpain ncomppain compmeanpain</b>
+        <b>compsdpain, nit(100) type(clinical) measure(nostandard) model(random)</b>
+        <b>pow(-20) inference(lci) start(50) stop(550) step(100) graph(lowess)</b>
+    <i>(</i><i>click to run</i><i>)</i>
+<p>
+<p>
+<b><u>Authors</u></b>
+<p>
+    Michael J. Crowther, University of Leicester, United Kingdom. Email:
+    michael.crowther@le.ac.uk.
+<p>
+    Sally R. Hinchliffe, University of Leicester, United Kingdom. Email:
+    srh20@le.ac.uk.
+<p>
+    Alison Donald, University of Leicester, United Kingdom.
+<p>
+    Alex J. Sutton, University of Leicester, United Kingdom. Email:
+    ajs22@le.ac.uk.
+<p>
+<p>
+<b><u>References</u></b>
+<p>
+    Hinchliffe S, Crowther MJ, Phillips RS, Sutton AJ. Using meta-analysis to
+        inform the design of subsequent studies of diagnostic test accuracy
+        (Submitted)
+<p>
+    Ferreira ML, Herbert RD, Crowther MJ, Verhagen A, Sutton AJ. When is
+        another clinical trial justified? (Submitted)
+<p>
+    Sutton AJ, Cooper NJ, Jones DR, Lambert PC, Thompson JR, Abrams KR.
+        Evidence-based sample size calculations based upon meta-analysis.
+        <i>Statistics in Medicine</i> 2007; 26:2479-2500.
+<p>
+<p>
+<b><u>Also see</u></b>
+<p>
+    Online:  <b>metasim</b>, <b>metapow</b>
+<p>
+</pre>

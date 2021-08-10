@@ -1,0 +1,46 @@
+<pre>
+-------------------------------------------------------------------------------
+help for <b>propcnsreg postestimation</b>
+-------------------------------------------------------------------------------
+<p>
+<p>
+Help for <b>predict</b>
+-------------------------------------------------------------------------------
+<p>
+<b><u>Syntax for predict</u></b>
+<p>
+        <b>predict</b> [<i>type</i>] <i>newvar</i> [<i>if</i>] [<i>in</i>] [<b>,</b> <i>statistic</i> <b><u>eq</u></b><b>uation(</b><i>eqno</i><b>[</b><i>, eqno</i><b>])</b>]
+<p>
+    <i>statistic</i>       Description
+    -------------------------------------------------------------------------
+      <b>mu</b>            expected value of y (the default)
+      <b><u>lat</u></b><b>ent</b>        predicted value of the latent variable
+      <b><u>eff</u></b><b>ect</b>        predicted effect of the latent variable
+      <b>xb</b>            xb, linear prediction
+      <b>stdp</b>          standard error of the linear prediction
+      <b><u>sc</u></b><b>ore</b>         first derivative of the log likelihood with respect to
+                      the linear predictor.
+    -------------------------------------------------------------------------
+<p>
+<p>
+<b><u>Options for predict</u></b>
+<p>
+    <b>mu</b> (the default) calculates the expected value of the dependent variable.
+<p>
+    <b><u>lat</u></b><b>ent</b> calculates the predicted value of the latent variable.
+<p>
+    <b><u>eff</u></b><b>ect</b> calculates the predicted effect of the latent variable.
+<p>
+    <b>xb</b> calculates the linear prediction.
+<p>
+    <b>stdp</b> calculates the standard error of the linear prediction.
+<p>
+    <b>score</b> calculates the first derivative of the log likelihood with respect
+        to the linear predictions.
+<p>
+    <b><u>eq</u></b><b>ation()</b> specifies which equation is used. The complete syntax is given
+        in predict. For example <b>predict eff, xb equation(lambda)</b> is
+        equivalent to <b>predict eff, effect</b>. An example of its use for
+        predicting standard errors (and confidence intervals) is given <b>here</b>.
+<p>
+</pre>

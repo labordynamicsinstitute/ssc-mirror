@@ -1,0 +1,362 @@
+<pre>
+-------------------------------------------------------------------------------
+help for <b>punafcc</b>                                                 (Roger Newson)
+-------------------------------------------------------------------------------
+<p>
+<b><u>Population attributable and unattributable fractions for case-control and survi</u></b>
+<b><u>&gt; val studies</u></b>
+<p>
+        <b>punafcc</b> [<i>if</i>] [<i>in</i>] [<i>weight</i>] , [ <b><u>at</u></b><b>spec(</b><i>atspec</i><b>)</b> <b>subpop(</b><i>subspec</i><b>)</b>
+                     <b>vce(</b><i>vcespec</i><b>)</b> <b>no</b><b><u>e</u></b><b>sample</b> <b>force</b> <b><u>iter</u></b><b>ate(</b><i>#</i><b>)</b> <b><u>ef</u></b><b>orm</b> <b><u>l</u></b><b>evel(</b><i>#</i><b>)</b>
+                     <b>post</b> ]
+<p>
+    where <i>atspec</i> is an at-specifications recognized by the <b>at()</b> option of 
+    <b>margins</b>, <i>subspec</i> is a subpopulation specificarion of the form recognized
+    by the <b>subpop()</b> option of <b>margins</b>, and <i>vcespec</i> is a variance-covariance
+    specification of the form recognized by <b>margins</b>, and must have one of the
+    values
+<p>
+    <b>delta</b> | <b>unconditional</b>
+<p>
+    <b>fweight</b>s, <b>aweight</b>s, <b>iweight</b>s, <b>pweight</b>s are allowed; see weight.
+<p>
+<p>
+<b><u>Description</u></b>
+<p>
+    <b>punafcc</b> calculates confidence intervals for population attributable and
+    unattributable fractions in case-control or survival studies.  <b>punafcc</b>
+    can be used after an estimation command whose parameters are interpreted
+    as log rate ratios, such as <b>logit</b> or <b>logistic</b> for case-control data, or 
+    <b>stcox</b> for survival data.  It estimates the log of the mean rate ratio, in
+    cases or deaths, between 2 scenarios, a baseline scenario ("Scenario 0")
+    and a fantasy scenario ("Scenario 1"), in which one or more exposure
+    variables are assumed to be set to particular values (typically zero),
+    and any other predictor variables in the model are assumed to remain the
+    same.  This ratio is known as the population unattributable fraction
+    (PUF), and is subtracted from 1 to derive the population attributable
+    fraction (PAF), defined as the proportion of the cases or deaths
+    attributable to living in Scenario 0 instead of Scenario 1.
+<p>
+<p>
+<b><u>Options for </u></b><b><u>punafcc</u></b>
+<p>
+    <b>atspec(</b><i>atspec</i><b>)</b> is an at-specification, allowed as a value of the <b>at()</b>
+        option of <b>margins</b>.  This at-specification must specify a single
+        scenario ("Scenario 1"), defined as a fantasy world in which a subset
+        of the predictor variables in the model are set to values different
+        from their value in the baseline scenario (denoted "Scenario 0" and
+        equal to the real-life scenario).  The at-specification may set
+        variables only to values (not to statistics).  <b>punafcc</b> uses the 
+        <b>margins</b> command to estimate the mean rate ratio, in cases or deaths,
+        between Scenarios 0 and 1, and then uses <b>nlcom</b> to estimate the log of
+        this ratio, known as the population unattributable fraction (PUF).
+        The PUF, and its confidence limits, are subtracted from 1 to
+        calculate a confidence interval for the population attributable
+        fraction (PAF).  If <b>atspec()</b> is not specified, then its default value
+        is <b>atzero((asobserved) _all)</b>, implying that Scenario 1 is the
+        real-life baseline scenario, represented by the predictor values
+        actually present.
+<p>
+    <b>subpop(</b><i>subspec</i><b>)</b> and <b>vce(</b><i>vcespec</i><b>)</b> have the same form and function as the
+        options of the same names for <b>margins</b>.  They specify the
+        subpopulation and the variance-covariance matrix formula,
+        respectively, used to estimate the mean Scenario 0/Scenario 1 rate
+        ratio, and therefore to estimate the population unattributable and
+        attributable fractions.
+<p>
+    <b>noesample</b> has the same function as the option of the same name for 
+        <b>margins</b>.  It specifies that computations will not be restricted to
+        the estimation sample used by the previous estimation command.
+<p>
+    <b>force</b> has the same function as the option of the same name for <b>margins</b>.
+<p>
+    <b>iterate(</b><i>#</i><b>)</b> has the same form and function as the option of the same name
+        for <b>nlcom</b>.  It specifies the number of iterations used by <b>nlcom</b> to
+        find the optimal step size to calculate the numerical derivatives of
+        the log of the mean Scenario 0/Scenario 1 rate ratio in cases or
+        deaths, with respect to the rate ratio itself, calculated by <b>margins</b>.
+<p>
+    <b>eform</b> specifies that <b>punafcc</b> will display an estimate, <i>P</i>-value and
+        confidence limits for the population unattributable fraction, instead
+        of for its log.  If <b>eform</b> is not specified, then a confidence
+        interval for the log is displayed.  In either case, <b>punafcc</b> also
+        displays a confidence interval for the population attributable
+        fraction (PAF).
+<p>
+    <b>level(</b><i>#</i><b>)</b> specifies the percentage confidence level to be used in
+        calculating the confidence intervals.  If it is not specified, then
+        it is taken from the current value of the c-class value <b>c(level)</b>,
+        which is usually 95.
+<p>
+    <b>post</b> specifies that <b>punafcc</b> will post in <b>e()</b> the estimation results for
+        estimating the log of the mean Scenario 0/Scenario 1 rate ratio in
+        cases or deaths, the PUF.  If <b>post</b> is not specified, then any
+        existing estimation results are left in <b>e()</b>.  Note that the
+        estimation results posted are for the log of the mean rate ratio in
+        cases or deaths (the PUF), whether or not <b>eform</b> is specified.
+<p>
+<p>
+<b><u>Remarks</u></b>
+<p>
+    <b>punafcc</b> essentially implements the method for estimating population
+    attributable fractions (PAFs) recommended by Greenland and Drescher
+    (1993) for case-control studies.  This source recommended the use of the
+    Normalizing and variance-stabilizing transformation
+<p>
+    <b>log(PUF) = log(1-PAF)</b>
+<p>
+    to define confidence intervals for the PAF.  <b>punafcc</b> starts by estimating
+    the log of the mean rate ratio in cases or deaths (the PUF), using 
+    <b>margins</b> and <b>nlcom</b>.  The results of this estimation are stored in <b>e()</b>, if
+    the option <b>post</b> is specified.  These estimation results may be saved in
+    an output dataset (or resultsset) by the <b>parmest</b> package, which can be
+    downloaded from SSC.
+<p>
+    <b>punafcc</b> assumes that the most recent estimation command estimates the
+    parameters of a single-equation regression model, whose parameters are
+    interpreted as log rate ratios.  It is the user's responsibility to
+    ensure that this is the case.  However, it will be true if the model is a
+    logistic regression model on case-control data, fitted using <b>logit</b>, 
+    <b>logistic</b> or <b>glm</b>, or a Cox proportional hazard model on survival data,
+    fitted using <b>stcox</b>.  <b>punafcc</b> estimates the PUF as the Scenario 0/Scenario
+    1 mean rate ratio, restricted to observations representing deaths, if the
+    previous command was <b>stcox</b>, and restricted to observations with a
+    non-missing non-zero value of the dependent variable, after any other
+    estimation command.
+<p>
+    <b>punafcc</b> was written to replace some of the functions of the <b>aflogit</b>
+    package (Brady, 1998).  <b>aflogit</b> was written in Version 6 of Stata, and
+    therefore will not work if the user uses long variable names and factor
+    variables, which were introduced in later Stata versions.
+<p>
+    Note that <b>punafcc</b> (unlike <b>aflogit</b>) does not implement the formulas for
+    estimating PAFs in cross-sectional and cohort studies, which can be done
+    using the <b>punaf</b> package.  The logs of PUFs in case-control and survival
+    studies represent a different kind of parameter from the logs of PUFs in
+    cohort and cross-sectional studies, but both can be estimated using 
+    <b>margins</b> and <b>nlcom</b>.  Note, also, that both kinds of PAF are a different
+    parameter from the population attributable risk (PAR), which can be
+    estimated using the <b>regpar</b> package.  Users who need to estimate scenario
+    prevalences (without differences) should use <b>margprev</b>.  Users who need to
+    estimate log-transformed scenario means (without ratios) should use 
+    <b>marglmean</b>.  The packages <b>punaf</b>, <b>regpar</b>, <b>margprev</b> and <b>marglmean</b> are
+    downloadable from SSC.
+<p>
+    The general principles behind scenario comparisons in generalized linear
+    models were introduced by Lane and Nelder (1982).
+<p>
+<p>
+<b><u>Examples</u></b>
+<p>
+    The following examples use the dataset <b>ccxmp.dta</b>.  This dataset has 1
+    observation for each combination of case status and exposure, and data on
+    the number of subjects with that case and exposure status.
+<p>
+    Setup
+<p>
+        <b>.webuse ccxmpl, clear</b>
+        <b>.describe</b>
+        <b>.list</b>
+<p>
+    The following example estimates population unattributable and
+    attributable fractions for exposure as a predictor of case status,
+    following a logistic regression model.  This is done by comparing
+    "Scenario 1" (a fantasy world in which no subjects are exposed) with
+    "Scenario 0" (the real world in which the data were collected).  This is
+    done both for all subjects (to get the total-population attributable
+    fraction) and for exposed subjects (to get the exposed-population
+    attributable fraction).  Note that the point estimators for both these
+    PAFs are the same as those produced by <b>cc</b> on the same data.  The option
+    <b>vce(unconditional)</b>, requiring robust variances in the model, is probably
+    a good idea with case-control or survival studies, because we might
+    expect covariate values in cases or deaths to be subject to sampling
+    error.  (However, <b>vce(unconditional)</b> should not be used when calculating
+    out-of-sample PAFs for a second set of case-control or survival data from
+    a model fitted to a first set of case-control or survival data, using the
+    <b>noesample</b> option.)
+<p>
+        <b>. cc case exposed [fweight=pop]</b>
+        <b>. logit case exposed [fweight=pop], or robust</b>
+        <b>. punafcc, at(exposed=0) eform vce(unconditional)</b>
+        <b>. punafcc, at(exposed=0) eform vce(unconditional) subpop(exposed)</b>
+<p>
+    The following examples use the dataset <b>downs.dta</b>.  This dataset has 1
+    observation for each combination of case status, exposure and age group,
+    and data on the number of subjects with that case and exposure status and
+    age group.
+<p>
+    Setup
+<p>
+        <b>.webuse downs, clear</b>
+        <b>.describe</b>
+        <b>.label list age</b>
+        <b>.list, sepby(age)</b>
+<p>
+    The following examples estimate age-adjusted exposure effects using
+    logistic regression, and then estimate the PAF.  This is done by
+    comparing "Scenario 1" (a fantasy world in which no subjects are exposed
+    and the age distribution stays the same) with "Scenario 0" (the real
+    world in which the data were collected).
+<p>
+        <b>.logit case i.age i.exposed [fweight=pop], or robust</b>
+        <b>.punafcc, at(exposed=0) eform vce(unconditional)</b>
+<p>
+        <b>.logit case i.age exposed [fweight=pop], or robust</b>
+        <b>.punafcc, at(exposed=0) eform vce(unconditional)</b>
+<p>
+    The following example demonstrates the use of <b>punafcc</b> in the same dataset
+    with an interactive logistic model, in which exposure effects may vary
+    with age.
+<p>
+        <b>.logit case i.age i.exposed i.age#i.exposed [fweight=pop], or robust</b>
+        <b>.punafcc, at(exposed=0) eform vce(unconditional)</b>
+<p>
+    The following example demonstrates the use of <b>punafcc</b> with the <b>parmest</b>
+    and <b>creplace</b> packages, downloadable from SSC.  The population
+    unattributable and attributable fractions for case status are estimated
+    using <b>punafcc</b> (with the <b>post</b> option), and saved, using <b>parmest</b>, in a
+    dataset in memory, overwriting the original dataset, with 1 observation
+    for 1 parameter, the log population unattributable fraction, named <b>"PUF"</b>,
+    and data on the estimate, confidence limits, <i>P</i>-value, and other parameter
+    attributes.  We then use <b>replace</b> and <b>creplace</b> to replace the confidence
+    interval for the PUF with a confidence interval for the PAF, and <b>describe</b>
+    and <b>list</b> the new dataset.
+<p>
+        <b>. logit case i.age i.exposed [fweight=pop], or robust</b>
+        <b>. punafcc, at(exposed=0) eform vce(unconditional) post</b>
+        <b>. parmest, eform norestore</b>
+        <b>. foreach Y of var estimate min* max* {</b>
+        <b>. replace `Y'=1-`Y'</b>
+        <b>. }</b>
+        <b>. creplace min* max*</b>
+        <b>. replace parm="PAF"</b>
+        <b>. describe</b>
+        <b>. list</b>
+<p>
+    The following example demonstrates the estimation of the PUF and PAF in a
+    Cox regression model on the drugtr data, used as an example for <b>stcox</b>.
+    We estimate a PUF and a PAF comparing the real-world Scenario 0 with a
+    fantasy Scenario 1, in which all subjects receive the drug, but the
+    subjects' ages are the same as in Scenario 0.
+<p>
+    Setup
+<p>
+        <b>. webuse drugtr, clear</b>
+        <b>. stset</b>
+        <b>. tab drug, m</b>
+<p>
+    Example
+<p>
+        <b>. stcox drug age, vce(robust)</b>
+        <b>. punafcc, eform at(drug=1) vce(unconditional)</b>
+<p>
+<p>
+<b><u>Saved results</u></b>
+<p>
+    <b>punafcc</b> saves the following in <b>r()</b>:
+<p>
+    Scalars        
+      <b>r(rank)</b>             rank of <b>r(V)</b>
+      <b>r(N)</b>                number of observations
+      <b>r(N_sub)</b>            subpopulation observations
+      <b>r(N_clust)</b>          number of clusters
+      <b>r(N_psu)</b>            number of samples PSUs, survey data only
+      <b>r(N_strata)</b>         number of strata, survey data only
+      <b>r(df_r)</b>             variance degrees of freedom, survey data only
+      <b>r(N_poststrata)</b>     number of post strata, survey data only
+      <b>r(k_margins)</b>        number of terms in <i>marginlist</i>
+      <b>r(k_by)</b>             number of subpopulations
+      <b>r(k_at)</b>             number of <b>at()</b> options (always 0)
+      <b>r(level)</b>            confidence level of confidence intervals
+<p>
+    Macros         
+      <b>r(atzero)</b>           <b>at()</b> option for Scenario 0
+      <b>r(atspec)</b>           <b>atspec()</b> option
+      <b>r(atzero_exp)</b>       <b>expression()</b> option for Scenario 0/Scenario 0 rate
+                            ratio
+      <b>r(atspec_exp)</b>       <b>expression()</b> option for Scenario 0/Scenario 1 rate
+                            ratio
+<p>
+    Matrices       
+      <b>r(cimat)</b>            vector containing estimates and confidence limits
+                            for the PAF
+      <b>r(b)</b>                vector of log Scenario 0/Scenario 1 rate ratio
+      <b>r(V)</b>                estimated variance-covariance matrix of log
+                            Scenario 0/Scenario 1 rate ratio
+<p>
+    If <b>post</b> is specified, <b>punafcc</b> also saves the following in <b>e()</b>:
+<p>
+    Scalars        
+      <b>e(rank)</b>             rank of <b>e(V)</b>
+      <b>e(N)</b>                number of observations
+      <b>e(N_sub)</b>            subpopulation observations
+      <b>e(N_clust)</b>          number of clusters
+      <b>e(N_psu)</b>            number of samples PSUs, survey data only
+      <b>e(N_strata)</b>         number of strata, survey data only
+      <b>e(df_r)</b>             variance degrees of freedom, survey data only
+      <b>e(N_poststrata)</b>     number of post strata, survey data only
+      <b>e(k_margins)</b>        number of terms in <i>marginlist</i>
+      <b>e(k_by)</b>             number of subpopulations
+      <b>e(k_at)</b>             number of <b>at()</b> options (always 0)
+<p>
+    Macros         
+      <b>e(cmd)</b>              <b>punafcc</b>
+      <b>e(predict)</b>          program used to implement <b>predict</b>
+      <b>e(atzero)</b>           <b>at()</b> option for Scenario 0
+      <b>e(atspec)</b>           <b>atspec()</b> option
+      <b>e(atzero_exp)</b>       <b>expression()</b> option for Scenario 0/Scenario 0 rate
+                            ratio
+      <b>e(atspec_exp)</b>       <b>expression()</b> option for Scenario 0/Scenario 1 rate
+                            ratio
+      <b>e(properties)</b>       <b>b V</b>
+<p>
+    Matrices       
+      <b>e(b)</b>                vector of log Scenario 0/Scenario 1 rate ratio
+      <b>e(V)</b>                estimated variance-covariance matrix of log
+                            Scenario 0/Scenario 1 rate ratio
+      <b>e(V_srs)</b>            simple-random-sampling-without-replacement
+                            (co)variance hat V_srswor, if <b>svy</b>
+      <b>e(V_srswr)</b>          simple-random-sampling-with-replacement
+                            (co)variance hat V_srswr, if <b>svy</b> and <b>fpc()</b>
+      <b>e(V_msp)</b>            misspecification (co)variance hat V_msp, if <b>svy</b> and
+                            available
+<p>
+    Functions      
+      <b>e(sample)</b>           marks estimation sample
+<p>
+<p>
+<b><u>Author</u></b>
+<p>
+    Roger Newson, National Heart and Lung Institute, Imperial College London,
+    UK.
+    Email: r.newson@imperial.ac.uk
+<p>
+<p>
+<b><u>References</u></b>
+<p>
+<a name="brady_1998"></a>    Brady A.  1998.  sbe21: Adjusted population attributable fractions from
+        logistic regression.  <i>Stata Technical Bulletin</i> <b>STB-42</b>: 8-12.
+        Download from the <i>Stata Technical Bulletin</i> website.
+<p>
+<a name="greenland_1993"></a>    Greenland S. and K. Drescher.  1993.  Maximum likelihood estimation of
+        the attributable fraction from logistic models.  <i>Biometrics</i> <b>49</b>:
+        865-872.
+<p>
+<a name="hosmer_1988"></a>    Hosmer Jr., D. W., S. Lemeshow, and J. Klar.  1988.  Goodness-of-fit
+        testing for the logistic regression model when the estimated
+        probabilities are small.  <i>Biometrical Journal</i> <b>30</b>: 911–924.
+<p>
+<a name="lane_1982"></a>    Lane, P. W., and J. A. Nelder.  1982.  Analysis of covariance and
+        standardization as instances of prediction.<i>  Biometrics</i> <b>38</b>: 613–621.
+<p>
+<p>
+<b><u>Also see</u></b>
+<p>
+    Manual:  <b>[R] margins</b>, <b>[R] nlcom</b>, <b>[R] logistic</b>, <b>[R] logit</b>, <b>[R] stcox</b>, <b>[R]</b>
+             <b>glm</b>
+<p>
+      Help:  <b>[R] margins</b>, <b>[R] nlcom</b>, <b>[R] logistic</b>, <b>[R] logit</b>, <b>[R] stcox</b>, <b>[R]</b>
+             <b>glm</b>
+             <b>punaf</b>, <b>regpar</b>, <b>margprev</b>, <b>marglmean</b>, <b>parmest</b>, <b>creplace</b>, <b>aflogit</b>
+             if installed
+</pre>

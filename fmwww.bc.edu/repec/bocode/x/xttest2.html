@@ -1,0 +1,95 @@
+<pre>
+.-
+help for ^xttest2^                             (SSC distribution, 16 August 200
+&gt; 4)
+.-
+<p>
+Breusch-Pagan LM test for cross-sectional correlation in fixed effects model
+----------------------------------------------------------------------------
+<p>
+    ^xttest2^ 
+<p>
+<p>
+^xttest2^ is for use with cross-section time-series data, following use of 
+^xtreg, fe^, ^xtgls^ or ^ivreg2^, and requiring prior use of ^tsset^.
+<p>
+<p>
+Description
+-----------
+<p>
+^xttest2^ calculates the Breusch-Pagan statistic for cross-sectional 
+independence in the residuals of a fixed effect regression model, following 
+Greene (2000, p. 601). ^xtreg, fe^ estimates this model assuming independence 
+of the errors. A likely deviation from independent errors in the context of 
+pooled cross-section time-series data (or panel data) is likely to be 
+contemporaneous correlations across cross-sectional units. These correlations 
+are those exploited by Zellner's seemingly unrelated regression (SUR) 
+estimator, and this test is provided by ^sureg, corr^ in that context.  
+^xttest2^ tests the hypothesis that the residual correlation matrix, computed 
+over observations common to all cross-sectional units, is an identity matrix 
+of order N_g, where N_g is the number of cross-sectional units. The resulting 
+test statistic is distributed Chi-squared(d), where d=N_g * (N_g - 1) /2, 
+under the null hypothesis of cross-sectional independence.
+<p>
+In the context of an unbalanced panel, the observations used to calculate 
+the test statistic are those available for all cross-sectional units. The 
+number of available observations is reported, as is the estimated correlation
+matrix of the residuals over cross-sectional units.
+<p>
+Since this routine makes use of Stata's matrix language, it cannot compute
+the test if the number of panels in the data exceeds the current matsize 
+(^help matsize^). 
+<p>
+The test statistic, degrees of freedom and number of available observations 
+are placed in the return array.
+<p>
+Note that this Breusch-Pagan test is not that commonly employed to test for
+heteroskedasticity.
+ 
+<p>
+Example
+-------
+<p>
+        . ^use http://fmwww.bc.edu/ec-p/data/greene2000/tbl15-1.dta,clear^
+<p>
+        . ^tsset firm year^
+        
+        . ^xtreg i f c,fe^
+        
+        . ^xttest2^
+                
+        . ^xtgls i f c, p(h)^
+        
+        . ^xttest2^
+        
+        . ^ivreg2 i (f c = L.i year)^
+        
+        . ^xttest2^
+<p>
+<p>
+References
+----------
+<p>
+Greene, W. 2000. Econometric Analysis. Upper Saddle River, NJ: Prentice--Hall. 
+<p>
+<p>
+Acknowledgement
+----------------
+<p>
+Thanks to Sylvain Friederich for suggesting that this routine be written.
+ 
+<p>
+Author
+------
+<p>
+Christopher F Baum, Boston College, USA
+baum@@bc.edu
+<p>
+<p>
+Also see
+--------
+<p>
+On-line:  help for @sureg@, @xttest1@ (if installed), @bpagan@ (if installed), 
+&gt; @ivreg2@ (if installed)
+<p>
+</pre>

@@ -1,0 +1,145 @@
+<html>
+
+<head>
+<title>estout - Making Regression Tables in Stata</title>
+<meta name="author" content="Ben Jann">
+<meta name="keywords" content="Stata, estout, esttab, eststo, estadd,
+      LaTeX, regression table, statistics">
+<meta http-equiv="content-language" content="en">
+<meta http-equiv="content-type" content="text/html">
+<link rel="stylesheet" href="default.css" type="text/css">
+</head>
+
+<body>
+
+<div id="pagehead">
+
+<form style="text-align:right; border:0px; margin: 2.17em 0px 0px 0px; padding:5px 15px 0px 0px; float:right"
+ "method=GET action="http://www.google.com/search">
+    <input style="border-style:solid; border-color: #bcd" TYPE=text name=q size="15">
+    <INPUT TYPE=hidden name=sitesearch value="repec.org/bocode/e/estout">
+    <input style="border:0px; background-color: #F3F6F9"
+     type=submit name=sa value="search">
+</form>
+
+   <a href="index.html"><h1>estout</h1></a>
+   <p>Making Regression Tables in Stata<p>
+
+</div>
+
+<div id="pagebar">
+   <ul>
+     <li><a href="index.html">Overview</a>
+     </li>
+     <li><a href="installation.html">Installation</a>
+     </li>
+     <li><a href="examples.html">Examples</a>
+     <ul>
+          <li><a href="esttab.html">esttab</a>
+          </li>
+          <li><a href="estout.html">estout</a>
+          </li>
+          <li><a href="eststo.html">eststo</a>
+          </li>
+          <li><a href="estadd.html">estadd</a>
+          </li>
+          <li><a href="estpost.html">estpost</a>
+          </li>
+          <li><a href="advanced.html">Advanced</a>
+          </li>
+          <li><a href="spost.html">SPost</a>
+          </li>
+     </ul>
+     </li>
+     <li><a href="documentation.html">Documentation</a>
+     <ul>
+          <li><a href="hlp_esttab.html">esttab</a>
+          </li>
+          <li><a href="hlp_estout.html">estout</a>
+          </li>
+          <li><a href="hlp_eststo.html">eststo</a>
+          </li>
+          <li><a href="hlp_estadd.html">estadd</a>
+          </li>
+          <li><a href="hlp_estpost.html">estpost</a>
+          </li>
+     </ul>
+     </li>
+     <li><a href="history.html">History</a>
+     </li>
+     <li><a href="publications.html">Publications</a>
+     </li>
+     <li><a href="author.html">Author</a>
+     </li>
+     <li><a href="alsosee.html">Also see</a>
+     </li>
+   </ul>
+
+</div>
+
+<div id="pagebody">
+<h1>Installation</h1>
+
+<h2>Installation using the <b>ssc</b> command (recommended)</h2>
+
+<p>
+To install the <b>estout</b> package, type
+</p>
+
+<pre>
+. ssc install estout, replace
+</pre>
+
+<p>
+in Stata.
+</p>
+
+<p>Compatibility: <b>estout</b> requires Stata 8.2 or newer.
+</p>
+
+<h2>Manual installation</h2>
+
+<p>
+If you cannot use the <b>ssc</b> command due to firewall issues or alike,
+you may install <b>estout</b> as follows:
+</p>
+
+<ol>
+	<li>
+	Download <a href="../estout.zip">estout.zip</a>
+	(also see: <a href="http://ideas.repec.org/c/boc/bocode/s439301.html">http://ideas.repec.org/c/boc/bocode/s439301.html</a>)</li>
+
+	<li>
+	Extract estout.zip into a temporary directory on
+	your hard disk, say, "C:\temp\".
+</li>
+
+	<li>
+	Start Stata and type
+
+<pre>
+. net from "c:/temp/"
+</pre>
+
+	(or similar, depending on the chosen temporary directory).
+	</li>
+
+	<li>
+	Type
+
+<pre>
+. net install estout, replace
+</pre>
+
+	</li>
+
+	<li>
+	Done! You may now erase the temporary files.
+	</li>
+
+</ol>
+
+
+</div>
+
+</body></html>

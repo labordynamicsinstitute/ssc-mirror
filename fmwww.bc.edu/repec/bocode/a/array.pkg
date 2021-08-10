@@ -1,0 +1,17 @@
+d 'ARRAY': package to support arrays of variables 
+d
+d This package contains four programs, and their associated help
+d files:  array.ado, aelem.ado, assign.ado, and ido.ado.  The first
+d is used to  define arrays of variables, the second provides
+d access to particular array  elements (i.e., variables), the third
+d assigns values to array elements, and  the fourth provides a
+d simple looping construct to specify array elements in  a
+d systematic manner. This provides the Stata programmer with most
+d of the capabilities of SAS arrays. 
+d
+d Author: David E. Moore, The Hartman Group, Inc.
+d Support: email david@@tinderboxthg.com
+d
+d Distribution-Date: 19980616
+
+f array.zip

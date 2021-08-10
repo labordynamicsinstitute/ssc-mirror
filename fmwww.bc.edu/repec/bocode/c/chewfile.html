@@ -1,0 +1,98 @@
+<pre>
+<b>help </b>
+<p>
+-------------------------------------------------------------------------------
+<p>
+<b><u>Title</u></b>
+<p>
+    <b>chewfile</b> --  chew and digest ASCII file down to size.
+<p>
+<a name="s_Syntax"></a><p>
+<b><u>Syntax</u></b>
+<p>
+    <b>chewfile</b> [<i>using filename</i>] [, <i>options</i>]
+<p>
+<a name="s_Description"></a><p>
+<b><u>Description</u></b>
+<p>
+    <b>chewfile</b> provides a fast and easy way to chew your ASCII file. It
+    will (1) cut down a file down to size, (2) export it as a text file,
+    or (3) force it to read in as strings. It is a supplement to insheet
+    or infile for importing ASCII files.
+<p>
+    Use insheet or infile if you want to read it as a number. If it's too
+    big, then read them after cutting it down to size using <b>begin(</b><i>#</i><b>)</b>,
+    <b>end(</b><i>#</i><b>)</b>, and <b>save(</b><i> </i><b>)</b>.
+<p>
+<a name="s_Options"></a><p>
+<b><u>Options</u></b>
+<p>
+        +------+
+    ----+ Main +-------------------------------------------------------------
+<p>
+    <b>replace</b> Replace the existing file.
+<p>
+    <b>clear</b> Read it into memory as strings.
+<p>
+    <b>save(</b><i> </i><b>)</b> Must be specified when <b>clear</b> is not specified.
+<p>
+    <b>parse(</b><i>" "</i><b>)</b> Parsing character. The default is tab. Choose comma like
+            this, parse(",").
+<p>
+    <b>begin(</b><i>#</i><b>)</b> The starting line to read, inclusive. The default is
+            begin(1).
+<p>
+    <b>end(</b><i>#</i><b>)</b> The ending line to read, inclusive. The default is end(.).
+<p>
+    <b>raw</b> Raw file appears in the first column in addition to the usual
+            stuff. Use this if you want to see unaltered file.
+<p>
+<a name="s_0"></a><p>
+<b><u>Examples</u></b>
+<p>
+    * example data
+    clear
+    set obs 100
+    gen var1=uniform()
+    gen var2=uniform()
+    gen var3=uniform()
+    outsheet using rawfile.txt, replace noname comma
+<p>
+    * import them as strings
+    clear
+    chewfile using rawfile.txt, clear parse(",")
+<p>
+    * read through without storing in memory
+    clear
+    chewfile using rawfile.txt, save(chewed_file.txt) replace
+<p>
+    * read through only a part of file without storing in memory
+    clear
+    chewfile using rawfile.txt, begin(5) end(.) save(chewed_file.txt)
+    replace
+<p>
+<p>
+<b><u>Remarks</u></b>
+<p>
+    Bare minimum programming. Should work.
+<p>
+    First published on Statalist
+            http://www.stata.com/statalist/archive/2008-08/msg00834.html
+<p>
+    I have been told the responsible thing to do is to write the help
+            file and put it up on ssc.
+<p>
+    You may prefer <b>chunk</b> by David C. Elliott.
+<p>
+<p>
+<b><u>Author</u></b>
+<p>
+    Roy Wada
+    roywada@hotmail.com
+<p>
+<p>
+<b><u>Also see</u></b>
+<p>
+    Online: insheet or infile
+<p>
+</pre>

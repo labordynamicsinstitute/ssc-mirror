@@ -1,0 +1,33 @@
+d 'SCREEN': module to screen observations that meet specific distributional criteria in terms of percentile, standard deviation or interquartile range
+d
+d   screen identifies observations that meet specific
+d distributional criteria in terms of percentile, standard
+d deviation or interquartile range, and generates a binary variable
+d equal to 1 if the observation meets the criteria and equal to 0
+d if it does not. For example, screen can identify observations
+d that lie more than 3 standard deviations above and below the
+d mean, observations that are above the 99.9th percentile, or
+d observations that are 1.5 IQR above the third quartile (Q3).	The
+d command screen can be two-tailed or one-tailed by specifying
+d lower(#) and/or upper(#).  The option gen(#) generates a clone
+d variable for each variable in your varlist and replaces screened
+d observations with the non-screened tail-end values, the mean or
+d median, or missing values. The option second(varlist) allows
+d sequential ordered screening by screening second level variables
+d after screening a first level variable.  The option iter(#)  runs
+d multiple standard deviation screening iterations. This module is
+d useful for screening distributional outliers. 
+d
+d KW: data management
+d KW: screening
+d KW: filtering
+d
+d Requires: Stata version 11
+d
+d Distribution-Date: 20170713
+d
+d Author: Marco Santacroce, International Food Policy Research Institute
+d Support: email  marcosantacroce.it@@gmail.com
+d
+f screen.ado
+f screen.sthlp

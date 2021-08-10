@@ -1,0 +1,56 @@
+<pre>
+-------------------------------------------------------------------------------
+help for <b>pwcov</b>
+-------------------------------------------------------------------------------
+<p>
+<b><u>Generate pairwise covariances</u></b>
+<p>
+        <b>pwcov</b> <i>varlist</i> [<b>if</b> <i>exp</i>] [<b>in</b> <i>range</i>] [<i>weight</i>] [<b>,</b> <b>print</b> <b>save</b> ]
+<p>
+<p>
+<b><u>Description</u></b>
+<p>
+    <b>pwcov</b> computes the pairwise covariances between a number of variables,
+    using the available observations on each pair of variables to generate
+    the sample covariances. <b>fweights</b> and <b>pweights</b> are allowed.
+<p>
+<p>
+<b><u>Options</u></b>
+<p>
+    <b>print</b> indicates that the matrix of covariances be printed.
+<p>
+    <b>save</b> indicates that four new variables should be created:  <b>pw_t</b>, <b>pw_tk</b>,
+        <b>pw_cov</b> and <b>pw_N</b>. The first two variables give the row and column
+        indices of the covariance, provided in the third variable, while <b>pw_N</b>
+        provides the number of observations used to compute that covariance.
+        These variables are added to the current data set, and must not
+        already exist.
+<p>
+<p>
+<b><u>Examples</u></b>
+<p>
+    . webuse grunfeld
+ 
+    . reshape wide invest mvalue kstock time , i(year) j(company)
+<p>
+    . pwcov invest1 invest2 invest3 invest4 invest5, print save
+<p>
+<p>
+<b><u>Author</u></b>
+<p>
+    Christopher F. Baum, Boston College
+    baum@bc.edu
+<p>
+<p>
+<p>
+<b><u>Acknowledgements</u></b>     
+<p>
+    The development of this routine was inspired by Peter Gottschalk.
+<p>
+<p>
+<b><u>Also see</u></b>
+<p>
+    On-line: pwcorr
+<p>
+<p>
+</pre>

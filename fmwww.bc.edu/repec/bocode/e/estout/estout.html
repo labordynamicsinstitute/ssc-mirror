@@ -1,0 +1,636 @@
+<html>
+
+<head>
+<title>estout - Making Regression Tables in Stata</title>
+<meta name="author" content="Ben Jann">
+<meta name="keywords" content="Stata, estout, esttab, eststo, estadd,
+      LaTeX, regression table, statistics">
+<meta http-equiv="content-language" content="en">
+<meta http-equiv="content-type" content="text/html">
+<link rel="stylesheet" href="default.css" type="text/css">
+</head>
+
+<body>
+
+<div id="pagehead">
+
+<form style="text-align:right; border:0px; margin: 2.17em 0px 0px 0px; padding:5px 15px 0px 0px; float:right"
+ "method=GET action="http://www.google.com/search">
+    <input style="border-style:solid; border-color: #bcd" TYPE=text name=q size="15">
+    <INPUT TYPE=hidden name=sitesearch value="repec.org/bocode/e/estout">
+    <input style="border:0px; background-color: #F3F6F9"
+     type=submit name=sa value="search">
+</form>
+
+   <a href="index.html"><h1>estout</h1></a>
+   <p>Making Regression Tables in Stata<p>
+
+</div>
+
+<div id="pagebar">
+   <ul>
+     <li><a href="index.html">Overview</a>
+     </li>
+     <li><a href="installation.html">Installation</a>
+     </li>
+     <li><a href="examples.html">Examples</a>
+     <ul>
+          <li><a href="esttab.html">esttab</a>
+          </li>
+          <li><a href="estout.html">estout</a>
+          </li>
+          <li><a href="eststo.html">eststo</a>
+          </li>
+          <li><a href="estadd.html">estadd</a>
+          </li>
+          <li><a href="estpost.html">estpost</a>
+          </li>
+          <li><a href="advanced.html">Advanced</a>
+          </li>
+          <li><a href="spost.html">SPost</a>
+          </li>
+     </ul>
+     </li>
+     <li><a href="documentation.html">Documentation</a>
+     <ul>
+          <li><a href="hlp_esttab.html">esttab</a>
+          </li>
+          <li><a href="hlp_estout.html">estout</a>
+          </li>
+          <li><a href="hlp_eststo.html">eststo</a>
+          </li>
+          <li><a href="hlp_estadd.html">estadd</a>
+          </li>
+          <li><a href="hlp_estpost.html">estpost</a>
+          </li>
+     </ul>
+     </li>
+     <li><a href="history.html">History</a>
+     </li>
+     <li><a href="publications.html">Publications</a>
+     </li>
+     <li><a href="author.html">Author</a>
+     </li>
+     <li><a href="alsosee.html">Also see</a>
+     </li>
+   </ul>
+
+</div>
+
+<div id="pagebody">
+<h1>Introductory examples for <b>estout</b></h1>
+
+<div id="extoc">
+<ul>
+<li><a href="estout.html#estout000">Basic syntax and usage</a></li>
+<li><a href="estout.html#estout002">Choosing a <b>style()</b></a></li>
+<li><a href="estout.html#estout003">The <b>cells()</b> option</a></li>
+<li><a href="estout.html#estout004">The <b>stats()</b> option</a></li>
+<li><a href="estout.html#estout005">Using labels</a></li>
+<li><a href="estout.html#estout006">Numerical formats</a></li>
+</ul>
+</div>
+
+<a name="estout000"></a>
+<h2>Basic syntax and usage</h2>
+
+<p>
+<b>estout</b> assembles a regression table from one or more models previously
+fitted and stored.
+The full syntax of <b>estout</b> is rather complex and is to be found
+in the <a href="hlp_estout.html">help file</a>.
+However, consider the following basic syntax, which includes only the
+most important options:</p>
+<pre>
+<b>estout</b> [ <i>namelist</i> ] [ <b>using</b> <i>filename</i> ] [ <b>,</b> <b><u>c</u></b><b>ells(</b><i>array</i><b>)</b> <b><u>s</u></b><b>tats(</b><i>scalarlist</i><b>)</b>
+                                           <b><u>sty</u></b><b>le(</b><i>style</i><b>)</b> <i>options</i> ]
+</pre>
+<p>where <i>namelist</i> is a list of the names of stored estimation sets (the name
+list can be entered as <b>*</b> to refer to all stored estimates). The
+<a href="hlp_estout.html#cells"><b>cells()</b></a>
+and <a href="hlp_estout.html#sum"><b>stats()</b></a> options determine the primary contents of the table. The
+<a href="hlp_estout.html#def"><b>style()</b></a> option determines the basic formatting of the table.
+</p>
+
+
+<a name="estout001"></a>
+<p>
+The general procedure for using <b>estout</b> is to first store several models
+using <a href="http://www.stata.com/help.cgi?estimates"><b>estimates store</b></a> and then apply <b>estout</b> to
+display or save a table of the estimates. By default, <b>estout</b> displays a plain
+table of the coefficients of the models and uses
+<a href="http://www.stata.com/help.cgi?smcl">SMCL</a> tags and horizontal lines to
+structure the table. Example:
+</p>
+
+<pre>
+. sysuse auto
+(1978 Automobile Data)
+
+. regress price weight mpg
+
+      Source |       SS           df       MS      Number of obs   =<b>        74</b>
+-------------+----------------------------------   F(2, 71)        = <b>    14.74</b>
+       Model | <b>  186321280         2  93160639.9   </b>Prob &gt; F        =<b>    0.0000</b>
+    Residual | <b>  448744116        71  6320339.67   </b>R-squared       =<b>    0.2934</b>
+-------------+----------------------------------   Adj R-squared   =<b>    0.2735</b>
+       Total | <b>  635065396        73  8699525.97   </b>Root MSE        =   <b>   2514</b>
+
+------------------------------------------------------------------------------
+       price |      Coef.   Std. Err.      t    P&gt;|t|     [95% Conf. Interval]
+-------------+----------------------------------------------------------------
+      weight |<b>   1.746559   .6413538     2.72   0.008      .467736    3.025382</b>
+         mpg |<b>  -49.51222   86.15604    -0.57   0.567    -221.3025     122.278</b>
+       _cons |<b>   1946.069    3597.05     0.54   0.590    -5226.245    9118.382</b>
+------------------------------------------------------------------------------
+
+. estimates store m1
+
+. regress price weight mpg foreign
+
+      Source |       SS           df       MS      Number of obs   =<b>        74</b>
+-------------+----------------------------------   F(3, 70)        = <b>    23.29</b>
+       Model | <b>  317252881         3   105750960   </b>Prob &gt; F        =<b>    0.0000</b>
+    Residual | <b>  317812515        70  4540178.78   </b>R-squared       =<b>    0.4996</b>
+-------------+----------------------------------   Adj R-squared   =<b>    0.4781</b>
+       Total | <b>  635065396        73  8699525.97   </b>Root MSE        =   <b> 2130.8</b>
+
+------------------------------------------------------------------------------
+       price |      Coef.   Std. Err.      t    P&gt;|t|     [95% Conf. Interval]
+-------------+----------------------------------------------------------------
+      weight |<b>   3.464706    .630749     5.49   0.000     2.206717    4.722695</b>
+         mpg |<b>    21.8536   74.22114     0.29   0.769    -126.1758     169.883</b>
+     foreign |<b>    3673.06   683.9783     5.37   0.000     2308.909    5037.212</b>
+       _cons |<b>  -5853.696   3376.987    -1.73   0.087    -12588.88    881.4934</b>
+------------------------------------------------------------------------------
+
+. estimates store m2
+
+. estout *
+
+--------------------------------------
+                       m1           m2
+                        b            b
+--------------------------------------
+weight      <b>     1.746559     3.464706</b>
+mpg         <b>    -49.51222      21.8536</b>
+foreign     <b>                   3673.06</b>
+_cons       <b>     1946.069    -5853.696</b>
+--------------------------------------
+
+. estimates clear
+<p style="text-align:right; padding:0px; margin:0px"><a href="estout001.do">[do-file]</a>
+</pre>
+
+
+<a name="estout001b"></a>
+<p>
+Alternatively, use <a href="hlp_eststo.html"><b>eststo</b></a> to store the models.
+Unlike <b>estimates store</b>, <b>eststo</b> can be used as a prefix command and
+does not require the user to specify names for the stored estimation sets.
+Furthermore, the estimation sets are automatically picked up by <b>estout</b>
+if they are stored by <b>eststo</b>. Example:
+</p>
+
+<pre>
+. eststo: quietly regress price weight mpg
+(<b>est1</b> stored)
+
+. eststo: quietly regress price weight mpg foreign
+(<b>est2</b> stored)
+
+. estout
+
+--------------------------------------
+                     est1         est2
+                        b            b
+--------------------------------------
+weight      <b>     1.746559     3.464706</b>
+mpg         <b>    -49.51222      21.8536</b>
+foreign     <b>                   3673.06</b>
+_cons       <b>     1946.069    -5853.696</b>
+--------------------------------------
+<p style="text-align:right; padding:0px; margin:0px"><a href="estout001b.do">[do-file]</a>
+</pre>
+
+<p>
+Note that what appears as dashed lines here, are solid lines in Stata's
+Results window or the Viewer: </p>
+<p align="center"><img src="estout001b.png" alt="estout001b.png">
+</p>
+
+
+<a name="estout001c"></a>
+<p>
+If <b>using</b> is specified, <b>estout</b> writes a raw
+tab-delimited table (without SMCL tags and without lines) to the indicated
+file:
+</p>
+
+<pre>
+. estout using example.txt
+(output written to example.txt)
+
+. type example.txt
+<b>        est1    est2</b>
+<b>        b       b</b>
+<b>weight  1.746559        3.464706</b>
+<b>mpg     -49.51222       21.8536</b>
+<b>foreign         3673.06</b>
+<b>_cons   1946.069        -5853.696</b>
+
+. eststo clear
+<p style="text-align:right; padding:0px; margin:0px"><a href="estout001c.do">[do-file]</a>
+</pre>
+
+<p>
+The table looks messy in the Stata results window or the Stata log because the
+columns are tab-separated (note that tab characters are not preserved in the
+results window or the log). However, the table would look tidy if
+"example.txt" were opened, for example, in a spreadsheet program.
+</p>
+
+
+<a name="estout002"></a>
+<h2>Choosing a <b>style()</b></h2>
+
+<p>
+<b>estout</b> has a <a href="hlp_estout.html#def"><b>style()</b></a> option to set the basic format of the table. The default style for
+screen display is the <b>smcl</b> style.  The default export style (i.e. if <b>using</b> is specified) is
+the <b>tab</b> style. (See the examples above.) Other predefined styles are <b>fixed</b>, <b>tex</b>, and <b>html</b>,
+but it is also possible to define one's own styles
+(see <a href="hlp_estout.html#defaults">Defaults files</a> in the documentation).
+The <b>tex</b> style, for example, modifies the output table for use with LaTeX's
+tabular environment:
+</p>
+
+<pre>
+. sysuse auto
+(1978 Automobile Data)
+
+. eststo: quietly regress price weight mpg
+(<b>est1</b> stored)
+
+. eststo: quietly regress price weight mpg foreign
+(<b>est2</b> stored)
+
+. estout, style(tex) varlabels(_cons \_cons)
+
+<b>            &amp;        est1&amp;        est2\\</b>
+<b>            &amp;           b&amp;           b\\</b>
+<b>weight      &amp;    1.746559&amp;    3.464706\\</b>
+<b>mpg         &amp;   -49.51222&amp;     21.8536\\</b>
+<b>foreign     &amp;            &amp;     3673.06\\</b>
+<b>\_cons      &amp;    1946.069&amp;   -5853.696\\</b>
+
+. eststo clear
+<p style="text-align:right; padding:0px; margin:0px"><a href="estout002.do">[do-file]</a>
+</pre>
+
+<p>
+(Note that <b>_cons</b> has been replaced by its LaTeX equivalent in the example
+above using the <a href="hlp_estout.html#varlabels"><b>varlabels()</b></a> option (the underscore character produces an
+error in LaTeX unless it is preceded by a backslash). For more
+information on the <b>varlabels()</b> option, see <b>estout</b>'s <a href="hlp_estout.html#lab">Labeling</a> options.)
+</p>
+
+
+<a name="estout003"></a>
+<h2>The <b>cells()</b> option</h2>
+
+<p>
+Use the <a href="hlp_estout.html#cells"><b>cells()</b></a> option to specify the parameter statistics to be
+tabulated and how they are to be arranged. The parameter statistics
+available are <b>b</b> (point estimates; the default), <b>se</b> (standard errors), <b>t</b>
+(t-/z-statistics), <b>p</b> (p-values), <b>ci</b> (confidence intervals; to display the
+lower and upper bounds in separate cells use <b>ci_l</b> and <b>ci_u</b>), as well as
+any additional parameter statistics included in the <b>e()</b>-returns for the
+models (see <b>estout</b>'s <a href="hlp_estout.html#par">Parameter Statistics</a> options). For example, <b>cells(b</b>
+<b>se)</b> results in the reporting of raw coefficients and standard errors:
+</p>
+
+<pre>
+. sysuse auto
+(1978 Automobile Data)
+
+. eststo: quietly regress price weight mpg
+(<b>est1</b> stored)
+
+. eststo: quietly regress price weight mpg foreign
+(<b>est2</b> stored)
+
+. estout, cells(b se)
+
+--------------------------------------
+                     est1         est2
+                     b/se         b/se
+--------------------------------------
+weight      <b>     1.746559     3.464706</b>
+            <b>     .6413538      .630749</b>
+mpg         <b>    -49.51222      21.8536</b>
+            <b>     86.15604     74.22114</b>
+foreign     <b>                   3673.06</b>
+            <b>                  683.9783</b>
+_cons       <b>     1946.069    -5853.696</b>
+            <b>      3597.05     3376.987</b>
+--------------------------------------
+<p style="text-align:right; padding:0px; margin:0px"><a href="estout003.do">[do-file]</a>
+</pre>
+
+
+<a name="estout003b"></a>
+<p>
+Multiple statistics are placed in separate rows beneath one another by
+default as in the example above. However, elements that are listed in
+quotes or in parentheses are placed beside one another. For example, specifying
+<b>cells("b se t p")</b> or, equivalently,
+<b>cells((b se t p))</b> produces the following table:
+</p>
+
+<pre>
+. estout est2, cells("b se t p") 
+
+----------------------------------------------------------------
+                     est2                                       
+                        b           se            t            p
+----------------------------------------------------------------
+weight      <b>     3.464706      .630749     5.493003     5.99e-07</b>
+mpg         <b>      21.8536     74.22114     .2944391     .7692938</b>
+foreign     <b>      3673.06     683.9783     5.370142     9.72e-07</b>
+_cons       <b>    -5853.696     3376.987    -1.733408     .0874262</b>
+----------------------------------------------------------------
+<p style="text-align:right; padding:0px; margin:0px"><a href="estout003b.do">[do-file]</a>
+</pre>
+
+
+<a name="estout003c"></a>
+<p>
+The two approaches can be combined. For example, <b>cells("b p" se)</b>
+or <b>cells((b p) se)</b> produces a table with raw coefficients and standard errors
+beneath one another in the first column and p-values in the top row of the second
+column for each model:
+</p>
+
+<pre>
+. estout, cells("b p" se)
+
+----------------------------------------------------------------
+                     est1                      est2             
+                     b/se            p         b/se            p
+----------------------------------------------------------------
+weight      <b>     1.746559     .0081298     3.464706     5.99e-07</b>
+            <b>     .6413538                   .630749             </b>
+mpg         <b>    -49.51222     .5673237      21.8536     .7692938</b>
+            <b>     86.15604                  74.22114             </b>
+foreign     <b>                                3673.06     9.72e-07</b>
+            <b>                               683.9783             </b>
+_cons       <b>     1946.069     .5901886    -5853.696     .0874262</b>
+            <b>      3597.05                  3376.987             </b>
+----------------------------------------------------------------
+<p style="text-align:right; padding:0px; margin:0px"><a href="estout003c.do">[do-file]</a>
+</pre>
+
+
+<a name="estout003d"></a>
+<p>
+For each statistic named in the <b>cells()</b> option a set of
+suboptions may be specified in parentheses. For example, in social
+sciences it is common to report standard errors or t-statistics in
+parentheses beneath the coefficients and to indicate the significance of
+individual coefficients with stars. Furthermore, the results are rounded.
+Just such a table can be created as follows:
+</p>
+
+<pre>
+. estout, cells(b(star fmt(3)) t(par fmt(2)))
+
+--------------------------------------------
+                     est1            est2   
+                      b/t             b/t   
+--------------------------------------------
+weight      <b>        1.747**         3.465***</b>
+            <b>       (2.72)          (5.49)   </b>
+mpg         <b>      -49.512          21.854   </b>
+            <b>      (-0.57)          (0.29)   </b>
+foreign     <b>                     3673.060***</b>
+            <b>                       (5.37)   </b>
+_cons       <b>     1946.069       -5853.696   </b>
+            <b>       (0.54)         (-1.73)   </b>
+--------------------------------------------
+
+. eststo clear
+<p style="text-align:right; padding:0px; margin:0px"><a href="estout003d.do">[do-file]</a>
+</pre>
+
+<p>
+The <b>estout</b> default is to display <b>*</b> for p&lt;.05, <b>**</b> for p&lt;.01, and <b>***</b> for
+p&lt;.001. However, note that the significance thresholds and symbols are
+fully customizable (see <b>estout</b>'s <a href="hlp_estout.html#sig">Significance stars</a> options).
+</p>
+
+
+<a name="estout004"></a>
+<h2>The <b>stats()</b> option</h2>
+
+<p>
+Finally, use the <a href="hlp_estout.html#sum"><b>stats()</b></a> option to specify scalar statistics to be
+displayed for each model in the table footer. The available scalar
+statistics are <b>aic</b> (Akaike's information criterion), <b>bic</b> (Schwarz's
+information criterion), <b>rank</b> (the rank of <b>e(V)</b>, i.e. the number of free
+parameters in model), <b>p</b> (the p-value of the model), as well as any scalar
+contained in the <b>e()</b>-returns for the models (see <b>estout</b>'s
+<a href="hlp_estout.html#sum">Summary statistics</a> options).
+Type <b>ereturn list</b> after estimating a model to see a list of the returned results.<p>
+</p>For example, specify <b>stats(r2 bic N)</b> to add the
+R-squared, BIC, and the number of cases:
+</p>
+
+<pre>
+. sysuse auto
+(1978 Automobile Data)
+
+. eststo: quietly regress price weight mpg
+(<b>est1</b> stored)
+
+. eststo: quietly regress price weight mpg foreign
+(<b>est2</b> stored)
+
+. estout, stats(r2 bic N)
+
+--------------------------------------
+                     est1         est2
+                        b            b
+--------------------------------------
+weight      <b>     1.746559     3.464706</b>
+mpg         <b>    -49.51222      21.8536</b>
+foreign     <b>                   3673.06</b>
+_cons       <b>     1946.069    -5853.696</b>
+--------------------------------------
+r2          <b>     .2933891     .4995594</b>
+bic         <b>      1378.64     1357.414</b>
+N           <b>           74           74</b>
+--------------------------------------
+
+. eststo clear
+<p style="text-align:right; padding:0px; margin:0px"><a href="estout004.do">[do-file]</a>
+</pre>
+
+
+<a name="estout004b"></a>
+<p>
+Note that you may also tabulate string scalars contained in <b>e()</b>,
+so called <b>e()</b>-macros. Example:
+</p>
+
+<pre>
+. sysuse auto
+(1978 Automobile Data)
+
+. eststo: quietly regress price weight
+(<b>est1</b> stored)
+
+. eststo: quietly regress price weight, robust
+(<b>est2</b> stored)
+
+. eststo: quietly regress price weight, vce(bootstrap)
+(<b>est3</b> stored)
+
+. estout, cells(b se(par)) stats(N vce)
+
+---------------------------------------------------
+                     est1         est2         est3
+                     b/se         b/se         b/se
+---------------------------------------------------
+weight      <b>     2.044063     2.044063     2.044063</b>
+            <b>   (.3768341)   (.3897465)   (.4541801)</b>
+_cons       <b>    -6.707353    -6.707353    -6.707353</b>
+            <b>    (1174.43)   (1032.394)   (1193.098)</b>
+---------------------------------------------------
+N           <b>           74           74           74</b>
+vce         <b>          ols       robust    bootstrap</b>
+---------------------------------------------------
+
+. eststo clear
+<p style="text-align:right; padding:0px; margin:0px"><a href="estout004b.do">[do-file]</a>
+</pre>
+
+
+<a name="estout005"></a>
+<h2>Using labels</h2>
+
+<p>
+The <a href="hlp_estout.html#label"><b>label</b></a> option will cause <b>estout</b> to use variable labels
+and model labels, if available, and <a href="hlp_estout.html#legend"><b>legend</b></a> will display a legend
+explaining the significance symbols and thresholds.
+Furthermore, there are various options for
+specifying custom labels for the different table elements. The following
+example is intended to provide a first impression of these possibilities:
+</p>
+
+<pre>
+. sysuse auto
+(1978 Automobile Data)
+
+. eststo, title("Model 1"): quietly regress price weight mpg
+(<b>est1</b> stored)
+
+. eststo, title("Model 2"): quietly regress price weight mpg foreign
+(<b>est2</b> stored)
+
+. label variable foreign "Car type (1=foreign)"
+
+. estout, cells("b(star label(Coef.)) se(label(Std. err.))")  ///
+&gt;     stats(r2 N, labels(R-squared "N. of cases"))            ///
+&gt;     label legend varlabels(_cons Constant)
+
+------------------------------------------------------------------------------
+                          Model 1                      Model 2                
+                            Coef.       Std. err.        Coef.       Std. err.
+------------------------------------------------------------------------------
+Weight (lbs.)       <b>     1.746559**      .6413538     3.464706***      .630749</b>
+Mileage (mpg)       <b>    -49.51222        86.15604      21.8536        74.22114</b>
+Car type (1=foreign)<b>                                   3673.06***     683.9783</b>
+Constant            <b>     1946.069         3597.05    -5853.696        3376.987</b>
+------------------------------------------------------------------------------
+R-squared           <b>     .2933891                     .4995594                </b>
+N. of cases         <b>           74                           74                </b>
+------------------------------------------------------------------------------
+* p&lt;0.05, ** p&lt;0.01, *** p&lt;0.001
+
+. eststo clear
+<p style="text-align:right; padding:0px; margin:0px"><a href="estout005.do">[do-file]</a>
+</pre>
+
+
+<a name="estout006"></a>
+<h2>Numerical formats</h2>
+
+<p>
+The <b>fmt()</b> suboption in
+<a href="hlp_estout.html#cells"><b>cells()</b></a> and
+<a href="hlp_estout.html#sum"><b>stats()</b></a>
+can be used to determine the display formats of the tabulates statistics.
+Available format specifications are official Stata's display formats, such as
+%9.0g or %8.2f (see help <a href="http://www.stata.com/help.cgi?format"><b>format</b></a>),
+integer numbers to request a fixed format, or a#, where # is in {1,2,...,9},
+to use an adaptive format
+(see the <a href="hlp_estout.html#fmt">Numerical formats</a> section in the help file).
+</p>
+
+<pre>
+. sysuse auto
+(1978 Automobile Data)
+
+. eststo: quietly regress price weight mpg
+(<b>est1</b> stored)
+
+. eststo: quietly regress price weight mpg foreign
+(<b>est2</b> stored)
+
+. estout, cells(b(fmt(a3)) t(fmt(2) par)) stats(r2 N, fmt(3 0))
+
+--------------------------------------
+                     est1         est2
+                      b/t          b/t
+--------------------------------------
+weight      <b>        1.747        3.465</b>
+            <b>       (2.72)       (5.49)</b>
+mpg         <b>       -49.51        21.85</b>
+            <b>      (-0.57)       (0.29)</b>
+foreign     <b>                    3673.1</b>
+            <b>                    (5.37)</b>
+_cons       <b>       1946.1      -5853.7</b>
+            <b>       (0.54)      (-1.73)</b>
+--------------------------------------
+r2          <b>        0.293        0.500</b>
+N           <b>           74           74</b>
+--------------------------------------
+<p style="text-align:right; padding:0px; margin:0px"><a href="estout006.do">[do-file]</a>
+</pre>
+
+
+<a name="estout006b"></a>
+<p>
+Note that it is possible to specify individual formats for the coefficients:
+</p>
+
+<pre>
+. estout, cells(b(fmt(6 1 3 1))) 
+
+--------------------------------------
+                     est1         est2
+                        b            b
+--------------------------------------
+weight      <b>     1.746559     3.464706</b>
+mpg         <b>        -49.5         21.9</b>
+foreign     <b>                  3673.060</b>
+_cons       <b>       1946.1      -5853.7</b>
+--------------------------------------
+
+. eststo clear
+<p style="text-align:right; padding:0px; margin:0px"><a href="estout006b.do">[do-file]</a>
+</pre>
+
+</div>
+
+</body></html>

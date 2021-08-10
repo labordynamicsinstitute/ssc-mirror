@@ -1,0 +1,51 @@
+<pre>
+-------------------------------------------------------------------------------
+help for <b>adjacent</b>
+-------------------------------------------------------------------------------
+<p>
+<b><u>List adjacent values of variables</u></b>
+<p>
+        <b>adjacent</b> <i>varlist</i> [<i>weight</i>] [<b>if</b> <i>exp</i>] [<b>in</b> <i>range</i>] [ <b>,</b> <b>by(</b><i>varlist</i><b>)</b> <b><u>miss</u></b><b>ing</b>
+                 ]
+<p>
+    <b>fweight</b>s and <b>aweight</b>s are allowed; see help weights.
+<p>
+<p>
+<b><u>Description</u></b>
+<p>
+    <b>adjacent</b> lists adjacent values for a set of numeric variables in <i>varlist</i>.
+    Calculate the upper and lower quartiles, p75 and p25, and thus the
+    interquartile range iqr = p75 - p25. Then the adjacent values are the
+    highest value not greater than p75 + 3/2 iqr and the lowest value not
+    less than p25 - 3/2 iqr. The adjacent values are marked graphically on a
+    box plot as drawn by graph box or graph hbox by the ends of the whiskers
+    drawn out from each central box.
+<p>
+<p>
+<b><u>Options</u></b>
+<p>
+    <b>by()</b> defines one or more grouping variables. (When using graph box or
+        graph hbox, these variables would be specified in <b>by()</b> or <b>over()</b>
+        options.)
+<p>
+    <b>missing</b>, applicable only with <b>by()</b>, specifies that results for
+        observations with missing values of variables specified in <b>by()</b>
+        should be included in the tabulation. The default is to exclude them.
+<p>
+<p>
+<b><u>Examples</u></b>
+<p>
+    . adjacent mpg, by(foreign rep78)
+<p>
+<p>
+<b><u>Author</u></b> 
+<p>
+    Nicholas J. Cox, University of Durham, U.K.
+    n.j.cox@durham.ac.uk
+<p>
+<p>
+<b><u>Also see</u></b>
+<p>
+    On-line:  help for graph box, extremes (if installed)
+<p>
+</pre>

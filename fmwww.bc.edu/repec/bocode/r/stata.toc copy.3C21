@@ -1,0 +1,31 @@
+p ralloc module to design randomized controlled trials
+p ranova module to estimate single factor repeated measures ANOVA
+p ranvar module to compute the random group variance estimator of the mean for survey data
+p raschcvt module to produce data in WINSTEPS format
+p rdplot module to graph residual distribution after regression-type command
+p readlog module to read and process a file
+p recast2 module to change storage type of variable
+p recode2 module to provide extended recode capabilities
+p reformat module to reformat regression output
+p reg3 modules to perform three-stage least squares and SURE (version 5)
+p regdplot module to produce regression diagnostics plot
+p reglike module to calculate log-likelihood function value from regress
+p regplot module to plot regression fit 
+p regpred module to calculate linear regression predictions
+p regresby module to generate regression residuals by byvarlist
+p renames module to rename variables
+p rensfix module to rename variable and change suffix
+p reshape7 module to provide improved reshape
+p rfregk module to estimate random-effects model with weights
+p rglm module to estimate robust generalized linear models
+p rgroup module for Random Group Variance Estimation
+p rhetplot module to graph residual heteroscedasticity after regression-type command
+p rmanova module to estimate repeated measures ANOVA
+p rnd modules for random number generation
+p roblpr module to estimate long memory in a set of timeseries
+p rowranks module to create row ranks of a set of variables 
+p rowsort module to row sort a set of integer variables
+p russ_stata tutorial in Russian
+p rvfplot2 module to produce residual-versus-fitted plot after regression-type command
+p rvlrplot module to plot residuals vs lagged residuals for time series data
+p rvpplot2 module to graph residual-versus-predictor plot after regression-type command

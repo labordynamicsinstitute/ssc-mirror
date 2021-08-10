@@ -1,0 +1,35 @@
+d 'STCMD': module to execute StatTransfer command from within Stata
+d
+d The program stcmd runs the Stat/Transfer st command from inside
+d Stata, if Stat/Transfer is installed on the user's system.
+d Stat/Transfer converts data sets from one format to another (eg
+d Stata to/from SAS). It is available from Stata Corporation and
+d manufactured by Circle Systems; further information can be found
+d at http://www.stattransfer.com/. The program inputst converts an
+d existing non-Stata input file into a Stata data set in the
+d memory, overwriting any existing data. The program  converts the
+d Stata data set in the memory to a newly-created non-Stata output
+d file. The programs inputst and outputst require stcmd, and
+d therefore should not be downloaded alone. If the Stat/Transfer
+d directory on the user's system is not on the user's default path,
+d then the user must edit his/her copy of stcmd.ado to change the
+d setting of the local macro path, which contains the path for the
+d Stat/Transfer st command (see on-line help for details). 
+d
+d
+d Requires: Stata version 13.0 and Stat/Transfer
+d
+d
+d Author: Roger Newson, National Heart and Lung Institute, Imperial College London
+d Support: email r.newson@@imperial.ac.uk
+d
+d Distribution-Date: 20170701
+d
+f stcmd.ado
+f stcmd.sthlp
+f ../i/inputst.ado
+f ../i/inputst.sthlp
+f ../o/outputst.ado
+f ../o/outputst.sthlp
+f ../o/outputstold.ado
+f ../o/outputstold.sthlp

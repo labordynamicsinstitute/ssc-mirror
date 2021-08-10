@@ -1,0 +1,93 @@
+<pre>
+-------------------------------------------------------------------------------
+help for <b>checkfor2</b>                                             Amadou B. DIALLO
+                                                           Jean-Benoit HARDOUIN
+-------------------------------------------------------------------------------
+<p>
+<b><u>Module to check whether a variable exists or not in a dataset.</u></b>
+<p>
+    <b>checkfor2</b> <i>anything</i> [<b>,</b> <b><u>t</u></b><b>olerance</b>(<i>#</i>) <b><u>ta</u></b><b>ble</b> <b><u>nol</u></b><b>ist</b> <b><u>nosu</u></b><b>m</b> <b><u>genm</u></b><b>iss</b>(<i>newvarname</i>)
+        <b><u>mis</u></b><b>sing</b>(<i>string</i>)]
+<p>
+<b><u>Description</u></b>
+<p>
+    <b>checkfor2</b> is a data management routine to check for existence of
+    variables within a (usually big) data set.
+<p>
+    <b>checkfor2</b> searchs through the data whether each variable exists.  The
+    variables are clustered between unavailable variables, available
+    variables with a little amount of missing values and available variables
+    with too many missing values.
+<p>
+    <b>isvar</b> must be installed (ssc install isvar).
+<p>
+<b><u>Options</u></b>
+<p>
+    <i>anything</i> is composed of variable names or lists of variables,
+<p>
+    <b>tolerance</b> is the tolerance level (in percentage) to consider a variable
+    as available, with default 0,
+<p>
+    <b>nolist</b> avoids displaying availability status at the end of the process,
+<p>
+    <b>nosum</b> avoids displaying summary statistics of available variables,
+<p>
+    <b>table</b> displays the results in a table (instead as text),
+<p>
+    <b>genmiss</b> creates a new variable containing the number of missing values
+    among the available variables,
+<p>
+    <b>missing</b> defines a specific value or string considered as a missing value.
+<p>
+<p>
+<b><u>Saved results</u></b>
+<p>
+    <b>r(unavailable)</b> names of unavailable variables.
+<p>
+    <b>r(available)</b> names of available variables with a small amount of missing
+    values.
+<p>
+    <b>r(manymissings)</b> names of variables present but with too missings.
+<p>
+<b><u>Examples</u></b>
+<p>
+    <b>. use mydata, clear</b>
+<p>
+    <b>. checkfor2 x y z , mis(99) genmiss(countmiss)</b>
+<p>
+    <b>. su `r(available)'</b>
+<p>
+    <b>. tab countmiss</b>
+<p>
+    <b>. u bigdataset in 1/100, clear // Big data set</b>
+<p>
+    <b>. checkfor2 v1 v2 v3 xx yy , nosum tol(5) tab</b>
+<p>
+    <b>. use `r(available)' using bigdataset, clear</b>
+<p>
+<b><u>Remarks</u></b>
+<p>
+    <b>checkfor2</b> and its primary version (<b>checkfor</b>) have been primarily written
+    for comparable surveys such as the Demography and Health Surveys (DHS) or
+    the Multiple Indicator Cluster Surveys (MICS). But this could easily
+    applied to any other survey.
+<p>
+<b><u>Authors</u></b>
+<p>
+    Amadou Bassirou DIALLO.  Poverty and Health Division, PREM, The World
+    Bank.
+    Email: adiallo5@worldbank.org
+<p>
+    Jean-Benoit HARDOUIN.  Regional Health Observatory of Orléans, France.
+    Email: jean-benoit.hardouin@orscentre.org
+<p>
+<b><u>Aknowledgements</u></b>
+<p>
+    We would like to thank Christophe Rockmore and also Nick Cox and Kit Baum
+    for their comments.
+<p>
+<b><u>Also see</u></b>
+<p>
+    Online:  help for checkfor, isvar, nmissing, npresent, missing and 
+             dropmiss if installed.
+</pre>

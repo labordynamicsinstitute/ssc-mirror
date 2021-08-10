@@ -1,0 +1,59 @@
+<pre>
+<p>
+-------------------------------------------------------------------------------
+help for <b>covariancemat</b>
+-------------------------------------------------------------------------------
+<p>
+<b><u>Generate a matrix of covariances</u></b>
+<p>
+        <b>covariancemat</b> <i>varlist</i> [<b>if</b> <i>exp</i>] [<b>in</b> <i>range</i>] [<i>weight</i>]<b>, covarmat(</b><i>mat</i><b>)</b>
+<p>
+<p>
+<b><u>Description</u></b>
+<p>
+    <b>covariancemat</b> generates a matrix of the covariances of the variables in
+    <i>varlist</i>. The result is a square p-by-p matrix, where p is the number of
+    variables in <i>varlist</i>.
+<p>
+    <b>aweight</b>s, <b>fweight</b>s, <b>pweight</b>s, and <b>iweight</b>s are allowed; <b>aweight</b> is the
+    default. See help weights.
+<p>
+    <b>covariancemat</b> was written for use by mahapick, mahascore, and mahascores,
+    but may be of use in other circumstances.
+<p>
+<p>
+<b><u>Options</u></b>
+<p>
+    <b>covarmat(</b><i>mat</i><b>)</b> is required; it specifies the name of the matrix to be
+    created. If <i>mat</i> already exists as a scalar or matrix, it will be
+    overwritten. The row- and column names of <i>mat</i> will be the variable names
+    in <i>varlist</i>.
+<p>
+<p>
+<b><u>Remarks</u></b>
+<p>
+    Since the covariances are computed together, they are necessarily
+    computed on the set of observations that are nonmissing for all variables
+    in <i>varlist</i>.  Thus, the results may differ from pairwise computations of
+    covariances, depending on the presence of missing values.  (This
+    corresponds to the<b> common</b> option of variancemat of the mahapick package.)
+<p>
+    This partly replicates functionality and borrows some code from <b>corrmat</b>
+    by Shannon Driver of Stata Corporation.
+<p>
+<p>
+<b><u>Examples</u></b>
+<p>
+    <b>. covariancemat age income numkids, covarmat(m)</b>
+<p>
+    <b>. covariancemat age income numkids if numkids&gt;0 [aw= wgt1], covarmat(m)</b>
+<p>
+<p>
+<b><u>Author</u></b>
+    David Kantor.  Email kantor.d@att.net if you observe any problems.
+<p>
+<p>
+<b><u>Also See</u></b>
+    mahapick, mahascore, mahascores, mahascore2, screenmatches, variancemat, 
+    stackids.  See mahapick.ado for another example of the use of
+</pre>

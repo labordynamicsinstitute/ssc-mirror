@@ -1,0 +1,35 @@
+Shazam Programming of Non-parametric Unit Root Test
+
+*This is a programming of the non-parametric unit root test statistic developed by Breitung J.& Gourieroux C.,(1997), Journal of Econometrics, Vol.81(1), pp.7-27.
+
+*Assume the sample size = 100
+sample 1 100
+read x
+ 
+*compute change in variable
+genr x1=x-lag(x)
+*set the sample size
+Sample 2 $N
+*create observations numbering
+genr xt=time(0)
+*sort the data 
+sort x1 xt
+genr rx=time(0)
+*check for ties
+genr x2=lag(x1)
+if(x1.EQ.x2)rx=lag(rx)
+*Now sort the data back to the initial order
+Sample 3 $N
+sort xt rx x1
+* rank variables are: rx 
+*generate the rank test statistic (lambda uni, equation 6, page 17)
+genr x3=sqrt(12)*(rx-$N/2)/$N
+*square x3
+genr x4=(x3)**2
+*calculate lambda uni values (equation 6,page 17)
+gen1 x5=sum(x4,$N)/($N)**2
+*check lambda(uni) statistic
+print x5 
+stop	
+
+

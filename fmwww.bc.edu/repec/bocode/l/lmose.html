@@ -1,0 +1,96 @@
+<pre>
+-------------------------------------------------------------------------------
+help for <b>lmose</b>
+-------------------------------------------------------------------------------
+<p>
+<b><u>Standard errors for L-moments and derived statistics</u></b>
+<p>
+        <b>lmose</b> <i>varname</i> [<b>if</b> <i>exp</i>] [<b>in</b> <i>range</i>] [<b>,</b> <i>matlist_options</i> ]
+<p>
+    <b>by ... :</b> may also be used with <b>lmose</b>:  see help on by.
+<p>
+<p>
+<b><u>Description</u></b>
+<p>
+    <b>lmose</b> calculates standard errors for L-moments and derived statistics for
+    a numeric variable <i>varname</i>.
+<p>
+<p>
+<b><u>Remarks</u></b>
+<p>
+    Specifically, the variance matrix of sample L-moments and the standard
+    error vector of sample L-moments and derived ratios is displayed.  The
+    variance matrix of sample L-moments is estimated using the exact unbiased
+    distribution-free estimator of Elamir and Seheult (2004).  Note that
+    negative estimates of each variance are possible, especially with very
+    small samples.  The standard errors of sample L-moments are the square
+    roots of the diagonal elements of that matrix. The standard errors of t,
+    t_3 and t_4 are obtained from the variances of ratios l_2/l_1, l_3/l_2,
+    l_4/l_2 using Taylor-series-based approximations: for a ratio U/V,
+<p>
+        var(U/V) = {var(U)/E(U)^2 + var(V)/E(V)^2 - 2 cov(U,V)/(E(U) E(V))}
+        {E(U)/E(V)}^2.
+<p>
+    This information is reported for the one variable only.  However, <b>by:</b> may
+    be used to obtain listings of standard errors for each of several groups.
+    This program can be rather slow for larger sample sizes.
+<p>
+<p>
+<b><u>Options</u></b>
+<p>
+    <i>matlist_options</i> are options of matrix list.  The default display has
+        <b>format(%9.3f)</b>.
+<p>
+<p>
+<b><u>Examples</u></b> 
+<p>
+    <b>. lmose price</b>
+<p>
+<p>
+<b><u>Saved results</u></b> 
+<p>
+    r(V)     variance matrix of l_1 ... l_4
+    r(SE)    standard error vector of l_1 ... l_4 t t_3 t_4 
+<p>
+<p>
+<b><u>Acknowledgments</u></b> 
+<p>
+    Allan Seheult kindly provided and discussed reprints of his joint work.
+    William Gould was most helpful over the first version of the Mata code.
+<p>
+<p>
+<b><u>Author</u></b>
+<p>
+    Nicholas J. Cox, Durham University, U.K.
+    n.j.cox@durham.ac.uk
+<p>
+<p>
+<b><u>References</u></b>
+<p>
+    The L-moments page
+<p>
+    Elamir, E.A.H. and A.H. Seheult. 2004.  Exact variance structure of
+        sample L-moments.  <i>Journal of Statistical Planning and Inference</i> 124:
+        337-359.
+<p>
+    Hosking, J.R.M. 1990. L-moments: Analysis and estimation of distributions
+        using linear combinations of order statistics.  <i>Journal of the Royal</i>
+        <i>Statistical Society</i> Series B 52: 105-124.
+<p>
+    Hosking, J.R.M. 1998. L-moments. In Kotz, S., C.B. Read and D.L. Banks
+        (eds) <i>Encyclopedia of Statistical Sciences Update Volume 2.</i>  New
+        York: Wiley, 357-362.
+<p>
+    Hosking, J.R.M. and J.R. Wallis. 1997.  <i>Regional frequency analysis: an</i>
+        <i>approach based on L-moments.</i>  Cambridge University Press.
+<p>
+    Royston, P. 1992.  Which measures of skewness and kurtosis are best?
+        <i>Statistics in Medicine</i> 11: 333-343.
+<p>
+<p>
+<b><u>See also</u></b> 
+<p>
+    lmo (if installed); lmoments (if installed; older version with some
+        discontinued features)
+<p>
+</pre>

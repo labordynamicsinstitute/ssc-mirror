@@ -1,0 +1,97 @@
+<pre>
+ 
+-------------------------------------------------------------------------------
+help for <b>hodgesl</b>
+-------------------------------------------------------------------------------
+  
+<b>Hodges-Lehmann aligned rank test</b>
+<b>--------------------------------</b>
+ 
+<b>Syntax</b>
+<b>------</b>
+<b>hodgesl</b> dataname varname blockname treatname savfile
+<p>
+<p>
+<b>Description</b>
+<b>-----------</b>
+ 
+<b>hodgesl</b> implements Hodges-Lehmann aligned rank test of 
+the null hypothesis of no difference in an outcome variable 
+between treated and control observations over matched or 
+stratified sets. The test is an extension of the Wilcoxon 
+signed rank test to matching with multiple controls. It may 
+be employed in testing treatment effect that stratifies the 
+sample on single or multiple covariates, where the number of 
+strata compared to the number of total sample observations is 
+large, and within a stratum each treated subject has more than 
+one matched control. The test is needed when the analyst 
+evaluates average treatment effect and performs a significance 
+test of such effect after optimal matching.  
+<p>
+<b>dataname</b> specifies the name of data file for the sample being 
+tested after matching or stratification. <b>varname</b> is the name 
+of outcome variable on which the analyst wants to test the 
+difference between treated and control observations. <b>blockname</b> 
+specifies the variable name that identifies matched or stratified 
+sets. <b>treatname</b> specifies the name of the dichotomous variable 
+identifying treatment conditions (i.e., treatname = 1 if the 
+observation receives treatment, and treatname = 0 if the 
+observation is a control). <b>savfile</b> specifies the name of a saved 
+data file for future analysis.
+ 
+ 
+<b>Output and Return Values</b>
+<b>------------------------</b>
+ 
+After running <b>hodgesl</b>, Stata returns the sample average treatment effect 
+in the metric of the outcome variable <b>tx_effect</b>, Hodges-Lehmann mean 
+statistic <b>HL_mean</b>, Hodges-Lehmann standard-error statistic <b>HL_se</b>, 
+the test statistic <b>z</b> that is the ratio of HL_mean and HL_se, and is 
+subject to a standard normal distribution, and the <b>p</b>-value of z via 
+which the analyst can perform a significance test of a nondirectional 
+hypothesis (i.e., perform a two-tailed test) or a directional hypothesis 
+(i.e. perform a one-tailed test). 
+<p>
+After running <b>hodgesl</b>, <b>savfile</b> contains mean of the outcome and number of 
+observations for each treatment condition by matched set. The data file 
+can be used for postestimation analysis. 
+<p>
+The analyst can use <b> return list</b> immediately after running 
+<b>hodgesl</b> to see statistics saved for further analysis. 
+<p>
+ 
+<b>Examples</b>
+<b>--------</b>
+  
+<b>. hodgesl cds lwss97 fm kuse fm_results</b>
+<p>
+<b>. hodgesl "C:\PSA\chapter5\cds.dta" lwss97 fm kuse "C:\tmp\fm_results"</b>
+<b>. return list</b>
+<b>. use "C:\tmp\fm_results", clear</b>
+<b>. list</b>
+<p>
+ 
+<b>References</b>
+<b>----------</b>
+ 
+Guo, S., &amp; Fraser, M. (2009). Propensity score analysis: Statistical 
+methods and applications. Thousand Oaks, CA: Sage Publications, Inc.
+ 
+Lehmann, E. L. (2006). Nonparametrics: Statistical methods based on ranks 
+(Rev. ed., pp.132-141) New York: Springer.  
+<p>
+Rosenbaum, P.R. (2002) Observational Studies. 2nd edition. New York: Springer.
+ 
+ 
+<b>Author</b>
+<b>------</b>
+ 
+        Shenyang Guo
+        University of North Carolina at Chapel Hill
+        sguo@email.unc.edu 
+<p>
+ 
+<b>Also see:</b>
+<b>---------</b>
+ 
+</pre>

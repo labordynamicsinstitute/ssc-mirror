@@ -1,0 +1,132 @@
+<pre>
+-------------------------------------------------------------------------------
+<b>help: </b><b>lmabp</b>                                                        <b>dialog:</b> <b>lmab</b>
+<b>&gt; p</b>
+-------------------------------------------------------------------------------
+<p>
+<p>
+<b>        </b>+-------+
+<b>    </b>----+<b> Title </b>+------------------------------------------------------------
+<p>
+<b> lmabp: Box-Pierce Autocorrelation LM Test at Higher Order AR(p)</b>
+<p>
+<p>
+<b>        </b>+--------+
+<b>    </b>----+<b> Syntax </b>+-----------------------------------------------------------
+<p>
+        <b>lmabp</b> <i>depvar</i> <i>indepvars</i> [<i>if</i>] [<i>in</i>] [<i>weight</i>] , [ <b><u>lag</u></b><b>s(</b><i>numlist</i><b>)</b>
+                <b><u>nocons</u></b><b>tant</b> <b>vce(</b><i>vcetype</i><b>)</b> ]
+ 
+<p>
+<b>        </b>+---------+
+<b>    </b>----+<b> Options </b>+----------------------------------------------------------
+<p>
+      <b><u>lag</u></b><b>s(</b><i>#</i><b>)</b>             determine Order of Lag Length; default is lag(1).
+<p>
+      <b><u>nocons</u></b><b>tant</b>          suppress constant term
+<p>
+    SE/Robust
+      <b>vce(</b><i>vcetype</i><b>)</b>        <i>vcetype</i> may be <b>ols</b>, <b><u>r</u></b><b>obust</b>, <b><u>cl</u></b><b>uster</b> <i>clustvar</i>,
+                            <b><u>boot</u></b><b>strap</b>, <b><u>jack</u></b><b>knife</b>, <b>hc2</b>, or <b>hc3</b>
+<p>
+<p>
+<b>        </b>+-------------+
+<b>    </b>----+<b> Description </b>+------------------------------------------------------
+<p>
+  <b>lmabp</b> computes Box-Pierce Autocorrelation LM Test after <b>regress</b> command.
+ 
+  <b>lmabp</b> detects autocorrelation at Higher Order AR(p), more than AR(1).
+<p>
+<p>
+                              J
+   <b> Box-Pierce LM test</b> = N [ Sum(Rho_i) ] ~ Chi2(J)
+                             i=1
+where
+       N = Number of Observations.
+       J = Order of Lag Length.
+   Rho_i = Autoregressive Coefficient of Lag i.
+<p>
+<p>
+<b>        </b>+---------------+
+<b>    </b>----+<b> Saved Results </b>+----------------------------------------------------
+<p>
+    <b>lmadurh</b> saves the following in <b>r()</b>:
+<p>
+    Scalars
+      <b>r(rho_#)</b>    Rho Value at Order AR(i)
+      <b>r(bp_#)</b>     Box-Pierce Autocorrelation LM Test at Order AR(i)
+      <b>r(bpp_#)</b>    Box-Pierce Autocorrelation LM Test P-Value at Order AR(i)
+<p>
+<p>
+<b>        </b>+----------+
+<b>    </b>----+<b> Examples </b>+---------------------------------------------------------
+<p>
+        clear all
+<p>
+        db lmabp
+<p>
+        sysuse lmabp.dta , clear
+<p>
+        lmabp y x1 x2 , lags(1)
+<p>
+        lmabp y x1 x2 , lags(4)
+<p>
+        return list
+<p>
+<p>
+   ===================================================
+   * Box-Pierce Autocorrelation LM Test              *
+   ===================================================
+    Ho: No Autocorrelation - Ha: Autocorrelation
+   ------------------------------------------------------------
+   * Rho Value for         AR(1) =   -0.1455
+   * Box-Pierce LM Test    AR(1) =    0.3598   P&gt;Chi2(1) 0.5486
+   ------------------------------------------------------------
+   * Rho Value for         AR(2) =   -0.2231
+   * Box-Pierce LM Test    AR(2) =    1.2062   P&gt;Chi2(2) 0.5471
+   ------------------------------------------------------------
+   * Rho Value for         AR(3) =    0.1871
+   * Box-Pierce LM Test    AR(3) =    1.8016   P&gt;Chi2(3) 0.6146
+   ------------------------------------------------------------
+   * Rho Value for         AR(4) =   -0.3002
+   * Box-Pierce LM Test    AR(4) =    3.3334   P&gt;Chi2(4) 0.5037
+   ------------------------------------------------------------
+<p>
+<p>
+<b>        </b>+------------+
+<b>    </b>----+<b> References </b>+-------------------------------------------------------
+<p>
+    Damodar Gujarati (1995)<b> "Basic Econometrics"</b> <i>3rd Edition, McGraw Hill,</i>
+        <i>New York, USA</i>; 717.
+<p>
+    Box, George &amp; Pierce D. (1970)<b> "Distribution of Residual Autocorrelations</b>
+        <b>in Autoregressive Integrated Moving Average Time Series Models",</b> <i>J.</i>
+        <i>Am. Stat. Assoc., Vol. 65</i>; 1509-1526.
+<p>
+<b>        </b>+--------+
+<b>    </b>----+<b> Author </b>+-----------------------------------------------------------
+<p>
+  <b>Emad Abd Elmessih Shehata</b>
+  <b>Assistant Professor</b>
+  <b>Agricultural Research Center - Agricultural Economics Research Institute - Eg</b>
+<b>&gt; ypt</b>
+  <b>Email:   </b>emadstat@hotmail.com
+  <b>WebPage:                </b>http://emadstat.110mb.com/stata.htm
+  <b>WebPage at IDEAS:       </b>http://ideas.repec.org/f/psh494.html
+  <b>WebPage at EconPapers:  </b>http://econpapers.repec.org/RAS/psh494.htm
+<p>
+<p>
+<b>        </b>+----------------+
+<b>    </b>----+<b> lmabp Citation </b>+---------------------------------------------------
+<p>
+    Shehata, Emad Abd Elmessih (2011)
+    <b>"lmabp: Stata Module to Compute Box-Pierce Autocorrelation LM Test at</b>
+        <b>Higher Order AR(p) after OLS Regression"</b>
+<p>
+<p>
+<b><u>Also see</u></b>
+<p>
+    Online: <b>lmareg3</b>, <b>lmadurh</b>, <b>lmalb</b>, <b>lmabp</b>, <b>lmadw</b>, <b>lmavon</b> <b>(</b><i>if installed</i><b>)</b>.
+<p>
+<p>
+</pre>

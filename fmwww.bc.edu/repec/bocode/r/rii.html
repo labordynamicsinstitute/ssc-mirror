@@ -1,0 +1,109 @@
+<pre>
+-------------------------------------------------------------------------------
+help for <b>rii</b>                                                  manual:  <b>[R] none</b>
+                                                             dialog:  <b> none</b>    
+-------------------------------------------------------------------------------
+<p>
+<p>
+<b><u>Repeated-Imputation Inference</u></b>
+<p>
+        <b>rii</b> [<i>if</i>] [<i>in</i>] <b>,</b> <b><u>imp</u></b><b>var(</b><i>varname</i><b>)</b> [<b>robust</b>] <b>:</b><i> estimate command</i>
+<p>
+        
+<b><u>Description</u></b>
+<p>
+    <b>rii</b> is a prefix command that runs multiple imputations of a model based
+    on the value of the multiple imputation variable.  <b>rii</b> has been tested
+    on:  probit, tobit, cnreg, and regress. <b>rii</b> uses the repeated-imputation
+    inference (RII) technique to derive OLS regression coefficients,
+    estimates of the standard error of the coefficients, test statistics for
+    individual coefficients and a model test statistic.  RII is based on
+    Bayesian theory, and is applicable to linear and nonlinear models, and to
+    models estimated by both least squares and maximum likelihood.  The RII
+    technique incorporates the variability in the data due to missing data
+    into the estimate of the standard error of the mean.
+<p>
+    Note: The command submitted to <b>rii</b> cannot contain an <b>if</b> or <b>in</b> since <b>rii</b>
+        subsets the data to each value of the imputation variable.  <b>if</b> and/or
+        <b>in</b> can be use in <b>rii</b> like so:
+<p>
+    <b>. rii if mvar &lt;= 5 in 1/50000 , imp(mvar): regress y x1 x2 x3 x4 year89</b>
+        <b>year90</b>
+<p>
+    <b>. rii if mvar &lt;= 5 , imp(mvar): regress y x1 x2 x3 x4 year89 year90</b>
+<p>
+    <b>. rii in 1/50000 , imp(mvar): regress y x1 x2 x3 x4 year89 year90</b>
+<p>
+<b><u>Paper rii is based on</u></b> 
+<p>
+    Montalto, Catherine Phillips &amp; Sung, Jaimie. (1996). Multiple imputation
+    in the 1992 Survey of Consumer Finances.  Financial Counseling and
+    Planning, Vol. 7, pp. 133-46.
+<p>
+<b><u>Options</u></b>
+<p>
+    <b><u>imp</u></b><b>var(</b><i>varname</i><b>)</b> is a required option that specifies a numeric variable
+        that identifies the multiple imputations with which to run the
+        submitted command.
+<p>
+<b><u>Saved results</u></b>
+<p>
+    <b>rii</b> saves the following in <b>e()</b>:
+<p>
+    Scalars        
+      <b>e(N_imps)</b>           number of imputations
+      <b>e(N)</b>                number of observations
+<p>
+    Macros         
+      <b>e(depvar)</b>           name of dependent variable
+      <b>e(prefix)</b>           <b>rii</b>
+      <b>e(command)</b>          command run by rii
+      <b>e(cmdline)</b>          command as typed
+      <b>e(cmdname)</b>          name of command run by rii
+      <b>e(cmd)</b>              name of command run by rii
+      <b>e(properties)</b>       <b>b V</b>
+<p>
+    Matrices       
+      <b>e(b)</b>                coefficient vector
+      <b>e(V)</b>                variance-covariance matrix of the estimators
+      <b>e(obs_per_imp)</b>      number of observations per imputation
+<p>
+    Functions      
+      <b>e(sample)</b>           marks estimation sample
+<p>
+<b><u>Examples</u></b>
+<p>
+    <b>. rii , imp(mvar): probit x1 x2 x3, robust</b>
+<p>
+    <b>. rii if mvar &lt; 6, imp(mvar): tobit amtspt x1 x2 x3 x4, ll(0) ul(25000)</b>
+<p>
+    <b>. rii , imp(mvar): cnreg y x1 x2 x3 x4 year89 year90, censored(cen)</b>
+<p>
+    <b>. rii , imp(mvar): reg y x1 x2 [pweight=pop]</b>
+<p>
+    Instead of using dprobit use probit and then run mfx:
+<p>
+    <b>. rii , impvar(mvar): probit y x1 x2 x3</b>
+<p>
+    <b>. mfx</b>
+<p>
+<p>
+<b><u>Authors</u></b>
+<p>
+    David T. Robinson
+    Center for Entrepreneurship and Innovation
+    Duke University's Fuqua School of Business
+    davidr@duke.edu
+    Dan Blanchette
+    The Carolina Population Center
+    University of North Carolina - Chapel Hill, USA
+    dan_blanchette@unc.edu
+<p>
+<p>
+<p>
+<b><u>Also see</u></b>
+<p>
+    On-line: probit, tobit, cnreg, and regress
+<p>
+<p>
+</pre>

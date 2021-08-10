@@ -1,0 +1,111 @@
+<pre>
+-------------------------------------------------------------------------------
+help for <b>qgamma</b> 
+-------------------------------------------------------------------------------
+<p>
+<b><u>Quantile-quantile plot for data versus fitted gamma distribution</u></b>
+<p>
+        <b>qgamma</b> <i>varname</i> [<b>if</b> <i>exp</i>] [<b>in</b> <i>range</i>] [<i>weight</i>] [<b>,</b> <b><u>alt</u></b><b>ernative</b> <b><u>g</u></b><b>rid</b>
+                         <b>param(</b><i># #</i><b>)</b> <b>show(</b><i>condition</i><b>)</b> <b><u>gen</u></b><b>erate(</b><i>newvar</i><b>)</b>
+                         <i>graph_options</i> ]
+<p>
+    where <i>graph_options</i> are
+<p>
+        <b>rlopts(</b><i>cline_options</i><b>)</b> <b>plot(</b><i>plot</i><b>)</b> <b>addplot(</b><i>plot</i><b>)</b> <i>scatter_options</i>
+        <i>twoway_options</i>
+<p>
+    <b>fweight</b>s and <b>aweight</b>s are allowed; see help weights.
+<p>
+<p>
+<b><u>Description</u></b>
+<p>
+    <b>qgamma</b> plots the quantiles of <i>varname</i> against the quantiles of a
+    two-parameter gamma distribution with probability density function for
+    variable <i>x</i> &gt;= 0, shape parameter <i>a</i> &gt; 0 and scale parameter <i>b</i> &gt; 0 of [1 /
+    (<i>b</i>^<i>a</i> gamma(<i>a</i>))] <i>x</i>^(<i>a</i> - 1) exp(-<i>x</i> / <i>b</i>).  See also the <b>alternative</b> option.
+    By default, maximum likelihood estimation is carried out, using gammafit,
+    which should be installed separately.
+<p>
+<p>
+<b><u>Remarks</u></b> 
+<p>
+    In the majority of cases, <b>qgamma</b> will be used to fit an gamma
+    distribution on the fly and to assess that fit. In some cases, it may be
+    of interest to compare data with a gamma distribution with known or
+    hypothesised parameters, which may be specified using the <b>param()</b> option.
+    In all cases it is important not only to specify any <b>if</b> or <b>in</b>
+    restrictions, but also to specify relevant weights, which will (unless
+    constant) affect the configuration of the plot.
+<p>
+<p>
+<b><u>Options</u></b>
+<p>
+    <b>alternative</b> specifies use of an alternative parameterisation [(<i>b</i>^<i>a</i> /
+        gamma(<i>a</i>))] <i>x</i>^(<i>a</i> - 1) exp(-<i>bx</i>).
+<p>
+    <b>grid</b> adds grid lines at the .05, .10, .25, .50, .75, .90, and .95
+        quantiles.
+<p>
+    <b>param()</b> may be used to supply parameter values (namely, shape and scale
+        parameters) directly for use in estimation of fitted quantiles.  <i>a</i>
+        and <i>b</i> should be provided as separate values in precisely that order.
+<p>
+    <b>show()</b> may be used to specify that you wish to restrict the graph
+        according to some condition, say looking at one tail of the
+        distribution only. Note that <b>if</b> and <b>in</b> should not be used for this
+        purpose.
+<p>
+    <b>generate()</b> specifies the name of a new variable to hold values of fitted
+        gamma quantiles.
+<p>
+    <i>graph_options</i> are <b>rlopts(</b><i>cline_options</i><b>)</b>, <b>plot(</b><i>plot</i><b>)</b> (Stata 8 only),
+        <b>addplot(</b><i>plot</i><b>)</b> (Stata 9 up), <i>scatter_options</i> , and <i>twoway_options</i>.
+<p>
+    <b>rlopts(</b><i>cline_options</i><b>)</b> affect the rendition of the reference line; see
+        help cline_options.
+<p>
+    <b>plot(</b><i>plot</i><b>)</b> provides a way to add other plots to the generated graph; see
+        help plot_option (Stata 8 only).
+<p>
+    <b>addplot(</b><i>plot</i><b>)</b> provides a way to add other plots to the generated graph;
+        see help addplot_option (Stata 9 up).
+<p>
+    <i>scatter_options</i> affect the rendition of the plotted points; see help 
+        scatter.
+<p>
+    <i>twoway_options</i> are any of the options documented in help twoway_options
+        excluding <b>by()</b>.  These include options for titling the graph (see
+        help title_options) and options for saving the graph to disk (see
+        help saving_option).
+<p>
+<p>
+<b><u>Examples</u></b>
+<p>
+    <b>. qgamma spacing</b>
+<p>
+    <b>. qgamma spacing, param(20 3)</b>
+<p>
+    <b>. qgamma spacing, gen(spacing_g)</b>
+<p>
+<p>
+<b><u>Author</u></b>
+<p>
+    Nicholas J. Cox, Durham University, U.K.
+    n.j.cox@durham.ac.uk
+<p>
+<p>
+<b><u>References</u></b>
+<p>
+    Forbes, C., Evans, M., Hastings, N. and Peacock, B. 2011.  <i>Statistical</i>
+    <i>distributions.</i>  New York: John Wiley.
+<p>
+    Johnson, N.L., Kotz, S. and Balakrishnan, N. 1994.  <i>Continuous univariate</i>
+    <i>distributions: Volume 1.</i> New York: John Wiley.
+<p>
+    Kleiber, C. and Kotz, S. 2003.  <i>Statistical size distributions in</i>
+    <i>economics and actuarial sciences.</i>  Hoboken, NJ: John Wiley.
+<p>
+<p>
+<b><u>Also see</u></b>
+<p>
+</pre>

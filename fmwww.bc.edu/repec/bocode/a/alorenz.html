@@ -1,0 +1,213 @@
+<pre>
+-------------------------------------------------------------------------------
+help for <b>alorenz</b>                                             Joao Pedro Azevedo
+                                                                  Samuel Franco
+-------------------------------------------------------------------------------
+<p>
+<b><u>Derivation of the Pen's Parade, Lorenz and Generalised Lorenz curve from the em</u></b>
+<b><u>&gt; pirical distribution</u></b>
+<p>
+        <b>alorenz</b> <i>depvar</i> [<b>if</b> <i>exp</i>] [<b>in</b> <i>range</i>] [<b>weight</b>] [ , <b>points(</b><i>number</i><b>)</b>
+                 <b>by(</b><i>varname</i><b>)</b> <b>order(</b><i>varname</i><b>)</b> <b>gl</b> <b>gp</b> <b>ge</b> <b>gom</b> <b>goa</b> <b>angle45</b>
+                 <b>format(</b><i>string</i><b>)</b> <b>output(</b><i>string</i><b>)</b> <b>view</b> <b>fullview</b> <b>compare</b>
+                 <b>base(</b><i>refcat</i><b>)</b> <b>grname(</b><i>string</i><b>)</b> <b>results(</b><i>string</i><b>)</b> <b>select(</b><i>string</i><b>)</b>
+                 <b>mlabangle(</b><i>string</i><b>)</b> <b>mlabsize(</b><i>string</i><b>)</b> <b>mark(</b><i>value 1</i> ... <i>value n</i><b>)</b>
+                 <b>marklabel(</b><i>valuelabel 1</i>...<i>valuelabel n</i><b>)</b> <b>markvar(</b><i>varname</i>
+                 <i>(categorical)</i><b>)</b> <b>invert</b> <b>xdecrease</b> <b>ksmirnov</b> <b>exact</b> <b>noisily</b> 
+                 <i>twoway_options</i> ]
+<p>
+    <b>pweights</b>, <b>fweights</b> and <b>aweights</b> are allowed; see help weights. See help 
+    weight.
+<p>
+<b><u>Description</u></b>
+<p>
+    <b>alorenz</b> derive and plot the Pen's Parade, Lorenz and Generalized Lorenz
+    curve from the empirical distribution. In addition, <b>alorenz</b> allow user to
+    retrive the data used to generate the curves, and implement first order
+    stochastic dominance (Saposnik, 1981, 1983), second order stochastic
+    dominance (Shorrocks, 1983), and the Lorenz dominance analysis of the
+    distribution (Atkinson, 1970). Moreover, following Pigou-Dalton
+    principles, demonstrated by Marshall &amp; Olkin (1979), <b>alorenz</b> also ranks
+    two or more social states by analysing the Lorenz, Generalized Lorenz,
+    and Pen's Parade. <b>alorenz</b> also performs the two-sample Kolmogorov-Smirnov
+    tests of the equality of distributions.
+<p>
+<b><u>Options</u></b>
+<p>
+    <b>points(</b>#<b>)</b> sets the number of the distribution points. If the selected
+    number of points is larger than the number of observations, alorenz will
+    automatically adjust its value, and display a warning message. Default
+    value 10.
+<p>
+    <b>by(</b>groupvar<b>)</b> repeats the command for each group of observations for which
+    the values of the variables in varlist are the same. Groupvar must be an
+    integer variable.
+<p>
+    <b>order(</b>varname<b>)</b> Selects an alternative variable the build the cumulative
+    distribution. The default is the population.
+<p>
+    <b>gl</b> plot the Lorenz curve (cumulated share of var by cumulated share of
+    the population).
+<p>
+    <b>gp</b> plot the Pen's Parade curve (max value of each percentile).
+<p>
+    <b>ge</b> plot the Generalized Lorenz curve (cumulated mean of var by cumulated
+    share of the population).
+<p>
+    <b>gom</b> plot the mean of variable <i>depvar</i> against the mean of variable <i>order</i>
+    as ordered by percentiles of the population by variable <i>order</i>.
+<p>
+    <b>goa</b> plot the cumulated mean of variable <i>depvar</i> against the cumulated mean
+    of variable <i>order</i> as ordered by percentiles of the population by variable
+    <i>order</i>.
+<p>
+    <b>angle45</b> specifies that a 45 degree angel line is to the ploted at the
+    Lorenz Curve.
+<p>
+    <b>format</b> specify the display format for variables. Default format %12.2f.
+<p>
+    <b>output</b> desired name of the data file writes in comma-separated format.
+<p>
+    <b>view</b> specifies that the tabels are to be viewed on the Stata display
+    window.
+<p>
+    <b>fullview</b> specifies that all the possible variables are to be displayed at
+    the Stata window.
+<p>
+    <b>grname(</b>string<b>)</b> specifies an alternative name of the figures.
+<p>
+    <b>select(</b>string<b>)</b> select particular observations to be marked on the plot.
+<p>
+    <b>invert</b> invert the axis of the gl, gp, ge, gom or goa plots.
+<p>
+    <b>xdecrease</b> invert the order the the x-axis, from increasing to decreasing.
+<p>
+    <b>base(</b><i>refcat</i><b>)</b> sets the value of the comparation categoric group that
+    defided the base group. If the base category was not defined <b>alorenz</b> will
+    use the first category.
+<p>
+    <b>mark(</b><i>value 1</i> ... <i>value n</i><b>)</b> select particular values to be marked on the
+    plot.
+<p>
+    <b>marklabel(</b><i>valuelabel 1</i>...<i>valuelabel n</i><b>)</b> set the label for the selected
+    values to be marked on the plot.
+<p>
+    <b>markvar(</b><i>varname (categorical)</i><b>)</b> select the values of a particular
+    categorical variable to be marked on the graph.
+<p>
+    <b>ksmirnov</b> performs two-sample Kolmogorov-Smirnov tests of the equality of
+    distributions. For more information please see ksmirnov.
+<p>
+    <b>exact</b> specifies that the exact p-value be computed.  This may take a long
+    time if n &gt; 50. For more information please see ksmirnov.
+<p>
+    <b>noisily</b> displays on the Stata screen the results of the
+    Kolmogorov-Smirnov tests.
+<p>
+    <b>compare</b> Analysis the first order stochastic dominance (Saposnik, 1981,
+    1983), second order stochastic dominance (Shorrocks, 1983), and the
+    Lorenz dominance of the distribution (Atkinson, 1970).
+<p>
+    <i>twoway_options</i> accept any options other than <b>name()</b> or <b>by()</b> documented in
+    <b>[G] </b><i>twoway_options</i>
+<p>
+<b><u>Saved Results</u></b>
+<p>
+    <b>max_:</b> Pen's Parade.
+    <b>ac_prop_:</b> Loren's Curve.
+    <b>ac_mean_:</b> Generalized Loren's Curve.
+    <b>speso:</b> Population.
+    <b>ac_speso:</b> Cumulative Population.
+    <b>prop_pop:</b> Distribution of population.
+    <b>ac_prop_pop:</b> Cumulative distribution of population.
+    <b>prop_:</b> percentage of <i>depvar</i> by percentile.
+<p>
+<b><u>Stocastic Dominance analysis (Marshall &amp; Olkin, 1979)</u></b>
+<p>
+    <b>I :</b>  Lack of envy.
+    <b>IE:</b>  Lack of envy and preference for equity.
+    <b>CE:</b>  Preference for growth with equity.
+<p>
+<b><u>Examples</u></b>
+<p>
+        . alorenz y
+<p>
+        . alorenz y [pw=weight]
+<p>
+        . alorenz y [pw=weight], points(10)
+<p>
+        . alorenz y [pw=weight], points(10) format(%12.0f) view
+<p>
+        . alorenz y [pw=weight], points(10) output(tab) fullview
+<p>
+        . alorenz y [pw=weight], points(10) format(%12.0f) fullview output(tab)
+<p>
+        . alorenz y [pw=weight], points(100) view gl
+<p>
+        . alorenz y [pw=weight], points(100) view gl ge
+<p>
+        . alorenz y [pw=weight], points(100) view gl ge gp
+<p>
+        . alorenz y [pw=weight], points(100) view gl ge gp angle45
+            format(%12.0f) output(tab)
+<p>
+        . alorenz y [pw=weight], points(100) view gl ge gp angle45
+            format(%12.0f) output(tab) by(pais)
+<p>
+        . alorenz y [pw=weight], points(10) compare base(1)
+<p>
+        . alorenz y [pw=weight], points(10) compare base(4)
+<p>
+        . alorenz y [pw=weight], points(100) gp select(country == India |
+            country == Brazil | country == Peru | country == Mexico)
+<p>
+        . alorenz y [pw=weight], points(100) gp order(x) select(country ==
+            India | country == Brazil | country == Peru | country == Mexico)
+<p>
+<b><u>References</u></b>
+<p>
+    Atkinson, A.B., 1970, "On the Measurement of Inequality", Journal of
+    Economic Theory, 2: 244-63.
+<p>
+    Dalton, H., 1920, "The Measurement of the Inequality of Incomes",
+    Economic Journal, 30: 348-61.
+<p>
+    Marshall, A.W. and I.Olkin, 1979, Inequalities: Theory of Majorization
+    and Its Applications. In: Mathematics in Science and Engineering, V. 143.
+    Academic Press.
+<p>
+    Pigou, A.F., 1912, Wealth and Welfare, Macmillan, London.
+<p>
+    Saposnik, R., 1981, "Rank-Dominance in Income Distribution" Public
+    Choice, 36 pp147-151.
+<p>
+    Saposnik, R., 1983, "On Evaluating Income Distributions: Rank Dominance,
+    the Suppes-Sen Grading Principle of Justice and Pareto Optimality",
+    Public Choice, 40: 329-36.
+<p>
+    Shorrocks A.F., 1983, "Ranking Income Distributions", Economica, 50:
+    3-17.
+<p>
+<p>
+<b><u>Authors</u></b>
+<p>
+    Joao Pedro Azevedo
+    jazevedo@worldbank.org
+<p>
+    Samuel Franco
+<p>
+<b><u>Aknowledgements</u></b>
+<p>
+    The authors would like to thank Andres Castaneda, Viviane Sanfelice,
+    Gabriel Facchini, and Amer Hasan for their valuable suggestions.
+    The usual disclaimer applies.
+    <b>alorenz</b> uses the Stata user written command _pecats produced by J. Scott
+    Long and Jeremy Freese.
+ 
+<p>
+<b><u>Also see</u></b>
+<p>
+    Manual:  <b>[R] lorenz</b>
+    Online:  help for glcurve; inequal7; ineqdeco; ksmirnov; wbopendata(if
+             installed)
+</pre>

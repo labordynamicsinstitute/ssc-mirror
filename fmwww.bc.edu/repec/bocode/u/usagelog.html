@@ -1,0 +1,75 @@
+<pre>
+-------------------------------------------------------------------------------
+help for <b>usagelog</b>                                             manual:  <b>[R] none</b>
+                                                             dialog:  <b> none</b>    
+-------------------------------------------------------------------------------
+<p>
+<p>
+<b><u>Log usage of Stata programs in an existing text file</u></b>
+<p>
+        <b>usagelog</b> [<b>,</b> <b>message(</b><i>string</i><b>)</b> <b>start</b> <b><u>et</u></b><b>ime</b> <b>type(</b><i>string</i><b>)</b> <b><u>ue</u></b><b>rror(</b><i>string</i><b>)</b> ]
+<p>
+<b><u>Description</u></b>
+<p>
+    <b>Usagelog</b> is designed for programmers who want to keep track of how often
+    and, simply, how their program is being used by their users.  With
+    <b>usagelog</b> you can log the date and time of day the program was started and
+    completed as well as what the user's command line looked like and any
+    user-error code.  This one program can be used to track several programs
+    in different usage log files.  When used with the option etime it can
+    report how long the program to took to run in days:hours:mins:secs.
+<p>
+    The first line in the usagelog file is:
+<p>
+        "Current date", "Current time" and "Work directory"
+<p>
+        "Current date" is taken from the creturn variable: <b>`c(current_date)'</b>
+<p>
+        "Current time" is taken from the creturn variable: <b>`c(current_time)'</b>
+<p>
+        "Work directory" is taken from the creturn variable: <b>`c(pwd)'</b>
+<p>
+<p>
+<b><u>Options</u></b>
+<p>
+    <b>start</b> specifies that <b>usagelog</b> is to start logging program.
+<p>
+    <b>message</b> can pass any text message to the usagelog file like what options
+        and settings the user of the program submitted.
+<p>
+    <b>type</b> specifies the program name or any text string you want the
+        {cmd:usagelog file to start with.
+<p>
+    <b>etime</b> specifies to add the elapsed time since <b>start</b> to the usage log
+        file.
+<p>
+    <b>uerror</b> provides what error code you want documented at time the program
+        exited.  You have to make a call to <b>usagelog</b> before the Stata program
+        really crashes since Stata will likely stop at that time.  <b>Uerror</b> is
+        only helpful when you can predict how the program might fail.
+<p>
+<b><u>Examples</u></b>
+<p>
+    You can make a call to <b>usagelog</b> at the beginning of a program:
+<p>
+        <b>usagelog</b> , type(savasas) c(savasas using `using' `if' `in' ,
+        type(`type') `replace' `rename')
+<p>
+        and then at the end of the program call it again:
+<p>
+        <b>usagelog</b> , type(savasas) uerror(5) etime(`s(etime)')
+<p>
+<b><u>Author</u></b>
+<p>
+    Dan Blanchette
+    The Carolina Population Center
+    University of North Carolina - Chapel Hill, USA
+    dan_blanchette@unc.edu
+<p>
+<p>
+<b><u>Also see</u></b>
+<p>
+    On-line: log, etime (if installed) savasas (if installed) usesas (if
+             installed)
+<p>
+</pre>

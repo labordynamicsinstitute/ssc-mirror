@@ -1,0 +1,140 @@
+<pre>
+<p>
+.-
+help for ^icc23^
+.-
+<p>
+^Calculation of ICC Models 2 and 3^
+^---------------------------------^
+<p>
+        .^icc23^ &lt;dv&gt; &lt;classvar&gt; &lt;within_var&gt;, MOdel(#) LEvel(#)
+<p>
+<p>
+^Description^
+^-----------^
+<p>
+^icc23^ computes the intra-class correlation for random effects models based on
+&gt;  repeated
+measures ANOVA.  These models are ICC[2,1], ICC[2,k], ICC[3,1], and ICC[3,k], a
+&gt; s described
+by Shrout and Fleiss, 1979 (see reference below).  (For the ICC[1,1] and ICC[1,
+&gt; k] models
+based on a one-way ANOVA, see @loneway@).  ^icc23^ runs a repeated measures ANO
+&gt; VA to derive
+the appropriate estimates and degrees of freedom.  In the event there is a sign
+&gt; ificant F-test
+for the ^classvar^ (e.g., a significant differernce among raters), the program 
+&gt; will provide
+the p-value from the ANOVA table.
+<p>
+Data must be in the "long" format.  If not, use the @reshape@ command to reconf
+&gt; igure the data.
+<p>
+Four types of ICC models are considered:
+<p>
+        ICC[2,1]:  reflects the case where the same group of subjects is rated 
+&gt; by k raters,
+                   interest is in the reliability of individual scores.  In thi
+&gt; s model, raters
+                   are considered a representative sample of a population of si
+&gt; milar raters. This
+                   model is a two-way random effects model.
+<p>
+        ICC[2,k]:  is the same approach as ICC[2,1] above, but interest is in t
+&gt; he reliability
+                   of the MEAN score, rather than among single observations.
+<p>
+        ICC[3,1]:  reflects the case where the same group of subjects is rated 
+&gt; by k raters,
+                   interest is in the reliability of individual scores.  In thi
+&gt; s model, the only
+                   raters of interest are those participating in the study (e.g
+&gt; ., there is no 
+                   intention of generalizing the raters' scores to a larger pop
+&gt; ulation of raters).
+                   This model is considered a "mixed" model (subjects are rando
+&gt; m, raters are fixed). 
+                  
+        ICC[3,k]:  is the same approach as ICC[3,1] above, but interest is in t
+&gt; he reliability
+                   of the MEAN score, rather than among single observations.
+<p>
+Three inputs are required:
+<p>
+            dv     is the dependent variable
+<p>
+         classvar  the class variable refers to factor that is repeated within 
+&gt; subjects, e.g., raters,
+                   devices, time points, etc., e.g., the variable which would b
+&gt; e entered as the 
+                   repeated() variable in the ANOVA option.
+<p>
+       within_var  refers to the "within subject" variable, e.g., subjects bein
+&gt; g assessed
+   
+<p>
+^NOTE:  The order of entry of the variables is critical!^  
+<p>
+<p>
+<p>
+^Options^
+^-------^
+       ^MO^del(#)  refers to the type of model to be estimated.  ICC model 2 is
+&gt;  the default (
+                 producing ICC[2,1] and ICC[2,k] estimates).
+       
+       ^LE^vel(#)  the degree of precision of the confidence interval, entered 
+&gt; as a decimal.
+                 The default is 95%, i.e., level(.95)
+                
+<p>
+Examples
+--------
+<p>
+For ICC[2,1] and ICC[2,k]: Two-way random effects (Subjects and raters are cons
+&gt; idered to be
+                           sampled from larger populations); 95% CIs are assume
+&gt; d. 
+                
+^.icc23 score rater person_id^
+<p>
+<p>
+<p>
+For ICC[3,1] and ICC[3,k]: Two-way mixed model: Subjects are random, but raters
+&gt;  are fixed 
+                           (i.e., the raters are not considered a sample -- the
+&gt; y are the 
+                           only raters of interest); 90% CIs are requested.
+                
+^.icc23 score rater person_id, model(3) level(.90)^
+                
+<p>
+References
+----------
+Shrout PE, FLeiss JL. Intraclass correlation: uses in assessing rater reliabili
+&gt; ty. Psychol
+Bull, 1979; 86: 420-428.
+<p>
+Portney LG, Watkins MP. Foundations of Clinical Research: Applications to Pract
+&gt; ice (2nd ed.).
+Prentice-Hall, Inc: Upper Saddle River, NJ., 2000.
+<p>
+<p>
+Author
+------
+Paul F. Visintainer, PhD
+Baystate Health System
+Springfield, MA 01089
+visint46@gmail.com
+<p>
+Luis C.Orozco, MD, MSc
+Facultad de Salud
+Universidad Industrial de Santander
+Colombia
+lcorovar@gmail.com
+<p>
+<p>
+Also see
+--------
+Manual or on-line help for: @loneway@, @reshape@, @iclassr@, @iclassr2@
+</pre>

@@ -1,0 +1,131 @@
+<pre>
+<b>help igencox postestimation</b>                                  also see:  <b>igencox</b>
+-------------------------------------------------------------------------------
+<p>
+<b><u>Title</u></b>
+<p>
+    <b>igencox postestimation</b> -- Postestimation tools for igencox
+<p>
+<p>
+<a name="description"></a><b><u>Description</u></b>
+<p>
+    The following postestimation commands are available after <b>igencox</b>:
+<p>
+    Command                Description
+    -------------------------------------------------------------------------
+INCLUDE help post_estat
+INCLUDE help post_estimates
+INCLUDE help post_lincom
+INCLUDE help post_lrtest
+INCLUDE help post_nlcom
+        <b>predict</b>            predicted values
+INCLUDE help post_predictnl
+INCLUDE help post_test
+INCLUDE help post_testnl
+    -------------------------------------------------------------------------
+<p>
+<p>
+<a name="syntax_predict"></a><a name="predict"></a><b><u>Syntax for predict</u></b>
+<p>
+        <b>predict</b> [<i>type</i>] <i>newvar</i> [<i>if</i>] [<i>in</i>] [<b>,</b> <i>options</i>]
+<p>
+<p>
+    <i>statistic</i>                        Description
+    -------------------------------------------------------------------------
+    Main
+      <b>xb</b>                             linear prediction xb; the default
+      <b>stdp</b>                           standard error of the linear prediction;
+                                       SE(xb)
+      <b><u>bases</u></b><b>urv</b>                       baseline survivor function
+      <b><u>surv</u></b><b>ival</b>                       covariate-adjusted survivor function
+      <b><u>basec</u></b><b>hazard</b>                    baseline cumulative hazard function
+      <b><u>cumh</u></b><b>az</b>                         covariate-adjusted cumulative hazard
+                                       function
+    * <b>at(</b><i>varname</i><b>=</b><i>#</i> [<i>varname</i><b>=</b><i># ...</i>]<b>)</b>  set value of the specified covariates
+    + <b>se(</b><i>newvarname</i><b>)</b>                 save standard error in <i>newvarname</i>
+    -------------------------------------------------------------------------
+    * <b>at()</b> is allowed only with <b>survival</b> or <b>cumhaz</b>.
+    + <b>se()</b> is allowed only with <b>basesurv</b> or <b>survival</b>.
+<p>
+<p>
+<a name="options_predict"></a><b><u>Options for predict</u></b>
+<p>
+        +------+
+    ----+ Main +-------------------------------------------------------------
+<p>
+    <b>xb</b>, the default, calculates the linear prediction from the fitted model.
+        That is, you fit the model by estimating a set of parameters b0, b1,
+        b2, ..., bk, and the linear prediction is xb.
+<p>
+        The x used in the calculation is obtained from the data currently in
+        memory and need not correspond to the data on the independent
+        variables used in estimating b.
+<p>
+    <b>stdp</b> calculates the standard error of the prediction, that is, the
+        standard error of xb.
+<p>
+    <b>basesurv</b> calculates the baseline survivor function.  It requires that the
+        <b>baseq()</b> option is specified with <b>igencox</b>.
+<p>
+    <b>survival</b> calculates the covariate-adjusted survivor function.  If <b>at()</b> is
+        not specified, the survivor function is evaluated at the mean values
+        of the covariates.  <b>survival</b> requires that the <b>baseq()</b> option is
+        specified with <b>igencox</b>.
+<p>
+    <b>basechazard</b> calculates the cumulative baseline hazard.  It requires that
+        the <b>baseq()</b> option is specified with <b>igencox</b>.
+<p>
+    <b>cumhaz</b> calculates the covariate-adjusted cumulative hazard.  If <b>at()</b> is
+        not specified, the cumulative hazard is evaluated at the mean values
+        of the covariates.  <b>cumhaz</b> requires that the <b>baseq()</b> option is
+        specified with <b>igencox</b>.
+<p>
+    <b>at(</b><i>varname</i><b>=</b><i># ...</i><b>)</b> requests that the covariates specified by <i>varname</i> be
+        set to <i>#</i> when computing covariate-adjusted survivor or cumulative
+        hazard functions.  By default, <b>predict</b> evaluates the function by
+        setting each covariate to its mean value.  This option causes the
+        function to be evaluated at the value of the covariates listed in
+        <b>at()</b> and at the mean of all unlisted covariates.  The <b>at()</b> option
+        requires <b>survival</b> or <b>cumhaz</b>.
+<p>
+    <b>se(</b><i>newvarname</i><b>)</b> requests that the standard error of the survivor function
+        be saved in <i>newvarname</i>.  It requires that <b>baseq()</b> and <b>savesigma()</b> are
+        specified with <b>igencox</b>.  The <b>se()</b> option requires <b>basesurv</b> or
+        <b>survival</b>.
+<p>
+<p>
+<a name="examples"></a><b><u>Examples</u></b>
+<p>
+<b><u>Compute baseline survivor function</u></b>
+<p>
+    Setup
+        <b>. use va, clear</b>
+<p>
+    Fit Cox proportional hazards model and save jump sizes
+        <b>. igencox status type1 type2 type3, baseq(q)</b>
+<p>
+    Obtain predicted values of the baseline survivor function
+        <b>. predict s, basesurv</b>
+<p>
+<p>
+<a name="survivor"></a><p>
+<b><u>Compute covariate-adjusted survivor function and its standard error</u></b>
+<p>
+    Setup
+        <b>. use va, clear</b>
+        <b>. igencox status type1 type2 type3, baseq(bq) savesigma(tmp, replace)</b>
+<p>
+    Predict survivor function and its standard errors at specified values of
+    the covariates
+        <b>. predict surv, survival se(sesurv) at(status=.4 type1=0 type2=0</b>
+            <b>type3=0)</b>
+<p>
+    Calculate the 95% pointwise confidence intervals of the survivor function
+        <b>. gen tmp = 1.96*sesurv / (surv*log(surv))</b>
+        <b>. gen lb = surv^exp(-tmp)</b>
+        <b>. gen ub = surv^exp(tmp)</b>
+<p>
+    Plot the results
+        <b>. gsort _t surv</b>
+        <b>. twoway line surv lb ub _t, connect(J J J)</b>
+</pre>

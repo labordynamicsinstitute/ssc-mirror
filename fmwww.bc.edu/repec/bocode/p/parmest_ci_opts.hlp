@@ -1,0 +1,130 @@
+{smcl}
+{hline}
+{cmd:help parmest_ci_opts}{right:(Roger Newson)}
+{hline}
+
+
+{title:Confidemce-interval options for {helpb parmest} and {helpb parmby}}
+
+
+{title:Syntax}
+
+{synoptset 24}
+{synopthdr}
+{synoptline}
+{synopt:{opt ef:orm}}Exponentiate estimates and confidence limits{p_end}
+{synopt:{opt d:of(#)}}Degrees of freedom for calculating confidence limits{p_end}
+{synopt:{cmdab:le:vel}{cmd:(}{help numlist:{it:numlist}}{cmd:)}}Confidence level(s) for calculating confidence limits{p_end}
+{synopt:{opt cln:umber(numbering_rule)}}Numbering rule for naming confidence limit variables{p_end}
+{synoptline}
+
+{pstd}
+where {it:numbering_rule} is
+
+{pstd}
+{cmd:level} | {cmd:rank}
+
+
+{title:Description}
+
+{pstd}
+These options allow the user to change the selection of confidence limits and {it:P}-values
+in the output dataset (or resultsset) created by {helpb parmest} or {helpb parmby}.
+
+
+{title:Options}
+
+{p 4 8 2}
+{cmd:eform} specifies that the estimates and confidence limits in the output dataset
+are to be exponentiated, and the standard errors multiplied by the exponentiated estimates.
+This option is usually used if the estimated parameters were calculated on a log scale, as is done by
+{helpb logit} and {helpb logistic} with odds ratios, by {helpb glm} and {helpb binreg} with risk ratios,
+by {helpb stcox} with hazard ratios, or by {helpb regress} with geometric mean ratios.
+Note that, if the user wants exponentiated confidence intervals in the output dataset,
+then the {cmd:eform} option must be specified for {helpb parmby} or {helpb parmest}, whether or not
+the {cmd:eform} or equivalent option was specified for the {help estcom:estimation command}.
+
+{p 4 8 2}
+{cmd:dof(}{it:#}{cmd:)} specifies the degrees of freedom
+for {it:t}-distribution-based confidence limits and {it:P}-values.
+If {cmd:dof()} is positive, then confidence limits and {it:P}-values for all parameters are calculated using the
+{it:t}-distribution with {cmd:dof()} degrees of freedom.
+If {cmd:dof()} is zero, then confidence limits are calculated using the standard normal distribution.
+If {cmd:dof()} is absent (or negative), then confidence limits are calculated from the most recent {help return:estimation results}, as follows.
+If the most recent {help est:estimation command} is one of the superseded Stata 8 survey commands {helpb svymean}, {helpb svyratio} or {helpb svytotal},
+and the command was specified with the {cmd:available} option instead of the {cmd:complete} option,
+then the degrees of freedom used for each parameter is extracted from the corresponding row of the
+column vector {hi:(e(_N_psu)-e(_N_str))'}, where {hi:e(_N_psu)} contains the numbers of primary sampling
+units (clusters) for each parameter and {hi:e(_N_str)} contains the numbers of strata for each parameter.
+(See the Stata 8 manual entry {hi:[SVY] svymean} for formulas.)
+Otherwise, if there is a non-missing result {hi:e(df_r)}, containing the
+residual degrees of freedom, then the degrees of freedom for all parameters is set to the value of {hi:e(df_r)}.
+Otherwise, the confidence limits and {it:P}-values are calculated using the standard normal distribution.
+
+{p 4 8 2}
+{cmd:level(}{it:numlist}{cmd:)} specifies the confidence levels, in percent, for
+the confidence limit variables created in the output dataset.
+These levels do not have to be integers, but must be at least 0 and strictly less than 100.
+For each level {it:xx}, {helpb parmest} and {helpb parmby} calculate a lower {it:xx} percent confidence
+limit variable with a default name of form {hi:min}{it:xx} and an upper {it:xx} percent confidence level
+with a default name of form {hi:max}{it:xx}.
+The numbering of the confidence limit variable names
+can be changed using the {cmd:clnumber} option (see below), and the names of the confidence limits
+can be changed using the {cmd:rename} option (see {help parmest_varmod_opts:{it:parmest_varmod_opts}}).
+The default is {cmd:level(95)}, or another single number set by {helpb set level}.
+Note that the {cmd:level()} option used by {helpb parmby} or {helpb parmest}
+is not affected by any {cmd:level()} option specified for the {help estcom:estimation command}.
+(See {hi:[U] 20 Estimation and postestimation commands}.)
+
+{p 4 8 2}
+{cmd:clnumber(}{it:numbering_rule}{cmd:)} specifies the rule used to number the names of the
+confidence limit variables created in the output dataset.
+The {it:numbering_rule} may be {cmd:level} or {cmd:rank}, and is set in default to {cmd:level}
+if the {cmd:clnumber()} option is not specified.
+For each confidence level {it:xx} specified by the
+{cmd:levels()} option, {helpb parmest} and {helpb parmby} calculate a lower
+{it:xx} percent confidence limit with the default name {hi:min}{it:yy}, and an upper {it:xx} percent
+confidence limit with the default name {hi:max}{it:yy}, where the number {it:yy} depends on the
+confidence level {it:xx} according to a rule specified by the {it:numbering_rule} of the {cmd:clnumber()} option.
+If the {it:numbering_rule} is {cmd:rank}, then the number {it:yy} is the rank, in ascending
+order, of the confidence level {it:xx} in the set of confidence levels specified by the {cmd:levels()} option.
+For instance, if the user specifies {cmd:levels(90 95 99) clnumber(rank)},
+then the 90 percent confidence limits are named {hi:min1} and {hi:max1},
+the 95 percent confidence limits are named {hi:min2} and {hi:max2},
+and the 99 percent confidence limits are named {hi:min3} and {hi:max3}.
+If the numbering rule is {cmd:level} (the default), then the number {it:yy} is equal to the confidence level {it:xx}.
+For instance, if the user specifies {cmd:levels(90 95 99) clnumber(lewel)},
+then the 90 percent confidence limits are named {hi:min90} and {hi:max90},
+the 95 percent confidence limits are {hi:min95} and {hi:max95},
+and the 99 percent confidence limits are {hi:min99} and {hi:max99}.
+If the confidence level {it:xx} contains a decimal point, then the decimal point is replaced with "_"
+in the variable names {hi:min}{it:xx} and {hi:max}{it:xx}.
+If the confidence level {it:xx} contains "e-" (because of very small e-format confidence levels),
+then the "e-" is replaced with "em" in the variable names {hi:min}{it:xx} and {hi:max}{it:xx}.
+Therefore, if the user specifies {cmd:level(95 99.99) clnumber(level)}, then the output dataset
+contains 95% lower and upper confidence limits in variables
+{hi:min95} and {hi:max95}, and 99.99% lower and upper confidence limits in variables {hi:min99_99} and {hi:max99_99}.
+The option {cmd:clnumber(rank)} is useful if the confidence levels contain many
+numbers after the decimal point, which may be the case if the user specifies Bonferroni-corrected
+or Sidak-corrected confidence limits.
+
+
+{title:Author}
+
+{pstd}
+Roger Newson, Imperial College London, UK.
+Email: {browse "mailto:r.newson@imperial.ac.uk":r.newson@imperial.ac.uk}
+
+
+{title:Also see}
+
+{p 4 13 2}
+{bind: }Manual: {hi:[U] 20 Estimation and postestimation commands}
+{p_end}
+{p 4 13 2}
+On-line: help for {help estcom:estimation and postestimation commands}
+{break} help for {helpb parmest}, {helpb parmby},
+{help parmest_outdest_opts:{it:parmest_outdest_opts}}, {help parmest_varadd_opts:{it:parmest_varadd_opts}},
+{help parmest_varmod_opts:{it:parmest_varmod_opts}}, {help parmby_only_opts:{it:parmby_only_opts}},
+{help parmest_resultssets:{it:parmest_resultssets}}
+{p_end}

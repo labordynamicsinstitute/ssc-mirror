@@ -1,0 +1,193 @@
+<pre>
+-------------------------------------------------------------------------------
+<b>help: </b><b>lmnreg3</b>                                                        <b>dialog:</b> <b>lm</b>
+<b>&gt; nreg3</b>
+-------------------------------------------------------------------------------
+<p>
+<b>        </b>+-------+
+<b>    </b>----+<b> Title </b>+------------------------------------------------------------
+<p>
+<b> lmnreg3: Overall System Non Normality Tests after (3SLS-SURE) Regressions</b>
+<p>
+<b>        </b>+--------+
+<b>    </b>----+<b> Syntax </b>+-----------------------------------------------------------
+<p>
+     <b> lmnreg3</b>
+<p>
+<b>        </b>+-------------+
+<b>    </b>----+<b> Description </b>+------------------------------------------------------
+<p>
+  lmnreg3 computes overall system Non Normality Tests, after:
+  - (3SLS) Three-Stage Least Squares <b>reg3</b> for systems of simultaneous
+  equations.
+  - (SURE) Seemingly Unrelated Regression Estimation <b>sureg</b> for sets of
+  equations.
+<p>
+<b>        </b>+---------------+
+<b>    </b>----+<b> Saved Results </b>+----------------------------------------------------
+<p>
+    <b>lmnreg3</b> saves the following in <b>r()</b>:
+<p>
+    Scalars
+<p>
+<p>
+   <b>r(lmnjb_#)</b>      Jarque-Bera LM Test for eq.# 
+   <b>r(lmnjbp_#)</b>     Jarque-Bera LM Test for eq.# P-Value
+<p>
+   <b>r(lmnjb)</b>        Jarque-Bera LM Test
+   <b>r(lmnjbp)</b>       Jarque-Bera LM Test P-Value
+   <b>r(lmndh)</b>        Doornik-Hansen LM Test
+   <b>r(lmndhp)</b>       Doornik-Hansen LM Test P-Value
+   <b>r(lmng)</b>         Geary LM Test
+   <b>r(lmngp)</b>        Geary LM Test P-Value
+   <b>r(lmnad)</b>        Anderson-Darling Z Test
+   <b>r(lmnadp)</b>       Anderson-Darling Z Test P-Value
+   <b>r(lmndp)</b>        D'Agostino-Pearson LM Test
+   <b>r(lmndpp)</b>       D'Agostino-Pearson LM Test P-Value
+   <b>r(lmnsvs)</b>       Srivastava LM Skewness Test
+   <b>r(lmnsvsp)</b>      Srivastava LM Skewness Test P-Value
+   <b>r(lmnsms1)</b>      Small LM Skewness Test
+   <b>r(lmnsms1p)</b>     Small LM Skewness Test P-Value
+   <b>r(lmnsms2)</b>      Skewness Z Test
+   <b>r(lmnsms2p)</b>     Skewness Z Test P-Value
+   <b>r(lmnsvk)</b>       Srivastava Z Kurtosis Test
+   <b>r(lmnsvkp)</b>      Srivastava Z Kurtosis Test P-Value
+   <b>r(lmnsmk1)</b>      Small LM Kurtosis Test
+   <b>r(lmnsmk1p)</b>     Small LM Kurtosis Test P-Value
+   <b>r(lmnsmk2)</b>      Kurtosis Z Test
+   <b>r(lmnsmk2p)</b>     Kurtosis Z Test P-Value
+   <b>r(sk)</b>           Skewness Coefficient
+   <b>r(sksd)</b>         Skewness Standard Deviation
+   <b>r(ku)</b>           Kurtosis Coefficient
+   <b>r(kusd)</b>         Kurtosis Standard Deviation
+   <b>r(sn)</b>           Standard Deviation Runs Sig(k)
+   <b>r(en)</b>           Mean Runs E(k)
+   <b>r(lower)</b>        Lower 95% Conf. Interval [E(k)- 1.96* Sig(k)]
+   <b>r(upper)</b>        Upper 95% Conf. Interval [E(k)+ 1.96* Sig(k)]
+<p>
+<b>        </b>+------------+
+<b>    </b>----+<b> References </b>+-------------------------------------------------------
+<p>
+    Anderson T.W., Darling D.A. (1954)<b> "A Test of Goodness of Fit",</b> <i>Journal</i>
+        <i>of the American Statisical Association, 49</i>; 765–69.
+<p>
+    C.M. Jarque &amp; A.K. Bera (1987)<b> "A Test for Normality of Observations and</b>
+        <b>Regression Residuals"</b> <i>International Statistical Review</i> , Vol. 55;
+        163-172.
+<p>
+    D'Agostino, R. B., &amp; Rosman, B. (1974)<b> "The Power of Geary’s Test of</b>
+        <b>Normality",</b> <i>Biometrika, 61(1)</i>; 181-184.
+<p>
+    Damodar Gujarati (1995)<b> "Basic Econometrics"</b> <i>3rd Edition, McGraw Hill,</i>
+        <i>New York, USA</i>.
+<p>
+    Geary R.C. (1947)<b> "Testing for Normality"</b> <i>Biometrika, Vol. 34</i>; 209-242.
+<p>
+    Geary R.C. (1970)<b> "Relative Efficiency of Count of Sign Changes for</b>
+        <b>Assessing Residuals Autoregression in Least Squares Regression"</b>
+        <i>Biometrika, Vol. 57</i>; 123-127.
+<p>
+    Pearson, E. S., D'Agostino, R. B., &amp; Bowman, K. O. (1977)<b> "Tests for</b>
+        <b>Departure from Normality: Comparison of Powers",</b> <i>Biometrika, 64(2)</i>;
+        231-246.
+<p>
+<p>
+<b>        </b>+----------+
+<b>    </b>----+<b> Examples </b>+---------------------------------------------------------
+<p>
+        clear all
+<p>
+        sysuse lmnreg3.dta , clear
+<p>
+   * (1) SUR Model:
+<p>
+        sureg (y1 x1 z1) (y2 x2 z2) (y3 x3 z3) (y4 x4 z4)
+<p>
+        lmnreg3
+<p>
+        return list
+<p>
+<p>
+   * (2) 3SLS Model:
+<p>
+        reg3 (y1 x1 z1) (y2 x2 z2) (y3 x3 z3) (y4 x4 z4)
+<p>
+        lmnreg3
+<p>
+        return list
+<p>
+* If you want to use dialog box: Press OK to compute lmnreg3
+<p>
+        db lmnreg3
+<p>
+<p>
+. clear all
+. sysuse lmnreg3.dta , clear
+. reg3 (y1 x1 z1) (y2 x2 z2) (y3 x3 z3) (y4 x4 z4)
+. lmnreg3
+<p>
+=================================================
+* System Non Normality Tests (3sls) 
+=================================================
+*** Single Equation Non Normality Tests:
+  Ho: Normality - Ha: Non Normality
+<p>
+ Eq. y1    : Jarque-Bera LM Test   =   1.4515        P-Value &gt; Chi2(2)  0.4840
+ Eq. y2    : Jarque-Bera LM Test   =  18.1562        P-Value &gt; Chi2(2)  0.0001
+ Eq. y3    : Jarque-Bera LM Test   =   2.0054        P-Value &gt; Chi2(2)  0.3669
+ Eq. y4    : Jarque-Bera LM Test   =   0.8628        P-Value &gt; Chi2(2)  0.6496
+------------------------------------------------------------------------------
+<p>
+*** Overall System Non Normality Tests:
+ Ho: No Overall System Non Normality
+<p>
+*** Non Normality Tests:
+- Jarque-Bera LM Test              =   2.3287        P-Value &gt; Chi2(2)  0.3121
+- Doornik-Hansen LM Test           =   3.2725        P-Value &gt; Chi2(2)  0.1947
+- Geary LM Test                    =  -2.2504        P-Value &gt; Chi2(2)  0.3246
+- Anderson-Darling Z Test          =   0.5028        P-Value&gt;Z( 3.409)  0.9997
+- D'Agostino-Pearson LM Test       =   3.0259        P-Value &gt; Chi2(2)  0.2203
+------------------------------------------------------------------------------
+*** Skewness Tests:
+- Srivastava LM Skewness Test      =   1.0859        P-Value &gt; Chi2(1)  0.2974
+- Small LM Skewness Test           =   1.2242        P-Value &gt; Chi2(1)  0.2685
+- Skewness Z Test                  =  -1.1064        P-Value &gt; Chi2(1)  0.2685
+------------------------------------------------------------------------------
+*** Kurtosis Tests:
+- Srivastava Z Kurtosis Test       =   1.1148        P-Value &gt; Z(0,1)   0.2649
+- Small LM Kurtosis Test           =   1.8017        P-Value &gt; Chi2(1)  0.1795
+- Kurtosis Z Test                  =   1.3423        P-Value &gt; Chi2(1)  0.0898
+------------------------------------------------------------------------------
+    Skewness Coefficient =   -0.2854     - Standard Deviation =  0.2689
+    Kurtosis Coefficient =    3.6106     - Standard Deviation =  0.5318
+------------------------------------------------------------------------------
+    Runs Test: (31) Runs -  (40) Positives - (40) Negatives
+    Standard Deviation Runs Sig(k) =  4.4437 , Mean Runs E(k) = 41.0000
+    95% Conf. Interval [E(k)+/- 1.96* Sig(k)] = (32.2903 , 49.7097 )
+------------------------------------------------------------------------------
+<p>
+<b>        </b>+--------+
+<b>    </b>----+<b> Author </b>+-----------------------------------------------------------
+<p>
+  <b>Emad Abd Elmessih Shehata</b>
+  <b>Assistant Professor</b>
+  <b>Agricultural Research Center - Agricultural Economics Research Institute - Eg</b>
+<b>&gt; ypt</b>
+  <b>Email:   </b>emadstat@hotmail.com
+  <b>WebPage:                </b>http://emadstat.110mb.com/stata.htm
+  <b>WebPage at IDEAS:       </b>http://ideas.repec.org/f/psh494.html
+  <b>WebPage at EconPapers:  </b>http://econpapers.repec.org/RAS/psh494.htm
+<p>
+<b>        </b>+------------------+
+<b>    </b>----+<b> lmnreg3 Citation </b>+-------------------------------------------------
+<p>
+    Shehata, Emad Abd Elmessih (2011)
+    <b>"LMNREG: Stata Module to Compute Overall System Non Normality Tests after</b>
+        <b>(3SLS-SURE) Regressions"</b>
+<p>
+<b><u>Online Help:</u></b>
+<p>
+    <b>lmnreg</b> <b>lmnreg2</b> <b>lmnreg3</b> <b>(</b><i>if installed</i><b>)</b>.
+<p>
+<p>
+</pre>

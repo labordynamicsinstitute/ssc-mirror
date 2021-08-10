@@ -1,0 +1,110 @@
+<pre>
+..-
+help for ^omodel^                                           Statalist, 1Sep1997
+..-
+<p>
+Maximum-likelihood ordered logit and probit estimation 
+- ------------------------------------------------------
+<p>
+    ^omodel logit^  depvar varlist [weight] [^if^ exp] [^in^ range]
+<p>
+    ^omodel probit^ depvar varlist [weight] [^if^ exp] [^in^ range]
+<p>
+<p>
+^fweights^ are allowed; see help @weights@.
+<p>
+^omodel^ is not quite an estimation command; use @ologit@ or @oprobit@ to
+redisplay results.
+<p>
+To reset problem-size limits, see help @matsize@.
+<p>
+<p>
+Description
+- -----------
+<p>
+^omodel^ is an alternative to @ologit@ and @oprobit@ for estimating ordered
+logit and probit models.  It produces the same results but it also reports an
+approximate likelihood-ratio test of whether the coefficients are equal across
+categories (i.e. a test of the proportional-odds assumption if logit is the
+requested model). 
+<p>
+<p>
+Examples
+- --------
+<p>
+        . use auto.dta, clear
+        . ^omodel probit rep78 mpg weight^
+        . ^ologit^                            /* to redisplay results */
+<p>
+        . tab foreign rep78
+        . ^omodel logit rep78 foreign^                /* Put data into 2-way */
+&gt;  
+        . gen obs=1                                   /* table of counts to  */
+&gt;  
+        . collapse (count) obs, by(rep78 foreign)       /* demonstrate use of  
+&gt; */
+        . ^omodel logit rep78 foreign [fweight=obs]^  /* fweights            */
+                                                      
+<p>
+Saved results
+- -------------
+<p>
+In addition to the results saved by ^ologit^ and ^oprobit^, ^omodel^ saves in
+the global ^S_^# macros
+<p>
+        ^S_1^    likelihood-ratio value 
+        ^S_2^    dof for likelihood-ratio test 
+<p>
+<p>
+Methods and formulas
+- --------------------
+<p>
+Let there be K outcomes of the dependent variable depvar and for convenience,
+let's call the outcomes 1, 2, ..., K, although ^omodel^ places no constraint
+on the labeling of the outcomes.
+<p>
+^omodel^ estimates the ordered logit or probit model using ^ologit^ or 
+^oprobit^ as requested.
+<p>
+An approximate version of the model is also fitted by using all K-1 binary 
+variables obtained from dichotomisations of the ordered scale. From this an 
+approximation to the log-likelihood obtained from the ^ologit^ or ^oprobit^ 
+model is obtained. In most cases the approximation will be very good.
+<p>
+In a similar fashion, an approximation to the log-likelihood for a completely
+general model (in which there are different effects at each cut-point for 
+every variable) is obtained. Note that this model cannot be fitted in Stata
+by maximum-likelihood. The difference between the two approximate 
+log-likelihoods is the likelihood-ratio test reported by ^omodel^. The 
+approximation to the log-likelihood value for the general model will usually
+be less reliable than the first approximation but both are underestimates of
+the respective true log-likelihoods. Hence in taking the difference between
+the two approximations we obtain a reasonable approximation to the true 
+lieklihood-ratio test. 
+<p>
+The ratio is tested on degrees of freedom that are the difference between the
+number of fitted parameters in the standard and general models. This will
+typically be (p)*(K-2), where p is the number of regressors specified,
+although under certain sparse data conditions there will be fewer degrees of
+freedom (see the second example above).
+<p>
+Finally, and very importantly, note that a significant p-value is evidence to
+reject the null hypothesis that the coefficients are equal across categories.
+A non-significant p-value does not justify the conclusion that we have an 
+appropiate model for the data. This mistake is often made in the 
+implementation of this test.
+<p>
+<p>
+Authors
+- -------
+<p>
+Rory Wolfe &lt;wolfer@@cryptic.rch.unimelb.edu.au&gt;, Royal Children's Hospital, 
+        Melbourne.
+William Gould &lt;wgould@@stata.com&gt;, Stata Corp.
+<p>
+<p>
+Also see
+- --------
+<p>
+On-line:  help for @ologit@, @oprobit@
+</pre>

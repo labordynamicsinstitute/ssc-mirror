@@ -1,0 +1,57 @@
+<pre>
+<b>help frontier_teci</b>
+-------------------------------------------------------------------------------
+<p>
+<b><u>Title</u></b>
+<p>
+    <b> frontier_teci -  Confidence Intervals for Technical Efficiency Estimates </b>
+<p>
+<p>
+<p>
+<b><u>Syntax</u></b>
+<p>
+        <b>frontier_teci</b> stub [<i>if</i>] [<i>in</i>] <b>,</b> <i>options</i>]
+<p>
+    <i>options</i>               Description
+    -------------------------------------------------------------------------
+      <b><u>l</u></b><b>evel(</b><i>#</i><b>)</b>            set confidence level; default is level(95)
+    -------------------------------------------------------------------------
+<p>
+<b><u>Description</u></b>
+<p>
+    <b>frontier_teci</b> generates the confidence intervals for technical efficiency
+    estimates following<b> frontier</b> or<b> xtfrontier</b>.  Two new variables are
+    creates:  <i>stub</i>_l and <i>stub</i>_u for the lower and upper confidence intervals.
+<p>
+<p>
+<b><u>Examples</u></b>
+<p>
+<b>    webuse xtfrontier1, clear</b>
+<b>    frontier lnwidgets lnworkers lnmachines, ti</b>
+<b>    predict te, te</b>
+<b>    frontier_teci te</b>
+<p>
+<p>
+<b>    webuse frontier1, clear</b>
+<b>    frontier lnoutput lncapital lnlabor, d(t)</b>
+<b>    predict te, te</b>
+<b>    frontier_teci te</b>
+<p>
+<p>
+<b><u>Author</u></b>
+    Scott Merryman
+    Risk Management Agency/USDA
+    scott.merryman@gmail.com
+<p>
+<p>
+<b><u>References</u></b>
+<p>
+    Horrace, William and Peter Schmidt (1996) "Confidence Statements for
+        Efficiency Estimates from Stochastic Frontier Models" <i>The Journal of</i>
+        <i>Productivity Analysis</i>, 7, 257-282.
+<p>
+<p>
+<b><u>Also see:</u></b>
+<p>
+Estimation commands:
+</pre>

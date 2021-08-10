@@ -1,0 +1,84 @@
+<pre>
+-------------------------------------------------------------------------------
+help for <b>lomackinlay</b>
+-------------------------------------------------------------------------------
+<p>
+<b><u>Perform Lo-MacKinlay variance ratio test</u></b>
+<p>
+        <b>lomackinlay</b> <i>varname</i> [<b>if</b> <i>exp</i>] [<b>in</b> <i>range</i>] [<b>,</b> <b><u>q</u></b><b>(</b><i>numlist</i><b>)</b> <b>gaps</b> <b>robust</b> ]
+<p>
+    <b>lomackinlay</b> is for use on time series data, which must be tsset.  It may
+    be applied to a single panel of a panel (<i>xt</i>) data set using an <b>if</b>
+    qualifier.  <b>lomackinlay</b> also supports the <b>by:</b> prefix.
+<p>
+<b><u>Description</u></b>
+<p>
+    <b>lomackinlay</b> computes a overlapping variance-ratio test on a timeseries.
+    The timeseries should be in level form; e.g., to test that stock returns
+    vary randomly around a constant mean, you consider the null hypothesis
+    that the log price series is a random walk with drift. The log price
+    series would then be given in the <i>varlist</i>. If the assumption of
+    homoskedastic errors in the process generating the differenced series is
+    not reasonable, the <i>robust</i> option may be used to calculate a variance
+    ratio test statistic robust to arbitrary heteroskedasticity.
+<p>
+<p>
+<b><u>Options</u></b> 
+<p>
+    <b>q(numlist)</b> optionally specifies a <i>numlist</i> of values for the span of
+        differencing. If not provided, the <i>numlist</i> of 2 4 8 16 is applied.
+<p>
+    <b>gaps</b> is used to indicate that gaps in the timeseries are allowed.
+<p>
+    <b>robust</b> specifies that a heteroskedasticity-robust test statistic should
+        be computed.
+<p>
+<p>
+<b><u>Examples</u></b>
+<p>
+    . webuse wpi1
+    . lomackinlay ln_wpi
+    . lomackinlay ln_wpi, robust
+    . lomackinlay ln_wpi, q(2 3 5 7 9)
+<p>
+<p>
+<b><u>References</u></b>
+<p>
+<p>
+Campbell, J. Y., Lo, A. W. and A. C. MacKinlay, The Econometrics of Financial M
+&gt; arkets. 
+Princeton: Princeton University Press, 1997.
+<p>
+Lo, A. and MacKinlay, A. C., "Stock market prices do not follow random walks: e
+&gt; vidence
+ from a simple specification test", Review of Financial Studies 1:1, 1988. 
+ 
+Lo, A. W. and A. C. MacKinlay, A Non-Random Walk Down Wall Street. 
+Princeton: Princeton University Press, 1999. http://www.pupress.princeton.edu/b
+&gt; ooks/lo/
+<p>
+Tse, Ng and Zhang, "A small-sample overlapping variance-ratio test",
+ available from www.mysmu.edu/faculty/yktse/JTSA_R.pdf 
+ 
+ 
+<p>
+<b><u>Author</u></b> 
+<p>
+    Christopher F Baum, Boston College
+    baum@bc.edu
+<p>
+<p>
+<b><u>Acknowledgements</u></b> 
+<p>
+    Tomasz Stepniak's query to Statalist suggested this problem. I am very
+    grateful to Allin Cottrell for pointing out several corrections required
+    in the code and providing corrected code. Brian Fryd also pointed out an
+    error in the routine and provided a fix, for which I thank him.
+<p>
+<p>
+<b><u>Also see</u></b>
+<p>
+    On-line: help for lomodrs (if installed)
+<p>
+<p>
+</pre>

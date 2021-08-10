@@ -1,0 +1,220 @@
+<pre>
+<b>help pv</b>                                                       also see:  pvtest
+-------------------------------------------------------------------------------
+<p>
+<b><u>Title</u></b>
+<p>
+    <b>pv</b> -- Estimation with plausible values
+<p>
+<b><u>Syntax</u></b>
+<p>
+        <b>pv</b> [<i>indepvars</i>] [<i>if</i>] [<i>in</i>] [<i>weight</i>] <b>,</b> <b>pv(</b><i>varlist</i><b>)</b> [<i>options</i>]
+<p>
+<p>
+    <i>options</i>                 Description
+    -------------------------------------------------------------------------
+    Main
+      <b>pv(</b><i>varlist</i><b>)</b>           plausible value estimates of the dependent
+                              variable
+      <b>cmd("</b><i>command</i><b>")</b>        estimation command to estimate the statistic,
+                              default is regress
+      <b>cmdops("</b><i>options</i><b>")</b>     options for the estimation command
+<p>
+    VCE BRR (PISA)
+      <b>brr</b>                   specifies Balanced Repeated Replication (BRR) be
+                              used for VCE
+      <b>rw(</b><i>varlist</i><b>)</b>           BRR replicate weights to be used
+      <b>fays(</b><i>real</i><b>)</b>            Fay's adjustment
+<p>
+    VCE JRR (TIMSS PIRLS)
+      <b>jrr</b>                   specifies Jackknifed Repeated Replication (JRR)
+                              be used for VCE
+      <b>jkzone(</b><i>varname</i><b>)</b>       Sampling zone variable
+      <b>jkrep(</b><i>varname</i><b>)</b>        Zone replicate weight variable
+<p>
+    VCE Bootstrap
+      <b>bs</b>                    specifies that Stata's bootstrap command be used
+                              for VCE
+      <b>bsops("</b><i>options</i><b>")</b>      options for Stata's bootstrap command
+<p>
+    VCE Aggregation
+      <b>pisa</b>                  specifies PISA's formula for aggregating VCE be
+                              used
+      <b>timss</b>                 specifies TIMSS formula for aggregating VCE be
+                              used
+      <b>pirls</b>                 specifies PIRLS formula for aggregating VCE be
+                              used
+    -------------------------------------------------------------------------
+<p>
+    <b>fweight</b>s, <b>iweight</b>s, <b>aweight</b>s, or <b>pweight</b>s are required; see weight.
+    See pvtest for post estimation hypothesis testing.
+    The default VCE utilizes the VCE reported by the command for each
+      plausible value.
+<p>
+<p>
+<b><u>Description</u></b>
+<p>
+    <b>pv</b> estimates statistics when there are multiple estimates of the
+    dependent variable (which are sometimes referred to as plausible values)
+    by calculating the statistics for each estimate of the dependent variable
+    and then calculating their average.  This program can be used with any
+    statistics estimation commands that accepts weights including <b>regress</b>, 
+    <b>qreg</b>, <b>logit</b>, <b>mean</b>, etc. It is specially (but not exclusively) designed to
+    be used with the PISA, TIMSS and PIRLS student achievement datasets.
+<p>
+    The VCE can be calculated in one of four ways. The default is to use an
+    aggregation of the VCEs for each plausible value which is reported by the
+    specified stata command. Alternatively, Balanced Repeated Replication
+    (used with PISA), Jackknifed Repeated Replication (used with TIMSS and
+    PIRLS), or bootstrapping can be used.
+<p>
+    See the Formulas section below.
+<p>
+<b><u>Options</u></b>
+<p>
+        +------+
+    ----+ Main +-------------------------------------------------------------
+<p>
+    <b>pv(</b><i>varlist</i><b>)</b> the variable list of plausible values or estimates of the
+        dependent variable.
+<p>
+    <b>cmd("</b><i>command</i><b>")</b> specifies the name of estimation command to be used.
+        Estimation commands must allow weights, and they must output their
+        estimates to e(b).
+<p>
+    <b>cmdops("</b><i>options</i><b>")</b> options to be specified for the estimation command.
+<p>
+<p>
+        +---------+
+    ----+ VCE BRR +----------------------------------------------------------
+<p>
+    <b>brr</b> specifies that Balanced Repeated Replication be used for estimating
+        the sampling variance.
+<p>
+    <b>rw(</b><i>varlist</i><b>)</b> specifies the variable list of replicate weights to be used.
+        In PISA 2000, 2003, and 2006 these variables are w_fstr1 - w_fstr80.
+<p>
+    <b>fays(</b><i>real</i><b>)</b> is the Fay's adjustment. In PISA 2000, 2003, and 2006 this is
+        0.5.
+<p>
+        +---------+
+    ----+ VCE JRR +----------------------------------------------------------
+<p>
+    <b>jrr</b> specifies that Jackknifed Repeated Replication be used for estimating
+        the sampling variance.
+<p>
+    <b>jkzone(</b><i>varname</i><b>)</b> is a categorical variable that specifies the sampling
+        zone; for TIMSS and PIRLS this variable is jkzone.
+<p>
+    <b>jkrep(</b><i>varname</i><b>)</b> is a binary variable that specifies the observation's
+        weighting within its zone; for TIMSS and PIRLS, this variable is
+        jkrep.
+<p>
+        +---------------+
+    ----+ VCE Bootstrap +----------------------------------------------------
+<p>
+    <b>bs</b> specifies that bootstrapping should be used to calculate the sampling
+        variance. The expression list is assumed to be e(b); as a result, the
+        user can only control the options.
+<p>
+    <b>bsops("</b><i>options</i><b>")</b> specifies any bootstrapping options; see <b>bootstrap</b>.
+<p>
+        +-----------------+
+    ----+ VCE Aggregation +--------------------------------------------------
+<p>
+    <b>pisa</b> tells the program to aggregate the VCE according to the formula on
+        page 79 of OECD (2005a); this is the default.
+<p>
+    <b>timss</b> tells the program to aggregate the VCE according to the formula on
+        2-52 of IEA (2005).
+<p>
+    <b>pirls</b> tells the program to aggregate the VCE according to the formula on
+        2-52 of IEA (2005); see the description of formulas below.
+<p>
+<b><u>Examples</u></b>
+<p>
+    Estimating statistics with PISA
+<p>
+        <b>. pv stratio propqual [aw=w_fstuwt], pv(pv*math) cmd("reg") brr</b>
+            <b>rw(w_fstr*) fays(0.5)</b>
+<p>
+        <b>. pvtest stratio=propqual</b>
+<p>
+        <b>. pv stratio [aw=w_fstuwt], pv(pv*math) cmd("qreg") brr rw(w_fstr*)</b>
+            <b>fays(0.5)</b>
+<p>
+        <b>. pv stratio [aw=w_fstuwt], pv(pv*math) cmd("mean") brr rw(w_fstr*)</b>
+            <b>fays(0.5)</b>
+<p>
+        <b>. pv stratio [aw=w_fstuwt], pv(pv*math) bs bsops("reps(80)</b>
+            <b>str(stratum) cl(schoolid)")</b>
+<p>
+    Estimating statistics with TIMSS and PIRLS
+<p>
+        <b>. pv [aw=tchwgt], cmd("mean") pv(asrrea*) jkzone(jkzone) jkrep(jkrep)</b>
+            <b>jrr timss</b>
+<p>
+        <b>. pv asbgsex [aw=tchwgt], pv(asrrea*) jkzone(jkzone) jkrep(jkrep) jrr</b>
+            <b>timss</b>
+<p>
+    Estimating statistics with BRR VCE with a regular dependent variable
+<p>
+        <b>. pv stratio [aw=w_fstuwt], pv(propqual) cmd("reg") brr rw(w_fstr*)</b>
+            <b>fays(0.5)</b>
+<p>
+<b><u>Formulas</u></b>
+<p>
+    To calculate statistics that are functions of plausible value estimates
+    of a variable, the statistic is calculated for each plausible value and
+    then averaged. See OECD (2005a), page 79 for the formula used in this
+    program.
+<p>
+    To calculate the standard error of statistics that are functions of
+    plausible value estimates of a variable average sampling variance of the
+    statistic for each plausible value combined with the variation among the
+    estimated statistics for each plausible value.
+<p>
+    By specifying the <b>pisa</b> option, the formula used to calculate the standard
+    error can be found on page 79 of OECD (2005a). By specifying the <b>timss</b> or
+    <b>pirls</b> option, the formula can be found on page 2-52 of IEA (2005).
+<p>
+    The formula for calculating the VCE for statistics using BRR is taken
+    from page 51 of OECD (2005a) while the formula used for calculating the
+    VCE for JRR is from page 2-50 in IEA (2005).
+<p>
+    The formula for calculating the parameter for the t-distribution of the
+    ratio of a statistic and its standard error is on page 131 of OECD
+    (2005b).
+<p>
+<b><u>References</u></b>
+<p>
+    Lauzon D. (2004), "Variance estimation with plausible value achievement
+    data: Two STATA programs for use with YITS/PISA data", <i>Information and</i>
+    <i>Technical Bulletin</i>, Statistics Canada, Ottawa
+<p>
+    OECD (2005a), <i>PISA 2003 Data Analysis Manual</i>, OECD, Paris
+<p>
+    OECD (2005b), <i>PISA 2003 Technical Report</i>, OECD, Paris
+<p>
+    IEA (2005), <i>TIMSS 2003 User Guide for the International Database</i>, IEA,
+        Chestnut Hill, MA
+<p>
+<b><u>Author</u></b>
+<p>
+    Kevin Macdonald is a consultant with the Education Team in the World
+    Bank's Human Development Network and has a master's degree in economics
+    from the University of British Columbia in Vancouver, Canada. Please send
+    questions, comments or complaints to kadmacdonald@gmail.com.
+<p>
+    The command syntax and display for this program was inspired by Lauzon
+    (2004).
+<p>
+<b><u>Also see</u></b>
+<p>
+    <b>pvtest</b>
+<p>
+<b><u>Version</u></b>
+<p>
+    Last updated 2008-09-05
+<p>
+</pre>

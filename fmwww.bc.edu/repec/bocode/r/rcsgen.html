@@ -1,0 +1,137 @@
+<pre>
+<b>help rcsgen</b>
+-------------------------------------------------------------------------------
+<p>
+<b><u>Title</u></b>
+<p>
+    <b>rcsgen</b> --       Generate restriced cubic splines and derivatives
+<p>
+<p>
+<b><u>Syntax</u></b>
+<p>
+        <b>rcsgen</b> <i>varname</i> [<i>if</i>] [<i>in</i>] [<b>,</b> <i>options</i>]
+<p>
+    <i>options</i>                Description
+    -------------------------------------------------------------------------
+    Options
+      <b><u>g</u></b><b>en(</b><i>stub</i><b>)</b>            stubname for generated spline variables
+      <b><u>dg</u></b><b>en(</b><i>stub</i><b>)</b>           stubname for generated derivatives of spline
+                             variables
+      <b><u>k</u></b><b>nots(</b><i>numlist</i><b>)</b>       location of knots
+      <b><u>p</u></b><b>ercentiles(</b><i>numlist</i><b>)</b> location of knots using percentiles
+      <b>df(</b><i>#</i><b>)</b>                degrees of freedom for knots
+      <b><u>bk</u></b><b>nots(</b><i>numlist</i><b>)</b>      location of boundary knots
+      <b><u>o</u></b><b>rthog</b>               orthogonalize generates spline variables
+      <b><u>rmat</u></b><b>rix(</b><i>matname</i><b>)</b>     use supplied matrix for orthogonalization
+      <b>if2(</b><i>string</i><b>)</b>          use extra condition when generating knots using <b>df</b>
+                             or <b>percentile</b> options
+      <b>fw(</b><i>varname</i><b>)</b>          name of variable containing weights when
+                             generating knots using the <b>df</b> or <b>percentile</b>
+                             options
+      <b><u>rev</u></b><b>erse</b>              derives the spline variables in reversed order
+      <b><u>sca</u></b><b>lar(</b><i>#</i><b>)</b>            a single value to calculate the spline basis for
+<p>
+        
+    One (and only one) of the <b>knots</b>, <b>percentiles</b> or <b>df</b> options should be
+    specified. If they are not then only 1 variable is created which is a
+    copy of <i>varname</i>.
+<p>
+<b><u>Description</u></b>
+<p>
+    <b>rcsgen</b> generates basis functions for restricted cubic splines and
+    (optionally) their derivatives. Restriced cubic spline functions assume
+    linearity beyond the two boundary knots. It is possible to specify knots
+    on the original scale, as default percentiles or user specified
+    pecentiles. Orthogonalization can be peformed using Gram-Schmidt
+    orthogonalization. When orthogonalizing, a matrix is returned, which can
+    be useful for regenerating the orthogonalized spline variables for out of
+    sample predictions.
+<p>
+<b><u>Options</u></b>
+<p>
+    <b>gen(</b><i>stub</i><b>)</b> gives a stubname for the generated cubic splines variables. For
+        example, <b>gen(rcs)</b> will create variable <i>rcs1, rcs2, ...</i>.
+<p>
+    <b>dgen(</b><i>stub</i><b>)</b> gives a stubname for the derivatives of the restricted cubic
+        splines variables. For example, <b>dgen(drcs)</b> will create variable
+        <i>drcs1, drcs2, ...</i>.
+<p>
+    <b>knots(</b><i>numlist</i><b>)</b> list of the location of the knots. The boundary knots are
+        included in the<i> numlist</i>.
+<p>
+    <b>percentiles(</b><i>numlist</i><b>)</b> list of percentiles for the location of the knots.
+        The boundary knots are included in the<i> numlist</i>.
+<p>
+    <b>df(</b><i>#</i><b>)</b> sets the desired degrees of freedom (df). The number of knots is
+        one less than the df.  Knots are placed at equally spaced centiles of
+        the distribution of <i>varname</i>.  For example, for <b>df(5)</b> knots are placed
+        at the 20th, 40th, 60th, 80th centiles of the distribution of
+        <i>varname</i>.  In addition boundary knots are placed at the maximum and
+        minimum values of <i>varname</i> or those specified using the <b>bknots()</b>
+        option.
+<p>
+    <b>bknots(</b><i>numlist</i><b>)</b> list of boundary knots when using the <b>df()</b> option. By
+        default these are the minimum and maximum of the <i>varname</i>
+<p>
+    <b>orthog</b> will orthogonalize the generated spline variables using
+        Gram-Schmidt orthogonalization.
+<p>
+    <b>rmatrix(</b><i>matname</i><b>)</b> will orthogonalize the generated spline variables using
+        the supplied R matrix. If X is the N*p matrix of untransformed spline
+        variables and Q is the N*(p+1) matrix of orthogonlized variables plus
+        a column of ones, then X=QR.
+<p>
+    <b>if2(</b><i>condition</i><b>)</b> supplies a condition when generating the knots using the
+        <b>df</b> or <b>percentile</b> options.  For example in survival (time-to-event)
+        data when using splines for the time scale it is common to calculate
+        the knot locations based on the distribution of uncensored event
+        times.
+<p>
+    <b>fw(</b><i>weight</i><b>)</b> gives the name of the variable containing weights when
+        generating knots using <b>df</b> or <b>percentile</b> options.
+<p>
+    <b>reverse</b> will make the spline variables to be derived in reversed order,
+        treating the last knot as the first and the first knot as the last.
+        This can be used to add a constraint to a regression model for a
+        constant effect after the last knot.
+<p>
+    <b>scalar</b> will calculate the spline variables for a single value and store
+        the results in a series of Stata scalars.  It is useful when
+        obtaining in or out of sample predictions in large datasets and you
+        want to predict at a certain value of <i>varname</i>.
+<p>
+<b><u>Example:</u></b>
+    You can specify where to position the knots.
+<p>
+<b>. rcsgen x, knots(10 30 50 70 90) gen(rcs)</b>
+<p>
+    Alternatively, you can generate the knots positions according to the
+    distribution of<i> varname</i>.  In the example below the <b>df(</b><i>3</i><b>)</b> option is used
+    which means that 4 knots are used at 0th 33rd 67th and 100th centiles of
+    <b>weight</b>.
+<p>
+<b>. sysuse auto, clear</b>
+<b>. rcsgen weight, gen(rcs) df(3)</b>
+<b>. regress mpg rcs1-rcs3</b>
+<b>. predictnl pred = xb(), ci(lci uci)</b>
+<b>. twoway (rarea lci uci weight, sort) ///</b>
+<b>         (scatter mpg weight, sort) ///</b>
+<b>         (line pred weight, sort lcolor(black)), legend(off)</b>
+         <i>(</i><i>click to run</i><i>)</i>
+<p>
+                 
+<b><u>Authors</u></b>
+<p>
+  This command is based on rcs written by Chris Nelson (cn46@le.ac.uk) that
+  comes with the strsrcs command available from SSC.
+<p>
+  Paul Lambert (paul.lambert@le.ac.uk) added the percentile, rmatrix, if2, fw
+  and scalar options. He also wrote the mata code for the Gram-Schmidt
+  orthogonalization (as opposed to using the orthog command).
+<p>
+  Mark Rutherford (mjr40@le.ac.uk) added the df and bknots options.
+<p>
+  Therese Andersson (therese.m-l.andersson@ki.se) added the reverse option.
+  Also see
+<p>
+</pre>

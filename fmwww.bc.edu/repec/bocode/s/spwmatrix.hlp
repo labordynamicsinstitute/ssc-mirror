@@ -1,0 +1,358 @@
+{smcl}
+{* December 2008}{...}
+{* Update December 2009}{...}
+
+{hline}
+{cmd:help for spwmatrix} 
+{hline}
+
+{title:Title}
+
+{p 2 8 2}
+{bf:spwmatrix --- Generates, imports, and exports spatial weights}
+
+{marker contents}{dlgtab: Table of Contents}
+{p 2 16 2}
+
+{p 2}{help spwmatrix##syntax:Syntax}{p_end}
+{p 2}{help spwmatrix##description:General description}{p_end}
+{p 2}{help spwmatrix##options:Description of the options}{p_end}
+{p 2}{help spwmatrix##examples:Examples}{p_end}
+{p 2}{help spwmatrix##refs:References}{p_end}
+{p 2}{help spwmatrix##author:Author information}{p_end}
+{p 2}{help spwmatrix##citat:Citation}{p_end}
+
+{hline}
+
+{marker syntax}{title:Syntax}
+
+Import first order contiguity spatial weights (GAL files) from GeoDa
+
+{phang}
+{cmd: spwmatrix} {it:gal} {helpb using} {it:gal_filename}{cmd:,} {opt wn:ame(wght_name)} [{help spwmatrix##other_options:Other_options}]
+
+
+Create geographic and economic distance-based spatial weights using latitude and longitude
+
+{phang}
+{cmd: spwmatrix} {it:gecon} {varlist} [{help if}] [{help in}]{cmd:,} {opt wn:ame(wght_name)} 
+	[{opt wt:ype(bin|inv|econ|invecon)} {opt cart} {opt r(#)} {opth db:and(numlist)} {opt alpha(#)}
+	{opt knn(#)} {cmd:econvar({varname:1})} {opt beta(#)} {opt gwt(gwt_filename)} {opt con:nect} 
+      {help spwmatrix##other_options:Other_options}] 
+
+
+Create social network and socio-economic spatial weights
+
+{phang}
+{cmd: spwmatrix} {it:socio} {varname:2} [{help if}] [{help in}]{cmd:,} {opt wn:ame(wght_name)} {opt wt:ype(socnet|socecon)}
+	[{cmd:idvar({varname:3})} {opt gwt(gwt_filename)} {opt con:nect} {help spwmatrix##other_options:Other_options}] 
+
+
+{phang}
+where {it:gal, gecon, and socio} are sub-commands. 
+
+
+{synoptset 32 tabbed}
+{synopthdr}
+{marker options}
+{synoptline}
+{syntab:{help spwmatrix##main_options:Main Options}}   
+     
+{synopt :{opt wn:ame(wght_name)}}indicate a name for the spatial weights matrix{p_end}
+
+{synopt :{opt wt:ype(bin|inv|econ|invecon|socnet|socecon)}}request binary, distance decay, economic distance, inverse economic distance,
+social network, or socio-economic spatial weights{p_end}
+
+{synopt :{opt alpha(#)}}indicate the value of the dampening parameter; default is {opt alpha(1)}{p_end}
+
+{synopt :{opth db:and(numlist)}}indicate a distance band or cut-off{p_end}
+
+{synopt :{opt cart}}use Cartesian coordinates (projected latitudes and longitudes){p_end}
+
+{synopt :{opt r(#)}}indicate the earth radius value to be used in case of spherical coordinates; 
+default is r(6371.009), i.e 6371.009 km{p_end}
+
+{synopt :{opt knn(#)}}request nearest neighbor spatial weights{p_end}
+
+{synopt :{cmd: econvar({varname:1})}}request economic or inverse economic distance spatial weights{p_end}
+
+{synopt :{opt beta(#)}}specify the coefficient beta for the exponential function{p_end}
+
+{synopt :{cmd:idvar({varname:3})}}specify the identifier variable{p_end}
+
+{synopt :{opt gwt(gwt_filename)}}save the spatial weights in sparse form to a text file{p_end}
+
+{synopt :{opt con:nect}}display connectivity information about the spatial weights{p_end}
+
+
+{marker other_options}
+{synoptline}
+{syntab:{help spwmatrix##oth_options:Other Options}}   
+
+{synopt :{opt m:ataf}}save the spatial weights and the eigenvalues to Mata files{p_end}
+
+{synopt :{opt eignv:al(eignv_name)}}specify a column vector name to hold the eigenvalues{p_end}
+
+{synopt :{opth eignvar(newvar)}}specify a variable name to hold the eigenvalues{p_end}
+
+{synopt :{opt row:stand}}row-standardize the spatial weights{p_end}
+
+{synopt :{opt matlab(dat_filename)}}export the spatial weights to a .dat (text) file for use in {cmd:Matlab}{p_end}
+
+{synopt :{opt replace}} overwrite existing {newvar}, {it:gwt_filename}, and {it:dat_filename} as well as {it:wght_name} and {it:eignv_name}
+		                      if {opt mataf} is specified{p_end}
+
+{synopt :{opt favor(speed|space)}}favor speed or space{p_end}
+
+{synoptline}
+{p2colreset}{...}
+
+{marker description}{dlgtab:Description}
+
+{pstd}
+{cmd:spwmatrix} creates distance based spatial weights and imports first-order contiguity spatial weights (.gal files saved in sparse form) created 
+using the GeoDa software (see http://geodacenter.asu.edu). {cmd:spwmatrix} also generates economic distance spatial weights based on an economic 
+variable (see Fingleton and Le Gallo, 2008) and social network and socio-economic spatial weights based on a socio-economic variable 
+(See Anselin and Bera, 1998). Optionally, created and imported spatial weights are exported to a .dat file for use in Matlab. Created spatial 
+weights may also be exported to a .gwt file for use in GeoDa. Ultimately, the requested spatial weights are delivered as a Stata matrix loaded in memory 
+or as a permanent Mata file. When creating distance-related spatial weights, {cmd:spwmatrix} uses either the straight-line (crow-fly) Euclidean 
+distance or the Great Circle distance depending on whether the latitudes and longitudes supplied in {varlist} are projected or not. 
+
+{pstd}
+Spatial weights matrices created or imported by {cmd:spwmatrix} may be used by other user-written commands requiring a spatial weights matrix.
+
+
+{marker main_options}{dlgtab:Main Options}
+
+{phang}
+{opt wname(wght_name)} specifies a name for the spatial weights matrix to be created. This option is required.
+
+{phang}
+{opt wtype(bin|inv|econ|invecon|socnet|socecon)} indicates whether binary, distance decay, economic distance, inverse economic distance,
+social network, or socio-economic spatial weights should be created.
+
+{pmore}Refer to the literature cited below for a background on these spatial weights, except for inverse economic distance spatial 
+weights which are defined as:
+
+{pmore2}{bf:W_ij = [1/|econvar_i - econvar_j|] * exp(-beta*D_ij)}, where D_ij is the distance between i and j
+
+{phang}
+{opt alpha(#)} specifies a value to be used for the dampening parameter when requesting inverse distance spatial weights.
+If {opt wtype(inv)} is specified, the default will be {opt alph(1)}. Specifying {opt alpha(2)} requests  
+inverse distance squared spatial weights. 
+
+{phang}
+{opth dband(numlist)} indicates a distance cut-off to be used beyond which no spatial autocorrelation is assumed. This option is required when option 
+{opt wtype(bin)} is specified. Following the literature (see Boarnet et al., 2006) , option {opt dband(numlist)} is not required when 
+an inverse distance weights matrix is requested. When {opth dband(numlist)} is specified, by default, the distance unit is assumed to be 
+kilometers, but that can be overriden with {opt cart} or {opt r(#)}. 
+
+{phang}
+{opt cart} indicates that the latitudes and longitudes supplied in {varlist} are projected and that, in generating the spatial weights, Euclidean or 
+crow-fly distance should be calculated. By default, the Great Circle distance is calculated. For more details, see the help file for {helpb nearstat}. 
+
+{phang}
+{opt r(#)} indicates the value to be used for the Earth radius or mean radius in case of spherical coordinates. 
+The Earth radius usually refers to various fixed distances and to various mean radii since only a sphere has a true radius. 
+Fortunately, the numerical differences among different radii vary by far less than one percent, making the choice of {bf:#}
+less of a concern.
+
+{pmore}{bf:N.B.:} As indicated above, by default, the distance unit for {opth dband(numlist)} is assumed to be kilometers. If you want the unit to 
+be miles, then you must specfiy {opt r(3958.761)}. 
+
+{pmore}Options {opt r(#)} and {opt cart} may not be combined.
+
+{phang}
+{opt knn(#)} requests nearest neighbor spatial weights and indicates the number of nearest neighbors to be used. 
+Option {opt knn(#)} may not be combined with either {opt wtype()} or {opt dband()}. 
+
+{phang}
+{cmd:econvar({varname:1})} specifies the name of the economic variable to be used in creating economic or inverse economic distance spatial weights. 
+
+{phang}
+{opt beta(#)} specifies a value to be used for the beta coefficient. The default is {opt beta(100)}. You might want to choose # so that 
+the spatial weights matrix does not contain any rows with elements summing up to zero.
+
+{phang}
+{cmd:idvar({varname:3})} specifies the identifier variable (with values varying from 1 to N) to be used when creating social network 
+spatial weights. The variable holding the groups or the networks should be supplied with {varname:2}. {opt idvar()} is required when 
+{opt wtype(socnet)} is specified to request social network spatial weights. For instance, you can generate spatial weights based on 
+the idea that two or more households are considered neighbors if they belong to the same village. In this case, 
+{varname:3} would contain the household indentification numbers and {varname:2} would take on the village names or identification numbers.
+
+{phang}
+{opt gwt(gwt_filename)} requests that the generated spatial weights be written in sparse form to the text file {it:gwt_filename.gwt}
+for use in GeoDa. Prior to using the .gwt file in GeoDa, a header line containing 0, the number of observations, name of a shapefile,
+and the key variable should be inserted. This can be done in Notepad.
+
+{phang}
+{opt connect} requests that connectivity information such as sparseness, average number of neighbors, etc... for the created spatial weights be displayed.
+
+
+{marker oth_options}{dlgtab:Other Options}
+
+{phang}
+{marker mataf}{opt mataf} requests that the spatial weights (and the eigenvalues if {opt eignval()} is specified) be saved to permanent Mata files. By default, 
+the spatial weights matrix and its eigenvalues are created as Stata matrices temporarily loaded in memory. However, if size of the spatial weights matrix 
+to be created or imported exceeds the {help matsize} limit of your Stata flavor and option {opt mataf} is not specified, the spatial weights matrix and 
+its eigenvalues will automatically be saved to Mata files. In such a case, the names suppplied with options {opt wname()} and {opt eignval()} will be 
+suffixed with "_n" to avoid replacing existing files. For example, if you specify {opt wname(mywght)}, then the Mata file {it:mywght_n} will be created.
+
+{pmore}{bf:N.B.:} Unless your goal is to generate a spatial weights matrix to be used with {cmd:spatreg}, in which a case you should also specify {opt eignval()},
+I recommend specifying option {opt mataf} always.
+
+{phang}
+{opt eignval(eign_name)} specifies that the spatial weights matrix eigenvalues be written to the {it:N x 1} vector or file {it:eign_name}. 
+
+{phang}
+{marker eigv}{opth eignvar(newvar)} specifies a variable name to hold the eigenvalues.
+
+{phang}
+{marker rowst}{opt rowstand} requests that the spatial weights matrix be row-standardized. {cmd:spwmatrix} will deny this request if elements of at least one 
+row sum up to zero. When this is the case, the indexes of such rows will be listed.
+
+{phang}
+{opt matlab(dat_filename)} specifies that the spatial weights matrix (generated or imported) be written to the text file {it:dat_filename.dat}
+for use in Matlab. To use the file in Matlab, you code:
+
+{pmore}{bf: load dat_filename.dat;}
+
+{pmore}{bf: W=dat_filename(:,:);}
+
+{phang}
+{opt replace} overwrites existing {newvar}, {it:dat_filename}, and {it:gwt_filename} and existing {it:wght_name} and {it:eign_name} if {opt mataf} is specified.
+
+{phang}
+{opt favor(speed|space)} instructs {cmd:spwmatrix} to favor speed or space when performing all calculations.
+{opt favor(speed)} is the default. This option provides a tradeoff between speed and memory use. See {help mata_set:[M-3] mata set}.
+
+
+
+{marker examples}{dlgtab:Examples}
+
+{phang}
+1) Create a row-standardized binary spatial weights matrix assuming spherical coordinates and a distance cut-off of 10 miles
+
+{pmore}{cmd:. spwmatrix gecon latitude longitude, wn(wbin) dist(bin) db(0 10) ///}{p_end}
+	  {cmd:r(3958.761) row} 
+
+{synoptline}
+
+{phang}
+2) Generate a spatial weights matrix under the assumptions above and save both the weights matrix and its eigenvalues to Mata files
+ {it: wbin} and {it:eignwbin}, and export the weights matrix to the text file {it:wghtotxt.dat} 
+
+{pmore}{cmd:. spwmatrix gecon latitude longitude, wn(wbin) dist(bin) dband(0 10) ///}{p_end}
+	  {cmd:r(3958.761) rowstand eignval(eignwbin) mataf matlab(wghtotxt)}
+
+{synoptline}
+
+{phang}
+3) Generate an inverse distance squared spatial weights matrix using projected latitudes and longitudes
+
+{pmore}{cmd:. spwmatrix gecon latitude longitude, wname(winvsq) wtype(inv) ///}{p_end}
+	  {cmd:alpha(2) dband(0 100) cart }
+
+{phang}
+Here the distance cut-off unit is assumed to be the same as that of the projected latitudes and longitudes.
+
+{synoptline}
+
+
+{phang}
+4) Generate an economic distance spatial weights matrix using employment as the economic variable
+
+{pmore}{cmd:. spwmatrix gecon latitude longitude, wn(wecon) wtype(econ) ///}{p_end}
+	  {cmd:econvar(employment) rowstand}
+
+{synoptline}
+ 
+
+{phang}
+5) Generate an inverse economic distance spatial weights matrix using income as the economic variable
+
+{pmore}{cmd:. spwmatrix gecon latitude longitude, wn(winvecon) wtype(invecon) econvar(income) rowstand}{p_end}
+
+{synoptline}
+
+
+{phang}
+6) Import a first order contiguity spatial weights matrix created in GeoDa to be used in {cmd:Stata} 
+
+{pmore}{cmd:. spwmatrix gal using C:\data\wcontig.gal, wname(wcontig) rowstand}{p_end}
+
+{phang}
+Note that the gal extension is required for {cmd:spwmatrix} to locate the file. Also, the identifier variable supplied 
+to GeoDa when creating the spatial weights should take on values ranging from 1 to N, where N is the number of observations. 
+But, the header line in the GeoDa .gal file needs not be removed.
+
+{synoptline}
+
+{phang}
+7) Import a first order contiguity spatial weights matrix created in GeoDa and save it to a .dat file to be used in Matlab  
+
+{pmore}{cmd:. spwmatrix gal using C:\data\wcontig.gal, wname(wcontig) matlab(wcontig)}{p_end}
+
+{synoptline}
+
+
+{phang}
+8) Generate a row-standardized 5-nearest neighbor spatial weights matrix
+
+{pmore}{cmd:. spwmatrix gecon latitude longitude, wname(wknn5) knn(5) rowstand}{p_end}
+
+{synoptline}
+
+
+{phang}
+9) Generate a socio-economic spatial weights matrix
+
+{pmore}{cmd:. spwmatrix socio village_id, wname(socecon_wght) row wtype(socecon)}
+
+{synoptline}
+
+
+{phang}
+10) Generate a social network spatial weights matrix (e.g., households are considered neighbors if they belong to the same village)
+
+{pmore}{cmd:. spwmatrix socio village_id, wname(socnet_wght) wtype(socnet) idvar(hhid)}
+
+{synoptline}
+
+
+{marker refs}{title:References}
+
+{bf:Anselin, L, and A. Bera}. 1998. "Spatial Dependence in Linear Regression Models with an Introduction to Spatial Econometrics." 
+In A. Ullah and D.E. Giles (Eds), {it:Handbook of Applied Economic Statistics}. New York: Marcel Dekker, pp.237-89.
+
+{bf:Boarnet MG, Chalermpong S, Geho E}. 2006 "Specification Issues in Models of Population and Employment Growth.
+{it:Papers in Regional Science} 84: 21–46.
+
+{bf:Fingleton. B. and J. Le Gallo}. 2008. "Estimating Spatial Models with Endogenous Variables, a Spatial Lag and Spatially
+Dependent Disturbances: Finite Sample Properties ", {it:Papers in Regional Science} 87(3): 319-339. 
+
+{bf:Wikipedia}. 2008. {it:Earth Radius}. {browse "http://en.wikipedia.org/wiki/Earth_radius#Mean_radii":http://en.wikipedia.org/wiki/Earth_radius#Mean_radii.}
+
+{bf:--------} {it:Great-Circle Distance}. {browse "http://en.wikipedia.org/wiki/Great-circle_distance":http://en.wikipedia.org/wiki/Great-circle_distance}
+
+
+{marker author}{title:Author}
+
+{p 4 4 2}{hi: P. Wilner Jeanty}, Dept. of Agricultural, Environmental, and Development Economics, 
+    	   The Ohio State University{break}
+	   
+{p 4 4 2}Email to {browse "mailto:jeanty.1@osu.edu":jeanty.1@osu.edu} for any comments or suggestions.
+
+
+{marker citat}{title:Citation}
+
+Users please cite this software as follows:
+
+{bf:Jeanty, P.W.}, 2010. {bf:spwmatrix}: Stata module to create, import, and export spatial weights. Available from http://ideas.repec.org/c/boc/bocode/s457111.html.
+
+
+{title:Also see}
+
+{p 4 13 2}Online: {helpb nearstat}, {helpb spwmatfill}, {helpb splagvar}, {helpb anketest}, and {helpb spatwmat} (if installed) 
+
+

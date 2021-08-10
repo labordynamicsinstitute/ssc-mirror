@@ -1,0 +1,164 @@
+<pre>
+<b>help trellis</b>
+-------------------------------------------------------------------------------
+<p>
+<b><u>Title</u></b>
+<p>
+    <b> Produces a Trellis Plot</b>
+<p>
+<b><u>Syntax</u></b>
+<p>
+        <b>trellis</b> [<i>varlist</i>] [<b>,</b> <i>options</i>]
+<p>
+    <i>options</i>               Description
+    -------------------------------------------------------------------------
+    Main
+      <b>by(</b><i>varname varname</i><b>)</b>  specifies the two variables that determine the
+                            array of graphs.
+      <b>labels</b>               specifies that the value labels for the
+                            by-variables are used as titles.
+      <b><u>f</u></b><b>unction(</b><i>string</i><b>)</b>     specifies the command to draw each graph in the
+                            trellis.
+      <b>fopt(</b><i>graph_options</i><b>)</b>  specifies the options applied to each graph in the
+                            matrix.
+      <b><u>single</u></b><b>opt(</b><i>string</i><b>)</b>    specifies the options applied to a single
+                            identified graph.
+      <b>sr(</b><i>#</i><b>)</b>                specifies the row of the single identified graph.
+      <b>sc(</b><i>#</i><b>)</b>                specifies the column of the identified single
+                            graph.
+      graph combine options 
+                            additional options from graph combine.
+    -------------------------------------------------------------------------
+<p>
+<b><u>Description</u></b>
+<p>
+    This command creates a trellis plot using<b> graph combine</b>. This trellis
+    plot is an array of the same graph type by the levels of two factor
+    variables.  It is a convenient way to represent the graphic of interest
+    and whether it changes with respect to two other variables.
+<p>
+    The individual graph type can be any of STATA's graphic commands, even
+    the matrix plot.  Any of the options of the graph can be specified and in
+    addition any options for the <b>graph combine</b> command.
+<p>
+    The latest version of this command can be found at the SSC website or by
+    the following command ssc install trellis, replace.
+<p>
+<p>
+<b><u>Options</u></b>
+<p>
+        +------+
+    ----+ Main +-------------------------------------------------------------
+<p>
+    <b>by(</b><i>varname varname</i><b>)</b> specifies the two variables that determine the array
+        of graphs.
+<p>
+    <b>labels</b> specifies that the value labels for the by-variables are used as
+        titles.
+<p>
+    <b><u>f</u></b><b>unction(</b><i>string</i><b>)</b> specifies the command to draw each graph in the trellis.
+        This can be a simple scatter graph of two variables <b>twoway scatter x</b>
+        <b>y</b> or much more complicated commands shown in the examples
+<p>
+    <b>fopt(</b><i>graph_options</i><b>)</b> specifies the options applied to each graph in the
+        matrix.
+<p>
+    <b><u>single</u></b><b>opt(</b><i>string</i><b>)</b> specifies the options applied to a single identified
+        graph.
+<p>
+    <b>sr(</b><i>#</i><b>)</b> specifies the row of the single identified graph.
+<p>
+    <b>sc(</b><i>#</i><b>)</b> specifies the column of the identified single graph.
+<p>
+<b><u>Examples</u></b>
+<p>
+    The trellis command can be as complex as the user specifies so only a few
+    of the options can be demonstrated. NOTE you must click on the<b> webuse</b>
+    command below to load up the data for the trellis commands to work.
+<p>
+** webuse bdendo  (MUST load data first) **
+<p>
+Scatter plots        : trellis, by(gall ob) f(twoway scatter age duration)
+Line plots           : trellis, by(gall ob) f(twoway line age duration) fopt(so
+&gt; rt)
+Box plot             : trellis, by(gall ob) f(graph box duration)
+Box plot (grouped)   : trellis, by(gall ob) f(graph box duration) fopt(over(age
+&gt; grp))
+HBox plot (grouped)  : trellis, by(gall ob) f(graph hbox duration) fopt(over(ag
+&gt; egrp))
+Scatter Matrix       : trellis, by(gall ob) f(graph matrix age agegrp duration)
+Dot plot (grouped)   : trellis, by(gall ob) f(graph dot age duration) fopt(over
+&gt; (agegrp))
+Bar chart (grouped)  : trellis, by(gall ob) f(graph bar age duration) fopt(over
+&gt; (agegrp))
+Horizontal Bar chart : trellis, by(gall ob) f(graph hbar age duration) fopt(ove
+&gt; r(agegrp))
+Pie chart            : trellis, by(gall ob) f(graph pie age duration) 
+Histogram            : trellis, by(gall ob) f(histogram age)
+Sunflower plot       : trellis, by(gall ob) f(sunflower duration age) fopt(lege
+&gt; nd(off))
+QQ plot              : trellis, by(gall ob) f(qnorm age) 
+<p>
+<p>
+** webuse nhanes2f MUST use this dataset for the following examples **
+<p>
+    Scatter plot with 2 y-variables
+<p>
+    trellis, by(health region) f(twoway scatter copper zinc iron)
+    fopt(legend(off))
+<p>
+    Same plot except each individual graph is now plotted by race.  The graph
+    needs a few more options to look perfect but it demonstrates the
+    flexibility
+<p>
+    trellis, by(health region) f(twoway scatter copper zinc iron)
+    fopt(xtitle("") by(race, im(0 0 0 0) noixlabel noiylabel note("")
+    legend(off) ) legend(off))
+<p>
+    The data from the previous graph are better represented by the box plot
+    below
+<p>
+    trellis, by(health region) f(graph box copper zinc iron) fopt(legend(off)
+    over(race))
+<p>
+    Another added complexity is that you can combine mulitple graphing
+    functions and display a single legend.
+<p>
+    trellis, by(health region) f(twoway (scatter zinc copper iron, ms(p
+    p))||(mspline zinc iron,n(40) clw(*3))||(mspline copper iron,n(40)
+    clw(*3))) sr(2) sc(3) singleopt(legend(on ring(0) pos(1) col(1)))
+    fopt(legend(off))
+<p>
+    The same data represented by boxplots.
+<p>
+    trellis,by(health region) f(graph box copper zinc iron) fopt(legend(off)
+    ylab(50 175 300) yscale(r(50,310))) sr(2) sc(2) singleopt(legend(on
+    ring(0) pos(1) col(1) bm(tiny) symx(*0.2) keyg(*0.2) region(m(zero)
+    lw(none))) yscale(r(50,310)))
+<p>
+    Only the race Other is displayed and the box plots are further divided by
+    sex. This highlights what happens when there are graphs with no
+    information
+<p>
+    trellis if race==3, by(health region) f(graph box copper zinc iron)
+    fopt(over(sex) legend(off) ylab(50 175 300) yscale(r(50,310)))
+<p>
+    Now add labels for health and region
+<p>
+    trellis if race==3, labels by(health region) f(graph box copper zinc
+    iron) fopt(over(sex) legend(off) ylab(50 175 300) yscale(r(50,310)))
+<p>
+<b><u>Author</u></b>
+<p>
+Adrian Mander, MRC Human Nutrition Research, Cambridge, UK.  Email
+adrian.mander@mrc-hnr.cam.ac.uk
+<p>
+<b><u>Also see</u></b>
+<p>
+Related commands
+<p>
+graph twoway.
+<p>
+<p>
+<p>
+</pre>

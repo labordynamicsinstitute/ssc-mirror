@@ -1,0 +1,217 @@
+<pre>
+<b> help xtsemipar</b>                          (François Libois and Vincenzo Verardi)
+-------------------------------------------------------------------------------
+<p>
+<b><u>Title</u></b>
+<p>
+      <b>xtsemipar</b> ---  Semi-parametric estimator in panel
+<p>
+<p>
+<b><u>Syntax</u></b>
+<p>
+      <b>xtsemipar</b> <i>depvar</i> [<i>indepvars</i>] [<i>if</i>] [<i>in</i>] [<i>weight</i>] <b>,</b>
+               <b>nonpar(</b><i>varname</i><b>)</b> [<i>options</i>]
+<p>
+<p>
+    <i>options</i>             Description
+    -------------------------------------------------------------------------
+    Main
+      <b>nonpar</b>(<i>varname</i>)    Specifies the variable that enters the model
+                          nonlinearly
+      <b><u>gen</u></b><b>erate(</b>[<i>newvar_x</i>] <i>newvar_s</i>)
+                          Store fitted values in <i>newvar_x</i> and residuals of
+                          the parametric estimation in <i>newvar_s</i>
+      <b><u>deg</u></b><b>ree(</b><i>#</i><b>)</b>          Specifies the degree of the local weighted
+                          polynomial fit used in the epanechnikov kernel if
+                          spline is not specified (see <b>lpoly</b>). If spline is
+                          specified, degree specifies the power (or degree)
+                          of the splines. If absent, 4 is assumed.  (see 
+                          <b>bspline</b>)
+      <b>knots1</b>(<i>numlist</i>)    Specifies a list of at least 2 ascending knots used
+                          for the spline interpolation that allows to remove
+                          fixed-effects.
+      <b><u>nog</u></b><b>raph</b>            Suppresses graph
+<p>
+<p>
+    Spline options
+      <b>spline</b>             Uses B-splines to perform the non-parametric fit,
+                          instead of kernel-weighted local polynomial
+                          smoothing, the default option.(see <b>lpoly</b>)
+      <b>knots2</b>(<i>numlist</i>)    Specifies a list of at least 2 ascending knots used
+                          for the last step spline interpolation which yields
+                          the graph.
+<p>
+<p>
+    polynomial smoothing options
+      <b><u>bw</u></b><b>idth</b>(<i>#</i>)          Specifies kernel bandwidth
+<p>
+<p>
+    CI/SE
+      <b>robust</b>             Specifies that the type of standard error reported
+                          are corrected using the Huber/White/sandwich
+                          estimator
+      <b>cluster</b>(<i>varname</i>)   Specifies that the type of standard error reported
+                          are corrected using the clustered sandwich
+                          estimator
+      <b>ci</b>                 Plots confidence bands
+      <b><u>l</u></b><b>evel(</b><i>#</i><b>)</b>           Sets confidence level; default is <b>level(95)</b>
+    -------------------------------------------------------------------------
+    <b>fweight</b>s and <b>aweight</b>s are allowed; see weight.
+<p>
+<p>
+<p>
+<b><u>Description</u></b>
+<p>
+    <b>xtsemipar</b> estimates Baltagi and Li's (2002) series semi-parametric fixed
+    effects regression estimator.  The main options allow to use a classical
+    nonparametric estimator based on an epanechnikov kernel weighted local
+    polynomial fit or a spline interpolation. This last technique yields
+    similar results to the polynomial interpolation but better approximates
+    complex shapes and does not suffer from Runge's phenomenon.
+<p>
+<b><u>Requirement</u></b>
+    <b>xtsemipar</b> can only be used if data are declare as panel data, through
+    xtset or tsset command. Before using <b>xtsemipar</b>, Newson's (2000) <b>bspline</b>
+    program has to be installed.
+<p>
+<b><u>Options</u></b>
+<p>
+        +------+
+    ----+ Main +-------------------------------------------------------------
+<p>
+    <b>nonpar</b>(<i>varname</i>) specify a (continuous) variable that nonlinearly enter
+        the model.
+<p>
+    <b>generate(</b>[<i>newvar_x</i>] <i>newvar_s</i><b>)</b> stores the (centered) non-parametric fit
+        evaluated at the values of the <b>nonpar</b> variable.<i>  newvar_x</i> stores the
+        (centered) partialled-out residuals, i.e. the part of the dependant
+        variable that is not explained by the parametric part of the
+        estimation. These residuals are used to estimate the local polynomial
+        smooth or the splines. This option is particularly handy if
+        additional tests or estimations has to be done on the residuals of
+        the semi-parametric fit.
+<p>
+    <b>degree(#)</b> (a non-negative integer) specifies the degree of the polynomial
+        to be used in the polynomial smoothing or the power of the series
+        estimator in the spline smoothing. If absent 4 is assumed
+<p>
+    <b>knots1</b>(<i>numlist</i>) specifies a list of at least two ascending knots on which
+        the splines estimated to remove fixed-effects are based. This option
+        is seldom in use. If knots1 is not specified,<b> bspline</b> will initialize
+        the list to the minimum and maximum of <b>nonpar</b>. The number of knots
+        will then be chosen optimally.
+<p>
+    <b>nograph</b> suppresses drawing the graph of the estimated smooth.
+<p>
+<p>
+        +----------------+
+    ----+ Spline options +---------------------------------------------------
+<p>
+    <b>spline</b> specifies that the non-parametric fit will be done by using
+        b-splines (see Newson, 2001).  The default option is a
+        kernel-weighted local polynomial fit based on an epanechnikov kernel.
+        Spline interpolation yields similar results to polynomial fit but is
+        more flexible and does not suffer from some weaknesses that affect
+        polynomial fit, such as Runge's phenomenon.
+<p>
+    <b>knots2</b>(<i>numlist</i>) specifies a list of at least two ascending knots on which
+        the spline interpolation appearing in the graph are based. This
+        option is seldom in use. If knots2 is not specified,<b> bspline</b> will
+        initialize the list to the minimum and maximum of <b>nonpar</b>. The number
+        of knots will then be chosen optimally.
+<p>
+<p>
+        +------------------------------+
+    ----+ Polynomial smoothing options +-------------------------------------
+<p>
+    <b>bwidth(</b><i>#</i><b>)</b> specifies the half-width of the kernel, the width of the
+        smoothing window around each point. If <b>bwidth()</b> is not specified, a
+        rule-of-thumb (ROT) bandwidth estimator is calculated and used.
+<p>
+<p>
+        +-------+
+    ----+ CI/SE +------------------------------------------------------------
+<p>
+    <b>robust</b> uses the Huber/White/sandwich variance estimator to compute
+        standard errors of the estimated parameters. All the inference and
+        confidence intervals will be corrected.
+<p>
+    <b>cluster</b>(<i>varname</i>) computes clustered-corrected standard errors of the
+        estimated parameters and adjusts the inference as well as confidence
+        intervals.
+<p>
+    <b>ci</b> plots confidence intervals around the polynomial smoothing or the
+        spline. The confidence level used is the one specified in <b>level()</b>.
+<p>
+    <b>level(</b><i>#</i><b>)</b> specifies the confidence level, as a percentage, for confidence
+        intervals.  The default is <b>level(95)</b> or as set by <b>set level</b>.
+<p>
+<p>
+<b><u>Examples</u></b>
+<p>
+    Setup
+        webuse invest2
+        gen logi=log(invest)
+        gen logm=log(market)
+        gen logs=log(stock)
+        xtset company time
+<p>
+    Fixed-effect semi-parametric regression with default quartic local
+    polynomial smooth for the non-parametric part
+        xi: xtsemipar logi logm i.time, nonpar(logs)
+<p>
+    same as above but with quartic spline smoothing, confidence intervals and
+    standard errors clustered at company level
+        xi: xtsemipar logi logm i.time, nonpar(logs) spline ci
+            cluster(company)
+<p>
+    Same as above but with smoothed values (a) and partialled-out residuals
+    (b) as variables instead of graphing
+        xi: xtsemipar logi logm i.time, nonpar(logs) generate(a b) nograph
+<p>
+<b><u>Saved results</u></b>
+<p>
+    <b>xtsemipar</b> saves the following in <b>e()</b>:
+<p>
+    Scalars   
+      <b>e(N)</b>           Number of observations
+      <b>e(df_r)</b>        Residual degrees of freedom
+      <b>e(df_m)</b>        Model degrees of freedom
+      <b>e(F)</b>           F statistic
+      <b>e(r2)</b>          Within R-squared
+      <b>e(r2_a)</b>        Adjusted R-squared
+      <b>e(rmse)</b>        Root mean squared error
+      <b>e(mss)</b>         Model sum of square
+      <b>e(rss)</b>         Residual sum of square
+      <b>e(ll)</b>          Log likelihood under additional assumption of i.i.d.
+                       normal errors
+<p>
+<p>
+    Macros    
+      <b>e(cmd)</b>         <b>xtsemipar</b>
+      <b>e(title)</b>       "Panel fixed-effects partial linear regression"
+      <b>e(model)</b>       "Baltagi fixed-effect series Semiparametric estimation"
+      <b>e(depvar)</b>      Name of dependant variable
+      <b>e(properties)</b>  <b>b V</b>
+<p>
+    Matrices  
+      <b>e(b)</b>           coefficient vector
+      <b>e(V)</b>           variance-covariance matrix of the estimators
+<p>
+    Functions 
+      <b>e(sample)</b>      marks estimation sample
+<p>
+<p>
+<b><u>Also see</u></b>
+<p>
+       Help:  <b>[R] lpoly</b>
+              <b>[R] bspline</b> (if installed)
+<p>
+<b><u>References</u></b>
+      Baltagi B.H., D. Li (2002), Series estimation of partially linear
+                     panel data models with fixed effect, <i>Annals of</i>
+                     <i>economics and finance</i>, 3, 103-116.
+<p>
+      Newson R., (2001) "B-splines and splines parameterized by their
+                     values at their reference points on the x-axis",
+</pre>

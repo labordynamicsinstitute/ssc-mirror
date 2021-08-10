@@ -1,0 +1,98 @@
+<pre>
+-------------------------------------------------------------------------------
+help for <b>sampsi_mcc</b>
+-------------------------------------------------------------------------------
+<p>
+<b><u>Calculates Sample Size or Power for Matched Case-Control Studies</u></b>
+<p>
+        <b>sampsi_mcc</b> [, <b>p0(</b><i>#</i><b>)</b> <b>alt(</b><i>#</i><b>)</b> <b>n1(</b><i>#</i><b>)</b> <b>m(</b><i>#</i><b>)</b> <b>phi(</b><i>#</i><b>)</b> <b><u>a</u></b><b>lpha(</b><i>#</i><b>)</b> <b>power(</b><i>#</i><b>)</b>
+                      <b><u>s</u></b><b>olve(</b><i>string</i><b>)</b> } ]
+<p>
+<p>
+<b><u>Description</u></b>
+<p>
+<b>sampsi_mcc</b> calculates the power and sample size for a matched case control
+study. The theory behind this command is described in Dupont (1988) Power
+Calculations for Matched Case-Control Studies, Biometrics.
+<p>
+The calculations require the usual alpha and beta values, a possible
+alternative odds ratio (the null is 1), phi the correlation of exposure between
+pairs in the case-control set (the default is 0.2) and the probability of
+exposure in the controls.
+<p>
+This command can be combined with <b>samplesize</b> in order to look at multiple
+calculations and to plot the results.
+<p>
+<b><u>Updating this command</u></b>
+<p>
+To obtain the latest version click the following to uninstall the old version
+ssc uninstall sampsi_mcc
+And click here to install the new version
+ssc install sampsi_mcc
+<p>
+<b><u>Options</u></b>
+<p>
+<b>p0(</b><i>#</i><b>)</b> specifies the exposure probability of controls; default is <b>p0(0.5)</b>.
+<p>
+<b>alt(</b><i>#</i><b>)</b> specifies the "alternative OR".
+<p>
+<b>n1(</b><i>#</i><b>)</b> specifies the number of cases; default is <b>n1(100)</b>.
+<p>
+<b>m(</b><i>#</i><b>)</b> specifies the number of matched controls per case; default is <b>m(1)</b>.
+<p>
+<b><u>a</u></b><b>lpha(</b><i>#</i><b>)</b> significance level of test; default is <b>a(0.05)</b>.
+<p>
+<b>power(</b><i>#</i><b>)</b> power of test; default is <b>p(0.9)</b>.
+<p>
+<b><u>s</u></b><b>olve(</b><i>string</i><b>)</b> specifies whether to solve for the sample size or power; default
+is <b>s(n)</b> solves for n and the only other choice is <b>s(power)</b> solves for power.
+<p>
+<b>phi(</b><i>#</i><b>)</b> specifies the correlation of exposure between pairs in the case-control
+set. The paper recommends the default value <b>0.2</b> when it is unknown.
+<p>
+<b><u>Examples</u></b>
+<p>
+Calculate power for a two-sided test:
+<p>
+  sampsi_mcc, p0(0.5) alt(1.5) n(100) s(power)
+<p>
+Compute sample size:
+<p>
+  sampsi_mcc, p0(0.5) alt(1.5) s(n)
+<p>
+Compute sample size when the power is 80%:
+<p>
+  sampsi_mcc, p0(0.5) alt(1.5) s(n) power(0.8)
+<p>
+Re-calculate the above values for 5 matched controls rather than 1:
+<p>
+  sampsi_mcc, p0(0.5) alt(1.5) n(100) s(power) m(5)
+<p>
+Compute sample size:
+<p>
+  sampsi_mcc, p0(0.5) alt(1.5) s(n) m(5)
+<p>
+<b><u>Author</u></b>
+<p>
+Adrian Mander, MRC Human Nutrition Research, Cambridge, UK.
+<p>
+Email adrian.mander@mrc-hnr.cam.ac.uk
+<p>
+<b><u>Reference</u></b>
+<p>
+Dupont W.D. (1988) Power calculations for matched case-control studies. Biometr
+&gt; ics 44: 1157-1168.
+ 
+<b><u>See Also</u></b>
+Related commands:
+<p>
+  sampsi, samplesize (if installed), sampclus (if installed), xsampsi (if
+  installed), artmenu (if installed)
+<p>
+<p>
+<p>
+<p>
+<p>
+ 
+<p>
+</pre>

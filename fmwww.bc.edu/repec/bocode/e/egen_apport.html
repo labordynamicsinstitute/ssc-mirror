@@ -1,0 +1,84 @@
+<pre>
+-------------------------------------------------------------------------------
+help for <b>egen apport()</b>
+-------------------------------------------------------------------------------
+<p>
+<b><u>Egen-function for apportionment methods</u></b>
+<p>
+        <b>egen</b> [<i>type</i>] <i>newvar</i> <b>=</b> <b>apport(</b><i>votesvar</i><b>)</b> [<b>if</b> <i>exp</i>] [<b>in</b> <i>range</i>] [<b>,</b> <i>options</i>]
+<p>
+    <i>options</i>                    Description
+    -------------------------------------------------------------------------
+    <b><u>m</u></b><b>ethod(</b><i>keyword</i><b>)</b>            apportionment method
+    <b><u>s</u></b><b>ize(</b><i>#</i>|<i>varname</i><b>)</b>            seats to be allocated
+    <b><u>t</u></b><b>hreshold(</b><i>#</i>|<i>varname</i><b>)</b>       barrier clause
+    <b><u>e</u></b><b>xceptions(</b><i>exp</i><b>)</b>            Exceptions from barrier clause
+    <b>by(</b><i>varname</i><b>)</b>                apply method by groups
+    -------------------------------------------------------------------------
+<p>
+<b><u>Description</u></b>
+<p>
+The egen-function <b>apport(</b><i>varname</i><b>)</b> creates a new variable holding the number
+of seats on the basis of the absolute number of valid votes in<b> varname</b>. The
+apportionment can be done by using either a quota method or five different
+divisor methods are introduced. A detailed description of these methods is
+given in the Stata Journal article regarding this program.
+<p>
+<b><u>Options</u></b>
+<p>
+    <b>method(</b><i>keyword</i><b>)</b> is used to select the apportionment method. The
+        apportionment methods described above can be specified using one of
+        the following keywords:
+<p>
+         ------------------------------------------------------------
+         Method    Keyword and synonyms
+         ------------------------------------------------------------
+         Hamilton  <b>hamilton</b> <b>hare-niemeyer</b> <b>remainder</b> <b>vinton</b>
+         Jefferson <b>jefferson</b> <b>dhondt</b> <b>hagenbach-bischoff</b> <b>greatest</b>
+         Webster   <b>webster</b> <b>stlague</b> <b>majorfraction</b>
+         Hill      <b>hill</b> <b>huntington</b> <b>geometric</b>
+         Dean      <b>dean</b> <b>harmonic</b>
+         Adam      <b>adam</b> <b>smallest</b>
+         ------------------------------------------------------------
+         The default is <b>method(</b><i>jefferson</i><b>)</b>.
+<p>
+    <b>size(</b><i>#</i>|<i>varname</i><b>)</b> is used to specify the number of seats to be allocated.
+        Either use a positive integer number or the name of a variable
+        holding the number of seats to be allocated. In the latter case, the
+        variable should be constant within one apportionment problem (i.e.,
+        for one election). Size defaults to 100.
+<p>
+    <b>by(</b><i>varlist</i><b>)</b> is used when the data set holds several apportionment
+        problems (i.e., several elections), or when seats should be allocated
+        separately for regional subdivisions. Specifying <b>by(</b><i>varlist</i><b>)</b> is
+        equivalent to using<b> by varlist:</b> as a prefix.
+<p>
+    <b>threshold(</b><i>#</i>|<i>varname</i><b>)</b> is used to set the barring clause. Within the
+        parentheses put the size for the barring clause as a percentage or
+        specify the name of a variable holding the value for the barring
+        clause. The variable must be constant within one apportionment
+        problem (i.e., for one election).
+<p>
+    <b>exception(</b><i>exp</i><b>)</b> is used to specify exceptions from the barring clause.
+        Within the parentheses specify an expression indicating the exempted
+        observations (see help exp).
+<p>
+<b><u>Examples</u></b>
+<p>
+    <b>. use uspop if year==1790, clear</b>
+    <b>. egen ham = apport(pop), method(hamilton) size(105)</b>
+<p>
+    <b>. use uspop, clear</b>
+    <b>. egen jeff = apport(pop), method(jefferson) size(size) by(year)</b>
+<p>
+<b><u>Author</u></b>
+<p>
+    Ulrich Kohler, WZB, kohler@wzb.eu
+<p>
+<b><u>Also see</u></b>
+<p>
+    Manual:  <b>[D] </b><i>egen</i>
+<p>
+    Online: <b>egen</b>, <b>egenmore</b> (if installed)
+<p>
+</pre>

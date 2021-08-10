@@ -1,0 +1,18 @@
+d 'SIM_ARMA': module to simulate data for ARMA processes
+d
+d sim_arma is a random number generator for the ARMA(p,q) model.
+d For more information, see A. McDowell, Stata Journal 4:2,
+d 180-189. The routine may be installed with the "net from" command
+d in Stata. 
+d
+d KW: Box-Jenkins
+d KW: ARMA
+d KW: ARIMA
+d
+d Requires: Stata version 8.0 (7.0 for sim_arma_7)
+d
+d Distribution-Date: 20040817
+d
+d Author: Jeff Pitblado, StataCorp LP
+d Support: email jpitblado@@stata.com
+d

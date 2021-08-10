@@ -1,0 +1,65 @@
+<pre>
+-------------------------------------------------------------------------------
+help for <b>stata2pajek</b>
+-------------------------------------------------------------------------------
+<p>
+<b><u>Export data to Pajek .net format</u></b> 
+<p>
+        <b>stata2pajek</b> <i>ego alter</i>[, <b>edges tiestrength() filename()</b>]
+<p>
+<p>
+<b><u>Description</u></b> 
+<p>
+    <b>stata2pajek</b> exports data to the ".net" format read by Pajek, Network
+    Workbench, and many other social network analysis packages.
+<p>
+<p>
+<b><u>Remarks</u></b> 
+<p>
+    The program assumes that you already have used Stata to create an edge
+    list or arc list. You specify which (string or numeric) variable
+    identifies ego and which alter. Specifying a tie strength variable is
+    optional. <b>stata2pajek</b> converts this to .net format, which is a
+    Windows-formatted text file beginning with a list of vertices (aka nodes)
+    and their labels, followed by a list of ties (arcs or edges).
+<p>
+    As an alternative to this program, you may wish to use <b>outsheet</b> then
+    process the saved output with the Windows program txt2pajek.
+<p>
+    Note that <b>stata2pajek</b> treats the Stata versions of your id variables as
+    labels even if they are numeric. Thus if you have a node called #15 in
+    Stata it will not necessarily also be called #15 in Pajek. Please see the
+    vertice section of the .net file (which is human-readable text) to see
+    the correspondence.
+<p>
+<b><u>Options</u></b> 
+ 
+    <b>edges</b> specifies that ties should be treated as edges (symmetrical ties).
+        The default is to treat ties as arcs (directed ties).
+<p>
+    <b>filename()</b> allows you to name the output file. By default it is named
+        mypajekfile.net
+<p>
+<b><u>Examples</u></b>
+<p>
+    <b>. *create a random network with 10 nodes and export it as pajek</b>
+    <b>. clear</b>
+    <b>. set obs 200</b>
+    <b>. gen i=int(uniform()*10)+1</b>
+    <b>. gen j=int(uniform()*10)+1</b>
+    <b>. contract i j, freq(strength)</b>
+    <b>. drop if i==j</b>
+    <b>. sort i j</b>
+    <b>. stata2pajek i j, tiestrength(strength) filename(samplerandomnetwork)</b>
+<p>
+<p>
+<b><u>Author</u></b>
+<p>
+    Gabriel Rossman, UCLA
+    rossman@soc.ucla.edu
+<p>
+<b><u>Also see</u></b>
+<p>
+    On-line:  help for outsheet
+<p>
+</pre>

@@ -1,0 +1,196 @@
+<pre>
+...- 
+help for ^htest^, ^szroeter^, and ^white^           (Jeroen Weesie/ICS 
+Dec 10, 1996) ..-
+<p>
+Tests for heteroscedasticity after fit
+- --------------------------------------
+<p>
+        ^htest^ [varlist] [^, r^hs ^u^nivar ]
+<p>
+        ^szroeter^ varname
+<p>
+        ^white^ [^, p^reserve ]
+<p>
+^htest^, ^szroeter^, and ^white^ are for use after ^fit^; see help 
+^fit^.
+<p>
+See the notes below for a discussion of the interpretation of test 
+results in case of weighted regression.
+<p>
+<p>
+Description
+- -----------
+<p>
+^htest^, ^szroeter^, and ^white^ provide tests for the assumption of 
+the linear regression model that the residuals e are homoscedastic, 
+i.e., have constant variance. The tests differ with respect to the 
+specification of residual variances under the alternative hypothesis.
+<p>
+   ^white^ considers the general (unrestricted) alternative hypothesis 
+in    which no assumptions is made on the residual variances (White 
+1980).
+<p>
+   ^szroeter^ considers the alternative hypothesis that the residual 
+variances    are monotonically increasing in some variable (Szroeter 
+1978).
+<p>
+   ^htest^ performs standard score tests for H: b=0 for two parametric 
+forms of    heteroscedasticity:
+<p>
+       ^multiplicative heteroscedastcity^ (Cook &amp; Weinberg 1983)
+<p>
+           var(y) = s^^2 * exp( b1.z1 + b2.z2 + .. + bk.zk)
+<p>
+       ^random coefficient heteroscedasticity^ (REF)    
+<p>
+           var(y) = s^^2 + b1.z1^^2 + b2.z2^^2 + .. + bk.zk^^2
+<p>
+   If no varlist is specified, ^htest^ uses the fitted values of the 
+regression.
+<p>
+<p>
+^szoeter^ and ^htest^ test homoscedasticity against specific models 
+(monotonicity; multiplicative and random coefficient heteroscedasticty) 
+under the alternative hypothesis. Due to the general structure of the 
+alternative, ^white^ is not very powerfull against any particular form 
+of heteroscedasticity.    
+     Options (^htest^)
+- -------
+<p>
+^rhs^ specifies that the independent variables of the ^fit^ted 
+regression     should be used.
+<p>
+^univar^ specifies that univariate score tests for each of the 
+variables is     displayed in addition to the "combined" test.
+<p>
+If ^htest^ suggest multiplicative forms of heteroscedasticity, 
+regression models can be estimated using ^regmh^ or ^regmhv^ . The 
+random coefficient model is currently not supported.
+<p>
+<p>
+Options (^white^)
+- -------
+<p>
+^preserve^ specifies that the ^white^ may ^preserve^ the data in memory 
+and     drop all variables and cases that are not needed in the 
+calculations. This     is costly for large data sets. However, ^white^ 
+has to generate k(k+1)/2     temporary variables, where k = #rhs-vars 
+in the ^fit^ted model. 
+<p>
+<p>
+Examples
+- --------
+ 
+    . ^fit income edu sex exp exp2 industry^             (fit a 
+regression model)
+<p>
+    . ^white^                                   
+<p>
+    . ^szroeter edu^                                 (variance 
+increases in edu?)
+<p>
+    . ^htest^                                 (homoscedasticity in 
+fitted values)     . ^htest edu sex exp exp2 industry^            
+(homoscedasticity in rhs-vars)     . ^htest, rhs^                       
+(shorthand for the previous command)     . ^htest edu exp age, univar^  
+(display univariate tests as well)
+<p>
+<p>
+Details (^white^)
+- -------
+<p>
+White (1980) noted that the classical estimate 
+<p>
+        Vc = s^2 inv(X'X)
+<p>
+of the variance V of OLS regression estimates and the 
+Huber/White/robust estimate 
+<p>
+        Vr = X' inv(sum e_i^2 x_i x_i') X
+<p>
+of V are likely to be close under homoscedasticity. White (1980) 
+proposed a Hausmann-type test of the matrix difference Vc-Vr as a test 
+for homoscedasticy against general forms of heteroscedasticity. 
+(Actually, White showed that Vc and Vr may also be close under 
+particular forms of hetero-scedasticty as well. See White (1980) for 
+details.)
+<p>
+<p>
+Details (^szroeter^)
+- -------
+<p>
+Szoeter's class of tests for homoscedasticity against the alternative 
+that the residual variance increases in some variable x are defined in 
+terms of
+<p>
+          sum_i h(x(i)) e(i)^^2
+     H =  --------------------          i=1..n
+             sum_i e(i)^^2 
+<p>
+where h(x) is some weight function that increases in x. Note that H can 
+be interpreted as a weighted avarege of the h(x), weighted by the 
+squares residuals. Under homoscedasticty, H should be approximately 
+equal to the unweighted average of h(x). Large values of H suggest that 
+e(i)^^2 tends to be large where h(x) is large, i.e., the variance 
+indeed increases in x, while small values of H suggest that the 
+variance actually decreases in x.
+<p>
+King (1982) suggest to use h(x(i)) = rank(x(i) in x(1)..x(n)). 
+The Q-statistic displayed by ^szroeter^ is a transformation of H that 
+is asymptotically standard normal distributed under homoscedasticity.
+<p>
+^szroeter^ displays a Q-statistic (Judge 1985:452). Under 
+homoscedasticity, Q is approximately N(0,1) distributed. Q&gt;2 suggests 
+that the residual variance increases in varname, while Q&lt;-2 suggests 
+that it decreases in varname.
+<p>
+<p>
+Homoscedastity and weighted regression
+- --------------------------------------
+<p>
+<p>
+References
+- ----------
+<p>
+    Cook, R.D., and S. Weisberg (1983) Diagnostics for 
+heteroscedasticity         in regression. Biometrica 70: 1-10.
+<p>
+    Judge, G.G. et al. (1985) The Theory and Practice of Econometrics. 
+2nd         Ed. New York: Wiley.
+<p>
+    Szroeter, J. (1978) A Class of Parametric Tests for 
+Heteroscedasticity         in Linear Econometric Models. Econometrica 
+46, 1311-28.
+<p>
+    White, H. (1980)  A Heteroskedasticity-Consistent Covariance Matrix 
+        Estimator and a Direct Test for Heteroskedasticity, 
+Econometrica,         48: 817-838.
+<p>
+<p>
+Saved results
+- -------------
+<p>
+^htest^ saves results for the final (multivariate) score tests in
+<p>
+    scalar ^S_3^  #df for the asymptotic chi-square distribution under 
+Ho.     scalar ^S_4^  score statistic    
+    scalar ^S_5^  #df for the asymptotic chi-square distribution under 
+Ho.     scalar ^S_6^  score statistic
+<p>
+^white^ saves results in
+<p>
+    scalar ^S_1^  test statistic
+    scalar ^S_2^  #df for the asymptotic chi-square distribution under Ho.
+<p>
+^szroeter ^ saves results in
+<p>
+    scalar ^S_1^  test statistic
+<p>
+<p>
+Also See
+- --------
+<p>
+ Manual:  [R] fit
+On-line:  help for @fit@, @regmh@, @probith@, @_tscore@ 
+</pre>

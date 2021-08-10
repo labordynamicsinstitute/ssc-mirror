@@ -1,0 +1,74 @@
+<pre>
+<b>help archqq</b>
+-------------------------------------------------------------------------------
+<p>
+<b><u>Q-Q plots and tests to assess distributional assumptions for ARCH models</u></b>
+<p>
+<p>
+<b><u>Syntax</u></b>
+<p>
+        <b>archqq</b> [<i>varname</i>] [<i>if</i>] [<i>in</i>] [<b>,</b> <b><u>dist</u></b><b>ribution(</b><i>dist </i>[<i>#</i>]<b>)</b> <b><u>nog</u></b><b>raph</b> <b><u>not</u></b><b>est</b>
+                         <b>jb</b>]
+<p>
+<b><u>Description</u></b>
+<p>
+<b>archqq</b> is primarily for use after <b>arch</b> but can also be applied to an arbitrary
+variable. It displays Q-Q plots of the standardized residuals from an ARCH
+model against a standard normal, t-distribution normalized to variance 1 or the
+GED distribution.  The distribution (and degrees of freedom for a
+t-distribution or shape parameter for the GED) is the one used with <b>arch</b> if not
+specified explicitly.
+<p>
+Additionally, the data and assumed moments, mean, variance, skewness and
+kurtosis and.the Kolmogorov-Smirnov test for distribution are reported. In
+addition the Jarque-Bera test for normality is reported if the assumed
+distribution is normal. Optionally, a Jarque-Bera type test generalized to
+allow other null hypothesis than a normal distribution can be reported. Note
+that the properties of the generalized test are unknown.  In particular, the
+test appears to have very low power when the alternative is a distribution with
+thinner tails than the null.
+<p>
+If a variable is specified the comparison distribution is scaled to the data
+mean and variance.
+<p>
+<b><u>Options</u></b>
+<p>
+    <i>option</i>                  Description
+    -------------------------------------------------------------------------
+<p>
+    <b><u>dist</u></b><b>ribution(</b><i>dist </i>[<i>#</i>]<b>)</b>  Use the <i>dist</i> distribution with parameter <i>#</i>.  <i>dist</i>
+                              can be one <b>gaussian</b>, <b>normal</b>, <b>t</b> or <b>ged</b>. <b>gaussian</b>
+                              and <b>normal</b> are synonyms. The second argument
+                              specifies the degrees of freedom for <b>t</b> or the
+                              shape parameter for <b>ged</b> and is not allowed with
+                              <b>gaussian</b> and <b>normal</b>. The default is <b>gaussian</b> if
+                              a variable is specified, otherwise the default
+                              is taken from the <b>arch</b> estimation results.
+<p>
+    <b><u>nog</u></b><b>raph</b>                 Suppress display of Q-Q plot.
+<p>
+    <b><u>not</u></b><b>test</b>                 Suppress display of moments and test statistics.
+<p>
+    <b>jb</b>                      Force calculation of Jarque-Bera type test with
+                              non-normal distributions.
+<p>
+    -------------------------------------------------------------------------
+<p>
+<b><u>Examples</u></b>
+<p>
+    Setup
+        <b>. webuse wpi1</b>
+<p>
+    Fit GARCH(1,1) under normality and display Q-Q plot
+        <b>. arch D.ln_wpi, arch(1) garch(1)</b>
+        <b>. archqq</b>
+<p>
+    Fit GARCH(1,1) with a t-distribution and display Q-Q plot
+        <b>. arch D.ln_wpi, arch(1) garch(1) dist(t)</b>
+        <b>. archqq</b>
+<p>
+<b><u>Author</u></b>
+<p>
+    Sune Karlsson, Örebro University, Sweden
+    sune.karlsson@oru.se
+</pre>

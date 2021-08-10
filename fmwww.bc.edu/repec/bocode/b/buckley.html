@@ -1,0 +1,104 @@
+<pre>
+<b>help buckley</b>
+                                                              (SJ-5-4: 517-526)
+-------------------------------------------------------------------------------
+<p>
+<b><u>Title</u></b>
+<p>
+    <b>buckley</b> --    Buckley-James method for analysing censored data
+<p>
+<p>
+<p>
+<b><u>Syntax</u></b>
+<p>
+        <b>buckley</b> <i>depvar</i><i> censorvar</i> <i>varlist</i> [<b>,</b> <i>options</i>]
+<p>
+    <i>options</i>                Description
+    -------------------------------------------------------------------------
+    Main
+      <b><u>i</u></b><b>terate(</b><i>#</i><b>)</b>           specifies the maximum number of iterations
+      <b><u>t</u></b><b>olerance(</b><i>#</i><b>)</b>         specifies the convergence criterion
+      <b><u>d</u></b><b>ispnum(</b><i>#</i><b>)</b>           specifies how frequently to display the iteration
+    -------------------------------------------------------------------------
+<p>
+<p>
+<b><u>Description</u></b>
+<p>
+    <b>buckley</b> uses the Buckley-James method (Buckley and James 1979) to
+    estimate the regression coefficients and generate the expected value of
+    the censored outcome.  <i>depvar</i> is the dependent variable whose value is
+    rightly censored when the censoring variable <i>censorvar</i>=1.  Otherwise it
+    is observed exactly when <i>censorvar</i>=0.  <i>varlist</i> is a list of explanatory
+    variable names. At least one explanatory variable must be specified.
+<p>
+<p>
+<b><u>Options</u></b>
+<p>
+        +------+
+    ----+ Main +-------------------------------------------------------------
+<p>
+    <b>iterate(</b><i>#</i><b>)</b> specifies the maximum number of iterations allowed in the
+        optimization.  It must be a positive integer. The default is
+        <b>iterate(100)</b>.
+<p>
+    <b>tolerance(</b><i>#</i><b>)</b> specifies the convergence criterion defined as the change of
+        the sum of squares of the difference of regression coefficients
+        between iterations.  It must be a positive number between 0 and 1.
+        The default is <b>tolerance(1e-6)</b>.
+<p>
+    <b>dispnum(</b><i>#</i><b>)</b> specifies how frequently to display the iteration; For
+        example, <b>dispnum(50)</b> displays every 50th iteration. <i>#</i> must be a
+        positive integer. The default is <b>dispnum(100)</b>.
+<p>
+<p>
+<b><u>Examples</u></b>
+<p>
+    use aids, clear
+<p>
+    gen censor = 1 - aids
+<p>
+    gen age30 = age - 30
+<p>
+    buckley time censor age30, i(20) t(1e-6) d(10)
+<p>
+    tabstat time varbj, by(aids) stats(n mean sd min max) col(stats) f(%7.2f)
+        long
+<p>
+<p>
+<b><u>Also see</u></b>
+<p>
+    SJ-5-4: 517-526
+<p>
+<p>
+<b><u>References</u></b>
+<p>
+    Buckley J, James I. Linear regression with censored data. Biometrika
+        1979; 66: 429-436.
+<p>
+    Cui J. Buckley-James method for analyzing censored data, with an
+        application to a cardiovascular disease and an HIV/AIDS study. Stata
+        Journal 2005; 4: 517-526.
+<p>
+<p>
+<b><u>Author</u></b>
+<p>
+    James Cui, Department of Epidemiology and Preventive Medicine, Monash
+    University.
+<p>
+    Email: james.cui@med.monash.edu.au
+<p>
+<p>
+Other Commands I have written:
+genhwcci   (if installed)      ssc install genhwcci     (to install this comman
+&gt; d)
+simuped2   (if installed)      ssc install simuped2     (to install this comman
+&gt; d)
+simuped3   (if installed)      ssc install simuped3     (to install this comman
+&gt; d)
+phenotype  (if installed)      ssc install phenotype    (to install this comman
+&gt; d)
+qic        (if installed)      ssc install qic          (to install this comman
+&gt; d)
+<p>
+<p>
+</pre>

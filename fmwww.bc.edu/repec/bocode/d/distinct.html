@@ -1,0 +1,122 @@
+<pre>
+-------------------------------------------------------------------------------
+<b>help distinct</b>                                                  (SJ12-2: dm0042)
+-------------------------------------------------------------------------------
+<p>
+<b><u>Title</u></b>
+<p>
+    <b>distinct</b> -- Report number(s) of distinct observations or values
+<p>
+<p>
+<b><u>Syntax</u></b>
+<p>
+        <b>distinct</b> [<i>varlist</i>] [<i>if</i>] [<i>in</i>] [<b>,</b> <b><u>miss</u></b><b>ing</b> <b><u>a</u></b><b>bbrev(</b><i>#</i><b>)</b> <b><u>j</u></b><b>oint</b> <b><u>min</u></b><b>imum(</b><i>#</i><b>)</b>
+                 <b><u>max</u></b><b>imum(</b><i>#</i><b>)</b> ]
+<p>
+    <b>by</b> is allowed; see <b>[D] by</b>.
+<p>
+<p>
+<b><u>Description</u></b>
+<p>
+    The <b>distinct</b> command displays the number of distinct observations with
+    respect to the variables in <i>varlist</i>.  By default, each variable is
+    considered separately so that the number of distinct observations for
+    each variable is reported; the number of distinct observations is the
+    same as the number of distinct values.  Optionally, variables can be
+    considered jointly so that the number of distinct groups defined by the
+    values of variables in <i>varlist</i> is reported.
+<p>
+    By default, missing values are not counted.  <i>varlist</i> may contain both
+    numeric and string variables.
+<p>
+<p>
+<b><u>Options</u></b> 
+<p>
+    <b>missing</b> specifies that missing values are to be included in counting
+    distinct observations.
+<p>
+    <b>abbrev(</b><i>#</i><b>)</b> specifies that variable names are to be displayed abbreviated
+    to at most <i>#</i> characters.  This option has no effect with <b>joint</b>.
+<p>
+    <b>joint</b> specifies that distinctness is to be determined jointly for the
+    variables in <i>varlist</i>.
+<p>
+    <b>minimum(</b><i>#</i><b>)</b> specifies that numbers of distinct values are to be displayed
+    only if they are equal to or greater than a specified minimum.
+<p>
+    <b>maximum(</b><i>#</i><b>)</b> specifies that numbers of distinct values are to be displayed
+    only if they are less than or equal to a specified maximum.
+<p>
+<p>
+<b><u>Remarks</u></b> 
+<p>
+    Distinctness, duplication, and uniqueness are different aspects of the
+    similarity and difference of observations.  Suppose the values of some
+    variable are 1, 2, 2, 3, 3, 3, 4, 4, 4, 4.  Then there are four distinct
+    values: 1, 2, 3, and 4.  Alternatively, there are, so far as this
+    variable is concerned, four distinct observations because, for example,
+    the second and third observations both containing the value 2 are
+    identical in respect to this variable.  Of these values, 2, 3, and 4 are
+    duplicated in the data, meaning that each occurs twice or more.  Some
+    people refer to the distinct values as unique values, even though in
+    general distinct values could all be repeated in the data.  One logic
+    behind that terminology is that if you remove all duplicates from these
+    data then you are left with four distinct values, each of which occurs
+    once.
+<p>
+    Now consider distinctness determined jointly for two variables.  Suppose
+    observations are 1 and <b>"a"</b>, 2 and <b>"b"</b>, 2 and <b>"b"</b>, 3 and <b>"c"</b>, 3 and <b>"c"</b>, 3
+    and <b>"d"</b>, 4 and <b>"c"</b>, 4 and <b>"c"</b>, 4 and <b>"d"</b>, 4 and <b>"d"</b>.  Then, as far as
+    these two variables are concerned, there are six distinct observations, 1
+    and <b>"a"</b>, 2 and <b>"b"</b>, 3 and <b>"c"</b>, 3 and <b>"d"</b>, 4 and <b>"c"</b>, 4 and <b>"d"</b>.
+    Considering the variables individually, there are four distinct values
+    for the first variable and four for the second.  Clearly, the same
+    principles of considering variables individually and jointly extend to
+    three or more variables.
+<p>
+<p>
+<b><u>Saved results</u></b>
+<p>
+    <b>distinct</b> saves the following in <b>r()</b>:
+<p>
+    Scalars  
+      <b>r(ndistinct)</b>  distinct count (for last variable, or jointly considered
+                      group of variables, and, if specified, last <b>by</b> group)
+      <b>r(N)</b>          number of observations (for last variable, or jointly
+                      considered group of variables, and, if specified, last
+                      <b>by</b> group)
+<p>
+<p>
+<b><u>Examples</u></b>
+<p>
+    <b>. sysuse auto</b>
+    <b>. distinct</b>
+    <b>. distinct, max(10)</b>
+    <b>. distinct make-headroom</b>
+    <b>. distinct make-headroom, missing abbrev(6)</b>
+    <b>. distinct foreign rep78, joint</b>
+    <b>. distinct foreign rep78, joint missing</b>
+<p>
+<p>
+<b><u>Authors</u></b>
+<p>
+    Gary Longton, Fred Hutchinson Cancer Research Center, USA
+    glongton@fhcrc.org
+<p>
+    Nicholas J. Cox, Durham University, UK
+    n.j.cox@durham.ac.uk
+<p>
+<p>
+<b><u>Acknowledgment</u></b>
+<p>
+    This program grew out of one originally posted to Statalist by Patrick
+    Royston for Stata 4.
+<p>
+<p>
+<b><u>Also see</u></b>
+<p>
+    Article: <i>Stata Journal</i>, volume 8, number 4: dm0042
+<p>
+    Online:  <b>[D] codebook</b>, <b>[D] contract</b>, <b>[D] duplicates</b>, <b>[D] egen</b>, <b>[D]</b>
+             <b>inspect</b>, <b>[D] isid</b>, <b>[P] levelsof</b>, tabulate, groups (if installed)
+</pre>

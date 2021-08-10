@@ -1,0 +1,237 @@
+<pre>
+-------------------------------------------------------------------------------
+help for <b>rc2</b>                                                     John Hendrickx
+-------------------------------------------------------------------------------
+<p>
+<b><u>Goodman's row and column model 2</u></b>
+<p>
+<b><u>Syntax</u></b>
+<p>
+        <b>rc2</b> <i>varlist</i> [<b>if</b> <i>exp</i>] [<b>in</b> <i>range</i>] [<i>weight</i>] <b>,</b> <b><u>r</u></b><b>ow(</b><i>varname</i><b>)</b> <b><u>c</u></b><b>ol</b><i>varname</i><b>)</b> [
+                           <b><u>m</u></b><b>uby(</b><i>varlist</i><b>)</b> <b>muby3(</b><i>string</i><b>)</b> <b>eq</b> <b><u>no</u></b><b>rm</b> <b>niter(</b><i>#</i><b>)</b> <b>rctol(</b><i>#</i>
+                           <b>)</b> <b>debug</b>
+<p>
+<b><u>Description</u></b>
+<p>
+<b>rc2</b> estimates Goodman's log-multiplicative Row and Columns model 2.This model
+is a variation on a regular loglinear model. A <b>sigma</b> scale is estimated for the
+row variable, a <b>phi</b> scale is estimated for the column variable, and a <b>mu</b>
+parameter indicates the scaled association between the two variables.
+<p>
+<b><u>Options</u></b>
+<p>
+<b>row</b> the row variable <i>(required)</i>
+<p>
+<b>col</b> the column variable <i>(required)</i>
+<p>
+<b>muby</b> a list of factors by which the <b>mu</b> parameter will vary
+<p>
+<b>muby3</b> specify an interaction between the mu parameter and other variables using
+    the xi3 command. The xi3 command must be installed first; xi3 is available
+    from the ssc archives.  <b>muby3</b> must specify the dummies that are to interact
+    with <b>mu</b> using valid <b>xi3</b> syntax, e.g. <b>muby3("e.</b><i>groupvar</i><b>")</b> The <b>muby</b> option is
+    ignored if <b>muyb3</b> is used.
+<p>
+<b>eq</b> specifies an equality constraint on <b>sigma</b> and <b>phi</b>.  This option requires
+    that the row and column variable both have the same number of categories.
+    The default is noeq.
+<p>
+<b>norm</b> The option <b>nonorm</b> suppresses printing of the normalized <b>phi</b> and <b>sigma</b>
+    scales (mean 0, sum of squares 1).  The default is <b>norm</b>.
+<p>
+<b>niter</b> specifies the maximum number of iterations for estimating the model. The
+    default is 20.
+<p>
+<b>rctol</b> specifies the convergence criterion for estimating the model.  The
+    default is .0001.
+<p>
+<b>debug</b> prints intermediate results to assist in debugging.  The default is
+    <b>nodebug</b>.
+<p>
+<b><u>Usage</u></b>
+<p>
+You must estimate a baseline loglinear model using either poisson or glm with a
+log link and the poission family before running <b>rc2</b>. Usually the baseline model
+will be either an independence model or a quasi- independence model. The
+dummies in the baseline model can be created using xi, xi3, desmat or any other
+method.
+<p>
+Goodman's rc2 model has the following form:
+<p>
+log(F[ij]) = &lt;baseline model&gt; + sigma[i]*mu*phi[j]
+<p>
+Where <b>F[ij]</b> indicates the expected frequencies of the model, <i>i</i> indexes the
+categories of the row variable, and <i>j</i> indexes the categories of the column
+variable. <b>sigma[i]</b> indicates the estimated scale values for the row variable,
+<b>phi[j]</b> indicates the estimated scale values for the column variable. <b>mu</b>
+indicates the scaled association between the row and column variable.
+<p>
+Two values of <b>sigma[i]</b> and <b>phi[j]</b> must be fixed to identify the model. <b>rc2</b>
+fixes the first category to 0 and the highest category to 1 while estimating
+the model. For the final model, the <b>sigma</b> and <b>phi</b> scales are also reported
+using the restriction that they sum to 0 and have a sum of squares of 1.
+Printing of these normalized scale values can be suppressed using the <b>nonorm</b>
+option.
+<p>
+The rc2 model contains both linear and multiplicative parameters.  Therefore,
+it cannot be estimated in a straightforward fashion.  However, given scale
+values for <b>sigma</b>, the model simplifies to a regular loglinear model and values
+for mu*phi[j] can be estimated.  Likewise, given scale values for <b>phi</b>, values
+for mu*sigma[i] can be estimated.
+<p>
+<b>rc2</b> estimates the model in this fashion, taking <b>sigma</b> as given and estimating
+<b>phi</b>, then taking the updated values of <b>phi</b> as given and estimating <b>sigma</b>. This
+continues until the improvement in fit between subsequent loglinear models is
+less than <b>rctol</b> (default .0001) or the number of iterations exceeds <b>niter</b>
+(default 10).
+<p>
+Note that due to the estimation procedure used, the standard errors for
+coefficients are conditional on the <b>sigma</b> and <b>phi</b> scale values. In addition,
+the degrees of freedom reported by <b>poisson</b> are not correct, since they do not
+take the estimated <b>sigma</b> and <b>phi</b> coefficients into account. Refer to the <b>Model</b>
+<b>summary</b> at the end of the output for the correct degrees of freedom and other
+goodness of fit statistics.
+<p>
+<b><u>Example</u></b>
+<p>
+This example is taken from Hout (1983: 56-65).
+<p>
+/* Table in Hout (1983: 11). Original source: page 49 of            */
+/* Featherman D.L., R.M. Hauser. (1978) "Opportunity and Change."   */
+/* New York: Academic.                                              */
+#delimit ;
+tabi
+1414  521  302   643   40 \
+ 724  524  254   703   48 \
+ 798  648  856  1676  108 \
+ 756  914  771  3325  237 \
+ 409  357  441  1611 1832 ,replace;
+#delimit cr
+<p>
+rename row father
+rename col son
+rename pop freq
+<p>
+label var father "Father's occupation"
+label var son    "Son's occupation"
+#delimit ;
+label def occ 1 "Upper nonmanual" 2 "Lower nonmanual" 3 "Upper manual"
+4 "Lower manual" 5 "Farm";
+#delimit cr
+label val father occ
+label val son occ
+<p>
+xi: glm freq i.father i.son, family(poisson) link(log)
+rc2 , row(father) col(son)
+rc2 , row(father) col(son) eq
+<p>
+gen diag=(father==son)*father
+xi: poisson freq i.father i.son i.diag
+rc2 , row(father) col(son)
+rc2 , row(father) col(son) eq
+<p>
+<b><u>Remarks</u></b>
+<p>
+The rc2 model can also be estimated as a multinomial logistic regression model
+using mclest. The mcl package is available from the ssc archives.
+<p>
+<b>mclest</b> will be somewhat faster than <b>rc2</b> for large tables because it does not
+have to estimate the main effects of the row variable or interactions of the
+row variable with group variables.  If these effects are not of interest, then
+<b>mclest</b> could be used instead of <b>rc2</b>. Note that <b>mclest</b> also works for
+non-aggregated data. The example above can be estimated with <b>mclest</b> as follows:
+<p>
+mclgen son
+xi: mclest i.son [fw=freq],rc2(father)
+xi: mclest i.son [fw=freq],eqrc2(father)
+gen diag=(father==son)*father
+xi: mclest i.son i.diag [fw=freq],rc2(father)
+xi: mclest i.son i.diag [fw=freq],eqrc2(father)
+<p>
+The unidiff program by Maurizio Pisati, University of Trento, Italy, can
+estimate uniform layer effect models. Use findit unidiff to obtain the program.
+<p>
+<b>LEM</b> is a standalone program for Windows computers by Jeroen Vermunt, Tilburg
+University, the Netherlands. LEM is a fast and flexible tool for estimating rc2
+models (as well as latent class and a wide array of other models). <b>LEM</b> is
+available at
+http://www.uvt.nl/faculteiten/fsw/organisatie/departementen/mto/software2.html
+<p>
+<b><u>Saved results</u></b>
+<p>
+In addition to the results saved by poisson, <b>rc2</b> saves the following matrices:
+<p>
+<b>e(sig)</b>
+    the sigma scale with the first category fixed to 0, the last to 1
+<p>
+<b>e(phi)</b>
+    the phi scale with the first category fixed to 0, the last to 1
+<p>
+<b>e(sig_n)</b>
+    the sigma scale with mean 0 and sum of squares 1
+<p>
+<b>e(phi_n)</b>
+    the phi scale with mean 0 and sum of squares 1
+<p>
+<b>e(df_m)</b>
+    the model degrees of freedom adjusted for the sigma and phi parameters
+<p>
+<b>e(deviance)</b>
+    the deviance as calculated by poisgof
+<p>
+<b>e(df)</b>
+    the residual degrees of freedom, also adjusted for the sigma and phi
+    parameters
+<p>
+<b>e(ll_b)</b>
+    the log likelihood of the baseline model
+<p>
+<b>e(df_b)</b>
+    the model degrees of freedom of the baseline model
+<p>
+<b>e(model)</b>
+    "<b>rc2</b>" or "<b>eqrc2</b>", depending on the <b>eq</b>
+    option
+<p>
+<b>e(b)</b> and <b>e(V)</b> contain the estimates and variance- covariance for the normalized
+solution, unless the <b>nonorm</b> option was used. The values for the model using the
+zero-one constraints can be obtained using "<b>estimates unhold c0_1</b>".
+<p>
+<b>rc2</b> defines the following global macros that persist between runs of <b>rc2</b>:
+<p>
+<b>$RC_depvar</b>
+    The dependent variable of the baseline model
+<p>
+<b>$RC_base</b>
+    The independent variables of the baseline model
+<p>
+<b><u>References</u></b>
+<p>
+Goodman, Leo A. (1979). Multiplicative models for the analysis of occupational
+    mobility tables and other kinds of cross-classification tables. <i>American</i>
+    <i>Journal of Sociology</i> 84: 804-819.
+<p>
+Goodman, Leo A. (1984).  <i>The analysis of cross-classified data having ordered</i>
+    <i>categories</i>.  Cambridge, Mass.: Harvard University Press.
+<p>
+Hout, Michael. (1983). <i>Mobility Tables</i>. Sage Publication 07-031.
+<p>
+Xie, Yu (2003). Association Model. In the <i>Encyclopedia of Social Science</i>
+    <i>Research Methods</i>, edited by Michael Lewis-Beck, Alan Bryman and Tim Futing
+    Liao. Thousand Oaks, Ca: Sage (2003).
+<p>
+http://www-personal.umich.edu/~yuxie/Research/Assoc-program.html
+<p>
+<b><u>Also see</u></b>
+<p>
+Direct comments to: John Hendrickx
+<p>
+rc2 is available from the ssc archives.  Use findit <b>rc2</b> to locate the latest
+version.
+<p>
+The packages mcl, desmat, xi3, are also available from the ssc archives. Use
+findit unidiff to obtain <b>unidiff</b>.
+<p>
+On-line: help for poisson, poisgof, glm, mclgen, mclest, unidiff, desmat, 
+                     desrep, xi, xi3
+</pre>

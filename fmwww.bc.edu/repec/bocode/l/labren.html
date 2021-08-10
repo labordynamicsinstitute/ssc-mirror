@@ -1,0 +1,206 @@
+<pre>
+<b>help labren</b>
+-------------------------------------------------------------------------------
+<p>
+<b><u>Title</u></b>
+<p>
+     <b>labren</b> -- Rename value labels
+<p>
+<p>
+<b><u>Syntax</u></b>
+<p>
+     Change single value label name
+<p>
+        <b>labren</b> <i>oldlblname</i> <i>newlblname</i>
+<p>
+<p>
+     Change groups of value label names
+<p>
+        <b>labren</b> <b>(</b><i>oldlblname-list</i><b>)</b> <b>(</b><i>newlblname-list</i><b>)</b> [<b>,</b> <i>options</i>]
+<p>
+<p>
+     Predefined changes
+<p>
+        <b>labren</b> [<i>oldlblname-list</i>] <b>,</b> <i>transformation-options</i> [<b><u>d</u></b><b>ryrun</b>]
+<p>
+<p>
+    <i>options</i>                Description
+    -------------------------------------------------------------------------
+    <i>options</i>
+      <b>csis(</b><i>spec</i><b>)</b>           create lblname-lists. See Remarks
+      <b><u>d</u></b><b>ryrun</b>               display <i>oldlblname</i> to <i>newlblname</i> mappings. Do not
+                             change any value label names
+<p>
+    <i>transformation-options</i>
+      <b><u>u</u></b><b>pper</b>                change value label names to uppercased characters
+      <b><u>l</u></b><b>ower</b>                change value label names to lowercased characters
+      <b><u>pre</u></b><b>fix(</b><i>stub</i><b>)</b>         prefix value label names with <i>stub</i>
+      <b><u>suff</u></b><b>ix(</b><i>stub</i><b>)</b>         suffix value label names with <i>stub</i>
+      <b><u>sub</u></b><b>st(</b><i>this that</i><b>)</b>     in value label names change <i>this</i> to <i>that</i>
+      <b><u>bef</u></b><b>ore(</b><i>before</i><b>)</b>       remove <i>before</i> and any text following
+      <b><u>aft</u></b><b>er(</b><i>after</i><b>)</b>         remove <i>after</i> and any text preceding
+      <b><u>noexc</u></b><b>lude</b>            do not remove <i>before</i> or <i>after</i>
+      <b>strfcn(</b><i>strfcn</i><b>(</b><i>args</i><b>))</b> apply string function <i>strfcn</i><b>(</b><i>args</i><b>)</b> to value label
+                             names
+      <b><u>sy</u></b><b>mbol(</b><i>char</i><b>)</b>         use <i>char</i> as placeholder in <i>args</i>
+    -------------------------------------------------------------------------
+<p>
+<p>
+<b><u>Description</u></b>
+<p>
+    <b>labren</b> changes value label names. New value labels are attached to
+    variables currently using old value labels. Old value labels are dropped
+    from memory.
+<p>
+    If more than one transformation option is specified, <b>labren</b> applies
+    options in the following order.
+<p>
+        1. <i>before</i> or <i>after</i> select text
+        2. all occurrences of <i>this</i> are changed to <i>that</i>
+        3. value labels are changed to upper- or lowercased characters
+        4. string function <i>strfcn</i><b>(</b><i>args</i><b>)</b> is applied
+        5. prefix and/or suffix is added
+<p>
+<p>
+<b><u>Options</u></b>
+<p>
+        +---------+
+    ----+ Options +----------------------------------------------------------
+<p>
+    <b>csis(</b><i>spec</i><b>)</b> uses cyclic substitution in strings to create lblname-lists.
+        The synonym <b>x()</b> may be used. See Remarks.
+<p>
+    <b>dryrun</b> displays <i>oldlblname</i> to <i>newlblname</i> mappings and does not change any
+        value label names. This option is especially useful with <b>csis()</b>.
+<p>
+        +------------------------+
+    ----+ Transformation options +-------------------------------------------
+<p>
+    <b>upper</b> changes value label names to uppercased characters. May not be
+        specified with <b>lower</b>.
+<p>
+    <b>lower</b> changes value label names to lowercased characters. May not be
+        specified with <b>upper</b>.
+<p>
+    <b>prefix(</b><i>stub</i><b>)</b> prefixes value label names with <i>stub</i>. May be combined with
+        <b>suffix()</b>.
+<p>
+    <b>suffix(</b><i>stub</i><b>)</b> suffixes value label names with <i>stub</i>. May be combined with
+        <b>prefix()</b>.
+<p>
+    <b>subst(</b><i>this that</i><b>)</b> substitutes all occurrences of <i>this</i> in value label names
+        with <i>that</i>. Value label names in which <i>this</i> is not found are left
+        unchanged. Specifying <i>that</i> as (<b>""</b>) removes <i>this</i> from value label
+        names.
+<p>
+    <b>before(</b><i>before</i><b>)</b> removes <i>before</i> and any text following from value label
+        names. Thus, value label names will be changed to contain any text
+        preceding <i>before</i>. Value label names in which <i>before</i> is not found are
+        left unchanged. May not be specified with <b>after</b>.
+<p>
+    <b>after(</b><i>after</i><b>)</b> removes <i>after</i> and any text preceding from value label names.
+        Thus, value label names will be changed to contain any text following
+        <i>after</i>. Value label names in which <i>after</i> is not found are left
+        unchanged. May not be specified with <b>before</b>.
+<p>
+    <b>noexclude</b> prevents <b>labren</b> from removing <i>before</i> or <i>after</i> from value label
+        names. Specifying <b>before(g) noexclude</b> will change value label name
+        <b>origin</b> to <b>orig</b>. Specifying <b>before(g)</b> will change value label name
+        <b>origin</b> to <b>ori</b>.
+<p>
+    <b>strfcn(</b><i>strfcn</i><b>(</b><i>args</i><b>))</b> applies any string function to value label names. In
+        <i>args</i> use placeholder <b>@</b> to refer to value label names. The general
+        from of this option is <b>strfcn(</b><i>strfcn</i><b>("@"</b> [<b>,</b> <i>args</i>]<b>))</b>.
+<p>
+    <b>symbol(</b><i>char</i><b>)</b> uses <i>char</i> as placeholder for value labels in <i>args</i>. Default
+        placeholder is <b>@</b>. May only be specified with <b>strfcn</b>.
+<p>
+<a name="spec"></a><p>
+<b><u>Remarks</u></b>
+<p>
+    In <b>csis(</b><i>spec</i><b>)</b>
+<p>
+     <i>spec</i> is
+<p>
+        <i>symbol</i> <i>list</i> [<b>\</b> <i>symbol</i> <i>list ...</i> ]
+<p>
+     <i>symbol</i> is one character (e.g. @, #, ...) and <i>list</i> is a (num)list.
+<p>
+    In
+<p>
+        <b>. labren (oldlbl1 oldlbl2) (@new) ,csis(@ a b)</b>
+        
+    <b>@new</b> will be changed to <b>anew bnew</b>. Thus, <b>oldlbl1</b> will be renamed <b>anew</b> and
+    <b>oldlbl2</b> will be renamed <b>bnew</b>.
+<p>
+    More than one <i>symbol</i> may be used. The above line can be rewritten as
+<p>
+        <b>. labren (oldlbl#) (@new) ,csis(@ a b \ # 1/2)</b>
+<p>
+    You may also use more than one <i>symbol</i> within one name. The line
+<p>
+        <b>. labren (oldlbl1 oldlbl2 oldlbl3 oldlbl4) (@new#) ,csis(@ a b \ # 1/2)</b>
+<p>
+    will rename <b>oldlbl1</b> <b>anew1</b>, <b>oldlbl2</b> <b>anew2</b>, <b>oldlbl3</b> <b>bnew1</b> and <b>oldlbl4</b>
+    <b>bnew2</b>. Note the difference between
+<p>
+        [...] <b>(@new#) ,csis(@ a b \ # 1/2)</b>
+<p>
+    and
+<p>
+        [...] <b>(@new#) ,csis(# 1/2 \ @ a b)</b>
+<p>
+    where the former will change <b>@new#</b> to <b>anew1 anew2 bnew1 bnew2</b>, and the
+    latter will change it to <b>anew1 bnew1 anew2 bnew2</b>
+<p>
+    There is one special case in which option <b>csis</b> is not needed. In
+<p>
+        <b>. labren (old1 old2 old3) (new#)</b>
+        
+    <b>new</b><i>#</i> will be changed to <b>new1 new2 new3</b>. Here <i>#</i> must be used as <i>symbol</i> and
+    it may only be used in <i>newlblname</i>. The numbers will always start at 1.
+    There will be as many numbers as there are old names.
+<p>
+    Wildcards (<b>*</b>, <b>?</b>, <b>~</b>) are treated as any other character when used as
+    <i>symbol</i>. If you want to abbreviate a list of existing value labels, see 
+    labunab (if installed).
+<p>
+        
+<b><u>Example</u></b>
+<p>
+        <b>. sysuse nlsw88</b>
+<p>
+        Change <b>racelbl</b> to <b>newlbl</b>
+        <b>. labren racelbl newlbl</b>
+<p>
+        Remove <b>lbl</b> from all value label names
+        <b>. labren ,before(lbl)</b>
+<p>
+        Rename value labels <b>occ</b> and <b>ind</b> to <b>new1</b> and <b>new2</b>
+        <b>. labren (occ ind) (new#)</b>
+<p>
+        Rename <b>new</b>, <b>new1</b> and <b>new2</b> <b>Anew</b>, <b>Bnew</b> and <b>Cnew</b>
+        <b>. labren (new new#)(@new) ,csis(# 1 2 \ @ A B C)</b>
+<p>
+<p>
+<b><u>Acknowledgments</u></b>
+<p>
+    The program, and especially support for multilingual datasets, is
+    inspired by Jeroen Weesie's labelrename.
+<p>
+    Nick Cox originated the <i>transformation_options</i>.
+<p>
+    The syntax is inspired by official Stata's rename group (release 12).
+<p>
+<p>
+<b><u>Author</u></b>
+<p>
+    Daniel Klein, University of Kassel, klein.daniel.81@gmail.com
+<p>
+<p>
+<b><u>Also see</u></b>
+<p>
+    Online: label
+<p>
+    if installed: labelrename, labvalclone, labutil2
+</pre>

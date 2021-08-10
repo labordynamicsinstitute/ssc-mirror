@@ -1,0 +1,193 @@
+<pre>
+-------------------------------------------------------------------------------
+<b>help: </b><b>reset</b>                                                   <b>dialog:</b> <b>reset</b>
+-------------------------------------------------------------------------------
+<p>
+<b>        </b>+-------+
+<b>    </b>----+<b> Title </b>+------------------------------------------------------------
+<p>
+<b> reset: OLS REgression Specification Error Tests (RESET)</b>
+<p>
+<a name="00"></a><b>        </b>+-------------------+
+<b>    </b>----+<b> Table of Contents </b>+------------------------------------------------
+<p>
+     <b>Syntax</b>
+     <b>Description</b>
+     <b>Options</b>
+     <b>Saved Results</b>
+     <b>References</b>
+<p>
+ *** <b>Examples</b>
+<p>
+     <b>Author</b>
+<p>
+<a name="01"></a><b>        </b>+--------+
+<b>    </b>----+<b> Syntax </b>+-----------------------------------------------------------
+<p>
+     <b>reset</b> <i>depvar</i> <i>indepvars</i> [<i>if</i>] [<i>in</i>] , [ <b><u>nocons</u></b><b>tant</b> <b>coll</b> ]
+<p>
+<a name="02"></a><b>        </b>+-------------+
+<b>    </b>----+<b> Description </b>+------------------------------------------------------
+<p>
+    <b>reset</b> computes REgression Specification Error Tests (RESET)
+<p>
+        Ho: Model is Specified  -  Ha: Model is Misspecified
+        - Ramsey RESETF Test
+        - DeBenedictis-Giles Specification ResetL Test
+        - DeBenedictis-Giles Specification ResetS Test
+        - White Functional Form Test
+<p>
+   R2, R2 Adjusted, and F-Test, are obtained from 4 ways:
+ 
+     1- (Buse 1973) R2.
+     2- Raw Moments R2.
+     3- squared correlation between predicted (Yh) and observed dependent
+    variable (Y).
+     4- Ratio of variance between predicted (Yh) and observed dependent
+    variable (Y).
+<p>
+     - Adjusted R2: R2_a=1-(1-R2)*(N-1)/(N-K-1).
+     - F-Test=R2/(1-R2)*(N-K-1)/(K).
+<p>
+<a name="03"></a><b>        </b>+---------+
+<b>    </b>----+<b> Options </b>+----------------------------------------------------------
+<p>
+  <b><u>nocons</u></b><b>tant</b>       Exclude Constant Term from Equation
+<p>
+  <b>coll</b>             keep collinear variables; default is removing collinear vari
+&gt; ables.
+<p>
+<a name="04"></a><b>        </b>+---------------+
+<b>    </b>----+<b> Saved Results </b>+----------------------------------------------------
+<p>
+    <b>reset</b> saves the following in <b>e()</b>:
+<p>
+*** REgression Specification Error Tests (RESET) Tests:
+   <b>e(resetf1)</b>      Ramsey Specification ResetF1 Test
+   <b>e(resetf1p)</b>     Ramsey Specification ResetF1 Test P-Value
+   <b>e(resetf2)</b>      Ramsey Specification ResetF2 Test
+   <b>e(resetf2p)</b>     Ramsey Specification ResetF2 Test P-Value
+   <b>e(resetf3)</b>      Ramsey Specification ResetF3 Test
+   <b>e(resetf3p)</b>     Ramsey Specification ResetF3 Test P-Value
+<p>
+   <b>e(resetl1)</b>      DeBenedictis-Giles Specification ResetL1 Test
+   <b>e(resetl1p)</b>     DeBenedictis-Giles Specification ResetL1 Test P-Value
+   <b>e(resetl2)</b>      DeBenedictis-Giles Specification ResetL2 Test
+   <b>e(resetl2p)</b>     DeBenedictis-Giles Specification ResetL2 Test P-Value
+   <b>e(resetl3)</b>      DeBenedictis-Giles Specification ResetL3 Test
+   <b>e(resetl3p)</b>     DeBenedictis-Giles Specification ResetL3 Test P-Value
+<p>
+   <b>e(resets1)</b>      DeBenedictis-Giles Specification ResetS1 Test
+   <b>e(resets1p)</b>     DeBenedictis-Giles Specification ResetS1 Test P-Value
+   <b>e(resets2)</b>      DeBenedictis-Giles Specification ResetS2 Test
+   <b>e(resets2p)</b>     DeBenedictis-Giles Specification ResetS2 Test P-Value
+   <b>e(resets3)</b>      DeBenedictis-Giles Specification ResetS3 Test
+   <b>e(resets3p)</b>     DeBenedictis-Giles Specification ResetS3 Test P-Value
+<p>
+   <b>e(lmw)</b>          Functional Form White LM Test
+   <b>e(lmwp)</b>         Functional Form White LM Test P-Value
+<p>
+<a name="05"></a><b>        </b>+------------+
+<b>    </b>----+<b> References </b>+-------------------------------------------------------
+<p>
+    Damodar Gujarati (1995)<b> "Basic Econometrics"</b> <i>3rd Edition, McGraw Hill,</i>
+        <i>New York, USA</i>.
+<p>
+    DeBenedictis, L. F. &amp; Giles D. E. A. (1998)<b> "Diagnostic Testing in</b>
+        <b>Econometrics: Variable Addition, RESET and Fourier Approximations",</b>
+        <i>In: A. Ullah &amp; D. E. A. Giles (Eds.), Handbook of Applied Economic</i>
+        <i>Statistics. Marcel Dekker, New York</i>; 383-417.
+<p>
+    Ramsey, J. B. (1969)<b> "Tests for Specification Errors in Classical Linear</b>
+        <b>Least-Squares Regression Analysis",</b><i> Journal of the Royal Statistical</i>
+        <i>Society, Series B 31</i>; 350-371.
+<p>
+<a name="06"></a><b>        </b>+----------+
+<b>    </b>----+<b> Examples </b>+---------------------------------------------------------
+<p>
+ clear all
+<p>
+ sysuse reset.dta , clear
+<p>
+ db reset
+<p>
+ reset y x1 x2
+-------------------------------------------------------------------------------
+<p>
+. clear all
+. sysuse reset.dta , clear
+. reset y x1 x2
+<p>
+==============================================================================
+* Ordinary Least Squares (OLS)
+==============================================================================
+  y = x1 + x2
+------------------------------------------------------------------------------
+  Sample Size       =          17
+  Wald Test         =    273.3662   |   P-Value &gt; Chi2(2)       =      0.0000
+  F-Test            =    136.6831   |   P-Value &gt; F(2 , 14)     =      0.0000
+ (Buse 1973) R2     =      0.9513   |   Raw Moments R2          =      0.9986
+ (Buse 1973) R2 Adj =      0.9443   |   Raw Moments R2 Adj      =      0.9984
+  Root MSE (Sigma)  =      5.5634   |   Log Likelihood Function =    -51.6471
+------------------------------------------------------------------------------
+- R2h= 0.9513   R2h Adj= 0.9443  F-Test =  136.68 P-Value &gt; F(2 , 14)  0.0000
+- R2v= 0.9513   R2v Adj= 0.9443  F-Test =  136.68 P-Value &gt; F(2 , 14)  0.0000
+------------------------------------------------------------------------------
+           y |      Coef.   Std. Err.      t    P&gt;|t|     [95% Conf. Interval]
+-------------+----------------------------------------------------------------
+          x1 |   1.061709   .2666739     3.98   0.001     .4897506    1.633668
+          x2 |  -1.382986   .0838143   -16.50   0.000    -1.562749   -1.203222
+       _cons |   130.7066   27.09429     4.82   0.000     72.59515    188.8181
+------------------------------------------------------------------------------
+<p>
+==============================================================================
+*** REgression Specification Error Tests (RESET)
+==============================================================================
+ Ho: Model is Specified  -  Ha: Model is Misspecified
+------------------------------------------------------------------------------
+* Ramsey Specification ResetF Test
+- Ramsey RESETF1 Test: Y= X Yh2         =  11.787  P-Value &gt; F(1,  13) 0.0044
+- Ramsey RESETF2 Test: Y= X Yh2 Yh3     =   5.488  P-Value &gt; F(2,  12) 0.0203
+- Ramsey RESETF3 Test: Y= X Yh2 Yh3 Yh4 =   3.604  P-Value &gt; F(3,  11) 0.0494
+------------------------------------------------------------------------------
+* DeBenedictis-Giles Specification ResetL Test
+- Debenedictis-Giles ResetL1 Test       =   3.873  P-Value &gt; F(2, 12)  0.0504
+- Debenedictis-Giles ResetL2 Test       =   1.919  P-Value &gt; F(4, 10)  0.1838
+- Debenedictis-Giles ResetL3 Test       =   1.052  P-Value &gt; F(6, 8)   0.4598
+------------------------------------------------------------------------------
+* DeBenedictis-Giles Specification ResetS Test
+- Debenedictis-Giles ResetS1 Test       =   2.020  P-Value &gt; F(2, 12)  0.1753
+- Debenedictis-Giles ResetS2 Test       =   0.886  P-Value &gt; F(4, 10)  0.5067
+- Debenedictis-Giles ResetS3 Test       =   2.437  P-Value &gt; F(6, 8)   0.1215
+------------------------------------------------------------------------------
+- White Functional Form Test: E2= X X2  =   4.936  P-Value &gt; Chi2(1)   0.0847
+------------------------------------------------------------------------------
+<p>
+<a name="07"></a><b>        </b>+--------+
+<b>    </b>----+<b> Author </b>+-----------------------------------------------------------
+<p>
+  <b>Emad Abd Elmessih Shehata</b>
+  <b>Assistant Professor</b>
+  <b>Agricultural Research Center - Agricultural Economics Research Institute - Eg</b>
+<b>&gt; ypt</b>
+  <b>Email:   </b>emadstat@hotmail.com
+  <b>WebPage:                </b>http://emadstat.110mb.com/stata.htm
+  <b>WebPage at IDEAS:       </b>http://ideas.repec.org/f/psh494.html
+  <b>WebPage at EconPapers:  </b>http://econpapers.repec.org/RAS/psh494.htm
+<p>
+<b>        </b>+----------------+
+<b>    </b>----+<b> reset Citation </b>+---------------------------------------------------
+<p>
+ <b>Shehata, Emad Abd Elmessih (2012)</b>
+ <b>RESET: "OLS REgression Specification Error Tests (RESET)"</b>
+<p>
+        http://ideas.repec.org/c/boc/bocode/s457333.html
+<p>
+        http://econpapers.repec.org/software/bocbocode/s457333.htm
+<p>
+<b><u>Online Help:</u></b>
+<p>
+    <b>reset</b>, <b>reset2</b>. <b>(</b><i>if installed</i><b>)</b>.
+<p>
+<p>
+</pre>

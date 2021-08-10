@@ -1,0 +1,316 @@
+<pre>
+help for <b>stcompadj</b>
+-------------------------------------------------------------------------------
+<p>
+<b><u>Title</u></b>
+<p>
+    <b>stcompadj</b> --   Adjusted Cumulative Incidence in the presence of competing
+                     risks
+<p>
+<p>
+<b><u>Syntax</u></b>
+<p>
+        <b>stcompadj</b> <i>var</i> [<b>=</b> <i>#</i> <i>var ...</i>] [<i>if</i>] [<i>in</i>] <b>,</b> <b>compet(</b><i>#</i> [<i>...</i>] <b>)</b> [
+               <b><u>mainef</u></b><b>fect(</b><i>varlist</i><b>)</b> <b><u>competef</u></b><b>fect(</b><i>varlist</i><b>)</b> <b><u>fle</u></b><b>xible</b> <b>df(</b><i>#</i><b>)</b>
+               <b><u>gen</u></b><b>erate(</b><i>newvar newvar</i><b>)</b> <b><u>savexp</u></b><b>anded(</b><i>filename [,replace]</i><b>)</b>
+               <b>bootci</b> <b><u>rep</u></b><b>s(</b><i>#</i><b>)</b> <b>ci</b> <b>showmod</b> <b><u>l</u></b><b>evel(</b><i>#</i><b>)</b> ]
+<p>
+<p>
+<p>
+    <i>options</i>                        Description
+    -------------------------------------------------------------------------
+    Options
+      <b>compet(</b><i># </i>[<i>#</i>]<b>)</b>                A failure of a competing event occurs
+                                     whenever failvar specified in the
+                                     previous stset takes on any of the
+                                     values of this numlist. It is not an
+                                     option.
+      <b><u>mainef</u></b><b>fect(</b><i>varlist</i><b>)</b>          covariates acting only on the main event.
+      <b><u>competef</u></b><b>fect(</b><i>varlist</i><b>)</b>        covariates acting only on the competing
+                                     event.
+      <b><u>fle</u></b><b>xible</b>                     cause a flexible parametric, instead of a
+                                     Cox, model is fitted to the data.
+      <b>df(</b><i>#</i><b>)</b>                        degrees of freedom for the underlying
+                                     flexible parametric model.
+      <b><u>gen</u></b><b>erate(</b><i>newvar1 newvar2</i><b>)</b>    specify the names of covariates containing
+                                     the cumulative incidence of the main and
+                                     competing event
+      <b><u>savexp</u></b><b>anded(</b><i>filename</i><b>)</b>        save the data file in the expanded format
+                                     suitable for further analysis.
+      <b>bootci</b>                       compute bootstrap confidence intervals of
+                                     the cumulative incidence functions.
+      <b><u>rep</u></b><b>s(</b><i>#</i><b>)</b>                      specify <i>#</i> bootstrap replications; default
+                                     is <b><u>rep</u></b><b>s(</b><i>1000</i><b>)</b>.
+      <b>ci</b>                           compute confidence intervals of the
+                                     cumulative incidence functions after a
+                                     flexible parametric model.
+      <b>showmod</b>                      shows the fitted model (Cox or flexible
+                                     parametric)
+      <b><u>l</u></b><b>evel</b>                        set confidence level. Default is 95
+<p>
+<p>
+    You must <b>stset</b> your data before using <b>stcompadj</b>. In previous stset you
+    must specify failure(varname==numlist) where numlist refers to the event
+    of interest; see <b>stset</b>
+<p>
+<p>
+    The <b>moremata</b> user package must be installed on the system (Jann 2005).
+    See ssc describe moremata.
+<p>
+<p>
+<p>
+<b><u>Options</u></b>
+<p>
+    <b>compet(</b><i># </i>[<i>#</i>]<b>)</b> is not an option. A failure of a competing event occurs
+        whenever <i>failvar</i> specified in the previous <b>stset</b> takes on any of the
+        values of this <i>numlist</i>.
+<p>
+    <b>maineffect(</b><i>varlist</i><b>)</b> <i>varlist</i> is the list of the variables acting only on
+        the main event.
+<p>
+    <b>competeffect(</b><i>varlist</i><b>)</b> <i>varlist</i> is the list of the variables acting only on
+        the competing event. Note that the same variable can be specified
+        both in <b><u>mainef</u></b><b>fect(</b><i>varlist</i><b>)</b> and <b><u>competef</u></b><b>fect(</b><i>varlist</i><b>)</b>. Then, this
+        variable is assumed to have different effects on the main and
+        competing event. Variables not specified either in
+        <b><u>mainef</u></b><b>fect(</b><i>varlist</i><b>)</b> or in <b><u>competef</u></b><b>fect(</b><i>varlist</i><b>)</b> are assumed to have
+        the same effect on the main and the competing event.
+<p>
+    <b>flexible</b> switches <b>stcompadj</b> to fit a flexible parametric model to the
+        expanded data.  This allows to easily obtain the confidence intervals
+        of the covariate-adjusted CI.
+<p>
+    <b>df(</b><i>#</i><b>)</b> specifies the degrees of freedom for the restriced cubic spline
+        function used for the flexible parametric model.  This option has
+        effect only when <b>flexible</b> is also specified. Allowed values are 1-10.
+        The default is 4.
+<p>
+    <b>generate(</b><i>newvarname1 newvarname2</i><b>)</b> gives two alternative names to the
+        variables containing the covariate-adjusted CI function for the main
+        and competing event. Default names are CI_Main and CI_Compet.
+<p>
+    <b>savexpanded(</b><i>filename </i>[<b>,</b><i>replace</i>]<b>)</b> states the name of the file where the
+        expanded data are to be saved. See examples below for the use of this
+        file.
+<p>
+    <b>bootci</b> computes CI confidence intervals by resampling observations from
+        the expanded dataset.  This method is only available when the Cox
+        model is used for fitting the effect of the covariates.
+<p>
+    <b>reps(</b><i>#</i><b>)</b> sets the number of bootstrap replications to be performed.  The
+        default is 1000.
+<p>
+    <b>ci</b> estimates CI confidence intervals when a parametric flexible model is
+        used for fitting the effect of the covariates.  When data are sparse
+        a small number of df is recommended for estimating confidence
+        intervals.
+<p>
+    <b>showmod</b> shows the model, Cox or flexible parametric, fitted to the
+        expanded data. This can be usefull for checking that the model fitted
+        is as you expect.
+<p>
+    <b>level(</b><i>#</i><b>)</b> sets the confidence level; default is level(95) or as set by set
+        level
+<p>
+<p>
+<p>
+<b><u>Remarks</u></b>
+<p>
+<b>stcompadj</b> estimates the adjusted cumulative incidence function based on a Cox
+or a flexible parametric regression model in the presence of competing risks.
+<p>
+Cox regression in the presence of competing risks is usually performed by
+fitting separate models for each failure type.  It is possible to obtain the
+same results by using a single analysis after appropriately adapting the data
+set. In short this consists of expanding each observation for each cause of
+failure, creating a stratum indicator taking on a value of 1 for the first <i>n</i>
+records, 2 for the following <i>n</i> records and so on, and modifying the failure
+indicator so that it attains the value 1 for each observation of death caused
+by the main event in the first stratum, for each observation of death caused by
+the competing event in the second stratum and so on. This way of representing
+data (expanded format) allows to model both identical and different effects of
+the same covariate on the main and competing events. Note that at present
+<b>stcompadj</b> handles the presence of one event competing with the main.  For more
+details see reference.
+<p>
+After adapting the data set <b>stcompadj</b> fits a Cox model whose covariates are the
+variables specified in <i>var</i> [[<b>=</b> <i>#</i>]<i> var ...</i>]. Then, from the baseline cumulative
+hazard and the linear predictor it computes and saves in two variables the
+cumulative incidence (CI) function for the main and competing event adjusted to
+the mean or to the specified number of each covariate if the = # part is
+specified.
+<p>
+As an alternative to the Cox model, a flexible parametric model can be fitted
+to the expanded data set by specifying <b><u>fle</u></b><b>xible</b>. This allows one to easily
+estimate the confidence intervals of the CI function. The <b>stpm2</b> (Lambert 2009)
+and <b>rcsgen</b> (Nelson, Lambert, Rutherford 2008) user packages must be installed
+on the system. See net describe stpm2 and ssc describe rcsgen.
+<p>
+By default the fitted model considers the covariates as having the same effect
+on the main as on the competing event.  The options <b><u>mainef</u></b><b>fect(</b><i>varlist</i><b>)</b> and
+<b><u>competef</u></b><b>fect(</b><i>varlist</i><b>)</b> allow to fit a model where some of the previously stated
+variables have effect only on the main or on the competing event. If the same
+variable is specified both in <b><u>mainef</u></b><b>fect(</b><i>varlist</i><b>)</b> and <b><u>competef</u></b><b>fect(</b><i>varlist</i><b>)</b>
+then it is assumed that it has different effects on the main and competing
+event.
+<p>
+By default the CI function for the main and competing event is saved in two
+variables named CI_Main and CI_Compet. Other names can be specified by using
+<b><u>gen</u></b><b>erate(</b><i>newvar1 newvar2</i><b>)</b>. If <b>bootci</b> or <b>ci</b> is also specified then higher and
+lower confidence bounds of the CI are saved in four new variables whose names
+are prefixed by Hi_ and Lo_.
+<p>
+Data in the expanded format can be saved by using <b><u>savexp</u></b><b>anded(</b><i>filename</i><b>)</b>. This
+format allows to test the equality of the effects of a covariate on the main
+and on the competing event and the difference between the hazards of the main
+and competing event under the assumption of the cause-specific hazards being
+proportional (see example below).
+<p>
+<p>
+<p>
+<b><u>Examples</u></b>
+<p>
+The cumulative incidence is estimated in a model where sex has the same effect
+on the main as on the competing event, and thick has effect only on the main
+event. The function is evaluated for males (sex=1) and thickness of the tumor 2
+mm above the mean (thick=2):
+<p>
+    <b>use "C:\Data\malignantmelanoma", clear</b>
+    <b>stset time,failure(cause==1)</b>
+<p>
+    <b>stcompadj sex=1 thick=2, compet(2) maineffect(thick) showmod nolog nohr</b>
+    <b>sort _t</b>
+    <b>l _t CI_Main CI_Compet in 1/12</b>
+<p>
+<p>
+Adjusted cumulative incidence is estimated for two levels of a covariate and
+two graphs are produced for the main and competing event (fig. 5 in the second
+reference).
+<p>
+    <b>use si.dta,clear</b>
+    <b>stset time, f(status==1)</b>
+<p>
+    <b>stcompadj ccr=0 , compet(2) maineffect(ccr) competeffect(ccr) gen(Main0</b>
+        <b>Compet0)</b>
+    <b>stcompadj ccr=1 , compet(2) maineffect(ccr) competeffect(ccr) gen(Main1</b>
+        <b>Compet1)</b>
+    <b>twoway line Main0 Main1 _t, sort c(J J) scheme(lean2) xti("Years from HIV</b>
+        <b>Infection") yti("Cumulative Incidence") yla(0(.1).5,glp(shortdash))</b>
+        <b>xla(0(2)12) legend(pos(11) ring(0) label(1 "WW") label(2 "WM"))</b>
+        <b>ti("AIDS")</b>
+<p>
+    <b>twoway line Compet0 Compet1 _t if _t&lt;13.5, sort c(J J) scheme(lean2)</b>
+        <b>xti("Years from HIV Infection") yti("Cumulative Incidence")</b>
+        <b>yla(0(.1).5,glp(shortdash)) xla(0(2)12) legend(pos(11) ring(0)</b>
+        <b>label(1 "WW") label(2 "WM")) ti("SI Appearance")</b>
+<p>
+<p>
+<p>
+Confidence intervals of the cumulative incidence are estimated by sampling with
+replacement (see bsample) from data.
+<p>
+    <b>stcompadj ccr=0 , compet(2) maineffect(ccr) competeffect(ccr) gen(Main0</b>
+        <b>Compet0) bootci</b>
+    <b>stcompadj ccr=1 , compet(2) maineffect(ccr) competeffect(ccr) gen(Main1</b>
+        <b>Compet1) bootci</b>
+<p>
+    <b>twoway line Main1 Hi_Main1 Lo_Main1 Main0 Hi_Main0 Lo_Main0 _t , sort c(J</b>
+        <b>J J J J J) lp(l - - l - -)"</b> <b>scheme(lean2) xti("Years from HIV</b>
+        <b>Infection") yti("Cumulative Incidence") yla(0(.1).65,nogrid)</b>
+        <b>xla(0(2)12) legend(pos(11) ring(0)</b> <b>label(1 "WW") label(4 "WM")</b>
+        <b>order(1 4)) ti("AIDS")</b>
+<p>
+The estimate of the confidence intervals may be time and memory consuming
+mainly if starting data are large. Note also that the confidence intervals
+obtained by using this approach is not yet validated.
+ 
+<p>
+<p>
+Confidence intervals of the cumulative incidence are now obtained by fitting a
+flexible parametric model (see stpm2) to the expanded data set.
+<p>
+    <b>stcompadj ccr=0 , compet(2) maineffect(ccr) competeffect(ccr)</b>
+        <b>gen(Fl_Main0 Fl_Compet0) flexible ci</b>
+    <b>stcompadj ccr=1 , compet(2) maineffect(ccr) competeffect(ccr)</b>
+        <b>gen(Fl_Main1 Fl_Compet1) flexible ci</b>
+<p>
+    <b>twoway line Fl_Main1 Hi_Fl_Main1 Lo_Fl_Main1 Fl_Main0 Hi_Fl_Main0</b>
+        <b>Lo_Fl_Main0 _t , sort c(J J J J J J) lp(l - - l - -)"</b> <b>scheme(lean2)</b>
+        <b>xti("Years from HIV Infection") yti("Cumulative Incidence")</b>
+        <b>yla(0(.1).65,nogrid) xla(0(2)12) legend(pos(11) ring(0)</b> <b>label(1 "WW")</b>
+        <b>label(4 "WM") order(1 4)) ti("AIDS")</b>
+<p>
+<p>
+After saving data in the expanded format the equality of the effect of a
+covariate on the main and competing event can be tested as follows:
+<p>
+- Saving expanding format data assuming that the covariate <i>ccr</i> has the same
+    effect on the main and competing event
+<p>
+    <b>stcompadj ccr=1 , compet(2) savexp(silong,replace)</b>
+<p>
+- Fit a Cox model where the ccr effect interacts with stratum indicator
+    variable
+    <b>use silong,clear</b>
+    <b>xi: stcox i.ccr*i.stratum, strata(stratum) nohr nolog</b>
+<p>
+The coefficient for the interaction term represents the difference in the <i>ccr</i>
+effect on the main and competing event. The corresponding <i>z</i> and <i>p</i> value assess
+the significance of this difference.
+<p>
+<p>
+In the expanded data format the difference of the hazards of the main and
+competing event can also be checked under the assumption that they are
+proportional.
+<p>
+- Saving expanded data format assuming that the covariate <i>ccr</i> has different
+    effects on the main and competing event
+    <b>stcompadj ccr=1 , compet(2) maineffect(ccr) competeffect(ccr)</b>
+        <b>savexp(silong,replace)</b>
+<p>
+- Fit a Cox model whose covariates are the two <i>ccr</i> effects and the stratum
+    indicator variable.
+    <b>use silong,clear</b>
+    <b>xi: stcox Main_ccr Compet_ccr stratum, nohr nolog</b>
+<p>
+The coefficient for the stratum term represents the difference of the
+cause-specific hazards of the competing vs. the main event under the assumption
+that they are proportional.
+<p>
+<p>
+<p>
+Downloading ancillary files in one of your <b>`"`c(adopath)'"'</b> directory you can
+run this example.
+<p>
+          <i>(</i><i>click to run</i><i>)</i>
+<p>
+<p>
+<p>
+<b><u>Also see</u></b>
+<p>
+    On-line:  help for stcompet, stpepemori (if installed).
+<p>
+<p>
+<p>
+<b><u>References</u></b>
+<p>
+Rosthoj S., Andersen P. K., and Abildstrom S. Z. SAS macros for estimation of
+the cumulative incidence functions based on a Cox regression model for
+competing risks. Computer methods and Programs in Biomedicine (2004) 74: 69-75.
+<p>
+Putter H., Fiocco M., and Geskus R. B. Tutorial in biostatistics: Competing
+risks and multi-state models.  Statistics in Medicine (2007) 26: 2389-2430.
+<p>
+<p>
+<p>
+<b><u>Aknowledgments</u></b>
+<p>
+Thanks to Kerry Kammire of the tech-support for his suggestion in writing the
+Mata code.
+<p>
+<p>
+<p>
+<b><u>Author</u></b>
+Enzo Coviello (enzo.coviello@alice.it)
+<p>
+</pre>

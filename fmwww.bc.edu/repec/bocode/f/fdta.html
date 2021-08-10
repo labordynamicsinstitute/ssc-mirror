@@ -1,0 +1,72 @@
+<pre>
+-------------------------------------------------------------------------------
+help for <b>fdta</b>                                                       version 2.0
+                                                         get the newest version
+-------------------------------------------------------------------------------
+<p>
+<b><u>Change contents of string variables</u></b>
+<p>
+<p>
+<b><u>Description</u></b>
+<p>
+<p>
+    <b>fdta</b> check the string <i>varibles</i>, searching for <i>st1</i>.  Whenever a matching
+    <i>str1</i> is found, it is replaced with <i>str2</i>.
+<p>
+<p>
+<b><u>Syntax</u></b>
+<p>
+<p>
+    <b>fdta</b> <i>variables</i> <b>,</b> <b><u>f</u></b><b>rom(</b><i>str1</i><b>)</b> [<b><u>t</u></b><b>o(</b><i>str2</i><b>)</b>]
+<p>
+<p>
+    Where the type of <i>variables</i> must be string. And if the <i>variables</i> specify
+    as <i>_all</i>, it means all string <i>variables</i> in the database.
+<p>
+<a name="options"></a>    <i>options</i>               Description
+    -------------------------------------------------------------------------
+    * <b><u>f</u></b><b>rom(</b><i>str1</i><b>)</b>          find to be replaced
+    * <b><u>t</u></b><b>o(</b><i>str2</i><b>)</b>            use to replace occurrences of <b>from()</b>
+    -------------------------------------------------------------------------
+<p>
+<p>
+<b><u>Examples</u></b>
+<p>
+<p>
+    . sysuse auto
+<p>
+    . fdta make, from(Buick) to(BMW)
+<p>
+    . gen make2=word(make,1)
+<p>
+    . fdta make-trunk, from(Merc.) to(BMW)
+<p>
+    . fdta _all, f(Chev.) t(BMW)
+<p>
+    . fdta _all, f(BMW) t("")
+<p>
+    . fdta _all, f(AMC)
+<p>
+<p>
+<b><u>For problems and suggestions</u></b>
+<p>
+<p>
+    <b>Author: Liu wei</b>, The School of Sociology and Population Studies, Renmin
+    University of China. <b>Address: </b>Zhongguancun Street No. 59, Haidian
+    District, <b>ZIP Code:</b> 100872.  <b>E-mail:</b> rucwz-stata@yahoo.cn
+<p>
+<p>
+<b><u>Also see</u></b>
+<p>
+<p>
+    Other Commands I have written:
+<p>
+    curvefit (if installed)          ssc install curvefit (to install)
+    deci (if installed)              ssc install deci (to install)
+    elife (if installed)             ssc install elife (to install)
+    ftrans (if installed)            ssc install ftrans (to install)
+    freplace (if installed)          ssc install freplace (to install)
+    ftree (if installed)             ssc install ftree (to install)
+    fren (if installed)              ssc install fren (to install)
+<p>
+</pre>

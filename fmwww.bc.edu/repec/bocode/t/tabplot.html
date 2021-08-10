@@ -1,0 +1,395 @@
+<pre>
+-------------------------------------------------------------------------------
+help for <b>tabplot</b>
+-------------------------------------------------------------------------------
+<p>
+<b><u>One-, two- and three-way bar charts for tables</u></b> 
+<p>
+        <b>tabplot</b> <i>rowvar</i> <i>colvar</i> [<b>if</b> <i>exp</i>] [<b>in</b> <i>range</i>] [<i>weight</i>] [ <b>,</b> [ <b><u>fr</u></b><b>action</b> |
+                 <b><u>fr</u></b><b>action(</b><i>varlist</i><b>)</b> | <b><u>perc</u></b><b>ent</b> | <b><u>perc</u></b><b>ent(</b><i>varlist</i><b>)</b> ] <b><u>miss</u></b><b>ing</b>
+                 <b>yasis xasis</b> <b><u>h</u></b><b>eight(</b><i>#</i><b>)</b> <b><u>show</u></b><b>val</b>[<b>(</b><i>specification</i><b>)</b>] <b><u>min</u></b><b>imum(</b><i>#</i><b>)</b>
+                 <b><u>max</u></b><b>imum(</b><i>#</i><b>)</b> <b><u>sep</u></b><b>arate(</b><i>sepspec</i><b>)</b> <b>bar1(</b><i>rbar_options</i><b>)</b> ...
+                 <b>bar20(</b><i>rbar_options</i><b>)</b> <b>barall(</b><i>rbar_options</i><b>)</b> <i>graph_options</i> [
+                 <b>plot(</b><i>plot</i><b>)</b> | <b>addplot(</b><i>plot</i><b>)</b> ] ]
+<p>
+        <b>tabplot</b> <i>varname</i> [<b>if</b> <i>exp</i>] [<b>in</b> <i>range</i>] [<i>weight</i>] [ <b>,</b> [ <b><u>fr</u></b><b>action</b> |
+                 <b><u>fr</u></b><b>action(</b><i>varlist</i><b>)</b> | <b><u>perc</u></b><b>ent</b> | <b><u>perc</u></b><b>ent(</b><i>varlist</i><b>)</b> ] <b><u>miss</u></b><b>ing</b>
+                 <b>yasis xasis</b> <b><u>h</u></b><b>eight(</b><i>#</i><b>)</b> <b><u>show</u></b><b>val</b>[<b>(</b><i>specification</i><b>)</b>] <b><u>min</u></b><b>imum(</b><i>#</i><b>)</b>
+                 <b><u>max</u></b><b>imum(</b><i>#</i><b>)</b> <b><u>sep</u></b><b>arate(</b><i>sepspec</i><b>)</b> <b>bar1(</b><i>rbar_options</i><b>)</b> ...
+                 <b>bar20(</b><i>rbar_options</i><b>)</b> <b>barall(</b><i>rbar_options</i><b>)</b> <i>graph_options</i> [
+                 <b>plot(</b><i>plot</i><b>)</b> | <b>addplot(</b><i>plot</i><b>)</b> ] ]
+<p>
+    <b>fweight</b>s, <b>aweight</b>s and <b>iweights</b> may be specified.
+<p>
+<p>
+<b><u>Description</u></b> 
+<p>
+    <b>tabplot</b> plots a table of numerical values (e.g.  frequencies, fractions
+    or percents) in graphical form as a bar chart.  It is mainly intended for
+    representing contingency tables for one, two or three categorical
+    variables. It also has uses for producing multiple histograms and graphs
+    for general one-, two- or three-way tables.
+<p>
+    <b>tabplot</b> <i>rowvar</i> <i>colvar</i> follows the standard tabular alignment: the
+    categories of <i>rowvar</i> define rows from top (low values) to bottom (high
+    values) and the categories of <i>colvar</i> define columns from left (low
+    values) to right (high values). The frequency (fraction, percent) of each
+    combination of row and column is shown as a bar, with default alignment
+    vertical and default width 0.5.  Use the <b>barwidth()</b> option to vary width,
+    but note that all bars will have the same width.  By default both
+    variables are mapped on the fly in sort order to successive integers from
+    1 up, but original values or value labels are used as value labels: this
+    may be varied by use of the <b>yasis</b> or <b>xasis</b> options.
+<p>
+    Alternatively, <b>tabplot</b> <i>varname</i> creates a bar chart which by default
+    displays one set of vertical bars; with the <b>horizontal</b> option it displays
+    one set of horizontal bars. The categories of <i>varname</i> thus define either
+    columns from left (low values) to right (high values) or rows from top
+    (low values) to bottom (high values).  The frequency (fraction, percent)
+    of each column or row is shown as a bar.
+<p>
+<p>
+<b><u>Remarks</u></b> 
+<p>
+    The display is deliberately minimal. No numeric scales are shown for
+    reading off numeric values, although optionally numeric values may be
+    shown below bars by use of the <b>showval</b> option. Above all, there is no
+    facility for any kind of three-dimensional display or effect. The maximum
+    value (or more generally biggest value) shown is indicated by use of
+    <b>note()</b>, unless <b>showval</b> or <b>showval()</b> is specified.
+<p>
+    In contrast to a table, in which it is easier to compare values down
+    columns, it is usually easier to compare values across rows whenever bars
+    are vertical.  A simple alternative is to use the <b>horizontal</b> option, in
+    which case it is usually easier to compare down columns.  Some
+    experimentation with both forms and with <b>percent(</b><i>rowvar</i><b>)</b> or
+    <b>percent(</b><i>colvar</i><b>)</b> will often be helpful.
+<p>
+    <b>tabplot</b> <i>rowvar colvar</i><b>, by()</b> is the way to plot three-way tables. The
+    variable specified in <b>by()</b> is used to produce a set of graphs in several
+    panels. Similarly, <b>tabplot</b> <i>varname</i><b>, by()</b> is another way to plot two-way
+    tables.
+<p>
+    <b>tabplot</b> with the <b>xasis</b> option may be useful for stacking histograms
+    vertically. Less commonly, with the <b>yasis</b> and <b>horizontal</b> options it may
+    be useful for stacking them horizontally.  A typical protocol would be,
+    for <b>mpg</b> shown in bins of width 2.5 mpg,
+<p>
+        <b>. gen midpoint = round(mpg, 2.5)</b>
+        <b>. _crcslbl midpoint mpg</b>
+        <b>. tabplot foreign midpoint, xasis barw(2.5) bstyle(histogram)</b>
+        <b>percent(foreign)</b>
+<p>
+    In general, specify a variable containing equally-spaced midpoints and
+    assign to it an appropriate variable label.  <b>tabplot</b> will do the rest.
+    Omit the <b>percent()</b> option for display of frequencies.
+<p>
+    A recipe for subverting <b>tabplot</b> to plot any variable that takes on a
+    single value for each cross-combination of categories is illustrated in
+    the examples below. The key is to select precisely one observation for
+    each cross-combination and to specify that variable as (most generally)
+    an <b>iweight</b>.
+<p>
+    Furthermore, using an <b>iweight</b> is the only possible method whenever a
+    variable has at least some negative values. In that case,
+<p>
+        1. Consider changing the maximum height through <b>height()</b> to avoid
+        overlap of bars variously representing positive and negative values.
+        By default <b>tabplot</b> chooses the scale to accommodate the longest bar
+        to be shown, but it contains no special intelligence otherwise to
+        avoid overlap of bars in the same column or row.
+<p>
+        2. If also using <b>showval</b> or <b>showval()</b>, consider changing the <b>offset()</b>
+        and using a transparent <b>bfcolor()</b>.
+<p>
+    Bar charts presented as one row or one column of bars go back at least as
+    far as Playfair (1786). See (e.g.) Playfair (2005, p.25) or Wainer (2005,
+    p.45; 2009, p.174).
+<p>
+    Bar charts presented in table form with two or more rows and two or more
+    columns are less common.
+<p>
+        They have been used in one form of pollen diagram.  Sears (1933,
+        1935) gave some early examples.
+<p>
+        Brinton (1939), Neurath (1939), Rogers (1961), Lockwood (1969), Doran
+        and Hodson (1975), Bertin (1981, 1983), Lebart, Morineau and Warwick
+        (1984), Anderson and May (1991), Chapman and Wykes (1996), de
+        Falguerolles et al. (1997), Chauchat and Risson (1998), MacKay (2003,
+        2008), Wilkinson (2005), Unwin, Theus and Hofmann (2006), Hahsler,
+        Hornik and Buchta (2008), Hofmann (2008), Theus and Urbanek (2009)
+        and Few (2009, 2012) also give a variety of examples.
+<p>
+<p>
+<b><u>Options</u></b> 
+<p>
+    <b>fraction</b> indicates that all frequencies should be shown as fractions
+        (with sum 1) of the total frequency of all values being represented
+        in the graph.
+<p>
+    <b>fraction(</b><i>varlist</i><b>)</b> indicates that all frequencies should be shown as
+        fractions (with sum 1) of the total frequency for each distinct
+        category defined by the combinations of <i>varlist</i>. Usually, <i>varlist</i>
+        will be either <i>rowvar</i> or <i>colvar</i>.
+<p>
+    <b>percent</b> indicates that all frequencies should be shown as percents (with
+        sum 100) of the total frequency of all values being represented in
+        the graph.
+<p>
+    <b>percent(</b><i>varlist</i><b>)</b> indicates that all frequencies should be shown as
+        percents (with sum 100) of the total frequency for each distinct
+        category defined by the combinations of <i>varlist</i>.  Usually, <i>varlist</i>
+        will be either <i>rowvar</i> or <i>colvar</i>.
+<p>
+    Only one of these <b>fraction</b>[<b>()</b>] and <b>percent</b>[<b>()</b>] options may be specified.
+<p>
+    <b>missing</b> specifies that any missing values of any of the variables
+        specified should also be included within their own categories.
+<p>
+    <b>yasis</b> and <b>xasis</b> specify respectively that the <i>y</i> (row) variable and the <i>x</i>
+        (column) variable are to be treated literally (that is, numerically).
+        Most commonly, each option will be specified if the variable in
+        question is a measured scale or a graded variable with gaps. If
+        values 1 to 5 are labelled A to E, but no value of 4 (D) is present
+        in the data, <b>yasis</b> or <b>xasis</b> prevents a mapping to 1 (A) ... 4 (E).
+<p>
+    <b>height(</b><i>#</i><b>)</b> controls the amount of graph space taken up by bars. The
+        default is 0.8.  Note that the height may need to be much smaller or
+        much larger with <b>yasis</b> or <b>xasis</b>, given that the latter take values
+        literally.
+<p>
+    <b>showval</b> specifies that numeric values are be shown beneath (or if
+        <b>horizontal</b> is specified to the left of) bars.
+<p>
+    <b>showval</b> may also be specified with a variable name and/or options.  If
+        options alone are specified, no comma should be given.  In
+        particular,
+<p>
+        <b>showval(</b><i>varname</i><b>)</b> would specify that the values to be shown are those
+        of <i>varname</i>. For example, the values of some kind of residuals might
+        be shown alongside frequency bars.
+<p>
+        <b>showval(offset(</b><i>#</i><b>))</b> specifies an offset between the base of the bar
+        and the position of the numeric value.  Default is 0.1 with two
+        variables or 0.02 with one variable.  Tweak this if the spacing is
+        too large or too small.
+<p>
+        <b>showval(format(</b><i>format</i><b>))</b> specifies a format with which to show values.
+        Specifying a format will often be advisable with non-integers.
+        Example: <b>showval(format(%2.1f))</b> specifies rounding to 1 decimal
+        place. Note that with a specified variable the format defaults to the
+        format of that variable; with percent options the format defaults to
+        %2.1f (1 decimal place); with fraction options the format defaults to
+        %4.3f (3 decimal places).
+<p>
+        <b>showval(</b><i>varname</i><b>, format(%2.1f))</b> is an example of <i>varname</i> specified
+        with options.
+<p>
+        Otherwise the options of <b>showval()</b> can be options of scatter, most
+        usually marker label options.
+<p>
+    <b>minimum()</b> suppresses plotting of bars with values less than the minimum
+        specified, in effect setting them to zero.
+<p>
+    <b>maximum()</b> truncates bars with values more than the maximum specified to
+        show that maximum.
+<p>
+    <b>separate()</b> specifies that bars associated with different <i>sepspec</i> will be
+        shown differently, most obviously using different colours. <i>sepspec</i> is
+        passed as an argument to the <b>by()</b> option of separate, except that
+        references to <b>@</b> are first translated to be references to the quantity
+        being plotted.
+<p>
+        A call to <b>separate()</b> may be supplemented with calls to options <b>bar1()</b>
+        ...  <b>bar20</b> and/or to <b>barall()</b>. The arguments should be options of 
+        twoway rbar.
+<p>
+        Options <b>bar1()</b> to <b>bar20()</b> are provided to allow overriding the
+        defaults on up to 20 categories, the first, second, etc., shown.  The
+        limit of 20 is plucked out of the air as more than any user should
+        really want. The option <b>barall()</b> is available to override the
+        defaults for all bars. Any <b>bar</b>?  option always overrides <b>barall()</b>.
+        Thus if you wanted thicker <b>blwidth()</b> on all bars you could specify
+        <b>barall(blwidth(thick))</b>. If you wanted to highlight the first category
+        only you could specify <b>bar1(blwidth(thick))</b>.
+<p>
+    <i>graph_options</i> refers to options of twoway rbar.  Among others:
+<p>
+        <b>barwidth()</b> specifies the widths of the bars. The default is 0.5.
+        This may need changing, especially with option <b>xasis</b> or <b>yasis</b>.
+<p>
+        <b>by()</b> specifies another variable used to subdivide the display into
+        panels.
+<p>
+        <b>recast()</b> recasts the graph as another twoway plottype. In practice,
+        <b>recast(rspike)</b> is the main alternative.
+<p>
+    <b>plot(</b>plot<b>)</b> provides a way to add other plots to the generated graph.
+        Allowed in Stata 8 only.
+<p>
+    <b>addplot(</b>addplot<b>)</b> provides a way to add other plots to the generated
+        graph. Allowed in Stata 9 upwards.
+<p>
+        With large datasets especially, it is advisable to ensure that the
+        extra plot(s) do(es) not contain information repeated for every
+        observation within each combination of <i>rowvar</i> and <i>colvar</i>. The
+        examples show one technique for avoiding this.
+<p>
+<p>
+<b><u>Examples</u></b>
+<p>
+    <b>. sysuse auto, clear</b>
+<p>
+    <b>. tabplot for rep78</b>
+    <b>. tabplot for rep78, showval</b>
+    <b>. tabplot for rep78, percent(foreign) showval(offset(0.05) format(%2.1f))</b>
+    <b>. tabplot for rep78, percent(foreign) sep(foreign) bar1(bcolor(red*0.5))</b>
+        <b>bar2(bcolor(blue*0.5)) showval(offset(0.05) format(%2.1f))</b>
+<p>
+    <b>. tabplot rep78 mpg, xasis barw(1) bstyle(histogram)</b>
+<p>
+    <b>. egen mean = mean(mpg), by(rep78)</b>
+    <b>. gen rep78_2 = 6 - rep78 - 0.05</b>
+    <b>. bysort rep78 : gen byte tag = _n == 1</b>
+    <b>. tabplot rep78 mpg, xasis barw(1) bstyle(histogram) addplot(scatter</b>
+        <b>rep78_2 mean if tag)</b>
+<p>
+    <b>. tabplot rep78</b>
+    <b>. tabplot rep78, showval</b>
+    <b>. tabplot rep78, showval horizontal</b>
+<p>
+    <b>. egen mean2 = mean(mpg), by(foreign rep78)</b>
+    <b>. egen tag = tag(foreign rep78)</b>
+    <b>. tabplot foreign rep78 if tag [iw=mean2], showval(format(%2.1f))</b>
+        <b>subtitle(mean miles per gallon)</b>
+    <b>. su mpg</b>
+    <b>. tabplot foreign rep78 if tag [iw=mean2], showval(format(%2.1f))</b>
+        <b>separate(@ &gt; 21.29) bar1(bcolor(red)) bar2(bcolor(black))</b>
+<p>
+    <b>. webuse rate2, clear</b>
+    <b>. tabplot rad?, percent showval</b>
+    <b>. count</b>
+    <b>. bysort rada radb : gen show = string(_N) + " " + string(_N * 100/85,</b>
+        <b>"%2.1f") + "%"</b>
+    <b>. tabplot rad?, showval(show)</b>
+<p>
+<p>
+<b><u>Author</u></b> 
+<p>
+    Nicholas J. Cox, Durham University, U.K.
+    n.j.cox@durham.ac.uk
+<p>
+<p>
+<b><u>Acknowledgments</u></b> 
+<p>
+    Bob Fitzgerald, Friedrich Huebler and Martyn Sherriff found typos in this
+    help. Friedrich also pointed to various efficiency issues.  Marcello
+    Pagano provided encouragement and found a bug. Vince Wiggins suggested
+    how best to align x-axis labels when bars are horizontal.
+<p>
+<p>
+<b><u>References</u></b> 
+<p>
+    Anderson, R.M. and May, R.M. 1991.  <i>Infectious diseases of humans:</i>
+        <i>dynamics and control.</i>  Oxford: Oxford University Press.
+<p>
+    Bertin, J. 1981.  <i>Graphics and graphic information-processing.</i>  Berlin:
+        Walter de Gruyter.
+<p>
+    Bertin, J. 1983.  <i>Semiology of graphics: Diagrams, networks, maps.</i>
+        Madison: University of Wisconsin Press.
+<p>
+    Brinton, W.C. 1939.  <i>Graphic presentation.</i>  New York: Brinton Associates.
+        http://www.archive.org/stream/graphicpresentat00brinrich
+<p>
+    Chapman, M. and Wykes, C. 1996.  <i>Plain figures.</i>  London: The Stationery
+        Office.
+<p>
+    Chauchat, J.-H. and Risson, A. 1998.  Bertin's graphics and
+        multidimensional data analysis.  In Blasius, J. and Greenacre, M.
+        (Eds) <i>Visualization of Categorical Data</i> San Diego, CA: Academic
+        Press, 37-45.
+<p>
+    Cox, N.J. 2004.  Graphing categorical and compositional data.  <i>Stata</i>
+        <i>Journal</i> 4: 190-215.
+<p>
+    Cox, N.J. 2008.  Spineplots and their kin.  <i>Stata Journal</i> 8: 105-121.
+<p>
+    de Falguerolles, A., Friedrich, F. and Sawitzki, G. 1997.  A tribute to
+        J. Bertin's graphical data analysis.  In Bandilla, W. and Faulbaum,
+        F. (Eds) <i>Advances in Statistical Software 6.</i>  Stuttgart: Lucius and
+        Lucius, 11-20.
+        http://statlab.uni-hd.de/reports/by.series/beitrag.34.pdf
+<p>
+    Doran, J.E. and Hodson, F.R. 1975.  <i>Mathematics and computers in</i>
+        <i>archaeology.</i>  Edinburgh: Edinburgh University Press.  See p.118.
+<p>
+    Few, S. 2009.  <i>Now you see it: Simple visualization techniques for</i>
+        <i>quantitative analysis.</i>  Oakland, CA: Analytics Press.
+<p>
+    Few, S. 2012.  <i>Show me the numbers: Designing tables and graphs to</i>
+        <i>enlighten.</i>  Burlingame, CA: Analytics Press.
+<p>
+    Hahsler, M., Hornik, K. and Buchta, C. 2008.  Getting things in order: an
+        introduction to the R package seriation.  <i>Journal of Statistical</i>
+        <i>Software</i> 25(3) http://www.jstatsoft.org/v25/i03
+<p>
+    Hofmann, H. 2008.  Mosaic plots and their variants.  In Chen, C., Härdle,
+        W. and Unwin, A. (Eds) <i>Handbook of data visualization.</i>  Berlin:
+        Springer, 617-642.
+<p>
+    Lebart, L., Morineau, A. and Warwick, K.M. 1984.  <i>Multivariate</i>
+        <i>descriptive statistical analysis: Correspondence analysis and related</i>
+        <i>techniques for large matrices.</i>  New York: John Wiley. See p.50.
+<p>
+    Lockwood, A. 1969.  <i>Diagrams: A visual survey of graphs, maps, charts and</i>
+        <i>diagrams for the graphic designer.</i>  London: Studio Vista.  See pp.27,
+        32, 45, 53, 61, 62.
+<p>
+    MacKay, D.J.C. 2003.  <i>Information theory, inference, and learning</i>
+        <i>algorithms.</i>  Cambridge: Cambridge University Press.
+<p>
+    MacKay, D.J.C. 2008.  <i>Sustainable energy </i>-<i> without the hot air.</i>
+        Cambridge: UIT Cambridge.
+<p>
+    Neurath, O. 1939.  <i>Modern man in the making.</i>  London: Secker and Warburg.
+        See p.74.
+<p>
+    Playfair, W. 1786.  <i>The commercial and political atlas.</i>  London: Debrett;
+        Robinson; and Sewell.
+<p>
+    Playfair, W. 2005.  <i>The commercial and political atlas and Statistical</i>
+        <i>breviary.</i>  (eds. Wainer, H. and Spence, I.) Cambridge: Cambridge
+        University Press.
+<p>
+    Rogers, A.C. 1961.  <i>Graphic charts handbook.</i>  Washington, DC: Public
+        Affairs Press.
+<p>
+    Sears, P.B. 1933.  Climatic change as a factor in forest succession.
+        <i>Journal of Forestry</i> 31: 934-942.
+<p>
+    Sears, P.B. 1935.  Types of North American pollen profiles.  <i>Ecology</i> 16:
+        488-499.
+<p>
+    Theus, M. and Urbanek, S. 2009.  <i>Interactive graphics for data analysis:</i>
+        <i>Principles and examples.</i>  Boca Raton, FL: CRC Press.
+<p>
+    Unwin, A., Theus, M. and Hofmann, H. 2006.  <i>Graphics of large datasets:</i>
+        <i>Visualizing a million.</i>  New York: Springer.
+<p>
+    Wainer, H. 2005.  <i>Graphic discovery: A trout in the milk and other visual</i>
+        <i>adventures.</i>  Princeton, NJ: Princeton University Press.
+<p>
+    Wainer, H. 2009.  <i>Picturing the uncertain world: How to understand,</i>
+        <i>communicate, and control uncertainty through graphical display.</i>
+        Princeton, NJ: Princeton University Press.
+<p>
+    Wilkinson, L. 2005.  <i>The grammar of graphics.</i>  New York: Springer.
+<p>
+<p>
+<b><u>Also see</u></b> 
+<p>
+    On-line: help for twoway rbar, histogram, catplot (if installed), 
+             spineplot (if installed)
+<p>
+</pre>

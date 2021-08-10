@@ -1,0 +1,250 @@
+<pre>
+-------------------------------------------------------------------------------
+help for <b>mcmcmixed</b>
+-------------------------------------------------------------------------------
+<p>
+<b><u>Syntax</u></b>
+<p>
+        <b>mcmcmixed</b> <i>depvar</i> [<i>fe_equation</i>] [<b>||</b> <i>re_equation</i>] <b>,</b> <b>saving(</b><i>filename</i><b>)</b>
+                  <b>d0(</b><i>#</i><b>)</b> <b>delta0(</b><i>name</i><b>)</b> [<i>options</i>]
+<p>
+    where the syntax of <i>fe_equation</i> is
+<p>
+            [<i>indepvars</i>] [<i>if</i>] [<i>in</i>] [<i>weight</i>] [<b>,</b> <b>noconstant</b>]
+<p>
+    and the syntax of <i>re_equation</i> is
+<p>
+            <i>levelvarlist</i><b>:</b> [<i>varlist</i>] [<b>,</b> <b>noconstant</b>]
+<p>
+    <i>options</i>               Description
+    -------------------------------------------------------------------------
+    Model
+      <b>d0(</b><i>#</i><b>)</b>               prior variance of regression error
+      <b>delta0(</b><i>name</i><b>)</b>        scalar or matrix specifying prior variance of
+                            random effects; relevant only if <i>re_equation</i> is
+                            specified
+      <b>noconstant</b>          suppress constant term
+<p>
+    Results
+      <b>saving(</b><i>filename</i><b>)</b>    filename where results should be stored
+      <b>replace</b>             overwrite existing <i>filename</i>
+<p>
+    Markov chain
+      <b>iterate(</b><i>#</i><b>)</b>          number of iterations in chain; default is
+                            <b>iterate(100)</b>
+      <b>seed(</b><i>#</i><b>)</b>             random number generator seed; default is
+                            <b>seed(12345)</b>
+      <b>nolog</b>               suppress iteration log
+    -------------------------------------------------------------------------
+<p>
+    <b>aweight</b>s and <b>fweight</b>s are allowed; see weight, and see methods for an
+      important note on how <b>aweight</b>s are interpreted.
+<p>
+<b><u>Description</u></b>
+<p>
+    <b>mcmcmixed</b> uses Markov chain Monte Carlo (MCMC) to sample from the
+    posterior distribution of a normal linear mixed model.  If <i>re_equation</i> is
+    not specified, <b>mcmcmixed</b> is identical to <b>mcmcreg</b>, which estimates a
+    normal linear regression.  If <i>re_equation</i> is specified, the model allows
+    the coefficients to vary across groups defined by <i>levelvarlist</i>.
+<p>
+    <b>mcmcmixed</b> produces a file of draws from the posterior distribution of the
+    model parameters.  Each observation in the file corresponds to an
+    iteration of the sampler; each variable represents a different scalar
+    parameter.  These variables are named as follows:
+<p>
+      <i>beta_*</i>               Coefficient on independent variable *.
+      <i>beta__cons</i>           Intercept (omitted if <b>noconstant</b> is specified in
+                            <i>fe_equation</i>).
+      <i>sigma2</i>               Variance of regression error.
+      <i>theta`i'_*</i>           Coefficient on independent variable * for group
+                            `i' of <i>levelvarlist</i>.
+      <i>theta`i'__cons</i>       Intercept for group `i' of <i>levelvarlist</i> (omitted
+                            if <b>noconstant</b> is specified in <i>re_equation</i>).
+      <i>Sigma_`j'_`j'</i>        Variance across groups of the `j'th coefficient in
+                            <i>re_equation</i> (where the constant, if included, is
+                            the final coefficient).
+      <i>Sigma_`j'_`k'</i>        Covariance across groups of the `j'th and `k'th
+                            coefficients in <i>re_equation</i>.
+<p>
+    The variable <i>iter</i> in the output file keeps track of iterations; <i>iter</i>=0 is
+    the initial condition used to start the chain.
+<p>
+    Right-hand-side variables can appear in <i>fe_equation</i>, <i>re_equation</i> or both.
+    If a variable appears only in <i>fe_equation</i>, it has the same coefficient
+    for all groups, and this coefficient is reported in <i>beta_*</i>.  If a
+    variable appears in both <i>fe_equation</i> and <i>re_equation</i>, it has a different
+    coefficient for each group; the mean across groups is reported in <i>beta_*</i>,
+    and the group-specific deviation from the mean is reported in <i>theta`i'_*</i>.
+    If a variable appears only in <i>re_equation</i>, it has a different coefficient
+    for each group, reported in <i>theta`i'_*</i>; the mean across groups is assumed
+    be zero.
+<p>
+    The group indexes <i>`i'</i> in <i>theta`i'_*</i> are obtained from<b> egen</b>
+    <b>i=group(</b><i>levelvarlist</i><b>)</b>.
+<p>
+<b><u>Options</u></b>
+<p>
+        +-------+
+    ----+ Model +------------------------------------------------------------
+<p>
+    <b>d0(</b><i>#</i><b>)</b> sets the prior variance of the regression errors. Because results
+        are potentially sensitive to this prior, you are required to specify
+        it yourself; there is no default value.
+<p>
+    <b>delta0(</b><i>name</i><b>)</b> sets the prior variance-covariance matrix of the
+        group-specific coefficients.  Because results are potentially
+        sensitive to this prior, you are required to specify it yourself;
+        there is no default value.  <i>delta0</i> must be the name of a scalar,
+        vector or matrix containing the prior.  If <i>delta0</i> is a scalar, the
+        prior is <i>delta0</i>*I(<i>Nz</i>), where <i>Nz</i> is the number of group-specific
+        coefficients (including the intercept, unless <b>noconstant</b> is specified
+        in <i>re_equation</i>); <i>delta0</i> must be positive.  If <i>delta0</i> is an <i>Nz</i>x1 or
+        1x<i>Nz</i> vector, the prior is <b>diag</b>(<i>delta0</i>); all elements of <i>delta0</i> must
+        be positive.  If <i>delta0</i> is an <i>Nz</i>x<i>Nz</i> matrix, the prior is <i>delta0</i>; this
+        matrix must be symmetric and positive definite.  It is an error for
+        <i>delta0</i> to be anything except a positive scalar; an <i>Nz</i>x1 or 1x<i>Nz</i>
+        vector containing only positive numbers; or an <i>Nz</i>x<i>Nz</i> symmetric,
+        positive-definite matrix.  The order of elements in <i>delta0</i> is the
+        same as the order of the <i>varlist</i> specified in <i>re_equation</i>, with the
+        intercept last if there is an intercept.
+<p>
+    <b>noconstant</b>; see <b>[R] estimation options</b>. If <b>noconstant</b> is specified, there
+        must be at least one independent variable.
+<p>
+        +---------+
+    ----+ Results +----------------------------------------------------------
+<p>
+    <b>saving(</b><i>filename</i><b>)</b> designates the location where the results should be
+        saved.
+<p>
+    <b>replace</b> specifies that you want to overwrite <i>filename</i> if it already
+        exists.
+<p>
+        +--------------+
+    ----+ Markov chain +-----------------------------------------------------
+<p>
+    <b>iterate(</b><i>#</i><b>)</b> specifies how many iterations the chain should continue for.
+<p>
+    <b>seed(</b><i>#</i><b>)</b> sets the random number generator seed. Random numbers are used to
+        initialize the sampler; thus, multiple independent chains can be
+        obtained by running <b>mcmcreg</b> with different values of <b>seed</b>.
+<p>
+    <b>nolog</b> suppresses printing of an iteration log.
+<p>
+<a name="methods"></a><b><u>Methods</u></b>
+<p>
+    <b>mcmcreg</b> uses the Gibbs sampler. Standard uninformative conjugate priors
+    are used: The prior for the regression coefficients is uninformative, the
+    prior for the error variance <i>sigma^2</i> is InverseGamma(1/2, <i>d0</i>/2), and the
+    prior for the variance-covariance matrix of group-specific coefficients
+    <i>Sigma</i> is InverseWishart(1+<i>Ng</i>,<i>delta0</i>), where <i>Ng</i> is the number of groups.
+    See Chib (2001, algorithm 16) for a textbook exposition.
+<p>
+    The sampler is initialized with guesses for <i>sigma^2</i> and <i>Sigma</i> obtained as
+    follows.  Let <i>y</i> be the dependent variable, let <i>x</i> be the independent
+    variables in <i>fe_equation</i>, and let <i>z</i> be the independent variables in
+    <i>re_equation</i>.  Let <i>beta</i> be the estimated coefficient vector in a
+    frequentist pooled least squares regression of <i>y</i> on <i>x</i>.  For each group <i>i</i>,
+    let <i>theta_i</i> be the posterior mean of the coefficient vector in a Bayesian
+    least squares regression of <i>y</i>-<i>x</i>*<i>beta</i> on <i>z</i> using the data from group <i>i</i>,
+    where the prior for <i>theta_i</i> is N(0,<i>delta0</i>).  The initial guess for the
+    inverse of <i>Sigma</i> is drawn from Wishart(1+<i>Ng</i>,inv(inv(<i>delta0</i>)+<i>S</i>*<i>Ng</i>)), where
+    <i>S</i> is the observed variance-covariance matrix of the <i>theta_i</i>'s.  The
+    initial guess for <i>sigma^2</i> is drawn from
+    InverseGamma((1+<i>df</i>)/2,(<i>d0</i>+<i>SSR</i>)/2), where <i>df</i> is the number of observations
+    (or the sum of weights if you use <b>fweight</b>s) and <i>SSR</i> is the sum of squares
+    of <i>y</i>-<i>x</i>*<i>beta</i>-<i>z</i>*<i>theta_i</i>.
+<p>
+    <b>aweight</b>s are interpreted as scaling the variances of the regression error
+    and all of the random effects.  That is, if you specify <b>aweight</b>s, they
+    apply to both <i>fe_equation</i> and <i>re_equation</i>.  A future version may provide
+    the ability to specify <b>aweight</b>s separately for the two equations.
+<p>
+<b><u>Examples</u></b>
+<p>
+    Manufacturer-specific intercepts:
+<p>
+        <b>. scalar mydelta0=0.01</b>
+        <b>. sysuse auto</b>
+        <b>. generate manuf=cond(strpos(make," ")&gt;0,substr(make,1,strpos(make,"</b>
+            <b>")-1),make)</b>
+        <b>. mcmcmixed mpg weight foreign || manuf:, saving(mcmcmixed_auto1.dta)</b>
+            <b>d0(0.01) delta0(mydelta0)</b>
+        <b>. use mcmcmixed_auto1.dta, clear</b>
+        <b>. list in 1/5</b>
+        <b>. summarize *</b>
+<p>
+    Manufacturer-specific intercept and manufacturer-specific coefficient on
+    <i>weight</i>, same prior variance on each manufacturer-specific parameter:
+<p>
+        <b>. scalar mydelta0=0.01</b>
+        <b>. sysuse auto</b>
+        <b>. generate manuf=cond(strpos(make," ")&gt;0,substr(make,1,strpos(make,"</b>
+            <b>")-1),make)</b>
+        <b>. mcmcmixed mpg weight foreign || manuf:weight,</b>
+            <b>saving(mcmcmixed_auto2.dta) d0(0.01) delta0(mydelta0)</b>
+        <b>. use mcmcmixed_auto2.dta, clear</b>
+        <b>. list in 1/5</b>
+        <b>. summarize *</b>
+<p>
+    Manufacturer-specific intercept and manufacturer-specific coefficient on
+    <i>weight</i>, different prior variance on each manufacturer-specific parameter:
+<p>
+        <b>. matrix mydelta0=(1,0.01)</b>
+        <b>. sysuse auto</b>
+        <b>. generate manuf=cond(strpos(make," ")&gt;0,substr(make,1,strpos(make,"</b>
+            <b>")-1),make)</b>
+        <b>. mcmcmixed mpg weight foreign || manuf:weight,</b>
+            <b>saving(mcmcmixed_auto3.dta) d0(0.01) delta0(mydelta0)</b>
+        <b>. use mcmcmixed_auto3.dta, clear</b>
+        <b>. list in 1/5</b>
+        <b>. summarize *</b>
+<p>
+    When estimating models by MCMC, it is good practice to check for
+    convergence by running multiple independent chains.  <b>mcmcmixed</b> will
+    generate different chains when run repeatedly with different values of
+    <b>seed(#)</b>; see mcmcreg##examples for an example of how to run multiple
+    chains, and see mcmcconverge, available in the SSC package <b>mcmcstats</b>, for
+    useful statistics for checking convergence once you have run multiple
+    chains.
+<p>
+    It is also good practice to drop early iterations, before convergence was
+    achieved, when describing the posterior distribution.  See mcmcsummarize,
+    available in the SSC package <b>mcmcstats</b>, for a convenient way to describe
+    the posterior distribution.
+<p>
+<p>
+<b><u>Saved results</u></b>
+<p>
+    <b>mcmcmixed</b> saves the following in <b>e()</b>:
+<p>
+    Scalars        
+      <b>e(N)</b>                number of observations
+<p>
+    Macros         
+      <b>e(cmd)</b>              <b>mcmcreg</b>
+      <b>e(cmdline)</b>          command as typed
+      <b>e(depvar)</b>           name of dependent variable
+      <b>e(wtype)</b>            weight type
+      <b>e(wexp)</b>             weight expression
+<p>
+    Functions      
+      <b>e(sample)</b>           marks estimation sample
+<p>
+<p>
+<b><u>Author</u></b>
+<p>
+    Sam Schulhofer-Wohl, Federal Reserve Bank of Minneapolis,
+    sschulh1.work@gmail.com.  The views expressed herein are those of the
+    author and not necessarily those of the Federal Reserve Bank of
+    Minneapolis or the Federal Reserve System.
+<p>
+<b><u>Reference</u></b>
+<p>
+    Chib, Siddhartha, 2001. "Markov Chain Monte Carlo Methods: Computation
+        and Inference." In <i>Handbook of Econometrics</i>, vol. 5, ed. James J.
+        Heckman and Edward Leamer, 3569-649. Amsterdam: Elsevier.
+<p>
+<p>
+</pre>

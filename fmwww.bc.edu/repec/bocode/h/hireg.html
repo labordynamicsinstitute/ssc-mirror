@@ -1,0 +1,43 @@
+<pre>
+-------------------------------------------------------------------------------
+Help for <b>hireg</b>
+-------------------------------------------------------------------------------
+<p>
+<b><u>Hierarchical Regression</u></b>
+<p>
+        <b>hireg</b> <i>depvar</i> <i>(indvar block 1)</i> <i>(indvar block 2)</i> <i>(indvar block N)</i> [if]
+                 [in] [wt] <b>,</b> [<b><u>r</u></b><b>egopts()</b> <b><u>nom</u></b><b>iss</b> <b><u>xi</u></b>]
+<p>
+<b><u>Description</u></b>
+<p>
+<b>hireg</b> performs hierarchical regressions.  You must specify a dependent variable
+as well as a list of independent variables.  The independent variables are
+listed in blocks within parentheses (similar to the syntax for <b>sw</b>).  You may
+have as many blocks as you wish and as many variables within the blocks as you
+wish.  All options available to the <b>regress</b> command are available to <b>hireg</b>.
+<p>
+<b><u>Options</u></b>
+<p>
+<b>regopts</b> Are all of the options available to the <b>regress</b> command.
+<b>nomiss</b> Will drop any observation having a missing value for any variable
+    specified in the command. Please note that these observations will be
+    dropped before any that may be dropped by using the "if" clause.
+<b>xi</b> Interaction expansion; indicates using the "xi:" prefix
+<p>
+<b><u>Examples</u></b>
+<p>
+        . hireg income (sex race) (hours rate) (class tenure)
+        . hireg income (sex race) (hours rate) (class tenure), r(beta robust)
+        . hireg income (sex race) (hours rate) (class tenure), r(beta robust)
+            nom
+        . hireg income (sex race) (i.hours i.rate) (class tenure), r(beta
+            robust) nom xi
+<p>
+<p>
+<b><u>Author</u></b>
+Paul H. Bern, Syracuse University
+phbern@syr.edu
+<p>
+<b><u>See Also</u></b>
+Manual: <b>[R] regress</b>
+</pre>

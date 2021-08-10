@@ -1,0 +1,148 @@
+<pre>
+-------------------------------------------------------------------------------
+help for <b>regplot</b>
+-------------------------------------------------------------------------------
+<p>
+<b><u>Plots of regress or similar fit</u></b>
+<p>
+        <b>regplot</b> [<b>,</b> <b>plottype(</b><i>plottype</i><b>)</b> <b><u>fit</u></b><b>opts(</b><i>graph_options</i><b>)</b>
+                 <b><u>sep</u></b><b>arate(</b><i>varname</i><b>)</b> <i>scatter_options</i> <b>plot(</b><i>plot</i><b>)</b> ]
+<p>
+        <b>regplot</b> <i>varname</i> [<b>,</b> <b>plottype(</b><i>plottype</i><b>)</b> <b><u>fit</u></b><b>opts(</b><i>graph_options</i><b>)</b>
+                 <b><u>sep</u></b><b>arate(</b><i>varname</i><b>)</b> <i>scatter_options</i> <b>plot(</b><i>plot</i><b>)</b> ]
+<p>
+<p>
+<b><u>Description</u></b>
+<p>
+    <b>regplot</b> plots fitted or predicted values from an immediately previous
+    <b>regress</b> or similar command. By default the data for the response are also
+    plotted.
+<p>
+<p>
+<b><u>Remarks</u></b> 
+<p>
+    With the first syntax, no <i>varname</i> is specified. <b>regplot</b> shows the
+    response and predicted values on the <i>y</i> axis and the predictor named first
+    in the <b>regress</b> or similar command on the <i>x</i> axis. Thus with this syntax
+    the plot shown is sensitive to the order in which predictors are
+    specified in the estimation command.
+<p>
+    With the second syntax, a <i>varname</i> is supplied, which may name any numeric
+    variable. This is used as the variable on the <i>x</i> axis. This permits
+    changing graphs without reissuing the estimation command.
+<p>
+    Thus in practice <b>regplot</b> is most useful when the fitted values are a
+    smooth function of the variable shown on the <i>x</i> axis, or a set of such
+    functions given also one or more dummy variables as predictors. However,
+    other applications also arise, such as plotting observed and predicted
+    values from a time series model versus time.
+<p>
+    By default, <b>regplot</b> shows the fitted values using {help:twoway mspline}.
+    The <b>plottype()</b> option may be used to specify another twoway plottype.
+<p>
+    In more technical detail: <b>regplot</b> plots
+<p>
+    1. both a single dependent or response variable as specified in <b>e(depvar)</b>
+    and whatever single variable is calculated by the default of <b>predict</b> on
+    the <i>y</i> axis, which makes sense whenever those variables are on the same
+    scale;
+<p>
+    2. either the <i>varname</i> specified or what names the first column of <b>e(b)</b> on
+    the <i>x</i> axis, which makes sense whenever <b>graph</b> can understand that as
+    specifying the <i>x</i> axis.
+<p>
+    If your estimation results do not meet these specifications, you are
+    likely to get either bizarre results or an error message. Note in
+    particular that <i>varname</i> must be specified after <b>nl</b>.
+<p>
+    Time series operators are allowed.
+<p>
+    The plot is restricted to the estimation sample.
+<p>
+    This command provides graphics after model fitting. Its aims thus differ
+    from those of twoway lfit, twoway qfit, twoway fpfit, etc., which fit
+    models on the fly and are restricted to the application of particular
+    modelling commands.
+<p>
+<p>
+<b><u>Options</u></b>
+<p>
+    <b>plottype()</b> specifies an alternative to <b>mspline</b> as a twoway plottype for
+        showing the fitted model values.
+<p>
+    <b>fitopts()</b> specifies graph options tuning the display of fitted values.
+<p>
+    <b>separate()</b> specifies that values of fitted and observed responses be
+        plotted as separate groups corresponding to the distinct values of
+        the variable specified.
+<p>
+    <i>scatter_options</i> are options allowed with twoway scatter.
+<p>
+        As usual, <b>by(</b><i>varname</i><b>)</b> specifies that predictions are to be shown
+        separately for different categories of <i>varname</i>. This will often be
+        appropriate when the categories of <i>varname</i> are associated with one or
+        more dummy or indicator variables, but see also the <b>separate()</b>
+        option.
+<p>
+    <b>plot(</b>plot<b>)</b> provides a way to add other plots to the generated graph; see 
+        plot_option.
+<p>
+<p>
+<b><u>Examples</u></b>
+<p>
+    <b>. sysuse auto</b>
+<p>
+continuous variables only:
+<p>
+    <b>. regress mpg weight</b>
+    <b>. regplot</b>
+    <b>. gen weightsq = weight^2</b>
+    <b>. regress mpg weight weightsq</b>
+    <b>. regplot</b>
+<p>
+    (N.B.<b>  weight</b> shown on <i>x</i> axis in both cases)
+<p>
+categorical variable also:
+<p>
+    <b>. regress mpg weight foreign</b>
+    <b>. regplot, by(foreign)</b>
+    <b>. regplot, sep(foreign)</b>
+    <b>. regress mpg weight weightsq foreign</b>
+    <b>. regplot, by(foreign)</b>
+ 
+    <b>. regplot, sep(foreign)</b>
+<p>
+    <b>. gen fw = foreign * weight</b>
+    <b>. regress mpg weight foreign fw</b>
+    <b>. regplot, by(foreign)</b>
+    <b>. regplot, sep(foreign)</b>
+<p>
+commands other than <b>regress</b>:
+<p>
+    <b>. logit foreign weight</b>
+    <b>. regplot</b>
+<p>
+    <b>. glm mpg weight foreign, link(log)</b>
+    <b>. regplot, by(foreign)</b>
+<p>
+fit an AR(1) plus trend model to time series:
+<p>
+    <b>. regress ERvol L.ERvol date</b>
+    <b>. regplot date</b>
+<p>
+<p>
+<b><u>Author</u></b>
+<p>
+    Nicholas J. Cox, University of Durham, U.K.
+    n.j.cox@durham.ac.uk
+<p>
+    
+<b><u>Acknowledgements</u></b> 
+<p>
+    Ken Higbee and Kit Baum provided very helpful comments on an earlier
+    version.
+<p>
+<p>
+<b><u>Also see</u></b>
+<p>
+</pre>

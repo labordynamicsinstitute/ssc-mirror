@@ -1,0 +1,55 @@
+<pre>
+-------------------------------------------------------------------------------
+help for <b>xtpattern</b>
+-------------------------------------------------------------------------------
+<p>
+<p>
+<b><u>Generate code showing pattern of xt data</u></b>
+<p>
+        <b>xtpattern</b> [<b>if</b> <i>exp</i>] <b>,</b> <b><u>g</u></b><b>enerate(</b><i>newvar</i><b>)</b>
+<p>
+<p>
+<b><u>Description</u></b> 
+<p>
+Given a panel data set which has been <b>tsset</b> as such, <b>xtpattern</b> generates a
+string variable coding panels according to presence or absence of observation
+at different times. This variable contains information tabulated by <b>xtdes</b>. The
+same code will be assigned to each observation in a panel. Thus, if there were
+six times of observation, and a panel was observed at times 1, 2, 3, 4 and 6,
+all five observations for that panel would be coded <b>"1111.1"</b>.
+<p>
+The number of observations in each panel must not exceed 80 (or under Stata/SE,
+244).
+<p>
+<p>
+<b><u>Options</u></b>
+<p>
+<b>generate(</b><i>newvar</i><b>)</b> specifies the name of a new variable to hold the code. It is a
+    required option.
+<p>
+<p>
+<b><u>Examples</u></b>
+<p>
+    . tsset id time
+<p>
+    . xtdes
+<p>
+    . xtpattern, gen(pattern)
+<p>
+    . egen tag = tag(id)
+<p>
+    . tab pattern if tag
+<p>
+<p>
+<b><u>Author</u></b> 
+<p>
+         Nicholas J. Cox, University of Durham, U.K.
+         n.j.cox@durham.ac.uk
+<p>
+<p>
+<b><u>Also see</u></b>
+<p>
+On-line: help for xtdes 
+ Manual: <b>[R] xtdes</b>
+<p>
+</pre>

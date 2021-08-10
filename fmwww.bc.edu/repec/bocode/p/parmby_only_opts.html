@@ -1,0 +1,76 @@
+<pre>
+-------------------------------------------------------------------------------
+<b>help parmby_only_opts</b>                                            (Roger Newson)
+-------------------------------------------------------------------------------
+<p>
+<p>
+<b><u>Options for </u></b><b><u>parmby</u></b><b><u> only</u></b>
+<p>
+<p>
+<b><u>Syntax</u></b>
+<p>
+<p>
+    <i>options</i>                   Description
+    -------------------------------------------------------------------------
+    <b>by(</b><i>varlist</i><b>)</b>               Specify variables defining by-groups
+    <b><u>com</u></b><b>mand</b>                   Add a variable containing the command called
+    -------------------------------------------------------------------------
+<p>
+<p>
+<b><u>Description</u></b>
+<p>
+    These options may not be specified for <b>parmest</b>.  They allow the user to
+    call an estimation command once for each of a set of by-groups, and to
+    create an the output dataset (or resultsset) with one observation per
+    parameter per by-group.
+<p>
+<p>
+<b><u>Options</u></b>
+<p>
+    <b>by(</b><i>varlist</i><b>)</b> specifies a list of existing variables which would normally
+        appear in the <b>by</b> <i>varlist</i><b>:</b> section of the Stata estimation command
+        called by <b>parmby</b>.  <b>parmby</b> creates an output dataset with one
+        observation for each parameter in each by-group in which the command
+        executed successfully.  The output dataset contains values of the
+        by-variables in each by-group (if <b>by()</b> is specified), in addition to
+        the variables created by <b>parmest</b>.  However, the <b>by()</b> option is
+        optional, and <b>parmby</b> will still work without it, creating an output
+        dataset with one observation per parameter of a single set of
+        estimation results.
+<p>
+    <b>command</b> is a variable-adding option.  If specified, it creates a string
+        variable named <b>command</b> in the output dataset, containing the text of
+        the estimation command called by <b>parmby</b>.  The text of the command is
+        truncated, if necessary, to the maximum length of a string variable
+        under the edition of Stata currently in use, which is 244 characters
+        in Stata Version 9. (See help for limits.) The variable <b>command</b> has
+        the same value in all observations in the output dataset, and is
+        useful as an identifier if the user creates multiple <b>parmby</b> output
+        datasets, using different commands, and concatenates them using 
+        <b>append</b>, or using <b>dsconcat</b> if installed.
+<p>
+<p>
+<b><u>Notes</u></b>
+<p>
+    Note that the variable <b>command</b> can be renamed by the <b>rename()</b> option, but
+    the variables specified in <b>by(</b><i>varlist</i><b>)</b> cannot.  See help for
+    <i>parmest_varmod_opts</i> for details on the <b>rename()</b> option, and help for
+    <i>parmest_resultssets</i> for details of other variables in the output datasets
+    (or resultssets} produced by <b>parmest</b> and <b>parmby</b>.
+<p>
+<p>
+<b><u>Author</u></b>
+<p>
+    Roger Newson, Imperial College London, UK.  Email:
+    r.newson@imperial.ac.uk
+<p>
+<p>
+<b><u>Also see</u></b>
+<p>
+     Manual: <b>[D] append</b>,<b> [D] by</b>,<b> [U] 11.4 varlists</b>,<b> [U] 20 Estimation and</b>
+             <b>postestimation commands</b>
+    On-line: help for <b>append</b>, <b>by</b>, <i>varlist</i>, estimation commands
+             help for <b>parmest</b>, <b>parmby</b>, <i>parmest_outdest_opts</i>, <i>parmest_ci_opts</i>,
+             <i>parmest_varadd_opts</i>, <i>parmest_varmod_opts</i>, <i>parmest_resultssets</i>
+             help for <b>dsconcat</b> if installed
+</pre>

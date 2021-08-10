@@ -1,0 +1,1135 @@
+<pre>
+<b>help for ice, uvis</b>                                              Patrick Royston
+-------------------------------------------------------------------------------
+<p>
+<p>
+<b><u>Multiple imputation by the MICE system of chained equations</u></b>
+<p>
+<p>
+<b><u>Syntax</u></b>
+<p>
+        <b>ice</b> [<i>mainvarlist</i>] [<i>if</i>] [<i>in</i>] [<i>weight</i>] [<b>,</b> <i>major_options</i>
+            <i>less_used_options</i>]
+<p>
+        <b>uvis</b> <i>cmd</i> {<i>yvar</i>|<i>llvar ulvar</i>} <i>xvars</i> [<i>if</i>] [<i>in</i>] [<i>weight</i>] [<b>,</b> <i>options</i>]
+<p>
+<p>
+    <i>options</i>                       Description
+    -------------------------------------------------------------------------
+    <b>ice</b> <i>major_options</i>
+      <b>clear</b>                       clears the original data from memory and
+                                    loads the imputed dataset into memory
+      <b><u>dry</u></b><b>run</b>                      reports the prediction equations - no
+                                    imputations are done
+      <b>eq(</b><i>eqlist</i><b>)</b>                  defines customised prediction equations
+      <b>m(</b><i>#</i><b>)</b>                        defines the number of imputations
+      <b><u>ma</u></b><b>tch(</b><i>varlist</i><b>)</b>              prediction matching for each member of
+                                    <i>varlist</i>
+      <b><u>pass</u></b><b>ive(</b><i>passivelist</i><b>)</b>        passive imputation
+      <b><u>sav</u></b><b>ing(</b><i>filename</i> [<b>,replace</b>]<b>)</b> imputed and non-imputed variables are
+                                    stored to <i>filename</i>
+      <b>stepwise</b>                    constructs prediction equations by stepwise
+                                    variable selection
+      <b><u>sw</u></b><b>opts(</b><i>stepwise_options</i><b>)</b>    options for <b>stepwise</b>
+<p>
+    <b>ice</b> <i>stepwise_options</i>
+      <b>forward</b>                     perform forward-stepwise selection
+      <b><u>gr</u></b><b>oup(</b><i>group_list</i><b>)</b>           create groups of variables for joint
+                                    testing for addition or removal
+      <b><u>lo</u></b><b>ck(</b><i>varlist</i><b>)</b>               Variables to be kept in all models
+      <b>pe(</b><i>#</i><b>)</b>                       significance level for addition to a model
+      <b>pr(</b><i>#</i><b>)</b>                       significance level for removal from a model
+      <b><u>sh</u></b><b>ow</b>                        show each stepwise regression
+<p>
+    <b>ice</b> <i>less_used_options</i>
+      <b><u>allm</u></b><b>issing</b>                  imputes in observations with all values in
+                                    <i>mainvarlist</i> missing
+      <b><u>bo</u></b><b>ot(</b><i>varlist</i><b>)</b>               estimates regression coefficients for
+                                    <i>varlist</i> in a bootstrap sample
+      <b>by(</b><i>varlist</i><b>)</b>                 imputation within the levels implied by
+                                    <i>varlist</i>
+      <b>cc(</b><i>varlist</i><b>)</b>                 prevents imputation of missing data in
+                                    observations in which <i>varlist</i> has a
+                                    missing value
+      <b><u>cm</u></b><b>d(</b><i>cmdlist</i><b>)</b>                defines regression command(s) to be used
+                                    for imputation
+      <b><u>cond</u></b><b>itional(</b><i>condlist</i><b>)</b>       conditional imputation
+      <b><u>cy</u></b><b>cles(</b><i>#</i><b>)</b>                   determines number of cycles of regression
+                                    switching
+      <b><u>de</u></b><b>bug</b>                       assistance to debug individual regressions
+      <b><u>drop</u></b><b>missing</b>                 omits from the output all observations not
+                                    in the estimation sample
+      <b><u>eqd</u></b><b>rop(</b><i>eqdroplist</i><b>)</b>          removes variables from prediction equations
+      <b><u>g</u></b><b>enmiss(</b><i>string</i><b>)</b>             creates missingness indicator variable(s)
+      <b><u>i</u></b><b>d(</b><i>varname</i><b>)</b>                 creates <i>varname</i> containing the original
+                                    sort order of the data
+      <b><u>init</u></b><b>ialonly</b>                 impute by random sampling from distribution
+                                    of non-missing values
+      <b><u>int</u></b><b>erval(</b><i>intlist</i><b>)</b>           imputes interval-censored variables
+      <b><u>matchp</u></b><b>ool(</b><i>#</i><b>)</b>                size of pool of potential matches for
+                                    prediction mean matching
+      <b><u>mono</u></b><b>tone</b>                    assumes pattern of missingness is monotone,
+                                    and creates relevant prediction equations
+      <b><u>nocons</u></b><b>tant</b>                  suppresses the regression constant
+      <b>nopp</b>                        suppresses special treatment of perfect
+                                    prediction
+      <b><u>nosh</u></b><b>oweq</b>                    suppresses presentation of prediction
+                                    equations
+      <b><u>nover</u></b><b>bose</b>                   suppresses messages showing the progress of
+                                    the imputations
+      <b><u>nowarn</u></b><b>ing</b>                   suppresses warning messages
+      <b>on(</b><i>varlist</i><b>)</b>                 imputes each member of <i>mainvarlist</i>
+                                    univariately
+      <b><u>ord</u></b><b>erasis</b>                   enters the variables in the order given
+      <b><u>per</u></b><b>sist</b>                     ignore errors when trying to impute
+                                    "difficult" variables and/or models
+      <b><u>res</u></b><b>trict(</b>[<i>varname</i>] [<i>if</i>]<b>)</b>    fit models on a specified subsample, impute
+                                    missing data for entire estimation sample
+      <b><u>se</u></b><b>ed(</b><i>#</i><b>)</b>                     sets random number seed
+      <b><u>sub</u></b><b>stitute(</b><i>sublist</i><b>)</b>         substitutes dummy variables for multilevel
+                                    categorical variables
+      <b><u>tr</u></b><b>ace(</b><i>trace_filename</i><b>)</b>       monitors convergence of the imputation
+                                    algorithm
+<p>
+    <b>uvis</b> <i>options</i>
+      <b><u>g</u></b><b>en(</b><i>newvarname</i><b>)</b>             creates variable containing imputations.
+                                    <b>Not optional</b>
+      <b><u>bo</u></b><b>ot</b>                        estimates regression coefficients in a
+                                    bootstrap sample
+      <b>by(</b><i>varlist</i><b>)</b>                 imputation within the levels implied by
+                                    <i>varlist</i>
+      <b><u>ma</u></b><b>tch</b>                       does prediction mean matching
+      <b><u>matchp</u></b><b>ool(</b><i>#</i><b>)</b>                size of pool of potential matches for
+                                    prediction mean matching
+      <b>nopp</b>                        suppresses special treatment of perfect
+                                    prediction
+      <b><u>nover</u></b><b>bose</b>                   suppresses information about the imputation
+                                    process
+      <b>replace</b>                     overwrites <i>newvarname</i> if it exists
+      <b><u>res</u></b><b>trict(</b>[<i>varname</i>] [<i>if</i>]<b>)</b>    fit models on a specified subsample, impute
+                                    missing data for entire estimation sample
+      <b><u>se</u></b><b>ed(</b><i>#</i><b>)</b>                     sets random number seed
+    -------------------------------------------------------------------------
+<p>
+    where <i>cmd</i> (with <b>uvis</b>) may be intreg, logistic, logit, mlogit, nbreg, 
+    ologit, or regress. <i>llvar</i> <i>ulvar</i> are required with <b>intreg</b>.
+<p>
+    An element of <i>mainvarlist</i> for <b>ice</b> takes one of two forms:  <i>varname</i> or
+    [<b>i.</b>|<b>m.</b>|<b>o.</b>]<i>varname</i>.  Details are given in Special features for imputing
+    categorical variables.  If <i>mainvarlist</i> is omitted, variables and chained
+    equations are input from special global macros; see the <b>eq()</b> and <b>stepwise</b>
+    options for details.
+<p>
+<p>
+    All weight-types are supported.
+<p>
+    <b><u>Stata 11 users:</u></b> Please see mi ice, which does all that <b>ice</b> does and a
+    little bit more, and is conveniently integrated into the new mi system.
+<p>
+<p>
+<b><u>Description</u></b>
+<p>
+    <b>ice</b> imputes missing values in <i>mainvarlist</i> by using switching regression,
+    an iterative multivariable regression technique. The abbreviation MICE
+    means multiple imputation by chained equations, and was apparently coined
+    by Stef van Buuren. <b>ice</b> implements MICE for Stata. Sets of imputed and
+    non-imputed variables are stored to a new file called <i>filename</i>. Any
+    number of complete imputations may be created. The original data are
+    stored in <i>filename</i> as "imputation number 0" and the new variable <b>_mj</b> is
+    set to 0 for these observations.
+<p>
+    <b>uvis</b> (<b>u</b>ni<b>v</b>ariate <b>i</b>mputation <b>s</b>ampling) imputes missing values in the
+    single variable <i>yvar</i> based on multiple regression on <i>xvars</i>. <b>uvis</b> is
+    called repeatedly by <b>ice</b> in a regression switching mode to perform
+    multivariate imputation.
+<p>
+    The missing observations are assumed to be "missing at random" (MAR) or
+    "missing completely at random" (MCAR), according to the jargon.  See for
+    example van Buuren <i>et al</i> (1999) for an explanation of these concepts.
+<p>
+    Please note that <b>ice</b> and <b>uvis</b> require Stata 8.0 or higher.  There have
+    been incompatibility issues with Stata 7 or lower.
+<p>
+<a name="special"></a>    <b><u>Special features for imputing categorical variables</u></b>
+<p>
+    The prefixes <b>i.</b>, <b>m.</b> and <b>o.</b> for a variable in <b>ice</b>'s <i>mainvarlist</i> are a
+    convenience feature designed to simplify specification of the imputation
+    model for categorical variables with three or more levels. You should
+    hardly ever need to use Stata's <b>xi</b> dummy variable and interaction creator
+    directly with <b>ice</b> commands, since dummy variables and more are adequately
+    handled by using the <b>i.</b>, <b>m.</b> and <b>o.</b> prefixes.
+<p>
+    The prefix <b>i.</b> in <b>i.</b><i>varname</i> may be used only when <i>varname</i> has no missing
+    data. It applies <b>xi</b> to <b>i.</b><i>varname</i> to create the corresponding dummy
+    variables.  If <i>varname</i> has missing data, imputation is required; either
+    the <b>m.</b> or the <b>o.</b> prefix (see below) should be used with such variables.
+    See Pitfalls in using the <b>i.</b> prefix for further information.
+<p>
+    Use of <b>m.</b><i>varname</i> or <b>o.</b><i>varname</i> substitutes <b>i.</b> for <b>m.</b> or <b>o.</b> and applies <b>xi:</b>
+    to <b>i.</b><i>varname</i>, at the same time telling <b>ice</b> to impute missing values of
+    <i>varname</i> using the <b>mlogit</b> or <b>ologit</b> commands, respectively. Use of the <b>m.</b>
+    or <b>o.</b> prefixes also ensures that the corresponding dummy variables are
+    used as predictors in imputation models for other variables (see
+    substitute()) and are 'passively' imputed (see passive()).  Suppose that
+    <b>x</b> is a multilevel categorical variable.  Then <b>ice o.x</b><i> varlist</i><b>,</b><i> options</i> is
+    expanded to <b>xi: ice x i.x</b><i> varlist</i><b>, substitute(x:i.x) cmd(x:ologit)</b>
+    <i>options</i>.  Similary, <b>ice m.x</b><i> varlist</i><b>,</b><i> options</i> is expanded to <b>xi: ice x i.x</b>
+    <i>varlist</i><b>, substitute(x:i.x) cmd(x:mlogit)</b><i> options</i>.
+<p>
+    The resulting 'expanded' version of the <b>ice</b> command is stored in the <b>$F9</b>
+    global macro. It can be retrieved if desired by pressing the F9 key.
+<p>
+    Note that the <b>i.</b>, <b>m.</b> and <b>o.</b> prefixes are also valid with binary
+    variables, although much less likely to be useful since one would not
+    wish to impute a binary variable using either <b>mlogit</b> or <b>ologit</b>.
+<p>
+<p>
+<b><u>Options</u></b>
+<p>
+        +---------------------+
+    ----+ ice (major options) +----------------------------------------------
+<p>
+    <b>clear</b> clears the original data from memory and loads the imputed dataset.
+        Unless the <b>saving()</b> option is also specified, the data in memory are
+        not permanently saved; this must then be done manually using the save
+        or saveold commands.
+<p>
+    <b>dryrun</b> causes <b>ice</b> to report the prediction equations it has constructed
+        from the various inputs, but no imputations are done and no files are
+        created. The option name ("dryrun") may be abbreviated as <b>dry</b>. It is
+        not mandatory to specify an output file with <b>saving(</b><i>filename</i><b>)</b> for a
+        dry run.  Sometimes the prediction equation set-up needs to be
+        carefully checked before running what may be a lengthy imputation
+        process.  Note that stepwise selection of prediction equations
+        (<b>stepwise</b> option) still works when <b>dryrun</b> has been specified.
+<p>
+<a name="eq"></a>    <b>eq(</b><i>eqlist</i><b>)</b> allows one to define prediction equations for any subset of
+        variables in <i>mainvarlist</i>. The <b>eq()</b> option, particularly when used
+        with <b>passive()</b>, allows great flexibility in the possible imputation
+        schemes. Note that <b>eq()</b> takes precedence over all default definitions
+        and assumptions about the way a given variable in <i>mainvarlist</i> is to
+        be imputed.  If the <b>passive()</b> and <b>substitute()</b> options are not
+        invoked, the default set of equations is that each variable in
+        <i>mainvarlist</i> with any missing data is imputed from all other variables
+        in <i>mainvarlist</i>.
+<p>
+        When <b>eq()</b> is specified, the syntax of <i>eqlist</i> is <i>varname1</i><b>:</b><i>varlist1</i>
+        [<b>,</b><i>varname2</i><b>:</b><i>varlist2</i> ...] where each <i>varname#</i> (or <i>varlist#</i>) is a
+        member (or subset) of <i>mainvarlist</i>. Variable names prefixed by <b>i.</b> are
+        allowed, provided that the names were prefixed by <b>i.</b>, <b>m.</b> or <b>o.</b> in
+        <i>mainvarlist</i>.  They are translated to the corresponding dummy
+        variables created by <b>xi:</b>.
+<p>
+        A 'blank' (null, constant-only) equation is specified as <b>_cons</b>, for
+        example, <b>eq(x4 x5:_cons)</b>. Such equations are reported in the table of
+        prediction equations as "<b>[Empty equation]</b>". The prediction model for
+        variables with empty equations is simply <b>_cons</b>.
+<p>
+        If <i>mainvarlist</i> is omitted, <b>ice</b> takes <i>mainvarlist</i> from the global
+        macro <b>$ice_main</b> and the equations, regression commands and predicted
+        variables from global macros <b>$ice_eq</b><i>#</i>, <b>$ice_cmd</b><i>#</i> and <b>$ice_x</b><i>#</i>,
+        respectively, for <i>#</i> = 1, ..., <b>$ice_neq</b>. The number of equations is
+        stored in <b>$ice_neq</b>. These macros are created automatically when <b>ice</b>'s
+        <b>stepwise</b> option is used (see details under <b>stepwise</b>). They may also
+        be user-defined. The macros may be inspected in Stata by using the
+        command <b>macro list ice_*</b>.
+<p>
+    <b>m(</b><i>#</i><b>)</b> defines <i>#</i> as the number of imputations required (minimum 1, no upper
+        limit). The default <i>#</i> is 1.
+<p>
+<a name="match"></a>    <b>match</b>[<b>(</b><i>varlist</i><b>)</b>] instructs that each member of <i>varlist</i> be imputed with
+        the <b>match</b> option of <b>uvis</b>.  This provides prediction matching for each
+        member of <i>varlist</i>.  If <b>(</b><i>varlist</i><b>)</b> is omitted then all relevant
+        variables are imputed with the <b>match</b> option of <b>uvis</b>. The default, if
+        <b>match()</b> is not specified, is to draw from the posterior predictive
+        distribution of each variable requiring imputation.
+<p>
+<a name="passive"></a>    <b>passive(</b><i>passivelist</i><b>)</b> allows the use of "passive" imputation of variables
+        that depend on other variables, some of which are imputed.  The
+        syntax of <i>passivelist</i> is <i>varname</i><b>:</b><i>exp</i> [<b>\</b><i>varname</i><b>:</b><i>exp</i> ...]. Notice the
+        requirement to use "\" as a separator between items in <i>passivelist</i>,
+        rather than the usual comma; the reason is that a comma may be a
+        valid part of an expression.  The option is most easily explained by
+        example. Suppose x1 is a categorical variable with 3 levels, and that
+        two dummy variables x1a, x1b have been created by the commands
+<p>
+        <b>. generate byte x1a=(x1==2)</b>
+        <b>. generate byte x1b=(x1==3)</b>
+<p>
+        Now suppose that x1 is to be imputed by the <b>mlogit</b> command, and is to
+        be treated as the two dummy variables x1a and x1b when predicting
+        other variables.  Use of <b>mlogit</b> is achieved by the option
+        <b>cmd(x1:mlogit)</b>.  When x1 is imputed, we want x1a and x1b to be
+        updated with new values which depend on the imputed values of x1.
+        This may be achieved by specifying <b>passive(x1a:x1==2 \ x1b:x1==3)</b>. It
+        is necessary also to remove x1 from the list of predictors when
+        variables other than x1 are being imputed, and this is done by using
+        the <b>substitute()</b> option; in the present example, you would specify
+        <b>substitute(x1:x1a x1b)</b>.
+<p>
+        Note that although in this example x1a will take the (possibly
+        unintended) value of 0 when x1 is missing, <b>ice</b> is careful to ensure
+        that x1a (and x1b) inherit the missingness of x1, and are passively
+        imputed following active imputation of missing values of x1. If this
+        were not done, incorrect results could occur. The responsibility of
+        the user is to create x1a and x1b before running <b>ice</b> such that their
+        missing values are identical to those of x1.
+<p>
+        A second example is multiplicative interactions between variables,
+        for example, between x1 and x2 (e.g. x12=x1*x2); this could be
+        entered as <b>passive(x12:x1*x2)</b>. It would cause the interaction term
+        x12 to be omitted when either x1 or x2 was being imputed, since it
+        would make no sense to impute x1 from its interaction with x2.
+        <b>substitute()</b> is not needed here.
+<p>
+        It should be stressed that variables to be imputed passively must
+        already exist and must be included in <i>mainvarlist</i>, otherwise they are
+        not recognised. Passive variables may be defined in terms of
+        variables in <i>mainvarlist</i> and variables not in <i>mainvarlist</i>, although
+        it would of course make no sense not to involve at least one variable
+        in <i>mainvarlist</i>.
+<p>
+    <b>saving(</b><i>filename</i> [<b>,replace</b>]<b>)</b> saves the imputation to <i>filename</i>. <b>replace</b>
+        allows <i>filename</i> to be overwritten with new data. <b>replace</b> may not be
+        abbreviated.
+<p>
+    <b>stepwise</b> constructs prediction equations by stepwise variable selection
+        among members of <i>mainvarlist</i>. There are 3 steps to the process.
+        First, <b>ice</b> creates a dataset with 1 imputation using a randomly drawn
+        subset of values from the distribution of each variable with missing
+        values. (This is the standard initialisation step for <b>ice</b>, and is
+        invoked automatically by the <b>initialonly</b> option.) Next, <b>ice</b> runs 
+        <b>stepwise</b> to select variables for each prediction equation. Binary
+        dummy variables are treated appropriately. By default, forward
+        selection at a 5% significance level is used; see the <b>swopts()</b> option
+        for other possibilities. Finally, <b>ice</b> retrieves the reduced equations
+        and performs imputation with them as usual.
+<p>
+        Using <b>stepwise</b> also causes <b>ice</b> to store <i>mainvarlist</i>, the selected
+        equations, variables and commands in global macros called <b>$ice_*</b>, as
+        described under the <b>eq()</b> option.
+<p>
+    <b>swopts(</b><i>stepwise_options</i><b>)</b> allows the following <i>stepwise_options</i> for use
+        with <b>stepwise</b>:  <b>forward</b>, <b>group(</b><i>group_list</i><b>)</b>, <b>lock(</b><i>varlist</i><b>)</b>, <b>pe(</b><i>#</i><b>)</b>,
+        <b>pr(</b><i>#</i><b>)</b> and <b>show</b>. Note that only <b>pe(</b><i>#</i><b>)</b>, <b>pr(</b><i>#</i><b>)</b> and <b>forward</b> are standard
+        options of Stata's <b>stepwise</b> command; the remainder are used to group
+        variables for joint testing for inclusion or exclusion from the
+        models, to construct a list of variables formatted for use with
+        <b>stepwise</b>'s <b>lockterm1</b> option, and to show the output from <b>stepwise</b>.
+        Further details of individual options are given below under <b>ice</b>
+        (<i>stepwise options</i>).
+<p>
+        Specifying neither <b>pe(</b><i>#</i><b>)</b> nor <b>pr(</b><i>#</i><b>)</b> is equivalent to specifying
+        <b>pe(0.05)</b>, i.e. the default method is forward selection of variables
+        significant at the 5% level.
+<p>
+        Note that variables in <i>mainvarlist</i> that have the prefix <b>i.</b>,
+        indicating that they are categorical, are to be represented by their
+        dummy variables and have no missing data, should retain their <b>i.</b>
+        prefix when they are included in the <b>group()</b> or <b>lock()</b> options.
+<p>
+        +------------------------+
+    ----+ ice (stepwise options) +-------------------------------------------
+<p>
+    <b>forward</b> specifies the forward-stepwise method and may be specified only
+        when both <b>pr()</b> and <b>pe()</b> are also specified. Specifying both <b>pr()</b> and
+        <b>pe()</b> without <b>forward</b> results in backward-stepwise selection.
+        Specifying only <b>pr()</b> results in backward selection, and specifying
+        only <b>pe()</b> results in forward selection.
+<p>
+    <b>group(</b><i>group_list</i><b>)</b> specifies variables always to be tested jointly for
+        inclusion or exclusion from models. An element of <i>group_list</i> is a
+        <i>varlist</i>, and elements are separated by commas, for example <b>group(x1</b>
+        <b>i.x2, y1 y2)</b>. Such groups of variables (or, in the case of
+        categorical variables prefixed with <b>i.</b>, their implied dummy
+        variables) are surrounded by parentheses when presented to <b>stepwise</b>
+        for analysis.
+<p>
+    <b>lock(</b><i>varlist</i><b>)</b> specifies variables to be kept in all models. Such
+        variables are surrounded by parentheses when presented to <b>stepwise</b>
+        for analysis. The <b>lockterm1</b> option of <b>stepwise</b> is applied to them.
+<p>
+    <b>pe(</b><i>#</i><b>)</b> specifies the significance level for addition to the model; terms
+        with p &lt; <b>pe()</b> are eligible for addition.
+<p>
+    <b>pr(</b><i>#</i><b>)</b> specifies the significance level for removal from the model; terms
+        with p &gt;= <b>pr()</b> are eligible for removal.
+<p>
+    <b>show</b> displays the output from <b>stepwise</b> for each regression analysis to
+        develop the prediction equations used by <b>ice</b>.
+<p>
+        +-------------------------+
+    ----+ ice (less used options) +------------------------------------------
+<p>
+    <b>allmissing</b> imputes missing values in observations in which all variables
+        in <i>mainvarlist</i> are missing. The default is to leave such values as
+        missing.
+<p>
+    <b>boot</b>[<b>(</b><i>varlist</i><b>)</b>] instructs that each member of <i>varlist</i>, a subset of
+        <i>mainvarlist</i>, be imputed with the <b>boot</b> option of <b>uvis</b> activated. If
+        <b>(</b><i>varlist</i><b>)</b> is omitted then all members of <i>mainvarlist</i> with missing
+        observations are imputed using the <b>boot</b> option of <b>uvis</b>.
+<p>
+    <b>by(</b><i>varlist</i><b>)</b> performs multiple imputation separately for all combinations
+        of variables in <i>varlist</i>. Observations with missing values for any
+        members of <i>varlist</i> are excluded. May be combined with <b>restrict()</b>.
+<p>
+    <b>cc(</b><i>varlist</i><b>)</b> prevents imputation of missing data in <i>mainvarlist</i> for cases
+        in which any member of <i>varlist</i> has a missing value. "cc" signifies
+        "complete case". Note that members of <i>varlist</i> are used for imputation
+        if they appear in <i>mainvarlist</i>, but not otherwise. Use of this option
+        is equivalent to entering <b>if</b> <b>~missing(</b><i>var1</i><b>) &amp;</b> <b>~missing(</b><i>var2</i><b>)</b> ...,
+        where <i>var1</i>, <i>var2</i>, ... denote the members of <i>varlist</i>.
+<p>
+<a name="cmd"></a>    <b>cmd(</b><i>cmdlist</i><b>)</b> defines the regression commands to be used for each variable
+        in <i>mainvarlist</i>, when it becomes the dependent variable in the
+        switching regression procedure used by <b>uvis</b> (see Algorithm used by
+        uvis).  The first item in <i>cmdlist</i> may be a command such as <b>regress</b> or
+        may have the syntax <i>varlist</i><b>:</b><i>cmd</i>, specifying that command <i>cmd</i> applies
+        to all the variables in <i>varlist</i>.  Subsequent items in <i>cmdlist</i> must
+        follow the latter syntax, and each item should be followed by a
+        comma.
+<p>
+        The default <i>cmd</i> for a variable is <b>logit</b> when there are two distinct
+        values, <b>mlogit</b> when there ar 3-5 and <b>regress</b> otherwise.
+<p>
+        Example:  <b>cmd(regress)</b> specifies that all variables are to be imputed
+            by <b>regress</b>, over-riding the defaults
+<p>
+        Example:  <b>cmd(x1 x2:logit, x3:regress)</b> specifies that <b>x1</b> and <b>x2</b> are
+            to be imputed by <b>logit</b>, <b>x3</b> by <b>regress</b> and all others by their
+            default choices
+<p>
+        <i>Advanced use</i>: If a <i>cmd</i> is implicitly defined for a variable by a <b>o.</b>
+        or <b>m.</b> prefix and the <b>cmd()</b> option is used explicitly for that same
+        variable then the explicit use takes precedence over the implicit
+        use. For example, the combination ... <b>o.x1, cmd(x1:regress)</b> would
+        impute <b>x1</b> with <b>regress</b> rather than with the implicit <b>ologit</b>. Used
+        with<b> match(x1)</b>, this would give a reasonable alternative to ordinal
+        logistic regression for imputing an ordered categorical variable <b>x1</b>.
+<p>
+<p>
+    <b>conditional(</b><i>condlist</i><b>)</b> invokes conditional imputation. Each item of
+        <i>condlist</i> has the form <i>varlist</i><b>:</b> <i>condition</i>. Items are separated by
+        backslash (<b>\</b>). The idea is that members of <i>varlist</i> are only
+        informative when <i>condition</i> is true, and that they take some
+        <i>pre-determined value</i> when <i>condition</i> is false.
+<p>
+        Important: This option was not correctly implemented in versions of
+        <b>ice_</b> before 1.2.2 – use which ice_ to check your version.
+<p>
+        Conditional imputation requires that (i) when any variable included
+        in <i>condition</i> is missing, all variables in <i>varlist</i> are missing, and
+        (ii) when <i>condition</i> is false, each variable in <i>varlist</i> takes only one
+        value (the <i>pre-determined value</i>, which might be 0 or a unique
+        "not-applicable" code such as 99).
+<p>
+        In detail, members of <i>varlist</i> are imputed in the usual way for the
+        subset of observations for which <b>if</b> <i>condition</i> is true (i.e. <i>condition</i>
+        evaluates to a non-zero quantity). For the subset of observations for
+        which <b>if</b> <i>condition</i> is false, the <i>pre-determined value</i> is identified
+        from the data for each member of <i>varlist</i> and is used to impute any
+        missing values for that variable. An example is given below.
+<p>
+        <i>condition</i> is a Stata expression constructed so that <b>if</b> <i>condition</i> can
+        be evaluated for the current dataset. Variables appearing in
+        <i>condition</i> may be members of <i>mainvarlist</i> or merely variables in the
+        dataset. The only other situation in <b>ice</b> in which variables that do
+        not appear in <i>mainvarlist</i> may be used is described under the
+        <b>passive()</b> option.
+<p>
+        Consider a simple example, a dataset comprising three incomplete
+        variables <b>age</b>, <b>female</b>, and <b>pregnant</b>, where <b>female</b> is 1 for females, 0
+        for males, and <b>pregnant</b> is 1 for pregnant, 0 for not pregnant. Since
+        males can't be pregnant, we wish to impute missing values of <b>pregnant</b>
+        using only data from females. If we impute someone with missing
+        gender as male, we want their pregnancy status always to be imputed
+        as non-pregnant.  If males are simply coded as non-pregnant then the
+        <i>pre-determined value</i> is the value of <b>pregnant</b> denoting non-pregnant,
+        i.e. 0; if instead males are coded as pregnant=99 then the
+        <i>pre-determined value</i> is 99. In either case, we implement the
+        conditional imputation as follows:
+<p>
+        <b>. ice age pregnant female, conditional(pregnant: female==1) clear</b>
+<p>
+        Here, the prediction equation for <b>age</b> is <b>pregnant female</b>, that for
+        female is <b>age</b> and that for <b>pregnant</b> is <b>age if female==1</b>.
+        Observations of <b>pregnant</b> for originally missing observations of
+        <b>female</b> now imputed as male (i.e. <b>female</b> = 0) are assigned the value 0
+        by <b>ice</b>.
+<p>
+        We can have dependent conditional imputation. For example, suppose a
+        fertility test <b>fertile</b>, taking the value 1 for fertile and 0 for
+        infertile, was available just for females. We might code this as
+        follows:
+<p>
+        <b>. ice age pregnant female fertile, conditional(pregnant: female==1 &amp;</b>
+            <b>fertile==1 \ fertile: female==1) clear</b>
+<p>
+        which reflects that only fertile females can become pregnant, and
+        only females have a fertility test.
+<p>
+    <b>cycles(</b><i>#</i><b>)</b> determines the number of cycles of regression switching to be
+        carried out. Default <i>#</i> is 10.
+<p>
+    <b>debug</b> provides assistance for debugging individual regressions.  As <b>ice</b>
+        runs, it prints out, for each imputation and cycle, the name of the
+        regression command, the variable being imputed and R2, the explained
+        variation of the model (Nagelkerke method). At the same time, the
+        values from the last cycle only are stored in a new file called
+        <b>_ice_debug.dta</b>, in the current working directory. A plot of R2
+        against cycle number may indicate abnormalities; for example if R2
+        shows instability, the corresponding model may have some features
+        that need improving. The option is useful also for detecting
+        regression models that explain a negligible amount of variation; such
+        models are candidates for deletion.
+<p>
+        Because only the final cycle is stored, for debugging purposes it may
+        be most sensible to use the <b>debug</b> option with, say, <b>cycles(100)</b> and
+        <b>m(1)</b>.
+<p>
+<p>
+    <b>dropmissing</b> is a feature designed to save memory when using the file of
+        imputed data created by <b>ice</b>. It omits from <i>filename</i> all observations
+        which are not in the estimation sample, that is for which either (i)
+        they are filtered out by <b>if</b> or <b>in</b>, or a non-positive weight, or (ii)
+        the values of all variables in <i>mainvarlist</i> are missing.  This option
+        provides a "clean" analysis file of imputations, with no missing
+        values. Note that the observations not in the estimation sample are
+        omitted also from the original data, stored as imputation #0 in
+        <i>filename</i>.
+<p>
+    <b>eqdrop(</b><i>eqdroplist</i><b>)</b> deletes variables from prediction equations.  The
+        syntax of <i>eqdroplist</i> is <i>varname1</i><b>:</b><i>varlist1</i> [<b>,</b><i>varname2</i><b>:</b><i>varlist2</i> ...]
+        where each <i>varname#</i> (or <i>varlist#</i>) is a member (or subset) of
+        <i>mainvarlist</i>.  One can only remove predictors from equations for
+        variables with missing values (although trying to remove predictors
+        from non-existent equations is not a fatal error - an information
+        message is issued). Variable names prefixed by <b>i.</b> are allowed,
+        provided that the names were prefixed by <b>i.</b>, <b>m.</b> or <b>o.</b> in <i>mainvarlist</i>.
+        They are translated to the corresponding dummy variables created by
+        <b>xi:</b>.
+<p>
+    <b>genmiss(</b><i>string</i><b>)</b> creates an indicator variable for the missingness of data
+        in any variable in <i>mainvarlist</i> for which at least one value has been
+        imputed. The indicator variable is set to missing for observations
+        excluded by <b>if</b>, <b>in</b>, etc.  The indicator variable for <i>xvar</i> is named
+        <i>stringxvar</i>.  The information on missingness is implicit in the
+        original data, which is stored as "imputation 0".
+<p>
+    <b>id(</b><i>newvarname</i><b>)</b> creates a variable called <i>newvarname</i> containing the
+        original sort order of the data. Default <i>newvarname</i>: <b>_mi</b>.
+<p>
+    <b>interval(</b><i>intlist</i><b>)</b> imputes interval-censored variables.  An
+        interval-censored value is one which is known to lie in an interval
+        [a,b] where a and b are finite and a &lt;= b, or in (-infinity,b] or in
+        [a,infinity).  When either terminal is infinite we have left or right
+        censoring, respectively.  <i>intlist</i> has the syntax <i>varname</i><b>:</b><i>llvar ulvar</i>
+        [<b>,</b> <i>varname</i>:<i>llvar ulvar</i> ...], where each <i>varname</i> is an
+        interval-censored variable, each <i>llvar</i> contains the lower bound (a)
+        for <i>varname</i> and each <i>ulvar</i> contains the upper bound (b) for <i>varname</i>
+        (or a missing value to represent plus or minus infinity).  The
+        supplied values of <i>varname</i> are irrelevant since they will be replaced
+        anyway; it is only required that <i>varname</i> exist. Observations with
+        <i>llvar</i> missing and <i>ulvar</i> present are left-censored for <i>varname</i>.
+        Observations with <i>llvar</i> present and <i>ulvar</i> missing are right-censored
+        for <i>varname</i>. Observations with <i>llvar</i> = <i>ulvar</i> are complete, and no
+        imputation is done for them. Observations with both <i>llvar</i> and <i>ulvar</i>
+        missing are imputed assuming an uncensored normal distribution.  See
+        Interval censoring for further information.
+<p>
+    <b>initialonly</b> imputes by random sampling from the distribution of the
+        non-missing values of each variable which has missing value(s).  This
+        is the initialisation step of the MICE algorithm (see Remarks).  This
+        option may be used to get a 'quick and dirty' set of multiple
+        imputations with which to explore initial impressions of the analysis
+        model, or to investigate possible prediction equations for subsequent
+        multiple imputation using the MICE method. The prediction equations
+        that are displayed are the ones that would be used by default in a
+        full MICE imputation run; with the <b>initialonly</b> option, they are
+        ignored when imputations are produced.
+<p>
+<a name="matchpool"></a>    <b>matchpool(</b><i>#</i><b>)</b> modifies the implementation of the <b>match()</b> option.  <b>match</b>
+        performs predictive mean matching in which a pool of potential
+        matches is constructed and one member of this pool is sampled (with
+        equal probabilities). <i>#</i> specifies the size of this pool. The default
+        is 3.  Please note that older versions of <b>ice</b> used <i>#</i> = 1.
+<p>
+    <b>monotone</b> assumes the members of <i>mainvarlist</i> have a monotone missingness
+        pattern, that is, <b>ice</b> defines the prediction equations appropriately.
+        For variables x1, ..., xk the imputation equations would be x1 on
+        [nothing], x2 on x1, x3 on x1 x2, ... , xk on x1 x2 ... x(k-1). When
+        the missingness really is monotonic, only one cycle of MICE is
+        required, so the default here is <b>cycles(1)</b>.  There is no advantage in
+        specifying more than one cycle.
+<p>
+        With the <b>monotone</b> option, <b>ice</b> reports a 'non-monotonicity score'.
+        This is defined as 100 * (sum of numerators) / (sum of denominators),
+        where the sums are taken over all adjacent pairs of variables in
+        <i>mainvarlist</i>.  Consider two variables, x1 and x2. The numerator for x1
+        and x2, i.e the non-monotonicity, is the number of observations in
+        the estimation sample for which x1 is missing and x2 is observed. If
+        the numerator is positive, x1 and x2 show a non-monotonic pattern.
+        The denominator for x1 and x2 is the the number of observations in
+        the estimation sample for which x2 is observed.
+<p>
+        <b>ice</b> takes a relaxed view of runs in which the non-monotonicity score
+        is positive. It warns the user but goes ahead with the imputation
+        anyway - it assumes that the user knows what they are doing.
+<p>
+    <b>noshoweq</b> suppresses the presentation of the prediction equations.
+<p>
+    <b>noconstant</b> suppresses the regression constant in all regressions.
+<p>
+    <b>nopp</b> suppresses treatment of the perfect prediction bug (see Avoiding the
+        perfect prediction bug).
+<p>
+    <b>noverbose</b> suppresses display of the imputation number (as <i>#</i>) and cycle
+        number within imputations (as <b>.</b>) which show the progress of the
+        imputations.
+<p>
+    <b>nowarning</b> suppresses warning messages.
+<p>
+    <b>on(</b><i>varlist</i><b>)</b> changes the operation of <b>ice</b> in a major way.  With this
+        option, <b>uvis</b> imputes each member of <i>mainvarlist</i> univariately on
+        <i>varlist</i>. This provides a convenient way of producing multiple
+        imputations when imputation for each variable in <i>mainvarlist</i> is to be
+        done univariately on a set of complete predictors.
+<p>
+    <b>orderasis</b> enters the variables in <i>mainvarlist</i> into the MICE algorithm in
+        the order given. The default is to order them according to the number
+        of missing values: the variable with least missingness gets imputed
+        first, and so on.
+<p>
+    <b>persist</b> causes <b>ice</b> to ignore errors raised by <b>uvis</b> when trying to impute
+        a "difficult" variable, or impute with a model that is difficult to
+        fit to the data to hand. Trying to impute a "difficult" variable
+        using the <b>ologit</b> or <b>mlogit</b> command is the most common cause of
+        failure.  By default, <b>ice</b> stops with an error message. With <b>persist</b>,
+        <b>ice</b> continues to the next variable to be imputed, not updating the
+        variable that raised an error. Often, by the play of chance, the
+        "difficult" variable is successfully updated in a subsequent cycle,
+        and no damage is done to the imputation process.
+<p>
+        If the error for a given variable appears in every cycle, you should
+        consider changing the prediction equation for that variable, since
+        its imputed values are unlikely to be appropriate.
+<p>
+        We do not recommend the routine use of <b>persist</b>. Only use it when it
+        appears that there is sporadic failure to fit an imputation model.
+<p>
+    <b>restrict(</b>[<i>varname</i>] [<i>if</i>]<b>)</b> specifies that imputation models be computed
+        using the subsample identified by <i>varname</i> and <i>if</i>.
+<p>
+        The subsample is defined by the observations for which <i>varname</i>!=0
+        that also meet the <i>if</i> conditions.  Typically, <i>varname</i>=1 defines the
+        subsample and <i>varname</i>=0 indicates observations not belonging to the
+        subsample.  For observations whose subsample status is uncertain,
+        <i>varname</i> should be set to a missing value; such observations are
+        dropped from the subsample.
+<p>
+        By default <b>ice</b> fits imputation models and imputes missing values
+        using the sample of observations identified in the [<i>if</i>] [<i>in</i>] options.
+        The <b>restrict()</b> option identifies a subset of this sample to be used
+        for model estimation. Imputation is restricted to the sample
+        identified in the [<i>if</i>] [<i>in</i>] options. Thus, predictions and their
+        associated imputations are made 'out-of-sample' with respect to the
+        subsample defined by <b>restrict()</b>.
+<p>
+        Be careful to avoid restrictions that prevent prediction for all the
+        relevant observations. For example, models that involve <b>mlogit</b> will
+        fail to predict 'everywhere' if the <b>restrict()</b> option excludes any of
+        the levels of the target variable, as in the following example.
+        <b>school</b> is a four-level categorical variable coded 0, 1, 2, 3:
+<p>
+        <b>. gen byte ok = (school &gt; 0) if !missing(school)</b>
+        <b>. ice school house age sex bcg, clear restrict(ok)</b>
+<p>
+        By default, <b>school</b> is imputed using <b>mlogit</b>.  Predictions cannot be
+        made for observations with <b>school==0</b>.  <b>ice</b> will halt with error #303
+        (equation not found).
+<p>
+    <b>seed(</b><i>#</i><b>)</b> sets the random number seed to <i>#</i>. In order to reproduce a set of
+        imputations, the same random number seed should be used.  See
+        Reproducibility of results from uvis and ice for further comments.
+        Default <i>#</i>: 0, meaning no seed is set by the program; depending on the
+        status of Stata's random number seed, different sets of imputations
+        should be obtained on each run.
+<p>
+<a name="substitute"></a>    <b>substitute(</b><i>sublist</i><b>)</b> is typically used with the <b>passive()</b> option to
+        represent multilevel categorical variables as dummy variables in
+        models for predicting other variables. See <b>passive()</b> for more
+        details. The syntax of <i>sublist</i> is <i>varname</i><b>:</b><i>dummyvarlist</i>
+        [<b>,</b><i>varname</i><b>:</b><i>dummyvarlist</i> ...] where <i>varname</i> is the name of a variable
+        to be substituted and <i>dummyvarlist</i> is the list of dummy variables
+        representing it.
+<p>
+        Note, however, the following important convenience feature:
+        <b>substitute()</b> may be used without corresponding expressions in
+        <b>passive()</b> to recreate dummy variables automatically.  If the values
+        of variables in <i>dummyvarlist</i> are NOT defined through expressions
+        involving <i>varname</i> in the <b>passive()</b> option, then the variables in
+        <i>dummyvarlist</i> are calculated according to the actual range of values
+        of <i>varname</i>. For example, suppose the options <b>passive(x1a:x1==2 \</b>
+        <b>x1b:x1==3)</b> and <b>substitute(x1:x1a x1b)</b> were specified. Provided that
+        all the non-missing values of <b>x1</b> were 2 when <b>x1a</b>==1 and all the
+        non-missing values of <b>x1</b> were 3 when <b>x1b</b>==1, then <b>passive(x1a:x1==2 \</b>
+        <b>x1b:x1==3)</b> is implied by <b>substitute(x1:x1a x1b)</b> and can be omitted.
+        The rule applied by <b>substitute(x:dummy1 [dummy2...])</b> for defining
+        dummy variables dummy1, dummy2, ... is as follows:
+<p>
+        1. Determine the range of values [xmin, xmax] of x for which dummy1 &gt;
+            0.
+<p>
+        2a. If xmin &lt; xmax, define dummy1 to be 1 if xmin &lt;= x &lt;= xmax and 0
+            otherwise.
+<p>
+        2b. If xmin = xmax, define dummy1 to be 1 if x = xmin and 0
+            otherwise.
+<p>
+        3. Repeat steps 1 and 2a,b for dummy2, dummy3, ... as necessary.
+<p>
+        With many such categorical variables this feature can save a lot of
+        typing.
+<p>
+    <b>trace(</b><i>trace_filename</i><b>)</b> monitors the convergence of the imputation
+        algorithm. For each original variable with missing values, the mean
+        of the imputed values is stored as a variable in <i>trace_filename</i>,
+        together with the cycle number at which that mean was calculated. The
+        results are stored only for the final imputation.  For diagnostic
+        purposes, it is sensible to run <b>trace()</b> with <b>m(1)</b> and a large number
+        of cycles, such as <b>cycles(100)</b>.  When the run is complete, it is
+        helpful to load <i>trace_filename</i> into memory and plot the mean for each
+        imputed variable against the cycle number. If necessary, smoothing
+        may be applied to clarify any apparent pattern. Convergence is judged
+        to have occurred when the pattern of the imputed means is random.  It
+        is usually obvious from the appearance of the plot how many cycles
+        are needed for convergence.
+<p>
+<p>
+        +------+
+    ----+ uvis +-------------------------------------------------------------
+<p>
+    <b>boot</b> invokes a bootstrap method for creating imputed values (see
+        bootstrap).
+<p>
+    <b>by(</b><i>varlist</i><b>)</b> performs imputation separately for all combinations of
+        variables in <i>varlist</i>. Observations with missing values for any
+        members of <i>varlist</i> are excluded. May be combined with <b>restrict()</b>.
+<p>
+    <b>gen(</b><i>newvar</i><b>)</b> is not optional. <i>newvar</i> contains original (non-missing) and
+        imputed (originally missing) values of <i>yvar</i>.
+<p>
+    <b>match</b> creates imputations by prediction matching. The default is to draw
+        imputations at random from the posterior distribution of the missing
+        values of <i>yvar</i>, conditional on the observed values and the members of
+        <i>xvars</i>. See match for further details.
+<p>
+    <b>matchpool(</b><i>#</i><b>)</b> - see matchpool for details.
+<p>
+    <b>noconstant</b> suppresses the regression constant in all regressions.
+<p>
+    <b>noverbose</b> suppresses non-error messages while <b>uvis</b> is running.
+<p>
+    <b>replace</b> permits <i>newvar</i> (see <b>gen(</b><i>newvar</i><b>)</b>) to be overwritten with new data.
+        <b>replace</b> may not be abbreviated.
+<p>
+    <b>restrict(</b>[<i>varname</i>] [<i>if</i>]<b>)</b> specifies that the imputation model be computed
+        using the subsample identified by <i>varname</i> and <i>if</i>.
+<p>
+        The subsample is defined by the observations for which <i>varname</i>!=0
+        that also meet the <i>if</i> conditions.  Typically, <i>varname</i>=1 defines the
+        subsample and <i>varname</i>=0 indicates observations not belonging to the
+        subsample.  For observations whose subsample status is uncertain,
+        <i>varname</i> should be set to a missing value; such observations are
+        dropped from the subsample.
+<p>
+        By default <b>uvis</b> fits the imputation model using the sample of
+        observations identified in the [<i>if</i>] [<i>in</i>] options.  The <b>restrict()</b>
+        option identifies a subset of this sample.
+<p>
+    <b>seed(</b><i>#</i><b>)</b> sets the random number seed to <i>#</i>.  See Reproducibility of results
+        from uvis and ice for comments on how to ensure reproducible
+        imputations by using the <b>seed()</b> option.  Default <i>#</i>: 0, meaning no
+        seed is set by the program.
+<p>
+<p>
+<b><u>Remarks</u></b>
+<p>
+<a name="algorithm"></a>    <b><u>Algorithm used by uvis</u></b>
+<p>
+    When <i>cmd</i> is <b>regress</b>, <b>uvis</b> imputes <i>yvar</i> from <i>xvars</i> according to the
+    following algorithm (see van Buuren et al (1999) section 3.2 for further
+    technical details):
+<p>
+        1. Estimate the vector of coefficients (beta) and the residual
+            variance by regressing the non-missing values of <i>yvar</i> on the
+            current "completed" version of <i>xvars</i>. Predict the fitted values
+            <i>etaobs</i> at the non-missing observations of <i>yvar</i>.
+<p>
+        2. Draw at random a value (sigma_star) from the posterior
+            distribution of the residual standard deviation.
+<p>
+        3. Draw at random a value (beta_star) from the posterior distribution
+            of beta, conditional on sigma_star, thus allowing for uncertainty
+            in beta.
+<p>
+        4. Use beta_star to predict the fitted values <i>etamis</i> at the missing
+            observations of <i>yvar</i>.
+<p>
+        5. The imputed values are predicted directly from beta_star,
+            sigma_star and the covariates. For imputation by linear
+            regression, this step assumes that <i>yvar</i> is Normally distributed,
+            given the covariates.  For other types of imputation, samples are
+            drawn from the appropriate distribution.
+<p>
+<a name="match"></a>    With the <b>match</b> option, step 5 is replaced by the following.  For each
+    missing observation of <i>yvar</i> with prediction <i>etamis</i>, find the non-missing
+    observation of <i>yvar</i> whose prediction (<i>etaobs</i>) on observed data is closest
+    to <i>etamis</i>. This closest non-missing observation is used to impute the
+    missing value of <i>yvar</i>.
+<p>
+    The default draw method is not robust to departures from Normality and
+    may produce implausible imputations. For example, if the original
+    distribution is skew and positive-valued, the imputed distribution will
+    not necessarily have the appropriate amount of skewness, nor will all the
+    imputed values necessarily be positive. Log transformation of positive
+    variables may greatly improve the appropriateness of the imputations.
+<p>
+    The alternative <b>match</b> method is recommended only for continuous variables
+    when the Normality assumption is clearly untenable, even approximately.
+    It is not necessary, nor is it implemented, for binary, ordered
+    categorical or nominal variables. <b>match</b> may work well when the
+    distribution of a continuous variable is very non-Normal, but it may
+    sometimes result in biased imputations.
+<p>
+<a name="boot"></a>    With the <b>boot</b> option, steps 2-4 are replaced by a bootstrap estimation of
+    beta_star and sigma_star, obtained by regressing <i>yvar</i> on <i>xvars</i> after
+    taking a bootstrap sample of the non-missing observations. This has the
+    advantage of robustness since the distribution of beta is no longer
+    assumed to be multivariate normal.
+<p>
+    Note that <b>uvis</b> will not impute observations for which a value of a
+    variable in <i>xvars</i> is missing. However, all original (missing or
+    non-missing) observations of <i>yvar</i> will be copied into <i>newvarname</i> in such
+    cases. This is a change from the first release of <b>uvis</b> (with <b>mvis</b>).
+    Previously, <i>newvarname</i> would be set to missing whenever a value of a
+    variable in <i>xvars</i> was missing, irrespective of the value of <i>yvar</i>.
+<p>
+    Missing data for ordered (or unordered) categorical covariates should be
+    imputed by using the <b>ologit</b> (or <b>mlogit</b>) command. <b>match</b> is neither
+    required nor implemented in these cases.
+<p>
+    <b>ice</b> carries out multivariate imputation in <i>mainvarlist</i> using regression
+    switching (van Buuren et al 1999) as follows:
+<p>
+        1. Ignore any observations for which <i>mainvarlist</i> has only missing
+            values, or if the <b>cc(</b><i>varlist</i><b>)</b> option has been specified, for
+            which any member of <i>varlist</i> has a missing value.
+<p>
+        2. For each variable in <i>mainvarlist</i> with any missing data, randomly
+            order that variable and replicate the observed values across the
+            missing cases. This step initialises the iterative procedure by
+            ensuing that no relevant values are missing.
+<p>
+        3. For each variable in <i>mainvarlist</i> in turn, impute missing values by
+            applying <b>uvis</b> with the remaining variables as covariates.
+<p>
+        4. Repeat step 3 <b>cycles()</b> times, replacing the imputed values with
+            updated values at the end of each cycle.
+<p>
+    A single imputation sample is created for each variable with any relevant
+    missing values.
+<p>
+    Van Buuren recommends <b>cycles(20)</b> but goes on to say that 10 or even 5
+    iterations are probably sufficient. We have chosen a compromise default
+    of 10.
+<p>
+    "Multiple imputation" (MI) implies the creation and analysis of several
+    imputed datasets. To do this, one would run <b>ice</b> with <i>m</i> set to a suitable
+    number, for example 5. To obtain final estimates of the parameters of
+    interest and their standard errors, one would fit a model in each
+    imputation and carry out the appropriate post-MI averaging procedure on
+    the results from the <i>m</i> separate imputations. A suitable estimation tool
+    for this purpose is mim.
+<p>
+    <b><u>Handling the outcome variable</u></b>
+<p>
+    To avoid bias, the outcome variable must always be included in the list
+    of variables to be used for imputation. In survival analysis, in
+    particular, it is essential to include the censoring indicator as well as
+    the survival time. van Buuren et al (1999) recommend a log transformation
+    of the survival time, apparently a heuristic choice. We have shown (White
+    &amp; Royston 2008) that for a single binary predictor and a proportional
+    hazards analysis model, the correct imputation model comprises the
+    baseline cumulative hazard, the censoring indicator and the binary
+    predictor. The theory remains approximately valid for a normally
+    distributed predictor with a weak effect. More complex cases have not yet
+    been investigated, but at least some guidance is now available.
+<p>
+    <b><u>Handling binary variables</u></b>
+<p>
+    Binary variables present no difficulty. By default, in the MICE
+    procedure, when such a variable is the response, it is predicted from
+    other variables by using logistic regression; when it is a covariate, it
+    is modelled in the only way possible, effectively as a single dummy
+    variable.
+<p>
+    Ensure that binary variables are coded 0/1.  Although, in theory, one
+    could use <b>ologit</b> or <b>mlogit</b> to model them, in practice there is no
+    advantage in doing so. Furthermore, do not use the <b>i.</b> prefix with binary
+    variables, since there is a speed penalty in doing so.
+<p>
+    <b><u>Handling categorical variables</u></b>
+<p>
+    Categorical variables with 3 or more levels may in principle be treated
+    in different ways. By default, in <b>ice</b> variables with 3-5 levels are
+    modelled using multinomial logistic regression (<b>mlogit</b> command) when the
+    response, and as a single linear term when a covariate. The same
+    behaviour occurs with the ordered logistic model (<b>ologit</b> command). Our
+    recommended strategy is to use the <b>m.</b>  or <b>o.</b> prefixes for variables to be
+    imputed using unordered or ordered logistic regression. This approach
+    removes the need to define the <b>substitute()</b> and <b>passive()</b> options, both
+    of which can be tedious and error-prone to type.
+<p>
+    You should be aware that unless the dataset is large, use of the <b>mlogit</b>
+    command may produce unstable estimates if the number of levels is too
+    large, and may compromise the accuracy of the imputations. It is hard to
+    predict when this will occur.
+<p>
+<a name="interval"></a>    <b><u>Interval censoring</u></b>
+<p>
+    Values of a variable y that are interval censored are imputed under the
+    assumption that y is normally distributed with unknown mean and variance.
+    The method, which is fast and efficient, is essentially as described for
+    right-censored variables in section 3.3 of Royston (2001).  A minor
+    extension to allow left or interval censoring is employed.  For example,
+    if A &lt; y &lt; B and A and B are both finite, the imputed value for y will
+    follow a truncated normal distribution with bounds A and B, variance
+    parameter estimated from the data and mean given by the linear predictor
+    for the imputation model for y. Stata's <b>intreg</b> command is used to
+    estimate the mean and variance of y. When A and B are both missing
+    (infinite), imputation of y simply assumes the normal distribution just
+    mentioned, but without bounds.
+<p>
+    If you wish to impose range limits on the imputed values, the lower and
+    upper bound variables may be set accordingly. For example, to impute
+    right-censored (e.g. survival) data, you would set <i>llvar</i> equal to all the
+    observed times to event, whether censored or not, and <i>ulvar</i> to all the
+    uncensored event times and missing for the censored times.  This would
+    cause the right-censored values to be imputed without restriction.  If
+    you wanted to bound the imputed values above, say by 10, you would
+    specify <i>ulvar</i> to be 10 (rather than missing) for all the censored
+    observations.
+<p>
+<a name="pp"></a>    <b><u>Avoiding the perfect prediction bug</u></b>
+<p>
+    Perfect prediction may arise in <b>logistic</b>, <b>ologit</b> or <b>mlogit</b> regression
+    models when a (usually categorical) predictor variable perfectly predicts
+    success or failure in the outcome variable.  In <b>ice</b>, perfect prediction
+    may occur without the user's knowledge because a large number of
+    regression models are run silently. Perfect prediction may lead to
+    entirely inappropriate imputations. To avoid this, <b>uvis</b> checks for
+    perfect prediction; if it is detected, <b>uvis</b> temporarily augments the data
+    with a small number of extra observations with low weight, in such a way
+    as to remove the perfect prediction.  A message is displayed noting the
+    variable that has the perfect prediction issue, and that the problem has
+    been dealt with.  Such treatment of the perfect prediction bug may be
+    switched off, if desired, by using the <b>nopp</b> option.
+<p>
+    <b><u>Errors and diagnostics</u></b>
+<p>
+    <b>ice</b> may occasionally detect an anomaly when running <b>uvis</b> with a
+    particular variable as response and a particular regression command. <b>ice</b>
+    will then stop and report the <b>uvis</b> command it was running and the error
+    number returned.  Also, <b>ice</b> saves to a file called <b>_ice_dump.dta</b> in the
+    working directory a snapshot of the data it was using when the error
+    occurred, while also reporting the <b>uvis</b> command it was executing.
+    Sometimes the problem lies in a regression of a binary or categorical
+    variable where the estimation procedure fails to converge; this is
+    usually caused by sparse cell occupancy of the response variable. If you
+    obtain this error you should either omit the offending variable from the
+    imputation, or seek to combine a sparse category with another category.
+<p>
+    Another possibility is that, again due to a defect in a particular
+    regression command in the chained equations structure, the number of
+    values imputed for a particular variable is less than expected.  This is
+    a serious error and again may arise from estimation problems involving a
+    binary or categorical variable. In this situation, <b>ice</b> again saves to a
+    file called <b>_ice_dump.dta</b> in the working directory a snapshot of the data
+    it was using in the attempted estimation, while reporting the <b>uvis</b>
+    command it was executing.  You can then investigate what may have gone
+    wrong with the command by loading the data in <b>_ice_dump.dta</b> and
+    re-running the offending regression command.
+<p>
+<a name="reproducibility"></a>    <b><u>Reproducibility of results from uvis and ice</u></b>
+<p>
+    Use of the option <b>seed(</b><i>#</i><b>)</b> ensures that a set of imputed values is
+    reproduced identically for a given value of <i>#</i>.  This is true for both
+    <b>uvis</b> and <b>ice</b>.
+<p>
+    Please report to the author any instances where use of <b>ice</b> or <b>uvis</b> with a
+    fixed seed does not produce the same set of imputed values.
+<p>
+<a name="pitfalls"></a>    <b><u>Pitfalls in using the i. prefix</u></b>
+<p>
+    <b>ice</b> commands that include <b>i.</b><i>varname</i> in <i>mainvarlist</i> need to be handled
+    with awareness. If <i>varname</i> has no missing data in the estimation sample,
+    expected results are obtained. If <i>varname</i> does have missing values in the
+    estimation sample, an error message is given and <b>ice</b> stops. The
+    "estimation sample" here is the set of observations for which at least
+    one variable in <i>mainvarlist</i> has non-missing value(s).
+<p>
+    The presence of <b>i.</b> evokes <b>xi</b>, which expands <b>i.</b><i>varname</i> in the usual way to
+    create <b>_I</b><i>varname</i><b>_</b><i>#</i> dummy variables. Since <i>varname</i> has no missing data,
+    the dummy variables are included in the prediction equations for other
+    variables in <i>mainvarlist</i>, as required.
+<p>
+    If <b>i.</b><i>varname</i> were allowed to have missing data in the estimation sample,
+    <b>xi</b> expansion would occur as before, but each of the <b>_I</b><i>varname</i><b>_</b><i>#</i> dummy
+    variables would become a response variable in a prediction equation and
+    would be predicted individually (using logistic regression). Worse, the
+    prediction equation for each dummy variable would include the <i>other</i> dummy
+    variables from <b>i.</b><i>varname</i>. That is clearly nonsense.
+<p>
+    The advice, as always, is (a) to use <b>dryrun</b> before 'production' runs if
+    the <b>ice</b> command is at all complex, and then (b) carefully to check that
+    <b>ice</b>'s table of prediction equations is both sensible and what you
+    expected.
+<p>
+    <b><u>Further notes</u></b>
+<p>
+    <b>ice</b> saves all the variables in the current data to the output, whether or
+    not they are involved in the imputation procedure.  This can make the
+    resulting dataset very large. It may therefore be sensible to drop
+    variables not subsequently needed for modelling before running <b>ice</b>.
+<p>
+    <b>ice</b> determines the order of imputing variables in the cycle of chained
+    equations according to the amount of missing data.  Variables with the
+    least missingness are imputed first. Variables with the same amount of
+    missingness are processed in an arbitrary order, but always in the same
+    order.  Note that if <b>ice</b> is run twice using identical variables (at least
+    two of which have the same amount of missingness) and the same random
+    number seed, but with the variables with equal missingness in a different
+    order, slightly different imputations will be generated. The differences
+    will be purely random and will not produce bias in subsequent parameter
+    estimates. If the <b>boot()</b> option is applied to all variables, the order of
+    variables no longer affects the results.
+<p>
+    An important application of MI is to investigate possible models, for
+    example prognostic models, in which selection of influential variables is
+    required (Clark &amp; Altman 2003). For example, the stability of the final
+    model across the imputation samples is of interest. This area of enquiry
+    is in its infancy.
+<p>
+    See also Van Buuren's website http://www.multiple-imputation.com for
+    further information and software sources.
+<p>
+<p>
+<b><u>Examples</u></b>
+<p>
+    <b>. uvis regress y x1 x2 x3, gen(ym)</b>
+<p>
+    <b>. uvis logit y x1 x2 x3, gen(y) by(x4) restrict(x5) replace noverbose</b>
+<p>
+    <b>. uvis intreg ll ul x1 x2 x3, gen(y)</b>
+<p>
+    <b>. ice x1 x2 x3, saving(imputed) m(5)</b>
+<p>
+    <b>. ice x1 x2 x3, dropmissing monotone clear m(5)</b>
+<p>
+    <b>. ice x1 x2 i.x3, clear m(5)</b>
+    [Note that x3 must have no missing values in the estimation sample]
+<p>
+    <b>. ice x1 x2 x3, saving(imputed) m(5) cycles(20) cc(x4 x5)</b>
+<p>
+    <b>. ice m.x1 m.x2 o.x3 x4 x5, saving(imputed) m(10) boot(x1 x2 x3) match(x4</b>
+        <b>x5) id(pid) seed(101) genmiss(M_)</b>
+<p>
+    <b>. gen x23 = x2 * x3</b>
+    <b>. ice o.x1 x2 x3 x23 z1 z2, saving(imputed) m(5) passive(x23:x2*x3)</b>
+        <b>conditional(z1: if z2==0)</b>
+<p>
+    <b>. ice y1 y2 y3 x1 x2 x3 x4, saving(imputed) m(5) eq(y1:x1 x2 y2, y2:y1 x3</b>
+        <b>x4, y3:y1 y2) match(y3)</b>
+<p>
+    <b>. ice y1 y2 y3 x1 x2 o.x3 i.x4, saving(imputed) m(5) stepwise</b>
+        <b>swopts(pe(.10) pr(.15) group(x1 x2, y1 i.x4)lock(y2 x3)) match(x3)</b>
+<p>
+    <b>. ice x1-x99, clear debug m(1) cycles(100)</b>
+<p>
+    <b>. ice x1 x2 x3, saving(imputed) m(5) cmd(x1:ologit) eqdrop(x2:x3, x1:x2)</b>
+<p>
+    <b>. ice x1 x2 x3, saving(imputed) m(5) cmd(x1:ologit) match(x2) dropmissing</b>
+<p>
+    <b>. ice x1 ll2 ul2 x2 ll3 ul3 x3, saving(imputed) m(5) interval(x2:ll2 ul2,</b>
+        <b>x3:ll3 ul3)</b>
+<p>
+<p>
+<b><u>Author</u></b>
+<p>
+    Patrick Royston, MRC Clinical Trials Unit, London.
+    pr@ctu.mrc.ac.uk
+<p>
+<p>
+<b><u>Further reading</u></b>
+<p>
+    van Buuren S., H. C. Boshuizen and D. L. Knook. 1999. Multiple imputation
+        of missing blood pressure covariates in survival analysis.
+        <i>Statistics in Medicine</i> <b>18</b>:681-694.  Also see
+        http://www.multiple-imputation.com.
+<p>
+    Carlin J. B., N. Li, P. Greenwood, and C. Coffey. 2003. Tools for
+        analyzing multiple imputed datasets. <i>Stata Journal</i> <b>3(3)</b>:226-244.
+<p>
+    Clark T. G. and D. G. Altman. 2003. Developing a prognostic model in the
+        presence of missing data: an ovarian cancer case-study.  <i>Journal of</i>
+        <i>Clinical Epidemiology</i> <b>56</b>28-37.
+<p>
+    Royston P. 2001. The lognormal distribution as a model for survival time
+        in cancer, with an emphasis on prognostic factors.  <i>Statistica</i>
+        <i>Neelandica</i> <b>55</b>:89-104.
+<p>
+    Royston P. 2004. Multiple imputation of missing values.  <i>Stata Journal</i>
+        <b>4(3)</b>:227-241.
+<p>
+    Royston P. 2005a. Multiple imputation of missing values: update.  Stata
+        Journal <b>5</b>: 188-201.
+<p>
+    Royston P. 2005b. Multiple imputation of missing values: update of <b>ice</b>.
+        Stata Journal <b>5</b>: 527-536.
+<p>
+    Royston P. 2007. Multiple imputation of missing values: further update of
+        ice, with an emphasis on interval censoring.  Stata Journal <b>7</b>:
+        445-464.
+<p>
+    White I. R. and P. Royston. 2009. Imputing missing covariate values for
+        the Cox model. Statistics in Medicine <b>28</b>: 1982-1998.
+<p>
+    White I. R., R. Daniel and P. Royston. 2010. Avoiding bias due to perfect
+        prediction in multiple imputation of incomplete categorical
+        variables.  Computational Statistics and Data Analysis <b>54</b>: 2267-2275.
+<p>
+<p>
+<b><u>Acknowledgements</u></b>
+<p>
+    Ian White has made substantial contributions to the understanding and
+    practical use of multiple imputation, and to the programming of <b>ice</b> and
+    <b>uvis</b>. Ian wrote the guts of the <b>draw()</b> option; the idea and code for
+    coping with perfect prediction are essentially all his.  I am extremely
+    grateful to him for his ongoing commitment to this project.
+<p>
+    I am grateful also to Gillian Raab for pointing out certain issues with
+    the prediction matching approach, particularly that it is only useful
+    with continuous variables.  As a result, the default imputation method
+    has been changed from matching to drawing from the predictive
+    distribution. Gillian also suggested imputing the variables in reverse
+    order of the amount of missingness, and selecting the imputed value at
+    random from the set determined by the available matching predictions.
+    Both suggestions have been implemented.
+<p>
+<p>
+<b><u>Also see</u></b>
+<p>
+    On-line:  help for mim (if installed), mi ice (if installed, Stata 11
+</pre>

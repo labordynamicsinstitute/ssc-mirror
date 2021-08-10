@@ -1,0 +1,73 @@
+/* -------------------------------------------------------------------
+
+Package: -metadialog-                      (file meta_profile.txt)
+
+The commands at the bottom of this file are placed in your personal 
+Stata profile.do file.  They create a Meta-Analysis sub-menu (of the 
+StataCorp-defined User menu) that contains the publicly available 
+meta-analysis commands.
+
+You can determine if you have defined a profile.do file by starting 
+Stata and observing whether a line of the form:
+
+   running C:\data\stata\profile.do ...
+
+appears on the screen as part of the initiation sequence. If it does, 
+then add the commands below to that file and resave the file.  If the 
+line does not appear then you have not defined a profile.  Create a 
+plain text file containing the commands below, name it profile.do and 
+save it somewhere in the Stata path.  
+
+Only 3 of these 12 programs were authored by me. To avoid a name 
+conflict if the authors of the other 9 programs choose to write a 
+dialog for their programs, I have added my initials to the dialog file 
+names I wrote for their programs.  Nonetheless, because dialogs can be 
+invoked via a -db name- command (to run dialog name.dlg), you may wish 
+to remove these initials from the commands below and rename the dialog 
+files to match.  Be aware that subsequent downloads of my dialogs will 
+not update these renamed files and downloaded dialogs written by the 
+original authors would replace my files.
+
+You may choose not to create the menu and run the dialogs directly
+from the Stata8 command line via the -db name- command.  Thus: 
+
+command...      runs...
+-----------------------------------------------------------------
+db meta_tjs     Meta-analysis of Effects               (meta)                
+db metan_tjs    Meta-analysis of Binary and Continuous (metan) 
+db metap_tjs    Meta-analysis of p-values              (metap)              
+db meta_tjs     Meta-analysis Regression               (metareg)             
+db metacum_tjs  Cumulative Meta-analysis               (metacum)             
+db funnel_tjs   Metan-based Funnel Graph               (funnel)              
+db labbe_tjs    Metan-based L'abbe Graph               (labbe)               
+db metaninf     Metan-based Influence Analysis         (metaninf)      
+db metainf_tjs  Meta-based Influence Analysis          (metainf)        
+db galbr_tjs    Galbraith Plot for Heterogeneity       (galbr)       
+db metabias     Publication Bias in Meta-analysis      (metabias)   
+db metatrim     Trim and Fill Analysis                 (metatrim)              
+
+
+The menu creation commands follow...
+
+Note: dialogs function only in Stata8. The -if _caller() >= 8 {- and 
+closing -}- lines are needed only if you also run Stata7.
+
+--Put-the-following-in-your-profile.do---------------------------------- */
+
+if _caller() >= 8 {
+  window menu clear
+  window menu append submenu "stUser" "Meta-Analysis"
+  window menu append item "Meta-Analysis" "Meta-analysis of Effects (&meta)" "db meta_tjs"
+  window menu append item "Meta-Analysis" "Meta-analysis of Binary and Continuous (meta&n)" "db metan_tjs"
+  window menu append item "Meta-Analysis" "Meta-analysis of p-values (meta&p)" "db metap_tjs"
+  window menu append item "Meta-Analysis" "Meta-analysis Regression (meta&reg)" "db metareg_tjs"
+  window menu append item "Meta-Analysis" "Cumulative Meta-analysis (meta&cum)" "db metacum_tjs"
+  window menu append item "Meta-Analysis" "Metan-based Funnel Graph (&funnel)" "db funnel_tjs"
+  window menu append item "Meta-Analysis" "Metan-based L'abbe Graph (&labbe)" "db labbe_tjs"
+  window menu append item "Meta-Analysis" "Metan-based Influence Analysis (metan&inf)" "db metaninf"
+  window menu append item "Meta-Analysis" "Meta-based Influence Analysis (metain&f)" "db metainf_tjs"
+  window menu append item "Meta-Analysis" "Galbraith Plot for Heterogeneity (&galbr)" "db galbr_tjs"
+  window menu append item "Meta-Analysis" "Publication Bias in Meta-analysis (meta&bias)" "db metabias"
+  window menu append item "Meta-Analysis" "Trim and Fill Analysis (meta&trim)" "db metatrim"
+  window menu refresh
+}

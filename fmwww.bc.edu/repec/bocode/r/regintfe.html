@@ -1,0 +1,84 @@
+<pre>
+<p>
+-------------------------------------------------------------------------------
+help for <b>reghintfe</b>                                                           ()
+-------------------------------------------------------------------------------
+ 
+<b><u>Title</u></b>
+<p>
+reghintfe - Estimates a linear regression model with one interacted high dimens
+&gt; ional fixed effect.
+<p>
+<b><u>Syntax</u></b>
+<p>
+<p>
+<b>reghintfe</b> <i>depvar</i> [<i>indepvar</i>] [if] [in] , <b>id1(</b><i>varname</i><b>)</b> <b>intvar(</b><i>varname</i><b>)</b> [<i>options</i>] 
+<p>
+<p>
+<p>
+<b><u>Description</u></b>
+<p>
+This command estimates a linear regression model with one high-dimensional
+interacted fixed effect. The command makes use of the Frisch-Waugh-Lovell
+result to avoid computing the dummy variables and the interactions for the
+fixed effects.  Because of this it can be used with a very large number of
+groups for the fixed effect.
+<p>
+<b><u>Options</u></b>
+<p>
+<b>id1(</b><i>varname</i><b>)</b> fixed effect variable. This option is required.
+<p>
+<b>intvar(</b><i>varname</i><b>)</b> variables that interact with the fixed effect. This option is
+    required.
+<p>
+<b>cluster(</b><i>varname</i><b>)</b> computes clustered standard errors.
+<p>
+<b><u>verb</u></b><b>ose</b> gives more information during estimation.
+<p>
+<b><u>Examples</u></b>
+<p>
+Example 1:
+Estimates a model with interaction between a fixed effect i and the variable x3
+&gt; .
+Does the same as "regress y x1 x2 i.j##c.x3"
+<p>
+        . regintfe y x1 x2, id1(j) intvar(x3)
+ 
+It creates two variables, __fe0 and __fe1. The variable __fe0 contains the esti
+&gt; mates of the coefficients for the 
+fixed effect and the variable __fe1 the estimates of the coefficients for the i
+&gt; nteraction between "j" and "x3".
+<p>
+Example 2:
+Estimates a model with interaction between a fixed effect i and the variables x
+&gt; 2 and x3. Standard errors are clustered on "j".
+Does the same as "regress y x1 i.j##c.x2 i.j##c.x3, cluster(j)"
+<p>
+        . regintfe y x1, id1(j) intvar(x2 x3) cluster(j)
+ 
+Creates three variables,  __fe0, __fe1 and __fe2. The variable __fe0 contains t
+&gt; he estimates of the coefficients for the 
+fixed effect, the variable __fe1 the estimates of the coefficients for the inte
+&gt; raction between "j" and "x2" and
+the variable __fe2 the estimates of the coefficients for the interaction betwee
+&gt; n "j" and "x3".
+<p>
+<b><u>Author</u></b>
+<p>
+Paulo Guimaraes, Universidade do Porto, Portugal.
+<p>
+Email: pguimaraes@fep.up.pt
+<p>
+Comments welcome!
+<p>
+<b><u>Reference</u></b>
+<p>
+If you use this program in your research cite:
+<p>
+Paulo Guimaraes and Pedro Portugal. "A Simple Feasible Alternative Procedure to
+&gt;  Estimate Models with 
+High-Dimensional Fixed Effects", Stata Journal, 10(4), 628-649, 2010.
+<p>
+{p_end}
+<p>
+</pre>

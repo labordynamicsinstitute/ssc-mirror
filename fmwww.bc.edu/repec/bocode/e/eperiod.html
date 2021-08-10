@@ -1,0 +1,74 @@
+<pre>
+<b>help eperiod</b>                                                   dialog:  <b>eperiod</b>
+-------------------------------------------------------------------------------
+<p>
+<b><u>Title</u></b>
+<p>
+    <b>eperiod</b> --    Elapsed period calculator - age calculator
+<p>
+<p>
+<b><u>Syntax</u></b>
+<p>
+        <b>eperiod</b> <i>final_date initial_date</i> [<i>if</i>] [<i>in</i>] <b>,</b>[ <i>options</i>]
+<p>
+<p>
+<b><u>Description</u></b>
+<p>
+    For the elapsed time between final_date and initial_date, eperiod
+    calculates the number of Years, Month, or days according to the specified
+    option. Input variables could either have a date format or not.
+<p>
+<p>
+<p>
+<b><u>Options</u></b>
+<p>
+<p>
+  Main
+  -----------------------------------------------------------------------------
+<p>
+    <b><u>y</u></b><b>ear</b> Calculates the elapsed period by years between initial and final
+        date.
+<p>
+    <b><u>m</u></b><b>onth</b> Calculates the elapsed period by months between initial and final
+        date.
+<p>
+    <b><u>d</u></b><b>ay</b> Calculates the elapsed period by days between initial and final date.
+<p>
+<p>
+  Options
+  -----------------------------------------------------------------------------
+<p>
+    <b><u>t</u></b><b>oday(</b><i>freq</i><b>)</b> May not be used with a <i>final_date</i>. Calculates the elapsed
+        period by <i>freq</i> between final and current date. Where <i>freq</i> is:
+<p>
+    freq
+      <b>y</b>    Year frequency.
+      <b>m</b>    Month frequency.
+      <b>d</b>    day frequency.
+<p>
+<p>
+    <b><u>g</u></b><b>enerate(</b><i>newvar</i><b>)</b> Specifies the name of the new variable to be created. If
+        <i>newvar</i> is not specified, <b>eperiod</b> creates a default variable name.
+<p>
+<p>
+<b><u>Example</u></b>
+<p>
+    .<b> eperiod</b> enrolled graduated, year
+    .<b> eperiod</b> enrolled graduated, month generate(studied_months)
+    .<b> eperiod</b> graduated, today(d) generate(experience_days)
+<p>
+<p>
+<p>
+<b><u>Author</u></b>
+<p>
+    Juan M. Villa
+    Inter-American Development Bank (not responsible)
+    juanmiguelv@iadb.org
+<p>
+<p>
+<p>
+<p>
+<p>
+<p>
+<p>
+</pre>

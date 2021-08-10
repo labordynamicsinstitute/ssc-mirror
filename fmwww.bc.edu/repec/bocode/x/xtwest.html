@@ -1,0 +1,159 @@
+<pre>
+-------------------------------------------------------------------------------
+<b>help xtwest</b>                                                     (SJ8-2: st0146)
+-------------------------------------------------------------------------------
+<p>
+<p>
+<b><u>Title</u></b>
+<p>
+    <b>xtwest</b> -- Westerlund error-correction-based panel cointegration tests
+<p>
+<p>
+<b><u>Syntax</u></b>
+<p>
+<p>
+    <b>xtwest</b> <i>depvar</i> <i>varlist</i> [<b>if</b> <i>exp</i>] [<b>in</b> <i>range</i>] <b>,</b> <b>lags(</b><i># [#]</i><b>)</b> <b>leads(</b><i># [#]</i><b>)</b>
+        <b>lrwindow(</b><i>#</i><b>)</b> [<b>constant</b> <b>trend</b> <b>bootstrap(</b><i>#</i><b>)</b> <b>westerlund</b> <b>noisily</b> <b>mg</b>]
+<p>
+    <b>xtwest</b> is for use with panel data.  You must <b>tsset</b> your data before using
+    <b>xtwest</b>; see help tsset.
+<p>
+<p>
+<b><u>Description</u></b>
+<p>
+<p>
+    <b>xtwest</b> implements the four panel cointegration tests developed by
+    Westerlund (2007). The underlying idea is to test for the absence of
+    cointegration by determining whether there exists error correction for
+    individual panel members or for the panel as a whole.  Consider following
+    error correction model, where all variables in levels are assumed to be
+    I(1):
+<p>
+        D.y_it = c_i + a_i1*D.y_it-1 + a_i2*D.y_it-2 + ... +  a_ip*D.y_it-p
+<p>
+                     + b_i0*D.x_it + b_i1*D.x_it-1 + ... + b_ip*D.x_it-p
+<p>
+                     + a_i(y_it-1 - b_i*x_it-1) + u_it
+<p>
+    a_i provides an estimate of the speed of error-correction towards the
+    long run equilibrium y_it = - (b_i/a_i) * x_it for that series i. The Ga
+    and Gt test statistics test H0: a_i = 0 for all i versus H1: a_i &lt; 0 for
+    at least one i. These statistics start from a weighted average of the
+    individualy estimated a_i's and their t-ratio's respectively. Rejection
+    of H0 should therefore be taken as evidence of cointegration of at least
+    one of the cross-sectional units.  The Pa and Pt test statistics pool
+    information over all the cross-sectional units to test H0: a_i = 0 for
+    all i vs H1:  a_i &lt; 0 for all i. Rejection of H0 should therefore be
+    taken as evidence of cointegration for the panel as a whole.
+<p>
+    The tests are very flexible and allow for an almost completely
+    heterogeneous specification of both the long- and short-run parts of the
+    error correction model, where the latter can be determined from the data.
+    The series are allowed to be of unequal length.
+<p>
+    If the cross sectional units are suspected to be correlated, robust
+    critical values can be obtained through bootstrapping.
+<p>
+<p>
+<b><u>Citation</u></b>
+<p>
+    <b>xtwest</b> is not an official Stata command. If you use <b>xtwest</b> please cite
+    Persyn, D. and J. Westerlund. 2008. Error Correction Based cointegration
+    Tests for Panel Data. <i>Stata Journal</i> 8 (2), 232-241.
+<p>
+<p>
+<b><u>Options</u></b>
+<p>
+    <b>lags(</b><i>#</i><b> [</b><i>#</i><b>])</b> If one number is specified, it determines a fixed number of
+        lags p to be included in the error correction equations.  f two
+        numbers are specified the Akaike information criterion is used to
+        determine an optimal lag length pi for each separate time series,
+        within the given limits.
+<p>
+    <b>leads(</b><i>#</i><b> [</b><i>#</i><b>])</b> Similar to the option lags it determines the number of leads
+        to be included in the error correction equations.
+<p>
+    <b>lrwindow(</b><i>#</i><b>)</b> Sets the width of the Bartlett kernel window used in the
+        semi-parametric estimation of long run variances.
+<p>
+    <b>constant</b> When given, a constant is added to the cointegration
+        relationship.
+<p>
+    <b>trend</b> Allows for a deterministic trend in the cointegration relationship.
+<p>
+    <b>bootstrap(#)</b> This option shows bootstrapped p-values for all four test
+        statistics.  These are robust in the presence of common factors in
+        the time series. The argument determines the number of bootstrap
+        replications. On Stata/IC the number of replications must be smaller
+        than 800.
+<p>
+    <b>westerlund</b> This option should be used only to replicate the tables in
+        Westerlund (2007).
+<p>
+    <b>noisily</b> With this option xtwest shows the regressions for the separate
+        series.  If a range of lags or leads is given, only the regression
+        chosen by the AIC is shown.
+<p>
+    <b>mg</b> If specified, xtwest reports the mean group error-correction model,
+        averaging coefficients of the error-correction equation over all
+        cross-sectional units, together with the implied long-run
+        relationship. This is much like the output of <b>xtpmg</b> with the "mg"
+        option, but allowing for different lag and lead lengths in the
+        different cross-sectional units.
+<p>
+<b><u>Examples</u></b>
+<p>
+    use http://fmwww.bc.edu/repec/bocode/x/xtwestdata.dta
+<p>
+    In many applications at least a constant term is added to the
+    cointegration equation
+    xtwest loghex loggdp, constant lags(1 3) leads(0 3) lrwindow(3)
+<p>
+    Bootstrapping takes a long time unless the lead and lag lengths are fixed
+    xtwest loghex loggdp, constant trend lags(1) leads(1) lrwindow(3)
+        bootstrap(100)
+<p>
+    The westerlund option should only be used to replicate the results of
+    Westerlund (2007)
+    xtwest loghex loggdp, westerlund constant trend lags(1 3) leads(0 3)
+        lrwindow(3)
+    xtwest loghex loggdp, westerlund constant trend lags(1) leads(1)
+        lrwindow(3) bootstrap(100)
+<p>
+<p>
+<p>
+<p>
+<b><u>References</u></b>
+<p>
+    Persyn, D. and J. Westerlund. 2008. Error Correction Based Cointegration
+        Tests for Panel Data. <i>Stata Journal</i> 8 (2), 232-241.
+<p>
+    Westerlund, J. 2007. Testing for Error Correction in Panel Data. <i>Oxford</i>
+        <i>Bulletin of Economics and Statistics</i> 69(6): 709-748.
+<p>
+<p>
+<b><u>Authors</u></b>
+<p>
+    Damiaan Persyn (corresponding author)
+    LICOS, Centre for Institutions and Economic Performance
+    Katholieke Universiteit Leuven
+    Leuven, Belgium
+    damiaan.persyn@econ.kuleuven.be
+<p>
+    Joakim Westerlund
+    Department of Economics
+    Lund University
+    Lund, Sweden
+    joakim.westerlund@nek.lu.se
+<p>
+<p>
+<b><u>Also see</u></b>
+<p>
+    Article: <i>Stata Journal</i>, volume 8, number 2: st0146
+<p>
+<p>
+    Online:  <b>ipshin</b>, <b>hadrilm</b>, <b>xtfisher</b>, <b>xtpmg</b> (if installed)
+<p>
+<p>
+<p>
+</pre>

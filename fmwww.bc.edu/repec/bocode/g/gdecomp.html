@@ -1,0 +1,126 @@
+<pre>
+help for <b>gdecomp</b>
+-------------------------------------------------------------------------------
+<p>
+<b><u>Decomposition of outcome differentials after nonlinear models</u></b>
+<p>
+<b><u>Syntax</u></b> 
+<p>
+        <b>gdecomp</b> <i>groupvar</i> [,<i> options</i> ]<b> :</b> <i>estimation_command</i>
+<p>
+    where
+<p>
+        <i>groupvar</i> specifies a binary (numeric) variable identifying the two
+                groups;
+<p>
+        <i>estimation_command</i> (see help estcom) should begin with the <i>logit</i>,
+                <i>logistit</i>, <i>logistit</i>, <i>probit</i>, <i>poisson</i>, or <i>nbreg</i>;
+<p>
+        <i>options</i> are
+                <b><u>dxw</u></b><b>eight(</b><i>high</i>|<i>low</i><b>)</b> <b><u>rev</u></b><b>erse</b> <b>eform</b> <b><u>l</u></b><b>evel(</b><i>#</i><b>)</b> <b><u>nohead</u></b><b>er</b> <b>nocoef</b>
+                <b><u>d</u></b><b>ummies(</b><i>varlist_1</i> [<b>\</b> <i>varlist_2</i> ..]<b>)</b>
+<p>
+<b><u>Description</u></b>
+<p>
+    <b>gdecomp</b> implements a generalized Blinder-Oaxaca decomposition which
+    applies to categorical and count outcomes (and parallel to this, to
+    nonlinear regression models). First,<i> estimation_command</i> is estimated in
+    the two groups of<i> groupvar</i>. Then the observed difference in the dependent
+    variable of<i> estimation_command</i> between the groups defined by <i>groupvar</i> is
+    decomposed into three parts: (1) a part due to differences in endowments
+    (labeled by E), and (2) a part due to differences in<i> marginal effects</i> and
+    finally (3) a part due to difference in baseline predictions or constants
+    (labeled by U).  See the<b> Methods and formulas</b> section below.
+<p>
+    Typed without arguments, <b>gdecomp</b> replays the estimation results.  <b>gdecomp</b>
+    shares all features of estimation commands; see help estcom for details.
+<p>
+    Before using <b>gdecomp</b>, please install the latest version of margeff.  (The
+    latest version is 2.0.1, dated 15 Septermber 2006).  See other packages
+    carrying out Blinder-Oaxaca decompositions at the bottom of this help
+    file.
+<p>
+<b><u>Options</u></b>
+<p>
+<p>
+    <b><u>dxw</u></b><b>eight(</b><i>high</i>|<i>low</i><b>)</b> affects the calculation of the endowment effect.  If
+        <b><u>dxw</u></b><b>eight(</b><i>high</i><b>)</b> is specified then differences in endowments are
+        evaluated at the high-outcome regression line. If <b><u>dxw</u></b><b>eight(</b><i>low</i><b>)</b> is
+        specified then differences in endowments are weighted with the
+        marginal effects from the low-outome group.  The default is
+        <b><u>dxw</u></b><b>eight(</b><i>high</i><b>)</b>.
+<p>
+    <b><u>rev</u></b><b>erse</b> tells <b>gdecomp</b> that the group with the lower average of the
+        outcome variable should be treated as the high-outcome group. By
+        default, <b>gdecomp</b> defines the low-outcome group to be the group with
+        the largest observed mean of the outcome variable. The default
+        behavior generalizes the idea that average earnings are higher in the
+        high-outcome group. The <b><u>rev</u></b><b>erse</b> option makes sense and should be used
+        only if high value of the outcome variable indicate outcomes that are
+        "negatively" valued (or, outcomes decreasing subjective utility). Do
+        not use this option if large categories of the outcome variable
+        record high salaries or being in the labor force; use this option if
+        large categories of the outcome variable record being unemployed.
+<p>
+    <b>eform</b> tells <b>gdecomp</b> that the dependent variable is the natural logarithm
+        of the outcome variable, so that correct marginal effects (changes in
+        the exponential of the linear prediction) can be calculated.  This
+        option is useful if the dependent variable is the logarithm of wage.
+        <b>Warning:</b> with this option, you do not request the results to be
+        displayed in exponentiated form.
+<p>
+    <b>level(</b><i>#</i><b>)</b> specifies the confidence level, in percent terms, for the
+        confidence intervals of the computed statistics; see help level.
+<p>
+    <b>noheader</b> suppresses the display of overall and variable-level
+        decomposition results.
+<p>
+    <b>nocoef</b> suppresses the display of the decomposition results for the
+        variables, and forces <b>gdecomp</b> to display the E, C and U components
+        (without respective standard errors).  .
+<p>
+    <b>dummies(</b><i>varlist_1</i> [<b>\</b> <i>varlist_2</i> ... ]<b>)</b> modifies the calculation of
+        marginal effects for dummy variables. Here, <i>varlist_1</i> [<b>\</b> <i>varlist_2</i>
+        ... ] are lists of dummy variables, where all dummies of a list
+        indicate different categories of the same underlying categorical
+        variable. Let <i>xvar</i> be a categorical variables with <i>K</i>+1 (<i>K</i>&gt;1)
+        categories. In this case, not xvar, but <i>K</i> dummies - say, D1, ..., DK
+        - are included in the regression model. The estimated marginal
+        effects for these <i>K</i> dummies may be misleading (see an example in the
+        help file margeff). The correct result is obtained if one specifies
+        the <b>dummies(</b>D*<b>)</b> option.
+<p>
+<p>
+<b><u>Methods and Formulas</u></b>
+<p>
+    Let y1 and y0 be the means of the dependent variable Y in the
+    high-outcome and the low-outcome groups, respectively (thus y1&gt;y0). Let
+    <b>x</b>1 and <b>x</b>0 the row vectors of the means of the explanatory variables
+    X1,...,Xk, and <b>m</b>1 and <b>m</b>0 the column vectors of the marginal effects in
+    groups 1 and 0, and <i>a</i>1 and <i>a</i>0 the baseline predictions in groups 1 and 0.
+<p>
+    If the <b><u>dxw</u></b><b>eight(</b><i>high</i>|<i>low</i><b>)</b> option is omitted or <b><u>dxw</u></b><b>eight(</b><i>high</i><b>)</b> is
+    specified, then the raw differential y1-y2 is approximated as
+<p>
+        y1-y0 = (<b>x</b>1-<b>x</b>0)<b>m</b>1 + <b>x</b>0(<b>m</b>1-<b>m</b>0) + <i>a</i>1-<i>a</i>0
+<p>
+    If, however, the <b><u>dxw</u></b><b>eight(</b><i>low</i><b>)</b> option is specified, then the raw
+    differential y1-y2 is approximated as
+<p>
+        y1-y0 = (<b>x</b>1-<b>x</b>0)<b>m</b>0 + <b>x</b>0(<b>m</b>1-<b>m</b>0) + <i>a</i>1-<i>a</i>0
+<p>
+    Whatever method is chosen, the first part on the right-hand side is the
+    endowments effect (E), and the second part on the right-hand side is the
+    coefficient effect (C), and the third part is the difference due to
+    differences in "constants" (unexplained part, U).
+<p>
+<p>
+<b><u>Author</u></b>
+<p>
+Tamás Bartus, Corvinus University, Budapest, tamas.bartus@uni-corvinus.hu
+<p>
+<p>
+<b><u>Also see</u></b>
+<p>
+On-line:  help for gdecomp decompose oaxaca if installed
+</pre>

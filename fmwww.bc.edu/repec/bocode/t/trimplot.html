@@ -1,0 +1,105 @@
+<pre>
+-------------------------------------------------------------------------------
+help for <b>trimplot</b>
+-------------------------------------------------------------------------------
+<p>
+<b><u>Plots of trimmed means</u></b> 
+<p>
+        <b>trimplot</b> <i>varname</i> [<b>if</b> <i>exp</i>] [<b>in</b> <i>range</i>] [<b>,</b> <b>over(</b><i>varname</i><b>)</b> <b>percent</b>
+                 <i>scatter_options</i>]
+<p>
+        <b>trimplot</b> <i>varlist</i> [<b>if</b> <i>exp</i>] [<b>in</b> <i>range</i>] [<b>,</b> <b>percent</b> <i>scatter_options</i>]
+<p>
+<p>
+<b><u>Description</u></b>
+<p>
+    <b>trimplot</b> produces plots of trimmed means versus depth for one or more
+    numeric variables. Such plots may help specifically in choosing or
+    assessing measures of level and generally in assessing the symmetry or
+    skewness of distributions. They can be used to compare distributions or
+    to assess whether transformations are necessary or effective.
+<p>
+    <b>trimplot</b> may be used to show trimmed means for one variable, in which
+    case different groups may be distinguished by the <b>over()</b> option; or for
+    several variables.
+<p>
+<p>
+<b><u>Remarks</u></b> 
+<p>
+    Order n data values for a variable x and label them such that x(1) &lt;= ...
+    &lt;= x(n). Following Tukey (1977), depth is defined as 1 for x(1) and x(n),
+    2 for x(2) and x(n-1), and so forth: it is the smaller number reached by
+    counting inwards from either extreme x(1) or x(n) toward any specified
+    value. So the depth of x(i) is the smaller of i and n - i + 1.
+<p>
+    Trimmed means may be related to depth as follows. A trimmed mean may be
+    defined for any particular depth as the mean of all values with that
+    depth or greater. Thus the trimmed mean for depth 1 is the mean of all
+    values. The trimmed mean for depth 2 is the mean of all values except
+    those of depth 1, i.e. all values except for the extremes. The trimmed
+    mean for depth 3 is the mean of all values except those of depth 1 and 2;
+    and so forth.
+<p>
+    The highest depth observed for a distribution occurs once if n is odd and
+    twice if n is even; either way it labels those values whose mean is the
+    median. Thus trimmed means range from the mean to the median.
+<p>
+    The idea of plotting trimmed mean versus percent trimmed can only be a
+    little deal. An example can be found in Rosenberger and Gasko (1983,
+    p.315). Users knowing good and/or early references are welcome to email
+    me with details.
+<p>
+    For more on trimmed means, see the help for trimmean (which must be
+    installed first).
+<p>
+<p>
+<b><u>Options</u></b> 
+<p>
+    <b>over(</b><i>varname</i><b>)</b> specifies that calculations are to be carried out
+        separately for each group defined by <i>varname</i>.  <b>over()</b> is allowed only
+        with a single variable to be plotted.
+<p>
+    <b>percent</b> specifies that depth is to be scaled and plotted as percent
+        trimmed, which will range from 0 to nearly 50 (a median cannot be
+        based on no observed values, so 50 cannot be attained).
+<p>
+    <i>scatter_options</i> are options of twoway scatter.
+<p>
+<p>
+<b><u>Examples</u></b>
+<p>
+    <b>. webuse citytemp</b>
+    <b>. describe</b>
+    <b>. trimplot *dd</b>
+    <b>. trimplot temp*</b>
+    <b>. trimplot tempjan, over(region) percent</b>
+<p>
+<p>
+<b><u>Author</u></b>
+<p>
+    Nicholas J. Cox, Durham University
+    n.j.cox@durham.ac.uk
+<p>
+<p>
+<b><u>Acknowledgments</u></b> 
+<p>
+    Ariel Linden found a typo in the help.
+<p>
+<p>
+<b><u>References</u></b>
+<p>
+    Rosenberger, J.L. and Gasko, M. 1983.  Comparing location estimators:
+        trimmed means, medians, and trimean.  In Hoaglin, D.C., Mosteller, F.
+        and Tukey, J.W. (Eds) <i>Understanding robust and exploratory data</i>
+        <i>analysis.</i>  New York: John Wiley, 297-338.
+<p>
+    Tukey, J.W. 1977.  <i>Exploratory data analysis.</i>  Reading, MA:
+        Addison-Wesley.
+<p>
+<p>
+<b><u>Also see</u></b> 
+<p>
+    summarize, means, trimmean (if installed), hsmode (if installed), shorth
+             (if installed)
+<p>
+</pre>

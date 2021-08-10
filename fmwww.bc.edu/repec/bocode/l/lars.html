@@ -1,0 +1,139 @@
+<pre>
+<b>help lars</b>
+-------------------------------------------------------------------------------
+<p>
+<b><u>Title</u></b>
+<p>
+    <b>Least Angle Regression, Forward Stagewise Regression, Lasso estimation</b>
+<p>
+<b><u>Syntax</u></b>
+<p>
+        <b>lars</b> [varlist] [if] [in] [ <b>,</b> <i>options</i>]
+<p>
+    <i>options</i>               Description
+    -------------------------------------------------------------------------
+    Main
+      <b><u>a</u></b><b>lgorithm(</b><i>string</i><b>)</b>    specifies the algorithm to be used in estimation,
+                            default is lars.
+      <b><u>e</u></b><b>ps(</b><i>#</i><b>)</b>              is the small number taken as the "machine zero",
+                            the default is 0.000001.
+      <b><u>g</u></b><b>raph</b>                specifies whether a graph of the entire model
+                            sequence is plotted.
+      <b>gopt(</b><i>string</i><b>)</b>         specifies options to be included in the graph.
+      <b>nooutput</b>             do not display any output.
+<p>
+    Prediction
+      <b><u>t</u></b><b>ype(</b><i>string</i><b>)</b>         specifies that coefficients are produced from a
+                            single realisation of the algorithm.
+      <b><u>m</u></b><b>ode(</b><i>string</i><b>)</b>         specifies the mode of the prediction, the default
+                            is step.
+      <b>s(</b><i>#</i><b>)</b>                 specifies the value at which the prediction is
+                            made, the default is 0.5 that means halfway
+                            between steps 0 and 1.
+    -------------------------------------------------------------------------
+<p>
+<b><u>Description</u></b>
+<p>
+    Least Angle Regression is a model-building algorithm that considers
+    parsimony as well as prediction accuracy.  This method is covered in
+    detail by the paper Efron, Hastie, Johnstone and Tibshirani (2004),
+    published in The Annals of Statistics.  Their motivation for this method
+    was a computationally simpler algorithm for the <b>Lasso</b> and <b>Forward</b>
+    <b>Stagewise</b> regression.
+<p>
+    There are many criticisms of stepwise regression, one of which is that it
+    is a "greedy" algorithm and that the regression coefficients are too
+    large. Ridge regression is one method of model-building that shrinks the
+    coefficients by making the sum of the squared coefficients less than some
+    constant. The <b>Lasso</b> is similar but the constaint is that the sum of the
+    "mod" coefficients is less than a constant. One implication of this will
+    be that the solution will contain coefficients that are exactly 0 and
+    hence have the property of parsimony i.e. a simpler model.
+<p>
+    The method implemented here is<b> Least Angle Regression</b> but the same
+    algorithm can be used to get the <b>Lasso</b> solution or the <b>Forward Stagewise</b>
+    solution. It is nearly a complete port of the LARS package written by
+    Hastie and Efron but I have not translated everything so if anyone spots
+    anything needed or a bug just email me.
+<p>
+<b><u>Options</u></b>
+<p>
+        +------+
+    ----+ Main +-------------------------------------------------------------
+<p>
+    <b><u>a</u></b><b>lgorithm(</b><i>string</i><b>)</b> specifies the algorithm to be used in estimation. There
+        are three choices: Least angle regression; Lasso and; Forward
+        Stagewise. The connection between these is discussed in the Efron
+        paper.
+<p>
+    <b><u>e</u></b><b>ps(</b><i>#</i><b>)</b> is the small number taken as the "machine zero", the default is
+        0.000001.
+<p>
+    <b><u>t</u></b><b>ype(</b><i>string</i><b>)</b> specified that coefficients are produced from a single
+        realisation of the algorithm. The default string must be
+        "coefficients". The original code also produced fitted values, this
+        will be implemented in the future.
+<p>
+    <b><u>m</u></b><b>ode(</b><i>string</i><b>)</b> specifies the mode of the prediction, the default is step.
+<p>
+    <b>s(</b><i>#</i><b>)</b> specifies the value at which the prediction is made, the default is
+        4.1 that means .1 between steps 4 and 5.
+<p>
+    <b><u>g</u></b><b>raph</b> specifies whether a graph of the entire model sequence is plotted.
+        The default graph and only one implemented at this moment contains
+        the coefficients on the y-axis and steps on the x-axis.
+<p>
+    <b>gopt(</b><i>string</i><b>)</b> specifies options to be included in the automatic graph.
+<p>
+    <b>nooutput</b> do not display any output. The estimation still occurs and the
+        usual output is placed in the saved results.
+<p>
+<b><u>Examples</u></b>
+<p>
+    The command can be demonstrated by clicking the text below
+<p>
+    sysuse auto,replace &lt;---- click to load up dataset *the old dataset is
+    lost*!
+<p>
+    Use <b>lars</b> to find the least angle regression solution. The coefficients
+    are displayed for the model with the lowest Cp statistic.
+<p>
+    lars price weight length mpg turn rep78 headroom trunk displacement
+        gear_ratio foreign
+<p>
+    Now the Lasso estimation, in this case gives the same answer as least
+    angle regression but using the <b>g()</b> option plots the model sequqnce.
+<p>
+    lars price weight length mpg turn rep78 headroom trunk displacement
+        gear_ratio foreign, a(lasso) g
+<p>
+    Again forward stagewise gives the same solution so this example
+    demonstrates the use of extra options for the graph.
+<p>
+    lars price weight length mpg turn rep78 headroom trunk displacement
+        gear_ratio foreign, a(stagewise) g gopt(title(stagewise))
+<p>
+<p>
+<b><u>Saved Results</u></b>
+<p>
+    <b>r(RSS)</b>      the residual sums of squares for each step 
+    <b>r(R2)</b>       the r-squared values
+    <b>r(newbetas)</b> the coefficients from the prediction part
+    <b>r(cp)</b>       the Cp statistic for each step
+    <b>r(normx)</b>    the sum of squares for the covariates, i.e. the normalising con
+&gt; stants.
+    <b>r(beta)</b>     the beta coefficients for each step
+    <b>r(sbeta)</b>    the beta coefficients multiplied by the normx matrix
+<p>
+<b><u>Author</u></b>
+<p>
+    Adrian Mander, MRC Biostatistics Unit, Cambridge, UK.
+<p>
+    Email adrian.mander@mrc-bsu.cam.ac.uk
+<p>
+<p>
+<b><u>See Also</u></b> 
+<p>
+    Related commands:
+<p>
+</pre>

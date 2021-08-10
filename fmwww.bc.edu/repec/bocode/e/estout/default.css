@@ -1,0 +1,259 @@
+/* MAIN TAGS */
+html {
+    height: 100%;
+}
+
+body {
+    font-size: 12px;
+    background-color: #F3F6F9;
+    height: 100%;
+    padding: 0px 0px 0px 0px;
+    margin: 0px 0px 0px 0px;
+}
+
+a, a:visited {
+    color: #000000;
+    border-bottom: 1px solid;
+    text-decoration: none;
+}
+
+a:active, a:hover {
+    color: #666666;
+    border-bottom: 1px solid;
+    text-decoration: none;
+}
+
+
+/* PAGEHEAD :: The top section of the page */
+
+#pagehead {
+    background-color: #bcd;
+    font-family: verdana, arial, helvetica, sans-serif;
+    padding: 5px 0px 10px 15px;
+    white-space: nowrap;
+}
+
+#pagehead h1 {
+    /*font-size: 26px;*/
+    font-size: 2.17em;
+    font-weight: bold;
+    margin: 0px 0px 5px 0px;
+    padding: 0px 0px 0px 0px;
+}
+
+#pagehead p {
+    /*font-size: 14px;*/
+    font-size: 1.17em;
+    margin: 0px 0px 0px 0px;
+    padding: 0px 0px 0px 0px;
+}
+
+#pagehead a {
+    color: #000000;
+    border-bottom: none;
+    text-decoration: none;
+}
+
+/* PAGEBAR :: Bar on Left Side of Page */
+
+#pagebar {
+    position: static;
+    font-family: verdana, arial, helvetica, sans-serif;
+    /*height: 100%;*/
+    /*min-height: 100%;*/
+    /*width: 150px;*/
+    width: 12.5em;
+    padding: 5px 0px 0px 0px;
+}
+
+#pagebar ul {
+    list-style: none;
+    padding: 0;
+    margin: 0px;
+}
+
+#pagebar ul li {
+    display: block;
+    margin: 2px 0px 3px 15px;
+    vertical-align: middle;
+}
+
+#pagebar ul li ul li {
+    margin-left: 20px;
+}
+
+#pagebar a {
+    font-family: verdana, arial, helvetica, sans-serif;
+    color: #000000;
+    font-weight: normal;
+    border-bottom: none;
+    text-decoration: none;
+}
+
+#pagebar ul li a:hover , a:active {
+    border-bottom: 1px solid;
+}
+
+
+/* PAGEBODY :: Main Content Area of the Page */
+
+#pagebody {
+    position: absolute;
+    /*top: 75px;*/
+    top: 6.25em;
+    /*left: 155px;*/
+    left: 13em;
+    /*height: 100%;*/
+    font-family: verdana, arial, helvetica, sans-serif;
+    /*margin-right: 221px;*/
+    padding-right: 15px;
+    padding-bottom: 15px;
+    max-width: 50em;
+}
+
+#pagebody table {
+    font-size: 1em;
+    margin: 0px;
+    padding: 0px;
+    text-align: left;
+    border-spacing: 0px;
+    border: 0px;
+    }
+
+#pagebody td {
+    margin: 0px;
+    padding: 0px;
+    border-spacing: 0px;
+    vertical-align:top
+}
+
+#pagebody p {
+    /*font-size: 12px;*/
+    margin-top: 0px;
+    margin-bottom: 3px;
+    padding-top: 3px;
+    padding-left: 0px;
+    padding-bottom: 3px;
+    line-height: 150%;
+    }
+
+#pagebody h1 {
+    margin-top: 0px;
+    margin-bottom: .7em;
+    /*font-size: 14px;*/
+    font-size: 1.17em;
+    font-weight: bold;
+}
+
+#pagebody h2 {
+    /*font-size: 14px;*/
+    margin-top: 2em;
+    margin-bottom: .7em;
+    font-size: 1.17em;
+    font-weight: bold;
+}
+
+#pagebody h3 {
+    /*font-size: 14px;*/
+    margin-top: 1.5em;
+    margin-bottom: .5em;
+    font-size: 1em;
+    font-weight: bold;
+}
+
+#pagebody a:active, a:hover {
+    border-bottom: 1px solid;
+    text-decoration: none;
+}
+
+#pagebody pre {
+    font-family: monospace;
+    background-color: #FFFFFF;
+    padding: 6px 12px 6px 12px;
+    margin: 3px 0px 3px 0px;
+}
+
+#pagebody samp {
+    font-family: monospace;
+}
+
+#pagebody pre a {
+    font-family: monospace;
+    color: #000066;
+    border-bottom: none;
+    text-decoration: none;
+}
+
+#pagebody  pre a:hover , a:active {
+    border-bottom: none;
+    text-decoration: underline;
+}
+
+#pagebody li {
+    /*font-size: 12px;*/
+    margin-top: 0px;
+    margin-left: -12px;
+    padding-top: 2px;
+    padding-left: 10px;
+    padding-bottom: 0px;
+    line-height: 150%;
+}
+
+#pagebody ul {
+    margin-top: 0px;
+    padding-bottom: 0px;
+}
+
+#pagebody ol {
+    margin-top: 0px;
+    margin-bottom: 0px;
+    padding-top: 0px;
+    padding-bottom: 0px;
+    list-style-type: decimal;
+    list-style-position: outside;
+}
+
+#pagebody ol li {
+    margin-top: 0px;
+    margin-bottom: 3px;
+    padding-top: 3px;
+    padding-bottom: 3px;
+}
+
+
+/* EXTOC :: Table of contents on example pages */
+
+#extoc {
+    padding-right: 15px;
+}
+
+#extoc ul {
+    list-style: none;
+    margin: 0px 0px 3px 0px;
+    padding: 3px 0px 3px 0px;
+}
+
+#pagebody li {
+    margin-top: 0px;
+    margin-left: 0px;
+    padding-top: 0px;
+    padding-left: 0px;
+    padding-bottom: 0px;
+    line-height: 150%;
+}
+
+#extoc ul ul {
+    margin: 0px 0px 0px 2em;
+    padding: 0px
+}
+
+/* PAGERBAR :: Bar on Right Side of Page */
+
+#pagerbar {
+    position: absolute;
+    /*top: 75px;*/
+    top: 6.25em;
+    right: 0px;
+    /*height: 100%;*/
+    width: 135px;
+}

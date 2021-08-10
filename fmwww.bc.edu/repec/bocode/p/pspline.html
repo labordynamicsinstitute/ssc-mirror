@@ -1,0 +1,235 @@
+<pre>
+<b>help pspline</b>
+-------------------------------------------------------------------------------
+<p>
+<b><u>Title</u></b>
+<p>
+    <b>pspline</b> -- Penalized spline scatterplot smoother based on <b>xtmixed</b>
+<p>
+<p>
+<b><u>Syntax</u></b>
+<p>
+        <b>pspline</b> <i>yvar</i> <i>xvar</i> [<i>varlist</i>] [<i>if</i>] [<i>in</i>] [<b>,</b> <i>options</i> ]
+<p>
+<p>
+<a name="opt"></a>    <i>options</i>                    Description
+    -------------------------------------------------------------------------
+    Main
+      <b><u>d</u></b><b>egree(</b><i>#</i><b>)</b>                degree of spline; default is 1
+      <b><u>nk</u></b><b>nots(</b><i>#</i><b>)</b>                number of knots; default is min(int(U/4), 35)
+                                 where U is the number of distinct values of
+                                 <i>xvar</i>
+      <b><u>k</u></b><b>nots(</b><i>numlist</i><b>)</b>           exact location of knots
+      <b><u>al</u></b><b>pha(</b><i>#</i><b>)</b>                 significance level for pilot goodness-of-fit
+                                 test
+      <b>force</b>                    force penalized spline estimation
+      <b>at(</b><i>varname</i> [<i>if</i>] [<i>in</i>]<b>)</b>    obtain the smooth at the values of <i>varname</i>
+      <b><u>g</u></b><b>enerate(</b><i>newvar</i><b>)</b>         store smoothed fit in <i>newvar</i>
+      <b><u>r</u></b><b>eplace</b>                  overwrite existing variable
+      <b><u>nopen</u></b><b>alty</b>                do not apply a roughness penalty; treat spline
+                                 coefficients as fixed effects
+      <b><u>dis</u></b><b>crete</b>                 treat <i>xvar</i> as a factor variable
+      <b><u>estop</u></b><b>ts(</b><i>options</i><b>)</b>         estimation options as documented in help 
+                                 <b>xtmixed</b>
+      <b><u>noi</u></b><b>sily</b>                  display estimation output
+      <b><u>nogr</u></b><b>aph</b>                  suppress graph
+      <b><u>nosc</u></b><b>atter</b>                suppress scatterplot only
+      <b><u>noknot</u></b><b>pos</b>                suppress ticks indicating knot positions
+<p>
+    Scatterplot
+      <i>marker_options</i>           change look of markers (color, size, etc.)
+      <i>marker_label_options</i>     add marker labels; change look or position
+<p>
+    Smoothed line
+      <b><u>lineop</u></b><b>ts(</b><i>cline_options</i><b>)</b>  affect rendition of the smoothed line
+<p>
+    Add plots
+      <b>addplot(</b><i>plot</i><b>)</b>            add other plots to the generated graph
+<p>
+    Y axis, X axis, Titles, Legend, Overall
+      <i>twoway_options</i>           any options other than <b>by()</b> documented in
+                                 <b>[G]</b> <i>twoway_options</i>
+    -------------------------------------------------------------------------
+<p>
+<p>
+<b><u>Description</u></b>
+<p>
+    <b>pspline</b> uses <b>xtmixed</b> to fit a penalized spline regression of <i>yvar</i> on <i>xvar</i>
+    as discussed in Ruppert et al. (2003) and plots the function. The knots
+    of the spline are positioned at equally spaced quantiles of the distinct
+    values of <i>xvar</i>.
+<p>
+    <b>pspline</b> is an automatic smoother in that the optimal degree of smoothing
+    is determined from the data by (restricted) maximum likelihood.
+<p>
+    Specify <i>varlist</i> to adjust for additional covariates and plot partial
+    residuals.
+<p>
+    To circumvent convergence problems in situations where there is only
+    little deviation in the data from a simple parametric model (e.g. a
+    linear model if degree=1, a quadratic model if degree=2), <b>pspline</b>
+    performs a pilot goodness-of-fit (GOF) test for the parametric model. The
+    GOF test is implemented as a Wald test of the spline terms in a
+    non-penalized model (see the <b>nopenalty</b> option). A low p-value indicates
+    that there is a lot of evidence against the parametric model. <b>pspline</b>
+    uses the penalized spline model only if the p-value is smaller than 0.3
+    (or as set by <b>alpha()</b>) and otherwise sticks with the parametric model.
+    Specify <b>force</b> to skip the test and enforce the penalized spline model.
+<p>
+<p>
+<b><u>Options</u></b>
+<p>
+        +------+
+    ----+ Main +-------------------------------------------------------------
+<p>
+    <b>degree(</b><i>#</i><b>)</b> specifies the degree of the spline to be used in the smoothing.
+        The default is <b>degree(1)</b> (linear splines), resulting in a piecewise
+        linear smooth. Use <b>degree(2)</b> (quadratic splines) for a continuous
+        smooth (i.e. a smooth with a continuous first derivative). <b>degree(0)</b>
+        results in a step function.
+<p>
+    <b>nknots(</b><i>#</i><b>)</b> specifies the number of knots of the spline. The default is
+        min(int(U/4), 35) where U is the number of distinct values of <i>xvar</i>.
+        <b>nknots(0)</b> is allowed and causes a parametric model without splines to
+        be fitted. This is equivalent to fitting a polynomial model using 
+        <b>regress</b> (i.e. a linear model if degree=1, a quadratic model if
+        degree=2, etc.).
+<p>
+    <b>knots(</b><i>numlist</i><b>)</b> specifies the exact locations of knots of the spline. The
+        default is to position the knots at equally spaced quantiles of the
+        distinct values of <i>xvar</i>. <b>nknots()</b> is not allowed if <b>knots()</b> is
+        specified.
+<p>
+    <b>alpha(</b><i>#</i><b>)</b> sets the significance level for the pilot goodness-of-fit test
+        (see description above). The default is <b>alpha(0.3)</b>.
+<p>
+    <b>force</b> skips the pilot goodness-of-fit test and enforces estimation of the
+        penalized spline model.
+<p>
+    <b>at(</b><i>varname</i> [<i>if</i>] [<i>in</i>]<b>)</b> obtains the smoothed fit at the values of <i>varname</i>.
+        The default is to obtain the fit at the values of <i>xvar</i>. The fit at
+        the values of <i>varname</i> is computed by linear interpolation (or
+        extrapolation) from the fit at the values of <i>xvar</i>.
+<p>
+    <b>generate(</b><i>newvar</i><b>)</b> stores the smoothed values in <i>newvar</i>.
+<p>
+    <b>replace</b> permits <b>pspline</b> to overwrite an existing variable.
+<p>
+    <b>nopenalty</b> fits a non-penalized spline smooth. This is accomplished by
+        treating the spline coefficients as fixed instead of random in 
+        <b>xtmixed</b> and is equivalent to fitting a spline model using <b>regress</b>.
+<p>
+    <b>discrete</b> causes <i>xvar</i> to be treated as a factor variable and fits a model
+        containing a random effect among the levels of <i>xvar</i> instead of a
+        spline. <b>nknots()</b>, <b>knots()</b>, and <b>at()</b> are not allowed if <b>discrete</b> is
+        specified.
+<p>
+    <b>estopts(</b><i>options</i><b>)</b> specified options to be passed through to <b>xtmixed</b>.
+<p>
+    <b>noisily</b> causes output from <b>xtmixed</b> to be displayed.
+<p>
+    <b>nograph</b> suppresses drawing the graph of the estimated smooth.
+<p>
+    <b>noscatter</b> suppresses graphing a scatterplot of the observed data or
+        partial residuals.
+<p>
+    <b><u>noknot</u></b><b>pos</b> suppresses the ticks indicating the knot positions.
+<p>
+        +-------------+
+    ----+ Scatterplot +------------------------------------------------------
+<p>
+    <i>marker_options</i> affect the rendition of markers drawn at the plotted
+        points, including their shape, size, color, and outline; see <b>[G]</b>
+        <i>marker_options</i>.
+<p>
+    <i>marker_label_options</i> specify if and how the markers are to be labeled;
+        see <b>[G]</b> <i>marker_label_options</i>.
+<p>
+        +---------------+
+    ----+ Smoothed line +----------------------------------------------------
+<p>
+    <b>lineopts(</b><i>cline_options</i><b>)</b> affects the rendition of the smoothed line; see 
+        <b>[G]</b> <i>cline_options</i>.
+<p>
+        +-----------+
+    ----+ Add plots +--------------------------------------------------------
+<p>
+    <b>addplot(</b><i>plot</i><b>)</b> provides a way to add other plots to the generated graph;
+        see <b>[G]</b> <i>addplot_option</i>.
+<p>
+        +-----------------------------------------+
+    ----+ Y axis, X axis, Titles, Legend, Overall +--------------------------
+<p>
+    <i>twoway_options</i> are any of the options documented in <b>[G]</b> <i>twoway_options</i>,
+        excluding <b>by()</b>.  These include options for titling the graph (see <b>[G]</b>
+        <i>title_options</i>) and for saving the graph to disk (see <b>[G]</b>
+        <i>saving_option</i>).
+<p>
+<p>
+<b><u>Examples</u></b>
+<p>
+    Example using the auto data:
+<p>
+        . sysuse auto
+        . pspline price mpg                            // piecewise linear
+        . pspline price mpg, degree(0)                 // step function
+        . pspline price mpg, degree(2)                 // continuous
+        . pspline price mpg weight foreign, degree(2)  // covariate adjustment
+        
+<p>
+    Graph on titlepage of Ruppert et al. (2003):
+<p>
+        . use http://fmwww.bc.edu/repec/bocode/l/lidar.dta
+        . pspline logratio range
+        
+<p>
+    The motorcycle data:
+<p>
+        . webuse motorcycle
+        . pspline accel time, d(2)
+        
+<p>
+<b><u>Saved results</u></b>
+<p>
+    <b>pspline</b> returns the results from <b>xtmixed</b> in <b>e()</b> and saves the following
+    in <b>r()</b>:
+<p>
+    Scalars   
+      <b>r(degree)</b>      degree of spline
+      <b>r(nknots)</b>      number of knots
+      <b>r(alpha)</b>       significance level for pilot GOF test
+      <b>r(gof_chi2)</b>    chi-squared of pilot GOF test
+      <b>r(gof_df)</b>      degrees of freedom of pilot GOF test
+      <b>r(gof_p)</b>       p-value of pilot GOF test
+<p>
+    Macros    
+      <b>r(model)</b>       <b>penalized</b>, <b>parametric</b>, or <b>non-penalized</b>
+      <b>r(discrete)</b>    <b>discrete</b> or empty
+<p>
+    Matrix    
+      <b>r(knots)</b>       knot positions
+<p>
+<p>
+<b><u>References</u></b>
+<p>
+    Ruppert, D., M. P. Wand, and R. J. Carroll (2003). Semiparametric
+        Regression.  Cambridge University Press.
+<p>
+<p>
+<b><u>Authors</u></b>
+<p>
+    Ben Jann, ETH Zurich, jannb@ethz.ch
+<p>
+    Roberto G. Gutierrez, StataCorp., rgutierrez@stata.com
+<p>
+    Thanks for citing this software as follows:
+<p>
+        Jann, B., and R. Gutierrez. 2008. pspline: Stata module providing a
+        penalized spline scatterplot smoother based on linear mixed model
+        technology. Available from
+        http://ideas.repec.org/c/boc/bocode/s456972.html.
+<p>
+<p>
+<b><u>Also see</u></b>
+<p>
+</pre>

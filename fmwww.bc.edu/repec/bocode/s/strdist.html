@@ -1,0 +1,79 @@
+<pre>
+<b>help strdist</b>
+-------------------------------------------------------------------------------
+<p>
+<b><u>Title</u></b>
+<p>
+    <b>strdist</b> -- Calculate the Levenshtein distance, or edit distance, between
+        strings.
+<p>
+<p>
+<b><u>Syntax</u></b>
+<p>
+        <b>strdist</b> {<i>varname1</i>|<b>"</b><i>string1</i><b>"</b>} {<i>varname2</i>|<b>"</b><i>string2</i><b>"</b>} [<i>if</i>] [<i>in</i>] [<b>,</b>
+                 <b><u>g</u></b><b>enerate(</b><i>newvar</i><b>)</b> ]
+<p>
+<p>
+<b><u>Description</u></b>
+<p>
+    <b>strdist</b> calculates the distance between strings and/or string variables
+    using the Levenshtein distance metric. Levenshtein distance, or edit
+    distance, is the smallest number of edits required to make one string
+    match a second string. An edit may be an insertion, deletion, or
+    substitution of any single letter.
+<p>
+    <b>strdist</b> accepts two arguments, which may be string variables or string
+    scalars in any combination. String scalars must be enclosed in quotes.
+<p>
+    Edit distances are returned in a scalar or a new variable, depending on
+    the type of arguments supplied. If the arguments contain one or two
+    string variables, edit distances are returned in a new variable with
+    default name <b>strdist</b>. If both arguments are string scalars, edit distance
+    is returned in <b>r(d)</b>.
+<p>
+<p>
+<b><u>Options</u></b>
+<p>
+        +------+
+    ----+ Main +-------------------------------------------------------------
+<p>
+    <b>generate(</b><i>newvar</i><b>)</b> Create a new variable named <i>newvar</i> containing edit
+        distance(s). If the arguments include a string variable without the
+        <b>generate()</b> option, a new variable will be created with default name
+        <b>strdist</b>.
+<p>
+<p>
+<b><u>Examples</u></b>
+<p>
+    <b>. strdist "cat" "hat"</b>
+<p>
+    <b>. sysuse census</b>
+<p>
+    <b>. strdist state "west virginia" , gen(wvdist)</b>
+<p>
+<p>
+<b><u>Saved results</u></b>
+<p>
+    <b>strdist</b> saves the following in <b>r()</b>:
+<p>
+<p>
+    Scalars   
+      <b>r(d)</b>           edit distance if arguments are both string scalars
+<p>
+    Macros    
+      <b>r(strdist)</b>     name of new edit distance variable if created
+<p>
+<p>
+<b><u>Author</u></b>
+<p>
+    Michael Barker
+    Georgetown University
+    mdb96@georgetown.edu
+<p>
+<p>
+<b><u>Also see</u></b>
+<p>
+    soundex, strgroup
+<p>
+<p>
+</pre>

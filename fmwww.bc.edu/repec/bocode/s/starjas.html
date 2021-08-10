@@ -1,0 +1,85 @@
+<pre>
+help for <b>starjas</b>
+-------------------------------------------------------------------------------
+<p>
+<b><u>Title</u></b>
+<p>
+    <b>starjas</b> --     Arjas plot to check proportional hazards assumption
+<p>
+<p>
+<b><u>Syntax</u></b>
+<p>
+        <b>starjas</b> <i>varname</i> [<b>if</b> <i>exp</i>] [<b>in</b> <i>range</i>] [<b>,</b> <b><u>adj</u></b><b>ust(</b><i>varlist</i><b>)</b> <b><u>lev</u></b><b>elplot(</b><i>#</i>
+               <i>[#] ..</i><b>)</b> <b>atobs(</b><i>#</i><b>)</b> <b><u>rrgla</u></b><b>nce(</b><i>#</i><b>)</b> <i>twoway_options</i> ]
+<p>
+<p>
+    <i>options</i>                        Description
+    -------------------------------------------------------------------------
+    Options
+      <b><u>adj</u></b><b>ust</b>                       specify the variables fitted in the Cox
+                                     model before checking if <i>varname</i> is
+                                     proportional
+      <b><u>lev</u></b><b>elplot</b>                    specify the levels of <i>varname</i> to be
+                                     displayed in the plot
+      <b>atobs</b>                        restrict the plot to the first <i>#</i> events
+      <b><u>rrgla</u></b><b>nce</b>                     draw a line approximately corresponding in
+                                     the case of binary covariate to a <i>#</i>
+                                     relative risk
+<p>
+    Y-Axis, X-Axis, Caption, Legend
+      <i>twoway_options</i>               some of the options documented in
+                                     <b>[G]</b> <i>twoway_options</i>
+    Add plot
+      <b>plot(</b><i>plot</i><b>)</b>                   add other plots to generated graph
+    -------------------------------------------------------------------------
+<p>
+    You must <b>stset</b> your data before using <b>starjas</b>; see <b>stset</b>.
+<p>
+<p>
+<b><u>Description</u></b>
+<p>
+<b>starjas</b> graphs Arjas plot by one categorical variable declared in <i>varname</i>.
+<p>
+Arjas plots allow to check if a covariate should be included in a proportional
+hazards model and if it has proportional hazards effect.
+If a covariate does not need to be in the model, then for each level a roughly
+45° line through origin should be plotted.  Otherwise Arjas plot will give
+curves which are approximately linear but with slope differing from 1.
+If a covariate has a nonproportional effect on the hazard rate, then the curves
+will differ nonlinearly from 45° line. Assume an indicator variable having only
+two values, the curve for the level 1 should be concave if the hazard ratio is
+increasing in<i> t</i> whereas the curve for the level 0 should be convex.
+<p>
+<p>
+<p>
+<b><u>Examples</u></b>
+<p>
+            use "C:\Data\BMT", clear
+            starjas MTX, legend(pos(5) ring(0)) lw(medthick)
+            starjas Z7cat, adjust(MTX Z1-Z6) legend(pos(5) ring(0)) lc(green
+                    navy red brown)
+<p>
+Downloading ancillary files in one of your <b>`"`c(adopath)'"'</b> directory you can
+run this example.
+<p>
+          <i>(</i><i>click to run</i><i>)</i>
+<p>
+<p>
+<b><u>Also see</u></b>
+<p>
+ Manual:  <b>[S] st stcox</b>
+<p>
+ Online:  stcox postestimation, stcox diagnostics
+<p>
+<p>
+<p>
+<b><u>References</u></b>
+<p>
+Klein JP, and Moeschberger ML: Survival Analysis: techniques for Censored and
+Truncated Data - 2nd ed. (2003), p. 369 - 374.  Springer
+<p>
+<p>
+<b><u>Authors</u></b>
+<p>
+Enzo Coviello (enzo.coviello@alice.it)
+</pre>

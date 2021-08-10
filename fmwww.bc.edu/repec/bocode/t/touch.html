@@ -1,0 +1,41 @@
+<pre>
+<b>help touch</b>
+-------------------------------------------------------------------------------
+<p>
+<b><u>Title</u></b>
+<p>
+    <b>touch -- Create a blank data file</b>
+<p>
+<p>
+<b><u>Syntax</u></b>
+<p>
+        <b>touch</b> <i>filename</i>, [<b>type</b>(<i>string</i>)] [<b>replace</b>] [<b>var</b>(<i>string</i>)]
+<p>
+<p>
+<b><u>Description</u></b>
+<p>
+    <b>touch</b> creates a blank data file of the type specified.  This is useful to
+    avoid append loops failing on the first run due to the file not existing,
+    and is a slightly more elegant solution than -cap append-, as append will
+    still abort the program if there is a real problem.  It is similar to the
+    UNIX command touch.
+<p>
+<p>
+<b><u>Options</u></b>
+<p>
+<p>
+<b>type</b> specifies the type of file to create.  Options are <i>txt</i> for text-based file
+&gt; s e.g. csv, tsv, fixed, etc. or <i>dta</i> for Stata data files.  If not specified, 
+&gt; the program will attempt to guess based on the extension given in <i>filename</i>.
+<p>
+<b>var</b> specifies variable(s) to create.  Useful for merging in loops.
+<p>
+Version 1.1: Allows specification of the path as part of filename.
+<p>
+<b><u>Example</u></b>
+<p>
+<p>
+        <b>. tempfile looptempfile</b>
+        <b>. touch `looptempfile'</b>
+<p>
+</pre>

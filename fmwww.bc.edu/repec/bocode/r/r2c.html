@@ -1,0 +1,121 @@
+<pre>
+<b>help r2c</b>
+-------------------------------------------------------------------------------
+<b><u>Title</u></b>
+<p>
+    Computes several goodness of fit measures for count data models
+<p>
+<b><u>Syntax</u></b>
+<p>
+    <b>r2c</b> [<b>,</b> <b>NODp</b> <b>NOOffsetadj</b> <b>NOSummarize</b>]
+<p>
+<b><u>Description</u></b>
+<p>
+    <b>r2c</b> generates r-squared fit statistics based on deviance, pearson
+    deviance, squared correlation, and predicted value sums of squares.
+    Cameron and Windmeijer (1996) recommend the use of the deviance-based R2
+    (which produces identical results to the <b>devr2</b> command for <b>glm</b>; findit
+    devr2).  <b>r2c</b> also produces an adjusted deviance-based r-squared metric
+    based on Heinzl and Mittlböck (2003).  The negative binomial adjustment
+    is based on an overdispersed Poisson model.  The <b>r2c</b> command is specific
+    to count data models but covers most built-in count data commands.  At
+    current,<b> r2c</b> works only with the built-in commands <b>poisson</b>, <b>tpoisson</b>,
+    <b>zip</b>, <b>nbreg</b>, <b>tnbreg</b>,<b> gnbreg</b>,<b> zinb</b>, and<b> glm</b> (with <b>glm</b>, <b>r2c</b> works only for
+    count-based variance functions <b>family(</b><i>poisson</i><b>)</b> and <b>family(</b><i>nbinomial</i><b>)</b> and
+    assumes the default <b>link(</b><i>log</i><b>)</b>).
+<p>
+    <b>r2c</b> adjusts fit statistics automatically for sample weights (see <b>[R]</b>
+    <b>weight</b>) as well as offset and exposure variables (see estimation
+    options).<b>  r2c</b> also does not currently accept the <b>svy</b> or <b>mi</b> prefixes.
+    Probability weighted models must use the <i>command depvar indepvars</i> [pw=
+    <i>weight</i>] syntax.
+<p>
+<a name="options"></a><b><u>Options</u></b>
+<p>
+    <b>nodp</b> suppresses the scaled deviance-based R2 measure comparing a the
+        fitted negative binomial model with Poisson model specification.  The
+        DP R2 is a ratio of the deviance of the full negative binomial model
+        being fitted from a saturated Poisson model over the deviance of the
+        constant-only Poisson from a saturated Poisson.  The DP R2 then
+        allows for a direct comparison between negative binomial and Poisson
+        models (see Cameron and Windmeijer, 1996; for details).  As Cameron
+        and Windmeijer note, a large DP R2 would be expected in cases where
+        there is a substantial alpha (NB2; <b>dispersion(</b><i>mean</i><b>)</b>) or delta (NB1;
+        <b>dispersion(</b><i>constant</i><b>)</b>) value, as large alpha/delta values represent
+        substantial overdispersion.  It is worth noting that the DP R2
+        baseline poisson model is adjusted for truncation with <b>tnbreg</b> and
+        zero-inflation with <b>zinb</b>.
+<p>
+    <b>nooffsetadj</b> overrides the default constant-only model adjustment for the
+        inclusion of an offset or exposure variable.
+<p>
+    <b>nosummarize</b> overrides the default display of the summarize command with
+        detail option for the dependent variable before r-squared results.
+<p>
+<b><u>Saved results</u></b>
+<p>
+    <b>r2c</b> saves the following results in<b> r()</b>:
+<p>
+    Scalars   
+      <b>r(dev_r2)</b>       Deviance-based R2
+      <b>r(dev_r2)</b>       Bias-adjusted Deviance-based R2
+      <b>r(pear_r2)</b>      Pearson deviance-based R2
+      <b>r(corr_r2)</b>      Squared correlation between observed and predicted
+                        values
+      <b>r(exp_r2)</b>       Ratio of sums of squared differences between predicted
+                        vs. mean observed values over observed vs. mean
+                        observed values
+      <b>r(modeldev)</b>     Deviance based on full model
+      <b>r(constdev)</b>     Deviance based on constant only model
+      <b>r(modelpear)</b>    Pearson deviance based on full model
+      <b>r(constpear)</b>    Pearson deviance based on constant only model
+      <b>r(expvar)</b>       Predicted value variance
+      <b>r(dp_r2)</b>        Ratio of the deviance for a fitted negative binomial
+                        model over the deviance for a constant-only Poisson
+                        model
+      <b>r(modeldp)</b>      DP deviance based on full model compared to saturated
+                        Poisson
+      <b>r(constdp)</b>      DP deviance based on constant only model compared to
+                        saturated Poisson
+<p>
+<b><u>Introductory examples</u></b>
+<p>
+    To illustrate how <b>r2c</b> works click on colored text below:
+<p>
+    . webuse auto
+<p>
+    <b>* r2c following traditional Poisson regression.</b>
+<p>
+    . poisson price mpg rep78 headroom
+<p>
+    . r2c
+<p>
+    <b>* r2c following negative binomial (NB1 or constant dispersion method)</b>
+<p>
+    . nbreg price mpg rep78 headroom, dispersion(constant)
+<p>
+    . r2c, nosummarize
+<p>
+<b><u>References</u></b>
+<p>
+    Cameron, A. C. &amp; Windmeijer, F. A. G. (1996). R-squared measures for
+        count data regression models with applications to health-care
+        utilization. <i>Journal of Business &amp; Economic Statistics, 14(2)</i>,
+        209-220.
+    Heinzl, H. &amp; Mittlböck, M. (2003). Pseudo R-squared measures for Poisson
+        regression models with over- or under-dispersion. <i>Computational</i>
+        <i>Statistics &amp; Data Analysis, 44(1-2)</i>, 253-271.
+<p>
+<b><u>Author</u></b>
+<p>
+    Joseph N. Luchman
+    Senior Research Associate
+    Fors Marsh Group LLC
+    Arlington, VA
+    jluchman@forsmarshgroup.com
+<p>
+<b><u>Also see</u></b>
+<p>
+    <b>[R] poisson</b>, <b>[R] zip</b>, <b>[R] tpoisson</b>, <b>[R] nbreg</b>, <b>[R] gnbreg</b>, <b>[R] tnbreg</b>, 
+             <b>[R] zinb</b>, <b>[R] glm</b>.
+</pre>

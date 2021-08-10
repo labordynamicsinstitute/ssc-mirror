@@ -1,0 +1,66 @@
+<pre>
+<b>help labvalcl</b>
+-------------------------------------------------------------------------------
+<p>
+<b><u>Title</u></b>
+<p>
+     <b>labvalcl</b> -- Clear value labels of null strings
+<p>
+<p>
+<b><u>Syntax</u></b>
+<p>
+        <b>labvalcl</b> [<i>lblname-list</i>] [<b>,</b> <b><u>n</u></b><b>ull</b>[<b>("</b><i>label</i><b>")</b>] <b><u>num</u></b><b>eric</b> <b><u>node</u></b><b>tach</b>]
+<p>
+<p>
+<b><u>Description</u></b>
+<p>
+    <b>labvalcl</b> removes null strings from value labels and detaches empty value
+    labels from variables. Empty value labels are dropped from memory. If
+    <i>lblname-list</i> is not specified it defaults to all value labels in memory.
+<p>
+<p>
+<b><u>Options</u></b>
+<p>
+    <b>null</b>[<b>("</b><i>label</i><b>")</b>] additionally removes <i>label</i> from value labels in
+        <i>lblname-list</i>. If <i>label</i> is not specified it defaults to "null".
+<p>
+    <b>numeric</b> additinally removes (integer) numbers from value labels if
+        integers are used as labels for the integer values they are
+        associated with. Thus "2" will be removed if it is associated with
+        value 2.
+<p>
+    <b>nodetach</b> does not detach empty value labels from variables. This option
+        is seldom used.
+<p>
+<p>
+<b><u>Example</u></b>
+<p>
+    Setting
+<p>
+        . sysuse nlsw88
+        . label define racelbl 4 "" ,modify
+        . label define marlbl 0 "0" 1 "" ,modify
+        . describe race married
+        . label list racelbl marlbl
+        
+<p>
+    Remove null strings, numeric to numeric mappings and detach and drop
+    empty value labels
+<p>
+        <b>. labvalcl racelbl marlbl ,numeric</b>
+        . describe race married
+        . label list racelbl
+        . label list marlbl
+<p>
+<p>
+<b><u>Author</u></b>
+<p>
+    Daniel Klein, University of Bamberg, klein.daniel.81@gmail.com
+<p>
+<p>
+<b><u>Also see</u></b>
+<p>
+    Online: label, labelbook_problems
+<p>
+    if installed: labdel, labdtch, labvalch, labeldup, strrec, labutil2
+</pre>

@@ -1,0 +1,63 @@
+d 'LOWYSEATTLE': module for managing settings and recompiling
+d
+d  lowyseattle is a prerequisite package for lowyseattlea and/or
+d lowyseattleb. It contains a Mata library, modules for managing
+d settings, and global help files. It also contains the source code
+d (lowyseattle.do) needed to compile the Mata library for different
+d versions of Stata. 'help lowy' will bring up an index to all the
+d lowyseattle commands. 
+d
+d KW: settings
+d KW: prerequisite
+d
+d Requires: Stata version 11.1 and lowyseattlea and/or lowyseattleb from SSC (q.v.)
+d
+d Distribution-Date: 20160902
+d
+d Author: Elliott Lowy, Department of Veterans Affairs
+d Support: email Elliott.Lowy@@va.gov
+d
+f lowyupdate.ado
+f lowyupdate.sthlp
+f ../a/also_vlowy.ihlp
+f ../c/cfuncspec.sthlp
+f ../e/elfs.ado
+f ../e/elfs.sthlp
+f ../e/elfs_callst.sthlp
+f ../e/elfs_colors.sthlp
+f ../e/elfs_facts.sthlp
+f ../e/elfs_instance.sthlp
+f ../e/elfs_misc.sthlp
+f ../e/elfs_outemail.sthlp
+f ../e/elfs_outhtml.sthlp
+f ../e/elfs_outstata.sthlp
+f ../e/elfs_sql.sthlp
+f ../e/elfs_startup.sthlp
+f ../e/exampel.dta
+f ../f/fromeditor.ado
+f ../j/jfile.ico
+f labelsopt.sthlp
+f lowy_1.sthlp
+f lowy_2.sthlp
+f lowy_3.sthlp
+f lowy_4.sthlp
+f lowy_5.sthlp
+f lowy_6.sthlp
+F lowyseattle.do
+f lowyseattle.mlib
+f ../o/outopt.sthlp
+f ../p/path_el.sthlp
+f ../p/portel_xl.sthlp
+f ../s/statadata.ico
+f ../s/statafodata.ico
+f ../s/statalmat.ico
+f ../s/statamlib.ico
+f ../s/statamo.ico
+f ../s/statareport.ico
+f ../t/tabel_options1.ihlp
+f ../t/tabel_options2.ihlp
+f ../t/tabel_options2n.ihlp
+f ../t/tabel_options2v.ihlp
+f ../t/tabel_out1.ihlp
+f ../t/tabel_out2.ihlp
+f ../v/varelist.sthlp

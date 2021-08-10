@@ -1,0 +1,119 @@
+<pre>
+-------------------------------------------------------------------------------
+help for <b>plotmatrix</b>
+-------------------------------------------------------------------------------
+<p>
+<b><u>Plot values of a matrix as different coloured blocks</u></b>
+<p>
+        <b>plotmatrix</b> , <b><u>m</u></b><b>at(</b><i>matrix_name</i><b>)</b> [ <b><u>s</u></b><b>plit(</b><i>numlist</i><b>)</b> <b><u>c</u></b><b>olor(</b><i>colorstyle</i><b>)</b> <b>nodiag</b>
+                           <b>addbox(</b><i>numlist</i><b>)</b> <b><u>u</u></b><b>pper</b> <b><u>l</u></b><b>ower</b> <b><u>d</u></b><b>istance(</b><i>varname</i><b>)</b>
+                           <b><u>du</u></b><b>nit(</b><i>string</i><b>)</b> <b><u>maxt</u></b><b>icks(</b><i>#</i><b>)</b> ]
+<p>
+<p>
+<b><u>Description</u></b>
+<p>
+This command will display the values of a matrix using <b>twoway area</b>.  Each value
+of the matrix will be represented by a coloured rectangular block.  A legend is
+automatically created using percentiles but the user can also specify how to
+split the data.
+<p>
+For genetic data there is an additional function to show the genomic distances
+between markers.  The genomic position is entered using the <b>distance()</b> option.
+<p>
+<b><u>Updating this command</u></b>
+<p>
+To obtain the latest version click the following to uninstall the old version
+<p>
+ssc uninstall plotmatrix
+<p>
+And click here to install the new version
+<p>
+ssc install plotmatrix
+<p>
+<b><u>Options</u></b>
+<p>
+<b><u>m</u></b><b>at(</b><i>matrix_name</i><b>)</b> specifies the name of the matrix to plot. Note that for
+matrices e(b) and e(V) the user must create a new matrix using the matrix
+command.
+<p>
+<b><u>s</u></b><b>plit(</b><i>numlist</i><b>)</b> specifies the cutpoints used in the legend. Note that if the
+matrix contains values outside the range of the number list then the values
+will not be plotted.  The default will be a number list containing the min, max
+and 10 other percentiles.
+<p>
+<b><u>c</u></b><b>olor(</b><i>string</i><b>)</b> specifies the colour of the blocks used. The default colour is
+bluish gray. Note that RGB and CMYK colors are not accepted and colors should
+be specified by the word list in colorstyle e.g. brown.
+<p>
+<b>nodiag</b> specifies that the diagonal of the matrix is not represented in the
+graph.
+<p>
+<b>addbox(</b><i>numlist</i><b>)</b> specifies that areas of the graph will be enclosed within a
+box.  The arguments of this option are groups of 4 numbers representing the
+(y,x) points of two extreme vertices of the box.
+<p>
+<b><u>u</u></b><b>pper</b> specifies that only the upper diagonal matrix be plotted.
+<p>
+<b><u>l</u></b><b>ower</b> specifies that only the lower diagonal matrix be plotted.
+<p>
+<b><u>d</u></b><b>istance(</b><i>varname</i><b>)</b> specifies the physical distances between rows/columns in the
+matrix. This is mostly useful for plotting a pairwise LD matrix to include the
+genomic distances between markers.
+<p>
+<b><u>du</u></b><b>nit(</b><i>string</i><b>)</b> specifies the units of the distances specified in the <b>distance</b>
+variable. The default is Megabases but can be any string.
+<p>
+<b><u>maxt</u></b><b>icks(</b><i>#</i><b>)</b> specifies the maximum number of ticks on both the y and x axes. The
+default is 8.
+<p>
+<b><u>Examples</u></b>
+<p>
+Plotting the values of a variance covariance matrix
+<p>
+<p>
+  sysuse auto &lt;--- click this <b>first</b> to load data
+<p>
+  reg price mpg trunk weight length turn, nocons
+<p>
+  mat regmat = e(V)
+<p>
+  plotmatrix, m(regmat) c(green) ylabel(,angle(0))
+<p>
+Plotting the values of a correlation matrix of a given varlist
+<p>
+  matrix accum R = price mpg trunk weight length turn , nocons dev
+<p>
+  matrix R = corr(R)
+<p>
+  plotmatrix, m(R) s(-1(0.25)1) c(red)
+<p>
+<b><u>Genetic Examples</u></b>
+<p>
+Plotting the values of a point-wise LD map (see command <b>pwld</b>), with boxes
+around two areas defined by variables 1-5 and variables 11-18.
+<p>
+  .pwld l1_1-l76_2, mat(grid) .plotmatrix, mat(grid) split( 0(0.1)1 ) c(gray)
+nodiag addbox(1 1 5 5 11 11 18 18)
+<p>
+Using the same data as above there were also map positions within the variable
+<b>posn</b>. Thus the genomic map could be displayed as a diagonal axis with the
+following command
+<p>
+  .plotmatrix , mat(grid) split( 0(0.1)1 ) c(gray) nodiag save l distance(posn)
+dunit(Mb)
+<p>
+<p>
+<b><u>Author</u></b>
+<p>
+Adrian Mander, MRC Human Nutrition Research, Cambridge, UK.
+<p>
+Email adrian.mander@mrc-hnr.cam.ac.uk
+<p>
+<b><u>See Also</u></b>
+Related commands:
+<p>
+  plotbeta (if installed), cdfplot (if installed), graphbinary (if installed), 
+  palette_all (if installed).
+<p>
+<p>
+</pre>

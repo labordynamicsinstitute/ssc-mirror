@@ -1,0 +1,109 @@
+<pre>
+-------------------------------------------------------------------------------
+help for <b>writepsfrag</b>                             Ryan E. Kessler (October 2012)
+-------------------------------------------------------------------------------
+<p>
+<b><u> Automates the use of LaTeX's PSfrag package</u></b>
+<p>
+        <b>writepsfrag</b> <i>filename.eps </i><b>using </b><i>filename.tex</i><b>, </b>[<b>replace append</b>
+                 <b>textsize(</b><i>string</i><b>) scale(</b><i>#</i><b>) body(</b><i>string</i> [,<i>subopts</i>]<b>)</b>
+                 <b>substitute(</b><i>stringlist</i><b>)</b>]
+<p>
+<b><u>Description</u></b>
+<p>
+    <b>writepsfrag</b> writes to a LaTeX file the PSfrag commands necessary to
+    replace all occurences of text in a Stata Encapsulated PostScript (EPS)
+    file with properly-formatted LaTeX text.
+<p>
+<b><u>Options</u></b>
+<p>
+    <b>replace</b> and <b>append</b> are file commands which specify whether the current
+    output will overwrite or be to appended to <i>filename.tex</i>; see file for
+    details.
+<p>
+    <b>textsize(</b><i>string</i><b>)</b> specifies the LaTeX font size. The 10 acceptable values
+    are as follows: \tiny, \scriptsize, \footnotesize, \small, \normalsize
+    (default), \large, \Large, \LARGE, \huge, and \Huge.
+<p>
+    <b>scale(</b><i>#</i><b>)</b> specifies the PSfrag scaling factor (default=1) which can be
+    used in conjunction with <b>textsize(</b><i>string</i><b>)</b> to address scale/size issues.
+<p>
+    <b>substitute(</b><i>stringlist</i><b>)</b> applies substitutions where <i>`stringlist'</i> is of the
+    form<i> `from to [from to...]'</i>. Note that <b>substitute($ \$ \dbs \\)</b> is
+    assumed, since neither <b>\$</b> nor <b>\\</b> can be readily displayed in a plot.
+    Accordingly, users should use <b>\( ... \)</b> --- not <b>$ ... $</b> --- to enter
+    LaTeX's math mode.
+<p>
+    <b>body(</b><i>string </i>[,<i>subopts</i>]<b>)</b> specifies the outmost LaTeX environment into
+    which the resulting PSfrag code is to be placed. It accepts two values,
+    <i>figure</i> and <i>document</i>, both of which allow the following suboptions:
+<p>
+        <b>placement(</b><i>string</i><b>)</b> specifies the placement argument (default=htbp) of
+    the LaTeX figure environment.
+<p>
+        <b>width(</b><i>#</i><b>)</b> scales the \linewidth argument in the \includegraphics
+    command (default=1).
+<p>
+        <b>caption(</b><i>string</i><b>)</b> specifies the figure caption.
+<p>
+        <b>label(</b><i>string</i><b>)</b> specifies the figure label (for cross-referencing).
+<p>
+        <b>packages(</b><i>string</i><b>)</b> specifies LaTeX packages to be added to the preamble
+    of the LaTeX document (<b>body(</b><i>document</i><b>)</b> only).
+<p>
+<b><u>Examples</u></b>
+<p>
+    A simple function:
+<p>
+    <b>. #delimit;</b>
+    <b>. twoway function y=normalden(x), range(-4 4)</b>
+    <b>&gt; text(0.125 0 "\textbf{\color{blue}{Normal PDF:}}")</b>
+    <b>&gt; text(0.090 0</b>
+        <b>"\(y=\frac{1}{\sigma\sqrt{2\pi}}e^{\frac{-(x-\mu)^2}{2\sigma^2}}\)")</b>
+    <b>&gt; xlabel(-4 "\(-4\sigma\)" -2 "\(-2\sigma\)" 0 "\(\mu\)" 2 "\(2\sigma\)"</b>
+        <b>4 "\(4\sigma\)")</b>
+    <b>&gt; xtitle("All text is set in {\LaTeX} font") ytitle("\(y\)");</b>
+    <b>. graph export normal.eps, as(eps);</b>
+    <b>. writepsfrag normal.eps using normal.tex;</b>
+    <b>. #delimit cr</b>
+<p>
+    The resulting PSfrag code can be called using LaTeX's \input command:
+<p>
+    <b>\begin{figure}[htbp]</b>
+    <b>\centering</b>
+    <b>\input{normal.tex}</b>
+    <b>\resizebox{1\linewidth}{!}{\includegraphics{normal.eps}}</b>
+    <b>\caption{Normal Probability Density Function}</b>
+    <b>\end{figure}</b>
+<p>
+    The same LaTeX code can be generated using the <b>body(</b><i>figure</i><b>)</b> option:
+<p>
+    <b>. writepsfrag normal.eps using normal.tex, replace body(figure,</b>
+        <b>caption("Normal Probability Density Function"))</b>
+<p>
+<b><u>Author</u></b>
+<p>
+    Ryan E. Kessler
+    Research Department
+    Federal Reserve Bank of Boston
+    ryan.edmund.kessler@gmail.com
+<p>
+<b><u>References</u></b>
+<p>
+    Cox, N. J. 2004. Stata tip 6: Inserting awkward characters in the plot.
+        The Stata Journal 4(1): 95-96.
+<p>
+    Cox, N. J. 2008. Stata tip 65: Beware the backstabbing backslash. The
+        Stata Journal 8(3): 446-447.
+<p>
+    Grant, M. C., and D. Carlisle. 1998. The PSfrag system, version 3. 
+        ftp://ctan.tug.org/tex-archive/macros/latex/contrib/psfrag/pfgguide.p
+        &gt; df
+<p>
+    Jann, B. 2005. Making regression tables from stored estimates. The Stata
+        Journal 5(3): 288–308.
+<p>
+    Jann, B. 2007. Making regression tables simplified. The Stata Journal
+        7(2): 227–244.
+<p>
+</pre>

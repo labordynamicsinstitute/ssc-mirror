@@ -1,0 +1,95 @@
+<pre>
+-------------------------------------------------------------------------------
+help for <b>chitest</b>
+-------------------------------------------------------------------------------
+<p>
+<b><u>Chi-square test for univariate frequency distributions</u></b> 
+<p>
+        <b>chitest</b> <i>observed</i> [<i>expected</i>] [<b>if</b> <i>exp</i>] [<b>in</b> <i>range</i>] [ <b>,</b> <b>nfit(</b><i>#</i><b>)</b> <b>count</b>
+                 <i>list_options</i> ]
+<p>
+<p>
+<b><u>Description</u></b>
+<p>
+    <b>chitest</b> works on either one or two variables.
+<p>
+    By default the first variable is taken to contain observed frequencies,
+    which must be zeros or positive integers.  Optionally, the first variable
+    is treated as a variable with distinct values to be counted; the observed
+    frequencies are then used in a chi-square test.
+<p>
+    The second variable, if specified, is taken to contain expected
+    frequencies under some hypothesis, which must be positive. If the second
+    variable is not specified, the expected frequencies are taken to be
+    equal, i.e. equal to the mean of the observed frequencies.
+<p>
+    The display includes the Pearson chi-square statistic and its <i>P</i>-value for
+    a test of the hypothesis, the likelihood-ratio chi-square statistic and
+    its <i>P</i>-value, observed frequencies, expected frequencies, residuals
+    (observed - expected), and Pearson residuals, defined as (observed -
+    expected) / sqrt(expected).
+<p>
+    Any cells with expected frequencies less than 5 are flagged.
+<p>
+<p>
+<b><u>Options</u></b> 
+<p>
+    <b>nfit()</b> indicates the number of parameters that have been estimated from
+        the data. This number will be subtracted from (number of cells - 1)
+        to give the number of degrees of freedom. The default is 0.
+<p>
+    <b>count</b> instructs <b>chitest</b> to count the single variable specified, which is
+        treated as a categorical variable. Note that <b>count</b> will not produce
+        zero counts; that is, it cannot count what is not present in the
+        data. In some problems it is easiest to insert zero counts by hand
+        with chitesti. See the examples for one counting technique.
+<p>
+    <i>list_options</i> are options of list.
+<p>
+<p>
+<b><u>Examples</u></b> 
+<p>
+    <b>. chitest count Poisson, nfit(1)</b>
+<p>
+    <b>. gen lastdigit = mod(price, 10)</b>
+    <b>. chitest lastdigit, count</b>
+<p>
+    <b>. gen firstdigit = real(substr(string(myvar),1,1))</b>
+    <b>. gen obs = .</b>
+    <b>. qui forval i = 1/9 {</b>
+    <b>.         count if firstdigit == `i'</b>
+    <b>.         replace obs = r(N) in `i'</b>
+    <b>. }</b>
+    <b>. gen exp = _N * log10(1 + 1/_n) in 1/9</b>
+    <b>. chitest obs exp</b>
+<p>
+        
+<b><u>Saved values</u></b> 
+<p>
+        r(k)       number of classes in distribution
+        r(df)      degrees of freedom
+        r(chi2)    Pearson chi-square
+        r(p)       <i>P</i>-value of Pearson chi-square
+        r(chi2_lr) likelihood-ratio chi-square
+        r(p_lr)    <i>P</i>-value of likelihood-ratio chi-square
+        r(emean)   mean expected frequency
+<p>
+<p>
+<b><u>Author</u></b> 
+<p>
+         
+    Nicholas J. Cox, University of Durham, U.K.
+    n.j.cox@durham.ac.uk
+<p>
+<p>
+<b><u>Acknowledgements</u></b>
+<p>
+         
+    Benoit Dulong pointed towards a precision problem.
+<p>
+<p>
+<b><u>Also see</u></b> 
+<p>
+    On-line:  help for chitesti, tabulate
+<p>
+</pre>

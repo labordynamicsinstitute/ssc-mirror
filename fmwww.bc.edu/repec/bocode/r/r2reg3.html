@@ -1,0 +1,229 @@
+<pre>
+-------------------------------------------------------------------------------
+<b>help: </b><b>r2reg3</b>                                                        <b>dialog:</b> <b>r2r</b>
+<b>&gt; eg3</b>
+-------------------------------------------------------------------------------
+<p>
+<b>        </b>+-------+
+<b>    </b>----+<b> Title </b>+------------------------------------------------------------
+<p>
+<b> r2reg3: Overall System R2 - Adjusted R2 - F Test - Chi2 Test</b>
+<p>
+<b>        </b>+--------+
+<b>    </b>----+<b> Syntax </b>+-----------------------------------------------------------
+<p>
+<b> r2reg3</b>
+<p>
+<p>
+<b>        </b>+-------------+
+<b>    </b>----+<b> Description </b>+------------------------------------------------------
+<p>
+  r2reg3 computes overall system R-squared (R2), Adjusted R2, and the overall
+  significance of F-Test, and Chi2-Test, after:
+   - (3SLS) Three-Stage Least Squares <b>reg3</b> for systems of simultaneous
+  equations.
+   - (SUR) Seemingly Unrelated Regression <b>sureg</b> for sets of equations.
+<p>
+  r2reg3 used Four types of criteria and tests, as discussed in:
+  <b>McElroy(1977), Judge et al(1985), Dhrymes(1974), Greene(1993), and</b>
+  <b>Berndt(1991)</b>.
+ 
+      see eq.12.1.33-36 in Judge et al(1985, p.477).
+<p>
+   <b>1- Berndt  System R2</b> = 1-|E'E|  / |Yb'Yb|
+   <b>2- McElroy System R2</b> = 1-(U'W*U)/ (Y'W*Y)
+   <b>3- Judge   System R2</b> = 1-(U'U)  / (Y'Y)
+                           Q
+   <b>4- Dhrymes System R2</b> = Sum [R2i (yi' Dt yi']/[Y(I(Q) # Dt)Y]
+                          i=1
+   <b>5- Greene  System R2</b> = 1-(Q/trace(inv(Sig))*SYs)
+<p>
+<p>
+  Judge and Dhrymes are identical results.
+<p>
+  From each type of these system R2's, <b>r2reg3</b> can calculate Adjusted R2,
+  F-Test, and Chi2-Test:
+<p>
+    <b>Adjusted R2</b> = 1-(1-R2)*((QN-Q)/(QN-K))
+         <b>F-Test</b> = R2/(1-R2)*[(QN-K)/(K-Q)]
+      <b>Chi2-Test</b> = -N*(log(1-R2))
+<p>
+where
+   |E'E| = determinant of residual matrix (NxQ)
+ |Yb'Yb| = determinant of dependent variables matrix in deviation from mean (Nx
+&gt; Q)
+      yi = dependent variable of eq. i (Nx1)
+       Y = stacked vector of dependent variables (QNx1)
+       U = stacked vector of residuals (QNx1)
+       W = variance-covariance matrix of residuals (W=inv(Omega) # I(N))
+       N = number of observations
+       K = Number of Parameters
+       Q = Number of Equations
+     R2i = R2 of eq. i
+      Dt = I(N)-JJ'/N, with J=(1,1,...,1)' (Nx1)
+     SYs = (Yb1*Yb2*...Ybq)/N
+     Sig = Sigma hat Matrix
+ Degrees of Freedom F-Test    = (K-Q), (QN)
+ Degrees of Freedom Chi2-Test = (K-Q)
+ Log Determinant of Sigma     = log|Sigma matrix|
+ Log Likelihood Function LLF  =-(N*Q/2)*(1+log(2*_pi))-(N/2*abs(log(Sigma)))
+<p>
+<p>
+<b>        </b>+---------------+
+<b>    </b>----+<b> Saved Results </b>+----------------------------------------------------
+<p>
+    <b>r2reg3</b> saves the following in <b>r()</b>:
+<p>
+    Scalars   
+      <b>r(N)</b>           Number of Observations
+      <b>r(k)</b>           Number of Parameters
+      <b>r(k_eq)</b>        Number of Equations
+      <b>r(chi_df)</b>      DF chi-squared
+      <b>r(f_df1)</b>       F-Test DF1 Numerator
+      <b>r(f_df2)</b>       F-Test DF2 Denominator
+      <b>r(r2_b)</b>        Berndt R-squared
+      <b>r(r2_j)</b>        Judge R-squared
+      <b>r(r2_m)</b>        McElroy R-squared
+      <b>r(r2_d)</b>        Dhrymes R-squared
+      <b>r(r2_g)</b>        Greene R-squared
+      <b>r(r2a_b)</b>       Berndt Adjusted R-squared
+      <b>r(r2a_j)</b>       Judge Adjusted R-squared
+      <b>r(r2a_m)</b>       McElroy Adjusted R-squared
+      <b>r(r2a_d)</b>       Dhrymes Adjusted R-squared
+      <b>r(r2a_g)</b>       Greene Adjusted R-squared
+      <b>r(f_b)</b>         Berndt F Test
+      <b>r(f_j)</b>         Judge F Test
+      <b>r(f_m)</b>         McElroy F Test
+      <b>r(f_d)</b>         Dhrymes F Test
+      <b>r(f_g)</b>         Greene F Test
+      <b>r(chi_b)</b>       Berndt Chi2 Test
+      <b>r(chi_j)</b>       Judge Chi2 Test
+      <b>r(chi_m)</b>       McElroy Chi2 Test
+      <b>r(chi_d)</b>       Dhrymes Chi2 Test
+      <b>r(chi_g)</b>       Greene Chi2 Test
+      <b>r(lsig2)</b>       Log Determinant of Sigma
+      <b>r(llf)</b>         Log Likelihood Function
+ 
+<p>
+<b>        </b>+----------+
+<b>    </b>----+<b> Examples </b>+---------------------------------------------------------
+<p>
+        clear all
+<p>
+        sysuse r2reg3.dta , clear
+<p>
+ * (1) SUR Model:
+<p>
+        sureg (y1 y2 x1 x2) (y2 y1 x3 x4)
+<p>
+        r2reg3
+<p>
+        return list
+<p>
+ * (2) 3SLS Model:
+<p>
+        reg3 (y1 y2 x1 x2) (y2 y1 x3 x4) , exog(x1 x2 x3 x4)
+<p>
+        r2reg3
+<p>
+        return list
+<p>
+ * If you want to use dialog box: Press OK to compute r2reg3
+<p>
+        db r2reg3
+<p>
+<p>
+. sysuse r2reg3.dta , clear
+. reg3 (y1 y2 x1 x2) (y2 y1 x3 x4) , exog(x1 x2 x3 x4)
+. r2reg3
+<p>
+  ========================================================
+  * Overall System R2 - Adjusted R2 - F Test - Chi2 Test *
+  ========================================================
+  +----------------------------------------------------------------------------
+&gt; +
+  |     Name |       R2 |   Adj_R2 |        F |  P-Value |     Chi2 |  P-Value 
+&gt; |
+  |----------+----------+----------+----------+----------+----------+----------
+&gt; |
+  |   Berndt |   0.9191 |   0.9004 |  49.2299 |   0.0000 |  42.7469 |   0.0000 
+&gt; |
+  |  McElroy |   0.8042 |   0.7590 |  17.7985 |   0.0000 |  27.7216 |   0.0001 
+&gt; |
+  |    Judge |   0.8228 |   0.7819 |  20.1180 |   0.0000 |  29.4159 |   0.0001 
+&gt; |
+  |  Dhrymes |   0.8228 |   0.7819 |  20.1180 |   0.0000 |  29.4159 |   0.0001 
+&gt; |
+  |   Greene |   0.8104 |   0.7666 |  18.5204 |   0.0000 |  28.2672 |   0.0001 
+&gt; |
+  +----------------------------------------------------------------------------
+&gt; +
+  Number of Parameters         =           8
+  Number of Equations          =           2
+  Degrees of Freedom F-Test    =      (6, 34)
+  Degrees of Freedom Chi2-Test =           6
+  Log Determinant of Sigma     =      9.2772
+  Log Likelihood Function      =   -127.1003
+<p>
+<p>
+<b>        </b>+------------+
+<b>    </b>----+<b> References </b>+-------------------------------------------------------
+<p>
+    Berndt, Ernst R. (1991)<b> "The practice of econometrics: Classical and</b>
+        <b>contemporary",</b> <i>Addison-Wesley Publishing Company</i>; 468.
+<p>
+    Dhrymes, Phoebus J. (1974)<b> "Econometrics: Statistical Foundations and</b>
+        <b>Applications",</b> <i>2ed edition Springer- Verlag New York, USA.</i>.
+<p>
+    Greene, William (1993)<b> "Econometric Analysis",</b> <i>2nd ed., Macmillan</i>
+        <i>Publishing Company Inc., New York, USA.</i>; 490-491.
+<p>
+    Judge, Georege, W. E. Griffiths, R. Carter Hill, Helmut Lutkepohl, &amp;
+        Tsoung-Chao Lee(1985)<b> "The Theory and Practice of Econometrics",</b> <i>2nd</i>
+        <i>ed., John Wiley &amp; Sons, Inc., New York, USA</i>; 477-478.
+<p>
+    Kmenta, Jan (1986)<b> "Elements of Econometrics",</b> <i>2nd ed., Macmillan</i>
+        <i>Publishing Company, Inc., New York, USA</i>; 645.
+<p>
+    McElroy, Marjorie B. (1977)<b> "Goodness of Fit for Seemingly Unrelated</b>
+        <b>Regressions: Glahn's R2y,x and Hooper's r~2",</b> <i>Journal of</i>
+        <i>Econometrics, 6(3), November</i>; 381-387.
+<p>
+<p>
+<b>        </b>+-----------------+
+<b>    </b>----+<b> Acknowledgments </b>+--------------------------------------------------
+<p>
+  I would like to thank the authors of the following Stata modules:
+<p>
+ - Nicholas J. Cox: for writing Stata programs about various matrix tasks <b>matod</b>
+<b>&gt; d</b>.
+ 
+ - Philip Ryan: for writing Stata programs about product of observations <b>rprod</b>.
+<p>
+<p>
+<b>        </b>+--------+
+<b>    </b>----+<b> Author </b>+-----------------------------------------------------------
+<p>
+  <b>Emad Abd Elmessih Shehata</b>
+  <b>Assistant Professor</b>
+  <b>Agricultural Research Center - Agricultural Economics Research Institute - Eg</b>
+<b>&gt; ypt</b>
+  <b>Email:   </b>emadstat@hotmail.com
+  <b>WebPage:                </b>http://emadstat.110mb.com/stata.htm
+  <b>WebPage at IDEAS:       </b>http://ideas.repec.org/f/psh494.html
+  <b>WebPage at EconPapers:  </b>http://econpapers.repec.org/RAS/psh494.htm
+<p>
+<p>
+<b>        </b>+-----------------+
+<b>    </b>----+<b> r2reg3 Citation </b>+--------------------------------------------------
+<p>
+    Shehata, Emad Abd Elmessih (2011)
+    <b>r2reg3: "Stata Module to Compute Overall System R2, Adj. R2, F-Test, and</b>
+        <b>Chi2-Test after reg3 or sureg"</b>
+<p>
+        http://ideas.repec.org/c/boc/bocode/s457322.html
+<p>
+        http://econpapers.repec.org/software/bocbocode/s457322.htm
+<p>
+<p>
+</pre>

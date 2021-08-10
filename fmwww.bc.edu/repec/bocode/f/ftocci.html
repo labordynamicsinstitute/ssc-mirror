@@ -1,0 +1,75 @@
+<pre>
+-------------------------------------------------------------------------------
+help for <b>ftocci</b>
+-------------------------------------------------------------------------------
+<p>
+<b><u>From floated to conventional confidence intervals</u></b>
+<p>
+    <b>ftocci</b> <i>rrf</i> {<i>lbf</i> <i>ubf</i> | <i>sef</i>} [<b>,</b> <b>ref(</b><i>#</i><b>)</b> <b><u>f</u></b><b>ormat(%</b><i>fmt</i><b>)</b> <b><u>l</u></b><b>evel(</b><i>#</i><b>)</b>
+              <b><u>gen</u></b><b>erate(</b><i>newvar1</i> <i>newvar2</i> <i>newvar3</i><b>)</b> ]
+<p>
+    where the
+<p>
+    <i>rrf</i> point estimate of the relative risk
+<p>
+    is followed by
+<p>
+    <i>lbf</i> lower bound of the floated confidence interval
+    <i>ubf</i> upper bound of the floated confidence interval
+<p>
+    or by
+<p>
+    <i>sef</i> floated standard error of the log relative risk
+<p>
+<b><u>Description</u></b>
+<p>
+    <b>ftocci</b> back calculates the conventional confidence intervals from
+          the floated confidence intervals or from the floated
+          standard errors of a set of relative risks.
+<p>
+<b><u>Options</u></b>
+<p>
+    <b>ref(</b><i>#</i><b>)</b> specifies the reference exposure category. Default is the first
+        line.
+<p>
+    <b><u>f</u></b><b>ormat(%</b><i>fmt</i><b>)</b> specifies the display format for presenting numbers.
+        <b>format(%3.2f)</b> is the default; see help format.
+<p>
+    <b><u>l</u></b><b>evel(</b><i>#</i><b>)</b> specifies the width of the published floated confidence
+        interval; see help level. The default level is 95%.
+<p>
+    <b><u>gen</u></b><b>erate(</b><i>newvar1</i> <i>newvar2</i> <i>newvar3</i><b>)</b> specifies that the displayed results
+        (conventional relative risk and confidence limits) to be saved in
+        <i>newvar1</i>, <i>newvar2</i> and <i>newvar3</i> respectively.
+<p>
+<b><u>Examples</u></b>
+<p>
+        clear
+        input    rrf    sef 
+                1          .0544927  
+                1.202145   .0509047  
+                1.521979   .0477249  
+                2.111223    .039682  
+                3.284124    .035919  
+        end
+         
+        ftocci rrf sef 
+<p>
+        ftocci rrf sef  , ref(2) format(%9.0g)  
+<p>
+        ftocci rrf sef  , ref(3)   gen(rrc lbc ubc)
+<p>
+<b><u>Reference</u></b>
+<p>
+        Orsini N. From floated to conventional confidence intervals for the rel
+&gt; ative risks based on published dose-response data.
+                        Computer Methods and Programs in Biomedicine, in press.
+<p>
+<b><u>Author</u></b>
+<p>
+    nicola.orsini@ki.se, Karolinska Institutet
+    http://nicolaorsini.altervista.org
+<p>
+<p>
+<p>
+</pre>

@@ -1,0 +1,52 @@
+<pre>
+.-
+help for ^tsplot^
+.-
+<p>
+Time series plot
+----------------
+<p>
+        ^tsplot^ varlist [weight ^if^ exp ^in^ range][, graph_options]
+<p>
+<p>
+Description 
+-----------
+<p>
+^tsplot^ displays a time series plot.
+<p>
+<p>
+Options
+-------
+<p>
+^graph^ command options are allowed.
+<p>
+<p>
+Author
+------
+<p>
+        Aurelio Tobias
+        Medical Statistician
+        Getafe (Spain)
+        e-mail: bledatobias@@ctv.es
+<p>
+<p>
+Examples
+--------
+<p>
+        . ^dups timevar, key(*) drop^
+        . 
+        . ^tsplot x^
+        . ^tsplot x [fw=w]^
+        . ^tsplot x, c(s) bands(10)^
+        . ^tsplot x y z, matrix half^
+<p>
+<p>
+Also see
+--------
+<p>
+ Manual:  ^[R] graph^
+    STB:  ^STB-41: dm53^
+On-line:  help for @graph@, @dups@ (if installed)
+<p>
+<p>
+</pre>

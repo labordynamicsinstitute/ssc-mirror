@@ -1,0 +1,81 @@
+<pre>
+-------------------------------------------------------------------------------
+help for <b> miset</b>                                                 (SJ3-3: st0000)
+-------------------------------------------------------------------------------
+<p>
+<b><u>Declare datasets to be multiple imputed datasets</u></b>
+<p>
+        <b>miset</b> [<b>using</b> <i>filename-prefix</i>] [<b>,</b> <b><u>m</u></b><b>imps(</b><i>#</i><b>)</b> <b>clear</b>]
+<p>
+<p>
+<b><u>Description</u></b>
+<p>
+    <b>miset</b> creates temporary copies of imputed datasets so that subsequent <b>mi</b>
+    (multiple imputation) commands can be executed on these data. The other
+    <b>mi</b> commands can only be used after the multiple datasets have been
+    declared by <b>miset</b>.  The imputed datasets are assumed to be created from
+    an original dataset by a "proper" imputation method as in Schafer (1997).
+    These datasets must have the same variables and the same number of
+    observations.
+<p>
+    The following naming convention must be used: the filenames of the
+    imputed datasets must consist of a common word followed by a consecutive
+    number and followed by the normal extension <b>.dta</b>; for example, <b>foo1.dta</b>,
+    <b>foo2.dta</b>, ..., <b>foo5.dta</b>. Only the common word or <i>filename-prefix</i> ("foo"
+    in this case) is to be specified after the <b>using</b> command.
+<p>
+    <b>miset</b> creates temporary files <b>mitemp1.dta</b>, <b>mitemp2.dta</b>, and so on by
+    copying the <b>using</b> files.  All subsequent commands will be executed on
+    these temporary files, with the original <b>using</b> files left unchanged. The
+    temporary files remain in the working directory until mireset is issued.
+    To save the updated temporary files after a series of <b>mi</b> commands, see 
+    misave.
+<p>
+<p>
+<b><u>Options</u></b>
+<p>
+    <b>mimps(</b><i>#</i><b>)</b> specifies the number, <i>m</i>, of datasets to be used. The default is
+        5. A minimum of 2 and a maximum of 9 datasets can be specified. If
+        there exist more than <i>m</i> datasets, Only the first <i>m</i> datasets are used.
+        As mentioned earlier, usually as few as 3 or 5 multiple imputed
+        datasets is sufficient.
+<p>
+    <b>clear</b> permits the data to be loaded even if there is a dataset already in
+        memory and even if that dataset has changed since the data were last
+        saved.
+<p>
+<p>
+<b><u>Remarks</u></b>
+<p>
+    <b>miset</b> is one of the suite of<b> mi</b> commands. The other <b>mi</b> commands can only
+    be used after the multiple datasets have been declared by <b>miset</b>.
+<p>
+<p>
+<b><u>Examples</u></b>
+<p>
+    <b>. miset using mydata</b>
+    <b>. miset using mydata, mimps(3)</b>
+<p>
+  
+<b><u>Authors</u></b>
+<p>
+    Ning Li, Philip Greenwood, and John Carlin, Clinical Epidemiology &amp;
+    Biostatistics Unit, Murdoch Children's Research Institute and University
+    of Melbourne. Email jbcarlin@unimelb.edu.au
+<p>
+<p>
+<b><u>References</u></b>
+<p>
+<p>
+    Rubin, D. B. 1987. <i>Multiple Imputation for Nonresponse in Surveys</i>.  New
+        York: John Wiley &amp; Sons.
+<p>
+    Schafer, J. L. 1997. <i>Analysis of Incomplete Multivariate Data</i>.  London:
+        Chapman &amp; Hall.
+<p>
+<p>
+<b><u>Also see</u></b>
+<p>
+    Online: help for miappend, mimerge, misave, mido, mici, mifit, milincom, 
+              mireset
+</pre>

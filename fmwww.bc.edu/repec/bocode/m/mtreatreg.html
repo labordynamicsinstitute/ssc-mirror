@@ -1,0 +1,193 @@
+<pre>
+<b>help mtreatreg</b>                              also see:  mtreatreg postestimation
+-------------------------------------------------------------------------------
+<p>
+<b><u>Title</u></b>
+<p>
+    <b>mtreatreg</b> --    Multinomial treatment effects model
+<p>
+<p>
+<b><u>Syntax</u></b>
+<p>
+        <b>mtreatreg</b> <i>depvar</i> [<i>indepvars</i>] [<i>if</i>] [<i>in</i>] [<i>weight</i>]<b>,</b> <b><u>mtreat</u></b><b>ment(</b><i>depvar_mt</i>
+                 <b>=</b> <i>indepvars_mt</i><b>)</b> <b><u>sim</u></b><b>ulationdraws(</b><i>#</i><b>)</b> <b><u>den</u></b><b>sity(</b><i>densityname</i><b>)</b>
+                 [<i>options</i>]
+<p>
+<a name="options"></a>    <i>options</i>                     Description
+    -------------------------------------------------------------------------
+    Model
+      <b><u>mtreat</u></b><b>ment(</b><i>string</i><b>)</b>        <i>string</i> is specified as depvar_mt =
+                                  indepvars_mt.   It is required.
+      <b><u>sim</u></b><b>ulationdraws(</b><i>#</i><b>)</b>        number of simulation draws per observation.  
+                                  It is required.
+      <b><u>den</u></b><b>sity(</b><i>densityname</i><b>)</b>      distribution of <i>depvar</i>.  It is required.
+      <b><u>pre</u></b><b>fix(string)</b>            prefix for the indicator variables created
+                                  from the multinomial treatment variable.
+                                   The default is a set of indicator
+                                  variables starting with _T.
+      <b><u>const</u></b><b>raint(</b><i>constraint</i><b>)</b>    apply specified linear constraints
+<p>
+    SE/Robust
+      <b>vce(</b><i>vcetype</i><b>)</b>              <i>vcetype</i> may be <b>oim</b>, <b><u>r</u></b><b>obust</b>, <b>opg</b>, <b><u>boot</u></b><b>strap</b> or
+                                  <b><u>jack</u></b><b>knife</b>
+      <b><u>r</u></b><b>obust</b>                    synonym for <b>vce(robust)</b>
+      <b><u>cl</u></b><b>uster(</b><i>varname</i><b>)</b>          adjust standard errors for intragroup
+                                  correlation
+<p>
+    Reporting
+      <b><u>ver</u></b><b>bose</b>                   report mixed multinomial logit treatment and
+                                  exogenous outcome regressions.
+<p>
+    Quasi-random numbers
+      <b><u>facsc</u></b><b>ale(</b><i>#</i><b>)</b>               specifies the standard deviation of each of
+                                  the quasi-random variables.  The default is
+                                  1.
+      <b><u>start</u></b><b>point(</b><i>#</i><b>)</b>             specifies the starting point in the Halton
+                                  sequence from which the quasi-random
+                                  variates are generated.  The default is 20.
+<p>
+    Max options
+      <b><u>facfr</u></b><b>om(</b><i>string</i><b>)</b>           specifies the starting value for the
+                                  parameter associated with the latent
+                                  factor.  The default starting value is
+                                  zero.
+      <i>maximize_options</i>          control the maximization process.  These
+                                  options are seldom used.
+    -------------------------------------------------------------------------
+<p>
+<a name="densityname"></a>    <i>densityname</i>              Description
+    -------------------------------------------------------------------------
+    <b>gamma</b>                    Gamma
+    <b>logit</b>                    Logistic
+    <b>negbin1</b>                  Negative Binomial-1 (constant dispersion)
+    <b>negbin2</b>                  Negative Binomial-2 (mean dispersion)
+    <b>normal</b>                   Normal
+    -------------------------------------------------------------------------
+<p>
+    <b>bootstrap</b>, <b>by</b>, <b>jackknife</b>, <b>rolling</b>, <b>statsby</b>, and <b>xi</b> are allowed; see 
+      prefix.
+    <b>pweight</b>s, <b>aweight</b>s, <b>fweight</b>s, and <b>iweight</b>s are allowed.
+    See mtreatreg postestimation for features available after estimation.
+<p>
+<p>
+<b><u>Description</u></b>
+<p>
+    <b>mtreatreg</b> fits models with multinomial treatments and continuous, count
+    and binary outcomes outcomes using maximum simulated likelihood.  The
+    model considers the effect of an endogenously chosen multinomial-valued
+    treatment on an outcome variable, conditional on two sets of independent
+    variables.   The outcome variable can be continuous, binary or
+    integer-valued while the treatment choice is assumed to follow a mixed
+    multinomial logit distribution.   The model is estimated using maximum
+    simulated likelihood and the simulator uses Halton sequences.
+<p>
+<p>
+<b><u>Options</u></b>
+<p>
+        +-------+
+    ----+ Model +------------------------------------------------------------
+<p>
+    <b>mtreatment(</b><i>depvar_mt = indepvars_mt</i>{cmd:) specifies the variables   for
+        the treatment equation.  It is required.
+<p>
+    <b>simulationdraws(</b><i>#</i><b>)</b> specifies the number of simulation draws used per
+        observation.  It is required.
+<p>
+    <b>density(densityname)</b> specifies the distribution of <i>depvar</i>.   See
+        <i>densityname</i>.  It is required.
+<p>
+    <b>prefix(string)</b> allows the user to choose a prefix other than _T for the
+        indicator variables created from the multinomial treatment variable.
+         The default is a set of indicator variables starting with _T.  When
+        mtreatreg is called, all previously created indicator variables
+        starting with the prefix specified in the prefix(string) option or
+        with _T are dropped.
+<p>
+    <b>noconstant</b>, <b>constraint(</b><i>constraint</i><b>)</b>, <b>collinear</b>; see     estimation
+        options.
+<p>
+        +-----------+
+    ----+ SE/Robust +--------------------------------------------------------
+<p>
+    <b>vce(</b><i>vcetype</i><b>)</b>; see <i>vce_option</i>.
+<p>
+    <b>robust</b>, <b>cluster(</b><i>varname</i><b>)</b>; see    estimation options.
+<p>
+        +-----------+
+    ----+ Reporting +--------------------------------------------------------
+<p>
+    <b>verbose</b> specifies that output from the mixed multinomial logit treatment
+        and exogenous outcome regressions be reported. <b>verbose</b> has no effect
+        if <b>from</b> is specified.
+<p>
+        +----------------------+
+    ----+ Quasi-random numbers +---------------------------------------------
+<p>
+    <b>facscale(</b><i>#</i><b>)</b> specifies the standard deviation of the quasi-random
+        variables.  The default is 1.
+<p>
+    <b>startpoint(</b><i>#</i><b>)</b> specifies the starting point in the Halton sequence from
+        which the quasi-random variates are generated.  The default is 20.
+<p>
+<a name="maximize_options"></a>        +-------------+
+    ----+ Max options +------------------------------------------------------
+<p>
+    <b>facfrom(</b><i>string</i><b>)</b>}specifies the starting value for the parameter associated
+        with the latent factor.  The default starting value is zero.
+<p>
+    <i>maximize_options</i>:  <b><u>diff</u></b><b>icult</b>, <b><u>tech</u></b><b>nique(</b><i>algorithm_spec</i><b>)</b>, <b><u>iter</u></b><b>ate(</b><i>#</i><b>)</b>,
+        [<b><u>no</u></b>]<b><u>lo</u></b><b>g</b>, <b><u>tr</u></b><b>ace</b>, <b><u>grad</u></b><b>ient</b>, <b>showstep</b>, <b><u>hess</u></b><b>ian</b>, <b><u>shownr</u></b><b>tolerance</b>,
+        <b><u>tol</u></b><b>erance(</b><i>#</i><b>)</b>, <b><u>ltol</u></b><b>erance(</b><i>#</i><b>)</b>, <b><u>gtol</u></b><b>erance(</b><i>#</i><b>)</b>, <b><u>nrtol</u></b><b>erance(</b><i>#</i><b>)</b>,
+        <b><u>nonrtol</u></b><b>erance(</b><i>#</i><b>)</b>, <b>from(</b><i>init_specs</i><b>)</b>; see maximize.  These options are
+        seldom used.
+<p>
+<p>
+<b><u>Remarks</u></b>
+<p>
+    <b>difficult</b> may sometimes be a useful option if convergence is slow.
+<p>
+    <b>robust</b> produces standard errors which take simulation error into account.
+      It is the preferred option unless <b>cluster(</b><i>varname</i><b>)</b> is specified.
+<p>
+    The available outcome densities and associated conditional means are
+<p>
+        Density                 <b>mtreatreg</b> option        cond. mean
+        ------------------------------------------------------------
+        Gamma                   <b>density(gamma)</b>  exp(xb)
+        Logistic                <b>density(logit)</b>  exp(xb)/(1+exp(xb))
+        Negative Binomial-1     <b>density(negbin1)</b>        exp(xb)
+        Negative Binomial-2     <b>density(negbin2)</b>        exp(xb)
+        Normal(Gaussian)        <b>density(normal)</b> xb 
+<p>
+<p>
+<b><u>Examples</u></b>
+<p>
+        <b>. mtreatreg ycontinuous x1 x2, mtreat(d=x1 x2 z) sim(200) dens(gamma)</b>
+        <b>. mtreatreg yinteger x1 x2, mtreat(d=x1 x2 z) sim(200) dens(negbin1)</b>
+<p>
+<p>
+<b><u>References</u></b>
+<p>
+    Deb, P., and P. K. Trivedi (2006), Specification and Simulated Likelihood
+        Estimation of a Non-normal Treatment-outcome Model with Selection:
+        Application to Health Care Utilization, <i>Econometrics Journal</i>, 9,
+        307-331.
+<p>
+    Deb, P., and P. K. Trivedi (2006), Maximum Simulated Likelihood
+        Estimation of a Negative-binomial Regression Model with Multinomial
+        Endogenous Treatment,<i> The Stata Journal</i>, 6, 246-255.
+<p>
+<p>
+<b><u>Author</u></b>
+<p>
+    Partha Deb, Hunter College and The Graduate Center, City University of
+        New York, and NBER, USA.
+    partha.deb@hunter.cuny.edu
+<p>
+<p>
+<p>
+<b><u>Also see</u></b>
+<p>
+    Online:   mtreatreg postestimation
+             <b>treatreg</b>
+</pre>

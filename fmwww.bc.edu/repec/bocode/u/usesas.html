@@ -1,0 +1,229 @@
+<pre>
+-------------------------------------------------------------------------------
+help for <b>usesas</b>                                               manual:  <b>[R] none</b>
+                                                             dialog:  <b> none</b>    
+-------------------------------------------------------------------------------
+<p>
+<p>
+<b><u>Use a SAS dataset</u></b>
+<p>
+        <b>usesas</b> <b>using</b> <i>filename</i> [<b>,</b> <b><u>for</u></b><b>mats</b> <b>char2lab</b> <b><u>ch</u></b><b>eck</b> <b>clear</b> <b>float</b> <b>xport</b>
+                 <b><u>de</u></b><b>scribe</b> <b><u>ke</u></b><b>ep(</b><i>variable names</i><b>)</b> <b>if(</b><i>SAS if statement</i><b>)</b>
+                 <b>in(</b><i>firstobs/lastobs</i><b>)</b> <b><u>qu</u></b><b>otes</b> <b><u>me</u></b><b>ssy</b> ]
+<p>
+        
+<b><u>Description</u></b>
+<p>
+    <b>NOTE:</b> Before the first use of <b>usesas</b> your <b>sasexe.ado</b> file may need to be
+        edited to set the location of your SAS executable file (sas.exe) and
+        your savastata SAS macro file (savastata.sas).  It may be that <b>usesas</b>
+        will be able to run with the default settings in <b>sasexe.ado</b>.
+<p>
+    <b>usesas</b> loads a SAS datafile into memory.  This usually occurs by
+    supplying <b>usesas</b> a SAS dataset (*.sas7bdat, *.sd7, *.sd2, *.ssd01, *.xpt,
+    *.cport) or an SPSS portable file (*.por), but <b>usesas</b> can also load a SAS
+    datafile into memory via a SAS program (*.sas) that creates a SAS
+    dataset.  The last dataset created by the SAS program will be the SAS
+    dataset processed by <b>usesas</b>.
+ 
+<p>
+    <b>usesas</b> assumes the most common SAS datafile extension <b>.sas7bdat</b> if no
+    file extension/suffix is specified.
+<p>
+    <b>usesas</b> uses the savastata SAS macro to create the Stata dataset from the
+    SAS dataset.  <b>usesas</b> downloads the savastata SAS macro and stores it
+    where user-written Stata ado-files are stored that begin with the letter
+    "s".  This macro can be used in SAS.  Learn about savastata here:
+    http://www.cpc.unc.edu/research/tools/data_analysis/savastata.html
+<p>
+    <b>usesas</b> figures out how much memory the SAS dataset will require to be
+    loaded into Stata and sets Stata's memory for you if your memory setting
+    is less than is required.
+<p>
+    <b>usesas</b> indicates that it has finished running by reporting to you how
+    many observations and variables are in your dataset now in memory.  For
+    example:
+<p>
+    Stata reports that the dataset has 200 observations and 11 variables.
+<p>
+    <b>NOTE:  usesas</b> calls SAS to run a SAS program.  This requires the ability
+        to run SAS on your computer.
+<p>
+ 
+<b><u>Options</u></b>
+<p>
+    <b>formats</b> specifies to create value labels from SAS user-defined formats
+        that are stored in a SAS formats catalog file that has the same name
+        as the dataset and is in the same directory as the SAS dataset.  For
+        example: MySasData.sas7bcat .  If this file doesn't exist, <b>usesas</b>
+        will look for the file formats.sas7bcat in the same directory as the
+        dataset.
+<p>
+    <b>char2lab</b> specifies to encode long SAS character variables like the Stata
+        command encode.  Character variables that are too long for a Stata
+        string variable are maintained in value labels. This is all done with
+        the <b>char2fmt</b> SAS macro.
+<p>
+    <b>check</b> specifies to generate basic stats for both datasets for the user to
+        compare the newly created Stata dataset with the imported SAS dataset
+        to make sure <b>usesas</b> created the files correctly.  This is a
+        comparison that should be done after any datafile is converted to any
+        other type of datafile by any software.  The SAS file is created in
+        the same directory as the input SAS datafile and is named starting
+        with the name of the datafile followed by "_SAScheck.lst" (SAS).
+        e.g. "mySASdata_SAScheck.lst"
+<p>
+    <b>clear</b> specifies to clear the data currently in memory before running
+        <b>usesas</b>.
+<p>
+    <b>float</b> specifies that numeric variables that would otherwise be stored as
+        numeric type double be stored with numeric type float.  This option
+        should only be used if you are certain you have no integer variables
+        that have more than 7 digits (like an ID variable).
+<p>
+    <b>xport</b> specifies that the input dataset is a SAS Transport/Xport dataset.
+        Since there is no standard file extension for SAS Xport datasets,
+        this option is required.  Datasets created by SAS's PROC CPORT
+        procedure are allowed.
+<p>
+    <b>describe</b> makes <b>usesas</b> act somewhat like the Stata command describe using.
+        It does not bring the full dataset into memory.  Instead it specifies
+        for <b>usesas</b> only to load the descriptive information about the using
+        dataset into Stata's memory as a Stata dataset and print it.  So,
+        instead of loading the actual dataset into Stata, <b>usesas</b> loads the
+        descriptive information (variable names, what type of variables they
+        are, the variable labels and formats associated to the variables)
+        into Stata as a dataset.  You can clear the descriptive data out of
+        Stata's memory or use the descriptive data however you like to create
+        variable lists for your actual invocation of <b>usesas</b>.  This may be
+        helpful for situations where the SAS dataset has more variables than
+        your version of Stata can handle.  You can create a variable list
+        from the variable called "name" to create another invocation of
+        <b>usesas</b> to read in only the variables you need.
+<p>
+        If you do not want to have the <b>describe</b> option list the descriptive
+        information of the imported dataset, you can use the option <b>listnot</b>
+        with <b>describe</b>. The descriptive information will still be loaded into
+        Stata as a Stata dataset.
+ 
+<p>
+        The descriptive data are sorted in the variable order of the using
+        dataset so a variable list for <b>usesas</b> could be created like so:
+<p>
+        <b>. display "`= trim(name[1])'--`= name[2047]'"</b>
+<p>
+        <b>id--income88</b>
+<p>
+<p>
+        which could then be used like so to keep the first 2,047 variables in
+        the using dataset (2,047 is the maximum number of variables that
+        Stata Intercooled can handle):
+<p>
+        <b>. usesas using "mySASdata.sas7bdat", clear keep(`= trim(name[1])'--`=</b>
+        <b>name[2047]')</b>
+<p>
+        SAS variable lists using two dashes "--" tells SAS to use the
+        variables that exist positionally between the first variable and the
+        last variable in the using dataset inclusively.  Read more about this
+        under the documentation of the <b>keep</b> option.
+<p>
+        The <b>describe</b> option makes <b>usesas</b> return the following in <b>r()</b>:
+<p>
+    Scalars        
+      <b>r(N)</b>                number of observations in using dataset
+      <b>r(k)</b>                number of variables in using dataset
+<p>
+    Macros         
+      <b>r(varlist)</b>          variables in using dataset
+      <b>r(sortlist)</b>         variables by which using data are sorted
+<p>
+        The above scalars and macros contain information about the dataset
+        that was described, not information of the dataset of descriptive
+        information that <b>usesas</b> loaded into Stata with the <b>describe</b> option.
+<p>
+    <b>keep</b> allows for a list of variables from the imported dataset to be read
+        in.  This list is used in the SAS code portion of <b>usesas</b> so must be
+        written in the SAS variable list style.  SAS does not allow for
+        variable lists to contain stars (*) or question marks (?).  For
+        example:
+<p>
+    <b>keep(var1-var20)</b> includes only vars that start with "var" and end in a
+        number between 1 and 20.
+<p>
+    <b>keep(var1--var20)</b> includes only vars in the dataset between var1 and
+        var20.  This is like Stata's varlist style<b> var1-var20</b>.
+<p>
+    <b>if</b> allows for a SAS <b>if</b> statement to subset the data before it's read in.
+        Any valid SAS style <b>if</b> statement will work.
+<p>
+    <b>in</b> allows for subsetting the data before it's read in.  Use only <b>#/#</b>
+        where both numbers are positive, for example 1/30 for the first 30
+        observations.
+<p>
+    <b>quotes</b> specifies that double quotes that exist in string variables are to
+        be replaced with single quotes.  Since the data are written out to an
+        ASCII file and then read into Stata, there are rare instances when
+        double quotes are not allowed inside string variables.
+<p>
+    <b>messy</b> specifies that all the intermediary files created by <b>usesas</b> during
+        its operation are not to be deleted.  The <b>messy</b> option prevents
+        <b>usesas</b> from cleaning up after it has finished.  This option is mostly
+        useful for debugging purposes in order to find out where something
+        went wrong.  All intermediary files have a name starting with an
+        underscore "_" followed by the process ID and are located in Stata's
+        temp directory.
+<p>
+<b><u>Examples</u></b>
+<p>
+    <b>. usesas using "mySASdata.sas7bdat"</b>
+<p>
+    <b>. usesas using "c:\data\mySASdata.ssd01", check</b>
+<p>
+    <b>. usesas using "mySASdata.xpt", xport</b>
+<p>
+    <b>. usesas using "mySASdata.sas7bdat", formats</b>
+<p>
+    <b>. usesas using "mySASdata.sd2", quotes</b>
+<p>
+    <b>. usesas using "mySASdata.sas7bdat", messy</b>
+<p>
+    <b>. usesas using "mySASdata.sas7bdat", keep(id--qvm203a) if(1980&lt;year&lt;2000)</b>
+        <b>in(1/500)</b>
+<p>
+    <b>. usesas using "mySASdata.sas7bdat", describe</b>
+<p>
+    <b>. usesas using "mySASdata.sas7bdat", describe nolist</b>
+<p>
+    <b>// then submit the following actual invocation of usesas:</b>
+<p>
+    <b>. usesas using "mySASdata.sas7bdat", clear keep(`r(sortlist)' `=</b>
+        <b>trim(name[1])'--`= name[2047]')</b>
+<p>
+<p>
+    NOTE:  If you are setting up this program on your computer for the first
+        time, please edit <b>sasexe.ado</b> to set the location of your SAS
+        executable file (sas.exe).  If you do not, <b>usesas</b> will try to set it
+        for you.  The <b>sasexe.ado</b> file is an ASCII text file and should be
+        saved as such after editing.  Stata's <b>do-file</b> editor will do the
+        trick.
+<p>
+<b><u>Setting up usesas</u></b>
+<p>
+    edit sasexe.ado (click, to edit the <b>sasexe.ado</b> file, remember to save
+        when done.)
+<p>
+<p>
+<b><u>Author</u></b>
+<p>
+    Dan Blanchette
+    The Carolina Population Center
+    University of North Carolina - Chapel Hill, USA
+    dan_blanchette@unc.edu
+<p>
+<p>
+<b><u>Also see</u></b>
+<p>
+    On-line: use, fdause, savasas (if installed)
+<p>
+<p>
+</pre>

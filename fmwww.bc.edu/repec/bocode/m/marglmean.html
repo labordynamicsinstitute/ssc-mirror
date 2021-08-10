@@ -1,0 +1,245 @@
+<pre>
+-------------------------------------------------------------------------------
+help for <b>marglmean</b>                                               (Roger Newson)
+-------------------------------------------------------------------------------
+<p>
+<b><u>Marginal log means from regression models</u></b>
+<p>
+        <b>marglmean</b> [<i>if</i>] [<i>in</i>] [<i>weight</i>] , [ <b><u>at</u></b><b>spec(</b><i>atspec</i><b>)</b> <b>subpop(</b><i>subspec</i><b>)</b>
+                     <b><u>pr</u></b><b>edict(</b><i>pred_opt</i><b>)</b> <b>vce(</b><i>vcespec</i><b>)</b> <b>no</b><b><u>e</u></b><b>sample</b> <b>force</b>
+                     <b><u>iter</u></b><b>ate(</b><i>#</i><b>)</b> <b><u>ef</u></b><b>orm</b> <b><u>l</u></b><b>evel(</b><i>#</i><b>)</b> <b>post</b> ]
+<p>
+    where <i>atspec</i> is an at-specification recognized by the <b>at()</b> option of 
+    <b>margins</b>, <i>subspec</i> is a subpopulation specification of the form recognized
+    by the <b>subpop()</b> option of <b>margins</b>, and <i>vcespec</i> is a variance-covariance
+    specification of the form recognized by <b>margins</b>, and must have one of the
+    values
+<p>
+    <b>delta</b> | <b>unconditional</b>
+<p>
+    <b>fweight</b>s, <b>aweight</b>s, <b>iweight</b>s, <b>pweight</b>s are allowed; see weight.
+<p>
+<p>
+<b><u>Description</u></b>
+<p>
+    <b>marglmean</b> calculates symmetric confidence intervals for log marginal
+    means (also known as log scenario means), and asymmetric confidence
+    intervals for the marginal means themselves.  <b>marglmean</b> can be used after
+    an estimation command whose predicted values are interpreted as positive
+    conditional arithmetic means of non-negative-valued outcome variables,
+    such as <b>logit</b>, <b>logistic</b>, <b>probit</b>, <b>poisson</b>, or <b>glm</b> with most non-Normal
+    distributional families.  It can estimate a marginal mean for a scenario
+    ("Scenario 1"), in which one or more predictor variables may be assumed
+    to be set to particular values, and any other predictor variables in the
+    model are assumed to remain the same.
+<p>
+<p>
+<b><u>Options for </u></b><b><u>marglmean</u></b>
+<p>
+    <b>atspec(</b><i>atspec</i><b>)</b> is an at-specification, allowed as a value of the <b>at()</b>
+        option of <b>margins</b>.  This at-specification must specify a single
+        scenario ("Scenario 1"), defined as a fantasy world in which a subset
+        of the predictor variables in the model are set to specified values.
+        <b>marglmean</b> uses the <b>margins</b> command to estimate the marginal
+        arithmetic mean under Scenario 1, and then uses <b>nlcom</b> to estimate the
+        log of this scenario mean, known as the marginal log mean.  If
+        <b>atspec()</b> is not specified, then its default value is
+        <b>atspec((asobserved) _all)</b>, implying that Scenario 1 is the real-life
+        baseline scenario, represented by the predictor values actually
+        present.
+<p>
+    <b>subpop(</b><i>subspec</i><b>)</b>, <b>predict(</b><i>pred_opt</i><b>)</b> and <b>vce(</b><i>vcespec</i><b>)</b> have the same form
+        and function as the options of the same names for <b>margins</b>.  They
+        specify the subpopulation, the predict option(s), and the
+        variance-covariance matrix formula, respectively, used to estimate
+        the log of the marginal mean.
+<p>
+    <b>noesample</b> has the same function as the option of the same name for 
+        <b>margins</b>.  It specifies that computations will not be restricted to
+        the estimation sample used by the previous estimation command.
+<p>
+    <b>force</b> has the same function as the option of the same name for <b>margins</b>.
+<p>
+    <b>iterate(</b><i>#</i><b>)</b> has the same form and function as the option of the same name
+        for <b>nlcom</b>.  It specifies the number of iterations used by <b>nlcom</b> to
+        find the optimal step size to calculate the numerical derivative of
+        the log of the marginal mean, with respect to the original marginal
+        mean calculated by <b>margins</b>.
+<p>
+    <b>eform</b> specifies that <b>marglmean</b> will display an estimate, <i>P</i>-value and
+        confidence limits for the marginal mean, instead of for the log
+        marginal mean.  If <b>eform</b> is not specified, then a confidence interval
+        for the log marginal mean is displayed.  Whether or not <b>eform</b> is
+        specified, the saved results will contain an estimate vector and
+        variance matrix for the log marginal mean.
+<p>
+    <b>level(</b><i>#</i><b>)</b> specifies the percentage confidence level to be used in
+        calculating the confidence interval.  If it is not specified, then it
+        is taken from the current value of the c-class value <b>c(level)</b>, which
+        is usually 95.
+<p>
+    <b>post</b> specifies that <b>marglmean</b> will post in <b>e()</b> the estimation results for
+        estimating the log of the marginal mean.  If <b>post</b> is not specified,
+        then any existing estimation results are left in <b>e()</b>.  Note that the
+        estimation results posted are for the log of the marginal mean, and
+        not for the marginal mean itself.  This is done because the
+        estimation results are intended to define a symmetric confidence
+        interval for the log-transformed marginal mean, which can be
+        back-transformed to define an asymmetric confidence interval for the
+        untransformed marginal mean.
+<p>
+<p>
+<b><u>Remarks</u></b>
+<p>
+    <b>marglmean</b> estimates the marginal mean, which is a scenario mean.  The
+    general principles behind scenario means for generalized linear models
+    were introduced in Lane and Nelder (1982).
+<p>
+    <b>marglmean</b> starts by estimating the log of the scenario mean, using 
+    <b>margins</b> and <b>nlcom</b>.  The results of this estimation are stored in <b>e()</b>, if
+    the option <b>post</b> is specified.  These estimation results may be saved in
+    an output dataset (or resultsset) by the <b>parmest</b> package, which can be
+    downloaded from SSC.
+<p>
+    <b>marglmean</b> assumes that the most recent estimation command estimates the
+    parameters of a regression model, whose fitted values are conditional
+    arithmetic means, which must be positive.  It is the user's
+    responsibility to ensure that this is the case.  However, it will be true
+    if the conditional proportions are defined using a generalized linear
+    model with a binomial, negative binomial, Poisson, gamma or inverse
+    Gaussian distributional family, and a link function with a positive
+    domain, such as a power, the log, the logit, the probit, or the
+    complementary log-log.
+<p>
+    Note that <b>marglmean</b> estimates a single marginal mean, and does not
+    compare 2 marginal means from the same estimation using differences or
+    ratios.  Users who need to estimate differences between marginal means
+    should use <b>margins</b> followed by <b>contrast</b>.  Users who need to estimate
+    ratios between scenario means (population unattributable fractions)
+    should use either <b>punaf</b> (for cohort or cross-sectional study data) or 
+    <b>punafcc</b> (for case-control or survival study data).  Users who need to
+    estimate marginal prevalences or proportions (a special case of scenario
+    means) should probably use <b>margprev</b>.  Users who need to estimate
+    differences between scenario proportions (population attributable risks)
+    should use <b>regpar</b>.  The packages <b>punaf</b>, <b>punafcc</b>, <b>margprev</b> and <b>regpar</b> are
+    downloadable from SSC.
+<p>
+<p>
+<b><u>Examples</u></b>
+<p>
+    The following examples use the <b>auto</b> dataset, distributed with Stata.
+<p>
+    Setup
+<p>
+        <b>. sysuse auto, clear</b>
+        <b>. describe</b>
+<p>
+    The following examples estimate marginal means of mileage, or their logs,
+    either in the real world or in a fantasy scenario, where all car models
+    are US-made but have the same weight as in the real world.
+<p>
+        <b>. glm mpg weight foreign, fam(gamma) link(log) robust eform</b>
+        <b>. marglmean, eform</b>
+        <b>. marglmean, at(foreign=0) eform</b>
+        <b>. marglmean</b>
+        <b>. marglmean, at(foreign=0)</b>
+<p>
+    The following example demonstrates the use of <b>marglmean</b> with the <b>parmest</b>
+    package, downloadable from SSC.  The marginal mean of mileage is
+    estimated using <b>marglmean</b> (with the <b>post</b> option), and saved, using 
+    <b>parmest</b>, in a dataset in memory, overwriting the original dataset, with 1
+    observation for the untransformed parameter, named <b>"Scenario_1"</b>, and data
+    on the estimate, confidence limits, <i>P</i>-value, and other parameter
+    attributes.  We then <b>describe</b> and <b>list</b> the new dataset.
+<p>
+        <b>. glm mpg weight foreign, fam(gamma) link(log) robust eform</b>
+        <b>. marglmean, eform post</b>
+        <b>. parmest, eform norestore</b>
+        <b>. describe</b>
+        <b>. list</b>
+<p>
+<p>
+<b><u>Saved results</u></b>
+<p>
+    <b>marglmean</b> saves the following in <b>r()</b>:
+<p>
+    Scalars        
+      <b>r(rank)</b>             rank of <b>r(V)</b>
+      <b>r(N)</b>                number of observations
+      <b>r(N_sub)</b>            subpopulation observations
+      <b>r(N_clust)</b>          number of clusters
+      <b>r(N_psu)</b>            number of samples PSUs, survey data only
+      <b>r(N_strata)</b>         number of strata, survey data only
+      <b>r(df_r)</b>             variance degrees of freedom, survey data only
+      <b>r(N_poststrata)</b>     number of post strata, survey data only
+      <b>r(k_margins)</b>        number of terms in <i>marginlist</i>
+      <b>r(k_by)</b>             number of subpopulations
+      <b>r(k_at)</b>             number of <b>at()</b> options (always 1)
+      <b>r(level)</b>            confidence level of confidence intervals
+<p>
+    Macros         
+      <b>r(atspec)</b>           <b>atspec()</b> option
+<p>
+    Matrices       
+      <b>r(b)</b>                vector of the log of the marginal mean
+      <b>r(V)</b>                estimated variance-covariance matrix of the log of
+                            the marginal mean
+<p>
+    If <b>post</b> is specified, <b>marglmean</b> also saves the following in <b>e()</b>:
+<p>
+    Scalars        
+      <b>e(rank)</b>             rank of <b>e(V)</b>
+      <b>e(N)</b>                number of observations
+      <b>e(N_sub)</b>            subpopulation observations
+      <b>e(N_clust)</b>          number of clusters
+      <b>e(N_psu)</b>            number of samples PSUs, survey data only
+      <b>e(N_strata)</b>         number of strata, survey data only
+      <b>e(df_r)</b>             variance degrees of freedom, survey data only
+      <b>e(N_poststrata)</b>     number of post strata, survey data only
+      <b>e(k_margins)</b>        number of terms in <i>marginlist</i>
+      <b>e(k_by)</b>             number of subpopulations
+      <b>e(k_at)</b>             number of <b>at()</b> options (always 1)
+<p>
+    Macros         
+      <b>e(cmd)</b>              <b>marglmean</b>
+      <b>e(predict)</b>          program used to implement <b>predict</b>
+      <b>e(atspec)</b>           <b>atspec()</b> option
+      <b>e(properties)</b>       <b>b V</b>
+<p>
+    Matrices       
+      <b>e(b)</b>                vector of the log of the marginal mean
+      <b>e(V)</b>                estimated variance-covariance matrix of the log of
+                            the marginal mean
+      <b>e(V_srs)</b>            simple-random-sampling-without-replacement
+                            (co)variance hat V_srswor, if <b>svy</b>
+      <b>e(V_srswr)</b>          simple-random-sampling-with-replacement
+                            (co)variance hat V_srswr, if <b>svy</b> and <b>fpc()</b>
+      <b>e(V_msp)</b>            misspecification (co)variance hat V_msp, if <b>svy</b> and
+                            available
+<p>
+    Functions      
+      <b>e(sample)</b>           marks estimation sample
+<p>
+<p>
+<b><u>Author</u></b>
+<p>
+    Roger Newson, National Heart and Lung Institute, Imperial College London,
+    UK.
+    Email: r.newson@imperial.ac.uk
+<p>
+<p>
+<b><u>References</u></b>
+<p>
+<a name="lane_1982"></a>    Lane, P. W., and J. A. Nelder.  1982.  Analysis of covariance and
+        standardization as instances of prediction.<i>  Biometrics</i> <b>38</b>: 613–621.
+<p>
+<p>
+<b><u>Also see</u></b>
+<p>
+    Manual:  <b>[R] margins</b>, <b>[R] nlcom</b>, <b>[R] logistic</b>, <b>[R] logit</b>, <b>[R] probit</b>, <b>[R]</b>
+             <b>glm</b>
+<p>
+      Help:  <b>[R] margins</b>, <b>[R] nlcom</b>, <b>[R] logistic</b>, <b>[R] logit</b>, <b>[R] probit</b>, <b>[R]</b>
+             <b>glm</b>
+             <b>margprev</b>, <b>regpar</b>, <b>punaf</b>, <b>punafcc</b>, <b>parmest</b> if installed
+</pre>

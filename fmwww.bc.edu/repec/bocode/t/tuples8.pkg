@@ -1,0 +1,29 @@
+d 'TUPLES8': module for selecting all possible tuples from a list 
+d
+d     tuples8 produces a set of local macros, each containing a
+d list of      the names defining a tuple selected from a given
+d list. By	default  the set of macros is complete, other than
+d the tuple	 containing no	selections. By default the given
+d list is tried as	a variable list,  but if it is not a
+d variable list any other kind	    of list is	acceptable, except
+d that no other expansion is carried	  out. All  these defaults
+d can be overridden.  Users running Stata     10 or better should
+d use tuples (q.v.). 
+d
+d KW: tuples
+d KW: combinatorics
+d KW: programming
+d KW: selection 
+d
+d Requires: Stata version 8
+d
+d Distribution-Date: 20150308
+d
+d Author: Joseph N. Luchman, Fors Marsh Group LLC
+d Support: email   jluchman@@forsmarshgroup.com 
+d
+d Author: Nicholas J. Cox, Durham University
+d Support: email N.J.Cox@@durham.ac.uk
+d
+f tuples8.ado
+f tuples8.hlp

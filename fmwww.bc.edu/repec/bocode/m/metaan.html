@@ -1,0 +1,235 @@
+<pre>
+-------------------------------------------------------------------------------
+help for <b>metaan</b>
+-------------------------------------------------------------------------------
+<p>
+<b><u>Title</u></b>
+<p>
+    <b>metaan</b> -- Module for performing fixed- or random-effects meta-analyses
+<p>
+<p>
+<b><u>Syntax</u></b>
+<p>
+    <b>metaan</b> <i>varname1</i> <i>varname2</i> [<i>if</i>] [<i>in</i>] [<b>,</b> <i>options</i>]
+<p>
+    where
+<p>
+      <i>varvame1</i> the study effect sizes.
+<p>
+      <i>varvame2</i> the study effect variation, with standard error used as
+      default.
+<p>
+<a name="options"></a>    <i>options</i>               Description
+    -------------------------------------------------------------------------
+    Options
+      <b>fe</b>                  Fixed-effect model
+      <b>dl</b>                  DerSimonian-Laird random-effects model
+      <b>ml</b>                  Maximum likelihood random-effects model
+      <b>reml</b>                Restricted maximum likelihood random-effects model
+      <b>pl</b>                  Profile likelihood random-effects model
+      <b>pe</b>                  Permutations random-effects model
+      <b>varc</b>                Variances provided instead of the standard
+                            errors/deviations
+      <b>label(</b><i>varname</i><b>)</b>      Study label variable(s)
+      <b>forest</b>              Forest plot
+      <b>forestw(</b><i>#</i><b>)</b>          Forest plot with adjusted weight ratios
+      <b>plplot(</b><i>string</i><b>)</b>      Likelihood plot for the mu or tau^2 estimate in the
+                            maximum-likelihood models (ml, pl, reml)
+<p>
+<b><u>Description</u></b>
+<p>
+    The <b>metaan</b> command performs a meta-analysis on a set of studies and
+    calculates the overall effect and a confidence interval for the effect.
+    The command also displays various heterogeneity measures: Cochrane's Q,
+    I-squared (0-100% with larger scores indicating heterogenity) , H-squared
+    (zero in the case of homogeneity) and the between-study variance
+    estimate. Cochrane's Q is the same across all methods, but the
+    between-study variance estimate (and hence I-squared and H-squared) can
+    vary between the <b>dl</b> and <b>ml</b> methods. Only one method option must be
+    selected. For calculating the effects and variance of the effects, for a
+    group of studies, from various statistical parameters please see metaeff.
+<p>
+<b><u>Options</u></b>
+<p>
+        +-------+
+    ----+ Model +------------------------------------------------------------
+<p>
+    <b>fe</b> Fixed-model that assumes there is no heterogeneity between the
+        studies. The model assumes that within-study variances may differ,
+        but that there is homogeneity of effect size across allstudies.
+        Often the homogeneity assumption is unlikely and variation in the
+        true effect across studies is to be expected.  Therefore, caution is
+        required when using this model. Reported heterogeneity measures are
+        estimated using the <b>dl</b> model.
+<p>
+    <b>dl</b> DerSimonian-Laird, the most commonly used random-effects model. Models
+        heterogeneity between the studies i.e. assumes that the true effect
+        can be different for each study. The method assumes that the
+        individual study true effects are distributed with a variance tau^2,
+        around an "overall" true effect, but makes no assumptions about the
+        form of the distribution of either the within- or between-study
+        effects.  Reported heterogeneity measures are estimated using the <b>dl</b>
+        model.
+<p>
+    <b>ml</b> Maximum likelihood random-effects model. Makes the additional
+        assumption (necessary to derive the log-likelihood function, and also
+        true for <b>reml</b> and <b>pl</b> below) that both the within-study and
+        between-study effects have Normal distributions. It solves the
+        log-likelihood function iteratively to produce an estimate of the
+        between-study variance. However, the method does not always converge
+        while in some cases the between-study variance estimate is negative
+        and set to zero (in which case the model is reduced to the <b>fe</b> model).
+        Estimates are reported as missing in the event of non-convergence.
+        Reported heterogeneity measures are estimated using the <b>ml</b> model.
+<p>
+    <b>reml</b> Restricted maximum-likelihood random-effects model. Similar method
+        to <b>ml</b> and using the same assumptions. The log-likelihood function is
+        maximized iteratively to provide estimates as in <b>ml</b>. However, under
+        <b>reml</b> only the part of the likelihood function which is location
+        invariant is maximized (i.e. maximizing the portion of the likelihood
+        that does not involve mu, if estimating tau^2, and vice versa).  The
+        method does not always converge while in some cases the between-study
+        variance estimate is negative and set to zero (in which case the
+        model is reduced to the <b>fe</b> model). Estimates are reported as missing
+        in the event of non-convergence. Reported heterogeneity measures are
+        estimated using the <b>reml</b> model.
+<p>
+    <b>pl</b> Profile likelihood random-effects model. Profile likelihood uses the
+        same likelihood function as <b>ml</b>, but takes into account the
+        uncertainty associated with the between-study variance estimate when
+        calculating an overall effect, by using nested iterations to converge
+        to an maximum. The confidence intervals provided by the method are
+        asymmetric and hence so is the the diamond in the forest plot.
+        However, the method does not always converge. Values that were not
+        computed are reported as missing. Reported heterogeneity measures are
+        estimated using the <b>ml</b> model (the effect and tau^2 estimates are the
+        same, only the confidence interevals are re-estimated) but also
+        provides a confidence interval for the between-study variance
+        estimate.
+<p>
+    <b>pe</b> Permutations random-effects model. A non-parametric random-effects
+        method, which can be described in three steps. First, in line with a
+        Null hypothesis that all true study effects are zero and observed
+        effects are due to random variation, a dataset of all possible
+        combinations of observed study outcomes is created by permuting the
+        sign of each observed effect. Then the <b>dl</b> method is used to compute
+        an overall effect for each combination. Finally, the resulting
+        distribution of overall effect sizes is used to derive a confidence
+        interval for the observed overall effect.  The confidence interval
+        provided by the method is asymmetric and hence so is the diamond in
+        the forest plot. Reported heterogeneity measures are estimated using
+        the <b>dl</b> model.
+<p>
+        +----------------------+
+    ----+ Variable information +---------------------------------------------
+<p>
+    <b>varc</b> Informs the program that the study effect variation variable
+        (<i>varname2</i>) holds variance values. If this option is omitted the
+        program assumes the variable contains standard error values (the
+        default)
+<p>
+    <b>label(</b><i>varname</i><b>)</b> Selects labels for the studies.  Up to two variables can
+        be selected and converted to strings. If two variables are selected
+        they will be separated by a comma. Usually, the author names and the
+        year of study are selected as labels. The final string is truncated
+        to 20 characters.
+<p>
+        +-------+
+    ----+ Graph +------------------------------------------------------------
+<p>
+    Only one graph output is allowed in each execution
+<p>
+    <b>forest</b> Requests a forest plot. The weights from the specified analysis
+        are used for plotting symbol sizes ({opth pe} uses {opth dl}
+        weights).
+<p>
+    <b>forestw(</b><i>#</i><b>)</b> Requests a forest plot with adjusted weight ratios for better
+        display. The value can be in the [1,50] range.  For example if the
+        largest to smallest weight ratio is 60 and the graph looks awkward
+        the user can use this command to improve the appearance, by
+        requesting the weight to be rescaled to a largest/smallest weight
+        ratio of 30. It should be noted that only the weight squares in the
+        plot are affected and not the model. The confidence intervals in the
+        plot are unaffected.
+<p>
+    <b>plplot(</b><i>string</i><b>)</b> Requests a plot of the likelihood function for the mu or
+        tau^2 estimates of the <b>ml</b>, <b>pl</b> or <b>reml</b> models.  Option <b>plplot(</b><i>mu</i><b>)</b>
+        fixes mu to its model estimate, in the likelihood function, and
+        creates a two way plot of tau^2 vs the likelihood function.  Option
+        <b>plplot(</b><i>tsq</i><b>)</b> fixes tau^2 to its model estimate, in the likelihood
+        function, and creates a two way plot of mu vs the likelihood
+        function.
+<p>
+<p>
+<b><u>Remarks</u></b>
+<p>
+    For a detailed description of the methods see Brockwell &amp; Gorndon
+        (methods <b>fe</b>, <b>dl</b>, <b>pl</b>, <b>ml</b>) and Follmann &amp; Proschan (<b>pe</b>). Method
+        performance investigated by Kontopantelis &amp; Reeves and Brockwell &amp;
+        Gorndon.
+<p>
+<p>
+<b><u>Examples</u></b>
+<p>
+    <b>. metaan eff SEeff, ml</b>
+<p>
+    <b>. metaan eff SEeff, pl forest</b>
+<p>
+    <b>. metaan eff effvar, varc pe</b>
+<p>
+    <b>. metaan eff effvar, varc fe forestw(20)</b>
+<p>
+<p>
+<b><u>Authors</u></b>
+<p>
+    Evangelos Kontopantelis, National Primary Care Research and Development
+    Centre,
+<p>
+                             University of Manchester,
+    e.kontopantelis@manchester.ac.uk
+<p>
+    David Reeves, Health Sciences Primary Care Research Group, University of
+    Manchester
+<p>
+<p>
+<b><u>References</u></b>
+<p>
+    Brockwell, S.E. and Gordon I.R. 2001.  <i>A Comparison of Statistical</i>
+        <i>Methods for Meta-Analysis</i>.  Statistics in Medicine.
+<p>
+    Follmann, D.A. and Proschan M.A. 1999.  <i>Valid Inference in Random Effects</i>
+        <i>Meta-Analysis</i>.  Biometrics.
+<p>
+    Higgins, J.P. and Thompson S.G. 2002.  <i>Quantifying Heterogeneity in a</i>
+        <i>Meta-Analysis</i>.  Statistics in Medicine.
+<p>
+    Mittlbock, M. and Heinzl H. 2006.  <i>A Simulation Study Comparing</i>
+        <i>Properties of Heterogeneity Measures in Meta-Analyses</i>.  Statistics in
+        Medicine.
+<p>
+    Kontopantelis, E. and Reeves D. 2009.  <i>A Meta-Analysis add-in for</i>
+        <i>Microsoft Excel</i>.  Journal of Statistical Software.
+<p>
+    Kontopantelis, E. and Reeves D. 2009.  <i>The Robustness of Statistical</i>
+        <i>Methods for Meta-Analysis when Study Effects are Non-Normally</i>
+        <i>Distributed: A Simulation Study</i>.  Submitted.
+<p>
+<p>
+<p>
+<b><u>Also see</u></b>
+<p>
+    STB: STB-44 sbe24
+<p>
+    help for metaeff, metan7 (if installed)
+<p>
+    metannt (if installed), meta (if installed)
+<p>
+    metacum (if installed), metareg (if installed)
+<p>
+    metabias (if installed), metatrim (if installed)
+<p>
+    metainf (if installed), galbr (if installed)
+<p>
+    metafunnel (if installed)
+<p>
+</pre>

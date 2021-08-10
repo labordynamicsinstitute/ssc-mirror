@@ -1,0 +1,120 @@
+<pre>
+-------------------------------------------------------------------------------
+Help file for <b>runparscale</b>                                       (Sept 26, 2012)
+-------------------------------------------------------------------------------
+<p>
+    Builds a PARSCALE data file and command file, executes the command file,
+    and displays PARSCALE output in the Stata results window
+<p>
+-------------------------------------------------------------------------------
+<p>
+        <b>runparscale</b> varlist , <b>ID(</b><i>subject id</i><b>)</b> [ <b>RUnname(</b><i>string</i><b>)</b>
+                 <b>minsize(</b><i>interger 20</i><b>)</b> <b>display(</b><i>string with 0,1,2 and/or 3</i><b>)</b>
+                 <b>SCale(</b><i>string 1.7</i><b>)</b> <b>NQpt(</b><i>string 11</i><b>)</b> <b>CYcles(</b><i>string 1000</i><b>)</b>
+                 <b>cleanup</b> ]
+<p>
+<b><u>Required commands</u></b>
+<p>
+<b>varlist</b> - Variables to be used in the PARSCALE run.
+<p>
+<b>ID</b> - a unique identifier for each record must be provided. This is used to
+        merge in theta scores estimated from the PARSCALE run.
+<p>
+<b><u>Options</u></b>
+<p>
+<b>runname(</b><i>string</i><b>)</b> - file name stub used to name PARSCALE data and command files
+        created by <b>runparscale</b>.
+<p>
+<b>minsize(</b><i>integer</i><b>)</b> - Enter the minimum category frequency allowed. The default
+        value is 5% of the total number of observations in the last item on
+        the varlist, or 20, whichever is smaller.  Categories will be
+        combined, if possible, to meet the minsize.  Any variable that does
+        not have enough observations in at least 2 categories will be
+        dropped.  If you do not want any categories combined, specify
+        minsize(1).
+<p>
+<b>display(</b><i>string with 0,1,2 and/or 3</i><b>)</b> - displays the results of PARSCALE run
+        phase 0, 1 2 or 3 as indicated.  Any string that contains 0,1,2,3
+        will work (e.g., "0123" or "0,1,2,3" or "phase2only", or "phase 1 and
+        2", or "2").
+<p>
+<b>scale</b> - changes the scale parameter from the default of 1.7.
+<p>
+<b>nqpt</b> - changes the number of quadrature points from a default of 11.
+<p>
+<b>cycles</b> - changes the maximun number of iterations in PARSCALE stage 2 from
+        the default of 1000.
+<p>
+<b>cleanup</b> - removes interim files, PARSCALE command, data and results files. If
+        <b>runname</b> is not specified, <b>cleanup</b> is automatically invoked.
+<p>
+<b><u>Description</u></b>
+<p>
+    <b>runparscale</b> brings the IRT analysis framework of PARSCALE into the Stata
+    enviroment. While <b>runparscale</b> does little more than data reformat and
+    ascii file creation, it removes a lot of the hassle of estimating IRT
+    models.
+<p>
+<b><u>Remarks</u></b>
+<p>
+        Program is rclass, returning item parameters and standard errors.
+<p>
+        Warning message for variables with more than 15 levels (PARSCALE will
+            reject).  Letter codes automatically made for 2-digit values.
+<p>
+        Items can have 2-10 categories.  The program will run correctly with
+            up to 15 categories (PARSCALE's maximum), but not all item
+            cutpoints will be displayed.  They will still be available in the
+            <b>runname</b>.par file.
+<p>
+        The maximum number of items is 230.
+<p>
+        Allows missing values.
+<p>
+        Allows character or numeric ID's up to 9 digits.  Creates a numeric,
+            10-digit ID code for PARSCALE by adding 1,000,000,000 to the ID,
+            first converting string IDs to a unique number if needed.
+<p>
+        Please make sure that Stata's current working directory is the same
+            as your data's directory (help cd).
+<p>
+        Default PARSCALE instructions are:
+<p>
+            &gt;CALIB GRADED, LOGISTIC, SCALE=1.7, NQPT=11, CYCLES=1000,
+            CRIT=.001
+<p>
+            &gt;SCORE EAP
+<p>
+            If you want to change anything but the scale, nqpt, and cycles,
+            you can edit the .PSL file or this program before running it.
+<p>
+        Written for Stata 8.2.
+<p>
+<b><u>Examples</u></b>
+<p>
+. <b>runparscale y1-y7, id(id) scale(1.83) display(2) runname(splunge)</b>
+<p>
+. <b>runparscale y1-y7, id(id) scale(1.83) display(2) cleanup</b>
+<p>
+<p>
+<b><u>Authors</u></b>
+<p>
+<b>runparscale</b> was written by Laura Gibbons, PhD and Richard Jones, ScD, under
+            the direction of Paul Crane, MD MPH.  We appreciate the
+            assistance of Tom Koepsell, MD MPH.
+<p>
+Please see <b>runparscale.ado</b> for UW License information.
+<p>
+<p>
+Laura Gibbons, PhD
+gibbonsl@u.washington.edu 
+<p>
+Richard N Jones, ScD
+jones@mail.hrca.harvard.edu
+<p>
+<p>
+<b><u>Also see</u></b>
+<p>
+    <b>difwithpar</b> and <b>prepar</b>.
+<p>
+</pre>

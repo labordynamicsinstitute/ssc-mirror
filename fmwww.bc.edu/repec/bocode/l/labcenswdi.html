@@ -1,0 +1,220 @@
+<pre>
+-------------------------------------------------------------------------------
+<b>help for labcenswdi</b> 
+-------------------------------------------------------------------------------
+<p>
+<b><u>Title</u></b>
+<p>
+  <b>labcenswdi</b> ---Automatically manages datasets obtained from US Census 2000
+        and World Development Indicators databases.
+<p>
+<a name="contents"></a>        +--------------------+
+    ----+  Table of Contents +-----------------------------------------------
+<p>
+  Syntax
+  General description
+  Description of the options
+  Examples
+  Author information
+-------------------------------------------------------------------------------
+<p>
+<a name="syntax"></a><b><u>Syntax</u></b>
+<p>
+The syntax to display the default variable names with the variable descriptions
+&gt;  is
+<p>
+    <b>labcenswdi</b>
+<p>
+The syntax to manage the data and the variable descriptions is
+<p>
+    <b>labcenswdi</b> [newvarlist]<b>,</b> <b>nstr(</b><i>#</i><b>)</b> [<b><u>truncb</u></b><b>y(</b>(<i>"text1"</i>) [(<i>"text2"</i>)]<b>)</b>
+        <b><u>truncw</u></b><b>ith(</b>(<i>"text3"</i>) [(<i>"text4"</i>)]<b>)</b> <b>repdes(</b>(# <i>"text5"</i>) [(# <i>"text6"</i>)...]<b>)</b>
+        <b>force</b> <b>comma</b> <b>saving(</b><i>filename</i> [,<i>sub_option</i>]<b>)</b>]
+<p>
+<p>
+<p>
+    <i>options</i>                                 Description
+    -------------------------------------------------------------------------
+    Options
+        
+      <b>nstr(</b><i>#</i><b>)</b>                               indicate the number of identifier
+                                              variables in the dataset.
+<p>
+      <b><u>truncb</u></b><b>y(</b>(<i>"text1"</i>) [(<i>"text2"</i>)]<b>)</b>        truncate the variable
+                                              descriptions.
+<p>
+      <b><u>truncw</u></b><b>ith(</b>(<i>"text3"</i>) [(<i>"text4"</i>)]<b>)</b>      replace the truncated characters
+                                              with shorter ones.
+<p>
+      <b>repdes(</b>(# <i>"text5"</i>) [(# <i>"text6"</i>)...]<b>)</b>  replace variable descriptions
+                                              entirely
+<p>
+      <b>force</b>                                 convert nonnumeric strind to
+                                              missing values.
+<p>
+      <b>comma</b>                                 remove 1000-separator commas.
+<p>
+      <b>saving(</b><i>filename</i> [,<i>sub_option</i>]<b>)</b>        save the original variable
+                                              descriptions to text file.
+<p>
+    -------------------------------------------------------------------------
+<p>
+<a name="description"></a>        +-------------+
+    ----+ Description +------------------------------------------------------
+<p>
+    <b>labcenswdi</b> automatically manages datasets obtained from databases
+    providing variable descriptions on the second row.  Such databases
+    include, but not limited to, the US Census 2000 Summary Files, the
+    American Community Survey, and the World Development (WDI). While
+    renaming variables with the user's specified variable names, <b>labcenswdi</b>
+    manages the variable descriptions including removing them from the second
+    row to place them into Stata variable labels, reducing their length to 80
+    characters or less, and saving them to a text file. The new variable
+    names should be supplied in newvarlist (see syntax) if the user elects to
+    replace the original variable names with more meaningful names.
+<p>
+    When a dataset containing variable descriptions on the second row is
+    insheeted, Stata read all variables as string regardless of their
+    contents (string or numeric). <b>labcenswdi</b> will attempt to automatically
+    convert back to numeric all variables containing numerical contents.
+    However, if these variables, for some observations, take on values with
+    non-numeric characters or values with 1000-separator commas, unless
+    explicitly requested by the user, no conversion from string to numeric
+    will take place. Also, to conserve memory, demoting the variables is a
+    good idea. <b>labcenswdi</b> automatically attempts to demote both string and
+    numeric variables. For instance, storing an integer variable as <i>double</i>,
+    or a string variable having maximum length of 5 characters as a <i>str15</i>,
+    would be a waste of memory (see compress and data types). All of these
+    tasks, in addition to the variable descriptions being removed from the
+    second row to be placed into as variable labels, are accomplished by
+    default when you type <b>labcenswdi</b> with option <b>nstr(</b><i>#</i><b>)</b>. But, typed by
+    itself, <b>labcenswdi</b> will display the default variable names along with the
+    variable descriptions.
+<p>
+        <b>Note 1:</b> To use <b>labcenswdi</b> on a WDI dataset, the data must be
+        extracted in long form with countries or time in rows and series in
+        columns.
+<p>
+        <b>Note 2:</b> <b>labcenswdi</b> requires at least Stata 9.2.
+<p>
+<a name="options"></a>        +---------+
+    ----+ Options +----------------------------------------------------------
+<p>
+    <b>nstr(</b><i>#</i><b>)</b> specifies the number of identifier (string) variables present in
+        the dataset.  These variables are assumed to be at the beginning of
+        the dataset and will not be converted from string to numeric even if
+        they have numeric content. Option <b>nstr(</b><i>#</i><b>)</b> is required.
+<p>
+    <b><u>truncb</u></b><b>y(</b>(<i>"text1"</i>) [(<i>"text2"</i>)]<b>)</b> specifies the set or sets of characters by
+        which the variable definitions should be truncated. This is important
+        since Stata will truncate all labels with length greater than 80
+        characters. Up to two sets of characters may be specified (see
+        examples below). Conspicuously, the two sets of characters must be
+        different. If your sets of characters contain space, consider using
+        quotes.
+<p>
+    <b><u>truncw</u></b><b>ith(</b>(<i>"text3"</i>) [(<i>"text4"</i>)]<b>)</b> specifies the set or sets of characters
+        with which <i>"text1"</i>) (and <i>"text2"</i>) is (are) to be replaced. If
+        <b>truncwith()</b> is not specified, <b>truncby()</b> returns the variables
+        descriptions without <i>"text1"</i> (and <i>"text2"</i>)
+<p>
+    <b>repdes(</b>(# <i>"text5"</i>) [(# <i>"text6"</i>)...]<b>)</b> specifies a list of Census variable
+        descriptions to be replaced with user-defined variable descriptions.
+        #corresponds to the <i>#th</i> variable description to be replaced and
+        ”<i>text5, (text6,...)</i>” is the text(s) to replace with. For example,
+        specifying <b>repdes(</b>(1 <i>"Workers 16</i> <i>and plus in Agr. Sector"</i>)<b>)</b> will
+        replace the first Census variable description with the quoted text.
+        Prior to specifying this option, users are encouraged to use the
+        first syntax to decipher the order of the U.S. Census variable
+        descriptions in a dataset. Also, if more than one variable
+        definitions need to be replaced, their corresponding order numbers
+        should be specified in ascending order. Option <b>repdes()</b> supercedes
+        option <b>truncby()</b> if applied to the same variable descriptions.
+<p>
+    <b>force</b> specifies that non-numeric character values of numeric variables be
+        converted to missing values. If the numerical variables in your
+        dataset take on non-numeric characters such as ”(D)”, ”NA”, ”-”,
+        ”..”, and ”ND”, you should specify the force option.
+<p>
+    <b>comma</b> specifies that 1000-separator commas be removed from numbers
+        displaying them.  You need to specify this option if one or more
+        variables take on values with 1000- separator commas, or those
+        variables will not be converted from string to numeric.
+<p>
+    <b>saving(</b><i>filename</i> [,<i>sub_option</i>]<b>)</b>] specifies that the original variable
+        descriptions be saved to the text file <i>filename</i>. If used, <i>sub_option</i>
+        must equal replace to overwrite an existing file. When option
+        <b>saving()</b> is specified, at the end of the process, the file name (path
+        included) is displayed as a link which, if clicked on, displays the
+        file contents.
+<p>
+<a name="examples"></a>        +----------+
+    ----+ Examples +---------------------------------------------------------
+<p>
+    <b>1) Example with a US Census 2000 dataset</b>
+<p>
+    Load a US Census 2000 Summary File 1 dataset
+<p>
+        . insheet using
+        http://fmwww.bc.edu/repec/bocode/d/dc_dec_2000_sf1_u_data1.txt, names
+        clear delimiter(|)
+<p>
+        . drop geo_id sumlevel
+<p>
+    Display the all the variables and their descriptions
+<p>
+        . labcenswdi
+<p>
+    Manage the data by copy-pasting the following lines of code into your
+        do-file editor
+<p>
+        <b>. labcenswdi fips county tot_hhs hhu18 fhhu18 fhhu18m fhhu18o</b>
+        <b>fhhu18om fhhu18of ///</b>
+                <b> nfhhu18 nfhhu18m nfhhu18f hhn18 fhhn18 fhhn18m fhhn18o fhhn18o</b>
+<b>&gt; m fhhn18of ///</b>
+                <b> nfhhn18 nfhhn18m nfhhn18f, nstr(2) saving(fem_hh, replace) ///</b>
+                <b> truncby(("Households:  Households with one or more people unde</b>
+<b>&gt; r 18 years") ///</b>
+                <b> ("Households:  Households with no people under 18 years")) ///</b>
+                <b> truncwith(("HH w/ 1+ person &lt;18") ("HH w/o people &lt;18")) ///</b>
+                <b> repdes((1 "County Fips Code") (2 "County Name") ///</b>
+                <b> (8 "HH w/ 1+ person &lt;18; Family HH; Other family; Male househo</b>
+<b>&gt; lder") ///</b>
+                <b> (9 "HH w/ 1+ person &lt;18; Family HH; Other family; Female house</b>
+<b>&gt; holder") ///</b>
+                <b> (17 "HH w/o people &lt;18; Family HH; Other family; Male HHer no </b>
+<b>&gt; wife present") ///</b>
+                <b> (18 "HH w/o people &lt;18; Family HH; Other family; Female HHer; </b>
+<b>&gt; no husband present"))</b>
+<p>
+        . describe
+<p>
+    <b>2) Example with a long form WDI dataset downloaded with countries or time</b>
+        <b>in rows and series in columns</b>
+<p>
+    Convert to numeric all string variables with numerical contents, rename
+        all variables, replace the first three variable definitions (or
+        series descriptors) with new ones, and use all variable definitions
+        as variable labels
+<p>
+        <b>. labcenswdi country code year tractsk fertilha gdpcnst gdpcur ///</b>
+                <b>   gdppg agland irrigpct croplnd popdens popg ruraldens trade  </b>
+<b>&gt; ///</b>
+                <b>   urbpg, nstr(3) force repdes((1 "Name of Countries") ///</b>
+                <b>   (2 "Country code") (3 "Year"))</b>
+<p>
+  -----------------------------------------------------------------------------
+<p>
+<p>
+<a name="author"></a><b><u>Author</u></b>
+<p>
+    <b>P. Wilner Jeanty</b>, Research Economist, Dept. of Agricultural,
+    Environmental, and Development Economics,
+    The Ohio State University
+<p>
+    Email: jeanty.1@osu.edu.
+<p>
+<p>
+<b><u>Also see</u></b>
+<p>
+</pre>

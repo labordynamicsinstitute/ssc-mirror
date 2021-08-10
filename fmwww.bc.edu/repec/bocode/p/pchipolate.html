@@ -1,0 +1,119 @@
+<pre>
+-------------------------------------------------------------------------------
+help for <b>pchipolate</b>
+-------------------------------------------------------------------------------
+<p>
+<b><u>Piecewise cubic Hermite interpolation</u></b>
+<p>
+        <b>pchipolate</b> <i>yvar</i> <i>xvar</i> [<b>if</b> <i>exp</i>] [<b>in</b> <i>range</i>] <b>,</b> <b><u>g</u></b><b>enerate(</b><i>newvar</i><b>)</b>
+<p>
+    <b>by</b> <i>...</i> <b>:</b> may be used with <b>pchipolate</b>; see help by.
+<p>
+<p>
+<b><u>Description</u></b>
+<p>
+    <b>pchipolate</b> creates <i>newvar</i> by averaging non-missing values of <i>yvar</i> and
+    using piecewise cubic Hermite interpolation of missing values of <i>yvar</i>,
+    given <i>xvar</i>. That is, provided that <i>xvar</i> is not missing,
+<p>
+    1. When <i>yvar</i> is not missing, <i>newvar</i> is the mean of <i>yvar</i> over observations
+    with the same value of <i>xvar</i>. If a value of <i>xvar</i> is unique, then each mean
+    is just the same as the value of <i>yvar</i> at that point.
+<p>
+    2. When <i>yvar</i> is missing, <i>newvar</i> is filled in using piecewise cubic
+    Hermite interpolation.
+<p>
+<p>
+<b><u>Remarks</u></b> 
+<p>
+    This method is often described informally as "pchip". For a lucid
+    account, see Moler (2004, Ch.3). Informally, pchip interpolates using
+    piecewise cubics that join smoothly, so that both the interpolated
+    function and its first derivative are continuous. In addition, the
+    interpolant is shape-preserving in the sense that it cannot overshoot
+    locally; sections in which observed <i>yvar</i> is increasing, decreasing or
+    constant with <i>xvar</i> remain so after interpolation, and local extremes
+    (maxima, maxima) also remain so.
+<p>
+    This interpolation method also extrapolates.
+<p>
+    The first two examples are based on the help for ipolate in Stata 10.
+<p>
+<p>
+<b><u>Options</u></b>
+<p>
+    <b>generate()</b> is not optional; it specifies the name of the new variable to
+        be created.
+<p>
+<p>
+<b><u>Examples</u></b>
+<p>
+    ---------------------------------------------------------------------------
+    Setup
+        <b>. webuse ipolxmpl1, clear</b>
+<p>
+    List the data
+        <b>. list, sep(0)</b>
+<p>
+    Create <b>y1</b> containing an interpolation of <b>y</b> on <b>x</b> for missing values of <b>y</b>
+        <b>. pchipolate y x, gen(y1)</b>
+<p>
+    Plot the result
+        <b>. line y1 x || scatter y x</b>
+<p>
+    List the result
+        <b>. list, sep(0)</b>
+<p>
+    ---------------------------------------------------------------------------
+    Setup
+        <b>. webuse ipolxmpl2, clear</b>
+<p>
+    Show years for which the circulation data are missing
+        <b>. tabulate circ year if circ == ., missing</b>
+<p>
+    Create <b>pchicirc</b> containing an interpolation of <b>circ</b> on <b>year</b> for missing
+    values of <b>circ</b> and perform this calculation separately for each <b>magazine</b>
+        <b>. by magazine: pchipolate circ year, gen(pchicirc)</b>
+<p>
+    Plot the result
+        <b>. line pchicirc year || scatter circ year, by(magazine)</b> {hline}
+<p>
+    ---------------------------------------------------------------------------
+    Moler's example
+        <b>. clear</b>
+        <b>. set obs 6</b>
+        <b>. matrix y = (16, 18, 21, 17, 15, 12)'</b>
+        <b>. gen y = y[_n, 1]</b>
+        <b>. gen x = _n</b>
+        <b>. set obs 61</b>
+        <b>. replace x = (_n + 1)/10 in 7/L</b>
+        <b>. pchipolate y x, gen(pchip)</b>
+        <b>. line pchip x, sort || scatter y x</b>
+    ---------------------------------------------------------------------------
+<p>
+<p>
+<b><u>Author</u></b>
+<p>
+    Nicholas J. Cox, Durham University, U.K.
+    n.j.cox@durham.ac.uk
+<p>
+<p>
+<b><u>Acknowledgments</u></b> 
+<p>
+    Most of the Mata code in this program is a translation of MATLAB code
+    given by Moler (2004).
+<p>
+<p>
+<b><u>References</u></b> 
+<p>
+    Moler, C. 2004. <i>Numerical Computing with MATLAB.</i>  Philadelphia: SIAM.
+        Chapter 3.  (also available in slightly different form at
+        http://www.mathworks.com/moler/interp.pdf)
+<p>
+<p>
+<b><u>Also see</u></b>
+<p>
+    Manual:  <b>[D] ipolate</b>
+<p>
+    On-line:  help for ipolate, help for cipolate (if installed), help for 
+</pre>

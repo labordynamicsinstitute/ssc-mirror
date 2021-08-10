@@ -1,0 +1,61 @@
+<pre>
+-------------------------------------------------------------------------------
+help for <b>kapprevi</b>
+-------------------------------------------------------------------------------
+<p>
+<b><u>Dependence of kappa statistic on true prevalence</u></b>
+<p>
+    <b>kapprevi</b> , <b>r1(</b><i>#sens #spec</i><b>)</b> <b>r2(</b><i>#sens #spec</i><b>)</b> [ <b><u>no</u></b><b>graph</b>
+              <i>scatter_options</i> ]
+<p>
+<b><u>Description</u></b>
+<p>
+    <b>kapprevi</b> provides a graphical representation of the kappa
+          statistic as a function of the true prevalence of the
+          characteristic in the population, given specified values of
+          sensitivity and specificity for two raters.  It is an
+          immediate command, see help immed.
+ 
+<b><u>Options</u></b>
+<p>
+    <b>r1(</b><i>#sens #spec</i><b>)</b> specifies the sensitivity and specificity of rater 1.
+        These numbers have to range between 0 and 1.
+<p>
+    <b>r2(</b><i>#sens #spec</i><b>)</b> specifies the sensitivity and specificity of rater 2.
+        These numbers have to range between 0 and 1.
+<p>
+    <b><u>no</u></b><b>graph</b> suppresses graphical output.
+<p>
+    <i>scatter_options</i> are any of the scatter options.
+<p>
+<b><u>Examples</u></b>
+<p>
+     <b>. kapprevi, r1(0.90 0.95) r2(0.70 .99)</b>
+     <b>. kapprevi, r1(0.90 0.95) r2(0.90 .95)</b>
+     <b>. kapprevi, r1(0.70 0.90) r2(0.70 .90) ysize(4)  xsize(4)</b>
+     <b>. kapprevi, r1(0.70 0.90) r2(0.70 .90) title(Dependence of kappa on preval</b>
+<b>&gt; ence)</b>
+     <b>. kapprevi, r1(0.90 0.95) r2(0.70 .99) ysize(4) xsize(4) scheme(vg_blue)</b>
+<p>
+<b><u>Authors</u></b>
+<p>
+    Nicola Orsini, Division of Nutritional Epidemiology, IMM, Karolinska
+    Institutet, Sweden
+    Debora Rizzuto, Division of Geriatric Epidemiology, Department of
+    Neurotec, Karolinska Institutet, Sweden
+<p>
+<b><u>Reference</u></b>
+<p>
+    Thompson W.D and Walter S.D. <i>A reappraisal of the kappa coefficient</i>, J
+    Clin Epidemiol, 1988, Vol.41, n.10, pp.949-959
+ 
+<b><u>Support</u></b>
+<p>
+    http://nicolaorsini.altervista.org
+    nicola.orsini@ki.se
+<p>
+<b><u>Also see</u></b>
+<p>
+On-line:  help for kappa
+<p>
+</pre>

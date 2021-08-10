@@ -1,0 +1,426 @@
+<pre>
+-------------------------------------------------------------------------------
+help for <b>scenreg</b>
+-------------------------------------------------------------------------------
+<p>
+<b><u>title</u></b>
+<p>
+    <b>scenreg</b> -- Scenarios for models with binary dependent variables
+<p>
+<p>
+<b><u>Syntax</u></b>
+<p>
+        <b>scenreg</b> [<i>varlist</i>] [<i>if</i>] [<i>in</i>] [<i>weight</i>] <b>,</b> <b>sd(</b><i>exp</i><b>)</b> [<i>options</i>]
+<p>
+    <i>options</i>               Description
+    -------------------------------------------------------------------------
+    Model
+      <b>link(</b><i>link_name</i><b>)</b>     specifies the link function
+      <b>dist(</b><i>dist_name</i><b>)</b>     specifies the distribution of the unobserved
+                            variable
+      <b>rho(</b><i>varname #</i><b>)</b>      specifies the correlation between <i>varname</i> and the
+                            unobserved variable
+      <b><u>nocons</u></b><b>tant</b>          suppresses the constant
+<p>
+    SE/Robust
+      <b>vce(</b><i>vcetype</i><b>)</b>        <i>vcetype</i> may be <b>oim</b>, <b><u>r</u></b><b>obust</b>, <b><u>cl</u></b><b>uster</b> <i>clustvar</i>, <b>opg</b>,
+                            <b><u>boot</u></b><b>strap</b>, or <b><u>jack</u></b><b>knife</b>
+<p>
+    Display
+      <b>or</b>                  report odds ratios
+      <b>rr</b>                  report risk ratios
+      <b>hr</b>                  report hazard ratios
+      <b><u>l</u></b><b>evel(</b><i>#</i><b>)</b>            set confidence level
+      <b><u>coefl</u></b><b>egend</b>          display coefficients' legend instead of coefficient
+                            table
+<p>
+    Maximization
+      <i>maximize_options</i>    control the maximization process; seldom used
+    -------------------------------------------------------------------------
+    <b>fweight</b>s and <b>pweight</b>s are allowed; see weight.
+<p>
+<p>
+<b><u>Description</u></b>
+<p>
+    The results of many models for binary dependent variables can be
+    influenced by unobserved variables, even when these unobserved variable
+    are uncorrelated with any of the observed variables Neuhaus and Jewell
+    (1993), Allison (1999), Williams (2009), and Mood (2010).  With <b>scenreg</b>
+    one can explore the seriousness of this potential problem for your data
+    and hypotheses by allowing one to estimate the results given a wide set
+    of scenarios concerning the unobserved variable.  In that sense it is
+    similar to Rosenbaum and Rubin (1983), Rosenbaum (2002) and Becker and
+    Caliendo (2007), except that the method for estimating these scenarios
+    used in <b>scenreg</b> allows greater flexibility regarding the distribution of
+    the unobserved variable and the hypotheses and parameters that are
+    investigated for scensitivity.  The method is similar to the method
+    proposed by Buis (2010), except that he used it for a sequential logit
+    model.
+<p>
+<p>
+<b><u>Options</u></b>
+<p>
+        +-------+
+    ----+ Model +------------------------------------------------------------
+ 
+    <b>sd(</b><i>exp</i><b>)</b> specified the standard deviation of the unobserved variable,
+        which can also be interpreted as the effect of the standardized
+        unobserved variable.  The <i>exp</i> can either be a positive number or an
+        expression that can be interpreted by <b>[R] generate</b>. This option is
+        not optional.
+<p>
+    <b>link(</b><i>link_name</i><b>)</b> specified the link function, the default is the <b><u>logi</u></b><b>t</b>
+        link function. Alternitives are: <b><u>prob</u></b><b>it</b>, <b><u>iden</u></b><b>tity</b>, <b>log</b>, <b><u>clog</u></b><b>log</b>, and
+        <b><u>logl</u></b><b>og</b>.
+<p>
+    <b>dist(</b><i>dist_name</i><b>)</b> specifies the distribution of the unobserved variable.
+        The default is the <b><u>norm</u></b><b>al</b> distribution. Alternatives are <b><u>Gaus</u></b><b>sian</b> (a
+        synonym for <b>normal</b>), <b><u>unif</u></b><b>orm</b>, and <b><u>disc</u></b><b>rete</b> <i># #</i>[<i>#</i> [...]].  The numbers
+        in after <b>discrete</b> represent the proportion of observations that
+        belong to each category of the discrete distribution. Since the
+        numbers are propotions, they all need to be larger than 0 and they
+        need to add up to 1. The location of these categories will be chosen
+        such that the mean is 0, the standard deviation is 1, and all
+        categories are separated by the same distance.
+<p>
+    <b>rho(</b><i>varname #</i><b>)</b> specifies the correlation of the unobserved variable and
+        the variable <i>varname</i>. The default is 0.
+<p>
+    <b>noconstant</b> suppresses the constant term (intercept) in the model.
+<p>
+<p>
+        +-----------+
+    ----+ SE/Robust +--------------------------------------------------------
+<p>
+INCLUDE help vce_asymptall
+<p>
+<p>
+        +---------+
+    ----+ Display +----------------------------------------------------------
+<p>
+    <b>or</b> | <b>rr</b> | <b>hr</b> reports the estimated coefficients transformed to odds
+        ratios, risk ratios, or hazard ratios i.e., exp(b) rather than b.
+        Standard errors and confidence intervals are similarly transformed.
+        This option affects how results are displayed, not how they are
+        estimated.  Unfortunately, this option suppresses the display of the
+        baseline odds, risk or hazard, i.e. exp(_cons).  See Newson (2003)
+        for a way around this problem.
+<p>
+        The <b>or</b> option is only possible incombination with the <b>logit</b> link
+        function.  The <b>rr</b> option is only possible incombination with the <b>log</b>
+        link function.  The <b>hr</b> option is only possible incombination with the
+        <b>cloglog</b> link function.
+<p>
+<p>
+    <b>level(</b><i>#</i><b>)</b>; see <b>[R] estimation options</b>.
+<p>
+    <b>coeflegend</b>; see <b>[R] estimation options</b>.
+<p>
+<p>
+<a name="maximize_options"></a>        +--------------+
+    ----+ Maximization +-----------------------------------------------------
+<p>
+    <b>draws(</b><i>#</i><b>)</b> specifies the number of pseudo random draws per observation used
+        when calculating the simulated likelihood; the default is 100.  See 
+        <b>[M-5] mata_halton()</b> and Drukker &amp; Gates (2006).
+<p>
+    <b>start(</b><i>#</i><b>)</b> specifies the index at which the Halton sequence starts; the
+        default is 15.  See <b>[M-5] mata_halton()</b> and Drukker &amp; Gates (2006).
+<p>
+    <b>eclear</b> specifies that the Mata external global object
+        S_unobserved_variable may be overwritten.  This global object is used
+        to store pseudo-random draws from the unobserved variable, and is
+        normally removed the moment <b>scenreg</b> successfully finished.  However,
+        it can be left behind when <b>scenreg</b> exited with an error, in which
+        case the <b>eclear</b> option must be specified in the subsequent call to
+        <b>scenreg</b> otherwise it will exit with an error.
+<p>
+    <i>maximize_options</i>:  <b><u>dif</u></b><b>ficult</b>, <b><u>tech</u></b><b>nique(</b><i>algorithm_spec</i><b>)</b>, <b><u>iter</u></b><b>ate(</b><i>#</i><b>)</b>,
+        [<b><u>no</u></b>]<b><u>lo</u></b><b>g</b>, <b><u>tr</u></b><b>ace</b>, <b><u>grad</u></b><b>ient</b>, <b>showstep</b>, <b><u>hess</u></b><b>ian</b>, <b><u>showtol</u></b><b>erance</b>,
+        <b><u>tol</u></b><b>erance(</b><i>#</i><b>)</b>, <b><u>ltol</u></b><b>erance(</b><i>#</i><b>)</b>, <b><u>nrtol</u></b><b>erance(</b><i>#</i><b>)</b>, <b><u>nonrtol</u></b><b>erance</b>, ; see <b>[R]</b>
+        <b>maximize</b>.  These options are seldom used.
+<p>
+<b><u>Remarks</u></b>
+<p>
+    The aim of <b>scenreg</b> is to explore the sensitivity of results in a binary
+    regression model to the presence of unobserved variables.  There are many
+    publications now showing that these unobserved variable <i>could</i> influence
+    the results (Neuhaus and Jewell (1993), Allison (1999), Williams (2009),
+    and Mood (2010)), but these publications cannot tell you how big the
+    problem is in your data and for your hypotheses or parameters of
+    interest.  That is the question that a sensitivity analysis using <b>scenreg</b>
+    is supposed to answer.
+<p>
+    The scenarios consists of assumptions concerning the strength of the
+    effect of the standardized unobserserved variable (specified in the
+    <b>sd(</b><i>exp</i><b>)</b> option), the distribution of the unobserved variable (specified
+    in the <b>dist(</b><i>dist_name</i><b>)</b> option), and the correlation between the
+    unobserved and an observed variable (specified in the <b>corr(</b><i>varname #</i><b>)</b>
+    option).  The strength of the effect of the unobserved variable can be
+    constant or change over variables. The latter possibility is useful as
+    this "heteroscedasticity" plays an important part in the literature.  The
+    effects are than estimated by integrating the unobserved variable out of
+    the likelihood function using maximum simulated likelihood, see: Train
+    (2003) and the special issue on maximum simulated likelihood in the Stata
+    Journal, issue 6, number 2.
+<p>
+    The hard part is to determine a set of scenarios that on the one hand
+    push the model hard, but on the other hand are still (somewhat)
+    plausible.  This is not a technical problem, but a substantive one.  The
+    best thing one can do is look at the literature in your field, and see
+    what kind of effects occur in real data.  Remember that the effect
+    specified in the <b>sd()</b> option can be thought of as effects of a
+    standardized variable.
+<p>
+    To keep the number of scenarios manageable (and estimateable) you will
+    typically want to break your sensitivity analysis up into several
+    sub-analyses: One that only changes the amount of unobserved
+    heterogeneity, one that allows the amount of unobserved heterogeneity to
+    change in differing degrees over a key variable, one that fixes the
+    amount of unobserved heterogeneity to one number but allows the
+    correlation between the unobserved variable and an observed variable of
+    interest to change, etc.
+<p>
+<p>
+<b><u>Example</u></b>
+<p>
+    As a general strategy, it is often useful to build a (sub-)sensitivity
+    analysis in three steps:
+<p>
+        1) prepare the data
+<p>
+        2) estimate the scenarios, and store those models using estimates
+<p>
+        3) analyse the stored scenarios
+<p>
+    The reason for separating the estimating and storing the scenarios from
+    the analysing the scenarios is that the estimation can take quite a bit
+    of time, so you really want to do that only once, while the analysis part
+    consist of a lot of moving back and forth between scenarios and
+    parameters that might be of interest. By estimating and storing the
+    models you can avoid estimating the same scenario multiple times and you
+    more easily keep an overview of which scenarios you estimated.
+<p>
+    Below is an example of how I would organize such a sensitivity analysis.
+    I start with a basic model without unobserved heterogeneity, In this case
+    I model union membership of women who were asked in 1988 where asked
+    question regarding their union membership, marital status and how many
+    years of schooling they attained.  The variable of interest is the
+    education of the respondent (grade).
+<p>
+<p>
+<b>    sysuse nlsw88, clear</b>
+<b>    gen byte black = race == 2 if race &lt;= 2</b>
+<b>    gen byte baseline = 1</b>
+<p>
+<b>    scenreg union married never_married black grade baseline, ///</b>
+<b>            sd(0) link(logit) or nocons</b>
+<b>    est store s0</b>
+<p>
+<p>
+    Next I will estimate the other scenarios. In this case I will look at the
+    influence of changing the amount of unobserved heterogeneity. So here I
+    estimated three scenarios, where in each subsequent scenario the amount
+    of unobserved heterogeneity increased by 1.
+<p>
+<p>
+<b>    scenreg union married never_married black grade baseline, ///</b>
+<b>            sd(1) link(logit) or nocons</b>
+<b>    est store s1</b>
+<p>
+<b>    scenreg union married never_married black grade baseline, ///</b>
+<b>            sd(2) link(logit) or nocons</b>
+<b>    est store s2</b>
+<p>
+<b>    scenreg union married never_married black grade baseline, ///</b>
+<b>            sd(3) link(logit) or nocons</b>
+<b>    est store s3</b>
+<p>
+<p>
+    Next we can use these stored scenarios to look if our conclusions are
+    sensitive to the amount of unobserved heterogeneity. Say we are
+    interested in the effect of education for women. The So we are looking at
+    the parameter of grade. I start with creating an empty matrix in which I
+    will later store the results from the different scenarios. I have 4
+    scenarios, so the matrix will contain 4 rows. For each scenario I want to
+    store the amount of unobserved heterogeneity, the odds ratio for grade,
+    and the p-value of the test whether this odds ratio equals 1 (which is
+    equivalent to the test that the coefficient equals 0), so the matrix will
+    contain three columns.
+<p>
+<p>
+<b>    matrix res = J(4,3,.)</b>
+<p>
+<p>
+    Next I loop over the scenarios, which I called s0 till s3. I start with
+    using<b> estimates restore</b> to retrieve the appropriate scenario. I than test
+    whether the effect of being white during the third scenario equals zero.
+    Than I create a new local macro equal to `i' + 1, so it will run from 1
+    to 4. This macro will indicate which row of the matrix res I will want to
+    fill. The final line says that we populate the `j'th row of matrix res
+    with three numbers (see matrix substitution):
+<p>
+        The first number is amount of unobserved heterogeneity used in that
+        scenario. Here I used the fact that I created my scenarios in such a
+        way that the amount of unobserved heterogeneity equals `i'.  In
+        general one creates the scenarios in such a way that they differ in
+        some regular way, and you can often use that regularity to populate
+        the first column of such a results matrix.
+<p>
+        The second number is the odds ratio for grade.  Here I used the
+        standard Stata way of retrieving coefficients from models, for more
+        see here: _variables.  The odds ratio is exp(coefficient).
+<p>
+        The final number is the p-value of the test whether that the odds
+        ratio equals 1, i.e. the coeficient equals 0.  This p-value was left
+        behind by the test command as r(p).
+<p>
+<p>
+<b>    forvalues i = 0/3 {</b>
+<b>        est restore s`i'</b>
+<b>        test _b[grade] = 0</b>
+<b>        local j = `i' + 1</b>
+<b>        matrix res[`j',1] =  `i', exp(_b[grade]), r(p)</b>
+<b>    }</b>
+<b>    matrix colnames res = "sd" "or" "p"</b>
+<p>
+<p>
+    I can than tabulate the results using matlist.
+<p>
+<p>
+<b>    matlist res, names(columns) format(%9.3g)</b>
+   
+        
+    Or I can graph them. To do that I first turn the matrix into variables in
+    my dataset using svmat. These variables I can than use to create my
+    graphs.
+<p>
+<p>
+<b>    svmat res, names(col)</b>
+<p>
+<b>    twoway line or sd,                                       /// </b>
+<b>    xtitle("effect of the standardized unobserved variable"  ///</b>
+<b>           "(log odds ratio)")                               ///</b>
+<b>    ytitle("effect of grade (odds ratio)")</b>
+<p>
+<b>    twoway line p sd,                                        ///</b>
+<b>    xtitle("effect of the standardized unobserved variable"  ///</b>
+<b>           "(log odds ratio)")                               ///</b>
+<b>    ytitle("p-value of test" "whether odds ratio for grade = 1")    </b>
+<p>
+<p>
+<p>
+    Putting this all together:
+<p>
+<p>
+<b>    // start with preparing the data</b>
+<b>    sysuse nlsw88, clear</b>
+<b>    gen byte black = race == 2 if race &lt;= 2</b>
+<b>    gen byte baseline = 1</b>
+<p>
+<b>    // estimate the scenarios</b>
+<b>    scenreg union married never_married black grade baseline, ///</b>
+<b>            sd(0) link(logit) or nocons</b>
+<b>    est store s0</b>
+<p>
+<b>    scenreg union married never_married black grade baseline, ///</b>
+<b>            sd(1) link(logit) or nocons</b>
+<b>    est store s1</b>
+<p>
+<b>    scenreg union married never_married black grade baseline, ///</b>
+<b>            sd(2) link(logit) or nocons</b>
+<b>    est store s2</b>
+<p>
+<b>    scenreg union married never_married black grade baseline, ///</b>
+<b>            sd(3) link(logit) or nocons</b>
+<b>    est store s3</b>
+<p>
+<b>    // collect estimates from the scenarios</b>
+<b>    matrix res = J(4,3,.)</b>
+<p>
+<b>    forvalues i = 0/3 {</b>
+<b>        est restore s`i'</b>
+<b>        test _b[grade] = 0</b>
+<b>        local j = `i' + 1</b>
+<b>        matrix res[`j',1] =  `i', exp(_b[grade]), r(p)</b>
+<b>    }</b>
+<b>    matrix colnames res = "sd" "or" "p"</b>
+<p>
+<b>    // tabulate the estimates</b>
+<b>    matlist res, names(columns) format(%9.3g)</b>
+<p>
+<b>    // graph the estimates  </b>
+<b>    // first turn the matrix into variables</b>
+<b>    svmat res, names(col)</b>
+<p>
+<b>    // graph the variables </b>
+<b>    twoway line or sd,                                       /// </b>
+<b>    xtitle("effect of the standardized unobserved variable"  ///</b>
+<b>           "(log odds ratio)")                               ///</b>
+<b>    ytitle("effect of grade (odds ratio)")</b>
+<p>
+<b>    twoway line p sd,                                        ///</b>
+<b>    xtitle("effect of the standardized unobserved variable"  ///</b>
+<b>           "(log odds ratio)")                               ///</b>
+<b>    ytitle("p-value of test" "whether odds ratio for grade = 1")    </b>
+<p>
+<p>
+<p>
+<b><u>Author</u></b>
+<p>
+    Maarten L. Buis, Universitaet Tuebingen
+    maarten.buis@uni-tuebingen.de
+<p>
+<p>
+<b><u>References</u></b>
+<p>
+<a name="allison"></a>    Allison, Paul D. (1999) "Comparing logit and probit coefficients across
+        groups".  <i>Sociological Methods &amp; Research</i>, 28(2): 186-208.
+<p>
+<a name="becker_caliendo"></a>    Becker, Sascha O. and Marco Caliendo (2007) "Sensitivity analysis for
+        average treatment effects", <i>The Stata Journal</i>, 7(1): 71-83.  
+        http://www.stata-journal.com/article.html?article=st0121
+<p>
+<a name="buis"></a>    Buis, Maarten L (2010) "Chapter 7, The consequences of unobserved
+        heterogeneity in a sequential logit model", In: Buis, Maarten L.
+        <i>Inequality of Educational Outcome and Inequality of Educational</i>
+        <i>Opportunity in the Netherlands during the 20th Century</i>.  PhD thesis.
+        http://www.maartenbuis.nl/dissertation/chap_7.pdf
+<p>
+<a name="drukker_gates"></a>    Drukker, David M. and Richard Gates (2006) "Generating Halton sequences
+        using Mata", <i>The Stata Journal</i>, 6(2): 214-228.  
+        http://www.stata-journal.com/article.html?article=st0103
+<p>
+<a name="mood"></a>    Mood, Carina (2010) "Logistic regression: Why we cannot do what we think
+        we can do, and what we can do about it." <i>European Sociological</i>
+        <i>Review</i>, 26(1):6 7–82.
+<p>
+<a name="neuhaus_jewell"></a>    Neuhaus, John M. and Nicholas P. Jewell (1993) "A Geometric Approach to
+        Assess Bias Due to Omited Covariates in Generalized Linear Models."
+        <i>Biometrika</i>, 80(4): 807–815.
+<p>
+<a name="newson"></a>    Newson, Roger (2003) "Stata tip 1: The eform() option of regress", <i>The</i>
+        <i>Stata Journal</i>, 3(4): 445.  
+        http://www.stata-journal.com/article.html?article=st0054
+<p>
+<a name="rosenbaum"></a>    Rosenbaum, Paul R (2002) <i>Observational Studies</i>. New York: Springer, 2d
+        edition.
+<p>
+<a name="rosenbaum_rubin"></a>    Rosenbaum, Paul R. and Donald B. Rubin (1983) "Assessing Sensitivity to
+        an Unobserved Binary Covariate in an Observational Study with Binary
+        Outcome." <i>Journal of the Royal Statistical Society. Series B</i>, 45(2):
+        212–218.
+<p>
+<a name="train"></a>    Train, Kenneth (2002) <i>Discrete Choice Methods with Simulation</i>. Cambridge:
+        Cambridge University Press.
+<p>
+<a name="williams"></a>    Williams, Richard (2009) "Using heterogenous choice models to compare
+        logit and probit coefficients across groups", <i>Sociological Methods &amp;</i>
+        <i>Research</i>, 37(4): 531–559.
+<p>
+<p>
+<b><u>Also see:</u></b>
+<p>
+    Online: <b>glm</b>, <b>mata_halton()</b>
+<p>
+</pre>

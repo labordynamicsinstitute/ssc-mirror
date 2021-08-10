@@ -1,0 +1,73 @@
+<pre>
+-------------------------------------------------------------------------------
+help for <b>imputemok</b>                                         Jean-Benoit Hardouin
+-------------------------------------------------------------------------------
+<p>
+<b><u>Imputation of missing item responses with the Mokken scaling</u></b>
+<p>
+        <b>imputemok</b> <i>varlist</i> [,<b><u>pref</u></b><b>ix</b>(<i>string</i>) <b>max</b>(<i>#</i>)]
+<p>
+<p>
+<b><u>Description</u></b>
+<p>
+    <b>imputemok</b> imputes missing item responses with the Mokken scaling as
+    defined in Huisman and Molenaar (2001). This module runs only with
+    dichotomous items.
+<p>
+    The following algorithm is used:
+<p>
+        First, the items are ordered according to the percentage of positive
+    responses (in a decreasing order).
+<p>
+        For each individual, if a positive response follows a missing
+    response, it is imputed to 1.
+<p>
+        Else if a negative response precedes a missing response, it is
+    imputed to 0.
+<p>
+        Else we count the number of positive and negative responses preceding
+    a missing response and if the number of negative response is larger or
+    equal than the number of positive responses, the missing value is imputed
+    to 0.
+<p>
+        Else we count the number of positive and negative responses following
+    a missing response and if the number of positive response is larger or
+    equal than the number of negative responses, the missing value is imputed
+    to 1.
+<p>
+        Else, the missing value is imputed by drawing a random number based
+    on the observed proportion of positive responses to the item.
+<p>
+<b><u>Options</u></b>
+<p>
+    <b>prefix</b> defines the prefix to use to name the imputted variables (this
+        prefix is followed by the name of the initial variable). By default,
+        this prefix is "imp".
+<p>
+    <b>max</b> allows imputing missing values only for individuals with a maximal
+        number of missing values defined with this option.
+<p>
+<b><u>Example</u></b>
+<p>
+        <b>. imputemok itemA*</b>
+<p>
+        <b>. imputemok itemA*,prefix(new)</b>
+<p>
+<p>
+<b><u>Reference</u></b>
+<p>
+    <b>Huisman M. and Molenaar I. W.</b>, <i>Imputation of missing scale data with item</i>
+        <i>response models</i>. In A. Boomsma, M.A.J. van Duijn, &amp; T.A.B. Snijders
+        (Eds.),<i> Essays on item response theory</i> (pp. 221-244).  New York:
+        Springer-Verlag, 2001.
+<p>
+<b><u>Author</u></b>
+<p>
+    Jean-Benoit Hardouin, PhD, assistant professor
+    EA 4275 "Biostatistics, Clinical Research and Subjective Measures in
+        Health Sciences"
+    University of Nantes - Faculty of Pharmaceutical Sciences
+    1, rue Gaston Veil - BP 53508
+    44035 Nantes Cedex 1 - FRANCE
+    Email:  jean-benoit.hardouin@univ-nantes.fr
+</pre>

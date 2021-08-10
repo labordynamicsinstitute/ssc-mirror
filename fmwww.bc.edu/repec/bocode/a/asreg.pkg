@@ -1,0 +1,33 @@
+d 'ASREG': module to estimate rolling window regressions and by(group) regressions
+d
+d  asreg fits a model of depvar on indepvars using linear
+d regression in a user's defined rolling window, recursive window,
+d or by a grouping variable. asreg is order of magnitude faster
+d than estimating rolling window regressions through conventional
+d methods such as Stata loops or using the Stata's official rolling
+d command. asreg has the same speed efficiency as asrol. All the
+d rolling window calculations, estimation of regression parameters,
+d and writing of results to Stata variables are done in the Mata
+d language. asreg reports most commonly used regression statistics
+d such as number of observations, r-squared, adjusted r-squared,
+d constant, slope coefficients, standard errors of the
+d coefficients, fitted values, and regression residuals. 
+d
+d KW:  rolling window regression
+d KW: recursive window regressions
+d KW: by-group regressions
+d KW: storing regression results in memory
+d KW: rolling betas
+d KW: moving window regressions
+d KW: cross-sectional regressions
+d
+d Requires: Stata version 13
+d
+d Distribution-Date: 20170502
+d
+d Author: Attaullah Shah, Institute of Management Sciences
+d Support: email attaullah.shah@@imsciences.edu.pk
+d
+f asreg.ado
+f asreg.sthlp
+f ../l/lasreg.mlib

@@ -1,0 +1,58 @@
+<pre>
+-------------------------------------------------------------------------------
+help for <b>geneigen</b>                         (StataList distribution 20 July 2001)
+-------------------------------------------------------------------------------
+<p>
+<b><u>Eigenvalues of a real general matrix</u></b>
+<p>
+        <b>geneigen</b> <i>matrixname</i>
+<p>
+<p>
+<b><u>Description</u></b>
+<p>
+<b>geneigen</b> calculates the eigenvalues of a square matrix. The eigenvalues of a
+square symmetric matrix may be calculated by mat symeigen, but official Stata
+cannot calculate the eigenvalues of a nonsymmetric matrix. <b>geneigen</b> executes
+EISPACK code to calculate the eigenvalues' real part, imaginary part, and
+modulus via the QR algorithm for real Hessenberg matrices, as described in
+Press et al. (1992, Chapter 11).
+<p>
+The routine returns a <b>N</b> by 4 matrix <b>r(eigen)</b>, containing, respectively, the
+modulus, real part, imaginary part, and cumulated modulus. The eigenvalues are
+sorted in order of ascending moduli.
+<p>
+If Stata considers a matrix to be symmetric, its own mat symeigen routine
+should be used rather than this routine.
+<p>
+<b><u>Examples</u></b>
+<p>
+        . mat kk=(1,2,3\-6,-8,-14\122,345,678)
+<p>
+        . geneigen kk
+<p>
+        . return list
+<p>
+<p>
+<b><u>Acknowledgements</u></b>
+<p>
+The routine makes use of Jeroen Weesie's <b>qsortidx</b> routine, part of his very
+useful qsort package. Thanks to Paul McGale for noting an error
+in the translation of the routine.
+<p>
+<p>
+<b><u>References</u></b>
+<p>
+Press, William H., Teukolsky, Saul A., Vetterling, William T. and Brian P. Flan
+&gt; nery.
+Numerical Recipes in C, Second Edition. Cambridge: Cambridge University Press, 
+&gt; 1992.
+<p>
+<b><u>Author</u></b>
+<p>
+<p>
+Christopher F Baum, Boston College, USA, baum@bc.edu
+<p>
+<p>
+<b><u>Also see</u></b>
+<p>
+</pre>

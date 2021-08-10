@@ -1,0 +1,75 @@
+<pre>
+-------------------------------------------------------------------------------
+help for <b>fs</b>
+-------------------------------------------------------------------------------
+<p>
+<b><u>Show names of files in compact form</u></b>
+<p>
+        <b>fs</b> [<i>filespec</i> [<i>filespec</i> [ ... ]]]
+<p>
+<p>
+<b><u>Description</u></b>
+<p>
+    <b>fs</b> lists the names of files in compact form.  Note that files do not
+    include folders or directories.
+<p>
+    With no arguments, <b>fs</b> lists names of files in the current folder or
+    directory. Otherwise, it follows file specifications.  A file
+    specification <i>filespec</i> is a filename or (more commonly) a set of
+    filenames indicated by the use of wildcards <b>*</b> or <b>?</b>. A folder or directory
+    prefix should be given for files outside the current directory.
+<p>
+    See help on dir or ls for listing the names of files with more detailed
+    information. Unlike either of those commands, <b>fs</b> may be given more than
+    one file specification. Also unlike either of those commands, <b>fs</b> shows
+    any hidden files.
+<p>
+    The list of filenames is returned in <b>r(files)</b>, so long as that is not
+    empty.
+<p>
+<p>
+<b><u>Remarks</u></b> 
+<p>
+    It is recommended that even if you use Windows, you use forward slashes <b>/</b>
+    rather than backward slashes <b>\</b>.  Stata will understand and there will
+    then be no clash with other meanings for the backward slash.
+<p>
+<p>
+<b><u>Examples</u></b>
+<p>
+    <b>. fs</b>
+<p>
+    <b>. fs *.dta</b>
+<p>
+    <b>. fs *.ado *.hlp</b>
+<p>
+    <b>. fs /ado/plus/f/*.ado</b>
+<p>
+    <b>. fs *.gph</b>
+    <b>. foreach f in `r(files)' {</b>
+    <b>.         graph use `f'</b>
+    <b>.         more</b>
+    <b>. }</b>
+<p>
+<p>
+<b><u>Acknowledgements</u></b>
+<p>
+    William Gould kindly told me about the subroutine for display in columns,
+    which is copied from the source code for classutil.  Kit Baum was a very
+    helpful tester.
+<p>
+<p>
+<b><u>Author</u></b>
+<p>
+    Nicholas J. Cox, Durham University, U.K.
+    n.j.cox@durham.ac.uk
+<p>
+<p>
+<b><u>Also see</u></b>
+<p>
+    Manual:  <b>[D] dir</b>
+<p>
+    Online:  help for dir, help for extended macro functions, help for 
+             folders (if installed)
+<p>
+</pre>

@@ -1,0 +1,194 @@
+<pre>
+<b>help rdci</b> and <b>help rdcii</b>                                 Version 1.2 2010-09-30
+<p>
+-------------------------------------------------------------------------------
+<p>
+<b><u>Title</u></b>
+<p>
+    <b>rdci</b> -- Improved asymptotic confidence interval for the difference
+            between two independent proportions
+    <b>rdcii</b>   
+<p>
+<p>
+<b><u>Syntax</u></b>
+<p>
+        <b>rdci</b> <i>var_case var_exposed</i> [<i>if</i>] [<i>in</i>] [<i>weight</i>] [<b>,</b> <i>options</i>]
+<p>
+        <b>rdcii</b> <i>#a #b #c #d</i> [<b>,</b> <i>options</i>]
+<p>
+    <i>options</i>               Description
+    -------------------------------------------------------------------------
+    Main
+      <b><u>l</u></b><b>evel(</b><i>#</i><b>)</b>            set confidence level; default is prevailing setting
+                            (see creturn)
+      <b><u>z</u></b><b>sot</b>                allow t-over-two to vary as <i>z</i>²-over-two
+                            (Agresti-Caffo confidence interval)
+      <b><u>c</u></b><b>c</b>                  apply continuity correction (Wallenstein confidence
+                            interval)
+      <b><u>nobrute</u></b><b>force</b>        turn off brute-force bracketing for root finding
+                            (Miettinen-Nurminen confidence interval)
+      <b><u>tol</u></b><b>erance(</b><i>#</i><b>)</b>        relative tolerance for root-finding convergence
+                            (Miettinen-Nurminen confidence interval)
+      <b><u>ltol</u></b><b>erance(</b><i>#</i><b>)</b>       absolute tolerance for root-finding convergence
+                            (Miettinen-Nurminen confidence interval)
+      <b><u>v</u></b><b>erbose</b>             displays iteration log for root-finding (Miettinen
+                            and Nurminen confidence interval)
+      <b><u>init</u></b><b>ial(</b><i>numlist</i><b>)</b>    initial values for root-finding (Miettinen-Nurminen
+                            confidence interval)
+    -------------------------------------------------------------------------
+    <b>by</b> may be used with <b>rdci</b>; see <b>by</b>.
+    <b>fweight</b>s are allowed with <b>rdci</b>; see weight.
+<p>
+<p>
+<b><u>Description</u></b>
+<p>
+    <b>rdci</b> calculates confidence intervals for the difference between two
+    independent proportions by four methods that are considered to be
+    improvements over the conventional Wald method.  <b>rdcii</b> is the immediate
+    form of the command.
+<p>
+<p>
+<b><u>Options</u></b>
+<p>
+        +------+
+    ----+ Main +-------------------------------------------------------------
+<p>
+    <b>level</b> set confidence level; it must lie between 0.1 and 99.9%, inclusive;
+        default is the Stata level setting.
+<p>
+    <b>zsot</b> adds <i>z</i>²-over-two successes and failures instead of a fixed value of
+        two each for the Agresti-Caffo method
+<p>
+    <b>cc</b> applies Yates's continuity correction in Wallenstein's method; this
+        mimics a so-called exact confidence interval
+<p>
+    <b>nobruteforce</b> forgoes brute-force incrementing through parameter space to
+        set brackets on occasions when initial brackets fail to yield roots
+        with Ridders's method
+<p>
+    <b>tolerance</b> sets the relative error tolerance for root finding for
+        Ridders's method; default is 1e-6.
+<p>
+    <b>ltolerance</b> sets the absolute error tolerance for Ridders's method; not
+        invoked by default.
+<p>
+    <b>verbose</b> displays iteration history for root finding; helpful in diagnosis
+        of problematic cases.
+<p>
+    <b>initial</b> allows manually setting brackets for root finding.
+<p>
+<p>
+<b><u>Remarks</u></b>
+<p>
+    <b>rdci</b> calculates confidence intervals for differences between two
+    independent proportions by four methods:  Miettinen-Nurminen,
+    Agresti-Caffo, Newcombe Method 10 (so-called score method or hybrid score
+    method), and Wallenstein.  These risk difference confidence intervals are
+    considered to have better statistical properties (i.e., are stabler, more
+    accurate–have better "coverage") than the conventional Wald confidence
+    interval, especially for small- to moderate-sized samples.
+<p>
+    As with <b>cs</b> (see epitab), nonzero nonmissing values in the <i>cases</i> variable
+    for <b>rdci</b> are cases, and nonzero nonmissing values in the <i>exposure</i>
+    variable indicate exposure.  The sequence of <i>#a</i>, <i>#b</i>, <i>#c</i> and <i>#d</i> in <b>rdcii</b>
+    is identical to that for the analogous <b>csi</b> (see epitab), as well.
+<p>
+    The command calls <b>ridder</b> during the estimation of Miettinen-Nurminen
+    confidence interval.  <b>ridder</b> is a user-written command that will need to
+    be installed for <b>rdci</b> to estimate Miettinen-Nurminen confidence
+    intervals.  Because the command calls <b>ridder</b>, any global macro <i>S_1</i> that
+    the user has defined will be overwritten.
+<p>
+    As with any root-finding algorithm, on occasion, <b>ridder</b> can fail.  The
+    affected Miettinen-Nurminen confidence limit will be set to missing when
+    this occurs.  The <b>verbose</b> option will allow the user to see the iteration
+    log of <b>ridder</b> and diagnose whether a missing confidence limit results
+    from failure of convergence or of bracketing.  Adjusting the tolerance
+    (<b>tolerance</b>, <b>ltolerance</b> or both) if the former and manually setting the
+    brackets <b>initial(</b><i>numlist</i><b>)</b> if the latter often allows for successful root
+    finding in such cases.  One or two numbers are allowed in
+    <b>initial(</b><i>numlist</i><b>)</b>.  If one number is entered, the root-finding interval
+    will be (-1, <i>#</i>] in the search for the lower confidence limit and [<i>#</i>, +1)
+    for the upper confidence limit.  If two numbers are entered, then the
+    second number will form this latter lower bracket in the search for the
+    upper confidence limit.
+<p>
+    If root finding fails during a first attempt, <b>rdci</b> detects this and
+    implements an exhuastive scan of the parameter space on the affected side
+    of the point estimate.  This may be turned off with the <b>nobruteforce</b>
+    option should the the user wish to do so, for example, when setting the
+    bracket points manually or to limit output when the user invokes the
+    <b>verbose</b> option.  The exhaustive scan, however, ought to reduce the need
+    for user intervention.
+<p>
+    Note that the tolerance settings are for the difference between the
+    objective function's result and the target chi-square statistic for the
+    confidence level; it is not the tolerance for the values of the
+    confidence limits.  (Run the ancillary do-file for examples illustrating
+    the meaning of this, and for suggested settings of <b>ltolerance</b> to assure
+    reasonably good tolerance for the confidence limits.)
+<p>
+    When the expectation of successes or failures is fewer than two in either
+    exposure group, Wallenstein's method might lead to a confidence limit
+    that implies that an individual proportion lies outside of the parameter
+    space for proportions.  <b>rdci</b> tests for this and applies adjustments
+    recommended by Wallenstein.  The Wallenstein method performs relatively
+    poorly in general when the observed successes (failures) in both exposure
+    groups are zero, especially when the two sample sizes are the same.  (Run
+    the ancillary do-file to see examples of this behavior.)
+<p>
+    When the so-called t-over-two parameter is fixed at two (the default, as
+    suggested by Agresti and Caffo), the Agresti-Caffo method might not be
+    accurate with very small sample sizes when the <b>level</b> is set at unusually
+    very low levels (&lt;10%).  There will not be a problem when more
+    conventional values for <b>level</b> are used (&gt;80%).  Allowing the t-over-two
+    parameter to vary with level (which is done by invoking the <b>zsot</b> option)
+    might also aid accuracy.
+<p>
+    The subroutine for the Wallenstein method is recursive, as is the main
+    program (calling itself indirectly via <b>ridder</b>), but the recursion depth
+    is only one, and so there is scant chance of exhausting memory.
+<p>
+<p>
+<b><u>Examples</u></b>
+<p>
+    <b>. rdcii 7 12 9 2, level(90)</b>
+<p>
+    <b>. rdci case exp [freq=pop]</b>
+<p>
+<p>
+<b><u>References</u></b>
+<p>
+    A. Agresti and B. Caffo, Simple and effective confidence intervals for
+    proportions and differences of proportions result from adding two
+    successes and two failures. <i>The American Statistician</i> <b>54</b>:280-88, 2000.
+<p>
+    O. Miettinen and M. Nurminen, Comparative analysis of two rates.
+    <i>Statistics in Medicine</i> <b>4</b>:213-26, 1985.
+<p>
+    R. G. Newcombe, Interval estimation for the difference between
+    independent proportions:  comparison of eleven methods. <i>Statistics in</i>
+    <i>Medicine</i> <b>17</b>:873-90, 1998.
+<p>
+    S. Wallenstein, A non-iterative accurate asymptotic confidence interval
+    for the difference between two proportions. <i>Statistics in Medicine</i>
+    <b>16</b>:1329-36, 1997.
+<p>
+<p>
+<b><u>Acknowledgements</u></b>
+<p>
+    Code for calculating Wilson intervals of the individual proportions (used
+    in calculation of Newcombe's Method 10 confidence intervals) is adapted
+    from <b>ciwi</b> by Nicholas J. Cox.
+<p>
+<p>
+<b><u>Author</u></b>
+<p>
+    Joseph Coveney jcoveney@bigplanet.com
+<p>
+<p>
+<b><u>Also see</u></b>
+<p>
+    Manual:  <b>[ST] epitab</b>
+<p>
+</pre>

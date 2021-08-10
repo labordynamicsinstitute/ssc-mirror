@@ -1,0 +1,320 @@
+<pre>
+-------------------------------------------------------------------------------
+<b>help: </b><b>lmadw2</b>                                                   <b>dialog:</b> <b>lmadw2</b>
+-------------------------------------------------------------------------------
+<p>
+<b>        </b>+-------+
+<b>    </b>----+<b> Title </b>+------------------------------------------------------------
+<p>
+<b>lmadw2: 2SLS-IV Autocorrelation Durbin-Watson Test at Higher Order AR(p)</b>
+<p>
+<a name="00"></a><b>        </b>+-------------------+
+<b>    </b>----+<b> Table of Contents </b>+------------------------------------------------
+<p>
+     <b>Syntax</b>
+     <b>Description</b>
+     <b>Model</b>
+     <b>GMM Options</b>
+     <b>Other Options</b>
+     <b>Saved Results</b>
+     <b>References</b>
+<p>
+ *** <b>Examples</b>
+<p>
+     <b>Authors</b>
+<p>
+<a name="01"></a><b>        </b>+--------+
+<b>    </b>----+<b> Syntax </b>+-----------------------------------------------------------
+<p>
+  <b>lmadw2</b> <i>depvar</i> <i>indepvars</i> <b>(</b><i>endog</i><b> = </b><i>inst</i><b>)</b> [<i>if</i>] [<i>in</i>] ,
+ 
+      <b>model(</b><i>2sls</i><b>,</b><i> liml</i><b>,</b><i> gmm</i><b>,</b><i> melo</i><b>,</b><i> fuller</i><b>,</b><i> kclass</i><b>)</b>
+ 
+      [ <b><u>lag</u></b><b>s(</b><i>#</i><b>)</b> <b>kc(</b><i>#</i><b>)</b> <b>kf(</b><i>#</i><b>)</b> <b>hetcov(</b><i>type</i><b>)</b> <b><u>nocons</u></b><b>tant</b> <b>noconexog</b> ]
+<p>
+<a name="02"></a><b>        </b>+-------------+
+<b>    </b>----+<b> Description </b>+------------------------------------------------------
+<p>
+    <b>lmadw2</b> computes 2SLS-IV Autocorrelation Durbin-Watson Test at Higher
+    Order AR(p) for instrumental variables regression models, via 2sls, liml,
+    melo, gmm, and kclass.
+<p>
+        Ho: No Autocorrelation - Ha: Autocorrelation
+        - Durbin-Watson Test
+<p>
+   {cmd: DW(i): Durbin-Watson Test = sum((E-`E'[n-i])^2)/sum(E^)
+<p>
+     **************************************************************
+     ***** Positive Auto ***** (DW Test) **** Negative Auto *******
+     *       DW &gt;  Du   (No+)      *          DW *  4-Du   (No-)  *
+     *  0  &lt; DW &lt;  DL   (  +)      *  4-DL &lt;  DW &lt;  4      (  -)  *
+     *  DL * DW *  Du   (Inc)      *  4-Du &lt;= DW *  4-DL   (Inc)  *
+     **************************************************************
+<p>
+<a name="03"></a><b>        </b>+-------+
+<b>    </b>----+<b> Model </b>+------------------------------------------------------------
+<p>
+    <i>model</i>             description
+    <b>2sls</b>              Two-Stage Least Squares (2SLS)
+    <b>liml</b>              Limited-Information Maximum Likelihood (LIML)
+    <b>melo</b>              Minimum Expected Loss (MELO)
+    <b>fuller</b>            Fuller k-Class LIML
+    <b>kclass</b>            Theil K-Class LIML
+    <b>gmm</b>               Generalized Method of Moments (GMM)
+<p>
+<a name="04"></a><b>        </b>+-------------+
+<b>    </b>----+<b> GMM Options </b>+------------------------------------------------------
+<p>
+    <i>hetcov Options</i>    Description
+<p>
+    <b>hetcov(</b><i>white</i><b>)</b>     White Method
+    <b>hetcov(</b><i>bart</i><b>)</b>      Bartlett Method
+    <b>hetcov(</b><i>dan</i><b>)</b>       Daniell Method
+    <b>hetcov(</b><i>nwest</i><b>)</b>     Newey-West Method
+    <b>hetcov(</b><i>parzen</i><b>)</b>    Parzen Method
+    <b>hetcov(</b><i>quad</i><b>)</b>      Quadratic spectral Method
+    <b>hetcov(</b><i>tent</i><b>)</b>      Tent Method
+    <b>hetcov(</b><i>trunc</i><b>)</b>     Truncated Method
+    <b>hetcov(</b><i>tukeym</i><b>)</b>    Tukey-Hamming Method
+    <b>hetcov(</b><i>tukeyn</i><b>)</b>    Tukey-Hanning Method
+<p>
+<a name="05"></a><b>        </b>+---------------+
+<b>    </b>----+<b> Other Options </b>+----------------------------------------------------
+<p>
+    <b>kf(</b><i>#</i><b>)</b>             Fuller k-Class LIML Value
+<p>
+    <b>kc(</b><i>#</i><b>)</b>             Theil k-Class LIML Value
+<p>
+    <b>lags(</b><i>#</i><b>)</b>           Order of Lag Length
+<p>
+    <b><u>nocons</u></b><b>tant</b>        Exclude Constant Term from RHS Equation only
+<p>
+    <b>noconexog</b>         Exclude Constant Term from all Equations (both RHS and
+                        Instrumental Equations). Results of using <b>noconexog</b>
+                        option are identical to Stata <b>ivregress</b>.  The default
+                        of <b>lmadw2</b> is including Constant Term in both RHS and
+                        Instrumental Equations
+<p>
+<a name="06"></a><b>        </b>+---------------+
+<b>    </b>----+<b> Saved Results </b>+----------------------------------------------------
+<p>
+<b>lmadw2</b> saves the following in <b>e()</b>:
+<p>
+   <b>e(rho#)</b>         Rho Value for AR(i)
+   <b>e(lmadw#)</b>       Durbin-Watson Test AR(i)
+<p>
+<a name="07"></a><b>        </b>+------------+
+<b>    </b>----+<b> References </b>+-------------------------------------------------------
+<p>
+    Damodar Gujarati (1995)<b> "Basic Econometrics"</b> <i>3rd Edition, McGraw Hill,</i>
+        <i>New York, USA</i>.
+<p>
+    Judge, Georege, R. Carter Hill, William . E. Griffiths, Helmut Lutkepohl,
+        &amp; Tsoung-Chao Lee (1988)<b> "Introduction To The Theory And Practice Of</b>
+        <b>Econometrics",</b> <i>2nd ed., John Wiley &amp; Sons, Inc., New York, USA</i>.
+<p>
+<a name="08"></a><b>        </b>+----------+
+<b>    </b>----+<b> Examples </b>+---------------------------------------------------------
+<p>
+ clear all
+<p>
+ sysuse lmadw2.dta , clear
+<p>
+ db lmadw2
+<p>
+ lmadw2 y1 x1 x2 (y2 = x1 x2 x3 x4) , model(2sls) lag(4)
+<p>
+ lmadw2 y1 x1 x2 (y2 = x1 x2 x3 x4) , model(2sls)
+ lmadw2 y1 x1 x2 (y2 = x1 x2 x3 x4) , model(melo)
+ lmadw2 y1 x1 x2 (y2 = x1 x2 x3 x4) , model(liml)
+ lmadw2 y1 x1 x2 (y2 = x1 x2 x3 x4) , model(fuller) kf(0.5)
+ lmadw2 y1 x1 x2 (y2 = x1 x2 x3 x4) , model(kclass) kc(0.5)
+ lmadw2 y1 x1 x2 (y2 = x1 x2 x3 x4) , model(gmm) hetcov(white)
+ lmadw2 y1 x1 x2 (y2 = x1 x2 x3 x4) , model(gmm) hetcov(bart)
+ lmadw2 y1 x1 x2 (y2 = x1 x2 x3 x4) , model(gmm) hetcov(dan)
+ lmadw2 y1 x1 x2 (y2 = x1 x2 x3 x4) , model(gmm) hetcov(nwest)
+ lmadw2 y1 x1 x2 (y2 = x1 x2 x3 x4) , model(gmm) hetcov(parzen)
+ lmadw2 y1 x1 x2 (y2 = x1 x2 x3 x4) , model(gmm) hetcov(quad)
+ lmadw2 y1 x1 x2 (y2 = x1 x2 x3 x4) , model(gmm) hetcov(tent)
+ lmadw2 y1 x1 x2 (y2 = x1 x2 x3 x4) , model(gmm) hetcov(trunc)
+ lmadw2 y1 x1 x2 (y2 = x1 x2 x3 x4) , model(gmm) hetcov(tukeym)
+ lmadw2 y1 x1 x2 (y2 = x1 x2 x3 x4) , model(gmm) hetcov(tukeyn)
+-------------------------------------------------------------------------------
+<p>
+. clear all
+. sysuse lmadw2.dta , clear
+. lmadw2 y1 x1 x2 (y2 = x1 x2 x3 x4) , model(2sls) lag(4)
+<p>
+==============================================================================
+* Two Stage Least Squares (2SLS)
+==============================================================================
+  y1 = y2 + x1 + x2
+------------------------------------------------------------------------------
+  Sample Size       =          17
+  Wald Test         =     79.9520   |   P-Value &gt; Chi2(3)       =      0.0000
+  F-Test            =     26.6507   |   P-Value &gt; F(3 , 13)     =      0.0000
+ (Buse 1973) R2     =      0.8592   |   Raw Moments R2          =      0.9954
+ (Buse 1973) R2 Adj =      0.8267   |   Raw Moments R2 Adj      =      0.9944
+  Root MSE (Sigma)  =     10.2244   |   Log Likelihood Function =    -61.3630
+------------------------------------------------------------------------------
+- R2h= 0.8593   R2h Adj= 0.8268  F-Test =   26.46 P-Value &gt; F(3 , 13)  0.0000
+- R2v= 0.8765   R2v Adj= 0.8480  F-Test =   30.75 P-Value &gt; F(3 , 13)  0.0000
+------------------------------------------------------------------------------
+          y1 |      Coef.   Std. Err.      t    P&gt;|t|     [95% Conf. Interval]
+-------------+----------------------------------------------------------------
+          y2 |    .237333   .2422811     0.98   0.345    -.2860835    .7607495
+          x1 |   .2821278   .5433329     0.52   0.612    -.8916715    1.455927
+          x2 |  -1.044795    .362648    -2.88   0.013    -1.828248   -.2613411
+       _cons |   145.8444   61.72083     2.36   0.034     12.50468    279.1842
+------------------------------------------------------------------------------
+* Y  = LHS Dependent Variable:       1 = y1
+* Yi = RHS Endogenous Variables:     1 = y2
+* Xi = RHS Included Exogenous Vars:  2 = x1 x2
+* Xj = RHS Excluded Exogenous Vars:  2 = x3 x4
+* Z  = Overall Instrumental Vars:    4 = x1 x2 x3 x4
+<p>
+==============================================================================
+*** 2SLS-IV Autocorrelation Durbin-Watson Test - Model= (2sls)
+==============================================================================
+ Ho: No Autocorrelation - Ha: Autocorrelation
+------------------------------------------------------------------------------
+- Rho Value for Order(1)               AR(1)= -0.0855
+- Durbin-Watson Test                   AR(1)=  2.1321  df: (3 , 17)
+------------------------------------------------------------------------------
+- Rho Value for Order(2)               AR(2)= -0.2334
+- Durbin-Watson Test                   AR(2)=  2.3986  df: (3 , 17)
+------------------------------------------------------------------------------
+- Rho Value for Order(3)               AR(3)=  0.1275
+- Durbin-Watson Test                   AR(3)=  1.5786  df: (3 , 17)
+------------------------------------------------------------------------------
+- Rho Value for Order(4)               AR(4)= -0.0905
+- Durbin-Watson Test                   AR(4)=  1.4892  df: (3 , 17)
+------------------------------------------------------------------------------
+<p>
+<a name="09"></a><b>        </b>+---------+
+<b>    </b>----+<b> Authors </b>+----------------------------------------------------------
+<p>
+- <b>Emad Abd Elmessih Shehata</b>
+  <b>Professor (PhD Economics)</b>
+  <b>Agricultural Research Center - Agricultural Economics Research Institute - Eg</b>
+<b>&gt; ypt</b>
+  <b>Email: </b>emadstat@hotmail.com
+  <b>WebPage:                </b>http://emadstat.110mb.com/stata.htm
+  <b>WebPage at IDEAS:       </b>http://ideas.repec.org/f/psh494.html
+  <b>WebPage at EconPapers:  </b>http://econpapers.repec.org/RAS/psh494.htm
+<p>
+- <b>Sahra Khaleel A. Mickaiel</b>
+  <b>Professor (PhD Economics)</b>
+  <b>Cairo University - Faculty of Agriculture - Department of Economics - Egypt</b>
+  <b>Email: </b>sahra_atta@hotmail.com
+  <b>WebPage:                </b>http://sahraecon.110mb.com/stata.htm
+  <b>WebPage at IDEAS:       </b>http://ideas.repec.org/f/pmi520.html
+  <b>WebPage at EconPapers:  </b>http://econpapers.repec.org/RAS/pmi520.htm
+<p>
+<b>        </b>+-----------------+
+<b>    </b>----+<b> LMADW2 Citation </b>+--------------------------------------------------
+<p>
+ <b>Shehata, Emad Abd Elmessih &amp; Sahra Khaleel A. Mickaiel (2012)</b>
+ <b>LMADW2: "2SLS-IV Autocorrelation Durbin-Watson Test at Higher Order AR(p)"</b>
+<p>
+<p>
+<b><u>Online Help:</u></b>
+<p>
+<b>* Autocorrelation Tests:</b>
+<p>
+<b>* (1) (OLS) * Ordinary Least Squares Tests:</b>
+<b>lmareg</b>     OLS Autocorrelation Tests
+<b>lmabp</b>      OLS Autocorrelation Box-Pierce Test
+<b>lmabg</b>      OLS Autocorrelation Breusch-Godfrey Test
+<b>lmabpg</b>     OLS Autocorrelation Breusch-Pagan-Godfrey Test
+<b>lmadurh</b>    OLS Autocorrelation Dynamic Durbin h, Harvey LM, Wald Tests
+<b>lmadurm</b>    OLS Autocorrelation Dynamic Durbin m Test
+<b>lmadw</b>      OLS Autocorrelation Durbin-Watson Test
+<b>lmalb</b>      OLS Autocorrelation Ljung-Box Test
+<b>lmavon</b>     OLS Autocorrelation Von Neumann Ratio Test
+<b>lmaz</b>       OLS Autocorrelation Z Test
+---------------------------------------------------------------------------
+<b>* (2) (NLS) * Non Linear Least Squares Tests:</b>
+<b>lmanls</b>     Non Linear Least Squares Autocorrelation Tests
+<b>lmabpnl</b>    NLS Autocorrelation Box-Pierce Test
+<b>lmabgnl</b>    NLS Autocorrelation Breusch-Godfrey Test
+<b>lmabpgnl</b>   NLS Autocorrelation Breusch-Pagan-Godfrey Test
+<b>lmadurmnl</b>  NLS Autocorrelation Dynamic Durbin m Test
+<b>lmadwnl</b>    NLS Autocorrelation Durbin-Watson Test
+<b>lmalbnl</b>    NLS Autocorrelation Ljung-Box Test
+<b>lmavonnl</b>   NLS Autocorrelation Von Neumann Ratio Test
+<b>lmaznl</b>     NLS Autocorrelation Z Test
+---------------------------------------------------------------------------
+<b>* (3) (MLE) * Maximum Likelihood Estimation Tests:</b>
+<b>lmamle</b>     MLE Autocorrelation Tests
+<b>lmabpml</b>    MLE Autocorrelation Box-Pierce Test
+<b>lmabgml</b>    MLE Autocorrelation Breusch-Godfrey Test
+<b>lmabpgml</b>   MLE Autocorrelation Breusch-Pagan-Godfrey Test
+<b>lmadurhml</b>  MLE Autocorrelation Dynamic Durbin h, Harvey LM, Wald Tests
+<b>lmadurmml</b>  MLE Autocorrelation Dynamic Durbin m Test
+<b>lmadwml</b>    MLE Autocorrelation Durbin-Watson Test
+<b>lmalbml</b>    MLE Autocorrelation Ljung-Box Test
+<b>lmavonml</b>   MLE Autocorrelation Von Neumann Ratio Test
+<b>lmazml</b>     MLE Autocorrelation Z Test
+---------------------------------------------------------------------------
+<b>* (4) (2SLS-IV) * Two-Stage Least Squares &amp; Instrumental Variables Tests:</b>
+<b>lmareg2</b>    2SLS-IV Autocorrelation Tests
+<b>lmabg2</b>     2SLS-IV Autocorrelation Breusch-Godfrey Test
+<b>lmabp2</b>     2SLS-IV Autocorrelation Box-Pierce Test
+<b>lmabpg2</b>    2SLS-IV Autocorrelation Breusch-Pagan-Godfrey Test
+<b>lmadurh2</b>   2SLS-IV Autocorrelation Dynamic Durbin h, Harvey LM, Wald Tests
+<b>lmadurm2</b>   2SLS-IV Autocorrelation Dynamic Durbin m Test
+<b>lmadw2</b>     2SLS-IV Autocorrelation Durbin-Watson Test
+<b>lmalb2</b>     2SLS-IV Autocorrelation Ljung-Box Test
+<b>lmavon2</b>    2SLS-IV Von Neumann Ratio Autocorrelation Test
+<b>lmaz2</b>      2SLS-IV Autocorrelation Z Test
+---------------------------------------------------------------------------
+<b>* (5) Panel Data Tests:</b>
+<b>lmaxt</b>      Panel Data Autocorrelation Tests
+<b>lmabxt</b>     Panel Data Autocorrelation Baltagi Test
+<b>lmabgxt</b>    Panel Data Autocorrelation Breusch-Godfrey Test
+<b>lmabpxt</b>    Panel Data Autocorrelation Box-Pierce Test
+<b>lmabpgxt</b>   Panel Data Autocorrelation Breusch-Pagan-Godfrey Test
+<b>lmadurhxt</b>  Panel Data Autocorrelation Dynamic Durbin h and Harvey LM Tests
+<b>lmadurmxt</b>  Panel Data Autocorrelation Dynamic Durbin m Test
+<b>lmadwxt</b>    Panel Data Autocorrelation Durbin-Watson Test
+<b>lmavonxt</b>   Panel Data Von Neumann Ratio Autocorrelation Test
+<b>lmawxt</b>     Panel Data Autocorrelation Wooldridge Test
+<b>lmazxt</b>     Panel Data Autocorrelation Z Test
+---------------------------------------------------------------------------
+<b>* (6) (3SLS-SUR) * Simultaneous Equations Tests:</b>
+<b>lmareg3</b>    (3SLS-SUR) Overall System Autocorrelation Tests
+<b>lmhreg3</b>    (3SLS-SUR) Overall System Heteroscedasticity Tests
+<b>lmnreg3</b>    (3SLS-SUR) Overall System Non Normality Tests
+<b>lmcovreg3</b>  (3SLS-SUR) Breusch-Pagan Diagonal Covariance Matrix
+<b>r2reg3</b>     (3SLS-SUR) Overall System R2, F-Test, and Chi2-Test
+<b>diagreg3</b>   (3SLS-SUR) Overall System ModeL Selection Diagnostic Criteria
+---------------------------------------------------------------------------
+<b>* (7) (SEM-FIML) * Structural Equation Modeling Tests:</b>
+<b>lmasem</b>     (SEM-FIML) Overall System Autocorrelation Tests
+<b>lmhsem</b>     (SEM-FIML) Overall System Heteroscedasticity Tests
+<b>lmnsem</b>     (SEM-FIML) Overall System Non Normality Tests
+<b>lmcovsem</b>   (SEM-FIML) Breusch-Pagan Diagonal Covariance Matrix Test
+<b>r2sem</b>      (SEM-FIML) Overall System R2, F-Test, and Chi2-Test
+<b>diagsem</b>    (SEM-FIML) Overall System ModeL Selection Diagnostic Criteria
+---------------------------------------------------------------------------
+<b>* (8) (NL-SUR) * Non Linear Seemingly Unrelated Regression Tests:</b>
+<b>lmanlsur</b>   (NL-SUR) Overall System Autocorrelation Tests
+<b>lmhnlsur</b>   (NL-SUR) Overall System Heteroscedasticity Tests
+<b>lmnnlsur</b>   (NL-SUR) Overall System Non Normality Tests
+<b>lmcovnlsur</b> (NL-SUR) Breusch-Pagan Diagonal Covariance Matrix Test
+<b>r2nlsur</b>    (NL-SUR) Overall System R2, F-Test, and Chi2-Test
+<b>diagnlsur</b>  (NL-SUR) Overall System ModeL Selection Diagnostic Criteria
+---------------------------------------------------------------------------
+<b>* (9) (VAR) * Vector Autoregressive Model Tests:</b>
+<b>lmavar</b>     (VAR) Overall System Autocorrelation Tests
+<b>lmhvar</b>     (VAR) Overall System Heteroscedasticity Tests
+<b>lmnvar</b>     (VAR) Overall System Non Normality Tests
+<b>lmcovvar</b>   (VAR) Breusch-Pagan Diagonal Covariance Matrix Test
+<b>r2var</b>      (VAR) Overall System R2, F-Test, and Chi2-Test
+<b>diagvar</b>    (VAR) Overall System ModeL Selection Diagnostic Criteria
+---------------------------------------------------------------------------
+<p>
+<p>
+<p>
+</pre>

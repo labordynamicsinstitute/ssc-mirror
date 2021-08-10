@@ -1,0 +1,82 @@
+<pre>
+-------------------------------------------------------------------------------
+help for <b>indexplot</b>
+-------------------------------------------------------------------------------
+<p>
+<b><u>Index plots of estimation results</u></b> 
+<p>
+        <b>indexplot</b> [<b>if</b> <i>exp</i>] [<b>in</b> <i>range</i>] [ <b>, show(</b>[<b><u>o</u></b><b>bserved</b>|<i>predict_options</i>]<b>)</b>
+                 <b><u>hi</u></b><b>gh(</b><i>#</i><b>)</b> <b><u>lo</u></b><b>w(</b><i>#</i><b>)</b> <b>base(</b><i>str</i><b>)</b> <b>recast(</b><i>plottype</i><b>)</b> <i>graph_options</i>]
+<p>
+<p>
+<b><u>Description</u></b>
+<p>
+    <b>indexplot</b> plots estimation results (by default whatever <b>predict</b> produces
+    by default) from an immediately previous <b>regress</b> or similar command
+    versus observation number (i.e. <b>_n</b>). Values are shown, by default, as
+    dropped lines starting at 0. Note that the base need not be visible by
+    default.
+<p>
+    The plot is restricted to at most the estimation sample. A subset of that
+    may be shown by using <b>if</b> and/or <b>in</b>.
+<p>
+<p>
+<b><u>Options</u></b>
+<p>
+    <b>show()</b> specifies either <b>observed</b>, to show observed values of the
+        response, or options of <b>predict</b>. This option is used to specify
+        results other than the default. Any abbreviation of <b>observed</b> or of
+        <i>predict_options</i> that is acceptable to <b>predict</b> may be used.
+<p>
+    <b>high(</b><i>#</i><b>)</b> specifies that the highest <i>#</i> of the results are to be identified
+        by their observation numbers using <b>xlabel()</b>.
+<p>
+    <b>low(</b><i>#</i><b>)</b> specifies that the lowest <i>#</i> of the results are to be identified by
+        their observation numbers using <b>xlabel()</b>.
+<p>
+    <b>base()</b> specifies an alternative to 0 as the starting point for dropped
+        lines. <b>base(mean)</b> specifies the mean of whatever is being shown;
+        otherwise <b>base(</b><i>#</i><b>)</b> specifies a number <i>#</i>.
+<p>
+    <b>recast()</b> specifies the use of a twoway plottype differing from the
+        default of <b>twoway dropline</b>.
+<p>
+    <i>graph_options</i> are those of twoway dropline, except if <b>recast()</b> is
+        specified, in which case they are those of the <i>plottype</i> specified.
+<p>
+<p>
+<b><u>Examples</u></b>
+<p>
+    <b>. sysuse auto</b>
+<p>
+    <b>. regress mpg weight</b>
+    <b>. indexplot</b>
+    <b>. indexplot, base(mean)</b>
+    <b>. indexplot, show(residual)</b>
+    <b>. indexplot, show(residual) hi(3) lo(3) mla(make)</b>
+    <b>. indexplot, show(cooksd) hi(6) mla(make)</b>
+<p>
+    <b>. glm mpg weight, link(log)</b>
+    <b>. indexplot, show(anscombe) hi(3) lo(3)</b>
+<p>
+    <b>. sysuse census</b>
+<p>
+    <b>. regress marriage pop</b>
+    <b>. indexplot, show(dfbeta(pop)) mla(state)</b>
+<p>
+<p>
+<b><u>Author</u></b>
+<p>
+    Nicholas J. Cox, University of Durham, U.K.
+    n.j.cox@durham.ac.uk
+<p>
+<p>
+<b><u>Acknowledgements</u></b> 
+<p>
+    Phil Ender and Andy Sloggett provided very helpful comments on a previous
+    version.
+<p>
+<p>
+<b><u>Also see</u></b>
+<p>
+</pre>

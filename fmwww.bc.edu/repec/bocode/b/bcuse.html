@@ -1,0 +1,47 @@
+<pre>
+<b>help bcuse</b>
+-------------------------------------------------------------------------------
+<p>
+<b><u>Title</u></b>
+    <b>bcuse -- Access BC Economics Stata datasets</b>
+<p>
+<b><u>Syntax</u></b>
+        <b>bcuse</b> <i>filename</i> [ <b>,</b> <b>nodesc</b> <b>clear</b> ]
+<p>
+<b><u>Description</u></b>
+<p>
+    <b>bcuse</b> provides easy access to a number of Stata-format datasets used in
+    BC Economics labs for Statistics (EC151) and Econometric Methods (EC228).
+    If you are told to use the <b>crime1</b> dataset, give the command <b>bcuse crime1</b>.
+    If you receive an error message, check the web page listing these
+    datasets on the BC Economics web site, 
+    http://fmwww.bc.edu/ec-p/data/wooldridge/datasets.list.html
+<p>
+    If a Stata data file has been saved in .zip format on the server (usually
+    because it is very large), you may give the <i>filename</i>, including .zip, and
+    the zip file will be copied to your working directory, unzipped, and read
+    into Stata.
+<p>
+<b><u>Options</u></b>
+<p>
+    <b>nodesc</b> specifies that the dataset should not be described after loading.
+        By default, the <b>describe</b> command is automatically issued after the
+        dataset is loaded.
+<p>
+    <b>clear</b> specifies that you want to clear Stata's memory before loading the
+        new dataset.
+<p>
+<b><u>Examples</u></b> 
+<p>
+    . bcuse crime1
+    . bcuse crime1, clear
+    . bcuse crime1, nodesc
+    . bcuse auto.zip, clear
+<p>
+<b><u>Author</u></b>
+    Christopher F Baum, Boston College
+        baum@bc.edu
+<p>
+<b><u>Also see</u></b> 
+<p>
+</pre>

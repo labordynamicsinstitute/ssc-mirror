@@ -1,0 +1,74 @@
+<pre>
+-------------------------------------------------------------------------------
+help for <b>pcontract</b>                                               (Roger Newson)
+-------------------------------------------------------------------------------
+<p>
+<b><u>Make dataset of frequencies and percentages</u></b>
+<p>
+        <b>pcontract</b> <i>varlist</i> [<i>weight</i>] [<b>if</b> <i>exp</i>] [<b>in</b> <i>range</i>] [<b>,</b> <b><u>f</u></b><b>req(</b><i>varname</i><b>)</b>
+                 <b><u>p</u></b><b>ercent(</b><i>varname</i><b>)</b> <b><u>cf</u></b><b>req(</b><i>varname</i><b>)</b> <b><u>cp</u></b><b>ercent(</b><i>varname</i><b>)</b> <b>float</b>
+                 <b><u>form</u></b><b>at(</b><i>format</i><b>)</b> <b><u>z</u></b><b>ero</b> <b>nomiss</b> ]
+<p>
+    <b>fweight</b>s are allowed; see help weights.
+<p>
+<p>
+<b><u>Description</u></b>
+<p>
+    <b>pcontract</b> is an extended version of contract.  It replaces the dataset in
+    memory with a new dataset consisting of all combinations of <i>varlist</i> that
+    exist in the data and new variables containing the frequency and
+    percentage of each combination, and, optionally, the cumulative frequency
+    and percentage of each combination.
+<p>
+<p>
+<b><u>Options</u></b>
+<p>
+    <b>freq(</b><i>varname</i><b>)</b> specifies a name for the frequency variable.  If not
+        specified, <b>_freq</b> is used. The name must be new.
+<p>
+    <b>percent(</b><i>varname</i><b>)</b> specifies a name for the percentage variable.  If not
+        specified, <b>_percent</b> is used. The name must be new.
+<p>
+    <b>cfreq(</b><i>varname</i><b>)</b> specifies a name for the cumulative frequency variable.
+        If not specified, no cumulative frequency variable is created.  The
+        name must be new.
+<p>
+    <b>cpercent(</b><i>varname</i><b>)</b> specifies a name for the cumulative percentage
+        variable.  If not specified, no cumulative percentage variable is
+        created.  The name must be new.
+<p>
+    <b>float</b> specifies that the percentage variables specified by <b>percent</b> and
+        <b>cpercent</b> will be generated as variables of type float.  If <b>float</b> is
+        not specified, then these variables will be generated as variables of
+        type double. All generated variables are compressed to the smallest
+        storage type possible without loss of precision. See help for 
+        compress.
+<p>
+    <b>format(</b><i>format</i><b>)</b> specifies a display format for the generated percentage
+        variables specified by <b>percent()</b> and <b>cpercent()</b>.  If <b>format()</b> is not
+        specified, then these variables will have the display format <b>%8.2f</b>.
+<p>
+    <b>zero</b> specifies that combinations with frequency zero are wanted.
+<p>
+    <b>nomiss</b> specifies that observations with missing values on any of the
+        variables in <i>varlist</i> will be dropped.  If not specified, all
+        observations possible are used.
+<p>
+<p>
+<b><u>Examples</u></b>
+<p>
+    <b>. pcontract foreign rep78</b>
+    <b>. pcontract foreign rep78, zero</b>
+    <b>. pcontract foreign rep78, f(count) zero nomiss</b>
+    <b>. pcontract foreign rep78,fr(frequency) per(percentage) cf(cumfreq)</b>
+        <b>cp(cumperc) float format(%4.0f)</b>
+<p>
+    <b>. pcontract _all</b>
+<p>
+<p>
+<b><u>Also see</u></b>
+<p>
+    Manual:  <b>[R] contract</b>, <b>[R] compress</b>, <b>[R] format</b>
+<p>
+    Online:  help for contract, compress, format, expand; collapse, 
+</pre>

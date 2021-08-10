@@ -1,0 +1,18 @@
+d 'XTFEIS': module to estimate linear Fixed-Effects model with Individual-specific Slopes (FEIS)
+d
+d   xtfeis estimates linear Fixed-Effects model with
+d Individual-specific Slopes (FEIS). 
+d
+d KW:  fixed effects
+d KW: xt
+d KW: panel data
+d
+d Requires: Stata version 12
+d
+d Distribution-Date: 20150717
+d
+d Author: Volker Ludwig, University of Munich
+d Support: email vludwig@@soziologie.uni-muenchen.de
+d
+f xtfeis.ado
+f xtfeis.sthlp

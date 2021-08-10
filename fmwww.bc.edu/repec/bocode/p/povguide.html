@@ -1,0 +1,82 @@
+<pre>
+<p>
+-------------------------------------------------------------------------------
+help for <b>povguide</b>
+-------------------------------------------------------------------------------
+<p>
+<b><u>Generate the U.S. Poverty Guideline value for a given family size and year</u></b>
+<p>
+        <b>povguide, gen(</b><i>newvar</i><b>)</b> <b>famsize(</b><i>famsize</i><b>)</b> <b>year(</b><i>year</i><b>)</b>
+<p>
+<p>
+<b><u>Description</u></b>
+<p>
+    <b>povguide</b> generates a numeric variable representing the official U.S.
+    poverty guideline.
+<p>
+    Important: this is one of two official poverty levels in use by the
+    United States government. See more on this matter below, under Remarks.
+<p>
+<p>
+<b><u>Options</u></b>
+    All of these options are required.
+<p>
+    <b>gen(</b><i>newvar</i><b>)</b> specifies the name of a new variable to be generated, which
+    will contain the poverty guideline (in U.S. dollars). By default is will
+    be of an integer type, typically int.
+<p>
+    <b>famsize(</b><i>famsize</i><b>)</b> specifies an expression representing the family size. It
+    will be truncated to an integer and bottom-coded at 1 (values below 1
+    will be coerced to 1).
+<p>
+    <b>year(</b><i>year</i><b>)</b> specifies an expression representing the year for which the
+    computation is to be made. It will be truncated to an integer.
+    Presently, the acceptable values are 1973-2008. Out-of-bounds values will
+    result in a warning and missing values in the result.
+<p>
+<p>
+<b><u>Remarks</u></b>
+<p>
+    The poverty guideline is a "base value" for the first person in the
+    famly, plus an increment for each additional person; the base value and
+    increment vary, depending on the year. For example, in 2005, it is 9570 +
+    3260 for each additional person. To be concise, it is,
+        basevalue + (familysize - 1) * increment
+<p>
+    Poverty guideline values exist prior to 1973, however the increment is
+    not uniform in those early years, so this scheme does not apply.
+<p>
+    These values are valid for all states of the U.S. and the District of
+    Columbia, excluding Alaska and Hawaii; Alaska and Hawaii have their own
+    distinct standards which are not presently covered in this program.
+<p>
+    Official standards are issued by the U.S. Department of Health and Human
+    Services, and can be found at such locations as
+        http://aspe.hhs.gov/poverty/figures-fed-reg.shtml
+        http://aspe.hhs.gov/poverty/99poverty.htm
+        www.ssa.gov/policy/docs/statcomps/2006/3e.html#table3.e8
+<p>
+    The 1982 standards are for nonfarm families.
+<p>
+    The Poverty Guideline is one of two standards in use; the other is the
+    Poverty Threshold, a more complex calculation, involving the number of
+    children and elderly. The Poverty Threshold is the original standard,
+    based on the work of Mollie Orshansky; the Poverty Guideline is regarded
+    as a simplified alternative. Also, the Threshold is used for statistical
+    purposes (e.g., by the U.S. Census Bureau), whereas the Guideline is used
+    for program eligibility.
+<p>
+<p>
+<b><u>Examples</u></b>
+<p>
+    <b>. povguide, gen(povguide) famsize(num_persons) year(2002)</b>
+<p>
+    <b>. povguide, gen(povguide) famsize(num_persons) year(year)</b>
+<p>
+    Typically, you would follow this with something like...
+    <b>. gen byte pov = faminc &lt; povguide if ~mi(povguide) &amp; ~mi(faminc)</b>
+<p>
+<p>
+<b><u>Author</u></b>
+    David Kantor.  Email kantor.d@att.net if you observe any problems. Check
+</pre>

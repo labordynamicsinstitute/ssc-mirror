@@ -1,0 +1,102 @@
+<pre>
+-------------------------------------------------------------------------------
+help for <b>destest</b>                                                 John Hendrickx
+-------------------------------------------------------------------------------
+<p>
+<b><u>destest</u></b>
+<p>
+        <b>destest</b> [<i>termlist</i>] [<b>using</b> <i>filename</i>] [<b>,</b> <b><u>j</u></b><b>oint</b> <b><u>e</u></b><b>qual</b> <b>outraw</b> <b>replace</b>
+                           <b>ndec(</b>#<b>)</b> <b>sigcut(</b>numlist<b>)</b> <b>sigsym(</b>list<b>)</b> <b>sigsep(</b>#<b>)</b>
+<p>
+<b><u>Description</u></b>
+<p>
+<b>destest</b> is a companion program for desmat. It is used after estimating a model
+to perform a Wald test on model terms.  The <i>termlist</i> consists of one or more
+terms as specified in desmat. A <i>term</i> can consist of a single variable, or two
+or more variables separated by either asterisks or periods. If asterisks are
+used, they will be changed into periods by <b>destest</b>, i.e. only the highest order
+interaction will be tested. If no arguments are specified, all terms from the
+last desmat model will be tested.
+<p>
+The default is to test whether the effects of each separate term are equal to
+zero. If the option <b>joint</b> is specified, <b>destest</b> will test instead whether all
+the effects in all the terms are jointly equal to zero. If the option <b>equal</b> is
+specified, <b>destest</b> will test whether the effects of each separate term are
+equal. The <b>joint</b> and <b>equal</b> options may be combined to test whether all effects
+are jointly equal, although this would be a somewhat peculiar hypothesis. Only
+the first letter of the <b>joint</b> and <b>equal</b> option is sigificant.
+<p>
+If <b>using</b> <i>filename</i> is specified then the results are written to a tab- delimited
+ascii file. The default extension for <i>filename</i> is <b>.out</b> (cf.  outsheet). If
+<i>filename</i> already exists, <b>desrep</b> will attempt to find a valid <i>filename</i> by
+appending a number (see outshee2). The <b>replace</b> option can be used to overwrite
+an existing file.
+<p>
+<b><u>Options</u></b>
+<p>
+The options <b>ndec()</b>, <b>sigcut()</b>, <b>sigsym()</b>, <b>sigsep()</b> have the same usage as in 
+desrep.
+<p>
+<b>ndec(</b>#<b>)</b> specifies the number of decimal places. Default=3.
+<p>
+<b>sigcut(</b><i>numlist</i><b>)</b> specifies levels of significance to be indicated in the output.
+    <b>destest</b> places a symbol next to the Chi-square or F statistics to indicate
+    whether these are significant at a certain level.  The <b>sigcut</b> option is
+    used to specify these levels of significance.  The <i>numlist</i> should contain a
+    list of values in descending order with the same number of elements as the
+    string list in <b>sigsym</b>. For example, sigcut(.1 .05 .01 .001) together with
+    sigsym(# * ** ***) will use the symbols # for p &lt; .1, * for p &lt; .05, ** for
+    p &lt; .01, and *** for p &lt; .001. The default is (.05 .01).
+<p>
+<b>sigsym(</b><i>list</i><b>)</b> specifies set of symbols corresponding with the levels of
+    significance given by <b>sigcut</b>. Default=(* **).
+<p>
+<b>sigsep(</b>#<b>)</b> spcifies the number of spaces between coefficients and symbols
+    indicating significance. Default=0.
+<p>
+The following two options apply only if <b>using</b> has been specified to write the
+data to a tab-delimited ascii file:
+<p>
+<b>outraw</b> requests that results be written using their default formats, e.g. %9.0g
+    for floats. In addition, a tab will be inserted between coefficients and
+    significance symbols. Otherwise, the variables are written with a fixed
+    number of decimal places as specified by the <b>ndec</b> option (default 3) and
+    significance symbols are appended to coefficients if <b>sigsep</b>=0.
+    Default=<b>nooutraw</b>.
+<p>
+<b>replace</b> specifies that any existing output file should be replaced.  If not
+    specified, <b>destest</b> appends a number to the filename if it already exists.
+    If no valid name has been found after appending 1 to 20, the process stops
+    and the output is not saved. Default=<b>noreplace</b>.
+<p>
+<b><u>Macro variables to control layout</u></b>
+<p>
+Global macro variables can be used to specify different defaults for these
+options, either for the session or for all Stata sessions, by placing the
+global variables in the user's profile.do.
+<p>
+<b>$D_NDEC</b>
+<b>$D_SIGCUT</b>
+<b>$D_SIGSYM</b>
+<b>$D_SIGSEP</b>
+<b>$D_RAW</b>
+<b>$D_REPL</b>
+<p>
+Options specified in the <b>destest</b> command string will override these global
+variables.
+<p>
+<b><u>Notes</u></b>
+<p>
+desmat creates global macro variables <b>$term1</b>, <b>$term2</b>, etc.  containing a
+<i>varlist</i> for each term in the model. <b>destest</b> runs through each of these terms,
+finds the terms corresponding with the <i>termlist</i>, and runs testparm with the
+<i>varlist</i> corresponding with each term.  If these global variables have not been
+defined, <b>destest</b> will only print header information. These global variables can
+of course also be used separately in testparm, sw, or related programs.
+<p>
+<b><u>Aso see</u></b>
+<p>
+ Manual: <b>[R] Test</b>
+On-line: help for desmat, desrep, outsheet, outshee2, showtrms, test
+<p>
+</pre>

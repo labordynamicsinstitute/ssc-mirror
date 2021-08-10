@@ -1,0 +1,88 @@
+<pre>
+-------------------------------------------------------------------------------
+help for <b>avplot2</b>
+-------------------------------------------------------------------------------
+<p>
+<b><u>Partial regression plots for subsamples </u></b> 
+<p>
+        <b>avplot2</b> <i>varname</i> <b>,</b><b><u>sep</u></b><b>arate(</b><i>varname</i><b>)</b> [ <i>graph_options</i> ]
+<p>
+<b><u>Description</u></b>
+<p>
+<b>avplot2</b> generates "partial regression plots" from an analysis of covariance
+model, where a category variable has been included in dummy-variable form among
+the regressors along with a constant term (that is, a dummy for all but one
+categories appears) and the full set of dummies have been interacted with a
+continuous variable. The "partial predictions" of such a model are then
+defined, for each category, as the category-specific constant term plus the
+category-specific slope multiplied by the continuous variable. Any number of
+additional covariates, continuous or discrete, may appear in the regression
+model, but do not affect the partial predictions.
+<p>
+<p>
+<b><u>Remarks</u></b> 
+<p>
+One variable must be specified: the continuous variable which has been fully
+interacted in the regression model. If there are G categories of the discrete
+variable, the continuous variable must be included as G interaction terms, each
+named <i>categoryvarname</i> x <i>varname</i>.  See the example below.
+<p>
+The separate option must specify the integer variable (<i>categoryvarname</i>) that
+defines the G categories. The model must contain (G-1) dummy variables for all
+but one category, and a constant term. It is immaterial which category is
+excluded.
+<p>
+<p>
+<b><u>Options</u></b>
+<p>
+<i>graph_options</i> are options of <b>graph, twoway</b>. One may use, for instance, the
+    saving option to create a .gph file from the displayed graph.
+<p>
+    The defaults include <b>connect(l)</b> for each subset of predicted values.
+<p>
+<b>separate(</b><i>varname</i><b>)</b> specifies the integer variable which defines categories.
+<p>
+<p>
+<p>
+<b><u>Examples</u></b>
+<p>
+    . use auto
+<p>
+    . drop if rep78==.
+<p>
+    . recode rep78 1/2=2
+<p>
+    . tab rep78,gen(repair)
+<p>
+    . rename rep78 repair
+<p>
+    . forv i=1/4 { g repair`i'xmpg = mpg*repair`i' }
+<p>
+    . reg price length foreign repair2-repair4 repair1xmpg repair2xmpg
+        repair3xmpg repair4xmpg
+<p>
+    . avplot2 mpg, sep(repair)
+<p>
+<p>
+<p>
+<b><u>Author</u></b>
+<p>
+    Christopher F Baum, Boston College, USA
+    baum@bc.edu
+    
+    
+<b><u>Acknowledgements</u></b> 
+<p>
+    Nick Cox and his routines regplot and keyplot were indispensable in constru
+&gt; cting
+    this program. Development of the routine was inspired by conversations with
+&gt;  Rebekah 
+    Coley and Jodi Morris.
+<p>
+<p>
+<b><u>Also see</u></b>
+<p>
+On-line:  help for regress, graph, regdiag, regplot (if installed), sparl (if
+                   installed)
+ Manual:<b>  [U] 21 Programming Stata</b>
+</pre>

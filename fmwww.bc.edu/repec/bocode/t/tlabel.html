@@ -1,0 +1,45 @@
+<pre>
+-------------------------------------------------------------------------------
+help for <b>tlabel</b>
+-------------------------------------------------------------------------------
+<p>
+<b><u>Enter or list user-defined labels</u></b> 
+<p>
+        <b>tlabel</b> <i>varname label</i>
+<p>
+        <b>tlabel</b> <i>clearall</i>
+<p>
+        <b>tlablist</b> <i>[varname]</i>
+<p>
+<p>
+<b><u>Description</u></b>
+<p>
+<b>tlabel</b> is an utilty for entering user-defined labels.  User-defined labels are
+actually variable characteristics in the form of <b>char varname[tlabel]</b>
+<b>description</b>. <b>tlabel</b><i>varname</i> without a label removes any exisiting label.
+<p>
+<b>tlabel clearall</b> deletes all user-defined labels.
+<p>
+<b>tlablist</b> displays user-defined labels.
+<p>
+<b><u>Examples</u></b>
+<p>
+    . tlabel age "Age (years)"
+    . tlabel
+    . tlabel clearall
+<p>
+    . tlablist age
+    . tlablist age sex haq
+    . tlablist
+<p>
+<b><u>Author</u></b>
+<p>
+    Fred Wolfe, National Data Bank for Rheumatic Diseases, Wichita, KS  
+    fwolfe@arthritis-research.org
+<p>
+<p>
+<b><u>Also see</u></b>
+<p>
+On-line:  help for fsum
+  
+</pre>

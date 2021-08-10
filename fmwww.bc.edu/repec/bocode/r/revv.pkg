@@ -1,0 +1,21 @@
+d 'REVV': module to reverse value order of variables
+d
+d    revv reverses the order of values of each variable specified
+d in varlist.	New variables are created containing the reversed
+d value order of the   original variables. In a second step the
+d value labels are reversed   accordingly. 
+d
+d KW: data management
+d KW: values
+d KW: variables
+d KW: value labels
+d
+d Requires: Stata version 11
+d
+d Distribution-Date: 20110809
+d
+d Author: Daniel Klein, University of Bamberg
+d Support: email daniel1.klein@@stud.uni-bamberg.de
+d
+f revv.ado
+f revv.sthlp

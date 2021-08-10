@@ -1,0 +1,54 @@
+<pre>
+..-
+help for ^markov^
+..-
+<p>
+Markov chain analysis
+---------------------
+<p>
+    ^markov^ varname [ , ^f^name^(^string^)^ ^p^name^(^string^)^
+    tabchi_options ]
+<p>
+Description
+-----------
+<p>
+^markov^ examines varname, treated as a sequence or series, to produce
+basic summaries relevant to discrete-time, discrete-state Markov chains.
+<p>
+^markov^ tabulates one-step transition frequencies from one state to
+another, carries out a chi-square test for independence, and tabulates a
+transition probability matrix. The frequency matrix and the probability
+matrix are saved as F and P, or as whatever names are specified.
+Matrices with these names are overwritten.
+<p>
+It is the user's responsibility to ensure that data are in the
+appropriate sort order when ^markov^ is called.
+<p>
+^tabchi^ must be installed first.
+<p>
+Options
+-------
+<p>
+^fname(^string^)^ specifies a name for the frequency matrix (default F).
+<p>
+^pname(^string^)^ specifies a name for the probability matrix (default P).
+<p>
+tabchi_options are options allowed with ^tabchi^.
+<p>
+Example
+-------
+<p>
+    . ^markov state^
+<p>
+Author
+------
+<p>
+         Nicholas J. Cox, University of Durham, U.K.
+         n.j.cox@@durham.ac.uk
+<p>
+Also see
+--------
+<p>
+ On-line:  help for @tabchi@
+<p>
+</pre>

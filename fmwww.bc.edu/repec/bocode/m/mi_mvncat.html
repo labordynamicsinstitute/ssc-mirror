@@ -1,0 +1,248 @@
+<pre>
+<p>
+<b>help mi mvncat</b>
+-------------------------------------------------------------------------------
+<p>
+<b><u>Title</u></b>
+<p>
+     <b>mi mvncat</b> -- Assign "final" values to (mvn) imputed categorical variables
+<p>
+<b><u>Syntax</u></b>
+<p>
+        <b>mi mvncat</b> <i>dset</i> [(<i>reference</i>)] [<i>\ dset</i> [(<i>reference</i>)] ... ] [<b>,</b> <i>options</i>]
+<p>
+<p>
+     where <i>dset</i> is a set of dummy variables, representing a variable with more
+        than two categories
+<p>
+     <i>reference</i> is the reference dummy. Make sure to enclose <i>reference</i> in
+        parentheses.  See Should the reference dummy be specified?
+<p>
+<p>
+    <i>options</i>                Description
+    -------------------------------------------------------------------------
+      <b><u>rep</u></b><b>ort</b>               display <i>dset</i> and reference category
+      <b><u>noup</u></b><b>date</b>             do not update MI data; see mi update
+    -------------------------------------------------------------------------
+<p>
+<p>
+<b><u>Description</u></b>
+<p>
+    <b>mi mvncat</b> assigns "final" values to multiple imputed categorical
+    variables, using the procedure described by Allison (2002:40).
+    Categorical variables with <i>k</i> levels are supposed to be represented with <i>k</i>
+    <i>- 1</i> dummies in the dataset. After these dummies are (multiple) imputed
+    using multivariate normal regression (mi impute mvn), <b>mi mvncat</b> assigns
+    values 0 or 1 to each dummy, ensuring that dummies representing one
+    categorical variable add up to 1.
+<p>
+<p>
+<b><u>Options</u></b>
+<p>
+        +---------+
+    ----+ Options +----------------------------------------------------------
+<p>
+    <b>report</b> displays <i>dsets</i> and corresponding reference categories. If the
+        reference dummy is not registered <i>imputed</i>, it is reported as "no
+        reference category".
+<p>
+    <b>noupdate</b> suppresses <b>mi update</b>.
+<p>
+<p>
+<b><u>Remarks</u></b>
+<p>
+    <b><u>When to use mi mvncat?</u></b>
+<p>
+    Suppose a dataset, containing different types of variables with arbitrary
+    missing pattern.  In this case multivariate normal regression may be used
+    to (multiple) impute missing values. Although this method is originally
+    designed for continuous (normally distributed) variables, Allison
+    (2002:38-40) describes how the multivariate normal regression may be used
+    to impute dummies or categorical variables.
+<p>
+    <b><u>Steps previous to mi mvncat</u></b>
+<p>
+    1. Create <i>k - 1</i> dummies for each categorical variable with <i>k</i> levels in
+        the original dataset (<i>m</i> = 0). You may also create all <i>k</i> dummies, but
+        only impute <i>k - 1</i> later. Make sure dummies have hard missings (.a,
+        ..., .z), where the categorical variable they represent has hard
+        missings.
+<p>
+    2. mi set your dataset <i>wide</i>.
+<p>
+    3. mi register <i>imputed</i> the <i>k - 1</i> dummies for each categorical variable
+        with <i>k</i> levels. You may register all <i>k</i> dummies <i>imputed</i>.
+<p>
+    4. mi impute mvn values for <i>k - 1</i> dummies for each categorical variable
+        with <i>k</i> levels.
+<p>
+    <b><u>What does mi mvncat do?</u></b>
+<p>
+    For a categorical variable with 3 levels (thus 2 dummies), Allison
+    (2002:40) suggests to
+<p>
+    1. calculate a reference category as <i>1 - imputed_dummy1 - imputed_dummy2</i>
+<p>
+    2. assign value 1 to whichever category has the largest (imputed) value.
+        If the reference category happens to be coded 1, assign value 0 to
+        both dummies.
+<p>
+    <b>mi mvncat</b> follows this approach, assigning values 0 and 1 to all dummies
+    that are a) registered <i>imputed</i> and b) specified in <i>dset</i>.
+<p>
+<a name="ref"></a><p>
+    <b><u>Should the reference dummy be specified?</u></b>
+<p>
+    Given the reference dummy has been created, it is never wrong to ...
+<p>
+    (a) specify the reference dummy in <i>dset</i>
+<p>
+    (b) specifiy the reference dummy in <b>(</b><i>reference</i><b>)</b>
+<p>
+    ..., but it is not always necessary.
+<p>
+    There are two possible scenarios after the imputation step.
+<p>
+    In the first scenario, all (soft) missing values in the <i>k-1</i> dummies in <i>m</i>
+    = 0 are imputed in <i>m</i> &gt; 0. In this case, <b>mi mvncat</b> determines the
+    reference automatically.  You do not have to specify <b>(</b><i>reference</i><b>)</b>. If the
+    <i>k</i>th dummy has been created, is registered <i>imputed</i> and specified in <i>dset</i>,
+    <b>mi mvncat</b> will assign "final" values to all <i>k</i> dummies in <i>m</i> &gt; 0. If the
+    <i>k</i>th dummy has not been created, or is not registered <i>imputed</i>, or is not
+    specified in <i>dset</i>, only the <i>k-1</i> dummies are assigned "final" values.
+<p>
+    In the second scenario, there are soft missing values in more than one
+    imputed dummy in <i>m</i> &gt; 0. In this case, <b>mi mvncat</b> cannot determine the
+    reference category and will exit with an error. You will have to specify
+    a reference dummy in <b>(</b><i>reference</i><b>)</b>. Dummies are assigned "final" values, if
+    they have been created and are registred <i>imputed</i>. Note, that there might
+    be a situation, in which two or more imputed dummies have soft missing
+    values in <i>m</i> &gt; 0, but a reference dummy has not been created. In this
+    case, you have to specify <b>(</b><i>reference</i><b>)</b> and choose a (arbitrary) name that
+    must not be the name of an existing variable.
+<p>
+<p>
+<b><u>Example</u></b>
+        
+    In this example I do <b>not</b> want to show how to properly impute missing
+    values. The point is to illustrate, how <b>mi mvncat</b> works.
+<p>
+        . sysuse nlsw88 ,clear
+        (NLSW, 1988 extract)
+<p>
+    Create some missing values in <i>race</i> and <i>industry</i>.
+<p>
+        . replace race = . in 1/150
+        (150 real changes made, 150 to missing)
+<p>
+        . replace industry = . in 100/300
+        (201 real changes made, 201 to missing)
+<p>
+    Create dummies.
+<p>
+        . tabulate race ,generate(race) nofreq
+<p>
+        . tabulate industry ,generate(ind) nofreq
+<p>
+    Remember to copy hard missings from <i>race</i> and<i> industry</i> (if there are any),
+    when creating the dummies. One way to do this, is using the chm prefix
+    (if installed) with tabulate.
+<p>
+    Declare data to be MI data. Note that <b>mi mvncat</b> requires the <i>style</i> to be
+    "wide".
+<p>
+        . mi set wide
+<p>
+    Register variables to be imputed. Here the reference category for
+    <i>industry</i> is not registered and will therefore not exist in imputed
+    datasets (<i>m</i> &gt; 0).
+<p>
+        . mi register imputed race1 race2 race3 ind1-ind3 ind5-ind12
+<p>
+    Impute values using mvn-method (see mi impute). Choose <i>race2</i> and <i>ind4</i> as
+    reference categories.
+<p>
+        . mi impute mvn ///
+          race1 race3 ind1-ind3 ind5-ind12 = age married grade wage ,add(5)
+<p>
+        [output omitted]
+<p>
+        . list  _1_race1 _1_race2 _1_race3 _5_ind1 _5_ind2 _5_ind12 in 96/105
+<p>
+             +-----------------------------------------------------------------
+&gt; +
+             | _1_race1   _1_race2   _1_race3    _5_ind1    _5_ind2   _5_ind12 
+&gt; |
+             |-----------------------------------------------------------------
+&gt; |
+         96. |  1.26249          .    .113094          0          0          0 
+&gt; |
+         97. |  .061359          .    .017226          0          0          0 
+&gt; |
+         98. |  1.23018          .   -.110508          0          0          0 
+&gt; |
+         99. |  .500781          .    .057241          0          0          0 
+&gt; |
+        100. |  .364564          .    .048897   -.086906   -.013051    .425884 
+&gt; |
+             |-----------------------------------------------------------------
+&gt; |
+        101. |  1.32567          .    .145112   -.073345   -.035808   -.292849 
+&gt; |
+        102. |  1.48026          .     .04562   -.057562   -.080453    .094772 
+&gt; |
+        103. |  .290545          .    .027436   -.039534   -.021071   -.034177 
+&gt; |
+        104. |  1.62895          .   -.031766   -.060089    .013959    -.23388 
+&gt; |
+        105. |  1.21151          .   -.006183     .02949   -.006173    .528441 
+&gt; |
+             +-----------------------------------------------------------------
+&gt; +
+<p>
+    Since all variables listed are dummies, representing categorical
+    variables, they should only contain values 0 and 1 (as the non-missing
+    observations 96-99 in _5_ind<i>x</i>).  Furthermore dummies representing one
+    categorical variable should add up to 1.
+<p>
+        <b>. mi mvncat race1 race2 race3 \ ind1-ind12</b>
+<p>
+        . list  _1_race1 _1_race2 _1_race3 _5_ind1 _5_ind2 _5_ind12 in 96/105
+<p>
+             +---------------------------------------------------------------+
+             | _1_race1   _1_race2   _1_race3   _5_ind1   _5_ind2   _5_ind12 |
+             |---------------------------------------------------------------|
+         96. |        1          0          0         0         0          0 |
+         97. |        0          1          0         0         0          0 |
+         98. |        1          0          0         0         0          0 |
+         99. |        1          0          0         0         0          0 |
+        100. |        0          1          0         0         0          0 |
+             |---------------------------------------------------------------|
+        101. |        1          0          0         0         0          0 |
+        102. |        1          0          0         0         0          0 |
+        103. |        0          1          0         0         0          0 |
+        104. |        1          0          0         0         0          0 |
+        105. |        1          0          0         0         0          0 |
+             +---------------------------------------------------------------+
+<p>
+    Omitting <i>race2</i> (the reference) from <b>mi mvncat race1 race2 race3</b> will
+    leave <i>_1_race2</i> (and all <i>_m_race2</i>) unchanged (i.e. soft missing), while
+    still correctly assigning values 0 or 1 to <i>_m_race1</i> and <i>_m_race3</i>.
+<p>
+<p>
+<b><u>References</u></b>
+<p>
+    Allison, Paul D. (2002) Missing Data. Thousand Oaks, CA:  Sage
+    Publications.
+<p>
+<p>
+<b><u>Author</u></b>
+<p>
+    Daniel Klein, University of Bamberg, klein.daniel.81.@gmail.com
+<p>
+<b><u>Also see</u></b>
+<p>
+    Online: <b>mi</b>, egen
+<p>
+    if installed: chm
+</pre>

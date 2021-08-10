@@ -1,0 +1,21 @@
+{smcl}
+{* 18sep2002}{...}
+{.-}
+help for {cmd: mici warning *}
+{.-}
+
+{title:Warning message from mici}
+
+{p 8} 
+Number of observations differs across datasets.
+
+
+{title:Explanation}
+
+{p}
+The number of observations is different across the multiple datasets. 
+This is probably because {cmd:if} was specified in {help mici}. 
+
+{p}
+You can see results from each of the multiple datasets
+by using the {cmd:indiv} option in {help mici}.

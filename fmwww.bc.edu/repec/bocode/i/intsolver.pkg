@@ -1,0 +1,27 @@
+d 'INTSOLVER': module providing functions and tools for finding solutions to nonlinear equation systems in Mata
+d
+d   intsolver uses interval methods to solve nonlinear systems of
+d equations. To guarantee that all solutions can be found,
+d intsolver requires that the user program the function, the
+d function's Jacobian, an interval version of the function, and an
+d interval version of the Jacobian. All  functions must be
+d programmed in a certain way, as detailed in examples and in the
+d help file. intsolver also provides a less rigorous means of
+d finding solutions using just the function and its Jacobian based
+d on parallel Newton iteration. 
+d
+d KW:  nonlinear system
+d KW: system solution
+d KW: interval computations
+d KW: interval arithmetic
+d
+d Requires: Stata version 11.2; moremata, int_utils, rowmat_utils from SSC (q.v.)
+d
+d Distribution-Date: 20140829
+d
+d Author: Matthew Baker, Hunter College
+d Support: email matthew.baker@@hunter.cuny.edu
+d
+f intsolver.sthlp
+f ../l/lintsolver.mlib
+f intsolver_examples.do

@@ -1,0 +1,23 @@
+d 'RTNORM': Mata module to produce truncated normal pseudorandom variates (Mata)
+d
+d rtnorm() returns truncated normal random variates.  The user may
+d specify both the mean and standard deviation before truncation, 
+d and the interval for the two-side truncation of the distribution.
+d After downloading,  issue command do rtnorm.mata to compile the
+d function. 
+d
+d KW: normal distribution
+d KW: truncated normal distribution
+d
+d Requires: Stata version 10
+d
+d Distribution-Date: 20100326
+d
+d Author: Federico Belotti, Tor Vergata University
+d Support: email federico.belotti@@uniroma2.it
+d
+d Author: Giuseppe Ilardi, Bank of Italy
+d Support: email 
+d
+f rtnorm.mata.do
+f ../m/mf_rtnorm.sthlp

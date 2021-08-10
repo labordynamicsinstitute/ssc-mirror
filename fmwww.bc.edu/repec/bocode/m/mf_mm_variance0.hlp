@@ -1,0 +1,110 @@
+{smcl}
+{* 22may2006}{...}
+{cmd:help mata mm_variance0()}
+{hline}
+
+{title:Title}
+
+{pstd}
+{bf:mm_variance0() -- Population variance}
+
+
+{title:Syntax}
+
+{p 8 12 2}
+{it:real matrix}{bind:   }
+{cmd:mm_variance0(}{it:X}{cmd:,}
+{it:w}{cmd:)}
+
+{p 8 12 2}
+{it:real matrix}{bind:   }
+{cmd:mm_meanvariance0(}{it:X}{cmd:,}
+{it:w}{cmd:)}
+
+
+{p 4 4 2}
+where
+
+{p 12 12 2}
+{it:X}:  {it:real matrix X} (rows are observations, columns variables)
+
+{p 12 12 2}
+{it:w}:  {it:real colvector w}
+
+
+{title:Description}
+
+{pstd}
+{cmd:mm_variance0(}{it:X}{cmd:,} {it:w}{cmd:)}
+returns the population variance matrix of {it:X}. {cmd:mm_variance0()}
+differs from official Stata's {helpb mf_variance:variance()} (see help
+for {helpb mf_mean:mean()}) in that
+it divides the deviation cross products by N instead of N-1, where N
+is the number of observations. Essentially,
+
+        {cmd:mm_variance0(}{it:X}{cmd:,} {it:w}{cmd:)} = {cmd:variance(}{it:X}{cmd:,} {it:w}{cmd:)} * (N-1)/N
+
+{pstd}
+However, {cmd:mm_variance0()} also produces correct results if
+N==1.
+
+{pstd}
+{cmd:mm_meanvariance0(}{it:X}{cmd:,} {it: w}{cmd:)}
+returns {cmd:mean(}{it:X}{cmd:,}{it:w}{cmd:)\mm_variance0(}{it:X}{cmd:,}{it:w}{cmd:)}.
+
+{pstd}
+{it:w} specifies the weight.
+Specify {it:w} as 1 to obtain unweighted results.
+Rows of {it:X} or {it:w} that contain missing values are omitted
+from the calculation, which amounts to casewise deletion.
+
+
+{title:Remarks}
+
+{pstd}
+None.
+
+
+{title:Conformability}
+
+{pstd}
+{cmd:mm_variance0(}{it:X}{cmd:,} {it:w}{cmd:)},
+{p_end}
+		{it:X}:  {it:n x k}
+		{it:w}:  {it:n x 1} or {it:1 x 1}
+	   {it:result}:  {it:k x k}
+
+{pstd}
+{cmd:mm_meanvariance0(}{it:X}{cmd:,} {it:w}{cmd:)},
+{p_end}
+		{it:X}:  {it:n x k}
+		{it:w}:  {it:n x} 1 or 1 {it:x} 1
+	   {it:result}:  ({it:k}+1) {it:x} k
+
+
+{title:Diagnostics}
+
+{pstd}
+The functions omit from the calculation rows that contain missing values
+unless all rows contain missing values.  Then the returned result contains all
+missing values.
+
+
+{title:Source code}
+
+{pstd}
+{help moremata_source##mm_variance0:mm_variance0.mata},
+{help moremata_source##mm_meanvariance0:mm_meanvariance0.mata}
+
+{title:Author}
+
+{pstd} Ben Jann, ETH Zurich, jann@soz.gess.ethz.ch
+
+
+{title:Also see}
+
+{psee}
+Online:  help for
+{bf:{help mf_mean:[M-5] mean()}},
+{bf:{help moremata}}
+{p_end}

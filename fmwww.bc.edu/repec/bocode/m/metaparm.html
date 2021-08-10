@@ -1,0 +1,375 @@
+<pre>
+-------------------------------------------------------------------------------
+help for <b>metaparm</b> and <b>parmcip</b>                                    (Roger Newson)
+-------------------------------------------------------------------------------
+<p>
+<p>
+<b><u>Meta-analysis and calculating confidence intervals using </u></b><b><u>parmest</u></b><b><u>-format results</u></b>
+<b><u>&gt; sets</u></b>
+<p>
+        <b>parmcip</b> [<i>if</i>] [<i>in</i>] [ <b>,</b> <i>parmcip_opts</i> ]
+<p>
+        <b>metaparm</b> [<i>weight</i>] [<i>if</i>] [<i>in</i>] [ <b>,</b> <i>metaparm_outdest_opts</i>
+                     <i>metaparm_content_opts</i> <i>parmcip_opts</i> ]
+<p>
+    <b>aweight</b>s and <b>iweight</b>s are allowed with <b>metaparm</b>.  See help for weights.
+<p>
+<p>
+<b><u>Description</u></b>
+<p>
+    <b>metaparm</b> and <b>parmcip</b> are resultsset-processing programs designed for use
+    with <b>parmest</b> and <b>parmby</b> resultssets, which have one observation per
+    estimated parameter and data on parameter estimates.  (See Newson (2006),
+    Newson (2004), Newson (2003) and Newson (2002).) <b>metaparm</b> inputs a
+    dataset in memory with one observation per parameter and variables
+    containing estimates, standard errors and (optionally) degrees of
+    freedom, and creates an output dataset with one observation, or one
+    observation per by-group, and data on estimates, standard errors, <i>z</i>- or
+    <i>t</i>-statistics, <i>P</i>-values and confidence limits for a linear combination
+    (weighted sum) of the input parameters, assuming that the input
+    parameters are estimated independently (or at least are uncorrelated) for
+    different sub-populations.  The output dataset can be listed to the Stata
+    log, saved to a disk file, or written to memory, overwriting the existing
+    dataset.  <b>metaparm</b> is useful for meta-analyses (where aweights are used),
+    and can also be used with iweights for calculating confidence intervals
+    and <i>P</i>-values for differences or ratios between parameters for different
+    subpopulations.  <b>parmcip</b> inputs a dataset in memory with one observation
+    per parameter and variables containing parameter estimates, standard
+    errors and (optionally) degrees of freedom, and adds new variables to the
+    dataset, containing the confidence limits, <i>z</i>- or <i>t</i>-statistics, <i>P</i>-values,
+    and (optionally) stars for <i>P</i>-values.  <b>parmcip</b> is useful if the user
+    requires confidence intervals for a Normalizing and/or
+    variance-stabilizing transformation of the original parameters.  <b>metaparm</b>
+    works by calling <b>parmcip</b>, and therefore should not be downloaded without
+    <b>parmcip</b>.
+<p>
+<p>
+<b><u>Options</u></b>
+<p>
+    <b>metaparm</b> and <b>parmcip</b> have a large number of options, which fall into the
+    following 3 groups:
+<p>
+   Option group          Description
+   --------------------------------------------------------------------------
+   <i>metaparm_outdest_opts</i> Output-destination options for <b>metaparm</b>
+   <i>metaparm_content_opts</i> Output-content options for <b>metaparm</b>
+   <i>parmcip_opts</i>          Options for <b>metaparm</b> and <b>parmcip</b>
+   --------------------------------------------------------------------------
+<p>
+<p>
+<p>
+<a name="metaparm_outdest_opts"></a><b><u>Output-destination options for </u></b><b><u>metaparm</u></b>
+<p>
+<p>
+    <i>options</i>                           Description
+    -------------------------------------------------------------------------
+    <b><u>li</u></b><b>st(</b><i>list_spec</i><b>)</b>                   List output dataset to Stata log and/or
+                                        Results window
+    <b><u>sa</u></b><b>ving(</b><i>filename</i>[<b>,replace</b>]<b>)</b>        Save output dataset to a disk file
+    <b>no</b><b><u>re</u></b><b>store</b>                         Write output dataset to memory
+    <b>fast</b>                              Write output dataset to memory without
+                                        precautions
+    <b><u>fl</u></b><b>ist(</b><i>global_macro_name</i><b>)</b>          Append output filename to a global
+                                        macro
+    -------------------------------------------------------------------------
+<p>
+    where <i>list_spec</i> is a specification of the form
+<p>
+    [<i>varlist</i>] [<i>if</i>] [<i>in</i>] [ , [<i>list_options</i> ] ]
+<p>
+    and <i>list_options</i> is a list of options used by the <b>list</b> command.
+<p>
+    See <i>metaparm_outdest_opts</i> for details of these options.
+<p>
+<p>
+<a name="metaparm_content_opts"></a><b><u>Output-content options for </u></b><b><u>metaparm</u></b>
+<p>
+<p>
+    <i>options</i>                       Description
+    -------------------------------------------------------------------------
+    <b>by(</b><i>varlist</i><b>)</b>                   Variables specifying by-groups
+    <b><u>su</u></b><b>mvar(</b><i>varlist</i><b>)</b>               Variables to be summed in output dataset
+    <b><u>dfc</u></b><b>ombine(</b><i>combination_rule</i><b>)</b>   Rule for combining degrees of freedom
+    <b><u>idn</u></b><b>um(</b><i>#</i><b>)</b>                      Value of numeric dataset ID variable
+    <b><u>nidn</u></b><b>um(</b><i>newvarname</i><b>)</b>            Name of numeric dataset ID variable
+    <b><u>ids</u></b><b>tr(</b><i>string</i><b>)</b>                 Value of string dataset ID variable
+    <b><u>nids</u></b><b>tr(</b><i>newvarname</i><b>)</b>            Name of string dataset ID variable
+    <b><u>fo</u></b><b>rmat(</b><i>formatting_list</i><b>)</b>       Display formats for variables in the output
+                                    dataset
+    -------------------------------------------------------------------------
+<p>
+    where <i>combination_rule</i> is
+<p>
+    <b>satterthwaite</b> | <b>constant</b>
+<p>
+    and <i>formatting_list</i> is a list of form
+<p>
+    <i>varlist_1</i><i> </i><i>format_1</i><i> ... </i><i>varlist_n</i><i> </i><i>format_n</i>
+<p>
+    See <i>metaparm_content_opts</i> for details of these options.
+<p>
+<p>
+<a name="parmcip_opts"></a><b><u>Options for </u></b><b><u>metaparm</u></b><b><u> and </u></b><b><u>parmcip</u></b>
+<p>
+<p>
+    <i>options</i>                   Description
+    -------------------------------------------------------------------------
+    <b>no</b><b><u>td</u></b><b>ist</b>                   Use Normal or <i>t</i>-distribution
+    <b><u>ef</u></b><b>orm</b>                     Estimates and confidence limits exponentiated
+    <b>float</b>                     Numeric output variables of type <b>float</b> or less
+    <b>fast</b>                      Calculate confidence limits without precautions
+    <b><u>est</u></b><b>imate(</b><i>varname</i><b>)</b>         Name of input estimate variable
+    <b><u>std</u></b><b>err(</b><i>varname</i><b>)</b>           Name of input standard error variable
+    <b><u>d</u></b><b>of(</b><i>varname</i><b>)</b>              Name of input degrees of freedom variable
+    <b><u>z</u></b><b>stat(</b><i>newvarname</i><b>)</b>         Name of output <i>z</i>-statistic variable
+    <b><u>t</u></b><b>stat(</b><i>newvarname</i><b>)</b>         Name of output <i>t</i>-statistic variable
+    <b><u>p</u></b><b>value(</b><i>newvarname</i><b>)</b>        Name of output <i>P</i>-value variable
+    <b><u>sta</u></b><b>rs(</b><i>numlist</i><b>)</b>            List of <i>P</i>-value thresholds for stars
+    <b><u>nsta</u></b><b>rs(</b><i>newvarname</i><b>)</b>        Name of output stars variable
+    <b><u>le</u></b><b>vel(</b><i>numlist</i><b>)</b>            Confidence level(s) for calculating confidence
+                                limits
+    <b><u>cln</u></b><b>umber(</b><i>numbering_rule</i><b>)</b>  Numbering rule for naming confidence limit
+                                variables
+    <b><u>minp</u></b><b>refix(</b><i>prefix</i><b>)</b>         Prefix for lower confidence limits
+    <b><u>maxp</u></b><b>refix(</b><i>prefix</i><b>)</b>         Prefix for upper confidence limits
+    <b>replace</b>                   Replace variables with same names as output
+                                variables
+    -------------------------------------------------------------------------
+<p>
+    where <i>numbering_rule</i> is
+<p>
+    <b>level</b> | <b>rank</b>
+<p>
+    See <i>parmcip_opts</i> for details of these options.
+<p>
+<p>
+<b><u>Output datasets created by </u></b><b><u>metaparm</u></b><b><u> and </u></b><b><u>parmcip</u></b>
+<p>
+    These output datasets (or resultssets) are described in detail in 
+    <i>metaparm_resultssets</i>.
+<p>
+<p>
+<b><u>Methods and formulas</u></b>
+<p>
+    <b>metaparm</b> generates an output dataset with one observation, or one
+    observation per by-group, and data on estimates, standard errors and
+    degrees of freedom for linear combinations (weighted sums) of parameters,
+    and then uses <b>parmcip</b> to derive the <i>t</i>- or <i>z</i>-statistics, <i>P</i>-values and
+    confidence limits.  The exact method used to calculate the estimates,
+    standard errors and degrees of freedom depends on whether the <b>tdist</b>
+    option is used, and on whether aweights or iweights are specified.  In
+    general, it is assumed that, in the input dataset (or in a by-group of
+    the input dataset), there are <b>N</b> observations, corresponding to parameters
+    <b>theta_1, ..., theta_N</b>, with corresponding standard errors <b>se_1, ...,</b>
+    <b>se_N</b>, corresponding coefficients <b>a_1, ..., a_N</b>, and corresponding degrees
+    of freedon <b>df_1, ..., df_N</b> if the <b>tdist</b> option is used.  We wish to
+    calculate an estimate for the linear combination
+<p>
+    <b>Theta = Sum ( a_j * theta_j )</b>
+<p>
+    and a corresponding standard error
+<p>
+    <b>SE = sqrt( Sum (a_j * se_j)^2</b> )
+<p>
+    and degrees of freedom (if <b>tdist</b> is specified) calculated from the <b>df_j</b>
+    and the <b>se_j</b> by the Satterthwaite formula (Satterthwaite, 1946), unless
+    the user specifies the option <b>dfcombine(constant)</b>, in which case <b>metaparm</b>
+    checks that the input degrees of freedom <b>df_j</b> are all equal, and then
+    sets the output degrees of freedom to the input degrees of freedom.  The
+    definition of the <b>a_j</b> depends on whether iweights or aweights are
+    specified. If iweights are specified, then the <b>a_j</b> are given by the
+    result of the weight expression, which may be positive, zero or negative.
+    If aweights are specified, then the result of the weight expression must
+    be non-negative, and is divided by its total within the input dataset or
+    by-group to give the <b>a_j</b>.  If no weights are specified, then aweights are
+    assumed, and are set to 1, so that the <b>a_j</b> are equal to <b>1/N</b>, and their
+    sum in the dataset or by-group is equal to 1.  aweights are typically
+    specified if the user wishes to carry out a meta-analysis, whereas
+    iweights are typically specified if the user wishes to estimate a
+    difference between two parameters <b>theta_1</b> and <b>theta_2</b> in each by-group.
+<p>
+<p>
+<b><u>Remarks</u></b>
+<p>
+    More information about <b>parmest</b> and <b>parmby</b> resultssets can be found in
+    Newson (2006), Newson (2004), Newson (2003) and Newson (2002).  Other
+    programs are available in the Stata community for carrying out
+    meta-analyses, including <b>meta</b>, written by Stephen Sharp and Jonathan
+    Sterne.  (See <b>[R] meta</b> for details.) <b>metaparm</b> is complementary to these,
+    and is designed specifically for use with <b>parmest</b> resultssets.  Note,
+    however, that the input resultsset does not have to be produced by 
+    <b>parmest</b>.  It need only contain an estimate variable, a standard error
+    variable, and a degrees of freedom variable (if <b>tdist</b> is specified).
+    Linear combinations of parameters for the same model can be estimated
+    using the official Stata command <b>lincom</b>, or by the <b>lincomest</b> package,
+    downloadable from SSC.  <b>metaparm</b> is complementary to these, and is
+    designed for use when parameters are estimated by sampling independently
+    from distinct subpopulations.
+<p>
+    <b>parmcip</b> may be used for defining additional confidence limits in a 
+    <b>parmest</b> resultsset, with different confidence levels from those
+    originally calculated by <b>parmby</b> or <b>parmest</b>. However, <b>parmcip</b> is also
+    useful for calculating confidence limits for transformed parameters,
+    using standard errors calculated using the delta method.
+<p>
+    The confidence limits calculated by <b>metaparm</b> or <b>parmcip</b> can be plotted
+    using the <b>eclplot</b> command, which is downloadable from SSC, and which can
+    be used to calculate Cochrane forest plots for meta-analyses.
+<p>
+<p>
+<b><u>Examples</u></b>
+<p>
+                . metaparm, list(,)
+<p>
+                . metaparm [awei=studynum], sumvar(studynum) list(,)
+<p>
+                . parmcip
+<p>
+                . parmcip, replace
+<p>
+    The following example uses the <b>auto</b> data. A variable <b>mod4</b> is defined,
+    equal to 0, 1, 2 or 3 for approximately equal numbers of cars.  We then
+    use <b>parmby</b> to fit a regression model, comparing mileage in non-American
+    and American cars, for cars with each value of <b>mod4</b>, and to store the
+    parameters in a <b>parmby</b> resultsset in memory, which is listed.  Finally,
+    we carry out a meta-analysis on the differences between the non-American
+    and American cars in the 4 <b>mod4</b> groups, weighting the differences by
+    numbers of cars to produce a weighted mean difference, which is listed,
+    together with its 95% confidence limits and <i>P</i>-value.
+<p>
+                . sysuse auto, clear
+                . gene byte mod4=mod(_n,4)
+                . parmby "regress mpg foreign", by(mod4) norestore escal(N)
+                    rename(es_1 N) format(estimate min* max* %8.2f p %-8.2g)
+                . bysort mod4 (N parmseq): list
+                . metaparm [awei=N] if parm=="foreign", sumvar(N) list(,)
+<p>
+    The following example uses the <b>auto</b> data. A variable <b>odd</b> is defined,
+    equal to 0 for even-numbered cars and 1 for odd-numbered cars in the
+    order in the dataset. We then demonstrate that <b>metaparm</b> (with iweights)
+    produces the same results as <b>ttest</b> with the <b>unequal</b> option when comparing
+    the weights of American and non-American cars within the odd-numbered and
+    even-numbered categories. <b>metaparm</b> has the advantage that it can store
+    the confidence intervals in a resultsset on disk or memory, which can
+    later be plotted using <b>eclplot</b>, although this is not done here.
+<p>
+                . sysuse auto, clear
+                . gene byte odd=mod(_n,2)
+                . bysort odd: ttest weight, by(foreign) unequal
+                . parmby "regress weight", by(odd foreign) norestore
+                    format(estimate min* max* %8.2f p %-8.2g)
+                . list
+                . metaparm [iwei=!foreign-foreign], by(odd) norestore
+                . list odd estimate min* max* p dof
+<p>
+    The following example uses the <b>auto</b> data to demonstrate the use of
+    <b>metaparm</b>, with the option <b>dfcombine(constant)</b>, to carry out an
+    equal-variance <i>t</i>-test between weights of US and non-US cars.  This is
+    done using a <b>parmby</b> output dataset, in which the command <b>factext</b>
+    (downloadable from SSC) has been used to reconstruct the variable
+    <b>foreign</b>.  Again, the use of <b>metaparm</b> allows the user to save confidence
+    intervals to be plotted and/or tabulated, although this is not done here.
+<p>
+                . sysuse auto, clear
+                . ttest weight, by(foreign)
+                . parmby "xi, noomit: regress weight i.foreign, noconst",
+                    norestore label format(estimate min* max* %8.2f p %-8.2g)
+                . factext
+                . list
+                . metaparm [iwei=!foreign-foreign], dfcombine(constant) list(,)
+<p>
+    The following example uses the <b>svyset</b> and <b>svy: tabulate</b> commands, and the
+    SSC package <b>xcontract</b>, in the <b>auto</b> data to demonstrate the use of <b>parmcip</b>
+    for calculating transformed confidence intervals.  It uses <b>xcontract</b> to
+    calculate counts and proportions and save them to a file on disk, uses
+    <b>svy: tabulate</b> to calculate confidence intervals for the proportions of
+    cars with each combination of the values of the variables <b>rep78</b> and
+    <b>foreign</b>, and uses <b>parmest</b> to save the estimates and standard errors of
+    these proportions in a resultsset in memory.  We then replace the
+    estimates and standard errors of the proportions with the estimates and
+    standard errors of the corresponding logged odds, drop the existing
+    <i>t</i>-statistics, <i>P</i>-values and confidence limits, use <b>parmcip</b> to calculate
+    <i>t</i>-statistics, <i>P</i>-values and confidence limits for the logged odds, and
+    then calculate new estimates and confidence limits for the proportions by
+    back-transforming the estimates and confidence limits for the logged
+    odds.  These confidence limits are listed, and are identical to those
+    displayed by <b>svy: tabulate</b>, but have the advantage that they may then be
+    plotted using <b>eclplot</b>, or listed using formats chosen by the user.  (This
+    is an example of the delta method.  See <b>[SVY] svy: tabulate twoway</b> for
+    details of the formulas.)
+<p>
+                . sysuse auto, clear
+                . tempfile tf1
+                . xcontract rep78 foreign, zero saving(`tf1', replace)
+                . gene byte pwt=1
+                . version 8: svyset [pweight=pwt]
+                . svy: tabulate rep78 foreign, ci
+                . parmest, norestore
+                . list
+                . replace stderr=stderr/(estimate*(1-estimate))
+                . replace estimate=log(estimate/(1-estimate))
+                . drop t p min* max*
+                . parmcip
+                . gene estimate_2=exp(estimate)/(1+exp(estimate))
+                . gene min95_2=exp(min95)/(1+exp(min95))
+                . gene max95_2=exp(max95)/(1+exp(max95))
+                . merge using `tf1'
+                . sort rep78 foreign
+                . list rep78 foreign _freq estimate_2 min95_2 max95_2,
+                    sepby(rep78)
+<p>
+<p>
+<p>
+<b><u>Acknowledgements</u></b>
+<p>
+    I would like to thank Jill Starkes and Lee Sieswerda of Thunder Bay
+    District Health Unit for drawing my attention to the example of the delta
+    method used to calculate the confidence intervals displayed by <b>svy:</b>
+    <b>tabulate</b>.
+<p>
+<p>
+<b><u>Author</u></b>
+<p>
+    Roger Newson, Imperial College London, UK.  Email:
+    r.newson@imperial.ac.uk
+<p>
+<p>
+<b><u>References</u></b>
+<p>
+    Newson, R. 2006. Resultssets, resultsspreadsheets, and resultsplots in
+        Stata.  Presented at the 4th German Stata Users' Group Meeting,
+        Mannheim, 31 March, 2006.  Also downloadable from Roger Newson's
+        website at http://www.imperial.ac.uk/nhli/r.newson.
+<p>
+    Newson, R. 2004. From datasets to resultssets in Stata.  Presented at the
+        10th United Kingdom Stata Users' Group Meeting, London, 29 June,
+        2004.  Also downloadable from Roger Newson's website at
+        http://www.imperial.ac.uk/nhli/r.newson.
+<p>
+    Newson, R. 2003. Confidence intervals and <i>p</i>-values for delivery to the
+        end user.  <i>The Stata Journal</i> 3(3): 245-269. Pre-publication draft
+        downloadable from Roger Newson's website at
+        http://www.imperial.ac.uk/nhli/r.newson.
+<p>
+    Newson, R. 2002. Creating plots and tables of estimation results using
+        <b>parmest</b> and friends.  Presented at the 8th UK Stata Users' Group
+        Meeting, 20-21 May, 2002.  Also downloadable from Roger Newson's
+        website at http://www.imperial.ac.uk/nhli/r.newson.
+<p>
+    Satterthwaite, F. E. 1946. An approximate distribution of estimates of
+        variance components.  <i>Biometrics Bulletin</i> 2(6): 110-114.
+<p>
+<p>
+<b><u>Also see</u></b>
+<p>
+     Manual: <b>[U] 20 Estimation and postestimation commands</b>,
+             <b>[D] append</b>, <b>[R] lincom</b>, <b>[R] meta</b>, <b>[SVY] svyset</b>, <b>[SVY] svy:</b>
+             <b>tabulate oneway</b>, <b>[SVY] svy: tabulate twoway</b>.
+    On-line: help for <b>append</b>, <b>lincom</b>, <b>svyset</b>, <b>svy tabulate oneway</b>, <b>svy</b>
+             <b>tabulate twoway</b>
+             help for <b>parmest</b>, <b>parmby</b>, <i>metaparm_outdest_opts</i>,
+             <i>metaparm_content_opts</i>, <i>parmcip_opts</i>, <i>metaparm_resultssets</i>,
+             <i>parmest_resultssets</i>
+             help for <b>meta</b>, <b>dsconcat</b>, <b>factext</b>, <b>lincomest</b>, <b>xcontract</b> if
+             installed
+</pre>

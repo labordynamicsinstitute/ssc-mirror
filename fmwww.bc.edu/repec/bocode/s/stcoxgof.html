@@ -1,0 +1,218 @@
+<pre>
+help for <b> help stcoxgof</b>
+-------------------------------------------------------------------------------
+<p>
+<b><u>Title</u></b>
+<p>
+    <b>stcoxgof</b> --    Goodness-of-fit test and plot after a Cox model
+<p>
+<p>
+<b><u>Syntax</u></b>
+<p>
+        <b>stcoxgof</b> [<b>,</b> <b><u>gr</u></b><b>oup(</b><i>#</i><b>)</b> <b>mol(</b><i>#</i><b>)</b> <b>molat(</b><i>numlist</i><b>)</b> <b>mom(</b><i>#</i><b>)</b> <b>momat(</b><i>numlist</i><b>)</b>
+               <b><u>poi</u></b><b>dis</b> <b><u>ar</u></b><b>jas(</b><i>#</i><b>)</b> <b>separate</b> <i>twoway_options</i> ]
+<p>
+<p>
+    <i>options</i>                        Description
+    -------------------------------------------------------------------------
+    Main
+      <b><u>gr</u></b><b>oup</b>                        specify the number of quantiles of risk
+                                     for Gronnesby and Borgan test
+      <b>mol</b>                          specify the number of time intervals for
+                                     Moreau, O'Quigley and Lellouch test
+      <b>molat</b>                        specify the time intervals for Moreau,
+                                     O'Quigley and Lellouch test
+      <b>mom</b>                          specify the number of time intervals for
+                                     Moreau, O'Quigley and Mesbah test
+      <b>momat</b>                        specify the time intervals for Moreau,
+                                     O'Quigley and Mesbah test
+      <b><u>poi</u></b><b>dis</b>                       report probability of observed counts
+                                     within each decile of risk according to
+                                     Poisson distibution
+<p>
+    Arjas like plots
+      <b><u>ar</u></b><b>jas</b>                        specify the number of quantiles of risk
+                                     for Arjas like plots.
+      <b><u>sep</u></b><b>arate</b>                     separate plots for each qualntile of risk
+                                     are shown.
+      <b><u>lineop</u></b><b>ts(</b><i>cline_options</i><b>)</b>      affect rendition of the line
+<p>
+    Y-Axis, X-Axis, Saving, Scheme
+      <i>twoway_options</i>               some of the options documented in
+                                     <b>[G]</b> <i>twoway_options</i>
+    -------------------------------------------------------------------------
+<p>
+<p>
+<b><u>Description</u></b>
+<p>
+<b>stcoxgof</b> is a post-estimation command testing the goodness of fit after a Cox
+model.  So you must use this command after <b>stcox</b>. To compute Gronnesby and
+Borgan test and to obtain Arjas like plots Martingale residuals must also be
+saved specifying <b>stcox</b>'s <b>mgale()</b> option; see stcox.
+<p>
+<b>stcoxgof</b> calls <b>scoretest_cox</b> to compute score test statistics. You can obtain
+this command by clicking here.
+<p>
+When used without options or with the option <b>group(</b><i>#</i><b>)</b>, <b>stcoxgof</b> computes the
+added variable version of Gronnesby and Borgan test by the Score statistic and
+Likelihood ratio statistic for the inclusion of design variables based on risk
+score.  Then a table presenting the observed and expected numbers of events in
+each quantile of risk is shown. According to May and Hosmer, z-score and
+two-tailed p-value from standard normal distribution are also tabulated.
+<p>
+An added variables version of the Moreau, O'Quigley and Lellouch test can be
+computed specifying the <b>mol(</b><i>#</i><b>)</b> or the <b>molat(</b><i>numlist</i><b>)</b> option.  In this case the
+Score statistic and Likelihood ratio statistic refer to the inclusion of design
+variables based on cross-products of indicator variables for risk score groups
+and time intervals.
+<p>
+Specifying <b>mom(</b><i>#</i><b>)</b> or the <b>momat(</b><i>numlist</i><b>)</b> option an added variables version of
+the Moreau, O'Quigley and Mesbah test can be computed.  In this case the Score
+statistic and Likelihood ratio statistic refer to the inclusion of design
+variables based on cross-products of the covariates included in the model and
+time intervals.  Since several interactions terms can be created, it is not
+advisable to compute this test when the model includes more than a few
+categorical covariates.
+<p>
+If <b>arjas(</b><i>#</i><b>)</b> option is given Arjas like plots by quantiles of risk are
+displayed.
+<p>
+<p>
+<b><u>Options</u></b>
+<p>
+        +------+
+    ----+ Main +-------------------------------------------------------------
+<p>
+    <b>group(</b><i>#</i><b>)</b> specifies the number of groups based on risk score to be used to
+        group observed ed expected numbers of events. If not specified the
+        optimal number of quantiles is computed according to the formula
+        <i>int(max(2,min(10,`e(N_fail)'/40)))</i>. Indicator variables for each risk
+        score group are then added to the model to compute the Gronnesby and
+        Borgan test.  Values allowed are from 2 to 10.
+<p>
+    <b>mol(</b><i>#</i><b>)</b> specifies the number of time intervals by which the analysis time is
+        partitioned. Then, cross-products of indicator variables for quantiles
+        of risk and time intervals are formed and the Moreau, O'Quigley and
+        Lellouch test computed.  Values allowed are from 2 to 10. The number of
+        quantiles of risk can be specified using the <b>group(</b><i>#</i><b>)</b> option or the
+        optimal number is determined according to the formula above.
+<p>
+    <b>molat(</b><i>numlist</i><b>)</b> is an alternative way to partition the analysis time at the
+        times specified in the <i>numlist</i>. As the previous option, cross-products
+        of indicator variables for quantiles of risk and time intervals are
+        then formed the Moreau, O'Quigley and Lellouch test computed.
+<p>
+    <b>mom(</b><i>#</i><b>)</b> specifies the number of time intervals by which the analysis time is
+        partitioned. The time axis is divided such that each interval contains
+        approximately the same number of events. Then cross-products of
+        covariates included in the model and time intervals are formed and
+        Moreau, O'Quigley and Mesbah test computed. Values allowed are from 2
+        to 10.
+<p>
+    <b>momat(</b><i>numlist</i><b>)</b> is an alternative way to partition the analysis time at the
+        times specified in the <i>numlist</i>. As the previous option, cross-products
+        of covariates included in the model and time intervals are then formed
+        and the Moreau, O'Quigley and Mesbah test computed.
+<p>
+    <b>poidis</b> estimates the probability of observed counts within each decile of
+        risk according to Poisson distibution with mean equal to the estimated
+        expected number of counts.
+<p>
+<p>
+        +-----------------+
+    ----+ Arjas like plot +--------------------------------------------------
+<p>
+    <b>arjas(</b><i>#</i><b>)</b> specifies the number of quantiles of risk used to group the data
+        for Arjas like plots. Values allowed are from 2 to 10.
+<p>
+    <b>separate</b> requests that for each quantile of risk a separate graph should be
+        shown.
+<p>
+<p>
+<p>
+<b><u>Examples</u></b>
+<p>
+            use "C:\Data\uis_gof", clear
+            stset time, failure(cens)
+            stcox age beck ndru_1 ndru_2 ivh_3 race treat site agesite
+                    racesite, mgale(m)
+            stcoxgof
+            stcoxgof,gr(5)
+            stcoxgof,mol(4)
+            stcoxgof,gr(5) mol(4)
+            stcoxgof,gr(5) molat(84 170 376)
+            stcoxgof,arjas(4) scheme(sj)
+            stcox ivh_3 race treat
+            stcoxgof,mom(4)
+            stcoxgof,momat(170 354 535)
+<p>
+Downloading ancillary files in one of your <b>`"`c(adopath)'"'</b> directory you can
+run this example.
+<p>
+          <i>(</i><i>click to run</i><i>)</i>
+<p>
+<p>
+<b><u>Remarks</u></b>
+<p>
+Based on ideas similar to the Hosmer-Lemeshow test for logistic regression,
+three goodness of fit tests for Cox proportional hazards model can be derived
+by adding group indicator variables to the model and testing the hypothesis
+that the coefficients of the group indicator variables are zero via score,
+likelihood ratio or Wald test.
+<p>
+The first is the Moreau, O'Quigley, and Lellouch (MOL) test obtained by
+partitioning in intervals the time axis and grouping the individuals based on
+their risk score. Then, indicator variables are generated as cross products of
+time intervals with risk score groups and included in the model. The MOL test
+is an omnibus test and should detect any violations of the PH model.
+<p>
+The second is the added variable version of test proposed by Moreau. O'Quigley,
+and Mesbah (MOM).  The time axis is partitoned in intervals and indicator
+variables are generated by cross products of time intervals with each level of
+the covariates in the model. The MOM test is designed to specifically detect
+violations of the proportional hazards assumption. The fact that we might need
+to use a large number of added variables limits the use of the MOM test to the
+case of Cox models with just a few categorical covariates.
+<p>
+The third test is proposed by Gronnesby and Borgan. The idea is to divide the
+observations into groups based on their estimated risk score. Then, indicator
+variables for risk score groups are added to the model testing whether their
+coefficients are zero. This test, like the MOL test, is an omnibus test but it
+is not appropriate when time-varying covariates are included in the model.
+<p>
+Arjas like plots, as proposed by Hosmer and Lemeshow, compare observed and
+expected events in groups based on risk score.
+<p>
+<p>
+<p>
+<b><u>Also see</u></b>
+<p>
+ Manual:  <b>[S] st stcox</b>
+<p>
+ Online:  stcox postestimation, stcox diagnostics
+<p>
+<p>
+<p>
+<b><u>References</u></b>
+<p>
+S. May and D. W. Hosmer. Hosmer and Lemeshow type goodness-of-fit statistics
+for the Cox proportional hazards model.  In: Advances in Survival Analysis:
+Handbook of Statistics Vol 23, edited by N. Balakrishnana and C. R. Rao,
+Amsterdam: Elsevier, North-Holland, 2004, p. 383-394.
+<p>
+D. W. Hosmer and S. Lemeshow. Applied survival analysis: Regression modeling of
+time to event data.  Wiley, New York, 1999, p. 225 - 230.
+<p>
+<p>
+<p>
+<b><u>Authors</u></b>
+<p>
+Enzo Coviello (enzo.coviello@alice.it)
+John Moran (john.moran@adelaide.edu.au)
+<p>
+<p>
+<b><u>Aknowledgments</u></b>
+<p>
+We are grateful to Isabel Canette for writing scoretest_cox and to Phil Ryan
+and coll. for their cooperation in checking the results of the tests.
+</pre>

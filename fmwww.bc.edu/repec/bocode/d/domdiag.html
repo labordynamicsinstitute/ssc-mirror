@@ -1,0 +1,90 @@
+<pre>
+-------------------------------------------------------------------------------
+help for <b>domdiag</b>
+-------------------------------------------------------------------------------
+<p>
+<b><u>Dominance diagram</u></b>
+<p>
+        <b>domdiag</b> <i>varname</i> [<b>if</b> <i>exp</i>] [<b>in</b> <i>range</i>] <b>, by(</b><i>byvar</i><b>)</b> [ <b><u>rev</u></b><b>erse</b>
+                 <i>graph_options</i> ]
+<p>
+<p>
+<b><u>Description</u></b>
+<p>
+    <b>domdiag</b> plots a dominance diagram given a division of the values of the
+    numeric variable <i>varname</i> into precisely two groups by the categories of
+    <i>byvar</i>.
+<p>
+    Suppose there are <i>n_1</i> values in the group for the lower value of <i>varname</i>
+    (hereafter called group 1) and <i>n_2</i> values in the group for the higher
+    value of <i>varname</i> (group 2). Then there are <i>n_1</i> * <i>n_2</i> pairwise
+    comparisons, which are plotted on a graph with axes rank on <i>varname</i>
+    within group 1 and rank on <i>varname</i> within group 2. The symbols used are
+    <b>"+"</b> if value in group 1 &gt; value in group 2, <b>"0"</b> if value in group 1 =
+    value in group 2, and <b>"-"</b> if value in group 1 &lt; value in group 2. This
+    helps to make graphic what is done in <b>ranksum</b>: the proportion of pairs
+    symbolised <b>"+"</b> plus 1/2 the proportion of pairs symbolised <b>"0"</b> is the
+    estimate that <i>P</i>((<i>varname</i> | group 1) &gt; (<i>varname</i> | group 2)).
+<p>
+    By default, ranks for the group with fewer values are plotted on the <i>y</i>
+    axis.
+<p>
+<p>
+<b><u>Remarks</u></b>
+<p>
+    This graph was used by Cliff (1993, 1996). Some earlier related ideas are
+    reviewed by Fisher (1983). Newson (2002) gives a broader discussion and
+    an example implementing <b>domdiag</b>.
+<p>
+    <b>domdiag</b> temporarily makes a dataset of <i>n_1</i> * <i>n_2</i> observations.  This may
+    be very much larger than the existing dataset and the user should make
+    sure that enough memory is allocated.
+<p>
+<p>
+<b><u>Options</u></b>
+<p>
+    <b>by(</b><i>byvar</i>) specifies subdivision into two groups and is a required option.
+        If <i>byvar</i> defines three or more categories and it is desired to focus
+        on just two, make sure the others are excluded by using <b>if</b>.
+<p>
+    <b>reverse</b> specifies that axes are to be reversed from the default.
+<p>
+    <i>graph_options</i> are options of scatter.  By default, <b>note()</b> is used to
+        display <i>P</i>((<i>varname</i> | group 1) &gt; (<i>varname</i> | group 2)).
+<p>
+<p>
+<b><u>Examples</u></b>
+<p>
+    <b>. domdiag mpg, by(foreign)</b>
+<p>
+<p>
+<b><u>Author</u></b>
+<p>
+    Nicholas J. Cox, Durham University, U.K.
+    n.j.cox@durham.ac.uk
+<p>
+<p>
+<b><u>References</u></b> 
+<p>
+    Cliff, N. 1993. Dominance statistics: ordinal analyses to answer ordinal
+        questions. <i>Psychological Bulletin</i> 114, 494-509.
+<p>
+    Cliff, N. 1996. <i>Ordinal methods for behavioral data analysis.</i>  Mahwah,
+        NJ: Lawrence Erlbaum.
+<p>
+    Fisher, N.I. 1983. Graphical methods in nonparametric statistics:  a
+        review and annotated bibliography. <i>International Statistical Review</i>
+        51, 25-38.
+<p>
+    Newson, R. 2002. Parameters behind "nonparametric" statistics:  Kendall's
+        tau, Somers' D and median differences.  <i>Stata Journal</i> 2: 45-64.
+        http://www.stata-journal.com/sjpdf.html?articlenum=st0007
+<p>
+<p>
+<p>
+<b><u>Also see</u></b>
+<p>
+ Manual:  <b>[R] signrank</b>
+On-line:  signrank
+<p>
+</pre>

@@ -1,0 +1,186 @@
+<pre>
+<b>help mata mm_matlist()</b>
+-------------------------------------------------------------------------------
+<p>
+<b><u>Title</u></b>
+<p>
+    <b>mm_matlist() -- Display a matrix and control the format</b>
+<p>
+<p>
+<b><u>Syntax</u></b>
+<p>
+                <i>void</i>  <b>mm_matlist(</b><i>X</i> [<b>,</b> <i>fmt</i><b>,</b> <i>border</i><b>,</b> <i>rstripe</i><b>,</b> <i>cstripe</i><b>,</b> <i>rtitle</i><b>,</b>
+                           <i>save</i>]<b>)</b>
+<p>
+    <i>string colvector</i>  <b>mm_smatlist(</b><i>X</i> [<b>,</b> <i>fmt</i><b>,</b> <i>border</i><b>,</b> <i>rstripe</i><b>,</b> <i>cstripe</i><b>,</b>
+                           <i>rtitle</i>]<b>)</b>
+<p>
+<p>
+    where
+<p>
+            <i>X</i>:  <i>real matrix X</i>
+<p>
+          <i>fmt</i>:  <i>string matrix fmt</i>
+<p>
+       <i>border</i>:  <i>real scalar border</i>
+<p>
+      <i>rstripe</i>:  <i>string vector rstripe</i>
+<p>
+      <i>cstripe</i>:  <i>string vector cstripe</i>
+<p>
+       <i>rtitle</i>:  <i>string scalar rtitle</i>
+<p>
+         <i>save</i>:  object of any type; will be replaced
+<p>
+<p>
+<b><u>Description</u></b>
+<p>
+    <b>mm_matlist()</b> displays matrix <i>X</i> and lets you control the format. Wide
+    matrices are broken into pieces to fit the window width.
+<p>
+    <i>fmt</i> set the display format(s). Available formats are the usual numeric
+    and date formats (see help <b>format</b>) as well as <b>"%f"</b> and <b>"%g"</b> meaning
+    %11.0g, compressed, and <b>"%e"</b> meaning %11.8e, compressed (see help <b>[M-5]</b>
+    <b>printf()</b>). The default format is <b>"%9.0g"</b>.
+<p>
+    <i>border</i> sets border style. <i>border</i>==0 omits the border lines.  <i>border</i>==1
+    prints lines around all four sides (Mata default).  <i>border</i>==2 uses a
+    style similar to a one-way frequency table (lines between the row labels
+    and table body and between the column labels and the table body; see help
+    <b>tabulate</b>). <i>border</i>==3 uses a style similar to a coefficients table (like
+    <i>border</i>==2 but with top and bottom lines; see help <b>ereturn display</b>). The
+    default is <i>border</i>==1.
+<p>
+    <i>rstripe</i> and <i>cstripe</i> may be used to provide row and column labels. The
+    default is to print the row and column numbers. Specifying <i>rstripe</i> or
+    <i>cstripe</i> as <b>""</b> omits the labels. Specifying <i>rstripe</i> or <i>cstripe</i> as
+    <b>J(1,0,"")</b> or <b>J(0,1,"")</b> is equivalent to not specifying the argument (i.e.
+    row or column numbers will be printed).
+<p>
+    <i>rtitle</i> specifies a title to be printed above the row labels.
+<p>
+    If <i>save</i> is provided, no output is displayed, but is returned in <i>save</i> as
+    <i>string colvector</i>. Breaking wide matrices into pieces is disabled in this
+    case.
+<p>
+    <b>mm_smatlist()</b> is like <b>mm_matlist()</b> but returns a <i>string colvector</i>
+    containing the output. In fact, <b>display(mm_smatlist(X))</b> is equivalent to
+    <b>mm_matlist(X)</b>, but uses more memory (and does not break wide matrices
+    into pieces). <b>mm_smatlist()</b> is a shortcut to <b>mm_matlist(</b><i>...</i><b>,</b> <i>save</i><b>)</b>.
+<p>
+<p>
+<b><u>Remarks</u></b>
+<p>
+    Examples:
+<p>
+        : X = uniform(2,2):*(100,1)
+        
+        : X
+                         1             2
+            +-----------------------------+
+          1 |  61.00572762   .0884897853  |
+          2 |  4.244257417   .2894746962  |
+            +-----------------------------+
+<p>
+        : mm_matlist(X)
+                       1           2
+            +-------------------------+
+          1 |   61.00573    .0884898  |
+          2 |   4.244257    .2894747  |
+            +-------------------------+
+<p>
+        : mm_matlist(X,("%9.0g","%8.4f"), 3,
+        &gt;     ("weight", "mpg"), ("Coef.","p-value"), "price")
+        --------------------------------
+           price |      Coef.    p-value
+        ---------+----------------------
+          weight |   61.00573     0.0885
+             mpg |   4.244257     0.2895
+        --------------------------------
+<p>
+        : mm_matlist(X*100,"%d")
+                       1           2
+            +-------------------------+
+          1 |  13sep1976   09jan1960  |
+          2 |  28feb1961   29jan1960  |
+            +-------------------------+
+<p>
+        : mm_matlist(J(2,2,1))
+                       1           2
+            +-------------------------+
+          1 |          1           1  |
+          2 |          1           1  |
+            +-------------------------+
+<p>
+        : mm_matlist(J(2,2,1),"%g")
+               1   2
+            +---------+
+          1 |  1   1  |
+          2 |  1   1  |
+            +---------+
+<p>
+        : S = mm_smatlist(X,"%g",2)
+        
+        : display(8*" ":+S)
+                    |           1            2
+                ----+-------------------------
+                  1 |  61.0057276   .088489785
+                  2 |  4.24425742   .289474696
+        
+<p>
+    <b>mm_matlist()</b> uses the <b>sprintf()</b> function to display the numbers, so <i>fmt</i>
+    may also contain text, although this only seems of limited use. Example:
+<p>
+        : mm_matlist(uniform(2,2),("x = %g","y = %g"))
+                           1                2
+            +----------------------------------+
+          1 |  x = .29975603   y = .566944822  |
+          2 |  x = .32776424   y = .068731192  |
+            +----------------------------------+
+        
+<p>
+<b><u>Conformability</u></b>
+<p>
+    <b>mm_matlist(</b><i>X</i><b>,</b> <i>fmt</i><b>,</b> <i>border</i><b>,</b> <i>rstripe</i><b>,</b> <i>cstripe</i><b>,</b> <i>rtitle</i><b>,</b> <i>save</i><b>)</b>:
+         <i>X</i>:  <i>r x c</i>
+       <i>fmt</i>:  1 <i>x</i> 1 or <i>r x</i> 1 or 1 <i>x c</i> or <i>r x c</i>
+    <i>border</i>:  1 <i>x</i> 1
+   <i>rstripe</i>:  <i>r x</i> 1 or 1 <i>x r</i> or <b>""</b> or <b>J(0,1,"")</b> or <b>J(1,0,"")</b>
+   <i>cstripe</i>:  1 <i>x c</i> or <i>c x</i> 1 or <b>""</b> or <b>J(1,0,"")</b> or <b>J(0,1,"")</b>
+    <i>rtitle</i>:  1 <i>x</i> 1
+      <i>save</i>:  will be replaced by <i>ro x</i> 1
+    <i>result</i>:  <i>void</i>
+<p>
+    <b>mm_smatlist(</b><i>X</i><b>,</b> <i>fmt</i><b>,</b> <i>border</i><b>,</b> <i>rstripe</i><b>,</b> <i>cstripe</i><b>,</b> <i>rtitle</i><b>)</b>:
+         <i>X</i>:  <i>r x c</i>
+       <i>fmt</i>:  1 <i>x</i> 1 or <i>r x</i> 1 or 1 <i>x c</i> or <i>r x c</i>
+    <i>border</i>:  1 <i>x</i> 1
+   <i>rstripe</i>:  <i>r x</i> 1 or 1 <i>x r</i> or <b>""</b> or <b>J(0,1,"")</b> or <b>J(1,0,"")</b>
+   <i>cstripe</i>:  1 <i>x c</i> or <i>c x</i> 1 or <b>""</b> or <b>J(1,0,"")</b> or <b>J(0,1,"")</b>
+    <i>rtitle</i>:  1 <i>x</i> 1
+    <i>result</i>:  <i>ro x</i> 1
+    
+    <i>ro</i>, the number of output rows, is equal to <i>r</i> plus some rows containing
+    borders and column labels.
+<p>
+<p>
+<b><u>Diagnostics</u></b>
+<p>
+    Using SMCL tags within <i>fmt</i>, <i>rstripe</i>, or <i>cstripe</i> (see help smcl) or
+    specifying special characters in <i>fmt</i> such as, e.g., <b>\n</b> (see help <b>[M-5]</b>
+    <b>printf()</b>) may mess up the output.
+<p>
+<p>
+<b><u>Source code</u></b>
+<p>
+    mm_matlist.mata
+<p>
+<p>
+<b><u>Author</u></b>
+<p>
+    Ben Jann, ETH Zurich, jann@soz.gess.ethz.ch
+<p>
+<p>
+<b><u>Also see</u></b>
+<p>
+</pre>

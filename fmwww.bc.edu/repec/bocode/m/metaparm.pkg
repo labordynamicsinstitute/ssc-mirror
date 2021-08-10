@@ -1,0 +1,35 @@
+d 'METAPARM': module to perform meta-analysis and transformations using parmest resultssets
+d
+d	 The metaparm package contains two resultsset-processing
+d programs, parmcip	 and metaparm, for use with parmest
+d resultssets. metaparm inputs a dataset      in memory with one
+d observation per parameter and variables containing	 
+d estimates, standard errors and (optionally) degrees of freedom,
+d and creates	   an output dataset with one observation, or one
+d observation per by-group, and      data on estimates, standard
+d errors, z- or t-statistics, P-values and	confidence limits
+d for a linear combination (weighted sum) of the input	   
+d parameters, assuming that the input parameters are estimated
+d independently      for different sub-populations.  The output
+d dataset can be listed to the Stata	  log, saved to a disk
+d file, or written to memory, overwriting the existing	   
+d dataset. metaparm is useful for meta-analyses and for calculating
+d confidence	  intervals and P-values for differences or ratios
+d between parameters for      different subpopulations.  parmcip
+d inputs a dataset in memory with one	   observation per
+d parameter and variables containing parameter estimates,     
+d standard errors and (optionally) degrees of freedom, and adds new
+d variables	 to the dataset, containing the confidence limits,
+d z- or t-statistics,	   P-values, and (optionally) stars for
+d P-values.  parmcip is useful if the user	requires confidence
+d intervals for a transformation of the original      parameters. 
+d
+d Distribution-Date: 20041110
+d
+d Author: Roger Newson, Guy's, King's and St. Thomas' School of Medicine
+d Support: email roger.newson@@kcl.ac.uk
+d
+f metaparm.ado
+f metaparm.hlp
+f ../p/parmcip.ado
+f ../p/parmcip.hlp

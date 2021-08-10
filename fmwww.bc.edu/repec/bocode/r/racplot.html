@@ -1,0 +1,56 @@
+<pre>
+-------------------------------------------------------------------------------
+help for <b>racplot</b>
+-------------------------------------------------------------------------------
+<p>
+<b><u>Plot residual autocorrelation function</u></b> 
+<p>
+        <b>racplot</b> [ <b>,</b> <i>residualtype</i> <b><u>rsc</u></b><b>ale(</b><i>exp</i><b>)</b> <i>ac_options</i> <b>plot(</b><i>plot</i><b>)</b> ]
+<p>
+<p>
+<b><u>Description</u></b>
+<p>
+    <b>racplot</b> plots the autocorrelation function of residuals from the last
+    model. Data must have been <b>tsset</b> previously.
+<p>
+    More precisely, the default is whatever residuals <b>predict, residuals</b> (or,
+    after <b>glm</b>, <b>predict, response</b>) produces after a model. The plot is
+    restricted to the estimation sample.
+<p>
+<p>
+<b><u>Options</u></b>
+<p>
+    <i>residualtype</i> specifies a type of residual other than the default.  The
+        following types are currently supported: <b><u>a</u></b><b>nscombe</b>, <b><u>d</u></b><b>eviance</b>,
+        <b><u>l</u></b><b>ikelihood</b>, <b><u>p</u></b><b>earson</b>, <b><u>r</u></b><b>esiduals</b>, <b><u>resp</u></b><b>onse</b>, <b><u>rsta</u></b><b>ndard</b>, <b><u>rstu</u></b><b>dent</b>, <b><u>s</u></b><b>core</b>,
+        <b><u>w</u></b><b>orking</b>.
+<p>
+    <b>rscale(</b><i>exp</i><b>)</b> specifies a transformed scale for the residuals using Stata
+        syntax and <b>X</b> as a placeholder for the residual variable name. Thus
+        <b>rscale(X^2)</b> specifies squaring; <b>rscale(abs(X))</b> specifies absolute
+        value, to set aside sign; <b>rscale(sqrt(abs(X)))</b> specifies root of
+        absolute value. This option is not obviously helpful, but is included
+        just in case it may be.
+<p>
+    <i>ac_options</i> are options of ac.
+<p>
+    <b>plot(</b>plot<b>)</b> provides a way to add other plots to the generated graph; see 
+        plot_option.
+<p>
+<p>
+<b><u>Examples</u></b>
+<p>
+    <b>. tsset time</b>
+    <b>. regress </b><i>whatever</i><b> time</b>
+    <b>. racplot</b>
+<p>
+<p>
+<b><u>Author</u></b>
+<p>
+    Nicholas J. Cox, University of Durham, U.K.
+    n.j.cox@durham.ac.uk
+<p>
+<p>
+<b><u>Also see</u></b>
+<p>
+</pre>

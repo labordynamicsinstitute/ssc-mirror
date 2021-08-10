@@ -1,0 +1,337 @@
+<pre>
+-------------------------------------------------------------------------------
+<b>help: </b><b>chowreg</b>                                                   <b>dialog:</b> <b>chowreg</b>
+-------------------------------------------------------------------------------
+<p>
+<b>        </b>+-------+
+<b>    </b>----+<b> Title </b>+------------------------------------------------------------
+<p>
+<b>chowreg: Structural Change Regressions and Chow Test</b>
+<p>
+<a name="00"></a><b>        </b>+-------------------+
+<b>    </b>----+<b> Table of Contents </b>+------------------------------------------------
+<p>
+     <b>Syntax</b>
+     <b>Options</b>
+     <b>Description</b>
+     <b>Saved Results</b>
+     <b>References</b>
+<p>
+ *** <b>Examples</b>
+<p>
+     <b>Author</b>
+<p>
+<a name="01"></a><b>        </b>+--------+
+<b>    </b>----+<b> Syntax </b>+-----------------------------------------------------------
+<p>
+  <b>chowreg</b> <i>depvar</i> <i>indepvars</i> [<i>if</i>] [<i>in</i>] [<i>weight</i>] , <b><u>d</u></b><b>um(</b><i>#</i><b>)</b> [ <b><u>t</u></b><b>ype(</b><i>#</i><b>)</b> <b><u>nocons</u></b><b>tant</b>
+    <b>vce(</b><i>vcetype</i><b>)</b>]
+ 
+<p>
+<a name="02"></a><b>        </b>+---------+
+<b>    </b>----+<b> Options </b>+----------------------------------------------------------
+<p>
+    <b>type(</b><i>1, 2, 3</i><b>)</b>     Functional Form Dummy Variables Type
+<p>
+        (1) Y = X + D0
+        (2) Y = X + DX
+        (3) Y = X + D0 + DX
+        where:
+        D0 = Dummy variable (0,1), takes (0) in first period, and (1) in second
+&gt;  period.
+        DX = Cross product of each Xi times in D0
+<p>
+    <b>dum(</b><i>#</i><b>)</b>            Number of First Period Observations
+<p>
+    <b><u>nocons</u></b><b>tant</b>        Exclude Constant Term
+<p>
+<a name="03"></a><b>        </b>+-------------+
+<b>    </b>----+<b> Description </b>+------------------------------------------------------
+<p>
+  <b>chowreg</b> Estimates structural change regressions and compute Chow test"}
+<p>
+<a name="04"></a><b>        </b>+---------------+
+<b>    </b>----+<b> Saved Results </b>+----------------------------------------------------
+<p>
+    <b>chowreg</b> saves the following in <b>r()</b>:
+<p>
+   <b>r(chow)</b>         Chow Test
+   <b>r(chowp)</b>        Chow Test P-Value
+   <b>r(fisher)</b>       Fisher Test
+   <b>r(fisherp)</b>      Fisher Test P-Value
+   <b>r(wald)</b>         Wald Test
+   <b>r(waldp)</b>        Wald Test P-Value
+   <b>r(lr)</b>           Likelihood Ratio Test
+   <b>r(lrp)</b>          Likelihood Ratio Test P-Value
+   <b>r(lm)</b>           Lagrange Multiplier Test
+   <b>r(lmp)</b>          Lagrange Multiplier Test P-Value
+<p>
+<a name="05"></a><b>        </b>+------------+
+<b>    </b>----+<b> References </b>+-------------------------------------------------------
+<p>
+    Damodar Gujarati (1995)<b> "Basic Econometrics"</b> <i>3rd Edition, McGraw Hill,</i>
+        <i>New York, USA</i>.
+<p>
+    Greene, William (1993)<b> "Econometric Analysis",</b> <i>2nd ed., Macmillan</i>
+        <i>Publishing Company Inc., New York, USA</i>.
+<p>
+    Greene, William (2007)<b> "Econometric Analysis",</b> <i>6th ed., Upper Saddle</i>
+        <i>River, NJ: Prentice-Hall</i>.
+<p>
+    Maddala, G. (1992)<b> "Introduction to Econometrics",</b> <i>2nd ed., Macmillan</i>
+        <i>Publishing Company, New York, USA</i>.
+<p>
+<a name="06"></a><b>        </b>+----------+
+<b>    </b>----+<b> Examples </b>+---------------------------------------------------------
+<p>
+         clear all
+<p>
+        sysuse chowreg.dta , clear
+<p>
+        db chowreg
+<p>
+        chowreg y x1 x2 , dum(9) type(1)
+        chowreg y x1 x2 , dum(9) type(2)
+        chowreg y x1 x2 , dum(9) type(3)
+-------------------------------------------------------------------------------
+<p>
+. clear all
+. sysuse chowreg.dta , clear
+. chowreg y x1 x2 , dum(9) type(1)
+<p>
+==============================================================================
+* Structural Change Regression *
+==============================================================================
+<p>
+      Source |       SS       df       MS              Number of obs =      17
+-------------+------------------------------           F(  3,    13) =   86.07
+       Model |  8467.92983     3  2822.64328           Prob &gt; F      =  0.0000
+    Residual |  426.320328    13  32.7938714           R-squared     =  0.9521
+-------------+------------------------------           Adj R-squared =  0.9410
+       Total |  8894.25016    16  555.890635           Root MSE      =  5.7266
+<p>
+------------------------------------------------------------------------------
+           y |      Coef.   Std. Err.      t    P&gt;|t|     [95% Conf. Interval]
+-------------+----------------------------------------------------------------
+          x1 |   .9479218   .3688768     2.57   0.023     .1510118    1.744832
+          x2 |  -1.483711   .2345698    -6.33   0.000    -1.990468   -.9769534
+          D0 |   -3.91322   8.474379    -0.46   0.652      -22.221    14.39456
+       _cons |   151.9528   53.80284     2.82   0.014      35.7188    268.1867
+------------------------------------------------------------------------------
+<p>
+ ( 1)  D0 = 0
+<p>
+       F(  1,    13) =    0.21
+            Prob &gt; F =    0.6519
+==============================================================================
+* Structural Change Test: Y = X + D0 *
+==============================================================================
+  Ho: no Structural Change
+- Chow Test                =    0.2132      P-Value &gt; F(1 , 13)   0.6519
+<p>
+. chowreg y x1 x2 , dum(9) type(2)
+<p>
+==============================================================================
+* Structural Change Regression *
+==============================================================================
+<p>
+      Source |       SS       df       MS              Number of obs =      17
+-------------+------------------------------           F(  4,    12) =   78.86
+       Model |  8568.30591     4  2142.07648           Prob &gt; F      =  0.0000
+    Residual |  325.944251    12  27.1620209           R-squared     =  0.9634
+-------------+------------------------------           Adj R-squared =  0.9511
+       Total |  8894.25016    16  555.890635           Root MSE      =  5.2117
+<p>
+------------------------------------------------------------------------------
+           y |      Coef.   Std. Err.      t    P&gt;|t|     [95% Conf. Interval]
+-------------+----------------------------------------------------------------
+          x1 |   .9828138   .3162965     3.11   0.009     .2936629    1.671965
+          x2 |   -1.35305   .2050101    -6.60   0.000    -1.799729   -.9063713
+       Dx_x1 |   .6241894    .334729     1.86   0.087    -.1051225    1.353501
+       Dx_x2 |  -1.029671   .5229864    -1.97   0.073    -2.169161    .1098183
+       _cons |   136.4496   45.26946     3.01   0.011     37.81594    235.0833
+------------------------------------------------------------------------------
+<p>
+ ( 1)  Dx_x1 = 0
+ ( 2)  Dx_x2 = 0
+<p>
+       F(  2,    12) =    1.98
+            Prob &gt; F =    0.1812
+==============================================================================
+* Structural Change Test: Y = X + DX *
+==============================================================================
+  Ho: no Structural Change
+- Chow Test                =    1.9765      P-Value &gt; F(2 , 12)   0.1812
+<p>
+. chowreg y x1 x2 , dum(9) type(3)
+<p>
+==============================================================================
+* Structural Change Regression *
+==============================================================================
+<p>
+      Source |       SS       df       MS              Number of obs =      17
+-------------+------------------------------           F(  5,    11) =   75.75
+       Model |  8643.23205     5  1728.64641           Prob &gt; F      =  0.0000
+    Residual |  251.018117    11  22.8198288           R-squared     =  0.9718
+-------------+------------------------------           Adj R-squared =  0.9589
+       Total |  8894.25016    16  555.890635           Root MSE      =   4.777
+<p>
+------------------------------------------------------------------------------
+           y |      Coef.   Std. Err.      t    P&gt;|t|     [95% Conf. Interval]
+-------------+----------------------------------------------------------------
+          x1 |   .3623291   .4486735     0.81   0.436    -.6251947    1.349853
+          x2 |  -1.683503   .2618556    -6.43   0.000    -2.259843   -1.107162
+          D0 |  -154.5432    85.2883    -1.81   0.097    -342.2615    33.17507
+       Dx_x1 |   1.732067   .6840704     2.53   0.028     .2264386    3.237696
+       Dx_x2 |  -.5282025   .5535151    -0.95   0.360    -1.746481    .6900761
+       _cons |   231.5499   66.90452     3.46   0.005     84.29409    378.8058
+------------------------------------------------------------------------------
+<p>
+ ( 1)  D0 = 0
+ ( 2)  Dx_x1 = 0
+ ( 3)  Dx_x2 = 0
+<p>
+       F(  3,    11) =    2.66
+            Prob &gt; F =    0.0998
+==============================================================================
+* Structural Change Tests:  Y = X + D0 + DX
+==============================================================================
+  Ho: no Structural Change
+<p>
+- Chow Test   [K, N-2*K]   =    2.6628      P-Value &gt; F(3 , 11)   0.0998
+- Fisher Test [N2,(N1-K)]  =    4.5197      P-Value &gt; F(8 , 6)    0.0412
+- Wald Test                =   12.3458      P-Value &gt; Chi2(8)     0.0021
+- Likelihood Ratio Test    =    9.2809      P-Value &gt; Chi2(8)     0.0097
+- Lagrange Multiplier Test =    7.1519      P-Value &gt; Chi2(8)     0.0280
+<p>
+<p>
+<a name="07"></a><b>        </b>+--------+
+<b>    </b>----+<b> Author </b>+-----------------------------------------------------------
+<p>
+  <b>Emad Abd Elmessih Shehata</b>
+  <b>Professor (PhD Economics)</b>
+  <b>Agricultural Research Center - Agricultural Economics Research Institute - Eg</b>
+<b>&gt; ypt</b>
+  <b>Email: </b>emadstat@hotmail.com
+  <b>WebPage:                </b>http://emadstat.110mb.com/stata.htm
+  <b>WebPage at IDEAS:       </b>http://ideas.repec.org/f/psh494.html
+  <b>WebPage at EconPapers:  </b>http://econpapers.repec.org/RAS/psh494.htm
+<p>
+<b>        </b>+------------------+
+<b>    </b>----+<b> CHOWREG Citation </b>+-------------------------------------------------
+<p>
+ <b>Shehata, Emad Abd Elmessih (2012)</b>
+ <b>CHOWREG: "Structural Change Regressions and Chow Test"</b>
+<p>
+        http://ideas.repec.org/c/boc/bocode/s457383.html
+<p>
+        http://econpapers.repec.org/software/bocbocode/s457383.htm
+<p>
+<p>
+<b><u>Online Help:</u></b>
+<p>
+<b>* Econometric Regression Models:</b>
+<p>
+<b>* (1) (OLS) * Ordinary Least Squares Regression Models:</b>
+<b>olsreg</b>     OLS Econometric Ridge &amp; Weighted Regression Models: Stata Module Too
+&gt; lkit
+<b>ridgereg</b>   OLS Ridge Regression Models
+<b>gmmreg</b>     OLS Generalized Method of Moments (GMM): Ridge &amp; Weighted Regression
+<b>chowreg</b>    OLS Structural Change Regressions and Chow Test
+---------------------------------------------------------------------------
+<b>* (2) (2SLS-IV) * Two-Stage Least Squares &amp; Instrumental Variables Regression M</b>
+<b>&gt; odels:</b>
+<b>reg2</b>       2SLS-IV Econometric Ridge &amp; Weighted Regression Models: Stata Module
+&gt;  Toolkit
+<b>gmmreg2</b>    2SLS-IV Generalized Method of Moments (GMM): Ridge &amp; Weighted Regres
+&gt; sion
+<b>limlreg2</b>   Limited-Information Maximum Likelihood (LIML) IV Regression
+<b>meloreg2</b>   Minimum Expected Loss (MELO) IV Regression
+<b>ridgereg2</b>  Ridge 2SLS-LIML-GMM-MELO-Fuller-kClass IV Regression
+<b>ridge2sls</b>  Two-Stage Least Squares Ridge Regression
+<b>ridgegmm</b>   Generalized Method of Moments (GMM) IV Ridge Regression
+<b>ridgeliml</b>  Limited-Information Maximum Likelihood (LIML) IV Ridge Regression
+<b>ridgemelo</b>  Minimum Expected Loss (MELO) IV Ridge Regression
+---------------------------------------------------------------------------
+<b>* (3) * Panel Data Regression Models:</b>
+<b>regxt</b>      Panel Data Econometric Ridge &amp; Weighted Regression Models: Stata Mod
+&gt; ule Toolkit
+<b>xtregdhp</b>   Han-Philips (2010) Linear Dynamic Panel Data Regression
+<b>xtregam</b>    Amemiya Random-Effects Panel Data: Ridge &amp; Weighted Regression
+<b>xtregbem</b>   Between-Effects Panel Data: Ridge &amp; Weighted Regression
+<b>xtregbn</b>    Balestra-Nerlove Random-Effects Panel Data: Ridge &amp; Weighted Regress
+&gt; ion
+<b>xtregfem</b>   Fixed-Effects Panel Data: Ridge &amp; Weighted Regression
+<b>xtregmle</b>   Trevor Breusch MLE Random-Effects Panel Data: Ridge &amp; Weighted Regre
+&gt; ssion
+<b>xtregrem</b>   Fuller-Battese GLS Random-Effects Panel Data: Ridge &amp; Weighted Regre
+&gt; ssion
+<b>xtregsam</b>   Swamy-Arora Random-Effects Panel Data: Ridge &amp; Weighted Regression
+<b>xtregwem</b>   Within-Effects Panel Data: Ridge &amp; Weighted Regression
+<b>xtregwhm</b>   Wallace-Hussain Random-Effects Panel Data: Ridge &amp; Weighted Regressi
+&gt; on
+<b>xtreghet</b>   MLE Random-Effects Multiplicative Heteroscedasticity Panel Data Regr
+&gt; ession
+---------------------------------------------------------------------------
+<b>* (4) (MLE) * Maximum Likelihood Estimation Regression Models:</b>
+<b>mlereg</b>     MLE Econometric Regression Models: Stata Module Toolkit
+<b>mleregn</b>    MLE Normal Regression
+<b>mleregln</b>   MLE Log Normal Regression
+<b>mlereghn</b>   MLE Half Normal Regression
+<b>mlerege</b>    MLE Exponential Regression
+<b>mleregle</b>   MLE Log Exponential Regression
+<b>mleregg</b>    MLE Gamma Regression
+<b>mlereglg</b>   MLE Log Gamma Regression
+<b>mlereggg</b>   MLE Generalized Gamma Regression
+<b>mlereglgg</b>  MLE Log Generalized Gamma Regression
+<b>mleregb</b>    MLE Beta Regression
+<b>mleregev</b>   MLE Extreme Value Regression
+<b>mleregw</b>    MLE Weibull Regression
+<b>mlereglw</b>   MLE Log Weibull Regression
+<b>mleregilg</b>  MLE Inverse Log Gauss Regression
+---------------------------------------------------------------------------
+<b>* (5) * Autocorrelation Regression Models:</b>
+<b>autoreg</b>    Autoregressive Least Squares Regression Models: Stata Module Toolkit
+<b>alsmle</b>     Beach-Mackinnon AR(1) Autoregressive Maximum Likelihood Estimation R
+&gt; egression
+<b>automle</b>    Beach-Mackinnon AR(1) Autoregressive Maximum Likelihood Estimation R
+&gt; egression
+<b>autopagan</b>  Pagan AR(p) Conditional Autoregressive Least Squares Regression
+<b>autoyw</b>     Yule-Walker AR(p) Unconditional Autoregressive Least Squares Regress
+&gt; ion
+<b>autopw</b>     Prais-Winsten AR(p) Autoregressive Least Squares Regression
+<b>autoco</b>     Cochrane-Orcutt AR(p) Autoregressive Least Squares Regression
+<b>autofair</b>   Fair AR(1) Autoregressive Least Squares Regression
+---------------------------------------------------------------------------
+<b>* (6) * Heteroscedasticity Regression Models:</b>
+<b>hetdep</b>     MLE Dependent Variable Heteroscedasticity
+<b>hetmult</b>    MLE Multiplicative Heteroscedasticity Regression
+<b>hetstd</b>     MLE Standard Deviation Heteroscedasticity Regression
+<b>hetvar</b>     MLE Variance Deviation Heteroscedasticity Regression
+<b>glsreg</b>     Generalized Least Squares Regression
+---------------------------------------------------------------------------
+<b>* (7) * Non Normality Regression Models:</b>
+<b>robgme</b>     MLE Robust Generalized Multivariate Error t Distribution
+<b>bcchreg</b>    Classical Box-Cox Multiplicative Heteroscedasticity Regression
+<b>bccreg</b>     Classical Box-Cox Regression
+<b>bcereg</b>     Extended Box-Cox Regression
+---------------------------------------------------------------------------
+<b>* (8) (NLS) * Nonlinear Least Squares Regression Regression Models:</b>
+<b>autonls</b>    Non Linear Autoregressive Least Squares Regression
+<b>qregnls</b>    Non Linear Quantile Regression
+---------------------------------------------------------------------------
+<b>* (9) * Logit Regression Models:</b>
+<b>logithetm</b>  Logit Multiplicative Heteroscedasticity Regression
+<b>mnlogit</b>    Multinomial Logit Regression
+---------------------------------------------------------------------------
+<b>* (10) * Probit Regression Models:</b>
+<b>probithetm</b> Probit Multiplicative Heteroscedasticity Regression
+<b>mnprobit</b>   Multinomial Probit Regression
+---------------------------------------------------------------------------
+<b>* (11) * Tobit Regression Models:</b>
+<b>tobithetm</b>  Tobit Multiplicative Heteroscedasticity Regression 
+---------------------------------------------------------------------------
+<p>
+<p>
+<p>
+</pre>

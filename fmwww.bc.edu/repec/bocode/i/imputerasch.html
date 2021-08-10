@@ -1,0 +1,76 @@
+<pre>
+-------------------------------------------------------------------------------
+help for <b>imputerasch</b>                                       Jean-Benoit Hardouin
+-------------------------------------------------------------------------------
+<p>
+<b><u>Imputation of missing binary variables by a Rasch model</u></b>
+<p>
+        <b>imputerasch</b> <i>varlist</i> [<b>,</b> <b><u>pref</u></b><b>ix</b>(<i>string</i>) <b><u>noran</u></b><b>dom</b> <b><u>savep</u></b><b>roba</b>(<i>string</i>)
+              <b><u>nbit</u></b><b>eration</b>(<i>#</i>) <b><u>det</u></b><b>ails</b> <b>max</b>(<i>#</i>)]
+<p>
+        <i>varlist</i> is a list of two or more existing dichotomous variables.
+<p>
+<b><u>Description</u></b>
+<p>
+    <b>imputerasch</b> imputes missing binary data by a Rasch model.  The parameters
+        of the Rasch model are estimated on complete data, then the missing
+        data are imputed from the estimated probability for each individual
+        to response to each item.  By default, the imputed value is a result
+        of a random draw within a Bernouilli random variable with this
+        probability used like parameter, but it is possible to affect more
+        deterministically the value of the missing data (0 if p&lt;0.5 and 1 if
+        p&gt;=.5) with the <b>norandom</b> option.  An iterative procedure can be run
+        in a second time by estimating parameters of the Rasch model on
+        existing and imputing data, and by eventually correcting missing data
+        at each step (see the <b>nbiteration</b> option).  This procedure is stopped
+        as soon the allowed maximal number of iterations is attained, or as
+        soon the imputed values are stable.
+<p>
+<b><u>Options</u></b>
+<p>
+    <b>prefix</b>. The former variables (with missing data) are keeped. New
+        variables are created by imputing new values to missing data.  The
+        name of these new variables are the names of the former variables
+        preeceded by the prefix defined in this option. By default, this
+        prefix is "imp".
+<p>
+    <b>norandom</b> avoids to randomly draw the value of imputation (by default). A
+        deterministic process is used : if the expected probability is &lt;0.5,
+        imputed value is 0, else imputed value is 1 (the old name of this
+        option, <b>nobinomial</b>, continues to run).
+<p>
+    <b>saveproba</b> allows saving the expected probability in variables whose the
+        names begin by the string defined in this option.
+<p>
+    <b>nbiteration</b> realizes an iterative procedure which is stopped as soon as
+        the maximal number of iterations is attained, or as soon as the
+        imputed data are stable.
+<p>
+    <b>details</b> gives details on the imputation.
+<p>
+    <b>max</b> allows imputing missing values only for individuals with a maximal
+        number of missing values defined with this option.
+<p>
+<p>
+<p>
+<b><u>Example</u></b>
+<p>
+        . imputerasch item*
+<p>
+        . imputerasch item*, norandom saveproba(p) prefix(dataimputed) max(4)
+<p>
+        . imputerasch item1-item5, nbiteration(5) details
+<p>
+<p>
+<b><u>Author</u></b>
+<p>
+    Jean-Benoit Hardouin, PhD, assistant professor
+    EA 4275 "Biostatistics, Clinical Research and Subjective Measures in
+        Health Sciences"
+    University of Nantes - Faculty of Pharmaceutical Sciences
+    1, rue Gaston Veil - BP 53508
+    44035 Nantes Cedex 1 - FRANCE
+    Email:  jean-benoit.hardouin@univ-nantes.fr
+    Websites AnaQol and FreeIRT
+<p>
+</pre>

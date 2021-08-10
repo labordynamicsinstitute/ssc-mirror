@@ -1,0 +1,114 @@
+<pre>
+<b>help saveresults</b>
+-------------------------------------------------------------------------------
+<p>
+<b><u>Title</u></b>
+<p>
+    <b>saveresults</b> -- Save output from a command in a file on disk
+<p>
+<p>
+<b><u>Syntax</u></b>
+<p>
+        <b>saveresults</b> [<b>using</b>] <i>filename</i> [<b>,</b> <i>options</i> ] <b>:</b> <i>command</i>
+<p>
+<p>
+    <i>options</i>               Description
+    -------------------------------------------------------------------------
+    Main
+      <b><u>noc</u></b><b>md</b>               do not echo <i>command</i> in output
+      <b>replace</b>             replace existing file
+<p>
+    Output format
+      <b>ps</b>                  PostScript
+      <b>prn</b>                 default printer format
+      <b>txt</b>                 generic ASCII text log
+      <b>log</b>                 Stata ASCII text log
+      <b>smcl</b>                SMCL format
+      <b>pdf</b>                 PDF (Mac only)
+      <i>override_options</i>    options passed through to <b>translate</b>
+    -------------------------------------------------------------------------
+<p>
+<p>
+<b><u>Description</u></b>
+<p>
+    <b>saveresults</b> runs <i>command</i> and saves a copy of the command's output in a
+    file on disk. Depending on <i>filename</i>'s extension, the output is translated
+    to one of several file formats using Stata's <b>translate</b> command.
+<p>
+<p>
+<b><u>Options</u></b>
+<p>
+        +------+
+    ----+ Main +-------------------------------------------------------------
+<p>
+    <b>nocmd</b> specifies that the command line not be echoed in the output.
+<p>
+    <b>replace</b> specifies that <i>filename</i> be replaced if it already exists.
+<p>
+        +---------------+
+    ----+ Output format +----------------------------------------------------
+<p>
+    <b>ps</b>, <b>prn</b>, <b>txt</b>, <b>log</b>, <b>smcl</b>, and <b>pdf</b> (MAC only) set the output format.
+        Specify one of these options to override the default behavior, which
+        is to determine the output format from <i>filename</i>'s extension. The
+        default mappings are as follows:
+<p>
+            <i>option  extension  translator  format</i>
+            -----------------------------------------------------
+            <b>ps</b>      .ps        <b>smcl2ps</b>     PostScript
+            <b>prn</b>     .prn       <b>smcl2prn</b>    default printer format
+            <b>txt</b>     .txt       <b>smcl2txt</b>    generic ASCII text log
+            <b>log</b>     .log       <b>smcl2log</b>    Stata ASCII text log
+            <b>smcl</b>    .smcl      (none)      SMCL
+                    .sthlp     (none)      SMCL (Stata 10 up)
+                    .hlp       (none)      SMCL (Stata 9)
+            <b>pdf</b>     .pdf       <b>smcl2pdf</b>    PDF (Mac only)
+            -----------------------------------------------------
+<p>
+        For all other extensions <b>txt</b> is used as the default output format.
+        However, note that <b>saveresults</b> is sensitive to the mappings defined
+        by <b>transmap</b>. For example, to declare PostScript the default format
+        for extension ".myps" you could type
+<p>
+            . transmap define .myps .ps
+<p>
+    <i>override_options</i> are passed through to <b>translate</b> and override any of the
+        default options of the used translator. To find out what you can
+        override for, say, <b>ps</b>, type
+<p>
+            . translator query smcl2ps
+<p>
+        For example, there is a <b>logo</b> option for most translators, which you
+        could turn off by typing
+<p>
+            . saveresults <i>...</i>, logo(off) : <i>command</i>
+<p>
+        Alternatively, you can change translator options permanently using
+        the <b>translator set</b> command. See help <b>translate</b> for details.
+<p>
+<p>
+<b><u>Examples</u></b>
+<p>
+        . sysuse auto, clear
+<p>
+        . saveresults test.log: describe
+<p>
+        . type test.log
+<p>
+        . saveresults test.ps, logo(off): describe
+        
+<p>
+<b><u>Author</u></b>
+<p>
+    Ben Jann, ETH Zurich, jannb@ethz.ch
+<p>
+    Thanks for citing this software as follows:
+<p>
+        Jann, B. (2009). saveresults: Stata module to save output from a
+        command in a file on disk. Available from 
+        http://ideas.repec.org/c/boc/bocode/s457089.html.
+<p>
+<p>
+<b><u>Also see</u></b>
+<p>
+</pre>

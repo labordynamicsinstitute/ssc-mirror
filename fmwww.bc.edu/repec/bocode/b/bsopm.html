@@ -1,0 +1,169 @@
+<pre>
+-------------------------------------------------------------------------------
+<b>help: </b><b>bsopm</b>                                                        <b>dialog:</b> <b>bsop</b>
+<b>&gt; m</b>
+-------------------------------------------------------------------------------
+<p>
+<b>        </b>+-------+
+<b>    </b>----+<b> Title </b>+------------------------------------------------------------
+<p>
+    <b>bsopm - Black-Scholes European Option Pricing Model</b>
+<p>
+<a name="00"></a><b>        </b>+-------------------+
+<b>    </b>----+<b> Table of Contents </b>+------------------------------------------------
+<p>
+     <b>Syntax</b>
+     <b>Options</b>
+     <b>Description</b>
+     <b>References</b>
+<p>
+ *** <b>Examples</b>
+<p>
+     <b>Author</b>
+<p>
+<a name="01"></a><b>        </b>+--------+
+<b>    </b>----+<b> Syntax </b>+-----------------------------------------------------------
+<p>
+     <b>bsopm</b> Stock_Price Strike_Price , <b>ir(</b><i>var</i><b>)</b> <b><u>Sig</u></b><b>ma(</b><i>var</i><b>)</b> <b><u>T</u></b><b>ime(</b><i>var</i><b>)</b>
+<p>
+<a name="02"></a><b>        </b>+---------+
+<b>    </b>----+<b> Options </b>+----------------------------------------------------------
+<p>
+<p>
+      <b>ir(</b><i>var</i><b>)</b>        Interest Rate
+      <b><u>sig</u></b><b>ma(</b><i>var</i><b>)</b>     Standard Deviation = Volatility
+      <b>time(</b><i>var</i><b>)</b>      Expiration Time
+<p>
+<a name="03"></a><b>        </b>+-------------+
+<b>    </b>----+<b> Description </b>+------------------------------------------------------
+<p>
+  <b>bsopm</b> computes Black-Scholes European Option Pricing Model.
+<p>
+  Fischer Black &amp; Myron Scholes are 2 economist, who in 1973 published a
+  paper which redefined finance and derivatives, with "The Pricing of Options
+  &amp; Corporate Liabilities" featured in the Journal of Political Economy in
+  May of that year.  The piece is arguably one of the most important papers
+  within finance theory to date and allows us to price various derivatives,
+  including options on commodities, financial assets and even pricing of
+  employee stock options.
+<p>
+  Assumptions of Black-Scholes Option Pricing:
+ 
+        1. No dividends are paid out on the underlying stock during the option 
+&gt; life.
+        2. The option can only be exercised at expiry (European characteristics
+&gt; )
+        3. Efficient markets (Market movements cannot be predicted)
+        4. Commissions are non-existent
+        5. Interest rates do not change over the life of the option (and are kn
+&gt; own)
+        6. Stock returns follow a lognormal distribution.
+<p>
+  European Options Pricing: are options which are only exercisable on the
+  expiry date of the option and are valued using the Black Scholes option
+  pricing forumla. There are only five inputs to the classic Black Scholes
+  model:  spot price, strike price, time until expiry, interest rate, and
+  volatility. As such European options are typically the simplest options to
+  value The dividend or yield on the underlying asset can also be an input on
+  some extentions of the model.  In contrast American Options can be
+  exercised at any time up until and including the expiry date of the option.
+<p>
+  The term European is confined to describing the exercise feature of the
+  option (ie exercisable only on the expiry date) and is does not describe
+  the geographic region of the underlying asset. For example, a European
+  Option can be issued on a stock of a company listed on an Asian exchange.
+ 
+<p>
+  Spot Price: The market price of the underlying asset on the valuation date.
+  This can be a difficult input to estimate for options on illiquid assets,
+  however under normal circumstances the closing market price can usually be
+  used.
+<p>
+  Strike Price: The price level at which the option holder has the right to
+  buy or sell the underlying asset. It is the most straightforward input as
+  it will always be given in the option contract.
+<p>
+  Time to Maturity: Time (in years) until the option expires and the holder
+  is no longer entitled to exercise the option.
+<p>
+  Interest Rate: Risk free interest rate for the period until the option
+  expires. The risk free rate should typically be a zero coupon government
+  bond yield.
+<p>
+  Volatility: Probably the most important single input to any option pricing
+  model.
+<p>
+  Implied Volatility: The volatility implied by the market price of traded
+  options. As the price is already known and the volatility (which is
+  typically an input) is unknown the pricing model is reversed to determine
+  the volatility.  When using the implied volatility it is important to be
+  aware of the volatility surface.  The volatility surface is the 3
+  dimensional representation of the relationship between volatility, option
+  life and exercise price.  Thus to use implied volatility the option from
+  which the volatility is implied should have a similar life and exercise
+  price (or ratio of market price to exercise price) as the option being
+  valued.
+ 
+<p>
+<a name="04"></a><b>        </b>+------------+
+<b>    </b>----+<b> References </b>+-------------------------------------------------------
+<p>
+    Black, F., and M.S. Scholes (1973)<b> "The Pricing of Options and Corporate</b>
+        <b>Liabilities",</b> <i>Journal of Political Economy, 81 (May/June)</i>. 637-659
+<p>
+<a name="05"></a><b>        </b>+----------+
+<b>    </b>----+<b> Examples </b>+---------------------------------------------------------
+<p>
+  clear all
+<p>
+  sysuse bsopm.dta, clear
+<p>
+  db bsopm
+<p>
+  bsopm  ps pk , ir(0.12) time(0.50) sig(0.25)
+<p>
+  bsopm  ps pk , ir(ir) time(t) sig(sig)
+<p>
+. bsopm  ps pk , ir(ir) time(t) sig(sig)
+<p>
+=======================================================
+* Black-Scholes European Pricing Option Model
+=======================================================
+- Ps   = Stock  Pric                     =   100.0000
+- PK   = Strike Price                    =   110.0000
+- Time = Expiration Time                 =     0.5000
+- IR   = Interest Rate                   =     0.1200
+- Sig  = Standard Deviation = Volatility =     0.2500
+- CALL = Call Price                      =     5.5149
+- Put  = Put  Price                      =     9.1090
+=======================================================
+<p>
+<a name="06"></a><b>        </b>+--------+
+<b>    </b>----+<b> Author </b>+-----------------------------------------------------------
+<p>
+  <b>Emad Abd Elmessih Shehata</b>
+  <b>Assistant Professor</b>
+  <b>Agricultural Research Center - Agricultural Economics Research Institute - Eg</b>
+<b>&gt; ypt</b>
+  <b>Email:   </b>emadstat@hotmail.com
+  <b>WebPage:                </b>http://emadstat.110mb.com/stata.htm
+  <b>WebPage at IDEAS:       </b>http://ideas.repec.org/f/psh494.html
+  <b>WebPage at EconPapers:  </b>http://econpapers.repec.org/RAS/psh494.htm
+<p>
+  <b>Sahra Khaleel A. Mickaiel</b>
+  <b>Professor</b>
+  <b>Cairo University - Faculty of Agriculture - Department of Economics - Egypt</b>
+  <b>Email:   </b>sahra_atta@hotmail.com
+<p>
+<b>        </b>+----------------+
+<b>    </b>----+<b> bsopm Citation </b>+---------------------------------------------------
+<p>
+    Shehata, Emad Abd Elmessih &amp; Sahra Khaleel A. Mickaiel (2012)
+    <b>BSOPM: "Stata Module to Compute Black-Scholes European Option Pricing</b>
+        <b>Model"</b>
+<p>
+<b><u>Online Help:</u></b>
+<p>
+  <b>bsopm</b>, <b>impvol</b>. <b>(</b><i>if installed</i><b>)</b>.
+<p>
+</pre>

@@ -1,0 +1,191 @@
+<pre>
+<b>help mata mm_subset()</b>
+-------------------------------------------------------------------------------
+<p>
+<b><u>Title</u></b>
+<p>
+    <b>mm_subset() -- Obtain subsets, compositions, and partitions</b>
+<p>
+<p>
+<b><u>Syntax</u></b>
+<p>
+             <i>info</i> <b>=</b> <b>mm_subsetsetup(</b><i>n</i> [<b>,</b> <i>k</i>]<b>)</b>
+<p>
+    <i>real colvector</i>  <b>mm_subset(</b><i>info</i><b>)</b>
+<p>
+       <i>real matrix</i>  <b>mm_subsets(</b><i>n</i> [<b>,</b> <i>k</i>]<b>)</b>
+<p>
+<p>
+             <i>info</i> <b>=</b> <b>mm_compositionsetup(</b><i>n</i> [<b>,</b> <i>k</i><b>,</b> <i>alt</i>]<b>)</b>
+<p>
+    <i>real colvector</i>  <b>mm_composition(</b><i>info</i><b>)</b>
+<p>
+       <i>real matrix</i>  <b>mm_compositions(</b><i>n</i> [<b>,</b> <i>k</i><b>,</b> <i>alt</i>]<b>)</b>
+<p>
+       <i>real scalar</i>  <b>mm_ncompositions(</b><i>n</i> [<b>,</b> <i>k</i>]<b>)</b>
+<p>
+<p>
+             <i>info</i> <b>=</b> <b>mm_partitionsetup(</b><i>n</i> [<b>,</b> <i>k</i><b>,</b> <i>pad</i><b>,</b> <i>alt</i>]<b>)</b>
+<p>
+    <i>real colvector</i>  <b>mm_partition(</b><i>info</i><b>)</b>
+<p>
+       <i>real matrix</i>  <b>mm_partitions(</b><i>n</i> [<b>,</b> <i>k</i><b>,</b> <i>alt</i>]<b>)</b>
+<p>
+       <i>real scalar</i>  <b>mm_npartitions(</b><i>n</i> [<b>,</b> <i>k</i>]<b>)</b>
+<p>
+<p>
+    <i>real colvector</i>  <b>mm_rsubset(</b><i>n</i> [<b>,</b> <i>k</i>]<b>)</b>
+<p>
+    <i>real colvector</i>  <b>mm_rcomposition(</b><i>n</i> [<b>,</b> <i>k</i>]<b>)</b>
+<p>
+<p>
+    where
+<p>
+                <i>n</i>:  <i>real scalar n</i>
+<p>
+                <i>k</i>:  <i>real scalar k</i>
+<p>
+              <i>pad</i>:  <i>real scalar</i> indicating that the partitions be padded with
+                    0s to have length <i>k</i>
+<p>
+              <i>alt</i>:  <i>real scalar</i> indicating that the alternative algorithm be
+                    used
+<p>
+<p>
+    and where <i>info</i> should be declared <i>transmorphic</i>.
+<p>
+<p>
+<b><u>Description</u></b>
+<p>
+    <b>mm_subset(</b><i>info</i><b>)</b>, where <i>info</i> is set by <b>mm_subsetsetup()</b>, returns all
+    <i>k</i>-subsets (combinations) of <i>n</i> elements, one at a time in lexicographic
+    order. If <i>k</i> is omitted or if <i>k</i>==., the <i>n</i>-subset is returned. Hint: The
+    total number of subsets can be computed as <b>comb(</b><i>n</i><b>,</b> <i>k</i><b>)</b>. Algorithm 5.8 from
+    Reingold et al. (1977) is used to generate the subsets.
+<p>
+    <b>mm_subsets()</b> is a wrapper for <b>mm_subset()</b> and returns a matrix containing
+    all subsets.
+<p>
+    <b>mm_composition(</b><i>info</i><b>)</b>, where <i>info</i> is set by <b>mm_compositionsetup()</b>, returns
+    all <i>k</i>-part compositions of a positive integer <i>n</i>, one at a time. If <i>k</i> is
+    omitted or if <i>k</i>==., then the <i>n</i>-part compositions of <i>n</i> are returned. The
+    default algorithm uses a direct approach and returns the compositions in
+    anti-lexicographic order. The alternative algorithm, which is applied if
+    <i>alt</i>!=0 is specified, generates the compositions indirectly (in
+    lexicographic order) by using the <b>mm_subset()</b> function (as suggested by
+    Reingold et al. 1977, p. 190-191). The default algorithm is about 1/3
+    faster than the alternative algorithm.
+<p>
+    <b>mm_compositions()</b> is a wrapper for <b>mm_composition()</b> and returns a matrix
+    containing all compositions.
+<p>
+    <b>mm_ncompositions()</b> returns the total number of <i>k</i>-part compositions of <i>n</i>,
+    which is equal to <b>comb(</b><i>n</i>+<i>k</i>-1<b>,</b><i>k</i>-1<b>)</b>.
+<p>
+    <b>mm_partition(</b><i>info</i><b>)</b>, where <i>info</i> is set by <b>mm_partitionsetup()</b>, returns all
+    partitions with <i>k</i> or fewer addends of a positive integer <i>n</i>, one at a
+    time. If <i>k</i> is omitted or if <i>k</i>==., then the partitions with <i>n</i> or fewer
+    addends are returned. The default algorithm is based on Algorithm ZS1 by
+    Zoghbi and Stojmenovic (1998; with modifications to allow the <i>k</i>
+    parameter) and returns the partitions in anti-lexicographic order.  The
+    alternative algorithm, which is applied if <i>alt</i>!=0 is specified, is based
+    on Algorithm 5.12 in Reingold et al. (1977) and returns the partitions in
+    lexicographic order. The default algorithm is much faster than the
+    alternative algorithm, especially if <i>k</i> is low compared to <i>n</i>.
+<p>
+    <b>mm_partitions()</b> is a wrapper for <b>mm_partition()</b> and returns a matrix
+    containing all partitions.
+<p>
+    <b>mm_npartitions()</b> returns the total number of partitions with <i>k</i> or fewer
+    addends of a positive integer <i>n</i> (based on algorithms given on
+    http://home.att.net/~numericana/answer/numbers.htm#partitions, with
+    modifications to allow the <i>k</i> parameter). <b>mm_npartitions()</b> may be slow if
+    <i>k</i>&lt;<i>n</i> and <i>n</i> is large (&gt; 1000, say).
+<p>
+    <b>mm_rsubset()</b> returns a random <i>k</i>-subset of <i>n</i> elements. <b>mm_rcomposition()</b>
+    returns a random <i>k</i>-part compositions of <i>n</i> (based on ideas presented in
+    Reingold et al. 1977, p. 189).
+<p>
+    The procedure to cycle through all combinations, compositions, or
+    partitions is to initialize <i>info</i> using the setup function and then
+    repeatedly call the combinatorial function until it returns <b>J(0,1,.)</b>. For
+    example:
+<p>
+        <i>info</i> <b>= mm_subsetsetup(</b><i>n</i><b>,</b> <i>k</i><b>)</b>
+        <b>while ((</b><i>set</i><b>=mm_subset(</b><i>info</i><b>)) != J(0,1,.)) {</b> 
+                ... <i>set</i> ...
+        <b>}</b>
+<p>
+<p>
+<b><u>Remarks</u></b>
+<p>
+    Examples:
+<p>
+        : comb(4,3)
+          4
+        
+        : mm_subsets(4,3)
+               1   2   3   4
+            +-----------------+
+          1 |  1   1   1   2  |
+          2 |  2   2   3   3  |
+          3 |  3   4   4   4  |
+            +-----------------+
+        
+        : mm_ncompositions(4,3)
+          15
+        
+        : mm_compositions(4,3)
+                1    2    3    4    5    6    7    8    9   10
+            +---------------------------------------------------
+          1 |   4    3    3    2    2    2    1    1    1    1
+          2 |   0    1    0    2    1    0    3    2    1    0
+          3 |   0    0    1    0    1    2    0    1    2    3
+            +---------------------------------------------------
+               11   12   13   14   15
+             --------------------------+
+          1     0    0    0    0    0  |
+          2     4    3    2    1    0  |
+          3     0    1    2    3    4  |
+             --------------------------+
+        
+        : mm_npartitions(4,3)
+          4
+        
+        : mm_partitions(4,3)
+               1   2   3   4
+            +-----------------+
+          1 |  4   3   2   2  |
+          2 |  0   1   2   1  |
+          3 |  0   0   0   1  |
+            +-----------------+
+        
+        
+    See the source code of <b>mm_mgof()</b> for some applications.
+<p>
+<p>
+<b><u>Diagnostics</u></b>
+<p>
+    <b>mm_subset()</b>, <b>mm_composition()</b>, and <b>mm_permutation()</b> return J(0,1,.) when
+    there are no more combinations, compositions, or permutations.
+<p>
+<p>
+<b><u>Source code</u></b>
+<p>
+    mm_subset.mata
+<p>
+<p>
+<b><u>References</u></b>
+<p>
+    Reingold, E. M., J. Nievergelt, N. Deo (1977). Combinatorial Algorithms:
+        Theory and Practice. Englewood Cliffs, NJ: Prentice-Hall.
+    Zohgbi, A., I. Stojmenovic (1998). Fast Algorithms for Generating
+        Partitions. International Journal of Computer Mathematics 70:
+        319-332.
+<p>
+<p>
+<b><u>Also see</u></b>
+<p>
+    Online:  help for <b>[M-5] cvpermute()</b>, <b>[M-4] statistical</b>, <b>mm_mgof()</b>, 
+             <b>moremata</b>
+</pre>

@@ -1,0 +1,117 @@
+<pre>
+-------------------------------------------------------------------------------
+<b>help: </b><b>lmgc</b>                                                   <b>dialog:</b> <b>lmgc</b>
+-------------------------------------------------------------------------------
+<p>
+<b>        </b>+-------+
+<b>    </b>----+<b> Title </b>+------------------------------------------------------------
+<p>
+<b> lmgc: Granger Causality Test at Higher Order AR(p)</b>
+<p>
+<b>        </b>+--------+
+<b>    </b>----+<b> Syntax </b>+-----------------------------------------------------------
+<p>
+  <b>lmgc</b> <i>depvar</i> <i>indepvars</i> [<i>if</i>] [<i>in</i>] , [<b><u>lag</u></b><b>s(</b><i>#</i><b>)</b> <b>aux(</b><i>varlist</i><b>)</b> <b><u>nocons</u></b><b>tant</b> <b>reg</b>
+        <b>coll</b>]
+ 
+<p>
+<b>        </b>+---------+
+<b>    </b>----+<b> Options </b>+----------------------------------------------------------
+<p>
+  <b><u>lag</u></b><b>s(</b><i>#</i><b>)</b>          Order of Lag Length; default is lag(1)
+<p>
+  <b><u>nocons</u></b><b>tant</b>       suppress constant term
+<p>
+  <b>reg</b>              display regression results for unrestricted model
+<p>
+  <b>coll</b>             Keep Collinear Variables
+<p>
+   <b>aux(</b><i>varlist</i><b>)</b> add Auxiliary Variables into model without converting them to
+                    lagged variables, i.e., dummy variables, time trend,
+                    ...etc.
+<p>
+<b>        </b>+-------------+
+<b>    </b>----+<b> Description </b>+------------------------------------------------------
+<p>
+  <b>lmgc</b> computes Granger Causality Test at Higher Order AR(p)
+<p>
+<b>        </b>+---------------+
+<b>    </b>----+<b> Saved Results </b>+----------------------------------------------------
+    <b>lmgc</b> saves the following in <b>r()</b>:
+<p>
+   <b>r(lmgc1_#)</b>      F Test for order(#)
+   <b>r(lmgc1p_#)</b>     F Test for order(#) P-Value
+<p>
+   <b>r(lmgc2_#)</b>      Wald Test for order(#)
+   <b>r(lmgc2p_#)</b>     Wald Test for order(#) P-Value
+<p>
+<b>        </b>+----------+
+<b>    </b>----+<b> Examples </b>+---------------------------------------------------------
+<p>
+        clear all
+<p>
+        db lmgc
+<p>
+        sysuse lmgc.dta , clear
+<p>
+        lmgc y1 y2 , lags(1) reg
+<p>
+        lmgc y1 y2 , lags(1) aux(t) reg
+<p>
+        lmgc y1 y2 , lags(1) aux(t y3) reg
+<p>
+        lmgc y1 y2 , lags(2)
+<p>
+        return list
+<p>
+. clear all
+. sysuse lmgc.dta , clear
+. lmgc y1 y2 , lags(2)
+<p>
+==============================================================================
+*** Granger Causality Test
+==============================================================================
+ Ho: y2 does not Granger-Cause y1
+<p>
+ Sample Range = 2-40              Sample Size= 39
+ Lag Length   = 1
+ * F-Test     =      0.5339       P-Value &gt; F(1 , 36)      = 0.4697
+ * Wald Test  =      0.5784       P-Value &gt; Chi2(1)        = 0.4469
+----------------------------------------------------------------------
+ Sample Range = 3-40              Sample Size= 38
+ Lag Length   = 2
+ * F-Test     =      4.9514       P-Value &gt; F(2 , 33)      = 0.0132
+ * Wald Test  =     11.4031       P-Value &gt; Chi2(2)        = 0.0033
+----------------------------------------------------------------------
+<p>
+<b>        </b>+------------+
+<b>    </b>----+<b> References </b>+-------------------------------------------------------
+<p>
+    Damodar Gujarati (1995)<b> "Basic Econometrics"</b> <i>3rd Edition, McGraw Hill,</i>
+        <i>New York, USA</i>; 620-623.
+<p>
+    Judge, Georege, R. Carter Hill, William . E. Griffiths, Helmut Lutkepohl,
+        &amp; Tsoung-Chao Lee (1988)<b> "Introduction To The Theory And Practice Of</b>
+        <b>Econometrics",</b> <i>2nd ed., John Wiley &amp; Sons, Inc., New York, USA</i>;
+        767-770.
+<p>
+<b>        </b>+--------+
+<b>    </b>----+<b> Author </b>+-----------------------------------------------------------
+<p>
+  <b>Emad Abd Elmessih Shehata</b>
+  <b>Assistant Professor</b>
+  <b>Agricultural Research Center - Agricultural Economics Research Institute - Eg</b>
+<b>&gt; ypt</b>
+  <b>Email:   </b>emadstat@hotmail.com
+  <b>WebPage:                </b>http://emadstat.110mb.com/stata.htm
+  <b>WebPage at IDEAS:       </b>http://ideas.repec.org/f/psh494.html
+  <b>WebPage at EconPapers:  </b>http://econpapers.repec.org/RAS/psh494.htm
+<p>
+<b>        </b>+---------------+
+<b>    </b>----+<b> lmgc Citation </b>+----------------------------------------------------
+<p>
+    <b>Shehata, Emad Abd Elmessih (2012)</b>
+    <b>LMGC: "Granger Causality Test at Higher Order AR(p)"</b>
+<p>
+<p>
+</pre>

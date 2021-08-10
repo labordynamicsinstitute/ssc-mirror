@@ -1,0 +1,1 @@
+*! version 1.00 94/1/20program define roblowes   version 3.0   capture confirm existence `1' `2'   capture confirm number `3'   if _rc~=0 {       di "syntax: roblowes yvar xvar bwidth"       exit}   robksm `1' `2', lowess bwidth(`3') xlab ylab gen(lowerob)end

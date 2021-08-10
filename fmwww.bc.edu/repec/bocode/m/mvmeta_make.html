@@ -1,0 +1,150 @@
+<pre>
+<p>
+-------------------------------------------------------------------------------
+help for <b>mvmeta_make</b>                                                  Ian White
+-------------------------------------------------------------------------------
+<p>
+<b><u>Prepare data for multivariate meta-analysis</u></b>
+<p>
+<p>
+<b><u>Description</u></b>
+<p>
+    <b>mvmeta_make</b> is a utility to produce data in the correct format for 
+    <b>mvmeta</b>.
+<p>
+<p>
+<b><u>Syntax</u></b>
+<p>
+        <b>mvmeta_make</b> <i>regression_command</i> [<i>if</i>] [<i>in</i>] [<i>weight</i>] <b>,</b> <b>by(</b><i>by_variable</i><b>)</b>
+                 <b><u>sav</u></b><b>ing(</b><i>savefile</i><b>)</b> [<b>replace</b> <b>append</b> <b><u>name</u></b><b>s(</b><i>bname Vname</i><b>)</b> <b>keepmat</b>
+                 <b><u>usev</u></b><b>ars(</b><i>string</i><b>)</b> <b><u>usec</u></b><b>onstant</b> <b>esave(</b><i>namelist</i><b>)</b> <b><u>nodet</u></b><b>ails</b> <b>pause</b>
+                 <b><u>ppf</u></b><b>ix(none|check|all)</b> <b><u>aug</u></b><b>wt(#)</b> <b><u>noaugl</u></b><b>ist</b>
+                 <b><u>ppc</u></b><b>md(</b><i>regcmd</i>[<i>,options</i>]<b>)</b> <b>hard</b> <i>regression_options</i>]
+<p>
+    This command performs <i>regression-command</i> for each level of <i>by_variable</i>
+    and stores the results in <i>savefile</i> in the format required by <b>mvmeta</b>.
+<p>
+<p>
+<b><u>Options</u></b>
+<p>
+    <b>by(</b><i>by_variable</i><b>)</b> is compulsory: it identifies the studies, in each of
+        which the regression command will be performed.
+<p>
+    <b>saving(</b><i>savefile</i><b>)</b> is compulsory: the regression results are saved to this
+        file.
+<p>
+    <b>replace</b> specifies that <i>savefile</i> may already exist.
+<p>
+    <b>append</b> specifies that <i>savefile</i> already exists and the results should be
+        appended to it.
+<p>
+    <b>names(</b><i>bname Vname</i><b>)</b> specifies that estimated coefficients for variable x
+        are to be stored in variable <i>bname</i>x, and the estimated covariance
+        between coefficients <i>bname</i>y and <i>bname</i>y is to be stored in variable
+        <i>Vname</i>xy. Defaults are y and S.
+<p>
+    <b>keepmat</b> specifies that the results are also to be stored as matrices. The
+        estimate vector and covariance matrix for study i are stored as
+        matrices <i>bname</i>i and <i>Vname</i>i respectively, where <i>bname</i> and <i>Vname</i> are
+        the names specified by <b>names</b>.
+<p>
+    <b>usevars(</b><i>varlist</i><b>)</b> identifies the variables whose regression coefficients
+        are of interest. The default is all variables in the model, excluding
+        the constant.
+<p>
+    <b>useconstant</b> specifies that the constant is also of interest.
+<p>
+    <b>esave(</b><i>namelist</i><b>)</b> adds the specified e() statistics to the saved data.  For
+        example, <b>esave(</b>N ll<b>)</b> saves e(N) and e(ll) as variables _e_N and
+        _e_ll.
+<p>
+    <b>nodetails</b> suppresses the results of running <i>regression_command</i> on each
+        study.
+<p>
+    <b>pause</b> pauses output after the analysis of each study, provided that <b>pause</b>
+        <b>on</b> has been set.
+<p>
+    <b>ppfix(none|check|all)</b> specifies whether perfect prediction should be
+        fixed in no studies, only in studies where it is detected (the
+        default), or in all studies.
+<p>
+    <b>augwt(</b><i>#</i><b>)</b> determines the weight applied to added observations in a study
+        in which perfect prediction is detected (see Perfect Prediction
+        below).  The default is 0.01.  <b>augment(0)</b> is the same as <b>ppfix(none)</b>
+        and specifies that no augmentation is to be performed.
+<p>
+    <b>noauglist</b> suppresses listing of the augmented observations.
+<p>
+    <b>ppcmd(</b><i>regcmd</i>[<i>,options</i>]<b>)</b> specifies that perfect prediction should be fixed
+        by using regression command <i>regcmd</i> with options <i>options</i>, instead of
+        the default augmentation procedure.
+<p>
+    <b>hard</b> is useful when convergence may not be achieved in some studies.  It
+        captures the results of initial model fitting in each study, and
+        treats any non-zero return code as a symptom of perfect prediction.
+<p>
+    <i>regression_options</i> are any options allowed for <i>regression_command</i>.
+<p>
+<p>
+<b><u>Perfect Prediction</u></b>
+<p>
+Perfect prediction is a problem which may lead to highly misleading results
+being output.  It may occur in regression models for categorical or survival
+data.  In logistic regression, for example, perfect prediction occurs if there
+is a level of a categorical explanatory variable for which the observed values
+of the outcome are all zero; in Cox regression, it occurs if there is a
+category in which no events are observed.
+<p>
+<b>mvmeta_make</b> checks for perfect prediction by checking (i) that all parameters
+are reported, and (ii) that there are no zeroes on the diagonal of the
+variance-covariance matrix of the parameter estimates.  If perfect prediction
+is detected, it augments the data to avoid perfect prediction.
+<p>
+The augmentation is performed at 2 design points for each covariate x, defined
+by letting x equal its study-specific mean plus or minus its study-specific
+standard deviation and fixing other covariates at their mean value.  The
+records added at each design point depend on the form of regression model.  For
+regression models with discrete outcomes, we add one observation with each
+outcome level.  For survival analyses, we add one event at time tmin/2 and one
+censoring at time tmax+tmin/2, where tmin and tmax are the earliest and latest
+follow-up times in the study. For a stratified model, the augmentation is
+performed for each stratum.
+<p>
+A total weight of wp is then shared equally between the added observations,
+where w is specified by the <b>augwt(#)</b> option and p is the number of model
+parameters (treating the baseline hazard in a Cox model as a single parameter).
+<p>
+The regression model is then re-run including the weighted added observations.
+<p>
+When many studies have perfect prediction, it may be worth specifying the
+<b>ppfix(all)</b> option which bypasses the initial fit of the model without
+augmentation.
+<p>
+Alternatives to augmentation include penalised likelihood methods, which would
+be specified by the <b>ppcmd()</b> option.  These are implemented by <b>plogit</b> and <b>stpcox</b>
+which should in the near future be able to handle perfect prediction.
+<p>
+The output data set contains variables _ppfix which indicates whether the
+outputted results derive from a model in which perfect prediction was tackled,
+and _ppremains which indicates whether perfect prediction was detected in this
+final model.
+<p>
+<p>
+<b><u>Example</u></b>
+<p>
+First stage, starting with individual participant data (<b>fg</b> has levels 1-5):
+<p>
+    <b>. xi: mvmeta_make stcox ages i.fg, strata(sex tr) nohr saving(FSCstage1)</b>
+        <b>replace by(cohort) usevars(i.fg) names(b V) esave(N)</b>
+<p>
+Second stage:
+<p>
+    <b>. use FSCstage1, clear</b>
+<p>
+    <b>. mvmeta b V</b>
+<p>
+<p>
+<b><u>See also</u></b>
+<p>
+<b>mvmeta</b>, <b>metan</b>, <b>metareg</b>.
+</pre>

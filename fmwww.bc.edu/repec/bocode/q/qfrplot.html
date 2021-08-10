@@ -1,0 +1,87 @@
+<pre>
+-------------------------------------------------------------------------------
+help for <b>qfrplot</b>
+-------------------------------------------------------------------------------
+<p>
+<b><u>Quantile plots of fitted and residuals</u></b> 
+<p>
+        <b>qfrplot</b> [<i>plottype</i>] [<b>,</b> <b>super</b> [<b><u>norm</u></b><b>al</b>|<b><u>gauss</u></b><b>ian</b>] <b>combine(</b><i>graph_options</i><b>)</b>
+                 <b>fplot(</b><i>qplot_options</i><b>)</b> <b>rplot(</b><i>qplot_options</i><b>)</b> <i>graph_options</i>]
+<p>
+<p>
+<b><u>Description</u></b>
+<p>
+    <b>qfrplot</b> plots quantile plots of fitted values, minus their mean, and
+    residuals from the previous estimation command. Fitted values are
+    whatever <b>predict</b> produces by default and residuals are whatever <b>predict,</b>
+    <b>res</b> produces. Comparing the distributions gives an overview of their
+    variability and some idea of their fine structure. By default plots are
+    side-by-side.
+<p>
+    The plot type may be one of eight twoway types, namely, <b>area</b>, <b>bar</b>,
+    <b>connected</b>, <b>dot</b>, <b>dropline</b>, <b>line</b>, <b>scatter</b> or <b>spike</b>. <b>scatter</b> is the default.
+<p>
+    The plot is restricted to the estimation sample.
+<p>
+    <b>qplot</b> (SJ 4(1) 2004) must be installed.
+<p>
+<p>
+<b><u>Remarks</u></b>
+<p>
+    A quantile plot shows ordered values versus the so-called plotting
+    positions, or if the <b>normal</b> or <b>gaussian</b> option is specified, the
+    corresponding quantiles of a standard normal (Gaussian) distribution.
+    For n values ordered minimum first, the plotting positions are
+    (i - a) / (n - 2a + 1) for i = 1, ..., n, where a is by default 0.5.
+<p>
+    W.S. Cleveland in <i>Visualizing data</i> (Hobart Press, Summit, NJ, 1993) gives
+    many side-by-side quantile plots of fit and residuals, which he calls
+    "residual-fit spread plots". See example on p.41. However, he also uses
+    this term for side-by-side time series plots of fit and residuals. See
+    example on p.157. The command name and description here emphasise the use
+    of a quantile plot.
+<p>
+<p>
+<b><u>Options</u></b>
+<p>
+    <b>super</b> specifies that plots are to be superimposed, not side-by-side. If
+        <b>super</b> is specified, use <b>combine()</b> to control other characteristics of
+        the combined plot.
+<p>
+    <b>normal</b> specifies that standard normal quantiles should be shown instead
+        of plotting positions. <b>gaussian</b> is an exact synonym except that by
+        default the text <b>Gaussian</b> will appear within the axis title, rather
+        than <b>normal</b>.
+<p>
+    <b>fplot()</b> specifies options of qplot controlling the quantile plot of
+        fitted values. <b>fplot()</b> is irrelevant if <b>super</b> is also specified.
+<p>
+    <b>rplot()</b> specifies options of qplot controlling the quantile plot of
+        residuals. <b>rplot()</b> is irrelevant if <b>super</b> is also specified.
+<p>
+    <b>combine()</b> specifies options of qplot controlling the quantile plot of
+        fitted and residuals, whenever <b>super</b> is also specified; and options
+        of graph combine otherwise.
+<p>
+    <i>graph_options</i> are other graph options affecting the combined graph.
+<p>
+<p>
+<b><u>Examples</u></b>
+<p>
+    <b>. use auto</b>
+    <b>. regress mpg weight</b>
+    <b>. qfrplot</b>
+<p>
+    <b>. glm mpg weight, link(power -1)</b>
+    <b>. qfrplot, norm fplot(yla(,ang(h)))</b>
+<p>
+<p>
+<b><u>Author</u></b>
+<p>
+    Nicholas J. Cox, University of Durham, U.K.
+    n.j.cox@durham.ac.uk
+<p>
+<p>
+<b><u>Also see</u></b>
+<p>
+</pre>

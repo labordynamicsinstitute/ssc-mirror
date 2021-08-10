@@ -1,0 +1,130 @@
+<pre>
+<p>
+help tryem
+-------------------------------------------------------------------------------
+<p>
+Title
+<p>
+    tryem
+<p>
+Description
+<p>
+   Finds "best" subset of size k (by brute force) in terms of minimizing or max
+&gt; imizing
+   user-supplied "e"-statistic when estimating a regression model with the dist
+&gt; ribtion 
+   of depvar depending on a linear combination of n potential explanatory varia
+&gt; bles.
+<p>
+   Shows variable number(s) (order in varlist), 
+   best (min or max) value of "e"-statistic , and identity of best subset
+<p>
+Syntax
+<p>
+   tryem depvar varlist [if] [in] , k(integer) [cmd(string) stat(string) best(s
+&gt; tring)
+   cmdoptions(string)]
+<p>
+    options              description
+    -------------------------------------------------------------------------
+     k                   subset size (required)
+     cmd                 estimation command (default = reg)
+     stat                estimation output "e"-statistic (default = r2)
+     best                min or max (default = max)
+     cmdoptions          options to be added to estimation command 
+    -------------------------------------------------------------------------
+<p>
+<p>
+<p>
+Remarks
+<p>
+    Uses -mktime.ado- (provided) to cycle through the subsets.
+     
+    
+    Warning:
+   
+       / n \ 
+   If |     | is large, where n is the number of potential regressors, 
+       \ k / 
+<p>
+<p>
+    this may take a prohibitive amount of time.
+<p>
+Options Detail
+    -------------------------------------------------------------------------
+<p>
+    With only the k( ) option (required), tryem finds subset with maximum r^2 i
+&gt; n 
+    ordinary linear regression.
+<p>
+    Other estimation commands are permitted with the cmd( ) option, but then th
+&gt; e 
+    appropriate estimation statistic ("e"-statistic) has to be specified. 
+    For example specifying
+<p>
+         ..cmd(logit) stat(ll).. 
+<p>
+    as options will find the subset that maximizes the log likelihood under 
+    logistic regression
+<p>
+    If you want to minimize an estimation statistic (such as Pearson deviance i
+&gt; n a glm)
+    specify best(min) as an option; e.g.
+<p>
+          ..cmd(glm) best(min) stat(deviance_p)..
+<p>
+   If there are options specific to the estimation command, they may be include
+&gt; d using
+   cmdoptions( ) - for example for glm with a gamma family and identity link fu
+&gt; nction:
+<p>
+          ..cmd(glm) cmdoptions(family(gamma) link(identity)) best(min) stat(de
+&gt; viance_p)
+<p>
+<p>
+Examples
+a) Ordinary linear regression, maximize r^2
+<p>
+. tryem ym3 radex hs12 x* hs43-hs51,k(3)
+<p>
+ --------------------------------------------
+ 
+ Best r^2 is   0.361193.  Best subset of size 3 is: 
+ 
+ radex xsun xrg
+ 
+ Variable numbers for best subset are:
+<p>
+  1  7  9
+ --------------------------------------------
+<p>
+b) ordinary linear regression, find subset with minimum RMSE
+<p>
+. tryem ym3 hs1-hs7,k(2) best(min) stat(rmse)
+[output omitted]
+<p>
+c) GLM - minimize Pearson deviance
+<p>
+. tryem ym3 x*,k(2) cmd(glm) cmdoptions(family(gamma) link(iden)) best(min) sta
+&gt; t(deviance_p)
+[output omitted]
+<p>
+<p>
+<p>
+Author(s)
+---------
+<p>
+Al Feiveson, Johnson Spaceflight Center
+Email: alan.h.feiveson@nasa.gov
+<p>
+<p>
+<p>
+Also see
+<p>
+    Manual:  [U] 18.11.6 Writing online help
+<p>
+    Online:  help, summarize
+<p>
+<p>
+<p>
+</pre>

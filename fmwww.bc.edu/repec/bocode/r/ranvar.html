@@ -1,0 +1,49 @@
+<pre>
+.-
+help for ^ranvar^
+.-
+<p>
+random group variance estimation of the mean for survey data
+------------------------------------------------------------------------------
+<p>
+        ^ranvar^ varlist [aweight] [if]
+        ^ranvar2^ varlist [iweight] [if]
+<p>
+Description
+-----------
+<p>
+^ranvar^ calculates the random group variance estimator of the mean for survey
+ data. The estimator is described in detail by Wolter (1985) "Introduction to 
+Variance estimation", New York/Berlin (Springer). This estimator is an 
+alternative to other estimators of the variance of sample statistics 
+for survey data e.g. the jacknife or taylor linearization. The 
+application of the random group estimator requires, that random groups 
+are already defined during data collection.
+<p>
+Note: ^iweight^ is available with ^ranvar2^.
+<p>
+Note for ^SOEP^ Users: The estimation is described in K.4
+<p>
+Examples
+--------
+<p>
+ . ^ranvar death net^
+ . ^ranvar death net [aweight=bstrat] if sex==1 ^ 
+<p>
+<p>
+Author
+------
+        Frauke Kreuter
+        University of Konstanz
+        frauke.kreuter@@uni-konstanz.de
+        
+<p>
+Also see
+--------
+<p>
+    STB:
+ Manual:
+On-line: help for ^svymean^
+<p>
+<p>
+</pre>

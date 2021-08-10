@@ -1,0 +1,108 @@
+<pre>
+-------------------------------------------------------------------------------
+help for <b>eqprhistogram</b>
+-------------------------------------------------------------------------------
+<p>
+<b><u>Equal probability histogram</u></b> 
+<p>
+        <b>eqprhistogram</b><i> varname</i> [<i>weight</i>] [<b>if</b> <i>exp</i>] [<b>in</b> <i>range</i>] [ <b>,</b> <b>bin(</b><i>#</i><b>)</b> <b>mean</b>
+                 <b>plot(</b><i>plot</i><b>)</b> <i>graph_options</i> ]
+<p>
+<p>
+<b><u>Description</u></b>
+<p>
+    <b>eqprhistogram</b> shows a histogram of the distribution of <i>varname</i>
+    constructed so that each bar represents the same fraction of the data.
+<p>
+    <b>fweight</b>s and <b>aweight</b>s may be specified.
+<p>
+<p>
+<b><u>Remarks</u></b> 
+<p>
+    As an example, suppose we calculate the minimum, the lower quartile, the
+    median, the upper quartile and the maximum of a variable.  These 5
+    quantiles allow us to draw a histogram with 4 bars, each representing 1/4
+    of the total (possibly weighted) frequency, or of the total probability
+    1. The height of each bar representing the average probability density in
+    each interval should be 1 / 4 * (higher quantile - lower quantile). More
+    generally, <i>k</i> bars each representing a fraction or probability 1/<i>k</i> may be
+    drawn after calculating <i>k</i> +1 quantiles equally spaced in terms of
+    cumulative probability.  In practice, the lowest and highest of these are
+    obtained from summarize and the others from _pctile.
+<p>
+    <b>eqprhistogram</b> refuses to draw graphs when the quantiles calculated are
+    not distinct. This is likely with categorical or discrete or highly
+    rounded data, especially as the number of quantiles approaches the number
+    of values. It is recommended either to ask for fewer bins or to
+    reconsider the appropriateness of the request.
+<p>
+    Equal probability histograms have some analytical value. Perhaps their
+    greatest merit is pedagogic, as examples showing the principle behind
+    histograms, that area represents probability, and as a graphic way to
+    show how quantiles relate to the histogram, especially say quartiles,
+    octiles or deciles.
+<p>
+    Note that <b>eqprhistogram</b> is not implemented using histogram, but directly.
+<p>
+    This kind of graph has been discussed by, for example, Breiman (1973,
+    pp.208-9) and Scott (1992, pp.69-70).  Breiman points out that the
+    associated error will be approximately a constant multiple of the bar
+    heights, so long as the bin frequencies are not too small.  Scott points
+    out that, in terms of mean integrated squared error, it is a lousy
+    estimator of the underlying probability density function.  Simonoff
+    (1996, p.34) gives references for related work from 1969.  (Please email
+    the author with details of any earlier or fuller discussions.)
+<p>
+<p>
+<b><u>Options</u></b> 
+<p>
+    <b>bin()</b> indicates the number of bins.  In Stata 8.0, the number of bins may
+        not exceed 20.  As of Stata 8.1, the number of bins may not exceed
+        1000.  The default is 8.
+<p>
+    <b>mean</b> adds a dashed line indicating the mean of the data.
+<p>
+    <b>plot(</b><i>plot</i><b>)</b> provides a way to add other plots to the generated graph; see
+        help plot_option.
+<p>
+    <i>graph_options</i> refers to options of twoway bar.
+<p>
+<p>
+<b><u>Examples</u></b>
+<p>
+    . sysuse auto
+<p>
+    . eqprhistogram price
+    . eqprhistogram price, bin(4)
+    . eqprhistogram price, bin(10) plot(kdensity price)
+<p>
+<p>
+<b><u>Author</u></b>
+<p>
+        Nicholas J. Cox, University of Durham
+        n.j.cox@durham.ac.uk
+<p>
+         
+<b><u>Acknowledgements</u></b> 
+<p>
+        Marcello Pagano suggested the problem.  Vince Wiggins provided very
+        helpful comments, particularly in pointing to the undocumented option
+        <b>bartype(spanning)</b>.
+<p>
+<p>
+<b><u>References</u></b>
+<p>
+    Breiman, L. 1973. <i>Statistics: with a view towards applications.</i>  Boston:
+    Houghton Mifflin.
+<p>
+    Scott, D.W. 1992.  <i>Multivariate density estimation: theory, practice, and</i>
+    <i>visualization.</i>  New York: John Wiley.
+<p>
+    Simonoff, J.S. 1996.  <i>Smoothing methods in statistics.</i> New York:
+    Springer.
+<p>
+<p>
+<b><u>Also see</u></b>
+<p>
+On-line:  help for histogram
+</pre>

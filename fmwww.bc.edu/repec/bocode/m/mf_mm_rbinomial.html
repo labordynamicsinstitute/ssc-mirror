@@ -1,0 +1,107 @@
+<pre>
+<b>help mata mm_rbinomial()</b>
+-------------------------------------------------------------------------------
+<p>
+<b><u>Title</u></b>
+<p>
+    <b>mm_rbinomial() -- Generate binomial distributed random numbers</b>
+<p>
+-------------------------------------------------------------------------------
+  Note: An official <b>rbinomial()</b> function was introduced in Stata 10.1 (see
+  help <b>[M-5] runiform()</b>). Official <b>rbinomial()</b> is much faster than
+  <b>mm_rbinomial()</b>.
+-------------------------------------------------------------------------------
+<p>
+<p>
+<b><u>Syntax</u></b>
+<p>
+        <i>real matrix</i> <b>mm_rbinomial(</b><i>n</i><b>,</b> <i>p</i><b>)</b>
+<p>
+        <i>real matrix</i> <b>mm_cebinomial(</b><i>n</i><b>,</b> <i>k</i><b>,</b> <i>p</i><b>)</b>
+<p>
+    where
+<p>
+        <i>n</i>:  <i>real matrix n</i>
+        <i>k</i>:  <i>real matrix k</i>
+        <i>p</i>:  <i>real matrix p</i>
+<p>
+<p>
+<b><u>Description</u></b>
+<p>
+    <b>mm_rbinomial()</b> returns a random draw from the binomial distribution where
+    <i>n</i> is the number of trials and <i>p</i> is the success probability.
+<p>
+    When <i>n</i> and <i>p</i> are not scalar, <b>mm_rbinomial()</b> returns element-by-element
+    results. <i>n</i> and <i>p</i> are required to be r-conformable (see help <b>[M-6]</b>
+    <b>glossary</b>).
+<p>
+    If you are serious about generating random numbers, you should first set
+    the random number seed; see help <b>generate</b> or help for <b>[M-5] uniform()</b>.
+<p>
+    <b>mm_cebinomial()</b> returns the expected value of a binomial distributed
+    random variable conditional on the variable being equal to <i>k</i> or larger.
+    That is, <b>mm_cebinomial()</b> returns
+<p>
+        E(<i>X</i>|<i>X</i>&gt;=<i>k</i>)
+<p>
+    where
+<p>
+        <i>X</i> ~ B(<i>n</i>, <i>p</i>)
+<p>
+    and <i>n</i> is the number of trials and <i>p</i> is the success probability.
+<p>
+    When <i>n</i>, <i>k</i>, and <i>p</i> are not scalar, <b>mm_cebinomial()</b> returns
+    element-by-element results. <i>n</i>, <i>k</i>, and <i>p</i> are required to be r-conformable
+    (see help <b>[M-6] glossary</b>).
+<p>
+<p>
+<b><u>Remarks</u></b>
+<p>
+    <b>mm_rbinomial()</b>: If <i>n</i>&lt;50 or <i>p</i>&gt;.03, the random numbers are generated using
+    the rejection technique. If <i>n</i>&gt;=50 and <i>p</i>&gt;=.03, the geometric distribution
+    technique is applied (see Evans et al. 2000).
+<p>
+    <b>mm_cebinomial()</b>: The expectation of <i>X</i> ~ B(<i>n</i>, <i>p</i>) conditional on <i>X</i>&gt;=<i>k</i> may
+    be written as
+<p>
+        E(<i>X</i>|<i>X</i>&gt;=<i>k</i>) = <i>k</i> + [ P(<i>X</i>&gt;=<i>k</i>+1) + ... + P(<i>X</i>=<i>n</i>) ] / P(<i>X</i>&gt;=<i>k</i>)
+<p>
+    where P(<i>X</i>&gt;=<i>k</i>) is the probability of <i>k</i> or more successes, which is
+    computed as <b>Binomial(</b><i>n</i><b>,</b><i> k</i><b>,</b><i> p</i><b>)</b> (see <b>[M-5] normal()</b>).
+<p>
+<p>
+<b><u>Conformability</u></b>
+<p>
+    Both functions require arguments be r-conformable (see help <b>[M-6]</b>
+    <b>glossary</b>). Returned is a matrix of max(argument rows) rows and
+    max(argument columns) columns containing element-by-element calculated
+    results.
+<p>
+<p>
+<b><u>Diagnostics</u></b>
+<p>
+    Missing value is returned if arguments are out of range (<i>p</i>&gt;1, <i>p</i>&lt;0, <i>n</i>&lt;=0,
+    <i>k</i>&lt;0, or <i>k</i>&gt;<i>n</i>) or contain missing value or if <i>n</i> and <i>k</i> are non-integer.
+<p>
+<p>
+<b><u>Source code</u></b>
+<p>
+    mm_rbinomial.mata, mm_cebinomial.mata
+<p>
+<p>
+<b><u>References</u></b>
+<p>
+    Evans, M., N. Hastings, B. Peacock (2000): Statistical Distributions.
+        Third Edition. New York: Wiley.
+<p>
+<p>
+<b><u>Author</u></b>
+<p>
+    Ben Jann, ETH Zurich, jann@soz.gess.ethz.ch
+<p>
+<p>
+<b><u>Also see</u></b>
+<p>
+    Online:  help for <b>[M-5] normal()</b>, <b>moremata</b>
+<p>
+</pre>

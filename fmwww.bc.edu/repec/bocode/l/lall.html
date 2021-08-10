@@ -1,0 +1,107 @@
+<pre>
+<b>help lall</b>, <b>help ldo</b>, <b>help ldta</b>, <b>help lgph</b>, <b>help lsmcl</b>
+-------------------------------------------------------------------------------
+<p>
+<b><u>Title</u></b>
+<p>
+    Featured list of Stata files in the working directory
+<p>
+<b><u>Syntax</u></b>
+<p>
+        <b>lall</b> [ <i>stub</i> ] [<b>, </b><b><u>e</u></b><b>rase</b>]
+<p>
+        <b>ldo</b> [ <i>stub</i> ] [<b>, </b><b><u>e</u></b><b>rase</b>]
+<p>
+        <b>ldta</b> [ <i>stub</i> ] [<b>, </b><b><u>e</u></b><b>rase</b>]
+<p>
+        <b>lgph</b> [ <i>stub</i> ] [<b>, </b><b><u>e</u></b><b>rase</b>]
+<p>
+        <b>lmata</b> [ <i>stub</i> ] [<b>, </b><b><u>e</u></b><b>rase</b>]
+<p>
+        <b>lsmcl</b> [ <i>stub</i> ] [<b>, </b><b><u>e</u></b><b>rase</b>]
+<p>
+    where <i>stub</i> may be a single letter or any combination of characters that
+    can be used for filenames.
+<p>
+<b><u>Description</u></b>
+<p>
+    The above programs return lists of Stata files in the working directory.
+    Along with the file names, the programs offer a list of click-able links
+    for some typical tasks that one wants to do for the files.
+<p>
+    If <i>stub</i> is specified, only files with names containing<i> stub</i> are listed.
+<p>
+    All programs save back the list of files in a local macro.
+<p>
+    <b>ldta</b> provides links for describing, and using each Stata data set in the
+    working directory.
+<p>
+    <b>ldo</b> provides links for viewing, editing, and running each Stata do-file
+    in the working directory. You can define the Editor that is invoked when
+    clicking on the edit-item of <b>ldo</b> by setting the global macro "MYEDITOR"
+    to the command that opens your preferred text editor. I, for example, put
+<p>
+        ------------------- profile.do
+        <b>global MYEDITOR !emacsclient -n</b>
+        -------------------------------
+<p>
+    in my profile file, which works under Linux. Windows users might prefer
+    something along the following lines
+<p>
+        -------------------- profile.do
+        <b>global MYEDITOR winexec textpad</b>
+        -------------------------------
+<p>
+    <b>lsmcl</b> provides links for viewing, and translating each Stata SMCL-file in
+    the working directory.
+<p>
+    <b>lgph</b> provides links for displaying, printing, and exporting each Stata
+    gph file in the working directory.
+<p>
+    <b>lmata</b> provides links for viewing, editing, and compiling each Mata-file
+    in the working directory. You can define the Editor that is invoked when
+    clicking on the edit-item of <b>lmata</b> by setting the global macro "MYEDITOR"
+    to the command that opens your preferred text editor. See help for <b>ldo</b>
+    above.
+<p>
+    <b>lall</b> provides links for all .dta, .do, .smcl, and .gph files in the
+    working directory along with the click-able links described above.
+<p>
+    The programs are most valueable if you link them with a function-key in
+    your profile (see help profile). If you, for example, add the following
+    lines in your profile.do file, you can issue the commands by pressing F4,
+    F5, F6 or F7 respectively.
+<p>
+    --------------- profile.do
+    <b>global F4 "ldta, erase ;"</b>
+    <b>global F5 "ldo, erase ;"</b>
+    <b>global F6 "lgph, erase ;"</b>
+    <b>global F7 "lsmcl, erase ;"</b>
+    --------------------------
+<p>
+<b><u>Options</u></b>
+<p>
+    <b><u>e</u></b><b>rase</b> brings up yet another click-able item which allows to erase files
+        on disk. Clicking on that item removes the respective file
+        immediately from the disk. The file is not moved to the recycle bin.
+        The erase button is printed in red to indicate that it should be
+        handled with care.
+<p>
+<p>
+<b><u>Example</u></b>
+<p>
+        <b>. ldo</b>
+        <b>. ldta</b>
+        <b>. lgph, e</b>
+        <b>. lsmcl, e</b>
+<p>
+<b><u>Authors</u></b>
+<p>
+    Ulrich Kohler, kohler@wzb.eu
+    Roy Wada, roywada@hotmail.com
+<p>
+<b><u>Also see</u></b>
+<p>
+    Online: cdout, clickout, fastcd (if installed)
+<p>
+</pre>

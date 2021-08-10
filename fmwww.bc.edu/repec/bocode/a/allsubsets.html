@@ -1,0 +1,84 @@
+<pre>
+-------------------------------------------------------------------------------
+help for <b>allsubsets</b>
+-------------------------------------------------------------------------------
+<p>
+<b><u>All subsets (combinatorial) meta-analysis</u></b>
+<p>
+    <b>allsubsets</b> varlist [<b>if</b> expression] [<b>in</b> range], <b>s</b>ave(<i>filename</i>)
+                 [<b>maxstudies</b>(<i>integer</i>) <b>replace</b> ]
+<p>
+<b><u>Description</u></b>
+<p>
+    <b>allsubsets</b> performs all subsets (combinatorial) meta-analysis in a set of
+        studies and saves results.  By default the routine performs fixed
+        effects meta-analysis using the inverse variance method, and random
+        effects meta-analysis using the DerSimonian and Laird random effects
+        model.
+<p>
+Let N be the number of studies in the meta-analysis.
+Then the number of possible subsets is -1+2^N. 
+The command handles up to N=<b>maxstudies</b> studies. See Options. 
+<p>
+<b><u>Suggested citation:</u></b>
+<p>
+    Olkin I, Dahabreh IJ, Trikalinos TA. GOSH - A graphical display of study
+        heterogeneity. <i>Research Synthesis Methods</i>. 2012;3(3):214-223.
+<p>
+See also the Center for Evidence-based Medicine (CEBM) at Brown University for 
+&gt; updates or additional materials.
+<p>
+-------------------------------------------------------------------------------
+<p>
+    <b>varlist</b> Expects two numeric variables: the effect size <i>Theta</i> and its
+        variance <i>var_theta</i>.
+<p>
+-------------------------------------------------------------------------------
+<p>
+    In the saved file one finds the following variables:
+<p>
+    <i>study_ES</i>: the effect size of the study. has non-missing values only for N
+        (# of studies) observations.
+<p>
+    <i>study_var</i>: the variance of each study. has non-missing values only for N
+        (# of studies) observations.
+<p>
+    <i>es_fem</i>: fixed effects meta-analysis result
+<p>
+    <i>es_rem</i>: random effects meta-analysis result
+<p>
+    <i>df</i>: degrees of freedom
+<p>
+    <i>I2</i>: I^2 value
+<p>
+    <i>subset</i>: codes which studies are in the subset.  Studies are named with
+        lowercase letters (e.g. "a", "b"). "a b g" means that the 2nd, 3rd
+        and 7th study are included in the subset.
+<p>
+    <i>pRem_z</i>: p-value for the overall effect with the random effects model
+<p>
+    <i>var_fem</i>: variance of the summary fixed effects estimate
+<p>
+    <i>var_rem</i>: variance of the summary random effects estimate
+<p>
+    <i>Q</i>: Cochran's Q
+<p>
+    <i>tau2</i>: DerSimonian and Laird 1-step tau^2
+<p>
+    <i>pFem_z</i>: p-value for the overall effect with fixed effects
+<p>
+<p>
+<p>
+-------------------------------------------------------------------------------
+    Options for <b>allsubsets</b>
+<p>
+<p>
+    <b>save</b> Give the nane of the file where the command will save results
+<p>
+    <b>replace</b> Whether or not to replace the file if it exists.
+<p>
+    <b>maxstudies</b> The maximum number of studies that are allowed. This depends
+        on your computer's RAM. The default is N=20 (1'048'575 subsets).
+        Specifying too high an N results in a memory allocation error.
+<p>
+</pre>

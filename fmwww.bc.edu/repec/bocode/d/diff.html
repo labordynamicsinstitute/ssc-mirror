@@ -1,0 +1,201 @@
+<pre>
+<b>help diff</b> 
+-------------------------------------------------------------------------------
+<p>
+<b><u>Title</u></b>
+<p>
+    <b>diff</b> --       Difference in differences estimation
+<p>
+<p>
+<b><u>Syntax</u></b>
+<p>
+        <b>diff</b> <i>outcome_var</i> [<i>if</i>] [<i>in</i>] [<i>weight</i>] <b>,</b>[ <i>options</i>]
+<p>
+<p>
+<b><u>Description</u></b>
+<p>
+    <b>diff</b> performs several difference in differences (diff-in-diff)
+    estimations of the treatment effect of a given outcome variable from a
+    pooled baseline and follow up dataset: Single Diff-in-Diff, Diff-in-Diff
+    controlling for covariates, Kernel-based Propensity Score diff-in-diff,
+    and the Quantile Diff-in-Diff.  <b>diff</b> is also suitable for estimating
+    repeated cross section diff-in-diff (except for the kernel option).
+<p>
+<p>
+<b><u>Options</u></b>
+<p>
+    <i>options</i>               Description
+    -------------------------------------------------------------------------
+    Model - Required
+      <b><u>p</u></b><b>eriod(</b><i>varname</i><b>)</b>     Indicates the dummy period variable (0: base line;
+                            1: follow up).
+      <b><u>t</u></b><b>reated(</b><i>varname</i><b>)</b>    Indicates the dummy treated variable (0: controls;
+                            1:treated).
+<p>
+    Optional
+      <b><u>c</u></b><b>ov(</b><i>varlist</i><b>)</b>        Specifies the pre-treatment covariates of the
+                            model. When option <b><u>k</u></b><b>ernel</b> is selected these
+                            variables are used to generate the propensity
+                            score.
+      <b><u>k</u></b><b>ernel</b>              Performs the Kernel-based Propensity Score
+                            diff-in-diff. This option generates _weights that
+                            contains the weights derived from the kernel
+                            density function, _ps when the Propensity Score
+                            is not specified in <b><u>ps</u></b><b>core(</b><i>varname</i><b>)</b>. This option
+                            requires the<i> id(varname)</i> of each individual,
+                            hence it is not compatible with repeated cross
+                            section.
+      <b>id(</b><i>varname</i><b>)</b>         Option<i> kernel</i> requires the supply of the
+                            identification variable.
+      <b>bw(</b><i>#</i><b>)</b>               Supplied bandwidth of the kernel. The default is
+                            the optimum bw estimated by Stata. See <b>[R]</b>
+                            <b>kdensity</b>
+      <b><u>kt</u></b><b>ype(</b><i>kernel</i><b>)</b>       Specifies the kernel function; the default is
+                            epanechnikov.  See <b>[R] kdensity</b>
+      <b><u>qd</u></b><b>id(</b><i>quantile</i><b>)</b>      Performs the Quantile Difference in Differences
+                            estimation at the specified quantile from 0.1 to
+                            0.9 (quantile 0.5 performs the QDID at the
+                            medeian). You may combine this option with <b><u>k</u></b><b>ernel</b>
+                            and <b><u>c</u></b><b>ov</b> options. <b><u>qd</u></b><b>id</b> does not support weights
+                            nor robust standard errors.  This option uses <b>[R]</b>
+                            <b>qreg</b> and <b>[R] bsqreg</b> for bootstrapped standard
+                            errors
+      <b><u>ps</u></b><b>core(</b><i>varname</i><b>)</b>     Supplied Propensity Score.
+      <b><u>lo</u></b><b>git</b>               Specifies logit estimation of the Propensity Score.
+                            The default is Probit.
+      <b><u>sup</u></b><b>port</b>             Performs diff on the common support of the
+                            propensity score given the option <b><u>k</u></b><b>ernel</b>.
+<p>
+    SE/Robust
+      <b><u>cl</u></b><b>uster(</b><i>varname</i><b>)</b>    Calculates clustered Std. Errors by<i> varname</i>.
+      <b>robust</b>              Calculates robust Std. Errors.
+      <b>bs</b>                  performs a Bootstrap estimation of coefficients and
+                            standard errors.
+      <b><u>r</u></b><b>eps(</b><i>int</i><b>)</b>           Specifies the number of repetitions when the <b>bs</b> is
+                            selected. The default are 50 repetitions.
+<p>
+    Balancing test
+      <b>test</b>                Performs a balancing t-test of difference in means
+                            of the specified covariates between control and
+                            treated groups in period == 0. The option<i> test</i>
+                            combined with<i> kernel</i> performs the balancing
+                            t-test with the weighted covariates.  See <b>[R]</b>
+                            <b>ttest</b>
+<p>
+    Reporting
+      <b><u>rep</u></b><b>ort</b>              Displays the inference of the included covariates
+                            or the estimation of the Propensity Score when
+                            option <b>kernel</b> is specified.
+      <b><u>nos</u></b><b>tar</b>              Removes the inference stars from the p-values.
+<p>
+<p>
+    -------------------------------------------------------------------------
+<p>
+<p>
+<b><u>Example</u></b>
+<p>
+    Install<i> diff</i> and/or check for updates.
+<p>
+         ssc inst diff, replace
+<p>
+    1. Diff-in-Diff with no covariates.
+    We use the dataset form Card &amp; Krueger (1994)*.
+<p>
+         net get diff
+<p>
+         use cardkrueger1994, clear
+<p>
+         diff fte, t(treated) p(t)
+<p>
+    For bootstrapped std. err.:
+<p>
+         diff fte, t(treated) p(t) bs rep(50)
+<p>
+    2. Diff-in-Diff with covariates.
+<p>
+         diff fte, t(treated) p(t) cov(bk kfc roys)
+         diff fte, t(treated) p(t) cov(bk kfc roys) report
+         diff fte, t(treated) p(t) cov(bk kfc roys) report bs
+<p>
+    3. Kernel Propensity Score Diff-in-Diff.
+<p>
+         diff fte, t(treated) p(t) cov(bk kfc roys) kernel id(id)
+         diff fte, t(treated) p(t) cov(bk kfc roys) kernel id(id) support
+         diff fte, t(treated) p(t) kernel id(id) ktype(gaussian) pscore(_ps)
+<p>
+    4. Quantile Diff-in-Diff.
+<p>
+         diff fte, t(treated) p(t) qdid(0.25)
+         diff fte, t(treated) p(t) qdid(0.50)
+         diff fte, t(treated) p(t) qdid(0.75)
+         diff fte, t(treated) p(t) qdid(0.50) cov(bk kfc roys)
+         diff fte, t(treated) p(t) qdid(0.50) cov(bk kfc roys) kernel id(id)
+<p>
+    5. Balancing test of covariates.
+<p>
+         diff fte, t(treated) p(t) cov(bk kfc roys wendys) test
+         diff fte, t(treated) p(t) cov(bk kfc roys wendys) test id(id) kernel
+<p>
+<b><u>Saved results</u></b>
+<p>
+    <b>diff</b> saves the following list of scalars in<b> r()</b>:
+<p>
+      <b>r(mean_c0)</b>      mean of <i>output_var</i> of the control group in period == 0
+      <b>r(mean_t0)</b>      mean of <i>output_var</i> of the treated group in period == 0
+      <b>r(diff0)</b>        difference of the mean of <i>output_var</i> between treated
+                       and control groups in period == 0
+      <b>r(mean_c1)</b>      mean of <i>output_var</i> of the control group in period == 1
+      <b>r(mean_t1)</b>      mean of <i>output_var</i> of the treated group in period == 1
+      <b>r(diff1)</b>        difference of the mean of <i>output_var</i> between treated
+                       and control groups in period == 1
+      <b>r(diffdiff)</b>     differences in differences - Treatment Effect
+      <b>r(se_c0)</b>        Standard Error of the mean of <i>output_var</i> of the control
+                       group in period == 0
+      <b>r(se_t0)</b>        Standard Error of the mean of <i>output_var</i> of the treated
+                       group in period == 0
+      <b>r(se_d0)</b>        Standard Error of the difference of <i>output_var</i> between
+                       the treated and control groups in period == 0
+      <b>r(se_c1)</b>        Standard Error of the mean of <i>output_var</i> of the control
+                       group in period == 1
+      <b>r(se_t1)</b>        Standard Error of the mean of <i>output_var</i> of the treated
+                       group in period == 1
+      <b>r(se_d1)</b>        Standard Error of the difference of <i>output_var</i> between
+                       the treated and control groups in == 0
+      <b>r(se_dd)</b>        Standard Error of the difference in difference
+<p>
+<b><u>References</u></b>
+<p>
+Single diff-in-diff:
+<p>
+    Card, D., Krueger, A. "Minimum Wages and Employment: A Case Study of the
+        Fast-Food Industry in New Jersey and Pennsylvania".  The American
+        Economic Review, Vol. 84, No. 4 (Sep., 1994), pp. 772-793.
+<p>
+Kernel diff-in-diff:
+<p>
+    Heckman, J., Ichimura, H., Todd, P. "Matching As an Econometric
+        Evaluation Estimator". The Review of Economic Studies, Vol. 65, No. 2
+        (Apr., 1998), pp. 261-294.
+<p>
+Quantile diff-in-diff:
+<p>
+    Meyer, B., Viscusi, W., . "Workers' Compensation and Injury Duration:
+        Evidence from a Natural Experiment". The American Economic Review,
+        Vol. 85, No.3 (Jun., 1995), pp. 322-340.
+<p>
+<b><u>Author</u></b>
+<p>
+    Juan M. Villa
+    Brooks World Poverty Institute
+    University of Manchester
+    juan.villalora@postgrad.manchester.ac.uk
+<p>
+    Please cite as: Villa, Juan M. 2011. DIFF: Stata Module to Perform
+        Differences in Differences Estimation. Statistical Software
+        Components. Boston College Department of Economics.
+<p>
+    Update: Nov - 2012. Click here periodically to get the lastest version.
+    *Acknowledgements to Kit Baum for valuable comments.
+<p>
+<p>
+</pre>

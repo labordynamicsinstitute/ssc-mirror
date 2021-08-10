@@ -1,0 +1,97 @@
+<pre>
+<b>help lado</b>
+-------------------------------------------------------------------------------
+<p>
+<b><u>Title</u></b>
+<p>
+    Featured list of ado-files
+<p>
+<b><u>Syntax</u></b>
+        <b>lado</b> [ <i>stub</i> ] <b>, </b><b><u>e</u></b><b>rase</b>
+<p>
+    where <i>stub</i> may be a dot, a single letter or any combination of characters
+    that can be used for file names, or a dot followed by a single letter of
+    any combination of characters that can be used for file names.
+<p>
+<b><u>Description</u></b>
+<p>
+    <b>lado</b> is developed for ado file programmers. It returns a list of ado
+    files stored in the working directory or in any other directory that has
+    been set as the "ado development folder". If <i>stub</i> is specified, only
+    files with names containing<i> stub</i> are listed. Along with the file names,
+    the programs offer a list of click-able links for some typical tasks that
+    one wants to do for <i>own</i> ado files.
+<p>
+    Specifically, <b>lado</b> provides links for viewing and editing each ado file.
+    If a help file exists links for getting help and editing the help file
+    are also provided.
+<p>
+    By default, the Stata do-file editor is invoked for editing ado files and
+    help files. However, you can use a different editor by setting the global
+    macro "MYEDITOR" to the command that opens your preferred text editor. I,
+    for example, have the line
+<p>
+        ------------------- profile.do
+        <b>global MYEDITOR !emacsclient -n</b>
+        -------------------------------
+<p>
+    in my profile file, which works under Linux. Windows users might prefer
+    something along the following lines
+<p>
+        -------------------- profile.do
+        <b>global MYEDITOR winexec textpad</b>
+        -------------------------------
+<p>
+    Note that setting the macro MYEDITOR also affects the editor used to open
+    do-files with ldo and the editor used to open tex-files with ltex.
+<p>
+    By default, <b>lado</b> lists the ado files in the working directory. However,
+    you can predefine an <b>ado development directory</b> which is then used instead
+    of the working directory.  This is done by setting the global macro
+    "ADODEVELOPMENT" to the directory in which own ado files are created. I
+    have
+<p>
+        ------------------------ profile.do
+        <b>global ADODEVELOPMENT "~/ado/cooker/"</b>
+        -----------------------------------
+<p>
+    in my profile file.
+<p>
+    The ado development folder can be overwritten interactively by typing a
+    dot in front of or instead of the stub. The command
+<p>
+        <b>. lado .</b>
+<p>
+    will list all ado files of your current directory even if you have
+    predefined an ado development folder. Likewise,
+<p>
+        <b>. lado .l</b>
+<p>
+    will list all ado files of your current directory starting with the
+    letter l.
+<p>
+<b><u>Options</u></b>
+<p>
+    <b><u>e</u></b><b>rase</b> brings up yet another click-able item which allows to erase files
+        on disk. Clicking on that item removes the respective file
+        immediately from the disk. The file is not moved to the recycle bin.
+        The erase button is printed in red to indicate that it should be
+        handled with care.
+<p>
+<p>
+<b><u>Example</u></b>
+<p>
+        <b>. lado</b>
+        <b>. lado, erase</b>
+<p>
+<p>
+<b><u>Author</u></b>
+<p>
+    Ulrich Kohler, kohler@wzb.eu
+<p>
+<b><u>Also see</u></b>
+<p>
+    Online: dirtools, lall, ldir, ltex, cdout, clickout, fastcd (if
+             installed)
+<p>
+</pre>

@@ -1,0 +1,45 @@
+d 'SIMARWILSON': module to perform Simar & Wilson efficiency analysis
+d
+d   simarwilson implements the procedure proposed by Simar and
+d Wilson (J. Econometrics, 2007) for regression analysis of DEA
+d (data envelopment analysis) efficiency scores. Unlike naive
+d two-step approaches, the Simar and Wilson procedure accounts for
+d (i) DEA efficiency scores being bounded - depending on how
+d inefficiency is defined - from above or from below at the value
+d of one, and (ii) for DEA generating a complex and generally
+d unknown correlation pattern among estimated efficiency scores. In
+d technical terms a multi-step procedure is pursued that involves
+d (i) truncated regression analysis, (ii) simulating the unknown
+d error correlation, and (iii) calculating bootstrap standard
+d errors and CIs. One may interpret simarwilson as a procedure for
+d correcting the standard errors one gets from using truncreg for
+d regressing DEA scores on explanatory variables. DEA efficiency
+d scores that enter the model as dependent variable have to be
+d estimated prior to running simarwilson. The user-written commands
+d dea (Ji and Lee, 2010) and teradial, as well as the accompanying
+d commands teradialbc and nptestrts, (Badunenko and Mozharovskyi,
+d 2016) allow for this using stata. Primarily, algorithm #1 (Simar
+d and Wilson, 2007) is implemented by simarwilson. Yet, the command
+d also allows for applying (the double-bootstrap) algorithm #2
+d (Simar and Wilson, 2007) by choosing bias-corrected efficiency
+d estimates as dependent variable. The user-written command
+d teradialbc (Badunenko and Mozharovskyi, 2016) allows for
+d obtaining such estimates. With the (smoothed) heterogeneous
+d option specified, teradialbc approximates the procedure suggested
+d in Simar and Wilson (2007) to obtain bias-corrected efficiency
+d estimates, which is one step in algorithm #2. 
+d
+d KW: efficiency analysis
+d KW: two-step approach
+d KW: data envelopment analysis
+d KW: truncated regression
+d
+d Requires: Stata version 12 and rtnorm from SSC (q.v.)
+d
+d Distribution-Date: 20170413
+d
+d Author: Harald Tauchmann, Friedrich-Alexander-Universität Erlangen-Nürnberg
+d Support: email harald.tauchmann@@fau.de
+d
+f simarwilson.ado
+f simarwilson.sthlp

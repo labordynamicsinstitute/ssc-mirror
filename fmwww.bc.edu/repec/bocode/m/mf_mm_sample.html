@@ -1,0 +1,624 @@
+<pre>
+<b>help mata mm_sample()</b>
+-------------------------------------------------------------------------------
+<p>
+<b><u>Title</u></b>
+<p>
+    <b>mm_sample() -- Draw a random sample</b>
+<p>
+<p>
+<b><u>Syntax</u></b>
+<p>
+        <i>real colvector</i> <b>mm_sample(</b><i>n</i><b>,</b> <i>strata</i> [<b>,</b> <i>cluster</i><b>,</b> <i>w</i><b>,</b> <i>wor</i><b>,</b> <i>count</i><b>,</b> <i>fast</i>]<b>)</b>
+<p>
+    where
+<p>
+              <i>n</i>:  <i>real colvector</i> containing sample size(s)
+<p>
+         <i>strata</i>:  <i>real matrix</i> containing strata sizes (or the population
+                  size) and, in the case of stratified cluster sampling, the
+                  number of clusters per stratum
+<p>
+        <i>cluster</i>:  <i>real colvector</i> containing cluster sizes; <i>cluster</i>==.
+                  indicates that there are no clusters
+<p>
+              <i>w</i>:  <i>real colvector</i> containing weights for unequal probability
+                  sampling; <i>w</i> being scalar causes equal probability sampling
+                  to be performed
+<p>
+            <i>wor</i>:  <i>real scalar</i> indicating that sampling be performed without
+                  replacement; default is to sample with replacement
+<p>
+          <i>count</i>:  <i>real scalar</i> indicating that a count vector be returned;
+                  default is to return a permutation vector
+<p>
+           <i>fast</i>:  <i>real scalar</i> indicating that some internal checks be
+                  skipped; do not use this option
+<p>
+<p>
+        <i>real colvector</i> <b>mm_srswr(</b><i>n</i><b>,</b> <i>N</i> [<b>,</b> <i>count</i>]<b>)</b>
+<p>
+        <i>real colvector</i> <b>mm_srswor(</b><i>n</i><b>,</b> <i>N</i> [<b>,</b> <i>count</i>]<b>)</b>
+<p>
+        <i>real colvector</i> <b>mm_upswr(</b><i>n</i><b>,</b> <i>w</i> [<b>,</b> <i>count</i>]<b>)</b>
+<p>
+        <i>real colvector</i> <b>mm_upswor(</b><i>n</i><b>,</b> <i>w</i> [<b>,</b> <i>count</i><b>,</b> <i>nowarn</i>]<b>)</b>
+<p>
+    where
+<p>
+              <i>n</i>:  <i>real scalar</i> containing sample size
+<p>
+              <i>N</i>:  <i>real scalar</i> containing population size
+<p>
+              <i>w</i>:  <i>real colvector</i> containing weights/sizes of elements
+<p>
+          <i>count</i>:  <i>real scalar</i> indicating that a count vector be returned;
+                  default is to return a permutation vector
+<p>
+         <i>nowarn</i>:  <i>real scalar</i> indicating that repetitions are allowed in
+                  UPSWOR
+<p>
+<p>
+<b><u>Description</u></b>
+<p>
+    <b>mm_sample()</b> may be used for sampling. Simple random sampling (SRS) is
+    supported, as well as unequal probability sampling (UPS), of which
+    sampling with probabilities proportional to size (PPS) is a special case.
+    Both methods support sampling with replacement and sampling without
+    replacement. Furthermore, stratified sampling and cluster sampling may be
+    performed.
+<p>
+    <i>n</i> specifies the desired sample size. <i>n</i>==. indicates that <i>n</i> be equal to
+    the size of the population or, if <i>cluster</i>!=., the number of clusters. If
+    <i>n</i> is scalar and there are several strata, <i>n</i> cases will be sampled from
+    each stratum. Alternatively, specify an individual sample size for each
+    stratum in <i>colvector n</i>.
+<p>
+    <i>strata</i> specifies the sizes of the strata to be sampled from. The sizes
+    must be equal to one or larger. In the case of unstratified sampling,
+    <i>strata</i> is a <i>real scalar</i> specifying the population size (i.e. there is
+    only one stratum). Note that <i>strata</i> may be set missing in unstratified
+    sampling if <i>cluster</i> or <i>w</i> is provided. The population size will then be
+    inferred from <i>cluster</i> or <i>w</i>, respectively.
+<p>
+    <i>cluster</i> provides the sizes of the clusters within strata. The sizes must
+    be equal to one or larger. If <i>cluster</i> is specified, the drawn sample is a
+    sample of clusters. Note that, for cluster sampling, <i>strata</i> must have a
+    second column containing the number of clusters in each stratum (unless
+    there is only one stratum).  <i>cluster</i>==. indicates that there are no
+    clusters (i.e. each population member is its own cluster). Use
+    <b>mm_panels()</b> to generate the required input for <b>mm_sample()</b> from strata
+    and cluster ID variables (see the examples below).
+<p>
+    Sampling with probabilities proportional to size or, more generally,
+    unequal probability sampling can be achieved by providing <i>colvector w</i>,
+    where <i>w</i> contains the sizes/weights of the elements in the population or,
+    if <i>cluster</i> is provided, the sizes/weights of the clusters. <i>w</i> being scalar
+    (e.g. <i>w</i>==1 or <i>w</i>==.) indicates that equal probability sampling be applied.
+<p>
+    <i>wor</i>!=0 indicates that the sample be drawn without replacement (similar tp
+    <b>sample</b>). The default is to sample with replacement (similar to <b>bsample</b>).
+    Note that, when sampling without replacement, <i>n</i> may not be larger than
+    the size of the population/stratum (or the number of clusters within the
+    population/stratum).
+<p>
+    The default for <b>mm_sample()</b> is to return a permutation vector
+    representing the sample (see <b>[M-1] permutation</b>). Alternatively, if
+    <i>count</i>!=0 is specified, <b>mm_sample()</b> returns a count vector indicating for
+    each population member the number of times it is in the sample. If
+    sampling is performed without replacement, the counts are restricted to
+    {0, 1}.
+<p>
+    <b>mm_srswr()</b>, <b>mm_srswor()</b>, <b>mm_upswr()</b>, and <b>mm_upswor()</b> are the basic
+    sampling functions used by <b>sample()</b>. <b>mm_srswr()</b> and <b>mm_srswor()</b> draw
+    simple random samples (SRS) with and without replacement, respectively.
+    <b>mm_upswr()</b> and <b>mm_upswor()</b> perform unequal probability sampling (UPS) or
+    sampling with probabilities proportional to size (PPS).
+<p>
+    If you are serious about sampling, you should first set the random number
+    seed; see help <b>generate</b> or help for <b>[M-5] uniform()</b>.
+<p>
+<p>
+<b><u>Remarks</u></b>
+<p>
+    Remarks are presented under the headings
+<p>
+        <i>Introduction: Simple Random Sample with Replacement</i>
+<p>
+        <i>Stratified Sampling</i>
+<p>
+        <i>Cluster Sampling</i>
+<p>
+        <i>Stratified Cluster Sampling</i>
+<p>
+        <i>Sampling from Strata and Cluster ID Variables using </i><i>mm_panels()</i>
+<p>
+        <i>Returning a Count Vector</i>
+<p>
+        <i>Sampling without Replacement</i>
+<p>
+        <i>Unequal Probability Sampling/PPS Sampling</i>
+<p>
+        <i>Methods and Formulas</i>
+<p>
+<p>
+<a name="r1"></a>    <i><u>Introduction: Simple Random Sample with Replacement</u></i>
+<p>
+    The simplest (and fastest) application of <b>mm_sample()</b> is to create a
+    permutation vector representing a simple random sample with replacement
+    (SRSWR). For example, the following command samples 10 out of a
+    population of 1000:
+<p>
+        : mm_sample(10, 1000)
+                  1
+             +-------+
+           1 |  578  |
+           2 |  807  |
+           3 |   47  |
+           4 |    8  |
+           5 |  900  |
+           6 |  237  |
+           7 |  545  |
+           8 |   76  |
+           9 |  398  |
+          10 |  770  |
+             +-------+
+<p>
+    The numbers in the returned vector represent the positions of the sampled
+    elements in the (hypothetical) list of population members.
+<p>
+    Suppose <b>X</b> is a data matrix containing <b>rows(X)</b> observations and <b>cols(X)</b>
+    variables. To create a matrix <b>Xs</b>, which represents a SRSWR containing 100
+    randomly drawn observations from <b>X</b>, type
+<p>
+        : Xs = X[mm_sample(100,rows(X)),.]
+<p>
+    Note that in most applications you would want to save the sample
+    permutation vector for further use. For example:
+<p>
+        : p = mm_sample(100,rows(X))
+        
+        : Xs = X[p,.]
+        
+        : Ys = Y[p,.]
+<p>
+<p>
+<a name="r2"></a>    <i><u>Stratified Sampling</u></i>
+<p>
+    To generate a stratified SRSWR, provide to <b>mm_sample()</b> a column vector
+    containing the sizes of the strata. Example:
+<p>
+        : mm_sample(5, (300\700))
+                  1
+             +-------+
+           1 |  112  |
+           2 |  130  |
+           3 |  168  |
+           4 |   62  |
+           5 |  241  |
+           6 |  474  |
+           7 |  603  |
+           8 |  669  |
+           9 |  310  |
+          10 |  994  |
+             +-------+
+<p>
+    From each stratum, five elements were drawn. The first five cases in the
+    returned sample come from the first stratum (1-300), the remaining five
+    cases come from the second stratum (301-1000).
+<p>
+    To use different sample sizes in the strata, type, for example,
+<p>
+        : mm_sample((3\7), (300\700))
+                  1
+             +-------+
+           1 |  298  |
+           2 |  226  |
+           3 |  192  |
+           4 |  998  |
+           5 |  956  |
+           6 |  338  |
+           7 |  900  |
+           8 |  378  |
+           9 |  980  |
+          10 |  992  |
+             +-------+
+<p>
+    Now the first three cases come from the first stratum and the remaining
+    seven come from the second stratum. Note that <b>mm_sample()</b> has no internal
+    mechanism to determine the sample sizes for proportional stratification
+    from a given total sample size. However, it is easy to compute the
+    appropriate sample sizes in advance and then provide them to <b>mm_sample()</b>.
+<p>
+<p>
+<a name="r3"></a>    <i><u>Cluster Sampling</u></i>
+<p>
+    To generate a sample of clusters, provide to <b>mm_sample()</b> a column vector
+    containing the sizes of the clusters within the population. The sum of
+    cluster sizes must equal the population size (unless the population size
+    is missing, in which case the sum of cluster sizes defines the population
+    size). The sample size <i>n</i> is interpreted as the number of clusters to be
+    sampled in this case.
+<p>
+    For example, the following command randomly picks one of three clusters,
+    where the first cluster has 3 members, the second cluster has 2 members,
+    and the third cluster has 5 members (making a population total of 10).
+    Note that, regardless of its size, each cluster has the same sampling
+    probability (see below for sampling with probabilities proportional to
+    size).
+<p>
+        : mm_sample(1, ., (3\2\5))
+               1
+            +-----+
+          1 |  4  |
+          2 |  5  |
+            +-----+
+<p>
+    The result indicates that the second cluster was drawn (containing the
+    4th and 5th member of the population).
+<p>
+<p>
+<a name="r4"></a>    <i><u>Stratified Cluster Sampling</u></i>
+<p>
+    Generating a stratified sample of clusters requires:
+<p>
+     o  A matrix containing the sizes of the strata and the number of
+        clusters within each stratum. For example,
+<p>
+        : strata  = (5, 2) \ (10, 3)
+        
+        : strata
+                1    2
+            +-----------+
+          1 |   5    2  |
+          2 |  10    3  |
+            +-----------+
+<p>
+        defines two strata, where the first stratum contains 2 clusters with
+        a total of 5 members and the second stratum contains 3 clusters with
+        a total of 10 members.
+<p>
+     o  A column vector containing the sizes of the clusters.
+<p>
+    In the following example, one cluster is sampled from each stratum:
+<p>
+        : strata  = (5, 2) \ (10, 3)
+        
+        : cluster = 3 \ 2 \ 2 \ 5 \ 3
+        
+        : mm_sample(1, strata, cluster)
+                1
+            +------+
+          1 |   4  |
+          2 |   5  |
+          3 |   8  |
+          4 |   9  |
+          5 |  10  |
+          6 |  11  |
+          7 |  12  |
+            +------+
+<p>
+    In both strata the second cluster was drawn.
+<p>
+<p>
+<a name="r5"></a>    <i><u>Sampling from Strata and Cluster ID Variables using </u></i><i><u>mm_panels()</u></i>
+<p>
+    When resampling real data, information on strata and clusters is usually
+    present in the form of ID variables. The <b>mm_panels()</b> function, which is
+    also part of the <b>moremata</b> package, can be used in this case to generate
+    the appropriate strata and cluster input for <b>mm_sample()</b>.
+<p>
+    Suppose you want to resample stratified and clustered data.  First, sort
+    the data by stratum and cluster ID. For example, in Stata type
+<p>
+        . sort strata cluster
+<p>
+    where <b>strata</b> is the strata ID variable and <b>cluster</b> is the cluster ID
+    variable. After that, in Mata type something like
+<p>
+        : st_view(strata=., ., "strata")
+        
+        : st_view(cluster=., ., "cluster")
+        
+        : mm_panels(strata, Sinfo=., clusters, Cinfo=.)
+        
+        : p = mm_sample(<i>n</i>, Sinfo, Cinfo)
+        
+        : <i>...</i>
+<p>
+    Alternatively, if the data are stratified only, type
+<p>
+        . sort strata
+<p>
+    and then
+<p>
+        : st_view(strata=., ., "strata")
+        
+        : mm_panels(strata, Sinfo=.)
+        
+        : p = mm_sample(<i>n</i>, Sinfo)
+        
+        : <i>...</i>
+<p>
+    or, if the data are clustered only,
+<p>
+        . sort cluster
+<p>
+    and then
+<p>
+        : st_view(cluster=., ., "cluster")
+        
+        : mm_panels(cluster, Cinfo=.)
+        
+        : p = mm_sample(<i>n</i>, ., Cinfo)
+        
+        : <i>...</i>
+<p>
+    The following example further illustrates the usage of <b>mm_panels()</b>:
+<p>
+        : strata,clusters
+                1   2
+             +---------+
+           1 |  1   1  |
+           2 |  1   1  |
+           3 |  1   2  |
+           4 |  1   3  |
+           5 |  1   3  |
+           6 |  1   3  |
+           7 |  1   3  |
+           8 |  1   4  |
+           9 |  2   1  |
+          10 |  2   2  |
+          11 |  2   2  |
+          12 |  2   2  |
+          13 |  2   3  |
+          14 |  2   3  |
+             +---------+
+<p>
+        : mm_panels(strata, Sinfo=., clusters, Cinfo=.)
+        
+        : Sinfo
+               1   2
+            +---------+
+          1 |  8   4  |
+          2 |  6   3  |
+            +---------+
+<p>
+        : Cinfo
+               1
+            +-----+
+          1 |  2  |
+          2 |  1  |
+          3 |  4  |
+          4 |  1  |
+          5 |  1  |
+          6 |  3  |
+          7 |  2  |
+            +-----+
+<p>
+        : mm_sample(1,Sinfo,Cinfo)
+                1
+            +------+
+          1 |   1  |
+          2 |   2  |
+          3 |  10  |
+          4 |  11  |
+          5 |  12  |
+            +------+
+<p>
+<p>
+<a name="r6"></a>    <i><u>Returning a Count Vector</u></i>
+<p>
+    <b>mm_sample()</b> can return its results in two different formats. The default
+    is to return a permutation vector containing the positions of the drawn
+    elements in the population list. See the examples above. Alternatively,
+    if <i>count</i>!=0 is specified, a count vector is returned. A count vector
+    contains for each member of the population the number of times it has
+    been drawn into the sample. The following example shows the count vector
+    of a sample of 5 out of a population of 10 (with replacement):
+<p>
+        : mm_sample(5,10,.,.,0,1)
+                1
+             +-----+
+           1 |  0  |
+           2 |  0  |
+           3 |  0  |
+           4 |  0  |
+           5 |  0  |
+           6 |  0  |
+           7 |  1  |
+           8 |  0  |
+           9 |  2  |
+          10 |  2  |
+             +-----+
+<p>
+<p>
+<a name="r7"></a>    <i><u>Sampling without Replacement</u></i>
+<p>
+    The following examples illustrate the difference between sampling with
+    replacement and sampling without replacement. When sampling <i>with</i>
+    replacement, an individual element may be sampled multiple times:
+<p>
+        : mm_sample(5,5,.,.,0,1)
+               1
+            +-----+
+          1 |  3  |
+          2 |  1  |
+          3 |  1  |
+          4 |  0  |
+          5 |  0  |
+            +-----+
+<p>
+    However, when sampling <i>without</i> replacement, each element may appear at
+    most once in the sample:
+<p>
+        : mm_sample(5,5,.,.,1,1)
+               1
+            +-----+
+          1 |  1  |
+          2 |  1  |
+          3 |  1  |
+          4 |  1  |
+          5 |  1  |
+            +-----+
+<p>
+    Note that, naturally, the sample size <i>n</i> may not exceed the population
+    size when sampling without replacement. (In the case of cluster sampling,
+    <i>n</i> may not exceed the number of clusters.)
+<p>
+<p>
+<a name="r8"></a>    <i><u>Unequal Probability Sampling/PPS Sampling</u></i>
+<p>
+    For sampling with probabilities proportional to size (PPS) or, more
+    generally, unequal probability sampling (UPS), you have to specify a
+    column vector containing the sizes or weights. In the following example a
+    <i>n</i> = 15000 "sample" is drawn out of a population containing 5 members. The
+    population members are sampled with probabilities proportional to size,
+    where the first member has weight 1, the second has weight 2, etc.
+<p>
+        : mm_sample(15000, 5, ., (1::5),0,1)
+                  1
+            +--------+
+          1 |  1068  |
+          2 |  2076  |
+          3 |  2909  |
+          4 |  3969  |
+          5 |  4978  |
+            +--------+
+<p>
+    We see that, according to the given weights, the first member has been
+    sampled roughly 1000 times, the second has been sample around 2000 times,
+    etc.
+<p>
+    Unequal probability sampling is also possible <i>without</i> replacement.
+    However, note that in the without replacement case a problem exists if
+    there are population members for which <i>w</i>(<i>i</i>) * <i>n</i> / sum(<i>w</i>) &gt; 1. Consider
+    the following example:
+<p>
+        : mm_sample(4, 5, ., (1::5),1,1)
+                     mm_upswor():  3300  2 cases have w_i*n/sum(w)&gt;1
+                     mm_sample():     -  function returned error
+                         &lt;istmt&gt;:     -  function returned error
+<p>
+    What happened? Population member no. 5 has size 5 and the sum of sizes
+    over all members is 15. That is, the population share of member no. 5 is
+    5/15 = 33.3%. However, even if member no. 5 is selected with certainty
+    into the sample, i.e. if member no. 5 is sampled with probability 1, it
+    can only reach a maximum sample share of 1/4 = 25%. (A similar problem
+    exists with member no. 4 whose population share is 4/15 = 26.7%.)
+    Apparently, unbiased PPS sampling without replacement is not possible in
+    this situation.
+<p>
+<p>
+<a name="r10"></a>    <i><u>Methods and Formulas</u></i>
+<p>
+    Simple random sampling with replacement (SRSWR) is implemented as
+    ceil(uniform(<i>n</i>,1) * <i>N</i>) where <i>n</i> is the sample size and <i>N</i> is the population
+    size.
+<p>
+    Simple random sampling without replacement (SRSWOR) is implemented as
+    unorder(<i>N</i>)[|1 \ <i>n</i>|].
+<p>
+    Unequal probability sampling with replacement (UPSWR) is implemented
+    using the standard "cumulative" approach (see, e.g., Levy and Lemeshow
+    1999:354 or Cochran 1977:250; important theoretical results have been
+    provided by Hansen and Hurwitz 1943).
+<p>
+    Unequal probability sampling without replacement (UPSWOR) is implemented
+    using the random systematic sampling technique discussed in, e.g.,
+    Hartley and Rao (1962). Note that many other UPSWOR algorithms can be
+    found in the literature (see the review in Brewer and Hanif 1983; the
+    algorithm implemented here conforms to their "Procedure 2"). An
+    interesting recent approach has been developed by Tillé (1996; also see
+    Ernst 2003).
+<p>
+<p>
+<b><u>Conformability</u></b>
+<p>
+    <b>mm_sample(</b><i>n</i><b>,</b> <i>strata</i><b>,</b> <i>cluster</i><b>,</b> <i>w</i><b>,</b> <i>wor</i><b>,</b> <i>count</i><b>,</b> <i>fast</i><b>)</b>
+           <i>n</i>:  1 <i>x</i> 1 or <i>k x</i> 1, where <i>k</i>&gt;0 is the number of strata
+      <i>strata</i>:  <i>k x</i> 1 (if <i>cluster</i>!=.: <i>k x</i> 2)
+     <i>cluster</i>:  <i>l x</i> 1, where <i>l</i>&gt;0 is the number of clusters; alternatively,
+               <i>cluster</i>==.
+           <i>w</i>:  1 <i>x</i> 1 or <i>N</i> <i>x</i> 1 (if <i>cluster</i>!=.: <i>l x</i> 1)
+         <i>wor</i>:  1 <i>x</i> 1
+       <i>count</i>:  1 <i>x</i> 1
+        <i>fast</i>:  1 <i>x</i> 1
+      <i>result</i>:  <i>ntot</i> <i>x</i> 1, where <i>ntot</i> is the final sample size, or, if
+               <i>count</i>!=0, <i>N x</i> 1, where <i>N</i> is the population size
+<p>
+    <b>mm_srswr(</b><i>n</i><b>,</b> <i>N</i><b>,</b> <i>count</i><b>)</b>
+           <i>n</i>:  1 <i>x</i> 1
+           <i>N</i>:  1 <i>x</i> 1
+       <i>count</i>:  1 <i>x</i> 1
+      <i>result</i>:  <i>n x</i> 1 or, if <i>count</i>!=0, <i>N x</i> 1
+<p>
+    <b>mm_srswor(</b><i>n</i><b>,</b> <i>N</i><b>,</b> <i>count</i><b>)</b>
+           <i>n</i>:  1 <i>x</i> 1
+           <i>N</i>:  1 <i>x</i> 1
+       <i>count</i>:  1 <i>x</i> 1
+      <i>result</i>:  <i>n x</i> 1 or, if <i>count</i>!=0, <i>N x</i> 1
+<p>
+    <b>mm_upswr(</b><i>n</i><b>,</b> <i>w</i><b>,</b> <i>count</i><b>)</b>
+           <i>n</i>:  1 <i>x</i> 1
+           <i>w</i>:  <i>N x</i> 1, where <i>N</i> is the population size
+       <i>count</i>:  1 <i>x</i> 1
+      <i>result</i>:  <i>n x</i> 1 or, if <i>count</i>!=0, <i>N x</i> 1
+<p>
+    <b>mm_upswor(</b><i>n</i><b>,</b> <i>w</i><b>,</b> <i>count</i><b>)</b>
+           <i>n</i>:  1 <i>x</i> 1
+           <i>w</i>:  <i>N x</i> 1, where <i>N</i> is the population size
+       <i>count</i>:  1 <i>x</i> 1
+      <i>result</i>:  <i>n x</i> 1 or, if <i>count</i>!=0, <i>N x</i> 1
+<p>
+<p>
+<b><u>Diagnostics</u></b>
+<p>
+    <b>mm_upswr()</b> and <b>mm_upswor()</b> produce erroneous results if <i>w</i> contains
+    negative or missing values or if sum(<i>w</i>)==0.
+<p>
+<p>
+<b><u>Source code</u></b>
+<p>
+    mm_sample.mata, mm_srswr.mata, mm_srswor.mata, mm_upswr.mata,
+    mm_upswor.mata
+<p>
+<p>
+<b><u>References</u></b>
+<p>
+    Brewer, K. R. W., Muhammad Hanif (1983). Sampling with Unequal
+        Probabilities. New York: Springer.
+<p>
+    Cochran, William G. (1967). Sampling Techniques, 3rd ed. New York: Wiley.
+<p>
+    Ernst, Lawrence (2003). Sample Expansion for Probability Proportional to
+        Size without Replacement Sampling. Proceedings of the Section on
+        Survey Research Methods, 2003, American Statistical Association: 
+        http://www.bls.gov/ore/pdf/st030100.pdf.
+<p>
+    Hansen, Morris H., William N. Hurwitz (1943). On the Theory of Sampling
+        from Finite Populations. The Annals of Mathematical Statistics 33:
+        350-374.
+<p>
+    Hartley, H. O., J. N. K. Rao (1962). Sampling with Unequal Probabilities
+        and without Replacement. The Annals of Mathematical Statistics 14:
+        333-362.
+<p>
+    Levy, Paul S., Stanley Lemeshow (1999). Sampling of Populations. Methods
+        and Applications, 3rd ed. New York: Wiley.
+<p>
+    Tillé, Yves (1996). An Elimination Procedure for Unequal Probability
+        Sampling without Replacement. Biometrika 83: 238-241.
+<p>
+<p>
+<b><u>Author</u></b>
+<p>
+    Ben Jann, ETH Zurich, jann@soz.gess.ethz.ch
+<p>
+<p>
+<b><u>Also see</u></b>
+<p>
+    Online:  help for <b>mm_panels()</b>, <b>sample</b>, <b>bsample</b>, <b>[M-5] uniform()</b>, <b>[M-4]</b>
+             <b>utility</b>, <b>moremata</b>
+<p>
+</pre>

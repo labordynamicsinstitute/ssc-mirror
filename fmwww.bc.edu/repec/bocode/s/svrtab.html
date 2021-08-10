@@ -1,0 +1,251 @@
+<pre>
+-------------------------------------------------------------------------------
+help for <b>svrtab</b>
+-------------------------------------------------------------------------------
+<p>
+<b><u>One and Two-way tables for survey data, with balance repeated replication (BRR)</u></b>
+<b><u>&gt;  based standard errors</u></b>
+<p>
+    <b>svrtab</b> <i>varname1</i> [<i>varname2</i>] [<b>if</b> <i>exp</i>] [<b>in</b> <i>range</i>] [ <b>,</b>
+<p>
+<p>
+    [tabulate options]
+<p>
+           <b>tab(</b><i>varname</i><b>)</b> <b><u>miss</u></b><b>ing</b>
+<p>
+    [display items]
+<p>
+           <b><u>cel</u></b><b>l</b> <b><u>cou</u></b><b>nt</b> <b>row</b> <b><u>col</u></b><b>umn</b> <b>obs</b> <b>se</b> <b>ci</b> <b>deff</b> <b>deft</b> <b>cucol</b>
+<p>
+    [display formats]
+<p>
+           { <b><u>f</u></b><b>ormat(%</b><i>fmt</i><b>)</b> | <b><u>fcel</u></b><b>l(%</b><i>fmt</i><b>)</b> <b><u>fcou</u></b><b>nt(%</b><i>fmt</i><b>)</b> <b>frow(%</b><i>fmt</i><b>)</b> <b><u>fcol</u></b><b>umn(%</b><i>fmt</i><b>)</b>
+           <b>fobs(%</b><i>fmt</i><b>)</b> <b>fse(%</b><i>fmt</i><b>)</b> <b>fci(%</b><i>fmt</i><b>)</b> <b>fdeff(%</b><i>fmt</i><b>)</b> <b>fdeft(%</b><i>fmt</i><b>)</b> }
+<p>
+    [display options]
+<p>
+           [ <b><u>prop</u></b><b>ortion</b> | <b><u>per</u></b><b>cent</b> ] <b><u>nolab</u></b><b>el</b> <b><u>nomarg</u></b><b>inals</b> <b><u>for</u></b><b>mat(%</b><i>fmt</i><b>)</b> <b><u>vert</u></b><b>ical</b>
+           <b><u>l</u></b><b>evel(</b><i>#</i><b>)</b>
+<p>
+    [statistic options]
+<p>
+           <b><u>pea</u></b><b>rson</b> <b>lr</b> <b><u>nul</u></b><b>l</b> <b>wald</b> <b>llwald</b> <b><u>noadj</u></b><b>ust</b> ]
+<p>
+<p>
+This command is for use with replication weights.  You must set your data for
+replication based survey estimation with svrset or survwgt before using this
+command.
+<p>
+<b>svrtab</b> typed without arguments redisplays previous results.  Any of the
+"display items", "display options", or "statistic options" can be specified
+when redisplaying with the following exception: <b>wald</b> must be specified at run
+time.
+<p>
+<p>
+<b><u>Description</u></b>
+<p>
+<b>svrmodel</b> produces one- and two-way tabulations with complex survey data.  Tests
+for independence are available for two-way tables.  Standard errors are
+calculated using a series of user-supplied replication weights, by balanced
+repeated replication (BRR) or survey jackknife (JK1, JK2, or JKn).  This is an
+alternate method to the Taylor series linearization methods used by Stata's svy
+commands.  See survwgt for details on the creation of weights and estimation of
+variances with replication.
+<p>
+Except for the different method of variance calculation, <b>svrtab</b> has identical
+syntax as svytab.  Point estimates are the same as those from svytab; standard
+errors and tests of independence are different.
+<p>
+<p>
+<b><u>Options regarding Tabulation</u></b>
+<p>
+These options operate exactly as they do in svytab, and this help text is taken
+from that help file:
+<p>
+<b>tab(</b><i>varname</i><b>)</b> specifies that counts should instead be cell totals of this
+    variable and proportions (or percentages) should be relative to (i.e.,
+    weighted by) this variable.  For example, if this variable denotes income,
+    then the cell "counts" are instead totals of income for each cell, and the
+    cell proportions are proportions of income for each cell.
+<p>
+<b>missing</b> specifies that missing values of <i>varname1</i> and <i>varname2</i> are to be
+    treated as another row or column category, rather than be omitted from the
+    analysis (the default).
+<p>
+<p>
+<b><u>Options to Choose Items for Display</u></b>
+<p>
+These options operate exactly as they do in svytab, and this help text is taken
+from that help file:
+<p>
+<b>cell</b> requests that cell proportions (or percentages) be displayed.  This is the
+    default if none of <b>count</b>, <b>row</b>, or <b>column</b> are specified.
+<p>
+<b>count</b> requests that weight cell counts be displayed.
+<p>
+<b>row</b> or <b>column</b> requests that row or column proportions (or percentages) be
+    displayed.
+<p>
+<b>cucol</b> requests that cumulative column percentages be displayed.  This option is
+    only valid for tables with one column.
+<p>
+<b>obs</b> requests that the number of observations for each cell be displayed.
+<p>
+<b>se</b> requests that the standard errors of either cell proportions (the default),
+    weighted counts, or row or column proportions be displayed.  When <b>se</b> (or
+    <b>ci</b>, <b>deff</b>, or <b>deft</b>) is specified, only one of <b>cell</b>, <b>count</b>, <b>row</b>, or <b>column</b>
+    can be selected.  The standard error computed is the standard error of the
+    one selected.
+<p>
+<b>ci</b> requests confidence intervals for either cell proportions, weighted counts,
+    or row or column proportions.  The confidence intervals are constructed
+    using a logit transform so that their endpoints always lie between 0 and 1.
+<p>
+<b>deff</b> (<b>deft</b>) requests that the design-effect measure deff (deft) be displayed
+    for either cell proportions, counts, or row or column proportions.  See <b>[R]</b>
+    <b>svymean</b> for details.  The mean generalized deff is also displayed when <b>deff</b>
+    or <b>deft</b> is requested.
+<p>
+<p>
+<b><u>Options for Display Formats</u></b>
+<p>
+<b>format(%</b><i>fmt</i><b>)</b> specifies an overall format for the items in the table.  The
+    default is <b>%6.0g</b>.  See <b>[U] 15.5 Formats: controlling how data are</b>
+    <b>displayed</b>.
+<p>
+Alternately, display formats can be specified separately for the items included
+    in the table with the other formatting options, <b>fcell()</b>, <b>fcount()</b>, <b>frow()</b>,
+    <b>fcolumn()</b>, <b>fobs()</b>, <b>fse()</b>, <b>fci()</b>, <b>fdeff()</b>, <b>fdeft()</b>.
+<p>
+    If only one of <b>fcell()</b>, <b>fcolumn()</b>, and <b>frow()</b> is specified, that format is
+    used for all three, if they are being displayed.  Similarly, if only one of
+    <b>fdeff()</b> and <b>fdeft()</b> is specified, that format will be used for displaying
+    both deff and deft.
+<p>
+<p>
+<b><u>Options regarding Display</u></b>
+<p>
+<b>proportion</b> or <b>percent</b> requests that proportions (the default) or percentages be
+    displayed.
+<p>
+<b>nolabel</b> requests that variable labels and value labels be ignored.
+<p>
+<b>nomarginals</b> requests that row and column marginals not be displayed.
+<p>
+<b>vertical</b> requests that the endpoints of the confidence intervals be stacked
+    vertically on display.
+<p>
+<b>level(</b><i>#</i><b>)</b> specifies the confidence level (i.e., nominal coverage rate), in
+    percent, for confidence intervals; see help level.
+<p>
+<b>cellwidth(</b><i>#</i><b>)</b>, <b>csepwidth(</b><i>#</i><b>)</b>, and <b>stubwidth(</b><i>#</i><b>)</b> specify widths of table elements
+    in the output; see help tabdisp.
+<p>
+<b>pearson</b> requests that the Pearson chi-squared statistic be computed.  By
+    default, this is the test of independence that is displayed.  The Pearson
+    chi-squared statistic is corrected for the survey design using the
+    second-order correction of Rao and Scott (1984) and converted into an
+    F-statistic.
+<p>
+    One term in the correction formula can be calculated using either observed
+    cell proportions or proportions under the null hypothesis (i.e., the
+    product of the marginals).  By default, observed cell proportions are used.
+    If the <b>null</b> option is selected, then a statistic corrected using
+    proportions under the null is displayed as well.  In most cases, it makes
+    little difference which is used, but simulations seem to indicate that for
+    sparse tables, using observed cell proportions is superior.
+<p>
+<b>lr</b> requests that the likelihood-ratio test statistic for proportions be
+    computed.  Note that this statistic is not defined when there are one or
+    more zero cells in the table.  The statistic is corrected for the survey
+    design using exactly the same correction procedure that is used with the
+    <b>pearson</b> statistic.  Again, either observed cell proportions or proportions
+    under the null can be used in the correction formula.  By default, the
+    former is used; specifying the <b>null</b> option gives both the former and the
+    latter.  Neither variant of this statistic is recommended for sparse
+    tables.  For nonsparse tables, the <b>lr</b> statistics are very similar to the
+    corresponding <b>pearson</b> statistics.
+<p>
+<b>null</b> modifies the <b>pearson</b> and <b>lr</b> options only.  If it is specified, two
+    corrected statistics are displayed.  The statistic labeled "D-B (null)"
+    ("D-B" stands for design-based) uses proportions under the null hypothesis
+    (i.e., the product of the marginals) in the Rao and Scott (1984)
+    correction.  The statistic labeled merely "Design-based" uses observed cell
+    proportions.  If <b>null</b> is not specified, only the correction that uses
+    observed proportions is displayed.
+<p>
+<b>wald</b> requests a Wald test of whether observed weighted counts equal the product
+    of the marginals.  By default, an adjusted F-statistic is produced; an
+    unadjusted statistic can be produced by specifying <b>noadjust</b>.  The
+    unadjusted F-statistic can yield extremely anti-conservative p-values
+    (i.e., p-values that are too small) when the degrees of freedom of the
+    variance estimates (the number of PSUs minus the number of strata) are
+    small relative to the (R-1)*(C-1) degrees of freedom of the table (where R
+    is the number of rows and C is the number of columns).  Hence, the
+    statistic produced by <b>wald</b> and <b>noadjust</b> should not be used for inference
+    except when it is essentially identical to the adjusted statistic; it is
+    only made available to duplicate the results of other software.
+<p>
+<b>llwald</b> requests a Wald test of the log-linear model of independence.  Note that
+    the statistic is not defined when there are one or more zero cells in the
+    table.  The adjusted statistic (the default) can produce anti-conservative
+    p-values, especially for sparse tables, when the degrees of freedom of the
+    variance estimates are small relative to the degrees of freedom of the
+    table.  Specifying <b>noadjust</b> yields a statistic with more severe problems.
+    Neither the adjusted nor the unadjusted statistic is recommended for
+    inference; the statistics are only made available for pedagogical purposes
+    and to duplicate the results of other software.
+<p>
+<b>noadjust</b> modifies the <b>wald</b> and <b>llwald</b> options only.  It requests that an
+    unadjusted F-statistic be displayed in addition to the adjusted statistic.
+<p>
+<p>
+<b><u>Examples</u></b>
+<p>
+        . svrtab agegrp gender
+        . svrtab, se ci deff                 [redisplay std. err., etc.]
+        . svrtab, count column obs           [redisplay counts, etc.]
+<p>
+        . svrtab agegrp gender, count se     [compute std. err. of counts]
+        . svrtab, count ci                   [redisplay CI of counts]
+<p>
+        . svrtab agegrp gender, wald         [compute Wald test]
+        . svrtab, pearson lr                 [redisplay <b>pearson</b> and <b>lr</b> tests]
+<p>
+        . svrtab agegrp gender, count se fse(%4.2f) fcount(%4.0fc)
+                                             [specify display formats]
+<p>
+        . svrtab agegrp gender, tab(income)  [gives income proportions by
+                                             <b>agegrp</b> and <b>gender</b>]
+<p>
+        . svrtab agegrp, count col           [one-dimensional tabulation]
+<p>
+<p>
+<b><u>Saved Results</u></b>
+<p>
+<b>svrtab</b> generates the same saved results as <b>svytab</b>.
+<p>
+Note that e(cmd) is set to "svytab" in order to allow post-tabulation tests to 
+&gt; function correctly.
+<p>
+<p>
+<b><u>Methods and formulae</u></b>
+<p>
+See survwgt.
+<p>
+<p>
+<b><u>Acknowledgements</u></b>
+<p>
+<b>svrtab</b> consists largely of the ado file code from official Stata's <b>svytab</b>
+command, version 1.1.6, modified to calculate (co)variances differently.  I
+would like to thank Bobby Gutierrez at StataCorp for advice on implementation
+of BRR.
+<p>
+<p>
+<b><u>Author</u></b>
+<p>
+        Nick Winter
+        Cornell University
+        nw53@cornell.edu
+<p>
+</pre>

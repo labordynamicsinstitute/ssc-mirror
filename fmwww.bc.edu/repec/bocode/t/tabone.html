@@ -1,0 +1,78 @@
+<pre>
+<b>help tabone</b>
+<p>
+-------------------------------------------------------------------------------
+<p>
+<b><u>Title</u></b>
+<p>
+    <b>tabone</b> -- Exports single or multiple one-way tabulations into various
+                     formats
+<p>
+<a name="s_Syntax"></a><p>
+<b><u>Syntax</u></b>
+<p>
+    <b>tabone</b> <i>using filename</i> [, <i>options</i>]
+<p>
+<a name="s_Description"></a><p>
+<b><u>Description</u></b>
+<p>
+    <b>tabone</b> provides a fast and easy way to export single or multiple
+    tabulations into various output formats compatible with Latex, Word,
+    and Excel.
+<p>
+    Note that <b>tabone</b> is for one-way tabulation, not cross-tabulation.
+<p>
+    <b>tabone</b> requires -logout- and -dataout- from ssc. <b>tabone</b> will
+    automatically install them if not already installed (it will not
+    double-install).
+<p>
+<a name="s_Options"></a><p>
+<b><u>Options</u></b>
+<p>
+        +------+
+    ----+ Main +-------------------------------------------------------------
+<p>
+    <b>replace(</b><i> </i><b>)</b> Replace pre-exiting files.
+<p>
+    <b>tex</b> Convert into Latex or tex compatible file.
+<p>
+    <b>excel</b> Convert into Excel compatible file.
+<p>
+    <b>word</b> Convert into Word compatible file.
+<p>
+    <b>auto(</b><i>#</i><b>)</b> where # is the number of automatically formatted digits to be
+            reported.
+<p>
+    <b>noauto</b> No automatic formating.
+<p>
+    <b>dec(</b><i>#</i><b>)</b> where # is the fixed number digits to be reported.
+<p>
+<p>
+<a name="s_0"></a><p>
+<b><u>Examples</u></b>
+<p>
+<p>
+    * exporting multiple one-way tabulation
+    sysuse auto, clear
+    gen activity1=mpg
+    gen activity2=rep78+mpg
+    gen activity3=mpg-rep78+3
+    keep activity*
+    tabone activity* using myfile, word tex excel replace
+<p>
+<p>
+<b><u>Remarks</u></b>
+<p>
+    Bare minimum programming.
+    The decimal format is currently set as fc.
+    <b>tabone</b> was motivated by a question from Anna Reimondos
+            (areimondos@gmail.com).
+<p>
+<p>
+<b><u>Author</u></b>
+<p>
+    Roy Wada
+    roywada@hotmail.com
+<p>
+<p>
+</pre>

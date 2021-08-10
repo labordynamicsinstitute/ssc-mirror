@@ -1,0 +1,164 @@
+.-
+help for ^xrigls^                                                 (STB-38: sbe15)
+.-
+
+Reference Interval Estimation by Generalized Least Squares
+----------------------------------------------------------
+
+
+    ^xrigls^ yvar xvar [^in^ range] [^if^ exp] [^,^ major_options minor_options ]
+
+
+The major_options (most used options), in alphabetic order, are:
+
+    ^al^pha^(^#^)^ ^ce^ntile^(^# [# [#...]]^)^ ^cv^ ^det^ail ^fp(^[^m:^term^,^] [^s:^term]^)^ 
+
+where term is of the form [^powers^] # [# ...]|^df^ #
+
+
+The minor_options (less used options), in alphabetic order, are:
+
+    ^cova^rs^(^[^m:^mcovars^,^] [^s:^scovars]^)^ ^cy^cles^(^#^)^ ^nogr^aph 
+    ^nolea^ve ^nose^lect ^noti^dy ^po^wers^(^powlist^)^ 
+    ^ro^pts^(^[^m:^mopts^,^] [^s:^sopts]^)^ ^sav^ing^(^filename[^,^ ^replace^]^)^ ^se^
+
+
+Description
+-----------
+
+^xrigls^ calculates reference intervals for yvar based on the xvar- (e.g. age-)
+specific mean and standard deviation of yvar.  yvar is assumed to be Normally
+distributed.
+
+
+Major options
+-------------
+
+^alpha(^#^)^ specifies the significance level for testing between degrees of FP for
+    the mean and SD curves. Default : 0.05.
+
+^centile(^# [# [#...]]^)^ defines the centiles of yvar|xvar required.  Default is
+    3 and 97 (i.e. a 94% reference interval).
+
+^cv^ models the ^s^ curve as a coefficient of variation.
+
+^detail^ displays the final regression models for the mean and SD curves.
+
+^fp(^[^m:^term^,^] [^s:^term]^)^ specifies fractional polynomial models in xvar for
+    the mean and SD curves.  ^term^ is of form [^powers^] # [# ...]|^df^ #.  
+    The phrase ^powers^ is optional.  The powers should be separated by spaces, 
+    for example ^fp(m:powers 0 1, s:powers 2)^. If ^powers^ or ^df^ are not given 
+    for any curve, the default is ^fp(m:df 4,s:df 2)^. ^df^ # specifies that the 
+    degrees of freedom for the best-fitting FP model are to be at most # for 
+    the curve in question.  The powers are then determined from the data.
+
+
+Minor options
+-------------
+
+^covars(^[^m:^mcovars^,^] [^s:^scovars]^)^ includes mcovars (scovars) variables as
+    predictors in the regression model for the mean (SD) curves.
+
+^cycles(^#^)^ determines the number of fitting cycles (fit mean, calculate absolute
+    residuals, fit absolute residuals, recalculate weights, etc.).  The default
+    value of # is 2: an initial (unweighted) fit for the mean is followed by an
+    unweighted fit of the absolute residuals; weights are calculated, and one
+    weighted fit for the mean, one weighted fit for the absolute residuals and
+    a final weighted fit for the mean are carried out.  
+
+^nograph^ suppresses a plot of yvar against xvar with fitted values and reference
+    limits superimposed.  The default is to have the graph.
+
+^noleave^ prevents the creation of new variables. The default (^leave^) causes new
+    variables, appropriately labelled, containing the estimated mean, SD, Z-
+    scores for yvar and also the centiles specified in ^centile^, to be created.
+
+^noselect^ specifies that the degree of FP will be that specified in the ^fp^
+    option. The default is to select a lower order FP if the likelihood ratio
+    test has P-value < ^alpha^.
+
+^notidy^ preserves the variables created in the routine representing the
+    fractional polynomials powers of the xvar used in the analysis.
+
+^ropts(^[^m:^mopts]^,^ [^s:^sopts]^)^ determines the regression options for the mean
+    and SD regression models.  Example: ^ropt(m:nocons)^ suppresses the constant
+    for the mean curve.
+
+^saving(^filename[^, replace^]^)^ saves the graph to a file (see ^nograph^).
+
+^se^ calculates the standard errors of the estimated centile curves.
+
+
+Remarks
+-------
+
+yvar is assumed to have a normal (Gaussian) distribution.  If a constant SD is
+assumed, it is estimated by the residual mean square in the usual way.  Other-
+wise, the SD is estimated by regression of the absolute residuals on an FP in
+xvar.  The SD's are the predicted values from this regression, multiplied by
+the square root of pi/2 (i.e. 1.2533...).  Since the correct regression for
+yvar should include weights proportional to the reciprocal of the squared SD,
+the regression for yvar is repeated using weights equal to the squared recip-
+rocal of the fitted SDs. At each iteration, models of lower degree are also 
+fitted. The FP with the lowest degree (k), for which the FP with degree k+1 
+is not a significantly better fit, is selected. The selection criteria between
+models may be specified.
+
+
+^xrigls^ displays the deviance (-2 * ln likelihood) for the entire model
+(including weights derived from the fitted SD). In general, the lower the
+deviance, the better the fit of the model. 
+
+
+Examples
+--------
+
+ . ^use auto.dta^
+ . ^xrigls mpg weight, fp(m:1 3,s:2 2) centile(10 90) cycles(3)^
+
+The FP model with powers (1,3) is used for the mean, and the FP model with
+powers (2,2) for the SD.  Three cycles are performed. The results are saved in 
+new variables. A graph of the resulting 10th, 50th and 90th centiles (or 80%
+reference interval) is given.
+
+ . ^xrigls mpg weight, fp(m:df 2,s:df 2) noselect powers(1 2 3) cv^
+
+The model for the mean of ^mpg^ is the best degree-1 FP function of ^weight^,
+and for the CV, the best degree-1 FP function of ^weight^. The chosen powers
+will be a subset of {1,2,3}. A graph of the resulting 94% reference interval 
+and new variables are also given.
+
+ . ^xrigls mpg weight, alpha(0.1) fp(m:df 2,s:df 2)^
+
+For both the mean and SD, a selection will be made between the best degree-1
+FP function, linear and constant fits using a significance level of 10% in the
+the likelihood-ratio tests.
+
+
+Saved Results
+-------------
+
+^xrigls^ is an R-class program and saves in the ^r()^ functions:
+
+	^r(dev)^	deviance of final model
+	^`r(mpow)'^	powers in final FP model for mean curve
+	^`r(mpow)'^	powers in final FP model for SD curve
+
+
+Authors
+-------
+
+          Patrick Royston
+          MRC Clinical Trials Unit, UK.
+          email: patrick.royston@@ctu.mrc.ac.uk
+
+          Eileen Wright
+          University of Strathclyde, UK 
+          email: eileen@@stams.strath.ac.uk
+
+
+Also see
+--------
+
+ Manual:  ^[R] fracpoly^
+On-line:  help for @xriml@

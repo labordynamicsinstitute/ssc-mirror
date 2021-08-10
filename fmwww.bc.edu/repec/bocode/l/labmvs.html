@@ -1,0 +1,106 @@
+<pre>
+<b>help labmvs</b>
+-------------------------------------------------------------------------------
+<p>
+<b><u>Title</u></b>
+<p>
+     <b>labmvs</b> -- Change numeric values associated with value labels to extended
+missing values
+<p>
+<p>
+<b><u>Syntax</u></b>
+<p>
+        <b>labmvs</b> [<i>varlist</i>] [<i>if</i>] [<i>in</i>] <b>, mv("</b><i>label</i><b>"</b> [<b>"</b><i>label</i><b>"</b> <i>...</i>]<b>)</b> [ <i>options</i> ]
+<p>
+<p>
+<b><u>Description</u></b>
+<p>
+    <b>labmvs</b> changes numeric values associated with <i>labels</i> to extended missing
+    values. Numeric values are changed to successive extended missing value
+    codes, starting with <b>.a</b>. Thus, the numeric value associated with the
+    first label specified, will be coded <b>.a</b>, the value associated with the
+    second label, <b>.b</b> and so on. Value labels are modified accordingly.
+<p>
+    Up to 26 labels may be specified in <b>mv()</b>. Enclose <i>label</i> in double quotes
+    if it contains embedded spaces. If <i>varlist</i> is not specified it defaults
+    to <b>_all</b>.
+<p>
+    Although it is not recommended, the wild cards <b>*</b> and <b>?</b> may be used in
+    <i>label</i>, where the fromer means 0 or more characters, the latter exactly
+    one character. Specifying wild cards is discouraged, as it might result
+    in multiple numeric values changed to only one missing value code, with
+    the value label of the last numeric value attached. This will not be
+    reversible.
+<p>
+    <b>Reminder:</b> modifiactions in value labels affect all variables that have
+    the same value label as one of the variables in <i>namelist</i> attached.
+<p>
+<p>
+<b><u>Remarks</u></b>
+<p>
+    As of version 1.0.1 of the program, <b>labmvs</b> is compatiple with Stata 9.2
+    (or higher). The code for <b>labmvs9</b> will not be removed from the package,
+    but I recommend using <b>labmvs</b> instead.
+<p>
+<p>
+<b><u>Options</u></b>
+<p>
+    <b>mv(</b><i>labels</i><b>)</b> specifies text in value labels indicating numeric values to be
+        changed to extended missing value codes. This is a required option.
+<p>
+    <b><u>all</u></b><b>vars</b> changes numeric values to extended missing values in all
+        variables that have the same value label as one of the variables in
+        <i>varlist</i> attached.
+<p>
+    <b><u>case</u></b><b>sensitive</b> performs a case sensitive search for <i>labels</i> in value
+        labels.
+<p>
+    <b><u>nodel</u></b><b>ete</b> prevents <b>labmvs</b> from deleting value labels that are changed. If
+        specified, numeric missing values and extended missing value codes
+        will be associated with the same text.
+<p>
+    <b><u>f</u></b><b>mvc(</b><i>mvc</i><b>)</b> specifies the first extended missing value code to be used.
+        Default is <b>.a</b>. Note that the maximum number of labels allowed in <b>mv()</b>
+        will be reduced if <i>mvc</i> &gt; <b>.a</b>
+<p>
+<p>
+<b><u>Example</u></b>
+<p>
+        <b>. sysuse nlsw88</b>
+        <b>. tabulate race</b>
+        <b>. label list racelbl</b>
+<p>
+        <b>. labmvs race ,mv(other)</b>
+        <b>. tabulate race</b>
+        <b>. tabulate race ,missing</b>
+        <b>. label list racelbl</b>
+<p>
+    Decode missing values
+        <b>. labmvs occ ,mv("Transport" "Sales")</b>
+<p>
+    Encode missing values using labmv
+        <b>. labmv `r(varlist)' ,mv(`r(occupation)') encode</b>
+<p>
+<p>
+<b><u>Saved results</u></b>
+<p>
+    <b>labmvs</b> saves the following in <b>r()</b>:
+<p>
+    Macros
+      <b>r(minmvc)</b>      minimum extended missing value code (if specified)
+      <b>r(varlist)</b>     varlist (only variables that are changed)
+      <b>r(lblnamelist)</b> value labels
+      <b>r(</b><i>varname</i><b>)</b>     numeric values in <i>varname</i> that are changed
+<p>
+<p>
+<b><u>Author</u></b>
+<p>
+    Daniel Klein, University of Kassel, klein.daniel.81@gmail.com
+<p>
+<p>
+<b><u>Also see</u></b>
+<p>
+    Online: mvdecode, label
+<p>
+    if installed: labelmiss, labutil2
+</pre>

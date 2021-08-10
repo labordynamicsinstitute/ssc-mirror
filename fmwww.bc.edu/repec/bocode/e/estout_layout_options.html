@@ -1,0 +1,65 @@
+<pre>
+    <b>varwidth(</b><i>#</i><b>)</b> specifies the number of characters used to display the names
+        (labels) of regressors and statistics (i.e. <b>varwidth</b> specifies the
+        width of the table's left stub). Long names (labels) are abbreviated
+        (depending on the <b>abbrev</b> option) and short or empty cells are padded
+        out with blanks to fit the width specified by the user.  <b>varwidth</b>
+        defaults to 0, which means that the names are not abbreviated and no
+        white space is added. Specifying low values may cause misalignment.
+<p>
+    <b>modelwidth(</b><i>#</i><b>)</b> designates the number of characters used to display the
+        results columns. If a non-zero <b>modelwidth</b> is specified, model names
+        are abbreviated if necessary (depending on the <b>abbrev</b> option) and
+        short or empty results cells are padded out with blanks. In contrast,
+        <b>modelwidth</b> does not shorten or truncate the display of the results
+        themselves (coefficients, t-statistics, summary statistics, etc.)
+        although it may add blanks if needed. <b>modelwidth</b> defaults to 0, which
+        means that the model names are not abbreviated and no white space is
+        added. Specifying low values may cause misalignment.
+<p>
+        The purpose of <b>modelwidth</b> is to be able to construct a fixed-format
+        table and thus make the raw table more readable. Be aware, however,
+        that the added blanks may cause problems with the conversion to a
+        table in word processors or spreadsheets.
+<p>
+    <b>abbrev</b> specifies that long names and labels be abbreviated if a
+        <b>modelwidth()</b> and/or a <b>varwidth()</b> is specified.
+<p>
+    <b>unstack</b> specifies that the individual equations from multiple-equation
+        models (e.g. <b>mlogit</b>, <b>reg3</b>, <b>heckman</b>) be placed in separate columns.
+        The default is to place the equations below one another in a single
+        column. Summary statistics will be reported for each equation if
+        <b>unstack</b> is specified and the estimation command is either <b>reg3</b>,
+        <b>sureg</b>, or <b>mvreg</b> (see help reg3, help sureg, help mvreg).
+<p>
+    <b>begin(</b>&lt;<i>string</i>&gt;<b>)</b> specifies a string to be printed at the beginning of
+        every table row. The default is an empty string. It is possible to
+        use special functions such as <b>_tab</b> or <b>_skip</b> in <b>begin()</b>. For more
+        information on using such functions, see the description of the
+        functions in help file.
+<p>
+    <b>delimiter(</b>&lt;<i>string</i>&gt;<b>)</b> designates the delimiter used between the table
+        columns. The default is a tab character. See the <b>begin</b> option above
+        for further details.
+<p>
+    <b>end(</b>&lt;<i>string</i>&gt;<b>)</b> specifies a string to be printed at the end of every table
+        row. The default is an empty string. See the <b>begin</b> option above for
+        further details.
+<p>
+    <b>dmarker(</b>&lt;<i>string</i>&gt;<b>)</b> specifies the form of the decimal marker. The standard
+        decimal symbol (a period or a comma, depending on the input provided
+        to <b>set dp</b>; see help format) is replaced by <i>string</i>.
+<p>
+    <b>msign(</b>&lt;<i>string</i>&gt;<b>)</b> determines the form of the minus sign. The standard minus
+        sign (<b>-</b>) is replaced by <i>string</i>.
+<p>
+    <b>lz</b> specifies that the leading zero of fixed format numbers in the
+        interval (-1,1) be printed. This is the default. Use <b>nolz</b> to advise
+        <b>estout</b> to omit the leading zeros (that is, to print numbers like
+        <b>0.021</b> or <b>-0.33</b> as <b>.021</b> and <b>-.33</b>).
+<p>
+    <b>substitute(</b><i>subst_list</i><b>)</b> specifies that the substitutions specified in
+        <i>subst_list</i> be applied to the estimates table after it has been
+        created. Specify <i>subst_list</i> as a list of substitution pairs, that is:
+<p>
+</pre>

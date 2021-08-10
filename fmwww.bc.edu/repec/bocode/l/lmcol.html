@@ -1,0 +1,309 @@
+<pre>
+-------------------------------------------------------------------------------
+<b>help: </b><b>lmcol</b>                                                   <b>dialog:</b> <b>lmcol</b>
+-------------------------------------------------------------------------------
+<p>
+<b>        </b>+-------+
+<b>    </b>----+<b> Title </b>+------------------------------------------------------------
+<p>
+<b>lmcol: OLS Multicollinearity Diagnostic Tests</b>
+<p>
+<a name="00"></a><b>        </b>+-------------------+
+<b>    </b>----+<b> Table of Contents </b>+------------------------------------------------
+<p>
+     <b>Syntax</b>
+     <b>Description</b>
+     <b>Options</b>
+     <b>References</b>
+<p>
+ *** <b>Examples</b>
+<p>
+     <b>Authors</b>
+<p>
+<a name="01"></a><b>        </b>+--------+
+<b>    </b>----+<b> Syntax </b>+-----------------------------------------------------------
+<p>
+     <b>lmcol</b> <i>depvar</i> <i>indepvars</i> [<i>if</i>] [<i>in</i>] , [ <b><u>nocons</u></b><b>tant</b> <b>coll</b> ]
+<p>
+<a name="02"></a><b>        </b>+---------+
+<b>    </b>----+<b> Options </b>+----------------------------------------------------------
+<p>
+  <b><u>nocons</u></b><b>tant</b>       Exclude Constant Term from Equation
+<p>
+  <b>coll</b>             keep collinear variables; default is removing collinear vari
+&gt; ables.
+<p>
+<p>
+<a name="03"></a><b>        </b>+-------------+
+<b>    </b>----+<b> Description </b>+------------------------------------------------------
+<p>
+    <b>lmcol</b> computes OLS Multicollinearity Diagnostic Tests
+<p>
+ 1- VIF: variance inflation factors for independent variables
+ 2- Eigenvalues (Eigenval)
+ 3- Condition Index (C_Index)
+ 4- Condition Number (C_Number)
+ 5- R2 between each independent variable with other independent variables (R2_x
+&gt; i,X)
+<p>
+        * Correlation Matrix
+        * Multicollinearity Diagnostic Criteria
+        * Farrar-Glauber Multicollinearity Tests
+        Ho: No Multicollinearity - Ha: Multicollinearity
+        * (1) Farrar-Glauber Multicollinearity Chi2-Test
+        * (2) Farrar-Glauber Multicollinearity F-Test
+        * (3) Farrar-Glauber Multicollinearity t-Test
+        * Multicollinearity Ranges
+        * Determinant of |X'X|
+        * Theil R2 Multicollinearity Effect:
+        - Gleason-Staelin Q0
+        - Heo Range  Q1
+<p>
+   R2, R2 Adjusted, and F-Test, are obtained from 4 ways:
+ 
+     1- (Buse 1973) R2.
+     2- Raw Moments R2.
+     3- squared correlation between predicted (Yh) and observed dependent
+    variable (Y).
+     4- Ratio of variance between predicted (Yh) and observed dependent
+    variable (Y).
+<p>
+     - Adjusted R2: R2_a=1-(1-R2)*(N-1)/(N-K-1).
+     - F-Test=R2/(1-R2)*(N-K-1)/(K).
+<p>
+<b>- Multicollinearity Detection:</b>
+  1. A high F statistic or R2 leads to reject the joint hypothesis that all
+    of the coefficients are zero, but individual t-statistics are low.
+ 
+  2. High simple correlation coefficients are sufficient but not necessary
+    for multicollinearity.
+ 
+  3. One can compute condition number. That is, the ratio of largest to
+    smallest root of the matrix x'x. This may not always be useful as the
+    standard errors of the estimates depend on the ratios of elements of
+    characteristic vectors to the roots.
+ 
+<p>
+<b>- Multicollinearity Remediation:</b>
+  1. Use prior information or restrictions on the coefficients. One clever
+    way to do this was developed by Theil and Goldberger. See <b>tgmixed</b>, and
+    Theil(1971, pp 347-352).
+ 
+  2. Use additional data sources. This does not mean more of the same. It
+    means pooling cross section and time series.
+ 
+  3. Transform the data. For example, inversion or differencing.
+ 
+  4. Use a principal components estimator. This involves using a weighted
+    average of the regressors, rather than all of the regressors.
+ 
+  5. Another alternative regression technique is ridge regression. This
+    involves putting extra weight on the main diagonal of X'X.
+ 
+  6. Dropping troublesome RHS variables. This begs the question of
+    specification error.
+<p>
+<a name="04"></a><b>        </b>+------------+
+<b>    </b>----+<b> References </b>+-------------------------------------------------------
+<p>
+    D. Belsley (1991)<b> "Conditioning Diagnostics, Collinearity and Weak Data</b>
+        <b>in Regression",</b> <i>John Wiley &amp; Sons, Inc., New York, USA</i>.
+<p>
+    D. Belsley, E. Kuh, and R. Welsch (1980)<b> "Regression Diagnostics:</b>
+        <b>Identifying Influential Data and Sources of Collinearity",</b> <i>John Wiley</i>
+        <i>&amp; Sons, Inc., New York, USA</i>.
+<p>
+    Damodar Gujarati (1995)<b> "Basic Econometrics"</b> <i>3rd Edition, McGraw Hill,</i>
+        <i>New York, USA</i>.
+<p>
+    Evagelia, Mitsaki (2011)<b> "Ridge Regression Analysis of Collinear Data",</b> 
+        http://www.stat-athens.aueb.gr/~jpan/diatrives/Mitsaki/chapter2.pdf
+<p>
+    Farrar, D. and Glauber, R. (1976)<b> "Multicollinearity in Regression</b>
+        <b>Analysis: the Problem Revisited",</b> <i>Review of Economics and Statistics,</i>
+        <i>49</i>; 92-107.
+<p>
+    Greene, William (1993)<b> "Econometric Analysis",</b> <i>2nd ed., Macmillan</i>
+        <i>Publishing Company Inc., New York, USA</i>; 616-618.
+<p>
+    Greene, William (2007)<b> "Econometric Analysis",</b> <i>6th ed., Upper Saddle</i>
+        <i>River, NJ: Prentice-Hall</i>; 387-388.
+<p>
+    Griffiths, W., R. Carter Hill &amp; George Judge (1993)<b> "Learning and</b>
+        <b>Practicing Econometrics",</b> <i>John Wiley &amp; Sons, Inc., New York, USA</i>;
+        602-606.
+<p>
+    Judge, Georege, R. Carter Hill, William . E. Griffiths, Helmut Lutkepohl,
+        &amp; Tsoung-Chao Lee (1988)<b> "Introduction To The Theory And Practice Of</b>
+        <b>Econometrics",</b> <i>2nd ed., John Wiley &amp; Sons, Inc., New York, USA</i>.
+<p>
+    Judge, Georege, W. E. Griffiths, R. Carter Hill, Helmut Lutkepohl, &amp;
+        Tsoung-Chao Lee(1985)<b> "The Theory and Practice of Econometrics",</b> <i>2nd</i>
+        <i>ed., John Wiley &amp; Sons, Inc., New York, USA</i>; 615.
+<p>
+    Maddala, G. (1992)<b> "Introduction to Econometrics",</b> <i>2nd ed., Macmillan</i>
+        <i>Publishing Company, New York, USA</i>; 358-366.
+<p>
+    Marquardt D.W. (1970)<b> "Generalized Inverses, Ridge Regression, Biased</b>
+        <b>Linear Estimation, and Nonlinear Estimation",</b> <i>Technometrics, 12</i>;
+        591-612.
+<p>
+    Rencher, Alvin C. (1998)<b> "Multivariate Statistical Inference and</b>
+        <b>Applications",</b> <i>John Wiley &amp; Sons, Inc., New York, USA</i>; 21-22.
+<p>
+    Theil, Henri (1971)<b> "Principles of Econometrics",</b> <i>John Wiley &amp; Sons,</i>
+        <i>Inc., New York, USA</i>.
+<p>
+    William E. Griffiths, R. Carter Hill and George G. Judge (1993)<b> "Learning</b>
+        <b>and Practicing Econometrics",</b> <i>John Wiley &amp; Sons, Inc., New York, USA</i>.
+<p>
+<a name="05"></a><b>        </b>+----------+
+<b>    </b>----+<b> Examples </b>+---------------------------------------------------------
+<p>
+ clear all
+<p>
+ sysuse lmcol.dta , clear
+<p>
+ db lmcol
+<p>
+ lmcol y x1 x2 x3
+-------------------------------------------------------------------------------
+<p>
+. clear all
+. sysuse lmcol.dta , clear
+. lmcol y x1 x2 x3
+<p>
+==============================================================================
+* Ordinary Least Squares (OLS)
+==============================================================================
+  y = x1 + x2 + x3
+------------------------------------------------------------------------------
+  Sample Size       =          17
+  Wald Test         =    253.9319   |   P-Value &gt; Chi2(3)       =      0.0000
+  F-Test            =     84.6440   |   P-Value &gt; F(3 , 13)     =      0.0000
+ (Buse 1973) R2     =      0.9513   |   Raw Moments R2          =      0.9986
+ (Buse 1973) R2 Adj =      0.9401   |   Raw Moments R2 Adj      =      0.9983
+  Root MSE (Sigma)  =      5.7724   |   Log Likelihood Function =    -51.6441
+------------------------------------------------------------------------------
+- R2h= 0.9513   R2h Adj= 0.9401  F-Test =   84.64 P-Value &gt; F(3 , 13)  0.0000
+- R2v= 0.9513   R2v Adj= 0.9401  F-Test =   84.64 P-Value &gt; F(3 , 13)  0.0000
+------------------------------------------------------------------------------
+           y |      Coef.   Std. Err.      t    P&gt;|t|     [95% Conf. Interval]
+-------------+----------------------------------------------------------------
+          x1 |   1.060841   .2769969     3.83   0.002     .4624256    1.659257
+          x2 |  -1.397391   .2321721    -6.02   0.000    -1.898969    -.895814
+          x3 |  -.0034456   .0514889    -0.07   0.948    -.1146807    .1077894
+       _cons |   132.2612   36.46863     3.63   0.003     53.47554    211.0469
+------------------------------------------------------------------------------
+<p>
+==============================================================================
+*** Multicollinearity Diagnostic Tests
+==============================================================================
+<p>
+* Correlation Matrix
+(obs=17)
+<p>
+             |       x1       x2       x3
+-------------+---------------------------
+          x1 |   1.0000
+          x2 |   0.1788   1.0000
+          x3 |  -0.1832  -0.9296   1.0000
+<p>
+* Multicollinearity Diagnostic Criteria
++------------------------------------------------------------------------------
+&gt; -+
+|   Var |  Eigenval |  C_Number |   C_Index |       VIF |     1/VIF |   R2_xi,X
+&gt;  |
+|-------+-----------+-----------+-----------+-----------+-----------+----------
+&gt; -|
+|    x1 |    1.9954 |    1.0000 |    1.0000 |    1.0353 |    0.9659 |    0.0341
+&gt;  |
+|    x2 |    0.9342 |    2.1361 |    1.4615 |    7.3632 |    0.1358 |    0.8642
+&gt;  |
+|    x3 |    0.0704 |   28.3396 |    5.3235 |    7.3753 |    0.1356 |    0.8644
+&gt;  |
++------------------------------------------------------------------------------
+&gt; -+
+<p>
+* Farrar-Glauber Multicollinearity Tests
+  Ho: No Multicollinearity - Ha: Multicollinearity
+--------------------------------------------------
+<p>
+* (1) Farrar-Glauber Multicollinearity Chi2-Test:
+    Chi2 Test =   28.7675    P-Value &gt; Chi2(3) 0.0000
+<p>
+* (2) Farrar-Glauber Multicollinearity F-Test:
++--------------------------------------------------------+
+|   Variable |   F_Test |      DF1 |      DF2 |  P_Value |
+|------------+----------+----------+----------+----------|
+|         x1 |    0.247 |   14.000 |    3.000 |    0.971 |
+|         x2 |   44.543 |   14.000 |    3.000 |    0.005 |
+|         x3 |   44.627 |   14.000 |    3.000 |    0.005 |
++--------------------------------------------------------+
+<p>
+* (3) Farrar-Glauber Multicollinearity t-Test:
++-------------------------------------+
+| Variable |     x1 |     x2 |     x3 |
+|----------+--------+--------+--------|
+|       x1 |      . |        |        |
+|       x2 |  0.680 |      . |        |
+|       x3 | -0.697 | -9.435 |      . |
++-------------------------------------+
+<p>
+* Determinant of |X'X|:
+  |X'X| = 0 Multicollinearity - |X'X| = 1 No Multicollinearity
+  Determinant of |X'X|:      (0 &lt; 0.1313 &lt; 1)
+---------------------------------------------------------------
+<p>
+* Theil R2 Multicollinearity Effect:
+  R2 = 0 No Multicollinearity - R2 = 1 Multicollinearity
+    - Theil R2:              (0 &lt; 0.7606 &lt; 1)
+---------------------------------------------------------------
+<p>
+* Multicollinearity Range:
+  Q = 0 No Multicollinearity - Q = 1 Multicollinearity
+     - Gleason-Staelin Q0:   (0 &lt; 0.5567 &lt; 1)
+    1- Heo Range  Q1:        (0 &lt; 0.8356 &lt; 1)
+    2- Heo Range  Q2:        (0 &lt; 0.8098 &lt; 1)
+    3- Heo Range  Q3:        (0 &lt; 0.6377 &lt; 1)
+    4- Heo Range  Q4:        (0 &lt; 0.5425 &lt; 1)
+    5- Heo Range  Q5:        (0 &lt; 0.8880 &lt; 1)
+    6- Heo Range  Q6:        (0 &lt; 0.5876 &lt; 1)
+------------------------------------------------------------------------------
+<p>
+<a name="06"></a><b>        </b>+---------+
+<b>    </b>----+<b> Authors </b>+----------------------------------------------------------
+<p>
+- <b>Emad Abd Elmessih Shehata</b>
+  <b>Professor (PhD Economics)</b>
+  <b>Agricultural Research Center - Agricultural Economics Research Institute - Eg</b>
+<b>&gt; ypt</b>
+  <b>Email: </b>emadstat@hotmail.com
+  <b>WebPage:                </b>http://emadstat.110mb.com/stata.htm
+  <b>WebPage at IDEAS:       </b>http://ideas.repec.org/f/psh494.html
+  <b>WebPage at EconPapers:  </b>http://econpapers.repec.org/RAS/psh494.htm
+<p>
+- <b>Sahra Khaleel A. Mickaiel</b>
+  <b>Professor (PhD Economics)</b>
+  <b>Cairo University - Faculty of Agriculture - Department of Economics - Egypt</b>
+  <b>Email: </b>sahra_atta@hotmail.com
+  <b>WebPage:                </b>http://sahraecon.110mb.com/stata.htm
+  <b>WebPage at IDEAS:       </b>http://ideas.repec.org/f/pmi520.html
+  <b>WebPage at EconPapers:  </b>http://econpapers.repec.org/RAS/pmi520.htm
+<p>
+<b>        </b>+----------------+
+<b>    </b>----+<b> LMCOL Citation </b>+---------------------------------------------------
+<p>
+ <b>Shehata, Emad Abd Elmessih &amp; Sahra Khaleel A. Mickaiel (2012)</b>
+ <b>LMCOL: "OLS Multicollinearity Diagnostic Tests"</b>
+<p>
+<p>
+<b><u>Online Help:</u></b>
+<p>
+<b>* OLS Multicollinearity Tests:</b>
+<b>lmcol</b>      OLS Multicollinearity Diagnostic Tests
+<b>fgtest</b>     Farrar-Glauber Multicollinearity Chi2, F, t Tests
+<b>theilr2</b>    Theil R2 Multicollinearity Effect
+<p>
+<p>
+</pre>

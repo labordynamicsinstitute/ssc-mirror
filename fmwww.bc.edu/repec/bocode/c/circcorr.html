@@ -1,0 +1,56 @@
+<pre>
+-------------------------------------------------------------------------------
+help for <b>circcorr</b>
+-------------------------------------------------------------------------------
+<p>
+<b><u>Correlation for circular data</u></b>
+<p>
+        <b>circcorr</b> <i>varname1 varname2</i> [<b>if</b> <i>exp</i>] [<b>in</b> <i>range</i>]
+<p>
+<p>
+<b><u>Description</u></b> 
+<p>
+    <b>circcorr</b> produces a correlation coefficient appropriate for two circular
+    variables taking on values between 0 and 360 degrees.  The correlation is
+    defined for <i>n</i> values of two such variables <i>x</i> and <i>y</i> as
+<p>
+                       SUM sin(<i>x</i>[<i>i</i>] - <i>x</i>[<i>j</i>]) sin(<i>y</i>[<i>i</i>] - <i>y</i>[<i>j</i>])
+                       <i>i</i>&lt;<i>j</i>
+        r_T =   ----------------------------------------------------
+                              2                     2
+                ROOT [ SUM sin (<i>x</i>[<i>i</i>] - <i>x</i>[<i>j</i>]) SUM sin (<i>y</i>[<i>i</i>] - <i>y</i>[<i>j</i>]) ]
+                       <i>i</i>&lt;<i>j</i>                   <i>i</i>&lt;<i>j</i>
+<p>
+    and takes on values between -1 and 1.
+<p>
+    The <i>P</i>-value associated with r_T can be computed for large samples, say <i>n</i>
+    &gt;= 25, but depends on the distribution of <i>x</i> and <i>y</i>.  If either has a mean
+    resultant length (vector strength) of 0, then <i>n</i> * r_T is double
+    exponential. Otherwise, ROOT of <i>n</i> * r_T has a Gaussian (normal)
+    distribution. Both <i>P</i>-values are calculated.  See Fisher (1993,
+    pp.151-153) for details, but note that both <i>U</i> terms in (6.40) on p.152
+    should be rooted.
+<p>
+<p>
+<b><u>Example</u></b> 
+<p>
+    <b>. circcorr wallasp axisasp</b>
+<p>
+<p>
+<b><u>Reference</u></b>
+<p>
+    Fisher, N.I. 1993. <i>Statistical analysis of circular data.</i>  Cambridge:
+        Cambridge University Press.
+<p>
+<p>
+<b><u>Author</u></b> 
+<p>
+    Nicholas J. Cox, University of Durham, U.K.
+    n.j.cox@durham.ac.uk
+<p>
+<p>
+<b><u>Also see</u></b> 
+<p>
+On-line: help for circscatter, circlccorr
+<p>
+</pre>

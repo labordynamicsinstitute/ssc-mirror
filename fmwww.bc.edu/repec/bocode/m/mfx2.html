@@ -1,0 +1,232 @@
+<pre>
+-------------------------------------------------------------------------------
+help for <b>mfx2</b>
+-------------------------------------------------------------------------------
+<p>
+<b><u>Enhanced mfx command for obtaining marginal effects or elasticities after estim</u></b>
+<b><u>&gt; ation</u></b>
+<p>
+        <b>mfx2</b> [<b>,</b> <b>stub(</b><i>name</i><b>)</b> <b><u>r</u></b><b>eplace</b> <b><u>m</u></b><b>ultiple</b> <b><u>s</u></b><b>ingle</b> <b>trustme</b> <b><u>nol</u></b><b>abel</b> <b>nolog</b>
+               <b><u>pred</u></b><b>ict(</b><i>prediction_option</i><b>)</b> <b><u>nos</u></b><b>e</b> <b><u>l</u></b><b>evel(</b><i>#</i><b>)</b> <i>other_mfx_options</i> ]
+<p>
+    If (and only if) the estimates from the marginal effects are currently
+    active, <b>mfx2</b> typed without arguments redisplays previous results.
+    Otherwise typing <b>mfx2</b> causes the marginal effects for the last estimation
+    command to be computed.
+<p>
+<b><u>Description</u></b>
+<p>
+    <b>mfx2</b> obtains marginal effects or elasticities after estimation.  It is
+    probably most useful after multiple-outcome commands like <b>ologit</b>,
+    <b>oprobit</b>, <b>gologit2</b>, <b>slogit</b>, <b>mlogit</b>, <b>oglm</b>, and <b>mprobit</b>, but it works with
+    other commands as well. <b>mfx2</b> offers two key enhancements to Stata's <b>mfx</b>
+    <b>compute</b> command: (a) after multiple- outcome commands <b>mfx2</b> automates the
+    calling of <b>mfx</b> and saves the marginal effects for all outcomes in a
+    single matrix; and (b) marginal effects are stored in a way that makes
+    them easy to use with post-estimation table formatting commands like
+    <b>outreg2</b> and <b>estout</b>. <b>mfx2</b> is inspired, in part, by Tamas Bartus's <b>margeff</b>
+    command. <b>margeff</b> is often quicker than <b>mfx2</b> and offers powerful
+    additional options but <b>mfx2</b> works with a wider range of commands.
+    Presumably/hopefully, <b>mfx2</b> will work whenever <b>mfx</b> will work (and will not
+    work whenever <b>mfx</b> doesn't), but not all possible commands have been
+    tested.  In order to fully understand <b>mfx2</b> you should also understand
+    <b>mfx</b>; see help mfx.
+<p>
+<b><u>Options</u></b>
+<p>
+    <b>stub(</b><i>name</i><b>)</b> causes the original estimates to be saved as <i>name</i>_coef and the
+        marginal effects estimates to be saved as <i>name</i>_mfx, e.g. <b>stub(</b><i>model1</i><b>)</b>
+        will cause the saved estimates to be named model1_coef and
+        model1_mfx. If <b>stub</b> is not specified, the name of the program that
+        produced the estimates is used, e.g. if <b>mfx2</b> is run after <b>ologit</b> the
+        stored estimates will be named ologit_coef and ologit_mfx. NOTE:
+        Matrices for the marginal effects and their standard errors are also
+        added to the original estimates.  However, the <i>name</i>_mfx file may be
+        easier to work with when using commands like <b>outreg2</b> and <b>estout</b>.
+<p>
+    <b>replace</b> (abbreviated <b>r</b>) causes the marginal effects to become the active
+        estimates.  Note that, whether you use <b>replace</b> or not, both the
+        marginal effects and the original estimates get saved.
+<p>
+    <b>multiple</b> and <b>single</b> (abbreviated <b>m</b> and <b>s</b>) can be used to specify whether
+        the estimation command is for multiple-outcome (e.g. <b>ologit</b>, <b>mlogit</b>)
+        or single/binary/count outcome (e.g. <b>regress</b>, <b>logit</b>, <b>poisson</b>) models.
+        <b>mfx2</b> often already knows this but these options can be helpful if
+        <b>mfx2</b> is guessing wrong.
+<p>
+    <b>trustme</b> lets you override <b>mfx2</b>'s default preferences. The code includes
+        (incomplete) lists of programs that do not work with it. This
+        hard-coding could be wrong, especially if you happen to have a
+        different program by the same name as those that are hard-coded.
+        Hence, if you specify <b>trustme</b>, the program will try to work with a
+        program it doesn't think is supported.  You may get a fatal error
+        later but you can go ahead and try this option if you really believe
+        that <b>mfx2</b> should work.
+<p>
+    <b>predict</b> specifies the prediction option to be used, e.g.  <b>predict(</b><i>pr</i><b>)</b>,
+        <b>predict(</b><i>pu0</i><b>)</b>. If not specified, then the default prediction option
+        for the estimation command is used.  For multiple outcome models you
+        should NOT include the outcome #, e.g. do not specify something like
+        <b>predict(</b><i>pr o</i><b>(</b><i>1</i><b>))</b>.  Instead, <b>mfx2</b> will internally generate the
+        commands for each possible outcome.
+<p>
+    <b>nolabel</b> causes the equations in multiple-outcome models to be named eq1,
+        eq2, etc. The default is to use the first 32 characters of the value
+        labels and/or the values of Y as the equation labels.  Note that some
+        characters cannot be used in equation names, e.g. the space ( ), the
+        period (.), the dollar sign ($), and the colon(:), and will be
+        replaced with the underscore (_) character.  The default behavior
+        works well when the value labels are short and descriptive.  It may
+        not work well when value labels are very long and/or include
+        characters that have to be changed to underscores. If the printout
+        looks unattractive and/or you are getting strange errors, try
+        changing the value labels of Y or else use the <b>nolabel</b> option.  If
+        you are estimating a series of models you probably want to be
+        consistent in your use or nonuse of <b>nolabel</b>.
+<p>
+    <b>nose</b> specifies that standard errors of the marginal effects
+        (elasticities) not be computed.  This can result in much faster
+        execution.  The variances and covariances will all be set to 0.  Note
+        that even if you do not use <b>nose</b>, only the standard errors of the
+        marginal effects are correct, hence use of commands like <b>test</b> may
+        produce incorrect results.  Also, if standard errors are estimated,
+        any missing values will be changed to 0 in the _mfx estimates.
+<p>
+    <b>level(</b><i>#</i><b>)</b> specifies the confidence level in percent for the confidence
+        intervals of the coefficients; see help level.
+<p>
+    <b>nolog</b> suppresses the printing of everything but the final results.
+        Otherwise, <b>mfx2</b> prints out the results from each intermediate command
+        it runs.  This display can be useful in that it can (a) help identify
+        any problems when computing marginal effects, and (b) let you know
+        the program really is running, since estimation can take a while,
+        especially after multiple-outcome commands like <b>ologit</b> and <b>mlogit</b>.
+        But, if you only want to see the final results, use <b>nolog</b>.
+<p>
+    <i>other_mfx_options</i> are the other options allowed by Stata's <b>mfx compute</b>
+        command, e.g. <b>at(</b><i>atlist</i><b>)</b>, <b>varlist(</b><i>varlist</i><b>)</b>; see help mfx.  The output
+        from some of these options will be hidden if you use the <b>nolog</b>
+        option.
+<p>
+<b><u>Troubleshooting</u></b>
+<p>
+    It is important to realize that, if <b>mfx</b> does not work for your problem,
+    then <b>mfx2</b> isn't going to work either.  <b>mfx2</b> simplifies the use of <b>mfx</b> and
+    restructures <b>mfx</b>'s output for easier use with table formatting programs.
+    But, when it comes to actually estimating the marginal effects <b>mfx2</b> has
+    the same limitations that <b>mfx</b> does.  Typing findit marginal effects may
+    either lead you to a FAQ that addresses your problem or show you a
+    program that is better suited for your needs. For example, if you have
+    interaction effects in your logit model, you may want to check out
+    <b>inteff</b>. Or, if your model includes multiple dummy variables, <b>margeff</b> may
+    handle your needs. In general, there are several different programs for
+    marginal effects, and if <b>mfx2</b> does not do what you want maybe another one
+    will. There is little point in asking the author of <b>mfx2</b> how to do
+    something that can't be done with <b>mfx</b>, because he probably won't know!
+    (Or at least he won't know more than what can be found in the FAQs and
+    other available programs.).
+<p>
+    Especially if you are having problems with your estimation, I recommend
+    NOT using the <b>nolog</b> option.  The output can be a little tedious, but you
+    will see all the intermediate calculations and any warning messages that
+    are being issued by <b>mfx</b>. For example, warning messages like "derivatives
+    not found" will be hidden if you use the <b>nolog</b> option.
+<p>
+    Sometimes switching to a different estimation program will help.  For
+    example, the original <b>gologit</b> does not work with either <b>mfx</b> or <b>mfx2</b>, but
+    <b>gologit2</b> does (make sure you have version 2.1.3 or later; earlier
+    versions had a problem that kept them from working correctly with <b>mfx</b>).
+    My guess is that user- written routines are more likely to be problematic
+    than official Stata programs, because they are less likely to follow
+    official Stata's standard programming practices.
+<p>
+    If you get an "equation not found" error it may be because <b>mfx2</b> has
+    incorrectly guessed that the estimation routine is for multiple outcomes,
+    similar to <b>ologit</b>.  Try rerunning <b>mfx2</b> using the <b>single</b> option.
+    Conversely, if you get a message like "too few variables specified," it
+    may be because <b>mfx2</b> does not realize the original estimation command is
+    for multiple outcomes; try rerunning <b>mfx2</b> using the <b>multiple</b> option.
+<p>
+    In theory, if <b>mfx</b> works fine for a problem, then <b>mfx2</b> should too. This
+    has been true for the programs most used by <b>mfx2</b>'s author, but there are
+    lots of programs, and lots of <b>mfx</b> options, that he has never tried.  If
+    you encounter a situation where <b>mfx</b> works but <b>mfx2</b> does not, please email
+    the author with the details.
+<p>
+<p>
+<b><u>Examples</u></b>
+<p>
+        <b>. * Compute marginal effects after ologit, gologit2, mlogit</b>
+        <b>. * Output and compare results using outreg2 and esttab</b>
+        <b>. * Be patient, since it can take a painfully long time to compute</b>
+            <b>s.e.'s</b>
+        <b>. * gologit2 &amp; outreg2 need to be installed for this example</b>
+        <b>. * If not otherwise specified, the stubname is the name of the</b>
+            <b>command that produced the estimates.</b>
+        <b>. use http://www.indiana.edu/~jslsoc/stata/spex_data/ordwarm2.dta,</b>
+            <b>clear</b>
+        <b>. ologit warm yr89 male white age ed prst</b>
+        <b>. mfx2</b>
+        <b>. gologit2 warm yr89 male white age ed prst, npl(yr89 male)</b>
+        <b>. mfx2</b>
+        <b>. mlogit warm yr89 male white age ed prst, b(4)</b>
+        <b>. mfx2</b>
+        <b>. outreg2 [ologit_mfx gologit2_mfx mlogit_mfx] using mymfx1a, replace</b>
+            <b>long onecol nor2 word</b>
+        <b>. esttab ologit_mfx gologit2_mfx mlogit_mfx using mymfx1b, mtitle se</b>
+            <b>replace rtf</b>
+<p>
+<p>
+        <b>. * If you don't need the standard errors, this is much quicker!!!</b>
+        <b>. * The standard errors will all be reported as equaling zero.</b>
+        <b>. * The nolog option will reduce the amount of printout</b>
+        <b>. use http://www.indiana.edu/~jslsoc/stata/spex_data/ordwarm2.dta,</b>
+            <b>clear</b>
+        <b>. ologit warm yr89 male white age ed prst</b>
+        <b>. mfx2, nose nolog</b>
+        <b>. gologit2 warm yr89 male white age ed prst, npl(yr89 male)</b>
+        <b>. mfx2, nose nolog</b>
+        <b>. mlogit warm yr89 male white age ed prst, b(4)</b>
+        <b>. mfx2, nose nolog</b>
+        <b>. outreg2 [ologit_mfx gologit2_mfx mlogit_mfx] using mymfx2a, replace</b>
+            <b>word long onecol nor2 noaster nonotes</b>
+        <b>. esttab ologit_mfx gologit2_mfx mlogit_mfx using mymfx2b, mtitle not</b>
+            <b>replace rtf</b>
+<p>
+<p>
+        <b>. * oglm needs to be installed for the following, which means you</b>
+            <b>also need Stata 9</b>
+        <b>. use http://www.indiana.edu/~jslsoc/stata/spex_data/ordwarm2.dta,</b>
+            <b>clear</b>
+        <b>. oglm warm yr89 male white age ed prst</b>
+        <b>. mfx2, stub(nonhetero)</b>
+        <b>. oglm warm yr89 male white age ed prst, het(yr89 male)</b>
+        <b>. mfx2, stub(hetero)</b>
+        <b>. outreg2 [nonhetero_mfx hetero_mfx] using mymfx3a, replace long</b>
+            <b>onecol nor2 word</b>
+        <b>. esttab nonhetero_mfx hetero_mfx using mymfx3b, mtitle se replace</b>
+            <b>rtf</b>
+<p>
+<p>
+        <b>. * Compare marginal effects at different values</b>
+        <b>. use http://www.indiana.edu/~jslsoc/stata/spex_data/ordwarm2.dta,</b>
+            <b>clear</b>
+        <b>. ologit warm yr89 male white age ed prst</b>
+        <b>. mfx2, at(mean) stub(mean)</b>
+        <b>. mfx2, at(median) stub(median)</b>
+        <b>. mfx2, at(zero) stub(zero)</b>
+        <b>. outreg2 [mean_mfx median_mfx zero_mfx] using mymfx4a, replace long</b>
+            <b>onecol nor2 noaster nonotes word</b>
+        <b>. esttab mean_mfx median_mfx zero_mfx using mymfx4b, mtitle se</b>
+            <b>replace rtf</b>
+<p>
+<p>
+<p>
+<b><u>Author</u></b>
+<p>
+     Richard Williams
+     Notre Dame Department of Sociology
+     Richard.A.Williams.5@ND.Edu
+     http://www.nd.edu/~rwilliam/
+<p>
+</pre>

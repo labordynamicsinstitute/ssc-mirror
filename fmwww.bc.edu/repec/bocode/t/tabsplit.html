@@ -1,0 +1,89 @@
+<pre>
+-------------------------------------------------------------------------------
+help for <b>tabsplit</b>
+-------------------------------------------------------------------------------
+<p>
+<b><u>Tabulate string variables split into parts</u></b>
+<p>
+        <b>tabsplit</b> <i>strvar</i> [<b>if</b> <i>exp</i>] [<b>in</b> <i>range</i>] [ <b>,</b> <b><u>char</u></b><b>acters</b>
+                 <b><u>p</u></b><b>arse(</b><i>parse_strings</i><b>)</b> [<b><u>no</u></b>]<b><u>t</u></b><b>rim</b> <i>tabulate_options</i> ]
+<p>
+<p>
+<b><u>Description</u></b>
+<p>
+    <b>tabsplit</b> tabulates frequencies of occurrence of the parts of a string
+    variable. By default, the parts of a string are separated by spaces. The
+    parts of <b>"A B C"</b> are thus <b>"A"</b>, <b>"B"</b> and <b>"C"</b>. Optionally, alternative
+    parsing strings may be specified. The parts of <b>"A,B,C"</b> with <b>parse(,)</b> are,
+    again, <b>"A"</b>, <b>"B"</b> and <b>"C"</b>. The parts of <b>"A B C"</b> with <b>parse(,)</b> are just the
+    single part <b>"A B C"</b>.  The idea of a part thus generalises Stata's concept
+    of a word.
+<p>
+<p>
+<b><u>Remarks</u></b> 
+<p>
+    Suppose data are gathered on modes of transport used in the journey to
+    work. In addition to values of <b>"car"</b>, <b>"cycle"</b>, <b>"foot"</b>, and so forth,
+    there may be multiple values such as <b>"car train tube foot"</b> for people who
+    use two or more modes. Within the limits in your version of Stata such
+    single or multiple values may be stored as string variables.  It may then
+    be desired, for example, to count the individual modes used.  <b>tabsplit</b> is
+    designed for this special problem.
+<p>
+    By default, leading and trailing spaces are ignored. Thus, string values
+    that equal one or more spaces are treated just as if they were missing.
+    Also with <b>" 1,  2,   3"</b> and <b>parse(,)</b> the parts are <b>"1"</b>, <b>"2"</b> and <b>"3"</b>.
+<p>
+<p>
+<b><u>Options</u></b>
+<p>
+    <b>characters</b> specifies that strings are to be split into separate
+        characters. Thus strings such as <b>"ABCDE"</b> and <b>"ABC"</b> will be split so
+        that the frequencies of <b>"A"</b>, <b>"B"</b>, etc. will be tabulated.  <b>parse()</b> is
+        ignored if <b>characters</b> is specified.
+<p>
+    <b>parse(</b><i>parse_strings</i><b>)</b> specifies that, instead of spaces, parsing should be
+        done using one or more <i>parse_strings</i>. Most commonly, one string which
+        is a single punctuation character will be specified.  For example, if
+        <b>parse(,)</b> is specified, then <b>"1,2,3"</b> is split into <b>"1"</b>, <b>"2"</b> and <b>"3"</b>.
+<p>
+        It is also possible to specify (1) two or more strings which are
+        alternative separators of parts and/or (2) strings which consist of
+        two or more characters.  Alternative strings should be separated by
+        spaces and strings which include spaces should be bound by <b>" "</b>. Thus
+        if <b>parse(, " ")</b> is specified, then <b>"1,2 3"</b> is also split into <b>"1"</b>,
+        <b>"2"</b> and <b>"3"</b>.  Note particularly the difference between (say)
+        <b>parse(a b)</b> and <b>parse(ab)</b>: with the first, <b>"a"</b> and <b>"b"</b> are both
+        acceptable as separators, while with the second, only the string <b>"ab"</b>
+        is acceptable.
+<p>
+    <b>notrim</b> specifies that the original string variable should not be trimmed
+        of leading and trailing spaces before being parsed, and that the
+        parts should not be trimmed similarly before being tabulated. <b>notrim</b>
+        is not considered compatible with parsing on spaces, as the latter
+        implies that spaces in a string are to be discarded: either specify
+        parse strings or by default allow a <b>trim</b>.
+<p>
+    <i>tabulate_options</i> are options of tabulate with one variable. The most
+        useful in practice is <b>sort</b>. Note that the table is based on a
+        temporary dataset which does not remain in memory after <b>tabsplit</b> has
+        finished.
+<p>
+<p>
+<b><u>Examples</u></b>
+<p>
+    . tabsplit authors, parse(,) sort
+<p>
+<p>
+<b><u>Author</u></b> 
+<p>
+    Nicholas J. Cox, University of Durham, U.K.
+    n.j.cox@durham.ac.uk
+<p>
+<p>
+<b><u>Also see</u></b>
+<p>
+    On-line:  help for split, tabulate
+<p>
+<p>
+</pre>

@@ -1,0 +1,81 @@
+<pre>
+ 
+-------------------------------------------------------------------------------
+help for <b>imbalance</b>
+-------------------------------------------------------------------------------
+  
+<b>Check covariate imbalance before and after matching</b>
+<b>---------------------------------------------------</b>
+ 
+<p>
+<b>Syntax</b>
+<b>------</b>
+<b>imbalance</b> dataname varname treatname blockname savfile
+<p>
+<p>
+<b>Description</b>
+<b>-----------</b>
+ 
+<b>imbalance</b> calculates absolute standardized difference in 
+covariate means (ASAM) before matching (dx) and after matching
+(dxm), as described by Haviland, Nagin, and Rosenbaum (2007). 
+It allows the analyst to evaluate whether matching balances an 
+observed covariate between treated and control observations.  
+<b>dataname</b> specifies the name of data file containing covariates 
+to be checked. <b>varname</b> is the name of a covariate on which the 
+analyst wants to check its balance between treated and control 
+observations. <b>treatname</b> specifies the name of the dichotomous 
+variable identifying treatment conditions. For <b>imbalance</b> to run 
+properly, <b>treatname</b> must be coded treatname = 1 if the observation
+receives treatment, and treatname = 0 if the observation is a control. 
+<b>blockname</b> specifies the variable name that identifies matched sets.
+ 
+ 
+<b>Output and Return Values</b>
+<b>------------------------</b>
+ 
+After running <b>imbalance</b>, Stata returns <b>dx</b> ¨C the absolute 
+standardized difference in covariate means before matching, 
+<b>dxm</b> - the absolute standardized difference in covariate means 
+after matching, and the <b>name</b> of the covariate along with the 
+blockname. Both dx and dxm are similar to Cohen¡¯s d. After running 
+imbalance, Stata saves the results in a file named <b>savfile</b>. 
+The analyst can use <b> return list</b> immediately after running 
+<b>imbalance</b> to see statistics saved for further analysis.   
+ 
+ 
+<b>Examples</b>
+<b>--------</b>
+<p>
+<b>. imbalance cds black kuse fm results</b>
+  
+<b>. imbalance "D:\PSA\cds.dta" black kuse fm "C:\tmp\results"</b>
+<b>. return list</b>
+<b>. use "C:\tmp\results", clear</b>
+<b>. list</b>
+ 
+ 
+ 
+<b>References</b>
+<b>----------</b>
+ 
+Guo, S., &amp; Fraser, M. (2009). Propensity score analysis: Statistical 
+methods and applications. Thousand Oaks, CA: Sage Publications Inc.
+ 
+Haviland, A., Nagin, D. S., &amp; Rosenbaum, P. R. (2007). Combining 
+propensity score matching and group-based trajectory analysis in an 
+observational study. Psychological Methods, 12, 247-267.
+ 
+ 
+<b>Author</b>
+<b>------</b>
+ 
+        Shenyang Guo
+        University of North Carolina at Chapel Hill
+        sguo@email.unc.edu 
+<p>
+ 
+<b>Also see:</b>
+<b>---------</b>
+ 
+</pre>

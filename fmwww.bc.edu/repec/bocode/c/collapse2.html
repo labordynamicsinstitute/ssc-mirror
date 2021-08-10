@@ -1,0 +1,88 @@
+<pre>
+-------------------------------------------------------------------------------
+help for <b>collapse2</b>}
+-------------------------------------------------------------------------------
+<p>
+<b><u>Augmented version of </u></b><b><u>collapse</u></b><b><u> to make dataset of means, medians, etc.</u></b>
+<p>
+        <b>collapse2</b> <i>clist</i> [<i>weight</i>] [<b>if</b> <i>exp</i>] [<b>in</b> <i>range</i>] [<b>,</b> <b>by(</b><i>varlist</i><b>)</b> <b>cw</b> <b>fast</b>]
+<p>
+<p>
+    where <i>clist</i> is either
+<p>
+        [<b>(</b><i>stat</i><b>)</b>] <i>varlist</i> [ [<b>(</b><i>stat</i><b>)</b>] <i>...</i> ]
+        [<b>(</b><i>stat</i><b>)</b>] <i>target_var</i><b>=</b><i>varname</i> [<i>target_var</i><b>=</b><i>varname</i> <i>...</i>] [ [<b>(</b><i>stat</i><b>)</b>] <i>...</i>]
+<p>
+    or any combination of the <i>varlist</i> or <i>target_var</i> forms, and <i>stat</i> is one of
+<p>
+        <b>first</b>       first
+        <b>last</b>        last
+        <b>firstnm</b>     first non-missing
+        <b>lastnm</b>      last non-missing
+<p>
+        <b>sd</b>          standard deviations
+        <b>sum</b>         sums
+        <b>rawsum</b>      sums ignoring optionally specified weight
+<p>
+        <b>count</b>       number of nonmissing observations
+        <b>max</b>         maximums
+        <b>min</b>         minimums
+<p>
+        <b>median</b>      medians
+        <b>p1</b>          1st percentile
+        <b>p2</b>          2nd percentile
+        <i>...</i>         3rd -- 49th percentiles
+        <b>p50</b>         50th percentile (same as <b>median</b>)
+        <i>...</i>         51st -- 97th percentiles
+        <b>p98</b>         98th percentile
+        <b>p99</b>         99th percentile
+        <b>iqr</b>         interquartile range
+<p>
+    If <i>stat</i> is not specified, <b>mean</b> is assumed.
+<p>
+    <b>aweight</b>s, <b>fweight</b>s, <b>pweight</b>s, and <b>iweight</b>s are allowed; see help weights
+    and see note concerning weights below.  Statistic <b>sd</b> (standard deviation)
+    is not allowed with <b>pweight</b>s.
+<p>
+    <i>varlist</i> and <i>varname</i> in <i>clist</i> may contain time-series operators; see help 
+    varlist.
+<p>
+<p>
+<b><u>Description</u></b>
+<p>
+    <b>collapse2</b> is an extension of Stata's built-in <b>collapse</b> command, which
+    converts the data in memory into a dataset of means, sums, medians, etc.
+    It differs only in offering four additional "aggregation" operators:
+    <b>first</b>, <b>last</b>, <b>firstnm</b>, and <b>lastnm</b>, described above.  These are useful, for
+    example, if you want to create a cross-section data set from annual data,
+    with <i>initial</i> population as a variable.  You must first <b>tsset</b> your data to
+    use these additional operators.
+<p>
+    For most details on the command, see help collapse.
+<p>
+<b><u>Examples</u></b>
+<p>
+    <b>. collapse2 (first) startpop=pop (last) endpop=pop, by(country)</b>
+<p>
+    <b>. collapse2 (firstnm) startknownpop=pop (lastnm) endknownpop=pop,</b>
+        <b>by(country)</b>
+<p>
+    <b>* Extract first available observation for pop and year it is for.</b>
+    <b>. gen popdatastart = year if pop &lt; .</b>
+    <b>. collapse2 (firstnm) popdatastart startpop=pop, by(country)</b>
+<p>
+<b><u>Author</u></b>
+<p>
+    David Roodman
+    Center for Global Development
+    Washington, DC
+    droodman@cgdev.org
+<p>
+<b><u>Also see</u></b>
+<p>
+    Manual:  <b>[R] collapse</b>
+<p>
+    Online:  help for collapse, contract, egen, statsby, summarize, tabdisp, 
+             table
+<p>
+</pre>

@@ -1,0 +1,59 @@
+<pre>
+<b>help mail</b>
+-------------------------------------------------------------------------------
+<p>
+<b><u>Title</u></b>
+<p>
+    <b> E-mail partial progress from within stata code</b>
+<p>
+<b><u>Syntax</u></b>
+<p>
+        <b>mail</b> From: sender@site1; To:recipient@site2; Subject: #;# [using
+                 filename] [<b>,</b> <i>options</i>]
+<p>
+<b><u>Description</u></b>
+<p>
+    <b>mail</b> uses the OS's underlying sendmail program to send you emails.  It is
+    meant to be used from withing programs running for a long time and send
+    emails to either an email-to-sms gateway of your sms provider or to a
+    mail push service so that you get progress reports on your cell phone or
+    handheld in the form of sms or email.  It can append a number of lines
+    from a given file typically the last lines from the file your program is
+    logging into. For that you need to install<b> ashell</b> (ssc install ashell)
+<p>
+<p>
+<b><u>Options</u></b>
+<p>
+        +------+
+    ----+ Main +-------------------------------------------------------------
+<p>
+    <b>using filename</b> append a max of 50 lines of bottom of filename to body.
+<p>
+    <b>,lines(integer 50)</b> Makes sense in the presence of "using filename".
+        Modifies the default of 50.
+<p>
+<b><u>Remarks</u></b>
+<p>
+    This program will work on MacOS X, Linux, Unix and the like. Could be
+    made to work on windows. May port it there if demand manifests itself.
+<p>
+<p>
+<b><u>Examples</u></b>
+The command below
+    <b>. mail From: nikos@iza.org; To: nikos@iza.org; Subject: request; How</b>
+        <b>about windows?</b>
+will send an email looking like this:
+------------------- 
+From: nikos@iza.org
+To: nikos@iza.org 
+Subject: request
+<p>
+How about windows? 
+------------------
+<p>
+<b><u> Author</u></b>
+Dr Nikos Askitas, IZA, Bonn, Germany.
+Email: nikos@@iza.org
+<p>
+<p>
+</pre>

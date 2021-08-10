@@ -1,0 +1,89 @@
+<pre>
+-------------------------------------------------------------------------------
+help for <b>extremes</b>
+-------------------------------------------------------------------------------
+<p>
+<b><u>List extreme values of a variable</u></b>
+<p>
+        <b>extremes</b> <i>numvar</i> [<i>other_vars</i>] [<b>if</b> <i>exp</i>] [<b>in</b> <i>range</i>] [ <b>,</b> <b>n(</b><i>#</i><b>)</b> {
+                 <b><u>freq</u></b><b>uencies</b> | <b>iqr</b>[<b>(</b><i>#</i><b>)</b>] } <b><u>hi</u></b><b>gh</b> <b><u>lo</u></b><b>w</b> <i>list_options</i> ]
+<p>
+    <b>by</b> <i>...</i><b>:</b> may be used with <b>extremes</b>; see help by.
+<p>
+<p>
+<b><u>Description</u></b>
+<p>
+    <b>extremes</b> lists extreme values of <i>numvar</i>.  If <i>other_vars</i> are also
+    specified, these are also listed for the same observations. By default,
+    the extremes are the 5 lowest and the 5 highest values of <i>numvar</i>. The
+    option <b>n()</b> may be used to change 5 to any other integer. The option <b>iqr</b>,
+    used with or without an argument, may be used to select extremes
+    according to their distance from the nearer quartile.  The option
+    <b>frequencies</b> may be used to show the frequencies of distinct extreme
+    values.  Missing values are ignored.
+<p>
+<p>
+<b><u>Options</u></b>
+<p>
+    <b>n(</b><i>#</i><b>)</b> specifies a number of values to be shown in each tail. <b>n</b> defaults to
+        5.
+<p>
+    <b>frequencies</b> specifies that frequencies of distinct values be shown. That
+        is, imagine the variable treated as discrete and shown as a
+        histogram. The table shows the frequencies that would be shown as the
+        <b>n</b> leftmost and/or the <b>n</b> rightmost bars of the histogram. <i>other_vars</i>
+        may not be specified with this option.
+<p>
+    <b>iqr</b> is short-hand for <b>iqr(1.5)</b>. See just below.
+<p>
+    <b>iqr(</b><i>#</i><b>)</b> specifies use of a rule based on iqr (interquartile range) for
+        identifying extremes. That is, calculate
+<p>
+                (value - upper quartile ) / iqr
+<p>
+        for any values at or above the upper quartile and
+<p>
+                (value - lower quartile) / iqr
+<p>
+        for any above at or below the lower quartile.  Values will be shown
+        if this ratio equals or exceeds <i>#</i> in absolute value. <b>iqr(1.5)</b>
+        corresponds to a common rule for identifying individual points on box
+        plots. <i>#</i> may be 0 or positive.
+<p>
+    <b>frequencies</b> may not be combined with <b>iqr</b> or <b>iqr()</b>.
+<p>
+    <b>high</b> specifies that only high values should be shown.
+<p>
+    <b>low</b> specifies that only low values should be shown.
+<p>
+    <i>list_options</i> are options of list other than <b>noobs</b> and <b>subvarname</b>.
+<p>
+<p>
+<b><u>Examples</u></b>
+<p>
+    . extremes price make
+<p>
+    . extremes price make, iqr
+<p>
+    . extremes price make, iqr(3)
+<p>
+    . bysort foreign: extremes price make, iqr
+<p>
+<p>
+<b><u>Author</u></b> 
+<p>
+        Nicholas J. Cox, University of Durham, U.K.
+        n.j.cox@durham.ac.uk
+<p>
+<p>
+<b><u>Acknowledgement</u></b> 
+<p>
+    This program owes a debt to Michael N. Mitchell's <b>hilo</b>.  A problem posed
+    by Sylvain Friederich led to tabulation by frequencies.
+<p>
+<p>
+<b><u>Also see</u></b>
+<p>
+    On-line:  help for list, hilo (if installed), adjacent (if installed)
+<p>
+</pre>

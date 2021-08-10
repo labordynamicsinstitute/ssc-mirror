@@ -1,0 +1,329 @@
+<pre>
+-------------------------------------------------------------------------------
+help for <b>punaf</b>                                                   (Roger Newson)
+-------------------------------------------------------------------------------
+<p>
+<b><u>Population attributable and unattributable fractions for cohort and cross-secti</u></b>
+<b><u>&gt; onal studies</u></b>
+<p>
+        <b>punaf</b> [<i>if</i>] [<i>in</i>] [<i>weight</i>] , [ <b><u>at</u></b><b>spec(</b><i>atspec</i><b>)</b> <b><u>atz</u></b><b>ero(</b><i>atspec0</i><b>)</b>
+                     <b>subpop(</b><i>subspec</i><b>)</b> <b><u>pr</u></b><b>edict(</b><i>pred_opt</i><b>)</b> <b>vce(</b><i>vcespec</i><b>)</b> <b>no</b><b><u>e</u></b><b>sample</b>
+                     <b>force</b> <b><u>iter</u></b><b>ate(</b><i>#</i><b>)</b> <b><u>ef</u></b><b>orm</b> <b><u>l</u></b><b>evel(</b><i>#</i><b>)</b> <b>post</b> ]
+<p>
+    where <i>atspec</i> and <i>atspec0</i> are at-specifications recognized by the <b>at()</b>
+    option of <b>margins</b>, <i>subspec</i> is a subpopulation specificarion of the form
+    recognized by the <b>subpop()</b> option of <b>margins</b>, and <i>vcespec</i> is a
+    variance-covariance specification of the form recognized by <b>margins</b>, and
+    must have one of the values
+<p>
+    <b>delta</b> | <b>unconditional</b>
+<p>
+    <b>fweight</b>s, <b>aweight</b>s, <b>iweight</b>s, <b>pweight</b>s are allowed; see weight.
+<p>
+<p>
+<b><u>Description</u></b>
+<p>
+    <b>punaf</b> calculates confidence intervals for population attributable
+    fractions, and also for scenario means and their ratio, known as the
+    population unattributable fraction.  <b>punaf</b> can be used after an
+    estimation command whose predicted values are interpreted as conditional
+    arithmetic means, such as <b>logit</b>, <b>logistic</b>, <b>poisson</b>, or <b>glm</b>.  It estimates
+    the logs of two scenario means, a baseline scenario ("Scenario 0") and a
+    fantasy scenario ("Scenario 1"), in which one or more exposure variables
+    are assumed to be set to particular values (typically zero), and any
+    other predictor variables in the model are assumed to remain the same.
+    It also estimates the log of the ratio of the Scenario 1 mean to the
+    Scenario 0 mean.  This ratio is known as the population unattributable
+    fraction, and is subtracted from 1 to derive the population attributable
+    fraction, defined as the proportion of the mean of the outcome variable
+    attributable to living in Scenario 0 instead of Scenario 1.
+<p>
+<p>
+<b><u>Options for </u></b><b><u>punaf</u></b>
+<p>
+    <b>atspec(</b><i>atspec</i><b>)</b> is an at-specification, allowed as a value of the <b>at()</b>
+        option of <b>margins</b>.  This at-specification must specify a single
+        scenario ("Scenario 1"), defined as a fantasy world in which a subset
+        of the predictor variables in the model are set to values different
+        from their value in the baseline scenario (denoted "Scenario 0" and
+        equal to the real-life scenario unless <b>atzero()</b> is specified).  <b>punaf</b>
+        uses the <b>margins</b> command to estimate the arithmetic mean values of
+        the outcome under Scenarios 0 and 1, and then uses <b>nlcom</b> to estimate
+        the logs of these 2 scenario means, and of the ratio of the Scenario
+        1 mean to the Scenario 0 mean, known as the population unattributable
+        fraction (PUF).  The PUF, and its confidence limits, are subtracted
+        from 1 to calculate a confidence interval for the population
+        attributable fraction (PAF).  If <b>atspec()</b> is not specified, then its
+        default value is <b>atspec((asobserved) _all)</b>, implying that Scenario 1
+        is the real-life baseline scenario, represented by the predictor
+        values actually present.
+<p>
+    <b>atzero(</b><i>atspec0</i><b>)</b> is an at-specification, allowed as a value of the <b>at()</b>
+        option of <b>margins</b>.  This at-specification must specify a single
+        baseline scenario ("Scenario 0"), defined as an alternative fantasy
+        world in which a subset of predictors in the model are set to the
+        values specified by <i>atspec0</i>.  Scenario 0 will then be compared to the
+        "Scenario 1" specified by the <b>atspec()</b> option.  If <b>atzero()</b> is not
+        specified, then its default value is <b>atzero((asobserved) _all)</b>,
+        implying that Scenario 0 is the real-life baseline scenario,
+        represented by the predictor values actually present.
+<p>
+    <b>subpop(</b><i>subspec</i><b>)</b>, <b>predict(</b><i>pred_opt</i><b>)</b> and <b>vce(</b><i>vcespec</i><b>)</b> have the same form
+        and function as the options of the same names for <b>margins</b>.  They
+        specify the subpopulation, the predict option(s), and the
+        variance-covariance matrix formula, respectively, used to estimate
+        the scenario means, and therefore to estimate the population
+        unattributable and attributable fractions.
+<p>
+    <b>noesample</b> has the same function as the option of the same name for 
+        <b>margins</b>.  It specifies that computations will not be restricted to
+        the estimation sample used by the previous estimation command.
+<p>
+    <b>force</b> has the same function as the option of the same name for <b>margins</b>.
+<p>
+    <b>iterate(</b><i>#</i><b>)</b> has the same form and function as the option of the same name
+        for <b>nlcom</b>.  It specifies the number of iterations used by <b>nlcom</b> to
+        find the optimal step size to calculate the numerical derivatives of
+        the logs of the scenario means and of their ratio, with respect to
+        the original scenario means calculated by <b>margins</b>.
+<p>
+    <b>eform</b> specifies that <b>punaf</b> will display estimates, <i>P</i>-values and
+        confidence limits for the scenario means and their ratio, instead of
+        for their logs.  If <b>eform</b> is not specified, then confidence intervals
+        for the logs are displayed.  In either case, <b>punaf</b> also displays a
+        confidence interval for the population attributable fraction (PAF).
+<p>
+    <b>level(</b><i>#</i><b>)</b> specifies the percentage confidence level to be used in
+        calculating the confidence intervals.  If it is not specified, then
+        it is taken from the current value of the c-class value <b>c(level)</b>,
+        which is usually 95.
+<p>
+    <b>post</b> specifies that <b>punaf</b> will post in <b>e()</b> the estimation results for
+        estimating the logs of the scenario means and of their ratio, the
+        PUF.  If <b>post</b> is not specified, then any existing estimation results
+        are left in <b>e()</b>.  Note that the estimation results posted are for the
+        logs of the scenario means and of their ratio (the PUF), whether or
+        not <b>eform</b> is specified.
+<p>
+<p>
+<b><u>Remarks</u></b>
+<p>
+    <b>punaf</b> essentially implements the method for estimating population
+    attributable fractions (PAFs) recommended by Greenland and Drescher
+    (1993) for cohort and cross-sectional studies.  This source recommended
+    the use of the Normalizing and variance-stabilizing transformation
+<p>
+    <b>log(PUF) = log(1-PAF)</b>
+<p>
+    to define confidence intervals for the PAF.  <b>punaf</b> starts by estimating
+    the logs of the scenario means and of their ratio (the PUF), using 
+    <b>margins</b> and <b>nlcom</b>.  The results of this estimation are stored in <b>e()</b>, if
+    the option <b>post</b> is specified.  These estimation results may be saved in
+    an output dataset (or resultsset) by the <b>parmest</b> package, which can be
+    downloaded from SSC.
+<p>
+    <b>punaf</b> assumes that the most recent estimation command estimates the
+    parameters of a regression model, whose fitted values are conditional
+    arithmetic mean outcomes, which must be positive.  It is the user's
+    responsibility to ensure that this is the case.  However, it will be true
+    if the conditional means are defined using a generalized linear model
+    with a log, logit, probit or complementary log-log link function.
+<p>
+    <b>punaf</b> is intended to replace some of the functions of the <b>aflogit</b> package
+    (Brady, 1998).  <b>aflogit</b> was written in Version 6 of Stata, and therefore
+    will not work if the user uses long variable names and factor variables,
+    which were introduced in later Stata versions.
+<p>
+    Note that <b>punaf</b> (unlike <b>aflogit</b>) does not implement the formulas for
+    estimating PAFs in case-control studies.  The PUFs and PAFs in
+    case-control studies represent a different kind of parameter from the
+    PUFs and PAFS in cohort and cross-sectional studies, and can be estimated
+    using the <b>punafcc</b> package.  Note, also, that the PAF is a different
+    parameter from the population attributable risk (PAR), which is a
+    between-scenario difference (not a between-scenario ratio), and can be
+    estimated using the <b>regpar</b> package.  Users who need to estimate scenario
+    prevalences (without differences) should use <b>margprev</b>.  Users who need to
+    estimate log-transformed scenario means (without ratios) should use 
+    <b>marglmean</b>.  The <b>punafcc</b>, <b>regpar</b>, <b>margprev</b> and <b>marglmean</b> packages can be
+    downloaded from SSC.
+<p>
+    The general principles behind scenario comparisons in generalized linear
+    models were introduced by Lane and Nelder (1982).
+<p>
+<p>
+<b><u>Examples</u></b>
+<p>
+    The following examples use the dataset <b>lbw.dta</b>, provided by Hosmer and
+    Lemeshow (1988) and used in <b>[R] logistic</b> and distributed by Stata Press.
+    This dataset has 1 observation for each of a sample of pregnancies, and
+    data on the birth weight of the baby and on a list of predictive
+    variables, which might be assumed to be causal by some scientists.
+<p>
+    Setup
+<p>
+        <b>.use http://www.stata-press.com/data/r11/lbw.dta, clear</b>
+        <b>.describe</b>
+<p>
+    The following example estimates population unattributable and
+    attributable fractions for maternal smoking during pregnancy as a
+    predictor of low birth weight.  This is done by comparing "Scenario 1" (a
+    fantasy world in which no pregnant women smoke) with "Scenario 0" (the
+    real world in which the data were collected).
+<p>
+        <b>. logit low i.race i.smoke, or robust</b>
+        <b>. punaf, at(smoke=0) eform</b>
+<p>
+    The following example estimates population unattributable and
+    attributable fractions for maternal smoking and non-white race.  This is
+    done by comparing "Scenario 1" (a fantasy world in which all pregnant
+    women are white and no pregnant women smoke) with "Scenario 0" (the real
+    world in which the data were collected).
+<p>
+        <b>.logit low i.race i.smoke, or robust</b>
+        <b>.punaf, at(smoke=0 race=1) eform</b>
+<p>
+    The following example demonstrates the use of <b>punaf</b> with a univariate
+    model of low birth weight with respect to maternal smoking status, to
+    estimate the total and exposed PAFs output by <b>cs</b>.  We start by calling <b>cs</b>
+    to calculate the total and exposed attributable fractions.  We then use 
+    <b>logit</b> to estimate the odds ratio of low birth weight with respect to
+    maternal smoking, and use <b>punaf</b> to estimate the scenario means and PAFs,
+    first for the total population, then for the smoking-exposed
+    subpopulation.  Finally, we use <b>punaf</b> with the <b>atzero()</b> option to compare
+    2 alternative fantasy scenarios, a "Scenario 0" in which no mothers smoke
+    and a "Scenario 1" in which all mothers smoke.  Note that the PUF in the
+    third scenario comparison is equal to the risk ratio output by <b>cs</b>, with
+    very similar confidence limits.  Note, also, that, in this comparison,
+    the PAF is negative, because a world of non-smoking mothers would have
+    fewer low birth weight babies than a world of smoking mothers.
+<p>
+        <b>.cs low smoke</b>
+        <b>.logit low i.smoke, or robust</b>
+        <b>.punaf, eform at(smoke=0)</b>
+        <b>.punaf if smoke==1, eform at(smoke=0)</b>
+        <b>.punaf, eform at(smoke=1) atzero(smoke=0)</b>
+<p>
+    The following example demonstrates the use of <b>punaf</b> with the <b>parmest</b> and 
+    <b>creplace</b> packages, downloadable from SSC.  The population unattributable
+    and attributable fractions for smoking are estimated using <b>punaf</b> (with
+    the <b>post</b> option), and saved, using <b>parmest</b>, in a dataset in memory,
+    overwriting the original dataset, with 1 observation for each of the 3
+    original parameters, named <b>"Scenario_0"</b>, <b>"Scenario_1"</b> and <b>"PUF"</b>, and data
+    on the estimates, confidence limits, <i>P</i>-values, and other parameter
+    attributes.  We then use <b>replace</b> and <b>creplace</b> to replace the confidence
+    interval for the PUF with a confidence interval for the PAF, and <b>describe</b>
+    and <b>list</b> the new dataset.
+<p>
+        <b>. logit low i.race i.smoke, or robust</b>
+        <b>. punaf, at(smoke=0) eform post</b>
+        <b>. parmest, eform norestore</b>
+        <b>. foreach Y of var estimate min* max* {</b>
+        <b>. replace `Y'=1-`Y' if parm=="PUF"</b>
+        <b>. }</b>
+        <b>. creplace min* max* if parm=="PUF"</b>
+        <b>. replace parm="PAF" if parm=="PUF"</b>
+        <b>. describe</b>
+        <b>. list</b>
+<p>
+<p>
+<b><u>Saved results</u></b>
+<p>
+    <b>punaf</b> saves the following in <b>r()</b>:
+<p>
+    Scalars        
+      <b>r(rank)</b>             rank of <b>r(V)</b>
+      <b>r(N)</b>                number of observations
+      <b>r(N_sub)</b>            subpopulation observations
+      <b>r(N_clust)</b>          number of clusters
+      <b>r(N_psu)</b>            number of samples PSUs, survey data only
+      <b>r(N_strata)</b>         number of strata, survey data only
+      <b>r(df_r)</b>             variance degrees of freedom, survey data only
+      <b>r(N_poststrata)</b>     number of post strata, survey data only
+      <b>r(k_margins)</b>        number of terms in <i>marginlist</i>
+      <b>r(k_by)</b>             number of subpopulations
+      <b>r(k_at)</b>             number of <b>at()</b> options (always 2)
+      <b>r(level)</b>            confidence level of confidence intervals
+<p>
+    Macros         
+      <b>r(atzero)</b>           <b>atzero()</b> option
+      <b>r(atspec)</b>           <b>atspec()</b> option
+<p>
+    Matrices       
+      <b>r(cimat)</b>            vector containing estimates and confidence limits
+                            for the PAF
+      <b>r(b)</b>                vector of logs of scenario means and their ratio
+      <b>r(V)</b>                estimated variance-covariance matrix of the logs of
+                            scenario means and their ratio
+<p>
+    If <b>post</b> is specified, <b>punaf</b> also saves the following in <b>e()</b>:
+<p>
+    Scalars        
+      <b>e(rank)</b>             rank of <b>e(V)</b>
+      <b>e(N)</b>                number of observations
+      <b>e(N_sub)</b>            subpopulation observations
+      <b>e(N_clust)</b>          number of clusters
+      <b>e(N_psu)</b>            number of samples PSUs, survey data only
+      <b>e(N_strata)</b>         number of strata, survey data only
+      <b>e(df_r)</b>             variance degrees of freedom, survey data only
+      <b>e(N_poststrata)</b>     number of post strata, survey data only
+      <b>e(k_margins)</b>        number of terms in <i>marginlist</i>
+      <b>e(k_by)</b>             number of subpopulations
+      <b>e(k_at)</b>             number of <b>at()</b> options (always 2)
+<p>
+    Macros         
+      <b>e(cmd)</b>              <b>punaf</b>
+      <b>e(predict)</b>          program used to implement <b>predict</b>
+      <b>e(atzero)</b>           <b>atzero()</b> option
+      <b>e(atspec)</b>           <b>atspec()</b> option
+      <b>e(properties)</b>       <b>b V</b>
+<p>
+    Matrices       
+      <b>e(b)</b>                vector of logs of scenario means and their ratio
+      <b>e(V)</b>                estimated variance-covariance matrix of the logs of
+                            scenario means and their ratio
+      <b>e(V_srs)</b>            simple-random-sampling-without-replacement
+                            (co)variance hat V_srswor, if <b>svy</b>
+      <b>e(V_srswr)</b>          simple-random-sampling-with-replacement
+                            (co)variance hat V_srswr, if <b>svy</b> and <b>fpc()</b>
+      <b>e(V_msp)</b>            misspecification (co)variance hat V_msp, if <b>svy</b> and
+                            available
+<p>
+    Functions      
+      <b>e(sample)</b>           marks estimation sample
+<p>
+<p>
+<b><u>Author</u></b>
+<p>
+    Roger Newson, National Heart and Lung Institute, Imperial College London,
+    UK.
+    Email: r.newson@imperial.ac.uk
+<p>
+<p>
+<b><u>References</u></b>
+<p>
+<a name="brady_1998"></a>    Brady A.  1998.  sbe21: Adjusted population attributable fractions from
+        logistic regression.  <i>Stata Technical Bulletin</i> <b>STB-42</b>: 8-12.
+        Download from the <i>Stata Technical Bulletin</i> website.
+<p>
+<a name="greenland_1993"></a>    Greenland S. and K. Drescher.  1993.  Maximum likelihood estimation of
+        the attributable fraction from logistic models.  <i>Biometrics</i> <b>49</b>:
+        865-872.
+<p>
+<a name="hosmer_1988"></a>    Hosmer Jr., D. W., S. Lemeshow, and J. Klar.  1988.  Goodness-of-fit
+        testing for the logistic regression model when the estimated
+        probabilities are small.  <i>Biometrical Journal</i> <b>30</b>: 911–924.
+<p>
+<a name="lane_1982"></a>    Lane, P. W., and J. A. Nelder.  1982.  Analysis of covariance and
+        standardization as instances of prediction.<i>  Biometrics</i> <b>38</b>: 613–621.
+<p>
+<p>
+<b><u>Also see</u></b>
+<p>
+    Manual:  <b>[R] margins</b>, <b>[R] nlcom</b>, <b>[R] logistic</b>, <b>[R] logit</b>, <b>[R] poisson</b>,
+             <b>[R] glm</b>
+<p>
+      Help:  <b>[R] margins</b>, <b>[R] nlcom</b>, <b>[R] logistic</b>, <b>[R] logit</b>, <b>[R] poisson</b>, 
+             <b>[R] glm</b>
+             <b>punafcc</b>, <b>regpar</b>, <b>margprev</b>, <b>marglmean</b>, <b>parmest</b>, <b>creplace</b>, <b>aflogit</b>
+             if installed
+</pre>

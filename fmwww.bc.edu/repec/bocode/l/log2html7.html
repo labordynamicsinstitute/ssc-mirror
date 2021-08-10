@@ -1,0 +1,123 @@
+<pre>
+-------------------------------------------------------------------------------
+help for <b>log2html7</b>                               SSC distribution 25 March 2003
+-------------------------------------------------------------------------------
+<p>
+<b><u>Translate a SMCL log file into HTML</u></b>
+<p>
+        <b>log2html7</b> <i>smclfile</i> [<b>,</b> <b>replace</b> <b><u>ti</u></b><b>tle(</b><i>string</i><b>)</b> <b><u>in</u></b><b>put(</b><i>string</i><b>)</b>
+            <b><u>r</u></b><b>esult(</b><i>string</i><b>)</b> <b>bg(</b><i>string</i><b>)</b> ]
+<p>
+<p>
+<b><u>Description</u></b> 
+<p>
+<b>log2html7</b> is for use after <b>log</b>; see log. If you are using Stata 8 or later, use
+<b>log2html</b> instead.
+<p>
+<b>log2html7</b> makes use of an undocumented command in Stata version 7, <b>log html</b>,
+which generates HTML log files from SMCL log files. SMCL, the Stata Markup and
+Control Language smcl, is the default log file format introduced with version
+7, and contains markup (similar to HTML) around elements of the log file. To
+use <b>log2html7</b>, you must first generate the default SMCL log file, not a text
+log file, with the file extension <b>.smcl</b>.  Thus if you have <b>set logtype text</b> to
+prevent the generation of SMCL log files, you must either turn it off or
+explicitly state that a SMCL log file is to be produced, as by<b> log using</b>
+<b>my.smcl</b>.
+<p>
+<b>log2html7</b> requires only the base name of the logfile: e.g. <b>my</b>, if the logfile
+is named <b>my.smcl</b>. The name of the HTML file produced will be this base name
+with <b>.html</b> appended, e.g. <b>my.html</b>.
+<p>
+<b>log2html7</b> requires that at least the 6 December 2001 update to Stata version 7
+be installed. If a message "Invalid syntax" is encountered, please ensure that
+<b>query born</b> returns a date no earlier than 06 Dec 2001.
+<p>
+<p>
+<b><u>Limitation</u></b> 
+<p>
+<b>log2html7</b> cannot reliably echo <i>names</i> of local or global macros given on command
+lines in the log. This is because before being passed to the Stata command
+<b>file</b>, which does most of the hard work within <b>log2html7</b>, they are caught by
+Stata's parser and substituted with their current <i>contents</i>, if any. The usual
+result is to replace macro names with empty strings, although on occasion you
+may be fortunate enough to have the correct contents of a macro substituted, or
+unfortunate enough to have something quite different substituted, if the
+contents of a macro have changed since the log was created. This behavior is
+outside the control of the program authors, who know of no work-around in Stata
+7.  The limitation does not apply to <b>log2html</b> used in conjunction with Stata 8
+or higher.
+<p>
+<p>
+<b><u>Options</u></b>
+<p>
+<b>replace</b> specifies that if the HTML file exists, it is to be replaced.
+<p>
+<b>title()</b> specifies a string to be placed in the &lt;TITLE&gt; of the HTML page, and on
+    the first line of the body of the page, using a &lt;H2&gt; heading.
+<p>
+The remaining options pertain to color choices. By default, <b>loghtml</b> produces a
+complete HTML page (i.e. with &lt;HTML&gt; and &lt;BODY&gt; tags) with a white background.
+Input lines (those resulting from user input) are rendered in RGB color
+"CC6600" (a shade of brown) and highlighted result-window lines are rendered in
+RGB color "000099" (a shade of blue).  The options permit other choices for
+these three colors. For best results, one of the 216 "web safe" colors that
+display properly in web browsers on all computers in 256-color mode should be
+used. Also note that some combinations of colors are not workable; e.g. a black
+("000000") background will cause all normally-rendered text to disappear.
+<p>
+<b>input()</b> allows the specification of a different color for the user input lines,
+    in standard RGB notation (three duples of two bytes, each 00-FF).
+<p>
+<b>result()</b> allows the specification of a different color for the highlighted
+    result lines, in standard RGB notation.
+<p>
+<b>bg()</b> allows the specification of a different color for the background, in
+    standard RGB notation. For convenience, the argument may be given as "gray"
+    or "grey", approximating most browsers' default behavior.
+<p>
+<p>
+<b><u>Examples</u></b>
+<p>
+    . log using autostudy, replace
+    . use auto
+    . desc
+    . summ
+    . regress price mpg rep78
+    . log close
+<p>
+    . log2html7 autostudy, replace
+<p>
+    . log2html7 autostudy, replace ti("Automobile study")
+<p>
+    . log2html7 autostudy, replace in(ff3300) res(003333) bg(grey)
+<p>
+<p>
+<b><u>Reference</u></b>
+<p>
+       Priester, Gary W. 2000. All you need to know about web safe colors. 
+       http://www.webdevelopersjournal.com/articles/websafe1/websafe_colors.htm
+&gt; l
+<p>
+<p>
+<b><u>Acknowledgements</u></b>
+<p>
+                We acknowledge Ken Higbee's assistance with the documentation o
+&gt; f 
+                <b>log html</b> and suggestions for improvement of this routine.
+                
+                
+<b><u>Authors</u></b> 
+<p>
+        Christopher F Baum, Boston College, USA
+        baum@bc.edu
+        
+        Nicholas J. Cox, University of Durham, UK
+        n.j.cox@durham.ac.uk
+<p>
+<p>
+<b><u>Also see</u></b> 
+<p>
+ Manual:  <b>[R] log</b>, <b>[P] smcl</b>
+On-line:  help for log, smcl 
+<p>
+</pre>

@@ -1,0 +1,144 @@
+<pre>
+-------------------------------------------------------------------------------
+<b>help: </b><b>lmcovnlsur</b>                                                   <b>dialog:</b> <b>lmco</b>
+<b>&gt; vnlsur</b>
+-------------------------------------------------------------------------------
+<p>
+<b>        </b>+-------+
+<b>    </b>----+<b> Title </b>+------------------------------------------------------------
+<p>
+    <b>lmcovnlsur: Breusch-Pagan LM Diagonal Covariance Matrix Test after NL-SUR</b>
+<p>
+<a name="00"></a><b>        </b>+-------------------+
+<b>    </b>----+<b> Table of Contents </b>+------------------------------------------------
+<p>
+     <b>Syntax</b>
+     <b>Description</b>
+     <b>Saved Results</b>
+     <b>References</b>
+<p>
+ *** <b>Examples</b>
+<p>
+     <b>Author</b>
+<p>
+<a name="01"></a><b>        </b>+--------+
+<b>    </b>----+<b> Syntax </b>+-----------------------------------------------------------
+<p>
+          <b>lmcovnlsur</b>
+<p>
+<a name="02"></a><b>        </b>+-------------+
+<b>    </b>----+<b> Description </b>+------------------------------------------------------
+<p>
+  <b>lmcovnlsur</b> computes Breusch-Pagan LM Diagonal Covariance Matrix Test after:
+   - (NL-SUR) Seemingly Unrelated Regression <b>nlsur</b> for sets of equations.
+ 
+<p>
+<a name="03"></a><b>        </b>+---------------+
+<b>    </b>----+<b> Saved Results </b>+----------------------------------------------------
+<p>
+  <b>lmcovnlsur</b> saves the following in <b>r()</b>:
+<p>
+   <b>r(lmcov)</b>        Lagrange Multiplier LM Test
+   <b>r(lmcovp)</b>       Lagrange Multiplier LM Test P-Value
+   <b>r(lmcovdf)</b>      Chi2 Degrees of Freedom
+<p>
+<a name="04"></a><b>        </b>+------------+
+<b>    </b>----+<b> References </b>+-------------------------------------------------------
+<p>
+    Judge, Georege, R. Carter Hill, William . E. Griffiths, Helmut Lutkepohl,
+        &amp; Tsoung-Chao Lee (1988)<b> "Introduction To The Theory And Practice Of</b>
+        <b>Econometrics",</b> <i>2nd ed., John Wiley &amp; Sons, Inc., New York, USA</i>;
+        456-461.
+<p>
+    Judge, Georege, W. E. Griffiths, R. Carter Hill, Helmut Lutkepohl, &amp;
+        Tsoung-Chao Lee(1985)<b> "The Theory and Practice of Econometrics",</b> <i>2nd</i>
+        <i>ed., John Wiley &amp; Sons, Inc., New York, USA</i>.
+<p>
+<a name="05"></a><b>        </b>+----------+
+<b>    </b>----+<b> Examples </b>+---------------------------------------------------------
+<p>
+ clear all
+<p>
+ sysuse lmcovnlsur.dta , clear
+<p>
+* (1) NL-SUR Model:
+<p>
+ nlsur (y1={B10}+{B11}*y2+{B12}*x1+{B13}*x2) (y2={B20}+{B21}*y1+{B22}*x3+{B23}*
+&gt; x4)
+<p>
+ lmcovnlsur
+<p>
+ return list
+<p>
+* (2) SUR Model:
+<p>
+ sureg (y1 y2 x1 x2) (y2 y1 x3 x4)
+<p>
+ lmcovnlsur
+<p>
+ return list
+<p>
+. clear all
+. sysuse lmcovnlsur.dta , clear
+. nlsur (y1={B10}+{B11}*y2+{B12}*x1+{B13}*x2) (y2={B20}+{B21}*y1+{B22}*x3+{B23}
+&gt; *x4)
+<p>
+FGNLS regression 
+---------------------------------------------------------------------
+       Equation |       Obs  Parms       RMSE      R-sq     Constant
+----------------+----------------------------------------------------
+ 1           y1 |        17      4   8.827101    0.8628          B10
+ 2           y2 |        17      4   10.71362    0.8332          B20
+---------------------------------------------------------------------
+<p>
+------------------------------------------------------------------------------
+             |      Coef.   Std. Err.      z    P&gt;|z|     [95% Conf. Interval]
+-------------+----------------------------------------------------------------
+        /B10 |   159.7348   48.37047     3.30   0.001     64.93046    254.5392
+        /B11 |   .1440474   .1473363     0.98   0.328    -.1447264    .4328211
+        /B12 |   .3736436   .4464905     0.84   0.403    -.5014617    1.248749
+        /B13 |   -1.17085   .2398822    -4.88   0.000     -1.64101   -.7006895
+        /B20 |   40.22012   31.80722     1.26   0.206    -22.12087    102.5611
+        /B21 |  -.0911744   .2613464    -0.35   0.727    -.6034038    .4210551
+        /B22 |  -.3973436   .2758714    -1.44   0.150    -.9380417    .1433545
+        /B23 |   2.480269    1.01631     2.44   0.015     .4883381    4.472201
+------------------------------------------------------------------------------
+<p>
+. lmcovnlsur
+==============================================================================
+* Breusch-Pagan LM Diagonal Covariance Matrix Test (fgnls) 
+==============================================================================
+    Ho: Diagonal Disturbance Covariance Matrix (Independent Equations)
+<p>
+    Lagrange Multiplier Test  =    0.00149
+    Degrees of Freedom        =        1.0
+    P-Value &gt; Chi2(1)         =    0.96921
+==============================================================================
+<p>
+<a name="06"></a><b>        </b>+--------+
+<b>    </b>----+<b> Author </b>+-----------------------------------------------------------
+<p>
+  <b>Emad Abd Elmessih Shehata</b>
+  <b>Assistant Professor</b>
+  <b>Agricultural Research Center - Agricultural Economics Research Institute - Eg</b>
+<b>&gt; ypt</b>
+  <b>Email:   </b>emadstat@hotmail.com
+  <b>WebPage:                </b>http://emadstat.110mb.com/stata.htm
+  <b>WebPage at IDEAS:       </b>http://ideas.repec.org/f/psh494.html
+  <b>WebPage at EconPapers:  </b>http://econpapers.repec.org/RAS/psh494.htm
+<p>
+<b>        </b>+---------------------+
+<b>    </b>----+<b> lmcovnlsur Citation </b>+----------------------------------------------
+<p>
+ <b>Shehata, Emad Abd Elmessih (2012)</b>
+ <b>LMCOVNLSUR: "Breusch-Pagan Lagrange Multiplier Diagonal Covariance Matrix</b>
+          <b>Test after (NL-SUR) Regressions"</b>
+<p>
+<b><u>Online Help:</u></b>
+<p>
+  <b>lmanlsur</b>, <b>lmhnlsur</b>, <b>lmnnlsur</b>, <b>lmcovnlsur</b>, <b>r2nlsur</b>
+  <b>lmareg3</b>, <b>lmhreg3</b>, <b>lmnreg3</b>, <b>lmcovreg3</b>, <b>r2reg3</b>
+  <b>lmasem</b>, <b>lmhsem</b>, <b>lmnsem</b>, <b>lmcovsem</b>, <b>r2sem</b>. <b>(</b><i>if installed</i><b>)</b>.
+<p>
+<p>
+</pre>

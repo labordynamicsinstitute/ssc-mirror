@@ -1,0 +1,87 @@
+<pre>
+-------------------------------------------------------------------------------
+help for <b>ifwins</b>                                               manual:  <b>[R] none</b>
+                                                             dialog:  <b> none</b>    
+-------------------------------------------------------------------------------
+<p>
+<p>
+<b><u>subset dataset by if exp before subsetting by in range</u></b>
+<p>
+        <b>ifwins</b> [<i>if</i>] [<i>in</i>] <b>:</b> <i>stata_cmd</i>
+<p>
+        
+<b><u>Description</u></b>
+<p>
+    <b>ifwins</b> is a prefix command that runs most any Stata command that does not
+    modify the dataset in memory (e.g. generate, replace, etc.).  <b>ifwins</b> will
+    have if subset the dataset before in subsets the dataset.  This is the
+    opposite of what happens when both if and in are used in the same Stata
+    command. For example, the following code will first subset the dataset to
+    the first 10 observations and then subset the dataset to the specified
+    condition:
+<p>
+    <b>. sysuse auto</b>
+    <b>. list if foreign == 1 in 1/10</b>
+<p>
+    Since the auto.dta dataset is sorted by the variable <b>foreign</b>, the above
+    code will not list any observations because in the first 10 observations
+    <b>foreign == 0</b> .  So, if looses and in wins when "battling" over which one
+    subsets the dataset before the other one does.
+<p>
+    If you want to run a Stata command on a certain number of observations
+    when a certain condition exists, you would have to:
+<p>
+    <b>. preserve</b>
+    <b>. keep if foreign == 1</b>
+    <b>. list in 1/10 make turn weight</b>
+    <b>. restore</b>
+<p>
+    or use <b>ifwins</b> as a prefix to the desired Stata command:
+<p>
+    <b>. ifwins if foreign == 1 in 1/10 : list make turn weight</b>
+<p>
+    The above will list up to the first 10 observations of when the variable
+    <b>foreign</b> is equal to 1 (one).  So now if wins!...but in is still helpful.
+<p>
+<b><u>Remarks</u></b>
+<p>
+    if and in are not allowed in the Stata command <b>ifwins</b> is specified to
+    run.
+ 
+    Since <b>ifwins</b> (when not running the list, browse, edit commands)
+    temporarily subsets the dataset before running the submitted Stata
+    command the observations numbers will not be the same as in the original
+    dataset.  So, the system variables _n and _N as well as the c(N) macro
+    variable are reset to the subsetted dataset before the specified Stata
+    command is run by <b>ifwins</b>. Also, <b>ifwins</b> will never return the error
+    message "Obs. nos. out of range r(198)" if the range specified is at
+    least within the number of observations in the dataset.  <b>ifwins</b> corrects
+    ranges specified by in to at least 1 observation of the specified
+    condition since it is hard to know how many observations will be
+    available after the if condition subsets the dataset.
+<p>
+    The list, browse, edit commands are the only exceptions to the note
+    above.
+<p>
+<b><u>Examples</u></b>
+<p>
+    <b>. ifwins if mpg &lt; 25 in -10/L : list make turn weight</b>
+<p>
+    <b>. ifwins if income &gt; 1000000 in 1/200 : summarize x1 x2 x3 x4 year89</b>
+        <b>year90</b>
+<p>
+<p>
+<b><u>Author</u></b>
+<p>
+    Dan Blanchette
+    The Carolina Population Center
+    University of North Carolina - Chapel Hill, USA
+    dan_blanchette@unc.edu
+<p>
+<p>
+<b><u>Also see</u></b>
+<p>
+    On-line: if and in
+<p>
+<p>
+</pre>

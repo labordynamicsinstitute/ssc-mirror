@@ -1,0 +1,117 @@
+<pre>
+-------------------------------------------------------------------------------
+help for <b>rhetplot</b>
+-------------------------------------------------------------------------------
+<p>
+<b><u>Plot checking for residual heteroscedasticity after model fit</u></b>
+<p>
+        <b>rhetplot</b> <b>,</b> <b>by(</b><i>byvarlist</i><b>)</b> [<i>residualtype</i> <b><u>var</u></b><b>iance</b> <i>lowess_options</i>
+                 <b>plot(</b><i>plot</i><b>)</b> ]
+<p>
+        <b>rhetplot</b> <i>varname</i> [<b>, at(</b><i>numlist</i><b>)</b> | <b><u>g</u></b><b>roup(</b><i>#</i><b>)</b>] [<i>residualtype</i> <b><u>var</u></b><b>iance</b>
+                 <i>lowess_options</i> <b>plot(</b><i>plot</i><b>)</b> ]
+<p>
+        <b>rhetplot</b> [<b>,</b> <b>at(</b><i>numlist</i><b>)</b> | <b><u>g</u></b><b>roup(</b><i>#</i><b>)</b>] <i>residualtype</i> <b><u>var</u></b><b>iance</b>
+                 <i>lowess_options</i> <b>plot(</b><i>plot</i><b>)</b> ]
+<p>
+<p>
+<b><u>Description</u></b>
+<p>
+    <b>rhetplot</b> is for use after <b>regress</b> and similar commands; see help on the
+    command of interest.
+<p>
+    With the first syntax, <b>rhetplot</b> graphs standard deviations (optionally
+    variances) of residuals for the distinct groups formed by combinations of
+    <i>byvarlist</i>.  If <i>byvarlist</i> is a single numeric variable, it is used for the
+    <i>x</i> axis; otherwise <i>byvarlist</i> is used as the argument to <b>egen, group()</b>
+    <b>label</b> to define a grouped variable. See egen.
+<p>
+    With the second syntax, <b>rhetplot</b> graphs standard deviations (optionally
+    variances) of residuals against means of groups of <i>varname</i>.  Groups are
+    defined by the argument of either <b>at()</b> or <b>cut()</b>, used as the
+    corresponding option for <b>egen, cut()</b>. See egen.
+<p>
+    With the third syntax, <b>rhetplot</b> graphs standard deviations (optionally
+    variances) of residuals against means of groups of fitted values from the
+    model.  Groups are defined by the argument of either <b>at()</b> or <b>cut()</b>, used
+    as the corresponding option for <b>egen, cut()</b>.  See egen.
+<p>
+    The residuals are, by default, those calculated by <b>predict, residuals</b> or
+    (if the previous estimation command was <b>glm</b>) by <b>predict, response</b>.
+<p>
+    The graph is produced by lowess. The `smooth' curve shown (unless the
+    number of groups specified is very small) is best regarded as an informal
+    indication of the general pattern of variability of residuals.
+<p>
+    The graph is restricted to the estimation sample.
+<p>
+<p>
+<b><u>Options</u></b>
+<p>
+    <b>by(</b><i>byvarlist</i><b>)</b>, required with the first syntax, specifies that the plot
+        should be of variability of residuals among the distinct groups
+        defined by combinations of <i>byvarlist</i>.
+<p>
+    <b>at(</b><i>numlist</i><b>)</b> or <b>group(</b><i>#</i><b>)</b>, required with the second and third syntaxes,
+        specifies how groups of either a specified variable (second syntax)
+        or fitted values (third syntax) are to be determined.  <b>at()</b> and
+        <b>group()</b> are options of <b>egen, cut()</b>: see help on egen.  In brief, <b>at()</b>
+        specifies lower limits of user-defined classes and <b>group()</b> specifies
+        the number of quantile-based groups with (approximately) equal
+        frequency to be used. (With <b>at()</b>, supply one high value beyond the
+        maximum of the data for best results.)
+<p>
+    <i>residualtype</i> specifies a type of residual other than the default.  The
+        following types are currently supported: <b><u>a</u></b><b>nscombe</b>, <b><u>d</u></b><b>eviance</b>,
+        <b><u>l</u></b><b>ikelihood</b>, <b><u>p</u></b><b>earson</b>, <b><u>r</u></b><b>esiduals</b>, <b><u>resp</u></b><b>onse</b>, <b><u>rsta</u></b><b>ndard</b>, <b><u>rstu</u></b><b>dent</b>, <b><u>s</u></b><b>core</b>,
+        <b><u>w</u></b><b>orking</b>.
+<p>
+    <b>variance</b> specifies plotting of variances rather than standard deviations.
+        Occasionally, especially with counted variables, the natural question
+        may be how far variance is constant or a function of mean fitted
+        values.
+<p>
+    <i>lowess_options</i> are any of the options allowed with lowess.
+<p>
+    <b>plot(</b>plot<b>)</b> provides a way to add other plots to the generated graph; see 
+        plot_option.
+<p>
+<p>
+<b><u>Examples</u></b>
+<p>
+    <b>. webuse systolic</b>
+    <b>. anova systolic drug disease</b>
+    <b>. rhetplot, by(drug disease) xla(1/12, valuelabel)</b>
+<p>
+    <b>. sysuse auto</b>
+    <b>. glm mpg weight, link(power -1)</b>
+    <b>. rhetplot weight, g(7)</b>
+<p>
+    <b>. reg turn length</b>
+    <b>. regplot</b>
+    <b>. rhetplot, g(7)</b>
+    <b>. rhetplot length, g(7)</b>
+<p>
+    <b>. insheet using http://www.kgs.ku.edu/Mathgeo/Books/Stat/ASCII/OCS.TXT,</b>
+        <b>clear</b>
+    <b>. label data "petroleum reservoirs, Outer Continental Shelf, Texas and</b>
+        <b>Louisiana"</b>
+    <b>. label var mmboe "ultimate production, million barrels oil equivalent"</b>
+    <b>. label var area "area of closure, acres"</b>
+    <b>. regress mmboe area</b>
+    <b>. rhetplot area, g(7)</b>
+    <b>. regress log10mmboe log10area</b>
+    <b>. rhetplot log10area, g(7)</b>
+<p>
+<p>
+<b><u>Author</u></b>
+<p>
+    Nicholas J. Cox, University of Durham, U.K.
+    n.j.cox@durham.ac.uk
+<p>
+<p>
+<b><u>Also see</u></b>
+<p>
+    On-line:  help for predict, modeldiag
+<p>
+</pre>

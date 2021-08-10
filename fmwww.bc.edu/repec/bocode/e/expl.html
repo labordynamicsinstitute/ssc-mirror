@@ -1,0 +1,61 @@
+<pre>
+<p>
+<p>
+<p>
+<b>help expl</b>
+-------------------------------------------------------------------------------
+<p>
+<b><u>Title</u></b>
+<p>
+    <b>expl</b> -- Explore folders and files
+<p>
+<a name="syntax"></a><b><u>Syntax</u></b>
+<p>
+        <b>expl</b> [<b>,</b> <i>options</i>]
+<p>
+    <i>options</i>               Description
+    -------------------------------------------------------------------------
+    Main
+      <b>path</b>                 path of the folder or file is located. Symbol "~"
+                            should be used instead ":" in windows
+      <b>nfolder</b>              Folder or File name
+      <b>action</b>               browse or open folder/file.
+    -------------------------------------------------------------------------
+<p>
+<a name="description"></a><b><u>Description</u></b>
+<p>
+    <b>expl</b> list all the folders and files. Stata display clickable link for
+    browsing and opening folders and files
+<p>
+<p>
+<a name="options"></a><b><u>Options</u></b>
+<p>
+        +------+
+    ----+ Main +-------------------------------------------------------------
+<p>
+    <b>path</b> Path of the folder or file located. you have to substitute "~" where
+        : after drive name. However if you only use<b> expl</b> as command no need
+        to specify anything. It will start explaring from current location.
+        Aslo my computer is displayed at the beginning.
+<p>
+    <b>action</b> There are three actions. 1 browse folders(bfolder). 2 Change
+        directory to another folder(folder). 3 Open file or folder(file)
+<p>
+    <b>nfolder</b> Name of the folder or file which need to take the action.
+<p>
+<p>
+<a name="examples"></a><b><u>Examples</u></b>
+<p>
+    <b>. expl</b>
+<p>
+To open C disk on Windows
+<p>
+    <b>. expl, nfolder(c~) action(bfolder)</b>
+<p>
+<p>
+<b><u>Author</u></b>
+    K. Chamara Anuranga
+    Institute for Health Policy
+    Sri Lanka
+    kcanuranga@gmail.com
+</pre>

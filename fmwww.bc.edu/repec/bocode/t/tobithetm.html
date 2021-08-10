@@ -1,0 +1,237 @@
+<pre>
+-------------------------------------------------------------------------------
+<b>help: </b><b>tobithetm</b>                                                        <b>dialog:</b> 
+<b>&gt; tobithetm</b>
+-------------------------------------------------------------------------------
+<p>
+<b>        </b>+-------+
+<b>    </b>----+<b> Title </b>+------------------------------------------------------------
+<p>
+<b> tobithetm: Tobit Multiplicative Heteroscedasticity Regression</b>
+<p>
+<b>        </b>+--------+
+<b>    </b>----+<b> Syntax </b>+-----------------------------------------------------------
+<p>
+        <b>tobithetm</b> <i>depvar</i> [<i>indepvars</i>] [<i>if</i>] [<i>in</i>] [<i>weight</i>] <b>,</b> <b>het(</b><i>varlist</i> [<b>,</b>
+                <b><u>off</u></b><b>set(</b><i>varname</i><b>)</b>]<b>)</b> [<i>options</i>]
+<p>
+    <i>options</i>                      Description
+    -------------------------------------------------------------------------
+    Model
+    * <b>het(</b><i>varlist</i>[...]<b>)</b>          independent variables to model the variance
+                                   and possible offset variable
+      <b><u>nocon</u></b><b>stant</b>                 suppress constant term
+      <b><u>off</u></b><b>set(</b><i>varname</i><b>)</b>            include <i>varname</i> in model with coefficient
+                                   constrained to 1
+      <b>asis</b>                       retain perfect predictor variables
+      <b><u>const</u></b><b>raints(</b><i>constraints</i><b>)</b>   apply specified linear constraints
+      <b><u>col</u></b><b>linear</b>                  keep collinear variables
+<p>
+    SE/Robust
+      <b>vce(</b><i>vcetype</i><b>)</b>               <i>vcetype</i> may be <b>oim</b>, <b><u>r</u></b><b>obust</b>, <b><u>cl</u></b><b>uster</b>
+                                   <i>clustvar</i>, <b>opg</b>, <b><u>boot</u></b><b>strap</b>, or <b><u>jack</u></b><b>knife</b>
+<p>
+    Reporting
+      <b><u>l</u></b><b>evel(</b><i>#</i><b>)</b>                   set confidence level; default is <b>level(95)</b>
+      <b>noskip</b>                     perform likelihood-ratio test
+      <b><u>nolr</u></b><b>test</b>                   perform Wald test on variance
+      <b><u>nocnsr</u></b><b>eport</b>                do not display constraints
+      <i>display_options</i>            control spacing and display of omitted
+                                   variables and base and empty cells
+<p>
+    Maximization
+      <i>maximize_options</i>           control the maximization process; seldom
+                                   used
+<p>
+    + <b><u>coefl</u></b><b>egend</b>                 display coefficients' legend instead of
+                                   coefficient table
+    -------------------------------------------------------------------------
+    * <b>het()</b> is required. The full specification is
+      <b>het(</b><i>varlist</i> [<b>,</b> <b><u>off</u></b><b>set(</b><i>varname</i><b>)</b>]<b>)</b>
+    + <b>coeflegend</b> does not appear in the dialog box.
+INCLUDE help fvvarlist2
+    <i>depvar</i>, <i>indepvars</i>, and <i>varlist</i> may contain time-series operators; see 
+      tsvarlist.
+    <b>bootstrap</b>, <b>by</b>, <b>jackknife</b>, <b>rolling</b>, <b>statsby</b>, and <b>svy</b> are allowed; see 
+      prefix.
+    Weights are not allowed with the <b>bootstrap</b> prefix.
+    <b>vce()</b>, <b>noskip</b>, and weights are not allowed with the <b>svy</b> prefix.
+    <b>fweight</b>s, <b>iweight</b>s, and <b>pweight</b>s are allowed; see weight.
+<p>
+<p>
+<b>        </b>+-------------+
+<b>    </b>----+<b> Description </b>+------------------------------------------------------
+<p>
+    <b>tobithetm</b> fits a maximum-likelihood for Tobit Multiplicative
+    Heteroscedasticity Regression.
+<p>
+<p>
+<b>        </b>+---------+
+<b>    </b>----+<b> Options </b>+----------------------------------------------------------
+<p>
+        +-------+
+    ----+ Model +------------------------------------------------------------
+<p>
+    <b>het(</b><i>varlist</i> [<b>,</b> <b>offset(</b><i>varname</i><b>)</b>]<b>)</b> specifies the independent variables and
+        the offset variable, if there is one, in the variance function.
+        <b>het()</b> is required.
+<p>
+    <b>noconstant</b>, <b>offset(</b><i>varname</i><b>)</b>; see <b>[R] estimation options</b>.
+<p>
+    <b>asis</b> forces the retention of perfect predictor variables and their
+        associated perfectly predicted observations and may produce
+        instabilities in maximization; see <b>[R] tobit</b>.
+<p>
+    <b>constraints(</b><i>constraints</i><b>)</b>, <b>collinear</b>; see <b>[R] estimation options</b>.
+<p>
+        +-----------+
+    ----+ SE/Robust +--------------------------------------------------------
+<p>
+INCLUDE help vce_asymptall
+<p>
+        +-----------+
+    ----+ Reporting +--------------------------------------------------------
+<p>
+    <b>level(</b><i>#</i><b>)</b>; see <b>[R] estimation options</b>.
+<p>
+    <b>noskip</b> requests fitting of the constant-only model and calculation of the
+        corresponding likelihood-ratio chi-squared statistic for testing
+        significance of the full model.  By default, a Wald chi-squared
+        statistic is computed for testing the significance of the full model.
+<p>
+    <b>nolrtest</b> specifies that a Wald test of whether <b>lnsigma2</b> = 0 be performed
+        instead of the LR test.
+<p>
+    <b>nocnsreport</b>; see <b>[R] estimation options</b>.
+<p>
+<a name="display_options"></a>    <i>display_options</i>:  <b><u>noomit</u></b><b>ted</b>, <b>vsquish</b>, <b><u>noempty</u></b><b>cells</b>, <b><u>base</u></b><b>levels</b>,
+        <b><u>allbase</u></b><b>levels</b>; see <b>[R] estimation options</b>.
+<p>
+<a name="maximize_options"></a>        +--------------+
+    ----+ Maximization +-----------------------------------------------------
+<p>
+    <i>maximize_options</i>: <b><u>dif</u></b><b>ficult</b>, <b><u>tech</u></b><b>nique(</b><i>algorithm_spec</i><b>)</b>, <b><u>iter</u></b><b>ate(</b><i>#</i><b>)</b>,
+        [<b><u>no</u></b>]<b><u>lo</u></b><b>g</b>, <b><u>tr</u></b><b>ace</b>, <b><u>grad</u></b><b>ient</b>, <b>showstep</b>, <b><u>hess</u></b><b>ian</b>, <b><u>showtol</u></b><b>erance</b>,
+        <b><u>tol</u></b><b>erance(</b><i>#</i><b>)</b>, <b><u>ltol</u></b><b>erance(</b><i>#</i><b>)</b>, <b><u>nrtol</u></b><b>erance(</b><i>#</i><b>)</b>, <b><u>nonrtol</u></b><b>erance</b>,
+        <b>from(</b><i>init_specs</i><b>)</b>; see <b>[R] maximize</b>.  These options are seldom used.
+<p>
+        Setting the optimization type to <b>technique(bhhh)</b> resets the default
+        <i>vcetype</i> to <b>vce(opg)</b>.
+<p>
+    The following option is available with <b>tobithetm</b> but is not shown in the
+    dialog box:
+<p>
+    <b>coeflegend</b>; see <b>[R] estimation options</b>.
+<p>
+<p>
+<b>        </b>+---------------+
+<b>    </b>----+<b> Saved Results </b>+----------------------------------------------------
+<p>
+    <b>tobithetm</b> saves the following in <b>e()</b>:
+<p>
+    Scalars        
+      <b>e(N)</b>                number of observations
+      <b>e(N_f)</b>              number of zero outcomes
+      <b>e(N_s)</b>              number of nonzero outcomes
+      <b>e(k)</b>                number of parameters
+      <b>e(k_eq)</b>             number of equations
+      <b>e(k_eq_model)</b>       number of equations in model Wald test
+      <b>e(k_dv)</b>             number of dependent variables
+      <b>e(k_autoCns)</b>        number of base, empty, and omitted constraints
+      <b>e(df_m)</b>             model degrees of freedom
+      <b>e(ll)</b>               log likelihood
+      <b>e(chi2)</b>             chi-squared
+      <b>e(chi2_c)</b>           chi-squared for heteroskedasticity LR test
+      <b>e(p)</b>                significance
+      <b>e(rank)</b>             rank of <b>e(V)</b>
+      <b>e(ic)</b>               number of iterations
+      <b>e(rc)</b>               return code
+      <b>e(converged)</b>        <b>1</b> if converged, <b>0</b> otherwise
+<p>
+    Macros         
+      <b>e(cmd)</b>              <b>tobithetm</b>
+      <b>e(cmdline)</b>          command as typed
+      <b>e(depvar)</b>           name of dependent variable
+      <b>e(wtype)</b>            weight type
+      <b>e(wexp)</b>             weight expression
+      <b>e(title)</b>            title in estimation output
+      <b>e(clustvar)</b>         name of cluster variable
+      <b>e(offset1)</b>          offset for tobit equation
+      <b>e(offset2)</b>          offset for variance equation
+      <b>e(chi2type)</b>         <b>Wald</b> or <b>LR</b>; type of model chi-squared test
+      <b>e(chi2_ct)</b>          <b>Wald</b> or <b>LR</b>; type of model chi-squared test
+                            corresponding to <b>e(chi2_c)</b>
+      <b>e(vce)</b>              <i>vcetype</i> specified in <b>vce()</b>
+      <b>e(vcetype)</b>          title used to label Std. Err.
+      <b>e(opt)</b>              type of optimization
+      <b>e(which)</b>            <b>max</b> or <b>min</b>; whether optimizer is to perform
+                            maximization or minimization
+      <b>e(method)</b>           requested estimation method
+      <b>e(ml_method)</b>        type of <b>ml</b> method
+      <b>e(user)</b>             name of likelihood-evaluator program
+      <b>e(technique)</b>        maximization technique
+      <b>e(singularHmethod)</b>  <b>m-marquardt</b> or <b>hybrid</b>; method used when Hessian is
+                            singular
+      <b>e(crittype)</b>         optimization criterion
+      <b>e(properties)</b>       <b>b V</b>
+      <b>e(predict)</b>          program used to implement <b>predict</b>
+      <b>e(asbalanced)</b>       factor variables <b>fvset</b> as <b>asbalanced</b>
+      <b>e(asobserved)</b>       factor variables <b>fvset</b> as <b>asobserved</b>
+<p>
+    Matrices       
+      <b>e(b)</b>                coefficient vector
+      <b>e(Cns)</b>              constraints matrix
+      <b>e(ilog)</b>             iteration log (up to 20 iterations)
+      <b>e(gradient)</b>         gradient vector
+      <b>e(V)</b>                variance-covariance matrix of the estimators
+      <b>e(V_modelbased)</b>     model-based variance
+<p>
+    Functions      
+      <b>e(sample)</b>           marks estimation sample
+<p>
+<p>
+<b>        </b>+----------+
+<b>    </b>----+<b> Examples </b>+---------------------------------------------------------
+<p>
+        clear all
+<p>
+        sysuse tobithetm.dta, clear
+<p>
+        db tobithetm
+<p>
+        tobithetm y x1 , het(x1)
+<p>
+<p>
+<b>        </b>+------------+
+<b>    </b>----+<b> References </b>+-------------------------------------------------------
+<p>
+    Greene, William (1993)<b> "Econometric Analysis",</b> <i>2nd ed., Macmillan</i>
+        <i>Publishing Company Inc., New York, USA.</i>.
+<p>
+<p>
+<b>        </b>+--------+
+<b>    </b>----+<b> Author </b>+-----------------------------------------------------------
+<p>
+  <b>Emad Abd Elmessih Shehata</b>
+  <b>Assistant Professor</b>
+  <b>Agricultural Research Center - Agricultural Economics Research Institute - Eg</b>
+<b>&gt; ypt</b>
+  <b>Email:   </b>emadstat@hotmail.com
+  <b>WebPage:                </b>http://emadstat.110mb.com/stata.htm
+  <b>WebPage at IDEAS:       </b>http://ideas.repec.org/f/psh494.html
+  <b>WebPage at EconPapers:  </b>http://econpapers.repec.org/RAS/psh494.htm
+<p>
+<p>
+<b>        </b>+--------------------+
+<b>    </b>----+<b> tobithetm Citation </b>+-----------------------------------------------
+<p>
+    Shehata, Emad Abd Elmessih (2011)
+    <b>tobithetm: "Stata Module to Estimate Tobit Multiplicative</b>
+        <b>Heteroscedasticity Regression"</b>
+<p>
+        http://ideas.repec.org/c/boc/bocode/s457323.html
+<p>
+        http://econpapers.repec.org/software/bocbocode/s457323.htm
+<p>
+<p>
+</pre>

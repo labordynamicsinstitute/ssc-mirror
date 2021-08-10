@@ -1,0 +1,96 @@
+<pre>
+-------------------------------------------------------------------------------
+help for <b>kapci</b>, <b>kappaci</b>                               (Author:  David Harrison)
+-------------------------------------------------------------------------------
+<p>
+<b><u>Confidence intervals for kappa</u></b>
+<p>
+    Two unique raters, two ratings:
+<p>
+        <b>kapci</b> <i>varname1</i> <i>varname2</i> [<b>if</b> <i>exp</i>] [<b>in</b> <i>range</i>] [<b>,</b> <b><u>pos</u></b><b>itive(</b><i>exp</i><b>)</b>
+               [<b><u>exa</u></b><b>ct</b>|<b><u>w</u></b><b>ilson</b>|<b><u>a</u></b><b>gresti</b>|<b><u>j</u></b><b>effreys</b>] <b><u>l</u></b><b>evel(</b><i>#</i><b>)</b> ]
+<p>
+    Two or more (non-unique) raters, two ratings:
+<p>
+        <b>kapci</b> <i>varname1</i> <i>varname2</i> <i>varname3</i> [<i>...</i>] [<b>if</b> <i>exp</i>] [<b>in</b> <i>range</i>] [<b>,</b>
+               <b><u>pos</u></b><b>itive(</b><i>exp</i><b>)</b> <b><u>l</u></b><b>evel(</b><i>#</i><b>)</b> ]
+<p>
+        <b>kappaci</b> <i>varname1</i> <i>varname2</i> [<b>if</b> <i>exp</i>] [<b>in</b> <i>range</i>] [, <b><u>l</u></b><b>evel(</b><i>#</i><b>)</b> ]
+<p>
+<p>
+<b><u>Description</u></b>
+<p>
+    <b>kapci</b> (first syntax) calculates the kappa-statistic measure of interrater
+    agreement when there are two unique raters and two ratings, with
+    confidence interval using the goodness-of-fit approach of Donner &amp;
+    Eliasziw (1992).
+<p>
+    <b>kapci</b> (second syntax) and <b>kappaci</b> calculate the kappa-statistic in the
+    case of two or more (nonunique) raters and two ratings, with confidence
+    interval using an inverted modified Wald test approach applied to the
+    Fleis-Cuzick estimate of kappa as recommended by Zou &amp; Donner (2004).
+<p>
+    <b>kapci</b> (second syntax) and <b>kappaci</b> produce the same results; they merely
+    assume the data are organized differently.  Both commands assume each
+    observation is a subject.  In the case of <b>kapci</b>, <i>varname1</i> contains the
+    ratings by the first rater, <i>varname2</i> the ratings by the second rater, and
+    so on.  <b>kappaci</b>, on the other hand, assumes each variable records the
+    frequencies with which ratings were assigned.  The first variable records
+    the number of times a positive rating was assigned, and the second
+    variable the number of times a negative rating was assigned.  These
+    definitions follow the same patterns as <b>kap</b> and <b>kappa</b>; see help kappa.
+<p>
+<p>
+<b><u>Options</u></b>
+<p>
+    <b>positive(</b><i>exp</i><b>)</b> specifies an expression identifying the ratings that should
+        be considered to be positive; the default assumes non-zero (and
+        non-missing) for positive and 0 for negative.
+<p>
+    <b>exact</b>, <b>wilson</b>, <b>agresti</b>, and <b>jeffreys</b> specify how binomial confidence
+        intervals for the observed agreement are to be calculated (see help 
+        ci); the default is <b>exact</b>.
+<p>
+    <b>level(</b><i>#</i><b>)</b> specifies the confidence level, in percent, for confidence
+        intervals; see help level.
+<p>
+<p>
+<b><u>Examples</u></b>
+<p>
+    Two raters, rating variables coded 0/1.
+<p>
+        <b>. kapci rada radb</b>
+<p>
+    Two raters, rating variables coded Y/N, Wilson confidence interval on
+    observed agreement.
+<p>
+        <b>. kapci rada radb, pos("Y") wilson</b>
+<p>
+    More than two raters, 99% confidence interval.
+<p>
+        <b>. kappaci pos neg, level(99)</b>
+<p>
+<p>
+<b><u>References</u></b>
+<p>
+    Donner, A. and Eliasziw, M. 1992. A goodness-of-fit approach to inference
+    procedures for the kappa statistic: confidence interval construction,
+    significance-testing and sample size estimation. <i>Statistics in Medicine</i>
+    11: 1511-1519.
+<p>
+    Zou, G. and Donner, A. 2004. Confidence interval estimation of the
+    intraclass correlation coefficient for binary outcome data. <i>Biometrics</i>
+    60: 807-811.
+<p>
+<p>
+<b><u>Maintainer</u></b>
+<p>
+    David A. Harrison
+    Intensive Care National Audit &amp; Research Centre
+    david@icnarc.org
+<p>
+<p>
+<b><u>Also see</u></b>
+<p>
+    Online:  help for kappa, ci
+</pre>

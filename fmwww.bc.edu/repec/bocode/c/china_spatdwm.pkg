@@ -1,0 +1,26 @@
+d 'CHINA_SPATDWM': module to provide spatial distance matrices for Chinese provinces and cities
+d
+d This package contains two Stata data files that are spatial
+d distance  weight matrices at the province and city level of
+d mainland China, respectively.  The province consists of 4
+d municipalities (Beijing, Tianjin, Chongqing, and Shanghai)  and 5
+d autonomous regions (Xinjiang, Tibet, Ningxia, Inner Mongolia and
+d Guangxi).  The city covers three administrative levels (cities
+d directly under the central  government, sub-provincial cities and
+d prefecture-level cities). The distance  between any two provinces
+d (or cities) is defined as the great circle distance. The files
+d may be used with Pisati's tools for spatial distance analysis
+d (spmap) and supplement Merryman's china_map package. 
+d
+d KW: spatial analysis
+d KW: map
+d KW: China
+d
+d Requires: Stata version 9.2
+d
+d Distribution-Date: 20090609
+d
+d Author: Yihua Yu, Renmin University of China
+d Support: email calyu1977@@hotmail.com
+d
+f china_spatdwm.zip

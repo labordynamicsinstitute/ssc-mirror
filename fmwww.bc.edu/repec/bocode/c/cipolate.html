@@ -1,0 +1,75 @@
+<pre>
+-------------------------------------------------------------------------------
+help for <b>cipolate</b>
+-------------------------------------------------------------------------------
+<p>
+<b><u>Cubicly interpolate values</u></b>
+<p>
+        <b>cipolate</b> <i>yvar</i> <i>xvar</i> [<b>if</b> <i>exp</i>] [<b>in</b> <i>range</i>] <b>,</b> <b><u>g</u></b><b>enerate(</b><i>newvar</i><b>)</b>
+<p>
+    <b>by</b> <i>...</i> <b>:</b> may be used with <b>cipolate</b>; see help by.
+<p>
+<p>
+<b><u>Description</u></b>
+<p>
+    <b>cipolate</b> creates <i>newvar</i> by averaging non-missing values of <i>yvar</i> and
+    cubicly interpolating missing values of <i>yvar</i>, given <i>xvar</i>. That is,
+    provided that <i>xvar</i> is not missing,
+<p>
+    1. When <i>yvar</i> is not missing, <i>newvar</i> is the mean of <i>yvar</i> over observations
+    with the same value of <i>xvar</i>. If a value of <i>xvar</i> is unique, then each mean
+    is just the same as the value of <i>yvar</i> at that point.
+<p>
+    2. When <i>yvar</i> is missing, <i>newvar</i> is filled in with cubicly interpolated
+    values of <i>yvar</i>.
+<p>
+    Interpolated values are based on exact fitting of a cubic curve to two
+    data points before and two data points after each observation for which
+    <i>yvar</i> is missing. <b>cipolate</b> will thus produce missing values whenever fewer
+    than two data points are present on either side. Note that this is not a
+    spline method.
+<p>
+    Extrapolation is not provided, mainly because of reservations about the
+    general (and even particular) wisdom of extrapolating cubics into the
+    unknown. Some users may wish to extrapolate any remaining missing values
+    linearly using ipolate.
+<p>
+<p>
+<b><u>Options</u></b>
+<p>
+    <b>generate()</b> is not optional; it specifies the name of the new variable to
+        be created.
+<p>
+<p>
+<b><u>Examples</u></b>
+<p>
+    <b>. cipolate y x, gen(yprime)</b>
+<p>
+    <b>. by panel : cipolate response year, gen(iresponse)</b>
+<p>
+<p>
+<b><u>Author</u></b>
+<p>
+    Nicholas J. Cox, Durham University, U.K.
+    n.j.cox@durham.ac.uk
+<p>
+<p>
+<b><u>References</u></b>
+<p>
+    Hamming, R.W. 1973. <i>Numerical methods for scientists and engineers.</i>  New
+        York: McGraw-Hill. See pp.235-236.
+<p>
+    Morton, B.R. 1964. <i>Numerical approximation</i>. London: Routledge and Kegan
+        Paul. See p.38.
+<p>
+    Press, W.H., S.A. Teukolsky, W.T. Vetterling, B.P. Flannery. 1992.
+        <i>Numerical recipes in C: the art of scientific computing.</i>  Cambridge:
+        Cambridge University Press. See pp.108-110.
+<p>
+<p>
+<b><u>Also see</u></b>
+<p>
+    Manual:  <b>[D] ipolate</b>
+<p>
+    On-line:  help for ipolate
+</pre>

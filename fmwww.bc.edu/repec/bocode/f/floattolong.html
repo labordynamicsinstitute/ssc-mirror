@@ -1,0 +1,60 @@
+<pre>
+<p>
+-------------------------------------------------------------------------------
+help for <b>floattolong</b>
+-------------------------------------------------------------------------------
+<p>
+<b><u>Change float-type variables to long where possible.</u></b>
+<p>
+        <b>floattolong</b> [<i>varlist</i>]
+<p>
+<b><u>Description</u></b>
+<p>
+    This is simply a convenience, issuing <b>recast long</b> <i>varlist2</i>, where
+    <i>varlist2</i> is the set of variables in <i>varlist</i> that are of type <b>float</b>.  This
+    has some resemblance to, and is intended to complement <b>compress</b>, but the
+    emphasis is on the appropriateness of the type rather than the reduction
+    of storage space.  (While <b>compress</b> does potentially change <b>float</b>s and
+    <b>double</b>s to integer types, it omits the possibility of changing a <b>float</b> to
+    a <b>long</b>, as that does not reduce the storage space.)
+<p>
+    <b>floattolong</b> would be typically used immediately following (or preceding)
+    <b>compress</b>, and saves you the trouble of seeking out all the remaining
+    <b>float</b> variables.
+<p>
+    If no <i>varlist</i> is specified, <b>_all</b> is assumed.
+<p>
+    <b>floattolong</b> ignores variables that are not <b>float</b>.
+<p>
+<p>
+<b><u>Examples</u></b>
+<p>
+    <b>. floattolong</b>
+<p>
+    <b>. floattolong wage income</b>
+<p>
+<p>
+<b><u>Remarks</u></b>
+<p>
+    <b>floattolong</b> can be used at any point, but is best used in conjunction
+    with (immediately after or before) <b>compress</b>; without <b>compress</b>, it may
+    recast some variables to <b>long</b> that might otherwise become <b>int</b> or <b>byte</b>.
+<p>
+    In general data preparation, <b>floattolong</b> would usually be called without
+    a <i>varlist</i>; there is little point in calling it with a specific set of
+    variables, since you could just as well type <b>recast long</b> with the same
+    <i>varlist</i>.  The exception is where you use it within a program that
+    generates a variable that is initially <b>float</b>, and you want to clean up
+    that one variable without affecting others.
+<p>
+    For a similar related program, see doubletofloat by the same author.
+<p>
+<p>
+<b><u>Author</u></b>
+<p>
+    David Kantor, Institute for Policy Studies, Johns Hopkins University.
+    Email dkantor@jhu.edu if you observe any problems.
+<p>
+<b><u>Also see</u></b>
+compress, recast, doubletofloat, datatypes
+</pre>

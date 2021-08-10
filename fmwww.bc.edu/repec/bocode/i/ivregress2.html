@@ -1,0 +1,107 @@
+<pre>
+<b>help ivregress2</b>
+<p>
+-------------------------------------------------------------------------------
+<p>
+<b><u>Title</u></b>
+<p>
+    <b>ivregress2</b> -- Exports first and second-stage results similar to
+                                ivregress.
+<p>
+<a name="s_Syntax"></a><p>
+<b><u>Syntax</u></b>
+<p>
+    <b>ivregress2</b> estimator depvar [varlist1] (varlist2 = varlist_iv) [if]
+          [in] [weight] [, options]
+<p>
+<a name="s_Description"></a><p>
+<b><u>Description</u></b>
+<p>
+    <b>ivregress2</b> provides a fast and easy way to export both the
+    first-stage and the second-stage results similar to <b>ivregress</b>, on
+    which it is based.
+<p>
+<a name="s_Options"></a><p>
+<b><u>Options</u></b>
+<p>
+    ivregress2 accepts the syntax and the options for <b>ivregress</b> (circa
+            Stata 11) with the following change:
+<p>
+<p>
+        +----------------+
+    ----+ Changed option +---------------------------------------------------
+<p>
+    <b>first</b> saves the estimates "first" and "second".
+<p>
+<p>
+<b><u>Examples</u></b>
+<p>
+* export them (with table-making programs of your choice)
+<p>
+    ivregress2 2sls mpg weight (length=displacement), first
+    est restore first
+    outreg2 using myfile, cttop(first) replace
+    est restore second
+    estat firststage
+    local fstat `r(mineig)'
+    estat endogenous
+    local p_durbin `r(p_durbin)'
+    outreg2 using myfile, cttop(second) excel adds(IV F-stat, `fstat',
+          Durbin pval, `p_durbin')
+<p>
+* You may fit 2SLS, LIML, GMM, etc. See <b>ivregress</b>.
+<p>
+    webuse hsng2, clear
+    ivregress2 2sls rent pcturban (hsngval = faminc i.region), small
+    ivregress2 liml rent pcturban (hsngval = faminc i.region)
+    ivregress2 gmm rent pcturban (hsngval = faminc i.region)
+<p>
+* use version control to make it future-proof against Stata 13 and beyond
+<p>
+    version 12: ivregress2 2sls mpg weight (length=displacement), first
+<p>
+<p>
+<b><u>Resources</u></b>
+<p>
+    <b>ivregress postestimation</b>
+    <b>estat endogenous</b> perform tests of endogeneity
+    <b>estat firststage</b> report "first-stage" regression statistics
+    <b>estat overid</b> perform tests of overidentifying restrictions
+<p>
+<p>
+<b><u>Remarks</u></b>
+<p>
+    This is actually an old program that I used personally. I hope this
+          will put this issue to rest.
+<p>
+    Alternatively, hit the BREAK button or the red X button on Stata
+          after the first-stage appears.  This solution should work with
+          xtivreg and xtivreg2 also. See below for the original posting.
+<p>
+    http://www.stata.com/statalist/archive/2012-05/msg00885.html
+<p>
+<p>
+<b><u>Acknowledgements</u></b>
+<p>
+    ivregress2 was cloned from the official ivregress. This is meant to
+          be a supplement, not a replacement.  Thanks to Stata
+          Corporation for their open-source programming.
+<p>
+    Etiology:
+       2010/03/16 2:35PM CST   : ivregress2.ado prepared for personal use
+       2012/05/21 6:15PM CST   : ivregress2.hlp prepared for public use
+       2012/05/21 23:22:45 UTC : emailed to SSC
+       2012/06/17 Unkown hour  : uploaded to SSC 27 days later, don't ask me
+       2013/01/23 6:53PM CST   : ivregress2.hlp modified in response to inquiry
+       2013/01/24 8:50AM CST   : ivregress2.hlp modified in response to Kit Bau
+&gt; m
+        
+    Incidentally, the difference between CST and UTC is 5 hours during DST.
+<p>
+<p>
+<b><u>Author</u></b>
+<p>
+    Roy Wada
+    roywada@hotmail.com
+<p>
+</pre>

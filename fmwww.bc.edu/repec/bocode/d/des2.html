@@ -1,0 +1,104 @@
+<pre>
+<b>help des2</b>
+-------------------------------------------------------------------------------
+<p>
+<b><u>Title</u></b>
+<p>
+     <b>des2</b> -- Describe current dataset (clickable output)
+<p>
+<p>
+<b><u>Syntax</u></b>
+<p>
+        <b>des2</b> [<i>varlist</i>] [<b>,</b> <b>cmd(</b><i>cmd</i><b>)</b> <b><u>varw</u></b><b>idth(</b><i>#</i><b>)</b> <b><u>valw</u></b><b>idth(</b><i>#</i><b>)</b> ] [<b>:</b> <i>command</i>]
+<p>
+<p>
+<b><u>Description</u></b>
+<p>
+    <b>des2</b> describes the data in memory. The program is very similar to 
+    describe, but with clickable output. A click on <i>varname</i> tabulates
+    <i>varname</i>, a click on the value label evokes label list.
+<p>
+    If <b>des2</b> is used as a prefix, any variables <i>command</i> returns in <b>r(varlist)</b>
+    are added to <i>varlist</i>.
+<p>
+<p>
+<b><u>Options</u></b>
+<p>
+    <b>cmd(</b><i>cmd</i><b>)</b> in its simplest form executes <i>cmd varname</i>, when a variable name
+        is clicked. Default <i>cmd</i> is tabulate. Also see Remarks.
+<p>
+    <b>varwidth(</b><i>#</i><b>)</b> specifies the width for variable names. Default is to
+        abbreviate variable names to 15 characters. Note that <i>#</i> must be
+        between 14 and 32.
+<p>
+    <b>valwidth(</b><i>#</i><b>)</b> specifies the width for value label names. Default is to
+        abbreviate value label names to 12 characters. Note that <i>#</i> must be
+        between 11 and 32.
+<p>
+<a name="cmd"></a><p>
+<b><u>Remarks</u></b>
+<p>
+    Say you would like to see summary statistics for a variable when clicking
+    it, rather than tabulating the variable. You would then type
+<p>
+        <b>des2</b> [<i>varname</i>] <b>,</b> <b>cmd(</b><b>summarize</b><b>)</b>
+<p>
+    Or, suppose you do not want to see summary statistics, but a two-way
+    tabulation of <i>varname</i> and another variable, say foreign, in the auto
+    dataset, you type
+<p>
+        <b>des2</b> [<i>varname</i>] <b>,</b> <b>cmd(</b><b>tabulate</b><b> @ foreign</b><b>)</b>
+<p>
+    If you wanted to also see missing values you would add option <b>missing</b>, so
+    the line reads
+<p>
+        <b>des2</b> [<i>varname</i>] <b>,</b> <b>cmd(</b><b>tabulate</b><b> @ foreign , missing</b><b>)</b>
+<p>
+    In both cases <b>@</b> will be replaced with the clicked <i>varname</i>.  The
+    placeholder is added to the end of <i>cmd</i> if you do not specify it.
+    Specifying
+<p>
+        <b>des2</b> [<i>varname</i>] <b>,</b> <b>cmd(</b><b>summarize</b><b>)</b>
+<p>
+    is equal to
+<p>
+        <b>des2</b> [<i>varname</i>] <b>,</b> <b>cmd(</b><b>summarize</b><b> @</b><b>)</b>
+<p>
+    and, in fact, equal to
+<p>
+        <b>des2</b> [<i>varname</i>] <b>,</b> <b>summarize</b>
+<p>
+    Whenever you want to specify options with <i>cmd</i>, you must specify <b>cmd(</b><i>cmd</i><b>)</b>.
+    If no options are needed you may omit <b>cmd()</b> in most cases. In case a
+    prefix (e.g. by) is used with <i>cmd</i>, double quotes are required. Specify
+    <b>cmd("</b><i>prefix</i> <b>:</b> <i>cmd</i><b>")</b>.
+<p>
+    Note that <i>cmd</i> is not checked beforehand, meaning <b>des2</b> executes <i>cmd</i> as
+    typed.
+<p>
+<p>
+<b><u>Examples</u></b>
+<p>
+        <b>. sysuse auto</b>
+        <b>. des2</b>
+<p>
+        <b>. des2 : lookfor hour</b>
+<p>
+<p>
+<b><u>Acknowledgments</u></b>
+<p>
+    Suggestions from Andreas Franken led to the possibility to use <b>des2</b> as a
+    prefix.
+<p>
+<p>
+<b><u>Author</u></b>
+<p>
+    Daniel Klein, University of Bamberg, klein.daniel.81@gmail.com
+<p>
+<p>
+<b><u>Also see</u></b>
+<p>
+    Online: describe, lookfor, ds
+<p>
+    if installed: findname
+</pre>

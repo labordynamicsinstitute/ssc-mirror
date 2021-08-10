@@ -1,0 +1,59 @@
+<pre>
+-------------------------------------------------------------------------------
+help for <b>obsdiff</b>
+-------------------------------------------------------------------------------
+<p>
+<b><u> Identify differences in values across observations for a variable.</u></b>
+<p>
+    <b>obsdiff</b> <i>varlist</i> [<b>if</b> <i>exp</i>] [<b>using</b> <i>newfile</i>] [ <b>,</b> <b><u>r</u></b><b>ows(</b><i>numlist</i><b>)</b> <b><u>rep</u></b><b>lace</b> <b>all</b> ]
+<p>
+<b><u>Description</u></b>
+<p>
+  <b>obsdiff</b> lists the differences among observations/records in a varlist.
+  This program is particularly useful for data where observations are near
+  duplicates and you need to identify the variables that differ. In this
+  way, <b>obsdiff</b> operates similar to duplicates list except that it lists
+  <b>differences</b> (not duplicates) for the <i>varlist</i> in the range of
+  observations/records specified in the option <b>rows</b>.  The output can be
+  saved to a text file with the <b>using</b> option.
+<p>
+<b><u> Options</u></b> 
+<p>
+    <b><u>r</u></b><b>ows(</b><i>numlist</i><b>)</b> required unless <b>all</b> is specified.  This option identifies
+        the range of rows or observations that should be examined for
+        differences for each variable in the<i> varlist</i>.  The format for the
+        <i>numlist</i> is explained in numlist.
+<p>
+    <b><u>rep</u></b><b>lace</b> overwrites<i> newfile</i>.txt, if it exists.
+<p>
+    <b>all</b> is used in place of the <b>range</b> option to indicate that all
+        observations should be examined for differences among the variables
+        in the<i> varlist</i>.  Same as specifying<b> rows(1/`=_N')</b>.
+<p>
+    <b>if</b> is allowed.
+<p>
+    <i>`r(diff_vars)'</i> contains a list of variables in<i> varlist</i> with differences
+        in the specified <b>rows</b>.
+<p>
+<b><u> Examples</u></b>
+<p>
+    <b>. sysuse auto, clear</b>
+    <b>. obsdiff make for rep78 , r(8/12)</b>
+    <b>. di "`r(diff_vars)'"</b>
+<p>
+    <b>. obsdiff for rep78, all</b>
+    <b>. obsdiff rep78 if for==0, r(1/10)</b>
+    <b>. obsdiff rep78 if for==1 using "obsdiff_log", all replace</b>
+<p>
+<p>
+<b><u>Author</u></b>
+<p>
+    Eric A. Booth, Texas A&amp;M University
+    ebooth@ppri.tamu.edu
+    http://www.eric-a-booth.com
+<p>
+<b><u>Also see</u></b>
+<p>
+    On-line:  help for list; duplicates list; unique(if installed)
+<p>
+</pre>

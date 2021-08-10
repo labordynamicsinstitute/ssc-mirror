@@ -1,0 +1,106 @@
+<pre>
+<b>help erepost</b>
+-------------------------------------------------------------------------------
+<p>
+<b><u>Title</u></b>
+<p>
+    <b>erepost</b> -- Repost the estimation results
+<p>
+<p>
+<b><u>Syntax</u></b>
+<p>
+        <b>erepost</b> [<b>b =</b> <i>b</i>] [<b>V =</b> <i>V</i>] [<b>,</b> <b>cmd(</b><i>string</i><b>)</b> <b><u>ren</u></b><b>ame</b> [<b><u>no</u></b>]<b><u>e</u></b><b>sample</b>[<b>(</b><i>varname</i><b>)</b>]
+                <i>ereturn_post_opts</i> ]
+<p>
+    where <i>b</i> is a 1 x p coefficient vector (matrix) and <i>V</i> is a p x p
+    covariance matrix.
+<p>
+<p>
+<b><u>Description</u></b>
+<p>
+    <b>erepost</b> changes the <b>b</b> or <b>V</b> matrix of the current estimation results or
+    changes the declared estimation sample. <b>erepost</b> is similar to <b>ereturn</b>
+    <b>repost</b>. However, <b>erepost</b> is allowed after estimation commands that do not
+    post their results using <b>ereturn post</b> (e.g. <b>logit</b>) and <b>erepost</b> can be
+    used outside of <b>eclass</b> programs (see help <b>program</b>).
+<p>
+    Technical note: After applying <b>erepost</b> the original command (or <b>estimates</b>
+    <b>replay</b>) may not be able to replay the output.
+<p>
+<p>
+<b><u>Options</u></b>
+<p>
+    <b>cmd(</b><i>string</i><b>)</b> sets the <b>e(cmd)</b> macro.
+<p>
+    <b>rename</b> causes the names from the coefficient vector to be used as the
+        labels for both the coefficient vector and the covariance matrix in
+        case of name conflicts.
+<p>
+    <b>esample(</b><i>varname</i><b>)</b> gives the name of the 0/1 variable indicating the
+        observations involved in the estimation. The variable is removed from
+        the data but is available for use as <b>e(sample)</b>. Specify <b>noesample</b> if
+        you want to remove <b>e(sample)</b> from the estimation results.
+<p>
+    <i>ereturn_post_opts</i> are any other options allowed with <b>ereturn post</b> (see
+        help <b>ereturn</b>).
+<p>
+<p>
+<b><u>Examples</u></b>
+<p>
+    Say, you are estimating a regression model that contains all interactions
+    between the regressors and a binary variable and you want to display the
+    main effects and the interaction effects in two columns side by side. One
+    approach is to modify the names in <b>e(b)</b> and <b>e(V)</b> so that there is a "main
+    equation" and an "interaction equation" and then tabulate the model using
+    <b>estout</b> or <b>esttab</b> with the <b>unstack</b> option. Example (you will need the
+    <b>estout</b> package to run this example; type ssc describe estout):
+<p>
+        . sysuse auto
+        (1978 Automobile Data)
+        
+        . generate foreign_mpg = foreign*mpg
+        
+        . generate foreign_weight = foreign*weight
+        
+        . quietly regress price foreign_mpg foreign_weight foreign mpg weight
+        
+        . matrix b = e(b)
+        
+        . matrix coleq b = foreign foreign foreign main main main
+        
+        . matrix colname b = mpg weight _cons mpg weight _cons
+        
+        . erepost b=b, rename
+        
+        . esttab , unstack order(main: foreign:)
+        
+        --------------------------------------------
+                              (1)                   
+                            price                   
+                             main         foreign   
+        --------------------------------------------
+        mpg                 237.7          -257.5   
+                           (1.90)         (-1.66)   
+        
+        weight              4.415***        0.741   
+                           (5.18)          (0.45)   
+        
+        _cons            -13285.4*         8219.6   
+                          (-2.58)          (1.13)   
+        --------------------------------------------
+        N                      74                   
+        --------------------------------------------
+        t statistics in parentheses
+        * p&lt;0.05, ** p&lt;0.01, *** p&lt;0.001
+<p>
+<p>
+<b><u>Author</u></b>
+<p>
+    Ben Jann, ETH Zurich, jann@soz.gess.ethz.ch
+<p>
+<p>
+<b><u>Also see</u></b>
+<p>
+    Online:  <b>ereturn</b>, estcom, <b>estimates</b>
+<p>
+</pre>

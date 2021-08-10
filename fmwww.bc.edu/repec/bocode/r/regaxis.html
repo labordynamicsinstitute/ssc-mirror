@@ -1,0 +1,351 @@
+<pre>
+-------------------------------------------------------------------------------
+help for <b>regaxis</b> and <b>logaxis</b>                                     (Roger Newson)
+-------------------------------------------------------------------------------
+<p>
+<b><u>Regular linear and logarithmic axis scales, ranges and tick lists</u></b>
+<p>
+        <b>regaxis</b> [ <i>varlist</i> ] [<b>if</b> <i>exp</i>] [<b>in</b> <i>range</i>] [<b>,</b> <b><u>inc</u></b><b>lude(</b><i>numlist</i><b>)</b>
+               <b><u>maxt</u></b><b>icks(</b><i>#</i><b>)</b> <b><u>sin</u></b><b>gleok</b>
+               <b><u>cy</u></b><b>cle(</b><i>#</i><b>)</b> <b><u>ph</u></b><b>ases(</b><i>numlist</i><b>)</b> <b><u>mar</u></b><b>gins(</b><i>marginlist</i><b>)</b>
+               <b><u>pcr</u></b><b>atios(</b><i>numlist</i><b>)</b> <b><u>mcr</u></b><b>atios(</b><i>marginratiolist</i><b>)</b> <b><u>cb</u></b><b>ase(</b><i>#</i><b>)</b>
+               <b><u>cpp</u></b><b>ower(</b><i>#</i><b>)</b>
+               <b><u>lra</u></b><b>nge(</b><i>macname</i><b>)</b> <b><u>lti</u></b><b>cks(</b><i>macname</i><b>)</b> <b><u>lrmi</u></b><b>n(</b><i>macname</i><b>)</b> <b><u>lrma</u></b><b>x(</b><i>macname</i><b>)</b>
+               <b><u>ltmi</u></b><b>n(</b><i>macname</i><b>)</b> <b><u>ltma</u></b><b>x(</b><i>macname</i><b>)</b> <b><u>lnti</u></b><b>ck(</b><i>macname</i><b>)</b> <b><u>lvmi</u></b><b>n(</b><i>macname</i><b>)</b>
+               <b><u>lvma</u></b><b>x(</b><i>macname</i><b>)</b>
+               <b><u>gra</u></b><b>nge(</b><i>macname</i><b>)</b> <b><u>gti</u></b><b>cks(</b><i>macname</i><b>)</b> <b><u>grmi</u></b><b>n(</b><i>macname</i><b>)</b> <b><u>grma</u></b><b>x(</b><i>macname</i><b>)</b>
+               <b><u>gtmi</u></b><b>n(</b><i>macname</i><b>)</b> <b><u>gtma</u></b><b>x(</b><i>macname</i><b>)</b> <b><u>gnti</u></b><b>ck(</b><i>macname</i><b>)</b> <b><u>gvmi</u></b><b>n(</b><i>macname</i><b>)</b>
+               <b><u>gvma</u></b><b>x(</b><i>macname</i><b>)</b> ]
+<p>
+        <b>logaxis</b> [ <i>varlist</i> ] [<b>if</b> <i>exp</i>] [<b>in</b> <i>range</i>] [<b>,</b> <b><u>inc</u></b><b>lude(</b><i>numlist</i><b>)</b>
+               <b><u>maxt</u></b><b>icks(</b><i>#</i><b>)</b> <b><u>sin</u></b><b>gleok</b>
+               <b><u>b</u></b><b>ase(</b><i>#</i><b>)</b> <b><u>s</u></b><b>calefactors(</b><i>numlist</i><b>)</b> <b><u>mar</u></b><b>ginfactors(</b><i>marginfactorlist</i><b>)</b>
+               <b><u>lra</u></b><b>nge(</b><i>macname</i><b>)</b> <b><u>lti</u></b><b>cks(</b><i>macname</i><b>)</b> <b><u>lrmi</u></b><b>n(</b><i>macname</i><b>)</b> <b><u>lrma</u></b><b>x(</b><i>macname</i><b>)</b>
+               <b><u>ltmi</u></b><b>n(</b><i>macname</i><b>)</b> <b><u>ltma</u></b><b>x(</b><i>macname</i><b>)</b> <b><u>lnti</u></b><b>ck(</b><i>macname</i><b>)</b> <b><u>lvmi</u></b><b>n(</b><i>macname</i><b>)</b>
+               <b><u>lvma</u></b><b>x(</b><i>macname</i><b>)</b>
+               <b><u>gra</u></b><b>nge(</b><i>macname</i><b>)</b> <b><u>gti</u></b><b>cks(</b><i>macname</i><b>)</b> <b><u>grmi</u></b><b>n(</b><i>macname</i><b>)</b> <b><u>grma</u></b><b>x(</b><i>macname</i><b>)</b>
+               <b><u>gtmi</u></b><b>n(</b><i>macname</i><b>)</b> <b><u>gtma</u></b><b>x(</b><i>macname</i><b>)</b> <b><u>gnti</u></b><b>ck(</b><i>macname</i><b>)</b> <b><u>gvmi</u></b><b>n(</b><i>macname</i><b>)</b>
+               <b><u>gvma</u></b><b>x(</b><i>macname</i><b>)</b> ]
+<p>
+    where <i>marginlist</i> is a list of up to 2 non-negative numbers,
+    <i>marginratiolist</i> is a list of up to 2 non-negative numbers, and
+    <i>marginfactorlist</i> is a list of up to 2 positive numbers equal to or
+    greater than 1.
+<p>
+<p>
+<b><u>Description</u></b>
+<p>
+    <b>regaxis</b> generates a regular linear axis range and tick list for a list of
+    variables and/or numbers to be included in the axis range.  <b>logaxis</b>
+    generates a regular logarithmic axis range and tick list for a list of
+    variables and/or numbers to be included in the axis range.  Both programs
+    can output the elements of the axis range and/or tick list to be stored
+    in local and/or global macros, which can then be used in Stata graphics
+    commands as axis options and suboptions, such as the range() suboption of
+    the xscale() and yscale() options, or the xlabel(), ylabel(), xtick() and
+    ytick() options.
+<p>
+<p>
+<b><u>Input options for </u></b><b><u>regaxis</u></b><b><u> and </u></b><b><u>logaxis</u></b>
+<p>
+    <b>include(</b><i>numlist</i><b>)</b> specifies a list of numeric values that must be included
+        in the range of values between the minimum tick and the maximum tick,
+        in addition to all values specified in the <i>varlist</i>.  For example, if
+        the user specifies <b>include(0)</b>, then the axis tick range will include
+        zero, even if all values in the <i>varlist</i> are positive.
+<p>
+    <b>maxticks(</b><i>#</i><b>)</b> specifies the maximum number of ticks allowed on the axis.
+        This number may not be less than 2 or greater than 1600.  If
+        <b>maxticks()</b> is not specified, then it is set to 25, the maximum number
+        of axis ticks allowed by the graph7 command.  The number of ticks
+        allowed is limited because Stata cannot handle numlists longer than
+        1600, but this limitation is not often important for graph axes in
+        practice.
+<p>
+    <b>singleok</b> specifies that the output tick list can be a single tick if the
+        data range contains only a single value equal to a valid tick mark
+        position.  If <b>singleok</b> is not specified, and the data range contains
+        only a single valid tick mark position, then the output tick list
+        will also include one tick mark above that position and one tick mark
+        below that position.
+<p>
+<p>
+<b><u>Input options for </u></b><b><u>regaxis</u></b><b><u> only</u></b>
+<p>
+    <b>cycle(</b><i>#</i><b>)</b> specifies the cycle length of the sequence of axis ticks.  The
+        cycle length has the property that, if <i>cycle</i> is the cycle length and
+        <i>t</i> is a valid tick mark in the sequence, then <i>t</i><b>+</b><i>cycle</i> is also a valid
+        tick mark in the sequence.  If <b>cycle()</b> is not specified, then it is
+        set to a sensible default value.  (Most users do not need to know the
+        definition of a "sensible default value", but more technically minded
+        users can modify this definition by setting the <b>cbase()</b> and <b>cppower()</b>
+        options below.)
+<p>
+    <b>phases(</b><i>numlist</i><b>)</b> specifies a list of cycle phases at which the axis ticks
+        appear.  If <b>phases()</b> is not specified, then it is set using the
+        <b>pcratios()</b> option, if that is specified, and otherwise defaults to a
+        single value of 0.  Axis ticks will be produced at positions of the
+        form
+<p>
+        <i>tick_ij</i> <b>=</b> <i>phase_i</i> <b>+</b> <i>cycle</i><b> * </b><i>j</i>
+<p>
+        where <i>j</i> is an integer, <i>i</i> is an integer between 1 and the number of
+        phases specified in the <b>phases()</b> option, <i>phase_i</i> is the <i>i</i>th phase,
+        <i>cycle</i> is the cycle length specified in the <b>cycle()</b> option, and
+        <i>tick_ij</i> is the tick mark position.  The integers <i>j</i> are chosen so that
+        the tick marks span the nonmissing values in the <i>varlist</i> and/or in
+        the <b>include()</b> option.
+<p>
+    <b>margins(</b><i>marginlist</i><b>)</b> specifies the lower and upper range margins,
+        separating the lower and upper range limits from the minimum and
+        maximum ticks, respectively.  No more than 2 margins may be
+        specified.  If only one margin is given in the <i>marginlist</i>, then both
+        margins are equal to that margin, If the <b>margins()</b> option is not
+        specified, then it is set using the <b>mcratios()</b> option if that is
+        specified.  Otherwise, both margins are set to 0, so that the axis
+        range extends from the minimum tick to the maximum tick.
+<p>
+    <b>pcratios(</b><i>numlist</i><b>)</b> specifies a list of phase/cycle ratios, which are used
+        to define a list of values for the <b>phases()</b> option as a proportion of
+        the <b>cycle()</b> option.  The <b>pcratios()</b> option is ignored if the <b>phases()</b>
+        option is specified,
+<p>
+    <b>mcratios(</b><i>marginratiolist</i><b>)</b> specifies a list of up to 2 margin/cycle
+        ratios, which are used to define a list of values for the <b>margins()</b>
+        option as a proportion of the <b>cycle()</b> option.  If only one
+        margin/cycle ratio is specified, then it is used to define both
+        margins.  The <b>mcratios()</b> option is ignored if the <b>margins()</b> option is
+        specified,
+<p>
+    <b>cbase(</b><i>#</i><b>)</b> specifies a logarithmic base used to define the default cycle
+        length if the <b>cycle()</b> option is not specified. This logarithmic base
+        must be positive, and is set to 10 if not specified by the user. The
+        <b>cbase()</b> option is ignored if the user specifies the <b>cycle()</b> option,
+        but otherwise the <b>cycle()</b> option is defined using the <b>cbase()</b> option
+        and the <b>cppower()</b> option (see below).
+<p>
+    <b>cppower(</b><i>#</i><b>)</b> must be positive, and is set in default to twice the <b>cbase()</b>
+        option.  The <b>cbase()</b> and <b>cppower()</b> options are used to define the
+        default cycle length if the <b>cycle()</b> option is not supplied.  The
+        <b>cbase()</b> and <b>cppower()</b> options are both ignored if the user specifies
+        the <b>cycle()</b> option.  Otherwise, the <b>cycle()</b> option is calculated as
+        follows.  Define <i>vmin</i> to be the minimum value, and <i>vmax</i> to be the
+        maximum value, in the <i>varlist</i> and/or in the <b>include()</b> option. If all
+        values are missing, then define both <i>vmin</i> and <i>vmax</i> to be zero.  Then
+        the <b>cycle()</b> option is set to 1 if <i>vmax</i> is equal to <i>vmin</i>, and is
+        otherwise set to
+<p>
+        <i>cycle</i> <b>=</b> <i>cbase</i><b>^ceil( log(</b><i>vmax</i><b>-</b><i>vmin</i><b>)/log(</b><i>cbase</i><b>) ) /</b> <i>cppower</i>
+<p>
+        where <i>cycle</i> is the cycle length, the <b>log()</b> and <b>ceil()</b> functions are
+        defined as in the help for mathematical functions, and <i>cbase</i> and
+        <i>cppower</i> are the values of the <b>cbase()</b> and <b>cppower()</b> options.
+        Therefore, <i>cppower</i> is the number of cycles in the minimum integer
+        power of <i>cbase</i> that is at least as large as the data range.  The
+        default values <b>cbase(10)</b> and <b>cppower(20)</b> cause the tick positions to
+        be "semi-round numbers", or multiples of <b>5*10^</b><i>k</i>, where <i>k</i> is a
+        positive or negative integer.
+<p>
+<p>
+<b><u>Input options for </u></b><b><u>logaxis</u></b><b><u> only</u></b>
+<p>
+    <b>base(</b><i>#</i><b>)</b> specifies the logarithmic base of the axis ticks.  This base must
+        be strictly greater than one.  If <b>base()</b> is not specified, then it is
+        set to the value <b>e=exp(1)</b>, implying that natural logarithms will be
+        used to define the axis ticks.
+<p>
+    <b>scalefactors(</b><i>numlist</i><b>)</b> specifies a list of scale factors defining the
+        positions at which the axis ticks appear.  If <b>scale()</b> is not
+        specified, then it is set to a single value of 1.  Axis ticks will be
+        produced at positions of the form
+<p>
+        <i>tick_ij</i> <b>=</b> <i>scalefactor_i</i> <b>*</b> <i>base</i><b>^</b><i>j</i>
+<p>
+        where <i>j</i> is an integer, <i>i</i> is an integer between 1 and the number of
+        scale factors specified in the <b>scalefactors()</b> option, <i>scalefactor_i</i>
+        is the <i>i</i>th scale factor, <i>base</i> is the logarithmic base specified in
+        the <b>base()</b> option, and <i>tick_ij</i> is the tick mark position.  The tick
+        marks are chosen to span the nonmissing values in the <i>varlist</i> and/or
+        in the <b>include()</b> option.
+<p>
+    <b>marginfactors(</b><i>marginfactorlist</i><b>)</b> specifies the lower and upper range
+        margin factors.  The lower range margin factor is the ratio of the
+        minimum tick to the range minimum, and the upper range margin factor
+        is the ratio of the range maximum to the maximum tick.  For instance,
+        <b>marginfactors(1.01, 1.01)</b> specifies that the range maximum is 1
+        percent greater than the maximum tick, and that the minimum tick is 1
+        percent greater than the range minimum.  No more than 2 margin
+        factors may be specified.  If only one margin factor is given in the
+        <i>marginfactorlist</i>, then both margin factors are equal to that margin
+        factor, If <b>marginfactors()</b> is not specified, then both margin factors
+        are set to 1, so that the axis range extends from the minimum tick to
+        the maximum tick.
+<p>
+<p>
+<b><u>Output options for </u></b><b><u>regaxis</u></b><b><u> and </u></b><b><u>logaxis</u></b>
+<p>
+    <b>lrange(</b><i>macname</i><b>)</b> inserts the axis range (a list of 2 numbers specifying
+        the axis minimum and maximum) in a local macro <i>macname</i> within the
+        calling program's space.  This macro will be accessible after <b>regaxis</b>
+        or <b>logaxis</b> has finished.  This is helpful for subsequent use,
+        especially in the <b>range()</b> suboption of the graph axis scale options
+        <b>yscale()</b>, <b>xscale()</b> or <b>tscale()</b>.
+<p>
+    <b>lticks(</b><i>macname</i><b>)</b> inserts the axis tick list in a local macro <i>macname</i>
+        within the calling program's space.  This macro will be accessible
+        after <b>regaxis</b> or <b>logaxis</b> has finished.  This is helpful for
+        subsequent use, especially in the graph axis label options <b>ylabel()</b>,
+        <b>xlabel()</b> or <b>tlabel()</b>.
+<p>
+    <b>lrmin(</b><i>macname</i><b>)</b> inserts the axis range minimum in a local macro <i>macname</i>
+        within the calling program's space.
+<p>
+    <b>lrmax(</b><i>macname</i><b>)</b> inserts the axis range maximum in a local macro <i>macname</i>
+        within the calling program's space.
+<p>
+    <b>ltmin(</b><i>macname</i><b>)</b> inserts the minimum tick in a local macro <i>macname</i> within
+        the calling program's space.
+<p>
+    <b>ltmax(</b><i>macname</i><b>)</b> inserts the maximum tick in a local macro <i>macname</i> within
+        the calling program's space.
+<p>
+    <b>lntick(</b><i>macname</i><b>)</b> inserts the number of axis ticks in a local macro <i>macname</i>
+        within the calling program's space.
+<p>
+    <b>lvmin(</b><i>macname</i><b>)</b> inserts the minimum nonmissing value appearing in the
+        <i>varlist</i> and/or the <b>include()</b> option in a local macro <i>macname</i> within
+        the calling program's space.  If there are no nonmissing values, then
+        the value returned is 0 in the case of <b>regaxis</b> and 1 in the case of
+        <b>logaxis</b>.
+<p>
+    <b>lvmax(</b><i>macname</i><b>)</b> inserts the maximum nonmissing value appearing in the
+        <i>varlist</i> and/or the <b>include()</b> option in a local macro <i>macname</i> within
+        the calling program's space.  If there are no nonmissing values, then
+        the value returned is 0 in the case of <b>regaxis</b> and 1 in the case of
+        <b>logaxis</b>.
+<p>
+    <b>grange(</b><i>macname</i><b>)</b> inserts the axis range in the global macro <i>macname</i>.
+<p>
+    <b>gticks(</b><i>macname</i><b>)</b> inserts the axis tick list in the global macro <i>macname</i>.
+<p>
+    <b>grmin(</b><i>macname</i><b>)</b> inserts the axis range minimum in the global macro
+        <i>macname</i>.
+<p>
+    <b>grmax(</b><i>macname</i><b>)</b> inserts the axis range maximum in the global macro
+        <i>macname</i>.
+<p>
+    <b>gtmin(</b><i>macname</i><b>)</b> inserts the minimum tick in the global macro <i>macname</i>.
+<p>
+    <b>gtmax(</b><i>macname</i><b>)</b> inserts the maximum tick in the global macro <i>macname</i>.
+<p>
+    <b>gntick(</b><i>macname</i><b>)</b> inserts the number of axis ticks in the global macro
+        <i>macname</i>.
+<p>
+    <b>gvmin(</b><i>macname</i><b>)</b> inserts the minimum nonmissing value appearing in the
+        <i>varlist</i> and/or the <b>include()</b> option in the global macro <i>macname</i>.
+<p>
+    <b>gvmax(</b><i>macname</i><b>)</b> inserts the maximum nonmissing value appearing in the
+        <i>varlist</i> and/or the <b>include()</b> option in the global macro <i>macname</i>.
+<p>
+<p>
+<b><u>Technical note</u></b>
+<p>
+    <b>regaxis</b> and <b>logaxis</b> define an axis range and tick mark list to span the
+    range of values of the variables in the <i>varlist</i> (qualified by the if and 
+    in qualifiers if these are supplied) and/or the number list supplied by
+    the <b>include()</b> option.  Either the <i>varlist</i>, or the <b>include()</b> option, or
+    both may be absent.  If all values are missing, then <b>regaxis</b> takes the
+    minimum and maximum values to be 0, and <b>logaxis</b> takes the minimum and
+    maximum values to be 1.
+<p>
+    A tick mark list is selected from the infinite sequence of candidate tick
+    marks specified by the <b>cycle()</b> and <b>phase()</b> options of <b>regaxis</b>, or by the
+    <b>base()</b> and <b>scalefactors()</b> options of <b>logaxis</b>.  Initially, the tick mark
+    list is defined as the shortest finite list of consecutive candidate tick
+    marks with a maximum tick mark at or above the maximum value and a
+    minimum tick mark at or below the minimum value.  If the minimum and
+    maximum tick marks are the same, and <b>singleok</b> is not specified, then
+    <b>regaxis</b> and <b>logaxis</b> add one additional tick mark above and one additional
+    tick mark below.
+<p>
+    If the number of tick marks defined in this way is greater than a maximum
+    set by the <b>maxticks()</b> option, then <b>regaxis</b> and <b>logaxis</b> repeat the
+    following procedure until the number of ticks is no more than the
+    <b>maxticks()</b> value.  If the <b>maxticks()</b> value is 2, then the first and last
+    ticks are retained, and all others are removed.  Otherwise, if there is
+    more than one phase specified by the <b>phases()</b> option of <b>regaxis</b>, or more
+    than one scale factor specified by the <b>scalefactors()</b> option of <b>logaxis</b>.
+    then the last phase or scale factor is removed, and the axis is then
+    redefined as before.  Otherwise, if there is only one phase or scale
+    factor, then <b>regaxis</b> increments the <b>cycle()</b> option by its original value,
+    and <b>logaxis</b> multiplies the <b>base()</b> option by its original value, and the
+    axis is then redefined as before.
+<p>
+    When a final list of tick marks has been defined, the range is set, using
+    the <b>margins()</b> option of <b>regaxis</b> or the <b>marginfactors()</b> option of <b>logaxis</b>
+    to define a range minimum at or below the minimum tick and a range
+    maximum at or above the maximum tick.
+<p>
+<p>
+<b><u>Examples</u></b>
+<p>
+    <b>. regaxis</b>
+    <b>. return list</b>
+<p>
+    <b>. regaxis weight, include(0) lticks(xlabs)</b>
+    <b>. regaxis price, include(0) lticks(ylabs)</b>
+    <b>. scatter price weight, ylabel(`ylabs') xlabel(`xlabs')</b>
+<p>
+    <b>. regaxis rep78, cycle(1) singleok margin(0.5) lrange(yrange)</b>
+        <b>lticks(ylabs)</b>
+    <b>. regaxis weight, include(0) lticks(xlabs)</b>
+    <b>. scatter rep78 weight, yscale(range(`yrange')) ylabel(`ylabs')</b>
+        <b>xlabel(`xlabs')</b>
+<p>
+    <b>. regaxis length, cycle(12) lticks(xlabs)</b>
+    <b>. regaxis displacement, cycle(100) phases(0 70) lticks(ylabs)</b>
+    <b>. scatter displacement length, ylabel(`ylabs', angle(0)) xlabel(`xlabs')</b>
+<p>
+    <b>. logaxis</b>
+    <b>. return list</b>
+<p>
+    <b>. logaxis length, base(2) scale(1 3 5) margin(1.05) lrange(xrange)</b>
+        <b>lticks(xlabs)</b>
+    <b>. logaxis displacement, base(2) scale(1 3 5) lrange(yrange) lticks(ylabs)</b>
+    <b>. scatter displacement length, yscale(log range(`yrange'))</b>
+        <b>ylabel(`ylabs', angle(0)) xscale(log range(`xrange')) xlabel(`xlabs')</b>
+<p>
+<p>
+<b><u>Saved results</u></b>
+<p>
+    <b>regaxis</b> and <b>logaxis</b> save the following results in <b>r()</b>:
+<p>
+    <b>Scalars:</b>
+<p>
+    <b>r(rmin)</b>        Range minimum
+    <b>r(rmax)</b>        Range maximum
+    <b>r(tmin)</b>        Minimum axis tick mark position
+    <b>r(tmax)</b>        Maximum axis tick mark position
+    <b>r(ntick)</b>       Number of axis ticks
+    <b>r(vmin)</b>        Minimum value in <i>varlist</i> and/or <b>include()</b> list
+    <b>r(vmax)</b>        Maximum value in <i>varlist</i> and/or <b>include()</b> list
+<p>
+    <b>Macros:</b>
+<p>
+    <b>r(range)</b>        list of 2 values (the range minimum and maximum)
+    <b>r(ticks)</b>        list of axis tick mark positions
+<p>
+<p>
+<b><u>Author</u></b>
+<p>
+    Roger Newson, National Heart and Lung Institute, Imperial College London,
+    UK.  Email: r.newson@imperial.ac.uk
+<p>
+<p>
+<b><u>Also see</u></b>
+<p>
+    Manual:  <b>[G] graph</b>, <b>[G] </b><i>axis_options</i>, <b>[G] </b><i>axis_scale_options</i>, <b>[G]</b>
+             <i>axis_label_options</i>
+    Online:  help for graph, axis_options, axis_scale_options, 
+             axis_label_options
+</pre>

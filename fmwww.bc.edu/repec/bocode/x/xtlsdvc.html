@@ -1,0 +1,199 @@
+<pre>
+-------------------------------------------------------------------------------
+help for <b>xtlsdvc</b>
+-------------------------------------------------------------------------------
+<b><u> Bias corrected LSDV dynamic panel data estimator</u></b>
+<p>
+        <b>xtlsdvc</b> <i>depvar</i> [<i>varlist</i>] [<b>if</b> <i>exp</i>] <b>,</b> <b><u>i</u></b><b>nitial(</b><i>estimator</i><b>)</b> [<b><u>l</u></b><b>evel(</b><i>#</i><b>)</b>
+                <b><u>b</u></b><b>ias(</b><i>#</i><b>)</b> <b><u>l</u></b><b>sdv</b> <b><u>f</u></b><b>irst</b> <b><u>v</u></b><b>cov(</b><i>#</i><b>)</b>]
+<p>
+    where <i>estimator</i> is
+<p>
+            <b>ah</b>                  Anderson-Hsiao
+            <b>ab</b>                  Arellano-Bond
+            <b>bb</b>                  Blundell-Bond
+            <b>my</b>                  initial values supplied by the user
+<p>
+    <b>xtlsdvc</b> is for use with time-series data.  You must <b>tsset</b> your data
+    before using <b>xtlsdvc</b>; see help tsset. However, since <b>xtlsdvc</b> calls <b>xtreg</b>
+    <i>varlist</i>s may not contain time-series operators; see help xtreg.
+<p>
+<p>
+    <b>xtlsdvc</b> shares the features of all estimation commands; see help estcom.
+<p>
+<p>
+    The syntax of predict following <b>xtlsdvc</b> is
+<p>
+        <b>predict</b> [<i>type</i>] <i>newvarname</i> [<b>if</b> <i>exp</i>] [<b>in</b> <i>range</i>] [<b>,</b> <i>statistic</i> ]
+<p>
+    where y[i,t] =  y[i,t-1]a + x[i,t]b + u[i] + e[i,t] and <i>statistic</i> is
+<p>
+        <b>xb</b>      y[i,t-1]a + x[i,t]b, fitted values; the default
+        <b>ue</b>      u[i] + e[i,t], the combined residual
+    (*) <b>xbu</b>     y[i,t-1]a + x[i,t]b + u[i], prediction including fixed effect
+    (*) <b>u</b>       u[i], the fixed effect
+    (*) <b>e</b>       e[i,t]
+<p>
+    Unstarred statistics are available both in and out of sample; type
+    "<b>predict</b> <i>...</i> <b>if e(sample)</b> <i>...</i>" if wanted only for the estimation sample.
+    Starred statistics are calculated only for the estimation sample even
+    when "<b>if e(sample)</b>" is not specified.
+<p>
+<p>
+<b><u>Description</u></b>
+<p>
+    <b>xtlsdvc</b> calculates bias corrected LSDV estimators for the standard
+    autoregressive panel data model using the bias approximations in Bruno
+    (2005a), who extends the results by Bun and Kiviet (2003), Kiviet (1999)
+    and Kiviet (1995) to unbalanced panels
+<p>
+    y[i,t] =  y[i,t-1]a + x[i,t]b + u[i] + e[i,t]      i={1,...,N};    
+            t={1,...,T_i},
+<p>
+    where
+<p>
+    a is a parameter to be estimated
+<p>
+    x[i,t] is a (1 X (k-1)) vector of strictly exogenous covariates
+<p>
+    b is a ((k-1) X 1) vector of parameters to be estimated
+<p>
+    u[i] are the individual effects, for which no distributional assumption
+            is made apart being fixed over time,
+<p>
+    and e[i,t] are iid over the whole sample with variance s_e*s_e.
+<p>
+    It is also assumed that the u[i] and the e[i,t] are independent for each
+    i over all t.
+<p>
+    A more detailed description of <b>xtlsdvc</b> can be found in Bruno (2005b).
+<p>
+<p>
+<b><u>Options</u></b>
+<p>
+    <b>level(</b><i>#</i><b>)</b> specifies the confidence level, in percent, for confidence
+        intervals of the coefficients; see help level.
+<p>
+    <b>initial(</b><i>estimator</i><b>)</b> specifies which consistent estimator among
+        Anderson-Hsiao (<b>ah</b>), Arellano-Bond (<b>ab</b>) and Blundell-Bond (<b>bb</b>) is to
+        initialize the bias correction. In alternative, users may want to
+        supply their own values, which can be done by creating beforehand the
+        (1 X (k+1)) matrix <b>my</b>, the i.th element of which serves as an initial
+        value for the coefficient on the i.th variable in <i>varlist</i>, i=1,...,k
+        and the last element as an estimate for the error variance. This may
+        be useful in Monte Carlo simulations or when the user wants to try
+        initial estimators other than <b>ah</b>, <b>ab</b> or <b>bb</b>.
+<p>
+    <b>bias(</b><i>#</i><b>)</b> determines the accuracy of the approximation:  up to O(1/T) (<b>1</b>);
+        up to O(1/NT) (<b>2</b>); up to O(1/NT^2) (<b>3</b>).
+<p>
+    <b>first</b> requests that the first-stage regression results be displayed.
+<p>
+    <b>lsdv</b> requests that the lsdv regression results be displayed.
+<p>
+    <b>vcov(</b><i>#</i><b>)</b> calculates a bootstrap variance-covariance matrix for LSDVC using
+        <i>#</i> repetitions. Normality for errors is assumed.  This procedure
+        continues to work also in the presence of gaps in the exogenous
+        variables, although in this case bootstrap samples for each unit are
+        truncated to the first missing value encountered. Gaps in the
+        dependent variable, instead, bear no consequence to the bootstrap
+        sample size.
+<p>
+<p>
+<b><u>Options for </u></b><b><u>predict</u></b>
+<p>
+    <b>xb</b> calculates the linear prediction; that is, y[i,t-1]a + x[i,t]b.  This
+        is the default.
+<p>
+    <b>ue</b> calculates the prediction of u[i] + e[i,t].
+<p>
+    <b>xbu</b> calculates the prediction of y[i,t-1]a + x[i,t]b + u[i], the
+        prediction including the fixed component.
+<p>
+    <b>u</b> calculates the prediction of u[i], the estimated fixed effect.
+<p>
+    <b>e</b> calculates the prediction of e[i,t].
+<p>
+<b><u>Remarks</u></b>
+<p>
+    <b>xtlsdvc</b> does not report analytical standard errors. Only bootstrap
+    standard errors are reported, provided that <b>vcov(</b><i>#</i><b>)</b> is given.
+<p>
+    Bootstrap standard errors are downward biased when values for the unknown
+    parameters are supplied through the matrix <b>my</b>, since the procedure,
+    keeping <b>my</b> fixed over replications, neglects a source of varibility of
+    the bias-corrected LSDV estimator.
+<p>
+<p>
+    <b>xtlsdvc</b> saves the following results in <b>e()</b>:
+<p>
+    Scalars
+        <b>e(N)</b>          Number of observations
+        <b>e(Tbar)</b>       Average number of time periods
+        <b>e(sigma)</b>      Estimate of s_e through the within 
+                      residuals from the first stage regression 
+        <b>e(N_g)</b>        Number of groups
+<p>
+    Macros
+        <b>e(cmd)</b>        xtlsdvc
+        <b>e(depvar)</b>     Name of dependent variable
+        <b>e(ivar)</b>       Panel variable
+        <b>e(predict)</b>    Program used to implement predict
+<p>
+    Matrices
+        <b>e(b)</b>          Coefficient vector
+        <b>e(V)</b>          Variance-covariance matrix of the estimators
+        <b>e(b_lsdv)</b>     Coefficient vector of the uncorrected LSDV
+        <b>e(V_lsdv)</b>     Variance-covariance matrix of the uncorrected LSDV
+ 
+<p>
+    Functions
+        <b>e(sample)</b>     Marks estimation sample
+<p>
+<p>
+<b><u>Examples</u></b>
+<p>
+    <b>. xtlsdvc n w k ys yr1980-yr1984, initial(ah)</b>
+    <b>. xtlsdvc n w k ys yr1980-yr1984, initial(ab) bias(3)</b>
+    <b>. xtlsdvc n w k ys yr1980-yr1984, initial(ab) bias(3) vcov(50)</b>
+<p>
+<p>
+<b><u>References</u></b>
+<p>
+    Bruno, G.S.F. 2005a.  Approximating the bias of the LSDV estimator for
+        dynamic unbalanced panel data models.  <i>Economics Letters,</i> 87,
+        361-366.
+<p>
+    Bruno, G.S.F. 2005b.  Estimation and inference in dynamic unbalanced
+        panel data models with a small number of individuals.  <i>CESPRI WP</i>
+        <i>n.165</i> , Università Bocconi-CESPRI, Milan.
+<p>
+    Bun, M.J.G., Kiviet, J.F., 2003. On the diminishing returns of higher
+        order terms in asymptotic expansions of bias.  <i>Economics Letters,</i> 79,
+        145-152.
+<p>
+    Kiviet, J.F., 1995. On Bias, Inconsistency and Efficiency of Various
+        Estimators in Dynamic Panel Data Models.  <i>Journal of Econometrics,</i>
+        68, 53-78.
+<p>
+    Kiviet, J.F., 1999. Expectation of Expansions for Estimators in a Dynamic
+        Panel Data Model; Some Results for Weakly Exogenous Regressors.  In:
+        Hsiao, C., Lahiri, K., Lee, L.-F., Pesaran, M.H. (Eds.), <i>Analysis of</i>
+        <i>Panel Data and Limited Dependent Variables.</i> Cambridge University
+        Press, Cambridge.
+<p>
+<b><u>Author</u></b>
+<p>
+    Giovanni S.F. Bruno
+    Istituto di Economia Politica, Università Bocconi
+    Milan, Italy
+    giovanni.bruno@unibocconi.it
+<p>
+<b><u>Also see</u></b>
+<p>
+    Manual: <b>[U] 23 Estimation and post-estimation commands</b>,
+            <b>[U] 29 Overview of Stata estimation commands</b>,
+            <b>[XT] xtabond</b> <b>[XT] xtivreg</b> <b>[R] ivreg</b>
+<p>
+    Online:  help for estcom, ivreg, postest, xtabond, xtdes, xtivreg, xtreg,
+</pre>

@@ -1,0 +1,105 @@
+{smcl}
+{* 18feb2004}{...}
+{hline}
+help for {hi:_gmlabvpos}{right:manual: [R] egen }
+{right:dialog:  }
+{hline}
+
+{title:Egen-Function to generate a variable for mlabvpos()}
+
+{p 8 18 2}{cmd:egen} [type] {it:newvar} {cmd:=} {cmd:mlabvpos(}{it:yvar xvar}{cmd:)} 
+[{cmd:if} {it:exp}] [{cmd:in} {it:range}] [{cmd:,} {cmd:log} {cmdab:poly:nom(}{it:#}{cmd:)}
+{cmd:mat:rix(}{it: 5x5 matrix}{cmd:)}
+
+{p 4 4 2}
+whereby {it:yvar} is the name of a variable which is going to be plotted as Y-variable in 
+a scatterplot and {it:xvar} is the name of a variable which forms the X-axis of that 
+scatterplot.
+
+{title:Description}
+
+{p 4 4 2}
+{cmd:_gmlabvpos} is an attempt to automatically generate a variable for the
+clockpositions of marker labels in scatterplots. That is, the command generates
+a variable which can be filled into the scatter option {cmd:mlabvpos()}.
+
+{p 4 4 2}
+Note that the program does not attempt to prevent marker labels from overploting, which is quite
+likely in dataset with many observations. In such situations you might be better of in simply 
+make randomized clock positions:
+
+{p 4 4 2}
+{cmd:. gen clock = int(uniform()*12)+1)}
+
+{p 4 4 2}
+The general idea behind _gmlabvpos is to pull the marker label away from the 
+data-region. For example, marker symbols in the lower left edge of the data 
+region are labeled at clock-position 7 or 8, and marker symbols in the upper right 
+edge of the data region are labeled at clock-position 1 or 2, etc.
+More precisely, if you consider the following rectangle as the data-region of a scatterplot,
+than marker labels of symbols in the indicated area gets the following clock-position:
+
+  {col 10}{c TLC}{hline 14}{c TRC}
+  {col 10}{c |}11 12 12 12  1{c |}
+  {col 10}{c |}10 11 12  1  2{c |} 
+  {col 10}{c |} 9  9 12  3  3{c |} 
+  {col 10}{c |} 8  7  6  5  4{c |} 
+  {col 10}{c |} 7  6  6  6  5{c |} 
+  {col 10}{c BLC}{hline 14}{c BRC} 
+
+{p 4 4 2}
+If {it:yvar} and {it:xvar} are highly correlated, than the clock-positions are generated
+as follows (which is however the same general idea):
+
+  {col 10}{c TLC}{hline 14}{c TRC}
+  {col 10}{c |}      12  1  3{c |}
+  {col 10}{c |}   12 12  3  4{c |} 
+  {col 10}{c |}11 11 12  5  5{c |} 
+  {col 10}{c |}10  9  6  6   {c |} 
+  {col 10}{c |} 9  7  6      {c |} 
+  {col 10}{c BLC}{hline 14}{c BRC} 
+
+{p 4 4 2}
+To calculate the the clock-positions, Stata first categorize the x-axis into 5 equal sized 
+intervals around the mean of {it:xvar}. Afterwards the residuals of a linear regression of 
+{it:yvar} on {it:xvar} are categorized into 5 equal sized intervals. Both categorized 
+variables are than used to form the clockpositions according to the rule of the first 
+table above.  The rule can be changed with the option {cmd:matrix()}.
+
+{title:Options}
+
+{p 4 8 2}
+{cmd:log} is used, if you want to calculate the residuals from the regression of 
+{it:yvar} on a logarthmic version of {it:xvar}. This might be useful if the scatter
+shows a strong curvilinar relationship.
+
+{p 4 8 2}
+{cmd:polynom(#)} is used, if you want to calculate the residuals from the regression of 
+{it:yvar} on polynoms of {it:xvar}. For example use {cmd:polynom(2) if the scatter
+shows a u-shaped relationship.
+
+{p 4 8 2}
+{cmd:matrix(#)} is used to change the general rule for the plot-positions. The clock positions 
+are specified by a 5x5 matrix, whereby the upper left cell refer to the clock position of marker 
+labels in the upper left part of the data-region. etc.
+
+
+{title:Examples}
+
+    {cmd:. egen clock = mlabvpos(mpg weight)}
+{p 4 8 2}{cmd:. sc mpg weight, mlab(make) mlabvpos(clock)}{p_end}
+{p 4 8 2}{cmd:. egen clock2 = mlabvpos(mpg weight), matrix(11 1 12 11 1 \\ 10 2 12 10 2 \\ 9 3 12 9 3 \\ 8 4 6 8 4 \\ 7 5 6 7 5)}{p_end}
+{p 4 8 2}{cmd:. sc mpg weight, mlab(make) mlabvpos(clock2)}{p_end}
+
+
+{title:Also see}
+
+ {p 4 13 2}
+Online:  help for {help scatter},
+
+
+{title:Author}
+
+ {p 4 13 2}
+ Ulrich Kohler, WZB,  kohler@wz-berlin.de
+ 

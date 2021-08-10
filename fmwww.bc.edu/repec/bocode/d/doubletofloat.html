@@ -1,0 +1,79 @@
+<pre>
+<p>
+-------------------------------------------------------------------------------
+help for <b>doubletofloat</b>
+-------------------------------------------------------------------------------
+<p>
+<b><u>Change double-type variables to float where possible.</u></b>
+<p>
+        <b>doubletofloat</b> [<i>varlist</i>]
+<p>
+<b><u>Description</u></b>
+<p>
+    This is simply a convenience, issuing <b>recast float</b> <i>varlist2</i>, where
+    <i>varlist2</i> is the set of variables in <i>varlist</i> that are of type <b>double</b>.
+    This has some resemblance to, and is intended to complement <b>compress</b>,
+    which does not include the possibility of changing <b>double</b> to <b>float</b>.
+<p>
+    <b>doubletofloat</b> would be typically used immediately following <b>compress</b>, and
+    saves you the trouble of seeking out all the remaining <b>double</b> variables.
+    There are some potental complications if you do not preceed it with
+    <b>compress</b>; see notes under <b>Remarks</b>.
+<p>
+    If no <i>varlist</i> is specified, <b>_all</b> is assumed.
+<p>
+    <b>doubletofloat</b> ignores variables that are not <b>double</b>.
+<p>
+<p>
+<b><u>Examples</u></b>
+<p>
+    <b>. doubletofloat</b>
+<p>
+    <b>. doubletofloat wage income</b>
+<p>
+<p>
+<b><u>Remarks</u></b>
+<p>
+    This is for those instances when you have some <b>double</b> variables which
+    could be stored as <b>float</b> without any loss of precision, but do require
+    <b>float</b> rather than an integer type.  Thus, there are fractional values
+    present, but all can be represented exactly using <b>float</b>.  Typical values
+    would have fractional parts involving halves and quarters, etc., such as
+    in 2.5, 2.75, and 10.375.
+<p>
+    It is best to use this immediately following <b>compress</b>.  If you use it
+    without a preceeding <b>compress</b>, you might recast some variables to <b>float</b>
+    which would otherwise become <b>long</b>, <b>int</b>, or <b>byte</b>.  If you use it without a
+    preceeding <b>compress</b>, but you do follow it with <b>compress</b>, then those
+    variables that <b>compress</b> would have recast as <b>int</b> or <b>byte</b> (but not <b>long</b>)
+    had it been called first, will still receive that change.
+<p>
+    For a similar related program, see floattolong by the same author.  Both
+    <b>doubletofloat</b> and <b>floattolong</b> are intended as companions to <b>compress</b>, and
+    would best be used as follows:
+<p>
+    <b>. compress</b>
+    <b>. floattolong</b>
+    <b>. doubletofloat</b>
+<p>
+    Note that in this sequence, the relative placement of <b>floattolong</b> is not
+    critical, as long as <b>compress</b> comes before <b>doubletofloat</b>.  (The sequence
+    <b>doubletofloat</b>, <b>compress</b>, <b>floattolong</b> should also work properly, but it is
+    easiest to remember to place <b>compress</b> first.)
+<p>
+    In general data preparation, <b>doubletofloat</b> would usually be called
+    without a <i>varlist</i>; there is little point in calling it with a specific
+    set of variables, since you could just as well type <b>recast float</b> with the
+    same <i>varlist</i>.  The exception is where you use it within a program that
+    generates a variable that is initially <b>double</b>, and you want to clean up
+    that one variable without affecting others.
+<p>
+<p>
+<b><u>Author</u></b>
+<p>
+    David Kantor, Institute for Policy Studies, Johns Hopkins University.
+    Email dkantor@jhu.edu if you observe any problems.
+<p>
+<b><u>Also see</u></b>
+compress, recast, floattolong, datatypes
+</pre>

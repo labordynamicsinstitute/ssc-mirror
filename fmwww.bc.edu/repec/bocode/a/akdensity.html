@@ -1,0 +1,182 @@
+<pre>
+-------------------------------------------------------------------------------
+help for <b>akdensity</b>                                            Philippe Van Kerm
+-------------------------------------------------------------------------------
+<p>
+<b><u>Title</u></b>
+<p>
+    <b>akdensity</b> -- Adaptive kernel density estimation
+<p>
+<p>
+<b><u>Syntax</u></b>
+<p>
+        <b>akdensity</b> <i>varname</i> [<i>weight</i>] [<b>if</b> <i>exp</i>] [<b>in</b> <i>range</i>] [<b>,</b> <i>options</i> ]
+<p>
+        <b>akdensity0</b> <i>varname</i> [<i>weight</i>] [<b>if</b> <i>exp</i>] [<b>in</b> <i>range</i>] <b>,</b> <b><u>bw</u></b><b>idth(</b><i>#</i>|<i>varname</i><b>)</b>
+               <b><u>g</u></b><b>enerate(</b><i>newvar</i><b>)</b> <b>at(</b><i>var_x</i><b>)</b> [ <i>options</i> ]
+<p>
+<p>
+    <i>options</i>                        Description
+    -------------------------------------------------------------------------
+    akdensity:
+      <b><u>noadap</u></b><b>tive</b>                   de-activate adaptive estimation
+      <b><u>stdb</u></b><b>ands(</b><i>#</i><b>)</b>                  request estimation of variability bands
+      <b>cdf(</b><i>newvar</i><b>)</b>                  request estimation of kernel smoothed CDF
+      <i>kdensity_options</i>             any <b>kdensity</b> option
+<p>
+    akdensity0:
+      <b><u>bw</u></b><b>idth(</b><i>#</i>|<i>varname</i><b>)</b>            half-width of kernel (scalar or variable)
+      <b><u>g</u></b><b>enerate(</b><i>newvar</i><b>)</b>             store the density estimate in <i>newvar</i>
+      <b>at(</b><i>var_x</i><b>)</b>                    estimate density using the values
+                                     specified by <i>var_x</i>
+      <b><u>stdb</u></b><b>ands(</b><i>#</i><b>)</b>                  request estimation of variability bands
+      <b>cdf(</b><i>newvar</i><b>)</b>                  request estimation of kernel smoothed CDF
+      <b>lambda(</b><i>newvar</i><b>)</b>               generate local bandwidth factors
+      <b><u>k</u></b><b>ernel(</b><i>kernel</i><b>)</b>               specify kernel function
+      <b>double</b>                       requests double precision
+    -------------------------------------------------------------------------
+<p>
+<a name="kdensopts"></a>    <i>kdensity_options</i>               Description
+    -------------------------------------------------------------------------
+    <b><u>k</u></b><b>ernel(</b><i>kernel</i><b>)</b>                 specify kernel function; default is
+                                     <b>kernel(epanechnikov)</b>
+    <b><u>bw</u></b><b>idth(</b><i>#</i><b>)</b>                      half-width of kernel
+    <b><u>g</u></b><b>enerate(</b><i>newvar_x newvar_d</i><b>)</b>    store the estimation points in <i>newvar_x</i>
+                                     and the density estimate in <i>newvar_d</i>
+    <b>n(</b><i>#</i><b>)</b>                           estimate density using <i>#</i> points; default
+                                     is min(N, 50)
+    <b>at(</b><i>var_x</i><b>)</b>                      estimate density using the values
+                                     specified by <i>var_x</i>
+    <b><u>nogr</u></b><b>aph</b>                        suppress graph
+    <i>cline_options</i>                  affect rendition of the plotted kernel
+                                     density estimate
+    <b><u>nor</u></b><b>mal</b>                         add normal density to the graph
+    <b><u>normop</u></b><b>ts(</b><i>cline_options</i><b>)</b>        affect rendition of normal density
+    <b><u>stu</u></b><b>dent(</b><i>#</i><b>)</b>                     add Student's t density with <i>#</i> degrees of
+                                     freedom to the graph
+    <b><u>stop</u></b><b>ts(</b><i>cline_options</i><b>)</b>          affect rendition of the Student's t
+                                     density
+    <b>addplot(</b><i>plot</i><b>)</b>                  add other plots to the generated graph
+    <i>twoway_options</i>                 any options other than <b>by()</b> documented in
+                                     <b>[G] </b><i>twoway_options</i>
+    -------------------------------------------------------------------------
+<p>
+<a name="kernel"></a>    <i>kernel</i>                         Description
+    -------------------------------------------------------------------------
+    <b><u>epa</u></b><b>nechnikov</b>                   Epanechnikov kernel function; the default
+    <b>epan2</b>                          alternative Epanechnikov kernel function
+    <b><u>gau</u></b><b>ssian</b>                       Gaussian kernel function
+    -------------------------------------------------------------------------
+<p>
+            
+    <b>fweight</b> and <b>aweight</b> are allowed; see help weights.
+<p>
+<p>
+<p>
+<b><u>Description</u></b>
+<p>
+    <b>akdensity</b> produces density estimates using adaptive kernel estimation
+    methods. The density estimates can be plotted and saved in new variables.
+    <b>akdensity0</b> is the engine used by <b>akdensity</b> to obtain the estimates. These
+    modules also provide variability bands (standard error bands).
+<p>
+    The syntax of <b>akdensity</b> mimics the syntax of the official <b>kdensity</b> that
+    uses fixed kernel estimation methods.
+<p>
+    <b>akdensity</b> can also be requested to produce kernel smoothed cumulative
+    distribution function estimates.
+<p>
+    See Van Kerm (2003, 2010) for detailed description.
+<p>
+<p>
+<b><u>Options</u></b>
+<p>
+    Most options for <b>akdensity</b> are the same as for <b>kdensity</b> (see <b>[R]</b>
+    <b>kdensity</b>). The specific options are the following.
+<p>
+        +-----------+
+    ----+ akdensity +--------------------------------------------------------
+<p>
+    <b>stdbands(</b><i>#</i><b>)</b> requests estimation of variability bands, and specifies the
+        number of standard errors above and below the estimates to be used (a
+        positive number).  If the <b>generate</b> option is specified, the estimated
+        bands are stored in two new variables: <i>newvard_up</i> and <i>newvard_lo</i>.
+<p>
+    <b>noadaptive</b> can be specified to obtain the standard fixed bandwidth kernel
+        density estimate. The resulting density is exactly as produced by
+        <b>kdensity</b>. This may be used to obtain the variability bands around the
+        fixed kernel density estimates, or kernel smoothed CDF estimation
+        with fixed bandwidth.
+<p>
+    <b>cdf(</b><i>newvarname</i><b>)</b> requests estimation of a kernel smoothed cumulative
+        distribution function in addition to the density function. Both
+        function estimates are based on identical (adaptive) bandwidth and
+        kernel function specifications.  CDF estimates for each point on the
+        grid specified by <b>at</b> or <b>n</b> options are stored in <i>newvarname</i>.
+        Variability bands are also produced if <b>stdbands</b> is specified.
+<p>
+<p>
+        +------------+
+    ----+ akdensity0 +-------------------------------------------------------
+<p>
+    <b>at</b>, <b>bwidth</b> and <b>generate</b> are not optional.  Most options are as in
+        <b>kdensity</b>.  Note, however, that the <b>bwidth</b> option can here be either a
+        scalar or a variable name containing observation-specific bandwidths.
+        Also, <b>generate</b> must specify a single new variable name to store the
+        estimated value of the density function at the grid points.
+<p>
+    <b>lambda(</b><i>newvarname</i><b>)</b> requests the estimation of local bandwidth factors
+        based on the estimated density function, and specifies a new variable
+        name where these values are to be stored.
+<p>
+    <b>cdf(</b><i>newvarname</i><b>)</b> requests estimation of the kernel smoothed cumulative
+        distribution function (see <b>akdensity</b> option descriptions).
+<p>
+    <b>double</b> requests the use of double precision in the estimation of the
+        density functions and standard error bands.
+<p>
+<p>
+<b><u>Examples</u></b>
+<p>
+        <b>. akdensity length</b>
+<p>
+        <b>. akdensity length, bw(5) stdbands(2) gen(x fx)</b>
+<p>
+        <b>. akdensity length, gen(x fx) cdf(cdfx)</b>
+<p>
+<p>
+<b><u>References</u></b>
+<p>
+    Van Kerm, P. 2003. Adaptive kernel density estimation. The Stata Journal
+        3(2): 148-156.
+<p>
+    Van Kerm, P. 2010. Kernel smoothed CDF estimation with akdensity.
+        CEPS/INSTEAD, Differdange, Luxembourg;
+<p>
+<p>
+<b><u>Acknowledgements</u></b>
+<p>
+    A bug report from Ben Jann lead to a major fix. Financial support from
+    the World Bank Knowledge for Change Program (KCP II - TF094570) for
+    developing the <b>cdf</b> option for smoothed cumulative distribution function
+    estimation is gratefully acknowledged, as well as support from the
+    Luxembourg FNR (FNR/06/15/08) for extension of this work.
+<p>
+<p>
+<b><u>Also see</u></b>
+<p>
+    Manual:  <b>[R] kdensity</b>
+       STB:  <b>snp6 (STB-16)</b>
+    Online:  help for kdensity, graph and hist, and help for adgakern, 
+                   adgaker2, asciker, bsciker, kdens, varwiker and varwike2
+                   if installed
+<p>
+<p>
+<p>
+<p>
+<p>
+<p>
+<p>
+<p>
+<p>
+</pre>

@@ -1,0 +1,204 @@
+*! version 2.10 06June2014 M. Araar Abdelkrim & M. Paolo verme
+/*************************************************************************/
+/* subsim: Subsidy Simulation Stata Toolkit  (version 1.0)               */
+/*************************************************************************/
+/* Conceived and programmed by Dr. Araar Abdelkrim  (2006-2012)          */
+/* Universite Laval, Quebec, Canada                                      */
+/* email : aabd@ecn.ulaval.ca                                            */
+/* Phone : 1 418 656 7507                                                */
+/*************************************************************************/
+/*   trexqua.dlg                                                          */
+/*************************************************************************/
+
+//A FINALISER....
+
+
+VERSION 9.2
+
+
+
+INCLUDE graph_header
+POSITION . . 760 360
+
+
+DIALOG main, label("SUBSIM| Transforming expenditures to consumed quantitiles --> trexqua command") tabtitle("Main")
+BEGIN
+  DEFINE col0  20
+  DEFINE col1 120
+  DEFINE col2 210
+  DEFINE col3 330
+  DEFINE col4 450
+  DEFINE col5 500
+  
+  DEFINE colwd0 55
+  DEFINE colwd1 100
+
+  DEFINE _x _xsetbu
+  DEFINE _y _top
+
+
+  
+      
+  
+
+        
+
+
+
+   GROUPBOX chk_per1  10    20  360 120,                         ///
+           label("Variables of interest: ")         ///
+
+  
+  TEXT     tx_var2      20    40    180      .,                 ///
+           label("Household expenditures on  the item:   ")  
+  VARNAME  vn_texp      210    @     150      .,                 ///
+           option(texp) 
+  
+  TEXT     tx_var22      20    +30    180      .,                 ///
+           label("Total household expenditures:          ")  
+  VARNAME  vn_texp2      210    @     150      .,                 ///
+           option(texp)
+  
+		   
+ TEXT     tx_var3      20   +30    180      .,                 ///
+           label("Household size:   ")  
+  VARNAME  vn_hhs      210    @     150      .,                 ///
+           option(hsize)    
+ 
+  
+  
+  
+  GROUPBOX chk_per2  10    +60  360 80,                         ///
+           label("The price schedule: ")                ///
+		   
+ TEXT txt_npsch     +10    +30    180      .,                 ///  
+                  label("Name of the price schedule:   ")                           
+       
+  EDIT  ed_npsch    210    @     150      .,                 ///
+              option(psch) 		   
+  
+  
+  GROUPBOX chk_per3  390    20  360 60,                         ///
+           label("Generated the variable of consumption in quantities: ")         ///
+		   
+    TEXT txt_vname     +10    +20    180      .,                 ///  
+                  label("Name of the variable:   ")                           
+       
+     EDIT  ed_vname    570    @     150      .,                 ///
+              option(name)   
+
+
+   DEFINE _x 600
+   DEFINE _y 280
+     
+  INCLUDE _bu_svyset
+
+END
+
+
+
+
+
+
+DIALOG resop,  tabtitle("Results")
+
+BEGIN
+
+TEXT     tx_res  70      30      200      .,                            /*
+                */ label("Descriptive results by:")  
+			 
+COMBOBOX  cb_res    210      @     230      .,                 ///
+dropdownlist                                          ///
+contents(cb_res)  values(cb_res_val) option(result)  ///
+            default(hh)
+			
+ TEXT     tx_hhg      70   +30    180      .,                 ///
+           label("Household group:   ")  
+ VARNAME  vn_hhg      210    @     230      .,                 ///
+           option(hgroup)  
+			
+                                        
+SPINNER  sp_dec    70       +35      50    .,                    /*
+                */ label("Decimals")                            /*
+                */ min(0) default(3) max(12)                            /*
+                */ option(dec)
+
+TEXT     sp_txt  130      @      100      .,                            /*
+                */ label("Number of decimals")  
+                
+
+				
+CHECKBOX   chk_opd     70   +35    150    .,                   ///
+             label("Display standard errors") option(dste) default(0)
+			 
+CHECKBOX   chk_gra     70   +35    150    .,                   ///
+             label("Display results in graph") option(dgra) default(0)
+
+
+
+			
+END
+
+LIST cb_res
+BEGIN
+  Households
+  Persons
+END
+
+LIST cb_res_val
+BEGIN
+ hh
+ per
+END
+
+
+HELP hlp1,   view("help trexqua")
+RESET res1
+OK ok1,      label("OK")
+CANCEL can1, label("Cancel")
+SUBMIT sub1, label("Submit")
+COPY copy1
+
+PROGRAM command
+BEGIN
+        put "trexqua "
+        
+        
+        require main.vn_texp
+        varlist [main.vn_texp]
+        require main.vn_texp2
+        varlist [main.vn_texp2]
+        put " "
+     
+       
+        
+        beginoptions
+        optionarg main.vn_hhs
+		
+		optionarg main.ed_vname
+		optionarg main.ed_npsch
+		  require main.ed_npsch
+      				                  
+      
+		
+		                      
+                       optionarg resop.vn_hhg
+                        if !resop.sp_dec.isdefault() {
+                        optionarg resop.sp_dec
+                        }
+
+					if !resop.cb_res.isdefault() {
+						       optionarg resop.cb_res
+			                              }	
+										  
+					     if !resop.chk_opd.isdefault(){
+                        optionarg resop.chk_opd
+                        }
+						     if !resop.chk_gra.isdefault(){
+                        optionarg resop.chk_gra
+                        }
+			
+        endoptions 
+        
+        
+END

@@ -1,0 +1,196 @@
+<pre>
+-------------------------------------------------------------------------------
+help for <b>xtarsim</b>
+-------------------------------------------------------------------------------
+<b><u> Simulate panel dataset</u></b>
+<p>
+        <b>xtarsim</b> <i>newdepvar</i> <i>newindepvar</i> <i>newindeffect</i> <i>newtimeffect</i> <b>,</b> <b><u>n</u></b><b>id(</b><i>#</i><b>)</b>
+                <b><u>t</u></b><b>ime(</b><i>#</i><b>)</b> <b><u>g</u></b><b>amma(</b><i>real</i><b>)</b> <b><u>b</u></b><b>eta(</b><i>real</i><b>)</b> <b><u>r</u></b><b>ho(</b><i>real</i><b>)</b> <b><u>sn</u></b><b>ratio(</b><i>real</i><b>)</b>
+                [<b><u>s</u></b><b>igma(</b><i>real</i><b>)</b> <b><u>one</u></b><b>way(</b><i>effect_type load</i><b>)</b> <b><u>two</u></b><b>way(</b><i>effect_type</i>
+                <i>load</i><b>)</b> <b><u>u</u></b><b>nbd(</b><i>N_1 T_1</i><b>)</b> <b><u>seed</u></b><b>(</b><i>#</i><b>)</b>]
+<p>
+<p>
+    <b>xtarsim</b> creates panel datasets for use in Monte Carlo experiments as
+    pseudo-random realizations from (possibly) dynamic twoway linear panel
+    data models.
+<p>
+<p>
+    Description
+<p>
+    <b>xtarsim</b> creates a dataset from the following general panel data model
+<p>
+    y[i,t] =  y[i,t-1]gamma + x[i,t]beta + u[i] + u[t] + e[i,t]
+<p>
+    x[i,t] =  x[i,t-1]rho + v[i,t]      i={1,...,N};     t={1,...,T},
+<p>
+    where
+<p>
+    gamma, beta and rho are real numbers chosen by the user.
+<p>
+    e[i,t] are iid Normal(0,sigma^2), with sigma chosen by the user.
+<p>
+    v[i,t] are iid Normal(0,sigma_v^2), with sigma_v being uniquely
+    determined once choosing the model parameters and the signal to noise
+    ratio of the y[i,t] regression.  Attention should be paid to supply
+    parameter values that ensure a finite positive variance for v[i,t]. When
+    this does not happen an error message is issued by <b>xtarsim</b>.
+<p>
+    e[i,t] and v[i,t] are not correlated, so that x[i,t] is a strictly
+    exogenous regressor in the first equation of the model.
+<p>
+    u[i] and u[t] are, respectively, the individual and time effects, and may
+    or may not be correlated with x[i,t].
+<p>
+    If correlated, individual effects are determined as
+    u[i]=load_1*(1-gamma)*(1+x[i]-x), where x[i] and x, respectively, are the
+    group mean and the overall mean of x[i,t], and load_1 is a load factor
+    chosen by the user. Correlated time effects, instead, are determined as
+    contrasts to the first period, u[t]=load_2*(1-gamma)*(x[t]-x[1]), where
+    again load_2 is a load factor chosen by the user. Such normalisation is
+    convenient in that the constant term in xtreg, in its one-way fixed
+    effect version as well as two-way fixed effect version excluding the
+    first time indicator, can be interpreted as an estimate for
+    load_1*(1-gamma) (see the example file <b>static2way_bias.do</b> available for 
+    download). If not correlated, both effects are taken to be iid
+    Normal(0,load^2*(1-gamma)^2) with a specific load factor for each effect.
+<p>
+    Following Kiviet (1995) start-up values y[i,0] and x[i,0] are obtained
+    according to the model using the McLeod and Hipel (1978) procedure. This
+    avoids wasting random numbers in generating start-up values and also
+    small-sample non-stationarity problems. This procedure has been also
+    applied by Bun and Kiviet (2003), Bruno (2005a) and (2005b).
+<p>
+<p>
+<b><u>Options</u></b>
+<p>
+    <b>nid(</b><i>#</i><b>)</b> specifies the number of individuals in the panel.
+<p>
+    <b>time(</b><i>#</i><b>)</b> specifies the number of time observations for each individual.
+<p>
+    <b>gamma(</b><i>real</i><b>)</b> specifies the value for the gamma parameter. Since the model
+        is stationary it must be picked up from within (1,-1).
+<p>
+    <b>beta(</b><i>real</i><b>)</b> specifies the value for the beta parameter, which can be any
+        real number.
+<p>
+    <b>rho(</b><i>real</i><b>)</b> specifies the value for the rho parameter. Since the model is
+        stationary it must be picked up from within (1,-1).
+<p>
+    <b>snratio(</b><i>real</i><b>)</b> specifies the value for the signal to noise ratio.
+<p>
+    <b>sigma(</b><i>real</i><b>)</b> specifies the value for the standard deviation of e[i,t]. The
+        default is unity.
+<p>
+    <b>oneway(</b><i>effect_type load</i><b>)</b> specifies 1) whether the individual effect is or
+        is not correlated with x[i,t] and 2) the load factor <i>load</i>. Allowed
+        <i>effect_type</i> is <b>corr</b> for correlated effects and <b>rand</b> for not
+        correlated effects.  <i>load</i> may be any real number. The default is
+        <b>oneway(rand 1)</b>.
+<p>
+    <b>twoway(</b><i>effect_type load</i><b>)</b> specifies 1) whether the time effect is or is
+        not correlated with x[i,t] and 2) the load factor <i>load</i>. Allowed
+        <i>effect_type</i> is <b>corr</b> for correlated effects and <b>rand</b> for not
+        correlated effects.  <i>load</i> may be any real number. The default is no
+        time effect.
+<p>
+    <b>unbd(</b><i>N_1 T_1</i><b>)</b> determines a specific form of unbalancedess, such that the
+        last <i>T_1</i> time observations are missing for the first <i>N_1</i> individuals.
+        The default is no ubalancedness.
+<p>
+    <b>seed(</b><i>#</i><b>)</b> sets the random-number seed.
+<p>
+<p>
+<b><u>Examples</u></b>
+<p>
+    (Create a panel from a static one-way random effect Data Generation
+    Process (DGP))
+        . xtarsim y x eta, n(200) t(10) g(0) b(.8) r(.2) sn(9) seed(1234)
+<p>
+        . describe
+<p>
+        . xtdes
+<p>
+    (Create a panel from a dynamic one-way fixed effect DGP)
+        . xtarsim y x eta, n(200) t(10) g(.2) b(.8) r(.2) one(corr 1) sn(9)
+            seed(1234)
+<p>
+        . xtdes
+<p>
+    (Demonstrate, on this dataset, the expected good perfomance of the basic
+    Arellano-Bond estimator in terms of estimation error and specification
+    tests)
+        . xtabond y x,noco
+<p>
+    (Create a panel from a dynamic two-way fixed effect DGP)
+        . xtarsim y x eta theta, n(200) t(10) g(.2) b(.8) r(.2) two(corr 5)
+            sn(9) seed(1234)
+<p>
+        . describe
+<p>
+        . xtdes
+<p>
+    (Demonstrate, on this dataset, the expected poor perfomance of the basic
+    Arellano-Bond estimator in terms of estimation error and specification
+    tests)
+ 
+        . xtabond y x,noco
+<p>
+    (Demonstrate the expected better perfomance of the two-way Arellano-Bond
+    estimator)
+ 
+        . tab tvar,gen(time)
+<p>
+        . xtabond y x time*,noco
+<p>
+    (Make the foregoing dataset unbalanced: the last 5 time observations are
+    missing for the first 50 individuals in the sample)
+        . xtarsim y x eta theta, n(200) t(10) g(.2) b(.8) r(.2) two(corr 5)
+            sn(9) unbd(50 5) seed(1234)
+<p>
+        . xtdes
+<p>
+    For examples of <b>xtarsim</b> in Monte Carlo experiments download the do files
+    <b>dyn_bias.do</b> and <b>static2way_bias.do</b>. The former, upon setting up a dynamic
+    one-way random effect DGP, estimates the unconditional small-sample
+    biases of the dynamic one-way fixed effect and random effect estimators
+    by 1000 Monte Carlo simulations. The latter sets up a static two-way
+    fixed effect DGP and estimates the unconditional small-sample biases of
+    the one-way and two-way fixed effect estimators using 1000 Monte Carlo
+    simulations.
+<p>
+<b><u>References</u></b>
+<p>
+    Bruno, G.S.F. 2005a.  Approximating the bias of the LSDV estimator for
+        dynamic unbalanced panel data models.  <i>Economics Letters,</i> 87,
+        361-366:  http://dx.doi.org/doi:10.1016/j.econlet.2005.01.005.
+<p>
+    Bruno, G.S.F. 2005b.  Estimation and inference in dynamic unbalanced
+        panel data models with a small number of individuals.  <i>CESPRI WP</i>
+        <i>n.165</i> , Università Bocconi-CESPRI, Milan.
+<p>
+    Bun, M.J.G., Kiviet, J.F., 2003. On the diminishing returns of higher
+        order terms in asymptotic expansions of bias.  <i>Economics Letters,</i> 79,
+        145-152.
+<p>
+    Kiviet, J.F., 1995. On Bias, Inconsistency and Efficiency of Various
+        Estimators in Dynamic Panel Data Models.  <i>Journal of Econometrics,</i>
+        68, 53-78.
+<p>
+    Kiviet, J.F., 1999. Expectation of Expansions for Estimators in a Dynamic
+        Panel Data Model; Some Results for Weakly Exogenous Regressors.  In:
+        Hsiao, C., Lahiri, K., Lee, L.-F., Pesaran, M.H. (Eds.), <i>Analysis of</i>
+        <i>Panel Data and Limited Dependent Variables.</i> Cambridge University
+        Press, Cambridge.
+<p>
+    McLeod, A.I., K.W. Hipel 1978. Smulation Procedures for Box-Jenkins
+        Models.  <i>Water Resources Research,</i> 14, 969-975.
+<p>
+<b><u>Author</u></b>
+<p>
+    Giovanni S.F. Bruno
+    Istituto di Economia Politica, Università Bocconi
+    Milan, Italy
+    giovanni.bruno@unibocconi.it
+<p>
+<p>
+</pre>

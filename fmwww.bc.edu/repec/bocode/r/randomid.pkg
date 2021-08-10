@@ -1,0 +1,17 @@
+d 'RANDOMID': module to identify every observation in the dataset with random alphanumeric characters
+d
+d  randomid creates a new variable that uniquely identifies every
+d observation in the dataset with random alphanumeric characters. 
+d
+d KW: random
+d KW: data management
+d
+d Requires: Stata version 13
+d
+d Distribution-Date: 20151114
+d
+d Author: Raúl Torres, Mathematica Policy Research
+d Support: email RTorres@@mathematica-mpr.com
+d
+f randomid.ado
+f randomid.sthlp

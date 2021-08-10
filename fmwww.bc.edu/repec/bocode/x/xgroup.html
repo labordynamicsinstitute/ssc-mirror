@@ -1,0 +1,115 @@
+<pre>
+-------------------------------------------------------------------------------
+help for <b>xgroup</b>                                                  (Roger Newson)
+-------------------------------------------------------------------------------
+<p>
+<b><u>Group the data creating a group variable and/or output dataset</u></b>
+<p>
+        <b>xgroup</b> <i>varlist</i> [<i>if</i>] [<i>in</i>] , [ <b><u>g</u></b><b>enerate(</b><i>varname</i><b>)</b> <b><u>sa</u></b><b>ving(</b><i>filename</i> [<b>,</b>
+                     <b>replace</b>]<b>)</b>
+                     <b><u>m</u></b><b>issing</b> <b>label</b> <b><u>l</u></b><b>name(</b><i>name</i><b>)</b> <b><u>t</u></b><b>runcate(</b><i>#</i><b>)</b> ]
+<p>
+<p>
+<b><u>Description</u></b>
+<p>
+    <b>xgroup</b> is an extended version of the <b>egen</b> function <b>group(</b><i>varlist</i><b>)</b>.  It
+    inputs a <i>varlist</i> of existing variables, and groups the data by the 
+    <i>varlist</i>.  It generates as output a new variable, indicating the group to
+    which each observation belongs, and/or an output dataset (or resultsset),
+    with 1 observation per group, and data on the values of the <i>varlist</i>
+    variables, and of the generated variable (if specified), corresponding to
+    that group.  The output dataset can be merged into other datasets, using
+    the official Stata command <b>merge</b> or the SSC package <b>addinby</b>.  <b>xgroup</b> is
+    typically used together with the SSC packages <b>parmest</b> and <b>factext</b>,
+    especially when a multiple-intercept model is fitted to the data, with 1
+    intercept for each combination of values for the <i>varlist</i>.
+<p>
+<p>
+<b><u>Options</u></b>
+<p>
+    <b>generate(</b><i>varname</i><b>)</b> specifies the name of an output variable to be
+        generated.  This output variable will contain, in each observation,
+        the group to which that observation belongs, based on the values of
+        the <i>varlist</i> in that ovservation.  It will have 1 integer value per
+        combination of values for the input variables in the <i>varlist</i>, in
+        ascending order of these values, starting with 1.
+<p>
+    <b>saving(</b><i>filename</i> [<b>, replace</b>]<b>)</b> specifies a file containing an output
+        dataset (or resultsset), with 1 observation per group specified by
+        the <i>varlist</i>, and data on the corresponding value of the new variable
+        specified by the <b>generate()</b> option (if present), and also on the
+        values of the input variables in the <i>varlist</i> corresponding to that
+        group.  The output dataset is sorted primarily by the new grouping
+        variable (if specified), and secondarily by the variables in the 
+        <i>varlist</i>.  If <b>replace</b> is specified, then any existing file named
+        <i>filename</i> will be replaced.  The user must specify the <b>generate()</b>
+        option, the <b>saving()</b> option, or both.
+<p>
+    <b>missing</b> specifies that there will be 1 group per combination of missing
+        or non-missing values of variables in the <i>varlist</i>.  If <b>missing</b> is not
+        specified, then there will be 1 group per combination of non-missing
+        values of <i>varlist</i>, and the <b>generate()</b> variable (if specified) will be
+        missing in any observation in which one or more of these variables
+        has missing values.
+<p>
+    <b>label</b>, <b>lname(</b><i>name</i><b>)</b> and <b>truncate(</b><i>#</i><b>)</b> control the value labels of the
+        variable specified by the <b>generate()</b> option, and function as the
+        options of the same names in the <b>egen</b> function <b>group(</b><i>varlist</i><b>)</b>.
+        However, they are not likely to be used, as they duplicate the
+        function of the <b>saving()</b> option.
+<p>
+<p>
+<b><u>Examples</u></b>
+<p>
+        <b>.sysuse auto, clear</b>
+        <b>.xgroup foreign rep78, gene(frgroup) saving(frgroup1.dta, replace)</b>
+<p>
+        <b>.sysuse auto, clear</b>
+        <b>.xgroup rep78 foreign, saving(rfgroup1.dta, replace)</b>
+<p>
+    The following example uses <b>xgroup</b> with the packages <b>parmest</b>, <b>factext</b> and 
+    <b>addinby</b>, downloadable from SSC.  It defines a new binary variable <b>odd</b>,
+    indicating that a car is odd-numbered in the sequence of the data.  It
+    then uses <b>xgroup</b> to create a new variable <b>fogroup</b>, grouping the data by
+    the binary variables <b>foreign</b> and <b>odd</b>.  It then fits a regression model
+    predicting weight (lb) from length (inches), with a common length effect
+    on weight, expressed in lb/inch, and 4 intercepts, 1 for each combination
+    of the binary variables <b>foreign</b> and <b>odd</b>, giving the expected weight of a
+    car 180 inches long with that combination of the variables <b>foreign</b> and
+    <b>odd</b>.  The parameters of this model are saved (using <b>parmest</b>) in an output
+    dataset (or resultsset), with 1 observation per estimated model
+    parameter, which is written to the memory, overwriting the existing data.
+    In this new dataset, the grouping variable <b>fogroup</b> is then reconstructed,
+    using <b>factext</b>.  The output dataset (or resultsset) generated by <b>xgroup</b> is
+    then merged into the output dataset (or resultsset) generated by <b>parmest</b>,
+    using <b>addinby</b>, to reconstruct the variables <b>foreign</b> and <b>odd</b> in the 4
+    observations corresponding to intercepts.
+<p>
+        <b>.sysuse auto, clear</b>
+        <b>.gene byte odd=mod(_n,2)</b>
+        <b>.lab var odd "Odd-numbered car"</b>
+        <b>.clonevar lm180=length</b>
+        <b>.replace lm180=lm180-180</b>
+        <b>.tempfile tf1</b>
+        <b>.xgroup foreign odd, gene(fogroup) saving(`"`tf1'"', replace)</b>
+        <b>.xi, noomit: regress weight lm180 i.fogroup, noconst</b>
+        <b>.parmest, label norestore</b>
+        <b>.factext fogroup</b>
+        <b>.addinby fogroup using `"`tf1'"', missing unmatched(keep)</b>
+        <b>.describe</b>
+        <b>.list label foreign odd estimate min* max* p</b>
+<p>
+<p>
+<b><u>Author</u></b>
+<p>
+    Roger Newson, National Heart and Lung Institute, Imperial College London,
+    UK.
+    Email: r.newson@imperial.ac.uk
+<p>
+<p>
+<b><u>Also see</u></b>
+<p>
+     Manual: <b>[D] egen</b>, <b>[D] merge</b>, <b>[R] xi</b>
+    On-line: help for <b>egen</b>, <b>merge</b>, <b>xi</b>
+             help for <b>addinby</b>, <b>parmest</b>, <b>factext</b> if installed
+</pre>

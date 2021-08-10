@@ -1,0 +1,109 @@
+<pre>
+<b>help misum</b>
+-------------------------------------------------------------------------------
+<p>
+<b><u>Title</u></b>
+<p>
+     <b>misum</b> -- Summary statistics in MI dataset
+<p>
+<b><u>Syntax</u></b>
+<p>
+        <b>misum</b> [<i>varlist</i>] [<i>if</i>] [<i>in</i>] [<i>weight</i>] [<b>, m(</b><i>numlist</i><b>)</b> <b><u>d</u></b><b>etail</b> <b><u>for</u></b><b>mat(</b>%fmt<b>)</b>
+                                            <b><u>mat</u></b><b>rix(</b><i>name</i><b>)</b>]
+<p>
+<p>
+            <b>by</b> is allowed
+<p>
+            <b>aweights</b>, <b>fweights</b> and <b>iweights</b> are allowed.  However, <b>iweights</b> are
+            not allowed with <b>detail</b>. See summarize
+<p>
+<p>
+<b><u>Description</u></b>
+<p>
+    <b>misum</b> calculates summary statistics in MI datasets. Results from 
+    summarize are combined, applying Rubin's combination rules.
+<p>
+<p>
+<b><u>Options</u></b>
+<p>
+        +---------+
+    ----+ Options +----------------------------------------------------------
+<p>
+    <b>m(</b><i>numlist</i><b>)</b> combines results from imputed datasets <i>numlist</i>.  Numbers of
+        imputed datasets must be given in ascending order.
+<p>
+    <b><u>d</u></b><b>etail</b> calculates additional statistics and returns them in <b>r()</b>. See 
+        summarize.
+<p>
+    <b><u>for</u></b><b>mat(%</b><i>fmt</i><b>)</b> displays results in specified format.
+<p>
+    <b><u>mat</u></b><b>rix(</b><i>name</i><b>)</b> returns the result matrix in <b>r(</b><i>name</i><b>)</b>.
+<p>
+<p>
+<b><u>Remarks</u></b>
+<p>
+    <b>misum</b> calls summarize for each imputed dataset. The returned results are
+    added up and divided by <i>M</i>, where <i>M</i> is the number of imputed datasets. The
+    standard deviation is calculated as the square root of the variance.
+<p>
+    <b>misum</b> requires the data to be <i>flong style</i> (also see mi set, mi convert).
+    The data may also be in <b>ice</b> format (Royston 2005).
+<p>
+<p>
+<b><u>Example</u></b>
+<p>
+    <u>Use with </u><u>mi</u><u> (Stata 11 or higher)</u>
+<p>
+        . sysuse auto
+<p>
+        . mi set flong
+<p>
+        . mi register imputed rep78
+<p>
+        . mi impute regress rep78 = price mpg weight ,add(5)
+<p>
+        <b>. misum rep78 price mpg</b>
+<p>
+    <u>Use with </u><b><u>ice</u></b><u> (Stata 9.2 or higher)</u>
+<p>
+        . sysuse auto ,clear
+<p>
+        . ice rep78 price mpg weight ,clear m(5) cmd(regress)
+<p>
+        <b>. misum rep78 price mpg</b>
+<p>
+<p>
+<b><u>Saved results</u></b>
+<p>
+    <b>misum</b> calls summarize and saves any results returned for each variable.
+    It therefore saves the following in <b>r()</b>:
+<p>
+    Scalars
+        <b>r(</b><i>varname_stat</i><b>)</b> (avarage) <i>stat</i> for <i>varname</i> returned by summarize
+<p>
+    Matrices
+        <b>r(</b><i>name</i><b>)</b>         result matrix (<b>matrix</b> only)
+<p>
+<p>
+<b><u>Acknowledgments</u></b>
+<p>
+    Sebastian Pink suggested downward compatibility with Stata 9.2 and data
+    in <b>ice</b> format.
+<p>
+<b><u>References</u></b>
+<p>
+    Royston, P. (2005) Multiple imputation of missing values: update. Stata
+    Journal 5 (2), 188-201.
+<p>
+<p>
+<b><u>Author</u></b>
+<p>
+    Daniel Klein, University of Bamberg, klein.daniel.81.@gmail.com
+<p>
+<p>
+<b><u>Also see</u></b>
+<p>
+    Online: <b>mi</b>, summarize
+<p>
+    if installed: <b>ice</b>
+</pre>

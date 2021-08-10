@@ -1,0 +1,173 @@
+<pre>
+-------------------------------------------------------------------------------
+help for <b>oprobpr</b>                                                    Nick Winter
+-------------------------------------------------------------------------------
+<p>
+<b><u>Displaying predicted probabilities from ordered probit &amp; logit</u></b>
+<p>
+     <b>oprobpr</b> <i>yvar xvar</i> [<i>weight</i>] [<b>if</b> <i>exp</i>] [<b>in</b> <i>range</i>] [<b>,</b> <b><u>a</u></b><b>djust(</b><i>varlist</i><b>)</b>
+               <b><u>x</u></b><b>act(</b><i>varlist</i><b>)</b> <b><u>po</u></b><b>ly(</b><i>#</i><b>)</b> <b><u>f</u></b><b>rom(</b><i>#</i><b>)</b> <b><u>t</u></b><b>o(</b><i>#</i><b>)</b> <b>inc(</b><i>#</i><b>)</b> <b><u>pl</u></b><b>ot(</b><i>pspec</i>[<b>,</b> ...]<b>)</b>
+               <b><u>s</u></b><b>ymbol(</b><i>s...s</i><b>)</b> <b><u>c</u></b><b>onnect(</b><i>c</i>[<b>[</b><i>p</i><b>]</b>] ... <i>c</i>[<b>[</b><i>p</i><b>]</b>]<b>)</b> <b><u>lab</u></b><b>els(</b><i>lab</i>[<b>,</b><i> ...</i>]<b>)</b>
+               <b><u>k</u></b><b>eys</b> <b><u>te</u></b><b>xt(</b><i>x y text</i> [<b>\</b><i>...</i>]<b>)</b> <b>cmd(</b><i>cmd_name</i><b>)</b> <b><u>nol</u></b><b>ist</b> <b><u>nop</u></b><b>lot</b> <b><u>nom</u></b><b>odel</b>
+               <b><u>save</u></b><b>(</b><i>filename</i>[<b>, replace</b>]<b>)</b>} <b><u>mod</u></b><b>eloptions(</b><i>options</i><b>)</b> <i>graph_options</i>
+<p>
+<p>
+<b><u>Description</u></b>
+<p>
+<b>oprobpr</b> estimates an ordered dependent variable model on a continuous X
+     variable and an optional set of covariates, then lists and graphs the
+     predicted probabilities from this model against the X variable, holding
+     the covariates constant.  Optionally, quadratic or quadratic and cubic
+     terms can be added to the model, as well as interaction terms between X
+     and one or more other covariates.
+<p>
+By default all response categories are listed and plotted; the <b>plot()</b> option
+     allows the user to control plotting of only some categories, or
+     combinations of categories. <b>labels()</b> allows control of the labelling of
+     the plotted lines.
+<p>
+<b>oprobpr</b> is originally based on logpred published by Joanne Garrett and of 
+     probpred published by Mead Over in sg42.2: STB 42. Unlike those
+     commands, <b>oprobpr</b>, does not include confidence intervals in the list or
+     graph.
+<p>
+<p>
+<b><u>Options</u></b>
+<p>
+<b>adjust(</b><i>varlist</i><b>)</b> specifies the other covariates in the model.  For the
+     calculation of probabilities, by default these are set to their mean,
+     based on the observations used in the analysis. They can be set to other
+     values, e.g. <b>a(</b>mpg=50 foreign=1 weight<b>)</b>.
+<p>
+<b>xact(</b><i>varlist</i><b>)</b> indicates that the variables in <i>varlist</i> (a subset of <b>adjust()</b>)
+     should also enter the model in interaction with <i>xvar</i>. The interaction
+     terms are created and entered in the model automatically.
+<p>
+<b>poly(</b><i>#</i><b>)</b> indicates that <i>xvar</i> enters the model as a polynomial.  Quadratic and
+     cubic models are allowed.  They are indicated by <b>poly(</b>2<b>)</b> and <b>poly(</b>3<b>)</b>,
+     respectively. The polynomial terms are created and entered in the model
+     automatically.
+<p>
+<b>from(</b><i>#</i><b>)</b> specifies the lowest value of <i>xvar</i> for which a prediction is to be
+     calculated.  The default is to use the minimum of <i>xvar</i> in the data.
+<p>
+<b>to(</b><i>#</i><b>)</b> specifies the highest value of <i>xvar</i> for which a prediction is to be
+     calculated.  The default is to use the maximum of <i>xvar</i> in the data.
+<p>
+<b>inc(</b><i>#</i><b>)</b> specifies the increment between adjacent values of <i>xvar</i>.  The default
+     is to set an increment such that eleven probabilities are calculated.
+<p>
+<b>plot(</b><i>n,...,n</i><b>)</b> controls which categories of the dependent variable are plotted
+     and listed. The default is to list and plot probabilities for all
+     categories. For example, <b>p(</b>1,3,4<b>)</b> would result in categories 1, 3 and 4
+     only being listed and plotted.
+<p>
+     <b>plot()</b> also allows categories to be combined. So, for example,
+     <b>p(</b>1+2,3,4+5+6<b>)</b> would plot three lines: one that is the sum of
+     probabilities for categories one and two, one that is the probability of
+     category three, and one that is the sum of categories 4 through 6.
+<p>
+<b>symbol()</b> indicates what symbol should be used for the lines. The syntax is
+     identical to the graph command's symbol() option.  By default, the lines
+     have no symbols.
+<p>
+<b>connect()</b> specifies the line style with which to draw the lines. The default
+     is to connect cubic splines with solid lines.  The syntax is identical
+     to the graph command's connect() option.
+<p>
+<b>labels()</b> specifies text labels with which to label the lines.  By default,
+     simple categories are labeled with the appropriate value label from the
+     dependent variable, if available. Otherwise, they are labelled "Cat 1",
+     "Cat 2" ... , through "Cat n".  For example, <b>s(</b>Low,Medium,High<b>)</b> would
+     label the lines "Low", "Medium", and "High". To leave a line unlabeled,
+     indicate a "." for its label.
+<p>
+<b>text()</b> specifies lines of text to be added to the graph.  X and y coordinates
+     should be specified in terms of the graph metric, followed by the text
+     to be inserted. Multiple text specifications may be separated with a
+     backslash, e.g. <b>text(24 .6 First string \ 30 .2 More text)</b> would insert
+     "First string" at 24,0.6 and "More text" at 30,0.2 on the graph.
+<p>
+<b>keys</b> specifies that Stata's default graph keys should be displayed, rather
+     than the default title line. Note that specific keys can be specified
+     manually with the key1 through key4 options, and titles may be specified
+     manually with the t1title and t2title options.
+<p>
+<b>command</b> specifies the estimation command to be used. Valid options are 
+     oprobit, ologit, svyoprobit, and svyologit.  The default is oprobit.
+<p>
+<b>nomodel</b> suppresses the display of the estimated model.
+<p>
+<b>nolist</b> suppresses the list of predicted values.
+<p>
+<b>noplot</b> suppresses the graph of predicted values.
+<p>
+<b>save(</b><i>filename</i><b>)</b> saves the prediction data set. This is useful for conducting
+     additional analysis of the predicted values. (Note that the graph option
+     <b>saving()</b> is different, and may be used to save the resulting <i>graph</i>.)
+<p>
+<b>modeloptions</b> specifies options to be included in the running of the model,
+     such as robust.
+<p>
+<i>graph_options</i> can be any valid options for a twoway graph. Particularly
+     helpful are <b>xlabel</b>, <b>ylabel</b>, <b>saving(</b><i>filename</i><b>)</b>, <b>titles</b>, and the rest.
+<p>
+<p>
+<b><u>Examples</u></b>
+<p>
+     <b>. oprobpr rep78 mpg, adj(weight gear_ratio foreign) noplot</b>
+<p>
+     Calculates the predicted probabilities of 1978 repair ratings (rep78)
+     for various values of mpg, adjusted for weight, gear ratio and foreign;
+     mpg ranges in 10 steps according to its minimum and maximum in the data;
+     displays model and predicted values but not the graph.
+<p>
+<p>
+     <b>. oprobpr rep78 mpg, adj(weight gear_ratio foreign=0)</b>
+<p>
+     Same as above, except predictions are for foreign==0 instead of for the
+     sample average of foreign.  Graph and predictions are displayed.
+<p>
+<p>
+     <b>. oprobpr rep78 mpg, adj(weight gear_ratio foreign=0)</b> <b>xact(weight)</b>
+          <b>poly(3) cmd(olog)</b>
+<p>
+     Same as above, except that the interaction term weight*mpg is included
+     in the model using the xact(weight) option, and terms for mpg-squared
+     and mpg-cubed are included using poly(3).  Model estimated is ordered
+     logit rather than ordered probit.
+<p>
+<p>
+     <b>. oprobpr rep78 mpg, adj(weight gear_ratio foreign=0) p(1,3+4,5)</b>
+          <b>lab(Low,Med&amp;High,Very High) c(s[.] s[-] s) ylab(0,.5,1)</b>
+<p>
+     Same as above but only lists and plots categories 1, the sum of 3 and 4,
+     and 5 of rep78, and labels them "Low", "Med&amp;High", and "Very High",
+     respectively.  The connect() options indicates that the first two lines
+     are drawn with short and long dashes, and the ylabel() option labels the
+     y-axis appropriately for predicted probabilities.  Note that any other
+     option which works on the graph command will also work here.
+<p>
+<p>
+     <b>. oprobpr rep78 mpg, f(30) t(50) adj(weight gear_ratio) xlab ylab nolist</b>
+<p>
+     Calculates the predicted probability over the range 30 to 50 of mpg,
+     rather than the range of mpg in the data set. Displays the model and the
+     graph, but omits the list of predictions.
+<p>
+<p>
+<b><u>Author</u></b>
+<p>
+     Nick Winter
+     Cornell University
+     nw53@cornell.edu
+<p>
+<p>
+<b><u>Also see</u></b>
+<p>
+    STB:  <b>STB-42 sg42.2, STB-26 sg42, STB-24 sg33</b>
+ Manual:  <b>[R] oprobit, oprobitp, ologit, ologitp</b>
+On-line:  help for predict, oprobit, ologit, probpred (if installed), 
+          regpred2 (if installed), logpred (if installed), adjmean (if
+          installed), adjprop (if installed)
+</pre>

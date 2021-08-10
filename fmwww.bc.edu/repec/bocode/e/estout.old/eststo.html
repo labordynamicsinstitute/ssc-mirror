@@ -1,0 +1,397 @@
+<html>
+
+<head>
+<title>estout - Making Regression Tables in Stata</title>
+<meta name="author" content="Ben Jann">
+<meta name="keywords" content="Stata, estout, esttab, eststo, estadd,
+      LaTeX, regression table, statistics">
+<meta http-equiv="content-language" content="en">
+<meta http-equiv="content-type" content="text/html">
+<link rel="stylesheet" href="default.css" type="text/css">
+</head>
+
+<body>
+
+<div id="pagehead">
+
+<form style="text-align:right; border:0px; margin: 2.17em 0px 0px 0px; padding:5px 15px 0px 0px; float:right"
+ "method=GET action="http://www.google.com/search">
+    <input style="border-style:solid; border-color: #bcd" TYPE=text name=q size="15">
+    <INPUT TYPE=hidden name=sitesearch value="repec.org/bocode/e/estout">
+    <input style="border:0px; background-color: #F3F6F9"
+     type=submit name=sa value="search">
+</form>
+
+   <a href="index.html"><h1>estout</h1></a>
+   <p>Making Regression Tables in Stata<p>
+
+</div>
+
+<div id="pagebar">
+   <ul>
+     <li><a href="index.html">Overview</a>
+     </li>
+     <li><a href="installation.html">Installation</a>
+     </li>
+     <li><a href="examples.html">Examples</a>
+     <ul>
+          <li><a href="esttab.html">esttab</a>
+          </li>
+          <li><a href="estout.html">estout</a>
+          </li>
+          <li><a href="eststo.html">eststo</a>
+          </li>
+          <li><a href="estadd.html">estadd</a>
+          </li>
+          <li><a href="estpost.html">estpost</a>
+          </li>
+          <li><a href="advanced.html">Advanced</a>
+          </li>
+          <li><a href="spost.html">SPost</a>
+          </li>
+     </ul>
+     </li>
+     <li><a href="documentation.html">Documentation</a>
+     <ul>
+          <li><a href="hlp_esttab.html">esttab</a>
+          </li>
+          <li><a href="hlp_estout.html">estout</a>
+          </li>
+          <li><a href="hlp_eststo.html">eststo</a>
+          </li>
+          <li><a href="hlp_estadd.html">estadd</a>
+          </li>
+          <li><a href="hlp_estpost.html">estpost</a>
+          </li>
+     </ul>
+     </li>
+     <li><a href="history.html">History</a>
+     </li>
+     <li><a href="publications.html">Publications</a>
+     </li>
+     <li><a href="author.html">Author</a>
+     </li>
+     <li><a href="alsosee.html">Also see</a>
+     </li>
+   </ul>
+
+</div>
+
+<div id="pagebody">
+<h1>Examples for <b>eststo</b></h1>
+
+<div id="extoc">
+<ul>
+<li><a href="eststo.html#eststo000">Basic syntax and usage</a></li>
+<li><a href="eststo.html#eststo001">Store estimates without providing a name</a></li>
+<li><a href="eststo.html#eststo002">Use <b>eststo</b> as a prefix command</a></li>
+<li><a href="eststo.html#eststo005">Using <b>by</b> with <b>eststo</b></a></li>
+<li><a href="eststo.html#eststo004">Add additional statistics</a></li>
+<li><a href="eststo.html#eststo003">Drop the <b>e(sample)</b> to save memory</a></li>
+</ul>
+</div>
+
+<a name="eststo000"></a>
+<h2>Basic syntax and usage</h2>
+
+<p>
+<b>eststo</b> stores a copy of the active estimation results for later tabulation.
+It is an alternative to official Stata's <b>estimates store</b>. The basic syntax 
+of <b>eststo</b> is:</p>
+<pre>
+<b>eststo</b> [<i>name</i>] [<b>,</b> <i>options</i> ] [ <b>:</b> <i>estimation_command</i> ]
+</pre>
+<p><b>eststo</b> may be applied analogous to official Stata's <b>estimates store</b>. Example:
+</p>
+
+<pre>
+. sysuse auto
+(1978 Automobile Data)
+
+. quietly regress price weight mpg
+
+. eststo model1
+
+. quietly regress price weight mpg foreign
+
+. eststo model2
+
+. estimates table model1 model2
+
+----------------------------------------
+    Variable |   model1       model2    
+-------------+--------------------------
+      weight |<b>  1.7465592</b>  <b>  3.4647058</b>  
+         mpg |<b> -49.512221</b>  <b>  21.853604</b>  
+     foreign |<b>           </b>  <b>  3673.0604</b>  
+       _cons |<b>  1946.0687</b>  <b> -5853.6957</b>  
+----------------------------------------
+
+. eststo clear
+<p style="text-align:right; padding:0px; margin:0px"><a href="eststo000.do">[do-file]</a>
+</pre>
+
+<p>
+<b>eststo clear</b> on the last line of the example erases the estimation sets
+that have been stored by <b>eststo</b>.
+</p>
+
+
+<a name="eststo001"></a>
+<h2>Store estimates without providing a name</h2>
+
+<p>
+A main advantage of <b>eststo</b> over <b>estimates store</b> is that it
+does not require the user to specify a name for the stored estimates. Example:
+</p>
+
+<pre>
+. sysuse auto
+(1978 Automobile Data)
+
+. quietly regress price weight mpg
+
+. eststo
+(<b>est1</b> stored)
+
+. quietly regress price weight mpg foreign
+
+. eststo
+(<b>est2</b> stored)
+
+. esttab
+
+--------------------------------------------
+                      (1)             (2)   
+                    price           price   
+--------------------------------------------
+weight      <b>        1.747**         3.465***</b>
+            <b>       </b>(<b>2.72</b>)<b>          </b>(<b>5.49</b>)<b>   </b>
+
+mpg         <b>       -49.51           21.85   </b>
+            <b>      </b>(<b>-0.57</b>)<b>          </b>(<b>0.29</b>)<b>   </b>
+
+foreign     <b>                       3673.1***</b>
+            <b>                       </b>(<b>5.37</b>)<b>   </b>
+
+_cons       <b>       1946.1         -5853.7   </b>
+            <b>       </b>(<b>0.54</b>)<b>         </b>(<b>-1.73</b>)<b>   </b>
+--------------------------------------------
+N           <b>           74              74   </b>
+--------------------------------------------
+t statistics in parentheses
+* p&lt;0.05, ** p&lt;0.01, *** p&lt;0.001
+
+. eststo clear
+<p style="text-align:right; padding:0px; margin:0px"><a href="eststo001.do">[do-file]</a>
+</pre>
+
+<p>
+<b>eststo</b> keeps a list of the names of the stored
+estimation sets. If, as above, <b>esttab</b> (or <b>estout</b>) is applied
+without specifying the names of the sets to be tabulated, all sets
+stored by <b>eststo</b> are tabulated.
+</p>
+
+
+<a name="eststo002"></a>
+<h2>Use <b>eststo</b> as a prefix command</h2>
+
+<p>
+<b>eststo</b> may be used as a prefix command:
+</p>
+
+<pre>
+. sysuse auto
+(1978 Automobile Data)
+
+. eststo: quietly regress price weight mpg
+(<b>est1</b> stored)
+
+. eststo: quietly regress price weight mpg foreign
+(<b>est2</b> stored)
+
+. esttab
+
+--------------------------------------------
+                      (1)             (2)   
+                    price           price   
+--------------------------------------------
+weight      <b>        1.747**         3.465***</b>
+            <b>       </b>(<b>2.72</b>)<b>          </b>(<b>5.49</b>)<b>   </b>
+
+mpg         <b>       -49.51           21.85   </b>
+            <b>      </b>(<b>-0.57</b>)<b>          </b>(<b>0.29</b>)<b>   </b>
+
+foreign     <b>                       3673.1***</b>
+            <b>                       </b>(<b>5.37</b>)<b>   </b>
+
+_cons       <b>       1946.1         -5853.7   </b>
+            <b>       </b>(<b>0.54</b>)<b>         </b>(<b>-1.73</b>)<b>   </b>
+--------------------------------------------
+N           <b>           74              74   </b>
+--------------------------------------------
+t statistics in parentheses
+* p&lt;0.05, ** p&lt;0.01, *** p&lt;0.001
+
+. eststo clear
+<p style="text-align:right; padding:0px; margin:0px"><a href="eststo002.do">[do-file]</a>
+</pre>
+
+
+<a name="eststo005"></a>
+<h2>Using <b>by</b> with <b>eststo</b></h2>
+
+<p>
+If <b>eststo</b> is used as a prefix command, the <b>by</b> command
+is allowed to obtain results for different groups of observations:
+</p>
+
+<pre>
+. sysuse auto
+(1978 Automobile Data)
+
+. by foreign: eststo: quietly reg price weight mpg
+
+-------------------------------------------------------------------------------
+-&gt; Domestic
+(<b>est1</b> stored)
+
+-------------------------------------------------------------------------------
+-&gt; Foreign
+(<b>est2</b> stored)
+
+. esttab, label nodepvar nonumber
+
+----------------------------------------------------
+                         Domestic         Foreign   
+----------------------------------------------------
+Weight (lbs.)       <b>        4.415***        5.156***</b>
+                    <b>       </b>(<b>4.66</b>)<b>          </b>(<b>5.85</b>)<b>   </b>
+
+Mileage (mpg)       <b>        237.7          -19.78   </b>
+                    <b>       </b>(<b>1.71</b>)<b>         </b>(<b>-0.34</b>)<b>   </b>
+
+Constant            <b>     -13285.4*        -5065.8   </b>
+                    <b>      </b>(<b>-2.32</b>)<b>         </b>(<b>-1.58</b>)<b>   </b>
+----------------------------------------------------
+Observations        <b>           52              22   </b>
+----------------------------------------------------
+t statistics in parentheses
+* p&lt;0.05, ** p&lt;0.01, *** p&lt;0.001
+
+. eststo clear
+<p style="text-align:right; padding:0px; margin:0px"><a href="eststo005.do">[do-file]</a>
+</pre>
+
+
+<a name="eststo004"></a>
+<h2>Add additional statistics</h2>
+
+<p>
+<b>eststo</b> can add extra results to the <b>e()</b>-scalars
+while storing the estimates and thus make them available for
+tabulation. Example:
+</p>
+
+<pre>
+. sysuse auto
+(1978 Automobile Data)
+
+. quietly regress price weight mpg
+
+. test weight = mpg
+
+ ( 1)  <b>weight - mpg = 0</b>
+
+       F(  1,    71) =<b>    0.36</b>
+            Prob &gt; F =<b>    0.5514</b>
+
+. eststo, addscalars(p_diff r(p))
+(e(<b>p_diff</b>) = <b>.55138216</b> added)
+(<b>est1</b> stored)
+
+. esttab, scalars(p_diff) obslast
+
+----------------------------
+                      (1)   
+                    price   
+----------------------------
+weight      <b>        1.747** </b>
+            <b>       </b>(<b>2.72</b>)<b>   </b>
+
+mpg         <b>       -49.51   </b>
+            <b>      </b>(<b>-0.57</b>)<b>   </b>
+
+_cons       <b>       1946.1   </b>
+            <b>       </b>(<b>0.54</b>)<b>   </b>
+----------------------------
+p_diff      <b>        0.551   </b>
+N           <b>           74   </b>
+----------------------------
+t statistics in parentheses
+* p&lt;0.05, ** p&lt;0.01, *** p&lt;0.001
+
+. eststo clear
+<p style="text-align:right; padding:0px; margin:0px"><a href="eststo004.do">[do-file]</a>
+</pre>
+
+<p>
+Functionality of the <a href="hlp_eststo.html#addscalars"><b>addscalars()</b></a> option is limited to adding scalars. See the <b>estadd</b>
+command for a more powerful tool to add results to stored estimates.
+</p>
+
+
+<a name="eststo003"></a>
+<h2>Drop the <b>e(sample)</b> to save memory</h2>
+
+<p>
+<b>eststo</b> can store the estimates without the <b>e(sample)</b>
+function. Excluding  <b>e(sample)</b> saves memory and speeds up 
+tabulation programs. Example:
+</p>
+
+<pre>
+. sysuse auto
+(1978 Automobile Data)
+
+. eststo: quietly regress price weight mpg
+(<b>est1</b> stored)
+
+. eststo, noesample: quietly regress price weight mpg
+(<b>est2</b> stored)
+
+. _eststo: quietly regress price weight mpg
+(<b>est3</b> stored)
+
+. estimates dir
+
+-------------------------------------------------------
+        name | command      depvar       npar  title 
+-------------+-----------------------------------------
+        est1 |<b> regress      price           3  </b>
+        est2 |<b> regress      price           3  </b>
+        est3 |<b> regress      price           3  </b>
+-------------------------------------------------------
+
+. describe _est*
+
+              storage  display     value
+variable name   type   format      label      variable label
+-------------------------------------------------------------------------------
+<b>_est_est1      </b> byte   %8.0g                  <b>esample() from estimates store</b>
+
+. eststo clear
+<p style="text-align:right; padding:0px; margin:0px"><a href="eststo003.do">[do-file]</a>
+</pre>
+
+<p>
+<b>_eststo</b> is a synonym for <b>eststo</b> with the
+<a href="hlp_eststo.html#esample"><b>noesample</b></a> option specified</p>
+<p><em>Cautionary note:</em> Some postestimation commands may not work correctly 
+with estimates that do not contain the <b>e(sample)</b>.
+</p>
+
+</div>
+
+</body></html>

@@ -1,0 +1,86 @@
+<pre>
+<p>
+<b>help drarea</b>
+-------------------------------------------------------------------------------
+<p>
+<b><u>Title</u></b>
+<p>
+    <b> Draw an overlapping range area plot</b>
+<p>
+<b><u>Syntax</u></b>
+<p>
+        <b>drarea</b> hi1 lo1 hi2 lo2 x [<b>,</b> <i>options</i>]
+<p>
+    <i>options</i>                 Description
+    -------------------------------------------------------------------------
+    Main
+      <b><u>c</u></b><b>olor</b>(colorstylelist)  specifies the two colours for the two separate
+                              range areas.
+      <b><u>a</u></b><b>dd</b>                    specifies that markers are plotted in addition
+                              to the range plots.
+      twoway_options         specifies additional options in the graphic.
+    -------------------------------------------------------------------------
+<p>
+<b><u>Description</u></b>
+<p>
+    Multiple graphics are produced in Stata by the rule "last drawn first
+    seen". So the objects that are drawn last are the ones that are observed.
+    The implication of this principle is that when overlapping two rarea
+    graphs the overlapping area is hidden by the second rarea graph.  This
+    command <b>drarea</b> overlays two range area plots by merging the two colours
+    and hence highlighting the true overlap. There are numerous graphics that
+    could benefit from the same principles but at the moment the graphics
+    engine does not remember what is beneath the plots that are observed.
+<p>
+    <b>drarea</b> is short for <b>d</b>ouble <b>rarea</b> plot
+<p>
+<b><u>Options</u></b>
+<p>
+        +------+
+    ----+ Main +-------------------------------------------------------------
+<p>
+    <b><u>c</u></b><b>olor</b>(colorstylelist) specifies the two colours for the two separate
+        range areas. The option requires the same colorstyle be used and can
+        handle both the words or the RGB format (CYMK is not supported at the
+        moment). <b>Note:</b> if a third colour is specified then this will be the
+        colour of the overlapping area.
+<p>
+    <b><u>a</u></b><b>dd</b> specifies that markers are plotted in addition to the range plots.
+<p>
+<b><u>Examples</u></b>
+<p>
+    sysuse sp500, clear
+<p>
+    gen high2 = high+15*uniform()
+<p>
+    gen low2 = low+15*uniform()
+<p>
+    drarea high low high2 low2 date in 1/20
+<p>
+<b><u>Author</u></b>
+<p>
+Adrian Mander, MRC Human Nutrition Research, Cambridge, UK.
+<p>
+Email adrian.mander@mrc-hnr.cam.ac.uk
+<p>
+<b><u>See Also</u></b>
+<p>
+Related commands:
+<p>
+twoway rarea
+<p>
+Other Graphic Commands I have written:
+trellis     (if installed)   ssc install trellis     (to install this command)
+cdfplot     (if installed)   ssc install cdfplot     (to install this command)
+contour     (if installed)   ssc install contour     (to install this command)
+surface     (if installed)   ssc install surface     (to install this command)
+batplot     (if installed)   ssc install batplot     (to install this command)
+plotbeta    (if installed)   ssc install plotbeta    (to install this command)
+graphbinary (if installed)   ssc install graphbinary (to install this command)
+palette_all (if installed)   ssc install palette_all (to install this command)
+plotmatrix  (if installed)   ssc install plotmatrix  (to install this command)
+metagraph   (if installed)   ssc install metagraph   (to install this command)
+<p>
+<p>
+<p>
+</pre>

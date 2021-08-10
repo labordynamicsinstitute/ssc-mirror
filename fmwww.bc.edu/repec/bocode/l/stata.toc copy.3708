@@ -1,0 +1,35 @@
+p labgraph module to place text labels on two-way graphs
+p labjl module to add numerical codes to a defined value label
+p labsort module to recode a grouping variable according to a group statistic and reorder its value labels
+p labsumm module to generate summary table with variable labels
+p labutil modules for managing value and variable labels
+p latab module to generate LaTeX output from tabulate
+p levels module to report distinct levels of integer or string variable
+p levene module to test for equal population variances
+p levinlin module to perform Levin-Lin-Chu panel unit root test
+p lfsum modules to describe variables located by name fragments
+p lincom2 module to compute multiple linear combinations
+p lincomest module to generate linear combinations of estimators saved as estimation results
+p listtex module to list variables to a file for inclusion in a TeX table
+p listutil modules to manipulate lists of words
+p ljs module to left-justify string variables for printing
+p lmoments module to generate L-moments and derived statistics
+p lms module to perform least median squares regression fit
+p log2do2 module to convert log file to do file
+p log2html module to produce HTML log files
+p logpred module to calculate logistic regression probabilities
+p lomodrs module to perform Lo R/S test for long range dependence in timeseries
+p longch module to identify how many records satisfy a condition
+p longplot module to produce exploratory plot for longitudinal data
+p lookfor2 module to locate variables (enhanced lookfor)
+p loopplot modules to generate scatter plots with loops
+p lprplot module to produce logistic regression partial residual plots
+p lrchg module to calculate change in coefficients between logistic models 
+p lrdrop1 module to calculate likelihood-ratio test after dropping one term
+p lrmatx module to make logistic regression estimates available 
+p lrplot module to plot coefficients from a logistic regression
+p lrseq module to calculate sequential likelihood-ratio test after model estimation
+p lrutil modules providing utilities for logistic regression
+p lstack module to stack variables with labelled _stack
+p ltable2 module to generate life tables for rare events
+p lmoments	module to generate L-moments and derived statistics

@@ -1,0 +1,132 @@
+<pre>
+-------------------------------------------------------------------------------
+<b>help: </b><b>lmavon</b>                                                        <b>dialog:</b> <b>lma</b>
+<b>&gt; von</b>
+-------------------------------------------------------------------------------
+<p>
+<p>
+<b>        </b>+-------+
+<b>    </b>----+<b> Title </b>+------------------------------------------------------------
+<p>
+<b> lmavon: Von Neumann Ratio Autocorrelation Test at Higher Order AR(p)</b>
+<p>
+<p>
+<b>        </b>+--------+
+<b>    </b>----+<b> Syntax </b>+-----------------------------------------------------------
+<p>
+        <b>lmavon</b> <i>depvar</i> <i>indepvars</i> [<i>if</i>] [<i>in</i>] [<i>weight</i>] , [ <b><u>lag</u></b><b>s(</b><i>numlist</i><b>)</b>
+                <b><u>nocons</u></b><b>tant</b> <b>vce(</b><i>vcetype</i><b>)</b> ]
+ 
+<p>
+<b>        </b>+---------+
+<b>    </b>----+<b> Options </b>+----------------------------------------------------------
+<p>
+      <b><u>lag</u></b><b>s(</b><i>#</i><b>)</b>             determine Order of Lag Length; default is lag(1).
+<p>
+      <b><u>nocons</u></b><b>tant</b>          suppress constant term
+<p>
+    SE/Robust
+      <b>vce(</b><i>vcetype</i><b>)</b>        <i>vcetype</i> may be <b>ols</b>, <b><u>r</u></b><b>obust</b>, <b><u>cl</u></b><b>uster</b> <i>clustvar</i>,
+                            <b><u>boot</u></b><b>strap</b>, <b><u>jack</u></b><b>knife</b>, <b>hc2</b>, or <b>hc3</b>
+<p>
+<p>
+<b>        </b>+-------------+
+<b>    </b>----+<b> Description </b>+------------------------------------------------------
+<p>
+  <b>lmavon</b> computes Von Neumann Ratio Autocorrelation Test after <b>regress</b>
+  command.
+ 
+  <b>lmavon</b> detects autocorrelation at Higher Order AR(p), more than AR(1).
+<p>
+<p>
+   <b> Von Neumann Ratio Test</b> = DW(i)*N/(N-1)
+<p>
+where
+    DW(i) = Durbin-Watson Test = sum((E-`E'[n-i])^2)/sum(E^).
+        N = Number of Observations.
+    Rho_i = Autoregressive Coefficient of Lag i.
+<p>
+<p>
+<b>        </b>+---------------+
+<b>    </b>----+<b> Saved Results </b>+----------------------------------------------------
+<p>
+    <b>lmadurh</b> saves the following in <b>r()</b>:
+<p>
+    Scalars
+      <b>r(rho_#)</b>    Rho Value at Order AR(i)
+      <b>r(von_#)</b>    Von Neumann Ratio Autocorrelation Test at Order AR(i)
+<p>
+<p>
+<b>        </b>+----------+
+<b>    </b>----+<b> Examples </b>+---------------------------------------------------------
+<p>
+        clear all
+<p>
+        db lmavon
+<p>
+        sysuse lmavon.dta , clear
+<p>
+        lmavon y x1 x2 , lags(1)
+<p>
+        lmavon y x1 x2 , lags(4)
+<p>
+        return list
+<p>
+<p>
+   ====================================================
+   * Von Neumann Ratio Autocorrelation Test           *
+   ====================================================
+    Ho: No Autocorrelation - Ha: Autocorrelation
+   ---------------------------------------------------------------------------
+   * Rho Value for              AR(1) =   -0.1455
+   * Von Neumann Ratio Test     AR(1) =    2.1447   df: (3 , 17)
+   ---------------------------------------------------------------------------
+   * Rho Value for              AR(2) =   -0.2231
+   * Von Neumann Ratio Test     AR(2) =    2.1632   df: (3 , 17)
+   ---------------------------------------------------------------------------
+   * Rho Value for              AR(3) =    0.1871
+   * Von Neumann Ratio Test     AR(3) =    1.2703   df: (3 , 17)
+   ---------------------------------------------------------------------------
+   * Rho Value for              AR(4) =   -0.3002
+   * Von Neumann Ratio Test     AR(4) =    2.1391   df: (3 , 17)
+   ---------------------------------------------------------------------------
+<p>
+<p>
+<b>        </b>+------------+
+<b>    </b>----+<b> References </b>+-------------------------------------------------------
+<p>
+    Maddala, G. (1992)<b> "Introduction to Econometrics",</b> <i>2nd ed., Macmillan</i>
+        <i>Publishing Company, New York, USA</i>; 245.
+<p>
+    Von, Neumann (1941)<b> "Distribution of the Ratio of the Mean Square</b>
+        <b>Successive Difference to the Variance",</b> <i>Annals Math. Stat., Vol. 12</i>;
+        367-395.
+<p>
+<p>
+<b>        </b>+--------+
+<b>    </b>----+<b> Author </b>+-----------------------------------------------------------
+<p>
+  <b>Emad Abd Elmessih Shehata</b>
+  <b>Assistant Professor</b>
+  <b>Agricultural Research Center - Agricultural Economics Research Institute - Eg</b>
+<b>&gt; ypt</b>
+  <b>Email:   </b>emadstat@hotmail.com
+  <b>WebPage:                </b>http://emadstat.110mb.com/stata.htm
+  <b>WebPage at IDEAS:       </b>http://ideas.repec.org/f/psh494.html
+  <b>WebPage at EconPapers:  </b>http://econpapers.repec.org/RAS/psh494.htm
+<p>
+<p>
+<b>        </b>+-----------------+
+<b>    </b>----+<b> lmavon Citation </b>+--------------------------------------------------
+<p>
+    Shehata, Emad Abd Elmessih (2011)
+    <b>"lmavon: Stata Module to Compute Von Neumann Ratio Autocorrelation Test</b>
+        <b>at Higher Order AR(p) after OLS Regression"</b>
+<p>
+<p>
+<b><u>Also see</u></b>
+<p>
+    Online: <b>lmareg3</b>, <b>lmadurh</b>, <b>lmalb</b>, <b>lmabp</b>, <b>lmadw</b>, <b>lmavon</b> <b>(</b><i>if installed</i><b>)</b>.
+<p>
+<p>
+</pre>

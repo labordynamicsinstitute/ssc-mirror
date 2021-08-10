@@ -1,0 +1,154 @@
+<pre>
+-------------------------------------------------------------------------------
+<b>help: </b><b>lmadurh</b>                                                        <b>dialog:</b> <b>lm</b>
+<b>&gt; adurh</b>
+-------------------------------------------------------------------------------
+<p>
+<p>
+<b>        </b>+-------+
+<b>    </b>----+<b> Title </b>+------------------------------------------------------------
+<p>
+<b> lmadurh: Dynamic Autocorrelation Tests after (OLS-ALS) Regressions</b>
+<p>
+<p>
+<b>        </b>+--------+
+<b>    </b>----+<b> Syntax </b>+-----------------------------------------------------------
+<p>
+          <b>lmadurh</b> <i>depvar</i> <i>indepvars</i> [<i>if</i>] [<i>in</i>] [<i>weight</i>] , [ <b>dlag(</b><i>numlist</i><b>)</b>
+                <b><u>nocons</u></b><b>tant</b> <b>vce(</b><i>vcetype</i><b>)</b> ]
+ 
+<p>
+<b>        </b>+---------+
+<b>    </b>----+<b> Options </b>+----------------------------------------------------------
+<p>
+      <b>dlag(</b><i>#</i><b>)</b>             determine location of lagged dependent variable
+                            among RHS regressors; default is 1.
+<p>
+      <b><u>nocons</u></b><b>tant</b>          suppress constant term
+<p>
+    SE/Robust
+      <b>vce(</b><i>vcetype</i><b>)</b>        <i>vcetype</i> may be <b>ols</b>, <b><u>r</u></b><b>obust</b>, <b><u>cl</u></b><b>uster</b> <i>clustvar</i>,
+                            <b><u>boot</u></b><b>strap</b>, <b><u>jack</u></b><b>knife</b>, <b>hc2</b>, or <b>hc3</b>
+<p>
+<p>
+<b>        </b>+-------------+
+<b>    </b>----+<b> Description </b>+------------------------------------------------------
+<p>
+  <b>lmadurh</b> computes dynamic autocorrelation tests after (OLS-ALS) Regression,
+  via Durbin h, Harvey LM, and Wald LM Tests for residuals after <b>regress</b>
+  command.
+ 
+  <b>lmadurh</b> detects autocorrelation after correction the residuals from first
+  order AR(1) autocorrelation, via Autoregressive Least Squares (ALS), i.e., 
+  <b>prais</b>.
+<p>
+  Durbin h Test can not be computed, if the square root has negative value.
+<p>
+     **************************************************************
+     *   h  &gt; 1.96  (Autocorrelation)                             *
+     *   h  &lt; 1.96  (No Autocorrelation)                          *
+     *          h(+3) &gt; +1.96    Positive Autocorrelation         *
+     *          h(-3) &lt; -1.96    Negative Autocorrelation         *
+     *  -1.96 &lt; h(+1) &lt; +1.96    No       Autocorrelation         *
+     **************************************************************
+<p>
+<p>
+<b>        </b>+---------------+
+<b>    </b>----+<b> Saved Results </b>+----------------------------------------------------
+<p>
+    <b>lmadurh</b> saves the following in <b>e()</b>:
+<p>
+    Scalars
+      <b>e(durho)</b>    Durbin h Test after (OLS) (Lag DepVar)
+      <b>e(durhop)</b>   Durbin h Test after (OLS) (Lag DepVar) P-Value
+      <b>e(hrvho)</b>    Harvey LM Test after (OLS) (Lag DepVar)
+      <b>e(hrvhop)</b>   Harvey LM Test after (OLS) (Lag DepVar) P-Value
+      <b>e(waldt)</b>    Wald T Test
+      <b>e(waldtp)</b>   Wald T Test P-Value
+      <b>e(waldchi)</b>  Wald Chi2 Test
+      <b>e(waldchip)</b> Wald Chi2 Test P-Value
+      <b>e(durha)</b>    Durbin h Test after ALS(1) (Lag DepVar)
+      <b>e(durhap)</b>   Durbin h Test after ALS(1) (Lag DepVar) P-Value
+      <b>e(hrvha)</b>    Harvey LM Test after ALS(1) (Lag DepVar)
+      <b>e(hrvhap)</b>   Harvey LM Test after ALS(1) (Lag DepVar) P-Value
+<p>
+<p>
+<b>        </b>+----------+
+<b>    </b>----+<b> Examples </b>+---------------------------------------------------------
+<p>
+        clear all
+<p>
+        db lmadurh
+<p>
+        sysuse lmadurh.dta, clear
+<p>
+        lmadurh y y1 x1 x2, dlag(1)
+<p>
+        lmadurh y x1 x2 y1, dlag(3)
+<p>
+        ereturn list
+<p>
+<p>
+   ============================================================
+   * Dynamic Autocorrelation Tests after (OLS-ALS) Regression *
+   ============================================================
+   Ho: No Autocorrelation - Ha: Autocorrelation
+<p>
+   ----------------------------------------------------------------------
+   * Durbin  h Test                AR(1) =    -0.351     P&gt;Z       0.3628
+   * Harvey LM Test                AR(1) =     0.123     P&gt;Chi2(1) 0.7256
+   ----------------------------------------------------------------------
+   * Wald    T Test                AR(1) =    -0.280     P&gt;Z       0.3896
+   * Wald Chi2 Test                AR(1) =     0.079     P&gt;Z       0.7792
+   ----------------------------------------------------------------------
+   * Durbin  h Test after ALS(1)   AR(1) =    -1.260     P&gt;Z       0.1038
+   * Harvey LM Test after ALS(1)   AR(1) =     1.588     P&gt;Chi2(1) 0.2077
+   ----------------------------------------------------------------------
+<p>
+<p>
+<b>        </b>+------------+
+<b>    </b>----+<b> References </b>+-------------------------------------------------------
+<p>
+    Durbin, James (1970)<b> "Testing for Serial Correlation in Least-Squares</b>
+        <b>Regression When Some of the Regressors are Lagged Dependent</b>
+        <b>Variables",</b> <i>Econometrica, vol.38, no.3, May</i>; 410-421.
+<p>
+    Harvey, Andrew (1990)<b> "The Econometric Analysis of Time Series",</b> <i>2nd</i>
+        <i>edition, MIT Press, Cambridge, Massachusetts</i>; 275-277.
+<p>
+    Judge, Georege, R. Carter Hill, William . E. Griffiths, Helmut Lutkepohl,
+        &amp; Tsoung-Chao Lee (1988)<b> "Introduction To The Theory And Practice Of</b>
+        <b>Econometrics",</b> <i>2nd ed., John Wiley &amp; Sons, Inc., New York, USA</i>; 401.
+<p>
+<p>
+<b>        </b>+--------+
+<b>    </b>----+<b> Author </b>+-----------------------------------------------------------
+<p>
+  <b>Emad Abd Elmessih Shehata</b>
+  <b>Assistant Professor</b>
+  <b>Agricultural Research Center - Agricultural Economics Research Institute - Eg</b>
+<b>&gt; ypt</b>
+  <b>Email:   </b>emadstat@hotmail.com
+  <b>WebPage:                </b>http://emadstat.110mb.com/stata.htm
+  <b>WebPage at IDEAS:       </b>http://ideas.repec.org/f/psh494.html
+  <b>WebPage at EconPapers:  </b>http://econpapers.repec.org/RAS/psh494.htm
+<p>
+<p>
+<b>        </b>+------------------+
+<b>    </b>----+<b> lmadurh Citation </b>+-------------------------------------------------
+<p>
+    Shehata, Emad Abd Elmessih (2011)
+    <b>"lmadurh: Stata Module to Compute Dynamic Durbin h, Harvey LM, and Wald</b>
+        <b>LM Autocorrelation Tests after (OLS-ALS) Regressions"</b>
+<p>
+        http://ideas.repec.org/c/boc/bocode/s457346.html
+<p>
+        http://econpapers.repec.org/software/bocbocode/s457346.htm
+<p>
+<p>
+<b><u>Also see</u></b>
+<p>
+    Online: <b>lmareg3</b>, <b>lmadurh</b>, <b>lmalb</b>, <b>lmabp</b>, <b>lmadw</b>, <b>lmavon</b> <b>(</b><i>if installed</i><b>)</b>.
+<p>
+<p>
+</pre>

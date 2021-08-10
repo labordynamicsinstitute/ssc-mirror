@@ -1,0 +1,114 @@
+<pre>
+<p>
+-------------------------------------------------------------------------------
+help for <b>quadas</b>                                           (Ben Adarkwa Dwamena)
+<p>
+-------------------------------------------------------------------------------
+<p>
+<b><u>quadas: Graphical depiction of quality assessment in diagnostic accuracy review</u></b>
+<b><u>&gt; s</u></b>
+<p>
+<b><u>Syntax</u></b>
+<p>
+        <b>quadas</b> <i>varlist</i> [<b>if</b> <i>exp</i>] [<b>in</b> <i>range</i>] [<b>,</b> <b>options</b> *]
+<p>
+        +---------+
+    ----+ OPTIONS +----------------------------------------------------------
+<p>
+        <b>sum</b> creates a figure summarizing compliance of individual studies
+        with methodologic quality items (varlist) scored yes, unclear, or no
+<p>
+        <b>bar</b> plots a bar graph of overall frequency of compliance with
+        methodologic quality items (varlist) scored yes, unclear, or no
+<p>
+        <b>color</b> bar or summary graph generated in color with yes=green,
+        unclear=yellow and no=red.
+<p>
+        may use graph editor or other twoway options to edit default
+        appearance.
+<p>
+<b><u>Remarks</u></b>
+<p>
+        Quality assessment of primary studies in systematic reviews assist in
+        identifying potential sources of bias and to limit the effects of
+        these biases on the estimates and the conclusions of the review.
+        Quality appraisal offers a general impression of the validity of the
+        available evidence. The Cochrane Diagnostic Test Accuracy Working
+        Group recommends the QUADAS (Quality Assessment of Diagnostic
+        Accuracy Studies) checklist to assess the quality of diagnostic test
+        accuracy studies. QUADAS is a rigorously constructed and validated
+        tool that can be used by investigators undertaking new systematic
+        reviews. The QUADAS tool consists of 14 items that cover patient
+        spectrum, reference standard, disease progression bias, verification
+        and review bias, clinical review bias, incorporation bias, test
+        execution, study withdrawals, and intermediate results.
+<p>
+        The results may be summarized using:
+<p>
+        (1) Methodological quality graph(example appended Quadas1.pdf):
+        review authors' judgments about each methodological quality item for
+        each included study.
+<p>
+        (2) Methodological quality summary(example appended Quadas2.pdf):
+        review authors' judgments about each methodological quality item
+        presented as percentages across all included studies
+<p>
+        Although not implemented in quadas, 1n the analysis phase of
+        systematic review, the results of the quality appraisal may guide
+        explorations of the sources of heterogeneity. Possible methods to
+        address quality differences are sensitivity analysis, subgroup
+        analysis, or meta-regression analysis, although the number of
+        included studies may often be too small for meaningful
+        investigations. Also, incomplete reporting hampers any evaluation of
+        study quality.
+<p>
+<b><u>Examples</u></b>
+<p>
+        use http://sitemaker.umich.edu/metadiagnosis/files/quadas.dta
+<p>
+        Methodolgical Quality Graph
+<p>
+        quadas spect select ref incorp testdesc refdesc blintest blinref clin
+            indeterm withdraw, bar col
+<p>
+        Methodolgical Quality Summary
+<p>
+        quadas spect select ref incorp testdesc refdesc blintest blinref
+            clin, id(studid) sum col ysiz(7) xsiz(4)
+<p>
+<p>
+<b><u>References</u></b>
+<p>
+        Whiting P, Rutjes AW, Reitsma JB, Bossuyt PM, Kleijnen J.  The
+        development of QUADAS: a tool for the quality assessment of studies
+        of diagnostic accuracy included in systematic reviews.  BMC Med Res
+        Methodol 2003;3:25
+<p>
+        Leeflang MM, Deeks JJ, Gatsonis C, Bossuyt PM, Cochrane Diagnostic
+        Test Accuracy Working Group.  Systematic reviews of diagnostic test
+        accuracy.  Ann Intern Med. 2008;149(12):889-897
+<p>
+<b><u>Author</u></b>
+<p>
+        Ben A. Dwamena, Division of Nuclear Medicine, Department of
+        Radiology, University of Michigan, USA Email bdwamena@umich.edu for
+        problems, comments and suggestions
+<p>
+<b><u>Citation</u></b>
+<p>
+        <b>quadas</b> is not an official Stata command. It is a free contribution to
+        the research community, like a paper.  Suggested citation if using
+        <b>quadas</b> in published work:
+<p>
+        Dwamena, Ben A.(2010)<b> quadas: A program for graphical depiction of</b>
+        <b>study quality assessment for diagnostic test accuracy reviews.</b>
+        Division of Nuclear Medicine, Department of Radiology, University of
+        Michigan Medical School, Ann Arbor, Michigan.
+<p>
+<p>
+<p>
+<p>
+        
+        
+<p>
+</pre>

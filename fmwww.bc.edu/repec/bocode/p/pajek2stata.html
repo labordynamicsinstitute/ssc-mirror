@@ -1,0 +1,79 @@
+<pre>
+<p>
+<b>help pajek2stata </b> 
+-------------------------------------------------------------------------------
+<p>
+<b><u>Title</u></b>
+<p>
+    <b>pajek2stata </b>--  Import network data in Pajek's .net format
+<p>
+<p>
+<b><u>Syntax</u></b>
+<p>
+<p>
+        <b>pajek2stata</b> using <i>fname</i> <b>,</b> <b>name(</b><i>name</i><b>)</b> [<b>clear replace</b>]
+<p>
+<p>
+<b><u>Description</u></b>
+<p>
+    <b>pajek2stata</b> imports data stored in Pajek's ".net" format for relational
+    data. A .net file is an ASCII file consisting of two parts.  The first
+    part contains information about the vertices in the network, in the
+    conventional observation-by-variable format.  The first column of the
+    vertices part must contain the identifiers for the vertices; optional
+    additional columns may contain vertex labels and other properties of the
+    vertices. pajek2stata stores this part into new Stata variables. By
+    default, these variables are named var1, var2..etc., because Pajek net
+    files do not contain variable names.  The new variables are all stored as
+    string variables, and can be converted afterwards as needed.
+<p>
+    The second part of the file contains the data on relations between the
+    vertecis, i.e., the network. The network data may take three different
+    formats:
+<p>
+    <i>Matrix:</i> The data are stored as a square NxN adjacency matrix.
+<p>
+    <i>Edges:</i> The data are stored as a <i>list</i> of <i>edges</i>, in which every line in the
+        data represents a relation between two vertices. The first two values
+        must contain the identifiers of the vertices; a third (optional)
+        value may contain the value of the relation.
+<p>
+    <i>Arcs:</i> The data are stored as a <i>list</i> of <i>arcs</i>, in which every line in the
+        data represents a directed a relation <i>from</i> one vertex <i>to</i> another. The
+        first two values must contain the identifiers of the vertices; a
+        third (optional) value may contain the value of the relation.
+<p>
+    pajek2stata stores the relational part of the data as a matrix in Mata,
+    from where it may be analyzed further.
+<p>
+    Note: this version of pajek2stata can only handle simple .net files
+    containing not more than one network specification.  Pajek also supports
+    .net files with multiple network specifications for the same set of
+    vertices. Future versions of pajek2stata may be able to deal with such
+    files.
+<p>
+<p>
+<b><u>Options</u></b>
+<p>
+<p>
+    <b>name()</b> is required: specifies the name of the Mata matrix in which the
+        relational data are to be stored.
+<p>
+    <b>clear</b> specifies that the memory is to be cleared before the data are
+        loaded. pajek2stata issues an error message if there are already data
+        in memory and "clear" is not specified.
+<p>
+    <b>replace</b> specifies that if the Mata matrix<i> name</i> already exists, it is to
+        be replaced.
+<p>
+<p>
+<p>
+<p>
+<b><u>Author</u></b>: Rense Corten, Department of Sociology/ICS, Utrecht Univesity. April 201
+&gt; 0.
+<p>
+<b><u>Also see</u></b>
+<p>
+    Online: <b>[R] mata</b>
+<p>
+</pre>

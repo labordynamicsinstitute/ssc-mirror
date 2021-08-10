@@ -1,0 +1,76 @@
+<pre>
+Unique values of a variable or group of variables
+-------------------------------------------------
+<p>
+^unique^ varlist [^if^ exp] [^in^ range], ^by(^varname^) gen^erate^(^varname^) 
+&gt; d^etail
+<p>
+Description
+-----------
+<p>
+The command ^unique^ without a ^by^ reports the number of unique values for
+the varlist. With a ^by^ it does the same, but also creates a new
+variable (^_Unique^ by default but can be named in the ^gen^ option). This new
+variable contains the number of unique values of the varlist for each level
+of the ^by^ variable. The new variable is coded missing except for the first
+record in each group defined by the levels of the ^by^ variable.
+<p>
+The command is useful for exploring data where the records refer to
+more than one level, for example longitudinal data where each record
+refers to a visit by a subject.
+<p>
+Options
+-------
+<p>
+^by^ provides the name of a categorical variable.
+<p>
+^generate()^ supplies the name of the new variable which contains the
+number of unique values of the varlist by levels defined by the
+categorical variable supplied in the ^by^.
+<p>
+^detail^ request summary statistics on the number of records which are
+present for unique values of the varlist. If you have longitudinal data
+for instance, this option reports the mean, median, minimum and maximum number
+of visits per subject.
+<p>
+Example
+-------
+<p>
+Consider a longitudinal data set in which each record corresponds to a
+visit by a subject. The subject identity is in the variable id, and
+the visit is identified by the variable visit, within id. Then
+<p>
+^unique id^
+<p>
+reports the number of subjects
+<p>
+^unique id visit^
+<p>
+reports a number which will be the same as the number of records unless
+there are duplicate records with the same id and visit number.
+<p>
+^unique visit, by(id) gen(vno)^
+<p>
+creates a new variable at the subject level which contains the number of
+visits for that subject. Alternatively
+<p>
+^unique id, detail^
+<p>
+reports summary statistics for the number of visits per subject.
+<p>
+<p>
+Authors
+-------
+<p>
+        Michael Hills
+        mhills@@regress..demon.co.uk
+<p>
+        Tony Brady
+        tbrady@@rpms.ac.uk
+<p>
+Also see
+--------
+<p>
+On-line: help for @count@, @longch@
+<p>
+</pre>

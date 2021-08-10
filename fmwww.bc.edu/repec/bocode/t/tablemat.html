@@ -1,0 +1,98 @@
+<pre>
+-------------------------------------------------------------------------------
+help for <b>tablemat</b> 
+   (Amadou Bassirou DIALLO: AFTPM, The World Bank and CERDI, Univ. of Auvergne)
+-------------------------------------------------------------------------------
+<p>
+<p>
+<b><u>Data Management Utility.</u></b>
+<b><u>Allows to produce and export table of results in a matricial format.</u></b>
+<p>
+<p>
+    <b>tablemat</b> <i>varlist</i> [<i>if</i>] [<i>in</i>] [<i>weight</i>] <b>,</b> <b><u>st</u></b><b>at(</b><i>varname</i><b>)</b> [<b><u>by</u></b><b>group(</b><i>varlist</i><b>)</b>
+    <b><u>cl</u></b><b>ean(</b><i>string</i><b>)</b> <b><u>f</u></b><b>ormat(</b><i>format</i><b>)</b> <b><u>n</u></b><b>ame(</b><i>string</i><b>)</b> <b><u>out</u></b><b>put(</b><i>file name</i><b>)</b> <b><u>sh</u></b><b>ort</b>
+    <b><u>t</u></b><b>rim(</b><i>real</i><b>)</b>]
+<p>
+<p>
+<p>
+where :
+<p>
+      <i>stat</i> is the statistic variable - not optional - (to be calculated by <b>tabs</b>
+<b>&gt; tat</b>),
+<p>
+      <i>bygroup</i> is a list of the by-<i>variables</i> (more than 2 could be specified), 
+      separated by spaces, 
+<p>
+      <i>clean</i> is the character to be removed specified by the user,
+<p>
+      <i>format</i> is the format type,
+<p>
+      <i>name</i> is the name of the save matrice of results (default is M),
+<p>
+      <i>output</i> is the option to export results,
+<p>
+      <i>trim</i> is the length to assign to value labels,
+<p>
+      <i>short</i> applies the trimming size to all labels.
+<p>
+<p>
+<b><u>Description</u></b>
+<p>
+    <b>tablemat</b> is an extension of tabstat.
+<p>
+    <b>tablemat</b> produces a matrice of results using <b>tabstat</b>.
+<p>
+    The statistics available are those of <b>tabstat</b> except q.  The weights
+    options are also those supported by <b>tabstat</b>. The improvement over <b>tabstat</b>
+    is that <b>tabstat</b> allows only one -by- variable while <b>tablemat</b> allows as
+    many by-variables as the user wishes.  Another advantage is the handle of
+    labels.
+<p>
+<p>
+    Version 8.2 or higher is required.
+<p>
+<p>
+<b><u>Examples</u></b>
+<p>
+    <b>. tablemat has_water has_elec, st(mean)</b>
+<p>
+    <b>. tablemat has_water has_elec, st(mean) cl((&amp;) name(myresults)</b>
+<p>
+    <b>. mat li myresults</b>
+<p>
+    <b>. tablemat has_water [aw=weight], st(mean) by(urbrur region quintile</b>
+    <b>educ)</b>
+<p>
+    <b>. tablemat var1 var2 [aw=weight], st(median) byg(region )</b>
+    <b>out("C:\N\File.out")</b>
+<p>
+    <b>. tablemat var1 var2 [aw=weight], st(p25) f(%9.2f) tr(5) sh</b>
+<p>
+<p>
+<b><u>Author</u></b>
+<p>
+    Amadou Bassirou DIALLO, AFTPM, The World Bank -and- CERDI, Univ. of
+    Auvergne (France).
+<p>
+    Email: adiallo5@worldbank.org
+<p>
+<p>
+<b><u>Aknowledgements</u></b>
+<p>
+    Some parts of this program have been built through my incessant questions
+    to Stata List.  I would like to thank Nick Cox, Kit Baum and other stata
+    users for their patience and their helpful comments on various aspects of
+    this program. Kit Baum earlier found a bug that has been fixed.
+<p>
+<p>
+<b><u>Also see</u></b>
+<p>
+    <b>[R] tabstat</b> <b>[R] tabstatmat</b>
+<p>
+    Manual: <b>[R] summarize</b>, <b>[R] tabulate</b>, <b>[R] matrix</b>.
+<p>
+    Online: help for summarize, tabstat, tabstatmat, tabulate, statsmat, 
+    outtable, outsheet, mat2txt if installed.
+<p>
+-------------------------------------------------------------------------------
+</pre>

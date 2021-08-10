@@ -1,0 +1,93 @@
+<pre>
+<b>help spmat idistance</b>
+-------------------------------------------------------------------------------
+<p>
+<b><u>Title</u></b>
+<p>
+    <b>spmat idistance</b> -- Create an <b>spmat</b> object containing an inverse-distance
+                         spatial-weighting matrix <b>W</b>
+<p>
+<p>
+<b><u>Syntax</u></b>
+<p>
+        <b>spmat</b> <b><u>idist</u></b><b>ance</b> <i>objname</i> <i>varlist</i> [<i>if</i>] [<i>in</i>]<b>,</b> <b>id(</b><i>varname</i><b>)</b> [<i>options</i>]
+<p>
+<p>
+    <i>options</i>                            Description
+    -------------------------------------------------------------------------
+    * <b>id(</b><i>varname</i><b>)</b>                      ID variable
+      <b><u>df</u></b><b>unction</b>(<i>function</i>[<b>, miles</b>])     distance function
+      <b><u>norm</u></b><b>alize(</b><i>norm</i><b>)</b>                  normalization method
+      <b><u>btr</u></b><b>uncate(</b><i>b B</i><b>)</b>                   bin truncation
+      <b><u>dtr</u></b><b>uncate(</b><i>l u</i><b>)</b>                   diagonal truncation
+      <b><u>vtr</u></b><b>uncate(</b><i>#</i><b>)</b>                     value truncation
+      <b><u>band</u></b><b>ed</b>                           banded storage
+      <b>replace</b>                          replace <i>objname</i>
+    -------------------------------------------------------------------------
+    * Required
+    Only one of <b>btruncate()</b>, <b>dtruncate()</b>, or <b>vtruncate()</b> may be specified.
+<p>
+<p>
+<b><u>Description</u></b>
+<p>
+    <b>spmat idistance</b> puts an inverse-distance spatial-weighting matrix <b>W</b> into
+    the new <b>spmat</b> object <i>objname</i>.  The <i>ij</i>th element of <b>W</b> contains the inverse
+    of the distance between points <i>i</i> and <i>j</i> calculated from the coordinate
+    variables specified in <i>varlist</i>.  Longitude must be specified first if
+    coordinate variables represent longitude and latitude.
+<p>
+<p>
+<b><u>Options</u></b>
+<p>
+    <b>id(</b><i>varname</i><b>)</b> specifies a numeric variable that contains a unique
+        identifier for each observation. This option is required.
+<p>
+    <b>dfunction(</b><i>function</i>[<b>, miles</b>]<b>)</b> specifies the distance function.  <i>function</i>
+        may be one of <b><u>euc</u></b><b>lidean</b> (default), <b><u>dhav</u></b><b>ersine</b>, <b><u>rhav</u></b><b>ersine</b>, or the
+        Minkowski distance of order <i>p</i> where <i>p</i> is an integer greater than or
+        equal to 1.
+<p>
+        Use <b>dhaversine</b> when your coordinate variables are in degrees; use
+        <b>rhaversine</b> when your coordinate variables are in radians.  By
+        default, the distances are calculated in kilometers; specify the
+        optional <b>miles</b> argument if you want the distances to be calculated in
+        miles.
+<p>
+    <b>normalize(</b><i>norm</i><b>)</b> specifies the normalization method.  <i>norm</i> may be one of
+        <b>row</b>, <b><u>min</u></b><b>max</b>, or <b><u>spe</u></b><b>ctral</b>.
+<p>
+    <b>truncate()</b> options specify one of the three available truncation
+        criteria.  The values of the spatial-weighting matrix <b>W</b> that meet the
+        truncation criterion will be changed to zero.
+<p>
+        <b>btruncate(</b><i>b B</i><b>)</b> partitions the value of <b>W</b> into <i>B</i> bins and truncates to
+        zero entries that fall into bin <i>b</i> or below.
+<p>
+        <b>dtruncate(</b><i>l u</i><b>)</b> truncates to zero the values of <b>W</b> that fall <i>l</i>
+        diagonals below and <i>u</i> diagonals above the main diagonal.  Neither
+        value can be greater than <b>floor((cols(W)-1)/4)</b>.
+<p>
+        <b>vtruncate(</b><i>#</i><b>)</b> truncates to zero the values of <b>W</b> that are less than or
+        equal to #.
+<p>
+    <b>banded</b> instructs <b>spmat</b> to store the truncated inverse-distance matrix in
+        a banded form; see <i>Remarks</i> in <b>spmat tobanded</b> for details.
+<p>
+    <b>replace</b> allows <i>objname</i> to be overwritten if it already exists.
+<p>
+<p>
+<b><u>Example</u></b>
+<p>
+    Setup
+        <b>. use pollute</b>
+<p>
+    Create the spmat object <b>dobj</b> containing an inverse-distance matrix
+        <b>. spmat idistance dobj longitude latitude, id(id)</b>
+            <b>dfunction(dhaversine)</b>
+<p>
+<p>
+<b><u>Also see</u></b>
+<p>
+    Online:  <b>spmat</b>, <b>spreg</b>, <b>spivreg</b>, <b>spmap</b>, <b>shp2dta</b>, <b>mif2dta</b> (if installed)
+<p>
+</pre>

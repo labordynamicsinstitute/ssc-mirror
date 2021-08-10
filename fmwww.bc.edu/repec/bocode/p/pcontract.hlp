@@ -1,0 +1,77 @@
+{smcl}
+{hline}
+help for {hi:pcontract}{right:(Roger Newson)}
+{hline}
+
+{title:Make dataset of frequencies and percentages}
+
+{p 8 17 2}{cmd:pcontract} {it:varlist} [{it:weight}] [{cmd:if} {it:exp}] [{cmd:in} {it:range}] [{cmd:,}
+{cmdab:f:req:(}{it:varname}{cmd:)} {cmdab:p:ercent:(}{it:varname}{cmd:)}
+{cmdab:cf:req:(}{it:varname}{cmd:)} {cmdab:cp:ercent:(}{it:varname}{cmd:)}
+{cmd:float} {cmdab:form:at}{cmd:(}{it:format}{cmd:)}
+{cmdab:z:ero} {cmd:nomiss} ]
+
+{p 4 4 2}
+{cmd:fweight}s are allowed; see help {help weights}.
+
+
+{title:Description}
+
+{p 4 4 2}
+{cmd:pcontract} is an extended version of {help contract}.
+It replaces the dataset in memory with a new dataset consisting
+of all combinations of {it:varlist} that exist in the data and new variables
+containing the frequency and percentage of each combination,
+and, optionally, the cumulative frequency and percentage of each combination.
+
+
+{title:Options}
+
+{p 4 8 2}{cmd:freq}{cmd:(}{it:varname}{cmd:)} specifies a name for the frequency
+variable.  If not specified, {cmd:_freq} is used. The name must be new.
+
+{p 4 8 2}{cmd:percent}{cmd:(}{it:varname}{cmd:)} specifies a name for the percentage
+variable.  If not specified, {cmd:_percent} is used. The name must be new.
+
+{p 4 8 2}{cmd:cfreq}{cmd:(}{it:varname}{cmd:)} specifies a name for the cumulative
+frequency variable.  If not specified, no cumulative frequency variable is created.
+The name must be new.
+
+{p 4 8 2}{cmd:cpercent}{cmd:(}{it:varname}{cmd:)} specifies a name for the cumulative
+percentage variable.  If not specified, no cumulative percentage variable is created.
+The name must be new.
+
+{p 4 8 2}{cmd:float} specifies that the percentage variables specified by
+{cmd:percent} and {cmd:cpercent} will be generated as variables of type {help float}.
+If {cmd:float} is not specified, then these variables will be generated as variables
+of type {help double}. All generated variables are compressed to the smallest
+storage type possible without loss of precision. See help for {help compress}.
+
+{p 4 8 2}{cmd:format}{cmd:(}{it:format}{cmd:)} specifies a {help format:display format}
+for the generated percentage variables specified by {cmd:percent()} and {cmd:cpercent()}.
+If {cmd:format()} is not specified, then these variables will have the
+{help format:display format} {hi:%8.2f}.
+
+{p 4 8 2}{cmd:zero} specifies that combinations with frequency zero are wanted.
+
+{p 4 8 2}{cmd:nomiss} specifies that observations with missing values on any of
+the variables in {it:varlist} will be dropped.  If not specified, all
+observations possible are used.
+
+
+{title:Examples}
+
+{p 4 8 2}{cmd:. pcontract foreign rep78}{p_end}
+{p 4 8 2}{cmd:. pcontract foreign rep78, zero}{p_end}
+{p 4 8 2}{cmd:. pcontract foreign rep78, f(count) zero nomiss}{p_end}
+{p 4 8 2}{cmd:. pcontract foreign rep78,fr(frequency) per(percentage) cf(cumfreq) cp(cumperc) float format(%4.0f)}{p_end}
+
+{p 4 8 2}{cmd:. pcontract _all}
+
+
+{title:Also see}
+
+    Manual:  {hi:[R] contract}, {hi:[R] compress}, {hi:[R] format}
+
+{p 4 13 2}Online:  help for {help contract}, {help compress}, {help format},
+{help expand}; {help collapse}, {help duplicates}

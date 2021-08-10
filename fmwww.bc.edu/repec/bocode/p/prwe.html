@@ -1,0 +1,64 @@
+<pre>
+<p>
+^prwe^ program
+___________________
+<p>
+<p>
+prwe calculates the ^PRWE scores^ (Patient-Rated Wrist Evaluation) from your re
+&gt; cords
+<p>
+The PRWE is a 15-item questionnaire designed to measure wrist pain and disabili
+&gt; ty in 
+activites of daily living. 
+It consists of two subscales: pain (5 items scored 0-10) and function (10 items
+&gt;  scored 0-10). 
+<p>
+Two subscale scores are computed and a total score is computed by summing the t
+&gt; wo subscales scores. 
+<p>
+The PRWE includes two subscale scores (pain and function) as well as a total sc
+&gt; ore. 
+<p>
+<p>
+Syntax: 
+^prwe^ varlist [if] [in], generate(newvarname)  [subscales]
+<p>
+        ^varlist^ must contain the 15 numeric variables to calculate the PRWE t
+&gt; otal score, these
+        should appear in the same order as in the questionnaire (var1-var5 for 
+&gt; pain and var6-var15 for function)
+<p>
+        ^gen(^varname^)^ is used to specify where the total score has to be sto
+&gt; red
+<p>
+        ^subscales^ is specified if the subscales scores have to be stored
+                
+ 
+                  
+Examples: 
+<p>
+^prwe^ PRWE1-PRWE15, gen(PRWE)  
+^prwe^ Pain1-Pain5 Function1-Function10, gen(PRWE) sub
+^prwe^ PRWE1-PRWE5, gen(PRWE) sub
+<p>
+Note:
+The variables containing the information for the calculation have to be numeric
+&gt; al and 
+contain values between 1 and 10. 
+<p>
+<p>
+Treatment of Missing Data:
+A summary score calculated if a respondent answered at least 4 out of 5 questio
+&gt; ns for the 
+pain subscale and 8 of 10 questions for the function subscale.
+<p>
+References: 
+The questionnaire and detailed scoring instructions are available at:
+http://www.srs-mcmaster.ca/Portals/20/pdf/research_resources/PRWE_PRWHEUserManu
+&gt; al_Dec2007.pdf
+<p>
+________________________________________________________
+AO Clinical Investigation and Documentation
+Program author: Monica Daigl 
+Date: 04.04.2012 
+</pre>

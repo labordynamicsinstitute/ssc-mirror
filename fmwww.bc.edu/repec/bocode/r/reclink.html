@@ -1,0 +1,173 @@
+<pre>
+-------------------------------------------------------------------------------
+help for <b>reclink</b>
+-------------------------------------------------------------------------------
+<p>
+<b><u>Record Linkage</u></b>
+<p>
+<p>
+    <b>reclink</b><i> varlist</i> <b>using</b> <i>filename</i> <b>,</b> <b><u>idm</u></b><b>aster(</b><i>varname</i><b>)</b> <b><u>idu</u></b><b>sing(</b><i>varname</i><b>)</b>
+                     <b><u>g</u></b><b>en(</b><i>newvarname</i><b>)</b> [ <b><u>wm</u></b><b>atch(</b><i>match weight list</i><b>)</b>
+                     <b><u>wnom</u></b><b>atch(</b><i>non-match weight list</i><b>)</b> <b><u>orb</u></b><b>lock(</b><i>varlist</i><b>)</b>
+                     <b><u>req</u></b><b>uired(</b><i>varlist</i><b>)</b> <b><u>exa</u></b><b>ctstr(</b><i>varlist</i><b>)</b> <b><u>exc</u></b><b>lude(</b><i>filename</i><b>)</b>
+                     <b><u>_m</u></b><b>erge(</b><i>newvarname</i><b>)</b> <b><u>uv</u></b><b>arlist(</b><i>varlist</i><b>)</b> <b><u>upr</u></b><b>efix(</b><i>text</i><b>)</b>
+                     <b><u>mins</u></b><b>core(</b><i>#</i><b>)</b> <b><u>minb</u></b><b>igram(</b><i>#</i><b>)</b>
+<p>
+<b><u>Description</u></b>
+<p>
+    <b>reclink</b> uses record linkage methods to match observations between two
+    datasets where no perfect key fields exist -- essentially a fuzzy merge.
+    <b>reclink</b> allows for user-defined matching and non-matching weights for
+    each variable and employs a bigram string comparator to assess imperfect
+    string matches.
+<p>
+<p>
+    The master and using datasets must each have a variable that uniquely
+    identifies observations.  Two new variables are created, one to hold the
+    matching score (scaled 0-1) and one for the merge variable.  In addition,
+    all of the matching variables from the using dataset are brought into the
+    master dataset (with newly prefixed names) to allow for manual review of
+    matches.
+<p>
+    To enhance the speed of this often slow procedure, or-blocking can be
+    used which requires at least one variable to match perfectly between
+    datasets.  Or-blocking is the default if 4 or more variables are
+    specified.
+<p>
+<b><u>Note and Warning</u></b>
+<p>
+    In general, record linkage methods are imperfect and results should be
+    manually reviewed, especially for observations with lower matching
+    scores.  It is not uncommon to try several runs with a variety of
+    weights, orblock options, and derived variables to increase the accuracy
+    of the linkage.  A series of<b> reclink</b> commands can be used with the help
+    of the<i> exclude</i> option.
+<p>
+<b><u>Required Options</u></b> 
+<p>
+<p>
+    <b>idmaster(</b><i>varname</i><b>)</b> is required and specifies the name of a variable in the
+    master dataset that uniquely identifies the observations.  This variable
+    is used to track observations.  If a unique identifer does not exist, one
+    can be created simply as gen idmaster=_n.
+<p>
+    <b>idusing(</b><i>varname</i><b>)</b> is required and specifies the name of a variable in the
+    using dataset that uniquely identifies the observations analogous to
+    <i>idmaster</i>.
+<p>
+    <b>gen(</b><i>newvarname</i><b>)</b> is required and specifies the name of a new variable
+    created by<b> reclink</b> to store the matching scores (scaled 0-1) for the
+    linked observations.
+<p>
+<p>
+<b><u>Common Options</u></b> 
+<p>
+    <b>wmatch(</b><i>numlist</i><b>)</b> specifies the weights given to matches for each variable
+    in<i> varlist</i>.  Each variable requires a weight, although a default of 1
+    will be used for all variables if not specified.  Weights must be &gt;=1 and
+    are typically integers from 1 to 20.  The values should reflect the
+    relative likelihood of a variable match indicating a true observation
+    match.  For example, a name variable will often have a large weight such
+    as 10 but a city variable, where many duplicates are expected, may have a
+    weight of just 2.
+<p>
+    <b>wnomatch(</b><i>numlist</i><b>)</b> specifies the weights given to mismatches for each
+    variable in the<i> varlist</i>.  These weights are analogous to<i> wmatch</i> weights,
+    but instead reflect the relative likelihood that a mismatch on a variable
+    indicates that the observations don't match -- a small value indicates
+    that mismatches are expected even if the observations truly match.  A
+    variable such as telephone number may have a large wmatch but a small
+    wnomatch because matches are unlikely to occur randomly, but mismatches
+    may be fairly common due to changes in phone numbers over time or
+    multiple phone numbers owned by the same person/entity.
+<p>
+    <b>orblock(</b><i>varlist </i>|<i> none</i><b>)</b> is used to speed up the record linkage by
+    providing a method for selecting only subsets of observations from the
+    using dataset to search for matches.  Only observations that match on at
+    least one variable in the Or-Block are examined.  Or-blocking on the full
+    varlist is the default behavior if there are 4 or more variables
+    specified.  This default can be overriden by specifying<i> orblock(none)</i>,
+    which is advised if all of the variables are expected to be fairly
+    unique.  New variables are sometimes created in the master and using
+    datasets to assist with Or-Blocking, such as initials of first and last
+    names, street numbers extracted from addresses, and telephone area codes.
+    Or-Blocking can dramatically improve the speed of<b> reclink</b>.
+<p>
+    <b>required(</b><i>varlist</i><b>)</b> allows the user to specify one or more variables that
+    must match exactly for the observation to be considered a match.  The
+    variable(s) must also be in the main varlist and are included in the
+    matching score.  This option could have been named andblock to make it's
+    function clear in relation to<i> orblock</i>.
+<p>
+    <b>exclude(</b><i>filename</i><b>)</b> allows the user to specify the name of a file that
+    contains previously matched observations, providing a convenient way to
+    use<b> reclink</b> repeatedly with different specifications.  The exclude file
+    must include the variables specified in<i> idmaster</i> and<i> idusing</i>.  Any
+    observation with non-missing values for both id variables is considered
+    matched and is excluded from the datasets for the current matching.
+    Results from each run of<b> reclink</b> can be appended together and specified
+    as the<i> exclude</i> file.  This approach can speed up the matching process by
+    starting with more restrictive<i> orblock</i> and/or<i> required</i> specifications
+    that work quickly, followed by a more exhaustive and slow search for the
+    more difficult observations.
+<p>
+<b><u>Less Commonly Used Options</u></b> 
+<p>
+    <b>_merge(</b><i>varname</i><b>)</b> specifies the name of the variable that will mark the
+    source of each observation.  The default name is <b>_merge(_merge)</b>.
+<p>
+    <b>exactstr(</b><i>varlist</i><b>)</b> allows the user to specify one or more string variables
+    where the bigram string comparator is not used to assess the degree of
+    agreement, but instead the agreement is simply 0 or 1.
+<p>
+    <b>uvarlist(</b><i>varlist</i><b>)</b> allows the using dataset to have different variable
+    names than the master dataset for the variables to be matched.  If
+    specified, the<i> uvarlist</i> must have the same number of variables in the
+    same ordering as the master<i> varlist</i>.
+<p>
+    <b>uprefix(</b><i>string</i><b>)</b> allows changing the prefix used for renaming the
+    variables in the matching<i> varlist</i> that are brought into the master
+    dataset from the using dataset.  The default uprefix is U.  For example,
+    if the matching variables are name and address, then the resulting
+    dataset will have variables Uname and Uaddress added from the using
+    dataset for the matching observations.
+<p>
+    <b>minscore(</b><i>#</i><b>)</b> specifies the minimum overall matching score value (0-1) used
+    to declare two observations a match, default=0.6.  Observations in the
+    using dataset are only merged into the master dataset if they have a
+    match score&gt;=<i>minscore</i> and are the highest match score in the using
+    dataset.  Lower values of <i>minscore</i> will expand the number of matches but
+    may lead to more false matches.
+<p>
+    <b>minbigram(</b><i>#</i><b>)</b> specifies the bigram value needed to declare two strings as
+    likely matched, default=0.6.  Each raw bigram score is transformed into
+    match and non-match weight multipliers that vary from 0 to 1 with a sharp
+    change at <i>minbigram</i>.  A higher value of minbigram may be useful when
+    matching longer strings.
+<p>
+<b><u>Example</u></b> 
+<p>
+    <b>. reclink fname lname address zip phone using bigset, gen(myscore)</b>
+    <b>idm(id) idu(recno) wmatch(3 8 10 2 8) wmnomatch(4 5 8 4 2)</b>
+<p>
+    finds matches between current dataset and bigset based on 5 variables.
+    Uses orblocking by default so that only records that match on fname or
+    lname or address or zip or phone will be examined.  Could specify
+    orblock(none) to widen possible matches but much slower.  Could<b> gen</b>
+    <b>initials=substr(fname,1,1)+substr(lname,1,1)</b> in both datasets and then
+    add initials to the varlist to increase likelihood that or-blocking will
+    work.
+<p>
+<p>
+<p>
+<b><u>Author</u></b>
+<p>
+    Michael Blasnik
+    michael.blasnik@verizon.net
+<p>
+<p>
+<b><u>Also see</u></b>
+<p>
+    Online: help for merge, joinby
+<p>
+</pre>

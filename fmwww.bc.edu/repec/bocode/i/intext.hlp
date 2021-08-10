@@ -1,0 +1,153 @@
+{smcl}
+{.-}
+help for {cmd:intext} and {cmd:tfconcat} {right:(Roger Newson)}
+{.-}
+
+
+{title:Read text files into string variables in the memory (without losing blanks)}
+
+{p 8 27}
+{cmd:intext} {cmd:using} {it:filename} {cmd:,} {cmdab:g:enerate}{cmd:(}{it:prefix}{cmd:)}
+[ {cmdab:le:ngth}{cmd:(}{it:#}{cmd:)} {cmdab:clear:}
+
+{p 8 27}
+{cmd:tfconcat}  {it:filename_list}  {cmd:,} {cmdab:g:enerate}{cmd:(}{it:prefix}{cmd:)}
+[ {cmdab:le:ngth}{cmd:(}{it:#}{cmd:)}
+{cmdab:tfi:d}{cmd:(}{it:newvarname}{cmd:)} {cmdab:tfn:ame}{cmd:(}{it:newvarname}{cmd:)}
+{cmdab:obs:seq}{cmd:(}{it:newvarname}{cmd:)}
+]
+
+{p}
+where {it:filename_list} is a list of filenames separated by spaces.
+
+
+{title:Description}
+
+{p}
+{cmd:intext} inputs a single text file into a set of generated string variables in
+the memory, generating as many string variables as is necessary to store the longest
+records in full, without trimmming leading and trailing blanks (as {help infix} does).
+{cmd:tfconcat} takes, as input, a list of filenames, assumed to belong to text
+files, and concatenates them (without losing blanks) to create a new data set in memory,
+overwriting any pre-existing data. The new data set contains one observation for each
+record in each text file, ordered primarily by source text file and secondarily by
+order of record within source text file, and contains a set of generated string
+variables containing the text, as created by {cmd:intext}. Optionally, {cmd:tfconcat}
+creates new variables, specifying, for each observation, the input text file of origin
+and/or the sequential order of the observation in its input text file of origin.
+
+
+{title:Options for {cmd:intext} and {cmd:tfconcat}}
+
+{p 0 4}
+{cmd:generate(}{it:prefix}{cmd:)} is not optional. It specifies a prefix for the names
+of the new string variables generated, which will be named as {it:prefix1 ... , prefixn},
+where {it:n} is the number of string variables required to contain the longest text record
+in any input data set, with length as specified by the {cmd:length} option.
+
+{p 0 4}
+{cmd:length} specifies the maximum length of the generated text variables. If absent,
+it is set to 80.
+
+
+{title:Options for {cmd:intext} only}
+
+{p 0 4}
+{cmd:clear} specifies that any existing data set in the memory is to be removed before the
+generated text variables are created. If {cmd:clear} is absent, then {cmd:intext} attempts to
+add the generated variables to the existing data set, failing if there is an existing variable
+with the same name as one of the generated variables. ({cmd:tfconcat} always removes any
+existing data set before generating new variables.)
+
+
+{title:Options for {cmd:tfconcat} only}
+
+{p 0 4}
+{cmd:tfid(}{it:newvarname}{cmd:)} specifies a new integer variable to be created,
+containing, for each observation in the new data set, the sequential order, in the
+{it:filename_list}, of the input text file of origin of the observation. If possible,
+{cmd:tfconcat} creates a value label for the {it:newvarname} with the same name,
+assigning, to each positive integer {hi:i} from 1 to the number of input file names
+in the list, a label equal to the filename of the {hi:i}th input text file,
+truncated if necessary to the maximum label length in the version of Stata being used
+(eg 80 characters for Small or Intercooled Stata 7).
+If a value label of that name already exists in one of the input data sets, and
+{cmd:nolabel} is not specified, then {cmd:dsconcat} adds new labels,
+but does not replace existing labels.
+
+{p 0 4}
+{cmd:tfname(}{it:newvarname}{cmd:)} specifies a new string variable containing,
+for each observation in the new data set, the name of the input text file of origin
+of that observation, truncated if necessary to the maximum string length
+in the version of Stata being used (eg 80 characters for Small or Intercooled Stata 7,
+or 244 for {help specialedition:Stata 7 SE}).
+
+{p 0 4}
+{cmd:obsseq(}{it:newvarname}{cmd:)} specifies a new integer variable containing,
+for each observation in the new data set, the sequential order of that observation
+as a text record in its input text data set of origin.
+
+
+{title:Remarks}
+
+{p}
+{cmd:intext} is an inverse of {help outfile} with the {cmd:runtogether} option.
+That is to say, if the user inputs a text file into a list of generated string variables
+using {cmd:intext} and then outputs them to a second text file using {help outfile}
+with the {cmd:runtogether} option, then the second text file will be identical
+to the first text file. {cmd:tfconcat} is similar to {help dsconcat} (downloadable from SSC),
+but it concatenates text files instead of Stata data sets into the memory. {cmd:tfconcat}
+works by calling {cmd:intext} multiple times to create a data set for each text file,
+and concatenating these data sets into the memory. Both programs make it possible to use
+Stata for text file processing, especially when the text files may be indented Stata programs.
+This cannot be done properly using {help infix}, which uses fixed-field input, but trims leading and trailing blanks from strings.
+Therefore, the {cmd:intext} package enables Stata programs to read Stata programs,
+just as {help outfile} with the {cmd:runtogether} option enables Stata programs to write
+Stata programs.
+
+
+{title:Examples}
+
+{p 8 16}{inp:. intext using intext.ado,gene(sect) clear}{p_end}
+
+{p 8 16}{inp:. tfconcat auto1.txt auto2.txt auto3.txt auto4.txt,gene(piece) tfid(tfseq) obs(recnum)}{p_end}
+{p 8 16}{inp:. sort tfseq recnum}{p_end}
+
+{p}
+The following example is equivalent to {cmd:copy tfconcat.ado trash1.txt,text replace}
+
+{p 8 16}{inp:. intext using tfconcat.ado,gene(slice) clear}{p_end}
+{p 8 16}{inp:. outfile slice* using trash1.txt,runtogether replace}{p_end}
+
+{p}
+The following advanced example works under Windows, and might be used if the user has
+a library of Stata ado-files in the current directory. It inputs the ado-files into the memory
+and lists the lines beginning with {hi:"*!"}, which are echoed by the {help which} command.
+The {help vallist} package, written by Nick Cox and downloadable from {help ssc:SSC},
+is assumed to be installed.
+
+{p 8 16}{inp:. tempfile dirf}{p_end}
+{p 8 16}{inp:. shell dir/b *.ado > `dirf'}{p_end}
+{p 8 16}{inp:. intext using `dirf',gene(fn) clear}{p_end}
+{p 8 16}{inp:. vallist fn1,quote}{p_end}
+{p 8 16}{inp:. tfconcat `r(list)',gene(line) tfid(adofile) obs(lseq)}{p_end}
+{p 8 16}{inp:. list adofile line* if substr(line1,1,2)=="*!"}{p_end}
+
+
+{title:Author}
+
+{p}
+Roger Newson, King's College, London, UK.
+Email: {browse "mailto:roger.newson@kcl.ac.uk":roger.newson@kcl.ac.uk}
+
+
+{title:Also see}
+
+{p 0 10}
+{bind: }Manual:  {hi:[U] 24 Commands to input data},
+{hi:[R] infix}, {hi:[R] append}, {hi:[R] outfile}
+{p_end}
+{p 0 10}
+On-line:  help for {help infiling}, {help infix}, {help append}, {help outfile}, {help file}
+{break} help for {help dsconcat} if installed
+{p_end}

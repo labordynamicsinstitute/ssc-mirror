@@ -1,0 +1,83 @@
+<pre>
+<b>help tdpd</b>
+-------------------------------------------------------------------------------
+<p>
+<b><u>Title</u></b>
+<p>
+<p>
+    <b>tdpd</b> -- Third-degree price discriminating monopoly
+<p>
+<p>
+<b><u>Syntax</u></b>
+<p>
+    <b>tdpd</b> <i>a1 b1 a2 b2 c1 c2 c3</i>, [invd]
+<p>
+<p>
+<p>
+<b><u>Description</u></b>
+<p>
+    <b>tdpd</b> computes the equilibrium of a third-degree discriminating monopolist
+    facing two groups of consumers:  total output and its allocation between
+    the two groups of consumers, prices charged to each group, profit of the
+    monopolist, asf.  Results are provided with a precision of two decimals.
+<p>
+    <b>tdpd</b> also computes the equilibrium of the market if the monopoly does not
+    price-discriminate.
+<p>
+    The 7 arguments <i>a1 b1 a2 b2 c1 c2 c3</i> are compulsory.  They define the
+    demands of the two groups of consumers, and the total cost function of
+    the monopolist:
+<p>
+         <b>Demand i:</b>      Qi = <i>ai</i> - <i>bi</i>Pi, i = 1,2
+         <b>Total Cost:</b>    TC = <i>c1</i> + <i>c2</i>Q + <i>c3</i>Q^2
+<p>
+    Graphical representations are provided for the two equilibria
+    (discriminating + non-discriminating).  Only two combined figures are
+    displayed (<i>MD</i> and <i>MND</i>), but the six different graphs composing them can
+    be displayed indivudally using <b>graph display</b>.  The names of the graphs
+    are as follows:
+<p>
+         --------------------------------------------------------------------
+         <b>Discriminating monopoly</b>
+         <i>group1d</i>        Segment 1
+         <i>group2d</i>        Segment 2
+         <i>marketd</i>        Entire market
+         <i>DM</i>             The three previous graphs horizontally aligned
+         --------------------------------------------------------------------
+         <b>Non-discriminating monopoly</b>
+         <i>group1nd</i>       Segment 1
+         <i>group2nd</i>       Segment 2
+         <i>marketnd</i>       Entire market
+         <i>NDM</i>            The three previous graphs horizontally aligned
+         --------------------------------------------------------------------
+<p>
+<p>
+<b><u>Option</u></b>
+<p>
+    <b>invd</b> is used when the parameters <i>a1</i>, <i>b2</i>, <i>a2</i> and <i>b2</i> define the inverse
+    demands.  Algebraically:
+    <b>Inverse demand i:</b>  Pi = <i>ai</i> - <i>bi</i>Qi, and thus Qi = <i>ai</i>/<i>bi</i> - 1/<i>bi</i>Pi, i = 1,2
+<p>
+<p>
+<b><u>Examples</u></b>
+<p>
+    . tdpd 100 1 60 1 0 20 .25, invd
+    . graph display marketd
+    . graph display marketnd
+<p>
+    . tdpd 60 .2 60 .3 2000 40 0
+<p>
+<p>
+<b><u>Author</u></b>
+<p>
+    Sylvain Weber
+    University of Neuchâtel (Switzerland)
+    Institute of Economic Research
+    sylvain.weber@unine.ch
+<p>
+<p>
+<b><u>Reference</u></b>
+<p>
+    The economic theory underlying <b>tdpd</b> is reviewed in:  Weber, Sylvain and
+    Pasche, Cyril (2008) "Price Discrimination", <i>Journal of Industrial</i>
+</pre>

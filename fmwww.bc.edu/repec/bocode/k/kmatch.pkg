@@ -1,0 +1,37 @@
+d 'KMATCH': module for multivariate-distance and propensity-score matching
+d
+d  kmatch matches treated and untreated observations with respect
+d to covariates and, if outcome variables are provided, estimates
+d treatment effects based on the matched observations, optionally
+d including regression adjustment bias-correction. Multivariate
+d (Mahalanobis) distance matching as well as propensity score
+d matching is supported, either using kernel matching, ridge
+d matching, or nearest-neighbor matching. For kernel and ridge
+d matching, several methods for data-driven bandwidth selection
+d such as cross-validation are offered. The package also includes
+d various commands for evaluating balancing and common-support
+d violations. 
+d
+d KW: propensity score matching
+d KW: multivariate distance matching
+d KW: mahalanobis distance matching
+d KW: kernel matching
+d KW: ridge matching
+d KW: nearest-neighbor matching
+d KW: treatment effects
+d KW: regression adjustment
+d KW: bandwidth selection
+d KW: cross-validation
+d KW: balancing diagnostics
+d KW: common-support diagnostics
+d
+d Requires: Stata version 11
+d
+d Distribution-Date: 20170616
+d
+d Author: Ben Jann, University of Bern
+d Support: email jann@@soz.unibe.ch
+d
+f kmatch.ado
+f kmatch.sthlp
+f kmatch.zip

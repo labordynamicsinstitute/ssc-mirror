@@ -1,0 +1,19 @@
+d 'LABUNDEF': module to list undefined value labels attached to variables in the current dataset
+d
+d  labundef lists undefined value labels attached to variables in
+d the current dataset. 
+d
+d KW: data management
+d KW: values
+d KW: missing values
+d KW: value labels
+d
+d Requires: Stata version 9.2
+d
+d Distribution-Date: 20111105
+d
+d Author: Daniel Klein, University of Bamberg
+d Support: email daniel1.klein@@stud.uni-bamberg.de
+d
+f labundef.ado
+f labundef.hlp

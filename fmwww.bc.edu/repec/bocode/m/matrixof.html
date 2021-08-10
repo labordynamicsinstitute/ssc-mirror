@@ -1,0 +1,122 @@
+<pre>
+-------------------------------------------------------------------------------
+help for <b>matrixof</b>, <b>vectorof</b>
+-------------------------------------------------------------------------------
+<p>
+<b><u>Matrix or vector of results for paired or single variables</u></b>
+<p>
+        <b>matrixof</b> <i>cmd</i> <i>varlist</i> [<b>if</b> <i>exp</i>] [<b>in</b> <i>range</i>] [<i>weight</i>] [ , { <b><u>e</u></b><b>class(</b><i>result</i><b>)</b>
+                | <b><u>r</u></b><b>class(</b><i>result</i><b>)</b> | <b><u>g</u></b><b>lobal(</b><i>result</i><b>)</b> } <b>cols(</b><i>column_varlist</i><b>)</b>
+                <b>listwise</b> <b><u>mat</u></b><b>name(</b><i>matrix_name</i><b>)</b> <i>cmd_options</i> <i>matrix_list_options</i> ]
+<p>
+        <b>vectorof</b> <i>cmd</i> <i>varlist</i> [<b>if</b> <i>exp</i>] [<b>in</b> <i>range</i>] [<i>weight</i>] [ , { <b><u>e</u></b><b>class(</b><i>result</i><b>)</b>
+                | <b><u>r</u></b><b>class(</b><i>result</i><b>)</b> | <b><u>g</u></b><b>lobal(</b><i>result</i><b>)</b> } <b>y(</b><i>yvarlist</i><b>)</b> <b>x(</b><i>xvarlist</i><b>)</b>
+                <b>listwise</b> <b><u>mat</u></b><b>name(</b><i>matrix_name</i><b>)</b> <i>cmd_options</i> <i>matrix_list_options</i> ]
+<p>
+<p>
+<b><u>Description</u></b>
+<p>
+<b>matrixof</b> by default computes a matrix of results containing one result for <i>cmd</i>
+for each pair of variables in <i>varlist</i>. Alternatively, with the <b>cols()</b> option,
+it computes a matrix of results containing one result for <i>cmd</i> for each pair of
+variables containing one variable from <i>varlist</i> and one variable from
+<i>column_varlist</i>.
+<p>
+<b>vectorof</b> computes a vector of results containing one result for <i>cmd</i> for each
+variable in <i>varlist</i>.
+<p>
+In essence, the matrix or vector may be literally that, containing numeric
+values, or it may be a matrix or vector of graphs. Compare the established
+meaning of a scatter plot matrix. However, the graph matrix or vector will be
+wrapped around left to right and top to bottom.
+<p>
+Any weights allowed by <i>cmd</i> may be specified.
+<p>
+<p>
+<b><u>Remarks</u></b>
+<p>
+As the names imply, some results may be obtained by using either <b>matrixof</b> with
+<b>cols(</b><i>varname</i><b>)</b> or <b>vectorof</b> with <b>x(</b><i>varname</i><b>)</b>.
+<p>
+<p>
+<b><u>Options</u></b>
+<p>
+<b>eclass()</b> specifies an eclass result produced by <i>cmd</i>. See the manual entry for
+    <i>cmd</i> or inspect the results of <b>estimates list</b> after <i>cmd</i>.
+<p>
+<b>rclass()</b> specifies an rclass result produced by <i>cmd</i>. See the manual entry for
+    <i>cmd</i> or inspect the results of <b>return list</b> after <i>cmd</i>.
+<p>
+<b>global()</b> specifies a global result produced by <i>cmd</i>. See the manual entry for
+    <i>cmd</i> or inspect the results of <b>macro list</b> after <i>cmd</i>.
+<p>
+At most one of <b>eclass()</b>, <b>rclass()</b> or <b>global()</b> may be specified. If none is
+    specified, <i>cmd</i> should be a graph command.
+<p>
+<b>listwise</b> specifies that the results of <i>cmd</i> should be determined for as many
+    observations as possible.  Note that as a consequence the number of
+    observations used in each calculation may differ. By default casewise
+    deletion is used to ensure consistency in observations selected.
+<p>
+<b>matname()</b> specifies a name to be used for a matrix to store results, which will
+    remain in memory after <b>matrixof</b> or <b>vectorof</b> has executed.
+<p>
+<b>y()</b> and <b>x()</b> are options of <b>vectorof</b>. The names are suggested by the conventions
+    of <b>regress</b> and <b>graph</b>: <b>y()</b> specifies one or more variable names to be
+    specified before each variable from <i>varlist</i>, and <b>x()</b> specifies one or more
+    variable names to be specified after each variable from <i>varlist</i>.
+<p>
+<b>cols()</b> is an option of <b>matrixof</b>. The name is suggested by the usual matrix
+    convention.  <b>cols()</b> specifies one or more variable names defining columns
+    of the matrix to be produced. That is, <i>varlist</i> defines rows of the matrix
+    and <i>column_varlist</i> defines columns. With a graph command, however, this
+    option specifies the second variables (e.g. the <i>x</i> axis variables) of <i>cmd</i>.
+<p>
+<i>cmd_options</i> are options of <i>cmd</i>. Note that these apply to each separate
+    execution of <i>cmd</i>, except that <b>saving()</b> and <b>margin()</b> are taken to refer to
+    any composite graph shown.
+<p>
+<i>matrix_list_options</i> are options of <b>matrix list</b>.  See help on matutil. Note that
+    if <b>matname()</b> is not specified, the header is suppressed.
+<p>
+<p>
+<b><u>Examples</u></b>
+<p>
+    . matrixof ktau price-foreign, r(tau_b) format(%4.3f)
+<p>
+    . matrixof correlate price-foreign, r(rho) format(%3.2f)
+    . matrixof correlate price-foreign, r(rho) format(%3.2f) listwise
+    . matrixof correlate price-foreign, r(N) listwise
+<p>
+    . vectorof correlate price-foreign, r(rho) y(mpg) format(%4.3f)
+<p>
+    . set textsize 140
+    . vectorof dotplot price-displacement
+    . vectorof quantile price-displacement
+<p>
+    . vectorof graph arithmetic algebra geometry calculus, x(age)
+<p>
+    . factor x1-x6, pc
+    . score pc1-pc6
+    . matrixof correlate x1-x6, cols(pc1-pc6) r(rho) format(%4.3f)
+<p>
+<p>
+<b><u>Author</u></b>
+<p>
+    Nicholas J. Cox, University of Durham, U.K.  
+    n.j.cox@durham.ac.uk
+<p>
+<p>
+<b><u>Acknowledgements</u></b> 
+<p>
+    
+    Ronan Conroy alerted me to a bug biting on Macintosh platforms.  Roger
+    Newson made helpful comments on the helpfile.
+<p>
+<p>
+<b><u>Also see</u></b>
+<p>
+On-line:  help for foreach, forvalues, return, tabstat, cpcorr (if installed), 
+cpspear (if installed), cpyxplot (if installed), statsmat (if installed)
+<p>
+</pre>

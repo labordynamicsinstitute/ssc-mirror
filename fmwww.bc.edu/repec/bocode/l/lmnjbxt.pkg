@@ -1,0 +1,24 @@
+d 'LMNJBXT': Module to Compute Panel Data Non Normality Jarque-Bera Test 
+d
+d  lmnjbxt computes Panel Data Non Normality Jarque-Bera Test 
+d
+d KW: Regression
+d KW: Panel
+d KW: Cross Sections-Time Series
+d KW: Non Normality
+d KW: Jarque-Bera Test
+d
+d Requires: Stata version 11.2
+d
+d Distribution-Date: 20160820
+d
+d Author: Emad Abd Elmessih Shehata, Agricultural Economics Research Institute, Egypt
+d Support: email emadstat@@hotmail.com
+d
+d Author: Sahra Khaleel A. Mickaiel, Cairo University, Faculty of Agriculture, Egypt
+d Support: email sahra_atta@@hotmail.com
+d
+f lmnxt.ado
+f lmnxt.sthlp
+f lmnxt.dlg
+f lmnxt.dta

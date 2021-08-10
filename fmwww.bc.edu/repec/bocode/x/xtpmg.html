@@ -1,0 +1,134 @@
+<pre>
+<b>help xtpmg</b>                                        dialog:  <b>xtpmg</b><b>               </b>
+-------------------------------------------------------------------------------
+<p>
+<b><u>Title</u></b>
+<p>
+    <b>xtpmg</b> --        Pooled Mean-Group, Mean-Group, and Dynamic Fixed Effects
+                      Models
+<p>
+<p>
+<b><u>Syntax</u></b>
+<p>
+        <b>xtpmg</b> <i>depvar</i> [<i>indepvars</i>] [<i>if</i>] [<i>in</i>] [<b>,</b> <i>options</i>]
+<p>
+<p>
+    <i>options</i>                 Description
+    -------------------------------------------------------------------------
+    Model
+      <b>lr(</b><i>varlist</i><b>)</b>           terms to be included in long-run cointegrating
+                              vector (Note the difference in sign from
+                              Pesaran's specification)
+      <b><u>nocons</u></b><b>tant</b>            suppresses constant term
+      <b><u>cl</u></b><b>uster(</b><i>varname</i><b>)</b>      adjust standard errors for intragroup correlation
+      <b>ec(</b><i>string</i><b>)</b>            name of newly created error-correction term
+      <b><u>const</u></b><b>raints(</b><i>string</i><b>)</b>   constraints to be applied to the model
+      <b>replace</b>               overwrite error correction term, if it exists
+      <b>full</b>                  display all panel regressions for MG and PMG
+                              models
+      <b>pmg|mg|fe</b>             specifies the panel data specification. <b>pmg</b>
+                              estimates Pesaran's Pooled Mean-Group Model, <b>mg</b>
+                              estimates the Mean-Group Model, and <b>fe</b>
+                              estimates the Dynamic Fixed Effects Model. <b>pmg</b>
+                              is the default.
+<p>
+    Maximum Likelihood Options
+      <i>Only valid with</i> <b>pmg</b>.
+      <b><u>tech</u></b><b>nique(</b><i>algorithm</i><b>)</b>  specifies the <b>ml</b> maximization technique
+      <b><u>diff</u></b><b>icult</b>             will use a different stepping algorithm in
+                              non-concave regions of the likelihood see
+      See <b>ml model_options</b> for a description of available options.
+<p>
+    Reporting
+      <b><u>l</u></b><b>evel(</b><i>#</i><b>)</b>              set confidence level; default is <b>level(95)</b>
+<p>
+    -------------------------------------------------------------------------
+    You must <b>tsset</b> your data before using <b>xtpmg</b>; see <b>tsset</b>.
+    <i>varlists</i> may contain time-series operators; see tsvarlist.
+<p>
+<p>
+<p>
+<b><u>Description</u></b>
+<p>
+    <b>xtpmg</b> aids in the estimation of large <i>N</i> and large <i>T</i> panel-data models
+    where nonstationarity may be a concern. In addition to the traditional
+    dynamic fixed effects models, <b>xtpmg</b> allows for the pooled mean group and
+    mean group estimators. Consider the model
+<p>
+    d.y_it =  phi*(y_(it-1)+beta*x_(it)) + d.y_(it-1)a_1+... + y_(it-p)a_p +
+            d.x_(it)b_1+...+d.x_(it-q)b_q + e_(it)      i={(1,...,N};    
+            t={(1,...,T_i)},
+<p>
+where
+    phi is the error correction speed of adjustment parameter to be estimated
+<p>
+    beta is a (k X 1) vector of parameters
+<p>
+    a_1,...,a_p are p parameters to be estimated
+<p>
+    x_(it) is a (1 X k) vector of covariates
+<p>
+    b_1,...,b_q are q parameters to be estimated
+<p>
+    and e_(it) is the error term. The assumed distribution of the error term
+            depends on the model estimated.
+<p>
+<p>
+<b><u>Options</u></b>
+<p>
+        +-------+
+    ----+ Model +------------------------------------------------------------
+<p>
+    <b>constraints(</b><i>constraints</i><b>)</b>, <b>noconstant</b>; see estimation options. (Note:
+        Constraints are applied post-estimation)
+<p>
+    <b>lr(</b><i>varlist</i><b>)</b> specifies the variables to be included in the cointegrating
+        vector.  For identification purposes, the first listed variable will
+        have its coefficient normalized to 1.
+<p>
+    <b>ec(</b><i>string</i><b>)</b> specifies the name of a new variable to be created in the
+        dataset to hold the error-correction term. The default is __ec.
+<p>
+    <b>cluster(</b><i>varname</i><b>)</b>; see estimation options.
+<p>
+    <b>replace</b> replaces the error correction variable in memory, if it exists.
+<p>
+    <b>full</b> displays all panel estimation output (for the mean-group and pooled
+        mean-group models).
+<p>
+    <b>pmg|mg|fe</b> selects the desired estimation procedure. <b>pmg</b> estimates the
+        pooled mean-group model where the long-run effects, beta, are
+        constrained to be equal across all panels.  The short-run
+        coefficients, including phi, are allowed to differ across panels. <b>mg</b>
+        estimates the mean-group model where the coefficients of the model
+        are calculated from the unweighted average of the unconstrained,
+        fully heterogeneous model. <b>fe</b> estimates the dynamic fixed effects
+        model where all parameters, except intercepts, are constrained to be
+        equal across panels.  <b>pmg</b> is the default.
+<p>
+        +----------------------------+
+    ----+ Maximum Likelihood Options +---------------------------------------
+<p>
+    <b>technique(</b><i>algorithm</i><b>)</b> specifies <b>ml</b> optimization technique.  See <b>ml</b>
+        <b>model_options</b> for more information.  The <b>bhh</b> algorithm is not
+        allowed.  This option is only valid with the <b>pmg</b> model.
+<p>
+    <b>level(</b><i>#</i><b>)</b>; see estimation options.
+<p>
+<b><u>Examples</u></b>
+<p>
+    <b>. xtpmg d.c d.y d.pi, lr(l.c y pi) full</b>
+<p>
+    <b>. xtpmg d.c d(1/2).y d.pi if year&gt;1962, ec(ec) lr(l.c y pi) mg replace</b>
+<p>
+    <b>. xtpmg d.c d.y d.pi, lr(l.c y pi) fe</b>
+<p>
+    <b>. cons def 1 [ec]y=.75</b>
+    <b>. xtpmg d.c d.y d.pi, lr(l.c y pi) mg const(1) replace ec(ec)</b>
+<p>
+<b><u>Also see</u></b>
+<p>
+    Manual:  <b>[XT] xt</b>
+<p>
+    <b>xtdata</b>, <b>xtdes</b>, <b>xtreg</b>, <b>xtsum</b>, <b>xttab</b>; <b>tsset</b>
+</pre>

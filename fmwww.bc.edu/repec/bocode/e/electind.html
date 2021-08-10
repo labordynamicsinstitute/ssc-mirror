@@ -1,0 +1,112 @@
+<pre>
+.-
+help for ^electind^ - February 2010
+.-
+<p>
+Toolkit to analyze electoral data
+<p>
+.-
+<p>
+   ^electind^ varname [^if^ exp] [^in^ range], [^party(^varname^)^] [^district(
+&gt; ^varlist^)^]
+        [^seats(^varname^)^] [^polar(^varlist^)^] [^time(^varname^)^] [^blocks(
+&gt; ^varname^)^]
+        [^store^] [^nooutput^] [^nototal^] [^save(^filename^)^]
+<p>
+Description
+-----------
+<p>
+^electind^ computes electoral indicators: proportionality, fragmentation
+(electoral and parliamentary), polarization and volatility between elections.
+Both ^if^ and ^in^ are allowed, although ^by^ is not supported. It can be used 
+&gt; with
+either aggregate or individual voting data. ^varname^ identifies response
+variable for individual data and count variable for aggregate data. In this
+case, you must use ^party(^varname^)^ to identify party labels.
+<p>
+Options
+-----------
+<p>
+^party(^varname^)^ identifies the variable containing party labels. It should
+  be used only when response variable is a frequency variable containing number
+  of votes at the aggregate level.
+<p>
+^district(^varlist^)^ identifies districts. It is required when there are more
+  than one district.  Typically, &lt;varlist&gt; will contain only one variable
+  identifying districts, but you can use up to five variables to nest districts
+  within higher levels of aggregation, such as regions. I you are using
+  ^save(^filename^)^, the new variables in &lt;filename&gt; will be named as distl1,
+  distl2, ... from the highest level of aggregation to the lowest. For the
+  sake of clarity, it is recommended to introduce the variables in &lt;varlist&gt; 
+  according to this agreggation ordering, since variables in &lt;filename&gt; will
+  appear in the same order. If you use this option, the program will compute
+  indicators at the district and aggregate level.
+<p>
+^seats(^varname^)^ this option can be used to tell the program the number of se
+&gt; ats
+  by party. If used, the program will compute proportionality and parliamentary
+  fragmentation.
+<p>
+^polar(^varlist^)^ identifies variables to compute polarization among groups,
+  such as polarization by ideology. Up to five variables are allowed. If you
+  use more than one variable, polarization will be computed using averaged
+  polarization over the whole set of variables. Absolute and Euclidean
+  measures of polarization are reported.
+<p>
+^time(^varname^)^ tells the program that the data contains more than one electi
+&gt; on.
+  This option identifies the date of the election or the order in which
+  elections take place. Using this option means that the program will compute
+  electoral and parliamentary volatitlity between elections.
+<p>
+^blocks(^varname^)^ tells the program that parties are grouped into blocks to
+  compute inter and intra blocks volatility. You can only use it if you set
+  ^time(^varname^)^ previously. If you are using ^time(^varname^)^, but do not
+  set ^blocks(^varname^)^, all the parties are suppossed to belong to the same
+  block. Then, inter-blocks volatility will be equal to 0, and intra-blocks
+  volatility will be equal to total volatility.
+<p>
+^store^ causes the program to store any computed indicator (at the aggregate an
+&gt; d
+  the district level, if present) in current dataset using new variables. If
+  variables are already defined an error message will be issued.
+<p>
+^nooutput^ tells the program to produce no output.
+<p>
+^nototal^ means that indicators will be calculated only at district level. This
+  option is only available if you set ^district(^varlist^)^.
+<p>
+^save(^filename^)^ allows to store results in &lt;filename&gt;.
+<p>
+Examples
+-----------
+<p>
+^. electind vote^
+<p>
+^. electind vote, party(plabel) district(dtname) store^
+<p>
+^. electind vote, party(plabel) seats(pseats)^
+<p>
+^. electind vote, party(plabel) polar(ideol) save(out.dta)^
+<p>
+^. electind vote, party(plabel) time(year) blocks(pbl)^
+<p>
+<p>
+References
+-----------
+<p>
+This program computes a variety of electoral indicators that are well known in
+the literature. Nevertheless, definitions and sources are given in the
+reference manual provided with this package as an ancillary file:
+<p>
+Jaime-Castillo, A. M. (2010). ELECTOOL. Some Tools for the Analysis of
+Electoral Systems. Mimeo.
+<p>
+Get it from @ssc@. Also available from amjaime@ugr.es
+<p>
+.-
+Author: Antonio M. Jaime-Castillo
+        University of Granada, Spain
+        e-mail: amjaime@ugr.es
+<p>
+</pre>

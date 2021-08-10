@@ -1,0 +1,142 @@
+<pre>
+-------------------------------------------------------------------------------
+help for <b>textbarplot</b>
+-------------------------------------------------------------------------------
+<p>
+<b><u>Horizontal text and bar plot</u></b> 
+<p>
+        <b>textbarplot</b> <i>textvar</i> <i>barvar</i> [<b>if</b> <i>exp</i>] [<b>in</b> <i>range</i>] [ <b>,</b> <b>y(</b><i>integervar</i><b>)</b>
+                 <b><u>sc</u></b><b>atter(</b><i>scatter_options</i><b>)</b> <b>addplot(</b>plot<b>)</b> <b>plot(</b>plot<b>)</b>
+                 <i>bar_options</i> ]
+<p>
+<p>
+<b><u>Description</u></b>
+<p>
+    <b>textbarplot</b> produces a horizontal bar plot with text shown to the left of
+    the bars. It is designed to give a quick-and-easy display.  <i>textvar</i>
+    specifies the text and <i>barvar</i>, which must be a numeric variable,
+    specifies the magnitude of the bars.
+<p>
+    By default
+<p>
+        1. If <i>textvar</i> is a string variable, then observation numbers are used
+        to determine row positions for the bars, which are <i>y</i> axis values on a
+        reversed scale, and its values are used as text.
+<p>
+        2. If <i>textvar</i> is a numeric variable with labels, then its numeric
+        values are used to determine row positions, and its labels are used
+        as text.
+<p>
+        3. If <i>textvar</i> is an integer-valued numeric variable, then its numeric
+        values are used to determine row positions and are also shown as
+        text.
+<p>
+    These defaults can be over-ridden by specifying an integer-valued <i>y</i>
+    variable with the <b>y()</b> option. In that case there are no constraints on
+    what <i>textvar</i> is.
+<p>
+    <b>textbarplot</b> is a wrapper for twoway bar and twoway scatter.  Other kinds
+    of graph can be obtained by using a <b>recast()</b> option. The most useful
+    alternatives are <b>recast(dot)</b>, <b>recast(dropline)</b> and <b>recast(spike)</b>.
+<p>
+<p>
+<b><u>Remarks</u></b> 
+<p>
+    The easiest way of drawing horizontal bar plots for various categories is
+    graph hbar. However, it can be difficult to produce some designs with
+    <b>graph hbar</b> that include many gaps between clusters of bars or repeated
+    category names.  <b>textbarplot</b> is implemented in terms of twoway to provide
+    a simpler alternative for some kinds of plots.
+<p>
+<p>
+<b><u>Options</u></b> 
+<p>
+    <b>y(</b><i>integervar</i><b>)</b> specifies an integer-valued numeric variable indicating row
+        positions for the bars. This overrides any default set of row
+        positions.
+<p>
+    <b>scatter(</b><i>scatter_options</i><b>)</b> indicates options of twoway scatter. Know that
+        the default is <b>scatter</b> <i>y_variable</i> <i>barvar</i> <b>ytitle("") ms(none)</b>. Thus
+        there is scope for (e.g.) adding marker labels.
+<p>
+    <b>addplot(</b>plot<b>)</b> specifies instructions for other plots to add to the graph.
+        (Stata 9 up.)
+<p>
+    <b>plot(</b>plot<b>)</b> specifies instructions for other plots to add to the graph.
+        (Stata 8.)
+<p>
+    <i>bar_options</i> refers to options of twoway bar. Know that the default is
+        <b>twoway bar</b> <i>barvar y_variable</i> <b>, yla(</b><i>row_positions</i><b>, base(0) valuelabel</b>
+        <b>nogrid noticks ang(h))</b> <b>horizontal ysc(reverse) ytitle("") barw(0.6)</b>
+        <b>legend(off)</b>.  Note that possible options include <b>vertical</b>.  Those who
+        like their bars to touch the associated axis should specify
+        <b>plotregion(margin(l=0))</b> or <b>plotregion(margin(b=0))</b>.
+<p>
+<p>
+<b><u>Examples</u></b>
+<p>
+    . sysuse auto
+    . textbarplot make mpg if foreign
+    . gsort foreign - mpg
+    . textbarplot make mpg if foreign
+    . textbarplot make mpg if foreign, recast(dot)
+    . textbarplot make mpg if foreign, scatter(mla(mpg)) xsc(r(. 43))
+        bcolor(red)
+<p>
+    The following data come from Statistiska centralbyrån. 2003.  <i>Sweden in</i>
+    <i>figures/Sverige i siffror 2004.</i> p.52:
+<p>
+                                home access to internet 2002 (%) 
+                                --------------------------------
+        Men                     66.7
+        Women                   60.3
+                
+        16-24                   75.5
+        25-34                   75.0
+        35-44                   80.0
+        45-54                   75.4
+        55-64                   59.9
+        65-74                   29.8
+        75-84                   10.3
+                
+        Labourers               49.9
+        Lower white collar      60.8
+        Managers and officials  83.5
+        Entrepreneurs           66.3
+        Farmers                 26.8
+        Old-age pensioners      22.1
+<p>
+    To use <b>textbarplot</b>, enter as two variables, say <b>text</b> and <b>access</b>, with
+    blank strings and missing numerics in observations 3 and 11 to indicate
+    blank lines. Then
+<p>
+    <b>. label var access "home access to internet (%)"</b>
+    <b>. textbarplot text access</b>
+<p>
+    A corresponding set of commands is, given <b>text</b> and <b>access</b> as variables,
+<p>
+    <b>. gen axis = _n</b>
+    <b>. labmask axis, values(text)</b>
+    <b>. graph hbar (asis) access, over(axis, relabel(3 "{c 32}" 11 "{c 32}"))</b>
+<p>
+    Alternatively, set up a variable directly with integer values and the
+    text here as value labels.
+<p>
+<p>
+<b><u>Acknowledgements</u></b>
+<p>
+    Hiroshi Maeda posted a stimulating example on Statalist.  Austin Nichols
+    contributed to discussion of <b>graph hbar</b>.  Friedrich Huebler, Ronán Conroy
+    and Vince Wiggins made helpful suggestions.
+<p>
+<p>
+<b><u>Author</u></b>
+<p>
+    Nicholas J. Cox, Durham University
+    n.j.cox@durham.ac.uk
+<p>
+         
+<b><u>Also see</u></b>
+<p>
+    On-line: help for twoway bar, graph bar, graph dot, catplot (if
+</pre>

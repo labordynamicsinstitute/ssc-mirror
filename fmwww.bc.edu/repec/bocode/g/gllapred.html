@@ -1,0 +1,254 @@
+<pre>
+.-
+help for ^gllapred^
+.-
+<p>
+Predict command for gllamm
+---------------------------
+<p>
+^gllapred^ varname [^if^ exp] [^in^ range] [,^u^ ^fac^ ^p^ ^xb^ 
+           ^ustd^ ^co^oksd ^li^npred ^mu^ ^ma^rginal ^us(^varname^)^ 
+           ^out^come^(^#^)^ ^ab^ove^(^#^,^...^,^#^)^ 
+           ^pe^arson ^d^eviance ^a^nscombe  
+           ^s^ ^ll^ ^fsample^ ^nooff^set 
+           ^adapt^ ^adoonly^ ^fr^om^(^matrix^)^ ]
+<p>
+where only one of ^xb^ ^u^ ^fac^ ^p^ ^li^npred ^mu^ 
+                  ^pe^arson ^d^eviance ^a^nscombe ^s^ ^ll^ 
+may be specified at a time.
+<p>
+<p>
+Description
+-----------
+<p>
+^gllapred^ is a prediction command for @gllamm@. It computes 
+<p>
+-- Posterior means (empirical Bayes predictions) and standard 
+deviations of the latent variables or random effects for models 
+estimated using gllamm (see ^u^ and ^fac^ options).
+<p>
+-- Posterior probabilities for two level models with discrete
+latent variables or random effects (see ^p^ option).
+<p>
+-- The fixed part of the linear predictor (^xb^ option) or the 
+entire linear predictor (^linpred^ option) with empirical Bayes
+estimates substituted for the latent variables or random effects.
+<p>
+-- The expectation of the response (see ^mu^ option). By default,
+the expectation is with respect to the posterior distribution
+of the latent variables, but the ^marginal^ option gives the
+expectation with respect to the prior distribution. 
+The ^us()^ option can be used to get the conditional expectation
+for specified values of the latent variables.
+<p>
+--- Pearson, Deviance or Anscombe residuals. By default,
+the posterior expectation, but the ^us^ option gives the
+residuals for specified values of the latent variables.
+<p>
+-- The level 1 standard deviation (see ^s^ option).
+<p>
+-- Log-likelihood contributions of the highest level clusters
+(see ^ll^ option).
+<p>
+In some cases the log-likelihood is also returned.
+By default prediction is restricted to the estimation sample.
+In this case (and if the ^if^ and ^in^ options are not specified),
+the log-likelihood returned by gllapred should be the same
+as that previously returned by gllamm.
+<p>
+<p>
+<p>
+Options
+--------
+<p>
+^u^ the posterior means and standard deviation of the latent 
+    variables or random effects are returned in "varname"m1, 
+    "varname"m2, etc., and "varname"s1, "varname"s2, etc., 
+    respectively, where the order of the latent variables is 
+    the same as in the call to gllamm (in the order of the 
+    equations in the eqs() option). In the case of continuos
+    latent variables, the number of quadrature points used 
+    is also the same as in the previous call to gllamm. If 
+    the gllamm model includes equations for the latent variables 
+    (geqs and/or bmatrix), the posterior means and standard
+    deviations of the disturbances are returned.
+<p>
+^corr^ the posterior correlations of the random effects
+    or latent variables are returned in "varname"c21, etc.
+    This option only works together with the ^u^ option. If
+    the model includes equations for the latent variables,
+    posterior correlations of the disturbances are calculated.   
+<p>
+^fac^ If the gllamm model includes equations for the latent
+    variables (^geqs()^ and/or ^bmatrix()^), ^fac^ causes
+    predictions of the latent variables (e.g. factors) to be 
+    returned in "varname"m1, "varname"m2, etc. instead of the 
+    disturbances. In other words, predictions of the latent 
+    variables on the left-hand side of the equations are returned.
+<p>
+^p^ can only be used for two-level models estimated using the 
+    ip(f) option. gllapred returns the posterior probabilities 
+    in "varname"1, "varname"2, etc., giving the probabilities
+    of classes 1,2, etc. gllapred also prints out the (prior) 
+    probability and location matrices to help interpret the 
+    posterior probabilities.
+<p>
+^xb^ the linear predictor for the fixed effects is returned. This
+     includes the offset (if there is one in the gllamm model)
+     unless the ^nooffset^ option is specified.
+<p>
+^ustd^ standardized posterior mean - approximate sampling
+    standard deviation is used, sqrt(prior var. - posterior var.)
+<p>
+^cooksd^ Cook's distances for the top-level units.
+<p>
+^linpred^ returns the linear predictor including both the fixed
+   and random parts where posterior means are substituted 
+   for the latent variables or random effects in the random 
+   part. The offset is included (if there is one in the 
+   gllamm model) unless the ^nooffset^ option is specified.
+<p>
+^mu^ returns the expecation of the response, for example
+   the predicted probability in the case of dichotomous 
+   responses. By default, the expectation is with respect
+   to the posterior distribution of the latent variables, 
+   but see ^marginal^ and ^us()^ options. The offset is included 
+   (if there is one in the gllamm model) unless the 
+   ^nooffset^ option is specified.
+<p>
+^marginal^ together with the ^mu^ option gives the
+   expectation of the response with respect to the prior
+   distribution of the latent variables. This is useful
+   for looking at the 'marginal' or population average
+   effects of covariates.
+<p>
+^us(^varname)^ can be used to specify values for the latent
+   variables to calculate conditional quantities, such as
+   the conditional mean of the responses (^mu^ option) 
+   given the values of the latent variables. Here varname 
+   specifies the stub-name (prefex) for the variables and 
+   ^gllapred^ will look for "varname"1 "varname"2, etc.
+<p>
+^outcome(^#^)^ specifies the outcome for which the predicted
+   probability should be returned (^mu^ option) if there
+   is a nominal response. This option is not necessary if the 
+   ^expanded()^ option was used in ^gllamm^ since in this 
+   case predicted probabilities are returned for all outcomes.
+<p>
+^above(^#^,^...^,^#^)^ specifies the events for which the 
+   predicted probabilities should be returned (^mu^ option)
+   if there are ordinal responses. The probability of
+   a value higher than that specified is returned for each
+   ordinal response. A single number can be given for all
+   ordinal responses.
+<p>
+^pearson^ returns Pearson residuals. By default, the posterior
+   expectation with respect to the latent variables is 
+   returned. The ^us()^ option can be used to obtain the
+   conditional residual when certain values are substituted 
+   for the latent variables.
+<p>
+^deviance^ returns deviance residuals. By default, the posterior
+   expectation with respect to the latent variables is 
+   returned. The ^us()^ option can be used to obtain the
+   conditional residual when certain values are substituted 
+   for the latent variables.
+<p>
+^anscombe^ returns Anscombe residuals. By default, the posterior
+   expectation with respect to the latent variables is 
+   returned. The ^us()^ option can be used to obtain the
+   conditional residual when certain values are substituted 
+   for the latent variables.
+<p>
+^s^ returns the scale or standard deviation. This is useful 
+    if the ^s()^ option was used in gllamm to specify level 1 
+    heteroscedasticity.
+<p>
+^ll^ returns the log-likelihood contributions of the highest
+   level (level L) units. 
+ 
+^adapt^ if the gllamm command did not use the adapt option, 
+   gllapred will use ordinary quadrature for computing the
+   posterior means and standard deviations unless the adapt
+   option is used in the gllapred command.
+<p>
+^fsample^ causes gllapred to return predictions for the
+   full sample (except observations exluded due to the
+   if and in options), not just the estimation sample. 
+   The returned log-likelihood may be missing since
+   gllapred will not exclude observations with missing
+   values on any of the variables used in the likelihood
+   calculation. It is up to the user to exclude these
+   observations using if or in.
+<p>
+^nooffset^ can be used together with the ^xb^, ^linpred^ or
+   ^mu^ options to exclude the offset from the prediction.
+   It will only make a difference if the offset option 
+   was used in gllamm.
+<p>
+^adoonly^ causes all gllamm to use only ado-code. This option
+   is not necessary if gllamm was run with the adoonly option.
+<p>
+^from(^matrix^)^ specifies a matrix of parameters for which 
+   the predictions should be made. The column and equation
+   names will be ignored. Without this option, the parameter
+   estimates from the last gllamm model will be used.
+<p>
+Examples
+--------
+<p>
+Estimate parameters of a three level logistic regression model:
+<p>
+    . ^gllamm resp x, i(id school) adapt trace family(binom)^
+    
+<p>
+Predict random intercepts using empirical Bayes:
+<p>
+    . ^gllapred int, u^  
+<p>
+<p>
+Predict marginal probability that resp=1 (with respect to random effects):
+<p>
+    . ^gllapred prob, mu marginal^
+<p>
+<p>
+Predict conditional probability that resp==1 if random intercepts are 0:
+<p>
+    . ^gen z1 = 0^
+    . ^gen z2 = 0^
+    . ^gllapred prob, us(z)^
+<p>
+<p>
+Predict posterior mean of Pearson residual
+<p>
+    . ^gllapred res, pearson^
+<p>
+Predict Pearson residual when random effects are equal to their posterior 
+means (note that ^gllapred int, u^ above produced empirical Bayes 
+predictions in intm1 intm2): 
+<p>
+    . ^gllapred res, pearson us(intm)^
+<p>
+<p>
+Author
+------
+Sophia Rabe-Hesketh (sophiarh@@berkeley.edu)
+as part of joint work with Andrew Pickles and Anders Skrondal.
+<p>
+<p>
+Web-page
+--------
+http://www.gllamm.org
+<p>
+<p>
+References
+----------
+Rabe-Hesketh, S., Skrondal, A. and Pickles, A. (2004). GLLAMM Manual. 
+U.C. Berkeley Division of Biostatistics Working Paper Series. 
+Working Paper 160.
+<p>
+<p>
+Also see
+--------
+On-line:  help for @gllamm@, @gllasim@
+</pre>

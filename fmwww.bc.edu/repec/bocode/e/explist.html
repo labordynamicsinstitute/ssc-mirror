@@ -1,0 +1,72 @@
+<pre>
+-------------------------------------------------------------------------------
+help for <b>explist</b>                                                 (Roger Newson)
+-------------------------------------------------------------------------------
+<p>
+<p>
+<b><u>Creating exponential lists of numbers</u></b>
+<p>
+        <b>explist</b> <i>number_list</i> [ <b>,</b> <b><u>b</u></b><b>ase(</b><i>#</i><b>)</b> <b><u>s</u></b><b>cale(</b><i>#</i><b>)</b> <b><u>g</u></b><b>lobal(</b><i>global_macro_name</i><b>)</b>
+                           <b><u>n</u></b><b>oisily</b> ]
+<p>
+where <i>number_list</i> is either a Stata <i>numlist</i> containing no commas or a Stata
+<i>numlist</i> surrounded by quotes.
+<p>
+<p>
+<b><u>Description</u></b>
+<p>
+<b>explist</b> takes, as input, a list of numbers <i>x_1, ... , x_n</i>. It creates, as
+output, a list of numbers <i>y_1, ... , y_n</i>, derived exponentially from the input
+list, so that, for each <i>i</i>,
+<p>
+<i>y_i = scale*base^x_i</i>
+<p>
+where <i>base</i> and <i>scale</i> are numbers given by the options of the same name.  The
+output list is returned in the local result <b>r(explist)</b>, and may also be saved
+in a global macro and/or printed.
+<p>
+<p>
+<b><u>Options</u></b>
+<p>
+<b>base(</b><i>#</i><b>)</b> is the logarithmic base for calculating the output list. If absent, it
+    is set to 10.
+<p>
+<b>scale(</b><i>#</i><b>)</b> is a scale factor for calculating the output list. If absent, it is
+    set to 1.
+<p>
+<b>global(</b><i>global_macro_name</i><b>)</b> is the name of a global macro, in which the output
+    list will be stored.
+<p>
+<b>noisily</b> specifies that the output list must be printed.
+<p>
+<p>
+<b><u>Remarks</u></b>
+<p>
+<b>explist</b> is designed in a style similar to Nick Cox's listutil utilities for
+processing lists.
+<p>
+<p>
+<b><u>Examples</u></b>
+<p>
+        . explist 0(1)20
+<p>
+        . explist 0(1)20,sc(2.5) noi
+<p>
+        . explist 0(5)50,base(2) noi
+<p>
+        . explist 0(-1)-20,g(powers)
+        . grap y x,ylog ylab($powers)
+<p>
+<p>
+<b><u>Author</u></b>
+<p>
+Roger Newson, King's College, London, UK.  Email: <b>roger.newson@kcl.ac.uk</b>
+<p>
+<p>
+<b><u>Also see</u></b>
+<p>
+ Manual:  <b>[P] numlist</b>.
+On-line:  help for nlist, numlist
+          help for listutil if installed
+<p>
+</pre>

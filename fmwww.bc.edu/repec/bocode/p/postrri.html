@@ -1,0 +1,67 @@
+<pre>
+-------------------------------------------------------------------------------
+help for <b>postrri</b>
+-------------------------------------------------------------------------------
+<p>
+<b><u>Posterior Relative Risk</u></b>
+<p>
+    <b>postrri</b> , <b><u>p</u></b><b>rior(</b><i>#lb #ub</i><b>)</b> <b><u>d</u></b><b>ata(</b><i>#rr #lb #ub</i><b>)</b> [ <b><u>l</u></b><b>evel(</b><i>#</i><b>)</b> <b><u>lp</u></b><b>rior(</b><i>#</i><b>)</b>
+              <b><u>ld</u></b><b>ata(</b><i>#</i><b>)</b> <b><u>f</u></b><b>ormat(%</b><i>fmt</i><b>)</b> ]
+<p>
+<b><u>Description</u></b>
+<p>
+    <b>postrri</b> provides an easy way to do Bayesian analyses via
+          inverse-variance (information) weighted averaging of the
+          prior with the frequentist relative risk.  It is an
+          immediate command, see help immed.
+ 
+<b><u>Options</u></b>
+<p>
+    <b><u>p</u></b><b>rior(</b><i>#lb #ub</i><b>)</b> specifies the confidence limits for the prior relative
+        risk.
+<p>
+    <b><u>d</u></b><b>ata(</b><i>#rr #lb #ub</i><b>)</b> specifies the frequentist relative risk and confidence
+        limits for the data.
+<p>
+    <b><u>l</u></b><b>evel(</b><i>#</i><b>)</b> specifies the confidence level for the posterior relative risk.
+        The default is 95%.
+<p>
+    <b><u>lp</u></b><b>rior(</b><i>#</i><b>)</b> specifies the probability for the Bayesian interval.  The
+        default is 95%.
+<p>
+    <b><u>ld</u></b><b>ata(</b><i>#</i><b>)</b> specifies the confidence level for the frequentist interval.
+        The default is 95%.
+<p>
+    <b><u>f</u></b><b>ormat(%</b><i>fmt</i><b>)</b> specifies the display format for presenting numbers.
+        format(%3.2f) is the default; see help format.
+<p>
+<b><u>Examples</u></b>
+<p>
+    . postrri , prior(0.25 4) data(3.51 .80 15.4) 
+    . postrri , prior(0.25 4) data(3.51 .80 15.4)  l(90)
+    . postrri , prior(0.25 4) data(3.51 .80 15.4)  l(99)
+    . postrri , prior(0.25 4) data(3.51 .80 15.4)  f(%4.3f)
+    . postrri , prior(0.25 4) data(1.69 1.28 2.23)
+<p>
+<b><u>Reference</u></b>
+<p>
+    Greenland S. (2006) Bayesian perspectives for epidemiologic research. I.
+        Foundations and basic methods., <i>International Journal of</i>
+        <i>Epidemiology</i>, 35:765-775.
+         
+<b><u>Authors</u></b>
+<p>
+    Nicola Orsini, Division of Nutritional Epidemiology, Institute of
+        Environmental Medicine, Karolinska Institutet, Sweden.
+    Rino Bellocco, Department of Medical Epidemiology and Biostatistics,
+        Karolinska Institutet, Stockholm, Sweden, and Department of
+        Statistics, University of Milano Bicocca, Milan, Italy.
+    Sander Greenland, Departments of Epidemiology and Statistics, University
+        of California, Los Angeles, CA, U.S.A.
+ 
+<b><u>Support</u></b>
+<p>
+    http://nicolaorsini.altervista.org
+    nicola.orsini@ki.se
+<p>
+</pre>

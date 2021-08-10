@@ -1,0 +1,77 @@
+<pre>
+.-
+help for ^tabform^
+.-
+<p>
+Create tables of means, standard deviations and confidence intervals
+-----------------------------------
+<p>
+^tabform^ varlist using filename [if] [in] [aw fw], [ by(varname) sd se ci leve
+&gt; l(#) ^not^otal bdec(#) 
+                                                         ^sdb^racket ^cib^race 
+&gt; ^mt^est ^mtp^rob ^mts^e ^mtb^dec ^ver^tical ]
+<p>
+Description
+-----------------------------------
+<p>
+^tabform^ creates tables of means, standard deviations, and confidence interval
+&gt; s and put them in the following format:
+<p>
+        |       Item1   |       Item2   |       Item3   |       Item4   |      
+&gt;  .... 
+--------|---------------|---------------|---------------|---------------|------
+&gt; ---------
+               mean             mean            mean            mean           
+&gt;  mean
+               (sd)             (sd)            (sd)            (sd)           
+&gt;  (sd)
+             [lb;ub]          [lb;ub]         [lb;ub]         [lb;ub]          
+&gt; [lb;ub]
+--------|---------------|---------------|---------------|---------------|------
+&gt; ---------
+<p>
+<p>
+Options         Description
+-----------------------------------
+^sd^            reports standard deviations
+^se^            reports standard errors of means. Either ^sd^ or ^se^ can be sp
+&gt; ecified
+^ci^            reports confidence intervals
+^level^         specifies the level of significance for the confidence interval
+&gt; s; The default is 95%
+^nototal^       specifies not to report overall statistics when using with by()
+^bdec^          specifies the number of digits after the decimal for the standa
+&gt; rd deviations and the confidence intervals.
+^sdbracket^     puts standard deviations (or standard errors of means) in [] ra
+&gt; ther than ()
+^cibrace^       puts confidence intervals in {} rather than []
+^mtest^         performs t tests on the equality of means (of the current categ
+&gt; ory and the rest). 
+        By default, the level of significance is indicated by stars 
+        (* significant at 10%; ** significant at 5%; *** significant at 1%).
+^mtprob^        p-values of the test statistic are included instead of stars.
+^mtse^          SEs of the test statistic are included instead of stars.
+        Either ^mtprob^ or ^mtse^ can be speficied.
+^mtbdec^        specifies the number of digits after the decimal for the p-valu
+&gt; es and the SEs of the mean-difference test.
+^vertical^      presents variables in the table vertically (the default is hori
+&gt; zontally).
+<p>
+Remark
+-------
+If neither ^sd^ nor ^ci^ is specified, the command report means
+<p>
+<p>
+Examples
+-------
+<p>
+    ^. tabform item1 item2 item3 using Test.xls, sd^
+    ^. tabform item1 item2 item3 using Test.xls, by(month) sd ci level(90) bdec
+&gt; (2) nototal sdbracket cibrace^
+<p>
+<p>
+Author
+-------
+                Le Dang Trung
+                ld.trung@yahoo.co.uk
+</pre>

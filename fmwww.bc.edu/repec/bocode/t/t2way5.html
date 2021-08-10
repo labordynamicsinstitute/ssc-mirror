@@ -1,0 +1,63 @@
+<pre>
+.-
+help for ^t2way5^
+.-
+<p>
+Tukey's Two-Way Analysis by Medians
+-----------------------------------
+<p>
+   ^t2way5^ rowvar colvar, ^s^ummari^(^depvar^)^ [ ^gr^aph ^q^uietly
+      ^gen(^rowfit colfit grandfit^)^ graph_options ]
+<p>
+Description
+-----------
+<p>
+^t2way5^ uses Tukey's low-median polish technique to fit a two-way table
+by medians.
+<p>
+^t2way5^ can produce both a tabular report and a graph.  Without
+options, it produces only the tabular report.
+<p>
+graph_options are those options allowed with ^graph, twoway^, apart
+    from ^symbol^, ^ttick^, ^rtick^, ^xlabel^ and ^ylabel^.
+<p>
+<p>
+Remarks
+-------
+<p>
+^t2way5^ is a translation to Stata 5.0 syntax and conventions of
+^t2way^, issued on a Stata Support Disk in November 1990. It includes
+some minor bug fixes and style changes. Stata Corp bear no
+responsibility for this program.
+<p>
+<p>
+Options
+-------
+<p>
+^summari()^ indicates the dependent variable and is a required option.
+<p>
+^graph^ produces a residual graph showing the size and sign of the
+    residuals plotted with an indication of the difference between the
+    row and column fits on the horizontal axis and the fitted value on
+    the vertical axis.
+<p>
+^quietly^ suppresses the tabular report.  This is typically used in
+    combination with ^graph^ to obtain only the graph.
+<p>
+^gen( )^ adds three new variables to your data:  the row fit, column
+    fit, and grand median fit.  This option resorts your data.
+<p>
+<p>
+Example
+-------
+<p>
+        ^. t2way5 county year, s(Demvote)^
+<p>
+<p>
+Author
+------
+<p>
+         Nicholas J. Cox, University of Durham, U.K.
+         n.j.cox@@durham.ac.uk
+<p>
+</pre>

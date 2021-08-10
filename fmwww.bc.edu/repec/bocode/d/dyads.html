@@ -1,0 +1,140 @@
+<pre>
+<p>
+<b>help dyads</b>
+-------------------------------------------------------------------------------
+<p>
+<b><u>Title</u></b>
+<p>
+    <b>dyads</b> -- Transform observations into dyads
+<p>
+<b><u>Syntax</u></b>
+<p>
+    <b>dyads</b> <i>idvar</i> [<b>,</b> <i>DYadvars(varlist)</i>]
+<p>
+<b><u>Description</u></b>
+    <b>dyads</b> takes a set of <i>N</i> observations and returns a set of <i>(N(N-1))/2</i>
+    dyads.  Observations are identified by <i>idvar</i>, which must be specified.
+    The user can also specify via <i>DYadvars()</i> any variables whose values
+    should be added in for the second half of the created dyads; the default
+    is to copy only the value of <i>idvar</i> for the other half of the dyad.
+<p>
+<b><u>Remarks</u></b>
+<p>
+    <b>dyads</b> is designed to take a file that has <i>N</i> observations, indexed by some
+    <i>idvar</i>, and create a file that has <i>(N(N-1))/2</i> dyads representing all the
+    possible pairs of observations in the original dataset.  The command is
+    meant to be used as a preface to calculating dyad-based statistics, as
+    one might do for many types of network analyses.  In addition to
+    generating pairs of observation identifierss, <b>dyads</b> can include a
+    user-specified collection of variables.
+<p>
+    You could instead create dyads using Stata's matrix-programming
+    capabilities.  The advantages of <b>dyads</b> are that it doesn't require
+    learning the matrix syntax for a discrete data-management job and it
+    isn't limited by Stata's matrix-size boundaries.  Thus it runs quickly on
+    large datasets.  It is worth noting that <b>dyads</b> produces <i>N*N</i> observations
+    before finishing with <i>(N(N-1))/2</i> observations.  This may be a memory
+    issue with large datasets.
+<p>
+<b><u>Examples</u></b>
+<p>
+    The simplest example is to take a list of IDs and generate all pairs of
+    IDs.  Imagine the following dataset:
+<p>
+                                    <b>N   id</b>
+                                    ------
+                                    1    1
+                                    2    2
+                                    3    3
+                                    4    4
+                                    5    5
+<p>
+    Typing
+<p>
+    <b>. dyads id</b>
+<p>
+    will produce the following dataset:
+<p>
+                                  <b>N  id  id_d</b>
+                                  -----------
+                                  1   1     2
+                                  2   1     3
+                                  3   1     4
+                                  4   1     5
+                                  5   2     3
+                                  6   2     4
+                                  7   2     5
+                                  8   3     4
+                                  9   3     5
+                                 10   4     5
+<p>
+    ...that is, all the pairwise combinations of <i>id</i>.
+<p>
+    A more useful example might be calculating the distance between pairs of
+    objects.  Imagine a dataset with firms and their <i>(x,y)</i> locations:
+<p>
+                                 <b>firm    x   y</b>
+                                 -------------
+                                 firma  12  13
+                                 firmb   4   6
+                                 firmc  10   2
+                                 firmd   5  17
+<p>
+    <b>. dyads firm, dy(x y)</b>
+<p>
+                       <b>firm    x   y  firm_d  x_d   y_d</b>
+                       --------------------------------
+                       firma  12  13  firmb     4     6
+                       firma  12  13  firmc    10     2
+                       firma  12  13  firmd     5    17
+                       firmb   4   6  firmc    10     2
+                       firmb   4   6  firmd     5    17
+                       firmc  10   2  firmd     5    17
+<p>
+    You could now calculate distance for all the dyads using
+<p>
+    <b>. generate dist = sqrt((x-x_d)^2+(y-y_d)^2)</b>
+<p>
+    A final example shows the utility of choosing <i>idvar</i> carefully.  Imagine a
+    dataset with basketball players, the times they entered the game
+    (expressed in minutes since the start) and the times they exited:
+<p>
+                              <b>id  timein  timeout</b>
+                              -------------------
+                               1       5       27
+                               2      15       41
+                               3       8       33
+                               4       2       36
+                               5      39       51
+                               6      33       36
+<p>
+    Assume that you want to know the amount of time that each player-dyad
+    spent on the court together.  In order to generate that particular
+    statistic, you might want to ensure that the player who came onto the
+    court earlier is always the <i>first</i> member of the dyad.  Creating a unique
+    <i>idvar</i> on which to run <b>dyads</b> can help with this.
+<p>
+    <b>. sort timein id</b>
+<p>
+    <b>. generate sortid = _n</b>
+<p>
+    <b>. dyads sortid, dy(id timein timeout)</b>
+<p>
+       <b>id  timein  timeout  sortid  sortid_d  id_d  timein_d  timeout_d</b>
+       ----------------------------------------------------------------
+        4       2       36       1         2     1         5         27
+        4       2       36       1         3     3         8         33
+        4       2       36       1         4     2        15         41
+                                      ...
+<p>
+    Notice that, in order to keep the original observation's identifier when
+    generating the dyads, in this case the variable <i>id</i> was included inside
+    {id:DYadvars()}.  Calculation of overlaps could now proceed under the
+    assumption that the first member of the dyad always had an earlier or
+    equal starting time than the second member.
+<p>
+<b><u>Author</u></b>
+<p>
+    John-Paul Ferguson
+<p>
+</pre>

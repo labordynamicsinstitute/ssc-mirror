@@ -1,0 +1,41 @@
+<pre>
+<b>help vcf</b>                                                         (version 1.0) 
+By Daniel E. Cook {Danielecook@gmail.com}                   www.Danielecook.com
+-------------------------------------------------------------------------------
+<b><u>vcf</u></b>
+<p>
+     <b>vcf</b> -- Used to import VCF (Variant Caller Format)
+            Files into Stata and format genotype data.
+<p>
+     This program does 2 challenging things:
+<p>
+     (1) Splits the INFO column (delimited by ;) into
+     seperate columns. It also pulls out variable
+     descriptions and assigns them as variable labels.
+<p>
+     (2) Recodes genotypic data, showing the genotypes of
+     each individual.
+<p>
+     <b>Important!</b> This is a new release, as such it is still
+     undergoing development. Please report any
+     issues/errors/comments/suggests (email above).
+<p>
+<p>
+<b><u>Syntax</u></b>
+<p>
+     <b>vcf using "path/to/file.vcf"</b>
+<p>
+<b><u>Limits</u></b>
+<p>
+     (1) While it is possible to read in very large files -
+     this program cannot handle enormous VCF Files. I have
+     successfully loaded in files that are a few gigabytes.
+<p>
+     (2) If your VCF Files has more than 9 alternative
+     alleles, this program will incorrectly assign alleles
+     beyond the 9th alternative allele.
+<p>
+<i> Initial Release</i> - 12/17/12
+<p>
+<p>
+</pre>

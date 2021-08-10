@@ -1,0 +1,12 @@
+d 'ITMEUS': program to install user-written software referenced in
+d Baum, An Introduction to Modern Econometrics using Stata, Stata Press, 2006.
+d
+d Requires: Stata version 8.2
+d
+d Distribution-Date: 20090223
+d
+d Author: Christopher F Baum, Boston College and DIW Berlin
+d Support: email baum@@bc.edu
+d
+f itmeus.ado
+f itmeus.hlp

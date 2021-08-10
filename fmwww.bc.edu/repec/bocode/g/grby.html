@@ -1,0 +1,97 @@
+<pre>
+-------------------------------------------------------------------------------
+help for <b>grby</b> 
+-------------------------------------------------------------------------------
+<p>
+<b><u>Bar charts</u></b>
+<p>
+        <b>grby</b> <i>yvar xvar1</i> [<i>xvar2</i>] [<b>if</b> <i>exp</i>] [<b>in</b> <i>range</i>] [, <b><u>f</u></b><b>ormat(</b><i>%fmt</i><b>)</b> <b><u>sh</u></b><b>ading(</b><i>#</i><b>)</b>
+              <b><u>ysc</u></b><b>ale(</b><i># #</i><b>)</b> <b><u>me</u></b><b>ans</b> <b>ci(</b><i>##</i><b>)</b> <b><u>co</u></b><b>nnect</b> <b><u>nu</u></b><b>mbers</b> <b><u>v</u></b><b>label</b> <b><u>v1</u></b><b>label</b> <b><u>v2</u></b><b>label</b>
+              <b><u>t</u></b><b>itle(</b><i>text</i><b>)</b> <b><u>sa</u></b><b>ving(</b><i>filename</i>[<b>,replace</b>]<b>)</b>]
+<p>
+           <i>yvar</i>     continuous or categorical variable on y-axis.
+          <i>xvar1</i>     first categorical variable on x-axis.
+          <i>xvar2</i>     second categorical variable on x-axis. 
+<p>
+<b><u>Description</u></b>
+<p>
+<b>grby</b> displays a bar chart for each covariate pattern.  Sums or means of <i>yvar</i>
+determine the height of the bars.  In the latter case you can specify the level
+of a confidence interval. This program works under Stata 7 and Stata 8 and it
+is based on gph.
+<p>
+<b><u>Options</u></b>
+<p>
+    <b>format(%</b><i>fmt</i><b>)</b> specifies the display format for sums or means over the bars.
+        
+    <b>shading(</b><i>#</i><b>)</b> specifies the amount of shading on a scale 0 up to 4, with 0 bei
+&gt; ng the lightest and 4 the darkest.
+        
+    <b>yscale(</b><i># #</i><b>)</b> specifies the minimum and maximum value of y-axis.
+        
+    <b>means</b> specifies that means of <i>yvar</i> determine the height of the bars (the de
+&gt; fault are the sums).
+        
+    <b>ci(</b><i>##</i><b>)</b> specifies the level to figure out a confidence intervals for the mea
+&gt; ns. This option is available only 
+             with the option <b>means</b>. The mean value for a covariate pattern with
+&gt;  only one observation is signed by X.
+<p>
+    <b>connect</b> with a line the means on the graph. This option is available only w
+&gt; ith <b>ci</b>.
+<p>
+    <b>numbers</b> specifies the number (sum or mean) over the bar (or point if <b>ci</b> is 
+&gt; specified).
+    
+    <b>vlabel</b> specifies the variable label.
+        
+    <b>v1label</b> specifies the value label for <i>xvar1</i>.
+        
+    <b>v2label</b> specifies the value label for <i>xvar2</i>.
+        
+    <b>title(</b><i>text</i><b>)</b> specifies a title on the top of the graph.
+    
+    <b><u>sa</u></b><b>ving(</b><i>filename</i>[<b>,replace</b>]<b>)</b> saves the graph in the current directory
+<p>
+<b><u>Examples</u></b>
+<p>
+    <b> . webuse lbw, clear  </b>
+    <b> . xtile aged = age, nq(10)      </b>
+    <b> . label var aged "decile age"    </b>
+    <b> . label define smoke 0 "No" 1 "Yes"  </b>
+    <b> . label values smoke smoke       </b>
+    <b> . label var smoke "smoking"       </b>
+    <b> . grby lwt race, nu format(%9.0g)   </b>
+    <b> . grby lwt race smoke, nu format(%9.0g)      </b>
+    <b> . grby lwt race smoke, nu format(%3.1f) mean v v1 v2        </b>
+    <b> . grby lwt race smoke, nu format(%3.1f) mean ci(95)     </b>
+    <b> . grby lwt race smoke, nu format(%3.1f) mean ci(95) v  v1 v2       </b>
+    <b> . grby lwt race smoke, nu format(%3.1f) mean ci(95) v  v1 v2 connect    </b>
+    <b> . grby lwt aged, nu                      </b>
+    <b> . grby lwt aged smoke, mea ci(95)      </b>
+    <b> . grby lwt aged race, mea ci(95) co v v2   </b>
+    <b> . grby lwt aged race, mea ci(99) co v v2 yscale(100 200) </b>
+<p>
+<b><u>Authors</u></b>
+<p>
+    Nicola Orsini, Institute of Environmental Medicine, Karolinska
+    Institutet, Stockholm, Sweden and Institute of Information Science and
+    Technology, National Research Council of Italy, Pisa, Italy.
+<p>
+    Matteo Bottai, Arnold School of Public Health, University of South
+    Carolina, Columbia, USA and Institute of Information Science and
+    Technology, National Research Council of Italy, Pisa, Italy.
+<p>
+<b><u>Support</u></b>
+<p>
+        Nicola Orsini, http://nicolaorsini.altervista.org, Karolinska
+            Institutet, Sweden
+        nicola.orsini@imm.ki.se
+<p>
+<b><u>Also see</u></b>
+<p>
+ Manual: <b>[G] gph</b>
+ Manual: <b>[G] graph</b>
+<p>
+ On-line:  help for gph, graph
+</pre>

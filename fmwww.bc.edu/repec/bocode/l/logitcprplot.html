@@ -1,0 +1,292 @@
+<pre>
+<b>help logitcprplot</b>
+-------------------------------------------------------------------------------
+<p>
+<b><u>Title</u></b>
+<p>
+    <b>logitcprplot</b> -- Component-plus-residual plot for logistic regression
+<p>
+<p>
+<b><u>Syntax</u></b>
+<p>
+        <b>logitcprplot</b> <i>varname</i> [<i>varlist</i>] [<i>if</i>] [<i>in</i>] [<b>,</b> <i>options</i> ]
+<p>
+<p>
+<a name="opt"></a>    <i>options</i>                   Description
+    -------------------------------------------------------------------------
+      <b><u>samp</u></b><b>le(</b><i>#</i><b>)</b>               plot a # percent sample of data points
+      <b><u>norl</u></b><b>ine</b>                 suppress reference line (model fit)
+      <b><u>r</u></b><b>line(</b><i>cline_options</i><b>)</b>    affect rendition of reference line
+      <b><u>rc</u></b><b>spline</b>[<b>(</b><i>options</i><b>)</b>]     add a restricted cubic spline smooth
+      <b><u>lp</u></b><b>oly</b>[<b>(</b><i>options</i><b>)</b>]        add a local polynomial smooth (Stata 10
+                                required)
+      <b><u>fp</u></b><b>fit</b>[<b>(</b><i>options</i><b>)</b>]        add a fractional polynomial fit
+      <b><u>l</u></b><b>owess</b>[<b>(</b><i>lowess_opts</i><b>)</b>]   add a lowess smooth
+      <b><u>ps</u></b><b>pline</b>[<b>(</b><i>options</i><b>)</b>]      add a penalized spline smooth (<b>pspline</b> user
+                                command required)
+      <b><u>rs</u></b><b>pline</b>[<b>(</b><i>options</i><b>)</b>]      add a regression spline smooth (<b>uvrs</b> user
+                                command required)
+      <b><u>run</u></b><b>ning</b>[<b>(</b><i>options</i><b>)</b>]      add a running line smooth (<b>running</b> user command
+                                required)
+      <b><u>auto</u></b><b>smoo</b>[<b>(</b><i>options</i><b>)</b>]     add an adaptive variable span running line
+                                smooth (<b>autosmoo</b> user command required)
+      <i>scatter_options</i>         options as defined in help <b>scatter</b>
+      <b>addplot(</b><i>plot</i><b>)</b>           add other plots to the generated graph
+      <b><u>g</u></b><b>enerate(</b><i>newvar</i><b>)</b>        store partial logit residuals in <i>newvar</i>
+      <b><u>r</u></b><b>eplace</b>                 overwrite existing variable
+      <b><u>nogr</u></b><b>aph</b>                 suppress graph
+    -------------------------------------------------------------------------
+<p>
+<p>
+<b><u>Description</u></b>
+<p>
+    <b>logitcprplot</b> is used after <b>logit</b> or <b>logistic</b> for graphing a
+    component-plus-residual plot (a.k.a. partial residual plot) for <i>varname</i>
+    as suggested by Landwehr, Pregibon, and Shoemaker (1984; also see, e.g.,
+    Fox 1997:458).
+<p>
+    Use <i>varlist</i> to specify additional terms to be taken into account when
+    computing the partial residuals and predictions. This is useful if a
+    variable enters the model repeatedly via different transformations (e.g.
+    polynomials).
+<p>
+    Use <i>if</i> and <i>in</i> to restrict the sample to specific observations. This can
+    be useful, for example, if a model contains interaction terms. In any
+    case, the sample will be restricted to the estimation sample of the
+    fitted model.
+<p>
+    Whether <b>logitcprplot</b> can be applied after weighted models depends on
+    specified options: no weights are allowed with the <b>lowess</b>, <b>pspline</b>,
+    <b>running</b>, and <b>autosmoo</b> options; <b>fweight</b>s are allowed with the <b>lpoly</b>
+    option; <b>fweight</b>s and <b>pweight</b>s are allowed with the <b>rcspline</b>, <b>fpfit</b>, and
+    <b>rspline</b> options.
+<p>
+    The <b>rcspline</b> option has been inspired by the <b>rcspline</b> command by Nick Cox
+    (see ssc describe rcspline). Furthermore, some of <b>logitcprplot</b>'s code has
+    been adapted from official Stata's <b>mkspline</b> command.
+<p>
+    Partial residual plots using the pre Stata 8 graphics engine are
+    available as <b>lprplot</b> from the SSC Archive (see ssc describe lprplot) and
+    <b>lpartr</b> in the Stata Technical Bulletin (Hilbe 1992; see net stb 10 sqv6).
+<p>
+<p>
+<b><u>Dependencies</u></b>
+<p>
+    The <b>sample()</b> option requires the <b>gsample</b> and <b>moremata</b> user packages to be
+    installed on the system (Jann 2005, 2006). See ssc describe gsample and
+    ssc describe moremata.
+<p>
+    The <b>pspline</b> option requires the <b>pspline</b> user command to be installed on
+    the system (Jann and Gutierrez 2008). See ssc describe pspline.
+<p>
+    The <b>rspline</b> option requires the <b>uvrs</b> user command to be installed on the
+    system (Royston and Sauerbrei 2007). See net sj 7-1 st0120
+<p>
+    The <b>running</b> option requires the <b>running</b> user command to be installed on
+    the system (Sasieni 1995, Sasieni and Royston 1998, Sasieni, Royston, and
+    Cox 2005). See net sj 5-2 sed9_2
+<p>
+    The <b>autosmoo</b> option requires the <b>autosmoo</b> user command to be installed on
+    the system (Sasieni 1998). See net stb 41 gr27
+<p>
+<p>
+<b><u>Options</u></b>
+<p>
+    <b>sample(</b><i>#</i><b>)</b> causes only a <i>#</i> percent random sample of observations to be
+        plotted. <i>#</i> is a number between 1 and 100.  <b>sample()</b> also restricts
+        the estimation sample for the computationally intensive <b>lowess</b> and
+        <b>lpoly</b> smooths. It does not, however, restrict the estimation sample
+        for the other smoothers.
+<p>
+        The <b>sample()</b> option requires <b>gsample</b> and <b>moremata</b> to be installed on
+        the system (see ssc describe gsample and ssc describe moremata).
+<p>
+    <b>norline</b> suppresses the reference line (i.e. the partial linear
+        predictions from the model).
+<p>
+    <b>rline(</b><i>cline_options</i><b>)</b> specifies details about the rendition of reference
+        line. See help <i>cline_options</i>.
+<p>
+<a name="rcopts"></a>    <b>rcspline</b>[<b>(</b><i>options</i><b>)</b>] adds a restricted cubic spline smooth to the plot.
+        Options are:
+<p>
+        <b>ci</b>[<b>(</b><i>area_options</i><b>)</b>] to plot a confidence interval(*) for the
+            restricted cubic spline smooth with options as described in help 
+            <i>area_options</i>.
+<p>
+        <b>level(</b><i>#</i><b>)</b> to set the confidence level, as a percentage, for the
+            plotted confidence interval. The default is <b>level(95)</b> or as set
+            by <b>set level</b>.
+<p>
+        <b>displayknots</b> to display a table containing the values of the knots
+            for the restricted cubic spline.
+<p>
+        <b>nknots(</b><i>#</i><b>)</b> to specify the number of knots that are used for the
+            restricted cubic spline. <i>#</i> must be between 3 and 7 unless the
+            knot locations are specified using <b>knots()</b>. The default number of
+            knots is 5. See <b>[R] mkspline</b> for details on how the knot
+            positions are determined.
+<p>
+        <b>knots(</b><i>numlist</i><b>)</b> to specify the exact location of the knots. The values
+            must be given in increasing order.
+<p>
+        <i>cline_options</i> to affect the rendition of the restricted cubic spline
+            smooth. See help <i>cline_options</i>.
+<p>
+<a name="lpopts"></a>    <b><u>lp</u></b><b>oly</b>[<b>(</b><i>options</i><b>)</b>] adds a local polynomial smooth to the plot (Stata 10
+        required). Options are:
+<p>
+        <b>ci</b> to plot a confidence interval(*) for local polynomial smooth.
+<p>
+        <i>lpolyci_options</i> as described in <b>twoway lpolyci</b> (if <b>ci</b> is specified).
+<p>
+        <i>lpoly_options</i> as described in <b>twoway lpoly</b>.
+<p>
+<a name="fpopts"></a>    <b><u>fp</u></b><b>fit</b>[<b>(</b><i>options</i><b>)</b>] adds a fractional polynomial fit to the plot. Options
+        are:
+<p>
+        <b>ci</b> to add a confidence interval(*) for fractional polynomial fit.
+<p>
+        <i>fpfitci_options</i> as described in <b>twoway fpfitci</b> (if <b>ci</b> is specified).
+<p>
+        <i>fpfit_options</i> as described in <b>twoway fpfit</b>
+<p>
+    <b><u>l</u></b><b>owess</b>[<b>(</b><i>options</i><b>)</b>] adds a lowess smooth to the plot. Options are as
+        described in <b>twoway lowess</b>.
+<p>
+<a name="psopts"></a>    <b>pspline</b>[<b>(</b><i>options</i><b>)</b>] adds penalized spline smooth to the plot using the 
+        <b>pspline</b> user command (Jann and Gutierrez 2008; see ssc describe
+        pspline). Options are <b>degree()</b>, <b>nknots()</b>, <b>knots()</b>, <b>estopts()</b>, and
+        <b>nopenalty</b> as described in help <b>pspline</b>.
+<p>
+<a name="rsopts"></a>    <b>rspline</b>[<b>(</b><i>options</i><b>)</b>] adds a regression spline smooth to the plot using the 
+        <b>uvrs</b> user command (Royston and Sauerbrei 2007; see net sj 7-1
+        st0120). Options are:
+<p>
+        <b>ci</b>[<b>(</b><i>area_options</i><b>)</b>] to plot a confidence interval(*) for the
+            regression spline smooth with options as described in help 
+            <i>area_options</i>.
+<p>
+        <b>level(</b><i>#</i><b>)</b> to set the confidence level, as a percentage, for the
+            plotted confidence interval. The default is <b>level(95)</b> or as set
+            by <b>set level</b>.
+<p>
+        <b>alpha()</b>, <b>degree()</b>, <b>df()</b>, and <b>knots()</b> as described in help <b>uvrs</b>.
+<p>
+        <b>regressopts()</b> containing any options of <b>regress</b> to be passed through
+            to the regression spline model.
+<p>
+<a name="runopts"></a>    <b>running</b>[<b>(</b><i>options</i><b>)</b>] adds a running line smooth to the plot using the 
+        <b>running</b> user command (Sasieni 1995, Sasieni and Royston 1998,
+        Sasieni, Royston, and Cox 2005; see net sj 5-2 sed9_2). Options are:
+<p>
+        <b>ci</b>[<b>(</b><i>area_options</i><b>)</b>] to plot a confidence interval(*) for the running
+            line smooth with options as described in help <i>area_options</i>.
+<p>
+        <b>level(</b><i>#</i><b>)</b> to set the confidence level, as a percentage, for the
+            plotted confidence interval. The default is <b>level(95)</b> or as set
+            by <b>set level</b>.
+<p>
+        <b>double</b>, <b>knn()</b>, <b>mean</b>, <b>repeat()</b>, <b>span()</b>, and <b>twice</b> as described in help
+            <b>running</b>.
+<p>
+<a name="autoopts"></a>    <b>autosmoo</b>[<b>(</b><i>options</i><b>)</b>] adds an adaptive variable span running line smooth to
+        the plot using the <b>autosmoo</b> user command (Sasieni 1998; see net stb
+        41 gr27). Options are <b>kmin()</b>, <b>kmax()</b>, and <b>repeat()</b> as described in
+        help <b>autosmoo</b>.
+<p>
+    <i>scatter_options</i> are any of the options documented in help <b>twoway scatter</b>
+<p>
+    <b>addplot(</b><i>plot</i><b>)</b> provides a way to add other plots to the generated graph;
+        see <b>[G]</b> <i>addplot_option</i>.
+<p>
+    <b>generate(</b><i>newvar</i><b>)</b> stores the partial logit residuals in <i>newvar</i>.
+<p>
+    <b>replace</b> permits <b>generate()</b> to overwrite an existing variable.
+<p>
+    <b>nograph</b> suppresses drawing the graph.
+<p>
+    (*) The confidence intervals computed by the <b>rcspline</b>, <b>lpoly</b>, <b>fpfit</b>,
+        <b>running</b>, and <b>rspline</b> options assume the partial logit residuals to be
+        known and are therefore somewhat too narrow.
+<p>
+<p>
+<b><u>Examples</u></b>
+<p>
+        . use http://www.stata-press.com/data/r9/lbw.dta
+<p>
+        . logit low age lwt smoke ht ui ptl
+<p>
+        . logitcprplot age, rcspline fpfit lowess
+<p>
+        . logitcprplot age, lpoly /*Stata 10 required*/
+<p>
+        . logitcprplot age, rcspline(ci)
+<p>
+        . logitcprplot age, rcspline(ci) sample(10) /*-gsample- and -moremata- 
+&gt; required*/
+<p>
+        . generate agesq = age^2
+<p>
+        . logit low age agesq lwt smoke ht ui ptl
+<p>
+        . logitcprplot age agesq, rcspline(ci)
+<p>
+<p>
+<b><u>References</u></b>
+<p>
+    Fox, J. 1997. Applied Regression Analysis, Linear Models, and Related
+        Methods. Thousand Oaks, CA: Sage.
+<p>
+    Hilbe, J. 1992. sqv6: Smoothed partial residual plots for logistic
+        regression. Stata Technical Bulletin 10:27.
+<p>
+    Jann, B. 2005. moremata: Stata module (Mata) to provide various
+        functions. Available from
+        http://ideas.repec.org/c/boc/bocode/s455001.html.
+<p>
+    Jann, B. 2006. gsample: Stata module to draw a random sample. Available
+        from http://ideas.repec.org/c/boc/bocode/s456716.html.
+<p>
+    Jann, B., and R. Gutierrez. 2008. pspline: Stata module providing a
+        penalized spline scatterplot smoother based on linear mixed model
+        technology. Available from
+        http://ideas.repec.org/c/boc/bocode/s456972.html.
+<p>
+    Landwehr, J. M., D. Pregibon, and A. C. Shoemaker. 1984. Graphical
+        Methods for Assessing Logistic Regression Models. Journal of the
+        American Statistical Association 79:61-71.
+<p>
+    Royston, P., and W. Sauerbrei. 2007. Multivariable modeling with cubic
+        regression splines: A principled approach. The Stata Journal 7:45-70.
+<p>
+    Sasieni, P. 1995. sed9: Symmetric nearest neighbor linear smoothers.
+        Stata Technical Bulletin 24:10-14.
+<p>
+    Sasieni, P. 1998. gr27: An adaptive variable span running line smoother.
+        Stata Technical Bulletin 41:4-7.
+<p>
+    Sasieni, P., and P. Royston. 1998. sed9.1: Pointwise confidence intervals
+        for running. Stata Technical Bulletin 41:17-23.
+<p>
+    Sasieni, P., P. Royston, and N. J. Cox. 2005. sed9_2: Software update:
+        Symmetric nearest neighbour linear smoothers. Stata Journal 5(2):
+        285.
+<p>
+<p>
+<b><u>Author</u></b>
+<p>
+    Ben Jann, ETH Zurich, jannb@ethz.ch
+<p>
+    Thanks for citing this software as follows:
+<p>
+        Jann, B. 2008. logitcprplot: Stata module to graph
+        component-plus-residual plot for logistic regression. Available from
+        http://ideas.repec.org/c/boc/bocode/s456969.html.
+<p>
+<p>
+<b><u>Also see</u></b>
+<p>
+    Online:  help for <b>logit</b>, <b>logistic</b>, <b>cprplot</b>, <b>mkspline</b>, <b>lpoly</b>, <b>fracpoly</b>, 
+             <b>lowess</b>; <b>gsample</b>, <b>rcspline</b>, <b>pspline</b>, <b>uvrs</b>, <b>running</b>, <b>autosmoo</b> (if
+</pre>

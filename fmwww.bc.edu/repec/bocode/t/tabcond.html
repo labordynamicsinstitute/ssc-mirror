@@ -1,0 +1,72 @@
+<pre>
+-------------------------------------------------------------------------------
+help for <b>tabcond</b>
+-------------------------------------------------------------------------------
+<p>
+<b><u>Tabulate frequencies satisfying specified conditions</u></b>
+<p>
+  <b>tabcond</b> <b><u>g</u></b><b>roups</b> <i>varname</i> [<b>if</b> <i>exp</i>] [<b>in</b> <i>range</i>] [<i>weight</i>] <b>,</b> <b><u>c</u></b><b>ond(</b><i>condition_list</i><b>)</b> [
+           <b>listwise</b> <i>tabdisp_options</i> ]
+<p>
+  <b>tabcond</b> <b><u>v</u></b><b>ariables</b> <i>varlist</i> [<b>if</b> <i>exp</i>] [<b>in</b> <i>range</i>] [<i>weight</i>] <b>,</b> <b><u>c</u></b><b>ond(</b><i>condition_list</i><b>)</b>
+           [ <b>listwise</b> <i>tabdisp_options</i> ]
+<p>
+<b>by ... :</b> may be used with <b>tabcond</b>; see by.  <b>fweight</b>s, <b>aweight</b>s, and <b>iweight</b>s
+are allowed; see weights.
+<p>
+<p>
+<b><u>Description</u></b>
+<p>
+<b>tabcond</b> tabulates frequencies satisfying up to 5 specified conditions. Zero
+frequencies are shown explicitly.
+<p>
+There are two syntaxes. With <b>tabcond groups</b>, the rows of the table show the
+distinct groups of <i>varname</i> and the columns show the frequencies of observations
+satisfying specified conditions. With <b>tabcond variables</b>, the rows of the table
+show the variables specified and the columns show the frequencies of
+observations satisfying specified conditions: the conditions must each include
+a wildcard <b>@</b> for which is substituted in turn each variable name.
+<p>
+<p>
+<b><u>Options</u></b>
+<p>
+<b>cond(</b><i>condition_list</i><b>)</b> specifies a list of true or false conditions, for which
+    the frequencies (zero or more) of observations satisfying those conditions
+    are to be shown. Unless they can expressed without embedded spaces,
+    conditions must be bound in double quotes <b>" "</b> and if necessary compound
+    double quotes <b>`" "'</b>. This is a required option.
+<p>
+<b>listwise</b> specifies that frequencies should be determined for as many
+    observations as possible.  By default casewise deletion on <i>varlist</i> is used
+    to ensure consistency in observations selected.
+<p>
+<i>tabdisp_options</i> are options of tabdisp, which may be used to tune the
+    appearance of the table.
+<p>
+<b><u>Examples</u></b>
+<p>
+    . tabcond g rep78, c("mpg &gt; 30" "mpg &lt;= 30" "weight &gt; 3000")
+<p>
+    . tabcond g rep78, c(mpg&gt;30 mpg&lt;=30 weight&gt;3000)
+<p>
+The two commands above have the same result, except that conditions are echoed
+exactly as typed as column headings.
+<p>
+    . bysort foreign: tabcond g rep78, c("mpg &gt; 30" "mpg &lt;= 30")
+<p>
+    . tabcond v price-foreign, c("@ &lt; 0")
+<p>
+    . tabcond v *, c(missing(@)) listwise
+<p>
+<p>
+<b><u>Author</u></b> 
+<p>
+        Nicholas J. Cox, University of Durham, U.K.
+        n.j.cox@durham.ac.uk
+<p>
+<p>
+<b><u>Acknowledgements</u></b> 
+<p>
+        Kit Baum made many useful comments on this problem. 
+<p>
+</pre>

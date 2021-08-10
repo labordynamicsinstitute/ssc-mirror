@@ -1,0 +1,35 @@
+d 'METAMISS': module to perform meta-analysis with missing data
+d
+d metamiss performs meta-analysis with a binary outcome, using data
+d on the number of  successes, number of failures and number of
+d missing values by arm. A variety of  imputation methods are
+d available, including imputing failures, imputing successes, 
+d worst- and best-case. Different imputation schemes may be applied
+d to subgroups with  different reported reasons for missing data.
+d The degree of informative missingness  may be specified via the
+d informative missingness odds ratio (IMOR) in each group. 
+d Finally, uncertainty about the IMORs may be taken into account in
+d a Bayesian analysis.	This command should be especially useful
+d for sensitivity analysis. 
+d
+d KW: meta-analysis
+d KW: missing data
+d KW: binary outcome
+d KW: informative missingness
+d
+d Requires: Stata version 9 (version 10.1 for metamiss2)
+d
+d Distribution-Date: 20081017
+d
+d Author: Ian White, MRC Biostatistics Unit
+d Support: email ian.white@@mrc-bsu.cam.ac.uk
+d
+d Author:  Julian Higgins, MRC Biostatistics Unit
+d Support: email 
+d
+f metamiss.ado
+f metamiss.hlp
+f metamiss2.ado
+f metamiss2.sthlp
+f ../h/haloperidol.do
+f ../h/haloperidol.dta

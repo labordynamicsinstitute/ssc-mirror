@@ -1,0 +1,75 @@
+<pre>
+<b> help margintegrate</b>
+-------------------------------------------------------------------------------
+<p>
+<b><u>Title</u></b>
+    <b>margintegrate</b> -- Estimate generalized additive non-parametric functions
+        of two dependent variables; output graphical representation of
+        <b>E(yvar|xvar1)</b>.
+<p>
+<b><u>Syntax</u></b>
+    <b>margintegrate</b> yvar xvar1 xvar2 [<i>if</i>] [<i>in</i>] <b>,</b> <b>bw(</b><i>numlist</i><b>)</b> [<i>options</i>]
+<p>
+<b><u>Description</u></b>
+    <b>margintegrate</b> estimates a non-parametric regression of <i>yvar</i> on <i>xvar1</i> and
+    <i>xvar2</i>, treating the expectation of <b>yvar|xvar1</b> as the quantity of
+    interest. It integrates out the effect of the "nuisance" variable xvar2
+    by means of marginal integration, following the methods outlined in
+    Linton and Neilsen (1996), Tjostheim and Auestad (1994); see also Li and
+    Racine (2007, 283-289).
+<p>
+<p>
+<b><u>Required Argument</u></b>
+    <b>bw(</b><i>numlist</i><b>)</b> must contain two values, bw_1 and bw_2, the bandwidths for
+        xvar1 and xvar2, respectively. The literature on generalized additive
+        models has suggested using a multiple of the standard deviation as
+        the bandwidth each independent variable of interest (i.e. .7, .9, 1.1
+        times sd); this solution is not optimal in the mean squared error
+        sense, but visual inspection can provide a good guide to appropriate
+        levels of smoothing.
+<p>
+<b><u>Options</u></b>
+    <b>n(</b><i>integer 50</i><b>)</b> contains the number of points at which the estimation will
+        be executed. The maximum is 800; default is 50. The marginal
+        integration estimator requires<i> n x n</i> regression smoothes to get
+        predicted values, so <b>n(</b><i>100</i><b>)</b> estimates 10,000 regression smoothes.
+        Points are chosen according to percentile values of the data sorted
+        by xvar1 and xvar2.
+<p>
+    <b><u>gen</u></b><b>erate(</b><i>varlist</i><b>)</b> can contain up to two variable names, the first for the
+        predicted value of the estimator, the second for the pointwise
+        estimate of the variance.
+<p>
+    <b>ci(</b><i>level</i><b>)</b> shows pointwise confidence intervals at specified level,
+        assuming asymptotic normal distribution of the expected value. If
+        <b>boot</b> is not specified, the estimator uses asymptotic variance (see Li
+        and Racine (2007, p.285)) to construct confidence intervals; this
+        expression can be fragile, especially if the support for either of
+        the independent variables is not compact.
+<p>
+    <b>boot(</b><i>integer</i><b>)</b> estimates confidence intervals by bootstrapping original
+        data <i>integer</i> number of times.
+<p>
+    <b>trim(</b><i>real</i><b>)</b> specifies that a total of<i> real</i> percent of the data will be
+        trimmed for the purposes of estimation; trims<i> real/2</i> percent at top
+        and bottom of the data sorted by xvar1.
+<p>
+    <b>nograph</b> specifies no graphical output: predicted values will be
+        calculated and stored if <b><u>gen</u></b><b>erate(</b><i>varlist</i><b>)</b> is specified; use to
+        incorporate your own graph preferences.
+<p>
+<p>
+<b><u>Examples</u></b>
+    Estimate a locally linear regression of y on x1 and x2 and use the
+    asymptotic variance to show 95% confidence intervals. Use 100 points to
+    in the distribution of x1 and x2 to derive estimates.
+<p>
+        <b>. margintegrate y x1 x2, bw(4 5) n(100) ci(95)</b>
+<p>
+<p>
+    Estimate a locally linear regression of y on x1 and x2 without producing
+    any graphical output, but using the bootstrap procedure to estimate
+    pointwise variances. Use 100 points to in the distribution of x1 and x2
+    to derive estimates.
+<p>
+</pre>

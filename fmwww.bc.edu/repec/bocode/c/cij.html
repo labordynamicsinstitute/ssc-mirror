@@ -1,0 +1,164 @@
+<pre>
+-------------------------------------------------------------------------------
+help for <b>cij</b>, <b>ciji</b>
+-------------------------------------------------------------------------------
+<p>
+<b><u>Binomial confidence intervals for proportions (Jeffreys prior)</u></b>
+<p>
+               <b>cij</b>  [<i>varlist</i>] [<i>weight</i>] [<b>if</b> <i>exp</i>] [<b>in</b> <i>range</i>] [<b>,</b> <b><u>l</u></b><b>evel(</b><i>#</i><b>)</b> <b><u>t</u></b><b>otal</b> ]
+<p>
+               <b>ciji</b> <i>#obs</i>      <i>#succ</i>     [<b>,</b> <b><u>l</u></b><b>evel(</b><i>#</i><b>)</b> ]
+<p>
+<b>by</b> <i>...</i> <b>:</b> may be used with <b>cij</b> (but not with <b>ciji</b>); see help by.
+<p>
+<b>fweight</b>s are allowed with <b>cij</b>; see help weights.
+<p>
+<p>
+<b><u>Description</u></b>
+<p>
+<b>cij</b> computes standard errors and binomial confidence intervals for each
+variable in <i>varlist</i>, which should be 0/1 binomial variables.  <b>ciji</b> is the
+immediate form of <b>cij</b>, for which specify the number of observations and the
+number of successes.  See help immed for more on immediate commands. With both
+commands confidence intervals are calculated based on the Jeffreys
+uninformative prior of a beta distribution with parameters 0.5 and 0.5.
+<p>
+<p>
+<b><u>Remarks</u></b> 
+<p>
+Suppose we observe <i>n</i> events and record <i>k</i> successes. Here as usual "success" is
+conventional terminology for whatever is coded 1.  For a 95% confidence
+interval, for example, we then take the 0.025 and 0.975 quantiles of the beta
+distribution with parameters <i>k</i> + 0.5 and <i>n - k</i> + 0.5.  This Bayesian procedure
+has a frequentist interpretation as a continuity-corrected version of the
+so-called exact (Clopper-Pearson) confidence interval, produced by <b>ci,</b>
+<b>binomial</b>, which takes (in the same example) the 0.025 quantile of beta(<i>k</i>, <i>n</i> - <i>k</i>
++ 1) and the 0.975 quantile of beta(<i>k</i> + 1, <i>n</i> - <i>k</i>). The lower limit if all
+values are 0 is taken to be 0 and the upper limit if all values are 1 is taken
+to be 1.  Among other properties, note that this interval is typically less
+conservative than the exact interval, so that coverage probabilities are on
+average close to the nominal confidence level. From a Bayesian point of view,
+however, the whole of the posterior distribution is much more fundamental than
+any interval derived from it.
+<p>
+See Brown <i>et al.</i> (2001) for a much fuller discussion and an entry to the
+literature. Brown <i>et al.</i> (2002) provide supporting technical background to that
+paper. Among many references, Agresti (2002, pp.14-21), Agresti and Coull
+(1998), Newcombe (1998, 2001) and Vollset (1993) provide clear and helpful
+context. Williams (2001, Ch.6) provides a lively alternative treatment of
+confidence intervals for one-parameter models.  The original work on
+uninformative priors was by Harold Jeffreys (1946; 1948, Ch.3.9; 1961,
+Ch.3.10).  The actuary Wilfred Perks (1947) independently produced very similar
+ideas.  Later discussions include Good (1965, esp. pp.18-19), Rubin and
+Schenker (1987), Lee (1989, esp. p.93; 1997, esp. pp.88-89), Gelman <i>et al.</i>
+(1995, esp. pp.55-56), or Carlin and Louis (1996, esp. pp.50-54; 2000, esp.
+pp.42-46).  For more on Jeffreys (1891-1989), see Cook (1990), Lindley (2001)
+or Lindley <i>et al.</i> (1991).
+<p>
+The method of calculating beta quantiles used here is based on the fact that if
+<i>Y</i> is distributed as beta(<i>a,b</i>) and <i>X</i> is distributed as <i>F</i>(2<i>a</i>,2<i>b</i>), then <i>Y</i> = <i>aX</i> /
+(<i>b</i> + <i>aX</i>). See (e.g.) Cramér (1946, pp.241-4) for background or Lee (1989,
+p.251; 1997, p.291). In Stata 8, it can be done directly with <b>invibeta()</b>.
+<p>
+<p>
+<b><u>Options</u></b>
+<p>
+<b>level(</b><i>#</i><b>)</b> specifies the confidence level, in percent, for confidence intervals;
+    see help level.
+<p>
+<b>total</b> is for use with the <b>by</b> <i>...</i> <b>:</b> prefix; it requests that, in addition to
+    output for each by-group, output be added for all groups combined.
+<p>
+<p>
+<b><u>Examples</u></b>
+<p>
+ . cij foreign
+<p>
+ . ciji 10 1                           (10 binomial events, 1 observed success)
+<p>
+<p>
+<b><u>Author</u></b> 
+<p>
+        Nicholas J. Cox, University of Durham, U.K.
+        n.j.cox@durham.ac.uk
+<p>
+<p>
+<b><u>Acknowledgements</u></b> 
+<p>
+        
+        Alan Feiveson suggested the Cramér reference.  John R. Gleason
+        increased my interest in this problem.
+<p>
+<p>
+<b><u>References</u></b>
+<p>
+Agresti, A. 2002. <i>Categorical data analysis.</i>  Hoboken, NJ: John Wiley.
+<p>
+Agresti, A. and Coull, B.A. 1998. Approximate is better than "exact" for
+interval estimation of binomial proportions. <i>American Statistician</i> 52: 119-126.
+<p>
+Brown, L.D., Cai, T.T., DasGupta, A. 2001. Interval estimation for a binomial
+proportion. <i>Statistical Science</i> 16: 101-133.
+<p>
+Brown, L.D., Cai, T.T., DasGupta, A. 2002. Confidence intervals for a binomial
+proportion and asymptotic expansions. <i>Annals of Statistics</i> 30: 160-201.
+<p>
+Carlin, B.P. and Louis, T.A. 1996/2000.  <i>Bayes and empirical Bayes methods for</i>
+<i>data analysis.</i>  Boca Raton, FL: Chapman and Hall/CRC (1996: London: Chapman and
+Hall.)
+<p>
+Cook, A.H. 1990. Sir Harold Jeffreys.  <i>Biographical Memoirs of Fellows of the</i>
+<i>Royal Society</i> 36: 303-333.
+<p>
+Cramér, H. 1946. <i>Mathematical methods of statistics.</i>  Princeton, NJ: Princeton
+University Press.
+<p>
+Gelman, A., Carlin, J.B., Stern, H.S., Rubin, D.B. 1995.  <i>Bayesian data</i>
+<i>analysis.</i> London: Chapman and Hall.
+<p>
+Good, I.J. 1965. <i>The estimation of probabilities:</i>  <i>an essay on modern Bayesian</i>
+<i>methods</i>. Cambridge, MA: MIT Press.
+<p>
+Jeffreys, H. 1939/1948/1961. <i>Theory of probability.</i>  Oxford: Oxford University
+Press.
+<p>
+Jeffreys, H. 1946. An invariant form for the prior probability in estimation
+problems.  <i>Proceedings of the Royal Society A</i> 186: 453-461.  Reprinted in
+Jeffreys, H. and Jeffreys, B.S. (eds) 1977.  <i>Collected papers of Sir Harold</i>
+<i>Jeffreys on geophysics and other sciences.  Volume 6: Mathematics, probability</i>
+<i>and miscellaneous other sciences.</i>  London: Gordon and Breach, 403-411.
+<p>
+Lee, P.M. 1989/1997.  <i>Bayesian statistics: an introduction.</i>  London: Edward
+Arnold.
+<p>
+Lindley, D.V. 2001. Harold Jeffreys. In Heyde, C.C. and Seneta, E. (eds)
+<i>Statisticians of the centuries.</i>  New York: Springer, 402-405.
+<p>
+Lindley, D.V., Bolt, B.A., Huzurbazar, V.S., Jeffreys, B.S., Knopoff, L. 1991.
+[articles on Harold Jeffreys] <i>Chance</i> 4(2): 10-26.
+<p>
+Newcombe, R.G. 1998. Two-sided confidence intervals for the single proportion:
+comparison of seven methods.  <i>Statistics in Medicine</i> 17: 857-872.
+<p>
+Newcombe, R.G. 2001. Logit confidence intervals and the inverse sinh
+transformation.  <i>American Statistician</i> 55: 200-202.
+<p>
+Perks, W. 1947. Some observations on inverse probability including a new
+indifference rule.  <i>Journal, Institute of Actuaries</i> 73: 285-334.
+<p>
+Rubin, D.M. and Schenker, N. 1987. Logit-based interval estimation for binomial
+data using the Jeffreys prior.  <i>Sociological Methodology</i> 17: 131-144.
+<p>
+Vollset, S.E. 1993. Confidence intervals for a binomial proportion. <i>Statistics</i>
+<i>in Medicine</i> 12: 809-824.
+<p>
+Williams, D. 2001.  <i>Weighing the odds: a course in probability and statistics.</i>
+Cambridge: Cambridge University Press.
+<p>
+<p>
+<b><u>Also see</u></b>
+<p>
+ Manual:  <b>[R] ci</b>
+On-line:  help for ci, bitest, immed
+<p>
+</pre>

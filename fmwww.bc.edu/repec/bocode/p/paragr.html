@@ -1,0 +1,103 @@
+<pre>
+<b>help paragr</b>
+<p>
+-------------------------------------------------------------------------------
+<p>
+<b><u>Title</u></b>
+<p>
+    <b>paragr</b> -- Parallel graphing of a coefficient across different equations
+<p>
+<a name="s_Syntax"></a><p>
+<b><u>Syntax</u></b>
+<p>
+    <b>paragr</b><i> variable</i> [, <i>options</i>]
+<p>
+<a name="s_Description"></a><p>
+<b><u>Description</u></b>
+<p>
+    <b>paragr</b> provides a fast and easy way to compare a coefficient across
+        different equations within an estimation.
+<p>
+    It can used to visualize the parallel assumption of ordered logit or
+        the equality of coefficients for quantile regression, etc.
+<p>
+    By default <b>paragr</b> plots a scatter graph. A quadratic fitted line
+        (qfit) can be superimposed.
+<p>
+    Twoway graph options can be specified for the entire graph, or
+        separately for the scatter graph or for the qfit graph.
+<p>
+<a name="s_Options"></a><p>
+<b><u>Options</u></b>
+<p>
+        +------+
+    ----+ Main +-------------------------------------------------------------
+<p>
+    <b><u>scat</u></b><b>ter(</b><i> </i><b>)</b> standard options for scatter graph. Use this to set color,
+            range, etc
+<p>
+    <b>qfit</b> a quadratic fitted line is superimposed.
+<p>
+    <b>qfit(</b><i> </i><b>)</b> standard options for qfit graph. Use this to set color,
+            range, etc
+<p>
+    <b>gen(</b><i> </i><b>)</b> a prefix for saving the plot points as variables.
+<p>
+    click here for a list of twoway options, including:
+<p>
+        <b>nodraw</b> suppress the display of graph
+<p>
+        <b>saving(</b><i> </i><b>)</b> save as a Stata graph
+<p>
+        <b>name(</b><i>name</i>[<b>,</b><i> replace</i>]<b>)</b> specifies the name of the graph
+<p>
+<a name="s_0"></a><p>
+<b><u>Examples</u></b>
+<p>
+    * reg3
+    sysuse auto, clear
+    reg3 (price weight rep78) (price weight rep78 mpg) (price weight
+        rep78 mpg headroom) (price weight rep78 mpg headroom length)
+    paragr rep78, xtitle(Equation) gen(reg3_) saving(mygraph)
+<p>
+<p>
+    * sqreg
+    sysuse auto, clear
+    sqreg price mpg rep78 headroom length, q(.10 .20 30 .40 .50 .60 .70
+        .80 .90) reps(25)
+    paragr rep78, qfit
+<p>
+<p>
+    * Unconstrained gologit
+    sysuse auto, clear
+    egen money=cut(price), group(5)
+    gologit money headroom mpg weight length turn displacemen
+    paragr displacement
+<p>
+<p>
+    * constrained gologit2 from ssc (need Stata 8.2 or better)
+    sysuse auto, clear
+    egen money=cut(price), group(5)
+    gologit2 money headroom mpg weight length turn displacement, auto
+    paragr weight, qfit ytitle(odds ratios) xtitle(cut)
+<p>
+<p>
+<b><u>Remarks</u></b>
+<p>
+    <b>qfit</b> requires at least two equations.
+<p>
+    Coefficient values goes on the y-axis.
+<p>
+<p>
+<b><u>Acknowledgement</u></b>
+<p>
+    Nick Cox provided detailed and helpful suggestions.
+<p>
+<p>
+<b><u>Author</u></b>
+<p>
+    Roy Wada
+    roywada@hotmail.com
+<p>
+<p>
+</pre>

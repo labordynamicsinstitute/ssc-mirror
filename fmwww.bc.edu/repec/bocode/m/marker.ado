@@ -1,0 +1,1 @@
+*! 1.0.1 NJC 1 March 1998 Snow in Durhamprogram def marker    version 5.0    local varlist "ex"    local if "opt"    local in "opt"    local weight "aweight fweight pweight iweight"    local options "Gen(str) Strok"    parse "`*'"    if "`gen'" == "" { local gen "_marker" }    mark `gen' [`weight'`exp'] `if' `in'    markout `gen' `varlist', `strok'end

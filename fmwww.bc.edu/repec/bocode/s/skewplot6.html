@@ -1,0 +1,204 @@
+<pre>
+.-
+help for ^skewplot6^
+.-
+<p>
+Skewness plots
+--------------
+<p>
+    ^skewplot6^ varname [^if^ exp] [^in^ range]
+    [^, skew^ graph_options ^by(^byvar^) mono miss^ing ]
+<p>
+    ^skewplot6^ varlist [^if^ exp] [^in^ range]
+    [^, skew^ graph_options ^mono miss^ing ]
+<p>
+<p>
+Description
+-----------
+<p>
+^skewplot6^ produces by default a plot of the midsummary versus the spread 
+for the variables in varlist, also known as the mid versus spread plot. 
+<p>
+With the ^skew^ option, it produces a plot of the skewness function versus 
+the spread function. 
+<p>
+Such plots convey both the general character and the fine structure of the
+symmetry or skewness of data sets, and can be used to compare distributions 
+or to assess whether transformations are necessary or effective.
+<p>
+^skewplot6^ is a renamed clone of ^skewplot^ 2.0.0 which is for Stata 6 
+or Stata 7. Stata 8 users should use ^skewplot^ 3.0.0 or later. 
+<p>
+<p>
+Remarks
+-------
+<p>
+Order n data values for a variable x and label them such that 
+x_(1) &lt;= ... &lt;= x_(n). 
+<p>
+In a perfectly symmetric set of data, the midsummaries 
+<p>
+        (x_(1) + x_(n)) / 2, 
+        (x_(2) + x_(n - 1)) / 2, 
+        etc. 
+<p>
+would all be identical, and equal to the median. A plot of each 
+midsummary 
+<p>
+        (x_(i) + x_(n - i + 1)) / 2
+<p>
+versus each difference or spread 
+<p>
+        x_(n - i + 1) - x_(i) 
+<p>
+would yield a horizontal straight line. Conversely, skewness in sets of 
+data will be reflected by departures from horizontality.
+<p>
+Apart from the divisor of 2, this plot was suggested by J.W. Tukey 
+(Wilk and Gnanadesikan 1968). See also Gnanadesikan (1977, Ch.6.2) or 
+Fisher (1983). The form used here and the name `mid versus spread plot' 
+are found in Hoaglin (1985). It is usual to plot only that half of the 
+sample results for which spread is &gt;= 0. 
+<p>
+The ^skew^ option produces an alternative form promoted by Benjamini and 
+Krieger (1996, 1999). The identity 
+<p>
+        x_(n - i + 1) = median  
+<p>
+                      + (x_(n - i + 1) - x_(i)) / 2 
+<p>
+                      + (x_(i) + x_(n - i + 1) - 2 * median) / 2 
+<p>
+                      = median + spread function + skewness function    
+<p>
+for x_(i) in the lower half of the sample leads to a plot of the skewness 
+function versus the spread function, known as the skewness versus spread 
+plot. Note that the skewness function is midsummary - median, and will be 
+constant and zero for a perfectly symmetric distribution, and that the 
+spread function is half the spread of the mid versus spread plot.
+<p>
+In addition, the ratio of the skewness and spread functions or
+<p>
+        x_(i) + x_(n - i + 1) - 2 * median
+        ----------------------------------
+              x_(n - i + 1) - x_(i)
+<p>
+is a measure of skewness (in the traditional sense) originally suggested 
+for quartiles by Bowley (1902) and generalised to this form by David and 
+Johnson (1956). It varies between -1 and 1. A similar general measure was 
+used by Parzen (1979). Graphically this measure is the slope of the line 
+connecting (0,0) and each data point. 
+<p>
+See Benjamini and Krieger (1996, 1999) and Groeneveld (1998) for concise 
+reviews tracing such ideas from late 19th century antecedents to recent 
+work and further details on the interpretation of the skewness versus 
+spread plot. 
+<p>
+<p>
+Options
+-------
+<p>
+^skew^ specifies the skewness versus spread plot, not the default 
+    mid versus spread plot. 
+<p>
+graph_options are options allowed with ^graph, twoway^.
+<p>
+    Note that with ^by( )^ each group is treated graphically as if it
+    were a separate variable, so long as the number of groups is not
+    greater than the limit in Stata on the number of y variables on a
+    scatter plot (20 in Stata 6.0).
+<p>
+    With more groups, all functions must be treated graphically as a
+    single variable, by using the ^mono^ option, which enforces a
+    monochrome treatment. The only ^connect^ line style appropriate is
+    then ^c(L)^, and only one ^pen^ and point ^symbol^ may be used.
+<p>
+    By default ^ysc( )^ and ^xsc( )^ show the extremes observed for each 
+    variable. With the ^skew^ option, the maximum value of spread (smax, 
+    say) can be used in a second pass with ^ysc(-^smax^,^smax^)^, which are 
+    the limits on possible values for skewness. For example, if the 
+    maximum value observed is ^12.34^, setting ^ysc(-12.34,12.34)^ gives a 
+    y axis stretched to show extremes possible for skewness, corresponding
+    to limits for a Bowley-type measure of -1 and 1. 
+<p>
+^by(^byvar^)^ specifies that calculations are to be carried out
+    separately for each group defined by ^byvar^. Any graph will,
+    however, show results for all groups. ^by( )^ is only allowed 
+    with a single varname.
+<p>
+^mono^ specifies a monochrome treatment, with a single ^pen^ colour,
+    ^connect^ style and point ^symbol^. See above, under graph_options.
+<p>
+^missing^, used only with ^by( )^, permits the use of non-missing values
+    of varname corresponding to missing values for the variable named by
+    ^by( )^. The default is to ignore such values.
+<p>
+<p>
+Examples
+--------
+<p>
+ . ^skewplot6 mpg^
+ . ^skewplot6 mpg, by(foreign) c(ll)^
+ . ^skewplot6 mpg, by(rep78) c(L) sy([rep78]) mono skew^ 
+ . ^skewplot6 length width height^
+<p>
+<p>
+References
+----------
+<p>
+Benjamini, Y. and Krieger, A.M. 1996. Concepts and measures for skewness
+with data-analytic implications. Canadian Journal of Statistics 24: 
+131-140.
+<p>
+Benjamini, Y. and Krieger, A.M. 1999. Skewness -- concepts and measures.  
+In Kotz, S., Read, C.B. and Banks, D.L. (eds) Encyclopedia of Statistical
+Sciences Update Volume 3. New York: John Wiley, 663-670. 
+<p>
+Bowley, A.L. 1902. Elements of statistics. London: P.S. King.
+(2nd edition: see p.331.)
+<p>
+David, F.N. and Johnson, N.L. 1956. Some tests of significance with 
+ordered variables. Journal, Royal Statistical Society B 18: 1-20. 
+<p>
+Fisher, N.I. 1983. Graphical methods in nonparametric statistics: a review
+and annotated bibliography. International Statistical Review 51: 25-58.
+<p>
+Gnanadesikan, R. 1977. Methods for statistical data analysis of multivariate
+observations. New York: John Wiley. 
+<p>
+Groeneveld, R. 1998. Skewness, Bowley's measures of. In Kotz, S., Read, 
+C.B. and Banks, D.L. (eds) Encyclopedia of Statistical Sciences Update 
+Volume 2. New York: John Wiley, 619-621. 
+<p>
+Hoaglin, D.C. 1985. Using quantiles to study shape. In Hoaglin, D.C., 
+Mosteller, F. and Tukey, J.W. (eds) Exploring data tables, trends, and 
+shapes. New York: John Wiley, 417-460. 
+<p>
+Parzen, E. 1979. Nonparametric statistical data modeling. Journal, American 
+Statistical Association 74, 105-131. 
+<p>
+Wilk, M.B. and Gnanadesikan, R. 1968. Probability plotting methods for
+the analysis of data. Biometrika 55: 1-17.
+<p>
+<p>
+Author
+------
+<p>
+         Nicholas J. Cox, University of Durham, U.K.
+         n.j.cox@@durham.ac.uk
+<p>
+         
+Acknowledgments
+---------------
+<p>
+         Richard Groeneveld tracked down the Bowley reference.
+<p>
+<p>
+Also see
+--------
+<p>
+On-line: help for @graph@, @symplot@
+ Manual: [R] graph, [R] diagplots
+ 
+<p>
+</pre>

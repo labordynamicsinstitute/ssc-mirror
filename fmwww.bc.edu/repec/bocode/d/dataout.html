@@ -1,0 +1,110 @@
+<pre>
+{* 16oct2009<b>help dataout</b>
+<p>
+-------------------------------------------------------------------------------
+<p>
+<b><u>Title</u></b>
+<p>
+    <b>dataout</b> -- Exports dataset or tab-delimited file into various formats
+<p>
+<a name="s_Syntax"></a><p>
+<b><u>Syntax</u></b>
+<p>
+    <b>dataout</b> &lt;using filename&gt; [, <i>options</i>]
+<p>
+<a name="s_Description"></a><p>
+<b><u>Description</u></b>
+<p>
+    <b>dataout</b> provides a fast and easy way to export dataset or
+    tab-delimited files into various output formats compatible with
+    Latex, Word, and Excel.
+<p>
+    Specify <b>&lt;using filename&gt;</b> if converting external tab-delimited file.
+<p>
+    Specify <b>save(</b><i> </i><b>)</b> if converting the current dataset in memory.
+<p>
+<p>
+<a name="s_Options"></a><p>
+<b><u>Options</u></b>
+<p>
+        +------+
+    ----+ Main +-------------------------------------------------------------
+<p>
+    <b>save(</b><i> </i><b>)</b> Must be specified when &lt;using file&gt; is not specified.
+<p>
+    <b>replace(</b><i> </i><b>)</b> Replace pre-exiting files.
+<p>
+    <b>tex</b> Convert into Latex or tex compatible file.
+<p>
+    <b>excel</b> Convert into Excel compatible file.
+<p>
+    <b>word</b> Convert into Word compatible file.
+<p>
+    <b>nohead</b> Force variable names not to be reported.
+<p>
+    <b>head</b> Force column head to be reported.
+<p>
+    <b>auto(</b><i>#</i><b>)</b> where # is the number of automatically formatted digits to be
+            reported.
+<p>
+    <b>noauto</b> No automatic formating.
+<p>
+    <b>dec(</b><i>#</i><b>)</b> where # is the fixed number digits to be reported.
+<p>
+    <b><u>mid</u></b><b>border(</b><i>#</i><b>)</b> where # is the location of middle border. Default is
+            mid(1).
+<p>
+<p>
+<a name="s_0"></a><p>
+<b><u>Examples</u></b>
+<p>
+<p>
+    * exporting dataset in memory
+    sysuse auto, clear
+    dataout, save(myfile) word tex excel replace
+<p>
+<p>
+    * collapse
+    collapse (mean) mpg headroom price weight, by(turn)
+    replace mpg=round(mpg,1)
+    dataout, save(myfile) word tex excel replace
+<p>
+<p>
+    * contract
+    sysuse auto, clear
+    contract foreign rep78, p(percentage) cf(cumfreq) cp(cumperc)
+    dataout, save(myfile) tex replace excel word dec(2)
+<p>
+<p>
+    * exporting any tab-delimited text file
+    dataout using myfile.txt, word tex excel replace mid(2)
+<p>
+<p>
+    * exporting your outreg/outreg2 file
+    sysuse auto, clear
+    reg price rep head trunk
+    outreg using myfile.out, replace
+    reg price rep head turn gear
+    outreg using myfile.out, append
+    dataout using myfile.out, word tex excel replace mid(2)
+<p>
+<p>
+<b><u>Acknowledgements</u></b>
+<p>
+    The codes for word and tex are traced back to John Gallup's outreg
+            through outreg2.
+    excel is implemented as a facsimile of xmlsave.
+<p>
+<p>
+<b><u>Remarks</u></b>
+<p>
+    The decimal format is currently set as fc.
+<p>
+<p>
+<b><u>Author</u></b>
+<p>
+    Roy Wada
+    roywada@hotmail.com
+<p>
+<p>
+</pre>

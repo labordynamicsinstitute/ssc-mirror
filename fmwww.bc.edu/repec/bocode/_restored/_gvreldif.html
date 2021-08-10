@@ -1,0 +1,69 @@
+<pre>
+<b>help egen vreldif</b>                                        Author: Stas Kolenikov
+-------------------------------------------------------------------------------
+<p>
+<b><u>Title</u></b>
+<p>
+    <b>[D] egen</b> -- Extensions to generate
+<p>
+<p>
+<b><u>Syntax</u></b>
+<p>
+        <b>egen</b> [<i>type</i>] <i>newvar</i> <b>= vreldif(</b>varlist1<b>)</b> [<i>if</i>] [<i>in</i>] <b>, by(</b>varlist2<b>)</b>
+<p>
+    <b>egen ... = vreldif()</b> creates a variable that contains the relative
+    differences (see mreldif) of the variables in <i>varlist1</i> within the values
+    identified by <i>varlist2</i>. It is useful to compare results in two appended
+    data sets when some minor numeric discrepancies are expected.
+<p>
+    <b>by(</b><i>varlist2</i><b>)</b> is required. It is expected that each unique combination of
+    variables in <i>varlist2</i> identifies at most two observations in the data
+    set.
+<p>
+    Comparable functionality can be achieved by the following Stata
+    pseudocode:
+<p>
+    <b>generate </b><i>newvar</i><b> = 0</b>
+<p>
+    <b>foreach x of varlist </b><i>varlist1</i><b> {</b>
+<p>
+        <b>bysort </b><i>varlist2</i><b>: replace </b><i>newvar</i><b> = </b><i>newvar</i><b> + reldif( `x'[1], `x'[_N] )</b>
+<p>
+    <b>}</b>
+<p>
+    <b>bysort </b><i>varlist2</i><b>: replace </b><i>newvar</i><b> = . if _N == 1</b>
+<p>
+<p>
+<b><u>Example</u></b>
+<p>
+    <b>. sysuse auto, clear</b>
+<p>
+    <b>. set seed 10101</b>
+<p>
+    <b>. gen byte replic = ceil( 0.5+1.5*uniform())</b>
+<p>
+    <b>. expand replic, gen( datacopy )</b>
+<p>
+    <b>. tabulate datacopy</b>
+<p>
+    <b>. replace weight = weight + uniform()</b>
+<p>
+    <b>. egen check1 = vreldif(mpg price), by(make)</b>
+<p>
+    <b>. egen check2 = vreldif(mpg weight), by(make)</b>
+<p>
+    The variable <i>check1</i> should be zero in the observations that were doubled
+    up, and missing in the unique observations:
+<p>
+    <b>. assert check1 == 0 if !missing( check1 )</b>
+<p>
+    The variable <i>check2</i> will not be zero in the observations that were
+    doubled up, so this assert should fail:
+<p>
+    <b>. assert check2 == 0 if !missing( check2 )</b>
+<p>
+    Since the differences of the values in the <i>weight</i> variable between the
+    two "copies" of data (identified by <i>datacopy</i> variable) are in the fourth
+    digit, the non-missing values of <i>check2</i> should be of the order 1e-4:
+<p>
+</pre>

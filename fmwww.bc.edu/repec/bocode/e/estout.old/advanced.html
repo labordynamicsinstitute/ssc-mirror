@@ -1,0 +1,3174 @@
+<html>
+
+<head>
+<title>estout - Making Regression Tables in Stata</title>
+<meta name="author" content="Ben Jann">
+<meta name="keywords" content="Stata, estout, esttab, eststo, estadd,
+      LaTeX, regression table, statistics">
+<meta http-equiv="content-language" content="en">
+<meta http-equiv="content-type" content="text/html">
+<link rel="stylesheet" href="default.css" type="text/css">
+</head>
+
+<body>
+
+<div id="pagehead">
+
+<form style="text-align:right; border:0px; margin: 2.17em 0px 0px 0px; padding:5px 15px 0px 0px; float:right"
+ "method=GET action="http://www.google.com/search">
+    <input style="border-style:solid; border-color: #bcd" TYPE=text name=q size="15">
+    <INPUT TYPE=hidden name=sitesearch value="repec.org/bocode/e/estout">
+    <input style="border:0px; background-color: #F3F6F9"
+     type=submit name=sa value="search">
+</form>
+
+   <a href="index.html"><h1>estout</h1></a>
+   <p>Making Regression Tables in Stata<p>
+
+</div>
+
+<div id="pagebar">
+   <ul>
+     <li><a href="index.html">Overview</a>
+     </li>
+     <li><a href="installation.html">Installation</a>
+     </li>
+     <li><a href="examples.html">Examples</a>
+     <ul>
+          <li><a href="esttab.html">esttab</a>
+          </li>
+          <li><a href="estout.html">estout</a>
+          </li>
+          <li><a href="eststo.html">eststo</a>
+          </li>
+          <li><a href="estadd.html">estadd</a>
+          </li>
+          <li><a href="estpost.html">estpost</a>
+          </li>
+          <li><a href="advanced.html">Advanced</a>
+          </li>
+          <li><a href="spost.html">SPost</a>
+          </li>
+     </ul>
+     </li>
+     <li><a href="documentation.html">Documentation</a>
+     <ul>
+          <li><a href="hlp_esttab.html">esttab</a>
+          </li>
+          <li><a href="hlp_estout.html">estout</a>
+          </li>
+          <li><a href="hlp_eststo.html">eststo</a>
+          </li>
+          <li><a href="hlp_estadd.html">estadd</a>
+          </li>
+          <li><a href="hlp_estpost.html">estpost</a>
+          </li>
+     </ul>
+     </li>
+     <li><a href="history.html">History</a>
+     </li>
+     <li><a href="publications.html">Publications</a>
+     </li>
+     <li><a href="author.html">Author</a>
+     </li>
+     <li><a href="alsosee.html">Also see</a>
+     </li>
+   </ul>
+
+</div>
+
+<div id="pagebody">
+<h1>Advanced Examples</h1>
+
+<div id="extoc">
+<ul>
+<li><a href="advanced.html#advanced000">Coefficients/equations</a></li>
+<ul>
+<li><a href="advanced.html#advanced001">Exponentiated coefficients (odds ratio, hazard ratio)</a></li>
+<li><a href="advanced.html#advanced002">Marginal effects</a></li>
+<li><a href="advanced.html#advanced003">Multiple-equation models</a></li>
+<li><a href="advanced.html#advanced004">Table of effects signs, significance stars, or "significant signs"</a></li>
+<li><a href="advanced.html#advanced005">Add a hypotheses column</a></li>
+<li><a href="advanced.html#advanced006">Indicate whether groups of control variables are in the model or not</a></li>
+<li><a href="advanced.html#advanced007">Display reference category information</a></li>
+<li><a href="advanced.html#advanced904">Adding extra rows using the <b>refcat()</b> option</a></li>
+<li><a href="advanced.html#advanced008">Match coefficients across models</a></li>
+</ul>
+<li><a href="advanced.html#advanced100">Model summary statistics</a></li>
+<ul>
+<li><a href="advanced.html#advanced101">Display summary statistics only (suppress coefficients)</a></li>
+<li><a href="advanced.html#advanced102">Adding likelihood-ratio test statistics</a></li>
+<li><a href="advanced.html#advanced103">Rearranging the summary statistics in the table footer</a></li>
+<li><a href="advanced.html#advanced104">Combining multiple summary statistics in one cell</a></li>
+</ul>
+<li><a href="advanced.html#advanced400">Specific models</a></li>
+<ul>
+<li><a href="advanced.html#advanced404">Tabulate results from <b>factor</b></a></li>
+<li><a href="advanced.html#advanced403">Clean out table after <b>ologit</b> or <b>oprobit</b></a></li>
+<li><a href="advanced.html#advanced401">Marginal effects for all outcomes after <b>mlogit</b></a></li>
+<li><a href="advanced.html#advanced402">Transforming random-effects parameters of an <b>xtmixed</b> model</a></li>
+</ul>
+<li><a href="advanced.html#advanced500">LaTeX</a></li>
+<ul>
+<li><a href="advanced.html#advanced501">Advanced LaTeX example: Arrange models in groups</a></li>
+</ul>
+<li><a href="advanced.html#advanced600">Descriptive tables</a></li>
+<ul>
+<li><a href="advanced.html#advanced601">Table of descriptives</a></li>
+<li><a href="advanced.html#advanced602">Table of descriptives by subgroups</a></li>
+<li><a href="advanced.html#advanced603">Tabulating results from t-Tests</a></li>
+<li><a href="advanced.html#advanced604">Frequency tables</a></li>
+</ul>
+<li><a href="advanced.html#advanced900">Other</a></li>
+<ul>
+<li><a href="advanced.html#advanced905">Tabulating a Stata matrix</a></li>
+<li><a href="advanced.html#advanced907">Flip models and coefficients (place models in rows instead of in columns)</a></li>
+<li><a href="advanced.html#advanced906">Tabulating results from an r-class program</a></li>
+<li><a href="advanced.html#advanced901">Including a column containing bivariate effects (stack models)</a></li>
+<li><a href="advanced.html#advanced902">Displaying group sizes for categorical regressors</a></li>
+<li><a href="advanced.html#advanced903">Tabulating results from <b>stci</b></a></li>
+</ul>
+</ul>
+</div>
+
+<a name="advanced000"></a>
+<h2>Coefficients/equations</h2>
+
+
+<a name="advanced001"></a>
+<h3>Exponentiated coefficients (odds ratio, hazard ratio)</h3>
+
+<p>
+To report exponentiated coefficients (aka odds ratio in logistic
+regression, harzard ratio in the Cox model, incidence rate ratio, relative risk ratio),
+apply the <a href="hlp_estout.html#eform"><b>eform</b></a> option. Example:
+</p>
+
+<pre>
+. sysuse auto
+(1978 Automobile Data)
+
+. eststo: quietly logit foreign mpg
+(<b>est1</b> stored)
+
+. eststo: quietly logit foreign mpg weight
+(<b>est2</b> stored)
+
+. esttab, eform
+
+--------------------------------------------
+                      (1)             (2)   
+                  foreign         foreign   
+--------------------------------------------
+mpg         <b>        1.173**         0.845   </b>
+            <b>       </b>(<b>3.04</b>)<b>         </b>(<b>-1.83</b>)<b>   </b>
+
+weight      <b>                        0.996***</b>
+            <b>                      </b>(<b>-3.86</b>)<b>   </b>
+--------------------------------------------
+N           <b>           74              74   </b>
+--------------------------------------------
+Exponentiated coefficients; t statistics in parentheses
+* p&lt;0.05, ** p&lt;0.01, *** p&lt;0.001
+
+. eststo clear
+<p style="text-align:right; padding:0px; margin:0px"><a href="advanced001.do">[do-file]</a>
+</pre>
+
+
+<a name="advanced001b"></a>
+<p>
+Note that <b>eform</b> also transforms the standard errors (and confidence intervals),
+as is illustrated bellow:
+</p>
+
+<pre>
+. sysuse auto
+(1978 Automobile Data)
+
+. quietly logit foreign mpg weight
+
+. eststo raw
+
+. eststo or
+
+. esttab raw or, se mtitles eform(0 1)
+
+--------------------------------------------
+                      (1)             (2)   
+                      raw              or   
+--------------------------------------------
+mpg         <b>       -0.169           0.845   </b>
+            <b>     </b>(<b>0.0919</b>)<b>        </b>(<b>0.0777</b>)<b>   </b>
+
+weight      <b>     -0.00391***        0.996***</b>
+            <b>    </b>(<b>0.00101</b>)<b>       </b>(<b>0.00101</b>)<b>   </b>
+
+_cons       <b>        13.71**      898396.7** </b>
+            <b>      </b>(<b>4.519</b>)<b>     </b>(<b>4059591.5</b>)<b>   </b>
+--------------------------------------------
+N           <b>           74              74   </b>
+--------------------------------------------
+Standard errors in parentheses
+* p&lt;0.05, ** p&lt;0.01, *** p&lt;0.001
+
+. eststo clear
+<p style="text-align:right; padding:0px; margin:0px"><a href="advanced001b.do">[do-file]</a>
+</pre>
+
+<p>
+The example also illustrates that, optionally, <b>eform</b> can be applied to selected
+models only. If you are interested in applying other transformations, see <b>estout</b>'s
+<a href="hlp_estout.html#transform"><b>transform()</b></a> option.
+</p>
+
+
+<a name="advanced002"></a>
+<h3>Marginal effects</h3>
+
+<p>
+<b>esttab</b> and <b>estout</b> support Stata's <a href=http://www.stata.com/help.cgi?mfx><b>mfx</b></a>
+command for calculating marginal effects and elasticities. To make
+<b>mfx</b>'s results available for tabulation it is essential that the model is
+stored <em>after</em> applying <b>mfx</b>. In <b>esttab</b> or <b>estout</b> then
+use the <a href="hlp_estout.html#margin"><b>margin</b></a> option to display the marginal effects. Example:
+</p>
+
+<pre>
+. sysuse auto
+(1978 Automobile Data)
+
+. generate reprec = (rep78 &gt; 3) if rep78&lt;.
+(5 missing values generated)
+
+. eststo raw: logit foreign mpg reprec
+
+Iteration 0:   log likelihood = <b>-42.400729</b>
+Iteration 1:   log likelihood = <b>-28.036843</b>
+Iteration 2:   log likelihood = <b>-27.117187</b>
+Iteration 3:   log likelihood = <b> -27.07727</b>
+Iteration 4:   log likelihood = <b> -27.07712</b>
+
+Logistic regression                               Number of obs   = <b>        69</b>
+<b>                                                  </b>LR chi2(<b>2</b>)      = <b>     30.65</b>
+<b>                                                  </b>Prob &gt; chi2     = <b>    0.0000</b>
+Log likelihood = <b> -27.07712                       </b>Pseudo R2       = <b>    0.3614</b>
+
+------------------------------------------------------------------------------
+     foreign |      Coef.   Std. Err.      z    P&gt;|z|     [95% Conf. Interval]
+-------------+----------------------------------------------------------------
+         mpg |  <b> .1401865   .0653246     2.15   0.032     .0121527    .2682203</b>
+<b>      </b>reprec |  <b> 2.649856   .7380623     3.59   0.000     1.203281    4.096432</b>
+<b>       </b>_cons |  <b>-5.370321   1.519268    -3.53   0.000    -8.348032   -2.392611</b>
+------------------------------------------------------------------------------
+
+. eststo mfx: mfx
+
+Marginal effects after logit
+      y  = Pr(foreign) (predict)
+         = <b> .21890427</b>
+------------------------------------------------------------------------------
+variable |      dy/dx    Std. Err.     z    P&gt;|z|  [    95% C.I.   ]      X
+---------+--------------------------------------------------------------------
+     mpg |  <b> .0239698       .0121    1.98   0.048    .00026   .04768   21.2899</b>
+<b>  </b>reprec*|  <b> .4813761      .11305    4.26   0.000    .25981  .702943    .42029</b>
+------------------------------------------------------------------------------
+(*) dy/dx is for discrete change of dummy variable from 0 to 1
+
+. esttab, se margin mtitles
+
+--------------------------------------------
+                      (1)             (2)   
+                      raw             mfx   
+--------------------------------------------
+mpg         <b>        0.140*         0.0240*  </b>
+            <b>     </b>(<b>0.0653</b>)<b>        </b>(<b>0.0121</b>)<b>   </b>
+
+reprec (d)  <b>        2.650***        0.481***</b>
+            <b>      </b>(<b>0.738</b>)<b>         </b>(<b>0.113</b>)<b>   </b>
+--------------------------------------------
+N           <b>           69              69   </b>
+--------------------------------------------
+Marginal effects; Standard errors in parentheses
+ (d) for discrete change of dummy variable from 0 to 1
+* p&lt;0.05, ** p&lt;0.01, *** p&lt;0.001
+
+. eststo clear
+<p style="text-align:right; padding:0px; margin:0px"><a href="advanced002.do">[do-file]</a>
+</pre>
+
+
+<a name="advanced003"></a>
+<h3>Multiple-equation models</h3>
+
+<p>
+The default in <b>esttab</b> or <b>estout</b> is to arrange the different equations of
+multiple-equation models in vertical order, as in:
+</p>
+
+<pre>
+. sysuse auto
+(1978 Automobile Data)
+
+. quietly heckman price weight, select(foreign = weight mpg) twostep
+
+. esttab, wide
+
+-----------------------------------------
+                      (1)                
+                    price                
+-----------------------------------------
+<b>price                                    </b>
+weight      <b>        5.284***       </b>(<b>5.89</b>)
+_cons       <b>      -5925.0***      </b>(<b>-3.50</b>)
+-----------------------------------------
+<b>foreign                                  </b>
+weight      <b>     -0.00234***      </b>(<b>-4.13</b>)
+mpg         <b>       -0.104*        </b>(<b>-2.02</b>)
+_cons       <b>        8.275**        </b>(<b>3.24</b>)
+-----------------------------------------
+<b>mills                                    </b>
+lambda      <b>        104.9          </b>(<b>0.12</b>)
+-----------------------------------------
+N           <b>           74                </b>
+-----------------------------------------
+t statistics in parentheses
+* p&lt;0.05, ** p&lt;0.01, *** p&lt;0.001
+<p style="text-align:right; padding:0px; margin:0px"><a href="advanced003.do">[do-file]</a>
+</pre>
+
+
+<a name="advanced003b"></a>
+<p>
+However, for models such as
+<a href=http://www.stata.com/help.cgi?mlogit><b>mlogit</b></a>
+or <a href=http://www.stata.com/help.cgi?sureg><b>sureg</b></a>
+it is sometimes sensible to arrange the
+equations horizontally, which can be achieved through the use of the
+<a href="hlp_estout.html#unstack"><b>unstack</b></a> option. Example:
+</p>
+
+<pre>
+. sysuse auto
+(1978 Automobile Data)
+
+. sureg (price foreign weight length) (mpg displ = foreign weight)
+
+Seemingly unrelated regression
+----------------------------------------------------------------------
+Equation          Obs  Parms        RMSE    "R-sq"       chi2        P
+----------------------------------------------------------------------
+<b>price              74      3    1967.769    0.5488      89.74   0.0000</b>
+<b>mpg                74      2    3.337283    0.6627     145.39   0.0000</b>
+<b>displacement       74      2    39.60002    0.8115     318.62   0.0000</b>
+----------------------------------------------------------------------
+
+------------------------------------------------------------------------------
+             |      Coef.   Std. Err.      z    P&gt;|z|     [95% Conf. Interval]
+-------------+----------------------------------------------------------------
+<b>price        </b>|
+     foreign |  <b>  3575.26   621.7961     5.75   0.000     2356.562    4793.958</b>
+<b>      </b>weight |  <b> 5.691462   .9205043     6.18   0.000     3.887307    7.495618</b>
+<b>      </b>length |  <b>-88.27114    31.4167    -2.81   0.005    -149.8467   -26.69554</b>
+<b>       </b>_cons |  <b> 4506.212   3588.044     1.26   0.209    -2526.225    11538.65</b>
+-------------+----------------------------------------------------------------
+<b>mpg          </b>|
+     foreign |  <b>-1.650029   1.053958    -1.57   0.117    -3.715748    .4156902</b>
+<b>      </b>weight |  <b>-.0065879   .0006241   -10.56   0.000     -.007811   -.0053647</b>
+<b>       </b>_cons |  <b>  41.6797   2.121197    19.65   0.000     37.52223    45.83717</b>
+-------------+----------------------------------------------------------------
+<b>displacement </b>|
+     foreign |  <b> -25.6127   12.50621    -2.05   0.041    -50.12441   -1.100984</b>
+<b>      </b>weight |  <b> .0967549   .0074051    13.07   0.000     .0822411    .1112686</b>
+<b>       </b>_cons |  <b>-87.23548   25.17001    -3.47   0.001    -136.5678   -37.90317</b>
+------------------------------------------------------------------------------
+
+. esttab, unstack scalars(r2 chi2 p) noobs nomtitle
+
+------------------------------------------------------------
+                      (1)                                   
+                    price             mpg    displacement   
+------------------------------------------------------------
+foreign     <b>       3575.3***       -1.650          -25.61*  </b>
+            <b>       </b>(<b>5.75</b>)<b>         </b>(<b>-1.57</b>)<b>         </b>(<b>-2.05</b>)<b>   </b>
+
+weight      <b>        5.691***     -0.00659***       0.0968***</b>
+            <b>       </b>(<b>6.18</b>)<b>        </b>(<b>-10.56</b>)<b>         </b>(<b>13.07</b>)<b>   </b>
+
+length      <b>       -88.27**                                 </b>
+            <b>      </b>(<b>-2.81</b>)<b>                                   </b>
+
+_cons       <b>       4506.2           41.68***       -87.24***</b>
+            <b>       </b>(<b>1.26</b>)<b>         </b>(<b>19.65</b>)<b>         </b>(<b>-3.47</b>)<b>   </b>
+------------------------------------------------------------
+r2          <b>        0.549           0.663           0.812   </b>
+chi2        <b>        89.74           145.4           318.6   </b>
+p           <b>     2.50e-19        2.68e-32        6.50e-70   </b>
+------------------------------------------------------------
+t statistics in parentheses
+* p&lt;0.05, ** p&lt;0.01, *** p&lt;0.001
+<p style="text-align:right; padding:0px; margin:0px"><a href="advanced003b.do">[do-file]</a>
+</pre>
+
+
+<a name="advanced004"></a>
+<h3>Table of effects signs, significance stars, or "significant signs"</h3>
+
+<p>
+Tables containing the signs of the coefficients, 
+"significance stars", or "significant signs" (i.e.
+the signs of the coefficient where each sing is repeated according to
+significance level) can be produced as follows:
+</p>
+
+<pre>
+. sysuse auto
+(1978 Automobile Data)
+
+. eststo: regress price mpg foreign
+
+      Source |       SS       df       MS              Number of obs =<b>      74</b>
+-------------+------------------------------           F(  2,    71) =<b>   14.07</b>
+<b>    </b>   Model | <b>  180261702     2  90130850.8           </b>Prob &gt; F      = <b> 0.0000</b>
+<b>    </b>Residual | <b>  454803695    71  6405685.84           </b>R-squared     = <b> 0.2838</b>
+-------------+------------------------------           Adj R-squared = <b> 0.2637</b>
+<b>    </b>   Total | <b>  635065396    73  8699525.97           </b>Root MSE      = <b> 2530.9</b>
+
+------------------------------------------------------------------------------
+       price |      Coef.   Std. Err.      t    P&gt;|t|     [95% Conf. Interval]
+-------------+----------------------------------------------------------------
+         mpg |  <b>-294.1955   55.69172    -5.28   0.000    -405.2417   -183.1494</b>
+     foreign |  <b> 1767.292    700.158     2.52   0.014     371.2169    3163.368</b>
+       _cons |  <b> 11905.42   1158.634    10.28   0.000     9595.164    14215.67</b>
+------------------------------------------------------------------------------
+(<b>est1</b> stored)
+
+. eststo: regress price mpg foreign weight
+
+      Source |       SS       df       MS              Number of obs =<b>      74</b>
+-------------+------------------------------           F(  3,    70) =<b>   23.29</b>
+<b>    </b>   Model | <b>  317252881     3   105750960           </b>Prob &gt; F      = <b> 0.0000</b>
+<b>    </b>Residual | <b>  317812515    70  4540178.78           </b>R-squared     = <b> 0.4996</b>
+-------------+------------------------------           Adj R-squared = <b> 0.4781</b>
+<b>    </b>   Total | <b>  635065396    73  8699525.97           </b>Root MSE      = <b> 2130.8</b>
+
+------------------------------------------------------------------------------
+       price |      Coef.   Std. Err.      t    P&gt;|t|     [95% Conf. Interval]
+-------------+----------------------------------------------------------------
+         mpg |  <b>  21.8536   74.22114     0.29   0.769    -126.1758     169.883</b>
+     foreign |  <b>  3673.06   683.9783     5.37   0.000     2308.909    5037.212</b>
+      weight |  <b> 3.464706    .630749     5.49   0.000     2.206717    4.722695</b>
+       _cons |  <b>-5853.696   3376.987    -1.73   0.087    -12588.88    881.4934</b>
+------------------------------------------------------------------------------
+(<b>est2</b> stored)
+
+. esttab, cells(_sign) nogap
+
+--------------------------------------
+                      (1)          (2)
+                    price        price
+                    _sign        _sign
+--------------------------------------
+mpg         <b>            -            +</b>
+foreign     <b>            +            +</b>
+weight      <b>                         +</b>
+_cons       <b>            +            -</b>
+--------------------------------------
+N           <b>           74           74</b>
+--------------------------------------
+
+. esttab, cells(_star) nogap ///
+&gt;     starlevels(n.s. 1 * 0.05 ** 0.01)
+
+--------------------------------------
+                      (1)          (2)
+                    price        price
+                    _star        _star
+--------------------------------------
+mpg         <b>           **         n.s.</b>
+foreign     <b>            *           **</b>
+weight      <b>                        **</b>
+_cons       <b>           **         n.s.</b>
+--------------------------------------
+N           <b>           74           74</b>
+--------------------------------------
+
+. esttab, cells(_sigsign) nogap ///
+&gt;     starlevels("+/-" 1 "++/--" 0.05 "+++/---" 0.01)
+
+--------------------------------------
+                      (1)          (2)
+                    price        price
+                 _sigsign     _sigsign
+--------------------------------------
+mpg         <b>          ---            +</b>
+foreign     <b>           ++          +++</b>
+weight      <b>                       +++</b>
+_cons       <b>          +++            -</b>
+--------------------------------------
+N           <b>           74           74</b>
+--------------------------------------
+
+. eststo clear
+<p style="text-align:right; padding:0px; margin:0px"><a href="advanced004.do">[do-file]</a>
+</pre>
+
+
+<a name="advanced005"></a>
+<h3>Add a hypotheses column</h3>
+
+<p>
+Use the <a href="hlp_estout.html#labcol2"><b>labcol2()</b></a>
+option to add a column indicating the expected
+directions of effects according to theory:
+</p>
+
+<pre>
+. sysuse auto
+(1978 Automobile Data)
+
+. quietly regress price mpg foreign weight displ
+
+. esttab, labcol2(+ ? + -, title("" Hypothesis))
+
+-----------------------------------------
+                                   (1)   
+              Hypothesis         price   
+-----------------------------------------
+mpg               +      <b>        19.08   </b>
+                         <b>       </b>(<b>0.26</b>)<b>   </b>
+
+foreign           ?      <b>       3930.2***</b>
+                         <b>       </b>(<b>5.67</b>)<b>   </b>
+
+weight            +      <b>        2.458** </b>
+                         <b>       </b>(<b>2.82</b>)<b>   </b>
+
+displacement      -      <b>        10.22   </b>
+                         <b>       </b>(<b>1.65</b>)<b>   </b>
+
+_cons                    <b>      -4846.8   </b>
+                         <b>      </b>(<b>-1.43</b>)<b>   </b>
+-----------------------------------------
+N                        <b>           74   </b>
+-----------------------------------------
+t statistics in parentheses
+* p&lt;0.05, ** p&lt;0.01, *** p&lt;0.001
+<p style="text-align:right; padding:0px; margin:0px"><a href="advanced005.do">[do-file]</a>
+</pre>
+
+
+<a name="advanced006"></a>
+<h3>Indicate whether groups of control variables are in the model or not</h3>
+
+<p>
+To save space full output is sometimes suppressed for certain control variables
+and it is only indicated whether the model contains the variables or not.
+The <a href="hlp_estout.html#indicate"><b>indicate()</b></a> in <b>estout</b>
+supports the construction of such tables:
+</p>
+
+<pre>
+. sysuse auto
+(1978 Automobile Data)
+
+. eststo: quietly regress price mpg foreign
+(<b>est1</b> stored)
+
+. eststo: xi: quietly regress price mpg foreign i.rep78
+i.rep78           _Irep78_1-5         (naturally coded; _Irep78_1 omitted)
+(<b>est2</b> stored)
+
+. esttab, indicate(rep dummies = _Irep78*)
+
+--------------------------------------------
+                      (1)             (2)   
+                    price           price   
+--------------------------------------------
+mpg         <b>       -294.2***       -299.6***</b>
+            <b>      </b>(<b>-5.28</b>)<b>         </b>(<b>-4.73</b>)<b>   </b>
+
+foreign     <b>       1767.3*         1102.3   </b>
+            <b>       </b>(<b>2.52</b>)<b>          </b>(<b>1.22</b>)<b>   </b>
+
+_cons       <b>      11905.4***      10856.2***</b>
+            <b>      </b>(<b>10.28</b>)<b>          </b>(<b>4.79</b>)<b>   </b>
+
+rep dummies <b>           No             Yes   </b>
+--------------------------------------------
+N           <b>           74              69   </b>
+--------------------------------------------
+t statistics in parentheses
+* p&lt;0.05, ** p&lt;0.01, *** p&lt;0.001
+
+. eststo clear
+<p style="text-align:right; padding:0px; margin:0px"><a href="advanced006.do">[do-file]</a>
+</pre>
+
+
+<a name="advanced006b"></a>
+<p>
+<b>indicate()</b> prints its information at the bottom of the
+main body of the table containing the coefficients.
+If you want to include the information in the table footer, then use
+the following approach:
+</p>
+
+<pre>
+. sysuse auto
+(1978 Automobile Data)
+
+. eststo: quietly regress price mpg foreign
+(<b>est1</b> stored)
+
+. estadd local hasrep "No"
+
+added macro:
+             e(hasrep) : "<b>No</b>"
+
+. eststo: xi: quietly regress price mpg foreign i.rep78
+i.rep78           _Irep78_1-5         (naturally coded; _Irep78_1 omitted)
+(<b>est2</b> stored)
+
+. estadd local hasrep "Yes"
+
+added macro:
+             e(hasrep) : "<b>Yes</b>"
+
+. esttab, drop(_Irep78*) scalars("hasrep rep dummies")
+
+--------------------------------------------
+                      (1)             (2)   
+                    price           price   
+--------------------------------------------
+mpg         <b>       -294.2***       -299.6***</b>
+            <b>      </b>(<b>-5.28</b>)<b>         </b>(<b>-4.73</b>)<b>   </b>
+
+foreign     <b>       1767.3*         1102.3   </b>
+            <b>       </b>(<b>2.52</b>)<b>          </b>(<b>1.22</b>)<b>   </b>
+
+_cons       <b>      11905.4***      10856.2***</b>
+            <b>      </b>(<b>10.28</b>)<b>          </b>(<b>4.79</b>)<b>   </b>
+--------------------------------------------
+N           <b>           74              69   </b>
+rep dummies <b>           No             Yes   </b>
+--------------------------------------------
+t statistics in parentheses
+* p&lt;0.05, ** p&lt;0.01, *** p&lt;0.001
+
+. eststo clear
+<p style="text-align:right; padding:0px; margin:0px"><a href="advanced006b.do">[do-file]</a>
+</pre>
+
+
+<a name="advanced007"></a>
+<h3>Display reference category information</h3>
+
+<p>
+Use the <a href="hlp_estout.html#refcat"><b>refcat()</b></a> option to
+add a table row containing the (omitted) reference category of a categorical
+variable. Example:
+</p>
+
+<pre>
+. sysuse cancer
+(Patient Survival in Drug Trial)
+
+. stset studytime, failure(died)
+
+     failure event:  <b>died != 0 &amp; died &lt; .</b>
+obs. time interval:  <b>(0, studytime]</b>
+ exit on or before:  <b>failure</b>
+
+------------------------------------------------------------------------------
+<b>       48</b>  total obs.
+<b>        0</b>  exclusions
+------------------------------------------------------------------------------
+<b>       48</b>  obs. remaining, representing
+<b>       31</b>  failures in single record/single failure data
+<b>      744</b>  total analysis time at risk, at risk from t = <b>        0</b>
+<b>                             </b>earliest observed entry t = <b>        0</b>
+<b>                                  </b>last observed exit t = <b>       39</b>
+
+. xi: stcox age i.drug, nolog
+i.drug            _Idrug_1-3          (naturally coded; _Idrug_1 omitted)
+
+         failure _d:  <b>died</b>
+<b>   </b>analysis time _t:  <b>studytime</b>
+
+Cox regression -- Breslow method for ties
+
+No. of subjects = <b>          48                     </b>Number of obs   =<b>        48</b>
+No. of failures = <b>          31</b>
+Time at risk    = <b>         744</b>
+<b>                                                   </b>LR chi2(<b>3</b>)      =<b>     36.52</b>
+Log likelihood  =   <b>-81.652567                     </b>Prob &gt; chi2     =<b>    0.0000</b>
+
+------------------------------------------------------------------------------
+          _t | Haz. Ratio   Std. Err.      z    P&gt;|z|     [95% Conf. Interval]
+-------------+----------------------------------------------------------------
+         age |  <b> 1.118334   .0409074     3.06   0.002     1.040963    1.201455</b>
+<b>    </b>_Idrug_2 |  <b> .1805839   .0892742    -3.46   0.001     .0685292    .4758636</b>
+<b>    </b>_Idrug_3 |  <b> .0520066    .034103    -4.51   0.000     .0143843    .1880305</b>
+------------------------------------------------------------------------------
+
+. lab var _Idrug_2 "Tadalafil"
+
+. lab var _Idrug_3 "Sildenafil"
+
+. esttab, eform wide label nostar refcat(_Idrug_2 "Placebo")
+
+----------------------------------------------
+                              (1)             
+                               _t             
+----------------------------------------------
+Patient's age at s..<b>        1.118       </b>(<b>3.06</b>)
+Placebo             <b>         ref.             </b>
+Tadalafil           <b>        0.181      </b>(<b>-3.46</b>)
+Sildenafil          <b>       0.0520      </b>(<b>-4.51</b>)
+----------------------------------------------
+Observations        <b>           48             </b>
+----------------------------------------------
+Exponentiated coefficients; t statistics in parentheses
+
+. esttab, eform wide label nostar refcat(_Idrug_2 "Placebo", label(1))
+
+----------------------------------------------
+                              (1)             
+                               _t             
+----------------------------------------------
+Patient's age at s..<b>        1.118       </b>(<b>3.06</b>)
+Placebo             <b>            1             </b>
+Tadalafil           <b>        0.181      </b>(<b>-3.46</b>)
+Sildenafil          <b>       0.0520      </b>(<b>-4.51</b>)
+----------------------------------------------
+Observations        <b>           48             </b>
+----------------------------------------------
+Exponentiated coefficients; t statistics in parentheses
+<p style="text-align:right; padding:0px; margin:0px"><a href="advanced007.do">[do-file]</a>
+</pre>
+
+
+<a name="advanced904"></a>
+<h3>Adding extra rows using the <b>refcat()</b> option</h3>
+
+<p>
+The <a href="hlp_estout.html#refcat"><b>refcat()</b></a> option is designed
+to include information on the (omitted) reference category of a categorical
+variable (see <a href="advanced.html#advanced007">above</a>), but it can also be used
+to include extra rows in the table containing subtitles or other information.
+Example:
+</p>
+
+<pre>
+. sysuse auto
+(1978 Automobile Data)
+
+. regress price weight mpg turn foreign
+
+      Source |       SS       df       MS              Number of obs =<b>      74</b>
+-------------+------------------------------           F(  4,    69) =<b>   19.23</b>
+<b>    </b>   Model | <b>  334771309     4  83692827.3           </b>Prob &gt; F      = <b> 0.0000</b>
+<b>    </b>Residual | <b>  300294087    69  4352088.22           </b>R-squared     = <b> 0.5271</b>
+-------------+------------------------------           Adj R-squared = <b> 0.4997</b>
+<b>    </b>   Total | <b>  635065396    73  8699525.97           </b>Root MSE      = <b> 2086.2</b>
+
+------------------------------------------------------------------------------
+       price |      Coef.   Std. Err.      t    P&gt;|t|     [95% Conf. Interval]
+-------------+----------------------------------------------------------------
+      weight |  <b> 4.284532   .7404967     5.79   0.000     2.807282    5.761783</b>
+         mpg |  <b>-.4660076   73.51407    -0.01   0.995    -147.1226    146.1905</b>
+        turn |  <b>-229.2059   114.2423    -2.01   0.049    -457.1131   -1.298676</b>
+     foreign |  <b> 3221.415   706.4847     4.56   0.000     1812.017    4630.813</b>
+       _cons |  <b> 1368.197   4887.597     0.28   0.780    -8382.292    11118.69</b>
+------------------------------------------------------------------------------
+
+. foreach v of varlist weight mpg turn foreign {
+  2.     label variable `v' `"- `: variable label `v''"'
+  3. }
+
+. esttab, refcat(weight "Main effects:" turn "Controls:", nolabel) wide label
+
+-------------------------------------------------
+                              (1)                
+                            Price                
+-------------------------------------------------
+Main effects:       <b>                             </b>
+- Weight (lbs.)     <b>        4.285***       </b>(<b>5.79</b>)
+- Mileage (mpg)     <b>       -0.466         </b>(<b>-0.01</b>)
+Controls:           <b>                             </b>
+- Turn Circle (ft.) <b>       -229.2*        </b>(<b>-2.01</b>)
+- Car type          <b>       3221.4***       </b>(<b>4.56</b>)
+Constant            <b>       1368.2          </b>(<b>0.28</b>)
+-------------------------------------------------
+Observations        <b>           74                </b>
+-------------------------------------------------
+t statistics in parentheses
+* p&lt;0.05, ** p&lt;0.01, *** p&lt;0.001
+<p style="text-align:right; padding:0px; margin:0px"><a href="advanced904.do">[do-file]</a>
+</pre>
+
+
+<a name="advanced008"></a>
+<h3>Match coefficients across models</h3>
+
+<p>
+Rename coefficients using the <a href="hlp_estout.html#rename"><b>rename()</b></a>
+option before matching the models and equations to merge different coefficients into
+the same table row. Example:
+</p>
+
+<pre>
+. sysuse auto
+(1978 Automobile Data)
+
+. set seed 123
+
+. generate altmpg = invnorm(uniform())
+
+. eststo: quietly regress price weight mpg
+(<b>est1</b> stored)
+
+. eststo: quietly regress price weight altmpg
+(<b>est2</b> stored)
+
+. esttab
+
+--------------------------------------------
+                      (1)             (2)   
+                    price           price   
+--------------------------------------------
+weight      <b>        1.747**         2.037***</b>
+            <b>       </b>(<b>2.72</b>)<b>          </b>(<b>5.36</b>)<b>   </b>
+
+mpg         <b>       -49.51                   </b>
+            <b>      </b>(<b>-0.57</b>)<b>                   </b>
+
+altmpg      <b>                       -73.94   </b>
+            <b>                      </b>(<b>-0.29</b>)<b>   </b>
+
+_cons       <b>       1946.1           6.433   </b>
+            <b>       </b>(<b>0.54</b>)<b>          </b>(<b>0.01</b>)<b>   </b>
+--------------------------------------------
+N           <b>           74              74   </b>
+--------------------------------------------
+t statistics in parentheses
+* p&lt;0.05, ** p&lt;0.01, *** p&lt;0.001
+
+. esttab, rename(altmpg mpg)
+
+--------------------------------------------
+                      (1)             (2)   
+                    price           price   
+--------------------------------------------
+weight      <b>        1.747**         2.037***</b>
+            <b>       </b>(<b>2.72</b>)<b>          </b>(<b>5.36</b>)<b>   </b>
+
+mpg         <b>       -49.51          -73.94   </b>
+            <b>      </b>(<b>-0.57</b>)<b>         </b>(<b>-0.29</b>)<b>   </b>
+
+_cons       <b>       1946.1           6.433   </b>
+            <b>       </b>(<b>0.54</b>)<b>          </b>(<b>0.01</b>)<b>   </b>
+--------------------------------------------
+N           <b>           74              74   </b>
+--------------------------------------------
+t statistics in parentheses
+* p&lt;0.05, ** p&lt;0.01, *** p&lt;0.001
+
+. eststo clear
+<p style="text-align:right; padding:0px; margin:0px"><a href="advanced008.do">[do-file]</a>
+</pre>
+
+
+<a name="advanced100"></a>
+<h2>Model summary statistics</h2>
+
+
+<a name="advanced101"></a>
+<h3>Display summary statistics only (suppress coefficients)</h3>
+
+<p>
+If you want to produce a table that only contains the summary statistics of the models,
+but no coefficients, add <a href="hlp_estout.html#cells"><b>cells(none)</b></a> to the command:
+</p>
+
+<pre>
+. sysuse auto
+(1978 Automobile Data)
+
+. eststo: quietly regress price weight mpg
+(<b>est1</b> stored)
+
+. eststo: quietly regress price weight mpg foreign
+(<b>est2</b> stored)
+
+. esttab, cells(none) scalars(rank r2 r2_a bic aic) nomtitles
+
+--------------------------------------
+                      (1)          (2)
+--------------------------------------
+N           <b>           74           74</b>
+rank        <b>            3            4</b>
+r2          <b>        0.293        0.500</b>
+r2_a        <b>        0.273        0.478</b>
+bic         <b>       1378.6       1357.4</b>
+aic         <b>       1371.7       1348.2</b>
+--------------------------------------
+
+. eststo clear
+<p style="text-align:right; padding:0px; margin:0px"><a href="advanced101.do">[do-file]</a>
+</pre>
+
+
+<a name="advanced102"></a>
+<h3>Adding likelihood-ratio test statistics</h3>
+
+<p>
+The <b>estadd</b>'s <a href="hlp_estadd.html#lrtest"><b>lrtest</b></a>
+subcommand may be used to add results from likelihood-ratio tests as follows:
+</p>
+
+<pre>
+. sysuse auto
+(1978 Automobile Data)
+
+. eststo A: quietly logit foreign weight
+
+. eststo B: quietly logit foreign weight mpg price
+
+. estadd lrtest A
+
+Likelihood-ratio test                                  LR chi2(<b>2</b>)  =<b>     23.78</b>
+(Assumption: A nested in .)                            Prob &gt; chi2 = <b>   0.0000</b>
+
+added scalars:
+           e(lrtest_p) =  <b>6.844e-06</b>
+<b>        </b>e(lrtest_chi2) =  <b>23.784217</b>
+<b>          </b>e(lrtest_df) =  <b>2</b>
+
+. esttab, scalars(lrtest_chi2 lrtest_df lrtest_p)
+
+--------------------------------------------
+                      (1)             (2)   
+                  foreign         foreign   
+--------------------------------------------
+weight      <b>     -0.00259***     -0.00685***</b>
+            <b>      </b>(<b>-4.25</b>)<b>         </b>(<b>-3.43</b>)<b>   </b>
+
+mpg         <b>                       -0.121   </b>
+            <b>                      </b>(<b>-1.27</b>)<b>   </b>
+
+price       <b>                     0.000926** </b>
+            <b>                       </b>(<b>3.01</b>)<b>   </b>
+
+_cons       <b>        6.283***        14.42** </b>
+            <b>       </b>(<b>3.92</b>)<b>          </b>(<b>2.66</b>)<b>   </b>
+--------------------------------------------
+N           <b>           74              74   </b>
+lrtest_chi2 <b>                        23.78   </b>
+lrtest_df   <b>                            2   </b>
+lrtest_p    <b>                   0.00000684   </b>
+--------------------------------------------
+t statistics in parentheses
+* p&lt;0.05, ** p&lt;0.01, *** p&lt;0.001
+
+. eststo clear
+<p style="text-align:right; padding:0px; margin:0px"><a href="advanced102.do">[do-file]</a>
+</pre>
+
+
+<a name="advanced103"></a>
+<h3>Rearranging the summary statistics in the table footer</h3>
+
+<p>
+The default in <b>estout</b> and <b>esttab</b> is to
+print the scalar summary statistics in the table footer in separate rows beneath
+one another (in each model's first column). Use the
+<a href="hlp_estout.html#statslayout"><b>layout()</b></a> suboption
+in the <a href="hlp_estout.html#sum"><b>stats()</b></a> option
+to rearrange the statistics. The option allows you to place
+the statistics in separate columns beside one another or also
+to combine multiple statistics in one table cell (see <a href="advanced.html#advanced104">below</a>).
+Here is an example:
+</p>
+
+<pre>
+. sysuse auto
+(1978 Automobile Data)
+
+. eststo: quietly regress price weight
+(<b>est1</b> stored)
+
+. eststo: quietly regress price weight foreign
+(<b>est2</b> stored)
+
+. esttab, p wide nopar label  ///
+&gt;     stats(F p N, layout("@ @" @) fmt(a3 3 a3) ///
+&gt;         labels("F statistic" "Observations"))
+
+------------------------------------------------------------------------------
+                              (1)                          (2)                
+                            Price                        Price                
+------------------------------------------------------------------------------
+Weight (lbs.)       <b>        2.044***        0.000        3.321***        0.000</b>
+Car type            <b>                                    3637.0***        0.000</b>
+Constant            <b>       -6.707           0.995      -4942.8***        0.000</b>
+------------------------------------------------------------------------------
+F statistic         <b>        29.42           0.000        35.35           0.000</b>
+Observations        <b>           74                           74                </b>
+------------------------------------------------------------------------------
+p-values in second column
+* p&lt;0.05, ** p&lt;0.01, *** p&lt;0.001
+
+. eststo clear
+<p style="text-align:right; padding:0px; margin:0px"><a href="advanced103.do">[do-file]</a>
+</pre>
+
+<p>
+In the <b>layout()</b> suboption, the "@" character is used as a placeholder
+for the statistics, one after another. Statistics to be printed in the same row
+have to be enclosed in quotes.
+</p>
+
+
+<a name="advanced104"></a>
+<h3>Combining multiple summary statistics in one cell</h3>
+
+<p>
+The syntax for combining multiple summary statistics in one table cell
+is a bit clumsy, as is illustrated in the following example.
+The cell definition has to be enclosed in double quotes in the example
+because it contains a blank, and a set of 
+compound double quotes is needed to mark off the row definition.
+</p>
+
+<pre>
+. sysuse auto
+(1978 Automobile Data)
+
+. eststo: quietly logit foreign weight mpg
+(<b>est1</b> stored)
+
+. eststo: quietly logit foreign weight mpg turn displ
+(<b>est2</b> stored)
+
+. esttab, stats(chi2 df_m r2_p N, layout(`""@ (@)""' @ @))
+
+--------------------------------------------
+                      (1)             (2)   
+                  foreign         foreign   
+--------------------------------------------
+weight      <b>     -0.00391***      0.00239   </b>
+            <b>      </b>(<b>-3.86</b>)<b>          </b>(<b>0.99</b>)<b>   </b>
+
+mpg         <b>       -0.169          -0.196*  </b>
+            <b>      </b>(<b>-1.83</b>)<b>         </b>(<b>-2.07</b>)<b>   </b>
+
+turn        <b>                       -0.502*  </b>
+            <b>                      </b>(<b>-2.28</b>)<b>   </b>
+
+displacement<b>                      -0.0769*  </b>
+            <b>                      </b>(<b>-2.06</b>)<b>   </b>
+
+_cons       <b>        13.71**         26.95** </b>
+            <b>       </b>(<b>3.03</b>)<b>          </b>(<b>3.00</b>)<b>   </b>
+--------------------------------------------
+chi2 (df_m) <b>    35.72 (2)       55.82 (4)   </b>
+r2_p        <b>        0.397           0.620   </b>
+N           <b>           74              74   </b>
+--------------------------------------------
+t statistics in parentheses
+* p&lt;0.05, ** p&lt;0.01, *** p&lt;0.001
+
+. eststo clear
+<p style="text-align:right; padding:0px; margin:0px"><a href="advanced104.do">[do-file]</a>
+</pre>
+
+<p>
+Note that in this example the layout definition could be simplified to <samp>layout(`""@ (@)""')</samp>
+without changing the result.
+</p>
+
+
+<a name="advanced400"></a>
+<h2>Specific models</h2>
+
+
+<a name="advanced404"></a>
+<h3>Tabulate results from <b>factor</b></h3>
+
+<p>
+The <b>factor</b> command does not return <b>e(b)</b> and <b>e(V)</b>, which makes
+tabulation less obvious. For example, the factor loadings are returned in matrix <b>e(L)</b>
+and the unique variances are returned in <b>e(Psi)</b>:
+</p>
+
+<pre>
+. webuse bg2
+(Physician-cost data)
+
+. factor bg2cost1-bg2cost6
+(obs=568)
+
+Factor analysis/correlation                        Number of obs    = <b>     568</b>
+<b>    </b>Method: principal factors                      Retained factors = <b>       3</b>
+<b>    </b>Rotation: (unrotated)                          Number of params = <b>      15</b>
+
+    --------------------------------------------------------------------------
+         Factor  |   Eigenvalue   Difference        Proportion   Cumulative
+    -------------+------------------------------------------------------------
+        Factor1  |<b>      0.85389      0.31282            1.0310       1.0310</b>
+        Factor2  |<b>      0.54107      0.51786            0.6533       1.6844</b>
+        Factor3  |<b>      0.02321      0.17288            0.0280       1.7124</b>
+        Factor4  |<b>     -0.14967      0.03951           -0.1807       1.5317</b>
+        Factor5  |<b>     -0.18918      0.06197           -0.2284       1.3033</b>
+        Factor6  |<b>     -0.25115            .           -0.3033       1.0000</b>
+    --------------------------------------------------------------------------
+    LR test: independent vs. saturated:  chi2(<b>15</b>) =<b>  269.07</b> Prob&gt;chi2 =<b> 0.0000</b>
+
+Factor loadings (pattern matrix) and unique variances
+
+    -----------------------------------------------------------
+        Variable |  Factor1   Factor2   Factor3 |   Uniqueness 
+    -------------+------------------------------+--------------
+        bg2cost1 | <b>  0.2470</b>  <b>  0.3670</b>  <b> -0.0446</b> |  <b>    0.8023</b>  
+        bg2cost2 | <b> -0.3374</b>  <b>  0.3321</b>  <b> -0.0772</b> |  <b>    0.7699</b>  
+        bg2cost3 | <b> -0.3764</b>  <b>  0.3756</b>  <b>  0.0204</b> |  <b>    0.7169</b>  
+        bg2cost4 | <b> -0.3221</b>  <b>  0.1942</b>  <b>  0.1034</b> |  <b>    0.8479</b>  
+        bg2cost5 | <b>  0.4550</b>  <b>  0.2479</b>  <b>  0.0641</b> |  <b>    0.7274</b>  
+        bg2cost6 | <b>  0.4760</b>  <b>  0.2364</b>  <b> -0.0068</b> |  <b>    0.7175</b>  
+    -----------------------------------------------------------
+
+. ereturn list
+
+scalars:
+                  e(f) =  <b>3</b>
+<b>                  </b>e(N) =  <b>568</b>
+<b>               </b>e(df_m) =  <b>15</b>
+<b>               </b>e(df_r) =  <b>0</b>
+<b>             </b>e(chi2_i) =  <b>269.0736870812582</b>
+<b>               </b>e(df_i) =  <b>15</b>
+<b>                </b>e(p_i) =  <b>1.43900835150e-48</b>
+<b>              </b>e(evsum) =  <b>.8281790835746108</b>
+
+macros:
+            e(cmdline) : "<b>factor bg2cost1-bg2cost6</b>"
+                e(cmd) : "<b>factor</b>"
+         e(properties) : "<b>nob noV eigen</b>"
+              e(title) : "<b>Factor analysis</b>"
+            e(predict) : "<b>factor_p</b>"
+          e(estat_cmd) : "<b>factor_estat</b>"
+         e(rotate_cmd) : "<b>factor_rotate</b>"
+             e(mtitle) : "<b>principal factors</b>"
+             e(method) : "<b>pf</b>"
+
+matrices:
+                e(sds) : <b> 1 x 6</b>
+<b>              </b>e(means) : <b> 1 x 6</b>
+<b>                  </b>e(C) : <b> 6 x 6</b>
+<b>                </b>e(Phi) : <b> 3 x 3</b>
+<b>                  </b>e(L) : <b> 6 x 3</b>
+<b>                </b>e(Psi) : <b> 1 x 6</b>
+<b>                 </b>e(Ev) : <b> 1 x 6</b>
+
+functions:
+             e(sample)   
+
+. matrix list e(L)
+
+e(L)[6,3]
+             Factor1     Factor2     Factor3
+bg2cost1  <b> .24704957   .36703122  -.04457883</b>
+bg2cost2  <b>-.33741222   .33210838  -.07721559</b>
+bg2cost3  <b>-.37640773    .3755668   .02035389</b>
+bg2cost4  <b>-.32206954    .1941843   .10341942</b>
+bg2cost5  <b> .45501598   .24785063   .06407803</b>
+bg2cost6  <b> .47598434   .23638092   -.0067801</b>
+
+. matrix list e(Psi)
+
+e(Psi)[1,6]
+             bg2cost1   bg2cost2   bg2cost3   bg2cost4   bg2cost5   bg2cost6
+Uniqueness  <b>.80226732  .76989477  .71685252  .84786809  .72742453    .717517</b>
+<p style="text-align:right; padding:0px; margin:0px"><a href="advanced404.do">[do-file]</a>
+</pre>
+
+
+<a name="advanced404b"></a>
+<p>
+The simplest way to tabulate the factor loadings is to type:
+</p>
+
+<pre>
+. esttab e(L)
+
+---------------------------------------------------
+                     e(L)                          
+                  Factor1      Factor2      Factor3
+---------------------------------------------------
+bg2cost1    <b>     .2470496     .3670312    -.0445788</b>
+bg2cost2    <b>    -.3374122     .3321084    -.0772156</b>
+bg2cost3    <b>    -.3764077     .3755668     .0203539</b>
+bg2cost4    <b>    -.3220695     .1941843     .1034194</b>
+bg2cost5    <b>      .455016     .2478506      .064078</b>
+bg2cost6    <b>     .4759843     .2363809    -.0067801</b>
+---------------------------------------------------
+<p style="text-align:right; padding:0px; margin:0px"><a href="advanced404b.do">[do-file]</a>
+</pre>
+
+
+<a name="advanced404c"></a>
+<p>
+Reproducing the factor loadings table including the unique variances is more involved. The
+single factors in <b>e(L)</b> have to be addressed individually. For example, type:
+</p>
+
+<pre>
+. esttab, ///
+&gt;     cells("L[1](transpose) L[2](transpose) L[3](transpose) Psi") ///
+&gt;     nogap noobs nonumber nomtitle
+
+----------------------------------------------------------------
+                     L[1]         L[2]         L[3]          Psi
+----------------------------------------------------------------
+bg2cost1    <b>     .2470496     .3670312    -.0445788     .8022673</b>
+bg2cost2    <b>    -.3374122     .3321084    -.0772156     .7698948</b>
+bg2cost3    <b>    -.3764077     .3755668     .0203539     .7168525</b>
+bg2cost4    <b>    -.3220695     .1941843     .1034194     .8478681</b>
+bg2cost5    <b>      .455016     .2478506      .064078     .7274245</b>
+bg2cost6    <b>     .4759843     .2363809    -.0067801      .717517</b>
+----------------------------------------------------------------
+<p style="text-align:right; padding:0px; margin:0px"><a href="advanced404c.do">[do-file]</a>
+</pre>
+
+<p>
+The <b>transpose</b> suboption is required since the factors are in the columns
+of <b>e(L)</b> and, by default, <b>e()</b>-matrices are read row-wise
+(<b>transpose</b> can be abbreviated to <b>t</b>). Hence,
+<b>L[</b><i>#</i><b>](transpose)</b> refers to the <i>#</i>th column of <b>e(L)</b>.
+</p>
+
+
+<a name="advanced404d"></a>
+<p>
+The <b>label()</b> suboption can be used to add labels, for example:
+</p>
+
+<pre>
+. esttab, ///
+&gt;     cells("L[1](t label(Factor 1)) L[2](t) L[3](t) Psi") ///
+&gt;     nogap noobs nonumber nomtitle
+
+----------------------------------------------------------------
+                 Factor 1         L[2]         L[3]          Psi
+----------------------------------------------------------------
+bg2cost1    <b>     .2470496     .3670312    -.0445788     .8022673</b>
+bg2cost2    <b>    -.3374122     .3321084    -.0772156     .7698948</b>
+bg2cost3    <b>    -.3764077     .3755668     .0203539     .7168525</b>
+bg2cost4    <b>    -.3220695     .1941843     .1034194     .8478681</b>
+bg2cost5    <b>      .455016     .2478506      .064078     .7274245</b>
+bg2cost6    <b>     .4759843     .2363809    -.0067801      .717517</b>
+----------------------------------------------------------------
+<p style="text-align:right; padding:0px; margin:0px"><a href="advanced404d.do">[do-file]</a>
+</pre>
+
+
+<a name="advanced404e"></a>
+<p>
+Alternatively, you can also use syntax <i>el</i><b>[</b><i>name</i><b>]</b>, where
+<i>name</i> refers to the name of the row to be tabulated (or column if
+<b>transpose</b> is specified) and also sets the label:
+</p>
+
+<pre>
+. esttab, ///
+&gt;     cells("L[Factor1](t) L[Factor2](t) L[Factor3](t) Psi[Uniqueness]") ///
+&gt;     nogap noobs nonumber nomtitle
+
+----------------------------------------------------------------
+                  Factor1      Factor2      Factor3   Uniqueness
+----------------------------------------------------------------
+bg2cost1    <b>     .2470496     .3670312    -.0445788     .8022673</b>
+bg2cost2    <b>    -.3374122     .3321084    -.0772156     .7698948</b>
+bg2cost3    <b>    -.3764077     .3755668     .0203539     .7168525</b>
+bg2cost4    <b>    -.3220695     .1941843     .1034194     .8478681</b>
+bg2cost5    <b>      .455016     .2478506      .064078     .7274245</b>
+bg2cost6    <b>     .4759843     .2363809    -.0067801      .717517</b>
+----------------------------------------------------------------
+<p style="text-align:right; padding:0px; margin:0px"><a href="advanced404e.do">[do-file]</a>
+</pre>
+
+
+<a name="advanced403"></a>
+<h3>Clean out table after <b>ologit</b> or <b>oprobit</b></h3>
+
+<p>
+Tables of <a href=http://www.stata.com/help.cgi?ologit><b>ologit</b></a>
+or <a href=http://www.stata.com/help.cgi?oprobit><b>oprobit</b></a>
+look somewhat complicated in
+Stata 9 or newer since each cutoff is stored in its own equation. To clean out
+the table, specify <a href="hlp_estout.html#eqlabels"><b>eqlabels(none)</b></a>:
+</p>
+
+<pre>
+. sysuse auto
+(1978 Automobile Data)
+
+. ologit rep mpg foreign
+
+Iteration 0:   log likelihood = <b>-93.692061</b>
+Iteration 1:   log likelihood = <b>-78.844995</b>
+Iteration 2:   log likelihood = <b>-78.106784</b>
+Iteration 3:   log likelihood = <b> -78.08927</b>
+Iteration 4:   log likelihood = <b>-78.089242</b>
+
+Ordered logistic regression                       Number of obs   = <b>        69</b>
+                                                  LR chi2(<b>2</b>)      = <b>     31.21</b>
+                                                  Prob &gt; chi2     = <b>    0.0000</b>
+Log likelihood = <b>-78.089242</b>                       Pseudo R2       = <b>    0.1665</b>
+
+------------------------------------------------------------------------------
+       rep78 |      Coef.   Std. Err.      z    P&gt;|z|     [95% Conf. Interval]
+-------------+----------------------------------------------------------------
+         mpg |<b>   .0672774   .0494465     1.36   0.174     -.029636    .1641908</b>
+     foreign |<b>   2.599085   .6745627     3.85   0.000     1.276966    3.921204</b>
+-------------+----------------------------------------------------------------
+       /cut1 |<b>  -1.885212   1.175719                     -4.189579    .4191555</b>
+       /cut2 |<b>  -.0922328   .9934139                     -2.039288    1.854823</b>
+       /cut3 |<b>   2.524538   1.021289                      .5228488    4.526228</b>
+       /cut4 |<b>   4.580877   1.146847                      2.333098    6.828657</b>
+------------------------------------------------------------------------------
+
+. esttab, wide
+
+-----------------------------------------
+                      (1)                
+                    rep78                
+-----------------------------------------
+<b>rep78                                    </b>
+mpg         <b>       0.0673          </b>(<b>1.36</b>)
+foreign     <b>        2.599***       </b>(<b>3.85</b>)
+-----------------------------------------
+<b>cut1                                     </b>
+_cons       <b>       -1.885         </b>(<b>-1.60</b>)
+-----------------------------------------
+<b>cut2                                     </b>
+_cons       <b>      -0.0922         </b>(<b>-0.09</b>)
+-----------------------------------------
+<b>cut3                                     </b>
+_cons       <b>        2.525*         </b>(<b>2.47</b>)
+-----------------------------------------
+<b>cut4                                     </b>
+_cons       <b>        4.581***       </b>(<b>3.99</b>)
+-----------------------------------------
+N           <b>           69                </b>
+-----------------------------------------
+t statistics in parentheses
+* p&lt;0.05, ** p&lt;0.01, *** p&lt;0.001
+
+. esttab, wide eqlabels(none)
+
+-----------------------------------------
+                      (1)                
+                    rep78                
+-----------------------------------------
+mpg         <b>       0.0673          </b>(<b>1.36</b>)
+foreign     <b>        2.599***       </b>(<b>3.85</b>)
+cut1        <b>       -1.885         </b>(<b>-1.60</b>)
+cut2        <b>      -0.0922         </b>(<b>-0.09</b>)
+cut3        <b>        2.525*         </b>(<b>2.47</b>)
+cut4        <b>        4.581***       </b>(<b>3.99</b>)
+-----------------------------------------
+N           <b>           69                </b>
+-----------------------------------------
+t statistics in parentheses
+* p&lt;0.05, ** p&lt;0.01, *** p&lt;0.001
+<p style="text-align:right; padding:0px; margin:0px"><a href="advanced403.do">[do-file]</a>
+</pre>
+
+
+<a name="advanced403b"></a>
+<p>
+To print a line between the main part of the table and the cutoffs, type:
+</p>
+
+<pre>
+. esttab, wide eqlabels(none) ///
+&gt;     varlabels(,blist(cut1:_cons "{hline @width}{break}"))
+
+-----------------------------------------
+                      (1)                
+                    rep78                
+-----------------------------------------
+mpg         <b>       0.0673          </b>(<b>1.36</b>)
+foreign     <b>        2.599***       </b>(<b>3.85</b>)
+-----------------------------------------
+cut1        <b>       -1.885         </b>(<b>-1.60</b>)
+cut2        <b>      -0.0922         </b>(<b>-0.09</b>)
+cut3        <b>        2.525*         </b>(<b>2.47</b>)
+cut4        <b>        4.581***       </b>(<b>3.99</b>)
+-----------------------------------------
+N           <b>           69                </b>
+-----------------------------------------
+t statistics in parentheses
+* p&lt;0.05, ** p&lt;0.01, *** p&lt;0.001
+<p style="text-align:right; padding:0px; margin:0px"><a href="advanced403b.do">[do-file]</a>
+</pre>
+
+
+<a name="advanced403c"></a>
+<p>
+Furthermore, to suppress significance stars and standard errors for the cutoffs, type:
+</p>
+
+<pre>
+. esttab, cells("b(fmt(a3) star) se(drop(cut*:))")           ///
+&gt;     stardrop(cut*:) eqlabels(none)                         ///
+&gt;     varlabels(,blist(cut1:_cons "{hline @width}{break}"))
+
+-----------------------------------------
+                      (1)                
+                    rep78                
+                        b              se
+-----------------------------------------
+mpg         <b>       0.0673          0.0494</b>
+foreign     <b>        2.599***        0.675</b>
+-----------------------------------------
+cut1        <b>       -1.885                </b>
+cut2        <b>      -0.0922                </b>
+cut3        <b>        2.525                </b>
+cut4        <b>        4.581                </b>
+-----------------------------------------
+N           <b>           69                </b>
+-----------------------------------------
+<p style="text-align:right; padding:0px; margin:0px"><a href="advanced403c.do">[do-file]</a>
+</pre>
+
+
+<a name="advanced401"></a>
+<h3>Marginal effects for all outcomes after <b>mlogit</b></h3>
+
+<p>
+To tabulate the marginal effects for all outcomes after
+<a href=http://www.stata.com/help.cgi?mlogit><b>mlogit</b></a>
+it is necessary to store several variants of the model's estimates. Example:
+</p>
+
+<pre>
+. sysuse auto
+(1978 Automobile Data)
+
+. replace price = price / 1000
+price was <b>int</b> now <b>float</b>
+(74 real changes made)
+
+. replace weight = weight / 1000
+weight was <b>int</b> now <b>float</b>
+(74 real changes made)
+
+. quietly mlogit rep78 price mpg foreign if rep78&gt;=3, nolog
+
+. foreach o in 3 4 5 {
+  2.     eststo, title(Outcome `o'): quietly mfx, predict(outcome(`o')) nose
+  3. }
+(<b>est1</b> stored)
+(<b>est2</b> stored)
+(<b>est3</b> stored)
+
+. esttab, margin scalars(Xmfx_y) noobs not nostar nocons ///
+&gt;     mtitles nonumbers keep(4:) eqlabels(none) collabels(none)
+
+---------------------------------------------------
+                Outcome 3    Outcome 4    Outcome 5
+---------------------------------------------------
+price       <b>     -0.00347      -0.0140       0.0175</b>
+mpg         <b>      -0.0171     -0.00245       0.0195</b>
+foreign (d) <b>       -0.516        0.290        0.225</b>
+---------------------------------------------------
+Xmfx_y      <b>        0.510        0.380        0.110</b>
+---------------------------------------------------
+Marginal effects
+ (d) for discrete change of dummy variable from 0 to 1
+
+. eststo clear
+<p style="text-align:right; padding:0px; margin:0px"><a href="advanced401.do">[do-file]</a>
+</pre>
+
+
+<a name="advanced401b"></a>
+<p>
+Things get involved if the marginal effects for the outcomes be printed
+beneath one another, because the model's representation in the <b>e()</b>-returns
+lacks an equation for the reference outcome. However, you can use
+<a href="hlp_estadd.html#prchange"><b>estadd prchange</b></a>
+with the <b>adapt</b> option to compute marginal effects and set up the model for tabulation. Example:
+</p>
+
+<pre>
+. sysuse auto
+(1978 Automobile Data)
+
+. replace price = price / 1000
+price was <b>int</b> now <b>float</b>
+(74 real changes made)
+
+. replace weight = weight / 1000
+weight was <b>int</b> now <b>float</b>
+(74 real changes made)
+
+. quietly mlogit rep78 price mpg foreign if rep78&gt;=3, nolog
+
+. estadd prchange, c(margefct) adapt
+
+<b>mlogit</b>: Changes in Probabilities for <b>rep78</b>
+
+<b>price</b>
+<b>          </b>  Avg|Chg|           4           5           3
+Min-&gt;Max  <b> .22632305  -.20621726   .33948457  -.13326731</b>
+   -+1/2  <b> .01165351  -.01400626   .01748028    -.003474</b>
+  -+sd/2  <b> .03369502  -.04037875   .05054252  -.01016378</b>
+MargEfct  <b> .01164741  -.01400459   .01747111  -.00346652</b>
+
+<b>mpg</b>
+<b>          </b>  Avg|Chg|           4           5           3
+Min-&gt;Max  <b> .55527355  -.27560695    .8329103  -.55730341</b>
+   -+1/2  <b> .01301373   -.0024623   .01952058  -.01705831</b>
+  -+sd/2  <b> .08165233  -.01687825   .12247847  -.10560027</b>
+MargEfct  <b>  .0130051  -.00245415   .01950765  -.01705351</b>
+
+<b>foreign</b>
+<b>          </b>  Avg|Chg|           4           5           3
+    0-&gt;1  <b> .34368436   .29041834   .22510819  -.51552653</b>
+
+<b>         </b>        4          5          3
+Pr(y|x)  <b>.38015294  .11008285  .50976419</b>
+
+<b>        </b>  price      mpg  foreign
+    x=  <b>6.22385  21.5932  .355932</b>
+sd(x)=  <b>2.88045  6.13109  .482905</b>
+
+added scalars:
+           e(predval4) =  <b>.38015294</b>
+<b>           </b>e(predval5) =  <b>.11008285</b>
+<b>           </b>e(predval3) =  <b>.50976419</b>
+<b>              </b>e(delta) =  <b>1</b>
+<b>           </b>e(centered) =  <b>1</b>
+
+added matrices:
+                 e(dc) :  <b>6 x 9</b>      (main, Min-&gt;Max, 0-&gt;1, -+1/2, -+sd/2, Marg
+&gt; Efct)
+            e(pattern) :  <b>1 x 9</b>
+<b>                  </b>e(X) :  <b>4 x 3</b>      (X, SD, Min, Max)
+
+first row in e(dc) contains:
+
+  <b>01</b> change for binary variables
+  <b>margefct</b> for continuous variables
+
+Note: e(b) and e(V) modified - use for tabulation only
+
+. esttab, main(dc) not nostar
+
+-------------------------
+                      (1)
+                    rep78
+-------------------------
+<b>3                        </b>
+price       <b>     -0.00347</b>
+mpg         <b>      -0.0171</b>
+foreign     <b>       -0.516</b>
+-------------------------
+<b>4                        </b>
+price       <b>      -0.0140</b>
+mpg         <b>     -0.00245</b>
+foreign     <b>        0.290</b>
+-------------------------
+<b>5                        </b>
+price       <b>       0.0175</b>
+mpg         <b>       0.0195</b>
+foreign     <b>        0.225</b>
+-------------------------
+N           <b>           59</b>
+-------------------------
+dc coefficients
+<p style="text-align:right; padding:0px; margin:0px"><a href="advanced401b.do">[do-file]</a>
+</pre>
+
+
+<a name="advanced402"></a>
+<h3>Transforming random-effects parameters of an <b>xtmixed</b> model</h3>
+
+<p>
+Variance parameters are returned by 
+<a href=http://www.stata.com/help.cgi?xtmixed><b>xtmixed</b></a> as logarithms of
+standard deviations in <b>e(b)</b>.
+To tabulate the parameters as standard deviations, back-transform
+them using the <a href="hlp_estout.html#transform"><b>transform()</b></a> option. Example:
+</p>
+
+<pre>
+. webuse pig
+(Longitudinal analysis of pig weights)
+
+. xtmixed weight week || id: week
+
+Performing EM optimization: 
+
+Performing gradient-based optimization: 
+
+Iteration 0:   log restricted-likelihood = <b>-870.51473</b>  
+Iteration 1:   log restricted-likelihood = <b>-870.51473</b>  
+
+Computing standard errors:
+
+Mixed-effects REML regression                   Number of obs      = <b>      432</b>
+Group variable: <b>id                              </b>Number of groups   = <b>       48</b>
+
+                                                Obs per group: min = <b>        9</b>
+                                                               avg = <b>      9.0</b>
+                                                               max = <b>        9</b>
+
+
+<b>                                                </b>Wald chi2(<b>1</b>)       = <b>  4592.10</b>
+Log restricted-likelihood = <b>-870.51473          </b>Prob &gt; chi2        =    <b>0.0000</b>
+
+------------------------------------------------------------------------------
+      weight |      Coef.   Std. Err.      z    P&gt;|z|     [95% Conf. Interval]
+-------------+----------------------------------------------------------------
+        week |<b>   6.209896   .0916386    67.77   0.000     6.030287    6.389504</b>
+       _cons |<b>   19.35561   .4021142    48.13   0.000     18.56748    20.14374</b>
+------------------------------------------------------------------------------
+
+------------------------------------------------------------------------------
+  Random-effects Parameters  |   Estimate   Std. Err.     [95% Conf. Interval]
+-----------------------------+------------------------------------------------
+<b>id</b>: Independent              |
+                    sd(week) |<b>   .6135471   .0673971      .4947035    .7609409</b>
+                   sd(_cons) |<b>   2.630132    .302883      2.098719    3.296105</b>
+-----------------------------+------------------------------------------------
+                sd(Residual) |<b>    1.26443   .0487971      1.172317    1.363781</b>
+------------------------------------------------------------------------------
+LR test vs. linear regression:       chi2(<b>2</b>) = <b>  765.92   </b>Prob &gt; chi2 = <b>0.0000</b>
+
+Note: LR test is conservative and provided only for reference.
+
+. esttab, se wide nostar transform(ln*: exp(@) exp(@))
+
+--------------------------------------
+                      (1)             
+                   weight             
+--------------------------------------
+<b>weight                                </b>
+week        <b>        6.210     </b>(<b>0.0916</b>)
+_cons       <b>        19.36      </b>(<b>0.402</b>)
+--------------------------------------
+<b>lns1_1_1                              </b>
+_cons       <b>        0.614     </b>(<b>0.0674</b>)
+--------------------------------------
+<b>lns1_1_2                              </b>
+_cons       <b>        2.630      </b>(<b>0.303</b>)
+--------------------------------------
+<b>lnsig_e                               </b>
+_cons       <b>        1.264     </b>(<b>0.0488</b>)
+--------------------------------------
+N           <b>          432             </b>
+--------------------------------------
+Standard errors in parentheses
+
+. esttab, se wide nostar transform(ln*: exp(@) exp(@))         ///
+&gt;     eqlabels("" "sd(week)" "sd(_cons)" "sd(Residual)", none) ///
+&gt;     varlabels(,elist(weight:_cons "{break}{hline @width}"))  ///
+&gt;     varwidth(13)
+
+---------------------------------------
+                       (1)             
+                    weight             
+---------------------------------------
+week         <b>        6.210     </b>(<b>0.0916</b>)
+_cons        <b>        19.36      </b>(<b>0.402</b>)
+---------------------------------------
+sd(week)     <b>        0.614     </b>(<b>0.0674</b>)
+sd(_cons)    <b>        2.630      </b>(<b>0.303</b>)
+sd(Residual) <b>        1.264     </b>(<b>0.0488</b>)
+---------------------------------------
+N            <b>          432             </b>
+---------------------------------------
+Standard errors in parentheses
+<p style="text-align:right; padding:0px; margin:0px"><a href="advanced402.do">[do-file]</a>
+</pre>
+
+<p>
+(Note that in <b>transform()</b> you also have to include
+the function's first derivative, which is required for the standard errors.
+The example above might be confusing because the first derivative of exp(x)
+is simply exp(x). See below for examples where the two differ.)
+</p>
+
+
+<a name="advanced402b"></a>
+<p>
+Similarly, to display the parameters as variances, type:
+</p>
+
+<pre>
+. xtmixed, variance
+
+Mixed-effects REML regression                   Number of obs      = <b>      432</b>
+Group variable: <b>id                              </b>Number of groups   = <b>       48</b>
+
+                                                Obs per group: min = <b>        9</b>
+                                                               avg = <b>      9.0</b>
+                                                               max = <b>        9</b>
+
+
+<b>                                                </b>Wald chi2(<b>1</b>)       = <b>  4592.10</b>
+Log restricted-likelihood = <b>-870.51473          </b>Prob &gt; chi2        =    <b>0.0000</b>
+
+------------------------------------------------------------------------------
+      weight |      Coef.   Std. Err.      z    P&gt;|z|     [95% Conf. Interval]
+-------------+----------------------------------------------------------------
+        week |<b>   6.209896   .0916386    67.77   0.000     6.030287    6.389504</b>
+       _cons |<b>   19.35561   .4021142    48.13   0.000     18.56748    20.14374</b>
+------------------------------------------------------------------------------
+
+------------------------------------------------------------------------------
+  Random-effects Parameters  |   Estimate   Std. Err.     [95% Conf. Interval]
+-----------------------------+------------------------------------------------
+<b>id</b>: Independent              |
+                   var(week) |<b>   .3764401   .0827025      .2447315     .579031</b>
+                  var(_cons) |<b>   6.917597   1.593245       4.40462    10.86431</b>
+-----------------------------+------------------------------------------------
+               var(Residual) |<b>   1.598784   .1234011      1.374328    1.859899</b>
+------------------------------------------------------------------------------
+LR test vs. linear regression:       chi2(<b>2</b>) = <b>  765.92   </b>Prob &gt; chi2 = <b>0.0000</b>
+
+Note: LR test is conservative and provided only for reference.
+
+. esttab, se wide nostar transform(ln*: exp(2*@) 2*exp(2*@))   ///
+&gt;     eqlabels("" "var(week)" "var(_cons)" "var(Residual)", none) ///
+&gt;     varlabels(,elist(weight:_cons "{break}{hline @width}")) ///
+&gt;     varwidth(13)
+
+---------------------------------------
+                       (1)             
+                    weight             
+---------------------------------------
+week         <b>        6.210     </b>(<b>0.0916</b>)
+_cons        <b>        19.36      </b>(<b>0.402</b>)
+---------------------------------------
+var(week)    <b>        0.376     </b>(<b>0.0827</b>)
+var(_cons)   <b>        6.918      </b>(<b>1.593</b>)
+var(Residual)<b>        1.599      </b>(<b>0.123</b>)
+---------------------------------------
+N            <b>          432             </b>
+---------------------------------------
+Standard errors in parentheses
+<p style="text-align:right; padding:0px; margin:0px"><a href="advanced402b.do">[do-file]</a>
+</pre>
+
+
+<a name="advanced402c"></a>
+<p>
+If the model also has covariance terms, these are returned as
+arc-hyperbolic tangents of correlations in <b>e(b)</b> and can be back-transformed
+to correlations using Stata's <b>tanh()</b> function. Example:
+</p>
+
+<pre>
+. xtmixed weight week || id: week, covariance(unstructured)
+
+Performing EM optimization: 
+
+Performing gradient-based optimization: 
+
+Iteration 0:   log restricted-likelihood = <b>-870.43562</b>  
+Iteration 1:   log restricted-likelihood = <b>-870.43562</b>  
+
+Computing standard errors:
+
+Mixed-effects REML regression                   Number of obs      = <b>      432</b>
+Group variable: <b>id                              </b>Number of groups   = <b>       48</b>
+
+                                                Obs per group: min = <b>        9</b>
+                                                               avg = <b>      9.0</b>
+                                                               max = <b>        9</b>
+
+
+<b>                                                </b>Wald chi2(<b>1</b>)       = <b>  4552.31</b>
+Log restricted-likelihood = <b>-870.43562          </b>Prob &gt; chi2        =    <b>0.0000</b>
+
+------------------------------------------------------------------------------
+      weight |      Coef.   Std. Err.      z    P&gt;|z|     [95% Conf. Interval]
+-------------+----------------------------------------------------------------
+        week |<b>   6.209896   .0920382    67.47   0.000     6.029504    6.390287</b>
+       _cons |<b>   19.35561   .4038677    47.93   0.000     18.56405    20.14718</b>
+------------------------------------------------------------------------------
+
+------------------------------------------------------------------------------
+  Random-effects Parameters  |   Estimate   Std. Err.     [95% Conf. Interval]
+-----------------------------+------------------------------------------------
+<b>id</b>: Unstructured             |
+                    sd(week) |<b>   .6164379   .0680541      .4964981    .7653519</b>
+                   sd(_cons) |<b>   2.643192   .3057584      2.106996    3.315842</b>
+            corr(week,_cons) |<b>  -.0634377    .158876     -.3593789    .2440973</b>
+-----------------------------+------------------------------------------------
+                sd(Residual) |<b>   1.263657   .0487466      1.171638    1.362903</b>
+------------------------------------------------------------------------------
+LR test vs. linear regression:       chi2(<b>3</b>) = <b>  766.07   </b>Prob &gt; chi2 = <b>0.0000</b>
+
+Note: LR test is conservative and provided only for reference.
+
+. esttab, se wide nostar ///
+&gt;     transform(ln*: exp(@) exp(@) at*: tanh(@) (1-tanh(@)^2)) ///
+&gt;     eqlabels("" "sd(week)" "sd(_cons)" "corr(week,_cons)" "sd(Residual)", ///
+&gt;         none) ///
+&gt;     varlabels(,elist(weight:_cons "{break}{hline @width}"))  ///
+&gt;     varwidth(16)
+
+------------------------------------------
+                          (1)             
+                       weight             
+------------------------------------------
+week            <b>        6.210     </b>(<b>0.0920</b>)
+_cons           <b>        19.36      </b>(<b>0.404</b>)
+------------------------------------------
+sd(week)        <b>        0.616     </b>(<b>0.0681</b>)
+sd(_cons)       <b>        2.643      </b>(<b>0.306</b>)
+corr(week,_cons)<b>      -0.0634      </b>(<b>0.159</b>)
+sd(Residual)    <b>        1.264     </b>(<b>0.0487</b>)
+------------------------------------------
+N               <b>          432             </b>
+------------------------------------------
+Standard errors in parentheses
+<p style="text-align:right; padding:0px; margin:0px"><a href="advanced402c.do">[do-file]</a>
+</pre>
+
+
+<a name="advanced402d"></a>
+<p>
+Unfortunately, it is not possible for <b>transform()</b> to turn such correlations
+into covariances (requires multiplication by the standard deviations). However, you can
+use <b>estadd</b> to manually compute the terms in advance and add them in the footer
+of the table. Example:
+</p>
+
+<pre>
+. xtmixed, variance
+
+Mixed-effects REML regression                   Number of obs      = <b>      432</b>
+Group variable: <b>id                              </b>Number of groups   = <b>       48</b>
+
+                                                Obs per group: min = <b>        9</b>
+                                                               avg = <b>      9.0</b>
+                                                               max = <b>        9</b>
+
+
+<b>                                                </b>Wald chi2(<b>1</b>)       = <b>  4552.31</b>
+Log restricted-likelihood = <b>-870.43562          </b>Prob &gt; chi2        =    <b>0.0000</b>
+
+------------------------------------------------------------------------------
+      weight |      Coef.   Std. Err.      z    P&gt;|z|     [95% Conf. Interval]
+-------------+----------------------------------------------------------------
+        week |<b>   6.209896   .0920382    67.47   0.000     6.029504    6.390287</b>
+       _cons |<b>   19.35561   .4038677    47.93   0.000     18.56405    20.14718</b>
+------------------------------------------------------------------------------
+
+------------------------------------------------------------------------------
+  Random-effects Parameters  |   Estimate   Std. Err.     [95% Conf. Interval]
+-----------------------------+------------------------------------------------
+<b>id</b>: Unstructured             |
+                   var(week) |<b>   .3799957   .0839023      .2465103    .5857635</b>
+                  var(_cons) |<b>   6.986465   1.616357      4.439432    10.99481</b>
+             cov(week,_cons) |<b>  -.1033632   .2627309     -.6183063      .41158</b>
+-----------------------------+------------------------------------------------
+               var(Residual) |<b>   1.596829   .1231981      1.372736    1.857506</b>
+------------------------------------------------------------------------------
+LR test vs. linear regression:       chi2(<b>3</b>) = <b>  766.07   </b>Prob &gt; chi2 = <b>0.0000</b>
+
+Note: LR test is conservative and provided only for reference.
+
+. mat list e(b)
+
+e(b)[1,6]
+         weight:      weight:    lns1_1_1:    lns1_1_2:  atr1_1_1_2:
+           week        _cons        _cons        _cons        _cons
+y1  <b>  6.2098958    19.355613   -.48379761    .97198734   -.06352304</b>
+
+<b>     </b>   lnsig_e:
+          _cons
+y1  <b>  .23401004</b>
+
+. estadd scalar v1  = exp(2*[lns1_1_1]_b[_cons])
+
+added scalar:
+                 e(v1) =  <b>.37999574</b>
+
+. estadd scalar v2  = exp(2*[lns1_1_2]_b[_cons])
+
+added scalar:
+                 e(v2) =  <b>6.9864649</b>
+
+. estadd scalar cov = tanh([atr1_1_1_2]_b[_cons]) ///
+&gt;                     * exp([lns1_1_1]_b[_cons])  ///
+&gt;                     * exp([lns1_1_2]_b[_cons])
+
+added scalar:
+                e(cov) =  <b>-.10336316</b>
+
+. estadd scalar v_e = exp(2*[lnsig_e]_b[_cons])
+
+added scalar:
+                e(v_e) =  <b>1.5968295</b>
+
+. esttab, se wide nostar keep(weight:) obslast       ///
+&gt;     scalars("v1 var(week)" "v2 var(_cons)"           ///
+&gt;         "cov cov(week,_cons)" "v_e var(Residual)") ///
+&gt;     eqlabels(none) varwidth(15)
+
+-----------------------------------------
+                         (1)             
+                      weight             
+-----------------------------------------
+week           <b>        6.210     </b>(<b>0.0920</b>)
+_cons          <b>        19.36      </b>(<b>0.404</b>)
+-----------------------------------------
+var(week)      <b>        0.380             </b>
+var(_cons)     <b>        6.986             </b>
+cov(week,_cons)<b>       -0.103             </b>
+var(Residual)  <b>        1.597             </b>
+N              <b>          432             </b>
+-----------------------------------------
+Standard errors in parentheses
+<p style="text-align:right; padding:0px; margin:0px"><a href="advanced402d.do">[do-file]</a>
+</pre>
+
+
+<a name="advanced500"></a>
+<h2>LaTeX</h2>
+
+
+<a name="advanced501"></a>
+<h3>Advanced LaTeX example: Arrange models in groups</h3>
+
+<pre>
+. sysuse auto
+(1978 Automobile Data)
+
+. eststo: quietly reg weight mpg
+(<b>est1</b> stored)
+
+. eststo: quietly reg weight mpg foreign
+(<b>est2</b> stored)
+
+. eststo: quietly reg price weight mpg
+(<b>est3</b> stored)
+
+. eststo: quietly reg price weight mpg foreign
+(<b>est4</b> stored)
+
+. esttab using example.tex, booktabs label            ///
+&gt;     mgroups(A B, pattern(1 0 1 0)                   ///
+&gt;         prefix(\multicolumn{@span}{c}{) suffix(})   ///
+&gt;         span erepeat(\cmidrule(lr){@span}))         ///
+&gt;     alignment(D{.}{.}{-1}) page(dcolumn) nonumber
+(output written to example.tex)
+
+. eststo clear
+<p style="text-align:right; padding:0px; margin:0px"><a href="advanced501.do">[do-file]</a>
+</pre>
+
+<p>
+Result:</p>
+<p align="center"><img src="advanced501.png" alt="advanced501.png">
+</p>
+
+
+<a name="advanced600"></a>
+<h2>Descriptive tables</h2>
+
+
+<a name="advanced601"></a>
+<h3>Table of descriptives</h3>
+
+<p>
+[<a href="hlp_estpost.html"><b>estpost</b></a> supersedes this example.
+See "<a href="estpost.html#estpost101">Post summary statistics (<b>summarize</b>)</a>"
+or "<a href="estpost.html#estpost102">Post summary statistics (<b>tabstat</b>)</a>"
+under "<a href="estpost.html">Examples for <b>estpost</b></a>".]
+</p><p>
+Research papers usually contain a table displaying the descriptive
+statistics for all variables in the analysis. The following
+example illustrates how such a table can be produced using
+<a href="hlp_estadd.html#summ"><b>estadd summ</b></a> and <b>esttab</b>.
+Assume, your analysis uses
+<b>price</b> as the dependent variable and <b>weight</b>, <b>mpg</b>,
+and <b>foreign</b> as independent variables. To create a descriptives table
+including all four variables, type:
+</p>
+
+<pre>
+. sysuse auto
+(1978 Automobile Data)
+
+. generate y = uniform()
+
+. quietly regress y price weight mpg foreign, noconstant
+
+. estadd summ
+
+added matrices:
+                 e(sd) :  <b>1 x 4</b>
+<b>                </b>e(max) :  <b>1 x 4</b>
+<b>                </b>e(min) :  <b>1 x 4</b>
+<b>               </b>e(mean) :  <b>1 x 4</b>
+
+. esttab, cells("mean sd min max") nogap nomtitle nonumber
+
+----------------------------------------------------------------
+                     mean           sd          min          max
+----------------------------------------------------------------
+price       <b>     6165.257     2949.496         3291        15906</b>
+weight      <b>     3019.459     777.1936         1760         4840</b>
+mpg         <b>      21.2973     5.785503           12           41</b>
+foreign     <b>     .2972973     .4601885            0            1</b>
+----------------------------------------------------------------
+N           <b>           74                                       </b>
+----------------------------------------------------------------
+<p style="text-align:right; padding:0px; margin:0px"><a href="advanced601.do">[do-file]</a>
+</pre>
+
+<p>
+The trick is to generate a fake variable and regress it
+on all involved variables, including the dependent variable.
+</p>
+
+
+<a name="advanced602"></a>
+<h3>Table of descriptives by subgroups</h3>
+
+<p>
+[<a href="hlp_estpost.html"><b>estpost</b></a> supersedes this example.
+See "<a href="estpost.html#estpost101b">Post summary statistics by subgroups (<b>summarize</b>)</a>"
+or "<a href="estpost.html#estpost104">Post summary statistics by subgroups (<b>tabstat</b>)</a>"
+under "<a href="estpost.html">Examples for <b>estpost</b></a>".]
+</p><p>
+A table of descriptive statistics by subgroups can easily be produced using <b>by</b> and
+<b>eststo</b>:
+</p>
+
+<pre>
+. sysuse auto
+(1978 Automobile Data)
+
+. generate y = uniform()
+
+. by foreign: eststo: quietly regress y price weight mpg, nocons
+
+-------------------------------------------------------------------------------
+-&gt; Domestic
+(<b>est1</b> stored)
+
+-------------------------------------------------------------------------------
+-&gt; Foreign
+(<b>est2</b> stored)
+
+. estadd summ : *
+
+. esttab, main(mean) aux(sd) label nodepvar nostar nonote
+
+----------------------------------------------
+                              (1)          (2)
+                         Domestic      Foreign
+----------------------------------------------
+Price               <b>       6072.4       6384.7</b>
+                    <b>     </b>(<b>3097.1</b>)<b>     </b>(<b>2621.9</b>)
+
+Weight (lbs.)       <b>       3317.1       2315.9</b>
+                    <b>      </b>(<b>695.4</b>)<b>      </b>(<b>433.0</b>)
+
+Mileage (mpg)       <b>        19.83        24.77</b>
+                    <b>      </b>(<b>4.743</b>)<b>      </b>(<b>6.611</b>)
+----------------------------------------------
+Observations        <b>           52           22</b>
+----------------------------------------------
+
+. eststo clear
+<p style="text-align:right; padding:0px; margin:0px"><a href="advanced602.do">[do-file]</a>
+</pre>
+
+
+<a name="advanced603"></a>
+<h3>Tabulating results from t-Tests</h3>
+
+<p>
+[<a href="hlp_estpost.html"><b>estpost</b></a> supersedes this example.
+See "<a href="estpost.html#estpost106">Post results from two-sample mean-comparison tests (<b>ttest</b>)</a>"
+under "<a href="estpost.html">Examples for <b>estpost</b></a>".]
+</p><p>
+Basically anything can be tabulated by <b>estout</b> or <b>esttab</b>
+once it is posted in <b>e()</b>. Here is an example with t-tests:
+</p>
+
+<pre>
+. capt prog drop myttests
+
+. *! version 1.0.0  14aug2007  Ben Jann
+. program myttests, eclass
+  1.     version 8
+  2.     syntax varlist [if] [in], by(varname) [ * ]
+  3.     marksample touse
+  4.     markout `touse' `by'
+  5.     tempname mu_1 mu_2 d d_se d_t d_p
+  6.     foreach var of local varlist {
+  7.         qui ttest `var' if `touse', by(`by') `options'
+  8.         mat `mu_1' = nullmat(`mu_1'), r(mu_1)
+  9.         mat `mu_2' = nullmat(`mu_2'), r(mu_2)
+ 10.         mat `d'    = nullmat(`d'   ), r(mu_1)-r(mu_2)
+ 11.         mat `d_se' = nullmat(`d_se'), r(se)
+ 12.         mat `d_t'  = nullmat(`d_t' ), r(t)
+ 13.         mat `d_p'  = nullmat(`d_p' ), r(p)
+ 14.     }
+ 15.     foreach mat in mu_1 mu_2 d d_se d_t d_p {
+ 16.         mat coln ``mat'' = `varlist'
+ 17.     }
+ 18.     tempname b V
+ 19.     mat `b' = `mu_1'*0
+ 20.     mat `V' = `b''*`b'
+ 21.     eret post `b' `V'
+ 22.     eret local cmd "myttests"
+ 23.     foreach mat in mu_1 mu_2 d d_se d_t d_p {
+ 24.         eret mat `mat' = ``mat''
+ 25.     }
+ 26. end
+
+. sysuse auto
+(1978 Automobile Data)
+
+. myttests price weight mpg, by(foreign)
+
+. ereturn list
+
+macros:
+                e(cmd) : "<b>myttests</b>"
+         e(properties) : "<b>b V</b>"
+
+matrices:
+                  e(b) : <b> 1 x 3</b>
+<b>                  </b>e(V) : <b> 3 x 3</b>
+<b>                </b>e(d_p) : <b> 1 x 3</b>
+<b>                </b>e(d_t) : <b> 1 x 3</b>
+<b>               </b>e(d_se) : <b> 1 x 3</b>
+<b>                  </b>e(d) : <b> 1 x 3</b>
+<b>               </b>e(mu_2) : <b> 1 x 3</b>
+<b>               </b>e(mu_1) : <b> 1 x 3</b>
+
+. esttab, nomtitle nonumbers noobs ///
+&gt;     cells("mu_1(fmt(a3)) mu_2 d(star pvalue(d_p))" ". . d_se(par)")
+
+------------------------------------------------------
+                     mu_1         mu_2       d/d_se   
+------------------------------------------------------
+price       <b>       6072.4       6384.7       -312.3   </b>
+            <b>                                (754.4)   </b>
+weight      <b>       3317.1       2315.9       1001.2***</b>
+            <b>                                (160.3)   </b>
+mpg         <b>        19.83        24.77       -4.946***</b>
+            <b>                                (1.362)   </b>
+------------------------------------------------------
+<p style="text-align:right; padding:0px; margin:0px"><a href="advanced603.do">[do-file]</a>
+</pre>
+
+<p>
+(An alternative approach would be to save three sets of estimates, one
+for each group, and one for the differences.)
+</p>
+
+
+<a name="advanced604"></a>
+<h3>Frequency tables</h3>
+
+<p>
+[<a href="hlp_estpost.html"><b>estpost</b></a> supersedes this example.
+See "<a href="estpost.html#estpost108">Post a one-way frequency table (<b>tabulate</b>)</a>"
+and "<a href="estpost.html#estpost110">Post a two-way frequency table (<b>tabulate</b>)</a>"
+under "<a href="estpost.html">Examples for <b>estpost</b></a>".]
+</p><p>
+With a little programming you could even do frequency tables in <b>estout</b>. Here
+is an example for a one-way table:
+</p>
+
+<pre>
+. capt prog drop e_tabulate
+
+. *! version 1.0.0  24sep2007  Ben Jann
+. prog e_tabulate, eclass
+  1.     version 8.2
+  2.     syntax varname(numeric) [if] [in] [fw aw iw] [, noTOTal * ]
+  3.     tempname count percent vals V
+  4.     tab `varlist' `if' `in' [`weight'`exp'], matcell(`count') matrow(`vals
+&gt; ') `options'
+  5.     local N = r(N)
+  6.     mat `count' = `count''
+  7.     forv r =1/`=rowsof(`vals')' {
+  8.         local value: di `vals'[`r',1]
+  9.         local label: label (`varlist') `value'
+ 10.         local values "`values' `value'"
+ 11.         local labels `"`labels' `value' `"`label'"'"'
+ 12.     }
+ 13.     if "`total'"=="" {
+ 14.         mat `count' = `count', `N'
+ 15.         local values "`values' total"
+ 16.         local labels `"`labels' total `"Total"'"'
+ 17.     }
+ 18.     mat colname `count' = `values'
+ 19.     mat `percent' = `count'/`N'*100
+ 20.     mat `V' = `count''*`count'*0
+ 21.     eret post `count' `V', depname(`varlist') obs(`N')
+ 22.     eret local cmd "e_tabulate"
+ 23.     eret local depvar "`varlist'"
+ 24.     eret local labels `"`labels'"'
+ 25.     eret mat percent = `percent'
+ 26. end
+
+. sysuse auto
+(1978 Automobile Data)
+
+. e_tabulate foreign
+
+   Car type |      Freq.     Percent        Cum.
+------------+-----------------------------------
+   Domestic |<b>         52       70.27       70.27</b>
+    Foreign |<b>         22       29.73      100.00</b>
+------------+-----------------------------------
+      Total |<b>         74      100.00</b>
+
+. ereturn list
+
+scalars:
+                  e(N) =  <b>74</b>
+
+macros:
+             e(labels) : "<b> 0 `"Domestic"' 1 `"Foreign"' total `"Total"'</b>"
+             e(depvar) : "<b>foreign</b>"
+                e(cmd) : "<b>e_tabulate</b>"
+         e(properties) : "<b>b V</b>"
+
+matrices:
+                  e(b) : <b> 1 x 3</b>
+<b>                  </b>e(V) : <b> 3 x 3</b>
+<b>            </b>e(percent) : <b> 1 x 3</b>
+
+. mat list e(b)
+
+e(b)[1,3]
+        0      1  total
+y1  <b>   52     22     74</b>
+
+. mat list e(percent)
+
+e(percent)[1,3]
+           0         1     total
+c1  <b>70.27027  29.72973       100</b>
+
+. esttab, cell("b percent") noobs nonumbers nomtitles ///
+&gt;     collabels(Freq. Percent, lhs(`:var lab `e(depvar)'')) ///
+&gt;     varlabels(`e(labels)', blist(total "{hline @width}{break}"))
+
+--------------------------------------
+Car type            Freq.      Percent
+--------------------------------------
+Domestic    <b>           52     70.27027</b>
+Foreign     <b>           22     29.72973</b>
+--------------------------------------
+Total       <b>           74          100</b>
+--------------------------------------
+<p style="text-align:right; padding:0px; margin:0px"><a href="advanced604.do">[do-file]</a>
+</pre>
+
+
+<a name="advanced604b"></a>
+<p>
+To construct a twoway table, save the conditional distributions in the table columns
+as separate estimation sets. Example:
+</p>
+
+<pre>
+. bys foreign: eststo: e_tabulate rep
+
+-------------------------------------------------------------------------------
+-&gt; Domestic
+
+     Repair |
+Record 1978 |      Freq.     Percent        Cum.
+------------+-----------------------------------
+          1 |<b>          2        4.17        4.17</b>
+          2 |<b>          8       16.67       20.83</b>
+          3 |<b>         27       56.25       77.08</b>
+          4 |<b>          9       18.75       95.83</b>
+          5 |<b>          2        4.17      100.00</b>
+------------+-----------------------------------
+      Total |<b>         48      100.00</b>
+(<b>est1</b> stored)
+
+-------------------------------------------------------------------------------
+-&gt; Foreign
+
+     Repair |
+Record 1978 |      Freq.     Percent        Cum.
+------------+-----------------------------------
+          3 |<b>          3       14.29       14.29</b>
+          4 |<b>          9       42.86       57.14</b>
+          5 |<b>          9       42.86      100.00</b>
+------------+-----------------------------------
+      Total |<b>         21      100.00</b>
+(<b>est2</b> stored)
+
+. esttab, main(percent 2) not nostar mtitles noobs nonote  ///
+&gt;     varlab(`e(labels)', blist(total "{hline @width}{break}"))
+
+--------------------------------------
+                      (1)          (2)
+                 Domestic      Foreign
+--------------------------------------
+1           <b>         4.17             </b>
+2           <b>        16.67             </b>
+3           <b>        56.25        14.29</b>
+4           <b>        18.75        42.86</b>
+5           <b>         4.17        42.86</b>
+--------------------------------------
+Total       <b>       100.00       100.00</b>
+--------------------------------------
+
+. eststo clear
+<p style="text-align:right; padding:0px; margin:0px"><a href="advanced604b.do">[do-file]</a>
+</pre>
+
+
+<a name="advanced900"></a>
+<h2>Other</h2>
+
+
+<a name="advanced905"></a>
+<h3>Tabulating a Stata matrix</h3>
+
+<p>
+A Stata <a href=http://www.stata.com/help.cgi?matrix><b>matrix</b></a> can be tabulated in
+<b>estout</b> or <b>esttab</b> by typing <b>matrix(</b><i>matname</i><b>)</b>
+instead of providing a list of names of stored estimation sets. Example:
+</p>
+
+<pre>
+. matrix A = (11,12,13)\(21,22,23)\(31,32,33)\(41,42,43)
+
+. esttab matrix(A)
+
+---------------------------------------------------
+                        A                          
+                       c1           c2           c3
+---------------------------------------------------
+r1          <b>           11           12           13</b>
+r2          <b>           21           22           23</b>
+r3          <b>           31           32           33</b>
+r4          <b>           41           42           43</b>
+---------------------------------------------------
+<p style="text-align:right; padding:0px; margin:0px"><a href="advanced905.do">[do-file]</a>
+</pre>
+
+
+<a name="advanced905b"></a>
+<p>
+Numeric formats can be set by adding a <b>fmt()</b> suboption
+in the <b>matrix()</b> argument. Examples:
+</p>
+
+<pre>
+. esttab matrix(A, fmt(1 2 3))
+
+---------------------------------------------------
+                        A                          
+                       c1           c2           c3
+---------------------------------------------------
+r1          <b>         11.0        12.00       13.000</b>
+r2          <b>         21.0        22.00       23.000</b>
+r3          <b>         31.0        32.00       33.000</b>
+r4          <b>         41.0        42.00       43.000</b>
+---------------------------------------------------
+
+. esttab matrix(A, fmt("1 2 3 4" "4 3 2 1"))
+
+---------------------------------------------------
+                        A                          
+                       c1           c2           c3
+---------------------------------------------------
+r1          <b>         11.0      12.0000         13.0</b>
+r2          <b>        21.00       22.000        23.00</b>
+r3          <b>       31.000        32.00       33.000</b>
+r4          <b>      41.0000         42.0      43.0000</b>
+---------------------------------------------------
+<p style="text-align:right; padding:0px; margin:0px"><a href="advanced905b.do">[do-file]</a>
+</pre>
+
+
+<a name="advanced905c"></a>
+<p>
+Examples for tabulating a matrix that also contains equation names:
+</p>
+
+<pre>
+. mat rownames A = "eq1:row1" "eq1:row2" "eq2:row1" "eq2:row2"
+
+. esttab matrix(A)
+
+---------------------------------------------------
+                        A                          
+                       c1           c2           c3
+---------------------------------------------------
+<b>eq1                                                </b>
+row1        <b>           11           12           13</b>
+row2        <b>           21           22           23</b>
+---------------------------------------------------
+<b>eq2                                                </b>
+row1        <b>           31           32           33</b>
+row2        <b>           41           42           43</b>
+---------------------------------------------------
+
+. esttab matrix(A), unstack compress
+
+----------------------------------------------------------------------
+                   A                                                  
+                 eq1                           eq2                    
+                  c1        c2        c3        c1        c2        c3
+----------------------------------------------------------------------
+row1      <b>        11        12        13        31        32        33</b>
+row2      <b>        21        22        23        41        42        43</b>
+----------------------------------------------------------------------
+
+. set seed 123
+
+. matrix A = matuniform(4,4)
+
+. mat coleq A = eq1 eq1 eq2 eq2
+
+. mat roweq A = eq1 eq1 eq2 eq2
+
+. esttab matrix(A), eqlabels(,merge)
+
+----------------------------------------------------------------
+                        A                                       
+                   eq1:c1       eq1:c2       eq2:c3       eq2:c4
+----------------------------------------------------------------
+eq1:r1      <b>      .912044     .0075452     .2808588     .4602787</b>
+eq1:r2      <b>     .5601059     .6731906     .6177612     .8656876</b>
+eq2:r3      <b>     9.57e-06     .4090917     .7234821     .4862948</b>
+eq2:r4      <b>     .9899684     .3205308     .1244845     .3839803</b>
+----------------------------------------------------------------
+<p style="text-align:right; padding:0px; margin:0px"><a href="advanced905c.do">[do-file]</a>
+</pre>
+
+
+<a name="advanced907"></a>
+<h3>Flip models and coefficients (place models in rows instead of in columns)</h3>
+
+<p>
+<b>esttab</b> and <b>estout</b> place different models in separate columns.
+Sometimes it is desirable, however, to arrange a table so that the models are
+placed in separate rows. Here are two approaches to construct such a
+table.
+</p><p>
+<b>Approach 1:</b>
+<b>esttab</b> and <b>estout</b> return a matrix <b>r(coefs)</b> that
+contains the tabulated results. You can run <b>esttab</b> or <b>estout</b> and
+then run it again in matrix mode to transpose and tabulate <b>r(coefs)</b>.
+This approach is simple but the possibilities for formatting the table
+are somewhat limited. Example:
+</p>
+
+<pre>
+. sysuse auto
+(1978 Automobile Data)
+
+. eststo model1: quietly reg price weight
+
+. eststo model2: quietly reg price weight mpg
+
+. esttab, se nostar
+
+--------------------------------------
+                      (1)          (2)
+                    price        price
+--------------------------------------
+weight      <b>        2.044        1.747</b>
+            <b>      </b>(<b>0.377</b>)<b>      </b>(<b>0.641</b>)
+
+mpg         <b>                    -49.51</b>
+            <b>                   </b>(<b>86.16</b>)
+
+_cons       <b>       -6.707       1946.1</b>
+            <b>     </b>(<b>1174.4</b>)<b>     </b>(<b>3597.0</b>)
+--------------------------------------
+N           <b>           74           74</b>
+--------------------------------------
+Standard errors in parentheses
+
+. mat list r(coefs)
+
+r(coefs)[3,4]
+            model1:     model1:     model2:     model2:
+                 b          se           b          se
+weight  <b> 2.0440626   .37683413   1.7465592   .64135379</b>
+   mpg  <b>        .z          .z  -49.512221   86.156039</b>
+ _cons  <b>-6.7073534   1174.4296   1946.0687   3597.0496</b>
+
+. esttab r(coefs, transpose)
+
+---------------------------------------------------
+                 r(coefs)                          
+                   weight          mpg        _cons
+---------------------------------------------------
+<b>model1                                             </b>
+b           <b>     2.044063                 -6.707353</b>
+se          <b>     .3768341                   1174.43</b>
+---------------------------------------------------
+<b>model2                                             </b>
+b           <b>     1.746559    -49.51222     1946.069</b>
+se          <b>     .6413538     86.15604      3597.05</b>
+---------------------------------------------------
+
+. eststo clear
+<p style="text-align:right; padding:0px; margin:0px"><a href="advanced907.do">[do-file]</a>
+</pre>
+
+
+<a name="advanced907b"></a>
+<p>
+<b>Approach 2:</b>
+Again run <b>esttab</b> or <b>estout</b> to compile <b>r(coefs)</b> but
+then, for each coefficient, collect the results and post them in <b>e()</b>
+(i.e. post one "model" per coefficient). This approach requires some
+programming but gives you full flexibility. Example:
+</p>
+
+<pre>
+. sysuse auto
+(1978 Automobile Data)
+
+. eststo model1: quietly reg price weight
+
+. eststo model2: quietly reg price weight mpg
+
+. esttab, se nostar
+
+--------------------------------------
+                      (1)          (2)
+                    price        price
+--------------------------------------
+weight      <b>        2.044        1.747</b>
+            <b>      </b>(<b>0.377</b>)<b>      </b>(<b>0.641</b>)
+
+mpg         <b>                    -49.51</b>
+            <b>                   </b>(<b>86.16</b>)
+
+_cons       <b>       -6.707       1946.1</b>
+            <b>     </b>(<b>1174.4</b>)<b>     </b>(<b>3597.0</b>)
+--------------------------------------
+N           <b>           74           74</b>
+--------------------------------------
+Standard errors in parentheses
+
+. matrix C = r(coefs)
+
+. eststo clear
+
+. local rnames : rownames C
+
+. local models : coleq C
+
+. local models : list uniq models
+
+. local i 0
+
+. foreach name of local rnames {
+  2.     local ++i
+  3.     local j 0
+  4.     capture matrix drop b
+  5.     capture matrix drop se
+  6.     foreach model of local models {
+  7.         local ++j
+  8.         matrix tmp = C[`i', 2*`j'-1]
+  9.         if tmp[1,1]&lt;. {
+ 10.             matrix colnames tmp = `model'
+ 11.             matrix b = nullmat(b), tmp
+ 12.             matrix tmp[1,1] = C[`i', 2*`j']
+ 13.             matrix se = nullmat(se), tmp
+ 14.         }
+ 15.     }
+ 16.     ereturn post b
+ 17.     quietly estadd matrix se
+ 18.     eststo `name'
+ 19. }
+
+. esttab, se mtitle noobs
+
+------------------------------------------------------------
+                      (1)             (2)             (3)   
+                   weight             mpg           _cons   
+------------------------------------------------------------
+model1      <b>        2.044***                       -6.707   </b>
+            <b>      </b>(<b>0.377</b>)<b>                        </b>(<b>1174.4</b>)<b>   </b>
+
+model2      <b>        1.747**        -49.51          1946.1   </b>
+            <b>      </b>(<b>0.641</b>)<b>         </b>(<b>86.16</b>)<b>        </b>(<b>3597.0</b>)<b>   </b>
+------------------------------------------------------------
+Standard errors in parentheses
+* p&lt;0.05, ** p&lt;0.01, *** p&lt;0.001
+
+. eststo clear
+<p style="text-align:right; padding:0px; margin:0px"><a href="advanced907b.do">[do-file]</a>
+</pre>
+
+
+<a name="advanced906"></a>
+<h3>Tabulating results from an r-class program</h3>
+
+<p>
+Many Stata commands and user programs return results in <b>r()</b>. To tabulate such
+results in <b>estout</b> or <b>esttab</b> you can collect them in a matrix
+and tabulate the matrix (Approach 1) or post the results as one or more vectors
+in <b>e()</b> and tabulate them from there (Approach 2). Approach 2 is more flexible
+than Approach 1.
+</p><p>
+<b>Approach 1: collect results in a matrix and tabulate the matrix</b><br />
+In the following example
+the <b>ineqrbd</b> command by Carlo V. Fiorio and Stephen P. Jenkins is used (see
+<a href="http://ideas.repec.org/c/boc/bocode/s456960.html">http://ideas.repec.org/c/boc/bocode/s456960.html</a>).
+<b>ineqrbd</b> happens to return results in a series of <b>r()</b>-macros.
+We can construct a matrix from these macros (and also compute some additional
+results using the formulas provided in <b>ineqrbd</b>'s output) and then tabulate
+the matrix as follows:
+</p>
+
+<pre>
+. capture which ineqrbd      // check whether -ineqrbd- is installed
+
+. if _rc ssc install ineqrbd // and get it if not
+
+. sysuse auto
+(1978 Automobile Data)
+
+. ineqrbd price trunk weight length foreign, noregression
+ 
+Regression-based decomposition of inequality in <b> price</b>
+---------------------------------------------------------------------------
+Decomp.  |     100*s_f        S_f     100*m_f/m      CV_f   CV_f/CV(total)
+---------+-----------------------------------------------------------------
+residual |   <b>  45.1031      0.2158      0.0000    1.79e+15    3.74e+15</b>
+trunk    |   <b>  -0.4687     -0.0022     -2.2943     -0.3109     -0.6499</b>
+weight   |   <b>  81.8711      0.3917    282.5215      0.2574      0.5380</b>
+length   |   <b> -29.2268     -0.1398   -273.2854     -0.1185     -0.2477</b>
+foreign  |   <b>   2.7213      0.0130     17.2635      1.5479      3.2356</b>
+---------+-----------------------------------------------------------------
+Total    |   <b> 100.0000      0.4784    100.0000      0.4784      1.0000</b>
+---------------------------------------------------------------------------
+Note: proportionate contribution of composite var f to inequality of Total,
+      s_f = rho_f*sd(f)/sd(Total). S_f = s_f*CV(Total).
+      m_f = mean(f). sd(f) = std.dev. of f. CV_f = sd(f)/m_f.
+      Total = <b>price</b>
+
+. return list
+
+macros:
+              r(sf_Z4) : "<b>.0272132003266729</b>"
+              r(cv_Z4) : "<b>1.547906632830336</b>"
+              r(sd_Z4) : "<b>1647.497942176796</b>"
+            r(mean_Z4) : "<b>1064.339351763328</b>"
+              r(sf_Z3) : "<b>-.2922677469661964</b>"
+              r(cv_Z3) : "<b>-.1184805603472782</b>"
+              r(sd_Z3) : "<b>1996.248597028214</b>"
+            r(mean_Z3) : "<b>-16848.7437194508</b>"
+              r(sf_Z2) : "<b>.8187108270390759</b>"
+              r(cv_Z2) : "<b>.2573949336205025</b>"
+              r(sd_Z2) : "<b>4483.350954895487</b>"
+            r(mean_Z2) : "<b>17418.17871794494</b>"
+              r(sf_Z1) : "<b>-.004687100101882</b>"
+              r(cv_Z1) : "<b>-.3109311493112151</b>"
+              r(sd_Z1) : "<b>43.98088549818675</b>"
+            r(mean_Z1) : "<b>-141.4489529132564</b>"
+              r(sf_Z0) : "<b>.4510308197023296</b>"
+              r(cv_Z0) : "<b>1790770538833059</b>"
+              r(sd_Z0) : "<b>1980.84687222313</b>"
+            r(mean_Z0) : "<b>1.10614220486e-12</b>"
+             r(cv_tot) : "<b>.4784060098610568</b>"
+             r(sd_tot) : "<b>2949.49588476892</b>"
+           r(mean_tot) : "<b>6165.256756756757</b>"
+              r(total) : "<b> price</b>"
+              r(xvars) : "<b>trunk weight length foreign</b>"
+               r(yvar) : "<b>price</b>"
+            r(varlist) : "<b>price trunk weight length foreign</b>"
+
+. // Step 1: collect results from r(sf_Z#), r(mean_Z#), and r(cv_Z#)
+. local xvars "`r(xvars)'"
+
+. local nx : list sizeof xvars
+
+. foreach s in sf mean cv {
+  2.    tempname `s'
+  3.    matrix ``s'' = J(`nx'+2, 1, .z)
+  4.    matrix rownames ``s'' = residual `r(xvars)' Total
+  5.    forv i = 0/`nx' {
+  6.        matrix ``s''[`i'+1, 1] = `r(`s'_Z`i')'
+  7.    }
+  8. }
+
+. matrix `sf'[rowsof(`sf'), 1]     = 1
+
+. matrix `mean'[rowsof(`mean'), 1] = `r(mean_tot)'
+
+. matrix `cv'[rowsof(`sf'), 1]     = `r(cv_tot)'
+
+. // Step 2: build matrix that mirrors -ineqrbd-'s output
+. matrix ineqrbd = ///
+&gt;    `sf' * 100 ,                    /// column 1: 100*s_f
+&gt;    `sf' * `r(cv_tot)' ,            /// column 2: S_f
+&gt;    `mean' / `r(mean_tot)' * 100,   /// column 3: 100*m_f/m
+&gt;    `cv',                           /// column 4: CV_f
+&gt;    `cv' / `r(cv_tot)'              //  column 5: CV_f/CV(total)
+
+. matrix colnames ineqrbd = 100*s_f S_f 100*m_f/m CV_f CV_f/CV(total)
+
+. // Step 3: tabulate the matrix
+. esttab matrix(ineqrbd)
+
+-----------------------------------------------------------------------------
+                  ineqrbd                                                    
+                  100*s_f          S_f    100*m_f/m         CV_f CV_f/CV(to~)
+-----------------------------------------------------------------------------
+residual    <b>     45.10308     .2157759     1.79e-14     1.79e+15     3.74e+15</b>
+trunk       <b>      -.46871    -.0022423    -2.294291    -.3109311    -.6499315</b>
+weight      <b>     81.87108     .3916762     282.5215     .2573949     .5380261</b>
+length      <b>    -29.22677    -.1398226    -273.2854    -.1184806    -.2476569</b>
+foreign     <b>      2.72132      .013019      17.2635     1.547907      3.23555</b>
+Total       <b>          100      .478406          100      .478406            1</b>
+-----------------------------------------------------------------------------
+<p style="text-align:right; padding:0px; margin:0px"><a href="advanced906.do">[do-file]</a>
+</pre>
+
+
+<a name="advanced906b"></a>
+<p>
+<b>Approach 2: post results as vectors in e()</b><br />
+Instead of directly
+tabulating the matrix you can post the matrix columns as vectors in <b>e()</b> and
+then tabulate these vectors. This gives you some additional flexibility for formatting
+the columns. Here is an example (Stata 9 is required):
+</p>
+
+<pre>
+. capture which ineqrbd      // check whether -ineqrbd- is installed
+
+. if _rc ssc install ineqrbd // and get it if not
+
+. sysuse auto
+(1978 Automobile Data)
+
+. ineqrbd price trunk weight length foreign, noregression
+ 
+Regression-based decomposition of inequality in <b> price</b>
+---------------------------------------------------------------------------
+Decomp.  |     100*s_f        S_f     100*m_f/m      CV_f   CV_f/CV(total)
+---------+-----------------------------------------------------------------
+residual |   <b>  45.1031      0.2158      0.0000    1.79e+15    3.74e+15</b>
+trunk    |   <b>  -0.4687     -0.0022     -2.2943     -0.3109     -0.6499</b>
+weight   |   <b>  81.8711      0.3917    282.5215      0.2574      0.5380</b>
+length   |   <b> -29.2268     -0.1398   -273.2854     -0.1185     -0.2477</b>
+foreign  |   <b>   2.7213      0.0130     17.2635      1.5479      3.2356</b>
+---------+-----------------------------------------------------------------
+Total    |   <b> 100.0000      0.4784    100.0000      0.4784      1.0000</b>
+---------------------------------------------------------------------------
+Note: proportionate contribution of composite var f to inequality of Total,
+      s_f = rho_f*sd(f)/sd(Total). S_f = s_f*CV(Total).
+      m_f = mean(f). sd(f) = std.dev. of f. CV_f = sd(f)/m_f.
+      Total = <b>price</b>
+
+. // Step 1: collect results from r(sf_Z#), r(mean_Z#), and r(cv_Z#)
+. local xvars "`r(xvars)'"
+
+. local nx : list sizeof xvars
+
+. foreach s in sf mean cv {
+  2.    tempname `s'
+  3.    matrix ``s'' = J(`nx'+2, 1, .z)
+  4.    matrix rownames ``s'' = residual `r(xvars)' Total
+  5.    forv i = 0/`nx' {
+  6.        matrix ``s''[`i'+1, 1] = `r(`s'_Z`i')'
+  7.    }
+  8. }
+
+. matrix `sf'[rowsof(`sf'), 1]     = 1
+
+. matrix `mean'[rowsof(`mean'), 1] = `r(mean_tot)'
+
+. matrix `cv'[rowsof(`sf'), 1]     = `r(cv_tot)'
+
+. // Step 2: build matrix that mirrors -ineqrbd-'s output
+. matrix ineqrbd = ///
+&gt;    `sf' * 100 ,                    /// column 1: 100*s_f
+&gt;    `sf' * `r(cv_tot)' ,            /// column 2: S_f
+&gt;    `mean' / `r(mean_tot)' * 100,   /// column 3: 100*m_f/m
+&gt;    `cv',                           /// column 4: CV_f
+&gt;    `cv' / `r(cv_tot)'              //  column 5: CV_f/CV(total)
+
+. matrix colnames ineqrbd = 100*s_f S_f 100*m_f/m CV_f CV_f/CV(total)
+
+. // Step 3: post matrix columns in e()
+. ereturn post
+
+. tempname tmp
+
+. local i 0
+
+. foreach col in s_f100 S_f m_f100 CV_f CV_ftot {
+  2.    local ++i
+  3.    matrix `tmp' = ineqrbd[1...,`i']'
+  4.    quietly estadd matrix `col' = `tmp'
+  5. }
+
+. ereturn list
+
+matrices:
+            e(CV_ftot) : <b> 1 x 6</b>
+<b>               </b>e(CV_f) : <b> 1 x 6</b>
+<b>             </b>e(m_f100) : <b> 1 x 6</b>
+<b>                </b>e(S_f) : <b> 1 x 6</b>
+<b>             </b>e(s_f100) : <b> 1 x 6</b>
+
+. // Step 4: tabulate
+. esttab, cell("s_f100 S_f m_f100 CV_f CV_ftot") noobs
+
+-----------------------------------------------------------------------------
+                      (1)                                                    
+                                                                             
+                   s_f100          S_f       m_f100         CV_f      CV_ftot
+-----------------------------------------------------------------------------
+residual    <b>     45.10308     .2157759     1.79e-14     1.79e+15     3.74e+15</b>
+trunk       <b>      -.46871    -.0022423    -2.294291    -.3109311    -.6499315</b>
+weight      <b>     81.87108     .3916762     282.5215     .2573949     .5380261</b>
+length      <b>    -29.22677    -.1398226    -273.2854    -.1184806    -.2476569</b>
+foreign     <b>      2.72132      .013019      17.2635     1.547907      3.23555</b>
+Total       <b>          100      .478406          100      .478406            1</b>
+-----------------------------------------------------------------------------
+
+. esttab, cell((S_f s_f100(fmt(1) par("" "%")))) noobs
+
+--------------------------------------
+                      (1)             
+                                      
+                      S_f       s_f100
+--------------------------------------
+residual    <b>     .2157759        45.1%</b>
+trunk       <b>    -.0022423        -0.5%</b>
+weight      <b>     .3916762        81.9%</b>
+length      <b>    -.1398226       -29.2%</b>
+foreign     <b>      .013019         2.7%</b>
+Total       <b>      .478406       100.0%</b>
+--------------------------------------
+<p style="text-align:right; padding:0px; margin:0px"><a href="advanced906b.do">[do-file]</a>
+</pre>
+
+
+<a name="advanced901"></a>
+<h3>Including a column containing bivariate effects (stack models)</h3>
+
+<p>
+<b>estout</b> cannot stack models. A solution is to stack the models in
+advance and save the result in <b>e()</b>. Here is an example where the goal
+is to include a column containing the bivariate effects of the regressors:
+</p>
+
+<pre>
+. capt prog drop appendmodels
+
+. *! version 1.0.0  14aug2007  Ben Jann
+. program appendmodels, eclass
+  1.     // using first equation of model
+.     version 8
+  2.     syntax namelist
+  3.     tempname b V tmp
+  4.     foreach name of local namelist {
+  5.         qui est restore `name'
+  6.         mat `tmp' = e(b)
+  7.         local eq1: coleq `tmp'
+  8.         gettoken eq1 : eq1
+  9.         mat `tmp' = `tmp'[1,"`eq1':"]
+ 10.         local cons = colnumb(`tmp',"_cons")
+ 11.         if `cons'&lt;. &amp; `cons'&gt;1 {
+ 12.             mat `tmp' = `tmp'[1,1..`cons'-1]
+ 13.         }
+ 14.         mat `b' = nullmat(`b') , `tmp'
+ 15.         mat `tmp' = e(V)
+ 16.         mat `tmp' = `tmp'["`eq1':","`eq1':"]
+ 17.         if `cons'&lt;. &amp; `cons'&gt;1 {
+ 18.             mat `tmp' = `tmp'[1..`cons'-1,1..`cons'-1]
+ 19.         }
+ 20.         capt confirm matrix `V'
+ 21.         if _rc {
+ 22.             mat `V' = `tmp'
+ 23.         }
+ 24.         else {
+ 25.             mat `V' = ///
+&gt;             ( `V' , J(rowsof(`V'),colsof(`tmp'),0) ) \ ///
+&gt;             ( J(rowsof(`tmp'),colsof(`V'),0) , `tmp' )
+ 26.         }
+ 27.     }
+ 28.     local names: colfullnames `b'
+ 29.     mat coln `V' = `names'
+ 30.     mat rown `V' = `names'
+ 31.     eret post `b' `V'
+ 32.     eret local cmd "whatever"
+ 33. end
+
+. sysuse auto
+(1978 Automobile Data)
+
+. eststo b1: quietly regress price weight
+
+. eststo b2: quietly regress price mpg
+
+. eststo b3: quietly regress price foreign
+
+. eststo bivar: appendmodels b1 b2 b3
+
+. eststo multi: quietly regress price weight mpg foreign
+
+. esttab b1 b2 b3 bivar, mtitles
+
+----------------------------------------------------------------------------
+                      (1)             (2)             (3)             (4)   
+                       b1              b2              b3           bivar   
+----------------------------------------------------------------------------
+weight      <b>        2.044***                                        2.044***</b>
+            <b>       </b>(<b>5.42</b>)<b>                                          </b>(<b>5.42</b>)<b>   </b>
+
+mpg         <b>                       -238.9***                       -238.9***</b>
+            <b>                      </b>(<b>-4.50</b>)<b>                         </b>(<b>-4.50</b>)<b>   </b>
+
+foreign     <b>                                        312.3           312.3   </b>
+            <b>                                       </b>(<b>0.41</b>)<b>          </b>(<b>0.41</b>)<b>   </b>
+
+_cons       <b>       -6.707         11253.1***       6072.4***                </b>
+            <b>      </b>(<b>-0.01</b>)<b>          </b>(<b>9.61</b>)<b>         </b>(<b>14.76</b>)<b>                   </b>
+----------------------------------------------------------------------------
+N           <b>           74              74              74                   </b>
+----------------------------------------------------------------------------
+t statistics in parentheses
+* p&lt;0.05, ** p&lt;0.01, *** p&lt;0.001
+
+. esttab multi bivar, mtitles
+
+--------------------------------------------
+                      (1)             (2)   
+                    multi           bivar   
+--------------------------------------------
+weight      <b>        3.465***        2.044***</b>
+            <b>       </b>(<b>5.49</b>)<b>          </b>(<b>5.42</b>)<b>   </b>
+
+mpg         <b>        21.85          -238.9***</b>
+            <b>       </b>(<b>0.29</b>)<b>         </b>(<b>-4.50</b>)<b>   </b>
+
+foreign     <b>       3673.1***        312.3   </b>
+            <b>       </b>(<b>5.37</b>)<b>          </b>(<b>0.41</b>)<b>   </b>
+
+_cons       <b>      -5853.7                   </b>
+            <b>      </b>(<b>-1.73</b>)<b>                   </b>
+--------------------------------------------
+N           <b>           74                   </b>
+--------------------------------------------
+t statistics in parentheses
+* p&lt;0.05, ** p&lt;0.01, *** p&lt;0.001
+
+. eststo clear
+<p style="text-align:right; padding:0px; margin:0px"><a href="advanced901.do">[do-file]</a>
+</pre>
+
+
+<a name="advanced902"></a>
+<h3>Displaying group sizes for categorical regressors</h3>
+
+<p>
+Assume you are including a categorical variable in a regression model (e.g. using
+the <a href=http://www.stata.com/help.cgi?xi><b>xi</b></a> command) and want to report the group sizes.
+You could proceed as follows:
+</p>
+
+<pre>
+. sysuse auto
+(1978 Automobile Data)
+
+. xi: reg price weight mpg i.rep
+i.rep78           _Irep78_1-5         (naturally coded; _Irep78_1 omitted)
+
+      Source |       SS       df       MS              Number of obs =<b>      69</b>
+-------------+------------------------------           F(  6,    62) =<b>    6.03</b>
+<b>    </b>   Model | <b>  212481723     6  35413620.6           </b>Prob &gt; F      = <b> 0.0001</b>
+<b>    </b>Residual | <b>  364315236    62  5876052.19           </b>R-squared     = <b> 0.3684</b>
+-------------+------------------------------           Adj R-squared = <b> 0.3073</b>
+<b>    </b>   Total | <b>  576796959    68  8482308.22           </b>Root MSE      = <b> 2424.1</b>
+
+------------------------------------------------------------------------------
+       price |      Coef.   Std. Err.      t    P&gt;|t|     [95% Conf. Interval]
+-------------+----------------------------------------------------------------
+      weight |  <b> 2.093066    .636901     3.29   0.002     .8199193    3.366213</b>
+         mpg |  <b> -63.0971   87.45276    -0.72   0.473    -237.9127    111.7185</b>
+   _Irep78_2 |  <b> 753.7024   1919.763     0.39   0.696    -3083.849    4591.254</b>
+   _Irep78_3 |  <b> 1349.361   1772.706     0.76   0.449    -2194.228     4892.95</b>
+   _Irep78_4 |  <b>  2030.47    1810.09     1.12   0.266    -1587.848    5648.788</b>
+   _Irep78_5 |  <b>  3376.91    1900.17     1.78   0.080    -421.4749    7175.296</b>
+       _cons |  <b>-598.9665   3960.904    -0.15   0.880    -8516.701    7318.768</b>
+------------------------------------------------------------------------------
+
+. capt matrix drop nobs
+
+. foreach cat of varlist _Irep* {
+  2.     count if `cat'==1 &amp; e(sample)
+  3.     matrix nobs = nullmat(nobs), r(N)
+  4.     local collab "`collab'`cat' "
+  5. }
+<b>    8</b>
+<b>   30</b>
+<b>   18</b>
+<b>   11</b>
+
+. matrix colname nobs = `collab'
+
+. estadd matrix nobs
+
+added matrix:
+               e(nobs) :  <b>1 x 4</b>
+
+. esttab, cells("b(fmt(a3)) t(fmt(2)) nobs") nogap
+
+---------------------------------------------------
+                      (1)                          
+                    price                          
+                        b            t         nobs
+---------------------------------------------------
+weight      <b>        2.093         3.29             </b>
+mpg         <b>       -63.10        -0.72             </b>
+_Irep78_2   <b>        753.7         0.39            8</b>
+_Irep78_3   <b>       1349.4         0.76           30</b>
+_Irep78_4   <b>       2030.5         1.12           18</b>
+_Irep78_5   <b>       3376.9         1.78           11</b>
+_cons       <b>       -599.0        -0.15             </b>
+---------------------------------------------------
+N           <b>           69                          </b>
+---------------------------------------------------
+<p style="text-align:right; padding:0px; margin:0px"><a href="advanced902.do">[do-file]</a>
+</pre>
+
+
+<a name="advanced903"></a>
+<h3>Tabulating results from <b>stci</b></h3>
+
+<p>
+[<a href="hlp_estpost.html"><b>estpost</b></a> supersedes this example.
+See "<a href="estpost.html#estpost116">Post confidence intervals for survival time (<b>stci</b>)</a>"
+under "<a href="estpost.html">Examples for <b>estpost</b></a>".]
+</p><p>
+The <a href=http://www.stata.com/help.cgi?stci><b>stci</b></a> command to compute confidence intervals
+for survival time estimates returns its results in <b>r()</b>, or not at all if used with the <b>by()</b> option.
+The following example therefore provides a wrapper for <b>stci</b> that collects the results
+and posts them in <b>e()</b>, so that
+they can be tabulated using <b>estout</b> or <b>esttab</b>:
+</p>
+
+<pre>
+. capt prog drop e_stci
+
+. *! version 1.0.0  16sep2008  Ben Jann
+. prog e_stci, eclass
+  1.     version 9.2
+  2.     syntax [if] [in] [ , by(varname) Median Rmean Emean p(str) * ]
+  3.     local stat "p50"
+  4.     if `"`p'"'!=""          local stat `"p`p'"'
+  5.     else if "`rmean'"!=""   local stat "rmean"
+  6.     else if "`emean'"!=""   local stat "emean"
+  7.     tempname b V N_sub lb ub
+  8.     marksample touse
+  9.     if "`by'"!="" {
+ 10.         markout `touse' `by', strok
+ 11.         qui levelsof `by' if `touse', local(levels)
+ 12.     }
+ 13.     local levels `"`levels' "total""'
+ 14.     gettoken l rest : levels, quotes
+ 15.     while (`"`l'"'!="") {
+ 16.         if `"`rest'"'=="" local lcond
+ 17.         else              local lcond `" &amp; `by'==`l'"'
+ 18.         qui stci if `touse'`lcond', `median' `rmean' `emean' `p' `options'
+ 19.         mat `b' = nullmat(`b'), r(`stat')
+ 20.         mat `V' = nullmat(`V'), r(se)^2
+ 21.         mat `N_sub' = nullmat(`N_sub'), r(N_sub)
+ 22.         mat `lb' = nullmat(`lb'), r(lb)
+ 23.         mat `ub' = nullmat(`ub'), r(ub)
+ 24.         gettoken l rest : rest
+ 25.     }
+ 26.     foreach m in b V N_sub lb ub {
+ 27.         mat coln ``m'' = `levels'
+ 28.     }
+ 29.     if matmissing(`V') {
+ 30.         mat `V' = `b'' * `b' * 0  // set V to zero
+ 31.     }
+ 32.     else {
+ 33.         mat `V' = diag(`V')
+ 34.     }
+ 35.     eret post `b' `V'
+ 36.     eret matrix N_sub = `N_sub'
+ 37.     eret matrix lb = `lb'
+ 38.     eret matrix ub = `ub'
+ 39.     eret local cmd "e_stci"
+ 40. end
+
+. webuse page2
+
+. stci, by(group)
+
+         failure _d:  <b>dead</b>
+<b>   </b>analysis time _t:  <b>time</b>
+
+             |    no. of 
+group        |  subjects         50%     Std. Err.     [95% Conf. Interval]
+-------------+-------------------------------------------------------------
+           1 | <b>       19         216      5.171042          190        234</b>
+<b>           </b>2 | <b>       21         233      2.179595          232        280</b>
+-------------+-------------------------------------------------------------
+       total | <b>       40         232      2.562933          213        239</b>
+
+. e_stci, by(group)
+
+. ereturn list
+
+macros:
+                e(cmd) : "<b>e_stci</b>"
+         e(properties) : "<b>b V</b>"
+
+matrices:
+                  e(b) : <b> 1 x 3</b>
+<b>                  </b>e(V) : <b> 3 x 3</b>
+<b>                 </b>e(ub) : <b> 1 x 3</b>
+<b>                 </b>e(lb) : <b> 1 x 3</b>
+<b>              </b>e(N_sub) : <b> 1 x 3</b>
+
+. estout, cell("N_sub b(label(50%)) se lb ub")
+
+-----------------------------------------------------------------------------
+                        .                                                    
+                    N_sub          50%           se           lb           ub
+-----------------------------------------------------------------------------
+1           <b>           19          216     5.171042          190          234</b>
+2           <b>           21          233     2.179595          232          280</b>
+total       <b>           40          232     2.562933          213          239</b>
+-----------------------------------------------------------------------------
+<p style="text-align:right; padding:0px; margin:0px"><a href="advanced903.do">[do-file]</a>
+</pre>
+
+</div>
+
+</body></html>

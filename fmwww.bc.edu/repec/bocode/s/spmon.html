@@ -1,0 +1,154 @@
+<pre>
+<b>help spmon</b>
+-------------------------------------------------------------------------------
+<p>
+<b><u>Title</u></b>
+<p>
+<b><u>spmon - Creates spatial effect variable for </u></b><i><u>monadic</u></i><b><u> data</u></b>
+<p>
+<p>
+<b><u>Syntax</u></b>
+<p>
+<p>
+        <b>spmon</b> lagvar [<i>if</i>] [<i>in</i>], <b><u>w</u></b><b>eightvar(</b><i>varname</i><b>)</b> <b>i(</b><i>varname</i><b>)</b> <b>k(</b><i>varname</i><b>)</b>
+                 [<i>options</i>]
+<p>
+<p>
+    <i>options</i>               Description
+    -------------------------------------------------------------------------
+      <b>time(</b><i>varname</i><b>)</b>       contains the numeric time variable
+      <b><u>rev</u></b><b>erse_W</b>           revert the direction of weight variable
+      <b><u>nor</u></b><b>owst</b>             spatial effect variable not row-standardized
+      <b><u>nom</u></b><b>erge</b>             no automatic merge of spatial effect variable into
+                            original dataset
+      <b><u>se</u></b><b>name(</b><i>name</i><b>)</b>        name to be given to created spatial effect variable
+      <b><u>label</u></b><b>name(</b><i>name</i><b>)</b>     name of label given to spatial effect variable
+      <b><u>file</u></b><b>name(</b><i>name</i><b>)</b>      name of file to which spatial effect variable saved
+    -------------------------------------------------------------------------
+<p>
+<p>
+<b><u>Description</u></b>
+<p>
+    <b>spmon</b> generates a spatial effect variable for analysis of spatial
+    dependence in monadic data, i.e. where the estimation dataset consists of
+    individual units (as in the vast majority of datasets used in the social
+    sciences), rather than of dyads (pairs of units).  It can create spatial
+    effect variables for spatial lag, spatial-x and spatial error models.
+    See Neumayer and Plümper (2010) for a discussion of the difference
+    between monadic and dyadic data.  See Plümper and Neumayer (2010) for a
+    discussion of model specification in the analysis of spatial dependence.
+    Users must have mmerge.ado already installed. If not, type <b>net search</b>
+    <b>mmerge.ado</b> into the editor and install.
+<p>
+<b><u>Additional information</u></b>
+<p>
+    See http://personal.lse.ac.uk/neumayer/spmon.htm.
+<p>
+<p>
+<b><u>Arguments</u></b>
+<p>
+        +------+
+    ----+ Main +-------------------------------------------------------------
+<p>
+    <b>lagvar</b> is the variable to be spatially lagged. It is the dependent
+        variable of unit <i>k</i> in spatial lag models, a selected independent
+        variable of unit <i>k</i> in spatial-x models and a saved regression
+        residual in spatial error models.  It must be the same for all dyads
+        of a specific unit <i>k</i> with all combinations of unit <i>i</i> (for any given
+        time period).
+<p>
+    <b><u>w</u></b><b>eightvar(</b><i>varname</i><b>)</b> is the weighting or connectivity variable. It connects
+        unit <i>i</i> with unit <i>k</i>. It must be numeric and must not contain negative
+        values. It may or may not be directed.
+<p>
+    <b>i(</b><i>varname</i><b>)</b> is the identifying variable of unit <i>i</i>. It can be a numeric or
+        string variable.
+<p>
+    <b>k(</b><i>varname</i><b>)</b> is the identifying variable of unit <i>k</i>. It can be a numeric or
+        string variable.
+<p>
+<p>
+<b><u>Options</u></b>
+<p>
+        +------+
+    ----+ Main +-------------------------------------------------------------
+<p>
+    <b>time(</b><i>varname</i><b>)</b> is an optional argument. If users wish to generate a
+        time-varying spatial effect variable, then the numeric time variable
+        must be stated here.
+<p>
+    <b><u>rev</u></b><b>erse_W</b> requests that the direction of the connectivity variable is to
+        be reversed. This only matters if the weighting variable
+        <b><u>w</u></b><b>eightvar(</b><i>varname</i><b>)</b> is a directed variable. In the default option,
+        <b><u>w</u></b><b>eightvar(</b><i>varname</i><b>)</b> represents connectivity from unit <i>i</i> to other units
+        <i>k</i>. <b>reverse_W</b> requests that the direction of this weighting variable
+        is to be reversed, such that a virtually transformed weighting matrix
+        instead represents connectivity from other units <i>k</i> to unit <i>i</i>.
+<p>
+    <b><u>nor</u></b><b>owst</b> requests that the generated spatial effect variable is not
+        row-standardized.  See Plümper and Neumayer (2010) for an explanation
+        and discussion of row-standardization.  Row-standardization is the
+        default option.
+<p>
+    <b><u>nom</u></b><b>erge</b> requests that the generated spatial effect variable is not
+        automatically merged into the original data set.
+<p>
+    <b><u>se</u></b><b>name(</b><i>name</i><b>)</b> names the generated spatial effect variable. In the default
+        option, if the weighting matrix is row-standardized, then the
+        generated spatial effect variable is called SE_var_monadic_rowst. If
+        the weighting matrix is not row-standardized, then the spatial effect
+        variable is called SE_var_monadic_norowst.  Any previously existing
+        variable with the same name will be replaced.
+<p>
+    <b><u>label</u></b><b>name(</b><i>name</i><b>)</b> names the label of the generated spatial effect variable.
+        The default label given is "Monadic spatial effect variable".
+<p>
+    <b><u>file</u></b><b>name(</b><i>name</i><b>)</b> requests that a dataset containing the generated spatial
+        effect variable is saved in the current working directory under the
+        defined name. In the default option, if the weighting matrix is
+        row-standardized, then a file is saved in the current working
+        directory called SE_file_monadic_rowst.  If the weighting matrix is
+        not row-standardized, then the saved file is called
+        SE_file_monadic_norowst.  Any previously existing file with the same
+        name will be replaced.
+<p>
+<b><u>References</u></b>
+<p>
+    Neumayer, Eric and Plümper, Thomas. 2010. Spatial Effects in Dyadic Data.
+    <i>International Organization</i> 64 (1), pp. 145-165.
+<p>
+    Plümper, Thomas and Eric Neumayer. 2010. Model Specification in the
+    Analysis of Spatial Dependence. <i>European Journal of Political Research</i> 49
+    (3), pp. 418-442.
+<p>
+<b><u>Examples</u></b>
+<p>
+    <b>. spmon y, w(contiguity) i(country_i) k(country_k) sename(se_monadic)</b>
+        <b>filename(se_monadic_file)</b>
+<p>
+    <b>. spmon y, w(exports) i(country_i) k(country_k) time(year) revert_W</b>
+        <b>norowst</b>
+<p>
+    <b>. spmon y, w(exports) i(country_i) k(country_k) time(year) norowst</b>
+<p>
+<p>
+<b><u>Authors</u></b>
+<p>
+    Eric Neumayer
+    Department of Geography and Environment
+    London School of Economics and Political Science (LSE)
+    London WC2A 2AE, UK
+    e.neumayer@lse.ac.uk
+    http://personal.lse.ac.uk/neumayer
+<p>
+    Thomas Plümper
+    Department of Government
+    University of Essex
+    Wivenhoe Park
+    Colchester CO4 3SQ, UK
+    tpluem@essex.ac.uk
+    http://www.polsci.org/pluemper/
+<p>
+<p>
+<p>
+</pre>

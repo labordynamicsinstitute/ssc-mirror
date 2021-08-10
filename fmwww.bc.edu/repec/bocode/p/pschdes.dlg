@@ -1,0 +1,72 @@
+*! version 2.10 06June2014 M. Araar Abdelkrim & M. Paolo verme
+
+VERSION 9.2
+
+
+INCLUDE graph_header
+//INCLUDE header
+POSITION . . 760 280
+
+
+DIALOG main, label("SUBSIM| Describe the price schedule(s): pschdes") tabtitle("Main")
+
+  
+BEGIN
+  TEXT     tx_using      20     20     200        .,       ///
+        label("Name(s) of price schedule(s):")
+
+        EDIT  names      220    @     280      .,    ///
+        label ("Names")     
+		
+GROUPBOX gb2     10     140    360  120,                      ///
+             label("Graph: ")
+             
+    CHECKBOX   chk_op3     20    +25    60    .,                   ///
+             label("Display:") default(0) option(dgra)
+             
+             
+    TEXT  txt4     20    +25    40      .,                 ///  
+               label("Save:")                                  ///      
+         
+    
+    FILE  fnamegs      80    @     280      .,                 ///
+    label ("Browse...")    save option(sgra)                   ///
+    filter("Stata Gragh (*.gph)|*.gph|All Files (*.*)|*.*")
+    
+    TEXT  chk_op5     20    +25    40      .,                 ///  
+                   label("Export:")                                  ///      
+            
+        
+        FILE  fnamege      80    @     280      .,                 ///
+        label ("Browse...")    save option(egra)                   ///
+        filter("MetaFile (*.wmf)|*.wmf|EPS (*.eps)|*.eps")
+  
+END
+
+INCLUDE gr_twoway
+
+HELP hlp1,   view("help asubini")
+RESET res1
+OK ok1,      label("OK")
+CANCEL can1, label("Cancel")
+SUBMIT sub1, label("Submit")
+COPY copy1
+
+PROGRAM command
+BEGIN
+        require main.names
+		put "pschdes  "
+		put `""' main.names `""'
+		
+		beginoptions
+		       optionarg main.fnamegs
+               optionarg main.fnamege
+               optionarg main.chk_op3
+                                                      
+                        put " " /program gr_twoway_output
+
+
+
+        
+END
+

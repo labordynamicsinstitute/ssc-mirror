@@ -1,0 +1,603 @@
+<pre>
+<b>help robreg</b>
+-------------------------------------------------------------------------------
+<p>
+<b><u>Title</u></b>
+<p>
+    <b>robreg</b> -- Robust regression
+<p>
+<p>
+<b><u>Syntax</u></b>
+<p>
+    MM-estimator
+<p>
+        <b>robreg mm</b> <i>depvar</i> <i>varlist</i> [<i>if</i>] [<i>in</i>] [<b>,</b> <i>mm_options</i> ]
+<p>
+    M-estimator
+<p>
+        <b>robreg m</b> <i>depvar</i> [<i>varlist</i>] [<i>if</i>] [<i>in</i>] [<b>,</b> <i>m_options</i> ]
+<p>
+    S-estimator
+<p>
+        <b>robreg s</b> <i>depvar</i> <i>varlist</i> [<i>if</i>] [<i>in</i>] [<b>,</b> <i>s_options</i> ]
+<p>
+    LMS/LQS/LTS-estimator
+<p>
+        <b>robreg lms</b> <i>depvar</i> <i>varlist</i> [<i>if</i>] [<i>in</i>] [<b>,</b> <i>lqs_options</i> ]
+        <b>robreg lqs</b> <i>depvar</i> <i>varlist</i> [<i>if</i>] [<i>in</i>] [<b>,</b> <i>lqs_options</i> ]
+        <b>robreg lts</b> <i>depvar</i> <i>varlist</i> [<i>if</i>] [<i>in</i>] [<b>,</b> <i>lqs_options</i> ]
+<p>
+    Replay syntax
+<p>
+        <b>robreg</b> [<b>,</b> <b><u>l</u></b><b>evel(</b><i>#</i><b>)</b> ]
+<p>
+<p>
+<a name="mm_opt"></a>    <i>mm_options</i>            description
+    -------------------------------------------------------------------------
+    Main
+      <b><u>eff</u></b><b>iciency(</b><i>#</i><b>)</b>       gaussian efficiency; # in 70(5)95; default is
+                            <b>efficiency(85)</b>
+      <b>bp(</b><i>#</i><b>)</b>               breakdown point; <i>#</i> in .10(.05).50; default is
+                            <b>bp(0.5)</b>
+<p>
+    Biweight M-estimate
+      <b>k(</b><i>#</i><b>)</b>                tuning constant; not allowed with <b>efficiency()</b>
+      <b><u>tol</u></b><b>erance(</b><i>#</i><b>)</b>        tolerance for IRWLS weights; default is
+                            <b>tolerance(1e-6)</b>
+      <b><u>iter</u></b><b>ate(</b><i>#</i><b>)</b>          maximum number of iterations; default is
+                            <b>iterate(16000)</b>
+      <b>relax</b>               continue even if convergence not reached
+      <b><u>g</u></b><b>enerate(</b><i>newvar</i><b>)</b>    store IRWLS weights
+      <b><u>re</u></b><b>place</b>             overwrite existing variable
+<p>
+    Initial S-estimate
+      <b><u>n</u></b><b>samp(</b><i>#</i><b>)</b>            number of trial samples
+      <b><u>s</u></b><b>opts(</b><i>s_options</i><b>)</b>    additional options passed through to S-algorithm
+      <b>save(</b><i>name</i><b>)</b>          save S-estimate
+<p>
+    Standard errors
+      <b>vce(</b><b><u>nor</u></b><b>obust)</b>       traditional standard errors
+      <b><u>nor</u></b><b>obust</b>            synonym for <b>vce(norobust)</b>
+<p>
+    Reporting
+      <b><u>l</u></b><b>evel(</b><i>#</i><b>)</b>            set confidence level; default is <b>level(95)</b>
+      <b>first</b>               display initial S-estimate
+      <b><u>nodot</u></b><b>s</b>              suppress progress dots of S-estimate
+      <b><u>lo</u></b><b>g</b>                 display RWLS iteration log
+    -------------------------------------------------------------------------
+<p>
+<p>
+<a name="m_opt"></a>    <i>m_options</i>             description
+    -------------------------------------------------------------------------
+    Main
+      <b><u>h</u></b><b>uber</b>               use Huber objective function; the default
+      <b><u>bi</u></b><b>weight</b>            use biweight objective function; <b><u>bis</u></b><b>quare</b> is a
+                            synonym
+      <b><u>eff</u></b><b>iciency(</b><i>#</i><b>)</b>       gaussian efficiency; # in 70(5)95; default is
+                            <b>efficiency(95)</b>
+      <b>k(</b><i>#</i><b>)</b>                tuning constant; not allowed with <b>efficiency()</b>
+<p>
+    IRWLS algorithm
+      <b><u>tol</u></b><b>erance(</b><i>#</i><b>)</b>        tolerance for IRWLS weights; default is
+                            <b>tolerance(1e-6)</b>
+      <b><u>iter</u></b><b>ate(</b><i>#</i><b>)</b>          maximum number of iterations; default is
+                            <b>iterate(16000)</b>
+      <b>relax</b>               continue even if convergence not reached
+      <b><u>g</u></b><b>enerate(</b><i>newvar</i><b>)</b>    store IRWLS weights
+      <b><u>re</u></b><b>place</b>             overwrite existing variable
+<p>
+    Initial estimate
+      <b>init(</b><i>arg</i><b>)</b>           initial estimate; <i>arg</i> may be <b>lav</b>, <b>ols</b>, <i>name</i>, or <b>.</b>;
+                            default is <b>init(lav)</b>
+      <b>save(</b><i>name</i><b>)</b>          save initial estimate
+<p>
+    Scale estimate
+      <b><u>s</u></b><b>cale(</b><i>#</i><b>)</b>            provide preliminary scale estimate
+      <b><u>update</u></b><b>scale</b>         update scale estimate in each iteration
+      <b><u>cen</u></b><b>ter</b>              center residuals when computing scale
+<p>
+    Standard errors
+      <b>vce(</b><b><u>nor</u></b><b>obust)</b>       traditional standard errors
+      <b>vce(pv)</b>             traditional standard errors using pseudo-values
+                            approach
+      <b><u>nor</u></b><b>obust</b>            synonym for <b>vce(norobust)</b>
+      <b>nose</b>                skip computation of standard errors
+<p>
+    Reporting
+      <b><u>l</u></b><b>evel(</b><i>#</i><b>)</b>            set confidence level; default is <b>level(95)</b>
+      <b>first</b>               display initial estimate
+      <b><u>lo</u></b><b>g</b>                 display RWLS iteration log
+    -------------------------------------------------------------------------
+<p>
+<p>
+<a name="s_opt"></a>    <i>s_options</i>             description
+    -------------------------------------------------------------------------
+    Main
+      <b>bp(</b><i>#</i><b>)</b>               breakdown point; <i>#</i> in .10(.05).50; default is
+                            <b>bp(0.5)</b>
+      <b>k(</b><i>#</i><b>)</b>                tuning constant; not allowed with <b>bp()</b>
+<p>
+    Resampling algorithm
+      <b><u>n</u></b><b>samp(</b><i>#</i><b>)</b>            number of trial samples
+      <b>alpha(</b><i>#</i><b>)</b>            maximum risk of bad solution; default is
+                            <b>alpha(0.01)</b>
+      <b><u>eps</u></b><b>ilon(</b><i>#</i><b>)</b>          maximum contamination fraction; default is
+                            <b>epsilon(0.2)</b>
+      <b><u>nk</u></b><b>eep(</b><i>#</i><b>)</b>            number of candidates to keep; default is <b>nkeep(2)</b>
+      <b><u>rstep</u></b><b>s(</b><i>#</i><b>)</b>           number of local improvement steps; default is
+                            <b>rsteps(1)</b>
+      <b><u>stol</u></b><b>erance(</b><i>#</i><b>)</b>       tolerance for scale estimate; default is
+                            <b>stolerance(1e-6)</b>
+      <b><u>siter</u></b><b>ate(</b><i>#</i><b>)</b>         maximum number of iterations for scale estimate;
+                            default is <b>siterate(16000)</b>
+      <b><u>tol</u></b><b>erance(</b><i>#</i><b>)</b>        tolerance for coefficient vector; default is
+                            <b>tolerance(1e-6)</b>
+      <b><u>iter</u></b><b>ate(</b><i>#</i><b>)</b>          maximum number of RWLS iterations; default is
+                            <b>iterate(16000)</b>
+      <b><u>sstep</u></b><b>s(</b><i>#</i><b>)</b>           number of scale approximation steps; default is
+                            <b>ssteps(1)</b>
+      <b><u>g</u></b><b>enerate(</b><i>newvar</i><b>)</b>    store IRWLS weights
+      <b><u>re</u></b><b>place</b>             overwrite existing variable
+<p>
+    Standard errors
+      <b>vce(</b><b><u>nor</u></b><b>obust)</b>       traditional standard errors
+      <b><u>nor</u></b><b>obust</b>            synonym for <b>vce(norobust)</b>
+      <b>nose</b>                skip computation of standard errors
+<p>
+    Reporting
+      <b><u>l</u></b><b>evel(</b><i>#</i><b>)</b>            set confidence level; default is <b>level(95)</b>
+      <b><u>nodot</u></b><b>s</b>              suppress progress dots
+    -------------------------------------------------------------------------
+<p>
+<p>
+<a name="lqs_opt"></a>    <i>lqs_options</i>           description
+    -------------------------------------------------------------------------
+    Main
+    * <b>bp(</b><i>#</i><b>)</b>               breakdown point; <i>#</i> in (0,0.5]; default is <b>bp(0.5)</b>
+<p>
+    Resampling algorithm
+      <b><u>n</u></b><b>samp(</b><i>#</i><b>)</b>            number of trial samples
+      <b>alpha(</b><i>#</i><b>)</b>            maximum risk of bad solution; default is
+                            <b>alpha(0.01)</b>
+      <b><u>eps</u></b><b>ilon(</b><i>#</i><b>)</b>          maximum contamination fraction; default is
+                            <b>epsilon(0.2)</b>.
+      <b><u>g</u></b><b>enerate(</b><i>newvar</i><b>)</b>    store minimizing sample
+      <b><u>re</u></b><b>place</b>             overwrite existing variable
+<p>
+    Reporting
+      <b><u>nodot</u></b><b>s</b>              suppress progress dots
+    -------------------------------------------------------------------------
+    * <b>bp()</b> is not allowed with <b>robreg lms</b>
+<p>
+<p>
+<b><u>Description</u></b>
+<p>
+    <b>robreg</b> provides a number of robust estimators for linear regression
+    models. The command accompanies Jann (2010), a survey paper on robust
+    regression in a German handbook on social science data analysis.
+<p>
+    <b>robreg mm</b> fits the efficient high breakdown MM-estimator proposed by
+    Yohai (1987). On the first stage, a high breakdown S-estimator is applied
+    to estimate the residual scale and derive starting values for the
+    coefficients vector. On the second stage, an efficient bisquare
+    M-estimator is applied to obtain the final coefficient estimates.
+<p>
+    <b>robreg m</b> fits regression M-estimators (Huber 1973) using iteratively
+    reweighted least squares (IRWLS).
+<p>
+    <b>robreg s</b> fits the high breakdown S-estimator introduced by Rousseeuw and
+    Yohai (1984) using the fast algorithm proposed by Salibian-Barrera and
+    Yohai (2006).
+<p>
+    <b>robreg lms</b>, <b>robreg lqs</b>, and <b>robreg lts</b> fit the least median of squares
+    (LMS), least quantile of squares (LQS; a generalization of LMS), and the
+    least trimmed squares (LTS) estimators (Rousseeuw and Leroy 1987).
+    Estimation is carried out using simple resampling without local
+    improvement (e.g. Rousseeuw and Leroy 1987:197). Computation of standard
+    errors is not supported for LMS, LQS, and LTS.
+<p>
+    For a recent contribution of similar estimators in Stata also see Verardi
+    and Croux (2009).
+<p>
+<p>
+<b><u>Dependencies</u></b>
+<p>
+    <b>robreg</b> requires <b>moremata</b>. See ssc describe moremata.
+<p>
+<a name="mm_options"></a><p>
+<b><u>Options for robreg mm</u></b>
+<p>
+        +------+
+    ----+ Main +-------------------------------------------------------------
+<p>
+    <b>efficiency(</b><i>#</i><b>)</b> sets the gaussian efficiency of the MM-estimator (i.e. the
+        asymptotic relative efficiency compared to the OLS or ML estimator in
+        case of i.i.d. normal errors). The efficiency is determined by
+        appropriate choice of the tuning constant for the bisquare
+        M-estimator in the second stage of the MM-algorithm. <i>#</i> may be a
+        number between 70 and 95 in steps of 5. The default for the
+        MM-estimator is <b>efficiency(85)</b>, as suggested by Maronna et al.
+        (2006: 144).
+<p>
+    <b>bp(</b><i>#</i><b>)</b> sets the breakdown point of the MM-Estimator. The breakdown point
+        is determined by appropriate choice of the tuning constant for the
+        S-estimator in the first stage of the MM-algorithm. <i>#</i> may be a number
+        between 0.1 and 0.5 in steps of 0.05. The default is <b>bp(0.5)</b>.
+<p>
+        +---------------------+
+    ----+ Biweight M-estimate +----------------------------------------------
+<p>
+    <b>k(</b><i>#</i><b>)</b> specifies the tuning constant for the bisquare M-estimator in the
+        second stage of the MM-algorithm. <b>k()</b> not allowed if <b>efficiency()</b> is
+        specified.
+<p>
+    <b>tolerance(</b><i>#</i><b>)</b> specifies the tolerance for the weights of the IRWLS
+        algorithm used to fit the bisquare M-estimator. When the maximum
+        absolute change in the weights from one iteration to the next is less
+        than or equal to <b>tolerance()</b>, the convergence criterion is satisfied.
+        The default is <b>tolerance(1e-6)</b>.
+<p>
+    <b>iterate(</b><i>#</i><b>)</b> specifies the maximum number of iterations for the IRWLS
+        algorithm used to fit the bisquare M-estimator. If convergence is not
+        reached within <b>iterate()</b> iterations, the algorithm stops and returns
+        error. The default is <b>iterate(16000)</b> or as set by <b>set maxiter</b>.
+<p>
+    <b>relax</b> causes the IRWLS algorithm to return the current results instead of
+        returning error if convergence is not reached.
+<p>
+    <b>generate(</b><i>newvar</i><b>)</b> stores the final weights of the IRWLS algorithm in
+        variable <i>newvar</i>.
+<p>
+    <b>replace</b> permits <b>robreg</b> to overwrite existing variables.
+<p>
+        +--------------------+
+    ----+ Initial S-estimate +-----------------------------------------------
+<p>
+    <b>nsamp(</b><i>#</i><b>)</b> specifies the number of trial samples for the search algorithm
+        of the S-estimator in the first stage of the MM-algorithm. The
+        default value is determined according to formula
+<p>
+            ceil(ln(alpha) / ln(1 - (1 - epsilon)^p))
+<p>
+        within a range of 50 to 10000, where p is the number of coefficients
+        in the model and alpha = 0.01 and epsilon = 0.2 (see Salibian-Barrera
+        and Yohai 2006 for a justification of the formula). The default
+        values for alpha and epsilon can be changed via <b>sopts()</b> (see below).
+<p>
+    <b>sopts(</b><i>s_options</i><b>)</b> specified additional options to be passed through to the
+        S-estimator. See the section on options for <b>robreg s</b>.
+<p>
+    <b>save(</b><i>name</i><b>)</b> saves the results of the S-estimator under <i>name</i> using 
+        <b>estimates store</b>.
+<p>
+        +-----------------+
+    ----+ Standard errors +--------------------------------------------------
+<p>
+    <b>vce(norobust)</b> causes standard errors to be computed using traditional
+        formulas assuming constant error variance. The default is to compute
+        robust standard errors as suggested by Croux et al (2003; using
+        formula Avar_1; the traditional formula is equivalent to Avar_2s).
+<p>
+    <b>norobust</b> is a synonym for <b>vce(norobust)</b>
+<p>
+<p>
+        +-----------+
+    ----+ Reporting +--------------------------------------------------------
+<p>
+    <b>level(</b><i>#</i><b>)</b> specifies the level for confidence intervals. The default is
+        <b>level(95)</b> or as set by <b>set level</b>.
+<p>
+    <b>first</b> causes the first stage S-estimate to be displayed.
+<p>
+    <b>nodots</b> suppresses the progress dots of the S-estimator search algorithm.
+<p>
+    <b>log</b> displays the iteration log of the second stage IRWLS algorithm.
+<p>
+<a name="m_options"></a><p>
+<b><u>Options for robreg m</u></b>
+<p>
+        +------+
+    ----+ Main +-------------------------------------------------------------
+<p>
+    <b>huber</b> causes the Huber objective function to be used (monotone
+        M-estimator). This is the default.
+<p>
+    <b>biweight</b> causes the biweight or bisquare objective function to be used
+        (redescending M-estimator). <b>bisquare</b> is a synonym for <b>biweight</b>. The
+        solution of a redescending M-estimator may depend on the starting
+        values.
+<p>
+    <b>efficiency(</b><i>#</i><b>)</b> sets the gaussian efficiency (i.e. the asymptotic relative
+        efficiency compared to the OLS or ML estimator in case of i.i.d.
+        normal errors) by appropriate choice of the tuning constant.  <i>#</i> may
+        be a number between 70 and 95 in steps of 5. The default is
+        <b>efficiency(95)</b>.
+<p>
+    <b>k(</b><i>#</i><b>)</b> specifies the tuning constant. <b>k()</b> not allowed if <b>efficiency()</b> is
+        specified.
+<p>
+        +-----------------+
+    ----+ IRWLS algorithm +--------------------------------------------------
+<p>
+    <b>tolerance(</b><i>#</i><b>)</b> specifies the tolerance for the weights of the IRWLS
+        algorithm. When the maximum absolute change in the weights from one
+        iteration to the next is less than or equal to <b>tolerance()</b>, the
+        convergence criterion is satisfied. The default is <b>tolerance(1e-6)</b>.
+<p>
+    <b>iterate(</b><i>#</i><b>)</b> specifies the maximum number of iterations for the IRWLS
+        algorithm. If convergence is not reached within <b>iterate()</b> iterations,
+        the algorithm stops and returns error. The default is <b>iterate(16000)</b>
+        or as set by <b>set maxiter</b>.
+<p>
+    <b>relax</b> causes the IRWLS algorithm to return the current results instead of
+        returning error if convergence is not reached. For example, to fit a
+        one-step M-estimate specify <b>relax</b> together with <b>iterate(1)</b>.
+<p>
+    <b>generate(</b><i>newvar</i><b>)</b> stores the final weights of the IRWLS algorithm in
+        variable <i>newvar</i>.
+<p>
+    <b>replace</b> permits <b>robreg</b> to overwrite existing variables.
+<p>
+        +------------------+
+    ----+ Initial estimate +-------------------------------------------------
+<p>
+    <b>init(</b><i>arg</i><b>)</b> determines the choice of the initial estimate that provides the
+        starting values for the IRWLS algorithm. <i>arg</i> may be <b>lav</b> for the
+        LAV-estimator (a.k.a. median regression; fitted using <b>qreg</b>), <b>ols</b> for
+        the least squares estimator (fitted using <b>regress</b>), <i>name</i> for an
+        estimation set stored under <i>name</i>, or <b>.</b> for the currently active
+        estimation results. The default is <b>init(lav)</b>.
+<p>
+    <b>save(</b><i>name</i><b>)</b> saves initial <b>lav</b> or <b>ols</b> estimate under <i>name</i> using <b>estimates</b>
+        <b>store</b>.
+<p>
+        +----------------+
+    ----+ Scale estimate +---------------------------------------------------
+<p>
+    <b>scale(</b><i>#</i><b>)</b> provides a preliminary value for the residual scale that will be
+        held constant. The default is to use the normalized median of the (N
+        - number of coefficients) largest absolute residuals from the initial
+        fit as an estimate of the residual scale (MADN).
+<p>
+    <b>updatescale</b> causes the MADN scale estimate to be updated in each
+        iteration of the IRWLS algorithm. <b>updatescale</b> has no effect if
+        <b>scale()</b> is specified.
+<p>
+    <b>center</b> causes the MADN scale estimate to be computed based on median
+        centered residuals. <b>center</b> has no effect if <b>scale()</b> is specified.
+<p>
+        +-----------------+
+    ----+ Standard errors +--------------------------------------------------
+<p>
+    <b>vce(norobust)</b> causes standard errors to be computed using traditional
+        formulas assuming constant error variance. The default is to compute
+        robust standard errors as suggested by Croux et al (2003; using
+        formula Avar_1s; the traditional formula is equivalent to Avar_2s).
+<p>
+    <b>vce(pv)</b> causes traditional standard errors to be computed using the
+        pseudo-values approach (Street et al. 1988). <b>vce(pv)</b> is equivalent to
+        <b>vce(norobust)</b> but includes some small sample correction.
+<p>
+    <b>norobust</b> is a synonym for <b>vce(norobust)</b>
+<p>
+    <b>nose</b> skips the computation of standard errors.
+<p>
+        +-----------+
+    ----+ Reporting +--------------------------------------------------------
+<p>
+    <b>level(</b><i>#</i><b>)</b> specifies the level for confidence intervals. The default is
+        <b>level(95)</b> or as set by <b>set level</b>.
+<p>
+    <b>first</b> causes the initial estimate to be displayed.
+<p>
+    <b>log</b> displays the iteration log of the second stage IRWLS algorithm.
+<p>
+<a name="s_options"></a><p>
+<b><u>Options for robreg s</u></b>
+<p>
+        +------+
+    ----+ Main +-------------------------------------------------------------
+<p>
+    <b>bp(</b><i>#</i><b>)</b> sets the breakdown point by appropriate choice of the tuning
+        constant (this also determines the gaussian efficiency). <i>#</i> may be a
+        number between 0.1 and 0.5 in steps of 0.05. The default is <b>bp(0.5)</b>.
+<p>
+    <b>k(</b><i>#</i><b>)</b> specifies the tuning constant. <b>k()</b> not allowed if <b>bp()</b> is specified.
+<p>
+        +----------------------+
+    ----+ Resampling algorithm +---------------------------------------------
+<p>
+    <b>nsamp(</b><i>#</i><b>)</b> specifies the number of trial samples for the search algorithm.
+        The default value is determined according to formula
+<p>
+            ceil(ln(alpha) / ln(1 - (1 - epsilon)^p))
+<p>
+        within a range of 50 to 10000, where p is the number of coefficients
+        in the model and alpha and epsilon are set by <b>alpha()</b> and <b>epsilon()</b>
+        (see Salibian-Barrera and Yohai 2006 for a justification of the
+        formula).
+<p>
+    <b>alpha(</b><i>#</i><b>)</b> specifies the maximum admissible risk of drawing a set of
+        samples of which none is free of outliers. This is a parameter in the
+        formula for the computation of the required number samples (see
+        above). The default is <b>alpha(0.01)</b> (i.e. 1 percent).  <b>alpha()</b> has no
+        effect if <b>nsamp()</b> is specified.
+<p>
+    <b>epsilon(</b><i>#</i><b>)</b> specifies the assumed maximum fraction of contaminated data.
+        This is a parameter in the formula for the computation of the
+        required number samples (see above). The default is <b>epsilon(0.2)</b>
+        (i.e. 20 percent). <b>epsilon()</b> has no effect if <b>nsamp()</b> is specified.
+<p>
+    <b>nkeep(</b><i>#</i><b>)</b> specifies the number of best candidates to be kept for final
+        refinement. The default is <b>nkeep(2)</b>.
+<p>
+    <b>rsteps(</b><i>#</i><b>)</b> specifies the number of local improvement steps applied to the
+        candidates. The default is <b>rsteps(1)</b>.
+<p>
+    <b>stolerance(</b><i>#</i><b>)</b> specifies the tolerance for the scale estimate of the
+        candidates. When the absolute relative change in the scale from one
+        iteration to the next is less than or equal to <b>stolerance()</b>, the
+        convergence criterion is satisfied. The default is <b>stolerance(1e-6)</b>.
+<p>
+    <b>siterate(</b><i>#</i><b>)</b> specifies the maximum number of iterations for the scale
+        estimate of the candidates. If convergence is not reached within
+        <b>siterate()</b> iterations, the algorithm stops and returns error.  The
+        default is <b>siterate(16000)</b> or as set by <b>set maxiter</b>.
+<p>
+    <b>tolerance(</b><i>#</i><b>)</b> specifies the tolerance for the coefficients in the
+        refinement IRWLS algorithm. When the maximum relative change in the
+        coefficient vector from one iteration to the next is less than or
+        equal to <b>tolerance()</b>, the convergence criterion is satisfied. The
+        default is <b>tolerance(1e-6)</b>.
+<p>
+    <b>iterate(</b><i>#</i><b>)</b> specifies the maximum number of iterations for the refinement
+        IRWLS algorithm. If convergence is not reached within <b>iterate()</b>
+        iterations, the algorithm stops and returns error. The default is
+        <b>iterate(16000)</b> or as set by <b>set maxiter</b>.
+<p>
+    <b>ssteps(</b><i>#</i><b>)</b> specifies the number of approximation steps for the scale
+        estimate within each RWLS iteration. The default is <b>ssteps(1)</b>.
+<p>
+    <b>generate(</b><i>newvar</i><b>)</b> stores the final IRWLS weights from the best solution in
+        variable <i>newvar</i>.
+<p>
+    <b>replace</b> permits <b>robreg</b> to overwrite existing variables.
+<p>
+        +-----------------+
+    ----+ Standard errors +--------------------------------------------------
+<p>
+    <b>vce(norobust)</b> causes standard errors to be computed using traditional
+        formulas assuming constant error variance. The default is to compute
+        robust standard errors as suggested by Croux et al (2003; using
+        formula Avar_1; the traditional formula is equivalent to Avar_2s).
+<p>
+    <b>norobust</b> is a synonym for <b>vce(norobust)</b>
+<p>
+    <b>nose</b> skips the computation of standard errors.
+<p>
+        +-----------+
+    ----+ Reporting +--------------------------------------------------------
+<p>
+    <b>level(</b><i>#</i><b>)</b> specifies the level for confidence intervals. The default is
+        <b>level(95)</b> or as set by <b>set level</b>.
+<p>
+    <b>nodots</b> suppresses the progress dots of the search algorithm.
+<p>
+<p>
+<a name="lqs_options"></a><p>
+<b><u>Options for robreg lms/lqs/lts</u></b>
+<p>
+        +------+
+    ----+ Main +-------------------------------------------------------------
+<p>
+    <b>bp(</b><i>#</i><b>)</b> sets the breakdown point, where # may be in (0,0.5]. <b>bp()</b>
+        determines the h parameter for the LQS and LTS estimators as follows:
+<p>
+            h = floor((1-<b>bp()</b>)*N) + floor(<b>bp()</b>*(p + 1))
+<p>
+        where N is the sample size and p is the number of coefficients. The
+        default is <b>bp(0.5)</b>. <b>bp()</b> is not allowed with <b>robreg lms</b>.
+<p>
+        +----------------------+
+    ----+ Resampling algorithm +---------------------------------------------
+<p>
+    <b>nsamp(</b><i>#</i><b>)</b> specifies the number of trial samples for the search algorithm.
+        The default value is determined according to formula
+<p>
+            ceil(ln(alpha) / ln(1 - (1 - epsilon)^p))
+<p>
+        within a range of 500 to 10000, where p is the number of coefficients
+        in the model and alpha and epsilon are set by <b>alpha()</b> and <b>epsilon()</b>.
+<p>
+    <b>alpha(</b><i>#</i><b>)</b> specifies the maximum admissible risk of drawing a set of
+        samples of which none is free of outliers. This is a parameter in the
+        formula for the computation of the required number samples (see
+        above). The default is <b>alpha(0.01)</b> (i.e. 1 percent).  <b>alpha()</b> has no
+        effect if <b>nsamp()</b> is specified.
+<p>
+    <b>epsilon(</b><i>#</i><b>)</b> specifies the assumed maximum fraction of contaminated data.
+        This is a parameter in the formula for the computation of the
+        required number samples (see above). The default is <b>epsilon(0.2)</b>
+        (i.e. 20 percent). <b>epsilon()</b> has no effect if <b>nsamp()</b> is specified.
+<p>
+    <b>generate(</b><i>newvar</i><b>)</b> stores a variable <i>newvar</i> that marks the minimizing trial
+        sample.
+<p>
+    <b>replace</b> permits <b>robreg</b> to overwrite existing variables.
+<p>
+        +-----------+
+    ----+ Reporting +--------------------------------------------------------
+<p>
+    <b>nodots</b> suppresses the progress dots of the search algorithm.
+<p>
+<p>
+<b><u>Examples</u></b>
+<p>
+        . sysuse auto
+<p>
+        . robreg mm price mpg weight headroom foreign
+<p>
+        . robreg m price mpg weight headroom foreign
+<p>
+        . robreg m price mpg weight headroom foreign, biweight
+<p>
+        . robreg s price mpg weight headroom foreign
+<p>
+        . robreg lqs price mpg weight headroom foreign
+<p>
+        . robreg lts price mpg weight headroom foreign
+        
+<p>
+<b><u>Saved results</u></b>
+<p>
+    <b>robreg</b> saves its results in <b>e()</b>. Type <b>ereturn list</b> to list the results
+    after estimation.
+<p>
+<p>
+<b><u>References</u></b>
+<p>
+    Croux, C., G. Dhaene, D. Hoorelbeke (2003). Robust Standard Errors for
+        Robust Estimators. Discussions Paper Series (DPS) 03.16. Center for
+        Economic Studies.
+<p>
+    Huber, P. J. (1973). Robust Regression: Asymptotics, Conjectures and
+        Monte Carlo. The Annals of Statistics 1: 799-821.
+<p>
+    Jann, B. (2010). Robuste Regression. In: Henning Best, Christof Wolf
+        (eds.). Handbuch der sozialwissenschaftlichen Datenanalyse.
+        Wiesbaden: VS-Verlag.
+<p>
+    Salibian-Barrera, M., V. J. Yohai (2006). A Fast Algorithm for
+        S-Regression Estimates. Journal of Computational and Graphical
+        Statistics 15: 414-427.
+<p>
+    Street, J. O., R. J. Carroll, D. Ruppert (1988). A Note on Computing
+        Robust Regression Estimates Via Iteratively Reweighted Least Squares.
+        The American Statistician 42: 152-154.
+<p>
+    Rousseeuw, P., V. Yohai (1984). Robust Regression by Means of
+        S-Estimators. Pp. 256-272 in: Jürgen Franke, Wolfgang Hardle, and
+        Douglas Martin (eds.). Robust and Nonlinear Time Series Analysis.
+        Lecture Notes in Statistics Vol. 26. Berlin: Springer.
+<p>
+    Yohai, V. J. (1987). High Breakdown-Point and High Efficiency Robust
+        Estimates for Regression. The Annals of Statistics 15: 642-656.
+<p>
+    Verardi, V., C. Croux (2009). Robust regression in Stata. The Stata
+        Journal 9: 439-453.
+<p>
+<p>
+<b><u>Author</u></b>
+<p>
+    Ben Jann, ETH Zurich, jannb@ethz.ch
+<p>
+    Thanks for citing this software as follows:
+<p>
+        Jann, B. (2010). robreg: Stata module providing robust regression
+        estimators. Available from
+        http://ideas.repec.org/c/boc/bocode/s457114.html.
+<p>
+<p>
+<b><u>Also see</u></b>
+<p>
+</pre>

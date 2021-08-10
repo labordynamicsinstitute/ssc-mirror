@@ -1,0 +1,77 @@
+<pre>
+<b>help group_id</b>                                                 dialog:  <b>group_id</b>
+-------------------------------------------------------------------------------
+<p>
+<b><u>Title</u></b>
+<p>
+    <b>group_id</b> -- Groups identifiers when values for specified variables match
+<p>
+<p>
+<b><u>Syntax</u></b>
+<p>
+        <b>group_id</b> <i>id_var</i> <b>,</b> <b><u>match</u></b><b>by(</b><i>match_vars</i><b>)</b>
+<p>
+<p>
+<b><u>Description</u></b>
+<p>
+    <b>group_id</b> consolidates values of identifier variable <i>id_var</i> when
+    observations are matched by <i>match_vars</i>. When a match is found between two
+    observations with different <i>id_var</i> values, all records with those <i>id_var</i>
+    values are updated to the new consolidated value, even if they do not
+    match by <i>match_vars</i>.
+<p>
+    If there is a missing value in any variable in <i>match_vars</i>, the
+    observation is ignored in terms of the matching.
+<p>
+<p>
+<b><u>Example</u></b>
+<p>
+    Suppose we have the following dataset,
+<p>
+          +-----------------------------------------------------------+
+          | id          contact      phone    loc               email |
+          |-----------------------------------------------------------|
+          |  1   Picard, Michel   555-2222   home                     |
+          |  1   Picard, Michel   555-3333   work                     |
+          |  2   Picard, Robert   555-0001   home                     |
+          |  2   Picard, Robert   555-1234   work                     |
+          |  2   Picard, Robert                     picard@netbox.com |
+          |  3    Pickard, John   555-5555   home                     |
+          |  3    Pickard, John                      Pickard@here.com |
+          |  4    Robert Picard   555-9999   cell                     |
+          |  4    Robert Picard                     picard@netbox.com |
+          +-----------------------------------------------------------+
+  
+<p>
+    Each contact has a unique id but values 2 and 4 appear to refer to the
+    same contact because the email is identical. Consolidating id values 2
+    and 4 is a bit tricky because there are observations with those id values
+    that are not part of the email match. However,
+<p>
+    <b>. group_id id, matchby(email)</b>
+<p>
+    <b>. list, noobs sep(0)</b>
+<p>
+          +-----------------------------------------------------------+
+          | id          contact      phone    loc               email |
+          |-----------------------------------------------------------|
+          |  1   Picard, Michel   555-2222   home                     |
+          |  1   Picard, Michel   555-3333   work                     |
+          |  2   Picard, Robert   555-0001   home                     |
+          |  2   Picard, Robert   555-1234   work                     |
+          |  2   Picard, Robert                     picard@netbox.com |
+          |  3    Pickard, John   555-5555   home                     |
+          |  3    Pickard, John                      Pickard@here.com |
+          |  2    Robert Picard   555-9999   cell                     |
+          |  2    Robert Picard                     picard@netbox.com |
+          +-----------------------------------------------------------+
+<p>
+    The listing shows that <b>group_id</b> has grouped the original id values 2 and
+    4.  Other id values are unaffected.
+<p>
+<p>
+<b><u>Author</u></b>
+<p>
+    Robert Picard
+    picard@netbox.com
+</pre>

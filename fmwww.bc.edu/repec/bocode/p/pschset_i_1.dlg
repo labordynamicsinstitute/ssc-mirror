@@ -1,0 +1,87 @@
+/*************************************************************************/
+/* PRICESIM: Price Simulation Stata Toolkit  (version 1.0)               */
+/*************************************************************************/
+/* Conceived and programmed by Dr. Araar Abdelkrim  (2006-2012)          */
+/* Universite Laval, Quebec, Canada                                      */
+/* email : aabd@ecn.ulaval.ca                                            */
+/* Phone : 1 418 656 7507                                                */
+/*************************************************************************/
+/*   pschset.dlg                                                          */
+/*************************************************************************/
+
+//A FINALISER....
+
+
+VERSION 9.2
+
+SYNCHRONOUS_ONLY
+
+INCLUDE graph_header
+POSITION . . 780 640
+
+
+DIALOG main, label("SUBSIM| Setting the shedule of prices (Item 1 // Initial period)") tabtitle("Main")
+  BEGIN
+  DEFINE col0  20
+  DEFINE col1 50
+  DEFINE col2 130
+  DEFINE col3 250
+  DEFINE col4 370
+  DEFINE col5 490
+  
+  DEFINE colwd0 55
+  DEFINE colwd1 100
+
+  DEFINE _x _xsetbu
+  DEFINE _y _top
+
+    
+  
+    GROUPBOX chk_per2  40    20  620 60,                         ///
+           label("Name of shedule price structure: ")         ///
+		   
+    TEXT txt_vname     50    +20    100      .,                 ///  
+                  label("Name:   ")                           
+       
+    TEXT  txt2_vname    160    @     350      .,                 ///
+     label("i_psch1") 
+                
+INCLUDE pschseti
+
+HELP hlp1,   view("help pschset")
+RESET res1
+OK ok1,      label("OK")
+CANCEL can1, label("Cancel")
+COPY copy1
+
+PROGRAM command
+BEGIN
+        put "pschset  i_psch1"
+        put " "
+     
+       
+        
+        beginoptions
+		optionarg main.cb_bracs
+		optionarg main.ed_bracs
+		if !main.cb_bun.isdefault() {
+		optionarg main.cb_bun
+		}
+		
+      				                  
+        put " " /program brac_output
+        
+		       if !has_ini {
+					 
+						 optionarg main.var_tr 
+						 optionarg main.var_sub
+						 optionarg main.var_mxb 
+						 optionarg main.cb_ini
+                     }
+        put " per(i)"
+		put " item(1)"
+		put " inisave(i_psch1)"
+        endoptions 
+        
+        
+END

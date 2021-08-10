@@ -1,0 +1,340 @@
+<pre>
+help <b>regsave</b>
+-------------------------------------------------------------------------------
+<b><u>Title</u></b>
+<p>
+    <b>regsave</b> -- Save regression results to a Stata-formatted dataset.
+<p>
+<b><u>Syntax</u></b>
+<p>
+    Replace data in memory with current regression results
+<p>
+        <b>regsave</b> [<i>namelist</i>] [, <b><u>t</u></b><b>stat</b> <b><u>p</u></b><b>val</b> <b>ci</b> <b><u>l</u></b><b>evel(</b>#<b>)</b> <b>nose</b> <b><u>cmd</u></b><b>line</b> <b>autoid</b>
+              <b>covar(</b><i>namelist</i><b>)</b> <b>detail(</b><i>type</i><b>)</b> <b>coefmat(</b><i>matname</i><b>)</b> <b>varmat(</b><i>matname</i><b>)</b>
+              <b>double</b> <b><u>addlab</u></b><b>el(</b><i>newvarname1, label1, newvarname2, label2, ...</i><b>)</b>
+              <b>addvar(</b><i>name1, coef1, stderr1, name2, coef2, stderr2, ...</i><b>)</b>
+              <b>table(</b><i>table_suboptions</i><b>)</b>]
+<p>
+    Save current regression results to a Stata-formatted dataset
+<p>
+        <b>regsave</b> [<i>namelist</i>] <b>using</b> <i>filename</i> [, <b><u>t</u></b><b>stat</b> <b><u>p</u></b><b>val</b> <b>ci</b> <b><u>l</u></b><b>evel(</b>#<b>)</b> <b>nose</b>
+              <b><u>cmd</u></b><b>line</b> <b>autoid</b> <b>covar(</b><i>namelist</i><b>)</b> <b>detail(</b><i>type</i><b>)</b> <b>coefmat(</b><i>matname</i><b>)</b>
+              <b>varmat(</b><i>matname</i><b>)</b> <b>double</b> <b><u>addlab</u></b><b>el(</b><i>newvarname1, label1,</i>
+              <i>newvarname2, label2, ...</i><b>)</b> <b>addvar(</b><i>name1, coef1, stderr1, name2,</i>
+              <i>coef2, stderr2, ...</i><b>)</b> <b>table(</b><i>table_suboptions</i><b>)</b> <b>append</b> <b>replace</b>]
+<p>
+    where
+<p>
+        <i>table_suboptions</i> are
+<p>
+            <b>table(</b><i>name</i> [, <b>order(</b><i>string</i><b>)</b> <b>format(</b><i>%</i>fmt<b>)</b> <b><u>paren</u></b><b>theses(</b><i>statlist</i><b>)</b>
+              <b><u>brack</u></b><b>ets(</b><i>statlist</i><b>)</b> <b><u>aster</u></b><b>isk(</b>numlist<b>)</b>]<b>)</b>
+<p>
+        <i>namelist</i> corresponds to names of regressors for estimation results
+              currently stored in <b>e()</b>,
+<p>
+        <i>type</i> can be either <i>all</i>, <i>scalars</i>, or <i>macros</i>, and
+<p>
+        <i>statlist</i> is one or more of the following:<i>  coef, stderr, tstat, pval,</i>
+              <i>ci_lower, ci_upper</i>
+<p>
+<p>
+<p>
+<p>
+<b><u>Description</u></b>
+<p>
+    <b>regsave</b> fetches output from Stata's <b>e()</b> macros, scalars, and matrices and
+    stores them in a Stata-formatted dataset.  It has two main uses:
+<p>
+        1. <b>regsave</b> provides a user-friendly way to manipulate a large number
+              of regression results by allowing you to apply Stata's data
+              manipulation commands to those results.  For example, you can
+              save the results of 100 regressions to a dataset and then use
+              Stata to analyze how coefficients change across different
+              regression specifications.  Or, you can outsheet these results
+              and analyze them using external utilities like Microsoft
+              Excel's pivot table.
+<p>
+        2. <b>regsave</b> saves your regression results to a nicely formatted table
+              when you specify its <b>table()</b> option.  You can then outsheet or
+              xmlsave your data and open it in another program.  LaTeX users
+              can use texsave (if installed) to automatically output their
+              table to LaTeX format (see example 7 below).
+<p>
+<p>
+<b><u>Options</u></b>
+<p>
+    <b>tstat</b> calculates t-statistics by dividing <i>coef</i> by <i>stderr</i>.
+<p>
+<p>
+    <b>pval</b> calculates two-tailed p-values using the t-statistic and the
+        residual degrees of freedom (as retrieved from <b>e(df_r)</b>).  If the
+        residual degrees of freedom are unavailable, the p-value is
+        calculated by assuming normality.
+<p>
+<p>
+    <b>ci</b> calculates confidence intervals according to the confidence level set
+        by <b>level</b> (default controlled by set level) and the residual degrees
+        of freedom (as retrieved from <b>e(df_r)</b>).  If the residual degrees of
+        freedom are unavailable, the confidence interval is calculated by
+        assuming normality.
+<p>
+<p>
+    <b>level(</b>#<b>)</b> specifies the confidence level, as a percentage, for confidence
+        intervals.  The default is level(95) or as set by set level.
+<p>
+<p>
+    <b>nose</b> drops standard errors from the reported results.
+<p>
+<p>
+    <b>cmdline</b> stores the Stata command code that produced the estimation
+        results, if it's available from <b>e(cmdline)</b>.
+<p>
+<p>
+    <b>autoid</b> provides an id number for your saved results. This is useful when
+        saving a large number of results to the same dataset. <b>autoid</b> can be
+        used as a complement to and/or substitute for <b>addlabel()</b>.
+<p>
+<p>
+    <b>covar(</b><i>namelist</i><b>)</b> instructs Stata to store all possible combinations of
+        covariances for the variables specified in <i>namelist</i>.
+<p>
+<p>
+    <b>detail(</b><i>type</i><b>)</b> stores additional statistics.  If <i>type</i> is <i>all</i>, <b>regsave</b>
+        retrieves all results available in <b>e()</b>.  The user may alternatively
+        specify a subset of those results: either <i>scalars</i> or <i>macros</i>.
+<p>
+<p>
+    <b>coefmat(</b><i>matname</i><b>)</b> instructs Stata to retrieve coefficient estimates from
+        <i>matname</i> instead of <b>e(b)</b>, the default.  See the notes section below
+        for more information.
+<p>
+<p>
+    <b>varmat(</b><i>matname</i><b>)</b> instructs Stata to retrieve variance estimates from
+        <i>matname</i> instead of <b>e(V)</b>, the default.  See the notes section below
+        for more information.
+<p>
+<p>
+    <b>double</b> specifies that all numeric statistics be stored as doubles instead
+        of floats.
+<p>
+<p>
+    <b>addlabel(</b><i>newvarname1, label1, newvarname2, label2, ...</i><b>)</b> instructs Stata
+        to create additional variables containing label data.  The
+        user-specified <i>label1</i> is stored in <i>newvarname1</i>, <i>label2</i> is stored in
+        <i>newvarname2</i>, etc.  This is a good way to label your results when
+        storing lots of regression results together in one dataset.  It is
+        also a good way to store additional statistics that are not
+        automatically retrieved by <b>regsave</b> (see example 4 below).
+<p>
+<p>
+    <b>addvar(</b><i>name1, coef1, stderr1, name2, coef2, stderr2, ...</i><b>)</b> allows the user
+        to store estimates for variables that are not currently stored in
+        <b>e(b)</b> and <b>e(V)</b> (see example 5 below).
+<p>
+<p>
+    <b>table(</b><i>name, suboptions</i><b>)</b> stores estimates in a traditional table form,
+        i.e., with standard errors (and t-statistic and p-values, if
+        specified) listed below coefficient estimates in a single column.
+        <i>name</i> specifies the name of the column.
+<p>
+        <i><u>suboptions</u></i>:
+<p>
+        <b>order(</b><i>string</i><b>)</b> allows the user to specify the table's row order.  The
+              name <i>regvars</i> can be used to refer to all regression variables
+              retrieved by <b>regsave</b> (see example 6 below).
+<p>
+        <b>format(</b><i>%</i>fmt<b>)</b> suboption allows you to specify the formats of the
+              numbers in your table.  For example, a format of %7.2f
+              specifies that numbers are to be rounded to two decimal places.
+              See [D] format for details.
+<p>
+        <b>parentheses(</b><i>statlist</i><b>)</b> suboption puts parentheses around <i>statlist</i>.
+<p>
+        <b>brackets(</b><i>statlist</i><b>)</b> suboption puts brackets around <i>statlist</i>.
+<p>
+        <b>asterisk(</b>numlist<b>)</b> allows you to specify up to three (descending)
+              significance levels for asterisks.  For example, <b>asterisk(</b>5 1<b>)</b>
+              place a */** next to coefficients that are significant at the
+              5/1% level, respectively.  Specifying <b>asterisk()</b> sets a
+              default, which places a */**/*** next to coefficients that are
+              significant at the 10/5/1% level.
+<p>
+<p>
+    <b>append</b> appends the regression results to the Stata-formatted dataset
+        <i>filename</i>.
+<p>
+<p>
+    <b>replace</b> overwrites <i>filename</i>.
+<p>
+<p>
+<b><u>Notes</u></b>
+<p>
+    By default, Stata retrieves coefficient and variance estimates from <b>e(b)</b>
+    and <b>e(V)</b>, respectively.  One exception is if the user executes <b>regsave</b>
+    after running a <b>dprobit</b> estimation.  In that case, <b>regsave</b> retrieves the
+    estimates from <b>e(dfdx)</b> and <b>e(se_dfdx)</b>.  Use options <b>coefmat(</b><i>matname</i><b>)</b> and
+    <b>varmat(</b><i>matname</i><b>)</b> if you want to retrieve estimates from matrices that
+    differ from these defaults.  Note that <b>regsave</b> will take the square root
+    of <b>varmat(</b><i>matname</i><b>)</b> unless the string "se" is detected in <i>matname</i> (in
+    which case it assumes that standard errors, not variances, are reported).
+<p>
+<p>
+<b><u>List of retrieved items</u></b>
+<p>
+    <b>regsave</b> automatically retrieves the following items from <b>e()</b> when they
+    are available:
+<p>
+<p>
+       Matrices
+         <b>e(b)</b>               Coefficient estimates (can be overridden with optio
+&gt; n <b>coefmat(</b><i>matname</i><b>)</b>)
+         <b>e(V)</b>               Variance-covariance matrix (can be overridden with 
+&gt; option <b>varmat(</b><i>matname</i><b>)</b>)
+<p>
+       Scalars
+         <b>e(N)</b>               Number of observations
+         <b>e(r2)</b>              R-squared
+<p>
+<p>
+    If <b>detail(</b><i>all</i><b>)</b> is specified, <b>regsave</b> retrieves all available statistics
+    from <b>e()</b>.
+<p>
+<p>
+<b><u>Saved results</u></b>
+<p>
+    <b>regsave</b> saves the following scalars to <b>r()</b>:
+<p>
+         <b>r(N)</b>               Number of rows in the newly created dataset
+         <b>r(k)</b>               Number of columns in the newly created dataset
+<p>
+<p>
+<b><u>Examples</u></b>
+<p>
+    1. Store regression results in the active dataset:
+<p>
+       <b>. </b>sysuse auto.dta, clear
+<p>
+       <b>. </b>regress price mpg trunk headroom length
+<p>
+       <b>. </b>regsave
+<p>
+       <b>. </b>browse
+<p>
+<p>
+    2. Store regression results in a file:
+<p>
+       <b>. </b>sysuse auto.dta, clear
+<p>
+       <b>. </b>regress price mpg trunk headroom length
+<p>
+       <b>. </b>regsave using results, tstat covar(mpg trunk) replace
+<p>
+<p>
+    3. Store regression results in table form:
+<p>
+       <b>. </b>sysuse auto.dta, clear
+<p>
+       <b>. </b>regress price mpg trunk headroom length
+<p>
+       <b>. </b>regsave, tstat pval table(regression_1, parentheses(stderr) brackets(t
+&gt; stat pval))
+<p>
+       <b>. </b>browse
+<p>
+<p>
+    4. Store a user-created statistic and label a series of regressions:
+<p>
+       <b>. </b>sysuse auto.dta, clear
+<p>
+       <b>. </b>regress price mpg trunk headroom length if gear_ratio &gt; 3
+<p>
+       <b>. </b>regsave using results, addlabel(scenario, gear ratio &gt; 3, dataset, aut
+&gt; o) replace
+<p>
+       <b>. </b>regress price mpg trunk headroom length if gear_ratio &lt;= 3
+<p>
+       <b>. </b>regsave using results, addlabel(scenario, gear ratio &lt;=3, dataset, aut
+&gt; o) append
+<p>
+<p>
+    5. Store regression results and add coefficient and standard error
+    estimates for an additional variable:
+<p>
+       <b>. </b>sysuse auto.dta, clear
+<p>
+       <b>. </b>regress price mpg trunk headroom length
+<p>
+       <b>. </b>local mycoef = _b[mpg]*5
+<p>
+       <b>. </b>local mystderr = _se[mpg]*5
+<p>
+       <b>. </b>regsave, addvar(mpg_5, `mycoef', `mystderr')
+<p>
+       <b>. </b>browse
+<p>
+<p>
+    6. Run a series of regressions and outsheet them into a text file that
+    can be opened by MS Excel:
+<p>
+       <b>. </b>sysuse auto.dta, clear
+<p>
+       <b>. </b>regress price mpg trunk headroom length
+<p>
+       <b>. </b>regsave mpg trunk using results, table(OLS_stderr, order(regvars r2)) 
+&gt; replace
+<p>
+       <b>. </b>regress price mpg trunk headroom length, robust
+<p>
+       <b>. </b>regsave mpg trunk using results, table(Robust_stderr, order(regvars r2
+&gt; )) append
+<p>
+       <b>. </b>use results, clear
+<p>
+       <b>. </b>outsheet using table.txt, replace
+<p>
+<p>
+    7. Run a series of regressions and output the results in a nice LaTeX
+    format that can be opened by Scientific Word. (This example requires the
+    user-written command texsave to be installed.):
+<p>
+       <b>. </b>sysuse auto.dta, clear
+<p>
+       <b>. </b>regress price mpg trunk headroom length
+<p>
+       <b>. </b>regsave mpg trunk using results, table(OLS, order(regvars r2) format(%
+&gt; 5.3f) parentheses(stderr) asterisk()) replace
+<p>
+       <b>. </b>regress price mpg trunk headroom length, robust
+<p>
+       <b>. </b>regsave mpg trunk using results, table(Robust, order(regvars r2) forma
+&gt; t(%5.3f) parentheses(stderr) asterisk()) append
+<p>
+       <b>. </b>use results, clear
+<p>
+       <b>. </b>replace var = subinstr(var,"_coef","",.)
+<p>
+       <b>. </b>replace var = "" if strpos(var,"_stderr")!=0
+<p>
+       <b>. </b>replace var = "R-squared" if var == "r2"
+<p>
+       <b>. </b>rename var Variable
+<p>
+       <b>. </b>texsave using "table.tex", title(Regression results) footnote("A */**/
+&gt; *** next to the coefficient indicates significance at the 10/5/1% level") rep
+&gt; lace
+<p>
+<p>
+<b><u>Author</u></b>
+<p>
+    Julian Reif, University of Chicago
+<p>
+    jreif@uchicago.edu
+<p>
+<p>
+<b><u>Also see</u></b>
+<p>
+    estimates store, outreg2 (if installed), sortobs (if installed), texsave
+    (if installed), svret (if installed)
+<p>
+</pre>

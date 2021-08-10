@@ -1,0 +1,473 @@
+<pre>
+<b>help estout1</b>
+-------------------------------------------------------------------------------
+<p>
+<b><u>Title</u></b>
+<p>
+    <b>estout1</b> -- Yet another command to export estimation results
+<p>
+<p>
+<b><u>Table of contents</u></b>
+<p>
+    Syntax
+    Description
+    Options
+    Remarks
+    Examples
+<p>
+<a name="syn"></a><p>
+<b><u>Syntax</u></b>
+<p>
+        <b>estout1</b> [ <i>namelist</i> ] [ <b>using</b> <i>filename</i> ] [ <b>,</b> <i>options</i> ]
+<p>
+    where <i>namelist</i>  is    <b>_all</b> | <b>*</b> | <i>name</i> [ <i>name</i> ...]
+          <i>name</i>      is    <i>identifier</i> | <b>.</b>
+<p>
+<p>
+    <i>options</i>                    Description
+    -------------------------------------------------------------------
+    Coefficients
+      <b>b(</b><i>fmt_spec</i><b>)</b>              set display format for coefficients
+      <b>se</b>[<b>(</b><i>fmt_spec</i><b>)</b>]           display standard errors
+      <b>t</b>[<b>(</b><i>fmt_spec</i><b>)</b>]            display t-values
+      <b>p</b>[<b>(</b><i>fmt_spec</i><b>)</b>]            display p-values
+      <b>eform</b>                    report exponentiated coefficients
+      <b>abs</b>                      use absolute t-values
+      <b><u>eq</u></b><b>uations(</b><i>eqmatchlist</i><b>)</b>   match the models' equations
+      <b><u>k</u></b><b>eep(</b><i>keeplist</i><b>)</b>           keep individual regressors
+      <b><u>d</u></b><b>rop(</b><i>droplist</i><b>)</b>           drop individual regressors
+      {<b>se</b>|<b>t</b>|<b>p</b>}<b><u>k</u></b><b>eep(</b><i>keeplist</i><b>)</b>   keep certain individual results
+      {<b>se</b>|<b>t</b>|<b>p</b>}<b><u>d</u></b><b>rop(</b><i>droplist</i><b>)</b>   drop certain individual results
+      <b>nob</b>                      suppress raw coefficients
+<p>
+    Summary statistics
+      <b><u>s</u></b><b>tats(</b><i>scalarlist</i><b>)</b>        display summary statistics at the
+                               bottom of the table
+      <b><u>stf</u></b><b>mt(</b><i>fmtlist</i><b>)</b>           set the display formats
+      <b><u>stl</u></b><b>abels(</b><i>stlabellist</i><b>)</b>    label the summary statistics
+<p>
+    Significance stars
+      <b>star</b>[<b>(</b><i>thresholds</i><b>)</b>]       attach "significance stars" (and
+                               define significance thresholds)
+      <b>starsym(</b><i>starsymlist</i><b>)</b>     define significance symbols
+      <b>starpos(b</b>|<b>se</b>|<b>t</b>|<b>p)</b>        determine position of thestars
+      <b><u>detach</u></b><b>star</b>               display the stars in their own column
+      <b><u>sts</u></b><b>tar(</b><i>scalarlist</i><b>)</b>       denote the overall model significance
+<p>
+    Layout
+      <b><u>w</u></b><b>ide</b>                     print table in wide format
+      <b>style(</b><i>style</i><b>)</b>             specifie a row style, where <i>style</i>
+                               is <b>tab</b>, <b>tex</b> or <b>html</b>
+      <b><u>beg</u></b><b>in(</b><i>str</i><b>)</b>               specify the beginning of the rows
+      <b><u>del</u></b><b>imiter(</b><i>str</i><b>)</b>           specify the column delimiter
+      <b>end(</b><i>str</i><b>)</b>                 specify the ending of the table rows
+      <b><u>var</u></b><b>width(</b><i>#</i><b>)</b>              set width of the table's left stub
+      <b><u>model</u></b><b>width(</b><i>#</i><b>)</b>            set width of the results columns
+      <b><u>noh</u></b><b>ead</b>                   suppress the table heading
+<p>
+    Labelling
+      <b><u>l</u></b><b>abel</b>                    make use of variable labels
+      <b><u>cons</u></b><b>lbl(</b><i>str</i><b>)</b>             specify a label for the constant
+      <b><u>preh</u></b><b>ead(</b><i>str_list</i><b>)</b>        add text before the table heading
+      <b><u>posth</u></b><b>ead(</b><i>str_list</i><b>)</b>       add text after the table heading
+      <b><u>pref</u></b><b>oot(</b><i>str_list</i><b>)</b>        add text before the table footer
+      <b><u>postf</u></b><b>oot(</b><i>str_list</i><b>)</b>       add text after the table footer
+<p>
+    Output
+      <b><u>r</u></b><b>eplace</b>                  overwrite an existing file
+      <b><u>a</u></b><b>ppend</b>                   append the output to an existing file
+      <b><u>noty</u></b><b>pe</b>                   suppress the table in the results window
+    -------------------------------------------------------------------
+<a name="fmtspec"></a><p>
+    where <i>fmt_spec</i> is
+<p>
+        <i>%fmt</i> <b><u>par</u></b><b>entheses</b> | <i>%fmt</i> | <b><u>par</u></b><b>entheses</b>
+<p>
+<a name="des"></a><p>
+<b><u>Description</u></b>
+<p>
+    <b>estout1</b> assembles a table of coefficients, "significance stars", standard
+    errors, t/z-statistics, p-values, and scalar statistics from one or more
+    models previously fitted and stored by estimates store and writes the
+    table to a text file specified by <b>using</b> and/or to the Stata log. The last
+    estimated results may be referenced as a period (<b>.</b>) even if they have not
+    yet been stored. If no model is specified, <b>estout1</b> uses the last fitted
+    model.
+<p>
+    In general, <b>estout1</b> works in a manner very similar to that of estimates
+    table (in fact, <b>estout1</b> calls estimates table internally). That is,
+    <b>estout1</b> "produces a table in which the coefficients are matched by the
+    name of equation and coefficient; see option <b>equations()</b> to match
+    equations by number. Each model in <i>namelist</i> is presented in a column of
+    the table." And, <b>estout1</b> "displays blanks in the table cells for those
+    coefficients that are not in a particular model." However, it includes
+    several additional features.
+<p>
+    See help estimates for general information about managing estimation
+    results.
+<p>
+    Note that a newer, more capable version of this program is available as 
+    estout (available from the SSC Archive, type ssc describe estout).
+<p>
+<a name="opt"></a><p>
+<b><u>Options</u></b>
+<a name="coe"></a><p>
+        +--------------+
+    ----+ Coefficients +-----------------------------------------------------
+<p>
+    <b>b(</b><i>fmt_spec</i><b>)</b> specifies the display format for the coefficients (e.g.
+        <b>b(%9.0g)</b>). It defaults to <b>%9.3f</b>.
+<p>
+    <b>se</b>[<b>(</b><i>fmt_spec</i><b>)</b>] specifies that the standard errors of the coefficients be
+        displayed below the coefficients (or beside them, see the <b>wide</b>
+        option). A display format may be specified as an optional argument
+        (e.g. <b>se(%9.0g)</b>). By default, the display format of the coefficients
+        is used. Furthermore, the standard errors are displayed in
+        parentheses if <b>se(</b><i>%fmt</i> <b>par)</b> is specified (or <b>se(par)</b> if the default
+        format is appropriate).
+<p>
+    <b>t</b>[<b>(</b><i>fmt_spec</i><b>)</b>] specifies that the t- or z-values (coef/se(coef)) be
+        displayed (see the description of <b>se()</b> above).
+<p>
+    <b>p</b>[<b>(</b><i>fmt_spec</i><b>)</b>] specifies that the (two-sided) p-values of the coefficients
+        be displayed (see the description of <b>se()</b> above). As is standard in
+        Stata, the reference distribution is the t if the estimation command
+        saved the residual degrees of freedom in <b>e(df_r)</b>, and the normal
+        distribution otherwise.
+<p>
+    <b>eform</b> displays the coefficient table in exponentiated form. exp(b) is
+        displayed rather than b (the untransformed coefficient) and standard
+        errors are transformed. Unlike regress and estimates table, <b>estout1</b>
+        does not suppress the display of the intercept in eform-mode. To drop
+        the intercept in eform-mode specify <b>drop(_cons)</b>.
+<p>
+    <b>abs</b> specifies that absolute t-values be used instead of regular t-values.
+<p>
+    <b>equations(</b><i>matchlist</i><b>)</b> specifies how the equations of the models in
+        <i>namelist</i> are to be matched. See the description in help estimates
+        table.
+<p>
+    <b>keep(</b><i>keeplist</i><b>)</b> specifies the coefficients to be included in the table.
+        Option <b>keep()</b> may also be used to change the order of coefficients
+        and equations. See the description in help estimates table.
+<p>
+    <b>drop(</b><i>droplist</i><b>)</b> specifies the coefficients to be dropped from the table.
+        See the description in help estimates table.
+<p>
+    {<b>se</b>|<b>t</b>|<b>p</b>}<b>keep(</b><i>keeplist</i><b>)</b> or {<b>se</b>|<b>t</b>|<b>p</b>}<b>drop(</b><i>droplist</i><b>)</b> specifies that certain
+        values be kept or dropped individually. For example, in a table of
+        coefficients and t-values the specification <b>tdrop(_cons)</b> suppresses
+        the t-values of the constants. On the other hand, <b>tkeep(_cons)</b> would
+        display the t-values for the constants exclusively. A <i>keeplist</i> or
+        <i>droplist</i> comprises one or more specifications, separated by white
+        space. A specification is a variable name (e.g. <b>price</b>), an equation
+        name (e.g. <b>mean:</b>), or a full name (e.g. <b>mean:price</b>).
+<p>
+        Use <b>keep()</b> or <b>drop()</b> without a prefix (see above or help estimates
+        table) if certain coefficients should be kept or dropped entirely or
+        the order of coefficients and equations should be changed (e.g. type
+        <b>drop(_cons)</b> if no information on the constants whatsoever should be
+        displayed).
+<p>
+    <b>nob</b> suppresses the display of the coefficients.
+<a name="sum"></a><p>
+        +--------------------+
+    ----+ Summary statistics +-----------------------------------------------
+<p>
+    <b>stats(</b><i>scalarlist</i><b>)</b> specifies one or more scalar statistics to be displayed
+        at the foot of the table. See the description given in help estimates
+        table.
+<p>
+    <b>stfmt(</b><i>fmtlist</i><b>)</b> specifies the display formats for the scalar statistics in
+        <b>stats()</b>. For instance, <b>stfmt(%9.3f %9.0f)</b> would be good choice for
+        <b>stats(r2_a N)</b>. See help format. The first format in <i>fmtlist</i> will be
+        used for the remaining scalars if <i>scalarlist</i> has more elements than
+        <i>fmtlist</i>. Thus, only one format has to be specified if all scalars are
+        supposed to have the same display format. If no format is specified,
+        the default format is the display format of the coefficients.
+<p>
+    <b>stlabels(</b><i>stlabellist</i><b>)</b> specifies labels for the scalars in <b>stats()</b>. If
+        specified, the labels will be used instead of the scalar names.
+        Example: <b>stlabels("Adj. R-Square" "Number of Cases")</b> for
+        <b>stats(r2_a N)</b>.
+<a name="sig"></a><p>
+        +--------------------+
+    ----+ Significance stars +-----------------------------------------------
+<p>
+    <b>star</b>[<b>(</b><i>star_spec</i><b>)</b>] specifies that the significance of coefficients be
+        denoted by stars: *: p&lt;.05, **: p&lt;.01, ***: p&lt;.001. The optional
+        <i>star_spec</i> may override these thresholds. For instance,
+        <b>star(0.10 0.05)</b> specifies that significance stars are added to the
+        coefficients using the following thresholds instead: *: p&lt;.10 and
+        **: p&lt;.05. If <i>star_spec</i> specifies more than three thresholds, an
+        appropriate list of symbols must be provided by <b>starsym</b>. For example,
+        <b>star(0.10 0.05 0.01 0.001)</b> and <b>starsym(+ * ** ***)</b> would work. Note:
+        The thresholds have to be specified in descending order.
+<p>
+    <b>starsym(</b><i>starsymlist</i><b>)</b> specifies the symbols to be used to indicate
+        significance levels. See description of <b>star</b> above. The default is
+        <b>starsym(* ** ***)</b> (and <b>starsym(*)</b> or <b>starsym(* **)</b> if only one or two
+        threshold levels are specified). <b>starsym</b> implies <b>star</b>.
+<p>
+    <b>starpos(b</b>|<b>se</b>|<b>t</b>|<b>p)</b> specifies the position of the "significance stars". For
+        example, <b>starpos(t)</b> means that the "significance stars" are connected
+        to the t-values. Default is <b>starpos(b)</b>, i.e. the stars are connected
+        to the coefficients. Specifying <b>starpos</b> implies <b>star</b>.
+<p>
+    <b>detachstar</b> specifies that a delimiter be placed between the coefficients
+        and the significance stars (i.e. the stars will be displayed in their
+        own column).
+<p>
+    <b>ststar(</b><i>scalarlist</i><b>)</b> specifies that the overall significance of the model
+        be denoted by stars. The stars will be attached to the scalar
+        statistics specified in <i>scalarlist</i>. If <i>scalarlist</i> is empty, the stars
+        will be attached to the first scalar statistic specified by <b>stats()</b>.
+        The rules for the determination of the model significance are:
+<p>
+        1) P-value provided: If the scalar e(p) is provided by the estimation
+           command and if the value of e(p) lies between 0 and 1, e(p) will
+           be interpreted as indicating the overall significance the model
+           (p-value of the model).
+<p>
+        2) F-Test: If e(p) is not provided, <b>estout1</b> looks for the scalars
+           e(df_m), e(df_r), and e(F) and the p-value of the model will be
+           calculated as <b>Ftail(df_m,df_r,F)</b>. This corresponds to the standard
+           overall F-test of linear regression.
+<p>
+        3) Chi2-Test: Otherwise, if neither e(p), nor e(F) is provided,
+           <b>estout1</b> looks for e(df_m) and e(chi2) and calculates the p-value
+           as <b>chi2tail(df_m,chi2)</b>. This p-value corresponds to the
+           Likelihood-Ratio or Wald Chi2-Test.
+<p>
+        3) If neither e(p) in [0,1], e(F), or e(chi2) are available, no
+           overall significance stars will be reported.
+<p>
+        Important note: Although the procedure outlined above is appropriate
+        for most models, there might be some models for which it is not.
+<p>
+        Hint: It is possible to attach the stars to different scalar
+        statistics in one table. For example, specify <b>ststar(r2_a r2_p)</b> when
+        tabulating OLS estimates and, say, probit estimates. For the OLS
+        models, the F-test will be carried out and the significance stars
+        will be attached to the r2_a; for the probit models the Chi2-test
+        will be used and the stars will appear next to the r2_p.
+<a name="lay"></a><p>
+        +--------+
+    ----+ Layout +-----------------------------------------------------------
+<p>
+    <b>wide</b> specifies that the table of coefficients be printed in wide format
+        instead of long format, that is, that the b-, se-, t- and p-values be
+        placed beside one another instead of beneath one another.
+<p>
+    <b>style(</b><i>style</i><b>)</b> specifies a row style for the table rows. A row style is a
+        named combination of values for the <b>begin()</b>, <b>end()</b>, and <b>delimiter()</b>
+        options. The style options currently available are <b>tex</b> (begin: "",
+        delimiter: "&amp;", end: "\\"), <b>html</b> (begin: "&lt;tr&gt;&lt;td&gt;", delimiter:
+        "&lt;/td&gt;&lt;td&gt;", end: "&lt;/td&gt;&lt;/tr&gt;"), and style <b>tab</b> (begin: "", delimiter:
+        tab character, end: "").
+<p>
+    <b>begin(</b><i>str</i><b>)</b> specifies a string to be printed at the beginning of every
+        table row. The default is an empty string. Consider the remark on
+        "Special characters" below.
+<p>
+    <b>delimiter(</b><i>str</i><b>)</b> specifies the delimiter used between the table columns.
+        The default is an empty string. See the remark on "Special
+        characters" below.
+<p>
+    <b>end(</b><i>str</i><b>)</b> specifies a string to be printed at the beginning of every table
+        row. Default is an empty string. See the remark on "Special
+        characters" below.
+<p>
+    <b>varwidth(</b><i>#</i><b>)</b> specifies the width of the left stub of the table containing
+        the variable names. <b>varwidth</b> defaults to 12, unless <b>style(tab)</b> is
+        specified, in which case <b>varwidth</b> defaults to 0.
+<p>
+    <b>modelwidth(</b><i>#</i><b>)</b> specifies width of the results columns. If specified, model
+        names are abbreviated and short or empty results cells are padded out
+        with blanks. <b>modelwidth</b> defaults to 12, unless <b>style(tab)</b> is
+        specified, in which case <b>modelwidth</b> defaults to 0.
+<p>
+    <b>nohead</b> suppresses the printing of the table head containing the model
+        names.
+<a name="lab"></a><p>
+        +-----------+
+    ----+ Labelling +--------------------------------------------------------
+<p>
+    <b>label</b> specifies that variable labels be displayed instead of variable
+        names.
+<p>
+    <b>conslbl(</b><i>str</i><b>)</b> may be used to specify a label for the constant. If
+        specified, <i>str</i> will be displayed instead of <b>_cons</b>.
+<p>
+    {<b>pre</b>|<b>post</b>}<b>head(</b><i>str_list</i><b>)</b> and {<b>pre</b>|<b>post</b>}<b>foot(</b><i>str_list</i><b>)</b> may be used to
+        specify lists of lines of text to appear before/after the table head
+        containing the model names and the table foot containing the scalar
+        statistics. For example <b>prehead("$S_DATE $S_TIME" "")</b> would add a
+        line containing the current date and time followed by an empty line
+        before the table.
+<a name="out"></a><p>
+        +--------+
+    ----+ Output +-----------------------------------------------------------
+<p>
+    <b>replace</b> permits <b>estout1</b> to overwrite an existing file.
+<p>
+    <b>append</b> specifies that output be appended to an existing file. It may be
+        used even if the file has not been previously created.
+<p>
+    <b>notype</b> prevents <b>estout1</b> from typing the table to the results window and
+        the log file.
+<a name="rem"></a><p>
+<b><u>Remarks</u></b>
+<p>
+    <i>Special characters:</i> The <b>\</b> and <b>$</b> characters as well as quotation marks
+        have special meanings in Stata. Thus, consider the following
+        instructions if you, for example, intend to specify akward
+        delimiters:
+<p>
+        - Strings containing unmatched quotes should be enclosed in compound
+          double quotes (thus, <b>delimiter(`"""')</b> results in columns delimited
+          by <b>"</b>, while <b>delimiter(")</b> produces an error).
+<p>
+        - The backslash character is used to delay macro expansion in Stata.
+          Specifying <b>\\</b> just results in <b>\</b>. To get a double backslash (the
+          "\newline" command in TeX) type <b>\\\</b> or <b>\\\\</b> instead.
+<p>
+        - The dollar sign is used for global macro expansion in Stata. Thus,
+          <b>$x</b> would result in the display of the contents of global macro x
+          (or nothing, if the macro does not exist). It is always safe to use
+          <b>\$</b> instead of <b>$</b>.
+<p>
+    <i>The tab character:</i> The <b>char()</b> function may also be used to specify odd
+        characters (help strfun). In particular, <b>"`=char(9)'"</b> results in a
+        tab character. For example, <b>delimiter(" `=char(9)' ")</b> specifies a tab
+        character with a leading and a trailing blank as delimiter. The
+        <b>char()</b> function is also helpful if extra lines be added to the head
+        or foot of the table. For example,
+<p>
+          <b>prehead("`=char(9)'Label 1`=char(9)'Label 2`=char(9)' ...")</b>
+<p>
+        may be used to add an extra row containing model labels. Multiple
+        tabs are specified as <b>"`=char(9)'`=char(9)' ..."</b>.
+<p>
+<a name="exa"></a><p>
+<b><u>Examples</u></b>
+<p>
+    General usage:
+<p>
+        <b>.</b> <i>fit some model</i>
+        <b>. est store A</b>   (store it)
+        <b>.</b> <i>fit another model</i>
+        <b>. est store B</b>   (store it)
+        <b>.</b> <i>fit yet another model</i>
+        <b>. est store C</b>   (store it)
+<p>
+        <b>. estout1 using</b><i> filename</i>
+        (export coefficients from the last model)
+<p>
+        <b>. estout1 A B using</b><i> filename</i>
+        (export coefficients from models A and B)
+<p>
+        <b>. estout1 A B using</b><i> filename</i><b>, star t(par) abs</b>
+        (add sign. stars and abs. t-values in parantheses)
+<p>
+        <b>. estout1 * using</b><i> filename</i><b>, stats(N ll chi2 df_m aic)</b>
+        (export all models with some additional statistics)
+<p>
+<p>
+    Coefficients, t-values, significance stars, and summary statistics:
+<p>
+        . sysuse auto
+        (1978 Automobile Data)
+<p>
+        . regress price weight
+        (output omitted)
+<p>
+        . estimates store M1
+        
+        . regress price weight turn rep78
+        (output omitted)
+<p>
+        . estimates store M2
+        
+        . estout1 M1 M2, star t(par) stats(r2_a N)
+                              M1             M2
+        weight             2.044***       3.670***
+                         (5.424)        (5.300)
+        turn                           -285.666*
+                                       (-2.189)
+        rep78                           560.285
+                                        (1.725)
+        _cons             -6.707       4478.295
+                        (-0.006)        (1.056)
+        r2_a               0.280          0.377
+        N                 74.000         69.000
+        
+<p>
+    T-values for the first variable only:
+<p>
+        . estout1 M1 M2, star t(par) tkeep(weight)
+                              M1             M2
+        weight             2.044***       3.670***
+                         (5.424)        (5.300)
+        turn                           -285.666*
+        rep78                           560.285
+        _cons             -6.707       4478.295
+        
+<p>
+    Scalar statistics and overall significance only:
+<p>
+        . estout1 M1 M2, nob stats(r2_a N) ststar
+                              M1             M2
+        r2_a               0.280***       0.377***
+        N                 74.000         69.000
+        
+<p>
+    Wide format:
+<p>
+        . estout1 M2, star t wide
+                              M2
+                               b              t
+        weight             3.670***       5.300
+        turn            -285.666*        -2.189
+        rep78            560.285          1.725
+        _cons           4478.295          1.056
+        
+<p>
+    LaTeX-Table:
+<p>
+        . estout1 M2, style(tex) p wide label conslbl(Constant)
+         prehead("\begin{tabular}{lrr}" \hline) posthead(\hline)
+         postfoot(\hline "\end{tabular}") varwidth(20)
+        \begin{tabular}{lrr}
+        \hline
+                            &amp;          M2&amp;            \\
+                            &amp;           b&amp;           p\\
+        \hline
+        Weight (lbs.)       &amp;       3.670&amp;       0.000\\
+        Turn Circle (ft.)   &amp;    -285.666&amp;       0.032\\
+        Repair Record 1978  &amp;     560.285&amp;       0.089\\
+        Constant            &amp;    4478.295&amp;       0.295\\
+        \hline
+        \end{tabular}
+        
+<p>
+<b><u>Acknowledgements</u></b>
+<p>
+    Some of the code of <b>estout1</b> and some of the text in this help file has
+    been taken from the official est_table.ado and est_table.hlp.
+<p>
+    I would like to thank Henriette Engelhardt and Elisabeth Coutts for
+    helpful comments and suggestions.
+<p>
+<p>
+<b><u>Author</u></b>
+<p>
+    Ben Jann, ETH Zurich, jann@soz.gess.ethz.ch
+<p>
+<p>
+<b><u>Also see</u></b>
+<p>
+    Manual:  <b>[R] estimates</b>
+<p>
+    Online:  help for estimates; estimates table; format; file
+</pre>

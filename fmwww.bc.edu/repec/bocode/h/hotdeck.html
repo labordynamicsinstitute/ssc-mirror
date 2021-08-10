@@ -1,0 +1,194 @@
+<pre>
+<b>help hotdeck</b>
+-------------------------------------------------------------------------------
+<p>
+<b><u>Title</u></b>
+<p>
+  <b>Impute missing values using the hotdeck method</b>
+<p>
+<b><u>Syntax</u></b>
+<p>
+        <b>hotdeck</b> [<i>varlist</i>] [<b>using</b>] [<b>if</b><i> exp</i>] [<b>in</b><i> exp</i>] , [ <b>by(</b><i>varlist</i><b>)</b> <b>store</b>
+                           <b><u>imp</u></b><b>ute(</b><i>varlist</i><b>)</b> <b>noise</b> <b>keep(</b><i>varlist</i><b>)</b> <b><u>com</u></b><b>mand(</b><i>command</i><b>)</b>
+                           <b>parms(</b><i>varlist</i><b>)</b> <b>seed(</b><i>#</i><b>)</b> <b>infiles(</b><i>filename filename</i>
+                           <i>...</i><b>)</b> ]
+<p>
+<p>
+<b><u>Description</u></b>
+<p>
+    <b>Hotdeck</b> will tabulate the missing data patterns within the varlist.  A
+    row of data with missing values in any of the variables in the <b>varlist</b> is
+    defined as a `missing line' of data, similarly a `complete line' is one
+    where all the variables in the <b>varlist</b> contain data. The <b>hotdeck</b>
+    procedure replaces the <b>varlist</b> variables in the `missing lines' with the
+    corresponding values in the `complete lines'.  <b>Hotdeck</b> should be used
+    several times within a multiple imputation sequence since missing data
+    are imputed stochastically rather than deterministically. The <b>nmiss</b>
+    missing lines in each stratum of the data described by the `by' option
+    are replaced by lines sampled from the <b>nobs</b> complete lines in the same
+    stratum. The approximate Bayesian bootstrap method of Rubin and
+    Schenker(1986) is used; first a bootstrap sample of <b>nobs</b> lines are
+    sampled with replacement from the complete lines, and the <b>nmiss</b> missing
+    lines are sampled at random (again with replacement) from this bootstrap
+    sample.
+<p>
+    A major assumption with the hotdeck procedure is that the missing data
+    are either missing completely at random (MCAR) or is missing at random
+    (MAR), the probability that a line is missing varying only with respect
+    to the categorical variables specified in the `by' option.
+<p>
+    If a dataset contains many variables with missing values then it is
+    possible that many of the rows of data will contain at least one missing
+    value. The <b>hotdeck</b> procedure will not work very well in such
+    circumstances.  There are more elaborate methods that <b>only</b> replace
+    missing values, rather than the whole row, for imputed values.  These
+    multivariate multiple imputation methods are discussed by Schafer(1997).
+<p>
+    A critical point is that all variables that are used in the analysis
+    should be included in the variable list. This is particularly true for
+    variables that have missing data!  Variables that predict missingness
+    should be included in the by option so missing data is imputed within
+    strata.
+<p>
+<b><u>Latest Version</u></b>
+<p>
+    The latest version is always kept on the SSC website. To install the
+    latest version click on the following link
+<p>
+    ssc install hotdeck, replace.
+<p>
+<b><u>Options</u></b>
+<p>
+    <b>using</b> specifies the root of the imputed datasets filenames. The default
+        is "imp" and hence the datasets will be saved as imp1.dta, imp2.dta,
+        ....
+<p>
+    <b>by(</b><i>varlist</i><b>)</b> specifies categorical variables defining strata within which
+        the imputation is to be carried out. Missing values will be replaced
+        by complete values only within the strata. If within a strata there
+        are no complete records then no data will be imputed and will lead to
+        the wrong answers. Make sure there are a reasonable number of
+        complete records per strata.
+<p>
+    <b>store</b> specifies whether the imputed datasets are saved to disk.
+<p>
+    <b><u>imp</u></b><b>ute(</b><i>varlist</i><b>)</b> specifies the number of imputed datasets to generate. The
+        number needed varies according to the percentage missing and the type
+        of data, but generally 5 is sufficient.
+<p>
+    <b>noise</b> specifies whether the individual analyses, from the <b>command()</b>
+        option, are displayed.
+<p>
+    <b>keep(</b><i>varlist</i><b>)</b> specifies the variables saved in the imputed datasets in
+        addition to the imputed variables and the by list. By default the
+        imputed variables and the by list are always saved.
+<p>
+    <b><u>com</u></b><b>mand(</b><i>command</i><b>)</b> specifies the analysis performed on every imputed
+        dataset.
+<p>
+    <b>parms(</b><i>varlist</i><b>)</b> specifies the parameters of interest from the analysis. If
+        the <b>command</b> is a regression command then the parameter list can
+        include a subset of the variables specified in the regression
+        command.The final output consists of the combined estimates of these
+        parameters.  For non-standard commands that are "regression" commands
+        the <b>parms()</b> option looks at the estimation matrix e(b) and requires
+        the column names to identify the coefficients of interest.
+<p>
+    <b>seed(</b><i>#</i><b>)</b> specifies the random number generator seed. When using the <b>seed</b>
+        option the hotdeck command must be used in the correct way. The key
+        point is that ALL variables in the analysis command must be in the
+        variable list, this ensures that the correlations between the
+        variables are maintained post imputation.
+<p>
+    <b>infiles(</b><i>filename filename ...</i><b>)</b> specifies a list of files that have
+        missing values replaced by imputed values. This is convenient when
+        the user has several imputed datasets and wants to analyse them and
+        combine the results.
+<p>
+<p>
+<b><u>Examples</u></b>
+<p>
+Impute values for y in sex/age groups.
+<p>
+  hotdeck y, by(sex age) 
+<p>
+Additionally to store the imputed datasets above as <b>imp1.dta</b> and <b>imp2.dta</b>.
+<p>
+  hotdeck y using imp,store by(sex age) impute(2) 
+<p>
+Hotdeck can also use the stored imputed datafiles hi:imp1.dta} and <b>imp2.dta</b> and
+carry out the combined analysis. This analysis is displayed for the coefficient
+of <b>x</b> and constant term <b>_cons</b>.
+<p>
+  hotdeck y using imp, command(logit y x) parms(x _cons) infiles(imp1 imp2)  
+<p>
+Do not save imputed datasets to disk but carry out a logistic regression on the
+imputed datasets and display the coefficients for <b>x</b> and the constant term <b>_cons</b>
+of the model.
+<p>
+  hotdeck y x, by(sex age) command(logit y x) parms(x _cons) impute(5) 
+<p>
+<p>
+<b><u>Example - Multiple Equation Model</u></b>
+<p>
+Multiple equation models require more complicated <b>parms()</b> statements.  The
+example used can be applied to all multiple equation models. The only
+complication is that the name of the coefficients are different.
+<p>
+For the following command
+<p>
+xtreg kgh f1, mle
+<p>
+Then inspect the matrix of coefficients
+<p>
+mat list e(b)
+<p>
+   e(b)[1,4]
+             kgh:        kgh:    sigma_u:    sigma_e:
+               f1       _cons       _cons       _cons
+   y1  -1.6751401   77.792948           0   16.730843
+<p>
+Then the following command will do an imputation and analysis for the single pa
+&gt; rameter.
+<p>
+hotdeck kgh, by(ethn) command(xtreg kgh f1, mle) parms(kgh:f1) impute(5)
+<p>
+<b><u>Example - mlogit</u></b>
+<p>
+Use this web dataset for STATA release 9.
+<p>
+use http://www.stata-press.com/data/r9/sysdsn3.dta
+<p>
+The simple model without handling missing data
+<p>
+mlogit insure male
+<p>
+The estimated coefficients are put automatically by STATA into the matrix e(b),
+note the column headings are the parameter names that <b>hotdeck</b> uses. So you can
+not use the simple syntax of just <b>parms(male)</b> because this refers to two
+parameters.
+<p>
+mat list e(b)
+<p>
+So this syntax will handle the missing data using <b>hotdeck</b> imputation.
+<p>
+hotdeck insure male, command(mlogit insure male) parms(Prepaid:male) impute(5)
+<p>
+<b>NOTE</b> hotdeck will fail when using mlogit with spaces in the category labels.
+This is due to the lack of functionality in STATA's matrix commands.
+<p>
+<b><u>Author</u></b>
+<p>
+Adrian Mander, MRC Human Nutrition Research, Cambridge, UK.
+<p>
+Email adrian.mander@mrc-hnr.cam.ac.uk
+<p>
+<b><u>See Also</u></b>
+Related commands
+<p>
+HELP FILES      Installation status     SSC installation links          Descrip
+&gt; tion
+<p>
+whotdeck                (if installed)          (ssc install whotdeck)         
+&gt;  Weighted version of Hotdeck
+</pre>

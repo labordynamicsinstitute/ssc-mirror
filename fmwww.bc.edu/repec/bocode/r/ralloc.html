@@ -1,0 +1,1149 @@
+<pre>
+<p>
+<b>help ralloc</b>
+-------------------------------------------------------------------------------
+<p>
+<b><u>Title</u></b>
+<p>
+    <b>ralloc </b>-<b> Allocation of treatments in controlled trials using random</b>
+        <b>permuted blocks</b>
+<p>
+<p>
+<b><u>Syntax</u></b>
+<p>
+        <b>ralloc</b> <i>varname1</i> <i>varname2</i> <i>varname3</i> <b>,</b> <b><u>sav</u></b><b>ing</b><b>(</b><i>filename1</i><b>)</b> [<i>options</i>]
+<p>
+        <b>ralloc ?</b>
+<p>
+    where:
+<p>
+        <i>varname1</i> is the variable that will store the block identifier.
+        <i>varname2</i> is the variable that will store the block size.
+        <i>varname3</i> is the variable that will store treatment allocation.
+       <i>filename1</i> is the filename (or stub of names of multiple files) that will
+store the randomised allocations.
+<p>
+<p>
+    <i>options</i>                         Description
+    -------------------------------------------------------------------------
+    Common options
+      <b>idvar(</b><i>varname</i><b>)</b>                specifies variable to store unique study
+                                      identifier
+      <b><u>se</u></b><b>ed(</b><i>#</i>|<b>date)</b>                  sets seed for the random number generator
+      <b><u>ns</u></b><b>ubj(</b><i>#</i><b>)</b>                      specifies number of allocations in each
+                                      stratum
+      <b><u>nt</u></b><b>reat(</b><i>#</i><b>)</b>                     specifies number of treatments (1 to 10)
+      <b><u>ra</u></b><b>tio(</b><i>#</i><b>)</b>                      specifies allocation ratio (1:<i>#</i>) in 2
+                                      treatment trial. <i>#</i> is 1, 2, or 3
+      <b><u>os</u></b><b>ize(</b><i>#</i><b>)</b>                      specifies number of different block sizes
+                                      (1 to 7)
+      <b>init(</b><i>#</i><b>)</b>                       specifies smallest block size to be used
+      [<b>no</b>]<b><u>eq</u></b><b>ual</b>                     specifies whether or not the frequency of
+                                      block sizes is the same
+      <b><u>strat</u></b><b>a(</b><i>#</i><b>)</b>                     specifies number of strata
+      [<b>no</b>]<b><u>tab</u></b><b>les</b>                    requests informative tables to be
+                                      displayed
+      <b>trtlab</b><b>(</b><i>label1 [label2]</i>...<b>)</b>    specifies value labels for at least one
+                                      treatment
+      <b><u>stratla</u></b><b>b</b><b>(</b><i>label1 label2</i>...<b>)</b>    specifies value labels for each and every
+                                      stratum [when no <b>using()</b> file is
+                                      specified]
+      [<b>no</b>]<b>vallab</b>                    requests value labels be attached to
+                                      strata <i>and</i> be used as suffixes for
+                                      allocation filenames
+<p>
+    Special designs
+      <b><u>fact</u></b><b>or</b><b>(</b><i>#1</i><b>*</b><i>#2</i><b>)</b>                 specifies a <i>#1</i>x<i>#2</i> factorial trial where
+                                      <i>#1</i>, <i>#2</i> = 2, 3 or 4
+      <b><u>fact</u></b><b>or</b><b>(</b><i>#1</i><b>*</b><i>#2</i><b>*</b><i>#3</i><b>)</b>              specifies a <i>#1</i>x<i>#2</i>x<i>#3</i> factorial trial
+                                      where <i>#1</i>, <i>#2</i>, <i>#3</i> = 2 or 3 but subject
+                                      to <i>#1</i> <u>&lt;</u> <i>#2</i> <u>&lt;</u> <i>#3</i>
+      <b><u>fra</u></b><b>tio</b><b>(</b><i>#1</i> <i>#2</i><b>)</b>                 specifies allocation ratios in a 2x2
+                                      factorial trial where <i>#1</i>, <i>#2</i> = 1 or 2
+      <b><u>xo</u></b><b>ver(stand</b>|<b>switch</b>|<b>extra)</b>     specifies design of a 2x2 crossover trial
+<p>
+    Saving file
+      [<b>no</b>]<b>multif</b>                    saves multiple files (one for each
+                                      stratum) with <i>filename1</i> as stub
+      <b><u>shap</u></b><b>e(long</b>|<b>wide)</b>              specifies shape of <i>filename1</i>
+<p>
+    File defining strata
+      <b><u>us</u></b><b>ing</b><b>(</b><i>filename2</i><b>)</b>              names an existing .dta file holding
+                                      desired stratum-specific allocation
+                                      counts
+      <b><u>count</u></b><b>v</b><b>(</b><i>varname</i><b>)</b>               specifies name of the numeric variable in
+                                      <i>filename2</i> that stores desired number of
+                                      allocations in each stratum.<b>  countv</b>
+                                      may only be specified - and is not
+                                      optional - if<b> using</b> is specified
+    -------------------------------------------------------------------------
+<p>
+<p>
+<b><u>Description</u></b>
+<p>
+    <b>ralloc</b> provides a sequence of treatments randomly permuted in blocks of
+    constant or varying size.  If not constant, the size and order of the
+    blocks are also random. Allocation may be stratified by one or more
+    variables.  In non-factorial designs, up to 10 treatments may be
+    specified. Randomisation may also proceed simultaneously on 2 factors:
+    2x2, 2x3, 3x2, 3x3, 2x4, 4x2, 3x4, 4x3 and 4x4 factorial designs are
+    supported, or on 3 factors: 2x2x2, 2x2x3, 2x3x3 and 3x3x3 designs are
+    supported. <b>ralloc</b> will also handle a 2x2 crossover design with or without
+    a supplementary 3rd period as either a "switchback" or "extra period"
+    design (Jones and Kenward 1989).
+<p>
+    A typical use of <b>ralloc</b> is in a randomised controlled clinical trial
+    (RCT), and, in particular, in a multicentred trial where balance in
+    treatment allocations may be desirable within centre and other defined
+    strata.
+<p>
+    The second syntax (<b>ralloc ?</b>) displays the syntax diagram for the first
+    syntax.
+<p>
+    Note that <b>ralloc</b> issues a <b>clear</b> command immediately after it is invoked,
+    so existing data in memory will be lost.
+<p>
+<p>
+<b><u>Options</u></b>
+<p>
+        +----------------+
+    ----+ Common options +---------------------------------------------------
+<p>
+    <b>idvar(</b><i>varname</i><b>)</b> specifies the name of the unique subject identifier. This
+        identifier is completely uninformative of any subject characteristic.
+<p>
+    <b>seed(</b><i>#</i>|<b>date)</b> specifies the random number seed. If unspecified, the
+        default is 1234567879. <i>#</i> should be an integer; if it is not it will
+        be truncated. Alternatively, the word <b>date</b> may be specified which
+        invites <b>ralloc</b> to set the seed to today's date (number of days
+        elapsed since January 1, 1960).
+<p>
+    <b>nsubj</b><b>(</b><i>#</i><b>)</b> specifies the total number of subjects (&gt;0) <i>in each stratum</i>
+        requiring a random treatment allocation. If unspecified, the default
+        is 100. <b>ralloc</b> may yield a number greater than <i>#</i> if this is required
+        to complete the final block in any stratum. <i>#</i> is overridden if option
+        <b>using()</b> is specified.
+<p>
+    <b>ntreat(</b><i>#</i><b>)</b> specifies the number of treatment arms in a non-factorial
+        design. <i>#</i> may be 2 to 10. <b>ntreat()</b> should not be specified in a
+        factorial design, as the number of treatment combinations is defined
+        in the <b>factor()</b> option. If unspecified, the default for a
+        non-factorial design is 2.
+<p>
+    <b>ratio</b><b>(</b><i>#</i><b>)</b> specifies the ratio of treatment allocations to the arms of a 2
+        treatment non-factorial trial. <i>#</i> may be 1, 2 or 3, yielding a 1:1,
+        1:2 or 1:3 ratio of allocations respectively. For a 3 or 4 arm
+        non-factorial trial, only <b>ratio(1)</b>, the default, may be specified.
+        However, one may allocate certain ratios by "tricking" <b>ralloc</b> by
+        judicious naming of treatments using the <b>trtlab()</b> option: see
+        Examples 9 and 10 below.
+<p>
+    <b>osize</b><b>(</b>1<b>|</b>2<b>|</b>3<b>|</b>4<b>|</b>5<b>|</b>6<b>|</b>7<b>)</b> specifies how many different sizes of blocks will be
+        used. For example, if 3 treatment arms are chosen, then <b>osize(5)</b>, the
+        default, will yield possible block sizes of 3, 6, 9, 12, and 15. Note
+        that it is quite possible not to realise some block sizes if the
+        number of subjects requested by option <b>nsubj()</b> is low. <b>osize(1)</b> gives
+        a constant block size.
+<p>
+    <b>init(</b><i>#</i><b>)</b> specifies the initiating value of the sequence defining the block
+        sizes. <b>ralloc</b> allows 5 schemas:
+<p>
+        (1) <i>non-factorial design with balanced allocation</i>: In this case the
+            default for <b>init()</b> is the number of treatments given by <b>ntreat()</b>.
+            This may also be specified by <b>init(0)</b>. For example, in a 3
+            treatment trial, <b>init(9)</b> would, if the default <b>osize(5)</b> were
+            chosen, yield block sizes of 9, 12, 15, 18 and 21. If <b>init()</b> were
+            unspecified, the block sizes would be 3, 6, 9, 12 and 15.
+<p>
+        (2) <i>2 treatment non-factorial design with unbalanced allocation</i>: When
+            a <b>ratio</b> &gt; 1 has been specified for a 2 treatment trial, the
+            default initiating value of the block size is (<b>ratio</b> + 1).
+<p>
+        (3) <i>factorial design with balanced allocation</i>: When not specified,
+            the default is the number of treatment combinations, for example,
+            6 in a 2x3 design.
+<p>
+        (4) <i>2x2 factorial design with unbalanced allocation</i>: When <b>fratio()</b> is
+            specified, the default initiating block size is given by ((1st
+            arg of <b>fratio()</b>) + 1) x ((2nd arg of <b>fratio()</b>) + 1).
+<p>
+        (5) <i>2x2 crossover design with balanced allocation</i>: See case (1)
+            above.
+<p>
+        In all cases, when specified, the argument for <b>init()</b> must be an
+            integer multiple of the appropriate default.
+<p>
+    <b>[no]equal</b> indicates whether or not block sizes will be allocated in equal
+        proportions. In the example given under the <b>osize()</b> option, each
+        block would appear on roughly 20% of occasions. This may not be
+        desirable: too many small blocks may allow breaking the blind; too
+        many large blocks may compromise balance of treatments in the event
+        of premature closure. The default (<b>noequal</b>) allocates treatments in
+        proportion to elements of Pascal's triangle.  In the above example,
+        if <b>equal</b> were not specified (or <b>noequal</b> were specified), allocation
+        of block sizes would be in the ratio of 1:4:6:4:1. That is, the
+        relative frequency of small and large block sizes is down-weighted.
+        See the <b>init()</b> option for another way to limit the number of small
+        blocks, albeit at the cost of increasing the number of large blocks.
+        If <b>osize()</b> is 1 or 2, then equality of distribution of block size(s)
+        is forced.
+<p>
+    <b>strata(</b><i>#</i><b>)</b> specifies the number of strata. The default is 1. The number of
+        strata can be calculated as the product, over all stratification
+        variables, of the levels in each stratification variable. For
+        example, if we had a trial running in 10 centres and we further
+        required balance over 2 sexes and 3 age groups, then <b>strata(60)</b> would
+        be specified.  This option may be specified with or without the
+        <b>using()</b> option (see below). If <b>using()</b> is not specified, each stratum
+        will hold the number of allocations specified by the <b>nsubj()</b> option.
+        If <b>using()</b> is specified, the value of <b>strata()</b> is overridden by the
+        number of rows in <i>filename2</i>.
+<p>
+    <b>[no]tables</b> specifies whether or not a frequency distribution of block
+        sizes is displayed for all allocations and, where appropriate, for
+        each stratum. The default is <b>notables</b>.
+<p>
+    <b>trtlab(</b><i>string1 </i>[<i>string2</i>]<i> </i>...<b>)</b> specifies value labels for treatments.  At
+        most 10 labels may be specified for a non-factorial design. The
+        number of labels that may be specified for a factorial design is
+        equal to the sum of the number of possible treatments in the two
+        randomisation axes. For example, a 2x3 study will allow 5 labels.
+        Labels are separated by spaces and so may not themselves contain a
+        space. A label will be truncated after the first 12 characters. The
+        default treatment labels are A, B, C, D, E, F, G, H, I and J. An
+        older form of the syntax for non-factorial designs, requiring an
+        option for each label, <b>tr1lab(</b><i>string</i><b>)</b>, <b>tr2lab(</b><i>string</i><b>)</b>, etc., is
+        permitted but obsolete.  Note that treatment labels need not be
+        unique: this may be exploited to allocate treatments in ratios other
+        than those permitted by <b>ratio()</b>.  See Examples 9 and 10 below.
+<p>
+    <b>stratlab(</b><i>string1 string2 </i>...<b>)</b> specifies value labels for the strata when
+        a <b>using()</b> file is not specified.  Labels are separated by spaces and
+        so may not themselves contain a space. The number of labels specified
+        must equal the number of strata specified in the <b>strata()</b> option.
+<p>
+<p>
+    <b>[no]vallab</b> specifies whether or not value labels will be used. The
+        default is that they will not be used (<b>novallab</b>).  If <b>vallab</b> <i>is</i>
+        specified then there are two situations to consider:
+<p>
+      (i) a <b>using</b> file is not specified:
+<p>
+        In this case, the value labels will have been explicitly specified in
+        option <b>stratlab</b>. The labels will be attached to the numeric stratum
+        identifying variable, <b>StratID</b>, in the file of allocations. If, in
+        addition, option<b> multif</b> is specified, each label will form the suffix
+        of the name of the file holding the treatment allocations for the
+        respective stratum.
+<p>
+      (i) a <b>using</b> file is specified:
+<p>
+        In this case, the value labels must pre-exist for each
+        stratum-defining variable in the <b>using</b> file, and will be attached to
+        the numeric stratum identifying variable, <b>StratID</b>, in the file of
+        allocations. If, in addition, option<b> multif</b> is specified, each label
+        will form the suffix of the name of the file holding the treatment
+        allocations for the respective stratum. Any spaces in a value label
+        being used as part of a filename will be replaced by underscore
+        characters.  The value labels of the stratum-defining variables in
+        the <b>using</b> file will also be attached to the same variables in the
+        file of allocations.
+<p>
+        +-----------------+
+    ----+ Special designs +--------------------------------------------------
+<p>
+    <b>factor(</b><i>string</i><b>)</b> specifies that the trial has a factorial design with two
+        or three "axes of randomisation". <i>string</i> must be one of: 2*2, 2*3,
+        3*2, 3*3, 2*4, 4*2, 3*4, 4*3, 4*4, 2*2*2, 2*2*3, 2*3*3 or 3*3*3.
+        Allocation combinations are balanced within blocks, unless <b>fratio()</b>
+        is specified in a 2x2 design. The names of the treatment variables
+        will be <i>varname3</i>1, <i>varname3</i>2 and, if required for the 3-way design,
+        <i>varname3</i>3.
+<p>
+    <b>fratio(</b><i>string</i><b>)</b> specifies, in the case of a 2x2 factorial design, the
+        ratio of allocations in <i>each</i> axis.  The string must be one of: 1 1, 1
+        2, 2 1, or 2 2, that is, two digits separated by at least one space.
+        For example, if we require a 1:2 ratio of treatments in the first
+        randomisation axis and a 1:1 ratio of treatments in the second axis,
+        <b>fratio(2 1)</b> would be specified.
+<p>
+    <b>xover(</b><i>string</i><b>)</b> specifies the design as a 2x2 crossover. <i>string</i> may be one
+        of <b>stand</b> for the standard 2 treatment, 2 period design, <b>switch</b> for
+        the switchback design where each subject receives the treatment
+        assigned for period 1 in period 3, or <b>extra</b>, for the extra period
+        design, where each subject has the treatment assigned for period 2
+        replicated in period 3. The names of the treatment variables will be
+        <i>varname3</i>1, <i>varname3</i>2 and, if required, <i>varname3</i>3.
+<p>
+<p>
+        +-------------+
+    ----+ Saving file +------------------------------------------------------
+<p>
+    <b>saving</b><b>(</b><i>filename1</i><b>)</b> specifies the name of the file to which data are saved.
+        This is a required "option".  If more than one stratum is specified
+        by either the <b>strata()</b> option or the <b>using()</b> option then, in addition
+        to saving all random allocations across all strata to <i>filename1</i>,
+        allocations for each stratum may be saved to individual files (see
+        option <b>multif</b>). For these, <i>filename1</i> is used as a stub to name one
+        file for each stratum. There are then two cases to consider:
+<p>
+      (i) Stratum value labels not specified <i>or</i> Stratum value labels
+        specified, but option <b>vallab</b> not specified:
+<p>
+        The naming schema for stratum specific files is:
+<p>
+            <i>filename1_n1</i>[<i>_n2_n3</i> ... <i>_nk</i>]}
+<p>
+        for a trial with 1 to <i>k</i> stratification variables. <i>n1</i> identifies the
+        level of the stratum of the 1st stratification variable, <i>n2</i> gives the
+        level of the stratum of the 2nd stratification variable, etc., each
+        stratification variable's set of suffixes being preceded by an
+        underscore character. Suffixes are padded with leading zeros to
+        maintain alphanumeric sort order.
+<p>
+        For example, if we specified <b>saving(myfile)</b> <i>and</i> <b>multif</b> and we had
+        only one stratification variable with 10 levels, the filenames would
+        be: <b>myfile.dta</b>, <b>myfile_01.dta</b>, <b>myfile_02.dta</b>, ..., <b>myfile_09.dta</b>, and
+        <b>myfile_10.dta</b>.
+<p>
+        If there were a second stratification variable, with say, 3 levels,
+        we would have <b>myfile.dta</b> plus 30 files named: <b>myfile_01_1.dta</b>,
+        <b>myfile_01_2.dta</b>, <b>myfile_01_3.dta</b>, <b>myfile_02_1.dta</b>, .....,
+        <b>myfile_10_3.dta</b>.
+<p>
+<p>
+      (ii) Stratum value labels specified <i>and</i> option <b>vallab</b> also specified:
+<p>
+        The naming schema for stratum specific files is:
+<p>
+            <i>filename1_valuelabel</i> if no <b>using</b> file is specified and so labels
+        are specified by option <b>stratlab</b>.
+        or
+            <i>filename1_valuelabel1_valuelabel2</i> ...... if a <b>using</b> file is
+        specified and so labels are derived from that file.
+<p>
+        In the case where the value labels are defined directly in the
+        <b>stratlab</b> option (that is, no <b>using</b> file is specified), then, for
+        example, if we specified <b>saving(myfile)</b> <i>and</i> <b>multif</b> and we had only 1
+        stratification variable with 2 levels, and stratum labels specified
+        as<b> stratlab(Seattle_Grace   Chicago_Hope)</b> the names of the 3 files
+        holding allocations would be: <b>myfile.dta</b>, <b>myfile_Seattle_Grace.dta</b>,
+        and <b>myfile_Chicago_Hope.dta</b>.
+<p>
+        If there were a second stratification variable, also with, say, 2
+        levels, we might have specified:<b>  stratlab(Seattle_Grace_Male  </b>
+        <b>Seattle_Grace_Female   Chicago_Hope_Male   Chicago_Hope_Female)</b> and
+        the 5 files produced would be: <b>myfile.dta</b>,
+        <b>myfile_Seattle_Grace_Male.dta</b>, <b>myfile_Seattle_Grace_Female.dta</b>,
+        <b>myfile_Chicago_Hope_Male.dta</b>, and <b>myfile_Chicago_Hope_Female.dta</b>.
+<p>
+        Note that each value label string must contain information on all the
+        relevant strata, in this case, the value labels each contain
+        information on <i>both</i> hospital and sex. Embedded spaces are not
+        allowed.
+<p>
+        In the case where the value labels are defined indirectly (that is,
+        they are derived from the value labels of the <b>using</b> file), then there
+        will be separate value labels for each stratum-defining variable. For
+        example, if the <b>using file</b> had two stratum defining variables,
+        hospital and sex, each of these variables will have a set of value
+        labels. The suffix of the name of an allocation file will be a
+        concatenation of the relevant label from each set, with separating
+        underscore characters.  So, for the file saving allocations for
+        females at Chicago Hope, the suffix will be<b> Chicago_Hope_Female</b>, and
+        we note that underscore characters have been substituted for the
+        space within "Chicago Hope" <i>and</i> used to bind the two value labels.
+<p>
+        If a stratum-defining variable in the <b>using</b> file does not have a
+        value label, or a value label exists but not for every level of the
+        stratum, then <b>vallab</b> will attach whatever value labels it can, and
+        substitute the raw numeric value of the level for those that are not
+        available. (See Example 12 below).
+<p>
+<p>
+    <b>[no]multif</b> specifies that multiple files will be saved, one file holding
+        all allocations, and a series of files for each stratum's
+        allocations. The default is <b>nomultif</b> meaning that just one file
+        holding all allocations will be generated.
+<p>
+    <b>shape(long</b>|<b>wide)</b> allows specification of the output to <i>filename1</i> (or to
+        each of the files with prefix stub <i>filename1</i> if <b>multif</b> has been
+        specified) in either long or wide form. In long form, the treatment
+        listing is sequential down page within the defined block. In wide
+        form, the treatment listing is sequential across page within the
+        defined block. The default is long. A factorial or crossover design
+        may not be specified as wide.
+<p>
+<p>
+        +----------------------+
+    ----+ File defining strata +---------------------------------------------
+<p>
+    <b>using(</b><i>filename2</i><b>)</b> specifies a Stata .dta file defining the stratification
+        schema. The file consists of numeric variables defining strata plus
+        one other numeric variable giving the number of subjects required to
+        be randomised in each stratum (the <b>countv()</b> variable, see below). If
+        the stratum-defining variables have value labels then, if option
+        <b>vallab</b> is specified, these labels will be used in the treatment
+        allocation file(s). <i>filename2</i> should reside in the current data path.
+        Each row (observation) in this file defines a stratum. Levels of each
+        stratification variable must be coded as consecutive positive
+        integers (1,2,3...). <b>ralloc</b> will check this and will also check that
+        each stratum has been uniquely specified.  The program will warn, but
+        not exit, if the product of levels over all stratification variables
+        does not equal the number of rows (strata).
+<p>
+    <b>countv(</b><i>varname</i><b>)</b> specifies the numeric variable in <i>filename2</i> whose values
+        give the number of subjects (&gt;0) requiring randomisation in each
+        stratum. <b>countv()</b> must be specified, and may only be specified, if
+        <b>using()</b> is specified.  Values of the variable specified override the
+        value of <b>nsubj()</b> should this option also be specified.
+<p>
+<p>
+<b><u>Remarks</u></b>
+<p>
+    <b>ralloc</b> addresses four (of the many) objectives of the design of a RCT:
+<p>
+    (1) Random allocation of treatments to subjects. Each block represents a
+        random permutation of up to 10 treatments specified.
+<p>
+    (2) Avoiding unnecessary imbalance in the number of subjects allocated to
+        each treatment. Allocation within blocks of reasonable size achieves
+        this. In the case of a trial with <i>k</i> treatments, even in the event of
+        unexpected termination of the trial, the imbalance (in each stratum)
+        will be at most 1/<i>k</i> times the size of the largest block used.
+<p>
+    (3) Maintenance of blinding by concealing the pattern of the blocks. A
+        limited number of block sizes are chosen, the number depending on the
+        <b>osize()</b> option. Treatments are balanced within blocks; by default,
+        there are equal numbers of each treatment in each block, although the
+        ratio may be varied (1:2 or 1:3) in a 2 treatment trial.  Block sizes
+        are chosen at random with equal or unequal probabilities and then the
+        order of block sizes is randomly shuffled. Such a scheme makes
+        "breaking the blind" by working out the block pattern extremely
+        difficult.  If, however, balance in the number of allocations to each
+        treatment is more critical than increased protection against breaking
+        the blind, <b>osize(1)</b> permits the choice of a constant block size. This
+        may be desired in a trial with a small number of subjects.
+<p>
+    (4) Ensuring that a record is kept of the randomisation protocol. The
+        program saves the allocation sequence into user-named .dta file(s).
+        It also (i) writes an exact copy of the user's command in a note in
+        the data file(s) and (ii) writes the options specified (seed, number
+        of subjects requested, etc.) and certain other useful information
+        (number of blocks used, number of subjects randomised, identification
+        of the levels of each stratum defining the schema for the current
+        data file) as notes in the data file(s).
+<p>
+    <b>ralloc</b> requires specification of 3 variables that will appear in the data
+    set(s) that the command creates and saves. These are listed under the
+    syntax paragraph. The last of these (<i>varname3</i>) names the treatment
+    variable storing the randomly allocated treatment; values are 1, 2, 3,
+    etc. labelled as <b>"A"</b>, <b>"B"</b>, <b>"C"</b>, etc. respectively, unless labels are
+    specified with the <b>trtlab()</b> option.
+<p>
+    <b>ralloc</b> creates two additional variables:
+<p>
+      <b>StratID</b> is an integer identifier whose value is the same for every
+          observation in a given stratum. Optionally, value labels, specified
+          either by <b>stratlab()</b> or, when a <b>using()</b> file is used, by<b> slabv()</b>,
+          may be attached.
+<p>
+      <b>SeqInBlk</b> gives the order of the allocation within block.  This variable
+          is explicit if <b>shape(long)</b> is specified, and implicit if
+          <b>shape(wide)</b> is specified.
+<p>
+    If <b>using(</b><i>filename2</i><b>)</b> is specified, <b>ralloc</b> adds each stratification
+    variable to the data set and fills observations with the values of the
+    levels appropriate to the stratum.
+<p>
+    If <b>shape(wide)</b> is specified, then each observation will be a block.
+    <b>ralloc</b> will create <i>k</i> = max(blocksize) new variables named <i>varname3#</i>,
+    where <i>#</i> = 1...<i>k</i>, to store the allocated treatments for that block.  Of
+    course, if a block's size, <i>j</i>, is such that <i>j</i> &lt; <i>k</i>, missing values are
+    stored in variables <i>varname3(j+1)</i> through <i>varname3k</i>.
+<p>
+    Should the original order of allocations be disturbed, then with the data
+    in long form, it may be restored by
+<p>
+        . <b>sort</b> <b>StratiD</b> <i>varname1</i> <b>SeqInBlk</b>
+<p>
+    The prudent user will open a <b>log file</b> before issuing a command such as
+    <b>ralloc</b>. However, even if the log file is lost, the data files contain, in
+    the form of <b>notes</b>, the information needed to reproduce the randomisation
+    protocol.
+<p>
+<p>
+<b><u>Examples</u></b>
+<p>
+  <b>Example 1: basic example</b>
+<p>
+    <b>. ralloc block size treat, nsubj(600) seed(675) sav(mytrial)</b>
+        <b>idvar(study_ID)</b>
+    <b>. list in 1/18, sepby(block)</b>
+<p>
+    allocates treatments A and B at random in a ratio of 1:1 in blocks of
+    sizes 2, 4, 6, 8 and 10 to 600 subjects. Block sizes are allocated
+    unequally in the ratio 1:4:6:4:1 (Pascal's triangle). Seed is set at 675.
+    Only 1 stratum is specified (by default). Sequence is saved to
+    <b>mytrial.dta</b> in long form. A unique subject identifier is stored in the
+    newly created variable <b>study_ID</b>.
+<p>
+<p>
+  <b>Example 2: equal block distribution but 1:3 allocation ratio within each</b>
+<b>block</b>
+<p>
+    <b>. ralloc bn bs Rx, nsubj(920) nt(2) osiz(4) ra(3) init(8) eq sav(mys)</b>
+<p>
+    allocates treatments A and B at random in ratio of 1:3 in blocks of sizes
+    8, 12, 16 and 20 to 920 subjects using the default seed of 123456789.
+    Roughly 25% of blocks will be of each size.  Data saved in default (long)
+    form to <b>mys.dta</b>. Only 1 stratum (the default) is specified, and 1 file is
+    saved. In fact, 932 subjects are allocated, the extra 12 being required
+    to complete the final block (the last block's size was 16, but the 920th
+    subject was only the 4th in the block).
+<p>
+<p>
+  <b>Example 3: saving a file for each stratum's allocations</b>
+<p>
+    <b>. ralloc blknum blksiz Rx, ns(494) osiz(2) eq ntreat(2) sav(mywide)</b>
+        <b>shap(wide) seed(date)</b>
+        <b>trtlab(Placebo Active) strata(4) multif</b>
+<p>
+    allocates treatments labelled <b>"Placebo"</b> and <b>"Active"</b> equally in two block
+    sizes, 2 and 4, to 494 subjects in each of 4 strata (maybe it's a
+    4-centre trial). The <b>seed</b> is set to today's <b>date</b> in Stata's elapsed days
+    since January 1, 1960. Data are saved in wide form to 5 files: <b>mywide.dta</b>
+    holds all allocations, and 4 additional files named <b>mywide_1.dta</b>,
+    <b>mywide_2.dta</b>, <b>mywide_3.dta</b> and <b>mywide_4.dta</b> hold stratum-specific
+    allocations.  A truncated listing of data from <b>mywide_4.dta</b> looks like
+    this (depending on today's date!):
+<p>
+        <b>. use mywide_4</b>
+        <b>. li in 1/7, noobs nodisp clean</b>
+<p>
+        <b>StratID     blknum     blksiz        Rx1        Rx2        Rx3        R</b>
+<b>&gt; x4</b>
+              4        498          2    Placebo     Active          .         
+&gt;  .
+              4        499          2     Active    Placebo          .         
+&gt;  .
+              4        500          2    Placebo     Active          .         
+&gt;  .
+              4        501          4     Active    Placebo    Placebo     Acti
+&gt; ve
+              4        502          2    Placebo     Active          .         
+&gt;  .
+              4        503          2    Placebo     Active          .         
+&gt;  .
+              4        504          2     Active    Placebo          .         
+&gt;  .
+<p>
+    And we can easily recover the long form of the data:
+<p>
+        <b>. reshape long</b>
+        <b>. sort blknum SeqInBlk</b>
+        <b>. drop if Rx == .</b>
+        <b>. order StratID</b>
+        <b>. list in 1/10, noobs clean</b>
+<p>
+        <b>StratID     blknum   SeqInBlk     blksiz         Rx</b>
+              4        498          1          2    Placebo
+              4        498          2          2     Active
+              4        499          1          2     Active
+              4        499          2          2    Placebo
+              4        500          1          2    Placebo
+              4        500          2          2     Active
+              4        501          1          4     Active
+              4        501          2          4    Placebo
+              4        501          3          4    Placebo
+              4        501          4          4     Active
+<p>
+<p>
+  <b>Example 4: unequal block size distribution and use of tables</b>
+<p>
+    <b>. ralloc blknum blksiz Rx, ns(4984) osiz(4) ntr(4) sav(mys) strat(3) tab</b>
+<p>
+    allocates treatments A, B, C and D at random in ratio of 1:1:1:1 in
+    blocks of sizes 4, 8, 12 and 16 to 4984 subjects in each of 3 strata
+    using the default seed. Block sizes are roughly in ratio of 1:3:3:1
+    (since <b>equal</b> was <i>not</i> specified). For this example, the following tables
+    will appear on-screen:
+<p>
+        <b>Frequency of block sizes in stratum 1:</b> 
+<p>
+         block size |      Freq.     Percent        Cum.
+        ------------+-----------------------------------
+                  4 |         62       12.50       12.50
+                  8 |        183       36.90       49.40
+                 12 |        185       37.30       86.69
+                 16 |         66       13.31      100.00
+        ------------+-----------------------------------
+              Total |        496      100.00
+<p>
+        <b>Frequency of block sizes in stratum 2:</b>
+              <i>output not shown</i>
+<p>
+        <b>Frequency of block sizes in stratum 3:</b>
+              <i>output not shown</i>
+<p>
+        <b>Frequency of block sizes over ALL data:</b>
+<p>
+         block size |      Freq.     Percent        Cum.
+        ------------+-----------------------------------
+                  4 |        179       12.01       12.01
+                  8 |        555       37.22       49.23
+                 12 |        577       38.70       87.93
+                 16 |        180       12.07      100.00
+        ------------+-----------------------------------
+              Total |       1491      100.00
+<p>
+    If one were to issue the command
+<p>
+        <b>. tab blksiz Rx</b>
+<p>
+    a table showing the frequency of treatment allocations across all strata
+    would be produced:
+<p>
+                   |                  treatment
+        Block size |         A          B          C          D |     Total
+        -----------+--------------------------------------------+----------
+                 4 |       179        179        179        179 |       716
+                 8 |      1110       1110       1110       1110 |      4440
+                12 |      1731       1731       1731       1731 |      6924
+                16 |       720        720        720        720 |      2880
+        -----------+--------------------------------------------+----------
+             Total |      3740       3740       3740       3740 |     14960
+<p>
+    Note that 14960 subjects were randomised, compared with 3*4984 = 14952
+    requested. An extra 8 subjects were required to ensure completeness of
+    final blocks in the strata.
+<p>
+<p>
+  <b>Example 5: individual specification of allocations to each stratum</b>
+<p>
+    Let us say we have a file, <b>raltest6.dta</b>, defining strata for a RCT to be
+    conducted in 3 centres and we also seek to balance allocations within 2
+    age groups. The number of allocations in each of the 6 strata are held in
+    the variable <b>freq</b>.
+<p>
+        <b>. use raltest6, clear</b>
+        <b>. list, clean</b>
+ 
+<p>
+              <b>centre    agegrp      freq</b>
+         1.        1         1        50
+         2.        1         2        80
+         3.        2         1       140
+         4.        2         2       100
+         5.        3         1        70
+         6.        3         2       100
+<p>
+    Note that <b>ralloc</b> does not care about the order of variables in the
+    dataset, nor about the sort order of the observations, but it is easier
+    to check the completeness of the schema if levels are coherently nested.
+<p>
+    The command
+<p>
+        <b>. ralloc bID bsiz trt, sav(myrct) count(freq) using(raltest6)</b>
+           <b>nsubj(80) seed(54109) multif</b>
+<p>
+    will produce the following output:
+<p>
+        <i>Counts defined in variable </i><i>freq</i><i> in file</i> raltest6 <i>will override the</i>
+          <i>number of subjects specified in option nsubj(80)</i>
+<p>
+        <i>Number of strata read from file</i> raltest6 <i>is 6</i>
+          <i>number of stratum variables is 2</i>
+<p>
+        <i>stratum variable 1 is centre</i>
+          <i>number of levels in centre is 3</i>
+<p>
+        <i>stratum variable 2 is agegrp</i>
+          <i>number of levels in agegrp is 2</i>
+<p>
+        <i>the stratum design and allocation numbers are:</i>
+<p>
+       <b>       centre  agegrp    freq</b>
+          r1       1       1      50
+          r2       1       2      80
+          r3       2       1     140
+          r4       2       2     100
+          r5       3       1      70
+          r6       3       2     100
+<p>
+        <i>Allocations over all strata saved to file</i> <b>myrct.dta</b>
+<p>
+          ....saving data from stratum 1 to file <b>myrct_1_1.dta</b>
+          ....saving data from stratum 2 to file <b>myrct_1_2.dta</b>
+          ....saving data from stratum 3 to file <b>myrct_2_1.dta</b>
+          ....saving data from stratum 4 to file <b>myrct_2_2.dta</b>
+          ....saving data from stratum 5 to file <b>myrct_3_1.dta</b>
+          ....saving data from stratum 6 to file <b>myrct_3_2.dta</b>
+<p>
+        <i>Data file</i> myrct <i>(all allocations) is now in memory</i>
+        <i>Issue the -notes- command to review your specifications</i>
+<p>
+<p>
+    Here are the notes saved to one of the 6 stratum-specific files
+    generated:
+<p>
+        <b>. use myrct_2_1</b>
+        <b>. notes</b>
+ 
+        _dta:
+          1.  command issued was: ralloc bID bsiz trt, sav(myrct) count(freq)
+               using(raltest6) nsubj(80) seed(54109) multif
+          2.  Randomisation schema created on 1 Oct 2006 22:38 using
+               ralloc.ado version 3.3 in Stata version 9.2 born 28 Aug 2006
+          3.  Seed used = 54109
+          4.  Stratum definitions and numbers of allocations were defined in
+               file 'raltest6.dta'
+          5.  Number of strata requested = 6
+          6.  This is a non-factorial, non-crossover trial with 2 treatments
+          7.  See notes for parent file 'myrct.dta'
+          8.  This is stratum 3 of 6 strata requested
+          9.  ...level 2 of stratum variable -centre-
+         10.  ...level 1 of stratum variable -agegrp-
+<p>
+    If the <b>shape(wide)</b> option had been specified, additional notes would have
+    been displayed:
+<p>
+         11.  Data saved in wide form:
+         12.  ...recover 'SeqInBlk' by issuing <b>reshape long</b> command
+         13.  ...then you may issue <b>drop if trt == .</b> without losing any
+               allocations
+<p>
+<p>
+  <b>Example 6: factorial design</b>
+<p>
+    Consider a study that aims to test both the efficacy of a blood pressure
+    lowering medication, called BPzap, versus a placebo, and the utility of
+    two weight reduction exercise programs, called GymSweat and JogaBit,
+    versus normal activity on a specified cardiovascular endpoint. An
+    efficient design might be a 2x3 factorial RCT (although one should also
+    consider if interaction is an issue here).
+<p>
+    <b>. ralloc blknum size Rx, sav(rctfact) factor(2*3) osiz(2) eq seed(4512)</b>
+        <b>trtlab(BPzap Placebo GymSweat JogaBit normact) nsubj(300)</b>
+<p>
+    will allocate two treatments, called Rx1 and Rx2, to each of 300 subjects
+    in a single stratum using a 2x3 factorial design. Blocks of size 6 and 12
+    with equal frequency will result. After the command we might
+<p>
+        <b>. list in 1/10</b>
+<p>
+<p>
+      <b>       StratID     blknum       size   SeqInBlk        Rx1        Rx2</b>
+        1.         1          1          6          1    Placebo    normact
+        2.         1          1          6          2      BPzap    JogaBit
+        3.         1          1          6          3      BPzap    normact
+        4.         1          1          6          4    Placebo    JogaBit
+        5.         1          1          6          5      BPzap   GymSweat
+        6.         1          1          6          6    Placebo   GymSweat
+        7.         1          2         12          1      BPzap   GymSweat
+        8.         1          2         12          2    Placebo    normact
+        9.         1          2         12          3      BPzap    normact
+       10.         1          2         12          4    Placebo    JogaBit
+<p>
+    So, the 5th subject in Block 1 will receive BPzap and hits the gym, but
+    the 2nd subject in Block 2 takes Placebo and gets to slob around as
+    usual.
+<p>
+        <b>. tab Rx1 Rx2</b>
+<p>
+                   |               Rx2
+               Rx1 |  GymSweat    JogaBit    normact |     Total
+        -----------+---------------------------------+----------
+             BPzap |        50         50         50 |       150
+           Placebo |        50         50         50 |       150
+        -----------+---------------------------------+----------
+             Total |       100        100        100 |       300
+<p>
+    and we note the balance in allocations in each axis of the study.
+<p>
+<p>
+  <b>Example 7: 2x2 factorial with 1:2 allocation ratios in both axes</b>
+<p>
+    We reformulate the preceding study as a 2x2 study by excluding the
+    JogaBit treatment. Let's say we wish to have twice as many on Placebo as
+    BPzap, and also twice as many subjects on normal activity as on the
+    GymSweat regimen.
+<p>
+    <b>. ralloc blknum size Rx, sav(rctfact2) factor(2*2) osiz(2) eq seed(1131)</b>
+        <b>trtlab(BPzap Placebo GymSweat normact) fratio(2 2) nsubj(300)</b>
+<p>
+    This command will give blocks of sizes 9 (the minimum possible with 1:2
+    allocation ratios in each axis) and 18 (because <b>osize(2)</b> was specified).
+<p>
+        <b>. tab Rx*</b>
+<p>
+                   |          Rx2
+               Rx1 |  GymSweat    normact |     Total
+        -----------+----------------------+----------
+             BPzap |        34         68 |       102
+           Placebo |        68        136 |       204
+        -----------+----------------------+----------
+             Total |       102        204 |       306
+<p>
+<p>
+  <b>Example 8: cross-over trial</b>
+<p>
+    We have a 2x2 crossover design supplemented by a switchback in period 3.
+    The trial compares a new anti-arthritic drug "HipLube" versus aspirin in
+    chronic osteoarthritis of the hip.
+<p>
+    <b>. ralloc Bnum Bsize medic, saving(chronOA) ns(28) trtlab(HipLube aspirin)</b>
+        <b>xover(switch) strata(2) osiz(1) init(4)</b>
+<p>
+    will randomise 56 subjects (28 in each of 2 strata) using blocks of
+    constant size, 4, and save results to <b>chronOA.dta</b>.  Each subject will
+    receive either HipLube or aspirin in the 1st period, and the other drug
+    in the 2nd period. The 1st period's drug will be readministered in the
+    3rd period.
+<p>
+<p>
+  <b>Example 9: non-standard allocation ratios</b>
+<p>
+    We have a parallel design with 5 treatments.  We wish to allocate in the
+    ratio 1:2:2:1:4. The <b>ratio</b> option does not support this. Here's how to
+    achieve it:
+<p>
+    <b>. ralloc Bnum Bsize treat, saving(mytrial) ntreat(10) nsubj(800) trtlab(A</b>
+        <b>B B C C D E E E E)</b>
+    <b>. decode treat, gen(final_treat)</b>
+<p>
+    Note that we specified 10 "treatments", not 5, because the sum of the
+    ratios of treatments was 10, and then we "tricked" <b>ralloc</b> by duplicating
+    the treatment names in the <b>trtlab()</b> option. The final <b>decode</b> command
+    tidies things up; to see why, crosstabulate variables <b>treat</b> and
+    <b>final_treat</b>.  Many other allocation ratio designs are possible with
+    judicious choice of <b>ntreat()</b> and <b>trtlab()</b>.
+<p>
+<p>
+  <b>Example 10: non-standard allocation ratios in a factorial design</b>
+<p>
+    We have a 2*3 factorial design with treatments A and B in the first axis,
+    and C, D and E in the second axis. We wish to allocate twice as many
+    subjects to A (in each of C, D and E) as in B. The <b>fratio()</b> option does
+    not support this.
+<p>
+    <b>. ralloc Bnum Bsize treat, saving(mytrial) nsubj(800) factor(3*3)</b>
+        <b>trtlab(A A B C D E)</b>
+<p>
+    and a crosstabulation of <b>treat1</b> by <b>treat2</b> yields:
+<p>
+                   |              treat2
+            treat1 |         C          D          E |     Total
+        -----------+---------------------------------+----------
+                 A |        89         89         89 |       267 
+                 A |        89         89         89 |       267 
+                 B |        89         89         89 |       267 
+        -----------+---------------------------------+----------
+             Total |       267        267        267 |       801 
+<p>
+    <b>. decode treat1, gen(treat1_new)</b>
+<p>
+    and a crosstabulation of <b>treat1_new</b> by <b>treat2</b> yields, as desired:
+<p>
+                   |              treat2
+        treat1_new |         C          D          E |     Total
+        -----------+---------------------------------+----------
+                 A |       178        178        178 |       534 
+                 B |        89         89         89 |       267 
+        -----------+---------------------------------+----------
+             Total |       267        267        267 |       801 
+<p>
+    Note that we specified <b>factor(3*3)</b> not <b>factor(2*3)</b> and tidied up
+    afterwards.
+<p>
+<p>
+  <b>Example 11: a stratified 3-way (2x2x3) factorial design</b>
+<p>
+    We have a stratified RCT in neonates of supplemental oxygen, admission to
+    NICU, and feeding mode.  The stratum is the parity of the mother. In this
+    schema we specify labels both for the 7 treatments and for the 4 strata.
+    The application of the stratum value labels is toggled on by the <b>vallab</b>
+    option.
+<p>
+    <b>. ralloc b s Rx, sav(temp) nsubj(500) fact(2*2*3) osize(1) strata(4)</b>
+        <b>vallab multif seed(81372)</b>
+        <b>trtlab(suppl_O2  no_suppl_O2  NICU  no_NICU  NG_tube  IV_feed</b>
+        <b> breast)</b>
+        <b>stratlab(nulliparous primiparous biparous multiparous)</b>
+<p>
+    Part of the screen display will be:
+<p>
+        <i>Allocations over all strata saved to file</i> <b>temp.dta</b>
+ 
+       ....saving data from stratum 1 [nulliparous] to file
+        <b>temp_nulliparous.dta</b>
+       ....saving data from stratum 2 [primiparous] to file
+        <b>temp_primiparous.dta</b>
+       ....saving data from stratum 3 [biparous] to file <b>temp_biparous.dta</b>
+       ....saving data from stratum 4 [multiparous] to file
+        <b>temp_multiparous.dta</b>
+ 
+<p>
+    <b>. table Rx*, by(StratID)</b>
+<p>
+        ----------------------------------------------------------------------
+        stratum     |                       Rx3 and Rx2                       
+        identifier  | ---- NG_tube ---    ---- IV_feed ---    ---- breast ----
+        and Rx1     |    NICU  no_NICU       NICU  no_NICU       NICU  no_NICU
+        ------------+---------------------------------------------------------
+        nulliparous |
+           suppl_O2 |      42       42         42       42         42       42
+        no_suppl_O2 |      42       42         42       42         42       42
+        ------------+---------------------------------------------------------
+        primiparous |
+           suppl_O2 |      42       42         42       42         42       42
+        no_suppl_O2 |      42       42         42       42         42       42
+        ------------+---------------------------------------------------------
+        biparous    |
+           suppl_O2 |      42       42         42       42         42       42
+        no_suppl_O2 |      42       42         42       42         42       42
+        ------------+---------------------------------------------------------
+        multiparous |
+           suppl_O2 |      42       42         42       42         42       42
+        no_suppl_O2 |      42       42         42       42         42       42
+        ----------------------------------------------------------------------
+<p>
+<p>
+  <b>Example 12: individual specification of allocations to each stratum: using()</b>
+<b>file has complete stratum value labels</b>
+<p>
+    Let us say we have a file, <b>raltest6_lab.dta</b>, containing the allocation
+    schema for a RCT with 6 strata:  3 centres (hospitals) and 2 age groups
+    in each centre. Value labels for every level of both stratification
+    variables are defined in the data set.
+<p>
+    <b>. describe</b>
+<p>
+        Contains data from raltest6_lab.dta
+          obs:             6                          
+         vars:             3                          1 Aug 2011 21:00
+         size:            96 (99.9% of memory free)
+        -----------------------------------------------------------------------
+&gt; ---
+                      storage  display     value
+        variable name   type   format      label      variable label
+        -----------------------------------------------------------------------
+&gt; ---
+        centre           byte  %13.0g      cenlab     
+        agegrp            int  %9.0g       agelab     
+        freq              int  %9.0g                  
+        -----------------------------------------------------------------------
+&gt; ---
+  
+    <b>. label list</b>
+<p>
+        cenlab:
+                  1 St Mary's
+                  2 Seattle Grace
+                  3 Chicago Hope
+        agelab:
+                  1 young
+                  2 old
+<p>
+    <b>. list, sep(6)</b>
+<p>
+             +-------------------------------+
+             |        centre   agegrp   freq |
+             |-------------------------------|
+          1. |     St Mary's    young     50 |
+          2. |     St Mary's      old     80 |
+          3. | Seattle Grace    young    140 |
+          4. | Seattle Grace      old    100 |
+          5. |  Chicago Hope    young     70 |
+          6. |  Chicago Hope      old    100 |
+             +-------------------------------+
+<p>
+<p>
+    <b>. ralloc b s treat, multif saving(RCTx) using(raltest6_lab) countv(freq)</b>
+        <b>vallab</b>
+<p>
+    Part of the screen display will be:
+<p>
+        <i>Allocations over all strata saved to file</i> <b>RCTx.dta</b>
+<p>
+       ....saving data from stratum 1 [St Mary's young] to file <b>RCTx_St_Mary's_</b>
+<b>&gt; young.dta</b>
+       ....saving data from stratum 2 [St Mary's old] to file <b>RCTx_St_Mary's_ol</b>
+<b>&gt; d.dta</b>
+       ....saving data from stratum 3 [Seattle Grace young] to file <b>RCTx_Seattl</b>
+<b>&gt; e_Grace_young.dta</b>
+       ....saving data from stratum 4 [Seattle Grace old] to file <b>RCTx_Seattle_</b>
+<b>&gt; Grace_old.dta</b>
+       ....saving data from stratum 5 [Chicago Hope young] to file <b>RCTx_Chicago</b>
+<b>&gt; _Hope_young.dta</b>
+       ....saving data from stratum 6 [Chicago Hope old] to file <b>RCTx_Chicago_H</b>
+<b>&gt; ope_old.dta</b>
+<p>
+<p>
+    Note that although the value labels on the variable <b>centre</b> in the <b>using</b>
+    file <b>raltest6_lab.dta</b> permit embedded spaces, these are substituted by
+    underscores "_" in the suffixes of the stratum-specific treatment
+    allocation filenames. But the value labels attached to <b>StratID</b> and to the
+    stratum-defining variables within the allocation files preserve any
+    spaces in the labels from the source (<b>using</b> file.
+<p>
+    <b>. list in 1/5</b>
+<p>
+             +-----------------------------------------------------------------
+&gt; +
+             |         StratID   b   s   SeqInBlk   treat      centre   agegrp 
+&gt; |
+             |-----------------------------------------------------------------
+&gt; |
+          1. | St Mary's young   1   4          1       A   St Mary's    young 
+&gt; |
+          2. | St Mary's young   1   4          2       B   St Mary's    young 
+&gt; |
+          3. | St Mary's young   1   4          3       B   St Mary's    young 
+&gt; |
+          4. | St Mary's young   1   4          4       A   St Mary's    young 
+&gt; |
+          5. | St Mary's young   2   6          1       A   St Mary's    young 
+&gt; |
+             +-----------------------------------------------------------------
+&gt; +
+<p>
+<p>
+  <b>Example 13: individual specification of allocations to each stratum: using()</b>
+<b>file has incomplete stratum value labels</b>
+<p>
+    Let us say we have a file, <b>raltest12_lab.dta</b>, containing the allocation
+    schema for a RCT with 12 strata:  3 hospitals x 2 age groups x 2 sexes.
+    Variables <b>hospital</b> and <b>sex</b> have value labels defined and attached, but
+    <b>hospital</b> = 2 does not have a label.  Variable <b>agegrp</b> does not have a
+    value label at all.  If <b>vallab</b> is specified, <b>ralloc</b> will use whatever
+    labels are available.
+<p>
+    <b>. describe</b>
+<p>
+        Contains data from raltest12_lab.dta
+          obs:            12                          
+         vars:             4                          2 Aug 2011 15:00
+         size:           108 (99.9% of memory free)
+        ----------------------------------------------------------------
+                      storage  display     value
+        variable name   type   format      label      variable label
+        ----------------------------------------------------------------
+        centre          byte   %13.0g      cenlab     
+        agegrp          byte   %9.0g                  
+        sex             byte   %9.0g       sexlab     
+        freq            int    %9.0g                  
+        ---------------------------------------------
+<p>
+    <b>. label list</b>
+<p>
+        cenlab: 
+                   1 St Mary's 
+                   3 Chicago Hope 
+        sexlab:
+<p>
+                   1 male 
+                   2 female 
+<p>
+    <b>. list, sepby(centre)</b>
+<p>
+             +---------------------------------------+
+             |       centre   agegrp      sex   freq |
+             |---------------------------------------|
+          1. |    St Mary's        1     male     50 |
+          2. |    St Mary's        1   female     80 |
+          3. |    St Mary's        2     male     60 |
+          4. |    St Mary's        2   female     80 |
+             |---------------------------------------|
+          5. |            2        1     male    140 |
+          6. |            2        1   female    100 |
+          7. |            2        2     male    100 |
+          8. |            2        2   female    100 |
+             |---------------------------------------|
+          9. | Chicago Hope        1     male     70 |
+         10. | Chicago Hope        1   female    100 |
+         11. | Chicago Hope        2     male     50 |
+         12. | Chicago Hope        2   female     50 |
+             +---------------------------------------+
+<p>
+<p>
+    <b>. ralloc b s treat, multif saving(RCTx) using(raltest12_lab) countv(freq)</b>
+        <b>vallab</b>
+<p>
+    Part of the screen display will be:
+<p>
+        <i>Allocations over all strata saved to file</i> <b>RCTx.dta</b>
+ 
+       ....saving data from stratum 1 [St Mary's 1 male] to file <b>RCTx_St_Mary's</b>
+<b>&gt; _1_male.dta</b>
+       ....saving data from stratum 2 [St Mary's 1 female] to file <b>RCTx_St_Mary</b>
+<b>&gt; 's_1_female.dta</b>
+       ....saving data from stratum 3 [St Mary's 2 male] to file <b>RCTx_St_Mary's</b>
+<b>&gt; _2_male.dta</b>
+       ....saving data from stratum 4 [St Mary's 2 female] to file <b>RCTx_St_Mary</b>
+<b>&gt; 's_2_female.dta</b>
+       ....saving data from stratum 5 [2 1 male] to file <b>RCTx_2_1_male.dta</b>
+       ....saving data from stratum 6 [2 1 female] to file <b>RCTx_2_1_female.dta</b>
+       ....saving data from stratum 7 [2 2 male] to file <b>RCTx_2_2_male.dta</b>
+       ....saving data from stratum 8 [2 2 female] to file <b>RCTx_2_2_female.dta</b>
+       ....saving data from stratum 9 [Chicago Hope 1 male] to file <b>RCTx_Chicag</b>
+<b>&gt; o_Hope_1_male.dta</b>
+       ....saving data from stratum 10 [Chicago Hope 1 female] to file <b>RCTx_Chi</b>
+<b>&gt; cago_Hope_1_female.dta</b>
+       ....saving data from stratum 11 [Chicago Hope 2 male] to file <b>RCTx_Chica</b>
+<b>&gt; go_Hope_2_male.dta</b>
+       ....saving data from stratum 12 [Chicago Hope 2 female] to file <b>RCTx_Chi</b>
+<b>&gt; cago_Hope_2_female.dta</b>
+<p>
+    <b>. tab StratID treat</b>
+<p>
+                              |         treat
+           stratum identifier |         A          B |     Total
+        ----------------------+----------------------+----------
+             St Mary's 1 male |        27         27 |        54 
+           St Mary's 1 female |        41         41 |        82 
+             St Mary's 2 male |        31         31 |        62 
+           St Mary's 2 female |        40         40 |        80 
+                     2 1 male |        70         70 |       140 
+                   2 1 female |        51         51 |       102 
+                     2 2 male |        52         52 |       104 
+                   2 2 female |        51         51 |       102 
+          Chicago Hope 1 male |        36         36 |        72 
+        Chicago Hope 1 female |        50         50 |       100 
+          Chicago Hope 2 male |        25         25 |        50 
+        Chicago Hope 2 female |        27         27 |        54 
+        ----------------------+----------------------+----------
+                        Total |       501        501 |     1,002 
+<p>
+<p>
+<p>
+<b><u>Acknowledgements</u></b>
+<p>
+    I thank Liddy Griffith, Tom Sullivan, Nick Cox, Nikolaos Pandis and
+    participants at the 2nd Australian and New Zealand Stata Users Group
+    meeting (Melbourne, 2006) for assisting with the development and/or
+    testing of <b>ralloc</b>.
+<p>
+<p>
+<b><u>Reference</u></b>
+<p>
+    Jones, B. and Kenward, M.G. 1989. <i>Design and Analysis of Crossover</i>
+        <i>Trials.</i> London: Chapman and Hall.
+<p>
+<p>
+<b><u>Author</u></b>
+<p>
+    Philip Ryan
+    Data Management &amp; Analysis Centre
+    Discipline of Public Health
+    Faculty of Health Sciences
+    University of Adelaide
+    South Australia
+    philip.ryan@adelaide.edu.au
+<p>
+<p>
+<b><u>See also</u></b>
+<p>
+    STB:  <b>ralloc</b> in STB-54 sxd1.2, STB-50 sxd1.1, STB-41 sxd1
+<p>
+</pre>

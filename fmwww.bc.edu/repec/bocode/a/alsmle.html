@@ -1,0 +1,280 @@
+<pre>
+-------------------------------------------------------------------------------
+<b>help: </b><b>alsmle</b>                                                        <b>dialog:</b> <b>als</b>
+<b>&gt; mle</b>
+-------------------------------------------------------------------------------
+<p>
+<b>        </b>+-------+
+<b>    </b>----+<b> Title </b>+------------------------------------------------------------
+<p>
+    <b>alsmle: Beach-Mackinnon AR(1) Autoregressive Maximum Likelihood</b>
+        <b>Estimation</b>
+<p>
+<a name="00"></a><b>        </b>+-------------------+
+<b>    </b>----+<b> Table of Contents </b>+------------------------------------------------
+<p>
+     <b>Syntax</b>
+     <b>Options</b>
+     <b>Description</b>
+     <b>Saved Results</b>
+     <b>References</b>
+<p>
+ *** <b>Examples</b>
+<p>
+     <b>Acknowledgment</b>
+     <b>Author</b>
+<p>
+<a name="01"></a><b>        </b>+--------+
+<b>    </b>----+<b> Syntax </b>+-----------------------------------------------------------
+<p>
+     <b>alsmle</b> <i>depvar</i> <i>indepvars</i> [<i>if</i>] [<i>in</i>] [<i>weight</i>] , [ <b><u>nocons</u></b><b>tant</b> <b>diag</b>
+     <b>mfx(</b><i>lin</i><b>,</b><i> log</i><b>)</b> <b>dn</b>
+ 
+            <b>log tolog</b> <b><u>two</u></b><b>step</b> <b>iter(</b><i>#</i><b>)</b> <b><u>tol</u></b><b>erance(</b><i>#</i><b>)</b> <b><u>pred</u></b><b>ict(</b><i>new_var</i><b>)</b>
+     <b><u>res</u></b><b>id(</b><i>new_var</i><b>)</b>
+ 
+            <b><u>l</u></b><b>evel(</b><i>#</i><b>)</b> <b>vce(</b><i>vcetype</i><b>)</b> ]
+ 
+<p>
+<a name="02"></a><b>        </b>+---------+
+<b>    </b>----+<b> Options </b>+----------------------------------------------------------
+<p>
+    <i>options</i>               Description
+    -------------------------------------------------------------------------
+<p>
+      <b><u>nocons</u></b><b>tant</b>          Exclude Constant Term from Equation
+ 
+      <b>dn</b>                  Use (N) divisor instead of (N-K) for Degrees of
+                            Freedom (DF)
+ 
+      <b>log</b>                 display iteration of Log Likelihood
+ 
+      <b>tolog</b>               Convert dependent and independent variables to LOG
+                            Form in the memory for Log-Log regression. <b>tolog</b>
+                            Transforms <i>depvar</i> and <i>indepvars</i> to Log Form
+                            without lost the original data variables
+ 
+      <b>iter(</b><i>#</i><b>)</b>             number of iterations; Default is iter(50)
+ 
+      <b><u>tol</u></b><b>erance(</b><i>#</i><b>)</b>        tolerance for coefficient vector; Default is
+                            tol(0.00001)
+ 
+      <b><u>two</u></b><b>step</b>             Two-Step estimation, stop after first iteration,
+                            same as iter(1)
+ 
+      <b><u>pred</u></b><b>ict(</b><i>new_var</i><b>)</b>    Predicted values variable
+ 
+      <b><u>res</u></b><b>id(</b><i>new_var</i><b>)</b>      Residuals values variable
+ 
+      <b>level(</b><i>#</i><b>)</b>            confidence intervals level; Default is level(95)
+ 
+      <b>vce(</b><i>vcetype</i><b>)</b>        <b>ols</b>, <b><u>r</u></b><b>obust</b>, <b><u>cl</u></b><b>uster</b>, <b><u>boot</u></b><b>strap</b>, <b><u>jack</u></b><b>knife</b>, <b>hc2</b>,
+                            <b>hc3</b>
+ 
+      <b>mfx(</b><i>lin</i><b>,</b><i> log</i><b>)</b>       Type of functional form, either Linear model <b>(lin)</b>,
+                            or Log-Log model <b>(log)</b>, to compute Marginal
+                            Effects and Elasticities.
+ 
+        - In Linear model marginal effects are the transformed coefficients
+        (Bm), and elasticities are (Es=Bm X/Y).
+<p>
+        - In Log-Log model the transformed coefficients are elasticities, and
+        the marginal effects are (Bm =Es Y/X).
+<p>
+        - Using <b>mfx(</b><i>log</i><b>)</b> requires <b>tolog</b> option, to trnsform variables to log
+        form.
+<p>
+      <b>diag</b>      Model Selection Diagnostic Criteria:
+                - Log Likelihood Function       LLF
+                - Akaike Final Prediction Error AIC
+                - Schwartz Criterion            SC
+                - Akaike Information Criterion  ln AIC
+                - Schwarz Criterion             ln SC
+                - Amemiya Prediction Criterion  FPE
+                - Hannan-Quinn Criterion        HQ
+                - Rice Criterion                Rice
+                - Shibata Criterion             Shibata
+                - Craven-Wahba Generalized Cross Validation-GCV
+<p>
+<a name="03"></a><b>        </b>+-------------+
+<b>    </b>----+<b> Description </b>+------------------------------------------------------
+<p>
+  <b>alsmle</b> estimates Autoregressive Least Squares (ALS) via Maximum Likelihood
+  Estimation (MLE), according to Beach-Mackinnon (1978) method for
+  Autocorrelated Errors with first order AR(1).
+ 
+  <b>alsmle</b> can also estimate weighted Autoregressive Maximum Likelihood
+  Estimation <b>weight</b>, with or without constant term.
+ 
+  <b>alsmle</b> can compute model selection diagnostic criteria, marginal effects,
+  and elasticities.
+<p>
+<a name="04"></a><b>        </b>+---------------+
+<b>    </b>----+<b> Saved Results </b>+----------------------------------------------------
+<p>
+  Depending on the model estimated, <b>alsmle</b> saves the following results in
+    <b>e()</b>:
+<p>
+Scalars:
+   <b>e(N)</b>            number of observations
+   <b>e(r2c)</b>          R-squared
+   <b>e(r2c_a)</b>        Adjusted R-squared
+   <b>e(r2u)</b>          Raw Moments R-squared
+   <b>e(r2u_a)</b>        Raw Moments Adjusted R2
+   <b>e(f)</b>            F-test
+   <b>e(fp)</b>           F-test P-Value
+   <b>e(wald)</b>         Wald-test
+   <b>e(waldp)</b>        Wald-test P-Value
+   <b>e(llf)</b>          Log Likelihood Function
+   <b>e(aic)</b>          Akaike Final Prediction Error AIC
+   <b>e(sc)</b>           Schwartz Criterion SC
+   <b>e(laic)</b>         Akaike Information Criterion ln AIC
+   <b>e(lsc)</b>          Schwarz Criterion Log SC
+   <b>e(fpe)</b>          Amemiya Prediction Criterion FPE
+   <b>e(hq)</b>           Hannan-Quinn Criterion HQ
+   <b>e(shibata)</b>      Shibata Criterion Shibata
+   <b>e(rice)</b>         Rice Criterion Rice
+   <b>e(gcv)</b>          Craven-Wahba Generalized Cross Validation-GCV
+<p>
+Matrixes:
+   <b>e(b)</b>            coefficient vector
+   <b>e(V)</b>            variance-covariance matrix of the estimators
+   <b>e(mfx)</b>          Beta and Marginal Effect
+<p>
+<a name="05"></a><b>        </b>+------------+
+<b>    </b>----+<b> References </b>+-------------------------------------------------------
+<p>
+    Beach, Charles &amp; James G. Mackinnon (1978)<b> "A Maximum Likelihood</b>
+        <b>Procedure for Regression with Autocorrelated Errors",</b> <i>Econometrica,</i>
+        <i>Vol. 46, No. 1, Jan.</i>; 51-58.
+<p>
+    Judge, Georege, R. Carter Hill, William . E. Griffiths, Helmut Lutkepohl,
+        &amp; Tsoung-Chao Lee (1988)<b> "Introduction To The Theory And Practice Of</b>
+        <b>Econometrics",</b> <i>2nd ed., John Wiley &amp; Sons, Inc., New York, USA</i>.
+<p>
+    Judge, Georege, W. E. Griffiths, R. Carter Hill, Helmut Lutkepohl, &amp;
+        Tsoung-Chao Lee(1985)<b> "The Theory and Practice of Econometrics",</b> <i>2nd</i>
+        <i>ed., John Wiley &amp; Sons, Inc., New York, USA</i>.
+<p>
+<a name="06"></a><b>        </b>+----------+
+<b>    </b>----+<b> Examples </b>+---------------------------------------------------------
+<p>
+  clear all
+<p>
+  sysuse alsmle.dta, clear
+<p>
+  db alsmle
+<p>
+  alsmle y x1 x2
+<p>
+  alsmle y x1 x2 , iter(1)
+<p>
+  alsmle y x1 x2 , twostep
+<p>
+  alsmle y x1 x2 , iter(10)
+<p>
+  alsmle y x1 x2 , noconstant
+<p>
+  alsmle y x1 x2 , mfx(lin) log
+  
+  alsmle y x1 x2 [weight=x1]
+<p>
+  alsmle y x1 x2 [aweight=x1]
+<p>
+  alsmle y x1 x2 [iweight=x1]
+<p>
+  alsmle y x1 x2 [pweight=x1]
+<p>
+  alsmle y x1 x2 in 2/16 [weight=x1] , noconstant
+<p>
+  alsmle y x1 x2 , mfx(lin) diag predict(Yh) resid(Ue)
+<p>
+  alsmle y x1 x2 , mfx(log) diag tolog predict(Yh) resid(Ue)
+<p>
+  alsmle y x1 x2 , mfx(log) log tolog
+<p>
+. clear all
+. sysuse alsmle.dta, clear
+. alsmle y x1 x2 , mfx(lin) diag log
+<p>
+==============================================================================
+* Beach-Mackinnon AR(1) Autoregressive Maximum Likelihood Estimation
+==============================================================================
+    Iteration       Rho             LLF           SSE
+    0                0.000000       -51.6471       433.3130
+    1               -0.184911       -51.6645       419.9530
+    2               -0.197405       -51.4007       419.7750
+    3               -0.197972       -51.3972       419.7692
+    4               -0.197997       -51.3971       419.7691
+------------------------------------------------------------------------------
+  Number of Obs    =         17
+  Wald Test        =   457.1243         P-Value &gt; Chi2(2)        =     0.0000
+  F Test           =   228.5621         P-Value &gt; F(2 , 14)      =     0.0000
+  R-squared        =     0.9528         Raw Moments R2           =     0.9987
+  R-squared Adj    =     0.9461         Raw Moments R2 Adj       =     0.9985
+  Root MSE (Sigma) =     5.4757         Log Likelihood Function  =   -51.3971
+  Autoregressive Coefficient (Rho) Value = -0.1979982
+------------------------------------------------------------------------------
+           y |      Coef.   Std. Err.      t    P&gt;|t|     [95% Conf. Interval]
+-------------+----------------------------------------------------------------
+          x1 |   1.065033   .2067004     5.15   0.000     .6217044    1.508361
+          x2 |  -1.375032   .0643558   -21.37   0.000    -1.513061   -1.237002
+       _cons |   129.6105   20.87587     6.21   0.000     84.83621    174.3848
+------------------------------------------------------------------------------
+<p>
+==============================================================================
+* Model Selection Diagnostic Criteria
+==============================================================================
+  Log Likelihood Function       LLF             =    -51.3971
+  Akaike Final Prediction Error AIC             =     32.3009
+  Schwartz Criterion            SC              =     35.6275
+  Akaike Information Criterion  ln AIC          =      3.4751
+  Schwarz Criterion             ln SC           =      3.5731
+  Amemiya Prediction Criterion  FPE             =     34.6460
+  Hannan-Quinn Criterion        HQ              =     32.6171
+  Rice Criterion                Rice            =     33.3836
+  Shibata Criterion             Shibata         =     31.5353
+  Craven-Wahba Generalized Cross Validation GCV =     32.7901
+---------------------------------------------------------------
+<p>
+* Linear: Marginal Effect - Elasticity
+<p>
++-----------------------------------------------------------------------------+
+|     Variable | Marginal_Effect(B) |     Elasticity(Es) |               Mean |
+|--------------+--------------------+--------------------+--------------------|
+|           x1 |             1.0650 |             0.8154 |           102.9824 |
+|           x2 |            -1.3750 |            -0.7801 |            76.3118 |
++-----------------------------------------------------------------------------+
+ Mean of Dependent Variable =   134.5059
+<p>
+<a name="07"></a><b>        </b>+----------------+
+<b>    </b>----+<b> Acknowledgment </b>+---------------------------------------------------
+<p>
+  I would like to thank Professor James G. Mackinnon
+  for sending to me his reference paper (1978)
+<p>
+<a name="08"></a><b>        </b>+--------+
+<b>    </b>----+<b> Author </b>+-----------------------------------------------------------
+<p>
+  <b>Emad Abd Elmessih Shehata</b>
+  <b>Assistant Professor</b>
+  <b>Agricultural Research Center - Agricultural Economics Research Institute - Eg</b>
+<b>&gt; ypt</b>
+  <b>Email:   </b>emadstat@hotmail.com
+  <b>WebPage:                </b>http://emadstat.110mb.com/stata.htm
+  <b>WebPage at IDEAS:       </b>http://ideas.repec.org/f/psh494.html
+  <b>WebPage at EconPapers:  </b>http://econpapers.repec.org/RAS/psh494.htm
+<p>
+<b>        </b>+-----------------+
+<b>    </b>----+<b> alsmle Citation </b>+--------------------------------------------------
+<p>
+    Emad Abd Elmessih Shehata (2012)
+    <b>ALSMLE: "Stata Module to Estimate Beach-Mackinnon First Order AR(1)</b>
+        <b>Autoregressive Maximum Likelihood Estimation"</b>
+<p>
+<b><u>Online Help:</u></b>
+<p>
+  Official: <b>regress</b>, <b>prais</b>.
+<p>
+<p>
+</pre>

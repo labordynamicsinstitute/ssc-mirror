@@ -1,0 +1,54 @@
+<pre>
+-------------------------------------------------------------------------------
+help for <b>gengroup</b>                                          Jean-benoit Hardouin
+-------------------------------------------------------------------------------
+<p>
+<b><u>Module to generate group of individuals based on a ordinal variable</u></b>
+<p>
+        <b>gengroup</b> <i>varlist</i> [<b>if</b> <i>exp</i>] [<b>in</b> <i>range</i>] [<b>,</b> <b><u>new</u></b><b>variable</b>(<i>newvarname</i>)
+              <b><u>rep</u></b><b>lace</b> <b><u>min</u></b><b>size</b>(#) <b><u>det</u></b><b>ails</b>]
+<p>
+<b><u>Description</u></b>
+<p>
+    <b>gengroup</b> creates groups of individuals by using the values of an ordinal
+        variable.  The module creates groups by recoding several adjacent
+        values of the ordinal variable, until obtaining groups with more than
+        individuals than the number defined in the <b>minsize</b> option.
+<p>
+<p>
+<b><u>Options</u></b>
+<p>
+    <b>newvariable</b> defines the name of the new variable (<i>group</i> by default).
+<p>
+    <b>replace</b> replaces the variable defined in the <b>newvariable</b> option if it
+        already exists.
+<p>
+    <b>minsize</b> defines the minimal number of individuals in each group (30 by
+        default).
+<p>
+    <b>details</b> diplays the composition of each group.
+<p>
+<b><u>Examples</u></b>
+<p>
+    . gengroup item*
+<p>
+    . gengroup itemA1-itemA7, newvariable(grouptocreate) replace minsize(80)
+<p>
+    . gengroup itemA*, details
+<p>
+<b><u>Author</u></b>
+<p>
+    Jean-Benoit Hardouin, PhD, assistant professor
+    Team of Biostatistics, Clinical Research and Subjective Measures in
+        Health Sciences
+    University of Nantes - Faculty of Pharmaceutical Sciences
+    1, rue Gaston Veil - BP 53508
+    44035 Nantes Cedex 1 - FRANCE
+    Email:  jean-benoit.hardouin@univ-nantes.fr
+    Websites AnaQol and FreeIRT
+<p>
+<b><u>Also see</u></b>
+<p>
+    Online: help for egen, generate and genscore if installed.
+<p>
+</pre>

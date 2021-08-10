@@ -1,0 +1,43 @@
+<pre>
+-------------------------------------------------------------------------------
+help for <b>tabmenu2</b>
+-------------------------------------------------------------------------------
+<p>
+        <b><u>tabmenu2</u></b> [<i>varlist</i>] [<b>if</b> <i>exp</i>] [<b>in</b> <i>range</i>] [<b>,</b> <b><u>res(</u></b><i>varname</i><b>)</b> <b><u>typ(</u></b><i>string</i><b>)</b>
+                           <b><u>row(</u></b><i>varname</i><b>)</b> <b><u>col(</u></b><i>varname</i><b>)</b> <b><u>summ</u></b><b>ary(</b><i>string</i><b>)</b>
+                           <b><u>fup</u></b><b>(</b><i>varname</i><b>)</b> <b><u>perc</u></b><b>(</b><i>#</i><b>)</b> <b><u>pery</u></b><b>(</b><i>#</i><b>)</b> <b><u>max</u></b><b>val(</b><i>#</i><b>)</b> <b><u>fr</u></b> <b><u>ci</u></b> <b><u>rv</u></b>
+                           <b><u>level</u></b><b>(</b><i>#</i><b>)</b> ]
+<p>
+<b><u> Description</u></b>
+<p>
+<b>tabmenu2</b> is the command-line version of <b>tabmenu1</b>, and is used
+for preparing one or two-way tables of means, geometric 
+means, medians, proportions, odds, or rates, from a command-line. 
+<p>
+<b><u>Options</u></b>
+<p>
+<p>
+<b>res</b>        response variable
+<b>typ</b>        type of response (metric/binary/failure/count)
+<b>row</b>        variable determining the rows of the table
+<b>col</b>        variable determining the columns of the table
+<b>summary</b>      summary required according to type of response
+                   binary:  prop/odds
+                   metric:  mean/gmean/median
+                   failure: rate
+                   count:   rate
+<b>fup</b>          variable containing follow-up time
+<b>perc</b>       for use with proportions per #, default 100
+<b>pery</b>       for use with rates per #,  default 1000
+<b>maxval</b>       maximum number of values a row or column variable can have, defaul
+&gt; t 10.
+<b>fr</b>         include frequencies in the table
+<b>ci</b>         include confidence intervals in the table
+<b>rv</b>         reverse rows and columns of table
+<b>level</b>      level for confidence intervals
+<p>
+<b><u>Also see</u></b>
+<p>
+<p>
+Help for tabmenu1, effmenu1, effmenu2.
+</pre>

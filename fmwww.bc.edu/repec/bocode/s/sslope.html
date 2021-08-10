@@ -1,0 +1,102 @@
+<pre>
+-------------------------------------------------------------------------------
+help for <b>sslope</b>
+-------------------------------------------------------------------------------
+<p>
+<b><u>Simple Slope Calculation for Linear Regression</u></b>
+<p>
+        <b>sslope</b> <i>varlist</i> [<b>if</b> <i>exp</i>] [<b>in</b> <i>range</i>] <b>,</b> [<b>i(</b><i>x z xz</i><b>)</b>] [<b>i(</b><i>x z w xz xw zw</i>
+        <i>xzw</i><b>)</b>] [<b>i(</b><i>x x-squared</i><b>)</b>] [<b>i(</b><i>x z x-squared xz</i><b>)</b>] [<b>i(</b><i>z x x-squared xz</i><b>)</b>]
+        [<b>sd(</b><i>#</i><b>)</b>] [<b>Graph</b>] or [<b>go(</b>graph options<b>)</b>] [<b>Fits</b>]
+<p>
+<p>
+<p>
+        <i>varlist</i> = regression equation with <u>centered variables</u> including all
+                           interactions
+<p>
+        option <b>i</b> must include either <b>(x z xz)</b> (2-way interaction), gives slope
+        of criterion variable on x at levels of z (x z xz are variable names)
+<p>
+        OR
+<p>
+        <b>(x z w xz xw zw xzw)</b> (3-way interaction), gives slope of criterion
+        variable on x at levels of z and w
+<p>
+        OR
+<p>
+        <b>(x x-squared)</b> (quadratic), gives slope of criterion variable on x at
+        levels of x. Also calculates the minimum or maximum of the curve.
+<p>
+        OR
+<p>
+        <b>(x z x-squared xz)</b> (quadratic plus linear interaction), gives slope of
+        criterion variable on x at levels of x and z. Also calculates the
+        minumum or maximum of the curves.
+<p>
+        OR
+<p>
+        <b>(z x x-squared xz)</b> (quadratic plus linear interaction), gives slope of
+        criterion variable on z at levels of x.
+<p>
+<b><u>Description</u></b>
+<p>
+This calculates simple slopes for interactions between continuous variables in
+linear regression analysis.  For example, the slope of the criterion on x
+conditional upon z. All continuous variables in the regression must be centered
+at the mean. The simple slope of interest must be specified in <b>i</b>. This must be
+of the form x(slope of interest) z(moderating variable) xz(the interaction
+between the two). Hence, <b>i</b>(x z xz) provides a different result than <b>i</b>(z x xz).
+Both are correct, one is the slope of y on x conditional upon z and the other,
+the slope of y on z conditional upon x. However, <b>i</b>(x xz z) will produce
+incorrect results.  Similarly, for a three-way interaction, <b>i</b> must be in the
+form of (x z w xz xw zw xzw) for the slope of x conditional upon z and w.
+<u>Important</u>, the order i(x z w xz <i>wz</i> xw xzw) will not produce the correct
+results. The order is x (slope of interest) z w (first order terms of the
+moderators) x^2 (x quadratic term) xz xw (2-way interactions with x) zw (the
+2-way interaction of the moderators without x) xzw (the three way interaction).
+The order of variables in varlist does not matter but calculations of the
+simple slopes depend upon the specified order in <b>i</b>. Simple slopes associated
+with both an interaction and a quadratic term (i.e., y on x when there are both
+xz and x-squared terms) are not supported at this time.  The calculations are
+based upon the formulas provided in Aiken &amp; West (1991).
+<p>
+<p>
+<b><u>Options</u></b>
+<p>
+<b>sd(#)</b> specifies the conditional levels of interest of z and/or w, in sd units,
+default = 1.0.
+<p>
+<b>Graph</b> requests a graph of the conditional slopes. Continuous variables not
+included in the interaction are held constant at mean=0, if there are
+dichotomous variables in the model, this option creates graphs for a
+category=0, if there is not a category=0, the intercepts will be invalid.
+<p>
+<b>go</b> requests a graph as above, but accepts all standard graph options for
+<b>scatter</b>.  Choose either <b>Graph</b> for the default graph OR <b>go</b> and define graph
+options.
+<p>
+<b>Fits</b> requests the conditional fitted values be saved. This is included to
+facilitate making additional graphs.
+<p>
+Examples
+<p>
+sslope y x z xz, i(x z xz)
+sslope y x z xz, i(x z xz) sd(2)
+sslope y x z w xz xw zw xzw, i(x z w xz xw zw xzw)
+sslope y q x z w xz, i(x z xz)
+sslope y x x-squared, i(x x-squared) graph
+sslope y x z x-squared, i(x x-squared) graph fits
+sslope y x q z  xz x-squared, i(x z x-squared xz) go(sort c(. l l l) m(o i i i)
+&gt;  mlabel(id)) fits
+<p>
+<p>
+<b>sslope dialog box</b>
+<p>
+<b>Author</b>
+<p>
+Jeffrey S. Simons - jsimons@usd.edu
+<p>
+<b>Also see</b>
+<p>
+<b>mcenter</b>
+</pre>

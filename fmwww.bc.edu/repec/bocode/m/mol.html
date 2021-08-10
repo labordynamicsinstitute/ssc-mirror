@@ -1,0 +1,127 @@
+<pre>
+-------------------------------------------------------------------------------
+help for <b>mol</b>                                                 Joao Pedro Azevedo
+-------------------------------------------------------------------------------
+<p>
+<p>
+<p>
+<b><u>Measures of Effective Literacy</u></b>
+<p>
+        <b>mol</b> <i>varlist</i> [<i>weight</i>] [<b>if</b> <i>exp</i>] [<b>in</b> <i>range</i>] <b>,</b> <b>house(</b><i>varname)</i> <b>[</b>
+               <b><u>f</u></b><b>ormat(%</b><i>fmt</i><b>)</b> <b>by(</b><i>varname</i><b>)</b> <b>rank</b> <b>gen</b> <b>]</b>
+<p>
+<b>aweight</b>s and <b>fweight</b>s are allowed; see help weights.
+<p>
+<p>
+<p>
+<b><u>Description</u></b>
+<p>
+A country's overall level of literacy is usually measured by taking the number
+of adults who are literate as a percentage of the total number of adults - the
+so-called literacy rate. Following Sen (1985) there has been increased use of
+the literacy rate and other social indicators to evaluate the overall standard
+of living in a country.
+<p>
+<b>mol</b> implements an alternative aproaches to evaluate the aggregate literacy
+level in a country or region or any type of group. The resulting 'effective
+literacy' proposed by Basu and Foster (1998). This measure takes into account
+the intrahousehold externality arising from the presence of a literate member
+in the household. The extensions proposed by Subramanian (2004) are also
+implemented.
+<p>
+<p>
+<p>
+<b><u>Option</u></b>
+<p>
+<b>by(</b>housevar<b>)</b> indicates the variable that will be used to identify the members
+    of a given household.
+<p>
+<b>by(</b>groupvar<b>)</b> repeats the command for each group of observations for which the
+    values of the variables in varlist are the same. Groupvar must be an
+    integer variable.
+<p>
+<b>alpha(</b>number<b>)</b> specifies the sensitivity alpha used. Alpha is contained within
+    the interval [0,1]. If alpha is omited, only the houseshould effective
+    literacy is calculated.  Multiple alphas are allowed to be calculated at
+    once.
+<p>
+<b>rank</b> returns the rank of different groups according to each indicator.
+<p>
+<b>gen</b> generates tree new variables in the dataset with the output of the
+    exercise.
+<p>
+<b>format(%</b><i>fmt</i><b>)</b> specifies the format to be used to display the estimated
+    inequality indices. The default is to use a <b>%6.5f</b> format.
+<p>
+<p>
+<p>
+<b><u>Output Variables</u></b>
+<p>
+     <b>R :</b>  'Crude' Literacy Rate .
+     <b>Re :</b>  Effective Literacy [alpha = hous. lit. rate].
+     <b>(1-I):</b>  Isolated Rate of Literacy (1-I).
+     <b>I :</b>  Isolated Rate of Illiteracy (1-I).
+     <b>Q :</b>  Efficiency Loss. Q is contained within the interval [0,1]: Q= 0 when
+    I = 0, and Q= 1 when I=1R (which, of course, is the maximum value I can
+    attain, corresponding to a situation in which all illiterates are isolated
+    illiterates).
+     <b>R* :</b>  Externality-adjusted Literacy Rate (Subramanian, 2004).
+<p>
+<p>
+<p>
+<b><u>Saved Results</u></b>
+<p>
+     <b>mol</b> returns results in r() format.
+<p>
+<p>
+<p>
+<b><u>Example</u></b>
+<p>
+        . mol alfab [fw= weight], house(domicilio)
+<p>
+        . mol alfab [fw= weight], house(domicilio) alpha(.2 .5 .8)
+<p>
+        . mol alfab [fw= weight], house(domicilio) by(region) gen
+<p>
+        . mol alfab [fw= weight], house(domicilio) by(state) rank
+<p>
+        . mol alfab [fw= weight], house(domicilio) by(gender) alpha(.2)
+<p>
+        . mol alfab [fw= weight], house(domicilio) by(gender) alpha(.2 .5 .8)
+<p>
+<p>
+<p>
+<b><u>Reference</u></b>
+<p>
+     Basu, Kaushik and Foster, James E. (1998) On measuring literacy. Economic
+          Journal, vol.108, no.451, Nov., pp.1733-1749.
+<p>
+     Sen, A. (1985), Commodities and Capability. Amsterdam: North-Holland.
+<p>
+     Subramanian, S (2004) Measuring literacy: some extensions of the
+          Basu-Foster framework.  Journal of Development Economics, vol.73,
+          pp453-463.
+<p>
+<p>
+<p>
+<b><u>Author</u></b>
+<p>
+     Joao Pedro Azevedo
+     jazevedo@worldbank.org
+     World Bank
+<p>
+<p>
+<p>
+<b><u>Also see</u></b>
+<p>
+    Manual:  <b>[R] lorenz</b>
+    Online:  help for alorenz; apoverty; changemean (if installed).
+<p>
+<p>
+<p>
+<b><u>Acknowledgements</u></b>
+<p>
+    The financial support of UNESCO is gratefully acknowledge.
+ 
+    The usual disclaimer applies.
+</pre>

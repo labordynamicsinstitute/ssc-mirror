@@ -1,0 +1,85 @@
+<pre>
+<b>help fraclogit</b>
+-------------------------------------------------------------------------------
+<p>
+<b><u>Title</u></b>
+<p>
+<p>
+    <b>fraclogit</b> -- Fractional logit model as implemented in Wedderburn (1974)
+    and generalized by McCullagh (1983).
+<p>
+<b><u>Syntax</u></b>
+        <b>fraclogit</b> <i>depvar</i> <i>indepvars</i> [<i>if</i>] [<i>in</i>] [<i>weight</i>], [<i>options</i>]
+<p>
+<a name="opt"></a>    <i>options</i>                    Description
+    -------------------------------------------------------------------------
+      <b>eform</b>                     odds ratio form results
+ 
+     
+        
+<b><u>Description</u></b>
+<p>
+    <b>fraclogit</b> carries out a quasi-likelihood estimation of a fractional logit
+    model as described Wedderburn (1974) and generalized by McCullah (1983).
+    The dependent variable for <b>fraclogit</b> is assumed to a proportion in the
+    (0,1) interval. This model was rediscovered two decades later by Papke
+    and Wooldridge (1996).
+<p>
+<p>
+<p>
+<b><u>Example (from Wedderburn 1974)</u></b>
+<p>
+. use wedderburn, clear 
+. fraclogit yield i.site i.variety
+. margins variety
+<p>
+<b><u>Estimation Details</u></b>
+<p>
+    <b>fraclogit</b> uses iteratively reweighted least squares in repeated calls to 
+    <b>glm</b>.
+<p>
+<p>
+<b><u>Saved Results</u></b>
+<p>
+<b>fraclogit</b> saves the following in <b>e()</b>:
+<p>
+    Scalars   
+      <b>e(N)</b>           number of observations
+      <b>e(df)</b>          number of model parameters
+      <b>e(dev)</b>         deviance
+      <b>e(rmse)</b>        root mse (dispersion)
+<p>
+    Macros    
+      <b>e(depvar)</b>      name of dependent variable
+    Matrices  
+      <b>e(b)</b>           1 X <i>K</i> vector of estimates
+      <b>e(V)</b>           <i>K</i> X <i>K</i> variance-covariance matrix
+<p>
+    Functions 
+      <b>e(sample)</b>       marks estimation sample
+<p>
+<p>
+<b><u>Authors</u></b>
+<p>
+    Daniel A. Powers, University of Texas at
+    Austin(dpowers@austin.utexas.edu).
+<p>
+<b><u>References</u></b>
+<p>
+    McCullagh, P. (1983) "Quasi-Likelihood Functions,"<i> Annals of Statistics</i>.
+    Vol. 11, No. 1, pp. 59-67.
+<p>
+    Papke, L.E. and J.W. Wooldridge (1996) "Econometric Methods for
+    Fractional Response Variables With an Application to 401 (K) Plan
+    Participation Rates,"<i> Journal of Applied Econometrics</i>. Vol 11, No. 6, pp.
+    619-632.
+<p>
+    Wedderburn, R.M.W. (1974) "Quasi-Likelihood Functions, Generalized Linear
+    Models, and the Gauss-Newton Method,"<i> Biometrika</i>, Vol. 61, No. 3, pp.
+    439-447.
+<p>
+<p>
+<p>
+<b><u>Also see</u></b>
+<p>
+</pre>

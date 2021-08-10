@@ -1,0 +1,153 @@
+<pre>
+-------------------------------------------------------------------------------
+help for <b>brrmean</b>, <b>brrtotal</b>, <b>brrratio</b>
+-------------------------------------------------------------------------------
+<p>
+<b><u>Estimate means, totals, ratios, and proportions for survey data, with balance r</u></b>
+<b><u>&gt; epeated replication (BRR) based standard errors</u></b>
+<p>
+        <b>brrmean</b>  <i>varlist</i> [<i>weight</i>] [<b>if</b> <i>exp</i>] [<b>in</b> <i>range</i>] [<b>,</b> <i>common_options</i>]
+<p>
+        <b>brrtotal</b> <i>varlist</i> [<i>weight</i>] [<b>if</b> <i>exp</i>] [<b>in</b> <i>range</i>] [<b>,</b> <i>common_options</i>]
+<p>
+        <b>brrratio</b> <i>varname</i> [<b>/</b>] <i>varname</i> [<i>varname</i> [<b>/</b>] <i>varname ...</i>] [<i>weight</i>] [<b>if</b>
+                 <i>exp</i>] [<b>in</b> <i>range</i>] [<b>,</b> <i>common_options</i>]
+<p>
+<p>
+where <i>common_options</i> are
+<p>
+                 <b><u>brrw</u></b><b>eight(</b><i>varlist</i><b>)</b> <b>fay(</b><i>#</i><b>)</b> <b>dof(</b><i>#</i><b>)</b>
+<p>
+                 <b>by(</b><i>varlist</i><b>)</b> [<b><u>com</u></b><b>plete</b>|<b><u>av</u></b><b>ailable</b>] <b><u>nolab</u></b><b>el</b> <b><u>l</u></b><b>evel(</b><i>#</i><b>)</b> <b>ci</b> <b>deff</b> <b>deft</b>
+                 <b>meff</b> <b>meft</b> <b>obs</b> <b>size</b>
+<p>
+<b>brrmean</b>, <b>brrratio</b>, and <b>brrtotal</b> typed without arguments redisplay previous
+results.  Any of the following options can be used when redisplaying results:
+<p>
+                 <b><u>l</u></b><b>evel(</b><i>#</i><b>)</b> <b>ci</b> <b>deff</b> <b>deft</b> <b>meff</b> <b>meft</b> <b>obs</b> <b>size</b>
+<p>
+All of these commands allow <b>pweight</b>s; see help weights.
+<p>
+<p>
+<b><u>Description</u></b>
+<p>
+<b>brrmean</b>, <b>brrtotal</b>, and <b>brrratio</b> produce estimates of population means, totals,
+ratios, and proportions.  Standard errors are calculated using a series of
+user-supplied replication weights, by the balanced repeated replication (BRR)
+method.  This is an alternate method to the Taylor series linearization methods
+used by Stata's svy-based commands.
+<p>
+Estimates for multiple subpopulations can be obtained using the <b>by()</b> option.
+The <b>if</b> option will give estimates for a single population.  (Note that with the
+BRR method, use of <b>if</b> or <b>in</b> producese correct estimates for the relevant
+subpopulation.)
+<p>
+svytest will operate after these commands, as it does after their svy-based
+equivalents.
+<p>
+<p>
+<b><u>Options</u></b>
+<p>
+<b>brrweight()</b> specifies the list of variables that contain the replicate weights
+    for the dataset.  The standard errors for the model are based on the
+    variation in the estimates generated across the various weights.
+<p>
+    A set of <b>brrweights</b> is required for the analysis.  Once the brrweights are
+    specified they are stored as a characteristic of the dataset and need not
+    be respecified in subsequent command.
+<p>
+<b>fay()</b> specifies the k value that should be used for weighting the estimates,
+    based on Fay's method.  The default is zero, meaning that simple averaging
+    will be used.  As with the replicate weights, the value for fay() is stored
+    as a characteristic of the dataset once it is specified, and need not be
+    re-specified in subsequent commands.
+<p>
+<b>dof()</b> specifies the degrees of freedom for model fit and t-statistics.  The
+    default is to use the number of replications.
+<p>
+<b>by(</b><i>varlist</i><b>)</b> specifies that estimates be computed for the subpopulations defined
+    by different values of the variable(s) in the <i>varlist</i>.
+<p>
+<b>nolabel</b> can only be specified when <b>by()</b> is specified.  <b>nolabel</b> requests that
+    numeric values rather than value labels be used to label output for
+    subpopulations.  By default, value labels are used.
+<p>
+[<b>complete</b>|<b>available</b>] specifies how missing values are to be handled.  <b>complete</b>
+    specifies that only observations with complete data should be used.
+    <b>available</b> specifies that all available nonmissing values be used for each
+    estimate.
+<p>
+    If neither <b>complete</b> nor <b>available</b> is specified, <b>available</b> is the default
+    when there are missing values and there are two or more variables in the
+    <i>varlist</i> (or four or more for <b>svyratio</b>).  <b>complete</b> must be specified to
+    compute the covariance or to use <b>svytest</b> after running the command; see
+    help svytest.
+<p>
+<b>level(</b><i>#</i><b>)</b> specifies the confidence level (i.e., nominal coverage rate), in
+    percent, for confidence intervals; see help level.
+<p>
+<b>ci</b> requests that confidence intervals be displayed.  If no display options are
+    specified then, by default, confidence intervals are displayed.
+<p>
+<b>deff</b> requests that the design-effect measure deff be displayed.  If no display
+    options are specified then, by default, deff is displayed.
+<p>
+<b>deft</b> requests that the design-effect measure deft be displayed.  See <b>[R]</b>
+    <b>svymean</b> for a discussion on deff and deft.
+<p>
+<b>meff</b> requests that the meff measure of misspecification effects be displayed.
+<p>
+<b>meft</b> requests that the meft measure of misspecification effects be displayed.
+    See <b>[R] svymean</b> for a discussion of meff and meft.
+<p>
+<b>obs</b> requests that the number of observations used for the computation of the
+    estimate be displayed for each row of estimates.
+<p>
+<b>size</b> requests that the estimate of the (sub)population size be displayed for
+    each row of estimates.  The (sub)population size estimate equals the sum of
+    the weights for those observations used for the mean/total/ratio estimate.
+<p>
+<p>
+<b><u>Examples</u></b>
+<p>
+        . brrmean birthwgt [pw=wgt], brrw(bw*)
+        . brrmean birthwgt, by(race)
+        . brrmean birthwgt if race==1
+<p>
+        . brrratio hdresult/tcresult
+<p>
+<p>
+<b><u>Methods and formulae</u></b>
+<p>
+Point estimates are calculated using aweights, and are identical to those
+produced by Stata's svy-based commands.  The variance matrix of the estimates
+is formed by calculating
+<p>
+                   G    
+                V = c * SUM [ (B - B(i))(B - B(i))' ]
+                  i=1
+<p>
+where B is the estimated coefficient vector based on the full sample weights,
+B(i) is the estimated coefficient vector using the i'th set of replicate
+weights, G is the number of replicates, and c is a constant defined as:
+<p>
+         1 / G            for standard BRR (i.e. fay==0), or
+<p>
+         1 / (G*(1-k)^2)  for Fay's method.
+<p>
+<p>
+<b><u>Acknowledgements</u></b>
+<p>
+These commands consists largely of the ado file code from official Stata's
+<b>svy_x</b> command, which underlies <b>svymean</b>, <b>svytotal</b>, and <b>svyratio</b>.  They are
+modified to calculate (co)variances differently.  I would like to thank Bobby
+Gutierrez at StataCorp for advice on implementation of BRR.
+<p>
+<p>
+<b><u>Author</u></b>
+<p>
+        Nick Winter
+        Cornell University
+        nw53@cornell.edu
+<p>
+</pre>

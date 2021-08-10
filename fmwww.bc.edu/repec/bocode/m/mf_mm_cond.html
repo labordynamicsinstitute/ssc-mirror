@@ -1,0 +1,63 @@
+<pre>
+<b>help mata mm_cond()</b>
+-------------------------------------------------------------------------------
+<p>
+<b><u>Title</u></b>
+<p>
+    <b>mm_cond() -- Matrix version of the conditional operator</b>
+<p>
+<p>
+<b><u>Syntax</u></b>
+<p>
+        <i>transmorphic matrix</i>  <b>mm_cond(</b><i>a</i><b>,</b> <i>b</i><b>,</b> <i>c</i><b>)</b>
+<p>
+<p>
+    where <i>a</i> is a <i>real matrix</i> and <i>b</i> and <i>c</i> are matrices of any type (as long as
+    their types are the same).
+<p>
+<p>
+<b><u>Description</u></b>
+<p>
+    <b>mm_cond()</b> is a matrix version of the scalar conditional operator (see 
+    <b>[M-2] op_conditional</b>).
+<p>
+    When <i>a</i>, <i>b</i>, and <i>c</i> are not scalar, <b>mm_cond()</b> returns element-by-element
+    results. <i>a</i>, <i>b</i>, and <i>c</i> are required to be r-conformable (see 
+    <b>[M-6] glossary</b>).
+<p>
+<p>
+<b><u>Remarks</u></b>
+<p>
+    None.
+<p>
+<p>
+<b><u>Conformability</u></b>
+<p>
+    The arguments have to be r-conformable (see help <b>[M-6] glossary</b>).
+    Returned is a matrix of max(argument rows) rows and max(argument columns)
+    columns containing element-by-element calculated results.
+<p>
+<p>
+<b><u>Diagnostics</u></b>
+<p>
+    None.
+<p>
+<p>
+<b><u>Source code</u></b>
+<p>
+    mm_cond.mata
+<p>
+<p>
+<b><u>Author</u></b>
+<p>
+    Ben Jann, ETH Zurich, jann@soz.gess.ethz.ch
+<p>
+<p>
+<b><u>Acknowledgments</u></b>
+<p>
+    Thanks to Kit Baum for proposing such a function.
+<p>
+<p>
+<b><u>Also see</u></b>
+<p>
+</pre>

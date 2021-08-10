@@ -1,0 +1,49 @@
+d 'IETOOLKIT': module providing commands specially developed for Impact Evaluations
+d
+d  ietookit provides a set of commands that address different
+d aspects of data management and data analysis in relation to
+d Impact Evaluations. The list of commands will be extended
+d continuously, and suggestions on new commands are highly
+d appreciated. Some of the commands are related to standardized
+d practices developed at the World Bank’s unit for Impact
+d Evaluations (DIME) and might not apply to practices adopted at
+d other institutions. For these commands, the corresponding help
+d files provide justifications for the standardized practices
+d applied. ieduplicates and iecompdup are useful tools to identify
+d and correct for duplicates. iebaltab is a tool for multiple
+d treatment arm balance tables. ieboilstart standardizes the
+d boilerplate code at the top of all do-files. iegraph produces
+d graphs based on common impact evaluation regression models. See
+d https://github.com/worldbank/ietoolkit for more details. 
+d
+d KW: impact evaluations
+d KW: survey data
+d
+d Requires: Stata version 11 
+d
+d Distribution-Date: 20170731
+d
+d Author: Kristoffer Bjärkefur, The World Bank, DECIE
+d Support: email  kbjarkefur@@worldbank.org
+d
+d Author: Mrijan Rimal, The World Bank, DECIE
+d Support: email 
+d
+f iebaltab.ado
+f iebaltab.sthlp
+f ieboilsave.ado
+f ieboilsave.sthlp
+f ieboilstart.ado
+f ieboilstart.sthlp
+f iecompdup.ado
+f iecompdup.sthlp
+f iedropone.ado
+f iedropone.sthlp
+f ieduplicates.ado
+f ieduplicates.sthlp
+f iefolder.ado
+f iefolder.sthlp
+f iegraph.ado
+f iegraph.sthlp
+f iematch.ado
+f iematch.sthlp

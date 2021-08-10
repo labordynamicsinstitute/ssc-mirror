@@ -1,0 +1,105 @@
+<pre>
+<b>help fvfix</b>
+<p>
+-------------------------------------------------------------------------------
+<p>
+<b><u>Title</u></b>
+<p>
+       <b>fvfix</b> --    Returns the future value of a series of equal payments
+                    (cash flows)
+<p>
+<p>
+<b><u>Syntax</u></b>
+<p>
+        <b>fvfix</b> <b>, cf(#) nper(#)</b> <b><u>freq</u></b><b>uency(</b>timeunit<b>)</b> <b>rate(#)</b> [ <i>options</i> ]
+<p>
+    <i>options</i>                   Description
+    -------------------------------------------------------------------------
+    Main
+      <b>cf(#)</b>                   Value of the constant cash flows (positive
+                                number)
+      <b>nper(#)</b>                 Number of payment periods (positive integer)
+      <b><u>freq</u></b><b>uency(</b><i>timeunit</i><b>)</b>     Time unit of payments (m, q, h, y)
+      <b>rate(#)</b>                 Nominal annual interest rate (in decimal form)
+<p>
+    Options
+      <b><u>presentval</u></b><b>ue</b>            Starting balance other than <b>cf(#)</b> (positive
+                                number)
+      <b>due(#)</b>                  When payments are due or made: 0 = end of
+                                period (default), or 1 = beginning of period
+      <b><u>res</u></b><b>ult(</b><i>mymatrix</i><b>)</b>        Set the capitalized cash flows' schedule matrix
+                                name
+    -------------------------------------------------------------------------
+<p>
+<a name="statname"></a>        <i>timeunit</i>       definition
+        ---------------------------------------------------------------------
+        <b>m</b>               monthly payments
+        <b>q</b>               quarterly payments
+        <b>h</b>               halfyearly payments
+        <b>y</b>               yearly payments
+        ---------------------------------------------------------------------
+<p>
+<p>
+<b><u>Description</u></b>
+<p>
+    <b>fvfix</b> Returns the future value of a series of equal payments (based on a
+    compounded constant interest rate). <b>fvfix</b> generates a three column matrix
+    (rows = nper) containing the entire schedule of capitalized cash flows
+    distinguishing between: period number, capitalization factor and cash
+    flows.
+<p>
+<p>
+        +---------+
+    ----+ Options +----------------------------------------------------------
+<p>
+    <b>cf(</b><i>#</i><b>)</b> Value of the constant cash flows.
+<p>
+    <b>nper(</b><i>#</i><b>)</b> Number of payment periods.  For example, if you want the future
+        value of five-year monthly cash flows, it will have 5*12 = 60
+        periods. The formula <b>nper(</b><i>60</i><b>)</b>.
+<p>
+    <b><u>freq</u></b><b>uency(</b><i>timeunit</i><b>)</b> Time unit of payments (m, q, h, y).  Used to convert
+        the annual interest rate into a periodic rate.
+<p>
+    <b>rate(</b><i>#</i><b>)</b> Nominal annual interest rate (in decimal form). <i>i.e.</i> an annual
+        5.24% interest rate should be written 0.0524.
+<p>
+    <b><u>presentval</u></b><b>ue</b> Starting balance other than <b>cf(#)</b>, default is 0.
+<p>
+    <b>due(</b><i>#</i><b>)</b> When payments are due or made: 0 = end of period (default), or 1 =
+        beginning of period.
+<p>
+    <b><u>res</u></b><b>ult(</b><i>mymatrix</i><b>)</b> Set the capitalized cash flows' schedule matrix name
+        saved in results, default is <b>matfvcf</b>
+<p>
+<p>
+<b><u>Examples</u></b>
+<p>
+    <b>. fvfix, cf(10000) nper(60) frequency(m) rate(.1125) due(1)</b>
+    <b>. fvfix, cf(1500) nper(5) frequency(y) rate(.125) res(cf1)</b>
+    <b>. mat list r(cf1)</b>
+<p>
+<p>
+<b><u>Saved results</u></b>
+<p>
+    <b>fvfix</b> saves the following in <b>r()</b>:
+<p>
+    Scalars   
+      <b>r(cf)</b>          cash flow value
+      <b>r(nper)</b>        total number of payment periods
+      <b>r(freq)</b>        number of payment within a year
+      <b>r(iy)</b>          annual interest rate
+      <b>r(due)</b>         due value
+      <b>r(presentval)</b>  Starting balance value
+      <b>r(FV)</b>          future value of constant cash flows
+<p>
+    Matrices  
+      <b>r(matfvcf)</b>     schedule of capitalized cash flows
+<p>
+<p>
+<b><u>Author</u></b>
+<p>
+Maximo Sangiacomo
+<b>Email:  </b>msangia@hotmail.com
+<p>
+</pre>

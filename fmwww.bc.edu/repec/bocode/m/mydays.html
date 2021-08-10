@@ -1,0 +1,115 @@
+<pre>
+-------------------------------------------------------------------------------
+help for <b>mydays</b>
+-------------------------------------------------------------------------------
+<p>
+<b><u>List of specified days, say for axis labels or ticks</u></b>
+<p>
+        <b>mydays</b> [<i>if</i>] [<i>in</i>] <b>,</b> <b><u>l</u></b><b>ocal(</b><i>macname</i><b>)</b> [ <b><u>d</u></b><b>ays(</b><i>numlist</i><b>)</b> <b>last</b>
+                 <b><u>m</u></b><b>onths(</b><i>numlist</i><b>)</b> <b><u>f</u></b><b>ormat(</b><i>date_format</i><b>)</b> ]
+<p>
+<p>
+<b><u>Description</u></b>
+<p>
+    <b>mydays</b> displays a formatted list of specified days that lie within the
+    range of a <b>tsset</b> daily date variable describing a time series and puts
+    the numeric version of that list in a specified local macro. The result
+    may be useful for specifying axis label or tick positions on graphs of
+    time series.
+<p>
+<p>
+<b><u>Remarks</u></b> 
+<p>
+    To use <b>mydays</b>, you must have a time series dataset defined by a daily
+    date variable. If it has not been done previously, you must tsset. For
+    example:
+<p>
+    <b>. sysuse sp500, clear</b>
+    <b>. tsset date</b>
+<p>
+    If you ask for a time series graph, Stata by default uses its best guess
+    at some "nice" dates as labelled dates on the time axis, in this case 1
+    January 2001, 1 April 2001, 1 July 2001, 1 October 2001, 1 January 2002.
+<p>
+    <b>. tsline high low</b>
+<p>
+    Now suppose you do not like that default. In principle you just need to
+    spell out which days you want, but that can be tedious. Differing month
+    lengths and the existence of leap years mean that what you want is
+    unlikely to be a regularly spaced series of days. <b>mydays</b> offers an
+    alternative. Unless it is obvious otherwise, it takes the <b>tsset</b> time
+    variable to be a daily date. Suppose you want the last days of each
+    quarter:
+<p>
+    <b>. mydays, last months(3(3)12) local(last)</b>
+    <b>. tsline high low, xla(`last', format(%dn_d))</b>
+<p>
+    The process thus entails two steps: define the days you want with <b>mydays</b>,
+    and then feed the name of the macro containing them to the graph command,
+    here <b>tsline</b>. In this case, <b>mydays</b> does not show 31 December 2000, as it
+    is not within the range of the data, but that could be added on the fly:
+<p>
+    <b>. tsline high low, xla(`=mdy(12,31,2000)' `last', format(%dn_d))</b>
+<p>
+    For days other than the last of each month, you need to specify an
+    argument for <b>days()</b>.
+<p>
+<p>
+<b><u>Options</u></b>
+<p>
+    <b>local(</b><i>macname</i><b>)</b> inserts the numeric list of daily dates in local macro
+        <i>macname</i> within the calling program's space.  Hence that macro will be
+        accessible after <b>mydays</b>, say for <b>graph</b> or other graphics commands.
+        This option is required.
+<p>
+    <b>days()</b> specifies the days of each month you want to include. The argument
+        must be a numlist of one or more integers between 1 and 31.
+        Impossible dates implied by this and your choice of <b>months()</b> (e.g. 31
+        February) will be ignored.
+<p>
+    <b>last</b> specifies that the last day of each month specified should be
+        included in the macro. Leap year corrections are automatic. (Note to
+        programmers: calculating in terms of <b>mdy(</b>#<b>,1,</b>#<b>) - 1</b> avoids ringing
+        the changes on 28, 29, 30 and 31 days in each month and on ordinary
+        and leap years.)
+<p>
+    At least one of <b>days()</b> and <b>last</b> must be specified.
+<p>
+    <b>months()</b> specifies the months you want to include. The argument must be a
+        numlist of one or more integers between 1 and 12. The default is all
+        months, i.e. <b>1/12</b>.
+<p>
+    <b>format()</b> specifies a format controlling the display of the list.  By
+        default the format of the <b>tsset</b> time variable will be used.  This
+        option has no effect on the contents of the macro and is intended
+        only to help in checking that the list contains what is desired.
+<p>
+<p>
+<b><u>Examples</u></b>
+<p>
+    <b>. sysuse sp500, clear</b>
+    <b>. tsset date</b>
+    <b>. mydays, day(1) local(ticks)</b>
+    <b>. mydays, day(15) local(labels)</b>
+    <b>. tsline high low, xla(`labels', labsize(*0.9) notick format(%dm))</b>
+        <b>xtic(`=mdy(1,1,2001)' `ticks' `=mdy(1,1,2002)')</b>
+<p>
+<p>
+<b><u>Authors</u></b>
+<p>
+    Nicholas J. Cox, Durham University
+    n.j.cox@durham.ac.uk
+<p>
+    Scott Merryman, Risk Management Agency/USDA
+    smerryman@kc.rr.com
+<p>
+<p>
+<b><u>Acknowledgements</u></b> 
+<p>
+    This program grew out of a question from Eric Wruck.
+<p>
+<p>
+<b><u>Also see</u></b>
+<p>
+    Online:  help for axis label options
+</pre>

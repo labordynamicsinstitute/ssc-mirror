@@ -1,0 +1,125 @@
+<pre>
+<b>help fmm postestimation</b>                                         also see:  <b>fmm</b> 
+-------------------------------------------------------------------------------
+<p>
+<b><u>Title</u></b>
+<p>
+<b>fmm postestimation</b> -- Postestimation tools for <b>fmm</b>
+<p>
+<p>
+<b><u>Description</u></b>
+<p>
+    The following postestimation commands are available for <b>fmm</b>:
+<p>
+    command      description
+    -------------------------------------------------------------------------
+INCLUDE help post_estat
+INCLUDE help post_estimates
+INCLUDE help post_lincom
+INCLUDE help post_lrtest
+INCLUDE help post_margins
+INCLUDE help post_nlcom
+    <b>predict</b>      predictions including component probabilities
+INCLUDE help post_test
+INCLUDE help post_testnl
+    -------------------------------------------------------------------------
+<p>
+<p>
+<a name="predict"></a><b><u>Syntax for predict</u></b>
+<p>
+        <b>predict</b> [<i>type</i>] <i>newvar</i> [<i>if</i>] [<i>in</i>] [<b>,</b> <i>statistic</i> <b><u>eq</u></b><b>uation(</b><i>component#</i><b>)</b>]
+<p>
+    <i>statistic</i>    Description
+    -------------------------------------------------------------------------
+    Main
+      <b><u>me</u></b><b>an</b>       predicted mean; the default
+      <b><u>pri</u></b><b>or</b>      prior component probability
+      <b><u>pos</u></b><b>terior</b>  posterior component probability
+    -------------------------------------------------------------------------
+    Option <b><u>eq</u></b><b>uation(</b><i>component#</i><b>)</b> is required for <b><u>pri</u></b><b>or</b> and <b><u>pos</u></b><b>terior</b>.  It is
+      also required for <b><u>me</u></b><b>an</b> if predicted within-component means are desired.
+<p>
+INCLUDE help esample
+<p>
+<p>
+<b><u>Options for predict</u></b>
+<p>
+    <b><u>me</u></b><b>an</b>, the default, calculates the predicted mean.
+<p>
+        To obtain within component means, specify the <b><u>eq</u></b><b>uation(</b><i>component#</i><b>)</b>
+        option.
+<p>
+    <b><u>pri</u></b><b>or</b> calculates the prior component probabilities.  With <b>prior</b>,
+        <b><u>eq</u></b><b>uation(</b><i>component#</i><b>)</b> must also be specified.
+<p>
+    <b><u>pos</u></b><b>terior</b> calculates the posterior component probabilities.  With
+        <b>posterior</b>, <b><u>eq</u></b><b>uation(</b><i>component#</i><b>)</b> must also be specified.
+<p>
+<p>
+<b><u>Marginal effects</u></b>
+<p>
+    Marginal effects can be calculated separately for the overall conditional
+    mean as well as for within-component means, prior and posterior
+    probabilities.  To calculate marginal effects for within-component means,
+    prior and posterior probabilities, run <b>margins</b> separately for each
+    component, as shown in the examples below. Note that <b>fmm</b> has not been
+    updated to accommodate factor variables.
+<p>
+<p>
+<b><u>Examples</u></b>
+<p>
+    Mixture of normals
+<p>
+    . webuse womenwk, clear
+<p>
+    . fmm wagefull educ age married, mix(normal) comp(2)
+<p>
+    . predict wfhat
+<p>
+    . predict wfhat1, eq(component1)
+<p>
+    . predict wfhat2, eq(component2)
+<p>
+    . predict wfhatpri, prior eq(component1)
+<p>
+    . predict wfhatpos, posterior eq(component1)
+<p>
+    . sum wagefull wfhat*
+<p>
+    . drop wfhat*
+<p>
+<p>
+    Mixture of Negative Binomials (Type 2)
+<p>
+    . webuse medpar, clear
+<p>
+    . gen los0 = los - 1
+<p>
+    . fmm exlos died hmo type2-type3, mix(negbin2) comp(2) comp(2)
+<p>
+    . predict wfhat
+<p>
+    . predict l0hat1, eq(component1)
+<p>
+    . predict l0hat2, eq(component2)
+<p>
+    . predict l0hatpri, prior eq(component1)
+<p>
+    . predict l0hatpos, posterior eq(component1)
+<p>
+    . sum los0 l0hat*
+<p>
+    . drop l0hat*
+<p>
+    . margins, dydx(*) predict(eq(component1))
+<p>
+    . margins, dydx(*) predict(eq(component2))
+<p>
+    . margins, dydx(*)
+<p>
+<p>
+<b><u>Also see</u></b>
+<p>
+    <b>fmm</b>; <b>estimates</b>, <b>lincom</b>, <b>lrtest</b>, <b>margins</b>, <b>nlcom</b>, <b>predictnl</b>, <b>suest</b>, <b>test</b>, 
+             <b>testnl</b>
+</pre>

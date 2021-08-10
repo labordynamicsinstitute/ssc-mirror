@@ -1,0 +1,477 @@
+*! version 2.10 06June2014 M. Araar Abdelkrim & M. Paolo verme
+/*************************************************************************/
+/* subsim: Subsidy Simulation Stata Toolkit  (Version 1.01)               */
+/*************************************************************************/
+/* Conceived and programmed by Dr. Araar Abdelkrim  (2006-2012)          */
+/* Universite Laval, Quebec, Canada                                      */
+/* email : aabd@ecn.ulaval.ca                                            */
+/* Phone : 1 418 656 7507                                                */
+/*************************************************************************/
+/*   asubsim.dlg                                                          */
+/*************************************************************************/
+
+
+
+VERSION 9.2
+SYNCHRONOUS_ONLY
+
+INCLUDE graph_header
+POSITION . . 860 560
+
+
+DIALOG main, label("SUBSIM| Automated SUBSIM Report --> asubsim command") tabtitle("Main")
+BEGIN
+  DEFINE col0  20
+  DEFINE col1 15
+  DEFINE col2 50
+  DEFINE col3 170
+  DEFINE col4 280
+  DEFINE col5 400
+  
+  DEFINE colwd0 55
+  DEFINE colwd1 105
+  DEFINE colwd2 105
+  DEFINE colwd3 80
+  
+
+  DEFINE _x _xsetbu
+  DEFINE _y _top
+  
+    GROUPBOX chk_per11  10    10  410 80,                         ///
+            label("Dialog box inputs: ")           ///
+		   
+    TEXT txt_vname11     20    +20    140      .,                 ///  
+                  label("Load the inputs:   ")                           
+       
+    BUTTON  bu_load    140    @     270      .,                 ///
+    label("Load") onpush("view dialog asubini") 
+	 
+	 
+	TEXT  tx_dbsfile     20    +25    140      .,                 ///  
+         label("Save the inputs:")                           	  
+   
+   FILE  dbsamex      140    @     270      .,                    ///
+    label ("Browse...")    save option("inisave")                   ///
+    filter("MetaFile (*.prj)*.prj*.* (*.*)*.*")   
+	
+	
+	GROUPBOX chk_per3  10    110  410 160,                         ///
+           label("General information: ")         ///
+		   
+    TEXT txt_cname     20    +20    180      .,                 ///  
+                  label("Country:   ")                       
+       
+    EDIT  ed_cname    170    @     240      .,                 ///
+              option(cname)      default() 
+    TEXT txt_ysvy    20    +30    180      .,                 ///  
+                  label("Year of the household survey:   ")                           
+       
+    EDIT  ed_ysvy    170    @    240      .,                 ///
+              	  default() option(ysvy) 
+			  
+    TEXT txt_ysim    20    +30    240      .,                 ///  
+                  label("Year of the simulation:   ")                           
+       
+    EDIT  ed_ysim    170    @     240      .,                 ///
+              	  default() 	option(ysim) 		  
+			  
+	TEXT txt_lcur    20    +30    240      .,                 ///  
+                  label("Local currency:   ")                           
+       
+    EDIT  ed_lcur    170    @     240      .,                 ///
+              	  default() option(lcur) 
+			  
+
+   GROUPBOX chk_per1  10    +60  410 140,                         ///
+           label("Variables of interest: ")                       ///
+
+  
+  TEXT     tx_var      20    +20    180      .,                 ///
+   label("Per capita household expenditures*:          ") 
+         
+  VARNAME  vn_pcexp      210    @     200      .,                 ///
+                  
+  
+		   
+ TEXT     tx_var3      20   +30    180      .,                 ///
+           label("Household size*:   ")  
+ VARNAME  vn_hhs     210    @     200      .,                 ///
+           option(hsize)    
+ 
+ TEXT     tx_pl1      20   +30    180      .,                 ///
+           label("Poverty line*:   ")  
+ VARNAME  vn_pl1      210    @     200      .,                 ///
+           option(pline)    
+  
+  GROUPBOX chk_per7  10    +80  410 80,                         ///
+           label("Group variable (by default is the quintiles) ")         
+		   
+ TEXT     tx_hhg      20   +30    180       .,                 ///
+           label("Household group:   ")  
+ VARNAME  vn_hhg      210 @     200      .,                 ///
+           option(hgroup)  
+		   
+
+
+ TEXT     txt_note1     10    +60    400      .,                 ///  
+             label("Note: The (*) indicates a required information.")     
+  
+ 
+ /*
+TEXT  tx_dbofile     20    +25    60      .,                 ///  
+label("Open:")                                  ///	  
+            
+        
+FILE  dboamex      80    @     200      .,                 ///
+label ("Browse...")    save option("iniopen")                   ///
+filter("MetaFile (*.def)*.def*.* (*.*)*.*") 
+
+BUTTON   bu_open     290 @       70     .,              ///
+        label("Load") onpush(program initialize)        ///
+        tooltip("Load the dialog box information")
+			
+*/			  
+     
+ GROUPBOX percentile 440    110    410 80,                      ///
+           label("Estimation methods/options")
+           
+  /*
+  TEXT     txt_op1     450    +25    120      .,                 ///  
+             label("Approximation approach:")     
+  
+    COMBOBOX  cb_met      580    @     260      .,                 ///
+              dropdownlist                                          ///
+              contents(cb_met)  values(cb_met_val) option(appr)  ///
+            default(1)
+   */
+   TEXT     txt_wop     450    +35    120      .,                 ///  
+             label("Impact on well-being:")     
+  
+   COMBOBOX  cb_wmet      580    @     260      .,                 ///
+              dropdownlist                                          ///
+              contents(cb_wmet)  values(cb_wmet_val) option(wappr)  ///
+            default(1)
+ 
+ GROUPBOX chk_tr  440    +70  410 120,                         ///
+           label("Lumpsum transfer")         
+ TEXT     tx_tr      450   +35    120      .,                 ///
+           label("Type of transfer:   ")  
+COMBOBOX  cb_tr      580    @     260      ., 	///
+dropdownlist contents(cb_tr) values(cb_tr_val)	///
+default(1)     option(typetr)     onselchangelist(cond_change) 
+
+TEXT    txt_trg    700    +30     170      .,                 ///
+              	  label("Group dummy variable" )
+				  
+TEXT     tx_trg2      450   +15    120      .,                 ///
+           label("Targeting form  :   ")  
+COMBOBOX  cb_trg      580    @     110      ., 	///
+dropdownlist contents(cb_trg) values(cb_trg_val)	///
+default()     option(typetrg)     onselchangelist(cond_change)  
+VARNAME  var_trg    700    @     140      .,                 ///
+              	  default() option(gtarg) 
+				  
+				  
+  CHECKBOX   chk_gvimp     440    +75    300    .,                   ///
+             label("Generate variable of the impact on wellbeing.") default(0) option(gvimp)
+				  
+
+   DEFINE _x 640
+   DEFINE _y 520
+     
+  INCLUDE _bu_svyset
+
+END
+
+
+
+LIST cb_met
+BEGIN
+  Ignore the interaction effect (dp*dq)
+  Estimate with the interaction effect (dp*dq)
+END
+
+LIST cb_met_val
+BEGIN
+ 1
+ 2
+END
+
+LIST cb_wmet
+BEGIN
+  Marginal approach (linear approximation) 
+  Modeling approach (Cobb-Douglas function)
+END
+
+LIST cb_wmet_val
+BEGIN
+ 1
+ 2
+END
+
+
+SCRIPT clear_all
+BEGIN
+        items_info.cb_scens.setvalue "1"
+        items_info.vn_fpsch1.setvalue ""
+        items_info.vn_fpsch2.setvalue ""
+        items_info.ln_scen3.setvalue ""
+		
+
+        main.cb_items.setvalue "1"
+        main.en_pr_a1.setvalue ""
+        main.vn_item1.setvalue ""
+        main.vn_item2.setvalue ""
+        main.vn_item3.setvalue ""
+        main.vn_item4.setvalue ""
+        main.vn_item5.setvalue ""
+        main.vn_item6.setvalue ""  
+	    main.vn_item7.setvalue ""
+        main.vn_item8.setvalue ""
+        main.vn_item9.setvalue ""
+        main.vn_item10.setvalue "" 
+END
+
+
+
+
+SCRIPT PREINIT
+BEGIN
+      
+        create BOOLEAN has_scen1
+        create BOOLEAN has_scen2
+        create BOOLEAN has_scen3
+		
+        create BOOLEAN has_item1
+        create BOOLEAN has_item2
+        create BOOLEAN has_item3
+        create BOOLEAN has_item4
+        create BOOLEAN has_item5
+        create BOOLEAN has_item6
+		create BOOLEAN has_item7
+        create BOOLEAN has_item8
+        create BOOLEAN has_item9
+        create BOOLEAN has_item10
+		
+		create BOOLEAN has_ps1
+        create BOOLEAN has_ps2
+        create BOOLEAN has_ps3
+        create BOOLEAN has_ps4
+        create BOOLEAN has_ps5
+        create BOOLEAN has_ps6
+		create BOOLEAN has_ps7
+        create BOOLEAN has_ps8
+        create BOOLEAN has_ps9
+        create BOOLEAN has_ps10
+		create BOOLEAN has_ini
+		
+		create BOOLEAN has_act_bui1
+		create BOOLEAN has_act_buf1
+		create BOOLEAN has_act_bui2
+		create BOOLEAN has_act_buf2
+		create BOOLEAN has_act_bui3
+		create BOOLEAN has_act_buf3
+		create BOOLEAN has_act_bui4
+		create BOOLEAN has_act_buf4
+		create BOOLEAN has_act_bui5
+		create BOOLEAN has_act_buf5
+		create BOOLEAN has_act_bui6
+		create BOOLEAN has_act_buf6
+		create BOOLEAN has_act_bui7
+		create BOOLEAN has_act_buf7
+		create BOOLEAN has_act_bui8
+		create BOOLEAN has_act_buf8
+		create BOOLEAN has_act_bui9
+		create BOOLEAN has_act_buf9
+		create BOOLEAN has_act_bui10
+		create BOOLEAN has_act_buf10
+		
+		create BOOLEAN has_cond1
+		create BOOLEAN has_cond2
+				
+END
+
+
+
+
+LIST cond_change
+BEGIN
+        script cond1
+        script cond2
+        
+END
+
+
+SCRIPT cond1
+BEGIN
+        has_cond1.settrue
+        has_cond2.setfalse
+        program check_conds
+END
+
+SCRIPT cond2
+BEGIN
+        has_cond1.setfalse
+        has_cond2.settrue
+        program check_conds
+END
+
+
+
+PROGRAM check_conds
+BEGIN
+if (has_cond1){
+call main.txt_trg.hide
+call main.var_trg.hide
+
+}
+
+if has_cond2{
+call main.txt_trg.show
+call main.var_trg.show
+}
+END
+
+
+PROGRAM POSTINIT_PROGRAM
+BEGIN
+	put "asubini2"
+	stata hidden
+END
+
+
+
+
+
+INCLUDE items_info
+INCLUDE tb_options
+INCLUDE gr_options
+
+
+
+LIST cb_trg
+BEGIN
+  Universal 
+  Population group
+END
+
+
+LIST cb_trg_val
+BEGIN
+  un
+  gr
+END
+
+
+
+LIST cb_tr_val
+BEGIN
+  1
+  2
+END
+
+
+
+LIST cb_res
+BEGIN
+  Households
+  Persons
+END
+
+LIST cb_res_val
+BEGIN
+ hh
+ per
+END
+
+
+HELP hlp1,   view("help asubsim")
+RESET res1
+OK ok1,      label("OK")
+CANCEL can1, label("Cancel")
+SUBMIT sub1, label("Submit")
+COPY copy1
+
+PROGRAM initialize
+BEGIN
+		*put `"dis  asubini tunisia_sum1"'
+		stata hidden
+END
+
+
+
+
+PROGRAM command
+BEGIN
+        put "asubsim "
+	    require main.vn_pcexp
+        varlist [main.vn_pcexp]
+
+        put " "
+     
+        beginoptions
+		
+        optionarg main.vn_hhs
+	    optionarg main.vn_pl1
+		
+		
+		
+		optionarg items_info.cb_items
+		optionarg items_info.ed_items
+		
+			/*			
+		if !main.cb_met.isdefault() {
+                           optionarg main.cb_met
+                               } 
+					*/		   
+		if !main.cb_wmet.isdefault() {
+                           optionarg main.cb_wmet
+                               } 
+						
+						 optionarg main.vn_hhg
+
+      
+                        optionarg tb_options.fnamex
+						optionarg main.dbsamex
+						optionarg gr_options.ed_folgr
+
+                        if !tb_options.cb_lan.isdefault(){
+                        optionarg tb_options.cb_lan
+                        }
+						
+						if !main.cb_tr.isdefault(){
+                        optionarg main.cb_tr
+                        }
+
+		optionarg tb_options.ed_aggr
+		optionarg tb_options.chk_sum
+		optionarg tb_options.ed_tab
+        optionarg gr_options.ed_gra         
+        
+		
+		optionarg main.ed_cname  
+		optionarg main.ed_ysvy  
+		optionarg main.ed_ysim    
+		optionarg main.ed_lcur  
+		optionarg main.var_trg
+		optionarg main.chk_gvimp 
+	   
+	    put " "  /program item1_output 
+        put " "  /program item2_output 
+        put " "  /program item3_output 
+        put " "  /program item4_output 
+        put " "  /program item5_output 
+        put " "  /program item6_output 
+		put " "  /program item7_output 
+		put " "  /program item8_output 
+		put " "  /program item9_output 
+		put " "  /program item10_output 
+		
+		put " " /program  var_output
+	    
+		put " " /program  gra_output
+		
+	   endoptions 
+        
+        
+END

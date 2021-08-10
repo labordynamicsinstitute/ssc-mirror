@@ -1,0 +1,1 @@
+p zb_qrm	module to Recoding multiple responses into binary variables p zinb	module to estimate zero inflated negative binomial model on count datap zip	module to estimate zero inflated Poisson model on count data

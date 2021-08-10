@@ -1,0 +1,78 @@
+<pre>
+-------------------------------------------------------------------------------
+help for <b>episensrri</b>
+-------------------------------------------------------------------------------
+<p>
+<b><u>Basic sensitivity analysis for binary unmeasured confounders</u></b>
+<p>
+    <b>episensrri</b> <i>#arr</i> [ <b>,</b> <b><u>pe</u></b><b>xp(</b>numlist<b>)</b> <b><u>pu</u></b><b>nexp(</b>numlist<b>)</b> <b>rrcd(</b><i>#</i><b>)</b> <b><u>ro</u></b><b>ut</b>
+              <b><u>f</u></b><b>ormat(%</b><i>fmt</i><b>)</b> ]
+<p>
+    where
+<p>
+    <i>#arr</i> is the apparent relative risk
+<p>
+<b><u>Description</u></b>
+<p>
+    <b>episensrri</b> provides basic sensitivity analysis of the apparent or
+          observed relative risks according to specified plausible
+          values of the prevalence of the unmeasured confounding
+          among exposed and unexposed, and the relative risks between
+          confounder and disease. It is an immediate command, see
+          help immed.
+<p>
+<b><u>Options</u></b>
+<p>
+    <b><u>pe</u></b><b>xp(</b>numlist<b>)</b> specifies the prevalence of the unmeasured confounder among
+        the exposed subjects.
+<p>
+    <b><u>pu</u></b><b>nexp(</b>numlist<b>)</b> specifies the prevalence of the unmeasured confounder
+        among the unexposed subjects.
+<p>
+    <b>rrcd(</b><i>#</i><b>)</b> specifies the relative risk between the unmeasured confounder and
+        disease.
+<p>
+    <b><u>ro</u></b><b>ut</b> identifies (rule-out approach) the relative risk between the
+        unmeasured confounder and disease (<b>rrcd(</b><i>#</i><b>)</b>) such that the apparent
+        relative risk (<i>#arr</i>) would move to the null (1).  Range for <b>rrcd(</b><i>#</i><b>)</b>
+        is 0 to 50.
+<p>
+    <b><u>f</u></b><b>ormat(%</b><i>fmt</i><b>)</b> specifies the display format for presenting numbers.
+        <b>format(%3.2f)</b> is the default; see help format.
+<p>
+<b><u>Examples</u></b>
+<p>
+     episensrri 1.76 , pexp(0.7) punexp(0.5) rrcd(5)
+     episensrri 1.76 , pexp(0.4(.1)0.7) punexp(0.3(.1)0.5) rrcd(5)
+     episensrri 1.76 , pexp(0.4(.1)0.7) punexp(0.3(.1)0.5) rrcd(10)
+     episensrri 1.86 , pexp(0.6) punexp(.2) rrcd(1.5) ro
+<p>
+<b><u>References</u></b>
+<p>
+    Schneeweiss S., 2006, Sensitivity analysis and external adjustment for
+        unmeasured confounders in epidemiologic database studies of
+        therapeutics.  <i>Pharmacoepidemiol Drug Saf</i>, 15(5):291-303.
+<p>
+<b><u>Authors</u></b>
+<p>
+    Nicola Orsini, Division of Nutritional Epidemiology, Institute of
+        Environmental Medicine, Karolinska Institutet, Sweden
+<p>
+    Rino Bellocco, Department of Medical Epidemiology and Biostatistics,
+        Karolinska Institutet, Sweden
+<p>
+    Sander Greenland, Department of Epidemiology, UCLA School of Public
+        Health, USA
+<p>
+<b><u>Support</u></b>
+<p>
+    http://nicolaorsini.altervista.org
+    nicola.orsini@ki.se
+<p>
+<b><u>Also see</u></b>
+<p>
+    Manual:  <b>[ST] epitab</b>
+<p>
+    Online:  <b>epitab</b>, <b>episens</b>, <b>episensi</b> (if installed)
+<p>
+</pre>

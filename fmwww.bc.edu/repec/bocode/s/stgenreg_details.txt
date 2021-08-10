@@ -1,0 +1,15 @@
+TITLE: `STGENREG' : module to fit general parametric survival models.
+
+DESCRIPTION/AUTHOR: stgenreg fits parametric survival models using any user-defined [log] baseline hazard fuction. Gaussian quadrature is used to evaluate the 
+cumulative hazard function and consequently the survival function allowing the estimation of a parametric survival model with almost any form. The [log] hazard 
+function must be written in Mata code using colon operators. Each parameter defined in a [log] hazard function can include components, whereby each component 
+can contain variables, user-defined functions of time, restricted cubic spline functions and/or fractional polynomial functions. Time-dependent effects can be 
+included in any component. Relative survival models can also be fitted.
+
+Author: Michael J. Crowther, University of Leicester
+Support: email michael.crowther@le.ac.uk
+
+Author: Paul Lambert, University of Leicester
+Support: email paul.lambert@le.ac.uk
+
+Requires: Stata version 11.2

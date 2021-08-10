@@ -1,0 +1,280 @@
+<pre>
+-------------------------------------------------------------------------------
+<b>help: </b><b>lmabpnl</b>                                                   <b>dialog:</b> <b>lmabpnl</b>
+-------------------------------------------------------------------------------
+<p>
+<b>        </b>+-------+
+<b>    </b>----+<b> Title </b>+------------------------------------------------------------
+<p>
+<b>lmabpnl: NLS Autocorrelation Box-Pierce Test at Higher Order AR(p)</b>
+<p>
+<a name="00"></a><b>        </b>+-------------------+
+<b>    </b>----+<b> Table of Contents </b>+------------------------------------------------
+<p>
+     <b>Syntax</b>
+     <b>Options</b>
+     <b>Description</b>
+     <b>Saved Results</b>
+     <b>References</b>
+<p>
+ *** <b>Examples</b>
+<p>
+     <b>Authors</b>
+<p>
+<a name="01"></a><b>        </b>+--------+
+<b>    </b>----+<b> Syntax </b>+-----------------------------------------------------------
+<p>
+   <b>lmabpnl</b> <i>depvar</i> [<i>if</i>] [<i>in</i>] [<i>weight</i>] , <b>fun(</b><i>expression</i><b>)</b> <b><u>lag</u></b><b>s(</b><i>#</i><b>)</b>
+ 
+     [ <b><u>in</u></b><b>itial(</b><i>init_val</i><b>)</b> <b><u>var</u></b><b>iables(</b><i>varlist</i><b>)</b> <b>vce(</b><i>vcetype</i> ]
+<p>
+<a name="02"></a><b>        </b>+---------+
+<b>    </b>----+<b> Options </b>+----------------------------------------------------------
+<p>
+  <b>lags(</b><i>#</i><b>)</b>              Lag Length Order
+<p>
+  <b>depvar</b>               Dependent Variable
+<p>
+  <b><u>var</u></b><b>iables(</b><i>varlist</i><b>)</b>   Independent Variables in model
+<p>
+  <b><u>in</u></b><b>itial(</b><i>init_val</i><b>)</b>    Parameters (initial) Starting Values
+<p>
+  <b>fun(</b><i>expression</i><b>)</b>      RHS Mathematical Expression
+<p>
+    SE/Robust
+    <b>vce(</b><i>vcetype</i><b>)</b>      <i>vcetype</i> may be <b>gnr</b>, <b><u>r</u></b><b>obust</b>, <b><u>cl</u></b><b>uster</b> <i>clustvar</i>,
+                        <b><u>boot</u></b><b>strap</b>, <b><u>jack</u></b><b>knife</b>, <b>hac</b> <i>kernel</i>, <b>hc2</b>, or <b>hc3</b>
+<p>
+<a name="03"></a><b>        </b>+-------------+
+<b>    </b>----+<b> Description </b>+------------------------------------------------------
+<p>
+    <b>lmabpnl</b> computes NLS Autocorrelation Box-Pierce Test at Higher Order
+    AR(p).
+<p>
+        Ho: No Autocorrelation - Ha: Autocorrelation
+        - Rho Value for
+        - Box-Pierce LM Test
+<p>
+<a name="04"></a><b>        </b>+---------------+
+<b>    </b>----+<b> Saved Results </b>+----------------------------------------------------
+<p>
+<b>lmabpnl</b> saves the following in <b>e()</b>:
+<p>
+   <b>e(rho#)</b>         Rho Value for AR(i)
+   <b>e(lmabp#)</b>       Box-Pierce LM Test AR(i)
+   <b>e(lmabpp#)</b>      Box-Pierce LM Test AR(i) P-Value
+<p>
+<a name="05"></a><b>        </b>+------------+
+<b>    </b>----+<b> References </b>+-------------------------------------------------------
+<p>
+    Box, George &amp; Pierce D. (1970)<b> "Distribution of Residual Autocorrelations</b>
+        <b>in Autoregressive Integrated Moving Average Time Series Models",</b>
+        <i>Journal of the American Statisical Association, 65</i>; 1509-1526.
+<p>
+    Damodar Gujarati (1995)<b> "Basic Econometrics"</b> <i>3rd Edition, McGraw Hill,</i>
+        <i>New York, USA</i>.
+<p>
+    Greene, William (1993)<b> "Econometric Analysis",</b> <i>2nd ed., Macmillan</i>
+        <i>Publishing Company Inc., New York, USA</i>; 616-618.
+<p>
+    Greene, William (2007)<b> "Econometric Analysis",</b> <i>6th ed., Upper Saddle</i>
+        <i>River, NJ: Prentice-Hall</i>; 387-388.
+<p>
+    Judge, Georege, R. Carter Hill, William . E. Griffiths, Helmut Lutkepohl,
+        &amp; Tsoung-Chao Lee (1988)<b> "Introduction To The Theory And Practice Of</b>
+        <b>Econometrics",</b> <i>2nd ed., John Wiley &amp; Sons, Inc., New York, USA</i>.
+<p>
+    Judge, Georege, W. E. Griffiths, R. Carter Hill, Helmut Lutkepohl, &amp;
+        Tsoung-Chao Lee(1985)<b> "The Theory and Practice of Econometrics",</b> <i>2nd</i>
+        <i>ed., John Wiley &amp; Sons, Inc., New York, USA</i>; 615.
+<p>
+    Maddala, G. (1992)<b> "Introduction to Econometrics",</b> <i>2nd ed., Macmillan</i>
+        <i>Publishing Company, New York, USA</i>; 358-366.
+<p>
+    William E. Griffiths, R. Carter Hill and George G. Judge (1993)<b> "Learning</b>
+        <b>and Practicing Econometrics",</b> <i>John Wiley &amp; Sons, Inc., New York, USA</i>;
+        721-725.
+<p>
+<a name="06"></a><b>        </b>+----------+
+<b>    </b>----+<b> Examples </b>+---------------------------------------------------------
+<p>
+clear all
+<p>
+sysuse lmabpnl.dta , clear
+<p>
+gen ly=ln(y)
+<p>
+lmabpnl ly , fun({B0}+{B1}*k+{B2}*l)
+<p>
+lmabpnl ly, fun({B}-({H}/{R})*ln({D}*l^(-{R})+(1-{D})*k^(-{R}))) in(B 1 H 1 R 1
+&gt;  D 0.5) lag(4)
+-------------------------------------------------------------------------------
+<p>
+. clear all
+. sysuse lmabpnl.dta , clear
+. gen ly=ln(y)
+. lmabpnl ly, fun({B}-({H}/{R})*ln({D}*l^(-{R})+(1-{D})*k^(-{R}))) in(B 1 H 1 R
+&gt;  1 D 0.5) lag(4)
+<p>
+      Source |       SS       df       MS
+-------------+------------------------------         Number of obs =        30
+       Model |   59.529144     3   19.843048         R-squared     =    0.9713
+    Residual |   1.7610762    26    .0677337         Adj R-squared =    0.9680
+-------------+------------------------------         Root MSE      =   .260257
+       Total |  61.2902202    29  2.11345587         Res. dev.     =  .0781436
+<p>
+------------------------------------------------------------------------------
+          ly |      Coef.   Std. Err.      t    P&gt;|t|     [95% Conf. Interval]
+-------------+----------------------------------------------------------------
+          /B |   .1244908   .0783444     1.59   0.124    -.0365483      .28553
+          /H |   1.012594   .0506832    19.98   0.000     .9084134    1.116775
+          /R |   3.010934   2.323389     1.30   0.206    -1.764861    7.786728
+          /D |   .3366735   .1361129     2.47   0.020     .0568895    .6164575
+------------------------------------------------------------------------------
+  Parameter B taken as constant term in model &amp; ANOVA table
+<p>
+==============================================================================
+*** NLS Autocorrelation Box-Pierce Test
+==============================================================================
+ Ho: No Autocorrelation - Ha: Autocorrelation
+------------------------------------------------------------------------------
+- Rho Value for Order(1)               AR(1)=  0.0271
+- Box-Pierce LM Test                   AR(1)=  0.0220  P-Value &gt;Chi2(1) 0.8820
+------------------------------------------------------------------------------
+- Rho Value for Order(2)               AR(2)=  0.0098
+- Box-Pierce LM Test                   AR(2)=  0.0249  P-Value &gt;Chi2(2) 0.9876
+------------------------------------------------------------------------------
+- Rho Value for Order(3)               AR(3)= -0.0134
+- Box-Pierce LM Test                   AR(3)=  0.0303  P-Value &gt;Chi2(3) 0.9986
+------------------------------------------------------------------------------
+- Rho Value for Order(4)               AR(4)= -0.3725
+- Box-Pierce LM Test                   AR(4)=  4.1924  P-Value &gt;Chi2(4) 0.3806
+------------------------------------------------------------------------------
+<p>
+<a name="07"></a><b>        </b>+---------+
+<b>    </b>----+<b> Authors </b>+----------------------------------------------------------
+<p>
+- <b>Emad Abd Elmessih Shehata</b>
+  <b>Professor (PhD Economics)</b>
+  <b>Agricultural Research Center - Agricultural Economics Research Institute - Eg</b>
+<b>&gt; ypt</b>
+  <b>Email: </b>emadstat@hotmail.com
+  <b>WebPage:                </b>http://emadstat.110mb.com/stata.htm
+  <b>WebPage at IDEAS:       </b>http://ideas.repec.org/f/psh494.html
+  <b>WebPage at EconPapers:  </b>http://econpapers.repec.org/RAS/psh494.htm
+<p>
+- <b>Sahra Khaleel A. Mickaiel</b>
+  <b>Professor (PhD Economics)</b>
+  <b>Cairo University - Faculty of Agriculture - Department of Economics - Egypt</b>
+  <b>Email: </b>sahra_atta@hotmail.com
+  <b>WebPage:                </b>http://sahraecon.110mb.com/stata.htm
+  <b>WebPage at IDEAS:       </b>http://ideas.repec.org/f/pmi520.html
+  <b>WebPage at EconPapers:  </b>http://econpapers.repec.org/RAS/pmi520.htm
+<p>
+<b>        </b>+------------------+
+<b>    </b>----+<b> LMABPNL Citation </b>+-------------------------------------------------
+<p>
+ <b>Shehata, Emad Abd Elmessih &amp; Sahra Khaleel A. Mickaiel (2012)</b>
+ <b>LMABPNL: "NLS Autocorrelation Box-Pierce Test at Higher Order AR(p)"</b>
+<p>
+<p>
+<b><u>Online Help:</u></b>
+<p>
+<b>* Autocorrelation Tests:</b>
+<p>
+<b>* (1) (OLS) * Ordinary Least Squares Tests:</b>
+<b>lmareg</b>     OLS Autocorrelation Tests
+<b>lmabp</b>      OLS Autocorrelation Box-Pierce Test
+<b>lmabg</b>      OLS Autocorrelation Breusch-Godfrey Test
+<b>lmabpg</b>     OLS Autocorrelation Breusch-Pagan-Godfrey Test
+<b>lmadurh</b>    OLS Autocorrelation Dynamic Durbin h, Harvey LM, Wald Tests
+<b>lmadurm</b>    OLS Autocorrelation Dynamic Durbin m Test
+<b>lmadw</b>      OLS Autocorrelation Durbin-Watson Test
+<b>lmalb</b>      OLS Autocorrelation Ljung-Box Test
+<b>lmavon</b>     OLS Autocorrelation Von Neumann Ratio Test
+<b>lmaz</b>       OLS Autocorrelation Z Test
+---------------------------------------------------------------------------
+<b>* (2) (NLS) * Non Linear Least Squares Tests:</b>
+<b>lmanls</b>     Non Linear Least Squares Autocorrelation Tests
+<b>lmabpnl</b>    NLS Autocorrelation Box-Pierce Test
+<b>lmabgnl</b>    NLS Autocorrelation Breusch-Godfrey Test
+<b>lmabpgnl</b>   NLS Autocorrelation Breusch-Pagan-Godfrey Test
+<b>lmadurmnl</b>  NLS Autocorrelation Dynamic Durbin m Test
+<b>lmadwnl</b>    NLS Autocorrelation Durbin-Watson Test
+<b>lmalbnl</b>    NLS Autocorrelation Ljung-Box Test
+<b>lmavonnl</b>   NLS Autocorrelation Von Neumann Ratio Test
+<b>lmaznl</b>     NLS Autocorrelation Z Test
+---------------------------------------------------------------------------
+<b>* (3) (MLE) * Maximum Likelihood Estimation Tests:</b>
+<b>lmamle</b>     MLE Autocorrelation Tests
+<b>lmabpml</b>    MLE Autocorrelation Box-Pierce Test
+<b>lmabgml</b>    MLE Autocorrelation Breusch-Godfrey Test
+<b>lmabpgml</b>   MLE Autocorrelation Breusch-Pagan-Godfrey Test
+<b>lmadurhml</b>  MLE Autocorrelation Dynamic Durbin h, Harvey LM, Wald Tests
+<b>lmadurmml</b>  MLE Autocorrelation Dynamic Durbin m Test
+<b>lmadwml</b>    MLE Autocorrelation Durbin-Watson Test
+<b>lmalbml</b>    MLE Autocorrelation Ljung-Box Test
+<b>lmavonml</b>   MLE Autocorrelation Von Neumann Ratio Test
+<b>lmazml</b>     MLE Autocorrelation Z Test
+---------------------------------------------------------------------------
+<b>* (4) (2SLS-IV) * Two-Stage Least Squares &amp; Instrumental Variables Tests:</b>
+<b>lmareg2</b>    2SLS-IV Autocorrelation Tests
+<b>lmabg2</b>     2SLS-IV Autocorrelation Breusch-Godfrey Test
+<b>lmabp2</b>     2SLS-IV Autocorrelation Box-Pierce Test
+<b>lmabpg2</b>    2SLS-IV Autocorrelation Breusch-Pagan-Godfrey Test
+<b>lmadurh2</b>   2SLS-IV Autocorrelation Dynamic Durbin h, Harvey LM, Wald Tests
+<b>lmadurm2</b>   2SLS-IV Autocorrelation Dynamic Durbin m Test
+<b>lmadw2</b>     2SLS-IV Autocorrelation Durbin-Watson Test
+<b>lmalb2</b>     2SLS-IV Autocorrelation Ljung-Box Test
+<b>lmavon2</b>    2SLS-IV Von Neumann Ratio Autocorrelation Test
+<b>lmaz2</b>      2SLS-IV Autocorrelation Z Test
+---------------------------------------------------------------------------
+<b>* (5) Panel Data Tests:</b>
+<b>lmaxt</b>      Panel Data Autocorrelation Tests
+<b>lmabxt</b>     Panel Data Autocorrelation Baltagi Test
+<b>lmabgxt</b>    Panel Data Autocorrelation Breusch-Godfrey Test
+<b>lmabpxt</b>    Panel Data Autocorrelation Box-Pierce Test
+<b>lmabpgxt</b>   Panel Data Autocorrelation Breusch-Pagan-Godfrey Test
+<b>lmadurhxt</b>  Panel Data Autocorrelation Dynamic Durbin h and Harvey LM Tests
+<b>lmadurmxt</b>  Panel Data Autocorrelation Dynamic Durbin m Test
+<b>lmadwxt</b>    Panel Data Autocorrelation Durbin-Watson Test
+<b>lmavonxt</b>   Panel Data Von Neumann Ratio Autocorrelation Test
+<b>lmawxt</b>     Panel Data Autocorrelation Wooldridge Test
+<b>lmazxt</b>     Panel Data Autocorrelation Z Test
+---------------------------------------------------------------------------
+<b>* (6) (3SLS-SUR) * Simultaneous Equations Tests:</b>
+<b>lmareg3</b>    (3SLS-SUR) Overall System Autocorrelation Tests
+<b>lmhreg3</b>    (3SLS-SUR) Overall System Heteroscedasticity Tests
+<b>lmnreg3</b>    (3SLS-SUR) Overall System Non Normality Tests
+<b>lmcovreg3</b>  (3SLS-SUR) Breusch-Pagan Diagonal Covariance Matrix
+<b>r2reg3</b>     (3SLS-SUR) Overall System R2, F-Test, and Chi2-Test
+<b>diagreg3</b>   (3SLS-SUR) Overall System ModeL Selection Diagnostic Criteria
+---------------------------------------------------------------------------
+<b>* (7) (SEM-FIML) * Structural Equation Modeling Tests:</b>
+<b>lmasem</b>     (SEM-FIML) Overall System Autocorrelation Tests
+<b>lmhsem</b>     (SEM-FIML) Overall System Heteroscedasticity Tests
+<b>lmnsem</b>     (SEM-FIML) Overall System Non Normality Tests
+<b>lmcovsem</b>   (SEM-FIML) Breusch-Pagan Diagonal Covariance Matrix Test
+<b>r2sem</b>      (SEM-FIML) Overall System R2, F-Test, and Chi2-Test
+<b>diagsem</b>    (SEM-FIML) Overall System ModeL Selection Diagnostic Criteria
+---------------------------------------------------------------------------
+<b>* (8) (NL-SUR) * Non Linear Seemingly Unrelated Regression Tests:</b>
+<b>lmanlsur</b>   (NL-SUR) Overall System Autocorrelation Tests
+<b>lmhnlsur</b>   (NL-SUR) Overall System Heteroscedasticity Tests
+<b>lmnnlsur</b>   (NL-SUR) Overall System Non Normality Tests
+<b>lmcovnlsur</b> (NL-SUR) Breusch-Pagan Diagonal Covariance Matrix Test
+<b>r2nlsur</b>    (NL-SUR) Overall System R2, F-Test, and Chi2-Test
+<b>diagnlsur</b>  (NL-SUR) Overall System ModeL Selection Diagnostic Criteria
+---------------------------------------------------------------------------
+<b>* (9) (VAR) * Vector Autoregressive Model Tests:</b>
+<b>lmavar</b>     (VAR) Overall System Autocorrelation Tests
+<b>lmhvar</b>     (VAR) Overall System Heteroscedasticity Tests
+<b>lmnvar</b>     (VAR) Overall System Non Normality Tests
+<b>lmcovvar</b>   (VAR) Breusch-Pagan Diagonal Covariance Matrix Test
+<b>r2var</b>      (VAR) Overall System R2, F-Test, and Chi2-Test
+<b>diagvar</b>    (VAR) Overall System ModeL Selection Diagnostic Criteria
+---------------------------------------------------------------------------
+<p>
+<p>
+<p>
+</pre>

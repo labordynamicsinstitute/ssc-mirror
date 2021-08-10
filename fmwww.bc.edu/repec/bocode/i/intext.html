@@ -1,0 +1,136 @@
+<pre>
+-------------------------------------------------------------------------------
+help for <b>intext</b> and <b>tfconcat</b>                                     (Roger Newson)
+-------------------------------------------------------------------------------
+<p>
+<p>
+<b><u>Read text files into string variables in the memory (without losing blanks)</u></b>
+<p>
+        <b>intext</b> <b>using</b> <i>filename</i> <b>,</b> <b><u>g</u></b><b>enerate(</b><i>prefix</i><b>)</b> [ <b><u>le</u></b><b>ngth(</b><i>#</i><b>)</b> <b><u>clear</u></b>
+<p>
+        <b>tfconcat</b> <i>filename_list</i> <b>,</b> <b><u>g</u></b><b>enerate(</b><i>prefix</i><b>)</b> [ <b><u>le</u></b><b>ngth(</b><i>#</i><b>)</b> <b><u>tfi</u></b><b>d(</b><i>newvarname</i><b>)</b>
+                           <b><u>tfn</u></b><b>ame(</b><i>newvarname</i><b>)</b> <b><u>obs</u></b><b>seq(</b><i>newvarname</i><b>)</b> ]
+<p>
+where <i>filename_list</i> is a list of filenames separated by spaces.
+<p>
+<p>
+<b><u>Description</u></b>
+<p>
+<b>intext</b> inputs a single text file into a set of generated string variables in
+the memory, generating as many string variables as is necessary to store the
+longest records in full, without trimmming leading and trailing blanks (as 
+infix does).  <b>tfconcat</b> takes, as input, a list of filenames, assumed to belong
+to text files, and concatenates them (without losing blanks) to create a new
+data set in memory, overwriting any pre-existing data. The new data set
+contains one observation for each record in each text file, ordered primarily
+by source text file and secondarily by order of record within source text file,
+and contains a set of generated string variables containing the text, as
+created by <b>intext</b>. Optionally, <b>tfconcat</b> creates new variables, specifying, for
+each observation, the input text file of origin and/or the sequential order of
+the observation in its input text file of origin.
+<p>
+<p>
+<b><u>Options for </u></b><b><u>intext</u></b><b><u> and </u></b><b><u>tfconcat</u></b>
+<p>
+<b>generate(</b><i>prefix</i><b>)</b> is not optional. It specifies a prefix for the names of the
+    new string variables generated, which will be named as <i>prefix1 ... ,</i>
+    <i>prefixn</i>, where <i>n</i> is the number of string variables required to contain the
+    longest text record in any input data set, with length as specified by the
+    <b>length</b> option.
+<p>
+<b>length</b> specifies the maximum length of the generated text variables. If absent,
+    it is set to 80.
+<p>
+<p>
+<b><u>Options for </u></b><b><u>intext</u></b><b><u> only</u></b>
+<p>
+<b>clear</b> specifies that any existing data set in the memory is to be removed
+    before the generated text variables are created. If <b>clear</b> is absent, then
+    <b>intext</b> attempts to add the generated variables to the existing data set,
+    failing if there is an existing variable with the same name as one of the
+    generated variables. (<b>tfconcat</b> always removes any existing data set before
+    generating new variables.)
+<p>
+<p>
+<b><u>Options for </u></b><b><u>tfconcat</u></b><b><u> only</u></b>
+<p>
+<b>tfid(</b><i>newvarname</i><b>)</b> specifies a new integer variable to be created, containing,
+    for each observation in the new data set, the sequential order, in the
+    <i>filename_list</i>, of the input text file of origin of the observation. If
+    possible, <b>tfconcat</b> creates a value label for the <i>newvarname</i> with the same
+    name, assigning, to each positive integer <b>i</b> from 1 to the number of input
+    file names in the list, a label equal to the filename of the <b>i</b>th input text
+    file, truncated if necessary to the maximum label length in the version of
+    Stata being used (eg 80 characters for Small or Intercooled Stata 7).  If a
+    value label of that name already exists in one of the input data sets, and
+    <b>nolabel</b> is not specified, then <b>dsconcat</b> adds new labels, but does not
+    replace existing labels.
+<p>
+<b>tfname(</b><i>newvarname</i><b>)</b> specifies a new string variable containing, for each
+    observation in the new data set, the name of the input text file of origin
+    of that observation, truncated if necessary to the maximum string length in
+    the version of Stata being used (eg 80 characters for Small or Intercooled
+    Stata 7, or 244 for Stata 7 SE).
+<p>
+<b>obsseq(</b><i>newvarname</i><b>)</b> specifies a new integer variable containing, for each
+    observation in the new data set, the sequential order of that observation
+    as a text record in its input text data set of origin.
+<p>
+<p>
+<b><u>Remarks</u></b>
+<p>
+<b>intext</b> is an inverse of outfile with the <b>runtogether</b> option.  That is to say,
+if the user inputs a text file into a list of generated string variables using
+<b>intext</b> and then outputs them to a second text file using outfile with the
+<b>runtogether</b> option, then the second text file will be identical to the first
+text file. <b>tfconcat</b> is similar to dsconcat (downloadable from SSC), but it
+concatenates text files instead of Stata data sets into the memory. <b>tfconcat</b>
+works by calling <b>intext</b> multiple times to create a data set for each text file,
+and concatenating these data sets into the memory. Both programs make it
+possible to use Stata for text file processing, especially when the text files
+may be indented Stata programs.  This cannot be done properly using infix,
+which uses fixed-field input, but trims leading and trailing blanks from
+strings.  Therefore, the <b>intext</b> package enables Stata programs to read Stata
+programs, just as outfile with the <b>runtogether</b> option enables Stata programs to
+write Stata programs.
+<p>
+<p>
+<b><u>Examples</u></b>
+<p>
+        . intext using intext.ado,gene(sect) clear
+<p>
+        . tfconcat auto1.txt auto2.txt auto3.txt auto4.txt,gene(piece)
+                tfid(tfseq) obs(recnum)
+        . sort tfseq recnum
+<p>
+The following example is equivalent to <b>copy tfconcat.ado trash1.txt,text</b>
+<b>replace</b>
+<p>
+        . intext using tfconcat.ado,gene(slice) clear
+        . outfile slice* using trash1.txt,runtogether replace
+<p>
+The following advanced example works under Windows, and might be used if the
+user has a library of Stata ado-files in the current directory. It inputs the
+ado-files into the memory and lists the lines beginning with <b>"*!"</b>, which are
+echoed by the which command.  The vallist package, written by Nick Cox and
+downloadable from SSC, is assumed to be installed.
+<p>
+        . tempfile dirf
+        . shell dir/b *.ado &gt; `dirf'
+        . intext using `dirf',gene(fn) clear
+        . vallist fn1,quote
+        . tfconcat `r(list)',gene(line) tfid(adofile) obs(lseq)
+        . list adofile line* if substr(line1,1,2)=="*!"
+<p>
+<p>
+<b><u>Author</u></b>
+<p>
+Roger Newson, King's College, London, UK.  Email: roger.newson@kcl.ac.uk
+<p>
+<p>
+<b><u>Also see</u></b>
+<p>
+ Manual:  <b>[U] 24 Commands to input data</b>, <b>[R] infix</b>, <b>[R] append</b>, <b>[R] outfile</b>
+On-line:  help for infiling, infix, append, outfile, file
+          help for dsconcat if installed
+</pre>

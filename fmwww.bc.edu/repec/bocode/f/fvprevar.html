@@ -1,0 +1,92 @@
+<pre>
+<b>help fvprevar</b>
+-------------------------------------------------------------------------------
+<p>
+<p>
+<b><u>Version of </u></b><b><u>fvrevar</u></b><b><u> generating permanent result variables</u></b>
+<p>
+<p>
+<b><u>Syntax</u></b>
+<p>
+        <b>fvprevar</b> [<i>varlist</i>] [<i>if</i>] [<i>in</i>] <b>,</b> <b><u>g</u></b><b>enerate(</b><i>stub</i><b>)</b> [ <b>no</b><b><u>lab</u></b><b>el</b> <b><u>sub</u></b><b>stitute</b>
+                 <b><u>ts</u></b><b>only</b> <b><u>l</u></b><b>ist</b> <b>fast</b> ]
+<p>
+    You must <b>tsset</b> your data before using <b>fvprevar</b> if <i>varlist</i> contains
+        time-series operators; see <b>[TS] tsset</b>.
+<p>
+<p>
+<b><u>Description</u></b>
+<p>
+    <b>fvprevar</b> is an extended version of <b>fvrevar</b>, which returns the generated
+    result variables as permanent variables (instead of as temporary
+    variables), with names prefixed with a user-specified stub.
+<p>
+<p>
+<b><u>Options</u></b>
+<p>
+    <b>generate(</b><i>stub</i><b>)</b> must be specified.  It specifies a prefix, used to produce
+        names for the generated variables, and suffixed by positive whole
+        numbers from 1 to the number of generated variables.
+<p>
+    <b>nolabel</b> specifies that no variable labels will be defined for the
+        generated permanent result variables.  If <b>nolabel</b> is not specified,
+        then the generated permanent result variables will have variable
+        labels equal to the variable characteristic <i>varname</i><b>[fvrevar]</b>, saved
+        by <b>fvprevar</b> and <b>fvrevar</b>, containing the expanded name of the virtual
+        factor variable corresponding to the generated variable.
+<p>
+    <b>substitute</b> specifies that equivalent, permanent variables, with names
+        prefixed using the <b>generate()</b> option, will be substituted for any
+        expanded factor variables, interactions, or time-series-operated
+        variables in the <i>varlist</i>.  <b>substitute</b> is the default action taken by
+        <b>fvprevar</b>; you do not need to specify the option.
+<p>
+    <b>tsonly</b> specifies that results variables will be substituted for only the
+        time-series-operated variables in <i>varlist</i>.
+<p>
+    <b>list</b> specifies that all factor-variable operators and time-series
+        operators be removed from <i>varlist</i>.  No new variables are created with
+        this option.
+<p>
+    <b>fast</b> is an option for programmers.  It specifies that <b>fvprevar</b> will do no
+        extra work to restore the original dataset (without the generated
+        result variables) if the user presses Break.
+<p>
+<p>
+<b><u>Examples</u></b>
+<p>
+    Setup
+        <b>. sysuse auto, clear</b>
+<p>
+    Describe the data
+        <b>. describe</b>
+<p>
+    Create five variables <b>b_1</b>, <b>b_2</b>, <b>b_3</b>, <b>b_4</b> and <b>b_5</b>, containing the values
+    for each level of factor variable <b>rep78</b>
+<p>
+        <b>. fvprevar i.rep78, generate(b_)</b>
+        <b>. describe b_*</b>
+<p>
+<p>
+<b><u>Saved results</u></b>
+<p>
+    <b>fvprevar</b> saves the following in <b>r()</b>:
+<p>
+    Scalars   
+      <b>r(ngenvar)</b>     Number of generated result variables
+<p>
+    Macros    
+      <b>r(varlist)</b>     the expanded variable list or list of base-variable
+                       names
+<p>
+    <b>fvprevar</b> (like <b>fvrevar</b>) also sets, for each generated variable, the
+    variable characteristic <i>varname</i><b>[fvrevar]</b>, containing the expanded virtual
+    factor variable name for that generated variable.
+<p>
+<p>
+<b><u>Also see</u></b>
+<p>
+    Manual:  <b>[R] fvrevar</b>
+<p>
+      Help:  <b>[R] fvrevar</b>, <b>[TS] tsrevar</b>, <b>[P] syntax</b>, <b>[P] unab</b>
+</pre>

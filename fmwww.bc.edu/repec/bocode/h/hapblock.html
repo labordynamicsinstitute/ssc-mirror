@@ -1,0 +1,90 @@
+<pre>
+-------------------------------------------------------------------------------
+help for <b>hapblock</b>
+-------------------------------------------------------------------------------
+<p>
+<b><u>Haplotype Block Edge Identification using hapipf</u></b>
+<p>
+        <b>hapblock</b> [<i>varlist</i>] [<b>using</b>] [, <b>mv</b> <b>mvdel</b> <b>hlen(</b><i>numlist</i><b>)</b> <b><u>s</u></b><b>tart(</b><i>#</i><b>)</b> <b>replace</b>
+                           <b><u>b</u></b><b>lock(</b><i>filename</i><b>)</b> ]
+<p>
+<b><u>Description</u></b>
+This command systematically fits a series of <b>hapipf</b> log-linear models that
+attempts to find the edge of areas containing high LD within a set of loci.
+<p>
+The log-linear model is fitted using iterative proportional fitting which is
+available using {hi ssc} and is called <b>ipf</b> (version 1.36 or later).
+Additionally, the user will also have to install <b>hapipf</b> (version 1.44 or
+later). This algorithm can handle very large contingency tables and converges
+to maximum likelihood estimates even when the likelihood is badly behaved.
+<p>
+If you are connected to the Web you can install the latest version by clicking
+here ssc install hapipf.  The latest version of <b>hapblock</b> can be installed here 
+ssc install hapblock,replace.
+<p>
+The <b>varlist</b> consists of paired variables representing the alleles at each
+locus. If phase is known then the paired variables are in fact the genotypes.
+When phase is unknown the algorithm assumes Hardy Weinberg Equilibrium so that
+models are based on chromosomal data and not genotypic data.
+<p>
+This algorithm can handle missing alleles at the loci by using the <b>mv</b> or <b>mvdel</b>
+option.
+<p>
+<b><u>Options</u></b>
+<b>mv</b> specifies that the algorithm should replace missing data (".") with a copy
+of each of the possible alleles at this locus. This is performed at the same
+stage as the handling of the missing phase when the dataset is expanded into
+all possible observations. If this option is not specified but some of the
+alleles do contain missing data the algorithm sees the symbol "." as another
+allele.
+<p>
+<b>mvdel</b> specifies that people with missing alleles are deleted.
+<p>
+<b>hlen(</b><i>numlist</i><b>)</b> specifies the width of the sliding window of models.
+<p>
+<b><u>s</u></b><b>tart(</b><i>#</i><b>)</b> specifies the starting loci in the varlist. This is useful when
+the algorithm is taking a long time and hence the command can be rerun from the
+&gt;  loci that the algorithm
+ended prematurely.
+<p>
+<b>replace</b> specifies that the results file created can be overwritten.
+<p>
+<b><u>b</u></b><b>lock(</b><i>filename</i><b>)</b> specifies that the calculated block sizes and p-values are save
+&gt; d
+to a file and is named <i>filename</i>.dta
+<p>
+<b><u>Examples</u></b>
+<p>
+Take a dataset with 70 loci, the pairs of alleles at locus i are the variables
+li_1 and li_2.
+<p>
+.hapblock l1_1-l70_2, hlen(6) s(10) mvdel
+<p>
+This will make the following comparisons
+l10*l11*l12+l13*l14*l15     vs   l10*l11*l12*l13*l14*l15
+l11*l12*l13+l14*l15*l16     vs   l11*l12*l13*l14*l15*l16
+l12*l13*l14+l15*l16*l17     vs   l12*l13*l14*l15*l16*l17
+l13*l14*l15+l16*l17*l18     vs   l13*l14*l15*l16*l17*l18
+e.t.c.
+If you specify the <b>mvdel</b> missing data option then these models might not be on 
+&gt; the same subjects.
+<p>
+<b><u>Author</u></b>
+<p>
+Adrian Mander, Cambridge, UK.  Email junk.ade@ntlworld.com
+<p>
+<b><u>Also see</u></b>
+<p>
+Related commands
+<p>
+HELP FILES      Installation status             SSC installation links
+<p>
+hapipf          (MUST be installed)             (ssc install hapipf)
+ipf             (MUST be installed)             (the above installs <b>ipf</b>)
+swblock         (if installed)                  (ssc install swblock)   
+gipf            (if installed)                  (ssc install gipf). 
+<p>
+<p>
+<p>
+<p>
+</pre>

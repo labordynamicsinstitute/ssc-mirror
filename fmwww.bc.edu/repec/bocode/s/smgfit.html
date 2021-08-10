@@ -1,0 +1,249 @@
+<pre>
+-------------------------------------------------------------------------------
+help for <b>smgfit</b>                                      Austin Nichols (June 2009)
+-------------------------------------------------------------------------------
+<p>
+<b><u>Program to fit a Singh-Maddala distribution to grouped data via ML</u></b>
+<p>
+        <b>smgfit</b> <i>nvar</i> [<b>if</b> <i>exp</i>] [<b>in</b> <i>range</i>] [<b>,</b> <b>z1(</b><i>z1var</i><b>)</b> <b>z2(</b><i>z2var</i><b>)</b> <b><u>a</u></b><b>var(</b><i>var</i><b>)</b>
+                 <b><u>b</u></b><b>var(</b><i>var</i><b>)</b> <b><u>q</u></b><b>var(</b><i>var</i><b>)</b> <b>sva(</b><i>var</i><b>)</b> <b>svb(</b><i>var</i><b>)</b> <b>svq(</b><i>var</i><b>)</b> <b>replace</b>
+                 <b>double</b> <b><u>f</u></b><b>rom(</b><i>string</i><b>)</b> <b><u>l</u></b><b>evel(</b><i>#</i><b>)</b> <i>maximize_options</i> ]
+<p>
+    <b>by</b> <i>...</i> <b>:</b> may be used with <b>smgfit</b>; see help by.
+<p>
+<b><u>Description</u></b>
+<p>
+    <b>smgfit</b> fits by ML the 3 parameter Singh-Maddala (1976) distribution to a
+    sample of counts or frequencies in <i>nvar</i> by income category. (For an
+    estimator designed for unit record data, see smfit). Optionally specified
+    variables <i>z1var</i> and <i>z2var</i> encode the lower and upper limits of each
+    interval; if they are not specified, variables serving that role and
+    called z1 and z2 are assumed to exist.
+<p>
+    Otherwise known as the Burr Type 12 distribution or as a Beta-P
+    distribution (Cronin 1979 and Johnson and Kotz 1970), the Singh-Maddala
+    distribution seems to provide a good fit to empirical income data
+    relative to other parametric functional forms; see e.g. McDonald (1984).
+    The Singh-Maddala distribution is closely related to the Dagum (Burr Type
+    3) distribution of Dagum (1977,1980) ; see dagfit (or see dagumfit for an
+    estimator designed for unit record data). Both are special cases of the
+    Generalized Beta of the Second Kind distribution (see gb2fit for an
+    estimator designed for unit record data). For a comprehensive review of
+    these and other related distributions, see Kleiber and Kotz (2003).  For
+    derivation of Lorenz orderings of pairs of income distributions in terms
+    of their Singh-Maddala parameters, see Wifling and Kraemer (1993) and
+    Kleiber (1996).  The Singh-Maddala distribution may be useful for
+    describing any skewed positive variable.
+<p>
+    The likelihood function for a sample of observations on <i>nvar</i> is specified
+    as the product of the integrated densities (between z1 and z2) to the
+    <i>nvar</i> power, and is maximized using <b>ml model lf</b>. See McDonald (1984) for
+    more information and references.
+<p>
+<b><u>Example from McDonald (1984)</u></b>
+<p>
+clear all
+input z1 f70 f75 f80
+    0    66  35  21
+    2.5  125 85  41
+    5    152 106 62
+    7.5  166 106 65
+    10   158 114 73
+    12.5 110 109 69
+    15   131 188 140
+    20   46  116 137
+    25   30  95  198
+    35   11  32  128
+    50   05  14  67
+end
+g z2=z1[_n+1]
+g mid=(z1+z2)/2
+replace mid=100 if mid==.  
+set obs 200
+g x=_n/2
+la var x "Income"
+dagfit f70 
+g dg70=e(ba)*e(bp)*(e(bb)/x)^e(ba)/x*(1+(e(bb)/x)^e(ba))^(-e(bp)-1)
+la var dg70 "PDF for grouped Dagum MLE 1970"
+tw hist mid [fw=f70]||line dg70 x, name(d)
+smgfit f70
+g sg70=(e(ba)*e(bq)/e(bb))*((1+(x/e(bb))^e(ba))^-(e(bq)+1))*((x/e(bb))^(e(ba)-1
+&gt; ))
+la var sg70 "PDF for grouped Singh-Maddala MLE 1970"
+tw hist mid [fw=f70]||line sg70 x, name(sm)
+dagumfit mid [fw=f70]
+g di70=e(ba)*e(bp)*(e(bb)/x)^e(ba)/x*(1+(e(bb)/x)^e(ba))^(-e(bp)-1)
+la var di70 "PDF for individual Dagum MLE applied to group data from 1970"
+smfit mid [fw=f70]
+g si70=(e(ba)*e(bq)/e(bb))*((1+(x/e(bb))^e(ba))^-(e(bq)+1))*((x/e(bb))^(e(ba)-1
+&gt; ))
+la var si70 "PDF for individual Singh-Maddala MLE applied to group data from 19
+&gt; 70"
+line dg70 sg70 di70 si70 x, leg(col(1)) scale(.8)
+<p>
+<b><u>Options</u></b>
+<p>
+    <b>z1(</b><i>z1var</i><b>)</b>, <b>z2(</b><i>z2var</i><b>)</b> are the lower and upper limits of each interval; if
+        they are not specified, variables serving that role and called z1 and
+        z2 are assumed to exist. It should always be true that the upper
+        bound of one category is the same as the lower bound of the next
+        highest category.
+<p>
+    <b>?var(</b><i>var</i><b>)</b> options specify varlists that are assumed to have a linear
+        effect on the parameter specified.  By default, each varlist contains
+        only a constant, so only the parameter itself is estimated.
+<p>
+    <b>sv?(</b><i>var</i><b>)</b> options specify newvars in which to store the estimated
+        parameters.  If <b>?var(</b><i>var</i><b>)</b> options have been specified, the prediction
+        assumes all explanatory variables are zero, i.e. the prediction is
+        only for the constant.
+<p>
+    <b>replace</b> allows <b>sv?(</b><i>var</i><b>)</b> options to specify existing variables, whose
+        values are replaced in the estimation sample.
+<p>
+    <b>double</b> requests that <b>sv?(</b><i>var</i><b>)</b> create doubles.
+<p>
+    <b>from(</b><i>string</i><b>)</b> specifies initial values for the Dagum parameters, and is
+        likely to be used only rarely. You can specify the initial values in
+        one of three ways: the name of a vector containing the initial values
+        (e.g., from(b0) where b0 is a properly labeled vector); by specifying
+        coefficient names with the values (e.g., from(a:_cons=1 b:_cons=5
+        p:_cons = 0); or by specifying an ordered list of values (e.g.,
+        from(1 5 0 .16, copy)).  Poor values in from() may lead to
+        convergence problems. For more details, including the use of copy and
+        skip, see {help:maximize}.
+<p>
+    <b>level(</b><i>#</i><b>)</b> specifies the confidence level, in percent, for the confidence
+        intervals of the coefficients; see help level.
+<p>
+    <b>nolog</b> suppresses the iteration log.
+<p>
+    <i>maximize_options</i> control the maximization process. The options available
+        are those shown by maximize, with the exception of <b>from()</b>.  If you
+        are seeing many "(not concave)" messages in the iteration log, using
+        the <b>difficult</b> or <b>technique</b> options may help convergence.
+<p>
+<b><u>Saved results</u></b>
+<p>
+    In addition to the usual results saved after <b>ml</b>, <b>dagfit</b> also saves the
+    following:
+<p>
+    <b>e(a)</b>, <b>e(b)</b>, and <b>e(p)</b> are the estimated Singh-Maddala parameters.
+<p>
+    <b>e(mode)</b>, <b>e(mean)</b>, <b>e(var)</b>, <b>e(sd)</b>, <b>e(i2)</b>, and <b>e(gini)</b> are the estimated
+    mode, mean, variance, standard deviation, half coefficient of variation
+    squared, Gini coefficient. <b>e(pX)</b>, and <b>e(LpX)</b> are the quantiles, and
+    Lorenz ordinates, where X = {1, 5, 10, 20, 25, 30, 40, 50, 60, 70, 75,
+    80, 90, 95, 99}.
+<p>
+<b><u>Formulae</u></b>
+<p>
+    The Singh-Maddala distribution has distribution function (c.d.f.)
+<p>
+        F(x) = 1-(1+(x/b)^a)^(-q)
+<p>
+    where a, b, q, are parameters, each positive, for random variable x &gt; 0.
+    Parameters a and q are the key distributional 'shape' parameters; b is a
+    scale parameter.
+<p>
+    The probability density function (p.d.f.) is
+<p>
+        f(x) = (a*q/b)*((1+(x/b)^a)^-(q+1))*((x/b)^(a-1))
+<p>
+    The likelihood function for a sample of observations on <i>nvar</i> is specified
+    as the product of the density integrated from z1 to z2 and raised to the
+    power <i>nvar</i>, the count of observations in the category, and is maximized
+    using <b>ml model lf</b>.
+<p>
+    The formulae used to derive the distributional summary statistics are as
+    follows. The r-th moment about the origin is given by
+<p>
+        b^r*B(1+r/a,q-r/a)/B(1,q)
+<p>
+    where B(u,v) is the Beta function = G(u)*G(v)/G(u+v) and
+    G(.)=exp(lngamma(.)) is the gamma function, which by substitution and
+    using G(1) = 1, implies the moments can be written
+<p>
+        b^r*G(1+r/a)*G(q-r/a)/G(q)
+<p>
+    and hence
+<p>
+        mean = b*G(1+1/a)*G(q-1/a)/G(q)
+<p>
+        variance = b*b*G(1+2/a)*G(q-2/a)/G(q) - (mean^2)
+<p>
+    from which the standard deviation and half the squared coefficient of
+    variation can be derived. The mode is
+<p>
+        mode = b*((a-1)/(aq+1))^(1/a) if a &gt; 1, and 0 otherwise.
+<p>
+    The quantiles are derived by inverting the distribution function:
+<p>
+        x_s = b*((1-s)^(-1/q) - 1)^(1/a) for each s = F(x_s).
+<p>
+    The Gini coefficient of inequality is given by
+<p>
+        Gini = 1 - G(q)*G(2q - 1/a) / ( G(q-1/a)*G(2q) ).
+<p>
+    The Lorenz curve ordinates at each s = F(x_s) use the incomplete Beta
+    function:
+<p>
+        L(s) = <b>ibeta</b>(1+1/a, q- 1/a, 1-(1-s)^(1/q) ).
+<p>
+        
+<p>
+<b><u>Author</u></b>
+<p>
+    Austin Nichols &lt;austinnichols@gmail.com&gt;
+<p>
+<b><u>Acknowledgements</u></b>
+<p>
+    Stephen P. Jenkins has made available commands for fitting various
+    distributions (including the Singh-Maddala) to individual record data;
+    see Jenkins (2004).  This package draws liberally from that work; note in
+    particular the similarity of verbiage under headings Formulae and
+    Description.
+<p>
+<p>
+<b><u>References</u></b>
+<p>
+    Cronin, D. C. (1979). A Function for the Size Distribution of Income: A
+        Further Comment.  <i>Econometrica</i> 47: 773-774.
+<p>
+    Dagum, C. (1977). A new model of personal income distribution:
+        specification and estimation. <i>Economie Appliquée</i> 30: 413-437.
+<p>
+    Dagum, C. (1980). The generation and distribution of income, the Lorenz
+        curve and the Gini ratio. <i>Economie Appliquée</i> 33: 327-367.
+<p>
+    Jenkins, S.P. (2004). Fitting functional forms to distributions, using
+        <b>ml</b>. Presentation at Second German Stata Users Group Meeting, Berlin. 
+        http://www.stata.com/meeting/2german/Jenkins.pdf
+<p>
+    Johnson, N. L., and S. Kotz (1970). <i>Continuous Univariate Distributions</i>
+        <i>1</i>. New York: John Wiley and Sons.
+<p>
+    Kleiber, C. (1996). Dagum vs. Singh-Maddala income distributions.
+        <i>Economics Letters</i> 53: 265-268.
+<p>
+    Kleiber, C. and Kotz, S. (2003). <i>Statistical Size Distributions in</i>
+        <i>Economics and Actuarial Sciences</i>.  Hoboken, NJ: John Wiley.
+<p>
+    McDonald, J.B. (1984). Some generalized functions for the size
+        distribution of income. <i>Econometrica</i> 52: 647-663.
+<p>
+    Singh, S.K. and G.S. Maddala (1976). A function for the size distribution
+        of income. <i>Econometrica</i> 44: 963-970.
+<p>
+    Tadikamalla, P. R. (1980). A Look at the Burr and Related Distributions.
+        <i>International Statistical Review</i> 48: 337-349.
+<p>
+    Wifling, B. and W. Kraemer (1993). The Lorenz-ordering of Singh- Maddala
+        income distributions. <i>Economics Letters</i> 43: 53-57.
+<p>
+<b><u>Also see</u></b>
+<p>
+    Online: help for dagfit, gbgfit, dagumfit, smfit, gb2fit, lognfit, if
+             installed, or acquire them from ssc.
+<p>
+</pre>

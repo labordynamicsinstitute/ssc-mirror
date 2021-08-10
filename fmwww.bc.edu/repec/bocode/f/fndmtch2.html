@@ -1,0 +1,94 @@
+<pre>
+.-
+help for ^fndmtch2^
+.-
+<p>
+Find matching values for one variable in another 
+------------------------------------------------
+<p>
+    ^fndmtch2^ var1 var2 [ ^if^ exp ] [ ^in^ range ] [ ^, g^enerate^(^newvar^)^
+&gt;  
+    ^l^ist ^by(^varlist^) c^ount ^miss^ ] 
+<p>
+Description
+-----------
+<p>
+^fndmtch2^ finds observations for which the value of var1 is matched by (is 
+equal to) some value of var2, whether for the same observation or for some 
+different observation. var1 and var2 should be both numeric or both string. 
+<p>
+Options
+-------
+<p>
+^generate(^newvar^)^ specifies the name of a new variable to hold 
+    information on matches. 
+    
+    By default, newvar is 
+    . if observations are excluded from comparison, 
+    1 if the value of var1 is matched by some value of var2, 
+    and 0 otherwise. 
+    
+    With the ^count^ option, newvar is   
+    . if observations are excluded from comparison, 
+    and the number of matches of the value of var1 in var2 otherwise. 
+    
+^list^ specifies that matching observations should be listed. 
+<p>
+At least one of ^generate( )^ and ^list^ should be specified. 
+<p>
+^by(^varlist^)^ specifies that matching is to be carried out only 
+    within distinct groups defined by byvarlist. Observations with 
+    equal values must belong to the same group to count as matching. 
+<p>
+^count^ specifies that the number of matches is to be returned.     
+<p>
+^miss^ indicates that missing values of var1 should be included in the 
+    comparison. By default, they are excluded.
+<p>
+<p>
+Remarks
+-------
+<p>
+Consider ^a^ and ^b^ and the results of 
+<p>
+    ^fndmtch2 a b, gen(mtcha)^
+    
+    ^fndmtch2 b a, gen(mtchb)^
+    
+    ^a   b mtcha mtchb^ 
+    1   5     0     1
+    2   6     0     0
+    3   7     0     0
+    4   8     0     0
+    5   9     1     0 
+<p>
+<p>
+Examples
+--------
+<p>
+    . ^fndmtch2 a b, list^      
+    . ^fndmtch2 a b, gen(mtcha)^ 
+    . ^fndmtch2 a b, gen(mtcha) by(year)^ 
+<p>
+<p>
+Author
+------
+<p>
+         Nicholas J. Cox, University of Durham, U.K.
+         n.j.cox@@durham.ac.uk
+<p>
+<p>
+Acknowledgments
+---------------
+<p>
+         This problem was suggested by Brian Uzzi. 
+<p>
+ 
+See also
+--------
+<p>
+ On-line: @dups@ (if installed), @fndmtch@ (if installed)  
+ 
+<p>
+<p>
+</pre>

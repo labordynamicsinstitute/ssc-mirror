@@ -1,0 +1,75 @@
+<pre>
+-------------------------------------------------------------------------------
+help for <b>wtdset</b>
+-------------------------------------------------------------------------------
+<p>
+<b><u>Declare data to be Waiting Time Distribution data</u></b>
+<p>
+        <b>wtdset</b> <i>eventvar</i> <i>exitvar</i> [<b>if</b> <i>exp</i>] [<i>weight</i>]<b>,</b> <b>start(</b><i>date</i><b>)</b> <b>end(</b><i>date</i><b>)</b>
+                [<b>id(</b><i>varname</i><b>)</b> <b>robust</b> <b>cluster(</b><i>varname</i><b>)</b> <b>scale(</b><i>#</i><b>)</b>]
+<p>
+        <b>wtd</b>
+<p>
+    <b>fweight</b>s are allowed; see help weights.
+<p>
+<p>
+<b><u>Description</u></b>
+<p>
+    <b>wtdset</b> declares data to be Waiting Time Distribution (wtd) data; see help
+    wtd.
+<p>
+    <b>wtd</b> displays how the data are currently declared.
+<p>
+    <b>Caution:</b> <b>wtdset</b> is destructive in the sense that it prunes and collapses
+    data so that subsequent wtd commands can exploit frequency weighting.
+    This improves estimation speed dramatically, but it is the users
+    responsibility (exclusively!) to ensure preservation of original data,
+    see help save.
+<p>
+<b><u>Options for </u></b><b><u>wtdset</u></b>
+<p>
+    <b>start(</b><i>date</i><b>)</b> specifies the starting date with syntax acceptable by the <b>d()</b>
+        <b>function</b>, see help dfcn. If your earliest possible observation is 1
+        january 1997 then the starting date should be set to 31 december
+        199<b>6</b>. In other words the starting date is time zero, with observation
+        of dates only possible for date 1, 2,...
+<p>
+    <b>end(</b><i>date</i><b>)</b> specifies the date of the last possible observation time.
+<p>
+    <b>id(</b><i>varname</i><b>)</b> specifies the subject-id variable. For each subject only the
+        first observation in the observation period is kept. If <b>id</b> is not
+        specified it is assumed that each observation corresponds to a single
+        individual.
+<p>
+    <b>robust</b> specifies that the Huber/White/sandwich estimator of variance is
+        to be used as default in place of the traditional calculation in
+        subsequent estimations with <b>wtdml</b>.  Although set it may be overruled
+        in the <b>wtdml</b> statement using option <b>norobust</b>, and if not set, it can
+        be added in the <b>wtdml</b> statement. <b>robust</b> combined with <b>cluster()</b>
+        further allows observations which are not independent within cluster
+        (although they must be independent between clusters). See <b>[U] 23.14</b>
+        <b>Obtaining robust variance estimates</b> and help robust.
+<p>
+    <b>cluster(</b><i>varname</i><b>)</b> specifies that data are clustered, ie. the observations
+        are independent across groups (clusters) but not necessarily
+        independent within groups. <i>varname</i> specifies to which group each
+        observation belongs. Specifying <b>cluster()</b> implies default <b>robust</b>
+        variance estimation.
+<p>
+    <b>scale(</b><i>#</i><b>)</b> defines the scale of analysis time. This can be handy for making
+        units of rate estimates more readable (such as converting person-days
+        to person-years).
+<p>
+<b><u>Examples</u></b>
+<p>
+    <b>. wtdset event exit, start(31dec1996) end(31dec1997) id(id)</b>
+<p>
+    <b>. wtdset event exit, start(31dec1996) end(31dec1997) id(id) scale(365)</b>
+<p>
+    <b>. wtd</b>
+<p>
+<b><u>Also see</u></b>
+<p>
+    Manual:  <b>[ST] stset</b>
+<p>
+</pre>

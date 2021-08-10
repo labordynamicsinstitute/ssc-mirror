@@ -1,0 +1,50 @@
+<pre>
+..-
+help for ^acplot^
+..-
+<p>
+Display a correlogram
+- ---------------------
+<p>
+    ^acplot^ varname [^, l^ags^(^#^)^ ^se^ ^pr^int ^sp^ike graph_options ]
+<p>
+Description
+- -----------
+<p>
+^acplot^ graphs the first ^lags()^ autocorrelations.
+<p>
+Options
+- -------
+<p>
+^lags(^#^)^ specifies the number of lags.  If not specified, the first
+    20 autocorrelations are graphed.
+<p>
+^se^ adds standard-error bands to the graph.
+<p>
+^print^ prints out the autocorrelations. If ^se^ is requested, the
+    standard errors are also printed.
+<p>
+^spike^ causes the autocorrelations to be shown as a series of spikes
+    drawn vertically from zero.
+<p>
+graph_options refers to any of the options of ^graph, twoway^.
+<p>
+Examples
+- --------
+<p>
+ . ^acplot durtemp^
+ . ^acplot durtemp, sp^
+ . ^acplot durtemp, se pr^
+<p>
+Methods and formulas
+- --------------------
+<p>
+The standard error of the autocorrelations is estimated by Bartlett's
+approximation.
+<p>
+Author
+- ------
+<p>
+         Nicholas J. Cox, University of Durham, after Sean Becketti's ac.
+         n.j.cox@@durham.ac.uk
+</pre>

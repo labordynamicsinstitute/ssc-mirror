@@ -1,0 +1,131 @@
+<pre>
+<b>help vioplot</b>                                 Nicholas Winter and Austin Nichols
+-------------------------------------------------------------------------------
+<p>
+<b><u>Title</u></b>
+<p>
+    <b>vioplot</b> -- Violin Plots
+<p>
+<p>
+<b><u>Syntax</u></b>
+<p>
+        <b>vioplot</b> <i>varlist</i> [<i>if</i>] [<i>in</i>] [<i>weight</i>] [<b>,</b> <i>options</i>]
+<p>
+    <i>options</i>                           Description
+    -------------------------------------------------------------------------
+    Group options
+      <b><u>o</u></b><b>ver</b><b>(</b><i>varname</i>[, <i>over_options</i>]<b>)</b>   categories; option may be repeated
+                                        twice
+         <b><u>m</u></b><b>issing</b>                      keep missing values as a category for
+                                        this overvar
+         <b><u>t</u></b><b>otal</b>                        add total group (can only be specified
+                                        in one over() option)
+         <b><u>nolab</u></b><b>el</b>                      do not use value labels to label
+                                        category axis
+<p>
+      <b><u>nof</u></b><b>ill</b>                          omit empty categories
+    
+<p>
+<p>
+    Orientation
+      <b><u>vert</u></b><b>ical</b>                        orient densities vertically (the
+                                        default)
+      <b><u>hor</u></b><b>izontal</b>                      orient densities horizontally
+<p>
+    Number of cases
+      <b><u>ob</u></b><b>s</b>                             include number of observations per
+                                        category
+      <b><u>ob</u></b><b>s</b><b>(alt)</b>                        move display of obs to the opposite
+                                        axis; implies option obs
+<p>
+    kdensity options
+      <b><u>k</u></b><b>ernel(</b><i>kernel</i><b>)</b>                  specify kernel function; default is
+                                        kernel(epanechnikov)
+      <b><u>bw</u></b><b>idth(</b><i>#</i><b>)</b>                       half-width of kernel
+<p>
+    Scaling &amp; labelling
+      <b><u>barw</u></b><b>idth(</b><i>#</i><b>)</b>                     width of bars as percentage of default
+      <b><u>ds</u></b><b>cale(</b><i>#</i><b>)</b>                       width of densities as percentage of
+                                        default
+<p>
+      <b><u>yg</u></b><b>ap(</b><i>#</i><b>)</b>                         gap between y variables as percentage
+                                        of default
+      <b><u>og</u></b><b>ap(</b><i>#</i><b>)</b>                         gap between 2d level over categories as
+                                        percentage of default
+      <b><u>noyl</u></b><b>abel</b>                        use <i>yvar</i> names rather than labels for
+                                        legending
+<p>
+    Graph appearance
+      <b><u>den</u></b><b>sity</b><b>(</b><i>area_options</i><b>)</b>           options affecting the plotting of the
+                                        densities
+      <b>bar</b><b>(</b><i>barlook_options</i><b>)</b>            options affecting the plotting of the
+                                        bars
+      <b>line</b><b>(</b><i>line_options</i><b>)</b>              options affecting the plotting of the
+                                        spikes
+      <b><u>med</u></b><b>ian</b><b>(</b><i>marker_options</i><b>)</b>          options affecting the plotting of the
+                                        medians
+      <b><u>obsopt</u></b><b>s</b><b>(</b><i>marker_label_options</i><b>)</b>   options affecting the plotting of
+                                        observation counts
+<p>
+      <i>twoway_options</i>                  Options affecting the graph as a whole
+<p>
+<p>
+<b><u>Description</u></b>
+<p>
+    <b>vioplot</b> displays a violin plot for one or more variables, optionally by
+    categories formed by one or two other variables.  Violin plots are a
+    modification of box plots that add plots of the estimated kernel density
+    to the summary statistics displayed by box plots. They were first
+    suggested by Hintze and Nelson (1998).
+<p>
+    Violin plots include a marker for the median of the data, a box
+    indicating the interquartile range, and spikes extending to the upper-
+    and lower-adjacent values, as in standard box plots.  Overlaid with this
+    modified box plot is a density, estimated by kdensity.
+<p>
+    <b>vioplot</b> allows aweights, fweights, and pweights; see weight.
+<p>
+<p>
+<b><u>Reference</u></b>
+<p>
+    Hintze, Jerry L., and Ray D. Nelson. 1998.  "Violin Plots: A Box
+        Plot-Density Trace Synergism." <i>The American Statistician</i>
+        52(2):181-84.
+<p>
+<p>
+<b><u>Examples</u></b>
+<p>
+        <b>sysuse auto, clear</b>
+<p>
+        <b>vioplot mpg, over(rep78)</b>
+<p>
+        <b>vioplot mpg, over(rep78) over(foreign)</b>
+<p>
+        <b>vioplot mpg, over(rep78, missing) over(foreign)</b>
+<p>
+        <b>vioplot mpg, over(rep78) over(foreign) nofill</b>
+<p>
+        <b>vioplot mpg, over(rep78) horizontal name(myplot) title("Violin Plot</b>
+            <b>of Mileage") subtitle("By repair record") ytitle(Repair Record)</b>
+            <b>ylab(, angle(horiz)) scheme(s2mono)</b>
+<p>
+        <b>vioplot gear head, over(foreign) scheme(s2color)</b>
+<p>
+        <b>vioplot gear head, over(rep78) legend( ring(0) pos(2) cols(1))</b>
+            <b>xtitle("Categories of Repair Record") scheme(s2color)</b>
+<p>
+        <b>vioplot gear head, over(rep78, m) over(foreign, total)</b>
+            <b>scheme(s2color)</b>
+<p>
+<b><u>Authors</u></b>
+<p>
+    Nick Winter
+    University of Virginia
+<p>
+<p>
+    Austin Nichols
+    Urban Institute
+    Washington DC
+    austinnichols@gmail.com
+<p>
+</pre>

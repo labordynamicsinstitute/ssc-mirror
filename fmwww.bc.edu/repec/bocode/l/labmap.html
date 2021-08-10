@@ -1,0 +1,88 @@
+<pre>
+.-
+help for ^labmap^
+.-
+<p>
+Define mapped value labels 
+--------------------------
+<p>
+    ^labmap^ valuelabelname ^, v^alues^(^integer numlist^) l^abels^(^numlist^)^
+&gt;  
+    [ ^pre^fix^(^str^) post^fix^(^str^) l^ist label_options ]
+    
+    ^labmap^ valuelabelname ^, v^alues^(^integer numlist^) f^irst^(^#^) s^tep^(
+&gt; ^#^)^ 
+    [ ^m^aximum^(^#^) pre^fix^(^str^) post^fix^(^str^) l^ist label_options ] 
+<p>
+<p>
+Description
+-----------
+<p>
+^labmap^ defines value labels using a mapping from numeric values to 
+numeric labels. This is best explained by example. 
+<p>
+Suppose you have a time variable which is minutes after midnight, so 
+that 0 = 12 am, 720 = 12 pm, 1440 = next 12 am, but you wish to 
+have value labels which are hours. This could be done by specifying labels 
+one by one with ^label define^, but ^labmap^ offers a systematic 
+alternative. 
+<p>
+There are two syntaxes, one using ^labels()^  and one using ^first() step()^ 
+[ ^max()^ ] to specify the numbers to be used as labels. 
+<p>
+<p>
+Options
+-------
+<p>
+^values(^integer numlist^)^ specifies a numlist of integers whose value labels 
+&gt; are 
+    to be defined. This is a required option. 
+<p>
+^labels(^numlist^)^ specifies a numlist of labels. If ^labels()^ is specified, 
+    ^values()^ and ^labels()^ must contain the same number of elements after 
+    expansion. 
+<p>
+^first(^#^)^ specifies the first label. 
+<p>
+^step(^#^)^ specifies the step between labels. 
+<p>
+^maximum(^#^)^ specifies the maximum label. 
+<p>
+^prefix^ adds text at the beginning of each label. 
+<p>
+^postfix^ adds text at the end of each label. 
+<p>
+^list^ invokes ^label list^ valuelabelname after the changes produced. 
+<p>
+label_options are options of ^label define^, namely ^add^, ^modify^ 
+        and (Stata 7 only) ^nofix^. See help on @label@. 
+    
+    
+Examples
+--------
+<p>
+        ^. labmap time, v(0(60)1440) l(12 1/12 1/12)^
+<p>
+        or 
+<p>
+        ^. labmap time, v(0(60)1440) f(12) m(12) s(1)^ 
+<p>
+        ^. labmap time, v(0(60)660) f(12) m(12) s(1) post(" am")^
+        ^. labmap time, v(720(60)1380) f(12) m(12) s(1) post(" pm") add^
+        ^. labmap time, v(1440) l(12) post(" am") add^ 
+<p>
+<p>
+Author
+------
+<p>
+         Nicholas J. Cox, University of Durham, U.K.
+         n.j.cox@@durham.ac.uk
+<p>
+<p>
+Also see
+--------
+<p>
+On-line: help for @label@, @numlist@
+ Manual: ^[U] 15.6^, ^[R] label^
+<p>
+</pre>

@@ -1,0 +1,161 @@
+<pre>
+<b>help lookfor_val</b>
+-------------------------------------------------------------------------------
+<p>
+<b><u>Title</u></b>
+<p>
+     <b>lookfor_val</b> -- Search value pattern in current dataset
+<p>
+<p>
+<b><u>Syntax</u></b>
+<p>
+     Basic syntax
+<p>
+        <b>lookfor_val</b> [<b>,</b> <b><u>p</u></b><b>attern(</b><i>pattern</i><b>)</b>]
+<p>
+     Full syntax
+<p>
+        <b>lookfor_val</b> [<i>varlist</i>] [<i>if</i>] [<i>in</i>] [<b>,</b> <i>options</i>]
+<p>
+<p>
+    <i>options</i>                Description
+    -------------------------------------------------------------------------
+      <b><u>p</u></b><b>attern(</b><i>pattern</i><b>)</b>     search values matching <i>pattern</i>
+<p>
+    <i>search</i>
+      <b><u>inse</u></b><b>nsitive</b>          perform case-insensitive search
+      <b><u>m</u></b><b>issing</b>              do not exclude missing values
+      <b><u>str</u></b><b>ing</b>               search string variables
+      <b><u>num</u></b><b>eric</b>              search numeric variables
+      <b><u>f</u></b><b>ormat(</b>%<i>fmt</i><b>)</b>         use <i>fmt</i> for numeric values
+<p>
+    <i>results</i>
+      <b><u>v</u></b><b>alues</b>               display and save in <b>r()</b> values matching <i>pattern</i>
+      <b><u>d</u></b><b>escribe</b>             describe variables with values matching <i>pattern</i>
+      <b><u>l</u></b><b>ist</b>                 list variables with values matching <i>pattern</i>
+      <b><u>ta</u></b><b>bulate</b>             tabulate variables with values matching <i>pattern</i>
+      <b><u>sep</u></b><b>arate(</b><i>str</i><b>)</b>        use <i>str</i> as separator in returned results
+      <b><u>nop</u></b><b>rint</b>              do not display results
+    -------------------------------------------------------------------------
+<a name="pat"></a><p>
+    <i>pattern</i> is one string, possibly including the wildcard characters <b>*</b>
+        and/or <b>?</b>, where the former means 0 or more characters, the latter
+        means exactly 1 character.
+<p>
+<p>
+<b><u>Description</u></b>
+<p>
+    <b>lookfor_val</b> searches the current dataset for values matching a specified
+    <i>pattern</i>. Variables in which values matching <i>pattern</i> are found, are listed
+    and their names are returned in <b>r(varlist)</b>.
+<p>
+    If varlist is not specified, it defaults to <b>_all</b>. Not specifying <i>pattern</i>
+    sets the pattern to <b>*</b> meaning all (non-missing) values.
+<p>
+    <b>lookfor_val</b> is typically used to search string variables.  However, if
+    not specified otherwise, string and numeric variables are searched.
+<p>
+<p>
+<b><u>Options</u></b>
+<p>
+    <b><u>p</u></b><b>attern(</b><i>pattern</i><b>)</b> specifies the value pattern to be searched.  The
+        wildcards <b>*</b> and <b>?</b> may be used, where the former means zero or more
+        characters and the latter means exactly one character.  Compound
+        double quotes are needed if <i>pattern</i> contains double quotes. Double
+        quotes are needed if <i>pattern</i> contains leading or trailing blanks, and
+        are not needed otherwise. If not specified, <i>pattern</i> defaults to <b>*</b>.
+<p>
+        +--------+
+    ----+ search +-----------------------------------------------------------
+<p>
+    <b><u>inse</u></b><b>nsitive</b> performs a case-insensitve search. The option only affects
+        the search in string variables.
+<p>
+    <b><u>m</u></b><b>issing</b> treats missing values as valid. Default is to exclude missing
+        values. Specify <b>missing</b> if you specified missing values (i.e. <b>""</b> or
+        one of <b>.</b>,<b> .a</b>,<b> .b</b>, ...,<b> .z</b>) in <i>pattern</i>. Specifying <b>missing</b> without
+        specifying <i>pattern</i> sets <i>pattern</i> to <b>""</b>, or <b>.</b> if <b>numeric</b> is also
+        specified.
+<p>
+    <b><u>str</u></b><b>ing</b> specifies that string variables be searched. Default is to search
+        string and numeric variables. Specify <b>string</b> to search string
+        variables only.
+<p>
+    <b><u>num</u></b><b>eric</b> specifies that numeric variables be searched. Default is to
+        search string and numeric variables. Specify <b>numeric</b> to search
+        numeric variables only.
+<p>
+    <b><u>f</u></b><b>ormat(%</b><i>fmt</i><b>)</b> uses <i>fmt</i> searching for <i>pattern</i> in numeric variables. Default
+        is to use variables' output format. This option is seldom used. It
+        may be used to replicate behavior of older versions of the program.
+        If you want to do this, sepcify <i>fmt</i> as <b>18.0g</b>.
+<p>
+        +---------+
+    ----+ results +----------------------------------------------------------
+<p>
+    <b><u>v</u></b><b>alues</b> lists and saves in <b>r(values_</b><i>varname</i><b>)</b> distinct values matching
+        <i>pattern</i>. If specified, variable names are neither listed nor returned
+        in <b>r(varlist)</b>.
+<p>
+    <b><u>d</u></b><b>escribe</b> describes variables with values matching <i>pattern</i>. This option
+        may not be used with <b>values</b>.
+<p>
+    <b><u>l</u></b><b>ist</b> lists values matching <i>pattern</i>. This option implies <b>values</b>. Values
+        will be returned in <b>r(values_</b><i>varname</i><b>)</b> but will not be displayed.
+<p>
+    <b><u>ta</u></b><b>bulate</b> tabulates values matching <i>pattern</i>. This option implies <b>values</b>.
+        Values will be returned in <b>r(values_</b><i>varname</i><b>)</b> but will not be
+        displayed.
+<p>
+    <b><u>sep</u></b><b>arate(</b><i>str</i><b>)</b> uses <i>str</i> as separator between elements in returned results.
+        Default separator is <b>" "</b>.
+<p>
+    <b><u>nop</u></b><b>rint</b> does not display returned results.
+<p>
+<p>
+<b><u>Remarks</u></b>
+<p>
+    <b>lookfor_val</b> returns erroneous results if a value contains an unbalanced
+    compound double quote (<b>`"</b> or <b>"'</b>), but does not issue an error message.
+    These characters are likely to break other Stata commands (e.g. 
+    levelsof), so these commands might be used to check for potential
+    problems.
+<p>
+<p>
+<b><u>Examples</u></b>
+<p>
+        <b>. sysuse auto</b>
+        <b>. lookfor_val ,pattern(*v*) string</b>
+        <b>. lookfor_val ,pattern(*v*) string values</b>
+        <b>. lookfor_val ,pattern(*v*) string values insensitive</b>
+        <b>. lookfor_val make ,pattern(*A*) tabulate</b>
+<p>
+        <b>. lookfor_val ,pattern(*07?) numeric</b>
+<p>
+                  
+<b><u>Saved results</u></b>
+<p>
+    <b>lookfor_val</b> saves one of the following in <b>r()</b>:
+<p>
+      <b>r(varlist)</b>          variables with values matching <i>pattern</i> (not with
+                            <b>values</b>)
+      <b>r(values_</b><i>varname</i><b>)</b>   values in <i>varname</i> matching <i>pattern</i> (option <b>values</b>
+                            only)
+<p>
+<p>
+<b><u>Acknowledgments</u></b>
+<p>
+    Bug reports from Matthew White led to fruitful discussions and a major
+    revison of the code.
+<p>
+<p>
+<b><u>Author</u></b>
+<p>
+    Daniel Klein, University of Kassel, klein.daniel.81@gmail.com
+<p>
+<p>
+<b><u>Also see</u></b>
+<p>
+    Online: <b>ds</b>, <b>lookfor</b>
+    if installed: lookfor_all, findname
+</pre>

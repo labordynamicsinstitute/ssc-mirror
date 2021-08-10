@@ -1,0 +1,139 @@
+<pre>
+-------------------------------------------------------------------------------
+help for <b>varlabdef</b>                                               (Roger Newson)
+-------------------------------------------------------------------------------
+<p>
+<b><u>Define a value label with values corresponding to variables</u></b>
+<p>
+        <b>varlabdef</b> <i>labelname</i> [ , <b><u>vl</u></b><b>ist(</b><i>varlist</i><b>)</b> <b><u>fr</u></b><b>om(</b><i>from_option</i><b>)</b> <b>replace</b>
+                     <b>nofix</b> ]
+<p>
+    where <i>labelname</i> is a name for a value label, and <i>from_option</i> is one of
+<p>
+    <b>order</b> | <b>name</b> | <b>type</b> | <b>format</b> | <b>vallab</b> | <b>varlab</b> | <b>char</b> <i>characteristic_name</i>
+<p>
+    and <i>characteristic_name</i> is the name of a variable characteristic.
+<p>
+<p>
+<b><u>Description</u></b>
+<p>
+    <b>varlabdef</b> creates (or extends) a value label, with one value for each of
+    a list of variables, and labels copied from the variable labels, variable
+    names, or other variable attributes.  This value label may be re-used in
+    output datasets (or resultssets), with observations corresponding to the
+    variables.  Such output datasets may be created using packages such as 
+    <b>parmest</b>, downloadable from SSC.
+<p>
+<p>
+<b><u>Options</u></b>
+<p>
+    <b>vlist(</b><i>varlist</i><b>)</b> specifies the list of variables corresponding to the new
+        values of the value label.  If <b>vlist()</b> is absent, then the full list
+        of variables in the current datasetr is used, unless there are no
+        variables in the memory, in which case <b>varlabdef</b> fails.
+<p>
+    <b>from(</b><i>from_option</i><b>)</b> specifies the source of the labels corresponding to the
+        new values corresponding to the variables.  The possible values of
+        the <i>from_option</i> are <b>order</b>, <b>name</b>, <b>type</b>, <b>format</b>, <b>vallab</b>, <b>varlab</b>, or
+        <b>char</b> <i>characteristic_name</i>.  These imply that the labels corresponding
+        to the variables will be copied, respectively, from the order of the
+        variable in the <i>varlist</i> specified by <b>vlist()</b>, the variable name, the
+        variable storage type, the variable format, the value label, the
+        variable label, or the named characteristic of the variable.  If
+        <b>from()</b> is not specified, then the default is <b>varlab</b>, implying that
+        the value label for each new value is copied from the variable label
+        of the corresponding variable.  The values of the <b>from()</b> option
+        correspond to the variable names of the output dataset (or
+        resultsset) produced by the <b>descsave</b> package, which can be downloaded
+        from SSC.
+<p>
+    <b>replace</b> specifies that, if a value label with the specified <i>labelname</i>
+        already exists, then that label will be dropped before a new label
+        with the same name is created.  If <b>replace</b> is specified, or if no
+        value label with the specified <i>labelname</i> already exists, then the new
+        values are defined as consecutive integers starting with 1.  If
+        <b>replace</b> is not specified, and a value label with the specified
+        <i>labelname</i> already exists, then the new labelled values are added to
+        the existing labelled values, and are defined as consecutive
+        integers, starting from 1 or from the lowest positive integer above
+        any existing non-missing labelled value, whichever is higher.
+<p>
+    <b>nofix</b> acts as the <b>nofix</b> option of the <b>label define</b> command.  It defines
+        the action of <b>varlabdef</b> when a value label with the specified
+        <i>labelname</i> already exists, and is the value label for one or more
+        existing variables in the dataset.  Without the <b>nofix</b> option,
+        <b>varlabdef</b> finds all the variables that use this value label, and
+        widens their display formats, if necessary, to be wide enough for the
+        longest of the new labels.  <b>nofix</b> prevents this.
+<p>
+<p>
+<b><u>Remarks</u></b>
+<p>
+    <b>varlabdef</b> was designed to be used with output datasets (or resultssets)
+    created by the <b>parmest</b> package, which can be downloaded from SSC.  The 
+    <b>parmest</b> package creates datasets with 1 observation for each of a set of
+    estimated parameters.  These datasets sometimes include string variables
+    containing the names or labels of the <i>Y</i>-variables and/or <i>X</i>-variables
+    corresponding to these estimated parameters.  <b>varlabdef</b> can be used in
+    the original dataset, containing the data from which the parameters are
+    estimated, to create a value label, with a value for each of a list of
+    variables, and labels containing the names or variable labels of these
+    variables.  This value label can then be saved to a do-file, using the
+    <b>label save</b> command.  When the estimation commands have been executed, and
+    the output datasets (or resultssets) have been created, the user can
+    execute the saved do-file to re-create the value label in the new output
+    dataset.  It is then possible to use the official Stata <b>encode</b> command,
+    or the <b>sencode</b> command downloadable from SSC, to input the string
+    variables containing the names and/or labels of the <i>Y</i>-variables and/or
+    <i>X</i>-variables, and to create new numeric variables, with the string values
+    as labels.  These new numeric variables are useful if the user wants to
+    produce plots of confidence intervals, which may be produced using the 
+    <b>eclplot</b> package, downloadable from SSC.
+<p>
+    The <b>parmest</b>, <b>sencode</b>, <b>sdecode</b> and <b>eclplot</b> packages can all be downloaded
+    from SSC.  So can the <b>descsave</b> package, which is also useful for passing
+    information about variables from one dataset to another.  For more about
+    resultsset processing, see the References in the on-line help for 
+    <b>parmest</b>.
+<p>
+<p>
+<b><u>Examples</u></b>
+<p>
+        <b>. sysuse auto, clear</b>
+        <b>. varlabdef mylabs</b>
+        <b>. lab list mylabs</b>
+        <b>. varlabdef yvarlab, vlist(length weight mpg price)</b>
+        <b>. lab list yvarlab</b>
+        <b>. varlabdef yvarlab, replace</b>
+        <b>. lab list yvarlab</b>
+        <b>. varlabdef yvarname, vlist(length weight mpg price) from(name)</b>
+        <b>. lab list yvarname</b>
+<p>
+<p>
+<b><u>Saved results</u></b>
+<p>
+    <b>varlabdef</b> saves the following in <b>r()</b>:
+<p>
+    Scalars        
+      <b>r(firstval)</b>         first value added by <b>varlabdef</b>
+      <b>r(lastval)</b>          last value added by <b>varlabdef</b>
+<p>
+    Macros         
+      <b>r(vlist)</b>            variables specified by <b>vlist()</b>
+      <b>r(from)</b>             <b>from()</b> option
+<p>
+<p>
+<b><u>Author</u></b>
+<p>
+    Roger Newson, National Heart and Lung Institute, Imperial College London,
+    UK.
+    Email: r.newson@imperial.ac.uk
+<p>
+<p>
+<b><u>Also see</u></b>
+<p>
+     Manual: <b>[D] label</b>, <b>[D] encode</b>, <b>[D] decode</b>, <b>[P] char</b>
+    On-line: help for <b>label</b>, <b>encode</b>, <b>decode</b>, <b>char</b>
+             help for <b>parmest</b>, <b>sencode</b>, <b>sdecode</b>, <b>descsave</b>, <b>eclplot</b> if
+             installed
+</pre>

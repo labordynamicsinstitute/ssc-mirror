@@ -1,0 +1,163 @@
+<pre>
+.-
+help for ^ridder^             [STB-17: ssi5.2; STB-19: ssi5.3; STB-24: ssi5.4]
+.-
+<p>
+Equation solving by Ridders' Method
+-----------------------------------
+<p>
+<p>
+ ^ridder^ fcnmask ^=^ exp_y ^from^ exp_0 ^to^ exp_1 [^tol^ exp_t] [^ltol^ exp_l
+&gt; ]
+<p>
+<p>
+where exp_y, exp_0, exp_1, exp_t, and exp_l refer to expressions (but are 
+typically specified as numbers) and where fcnmask is either:
+<p>
+<p>
+        (1)    an expression containing ^X^
+<p>
+        (2)    progname [args] ^X^ [args] ^returns^ {^exp^|^macro^} name
+<p>
+<p>
+If one of ^tol^ or ^ltol^ is omitted, ^ridder^ ignores that constraint.
+^tol 1e-6^ is assumed if neither ^tol^ nor ^ltol^ is specified.
+<p>
+<p>
+<p>
+<p>
+Description
+----------- 
+<p>
+<p>
+^ridder^ finds the value of X such that
+<p>
+                         f(X) = exp_y 
+<p>
+or, more precisely:
+<p>
+        |f(X) - exp_y| &lt; e   and   |x - x_hat| &lt; exp_t
+<p>
+where e = exp_y*max(|exp_y|,1).
+<p>
+The search is carried out over the range exp_0 &lt;= X &lt;= exp_1.  The function
+f() may be specified on the command line (first syntax for fcnmask) or as a
+user-written program (second sytnax).
+<p>
+<p>
+<p>
+<p>
+<p>
+<p>
+<p>
+Example 1
+---------
+<p>
+Find the value of chi-square with 2 degrees of freedom that is just signif-
+icant at the 5% level.
+<p>
+Solution:  Stata's ^chiprob(^d^,^x^)^ function returns the reverse cumulative f
+&gt; or
+chi-square value x with d degrees of freedom (e.g., ^chiprob(2,3)^ is .2231, 
+meaning chi-square 2 with 3 degrees of freedom is significant at the 22.3%
+percent level).  Thus, we want to find X such that ^chiprob(2,^X^)^=.05.  From
+knowledge of the chi-square distribution, we know the answer lies between
+3 and 20.  We type:
+<p>
+        . ^ridder chiprob(2,X)=.05 from 3 to 20^
+<p>
+<p>
+<p>
+<p>
+<p>
+<p>
+<p>
+<p>
+<p>
+<p>
+Example 1, second solution
+--------------------------
+<p>
+We define the following program:
+<p>
+        ^program define mychi^
+                ^global S_1 = chiprob(`1',`2')^
+        ^end^
+<p>
+and then type 
+<p>
+        . ^ridder mychi 2 X returns macro S_1 =.05 from 3 to 8^
+<p>
+Alternatively, we define the program
+<p>
+        ^program define mychi^
+                ^scalar answer = chiprob(`1',`2')^
+        ^end^
+<p>
+and then type 
+<p>
+        . ^ridder mychi 2 X returns exp answer =.05 from 3 to 8^
+<p>
+<p>
+Example 2
+---------
+<p>
+Given 
+                       a
+                        t-1              1.1       -2
+        S   =  [ ( -----------   - 2 ) ( ------- ) ]
+        t          sqrt(S   )             a
+                         t-1               t
+<p>
+Let a[1] = 1.5 and a[2], a[3], ..., be 1.  Find S[1] such that S[19]=1/22^^2.
+<p>
+A program to calculate S[t], t=1,...,19 is given S[1] is:
+<p>
+        ^program define simul^
+                ^drop _all^
+                ^set obs 19^
+                ^gen a = cond(_n==1,1.5,1)^
+                ^gen S = `1' in 1^
+                ^replace S=((a[_n-1]/sqrt(S[_n-1])-2)*(1.1/a))^^-2 in 2/l^
+        ^end
+<p>
+Typing "^simul .1^" would create the series based on S[1]=.1.
+<p>
+Example 2, continued
+--------------------
+<p>
+We can find S[1] such that S[19]==1/22^^2 by typing:
+<p>
+        . ^ridder simul X returns exp S[19] =1/22^^2 from .001 to .75^
+<p>
+Deciphering:
+<p>
+"^simul X^" means ^ridder^ can calculate values of the function by issuing
+the command ^simul^ followed by the number at which it wants the function 
+evaluated.  ^X^ is a placeholder.
+<p>
+"^returns exp S[19]^" means simul returns the answer as the expression S[19],
+meaning the 19th observation of the data variable S.
+<p>
+"^=1/22^^2^" means we want the answer to be 1/22^^2.
+<p>
+"^from .001 to .75^" means we want to search over the range .001 to .75 for
+the solution.
+<p>
+<p>
+<p>
+<p>
+Author
+------
+<p>
+       Tim McGuire, Stata Corporation
+       EMAIL  tech-support@@stata.com
+<p>
+<p>
+Also see
+--------
+<p>
+   STB:  ssi5.4 (STB-24), ssi5.3 (STB-19), ssi5.2 (STB-17), 
+         ssi5 (STB-16), ssi5.1 (STB-16)
+On-line:  ^help^ for @fcnplot@ (if ssi5.1 installed)
+</pre>

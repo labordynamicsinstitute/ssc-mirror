@@ -1,0 +1,126 @@
+<pre>
+<b>help episens</b>  
+-------------------------------------------------------------------------------
+<p>
+<b><u>Title</u></b>
+<p>
+    <b>episens</b> - Basic sensitivity analysis of epidemiological results
+<p>
+<b><u>Syntax</u></b>
+<p>
+    Cohort studies and Case-control studies
+<p>
+        <b>episens</b> <i>var_case</i> <i>var_exposed</i> [<i>var_time</i>] [<i>if</i>] [<i>in</i>] [<i>weight</i>] [<b>,</b> 
+              <i>options</i>]
+<p>
+        <b>episensi</b> <i>#a #b #c #d</i> [<b>,</b> <i>options</i>]
+<p>
+<b><u>Options</u></b>
+<p>
+<a name="options"></a>    <i>options</i>                         Description
+    -------------------------------------------------------------------------
+    Options
+      <b><u>st</u></b><b>udy(</b><i>cc</i>|<i>cs</i>|<i>ir</i><b>)</b>                specify the type of study
+      <b><u>unc</u></b><b>onf(</b><i>#pexp #punexp #rrcd</i><b>)</b>    analysis of unmeasured confounding
+      <b><u>mie</u></b><b>xp(</b><i>#seca #spca #senc spnc</i><b>)</b>  analysis of misclassification of the
+                                      exposure
+      <b><u>co</u></b><b>rder(#)</b>                      corrections order
+      <b><u>f</u></b><b>ormat(%</b><i>fmt</i><b>)</b>                   display format for numbers
+    -------------------------------------------------------------------------
+ 
+<b><u>Description</u></b>
+<p>
+    <b>episens</b> provides basic sensitivity analysis of the observed relative risk
+    for unmeasured confounding and misclassification of the exposure, or
+    both. <b>episensi</b> is the immediate form of <b>episens</b>; see immed.
+<p>
+<b><u>Options</u></b>
+<p>
+        +-------+
+    ----+ Model +------------------------------------------------------------
+<p>
+    <b><u>st</u></b><b>udy(</b><i>cc</i>|<i>cs</i>|<i>ir</i><b>)</b> specifies the type of study: <i>cc</i> (case-control data), <i>cs</i>
+        (cumulative-incidence data), or <i>ir</i> (incidence-rate data). The default
+        is <i>cc</i>. See epitab for more information.
+<p>
+    <b><u>unc</u></b><b>onf(</b><i>#pexp #punexp #rrcd</i><b>)</b> specifies the analysis of unmeasured
+        confounding, where <i>#pexp</i> is the prevalence of the unmeasured
+        confounder among the exposed subjects; <i>#punexp</i> is the prevalence of
+        the unmeasured confounder among the unexposed subjects; and <i>#rrcd</i> is
+        the relative risk between the unmeasured confounder and disease.
+<p>
+    <b><u>mie</u></b><b>xp(</b><i>#seca #spca #senc spnc</i><b>)</b> analysis of misclassification of the
+        exposure, where <i>#seca</i> is the sensitivity among the cases; <i>#spca</i> is
+        the specificity among the cases; <i>#senc</i> is the sensitivity among the
+        non-cases; and <i>#spnc</i> is the specificity among the non-cases.
+<p>
+    <b><u>co</u></b><b>rder(#)</b> specifies the correction order: 1 means first correct for
+        unmeasured confounding and then for misclassification of the
+        exposure; 2 means first correct for misclassification of the exposure
+        and then for unmeasured confounding.
+<p>
+    <b><u>f</u></b><b>ormat(%</b><i>fmt</i><b>)</b> display format for numbers; default is format(%3.2f).
+<p>
+<b><u>Examples</u></b>
+<p>
+// Cumulative incidence data
+<p>
+        webuse ugdp.dta
+        cs case exposed [fweight=pop]
+        episensi  30  21  174  184 , st(cs) unc(0.3 0.7 3)
+        episens case exposed [fweight=pop], st(cs)
+        episens case exposed [fweight=pop], st(cs) unc(0.3 0.7 1)
+        episens case exposed [fweight=pop], st(cs) unc(0.3 0.7 3)
+        episens case exposed [fweight=pop], st(cs) unc(0.3 0.7 3)  mie(0.9 0.8 
+&gt; 0.9 0.8)
+<p>
+// Incidence-rate data
+<p>
+        sysuse cancer.dta
+        gen exp = drug == 2
+        ir died exp studytime
+        episens died exp studytime
+        episens died exp studytime , st(ir) unc(0.5 0.2 2)
+        episensi  6  25  209  535  , st(ir)
+<p>
+// Case-control data
+<p>
+        episensi 45 94 257 945, st(cc) unc(0.7 0.5 5)                        
+        episensi 45 94 257 945, st(cc) mie(0.9 0.9 0.8 0.8)  
+        episensi 45 94 257 945, st(cc) mie(0.9 0.9 0.8 0.8)   
+        episensi 45 94 257 945, st(cc) mie(0.9 0.9 0.8 0.8)   
+        episensi 45 94 257 945, st(cc) unc(0.7 0.5 5)  mie(0.9 0.9 0.8 0.8) co(
+&gt; 1) 
+        episensi 45 94 257 945, st(cc) unc(0.7 0.5 5)  mie(0.9 0.9 0.8 0.8) co(
+&gt; 2) 
+        episensi 45 94 257 945, st(cc) mie(0.8 0.8 0.8 0.8)  
+        episensi 45 94 257 945, st(cc) unc(0.7 0.5 5)  mie(0.9 0.9 0.8 0.8)  
+        episensi 45 94 257 945, st(cc) unc(0.7 0.5 5)  mie(1 1 1 1)          
+<p>
+<b><u>References</u></b>
+<p>
+    Greenland S., 1996, Basic methods for sensitivity analysis of biases. <i>Int</i>
+        <i>J Epidemiol</i>, 5(6):1107-16.
+<p>
+<b><u>Authors</u></b>
+<p>
+    Nicola Orsini, Division of Nutritional Epidemiology, Institute of
+        Environmental Medicine, Karolinska Institutet, Sweden
+<p>
+    Rino Bellocco, Department of Medical Epidemiology and Biostatistics,
+        Karolinska Institutet, Sweden
+<p>
+    Sander Greenland, Department of Epidemiology, UCLA School of Public
+        Health, USA
+<p>
+<b><u>Support</u></b>
+<p>
+    http://nicolaorsini.altervista.org
+    nicola.orsini@ki.se
+<p>
+<b><u>Also see</u></b>
+<p>
+    Manual:  <b>[ST] epitab</b>
+<p>
+    Online:  <b>epitab</b>, <b>episensrri</b> (if installed)
+</pre>

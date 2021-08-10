@@ -1,0 +1,9 @@
+{smcl}
+{* 23nov2004}{...}
+{hline}
+{hi:estout}'s {it:significance_stars_options}
+{hline}
+
+INCLUDE help estout_significance_stars_options
+
+{back:(back)}

@@ -1,0 +1,54 @@
+<pre>
+.-
+help for ^pgamma4^
+.-
+<p>
+Probability plot for data compared with fitted gamma distribution
+-----------------------------------------------------------------
+<p>
+    ^pgamma4^ varname [^if^ exp] [^in^ range] [ ^,^ ^a^lpha^(^#^)^  ^b^eta^(^#^
+&gt; )^ ^gr^id
+    graph_options ]
+<p>
+Description
+-----------
+<p>
+^pgamma4^ produces a probability plot for varname compared with a
+two-parameter gamma distribution with shape parameter alpha and scale
+parameter beta. By default, alpha and beta are taken from S_alpha and
+S_beta, which is where ^gamma4^ puts maximum likelihood estimates of
+them.
+<p>
+Note: this is the original version of ^pgamma^, written for Stata 4. 
+Users of Stata 8 up should switch to ^pgamma^. 
+<p>
+Options
+-------
+<p>
+^alpha(^#^)^ sets alpha to #.
+<p>
+^beta(^#^)^ sets beta to #.
+<p>
+^grid^ is equivalent to ^yline(.25,.5,.75) xline(.25,.5,.75)^.
+<p>
+graph_options are any of the options allowed with ^graph, twoway^; see
+    help for ^graph^.
+<p>
+Example
+-------
+<p>
+        . ^gamma4 precip^
+        . ^pgamma4 precip^
+<p>
+Author
+------
+<p>
+         Nicholas J. Cox, University of Durham, U.K.
+         n.j.cox@@durham.ac.uk
+<p>
+Also see
+--------
+<p>
+On-line: help for @graph@, @gamma4@, @qgamma4@
+<p>
+</pre>

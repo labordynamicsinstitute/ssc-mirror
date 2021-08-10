@@ -1,0 +1,87 @@
+<pre>
+<b>help mata mm_locate()</b>
+-------------------------------------------------------------------------------
+<p>
+<b><u>Title</u></b>
+<p>
+    <b>mm_locate() -- Search an ordered vector</b>
+<p>
+<p>
+<b><u>Syntax</u></b>
+<p>
+          <i>void</i>  <b>mm_locate(</b><i>y</i><b>,</b> <i>x</i><b>,</b> <i>j</i><b>)</b>
+<p>
+          <i>void</i>  <b>mm_hunt(</b><i>y</i><b>,</b> <i>x</i><b>,</b> <i>j</i><b>)</b>
+<p>
+    where
+<p>
+            <i>y</i>:  <i>numeric vector</i> containing data; <i>y</i> must be ordered, either
+                ascending or descending
+<p>
+            <i>x</i>:  <i>numeric scalar</i> containing value to be located in <i>y</i>
+<p>
+            <i>j</i>:  <i>real scalar</i> containing initial guess for <b>mm_hunt()</b>; will be
+                replaced by a <i>real scalar</i> such that <i>x</i> lies between <i>y</i>[<i>j</i>] and
+                <i>y</i>[<i>j</i>+1]
+<p>
+<p>
+<b><u>Description</u></b>
+<p>
+    Given an ordered data vector <i>y</i> and some value <i>x</i>, <b>mm_locate()</b>, replaces <i>j</i>
+    such that <i>x</i> lies between <i>y</i>[<i>j</i>] and <i>y</i>[<i>j</i>+1]. <i>j</i>==0 or <i>j</i>==length(<i>y</i>) is
+    returned, if <i>x</i> is out of range. <b>mm_locate()</b> applies the bisection method
+    to locate <i>x</i> in <i>y</i>.
+<p>
+    <b>mm_hunt()</b> also locates <i>x</i> in <i>y</i>. However, <b>mm_hunt()</b> uses the input value of
+    <i>j</i> as the starting point for the search process and applies a modified
+    algorithm.  <b>mm_hunt()</b> is useful if consecutive searches be performed for
+    similar values.
+<p>
+    <b>mm_locate()</b> is a translation of the <b>locate</b> algorithm in Press et al.
+    (1992:117). <b>mm_hunt()</b> is a translation of the <b>hunt</b> algorithm in Press et
+    al. (1992:118-119).
+<p>
+<p>
+<b><u>Remarks</u></b>
+<p>
+    None.
+<p>
+<p>
+<b><u>Conformability</u></b>
+<p>
+    <b>mm_locate(</b><i>y</i><b>,</b> <i>x</i><b>,</b> <i>j</i><b>)</b>,
+    <b>mm_hunt(</b><i>y</i><b>,</b> <i>x</i><b>,</b> <i>j</i><b>)</b>:
+    <i>input:</i>
+           <i>y</i>:  <i>n x</i> 1 or 1 <i>x n</i>
+           <i>x</i>:  1 <i>x</i> 1
+           <i>j</i>:  1 <i>x</i> 1
+    <i>output:</i>
+           <i>j</i>:  1 <i>x</i> 1
+<p>
+<p>
+<b><u>Diagnostics</u></b>
+<p>
+    None.
+<p>
+<p>
+<b><u>Source code</u></b>
+<p>
+    mm_locate.mata
+<p>
+<p>
+<b><u>References</u></b>
+<p>
+    Press, William H., Saul A. Teukolsky, William T. Vetterling, Brian P.
+        Flannery (1992). Numerical Recipes in C. The Art of Scientific
+        Computing. Second Edition. Cambridge University Press.  
+        http://www.numerical-recipes.com/
+<p>
+<p>
+<b><u>Author</u></b>
+<p>
+    Ben Jann, ETH Zurich, jann@soz.gess.ethz.ch
+<p>
+<p>
+<b><u>Also see</u></b>
+<p>
+</pre>

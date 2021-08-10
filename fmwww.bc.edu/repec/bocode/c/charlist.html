@@ -1,0 +1,70 @@
+<pre>
+-------------------------------------------------------------------------------
+help for <b>charlist</b>
+-------------------------------------------------------------------------------
+<p>
+<b><u>List characters present in string variable</u></b>
+<p>
+        <b>charlist</b> <i>strvar</i> [<b>if</b> <i>exp</i>] [<b>in</b> <i>range</i>]
+<p>
+<p>
+<b><u>Description</u></b>
+<p>
+    <b>charlist</b> displays a sorted list of the distinct characters present in
+    values of string variable <i>strvar</i>.
+<p>
+<p>
+<b><u>Remarks</u></b>
+<p>
+    <b>charlist</b> may, for example, reveal the presence of problematic characters
+    in a string variable which "should be" numeric.  It leaves behind a terse
+    character list in <b>r(chars)</b>; a space-separated character list in
+    <b>r(sepchars)</b>; and a space-separated numlist of ASCII codes in <b>r(ascii)</b>.
+    Any may be used in a subsequent command. Sometimes copying and pasting
+    all or part of the displayed output to the command window may be the most
+    practical way to use the output, say as argument to <b>destring, ignore()</b>.
+<p>
+    Note in particular that many awkward characters may not print
+    comprehensibly or visibly in your Results window. To some extent, this
+    will depend on the font you choose. A particular pitfall is that char(32)
+    and char(160) appear identical and may be overlooked in any case. The
+    returned results showing ASCII codes are needed to solve many of these
+    difficulties.
+<p>
+<p>
+<b><u>Examples</u></b>
+<p>
+    <b>. charlist make</b>
+<p>
+    <b>. charlist make if foreign</b>
+<p>
+    <b>. charlist rank</b>
+    <b>. return list</b>
+    [suppose results show instances of char(160)]
+    <b>. destring rank, ignore(`=char(160)')</b>
+<p>
+   
+<b><u>Saved results</u></b> 
+<p>
+    <b>r(chars)</b>            compressed list of distinct characters
+    <b>r(sepchars)</b>         space-separated list of distinct characters
+    <b>r(ascii)</b>            numeric list of distinct ASCII codes (cf. <b>char()</b>)
+<p>
+<p>
+<b><u>Acknowledgements</u></b> 
+<p>
+    Daniel Egan posed a problem that led to extra comments and examples in
+    this help file.
+<p>
+<p>
+<b><u>Author</u></b> 
+<p>
+    Nicholas J. Cox, Durham University, U.K.
+    n.j.cox@durham.ac.uk
+<p>
+         
+<b><u>Also see</u></b>
+<p>
+    On-line:  help for destring, functions
+<p>
+</pre>

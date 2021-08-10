@@ -1,0 +1,108 @@
+<pre>
+-------------------------------------------------------------------------------
+help for <b>levels</b>
+-------------------------------------------------------------------------------
+<p>
+<b><u>Levels of integer or string variable</u></b>
+<p>
+        <b>levels</b> <i>varname</i> [<b>if</b> <i>exp</i>] [<b>in</b> <i>range</i>] [ <b>,</b> <b><u>c</u></b><b>lean</b> <b><u>l</u></b><b>ocal(</b><i>macname</i><b>)</b> <b><u>miss</u></b><b>ing</b>
+                 <b><u>s</u></b><b>eparate(</b><i>separator</i><b>)</b> ]
+<p>
+<p>
+<b><u>Description</u></b>
+<p>
+    <b>levels</b> displays a sorted list of the distinct values of <i>varname</i>, which
+    should be a variable taking on integer or string values, or in other
+    words, a categorical variable, very broadly so defined.
+<p>
+<p>
+<b><u>Remarks</u></b>
+<p>
+    <b>levels</b> serves two different functions.  Occasionally, it serves to give a
+    compact display of the distinct values of <i>varname</i>.  More commonly, it may
+    be useful when it is desired to cycle through the distinct values of
+    <i>varname</i> with (say) <b>foreach</b>.  <b>levels</b> leaves behind a list in <b>r(levels)</b>
+    which may be used in a subsequent command.
+<p>
+    <b>levels</b> may not be used if <i>varname</i> contains non-integer numeric values.
+<p>
+    <b>levels</b> may hit the limits imposed by your Stata. However, it is likely to
+    be most useful when the number of distinct values of <i>varname</i> is modest.
+<p>
+    The terminology of levels of a factor has long been standard in
+    experimental design. See, for example, Cochran and Cox (1957, p.148) or
+    Yates (1937, p.5).
+<p>
+<p>
+<b><u>Options</u></b>
+<p>
+    <b>clean</b> displays string values without compound double quotes.  By default,
+        each distinct string value is displayed within compound double
+        quotes, as these are the most general delimiters. If you know that
+        the string values in <i>varname</i> do not include embedded spaces or
+        embedded quotes, then this is an appropriate option. <b>clean</b> has no
+        effect on the display of integer values.
+<p>
+    <b>local(</b><i>macname</i><b>)</b> inserts the list of values in local macro <i>macname</i> within
+        the calling program's space. Hence that macro will be accessible
+        after <b>levels</b> has finished.  This is helpful for subsequent use,
+        especially with <b>foreach</b>.
+<p>
+    <b>missing</b> specifies that missing values of <i>varname</i> should be included in
+        the calculation.  The default is to exclude them.
+<p>
+    <b>separate(</b><i>separator</i><b>)</b> specifies a separator to serve as punctuation for the
+        values of the returned list.  The default is a space. The most
+        obviously useful alternative is a comma.
+<p>
+<p>
+<b><u>Examples</u></b>
+<p>
+    . levels rep78
+<p>
+    . levels rep78, sep(,)
+<p>
+    . levels rep78, miss
+<p>
+    . levels make if foreign
+<p>
+    . levels factor, local(levels)
+    . foreach l of local levels {
+    .        di "-&gt; factor = `l'"
+    <i>.        whatever</i> if factor == `l'
+    . }
+<p>
+   
+<b><u>Saved results</u></b> 
+<p>
+    <b>r(levels)</b>        list of distinct values
+<p>
+<p>
+<b><u>Author</u></b> 
+<p>
+        
+    Nicholas J. Cox, University of Durham, U.K.
+    n.j.cox@durham.ac.uk
+<p>
+<p>
+<b><u>Acknowledgements</u></b> 
+<p>
+        
+    Nicholas Winter identified a bug in a previous version.  Kit Baum made a
+    suggestion which led to the <b>clean</b> option.
+<p>
+<p>
+<b><u>References</u></b>      
+<p>
+    Cochran, W.G. and G.M. Cox. 1957. <i>Experimental design.</i>  New York: John
+        Wiley.
+<p>
+    Yates, F. 1937. <i>The design and analysis of factorial experiments.</i>
+        Harpenden: Imperial Bureau of Soil Science Technical Communication
+        35.
+<p>
+<b><u>Also see</u></b>
+<p>
+    On-line:  help for foreach; limits
+<p>
+</pre>

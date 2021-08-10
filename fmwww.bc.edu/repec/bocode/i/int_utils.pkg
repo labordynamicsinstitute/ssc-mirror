@@ -1,0 +1,23 @@
+d 'INT_UTILS': module to perform interval computations in Mata
+d
+d  Interval arithmetic allows calculations with intervals rather
+d than scalars. The package contains functions that allow one to
+d add, subtract and multiply intervals; and also perform some basic
+d matrix-interval operations. The package also contains functions
+d that allow one to subdivide intervals, and form unions and
+d intersections of intervals. 
+d
+d KW:  interval computations
+d KW: interval arithmetic
+d KW: convex sets
+d
+d Requires: Stata version 11.2 and moremata from SSC (q.v.)
+d
+d Distribution-Date: 20140815
+d
+d Author: Matthew Baker, Hunter College
+d Support: email matthew.baker@@hunter.cuny.edu
+d
+f int_utils.sthlp
+f ../l/lint_utils.mlib
+f ../m/mf_int_utils.sthlp

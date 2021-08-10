@@ -1,0 +1,117 @@
+<pre>
+-------------------------------------------------------------------------------
+help for <b>predxcat</b>
+-------------------------------------------------------------------------------
+<p>
+<b><u>Predicted means, medians, or proportions for nominal X's</u></b>   
+<p>
+      <b>predxcat</b> <i>yvar</i> [<b>if</b> <i>exp</i>] [<b>in</b> <i>range</i>]<b>,</b> <b>xvar(</b><i>xvar1</i> [<i>xvar2</i>]<b>)</b> [
+                     <b><u>adj</u></b><b>ust(</b><i>covlist</i><b>)</b> <b><u>mod</u></b><b>el</b> <b><u>l</u></b><b>evel(</b>#<b>)</b> <b><u>lin</u></b><b>ear</b> <b><u>med</u></b><b>ian</b> <b><u>g</u></b><b>raph</b> <b><u>b</u></b><b>ar</b>
+                     <b><u>cl</u></b><b>uster(</b><i>cluster_var</i><b>)</b> <b><u>sav</u></b><b>epred(</b><i>filename</i><b>)</b> <i>graph_options</i> ]
+<p>
+<p>
+<b><u>Description</u></b>
+<p>
+    <b>predxcat</b> calculates and optionally graphs means from linear regression
+        models, medians from quantile regression models, or proportions
+        from logistic regression models for one or two nominal X variables,
+        adjusted for covariates. If a second X is specified, means, medians
+        or proportions are calculated for all possible combinations of X
+        categories, and an interaction effect is tested. Optionally, model
+        estimates and/or a graph may be displayed. Dummy variables are
+        created for <i>xvar1</i>. The lowest dummy variable defaults to the
+        reference group. If <i>xvar2</i> is specified, dummy variables are created
+        for it, as well as interaction terms.  (Alternative to adjust
+        command.)
+<p>
+ 
+<b><u>Variables and options required</u></b>
+<p>
+    <i>yvar</i> is the dependent variable
+<p>
+        If <i>yvar</i> is continuous, defaults to linear regression
+<p>
+        If <i>yvar</i> is binary (0,1), defaults to logistic regression
+<p>
+<p>
+    <b>xvar(</b><i>xvar1</i><b>)</b> is the nominal variable for categories of estimated means,
+        medians, or proportions
+<p>
+    <b>xvar(</b><i>xvar1 xvar2</i><b>)</b> gives categories of all combinations of <i>xvar1</i> and
+        <i>xvar2</i>; interaction between <i>xvar1</i> and <i>xvar2</i> is tested (Partial F for
+        linear or quantile regression and likelihood ratio test for logistic
+        regression)
+<p>
+        
+<b><u>Options</u></b> 
+<p>
+    <b>adjust(</b><i>covlist</i><b>)</b> lists any covariates. If none are specified, unadjusted
+        means, medians, or proportions are reported. Covariates are set to
+        their mean, based on observations used in the analysis, or can be set
+        to user specified values (e.g., age=50 gender=1). (Note: if an <b>adjust</b>
+        variable is nominal with more than 2 categories, it must be defined
+        with dummy variables in the <b>adjust</b> list, whereas dummy variables are
+        created automatically in the <b>xvar</b> option)
+<p>
+    <b>model</b> -- for display purposes only, this option prints the regression
+        table
+<p>
+    <b>level(</b>#<b>)</b> -- specifies the confidence level, in percent, for calculation
+        of confidence intervals (default=95%)
+<p>
+    <b>graph</b> -- if one X (<i>xvar1</i>), graphs means, medians, or proportions and
+        confidence intervals; if both <i>xvar1</i> and <i>xvar2</i> are specified, points
+        are graphed for each mean, median, or proportion, but confidence
+        intervals are not graphed; <i>xvar1</i> is used for the x-axis with separate
+        points for categories of <i>xvar2</i>
+<p>
+    <b>bar</b> -- can be used with the <b>graph</b> option to display a bar graph instead
+        of points
+<p>
+    <b>linear</b> -- requests linear regression when <i>yvar</i> is binary (0,1); if not
+        specified, logistic regression is assumed
+<p>
+    <b>median</b> -- requests quantile regression when <i>yvar</i> is continuous
+<p>
+    <b>cluster(</b><i>cluster_var</i><b>)</b> -- Name of cluster variable; adjusts standard errors
+        for intraclass correlation
+<p>
+    <b>savepred(</b><i>filename</i><b>)</b> -- saves adjusted values and CI's to a Stata file
+<p>
+<p>
+<b><u>Examples</u></b>
+<p>
+    <b>. predxcat chol, xvar(race) adjust(sbp age=50) model</b>
+<p>
+        Uses linear regression to calculate mean cholesterol level by race
+        category, adjusted for mean sbp and age=50; displays model
+<p>
+    <b>. predxcat chol, xvar(ses) adjust(sbp age) graph</b>
+<p>
+        Uses linear regression to calculate mean cholesterol by levels of
+        socio-economic status, adjusted for sbp and age; displays graph
+<p>
+    <b>. predxcat htn, xvar(gender race) adjust(age smoke etoh)</b>
+<p>
+        Uses logistic regression to calculate proportion of hypertensives for
+        all combinations of gender (2 categories) and race (4 categories) for
+        a total of 8 proportions, adjusted for age, smoking status, and
+        alcohol consumption; tests for interaction between gender and race
+<p>
+    <b>. predxcat htn, xvar(race gender) adjust(age smoke etoh) graph bar</b>
+<p>
+        Uses logistic regression to calculate the adjusted proportion of
+        hypertensives for all combinations of gender and race; bar graph of
+        proportions, race on the x-axis
+<p>
+<p>
+<b><u>Also see</u></b>
+<p>
+    Manual:  <b>[U] 23 Estimation and post-estimation commands</b>,
+             <b>[R] adjust</b>
+<p>
+<p>
+<b><u>Author</u></b>
+<p>
+    <b>J.M.Garrett</b>, Professor, School of Medicine, University of North Carolina,
+</pre>

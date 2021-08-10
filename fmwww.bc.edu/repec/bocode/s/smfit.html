@@ -1,0 +1,265 @@
+<pre>
+-------------------------------------------------------------------------------
+help for <b>smfit</b>                                  Stephen P. Jenkins (March 2007)
+-------------------------------------------------------------------------------
+<p>
+<b><u>Fitting a Singh-Maddala distribution by ML to unit record data</u></b>
+<p>
+        <b>smfit</b> <i>var</i> [<i>weight</i>] [<b>if</b> <i>exp</i>] [<b>in</b> <i>range</i>] [<b>,</b> <b><u>a</u></b><b>var(</b><i>varlist1</i><b>)</b>
+                 <b><u>b</u></b><b>var(</b><i>varlist2</i><b>)</b> <b><u>q</u></b><b>var(</b><i>varlist3</i><b>)</b> <b>abq(</b><i>varlist</i><b>)</b> <b><u>st</u></b><b>ats</b>
+                 <b><u>f</u></b><b>rom(</b><i>string</i><b>)</b> <b><u>poor</u></b><b>frac(</b><i>#</i><b>)</b> <b>cdf(</b><i>cdfname</i><b>)</b> <b>pdf(</b><i>pdfname</i><b>)</b> <b><u>r</u></b><b>obust</b>
+                 <b><u>cl</u></b><b>uster(</b><i>varname</i><b>)</b> <b><u>svy</u></b> <b><u>l</u></b><b>evel(</b><i>#</i><b>)</b> <i>maximize_options</i> <i>svy_options</i> ]
+<p>
+    <b>by</b> <i>...</i> <b>:</b> may be used with <b>smfit</b>; see help by.
+<p>
+    <b>pweight</b>s, <b>aweight</b>s, <b>fweight</b>s, and <b>iweight</b>s are allowed; see help weights.
+    To use <b>pweight</b>s, you must first <b>svyset</b> your data and then use the <b>svy</b>
+    option.
+<p>
+<b><u>Description</u></b>
+<p>
+    <b>smfit</b> fits by ML the 3 parameter Singh-Maddala (1976) distribution to
+    sample observations on a random variable <i>var</i>. Unit record data are
+    assumed (rather than grouped data). Otherwise known as the Burr Type 12
+    distribution, the Singh-Maddala distribution has been shown to provide a
+    good fit to empirical income data relative to other parametric functional
+    forms: see e.g. McDonald (1984). It is closely related to the Dagum (Burr
+    Type 3) distribution (Dagum, 1977,1980).  Both are special cases of the
+    Generalized Beta of the Second Kind distribution (see gb2fit). For a
+    comprehensive review of these and other related distributions, see
+    Kleiber and Kotz (2003).  For derivation of Lorenz orderings of pairs of
+    income distributions in terms of their Singh-Maddala parameters, see
+    Wifling and Kraemer (1993) and Kleiber (1996). Of course the
+    Singh-Maddala distribution might be suitable for describing any skewed
+    variable, not only income.
+<p>
+    The likelihood function for a sample of observations on <i>var</i> is specified
+    as the product of the densities for each observation (weighted where
+    relevant), and is maximized using <b>ml model lf</b>.
+<p>
+<p>
+<b><u>Options</u></b>
+<p>
+    <b>avar(</b><i>varlist1</i><b>)</b>, <b>bvar(</b><i>varlist2</i><b>)</b>, and <b>qvar(</b><i>varlist3</i><b>)</b> allow the user to
+        specify each parameter as a function of the covariates specified in
+        the respective variable list. A constant term is always included in
+        each equation.
+<p>
+    <b>abq(</b><i>varlist</i><b>)</b> can be used instead of the previous option if the same
+        covariates are to appear in each parameter equation.
+<p>
+    <b>from(</b><i>string</i><b>)</b> specifies initial values for the parameters, and is likely
+        to be used only rarely. You can specify the initial values in one of
+        three ways: the name of a vector containing the initial values (e.g.,
+        from(b0) where b0 is a properly labeled vector); by specifying
+        coefficient names with the values (e.g., from(a:_cons=1 b:_cons=5
+        q:_cons = .16); or by specifying an ordered list of values (e.g.,
+        from(1 5 0 .16, copy)).  Poor values in from() may lead to
+        convergence problems. For more details, including the use of copy and
+        skip, see {help:maximize}.
+<p>
+        If covariates are specified, the next four options are not available.
+        Use smpred to generate statistics at particular values of the
+        covariates, or <b>nlcom</b>. <b>predict</b> can be used to generate the
+        observation-specific parameters corresponding to the covariate values
+        of each sample observation: see Examples below.
+<p>
+    <b>stats</b> displays selected distributional statistics implied by the
+        Singh-Maddala parameter estimates:  quantiles, cumulative shares of
+        total <i>var</i> at quantiles (i.e. the Lorenz curve ordinates), the mode,
+        mean, standard deviation, variance, half the coefficient of variation
+        squared, Gini coefficient, and quantile ratios p90/p10, p75/p25.
+<p>
+    <b>poorfrac(</b><i>#</i><b>)</b> displays the estimated proportion with values of <i>var</i> less
+        than the cut-off specified by <i>#</i>. This option may be specified when
+        replaying results.
+<p>
+    <b>cdf(</b><i>cdfname</i><b>)</b> creates a new variable <i>cdfname</i> containing the estimated
+        Singh-Maddala c.d.f. value F(x) for each x.
+<p>
+    <b>pdf(</b><i>pdfname</i><b>)</b> creates a new variable <i>pdfname</i> containing the estimated
+        Singh-Maddala p.d.f. value f(x) for each x.
+<p>
+<p>
+    <b>robust</b> specifies that the Huber/White/sandwich estimator of variance is
+        to be used in place of the traditional calculation; see <b>[U] 23.14</b>
+        <b>Obtaining robust variance estimates</b>.  <b>robust</b> combined with <b>cluster()</b>
+        allows observations which are not independent within cluster
+        (although they must be independent between clusters).  If you specify
+        pweights, <b>robust</b> is implied.
+<p>
+    <b>cluster(</b><i>varname</i><b>)</b> specifies that the observations are independent across
+        groups (clusters) but not necessarily within groups.  <i>varname</i>
+        specifies to which group each observation belongs; e.g.,
+        <b>cluster(personid)</b> in data with repeated observations on individuals.
+        See <b>[U] 23.14 Obtaining robust variance estimates</b>. <b>cluster()</b> can be
+        used with pweights to produce estimates for unstratified
+        cluster-sampled data.  Specifying <b>cluster()</b> implies <b>robust</b>.
+<p>
+    <b>svy</b> indicates that <b>ml</b> is to pick up the <b>svy</b> settings set by <b>svyset</b> and
+        use the robust variance estimator. Thus, this option requires the
+        data to be <b>svyset</b>; see help svyset. <b>svy</b> may not be combined with
+        weights or the <b>strata()</b>, <b>psu()</b>, <b>fpc()</b>, or <b>cluster()</b> options.
+<p>
+    <b>level(</b><i>#</i><b>)</b> specifies the confidence level, in percent, for the confidence
+        intervals of the coefficients; see help level.
+<p>
+    <b>nolog</b> suppresses the iteration log.
+<p>
+    <i>maximize_options</i> control the maximization process.. The options available
+        are those shown by maximize, with the exception of <b>from()</b>.  If you
+        are seeing many "(not concave)" messages in the iteration log, using
+        the <b>difficult</b> or <b>technique</b> options may help convergence.
+<p>
+    <i>svy_options</i> specify the options used together with the <b>svy</b> option.
+<p>
+<p>
+<b><u>Saved results</u></b>
+<p>
+    In addition to the usual results saved after <b>ml</b>, <b>smfit</b> also saves the
+    following, if there are no covariates have been specified and the
+    relevant options used:
+<p>
+    <b>e(ba)</b>, <b>e(bb)</b>, and <b>e(bq)</b> are the estimated Singh-Maddala parameters.
+<p>
+    <b>e(cdfvar)</b> and <b>e(pdfvar)</b> are the variable names specified for the c.d.f.
+    and the p.d.f.
+<p>
+    <b>e(mode)</b>, <b>e(mean)</b>, <b>e(var)</b>, <b>e(sd)</b>, <b>e(i2)</b>, and <b>e(gini)</b> are the estimated
+    mode, mean, variance, standard deviation, half coefficient of variation
+    squared, Gini coefficient. <b>e(pX)</b>, and <b>e(LpX)</b> are the quantiles, and
+    Lorenz ordinates, where X = {1, 5, 10, 20, 25, 30, 40, 50, 60, 70, 75,
+    80, 90, 95, 99}.
+<p>
+    The following results are saved regardless of whether covariates have
+    been specified or not.
+<p>
+    <b>e(b_a)</b>, <b>e(b_b)</b>, and <b>e(b_q)</b> are row vectors containing the parameter
+    estimates from each equation.
+<p>
+    <b>e(length_b_a)</b>, <b>e(length_b_b)</b>, and <b>e(length_b_q)</b> contain the lengths of
+    these vectors. If no covariates have been specified in an equation, the
+    corresponding vector has length equal to 1 (the constant term);
+    otherwise, the length is one plus the number of covariates.
+<p>
+<p>
+<b><u>Formulae</u></b>
+<p>
+    The Singh-Maddala distribution has distribution function (c.d.f.)
+<p>
+        F(x) = 1 - { 1/[ 1 + (x/b)^a ]^q }
+<p>
+    where a, b, q, are parameters, each positive, for random variable x &gt; 0.
+    Parameters a and q are the key distributional 'shape' parameters; b is a
+    scale parameter.
+<p>
+    Letting z = 1 + (x/b)^a, then F(x) = 1 - [1/(z^q)], and the probability
+    density function (p.d.f.) is
+<p>
+        f(x) = (aq/b)*{z^-(q+1)}*[(x/b)^(a-1)].
+<p>
+    The likelihood function for a sample of observations on <i>var</i> is specified
+    as the product of the densities for each observation (weighted where
+    relevant), and is maximized using <b>ml model lf</b>.
+<p>
+    The formulae used to derive the distributional summary statistics
+    presented (optionally) are as follows. The r-th moment about the origin
+    is given by
+<p>
+        b^r*B(1+r/a,q-r/a)/B(1,q)
+<p>
+    where B(u,v) is the Beta function = G(u).G(v)/G(u+v) and G(.) is the
+    gamma function [exp(<b>lngamma</b>(.)], which by substitution and using G(1) =
+    1, implies the moments can be written
+<p>
+        b^r*G(1+r/a)*G(q-r/a)/G(q)
+<p>
+    and hence
+<p>
+        mean = b*G(1+1/a)*G(q-1/a)/G(q)
+<p>
+        variance = b*b*G(1+2/a)*G(q-2/a)/G(q) - (mean^2)
+<p>
+    from which the standard deviation and half the squared coefficient of
+    variation can be derived. The mode is
+<p>
+    mode = b*((a-1)/(aq+1))^(1/a) if a &gt; 1, and 0 otherwise.
+<p>
+    The quantiles are derived by inverting the distribution function:
+<p>
+        x_s = b*((1-s)^(-1/q) - 1)^(1/a) for each s = F(x_s).
+<p>
+    The Gini coefficient of inequality is given by
+<p>
+        1-Gini = G(q)*G(2q - 1/a) / { G(q-1/a)*G(2q) }.
+<p>
+    The Lorenz curve ordinates at each s = F(x_s) use the incomplete Beta
+    function:
+<p>
+        L(s) = <b>ibeta</b>(1+1/a, q- 1/a, 1-(1-s)^(1/q) ).
+<p>
+        
+<b><u>Examples</u></b>
+<p>
+    . smfit x [w=wgt]
+<p>
+    . smfit
+<p>
+    . smfit, stats poorfrac(100)
+<p>
+    . smfit x, a(age sex) b(age sex) q(age sex)
+<p>
+    . smfit x, abq(age sex)
+<p>
+    . predict double a_i, eq(a) xb
+<p>
+    . predict double b_i, eq(b) xb
+<p>
+    . predict double q_i, eq(q) xb
+<p>
+    See also the examples in the presentation by Jenkins (2004).
+<p>
+<b><u>Author</u></b>
+<p>
+    Stephen P. Jenkins &lt;stephenj@essex.ac.uk&gt;, Institute for Social and
+    Economic Research, University of Essex, Colchester CO4 3SQ, U.K.
+<p>
+<b><u>Acknowledgements</u></b>
+<p>
+    N.J. Cox made numerous helpful comments and suggestions, and also wrote
+    programs for distributional diagnostic plots (qsm, psm).
+<p>
+<p>
+<b><u>References</u></b>
+<p>
+    Dagum, C. (1977). A new model of personal income distribution:
+        specification and estimation. <i>Economie Appliquée</i> 30: 413-437.
+<p>
+    Dagum, C. (1980). The generation and distribution of income, the Lorenz
+        curve and the Gini ratio. <i>Economie Appliquée</i> 33: 327-367.
+<p>
+    Jenkins, S.P. (2004). Fitting functional forms to distributions, using
+        <b>ml</b>. Presentation at Second German Stata Users Group Meeting, Berlin. 
+        http://www.stata.com/meeting/2german/Jenkins.pdf
+<p>
+    Kleiber, C. (1996). Dagum vs. Singh-Maddala income distributions.
+        <i>Economics Letters</i> 53: 265-268.
+<p>
+    Kleiber, C. and Kotz, S. (2003).  <i>Statistical Size Distributions in</i>
+        <i>Economics and Actuarial Sciences</i>. Hoboken, NJ: John Wiley.
+<p>
+    McDonald, J.B. (1984). Some generalized functions for the size
+        distribution of income. <i>Econometrica</i> 52: 647-663.
+<p>
+    Singh, S.K. and G.S. Maddala (1976). A function for the size distribution
+        of income. <i>Econometrica</i> 44: 963-970.
+<p>
+    Wifling, B. and W. Kraemer (1993). The Lorenz-ordering of Singh- Maddala
+        income distributions. <i>Economics Letters</i> 43: 53-57.
+<p>
+<b><u>Also see</u></b>
+<p>
+    Online: help for smpred, psm, qsm, dagumfit, gb2fit, lognfit, if
+             installed.
+<p>
+</pre>

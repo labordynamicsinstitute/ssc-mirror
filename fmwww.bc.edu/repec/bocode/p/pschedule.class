@@ -1,0 +1,28 @@
+*! version 2.10 06June2014 M. Araar Abdelkrim & M. Paolo verme
+       version 10
+        class pschedule {
+		        double nblock
+				double issub
+				double bun
+				array  blk        
+        }
+        
+	    program .new
+                        if "`0'" != "" {
+                                .set `0'
+                        }
+        end
+
+        program .set
+                         args nblock issub bun
+                         .nblock   =  `nblock'
+						 .issub    =  `issub'
+						 .bun      =  `bun'
+        end
+
+		 
+
+	 
+
+				
+       

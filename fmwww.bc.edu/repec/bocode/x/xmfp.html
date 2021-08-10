@@ -1,0 +1,114 @@
+<pre>
+<p>
+<b><u>Title</u></b>
+<p>
+    <b>xmfp</b> -- Multivariable fractional polynomial models with extensions
+<p>
+<p>
+<a name="syntax"></a><b><u>Syntax</u></b>
+<p>
+        <b>xmfp</b> [<b>,</b> <i>options</i>] <b>:</b> <i>regression_cmd</i> [<i>yvar1</i> [<i>yvar2</i>]] <i>xvarlist</i> [<i>if</i>] [<i>in</i>]
+            [<i>weight</i>] [<b>,</b> <i>regression_cmd_options</i>]
+<p>
+    <i>options</i>                     Description
+    -------------------------------------------------------------------------
+    Model 2
+      <b><u>seq</u></b><b>uential</b>                use the Royston and Altman model-selection
+                                  algorithm; default uses closed-test
+                                  procedure
+      <b><u>cyc</u></b><b>les(</b><i>#</i><b>)</b>                 maximum number of iteration cycles; default
+                                  is <b>cycles(5)</b>
+      <b><u>dfd</u></b><b>efault(</b><i>#</i><b>)</b>              default maximum degrees of freedom; default
+                                  is <b>dfdefault(4)</b>
+      <b><u>cent</u></b><b>er(</b><i>cent_list</i><b>)</b>         specification of centering for the
+                                  independent variables
+      <b><u>al</u></b><b>pha(</b><i>alpha_list</i><b>)</b>         p-values for testing between FP models;
+                                  default is <b>alpha(0.05)</b>
+      <b>df(</b><i>df_list</i><b>)</b>               degrees of freedom for each predictor
+      <b><u>po</u></b><b>wers(</b><i>numlist</i><b>)</b>           list of FP powers to use; default is
+                                  <b>powers(-2 -1(.5)1 2 3)</b>
+      <b><u>lin</u></b><b>adj(</b><i>varlist</i><b>)</b>           list of variables to be included as
+                                  untransformed linear terms in all MFP
+                                  models
+<p>
+    Adv. model
+      <b><u>xo</u></b><b>rder(+</b>|<b>-</b>|<b>n)</b>             order of entry into model-selection
+                                  algorithm; default is <b>xorder(+)</b>
+      <b><u>sel</u></b><b>ect(</b><i>select_list</i><b>)</b>       nominal p-values for selection on each
+                                  predictor
+      <b><u>xp</u></b><b>owers(</b><i>xp_list</i><b>)</b>          FP powers for each predictor
+      <b><u>zer</u></b><b>o(</b><i>varlist</i><b>)</b>             treat nonpositive values of specified
+                                  predictors as zero when FP is transformed
+      <b><u>cat</u></b><b>zero(</b><i>varlist</i><b>)</b>          add indicator variable for specified
+                                  predictors
+      <b>all</b>                       include out-of-sample observations in
+                                  generated variables
+<p>
+    Reporting
+      <b><u>lev</u></b><b>el(</b><i>#</i><b>)</b>                  set confidence level; default is <b>level(95)</b>
+      <i>display_options</i>           control column formats and line width
+    -------------------------------------------------------------------------
+<p>
+    <i>regression_cmd_options</i>      Description
+    -------------------------------------------------------------------------
+    Adv. model
+      <i>regression_cmd_options</i>    options appropriate to the regression command
+                                  in use
+    -------------------------------------------------------------------------
+<p>
+    All weight types supported by <i>regression_cmd</i> are allowed; see weight.
+    See <b>[R] mfp postestimation</b> for features available after estimation.
+    <b>fracgen</b> may be used to create new variables containing fractional
+      polynomial powers.  See <b>[R] fracpoly</b>.
+<p>
+<a name="reg_cmd"></a>    where
+<p>
+        <i>regression_cmd</i> may be <b>clogit</b>, <b>glm</b>, <b>intreg</b>, <b>logistic</b>, <b>logit</b>, <b>mlogit</b>, 
+        <b>nbreg</b>, <b>ologit</b>, <b>oprobit</b>, <b>poisson</b>, <b>probit</b>, <b>qreg</b>, <b>regress</b>, <b>rreg</b>, <b>stcox</b>, 
+        <b>stcrreg</b>, <b>streg</b>, or <b>xtgee</b>.
+<p>
+        <i>yvar1</i> is not allowed for <b>streg</b>, <b>stcrreg</b>, and <b>stcox</b>.  For these
+        commands, you must first <b>stset</b> your data.
+<p>
+        <i>yvar1</i> and <i>yvar2</i> must both be specified when <i>regression_cmd</i> is <b>intreg</b>.
+<p>
+        <i>xvarlist</i> has elements of type <i>varlist</i> and/or <b>(</b><i>varlist</i><b>)</b>; for example,
+<p>
+            <b>x1 x2 (x3 x4 x5)</b>
+<p>
+        Elements enclosed in parentheses are tested jointly for inclusion in
+        the model and are not eligible for fractional polynomial
+        transformation.
+<p>
+<p>
+<a name="description"></a><b><u>Description</u></b>
+<p>
+    <b>xmfp</b> selects the multivariable fractional polynomial (MFP) model that
+    best predicts the outcome variable from the right-hand-side variables in
+    <i>xvarlist</i>.
+<p>
+    <b>xmfp</b> provides some extensions to the factory-standard <b>mfp</b> command, namely
+<p>
+    1. <b>xmfp</b> supports factor variables
+    2. <b>xmfp</b> has a <b>linadj(</b><i>varlist</i><b>)</b> option to adjust linearly for variables in <i>va</i>
+<i>&gt; rlist</i>.
+<p>
+    Note also that the <b>mfp</b> post-estimation commands <b>fracplot</b> and <b>fracpred</b> are
+    replaced with <b>xfracplot</b> and <b>xfracpred</b>, respectively. The syntax is
+    unchanged, except that <b>xfracplot</b> has an additional option <b>nopts</b> which
+    suppresses plotting of partial residuals.
+<p>
+<b><u>Author</u></b>
+<p>
+    Patrick Royston
+    MRC Clinical Trials Unit
+    London, UK
+    pr@ctu.mrc.ac.uk
+<p>
+<p>
+<b><u>Also see</u></b>
+<p>
+    Manual:  <b>[R] fracpoly</b>, <b>[R] mfp</b>
+<p>
+    Online:  <b>mfp</b>
+</pre>

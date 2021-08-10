@@ -1,0 +1,60 @@
+<pre>
+-------------------------------------------------------------------------------
+help for <b>tarowi</b>                                       (see also:  <b>[R] tabulate</b>)
+-------------------------------------------------------------------------------
+<p>
+<b><u>tarowi</u></b>, "t-a-rowi", <b><u>tabulate by each row - immediate</u></b>
+<p>
+        <b>tarowi</b> <b>(</b><i>matrix definition syntax</i><b>)</b> OR <i>existing matrix name</i> <i>,</i>
+                 [<b><u>o</u></b><b>ptions_tabulate(</b><i>tabulate options</i><b>)</b>
+                 <b><u>r</u></b><b>ow_options_tabulate(</b><i>tabulate options for tables by each row</i><b>)</b>]
+<p>
+<b><u>Description</u></b>
+<p>
+<b>tarowi</b> tabulates row by column a table defined by the <i>matrix definition syntax</i>.
+    Thereafter, provides, by each row level (row==1, row==2, ...) a 2Xn table
+    where n equals the number of columns defined by the columns of the matrix
+    definition.  The two rows for each 2Xn table are <i>row==i</i> and <i>all other</i>.
+<p>
+<b><u>Options</u></b>
+<p>
+<b><u>o</u></b><b>ptions_tabulate(</b><i>tabulate options</i><b>)</b> and <b><u>r</u></b><b>ow_options_tabulate(</b><i>tabulate options</i>
+    <i>for tables by each row</i><b>)</b> take options available to tabulate and are, in
+    fact, passed directly to tabulate.  Examples of tabulate options are:<i> row,</i>
+    <i>col, all, chi2,</i> and <i>exact</i>.
+<p>
+<b><u>Note</u></b>
+<p>
+the parentheses are required in: <b>(</b><i>matrix definition syntax</i><b>)</b> and the matrix
+    definition must be valid or a vauge "syntax error" will result.
+<p>
+if <i>existing matrix name</i> is provided: 1) no parentheses are required and, if
+    included, result in a syntax error.  2) the matrix labels are not used (as
+    yet anyway).
+<p>
+currently <b>tarowi</b> is setup to return the p-value for the exact test, if exact is
+    specified as an option in <b><u>r</u></b><b>ow_options_tabulate(</b><i>tabulate options for tables</i>
+    <i>by each row</i><b>)</b>. The p-values, one for each 2Xn table, are called: exactp<i>1</i> ...
+    exactp<i>i</i>. These can be seen post <b>tarowi</b> by issuing the command <i>return list</i>.
+<p>
+<b><u>Examples</u></b>
+<p>
+        . tarowi (1,7\5,4\4,4\1,1), o(row col) r(chi nokey)
+        . tarowi (1,7\5,4\4,4\1,1)
+        . tarowi (1 7 \ 5 4 \ 4 4 \ 1 1), r(col exact nokey) o(col)
+        . tarowi (1 7 1\ 5 4 1\ 4 4 2\ 1 1 1), o(row) r(row exact nokey)
+        . tarowi MatrixA , o(row col) r(chi nokey exact)
+<p>
+<b><u>Author</u></b>
+<p>
+        Allen Buxton,
+        Assistant Statistician
+        Children's Oncology Group
+        Arcadia, CA
+<p>
+<b><u>Also see</u></b>
+<p>
+ Manual: <b>[R] tabulate</b>
+<p>
+On-line: help for tabi tabulate matrix immed
+</pre>

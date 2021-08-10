@@ -1,0 +1,271 @@
+<pre>
+-------------------------------------------------------------------------------
+<b>help paran</b>
+-------------------------------------------------------------------------------
+<p>
+<b><u>Title</u></b>
+<p>
+    <b>paran</b> -- Horn’s Test of Principal Components/Factors
+<p>
+<p>
+<b><u>Syntax</u></b>
+<p>
+    Parallel analysis of data
+<p>
+        <b>paran</b> [<i>varlist</i>] [<i>weight</i>] [<b>if</b> <i>exp</i>] [<b>in</b> <i>range</i>] [<b>,</b> <i>options</i>]
+<p>
+    <i>options</i>               Description
+    -------------------------------------------------------------------------
+    Model
+      <b><u>ite</u></b><b>rations(</b><i>#</i><b>)</b>       specify the number of iterations
+      <b><u>cent</u></b><b>ile(</b><i>#</i><b>)</b>          specify using a centile value of instead of the
+                            mean
+      <b>factor(</b><i>factor_type</i><b>)</b> use factor instead of pca (defaults to <b>pca</b> if left
+                            blank)
+      <b><u>cit</u></b><b>erate(</b><i>#</i><b>)</b>         communality re-estimation iterations (ipf only)
+<p>
+    Reporting
+      <b><u>q</u></b><b>uietly</b>             suppresses pca or factor output
+      <b><u>nost</u></b><b>atus</b>            suppresses the status indicator
+      <b>all</b>                 report all eigenvalues (default reports only those
+                            retained)
+<p>
+    Graphing
+      <b><u>gr</u></b><b>aph</b>               graphs unadjusted, adjusted, and random eigenvalues
+      <b>color</b>               renders graph in color (default is black and white)
+      <b>lcolors(</b><i>3 x rgb</i><b>)</b>    specifies colors using three rgb triples for
+                            observed, random, and adjusted eigenvalues
+                            (overrides the <b>color</b> option)
+      <b>saving(</b><i>filename</i><b>)</b>    saves graph as a <b>.gph</b> file
+      <b>replace</b>             replaces an existing file when <b>saving()</b>
+<p>
+    Miscellaneous
+      <b><u>pr</u></b><b>otect(</b><i>#</i><b>)</b>          perform <i>#</i> optimizations and report the best
+                            solution (<b>ml</b> only with factor)
+      <b>seed(</b><i>#</i><b>)</b>             seed the random number generator with the supplied
+                            integer
+      <b>mat(</b><i>matrix name</i><b>)</b>    option to provide a correlation matrix instead of
+                            the <i>varlist</i>
+      <b>n(</b><i>#</i><b>)</b>                specifies the required sample size when using the
+                            <b>mat()</b> option
+      <b>copyleft</b>            displays the GPL license for <b>paran</b>
+    -------------------------------------------------------------------------
+    <b>fweights</b>, and <b>aweights</b> are allowed when using <i>varlist</i>. See help weights.
+<p>
+<b><u>Description</u></b>
+<p>
+    <b>paran</b> is an implementation of Horn’s technique for evaluating the
+    components or common factors retained in a principle component analysis
+    (PCA) or a common factor analysis (FA). According to Horn, a common
+    interpretation of non-correlated data is that they are perfectly
+    non-collinear, and one would expect therefore to see eigenvalues equal to
+    1 in a PCA of such data (or equal to 0 in the case of a common factor
+    analysis, as with<b> pf</b>). However, Horn notes that multi-colinearity occurs
+    due to sampling error and least-squares "bias," even in uncorrelated
+    data, and therefore actual PCAs of such data will reveal eigenvalues of
+    components greater than and less than 1. His strategy is to contrast
+    eigenvalues produced through a PCA on a random dataset (uncorrelated
+    variables) with the same number of variables and observations as the
+    experimental or observational dataset to produce eigenvalues for
+    components or factors that are adjusted for the sample error-induced
+    inflation. Values greater than zero are retained in the adjustment given
+    by:
+<p>
+<p>
+    For principal component analysis:
+<p>
+        Observed Data Eigenvalue_p - (Random Data Eigenvalue_p - 1)
+<p>
+    For common factor analysis:
+<p>
+        Observed Data Eigenvalue_p - Random Data Eigenvalue_p
+<p>
+    <b>paran</b> is used in place of a <b>pca</b> <i>varlist</i> command (or <b>factor</b>). The user may
+    also specify how many times to make the contrast with a random dataset
+    (default is 30 per variable). Values less than 1 will be ignored (or less
+    than 0 for <b>factor</b>), and the default value assumed. Random datasets are
+    generated using the <b>uniform()</b> function. The program returns the estimated
+    mean eigenvalues of random data if the <b>centile</b> option is unspecified,
+    otherwise it returns the specified <b>centile</b>. biases on each eigenvector
+    are also returned. <b>paran</b> may be thus be used to conduct parallel analysis
+    following Glorfeld's suggestions to reduce the likelihood of
+    over-retention.  (Glorfeld, 1995)
+<p>
+    When the <b>all</b> option is not used, <i>unadjusted</i> eigenvalues greater than 1
+    (for prinicpal components) or 0 (for factors) are reported, with retained
+    adjusted eigenvalues printed in yellow, and unretained adjusted
+    eigenvalues printed in red.
+<p>
+<b><u>Options</u></b>
+<p>
+    <b><u>iter</u></b><b>ation(</b><i>#</i><b>)</b> sets the number of contrast datasets to evaluate. The
+        default value is 30 * the number of variables, and values less than 1
+        are ignored. For large datasets with large numbers of variables many
+        iterations may be time consuming. The greater the number of
+        iterations the more accurate the estimates of sample bias will be.
+<p>
+    <b>centile(</b><i>#</i><b>)</b> specifies that supplied centile value is to be used instead of
+        the mean (assumed median, since the distribution is symmetrical) in
+        estimating bias.  Values above the mean/median, such as the 95th
+        percentile, are more conservative estimates of chance bias in the
+        eigenvalues from a PCA of sample data. This option supercedes the
+        older <b>pnf</b>, which was equivalent to <b><u>cent</u></b><b>ile(</b>95<b>)</b>.  Values of <b><u>cent</u></b><b>ile()</b>
+        must be greater than 0 and less than 100. Non-integer values will be
+        rounded to the nearest integer value. Running <b>paran</b> without this
+        option uses the mean value (very close to <b><u>cent</u></b><b>ile(</b>50<b>)</b>). (see
+        Glorfeld, 1995)
+<p>
+    <b><u>q</u></b><b>uietly</b> suppresses output for the PCA or factor analysis. This option is
+        only used if a <i>varlist</i> is specified in the <b>paran</b> command.
+<p>
+    <b><u>nost</u></b><b>atus</b> By default <b>paran</b> indicates when every tenth percent of the
+        computation has been completed. <b>nostatus</b> eliminates this behavior.
+<p>
+    <b>factor(</b><i>factor_type</i><b>)</b> selects one of the factor estimation types:  <b>pf</b>, <b>pcf</b>,
+        <b>ipf</b>, or <b>ml</b> (for principal factors, principal component factors,
+        iterated principal factors, or maximum likelihood factors,
+        respectively). If you specify anything but one of these four
+        abbreviations, you will be warned and the program will halt. CAVEAT:
+        Conducting parallel analysis using factor methods other than <b>pf</b> is
+        unorthodox. Interpret such results at your own risk. If <b>factor</b> is not
+        used, or if one of the factor estimation types is not used <b>paran</b>
+        performs parallel analysis using pca by default.
+<p>
+    <b><u>cit</u></b><b>erate(</b><i>#</i><b>)</b> sets how many iterations will be used to re-estimate
+        communalities for the iterated principal factor type. (see factor)
+<p>
+    <b><u>pr</u></b><b>otect(</b><i>#</i><b>)</b> sets the number of optimizations for starting values option
+        for the maximum likelihood factor type. (see factor)
+<p>
+    <b>all</b> reports all components or factors, not just those with unadjusted
+        eigenvalues greater than one (or greater than zero for factor). The
+        default is not to report all components or factors.
+<p>
+    <b><u>gr</u></b><b>aph</b> draws a graph of the observed eigenvalues, the random eigenvalues,
+        and the adjusted eigenvalues much like the graphs presented by Horn
+        in his 1965 paper.
+<p>
+    <b>color</b> renders the graph in color (only with <b><u>gr</u></b><b>aph</b>) with unadjusted
+        eigenvalues drawn in red, adjusted eigenvalues drawn in black, and
+        random eigenvalues drawn in blue, and all lines drawn solid. Without
+        the <b>color</b> option, the graph is rendered in black and white, and the
+        line connecting the unadjusted eigenvalues is dashed, the line
+        connecting the random eigenvalues is dotted, and the line connecting
+        the adjusted eigenvalues is solid.
+<p>
+    <b>lcolors(</b><i># # # # # # # # #</i><b>)</b> specifies the colors of each line on the graph
+        using three rgb triples (only with <b><u>gr</u></b><b>aph</b>). The first triple indicates
+        the <b>R</b>, <b>G</b> and <b>B</b> components of the observed eigenvalues, the second
+        triple sets the values for the mean or centile random eigenvalues,
+        and the third triple sets the values for the adjusted eigenvalues.
+        These settings override the default (red, blue, and black) colors of
+        the <b>color</b> option.
+<p>
+    <b>saving(</b><i>filename</i><b>)</b> outputs the graph to the specified <i>filename</i> as a <b>.gph</b>
+        file (only with <b><u>gr</u></b><b>aph</b>).
+<p>
+    <b>replace</b> overwrites an existing <i>filename</i> when the <b>saving()</b> option is used
+        with <b><u>gr</u></b><b>aph</b>.
+<p>
+    <b>seed(</b><i>#</i><b>)</b> specifies an integer seed for the random number generator (see
+        set seed) so that results of <b>paran</b> upon a specific data set can be
+        exactly reproduced. The default behavior of <b>paran</b> is not to specify a
+        seed.
+<p>
+    <b>mat(</b><i>matrix name</i><b>)</b> specifies an optional correlation matrix to be used
+        instead of the <i>varlist</i>; requires the <b>n(</b><i>#</i><b>)</b> option also be specified.
+        This option is not compatible with <b>aweights</b> or <b>fweights</b>.
+<p>
+    <b>n(</b><i>#</i><b>)</b> specifies the sample size when using the <b>mat(</b><i>matrix name</i><b>)</b> option.
+<p>
+    <b>copyleft</b> displays the copying permission statement for <b>paran</b>. <b>paran</b> is
+        free software, licensed under the GPL. The full license can be
+        obtained by typing:
+<p>
+            . net describe paran, from (http://www.doyenne.com/stata)
+<p>
+    and clicking on the click here to get link for the ancillary file.
+<p>
+<p>
+<b><u>Remarks</u></b>
+<p>
+    Hayton, et al. (2004) urge a parameterization of the random data to
+    approximate the distribution of the observed data with respect to the
+    middle ("mid-point") and the observed min and max.  However, the PCA as I
+    understand it is insensitive to standardizing transformations of each
+    variable, and any linear transformation of all variables, and produces
+    the same eigenvalues used in component or factor retention decisions.
+    This is born by the notable lack of difference between analyses conducted
+    using a variety of simulated distributional assumptions (Dinno, 2009).
+    The central limit theorem would seem to make the selection of a
+    distributional form for the random data moot with any sizable number of
+    iterations. Former functionality implementing the recommendation by
+    Hayton et al.  (2004) has been removed, since parallel analysis is
+    insensitive to it, and it only adds to the computation time required to
+    conduct parallel analysis.
+<p>
+<p>
+<b><u>Examples</u></b>
+<p>
+    . paran var1-var16
+<p>
+    . paran var1-var26, iter(5000) q centile(95)
+<p>
+    . paran var1-var10, iter(1) factor(ipf) cit(50)
+<p>
+<p>
+<b><u>Author</u></b>
+<p>
+    Alexis Dinno
+    alexis dot dinno at pdx dot edu
+<p>
+    I am receptive to comments and requests.
+<p>
+<p>
+<b><u>Reference</u></b>
+<p>
+    Dinno A. 2009 "Exploring the Sensitivity of Horn’s Parallel Analysis to
+        the Distributional Form of Simulated Data" <i>Multivariate Behavioral</i>
+        <i>Research</i>. 44: 362-388
+<p>
+    Glorfeld LW. 1995. "An Improvement on Horn’s Parallel Analysis
+        Methodology for Selecting the Correct Number of Factors to Retain.
+        {it:Educational and Psychological Measurement}. 55: 377-393
+<p>
+    Hayton JC, Allen DG, and Scarpello V. 2004. "Factor Retention Decisions
+        in Exploratory Factor Analysis: A Tutorial on Parallel Analysis"
+        <i>Organizational Research Methods</i>. 7: 191-205
+<p>
+    Horn JL. 1965. "A rationale and a test for the number of factors in
+        factor analysis." <i>Psychometrika</i>. 30: 179-185
+<p>
+    Zwick WR, Velicer WF. 1986. "Comparison of Five Rules for Determining the
+        Number of Components to Retain." <i>Psychological Bulletin</i>. 99: 432-442
+<p>
+<p>
+<b><u>Saved results</u></b>
+<p>
+<b>paran</b> saves the following 1 by P matrices in <b>e()</b>:
+<p>
+    Matrices       
+      <b>e(UnadjustedEv)</b>     Unadjusted eigenvalues from the <b>pca</b> or <b>factor</b>
+                            command
+      <b>e(AdjustedEv)</b>       Eigenvalues from the analysis adjusted by
+                            subtracting the estimated bias
+      <b>e(MeanRandomEv)</b>     The mean of the eigenvalues of random data sets of
+                            size N by P (only if the <b>centile()</b> option is
+                            unspecified)
+      <b>e(CentRandomEv)</b>     The centile of the eigenvalues of random data sets
+                            of size N by P as given by the <b>centile()</b> option
+                            (and only if that option is specified)
+      <b>e(Bias)</b>             The estimated bias (which <i>is</i> the mean of the
+                            eigenvalues of random data sets of size N by P
+                            when using the <b>factor</b> option
+<p>
+<p>
+<b><u>Also See</u></b>
+<p>
+    On-line:  help for: pca, factor
+<p>
+<p>
+</pre>

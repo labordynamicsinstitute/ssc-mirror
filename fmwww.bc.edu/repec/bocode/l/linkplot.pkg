@@ -1,0 +1,14 @@
+d 'LINKPLOT': module for linked (connected) scatter plots
+d
+d  linkplot plots data such that data with the same value of a 
+d link variable are connected.	Applications include paired data
+d (link values with same  identifier), panel data (link values in
+d each panel), etc.  Stata 8 is required.  
+d
+d Distribution-Date: 20030708
+d
+d Author: Nicholas J. Cox, University of Durham
+d Support: email N.J.Cox@@durham.ac.uk
+d
+f linkplot.ado
+f linkplot.hlp

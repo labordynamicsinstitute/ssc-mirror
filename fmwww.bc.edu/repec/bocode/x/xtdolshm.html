@@ -1,0 +1,235 @@
+<pre>
+<b>help xtdolshm</b>
+-------------------------------------------------------------------------------
+<p>
+<b><u>Title</u></b>
+<p>
+    <b> Performs Dynamic Ordinary Least Squares for Cointegrated Panel Data with h</b>
+<b>&gt; omogeneous covariance structure</b>
+<p>
+<p>
+<p>
+<b><u>Syntax</u></b>
+<p>
+        <b>xtdolshm</b> <i>depvar</i> <i>indepvars</i> [<i>if</i>] [<i>in</i>] [<b>,</b> <i>options</i>]
+<p>
+    <i>options</i>               Description
+    -------------------------------------------------------------------------
+    Main
+      <b><u>L</u></b><b>evel</b>               set confidence level; default is <b>level(95)</b>
+      <b><u>nla</u></b><b>gs</b>               specify the number of lags
+      <b><u>nle</u></b><b>ads</b>              specify the number of leads
+    -------------------------------------------------------------------------
+<p>
+    You must <b>tsset</b> your data before using <b>xtdolshm</b>; see <b>tsset</b>.
+    <i>varlist</i> may contain time-series operators; see tsvarlist.
+    <b>by</b> is allowed with <b>xtdolshm</b> if no time-series operators are used in the
+      command line; see <b>[D] by</b> for more details on <b>by</b>.
+<p>
+<p>
+<p>
+<b><u>Description</u></b>
+<p>
+    <b>xtdolshm</b> fits a model of depvar on indepvars using Kao and Chiang (2000)
+    Dynamic Ordinary Least Squares (dols) for Cointegrated Panel Data with
+    homogeneous long-run covariance structure accross cross-sectional units.
+<p>
+<p>
+<p>
+<b><u>Options</u></b>
+<p>
+        +------+
+    ----+ Main +-------------------------------------------------------------
+<p>
+    <b>level(</b><i>#</i><b>)</b> sets confidence level; default is <b>level(95)</b>.
+<p>
+    <b>nlags(</b><i>integer</i><b>)</b> indicates the number of lags, default is <b>2</b>.
+<p>
+    <b>nlags(</b><i>integer</i><b>)</b> indicates the number of leads, default is <b>1</b>.
+<p>
+<p>
+<p>
+<b><u>Options for </u></b><b><u>predict</u></b>
+<p>
+    <b>xb</b>, the default, calculates the linear prediction from the long-run
+        coefficients.
+<p>
+    <b><u>dolsr</u></b><b>es</b> calculates the dols residuals.
+<p>
+<p>
+<p>
+<b><u>Citation</u></b>
+<p>
+    <b>xtdolshm</b> is not an official Stata command. The main program of this
+    command is an adaptation of Kao and Chiang (2002) Gauss corresponding
+    original procedure. It is entirely writing in the new powerful and
+    wonderful Stata matrix programming language <b>Mata</b>. The usual disclimers
+    apply: all errors and imperfections in this package are mine and all
+    comments are very welcome.
+<p>
+<p>
+<p>
+<b><u>Remarks</u></b>
+<p>
+    The package <b>xtdolshm</b> rely on the package <b>ltimbimata</b>. Hence you must
+    install <b>ltimbimata</b> to make <b>xtdolshm</b> work. To install the package 
+    <b>ltimbimata</b> from within <b>Stata</b>, please click on: ssc install ltimbimata,
+    replace. Note that you must be connected to Internet for this action to
+    work. The command <b>xtdolshm</b> now works with <b>test</b>, <b>predict</b>, <b>outreg</b> (if
+    installed), <b>outreg2</b> (if installed) and all <b>Stata</b> commands that allow
+    tabulating estimations results.
+<p>
+<p>
+<p>
+<b><u>Return values</u></b>
+<p>
+   Scalars
+       <b>e(N)</b>               Number of observations used
+       <b>e(k1)</b>              Number of variables used
+       <b>e(T)</b>               Time used
+       <b>e(N_g)</b>             Number of included individuals
+       <b>e(r2)</b>              R-squared
+       <b>e(r2_a)</b>            Adj R-squared
+       <b>e(g_avg)</b>           Average number of observations per included individua
+&gt; l
+       <b>e(g_min)</b>           Lowest number of observations in an included individu
+&gt; al
+       <b>e(g_max)</b>           Highest number of observations in an included individ
+&gt; ual
+       <b>e(nlags)</b>           Number of lags
+       <b>e(nleads)</b>          Number of leads
+       <b>e(chi2)</b>            Wald chi-squared statistic
+       <b>e(chi2_p)</b>          p value of Wald statistic
+<p>
+   Macros
+       <b>e(cmdline)</b>         Command as typed by the user
+       <b>e(cmd)</b>             "xtdolshm", command name
+       <b>e(predict)</b>         Program used to implement predict
+       <b>e(ivar)</b>            Individual (panel) variable
+       <b>e(depvar)</b>          Dependent variable
+       <b>e(properties)</b>      sets the e(properties) macro
+<p>
+   Matrices
+       <b>e(b)</b>               Coefficient vector
+       <b>e(V)</b>               Variance-covariance matrix
+       <b>e(omega_1_2)</b>       The estimated long-run conditional variance
+<p>
+   Functions
+       <b>e(sample)</b>          Marks estimation sample
+<p>
+<p>
+<p>
+<a name="remarks1"></a><b><u>Examples</u></b>
+<p>
+    Before beginning the estimations, we use the <b>set more off</b> instruction to
+        tell <b>Stata</b> not to pause when displaying the output.
+<p>
+    set more off
+<p>
+    We illustrate the use of the command<b> xtdolshm</b> with the dataset
+        <b>xtdolshmdata.dta</b>.  This dataset contains panel data of 51 countries
+        from 1975 to 2004.
+<p>
+    use http://fmwww.bc.edu/repec/bocode/x/xtdolshmdata.dta, clear
+<p>
+    Next we describe the dataset to see the definition of each variable.
+<p>
+    describe
+<p>
+    We regress iskr (dependent variable) on the regressors (irxmap1 defigd2
+        ltinflcd opins2 totwdct ltdgdpd). It appears from this estimation
+        that real effective exchange rate (REER) volatility has significant
+        negative effect on investment.
+<p>
+    xtdolshm iskr gdskr irxmap1 defigd2 ltinflcd opins2 totwdct ltdgdpd
+<p>
+    We show how to use the options <b>nlags()</b> and <b>nleads()</b>. We increase the
+        number of lags to 3 and the number of leads to 4. The regression
+        indicates that REER Volatility is still negatively linked with
+        investment.
+<p>
+    xtdolshm iskr gdskr irxmap1 defigd2 ltinflcd opins2 totwdct, nla(3)
+        nle(4)
+<p>
+    We estimate the previous equation with a 90% confidence interval.
+<p>
+    xtdolshm iskr gdskr irxmap1 defigd2 ltinflcd opins2 totwdct, nla(3)
+        nle(4) level(90)
+<p>
+    We illustrate the use of a time series operator by lagging inflation by
+        one period.
+<p>
+    xtdolshm iskr gdskr irxmap1 defigd2 l.ltinflcd opins2 totwdct
+<p>
+    Now we show how to use the package <b>xtdolshm</b> with the command <b>[D] by</b>.
+        First we tabulate the variable income levels.
+<p>
+    tab inclevel
+<p>
+    Then we sort the dataset by income levels.
+<p>
+    sort inclevel
+<p>
+    Finally we use the command <b>xtdolshm</b> with <b>[D] by</b>. We observe that REER
+        volatility continues to be negative and significant in both income
+        categories.
+<p>
+    by inclevel: xtdolshm iskr gdskr irxmap1 defigd2 ltinflcd opins2 totwdct
+        ltdgdpd
+<p>
+    Let us illustrate how the command <b>xtdolshm</b> works with <b>test</b>. First, we
+        restore the original ordering of the dataset.
+<p>
+    tsset
+<p>
+    Second, we perform the following regression.
+<p>
+    xtdolshm iskr gdskr irxmap1 defigd2 ltinflcd opins2 totwdct
+<p>
+    Third, we test that the coefficients on irxmap1 and opins2 are jointly
+        equal to 0.
+<p>
+    test (irxmap1=0) (opins2=0)
+<p>
+    The result suggests that the coefficients of the two variables are
+        jointly different to 0.
+<p>
+    To finish this example section, we now illustrate how to use the command
+        <b>xtdolshm</b> with <b>predict</b>. We start by running the following regression.
+<p>
+    xtdolshm iskr gdskr irxmap1 defigd2 ltinflcd opins2 totwdct ltdgdpd
+<p>
+    We calculate the linear prediction from the long-run coefficients.
+<p>
+    predict linpred, xb
+<p>
+    We calculate the dols residuals.
+<p>
+    predict dolsresiduals, dolsres
+<p>
+<p>
+<p>
+<b><u>References</u></b>
+<p>
+    Kao, C. and Chiang, M. H.: 2002, "Nonstationary Panel Time Series Using
+    NPT 1.3 - A User Guide," Center for Policy Research, Syracuse University.
+    Downloadable at: http://faculty.maxwell.syr.edu/cdkao/working/npt.html.
+<p>
+    Kao, C. and Chiang, M. H.: 2000, "On the estimation and inference of a
+    cointegrated regression in panel data", Advances in Econometrics 15,
+    179-222.  Downloadable at: 
+    http://faculty.maxwell.syr.edu/cdkao/working/w.html.
+<p>
+<p>
+<p>
+<b><u>Author</u></b>
+<p>
+    Diallo Ibrahima Amadou, zavren@gmail.com
+<p>
+<p>
+<p>
+<b><u>Also see</u></b>
+<p>
+    Online:  help for <b>xtpmg</b> (if installed), <b>xtwest</b> (if installed), <b>xtmg</b> (if
+             installed), <b>mata</b>, <b>ltimbimata</b>
+</pre>

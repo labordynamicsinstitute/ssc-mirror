@@ -1,0 +1,48 @@
+<pre>
+<b>help xripred</b>                                                    Patrick Royston
+-------------------------------------------------------------------------------
+<p>
+<b><u>Prediction following reference interval estimation</u></b>
+<p>
+<p>
+<b><u>Syntax</u></b>
+<p>
+        <b>xripred</b> [<b>,</b> <b><u>l</u></b><b>n</b> <b><u>a</u></b><b>dj(</b><i>varname #</i> [<i>varname #</i> ... ]<b>)</b> ]
+<p>
+<p>
+<b><u>Description</u></b>
+<p>
+    <b>xripred</b> calculates the survival, density and hazard functions according
+    to the most recently-fitted xriml model.
+<p>
+    <b>xripred</b> saves results three new variables: <b>surv_ml</b>, <b>dens_ml</b> and <b>haz_ml</b>.
+<p>
+<p>
+<b><u>Options</u></b>
+<p>
+    <b>noln</b> prevents adjustment of the estimated density and hazard functions
+        from the log time scale to the original time scale. You will usually
+        want adjustment to be done, to make the estimates compatible with
+        those from the usual non-parametric approach.
+<p>
+    <b>adj(</b><i>varname #</i>...<b>)</b> adjusts the estimates to value(s) <i>#</i> ... of predictor(s)
+        varname... . <b>xripred</b> silently identifies which part(s) of the model
+        include varname as a predictor. By default, estimates are calculated
+        at the <b>_cons</b> parameter of each curve.
+<p>
+<p>
+<b><u>Examples</u></b>
+<p>
+    <b>. xriml lnt, covar(m:x1 x2, s:x1) dist(en)</b>
+<p>
+    <b>. xripred</b>
+<p>
+    <b>. xripred, adj(x1 1 x2 2)</b>
+<p>
+<p>
+<b><u>Also see</u></b>
+<p>
+    Manual:  <b>[R] fracpoly</b>
+<p>
+    Online:  xriml
+</pre>

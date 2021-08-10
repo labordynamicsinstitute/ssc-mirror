@@ -1,0 +1,184 @@
+<pre>
+<b>help msdthaz</b>
+-------------------------------------------------------------------------------
+<p>
+<p>
+<b><u>Title</u></b>
+<p>
+    <b>msdthaz</b> -- Multiply-specified discrete-time event history analysis
+<p>
+<p>
+<b><u>Syntax</u></b>
+<p>
+        <b>msdthaz</b> <i>using filename</i> [<b>,</b> <i>options</i>]
+<p>
+    <i>options</i>                       Description
+    -------------------------------------------------------------------------
+    Model
+      <b><u>tp</u></b><b>ar(</b><i>#</i><b>)</b>                     select alternative parameterizations of
+                                    time
+      <b><u>l</u></b><b>ink(</b><i>linkname</i><b>)</b>              link function; default is logit hazard
+<p>
+    SE/Robust
+      <b><u>clus</u></b><b>ter(</b><i>varname</i><b>)</b>            adjust standard errors for intragroup
+                                    correlation
+<p>
+    Reporting
+      <b><u>base</u></b><b>line</b>                    include baseline estimates
+      <b><u>m</u></b><b>odel</b>                       output model estimate
+      <b>level(</b><i>#</i><b>)</b>                    set confidence level; default is <b>level(95)</b>
+<p>
+    Graph options
+      <b><u>gr</u></b><b>aph(</b><i>#</i><b>)</b>                    conditional hazard, survival, or cumulative
+                                    incidence curves
+<p>
+    Miscellaneous
+      <b>copyleft</b>                    display license information
+    -------------------------------------------------------------------------
+<p>
+<a name="linkname"></a>    <i>linkname</i>                 Description
+    -------------------------------------------------------------------------
+    <b>logit</b>                    logit hazard
+    <b>probit</b>                   probit hazard
+    <b>cloglog</b>                  complimentary log log hazard
+    -------------------------------------------------------------------------
+<p>
+    <b>fweights</b>, <b>iweights</b>, and <b>pweights</b> are allowed; see weight.
+<p>
+<p>
+<b><u>Description</u></b>
+<p>
+    <b>msdthaz</b> uses dthaz to perform discrete time analyses with
+    multiply-specified models, returning the matrix e(MSHazard) that contains
+    conditional hazard and survival probabilities for all specifications of a
+    given model. The model is estimated once, and probabilities for different
+    specifications of that model are calculated thereafter. A strength of
+    <b>msdthaz</b> is that multiple conditional hazard or survival curves may be
+    overlaid on the same graph.
+<p>
+    The required <i>using filename</i> statement directs the program to an
+    arbitrarily named ASCII text file containing the predictor variable names
+    and specification values desired by the user. The first line of this file
+    must contain the predictor variable names, separated by spaces. Each line
+    thereafter contains exactly one set of comma or space separated specified
+    values for these variables. In this way the effects of predictors upon
+    conditional hazard and survival probabilities may be evaluated. The
+    discrete time model to be estimated is specified in the options as per
+    dthaz. Because <b>msdthaz</b> obtains its specified values from the file, the
+    <b>specify()</b> option cannot be used with <b>msdthaz</b>.
+<p>
+    <b>msdthaz</b> accepts the same arguments as dthaz, excepting grtwoway options
+    which the program will not accept.
+<p>
+<p>
+<b><u>Options</u></b>
+<p>
+        +-------+
+    ----+ Model +------------------------------------------------------------
+<p>
+    <b><u>tp</u></b><b>ar(</b><i>#</i><b>)</b> selects alternative parameterizations of time. Such time
+        parameterizations allow a parsimonious smoothing of the effects of
+        time, and are as follows:
+<p>
+     -1 Fully discrete time parameterization. This setting is the default, and
+        reflects unique effects of time for each period.
+<p>
+      0 Constant time parameterization. This model constrains the effect of
+        time to be constant across all periods. The model includes a
+        prespecified constant term, is used in the following models, and
+        permits model nesting.
+<p>
+      N Polynomial time parameterization. This model constrains the effect of
+        time as a polynomial function of order N. If the representation of time
+        is over-specified (i.e. has more predictors than the number of periods
+        in the dataset, or than the number the analysis has been truncated to)
+        then the user will be warned and the parameterization will be reset to
+        its maximum. Lower order models nest within higher order ones. N &gt; 0.
+<p>
+     -2 Root time parameterization. This model constrains the effect of time as
+        a square-root function of period (plus constant plus linear terms)
+<p>
+    <b><u>l</u></b><b>ink(</b><i>linkname</i><b>)</b> switches between different models of the hazard function:
+        logit, probit or complimentary log log hazards. The default is the
+        logit hazard model. See dthaz for more details.
+<p>
+        +-----------+
+    ----+ SE/Robust +--------------------------------------------------------
+<p>
+    <b><u>clus</u></b><b>ter(</b><i>varname</i><b>)</b> adjusts the standard errors of the estimates for
+        person-level (between person) variance in repeated measures designs
+        by specifying the <i>id</i> variable used to construct the person-period
+        dataset.
+<p>
+        +-----------+
+    ----+ Reporting +--------------------------------------------------------
+<p>
+    <b><u>base</u></b><b>line</b> includes baseline (i.e. unconditional) hazard and survival
+        probabilities and graphs in the output.
+<p>
+    <b><u>m</u></b><b>odel</b> displays the estimated model in the output.
+<p>
+    <b>level(</b><i>#</i><b>)</b>; see <b>[R] estimation options</b>.
+<p>
+        +---------------+
+    ----+ Graph options +----------------------------------------------------
+<p>
+    <b><u>gr</u></b><b>aph(</b><i>#</i><b>)</b> graphs conditional hazard probabilities (1), survival
+        probabilities (2), both (3) or (4) cumulative incidence probabilities
+        (i.e. 1 - survival) against discrete time periods.  Graphing options
+        available to graph_twoway are available. The default setting is no
+        graph. Different colors are automatically assigned to each line.
+<p>
+        +---------------+
+    ----+ Miscellaneous +----------------------------------------------------
+<p>
+    <b>copyleft</b> <b>msdthaz</b> is free software, licensed under the GPL. The <b>copyleft</b>
+        option displays the copying permission statement for <b>msdthaz</b>. The
+        full license can be obtained by typing:
+<p>
+            . net describe dthaz, from (http://www.doyenne.com/stata)
+<p>
+    and clicking on the click here to get link for the ancillary file.
+<p>
+<p>
+<b><u>Examples</u></b>
+<p>
+The following example illustrates the specification plaint text file format, 
+with the first line containing variable names separated by spaces, and 
+subsequent four lines containing bespoke values for each variable:
+<p>
+    female age
+    0 20
+    1 20
+    0 30
+    1 30
+<p>
+    ---------------------------------------------------------------------------
+    . msdthaz using ":Path:myfile"
+<p>
+    ---------------------------------------------------------------------------
+    . msdthaz using ":Path:myfile" truncate(6)
+<p>
+    ---------------------------------------------------------------------------
+    . msdthaz using ":Path:myfile" link(cloglog) model tp(3)
+    ---------------------------------------------------------------------------
+<p>
+<b><u>Author</u></b>
+<p>
+Alexis Dinno
+Portland State University
+alexis dot dinno at pdx dot edu
+<p>
+<p>
+<b><u>Saved results</u></b>
+<p>
+    <b>msdthaz</b> returns <b>e(MSHazard)</b> with period and each of the hazard and
+    survival probabilities for each specified prediction (including baseline
+    if that option is set).
+<p>
+<p>
+<b><u>Also See</u></b>
+<p>
+      Help: dthaz, prsnperd
+<p>
+</pre>

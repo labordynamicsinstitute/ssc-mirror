@@ -1,0 +1,116 @@
+<pre>
+<b>help isa_search</b>
+-------------------------------------------------------------------------------
+<p>
+<b><u>Title</u></b>
+<p>
+        <b>isa_search</b> --
+                    Wrapper Program for -isa- (Imbens' Sensitivity Analysis)
+<p>
+<p>
+<b><u>Syntax</u></b>
+<p>
+        <b>isa_search</b> <i>depvar</i> <i>treatmentvar</i> [<i>indepvars</i>] [<i>if</i>] [<i>in</i>] <b>,</b> <b>tau(</b><i>real</i><b>)</b> <i>or</i>
+               <b>tstat(</b><i>real</i><b>)</b> [<i>options</i>]
+<p>
+    <i>options</i>                     Description
+    -------------------------------------------------------------------------
+    Model
+    * <b>tau(</b><i>real</i><b>)</b>                 the target size of the coefficient of the
+                                  treatment variable.
+    * <b>tstat(</b><i>real</i><b>)</b>               the target size of the t-value of the
+                                  treatment variable.
+      <b><u>maxa</u></b><b>lpha(</b><i>real</i><b>)</b>            the maximum value of alpha in the search;
+                                  default is<b> maxalpha(10)</b>
+      <b><u>mina</u></b><b>lpha(</b><i>real</i><b>)</b>            the minimum value of alpha in the search;
+                                  default is<b> minalpha(0)</b>
+      <b><u>maxd</u></b><b>elta(</b><i>real</i><b>)</b>            the maximum value of delta in the search;
+                                  default is<b> maxdelta(5)</b>
+      <b><u>mind</u></b><b>elta(</b><i>real</i><b>)</b>            the minimum value of delta in the search;
+                                  default is<b> mindelta(0)</b>
+      <b><u>incr</u></b><b>ement(</b><i>real</i><b>)</b>           the increment of the size of alpha and delta
+                                  for the next iteration; default is
+                                  <b>increment(.5)</b>
+<p>
+    SE/Robust
+      <b>vce(</b><i>vcetype</i><b>)</b>              <i>vcetype</i> may be <b>oim</b>, <b><u>r</u></b><b>obust</b>, <b><u>cl</u></b><b>uster</b> <i>clustvar</i>,
+                                  or <b>opg</b>
+    -------------------------------------------------------------------------
+    * Either <b>tau(</b><i>real</i><b>)</b> or <b>tstat(</b><i>real</i><b>)</b> is required.
+    * The value of <b>tau(</b><i>real</i><b>)</b> or <b>tstat(</b><i>real</i><b>)</b> must be positive and smaller than
+      the original treatment effect.
+    At least one <i>indepvars</i> is required.
+    <i>treatmentvar</i> must be binary.
+<p>
+<p>
+<b><u>Description</u></b>
+<p>
+    <b>isa_search</b> is a wrapper program of -isa- Imbens' (2003) Sensitivity
+    Analysis.  This program should be used when researchers do not have any
+    idea about how to set <b>minalpha</b>, <b>maxalpha</b>, <b>mindelta</b> and <b>maxdelta</b> in -<b>isa</b>-.
+    The program automatically check where in a given region a contour line
+    exists.  Once the program ends, it will generate the diagram that
+    consists of + (in blue), triangle (in red), and dot (in black).  The
+    contour line should exist somewhere between + (in blue) and triangle (in
+    red) if these symbols do not represent the location of irrelevant
+    contour, which is usually obvious from the figure.  In running <b>isa</b>, a
+    researcher should set the region defined by <b>minalpha</b>, <b>maxalpha</b>, <b>mindelta</b>
+    and <b>maxdelta</b> in the following way.  First, the region should be defined
+    as small as possible as long as it produces a good contour.  Second, the
+    region should not include the areas that produce the irrelevant contours.
+    Please read the quick guide for the further detail (Click here.)
+<p>
+<p>
+<b><u>Example</u></b>
+<p>
+    . sysuse nlsw88
+    . xi i.race
+    . rename _Irace_2 black
+    . rename _Irace_3 other
+    . xi i.industry
+    . rename _Iindustry_5 mnfctr
+    . isa_search wage union age black other grade married south c_city
+        mnfctr, tau(.314)
+<p>
+    If the user wants to know the more detailed results, set <b><u>incr</u></b><b>ement(</b><i>real</i><b>)</b>
+    at the value smaller than .5.
+<p>
+    . isa_search wage union age black other grade married south c_city
+        mnfctr, tau(.314) incr(.25)
+<p>
+<p>
+<b><u>Saved results</u></b>
+<p>
+    <b>isa_search</b> saves the following variables:
+<p>
+<p>
+      <b>isas_tau</b>            the treatment effect when alpha = isas_alpha[_n]
+                            and delta = isas_delta[_n].
+      <b>isas_tstat</b>          the t-statistics of the treatment effect when alpha
+                            = isas_alpha[_n] and delta = isas_delta[_n].
+      <b>isas_converged</b>      identifier of whether the estimation achieved
+                            convergence or not
+      <b>isas_alpha</b>          the value of alpha when quantity of interest is
+                            estimated.
+      <b>isas_delta</b>          the value of delta when quantity of interest is
+                            estimated.
+      <b>isas_plus</b>           indicator that the coordinate(isas_alpha[_n],
+                            isas_delta[_n]) is located marginally below the
+                            contour.
+      <b>isas_minus</b>          indicator that the coordinate(isas_alpha[_n],
+                            isas_delta[_n]) is located marginally above the
+                            contour.
+<p>
+<p>
+<b><u>Reference</u></b>
+<p>
+    Here is the link for the quick guide by the author of the program.
+<p>
+    If you use this program, please cite:
+<p>
+    Imbens, Guido W. 2003. "Sensitivity to Exogeneity Assumptions in Program
+    Evaluation." <i>The American Economic Review</i> 93(2):126-132.
+<p>
+    Harada, Masataka "Generalized Sensitivity Analysis." <i>Working paper</i>.
+<p>
+</pre>

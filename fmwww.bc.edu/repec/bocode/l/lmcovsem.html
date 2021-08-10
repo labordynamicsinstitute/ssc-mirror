@@ -1,0 +1,176 @@
+<pre>
+-------------------------------------------------------------------------------
+<b>help: </b><b>lmcovsem</b>                                                        <b>dialog:</b> <b>l</b>
+<b>&gt; mcovsem</b>
+-------------------------------------------------------------------------------
+<p>
+<b>        </b>+-------+
+<b>    </b>----+<b> Title </b>+------------------------------------------------------------
+<p>
+    <b>lmcovsem: Breusch-Pagan LM Diagonal Covariance Matrix Test after (SEM)</b>
+<p>
+<a name="00"></a><b>        </b>+-------------------+
+<b>    </b>----+<b> Table of Contents </b>+------------------------------------------------
+<p>
+     <b>Syntax</b>
+     <b>Description</b>
+     <b>Saved Results</b>
+     <b>References</b>
+<p>
+ *** <b>Examples</b>
+<p>
+     <b>Author</b>
+<p>
+<a name="01"></a><b>        </b>+--------+
+<b>    </b>----+<b> Syntax </b>+-----------------------------------------------------------
+<p>
+          <b>lmcovsem</b>
+<p>
+<a name="02"></a><b>        </b>+-------------+
+<b>    </b>----+<b> Description </b>+------------------------------------------------------
+  - (SEM) Structural Equation Modeling Regressions <b>sem</b> for system of
+  simultaneous equations.
+   - SEM Estimations assume:
+ 
+    1- Independence of the errors in each eqution or no correlations
+       between different periods in the same equation.
+ 
+    2- no correlations between the errors for any of two equtions
+       between two different periods, this is called <b>"Intertemporal</b>
+       <b>Correlation"</b>.
+ 
+    3- correlations may be exist between different two equations, but at
+       the same period, and this is called <b>"Contemporaneous</b>
+       <b>Correlation"</b>.
+ 
+    4- SEM can be applied when there is correlations between different
+       two equations at the same period, or if the independent variables
+       are differnt from equation to equation.
+ 
+    4- If <b>"Contemporaneous Correlation"</b> does not exist, ordinary least
+       squares (OLS) can be applied separately to each equation, the
+       results are fully efficient and there is no need to estimate SEM.
+ 
+    Breusch-Pagan LM can test whether contemporaneous diagonal covariance
+    matrix is 0. (Independence of the Errors), or correlated if at least
+    one covariance is nonzero.
+ 
+    Ho: <b>no Contemporaneous Correlation</b>: Sig12 = Sig13 = Sig23 = ... = 0.
+ 
+    Ha:<b>  Contemporaneous Correlation</b>: at least one Covariance is nonzero.
+ 
+<p>
+<a name="03"></a><b>        </b>+---------------+
+<b>    </b>----+<b> Saved Results </b>+----------------------------------------------------
+<p>
+  <b>lmcovsem</b> saves the following in <b>r()</b>:
+<p>
+   <b>r(lmcov)</b>        Lagrange Multiplier LM Test
+   <b>r(lmcovp)</b>       Lagrange Multiplier LM Test P-Value
+   <b>r(lmcovdf)</b>      Chi2 Degrees of Freedom
+<p>
+<a name="04"></a><b>        </b>+------------+
+<b>    </b>----+<b> References </b>+-------------------------------------------------------
+<p>
+    Judge, Georege, R. Carter Hill, William . E. Griffiths, Helmut Lutkepohl,
+        &amp; Tsoung-Chao Lee (1988)<b> "Introduction To The Theory And Practice Of</b>
+        <b>Econometrics",</b> <i>2nd ed., John Wiley &amp; Sons, Inc., New York, USA</i>;
+        456-461.
+<p>
+    Judge, Georege, W. E. Griffiths, R. Carter Hill, Helmut Lutkepohl, &amp;
+        Tsoung-Chao Lee(1985)<b> "The Theory and Practice of Econometrics",</b> <i>2nd</i>
+        <i>ed., John Wiley &amp; Sons, Inc., New York, USA</i>.
+<p>
+<a name="05"></a><b>        </b>+----------+
+<b>    </b>----+<b> Examples </b>+---------------------------------------------------------
+<p>
+ in this example FIML will be used as follows:
+<p>
+        clear all
+<p>
+        sysuse lmcovsem.dta , clear
+<p>
+        sem (y1 &lt;- y2 x1 x2) (y2 &lt;- y1 x3 x4), cov(e.y1*e.y2)
+<p>
+        lmcovsem
+<p>
+        return list
+<p>
+ * If you want to use dialog box: Press OK to compute lmcovsem
+<p>
+        db lmcovsem
+<p>
+<p>
+. clear all
+. sysuse lmcovsem.dta , clear
+. sem (y1 &lt;- y2 x1 x2) (y2 &lt;- y1 x3 x4), cov(e.y1*e.y2)
+<p>
+Structural equation model                       Number of obs      =        17
+Estimation method  = ml
+Log likelihood     = -363.34588
+------------------------------------------------------------------------------
+             |                 OIM
+             |      Coef.   Std. Err.      z    P&gt;|z|     [95% Conf. Interval]
+-------------+----------------------------------------------------------------
+Structural   |
+  y1 &lt;-      |
+          y2 |   .2425937   .2106232     1.15   0.249    -.1702201    .6554075
+          x1 |   .2568409    .462485     0.56   0.579     -.649613    1.163295
+          x2 |  -1.037016   .3154059    -3.29   0.001      -1.6552   -.4188317
+       _cons |   147.0826    54.4491     2.70   0.007     40.36431    253.8009
+  -----------+----------------------------------------------------------------
+  y2 &lt;-      |
+          y1 |  -.6282929   .6148239    -1.02   0.307    -1.833326    .5767398
+          x3 |  -.5226661   .3235637    -1.62   0.106    -1.156839    .1115071
+          x4 |     3.4208   1.440664     2.37   0.018     .5971513    6.244449
+       _cons |   62.44495   42.36071     1.47   0.140    -20.58052    145.4704
+-------------+----------------------------------------------------------------
+Variance     |
+        e.y1 |   80.17577   28.99122                      39.46865    162.8673
+        e.y2 |   142.4478   80.80501                      46.86006    433.0208
+-------------+----------------------------------------------------------------
+Covariance   |
+  e.y1       |
+        e.y2 |   25.62619   53.75243     0.48   0.634    -79.72665     130.979
+------------------------------------------------------------------------------
+LR test of model vs. saturated: chi2(2)   =      0.12, Prob &gt; chi2 = 0.9408
+<p>
+. lmcovsem
+==============================================================================
+* Breusch-Pagan LM Diagonal Covariance Matrix Test: SEM - Method(ml) 
+==============================================================================
+    Ho: Diagonal Disturbance Covariance Matrix (Independent Equations)
+    Ho: Run OLS  -  Ha: Run SEM
+<p>
+    Lagrange Multiplier Test  =    0.97750
+    Degrees of Freedom        =        1.0
+    P-Value &gt; Chi2(1)         =    0.32282
+==============================================================================
+<p>
+<a name="06"></a><b>        </b>+--------+
+<b>    </b>----+<b> Author </b>+-----------------------------------------------------------
+<p>
+  <b>Emad Abd Elmessih Shehata</b>
+  <b>Assistant Professor</b>
+  <b>Agricultural Research Center - Agricultural Economics Research Institute - Eg</b>
+<b>&gt; ypt</b>
+  <b>Email:   </b>emadstat@hotmail.com
+  <b>WebPage:                </b>http://emadstat.110mb.com/stata.htm
+  <b>WebPage at IDEAS:       </b>http://ideas.repec.org/f/psh494.html
+  <b>WebPage at EconPapers:  </b>http://econpapers.repec.org/RAS/psh494.htm
+<p>
+<b>        </b>+-------------------+
+<b>    </b>----+<b> lmcovsem Citation </b>+------------------------------------------------
+<p>
+    <b>Shehata, Emad Abd Elmessih (2012)</b>
+    <b>LMCOVSEM: "Stata Module to Compute Breusch-Pagan Lagrange Multiplier</b>
+        <b>Diagonal Covariance Matrix Test after Structural Equation Modeling</b>
+        <b>Regressions (SEM) Regressions"</b>
+<p>
+<b><u>Online Help:</u></b>
+<p>
+  <b>lmasem</b>, <b>lmhsem</b>, <b>lmnsem</b>, <b>lmcovsem</b>, <b>r2sem</b>,
+  <b>lmareg3</b>, <b>lmhreg3</b>, <b>lmnreg3</b>, <b>lmcovreg3</b>, <b>r2reg3</b>. <b>(</b><i>if installed</i><b>)</b>.
+<p>
+<p>
+</pre>

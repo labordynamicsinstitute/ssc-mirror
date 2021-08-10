@@ -1,0 +1,135 @@
+<pre>
+-------------------------------------------------------------------------------
+help for <b>factref</b>                                                 (Roger Newson)
+-------------------------------------------------------------------------------
+<p>
+<p>
+<b><u>Insert new observations with reference values for factors</u></b>
+<p>
+        <b>factref</b> <i>varlist</i> [<b>if</b> <i>exp</i>] [<b>in</b> <i>range</i>] [ <b>,</b> <b>by(</b><i>varlist</i><b>)</b> <b><u>re</u></b><b>find(</b><i>newvarname</i><b>)</b>
+               <b><u>rz</u></b><b>ero(</b><i>varlist</i><b>)</b> <b><u>ru</u></b><b>nity(</b><i>varlist</i><b>)</b> ]
+<p>
+<p>
+<b><u>Description</u></b>
+<p>
+<b>factref</b> is used with factext, descsave, parmby and parmest.  It takes, as
+input, a data set created by parmby or parmest, in which factors have been
+created by descsave and factext. These factors are variables (numeric or
+string) representing categorical variables in the fitted model, represented by
+dummy variables such as those created by xi. <b>factref</b> adds to that data set a
+set of additional observations with reference values for these factors, copied
+from the <b>omit</b> characteristic for each factor.  (The <b>omit</b> characteristic is used
+by the xi command to store the reference value of a categorical variable; see
+<b>[R] xi</b>.) For each factor, <b>factref</b> creates one reference observation if there
+are non-missing values for the factor and there is no by-variable list, or one
+reference observation for each by-group where there are non-missing values of
+the factor if there is a by-variable list.  After the reference observations
+have been added, the user may create a plot or table of confidence intervals
+for factor effects.
+<p>
+<p>
+<b><u>Options</u></b>
+<p>
+<b>by(</b><i>varlist</i><b>)</b> specifies a list of by-variables. <b>factref</b> will create a reference
+    observation for each factor for each by-group containing non-missing values
+    of that factor.
+<p>
+<b>refind(</b><i>newvarname</i><b>)</b> specifies an output variable indicating, in each
+    observation, whether that observation is a reference observation. It
+    contains a missing value if that observation is excluded by the <b>if</b> and/or
+    <b>in</b> statements, a value of 1 if that observation is a reference observation,
+    and a value of 0 otherwise.
+<p>
+<b>rzero(</b><i>varlist</i><b>)</b> specifies a list of existing variables whose values in the
+    reference observations are to be set to 0 (if the variable is numeric) or
+    "0" (if the variable is string).  These variables might represent estimates
+    and confidence limits for difference parameters, eg additive factor effects
+    such as mean differences between factor levels.
+<p>
+<b>runity(</b><i>varlist</i><b>)</b> specifies a list of existing variables whose values in the
+    reference observations are to be set to 1 (if the variable is numeric) or
+    "1" (if the variable is string).  These variables might represent estimates
+    and confidence limits for ratio parameters, eg multiplicative factor
+    effects such as relative risks between factor levels.
+<p>
+<p>
+<b><u>Remarks</u></b>
+<p>
+<b>factref</b> is typically used with factext, which is used with parmby, parmest and 
+descsave to create a data set with one observation per model parameter and data
+on confidence intervals and P-values. <b>factref</b> adds, to such a data set, a set
+of reference observations, one for each factor, or one for each by-group
+containing at least one non-missing value of each factor if the <b>by()</b> option is
+specified. A reference observation for a factor has a value for that factor
+taken from the <b>omit</b> characteristic for that factor. The other variables in a
+reference observation may have values reset to zero or one if the variable is
+listed in the options <b>rzero</b> or <b>runity</b>, respectively. Otherwise, the value of
+any variable in a reference observation, apart from the factors and the
+by-group variables specified in the <b>by()</b> option, is set to missing.  For
+<b>factref</b> to work, the <b>omit</b> characteristic for each factor must be set to the
+reference value for that factor. This can be done by specifying the <b>omit</b>
+characteristic for the factor of the same name in the original data set, and
+then using the <b>char(omit)</b> option with descsave.  (The <b>omit</b> characteristic is
+used by the xi command; see <b>[R] xi</b>.)
+<p>
+<p>
+<b><u>Examples</u></b>
+<p>
+The following example will work with the <b>auto</b> data if parmest, parmby, descsave
+and factext are installed.  A logistic regression is carried out, comparing the
+odds of non-US origin between 3 tertiles of mileage, created by the xtile
+command. The odds ratios (with confidence limits) are plotted against mileage
+tertile. Note that the characteristic <b>mpggp[omit]</b>, used optionally by xi, must
+be specified if <b>factref</b> is to work.
+<p>
+                . xtile mpggp=mpg, nq(3)
+                . char mpggp[omit] 1
+                . tempfile tf0
+                . descsave ,char(omit) do(`"`tf0'"', replace)
+                . parmby "xi: logit foreign i.mpggp,or", label norestore eform
+                    format(estimate min* max* %8.2f p %8.1e)
+                . factext, do(`"`tf0'"')
+                . factref mpggp, ru(estimate min* max*)
+                . list
+                . version 7: graph estimate min95 max95 mpggp, s(O..) c(.II)
+                    xlab(1 2 3) ylab ylin(1)
+<p>
+The following example illustrates the <b>by()</b> option, and will work with the <b>auto</b>
+data if parmest, parmby, descsave and factext are installed.  It will add
+reference observations to the parmby output data set and create a graph of
+confidence intervals. Note that the characteristic <b>rep78[omit]</b>, used optionally
+by xi, must be specified if <b>factref</b> is to work.
+<p>
+                . char rep78[omit] 1
+                . tempfile tf0
+                . descsave, char(omit) do(`"`tf0'"', replace)
+                . parmby "xi:regress mpg i.rep78", label by(foreign) norestore
+                    format(estimate min* max* %8.2f p %8.1e)
+                . factext, do(`"`tf0'"')
+                . factref rep78, by(foreign) rz(estimate stderr min* max*)
+                    refind(refcat)
+                . list
+                . version 7: graph estimate min95 max95 rep78, s(O..) c(.II)
+                    by(foreign) xlab ylab ylin(0)
+<p>
+Another example of the use of <b>factref</b> can be found in Newson (2003).
+<p>
+<p>
+<b><u>Author</u></b>
+<p>
+Roger Newson, Imperial College London, UK.  Email: r.newson@imperial.ac.uk
+<p>
+<p>
+<b><u>References</u></b>
+<p>
+Newson, R. 2003. Confidence intervals and <i>p</i>-values for delivery to the end
+user.  <i>The Stata Journal</i> 3(3): 245-269. A pre-publication draft is downloadable
+from Roger Newson's website at http://www.imperial.ac.uk/nhli/r.newson/
+<p>
+<p>
+<b><u>Also see</u></b>
+<p>
+ Manual:  <b>[R] xi</b>, <b>[R] pctile</b>.
+On-line:  help for describe, tabulate, xi, graph
+          help for parmby, parmest, descsave, factext and factmerg if installed
+</pre>

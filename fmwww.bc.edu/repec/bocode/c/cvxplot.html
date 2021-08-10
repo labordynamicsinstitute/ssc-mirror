@@ -1,0 +1,121 @@
+<pre>
+<p>
+-------------------------------------------------------------------------------
+help for <b>cvxplot</b>                          R Allan Reese, University of Hull, UK
+-------------------------------------------------------------------------------
+program cvxplot
+    version 8.0
+    syntax varlist(min=4) [if] [in] ///
+    [ , Hulls(numlist int min=0 max=2 &gt;0) MDPlot(int 8) ///
+        GROup(varname) SELect(numlist int min=0 &gt;0 sort) ///
+        noREPort MEAns SCATopt(string) SAVing(string)]
+<p>
+<b><u>Draws convex hulls on scatterplot, using values returned by cvxhull.</u></b>
+<p>
+                ANY OTHER USE IS ENTIRELY AT THE USER'S RISK
+<p>
+        <b>cvxplot</b> <i>yvar xvar list of hulls</i> [<b>if</b> <i>exp</i>] [<b>in</b> <i>range</i>] [<b>,</b>
+                 <b><u>h</u></b><b>ulls(</b><i>int</i><b>[</b><i>, int</i><b>])</b> <b><u>gro</u></b><b>up(</b><i>varname</i><b>)</b> <b><u>sel</u></b><b>ect(</b><i>numlist</i><b>)</b>
+                 <b><u>norep</u></b><b>ort</b> <b><u>mea</u></b><b>ns</b> <b><u>scat</u></b><b>opt(</b><i>string</i><b>)</b> <b><u>sa</u></b><b>ving(</b><i>graph_filename</i><b>[,</b>
+                 <b>replace])</b>]
+<p>
+<b><u>Description</u></b>
+<p>
+<p>
+<b>cvxplot</b> makes a scatterplot and draw convex hulls of a group of
+points in two-dimensional space. Each hull is defined by two lines
+joining the bottom-left point to the top-right point. The observations
+do not need to be sorted before calling the routine, but the group
+variable <i>must</i> match the one used in setting up the hulls. The coding
+used for each hull is as set up by cvxplot, the "left" and "right"
+vectors containing the "y" values for a line.
+<p>
+Typical use may be to call cvxhull to calculate many hulls and save
+them, then call cvxplot to draw selected hulls for selected groups. 
+<p>
+eg
+        cvxhull yv xv, hulls(50) group(gv) mdp(5) prefix(hn) saving(first5)
+        cvxplot yv xv hn1l-hn50r, hulls(50 10) group(gv) saving(by10)
+        cvxplot yv xv hn1l-hn50r, h(50 2) gro(gv) sav(odds)
+        cvxplot yv xv hn2l-hn50r, h(50 2) gro(gv) sav(evens)
+<p>
+<p>
+<b><u>Parameters</u></b>
+<p>
+There must be a varlist with an even number of names. The first two are
+the y and x; the remainder are pairs of variables for each layer of
+hull. The routine cvxhull saves the hull variables in a block so that
+normally you need refer only to first-last.
+<p>
+The <b>if</b> and <b>in</b> qualifiers act as usual to prescribe a subset 
+of observations to be considered. It is left to the user to decide if a
+selection different from the one in force for cvxhull gives sensible
+results. 
+<p>
+<b><u>Options</u></b>
+<p>
+Main options
+<p>
+<b>hulls(</b><i>numlist</i><b>)</b> one or two integers that define the maximum 
+number of hulls to be plotted from the varlist. Defaults to 1.  
+If the second integer has a value n, only the first and every n'th
+hull <i>from the varlist</i> are plotted.
+   
+Some spurious comments relating to pen styles may be output for hull
+levels when large numbers of hulls are defined.  These appear to be
+harmless.
+<p>
+<b>group(</b><i>varname</i><b>)</b> separate hulls are defined for each set of
+points identified with a different value of <i>varname</i>. The variable
+may be numeric or string.  A table is generated showing the equivalence 
+of numbers with the original values.
+<p>
+<b>select(</b><i>numlist</i><b>)</b> only groups indexed in the list will have
+hulls drawn, but other groups will be plotted as points.  
+Different plots may therefore be obtained by the commands
+<p>
+           cvxplot  y x if group==1
+    and
+           cvxplot  y x, group(group) select(1)
+<p>
+<b>means</b> group means of y-x will be added to the graph as solid triangles.
+<p>
+<b>scatopt(</b><i>string</i><b>)</b> provides a string of options that will
+be applied to the scatterplot. Any scatterplot options can be applied, 
+obvious examples being scatopt(ms(i)) to make the points invisible 
+leaving only the hull outlines, scatopt(mlab(var)) to mark each point 
+with a value.
+    
+{cmd:noreport suppresses the progress messages while the program is running.
+<p>
+<b>saving(</b><i>graph_filename</i><b>[,replace])</b> saves the graph in a .gph file.
+<p>
+<p>
+<b><u>Examples</u></b>
+<p>
+    . <b>cvxplot  yvar xvar _cvxh1l _cvxh1r</b>
+    Draws a default scatterplot with one convex hull containing all
+    the observations using cvxhull's standard names.
+<p>
+    . <b>cvxhull  y x, h(5) group(year) prefix(hl) scat(mlab(month))</b>
+    . <b>cvxplot  y x hl1l-hl5r, group(year) scat(ms(i)) h(5)</b>
+    The first call computes 5 hulls but draws just one for each year and
+    the month identifiers will be enclosed by a boundary.  The second call
+    shows all the hulls but not the points.
+<p>
+    . <b>gen lab = _n if hlpts==1</b>
+    . <b>cvxplot  y x hl1l-hl5r, group(year) prefix(hl) h(2) scat(mlab(lab))</b>
+    Draws two levels of hull but labels only the points on the outer one. 
+<p>
+<b><u>Author</u></b>
+<p>
+         R Allan Reese, University of Hull, UK
+         r.a.reese@hull.ac.uk
+<p>
+<p>
+<b><u>Also see</u></b>
+<p>
+    On-line: help for <b>cvxhull</b> <b>graph</b> <b>scatter</b>
+    Manual: [R] graph, [R] connectlines
+<p>
+</pre>

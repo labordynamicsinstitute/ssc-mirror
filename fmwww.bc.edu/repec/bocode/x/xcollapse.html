@@ -1,0 +1,204 @@
+<pre>
+-------------------------------------------------------------------------------
+help for <b>xcollapse</b>                                               (Roger Newson)
+-------------------------------------------------------------------------------
+<p>
+<b><u>Make dataset of means, medians, and other summary statistics.</u></b>
+<p>
+        <b>xcollapse</b> <i>clist</i> [<i>weight</i>] [<b>if</b> <i>exp</i>] [<b>in</b> <i>range</i>] [<b>,</b>
+                 <b><u>li</u></b><b>st(</b> [<i>varlist</i>] [<b>if</b> <i>exp</i>] [<b>in</b> <i>range</i>] [ , [<i>list_options</i>] ] <b>)</b>
+                 <b><u>sa</u></b><b>ving(</b><i>filename</i>[<b>,replace</b>]<b>)</b>
+                 <b>no</b><b><u>re</u></b><b>store</b> <b>fast</b> <b><u>fl</u></b><b>ist(</b><i>global_macro_name</i><b>)</b>
+                 <b>cw</b> <b>by(</b><i>varlist</i><b>)</b> <b><u>idn</u></b><b>um(</b><i>#</i><b>)</b> <b><u>nidn</u></b><b>um(</b><i>newvarname</i><b>)</b> <b><u>ids</u></b><b>tr(</b><i>string</i><b>)</b>
+                 <b><u>nids</u></b><b>tr(</b><i>newvarname</i><b>)</b>
+                 <b><u>fo</u></b><b>rmat(</b><i>varlist_1 format_1 ... varlist_n format_n</i><b>)</b>
+                 <b>float</b> ]
+<p>
+<p>
+    where <i>clist</i> is a list of statistics and variables, defined as in the
+    online help for <b>collapse</b>.
+<p>
+    <b>aweight</b>s, <b>fweight</b>s, <b>pweight</b>s, and <b>iweight</b>s are allowed.  See help for 
+    <b>collapse</b> for details of how these are handled.
+<p>
+<p>
+<b><u>Description</u></b>
+<p>
+    <b>xcollapse</b> is an extended version of <b>collapse</b>.  It creates an output
+    dataset of means, sums, medians, and other summary statistics.  This
+    output dataset may be listed to the Stata log, or saved to a disk file,
+    or written to the memory (overwriting any pre-existing dataset).
+<p>
+<p>
+<b><u>Options for use with </u></b><b><u>xcollapse</u></b>
+<p>
+    The options are listed in the following 2 groups:
+<p>
+    <b>1.</b> Output-destination options.  (These specify where the output dataset
+      will be written.)
+<p>
+    <b>2.</b> Other options. (These specify what the output dataset will contain.)
+<p>
+<p>
+<b><u>Output-destination options</u></b>
+<p>
+    <b>list(</b><i>varlist</i> [<b>if</b> <i>exp</i>] [<b>in</b> <i>range</i>] [, <i>list_options</i> ] <b>)</b> specifies a list of
+        variables in the output dataset, which will be listed to the Stata
+        log by <b>xcollapse</b>.  The <b>list()</b> option can be used with the <b>format()</b>
+        option (see below) to produce a list of summary statistics with
+        user-specified numbers of decimal places or significant figures.  The
+        user may optionally also specify <b>if</b> or <b>in</b> qualifiers to list subsets
+        of combinations of variable values, or change the display style using
+        a list of <i>list_options</i> allowed as options by the <b>list</b> command.
+<p>
+    <b>saving(</b><i>filename</i>[<b>,replace</b>]<b>)</b> saves the output dataset to a disk file.  If
+        <b>replace</b> is specified, and a file of that name already exists, then
+        the old file is overwritten.
+<p>
+    <b>norestore</b> specifies that the output dataset will be written to the
+        memory, overwriting any pre-existing dataset. This option is
+        automatically set if <b>fast</b> is specified. Otherwise, if <b>norestore</b> is
+        not specified, then the pre-existing dataset is restored in the
+        memory after the execution of <b>xcollapse</b>.
+<p>
+    <b>fast</b> is a stronger version of <b>norestore</b>, intended for use by programmers.
+        It specifies that the pre-existing dataset in the memory will not be
+        restored, even if the user presses <b>Break</b> during the execution of
+        <b>xcollapse</b>.  If <b>norestore</b> is specified and <b>fast</b> is absent, then
+        <b>xcollapse</b> will go to extra work so that it can restore the original
+        data if the user presses <b>Break</b>.
+<p>
+    Note that the user must specify at least one of the four options <b>list()</b>,
+        <b>saving()</b>, <b>norestore</b> and <b>fast</b>. These four options specify whether the
+        output dataset is listed to the Stata log, saved to a disk file, or
+        written to the memory (overwriting any pre-existing dataset). More
+        than one of these options can be specified.
+<p>
+    <b>flist(</b><i>global_macro_name</i><b>)</b> specifies the name of a global macro, containing
+        a filename list (possibly empty). If <b>saving()</b> is also specified, then
+        <b>xcollapse</b> will append the name of the dataset specified in the
+        <b>saving()</b> option to the value of the global macro specified in
+        <b>flist()</b>. This enables the user to build a list of filenames in a
+        global macro, containing the output of a sequence of output datasets.
+        These files may later be concatenated using <b>append</b>, or using <b>dsconcat</b>
+        (downloadable from SSC) if installed.
+<p>
+<p>
+<b><u>Other options</u></b>
+<p>
+    <b>cw</b> specifies casewise deletion.  If not specified, all observations
+        possible are used for each calculated statistic.
+<p>
+    <b>by(</b><i>varlist</i><b>)</b> specifies the groups over which the summary statistics are to
+        be calculated.  If not specified, the resulting dataset will contain
+        one observation.  If specified, <i>varlist</i> may refer to either string or
+        numeric variables.  Note that, if the <b>if</b> expression or the weight
+        expression contains the reserved names <b>_n</b> and <b>_N</b>, then these will be
+        interpreted as the observation sequence number and the number of
+        observations, respectively, within the whole dataset, not within the
+        by-group.
+<p>
+    <b>idnum(</b><i>#</i><b>)</b> specifies an ID number for the output dataset.  It is used to
+        create a numeric variable, with default name <b>idnum</b>, in the output
+        dataset, with that value for all observations.  This is useful if the
+        output dataset is concatenated with other <b>xcollapse</b> output datasets
+        using <b>append</b>, or using <b>dsconcat</b> if installed.
+<p>
+    <b>nidnum(</b><i>newvarname</i><b>)</b> specifies a name for the numeric ID variable evaluated
+        by <b>idnum()</b>. If <b>idnum()</b> is present and <b>nidnum()</b> is absent, then the
+        name of the numeric ID variable is set to <b>idnum</b>.
+<p>
+    <b>idstr(</b><i>string</i><b>)</b> specifies an ID string for the output dataset.  It is used
+        to create a string variable, with default name <b>idstr</b> in the output
+        dataset, with that value for all observations.  This is useful if the
+        output dataset is concatenated with other <b>xcollapse</b> output datasets
+        using <b>append</b>, or using <b>dsconcat</b> if installed.
+<p>
+    <b>nidstr(</b><i>newvarname</i><b>)</b> specifies a name for the string ID variable evaluated
+        by <b>idstr()</b>. If <b>idstr()</b> is present and <b>nidstr()</b> is absent, then the
+        name of the string ID variable is set to <b>idstr</b>.
+<p>
+    <b>format(</b><i>varlist_1 format_1 ... varlist_n format_n</i><b>)</b> specifies a list of
+        pairs of variable lists and display formats.  The formats will be
+        allocated to the variables in the output dataset specified by the
+        corresponding <i>varlist_i</i> lists.  If the <b>format()</b> option is absent,
+        then the percent variables have the format <b>%8.2f</b>, the frequency
+        variables have the format <b>%12.0g</b>, and the other variables have the
+        same formats as the variables of the same names in the input dataset.
+<p>
+    <b>float</b> specifies that numeric output variables in the output dataset,
+        specified by the <i>clist</i>, will not have storage type <b>double</b>, but will
+        be recast to storage type <b>float</b>, even if this causes loss of
+        precision.  Whether or not <b>float</b> is specified, numeric output
+        variables in the output dataset, specified by the <i>clist</i>, will be
+        compressed to the lowest storage type possible without loss of
+        precision.
+<p>
+<p>
+<b><u>Examples</u></b>
+<p>
+    The following examples use the <b>list()</b> option to list the output dataset
+    to the Stata log.  After these examples are executed, there is no new
+    dataset either in the memory or on disk.
+<p>
+    <b>. xcollapse mpg weight price, list(,)</b>
+<p>
+    <b>. xcollapse (median) mpg weight price, list(,)</b>
+<p>
+    <b>. xcollapse mpg weight price, by(foreign rep78) list(,clean)</b>
+<p>
+    <b>. xcollapse (mean) mpg weight price, by(foreign rep78) format(mpg weight</b>
+        <b>price %8.2f) list(*, sepby(foreign))</b>
+<p>
+    <b>. xcollapse (count) nmpg=mpg nweight=weight nprice=price (median)</b>
+        <b>medmpg=mpg medweight=weight medprice=price, by(foreign rep78)</b>
+        <b>format(med* %8.2f) list(foreign rep78 *mpg *weight *price,</b>
+        <b>sepby(foreign) abbrev(16))</b>
+<p>
+    The following examples use the <b>norestore</b> option to create an output
+    dataset in the memory, overwriting any pre-existing dataset.
+<p>
+    <b>. xcollapse mpg weight price, norestore</b>
+<p>
+    <b>. xcollapse (median) mpg weight price, norestore</b>
+<p>
+    <b>. xcollapse mpg weight price, by(foreign rep78) norestore</b>
+<p>
+    <b>. xcollapse (mean) mpg weight price, by(foreign rep78) format(mpg weight</b>
+        <b>price %8.2f) norestore</b>
+<p>
+    <b>. xcollapse (count) nmpg=mpg nweight=weight nprice=price (median)</b>
+        <b>medmpg=mpg medweight=weight medprice=price, by(foreign rep78)</b>
+        <b>format(med* %8.2f) norestore</b>
+<p>
+    The following examples use the <b>saving()</b> option to create an output
+    dataset in a disk file.
+<p>
+    <b>. xcollapse mpg weight price, saving(mysumm1)</b>
+<p>
+    <b>. xcollapse (median) mpg weight price, saving(mysumm2,replace)</b>
+<p>
+    <b>. xcollapse mpg weight price, by(foreign rep78) saving(mysumm3,replace)</b>
+<p>
+    <b>. xcollapse (mean) mpg weight price, by(foreign rep78) format(mpg weight</b>
+        <b>price %8.2f) saving(mysumm4,replace)</b>
+<p>
+    <b>. xcollapse (count) nmpg=mpg nweight=weight nprice=price (median)</b>
+        <b>medmpg=mpg medweight=weight medprice=price, by(foreign rep78)</b>
+        <b>format(med* %8.2f) saving(mysumm5,replace)</b>
+<p>
+<p>
+<b><u>Author</u></b>
+<p>
+Roger Newson, National Heart and Lung Institute, Imperial College London, UK.
+Email: r.newson@imperial.ac.uk
+<p>
+<p>
+<b><u>Also see</u></b>
+<p>
+    Manual:  <b>[R] collapse</b>, <b>[R] contract</b>
+<p>
+    Online:  help for <b>collapse</b>, <b>contract</b>, <b>egen</b>, <b>statsby</b>, <b>summarize</b>, <b>tabdisp</b>, 
+             <b>table</b>
+             help for <b>xcontract</b>, <b>dsconcat</b> if installed
+</pre>

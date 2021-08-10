@@ -1,0 +1,68 @@
+<pre>
+help <b>autorename</b>
+-------------------------------------------------------------------------------
+<b><u>Title</u></b>
+<p>
+    <b>autorename</b> -- Rename variables according to a row in the dataset.
+<p>
+<b><u>Syntax</u></b>
+<p>
+        <b>autorename</b> [<i>varlist</i> , <b>row(</b><i>#</i><b>)</b> <b>nodrop</b> <b>nolower</b> <b>vseparator(</b><i>string</i><b>)</b>
+              <b>varlabels</b>]
+<p>
+<p>
+<b><u>Description</u></b>
+<p>
+    <b>autorename</b> renames variables according to a specified row in the dataset.
+    This can be useful when reading text files into Stata.  For example, you
+    may need to <b>insheet</b> and manipulate a text file before the variable names
+    are accessible.  <b>autorename</b> takes care to make variable names conform to
+    Stata's naming scheme.  For example, it eliminates characters like '*'
+    and '&amp;' before renaming.
+<p>
+<p>
+<b><u>Options</u></b>
+<p>
+<p>
+    <b>row(</b><i>#</i><b>)</b> specifies the row number containing the new variable names. The
+        default is to use the first row.
+<p>
+    <b>nodrop</b> instructs Stata not to drop the row of data containing the new
+        variable names.
+<p>
+    <b>nolower</b> instructs Stata not to lowercase the renamed variables.
+<p>
+    <b>vseparator(</b><i>string</i><b>)</b> specifies what string should be used to replace spaces
+        in variable names (since Stata prohibits spaces in variable names).
+        If <b>vseparator()</b> is not specified then <b>vseparator(</b>""<b>)</b> is assumed (so
+        that words will be concatenated together).
+<p>
+    <b>varlabels</b> labels the variables with their new variable names in addition
+        to renaming them.  No characters are parsed out of the variable
+        label.
+<p>
+<p>
+<b><u>Example</u></b>
+<p>
+<p>
+       <b>. </b>sysuse auto.dta, clear
+<p>
+       <b>. </b>tempfile t
+<p>
+       <b>. </b>outsheet using "`t'", replace
+<p>
+       <b>. </b>insheet using "`t'", nonames clear
+<p>
+       <b>. </b>autorename
+<p>
+<p>
+<b><u>Author</u></b>
+<p>
+    Julian Reif, University of Chicago
+<p>
+    jreif@uchicago.edu
+<p>
+<p>
+<b><u>Also see</u></b>
+<p>
+</pre>

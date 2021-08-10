@@ -1,0 +1,160 @@
+<pre>
+-------------------------------------------------------------------------------
+help for <b>mcmcreg</b>
+-------------------------------------------------------------------------------
+<p>
+<b><u>Syntax</u></b>
+<p>
+        <b>mcmcreg</b> <i>depvar</i> [<i>indepvars</i>] [<i>if</i>] [<i>in</i>] [<i>weight</i>] <b>,</b> <b>saving(</b><i>filename</i><b>)</b>
+            <b>d0(</b><i>#</i><b>)</b> [<i>options</i>]
+<p>
+    <i>options</i>               Description
+    -------------------------------------------------------------------------
+    Model
+      <b>d0(</b><i>#</i><b>)</b>               prior variance of regression error
+      <b>noconstant</b>          suppress constant term
+<p>
+    Results
+      <b>saving(</b><i>filename</i><b>)</b>    filename where results should be stored
+      <b>replace</b>             overwrite existing <i>filename</i>
+<p>
+    Markov chain
+      <b>iterate(</b><i>#</i><b>)</b>          number of iterations in chain; default is
+                            <b>iterate(100)</b>
+      <b>seed(</b><i>#</i><b>)</b>             random number generator seed; default is
+                            <b>seed(12345)</b>
+      <b>nolog</b>               suppress iteration log
+    -------------------------------------------------------------------------
+<p>
+    <b>aweight</b>s and <b>fweight</b>s are allowed; see weight.
+<p>
+<b><u>Description</u></b>
+<p>
+    <b>mcmcreg</b> uses Markov chain Monte Carlo (MCMC) to sample from the posterior
+    distribution of a normal linear regression model of <i>depvar</i> on <i>indepvars</i>.
+<p>
+    <b>mcmcreg</b> produces a file of draws from the posterior distribution of the
+    model parameters.  Each observation in the file corresponds to an
+    iteration of the sampler; each variable represents a different scalar
+    parameter.  These variables are named as follows:
+<p>
+      <i>beta_*</i>               Coefficient on independent variable *.
+      <i>beta__cons</i>           Intercept (omitted if <b>noconstant</b> is specified).
+      <i>sigma2</i>               Variance of regression error.
+<p>
+    The variable <i>iter</i> in the output file keeps track of iterations; <i>iter</i>=0 is
+    the initial condition used to start the chain.
+<p>
+<b><u>Options</u></b>
+<p>
+        +-------+
+    ----+ Model +------------------------------------------------------------
+<p>
+    <b>d0(</b><i>#</i><b>)</b> sets the prior variance of the regression errors. Because results
+        are potentially sensitive to this prior, you are required to specify
+        it yourself; there is no default value.
+<p>
+    <b>noconstant</b>; see <b>[R] estimation options</b>. If <b>noconstant</b> is specified, there
+        must be at least one independent variable.
+<p>
+        +---------+
+    ----+ Results +----------------------------------------------------------
+<p>
+    <b>saving(</b><i>filename</i><b>)</b> designates the location where the results should be
+        saved.
+<p>
+    <b>replace</b> specifies that you want to overwrite <i>filename</i> if it already
+        exists.
+<p>
+        +--------------+
+    ----+ Markov chain +-----------------------------------------------------
+<p>
+    <b>iterate(</b><i>#</i><b>)</b> specifies how many iterations the chain should continue for.
+<p>
+    <b>seed(</b><i>#</i><b>)</b> sets the random number generator seed. Random numbers are used to
+        initialize the sampler; thus, multiple independent chains can be
+        obtained by running <b>mcmcreg</b> with different values of <b>seed</b>.
+<p>
+    <b>nolog</b> suppresses printing of an iteration log.
+<p>
+<b><u>Methods</u></b>
+<p>
+    <b>mcmcreg</b> uses the Gibbs sampler. Standard uninformative conjugate priors
+    are used: The prior for the regression coefficients is uninformative,
+    while the prior for the error variance <i>sigma^2</i> is InverseGamma(1/2,
+    <i>d0</i>/2).  See Chib (2001, algorithm 5) for a textbook exposition.
+<p>
+    The sampler is initialized with a guess for <i>sigma^2</i> drawn from
+    InverseGamma((1+<i>df</i>)/2,(<i>d0</i>+<i>SSR</i>)/2), where <i>df</i> is the number of observations
+    (or the sum of weights if you use <b>fweight</b>s) and <i>SSR</i> is the sum of squared
+    residuals from the frequentist least squares regression of <i>depvar</i> on 
+    <i>indepvars</i>.
+<p>
+<a name="examples"></a><b><u>Examples</u></b>
+<p>
+        <b>. sysuse auto</b>
+        <b>. mcmcreg mpg weight foreign, saving(mcmcreg_auto.dta) d0(0.01)</b>
+        <b>. use mcmcreg_auto.dta, clear</b>
+        <b>. list in 1/5</b>
+        <b>. summarize *</b>
+<p>
+    When estimating models by MCMC, it is good practice to check for
+    convergence by running multiple independent chains. <b>mcmcreg</b> will generate
+    different chains when run repeatedly with different values of <b>seed(#)</b>.
+<p>
+        <b>. sysuse auto</b>
+        <b>. tempfile temp</b>
+        <b>. mcmcreg mpg weight foreign, saving(`temp') d0(0.01) seed(12345)</b>
+        <b>. use `temp', clear</b>
+        <b>. gen byte chain=1</b>
+        <b>. save mcmcreg_auto.dta</b>
+        <b>. sysuse auto, clear</b>
+        <b>. mcmcreg mpg weight foreign, saving(`temp') d0(0.01) seed(54321)</b>
+            <b>replace</b>
+        <b>. use `temp', clear</b>
+        <b>. gen byte chain=2</b>
+        <b>. append using mcmcreg_auto.dta</b>
+        <b>. save mcmcreg_auto.dta, replace</b>
+        <b>. by chain, sort: summarize *</b>
+<p>
+    See mcmcconverge, available in the SSC package <b>mcmcstats</b>, for useful
+    statistics for checking convergence once you have run multiple chains.
+<p>
+    It is also good practice to drop early iterations, before convergence was
+    achieved, when describing the posterior distribution.  See mcmcsummarize,
+    available in the SSC package <b>mcmcstats</b>, for a convenient way to describe
+    the posterior distribution.
+<p>
+<b><u>Saved results</u></b>
+<p>
+    <b>mcmcreg</b> saves the following in <b>e()</b>:
+<p>
+    Scalars        
+      <b>e(N)</b>                number of observations
+<p>
+    Macros         
+      <b>e(cmd)</b>              <b>mcmcreg</b>
+      <b>e(cmdline)</b>          command as typed
+      <b>e(depvar)</b>           name of dependent variable
+      <b>e(wtype)</b>            weight type
+      <b>e(wexp)</b>             weight expression
+<p>
+    Functions      
+      <b>e(sample)</b>           marks estimation sample
+<p>
+<p>
+<b><u>Author</u></b>
+<p>
+    Sam Schulhofer-Wohl, Federal Reserve Bank of Minneapolis,
+    sschulh1.work@gmail.com.  The views expressed herein are those of the
+    author and not necessarily those of the Federal Reserve Bank of
+    Minneapolis or the Federal Reserve System.
+<p>
+<b><u>Reference</u></b>
+<p>
+    Chib, Siddhartha, 2001. "Markov Chain Monte Carlo Methods: Computation
+        and Inference." In <i>Handbook of Econometrics</i>, vol. 5, ed. James J.
+        Heckman and Edward Leamer, 3569-649. Amsterdam: Elsevier.
+<p>
+<p>
+</pre>

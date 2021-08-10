@@ -1,0 +1,61 @@
+<pre>
+<b>help mkest</b>
+-------------------------------------------------------------------------------
+<p>
+<b><u>Title</u></b>
+<p>
+    <b>mkest</b> -- Convert variables to estimates matrix
+<p>
+<p>
+<b><u>Syntax</u></b>
+<p>
+        <b>mkest</b> [<i>if</i>] [<i>in</i>], <b>replace b( ) v( ) [depvar( ) cmd( ) obs( )]</b>
+<p>
+<p>
+<b><u>Description</u></b>
+<p>
+    <b>mkest</b> provides a fast and easy way to convert variables into estimates
+    matrices e(b) and e(V).
+<p>
+    <b>mkest</b> thus facilitates exporting of variables into non-Stata format
+    through programs such as <b>est_table</b>, <b>xml_tab</b>, or <b>outreg2</b>.
+<p>
+<p>
+<b><u>Options</u></b>
+<p>
+    <b>replace</b> is required since the estimates may be lost
+<p>
+    <b>b( )</b> one variable to be placed in e(b)
+<p>
+    <b>v( )</b> one variable to be placed in e(V)
+<p>
+    <b>depvar( )</b> specifies depvar name
+<p>
+    <b>cmd( )</b> specifies cmd name
+<p>
+    <b>obs(#)</b> specifies # of observations, N
+<p>
+<p>
+<b><u>Remarks</u></b>
+<p>
+    <b>mkest</b> is based on mkmat.
+<p>
+<b><u>Examples</u></b>
+<p>
+    <b>. sysuse auto, clear</b>
+    <b>. mkest, b(price) v(mpg) replace</b>
+<p>
+    <b>. eret list</b>
+    <b>. mat list e(b)</b>
+<p>
+    <b>. xml_tab ., replace</b>
+    <b>. outreg2 using myfile, replace nonote noaster excel</b>
+<p>
+<p>
+<b><u>Also see</u></b>
+<p>
+    Manual:  <b>[P] matrix mkest</b>
+<p>
+    Online:  <b>matrix</b>
+<p>
+</pre>

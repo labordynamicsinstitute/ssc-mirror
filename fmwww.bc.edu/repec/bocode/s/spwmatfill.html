@@ -1,0 +1,183 @@
+<pre>
+-------------------------------------------------------------------------------
+<b>help for spwmatfill</b> 
+-------------------------------------------------------------------------------
+<p>
+<b><u>Title</u></b>
+<p>
+  <b>spwmatfill --- Assigns first nearest neighbors to observations with no</b>
+        <b>contiguous neighbors.</b>
+<p>
+<a name="contents"></a>        +--------------------+
+    ----+  Table of Contents +-----------------------------------------------
+<p>
+  Syntax
+  General description
+  Description of the options
+  Examples
+  Citation
+  Author information
+-------------------------------------------------------------------------------
+<p>
+<a name="syntax"></a><b><u>Syntax</u></b>
+<p>
+    <b>spwmatfill</b> <i>varlist</i><b>,</b> <b>id(</b><i>varname</i><b>)</b> <b><u>inwn</u></b><b>ame(</b><i>inwght_name</i><b>)</b> <b><u>inwf</u></b><b>rom(</b><i>Mata</i>|<i>Stata</i><b>)</b>
+        <b><u>outwn</u></b><b>ame(</b><i>wght_name</i><b>)</b> [<i>Other_options</i>]
+<p>
+<p>
+    <i>options</i>                           Description
+    -------------------------------------------------------------------------
+    Options
+        
+      <b>id(</b><i>varname</i><b>)</b>                     indicate the name of the identifier
+                                        variable.
+<p>
+      <b><u>inwn</u></b><b>ame(</b><i>inwght_name</i><b>)</b>            indicate the name of the input spatial
+                                        weights matrix; i.e, the contiguity
+                                        spatial weights.
+<p>
+      <b><u>inwfr</u></b><b>om(</b><i>Stata</i>|<i>Mata</i><b>)</b>             indicate the source of the input
+                                        spatial weights matrix.
+<p>
+      <b><u>outwn</u></b><b>ame(</b><i>outwght_name</i><b>)</b>          indicate a name for the output spatial
+                                        weights matrix.
+<p>
+      <b>cart</b>                            use Cartesian coordinates (projected
+                                        latitudes and longitudes).
+<p>
+      <b>r(</b><i>#</i><b>)</b>                            indicate the earth radius value to use
+                                        in case of spherical coordinates,
+                                        default is 6371.009 km.
+<p>
+      <b><u>m</u></b><b>ataf</b>                           save the output spatial weights matrix
+                                        and its eigenvalues to Mata files.
+<p>
+      <b><u>eignv</u></b><b>al(</b><i>eign_name</i><b>)</b>              specify a name for a column vector or a
+                                        file to hold the eigen values.
+<p>
+      <b>eignvar(</b><i>newvar</i><b>)</b>                 specify a variable name to hold the
+                                        eigen values.
+<p>
+      <b><u>row</u></b><b>stand</b>                        row-standardize the spatial weights
+                                        matrix.
+<p>
+      <b>matlab(</b><i>dat_filename</i><b>)</b>            export the weights matrix as a .dat
+                                        (text) file for use in <b>Matlab</b>.
+<p>
+      <b>replace</b>                         overwrite <i>dat_filename</i> if it already
+                                        exists as well as <i>wght_name</i> and
+                                        <i>eig_name</i>
+                                      if <b>mataf</b> is specified and these two matri
+&gt; ces already exit as Mata files.
+<p>
+      <b><u>con</u></b><b>nect</b>                         display connectivity information about
+                                        the spatial weights
+<p>
+<p>
+    -------------------------------------------------------------------------
+<p>
+<a name="description"></a>        +-------------+
+    ----+ Description +------------------------------------------------------
+<p>
+    <b>spwmatfill</b> takes a contiguity-based spatial weights matrix -created in
+    GeoDa- whose some rows consisting of only zero elements represent
+    observations with no contiguous neighbors, assigns to those observations
+    their nearest neighbors as their sole neighbors, and replaces the zero
+    elements corresponding to the nearest neighbors with ones. In order to
+    calculate the first nearest neighbors <b>spwmatfill</b> relies on nearestat
+    which must be installed.
+<p>
+<a name="options"></a>        +------------------+
+    ----+ Required Options +-------------------------------------------------
+<p>
+    <b>id(</b><i>varname</i><b>)</b> specifies the name of the identifier variable. It is
+        paramount that the sort order of this variable values be the same as
+        that of the values of the key variable used to generate the spatial
+        weights in GeoDa.
+<p>
+    <b><u>inwn</u></b><b>ame(</b><i>inwght_name</i><b>)</b> specifies the name of the input spatial weights
+        matrix to be used. This spatial weights matrix, which should <b>not</b> be
+        row-standardized, must have been imported from GeoDa using spwmatrix
+<p>
+    <b><u>inwf</u></b><b>rom(</b>Stata | Mata<b>)</b> indicates whether the input spatial weights exist
+        as Stata matrix loaded in memory or as a Mata file.
+<p>
+    <b><u>outwn</u></b><b>ame(</b><i>outwght_name</i><b>)</b> provides a name for the output spatial weights
+        matrix.
+<p>
+<p>
+<a name="otopt"></a>        +------------------+
+    ----+ Optional Options +-------------------------------------------------
+<p>
+    <b>cart</b> indicates that the latitudes and longitudes supplied in <i>varlist</i> are
+        projected. By default, sperical coordinates (latitudes and longitudes
+        in decimal degrees) are assumed.
+<p>
+    <b>r(</b><i>#</i><b>)</b> indicates the value for the Earth radius or mean radius to be used
+        in case of spherical coordinates. The default is <b>r(</b><i>6371</i>.<i>009</i><b>)</b>.
+<p>
+        Options <b>r(</b><i>#</i><b>)</b> and <b>cart</b> may not be combined. For more on these options,
+        see the help file for nearstat.
+<p>
+    <b><u>m</u></b><b>ataf</b> requests that the output spatial weights matrix and its eigenvalues
+        be saved to permanent Mata files. For more details, see the mataf
+        option of the <b>spwmatrix</b> command.
+<p>
+    <b><u>eignv</u></b><b>al(</b><i>eign_name</i><b>)</b> specifies that eigenvalues of the output spatial
+        weights be written to the <i>N x 1</i> vector or file <i>eign_name</i>.
+<p>
+    <b>eignvar(</b><i>newvar</i><b>)</b> specifies a variable name to hold the eigenvalues.
+<p>
+    <b><u>row</u></b><b>stand</b> requests that the output spatial weights be row-standardized.
+<p>
+    <b>matlab(</b><i>dat_filename</i><b>)</b> specifies that the output spatial weights be written
+        to the text file <i>dat_filename.dat</i> for use in Matlab.
+<p>
+    <b>replace</b> overwrites <i>newvar</i> and <i>dat_filename</i> as well as <i>outwght_name</i> and
+        <i>eign_name</i> if <b>mataf</b> is specified.
+<p>
+    <b>connect</b> requests that connectivity information such as sparseness,
+        average number of neighbors, etc... for the output spatial weights be
+        displayed.
+<p>
+<p>
+<a name="examples"></a>        +---------+
+    ----+ Example +----------------------------------------------------------
+<p>
+    First import a first order contiguity spatial weights matrix created in
+        GeoDa and save it to a Mata file.  Note that it is important not to
+        row-standardize the weights matrix at this time.
+<p>
+        <b>. spwmatrix using C:\data\wcontig.gal, wname(wcontig) mataf</b>
+<p>
+    You now are ready to run <b>spwmatfill</b>
+<p>
+        <b>. spwmatfill latitude longitude, id(obsid_n) inwname(wcontig)</b>
+        <b>inwfrom(Mata) outwname(wcontigfil) rowstand ///</b>
+        <b>cart mataf eignvar(eigncontig) matlab(wcontigfil)</b>
+ 
+<p>
+  -----------------------------------------------------------------------------
+<p>
+<a name="citation"></a><b><u>Citation of </u></b><b><u>spwmatfill</u></b>
+<p>
+Users should please cite as:
+<b>Jeanty, P. Wilner</b>. 2010. spwmatfill: Stata module to assign first nearest neigh
+&gt; bors to observations with no contiguous neighbors.
+<p>
+<p>
+<a name="author"></a><b><u>Author</u></b>
+<p>
+    <b>P. Wilner Jeanty</b>, Dept. of Agricultural, Environmental, and Development
+    Economics,
+    The Ohio State University
+<p>
+    Email to jeanty.1@osu.edu for any comments or suggestions.
+<p>
+<p>
+<b><u>Also see</u></b>
+<p>
+    Online: <b>nearstat</b> and <b>spwmatrix</b> (if installed)
+<p>
+<p>
+</pre>

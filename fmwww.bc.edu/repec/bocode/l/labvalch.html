@@ -1,0 +1,114 @@
+<pre>
+-------------------------------------------------------------------------------
+help for <b>labvalch</b>
+-------------------------------------------------------------------------------
+<p>
+<b><u>Copy and/or delete value labels</u></b>
+<p>
+  <b>labvalch</b> <i>valuelabelname</i> <b>,</b> [ { <b><u>f</u></b><b>rom(</b><i>numlist</i><b>)</b> <b><u>t</u></b><b>o(</b><i>numlist</i><b>)</b> | <b><u>s</u></b><b>wap(</b><i>#1 #2</i><b>)</b> }
+           <b>delete(</b><i>numlist</i><b>)</b> <b><u>l</u></b><b>ist</b> ]
+<p>
+<p>
+<b><u>Description</u></b>
+<p>
+<b>labvalch</b> copies and/or deletes specified value labels from value label
+<i>valuelabelname</i>.
+<p>
+Any <b>label define </b><i>whatever</i><b> , modify</b> command that executes changes is echoed to
+the monitor.
+<p>
+<p>
+<b><u>Remarks</u></b> 
+<p>
+Suppose that variable <b>gender</b> is coded 1 for male and 2 for female by
+<p>
+    . label def gender 1 "male" 2 "female"
+ 
+    . label val gender gender
+<p>
+but we find it convenient to change to 0 and 1:
+<p>
+    . replace gender = gender - 1
+<p>
+We need also to change the value labels. Slow but sure is
+<p>
+    . label def gender 0 "male" 1 "female", modify
+<p>
+It would normally be best to clean up by also deleting the label for 2:
+<p>
+    . label def gender 0 "male" 1 "female" 2 "", modify
+<p>
+An alternative is
+<p>
+    . labvalch gender, f(1 2) t(0 1)
+<p>
+Again, it would normally be best to clean up by also deleting the label for 2:
+<p>
+    . labvalch gender, f(1 2) t(0 1) delete(2)
+<p>
+Suppose we have a set of labels
+<p>
+    . label def rating 1 "poor" 2 "fair" 3 "OK" 4 "good" 5 "excellent"
+<p>
+and we wish to reverse the labelling. This is done by
+<p>
+    . labvalch rating, f(1/5) t(5/1)
+<p>
+<p>
+<b><u>Options</u></b>
+<p>
+<b>from(</b><i>numlist</i><b>)</b> specifies a <i>numlist</i> of integers whose value labels are to be
+    copied. These labels will not be changed unless an element of the <i>numlist</i>
+    also appears in <b>to( )</b>, or unless they are deleted by <b>delete()</b>.  Specifying
+    an integer for which a label does not exist is treated as an error.
+<p>
+<b>to(</b><i>numlist</i><b>)</b> specifies a <i>numlist</i> of integers whose value labels are to be
+    defined. Existing value labels are modified.
+<p>
+All replacements take place independently. Thus <b>from(2 1) to(1 2)</b> would swap
+value labels associated with 1 and 2: the label of 2 becomes that of 1, and
+<i>vice versa</i>. (<b>swap(1 2)</b> would be another way to do this.)
+<p>
+<b>from()</b> and <b>to()</b> must contain the same number of elements after expansion. This
+syntax may not be combined with <b>swap()</b>.
+<p>
+<b>swap(</b><i>#1 #2</i><b>)</b> specifies two integers possessing value labels whose labels are to
+    be swapped. This syntax may not be combined with <b>from() to()</b>.
+<p>
+<b>delete(</b><i>numlist</i><b>)</b> specifies a <i>numlist</i> of integers whose value labels are to be
+    deleted. Note that all deletions take place after copying.  Specifying an
+    integer for which a label does not exist is not treated as an error, but
+    this will be noted.
+<p>
+<b>list</b> invokes <b>label list</b> <i>valuelabelname</i> after the changes produced.
+<p>
+    
+<b><u>Examples</u></b> 
+<p>
+    . labvalch rating, f(1/5) t(5/1)
+<p>
+    . labvalch foo, f(1 1 1 1) t(2/5)
+<p>
+    . foreach label in a b c d e {
+    .        labvalch `label', f(1 2) t(0 1) delete(2)
+    . }
+<p>
+<p>
+<b><u>Author</u></b> 
+<p>
+         Nicholas J. Cox, University of Durham, U.K.
+         n.j.cox@durham.ac.uk
+<p>
+<p>
+<b><u>Acknowledgements</u></b> 
+<p>
+        Fred Wolfe made interesting and helpful comments on 
+        <b>labcopy</b> and <b>labdel</b>, precursors of this command.
+<p>
+<p>
+<b><u>Also see</u></b>
+<p>
+ Manual:  <b> [U] 15.6</b>, <b>[R] label</b>, <b>[R] recode</b> 
+On-line:  help for label; numlist; recode; labedit (if installed)
+<p>
+</pre>

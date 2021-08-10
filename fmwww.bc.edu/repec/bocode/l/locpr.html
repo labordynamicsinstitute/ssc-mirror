@@ -1,0 +1,87 @@
+<pre>
+-------------------------------------------------------------------------------
+help for <b>locpr</b>
+-------------------------------------------------------------------------------
+<p>
+<b><u>Semi-parametrically estimate probability/proportion as a function of one regres</u></b>
+<b><u>&gt; sor</u></b>
+<p>
+<b><u>Syntax</u></b>
+<p>
+      <b>locpr</b> [<i>varlist</i>] [<b>,</b> <b><u>s</u></b><b>tub(</b><i>string</i><b>)</b> <b><u>l</u></b><b>ogit</b> <b><u>c</u></b><b>ombine</b> other options ]
+<p>
+    <i>options</i>               Description
+    -------------------------------------------------------------------------
+      <b><u>s</u></b><b>tub(</b><i>string</i><b>)</b>        save graphed predictions to new variables with
+                            names beginning with <i>string</i>
+      <b>plot(</b><i>string</i><b>)</b>        add <i>string</i> to each graph command (useful for adding
+                            plots)
+      <b><u>l</u></b><b>ogit</b>               estimate a logit model and graph results
+      <b><u>c</u></b><b>ombine</b>             combine logit and semi-parametric estimates in one
+                            graph
+      <b>rarea(</b><i>string</i><b>)</b>       pass options <i>string</i> to rarea command graphing CI
+      <b>loptions(</b><i>string</i><b>)</b>    pass options <i>string</i> to logit prediction graph
+      <b>coptions(</b><i>string</i><b>)</b>    pass options <i>string</i> to combined graph
+      <b><u>n</u></b><b>quantiles(</b><i>integer</i><b>)</b> specifies how many points at which to estimate the
+                            local regression (default is 99)}
+      <b>levels</b>              estimate the local regression at each distinct
+                            value of the regressor}
+    -------------------------------------------------------------------------
+<p>
+<b><u>Description</u></b>
+<p>
+<b>locpr</b> semi-parametrically estimates a probability or proportion as a function
+of one other variable and graphs the result.  Specifically, it estimates a
+local linear regression using lpoly and approximates the endpoints of the
+confidence interval via a logit transformation. The estimates are computed at a
+number of quantiles (99 percentiles by default) of the regressor (or at each
+value of the regressor within the range of those quantiles, if there are fewer
+distinct values than the number of quantiles, unless the <b>levels</b> option requests
+estimation at <i>every</i> distinct value of the regressor) and graphed. The <b>logit</b>
+option offers a direct comparison to parametric logistic regression.  Other
+twoway options may be specified that apply to the graph of local regression
+estimates.
+<p>
+<a name="s_examples"></a><b><u>Examples</u></b>
+-------------------------------------------------------------------------------
+        sysuse nlsw88, clear
+        locpr never_married hours, l c
+-------------------------------------------------------------------------------
+        webuse nhanes2, clear
+        g bmi=weight/height^2*10000
+        lpoly highbp bmi [aw=finalwgt], nosc ci name(lpoly)
+        locpr highbp bmi [pw=finalwgt], l c name(hibp)
+        locpr diabetes bmi [pw=finalwgt], l c name(diab)
+-------------------------------------------------------------------------------
+        webuse psidextract, clear
+        locpr ms lwage, l c name(lwage)
+        locpr ms wks, l c name(wks)
+        locpr ms ed, l c name(ed)
+        *why graphs exclude bottom and top 1% of X by default:
+        *(also add a rug plot and vertical lines at 1%ile and 99%ile)
+        g l="|"
+        g o=-.1
+        _pctile wks, nq(100)
+        loc p1=r(r1)
+        loc p99=r(r99)
+        locpr union wks, yla(0(.5)1) xli(`p1') xli(`p99') plot(|| scatter o
+            wks, ms(none) mlabel(l) mlabp(0))
+        locpr union wks, levels yla(0(.5)1) xli(`p1') xli(`p99') plot(||
+            scatter o wks, ms(none) mlabel(l) mlabp(0))
+<p>
+<p>
+-------------------------------------------------------------------------------
+<p>
+<b><u>Author</u></b>
+<p>
+    Austin Nichols
+    Urban Institute
+    Washington, DC, USA
+    austinnichols@gmail.com
+<p>
+<b><u>Also see</u></b>
+<p>
+ On-line: logit, probit, glm, lpoly, lowess, mlowess (on SSC), transint (on
+          SSC)
+<p>
+</pre>

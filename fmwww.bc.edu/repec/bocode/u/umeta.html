@@ -1,0 +1,485 @@
+<pre>
+-------------------------------------------------------------------------------
+<b>help for umeta and umeta_postestimation</b>
+-------------------------------------------------------------------------------
+<p>
+<b><u>Title</u></b>
+<p>
+    <b>umeta</b> - U-statistics-based random-effects meta-analyses
+<p>
+<p>
+<p>
+<b><u>Description</u></b>
+<p>
+    The <b>umeta</b> command performs U-statistics-based random-effects
+    meta-analysis on a dataset of univariate, bivariate or trivariate point
+    estimates, sampling variances, and for bivariate or trivariate data,
+    within-study correlations or covariances.  The methodology is described
+    in Ma and Mazumdar (2011).
+<p>
+    For each outcome, <b>umeta</b> calculates the overall effect and a confidence
+    interval for the effect. The command also displays the between-study
+    variance (or alternatively between-study standard deviation),
+    between-study correlation(s) for bivariate or trivariate data and
+    inconsistency (I-squared) statistics.
+<p>
+<p>
+<b><u>umeta</u></b><b><u> Syntax</u></b>
+<p>
+    <b>umeta</b> <i>yvar*</i> <i>svar*</i> [<i>wsvar*</i>] [<i>if</i>] [<i>in</i>] [<b>,</b> <b><u>cov</u></b><b>var(string)</b> <b>level(#)</b> <b><u>pred</u></b><b>int</b>
+    <b><u>ts</u></b><b>cale(logit|log|asin)</b> <b><u>noest</u></b><b>imates</b> <b><u>bs</u></b><b>sd</b> <b><u>z</u></b><b>ci</b> <b>i2</b>]
+<p>
+    where the data are arranged with one line per study: the point estimates
+    are held in variables <i>yvar*</i>, the sampling variances are held in <i>svar*</i>,
+    and within-study correlations (or covariances) for 2 or 3 outcomes are
+    held in variable <i>wsvar*</i>.
+<p>
+    For univariate data, <b>yvar*</b> is <b>yvar</b> and <b>svar*</b> is <b>svar</b>
+<p>
+    For bivariate data, <b>yvar*</b> is <b>yvar1 yvar2</b>, <b>svar*</b> is <b>svar1 svar2</b> and <b>wsvar*</b>
+    is <b>wsvar12</b>
+<p>
+    For trivariate data, <b>yvar*</b> represents <b>yvar1 yvar2 yvar3</b>, <b>svar*</b> is <b>svar1</b>
+    <b>svar2 svar3</b> and <b>wsvar*</b> is <b>wsvar12, wsvar13 wsvar23</b>
+<p>
+    <b>For any unreported outcomes, umeta sets the outcome and its variance at 0</b>
+    <b>and 1E12, respectively</b>.
+<p>
+<b><u>Options for </u></b><b><u>umeta</u></b>
+<p>
+    <b><u>cov</u></b><b>var</b>(<i>string</i>) For bivariate or trivariate data analysis, you <b>must</b>
+        specify <b><u>cov</u></b><b>var</b>(<i>rho</i>) or <b><u>cov</u></b><b>var</b>(<i>cov</i>) depending on whether you are using
+        within-study correlation(s) or covariance(s).
+<p>
+    <b>level(#)</b> specifies the significance level for probability intervals.
+<p>
+    <b><u>pred</u></b><b>int</b> displays outcome-specific mean estimates with the probability
+        interval of the approximate predictive distribution of a future
+        trial, based on the extent of heterogeneity. No method has been
+        developed as yet for multivariate predictive distribution.
+<p>
+<p>
+    <b><u>ts</u></b><b>cale(logit|log|asin)</b> transformation of estimates to original scale, if
+        data was transformed prior to analysis.
+<p>
+<p>
+    <b><u>bs</u></b><b>sd</b> reports the between-study standard deviations with confidence
+        intervals (calculated as a function of inconsistency statistic and
+        typical within-study variance as by White(2009)) instead of the
+        default between-study variances.
+<p>
+    <b><u>noest</u></b><b>imates</b> prevents display of mean estimates, between-study variances
+        (or standard deviations) and correlation(s)
+<p>
+    <b><u>z</u></b><b>ci</b> uses z-statistics instead of default t-statistics for confidence
+        interval calculation. This is overriden if option <b><u>pred</u></b><b>int</b> specified.
+<p>
+    <b>i2</b> reports I-squared statistic for each outcome, together with confidence
+        intervals as is described in White(2009).
+<p>
+    <b>umeta</b>, typed without specifying varlist, redisplays the latest estimation
+    results.  All the output options listed above may be used
+<p>
+<p>
+    <b>by</b><i>...</i><b>:</b> or <b>statsby</b><i>...</i><b>:</b> may be used with <b>umeta</b> to perform subgroup
+    analyses; see help by or statsby.
+<p>
+<p>
+<b><u>Remarks</u></b>
+<p>
+    Multivariate meta-analysis is used to synthesize multiple outcomes
+    simultaneously taking into account the correlation between the outcomes
+    (Riley(2009)). Likelihood based approaches, in particular, Restricted
+    Maximum Likelihood (REML) method is commonly utilized in this context.
+    REML assumes a multivariate normal distribution for the random-effects
+    model. This assumption is difficult to verify, especially for
+    meta-analysis with small number of component studies. Use of REML also
+    requires iterative estimation between parameters, needing moderately high
+    computation time, especially when the dimension of outcomes is large
+    (White(2009)).  Jackson, White and Thompson(2010) have developed a
+    multivariate method of moments (MMM) which has been shown to perform
+    equally well to REML.
+<p>
+    Ma and Mazumdar recently proposed a new method for multivariate
+    meta-analysis based on the theory of U-statistic.  The motivation for
+    using U-statistic stems from the fact that it provides a a robust,
+    nonparametric and noniterative approach.  Additionally, the asymptotic
+    behavior of the related statistics and their estimates are easy to derive
+    being based on theorems already available for U-statistics.
+<p>
+    Since the between-study variance matrix for the random-effects
+    meta-analysis model involves second order moments, U-statistic
+    formulation is especially beneficial. It is easily applied to estimate
+    the variance matrix components and to develop their joint asymptotic
+    distribution for related inference. Because the U-statistic-based method
+    does not depend on parametric distributional assumptions for both random
+    effects and sampling errors, it provides robust inference irrespective of
+    the data distribution
+<p>
+    For a detailed description of the u-statistic methodology, see Ma and
+    Mazumdar (2011).
+<p>
+    By convention, the within-study variances are assumed known and replaced
+    by their sample estimates. Thus imprecision in within-study variance
+    estimates may affect the estimation of pooled effect size especially when
+    the size of within-study variation is relatively large.
+<p>
+    This program does not assume that variables need log, logit or arcsin or
+    other transformation(s).  However, if study-level outcome data are
+    available as odds ratios, risk ratios or proportions, the user may choose
+    to log-, logit-or arcsin-transform them first. Then <b><u>ts</u></b><b>cale</b> option may be
+    used to change back to the original scale for reporting if so desired.
+<p>
+    The probability interval of the approximate predictive distribution of a
+    future trial, is based on the extent of heterogeneity. This incorporates
+    uncertainty in the location and spread of the random effects distribution
+    using the formula<b> t(df) x sqrt(se2 + tau2)</b> where t is the t-distribution
+    with n-2 degrees of freedom, se2 is the squared standard error and tau2
+    the heterogeneity statistic and n is the number of observations(studies).
+    This is applied to each outcome separately.  For further information see
+    Higgins, Thompson and Spiegelhalter(2009)
+<p>
+<p>
+    I-squared formulated by Higgins and Thompson (2002), describes the
+    percentage of total variation across studies that is attributable to
+    heterogeneity rather than chance and measures impact of heterogeneity.  .
+    Negative values of I-squared are made equal to 0 so that I-squared lies
+    between 0% and 100%.  A value of 0% indicates no observed heterogeneity,
+    and values greater than 50% may be considered substantial heterogeneity.
+    The main advantage of I-squared is that it does not inherently depend on
+    the number of the studies in the meta-analysis
+<p>
+<p>
+<p>
+<b><u>Examples</u></b>
+<p>
+<p>
+Example 1: Univariate Data
+<p>
+        <b>. use umeta_example1, clear</b>
+<p>
+        <b>. list yvar svar, clean noobs</b>
+        <b>. umeta yvar svar</b>
+<p>
+Example 2: Bivariate logit-transformed Data, No within-study correlation
+<p>
+        <b>. use umeta_example2, clear</b>
+<p>
+        <b>. list yvar* svar* rho*, clean noobs</b>
+<p>
+        <b>. umeta yvar* svar* rho*, p</b>
+<p>
+        <b>. umeta yvar* svar* rho*, z bssd p tscale(logit)</b>
+<p>
+<p>
+Example 3: Bivariate Outcomes with missing Data
+<p>
+        <b>. use umeta_example3, clear</b>
+<p>
+        <b>. list yvar* svar* rho*, clean noobs</b>
+<p>
+        <b>. umeta yvar* svar* rho*</b>
+<p>
+        <b>. umeta yvar* svar* rho*, pred</b>
+<p>
+        <b>. umeta, noest i2 z q</b>
+<p>
+Example 4: Trivariate Outcomes with Zero within-study covariance matrix
+<p>
+        <b>. use umeta_example4, clear</b>
+<p>
+        <b>. list yvar* svar* rho*, clean noobs</b>
+<p>
+        <b>. umeta yvar* svar* rho*</b>
+<p>
+        <b>. umeta, noest i2 z q</b>
+<p>
+<p>
+Example 5: Trivariate Outcomes with within-study correlations
+<p>
+        <b>. use umeta_example5, clear</b>
+<p>
+        <b>. list yvar* svar* rho*, clean noobs</b>
+<p>
+        <b>. umeta yvar* svar* rho*, pred</b>
+<p>
+<p>
+<a name="saved_results"></a><b><u>Saved results</u></b>
+<p>
+    <b>umeta</b> saves the following in <b>e()</b>:
+<p>
+    Scalars   
+      <b>e(N)</b>                    number of observations
+      <b>e(dims)</b>                 number of outcomes for meta-analysis
+      <b>e(df_r)</b>                 degrees of freedom for meta-analysis estimation
+      <b>e(Qdf)</b>                  degrees of freedom for homogeneity testing
+<p>
+    Macros    
+      <b>e(cmd)</b>                  <b>umeta</b>
+      <b>e(cmdline)</b>              command as typed
+      <b>e(properties)</b>           <b>b V</b>
+      <b>e(yvars)</b>                names of study-specific outcome variables
+                                (point estimates)
+      <b>e(svars)</b>                names of study-specific sampling variances
+      <b>e(predict)</b>              program used to implement <b>predict</b>
+<p>
+    Matrices  
+      <b>e(b)</b>                    coefficient vector
+      <b>e(V)</b>                    variance-covariance matrix of the estimators
+      <b>e(Isqmat)</b>               matrix of outcome-specific I^2 values
+      <b>e(Qmat)</b>                 matrix of outcome-specific heterogeneity
+                                statistic
+      <b>e(Vtyp)</b>                 typical within-study variance
+      <b>e(Sigma)</b>                between-study variance-covariance matrix
+      <b>e(svars)</b>                matrix of study-specific sampling variances
+      <b>e(rho)</b>                  matrix of between-study correlation
+      <b>e(yvars)</b>                matrix of study-specific point estimates
+<p>
+    Functions 
+      <b>e(sample)</b>               marks estimation sample
+<p>
+<p>
+<p>
+<b><u>Authors</u></b>
+    Ben A. Dwamena, Department of Radiology, Division of Nuclear Medicine,
+    University of Michigan Medical School, Ann Arbor, Michigan
+<p>
+    Yan Ma, Hospital for Special Surgery, Weill Medical College of Cornell
+    University, New York, New York
+<p>
+<b><u>programming problems:</u></b>
+    bdwamena@umich.edu.
+<p>
+<b><u>u-statistic-based questions:</u></b>
+    yam2007@med.cornell.edu.
+<p>
+<p>
+<p>
+-------------------------------------------------------------------------------
+<p>
+<b><u>Title</u></b>
+<p>
+    <b>umeta postestimation</b> --   Postestimation tools for umeta
+<p>
+<p>
+<b><u>Description</u></b>
+<p>
+    umeta is programmed as an Stata estimation command and so supports many of
+    the commands listed under help estcom and postest.  The following standard
+    postestimation commands may be particularly useful:
+<p>
+    Command         Description
+    -------------------------------------------------------------------------
+    <b>estat</b>           VCE and estimation sample summary. See help estat
+    <b>estimates</b>       Cataloging estimation results. See help estimates
+    <b>lincom</b>          Point estimates, standard errors, testing, and inference
+                      for linear combinations of coefficients. See lincom
+    <b>nlcom</b>           Point estimates, standard errors, testing, and inference
+                      for nonlinear combinations of coefficients. See nlcom
+    <b>predict</b>         predictions, residuals, influence statistics, and other
+                      diagnostic measures
+    <b>test</b>            Wald tests of linear hypotheses. See help test
+    <b>testnl</b>          Wald tests of non-linear hypotheses. See help testnl
+    -------------------------------------------------------------------------
+<p>
+<p>
+<b><u>predict</u></b><b><u> Syntax</u></b>
+<p>
+    The syntax of predict following <b>umeta</b> is
+<p>
+    <b>syntax 1:</b>
+<p>
+        <b>predict</b> [<i>type</i>] <i>newvarname</i> [<b>if</b> <i>exp</i>] [<b>in</b> <i>range</i>] [<b>,</b> <i>statistic</i> ]
+<p>
+    <b>syntax 2:</b>
+<p>
+        <b>predict</b> <i>newvarname</i> [<b>if</b> <i>exp</i>] [<b>in</b> <i>range</i>] [<b>,</b> <i>statistic</i> <i>show(string)</i>]
+<p>
+    -------------------------------------------------------------------------
+    <i>statistic</i>      Description
+    -------------------------------------------------------------------------
+      <b><u>fix</u></b><b>ed</b>        prediction of fixed-effects; the default
+      <b><u>stf</u></b><b>ixed</b>      standard error of the fixed-effects prediction
+      <b><u>fit</u></b><b>ted</b>       prediction including random effects
+      <b>stfit</b>        standard error of <b><u>fit</u></b><b>ted</b>
+      <b>stdf</b>         standard error of the forecast
+      <b><u>reff</u></b><b>ects</b>     predicted random effects
+      <b><u>res</u></b><b>es</b>        standard error of predicted random effects
+      <b><u>rst</u></b><b>andard</b>    standardized predicted random effects
+      <b>lev</b>          leverage (diagonal elements of projection matrix)
+      <b>cooksd</b>       Cook's influence measure
+    -------------------------------------------------------------------------
+<p>
+    These statistics are available both in and out of sample; type "predict ...
+    if e(sample) ..." if wanted only for the estimation sample.
+<p>
+    -------------------------------------------------------------------------
+    <i>show</i>           Description
+    -------------------------------------------------------------------------
+      <b>clean</b>        force table format with no divider or separator lines
+      <b><u>t</u></b><b>able</b>        force table format
+      <b><u>ab</u></b><b>breviate(</b><i>#</i><b>)</b>
+                     abbreviate variable names to <i>#</i> characters; default is
+                     <b>ab(8)</b>
+      <b><u>noo</u></b><b>bs</b>        do not list observation numbers
+      <b><u>div</u></b><b>ider</b>      draw divider lines between columns
+      <b><u>sep</u></b><b>arator(</b><i>#</i><b>)</b> draw a separator line every <i>#</i> lines; default is
+                     <b>separator(5)</b>
+    -------------------------------------------------------------------------
+<p>
+<p>
+<p>
+<p>
+<b><u>Options for </u></b><b><u>predict</u></b>
+<p>
+    <b>fixed</b> calculates the linear prediction for the fixed portion of the model.
+<p>
+    <b>stfixed</b> calculates the outcome-specific standard error of the fixed-portion
+        linear prediction
+<p>
+    <b>stfitted</b> calculates the outcome-specific standard error of the prediction
+        including random effects.
+<p>
+    <b>fitted</b> calculates the outcome-specific prediction including random effects,
+        Xb[i] + u[i], also known as the empirical Bayes estimates of the
+        effects in each study.
+<p>
+    <b>stdf</b> calculates the outcome-specific standard error of the forecast.  This
+        gives the standard deviation of the predicted distribution of the <b>true</b>
+        value of <i>depvar</i> in a future study
+        stdf^2 = stdp^2 + tau2.
+<p>
+    <b>reffects</b> calculates the outcome-specific best linear unbiased predictions
+        (BLUPs) of the random effects, also known as the posterior mean or
+        empirical Bayes estimates of the random effects, or as shrunken
+        residuals.
+<p>
+    <b>reses</b> calculates the outcome-specific standard error of predicted random
+        effects.
+<p>
+    <b>rstandard</b> calculates the outcome-specific standardized predicted random
+        effects, i.e. the predicted random effects u[i] divided by their
+        (unconditional) standard errors.  These may be useful for diagnostics
+        and model checking.
+<p>
+    <b>lev</b> calculates the study-specific leverages
+<p>
+<p>
+    <b>cooksd</b> calculates the study-specific Cook's influence statistic.
+<p>
+<b><u>Remarks</u></b>
+<p>
+    Similar to other types of data, it is not uncommon to observe extreme
+    effect size values when conducting a meta-analysis.  As the main
+    objective of a meta-analysis is to provide a reasonable summary of the
+    effect sizes of a body of empirical studies, the presence of such
+    outliers may distort the conclusions of a meta-analysis.  Moreover, if
+    the conclusions of a meta-analysis hinge on the data of only one or two
+    influential studies, then the robustness of the conclusions are called
+    into question.  Researchers, therefore, generally agree that the effect
+    sizes should be examined for potential outliers and influential cases
+    when conducting a meta-analysis.
+<p>
+    The most thorough treatment of outlier diagnostics in the context of
+    meta-analysis to date can be found in the classic book by Hedges and
+    Olkin, who devoted a whole chapter to diagnostic procedures for effect
+    size data.  However, the methods developed by Hedges and Olkin(1985) are
+    only applicable to fixed-effects models.  Given that random- and
+    mixed-effects models are gaining popularity in the meta-analytic context,
+    corresponding methods for outlier and influential case diagnostics need
+    to be developed.
+<p>
+    Viechtbauer and Cheung(2010) have introduced several outlier and
+    influence diagnostic procedures for the random- and mixed-effects model
+    in meta-analysis.  These procedures are logical extensions of the
+    standard outlier and case-deletion influence diagnostics for regular
+    regression models as in Demidenko and Stukel(2005) and take both sampling
+    variability and between-study heterogeneity into account. The proposed
+    measures provide a simple framework for evaluating the potential impact
+    of outliers or influential cases in meta-analysis.
+<p>
+<b><u>Examples</u></b>
+<p>
+<p>
+        <b>. use umeta_example5, clear</b>
+<p>
+        <b>. umeta yvar* svar* rho*</b>
+<p>
+        <b>. predict lev, lev show(clean)</b>
+<p>
+        <b>. predict cook, cooksd show(clean)</b>
+<p>
+        <b>. predict fit, fit</b>
+<p>
+        <b>. predict fix</b>
+<p>
+        <b>. predict reff, reff show(clean noobs)</b>
+<p>
+        <b>. predict res, res</b>
+<p>
+        <b>. predict rst, rst</b>
+<p>
+        <b>. predict stpred, stfit</b>
+<p>
+<p>
+<p>
+        <b>. predict double stdf, stdf</b>
+<p>
+<p>
+<p>
+<p>
+<p>
+<b><u>Author</u></b>
+    Ben A. Dwamena, Department of Radiology, Division of Nuclear Medicine,
+    University of Michigan Medical School, Ann Arbor, Michigan.
+    bdwamena@umich.edu.
+<p>
+<p>
+<p>
+<b><u>References</u></b>
+<p>
+<a name="DS2005"></a>    Demidenko, E., T. A. Stukel. 2005 Influence analysis for linear
+        mixed-effects models <i>Statistics in Medicine</i> 24: 893–909
+<p>
+<a name="DL1986"></a>    DerSimonian, R., and N. Laird.  1986.  Meta-analysis in clinical trials.
+        <i>Controlled Clinical Trials</i> 7: 177-188.
+<p>
+<a name="HO1985"></a>    Hedges LV, I. Olkin. 1985.  <i>Statistical Methods for Meta-Analysis</i>
+        Academic Press: New York.
+<p>
+<a name="HT2002"></a>    Higgins, J. P. T., and S. G. Thompson.  2002.  Quantifying heterogeneity
+        in a meta-analysis.  <i>Statistics in Medicine</i> 21: 1539-1558.
+<p>
+<a name="HTS2009"></a>    Higgins, J. P. T., S. G. Thompson, and D. J. Spiegelhalter.  2009.  A
+        re-evaluation of random-effects meta-analysis.  <i>Journal of the Royal</i>
+        <i>Statistical Society, Series A</i> 172: 137-159.
+<p>
+<a name="JWT2010"></a>    Jackson, D., I. R. White, and S. G. Thompson. 2010.  Extending
+        DerSimonian and Laird's methodology to perform multivariate random
+        effects meta-analyses.  <i>Statistics in Medicine</i> 29: 1282-1297.
+<p>
+<a name="MM2011"></a>    Ma, Y., and M. Mazumdar. 2011. Multivariate meta-analysis:  a robust
+        approach based on the theory of U-Statistic.  <i>Statistics in Medicine</i>
+        30: 2911-2929.
+<p>
+<a name="R2009"></a>    Riley, R. D.  2009.  Multivariate meta-analysis: The effect of ignoring
+        within-study correlation.  <i>Journal of the Royal Statistical Society,</i>
+        <i>Series A</i> 172: 789-811.
+<p>
+<p>
+<a name="VC2010"></a>    Viechtbauer, W., M. W.-L. Cheung. 2010.  Outlier and influence
+        diagnostics for meta-analysis.  <i>Research Synthesis Methods</i> 1:
+        112-125.
+<p>
+<a name="W2009"></a>    White, I. R.  2009.  Multivariate random-effects meta-analysis.  <i>Stata</i>
+        <i>Journal</i> 9: 40-56.
+<p>
+<b><u>Also see</u></b>
+<p>
+<p>
+       Help: <b>mvmeta</b> (if installed)
+<p>
+<p>
+<p>
+<p>
+</pre>

@@ -1,0 +1,170 @@
+<pre>
+<b>help mata mm_finvert()</b>
+-------------------------------------------------------------------------------
+<p>
+<b><u>Title</u></b>
+<p>
+    <b>mm_finvert() -- Numerical inversion of univariate function</b>
+<p>
+<p>
+<b><u>Syntax</u></b>
+<p>
+        <i>real vector</i> <b>mm_finvert(</b><i>y</i><b>,</b> <i>f</i><b>,</b> <i>df</i> [<b>,</b> <i>x0</i><b>,</b> <i>tol</i><b>,</b> <i>itr</i>]<b>)</b>
+<p>
+        <i>real vector</i> <b>mm_finvert(</b><i>y</i><b>,</b> <i>f</i><b>,</b> <i>lo</i><b>,</b> <i>up</i> [<b>,</b> <i>tol</i><b>,</b> <i>itr</i>]<b>)</b>
+<p>
+    where
+<p>
+<p>
+            <i>y</i>:  <i>real vector</i> containing the values for which function <i>f</i> be
+                inverted
+<p>
+            <i>f</i>:  <i>pointer scalar</i> containing address of function to be inverted;
+                usually this is coded <b>&amp;</b><i>funcname</i><b>()</b>
+<p>
+           <i>df</i>:  <i>pointer scalar</i> containing address of function providing first
+                derivative of function <i>f</i> (Newton-Raphson method only)
+<p>
+           <i>x0</i>:  <i>real vector</i> containing initial guess (Newton-Raphson method
+                only); if <i>x0</i> omitted, <i>y</i> is used as initial guess
+<p>
+           <i>lo</i>:  <i>real vector</i> containing lower endpoint of the search interval
+                (Brent's method only)
+<p>
+           <i>up</i>:  <i>real vector</i> containing upper endpoint of the search interval
+                (Brent's method only)
+<p>
+          <i>tol</i>:  <i>real scalar</i> specifying acceptable tolerance for the estimate
+                (default is <i>tol</i>=0 to find the solution as accurate as
+                possible)
+<p>
+          <i>itr</i>:  <i>real scalar</i> specifying the maximum number of iterations
+                (default is <i>itr</i>=1000)
+<p>
+<p>
+<b><u>Description</u></b>
+<p>
+    <b>mm_finvert()</b> numerically inverts function <i>f</i> for the outcomes <i>y</i>, that is,
+    <b>mm_finvert()</b> returns an approximation for <i>x</i> given <i>y</i>, where <i>y</i> = <i>f</i><b>(</b><i>x</i><b>)</b>.
+<p>
+    Two methods are available:
+<p>
+        <b>mm_finvert(</b><i>y</i><b>,</b> <i>f</i><b>,</b> <i>df</i> [<b>,</b> <i>x0</i><b>,</b> <i>...</i>]<b>)</b>: If function <i>df</i>, providing the first
+            derivative of <i>f</i> is given, then the Newton-Raphson method
+            implemented in <b>mm_nrroot()</b> is applied. <i>x0</i> may be used to specify
+            an initial guess for <i>x</i>. Specify <i>x0</i> as a scalar to use the same
+            initial guess for <i>x</i> with all outcomes in <i>y</i>. If <i>x0</i> is omitted, <i>y</i>
+            is used as the initial guess.
+<p>
+        <b>mm_finvert(</b><i>y</i><b>,</b> <i>f</i><b>,</b> <i>lo</i><b>,</b> <i>up</i> [<b>,</b> <i>...</i>]<b>)</b>: If derivatives are not provided,
+            Brent's method implemented in <b>mm_root()</b> is applied. With this
+            method, <i>lo</i> and <i>up</i>, the lower and and upper endpoints of the
+            search interval, have to be specified. Specify <i>lo</i> and <i>up</i> as
+            scalars to use the same search interval for <i>x</i> with all outcomes
+            in <i>y</i>.
+<p>
+    With both methods, <i>tol</i> sets the acceptable tolerance for the accuracy of
+    the approximation of <i>x</i>. See help for <b>mm_nrroot()</b> and <b>mm_root()</b> for
+    details. Furthermore, <i>itr</i> sets the maximum number of iterations.
+    <b>mm_finvert()</b> aborts with error, if convergence is not reach within <i>itr</i>
+    iterations for any element in <i>y</i>.
+<p>
+    <b>mm_finvert()</b> is loosely based on suggestions made by Jeff Pitblado on
+    Statalist (see 
+    http://statacorp.com/statalist/archive/2005-09/msg00837.html).
+<p>
+<p>
+<b><u>Remarks</u></b>
+<p>
+    <b>mm_finvert()</b> may be useful, for example, generate random draws from a
+    given distribution function. If the first derivative of the distribution
+    function, i.e. the density function, is known, the approximation of the
+    inversion can be computed using the Newton-Raphson method. For example,
+    normally distributed random data could be produced as follows:
+<p>
+        : function fx(x) return(normal(x))
+<p>
+        : function dfx(x) return(normalden(x))
+<p>
+        : y = uniform(5,1)
+        
+        : mm_finvert(y, &amp;fx(), &amp;dfx())
+                          1
+            +----------------+
+          1 |   1.146369867  |
+          2 |  -.3431823749  |
+          3 |  -1.163062788  |
+          4 |  -.9168871812  |
+          5 |  -.3915779721  |
+            +----------------+
+<p>
+    If a function providing the first derivative is not available, the
+    inversion can be computed using Brent's zero finding method.  Brent's
+    method works very well in a variety of contexts. However, it is usually
+    slower than the Newton-Raphson method and it requires the user to specify
+    a range within which the solution is to be sought for. Example:
+<p>
+        : mm_finvert(y, &amp;fx(),-5, 5)
+                          1
+            +----------------+
+          1 |   1.146369867  |
+          2 |  -.3431823749  |
+          3 |  -1.163062788  |
+          4 |  -.9168871812  |
+          5 |  -.3915779721  |
+            +----------------+
+<p>
+    The above examples have only illustrative purpose. More accurate and much
+    more efficient would be to use the built-in function <b>invnormal()</b> in this
+    context (see help for <b>normal()</b>), that is:
+<p>
+        : invnormal(y)
+                          1
+            +----------------+
+          1 |   1.146369867  |
+          2 |  -.3431823749  |
+          3 |  -1.163062788  |
+          4 |  -.9168871812  |
+          5 |  -.3915779721  |
+            +----------------+
+<p>
+<p>
+<b><u>Conformability</u></b>
+<p>
+    <b>mm_finvert(</b><i>y</i><b>,</b> <i>f</i><b>,</b> <i>df</i><b>,</b> <i>x0</i><b>,</b> <i>tol</i><b>,</b> <i>itr</i><b>)</b>:
+           <i>y</i>:  <i>n x</i> 1 or 1 <i>x n</i>
+           <i>f</i>:  1 <i>x</i> 1
+          <i>df</i>:  1 <i>x</i> 1
+          <i>x0</i>:  <i>n x</i> 1 or 1 <i>x n</i> or 1 <i>x</i> 1
+         <i>tol</i>:  1 <i>x</i> 1
+         <i>itr</i>:  1 <i>x</i> 1
+      <i>result</i>:  <i>n x</i> 1 or 1 <i>x n</i>
+<p>
+    <b>mm_finvert(</b><i>y</i><b>,</b> <i>f</i><b>,</b> <i>lo</i><b>,</b> <i>up</i><b>,</b> <i>tol</i><b>,</b> <i>itr</i><b>)</b>:
+           <i>y</i>:  <i>n x</i> 1 or 1 <i>x n</i>
+           <i>f</i>:  1 <i>x</i> 1
+          <i>lo</i>:  <i>n x</i> 1 or 1 <i>x n</i> or 1 <i>x</i> 1
+          <i>up</i>:  <i>n x</i> 1 or 1 <i>x n</i> or 1 <i>x</i> 1
+         <i>tol</i>:  1 <i>x</i> 1
+         <i>itr</i>:  1 <i>x</i> 1
+      <i>result</i>:  <i>n x</i> 1 or 1 <i>x n</i>
+<p>
+<p>
+<b><u>Diagnostics</u></b>
+<p>
+    None.
+<p>
+<p>
+<b><u>Source code</u></b>
+<p>
+    mm_finvert.mata
+<p>
+<p>
+<b><u>Author</u></b>
+<p>
+    Ben Jann, ETH Zurich, jann@soz.gess.ethz.ch
+<p>
+<p>
+<b><u>Also see</u></b>
+<p>
+</pre>

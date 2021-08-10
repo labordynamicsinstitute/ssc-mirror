@@ -1,0 +1,46 @@
+<pre>
+-------------------------------------------------------------------------------
+help for <b>varlab</b>                                                        [P.Joly]
+-------------------------------------------------------------------------------
+<p>
+<b><u>Save and load variable labels</u></b>
+<p>
+        <b>varlab save</b> [<i>varlist</i>] <b>using</b> <i>filename</i> [<b>,</b> <b>replace</b> ]
+<p>
+        <b>varlab load</b> [<i>varlist</i>] <b>using</b> <i>filename</i> [<b>,</b> <b>replace</b> ]
+<p>
+<p>
+<b><u>Description</u></b>
+<p>
+<b>varlab save</b> saves the variable labels of variables in <i>varlist</i> using <i>filename</i>.
+<p>
+<b>varlab load</b> loads the variable labels of variables in <i>varlist</i> using <i>filename</i>.
+Extraneous variable labels are ignored.
+<p>
+<i>filename</i> is saved or retrieved from the current directory unless the full path
+and filename is specified in <i>filename</i> (see help cd).  If <i>filename</i> is specified
+without an extension, <b>.lbl</b> is assumed.  If no varlist is specified, labels are
+saved or retrieved for all variables in the data, if defined.
+<p>
+<p>
+<b><u>Options</u></b>
+<p>
+<b>replace</b> carries a different meaning depending on whether it is used in
+    conjucntion with <b>varlab save</b> or <b>varlab load</b>.  With <b>varlab save</b>, <b>replace</b>
+    specifies that <i>filename</i> be overwritten if it exists.  When used with <b>varlab</b>
+    <b>load</b>, <b>replace</b> means that labels of variables in <i>varlist</i> be overwritten if
+    they exists.  By default, existing labels are held inviolate.  (In this
+    context, its meaning is consistent with that of option <b>replace</b> in <b>merge</b>
+    (see help merge).)
+<p>
+<p>
+<b><u>Author</u></b>
+<p>
+Patrick Joly, Industry Canada
+pat.joly@utoronto.ca
+<p>
+<p>
+<b><u>Also see</u></b>
+<p>
+On-line:  help for label
+</pre>

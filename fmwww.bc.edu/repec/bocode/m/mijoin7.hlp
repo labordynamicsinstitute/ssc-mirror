@@ -1,0 +1,102 @@
+{smcl}
+{* 30sep2004}{...}
+{hline}
+help for {cmd:mijoin7}, {cmd:misplit7}{right:Patrick Royston}
+{hline}
+
+{title:Join or split multiple imputed datasets}
+
+
+{p 8 17 2}
+{c -(}{cmd:mijoin7} [{it:filestubname}] | {cmd:misplit7}{c )-}
+{cmd:,}
+{cmd:clear}
+[
+{cmd:m(}{it:#}{cmd:)}
+{cmdab:imp:id(}{it:varname}{cmd:)}
+]
+
+
+{title:Description}
+
+{p 4 4 2}
+{cmd:mijoin7} converts datasets prepared by Carlin's {help miset} routine
+to {help mvis} format, for analysis by {help micombine7}. The component
+datasets are stacked (joined vertically). If {it:filestubname} is 
+specified then the program will look for files called 
+{it:filestubname}{cmd:1.dta}, {it:filestubname}{cmd:2.dta},...,
+{it:filestubname}{cmd:m.dta} where {cmd:m} is determined by
+the {cmd:m()} option.
+
+{p 4 4 2}
+{cmd:misplit7} converts a dataset prepared by {help mvis}
+to {help miset} format, for analysis
+by {help mifit} and other utilities. You should {cmd:use}
+the dataset first.
+
+{p 4 4 2}
+The operations performed by {cmd:mijoin7} and {cmd:misplit7}
+are reciprocal.
+
+
+{title:Options}
+
+{p 4 8 2}
+{cmd:clear} is not optional and confirms that you are willing to replace the data in memory.
+
+{p 4 8 2}
+{cmd:impid(}{it:varname}{cmd:)} sets the name of the variable identifying the imputations
+to {it:varname} (default is {cmd:_j}). {cmd:mijoin7} creates {it:varname} whereas
+{cmd:misplit7} expects it to exist already.
+
+{p 4 8 2}
+{cmd:m(}{it:#}{cmd:)} sets the number of imputed datasets to be {it:#}.
+
+
+{title:Remarks}
+
+{p 4 4 2}
+After {cmd:mijoin7} has been executed, the data are ready for immediate use by
+{cmd:micombine7}. However, to save the data permanently you would
+need to issue a {help save} command.
+
+{p 4 4 2}
+After {cmd:misplit7} has been executed, the data are ready for immediate use by
+Carlin's routines. However, to save the data permanently you would
+need to issue a {help misave} command followed by {help miset} on the next use.
+
+
+{title:Examples}
+
+{p 4 8 2}{cmd:. mvis y x1 x2 x3 using imp, m(3)}{p_end}
+{p 4 8 2}{cmd:. use imp, clear}{p_end}
+{p 4 8 2}{cmd:. misplit7, clear}{p_end}
+{p 4 8 2}{cmd:. mifit regress y x1 x2 x3}
+
+{p 4 8 2}{cmd:. miset using imp, clear mimps(5)}{p_end}
+{p 4 8 2}{cmd:. mijoin7, clear}{p_end}
+{p 4 8 2}{cmd:. micombine7 regress y x1 x2 x3}
+
+{p 4 8 2}{cmd:. mijoin7 imp, clear m(5)}{p_end}
+{p 4 8 2}{cmd:. save imp_mvis}{p_end}
+{p 4 8 2}{cmd:. micombine7 regress y x1 x2 x3}
+
+
+{title:Author}
+
+{p 4 4 2}
+Patrick Royston, MRC Clinical Trials Unit, London.
+patrick.royston@ctu.mrc.ac.uk
+
+
+{title:References}
+
+{p 4 4 2}
+Carlin, J. B., N. Li, P. Greenwood, and C. Coffey. 2003. 
+Tools for analyzing multiple imputed datasets. The Stata Journal 3 (3): 226-244.
+
+
+{title:Also see}
+
+{p 4 13 2}
+Online:  help for {help mvis7}, {help micombine77}

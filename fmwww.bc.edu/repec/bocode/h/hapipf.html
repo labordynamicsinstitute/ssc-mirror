@@ -1,0 +1,166 @@
+<pre>
+-------------------------------------------------------------------------------
+help for <b>hapipf</b>
+-------------------------------------------------------------------------------
+<p>
+<p>
+<b><u>Haplotype frequency using an EM algorithm and log-linear modelling</u></b>
+<p>
+        <b>hapipf</b> [<i>varlist</i>] [<b>using</b>] [<b>if</b><i> exp</i>] , <b>ipf(</b><i>string</i><b>)</b> [ <b>ldim(</b><i>varlist</i><b>)</b> <b>start</b>
+                           <b><u>dis</u></b><b>play</b> <b>known</b> <b>phase(</b><i>varname</i><b>)</b> <b>acc(</b><i>#</i><b>)</b> <b>ipfacc(</b><i>#</i><b>)</b> <b>nolog</b>
+                           <b>model(</b><i>#</i><b>)</b> <b>lrtest(</b><i>#,#</i><b>)</b> <b>convars(</b><i>string</i><b>)</b> <b>confile(</b><i>string</i><b>)</b>
+                           <b>usew(</b><i>string</i><b>)</b> <b>savew(</b><i>string</i><b>)</b> <b>mv</b> <b>mvdel</b> <b>menu</b> <b>rare(</b><i>#</i><b>)</b>
+                           <b>cc(</b><i>varname</i><b>)</b> ]
+<p>
+<p>
+<b><u>Description</u></b>
+<p>
+This command calculates allele/haplotype frequencies using log-linear modelling
+embedded within an EM algorithm. The EM algorithm handles the phase uncertainty
+and the log-linear modelling allows testing for linkage disequilibrium and
+disease association. These tests can be controlled for confounders using a
+stratified analysis specified by the log-linear model.  The log-linear model
+can also model the relationship between loci and hence can group similar
+haplotypes.
+<p>
+<p>
+The log-linear model is fitted using iterative proportional fitting which is
+implemented in the STB command <b>ipf.ado</b> (the user will have to install this
+function first). This algorithm can handle very large contingency tables and
+converges to maximum likelihood estimates even when the likelihood is badly
+behaved.
+<p>
+<p>
+The <b>varlist</b> consists of paired variables representing the alleles at each
+locus. If phase is known then the pairs are the genotypes. When phase is
+unknown the algorithm assumes Hardy Weinberg Equilibrium so that models are
+based on chromosomal data and not genotypic data.
+<p>
+<p>
+This algorithm can handle missing alleles at the loci by using the <b>mv</b> option.
+<p>
+<b><u>Options</u></b>
+<p>
+<b>menu</b> specifies that the commands syntax is determined using the window
+interface. In the window interface select the loci and disease variables and
+then press the APPLY button. There should be a choice of four models when there
+some loci and the disease variable are selected. Either press the "put in
+review window" button so the syntax is placed in the review window OR press
+"run command" button and that model will be fitted.
+<p>
+<p>
+<b>rare(</b><i>#</i><b>)</b> specifies that all haplotypes below this frequency (a number between 0
+and 1) are grouped into one category. NOTE that you must specify the saturated
+mode in the <b>ipf</b> option and that you do not include the dependent variable in
+this model. This option will automatically fit firstly the saturated model to
+calculate haplotype frequencies and hence identify the groupings. Then with the
+grouped categories the independence and association models are fitted and a
+likelihood ratio test comparing the two is produced. The user must specify the
+outcome variable in the <b>cc</b> option.
+<p>
+<b>cc(</b><i>varname</i><b>)</b> specifies the outcome variable when using the <b>rare</b> option.
+<p>
+<b>mv</b> specifies that the algorithm should replace missing data (".") with a copy
+of each of the possible alleles at this locus. This is performed at the same
+stage as the handling of the missing phase when the dataset is expanded into
+all possible observations. If this option is not specified but some of the
+alleles do contain missing data the algorithm sees the symbol "." as another
+allele.
+<p>
+<b>mvdel</b> specifies that people with missing alleles are deleted.
+<p>
+<b>ldim(</b><i>varlist</i><b>)</b> specifies the variables that determine the dimension of the
+contingency table. By default the variables contained in the <b>ipf()</b> option
+define the dimension.
+<p>
+<b>ipf(</b><i>string</i><b>)</b> specifies the log-linear model. It requires special syntax of the
+form <b>l1*l2+l3</b>. <b>l1*l2</b> allows all the interactions between the first two loci and
+locus 3 is independent of them.  This syntax is used in most books on
+Log-linear modelling.
+<p>
+<b>start</b> specifies that the starting posterior weights of the EM algorithm are
+chosen at random. The default is that every haplotype has equal weight.
+<p>
+<b><u>dis</u></b><b>play</b> specifies whether the expected and imputed haplotype frequencies are
+shown on the screen.
+<p>
+<b>known</b> specifies that phase is known.
+<p>
+<b>phase(</b><i>varname</i><b>)</b> specifies a variable that contains 1's where phase is known and
+0's where phase is unknown.
+<p>
+<b>acc(</b><i>real</i><b>)</b> specifies the convergence threshold of the change of the full
+    log-likelihood.
+<p>
+<b>ipfacc(</b><i>real</i><b>)</b> specifies the convergence theshold of the change in the log-likeli
+&gt; hood of the log-linear model.
+<p>
+<b>nolog</b> specifies whether the log-likelihood is displayed at each iteration.
+<p>
+<b>model(</b><i>#</i><b>)</b> specifies a label for the log-linear model being fitted. This label is
+used in the lrtest() option.
+<p>
+<b>lrtest(</b><i>#,#</i><b>)</b> performs a likelihood ratio test using two models that have been
+labelled in the <b>model()</b> option.
+<p>
+<b>convars(</b><i>string</i><b>)</b> specifies a list of variables in the constraints file.
+<p>
+<b>confile(</b><i>string</i><b>)</b> specifies the name of the constraints file.
+<p>
+<b>usew(</b><i>string</i><b>)</b> specifies that the starting weights come from an external data fil
+&gt; e.
+<p>
+<b>savew(</b><i>string</i><b>)</b> specifies that the final set of weights is saved to a data file.
+Thus<b> hapipf</b> can be run once with the <b>savew()</b> option and then to replicate the
+same analysis quicker the user can specify the <b>usew()</b> option with the <b>savew()</b>
+datafile.
+<p>
+<b><u>Examples</u></b>
+<p>
+Take a dataset with 3 loci, the pairs of alleles at locus 1 are the variables
+ass1 and ass2, the pairs of alleles at locus 2 are the variables bss1 and bss2
+and the pairs of alleles at locus 3 are the variables drss1 and drss2. Note the
+<b>ipf()</b> option requires the log-linear model that contains lj terms which
+represent locus j.
+<p>
+The indicator variable for whether a person is a case or control is caco. To
+test whether the haplotypes are associated with disease is the likelihood ratio
+test comparing the models l1*l2*l3*caco and l1*l2*l3+caco. The following stata
+commands perform this test.
+<p>
+.hapipf ass1 ass2 bss1 bss2 drss1 drss2, ipf(l1*l2*l3*caco) model(0) display
+.hapipf ass1 ass2 bss1 bss2 drss1 drss2, ipf(l1*l2*l3+caco) model(1) lrtest(0,1
+&gt; ) display
+<p>
+If there are too many rare haplotypes they can be grouped by the following
+command and the likelihood ratio test is calculated for the two models above.
+<p>
+.hapipf ass1 ass2 bss1 bss2 drss1 drss2, ipf(l1*l2*l3) cc(caco) rare(0.05)
+<p>
+To identify haplotype blocks. Lets say we have 5 loci and that the first block
+contains the first three loci and the second block contains the last two loci
+then you can compare the following models
+<p>
+.hapipf a1 a2 b1 b2 c1 c2 d1 d2 e1 e2, ipf(l1*l2*l3*l4*l5) model(0) display
+.hapipf a1 a2 b1 b2 c1 c2 d1 d2 e1 e2, ipf(l1*l2*l3+l4*l5) model(1) lrtest(0,1)
+&gt;  display
+<p>
+<p>
+<b><u>Author</u></b>
+<p>
+Adrian Mander, Glaxo Smithkline, Harlow, UK.
+<p>
+Email adrian.p.mander@gsk.com
+<p>
+<b><u>Also see</u></b>
+<p>
+On-line: help for 
+Quantitative Trait qhapipf (if installed),
+Profile likelihoods profhap (if installed),
+Log-linear modelling ipf (if installed), 
+Haplotype blocks hapblock (if installed), 
+Haplotype blocks swblock (if installed). 
+<p>
+<p>
+<p>
+</pre>

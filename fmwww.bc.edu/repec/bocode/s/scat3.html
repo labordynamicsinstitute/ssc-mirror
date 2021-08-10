@@ -1,0 +1,111 @@
+<pre>
+-------------------------------------------------------------------------------
+help for <b>scat3</b>
+-------------------------------------------------------------------------------
+<p>
+<b><u>Crude 3-dimensional graphics</u></b>
+<p>
+<p>
+        <b>scat3</b> <i>xvar yvar zvar</i> [<b>if</b> <i>exp</i>] [<b>in</b> <i>range</i>] [<b>,</b> <b><u>r</u></b><b>otate(</b><i>#</i><b>)</b> <b><u>e</u></b><b>levate(</b><i>#</i><b>)</b>
+                 <b>axistype(</b><i>axis_type</i><b>)</b> <b>axes(</b><i>line_options</i><b>)</b>
+                 <b>shadow</b>[<b>(</b><i>scatter_options</i><b>)</b>] <b>spikes(</b><i>rspike_options</i><b>)</b>
+                 <b>titlex(</b>[<i>title_text</i>][<b>,</b> <i>marker_label_options</i>]<b>)</b>
+                 <b>titley(</b>[<i>title_text</i>][<b>,</b> <i>marker_label_options</i>]<b>)</b>
+                 <b>titlez(</b>[<i>title_text</i>][<b>,</b> <i>marker_label_options</i>]<b>)</b> <b>variablenames</b>
+                 <b><u>sep</u></b><b>arate(</b><i>varname</i><b>)</b> <i>graph_options</i>]
+<p>
+<p>
+<b><u>Description</u></b>
+<p>
+    <b>scat3</b> draws (crude) 3-dimensional scatterplots.  It is a port to Stata 8
+    of <b>gr3</b> (Gould, 1991, 1993), itself partially broken since Stata 3.1 and
+    dependent upon Stage for final editing.  The 3-d graph consists by
+    default of data points, spikes drawn from data points to the (<i>x</i>,<i>y</i>) plane,
+    axes and axis titles.
+<p>
+<p>
+<b><u>Options</u></b>
+<p>
+    <b>rotate(</b><i>#</i><b>)</b> specifies the rotation angle in degrees (default 45).
+<p>
+    <b>elevate(</b><i>#</i><b>)</b> specifies the elevation angle in degrees (default 45).
+<p>
+        These are the angles at which the graph is projected onto your
+        two-dimensional screen.  You should try different values: the
+        structure of your data may be better revealed by one angle rather
+        than another.  Good choices are:
+<p>
+                                           Resolution of
+           <b>rotate()</b>   <b>elevate()</b>        x          y         z
+           ------------------------------------------------------
+              30          60         good       good     adequate
+              45          45       adequate   adequate   adequate
+              60          30         poor       poor    excellent
+<p>
+    <b>axistype(</b><i>axis_type</i><b>)</b> specifies the type of axes used.  Choices are <b>table</b>,
+        the default, "table-top" axes, <b>outside</b>, "outside" axes, <b>zero</b>, axes
+        meeting at (0,0,0), and <b>minimum</b>, axes with origin the minimum of the
+        data.  The axistype may be specified by any abbreviation, down to one
+        letter.
+<p>
+    <b>axes()</b> tunes the representation of the axes (by default drawn with
+        <b>clp(solid)</b>).  It should contain options of twoway line.
+<p>
+    <b>shadow</b> specifies that instead of vertical spikes from the data points to
+        the (<i>x</i>,<i>y</i>) plane, each data point is paired with a shadow point on the
+        (<i>x</i>,<i>y</i>) plane. <b>shadow()</b> specified with arguments tunes the
+        representation of the shadow points (by default drawn with
+        <b>msize(*0.5)</b>).  It should contain options of twoway scatter.
+<p>
+    <b>spikes()</b> tunes the representation of the spikes.  It should contain
+        options of twoway rspike.
+<p>
+    <b>titlex()</b>, <b>titley()</b> and <b>titlez()</b> tune the representation of the x, y and z
+        axis titles, shown as marker labels with default <b>mlabpos(0)</b>
+        <b>mlabcolor(black)</b> and (in the case of the z axis title)
+        <b>mlabang(vertical)</b>. Each may contain title text and/or marker label
+        options. The titles will be the text supplied; or if none is
+        supplied, the variable labels of the variables concerned; or if those
+        are not defined, the variable names.
+<p>
+    <b>variablenames</b> overrides the option above by specifying the use of
+        variable names.
+<p>
+    <b>separate()</b> indicates that observations are to be subdivided into classes
+        according to a specified variable.  Each class is plotted as if it
+        defined a single variable.
+<p>
+    <i>graph_options</i> are options of <b>twoway</b>.
+<p>
+<p>
+<b><u>Examples</u></b>
+<p>
+    <b>. scat3 weight length mpg</b>
+<p>
+    <b>. scat3 length width wallht, rot(30) elev(60) axistype(z) titlez(,</b>
+        <b>mlabang(0) mlabpos(9) mlabgap(*12)) titley(, mlabpos(7) mlabgap(*7))</b>
+        <b>title("Height, length and width of Cumbrian cirques", size(medium))</b>
+        <b>spikes(blw(vvthin)) ms(oh)</b>
+<p>
+<p>
+<b><u>Author</u></b>
+<p>
+    Nicholas J. Cox, University of Durham, U.K.
+    n.j.cox@durham.ac.uk
+<p>
+<p>
+<b><u>Acknowledgements</u></b>
+<p>
+    William Gould kindly condoned this revision of his earlier program.
+    David Airey made a suggestion which led to the <b>separate()</b> option.
+<p>
+<p>
+<b><u>References</u></b> 
+<p>
+    Gould, W. 1991. gr3: Crude 3-dimensional graphics.  <i>Stata Technical</i>
+        <i>Bulletin</i> 2: 6-8. (<i>STB Reprints</i> 1: 35-38)
+<p>
+    Gould, W. 1993. gr3.1: Crude 3-dimensional graphics revisited.  <i>Stata</i>
+        <i>Technical Bulletin</i> 12: 12. (<i>STB Reprints</i> 2: 42-43)
+<p>
+</pre>

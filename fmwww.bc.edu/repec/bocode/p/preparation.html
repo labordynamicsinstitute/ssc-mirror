@@ -1,0 +1,57 @@
+<pre>
+-------------------------------------------------------------------------------
+help for <b>preparation</b>
+-------------------------------------------------------------------------------
+<p>
+<b><u>Title</u></b>
+<p>
+    <b>preparation</b> -- module which allows an one-by-one observation of varlist
+    to make it easier to control data and labels or just to have a closer
+    look at it.
+<p>
+<p>
+<b><u>Syntax</u></b>
+<p>
+    <b>preparation</b> [<i>varlist</i>] [<b>,</b> <b><u>num</u></b><b>labels</b> <b><u>str</u></b><b>ings</b> <b><u>nom</u></b><b>iss</b> <b><u>lim</u></b><b>it(</b><i>numlist</i><b>)</b>]
+<p>
+<p>
+<b><u>Description</u></b>
+<p>
+    Preparation loops through all variables in the varlist and displays a
+        table of contents of each of those variable. Since display of the
+        output breaks after each variable this script makes it easier to
+        control data and labels of the dataset or just to take a closer look
+        at data. The ado also automatically leaves out string variables and
+        displays missing values. Both options can be switched on and off of
+        course. Furthermore it allows to leave out variables which consist of
+        more than a user defined number of rows.
+<p>
+<p>
+<b><u>Options</u></b>
+<p>
+    <b><u>num</u></b><b>labels</b> temporarily adds numlabels to the output of each of the
+        variables.
+    <b><u>str</u></b><b>ings</b> By default string variables become omitted. By choosing the
+        strings option string variables will be included again.
+    <b><u>nom</u></b><b>iss</b> By default missing values are display. Choosing this option will
+        hide them.
+    <b><u>lim</u></b><b>it(numlist)</b> Do not want lengthy variables? Add a numlist with the
+        limit options and only variables with a lower equal number of rows
+        will be displayed.
+<p>
+<p>
+<b><u>Acknowledgement</u></b>
+<p>
+    The page clearing part of the ado is based on Nick J. Cox code on
+        Statalist.
+<p>
+<p>
+<b><u>Author</u></b>
+<p>
+    Johannes N. Blumenberg
+    University of Mainz (Germany)
+    Department of Political Science
+    Methods of Empirical Political Science
+    blumenberg@politik.uni-mainz.de
+<p>
+</pre>

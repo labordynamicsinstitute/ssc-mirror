@@ -1,0 +1,78 @@
+<pre>
+ <b> help neoclassical</b>
+-------------------------------------------------------------------------------
+<p>
+<b><u> Title</u></b>
+<p>
+<b> neoclassical -- estimates neoclassical education transitions model</b>
+<p>
+<b><u> Syntax</u></b>
+<b> neoclassical</b> Y1 "TC1" "TV1Names" "Exclusions" Y1Independent
+   Y2 "TC1" "TV2Names" Y2Independent deff [cluster] ;
+   
+<b><u> Description</u></b>
+<p>
+<b>neoclassical</b> estimates a bivariate probit model with selection with coefficient
+&gt; s 
+re-scaled to facilitate cross-equation testing for equality.  It is termed 
+neoclassical for it is a variant of the neoclassical education transitions fram
+&gt; ework 
+proposed in Lucas, Fucella, and Berends (2011).  Note that the first transition
+&gt;  
+appears in the second equation in the output.  Yet, in specifying the model the
+&gt;  
+temporally earlier transition is always regarded as the first transition.  The 
+estimates are the re-scaled coefficients and the appropriate standard errors.  
+&gt; Any 
+subsequent statistical tests will use this second set of results.  A related co
+&gt; mmand, 
+retroclassical, estimates a neoclassical education transitions model while 
+fixing the cross-equation error variance at zero.  This provides the result one
+&gt;  would 
+obtain by calibrating the coefficients across transitions, yet not accounting f
+&gt; or 
+selection.  Thus, it is a mid-way point between a neoclassical approach and the
+&gt;  
+classical approach.
+<p>
+    <b>Y1</b> is the outcome variable for the first transition--this is the
+        selection equation for the second transition
+<p>
+    <b>TC1</b> contains the list of time constant variables; these should be common
+        across the first and second equations.  The set of variables should
+        be in quotes both times they are listed, and in the same exact order.
+<p>
+    <b>TV1Names</b> contains the names of the variables that have specific values
+        for the first transition (and possibly different values for the
+        second transition).  The set of variables should be in quotes
+<p>
+    <b>Exclusions</b> are those variables in the selection equation that are not in
+        the equation for the second transition.  An explicit category is made
+        for these variables to reinforce the necessity of having such
+        variables to identify the selection process.  The set of variables
+        should be in quotations, even if it is only 1 variable
+<p>
+    <b>Y1Independent</b> is the total number of independent variables in the first
+        equation
+<p>
+    <b>Y2</b> is the outcome variable for the second transition--this is the last of
+        the two transitions
+<p>
+    <b>TV2Names</b> contains the variables that have specific values for the second
+        transition (and possibly different values for the first transition).
+        These variables should be in quotes
+<p>
+    <b>Y2Independent</b> is the total number of independent variables in the second
+        transition equation
+<p>
+    <b>deff</b> MUST be supplied.  It is a design effect and must be listed as 1.0
+        if there is no design effect.
+<p>
+    <b>cluster</b> is a variable you may use to obtain Huber-White standard errors.
+        This is optional.
+<p>
+    Also see
+<p>
+    Lucas, Samuel R., Phillip N. Fucella, and Mark Berends. 2011.
+             "Neo-Classical Education Transitions: A Corrected Tale for Three
+</pre>

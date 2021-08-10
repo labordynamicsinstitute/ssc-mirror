@@ -1,0 +1,78 @@
+<pre>
+<b>help mtreatreg postestimation</b>                              also see:  <b>mtreatreg</b>
+-------------------------------------------------------------------------------
+<p>
+<b><u>Title</u></b>
+<p>
+    <b>mtreatreg postestimation</b> --    Postestimation tools for mtreatreg
+<p>
+<p>
+<b><u>Description</u></b>
+<p>
+    The following postestimation commands are available for <b>mtreatreg</b>:
+<p>
+      command      description
+    -------------------------------------------------------------------------
+      <b>predict</b>      predictions
+INCLUDE help post_estat
+INCLUDE help post_estimates
+INCLUDE help post_lincom
+INCLUDE help post_lrtest
+INCLUDE help post_mfx
+INCLUDE help post_nlcom
+INCLUDE help post_predictnl
+INCLUDE help post_test
+INCLUDE help post_testnl
+    -------------------------------------------------------------------------
+<p>
+<p>
+<a name="predict"></a><b><u>Syntax for predict</u></b>
+<p>
+        <b>predict</b> [<i>type</i>] <i>newvar</i> [<i>if</i>] [<i>in</i>] [<b>,</b> <i>options</i>]
+<p>
+<a name="options"></a>    <i>options</i>        Description
+    -------------------------------------------------------------------------
+    Main
+      <b>mu</b>           E(y), the fitted values (the default)
+      <b>xb</b>           linear prediction for outcome
+      <b>at(</b><i>#</i><b>)</b>        specifies the values of the latent factors at which to
+                     evaluate predictions.  The default is a 0 vector.
+    -------------------------------------------------------------------------
+INCLUDE help esample
+<p>
+<p>
+<b><u>Options for predict</u></b>
+<p>
+        +------+
+    ----+ Main +-------------------------------------------------------------
+<p>
+    <b>mu</b> calculates the the expected value of the dependent variable; the
+        default.
+<p>
+    <b>xb</b> calculates the linear predictions for the dependent variable.
+<p>
+    <b>at(</b><i>#</i><b>)</b> specifies the value of the latent factor at which predictions are
+        evaluated.  The default is 0.
+<p>
+<p>
+<b><u>Examples</u></b>
+<p>
+    <b>. mtreatreg y x1 x2, mtreat(d=x1 x2 z) sim(200) dens(gamma)</b>
+    <b>. predict yhat</b>
+    <b>. predict yhat, xb</b>
+    <b>. predict yhat, at(1 1)</b>
+<p>
+<p>
+<b><u>Author</u></b>
+<p>
+    Partha Deb, Hunter College and The Graduate Center, City University of
+        New York, and NBER, USA.
+    partha.deb@hunter.cuny.edu
+<p>
+<p>
+<b><u>Also see</u></b>
+<p>
+    Online:   <b>mtreatreg</b>
+             <b>estat</b>, <b>estimates</b>, <b>lincom</b>, <b>lrtest</b>, <b>mfx</b>, <b>nlcom</b>, <b>predictnl</b>, <b>test</b>, 
+             <b>testnl</b>
+</pre>

@@ -1,0 +1,63 @@
+<pre>
+.-
+help for ^soreg^                                                   (Mark Lunt)
+.-
+<p>
+Stereotype Ordered Regression 
+-----------------------------
+<p>
+soreg depvar varlist [if exp] [in range] [,Maxdim(integer 1) 
+      Constraints(clist)]
+<p>
+<p>
+Description
+-----------
+<p>
+soreg implements the stereotype ordinal regression model proposed by 
+Anderson. Constraints may be defined to perform constrained
+estimation.   
+<p>
+<p>
+Options
+-------
+<p>
+^maxdim^ defines the dimension of the stereotype model to be fitted
+<p>
+^constraints(^clist^)^ specifies the linear constraints to be applied
+    during estimation.  The default is to perform unconstrained
+    estimation.  Constraints are defined with the constraint command.
+    constraints(1) specifies that the model is to be constrained
+    according to constraint 1; constraints(1-4) specifies constraints
+    1 through 4; constraints(1-4,8) specifies 1 through 4 and 8.  It
+    is not considered an error to specify nonexistent constraints as
+    long as some of the constraints exist.  Thus, constraint(1-999)
+    would specify that all defined constraints be applied.
+<p>
+<p>
+Remarks
+-------
+<p>
+Stereotype ordinal regression is an alternative to the proportional
+odds ordinal regression implemented by ologit.
+<p>
+<p>
+Author
+------
+<p>
+        Mark Lunt
+        ARC Epidemiology Unit
+        University of Manchester
+        Stopford Building
+        Oxford Road
+        Manchester
+<p>
+        Mark.Lunt@@man.ac.uk
+<p>
+<p>
+References
+----------
+<p>
+Anderson, J.A. (1984). "Regression and Ordered Categorical Variables."
+Journal of the Royal Statistical Society, Series B 46: 1-30.
+<p>
+</pre>

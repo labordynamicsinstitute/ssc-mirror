@@ -1,0 +1,55 @@
+<pre>
+-------------------------------------------------------------------------------
+help for <b>lookforit</b>                                              manual:  {none}
+-------------------------------------------------------------------------------
+<p>
+<b><u>Search variable names and labels for some string or strings (an enhancement of </u></b>
+<b><u>&gt; lookfor)</u></b>
+<p>
+        <b>lookforit</b><i> string [string [...]]</i>
+<p>
+<b><u>Description</u></b>
+<p>
+    <b>lookforit</b> is an enhancement of the base Stata command lookfor.  It
+    searches all variable names and variable labels just as lookfor does.
+    Like lookfor <b>lookforit</b> can search for multiple strings but can only do a
+    simple search, i.e. no &amp;'s, |'s, or enclosing strings in quotes.  The
+    ways that <b>lookforit</b> differs are as follows:
+<p>
+    1) <b>lookforit</b> does a case sensitive search if the user types any upper
+    case characters, otherwise, it performs a case insensitive search
+<p>
+    <b>. lookforit female</b>
+<p>
+    finds "Female", "FEMALE", "feMale", or even "FemalePatient"
+<p>
+    <b>. lookforit Female</b>
+<p>
+    only finds "Female"
+<p>
+    2) <b>lookforit</b> lists variables alphabetically
+<p>
+    3) The variable names are clickable links to the data editor that opens
+    Stata's data editor to that variable column.
+<p>
+<p>
+<b><u>Examples</u></b>
+<p>
+    <b>. lookforit job</b>
+<p>
+    <b>. lookforit employment Salary</b>
+<p>
+    <b>. lookforit inc</b>
+<p>
+<p>
+<b><u>Author</u></b>
+<p>
+    Dan Blanchette
+    The Carolina Population Center
+    University of North Carolina - Chapel Hill, USA
+    dan_blanchette@unc.edu
+<p>
+<b><u>Also see</u></b>
+<p>
+    Online:  help for lookfor, ds
+</pre>

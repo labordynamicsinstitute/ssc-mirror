@@ -1,0 +1,294 @@
+<pre>
+<p>
+<b>help rdpower</b>
+-------------------------------------------------------------------------------
+<p>
+<b><u>Title</u></b>
+<p>
+    <b>rdpower</b> --   Power calculations for random designs
+<p>
+<b><u>Syntax</u></b>
+        <b>rdpower</b> <i>design_type</i><b>,</b> es(#) [<i>options</i>]
+<p>
+    where elements of <i>design_type</i> may be
+<p>
+      <b>rd1</b>                        A simple 1-level design whereby half of the
+                                  subjects are assigned treatment and half
+                                  are assigned control.  Sample size is n *
+                                  2.
+<p>
+      <b>crd2</b>                       A 2-level cluster randomized design where
+                                  treatment is at level 2. Sample size is n *
+                                  m * 2.
+<p>
+      <b>crd3</b>                       A 3-level cluster randomized design where
+                                  treatment is at level 3.  Sample size is n
+                                  * p * m * 2.
+<p>
+      <b>rbd2</b>                       A 2-level randomized block design where
+                                  treatment is at level 1. Sample size is n *
+                                  m * 2.
+<p>
+      <b>rbd3</b>                       A 3-level randomized block design where
+                                  treatment is at level 2. Sample size is n *
+                                  p * m * 2.
+<p>
+<b><u> Description</u></b>
+<p>
+    <b>rdpower</b> computes power for a variety of randomized designs: a single
+    level randomized design where there is no clustering, a two-level cluster
+    randomized design where treatment is at level 2, a three-level cluster
+    randomized design where treatment is at level 2, a two-level block
+    randomized design where treatment is at level 1, and a three-level
+    randomized block design where treatment is at level 2.
+<p>
+IMPORTANT: For each design type, the options mean something different so be sur
+&gt; e to take note 
+of the definitions below.
+<p>
+    <i>options</i>                     Description
+    -------------------------------------------------------------------------
+    Required for all designs
+      <b>es(</b><i>#</i><b>)</b>                      A standardized effect size.
+<p>
+    Optional for all designs
+      <b>alpha(</b><i>#</i><b>)</b>                   The alpha for a two-tailed test.  Default is
+                                  0.05.
+<p>
+-------------------------------------------------------------------------------
+<p>
+    Required for rd1
+<p>
+      <b>n(</b><i>#</i><b>)</b>                       The number of cases per treatment
+<p>
+-------------------------------------------------------------------------------
+<p>
+    Required for crd2
+<p>
+      <b>m(</b><i>#</i><b>)</b>                       The number level-2 clusters per treatment.
+<p>
+      <b>n(</b><i>#</i><b>)</b>                       The number of cases per level-2 cluster.
+<p>
+      <b>icc2(</b><i>#</i><b>)</b>                    The level-2 intraclass correlation (ICC). If
+                                  none is specified, an ICC of 0 is assumed,
+                                  and the result is the same as rd1.
+<p>
+    Required for crd2 when specifying covariates
+<p>
+      <b>pre1(</b><i>#</i><b>)</b>                    The proportion of level-1 variance explained
+                                  (R-square) by level 2 covariates.
+<p>
+      <b>pre2(</b><i>#</i><b>)</b>                    The proportion of level-2 variance explained
+                                  (R-square) by level 2 covariates.
+<p>
+      <b>l2vars(</b><i>#</i><b>)</b>                  The number of level-2 covariates.
+<p>
+-------------------------------------------------------------------------------
+<p>
+    Required for crd3
+<p>
+      <b>m(</b><i>#</i><b>)</b>                       The number level-3 clusters per treatment.
+<p>
+      <b>p(</b><i>#</i><b>)</b>                       The number level-2 clusters per level-3
+                                  cluster
+<p>
+      <b>n(</b><i>#</i><b>)</b>                       The number of cases per level-2 cluster.
+<p>
+      <b>icc2(</b><i>#</i><b>)</b>                    The level-2 intraclass correlation (ICC).
+<p>
+      <b>icc3(</b><i>#</i><b>)</b>                    The level-3 intraclass correlation (ICC).
+<p>
+    Required for crd3 when specifying covariates
+<p>
+      <b>pre1(</b><i>#</i><b>)</b>                    The proportion of level-1 variance explained
+                                  (R-square) by level-3 covariates.
+<p>
+      <b>pre2(</b><i>#</i><b>)</b>                    The proportion of level-2 variance explained
+                                  (R-square) by level-3 covariates.
+<p>
+      <b>pre3(</b><i>#</i><b>)</b>                    The proportion of level-3 variance explained
+                                  (R-square) by level-3 covariates.
+<p>
+      <b>l3vars(</b><i>#</i><b>)</b>                  The number of level-3 covariates.
+<p>
+-------------------------------------------------------------------------------
+<p>
+    Required for rbd2
+<p>
+      <b>m(</b><i>#</i><b>)</b>                       The number level-2 clusters.
+<p>
+      <b>n(</b><i>#</i><b>)</b>                       The number of cases per treatment per
+                                  level-2 cluster.
+<p>
+      <b>icc2(</b><i>#</i><b>)</b>                    The level-2 intraclass correlation (ICC).
+<p>
+      <b>v(</b><i>#</i><b>)</b>                       The ratio of the variance in treatment
+                                  effects across clusters to the total
+                                  variance across clusters.
+<p>
+    Required for rbd2 when specifying covariates
+<p>
+      <b>pre1(</b><i>#</i><b>)</b>                    The proportion of level-1 variance explained
+                                  (R-square) by level 2 covariates.
+<p>
+      <b>pre2(</b><i>#</i><b>)</b>                    The proportion of level-2 variance in
+                                  treatment effects explained (R-square) by
+                                  level 2 covariates.
+<p>
+      <b>l2vars(</b><i>#</i><b>)</b>                  The number of level-2 covariates.
+<p>
+-------------------------------------------------------------------------------
+<p>
+    Required for rbd3
+<p>
+      <b>m(</b><i>#</i><b>)</b>                       The number level-3 clusters.
+<p>
+      <b>p(</b><i>#</i><b>)</b>                       The number level-2 clusters per treatment
+                                  per level-3 cluster
+<p>
+      <b>n(</b><i>#</i><b>)</b>                       The number of cases per level-2 cluster.
+<p>
+      <b>icc2(</b><i>#</i><b>)</b>                    The level-2 intraclass correlation (ICC).
+<p>
+      <b>icc3(</b><i>#</i><b>)</b>                    The level-3 intraclass correlation (ICC).
+<p>
+      <b>v(</b><i>#</i><b>)</b>                       The ratio of the variance in treatment
+                                  effects across clusters to the total
+                                  variance across clusters
+<p>
+    Required for rbd3 when specifying covariates
+<p>
+      <b>pre1(</b><i>#</i><b>)</b>                    The proportion of level-1 variance explained
+                                  (R-square) by level-3 covariates.
+<p>
+      <b>pre2(</b><i>#</i><b>)</b>                    The proportion of level-2 variance explained
+                                  (R-square) by level-3 covariates.
+<p>
+      <b>pre3(</b><i>#</i><b>)</b>                    The proportion of level-3 variance in the
+                                  treatment effects explained (R-square) by
+                                  level-3 covariates.
+<p>
+      <b>l3vars(</b><i>#</i><b>)</b>                  The number of level-3 covariates.
+<p>
+-------------------------------------------------------------------------------
+<p>
+<b><u>Examples</u></b>
+<p>
+    For a single level design with 80 subjects per treatment group and an
+        effect size of 0.40
+<p>
+    <b>. rdpower rd1, es(.4) n(80)</b>
+<p>
+    For a two-level cluster randomized design with 8 clusters per treatment
+        group, 50 subjects per cluster, an ICC of 0.2, and an effect size of
+        0.50.  Treatment is at level 2.
+<p>
+    <b>. rdpower crd2, es(.5) n(50) m(8) icc2(.2)</b>
+<p>
+    For a two-level cluster randomized design with 8 clusters per treatment
+        group, 50 subjects per cluster, an ICC of 0.2, an effect size of
+        0.50, with a single level-2 covariate that accounts for 20 percent of
+        the variance at level 1 and 20 percent of the variance at level 2.
+        Treatment is at level 2.
+<p>
+    <b>. rdpower crd2, es(.5) n(50) m(8) icc2(.2) pre1(.2) pre2(.2) l2vars(1)</b>
+<p>
+    For a three-level cluster randomized design with 8 level-3 clusters per
+        treatment group, 2 level-2 clusters per level-3 cluster, 15 subjects
+        per level-2 cluster, a level-2 ICC of 0.1, a level-3 icc of 0.20, and
+        an effect size of 0.50.  Treatment is at level 3.
+<p>
+    <b>. rdpower crd3, es(.5) n(15) p(2) m(8) icc2(.1) icc3(.2)</b>
+<p>
+    For a three-level cluster randomized design with 8 level-3 clusters per
+        treatment group, 2 level-2 clusters per level-3 cluster, 15 subjects
+        per level-2 cluster, a level-2 ICC of 0.1, a level-3 icc of 0.20, an
+        effect size of 0.50, with a covariate at level 3 that accounts for 10
+        percent of the variance at level 1, 20 percent of the variance at
+        level 2, and 25 percent of the variance at level 3.  Treatment is at
+        level 3.
+<p>
+    <b>. rdpower crd3, es(.5) n(15) p(2) m(8) icc2(.1) icc3(.2) pre1(.1)</b>
+        <b>pre2(.2) pre3(.25) l3vars(1)</b>
+<p>
+    For a two-level randomized block design with 8 clusters, 50 subjects per
+        treatment and control per cluster, an ICC of 0.2, an effect size of
+        0.50, and an estimated variance of the effect of 0.15.
+<p>
+    <b>. rdpower rbd2, es(.5) n(50) m(8) icc2(.2) v(.15)</b>
+<p>
+    For a two-level randomized block design with 8 clusters, 50 subjects per
+        treatment group per cluster, an ICC of 0.2, an effect size of 0.50,
+        and an estimated variance ratio of 0.15, with a single level 2
+        covariate that accounts for 10 percent of the variation at level 1
+        and 20 percent of the variation in treatment effects at level 2.
+<p>
+    <b>. rdpower rbd2, es(.5) n(50) m(8) icc2(.2) v(.15) pre1(.1) pre2(.2)</b>
+        <b>l2vars(1)</b>
+<p>
+    For a three-level randomized block design with 8 level-3 clusters, 2
+        level-2 clusters per treatment, 15 subjects per level-2 cluster, a
+        level-2 ICC of 0.1, a level-3 ICC of 0.2, an effect size of 0.50, and
+        an estimated variance of the effect of 0.15.
+<p>
+    <b>. rdpower rbd3, es(.5) n(15) p(2) m(8) icc2(.1) icc3(.2) v(.15)</b>
+<p>
+    For a three-level randomized block design with 8 level-3 clusters, 2
+        level-2 clusters per treatment, 15 subjects per level-2 cluster, a
+        level-2 ICC of 0.1, a level-3 ICC of 0.2, an effect size of 0.50, an
+        estimated variance ratio of 0.15, with a single level-3 covariate
+        that accounts for 10 percent of the variation at level 1 and 20
+        percent of the variation at level 2, and 25 percent of the variance
+        in the treatment effects at level 3.
+<p>
+    <b>. rdpower rbd3, es(.5) n(15) p(2) m(8) icc2(.1) icc3(.2) v(.15) pre1(.1)</b>
+        <b>pre2(.2) pre3(.25) l3vars(1)</b>
+<p>
+<b><u>Saved results</u></b>
+<p>
+    <b>rdpower</b> saves the following in <b>r()</b>:
+<p>
+    Scalars        
+      <b>r(samplesize)</b>       calculated sample size
+      <b>r(n)</b>                n
+      <b>r(m)</b>                m
+      <b>r(p)</b>                p
+      <b>r(icc2)</b>             the specified level-2 ICC
+      <b>r(icc3)</b>             the specified level-3 ICC
+      <b>r(level2vars)</b>       the specified number of level-2 covariates
+      <b>r(level3vars)</b>       the specified number of level-3 covariates
+      <b>r(r2_level3)</b>        the specified proportion of explained varinace at
+                            level 3
+      <b>r(r2_level2)</b>        the specified proportion of explained varinace at
+                            level 2
+      <b>r(r2_level1)</b>        the specified proportion of explained varinace at
+                            level 1
+      <b>r(designeffect)</b>     the calculated design effect
+      <b>r(treatmentvariance)</b>
+                            the specified variance of the treatment effect
+      <b>r(alpha)</b>            the alpha level
+      <b>r(effectsize)</b>       the specified effect size
+      <b>r(noncentral)</b>       the calculated non-centrality parameter of the
+                            non-cental t distribution
+      <b>r(critical)</b>         the critical t value
+      <b>r(power)</b>            the calcuated power
+<p>
+    Macros         
+      <b>r(type)</b>             <b>design_type</b>
+<p>
+<b><u>References</u></b>
+<p>
+    Hedges, Larry and Rhoads, Christopher. 2009. Statistical Power Analysis
+        in Education Research (NCSER 2010-3006). Washington, DC: National
+        Center for Special Education Research, Institute of Education
+        Sciences, U.S. Department of Education.
+<p>
+    Konstantopoulos, Spyros. 2008. The Power of the Test for Treatment
+        Effects in Three-Level Cluster Randomized Designs.  Journal of
+        Research on Educational Effectiveness.  1:1, 66-88.
+<p>
+    Konstantopoulos, Spyros. 2008. The Power of the Test for Treatment
+        Effects in Three-Level Block Randomized Designs.  Journal of Research
+        on Educational Effectiveness.  1:4, 265-288.
+<p>
+</pre>

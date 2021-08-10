@@ -1,0 +1,210 @@
+<pre>
+<b>help prsnperd</b>
+-------------------------------------------------------------------------------
+<p>
+<p>
+<b><u>Title</u></b>
+<p>
+    <b>prsnperd</b> -- A utility for creating person-period datasets for discrete
+               time longitudinal analyses
+<p>
+<p>
+<b><u>Syntax</u></b>
+<p>
+        <b>prsnperd</b> <i>id length-to-event</i> [<i>censor</i>] [<b>, </b><b><u>t</u></b><b>runcate(</b><i>#</i><b>)</b> <b><u>p</u></b><b>retrunc(</b><i>#</i><b>)</b>
+                  <b><u>cs</u></b><b>witch</b> <b>tvp(</b><i>names</i><b>)</b> <b>fev(</b><i>name</i><b>)</b> <b>copyleft</b>]
+<p>
+<p>
+    <i>options</i>                       Description
+    -------------------------------------------------------------------------
+    Miscellaneous
+      <b><u>t</u></b><b>runcate(</b><i>#</i><b>)</b>                 truncate the maximum time of
+                                    <i>length-to-event</i>
+      <b><u>p</u></b><b>retrunc(</b><i>#</i><b>)</b>                 ignore some initial time periods in the
+                                    model
+      <b><u>cs</u></b><b>witch</b>                     invert <i>censor</i> coding
+      <b>tvp(</b><i>names</i><b>)</b>                  provide root names of flat-encoded time
+                                    varying predictors
+      <b>fev(</b><i>name</i><b>)</b>                   provide root name of flat-encoded time
+                                    varying event occurrence
+      <b>copyleft</b>                    display license information
+    -------------------------------------------------------------------------
+<p>
+<p>
+<b><u>Description</u></b>
+<p>
+    <b>prsnperd</b> transforms a person-time dataset into a person-period dataset
+    for discrete-time longitudinal analyses, for example, using <b>dthaz</b>. Input
+    variables are <i>id</i>: the unique id number of each observed individual in the
+    person-time dataset; <i>length-to-event</i>: the duration to event occurrence
+    (in number of discrete time intervals since the study's Beginning of
+    Time); and <i>censor</i>, which indicates censoring status of the observed
+    individual (where 0 = not censored; and 1 = censored, unless the <b><u>cs</u></b><b>witch</b>
+    option is used). Given an input data set of this form, an output dataset
+    is created with expanded observations and several new variables.
+<p>
+    NOTE: individuals who were never observed to have experienced an event
+    should be coded as having a <i>length-to-event</i> equal to their total time in
+    the study, and should be censored.
+<p>
+    Each individual observation within the person-time dataset is replaced
+    with a number of new observations equal to <i>length-to-event</i> for that <i>id</i>.
+    If there is no event occurrence for a given time period, the user is so
+    notified.  Within these new observations either one, or several new
+    variables are created, depending on whether the survival analysis or
+    growth-modeling syntax is used.  If application is for growth modeling,
+    then only the <i>_period</i> variable is created, otherwise all the following
+    variables are produced.
+<p>
+    <i>_period</i> Specific time interval of this observation.  Each <i>id</i> will have at
+            least one observation with <i>_period</i> = 1. The maximum value for
+            <i>_period</i> is equal to the maximum <i>length-to-event</i> of the
+            person-time dataset (or to <b><u>t</u></b><b>runcate</b> if specified).
+<p>
+    <i>_d1-_dX</i> (Where X is the maximum value for <i>period</i>) These are indicator
+            variables (i.e. "dummy variables") for the current period.
+<p>
+    <i>_Y</i>      _Y indicates event occurrence for the given period (where 0 =
+            event did not happen and 1 = event happened). _Y is usefully
+            employed as the outcome in event history models. As in a simple
+            logit hazard model:
+<p>
+            . logit _Y d1-d8, nocons
+<p>
+            produces an estimate of baseline hazard corresponding perfectly
+            with the sample hazard where ^H(t_j) = 1/1+e^-(B_j). The estimate
+            becomes more interesting when additional predictors are added
+            thus:
+<p>
+            . logit _Y d1-d8 age, nocons or
+<p>
+            Exploration of estimated differences in ^H(t_j) can therefore be
+            modeled using standard nested models of multiple predictors. The
+            <b>or</b> function provides estimated odds for hazard of event compared
+            to non-event for each predictor.
+<p>
+    <i>_status</i> A categorical status variable for producing life-tables (where 1
+            = event occurred; 2 = event did not occur; and 3 = censored).
+            Life tables with sample hazard can be created by using the
+            following:
+<p>
+            . tabulate _period _status, row
+<p>
+<p>
+<b><u>Options</u></b>
+<p>
+        +---------------+
+    ----+ Miscellaneous +----------------------------------------------------
+<p>
+    <b><u>t</u></b><b>runcate(</b><i>#</i><b>)</b> restricts the maximum value for <i>length-to-event</i>, censoring
+        those observations with integer values greater than <b><u>t</u></b><b>runcate</b>.
+<p>
+    NOTE:   Specifying values of <b><u>t</u></b><b>runcate</b> greater than the maximum value of
+    <i>length-to-event</i> (or specifying negative values) produces the same dataset
+    as one with no value of <b><u>t</u></b><b>runcate</b> specified.
+<p>
+    <b><u>p</u></b><b>retrunc(</b><i>#</i><b>)</b> discards early time periods from the new dataset. For
+        example, when pre-truncating with a value of 2, the period that would
+        be indicated by _d3 becomes _d1 instead, and the value of _period
+        would be decreased by 2.
+<p>
+    NOTE:   Specifying values of <b><u>t</u></b><b>runcate</b> greater than the one minus the
+    maximum value of <i>length-to-event</i> (or specifying negative values) produces
+    the same dataset as one with no value of <b><u>t</u></b><b>runcate</b> specified. Also, <b><u>t</u></b><b>runcate</b>
+    and <b><u>p</u></b><b>retrunc</b> cannot be combined when their values would result in fewer
+    than two periods. Discrete time survival analyses conducted upon
+    pre-truncated datasets are, in effect analyses conducted upon separate
+    populations from the not pre-truncated datasets {it:if the conditional
+    hazard during the pre-truncated periods is greater than zero}. The author
+    suggests that an analyst may desire to perform a pre-truncated analysis
+    either because there are no events during initial periods, or because she
+    is interested in analyzing a surviving sub-population at a later starting
+    period. However, in cases where events occurred during the pre-truncated
+    periods, a survival analysis cannot be said to generalize to the population
+    of the not pre-truncated dataset. In cases where events occur in initial
+    periods, but at rates that are too few to provide reliable estimates for
+    these periods, the analyst should both employ a sensitivity analysis to
+    describe differences between models on pre-truncated and not pre-truncated
+    datasets, but also examine the characteristics of anomalous
+    individuals--qualitative data may particularly help illuminate how these
+    persons differ from the majority of individuals who remain in the
+    pre-truncated dataset.
+<p>
+    <b><u>cs</u></b><b>witch</b> tells <b>prsnperd</b> to expect that censored data are coded with 0 =
+        censored, and 1 = event/failure.
+<p>
+    <b>tvp(</b><i>names</i><b>)</b> generates variable(s) with the supplied name(s) if the names
+        correspond precisely to prefixed portions of flat coded time varying
+        predictors. Person-time data sets are often constructed with
+        time-varying predictors encoded in such a format (for example,
+        <i>predictor1</i>, <i>predictor2</i>, <i>predictor3</i>, <i>predictor4</i>, where the numeric
+        suffix indicates which time-period the observation was made in).
+        Missing values will not be imputed. The time-designation in the
+        suffix must be ordered in the same manner as the periods of
+        observation.
+<p>
+    <b>fev(</b><i>name</i><b>)</b> constructs variables named <i>length_to_event</i> and <i>censored</i> with
+        appropriate values if event data are in a flat indicator format (for
+        example, <i>event1 event2 event3 event4</i>), rather than in a single
+        <i>length-to-event</i> variable by specifying the common portion of the
+        event variables' names (for example <b>"</b><i>event</i><b>"</b>). This option assumes
+        that all event variables share a common prefix (<i>name</i>), that <i>name</i> has
+        values <b>0</b> (no event), <b>1</b> (event, or first event), or <b>.</b> (censored), and
+        that there is no left-censoring of observations. The created
+        variables will override supplied <i>length-to-event</i> and <i>censored</i>
+        variables. <b>prsnperd</b> will exit with an error if it encounters
+        left-censored data with the <b>fev</b> option. <b>fev</b> also expects that no data
+        are middle-censored (i.e. all time periods have been observed for
+        each individual between the study's beginning of time and either the
+        first occurence of the event, or right-censoring).
+<p>
+    <b>copyleft</b> <b>prsnperd</b> is free software, licensed under the GPL.  The <b>copyleft</b>
+        option displays the copying permission statement for <b>prsnperd</b> which
+        is a part of the <b>dthaz</b> package. The full license can be obtained by
+        typing:
+<p>
+            . net describe dthaz, from (http://www.doyenne.com/stata)
+<p>
+    and clicking on the click here to get link for the ancillary file.
+<p>
+<p>
+<b><u>Examples</u></b>
+<p>
+    . prsnperd id length censored
+<p>
+    . prsnperd id length censored, truncate(8)
+<p>
+    . prsnperd id, tvp(predictor) fev(event)
+<p>
+<b><u>Author</u></b>
+<p>
+Alexis Dinno
+Portland State University
+alexis dot dinno at pdx dot edu
+<p>
+Please contact me with any questions, bug reports or suggestions for improvemen
+&gt; t.
+<p>
+My thanks to Dr. Suzanne Graham, Dr. Jim Stiles, and Dr Anna Song.
+<p>
+<p>
+<b><u>References</u></b>
+<p>
+Singer JD and Willett JB. 2003. <i>Applied Longitudinal Data Analysis: Modeling</i>
+          <i>Change and Event Occurence</i>. Oxford, UK: Oxford University Press. 672
+          pages.
+<p>
+Willet JB and Singer JD. 1991. "From Whether to When: New Methods for Studying
+          Student Dropout and Teacher Attrition." <i>Review of Educational</i>
+          <i>Research</i>. 61: 407-450
+<p>
+Singer JD and Willett JB. 1991. "Modeling the Days of Our Lives: Using Survival
+          Analysis When Designing and Analyzing Longitudinal Studies of
+          Duration and Timing of Events." <i>Psychological Bulletin.</i> 110: 268-290
+<p>
+<p>
+<b><u>Also See</u></b>
+<p>
+      Help: dthaz, msdthaz
+<p>
+</pre>

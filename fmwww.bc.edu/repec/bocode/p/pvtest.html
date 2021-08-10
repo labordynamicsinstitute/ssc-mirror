@@ -1,0 +1,62 @@
+<pre>
+<b>help pvtest</b>                                                  also see:  test pv
+-------------------------------------------------------------------------------
+<p>
+<b><u>Title</u></b>
+<p>
+    <b>pvtest</b> -- Test linear hypotheses after estimation with plausible values
+<p>
+<b><u>Syntax</u></b>
+<p>
+        <b>pvtest</b> <b>(</b><i>spec</i><b>)</b> [<b>(</b><i>spec</i><b>)</b> ...]
+<p>
+<b><u>Description</u></b>
+<p>
+    <b>pvtest</b> estimates Wald and t tests for linear hypotheses. It differs from 
+    <b>test</b> only in how it calculates the t parameter, which is usually the
+    degrees of freedom, for the t test. See <b>pv</b> for formulas, references, and
+    more information.
+<p>
+<b><u>Examples</u></b>
+<p>
+    Estimating statistics with PISA
+<p>
+        <b>. pv stratio propqual [aw=w_fstuwt], pv(pv*math) cmd("reg") brr</b>
+            <b>rw(w_fstr*) fays(0.5)</b>
+<p>
+        <b>. pvtest stratio=propqual</b>
+<p>
+        <b>. pvtest stratio propqual</b>
+<p>
+        <b>. pv stratio [aw=w_fstuwt], pv(pv*math) bs bsops("reps(80)</b>
+            <b>str(stratum) cl(schoolid)")</b>
+<p>
+        <b>. pvtest 3*stratio=9</b>
+<p>
+        <b>. pv stratio [aw=w_fstuwt], pv(pv*math)</b>
+<p>
+        <b>. pvtest stratio=2</b>
+<p>
+Estimating statistics with PIRLS
+<p>
+        <b>. pv asbgsex [aw=tchwgt], pv(asrrea*) jkzone(jkzone) jkrep(jkrep) jrr</b>
+            <b>timss</b>
+<p>
+        <b>. pvtest 3*asbgsex=9</b>
+<p>
+<b><u>Author</u></b>
+<p>
+    Kevin Macdonald is a consultant with the Education Team in the World
+    Bank's Human Development Network and has a master's degree in economics
+    from the University of British Columbia in Vancouver, Canada. Please send
+    questions, comments or complaints to kadmacdonald@gmail.com.
+<p>
+<b><u>Also see</u></b>
+<p>
+    <b>test</b> <b>pv</b>
+<p>
+<b><u>Version</u></b>
+<p>
+    Last updated 2008-08-01
+<p>
+</pre>

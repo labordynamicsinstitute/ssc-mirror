@@ -1,0 +1,83 @@
+<pre>
+-------------------------------------------------------------------------------
+help for <b>vtokenize</b>                                                  Bill Rising
+-------------------------------------------------------------------------------
+<p>
+<b>Split All Observations of a Variable into Tokens</b>
+<p>
+        <b>vtokenize</b> <i>varname</i> [<b>if</b> <i>exp</i>] [<b>in</b> <i>range</i>] [<b>,</b> <b>stub</b> <b><u>p</u></b><b>arse</b> <b>nospace</b>
+              <b><u>nodelim</u></b><b>eters</b>
+<p>
+<b><u>Description</u></b>
+<p>
+Splits the <i>varname</i> into its component tokens, generating as many new variables
+as needed.  (The original variable is left untouched.) Used for working with
+truly nasty text files.
+<p>
+<b><u>Options</u></b>
+<p>
+<b>stub</b> specifies the start of the names of the variables which will be generated.
+    If omitted, the stub will simply be the name of the variable being split.
+    The resulting variables will have suffixes _1, _2, ... or _01, _02, ... or
+    _001, _002, ... depending on the number of variables generated.
+<p>
+<b>parse(delimiters)</b> gives the list of delimiters which are used to separate
+    tokens.  If omitted, the only delimiter is whitespace (one or more spaces).
+    There is no need to specify space a delimiter, though explicitly specifying
+    it will not cause problems.
+<p>
+<b>nospace</b> is used to <b>prevent</b> spaces from being used as delimiters.
+<p>
+<b>nodelimiters</b> is used to <b>prevent</b> delimiters from being stored as tokens.  Note
+    that just as with gettoken, spaces are never kept as tokens.
+<p>
+<b><u>Example(s)</u></b>
+<p>
+        . vtokenize foo
+            Splits <i>foo</i> into words by breaking on space(s), storing the first
+            word for each observation in <i>foo_1</i>, the second word in <i>foo_2</i>, etc.
+            <i>foo</i> itself is not altered.
+<p>
+        . vtokenize foo, stub(bar)
+            Splits <i>foo</i> into words by breaking on space(s), storing the first
+            word for each observation in <i>bar_1</i>, the second word in <i>bar_2</i>, etc.
+<p>
+        . vtokenize foo, stub(bar) parse(":") nospace
+            Splits <i>foo</i> into words by breaking on colons (:), storing the first
+            token for each observation in <i>bar_1</i>, the second token in <i>bar_2</i>,
+            etc.  The colons themselves <b>are</b> treated as tokens.
+<p>
+        . vtokenize foo, stub(bar) parse(":") nospace nodelimiters
+            Splits <i>foo</i> into words by breaking on colons (:), storing the first
+            token for each observation in <i>bar_1</i>, the second token in <i>bar_2</i>,
+            etc.  The colons themselves are <b>not</b> treated as tokens.
+<p>
+        . vtokenize foo, stub(bar) parse(":")
+            Splits <i>foo</i> into words by breaking on colons (:) and spaces, storing
+            the first token for each observation in <i>bar_1</i>, the second token in
+            <i>bar_2</i>, etc.  The colons themselves are treated as tokens, but the
+            spaces are not.
+<p>
+<b><u>Notes</u></b>
+<p>
+<b>vtokenize</b> checks only to see if the variable <i>stub_*1</i> exists when doing error
+checking.  Thus, it will die ungracefully if, say <i>stub_3</i> exists, but it needs
+to generate its own <i>stub_3</i>
+<p>
+<b><u>Also see</u></b>
+tokenize, gettoken, vgettoken
+<p>
+<b><u>Author</u></b>
+Bill Rising 
+email: brising@louisville.edu 
+web: http://www.louisville.edu/~wrrisi01
+<p>
+snailmail:
+Dept. of Family and Community Medicine
+University of Louisville
+MedCenter One, Suite 270
+501 E. Broadway
+Louisville, KY 40202
+<p>
+<b><u>Last Updated</u></b>: December 9, 2003 @ 21:51:25
+</pre>

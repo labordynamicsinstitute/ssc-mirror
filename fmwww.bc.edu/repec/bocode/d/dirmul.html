@@ -1,0 +1,50 @@
+<pre>
+<b>help dirmul</b>
+-------------------------------------------------------------------------------
+<p>
+<p>
+<b><u>Title</u></b>
+<p>
+    <b>dirmul -- dirichlet multinomial regression</b>
+<p>
+<b><u>Syntax</u></b>
+<p>
+        <b><u>dirmul</u></b> <i>depvar</i> [<i>indepvars</i>] [<i>if</i>] [<i>in</i>] <b>,</b> <b><u>gr</u></b><b>oup(</b><i>varname</i><b>)</b> [<i>options</i>]
+<p>
+<b><u>Description</u></b>
+<p>
+    <b>dirmul</b> fits the dirichlet-multinomial regression model. It is a
+    parametric alternative to grouped conditional logit that allows for
+    overdispersion. The data must be in the same format as for estimation
+    with <b>multin</b>.
+<p>
+<b><u>Options</u></b>
+<p>
+    <b>eqcorr</b> Specifies the parameterization in terms of the intraclass
+        correlation coefficient
+<p>
+    <b>stmul</b> Uses the results from the grouped conditional logistic as starting
+        values.
+<p>
+    <b>strho</b> Set a starting value for rho (must be between 0 and 1). This option
+        applies only if you are using the <b>eqcorr</b> option.
+<p>
+    <b>var2</b> Allows for the introduction of group level variables. These
+        variables do not affect the choice probabilities.
+<p>
+    <b>pearson</b> reports the Pearson chi-squared statistic.
+<p>
+<b><u>Author</u></b>
+<p>
+Paulo Guimaraes, Division of Research, University of South Carolina.
+Email: guimaraes@moore.sc.edu 
+<p>
+<b><u>References</u></b>
+<p>
+    Guimaraes, P and Lindrooth, R. 2005.  Dirichlet-Multinomial Regression
+    Economics Working Paper Archive at WUSTL, Econometrics, n. 0509001 
+    http://129.3.20.41/eps/em/papers/0509/0509001.pdf
+<p>
+<b><u>Also see</u></b>
+<p>
+</pre>

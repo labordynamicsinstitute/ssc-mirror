@@ -1,0 +1,61 @@
+<pre>
+<p>
+-------------------------------------------------------------------------------
+help for <b>circscatter</b>
+-------------------------------------------------------------------------------
+<p>
+<b><u>Scatter plot for circular data with wrapping round of data</u></b> 
+<p>
+        <b><u>circsc</u></b><b>atter</b> <i>varlist</i> [<i>weight</i>] [<b>if</b> <i>exp</i>] [<b>in</b> <i>range</i>] [ <b>,</b> <b><u>x</u></b><b>circ</b> <b><u>y</u></b><b>circ</b>
+                 <b><u>p</u></b><b>ad(</b><i>#)</i> <i>scatter_options</i> ]
+<p>
+    <b>aweight</b>s, <b>fweight</b>s and <b>iweight</b>s are allowed; see help on weights.
+<p>
+    The abbreviation <b>circsc</b> (only) is allowed.
+<p>
+<p>
+<b><u>Description</u></b>
+<p>
+    <b>circscatter</b> produces a scatter plot for <i>varlist</i> with some wrapping round
+    of data. It is applicable when at least one of the variables in <i>varlist</i>
+    is a circular variable taking on values between 0 and 360 degrees.
+<p>
+<p>
+<b><u>Options</u></b> 
+<p>
+    <b>xcirc</b> means that the last variable named in <i>varlist</i> specifies a circular
+        variable.
+<p>
+    <b>ycirc</b> means that the first variable named in <i>varlist</i> specifies a circular
+        variable.
+<p>
+    <b>xcirc</b> and <b>ycirc</b> may be specified together.
+<p>
+    <b>pad()</b> places a pad of <i>#</i> degrees at each axis end. Data less than or equal
+        to <i>#</i> degrees are copied at the right or top end of the axis for an
+        interval of 360 to 360 + <i>#</i> degrees. Data more than 360 - <i>#</i> degrees
+        are copied at the left or bottom end of the axis for an interval of
+        -<i>#</i> to 0 degrees. The default is 180, so that a full two cycles are
+        shown.
+<p>
+    <i>scatter_options</i> are any of the options allowed with scatter.
+<p>
+<p>
+<b><u>Examples</u></b> 
+<p>
+    <b>. circscatter wallpdf deg, xcirc</b>
+<p>
+    <b>. circscatter wallasp axisasp, xcirc ycirc</b>
+<p>
+<p>
+<b><u>Author</u></b> 
+<p>
+    Nicholas J. Cox, University of Durham, U.K.
+    n.j.cox@durham.ac.uk
+<p>
+<p>
+<b><u>Also see</u></b> 
+<p>
+    On-line: help for scatter
+<p>
+</pre>

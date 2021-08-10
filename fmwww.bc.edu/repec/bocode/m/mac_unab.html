@@ -1,0 +1,98 @@
+<pre>
+-------------------------------------------------------------------------------
+help for <b>mac_unab</b>
+-------------------------------------------------------------------------------
+<p>
+<b><u>Unabbreviate Global Macro Lists</u></b>
+<p>
+    <b>mac_unab</b> <i>mname</i><b> :</b><i>  patternlist</i> [ <b>,</b> <b><u>i</u></b><b>gnore(</b><i>string</i><b>)</b> ]
+<p>
+<b><u>Description</u></b>
+<p>
+    <b>mac_unab</b> mac_unab unabbreviates a global macro list.  Similar to unab it
+    finds all macros (rather than variables) that exist and match a pattern
+    and places them in a another global macro list.
+<p>
+<p>
+<b><u>Required</u></b>
+<p>
+    <b>mname</b> is the name of the global macro created to contain all macros that
+        match the<i> patternlist</i>.
+<p>
+    <b>patternlist</b> describes the global macro list that should be unabbreviated.
+        <i>patternlist</i> should consist of a<i> stub</i> followed by an asterisk (e.g.,
+        <i>gr*</i>) which will match global macros starting with the<i> stub</i> -- so<b> gr*</b>
+        would match already defined global macros<b> gr</b><b><u>een</u></b> and<b> gr</b><b><u>own</u></b>.
+<p>
+        Currently, global macros can only be matched using the asterisk
+        following the<i> stub</i> (e.g., <b>gr*</b>), the asterisk cannot precede or split
+        the<i> stub</i> (e.g.,<b> *gr</b> or<b> gr*on</b>).
+<p>
+<b><u>Options</u></b> 
+<p>
+    <b><u>i</u></b><b>gnore()</b> allows a space delimited list of words that you want to remove
+        from consideration when finding the macros in <i>patternlist</i> to
+        unabbreviate. To ignore the macros S_ADO and S_level (but not other
+        S_* macros, you could specify the option:
+<p>
+        ... , <b><u>i</u></b><b>gnore(</b><i>S_ADO S_level</i><b>)</b>
+<p>
+        Similar to pattern matching in varlist, <b>mac_unab</b> may match macros you
+        didn't intend to be in the list; these can be removed using the
+        <b>ignore</b> option.  This can be particularly tricky with expanding a
+        macro list because there are global macros created by the software or
+        other commands you may have run.  In order to ignore some or most of
+        these types of macros (usually begining in a S_, F, or _) you can
+        call the option:
+<p>
+        ... , <b><u>i</u></b><b>gnore(</b><i>SYSTEM</i><b>)</b>
+<p>
+        to ignore most or all of these macros.  All macros can be listed with
+        macro list or macro dir.  Also, the resulting<b> mname</b> can be further
+        cleaned or manipulated using macro extended functions.
+<p>
+<p>
+    <i>`r(mac_list)'</i> also contains the unabbreviated macro list.
+<p>
+<b><u>Remarks</u></b>
+<p>
+    <b>mac_unab</b> produces the full macro list output in the <b>Results</b> window when
+    run.  Currently, this output cannot be surpressed.  The reason for this
+    is that the expanded macro list is culled from a log file of macro list
+    output.  Further, this output cannot be surpressed by running<b> mac_unab</b> 
+    quietly (doing so will produce an error).
+<p>
+<b><u>Examples</u></b>
+<p>
+//Create some data//
+    <b>. clear</b>
+    <b>. set obs 10</b>
+    <b>. g x = round(runiform()*100, .05)</b>
+    <b>. g x2 = int(runiform()*100)</b>
+    <b>. replace x = -2.5 in 1</b>
+<p>
+//Convert Numbers to Text//
+    <b>. num2words x, g(x_converted)</b>
+    <b>. num2words x, g(x_rounded) round</b>
+    <b>. replace x_converted = proper(x_rounded)</b>
+    <b>. num2words x, g(x2_ordinal) ordinal</b>
+<p>
+//Use Converted Text in Graph//
+    <b>. egen mx = mean(x)</b>
+    <b>. num2words mx, round</b>
+    <b>. gr bar x , over(x2_ordinal, sort(1)) ///</b>
+        <b>note(</b><b> X for Obs 2 is `=x_rounded[2]'</b><b>) ///</b>
+        <b>text(60 20 `"Mean = `=mx2'"', box )</b>
+<p>
+<p>
+<b><u>Author</u></b>
+<p>
+    Eric A. Booth, Texas A&amp;M University
+    ebooth@ppri.tamu.edu
+    http://www.eric-a-booth.com
+<p>
+<b><u>Also see</u></b>
+<p>
+    On-line:  help for macro extended functions; unab
+<p>
+</pre>

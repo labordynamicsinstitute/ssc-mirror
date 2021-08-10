@@ -1,0 +1,49 @@
+<pre>
+.-
+help for ^mnthplot^
+.-
+<p>
+Scatter plot for monthly data with repetition of data
+-----------------------------------------------------
+<p>
+    ^mnthplot^ yvarlist mnthvar [weight] [^if^ exp] [^in^ range]
+    [ ^, p^ad^(^#^)^ graph_options ]
+<p>
+Description
+-----------
+<p>
+^mnthplot^ produces a scatter plot for yvarlist versus mnthvar with some 
+repetition of data. mnthvar is presumed to take values 1,...,12 for the 12 
+months of the year. A pad of # months is added so that 12 + # months are 
+shown on the horizontal axis. Showing (12 + #) / 12 annual cycles, where 
+# is say 3 or 6, may give a better picture of seasonal variation by 
+reducing the visual effect of the break at the end of the year. 
+<p>
+<p>
+Options
+-------
+<p>
+^pad(^#^)^ adds a pad of # months at the right of the horizontal axis. 
+    Default 0. Minimum 0, maximum 12.  
+<p>
+graph_options are any of the options allowed with ^graph, twoway^;
+    see help for ^graph^.
+<p>
+<p>
+Examples
+--------
+<p>
+        . ^mnthplot sales month, pad(6) xla(1/18)^
+<p>
+<p>
+Author
+------
+         Nicholas J. Cox, University of Durham, U.K.
+         n.j.cox@@durham.ac.uk
+<p>
+Also see
+--------
+<p>
+On-line: help for @graph@, @sssplot@ (if installed)
+<p>
+</pre>

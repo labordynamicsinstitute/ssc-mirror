@@ -1,0 +1,108 @@
+{smcl}
+{* *! version 1.1  2011-10-25}{...}
+{cmd:help use10save9} (vs1.1: 2011-10-25)
+{hline}
+
+{title:Title}
+
+{p2colset 5 19 21 2}{...}
+{bf:use10save9} {hline 2} Saving matched files in Stata 9 format - either as new files in automatically 
+created directory or through replacing previous Stata 10+ files. 
+{p2colreset}{...}
+
+
+{title:Syntax}
+
+{p 4 16 2}
+{opt use10save9} [{cmd:,} {opt folder}({it:string}) {opt match}({it:string}) {opt prefix}({it:string}) {opt suffix}({it:string}) {opt subs} {opt replace}]
+
+
+
+{title:Description}
+
+{pstd}
+{cmd:use10save9} 
+is a program that helps out with opening Stata 10+ files from within Stata 9 and then saving them in Stata 9 format 
+(using {cmd: use10} and {cmd: save9}). May be applied to a quite generally defined set of Stata datasets within a 
+defined folder and, if selected, also with respect to all corresponding subfolders. 
+The simplest syntax is purely based on defaults. All options are optional. 
+
+{pstd}
+An alternative, secondary, usage might be to simply use the function as an extension to {cmd: save9} (Ercolani, 2011) 
+in order to save matched sets of datasets in Stata 9 format while being in Stata 10+. 
+
+
+{title:Options}
+
+{pstd}
+{opt folder}({it:string}) Defines the directory from within where to look for files. 
+The default directory is the current working directory (cwd; '.').
+
+{pstd}
+{opt match}({it:string}) Defines the matching criterion used in order to select files 
+from the selected directory {bf:folder}. The default is all files in the directory ('*').
+
+{pstd}
+{opt prefix}({it:string}) Defines a prefix string to put in front of all new files corresponding
+to matched cases.
+
+{pstd}
+{opt suffix}({it:string}) Defines a suffix string to put at the end of all new files corresponding
+to matched cases.
+
+{pstd}
+{opt subs} An indicator for whether, or not, matched files in corresponding subdirectories (recursively) 
+also should be affected.
+ 
+{pstd}
+{opt replace} An indicator for whether, or not, the matched files should be saved as new files in subdirectory 
+'stata9'(which is then - if not existing - automatically created) or rather simply be saved (with 'replace') in
+{bf:folder} (potentially overwriting, if no prefix/suffix assigned, the old versions). 
+
+
+{title:Examples}
+
+    {hline}
+{pstd} 1. Save all (Stata dataset) files in current working directory in Stata 9 format in subdirectory 'stata9'. {p_end}
+{phang2}{cmd:. use10save9}{p_end}
+
+    {hline}
+{pstd} 2. Save all files with prefix {it:name} located in cwd-subdirectory {it:data} in Stata 9 format in subdirectory 'stata9'. {p_end}
+{phang2}{cmd:. use10save9 , folder(".\data") match("name*")} {p_end}
+
+    {hline}
+{pstd} 3. Same as Example 2, but in this case all matched files in subdirectories to folder {it:data} are also to be affected. {p_end}
+{phang2}{cmd:. use10save9 , folder(".\data") match("name*") subs}{p_end}
+
+    {hline}
+
+{pstd} 4. Same as Example 2, but in this case all matched files in folder {it:data} should simply be saved replacing the original ones. {p_end}
+{phang2}{cmd:. use10save9 , folder(".\data") match("name*") replace}{p_end}
+
+    {hline}
+{pstd} 5. Same as Example 4, but in this case all new files will have prefix 's9_' added to filenames (e.g. to avoid overwriting). {p_end}
+{phang2}{cmd:. use10save9 , folder(".\data") match("name*") prefix("s9_") replace}{p_end}
+
+    {hline}
+
+
+{title:Requires}
+
+{pstd} Stata 9; user written functions {cmd: use10} (Radyakin, 2008) & {cmd: save9} (Ercolani, 2011)
+
+
+{title:Author}
+
+{pstd} Lars Ängquist {break}
+       la@ipm.regionh.dk {break}
+       lars.angquist@telia.com
+
+
+{title:Also see}
+
+{psee}
+{space 2}Help:  [help pages on] {help use10} (user-written), {help save9} (user-written), 
+{p_end}
+{psee}
+{space 24}                       {help save}, {help varlist}, {help string functions}.
+{p_end}

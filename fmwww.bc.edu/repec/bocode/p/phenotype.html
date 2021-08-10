@@ -1,0 +1,138 @@
+<pre>
+<b>help phenotype</b>
+                                                                 (STB-61: dm92)
+-------------------------------------------------------------------------------
+<p>
+<b><u>Title</u></b>
+<p>
+    <b>phenotype</b> --  Simulate disease status and censored age for family data
+<p>
+<p>
+<b><u>Syntax</u></b>
+<p>
+        <b>phenotype</b> <i>hr</i> [<b>,</b> <i>options</i>]
+<p>
+<p>
+    <i>options</i>                Description
+    -------------------------------------------------------------------------
+    Main
+      <b><u>t</u></b><b>ype(</b><i>d</i>|<i>r</i><b>)</b>            specifies the type of inheritance
+      <b><u>a</u></b><b>lpha(</b><i>#</i><b>)</b>             specifies the shape parameter of the Weibull
+                             distribution
+      <b><u>l</u></b><b>ambda(</b><i>#</i><b>)</b>            specifies the scale parameter of the Weibull
+                             distribution
+      <b><u>m</u></b><b>axage(</b><i>#</i><b>)</b>            specifies the upper bound of age of death
+      <b><u>g</u></b><b>amma(</b><i>#</i><b>)</b>             specifies the parameter in the log-power density
+                             function of death
+      <b><u>s</u></b><b>ex(</b><i>b</i>|<i>f</i>|<i>m</i><b>)</b>           specifies the gender being affected by a disease
+      <b><u>sav</u></b><b>ing(</b><i>filename</i><b>)</b>     specifies the name of the file to be saved
+    -------------------------------------------------------------------------
+<p>
+<p>
+<b><u>Description</u></b>
+<p>
+    <b>phenotype</b> generates the disease status and censored age based on family
+    data created by simuped2 or simuped3 (Cui 2000). A censored age is the
+    age at onset of a disease if a person is affected, or the age of death if
+    a person has died before developing the disease. Otherwise it is the
+    calendar age contained in the original family data. This program expects
+    that the genetic hazard ratio, <i>hr</i>, to be specified as a non-negative
+    value.  This program is also known as <b>phenotyp</b> in the previous versions.
+<p>
+    Two modes of inheritance, dominant and recessive, are allowed for in this
+    program. They are represented by <b>d</b> and <b>r</b> in the <b>type</b> option,
+    respectively. Use of other letters will produce an error message.  if a
+    disease affects one gender only, the disease status is generated as 0 for
+    a person with an opposite gender.  The age of death is determined by a
+    log-power density function.  The hazard function of developing a disease
+    is assumed to be a Weibull distribution.
+<p>
+<p>
+<b><u>Options</u></b>
+<p>
+        +------+
+    ----+ Main +-------------------------------------------------------------
+<p>
+    <b>type(</b><i>inheritance</i><b>)</b> specifies the type of inheritance. The option <b>d</b> (the
+        default) specifies a dominant inheritance, and <b>r</b> specifies a
+        recessive inheritance.
+<p>
+    <b>alpha(</b><i>#</i><b>)</b> specifies the shape parameter of the Weibull distribution. The
+        default value is 4.21.
+<p>
+    <b>lambda(</b><i>#</i><b>)</b> specifies the scale parameter of the Weibull distribution. The
+        default value is 9.95e-10.
+<p>
+    <b>maxage(</b><i>#</i><b>)</b> specifies the upper bound of age of death. The default value is
+        100.
+<p>
+    <b>gamma(</b><i>#</i><b>)</b> specifies the parameter in the log-power density function of
+        death.  The default value is 15.
+<p>
+    <b>sex(</b><i>b</i>|<i>f</i>|<i>m</i><b>)</b> specifies the gender affected by a disease. The option <b>b</b> (the
+        default) specifies that both genders are affected, <b>f</b> specifies that
+        only females are affected, and <b>m</b> specifies that only males are
+        affected.
+<p>
+    <b>saving(</b><i>filename</i><b>)</b> specifies the file name of the simulated data. The
+        default file name is <b>temp1.dta</b>.
+<p>
+<p>
+<b><u>Examples</u></b>
+<p>
+    clear
+<p>
+    run simuped2.ado
+<p>
+    simuped2 70 10 40 10, reps(1000) sav(output) alle(0.05) sib(5)
+<p>
+    use output, clear
+<p>
+    phenotype 10, type(d) alpha(4.21) lambda(9.95e-10) maxage(100) gamma(15)
+        sex(f) sav(output1)
+<p>
+    use output1, clear
+<p>
+    list if famid &lt;= 2, sepby(famid)
+<p>
+<p>
+<b><u>Also see</u></b>
+<p>
+    STB:  STB-58: dm82
+<p>
+<p>
+<b><u>References</u></b>
+<p>
+    Cui J. Simulating two- and three-generation families. Stata Technical
+        Bulletin 2000; 58: 2-5.
+<p>
+    Cui J. Simulating disease status and censored age. Stata Technical
+        Bulletin 2001; 61: 8-10.
+<p>
+    Cui J and Hopper JL. Why are the majority of hereditary cases of
+        early-onset breast cancer sporadic? A simulation study. Cancer
+        Epidemiology, Biomarkers &amp; Prevention 2000; 9: 805-812.
+<p>
+<p>
+<b><u>Author</u></b>
+<p>
+    James Cui, Department of Epidemiology and Preventive Medicine, Monash
+    University.
+<p>
+    Email: james.cui@med.monash.edu.au
+<p>
+<p>
+Other Commands I have written:
+genhwcci   (if installed)      ssc install genhwcci     (to install this comman
+&gt; d)
+simuped2   (if installed)      ssc install simuped2     (to install this comman
+&gt; d)
+simuped3   (if installed)      ssc install simuped3     (to install this comman
+&gt; d)
+buckley    (if installed)      ssc install buckley      (to install this comman
+&gt; d)
+qic        (if installed)      ssc install qic          (to install this comman
+&gt; d)
+<p>
+<p>
+</pre>

@@ -1,0 +1,67 @@
+<pre>
+-------------------------------------------------------------------------------
+<b>help for paverage</b> 
+-------------------------------------------------------------------------------
+<p>
+<b><u>Title</u></b>
+<p>
+    <b>paverage --- Generates series of averages in a panel dataset.</b>
+<p>
+<b><u>Syntax</u></b>
+<p>
+    <b>paverage</b> <b>varlist</b><b>,</b> <b>p(</b><i>#</i><b>)</b> <b><u>ind</u></b><b>iv(</b><i>varname</i><b>)</b> <b>yr(</b><i>varname</i><b>)</b>
+<p>
+<p>
+<b><u>Description</u></b>
+<p>
+<p>
+    <b>paverage</b> (pronounced p-average) generates series of averages in a panel
+    dataset. In the process, the labels of the original variables, if
+    present, are attached to the average variables. The time period must be a
+    multiple of the subperiod over which averages need to be calculated.
+    Using series of averages is a common way of reducing business-cycle
+    effects and measurement error when analyzing a panel dataset with a long
+    time period.
+<p>
+    A side-effect of taking variable averages is that some variations in the
+    data will be lost.
+<p>
+    Note that <b>paverage</b> works on any yearly compiled <i>balanced</i> panel datasets.
+<p>
+<p>
+<b><u>Options</u></b>
+<p>
+        +---------+
+    ----+ Options +----------------------------------------------------------
+<p>
+<p>
+    <b>p(</b><i>#</i><b>)</b> indicates the number of years over which averages need to be
+    calculated. # ranges from 2 to 10. For example, specifying p(5) will
+    create a 5-year average dataset.
+<p>
+    <b><u>ind</u></b><b>iv(</b><i>varname</i><b>)</b> indicates the identifier variable which may hold country,
+    individual, or firm names or identification numbers.
+<p>
+    <b>yr(</b><i>varname</i><b>)</b> specifies the variable containing the years.
+<p>
+<p>
+        +---------+
+    ----+ Example +----------------------------------------------------------
+<p>
+    <b>. paverage gdp fdi import trade, p(5) indiv(countryname) yr(year)</b>
+<p>
+<p>
+<b><u>Author</u></b>
+<p>
+    <b>P. Wilner Jeanty</b>, Dept. of Agricultural, Environmental, and Development
+    Economics,
+    The Ohio State University
+<p>
+    Email to jeanty.1@osu.edu for any comments or suggestions.
+<p>
+<p>
+<b><u>Also see</u></b>
+<p>
+    Manual: <b>[D] collapse</b>
+<p>
+</pre>

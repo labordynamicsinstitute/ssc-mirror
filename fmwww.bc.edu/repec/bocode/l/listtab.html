@@ -1,0 +1,423 @@
+<pre>
+-------------------------------------------------------------------------------
+help for <b>listtab</b>                                                 (Roger Newson)
+-------------------------------------------------------------------------------
+ 
+<b><u>List a variable list to a file or to the log for inclusion in a TeX, HTML or wo</u></b>
+<b><u>&gt; rd processor table</u></b>
+<p>
+        <b>listtab</b> [ <i>varlist</i> ] [ <b>using</b> <i>filename</i> ] [<i>if</i>] [<i>in</i>] [ ,
+                     <b><u>b</u></b><b>egin(</b><i>string</i><b>)</b> <b><u>d</u></b><b>elimiter(</b><i>string</i><b>)</b> <b><u>e</u></b><b>nd(</b><i>string</i><b>)</b>
+                     <b><u>m</u></b><b>issnum(</b><i>string</i><b>)</b> <b><u>rs</u></b><b>tyle(</b><i>rowstyle</i><b>)</b>
+                     <b><u>vb</u></b><b>egin(</b><i>varname</i><b>)</b> <b><u>vd</u></b><b>elimiter(</b><i>varname</i><b>)</b> <b><u>ve</u></b><b>nd(</b><i>varname</i><b>)</b>
+                     <b><u>he</u></b><b>adlines(</b><i>string_list</i><b>)</b> <b><u>fo</u></b><b>otlines(</b><i>string_list</i><b>)</b>
+                     <b><u>headc</u></b><b>hars(</b><i>namelist</i><b>)</b> <b><u>footc</u></b><b>hars(</b><i>namelist</i><b>)</b> <b><u>nol</u></b><b>abel</b> <b><u>t</u></b><b>ype</b>
+                     <b><u>replace</u></b> <b><u>ap</u></b><b>pendto(</b><i>filename</i><b>)</b> <b><u>ha</u></b><b>ndle(</b><i>handle_name</i><b>)</b> ]
+<p>
+        <b>listtab_vars</b> [ <i>varlist</i> ] [ ,
+                     <b><u>b</u></b><b>egin(</b><i>string</i><b>)</b> <b><u>d</u></b><b>elimiter(</b><i>string</i><b>)</b> <b><u>e</u></b><b>nd(</b><i>string</i><b>)</b>
+                     <b><u>m</u></b><b>issnum(</b><i>string</i><b>)</b> <b><u>rs</u></b><b>tyle(</b><i>rowstyle</i><b>)</b>
+                     <b><u>su</u></b><b>bstitute(</b><i>variable_attribute</i><b>)</b> <b><u>lo</u></b><b>cal(</b><i>local_macro_name</i><b>)</b> ]
+<p>
+        <b>listtab_rstyle</b> [ , <b><u>b</u></b><b>egin(</b><i>string</i><b>)</b> <b><u>d</u></b><b>elimiter(</b><i>string</i><b>)</b> <b><u>e</u></b><b>nd(</b><i>string</i><b>)</b>
+                     <b><u>m</u></b><b>issnum(</b><i>string</i><b>)</b> <b><u>rs</u></b><b>tyle(</b><i>rowstyle</i><b>)</b>
+                     <b><u>lo</u></b><b>cal(</b><i>local_macro_name_list</i><b>)</b> ]
+<p>
+    where <i>rowstyle</i> is a row style as defined below under <b>Row Styles</b>,
+    <i>variable_attribute</i> is
+<p>
+    <b>name</b> | <b>type</b> | <b>format</b> | <b>vallab</b> | <b>varlab</b> | <b>char</b> <i>charname</i>
+<p>
+    and <i>charname</i> is a characteristic name.
+<p>
+<p>
+<b><u>Description</u></b>
+<p>
+    <b>listtab</b> lists the variables in the <i>varlist</i> (or all variables, if the 
+    <i>varlist</i> is absent) to the Stata log, or to a file (or files) specified by
+    <b>using</b>, <b>appendto()</b> or <b>handle()</b>, in a table format, with one table row per
+    observation and the values of different variables separated by a
+    delimiter string.  Optionally, the user may specify a list of header
+    lines before the data rows and/or a list of footer lines after the data
+    rows.  The log or output file can then be cut and pasted, or linked or
+    embedded (eg with the TeX <b>\input</b> command), into a TeX, HTML or word
+    processor table.  Values of numeric variables are output according to
+    their display formats or value labels (if non-missing), or as the missing
+    value string specified by <b>missnum()</b> (if missing).
+<p>
+    The commands <b>listtab_vars</b> and <b>listtab_rstyle</b> are tools for programmers to
+    use with <b>listtab</b>.  <b>listtab_vars</b> generates a table row, containing, in
+    each column, an attribute (such as the name) of the variable
+    corresponding to the column.  This generated table row is saved in
+    <b>r(vars)</b> and (optionally) in a local macro, and is then typically used to
+    specify a <b>headlines()</b> option for <b>listtab</b>.  <b>listtab_rstyle</b> inputs a
+    <b>listtab</b> row style, and saves the components of the row style in <b>r()</b> and
+    (optionally) in local macros.
+<p>
+<p>
+<b><u>Options for </u></b><b><u>listtab</u></b><b><u>, </u></b><b><u>listtab_vars</u></b><b><u>, and </u></b><b><u>listtab_rstyle</u></b>
+<p>
+    <b>begin(</b><i>string</i><b>)</b> specifies a string to be output at the beginning of every
+        output line corresponding to an observation.  If absent, it is set to
+        an empty string.
+<p>
+    <b>delimiter(</b><i>string</i><b>)</b> specifies the delimiter between values in an
+        observation.  If absent, it is set to an empty string.
+<p>
+    <b>end(</b><i>string</i><b>)</b> specifies a string to be output at the end of every output
+        line corresponding to an observation.  If absent, it is set to an
+        empty string.
+<p>
+    <b>missnum(</b><i>string</i><b>)</b> specifies a string to be output for numeric missing
+        values.  If absent, it is set to an empty string.
+<p>
+    <b>rstyle(</b><i>rowstyle</i><b>)</b> specifies a row style for the table rows.  A row style
+        is a named combination of values for the <b>begin()</b>, <b>end()</b>, <b>delimiter()</b>
+        and <b>missnum()</b> options.  It may be <b>html</b>, <b>htmlhead</b>, <b>tabular</b>, <b>halign</b>,
+        <b>settabs</b> or <b>tabdelim</b>.  Row styles are specified under <b>Row styles</b>
+        below.  The options set by a row style may be overridden by the
+        <b>begin()</b>, <b>end()</b>, <b>delimiter()</b> and <b>missnum()</b> options.
+<p>
+<p>
+<b><u>Options for </u></b><b><u>listtab</u></b><b><u> only</u></b>
+<p>
+    <b>vbegin(</b><i>varname</i><b>)</b> specifies a string variable to be output before any
+        variables in the <i>varlist</i>.  If <b>vbegin()</b> is absent, then the <b>begin()</b>
+        string is output instead.
+<p>
+    <b>vdelimiter(</b><i>varname</i><b>)</b> specifies a string variable to be output as a
+        delimiter between consecutive variables in the <i>varlist</i>.  If
+        <b>vdelimiter()</b> is absent, then the <b>delimiter()</b> string is output
+        instead.
+<p>
+    <b>vend(</b><i>varname</i><b>)</b> specifies a string variable to be output after all
+        variables in the <i>varlist</i>.  If <b>vend()</b> is absent, then the <b>end()</b> string
+        is output instead.
+<p>
+    Note that the option <b>vbegin()</b> overrides <b>begin()</b>, <b>vdelimiter()</b> overrides
+    <b>delimiter()</b>, and <b>vend()</b> overrides <b>end()</b>.  The <b>vbegin()</b>, <b>vdelimiter()</b> and
+    <b>vend()</b> options allow the user to use different begin, delimiter and end
+    strings for different observations.
+<p>
+    <b>headlines(</b><i>string_list</i><b>)</b> specifies a list of lines of text to appear before
+        the first of the table rows in the output.  This option enables the
+        user to add table preludes and/or headers.
+<p>
+    <b>footlines(</b><i>string_list</i><b>)</b> specifies a list of lines of text to appear after
+        the last of the table rows in the output.  This option enables the
+        user to add table postludes and/or footnotes.
+<p>
+    <b>headchars(</b><i>namelist</i><b>)</b> specifies a list of variable characteristic names,
+        used to create table header rows containing the values of these
+        characteristics for the variables in the <i>varlist</i>, prefixed, delimited
+        and suffixed with the strings specified by the <b>begin()</b>, <b>delimiter()</b>
+        and <b>end()</b> options.  These header rows appear after the lines of text
+        specified by <b>headlines()</b>, and before the first of the table rows
+        containing the variable values.  This option enables the user to add
+        column header labels for the variables in the <i>varlist</i>.
+<p>
+    <b>footchars(</b><i>namelist</i><b>)</b> specifies a list of variable characteristic names,
+        used to create table footer rows containing the values of these
+        characteristics for the variables in the <i>varlist</i>, prefixed, delimited
+        and suffixed with the strings specified by the <b>begin()</b>, <b>delimiter()</b>
+        and <b>end()</b> options.  These header rows appear before the lines of text
+        specified by <b>footlines()</b>, and after the last of the table rows
+        containing the variable values.  This option enables the user to add
+        column footer labels for the variables in the <i>varlist</i>.
+<p>
+    <b>nolabel</b> specifies that numeric variables with variable labels will be
+        output as numbers and not as labels.
+<p>
+    <b>type</b> specifies that the output from <b>listtab</b> will be typed to the Stata
+        log (or to the Results window).  The data can then be cut and pasted
+        from the Stata log (or from the Results window) to a TeX, HTML or
+        word processor file.
+<p>
+    <b>replace</b> specifies that any existing file with the same name as the <b>using</b>
+        file will be overwritten.
+<p>
+    <b>appendto(</b><i>filename</i><b>)</b> specifies the name of an existing file, to which the
+        output from <b>listtab</b> will be appended.
+<p>
+    <b>handle(</b><i>handle_name</i><b>)</b> specifies the name of a file handle, specifying a
+        file that is already open for output as a text file, to which the
+        output from <b>listtab</b> will be added, without closing the file.  See
+        help for <b>file</b> for details about file handles.  This option allows the
+        user to use <b>listtab</b> together with <b>file</b> as a low-level output utility,
+        possibly combining <b>listtab</b> output with other output.
+<p>
+    Note that the user must specify the <b>using</b> qualifier and/or the <b>type</b>
+    option and/or the <b>appendto()</b> option and/or the <b>handle()</b> option.
+<p>
+<p>
+<b><u>Options for </u></b><b><u>listtab_vars</u></b><b><u> only</u></b>
+<p>
+    <b>substitute(</b><i>variable_attribute</i><b>)</b> specifies a variable attribute to be
+        entered into the columns of the generated table row.  This attribute
+        may be <b>name</b>, <b>type</b>, <b>format</b>, <b>vallab</b>, <b>varlab</b>, or <b>char</b> <i>charname</i>,
+        specifying the variable name, storage type, display format, value
+        label, variable label, or a named variable characteristic,
+        respectively.  If <b>substitute()</b> is not specified, then
+        <b>substitute(name)</b> is assumed, and variable names are entered in the
+        columns of the generated table row.  In the table row generated by
+        <b>listtab_vars</b>, the attributes of the variables in the <i>varlist</i> (or of
+        all the variables, if the <i>varlist</i> is absent) appear in the columns,
+        and are separated by the <b>delimiter()</b> string, and prefixed and
+        suffixed by the <b>begin()</b> and <b>end()</b> strings, specified by the row
+        style.
+<p>
+<p>
+<b><u>Options for </u></b><b><u>listtab_rstyle</u></b><b><u> and </u></b><b><u>listtab_vars</u></b>
+<p>
+    <b>local(</b><i>local_macro_name_list</i><b>)</b> specifies the name of a local macro in the
+        program that calls <b>listtab_vars</b>, or the names of up to 4 local macros
+        in the program that calls <b>listtab_rstyle</b>.  In the case of
+        <b>listtab_vars</b>, the macro will be set to the value of the row of
+        variable attributes generated by <b>listtab_vars</b>, specified by the
+        <b>substitute()</b> option.  In the case of <b>listtab_rstyle</b>, these macros
+        will be set to the <b>begin()</b>, <b>delimiter()</b>, <b>end()</b> and <b>missnum()</b> options,
+        respectively, of the row style generated by <b>listtab_rstyle</b>.  The
+        <b>local()</b> option has the advantage that the user can save multiple
+        header rows, or multiple row style specifications, in multiple local
+        macros.  For instance, the user might want two header rows, one
+        containing variable names, and the other containing variable labels.
+<p>
+<p>
+<a name="listtab_row_styles"></a><b><u>Row styles</u></b>
+<p>
+    A row style is a combination of the <b>begin()</b>, <b>end()</b>, <b>delimiter()</b> and
+    <b>missnum()</b> options.  Each row style produces rows for a particular type of
+    table (HTML, TeX or word processor).  The row styles available are as
+    follows:
+<p>
+-------------------------------------------------------------------------------
+<i>Row style</i>   <b>begin()</b>     <b>delimiter()</b>     <b>end()</b>           <b>missnum()</b>   <i>Description</i>
+<b>html</b>        <b>"&lt;tr&gt;&lt;td&gt;"</b>  <b>"&lt;/td&gt;&lt;td&gt;"</b>     <b>"&lt;/td&gt;&lt;/tr&gt;"</b>    <b>""</b>          HTML table 
+&gt; rows
+<b>htmlhead</b>    <b>"&lt;tr&gt;&lt;th&gt;"</b>  <b>"&lt;/th&gt;&lt;th&gt;"</b>     <b>"&lt;/th&gt;&lt;/tr&gt;"</b>    <b>""</b>          HTML table 
+&gt; header rows
+<b>tabular</b>     <b>""</b>          <b>"&amp;"</b>             <b>`"\\"'</b>          <b>""</b>          LaTeX <b>\tabu</b>
+<b>&gt; lar</b> environment table rows
+<b>halign</b>      <b>""</b>          <b>"&amp;"</b>             <b>"\cr"</b>           <b>""</b>          Plain TeX <b>\</b>
+<b>&gt; halign</b> table rows
+<b>settabs</b>     <b>"\+"</b>        <b>"&amp;"</b>             <b>"\cr"</b>           <b>""</b>          Plain TeX <b>\</b>
+<b>&gt; settabs</b> table rows
+<b>tabdelim</b>    <b>""</b>          <b>char(9)</b>         <b>""</b>              <b>""</b>          Tab-delimit
+&gt; ed text file rows
+-------------------------------------------------------------------------------
+<p>
+    The <b>tabdelim</b> row style produces text rows delimited by the tab character,
+    returned by the char() function as <b>char(9)</b>.  It should be used with 
+    <b>using</b>, or with the <b>appendto()</b> or <b>handle()</b> options, to output the table
+    rows to a file.  If it is used with the <b>type</b> option, then the tab
+    character is not preserved in the Stata log or Results window.  Any of
+    these row styles may be specified together with <b>begin()</b> and/or
+    <b>delimiter()</b> and/or <b>end()</b> and/or <b>missnum()</b> options, and the default
+    options for the row style will then be overridden.  For instance, the
+    user may specify any of the above options with <b>missnum(-)</b>, and then
+    missing numeric values will be given as minus signs.
+<p>
+    Row styles can also be created for output to tables in Rich Text Format
+    (RTF) documents, using the <b>rtfrstyle</b> module of the <b>rtfutil</b> package, which
+    can be downloaded from SSC.  Row styles for RTF documents are more
+    complicated than those for other documents, because the <b>begin()</b> and/or
+    <b>end()</b> options used depend on the number of variables output, and on the
+    spacing of these variables as columns in the table.  It may also be
+    necessary to use the <b>vbegin()</b>, <b>vdelimiter)</b> and <b>vend()</b> options, if the
+    user requires borders and/or vertical alignment for some table rows and
+    not for others.
+<p>
+    More about plain TeX can be found in Knuth (1992).  More about LaTeX can
+    be found in Lamport (1994).  More about HTML can be found at The W3C
+    HyperText Markup Language (HTML) Home Page at http://www.w3.org/MarkUp/.
+    More about RTF can be found in Burke (2003), or at Sean Burke's RTF web
+    page.
+<p>
+<p>
+<b><u>Remarks</u></b>
+<p>
+    <b>listtab</b> is used with a group of other Stata packages to produce tables
+    from Stata datasets, as described in Newson (2012).  It creates (on disk
+    and/or in the Stata log and/or Results window) a text table with up to 3
+    kinds of rows.  These are headline rows, data rows and footline rows.
+    Any of these categories of rows may be empty.  The headline and footline
+    rows can be anything the user specifies in the <b>headline()</b> and <b>footline()</b>
+    options, respectively.  This allows the user to specify TeX preambles,
+    LaTeX environment delimiters, HTML table delimiters and header rows, or
+    other headlines and/or footlines for table formats not yet invented.  The
+    data rows must contain variable values, separated by the <b>delimiter()</b>
+    string, with the <b>begin()</b> string on the left and the <b>end()</b> string on the
+    right.  This general plan allows the option of using the same package to
+    generate TeX, LaTeX, HTML, RTF, Microsoft Word, and possibly other
+    tables.  The <b>rstyle()</b> option saves the user from having to remember other
+    options.  The text table generated can then be cut and pasted, embedded,
+    or linked (eg with the TeX <b>\input</b> command) into a document.  The <b>inccat</b>
+    command, available on SSC, can be used to embed a <b>using</b> file produced by
+    <b>listtab</b> into a document.  If all the variables are string, then title
+    rows may sometimes be created using the <b>ingap</b> package, also on SSC,
+    instead of using the <b>headlines()</b> option of <b>listtab</b>.
+<p>
+    The <b>ssc</b>, <b>findit</b> or <b>net</b> commands can also be used to find the various
+    alternatives to <b>listtab</b>, such as <b>corrtex</b>, <b>estout</b>, <b>outtable</b>, <b>outtex</b>, 
+    <b>textab</b> and <b>sutex</b>, which also produce tables from Stata.
+<p>
+<p>
+<b><u>Historical note</u></b>
+<p>
+    The <b>listtab</b> package is a revision of the <b>listtex</b> package, which can also
+    be downloaded from SSC.  In <b>listtex</b>, the <b>delimiter()</b> option defaults to
+    the ampersand (<b>"&amp;"</b>), which is used in most TeX tables, and often also for
+    tables pasted manually into Microsoft Word documents and converted.  This
+    <b>listtex</b> option cannot be reset to an empty string (<b>""</b>).  In <b>listtab</b>, the
+    default delimiter is an empty string, which will probably only be used
+    occasionally, but can be reset to any non-empty string.
+<p>
+    For more about the use of <b>listtab</b> and <b>listtex</b> with other packages, see
+    Newson (2012), Newson (2006), Newson (2004), and Newson (2003).
+<p>
+<p>
+<b><u>Examples</u></b>
+<p>
+    To type text table lines separated by <b>&amp;</b> characters for cutting and
+    pasting into a Microsoft Word table using the menu sequence
+    <b>Table-&gt;Convert-&gt;Text to Table</b>:
+<p>
+                . listtab make foreign weight mpg, type delim(&amp;)
+<p>
+    To output text table lines separated by tab characters to a text file for
+    cutting and pasting into a Microsoft Word table using
+    <b>Table-&gt;Convert-&gt;Text to Table</b>:
+<p>
+        . listtab make foreign weight mpg using trash1.txt, rstyle(tabdelim)
+<p>
+    To produce TeX table lines for a plain TeX <b>\halign</b> table:
+<p>
+        . listtab make foreign weight mpg using trash1.tex, rs(halign)
+            replace
+<p>
+    To produce TeX table lines for a plain TeX <b>\halign</b> table with horizontal
+    and vertical rules:
+<p>
+        . listtab make foreign weight mpg using trash1.tex, b(&amp;&amp;) d(&amp;&amp;)
+            e(&amp;\cr{\noalign{\hrule}}) replace
+<p>
+    To produce TeX table lines for a plain TeX <b>\settabs</b> table:
+<p>
+        . listtab make foreign weight mpg using trash1.tex, rstyle(settabs)
+            replace
+<p>
+    To produce LaTeX table lines for the LaTeX <b>tabular</b> environment:
+<p>
+        . listtab make foreign weight mpg using trash1.tex, rstyle(tabular)
+            replace
+<p>
+    To produce a LaTeX <b>tabular</b> environment with a title line, for cutting and
+    pasting into a document:
+<p>
+        . listtab make weight mpg if foreign, type rstyle(tabular)
+            head("\begin{tabular}{rrr}" `"\textit{Make}&amp;\textit{Weight
+            (lbs)}&amp;\textit{Mileage (mpg)}\\"') foot("\end{tabular}")
+<p>
+    Note that the user must specify compound quotes <b>`""'</b> around strings in
+    the <b>head()</b> option containing the double backslash <b>\\</b> at the end of a
+    LaTeX line.  This is because, inside Stata strings delimited by simple
+    quotes <b>""</b>, a double backslash is interpreted as a single backslash.
+<p>
+    To produce HTML table rows for insertion into a HTML table:
+<p>
+        . listtab make foreign weight mpg using trash1.htm, rstyle(html)
+            replace
+<p>
+    To produce a HTML table for cutting and pasting into a HTML document:
+<p>
+        . listtab make weight mpg if foreign, type rstyle(html) head(`"&lt;table
+            border="1"&gt;"' "&lt;tr&gt;&lt;th&gt;Make and Model&lt;/th&gt;&lt;th&gt;Weight
+            (lbs)&lt;/th&gt;&lt;th&gt;Mileage (mpg)&lt;/th&gt;&lt;/tr&gt;") foot("&lt;/table&gt;")
+<p>
+    To produce the same HTML table, using <b>listtab_vars</b>:
+<p>
+        . listtab_vars make weight mpg, substitute(varlab) rstyle(htmlhead)
+            local(headrow)
+        . listtab make weight mpg if foreign, type rstyle(html) head(`"&lt;table
+            border="1"&gt;"' `"`headrow'"') foot("&lt;/table&gt;")
+<p>
+    To produce a HTML table of variable attributes using <b>listtab_vars</b> with
+    the <b>descsave</b> package (an extended version of <b>describe</b> downloadable from
+    SSC):
+<p>
+        . preserve
+        . descsave, norestore
+        . list, noobs abbr(32) subvarname
+        . listtab_vars, rstyle(htmlhead) substitute(char varname)
+        . listtab, type rstyle(html) head("&lt;table frame=box&gt;" "`r(vars)'")
+            foot("&lt;/table&gt;")
+        . restore
+<p>
+    For examples using Rich Text Format (RTF), see on-line help for <b>rtfutil</b>,
+    if installed.  The <b>rtfutil</b> package can be downloaded from SSC.
+<p>
+<p>
+<b><u>Saved results</u></b>
+<p>
+    <b>listtab_rstyle</b> saves the following in <b>r()</b>:
+<p>
+    Macros    
+      <b>r(begin)</b>       <b>begin()</b> string
+      <b>r(delimiter)</b>   <b>delimiter()</b> string
+      <b>r(end)</b>         <b>end()</b> string
+      <b>r(missnum)</b>     <b>missnum()</b> string
+<p>
+    <b>listtab_vars</b> saves the above items in <b>r()</b>, and also the following:
+<p>
+    Macros    
+      <b>r(vars)</b>        generated table row
+<p>
+<p>
+<b><u>Author</u></b>
+<p>
+    Roger Newson, National Heart and Lung Institute, Imperial College London,
+    UK.  Email: r.newson@imperial.ac.uk
+<p>
+<p>
+<a name="references"></a><b><u>References</u></b>
+<p>
+    Burke S. M.  2003.  <i>RTF Pocket Guide</i>.  Sebastopol, CA: O'Reilly &amp;
+        Associates Inc.  Download more information from Sean Burke's RTF web
+        page.
+<p>
+    Knuth D. E.  1992.  <i>The TeXbook.</i>  Reading, Mass:  Addison-Wesley.
+<p>
+    Lamport L.  1994.  <i>LaTeX: a document preparation system.  2nd edition.</i>
+        Boston, Mass:  Addison-Wesley.
+<p>
+    Newson, R. B.  2012.  From resultssets to resultstables in Stata.  <i>The</i>
+        <i>Stata Journal</i> 12 (2): 191-213.  Download from <i>The Stata Journal</i>
+        website.
+<p>
+    Newson, R.  2006.  Resultssets, resultsspreadsheets and resultsplots in
+        Stata.  Presented at the 4th German Stata User Meeting, Mannheim, 31
+        March, 2006.
+<p>
+    Newson, R.  2004.  From datasets to resultssets in Stata.  Presented at
+        the 10th United Kingdom Stata Users' Group Meeting, London, 29 June,
+        2004.
+<p>
+    Newson, R.  2003.  Confidence intervals and <i>p</i>-values for delivery to the
+        end user.  <i>The Stata Journal</i> 3(3): 245-269.  Download from <i>The Stata</i>
+        <i>Journal</i> website.
+<p>
+<p>
+<b><u>Also see</u></b>
+<p>
+    Manual:  <b>[D] describe</b>, <b>[P] file</b>, <b>[D] insheet</b>, <b>[D] list</b>, <b>[D] outsheet</b>, <b>[R]</b>
+             <b>ssc</b>, <b>[D] type</b>
+<p>
+      Help:  <b>[D] describe</b>, <b>[P] file</b>, <b>[D] insheet</b>, <b>[D] list</b>, <b>[D] outsheet</b>, <b>[R]</b>
+             <b>ssc</b>, <b>[D] type</b>
+             <b>descsave</b>, <b>inccat</b>, <b>ingap</b>, <b>listtex</b>, <b>rtfutil</b>, <b>sdecode</b>,
+             <b>corrtex</b>, <b>estout</b>, <b>outtable</b>, <b>outtex</b>, <b>textab</b>, <b>sutex</b> if installed
+<p>
+     Other:  The W3C HyperText Markup Language (HTML) Home Page at
+             http://www.w3.org/MarkUp/
+             Sean Burke's RTF web page
+</pre>

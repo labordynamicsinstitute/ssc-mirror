@@ -1,0 +1,130 @@
+<pre>
+-------------------------------------------------------------------------------
+help for <b>outtex</b>                                              (Antoine Terracol)
+-------------------------------------------------------------------------------
+<b><u>Generates LaTeX code for results tables after any estimation command.</u></b>
+<p>
+        <b>outtex</b> , [<b><u>bel</u></b><b>ow</b>] [<b><u>plain</u></b>] [<b><u>dig</u></b><b>its(integer)</b>] [<b><u>lev</u></b><b>el</b>] [<b><u>lab</u></b><b>els</b>] [<b><u>de</u></b><b>tails</b>]
+                           [<b><u>le</u></b><b>gend</b>] [<b><u>nop</u></b><b>ar</b>] [<b><u>tit</u></b><b>le(string)</b>] [<b><u>key</u></b><b>(string)</b>]
+                           [<b><u>long</u></b><b>table</b>] [<b><u>pl</u></b><b>acement</b>] [<b><u>noch</u></b><b>eck</b>] [<b><u>file</u></b><b>(string)</b>]
+                           [<b><u>append</u></b>] [<b><u>repl</u></b><b>ace</b>]
+<p>
+<p>
+<b><u>Description</u></b>
+<p>
+<b>outtex</b> generates LaTeX code for results tables after any estimation command. If
+<b><u>file</u></b><b>(string)</b> is specified, the code is written to the specified file.
+<p>
+Otherwise, the code is displayed in the output window.
+<p>
+When <b><u>long</u></b><b>table</b> is selected, and if you <i>\usepackage{longtable}</i> in the preamble
+of your TeX document, tables can span over several pages
+<p>
+<b><u>Options</u></b>
+<p>
+<b><u>1. Display options</u></b>
+<p>
+By default, <b>outtex</b> generates a table of the following form :
+Variable name | Coefficient|significance level symbol | (Std. Err)
+<p>
+. "Variable name" in a left-aligned column
+. "Coefficient" in a right-aligned column
+. No intercolumn space between the Coeff. column and the symbol column ; which
+goes in a left-aligned column
+. "Std.Err" between parentheses in a centered column"
+<p>
+Combining [<b><u>plain</u></b>] and [<b><u>bel</u></b><b>ow</b>] can give up to four different layouts : 
+<p>
+The [<b><u>bel</u></b><b>ow</b>] option puts standards errors below the coefficient.
+<p>
+If [<b>plain</b>] is specified, the significance level symbols are put on the same
+column as the coefficients, and the column is centered.
+<p>
+<p>
+<b>outtex</b>, level below gives
+Variable name | Coefficient|sign.lev.symb.|
+              |   (Std.Err)|              |
+<p>
+<b>outtex</b>, level plain gives
+Variable name | Coefficient + sign.lev.symb. | (Std.Err) |
+<p>
+<b>outtex</b>, level below plain gives
+ Variable name | Coefficient+sign.lev.symb. |
+               |        (Std.Err)           |
+<p>
+The [<b><u>dig</u></b><b>its(integer)</b>] option defines the number of digits to be displayed
+(default is 3).
+<p>
+The [<b><u>lab</u></b><b>els</b>] option allows to display variable labels (if they exist) instead
+of variable names.
+<p>
+The [<b><u>lev</u></b><b>el</b>] option adds symbols according to the coefficient's significance
+level.
+<p>
+The [<b><u>le</u></b><b>gend</b>] option adds a legend correspondig to significance levels symbols.
+NB : [<b><u>leg</u></b><b>end</b>] implies [<b><u>lev</u></b><b>el</b>]
+<p>
+The [<b><u>de</u></b><b>tails</b>] option adds details such as R2 ,chi2, LL...
+<p>
+The [<b><u>nop</u></b><b>ar</b>] option supresses the parentheses around the Std. Err.
+<p>
+The [<b><u>tit</u></b><b>le(string)</b>] option defines the table title (Default is <i>Estimation</i>
+<i>result</i> followed by the command name).
+<p>
+<b><u>2. Other options</u></b>
+<p>
+The [<b>key(string)</b>] option defines the table label (<i>tabresult</i> is default).
+<p>
+The [<b><u>long</u></b><b>table</b>] option allows to create tables that span over several pages
+using the "longtable" package (do not forget to <i>\usepackage{longtable}</i> in the
+preamble of your .tex document)
+<p>
+The [<b><u>pl</u></b><b>acement</b>] option specifies the placement of the table in the .tex doc
+(default is <i>htbp</i>)
+<p>
+The [<b>nocheck</b>] option skips the LaTeX special characters search-and-replace
+routine. This option should be used in two cases :  - either you are sure there
+are no LaTeX special characters within variable names or labels, and want to
+speed-up the command, - or you deliberately included LaTeX special characters
+and do not want <b>outtex</b> to translate them.
+<p>
+The [<b><u>file</u></b><b>(string)</b>] option writes the LaTeX code in the specified ASCII file (if
+no extension is given, <i>.tex</i> is assumed), nothing is displayed in the output
+window.
+<p>
+The [<b><u>append</u></b>] option (to be used with <b><u>file</u></b><b>(string)</b>) appends the code to the
+specified file.
+<p>
+The [<b><u>repl</u></b><b>ace</b>] option (to be used with <b><u>file</u></b><b>(string)</b>) overwrites any existing
+file with the same name.
+<p>
+<b><u>Notes</u></b>
+<p>
+<p>
+If the LaTeX code is displayed in the output window, one just has to copy/paste
+it into a LaTeX editor (in Scientific Word, it has to be pasted into a "TeX
+field")
+<p>
+If a file is written, <b>outtex</b> displays "file <i>filename</i> saved". The content of
+<i>filename</i> can be viewed by clicking on it.
+<p>
+<p>
+<b><u>Examples</u></b>
+<p>
+        . outtex
+<p>
+        . outtex, labels level detail legend supertabular key(stab)
+<p>
+        . outtex, labels level below file(C:/myfiles/mytables.tex) replace
+<p>
+<p>
+<b><u>Also see</u></b>
+<p>
+On-line:  help for summarize
+          help for sutex, maketex, outreg, outtable if installed
+<p>
+-------------------------------------------------------------------------------
+<p>
+Questions, comments and bug-reports can be sent to terracol@univ-paris1.fr
+-------------------------------------------------------------------------------
+</pre>

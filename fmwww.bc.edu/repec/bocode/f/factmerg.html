@@ -1,0 +1,142 @@
+<pre>
+-------------------------------------------------------------------------------
+help for <b>factmerg</b>                                                (Roger Newson)
+-------------------------------------------------------------------------------
+<p>
+<p>
+<b><u>Merge factors to create string variables containing values, names and labels</u></b>
+<p>
+        <b>factmerg</b> [<i>varlist</i>] [<b>if</b> <i>exp</i>] [<b>in</b> <i>range</i>] [ <b>,</b> <b><u>fv</u></b><b>alue(</b><i>newvarname</i><b>)</b>
+               <b><u>fn</u></b><b>ame(</b><i>newvarname</i><b>)</b> <b><u>fl</u></b><b>abel(</b><i>newvarname</i><b>)</b> <b><u>mv</u></b><b>alue(</b><i>string_expression</i><b>)</b>
+               <b><u>mn</u></b><b>ame(</b><i>string_expression</i><b>)</b> <b><u>ml</u></b><b>abel(</b><i>string_expression</i><b>)</b>
+               <b><u>fm</u></b><b>issing(</b><i>newvarname</i><b>)</b> <b><u>xmls</u></b><b>ub</b> <b><u>pv</u></b><b>alue(</b><i>string</i><b>)</b> <b><u>pn</u></b><b>ame(</b><i>string</i><b>)</b>
+               <b><u>pl</u></b><b>abel(</b><i>string</i><b>)</b> <b><u>sv</u></b><b>alue(</b><i>string</i><b>)</b> <b><u>sn</u></b><b>ame(</b><i>string</i><b>)</b> <b><u>sl</u></b><b>abel(</b><i>string</i><b>)</b> ]
+<p>
+<p>
+<b><u>Description</u></b>
+<p>
+<b>factmerg</b> takes, as input, a list of variables (numeric or string), representing
+discrete factors in a model.  It creates, as output, one to three string
+variables, containing, in each observation, a value, a factor name or a factor
+variable label, respectively, copied from the first factor variable in the
+input variable list with a non-missing value for that observation.  <b>factmerg</b> is
+intended for use with a list of input variables created by <b>factext</b> after a call
+to <b>parmby</b> or <b>parmest</b>. The output variables are intended to be used in creating
+row labels for output tables and/or plots, possibly using the <b>sencode</b> package.
+The input factors are usually either created in a <b>parmest</b> or <b>parmby</b> output data
+set by using the <b>factext</b> package, or are in a data set created by concatenating
+multiple <b>xcontract</b> output data sets using the <b>dsconcat</b> package.
+<p>
+<p>
+<b><u>Options</u></b>
+<p>
+    <b>fvalue(</b><i>newvarname</i><b>)</b> specifies a string output variable containing, in each
+        observation, a value derived from the first variable in the input
+        <i>varlist</i> with a non-missing value for that observation. Values from
+        string input variables are copied.  Values from numeric input
+        variables are decoded using value labels if these are present, or
+        using formats otherwise.
+<p>
+    <b>fname(</b><i>newvarname</i><b>)</b> specifies a string output variable containing, in each
+        observation, the name of the input variable from which the value of
+        the <b>fvalue()</b> variable is copied for that observation.
+<p>
+    <b>flabel(</b><i>newvarname</i><b>)</b> specifies a string output variable containing, in each
+        observation, the variable label of the input variable from which the
+        value of the <b>fvalue()</b> variable is copied for that observation.
+<p>
+    <b>mvalue(</b><i>string_expression</i><b>)</b> specifies a string expression, used to define
+        values for the <b>fvalue()</b> variable for observations with missing values
+        for all variables in the input <i>varlist</i>.
+<p>
+    <b>mname(</b><i>string_expression</i><b>)</b> specifies a string expression, used to define
+        values for the <b>fname()</b> variable for observations with missing values
+        for all variables in the input <i>varlist</i>.
+<p>
+    <b>mlabel(</b><i>string_expression</i><b>)</b> specifies a string expression, used to define
+        values for the <b>flabel()</b> variable for observations with missing values
+        for all variables in the input <i>varlist</i>.
+<p>
+    <b>fmissing(</b><i>newvarname</i><b>)</b> specifies the name of a new binary variable to be
+        generated, containing missing values for observations excluded by the
+        <b>if</b> and <b>in</b> qualifiers, 1 for other observations in which all the input
+        factors are missing, and 0 for other observations in which at least
+        one of the input factors is nonmissing.
+<p>
+    <b>xmlsub</b> specifies that, in the string output variables indicated by the
+        options <b>fvalue()</b> and <b>flabel()</b>, the substrings <b>"&amp;"</b>, <b>"&lt;"</b> and <b>"&gt;"</b> will
+        be replaced throughout with the XML entity references <b>"&amp;amp;"</b>, <b>"&amp;lt;"</b>
+        and <b>"&amp;gt;"</b>, respectively.  This is useful if the string output
+        variables are intended for output to a table in a document in XHTML,
+        or in other XML-based languages.
+<p>
+    <b>pvalue(</b><i>string</i><b>)</b> specifies a prefix to be added to the <b>fvalue()</b> output
+        variable.
+<p>
+    <b>pname(</b><i>string</i><b>)</b> specifies a prefix to be added to the <b>fname()</b> output
+        variable.
+<p>
+    <b>plabel(</b><i>string</i><b>)</b> specifies a prefix to be added to the <b>flabel()</b> output
+        variable.
+<p>
+    <b>svalue(</b><i>string</i><b>)</b> specifies a suffix to be added to the <b>fvalue()</b> output
+        variable.
+<p>
+    <b>sname(</b><i>string</i><b>)</b> specifies a suffix to be added to the <b>fname()</b> output
+        variable.
+<p>
+    <b>slabel(</b><i>string</i><b>)</b> specifies a suffix to be added to the <b>flabel()</b> output
+        variable.
+<p>
+<p>
+<b><u>Remarks</u></b>
+<p>
+<b>factmerg</b> is typically used with <b>factext</b>, which is used with <b>parmby</b>, <b>parmest</b> and
+<b>descsave</b> to create a list of factors. The output <b>fvalue()</b> variable created by
+<b>factmerg</b> may be output using <b>outsheet</b> or <b>listtex</b> to create a table with one row
+per model parameter and data on the estimates, confidence limits and/or
+P-values.  Alternatively, the <b>fvalue()</b> variable may be encoded to a numeric
+variable using <b>sencode</b> and then plotted, using <b>graph</b>, <b>hplot</b> or <b>eclplot</b>, to
+create a confidence interval plot with one axis label per model parameter.  The
+<b>fvalue</b>, <b>fname</b> and/or <b>flabel</b> variables may be used in string expressions to
+generate labels for the rows of the table, or for positions on the axis of a
+confidence interval plot, specifying the parameters in a human-readable format.
+The packages <b>descsave</b>, <b>eclplot</b>, <b>factext</b>, <b>factref</b>, <b>hplot</b>, <b>listtex</b>, <b>parmby</b>, 
+<b>parmest</b>, <b>sdecode</b> and <b>sencode</b> are not supplied with official Stata, but can be
+installed from SSC.  Further information on the use of some of these packages
+can be found in Newson (2003).
+<p>
+<p>
+<b><u>Examples</u></b>
+<p>
+The following example will work with the <b>auto</b> data if <b>descsave</b>, <b>parmest</b>, <b>parmby</b>
+and <b>factext</b> are installed.
+<p>
+                . tempfile tf0
+                . descsave rep78 foreign, do(`"`tf0'"',replace)
+                . parmby "xi: regress mpg weight i.rep78 i.foreign, robust",
+                    label norestore format(estimate min* max* %8.2f p %8.2g)
+                . factext, do(`"`tf0'"')
+                . factmerg foreign rep78, fn(faname) fl(falab) fv(faval)
+                    mn(parm) ml(label)
+                . list parm label rep78 foreign faname falab faval
+<p>
+<p>
+<b><u>Author</u></b>
+<p>
+Roger Newson, Imperial College London, UK.  Email: r.newson@imperial.ac.uk
+<p>
+<p>
+<b><u>References</u></b>
+<p>
+Newson, R. 2003. Confidence intervals and <i>p</i>-values for delivery to the end
+user.  <i>The Stata Journal</i> 3(3): 245-269.  Download from the <i>Stata Journal</i>
+website.
+<p>
+<p>
+<b><u>Also see</u></b>
+<p>
+On-line:  help for <b>describe</b>, <b>tabulate</b>, <b>xi</b>, <b>graph</b>
+          help for <b>descsave</b>, <b>eclplot</b>, <b>factext</b>, <b>factref</b>, <b>hplot</b>, <b>listtex</b>, <b>parmby</b>,
+          <b>parmest</b>, <b>sdecode</b>, <b>sencode</b>, <b>xcontract</b> if installed
+</pre>

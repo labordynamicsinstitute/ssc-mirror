@@ -1,0 +1,84 @@
+<pre>
+<b>help irr</b>
+<p>
+-------------------------------------------------------------------------------
+<p>
+<b><u>Title</u></b>
+<p>
+       <b>irr</b> -- Calculates the (periodic) internal rate of return for a series
+                    of periodic cash flows
+<p>
+<p>
+<b><u>Syntax</u></b>
+<p>
+        <b>irr</b> varname [<i>if</i>] [<i>in</i>]
+<p>
+<p>
+<b><u>Description</u></b>
+<p>
+    <b>irr</b> Calculates the (periodic) internal rate of return for a series of
+    periodic cash flows.  These cash flows do not have to be constant,
+    however, the cash flows must occur at regular intervals, such as months
+    or years (if the cash flow payments are monthly, then the resulting rate
+    of return is multiplied by 12 for the annual rate of return).
+<p>
+<p>
+<b><u>Definitions</u></b>
+<p>
+<b>irr</b> uses the following conventions (for a <b>unique</b> internal rate of return):
+<p>
+   ¤ Net Current Value should be greater than zero:
+<p>
+        -I0 + CF1/(1+0)^(1) + CF2/(1+0)^(2) + ... + CFN/(1+0)^(N) &gt; 0
+<p>
+   ¤ Each Cash Flow value should be greater or equal to zero:
+<p>
+        CFi &gt;= 0
+<p>
+<p>
+<b><u>Input Arguments</u></b>
+<p>
+<b>varname</b> must be a vector containing a stream of periodic cash flows.
+The first entry in <b>varname</b> should be the initial investment (I0) as a negative 
+&gt; number.
+<p>
+<p>
+<b><u>Example</u></b>
+<p>
+Find the internal rate of return for a simple investment with a unique positive
+&gt;  rate of return. 
+The initial investment is $100,000 and the following cash flows represent the y
+&gt; early income from the investment.
+<p>
+<b>. list t cf if t&lt;=5, sep(0) noobs</b>
+<p>
+        
+                 +----------------+
+                 | t        cf    |
+                 |----------------|
+                 | 0   $ -100,000 |
+                 | 1   $   10,000 |
+                 | 2   $   20,000 |
+                 | 3   $   30,000 |
+                 | 4   $   40,000 |
+                 | 5   $   50,000 |
+                 +----------------+
+<p>
+<b>. irr cf</b>
+Internal Rate of Return = 0.12006 (12.006%)
+<p>
+<p>
+<b><u>Saved results</u></b>
+<p>
+    <b>irr</b> saves the following in <b>r()</b>:
+<p>
+    Scalars   
+      <b>r(irr)</b>         internal rate of return
+      <b>r(NPV)</b>         net present value
+<p>
+<b><u>Author</u></b>
+<p>
+Maximo Sangiacomo
+<b>Email:  </b>msangia@hotmail.com
+<p>
+</pre>

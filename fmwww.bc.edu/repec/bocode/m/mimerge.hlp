@@ -1,0 +1,110 @@
+{smcl}
+{* 18sep2002}{...}
+{.-}
+help for {cmd: mimerge}{right:(SJ3-3: st0000)}
+{.-}
+
+{title:Merge multiple (imputed) datasets}
+
+{p 8 27 2}
+{cmd:mimerge} [{it:varlist}] {cmd:using} {it:filename-prefix}
+[{cmd:,} {cmd:keep(}{it:varlist}{cmd:)} {cmdab:uniq:ue} {cmdab:uniqm:aster}
+{cmdab:uniqu:sing} {cmdab:nol:abel} 
+{cmdab:nok:eep} {cmd:_merge(}{it:varname}{cmd:)}]
+
+
+{title:Description}
+
+{p 4 4 2}
+{cmd:mimerge} joins corresponding observations from each of the {help miset}
+datasets with each of the {cmd:using} datasets into single observations.
+
+
+{title:Options}
+
+{p 4 8 2}
+{cmd:keep(}{it:varlist}{cmd:)} specifies the variables to be kept from the
+{cmd:using} data.  If {cmd:keep()} is not specified, all variables are kept.
+
+{p 4 8 2}
+{cmd:unique}, {cmd:uniqmaster}, and {cmd:uniqusing} specify that the
+match variable(s) in a match merge uniquely identifies the observations.
+
+{p 8 8 2}
+{cmd:unique} specifies that the match variable(s) uniquely identifies
+the observations in the master data and in the using data.  For most
+match merges, you should specify {cmd:unique}.  {cmd:merge} does nothing
+differently when you specify the option, unless the assumption that you
+are making is false.  In that case, an error message is issued and the
+data are not merged.
+
+{p 8 8 2}
+{cmd:uniqmaster} specifies that the match variable(s) uniquely identifies
+the observations in memory, the master data, but not necessarily the
+ones in the using data.
+
+{p 8 8 2}
+{cmd:uniqusing} specifies that the match variable(s) uniquely identifies
+the observations in the using data, but not necessarily the ones in the
+master data.
+
+{p 4 8 2} 
+{cmd:nolabel} prevents Stata from copying the value label definitions from the
+using dataset.
+
+{p 4 8 2} 
+{cmd:nokeep} causes merge to ignore observations in the using data that have
+no corresponding observation in the master.
+
+{p 4 8 2}
+{cmd:_merge(}{it:varname}{cmd:)} specifies the name of the variable that
+will mark the source of the resulting observation. The default is
+{cmd:_merge(_merge)}.
+
+{p 4 4 2}
+These options are all inherited from the parent {cmd:merge} command.
+
+
+{title:Remarks}
+
+{p 4 4 2}
+The master datasets should be {help miset} before using {cmd:mimerge}.
+The number of using datasets must be the same as that of the master datasets.
+The names follow {cmd:mi} naming conventions, see help {help miset}.
+
+
+{title:Examples}
+
+{p 4 4 2}
+Assume {cmd:foo1.dta} to {cmd:foo5.dta} have variables {cmd:id} and
+{cmd:drkfre}, and {cmd:bar1.dta} to {cmd:bar5.dta} have variables {cmd:id}
+and {cmd:smk}. By issuing
+
+{p 4 8 2}{cmd:. miset using foo}{p_end}
+{p 4 8 2}{cmd:. mido sort id}{p_end}
+{p 4 8 2}{cmd:. misave foo, replace}{p_end}
+{p 4 8 2}{cmd:. miset using bar}{p_end}
+{p 4 8 2}{cmd:. mido sort id}{p_end}
+{p 4 8 2}{cmd:. mimerge id using foo}{p_end}
+{p 4 8 2}{cmd:. misave foobar}
+
+{p 4 4 2}
+the dataset {cmd:foo}{it:m}{cmd:.dta} is merged to {cmd:bar}{it:m}{cmd:.dta}
+to form a new dataset {cmd:foobar}{it:m}{cmd:.dta} ({it:m} = 1,...,5), which
+contains variables {cmd:id}, {cmd:drkfre}, and {cmd:smk}.
+
+
+{title:Authors}
+
+{p 4 4 2}
+Ning Li, Philip Greenwood, and John Carlin, Clinical Epidemiology &
+Biostatistics Unit, Murdoch Children's Research Institute and University of
+Melbourne. Email 
+{browse "mailto:jbcarlin@unimelb.edu.au":jbcarlin@unimelb.edu.au}
+
+
+{title:Also see}
+
+{p 4 14 2}
+Online: help for {help merge}, {help miset}, {help miappend}, {help misave},
+{help mido}, {help mici}, {help mifit}, {help milincom}, {help mireset}{p_end}

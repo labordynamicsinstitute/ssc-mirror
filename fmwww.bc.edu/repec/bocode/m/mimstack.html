@@ -1,0 +1,129 @@
+<pre>
+-------------------------------------------------------------------------------
+help for <b> mimstack</b>                             JC Galati, P Royston &amp; JB Carlin
+-------------------------------------------------------------------------------
+<p>
+<b><u>Title</u></b>
+<p>
+        <b>mimstack</b> -- A command for stacking a multiply-imputed dataset into
+        the format required by mim.
+<p>
+<p>
+<b><u>Syntax</u></b>
+<p>
+        <b>mimstack,</b> <b>m(</b><i>#</i><b>)</b> <b><u>so</u></b><b>rtorder(</b><i>varlist</i><b>)</b> <b>istub(</b><i>string</i><b>)</b> | <b>ifiles(</b><i>string</i><b>)</b> [
+                 <b>nomj0</b> <b>clear</b> ]
+<p>
+<p>
+<b><u>Description</u></b>
+<p>
+    <b>mimstack</b> is a utility command which transforms a multiply-imputed dataset
+    stored in seperate files into the format required by mim.
+<p>
+<p>
+<b><u>Options</u></b>
+<p>
+    <b>m</b> specifies the number of imputed datasets
+<p>
+    <b><u>so</u></b><b>rtorder</b> specifies a list of one or more variables that uniquely
+        identify the observations in each of the datasets to be stacked
+<p>
+    <b>istub</b> specifies a list of `m'+1 datasets to be stacked, `istub'0.dta,
+        `istub'0.dta, ..., `istub'`m'.dta, where `istub'0.dta contains the
+        original data with missing values and the remaining files contain the
+        `m' imputed copies of the data, unless the <b>nomj0</b> option is specified,
+        in which case only the imputed datasets are stacked into
+        <b>mim</b>-compatible format
+<p>
+    <b>ifiles</b> specifies a space-separated list of `m'+1 datasets to be stacked,
+        with the first filename specifying the file containing the original
+        data with missing values, and the remaining `m' filenames specifying
+        the files containind the imputed datasets, unless the <b>nomj0</b> option is
+        specified, in which case only the `m' files containing the imputed
+        data are specified
+<p>
+    <b>nomj0</b> specifies that the original data is not to be stacked with the
+        imputed datasets
+<p>
+    <b>clear</b> allows the current dataset to be discarded
+<p>
+<p>
+<b><u>Remarks</u></b>
+<p>
+    <i>For users:</i>
+<p>
+    The first use of <b>mimstack</b> addresses the problem where the user has some
+    number of imputed copies of a dataset (10 for example), possibly
+    generated using some other software, and these are stored in separate
+    data files, say "myfile0.dta", "myfile1.dta", ..., "myfile10.dta", where
+    "myfile0.dta" contains the original data with missing values. The
+    datasets are stacked into a <b>mim</b>-compatible dataset using the <b>istub</b> option
+    as follows
+<p>
+    <b>. mimstack, m(10) so("idno") istub(myfile) clear</b>
+<p>
+    Here <b><u>so</u></b><b>rtorder</b> must contain a list of variables that uniquely identify
+    the observations in each of the datasets. Upon succesful completion of
+    the stack operation, the resulting mim compatible dataset is the current
+    dataset in memory. Note that the <b>clear</b> option is only required if the
+    current data has not been saved, but is to be discarded. If the user
+    optionally wishes to stack only the imputed datasets (a practice that is
+    strongly discouraged by the authors, since details of the values that
+    were originally missing will be lost), then this is done using the nomj0
+    option as follows
+<p>
+    <b>. mimstack, m(10) so("idno") nomj0 istub(myfile)</b>
+<p>
+    In this case the file "myfile0.dta" is not required. Note that certain 
+    mim functions (<b>predict</b>, for example) require that the original data be
+    stored with the imputed data in the stacked dataset.
+<p>
+<p>
+    <i>For programmers:</i>
+<p>
+    While it is desirable to do as much processing of a mim dataset with the
+    complete stacked dataset in memory, there are occasions where one may
+    have valid reasons for needing to process each of the imputed datasets
+    separately in memory (this is how the <b>manip</b> option of mim is implemented,
+    for example). In this scenario, <b>mimstack</b> may be used to restack the
+    individual datasets post processing using the <b>ifiles</b> option, assuming
+    that the changes to the individual datasets have been captured in
+    separate temporary files and the <b>_mi</b> variable has been regenerated in
+    each dataset to reflect any changes in the number of observations in the
+    datasets:
+<p>
+    <b>. mimstack, m(`m') so("_mi") ifiles(`"`ifilelist'"') clear</b>
+<p>
+    Here <i>m</i> is the number of imputed datasets in the stack and <i>ifilelist</i> is a
+    local macro containing the list of <i>m+1</i> temporary filenames, with each
+    filename being separated by a space, and, if the path or names of the
+    temporary files contain spaces, each filename enclosed in compound
+    quotes.
+<p>
+    Note that while the most natural approach to handling the above type of
+    processing is by looping over the individual _mj values, and at each
+    iteration, preserving the mim dataset, keeping the individual dataset
+    required, processing it, saving the results to a temporary file and then
+    restoring; for large m this is very inefficient. A preferable method is
+    to temporarily save the mim dataset to disk and then read in each
+    individual dataset one at a time via the <b>using</b> clause of the <b>use</b> command
+    as follows:
+<p>
+    <b>. quietly levelsof _mj, local(levels)</b>
+    <b>. local m : word count `levels'</b>
+    <b>. tempfile mimfile</b>
+    <b>. quietly save `mimfile'</b>
+    <b>. foreach j of local levels {</b>
+    <b>.</b>     <b>use _all if _mj==`j' using `mimfile', clear</b>
+    <b>.</b>     <b>...</b>
+    <b>.</b>     <b>tempfile tfile`j'</b>
+    <b>.</b>     <b>quietly save `tfile`j''</b>
+    <b>.</b>     <b>local ifilelist `"`ifilelist' `tfile`j''"'</b>
+    <b>. }</b>
+    <b>. mimstack `mimfile', m(`m') so("_mi") ifiles(`"`ifilelist'"') clear</b>
+<p>
+<p>
+<b><u>Also see</u></b>
+<p>
+    Online:  help for mim .
+</pre>

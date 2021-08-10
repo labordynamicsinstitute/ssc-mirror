@@ -1,0 +1,103 @@
+<pre>
+-------------------------------------------------------------------------------
+help for <b>psbayes</b>
+-------------------------------------------------------------------------------
+<p>
+<b><u>Pseudo-Bayes smoothing of cell frequencies</u></b> 
+<p>
+        <b>psbayes</b> <i>datavar</i> [<i>priorvar</i>] [<b>if</b> <i>exp</i>] [<b>in</b> <i>range</i>] [ <b>, by(</b><i>rowvar</i> [<i>colvar</i>
+                 [<i>layervar</i>]]<b>)</b> <b><u>g</u></b><b>enerate(</b><i>newvar</i><b>)</b> <b><u>p</u></b><b>rob</b> <i>tabdisp_options</i> ]
+<p>
+<p>
+<b><u>Description</u></b>
+<p>
+    <b>psbayes</b> takes <i>datavar</i>, which should be a set of frequencies, and shrinks
+    or smooths it towards a set of frequencies implied by prior
+    probabilities. This will have the effect of replacing sampling zeros by
+    positive estimates whenever the priors are positive.
+<p>
+    For a set of data frequencies n_i, summing to n, and a set of prior
+    probabilities q_i, the smoothed estimates are n * p_i, where
+<p>
+                 n   n_i       k
+        p_i =  ----- ---  +  ----- q_i,
+               n + k  n      n + k
+<p>
+    and shrinkage is tuned by the constant
+<p>
+              n²  - SUM ( n_i²)
+        k = --------------------.
+            SUM (n_i - n * q_i)²
+<p>
+    These estimates minimise the total mean square error between estimated
+    and estimand probabilities. For more details, see the References.
+<p>
+    If <i>priorvar</i> is specified, it must sum to 1 for the data used. If <i>priorvar</i>
+    is not specified, it is taken to be a set of equal probabilities.
+<p>
+<p>
+<b><u>Options</u></b> 
+<p>
+    <b>by(</b><i>rowvar colvar layervar</i><b>)</b> indicates that <i>datavar</i> refers to a table with
+        rows (and columns if specified (and layers if specified)) indexed by
+        the variable(s) named, which will structure a display of cell
+        estimates using tabdisp. If <b>by()</b> is not specified, cell estimates
+        will be displayed according to observation numbers.
+<p>
+    <b>generate(</b><i>newvar</i><b>)</b> generates a new variable containing results.
+<p>
+    <b>prob</b> indicates that probabilities rather than estimated frequencies are
+        to be shown (and if desired kept).
+<p>
+    <i>tabdisp_options</i> are options of tabdisp.  Default <b>center format(%9.1f)</b>.
+<p>
+<p>
+<b><u>Examples</u></b>
+<p>
+    <b>. psbayes f prior, by(row col) g(sf)</b>
+<p>
+    <b>. contract foreign rep78, zero nomiss</b>
+    <b>. psbayes _freq, by(foreign rep78) prob</b>
+<p>
+<p>
+<b><u>Author</u></b>
+<p>
+    Nicholas J. Cox, University of Durham, U.K.
+    n.j.cox@durham.ac.uk
+<p>
+<p>
+<b><u>References</u></b> 
+<p>
+    Agresti, A. 2002. <i>Categorical data analysis.</i> Hoboken, NJ: John Wiley.
+<p>
+    Bishop, Y.M.M., Fienberg, S.E. and Holland, P.W. 1975.  <i>Discrete</i>
+        <i>multivariate analysis.</i> Cambridge, MA: MIT Press.
+<p>
+    Fienberg, S.E. and Holland, P.W. 1970. Methods for eliminating zero
+        counts in contingency tables. In Patil, G.P. (ed.) <i>Random counts in</i>
+        <i>scientific work. Volume 1: Random counts in models and structures.</i>
+        Pennsylvania State University Press, University Park, 233-260.
+<p>
+    Fienberg, S.E. and Holland, P.W. 1972. On the choice of flattening
+        constants for estimating multinomial probabilities.  <i>Journal of</i>
+        <i>Multivariate Analysis</i> 2: 127-134.
+<p>
+    Fienberg, S.E. and Holland, P.W. 1973. Simultaneous estimation of
+        multinomial cell probabilities.  <i>Journal, American Statistical</i>
+        <i>Association</i> 68: 683-691.
+<p>
+    Good, I.J. 1965.  <i>The estimation of probabilities: an essay on modern</i>
+        <i>Bayesian methods.</i>  MIT Press, Cambridge, MA.
+<p>
+    Sutherland, M., Holland, P.W. and Fienberg, S.E. 1975. Combining Bayes
+        and frequency approaches to estimate a multinomial parameter. In
+        Fienberg, S.E. and Zellner, A. (eds) <i>Studies in Bayesian econometrics</i>
+        <i>and statistics in honor of Leonard J. Savage.</i>  North-Holland,
+        Amsterdam, 585-617.
+<p>
+<p>
+<b><u>Also see</u></b>
+<p>
+    On-line:  help for tabdisp
+<p>
+</pre>

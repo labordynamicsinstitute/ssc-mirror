@@ -1,0 +1,192 @@
+<pre>
+<b><u>Title</u></b>
+<p>
+    stns list --      List the net survival or cumulative hazard function
+<p>
+<p>
+<a name="syntax"></a><b><u>Syntax</u></b>
+<p>
+        <b>stns</b> <b><u>l</u></b><b>ist</b> <b>[using </b><i>lifetable</i><b>]</b> [<i>if</i>] [<i>in</i>] [<b>,</b> <i>options</i>]
+<p>
+    <i>options</i>                        Description
+    -------------------------------------------------------------------------
+    Main (Estimation options)
+<p>
+      <b>age(</b><i>varname</i><b>=</b><i>name</i><b>)</b>            varname specifies the age variable in the
+                                     dataset; name that in the ratetable
+      <b>period(</b><i>varname</i><b>=</b><i>name</i><b>)</b>         varname specifies the survival time
+                                     variable in the dataset; name that in
+                                     the ratetable
+      <b>rate(</b><i>name</i><b>)</b>                   name specifies the rate variable in the
+                                     ratetable
+      <b><u>st</u></b><b>rata(</b><i>varlist</i><b>)</b>              stratifies on different groups of <i>varlist</i>
+<p>
+      <b><u>ty</u></b><b>pe(</b><i>type</i><b>)</b>                   specifies type of estimates:
+                                     Kaplan-Meier-type (the default) or
+                                     Fleming-Harrington-type
+      <b>by(</b><i>varlist</i><b>)</b>                  estimates separate functions for each
+                                     group formed by <i>varlist</i>
+      <b><u>end</u></b><b>_followup(</b><i>#</i><b>)</b>              indicates the date of the end of the
+                                     follow up (in days since 01jan1960)
+<p>
+    Options
+      <b><u>sur</u></b><b>vival</b>                     reports net survival function; the default
+      <b><u>f</u></b><b>ailure</b>                      reports net failure function
+      <b><u>cumh</u></b><b>az</b>                       reports netcumulative hazard function
+<p>
+      <b>at(</b><i>#</i>|<i>numlist</i>[<b>, </b><b><u>scale</u></b><b>factor(</b><i>#</i><b>) unit(</b><i>unit</i><b>) round(</b><i>#</i><b>) </b><b><u>meth</u></b><b>od(</b><i>method</i><b>)</b>])
+                                   reports estimated net survival/ net
+                                   cumulative hazard function at specified
+                                   times; default is to report at all unique
+                                   time values
+      <b><u>nosh</u></b><b>ow</b>                       does not show st setting information
+      <b><u>nodet</u></b><b>ail</b>                     does not show the results
+      <b><u>city</u></b><b>pe(</b><i>citype</i><b>)</b>               specifies type of confidence interval:
+                                     plain (the default), log or loglog
+      <b><u>l</u></b><b>evel(</b><i>#</i><b>)</b>                     sets confidence level; default is
+                                     <b>level(95)</b>
+      <b><u>sav</u></b><b>ing(</b><i>filename</i>[<b>,</b> <b>replace</b>]<b>)</b>  saves results to <i>filename</i>; use <b>replace</b> to
+                                     overwrite existing <i>filename</i>
+    -------------------------------------------------------------------------
+    You must <b>stset</b> your data before using <b>stns list</b>; see <b>[ST] stset</b>.
+<p>
+<p>
+<a name="description"></a><b><u>Description</u></b>
+<p>
+    <b>stns list</b> lists the estimated net survival (failure) and related
+    functions, such as the cumulative hazard function. See stns for an
+    introduction to this command.
+<p>
+<p>
+<a name="options"></a><b><u>Options</u></b>
+<p>
+        +------+
+    ----+ Main +-------------------------------------------------------------
+<p>
+    <b>age</b>, <b>period</b>, <b>rate</b>, and <b>strata</b> are required to estimate the net
+        survival/failure function or net cumulative hazard stratified on
+        variables in <i>varlist</i>.
+<p>
+    <b>type(</b><i>type</i><b>)</b> specifies the type of estimates: <u>ka</u>plan-<u>me</u>ier (the default) or
+        <u>fl</u>eming-<u>ha</u>rrigton-<u>ne</u>lson-<u>aa</u>len.
+<p>
+    <b>by(</b><i>varlist</i><b>)</b> estimates a separate function for each by-group. By-groups
+        are identified by equal values of the variables in <i>varlist</i>.
+<p>
+    <b>end_followup(</b><i>#</i><b>)</b> specifies the date of the end of the follow up. The
+        default is the time exit of stset command.
+<p>
+<p>
+        +---------+
+    ----+ Options +----------------------------------------------------------
+<p>
+    <b>survival</b>, <b>failure</b>, and <b>cumhaz</b> specify the function to report.
+<p>
+        <b>survival</b> specifies that the net survival function be listed. This
+            option is the default if a function is not specified.
+<p>
+        <b>failure</b> specifies that the net failure function 1 - S(t+0) be listed.
+<p>
+        <b>cumhaz</b> specifies that the estimate of the net cumulative hazard
+            function be listed.
+<p>
+    <b>at(</b><i>#</i>|<i>numlist</i>[<b>, </b><b><u>scale</u></b><b>factor(</b><i>#</i><b>)</b> <b>unit(</b><i>unit</i><b>) round(</b><i>#</i><b>) </b><b><u>meth</u></b><b>od(</b><i>method</i><b>)</b>]<b>)</b>
+        specifies the time values at which the estimated net survival
+        (failure) or net cumulative hazard function is to be listed. The
+        default is to list the function at all the unique time values in the
+        data, or if functions are being compared, at about 10 times chosen
+        over the observed interval. In any case, you can control the points
+        chosen.
+<p>
+        <b>scalefactor(</b><i>#</i><b>)</b> indicates the step between times which are shown.
+<p>
+        <b>unit(</b><i>unit</i><b>)</b> specifies the unit of time variable and prints it on the
+        results. Default is void.
+<p>
+        <b>round(</b><i>#</i><b>)</b> specifies the decimal of the rounding. For example, if #
+        equals to 10 time will be rounded to the nearest tenth. By default it
+        takes 1, i.e. the rounding is made for the unity.
+<p>
+        <b>method(</b><i>step</i>|<i>lin</i><b>)</b> indicates how the survival and the cumulative hazard
+        functions are interpolated: <i>step</i> for left-continuous step function
+        and <i>lin</i> for linear interpolation. <i>step</i> is the default.
+<p>
+            <b>at(5 10 20 30 50 90)</b> would display the function at the designated
+                times.
+<p>
+            <b>at(10 20 to 100)</b> would display the function at times 10, 20, 30,
+                40, ..., 100.
+<p>
+            <b>at(5 10 to 100 200)</b> would display the function at times 5, 10,
+                15,..., 100, and 200.
+<p>
+            <b>at(10(5)30)</b> would display the function at the times 10, 15, 20,
+                25, and 30.
+<p>
+            <b>at(20)</b> would display the function at (roughly similarly to<b> sts</b>;
+                see <b>[ST] sts</b>) 20 equally spaced times over the interval
+                observed in the data.  We say roughly because Stata may
+                choose to increase or decrease your number slightly if that
+                would result in rounder values of the chosen times.
+<p>
+            <b>at(15, round(100))</b> would display the function at 15 equally
+                spaced times, which are around rounded to the nearest
+                hundredth.
+<p>
+            <b>at(1(1)5, scalefactor(365.25) method(</b><i>step</i><b>)</b> would display the
+                function at times 1*365.25, 2*365.25, ..., 5*365.25. If a
+                specified time does not correspond to an observation time, it
+                would display the function at the previous observation time.
+<p>
+    <b>noshow</b> prevents <b>stns list</b> from showing the key st variables. This option
+        is seldom used because most people type <b>stset , show</b> or <b>stset, noshow</b>
+        to set whether they want to see these variables mentioned at the top
+        of the output of every st command; see <b>[ST] stset</b>.
+<p>
+    <b>nodetail</b> prevents <b>stns list</b> from showing the results.
+<p>
+    <b>citype(</b><i>citype</i><b>)</b> specifies the type of confidence interval: plain, log or
+        log-log. The default is plain.
+<p>
+    <b>level(</b><i>#</i><b>)</b> specifies the confidence level, as a percentage, for the
+        Pohar-Perme pointwise confidence interval of the net survival
+        (failure) or for the pointwise confidence interval of the net
+        cumulative hazard function; see <b>[R] level</b>.
+<p>
+    <b>saving(</b><i>filename</i>[<b>,</b> <b>replace</b>]<b>)</b> saves the results in a Stata data file (<b>.dta</b>
+        file).
+<p>
+        <b>replace</b> specifies that <i>filename</i> be overwritten if it exists.
+<p>
+<p>
+ 
+<a name="examples"></a><b><u>Examples</u></b>
+<p>
+    Setup
+        <b>. use rdata</b>
+        <b>. stset survtime, failure(cens==1) id(id)</b>
+<p>
+    Suppress showing st settings
+        <b>. stset, noshow</b>
+<p>
+    Compute and list the net survival function
+        <b>. stns list using myslopop, age(agediag=age) period(datediag=year)</b>
+            <b>rate(rate) strata(sex)</b>
+<p>
+    Compute and list the net survival function for the two categories of <b>sex</b>
+        <b>. stns list using myslopop, age(agediag=age) period(datediag=year)</b>
+            <b>rate(rate) strata(sex) by(sex)</b>
+        <b>. stns list, by(sex)</b>
+<p>
+    Compute and list the net survival function for each time before 3000
+        <b>. stns list using myslopop, age(agediag=age) period(datediag=year)</b>
+            <b>rate(rate) strata(sex) by(sex) end_followup(3000)</b>
+<p>
+    Same as above, but list at the specified times
+        <b>. stns list using myslopop, age(agediag=age) period(datediag=year)</b>
+            <b>rate(rate) strata(sex) by(sex) at(0 250 to 3000)</b>
+<p>
+    Now list the net cumulative hazard functions at the specified times for
+    the two categories of <b>sex</b>
+        <b>. stns list, cumhaz at(0 250 to 3000) by(sex)</b>
+</pre>

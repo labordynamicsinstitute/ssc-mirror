@@ -1,0 +1,131 @@
+<pre>
+-------------------------------------------------------------------------------
+help for <b>rcspline</b>
+-------------------------------------------------------------------------------
+<p>
+<b><u>Restricted cubic spline smoothing</u></b>
+<p>
+        <b>rcspline</b> <i>yvar xvar</i> [<i>if</i>] [<i>in</i>] [<i>weight</i>] [ <b>,</b> <i>mkspline_options</i> <b>stub(</b><i>stub</i><b>)</b>
+            <b>regressopts(</b><i>regress_options</i><b>)</b> <b><u>gen</u></b><b>erate(</b><i>newvar</i><b>)</b>
+            <b><u>sc</u></b><b>atter(</b><i>scatter_options</i><b>)</b> <b>ci</b>[<b>(</b><i>rarea_options</i><b>)]</b> <b><u>l</u></b><b>evel(</b><i>#</i><b>)</b> <b><u>sh</u></b><b>owknots</b>
+            <i>mspline_options</i> <b>addplot(</b><i>plot</i><b>)</b> ]
+<p>
+    <b>fweight</b>s are allowed; see weight.
+<p>
+<p>
+<b><u>Description</u></b>
+<p>
+    <b>rcspline</b> computes and graphs a restricted cubic spline smooth of <i>yvar</i>
+    given <i>xvar</i>.
+<p>
+<p>
+<b><u>Remarks</u></b>
+<p>
+    <b>rcspline</b> calls mkspline, cubic to create variables containing a
+    restricted cubic spline of <i>xvar</i>.  It then calls regress to regress <i>yvar</i>
+    against those new variables, and thus obtains predicted (smoothed) values
+    of <i>yvar</i> given <i>xvar</i>.  Finally, it calls graph to plot data and smooth.
+<p>
+    R-square (squared correlation coefficient) and RMSE (root mean square
+    error) are provided as goodness of fit indicators.  However, these can
+    typically be 'improved' simply by smoothing less, which is often likely
+    to be unhelpful. As the resulting predictions come closer to
+    interpolating the data, R-square will increase, and RMSE will decrease,
+    but scientific usefulness and the possibility of insight will usually
+    diminish.
+<p>
+    More generally, the main intended usage of <b>rcspline</b> is for informal
+    exploratory analysis in which relationships are checked for linearity or
+    nonlinearity and appropriate transformations or link functions are
+    considered. More formal uses would require specification of the <b>stub()</b>
+    option to save the variables created. Some consideration might need to be
+    given to the implications of any data snooping.
+<p>
+<p>
+<b><u>Options</u></b> 
+<p>
+    <i>mkspline_options</i> are options of mkspline, cubic.
+<p>
+        <b>nknots()</b> specifies the number of knots that are to be used for a
+        restricted cubic spline.  This number must be between 3 and 7 unless
+        the knot locations are specified using <b>knots()</b>.  The default number
+        of knots is 5.
+<p>
+        <b>knots()</b> specifies the exact location of the knots to be used for a
+        restricted cubic spline.  The values of these knots must be given in
+        increasing order.  When this option is omitted, the default knot
+        values are based on Harrell's recommended percentiles with the
+        additional restriction that the smallest knot may not be less than
+        the fifth-smallest value of <i>xvar</i> and the largest knot may not be
+        greater than the fifth-largest value of <i>xvar</i>.  If both <b>nknots()</b> and
+        <b>knots()</b> are given, they must specify the same number of knots.
+<p>
+    <b>stub(</b><i>stub</i><b>)</b> specifies that the variables containing the spline be saved in
+        variables with prefix <i>stub</i>.  This option is essential if <b>rcspline</b> is
+        to be followed by <b>regress</b>.
+<p>
+    <b>regressopts()</b> contains options of regress. It is difficult to know why
+        you would want to specify any.
+<p>
+    <b>generate(</b><i>newvar</i><b>)</b> specifies that smoothed values be saved in a new
+        variable <i>newvar</i>.
+<p>
+    <b>scatter()</b> specifies options allowed by the scatter command.  These should
+        be specified to control the rendering of the data points.
+<p>
+    <i>mspline_options</i> are any of the options allowed with twoway mspline.
+        These should be specified to control the rendering of the smooth or
+        the overall graph.
+<p>
+    <b>showknots</b> specifies that the positions of the knots be shown on the graph
+        by vertical lines.
+<p>
+    <b>ci</b>[<b>(</b><i>rarea_options</i><b>)</b>] specifies that confidence intervals based on the
+        standard error of the linear prediction be shown. <b>ci</b> may be specified
+        with options of twoway rarea to tune the display of the confidence
+        interval.
+<p>
+    <b>level()</b> specifies a confidence level to use for confidence intervals. See
+        help on level.
+<p>
+    <b>addplot(</b><i>plot</i><b>)</b> provides a way to add other plots to the generated graph.
+        See help on addplot_option.
+<p>
+<p>
+<b><u>Examples</u></b> 
+<p>
+    <b>. rcspline mpg weight</b>
+<p>
+    <b>. rcspline mpg weight, scatter(ms(oh))</b>
+<p>
+    <b>. rcspline mpg weight, generate(Smpg)</b>
+<p>
+    <b>. rcspline mpg weight, ci(color(ltblue)) clw(medthick)</b>
+<p>
+    <b>. rcspline mpg weight, addplot(lowess mpg weight)</b>
+<p>
+<p>
+<b><u>Saved results</u></b> 
+<p>
+    r(N_knots)   number of knots (scalar) 
+    r(knots)     knot positions (matrix) 
+<p>
+<p>
+<b><u>Author</u></b> 
+<p>
+    Nicholas J. Cox
+    Durham University
+    n.j.cox@durham.ac.uk
+<p>
+<p>
+<b><u>Acknowledgments</u></b> 
+<p>
+    A question from José Maria Pacheco de Souza on Statalist led to the
+    addition of saved r-class results as above.
+<p>
+<p>
+<b><u>Also see</u></b>
+<p>
+    Online: lowess, lpoly, mvrs (if installed)
+<p>
+</pre>

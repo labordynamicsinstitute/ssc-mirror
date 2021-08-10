@@ -1,0 +1,166 @@
+<pre>
+<b>help robumeta</b>
+<p>
+<b><u>Title</u></b>
+    <b>robumeta</b> -- Robust variance estimation in meta-regression with dependent
+        effect size estimates
+<p>
+<b><u>Syntax</u></b>
+<p>
+     <b>robumeta</b> <i>depvar</i> [<i>indepvars</i>] [<i>if</i>] [<i>in</i>]<b>,</b> {<b>variance(</b><i>variancevar</i><b>)</b>|
+          <b>uweights(</b><i>userweights</i><b>)</b>} [<i>options</i>]
+<p>
+    <i>options</i>                     Description
+    -------------------------------------------------------------------------
+    Model
+<p>
+      <b>study(</b><i>studyid</i><b>)</b>            use <i>studyid</i> as the study id variable
+<p>
+      <b>weighttype(</b><i>weighting_scheme</i><b>)</b>
+                                  use <i>weighting_scheme</i> as the method to
+                                  calculate weights
+<p>
+      <b>variance(</b><i>variancevar</i><b>)</b>     use <i>variancevar</i> as the sampling variance of
+                                  the effect size
+<p>
+      <b>uweights(</b><i>userweights</i><b>)</b>     use <i>userweights</i> as weights in a fixed effect
+                                  model
+<p>
+      <b>rho(</b><i>icc</i><b>)</b>                  use <i>icc</i> in calculating variance components in
+                                  the random effects model
+<p>
+    -------------------------------------------------------------------------
+<p>
+    where elements of <i>weighting_scheme</i> may be
+<p>
+      <b>random</b>                     a random effects model weighting scheme that
+                                  assumes the observed effect size estimates
+                                  within each study are correlated with one
+                                  another.  In this model, the correlation
+                                  arises from sampling error which occurs
+                                  when, for example, multiple outcome
+                                  measures are collected on the same units.
+                                  This is the default.
+<p>
+      <b>fixed</b>                      a fixed effects model weighting scheme that
+                                  can be used when generalizations are
+                                  limited to those effect sizes in the
+                                  meta-analysis. This is useful when weights
+                                  other than inverse-variance weights are
+                                  used.
+<p>
+      <b>hierarchical</b>               a hierarchical model weighting scheme that
+                                  is used when there is an additional level
+                                  of nesting. This model assumes that the
+                                  observed effect size estimates are nested
+                                  within studies which are nested within
+                                  clusters. For example, studies from the
+                                  same research group may have something in
+                                  common with one another.
+<p>
+<b><u>Description</u></b>
+<p>
+    <b>robumeta</b> provides a robust method for estimating standard errors in
+    meta-regression, particularly when there are dependent effects. Dependent
+    effects occur in two basic models:  (1) correlated effects and (2)
+    hierarchical meta-regression. In (1), the dependency arises as a result
+    of correlated estimation errors; for example, a study collects two
+    outcome measures on each participant and then summarizes these as two
+    effect size measures. In (2), the dependency arises as a result of
+    correlated parameters; for example, the same research group may publish
+    several studies and there may be elements of these studies that are
+    similar to one another.  Importantly, the robust standard error procedure
+    used here does not require the underlying correlation structure to be
+    known; additionally, it works for any weights and can be used to estimate
+    the mean effect size as well as meta-regression models. Finally, note
+    that the procedure also can be used with independent effects,
+    particularly when distributional assumptions might be violated. For more
+    information on the underlying theory, see the references at the end of
+    this help file.
+<p>
+<b><u>Options</u></b>
+<p>
+        +-------+
+    ----+ Model +------------------------------------------------------------
+<p>
+    <b>study(</b><i>studyid</i><b>)</b> specified that <i>studyid</i> be used as the study-level
+        identifier.  If this option is not specified, then the effect sizes
+        are assumed to be independent.
+<p>
+    <b>weighttype(</b><i>weighting_scheme</i><b>)</b> specifies the weights to be used for
+        combining the effect size estimates. The default is <b>weighttype(</b>
+        <i>fixed</i><b>)</b>.
+<p>
+    <b>variance(</b><i>variancevar</i><b>)</b> specifies the variable <i>variancevar</i> that is the
+        sampling variance of the effect size estimates. This must be
+        specified for any random effects model. For fixed effects models,
+        <b>variance(</b><i>variancevar</i><b>)</b> or <b>uweights(</b><i>userweights</i><b>)</b> can be specified
+        instead.
+<p>
+    <b>uweights(</b><i>userweights</i><b>)</b> specified the user created weights for use with a
+        fixed effects model.
+<p>
+    <b>rho(</b><i>icc</i><b>)</b> for the correlated effects model, specifies the value of the
+        correlation rho to be used, which must be &lt; 1.
+<p>
+        +-----------+
+    ----+ Reporting +--------------------------------------------------------
+<p>
+    <b>level(</b><i>#</i><b>)</b>; see <b>[R] estimation options</b>.
+<p>
+<b><u>Examples</u></b>
+<p>
+    <b>. use hedgesexample.dta</b>
+    <b>. robumeta effectsize k1, study(study) variance(vareffsize)</b>
+        <b>weighttype(random) rho(.8)</b>
+    <b>. robumeta effectsize k1, study(study) variance(vareffsize)</b>
+        <b>weighttype(hierarchical)</b>
+<p>
+<b><u>Saved results</u></b>
+<p>
+    <b>robumeta</b> saves the following in <b>e()</b>:
+<p>
+    Scalars        
+      <b>e(N)</b>                number of observations
+      <b>e(N_g)</b>              number of studies
+      <b>e(df_r)</b>             model degrees of freedom
+<p>
+      <b>e(tau2)</b>              method-of-moments tau-square estimate
+      <b>e(tau2o)</b>             observed tau-square if estimate is negative
+<p>
+      <b>e(omega2)</b>            method-of-moments omega-square estimate (used in
+                            hierarchical model)
+      <b>e(omega2o)</b>           observed omega-square if estimate is negative
+<p>
+      <b>e(QE)</b>               QE used for estimating tau-square
+      <b>e(QR)</b>               QR used for estimating omega-square
+<p>
+      <b>e(rho)</b>               in correlated effects models, use specified ICC
+<p>
+    Macros         
+      <b>e(cmd)</b>              <b>robumeta</b>
+      <b>e(depvar)</b>           <i>depvar</i>
+<p>
+    Matrices       
+      <b>e(b)</b>                coefficient vector
+      <b>e(V)</b>                variance-covariance matrix of the estimators
+<p>
+    Functions      
+      <b>e(sample)</b>           marks estimation sample
+<p>
+<p>
+<b><u>References</u></b>
+<p>
+    Hedges, Larry V., Elizabeth Tipton, and Matthew C. Johnson. 2010. Robust
+        variance estimation in meta-regression with dependent effect size
+        estimates. Research Synthesis Methods.  (www.interscience.wiley.com)
+        DOI: 10.1002/jrsm.5
+<p>
+    Website for further information:
+        http://www.northwestern.edu/ipr/qcenter/RVE-meta-analysis.html
+<p>
+<p>
+<p>
+<p>
+<p>
+</pre>

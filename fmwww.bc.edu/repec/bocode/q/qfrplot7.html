@@ -1,0 +1,88 @@
+<pre>
+-------------------------------------------------------------------------------
+help for <b>qfrplot7</b>
+-------------------------------------------------------------------------------
+<p>
+<b><u>Quantile plots of fitted and residuals</u></b> 
+<p>
+        <b>qfrplot7</b> [ <b>,</b> <b>super</b> <b><u>r</u></b><b>everse</b> <b>a(</b><i>#</i><b>)</b> {<b><u>norm</u></b><b>al</b>|<b><u>gauss</u></b><b>ian</b>} <i>graph_options</i> ]
+<p>
+<b><u>Description</u></b>
+<p>
+<b>qfrplot7</b> plots quantile plots of fitted values, minus their mean, and residuals
+from the previous estimation command. Fitted values are whatever <b>predict</b>
+produces by default and residuals are whatever <b>predict, res</b> produces. Comparing
+the distributions gives an overview of their variability and some idea of their
+fine structure. By default plots are side-by-side.
+<p>
+The plot is restricted to the estimation sample.
+<p>
+This is the original of <b>qfrplot</b> for Stata 7, renamed <b>qfrplot7</b>.  Users of Stata
+8 upwards should upgrade to <b>qfrplot</b>.
+<p>
+<p>
+<b><u>Remarks</u></b>
+<p>
+A quantile plot shows ordered values versus the so-called plotting positions,
+or if the <b>normal</b> or <b>gaussian</b> option is specified, the corresponding quantiles
+of a standard normal (Gaussian) distribution.  For n values ordered minimum
+first, the plotting positions are (i - a) / (n - 2a + 1) for i = 1, ..., n,
+where a is by default 0.5.
+<p>
+W.S. Cleveland in <i>Visualizing data</i> (Hobart Press, Summit, NJ, 1993) gives many
+side-by-side quantile plots of fit and residuals, which he calls "residual-fit
+spread plots". See example on p.41. However, he also uses this term for
+side-by-side time series plots of fit and residuals. See example on p.157. The
+command name and description here emphasise the use of a quantile plot.
+<p>
+<p>
+<b><u>Options</u></b>
+<p>
+<b>super</b> specifies that plots are to be superimposed, not side-by-side.
+<p>
+<b>reverse</b> reverses the sort order, so that ordered values are plotted against
+    1 - plotting position.
+<p>
+<b>a(</b><i>#</i><b>)</b> specifies a in the formula for plotting position.  The default is a = 0.5,
+    giving (i - 0.5) / n. Other choices include a = 0, giving i / (n + 1), and
+    a = 1/3, giving (i - 1/3) / (n + 1/3). Rarely will choice of a make any
+    discernible difference.
+<p>
+<b>normal</b> specifies that standard normal quantiles should be shown instead of
+    plotting positions. <b>gaussian</b> is an exact synonym except that by default the
+    text <b>Gaussian</b> will appear within the axis title, rather than <b>normal</b>.
+<p>
+<i>graph_options</i> are options of <b>graph, twoway</b> except for <b>by()</b>.  Defaults include
+    <b>border gap(5)</b>. If <b>symbol()</b> is specified, the first symbol is used to plot
+    fitted values and the second symbol to plot residuals. Otherwise, graph
+    options refer to either or both graphs produced, except that <b>saving()</b> and
+    <b>title()</b> refer to the combined graph image.
+<p>
+<p>
+<b><u>Examples</u></b>
+<p>
+    . use auto
+<p>
+    . regress mpg weight
+<p>
+    . qfrplot7
+<p>
+    . glm mpg weight, link(log)
+<p>
+    . qfrplot7
+<p>
+    . qfrplot7, norm
+<p>
+<p>
+<b><u>Author</u></b>
+<p>
+    Nicholas J. Cox, University of Durham, U.K.
+    n.j.cox@durham.ac.uk
+<p>
+<p>
+<b><u>Also see</u></b>
+<p>
+On-line:  help for graph, quantile, qnorm, regdiag, regplot (if installed), 
+                   anovaplot (if installed), ovfplot (if installed), indexplot
+                   (if installed)
+</pre>

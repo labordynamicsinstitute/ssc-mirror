@@ -1,0 +1,65 @@
+<pre>
+<b>help labgen2</b>
+-------------------------------------------------------------------------------
+<p>
+<b><u>Title</u></b>
+<p>
+     <b>labgen2</b> -- Create labeled variable
+<p>
+<p>
+<b><u>Syntax</u></b>
+<p>
+        <b>labgen2</b> [<i>type</i>] <i>newvar</i>[<b>:</b><i>lblname</i>] [<b>"</b>]<i>varlabel</i>[<b>"</b>] <b>=</b><i>exp</i> [<i>if</i>] [<i>in</i>]
+<p>
+        <b>labgen2</b> [<i>type</i>] <i>newvar</i>[<b>:</b><i>lblname</i>] <b>=</b><i>exp</i> [<i>if</i>] [<i>in</i>] <b>,</b> <b><u>def</u></b><b>inition</b> [ <b><u>eq</u></b><b>ualsign</b>
+<b>noby</b> ]
+<p>
+<p>
+     <b>by</b> is allowed
+<p>
+<p>
+<b><u>Description</u></b>
+<p>
+    <b>labgen2</b> creates a new variable and labels it. The syntax is the same as
+    with generate with the exception, that either a variable label, or option
+    <b>definition</b> is specified additionally.
+<p>
+<p>
+<b><u>Options</u></b>
+<p>
+    <b>definition</b> specifies that anything on the right hand side of the equal
+        sign is used as the variable label. This option is required if no
+        variable label is specified.
+<p>
+    <b>equalsign</b> does not strip the equal sign from the variable label.  This
+        option may only be combined with <b>definition</b>.
+<p>
+    <b>noby</b> does not add "(by <i>byvars</i>)" to the variable label, if a <b>by</b> prefix is
+        used and <b>definition</b> is specified.
+<p>
+<p>
+<b><u>Examples</u></b>
+<p>
+        <b>. labgen2 byte foo "foobar" = (bar == 1)</b>
+        <b>. labgen2 byte foo = (bar == 1) ,definition</b>
+<p>
+<p>
+<b><u>Acknowledgments</u></b>
+<p>
+    The second syntax replicates the behavior of labgen by Nick Cox.
+<p>
+    If a definition exceeds the length of 80 characters it is put into notes.
+    This behavior is also borrowed from <b>labgen</b>.
+<p>
+<p>
+<b><u>Author</u></b>
+<p>
+    Daniel Klein, University of Bamberg, klein.daniel.81@gmail.com
+<p>
+<p>
+<b><u>Also see</u></b>
+<p>
+    Online: generate, label
+<p>
+    if installed: labgen, vlgen, labutil2
+</pre>

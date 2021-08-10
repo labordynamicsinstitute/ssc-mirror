@@ -1,0 +1,230 @@
+<pre>
+-------------------------------------------------------------------------------
+help for <b>overid</b>
+-------------------------------------------------------------------------------
+<p>
+<b><u>Calculate tests of overidentifying restrictions after </u></b><b><u>ivreg</u></b><b><u>, </u></b><b><u>ivreg2</u></b><b><u>, </u></b><b><u>ivprobit</u></b><b><u>, </u></b>
+<b><u>&gt; ivtobit</u></b><b><u>, </u></b><b><u>reg3</u></b>
+<p>
+        <b>overid</b> [, <b>chi2</b> <b>dfr</b> <b>f</b> <b>all</b> <b>depvar(</b><i>varname</i><b>)</b>]
+<p>
+<b>overid</b> may be used after IV estimation with <b>aweight</b>s, <b>fweight</b>s and <b>iweight</b>s;
+see help weights.
+<p>
+<p>
+<b><u>Description</u></b>
+<p>
+        +-----------------------------------+
+    ----+ Instrumental variables regression +--------------------------------
+<p>
+<b>overid</b> computes versions of Sargan's (1958) and Basmann's (1960) tests of
+overidentifying restrictions for a regression estimated via instrumental
+variables in which the number of instruments exceeds the number of regressors:
+that is, for an overidentified equation.  These are tests of the joint null
+hypothesis that the excluded instruments are valid instruments, i.e.,
+uncorrelated with the error term and correctly excluded from the estimated
+equation.  A rejection casts doubt on the validity of the instruments.
+<p>
+For single-equation (limited-information) instrumental variables regression (as
+implemented in <b>ivreg</b> or <b>ivreg2</b>), write the full set of instruments as Z and the
+residuals from the IV estimation as u, let P represent the "projection matrix"
+Z*inv(Z'Z)*Z', and let M=I-P, where I is the identity matrix.  N is the number
+of observations, L the number of instruments, K the number of regressors, and
+L-K the number of overidentifying restrictions.  Then
+<p>
+Sargan's (1958) statistic = u'Pu / (u'u/N)
+<p>
+Basmann's (1960) statistic = u'Pu / (u'Mu/(N-L))
+<p>
+The statistics share the same numerator.  The denominators can be interpreted
+as two different estimates of the error variance of the estimated equation,
+both of which are consistent (see Davidson and MacKinnon (1993), pp. 235-36).
+<p>
+Both statistics are distributed as chi-square with L-K degrees of freedom.
+Both can be calculated via an artificial regression of the residuals of the IV
+estimation regressed on the full set of instruments; the Sargan statistic is N
+* the uncentered R-sq from this regression.  See, e.g., Davidson and MacKinnon
+(1993), p. 236 and Wooldridge (2002), p. 123.
+<p>
+If there are no overidentifying restrictions (i.e., in the case of exact
+identification, where the number of excluded instruments equals the number of
+right-hand endogenous variables), an error message is printed.
+<p>
+The version of this test that is robust to heteroskedasticity in the errors is
+Hansen's J statistic; under the assumption of conditional homoskedasticity,
+Sargan's statistic becomes Hansen's J (see Hayashi (2000), p. 227-28), and
+hence the two statistics are sometimes referred to as the Hansen-Sargan
+statistic.  Robust overidentification statistics are available via <b>ivreg2</b>.
+<b>overid</b> will not produce a result if either the <b>robust</b> or <b>cluster</b> options are
+employed in the preceding IV regression.  <b>ivreg2</b> also provides "diff-Sargan" or
+"C" tests for the endogeneity of a subset of instruments; see help ivreg2 (if
+installed) for details.
+<p>
+The test will fail to run if N&lt;L. For Z'Z to be of full rank, N&gt;L.
+<p>
+        +-----------------------------------------+
+    ----+ Instrumental variables probit and Tobit +--------------------------
+<p>
+<b>overid</b> will report an overidentification statistic after estimation by <b>ivprobit</b>
+and <b>ivtobit</b> with the twostep option.  These Stata commands request Newey's
+(1987) minimum-distance (or minimum-chi-squared) IV probit and IV Tobit
+estimators, respectively.  Lee (1992) shows that the minimized distance for
+these estimators provides a test of overidentifying restrictions.  Like Sargan
+and Basmann single-equation statistics, the test statistic is distributed as
+Chi-squared with (L-K) degrees of freedom under the null that the instruments
+are valid.  The test statistic is available after twostep estimation only.
+<p>
+        +---------------------------+
+    ----+ Three-stage least squares +----------------------------------------
+<p>
+<b>overid</b> will report an overidentification statistic after system estimation with
+<b>reg3</b>. As Davidson and MacKinnon (2004, p.532) indicate, a Hansen-Sargan test of
+the overidentifying restrictions is based on the 3SLS criterion function
+evaluated at the 3SLS point and interval parameter estimates. Under the null
+hypothesis, the statistic is distributed Chi-squared wih (G*L - K) degrees of
+freedom, where G is the number of simultaneous equations. The procedure will
+take proper account of linear constraints on the parameter vector imposed
+during estimation.
+<p>
+        +------------------+
+    ----+ General comments +-------------------------------------------------
+<p>
+The command displays the test statistics, degrees of freedom and P-value, and
+places values in the return array. <b>return list</b> for details.
+<p>
+A full discussion of these computations and related topics can be found in
+Baum, Schaffer, and Stillman (2003) and Baum, Schaffer and Stillman (2006). A
+version of this routine by Schaffer and Stillman that works in the context of
+panel data is available as <b>xtoverid</b>.
+<p>
+<p>
+        +----------+
+    ----+ Citation +---------------------------------------------------------
+<p>
+<b>overid</b> is not an official Stata command. It is a free contribution to the
+research community, like a paper. Please cite it as such:
+    Baum, C.F., Schaffer, M.E., Stillman, S., Wiggins, V.  2006.  overid:
+        Stata module to calculate tests of overidentifying restrictions after
+        ivreg, ivreg2, ivprobit, ivtobit, reg3.
+        http://ideas.repec.org/c/boc/bocode/s396802.html
+<p>
+<b><u>Options</u></b>
+<p>
+Options <b>chi2</b>, <b>dfr</b>, <b>f</b> and <b>all</b> only pertain to use of <b>overid</b> after <b>ivreg</b> or
+<b>ivreg2</b>.
+<p>
+<b>chi2</b> requests Sargan's and Basmann's chi-squared statistics; this is the
+    default.
+<p>
+<b>dfr</b> is equivalent to <b>chi2</b> except that the the Sargan statistic has a
+    small-sample correction:  u'Pu / (u'u/(N-K))
+<p>
+<b>f</b> requests the pseudo-F test versions of the Sargan and Basmann statistics.
+    Sargan pseudo-F = u'Pu/(L-K) / (u'u/(N-K))
+    Basmann pseudo-F = u'Pu/(L-K) / (u'Mu/(N-L))
+<p>
+<b>all</b> causes all five statistics to be reported.
+<p>
+<b>depvar</b> must be used after <b>ivprobit</b>, version 1.1.8 or earlier, to specify the
+    dependent variable of the estimated equation.
+<p>
+<b><u>Examples</u></b>
+<p>
+    . sysuse auto
+<p>
+    . ivreg price mpg (weight turn=length displacement gear_ratio trunk)
+<p>
+    . overid
+<p>
+    . overid, all
+<p>
+    . ivprobit foreign displacement (mpg=length weight turn), twostep
+<p>
+    . overid, depvar(foreign)
+<p>
+    . ivtobit gear_ratio displacement (mpg=length weight turn) [fw=rep78],
+        twostep ll(2.2)
+<p>
+    . overid
+<p>
+    . webuse klein
+<p>
+    . constraint define 1 [consump]wagepriv = [consump]wagegovt
+<p>
+    . constraint define 2 [consump]govt = [wagepriv]govt
+<p>
+    . reg3 ( consump wagepriv wagegovt govt invest) ( wagepriv consump govt
+        capital1 taxnetx)
+<p>
+    . overid
+<p>
+    . reg3 ( consump wagepriv wagegovt govt invest) ( wagepriv consump govt
+        capital1 taxnetx), c(1 2)
+<p>
+    . overid
+<p>
+<b><u>Acknowledgements</u></b>
+<p>
+We are grateful to Austin Nichols for providing a better version of the reg3
+    code which greatly reduces memory use. Martin Weiss was also helpful in
+    pointing out a recent bug in official ivtobit which was causing overid to
+    fail.
+<p>
+<b><u>References</u></b>
+<p>
+Basmann, R.L., On Finite Sample Distributions of Generalized Classical Linear
+    Identifiability Test Statistics.  Journal of the American Statisical
+    Association, Vol. 55, Issue 292, December 1960, pp. 650-59.
+<p>
+Baum, C. F., Schaffer, M. E., Stillman, S., Instrumental variables and GMM:
+    Estimation and testing. Stata Journal, Vol. 3, 2003, pp. 1-31. Available as
+    Working Paper no. 545, Boston College Department of Economics.
+    http://fmwww.bc.edu/ec-p/WP545.pdf
+<p>
+Baum, C. F., Schaffer, M. E., Stillman, S., 2006. Enhanced routines for
+    instrumental variables/GMM estimation and testing. Unpublished working
+    paper, forthcoming.
+<p>
+Davidson, R. and MacKinnon, J., Estimation and Inference in Econometrics.
+    1993. New York: Oxford University Press.
+<p>
+Davidson, R. and MacKinnon, J., Econometric Theory and Methods.  2004. New
+    York: Oxford University Press.
+<p>
+Hayashi, F., Econometrics.  2000.  Princeton: Princeton University Press.
+<p>
+Lee, L., Amemiya's Generalized Least Squares and Tests of Overidenfication in
+    Simultaneous Equation Models with Qualitative or Limited Dependent
+    Variables. Econometric Reviews, Vol. 11, No. 3, 1992, pp. 319-328.
+<p>
+Newey, W.K., Efficient Estimation of Limited Dependent Variable Models with
+    Endogeneous Explanatory Variables". Journal of Econometrics, Vol. 36, 1987,
+    pp. 231-250.
+<p>
+Sargan, J.D. The Estimation of Economic Relationships Using Instrumental
+    Variables.  Econometrica, Vol. 26, 1958, pp. 393-415.
+<p>
+Wooldridge, J.M., Econometric Analysis of Cross Section and Panel Data.  2002.
+    Cambridge, MA: MIT Press.
+<p>
+<b><u>Authors</u></b>
+<p>
+        Christopher F Baum, Boston College, USA
+        baum@bc.edu
+        
+        Mark E Schaffer, Heriot-Watt University, UK
+        m.e.schaffer@hw.ac.uk
+<p>
+        Steven Stillman, Motu, New Zealand
+        stillman@motu.org.nz
+        
+        Vince Wiggins, Stata Corporation, USA
+        vwiggins@stata.com
+<p>
+<p>
+<b><u>Also see</u></b>
+<p>
+ Manual:  <b>[R] ivreg</b>, <b>[R] ivprobit</b>, <b>[R] ivtobit</b>, <b>[R] reg3</b>
+On-line:  help for ivreg; ivreg2 (if installed); ivprobit; ivtobit; reg3; 
+                   xtoverid (if installed)
+</pre>

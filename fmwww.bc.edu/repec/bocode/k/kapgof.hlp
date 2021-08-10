@@ -1,0 +1,66 @@
+.-
+help for ^kapgof^
+.-
+
+Usage
+-----
+	^kapgof^ varlist, [level(real 0.05) kappa_options]
+
+Description
+-----------
+^kapgof^ computes confidence intervals for the kappa statistic 
+for two indepedent raters and a binary outcome. These confidence
+intervals for kappa have desirable small-sample properties. It
+also computes confidence intervals for agreement.
+
+This confidence interval is not conditional on kappa being zero
+or a pre-specified non-null kappa, as some other procedures are.
+
+
+It calls @kap@ and returns the same values as this. Although
+values for the standard error and z-score are returned, they
+are not printed. Presumably, they wouldn't be as useful as
+confidence intervals.
+
+Examples
+-----------
+  .^kapgof^ astma1 astma2
+
+computes the kappa statistic and confidence intervals
+
+Remarks
+-------
+Bloch & Kraemer (1989) suggest an arcsine transformation. Donner
+& Eliasziw (1992) compare this with the goodness-of fit approach
+and find that the GOF approach gives coverage levels that are
+closer to nominal, even in small samples down to as little
+as n=25. I am not aware of any implementations of this arcsine
+transformation in any widely available computer program.
+
+The confidence interval given in Fleiss (1981) p.221 is for 
+a pre-specified non-null kappa.
+
+The confidence intervals for agreement are computed, but
+not printed at present. Use ^return list^ to see the
+results. They are simply a binomial confidence interval
+for the number of agreeing cells as a binomial trial out
+of the total number of tries, e.g. (a+b) out of N trials.
+
+References
+-------
+Donner, Eliasziw "A goodness-of-fit approach to inference
+procedures for the kappa statistic: confidence interval
+construction, significance-testing and sample size estimation",
+Statistics in Medicine (Stat Med), 1992: vol 11, pp. 1511-1519
+
+Fleiss "The measurement of interrater agreement" in Fleiss: 
+"Statistical methods for rates and proportions" (Wiley & Sons,
+New York) 1981; 212-235.
+
+Bloch, Kraemer, "2x2 kappa coefficients: measures of
+agreement or association" Biometrics 1989; 45: 269-287
+
+Author
+------
+Jan Brogger, jan.brogger@@med.uib.no
+

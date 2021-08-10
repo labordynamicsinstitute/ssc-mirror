@@ -1,0 +1,18 @@
+d 'SSCSUBMIT': module -- some notes on SSC Archive use for Stata users
+d
+d   This is not actually software, but a discussion of how
+d materials may be submitted to the SSC ("Boston College") archive,
+d and some suggestions for users of the archive materials. It takes
+d the form of an HTML guide. 
+d
+d KW: ado files
+d KW: SSC
+d KW: Boston College archive
+d
+d Distribution-Date: 20110803
+d
+d Author: Christopher F Baum, Boston College
+d Support: email baum@@bc.edu
+d
+f sscsubmit.html
+f sscstats.html

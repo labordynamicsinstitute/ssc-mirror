@@ -1,0 +1,110 @@
+<pre>
+<b>help renfiles</b>
+-------------------------------------------------------------------------------
+<p>
+<b><u>Title</u></b>
+<p>
+<b>renfiles</b> -- Renaming matched files by replacing specified sign/substring with a
+&gt; nother sign/substring.
+<p>
+<p>
+<b><u>Syntax</u></b>
+<p>
+    <b>renfiles</b> [<b>,</b> <b>folder</b>(<i>string</i>) <b>match</b>(<i>string</i>) <b>insign</b>(<i>string</i>) <b>outsign</b>(<i>string</i>)
+                <b>erase</b>]
+<p>
+<p>
+<p>
+<b><u>Description</u></b>
+<p>
+    <b>renfiles</b> is a program that helps to rename files in a quite generally
+    applicable fashion - changes applied to all matched filenames in a stated
+    directory.  The simplest syntax is purely based on defaults. All options
+    are optional.
+<p>
+    If the sign to-be-replaced is a dot, the last dot is not changed (keeping
+    file-suffix).
+<p>
+<p>
+<p>
+<b><u>Options</u></b>
+<p>
+    <b>folder</b>(<i>string</i>) Defines the directory from within where to look for files.
+    The default directory is the current working directory (cwd; '.').
+<p>
+    <b>match</b>(<i>string</i>) Defines the matching criterion used in order to select
+    files from the selected directory <b>folder</b>. The default is all files in the
+    directory ('*').
+<p>
+    <b>insign</b>(<i>string</i>) The sign to be replaced when applying the used criterion
+    <b>match</b> with respect to the files in the directory <b>folder</b>. Is
+    case-sensitive. The default is the dot sign ('.').
+<p>
+    <b>outsign</b>(<i>string</i>) The sign to be replacing (the to-be-replaced sign <b>insign</b>)
+    when applying the used criterion <b>match</b> with respect to the files in the
+    directory <b>folder</b>.  To remove the sign <b>insign</b>, i.e. replacing it with an
+    empty space, use string <i>null</i>.  The default is the underscore sign ('_').
+<p>
+    <b>erase</b> An indicator for whether, or not, the original matched (but
+    unchanged) files should be removed from the directory.
+<p>
+<p>
+<b><u>Examples</u></b>
+<p>
+    ---------------------------------------------------------------------------
+    1. Remove dots from all files in current working directory and replace
+    them with underscores.
+        <b>. renfiles</b>
+<p>
+    ---------------------------------------------------------------------------
+    2. Remove dots from all files with prefix <i>name</i> located in
+    cwd-subdirectory <i>data</i> and replace them with dashes.
+        <b>. renfiles , folder(".\data") match("name*") outsign("-")</b>
+<p>
+    ---------------------------------------------------------------------------
+    3. Same as Example 2, but in this case all matched, original, files are
+    also to be erased.
+        <b>. renfiles , folder(".\data") match("name*") outsign("-") erase</b>
+<p>
+    ---------------------------------------------------------------------------
+<p>
+    4. Remove all occurrences of <i>file</i> and replace them with abbreviation <i>f</i> in
+    all files with filenames including string-part <i>proj3</i> located in
+    cwd-subdirectory <i>results</i>.
+        <b>. renfiles , folder(".\results") match("*proj3*") insign("file")</b>
+            <b>outsign("f")</b>
+<p>
+    ---------------------------------------------------------------------------
+<p>
+    5. Same as Example 4, but in this case all Denmark-specific letters ('å',
+    'æ' and 'ø') are removed in a sequential manner; original/temporary files
+    are erased.
+        <b>. renfiles , folder(".\results") match("*proj3*") insign("å")</b>
+            <b>outsign("aa") erase</b>
+        <b>. renfiles , folder(".\results") match("*proj3*") insign("æ")</b>
+            <b>outsign("ae") erase</b>
+        <b>. renfiles , folder(".\results") match("*proj3*") insign("ø")</b>
+            <b>outsign("oe") erase</b>
+<p>
+    ---------------------------------------------------------------------------
+<p>
+    6. Same as Example 4, but in this case all present empty spaces, within
+    matched filenames, are removed (replaced with null space; see note
+    above).
+        <b>. renfiles , folder(".\results") match("*proj3*") insign(" ")</b>
+            <b>outsign("null")</b>
+<p>
+    ---------------------------------------------------------------------------
+<p>
+<p>
+<b><u>Author</u></b>
+<p>
+    Lars Ängquist
+    la@ipm.regionh.dk
+    lars.angquist@telia.com
+<p>
+<p>
+<b><u>Also see</u></b>
+<p>
+      Help:  [help pages on] extended_fcn, dir, erase
+</pre>

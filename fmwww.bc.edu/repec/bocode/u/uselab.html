@@ -1,0 +1,68 @@
+<pre>
+<b>help uselab</b>
+-------------------------------------------------------------------------------
+<p>
+<b><u>Title</u></b>
+<p>
+     <b>uselab</b> -- List value labels and variables using them
+<p>
+<p>
+<b><u>Syntax</u></b>
+<p>
+        <b>uselab</b> [<i>namelist</i>] [<b><u>c</u></b><b>urrent</b> <b><u>var</u></b><b>iables</b>]
+<p>
+<p>
+     where <i>namelist</i> is a list of value label names, a <i>varlist</i>, or a combination
+     of the two
+<p>
+<p>
+<b><u>Description</u></b>
+<p>
+    <b>uselab</b> lists value label names and all variables they are attached to. It
+    provides the same information as official Stata's <b>uselabel</b>, but without
+    creating a dataset. If <i>namelist</i> is not specified, all value labels in
+    memory are listed together with all variables that use them.
+<p>
+<p>
+<b><u>Options</u></b>
+<p>
+    <b>current</b> lists value label names in the current label language only.
+<p>
+    <b>variables</b> causes <i>namelist</i> to be interpreted as a <i>varlist</i>. If not
+        specified, <b>uselab</b> will figure out whether <i>name</i> is a <i>labelname</i> or a
+        <i>varname</i> for itself.
+<p>
+<p>
+<b><u>Example</u></b>
+<p>
+        <b>. sysuse nlsw88</b>
+        <b>. uselab</b>
+        <b>. uselab mar coll</b>
+<p>
+<p>
+<b><u>Saved results</u></b>
+<p>
+    <b>uselab</b> saves the following in <b>r()</b>:
+<p>
+    Macros
+        <b>r(</b><i>lblname</i><b>)</b> varlist using value label <i>lblname</i>
+        <b>r(languages)</b> value label languages (multiligual datasets only)
+<p>
+<p>
+<b><u>Acknowledgements</u></b>
+<p>
+    The major part of the code used is borrowed from official Stata's 
+    uselabel.
+<p>
+<p>
+<b><u>Author</u></b>
+<p>
+    Daniel Klein, University of Bamberg, klein.daniel.81@gmail.com
+<p>
+<p>
+<b><u>Also see</u></b>
+<p>
+    Online: uselabel, label
+<p>
+    if installed: labutil2
+</pre>

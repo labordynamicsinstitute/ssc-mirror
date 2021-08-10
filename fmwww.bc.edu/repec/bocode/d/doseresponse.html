@@ -1,0 +1,252 @@
+<pre>
+<b>help doseresponse</b>, <b>help doseresponse_model</b>                      (SJ8-3: st0150)
+-------------------------------------------------------------------------------
+<p>
+<b><u>Title</u></b>
+<p>
+    <b>doseresponse</b> -- Estimation of the dose-response function through
+                      adjustment for the generalized propensity score
+<p>
+<p>
+<b><u>Syntax</u></b>
+<p>
+        <b>doseresponse</b><i> varlist</i> [<i>if</i>] [<i>in</i>] [<i>weight</i>]<b>,</b> <b>outcome(</b><i>varname</i><b>)</b> <b>t(</b><i>varname</i><b>)</b>
+                    <b>gpscore(</b><i>newvar</i><b>)</b> <b>predict(</b><i>newvar</i><b>)</b> <b>sigma(</b><i>newvar</i><b>)</b>
+                    <b>cutpoints(</b><i>varname</i><b>)</b> <b>index(</b><i>string</i><b>)</b> <b>nq_gps(</b><i>#</i><b>)</b>
+                    <b>dose_response(</b><i>newvarlist</i><b>)</b> [<b>t_transf(</b><i>transformation</i><b>)</b>
+                    <b>normal_test(</b><i>test</i><b>)</b> <b>norm_level(</b><i>#</i><b>)</b> <b>test_varlist(</b><i>varlist</i><b>)</b>
+                    <b>test(</b><i>type</i><b>)</b> <b>flag(</b><i>#</i><b>)</b> <b>cmd(</b><i>regression_cmd</i><b>)</b> <b>reg_type_t(</b><i>type</i><b>)</b>
+                    <b>reg_type_gps(</b><i>type</i><b>)</b> <b>interaction(</b><i>#</i><b>)</b> <b>tpoints(</b><i>vector</i><b>)</b>
+                    <b>npoints(</b><i>#</i><b>)</b> <b>delta(</b><i>#</i><b>)</b> <b>filename(</b><i>filename</i><b>)</b> <b><u>boot</u></b><b>strap(</b><i>string</i><b>)</b>
+                    <b>boot_reps(</b><i>#</i><b>)</b> <b>analysis(</b><i>string</i><b>)</b> <b>analysis_level(</b><i>#</i><b>)</b>
+                    <b>graph(</b><i>filename</i><b>)</b> <b><u>det</u></b><b>ail</b>]
+<p>
+<p>
+        <b>doseresponse_model</b><i> treat_var GPS_var</i> [<i>if</i>] [<i>in</i>] [<i>weight</i>],
+                          <b>outcome(</b><i>varname</i><b>)</b> [<b>cmd(</b><i>regression_cmd</i><b>)</b>
+                          <b>reg_type_t(</b><i>type</i><b>)</b> <b>reg_type_gps(</b><i>type</i><b>)</b> <b>interaction(</b><i>#</i><b>)</b>]
+<p>
+<p>
+    <b>fweight</b>s, <b>iweight</b>s, and <b>pweight</b>s are allowed; see weight.
+<p>
+<p>
+<b><u>Description</u></b>
+<p>
+    <b>doseresponse</b> estimates the generalized propensity score (GPS), verifies
+    the normal model used for the GPS, and tests the balancing property by
+    calling the routine <b>gpscore</b>. Then it estimates the conditional
+    expectation of the outcome given the observed treatment and the estimated
+    GPS by calling the routine <b>doseresponse_model</b>. Finally, <b>doseresponse</b>
+    estimates the average potential outcome for each level of the treatment
+    in which the user is interested.
+<p>
+    <b>doseresponse_model</b> defines all these models and estimates each of them by
+    using the estimated GPS.
+<p>
+<p>
+<b><u>Options</u></b>
+<p>
+    <b><u>Required</u></b>
+<p>
+    <b>outcome(</b><i>varname</i><b>)</b> (<b>doseresponse</b> and <b>doseresponse_model</b>) specifies that
+        <i>varname</i> is the outcome variable.
+<p>
+    <b>t(</b><i>varname</i><b>)</b> specifies that <i>varname</i> is the treatment variable.
+<p>
+    <b>gpscore(</b><i>newvar</i><b>)</b> specifies the variable name for the estimated GPS, which
+        is added to the dataset.
+<p>
+    <b>predict(</b><i>newvar</i><b>)</b> creates a new variable to hold the fitted values of the
+        treatment variable.
+<p>
+    <b>sigma(</b><i>newvar</i><b>)</b> creates a new variable to hold the maximum likelihood
+        estimate of the conditional standard error of the treatment given the
+        covariates.
+<p>
+    <b>cutpoints(</b><i>varname</i><b>)</b> divides the set of potential treatment values into
+        intervals according to the sample distribution of the treatment
+        variable, cutting at <i>varname</i> quantiles.
+<p>
+    <b>index(</b><i>string</i><b>)</b> specifies the representative point of the treatment
+        variable at which the GPS has to be evaluated within each treatment
+        interval. <i>string</i> identifies either the mean (<i>string</i> = <b>mean</b>) or a
+        percentile (<i>string</i> = <b>p1</b>, ..., <b>p100</b>) of the treatment.
+<p>
+    <b>nq_gps(</b><i>#</i><b>)</b> specifies that the values of the GPS evaluated at the
+        representative point <b>index(</b><i>string</i><b>)</b> of each treatment interval have to
+        be divided into <i>#</i> (1 &lt;= <i>#</i> &lt;= 100) intervals, defined by the quantiles
+        of the GPS evaluated at the representative point <b>index(</b><i>string</i><b>)</b>.
+<p>
+    <b>dose_response(</b><i>newvarlist</i><b>)</b> specifies the variable name(s) for the
+        estimated dose-response function(s).
+<p>
+    <b><u>Optional</u></b>
+<p>
+    <b>t_transf(</b><i>transformation</i><b>)</b> specifies the transformation of the treatment
+        variable used in estimating the GPS. The default <i>transformation</i> is
+        the identity function.  The supported transformations are the
+        logarithmic transformation, <b>t_transf(ln)</b>; the zero-skewness log
+        transformation, <b>t_transf(lnskew0)</b>; the zero-skewness Box-Cox
+        transformation, <b>t_transf(bcskew0)</b>; and the Box-Cox transformation,
+        <b>t_transf(boxcox)</b>.
+<p>
+    <b>normal_test(</b><i>test</i><b>)</b> specifies the goodness-of-fit test that <b>gpscore</b> will
+        perform to assess the validity of the assumed normal distribution
+        model for the treatment conditional on the covariates. By default,
+        <b>gpscore</b> performs the Kolmogorov-Smirnov test (<b>normal_test(ksmirnov)</b>).
+        Possible alternatives are the Shapiro-Francia test,
+        <b>normal_test(sfrancia)</b>; the Shapiro-Wilk test, <b>normal_test(swilk)</b>; and
+        the Stata skewness and kurtosis test for normality,
+        <b>normal_test(sktest)</b>.
+<p>
+    <b>norm_level(</b><i>#</i><b>)</b> sets the significance level of the goodness-of-fit test for
+        normality. The default is <b>norm_level(0.05)</b>.
+<p>
+    <b>test_varlist(</b><i>varlist</i><b>)</b> specifies that the extent of covariate balancing
+        has to be inspected for each variable in <i>varlist</i>.  The default
+        <i>varlist</i> consists of the variables used to estimate the GPS.  This
+        option is useful when there are categorical variables among the
+        covariates to test the balancing property for the omitted group.
+<p>
+    <b>test(</b><i>type</i><b>)</b> specifies whether the balancing property has to be tested
+        using a standard two-sided t test (the default) or a
+        Bayes-factor-based method.
+<p>
+    <b>flag(</b><i>#</i><b>)</b> specifies that <b>gpscore</b> estimates the GPS without performing
+        either a goodness-of-fit test for normality or a balancing test. The
+        default <i>#</i> is 1, meaning that both the normal distribution model and
+        the balancing property are tested; the default level is recommended.
+<p>
+    <b>cmd(</b><i>regression_cmd</i><b>)</b> (<b>doseresponse</b> and <b>doseresponse_model</b>) defines the
+        regression command to be used for estimating the conditional
+        expectation of the outcome given the treatment and the GPS. The
+        default for the outcome variable is <b>cmd(logit)</b> when there are two
+        distinct values, <b>cmd(mlogit)</b> when there are 3-5 values, and
+        <b>cmd(regress)</b> otherwise. The supported regression commands are <b>logit</b>,
+        <b>probit</b>, <b>mlogit</b>, <b>mprobit</b>, <b>ologit</b>, <b>oprobit</b>, and <b>regress</b>.
+<p>
+    <b>reg_type_t(</b><i>type</i><b>)</b> (<b>doseresponse</b> and <b>doseresponse_model</b>) defines the
+        maximum power of the treatment variable in the polynomial function
+        used to approximate the predictor for the conditional expectation of
+        the outcome given the treatment and the GPS. The default <i>type</i> is
+        <b>linear</b>. Alternatively, <i>type</i> can be <b>quadratic</b> or <b>cubic</b>.
+<p>
+    <b>reg_type_gps(</b><i>type</i><b>)</b> (<b>doseresponse</b> and <b>doseresponse_model</b>) defines the
+        maximum power of the estimated GPS in the polynomial function used to
+        approximate the predictor for the conditional expectation of the
+        outcome given the treatment and the GPS. The default <i>type</i> is <b>linear</b>.
+        Alternatively, <i>type</i> can be <b>quadratic</b> or <b>cubic</b>.
+<p>
+    <b>interaction(</b><i>#</i><b>)</b> (<b>doseresponse</b> and <b>doseresponse_model</b>) specifies whether
+        the model for the conditional expectation of the outcome given the
+        treatment and the GPS has the interaction between treatment and GPS.
+        The default <i>#</i> is 1, meaning that the interaction is included.
+<p>
+    <b>tpoints(</b><i>vector</i><b>)</b> specifies that <b>doseresponse</b> estimates the average
+        potential outcome for each level of the treatment in <i>vector</i>. By
+        default, <b>doseresponse</b> creates a vector with the <i>i</i>th element equal to
+        the <i>i</i>th observed treatment value.  This option cannot be used with
+        the <b>npoints(</b><i>#</i><b>)</b> option.
+<p>
+    <b>npoints(</b><i>#</i><b>)</b> specifies that <b>doseresponse</b> estimates the average potential
+        outcome for each level of the treatment belonging to a set of evenly
+        spaced values <i>t0, t1, ..., t#</i>, that cover the range of the observed
+        treatment.  This option cannot be used with the <b>tpoints(</b><i>vector</i><b>)</b>
+        option.
+<p>
+    <b>delta(</b><i>#</i><b>)</b> specifies that <b>doseresponse</b> also estimates the treatment-effect
+        function considering a <i>#</i>-treatment gap, which is defined as E[<i>Y</i>(<i>t</i> +
+        <i>#</i>)] - E[<i>Y</i>(<i>t</i>)]. The default <i>#</i> is 0, meaning that <b>doseresponse</b>
+        estimates only the dose-response function.
+<p>
+    <b>filename(</b><i>filename</i><b>)</b> stores the treatment levels specified through the
+        <b>tpoints(</b><i>vector</i><b>)</b> option or the <b>npoints(</b><i>#</i><b>)</b> option, the estimated
+        dose-response function, and, eventually, the estimated
+        treatment-effect function, along with their standard errors (if
+        calculated), to a new file called <i>filename</i>.
+<p>
+    <b>bootstrap(</b><i>string</i><b>)</b> specifies the use of bootstrap methods to derive
+        standard errors and confidence intervals. By default, <b>doseresponse</b>
+        does not apply bootstrap techniques. In such a case, no standard
+        error is calculated.  To activate this option, <i>string</i> should be set
+        to <b>yes</b>.
+<p>
+    <b>boot_reps(</b><i>#</i><b>)</b> specifies the number of bootstrap replications to be
+        performed. The default is <b>boot_reps(</b>50<b>)</b>.  This option produces an
+        effect only if the <b>bootstrap()</b> option is set to <b>yes</b>.
+<p>
+    <b>analysis(</b><i>string</i><b>)</b> specifies that <b>doseresponse</b> plots the estimated
+        dose-response function(s) and the estimated treatment-effect
+        function(s), along with the corresponding confidence intervals if
+        they are calculated with bootstrapping. By default, <b>doseresponse</b>
+        plots only the estimated dose-response and treatment function(s). If
+        the user types <b>analysis(no)</b>, no plot is shown.
+<p>
+    <b>analysis_level(</b><i>#</i><b>)</b> sets the confidence level of the confidence intervals.
+        The default is <b>analysis_level(0.95)</b>.
+<p>
+    <b>graph(</b><i>filename</i><b>)</b> stores the plots of the estimated dose-response function
+        and the estimated treatment effects to a new file called<i> filename</i>.
+        When the outcome variable is categorical, <b>doseresponse</b> creates a new
+        file for each category<i> i</i> of the outcome variable and names it
+        <i>filename_i</i>.
+<p>
+    <b>detail</b> displays detailed output for the<b> gpscore</b> command and the results
+        of the regression of the outcome on the treatment and the GPS.
+<p>
+<p>
+<b><u>Remarks</u></b> 
+<p>
+    Please remember to use the <b>update query</b> command before running this
+    program to make sure you have an up-to-date version of Stata installed.
+    Otherwise, this program may not run properly.
+<p>
+    The treatment has to be continuous. The outcome can be of any nature:
+    binary, categorical, or continuous.
+<p>
+    Make sure that the variables in <i>varlist</i> do not contain missing values.
+<p>
+<p>
+<b><u>Examples</u></b>
+<p>
+   . #delimit ;
+   . doseresponse  agew ownhs male tixbot workthen yearw,
+   . outcome(year6) t(prize) gpscore(mygps) predict(hat_treat) sigma(hat_sd)
+   . cutpoints(cut) index(p50) nq_gps(5) dose_response(mydoseresponse) 
+   . ;
+<p>
+   . #delimit ;
+   . doseresponse  agew ownhs male tixbot workthen yearw,
+   . outcome(year6) t(prize) gpscore(mygps) predict(hat_treat) sigma(hat_sd)
+   . cutpoints(cut) index(p50) nq_gps(5) dose_response(mydoseresponse) 
+   . t_transf(ln) normal_test(0.01) reg_type_t(quadratic) 
+   . reg_type_gps(quadratic) bootstrap(yes)
+   . ;
+<p>
+   . #delimit ;
+   . doseresponse  agew ownhs male tixbot workthen yearw,
+   . outcome(year6) t(prize) gpscore(mygps) predict(hat_treat) sigma(hat_sd)
+   . cutpoints(cut) index(p50) nq_gps(5) dose_response(mydoseresponse) 
+   . t_transf(ln) normal_test(0.01) test(Bayes_factor)
+   . reg_type_t(quadratic) reg_type_gps(quadratic) bootstrap(yes) analysis(no)
+   . ;
+<p>
+<p>
+<b><u>Authors</u></b>
+<p>
+    Michela Bia
+    Laboratorio Riccardo Revelli
+    Centre for Employment Studies, Collegio Carlo Alberto
+    michela.bia@laboratoriorevelli.it
+<p>
+    Alessandra Mattei
+    Department of Statistics, "Giuseppe Parenti", University of Florence
+    mattei@ds.unifi.it
+<p>
+<p>
+<b><u>Also see</u></b>
+<p>
+    Article: <i>Stata Journal</i>, volume 8, number 3: st0150
+<p>
+    Online:  <b>gpscore</b>
+</pre>

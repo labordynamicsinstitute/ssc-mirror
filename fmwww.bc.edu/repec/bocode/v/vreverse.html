@@ -1,0 +1,78 @@
+<pre>
+-------------------------------------------------------------------------------
+help for <b>vreverse</b>
+-------------------------------------------------------------------------------
+<p>
+<b><u>Reverse existing categorical variable</u></b>
+<p>
+        <b>vreverse</b> <i>varname</i> [<b>if</b> <i>exp</i>] [<b>in</b> <i>range</i>] , <b><u>gen</u></b><b>erate(</b><i>newvar</i><b>)</b>
+               [<b><u>val</u></b><b>uelabelname(</b><i>lblname</i><b>)</b> <b><u>remove</u></b><b>numlabel</b> <b><u>m</u></b><b>ask(</b><i>str</i><b>)</b>]
+<p>
+<p>
+<b><u>Description</u></b>
+<p>
+    <b>vreverse</b> generates <i>newvar</i> as a reversed copy of an existing categorical
+    variable <i>varname</i> which has integer values and (usually) value labels
+    assigned.  Suppose that in the observations specified <i>varname</i> varies
+    between minimum <i>min</i> and maximum <i>max</i>. Then
+<p>
+        <i>newvar</i> = <i>min</i> + <i>max</i> - <i>varname</i>
+<p>
+    and any value labels are mapped accordingly. If no value labels have been
+    assigned, then the values of <i>varname</i> will become the value labels of
+    <i>newvar</i>. <i>newvar</i> will have the same storage type and the same display
+    format as <i>varname</i>.  If <i>varname</i> possesses a variable label or
+    characteristics, these will also be copied. It is the user's
+    responsibility to consider whether the copied variable label and
+    characteristics also apply to <i>newvar</i>.
+<p>
+<p>
+<b><u>Options</u></b>
+<p>
+    <b>generate()</b> is a required option specifying a new variable name.
+<p>
+    <b>valuelabelname()</b> specifies a name for the new value labels. By default
+        <i>newvar</i> is used as the name for the new value labels; any existing
+        value labels under that name for the values of <i>newvar</i> will be
+        overwritten.
+<p>
+    <b>removenumlabel</b> specifies that a numeric prefix previously assigned using 
+        numlabel to the value labels attached to <i>varname</i> should be removed
+        from the value labels attached to <i>newvar</i>. The value labels attached
+        to <i>varname</i> will not be modified, unless they are the value labels
+        named by <b>valuelabelname()</b>.
+<p>
+        Concretely, suppose you defined value labels for the values 1 to 5 of
+        <b>rep78</b> and then used <b>numlabel</b> to add numeric prefixes to those labels.
+        By default, without the <b>removenumlabel</b> option, <b>vreverse</b> produces
+        value labels attached to <i>newvar</i> that will start with "5. " "4. " "3.
+        " "2. " and "1. ". Specifying the <b>removenumlabel</b> option will strip
+        those prefixes. Note that a subsequent <b>numlabel</b> would add prefixes
+        "1. " "2. " "3. " "4. " and "5. ". See also <b>mask()</b> below.
+<p>
+    <b>mask()</b> is for use with <b>removelabel</b>. If, and only if, some <b>mask()</b> was
+        specified when previously using <b>numlabel</b>, then specify the same
+        <b>mask()</b> now.
+<p>
+<p>
+<b><u>Examples</u></b>
+<p>
+    <b>. vreverse foreign, gen(Foreign)</b>
+<p>
+<p>
+<b><u>Author</u></b>
+<p>
+    Nicholas J. Cox, Durham University, U.K.
+    n.j.cox@durham.ac.uk
+<p>
+<p>
+<b><u>Acknowledgements</u></b>
+<p>
+    Renzo Comolli pointed out an issue that can arise if <b>numlabel</b> had
+    previously been used.
+<p>
+ 
+<b><u>Also see</u></b>
+<p>
+    Online: help for label, numlabel
+</pre>

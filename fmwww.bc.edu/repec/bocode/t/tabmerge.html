@@ -1,0 +1,47 @@
+<pre>
+-------------------------------------------------------------------------------
+help for <b>tabmerge</b> 
+-------------------------------------------------------------------------------
+<p>
+<b><u>Tabulate report on merge</u></b>
+<p>
+        <b>tabmerge</b> [<i>mergevar</i>] [ , <i>tabulate_options</i> ]
+<p>
+<p>
+<b><u>Description</u></b>
+<p>
+<b>tabmerge</b> displays the result of a <b>merge</b> by tabulating <i>mergevar</i>, which by
+default is <b>_merge</b>. If <i>mergevar</i> does not have value labels, it is labelled to
+indicate the results of the <b>merge</b>. If <i>mergevar</i> is not <b>_merge</b>, it must be
+specified.
+<p>
+<p>
+<b><u>Options</u></b> 
+<p>
+<i>tabulate_options</i> are any options of tabulate for one variable.
+<p>
+<p>
+<b><u>Examples</u></b>
+<p>
+    . merge <i>whatever</i>
+<p>
+    . tabmerge
+<p>
+    . merge <i>whatever</i>, _merge(mymerge)
+<p>
+    . tabmerge mymerge
+<p>
+<p>
+<b><u>Author</u></b>
+<p>
+        Nicholas J. Cox, University of Durham, UK
+        n.j.cox@durham.ac.uk
+<p>
+<p>
+<b><u>Also see</u></b>
+<p>
+On line: help for merge
+Manual: <b>[R] merge</b>, <b>[R] tabulate</b>
+<p>
+<p>
+</pre>

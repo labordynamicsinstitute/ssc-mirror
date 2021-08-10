@@ -1,0 +1,42 @@
+<pre>
+<b> help xtmis</b>
+-------------------------------------------------------------------------------
+<p>
+<b><u>Title</u></b>
+<p>
+    <b>xtmis</b> --    Report missing observations for each variable in all
+                  countries/groups of interest in cross section data.
+<p>
+<b><u>Syntax</u></b>
+<p>
+        <b>xtmis variable1</b> <b>variable2 ... variable6,</b> <b><u>i</u></b><b>d(</b><i>string</i><b>)</b>
+<p>
+<p>
+<b><u>Description</u></b>
+<p>
+<b>xtmis</b> reports number of missing and nonmissing observations, percentages of
+missing and nonmissing for each variable in all groups of interest (such as
+country).
+<p>
+In order to use, -tomata- must be installed by typing within Stata -ssc install
+tomata-.
+<p>
+<b><u>Examples</u></b>
+<p>
+    Report missing observations for list of variables in a cross section
+        data.
+<p>
+    . use example1.dta, clear
+    . xtmis variable1 variable2 variable3 variable4, id(country)
+<p>
+<b><u>Author</u></b>
+    Minh Cong Nguyen
+    Ph.D. Candidate
+    Economics Department
+    American University
+    Washington, DC
+    congminh6@gmail.com
+<p>
+<b><u>Version</u></b>
+    This is version 1.0.0 released June 22, 2008.
+</pre>

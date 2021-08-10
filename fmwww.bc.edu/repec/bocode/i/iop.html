@@ -1,0 +1,120 @@
+<pre>
+<p>
+-------------------------------------------------------------------------------
+help for <b>iop</b>
+-------------------------------------------------------------------------------
+<p>
+<b><u> Dissimilarity index for inequality of opportunity when the outcome is dichotom</u></b>
+<b><u>&gt; ous</u></b>
+<p>
+<p>
+        <b>iop</b> <i>depvar</i> <i>indepvars</i> [<i>if</i>] [<i>in</i>] [,<b><u>boot</u></b><b>strap(</b><i>int</i><b>)</b> <b><u>decomp</u></b><b>osition</b>
+                 <b><u>gr</u></b><b>oups(</b><i>varname (max=1)</i><b>)</b> <b><u>pr</u></b><b>opt(</b><i>str</i><b>)</b> <b>bootopt(</b><i>str</i><b>)</b>]
+<p>
+<p>
+<b><u>Description</u></b>
+<p>
+    This ado-file performs an analysis of inequality of opportunity in the
+    access of <i>depvar</i> based on the methodology proposed by Paes de Barros et
+    al. (2008).  The main idea of the analysis is to capture the importance
+    of <i>indepvars</i> in explaining differences in <i>depvars</i>, where <i>indepvars</i> are
+    generally characteristics beyond individuals' control, thus they should
+    not explain <i>depvar</i> in a situation of equality of opportunity.
+<p>
+    The analysis is performed in the following way. First a simple probit
+    model of <i>depvar</i> on <i>indepvars</i> is performed. In a second step the
+    dissimilarity index is computed with the predicted values of the probit
+    estimation. The idea is that all differences in these predicted values
+    must be due to characteristics beyond individuals' control, thus they
+    represent inequality of opportunity. A detailed description along with an
+    application can be found in Soloaga &amp; Wendelspiess Chávez Juárez (2012)
+    Alternative routines are are mentioned below.
+<p>
+<b><u>Options</u></b>
+<p>
+    <b><u>boot</u></b><b>strap(</b><i>int</i><b>)</b> Use this option to include bootstrap confidence intervals
+        of the dissimilarity index by indicating the desired amount of
+        repetitions. The default value is 0, resulting in no computation of
+        bootstrap confidence intervals.
+<p>
+    <b><u>decomp</u></b><b>osition</b> This option includes a decomposition of the computed
+        dissimilarity index. The same method is used and all but one variable
+        is set to the average when computing the predicted values. Beware of
+        the fact that the sum of these estimates does not necesarily yield to
+        the total effect.
+<p>
+    <b><u>gr</u></b><b>oups(</b><i>varname (max=1)</i><b>)</b> By activating this option, the decomposition
+        across groups is perfomed. Indicate the categorical variable
+        containing a definition of the groups.
+<p>
+    <b><u>pr</u></b><b>opt(</b><i>str</i><b>)</b> Use this option to include special options in the probit
+        estimation. Just write your probit options normally and they are
+        transmitted to the probit estimation in the script.
+<p>
+    <b>bootopt(</b><i>str</i><b>)</b> Use this option to include special options in the bootstrap
+        sampling. Just write your bootstrap options normally and they are
+        transmitted to the <i>bsample</i> command in the script.
+<p>
+<p>
+<b><u>Example</u></b>
+<p>
+    <b>iop</b> access_school education_father family_income indigenous, decomp
+        boot(100)
+<p>
+    This example would calculate the inequality of opportunity in the access
+    to schooling based on three explanatory variables: father's education,
+    the family income and a dummy for indigenous people. Additionally the
+    index is also computed for each of the independent variables individually
+    and a bootstrap confidence interval for the main index is computed using
+    100 iterations.
+<p>
+<a name="alternatives"></a><p>
+<b><u>Alternative routines</u></b>
+    An alternative routine to estimate the dissimilarity index is hoi.
+    Compared to the current version of <b>iop</b> it performs almost the same
+    calculation regarding dissimilarity index. Differences between the two
+    routines include the estimation of the conditional probability (hoi uses
+    logit instead of probit) and mainly the options the routine offers to the
+    user. For inference, <b>hoi</b> should be preferred, since it computes not only
+    the bootstrap standard errors but also the analytical standard errors.
+<p>
+<b><u>Future developments</u></b>
+    The routine <b>iop</b> will be developped further. We plan to include several
+    recent contributions to the measurement of inequality of opportunity in
+    order to provide a routine that is able to deal not only with dichotomous
+    variables, but also with continuous variables. If you have particular
+    suggestions, please let us know. Otherwise, update the routine by typing
+    scc install iop, replace
+<p>
+<b><u>Author</u></b>
+<p>
+    Florian Wendelspiess Chávez Juárez &amp; Isidro Soloaga:
+    florian@chavezjuarez.com
+<p>
+<b><u>References</u></b>
+    Soloaga, Isidro and Florian Wendelspiess Chávez Juárez (2012). El comando
+    iop para estimar desigualdad cuando el indicador es binario.  Forthcoming
+    in: Aplicaciones en Economía y Ciencias Sociales con Stata. Stata Press.
+<p>
+    Paes de Barros, R and M. de Carvalho (2008). Measuring Inequality of
+    Opportunity in Latin America and the Caribbean"
+<p>
+    Paes de Barros, R and M. de Carvalho and S. Franco (2007). Preliminary
+    Notes on the Measurement of Socially-Determined Inequality of Opportunity
+    when the Outcome is Discrete". IPEA, Rio de Janeiro
+<p>
+    Paes de Barros, Ricard and Francisco H. G. Ferreira and José R. Molinas
+    Vega and Jaime Saavedra Chanduvi.  Measuring Inequality of Opportunities
+    in Latin America and the Caribbean-Inequality. The World Bank. 2009
+<p>
+    Soloaga, Isidro and Florian Wendelspiess Chávez Juárez. Desigualdad de
+    Oportunidades: aplicaciones al caso de México. IN: Movilidad Social en
+    México: Población, desarrollo y crediciento, edited by Julio Serrano
+    Espinosa and Florencia Torche. Centro de Estudios Espinosa Yglesias.
+    Mexico City. 2010.
+<p>
+<p>
+<p>
+<p>
+<p>
+</pre>

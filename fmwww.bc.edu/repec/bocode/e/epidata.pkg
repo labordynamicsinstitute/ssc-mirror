@@ -1,0 +1,33 @@
+d 'EPIDATA': Data entry system for use with Stata, SPSS, SAS, Excel, text formats
+d
+d EpiData is a MS Windows implementation for dataentry following
+d the QES/CHK/REC file system and structure of EpiInfo version 6.
+d EpiData is freeware and will install as a all-in-one .exe file
+d with options saved in an ini file. Documentation is available as
+d Windows help files and pdf files. Total size for download of
+d setup disk is 1.3 Mb. Epidata includes several documentation
+d tools for structure and validation of double entered data.
+d Although EpiData cannot be used for analysis of data, overall
+d frequency tables (codebook) and lists of data can be made. Files
+d can be analysed directly in EpiInfo version 6, EpiInfo 2000 or
+d other programs able to read REC files. EpiData can import data
+d from comma separated text, dBase and Stata v4-8 and export data
+d to dBase III, comma separated text, Excel, Stata v4-8, SAS and
+d SPSS formats. Variable and value labels may only be exported to
+d Stata, SPSS and SAS.	 Translated versions for French, Spanish,
+d Chinese, Russian and other non-english languages available at
+d http:// www.epidata.dk Current version 3.0. 
+d
+d Author: Jens M. Lauritsen, The EpiData Association, Odense, Denmark
+d Support: email  info@@epidata.dk
+d
+d Author: Michael Bruus
+d Support: email 
+d
+d Distribution-Date: 20031029
+
+f ../s/setup_epidata30.zip
+f epdintro.pdf
+f epdhelp.pdf
+f epitour.pdf
+f epidata_flow.pdf

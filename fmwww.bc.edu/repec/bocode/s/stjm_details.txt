@@ -1,0 +1,19 @@
+TITLE: `STJM' : module to fit shared parameter joint models of longitudinal and survival data.
+
+DESCRIPTION/AUTHOR: stjm fits shared parameter joint models for longitudinal and survival data using maximum likelihood. A single continuous longitudinal response 
+and a single survival outcome are allowed. A linear mixed effects model is used for the longitudinal submodel, which lets time be modelled 
+using fixed and/or random fractional polynomials or resticted cubic splines. Six choices are currently available for the survival submodel, 
+including the exponential, Weibull, Gompertz, 2-component mixture Weibull-Weibull and 2-component mixture Weibull-exponential proportional 
+hazards models. Furthermore, the flexible parametric survival model (see stpm2), modelled on the log cumulative hazard scale is also 
+available. The association between the two processes can be induced via the default current value parameterisation, the first derivative of 
+the longitudinal submodel (slope), and/or a random coefficient such as the intercept. Adaptive or non-adaptive Gauss-Hermite quadrature, coded in 
+Mata, can be used to evaluate the joint likelihood. Under all survival submodels except the flexible parametric model, Gauss-Kronrod 
+quadrature is used to evaluate the cumulative hazard. The dataset must be stset correctly into enter and exit times, using the enter 
+option. stjm uses _t0 to denote measurement times. Delayed entry models are allowed.
+
+Author: Michael J. Crowther, University of Leicester
+Support: email michael.crowther@le.ac.uk
+
+Requires: Stata version 12.1
+
+

@@ -1,0 +1,19 @@
+d 'NUMDATE': module to generate numeric date-time variable
+d
+d  numdate is for generating a new Stata numeric date-time variable
+d  from one or more existing variables containing date or date-time
+d  or time information. 
+d
+d KW: dates
+d KW: time
+d KW: generate
+d
+d Requires: Stata version 12
+d
+d Distribution-Date: 20150930
+d
+d Author: Nicholas J. Cox, Durham University
+d Support: email N.J.Cox@@durham.ac.uk
+d
+f numdate.ado
+f numdate.sthlp

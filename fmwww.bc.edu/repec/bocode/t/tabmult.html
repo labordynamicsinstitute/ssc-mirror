@@ -1,0 +1,216 @@
+<pre>
+<p>
+<b><u>Title</u></b>
+<p>
+    <b>[R] tabmult</b> --         Extension of tabulate tables, save results in XML
+                             format
+<p>
+<a name="syntax"></a><b><u>Syntax</u></b>
+<p>
+        <b>tabmult</b> [<i>if</i>] [<i>in</i>] [<i>weight</i>] <b>,</b> [cat<b>(</b><i>varlist</i><b>)</b> cont<b>(</b><i>varlist</i><b>)</b>] by<b>(</b><i>varlist</i><b>)</b>
+                 [<i>options</i>]
+<p>
+    Multiple two-way tables for all possible combinations - a convenience
+    tool. Saves results in XML format.
+<p>
+    <i>options</i>               Description
+    -------------------------------------------------------------------------
+    Main
+      <b><u>c</u></b><b>ol</b>                 report relative frequency within its column of each
+                            cell
+      <b><u>r</u></b><b>ow</b>                 report relative frequency within its row of each
+                            cell
+      <b><u>sc</u></b><b>ol</b>                report relative frequency supercolum total
+      <b><u>sr</u></b><b>ow</b>                report relative frequency superrow total
+      <b><u>m</u></b><b>issing</b>             treat missing values like other values
+      <b><u>statc</u></b><b>ont(</b><i>statname</i> [<i>...</i>]<b>)</b>
+                            report specified statistics
+<p>
+    Output
+      <b>save(</b>[<i>"</i>]<i>filename</i>[<i>"</i>]<b>)</b>
+                            name and path for the output file
+      <b>replace</b>             overwrite existing <i>filename</i>
+      <b>append</b>              if workbook <i>filename</i> exists, add a new sheet,
+                            otherwise create a new workbook
+      <b><u>sh</u></b><b>eet(</b><i>name </i>[<b>,</b><i> sh_opts</i>]<b>)</b>
+                            worksheet where the table is outputted
+<p>
+         <b><u>col</u></b><b>or(</b><i>#</i><b>)</b>                specify tab color for a worksheet
+         <b><u>nog</u></b><b>ridlines</b>             hide gridlines on a worksheet
+<p>
+      <b><u>savem</u></b><b>at(</b><i>name </i>[<b>,</b><i> sm_opts</i>]<b>)</b>
+                            save estimates to a matrix
+<p>
+         <b>replace</b>                 if matrix <i>name</i> already exists replace
+                                       it. The default is to append
+         <b>exit</b>                    after writing the matrix exit <b>tabmult</b>
+                                       without creating an output file
+<p>
+<p>
+<a name="description"></a><b><u>Description</u></b>
+<p>
+    <b>tabmult</b> collects multiple two-way tabulation tables of frequency counts
+    or percentages between each variable in the categorial (<b>cat</b>) <i>varlist</i> and
+    each variable in the <b>by</b> <i>varlist</i>, and calculates averages for variables in
+    the continuous (<b>cont</b>) <i>varlist</i> by categories of each variable in the <b>by</b> 
+    <i>varlist</i>. It also aligns, re-arranges, and saves Stata results directly
+    into XML format that could be opened with Microsoft Excel or OpenOffice
+    Calc.
+<p>
+<b><u>Options</u></b>
+<p>
+<a name="main"></a>        +------+
+    ----+ Main +-------------------------------------------------------------
+<p>
+    <b>col</b> displays the relative frequency of each cell within its column in a
+        two-way table.
+<p>
+    <b>row</b> displays the relative frequency of each cell within its row in a
+        two-way table.
+<p>
+    <b>scol</b> displays the relative frequency of supercolumn total.
+<p>
+    <b>srow</b> displays the relative frequency of superrow total.
+<p>
+    <b>missing</b> requests that missing values be treated like other values in
+        calculations of counts, percentages.
+<p>
+    <b>statcont(</b><i>statname</i> [<i>...</i>]<b>)</b> specifies the statistics to be displayed; the
+        default is equivalent to specifying <b>statcont(mean)</b> or <b>statcont(count)</b>
+        depending on whether "row" and/or "col" options are specified.
+        (<b>statc()</b> is a synonym for <b>statcont()</b>.) Multiple statistics may be
+        specified and are separated by white space, such as <b>statcont(mean</b>
+        <b>sd)</b>.  Available statistics are
+<p>
+<a name="statname"></a>        <i>statname</i>       definition
+        ---------------------------------------------------------------------
+        <b><u>me</u></b><b>an</b>            mean
+        <b><u>co</u></b><b>unt</b>           count of nonmissing observations
+        <b>n</b>               same as <b>count</b>
+        <b><u>su</u></b><b>m</b>             sum
+        <b><u>ma</u></b><b>x</b>             maximum
+        <b><u>mi</u></b><b>n</b>             minimum
+        <b><u>r</u></b><b>ange</b>           range = <b>max</b> - <b>min</b>
+        <b>sd</b>              standard deviation
+        <b><u>v</u></b><b>ariance</b>        variance
+        <b>cv</b>              coefficient of variation (<b>sd/mean</b>)
+        <b><u>sem</u></b><b>ean</b>          standard error of mean (<b>sd/sqrt(n)</b>)
+        <b><u>sk</u></b><b>ewness</b>        skewness
+        <b><u>k</u></b><b>urtosis</b>        kurtosis
+        <b>p1</b>              1st percentile
+        <b>p5</b>              5th percentile
+        <b>p10</b>             10th percentile
+        <b>p25</b>             25th percentile
+        <b><u>med</u></b><b>ian</b>          median (same as <b>p50</b>)
+        <b>p50</b>             50th percentile (same as <b>median</b>)
+        <b>p75</b>             75th percentile
+        <b>p90</b>             90th percentile
+        <b>p95</b>             95th percentile
+        <b>p99</b>             99th percentile
+        <b>iqr</b>             interquartile range = <b>p75</b> - <b>p25</b>
+        <b>q</b>               equivalent to specifying <b>p25 p50 p75</b>
+        ---------------------------------------------------------------------
+<p>
+<p>
+<a name="output"></a>        +--------+
+    ----+ Output +-----------------------------------------------------------
+<p>
+    <b>save(</b>[<i>"</i>]<i>filename</i>[<i>"</i>]<b>)</b> specifies a name for XML file where tables are
+        outputted. If <b>save(</b>[<i>"</i>]<i>filename</i>[<i>"</i>]<b>)</b> is omitted, the output will be
+        saved in <b>stata_tabmult.xml</b> located in the current working directory.
+        Use <b>append</b> and <b>replace</b> options to instruct <b>tabmult</b> to append a table
+        into the new worksheet of the existing file or to replace the
+        existing file.
+<p>
+    <b>replace</b> permits to overwrite the existing XML file.
+<p>
+    <b>append</b> if XML file already exists, a new sheet will be added to it where
+        the output table will be saved.  Otherwise the new file will contain
+        one sheet with the output.
+<p>
+    <b>NOTE:</b> You need to close XML file opened in Excel or Calc for <b>tabmult</b> to
+        save new tables there. If XML file is still opened, <b>tabmult</b> reports
+        an error message: file can not be saved at this location.
+<p>
+    <b>sheet(</b><i>name</i><b>)</b> You can output several tables into the different sheets of
+        XML file (workbook). Excel or Calc files could contain multiple
+        worksheets within a single document (workbook). <b>sheet()</b> option
+        specifies the name for the new sheet where the table will be
+        outputted. If not specified, a worksheet named <i>Sheet1</i> will be added.
+<p>
+        A valid Excel worksheet name must have no more than 31 characters.
+        The worksheet name cannot contain any of the following: : \ / ? * [
+        or ] and can not be left blank.
+<p>
+    <b>savemat(</b><i>name</i><b>)</b> saves tabulation results in a matrix. If <i>name</i> exists and
+        option <b>replace</b> was not used then additional rows will be appended to
+        that matrix. In this case number of columns in the existing matrix
+        and the one to be appended must be the same. The output matrix will
+        contain frequency and/or mean of the variables specified in the
+        syntax.
+<p>
+<p>
+<a name="limits"></a><b><u>Limits</u></b>
+<p>
+    Similar to <b>[R] tab</b>, each two-way tables may have a maximum of 1,200 rows
+    and 80 columns (Stata/MP and Stata/SE), 300 rows and 20 columns
+    (Stata/IC), or 160 rows and 20 columns (Small Stata). For larger tables,
+    you might need to adjust the matrix size in Stata, see <b>[R] matsize</b> and 
+    <b>[R] table</b>.
+<p>
+<p>
+<a name="examples"></a><b><u>Examples</u></b>
+<p>
+    ---------------------------------------------------------------------------
+    Setup
+        <b>. webuse citytemp2</b>
+<p>
+    Multiple two-way tables of frequencies
+        <b>. tabmult, cat(region agecat) cont(heatdd cooldd tempjan tempjuly)</b>
+            <b>by(division)</b>
+<p>
+    Multiple two-way tables of frequencies including missing observations
+        <b>. tabmult, cat(region agecat) cont(heatdd cooldd tempjan tempjuly)</b>
+            <b>by(division) m</b>
+<p>
+        <b>. tabmult, cat(region agecat) cont(heatdd cooldd tempjan tempjuly)</b>
+            <b>by(division) srow scol m</b>
+<p>
+    Include row percentages and means for continuous variables
+        <b>. tabmult, cat(region agecat) cont(heatdd cooldd tempjan tempjuly)</b>
+            <b>by(division) row save(Table1.xls)</b>
+<p>
+        <b>. tabmult, cat(agecat) cont(heatdd cooldd tempjan tempjuly)</b>
+            <b>by(division region) row m save(Table1.xls) replace</b>
+<p>
+    Include column percentages and means, medians for continuous variables
+        <b>. tabmult, cat(region agecat) cont(heatdd cooldd tempjan tempjuly)</b>
+            <b>by(division) col save(Table1.xls) replace</b>
+<p>
+        <b>. tabmult, cat(region agecat) cont(heatdd cooldd tempjan tempjuly)</b>
+            <b>by(division) statc(mean med) col save(Table1.xls) replace</b>
+<p>
+        <b>. tabmult, cat(agecat) cont(heatdd cooldd tempjan tempjuly)</b>
+            <b>by(division region) col m save(Table1.xls) sheet(missing) append</b>
+<p>
+        <b>. tabmult, cat(agecat) cont(heatdd cooldd tempjan tempjuly)</b>
+            <b>by(division region) col m sr sc save(Table1.xls) sheet(totals)</b>
+            <b>append</b>
+<p>
+   ----------------------------------------------------------------------------
+<p>
+<b><u>Acknowledgements</u></b>
+<p>
+    Some functionality ideas were adopted from <b>xml_tab</b> by Michael Lokshin and
+    Zurab Sajaia.
+<p>
+<b><u>Author</u></b>
+<p>
+    Minh Cong Nguyen
+    World Bank, 2012
+    mnguyen3@worldbank.org
+<p>
+<b><u>Version</u></b>
+<p>
+    This is version 1.0.6 released May., 2012.
+</pre>

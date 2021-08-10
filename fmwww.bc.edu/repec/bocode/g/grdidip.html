@@ -1,0 +1,85 @@
+<pre>
+-------------------------------------------------------------------------------
+help for <b>grdidip</b>                                            - v001 25dec2009 jx
+-------------------------------------------------------------------------------
+<p>
+<b><u>Diff in difference in predicted prob in binary regressions</u></b>
+<p>
+        <b>grdidip</b> [<b>if</b> exp] [<b>in</b> range] [<b>,</b> <b>x1(</b><i>variables_and_values</i><b>)</b>
+               <b>x2(</b><i>variables_and_values</i><b>)</b> <b>x3(</b><i>variables_and_values</i><b>)</b>
+               <b>x4(</b><i>variables_and_values</i><b>)</b> <b><u>r</u></b><b>est(</b><i>stat</i><b>)</b> <b><u>l</u></b><b>evel(</b><i>#</i><b>)</b> <b><u>noba</u></b><b>se</b> <b>all</b>]
+<p>
+    where <i>variables_and_values</i> is an alternating list of variables and either
+    numeric values or mean, median, min, max, upper, lower, previous.
+<p>
+    <i>stat</i> is either mean, median, min, max, upper, lower, previous,
+    grmean(group mean), mrmedian, grmin, grmax.
+<p>
+<p>
+<b><u>Description</u></b>
+<p>
+    After estimating a binary regression model, <b>grdidip</b> computes the
+    difference in difference in predicted probabilities:
+    {P(x*b|x4)-P(x*b|x3)}-{P(x*b|x2)-P(x*b|x1)}.  <b>grdidip</b> uses a closed form
+    solution with the delta method. It is especially useful for comparing the
+    effects of nomial level independent variables.  With this program, we
+    make comparisons between two groups, and vary the values of a specific
+    continuous variable while holding everything else to be the same.
+<p>
+<b><u>Options</u></b>
+<p>
+    <b>level()</b> sets the level of the confidence interval for differences in
+        difference in predicted probabilities.  The default confidence level
+        is 95.
+<p>
+    <b>x1()</b> sets the values of independent variables for x1 vector used in
+        {P(x*b|x4)-P(x*b|x3)}-{P(x*b|x2)-P(x*b|x1)}. The list must alternate
+        variable names and values. The values may be either numeric values or
+        they can be mean, median, min, max, previous, upper, or lower.  The
+        latter cannot be used if rest() specifies a group summary statistic
+        (e.g., grmean).
+<p>
+    <b>x2()</b> sets the values of independent variables for x2 vector.
+<p>
+    <b>x3()</b> sets the values of independent variables for x3 vector.
+<p>
+    <b>x4()</b> sets the values of independent variables for x4 vector.
+<p>
+    <b>rest()</b> sets the independent variables not specified in x1() to x4() to
+        their <b>mean</b> (default), <b>minimum</b>, <b>maximum</b>, <b>median</b> when calculating
+        predicted values. <b>grmean</b> sets these independent variables to the mean
+        conditional on the variables and values specified in x();
+        <b>grmedian</b>,<b>grmax</b>, and <b>grmin</b> can also be used.
+<p>
+    <b>nobase</b> suppresses inclusion of the base values of x in the output.
+<p>
+    <b>all</b> specifies that any calculations of means, medians, etc., should use
+        the entire sample instead of the sample used to estimate the model.
+<p>
+<b><u>Returned Matrices</u></b>
+<p>
+    r(didipmat):  saves differences in difference in predicted probabilities
+        and their confidence intervals
+<p>
+    r(didipp1s):  saves predicted probabilities (P(y=1|x)) for x1, x2, x3,
+        and x4 vectors.
+<p>
+<b><u>Examples</u></b>
+<p>
+    To compute the difference in difference in predicted probabilities and
+    confidence intervals using delta method for a logit model with all other
+    variables set at their means except for black and education.
+<p>
+    <b>.logit vote black educ income</b>
+<p>
+    <b>.grdidip, x1(black=1 educ=12) x2(black=1 educ=20) x3(black=0 educ=12)</b>
+        <b>x4(black=0 educ=20)</b>
+<p>
+    :::
+<p>
+-------------------------------------------------------------------------------
+<p>
+  Authors: Jun Xu
+<p>
+<p>
+</pre>

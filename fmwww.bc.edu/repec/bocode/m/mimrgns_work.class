@@ -1,0 +1,1123 @@
+*! version 2.3.0 07apr2017 daniel klein
+version 11.2
+
+class mimrgns_work {
+	string myname 			= "" 	// mimrgns handle
+	
+	string caller 			= "" 	// version <caller> :
+	string zero 			= "" 	// user cmdline as typed
+	double is_replay 		= 0
+	
+	string using 			= "" 	//.ster file
+	string esample 			= "" 	// varname e(sample)
+	
+	string er_mi 			= "" 	// mi results
+	string rr 				= "" 	// margins/mimrgns results
+	
+	double is_contrast 		= 0
+	double is_pwcompare 	= 0
+	
+	string user_options 	= "" 	// all options
+	string margins_opts 	= ""
+	
+	string coding 			= "" 	// coding or compare
+	string cimargins 		= "" 	// cionly or nopvalues
+	string vs_mats 			= "" 	// _coef_table (pwcompare)
+	
+	string coef_table_sty 	= "" 	// cionly, pvonly, etc.
+	string coef_table_opts 	= ""
+	
+	string margins_call 	= ""
+	string cmdline_mi 		= ""
+	string mi_opts 			= ""
+	
+	double is_noatlegend 	= 0
+	double is_post 			= 0
+	double is_cmdmargins 	= 0
+	double is_verbose 		= 0
+	double is_nosmall 		= 0
+	double set_tolerance 	= 0
+	
+	double est_number 		= 0 	// counter for m
+}
+
+program .new
+	syntax name(id = "mimrgns handle")
+	.myname = "`namelist'"
+end
+
+program .main
+	.caller 	= "version `= _caller()' :"
+	.zero 		= `"`0'"'
+	.is_replay 	= (replay() & ("`e(cmd_mimrgns)'" == "mimrgns"))
+	
+	tempname er_mi rr
+	.er_mi 	= "`er_mi'"
+	.rr 	= "`rr'"
+	
+	nobreak {
+		capture noisily break ._main
+		local rc = _rc
+		capture _return drop `.rr'
+		capture _estimates drop `.er_mi'
+	}
+	
+	exit `rc'
+end
+
+program ._main
+	mata : st_rclear()
+	_return hold `.rr'
+	
+	if (`.is_replay') {
+		.parse_opts_reporting `.zero'
+		if inlist("`e(cmd)'", "contrast", "pwcompare") {
+			.is_contrast 	= ("`e(cmd)'" == "contrast")
+			.is_pwcompare 	= ("`e(cmd)'" == "pwcompare")
+			
+			/* need to call this to set defaults */
+			.parse_opts_contr_pwcomp_sub // void
+		}
+	}
+	else {
+		.parse `.zero'
+		
+		if mi(`"`.using'"') {
+			.parse_mi_call
+		}
+		
+		nobreak {
+			capture noisily break .estimate
+			local rc = _rc
+			.return `rc'
+		}
+	}
+	
+	nobreak {
+		capture noisily break .report
+		local rc = _rc
+		.post
+	}
+	
+	exit `rc'
+end
+
+program .parse
+	syntax [ anything(id = "marginlist") ] 	///
+	[ if ] [ in ] 							///
+	[ using/ ] 								///
+	[ fw aw pw iw ] 						///
+	[ , * ]
+	
+	if (`"`anything'"' != "") {
+		capture fvunab dump : `anything' , min(1)
+			/* fails with contrast operators */
+		.is_contrast = (_rc != 0)
+	}
+	
+	if ("`weight'" != "") {
+		local weight [`weight' `exp']
+	}
+	
+	.user_options = `"`options'"'
+	
+	if (`"`using'"' != "") {
+		.using = (`"`using'"')
+		.parse_using , `.user_options'
+	}
+	else if ("`e(mi)'" != "mi") {
+		error 301
+	}
+	else if inlist("`e(cmd)'", "margins", "mimrgns") {
+		error 301
+	}
+	else if inlist("`e(cmd2)'", "margins", "mimrgns") {
+		error 301
+	}
+	
+	.parse_opts_not_allowed 	, `.user_options'
+	.parse_opts_pr_exp 			, `.user_options'
+	.parse_opts_contr_pwcomp 	, `.user_options'
+	.parse_opts_reporting 		, `.user_options'
+	.parse_opts_mimrgns 		, `.user_options' // must go last
+	
+	.margins_opts = `"`.margins_opts' `.user_options'"'
+	
+	local margins_call `anything' `if' `in' `weight'
+	local margins_call `margins_call' , post `.margins_opts'
+	local margins_call : list retok margins_call
+	
+	.margins_call = `"`margins_call'"'
+end
+
+program .parse_using
+	syntax , ESAMPLE(varname numeric) [ * ]
+	
+	.esample 		= "`esample'"
+	.user_options 	= `"`options'"'
+	
+	quietly estimates describe using `"`.using'"'
+	local n_mi = r(nestresults)
+	
+	nobreak {
+		tempname er
+		_estimates hold `er' , nullok
+		capture estimates use `"`.using'"' , number(`n_mi')
+		local rc = _rc
+		if (!`rc') {
+			local rc = ("`e(mi)'" != "mi")
+		}
+		.mi_opts = `"`.mi_opts' imputations(`e(m_mi)')"'
+		if (e(esampvary_ok)) {
+			.mi_opts = `"`.mi_opts' esampvaryok"'
+		}
+		_estimates unhold `er'
+	}
+	
+	if (`rc') {
+		display as error "corrupt MI estimation file"
+		exit 301
+	}
+end
+
+program .parse_opts_not_allowed
+	if (c(stata_version) < 12) {
+		local CONTRast CONTRast
+		local CONTRast1 CONTRast1(string)
+		local PWCOMPare PWCOMPare
+		local PWCOMPare1 PWCOMPare1(string)
+	}
+	
+	syntax 					///
+	[ , 					///
+		NOSE 				///
+		SAVing(passthru) 	///
+		ESAMPLE(passthru) 	///
+		`CONTRast' 			///
+		`CONTRast1' 		///
+		`PWCOMPare' 		///
+		`PWCOMPare1' 		///
+		* 					///
+	]
+	
+	if (`"`contrast1'"' != "") {
+		local contrast contrast(`contrast1')
+	}
+	if (`"`pwcompare1'"' != "") {
+		local pwcompare pwcompare(`pwcompare1')
+	}
+	
+	.opts_not_allowed , options `nose' `saving' `esample' `contrast' `pwcompare'
+end
+
+program .opts_not_allowed
+	syntax , OPTIONS
+end
+
+program .parse_opts_pr_exp
+	syntax 						///
+	[ , 						///
+		PRedict(passthru) 		///
+		EXPression(passthru) 	///
+		* 						///
+	]
+	
+	if (`"`predict'`expression'"' != "") {
+		opts_exclusive `"`predict' `expression'"'
+		.parse_opts_pr_exp_pr_default , `predict'
+	}
+	else {
+		local predict predict(xb)
+	}
+	
+	.margins_opts = `"`.margins_opts' `predict'`expression'"'
+	.user_options = `"`options'"'
+end
+
+program .parse_opts_pr_exp_pr_default
+	syntax [ , PREDICT(string asis) ]
+	if (`"`predict'"' == "default") {
+		c_local predict // void
+	}
+end
+
+program .parse_opts_contr_pwcomp
+	syntax 					///
+	[ , 					///
+		CONTRast 			///
+		CONTRast1(string) 	///
+		PWCOMPare 			///
+		PWCOMPare1(string) 	///
+		* 					///
+	]
+	
+	if (`"`contrast1'"' != "") {
+		local contrast contrast(`contrast1')
+	}
+	if (`"`pwcompare1'"' != "") {
+		local pwcompare pwcompare(`pwcompare1')
+	}
+	
+	opts_exclusive `"`contrast' `pwcompare'"'
+	
+	if (`.is_contrast') {
+		/* user specified contrast operators */	
+		if (`"`pwcompare'"' != "") {
+			display as error "option pwcompare " ///
+			"is not allowed with contrast operators"
+			exit 198
+		}
+		if mi(`"`contrast'"') {
+			local contrast contrast
+		}
+	}
+	else {
+		.is_contrast = (`"`contrast'"' != "")
+	}
+	
+	.is_pwcompare = (`"`pwcompare'"' != "")
+	
+	local nopts = (`.is_contrast' + `.is_pwcompare')
+	assert (`nopts' < 2) // only one allowed
+	
+	if (!`nopts') {
+		exit 0
+			/* done */
+	}
+	
+	.parse_opts_contr_pwcomp_sub , `contrast1' `pwcompare1'
+	
+	.margins_opts = `"`.margins_opts' `contrast'`pwcompare'"'
+	.user_options = `"`options'"'
+end
+
+program .parse_opts_contr_pwcomp_sub
+	if (`.is_contrast') {
+		.coding = "coding"
+		local ATcontrast ATcontrast(str)
+	}
+	else if (`.is_pwcompare') {
+		.coding = "compare"
+		local vs_mats 		///
+			bmat(e(b_vs)) 	///
+			vmat(e(V_vs)) 	///
+			mmat(e(b)) 		///
+			mvmat(e(V)) 	///
+			suffix(_vs) 	///
+			dfmat(e(df_vs)) ///
+			emat(e(error_vs))
+		.vs_mats = "`vs_mats'"
+		local CIMargins
+		local GROUPs GROUPs
+		local SORT SORT
+	}
+	else {
+		assert 0
+			/* internal error */
+	}
+	
+	syntax 				///
+	[ , 				///
+		CIeffects 		///
+		PVeffects 		///
+		EFFects 		///
+		`ATcontrast' 	///
+		`CIMargins' 	///
+		`GROUPs' 		///
+		`SORT' 			///
+	]
+		
+	/*
+		non-documented options in _coef_table
+		changed from Stata release 12.1 to 13 
+		
+		might need further adjustments in future */
+	
+	if (c(stata_version) > 12.1) {
+		local cionly_opt "nopvalues"
+		local pvonly_opt "noci"
+	}
+	else {
+		local cionly_opt "cionly"
+		local pvonly_opt "pvonly"
+	}
+	
+	if ("`cieffects'" != "") {
+		local cionly "`cionly_opt'"
+	}
+	if ("`pveffects'" != "") {
+		local pvonly "`pvonly_opt'"
+	}
+	if ("`effects'" != "") {
+		local effects `""""' // sic!
+	}
+	if ("`cimargins'" != "") {
+		.cimargins = "`cionly_opt'"
+	}
+	
+	local coef_table_sty `"`pvonly' `cionly' `effects'"'
+	local coef_table_sty : list retok coef_table_sty
+	
+	.coef_table_sty = `"`.coef_table_sty' `coef_table_sty'"'
+	
+	capture confirm existence `.coef_table_sty'
+	if ((_rc) & mi("`cimargins'")) {
+		/* the default */
+		.coef_table_sty = "`.coef_table_sty' `cionly_opt'"
+	}
+	
+	.coef_table_opts = "`.coef_table_opts' `groups' `sort'"
+end
+
+program .parse_opts_reporting
+	if (!`.is_replay') {
+		local DOTS 	DOTS
+		local NOIsily NOIsily
+		local TRACE TRACE
+		local POST POST
+		local VERBOSE VERBOSE
+	}
+	
+	syntax 					///
+	[ , 					///
+		/* replay() */ 		///
+		Level(passthru) 	///
+		MCOMPare(passthru) 	///
+		VSQUISH 			///
+		CFORMAT(passthru) 	///
+		PFORMAT(passthru) 	///
+		SFORMAT(passthru) 	///
+		NOLSTRETCH 			///
+		COEFlegend 			///
+		NOATLEGEND 			///
+		EFORM 				///
+		DFTABle 			///
+		DIPOTS(string) 		/// no longer documented
+		CMDMARGINS 			///
+		/* non replay() */ 	///
+		`DOTS' 				///
+		`NOIsily' 			///
+		`TRACE' 			///
+		`POST' 				///
+		`VERBOSE' 			/// not documented
+		* 					///
+	]
+	
+	if (`.is_replay') {
+		.opts_not_allowed , options `options'
+	}
+	
+	local reporting_opts `level' `mcompare' `vsquish'
+	foreach fmt in c p s {
+		local fmt_opts `fmt_opts' ``fmt'format'
+	}
+	local reporting_opts `reporting_opts' `fmt_opts' ///
+		`nolstretch' `coeflegend' `noatlegend'
+	
+	local coef_table_opts `reporting_opts' `eform' `dftable' `diopts'
+	
+	opts_exclusive "`dots' `noisily'"
+	local mi_opts `dots' `noisily' `trace'
+	
+	.margins_opts 		= `"`.margins_opts `reporting_opts''"'
+	.coef_table_opts 	= `"`.coef_table_opts' `coef_table_opts'"'
+	.mi_opts 			= `"`.mi_opts' `mi_opts'"'
+	
+	.is_noatlegend 	= ("`noatlegend'" != "")
+	.is_post 		= ("`post'" != "")
+	.is_cmdmargins 	= ("`cmdmargins'" != "")
+	.is_verbose 	= ("`verbose'" != "")
+	
+	.user_options = `"`options'"'
+end
+
+program .parse_opts_mimrgns
+	if mi(`"`.using'"') {
+		local ERROROK ERROROK
+		local ESAMPVARYOK ESAMPVARYOK
+	}
+	
+	syntax 							///
+	[ , 							///
+		NOSMALL 					///
+		`ERROROK' 					///
+		`ESAMPVARYOK' 				///
+		MIOPTS(string) 				/// not documented
+		SETTOLERANCE(real 1e-14) 	/// not documented
+		* 			/// margins options
+	]
+	
+	local miopts `miopts' `nosmall'
+	
+	.is_nosmall 	= ("`nosmall'" != "")
+	.mi_opts	 	= `"`.mi_opts' `errorok' `esampvaryok' `miopts'"'
+	.set_tolerance 	= `settolerance'
+	.user_options 	= `"`options'"'
+end
+
+program .parse_mi_call
+	local e_cmdline_mi `e(cmdline_mi)'
+	gettoken dump cmdline_mi : e_cmdline_mi , parse(":") bind
+	gettoken coln cmdline_mi : cmdline_mi , parse(":")
+	assert (`"`coln'"' == ":")
+	
+	.cmdline_mi = `"`cmdline_mi'"'
+	
+	gettoken mi_estimate mi_opts : e_cmdline_mi , p(",")
+	gettoken 0 : mi_opts , parse(":") bind
+	syntax 						///
+	[ , 						///
+		NImputations(passthru) 	///
+		Imputations(passthru) 	///
+		CMDOK 					///
+		* 	/// strip anything else
+	]
+	
+	.mi_opts = `"`.mi_opts' `nimputations'`imputations' `cmdok'"'
+end
+
+program .estimate
+	_estimates hold `.er_mi' , nullok // null in case of using syntax
+	
+	local mi_opts post noheader notable `.mi_opts'
+	local mi_opts : list retok mi_opts
+	
+	`.caller' mi estimate , `mi_opts' : mimrgns_estimate `.myname'
+	
+	if ((`.is_pwcompare') | (`.is_contrast')) {
+		_return restore `.rr'
+		mata : st_numscalar("e(N_mi)", min(st_matrix("r(_N)")))
+		if (`.is_pwcompare') {
+			local settolerance `.set_tolerance'
+			mata : mimrgns_combine_vs(`.is_nosmall')	
+		}
+		_return hold `.rr'
+	}
+	
+	if (`.at_varies') {
+		_return restore `.rr'
+		mata : mimrgns_combine_at(`.est_number')
+		_return hold `.rr'
+	}
+end
+
+program .return
+	args rc void
+	assert mi(`"`void'"')
+	
+	if (`rc') {
+		capture _estimates unhold `.er_mi'
+		capture _estimates drop `.er_mi'
+		capture mata : st_rclear()
+		capture _return drop `.rr'
+	}
+	else {
+		_return restore `.rr'
+		mata : mimrgns_return(`.is_cmdmargins')
+		_return hold `.rr'
+	}
+	
+	exit `rc'
+end
+
+program .report
+	if ("`e(mi)'" != "mi") {
+		error 301
+	}
+	
+	mi estimate , notable
+	
+	/*
+		now the tables */
+	
+	if (`"`e(predict_label)'"' != "") {
+		local prlabel "`e(predict_label)', "
+	}
+	
+	local tablegend `"{txt}Expression{col 14}: {res}`prlabel'`e(expression)'"'
+	
+	local margderiv `e(derivatives)'
+	if ("`margderiv'" != "") {
+		local tablegend `"`tablegend'"' _newline ///
+		`"{txt}`margderiv' w.r.t. : {res}`.get_xvars'"'
+		local Note display "{txt}Note: `margderiv' for factor " ///
+		"levels is the discrete change from the base level." _newline
+	}
+	
+	if inlist(e(k_predict), 1, .) {
+		local k_predict 0
+	}
+	else {
+		local k_predict = e(k_predict)
+	}
+	
+	display _newline `"`tablegend'"'
+	forvalues j = 1/`k_predict' {
+		display "{txt}`j'._predict{col 14}: {res}" ///
+		"`e(predict`j'_label)', predict(`e(predict`j'_opts)')"
+	}
+	if (("`e(at)'" == "matrix") & (!`.is_noatlegend')) {
+		.AtLegend2 , `.coef_table_opts'
+	}
+	display
+	
+	if ((`.is_contrast') | (`.is_pwcompare')) {
+		local coeft coeft("Contrast")
+		local coeft2 coeftitle2(`margderiv')
+	}
+	else {
+		if mi("`margderiv'") {
+			local coeft coeft("Margin")
+		}
+		else {
+			local coeft coeft(`margderiv')
+		}
+	}
+	
+	if ((`.is_contrast') | (`.is_pwcompare')) {
+		local quietly quietly
+	}
+	
+	local ct_opts `coeft' `coeft2' `.coef_table_opts'
+	
+	`quietly' _coef_table , `ct_opts'
+	`Note'
+	
+	.add_rtable
+		
+	if ((`.is_contrast') | (`.is_pwcompare')) { 
+		if ("`.cimargins'" != "") {
+			if (`.is_contrast') {
+				local coding `.coding'
+			}
+			
+			_coef_table , `coding' `ct_opts' `.cimargins'
+			`Note'
+		}
+		
+		foreach sty in `.coef_table_sty' {
+			_coef_table , `.coding' `ct_opts' `.vs_mats' `sty'
+			`Note'
+		}
+		
+		if (`.is_pwcompare') {
+			local _vs _vs
+		}
+		
+		.add_rtable `_vs'
+	}
+	
+	if (`.at_varies') {
+		display as txt "note: values in {cmd:at()} vary across imputations;"
+		display as txt _col(7) "reported values are mi point estimates."
+	}
+	
+	_return restore `.rr'
+end
+
+program .get_xvars
+	local X `e(xvars)'
+	
+	foreach x of loc X {
+		_ms_parse_parts `x'
+		if (!r(omit)) {
+			local xvars `xvars' `x'
+		}
+	}
+	
+	if (strlen("`xvars'") > 78) {
+		local xvars = substr("`xvars'", 1, 78) + "{txt}.."
+	}
+	
+	class exit "`xvars'"
+end
+
+/* 
+	code copied from StataCorp 
+	_marg_report version 1.0.1 09may2013 */
+	
+program .AtLegend2
+	syntax [, vsquish *]
+	tempname at
+	matrix `at'	= e(at)
+	local k_by	= e(k_by)
+	local hasby	= `k_by' > 1
+	local r		= rowsof(`at')
+	local c		= colsof(`at')
+	if `r' == `k_by' {
+		local vsquish vsquish
+	}
+	local blank = "`vsquish'" == ""
+	if `hasby' {
+		local within `"`e(within)'"'
+		local r	= `r'/`k_by'
+		local ind "{space 4}"
+	}
+	local NLIST : colna `at'
+	local row 0
+	local oldname
+	local flushbal 0
+	if `r' == 1 {
+		local title at
+		local first 1
+		local stats `"`e(atstats1)'"'
+		local stats : list uniq stats
+		local asstats asbalanced asobserved
+		local stats : list stats - asstats
+		if `:list sizeof stats' == 0 {
+			local flushbal 1
+		}
+	}
+	forval i = 1/`r' {
+		if `r' > 1 {
+			local title `i'._at
+			local first 1
+		}
+		local SLIST `"`e(atstats`i')'"'
+		local allasobs : list uniq SLIST
+		local allasobs = "`allasobs'" == "asobserved"
+		if `blank' {
+			di
+		}
+		forval g = 1/`k_by' {
+			if `k_by' > 1 {
+				local group `"{txt}`e(by`g')'"'
+				if `first' {
+					.Legend2 "`title'" "`group'"
+				}
+				else {
+					.Legend2 "" "`group'"
+				}
+				local first 0
+			}
+			local ++row
+			local nlist : copy local NLIST
+			local slist : copy local SLIST
+			forval j = 1/`c' {
+				gettoken name nlist : nlist
+				gettoken spec slist : slist
+				local factor 0
+				local asbal = "`spec'" == "asbalanced"
+				if `asbal' {
+					local factor 1
+				}
+				else if !`allasobs' {
+					if missing(`at'[`row',`j']) {
+						continue
+					}
+				}
+				_ms_parse_parts `name'
+				if r(type) == "factor" {
+					if `at'[`row',`j'] == 0 {
+						continue
+					}
+					else if `at'[`row',`j'] == 1 {
+						local factor 1
+					}
+					local name `r(level)'`r(ts_op)'.`r(name)'
+				}
+				if `factor' {
+					_ms_parse_parts `name'
+					local op `"`r(ts_op)'"'
+					local val = r(level)
+					if `:length local op' {
+						local name `"`op'.`r(name)'"'
+					}
+					else	local name `"`r(name)'"'
+					if `asbal' {
+						if `:list name in within' {
+							local olname
+							continue
+						}
+						if `"`name'"' == "`olname'" {
+							continue
+						}
+					}
+				}
+				else {
+					local name = abbrev("`name'", 12)
+				}
+				local olname : copy local name
+				local ss = 16 - strlen("`name'")
+				if `ss' > 0 {
+					local space "{space `ss'}"
+				}
+				else	local space
+				if !`factor' {
+					local val : display %9.0g `at'[`row',`j']
+					local val : list retok val
+				}
+				if `asbal' {
+					if `flushbal' {
+						local val
+					}
+					else {
+						local val "{space 12}"
+					}
+				}
+				else {
+					local len : length local val
+					local ss = 11 - `len'
+					if `ss' > 0 {
+						local val "{space `ss'}`val'"
+					}
+				}
+				if `factor' & !`asbal' {
+					local spec
+				}
+				if !inlist(`"`spec'"',	"",	///
+					"asobserved",			///
+					"value",				///
+					"values",				///
+					"zero") {
+					if !`hasby' {
+						if substr("`spec'",1,1) == "o" {
+							local spec = substr("`spec'",2,.)
+						}
+					}
+					local val `"`val' {txt:(`spec')}"'
+				}
+				if `allasobs' {
+					local pair `"`ind'{txt:(asobserved)}"'
+				}
+				else if `asbal' {
+					local pair "`ind'{txt:`name'}`space'  `val'"
+				}
+				else {
+					local pair "`ind'{txt:`name'}`space'{txt:=} `val'"
+				}
+				if `first' {
+					.Legend2 "`title'" `"`pair'"'
+					local first 0
+				}
+				else {
+					.Legend2 "" `"`pair'"'
+				}
+				if `allasobs' {
+					continue, break
+				}
+			}
+		}
+	}
+end
+
+program .Legend2
+	args name value
+	local len = strlen("`name'")
+	local c2 = 14
+	local c3 = 16
+	di "{txt}{p2colset 1 `c2' `c3' 2}{...}"
+	if `len' {
+		di `"{p2col:`name'}:{space 1}{res:`value'}{p_end}"'
+	}
+	else {
+		di `"{p2col: }{space 2}{res:`value'}{p_end}"'
+	}
+	di "{p2colreset}{...}"
+end
+
+/* 
+	end code from StataCorp */
+
+program .add_rtable
+	if (c(stata_version) < 12) {
+		exit 0
+			/* done */
+	}
+	args _vs
+	tempname rtable
+	matrix `rtable' = r(table`_vs')
+	_return restore `.rr'
+	mata : mimrgns_copy_st_matrix("`rtable'", "r(table`_vs')")
+	_return hold `.rr'
+end
+
+program .at_varies
+	local vvm `e(names_vvm_mi)'
+	local at at
+	class exit `: list at in vvm'
+end
+
+program .post
+	mata : mimrgns_set_cmd(`.is_cmdmargins', `.is_replay')
+	if ((`.is_replay') | (`.is_post')) {
+		exit 0	
+			/* done */
+	}
+	_estimates unhold `.er_mi'
+end
+
+mata :
+
+void mimrgns_combine_vs(real scalar is_nosmall)
+{
+	real scalar M, nu_c, gamma
+	real rowvector q, r, df, nu_obs
+	real matrix b, U, B, T
+	
+	b = st_matrix("r(b_vs_mi)")
+	M = rows(b)
+	U = st_matrix("r(V_vs_mi)") / M
+	q = mean(b)
+	B = ((b:-q)' * (b:-q)) / (M-1)
+	T = U + (1 + 1/M) * B
+	
+	if (!issymmetric(T)) {
+		if (mreldifsym(T) < strtoreal(st_local("settolerance"))) {
+			_makesymmetric(T)
+		}
+		else {
+			errprintf("covariance matrix not symmetric\n")
+			exit(499)
+		}
+	}
+	
+	r = (((1 + 1/M) * diagonal(B)):/diagonal(U))'	
+	df = (M-1) * (1 :+ 1:/r):^2
+	
+	if (!is_nosmall) {
+		nu_c = st_numscalar("r(df_r)")
+		if (nu_c != J(0, 0, .)) {
+			gamma = ((1 + 1/M) * (diagonal(B) :/ diagonal(T)))'
+			nu_obs = nu_c * (nu_c + 1) * (1 :- gamma) :/ (nu_c + 3)
+			df = 1 :/ ((1:/df) :+ (1:/nu_obs))
+		}
+	}
+	else {
+		if (st_global("e(dfadjust_mi)") == "Small sample") {
+			st_global("e(dfadjust_mi)", "Large sample")
+		}
+	}
+	
+	st_matrix("e(b_vs)", q)
+	st_matrixcolstripe("e(b_vs)", st_matrixcolstripe("r(b_vs)"))
+	
+	st_matrix("e(V_vs)", T)
+	st_matrixrowstripe("e(V_vs)", st_matrixrowstripe("r(V_vs)"))
+	st_matrixcolstripe("e(V_vs)", st_matrixcolstripe("r(V_vs)"))
+	
+	st_matrix("e(df_vs)", df)
+	st_matrixcolstripe("e(df_vs)", st_matrixcolstripe("r(b_vs)"))
+	
+	st_matrix("e(error_vs)", ((st_matrix("r(error_vs_mi)") :!= 0)*8))
+	
+	mimrgns_delete_st_matrix("r(b_vs_mi)")
+	mimrgns_delete_st_matrix("r(V_vs_mi)")
+	mimrgns_delete_st_matrix("r(df_vs_mi)")
+	mimrgns_delete_st_matrix("r(error_vs_mi)")
+}
+
+void mimrgns_combine_at(real scalar M)
+{
+	real matrix at
+	
+	at = st_matrix("r(at_mi)") / M
+	
+	st_matrix("e(at)", at)
+	st_matrixrowstripe("e(at)", st_matrixrowstripe("r(at)"))
+	st_matrixcolstripe("e(at)", st_matrixcolstripe("r(at)"))
+	
+	mimrgns_delete_st_matrix("r(at_mi)")
+}
+
+void mimrgns_return(real scalar is_cmdmargins)
+{
+	string rowvector vv
+	
+	/*
+		delete varying results from r() */
+	
+	vv = tokens(st_global("e(names_vvl_mi)"))
+	for (i = 1; i <= cols(vv); ++i) {
+		st_global("r(" + vv[i] + ")", "")
+	}
+	vv = tokens(st_global("e(names_vvm_mi)"))
+	for (i = 1; i <= cols(vv); ++i) {
+		mimrgns_delete_st_matrix("r(" + vv[i] + ")")
+	}
+	vv = tokens(st_global("e(names_vvs_mi)"))
+	for (i = 1; i <= cols(vv); ++i) {
+		mimrgns_delete_st_numscalar("r(" + vv[i] + ")")
+	}
+	
+	mimrgns_delete_st_global("r(overall)")
+	mimrgns_delete_st_matrix("r(k_groups)")
+	for (i = 1; i <= cols(st_matrix("r(b)")); ++i) {
+		mimrgns_delete_st_global("r(groups" + strofreal(i) + ")")
+	}
+	mimrgns_delete_st_matrix("r(chi2)")
+	mimrgns_delete_st_matrix("r(p)")
+	
+	/*
+		return results */
+	
+	st_numscalar("r(N)", st_numscalar("e(N_mi)"))
+	
+	if (stataversion() >= 1200) {
+		st_global_to_12("r(cmd_mimrgns)", "mimrgns", "hidden")
+		st_global_to_12("e(cmd_mimrgns)", "mimrgns", "hidden")
+	}
+	else {
+		st_global("r(cmd)", "margins")
+		st_global("r(cmd_mimrgns)", "mimrgns")
+		st_global("e(cmd_mimrgns)", "mimrgns")
+	}
+	
+	st_global("r(est_cmdline_margins)", st_global("e(cmdline)"))
+	st_global("r(est_cmdline_mi)", st_global("e(cmdline_mi)"))
+	st_global("r(cmdline)", st_macroexpand("mimrgns " + "`" + ".zero" + "'"))
+	
+	mimrgns_copy_st_matrix("e(error)", "r(error)")
+	mimrgns_copy_st_matrix("e(df_mi)", "r(df)")
+	mimrgns_copy_st_matrix("e(V)", "r(V)")
+	mimrgns_copy_st_matrix("e(b)", "r(b)")
+	
+	mimrgns_copy_st_matrix("e(error_vs)", "r(error_vs)")
+	mimrgns_copy_st_matrix("e(df_vs)", "r(df_vs)")
+	mimrgns_copy_st_matrix("e(V_vs)", "r(V_vs)")
+	mimrgns_copy_st_matrix("e(b_vs)", "r(b_vs)")
+	
+	mimrgns_copy_st_matrix("e(at)", "r(at)")
+}
+
+void st_global_to_12(
+	string scalar name, 
+	string scalar cont, 
+	string scalar hcat)
+{
+	st_global_12(name, cont, hcat)
+}
+
+void mimrgns_copy_st_matrix(
+	string scalar oname, 
+	string scalar nname, 
+	| string scalar hcat)
+{
+	string matrix rownames, colnames
+	
+	if (st_matrix(oname) == J(0, 0, .)) {
+		return
+	}
+	
+	rownames = st_matrixrowstripe(oname)
+	colnames = st_matrixcolstripe(oname)
+	
+	if ((stataversion() >= 1200) & (args() > 2)) {
+		st_matrix_to_12(nname, st_matrix(oname), hcat)
+	}
+	else {
+		st_matrix(nname, st_matrix(oname))
+	}
+	
+	st_matrixrowstripe(nname, rownames)
+	st_matrixcolstripe(nname, colnames)
+}
+
+void st_matrix_to_12(
+	string scalar name, 
+	real matrix mat, 
+	string scalar hcat)
+{
+	st_matrix_12(name, mat, hcat)
+}
+
+void mimrgns_delete_st_global(string scalar name)
+{
+	st_global(name, "")
+}
+
+void mimrgns_delete_st_numscalar(string scalar name)
+{
+	st_numscalar(name, J(0, 0, .))
+}
+
+void mimrgns_delete_st_matrix(string scalar name)
+{
+	st_matrix(name, J(0, 0, .))
+}
+
+void mimrgns_set_cmd(
+	real scalar is_cmdmargins, 
+	real scalar is_replay)
+{	
+	if (is_cmdmargins) {
+		if (st_global("e(cmd)") == "mimrgns") {
+			st_global("e(cmd)", "margins")
+			if (!is_replay) {
+				st_global("r(cmd)", "margins")
+			}
+		}
+		else if (st_global("e(cmd2)") == "mimrgns") {
+			st_global("e(cmd2)", "margins")
+			if (!is_replay) {
+				st_global("r(cmd2)", "margins")
+			}
+		}
+	}
+	else {
+		if (st_global("e(cmd)") == "margins") {
+			st_global("e(cmd)", "mimrgns")
+			if (!is_replay) {
+				st_global("r(cmd)", "mimrgns")
+			}
+		}
+		else if (st_global("e(cmd2)") == "margins") {
+			st_global("e(cmd2)", "mimrgns")
+			if (!is_replay) {
+				st_global("r(cmd2)", "mimrgns")
+			}
+		}
+	}
+}
+
+end
+
+if (c(stata_version) < 12) {
+	exit 0
+}
+
+mata :
+
+void st_global_12(
+	string scalar name, 
+	string scalar cont,
+	| string scalar cat)
+{
+	st_global(name, cont, cat)
+}
+
+void st_matrix_12(
+	string scalar name,
+	real matrix mat,
+	string scalar hcat)
+{
+	st_matrix(name, mat, hcat)
+}
+
+end
+exit
+
+2.3.0	07apr2017	tolerance for non-symmetric matrix set to 1e-14
+					new option settolerance() (not documented)
+2.2.1	11feb2017	adjust output for multiple predictions (Stata 14)
+2.2.0	03nov2016	fix bug with marginlist and contrast option
+					allow contrast(atcontrast()) option
+					return r(at) despite varying results
+					copy AtLegend and Legend from _marg_report
+2.1.0	05aug2016	copy -cmdok- option from previous -mi- call
+					new mi options -errorok- and -esampvaryok-
+2.0.0	28jun2016	new using syntax works with ster-files
+					new syntax can replay() results
+					changed returned results
+					return r(table) and r(table_vs)
+					fix bug df correction for pwcompare
+					margins option -nose- no longer allowed
+					margins option -saving()- no longer allowed
+					fix bug with -noatlegend- option
+1.1.2	01feb2016	fix small bug in .get_xvars
+					(never released)
+1.1.1	15jan2016 	fix bug in mimrgns_return()
+1.1.0 	18aug2015 	report legend despite varying -at- values
+					remove results reported in names_vv* by mi
+					ignore -cmdmargins- with varying -at-
+1.0.0 	02jul2015 	first sent to SSC

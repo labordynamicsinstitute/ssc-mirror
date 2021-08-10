@@ -1,0 +1,1108 @@
+<html>
+
+<head>
+<title>estout - Making Regression Tables in Stata</title>
+<meta name="author" content="Ben Jann">
+<meta name="keywords" content="Stata, estout, esttab, eststo, estadd,
+      LaTeX, regression table, statistics">
+<meta http-equiv="content-language" content="en">
+<meta http-equiv="content-type" content="text/html">
+<link rel="stylesheet" href="default.css" type="text/css">
+</head>
+
+<body>
+
+<div id="pagehead">
+
+<form style="text-align:right; border:0px; margin: 2.17em 0px 0px 0px; padding:5px 15px 0px 0px; float:right"
+ "method=GET action="http://www.google.com/search">
+    <input style="border-style:solid; border-color: #bcd" TYPE=text name=q size="15">
+    <INPUT TYPE=hidden name=sitesearch value="repec.org/bocode/e/estout">
+    <input style="border:0px; background-color: #F3F6F9"
+     type=submit name=sa value="search">
+</form>
+
+   <a href="index.html"><h1>estout</h1></a>
+   <p>Making Regression Tables in Stata<p>
+
+</div>
+
+<div id="pagebar">
+   <ul>
+     <li><a href="index.html">Overview</a>
+     </li>
+     <li><a href="installation.html">Installation</a>
+     </li>
+     <li><a href="examples.html">Examples</a>
+     <ul>
+          <li><a href="esttab.html">esttab</a>
+          </li>
+          <li><a href="estout.html">estout</a>
+          </li>
+          <li><a href="eststo.html">eststo</a>
+          </li>
+          <li><a href="estadd.html">estadd</a>
+          </li>
+          <li><a href="estpost.html">estpost</a>
+          </li>
+          <li><a href="advanced.html">Advanced</a>
+          </li>
+          <li><a href="spost.html">SPost</a>
+          </li>
+     </ul>
+     </li>
+     <li><a href="documentation.html">Documentation</a>
+     <ul>
+          <li><a href="hlp_esttab.html">esttab</a>
+          </li>
+          <li><a href="hlp_estout.html">estout</a>
+          </li>
+          <li><a href="hlp_eststo.html">eststo</a>
+          </li>
+          <li><a href="hlp_estadd.html">estadd</a>
+          </li>
+          <li><a href="hlp_estpost.html">estpost</a>
+          </li>
+     </ul>
+     </li>
+     <li><a href="history.html">History</a>
+     </li>
+     <li><a href="publications.html">Publications</a>
+     </li>
+     <li><a href="author.html">Author</a>
+     </li>
+     <li><a href="alsosee.html">Also see</a>
+     </li>
+   </ul>
+
+</div>
+
+<div id="pagebody">
+<h1>Documentation for estpost</h1>
+<pre>
+<b>help estpost</b>                           also see: <a href="hlp_esttab.html"><b>esttab</b></a>, <a href="hlp_estout.html"><b>estout</b></a>, <a href="hlp_eststo.html"><b>eststo</b></a>, <a href="hlp_estadd.html"><b>estadd</b></a>
+                                               http://repec.org/bocode/e/estout
+-------------------------------------------------------------------------------
+
+<b><u>Title</u></b>
+
+    <b>estpost</b> -- Post results from various commands in <b>e()</b>
+
+
+<b><u>Syntax</u></b>
+
+        <b>estpost</b> <a href="hlp_estpost.html#commands"><i>command</i></a> [...]
+
+<a name="commands"></a>
+    <i>command</i>              description
+    ----------------------------------------------------------------
+    <a href="hlp_estpost.html#summarize"><b><u>su</u></b></a><a href="hlp_estpost.html#summarize"><b>mmarize</b></a>            post summary statistics
+    <a href="hlp_estpost.html#tabstat"><b>tabstat</b></a>              post summary statistics
+    <a href="hlp_estpost.html#ttest"><b>ttest</b></a>                post two-group mean-comparison tests
+    <a href="hlp_estpost.html#prtest"><b>prtest</b></a>               post two-group tests of proportions
+    <a href="hlp_estpost.html#tabulate"><b><u>ta</u></b></a><a href="hlp_estpost.html#tabulate"><b>bulate</b></a>             post one-way or two-way frequency table
+    <a href="hlp_estpost.html#svy_tabulate"><b>svy: </b></a><a href="hlp_estpost.html#svy_tabulate"><b><u>ta</u></b></a><a href="hlp_estpost.html#svy_tabulate"><b>bulate</b></a>        post frequency table for survey data
+    <a href="hlp_estpost.html#correlate"><b><u>cor</u></b></a><a href="hlp_estpost.html#correlate"><b>relate</b></a>            post correlations
+    <a href="hlp_estpost.html#ci"><b>ci</b></a>                   post confidence intervals for means,
+                             proportions, or counts
+    <a href="hlp_estpost.html#stci"><b>stci</b></a>                 post confidence intervals for means
+                             and percentiles of survival time
+    ----------------------------------------------------------------
+
+
+<b><u>Description</u></b>
+
+    <b>estpost</b> posts results from various Stata commands in <b>e()</b> so that they can
+    be tabulated using <a href="hlp_esttab.html"><b>esttab</b></a> or <a href="hlp_estout.html"><b>estout</b></a>. Type <a href="http://www.stata.com/help.cgi?ereturn"><b>ereturn list</b></a> after <b>estpost</b> to
+    list the elements saved in <b>e()</b>.
+
+
+<b><u>Commands</u></b>
+<a name="summarize"></a>
+        +-----------+
+    ----+ summarize +--------------------------------------------------------
+
+    <b>estpost</b> <b><u>su</u></b><b>mmarize</b> [<a href="http://www.stata.com/help.cgi?varlist"><i>varlist</i></a>] [<a href="http://www.stata.com/help.cgi?if"><i>if</i></a>] [<a href="http://www.stata.com/help.cgi?in"><i>in</i></a>] [<a href="http://www.stata.com/help.cgi?weight"><i>weight</i></a>] [<b>,</b> <b><u>d</u></b><b>etail</b> <b><u>mean</u></b><b>only</b>
+               <b><u>list</u></b><b>wise</b> <b><u>case</u></b><b>wise</b> <b><u>q</u></b><b>uietly</b> <b><u>es</u></b><b>ample</b> ]
+
+    posts summary statistics computed by <a href="http://www.stata.com/help.cgi?summarize"><b>summarize</b></a>. If no <i>varlist</i> is
+    specified, summary statistics are calculated for all variables in the
+    dataset.
+
+    <b>aweight</b>s, <b>fweight</b>s, and <b>iweight</b>s are allowed (however, <b>iweight</b>s may not
+    be used with the <b>detail</b> option); see <a href="http://www.stata.com/help.cgi?weight">weight</a>.
+
+    Options are:
+
+        <b>detail</b> and <b>meanonly</b> as described in help <a href="http://www.stata.com/help.cgi?summarize"><b>summarize</b></a>.
+
+        <b>listwise</b> to handle missing values through listwise deletion, meaning
+            that an observation is omitted from the estimation sample if any
+            of the variables in <i>varlist</i> is missing for that observation. The
+            default is to determine the used observations for each variable
+            separately without regard to whether other variables are missing.
+            <b>casewise</b> is a synonym for <b>listwise</b>.
+
+        <b>quietly</b> to suppress the output.
+
+        <b>esample</b> to mark the estimation sample in <b>e(sample)</b>.
+
+    The following results vectors are saved in <b>e()</b>:
+
+        <b>e(count)</b>     number of observations
+        <b>e(mean)</b>      mean
+        <b>e(min)</b>       minimum
+        <b>e(max)</b>       maximum
+        <b>e(sum)</b>       sum of variable
+        <b>e(sum_w)</b>     sum of the weights
+        <b>e(Var)</b>       variance (unless <b>meanonly</b>)
+        <b>e(sd)</b>        standard deviation (unless <b>meanonly</b>)
+        <b>e(p1)</b>        1st percentile (<b>detail</b> only)
+        <b>e(p5)</b>        5th percentile (<b>detail</b> only)
+        <b>e(p10)</b>       10th percentile (<b>detail</b> only)
+        <b>e(p25)</b>       25th percentile (<b>detail</b> only)
+        <b>e(p50)</b>       50th percentile (<b>detail</b> only)
+        <b>e(p75)</b>       75th percentile (<b>detail</b> only)
+        <b>e(p90)</b>       90th percentile (<b>detail</b> only)
+        <b>e(p95)</b>       95th percentile (<b>detail</b> only)
+        <b>e(p99)</b>       99th percentile (<b>detail</b> only)
+        <b>e(skewness)</b>  skewness (<b>detail</b> only)
+        <b>e(kurtosis)</b>  kurtosis (<b>detail</b> only)
+
+    Example:
+
+        . sysuse auto, clear
+        (1978 Automobile Data)
+        
+        . estpost summarize price mpg rep78 foreign
+        
+                     |  e(count)   e(sum_w)    e(mean)     e(Var)      e(sd) 
+        -------------+-------------------------------------------------------
+               price | <b>       74</b>  <b>       74</b>  <b> 6165.257</b>  <b>  8699526</b>  <b> 2949.496</b> 
+                 mpg | <b>       74</b>  <b>       74</b>  <b>  21.2973</b>  <b> 33.47205</b>  <b> 5.785503</b> 
+               rep78 | <b>       69</b>  <b>       69</b>  <b> 3.405797</b>  <b> .9799659</b>  <b> .9899323</b> 
+             foreign | <b>       74</b>  <b>       74</b>  <b> .2972973</b>  <b> .2117734</b>  <b> .4601885</b> 
+        
+                     |    e(min)     e(max)     e(sum) 
+        -------------+---------------------------------
+               price | <b>     3291</b>  <b>    15906</b>  <b>   456229</b> 
+                 mpg | <b>       12</b>  <b>       41</b>  <b>     1576</b> 
+               rep78 | <b>        1</b>  <b>        5</b>  <b>      235</b> 
+             foreign | <b>        0</b>  <b>        1</b>  <b>       22</b> 
+        
+        . esttab ., cells("mean sd count") noobs
+        
+<b>        </b>---------------------------------------------------
+                              (1)                          
+                                                           
+                             mean           sd        count
+        ---------------------------------------------------
+        price       <b>     6165.257     2949.496           74</b>
+        mpg         <b>      21.2973     5.785503           74</b>
+        rep78       <b>     3.405797     .9899323           69</b>
+        foreign     <b>     .2972973     .4601885           74</b>
+        ---------------------------------------------------
+
+<a name="tabstat"></a>
+        +---------+
+    ----+ tabstat +----------------------------------------------------------
+
+    <b>estpost</b> <b>tabstat</b> <a href="http://www.stata.com/help.cgi?varlist"><i>varlist</i></a> [<a href="http://www.stata.com/help.cgi?if"><i>if</i></a>] [<a href="http://www.stata.com/help.cgi?in"><i>in</i></a>] [<a href="http://www.stata.com/help.cgi?weight"><i>weight</i></a>] [<b>,</b> <b><u>s</u></b><b>tatistics(</b><a href="http://www.stata.com/help.cgi?tabstat#statname"><i>statname</i></a> [<i>...</i>]<b>)</b>
+               <b><u>c</u></b><b>olumns(</b><b><u>v</u></b><b>ariables</b>|<b><u>s</u></b><b>tatistics)</b> <b>by(</b><i>varname</i><b>)</b> <b><u>not</u></b><b>otal</b> <b><u>m</u></b><b>issing</b>
+               <b><u>list</u></b><b>wise</b> <b><u>case</u></b><b>wise</b> <b><u>q</u></b><b>uietly</b> <b><u>es</u></b><b>ample</b> ]
+
+    posts summary statistics computed by <a href="http://www.stata.com/help.cgi?tabstat"><b>tabstat</b></a>. <b>aweight</b>s and <b>fweight</b>s are
+    allowed; see <a href="http://www.stata.com/help.cgi?weight">weight</a>.
+
+    Options are:
+
+        <b>statistics()</b>, <b>columns()</b>, <b>by()</b>, <b>nototal</b>, and <b>missing</b> as described in
+            help <a href="http://www.stata.com/help.cgi?tabstat"><b>tabstat</b></a>.
+
+        <b>listwise</b> to handle missing values through listwise deletion, meaning
+            that an observation is omitted from the estimation sample if any
+            of the variables in <i>varlist</i> is missing for that observation. The
+            default is to determine the used observations for each variable
+            separately without regard to whether other variables are missing.
+            <b>casewise</b> is a synonym for <b>listwise</b>.
+
+        <b>quietly</b> to suppress the output.
+
+        <b>esample</b> to mark the estimation sample in <b>e(sample)</b>.
+
+    A vector of results is saved in <b>e()</b> for each specified variable or
+    statistic, depending on <b>columns()</b>.
+
+    Examples:
+
+        . sysuse auto, clear
+        (1978 Automobile Data)
+        
+        . estpost tabstat price mpg rep78, listwise ///
+        &gt;     statistics(mean sd)
+        
+        Summary statistics: mean sd
+             for variables: price mpg rep78
+        
+                     |  e(price)     e(mpg)   e(rep78) 
+        -------------+---------------------------------
+                mean | <b> 6146.043</b>  <b> 21.28986</b>  <b> 3.405797</b> 
+                  sd | <b>  2912.44</b>  <b> 5.866408</b>  <b> .9899323</b> 
+        
+        . esttab ., cells("price mpg rep78")
+        
+<b>        </b>---------------------------------------------------
+                              (1)                          
+                                                           
+                            price          mpg        rep78
+        ---------------------------------------------------
+        mean        <b>     6146.043     21.28986     3.405797</b>
+        sd          <b>      2912.44     5.866408     .9899323</b>
+        ---------------------------------------------------
+        N           <b>           69                          </b>
+        ---------------------------------------------------
+        
+        . estpost tabstat price mpg rep78, listwise ///
+        &gt;     statistics(mean sd) columns(statistics)
+        
+        Summary statistics: mean sd
+             for variables: price mpg rep78
+        
+                     |   e(mean)      e(sd) 
+        -------------+----------------------
+               price | <b> 6146.043</b>  <b>  2912.44</b> 
+                 mpg | <b> 21.28986</b>  <b> 5.866408</b> 
+               rep78 | <b> 3.405797</b>  <b> .9899323</b> 
+        
+        . esttab ., cells("mean(fmt(a3)) sd")
+        
+<b>        </b>--------------------------------------
+                              (1)             
+                                              
+                             mean           sd
+        --------------------------------------
+        price       <b>       6146.0       2912.4</b>
+        mpg         <b>        21.29        5.866</b>
+        rep78       <b>        3.406        0.990</b>
+        --------------------------------------
+        N           <b>           69             </b>
+        --------------------------------------
+        
+        . estpost tabstat price mpg rep78, by(foreign) ///
+        &gt;     statistics(mean sd) columns(statistics) listwise
+        
+        Summary statistics: mean sd
+             for variables: price mpg rep78
+          by categories of: foreign
+        
+             foreign |   e(mean)      e(sd) 
+        -------------+----------------------
+        <b>Domestic     </b>|                      
+               price | <b>  6179.25</b>  <b> 3188.969</b> 
+                 mpg | <b> 19.54167</b>  <b> 4.753312</b> 
+               rep78 | <b> 3.020833</b>  <b>  .837666</b> 
+        -------------+----------------------
+        <b>Foreign      </b>|                      
+               price | <b> 6070.143</b>  <b> 2220.984</b> 
+                 mpg | <b> 25.28571</b>  <b> 6.309856</b> 
+               rep78 | <b> 4.285714</b>  <b> .7171372</b> 
+        -------------+----------------------
+        <b>Total        </b>|                      
+               price | <b> 6146.043</b>  <b>  2912.44</b> 
+                 mpg | <b> 21.28986</b>  <b> 5.866408</b> 
+               rep78 | <b> 3.405797</b>  <b> .9899323</b> 
+        
+        . esttab ., main(mean) aux(sd) nostar unstack ///
+        &gt;     noobs nonote label
+        
+<b>        </b>-----------------------------------------------------------
+                                      (1)                          
+                                                                   
+                                 Domestic      Foreign        Total
+        -----------------------------------------------------------
+        Price               <b>       6179.3       6070.1       6146.0</b>
+                            <b>     </b>(<b>3189.0</b>)<b>     </b>(<b>2221.0</b>)<b>     </b>(<b>2912.4</b>)
+        
+        Mileage (mpg)       <b>        19.54        25.29        21.29</b>
+                            <b>      </b>(<b>4.753</b>)<b>      </b>(<b>6.310</b>)<b>      </b>(<b>5.866</b>)
+        
+        Repair Record 1978  <b>        3.021        4.286        3.406</b>
+                            <b>      </b>(<b>0.838</b>)<b>      </b>(<b>0.717</b>)<b>      </b>(<b>0.990</b>)
+        -----------------------------------------------------------
+
+<a name="ttest"></a>
+        +-------+
+    ----+ ttest +------------------------------------------------------------
+
+    <b>estpost</b> <b>ttest</b> <a href="http://www.stata.com/help.cgi?varlist"><i>varlist</i></a> [<a href="http://www.stata.com/help.cgi?if"><i>if</i></a>] [<a href="http://www.stata.com/help.cgi?in"><i>in</i></a>]<b>,</b> <b>by(</b><i>groupvar</i><b>)</b> [ <b><u>une</u></b><b>qual</b> <b><u>w</u></b><b>elch</b> <b><u>list</u></b><b>wise</b>
+               <b><u>case</u></b><b>wise</b> <b><u>q</u></b><b>uietly</b> <b><u>es</u></b><b>ample</b> ]
+
+    posts two-group mean-comparison tests computed by <a href="http://www.stata.com/help.cgi?ttest"><b>ttest</b></a>.
+
+    Options are:
+
+        <b>by()</b>, <b>unequal</b>, and <b>welch</b> as described in help <a href="http://www.stata.com/help.cgi?ttest"><b>ttest</b></a>.
+
+        <b>listwise</b> to handle missing values through listwise deletion, meaning
+            that an observation is omitted from the estimation sample if any
+            of the variables in <i>varlist</i> is missing for that observation. The
+            default is to determine the used observations for each variable
+            separately without regard to whether other variables are missing.
+            <b>casewise</b> is a synonym for <b>listwise</b>.
+
+        <b>quietly</b> to suppress the output.
+
+        <b>esample</b> to mark the estimation sample in <b>e(sample)</b>.
+
+    The following results vectors are saved in <b>e()</b>:
+
+        <b>e(b)</b>         mean difference
+        <b>e(count)</b>     number of observations
+        <b>e(se)</b>        standard error of difference
+        <b>e(t)</b>         t statistic
+        <b>e(df_t)</b>      degrees of freedom
+        <b>e(p_l)</b>       lower one-sided p-value
+        <b>e(p)</b>         two-sided p-value
+        <b>e(p_u)</b>       upper one-sided p-value
+        <b>e(N_1)</b>       number of observations in group 1
+        <b>e(mu_1)</b>      mean in group 1
+        <b>e(N_2)</b>       number of observations in group 2
+        <b>e(mu_2)</b>      mean in group 2
+
+    Example:
+
+        . sysuse auto, clear
+        (1978 Automobile Data)
+        
+        . estpost ttest price mpg headroom trunk, by(foreign)
+        
+                     |      e(b)   e(count)      e(se)       e(t)    e(df_t) 
+        -------------+-------------------------------------------------------
+               price | <b>-312.2587</b>  <b>       74</b>  <b> 754.4488</b>  <b>-.4138899</b>  <b>       72</b> 
+                 mpg | <b>-4.945804</b>  <b>       74</b>  <b> 1.362162</b>  <b>-3.630848</b>  <b>       72</b> 
+            headroom | <b> .5402098</b>  <b>       74</b>  <b> .2070884</b>  <b> 2.608596</b>  <b>       72</b> 
+               trunk | <b> 3.340909</b>  <b>       74</b>  <b> 1.022208</b>  <b> 3.268327</b>  <b>       72</b> 
+        
+                     |    e(p_l)       e(p)     e(p_u)     e(N_1)    e(mu_1) 
+        -------------+-------------------------------------------------------
+               price | <b> .3400925</b>  <b> .6801851</b>  <b> .6599075</b>  <b>       52</b>  <b> 6072.423</b> 
+                 mpg | <b> .0002627</b>  <b> .0005254</b>  <b> .9997373</b>  <b>       52</b>  <b> 19.82692</b> 
+            headroom | <b> .9944757</b>  <b> .0110486</b>  <b> .0055243</b>  <b>       52</b>  <b> 3.153846</b> 
+               trunk | <b>   .99917</b>  <b>   .00166</b>  <b>   .00083</b>  <b>       52</b>  <b>    14.75</b> 
+        
+                     |    e(N_2)    e(mu_2) 
+        -------------+----------------------
+               price | <b>       22</b>  <b> 6384.682</b> 
+                 mpg | <b>       22</b>  <b> 24.77273</b> 
+            headroom | <b>       22</b>  <b> 2.613636</b> 
+               trunk | <b>       22</b>  <b> 11.40909</b> 
+        
+        . esttab ., wide
+        
+<b>        </b>-----------------------------------------
+                              (1)                
+                                                 
+        -----------------------------------------
+        price       <b>       -312.3         </b>(<b>-0.41</b>)
+        mpg         <b>       -4.946***      </b>(<b>-3.63</b>)
+        headroom    <b>        0.540*         </b>(<b>2.61</b>)
+        trunk       <b>        3.341**        </b>(<b>3.27</b>)
+        -----------------------------------------
+        N           <b>           74                </b>
+        -----------------------------------------
+        t statistics in parentheses
+        * p&lt;0.05, ** p&lt;0.01, *** p&lt;0.001
+
+<a name="prtest"></a>
+        +--------+
+    ----+ prtest +-----------------------------------------------------------
+
+    <b>estpost</b> <b>prtest</b> <a href="http://www.stata.com/help.cgi?varlist"><i>varlist</i></a> [<a href="http://www.stata.com/help.cgi?if"><i>if</i></a>] [<a href="http://www.stata.com/help.cgi?in"><i>in</i></a>]<b>,</b> <b>by(</b><i>groupvar</i><b>)</b> [ <b><u>list</u></b><b>wise</b> <b><u>case</u></b><b>wise</b>
+               <b><u>q</u></b><b>uietly</b> <b><u>es</u></b><b>ample</b> ]
+
+    posts two-group tests of proportions computed by <a href="http://www.stata.com/help.cgi?prtest"><b>prtest</b></a>.
+
+    Options are:
+
+        <b>by()</b> as described in help <a href="http://www.stata.com/help.cgi?prtest"><b>prtest</b></a>.
+
+        <b>listwise</b> to handle missing values through listwise deletion, meaning
+            that an observation is omitted from the estimation sample if any
+            of the variables in <i>varlist</i> is missing for that observation. The
+            default is to determine the used observations for each variable
+            separately without regard to whether other variables are missing.
+            <b>casewise</b> is a synonym for <b>listwise</b>.
+
+        <b>quietly</b> to suppress the output.
+
+        <b>esample</b> to mark the estimation sample in <b>e(sample)</b>.
+
+    The following results vectors are saved in <b>e()</b>:
+
+        <b>e(b)</b>         difference in proportions
+        <b>e(count)</b>     number of observations
+        <b>e(se)</b>        standard error of difference
+        <b>e(se0)</b>       standard error under Ho
+        <b>e(z)</b>         z statistic
+        <b>e(p_l)</b>       lower one-sided p-value
+        <b>e(p)</b>         two-sided p-value
+        <b>e(p_u)</b>       upper one-sided p-value
+        <b>e(N_1)</b>       number of observations in group 1
+        <b>e(P_1)</b>       proportion in group 1
+        <b>e(N_2)</b>       number of observations in group 2
+        <b>e(P_2)</b>       proportion in group 2
+
+    Example:
+
+        . webuse cure2, clear
+        
+        . estpost prtest cure, by(sex)
+        
+                     |      e(b)   e(count)      e(se)     e(se0)       e(z) 
+        -------------+-------------------------------------------------------
+                cure | <b>-.0729167</b>  <b>      109</b>  <b> .0933123</b>  <b> .0942404</b>  <b>-.7737309</b> 
+        
+                     |    e(p_l)       e(p)     e(p_u)     e(N_1)     e(P_1) 
+        -------------+-------------------------------------------------------
+                cure | <b>  .219545</b>  <b>   .43909</b>  <b>  .780455</b>  <b>       64</b>  <b>   .59375</b> 
+        
+                     |    e(N_2)     e(P_2) 
+        -------------+----------------------
+                cure | <b>       45</b>  <b> .6666667</b> 
+        
+        . esttab ., cell("b se0 z p")
+        
+<b>        </b>----------------------------------------------------------------
+                              (1)                                       
+                                                                        
+                                b          se0            z            p
+        ----------------------------------------------------------------
+        cure        <b>    -.0729167     .0942404    -.7737309       .43909</b>
+        ----------------------------------------------------------------
+        N           <b>          109                                       </b>
+        ----------------------------------------------------------------
+
+<a name="tabulate"></a>
+        +----------+
+    ----+ tabulate +---------------------------------------------------------
+
+    One-way table:
+
+        <b>estpost</b> <b><u>ta</u></b><b>bulate</b> <i>varname</i> [<a href="http://www.stata.com/help.cgi?if"><i>if</i></a>] [<a href="http://www.stata.com/help.cgi?in"><i>in</i></a>] [<a href="http://www.stata.com/help.cgi?weight"><i>weight</i></a>] [<b>,</b> <b><u>m</u></b><b>issing</b> <b><u>nol</u></b><b>abel</b> <b>sort</b>
+               <b>subpop(</b><i>varname</i><b>)</b> <b><u>notot</u></b><b>al</b> <b><u>q</u></b><b>uietly</b> <b><u>es</u></b><b>ample</b> ]
+
+    Two-way table:
+
+        <b>estpost</b> <b><u>ta</u></b><b>bulate</b> <i>varname1</i> <i>varname2</i> [<a href="http://www.stata.com/help.cgi?if"><i>if</i></a>] [<a href="http://www.stata.com/help.cgi?in"><i>in</i></a>] [<a href="http://www.stata.com/help.cgi?weight"><i>weight</i></a>] [<b>,</b> <b><u>m</u></b><b>issing</b>
+               <b><u>nol</u></b><b>abel</b> <b><u>ch</u></b><b>i2</b> <b><u>e</u></b><b>xact</b>[<b>(</b><i>#</i><b>)</b>] <b><u>g</u></b><b>amma</b> <b><u>lr</u></b><b>chi2</b> <b><u>t</u></b><b>aub</b> <b>v</b> <b><u>notot</u></b><b>al</b> <b><u>q</u></b><b>uietly</b>
+               <b><u>es</u></b><b>ample</b> ]
+
+    <b>estpost tabulate</b> posts a one-way or two-way table computed by <a href="http://www.stata.com/help.cgi?tabulate"><b>tabulate</b></a>.
+    <b>aweight</b>s, <b>fweight</b>s, and <b>iweight</b>s are allowed; see <a href="http://www.stata.com/help.cgi?weight">weight</a>.
+
+    Options are:
+
+        <b>missing</b>, <b>nolabel</b>, <b>sort</b>, <b>subpop()</b>, <b>chi2</b>, <b>exact</b>, <b>gamma</b>, <b>lrchi2</b>, <b>taub</b>,
+            and <b>v</b> as described in help <a href="http://www.stata.com/help.cgi?tabulate"><b>tabulate</b></a>.
+
+        <b>nototal</b> to omit row and column totals.
+
+        <b>quietly</b> to suppress the output.
+
+        <b>esample</b> to mark the estimation sample in <b>e(sample)</b>.
+
+    The following vectors are saved in <b>e()</b>:
+
+        <b>e(b)</b>         frequency counts
+        <b>e(pct)</b>       percent
+        <b>e(cumpct)</b>    cumulative percent (one-way only)
+        <b>e(colpct)</b>    column percent (two-way only)
+        <b>e(rowpct)</b>    row percent (two-way only)
+
+    If two-way options such as, e.g., <b>chi2</b> or <b>exact</b> are specified, the
+    results of the tests added as scalars in <b>e()</b> using the names documented
+    in <a href="http://www.stata.com/help.cgi?tabulate"><b>[R] tabulate</b></a>.
+
+    The value labels of the row variable are stored as names in the saved
+    vectors, unless no label exceeds 30 characters or contains unsuitable
+    characters in which case the labels are stored in macro <b>e(labels)</b>. Type
+    <b>varlabels(`e(labels)')</b> in <a href="hlp_esttab.html"><b>esttab</b></a> or <a href="hlp_estout.html"><b>estout</b></a> to use the labels stored
+    <b>e(labels)</b>. The value labels of the column variable are stored as equation
+    names or, alternatively, in macro <b>e(eqlabels)</b>. Type
+    <b>eqlabels(`e(eqlabels)')</b> in <a href="hlp_esttab.html"><b>esttab</b></a> or <a href="hlp_estout.html"><b>estout</b></a> to use the labels stored in
+    <b>e(eqlabels)</b>.
+
+    Examples:
+
+        . sysuse auto, clear
+        (1978 Automobile Data)
+        
+        . estpost tabulate foreign
+        
+             foreign |      e(b)     e(pct)  e(cumpct) 
+        -------------+---------------------------------
+            Domestic | <b>       52</b>  <b> 70.27027</b>  <b> 70.27027</b> 
+             Foreign | <b>       22</b>  <b> 29.72973</b>  <b>      100</b> 
+        -------------+---------------------------------
+               Total | <b>       74</b>  <b>      100</b>  <b>         </b> 
+        
+        . esttab ., cells("b pct(fmt(2)) cumpct(fmt(2))") noobs
+        
+<b>        </b>---------------------------------------------------
+                              (1)                          
+                          foreign                          
+                                b          pct       cumpct
+        ---------------------------------------------------
+        Domestic    <b>           52        70.27        70.27</b>
+        Foreign     <b>           22        29.73       100.00</b>
+        Total       <b>           74       100.00             </b>
+        ---------------------------------------------------
+        
+        . estpost tabulate rep78 foreign
+        
+        <b>foreign     </b> |                                            
+               rep78 |      e(b)     e(pct)  e(colpct)  e(rowpct) 
+        -------------+--------------------------------------------
+        <b>Domestic     </b>|                                            
+                   1 | <b>        2</b>  <b> 2.898551</b>  <b> 4.166667</b>  <b>      100</b> 
+                   2 | <b>        8</b>  <b>  11.5942</b>  <b> 16.66667</b>  <b>      100</b> 
+                   3 | <b>       27</b>  <b> 39.13043</b>  <b>    56.25</b>  <b>       90</b> 
+                   4 | <b>        9</b>  <b> 13.04348</b>  <b>    18.75</b>  <b>       50</b> 
+                   5 | <b>        2</b>  <b> 2.898551</b>  <b> 4.166667</b>  <b> 18.18182</b> 
+               Total | <b>       48</b>  <b> 69.56522</b>  <b>      100</b>  <b> 69.56522</b> 
+        -------------+--------------------------------------------
+        <b>Foreign      </b>|                                            
+                   1 | <b>        0</b>  <b>        0</b>  <b>        0</b>  <b>        0</b> 
+                   2 | <b>        0</b>  <b>        0</b>  <b>        0</b>  <b>        0</b> 
+                   3 | <b>        3</b>  <b> 4.347826</b>  <b> 14.28571</b>  <b>       10</b> 
+                   4 | <b>        9</b>  <b> 13.04348</b>  <b> 42.85714</b>  <b>       50</b> 
+                   5 | <b>        9</b>  <b> 13.04348</b>  <b> 42.85714</b>  <b> 81.81818</b> 
+               Total | <b>       21</b>  <b> 30.43478</b>  <b>      100</b>  <b> 30.43478</b> 
+        -------------+--------------------------------------------
+        <b>Total        </b>|                                            
+                   1 | <b>        2</b>  <b> 2.898551</b>  <b> 2.898551</b>  <b>      100</b> 
+                   2 | <b>        8</b>  <b>  11.5942</b>  <b>  11.5942</b>  <b>      100</b> 
+                   3 | <b>       30</b>  <b> 43.47826</b>  <b> 43.47826</b>  <b>      100</b> 
+                   4 | <b>       18</b>  <b> 26.08696</b>  <b> 26.08696</b>  <b>      100</b> 
+                   5 | <b>       11</b>  <b> 15.94203</b>  <b> 15.94203</b>  <b>      100</b> 
+               Total | <b>       69</b>  <b>      100</b>  <b>      100</b>  <b>      100</b> 
+        
+        . esttab ., cell(colpct(fmt(2))) unstack noobs
+        
+<b>        </b>---------------------------------------------------
+                              (1)                          
+                                                           
+                         Domestic      Foreign        Total
+                           colpct       colpct       colpct
+        ---------------------------------------------------
+        1           <b>         4.17         0.00         2.90</b>
+        2           <b>        16.67         0.00        11.59</b>
+        3           <b>        56.25        14.29        43.48</b>
+        4           <b>        18.75        42.86        26.09</b>
+        5           <b>         4.17        42.86        15.94</b>
+        Total       <b>       100.00       100.00       100.00</b>
+        ---------------------------------------------------
+        
+        . esttab ., cell(colpct(fmt(2)) count(fmt(g) par keep(Total))) ///
+        &gt;     collabels(none) unstack noobs nonumber nomtitle          ///
+        &gt;     eqlabels(, lhs("Repair Rec."))                           ///
+        &gt;     varlabels(, blist(Total "{hline @width}{break}"))
+        
+<b>        </b>---------------------------------------------------
+        Repair Rec.      Domestic      Foreign        Total
+        ---------------------------------------------------
+        1           <b>         4.17         0.00         2.90</b>
+        2           <b>        16.67         0.00        11.59</b>
+        3           <b>        56.25        14.29        43.48</b>
+        4           <b>        18.75        42.86        26.09</b>
+        5           <b>         4.17        42.86        15.94</b>
+        ---------------------------------------------------
+        Total       <b>       100.00       100.00       100.00</b>
+                    <b>                                       </b>
+        ---------------------------------------------------
+
+<a name="svy_tabulate"></a>
+        +---------------+
+    ----+ svy: tabulate +----------------------------------------------------
+
+    One-way table:
+
+        <b>estpost</b> <b>svy</b> [<i>vcetype</i>] [, <i>svy_options</i>] <b>:</b> <b><u>ta</u></b><b>bulate</b> <i>varname</i> [<a href="http://www.stata.com/help.cgi?if"><i>if</i></a>] [<a href="http://www.stata.com/help.cgi?in"><i>in</i></a>] [<b>,</b>
+               <b><u>notot</u></b><b>al</b> <b><u>q</u></b><b>uietly</b> <b><u>es</u></b><b>ample</b> <a href="http://www.stata.com/help.cgi?svy_tabulate_oneway"><i>svy_tabulate_opts</i></a> ]
+
+    Two-way table:
+
+        <b>estpost</b> <b>svy</b> [<i>vcetype</i>] [, <i>svy_options</i>] <b>:</b> <b><u>ta</u></b><b>bulate</b> <i>varname1</i> <i>varname2</i> [
+               <a href="http://www.stata.com/help.cgi?if"><i>if</i></a>] [<a href="http://www.stata.com/help.cgi?in"><i>in</i></a>] [<b>,</b> <b><u>notot</u></b><b>al</b> <b><u>q</u></b><b>uietly</b> <b><u>es</u></b><b>ample</b> <a href="http://www.stata.com/help.cgi?svy_tabulate_oneway"><i>svy_tabulate_opts</i></a> ]
+
+    <b>estpost svy: tabulate</b> posts a one-way or two-way table for complex survey
+    data computed by <a href="http://www.stata.com/help.cgi?svy_tabulate"><b>svy: tabulate</b></a>. Stata 9 or newer is required.
+
+    Options are as described in <a href="http://www.stata.com/help.cgi?svy_tabulate_oneway"><b>[SVY] svy: tabulate oneway</b></a> or <a href="http://www.stata.com/help.cgi?svy_tabulate_twoway"><b>[SVY] svy:</b></a>
+    <a href="http://www.stata.com/help.cgi?svy_tabulate_twoway"><b>tabulate twoway</b></a>, respectively, and:
+
+        <b>nototal</b> to omit row and column totals (synonym for <b>nomarginals</b>).
+
+        <b>quietly</b> to suppress the output.
+
+        <b>esample</b> to mark the estimation sample in <b>e(sample)</b>.
+
+    <b>estpost svy: tabulate</b> posts results in <b>e()</b> (except <b>e(V)</b>) as documented in
+    <a href="http://www.stata.com/help.cgi?svy_tabulate_oneway"><b>[SVY] svy: tabulate oneway</b></a> and <a href="http://www.stata.com/help.cgi?svy_tabulate_twoway"><b>[SVY] svy: tabulate twoway</b></a>, respectively,
+    and adds or replaces the following matrices:
+
+        <b>e(b)</b>      cell, column, or row proportions or percentages,
+                    or weighted counts, depending on options
+        <b>e(se)</b>     standard errors of <b>e(b)</b>
+        <b>e(lb)</b>     lower confidence bounds for <b>e(b)</b>
+        <b>e(ub)</b>     upper confidence bounds for <b>e(b)</b>
+        <b>e(deff)</b>   deff for variances of <b>e(b)</b>
+        <b>e(deft)</b>   deft for variances of <b>e(b)</b>
+        <b>e(cell)</b>   cell proportion or percentages
+        <b>e(row)</b>    row proportion or percentages (two-way only)
+        <b>e(col)</b>    column proportion or percentages (two-way only)
+        <b>e(count)</b>  weighted counts
+        <b>e(obs)</b>    number of observations
+
+    The value labels of the row variable are stored as names in the saved
+    vectors, unless no label exceeds 30 characters or contains unsuitable
+    characters in which case the labels are stored in macro <b>e(labels)</b>. Type
+    <b>varlabels(`e(labels)')</b> in <a href="hlp_esttab.html"><b>esttab</b></a> or <a href="hlp_estout.html"><b>estout</b></a> to use the labels stored
+    <b>e(labels)</b>. The value labels of the column variable are stored as equation
+    names or, alternatively, in macro <b>e(eqlabels)</b>. Type
+    <b>eqlabels(`e(eqlabels)')</b> in <a href="hlp_esttab.html"><b>esttab</b></a> or <a href="hlp_estout.html"><b>estout</b></a> to use the labels stored in
+    <b>e(eqlabels)</b>.
+
+    Examples:
+
+        . webuse nhanes2b, clear
+        
+        . svyset psuid [pweight=finalwgt], strata(stratid)
+        
+              pweight:<b>finalwgt</b>
+<b>                  </b>VCE:<b>linearized</b>
+<b>          </b>Single unit:<b>missing</b>
+<b>             </b>Strata 1:<b>stratid</b>
+<b>                 </b>SU 1:<b>psuid</b>
+<b>                </b>FPC 1:&lt;zero&gt;
+                
+        . estpost svy: tabulate race
+        (running tabulate on estimation sample)
+        
+        Number of strata= <b>       31</b>            Number of obs      = <b>     10351</b>
+<b>        </b>Number of PSUs= <b>       62</b>              Population size    =<b>  117157513</b>
+<b>        </b>                                       Design df          = <b>        31</b>
+<b>        </b>
+<b>        </b>-----------------------
+        1=white,  |
+        2=black,  |
+        3=other   | proportions
+        ----------+------------
+            White |       <b>.8792</b>
+<b>            </b>Black |       <b>.0955</b>
+<b>            </b>Other |       <b>.0253</b>
+<b>                  </b>| 
+            Total |           <b>1</b>
+<b>        </b>-----------------------
+          Key:  proportions  =  <b>cell proportions</b>
+<b>        </b>
+<b>        </b>saved vectors:
+                     e(b) =  <b>cell proportions</b>
+<b>                    </b>e(se) =  <b>standard errors of cell proportions</b>
+<b>                    </b>e(lb) =  <b>lower 95% confidence bounds for cell proportions</b>
+<b>                    </b>e(ub) =  <b>upper 95% confidence bounds for cell proportions</b>
+<b>                  </b>e(deff) =  <b>deff for variances of cell proportions</b>
+<b>                  </b>e(deft) =  <b>deft for variances of cell proportions</b>
+<b>                  </b>e(cell) =  <b>cell proportions</b>
+<b>                 </b>e(count) =  <b>weighted counts</b>
+<b>                   </b>e(obs) =  <b>number of observations</b>
+<b>        </b>
+        . esttab ., cell("b(f(4)) se deft")
+        
+<b>        </b>---------------------------------------------------
+                              (1)                          
+                                                           
+                                b           se         deft
+        ---------------------------------------------------
+        White       <b>       0.8792       0.0167       5.2090</b>
+        Black       <b>       0.0955       0.0127       4.4130</b>
+        Other       <b>       0.0253       0.0105       6.8246</b>
+        Total       <b>       1.0000       0.0000             </b>
+        ---------------------------------------------------
+        N           <b>        10351                          </b>
+        ---------------------------------------------------
+        
+        . estpost svy: tabulate race diabetes, row percent
+        (running tabulate on estimation sample)
+        
+        Number of strata= <b>       31</b>            Number of obs      = <b>     10349</b>
+<b>        </b>Number of PSUs= <b>       62</b>              Population size    =<b>  117131111</b>
+<b>        </b>                                       Design df          = <b>        31</b>
+<b>        </b>
+<b>        </b>-------------------------------
+        1=white,  |  diabetes, 1=yes,  
+        2=black,  |        0=no        
+        3=other   |     0      1  Total
+        ----------+--------------------
+            White |  <b>96.8  3.195    100</b>
+<b>            </b>Black |  <b>94.1  5.903    100</b>
+<b>            </b>Other | <b>97.97  2.034    100</b>
+<b>                  </b>| 
+            Total | <b>96.58  3.425    100</b>
+<b>        </b>-------------------------------
+          Key:  <b>row percentages</b>
+<b>        </b>
+<b>        </b>  Pearson:
+        Uncorrectedchi2(<b>2</b>)        = <b>  21.3483</b>
+<b>        </b>Design-basedF(<b>1.52</b>, <b>47.26</b>)= <b>  15.0056     </b>P = <b>0.0000</b>
+<b>        </b>
+<b>        </b>saved vectors:
+                     e(b) =  <b>row percentages</b>
+<b>                    </b>e(se) =  <b>standard errors of row percentages</b>
+<b>                    </b>e(lb) =  <b>lower 95% confidence bounds for row percentages</b>
+<b>                    </b>e(ub) =  <b>upper 95% confidence bounds for row percentages</b>
+<b>                  </b>e(deff) =  <b>deff for variances of row percentages</b>
+<b>                  </b>e(deft) =  <b>deft for variances of row percentages</b>
+<b>                  </b>e(cell) =  <b>cell percentages</b>
+<b>                   </b>e(row) =  <b>row percentages</b>
+<b>                   </b>e(col) =  <b>column percentages</b>
+<b>                 </b>e(count) =  <b>weighted counts</b>
+<b>                   </b>e(obs) =  <b>number of observations</b>
+<b>        </b>
+        . esttab ., b(2) se(2) scalars(F_Pear) nostar unstack ///
+        &gt;     mtitle(`e(colvar)')
+        
+<b>        </b>---------------------------------------------------
+                              (1)                          
+                         diabetes                          
+                                0            1        Total
+        ---------------------------------------------------
+        White       <b>        96.80         3.20       100.00</b>
+                    <b>       </b>(<b>0.20</b>)<b>       </b>(<b>0.20</b>)<b>             </b>
+        
+        Black       <b>        94.10         5.90       100.00</b>
+                    <b>       </b>(<b>0.61</b>)<b>       </b>(<b>0.61</b>)<b>             </b>
+        
+        Other       <b>        97.97         2.03       100.00</b>
+                    <b>       </b>(<b>0.76</b>)<b>       </b>(<b>0.76</b>)<b>             </b>
+        
+        Total       <b>        96.58         3.42       100.00</b>
+                    <b>       </b>(<b>0.18</b>)<b>       </b>(<b>0.18</b>)<b>             </b>
+        ---------------------------------------------------
+        N           <b>        10349                          </b>
+        F_Pear      <b>        15.01                          </b>
+        ---------------------------------------------------
+        Standard errors in parentheses
+
+<a name="correlate"></a>
+        +-----------+
+    ----+ correlate +--------------------------------------------------------
+
+    <b>estpost</b> <b><u>cor</u></b><b>relate</b> <a href="http://www.stata.com/help.cgi?varlist"><i>varlist</i></a> [<a href="http://www.stata.com/help.cgi?if"><i>if</i></a>] [<a href="http://www.stata.com/help.cgi?in"><i>in</i></a>] [<a href="http://www.stata.com/help.cgi?weight"><i>weight</i></a>] [<b>,</b> <b><u>m</u></b><b>atrix</b> <b><u>noh</u></b><b>alf</b> <b><u>print</u></b><b>(</b><i>#</i><b>)</b>
+               <b><u>b</u></b><b>onferroni</b> <b><u>sid</u></b><b>ak</b> <b><u>list</u></b><b>wise</b> <b><u>case</u></b><b>wise</b> <b><u>q</u></b><b>uietly</b> <b><u>es</u></b><b>ample</b> ]
+
+    posts the pairwise correlations between the first variable in <i>varlist</i> and
+    the remaining variables. Alternatively, if the <b>matrix</b> option is
+    specified, all pairwise correlations among the variable in <i>varlist</i> are
+    posted.
+
+    <b>aweight</b>s, <b>fweight</b>s, <b>iweight</b>s and <b>pweight</b>s are allowed; see <a href="http://www.stata.com/help.cgi?weight">weight</a>.
+
+    Methods and formulas are as described in <a href="http://www.stata.com/help.cgi?correlate"><b>[R] correlate</b></a>. However, if
+    <b>pweight</b>s are specified, the p-values of the correlations are computed as
+    suggested in the Stata FAQ on "Estimating correlations with survey data".
+
+    Options are:
+
+        <b>matrix</b> to return the (lower triangle) of the correlation matrix of
+            the variables in <i>varlist</i>. The default is to return the pairwise
+            correlations between the first variable in <i>varlist</i> and the
+            remaining variables.
+
+        <b>nohalf</b> to return the full correlation matrix rather than just the
+            lower triangle. <b>nohalf</b> has no effect unless <b>matrix</b> is specified.
+
+        <b>print(</b><i>#</i><b>)</b> to suppress (leave blank) correlation coefficients with a
+            p-value larger than <i>#</i>. <b>print()</b> only affects what is saved in
+            <b>e(rho)</b>, <b>e(p)</b>, and <b>e(count)</b>, but not what is saved in <b>e(b)</b>.
+
+        <b>bonferroni</b> to apply the Bonferroni adjustment to the p-values.
+
+        <b>sidak</b> to apply the Sidak adjustment to the p-values.
+
+        <b>listwise</b> to handle missing values through listwise deletion, meaning
+            that an observation is omitted from the estimation sample if any
+            of the variables in <i>varlist</i> is missing for that observation. The
+            default is to handle missing values by pairwise deletion, i.e.
+            all available observations are used to calculate a pairwise
+            correlation without regard to whether variables outside that pair
+            are missing. <b>casewise</b> is a synonym for <b>listwise</b>.
+
+        <b>quietly</b> to suppress the output.
+
+        <b>esample</b> to mark the estimation sample in <b>e(sample)</b>.
+
+    The following vectors are saved in <b>e()</b>:
+
+        <b>e(b)</b>         correlation coefficients
+        <b>e(rho)</b>       correlation coefficients
+        <b>e(p)</b>         p-values
+        <b>e(count)</b>     number of observations
+
+    Examples:
+
+        . sysuse auto, clear
+        (1978 Automobile Data)
+        
+        . estpost correlate price mpg turn foreign, matrix
+        
+                     |      e(b)     e(rho)       e(p)   e(count) 
+        -------------+--------------------------------------------
+        <b>price        </b>|                                            
+               price | <b>        1</b>  <b>        1</b>  <b>         </b>  <b>       74</b> 
+                 mpg | <b>-.4685967</b>  <b>-.4685967</b>  <b> .0000255</b>  <b>       74</b> 
+                turn | <b> .3096174</b>  <b> .3096174</b>  <b> .0072662</b>  <b>       74</b> 
+             foreign | <b> .0487195</b>  <b> .0487195</b>  <b> .6801851</b>  <b>       74</b> 
+        <b>mpg          </b>|                                            
+                 mpg | <b>        1</b>  <b>        1</b>  <b>         </b>  <b>       74</b> 
+                turn | <b>-.7191863</b>  <b>-.7191863</b>  <b> 5.30e-13</b>  <b>       74</b> 
+             foreign | <b> .3933974</b>  <b> .3933974</b>  <b> .0005254</b>  <b>       74</b> 
+        <b>turn         </b>|                                            
+                turn | <b>        1</b>  <b>        1</b>  <b>         </b>  <b>       74</b> 
+             foreign | <b>-.6310965</b>  <b>-.6310965</b>  <b> 1.66e-09</b>  <b>       74</b> 
+        <b>foreign      </b>|                                            
+             foreign | <b>        1</b>  <b>        1</b>  <b>         </b>  <b>       74</b> 
+        
+        . esttab ., not unstack compress noobs
+        
+<b>        </b>--------------------------------------------------------------
+                         (1)                                          
+                                                                      
+                       price          mpg         turn      foreign   
+        --------------------------------------------------------------
+        price     <b>         1                                          </b>
+        mpg       <b>    -0.469***         1                             </b>
+        turn      <b>     0.310**     -0.719***         1                </b>
+        foreign   <b>    0.0487        0.393***    -0.631***         1   </b>
+        --------------------------------------------------------------
+        * p&lt;0.05, ** p&lt;0.01, *** p&lt;0.001
+        
+        . bysort foreign: eststo: ///
+        &gt;     estpost correlate price turn weight rep78, listwise
+        
+        ------------------------------------------------------------
+        -&gt; Domestic
+        
+               price |      e(b)     e(rho)       e(p)   e(count) 
+        -------------+--------------------------------------------
+                turn | <b> .4328091</b>  <b> .4328091</b>  <b> .0021229</b>  <b>       48</b> 
+              weight | <b> .6864719</b>  <b> .6864719</b>  <b> 7.19e-08</b>  <b>       48</b> 
+               rep78 | <b>-.0193249</b>  <b>-.0193249</b>  <b> .8962741</b>  <b>       48</b> 
+        (<b>est1</b> stored)
+        
+        ------------------------------------------------------------
+        -&gt; Foreign
+        
+               price |      e(b)     e(rho)       e(p)   e(count) 
+        -------------+--------------------------------------------
+                turn | <b> .5102425</b>  <b> .5102425</b>  <b> .0181155</b>  <b>       21</b> 
+              weight | <b> .8315886</b>  <b> .8315886</b>  <b> 2.99e-06</b>  <b>       21</b> 
+               rep78 | <b> .1797879</b>  <b> .1797879</b>  <b> .4354917</b>  <b>       21</b> 
+        (<b>est2</b> stored)
+        
+        . esttab est1 est2, not mtitles
+        
+<b>        </b>--------------------------------------------
+                              (1)             (2)   
+                         Domestic         Foreign   
+        --------------------------------------------
+        turn        <b>        0.433**         0.510*  </b>
+        weight      <b>        0.686***        0.832***</b>
+        rep78       <b>      -0.0193           0.180   </b>
+        --------------------------------------------
+        N           <b>           48              21   </b>
+        --------------------------------------------
+        * p&lt;0.05, ** p&lt;0.01, *** p&lt;0.001
+
+<a name="ci"></a>
+        +----+
+    ----+ ci +---------------------------------------------------------------
+
+    <b>estpost</b> <b>ci</b> [<a href="http://www.stata.com/help.cgi?varlist"><i>varlist</i></a>] [<a href="http://www.stata.com/help.cgi?if"><i>if</i></a>] [<a href="http://www.stata.com/help.cgi?in"><i>in</i></a>] [<a href="http://www.stata.com/help.cgi?weight"><i>weight</i></a>] [<b>,</b> <b><u>b</u></b><b>inomial</b> <b><u>p</u></b><b>oisson</b>
+               <b><u>e</u></b><b>xposure(</b><i>varname</i><b>)</b> <b><u>ex</u></b><b>act</b> <b><u>wa</u></b><b>ld</b> <b><u>w</u></b><b>ilson</b> <b><u>a</u></b><b>gresti</b> <b><u>j</u></b><b>effreys</b> <b><u>l</u></b><b>evel(</b><i>#</i><b>)</b>
+               <b><u>list</u></b><b>wise</b> <b><u>case</u></b><b>wise</b> <b><u>q</u></b><b>uietly</b> <b><u>es</u></b><b>ample</b> ]
+
+    posts standard errors and confidence intervals computed by <a href="http://www.stata.com/help.cgi?ci"><b>ci</b></a>. <b>aweight</b>s
+    and <b>fweight</b>s are allowed, but <b>aweight</b>s may not be specified with options
+    <b>binomial</b> or <b>poisson</b>; see <a href="http://www.stata.com/help.cgi?weight">weight</a>.
+
+    Options are:
+
+        <b>binomial</b>, <b>poisson</b>, <b>exposure()</b>, <b>exact</b>, <b>wald</b>, <b>wilson</b>, <b>agresti</b>,
+            <b>jeffreys</b>, and <b>level()</b> as described in help <a href="http://www.stata.com/help.cgi?ci"><b>ci</b></a>.
+
+        <b>listwise</b> to handle missing values through listwise deletion, meaning
+            that an observation is omitted from the estimation sample if any
+            of the variables in <i>varlist</i> is missing for that observation. The
+            default is to determine the used observations for each variable
+            separately without regard to whether other variables are missing.
+            <b>casewise</b> is a synonym for <b>listwise</b>.
+
+        <b>quietly</b> to suppress the output.
+
+        <b>esample</b> to mark the estimation sample in <b>e(sample)</b>.
+
+    The following results vectors are saved in <b>e()</b>:
+
+        <b>e(b)</b>         mean
+        <b>e(count)</b>     number of observations
+        <b>e(se)</b>        estimate of standard error
+        <b>e(lb)</b>        lower bound of confidence interval
+        <b>e(ub)</b>        upper bound of confidence interval
+
+    Examples:
+
+        . sysuse auto, clear
+        (1978 Automobile Data)
+        
+        . estpost ci price mpg rep78, listwise
+        (confidence level is 95%)
+        
+                     |      e(b)   e(count)      e(se)      e(lb)      e(ub) 
+        -------------+-------------------------------------------------------
+               price | <b> 6146.043</b>  <b>       69</b>  <b> 350.6166</b>  <b> 5446.399</b>  <b> 6845.688</b> 
+                 mpg | <b> 21.28986</b>  <b>       69</b>  <b> .7062326</b>  <b> 19.88059</b>  <b> 22.69912</b> 
+               rep78 | <b> 3.405797</b>  <b>       69</b>  <b> .1191738</b>  <b> 3.167989</b>  <b> 3.643605</b> 
+        
+        . esttab ., cells("b lb ub") label
+        
+<b>        </b>-----------------------------------------------------------
+                                      (1)                          
+                                                                   
+                                        b           lb           ub
+        -----------------------------------------------------------
+        Price               <b>     6146.043     5446.399     6845.688</b>
+        Mileage (mpg)       <b>     21.28986     19.88059     22.69912</b>
+        Repair Record 1978  <b>     3.405797     3.167989     3.643605</b>
+        -----------------------------------------------------------
+        Observations        <b>           69                          </b>
+        -----------------------------------------------------------
+        
+        . eststo exact: estpost ci foreign, binomial exact
+        (confidence level is 95%)
+        
+                     |      e(b)   e(count)      e(se)      e(lb)      e(ub) 
+        -------------+-------------------------------------------------------
+             foreign | <b> .2972973</b>  <b>       74</b>  <b> .0531331</b>  <b>  .196584</b>  <b> .4148353</b> 
+        
+        . eststo agresti: estpost ci foreign, binomial agresti
+        (confidence level is 95%)
+        
+                     |      e(b)   e(count)      e(se)      e(lb)      e(ub) 
+        -------------+-------------------------------------------------------
+             foreign | <b> .2972973</b>  <b>       74</b>  <b> .0531331</b>  <b>  .204807</b>  <b> .4097942</b> 
+        
+        . esttab exact agresti, cells(lb ub) mtitles
+        
+<b>        </b>--------------------------------------
+                              (1)          (2)
+                            exact      agresti
+                            lb/ub        lb/ub
+        --------------------------------------
+        foreign     <b>      .196584      .204807</b>
+                    <b>     .4148353     .4097942</b>
+        --------------------------------------
+        N           <b>           74           74</b>
+        --------------------------------------
+
+<a name="stci"></a>
+        +------+
+    ----+ stci +-------------------------------------------------------------
+
+    <b>estpost</b> <b>stci</b> [<a href="http://www.stata.com/help.cgi?if"><i>if</i></a>] [<a href="http://www.stata.com/help.cgi?in"><i>in</i></a>] [<b>,</b> <b>by(</b><i>groupvar</i><b>)</b> <b><u>m</u></b><b>edian</b> <b><u>r</u></b><b>mean</b> <b><u>e</u></b><b>mean</b> <b>p(</b><i>#</i><b>)</b> <b><u>cc</u></b><b>orr</b>
+               <b><u>l</u></b><b>evel(</b><i>#</i><b>)</b> <b><u>q</u></b><b>uietly</b> <b><u>es</u></b><b>ample</b> ]
+
+    posts confidence intervals for means and percentiles of survival time
+    computed by <a href="http://www.stata.com/help.cgi?stci"><b>stci</b></a>. Stata 9 or newer is required.
+
+    Options are:
+
+        <b>by(</b><i>groupvar</i><b>)</b> to report separate summaries for each group defined by
+            <i>groupvar</i>, along with an overall total.
+
+        <b>median</b>, <b>rmean</b>, <b>emean</b>, <b>p()</b>, <b>ccorr</b>, and <b>level()</b> as described in help 
+            <a href="http://www.stata.com/help.cgi?stci"><b>stci</b></a>.
+
+        <b>quietly</b> to suppress the output.
+
+        <b>esample</b> to mark the estimation sample in <b>e(sample)</b>.
+
+    The following vectors are saved in <b>e()</b>:
+
+        <b>e(count)</b>     number of subjects
+        <b>e(p50)</b>       median (if <b>median</b> specified; the default)
+        <b>e(p</b><i>#</i><b>)</b>        #th percentile (if <b>p(</b><i>#</i><b>)</b> specified)
+        <b>e(rmean)</b>     restricted mean (if <b>rmean</b> specified)
+        <b>e(emean)</b>     extended mean (if <b>emean</b> specified)
+        <b>e(se)</b>        standard error
+        <b>e(lb)</b>        lower bound of CI
+        <b>e(ub)</b>        upper bound of CI
+
+    Examples:
+
+        . webuse page2, clear
+        
+        . estpost stci
+        (confidence level is 95%)
+        
+                     |  e(count)     e(p50)      e(se)      e(lb)      e(ub) 
+        -------------+-------------------------------------------------------
+               total | <b>       40</b>  <b>      232</b>  <b> 2.562933</b>  <b>      213</b>  <b>      239</b> 
+        
+        . esttab ., cell("count p50 se lb ub") noobs compress
+        
+<b>        </b>------------------------------------------------------------
+                         (1)                                        
+                                                                    
+                       count       p50        se        lb        ub
+        ------------------------------------------------------------
+        total     <b>        40       232  2.562933       213       239</b>
+        ------------------------------------------------------------
+        
+        . estpost stci, by(group)
+        (confidence level is 95%)
+        
+                     |  e(count)     e(p50)      e(se)      e(lb)      e(ub) 
+        -------------+-------------------------------------------------------
+                   1 | <b>       19</b>  <b>      216</b>  <b> 5.171042</b>  <b>      190</b>  <b>      234</b> 
+                   2 | <b>       21</b>  <b>      233</b>  <b> 2.179595</b>  <b>      232</b>  <b>      280</b> 
+        -------------+-------------------------------------------------------
+               total | <b>       40</b>  <b>      232</b>  <b> 2.562933</b>  <b>      213</b>  <b>      239</b> 
+        
+        . esttab ., cell("count p50 se lb ub") noobs compress
+        
+<b>        </b>------------------------------------------------------------
+                         (1)                                        
+                                                                    
+                       count       p50        se        lb        ub
+        ------------------------------------------------------------
+        1         <b>        19       216  5.171042       190       234</b>
+        2         <b>        21       233  2.179595       232       280</b>
+        total     <b>        40       232  2.562933       213       239</b>
+        ------------------------------------------------------------
+
+
+<b><u>Author</u></b>
+
+    Ben Jann, ETH Zurich, jannb@ethz.ch
+
+
+<b><u>Also see</u></b>
+
+    Manual:  <b>[R] estimates</b>
+
+    Online:  help for <a href="http://www.stata.com/help.cgi?estimates"><b>estimates</b></a>, <a href="hlp_estout.html"><b>estout</b></a>, <a href="hlp_esttab.html"><b>esttab</b></a>, <a href="hlp_eststo.html"><b>eststo</b></a>, <a href="hlp_estadd.html"><b>estadd</b></a>
+</pre>
+</div>
+
+</body></html>

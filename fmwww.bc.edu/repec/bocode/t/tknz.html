@@ -1,0 +1,85 @@
+<pre>
+<b>help tknz</b>                                                   also see:  tokenize
+-------------------------------------------------------------------------------
+<p>
+<b><u>Title</u></b>
+<p>
+    <b>tknz</b> -- Tokenize string into consecutively numbered named macros
+<p>
+<p>
+<b><u>Syntax</u></b>
+<p>
+        <b>tknz</b> <i>varlist</i>|["]string["] [,<b><u>p</u></b><b>arse(</b><i>pchars</i><b>)</b> <b><u>s</u></b><b>tub(</b><i>string</i><b>)</b> <b>nochar</b>]
+<p>
+    <i>options</i>                      Description
+    -------------------------------------------------------------------------
+<p>
+      <b><u>s</u></b><b>tub(</b><i>stub</i><b>)</b>      stub to prefix numbered positional macros.
+<p>
+      <b><u>p</u></b><b>arse(</b><i>pchars</i><b>)</b>   parse character(s)
+<p>
+      <b>nochar</b>          drop non space parsing character
+<p>
+<p>
+<b><u>Description</u></b>
+<p>
+    <b>tknz</b> tokenizes string into tokens, storing the results in the local
+    macros stub<b>1</b>, stub<b>2</b>, etc. Tokens are determined based on the parsing
+    characters pchars, which defaults to a space if not specified.
+<p>
+    The number of tokens created is returned in <b>s(items)</b>.
+<p>
+        +---------+
+    ----+ Options +----------------------------------------------------------
+<p>
+    <b><u>s</u></b><b>tub(</b><i>stub</i><b>)</b> specifies a stub for the macro names. This stub should be
+        short enough for the complete names all to be legal. If stub is not
+        included the default _1, _2 macro naming is used.
+<p>
+    <b><u>p</u></b><b>arse(</b><i>pchars</i><b>)</b> specifies the parsing characters.  If <b>parse()</b> is not
+        specified, <b>parse(</b><i>" "</i><b>)</b> is assumed, and thus the string is split into
+        words.
+<p>
+    <b>nochar</b> specifies that the non space parsing character not be included in
+        the consecutively numbered macros. (Stata's tokenize includes the non
+        space parsing character in the string of tokens and this conveniently
+        allows them to be stripped out)
+<p>
+<b><u>Examples</u></b>
+<p>
+   . <b>tknz `varlist', s(v)</b>
+   . <b>tknz "one,two,three,four", s(v) p(,) nochar</b>
+<p>
+<p>
+<b><u>Notes</u></b>
+<p>
+    Subsequent processing for each item on the list can easily be achieved by
+    using:
+<p>
+   <b>forvalues i=1/`s(items)' {</b>
+       <b>do something on `v`i'' // where v is the stub</b>
+       <b>}</b>
+<p>
+    <b>tknz</b> uses the undocumented macro assignment command<b> c_local</b> which allows
+    local macros created by <b>tknz</b> to be used within the context of the
+    program, dofile, or command line call to<b> tknz</b>. However, they are<b> not</b>
+    available to a new instance created by a subsequent program, which can
+    lead to unexpected results or errors.  For example, if you call <b>tknz</b> from
+    the command line and then again in a subsequent program or dofile, the
+    values you see from the command line by issuing<b> macro dir</b> are<b> not</b> those
+    created by the subsequent program, but from the instance created by the
+    previous command line call.  Understanding this can save a lot of grief!
+<p>
+<b><u>Author</u></b>
+<p>
+    David C. Elliott, Nova Scotia Department of Health, Halifax
+    DCElliott@gmail.com
+<p>
+<p>
+<b><u>Acknowledgements</u></b>
+<p>
+    Nicholas J. Cox created the original tknz for adding stubs to the
+    numbered positional macros and provided a number of suggestions for
+    improving the routine and help file.
+<p>
+</pre>

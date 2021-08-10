@@ -1,0 +1,86 @@
+<pre>
+-------------------------------------------------------------------------------
+help for <b>butterworth</b>              SSC distribution 03 July 2006
+-------------------------------------------------------------------------------
+<p>
+<b><u>Apply Butterworth square-wave highpass filter to time series</u></b>
+<p>
+        <b>butterworth</b> <i>varlist</i> [<b>if</b> <i>exp</i>] [<b>in</b> <i>range</i>] <b>,</b> <b>freq(</b><i>#</i><b>)</b> <b>stub(</b><i>abbrev</i><b>)</b> [
+                 <b>order(</b><i>#</i><b>)</b> ]
+<p>
+<p>
+    You must <b>tsset</b> your data before using <b>butterworth</b>; see help <b>tsset</b>.  If a
+    panel calendar is in effect, the filter can be applied if a single panel is
+    specified using if or in qualifiers, or with the <b>by</b> prefix.
+<p>
+    <b>varlist</b> may contain time-series operators; see help <b>varlist</b>.
+<p>
+    <b>butterworth</b> filters one or more time series using the Butterworth
+    square-wave highpass filter described in Pollock (2000).  The <b>freq()</b>
+    argument specifies the minimum period of oscillation of the desired
+    component of the time series, where 2 &lt; <i>freq</i> &lt; infinity. The <b>order()</b> of the
+    filter may also be chosen; if not specified, it defaults to 2.
+<p>
+<b><u>Options</u></b>
+    
+    <b>freq(</b><i>#</i><b>)</b> specifies the minimum period of oscillation, in periods per cycle,
+        to be retained in the time series, and must be given. It must be
+        greater than 2 (the reciprocal of the Nyquist frequency).
+        Higher-frequency components of the series will be returned in the
+        filtered series.
+<p>
+    <b>stub(</b><i>abbrev</i><b>)</b>, which must be provided, specifies the "stub" from which new
+        variable names will be created. Variables created by <b>stub</b> must be new
+        variables. If the <i>varlist</i> contains time-series operators, the dots in
+        their names are replaced by underscores so that the resulting new
+        variables' names are legal.
+<p>
+    <b>order(</b><i>#</i><b>)</b> specifies the order of the filter. If not specified, it defaults
+        to 2.
+<p>
+<b><u>Examples</u></b>
+<p>
+    . webuse lutkepohl,clear
+<p>
+    . butterworth investment, freq(6) phi stub(F)
+<p>
+    . butterworth investment income consumption, freq(12) stub(filt)
+<p>
+    . butterworth D.investment, freq(4) order(3) stub(fl)
+<p>
+    . use http://fmwww.bc.edu/ec-p/data/hayashi/sheston91.dta,clear
+<p>
+    . drop if country&gt;4
+<p>
+    . tsset
+<p>
+    . by country: butterworth rgdppc, freq(3) stub(SBY)
+<p>
+<p>
+<b><u>Authors</u></b>
+<p>
+    Christopher F. Baum, Boston College, USA
+    baum@bc.edu
+<p>
+    Martha Lopez, Boston College, USA
+    lopezmo@bc.edu
+<p>
+<b><u>References</u></b>
+<p>
+D.S.G. Pollock, Trend estimation and de-trending via rational square-wave
+filters, Journal of Econometrics, 2000, 99, 317-334.
+    
+Pawel Kowal (2005). MATLAB implementation of commonly used filters,
+http://ideas.repec.org/c/wpa/wuwppr/0507001.html
+<p>
+<b><u>Acknowledgements</u></b> 
+<p>
+    The Mata code of this routine was translated from MATLAB code made
+    available by Pawel Kowal (2005).
+<p>
+<b><u>Also see</u></b>
+<p>
+    On-line: hprescott (if installed), bking (if installed), cfitzrw (if
+             installed), tsset
+<p>
+</pre>

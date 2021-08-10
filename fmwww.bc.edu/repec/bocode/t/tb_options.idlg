@@ -1,0 +1,179 @@
+DIALOG tb_options,  tabtitle("Table Options")
+
+BEGIN
+			  
+		   
+	
+		
+		
+ CHECKBOX ck_tables     10    20     560    95,             ///
+        groupbox label("Tables: Select the tables to be produced")                 ///
+        onclickon(program ptb_options_tables)                      ///
+        onclickoff(script  tb_options_tables)
+  TEXT     tx_tab    20 _ss     400   .,              ///
+        label("Specify the codes of tables (type off to do not produce any table):")
+  EDIT     ed_tab     @       _ss     500  .,              ///
+        option(tjobs)                          
+  
+  BUTTON   bu_tab     530 @       15      .,              ///
+        label("?") onpush(view help jtables)        ///
+        tooltip("Help - List of tables and their codes")
+ 
+		   
+  CHECKBOX   chk_sum  20    +25    200    .,                   ///
+             label("Produce the summary table") default(1) option(summary)
+
+			 
+  CHECKBOX ck_order     10    +40     560    75,             ///
+        groupbox label("Override the default list of items")                 ///
+        onclickon(program ptb_options_order)                      ///
+        onclickoff(script  tb_options_order)
+  TEXT     tx_aggr    20 _ss     100   .,              ///
+        label("Specify the items aggregation of results and  their labels:")
+  EDIT     ed_aggr     @       _ss     500  .,              ///
+        option(aggr)                                           ///
+        label("Specify the items aggregation of results and  their labels")
+  BUTTON   bu_aggr     530 @       15      .,              ///
+        label("?") onpush(view help aggr)        ///
+        tooltip("Help - Aggregation order specification")
+		
+		
+	
+
+
+
+  
+  CHECKBOX ck_excel     10    +40     560    75,             ///
+        groupbox label("Excel file: Produce an Excel file of results")                 ///
+        onclickon(program ptb_options_excel)                      ///
+        onclickoff(script  tb_options_excel)    
+
+TEXT  tx_nxfile     20    +25    40      .,                 ///  
+label("File :")    	  
+            
+        
+FILE  fnamex      80    @     300      .,                 ///
+label ("Browse...")    save option("xfil")                   ///
+filter("MetaFile (*.xml)*.xml*.* (*.*)*.*")  
+ 
+
+TEXT    tx_lan       400    @    60      .,	///
+label("Language:") 
+
+COMBOBOX cb_lan       460    @   80   .,	///
+dropdownlist contents(cb_lan) values(cb_lan_val)	///
+default(en)     option(lan)     onselchangelist(cond_change) 
+		
+END
+
+
+
+
+LIST cb_lan
+BEGIN
+  English
+  Français
+END
+
+
+LIST cb_lan_val
+BEGIN
+  en
+  fr
+END
+
+
+
+
+
+
+
+
+
+PROGRAM ptb_options_order
+BEGIN
+        if tb_options.ck_order {
+                call tb_options.tx_aggr.enable
+                call tb_options.ed_aggr.enable
+                call tb_options.bu_aggr.enable
+        }
+		
+	 if !tb_options.ck_order {
+                call tb_options.tx_aggr.disable
+                call tb_options.ed_aggr.disable
+                call tb_options.bu_aggr.disable
+        }
+END
+
+
+SCRIPT tb_options_order
+BEGIN
+                tb_options.tx_aggr.disable
+                tb_options.ed_aggr.disable
+                tb_options.bu_aggr.disable
+END
+
+
+PROGRAM ptb_options_tables
+BEGIN
+        if tb_options.ck_tables {
+                call tb_options.tx_tab.enable
+                call tb_options.ed_tab.enable
+                call tb_options.bu_tab.enable
+        }
+		
+	 if !tb_options.ck_tables {
+                call tb_options.tx_tab.disable
+                call tb_options.ed_tab.disable
+                call tb_options.bu_tab.disable
+        }
+END
+
+
+SCRIPT tb_options_tables
+BEGIN
+                tb_options.tx_tab.disable
+                tb_options.ed_tab.disable
+                tb_options.bu_tab.disable
+END
+
+
+
+PROGRAM ptb_options_excel
+BEGIN
+        if tb_options.ck_excel {
+			call tb_options.tx_nxfile.enable
+			call tb_options.fnamex.enable 
+			call tb_options.tx_lan.enable
+			call tb_options.cb_lan.enable
+
+        }
+		
+	   if !tb_options.ck_excel {
+ 			call tb_options.tx_nxfile.disable
+			call tb_options.fnamex.disable 
+			call tb_options.tx_lan.disable
+			call tb_options.cb_lan.disable
+        }
+END
+
+
+SCRIPT tb_options_excel
+	BEGIN
+	    	tb_options.tx_nxfile.disable
+			tb_options.fnamex.disable
+			tb_options.tx_lan.disable
+			tb_options.cb_lan.disable
+		   
+	END
+
+
+
+	
+			
+
+LIST cb_tr
+BEGIN
+  Constant individual transfer
+  Constant household transfer
+END

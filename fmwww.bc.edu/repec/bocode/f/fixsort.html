@@ -1,0 +1,105 @@
+<pre>
+-------------------------------------------------------------------------------
+help for <b>fixsort</b>
+-------------------------------------------------------------------------------
+<p>
+<b><u>Sort variables and align in sorted order, with others fixed in position</u></b> 
+<p>
+        <b>fixsort</b> <i>varlist</i> [<b>if</b> <i>exp</i>] [<b>in</b> <i>range</i>] <b>,</b> <b><u>g</u></b><b>enerate(</b><i>newvarlist</i><b>)</b> [ <b><u>miss</u></b><b>ing</b>
+                 <b><u>r</u></b><b>everse</b> ]
+<p>
+<p>
+<b><u>Description</u></b> 
+<p>
+    <b>fixsort</b> sorts each variable in <i>varlist</i> and generates new variables so
+    that all new variables are in sorted order, by default aligned so that
+    the first value of each is in the first observation, the second value of
+    each is in the second observation, and so on. Reverse sorting (last value
+    first, etc.) is also possible.
+<p>
+    Any variables not in <i>varlist</i> retain their current sort order.  The sort
+    order of the dataset is unaffected.  Variables may be numeric or string.
+<p>
+<p>
+<b><u>Remarks</u></b> 
+<p>
+    <b>fixsort</b> is a rarely needed command. Almost all sorting problems call for 
+    sort or gsort. An example where it may be appropriate is in sorting
+    independent batches of random numbers held in separate variables.
+<p>
+    <b>fixsort</b> is unusual in various ways:
+<p>
+        Whatever is stored in any observation for new variables has no
+        necessary relationship to values for other variables in the same
+        observation.
+<p>
+        By default missing values of any kind (. .a ... .z "") are all
+        ignored.  Any such missing values are represented in new variables by
+        values of .  or "", as appropriate to the variable type, all stored
+        in the later observations of the dataset. Note that treatment of
+        missing values is variable by variable, so that the new variables
+        created by <b>fixsort</b> may readily possess different numbers of
+        non-missing values. See also the <b>missing</b> option below.
+<p>
+        <b>if</b> and <b>in</b> act only to select observations and do not affect the
+        storage of new variables in observations 1 up.
+<p>
+    By conscious design, there is no <b>replace</b> option to let users overwrite
+    existing variables. Thus no misunderstanding of <b>fixsort</b> should mean that
+    users lose data.
+<p>
+<p>
+<b><u>Options</u></b> 
+<p>
+    <b>generate()</b> specifies the names of new variables to hold the sorted values
+        of <i>varlist</i>. <b>generate()</b> is a required option.
+<p>
+    <b>missing</b> specifies that missing values of any kind are to be included in
+        the sorting. Missing values are treated as is; any other missing
+        values (corresponding to observations excluded by <b>if</b> and/or <b>in</b>) are
+        created as "" or . (i.e. system missing).
+<p>
+    <b>reverse</b> specifies sorting in reverse order, i.e. highest values first.
+<p>
+<p>
+<b><u>Examples</u></b> 
+<p>
+    Suppose we start in each of the following with these data:
+<p>
+        <b>a   b    c</b>
+        3   7   13 
+        1   8   12
+        2   9   11 
+<p>
+    After <b>fixsort a b c, gen(A B C)</b> we would have
+<p>
+        <b>a   b    c   A   B    C</b>
+        3   7   13   1   7   11  
+        1   8   12   2   8   12
+        2   9   11   3   9   13 
+<p>
+    After <b>fixsort c in 2/3, gen(C23)</b> we would have
+<p>
+        <b>a   b    c  C23</b>
+        3   7   13   11
+        1   8   12   12   
+        2   9   11    . 
+<p>
+<p>
+<b><u>Acknowledgments</u></b> 
+<p>
+    Philippe Van Kerm provoked a reconsideration and rewriting of this
+    program.
+<p>
+<p>
+<b><u>Author</u></b>
+<p>
+    Nicholas J. Cox, Durham University, U.K.
+    n.j.cox@durham.ac.uk
+<p>
+<p>
+<b><u>Also see</u></b>
+<p>
+    On-line: help for sort, gsort, clsort (if installed)
+<p>
+</pre>

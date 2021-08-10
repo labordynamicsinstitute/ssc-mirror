@@ -1,0 +1,586 @@
+<pre>
+-------------------------------------------------------------------------------
+help for <b>rfl</b>                                                       dialogs: rfl
+-------------------------------------------------------------------------------
+<p>
+<b><u>Syntax</u></b>
+<p>
+        <b>rfl</b>
+<p>
+        <b>rfluse</b>
+<p>
+        <b>rfluse</b> [<i>filename</i>|<i>#</i>] [<b>,</b> <b>log(</b><i>filename</i><b>)</b> <b>cmdlog(</b><i>filename</i><b>)</b> <b>desc(</b><i>string</i><b>)</b>
+                 <b>mem(</b><i>#</i><b>)</b> <b>l(</b><i>#</i><b>)</b> <b>ds</b> <b>dc</b> <b>lc</b> <b>cc</b> ]
+<p>
+        <b>rflsetmenu</b>
+<p>
+<p>
+<a name="overview"></a><b><u>Overview</u></b>
+<p>
+    <b>rfl</b> is an enhanced most recently used files list allowing a user to open
+    a dataset from a list of previously opened datasets. Every file opened
+    with <b>rfl</b> is added to a list of recently used files and may be accessed
+    via rfl's dialog window or Stata's User menu (in Stata 9, also via
+    Stata's Open Recent menu). In addition, the user can set the memory
+    allocated to Stata (in fact, <b>rfl</b> automatically determines the amount of
+    memory needed to open the dataset), attach a short description to each
+    loaded dataset, and open appropriate log and cmdlog files, all in one
+    step. If data are present in memory at the time <b>rfl</b> is called, the user
+    is prompted to save and close open files from within <b>rfl</b>'s dialog.
+<p>
+    <b>rfluse</b> calls the ado-files behind <b>rfl</b>'s dialogs without using the dialog
+    window. It either opens the specified filename or the #th entry in the
+    most recently used files list. Without arguments, # is set to 1, and
+    <b>rfluse</b> opens the most recently used dataset. See How to make use of rfl
+    without calling the dialog.
+<p>
+    <b>rflsetmenu</b> adds <b>rfl</b>'s menu to Stata's User menu for easy access to the
+    most recently opened datasets. You may want to invoke it only if you do
+    not want to use neither <b>rfl</b> nor <b>rfluse</b>, since both set <b>rfl</b>'s menu
+    automatically.
+<p>
+    Please note that <b>rfl</b> has been thoroughly tested on Windows XP systems. It
+    also works on other platforms. Stata 8.2 and up (both SE or non-SE) is
+    required.
+<p>
+<p>
+<b><u>Sections of this document</u></b>
+<p>
+    <b>rfl</b> is described under the following headings:
+<p>
+    Overview
+    Features and usage
+        First usage
+        Opening a dataset
+        How data in memory are handled
+        Setting the size of memory
+        Choosing a log file
+        Entering or changing a description
+        Managing the recent files list
+            Removing a list entry
+            Renaming a list entry
+            Deleted, moved and renamed datasets
+        How to make use of rfl without calling the dialog
+            From the command window
+            From the menu
+        Other settings
+    The Stata window title
+    How rfl stores the information
+    How to call rfl on each start of Stata
+    Known problems and unexpected behaviour
+<p>
+<p>
+<a name="features"></a><b><u>Features and usage</u></b>
+<p>
+<a name="first"></a><b><u>First usage</u></b>
+    Type <b>rfl</b> (<i>not</i>: db rfl) in the command window. The checkbox "Other
+    dataset" will be already checked in the dialog. Click <b>Choose</b> to choose a
+    file from the <b>file open</b> dialog. Accept the log and cmdlog files <b>rfl</b>
+    suggests or change <b>rfl</b>'s suggestions. Enter a description, if you like
+    (otherwise the dataset's label is taken). Press <b>OK</b>. The dataset, the log
+    files and the settings chosen will be remembered between sessions (also
+    see Other settings), and will be present in the dialog the next time you
+    invoke <b>rfl</b>.
+<p>
+<a name="opening"></a><b><u>Opening a dataset</u></b>
+    Type <b>rfl</b> in the command window, or choose <b>rfl (dialog)</b> from Stata's User
+    menu (you may also open a dataset from the command window or <b>rfl</b>'s menu,
+    see How to make use of rfl without calling the dialog). <b>rfl</b> lets you
+    choose among three views of the recent files list:
+        <b>(1)</b> a list of the 9 most recently opened datasets, with the dataset
+        opened last topping the list,
+        <b>(2)</b> a list of all the datasets ever opened, in alphabetical order,
+        <b>(3)</b> a list of the descriptions (if you have entered any) of all the
+        datasets ever opened, in alphabetical order.
+    From each view of the files list, you may select the dataset you want to
+    open. If you want to open a dataset which is not yet included in the
+    lists, check <b>Other dataset</b> (see First usage). If you don't want to open a
+    dataset, check <b>No dataset</b>.
+    <b><u>Remarks</u></b><b>:</b>  The files lists are filled automatically <i>after</i> you have opened
+    a dataset. (If you use Stata 9, the dataset is also placed in Stata's
+    Open recent menu). File names are shown in the lists in an abbreviated
+    form of up to 80 characters. If the abbreviated file name happens to be
+    the same as that of another file name, a number in parentheses is added
+    to the abbreviated file name. To view the unabbreviated file name, click
+    the button <b>Complete info</b>. <b>rfl</b> cannot handle file names which include
+    quotation marks like `, ' or ". <b>rfl</b> includes a rudimentary check for
+    quotes like ", ', and the macro quote "`" in file names and descriptions
+    and will not let you open such files in order to avoid later runtime
+    errors. An error message will be displayed in the results window. If a
+    file name or description contains an unmatched double quote ("abc), the
+    message "unmatched quote" will be displayed without further explanation.
+    If you select an entry which is marked for deletion or renaming (see
+    Removing a list entry and Renaming a list entry), <b>Del</b> or <b>Ren</b> is displayed
+    to the left of the <b>Change description</b> button. If you have prevented <b>rfl</b>'s
+    menu from being added to Stata's User menu (see Other settings), you
+    cannot access <b>rfl</b> via the menu. You can change the number of entries in
+    the recent files list on the second tab of the dialog window (see Other
+    settings).
+<p>
+<a name="datainmemory"></a><b><u>How data in memory are handled</u></b>
+    If you call <b>rfl</b> and there are data in memory or open log files, <b>rfl</b>
+    displays their file names and offers to save and close the open files. If
+    the data in memory have changed since you last saved them, the <b>Save</b>
+    checkbox will be checked by default. If the data in memory are unchanged,
+    only the <b>Close</b> checkbox will be checked. <b>rfl</b> uses the name under which
+    the data was last known to Stata. If you choose to clear changed data
+    from memory without saving, you will be prompted for confirmation. No
+    changed data will be cleared from memory unless you confirm the
+    operation. Note that if you choose not to clear the data from memory, <b>rfl</b>
+    cannot change the size of allocated memory (if needed), and will not load
+    a dataset. In Stata 9, <b>rfl</b> may also ask you to clear Mata's memory if it
+    suspects there are any functions, matrices etc. in Mata. Note that if you
+    choose not to clear Mata, Stata will refuse to allow <b>rfl</b> to set the
+    memory, and the dataset may or may not be loaded, depending on whether
+    there is sufficient memory available. No log or cmdlog file will be
+    loaded if you choose not to close the currently open log file(s).
+    <b><u>Remarks</u></b><b>:</b>  <b>rfl</b> relies on Stata's <b>c(changed)</b> when checking whether data in
+    memory are changed. Hence it won't recognise changed notes, labels etc.
+    Note that if the file names of the open files are too long to be
+    displayed in full in the dialog window, you may view the complete names
+    by typing the appropriate commands in the command window while the dialog
+    is being displayed (disp c(filename), log, cmdlog). <b>rfl</b> will invariably
+    save the data in version 8 format (same as version 9). If you need to
+    save the data in a previous version's format, you have to do so manually
+    (you may do so while <b>rfl</b>'s dialog window is displayed).
+<p>
+<a name="memory"></a><b><u>Setting the size of memory</u></b>
+    <b>rfl</b> does not recognize the size of the memory available on your computer.
+    Therefore, for each dataset marked in the lists, <b>rfl</b> proposes the memory
+    to be allocated to Stata according to a simple rule: size of dataset
+    times 1.5, at least 10 MB, at most 450 MB. You may change the size of
+    memory on the main tab of <b>rfl</b>'s dialog. You may control the memory rule
+    from the second tab of <b>rfl</b>'s dialog (see Other settings).
+    <b><u>Remarks</u></b><b>:</b>  Note that the percentage of free memory that will be available
+    to Stata after the dataset has been opened, which is displayed in the
+    dialog, is a rough approximation since it is calculated from integers in
+    MB. The actual free memory will differ slightly from the value shown.
+<p>
+<a name="log"></a><b><u>Choosing a log file</u></b>
+    For each dataset you open, you may choose an appropriate log and cmdlog
+    file. You have four choices:
+        <b>(1)</b> The first choice is a log file whose name is formed from the file
+            name of the dataset plus the current date.
+        <b>(2)</b> The second choice is the log file opened when this same dataset
+            was opened the last time. If there is no last log file associated
+            with the dataset, the button shows <i>No last log file yet</i> (in this
+            case, the selection of this button does not open a log file).
+        <b>(3)</b> The third choice is to not open a log file.
+        <b>(4)</b> The fourth choice is to open a log file of your choice by calling
+            a standard <i>file open</i> dialog.
+    Both a log file and a cmdlog file may be opened. The cmdlog file can be
+    chosen from <b>rfl</b>'s second tab. They both have the same name (unless you
+    uncheck <b>cmdlog selection follows log selection</b>, see Other settings), but
+    different file name extensions. By default, the cmdlog file gets the
+    extension txt. The log file extension (smcl or log) and the log file type
+    both depend on your set logtype setting. This means, if set logtype is
+    set to smcl, both the log file type and the file name extension will be
+    smcl, and if set logtype is set to text, the log file type will be text,
+    and the file name extension log. You may override the default extensions
+    for the log files by choosing <b>Other log file</b> and specifying a file with a
+    different file name extension.
+    <b><u>Remarks</u></b><b>:</b>  Log file names may be longer than the width of the dialog
+    window and therefore not fully displayed. To view the complete file name,
+    click the button <b>Complete info</b>. Log files are always opened with the
+    append option, unless you check the <b>Overwrite</b> options on <b>rfl</b>'s second tab
+    (see Other settings).
+<p>
+<a name="description"></a><b><u>Entering or changing a description</u></b>
+    Click <b>Enter description</b> to attach a description to a dataset, or click
+    <b>Change description</b> to edit the description attached to a dataset. Enter a
+    text (of up to 244 characters). Click <b>Done</b> to confirm the description. If
+    no description is entered, <b>rfl</b> uses the dataset's label (if any) as its
+    description.
+    <b><u>Remarks</u></b><b>:</b>  After a description has been changed, it is not possible to
+    view the descriptions list until <b>rfl</b> has been restarted. It is not
+    possible to change a description if the descriptions list is in view. Do
+    not include quotation marks like `, ' or " in descriptions, and never let
+    a description start with a colon (:). <b>rfl</b> cannot handle this (see Opening
+    a dataset). Descriptions may be up to 244 characters long. However, only
+    an abbreviated description of up to 80 characters is shown in the list. A
+    longer part of the description is displayed below the files list (if the
+    descriptions list is in view, the file name is displayed instead of the
+    description). To display the complete description, click the button
+    <b>Complete info</b>. Changes to descriptions of datasets already listed are
+    saved instantly, while descriptions of new datasets are stored only after
+    the dataset has been opened successfully. The logic of <b>rfl</b> requires the
+    abbreviated form of the descriptions to be different for each dataset. If
+    you enter similar descriptions for two different datasets which may be
+    abbreviated to the same string, <b>rfl</b> resolves the problem by adding a
+    number in parentheses to the description shown in the descriptions list.
+<p>
+<a name="managelist"></a><b><u>Managing the recent files list</u></b>
+<p>
+<a name="removelistentry"></a>    <b>(1) Removing a list entry</b>
+<p>
+    <b>rfl</b> stores the file names of all datasets ever opened with <b>rfl</b>. If your
+    lists grow large, you may choose to remove list entries manually.  You
+    may delete an entry from the files lists by choosing <b>Remove/Rename entry</b>.
+    The dialog will alter to give you a choice between <b>Remove</b> and <b>Rename</b>.
+    Choose <b>Remove</b>, then click the <b>Submit</b> button, or, if you change your mind,
+    click <b>Show logs</b> to cancel the <b>Remove</b> operation. Note that only the list
+    entry is removed, whereas the file on the disk remains untouched. See the
+    remarks in the section Deleted, moved and renamed datasets.
+<p>
+<a name="renamelistentry"></a>    <b>(2) Renaming a list entry</b>
+<p>
+    Within <b>rfl</b>'s dialog, you may also alter a list entry to point to another
+    dataset without losing the stored information (useful when a dataset is
+    moved to another directory). You may rename an entry in the files lists
+    by choosing <b>Remove/Rename entry</b>. The dialog will change to give you a
+    choice between <b>Remove</b> and <b>Rename</b>. Choose <b>Rename</b>, then click the <b>Submit</b>
+    button, or, if you change your mind, click <b>Show logs</b> to cancel the <b>Rename</b>
+    operation. Note that only the list entry is renamed while the file on the
+    disk remains untouched. See the remarks in the section Deleted, moved and
+    renamed datasets.
+<p>
+<a name="deletedfiles"></a>    <b>(3) Deleted, moved and renamed datasets</b>
+<p>
+    If you select a dataset or a description of a dataset which has been
+    deleted, moved or renamed on the disk, <b>rfl</b> detects this and asks what it
+    should do with the selected entry (cf. Removing a list entry and Renaming
+    a list entry). Make your choice and click the <b>Submit</b> button, or, if you
+    change your mind, click <b>Show logs</b> to leave the recent files list
+    unchanged.
+    <b><u>Remarks</u></b><b>:</b>  If you want to rename and/or remove more than one list entry at
+    a time, you may do so. Note that if you click <b>Remove/Rename entry</b> a list
+    entry is not immediately removed or renamed, but marked for deletion or
+    renaming. The actual renaming or removal from the list of an entry will
+    take place the next time <b>rfl</b> is called (<b>rfluse</b> and the menu do not
+    respect the rename or remove markers). There is no way to recall an entry
+    marked for deletion from within <b>rfl</b>. However, you may open rfl.log (see
+    How rfl stores the information) and edit the file manually. Be sure to
+    close <b>rfl</b> before.
+    If you rename a list entry by pointing it to a file which already has an
+    own entry in the files list, the entry you want to rename will be removed
+    from the files list after applicable information has been tranferred to
+    the existing entry. No information in the existing entry will be
+    overwritten. You will have to confirm the operation.
+<p>
+<a name="memory"></a><b><u>Setting the size of memory</u></b>
+    <b>rfl</b> does not recognize the size of the memory available on your computer.
+    Therefore, for each dataset marked in the lists, <b>rfl</b> proposes the size of
+    memory to be allocated to Stata according to a simple rule: size of
+    dataset times 1.5, at least 10 MB, at most 450 MB. You may change the
+    size of memory on the main tab of <b>rfl</b>'s dialog. You may control the
+    memory rule from the second tab of <b>rfl</b>'s dialog (see Other settings).
+    <b><u>Remarks</u></b><b>:</b>  Note that the percentage of free memory that will be available
+    to Stata after the dataset has been opened, which is displayed to the
+    left of the memory spinner, is a rough approximation since it is
+    calculated from integers in MB. The actual free memory will differ
+    slightly from the value shown.
+<p>
+<a name="datainmemory"></a><b><u>How data in memory are handled</u></b>
+    If you call <b>rfl</b> and there are data in memory or open log files, <b>rfl</b>
+    displays their file names and prompts you to save and to close the open
+    files. If the data in memory have changed since you last saved them, the
+    <b>Save</b> checkbox will be checked by default. If there are unchanged data in
+    memory, only the <b>Close</b> checkbox will be checked. <b>rfl</b> uses the name under
+    which the data was last known to Stata. If you choose to clear changed
+    data from memory without saving, you will be prompted for confirmation.
+    No changed data will be cleared from memory unless you confirm the
+    operation. Note that if you choose not to clear the data from memory, <b>rfl</b>
+    cannot change the size of allocated memory (if needed), and will not load
+    a dataset. No log or cmdlog file will be loaded unless you choose to
+    close the currently open log file(s).
+    <b><u>Remarks</u></b><b>:</b>  <b>rfl</b> relies on Stata's <b>c(changed)</b> when checking whether data in
+    memory are changed. Hence it won't recognise changed notes, labels etc.
+    Note that if the file names of the open files are too long to be
+    displayed in full in the dialog window, you may view the complete names
+    by typing the appropriate commands in the command window while the dialog
+    is being displayed (disp c(filename), log, cmdlog). <b>rfl</b> will invariably
+    save the data in version 8 format (same as version 9). If you need to
+    save the data in a previous version's format, you must do so manually
+    (you may do so while <b>rfl</b>'s dialog window is displayed).
+<p>
+<a name="nodlg"></a><b><u>How to make use of rfl without calling the dialog</u></b>
+<p>
+<a name="fromcommand"></a>    <b>(1) From the command window</b>
+<p>
+    In general you shouldn't bother with this cumbersome command-line version
+    of <b>rfl</b>. Specify all the settings you need in <b>rfl</b>'s dialog window, make
+    them permanent and then use <b>rfl</b>'s menu (cf. the next section From the
+    menu).
+    But if you really want to know: <b>rfluse</b> lets you open a dataset from the
+    command window without using <b>rfl</b>'s dialog. If you specify a file name for
+    the dataset, don't enclose it in quotes. You may also specify a log file,
+    a cmdlog file and a description. If no log files are specified, the log
+    files opened are controlled by the option <b>l()</b>. <b>l(1)</b> opens the log files
+    which would be the first choice in <b>rfl</b>'s dialog window, and <b>l(2)</b> opens
+    the log and cmdlog files used when this same dataset was last opened.
+    <b>l(3)</b> tells <b>rfluse</b> not to open any log or cmdlog file. If the <b>l()</b> option
+    is not specified, its value is taken from the <b>Load last log files</b> setting
+    on the second tab of <b>rfl</b>'s dialog window (see Other settings). If the
+    description specified in the <b>desc</b> option differs from the stored one, the
+    stored one is overwritten. If you do not specify a description, the
+    stored one remains unchanged. You may specify the parameters <b>ds</b>, <b>dc</b>, <b>lc</b>,
+    <b>cc</b> to handle data in memory and open log files. <b>ds</b> saves the data in
+    memory, <b>dc</b> clears the data from memory, <b>lc</b> closes an open log file, and
+    <b>cc</b> closes an open cmdlog file. If you do not specify these options and
+    <b>rfluse</b> encounters data in memory or open log files, a dialog window will
+    pop up to ask you how to handle them (cf. How data in memory are
+    handled). <b>rfluse</b> does not recognise remove and rename markers and
+    therefore uses such files list entries as if they were not marked. For
+    <b>rfluse</b> to work properly, <b>rfl</b> must have been called at least once before.
+    <b><u>Examples:</u></b>
+    <b>. rfluse</b> opens the most recently used file and its accompanying log and
+    cmdlog files, as specified in the <b>Load last log files</b> setting on the
+    second tab of <b>rfl</b>'s dialog window, if no data are present in memory
+    <b>. rfluse , l(3) dc cc lc</b> opens the most recently used file after having
+    cleared data from memory and closed open log files, but opens no log or
+    cmdlog file.
+    <b>. rfluse 4</b> opens the 4th entry in the recent files list and its
+    accompanying log and cmdlog files, as specified in the <b>Load last log</b>
+    <b>files</b> setting on the second tab of <b>rfl</b>'s dialog window, if no data are
+    present in memory
+    <b>. rfluse 4, l(2) dc cc lc</b> opens the 4th entry in the recent files list
+    and the log and cmdlog files used when this same data file was last
+    opened, after having cleared data from memory and closed open log files.
+    <b>. rfluse 7, desc(different description)</b> opens the 7th entry in the <b>Most</b>
+    <b>recent</b> list and its accompanying log and cmdlog files, as specified in
+    the <b>Load last log files</b> setting on the second tab of <b>rfl</b>'s dialog window,
+    and attaches "different description" to the entry, if no data are present
+    in memory
+    <b>. rfluse c:\mydata, desc("different description (version 2)") log(other</b>
+    <b>log) cmdlog(yet another log) mem(200) ds dc lc cc</b> saves the data in
+    memory, clears the memory, closes both log files, opens c:\mydata, other
+    log.smcl and yet another log.txt in your current (working) directory and
+    attaches "different description (version 2)" (note the quotes required
+    because of the parentheses) to the entry, after having saved the data in
+    memory, cleared the memory, closed any open log files, and allocated 200
+    MB of memory to Stata. Note that the file names are not enclosed in
+    quotes.
+<p>
+<a name="frommenu"></a>    <b>(2) From the menu</b>
+<p>
+    Upon the first invocation of <b>rfl</b> or <b>rfluse</b> during a Stata session, <b>rfl</b>'s
+    menu system is added to Stata's User menu. From there, one can call <b>rfl</b>'s
+    dialog or open the recently used files by typing 1,2,...,9 or selecting
+    them with the mouse. The calls from the menu work much the same way as
+    does <b>rfluse</b> called with a data file name. However, you cannot specify a
+    log file directly (the log files opened are specified in the <b>Load last</b>
+    <b>log files</b> setting on the second tab of <b>rfl</b>'s dialog window, see Other
+    settings) and you cannot change an entry's description. If there are data
+    in memory, or open log files, a dialog window will pop up asking you how
+    to handle them (cf. How data in memory are handled). <b>rfl</b>'s menu shows
+    abbreviated file names (which may not be fully shown by Stata's menu
+    system).
+    <b><u>Remarks</u></b><b>:</b>  Due to the static nature of Stata's menu system, the order of
+    the entries in the menu will not always reflect the re-ordering of the
+    files list entries <b>rfl</b> undertakes when you close and open files during a
+    Stata session. Thus, the order of the menu items will differ from the
+    order in the <b>Most recent</b> list of <b>rfl</b>'s dialog (or from Stata 9's Open
+    Recent list) after <b>rfl</b> has been called for the second time during one
+    Stata session. Similarly, entries removed from the files list will not be
+    removed from <b>rfl</b>'s menu, and a renamed entry will appear with its new
+    file name only at the bottom of <b>rfl</b>'s menu, while the original file name
+    will stay in place, unless you restart Stata. Files not present in the
+    menu at the beginning of a Stata session and opened subsequently will be
+    appended to the bottom of the menu (without a preceding number), if
+    opened with <b>rfl</b> or <b>rfluse</b>.
+    However, you may tell <b>rfl</b> to rewrite the menu each time it re-orders the
+    files list, thus showing the files in the menu in their correct order, by
+    checking <b>Rewrite rfl's menu</b> on the second tab of <b>rfl</b>'s dialog (see Other
+    settings). Be aware that checking this option will also remove all other
+    menu items in Stata's User menu each time <b>rfl</b> rewrites the menu. If you
+    don't like <b>rfls</b>'s menu system, you may prevent it from being installed.
+    To do so, check <b>Hide rfl's menu</b> on the second tab of the dialog.
+<p>
+<a name="other"></a><b><u>Other settings</u></b>
+    On the second tab of <b>rfl</b>'s dialog window, you may control how <b>rfl</b> works.
+    As soon as you change any of these settings, the button <b>Make settings</b>
+    <b>permanent</b> is enabled. Click it to make changes permanent. Otherwise the
+    settings will be in effect only for the dataset you're about to open.
+    (1) To dispense with <b>rfl</b>'s menu, check <b>Hide rfl's menu</b>.
+    (2) Make your choice with the <b>List of recent files</b> spinner to change the
+        number of files displayed in the <b>Most recent</b> list and in <b>rfl</b>'s menu.
+    (3) If you want the menu to always be up-to-date during a Stata session,
+        and its entries ordered like those in Stata 9's <b>Open Recent</b> menu,
+        check <b>Rewrite rfl's menu</b>. Be aware that <b>rfl</b> removes <i>any</i> menu item
+        added by another program (but not Stata's default menu) when
+        rewriting the menu.
+    (4) Check <b>Load last log files</b> if you want <b>rfl</b> to open the same log files
+        that were previously used with a dataset (cf. Choosing a log file)
+        when the dataset is called from the menu or from <b>rfluse</b>. Uncheck it
+        if you want <b>rfl</b> to open log files whose name is formed from the file
+        name of the dataset plus the current date (cf. Choosing a log file)
+        when opening a dataset using the menu or <b>rfluse</b>. This setting also
+        affects the default choice in the <b>Log file to use</b> and <b>cmdlog file to</b>
+        <b>use</b> sections of <b>rfl</b>'s dialog window.
+    (5) Set the<b> number of recent commands</b> from a cmdlog file you're opening
+        to add them to the review window. The default is 0.
+    (6) If you check <b>cmdlog selection follows log selection</b>, the cmdlog
+        choice on the second tab will always be the same as the log choice on
+        the first tab.  Thus, if you select the second choice from the <b>Log</b>
+        <b>file to use</b> section, the second choice from the <b>cmdlog file to use</b>
+        section will be selected, too. If you uncheck the option, <b>rfl</b> lets
+        you make your log and cmdlog choices independently of each other.
+    (7) Check <b>Replace the log file to be opened</b> if you want the log file to
+        be opened with the <b>replace</b> option, uncheck it, if you want the log
+        file to be opened with the <b>append</b> option (cf. help for log).
+    (8) Check <b>Replace the cmdlog file to be opened</b> if you want the cmdlog
+        file to be opened with the <b>replace</b> option, uncheck it, if you want
+        the cmdlog file to be opened with the <b>append</b> option (cf. help for 
+        log).
+    (9) Check <b>Don't warn me before replacing a log or cmdlog file</b> if you do
+        not wish to receive a reminder when you have chosen to open log or
+        cmdlog files with the <b>replace</b> option. This setting is only respected
+        if you use <b>rfl</b>'s dialog. If you use <b>rfl</b>'s menu or <b>rfluse</b>, a warning
+        message will always pop up. See the next entry for a possibility to
+        circumvent this behaviour.
+    (10) Check <b>Make a backup copy before overwriting</b> log files if you want to
+        back-up your log files before replacing them. The back-ups will be
+        named &lt;file name&gt;.&lt;extension&gt;.bkp. (If the file names are very long,
+        log files with the extension smcl will be renamed to have the
+        extension sbkp, those with the extension log will be renamed to have
+        the extension lbp, and cmdlog files will be renamed to have the
+        extension bkp). By checking this option, you will also prevent the
+        reminder from showing up if you have checked <b>Don't warn me before</b>
+        <b>replacing a log or cmdlog file</b> and use <b>rfl</b>'s menu or <b>rfluse</b>.
+    (11) Under <b>Memory settings</b>, you may change the rule <b>rfl</b> applies when
+        proposing the memory to be allocated to Stata on the main tab. With
+        the spinner in the first line of this section, you tell <b>rfl</b> by how
+        much it should multiply the file size of a dataset (divide the number
+        shown by 10). The spinners in the second line define a lower and an
+        upper limit for the memory proposed on the main tab. The amount of
+        memory <b>rfl</b> actually allocates to Stata may still be set on the main
+        tab.
+<p>
+<a name="windowtitle"></a><b><u>The Stata window title (Windows &amp; Unix only)</u></b>
+    If a dataset is opened with <b>rfl</b>, the Stata window title is set to the
+    file name of the dataset. If you close a dataset with <b>rfl</b> (check <b>No data</b>
+    <b>file</b>), the Stata window title is reset to the default. However, if you
+    close a dataset without using <b>rfl</b>, the Stata window title is not
+    restored.  To reset the windows title to the default, invoke <b>rfl</b>, choose
+    the second tab, and press<b> Reset Stata's window title</b>. Press <b>Cancel</b> if you
+    do not want to open a dataset.
+<p>
+<a name="storeinfo"></a><b><u>How rfl stores the information</u></b>
+    <b>rfl</b> makes use of a single text file (rfl.log) written to your PERSONAL
+    directory. Every time <b>rfl</b> or <b>rfluse</b> is started, a backup copy (rfl.bkp)
+    is created. In addition, upon invocation of <b>rfl</b> the files rflliall.idlg,
+    rflldesc.idlg, and rfllast5.idlg are created and written to your PERSONAL
+    directory. Make sure no files with these names that you may need for
+    other purposes are present when you invoke <b>rfl</b>, because they will be
+    overwritten without warning. Two global variables (rfl_SETMENU,
+    rfl_SETMENU_no) are defined. They control <b>rfl</b>'s menu. In rfl.log, the
+    first 15 lines are reserved for <b>rfl</b>'s menu, log and memory settings.
+        Line 1: rfl version
+        Line 2: hidemenu (default 0)
+        Line 3: rewrite menu (default 0)
+        Line 4: entries in recent file list (default 9)
+        Line 5: Always load last log, if called from menu or from rfluse
+        (default 1)
+        Line 6: cmdlog selection follows log selection (default 1)
+        Line 7: replace log (default 0)
+        Line 8: replace cmdlog (default 0)
+        Line 9: don't warn before replacing log and cmdlog (default 0)
+        Line 10: Minimum memory allocated to Stata when opening a dataset
+        (default 10)
+        Line 11: Maximum memory allocated to Stata when opening a dataset
+        (default 450)
+        Line 12: multiply dataset file size by this factor (default 1.5 [=15
+        in the dialog control])
+        Line 13: make backup of log files before overwriting (default 0)
+        Line 14: Number of commands to be added from the opened cmdlog file
+        to the review window (default 0)
+        Line 15: empty
+    From line 16 onwards, the list entries are stored. The most recently used
+    dataset comes first. Each list entry occupies 15 lines. The structure of
+    each list entry is as follows:
+        Line 1: Number of times the dataset has been opened
+        Line 2: Most recent status: 5 = most recent, 4 most recent but 1,
+        etc.
+        Line 3: dataset file name (short)
+        Line 4: dataset file name (long)
+        Line 5: cmdlog file name (long)
+        Line 6: log file name (long)
+        Line 7: description (short)
+        Line 8: description (long)
+        Lines 9-13: empty
+        Line 14: new dataset file name (only if a list entry has been altered
+        to point to a different file [i. e. renamed])
+        Line 15: actions on next start (delete, rename)
+    You can safely delete the files rfllast5.idlg, rflldesc.idlg, and
+    rflliall.idlg in your PERSONAL directory without losing any information.
+    If you delete rfl.log, you will start from scratch.
+<p>
+<a name="call"></a><b><u>How to call rfl on each start of Stata</u></b>
+    Simply add the command <b>rfl</b> to your profile.do:
+        (other commands)
+        <b>rfl</b>
+        (more commands, if you like, but <b>rfl</b> is recommended to be the last
+        line)
+    Alternatively, you may place <b>rflsetmenu</b> into your profile.do.
+<p>
+<a name="problems"></a><b><u>Known problems and unexpected behaviour</u></b>
+    <b>(1)</b> In rare circumstances, <b>rfl</b> may not react to mouse clicks as expected.
+        Specifically, regardless of where you click on the screen, it may
+        repeat the last action again and again (but does not produce unwanted
+        results). To regain control, either press the up or down arrow keys,
+        or, if this does not help, change to some other window without using
+        the mouse (e.g. by pressing &lt;alt&gt;+&lt;tab&gt; on Windows platforms), and
+        then return to <b>rfl</b>. Now normal behaviour of <b>rfl</b> should be restored.
+        <b><u>Remarks</u></b><b>:</b>  This seems to be a Stata or a Windows problem related to
+        the focus of the radio buttons. It has been observed on a Windows
+        platform when changing from one list to another and the selected
+        entry in the list you're changing to produces a message saying the
+        file could not be found.
+    <b>(2)</b> Stata allows you to open a log file and a cmdlog file both with the
+        same file name and extension. If you choose a log file with the
+        extension txt, <b>rfl</b> does not correct the choice and opens the same
+        file as a log and a cmdlog file. I didn't explore the consequences of
+        doing so.
+    <b>(3)</b> In very rare circumstances, double entries may be added to <b>rfl</b>'s menu
+        during one and the same Stata session. In practical use, this
+        behaviour should never occur. Anyway, it does not affect the
+        functionality of the menu. You'd simply have 2 or more menu items to
+        choose the same dataset from.
+<p>
+<b><u>Author</u></b>
+<p>
+    Dankwart Plattner
+    Please email bug reports, comments and suggestions to
+    dankwart.plattner@web.de
+<p>
+<p>
+<b><u>Acknowledgements</u></b>
+<p>
+    Jean Marie Linhart and James Hassell of Stata Corp. provided valuable
+    help and suggestions. Without Dan Chandler's support and help, <b>rfl</b>'s
+    dialog would not display on Macs.
+    For those who have F. Zimmerman's <b>elapse</b> installed, <b>rfl</b> shows the time
+    needed to load a dataset.
+<p>
+<b><u>Version history</u></b>
+    Version 3.6 available from SSC, December 2005.
+        File name extension and type of log files chosen according to <b>set</b>
+        <b>logtype</b> (previously fixed to smcl). Fixed small bug.
+    Version 3.5 available from SSC, July 2005.
+        Improved memory handling: Setting the memory even if there is
+        something in Mata.
+    Version 3.4 available from SSC, July 2005.
+        Added an option to add recent commands from the cmdlog file opened to
+        the review window. If no description is entered, the dataset's label
+        (if not empty) is taken. Fixed two bugs. Changed help file.
+        Reorganised <b>rfl</b>'s dialog files.
+    Version 3.3 available from SSC, Apr 2005.
+        Fixed a bug with some cmdlog file names. Some minor improvements you
+        may not notice.
+    Version 3.2 available from SSC, Mar 2005.
+        Added missing dialog file to the package. Minor bug fixes and
+        improvements.
+    Version 3.1 available from SSC, Jan 2005.
+        Improved menu system. Minor bug fixes and improvements.
+    Version 3.0 available from SSC, Jan 2005.
+        Improved menu system. Log and cmdlog files are treated independently.
+        Introduced options to control <b>rfl</b>'s behaviour. File names are shown
+        in the form &lt;file name (path name)&gt; in the lists. Minor bug fixes and
+        improvements.
+    Version 2.2 available from SSC, Nov 2004.
+        Menu system. Functional on Macs. Bug fixes and minor improvements.
+    Version 2.1 available from SSC, Oct 2004.
+        Bug fixes. List entries can be renamed.
+    Version 2.0 available from SSC, Sep 2004.
+    Version 1 presented at the German Stata User Meeting, Berlin 2004.
+</pre>

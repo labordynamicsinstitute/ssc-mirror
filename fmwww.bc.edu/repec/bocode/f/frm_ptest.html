@@ -1,0 +1,136 @@
+<pre>
+help for <b>frm_ptest</b>
+-------------------------------------------------------------------------------
+<p>
+<b><u>Title</u></b>
+<p>
+    <b>frm_ptest</b> -- P test for non-nested one-part and two-part fractional
+                   regression models
+<p>
+<p>
+<b><u>Syntax</u></b>
+<p>
+        <b>frm_ptest,</b> <b>mod1</b>(<i>name_model1a</i> [<i>name_model1b</i>]) <b>mod2</b>(<i>name_model2a</i>
+            [<i>name_model2b</i>]) [<i>options</i>]
+<p>
+    <i>options</i>                     Description
+    -------------------------------------------------------------------------
+    <b>lm</b>                          specify the LM version of the P test to be
+                                  performed
+    <b><u>w</u></b><b>ald</b>                        specify the t version of the P test to be
+                                  performed
+    -------------------------------------------------------------------------
+<p>
+    where <i>name_mod1a</i>, <i>name_mod1b</i>, <i>name_mod2a</i> and <i>name_mod2b</i> are names under
+    which estimation results were saved via estimates store.  The second name
+    in <b>mod1</b> and <b>mod2</b> is only to be provided when testing the full
+    specification of two-part models.
+<p>
+<p>
+<b><u>Description</u></b>
+<p>
+    <b>frm_ptest</b> applies the P test statistic proposed by Davidson and MacKinnon
+    (1981) to fractional regression models estimated via frm. <b>frm_ptest</b> may
+    be used to test against each other two alternative specifications for the
+    link function in: (i) one-part fractional regression models; (ii) the
+    binary component of two-part fractional regression models; (iii) the
+    fractional component of two-part fractional regression models; and (iv)
+    two-part fractional regression models. In addition, <b>frm_ptest</b> may be used
+    to test one-part models against two-part models. See Ramalho, Ramalho and
+    Murteira (2011) for details on the application of the P test in the
+    fractional regression framework.
+<p>
+<p>
+<b><u>Options</u></b>
+<p>
+    <b>lm</b> specifies that the LM version of the P test is to be performed. Unless
+        the competing models are alternative specifications for the binary
+        component of a two-part fractional regression model, a robust LM test
+        is implemented.
+<p>
+    <b>wald</b> specifies that the robust t version of the P test is to be
+        performed. This is the default option.
+<p>
+<p>
+<b><u>Examples</u></b>
+<p>
+    Setup - data used in Ramalho, Ramalho and Henriques (2010)
+        <b>. use http://evunix.uevora.pt/~jsr/stata/JPA-2010.dta</b>
+<p>
+    Testing logit versus loglog specifications for standard fractional
+    regression models
+        <b>. frm SCORE LANDLORD LIVESTOCK CROP SIZE SUBSIDIES ALTO CENTRAL BAIXO</b>
+        <b>. estimates store a1</b>
+        <b>. frm SCORE LANDLORD LIVESTOCK CROP SIZE SUBSIDIES ALTO CENTRAL</b>
+            <b>BAIXO, linkf(loglog)</b>
+        <b>. estimates store a2</b>
+        <b>. frm_ptest, mod1(a1) mod2(a2)</b>
+<p>
+    Testing a logit one-part fractional regression model versus a binary
+    logit + fractional probit two-part model
+        <b>. frm SCORE LANDLORD LIVESTOCK CROP SIZE SUBSIDIES ALTO CENTRAL BAIXO</b>
+        <b>. estimates store a1</b>
+        <b>. frm SCORE LANDLORD LIVESTOCK CROP SIZE SUBSIDIES ALTO CENTRAL</b>
+            <b>BAIXO, m(2Pbin) inf(1)</b>
+        <b>. estimates store a2</b>
+        <b>. frm SCORE LANDLORD LIVESTOCK CROP SIZE SUBSIDIES ALTO CENTRAL</b>
+            <b>BAIXO, m(2Pfrac) linkf(probit) inf(1)</b>
+        <b>. estimates store a3</b>
+        <b>. frm_ptest, mod1(a1) mod2(a2 a3)</b>
+<p>
+<p>
+<b><u>Saved results</u></b>
+<p>
+    <b>frm_ptest</b> saves the following in <b>r()</b> if both LM and Wald versions of the
+    P test are performed:
+<p>
+     Scalars       
+      <b>r(t1)</b>               t statistic for testing <b>mod1</b> against model <b>mod2</b>
+      <b>r(t1p)</b>              p-value for the statistic <b>r(t1)</b>
+      <b>r(t2)</b>               t statistic for testing <b>mod2</b> against model <b>mod1</b>
+      <b>r(t2p)</b>              p-value for the statistic <b>r(t2)</b>
+      <b>r(LM1)</b>              LM statistic for testing <b>mod1</b> against model <b>mod2</b>
+      <b>r(LM1p)</b>             p-value for the statistic <b>r(LM1)</b>
+      <b>r(LM2)</b>              LM statistic for testing <b>mod2</b> against model <b>mod1</b>
+      <b>r(LM2p)</b>             p-value for the statistic <b>r(LM2)</b>
+<p>
+<p>
+<b><u>Author</u></b>
+<p>
+    Joaquim J.S. Ramalho
+    Department of Economics
+    University of Evora
+    Portugal
+    jsr@uevora.pt
+<p>
+<p>
+<b><u>Remarks</u></b>
+<p>
+    <b>frm_ptest</b> is not an official Stata command. For further help and support,
+    please contact the author. Please notice that this software is provided
+    as is, without warranty of any kind, expressed or implied, including but
+    not limited to the warranties of merchantability, fitness for a
+    particular purpose, and noninfringement. In no event shall the author be
+    liable for any claim, damages, or other liability, whether in an action
+    of contract, tort, or otherwise, arising from, out of, or in connection
+    with the software or the use or other dealings in the software.
+<p>
+<p>
+<b><u>References</u></b>
+<p>
+    Davidson, R. and J.G. MacKinnon (1981), "Several tests for model
+        specification on the presence of alternative hypotheses",
+        Econometrica, 49(3), 781-793.
+<p>
+    Ramalho, E.A., J.J.S. Ramalho and J.M.R. Murteira (2011), "Alternative
+        estimating and testing empirical strategies for fractional regression
+        models", Journal of Economic Surveys, 25(1), 19-68.
+<p>
+    Ramalho, E.A., J.J.S. Ramalho and P.D. Henriques (2010), "Fractional
+        regression models for second stage DEA efficiency analyses", Journal
+        of Productivity Analysis, 34(3), 239-255.
+<p>
+<p>
+<b><u>Also see</u></b>
+<p>
+</pre>

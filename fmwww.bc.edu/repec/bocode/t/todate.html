@@ -1,0 +1,106 @@
+<pre>
+-------------------------------------------------------------------------------
+help for <b>todate</b>
+-------------------------------------------------------------------------------
+<p>
+<b><u>Generate Stata date variables from run-together date variables</u></b>
+<p>
+        <b>todate</b> <i>varlist</i> [<b>if</b> <i>exp</i>] [<b>in</b> <i>range</i>] <b>,</b> <b><u>g</u></b><b>enerate(</b><i>newvarlist</i><b>)</b>
+                 <b><u>p</u></b><b>attern(</b><i>patternspec</i><b>)</b> [<b><u>f</u></b><b>ormat(</b><i>format</i><b>)</b> <b><u>c</u></b><b>end(</b><i>year</i><b>)</b>]
+<p>
+<p>
+<b><u>Description</u></b> 
+<p>
+    <b>todate</b> takes run-together date variables consisting of integers or
+    integer characters and generates the corresponding Stata date variables.
+    Depending on input, the resulting variables will have units that are the
+    numbers of days, weeks, months, quarters or half-years since the
+    beginning of 1960.
+<p>
+<p>
+<b><u>Remarks</u></b>
+<p>
+    As explained in [U] 24.2.2.2, Stata's <b>date()</b> function cannot convert
+    run-together date variables which consist of integers or integer
+    characters and represent some permutation of years, months and days, with
+    values such as <b>19520121</b> or <b>520121</b> or <b>"19520121"</b>, to Stata date variables.
+    However, it is possible to use other numeric or string functions to
+    extract year, month and day and then to compute the dates.
+<p>
+    A similar problem and a similar solution arise with run-together dates
+    representing years and one of half-years, quarters, months or weeks.
+<p>
+    <b>todate</b> offers an alternative. It can handle one or more numeric and/or
+    string variables with run-together dates which are integers or integer
+    characters, hereafter both referred to as digits.
+<p>
+<p>
+<b><u>Options</u></b> 
+<p>
+    <b>generate()</b> specifies a list of new variable names to hold the Stata date
+        variables. There must be as many new names as there are existing
+        run-together date variables. This is a required option.
+<p>
+    <b>pattern()</b> specifies the pattern for interpreting digits in the dates.
+<p>
+        <b>y</b> indicates <b>y</b>ear.
+        <b>h</b> indicates <b>h</b>alf-year.
+        <b>q</b> indicates <b>q</b>uarter.
+        <b>m</b> indicates <b>m</b>onth.
+        <b>w</b> indicates <b>w</b>eek.
+        <b>d</b> indicates <b>d</b>ay.
+<p>
+        The patterns supported are of types <b>mdy</b>, <b>yh</b>, <b>yq</b>, <b>ym</b> and <b>yw</b>.  For
+        example, type <b>mdy</b> consists of some permutation of <b>m</b>s, <b>d</b>s and <b>y</b>s. In
+        general, all <b>y</b>s, ... , all <b>d</b>s should be contiguous.
+<p>
+        Thus <b>p(yyyymmdd)</b> indicates that <b>19520121</b> is to be interpreted as 1952
+        January 21. Dates like <b>3281952</b> and <b>12251999</b> for March 28 1952 and
+        December 25 1999, in which the first digit for shorter dates is not
+        specified, but could be <b>0</b>, should be specified as <b>p(mmddyyyy)</b>.
+<p>
+        <b>todate</b> cannot handle input variables whose maximum length does not
+        match the length of pattern specified, nor input variables whose non-
+        missing values vary in length by more than 1 digit. Such variables
+        are skipped.
+<p>
+        This is a required option.
+<p>
+    <b>cend()</b> specifies the end of the century (any period of 100 years) to
+        which years belong. With <b>cend(2000)</b> year digits of <b>52</b> and <b>99</b> will be
+        interpreted as <b>1952</b> and <b>1999</b>. With <b>cend(2060)</b> they will be
+        interpreted as <b>2052</b> and <b>1999</b>.  <b>cend()</b> is ignored if 4 digit years are
+        given.
+<p>
+    <b>format()</b> specifies a format to be attached to each new variable, usually
+        but not necessarily a date format. See help on date formats or
+        time-series formats.  By default the formats will be <b>%d</b>, <b>%tw</b>, <b>%tm</b>,
+        <b>%tq</b> or <b>%th</b> as appropriate.
+<p>
+<p>
+<b><u>Examples</u></b> 
+<p>
+    <b>. todate d1 d2 d3, gen(ndate1-ndate3) p(yyyymmdd) f(%dd_m_cy)</b>
+    <b>. todate d1 d2 d3, gen(ndate1-ndate3) p(mmddyy) c(2000) f(%dd_m_cy)</b>
+    <b>. todate d1 d2 d3, gen(ndate1-ndate3) p(yyyyq) f(%tq_q_cy)</b>
+<p>
+<p>
+<b><u>Author</u></b>
+<p>
+    Nicholas J. Cox, Durham University, U.K.
+    n.j.cox@durham.ac.uk
+<p>
+<p>
+<b><u>Acknowledgments</u></b>
+<p>
+    Kit Baum, Roger Harbord, David Kantor and Gary Longton made very helpful
+    comments.
+<p>
+<p>
+<b><u>Also see</u></b>
+<p>
+    On-line:  help for datefcn, ywfcns, dfmt, tfmt
+    Manual: <b>[U] 27 Commands for dealing with dates</b>
+    FAQ:  http://www.stata.com/support/faqs/data/dateseq.html
+<p>
+</pre>

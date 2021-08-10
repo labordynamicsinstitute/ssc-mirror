@@ -1,0 +1,71 @@
+<pre>
+..-
+help for ^aov1cont^                                     (statalist Mar. 20, 199
+&gt; 8)
+..-
+<p>
+Contrasts in one-way ANOVA from means, SD's and N's
+---------------------------------------------------
+<p>
+    ^aov1cont^ nvar meanvar sdvar [^if^ exp] [^in^ range]^,^
+        ^c^oeffs^(^coeffvar^)^|^tr^end [ ^le^vel^(^#^)^ ]
+<p>
+<p>
+Description
+-----------
+<p>
+^aov1cont^ calculates the contrast (L) for coefficients in coeffvar over the
+means in meanvar.  The group sizes are in nvar and the SDs are in sdvar.
+<p>
+<p>
+Options
+-------
+<p>
+^coeffs(^coeffvar^)^|^trend^: one of these is REQUIRED. If ^trend^ is specified
+&gt; ,
+L is a standardized linear trend contrast using integers with spacing 1.
+<p>
+^level(^#^)^ defines the confidence interval coverage for L. Default: $S_level.
+<p>
+<p>
+Remarks
+-------
+<p>
+Like @contrast@, ^aov1cont^ calculates the standardized contrast L as
+<p>
+        L = (a1 * mean1) + (a2 * mean2) + (a3 * mean3) + ...
+<p>
+where mean1 is the first value of meanvar and a1 is the first STANDARDIZED
+coefficient in coeffvar, and so on.  ^aov1cont^ always standardizes the coeff-
+icients so that they add up to zero; it does so by subtracting the mean of
+coeffvar from each of its values.  The standardized coefficients (a1, a2, etc)
+are labelled ^__a^ in the output from ^aov1cont^.  The output includes a
+confidence interval for L and a significance test for L = 0.
+<p>
+<p>
+Examples
+--------
+<p>
+ . ^aov1cont n mean sd, coeffs(c)^
+ . ^aov1cont n mean sd, trend^
+<p>
+<p>
+Stored
+------
+<p>
+        ^$S_1^  total number of observations in analysis of variance
+        ^$S_2^  number of groups in analysis of variance
+        ^$S_3^  value of standardized contrast, L
+        ^$S_4^  standard error of L
+        ^$S_5^  lower confidence limit for L
+        ^$S_6^  upper confidence limit for L
+        ^$S_7^  t value for test of L = 0
+        ^$S_8^  P value for test of L = 0
+<p>
+<p>
+Also see
+--------
+<p>
+ Manual:  [R] oneway
+On-line:  help for @oneway@, @contrast@.
+</pre>

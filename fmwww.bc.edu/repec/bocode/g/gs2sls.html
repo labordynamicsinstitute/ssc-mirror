@@ -1,0 +1,834 @@
+<pre>
+-------------------------------------------------------------------------------
+<b>help: </b><b>gs2sls</b>                                                   <b>dialog:</b> <b>gs2sls</b>
+-------------------------------------------------------------------------------
+<p>
+<b>        </b>+-------+
+<b>    </b>----+<b> Title </b>+------------------------------------------------------------
+<p>
+<b>gs2sls: Generalized Spatial Two Stage Least Squares (2SLS)</b>
+          <b>Cross Sections Regression</b>
+<p>
+<a name="00"></a><b>        </b>+-------------------+
+<b>    </b>----+<b> Table of Contents </b>+------------------------------------------------
+<p>
+     <b>Syntax</b>
+     <b>Description</b>
+     <b>Model Options</b>
+     <b>Options</b>
+     <b>Spatial Aautocorrelation Tests</b>
+     <b>Model Selection Diagnostic Criteria</b>
+     <b>Heteroscedasticity Tests</b>
+     <b>Non Normality Tests</b>
+     <b>Saved Results</b>
+     <b>References</b>
+<p>
+ *** <b>Examples</b>
+<p>
+     <b>Author</b>
+<p>
+<a name="01"></a><b>        </b>+--------+
+<b>    </b>----+<b> Syntax </b>+-----------------------------------------------------------
+<p>
+   <b>gs2sls</b> <i>depvar</i> <i>indepvars</i> [<i>weight</i>] , <b><u>wmf</u></b><b>ile(</b><i>weight_file</i><b>)</b>
+ 
+   [ <b><u>m</u></b><b>odel(</b><i>2sls</i>|<i>gmm</i>|<i>liml</i><b>)</b> <b><u>lmsp</u></b><b>ac</b> <b><u>lmh</u></b><b>et</b> <b><u>lmn</u></b><b>orm</b> <b>diag</b> <b><u>test</u></b><b>s</b> <b>stand inv inv2</b>
+ 
+     <b>mfx(</b><i>lin</i><b>,</b><i> log</i><b>)</b> <b><u>ord</u></b><b>er(</b><i>#</i><b>)</b> <b><u>pred</u></b><b>ict(</b><i>new_var</i><b>)</b> <b><u>res</u></b><b>id(</b><i>new_var</i><b>)</b>
+ 
+     <b>coll zero tolog</b> <b><u>nocons</u></b><b>tant</b> <b><u>l</u></b><b>evel(</b><i>#</i><b>)</b> <b>vce(</b><i>vcetype</i><b>)</b> ]
+<p>
+<a name="02"></a><b>        </b>+-------------+
+<b>    </b>----+<b> Description </b>+------------------------------------------------------
+<p>
+ <b>gs2sls</b> estimates Generalized Spatial Two Stage Least Squares (2SLS)
+        for Cross Sections Regression
+<p>
+   R2, R2 Adjusted, and F-Test, are obtained from 4 ways:
+ 
+     1- (Buse 1973) R2.
+     2- Raw Moments R2.
+     3- squared correlation between predicted (Yh) and observed dependent
+    variable (Y).
+     4- Ratio of variance between predicted (Yh) and observed dependent
+    variable (Y).
+<p>
+     - Adjusted R2: R2_a=1-(1-R2)*(N-1)/(N-K-1).
+     - F-Test=R2/(1-R2)*(N-K-1)/(K).
+<p>
+     Buse(1973) R2 in<b> model(</b><i>gs2sls</i><b>)</b> may be negative, to avoid negative R2,
+     you can increase number on instrumental variables by choosing order
+     more than 1 <b>order(2, 3, 4)</b>
+<p>
+<b>*** Important Notes:</b>
+<b>gs2sls</b> generates some variables names with prefix:
+<b>w1x_ , w2x_ , w3x_ , w4x_ , w1y_ , w2y_ , mstar_ , spat_</b>
+<b>So, you must avoid to include variables names with thes prefixes</b>
+<p>
+<a name="03"></a><b>        </b>+---------------+
+<b>    </b>----+<b> Model Options </b>+----------------------------------------------------
+<p>
+  <b>2sls</b>             Two-Stage Least Squares (2SLS)
+  <b>liml</b>             Limited Information Maximum Likelihood (LIML)
+  <b>gmm</b>              Generalized Method of Moments (GMM)
+<p>
+<a name="04"></a><b>        </b>+---------+
+<b>    </b>----+<b> Options </b>+----------------------------------------------------------
+<p>
+  <b><u>wmf</u></b><b>ile(</b><i>weight_file</i><b>)</b> Open CROSS SECTION weight matrix file.
+<p>
+        Spatial Cross Sections Weight Matrix file must be:
+         1- Square Matrix [NxN] 
+         2- Symmetric Matrix (Optional) 
+<p>
+  Spatial Weight Matrix has two types: Standardized and binary weight matrix.
+<p>
+  <b>stand</b>            Use Standardized Weight Matrix, (each row sum equals 1)
+                   Default is Binary spatial Weight Matrix which each element i
+&gt; s 0 or 1
+<p>
+  <b>inv</b>              Use Inverse Standardized Weight Matrix (1/W)
+<p>
+  <b>inv2</b>             Use Inverse Squared Standardized Weight Matrix (1/W^2)
+<p>
+  <b>zero</b>             convert missing values observations to Zero
+<p>
+  <b><u>ord</u></b><b>er(</b><i>1</i><b>,</b><i> 2</i><b>,</b><i> 3</i><b>,</b><i> 4</i><b>)</b> Order of lagged independent variables up to maximum 4th ord
+&gt; er.
+<p>
+  <b>coll</b>             keep collinear variables; default is removing collinear vari
+&gt; ables.
+<p>
+  <b><u>nocons</u></b><b>tant</b>       Exclude Constant Term from RHS Equation
+<p>
+  <b><u>test</u></b><b>s</b>            display ALL lmh, lmn, lmsp, diag tests
+<p>
+  <b>mfx(</b><i>lin</i><b>,</b><i> log</i><b>)</b>    functional form: Linear model <b>(lin)</b>, or Log-Log model <b>(log)</b>,
+                   to compute Total, Direct, and InDirect Marginal Effects and 
+&gt; Elasticities
+   - In Linear model: marginal effects are the coefficients (Bm),
+        and elasticities are (Es = Bm X/Y).
+   - In Log-Log model: elasticities are the coefficients (Es),
+        and the marginal effects are (Bm = Es Y/X).
+   - <b>mfx(</b><i>log</i><b>)</b> and <b>tolog</b> options must be combined, to transform linear variables
+&gt;  to log form.
+<p>
+  <b>tolog</b>            Convert dependent and independent variables
+                   to LOG Form in the memory for Log-Log regression.
+                   <b>tolog</b> Transforms <i>depvar</i> and <i>indepvars</i>
+                   to Log Form without lost the original data variables
+<p>
+  <b><u>pred</u></b><b>ict(</b><i>new_variable</i><b>)</b>      Predicted values variable
+<p>
+  <b><u>res</u></b><b>id(</b><i>new_variable</i><b>)</b>        Residuals values variable computed as Ue=Y-Yh
+<p>
+<b>vce(</b><i>vcetype</i><b>)</b> <b>ols</b>, <b><u>r</u></b><b>obust</b>, <b><u>cl</u></b><b>uster</b>, <b><u>boot</u></b><b>strap</b>, <b><u>jack</u></b><b>knife</b>, <b>hc2</b>, <b>hc3</b>
+<p>
+  <b>level(</b><i>#</i><b>)</b>         confidence intervals level; default is level(95)
+<p>
+<a name="05"></a><b>        </b>+--------------------------------+
+<b>    </b>----+<b> Spatial Aautocorrelation Tests </b>+-----------------------------------
+<p>
+<b><u>lmsp</u></b><b>ac</b> Spatial Aautocorrelation Tests:
+        * Ho: Error has No Spatial AutoCorrelation
+          Ha: Error has    Spatial AutoCorrelation
+            - GLOBAL Moran MI Test
+            - GLOBAL Geary GC Test
+            - GLOBAL Getis-Ords GO Test
+            - Moran MI Error Test
+            - LM Error [SEM] (Burridge) Test
+            - LM Error [SEM] (Robust) Test
+        * Ho: Spatial Lagged Dependent Variable has No Spatial AutoCorrelation
+          Ha: Spatial Lagged Dependent Variable has    Spatial AutoCorrelation
+            - LM Lag [SAR]  (Anselin) Test
+            - LM Lag [SAR]  (Robust) Test
+        * Ho: No General Spatial AutoCorrelation
+          Ha:    General Spatial AutoCorrelation
+            - LM SAC   (LMErr+LMLag_R) Test
+            - LM SAC   (LMLag+LMErr_R) Test
+<p>
+Definitions:                  
+<p>
+   - Spatial autocorrelation: chock in one country affects neighboring countrie
+&gt; s
+<p>
+   - Spatial autocorrelation: is correlation of a variable with itself in space
+&gt; .
+<p>
+   - Spatial Lag Model:     Y = BX + rWy + e         ; e = lWe+u
+   - Spatial Error Model:   Y = BX + e               ; e = lWe+u
+   - Spatial Durbin Model:  Y = BX + aWX* + rWy + e  ; e = lWe+u
+   - General Spatial Model: Y = BX + rWy  + LW1y + e ; e = lW1e+u
+<p>
+   - General Spatial Model is used to deal with both types of spatial dependenc
+&gt; e,
+     namely Spatial Lag Dependence and Spatial Error Dependence
+<p>
+   - Spatial Error Model is used to handle the spatial dependence due to
+     the omitted variables or errors in measurement through the error term
+<p>
+   - Spatial Autoregressive Model (SAR) is also known as Spatial Lag Model
+<p>
+   - Positive spatial autocorrelation exists when high values correlate
+     with high neighboring values or when low values correlate with low
+     neighboring values
+<p>
+   - Negative spatial autocorrelation exists when high values correlate
+     with low neighboring values and vice versa.
+<p>
+   - presence of positive spatial autocorrelation results in a loss of informat
+&gt; ion,
+     which is related to greater uncertainty, less precision, and larger standa
+&gt; rd errors.
+<p>
+   - Spatial autocorrelation coefficients (in contrast to their counterparts in
+&gt;  time)
+     are not constrained by -1/+1. Their range depends on the choice of weights
+&gt;  matrix.
+<p>
+   - Spatial dependence exists when the value associated with one location
+     is dependent on those of other locations.
+<p>
+   - Spatial heterogeneity exists when structural changes related to location
+     exist in a dataset, it can result in non-constant error variance
+     (heteroscedasticity) across areas, especially when scale-related
+     measurement errors are present.
+<p>
+   - Spatial regression models are statistical models that account for
+     the presence of spatial effects, i.e., spatial autocorrelation
+     (or more generally spatial dependence) and/or spatial heterogeneity.
+<p>
+   - if LM test for spatial lag is more significant than LM test for spatial er
+&gt; ror,
+     and robust LM test for spatial lag is significant but robust LM test for
+     spatial error is not, then the appropriate model is spatial lag model.
+     Conversely, if LM test for spatial error is more significant than LM test
+     for spatial lag and robust LM test for spatial error is significant
+     but robust LM test for spatial lag is not, then the appropriate specificat
+&gt; ion
+     is spatial error model, [Anselin-Florax (1995)].
+        
+   - robust versions of Spatial LM tests are considered only when
+     standard versions (LM-Lag or LM-Error) are significant
+        
+   - General Spatial Model is used to deal with both types of spatial dependenc
+&gt; e,
+     namely spatial lag dependence and spatial error dependence
+        
+   - Spatial Error Model is used to handle spatial dependence due to omitted
+     variables or errors in measurement through the error term
+        
+   - Spatial Autoregressive Model (SAR) is also known as Spatial Lag Model
+<p>
+<a name="06"></a><b>        </b>+-------------------------------------+
+<b>    </b>----+<b> Model Selection Diagnostic Criteria </b>+------------------------------
+<p>
+<b>diag</b> Model Selection Diagnostic Criteria:
+        - Log Likelihood Function                   LLF
+        - Akaike Information Criterion              (1974) AIC
+        - Akaike Information Criterion              (1973) Log AIC
+        - Schwarz Criterion                         (1978) SC
+        - Schwarz Criterion                         (1978) Log SC
+        - Amemiya Prediction Criterion              (1969) FPE
+        - Hannan-Quinn Criterion                    (1979) HQ
+        - Rice Criterion                            (1984) Rice
+        - Shibata Criterion                         (1981) Shibata
+        - Craven-Wahba Generalized Cross Validation (1979) GCV
+<p>
+<a name="07"></a><b>        </b>+--------------------------+
+<b>    </b>----+<b> Heteroscedasticity Tests </b>+-----------------------------------------
+<p>
+<b><u>lmh</u></b><b>et</b> Heteroscedasticity Tests:
+        * Ho: Homoscedasticity - Ha: Heteroscedasticity
+        - Hall-Pagan LM Test:  E2 = Yh
+        - Hall-Pagan LM Test:  E2 = Yh2
+        - Hall-Pagan LM Test:  E2 = LYh2
+        - Harvey LM Test:    LogE2 = X
+        - Wald Test:         LogE2 = X
+        - Glejser LM Test:    |E| = X
+        - Machado-Santos-Silva LM Test: Ev= Yh Yh2
+        - Machado-Santos-Silva LM Test: Ev= X
+        - White Test - Koenker(R2): E2 = X
+        - White Test - B-P-G (SSR): E2 = X
+        - White Test - Koenker(R2): E2 = X X2
+        - White Test - B-P-G (SSR): E2 = X X2
+        - White Test - Koenker(R2): E2 = X X2 XX
+        - White Test - B-P-G (SSR): E2 = X X2 XX
+        - Cook-Weisberg LM Test E = Yh
+        - Cook-Weisberg LM Test E = X
+        *** Single Variable Tests
+                - Cook-Weisberg LM Test: E = xi
+                - King LM Test: E = xi
+<p>
+        *** Tobit Model Heteroscedasticity LM Tests
+                - Separate LM Tests - Ho: Homoscedasticity
+                - Joint LM Test     - Ho: Homoscedasticity
+<p>
+<a name="08"></a><b>        </b>+---------------------+
+<b>    </b>----+<b> Non Normality Tests </b>+----------------------------------------------
+<p>
+<b><u>lmn</u></b><b>orm</b> Non Normality Tests:   
+        * Ho: Normality - Ha: Non Normality
+        *** Non Normality Tests:
+                - Jarque-Bera LM Test
+                - White IM Test
+                - Doornik-Hansen LM Test
+                - Geary LM Test
+                - Anderson-Darling Z Test
+                - D'Agostino-Pearson LM Test
+        *** Skewness Tests:
+                - Srivastava LM Skewness Test
+                - Small LM Skewness Test
+                - Skewness Z Test
+                - Skewness Coefficient - Standard Deviation
+        *** Kurtosis Tests:
+                - Srivastava Z Kurtosis Test
+                - Small LM Kurtosis Test
+                - Kurtosis Z Test
+                - Kurtosis Coefficient - Standard Deviation
+        *** Runs Tests:
+                - Runs Test:
+                - Standard Deviation Runs Sig(k) - Mean Runs E(k)
+                - 95% Conf. Interval [E(k)+/- 1.96* Sig(k)]
+        *** Tobit cross section Non Normality Tests
+                *** LM Test - Ho: No Skewness
+                *** LM test - Ho: No Kurtosis
+                *** LM Test - Ho: Normality (No Kurtosis, No Skewness)
+                    - Pagan-Vella LM Test
+                    - Chesher-Irish LM Test
+<p>
+<a name="09"></a><b>        </b>+---------------+
+<b>    </b>----+<b> Saved Results </b>+----------------------------------------------------
+<p>
+  <b>gs2sls</b> saves the following results in <b>e()</b>:
+<p>
+Scalars
+<p>
+*** Spatial Aautocorrelation Tests:
+   <b>e(mig)</b>          GLOBAL Moran MI Test
+   <b>e(migp)</b>         GLOBAL Moran MI Test P-Value
+   <b>e(gcg)</b>          GLOBAL Geary GC Test
+   <b>e(gcgp)</b>         GLOBAL Geary GC Test P-Value
+   <b>e(gog)</b>          GLOBAL Getis-Ords Test GO
+   <b>e(gogp)</b>         GLOBAL Getis-Ords GO Test P-Value
+   <b>e(mi1)</b>          Moran MI Error Test
+   <b>e(mi1p)</b>         Moran MI Error Test P-Value
+   <b>e(lmerr)</b>        LM Error (Burridge) Test
+   <b>e(lmerrp)</b>       LM Error (Burridge) Test P-Value
+   <b>e(lmerrr)</b>       LM Error (Robust) Test
+   <b>e(lmerrrp)</b>      LM Error (Robust) Test P-Value
+   <b>e(lmlag)</b>        LM Lag (Anselin) Test
+   <b>e(lmlagp)</b>       LM Lag (Anselin) Test P-Value
+   <b>e(lmlagr)</b>       LM Lag (Robust) Test
+   <b>e(lmlagrp)</b>      LM Lag (Robust) Test P-Value
+   <b>e(lmsac1)</b>       LM SAC (LMLag+LMErr_R) Test
+   <b>e(lmsac1p)</b>      LM SAC (LMLag+LMErr_R) Test P-Value
+   <b>e(lmsac2)</b>       LM SAC (LMErr+LMLag_R) Test
+   <b>e(lmsac2p)</b>      LM SAC (LMErr+LMLag_R) Test P-Value
+<p>
+*** Model Selection Diagnostic Criteria:
+   <b>e(N)</b>            number of observations
+   <b>e(r2bu)</b>         R-squared (Buse 1973)
+   <b>e(r2bu_a)</b>       R-squared Adj (Buse 1973)
+   <b>e(r2raw)</b>        Raw Moments R2
+   <b>e(r2raw_a)</b>      Raw Moments R2 Adj
+   <b>e(f)</b>            F-test
+   <b>e(fp)</b>           F-test P-Value
+   <b>e(wald)</b>         Wald-test
+   <b>e(waldp)</b>        Wald-test P-Value
+   <b>e(r2h)</b>          R2 Between Predicted (Yh) and Observed DepVar (Y)
+   <b>e(r2h_a)</b>        Adjusted r2h
+   <b>e(fh)</b>           F-test due to r2h
+   <b>e(fhp)</b>          F-test due to r2h P-Value
+   <b>e(r2v)</b>          R2 Variance Ratio Between Predicted (Yh) and Observed DepVar
+&gt;  (Y)
+   <b>e(r2v_a)</b>        Adjusted r2v
+   <b>e(fv)</b>           F-test due to r2v
+   <b>e(fvp)</b>          F-test due to r2v P-Value
+   <b>e(sig)</b>          Root MSE (Sigma)
+<p>
+   <b>e(llf)</b>          Log Likelihood Function                   LLF
+   <b>e(aic)</b>          Akaike Information Criterion              (1974) AIC
+   <b>e(laic)</b>         Akaike Information Criterion              (1973) Log AIC
+   <b>e(sc)</b>           Schwarz Criterion                         (1978) SC
+   <b>e(lsc)</b>          Schwarz Criterion                         (1978) Log SC
+   <b>e(fpe)</b>          Amemiya Prediction Criterion              (1969) FPE
+   <b>e(hq)</b>           Hannan-Quinn Criterion                    (1979) HQ
+   <b>e(rice)</b>         Rice Criterion                            (1984) Rice
+   <b>e(shibata)</b>      Shibata Criterion                         (1981) Shibata
+   <b>e(gcv)</b>          Craven-Wahba Generalized Cross Validation (1979) GCV
+<p>
+*** Heteroscedasticity Tests:
+   <b>e(lmhhp1)</b>       Hall-Pagan LM Test E2 = Yh
+   <b>e(lmhhp1p)</b>      Hall-Pagan LM Test E2 = Yh P-Value
+   <b>e(lmhhp2)</b>       Hall-Pagan LM Test E2 = Yh2
+   <b>e(lmhhp2p)</b>      Hall-Pagan LM Test E2 = Yh2 P-Value
+   <b>e(lmhhp3)</b>       Hall-Pagan LM Test E2 = Yh3
+   <b>e(lmhhp3p)</b>      Hall-Pagan LM Test E2 = Yh3 P-Value
+   <b>e(lmhw01)</b>       White Test - Koenker(R2) E2 = X
+   <b>e(lmhw01p)</b>      White Test - Koenker(R2) E2 = X P-Value
+   <b>e(lmhw02)</b>       White Test - B-P-G (SSR) E2 = X
+   <b>e(lmhw02p)</b>      White Test - B-P-G (SSR) E2 = X P-Value
+   <b>e(lmhw11)</b>       White Test - Koenker(R2) E2 = X X2
+   <b>e(lmhw11p)</b>      White Test - Koenker(R2) E2 = X X2 P-Value
+   <b>e(lmhw12)</b>       White Test - B-P-G (SSR) E2 = X X2
+   <b>e(lmhw12p)</b>      White Test - B-P-G (SSR) E2 = X X2 P-Value
+   <b>e(lmhw21)</b>       White Test - Koenker(R2) E2 = X X2 XX
+   <b>e(lmhw21p)</b>      White Test - Koenker(R2) E2 = X X2 XX P-Value
+   <b>e(lmhw22)</b>       White Test - B-P-G (SSR) E2 = X X2 XX
+   <b>e(lmhw22p)</b>      White Test - B-P-G (SSR) E2 = X X2 XX P-Value
+   <b>e(lmhharv)</b>      Harvey LM Test
+   <b>e(lmhharvp)</b>     Harvey LM Test P-Value
+   <b>e(lmhwald)</b>      Wald Test
+   <b>e(lmhwaldp)</b>     Wald Test P-Value
+   <b>e(lmhgl)</b>        Glejser LM Test
+   <b>e(lmhglp)</b>       Glejser LM Test P-Value
+   <b>e(lmhmss1)</b>      Machado-Santos-Silva  LM Test: Ev=Yh Yh2
+   <b>e(lmhmss1p)</b>     Machado-Santos-Silva LM Test: Ev=Yh Yh2 P-Value
+   <b>e(lmhmss2)</b>      Machado-Santos-Silva  LM Test: Ev=X
+   <b>e(lmhmss2p)</b>     Machado-Santos-Silva LM Test: Ev=X P-Value
+   <b>e(lmhcw1)</b>       Cook-Weisberg LM Test E = Yh
+   <b>e(lmhcw1p)</b>      Cook-Weisberg LM Test E = Y P-Valueh
+   <b>e(lmhcw2)</b>       Cook-Weisberg LM Test E = X
+   <b>e(lmhcw2p)</b>      Cook-Weisberg LM Test E = X P-Value
+<p>
+*** Non Normality Tests:
+   <b>e(lmnjb)</b>        Jarque-Bera LM Test
+   <b>e(lmnjbp)</b>       Jarque-Bera LM Test P-Value
+   <b>e(lmnw)</b>         White IM Test
+   <b>e(lmnwp)</b>        White IM Test P-Value
+   <b>e(lmndh)</b>        Doornik-Hansen LM Test
+   <b>e(lmndhp)</b>       Doornik-Hansen LM Test P-Value
+   <b>e(lmng)</b>         Geary LM Test
+   <b>e(lmngp)</b>        Geary LM Test P-Value
+   <b>e(lmnad)</b>        Anderson-Darling Z Test
+   <b>e(lmnadp)</b>       Anderson-Darling Z Test P-Value
+   <b>e(lmndp)</b>        D'Agostino-Pearson LM Test
+   <b>e(lmndpp)</b>       D'Agostino-Pearson LM Test P-Value
+   <b>e(lmnsvs)</b>       Srivastava LM Skewness Test
+   <b>e(lmnsvsp)</b>      Srivastava LM Skewness Test P-Value
+   <b>e(lmnsms1)</b>      Small LM Skewness Test
+   <b>e(lmnsms1p)</b>     Small LM Skewness Test P-Value
+   <b>e(lmnsms2)</b>      Skewness Z Test
+   <b>e(lmnsms2p)</b>     Skewness Z Test P-Value
+   <b>e(lmnsvk)</b>       Srivastava Z Kurtosis Test
+   <b>e(lmnsvkp)</b>      Srivastava Z Kurtosis Test P-Value
+   <b>e(lmnsmk1)</b>      Small LM Kurtosis Test
+   <b>e(lmnsmk1p)</b>     Small LM Kurtosis Test P-Value
+   <b>e(lmnsmk2)</b>      Kurtosis Z Test
+   <b>e(lmnsmk2p)</b>     Kurtosis Z Test P-Value
+   <b>e(sk)</b>           Skewness Coefficient
+   <b>e(sksd)</b>         Skewness Standard Deviation
+   <b>e(ku)</b>           Kurtosis Coefficient
+   <b>e(kusd)</b>         Kurtosis Standard Deviation
+   <b>e(sn)</b>           Standard Deviation Runs Sig(k)
+   <b>e(en)</b>           Mean Runs E(k)
+   <b>e(lower)</b>        Lower 95% Conf. Interval [E(k)- 1.96* Sig(k)]
+   <b>e(upper)</b>        Upper 95% Conf. Interval [E(k)+ 1.96* Sig(k)]
+<p>
+   <b>e(lmnpv)</b>        Pagan-Vella LM Test (Tobit Model)
+   <b>e(lmnpvp)</b>       Pagan-Vella LM Test (Tobit Model) P-Value
+   <b>e(lmnci)</b>        Chesher-Irish LM Test (Tobit Model)
+   <b>e(lmncip)</b>       Chesher-Irish LM Test (Tobit Model) P-Value
+<p>
+Matrixes       
+   <b>e(b)</b>            coefficient vector
+   <b>e(V)</b>            variance-covariance matrix of the estimators
+   <b>e(mfxlin)</b>       Marginal Effect and Elasticity in Lin Form
+   <b>e(mfxlog)</b>       Marginal Effect and Elasticity in Log Form
+<p>
+<a name="10"></a><b>        </b>+------------+
+<b>    </b>----+<b> References </b>+-------------------------------------------------------
+<p>
+    Anselin, L. (2001)<b> "Spatial Econometrics",</b> <i>In Baltagi, B. (Ed).: A</i>
+        <i>Companion to Theoretical Econometrics Basil Blackwell: Oxford, UK</i>.
+<p>
+    Anselin, L. (2007)<b> "Spatial Econometrics",</b> <i>In T. C. Mills and K.</i>
+        <i>Patterson (Eds).: Palgrave Handbook of Econometrics. Vol 1,</i>
+        <i>Econometric Theory. New York: Palgrave MacMillan</i>.
+<p>
+    Anselin, L. &amp; Kelejian, H. H. (1997)<b> "Testing for Spatial Error</b>
+        <b>Autocorrelation in the Presence of Endogenous Regressors",</b>
+        <i>International Regional Science Review, (20)</i>; 153-182.
+<p>
+    Anselin, L. &amp; Florax RJ. (1995)<b> "New Directions in Spatial Econometrics:</b>
+        <b>Introduction. In New Directions in Spatial Econometrics",</b> <i>Anselin L,</i>
+        <i>Florax RJ (eds). Berlin, Germany: Springer-Verlag</i>.
+<p>
+    Breusch, Trevor &amp; Adrian Pagan (1980)<b> "The Lagrange Multiplier Test and</b>
+        <b>its Applications to Model Specification in Econometrics",</b> <i>Review of</i>
+        <i>Economic Studies 47</i>; 239-253.
+<p>
+    C.M. Jarque &amp; A.K. Bera (1987)<b> "A Test for Normality of Observations and</b>
+        <b>Regression Residuals"</b> <i>International Statistical Review</i> , Vol. 55;
+        163-172.
+<p>
+    Cook, R.D., &amp; S. Weisberg (1983)<b> "Diagnostics for Heteroscedasticity in</b>
+        <b>Regression",</b> <i>Biometrica 70</i>; 1-10.
+<p>
+    D'Agostino, R. B., &amp; Rosman, B. (1974)<b> "The Power of Geary’s Test of</b>
+        <b>Normality",</b> <i>Biometrika, 61(1)</i>; 181-184.
+<p>
+    Damodar Gujarati (1995)<b> "Basic Econometrics"</b> <i>3rd Edition, McGraw Hill,</i>
+        <i>New York, USA</i>.
+<p>
+    Geary R.C. (1947)<b> "Testing for Normality"</b> <i>Biometrika, Vol. 34</i>; 209-242.
+<p>
+    Geary R.C. (1970)<b> "Relative Efficiency of Count of Sign Changes for</b>
+        <b>Assessing Residuals Autoregression in Least Squares Regression"</b>
+        <i>Biometrika, Vol. 57</i>; 123-127.
+<p>
+    Greene, William (2007)<b> "Econometric Analysis",</b> <i>6th ed., Macmillan</i>
+        <i>Publishing Company Inc., New York, USA.</i>.
+<p>
+    Griffiths, W., R. Carter Hill &amp; George Judge (1993)<b> "Learning and</b>
+        <b>Practicing Econometrics",</b> <i>John Wiley &amp; Sons, Inc., New York, USA</i>.
+<p>
+    Harvey, Andrew (1990)<b> "The Econometric Analysis of Time Series",</b> <i>2nd</i>
+        <i>edition, MIT Press, Cambridge, Massachusetts</i>.
+<p>
+    Judge, Georege, R. Carter Hill, William . E. Griffiths, Helmut Lutkepohl,
+        &amp; Tsoung-Chao Lee (1988)<b> "Introduction To The Theory And Practice Of</b>
+        <b>Econometrics",</b> <i>2nd ed., John Wiley &amp; Sons, Inc., New York, USA</i>.
+<p>
+    Judge, Georege, W. E. Griffiths, R. Carter Hill, Helmut Lutkepohl, &amp;
+        Tsoung-Chao Lee(1985)<b> "The Theory and Practice of Econometrics",</b> <i>2nd</i>
+        <i>ed., John Wiley &amp; Sons, Inc., New York, USA</i>.
+<p>
+    Kmenta, Jan (1986)<b> "Elements of Econometrics",</b> <i>2nd ed., Macmillan</i>
+        <i>Publishing Company, Inc., New York, USA</i>; 618-625.
+<p>
+    Koenker, R. (1981)<b> "A Note on Studentizing a Test for</b>
+        <b>Heteroskedasticity",</b> <i>Journal of Econometrics, Vol.17</i>; 107-112.
+<p>
+    Pagan, Adrian .R. &amp; Hall, D. (1983)<b> "Diagnostic Tests as Residual</b>
+        <b>Analysis",</b> <i>Econometric Reviews, Vol.2, No.2,</i>. 159-218.
+<p>
+    Pearson, E. S., D'Agostino, R. B., &amp; Bowman, K. O. (1977)<b> "Tests for</b>
+        <b>Departure from Normality: Comparison of Powers",</b> <i>Biometrika, 64(2)</i>;
+        231-246.
+<p>
+    Szroeter, J. (1978)<b> "A Class of Parametric Tests for Heteroscedasticity</b>
+        <b>in Linear Econometric Models",</b> <i>Econometrica, 46</i>; 1311-28.
+<p>
+<a name="11"></a><b>        </b>+----------+
+<b>    </b>----+<b> Examples </b>+---------------------------------------------------------
+<p>
+<b>Note 1:</b> you can use: <b>spweight</b>, <b>spweightcs</b>, <b>spweightxt</b> to create Spatial Weight 
+&gt; Matrix.
+<b>Note 2:</b> Remember, your spatial weight matrix must be:
+    *** <b>1-Cross Section Dimention  2- Square Matrix 3- Symmetric Matrix</b>
+<b>Note 3:</b> You can use the dialog box for gs2sls.
+-------------------------------------------------------------------------------
+<p>
+clear all
+<p>
+sysuse gs2sls.dta, clear
+<p>
+<b>* (1) Generalized Spatial 2SLS - AR(1) (GS2SLS)</b>
+gs2sls y x1 x2 , wmfile(SPWcs) order(1) mfx(lin) test
+gs2sls y x1 x2 , wmfile(SPWcs) order(1) mfx(log) test tolog
+<p>
+gs2sls y x1 x2 [weight=x1] , wmfile(SPWcs) order(1) mfx(lin) test
+<p>
+<b>* (2) Generalized Spatial 2SLS - AR(2) (GS2SLS)</b>
+gs2sls y x1 x2 , wmfile(SPWcs) order(2) mfx(lin) test
+-------------------------------------------------------------------------------
+<p>
+<b>* (3) Generalized Spatial 2SLS - AR(3) (GS2SLS)</b>
+gs2sls y x1 x2 , wmfile(SPWcs) order(3) mfx(lin) test
+-------------------------------------------------------------------------------
+<p>
+<b>* (4) Generalized Spatial 2SLS - AR(4) (GS2SLS)</b>
+gs2sls y x1 x2 , wmfile(SPWcs) order(4) mfx(lin) test
+-------------------------------------------------------------------------------
+<p>
+<b>* (5) Generalized Spatial GMM - AR(1) (GS2SLS)</b>
+gs2sls y x1 x2 , wmfile(SPWcs) order(1) mfx(lin) test model(gmm)
+-------------------------------------------------------------------------------
+<p>
+<b>* (6) Generalized Spatial LIML - AR(4) (GS2SLS)</b>
+gs2sls y x1 x2 , wmfile(SPWcs) order(1) mfx(lin) test model(liml)
+-------------------------------------------------------------------------------
+<p>
+. clear all
+. sysuse gs2sls.dta, clear
+. gs2sls y x1 x2 , wmfile(SPWcs) order(1) mfx(lin) tests
+<p>
+==============================================================================
+*** Binary (0/1) Weight Matrix: 49x49 (Non Normalized)
+==============================================================================
+==============================================================================
+* Generalized Spatial Two Stage Least Squares (GS2SLS)
+==============================================================================
+  y = w1y_y + x1 + x2
+------------------------------------------------------------------------------
+  Sample Size       =          49
+  Wald Test         =     58.7114   |   P-Value &gt; Chi2(3)       =      0.0000
+  F-Test            =     19.5705   |   P-Value &gt; F(3 , 46)     =      0.0000
+ (Buse 1973) R2     =      0.5379   |   Raw Moments R2          =      0.9160
+ (Buse 1973) R2 Adj =      0.5178   |   Raw Moments R2 Adj      =      0.9123
+  Root MSE (Sigma)  =     11.6184   |   Log Likelihood Function =   -188.1571
+------------------------------------------------------------------------------
+- R2h= 0.5381   R2h Adj= 0.5180  F-Test =   17.47 P-Value &gt; F(3 , 46)  0.0000
+- R2v= 0.5554   R2v Adj= 0.5360  F-Test =   18.74 P-Value &gt; F(3 , 46)  0.0000
+------------------------------------------------------------------------------
+           y |      Coef.   Std. Err.      t    P&gt;|t|     [95% Conf. Interval]
+-------------+----------------------------------------------------------------
+       w1y_y |  -.0120175   .0330463    -0.36   0.718    -.0785362    .0545011
+          x1 |   -.285965   .1068466    -2.68   0.010    -.5010361    -.070894
+          x2 |   -1.60376    .329412    -4.87   0.000    -2.266832   -.9406882
+       _cons |   71.22203   8.542205     8.34   0.000     54.02747     88.4166
+------------------------------------------------------------------------------
+  Rho Value  = -0.0120       F Test =     0.132    P-Value &gt; F(1, 46)   0.7178
+------------------------------------------------------------------------------
+* Y  = LHS Dependent Variable:   1 = y
+* Yi = RHS Endogenous Variables: 1 = w1y_y
+* Xi = RHS Exogenous Vars:       2 =  x1 x2
+* Z  = Overall Instrumental Variables:
+   4 : x1 x2 w1x_x1 w1x_x2
+------------------------------------------------------------------------------
+<p>
+==============================================================================
+*** Spatial Aautocorrelation Tests
+==============================================================================
+  Ho: Error has No Spatial AutoCorrelation
+  Ha: Error has    Spatial AutoCorrelation
+<p>
+- GLOBAL Moran MI            =   0.1625     P-Value &gt; Z( 2.160)   0.0308
+- GLOBAL Geary GC            =   0.6999     P-Value &gt; Z(-2.310)   0.0209
+- GLOBAL Getis-Ords GO       =  -0.7829     P-Value &gt; Z(-2.160)   0.0308
+------------------------------------------------------------------------------
+- Moran MI Error Test        =   0.8089     P-Value &gt; Z(9.772)    0.4186
+------------------------------------------------------------------------------
+- LM Error (Burridge)        =   2.7477     P-Value &gt; Chi2(1)     0.0974
+- LM Error (Robust)          =   2.2822     P-Value &gt; Chi2(1)     0.1309
+------------------------------------------------------------------------------
+  Ho: Spatial Lagged Dependent Variable has No Spatial AutoCorrelation
+  Ha: Spatial Lagged Dependent Variable has    Spatial AutoCorrelation
+<p>
+- LM Lag (Anselin)           =   8.1030     P-Value &gt; Chi2(1)     0.0044
+- LM Lag (Robust)            =   7.6375     P-Value &gt; Chi2(1)     0.0057
+------------------------------------------------------------------------------
+  Ho: No General Spatial AutoCorrelation
+  Ha:    General Spatial AutoCorrelation
+<p>
+- LM SAC (LMErr+LMLag_R)     =  10.3852     P-Value &gt; Chi2(2)     0.0056
+- LM SAC (LMLag+LMErr_R)     =  10.3852     P-Value &gt; Chi2(2)     0.0056
+------------------------------------------------------------------------------
+<p>
+==============================================================================
+* Model Selection Diagnostic Criteria
+==============================================================================
+- Log Likelihood Function                   LLF            =   -188.1571
+---------------------------------------------------------------------------
+- Akaike Information Criterion              (1974) AIC     =    149.1972
+- Akaike Information Criterion              (1973) Log AIC =      5.0053
+---------------------------------------------------------------------------
+- Schwarz Criterion                         (1978) SC      =    174.1128
+- Schwarz Criterion                         (1978) Log SC  =      5.1597
+---------------------------------------------------------------------------
+- Amemiya Prediction Criterion              (1969) FPE     =    146.0069
+- Hannan-Quinn Criterion                    (1979) HQ      =    158.2001
+- Rice Criterion                            (1984) Rice    =    151.4494
+- Shibata Criterion                         (1981) Shibata =    147.4125
+- Craven-Wahba Generalized Cross Validation (1979) GCV     =    150.2528
+------------------------------------------------------------------------------
+<p>
+==============================================================================
+* Heteroscedasticity Tests
+==============================================================================
+ Ho: Homoscedasticity - Ha: Heteroscedasticity
+------------------------------------------------------------------------------
+- Hall-Pagan LM Test:      E2 = Yh     =   0.6477    P-Value &gt; Chi2(1)  0.4209
+- Hall-Pagan LM Test:      E2 = Yh2    =   0.4294    P-Value &gt; Chi2(1)  0.5123
+- Hall-Pagan LM Test:      E2 = LYh2   =   0.5114    P-Value &gt; Chi2(1)  0.4745
+------------------------------------------------------------------------------
+- Harvey LM Test:       LogE2 = X      =   5.9688    P-Value &gt; Chi2(2)  0.0506
+- Wald LM Test:         LogE2 = X      =  14.7273    P-Value &gt; Chi2(1)  0.0001
+- Glejser LM Test:        |E| = X      =   7.1374    P-Value &gt; Chi2(2)  0.0282
+------------------------------------------------------------------------------
+- Machado-Santos-Silva Test: Ev=Yh Yh2 =   1.8537    P-Value &gt; Chi2(2)  0.3958
+- Machado-Santos-Silva Test: Ev=X      =   7.0005    P-Value &gt; Chi2(3)  0.0719
+------------------------------------------------------------------------------
+- White Test -Koenker(R2): E2 = X      =   7.4328    P-Value &gt; Chi2(3)  0.0593
+- White Test -B-P-G (SSR): E2 = X      =  10.2378    P-Value &gt; Chi2(3)  0.0166
+------------------------------------------------------------------------------
+- White Test -Koenker(R2): E2 = X X2   =   8.6304    P-Value &gt; Chi2(6)  0.1955
+- White Test -B-P-G (SSR): E2 = X X2   =  11.8873    P-Value &gt; Chi2(6)  0.0645
+------------------------------------------------------------------------------
+- White Test -Koenker(R2): E2 = X X2 XX=  22.0143    P-Value &gt; Chi2(9)  0.0088
+- White Test -B-P-G (SSR): E2 = X X2 XX=  30.3220    P-Value &gt; Chi2(9)  0.0004
+------------------------------------------------------------------------------
+- Cook-Weisberg LM Test  E2/Sig2 = Yh  =   0.8921    P-Value &gt; Chi2(1)  0.3449
+- Cook-Weisberg LM Test  E2/Sig2 = X   =  10.2378    P-Value &gt; Chi2(3)  0.0166
+------------------------------------------------------------------------------
+*** Single Variable Tests (E2/Sig2):
+- Cook-Weisberg LM Test: w1y_y             =   0.6888 P-Value &gt; Chi2(1) 0.4066
+- Cook-Weisberg LM Test: x1                =   1.4627 P-Value &gt; Chi2(1) 0.2265
+- Cook-Weisberg LM Test: x2                =   3.6114 P-Value &gt; Chi2(1) 0.0574
+------------------------------------------------------------------------------
+*** Single Variable Tests:
+- King LM Test: w1y_y                      =   0.5386 P-Value &gt; Chi2(1) 0.4630
+- King LM Test: x1                         =   0.3467 P-Value &gt; Chi2(1) 0.5560
+- King LM Test: x2                         =   3.8656 P-Value &gt; Chi2(1) 0.0493
+<p>
+==============================================================================
+* Non Normality Tests
+==============================================================================
+ Ho: Normality - Ha: Non Normality
+------------------------------------------------------------------------------
+*** Non Normality Tests:
+- Jarque-Bera LM Test                  =   1.8320     P-Value &gt; Chi2(2) 0.4001
+- White IM Test                        =   3.8988     P-Value &gt; Chi2(2) 0.1424
+- Doornik-Hansen LM Test               =   3.7783     P-Value &gt; Chi2(2) 0.1512
+- Geary LM Test                        =  -2.7412     P-Value &gt; Chi2(2) 0.2540
+- Anderson-Darling Z Test              =   0.3830     P &gt; Z( 0.243)     0.5961
+- D'Agostino-Pearson LM Test           =   2.7822     P-Value &gt; Chi2(2) 0.2488
+------------------------------------------------------------------------------
+*** Skewness Tests:
+- Srivastava LM Skewness Test          =   0.6689     P-Value &gt; Chi2(1) 0.4134
+- Small LM Skewness Test               =   0.8126     P-Value &gt; Chi2(1) 0.3674
+- Skewness Z Test                      =  -0.9014     P-Value &gt; Chi2(1) 0.3674
+------------------------------------------------------------------------------
+*** Kurtosis Tests:
+- Srivastava  Z Kurtosis Test          =   1.0784     P-Value &gt; Z(0,1)  0.2808
+- Small LM Kurtosis Test               =   1.9696     P-Value &gt; Chi2(1) 0.1605
+- Kurtosis Z Test                      =   1.4034     P-Value &gt; Chi2(1) 0.1605
+------------------------------------------------------------------------------
+    Skewness Coefficient = -0.2862     - Standard Deviation =  0.3398
+    Kurtosis Coefficient =  3.7548     - Standard Deviation =  0.6681
+------------------------------------------------------------------------------
+    Runs Test: (16) Runs -  (24) Positives - (25) Negatives
+    Standard Deviation Runs Sig(k) =  3.4619 , Mean Runs E(k) = 25.4898
+    95% Conf. Interval [E(k)+/- 1.96* Sig(k)] = (18.7045 , 32.2751 )
+------------------------------------------------------------------------------
+<p>
+* Marginal Effect - Elasticity (Model= 2sls): Linear *
+<p>
++---------------------------------------------------------------------------+
+|   Variable | Marginal_Effect(B) |     Elasticity(Es) |               Mean |
+|------------+--------------------+--------------------+--------------------|
+|      w1y_y |            -0.0120 |            -0.0583 |           170.4034 |
+|         x1 |            -0.2860 |            -0.3129 |            38.4362 |
+|         x2 |            -1.6038 |            -0.6563 |            14.3749 |
++---------------------------------------------------------------------------+
+ Mean of Dependent Variable =     35.1288
+<p>
+<a name="12"></a><b>        </b>+--------+
+<b>    </b>----+<b> Author </b>+-----------------------------------------------------------
+<p>
+  <b>Emad Abd Elmessih Shehata</b>
+  <b>Professor (PhD Economics)</b>
+  <b>Agricultural Research Center - Agricultural Economics Research Institute - Eg</b>
+<b>&gt; ypt</b>
+  <b>Email: </b>emadstat@hotmail.com
+  <b>WebPage:                </b>http://emadstat.110mb.com/stata.htm
+  <b>WebPage at IDEAS:       </b>http://ideas.repec.org/f/psh494.html
+  <b>WebPage at EconPapers:  </b>http://econpapers.repec.org/RAS/psh494.htm
+<p>
+<b>        </b>+-----------------+
+<b>    </b>----+<b> GS2SLS Citation </b>+--------------------------------------------------
+<p>
+ <b>Shehata, Emad Abd Elmessih (2012)</b>
+ <b>GS2SLS: "Generalized Spatial Two Stage Least Squares (2SLS) Cross Sections</b>
+          <b>Regression"</b>
+<p>
+        http://ideas.repec.org/c/boc/bocode/S457472.html
+<p>
+        http://econpapers.repec.org/software/bocbocode/S457472.htm
+<p>
+<p>
+<b><u>Online Help:</u></b>
+<p>
+<b>*** Spatial Econometrics Regression Models:</b>
+<p>
+-------------------------------------------------------------------------------
+&gt; -
+<b>*** (1) Spatial Panel Data Regression Models:</b>
+<b>spregxt</b>      Spatial Panel Regression Econometric Models: <b>Stata Module Toolkit</b>
+<b>gs2slsxt</b>     Generalized Spatial Panel 2SLS Regression
+<b>gs2slsarxt</b>   Generalized Spatial Panel Autoregressive 2SLS Regression
+<b>spglsxt</b>      Spatial Panel Autoregressive Generalized Least Squares Regression
+<b>spgmmxt</b>      Spatial Panel Autoregressive Generalized Method of Moments Regress
+&gt; ion
+<b>spmstarxt</b>    (m-STAR) Spatial Lag Panel Models
+<b>spmstardxt</b>   (m-STAR) Spatial Durbin Panel Models
+<b>spmstardhxt</b>  (m-STAR) Spatial Durbin Multiplicative Heteroscedasticity Panel Mo
+&gt; dels
+<b>spmstarhxt</b>   (m-STAR) Spatial Lag Multiplicative Heteroscedasticity Panel Model
+&gt; s
+<b>spregdhp</b>     Spatial Panel Han-Philips Linear Dynamic Regression: Lag &amp; Durbin 
+&gt; Models
+<b>spregdpd</b>     Spatial Panel Arellano-Bond Linear Dynamic Regression: Lag &amp; Durbi
+&gt; n Models
+<b>spregfext</b>    Spatial Panel Fixed Effects Regression: Lag &amp; Durbin Models
+<b>spregrext</b>    Spatial Panel Random Effects Regression: Lag &amp; Durbin Models
+<b>spregsacxt</b>   MLE Spatial AutoCorrelation Panel Regression (SAC)
+<b>spregsarxt</b>   MLE Spatial Lag Panel Regression (SAR)
+<b>spregsdmxt</b>   MLE Spatial Durbin Panel Regression (SDM)
+<b>spregsemxt</b>   MLE Spatial Error Panel Regression (SEM)
+-------------------------------------------------------------------------------
+&gt; -
+<b>*** (2) Spatial Cross Section Regression Models:</b>
+<b>spregcs</b>      Spatial Cross Section Regression Econometric Models: <b>Stata Module </b>
+<b>&gt; Toolkit</b>
+<b>gs2sls</b>       Generalized Spatial 2SLS Cross Sections Regression
+<b>gs2slsar</b>     Generalized Spatial Autoregressive 2SLS Cross Sections Regression
+<b>gs3sls</b>       Generalized Spatial Autoregressive 3SLS Regression 
+<b>gs3slsar</b>     Generalized Spatial Autoregressive 3SLS Cross Sections Regression
+<b>gsp3sls</b>      Generalized Spatial 3SLS Cross Sections Regression
+<b>spautoreg</b>    Spatial Cross Section Regression Models
+<b>spgmm</b>        Spatial Autoregressive GMM Cross Sections Regression
+<b>spmstar</b>      (m-STAR) Spatial Lag Cross Sections Models
+<b>spmstard</b>     (m-STAR) Spatial Durbin Cross Sections Models
+<b>spmstardh</b>    (m-STAR) Spatial Durbin Multiplicative Heteroscedasticity Cross Se
+&gt; ctions Models
+<b>spmstarh</b>     (m-STAR) Spatial Lag Multiplicative Heteroscedasticity Cross Secti
+&gt; ons Models
+<b>spregsac</b>     MLE Spatial AutoCorrelation Cross Sections Regression (SAC)
+<b>spregsar</b>     MLE Spatial Lag Cross Sections Regression (SAR)
+<b>spregsdm</b>     MLE Spatial Durbin Cross Sections Regression (SDM)
+<b>spregsem</b>     MLE Spatial Error Cross Sections Regression (SEM)
+-------------------------------------------------------------------------------
+&gt; -
+<b>*** (3) Tobit Spatial Regression Models:</b>
+<p>
+<b>*** (3-1) Tobit Spatial Panel Data Regression Models:</b>
+<b>sptobitgmmxt</b> Tobit Spatial GMM Panel Regression
+<b>sptobitmstarxt</b>Tobit (m-STAR) Spatial Lag Panel Models
+<b>sptobitmstardxt</b>Tobit (m-STAR) Spatial Durbin Panel Models
+<b>sptobitmstardhxt</b>Tobit (m-STAR) Spatial Durbin Multiplicative Heteroscedasticity
+&gt;  Panel Models
+<b>sptobitmstarhxt</b>Tobit (m-STAR) Spatial Lag Multiplicative Heteroscedasticity Pan
+&gt; el Models
+<b>sptobitsacxt</b> Tobit MLE Spatial AutoCorrelation (SAC) Panel Regression
+<b>sptobitsarxt</b> Tobit MLE Spatial Lag Panel Regression
+<b>sptobitsdmxt</b> Tobit MLE Spatial Panel Durbin Regression
+<b>sptobitsemxt</b> Tobit MLE Spatial Error Panel Regression
+<b>spxttobit</b>    Tobit Spatial Panel Autoregressive GLS Regression
+--------------------------------------------------------------
+<b>*** (3-2) Tobit Spatial Cross Section Regression Models:</b>
+<b>sptobitgmm</b>   Tobit Spatial GMM Cross Sections Regression
+<b>sptobitmstar</b> Tobit (m-STAR) Spatial Lag Cross Sections Models
+<b>sptobitmstard</b>Tobit (m-STAR) Spatial Durbin Cross Sections Models
+<b>sptobitmstardh</b>Tobit (m-STAR) Spatial Durbin Multiplicative Heteroscedasticity C
+&gt; ross Sections
+<b>sptobitmstarh</b>Tobit (m-STAR) Spatial Lag Multiplicative Heteroscedasticity Cross
+&gt;  Sections
+<b>sptobitsac</b>   Tobit MLE AutoCorrelation (SAC) Cross Sections Regression
+<b>sptobitsar</b>   Tobit MLE Spatial Lag Cross Sections Regression
+<b>sptobitsdm</b>   Tobit MLE Spatial Durbin Cross Sections Regression
+<b>sptobitsem</b>   Tobit MLE Spatial Error Cross Sections Regression
+-------------------------------------------------------------------------------
+&gt; -
+<b>*** (4) Spatial Weight Matrix:</b>
+<b>spcs2xt</b>      Convert Cross Section to Panel Spatial Weight Matrix
+<b>spweight</b>     Cross Section and Panel Spatial Weight Matrix
+<b>spweightcs</b>   Cross Section Spatial Weight Matrix
+<b>spweightxt</b>   Panel Spatial Weight Matrix
+-------------------------------------------------------------------------------
+&gt; -
+<p>
+<p>
+</pre>

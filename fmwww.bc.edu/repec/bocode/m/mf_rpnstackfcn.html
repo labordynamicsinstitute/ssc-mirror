@@ -1,0 +1,64 @@
+<pre>
+<b>help mata tostack()</b>
+<b>help mata enter()</b>
+<b>help mata swapst()</b>
+<b>help mata rotst()</b>
+-------------------------------------------------------------------------------
+<p>
+<b><u>Title</u></b>
+<p>
+    <b>Commands to manipulate the internal stack set up by rpnfcn()</b>
+<p>
+<p>
+<b><u>Syntax</u></b>
+<p>
+                <b><u>Command name</u></b>      <u>Argument</u>
+<p>
+                <b>&amp;tostack()</b>        <i>x</i>
+<p>
+                <b>&amp;enter()</b>          NULL
+<p>
+                <b>&amp;swapst()</b>         NULL
+<p>
+                <b>&amp;rotst()</b>          NULL
+<p>
+<p>
+<b><u>Description</u></b>
+<p>
+    These functions are used to place matrices into the appropriate places in
+    the stack used by <b>rpnfcn()</b>.  <b>&amp;tostack()</b> places the matrix <i>x</i> in a new top
+    element of the stack. <b>&amp;enter()</b> copies the current top element of the
+    stack to a new top element in the stack. <b>&amp;swapst()</b> swaps the two top
+    elements of the stack. <b>&amp;rotst()</b> rotates the stack one step down, meaning
+    that the bottom-most element becomes the top element, while all others
+    are shifted one step down.
+<p>
+<b><u>Remarks</u></b>
+<p>
+    The commands <b>&amp;tostack()</b> and <b>&amp;enter()</b> both copies the indicated matrix,
+    and for very large matrices the user must thus ensure that Stata has
+    sufficient memory to execute the command. The commands <b>&amp;swapst()</b> and
+    <b>&amp;rotst()</b> on the other hand do not move or copy matrices as such, but
+    rather rearranges their labels (the pointers in the stack) so as to
+    create the desired effect.
+<p>
+<p>
+<b><u>Source code</u></b>
+<p>
+    rpnstackfcn.mata
+<p>
+<b><u>Author</u></b>
+<p>
+    Henrik Støvring, Research Unit of General Practice, University of
+    Southern Denmark.  Please email hstovring@health.sdu.dk if you have
+    comments, questions or observe any problems.
+<p>
+<p>
+<b><u>Also see</u></b>
+<p>
+    Manual:  <b>[M] Mata Reference Manual</b>
+<p>
+    Online:  help for <b>[M-0] mata</b>, <b> Evaluation of algorithm matrix using RPN</b>,
+             <b>RPN binary operators</b>, <b>RPN distribution functions</b>, <b>RPN functions</b>
+             <b>for integration</b>
+</pre>

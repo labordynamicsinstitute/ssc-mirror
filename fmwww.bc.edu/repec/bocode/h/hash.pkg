@@ -1,0 +1,22 @@
+d 'HASH': module to combine multiple integer variables into a single variable using non-minimal perfect hashing
+d
+d  hash combines multiple variables of type byte, int, or long into
+d a single hashed variable that may later be -unhash-ed to recover
+d the original variables. It is a programmer's command that
+d executes very quickly and requires no internal sorting. 
+d
+d KW: data management
+d KW: hash
+d KW: associative array
+d
+d Requires: Stata version 12
+d
+d Distribution-Date: 20141125
+d
+d Author: Andrew Maurer, Quantitative Risk Management
+d Support: email Andrew.Maurer@@qrm.com
+d
+f hash.ado
+f hash.sthlp
+f ../u/unhash.ado
+f ../u/unhash.sthlp

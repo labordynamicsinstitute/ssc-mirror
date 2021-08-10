@@ -1,0 +1,189 @@
+<pre>
+-------------------------------------------------------------------------------
+help for <b>running</b>   (SJ9-1: sed9_3; SJ5-2: sed9_2; STB-41: sed9_1; STB-24: sed9)
+-------------------------------------------------------------------------------
+<p>
+<b><u>Symmetric nearest neighbour smoothing</u></b> 
+<p>
+        <b>running</b> <i>yvar</i> [<i>xvar</i>] [<b>if</b> <i>exp</i>] [<b>in</b> <i>range</i>] [<i>weight</i>] [<b>,</b> <b>ci</b> <b><u>d</u></b><b>ouble</b> { <b><u>k</u></b><b>nn(</b><i>#</i>
+                 | <i>knnvar</i><b>)</b> | <b><u>sp</u></b><b>an(</b><i>#</i><b>)</b> } <b><u>log</u></b><b>it</b> <b><u>m</u></b><b>ean</b> <b><u>r</u></b><b>epeat(</b><i>#</i><b>)</b> <b><u>tw</u></b><b>ice</b> <b>genb(</b><i>bvar</i><b>)</b>
+                 <b><u>gen</u></b><b>erate(</b><i>newvar</i><b>)</b> <b>gense(</b><i>sevar</i><b>)</b> <b>replace</b> <b><u>ciop</u></b><b>ts(</b><i>rarea_options</i><b>)</b>
+                 <b><u>lineop</u></b><b>ts(</b><i>line_options</i><b>)</b> <b><u>nog</u></b><b>raph</b> <b>nopts</b> [<b><u>no</u></b>]<b><u>vj</u></b><b>itter</b>
+                 <b><u>sc</u></b><b>atter(</b><i>scatter_options</i><b>)</b> <b>plot(</b><i>plot</i><b>)</b> <b>addplot(</b><i>plot</i><b>)</b>
+                 <i>twoway_options</i> ]
+<p>
+<p>
+<b><u>Description</u></b> 
+<p>
+    <b>running</b> smooths <i>yvar</i> on <i>xvar</i>. By default the smoothed version is a
+    running line: a running mean is also available.  A graph is given of <i>yvar</i>
+    together with its smooth plotted against <i>xvar</i>, unless suppressed. If <i>xvar</i>
+    is not provided, <i>yvar</i> is smoothed against the current order of
+    observations.
+<p>
+    Only analytic weights (<b>aweight</b>s) are allowed; see weights.
+<p>
+<p>
+<b><u>Options</u></b> 
+<p>
+<i><u>Smoothing options</u></i> 
+<p>
+    <b>ci</b> produces a pointwise confidence interval for the smoothed values of
+        <i>yvar</i>.  The width is determined by the current value of the macro
+        $<b>S_level</b>. Not available with <b>twice</b>, <b>repeat()</b> or <b>logit</b>.
+<p>
+    <b>double</b> doubles the value of <b>repeat()</b>.  If <b>repeat()</b> is not specified,
+        <b>double</b> is equivalent to <b>repeat(2)</b>.
+<p>
+    <b>knn(</b><i>#</i> | <i>knnvar</i><b>)</b> controls the number <i>k</i> of nearest neighbours used on each
+        side of the smoothed point. You may specify a constant <i>#</i> or a
+        variable <i>knnvar</i>. The value <i>#</i> is stored in <b>r(knn)</b>.  The greater the
+        value, the greater the smoothing. You are not allowed to specify both
+        <b>span()</b> and <b>knn()</b>.
+<p>
+    <b>logit</b> transforms the smooth and plots the <i>y</i> axis on a logit scale.
+        Values of 0 and 1 are plotted just above and outside the range of the
+        smoothed curve.
+<p>
+    <b>mean</b> specifies running-mean least-squares smoothing; default is
+        running-line.
+<p>
+    <b>repeat(</b><i>#</i><b>)</b> specifies the number of times the data are to be smoothed. The
+        default <i>#</i> is 1.  Increasing <i>#</i> increases the time it takes to
+        calculate the smooth but improves the smooth.  <b>repeat(2)</b> corresponds
+        to "smoothing the smooth". The value of <i>#</i> may not exceed 7.
+<p>
+    <b>span(</b><i>#</i><b>)</b> controls the span or proportion of the data to be used in the
+        symmetric nearest neighbours.  If <b>span()</b> is specified and <i>n</i> is the
+        number of observations, the argument of <b>knn()</b> is defined to be
+        (<i>n</i> * <b>span</b> - 1) / 2.  <b>span</b> must be in the range (0,2]. (It must be
+        less than 1 when using <b>mean</b>.) Span 2 corresponds to fitting a
+        straight line.  The value of <i>#</i> is stored in <b>r(span)</b>.  You are not
+        allowed to specify both <b>span()</b> and <b>knn()</b>.
+<p>
+    <b>twice</b> carries out Tukey's 'twicing' procedure whereby residuals from the
+        original fit are smoothed and added back to the fit to obtain the
+        final smooth ("smoothing the rough" or "reroughing" in Tukey's
+        terminology). The result is somewhat rougher than would have been
+        obtained without the application of twicing, but may be a better fit
+        to the data.
+<p>
+<i><u>Saving results options</u></i> 
+<p>
+    <b>genb(</b><i>bvar</i><b>)</b> creates <i>bvar</i> containing the local slope estimates. They
+        constitute a local estimate of the derivative of the smoothed values
+        of <i>yvar</i> with respect to <i>xvar</i>. Not available with <b>mean</b>, <b>twice</b> or
+        <b>logit</b>.
+<p>
+    <b>generate(</b><i>newvar</i><b>)</b> creates <i>newvar</i> containing the smoothed values of <i>yvar</i>.
+        Note that <i>newvar</i> will be on a logit scale if <b>logit</b> is used.
+<p>
+    <b>gense(</b><i>sevar</i><b>)</b> creates <i>sevar</i> containing the pointwise standard error of
+        smoothed values of <i>yvar</i>.  Not available with <b>twice</b>, <b>repeat()</b> or
+        <b>logit</b>.
+<p>
+    <b>replace</b> allows variables specified by any of the <b>generate()</b>, <b>genb()</b>,
+        <b>gense()</b> options to be replaced if they already exist.
+<p>
+<i><u>Graphics options</u></i> 
+<p>
+    <b>ciopts()</b> are options of twoway rarea.  These should be specified to
+        control the rendering of the confidence interval.
+<p>
+    <b>lineopts()</b> are options of twoway line.  These should be specified to
+        control the rendering of the smoothed lines.
+<p>
+    <b>nograph</b> suppresses the graph.
+<p>
+    <b>nopts</b> suppresses the scatter plot of <i>yvar</i>. Only the smoothed line (and if
+        <b>ci</b> is specified, the pointwise CI) is plotted.
+<p>
+    <b>novjitter</b> specifies no vertical jittering of 0 and 1 values. The default
+        with <b>logit</b> is that they are jittered vertically only. Note that
+        <b>jitter()</b> may be specified within <b>scatter()</b>, but that this specifies
+        standard Stata jittering which is both vertical and horizontal.
+<p>
+    <b>scatter(</b><i>scatter_options</i><b>)</b> are options of scatter.  These should be
+        specified to control the rendering of the original data points. The
+        default includes <b>ms(oh)</b> (<b>ms(p)</b> with over 299 observations).
+<p>
+    <b>plot(</b><i>plot</i><b>)</b> provides a way to add other plots to the generated graph; see
+        help plot. (Stata 8 only)
+<p>
+    <b>addplot(</b><i>plot</i><b>)</b> provides a way to add other plots to the generated graph;
+        see help plot. (Stata 9 up)
+<p>
+    <i>twoway_options</i> are other options of twoway.
+<p>
+<p>
+<b><u>Remarks</u></b> 
+<p>
+    Subsets of 2<i>k</i> + 1 observations are used for calculating smoothed values
+    for each point in the data except for end points, for which smaller
+    uncentred subsets are used.  The subsets consist of the closest <i>k</i> points
+    with <i>xvar</i> values less than or equal to that of the given point, the point
+    itself, and the closest <i>k</i> points with <i>xvar</i> values greater than or equal
+    to the given point.
+<p>
+    It should be noted that since the neighbourhoods are asymmetric in the
+    tails, the running mean is subject to bias in the tails. Other than in
+    the tails, using <b>mean</b> will produce the same result as using the default
+    smooth whenever the <i>xvar</i> values are evenly spaced.
+<p>
+    <b>repeat(3)</b>, for instance, first smooths <i>yvar</i> creating <i>yhat1</i>, say; next
+    <i>yhat1</i> is smoothed creating <i>yhat2</i>, and finally <i>yhat2</i> is smoothed creating
+    <i>yhat3</i>.
+<p>
+    See Royston and Cox (2005) for a multivariable implementation of <b>running</b>.
+<p>
+<p>
+<b><u>Examples</u></b> 
+<p>
+    <b>. running mpg weight</b>
+<p>
+    <b>. running mpg weight, span(0.75) ci</b>
+<p>
+    <b>. running mpg weight, knn(5) generate(fit) gense(sfit) replace</b>
+<p>
+    <b>. running mpg weight, twice</b>
+<p>
+<p>
+<b><u>Authors</u></b> 
+<p>
+    Peter Sasieni
+    Queen Mary, University of London
+    peter.sasieni@cancer.org.uk
+<p>
+    Patrick Royston
+    MRC Clinical Trials Unit
+    patrick.royston@ctu.mrc.ac.uk
+<p>
+    Nicholas J. Cox
+    Durham University
+    n.j.cox@durham.ac.uk
+<p>
+<p>
+<b><u>References</u></b> 
+<p>
+    Royston, P. and Cox, N.J. 2005.  A multivariable scatterplot smoother
+        <i>Stata Journal</i> 5(3): 405-412.
+        http://www.stata-journal.com/sjpdf.html?articlenum=gr0017
+<p>
+    Sasieni, P. 1995.  Symmetric nearest neighbor linear smoothers.  <i>Stata</i>
+        <i>Technical Bulletin</i> 24: 10-14 (<i>STB Reprints</i> Vol. 4, 97-101).
+        http://www.stata.com/products/stb/journals/stb24.pdf
+<p>
+    Sasieni, P. and Royston, P. 1998.  Pointwise confidence intervals for
+        running.  <i>Stata Technical Bulletin</i> 41: 17-23 (<i>STB Reprints</i> Vol. 7,
+        156-163).  http://www.stata.com/products/stb/journals/stb41.pdf
+<p>
+    Sasieni, P., Royston, P. and Cox, N.J. 2005.  Software update for
+        running.  <i>Stata Journal</i> 5(2): 285.
+        http://www.stata-journal.com/sjpdf.html?articlenum=up0011
+<p>
+<p>
+<b><u>Also see</u></b> 
+<p>
+    Manual:  <b>[R] lowess</b>, <b>[R] lpoly</b>, <b>[R] smooth</b>
+<p>
+</pre>

@@ -1,0 +1,48 @@
+<pre>
+..-
+help for ^vallab^
+..-
+<p>
+Packs values and labels into a new string variable
+- --------------------------------------------------
+<p>
+        ^vallab^ varname [^if^ exp] [^in^ range] ^, g^en^(^str^)^
+        [ ^sep(^str^) sp^aces^(^#^)^ ]
+<p>
+Description
+- -----------
+<p>
+^vallab^ takes a labelled numeric variable and packs its numeric values
+and their associated labels into a new string variable.
+<p>
+The result may be useful for tabulation.
+<p>
+Options
+- -------
+<p>
+^gen(^str^)^ is in fact essential and specifies the name of the new
+    string variable.
+<p>
+^sep(^str^)^ specifies one or more characters (other than spaces) to be
+    used as a separator between value and label. The default is an empty
+    string ^""^.
+<p>
+^spaces(^#^)^ specifies the number of spaces to be used in a separator.
+    The default is a single space. ^spaces(0)^ is possible.
+<p>
+If both ^sep^ and ^spaces^ are specified, spaces follow the non-space
+    separator.
+<p>
+Examples
+- --------
+<p>
+    . ^vallab socclass, gen(soc)^
+    . ^vallab socclass, gen(soc) sep(,)^
+    . ^for leftfte health: vallab @@, gen(@@l)^
+<p>
+Author
+- ------
+<p>
+         Nicholas J. Cox, University of Durham
+         n.j.cox@@durham.ac.uk
+</pre>

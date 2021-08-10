@@ -1,0 +1,102 @@
+<pre>
+-------------------------------------------------------------------------------
+help for <b>apch</b>
+-------------------------------------------------------------------------------
+<p>
+<b><u>Generalized linear models for age-period-cohort effects with hysteresis</u></b>
+<p>
+    Syntax
+<p>
+        <b>apch</b> <i>depvar</i> [<i>indepvars</i>] [<b>if</b> <i>exp</i>] [<b>in</b> <i>range</i>] [<i>weight</i>] <b>, [</b> <b>age(</b><i>string</i><b>)</b>
+              <b>period(</b><i>string</i><b>)</b> <i>glm_options</i> ]
+<p>
+    <b>apch</b> allows all <i>varlists</i> &amp; <i>weights</i> that <b>glm</b> considers.
+<p>
+<p>
+<b><u>Description</u></b>
+<p>
+<b>apch</b> estimates age-period-cohort APC-D (detrended) models and provides
+detrended (0 sum and 0 slope) parameters of age, period and cohort effects;
+appropriate constraints offer a unique solution &amp; solve the traditional APC
+identification problem.  We focus on cohort parameters (DCE=detrended cohort
+effect) that should be tested to be non-zeros across cohort span.  Their
+"hysteresis" (durability) over life course is assessed &amp; tested by a
+coefficient h (hysteresis) that is 0 in case of linear stability of cohort
+effect, -1 in case of vanishing of the cohort effect over life span, equal to 1
+in case of development from 0 of the cohort effect over life course.  Since the
+cohort parameters and the hysteresis parameter can not be assessed
+simultaneously, the package proposes an iterative strategy that converges to a
+single stable solution.  The <b>apch</b> provides Raftery's bics able to assess the
+interest of cohort effect and then of hysteresis effect.
+<p>
+The user provides a dependant variable, age and period, and controls from a mic
+&gt; rodata 
+series of crossectional surveys. 
+The data must be a complete rectangle (age x period) and the pace between perio
+&gt; ds must 
+be fix and equal to the distance between age groups. If not, the procedure will
+&gt;  fail.  
+<p>
+The procedure delivers :
+(1) An APC-Detrended model with controls, including zero-sum/zero-slope paramet
+&gt; ers of 
+        age, period &amp; cohort effects.
+(2) An APC-Hysteresis model with controls, delivering the h-hysteresis paramete
+&gt; r of 
+        linear stability of the DCE. 
+(3) Delta BICs are provided to measure 
+        (a) dbic_cohort : the interest of including cohort effects after a AP m
+&gt; odel and 
+        (b) dbic_hyster : the interest of including hysteresis effects to the A
+&gt; PC model 
+<p>
+<p>
+<b><u>Options</u></b>
+<p>
+<b>age(</b><i>string</i><b>)</b> and <b>period(</b><i>string</i><b>)</b> specify the names of age and period variables.
+    They must be given by the user.
+<p>
+Any <i>glm_options</i> can be valid options for <b>apch</b>.
+<p>
+Many types of model can be handled by <b>apch</b> :
+<p>
+* the user must call "family(bin) link(logit)" for a logit regression
+<p>
+* the user must call "family(poisson) link(log) exposure(pop)", where pop is
+the population at risk, for a poisson model
+<p>
+* the default "family(gauss) link(id)" will provide a linear regression.
+<p>
+<p>
+Since <b>apch</b> makes use of complex constraints, this package should be processed
+on STATA 11.0 or higher.
+<p>
+<b><u>example</u></b>
+<p>
+<b>use "http://www.louischauvel.org/apchexb.dta", clear</b>
+<p>
+<b>apch mf2 , age(age) period(year)</b>
+<p>
+<b><u>References</u></b>
+<p>
+see http://www.louischauvel.org/apchex.htm for working paper and examples on
+    apch.
+<p>
+see Yang, Y., Fu, W., and Land, K. 2006. <b>apc_ie</b> and <b>apc_cglm</b> STATA packages.
+<p>
+<b><u>Author</u></b>
+<p>
+Louis Chauvel
+Sciences Po Paris
+During the completion of the v1.0
+Louis Chauvel was also invited Pr at Columbia U 
+Dpt of sociology, Knox Hall
+chauvel@louischauvel.org
+<p>
+<b><u>Also see</u></b>
+<p>
+Online: help for glm.
+<p>
+<p>
+<p>
+</pre>

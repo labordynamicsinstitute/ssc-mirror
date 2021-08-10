@@ -1,0 +1,59 @@
+<pre>
+-------------------------------------------------------------------------------
+help for <b>mido</b>                                                   (SJ3-3: st0000)
+-------------------------------------------------------------------------------
+<p>
+<b><u>Execute a Stata command on multiple (imputed) datasets</u></b>
+<p>
+        <b>mido</b><i> Stata-command</i>
+<p>
+<p>
+<b><u>Description</u></b>
+<p>
+    <b>mido</b> executes a Stata command on each of the datasets created by miset.
+    Most commands can be used, except estimation and post-estimation
+    commands.  Defining value labels is also not possible with <b>mido</b>.
+<p>
+    For execution of estimation-class commands with combination of results
+    over imputed datasets, see mifit; for post-estimation inferences, see 
+    milincom and mitestparm; and for manipulation of multiple datasets, see 
+    mimerge, miappend, and misave.
+<p>
+<p>
+<b><u>Remarks</u></b>
+<p>
+    <b>mido</b> is one of the suite of <b>mi</b> commands. Since <b>mido</b> applies only to
+    datasets that have been created by miset, it can only be issued after 
+    miset.  The <i>Stata-command</i> can be defined by a user-written ado-file.
+<p>
+<p>
+<b><u>Examples</u></b>
+<p>
+  Example 1
+    <b>. miset using male</b>
+    <b>. mido gen sex=0</b>
+    <b>. misave male, replace</b>
+    <b>. miset using female</b>
+    <b>. mido gen sex=1</b>
+    <b>. miappend using male</b>
+    <b>. mido label data "males and femals"</b>
+    <b>. misave both</b>
+<p>
+  Example 2
+    <b>. miset using both</b>
+    <b>. mido tab wave sex, sum(smk) f</b>
+    <b>. mido tabodds alcdhi sex</b>
+<p>
+<p>
+<b><u>Authors</u></b>
+<p>
+    Ning Li, Philip Greenwood, and John Carlin, Clinical Epidemiology &amp;
+    Biostatistics Unit, Murdoch Research Institute and University of
+    Melbourne.  Email: jbcarlin@unimelb.edu.au
+<p>
+<p>
+<b><u>Also see</u></b>
+<p>
+    Online: help for miset, miappend, mimerge, misave, mici, mifit, milincom,
+              mireset
+</pre>

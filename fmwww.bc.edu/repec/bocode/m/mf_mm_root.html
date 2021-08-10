@@ -1,0 +1,120 @@
+<pre>
+<b>help mata mm_root()</b>
+-------------------------------------------------------------------------------
+<p>
+<b><u>Title</u></b>
+<p>
+    <b>mm_root() -- Brent's univariate zero (root) finder</b>
+<p>
+<p>
+<b><u>Syntax</u></b>
+<p>
+        <i>rc</i> = <b>mm_root(</b><i>x</i><b>,</b> <i>f</i><b>,</b> <i>lo</i><b>,</b> <i>up</i> [<b>,</b> <i>tol</i><b>,</b> <i>itr</i><b>,</b> <i>...</i>]<b>)</b>
+<p>
+    where
+<p>
+           <i>rc</i>:  the return code; <i>rc</i>!=0 indicates that no valid solution has
+                been found
+<p>
+            <i>x</i>:  will be replaced by a <i>real scalar</i> containing solution
+<p>
+            <i>f</i>:  <i>pointer scalar</i> containing address of function whose zero will
+                be sought for; usually this is coded <b>&amp;</b><i>funcname</i><b>()</b>
+<p>
+           <i>lo</i>:  <i>real scalar</i> containing lower endpoint of the search interval
+<p>
+           <i>up</i>:  <i>real scalar</i> containing upper endpoint of the search interval
+<p>
+          <i>tol</i>:  <i>real scalar</i> specifying acceptable tolerance for the root
+                estimate (default is <i>tol</i>=0 to find the root as accurate as
+                possible)
+<p>
+          <i>itr</i>:  <i>real scalar</i> specifying the maximum number of iterations
+                (default is <i>itr</i>=1000)
+<p>
+          <i>...</i>:  up to 10 additional arguments to pass on to function <i>f</i>
+<p>
+<p>
+<b><u>Description</u></b>
+<p>
+    <b>mm_root()</b> searches the interval from <i>lo</i> to <i>up</i> for the root of function <i>f</i>
+    with respect to its first argument.  That is, <b>mm_root()</b> approximates the
+    value <i>x</i> for which <i>f</i><b>(</b><i>x</i> [<b>,</b> <i>...</i>]<b>)</b> evaluates to zero. The accuracy of the
+    approximation is 4*epsilon(<i>x</i>) + <i>tol</i>.
+<p>
+    <b>mm_root()</b> stores the found solution in <i>x</i> and issues return code <i>rc</i>.
+    Possible return codes are:
+<p>
+         0: everything went well
+<p>
+         1: convergence has not been reached within the maximum number of
+            iterations; <i>x</i> will contain the current approximation
+<p>
+         2: <i>f</i><b>(</b><i>lo</i><b>)</b> and <i>f</i><b>(</b><i>up</i><b>)</b> do not have opposite signs and <i>f</i><b>(</b><i>lo</i><b>)</b> is closer to
+            zero than <i>f</i><b>(</b><i>up</i><b>)</b>; <i>x</i> will be set to <i>lo</i>
+<p>
+         3: <i>f</i><b>(</b><i>lo</i><b>)</b> and <i>f</i><b>(</b><i>up</i><b>)</b> do not have opposite signs and <i>f</i><b>(</b><i>up</i><b>)</b> is closer to
+            zero than <i>f</i><b>(</b><i>lo</i><b>)</b>; <i>x</i> will be set to <i>up</i>
+<p>
+    <b>mm_root()</b> is a (slightly modified) translation of the C realization of
+    Brent's zero finder provided in http://www.netlib.org/c/brent.shar. A
+    description of the algorithm and details on the modifications can be
+    found in the source of <b>mm_root()</b> (see below).
+<p>
+<p>
+<b><u>Remarks</u></b>
+<p>
+    Example:
+<p>
+        : function myfunc(x, a) return(x^2 - a)
+<p>
+        : a = 2/3
+        
+        : mm_root(x=., &amp;myfunc(), 0, 1, 0, 1000, a)
+          0
+<p>
+        : x
+          .8164965809
+<p>
+        : mm_root(x=., &amp;myfunc(), 0, 1, 0.01, 1000, a)
+          0
+<p>
+        : x
+          .8168350168
+<p>
+        : sqrt(a)
+          .8164965809
+<p>
+<p>
+<b><u>Conformability</u></b>
+<p>
+    <b>mm_root(</b><i>x</i><b>,</b> <i>f</i><b>,</b> <i>lo</i><b>,</b> <i>up</i><b>,</b> <i>tol</i><b>,</b> <i>itr</i><b>,</b> <i>...</i><b>)</b>:
+           <i>x</i>:  input: anything; output: 1 <i>x</i> 1
+           <i>f</i>:  1 <i>x</i> 1
+          <i>lo</i>:  1 <i>x</i> 1
+          <i>up</i>:  1 <i>x</i> 1
+         <i>tol</i>:  1 <i>x</i> 1
+         <i>itr</i>:  1 <i>x</i> 1
+         <i>...</i>:  (depending on function <i>f</i>)
+      <i>result</i>:  1 <i>x</i> 1
+<p>
+<p>
+<b><u>Diagnostics</u></b>
+<p>
+    <i>x</i> will be set to missing if <i>f</i> evaluates to missing at some point in the
+    algorithm.
+<p>
+<p>
+<b><u>Source code</u></b>
+<p>
+    mm_root.mata
+<p>
+<p>
+<b><u>Author</u></b>
+<p>
+    Ben Jann, ETH Zurich, jann@soz.gess.ethz.ch
+<p>
+<p>
+<b><u>Also see</u></b>
+<p>
+</pre>

@@ -1,0 +1,74 @@
+<pre>
+<b>help ttable</b>                                                                    
+-------------------------------------------------------------------------------
+<p>
+<b><u>Title</u></b>
+<p>
+    <b>ttable</b> --           <b> Mean Comparison for a lot of variables between two</b>
+         <b>groups with formatted table output</b>
+<p>
+<p>
+<b><u>Syntax</u></b>
+<p>
+    <b>ttable</b> syntax varlist(min=1) [if] [in], by(varname)<b>,</b>
+<p>
+<p>
+    <i>varlist</i> is a list of numerical variables to be tested.  For each of those
+    variables, we need to perform a standard t-test to compare her mean
+    difference between two groups specified by <b>by(varname)</b>
+<p>
+    <i>varname</i> must be a dichotomous variable for the sample specified by<b> [if]</b>
+    <b>and [in]</b>. <i>varname</i> maybe either numerical or string, provided that it only
+    takes two different values for the sample.
+<p>
+<p>
+<p>
+<b><u>A Simulated Examples</u></b>
+<p>
+<p>
+clear
+set obs 1000
+<p>
+forval i = 1(1) 10 {
+  gen x`i' = `i'+uniform()*`i'
+  }
+  gen num_d = uniform()&gt;0.2+x1*.3+x2*.4-x3*.5
+ 
+  gen xs = string(uniform())+"A"
+  gen str_d = "A"
+  replace str_d = "B" if x1&lt;1.400
+ 
+ ttable x1, by(num_d) 
+<p>
+ ttable x1 xs, by(num_d) 
+<p>
+ ttable x1-x10, by(num_d)
+<p>
+ ttable x1-x10, by(num_d)
+<p>
+ ttable x1-x10 xs, by(str_d)
+  
+ ttable x1-x10 in 1/800, by(str_d)
+ 
+ ttable x1-x10 in 1/800 if x1&lt;1.8, by(str_d)
+<p>
+<b><u> After Test</u></b>
+    Users can copy the output from Stata's result window, then paste to a MS
+    word document. After that, highlight the pasted words and transform into
+    a table.
+<p>
+<p>
+<b><u>Authors</u></b>
+<p>
+    Xuan Zhang
+    Zhongnan University of Economics and Law
+    Wuhan, China
+    zhangx@znufe.edu.cn
+<p>
+<p>
+    Chuntao Li
+    Zhongnan University of Economics and Law
+    Wuhan, China
+    chtl@znufe.edu.cn
+<p>
+</pre>

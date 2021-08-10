@@ -1,0 +1,103 @@
+<pre>
+<b>help labvalpool</b>
+-------------------------------------------------------------------------------
+<p>
+<b><u>Title</u></b>
+<p>
+     <b>labvalpool</b> -- Pool (sets of) value labels
+<p>
+<p>
+<b><u>Syntax</u></b>
+<p>
+        <b>labvalpool</b> [<i>target-lblname</i> [<i>lblname-list</i>]] [<b>,</b> <i>options</i>]
+<p>
+<p>
+     where
+<p>
+        <i>target-lblname</i> is the value label name for pooled sets of value labels
+<p>
+        <i>lblname-list</i> are names of value label sets to be pooled
+<p>
+<p>
+<b><u>Description</u></b>
+<p>
+    <b>labvalpool</b> pools (sets of) value labels specified in <i>lblname-list</i>. A
+    value label set, <i>target-lblname</i>, is defined, pooling definitions from
+    <i>lblname</i><i>1</i>, <i>lblname</i><i>2</i>, <i>...</i>. Not specifying <i>target-lblname</i> and/or
+    <i>lblname-list</i>, means all value labels in memory.
+<p>
+<p>
+<b><u>Options</u></b>
+<p>
+    <b><u>a</u></b><b>ppend</b>[<b>(</b><i>numlist</i> | <i>varlist</i><b>)</b>] appends value label definitions from
+        <i>lblname-list</i> to <i>target-lblname</i>. Note that <i>target-lblname</i> must exist.
+        If specified, only values in <i>numlist</i> or <i>varlist</i> and the associated
+        text are added from <i>lblname-list</i>. May not be specified with <b>replace</b>.
+<p>
+    <b>replace</b> replaces <i>target-lblname</i> with pooled value labels from
+        <i>lblname-list</i>. If <i>target-labelname</i> exists, it is redefined, otherwise
+        a new value label set is defined. May not be specified with <b>append</b>.
+<p>
+    <b>update</b> overwrites value label definitions. Later definitions overwrite
+        earlier ones in the order of the specified <i>lblname-list</i>. The synonym
+        <b><u>overw</u></b><b>rite</b> may be used. May not be specified with <b>pool</b>.
+<p>
+    <b><u>p</u></b><b>ool</b> pools text from value labels. Any text associated with the same
+        values is combined. May not be specified with <b>update</b>.
+<p>
+    <b><u>sep</u></b><b>arator(</b><i>chars</i><b>)</b> uses <i>chars</i> to separate pooled value labels. May only be
+        specified with <b>pool</b>. Default separator is <b>" "</b>.
+<p>
+<p>
+<b><u>Examples</u></b>
+<p>
+        <b>. clear all</b>
+        <b>. label define foo 1 "one" ,modify</b>
+        <b>. label define foo 2 "two" ,modify</b>
+        <b>. label define foo 3 "three" ,modify</b>
+<p>
+        <b>. label define bar 3 "second three" ,modify</b>
+        <b>. label define bar 4 "four" ,modify</b>
+<p>
+        <b>. labvalpool foobar foo bar</b>
+        <b>. label list</b>
+        <b>. labvalpool foobar foo bar,replace update</b>
+        <b>. label list foobar</b>
+        
+        <b>. labvalpool foobar foo bar,replace pool</b>
+        <b>. label list foobar</b>
+<p>
+        <b>. label drop foobar</b>
+        <b>. labvalpool foo bar ,append</b>
+        <b>. label list</b>
+        
+<p>
+        <b>. sysuse nlsw88 ,clear</b>
+        <b>. recode occupation (1/2 = 1 "Higher occupation") ,generate(occ)</b>
+            <b>label(occlbl2)</b>
+        <b>. label list occlbl2</b>
+        <b>. labvalpool occlbl2 occlbl ,append(occ)</b>
+        <b>. label list occlbl2</b>
+<p>
+<p>
+<b><u>Acknowledgments</u></b>
+<p>
+    The problem of combining (sets of) value labels was suggested by Jorge
+    Eduardo Pérez Pérez on Statalist.
+<p>
+    Nick Cox proposed a first solution labvalcombine, which is availiable
+    under the link above (or as part of labutil package) and will work with
+    Stata version 8 or higher.
+<p>
+<p>
+<b><u>Author</u></b>
+<p>
+    Daniel Klein, University of Kassel, klein.daniel.81@gmail.com
+<p>
+<p>
+<b><u>Also see</u></b>
+<p>
+    Online: label
+<p>
+    if installed: labvalcombine, labcopy, labvalclone, labutil2
+</pre>

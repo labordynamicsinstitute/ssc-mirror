@@ -1,0 +1,94 @@
+<pre>
+.-
+help for ^reswage^ - 1.0 - 1/1/05
+.-
+<p>
+Estimates reservation wage model using Breen's (1996) likelihood function
+-------------------------------------------------------------------------
+<p>
+    ^reswage^ ^depvar^ ^varlist1^, SELect(^varlist2^)[dummy(^censor_indicator^)
+&gt; ]
+<p>
+    where
+<p>
+    ^depvar^ is the dependent variable that is censored for a subset of the sam
+&gt; ple
+<p>
+    ^varlist1^ is the set of independent variables thought to affect ^depvar^
+<p>
+    ^varlist2^ is the set of independent variables thought to affect reservatio
+&gt; n wages
+<p>
+    ^censor_indicator^ is the dummy variable indicating if an observation is ce
+&gt; nsored
+<p>
+    ^aweights^, ^fweights^, and ^pweights^ are not allowed in this version of ^
+&gt; reswage^
+<p>
+Description
+-----------
+<p>
+^reswage^ uses maximum likelihood and Breen's likelihood function (in ^reswage_
+&gt; ll.ado^,
+see "Remarks" below for bibliographic information) to estimate a selection regr
+&gt; ession 
+model with endogenous selection.  ^reswage^ provides an alternative to the stan
+&gt; dard 
+Heckman two-step or MLE selection models, with the primary distinction being ^r
+&gt; eswage^
+relaxes the assumption of the exogeneity of the sampling mechanism; e.g., wage 
+&gt; offers 
+influence the likelihood of employment and hence the odds of observing wages. 
+<p>
+Sample selection models such as Heckman are notoriously difficult to identify, 
+&gt; and 
+^reswage^ is no exception to this general rule.  The likelihood function as spe
+&gt; cified 
+in ^reswage_ll.ado^ is identified via the assumption of no error correlation be
+&gt; tween 
+the error terms in the equations predicting observed wages and reservation wage
+&gt; s.  In 
+models where there are no good instruments to adequately differentiate between 
+&gt; these 
+two equations, there will likely be difficulties in getting ^reswage^ to conver
+&gt; ge.  
+<p>
+Options
+-------
+<p>
+dummy(^censor_indicator^) specifies which cases have censored values of ^depvar
+&gt; ^.  
+If this option is not utilized, a dummy variable will be created for you on the
+&gt;  basis
+of whether ^depvar^ is missing.  
+<p>
+Remarks
+-------
+<p>
+For detailed information on the underlying likelihood function, see REGRESSION 
+&gt; MODELS: 
+CENSORED, SAMPLE-SELECTED, OR TRUNCATED DATA.  Richard Breen, Sage University P
+&gt; aper 
+series on Quantitative Applications in the Social Sciences, series no. 7-011, T
+&gt; housand 
+Oaks, 1996.  The likelihood function is provided on pp. 55-57.
+<p>
+Examples
+--------
+<p>
+ . ^use http://www.stata.com/data/jwooldridge/eacsap/mroz^
+ . ^reswage lwage educ exper, select(nwifeinc kidslt6 kidsge6 age educ)^
+<p>
+ or equivalently
+<p>
+ . ^use http://www.stata.com/data/jwooldridge/eacsap/mroz^
+ . ^reswage lwage educ exper, sel(nwifeinc kidslt6 kidsge6 age educ) dummy(inlf
+&gt; )^
+<p>
+.-
+Authors:
+John Reynolds, Department of Sociology, Florida State University, john.reynolds
+&gt; @fsu.edu
+Karen Frank, Department of Sociology, Florida State University, kc04d@fsu.edu
+<p>
+</pre>

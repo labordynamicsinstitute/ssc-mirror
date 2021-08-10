@@ -1,0 +1,149 @@
+<pre>
+-------------------------------------------------------------------------------
+help for <b>cureregr</b> (sep2007)                              (see also:  <b>[R] stset</b>)
+-------------------------------------------------------------------------------
+<p>
+<b><u>cureregr</u></b>, cure model regression (split-population model) or, <b><u>parametric-cure mo</u></b>
+<b><u>&gt; del (PCM)</u></b>
+<p>
+        <b>cureregr</b> [<i>varlist</i>] [<b>if</b> <i>exp</i>] [<b>in</b> <i>range</i>] <i>,</i>
+                 [<b><u>dist</u></b><b>ribution_option(</b>{it:weibull | lognormal | logistic |
+                 gamma | exponential}<b>)</b> <b><u>class</u></b><b>_option(</b><i>mixture | non-mixture</i><b>)</b>
+                 <b><u>link</u></b><b>_option(</b><i>logistic | lml, log-minus-log | linear</i> <b>)</b>
+                 <b><u>sc</u></b><b>ale_option(</b><i>varlist</i><b>)</b> <b><u>sh</u></b><b>ape_option(</b><i>varlist</i><b>)</b> <b><u>noconst</u></b><b>ant</b>
+                 <b>scale_noc</b> <b>shape_noc</b> <b><u>nodesc</u></b><b>riptionmodel</b> <b><u>nosh</u></b><b>ow</b> <b>left</b>]
+<p>
+<b><u>Description</u></b>
+<p>
+    <b>cureregr</b> fits a parametric cure model in either the non-mixture or mixture
+    class.
+        important -- <b>cureregr</b> requires that the data be <b>stset</b> prior to use.
+        <b>cureregr</b> will correctly estimate multiple records per subject, to
+        include time-varying-covariates. Please note that for multiple records
+        per subject the records must be in contiguous intervals defined in
+        <b>stset</b>, [_t0, _t]; in other words, there may be no gaps (see: <b>stdes</b>).
+<p>
+<b><u>Options</u></b>
+<p>
+    <b><u>dist</u></b><b>ribution_option(</b><i>weibull | lognormal | logistic | gamma | exponential</i><b>)</b>
+        <i>define Kernel:</i>
+            weibull: exponential in tt
+            lognormal: norm(ln(tt))
+            logistic: tt/(1-tt)
+            gamma: gammap(shape, scale, time)
+            exponential: gammap(shape==1, scale, time)
+    <b><u>class</u></b><b>_option(</b><i>mixture | non-mixture</i><b>)</b>
+        <i>define parametric-cure model class:</i>
+            mixture: pi+(1-pi)*(1-Kernel)
+            non-mixture: pi^Kernel
+    <b><u>link</u></b><b>_option(</b><i>logistic | lml, log-minus-log | linear</i><b>)</b>
+        <i>define cure_fraction (pi) link funtion</i>
+            logistic: exp(xb_pi)/(1+exp(xb_pi))
+            lml: exp(-exp(xb_pi))
+            linear: exp(xb_pi)
+                <i>where</i> xb_pi <i>is the linear model for the cure_fraction, pi</i>
+    <b><u>sc</u></b><b>ale_option(</b><i>varlist</i><b>)</b>
+            <i>varlist for scale model</i>
+    <b><u>sh</u></b><b>ape_option(</b><i>varlist</i><b>)</b>
+            <i>varlist for shape model</i>
+    <b><u>noconst</u></b><b>ant</b>
+            <i>specifies that no constant term for cure-fraction model is to be</i>
+                <i>fit</i>
+    <b>scale_noc</b>
+            <i>specifies that no constant term for scale model is to be fit</i>
+    <b>shape_noc</b>
+            <i>specifies that no constant term for shape model is to be fit</i>
+    --
+    <b>left</b> specifies that there are left censored subjects.  the failures defined
+        by the last value specified by the failure() argument of <b>stset</b> are
+        taken to be left censored. this creates (or overwrites) a variable
+        called <i>_leftd</i> and is indicated in e(depvar).
+    --
+    <b><u>nodesc</u></b><b>riptionmodel</b>
+            <i>do not show cureregr model definition information</i>
+    <b><u>nosh</u></b><b>ow</b>
+            <i>do not show st setting information</i>
+<p>
+<b><u>please note these definitions</u></b>
+    tt = (scale*time)^shape<i> function of time, t-tilde</i>
+        scale=exp(xb_scale) <i>for the scale model</i>
+        shape=exp(xb_shape) <i>for the shape model</i>
+<p>
+<b><u>Example</u></b>
+<p>
+        . cureregr g1_ageyr, dist(weibull) class(n) link(logi) noconstant
+<p>
+        . xi: cureregr g0_ageyr i.g0_wbc i.g0_plt, sc(i.g0_wbc i.g0_plt)
+            sh(i.g0_plt) dist(lognormal) class(non) link(logi) scale_noc
+            shape_noc
+<p>
+        . xi: cureregr (i.study_r) i.g_liver i.race2 if analset1 ,
+            dist(weibull) link(lml) sc((i.study_r) ) sh((i.study_r) )
+            class(nonmixture) technique(nr)
+<p>
+        <i>predicting</i>
+<p>
+        <b>predict</b> [<b>if</b> <i>exp</i>] [<b>in</b> <i>range</i>] <i>,</i> [<b><u>at</u></b><b>(</b><i>numlist</i><b>)</b> | <b><u>all</u></b> | <b><u>s</u></b><b>urvival</b> | <b><u>se</u></b><b>s</b> | <b><u>u</u></b><b>cs</b>
+            | <b><u>l</u></b><b>cs</b> | <b><u>h</u></b><b>azard</b> | <b><u>fd</u></b>] [<b><u>gen</u></b><b>(</b><i>varlist</i><b>)</b>] [<b><u>level</u></b><b>(</b><i>number</i><b>)</b>]
+            [<b><u>fmt</u></b><b>print(</b><i>%8.6f</i><b>)</b>]
+<p>
+                After model estimation the survival, standard error, and
+            confidence interval can be displayed with <b>predict</b>, <b><u>at</u></b><b>()</b> specified
+            time points. The survival estimates are displayed for all covariate
+            patterns and <b>if</b> or <b>in</b> may be used to limit the number of covariate
+            patterns displayed; An example can be found in the ancillary file,
+            cureregr_predict_eg.pdf. The <b>fmt()</b> option allows any acceptable
+            numeric format specification for the displayed numeric results.
+            Please note also that the confidence limits are based on a
+            ln(-ln(S)) transform.
+<p>
+                Six quantities may be estimated and placed into a new variable:
+            survival (S), and its standard error (seS), lower confidence limit
+            (lciS), and upper confidence limit (uciS). In addition, the hazard
+            (haz), or the fail density (fd) may be estimated. One of the key
+            words (s, se, l, u, h, fd, or all) can be specified. With the
+            option <b><u>gen</u></b><b>()</b>, the estimate requested by the keyword will be placed
+            in the new variable, while the keyword <b><u>all</u></b> requires six new
+            variable names in order:  survival, ses, lcs, ucs, hazard, and fd.
+            Where the default names are: <i>S</i>, <i>seS</i>, <i>lciS</i>, <i>uciS</i>, <i>haz</i>, and <i>fd</i>,
+            respectively.
+<p>
+        . predict if study_r==1 &amp; g_liver==1 &amp; race2==2, at(30(30)365 2922)
+        . predict , all gen(s_v2 se_v2 lci90_v2 uci90_v2 haz_v2 fd_v2)
+            level(90)
+        . predict , hazard gen(myhaz)
+        . predict , lcs gen(lci95_v1) level(95)
+        . predict , ucs gen(uci95_v1) level(95)
+<p>
+<b><u>Author</u></b>
+        Allen Buxton, CureSearch, Children's Oncology Group, Arcadia, CA
+    - acknowledgements -
+        Richard Sposto, Mark Krailo, &amp; Todd Alonzo, Keck School of Medicine,
+            University of Southern California, USA
+        John Thompson &amp; Clarie Weston, Department of Health Sciences,
+            University of Leicester, UK
+<p>
+<b><u>References</u></b>
+        Sposto R. Cure model analysis in cancer: An application to data from
+            the Children's Cancer Group. Statistics in Medicine, 21: 293-312,
+            2002
+        Stephen Jenkins, spsurv (spsurv.ado for Stata, 23may2001), University
+            of Essex, UK
+        Maller RA. &amp; Zhou, X. Survival Analysis with Long Term Survivors, John
+            Wiley, 1997.
+        Schmidt P. &amp; Witte A. Predicting criminal recidivism using
+            'split-population' survival time models, Journal of Econometrics,
+            40: 141-159, 1989
+<p>
+<b><u>Files</u></b>
+        main: cureregr.ado, &amp; ml <i>evaluators</i>: PCM<i>mmkkll</i>.ado
+        predict: _cureregr.ado &amp; _cureregr_gen.ado
+    - ancillary -
+        pcm_key.pdf, a description of the models <b>cureregr</b> will fit.
+        cureregr_predict_eg.pdf, example of predict.
+        example_stata.dta, dataset in the above example.
+<p>
+<b><u>Also see</u></b>
+ Manual: <b>[R] stset</b>
+<p>
+</pre>

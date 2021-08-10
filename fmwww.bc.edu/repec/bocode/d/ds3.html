@@ -1,0 +1,262 @@
+<pre>
+-------------------------------------------------------------------------------
+help for <b>ds3</b>
+-------------------------------------------------------------------------------
+<p>
+<b><u>Describe variables in memory</u></b>
+<p>
+        <b>ds3</b> [<i>varlist</i>] [<b>if</b> <i>exp</i>] [<b>in</b> <i>range</i>] [<b>,</b> <b><u>str</u></b><b>ing</b>[<b>(</b><i>numlist</i><b>)</b>] <b><u>num</u></b><b>eric</b> <b>byte</b> <b>int</b>
+            <b>long</b> <b>float</b> <b>double</b> <b><u>co</u></b><b>mplement</b> { <b>has(</b><i>specification</i><b>)</b> |
+            <b>not(</b><i>specification</i><b>)</b> | <b>all(</b><i>condition</i><b>)</b> | <b>any(</b><i>condition</i><b>)</b> |
+            <b>none(</b><i>condition</i><b>)</b> } <b>case</b> <b><u>place</u></b><b>holder(</b><i>symbol</i><b>)</b> <b><u>d</u></b><b>etail</b> <b><u>col</u></b><b>s(</b><i>#</i><b>)</b> ]
+<p>
+        where <i>specification</i> is one of
+<p>
+            <b><u>varl</u></b><b>abel</b> [<i>patternlist</i>]
+<p>
+            <b><u>vall</u></b><b>abel</b> [<i>patternlist</i>]
+<p>
+            <b><u>f</u></b><b>ormat</b> <i>patternlist</i>
+<p>
+            <b><u>c</u></b><b>har</b> [<i>patternlist</i>]
+<p>
+            (for more details, see under Rule 4 below);
+<p>
+        and where <i>condition</i> is any true or false condition in which a single
+            variable name may be substituted for the placeholder, by default <b>X</b>,
+            which must appear at least once
+<p>
+            (for more details, see under Rule 5 below).
+<p>
+<p>
+<b><u>Description</u></b> 
+<p>
+<b>ds3</b> lists variable names in a compact format (or optionally, in the same format
+as <b>describe</b>). It is a variant on <b>ds</b>.
+<p>
+<b><u>Options</u></b>
+<p>
+<b>ds3</b> may be considered as applying seven rules in succession.
+<p>
+<b><u>Rule 1</u></b>
+<p>
+<b>ds3</b> starts with a <i>varlist</i>. If not supplied, <i>varlist</i> is a list of all variables
+in memory.
+<p>
+If there are no options, <b>ds3</b> stops here and prints out <i>varlist</i>.  This alone can
+be very useful. In this form, it is exactly equivalent to <b>ds</b>.
+<p>
+<b><u>Rule 2</u></b> 
+<p>
+If any of the options <b>string</b>, <b>numeric</b>, <b>byte</b>, <b>int</b>, <b>long</b>, <b>float</b> or <b>double</b> are
+specified, then <b>ds3</b> selects from the <i>varlist</i> those variables that are of the
+types specified.
+<p>
+<b>string</b> may take a <i>numlist</i> of any integers between 1 and 80, or between 1 and
+244 under Stata/SE.  For example, <b>str(1/10)</b> specifies variables of types <b>str1</b>,
+<b>str2</b>, ..., <b>str9</b>, <b>str10</b> and <b>str(42)</b> specifies variables of type <b>str42</b>.
+<b>str(1/80</b>), or <b>str(1/244)</b> under Stata/SE, is thus a synonym for <b>string</b>, although
+<b>string</b> is recommended.
+<p>
+<b><u>Rule 3</u></b> 
+<p>
+If the <b>complement</b> option is specified, then the <i>varlist</i> is replaced 
+by its complement, i.e. all those variables not in <i>varlist</i>. Thus 
+<b>ds3, float complement</b> produces a list of those variables that are not 
+of type <b>float</b>. 
+<p>
+<b><u>Rule 4</u></b> 
+<p>
+Either the <b>has()</b> or the <b>not()</b> option may be specified (but not both, and not in
+conjunction with any of the <b>all()</b>, <b>any()</b> or <b>none()</b> options described under Rule
+5).
+<p>
+    The <b>has()</b> option specifies further features: those variables will be listed
+    from the <i>varlist</i> that have those features.
+<p>
+    The <b>not()</b> option also specifies further features: those variables will be
+    listed from the <i>varlist</i> that do not have those features.
+<p>
+The <i>specification</i> may refer to one of the following: variable labels, value
+labels, formats or characteristics. The specification must start with one of
+the keywords <b>varlabel</b>, <b>vallabel</b>, <b>format</b> or <b>char</b>, which may be abbreviated <b>varl</b>,
+<b>vall</b>, <b>f</b> and <b>c</b>.
+<p>
+    <b>has(varl)</b> specifies variables with defined variable labels and <b>not(varl)</b>
+    specifies variables without such labels.
+<p>
+    <b>has(varl</b> <i>patternlist</i><b>)</b> and <b>not(varl</b> <i>patternlist</i><b>)</b> refer to variable labels
+    that satisfy one or more of the specified patterns.
+<p>
+    <b>has(vall)</b> specifies variables with defined value labels and <b>not(vall)</b>
+    specifies variables without such labels.
+<p>
+    <b>has(vall</b> <i>patternlist</i><b>)</b> and <b>not(vall</b> <i>patternlist</i><b>)</b> refer to value labels whose
+    names satisfy one or more of the specified patterns.
+<p>
+    <b>has(f</b> <i>patternlist</i><b>)</b> and <b>not(f</b> <i>patternlist</i><b>)</b> refer to display formats
+    satisfying specified patterns. In specifying a format the leading character
+    <b>%</b> may be omitted.
+<p>
+    Note that <b>has(f)</b> and <b>not(f)</b> are considered to be errors:  because all
+    variables have some display format, the answer to each would be totally
+    predictable.
+<p>
+    <b>has(c)</b> specifies variables with defined characteristics and <b>not(c)</b>
+    specifies variables without such characteristics.
+<p>
+    <b>has(c</b> <i>patternlist</i><b>)</b> and <b>not(c</b> <i>patternlist</i><b>)</b> refer to characteristics whose
+    names satisfy one or more of the specified patterns.
+<p>
+The keywords or their abbreviations <b>varl</b>, <b>vall</b>, <b>f</b> and <b>c</b> and any patterns
+specified must be separated by spaces.
+<p>
+In specifying patterns, use the syntax used in the <b>match(,)</b> function. That is,
+<b>*</b> means "0 or more characters go here", <b>?</b> means "1 character goes here" and any
+other character stands for itself. Comparison is case-sensitive unless the
+option <b>case</b> is specified. Thus <b>has(vall origin)</b> would not catch any variables
+with the value label <b>Origin</b>, but <b>has(vall origin) case</b> would do so.
+<p>
+<b><u>Rule 5</u></b> 
+<p>
+One of the <b>all()</b>, <b>any()</b> and <b>none()</b> options may be specified (but not in
+conjunction with either of the <b>has()</b> and <b>not()</b> options described under Rule 4).
+<p>
+    The <b>all()</b> option specifies a <i>condition</i>: those variables will be listed from
+    the <i>varlist</i> for which all values satisfy that <i>condition</i>.
+<p>
+    The <b>any()</b> option specifies a <i>condition</i>: those variables will be listed from
+    the <i>varlist</i> for which any values (one or more) satisfy that <i>condition</i>.
+<p>
+    The <b>none()</b> option specifies a <i>condition</i>: those variables will be listed
+    from the <i>varlist</i> for which no values satisfy that <i>condition</i>.
+<p>
+The <i>condition</i> should be a true or false condition in which a placeholder, by
+default <b>X</b>, appears at least once. This placeholder will be substituted by each
+<i>varname</i> in the <i>varlist</i>. Thus <b>any(X &lt; 0)</b> would be used to test whether each
+variable in the <i>varlist</i> contains negative values.
+<p>
+Any <i>condition</i> which makes no sense for numeric variables, such as <b>X == ""</b>, will
+be ignored for those variables, and any <i>condition</i> which makes no sense for
+string variables, such as <b>X &lt; 0</b>, will be ignored for those variables,
+irrespective of which variables appear in the <i>varlist</i>.
+<p>
+Whenever <b>if</b> or <b>in</b> is also specified, the <b>all()</b>, <b>any()</b> or <b>none()</b> option chosen
+will determine whether any, all or none of the observations satisfying the <b>if</b>
+and <b>in</b> conditions also satisfy the <i>condition</i> being tested. Note that <b>if</b> and <b>in</b>
+have otherwise no effect on the results of <b>ds3</b>.
+<p>
+The placeholder may be changed using <b>placeholder()</b>.
+<p>
+<b><u>Rule 6</u></b> 
+<p>
+The option <b>detail</b> specifies that a more detailed listing should be given. <b>ds3,</b>
+<b>str d</b> is equivalent to <b>describe</b> with all the string variables. <b>ds3, num d</b> is
+equivalent to <b>describe</b> with all the numeric variables.
+<p>
+<b><u>Rule 7</u></b> 
+<p>
+The option <b>cols()</b> specifies the number of columns to be used in the listing.
+The default is 8. The number may be between 1 and 12, inclusive. Fewer columns
+than the default may be desired by those using many long variable names, and
+more by those using many very short variable names. <b>cols()</b> has no effect with
+<b>detail</b>.
+<p>
+<p>
+<b><u>Saved results</u></b>
+<p>
+<b>ds3</b> saves in <b>r(varlist)</b> the names of the variables listed.
+<p>
+<b><u>Examples</u></b>
+<p>
+All variables:
+<p>
+    . ds3
+<p>
+    . ds3, cols(6)
+<p>
+All string variables:
+<p>
+    . ds3, str
+<p>
+    . ds3, str d
+<p>
+    . edit `r(varlist)'
+<p>
+All numeric variables:
+<p>
+    . ds3, num
+<p>
+    . order `r(varlist)'
+<p>
+    . ds3, num
+<p>
+    . su `r(varlist)'
+<p>
+All float variables:
+<p>
+    . ds3, float
+<p>
+All variables that are not float:
+<p>
+    . ds3, float co
+<p>
+All variables with value labels attached:
+<p>
+    . ds3, has(vall)
+<p>
+All variables with the value label <b>origin</b> attached:
+<p>
+    . ds3, has(vall origin)
+<p>
+All date variables, i.e. those with formats <b>%d*</b> or <b>%t*</b>:
+<p>
+    . ds3, has(f d* t*)
+<p>
+Variables with left-justified string formats:
+<p>
+    . ds3, has(f -*s)
+<p>
+Variables with right-justified string formats:
+<p>
+    . ds3, str not(f -*s)
+<p>
+Variables with comma formats:
+<p>
+    . ds3, has(f *c)
+<p>
+Variables with characteristics defined:
+<p>
+    . ds3, has(c)
+<p>
+Variables with all values missing:
+<p>
+    . ds3, all(missing(X))
+<p>
+Variables with any values negative:
+<p>
+    . ds3, any(X &lt; 0)
+<p>
+Variables with any nonsensical values:
+<p>
+    . ds3 if male, any(X &gt; 0 &amp; X &lt; .)
+<p>
+<p>
+<b><u>Author</u></b> 
+<p>
+         Nicholas J. Cox, University of Durham, U.K.
+         n.j.cox@durham.ac.uk
+<p>
+<p>
+<b><u>Acknowledgement</u></b>
+<p>
+Suggestions from Richard Goldstein, William Gould, Jay Kaufman and Fred Wolfe
+were very helpful in developing this program.
+<p>
+<p>
+<b><u>Also see</u></b>
+<p>
+On-line: help for describe 
+ Manual: <b>[R] describe</b>, <b>[R] saved results</b>
+<p>
+</pre>

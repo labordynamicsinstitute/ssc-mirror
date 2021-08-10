@@ -1,0 +1,280 @@
+<pre>
+-------------------------------------------------------------------------------
+help for <b>mvis</b>, <b>uvis</b>                                             Patrick Royston
+-------------------------------------------------------------------------------
+<p>
+<b><u>Multivariate and univariate imputation sampling</u></b>
+<p>
+<p>
+        <b>mvis</b> <i>mainvarlist</i> <b>using</b> <i>filename</i>[<b>.dta</b>] [<b>if</b> <i>exp</i>] [<b>in</b> <i>range</i>] [<i>weight</i>] <b>,</b>
+                 <b>m(</b><i>#</i><b>)</b> [ <b><u>bo</u></b><b>ot</b>[<b>(</b><i>varlist</i><b>)</b>] <b>cc(</b><i>ccvarlist</i><b>)</b> <b><u>cm</u></b><b>d(</b><i>cmdlist</i><b>)</b> <b><u>cy</u></b><b>cles(</b><i>#</i><b>)</b>
+                 <b><u>dr</u></b><b>aw</b>[<b>(</b><i>varlist</i><b>)</b>] <b><u>g</u></b><b>enmiss(</b><i>string</i><b>)</b> <b><u>i</u></b><b>d(</b><i>string</i><b>)</b> <b><u>nocons</u></b><b>tant</b>
+                 <b>on(</b><i>varlist</i><b>)</b> <b>replace</b> <b><u>se</u></b><b>ed(</b><i>#</i><b>)</b> ]
+<p>
+        <b>uvis</b> <i>regression_cmd</i> <i>yvar</i> <i>xvarlist</i> [<b>if</b> <i>exp</i>] [<b>in</b> <i>range</i>] [<i>weight</i>] <b>,</b>
+                 <b><u>g</u></b><b>en(</b><i>newvarname</i><b>)</b> [ <b><u>bo</u></b><b>ot</b> <b><u>dr</u></b><b>aw</b> <b>replace</b> <b><u>se</u></b><b>ed(</b><i>#</i><b>)</b> ]
+<p>
+    where
+<p>
+        <i>regression_cmd</i> may be logistic, logit, mlogit, ologit, or regress.
+<p>
+    All weight types supported by <i>regression_cmd</i> are allowed; see weights.
+<p>
+<p>
+<b><u>Description</u></b>
+<p>
+    <b>mvis</b> (<b>m</b>ulti<b>v</b>ariate <b>i</b>mputation <b>s</b>ampling) imputes missing values in
+    <i>mainvarlist</i> by using switching regression, an iterative multivariable
+    regression technique. Sets of imputed and non-imputed variables are
+    stored to a new file called <i>filename</i>. Any number of complete imputations
+    may be created.
+<p>
+    <b>uvis</b> (<b>u</b>ni<b>v</b>ariate <b>i</b>mputation <b>s</b>ampling) imputes missing values in the
+    single variable <i>yvar</i> based on multiple regression on <i>xvarlist</i>. <b>uvis</b> is
+    called repeatedly by <b>mvis</b> in a regression switching mode to perform
+    multivariate imputation.
+<p>
+    The missing observations are assumed to be "missing at random" (MAR) or
+    "missing completely at random" (MCAR), according to the jargon. See for
+    example van Buuren <i>et al</i> (1999) for an explanation of these concepts.
+<p>
+    Note that <b>mvis</b> and the other programs in the MICE multiple imputation
+    suite are now compatible with Stata version 7 and higher.
+<p>
+<p>
+<b><u>Options for </u></b><b><u>mvis</u></b>
+<p>
+    <b>m(</b><i>#</i><b>)</b> is not optional. <i>#</i> is the number of imputations required (minimum 1,
+        no upper limit).
+<p>
+    <b>boot</b>[<b>(</b><i>varlist</i><b>)</b>] instructs that each member of <i>varlist</i>, a subset of
+        <i>mainvarlist</i>, be imputed with the <b>boot</b> option of <b>uvis</b> activated. If
+        <b>(</b><i>varlist</i><b>)</b> is omitted then all members of <i>mainvarlist</i> with missing
+        observations are imputed using the <b>boot</b> option of <b>uvis</b>.
+<p>
+    <b>cc(</b><i>ccvarlist</i><b>)</b> prevents imputation of missing data in <i>mainvarlist</i> for
+        cases in which any member of <i>ccvarlist</i> has a missing value. "cc"
+        signifies "complete case". Note that members of <i>ccvarlist</i> are used
+        for imputation if they appear in <i>mainvarlist</i>, but not otherwise. Use
+        of this option is equivalent to entering <b>if</b> <b>~missing(</b><i>var1</i><b>) &amp;</b>
+        <b>~missing(</b><i>var2</i>{cmd:) ..., where <i>var1</i>, <i>var2</i>, ... denote the members of
+        <i>ccvarlist</i>.
+<p>
+    <b>cmd(</b><i>cmdlist</i><b>)</b> defines the regression commands to be used for each variable
+        in <i>mainvarlist</i>, when it becomes the dependent variable in the
+        switching regression procedure used by <b>uvis</b> (see <i>Remarks</i>).  The first
+        item in <i>cmdlist</i> may be a command such as <b>regress</b> or may have the
+        syntax <i>varlist</i><b>:</b><i>cmd</i>, specifying that command <i>cmd</i> applies to all the
+        variables in <i>varlist</i>.  Subsequent items in <i>cmdlist</i> must follow the
+        latter syntax, and each item should be followed by a comma.
+<p>
+        The default <i>cmd</i> for a variable is <b>logit</b> when there are two distinct
+        values, <b>mlogit</b> when there are 3-5 and <b>regress</b> otherwise.
+<p>
+        Example:  <b>cmd(regress)</b> specifies that all variables are to be imputed
+                  by <b>regress</b>, over-riding the defaults
+<p>
+        Example:  <b>cmd(x1 x2:logit, x3:regress)</b> specifies that <b>x1</b> and <b>x2</b> are
+                  to be imputed by <b>logit</b>, <b>x3</b> by <b>regress</b> and all others by
+                  their default choices
+<p>
+    <b>cycles(</b><i>#</i><b>)</b> determines the number of cycles of regression switching to be
+        carried out. Default <i>#</i> is 10.
+<p>
+    <b>draw</b>[<b>(</b><i>varlist</i><b>)</b>] instructs that each member of <i>varlist</i> be imputed with the
+        <b>draw</b> option of <b>uvis</b>. If <b>(</b><i>varlist</i><b>)</b> is omitted then all relevant
+        variables are imputed with the <b>boot</b> option of <b>uvis</b>.
+<p>
+    <b>genmiss(</b><i>string</i><b>)</b> creates an indicator variable for the missingness of data
+        in any variable in <i>mainvarlist</i> for which at least one value has been
+        imputed. The indicator variable is set to missing for observations
+        excluded by <b>if</b>, <b>in</b>, etc.  The indicator variable for <i>xvar</i> is named
+        <i>stringxvar</i>.
+<p>
+    <b>id(</b><i>string</i><b>)</b> creates a variable called <i>string</i> containing the original sort
+        order of the data. Default <i>string</i>: <b>_i</b>.
+<p>
+    <b>noconstant</b> suppresses the regression constant in all regressions.
+<p>
+    <b>on(</b><i>varlist</i><b>)</b> changes the operation of <b>mvis</b> in a major way.  With this
+        option, <b>uvis</b> imputes each member of <i>mainvarlist</i> univariately on
+        <i>varlist</i>. This provides a convenient way of producing multiple
+        imputations when imputation for each variable in <i>mainvarlist</i> is to be
+        done univariately on a set of complete predictors.
+<p>
+    <b>replace</b> permits <i>filename</i> to be overwritten with new data.  <b>replace</b> may
+        not be abbreviated.
+<p>
+    <b>seed(</b><i>#</i><b>)</b> sets the random number seed to <i>#</i>.  To reproduce a set of
+        imputations, the same random number seed should be used.  Default <i>#</i>:
+        0, meaning no seed is set by the program.
+<p>
+<p>
+<b><u>Options for </u></b><b><u>uvis</u></b>
+<p>
+    <b>gen(</b><i>newvar</i><b>)</b> is not optional. <i>newvar</i> contains original (non-missing) and
+        imputed (originally missing) values of <i>yvar</i>.
+<p>
+    <b>boot</b> invokes a bootstrap method for creating imputed values (see
+        Remarks).
+<p>
+    <b>draw</b> draws imputations at random from the posterior distribution of the
+        missing values of <i>yvar</i>, conditional on the observed values and the
+        members of <i>xvarlist</i>. The default method of imputation is by
+        prediction matching (see Remarks).
+<p>
+    <b>replace</b> permits <i>newvar</i> (see <b>gen(</b><i>newvar</i><b>)</b>) to be overwritten with new data.
+        <b>replace</b> may not be abbreviated.
+<p>
+    <b>noconstant</b> suppresses the regression constant in all regressions.
+<p>
+    <b>seed(</b><i>#</i><b>)</b> sets the random number seed to <i>#</i>.  See <i>Remarks</i> for comments on
+        how to ensure reproducible imputations by using the <b>seed()</b> option.
+        Default <i>#</i>: 0, meaning no seed is set by the program.
+<p>
+<p>
+<b><u>Remarks</u></b>
+<p>
+    <b>uvis</b> imputes <i>yvar</i> from <i>xvarlist</i> according to the following algorithm (see
+    van Buuren et al (1999) section 3.2 for further technical details):
+<p>
+        1. Estimate the vector of coefficients (beta) and the residual
+            variance by regressing the non-missing values of <i>yvar</i> on
+            <i>xvarlist</i>.  Predict the fitted values <i>etaobs</i> at the non-missing
+            observations of <i>yvar</i>.
+<p>
+        2. Draw at random a value (sigma_star) from the posterior
+            distribution of the residual standard deviation.
+<p>
+        3. Draw at random a value (beta_star) from the posterior distribution
+            of beta, allowing, through sigma_star, for uncertainty in beta.
+<p>
+        4. Use beta_star to predict the fitted values <i>etamis</i> at the missing
+            observations of <i>yvar</i>.
+<p>
+        5. (Prediction matching) For each missing observation of <i>yvar</i> with
+            prediction <i>etamis</i>, find the non-missing observation of <i>yvar</i> whose
+            prediction (<i>etaobs</i>) on observed data is closest to <i>etamis</i>.  This
+            closest non-missing observation is used to impute the missing
+            value of <i>yvar</i>.
+<p>
+    With the <b>boot</b> option, a variant on this algorithm is used. beta_star is
+    estimated by regressing <i>yvar</i> on <i>xvarlist</i> after taking a bootstrap sample
+    of the non-missing observations. This has the advantage of robustness
+    since the distribution of beta is no longer assumed to be muultivariate
+    normal.
+<p>
+    With the <b>draw</b> option, another variant on the algorithm is used. The
+    imputed values are predicted directly from beta_star, sigma_star and the
+    covariates.  This option assumes that <i>yvar</i> is Normally distributed, given
+    the covariates. The method is not robust to departures from Normality and
+    may produce implausible imputations. It is provided mainly for pedagogic
+    reaons, and also to deal with special situations in which the assumption
+    of Normality is known to be reasonable.
+<p>
+    Note that <b>uvis</b> will not impute observations for which a value of a
+    variable in <i>xvarlist</i> is missing. Only complete cases within <i>xvarlist</i> are
+    used.
+<p>
+    Missing data for ordered (or unordered) categorical covariates should be
+    imputed by using the <b>ologit</b> (or <b>mlogit</b>) command. In these cases,
+    prediction matching is done on the scale of the mean absolute difference
+    in the predicted class probabilities, preceded by logit transformation.
+<p>
+    <b>mvis</b> carries out multivariate imputation in <i>mainvarlist</i> using regression
+    switching (van Buuren et al 1999) as follows:
+<p>
+        1. Ignore any observations for which <i>mainvarlist</i> has only missing
+            values, or for which any member of <i>ccvarlist</i> (if specified) has a
+            missing value.
+<p>
+        2. For each variable in <i>mainvarlist</i> with any missing data, randomly
+            order that variable and replicate the observed values across the
+            missing cases. This step initialises the iterative procedure by
+            ensuing that no relevant values are missing.
+<p>
+        3. For each variable in <i>mainvarlist</i> in turn, impute missing values by
+            applying <b>uvis</b> with the remaining variables as covariates.
+<p>
+        4. Repeat step 3 <b>cycles()</b> times, replacing the imputed values with
+            updated values at the end of each cycle.
+<p>
+    A single imputation sample is created for each variable with any relevant
+    missing values.
+<p>
+    Van Buuren recommends <b>cycles(20)</b> but goes on to say that 10 or even 5
+    iterations are probably sufficient. We have chosen a compromise default
+    of 10.
+<p>
+    "Multiple imputation" (MI) implies the creation and analysis of several
+    imputed datasets. To do this, one would run <b>mvis</b> with <i>m</i> set to a suitable
+    number, for example 5. To obtain final estimates of the parameters of
+    interest and their standard errors, one would fit a model in each
+    imputation and carry out the appropriate post-MI averaging procedure on
+    the results from the <i>m</i> separate imputations. A suitable estimation tool
+    for this purpose is micombine.
+<p>
+<b><u>Further comments</u></b>
+<p>
+    An interesting application of MI is to investigate possible models, for
+    example prognostic models, in which selection of influential variables is
+    required (Clark &amp; Altman 2003). For example, the stability of the final
+    model across the imputation samples is of interest.
+<p>
+    In survival analysis, it is recommended to include the log of the
+    survival time and the censoring indicator in the variables to be used for
+    imputation.  Van Buuren et al (1999) give a detailed discussion of the
+    different types of covariate that can be included in the imputation model
+    and discuss the important issue of how to deal with variables which are
+    missing completely at random (MCAR), missing at random (MAR) and missing
+    not at random (MNAR).
+<p>
+    In the present implementation of multivariate imputation sampling in
+    <b>mvis</b>, all the variables in <i>varlist</i> are used for imputation of all the
+    others. This restriction could be lifted, but it is not clear that the
+    additional complexity would pay off.
+<p>
+    See also Van Buuren's website http://www.multiple-imputation.com for
+    further information and software sources.
+<p>
+<p>
+<b><u>Examples</u></b>
+<p>
+    <b>. uvis regress y x1 x2 x3, gen(ym)</b>
+<p>
+    <b>. mvis x1 x2 x3 using imputed, m(5)</b>
+<p>
+    <b>. mvis x1 x2 x3 using imputed, m(5) cycles(20) cc(x4 x5)</b>
+<p>
+    <b>. mvis x1-x5 using imputed, m(10) boot draw(x1 x2 x3) cmd(x1 x2:mlogit,</b>
+          <b>x3:ologit) id(pid) seed(101) genmiss(m_)</b>
+<p>
+<p>
+<b><u>Author</u></b>
+<p>
+    Patrick Royston, MRC Clinical Trials Unit, London.
+    patrick.royston@ctu.mrc.ac.uk
+<p>
+<p>
+<b><u>References</u></b>
+<p>
+    van Buuren S., H. C. Boshuizen and D. L. Knook. 1999. Multiple imputation
+        of missing blood pressure covariates in survival analysis.
+        <i>Statistics in Medicine</i> <b>18</b>:681-694.  Also see
+        http://www.multiple-imputation.com.
+<p>
+    Carlin J. B., N. Li, P. Greenwood, and C. Coffey. 2003. Tools for
+        analyzing multiple imputed datasets. <i>Stata Journal</i> <b>3(3)</b>:226-244.
+<p>
+    Clark T. G. and D. G. Altman. 2003. Developing a prognostic model in the
+        presence of missing data: an ovarian cancer case-study.  <i>Journal of</i>
+        <i>Clinical Epidemiology</i> <b>56</b>28-37.
+<p>
+    Royston P. 2004. Multiple imputation of missing values.  <i>Stata Journal</i>
+        <b>4(3)</b>:227-241.
+<p>
+<p>
+<b><u>Also see</u></b>
+<p>
+    On-line:  help for mijoin, micombine, miset and related programs (if
+</pre>

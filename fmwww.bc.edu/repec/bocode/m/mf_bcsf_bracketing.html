@@ -1,0 +1,347 @@
+<pre>
+<b>help mata _bcsf_bracketing</b>
+-------------------------------------------------------------------------------
+<p>
+<b><u>Title</u></b>
+<p>
+    <b>_bcsf_bracketing() -- Bracketing and bracket convergence functions used</b>
+    <b>by censlope</b>
+<p>
+<p>
+<b><u>Syntax</u></b>
+<p>
+        <i>real scalar</i>    <b>_bcsf_bracketing(</b><i>yfun</i><b>,</b> <i>y</i><b>,</b> <i>yfarleft</i><b>,</b> <i>yfarright</i><b>,</b>
+        <i>mbracket</i><b>,</b> <i>scalefactor</i><b>,</b> <i>bracketmat</i><b>,</b> <i>leftindex</i><b>,</b> <i>rightindex</i><b>)</b>
+<p>
+        <i>real scalar</i>    <b>_bcsf_bisect(</b><i>objfun</i><b>,</b> <i>x0</i><b>,</b> <i>x1</i><b>,</b> <i>y0</i><b>,</b> <i>y1</i><b>,</b> <i>itcount</i><b>,</b> <i>iterate</i><b>,</b>
+        <i>tolerance</i> [<b>,</b> <i>log</i>]<b>)</b>
+<p>
+        <i>real scalar</i>    <b>_bcsf_regula(</b><i>objfun</i><b>,</b> <i>x0</i><b>,</b> <i>x1</i><b>,</b> <i>y0</i><b>,</b> <i>y1</i><b>,</b> <i>itcount</i><b>,</b> <i>iterate</i><b>,</b>
+        <i>tolerance</i> [<b>,</b> <i>log</i>]<b>)</b>
+<p>
+        <i>real scalar</i>    <b>_bcsf_ridders(</b><i>objfun</i><b>,</b> <i>x0</i><b>,</b> <i>x1</i><b>,</b> <i>y0</i><b>,</b> <i>y1</i><b>,</b> <i>itcount</i><b>,</b>
+        <i>iterate</i><b>,</b> <i>tolerance</i> [<b>,</b> <i>log</i>]<b>)</b>
+<p>
+    where
+<p>
+                 <i>yfun</i>:  <i>pointer (real scalar function) scalar</i>
+                    <i>y</i>:  <i>real scalar</i>
+             <i>yfarleft</i>:  <i>real scalar</i>
+            <i>yfarright</i>:  <i>real scalar</i>
+             <i>mbracket</i>:  <i>real scalar</i>
+          <i>scalefactor</i>:  <i>real scalar</i>
+           <i>bracketmat</i>:  <i>real matrix</i>
+            <i>leftindex</i>:  <i>real scalar</i>
+           <i>rightindex</i>:  <i>real scalar</i>
+               <i>objfun</i>:  <i>pointer (real scalar function) scalar</i>
+                   <i>x0</i>:  <i>real scalar</i>
+                   <i>x1</i>:  <i>real scalar</i>
+                   <i>y0</i>:  <i>real scalar</i>
+                   <i>y1</i>:  <i>real scalar</i>
+              <i>itcount</i>:  <i>real scalar</i>
+              <i>iterate</i>:  <i>real scalar</i>
+            <i>tolerance</i>:  <i>real scalar</i>
+                  <i>log</i>:  <i>real scalar</i>
+<p>
+<p>
+<b><u>Description</u></b>
+<p>
+    The prefix <b>_bcsf</b> stands for "bracket convergence for step functions".
+    The program <b>censlope</b> uses these Mata functions for the numerical solution
+    of inequalities involving step functions.  If a scalar object function
+    <b>G()</b> is a step function (instead of being a continuous function), then
+    there may not be a unique solution to the equation <b>G(</b><i>x</i><b>)=0</b>.  Instead,
+    there may be either no solution or a nonempty interval of solutions.
+    However, if <b>G()</b> is monotonically nonincreasing, then there may be a
+    supremum for the set of values of <i>x</i> such that <b>G(</b><i>x</i><b>)</b> is positive (or
+    nonnegative), which is also the infimum for values of <i>x</i> such that <b>G(</b><i>x</i><b>)</b> is
+    nonpositive (or negative).  Similarly, if <b>G()</b> is monotonically
+    nondecreasing, then there may be a supremum for the set of values of <i>x</i>
+    such that <b>G(</b><i>x</i><b>)</b> is negative (or nonpositive), which is also the infimum
+    for values of <i>x</i> such that <b>G(</b><i>x</i><b>)</b> is nonnegative (or positive).  Examples of
+    such step functions <b>G()</b> include functions derived as continuous monotonic
+    transformation of cumulative distribution functions (CDFs). The suprema
+    and infima will then be percentiles, percentile differences, percentile
+    ratios, or percentile slopes.  The function <b>_bcsf_bracketing()</b> is used to
+    find pairs of X values that bracket the suprema and infima.  When such a
+    pair of X values is found, the functions <b>_bcsf_bisect()</b>, <b>_bcsf_regula()</b>,
+    and <b>_bcsf_ridders()</b> can be used to redefine these X brackets
+    progressively, until the relative difference between the upper and lower
+    <i>x</i>-brackets has been reduced to a level at or below a user-defined
+    tolerance level. The brackets are then said to have converged.  Bracket
+    convergence is achieved using variants of standard numerical methods used
+    to find solutions for scalar equations involving continuous functions,
+    such as the methods described in chapter 9 of Press et al. (1992).  All
+    the <b>_bcsf</b> functions return an integer-valued scalar return code,
+    indicating the outcome of their attempts to carry out their bracketing or
+    convergence tasks.
+<p>
+    <b>_bcsf_bracketing(</b><i>yfun</i><b>,</b> <i>y</i><b>,</b> <i>yfarleft</i><b>,</b> <i>yfarright</i><b>,</b> <i>mbracket</i><b>,</b> <i>scalefactor</i><b>,</b>
+    <i>bracketmat</i><b>,</b> <i>leftindex</i><b>,</b> <i>rightindex</i><b>)</b> inputs a Y value and finds a pair of X
+    values whose corresponding Y values bracket the input Y value.  The
+    arguments <i>yfun</i>, <i>y</i>, <i>yfarleft</i>, <i>yfarright</i>, <i>mbracket</i>, and <i>scalefactor</i> are
+    input, the arguments <i>leftindex</i> and <i>rightindex</i> are output, and the
+    argument <i>bracketmat</i> is a two-column bracket matrix, which must have at
+    least two rows on input and may be extended with additional rows on
+    output.  A bracket matrix is a two-column matrix whose first column is
+    assumed to contain a set of X values in ascending order and whose second
+    column is assumed to contain the corresponding Y values.  The argument
+    <i>yfun</i> contains a pointer to a scalar function, which is used to calculate
+    a Y value from the corresponding X value, and is assumed to be bounded
+    and monotonically nonincreasing or nondecreasing.  The argument <i>y</i>
+    contains the Y value to be bracketed.  The arguments <i>yfarleft</i> and
+    <i>yfarright</i> are assumed to contain the limits of (*<i>yfun</i>)(<i>x</i>) as <i>x</i> tends to
+    minus infinity and to plus infinity, respectively.  The argument <i>mbracket</i>
+    contains the maximum number of rows that the bracket matrix is allowed to
+    have at the end of execution.  The argument <i>scalefactor</i> contains a scale
+    factor, which must be nonmissing and strictly greater than 1, and is used
+    to calculate X values for additional rows of the bracket matrix.  It is
+    assumed that the lowest X value in the bracket matrix is negative and
+    that the highest X value in the bracket matrix is positive, so that an
+    additional X value on the left (or right) can be calculated by
+    multiplying the lowest (or highest) existing X value by <i>scalefactor</i>.  The
+    output arguments <i>leftindex</i> and <i>rightindex</i> are set during execution to
+    contain the highest index of the bracket matrix that brackets <i>y</i> on the
+    left and the lowest index of the bracket matrix that brackets <i>y</i> on the
+    right.  This bracketing must be strict, except if <i>y</i> <b>==</b> <i>yfarleft</i> (in which
+    case the left bracket may be partial) or if <i>y</i> <b>==</b> <i>yfarleft</i> (in which case
+    the right bracket may be partial).  The assumptions mentioned are assumed
+    and are not necessarily tested.  The terminology is detailed in
+    <b>Definitions and methods</b> below.
+<p>
+    <b>_bcsf_bisect(</b><i>objfun</i><b>,</b> <i>x0</i><b>,</b> <i>x1</i><b>,</b> <i>y0</i><b>,</b> <i>y1</i><b>,</b> <i>itcount</i><b>,</b> <i>iterate</i><b>,</b> <i>tolerance</i> <b>,</b> <i>log</i><b>)</b>
+    carries out bracket convergence by using a revised version (for step
+    functions) of the bisection method, described in Press et al. (1992).
+    The argument <i>objfun</i> is input and contains a pointer to a scalar object
+    function, assumed to be a monotonically nonincreasing or nondecreasing
+    step function.  The arguments <i>x0</i> and <i>x1</i> contain two X values on entry,
+    which are assumed to be boundaries for an interval containing the
+    supremum or infimum X value that we need to estimate, and will be revised
+    inward during each iteration to contain boundaries for another smaller
+    interval containing the same supremum or infimum.  The arguments <i>y0</i> and
+    <i>y1</i> are assumed to contain, on entry, the values <i>&amp;objfun(x0)</i> and
+    <i>&amp;objfun(x1)</i>, respectively, and, if so, then they will still be equal to
+    <i>&amp;objfun(x0)</i> and <i>&amp;objfun(x1)</i> on output.  The argument <i>itcount</i> contains a
+    running total of iterations and will be increased on exit by the number
+    of iterations carried out by <b>bcsf_bisect()</b>.  The argument <i>iterate</i>
+    contains the maximum number of iterations that <b>bcsf_bisect()</b> may carry
+    out.  The argument <i>tolerance</i> is input and specifies that no more
+    iterations are to be carried out after the value of <b>reldif(</b><i>x0</i><b>,</b><i>x1</i><b>)</b> is
+    equal to or less than the value of <i>tolerance</i>.  The argument <i>log</i> is input,
+    and, if it is not equal to zero, then <b>bcsf_bisect()</b> will output an
+    iteration log, giving the values of <i>x0</i>, <i>x1</i>, <i>y0</i>, and <i>y1</i> at the end of each
+    iteration.  The arguments <i>y0</i> and <i>y1</i> must partially bracket a Y value of
+    zero on entry if iterations are to proceed, with <i>y0</i> as the partial
+    bracket and <i>y1</i> as the strict bracket.  If this is the case on entry, then
+    it will also be the case for the revised values of <i>y0</i> and <i>y1</i> on exit.
+    The terminology is detailed in <b>Definitions and methods</b> below.
+<p>
+    <b>_bcsf_regula(</b><i>objfun</i><b>,</b> <i>x0</i><b>,</b> <i>x1</i><b>,</b> <i>y0</i><b>,</b> <i>y1</i><b>,</b> <i>itcount</i><b>,</b> <i>iterate</i><b>,</b> <i>tolerance</i> <b>,</b> <i>log</i><b>)</b>
+    carries out bracket convergence by using a revised version (for step
+    functions) of the regula falsi (or false position) method, described in
+    Press et al. (1992).  The arguments have the same names and functions as
+    those for <b>bcsf_bisect()</b>.
+<p>
+    <b>_bcsf_ridders(</b><i>objfun</i><b>,</b> <i>x0</i><b>,</b> <i>x1</i><b>,</b> <i>y0</i><b>,</b> <i>y1</i><b>,</b> <i>itcount</i><b>,</b> <i>iterate</i><b>,</b> <i>tolerance</i> <b>,</b> <i>log</i><b>)</b>
+    carries out bracket convergence by using a revised version (for step
+    functions) of the Ridders method, described in Press et al. (1992).  The
+    arguments have the same names and functions as those for <b>bcsf_bisect()</b>.
+<p>
+<p>
+<b><u>Definitions and methods</u></b>
+<p>
+    A real number value <i>y</i> is said to be strictly bracketed by two other
+    values <i>y0</i> and <i>y1</i> if and only if
+<p>
+                (<i>y0</i> - <i>y</i>) * (<i>y1</i> - <i>y</i>) &lt; 0
+<p>
+    or (in other words) if (<i>y0</i> - <i>y</i>) and (<i>y1</i> - <i>y</i>) have opposite nonzero signs.
+    If the Y values are defined using a step function, then we may use a more
+    relaxed definition of bracketing.  If we define
+<p>
+                sign0 = sign(<i>y0</i> - <i>y</i>)
+                sign1 = sign(<i>y1</i> - <i>y</i>)
+<p>
+    then we say that <i>y</i> is partially bracketed by <i>y0</i> and <i>y1</i> if and only if
+<p>
+                sign1!=0 &amp; sign1!=sign0
+<p>
+    This definition implies that <i>y0</i> may be equal to <i>y</i> but <i>y1</i> may not. We then
+    say that <i>y1</i> is the strict bracket and <i>y0</i> is the partial bracket.
+<p>
+    Whether the bracketing is strict or partial, there may be a function <b>F()</b>
+    such that <b>F(</b><i>x0</i><b>)</b> = <i>y0</i> and <b>F(</b><i>x1</i><b>)</b> = <i>y1</i> for some <i>x0</i> and <i>x1</i>.  We then say that
+    the <i>y</i>-bracket associated with the lower X value is the left bracket and
+    that the <i>y</i>-bracket associated with the higher X value is the right
+    bracket.
+<p>
+    The function <b>_bcsf_bracketing()</b> finds a pair of <i>y</i>-brackets for a Y value
+    using a bracket matrix, which is a matrix <i>bracketmat</i> with two columns and
+    at least two rows, sorted in ascending order of the first column, with
+    the property that, for each index <i>i</i>,
+<p>
+                <i>bracketmat</i>[<i>i</i>,2] = (*<i>yfun</i>)(<i>bracketmat</i>[<i>i</i>,1])
+<p>
+    In other words, the first column contains an ascending series of X
+    values, and the second column contains the corresponding Y values.
+    <b>_bcsf_bracketing()</b> aims to identify a pair of indices <i>leftindex</i> and
+    <i>rightindex</i>, having the property that <i>bracketmat</i>[<i>leftindex</i>,2] and
+    <i>bracketmat</i>[<i>rightindex</i>,2] bracket the input value <i>y</i>. This bracketing must
+    be strict, except if <i>y</i>==<i>yfarleft</i> (in which case the left bracket may be
+    partial) or if <i>y</i>==<i>yfarright</i> (in which case the right bracket may be
+    partial).  If the first row of <i>bracketmat</i> does not contain a potential
+    left bracket, then <i>bracketmat</i> is extended by adding additional rows
+    before the first row, until the first row of the extended matrix contains
+    a potential left bracket.  If the last row of <i>bracketmat</i> does not contain
+    a potential right bracket, then <i>bracketmat</i> is extended by adding
+    additional rows after the last row, until the last row of the extended
+    matrix contains a potential right bracket.  In both cases, an additional
+    row is defined by multiplying the X value in the existing end row by the
+    factor <i>scalefactor</i> to derive a new X value <i>xnew</i>, and by defining the
+    corresponding Y value as
+<p>
+                <i>ynew</i>=(*<i>yfun</i>)(<i>xnew</i>)
+<p>
+    and defining the new row as (<i>xnew</i>,<i>ynew</i>). The argument <i>scalefactor</i> is
+    usually set to 2, implying successive doubling of the outermost X value
+    in <i>bracketmat</i>.  This method requires that the first X value and the last
+    X value in <i>bracketmat</i> are initialized to have opposite signs.  When
+    <i>bracketmat</i> is known to contain at least one potential left bracket and
+    one potential right bracket, <b>_bcsf_bracketing()</b> returns the highest
+    possible index for a left bracket in <i>leftindex</i> and returns the lowest
+    possible index for a right bracket in <i>rightindex</i>.
+<p>
+    The functions <b>_bcsf_bisect()</b>, <b>_bcsf_regula()</b>, and <b>_bcsf_ridders()</b> input a
+    pointer <i>objfun</i>, assumed to point to a nonmonotonically increasing or
+    decreasing function, and aim to estimate the supremum (or infimum) of the
+    set of X values with positive (or negative) values of (*<i>objfun</i>)(<i>x</i>).  The
+    functions start with a pair of X values <i>x0</i> and <i>x1</i>, with corresponding Y
+    values <i>y0</i>=(*<i>objfun</i>)(<i>x0</i>) and <i>y1</i>=(*<i>objfun</i>)(<i>x1</i>), which partially bracket a Y
+    value of zero, with <i>y1</i> as the strict bracket and <i>y0</i> as the partial
+    bracket.  The functions then carry out a sequence of iterations whose
+    maximum number is given by the argument <i>iterate</i>, in which one or the
+    other of the (<i>x</i>,<i>y</i>) pairs is replaced with a new (<i>x</i>,<i>y</i>) pair, reducing the
+    difference abs(<i>x0</i>-<i>x1</i>) but preserving the bracketing properties.  The aim
+    of the iterations is to reach a point where the relative difference
+    reldif(<i>x0</i>,<i>x1</i>) is no more than the value of the <i>tolerance</i> argument, and
+    therefore either of the X values can be used as the estimate of the
+    supremum or infimum that we aim to estimate.  The methods used by the
+    functions are versions of those described in Press et al. (1992),
+    modified for use with step functions.  The function <b>_bcsf_bisect()</b> uses a
+    bisection method.  The function <b>_bcsf_regula()</b> uses the bisection method
+    if the value of <i>y0</i> is zero at the start of the iteration and otherwise
+    uses the regula falsi method.  The function <b>_bcsf_ridders()</b> uses the
+    bisection method if the value of <i>y0</i> is zero at the start of the iteration
+    and otherwise uses the method of Ridders (1979).
+<p>
+<p>
+<b><u>Return codes</u></b>
+<p>
+    <b>_bcsf_bracketing()</b> returns one of the following return codes:
+<p>
+    0:  Bracketing successful                                                  
+&gt;          
+    1:  Invalid row number for <i>bracketmat</i> on input                             
+&gt;          
+    2:  Missing values in input arguments or in <i>bracketmat</i> on input            
+&gt;          
+    3:  First and last X values in <i>bracketmat</i> do not have opposite signs       
+&gt;          
+    4:  <i>scalefactor</i> &lt;= 1 on input                                              
+&gt;          
+    5:  Left-extension of <i>bracketmat</i> unsuccessful                              
+&gt;          
+    6:  Right-extension of <i>bracketmat</i> unsuccessful                             
+&gt;          
+    7:  Left bracket index could not be located                                
+&gt;          
+    8:  Right bracket index could not be located                               
+&gt;          
+<p>
+    <b>_bcsf_bisect()</b>, <b>_bcsf_regula()</b>, and <b>_bcsf_ridders()</b> return one of the
+    following return codes:
+<p>
+    0:  Convergence successful                                                 
+&gt;          
+    1:  Maximum iterations completed without convergence                       
+&gt;          
+    2:  Missing X value calculated                                             
+&gt;          
+    3:  Missing Y value calculated                                             
+&gt;          
+    4:  Missing value for <i>iterate</i> on input                                     
+&gt;          
+    5:  <i>y0</i> and <i>y1</i> do not partially bracket zero on input                       
+&gt;          
+<p>
+<p>
+<b><u>Conformability</u></b>
+<p>
+    <b>_bcsf_bracketing(</b><i>yfun</i><b>,</b> <i>y</i><b>,</b> <i>yfarleft</i><b>,</b> <i>yfarright</i><b>,</b> <i>mbracket</i><b>,</b> <i>scalefactor</i><b>,</b>
+    <i>bracketmat</i><b>,</b> <i>leftindex</i><b>,</b> <i>rightindex</i><b>)</b>:
+             <i>yfun</i>:  1 <i>x</i> 1
+                <i>y</i>:  1 <i>x</i> 1
+         <i>yfarleft</i>:  1 <i>x</i> 1
+        <i>yfarright</i>:  1 <i>x</i> 1
+         <i>mbracket</i>:  1 <i>x</i> 1
+      <i>scalefactor</i>:  1 <i>x</i> 1
+       <i>bracketmat</i>:  <i>M x</i> 2 where <i>M</i> &gt;= 2
+        <i>leftindex</i>:  1 <i>x</i> 1
+       <i>rightindex</i>:  1 <i>x</i> 1
+<p>
+    <b>_bcsf_bisect(</b><i>objfun</i><b>,</b> <i>x0</i><b>,</b> <i>x1</i><b>,</b> <i>y0</i><b>,</b> <i>y1</i><b>,</b> <i>itcount</i><b>,</b> <i>iterate</i><b>,</b> <i>tolerance</i> <b>,</b> <i>log</i><b>)</b>,
+    <b>_bcsf_regula(</b><i>objfun</i><b>,</b> <i>x0</i><b>,</b> <i>x1</i><b>,</b> <i>y0</i><b>,</b> <i>y1</i><b>,</b> <i>itcount</i><b>,</b> <i>iterate</i><b>,</b> <i>tolerance</i> <b>,</b> <i>log</i><b>)</b>,
+    <b>_bcsf_ridders(</b><i>objfun</i><b>,</b> <i>x0</i><b>,</b> <i>x1</i><b>,</b> <i>y0</i><b>,</b> <i>y1</i><b>,</b> <i>itcount</i><b>,</b> <i>iterate</i><b>,</b> <i>tolerance</i> <b>,</b> <i>log</i><b>)</b>:
+           <i>objfun</i>:  1 <i>x</i> 1
+               <i>x0</i>:  1 <i>x</i> 1
+               <i>x1</i>:  1 <i>x</i> 1
+               <i>y0</i>:  1 <i>x</i> 1
+               <i>y1</i>:  1 <i>x</i> 1
+          <i>itcount</i>:  1 <i>x</i> 1
+          <i>iterate</i>:  1 <i>x</i> 1
+        <i>tolerance</i>:  1 <i>x</i> 1
+              <i>log</i>:  1 <i>x</i> 1
+<p>
+<p>
+<b><u>Diagnostics</u></b>
+<p>
+    <b>_bcsf_bracketing(</b><i>yfun</i><b>,</b> <i>y</i><b>,</b> <i>yfarleft</i><b>,</b> <i>yfarright</i><b>,</b> <i>mbracket</i><b>,</b> <i>scalefactor</i><b>,</b>
+    <i>bracketmat</i><b>,</b> <i>leftindex</i><b>,</b> <i>rightindex</i><b>)</b> can fail only if the function
+    indicated by <i>yfun</i> fails.
+<p>
+    <b>_bcsf_bisect(</b><i>objfun</i><b>,</b> <i>x0</i><b>,</b> <i>x1</i><b>,</b> <i>y0</i><b>,</b> <i>y1</i><b>,</b> <i>itcount</i><b>,</b> <i>iterate</i><b>,</b> <i>tolerance</i> <b>,</b> <i>log</i><b>)</b>,
+    <b>_bcsf_regula(</b><i>objfun</i><b>,</b> <i>x0</i><b>,</b> <i>x1</i><b>,</b> <i>y0</i><b>,</b> <i>y1</i><b>,</b> <i>itcount</i><b>,</b> <i>iterate</i><b>,</b> <i>tolerance</i> <b>,</b> <i>log</i><b>)</b>
+    and <b>_bcsf_ridders(</b><i>objfun</i><b>,</b> <i>x0</i><b>,</b> <i>x1</i><b>,</b> <i>y0</i><b>,</b> <i>y1</i><b>,</b> <i>itcount</i><b>,</b> <i>iterate</i><b>,</b> <i>tolerance</i> <b>,</b>
+    <i>log</i><b>)</b> can fail only if the function indicated by <i>objfun</i> fails.
+<p>
+<p>
+<b><u>Source code</u></b>
+<p>
+    _bcsf_bracketing.mata, _bcsf_bisect.mata, _bcsf_regula.mata,
+    _bcsf_ridders.mata
+<p>
+<p>
+<b><u>Author</u></b>
+<p>
+    Roger Newson, Imperial College London, UK.
+    Email: r.newson@imperial.ac.uk
+<p>
+<p>
+<b><u>References</u></b>
+<p>
+    Press, W. H., S. A. Teukolsky, W. T. Vetterling, and B. P. Flannery.
+        1992.  <i>Numerical Recipes in C: The Art of Scientific Computing</i>. 2nd
+        ed.  Cambridge, UK: Cambridge University Press.
+<p>
+    Ridders, C. J. F. 1979. A new algorithm for computing a single root of a
+        real continuous function.  <i>IEEE Transactions on Circuits and Systems</i>,
+        vol.  CAS-26(11): 979-980.
+<p>
+<p>
+<b><u>Also see</u></b>
+<p>
+    Manual:  <b>[M-0] intro</b>
+<p>
+    Online:  <b>mata</b>,
+             <b>somersd</b> (if installed)
+</pre>

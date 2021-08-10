@@ -1,0 +1,92 @@
+<pre>
+.-
+help for ^fitint^                         (^Neville Verlander and Andre Charlet
+&gt; t^)
+.-
+<p>
+Fitting a regression model and testing each term
+------------------------------------------------
+<p>
+    ^fitint^ regression_cmd yvar xvarlist [weight] [^if^ exp] [^in^ range]
+                [^,^ ^fac^tor^(^varlist^)^ ^twoway(^varlist [,varlist] ^)^
+                ^noshow^  regression_cmd_options ]
+<p>
+where regression_cmd is one of
+<p>
+        @clogit@        @nbreg@         @scobit@ 
+        @cloglog@       @ologit@        @stcox@
+        @cnreg@         @oprobit@       @streg@
+        @glm@           @poisson@       @tobit@
+        @logistic@      @probit@
+        @logit@         @regress@
+<p>
+Note: The yvar is not required for the stcox and streg commands but the data
+need to be @stset@
+<p>
+Warning: In order to generate any interactions between continuous variables
+this program uses the naming convention __x_y (double underscore) where x and y
+&gt;  
+denote the position of the two variables in the x variable list. In order for 
+this to work any pre-existing variables prefixed __ must be deleted or renamed.
+&gt;  
+The program will not run until this is done.
+<p>
+<p>
+Description
+-----------
+<p>
+Fitint fits a regression model and tests any twoway interactions and any
+main effects not included in interaction terms. The appropriate test (LR of F) 
+is chosen depending upon the regression model being estimated.
+<p>
+Options
+-------
+<p>
+^noshow^ suppress the regression table output
+<p>
+^fac^tor(varlist) define those xvarlist terms that are factors
+<p>
+^twoway^(varlist[,varlist]) define those xvarlist terms for which twoway intera
+&gt; ctions
+    are required. If more than two x-variables are listed then all possible two
+&gt; way 
+    interactions are generated. When a comma is used to separate x-variables li
+&gt; sts then 
+    all possible twoway interactions within each list are generated. e.g.
+    twoway(A B C, D E F) will produce the six interactions A*B A*C B*C D*E D*F 
+&gt; E*F
+<p>
+regression_cmd_options are options appropriate to the regression command in
+    use. The ^cluster()^, ^robust^ and ^noconstant^ options are not available w
+&gt; ith
+    this command, if these options are issued the program will detected this
+    and exit.
+<p>
+<p>
+Examples
+--------
+<p>
+Suppose ^age^ is a continuous variable, ^sex^, ^auber^ and ^okra^ ^categorical^
+&gt; :
+<p>
+  .  fitint glm case age sex okra auber, show factor(sex auber okra)
+     twoway(auber age sex, auber okra) f(bin) 
+<p>
+If the user wishes to use the ^logistic^ command, an example might be:
+<p>
+  .  fitint logistic case age sex okra auber, factor(sex auber okra)
+     twoway(auber age sex, auber okra) asis
+<p>
+<p>
+Also see
+--------
+<p>
+Manual:  ^[U] 23 Estimation and post-estimation commands^,
+           ^[U] 29 Overview of model estimation in Stata^
+<p>
+On-line:  help for @lrtest@, @test@, @anova@; @clogit@, @cloglog@, @cnreg@, 
+          @glm@, @logistic@, @logit@, @nbreg@, @ologit@, @oprobit@, @poisson@,
+          @probit@, @regress@, @scobit@, @stcox@, @streg@, @tobit@, @xi@, @lrdr
+&gt; op1@.
+<p>
+</pre>

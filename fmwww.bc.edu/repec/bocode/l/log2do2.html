@@ -1,0 +1,66 @@
+<pre>
+-------------------------------------------------------------------------------
+help for <b>log2do2</b>
+-------------------------------------------------------------------------------
+<p>
+<b><u>Conversion of Stata log files to do files</u></b>
+<p>
+        <b>log2do2</b> <i>logfile</i> , <b>saving(</b><i>filename</i> [ {<b>replace</b>|<b>append</b>} ]
+<p>
+<p>
+<b><u>Description</u></b>
+<p>
+<b>log2do2</b> extracts the command lines from a Stata text-format log file, creating
+a file of syntax (ie, a do file).
+<p>
+The program recognizes commands as lines in the log that begin with a period
+followed by a blank space.  It also recognizes command that are wrapped over
+multiple lines by Stata, and command that appear within <b>foreach</b> and <b>forvalues</b>
+loops.
+<p>
+<b>log2do2</b> uses the Stata 7 file command to read and write the file.  This command
+was in an update to Stata; be sure your stata is fully up to date.  The use of
+<b>file</b> allows <b>log2do2</b> to preserve references to local macros in command lines.
+The if the following line appears in a log file:
+<p>
+        . display "local x is `x'"
+<p>
+then the reference to <b>`x'</b> will appear in the do file as <b>`x'</b>, rather than being
+expanded by Stata and, therefore, blanked out.
+<p>
+Note that the program requires a text-format log file, and will not work with a
+smcl-formatted log.  See translate to translate a smcl log into plain text
+format.
+<p>
+<p>
+<b><u>Things to watch for</u></b>
+<p>
+Several situations can confuse <b>log2do2</b>.  First, the block of code within a 
+forvalues or foreach loop are generally displayed in the log file as numbered
+lines, rather than being preceded by a period and a space.  <b>log2do2</b> handles
+this by noticing the beginning of the loop, and counting the open- and
+close-braces (ie, <b>-)</b> and <b>)-</b> to find the end of the block of code.  This works
+correctly unless there are unmatched brace characters in comments within the
+looped code.
+<p>
+Second, Stata code can be written that will make output look to <b>log2do2</b> like
+input lines.  For example, the command <b>display ". hello there"</b> will lead to the
+line "hello there" appearing in the do file.
+<p>
+Finally, if the log file was created by do file that split commands over
+multiple lines, through use of the <b>/*</b> and <b>*/</b> delimiters, then <b>log2do2</b> will
+string the command together on one long line.  The resulting do file will work
+correctly, but might need editing for style points.
+<p>
+<p>
+<b><u>Example</u></b>
+<p>
+        . log2do2 "c:/My Files/mylog.log" , saving(c:/My Files/mydo.do) replace
+<p>
+<p>
+<b><u>Author</u></b>
+<p>
+     Nick Winter
+     Cornell University
+     nw53@cornell.edu
+</pre>

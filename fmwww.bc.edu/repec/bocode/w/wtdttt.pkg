@@ -1,0 +1,29 @@
+d 'WTDTTT': module to estimate parameters of the ordinary and reverse Waiting Time Distribution (WTD) by maximum likelihood
+d
+d  wtdttt estimates parameters of the ordinary and reverse Waiting
+d Time Distribution (WTD) by maximum likelihood. Covariates can be
+d used to improve precision of predicted prescription durations.
+d Diagnostic plots can be obtained to assess fit of the model. 
+d
+d KW: waiting time distribution
+d KW: maximum likelihood
+d
+d Requires: Stata version 14
+d
+d Distribution-Date: 20170518
+d
+d Author: Henrik Stovring, Department of Public Health Biostatistics, University of Aarhus
+d Support: email stovring@@biostat.au.dk
+d
+f wtdttt.ado
+f wtdttt.sthlp
+f wtdtttdiag.ado
+f wtdtttdiag.sthlp
+f wtdtttprob.ado
+f wtdtttprob.sthlp
+f wtdpreddur.ado
+f ../m/mlwtd_exp.ado
+f ../m/mlwtd_lnorm.ado
+f ../m/mlwtd_wei.ado
+f wtdttt_ex.do
+f wtddat_covar.dta

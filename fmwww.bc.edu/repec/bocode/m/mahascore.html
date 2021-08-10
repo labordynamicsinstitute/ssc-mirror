@@ -1,0 +1,321 @@
+<pre>
+<p>
+-------------------------------------------------------------------------------
+help for <b>mahascore</b>
+-------------------------------------------------------------------------------
+<p>
+<b><u>Generate a Mahalanobis distance measure</u></b>
+<p>
+        <b>mahascore</b> <i>varlist</i> [<i>weight</i>] <b>,</b> <b>gen(</b><i>newvar</i><b>)</b> [ <b>refobs(</b><i>#</i><b>)</b>
+                 <b>refvals(</b><i>refvalsmat</i><b>)</b> <b>refmeans treated(</b><i>treatedvar</i><b>)</b>
+                 <b><u>invcov</u></b><b>armat(</b><i>invcovarmat</i><b>)</b> <b><u>compute</u></b><b>_invcovarmat</b> <b><u>unsq</u></b><b>uared</b>
+                 <b><u>eucl</u></b><b>idean</b> <b><u>disp</u></b><b>lay(</b><i>display_options</i><b>)</b> <b><u>verb</u></b><b>ose</b> <b>float</b>
+                 <b><u>nocovtrlim</u></b><b>itation</b> <b><u>nomeantrlim</u></b><b>itation</b> ]
+<p>
+<b><u>Description</u></b>
+<p>
+    <b>mahascore</b> generates a (squared, by default) Mahalanobis distance measure
+    between every observation and a single tuple of reference values which
+    can be one of...
+        - the tuple of values in a specified reference observation, using the
+        <b>refobs</b> option;
+        - a tuple of values passed in, using the <b>refvals</b> option;
+        - the means of the variables of <i>varlist</i>, using the <b>refmeans</b> option.
+<p>
+    <b>mahascore</b> is used by mahascores and mahapick, but may be used
+    independently as well.
+<p>
+    <i>varlist</i> (the "covariates") is a list of numeric variables on which to
+    build the distance measure.  These variables should be of numeric
+    significance, not categorical; any categorical variables should be
+    replaced by a set of indicator variables.
+<p>
+    Weights are allowed, but apply only under the <b>compute_invcovarmat</b> and
+    <b>refmeans</b> options.
+<p>
+    By default, the result is actually the square of the Mahalanobis distance
+    measure. You can use the <b>unsquared</b> option to give you the proper
+    unsquared value.  But note that in most usages, the resulting values are
+    used in comparisons or sortings; the proportional magnitude is not
+    significant, so the squared values are just as good.
+<p>
+           --------------------------------------------------------------------
+            <b>Technical note:</b> As of 26mar2008, <b>mahascore</b> is revised
+            to produce a true Mahalanobis measure; previously, it
+            produced the normalized Euclidean measure. See the
+            <b>euclidean</b> option for further explanation.
+           --------------------------------------------------------------------
+<p>
+<b><u>Options</u></b>
+<p>
+    In what follows, let <i>p</i> denote the number of variables in <i>varlist</i>.
+<p>
+    <b>gen(</b><i>newvar</i><b>)</b> is required; it specifies the new variable which will contain
+    the generated distance measure. Its default type is double.
+<p>
+    <b>float</b> specifies that the type of <i>newvar</i> will be float, rather than
+    double.
+<p>
+    <b>refobs(</b><i>#</i><b>)</b> specifies an integer in the range 1 to _N, indicating the
+    reference observation. For example, if <i>#</i> = 12, then the generated measure
+    will be calculated between each observation and observation 12.
+<p>
+    <b>refvals(</b><i>refvalsmat</i><b>)</b> enables you to pass in a tuple of values to use as
+    the comparison values; i.e., the distances will be measured between each
+    observation and this tuple. <i>refvalsmat</i> must be a column vector (a <i>p</i>-by-1
+    matrix) whose entries correspond to the variables in <i>varlist</i>, and whose
+    rownames equal the names in <i>varlist</i> in the same order.  An example of how
+    to do this is given below.
+<p>
+    <b>refmeans</b> specifies that the tuple of reference values shall be be the
+    means of the variables of <i>varlist</i>; this is often referred to as the
+    centroid of <i>varlist</i>.  Note that the means are computed subject to
+    weighting, as well as limitation by <i>treatedvar</i> if the <b>treated()</b> option is
+    specified.  (But see <b>nomeantrlimitation</b>.) Also, see the discussion of
+    multivariate outliers in the <u>Remarks</u> section.
+<p>
+    <b>refobs()</b>, <b>refvals()</b>, and <b>refmeans</b> are alternatives; one of them must be
+    specified.
+<p>
+    <b>invcovarmat(</b><i>invcovarmat</i><b>)</b> specifies the name of a matrix to be used in the
+    computation described under <u>Remarks</u>. It is presumably the inverse
+    covariance matrix of <i>varlist</i>, but the only requirement is that it be a
+    square <i>p</i>-by-<i>p</i> matrix, and both the row and column names must equal the
+    names in <i>varlist</i> in the same order as in <i>varlist</i>.
+<p>
+    You can use covariancemat to help construct the inverse covariance
+    matrix; it should be followed by a<b> mat</b> ...<b>  = inv()</b> operation.  An
+    example is given below, in the <u>Examples</u> section.  See further discussion
+    of the purpose of this option, under <u>Remarks</u>.
+<p>
+    <b>compute_invcovarmat</b> specifies that you want the inverse covariance matrix
+    to be computed, rather than passed in (via <b>invcovarmat()</b>).  This
+    computation is subject to weighting, as well as limitation by <i>treatedvar</i>
+    if the <b>treated()</b> option is specified.  (But see <b>nocovtrlimitation</b>.) Note
+    that this will call covariancemat, which computes covariances limited to
+    observations with all variables of <i>varlist</i> nonmissing.  (I.e., it is
+    potentially different from the pairwise computation of covariances.)
+<p>
+    <b>invcovarmat()</b> and <b>compute_invcovarmat</b> are alternatives; one of them must
+    be specified. If both are specified, then <b>compute_invcovarmat</b> takes
+    precedence.
+<p>
+<p>
+    <b>treated(</b><i>treatedvar</i><b>)</b> specifies a numeric variable that distinguishes the
+    "treated" observations, with values of 0 and non-zero signifying
+    not-treated and treated, respectively. See mahapick for an explanation of
+    the concept of the treated set.  This option affects only the actions of
+    the <b>compute_invcovarmat</b> and <b>refmeans</b> options; these computations are
+    limited to the set of observations for which <i>treatedvar</i> is non-zero, if
+    <b>treated()</b> is specified. See <b>nocovtrlimitation</b> and <b>nomeantrlimitation</b> for
+    how to control those limitations.
+<p>
+    <b>euclidean</b> takes effect only if <b>compute_invcovarmat</b> is also specified.  It
+    specifies that the off-diagonal elements of the covariance matrix are to
+    be replaced with zeroes, which yields the normalized Euclidean distance
+    measure. (This option applies only with <b>compute_invcovarmat</b> because the
+    zeroing of off-diagonal elements is done to the covariance matrix - i.e.,
+    prior to inversion.  If you prefer this measure and are providing the
+    matrix via the <b>invcovarmat()</b> option, you should zero-out the off-diagonal
+    elements prior to inverting - or directly construct a matrix of
+    reciprocal variances.  Note that if the diagonal elements of a matrix are
+    c1, c2, ..., c<i>p</i>, and all other elements are zero, then its inverse
+    consists of 1/c1, 1/c2, ..., 1/c<i>p</i> on the diagonal and zero elsewhere.)
+    See more about this under <u>Remarks</u>.
+<p>
+    <b>display(</b><i>display_options</i><b>)</b> turns on the display of certain data structures
+    used in the computation. If <i>display_options</i> contains <b>covar</b>, then the
+    covariance matrix is listed; if it contains <b>invcov</b>, then the inverse
+    covariance matrix is listed; if it contains <b>means</b> and the <b>refmeans</b> option
+    was specified, then the vector of means is listed. Any other content is
+    ignored.
+<p>
+    If the inverse covariance matrix is displayed, it may be either
+    <i>invcovarmat</i> or that which is computed as directed by the
+    <b>compute_invcovarmat</b> option.  This may be useful in debugging or just to
+    assure you that the same set of (inverse) covariances are being used in
+    repeated calls.
+<p>
+    <b>unsquared</b> modifies the results to be the unsquared values, that is, the
+    square roots of the default values.
+<p>
+    <b>verbose</b> specifies that a line will be written, indicating some of the
+    options specified.
+<p>
+    <b>nocovtrlimitation</b> specifies that the covariance computation (for
+    <b>compute_invcovarmat</b>) not be limited to treated observations.
+<p>
+    <b>nomeantrlimitation</b> specifies that the mean computation (for <b>refmeans</b>) not
+    be limited to treated observations.
+<p>
+    Specifying both <b>nocovtrlimitation</b> and <b>nomeantrlimitation</b> is equivalent to
+    not specifying <b>treated()</b>. Thus, it makes sense to use only one of them,
+    if any.
+<p>
+<p>
+<b><u>Remarks</u></b>
+<p>
+    The (squared) distance measure generated is the matrix product d'Xd,
+    where d is a vector of differences in the set of variables, and X is
+    either the inverse of the covariance matrix of <i>varlist</i>, or is a specified
+    matrix that is provided via the <b>invcovarmat()</b> option.
+<p>
+    The difference vector d is taken between each observation and the tuple
+    of reference values. That is, d= (v1-<i>ref1</i> \ v2-<i>ref2</i> \ ... \ v<i>p</i>-<i>refp</i>),
+    where v1 v2 ... v<i>p</i> are the variables of <i>varlist</i>, and <i>ref1</i>, <i>ref2</i>,... <i>refp</i>
+    are the reference values. In particular, under the <b>refobs(</b><i>#</i><b>)</b> option,
+    <i>ref1</i>=v1[<i>#</i>], <i>ref2</i>=v2[<i>#</i>], etc.
+<p>
+    Thus, the generated value is the sum of all the possible products of
+    pairs of elements of d, weighted by corresponding elements of X.  This
+    includes components that are the squares of elements of d, weighted by
+    the elements on the diagonal of X, plus other products (of differing
+    elements of d), weighted by the off-diagonal elements of X.
+<p>
+    Note that the generated value (for each observation) is a single number,
+    though technically it is a 1-by-1 matrix. It is expected to be &gt;=0 if X
+    is truly an inverse covariance matrix, as such matrices are known to be
+    positive semi-definite.  However, if X is an arbitrary matrix, then there
+    is no guarantee that the result will be nonnegative.
+<p>
+    There are two purposes for the <b>invcovarmat()</b> option.  First, it can save
+    unnecessary repeated calculations whenever <b>mahascore</b> is repeatedly called
+    on the same dataset - which is typically done as you step through a set
+    of reference observations. Secondly, you may want to compute the inverse
+    covariance matrix in some way not provided for. For example, you might
+    compute the inverse covariance matrix on some large set of observations,
+    and then run <b>mahascore</b> on a subset or several subsets - but using this
+    common set of covariances.  This latter situation occurs in mahapick when
+    using the <b>sliceby()</b> option. (If it were not for this option then the
+    covariances would be recalculated on each subset - differently.)
+<p>
+    The <b>refvals()</b> option is expected to be rarely used. Potentially, it may
+    save unnecessary repeated calculations - analogous to one of the uses of
+    <b>invcovarmat()</b>.  Another use might be if you want the reference means and
+    the inverse covariance matrix to be computed differently in regard to how
+    they are affected by the<b> treated()</b> option or weights.
+<p>
+    The <b>refmeans</b> option can be useful in detecting multivariate outliers:
+    tuples of values that are judged to be outliers when all the variables
+    are considered together, but where the values are not necessarily
+    outliers when the variables are considered separately.  See
+    http://matlabdatamining.blogspot.com/2006/11/mahalanobis-distance.html
+    for an explanation of this phenomenon.
+<p>
+    The <b>euclidean</b> option, combined with <b>compute_invcovarmat</b>, yields the
+    normalized Euclidean distance. It can be considered as a simplified
+    version of the true Mahalanobis measure, and is less thorough in that it
+    ignores correlations between different variables of <i>varlist</i>.  It suffers
+    from the flaw that highly correlated variables can act together as one
+    variable but with disproportional weight. Another way to characterize it
+    is that it presumes that the data are configured in ellipsoids that are
+    oriented parallel to the axes. Also, it may fail to detect multivariate
+    outliers.
+<p>
+    The normalized Euclidean measure is probably less desirable than the true
+    Mahalanobis measure; it is provided as a comparison measure, and it
+    replicates the behavior of the earlier <b>mahascore</b> and <b>mahapick</b> programs.
+    Some experimentation has shown that, while the values of the two measures
+    are different, they may often yield orderings (i.e., if you sort on these
+    measures) that are similar.  Of course, this phenomenon may be highly
+    data-dependent, and may vary especially if highly correlated variables
+    are present.
+<p>
+           --------------------------------------------------------------------
+            <b>Technical note:</b>  The non-normalized Euclidean measure
+            is not provided for by <b>mahascore</b>, but is available in 
+            matrix dissimilarity (beginning with Stata 9).  It
+            suffers from sensitivity to the scale of measurment;
+            e.g., is income in dollars or thousands of dollars? The
+            normalized Euclidean measure is a first step in
+            improving this measure in that it corrects the problem
+            of measurement scale. The true Mahalanobis measure goes
+            one step further in that it accounts for correlation
+            between variables.
+           --------------------------------------------------------------------
+<p>
+<p>
+<p>
+    If any of these conditions occur, then the resulting measure will be
+    missing.
+<p>
+        Any covariate (variable in <i>varlist</i>) is missing in either the
+        reference observation or the observation for which the measure is
+        being calculated.  (Thus, if any covariate is missing in the
+        reference observation, then the result will be universally missing.)
+<p>
+        Any of the inverse covariance elements are missing.  This would cause
+        the result to be universally missing.
+<p>
+    If the inverse covariance matrix is computed on a very small set of
+    observations, it may not be valid and may yield strange results. It might
+    fail to be positive semi-definite, and can yield negative measures.  (It
+    may also cause the <b>unsquared</b> option to have a real effect on comparisons
+    and sortings of the results.)
+<p>
+    This computes a measure based on a single tuple of reference values:  the
+    values in a specified reference observation, the means of <i>varlist</i>, or an
+    explicit tuple of values. Thus, it generates a single variable.  In some
+    situations (e.g., searching for multivariate outliers), that may be all
+    you need, but in other situations, you may want to obtain the distance
+    measures with respect to a multitude of reference observation, thus
+    generating what is logically a rectangular array of values.  (This is why
+    there is a provision to pass in the inverse covariance matrix, rather
+    than recomputing the same matrix for each step.) You may or may not want
+    to keep all these values; you may want to make use of the values for one
+    reference observation, discard them and go on to the next reference
+    observation.  Users who wish to do these sorts of operations should
+    consider mahascores or mahapick. <b>mahascores</b> stores all the values from a
+    multitude of reference values; <b>mahapick</b> selects several observations
+    deemed to be closest matches (lowest scores). (The latter is an example
+    of using the score values and then discarding them.)
+<p>
+    It may help to understand two distinct types of weightings that can occur
+    in <b>mahascore</b>. Data weights, if specified, affect the computation of the
+    inverse covariance matrix if <b>compute_invcovarmat</b> is specified, as well as
+    the means calculation under <b>refmeans</b>.  Once this inverse covariance
+    matrix has been established, it serves as a set of weights for computing
+    the distance measure.  The former weighting is observation-oriented; the
+    latter is variable-oriented.
+<p>
+<p>
+<b><u>Examples</u></b>
+<p>
+    <b>. mahascore income age numkids, gen(dist1) refobs(12) invcovarmat(`v')</b>
+<p>
+    <b>. mahascore income age numkids, gen(dist2) refobs(`j')</b> <b>treated(assisted)</b>
+        <b>compute_invcov</b>
+<p>
+    To create your own inverse covariance matrix:
+<p>
+    <b>. local vars "income age numkids"</b>
+    <b>. covariancemat `vars' in 1/15, covarmat(M)</b>
+    <b>. mat MINV = inv(M) // or possibly invsym(M)</b>
+    <b>. forvalues j = 1/15 {</b>
+    <b>.  mahascore `vars', gen(dist`j') refobs(`j') invcovarmat(MINV)</b>
+    <b>. }</b>
+<p>
+    To create your own reference values:
+<p>
+    <b>. local vars "income age numkids"</b>
+    <b>. matrix V = (20000 \ 25 \ 2)</b>
+    <b>. matrix rownames V = `vars'</b>
+    <b>. mahascore `vars', gen(dist) refvals(V) compute</b>
+<p>
+<p>
+<b><u>Acknowledgement</u></b>
+    The author wishes to thank Joseph Harkness, formerly of The Institute for
+    Policy Studies at Johns Hopkins University for guidance in developing
+    this program, as well as Heiko Giebler of Wissenschaftszentrum Berlin fur
+    Sozialforschung GmbH, for suggesting further improvements.
+<p>
+<p>
+<b><u>Author</u></b>
+    David Kantor; initial development was done at The Institute for Policy
+    Studies, Johns Hopkins University.  Email kantor.d@att.net if you observe
+    any problems.
+<p>
+<p>
+<b><u>Also See</u></b>
+    mahapick, mahascores, mahascore2, covariancemat, variancemat, 
+</pre>

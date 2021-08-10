@@ -1,0 +1,261 @@
+<pre>
+<b>help texsave</b>
+-------------------------------------------------------------------------------
+<b><u>Title</u></b>
+<p>
+    <b>texsave</b> -- Save dataset in LaTeX format.
+<p>
+<p>
+<b><u>Syntax</u></b>
+<p>
+        <b>texsave</b> [<i>varlist</i>] <b>using</b> <i>filename</i> [if] [in] [, <b>title(</b><i>string</i><b>)</b>
+              <b>size(</b><i>string</i><b>)</b> <b>width(</b><i>string</i><b>)</b> <b>align(</b><i>string</i><b>)</b> <b><u>loc</u></b><b>ation(</b><i>string</i><b>)</b>
+              <b>marker(</b><i>string</i><b>)</b> <b>autonumber</b> <b>hlines(</b><i>numlist</i><b>)</b>
+              <b>footnote(</b><i>footnote_options</i><b>)</b> <b><u>varlab</u></b><b>els</b> <b>rowsep(</b><i>string</i><b>)</b> <b>frag</b>
+              <b>nonames</b> <b>sw</b> <b>nofix</b> <b>headerlines(</b><i>stringlist</i><b>)</b> <b>headlines(</b><i>stringlist</i><b>)</b>
+              <b>footlines(</b><i>stringlist</i><b>)</b> <b>replace</b> <i>format_options</i>]
+<p>
+    where
+<p>
+        <i>numlist</i> is a list of numbers with blanks or commas in between (see
+              [U] numlist for details),
+<p>
+        <i>stringlist</i> is a list of quoted strings,
+<p>
+        <i>footnote_options</i> are
+<p>
+            <b>footnote(</b><i>string</i> [, <b>size(</b><i>string</i><b>)</b> <b>align(</b><i>string</i><b>)</b>]<b>)</b>
+<p>
+        and <i>format_options</i> are
+<p>
+            <b>bold(</b><i>stringlist</i><b>)</b> <b>italics(</b><i>stringlist</i><b>)</b> <b>underline(</b><i>stringlist</i><b>)</b>
+              <b>slanted(</b><i>stringlist</i><b>)</b> <b>smallcaps(</b><i>stringlist</i><b>)</b> <b>sansserif(</b><i>stringlist</i><b>)</b>
+              <b>monospace(</b><i>stringlist</i><b>)</b> <b>emphasis(</b><i>stringlist</i><b>)</b>
+<p>
+<p>
+<b><u>Description</u></b>
+<p>
+    <b>texsave</b> outputs the dataset currently in memory to <i>filename</i> in LaTeX
+    format. It uses the <i>booktabs</i> and <i>tabularx</i> packages in order to produce
+    publication-quality tables.
+<p>
+<p>
+<b><u>Options</u></b>
+<p>
+<p>
+    <b>title(</b><i>string</i><b>)</b> writes out <i>string</i> as a caption above the table.
+<p>
+<p>
+    <b>size(</b><i>string</i><b>)</b> specifies the size of your table.  Valid size options are
+        tiny, scriptsize, footnotesize, small, normalsize, large, Large,
+        LARGE, huge, and Huge.  Alternatively, the user may specify a numeric
+        value between 1 and 10, where 1 corresponds to tiny and 10
+        corresponds to Huge.
+<p>
+<p>
+    <b>width(</b><i>string</i><b>)</b> specifies the width of your table. Lengths can be specified
+        in the same way as for <b>rowsep</b> (see below). The default is <i>\textwidth</i>.
+<p>
+<p>
+    <b>align(</b><i>string</i><b>)</b> specifies the column formatting. It generally consists of a
+        sequence of the following specifiers, at least one for each of the
+        columns:
+<p>
+        l - a column of left-aligned items
+<p>
+        c - a column of centered items
+<p>
+        C - a column of centered items; column spacing for all 'C' columns
+        are always the same.
+<p>
+        r - a column of right-aligned items
+<p>
+        | - a vertical line the full height and depth of the environment
+<p>
+        The character '|' (the vertical bar, NOT the alphabetic character
+        'l') adds vertical lines to the table.  For example, if there are
+        three columns, specify <b>align(</b><i>|l|C|C|</i><b>)</b> to surround all columns with
+        vertical lines.  The default is to left-justify the first column and
+        center and distribute space equally across the rest of the columns,
+        which in the case of three columns corresponds to <b>align(</b><i>lCC</i><b>)</b>
+<p>
+<p>
+    <b>location(</b><i>string</i><b>)</b> specifies the location of your table in the document.
+        It consists of one or more of the following specifiers:
+<p>
+        h - "Here": at the position in the text where the environment appears
+<p>
+        t - "Top": at the top of a text page
+<p>
+        b - "Bottom": at the bottom of a text page
+<p>
+        p - "Page": on a separate page containing no text, only figures and
+        tables
+<p>
+        The default is <b>location(</b><i>tbp</i><b>)</b>.
+<p>
+<p>
+    <b>marker(</b><i>string</i><b>)</b> uses LaTeX's \label option to mark your table with the key
+        <i>string</i>.
+<p>
+<p>
+    <b>autonumber</b> writes out "(1)", "(2)"... as the table column names,
+        beginning with column two.  This is useful when outputting regression
+        results stored by a command like regsave (if installed).
+<p>
+<p>
+    <b>hlines(</b><i>numlist</i><b>)</b> draws horizontal lines below each row specified in
+        <i>numlist</i>.  Specify a row's number twice to output a double line.
+        Negative values are interpreted as the distance from the end of the
+        table.
+<p>
+<p>
+    <b>footnote(</b><i>string</i> [, <b>size(</b><i>string</i><b>)</b> <b>align(</b><i>string</i><b>)</b>]<b>)</b> writes out <i>string</i> in a
+        left-justified footnote at the bottom of the table.  The suboptions
+        allow you to set the size and alignment of the footnote, using the
+        syntax described by the <b>size(</b><i>string</i><b>)</b> and <b>align(</b><i>string</i><b>)</b> options.
+<p>
+<p>
+    <b>varlabels</b> specifies that variable labels be written in the first line of
+        the table instead of variable names.
+<p>
+<p>
+    <b>rowsep(</b><i>string</i><b>)</b> adds vertical spacing of length <i>string</i> to the rows via the
+        <i>\addlinespace</i> command.  The length can be expressed in the following
+        units: <i>cm</i> (centimetres), <i>em</i> (the width of the letter M in the current
+        font), <i>ex</i> (the height of the letter x in the current font), <i>in</i>
+        (inches), <i>pc</i> (picas), <i>pt</i> (points) or <i>mm</i> (millimetres).  For example,
+        <b>rowsep(</b><i>1cm</i><b>)</b> adds one centimeter of vertical space between rows.
+<p>
+    <b>frag</b> omits from the output LaTeX code like <i>\begin{document}</i> that is
+        needed to create a standalone document.  This makes <i>filename</i> a
+        fragment, which is useful if you plan to link your table to another
+        document via LaTeX's <i>\input{table}</i> command.
+<p>
+<p>
+    <b>nonames</b> specifies that variable names not be written in the first line of
+        the table; the table is to contain data values only.
+<p>
+<p>
+    <b>sw</b> instructs <b>texsave</b> to include macro code that can be read by Scientific
+        Word (SW) so that full SW functionality is retained.
+<p>
+<p>
+    <b>nofix</b> instructs <b>texsave</b> to write out all data, titles and footnotes
+        exactly as they appear in Stata.  Many of the non-alphanumeric
+        characters have special meaning in LaTeX, namely _, %, #, $, &amp;, ~,
+        ^^, \, {, }.  By default, <b>texsave</b> tries to fix this by adding a
+        backslash (\) in front of these characters.  (It is not always
+        successful, though).  Specify <b>nofix</b> if you are intentionally
+        outputting LaTeX code and don't want <b>texsave</b> to incorrectly modify
+        it.
+<p>
+<p>
+    <b>headerlines(</b><i>stringlist</i><b>)</b> specifies a list of lines of LaTeX code to appear
+        before the table header.  Each line of code should be surrounded by
+        quotation marks (see example 5 below).
+<p>
+<p>
+    <b>headlines(</b><i>stringlist</i><b>)</b> specifies a list of lines of LaTeX code to appear
+        before the table code in the output.  Each line of code should be
+        surrounded by quotation marks (see example 4 below).
+<p>
+<p>
+    <b>footlines(</b><i>stringlist</i><b>)</b> specifies a list of lines of LaTeX code to appear
+        after the table code in the output.  Each line of code should be
+        surrounded by quotation marks (see example 4 below).
+<p>
+<p>
+    <b>replace</b> overwrites <i>filename</i>.
+<p>
+<p>
+    <i>format_options</i>: <b>bold(), italics(), underline(), slanted(), smallcaps(),</b>
+        <b>sansserif(), monospace(),</b> and <b>emphasis()</b> allow you to format the data
+        values in your table.  For example, <b>underline(</b><i>"word1" "word2"</i><b>)</b>
+        underlines all data values containing either <i>"word1"</i> or <i>"word2"</i>.
+<p>
+<p>
+<b><u>Remarks</u></b>
+<p>
+    It is sometimes difficult to make <b>texsave</b> output a literal "$" because
+        this can be interpreted by Stata as a global macro.  For example,
+        "$R^2$" will be incorrectly outputted as "^2$".  You can avoid this
+        problem by using the alternative LaTeX syntax "\(R^2\)".
+<p>
+    <b>texsave</b> performs some basic error checking. For example, it issues an
+        error if you specify horizontal lines at row values that do not
+        exist.  However, it does not check that tables with lots of alignment
+        specifications etc. will compile correctly.  It is your
+        responsibility to ensure that you are supplying valid LaTeX code when
+        specifying options such as <b>headlines()</b>, <b>align()</b> etc.  See 
+        http://en.wikibooks.org/wiki/LaTeX/Tables to learn more about writing
+        LaTeX code for tables.
+<p>
+<p>
+<b><u>Notes</u></b>
+<p>
+    <b>texsave</b> has been tested on Scientific WorkPlace 5.0 and TeXShop 2.18 (as
+        supplied by the August 28, 2008 distribution of MacTeX).  Please
+        contact the author if you notice problems with other compilers.
+<p>
+<b><u>Examples</u></b>
+<p>
+    1.  Output a table with a title and a footnote.
+<p>
+       <b>. </b>sysuse auto.dta, clear
+<p>
+       <b>. </b>texsave make mpg trunk if price &gt; 8000 using "example1.tex", title(MPG
+&gt;  and trunk space) footnote("*Variable trunk is measured in cubic feet") repla
+&gt; ce
+<p>
+<p>
+    2.  Output a table with a small font size and some horizontal lines.
+<p>
+       <b>. </b>sysuse auto.dta, clear
+<p>
+       <b>. </b>texsave make mpg trunk weight length displacement turn using "example2
+&gt; .tex" in 1/30, size(2) hlines(3 10/13 19 23 25 28) replace
+<p>
+<p>
+    3.  Output a table with half the normal width and LaTeX math code in the
+    footnote.
+<p>
+       <b>. </b>sysuse auto.dta, clear
+<p>
+       <b>. </b>texsave make mpg trunk if price &gt; 8000 using "example3.tex", title(MPG
+&gt;  and trunk space) width(0.5\textwidth) nofix footnote("*Variable trunk is mea
+&gt; sured in ft\(^3\)") replace
+<p>
+<p>
+    4. Output a table with additional LaTeX code.
+<p>
+       <b>. sysuse auto.dta, clear</b>
+<p>
+       <b>. texsave make mpg trunk if price &gt; 8000 using "example4.tex", loc(h) he</b>
+<b>&gt; adlines("\begin{center}" "My headline" "\end{center}") footlines("My footline</b>
+<b>&gt; ") replace</b>
+<p>
+<p>
+    5. Output a table with a complicated header and bold-face the first
+    observation.
+<p>
+       <b>. sysuse auto.dta, clear</b>
+<p>
+       <b>. texsave make mpg trunk if price &gt; 8000 using "example5.tex", bold("Bui</b>
+<b>&gt; ck") headerlines("&amp; \multicolumn{2}{c}{\textbf{Data}}" "\cmidrule{2-3}\addlin</b>
+<b>&gt; espace[-2ex]") replace nofix</b>
+<p>
+<p>
+<b><u>Author</u></b>
+<p>
+    Julian Reif, University of Chicago
+<p>
+    jreif@uchicago.edu
+<p>
+<p>
+    Thanks to Kit Baum for helpful suggestions and feedback.
+<p>
+<p>
+<b><u>Also see</u></b>
+<p>
+</pre>

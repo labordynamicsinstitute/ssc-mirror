@@ -1,0 +1,41 @@
+<pre>
+.-
+help for ^dissim^
+.-
+<p>
+Dissimilarity index
+--------------------
+<p>
+    ^dissim^ varlist [^if^ exp] [^in^ range] [ ^,^ ^m^atrix^(^matname^)^ ]
+<p>
+Description
+------------
+<p>
+^dissim^ displays the dissimilarity index D for each pair of variables
+in varlist. If x and y are &gt;= 0, form the proportions
+<p>
+    p = x / SUM x   and   q = y / SUM y
+<p>
+and calculate D = 1/2 SUM ( | p - q | ). D lies in [0, 1].
+<p>
+<p>
+Options
+--------
+<p>
+^matrix(^matname^)^ specifies that results are to be placed in matrix
+    matname.
+<p>
+<p>
+Examples
+---------
+<p>
+        . ^dissim a b c^
+<p>
+<p>
+Author
+-------
+<p>
+         Nicholas J. Cox, University of Durham, U.K.
+         n.j.cox@@durham.ac.uk
+         
+</pre>

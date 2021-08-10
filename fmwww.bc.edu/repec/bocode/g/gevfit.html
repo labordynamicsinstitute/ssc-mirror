@@ -1,0 +1,86 @@
+<pre>
+-------------------------------------------------------------------------------
+help for <b>gevfit</b>
+-------------------------------------------------------------------------------
+<p>
+<b><u>Fitting a generalized extreme value distribution by maximum likelihood</u></b>
+<p>
+        <b>gevfit</b> <i>depvar</i> [<i>weight</i>] [<b>if</b> <i>exp</i>] [<b>in</b> <i>range</i>] [ <b><u>shape</u></b><b>var(</b><i>varlist_a</i><b>)</b>
+                 <b><u>scale</u></b><b>var(</b><i>varlist_b</i><b>)</b> <b><u>loc</u></b><b>ation var(</b><i>varlist_c</i><b>)</b> <b><u>r</u></b><b>obust</b>
+                 <b><u>cl</u></b><b>uster(</b><i>clustervar</i><b>)</b> <b><u>l</u></b><b>evel(</b><i>#</i><b>)</b> <i>maximize_options</i> ]
+<p>
+    <b>by</b> <i>...</i> <b>:</b> may be used with <b>gevfit</b>; see help by.
+<p>
+    <b>fweight</b>s and <b>aweight</b>s are allowed; see help weights.
+<p>
+<p>
+<b><u>Description</u></b>
+<p>
+    <b>gevfit</b> fits by maximum likelihood a three-parameter generalized extreme
+    value distribution.
+<p>
+<p>
+<b><u>Options</u></b>
+<p>
+    <b>shapevar()</b>, <b>scalevar()</b> and <b>locationvar()</b> allow the user to specify each
+        parameter as a function of the covariates specified in the respective
+        variable list. A constant term is always included in each equation.
+<p>
+    <b>robust</b> specifies that the Huber/White/sandwich estimator of variance is
+        to be used in place of the traditional calculation; see <b>[U] 23.14</b>
+        <b>Obtaining robust variance estimates</b>.  <b>robust</b> combined with <b>cluster()</b>
+        allows observations which are not independent within cluster
+        (although they must be independent between clusters).
+<p>
+    <b>cluster(</b><i>clustervar</i><b>)</b> specifies that the observations are independent
+        across groups (clusters) but not necessarily within groups.
+        <i>clustervar</i> specifies to which group each observation belongs; e.g.,
+        <b>cluster(personid)</b> in data with repeated observations on individuals.
+        See <b>[U] 23.14 Obtaining robust variance estimates</b>.  Specifying
+        <b>cluster()</b> implies <b>robust</b>.
+<p>
+    <b>level(</b><i>#</i><b>)</b> specifies the confidence level, in percent, for the confidence
+        intervals of the coefficients; see help level.
+<p>
+    <b>nolog</b> suppresses the iteration log.
+<p>
+    <i>maximize_options</i> control the maximization process; see help maximize. If
+        you are seeing many "(not concave)" messages in the log, using the
+        <b>difficult</b> option may help convergence.
+<p>
+<p>
+<b><u>Example</u></b>
+<p>
+    <b>. use yearly_rain</b>
+<p>
+    <b>. gevfit rain</b>
+<p>
+<p>
+<b><u>Author</u></b>
+<p>
+    Scott Merryman, Risk Management Agency (USDA)
+    scott.merryman@gmail.com
+<p>
+<p>
+<b><u> Acknowledgements</u></b>
+<p>
+    This is based on betafit by Nick Cox, Stephen Jenkins, and Maarten Buis.
+<p>
+<p>
+<b><u>References</u></b>
+<p>
+    Coles, Stuart. 2001. <i>An Introduction to Statistical Modeling of Extreme</i>
+    <i>Values.</i>  London: Springer-Verlag
+<p>
+    Cole, Stuart and Luis Pericchi. 2003. Anticipating catastrophes through
+    extreme value modelling.<i>  Journal Of The Royal Statistical Society Series</i>
+    <i>C</i>, Royal Statistical Society, vol. 52(4), pages 405-416.
+<p>
+<p>
+<b><u>Also see</u></b>
+<p>
+    Online: help for gumbelfit (if installed), help for gevd (if installed)
+<p>
+<p>
+<p>
+</pre>

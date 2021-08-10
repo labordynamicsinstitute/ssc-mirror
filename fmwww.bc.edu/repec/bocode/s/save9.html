@@ -1,0 +1,69 @@
+<pre>
+<b>help save9 (version 1.2, 18-Oct-2011)</b>
+-------------------------------------------------------------------------------
+<p>
+<b><u>Title</u></b>
+<p>
+    <b>save9</b> - Save dataset in Stata-9 format regardless of whether Stata 9, 10,
+    11 or 12 is being run.
+<p>
+<b><u>Syntax</u></b>
+<p>
+        <b>save9</b> <i>filename</i> [<b>,</b> <b><u>nol</u></b><b>abel</b> <b>replace</b> <b>all</b> ]
+<p>
+<p>
+<p>
+<b><u>Description</u></b>
+<p>
+    <b>save9</b> saves, in the Stata-9 format, the dataset in memory to disk
+    regardless of whether Stata 9, 10, 11 or 12 is being run.  If <i>filename</i> is
+    specified without an extension, <b>.dta</b> is assumed.  If <i>filename</i> contains
+    embedded spaces, remember to enclose it in double quotes <i>" "</i>.  <b>save9</b> can
+    be useful in situations where authors who are running different editions
+    of Stata may wish to share the same .do scripts and the same datasets.
+<p>
+    Note that any attempt to <b>exit</b> Stata after the <b>save9</b> command might result
+    in the warning no; data in memory would be lost if Stata 10, 11 or 12
+    last saved the data in the Stata-9 format.  This is a default behaviour
+    of Stata insofar as it expects the data to be saved in the lastest format
+    before <b>exit</b>ing.  This default behaviour can be overcome by issuing the
+    <b>clear</b> command before issuing the <b>exit</b> command.
+<p>
+    <b>save9</b> will also work in Stata-8 but it will save the dataset in the
+    Stata-8 format.  Stata-8 datasets have a limit of 244 characters for
+    their values labels, Stata-9 datasets have a limit of 32,000 characters
+    but in all other ways the Stata-8 and Stata-9 dataset formats are
+    equivalent.  <b>save9</b> will not work in Stata-7 or earlier.
+<p>
+    <b>save9</b> works by using the <b>creturn</b> code <b>c(</b><i>stata_version</i><b>)</b> to determine which
+    version of Stata is being run.  It then uses this to decide if to include
+    the undocumented <b>oldformat</b> option when calling the <b>save</b> command.
+<p>
+<p>
+<b><u>Options</u></b>
+<p>
+    <b><u>nol</u></b><b>abel</b> prevents value labels in the dataset from being saved.
+<p>
+    <b>replace</b> permits overwriting of an existing dataset.
+<p>
+    <b>all</b> saves <b>e(</b><i>sample</i><b>)</b> with the dataset; programmer's option.
+<p>
+<b><u>Author</u></b>
+<p>
+    <i>Marco G. Ercolani</i>
+<p>
+<p>
+<b><u>Examples</u></b>
+<p>
+    <b>. save9 MyData, replace</b>
+<p>
+    <b>. save9 "My Data"</b>
+<p>
+    <b>. save9 "My Data.dta"</b>
+<p>
+    <b>. save9 "My Data.dta", nolabel replace</b>
+<p>
+<p>
+<b><u>Also see</u></b>
+<p>
+</pre>

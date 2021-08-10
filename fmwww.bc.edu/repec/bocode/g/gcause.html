@@ -1,0 +1,103 @@
+<pre>
+-------------------------------------------------------------------------------
+help for <b>gcause</b>                                                        [P.Joly]
+-------------------------------------------------------------------------------
+<p>
+<b><u>Granger causality test</u></b>
+<p>
+        <b>gcause</b> <i>var1</i> <i>var2</i> [<b>if</b> <i>exp</i>] [<b>in</b> <i>range</i>] <b>,</b> <b><u>l</u></b><b>ags(</b><i>#</i><b>)</b> [ <b><u>ex</u></b><b>og(</b><i>varlist</i><b>)</b> <b><u>reg</u></b><b>ress</b>
+                           ]
+<p>
+<p>
+<b>gcause</b> is for use with time-series data.  You must <b>tsset</b> your data before using
+this commands; see help tsset.
+<p>
+<p>
+<b><u>Description</u></b>
+<p>
+<b>gcause</b> performs a Granger causality test to investigate whether lagged values
+of a variable, <i>var2</i>, help in forecasting another variable, <i>var1</i>.  See <b>Methods &amp;</b>
+<b>Formulas</b> below.
+<p>
+<p>
+<b><u>Options</u></b>
+<p>
+<b>lags(</b><i>#</i><b>)</b> is not optional.  It specifies the number of lags of <i>var1</i> and <i>var2</i> to
+    include in the regression.
+<p>
+<b>exog(</b><i>varlist</i><b>)</b> for lack of a better name, specifies other conditioning variables
+    which may enter the regression.  <i>varlist</i> may contain time-series operators
+    which is particularly useful to add other lagged variables to the test
+    regressions.
+<p>
+<b>regress</b> requests the display of the output from the unrestricted regression.
+<p>
+<p>
+<b><u>Methods &amp; Formulas</u></b>
+<p>
+Granger-causality tests are usually performed in the context of vector
+autoregressions (VAR) or more specifically, individual equations within VAR
+systems.  Individual equations in VARs are known as autoregressive distributed
+lag (ADL) relationships and may be represented as
+<p>
+                 <i>p</i>                <i>p</i>
+    y_<i>t</i> = <i>c</i>_1 + SUM <i>a_i</i> *y_<i>t-i</i> + SUM <i>b_i</i> *x_<i>t-i</i> + D_<i>t</i> + u_<i>t</i>
+                <i>i</i>=1              <i>i</i>=1
+<p>
+    (<i>t</i> = 1,...,<i>T</i> )
+<p>
+where y_<i>t</i> and x_<i>t</i> respectively refer to <i>var1</i> and <i>var2</i> in <b>gcause</b>'s syntax
+diagram and D_<i>t</i> corresponds to other variables that need to be controlled for,
+if any, specified at <b>exog()</b>.  <i>p</i> is determined by <b>lags()</b>.
+<p>
+The null hypothesis that x_<i>t</i> does not Granger-cause y_<i>t</i> amounts to testing
+whether <i>b_i</i> = 0 for <i>i</i> = 1,...,<i>p</i>.  The rationale for conducting such a test is
+simple.  If event X is seen as causing event Y, then event X should precede Y
+(Hamilton, p.303).  The test statistic is calculated from the sum of squared
+residuals (RSS) of the unrestricted equation (above) and restricted equation
+<p>
+                 <i>p</i>
+    y_<i>t</i> = <i>c</i>_0 + SUM <i>g_i</i> *y_<i>t-i</i> + D_<i>t</i> + e_<i>t</i>
+                <i>i</i>=1
+<p>
+using the formula for joint-significance tests given by
+<p>
+    <i>F</i> = (<i>RSS</i>_0 - <i>RSS</i>_1)/<i>p</i>
+        ------------------
+        <i>RSS</i>_1 /(<i>T</i> -2<i>p</i> -1)
+<p>
+which is distributed as an <i>F</i> (<i>p</i>,<i>T</i> -2<i>p</i> -1) variable.  <i>RSS</i>_0 (<i>RSS</i>_1) is the
+residual sum of squares of the restricted (unrestricted) regression.
+<p>
+The above test in only valid asymptotically due to the presence of a lagged
+dependent variable in the regression.  An asymptotically equivalent test is
+given by,
+<p>
+    <i>F</i>_a = <i>T</i> (<i>RSS</i>_0 - <i>RSS</i>_1)
+          -----------------
+               <i>RSS</i>_1
+<p>
+which is distributed as a chi2(<i>p</i>) variable.
+<p>
+<p>
+<b><u>References</u></b>
+<p>
+Hamilton, J. D. (1994). <i>Time Series Analysis</i>. Princeton University Press. 799
+  p.
+<p>
+<p>
+<b><u>Acknowledgements</u></b>
+<p>
+Thanks to Carol Miu for helpful comments.
+<p>
+<p>
+<b><u>Author</u></b>
+<p>
+Patrick Joly, Industry Canada
+pat.joly@utoronto.ca
+<p>
+<p>
+<b><u>Also see</u></b>
+<p>
+On-line:  help for test, vecar (if installed)
+</pre>

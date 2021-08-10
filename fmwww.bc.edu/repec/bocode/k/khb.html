@@ -1,0 +1,251 @@
+<pre>
+<b>help khb</b> 
+-------------------------------------------------------------------------------
+<p>
+<b><u>Title</u></b>
+<p>
+    <b>khb</b> Decomposition of effects in non-linear probabiltiy models using the
+        KHB-method
+<p>
+<b><u>Syntax</u></b>
+<p>
+        <b>khb</b> <i>model-type</i> <i>depvar</i> <i>key-vars</i> || <i>z-vars</i> [<i>if</i>] [<i>in</i>] [<i>weight</i>] [ <b>,</b>
+                 <i>options</i> ]
+<p>
+    <i>options</i>                       Description
+    -------------------------------------------------------------------------
+    Main
+      <b><u>c</u></b><b>oncomitant(</b><i>varlist</i><b>)</b>        concomitants
+      <b><u>d</u></b><b>isentangle</b>                 disentangle difference for each z-var
+      <b><u>s</u></b><b>ummary</b>                     summary of decomposition
+      <b>or</b>                          exponentiated coeficients
+      <b>vce(</b><i>vcetype</i><b>)</b>                vcetype may be <b>robust</b>, <b>cluster</b> <i>clustvar</i>
+      <b>ape</b>                         decomposition using average partial
+                                    (marginal) effects
+      <b>continuous</b>                  treat dummy variable as continuous when
+                                    using ape-method
+      <b><u>not</u></b><b>able</b>                     suppress coefficient table
+      <b><u>v</u></b><b>erbose</b>                     show restricted and full model
+      <b><u>k</u></b><b>eep</b>                        keep residuals of z-vars
+      <b><u>xs</u></b><b>tandard</b>                   standardize <i>key-vars</i>
+      <b><u>zs</u></b><b>tandard</b>                   standardize <i>z-vars</i>
+    Model-type specific
+      <b><u>out</u></b><b>come(</b><i>outcome</i><b>)</b>            outcome used for decomposition when
+                                    <i>model-type</i> is mlogit
+      <b><u>b</u></b><b>aseoutcome(</b><i>#</i><b>)</b>              value of depvar that will be the base
+                                    outcome when <i>model-type</i> is mlogit
+      <b><u>g</u></b><b>roup(</b><i>varname</i><b>)</b>              necessary options for <i>model-types</i> rologit
+                                    and clogit; see help of these models.
+      <i>other</i>                       all options allowed for the specified
+                                    <i>model-type</i>
+    -------------------------------------------------------------------------
+<p>
+    <i>model-type</i> can be any of regress, logit, ologit, probit, oprobit, 
+    cloglog, {help slogit}, scobit, rologit, clogit, xtlogit, xtprobit and 
+    mlogit. Other models might also produce output but for the time being
+    this output is considered to be "experimental".
+<p>
+    <i>depvar</i> is the name of the dependent variable, <i>key-vars</i> is a varlist
+    holding the name(s) of the variable(s) to be decomposed, and <i>z-vars</i> is a
+    varlist holding the name(s) of control variables of interest.
+<p>
+    Factor variables are allowed for <i>key-vars</i>.  Factor variables for <i>z-vars</i>
+    are only allowed for Stata 12 or higher. Factor variables for <i>key-vars</i>
+    are not allowed, if option -xstandard- is specified.
+<p>
+    aweights, fweights, iweights, and pweights are allowed if they are
+    allowed in the specified <i>model-type</i>; see weight.
+<p>
+<b><u>Description</u></b>
+<p>
+    <b>khb</b> applies the KHB method developed to compare the estimated
+    coefficients between two nested non-linear probability models
+    (Karlson/Holm/Breen 2011; Breen/Karlson/Holm 2010). An important use of
+    the technique is to decompose the total effect of a variable into a
+    <i>direct</i> and <i>indirect</i> of <i>spurious</i> part.  The method is developed for
+    binary, logit and probit models, but this command also includes other
+    nonlinear probability models (ordered and multinomial) and linear
+    regression. Contrary to other decomposition methods, the KHB-method gives
+    unbiased decompositions, decomposes effects of both discrete and
+    continuous variables, and provides analytically derived statistical tests
+    for many models of the GLM family.
+<p>
+    In linear regression models, decomposing the total effect into direct and
+    indirect/spurious effects is straightforward. The decomposition is done
+    by comparing the estimated coefficient of a key variable of interest
+    (<i>key-var</i>) between a <i>reduced</i> model without a control variable Z and a <i>full</i>
+    model with one or more Z variable added. The difference between the
+    estimated coefficients of the key-variable of interest in the two models
+    expresses the amount by which the effect of the key-variable is
+    confounded by the z-variable(s). If the control variable is hypothesized
+    to be a consequence of the key-variable, the difference will be commonly
+    termed as the "indirect effect"; if the control variable is the
+    hypothesized to be a cause of the key-variable, the difference is termed
+    the "spurious effect".
+<p>
+    The strategy described for linear models cannot be used in the context of
+    nonlinear probability models such as logit and probit, because the
+    estimated coefficients of these models are not comparable between
+    different models. The reason is a rescaling of the model induced by a
+    property of these models: the coefficients and the error variance are not
+    separately identified. The KHB-method solves this problem. It allows the
+    comparison of effects of nested models for many models of the GLM
+    framework, including logit, probit, ologit, oprobit, and mlogit. The
+    basic idea of the method is to compare the full model with a reduced
+    model that substitutes some Z-variables by the residuals of the
+    Z-variables from a regression of the Z-variables on the <i>key-vars</i> (see
+    Karlson/Holm/Breen 2011 for explanations and details). The method
+    consequently allows separation of the change in the coefficient that is
+    due to confounding and the change that is due to rescaling.
+<p>
+    The KHB-method also allows the inclusion variables that control for
+    confounding influences on the decomposition. These variables are named
+    concomitants in Karlson/Holm (2011) and Breen/Karlson/Holm (2010). These
+    variables do not play the role of the Z-variables of the
+    y*-x-relationship, but rather as a set of variables that is included to
+    secure that both, the effects of the full model and the reduced model are
+    not confounded by these variables.
+<p>
+    The KHB-method is primarily intended to be used for various variants of
+    logit and probit models. However, it can be also used for linear
+    regression, in which case it returns the same results as the standard
+    technique. <b>khb</b> is then just a convenient way to do the decomposition with
+    one single command.
+<p>
+    Note that using regress as <i>model-type</i> for binary dependent variables
+    boils down to using a linear probability model for the decomposition.
+    However, the interpretation of decompositions in linear probability
+    models is unknown, and may not reflect the parameters of interest (in
+    particular the indirect effect). Caution should consequently be
+    exercised, and the authors do not recommend using khb for linear
+    probability models until the properties of these models have been
+    explored formally.
+<p>
+    A worked example using <b>khb</b> appears in Breen/Karlson/Holm (2010).
+<p>
+<b><u>Options</u></b>
+<p>
+    <b><u>s</u></b><b>ummary</b> requests the provision of a decomposition summary for all
+        <i>key-vars</i>. By default, <b>khb</b> reports the effects of all key variables
+        along with standard errors in terms of the estimated coefficients.
+        With option summary, <b>khb</b> also presents a table holding the
+        "confounding ratios", the "percentage reduction due to confounding"
+        and the "rescale factor". The confounding ratio measures the impact
+        of confounding net of rescaling. The percentage reduction measures
+        the percentage change in the coefficient of each <i>key-var</i> attributable
+        to confounding net of scaling. Finally, the rescale factor measures
+        the impact of rescaling, net of confounding.
+<p>
+    <b><u>d</u></b><b>isentangle</b> request a table that show how much of the difference between
+        the full and reduced model is contributed by each of the single
+        z-variables.
+<p>
+    <b><u>not</u></b><b>able</b> suppresses the display of the coefficient table. This normally
+        involves the options <b>summarize</b> and/or <b>disentangle</b>
+<p>
+    <b><u>c</u></b><b>oncomitant(</b><i>varlist</i><b>)</b> is used to specify control variables that are not
+        z-variables. Factor variables are allowed.
+<p>
+    <b>vce(</b><i>vcetype</i><b>)</b> specifies the type of standard error reported. It defaults
+        to the Stata's defaults for the specified model-type. Standard errors
+        for indirect effects are estimated using a method discussed by Sobel
+        (1982). The option vce() set the standard errors for total and direct
+        effects and controls the type of standard error that enter into
+        Sobel's method. Types <b>robust</b>, <b>cluster</b>; see help vce_option.
+<p>
+    <b>ape</b> is used to decompose the <i>key-vars</i> using average partial effects
+        (average marginal effects). Uses margins to compute average partial
+        effects. For <i>model-types</i> ologit and oprobit, khb uses the average
+        partial effect on the probability for the first outcome unless
+        <b>outcome()</b> is specified; see ologit_postestimation for various ways to
+        specify <b>outcome()</b>. Note that with APE the calculated indirect effect
+        is not constant across outcomes. This is a well-known property of
+        ordered choice models (see Greene/Henscher 2010).
+<p>
+    <b>or</b> exponentiates the estimated coefficients, and hence shows odds-ratios
+        for logit models. The coefficient for the reduced model is then the
+        product of the full model with the estimated difference.
+<p>
+    <b><u>v</u></b><b>erbose</b> is used to show the complete output of the full and restricted
+        models that are used to estimate the decomposition. This is
+        especially usefull to detect problems that occure in the intermediate
+        steps of the estimation.
+<p>
+    <b><u>k</u></b><b>eep</b> is used to keep the residuals of the z-variables, i.e. the
+        z-variables net of confounding. These residuals are included as
+        independent variables in the reduced model.
+<p>
+    <b>continuous</b> Average partial effects are by default based on unit effects
+        for dummy variables. Specifying continuous treats dummy variables
+        equal to continuous variables. See margins for details about this
+        option
+<p>
+    <b><u>xs</u></b><b>tandard</b> is used to standardize the <i>key-vars</i>.
+<p>
+    <b><u>zs</u></b><b>tandard</b> is used to standardize the <i>z-vars</i>.
+<p>
+    <b><u>out</u></b><b>come(</b><i>outcome</i><b>)</b> specifies the outcome for which the decompostion is to
+        be calculated. This takes effect for models for multinomial response
+        (mlogit), and, if option <b>ape</b> is specified, for ordered response
+        models. <b>outcome()</b> can be specified using
+<p>
+            <b>#1</b>, <b>#2</b>, ..., where <b>#1</b> means the first category of the dependent
+            variable, <b>#2</b> means the second category, etc.;
+<p>
+            the values of the dependent variable; or
+<p>
+            the value labels of the dependent variable if they exist.
+<p>
+    <b><u>b</u></b><b>aseoutcome(</b><i>#</i><b>)</b> can be used for <i>model-type</i> <b>mlogit</b>.  It specifies the value
+        of depvar to be treated as the base outcome. The default is to choose
+        the most frequent outcome. The option can be used together with
+        <b>outcome()</b> to fully control the contrast for which the decompositon is
+        done.
+<p>
+<p>
+<b><u>Example(s)</u></b>
+<p>
+    <b>. use dlsy_khb.dta</b>
+    <b>. khb logit univ fses || abil</b>
+    <b>. khb probit univ fses || abil</b>
+    <b>. khb logit univ fses || abil, c(intact boy)</b>
+    <b>. khb logit univ fses || abil, summary</b>
+<p>
+<b><u>References</u></b>
+<p>
+    Breen, R./Karlson, K.B./Holm, A. (Forthcoming).  Total, direct, and
+    indirect effects in logit models.  Accepted for publication in:
+    Sociological Methods and Research.
+<p>
+    Greene, W.H./Hensher, D.A. (2010): Modeling Ordered Choices: A Primer.
+    New York: Cambridge University Press.
+<p>
+    Karlson, K.B./Holm, A./Breen, R. (2011): Comparing Regression
+    Coefficients Between Same-sample Nested Models using Logit and Probit. A
+    New Method. Sociological Methodology 42:286-313.
+<p>
+    Karlson, K.B./Holm, A. (2011): Decomposing primary and secondary effects:
+    A new decomposition method. Research in Stratification and Social
+    Mobility 29:221-237.
+<p>
+    Kohler, U./Karlson, K.B./Holm, A. (2011): Comparing coefficients of
+    nested nonlinear probability models. The Stata Journal 11:420-438.
+<p>
+<p>
+<b><u>Also see</u></b>
+<p>
+    Manual: <b>[R] margins</b>
+<p>
+    Online: help for margins, ldecomp (if installed)
+<p>
+    Web:  Stata's Home
+<p>
+<b><u>Author</u></b>
+<p>
+    Ulrich Kohler (kohler@wzb.eu) and Kristian Karlson (kbk@dpu.dk)
+<p>
+    Please send bug reports and questions regarding the program to Ulrich
+    Kohler. Questions regarding the KHB method itself are handled by Kristian
+    Karlson.
+<p>
+</pre>

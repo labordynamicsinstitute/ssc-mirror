@@ -1,0 +1,152 @@
+<pre>
+-------------------------------------------------------------------------------
+help for <b>desrep</b>                                                  John Hendrickx
+-------------------------------------------------------------------------------
+<p>
+<b><u>desrep</u></b>
+<p>
+        <b>desrep</b> [<b>using</b> <i>filename</i>] [ <b>,</b> <b>fw(</b>#<b>)</b> <b>ndec(</b>#<b>)</b> <b>sigcut(</b><i>numlist</i><b>)</b> <b>sigsym(</b><i>list</i><b>)</b>
+                           <b>sigsep(</b>#<b>)</b> <b>nrwd(</b>#<b>)</b> <b>modinfo</b> <b>sig</b> <b>se</b> <b>zval</b> <b>prob</b> <b>ci</b> <b>all</b>
+                           <b>notrunc</b> <b>exp</b> <b>outraw</b> <b>replace</b> ]
+<p>
+<p>
+<b><u>Description</u></b>
+<p>
+<b>desrep</b> is a program for viewing the results of Stata estimation commands. It
+can be used after estimating any model but is particularly useful in
+conjunction with with desmat in command model. By default, <b>desrep</b> prints the
+coefficients, their standard errors, and symbols indicating the significance,
+of the last model estimated, together with longer descriptive labels. In
+conjunction with desmat, <b>desrep</b> will print labels on model terms and category
+values from the <b>[varn]</b> and <b>[valn]</b> characteristics desmat assigns to its dummy
+variables. If desmat was not used, variable labels are printed instead.
+Estimates are preceded by a summary of model information, based on results
+saved in <b>e()</b> by the command.
+<p>
+By default, <b>desrep</b> prints model information, coefficients, standard errors, and
+symbols indicating the significance. Additional statistics can be requested and
+printing of standard errors and signficance symbols can be suppressed. Defaults
+for some of these options can be modified using global macro variables (see
+below).
+<p>
+If <b>using</b> <i>filename</i> is specified then the results are written to a tab- delimited
+ascii file. The default extension for <i>filename</i> is <b>.out</b> (cf.  outsheet). If
+<i>filename</i> already exists, <b>desrep</b> will attmept to find a valid filename by
+appending a number (see outshee2). The <b>replace</b> option can be used to overwrite
+an existing file.
+<p>
+<b><u>Options</u></b>
+<p>
+<b>fw(</b>#<b>)</b> specifies <u>F</u>ield <u>W</u>idth, the number of columns used to display the
+    estimates, standard errors, and other requested statisics.  Default=10.
+<p>
+<b>ndec(</b>#<b>)</b> specifies the number of decimal places. Default=3.
+<p>
+<b>sigcut(</b><i>numlist</i><b>)</b> specifies levels of significance to be indicated in the output.
+    <b>desrep</b> places a symbol next to coefficients to indicate whether these are
+    significant at a certain level. The <b>sigcut</b> option is used to modify these
+    levels of significance.  The numlist should contain a list of values in
+    descending order with the same number of elements as the string list in
+    <b>sigsym</b>. For example, sigcut(.1 .05 .01 .001) together with sigsym(# * **
+    ***) will use the symbols # for p &lt; .1, * for p &lt; .05, ** for p &lt; .01, and
+    *** for p &lt; .001. The default is (.05 .01).
+<p>
+<b>sigsym(</b><i>list</i><b>)</b> specifies set of symbols corresponding with the levels of
+    significance given by <b>sigcut</b>. Default=(* **).
+<p>
+<b>sigsep(</b>#<b>)</b> spcifies the number of spaces between coefficients and symbols
+    indicating significance. Default=0.
+<p>
+<b>nrwd(</b>#<b>)</b> specifies the number of columns reserved for numbering the effects.
+    Specifying <b>nrwd(</b>0<b>)</b> can be used to suppress numbering. Default=3.
+<p>
+<b>modinfo</b> requests printing of summary information on the model.  oUse <b>nomodinfo</b>
+    to suppress this. Default=<b>modinfo</b>.
+<p>
+<b>sig</b> requests printing of symbols indicating levels of significance. Use <b>nosig</b>
+    to suppress this. Default=<b>sig</b>.
+<p>
+<b>se</b> requests printing of standard errors Use <b>nose</b> to suppress this. Default=<b>se</b>.
+<p>
+<b>zval</b> requests printing of z-values for models with a chi2 statistic, t-values
+    for models with an F statistic. Default =<b>nozval</b>.
+<p>
+<b>prob</b> requests printing of p-values. Default=<b>noprob</b>.
+<p>
+<b>ci</b> requests printing of confidence intervals. Default=<b>noci</b>.
+<p>
+<b>all</b> request printing of coefficients, standard errors, z or t-values,
+    probabilities, and confidence intervals, as in the standard <b>Stata</b> output.
+    Equivalent to <b>zval prob ci</b>.
+<p>
+<b>trunc</b> specifies that long labels are to be cut off and only the rightmost
+    section displayed. Use <b>notrunc</b> to suppress this and print results on a
+    separate line if necessary. Default=<b>trunc</b>.
+<p>
+<b>exp</b> requests that multiplicative parameters be reported, If <b>exp</b> is specified
+    the <b>desrep</b> will report multiplicative e.g. incident rate ratios in poisson
+    regression, oddsratios in logistic regression. The parameters are
+    transformed into exp(b) and their standard errors into exp(b)*se, where b
+    is the linear estimate and se its standard error. Note that if <b>exp</b> is not
+    specified, <b>desrep</b> will produce the <i>linear estimates</i> even if the procedure
+    produces multiplicative versions, since the procedure stores the linear
+    estimates and covariance matrix in e(b) and e(V).
+<p>
+    Earlier versions of <b>desrep</b> allowed <b>exp</b> to be specified as the only
+    argument. This is still allowed if <b>exp</b> is indeed the only argument. If
+    other options are specified, <b>exp</b> must be specified as an option.
+<p>
+The following two options apply only if <b>using</b> has been specified to write the
+data to a tab-delimited ascii file:
+<p>
+<b>outraw</b> requests that results be written using their default formats, e.g. %9.0g
+    for floats. In addition, a tab will be inserted between coefficients and
+    significance symbols. Otherwise, the variables are written with a fixed
+    number of decimal places as specified by the <b>ndec</b> option (default 3) and
+    significance symbols are appended to coefficients if <b>sigsep</b>=0.
+    Default=<b>nooutraw</b>.
+<p>
+<b>replace</b> specifies that any existing output file should be replaced.  If not
+    specified, <b>desrep</b> appends a number to the filename if it already exists. If
+    no valid name has been found after appending 1 to 20, the process stops and
+    the output is not saved. Default=<b>noreplace</b>.
+<p>
+Note that these options can also be specified in the <b>desrep</b> option of the 
+desmat command.
+<p>
+<b><u>Macro variables to control layout</u></b>
+<p>
+Macro variables can be use to alter the default for certain <b>desrep</b> options. The
+macro variables will still be overridden by options specified at the <b>desrep</b>
+command. The global variables can be specified once at the beginning of the
+Stata session or in the user's profile.do for all sessions. The following
+global variables may be defined:
+<p>
+<b>$D_FW</b>
+<b>$D_NDEC</b>
+<b>$D_SIGCUT</b>
+<b>$D_SIGSYM</b>
+<b>$D_SIGSEP</b>
+<b>$D_NRWD</b>
+<b>$D_SIG</b>
+<b>$D_SE</b>
+<b>$D_ZVAL</b>
+<b>$D_PROB</b>
+<b>$D_CI</b>
+<b>$D_ALL</b>
+<b>$D_TRUNC</b>
+<b>$D_RAW</b>
+<b>$D_REPL</b>
+<p>
+For example, the following can be used to set the column width for estimates to
+8, use 2 decimal places, and symbols and cutpoints for levels of significance:
+<p>
+global D_NDEC 2
+global D_FW 8
+global D_SIGCUT ".1 .05 .01 .001"
+global D_SIGSYM "# * ** ***"
+<p>
+<b><u>Aso see</u></b>
+<p>
+On-line: help for desmat, outsheet, outshee2 destest, showtrms, xi
+</pre>

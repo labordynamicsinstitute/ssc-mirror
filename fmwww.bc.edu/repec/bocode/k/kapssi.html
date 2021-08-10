@@ -1,0 +1,110 @@
+<pre>
+-------------------------------------------------------------------------------
+help for <b>kapssi</b>                                       (Author:  David Harrison)
+-------------------------------------------------------------------------------
+<p>
+<b><u>Sample size calculations for kappa</u></b>
+<p>
+    Two unique raters, two ratings:
+<p>
+        <b>kapssi</b> <i>kappa</i><b>,</b> { <b><u>s</u></b><b>e(</b><i>#</i><b>)</b> | <b><u>d</u></b><b>iff(</b><i>#</i><b>)</b> [<b><u>l</u></b><b>evel(</b><i>#</i><b>)</b>] | <b>n(</b><i>#</i><b>)</b> } <b><u>p</u></b><b>1(</b><i>#</i><b>)</b> [ <b>p2(</b><i>#</i><b>)</b>
+               <b>round</b> ]
+<p>
+    Two or more (non-unique) raters, two ratings:
+<p>
+        <b>kapssi</b> <i>kappa</i><b>,</b> { <b><u>s</u></b><b>e(</b><i>#</i><b>)</b> | <b><u>d</u></b><b>iff(</b><i>#</i><b>)</b> [<b><u>l</u></b><b>evel(</b><i>#</i><b>)</b>] | <b>n(</b><i>#</i><b>)</b> } <b>p(</b><i>#</i><b>)</b> [ <b>m(</b><i>#</i><b>)</b> <b>round</b>
+               ]
+<p>
+<p>
+<b><u>Description</u></b>
+<p>
+    <b>kapssi</b> estimates required sample size for estimating the kappa-statistic
+    of inter-rater reliability for a binary outcome (having postulated value
+    <i>kappa</i>) with given standard error, or the standard error for a given
+    sample size.  If <b>n()</b> is specified, <b>kapssi</b> computes standard error;
+    otherwise it computes sample size.  <b>kapssi</b> is an immediate command; all
+    of its arguments are numbers (see help immed).
+<p>
+    For two raters, the results are the same as produced by sskdlg or sskapp
+    (except for rounding; see <b>round</b> option below), based on the asymptotic
+    variance presented by Fleiss, Cohen and Everitt (1969).  Results for more
+    than two raters are based on the asymptotic variance for the
+    Fleiss-Cuzick estimator of kappa presented by Zou &amp; Donner (2004) in the
+    case of equal numbers of ratings for each subject.
+<p>
+<p>
+<b><u>Options</u></b>
+<p>
+    <b>se(</b><i>#</i><b>)</b> specifies the standard error of kappa.
+<p>
+    <b>diff(</b><i>#</i><b>)</b> specifies the half width of the confidence interval for kappa as
+        an alternative to the standard error.
+<p>
+    <b>level(</b><i>#</i><b>)</b> specifies the significance level for the confidence interval;
+        the default is obtained from <b>set level</b> (see help level), usually
+        <b>level(95)</b>.
+<p>
+    <b>n(</b><i>#</i><b>)</b> specifies the sample size for which to calculate standard error.
+<p>
+    <b>p1(</b><i>#</i><b>)</b> specifies the proportion of positive results reported by rater 1
+        (of two raters).
+<p>
+    <b>p2(</b><i>#</i><b>)</b> specifies the proportion of positive results reported by rater 2
+        (of two raters); if <b>p2</b> is not specified it is assumed to be equal to
+        <b>p1</b>.
+<p>
+    <b>p(</b><i>#</i><b>)</b> specifies the overall proportion of positive results (multiple
+        raters).
+<p>
+    <b>m(</b><i>#</i><b>)</b> specifies the number of raters; the default is <b>m(2)</b>.
+<p>
+    <b>round</b> specifies that the sample size is to be rounded to the <i>nearest</i>
+        integer; the default is to round <i>up</i> using the function ceil(). This
+        allows reproducability of results for two raters produced by sskdlg
+        or sskapp which both have this behaviour.
+<p>
+<p>
+<b><u>Examples</u></b>
+<p>
+    Two raters.  Compute sample size given standard error:
+<p>
+        <b>. kapssi .8, se(.1) p(.1)</b>
+<p>
+    Compute sample size given half width of confidence interval:
+<p>
+        <b>. kapssi .6, diff(.2) p1(.15) p2(.12) round</b>
+<p>
+    This is equivalent to:
+<p>
+        <b>. sskapp, p1(.15) p2(.12) diff(.2) kapp(.6)</b>
+<p>
+    More than two raters.  Compute sample size:
+<p>
+        <b>. kapssi .75, se(.12) p(.05) m(3)</b>
+<p>
+    Compute standard error for given sample size:
+<p>
+        <b>. kapssi .8, n(100) p(.12) m(4)</b>
+<p>
+<p>
+<b><u>References</u></b>
+<p>
+    Fleiss, J. L., Cohen, J. and Everitt, B.S. 1969. Large sample standard
+    errors of kappa and weighted kappa. <i>Psychological Bulletin</i> 72: 323-327.
+<p>
+    Zou, G. and Donner, A. 2004. Confidence interval estimation of the
+    intraclass correlation coefficient for binary outcome data. <i>Biometrics</i>
+    60: 807-811.
+<p>
+<p>
+<b><u>Maintainer</u></b>
+<p>
+    David A. Harrison
+    Intensive Care National Audit &amp; Research Centre
+    david@icnarc.org
+<p>
+<p>
+<b><u>Also see</u></b>
+<p>
+    Online:  help for kappa, sskdlg, sskapp, immed
+</pre>

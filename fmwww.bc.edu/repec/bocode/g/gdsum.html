@@ -1,0 +1,221 @@
+<pre>
+<p>
+<b>help gdsum</b>
+-------------------------------------------------------------------------------
+<p>
+<b><u>Title</u></b>
+<p>
+     <b>gdsum</b> -- Summarize grouped data
+<p>
+<b><u>Syntax</u></b>
+<p>
+        <b>gdsum</b> <i>varlist</i> [<i>if</i>] [<i>in</i>] [<b>,</b> <i>options</i>]
+<p>
+    <i>options</i>                Description
+    -------------------------------------------------------------------------
+      <b><u>rem</u></b><b>ove(</b><i>"chars"</i><b>)</b>      remove <i>chars</i> from value labels
+      <b><u>med</u></b><b>ian</b>               additionally calculate median
+      <b>min(</b><i>#</i><b>)</b>               set lower boundary of first class to <i>#</i>
+      <b>max(</b><i>#</i><b>)</b>               set upper boundary of last class to <i>#</i>
+      <b><u>com</u></b><b>ma</b>                treat commas in value labels as decimal point
+      <b><u>mat</u></b><b>rix(</b><i>matname</i><b>)</b>      return output in matrix <b>r(</b><i>matname</i><b>)</b>
+      <b><u>novarl</u></b><b>abel</b>           use variable names in output matrix
+      <b><u>f</u></b><b>ormat(%</b><i>fmt</i><b>)</b>         set format for output
+    -------------------------------------------------------------------------
+    <b>by</b> is allowed
+<p>
+<p>
+<b><u>Description</u></b>
+<p>
+    <b>gdsum</b> calculates the mean and standard deviation for grouped data. The
+    median may be calculated optionally. Results are displayed in a matrix
+    and returned in <b>r()</b>. The lower and upper boundaries of the (disjoint)
+    classes are needed to calculate the statistics. The way to provide this
+    information is to define value labels for each class.
+<p>
+    The value labels must contain the lower <b>and</b> upper boundary of each class
+    and may contain any other characters. The boundaries must be given in the
+    correct order and all other characters (before the upper bound) must be
+    specified in the <b>remove()</b> option.
+<p>
+<b><u>Options</u></b>
+<p>
+        +---------+
+    ----+ options +----------------------------------------------------------
+<p>
+    <b>remove(</b><i>"chars"</i><b>)</b> specifies the characters to be removed from value labels.
+        The default is <b>"-"</b> and it is added to the characters specified.
+        Commas in value labels are ignored, unless <b>comma</b> is specified. Double
+        quotes may be omitted.
+<p>
+    <b>median</b> additionally calculates and returns the median.
+<p>
+    <b>min(</b><i>#</i><b>)</b> sets the lower boundary of the first class to <i>#</i>. This option may
+        be used if the lower bound of the first class is not given in the
+        value label. In this case <b>min(</b><i>0</i><b>)</b> is the default.
+<p>
+    <b>max(</b><i>#</i><b>)</b> sets the upper boundary of the last class to <i>#</i>. This option may be
+        used if the upper bound of the last class is not given in the value
+        label. In this case <b>max()</b> is set to the lower bound of the last
+        class.
+<p>
+    <b>comma</b> treats commas in value labels as decimal point. The default is to
+        ignore commas. This option temporarily set dp<b> comma</b>.
+<p>
+    <b>matrix(</b><i>matname</i><b>)</b> returns the result matrix in <i>matname</i>.
+<p>
+    <b>novarlabel</b> uses variable names in the output. Default is to use variable
+        labels.  Labels are abbreviated to 32 characters.
+<p>
+    <b>format(%</b><i>fmt</i><b>)</b> sets the display format.
+<p>
+<p>
+<b><u>Examples</u></b>
+<p>
+    Example 1
+<p>
+        . tabulate inc
+<p>
+         Income per month |      Freq.     Percent        Cum.
+        ------------------+-----------------------------------
+            $ 0 to 499.99 |          4       26.67       26.67
+          $ 500 to 999.99 |          6       40.00       66.67
+        $ 1000 to 2499.99 |          3       20.00       86.67
+           $ 2500 to 5000 |          2       13.33      100.00
+        ------------------+-----------------------------------
+                    Total |         15      100.00
+<p>
+        <b>. gdsum inc ,remove($ to)</b>
+<p>
+                         |      Mean         SD        Obs 
+        -----------------+---------------------------------
+        Income per month |  1216.662   1156.762         15 
+<p>
+<p>
+    Example 2
+<p>
+        . tabulate inc
+<p>
+                Einkommen |      Freq.     Percent        Cum.
+        ------------------+-----------------------------------
+            0-499,99 Euro |          4       26.67       26.67
+          500-999,99 Euro |          6       40.00       66.67
+        1000-2499,99 Euro |          3       20.00       86.67
+           2500-5000 Euro |          2       13.33      100.00
+        ------------------+-----------------------------------
+                    Total |         15      100.00
+<p>
+        <b>. gdsum inc ,novarlabel</b>
+<p>
+                     |      Mean         SD        Obs 
+        -------------+---------------------------------
+                 inc |  52366.23   41226.84         15 
+<p>
+<p>
+    Note that "-" and "Euro" do not have to be removed, because "-" is the
+    default setting and "Euro" follows the upper boundary. The result is not
+    equal to the result above, because a comma is used as decimal point. The
+    default setting is to remove commas, so "499,99" becomes "49999". In
+    order to get the correct result you have to specify <b>comma</b>.
+<p>
+        <b>. gdsum inc ,novarlabel comma</b>
+<p>
+                     |      Mean         SD        Obs 
+        -------------+---------------------------------
+                 inc |  1216,662   1156,762         15 
+<p>
+<p>
+    Example 3
+<p>
+        . tabulate inc
+<p>
+            Income p. month |      Freq.     Percent        Cum.
+        --------------------+-----------------------------------
+           up to USD 499.99 |          4       26.67       26.67
+          USD 500 to 999.99 |          6       40.00       66.67
+        USD 1000 to 2499.99 |          3       20.00       86.67
+         more than USD 2500 |          2       13.33      100.00
+        --------------------+-----------------------------------
+                      Total |         15      100.00
+<p>
+        <b>. gdsum inc ,remove(up to USD "more than") median</b>
+        inc: lower boundary set to 0
+        inc: upper boundary set to 2500
+<p>
+                       |      Mean         SD        p50        Obs 
+        ---------------+--------------------------------------------
+        Income p month |  1049.996   791.6993   791.6608         15 
+<p>
+<p>
+    Note that the lower boundary is missing in the first class and the upper
+    boundary is missing in the last class. Since <b>min()</b> and <b>max()</b> are not
+    specified, <b>gdsum</b> uses "0" as the lower bound of the first and "2500" as
+    upper bound of the last class. To get the above result, specify
+    <b>max(</b><i>5000</i><b>)</b>.
+<p>
+        <b>. gdsum inc ,remove(up to USD "more than") median max(5000)</b>
+        inc: lower boundary set to 0
+        inc: upper boundary set to 5000
+<p>
+                       |      Mean         SD        p50        Obs 
+        ---------------+--------------------------------------------
+        Income p month |  1216.662   1156.762   791.6608         15 
+<p>
+<p>
+<b><u>Saved results</u></b>
+<p>
+    <b>gdsum</b> saves the following in <b>r()</b>:
+<p>
+    Scalars
+      <b>r(mean_varname)</b>      mean
+      <b>r(sd_varname)</b>        standard deviation
+      <b>r(N_varname)</b>         non-missing observations
+      <b>r(p50_varname)</b>       median (<b>median</b> only)
+<p>
+    Matrices
+      <b>r(matname)</b>           result matrix (<b>matrix()</b> only)
+<p>
+<p>
+<b><u>Formulas</u></b>
+<p>
+    The mean is calculated as
+<p>
+        (1) <i>M = (A' * F) / n</i>
+<p>
+    with
+        <i>A = (el1 el2 ... elk)'</i>
+       <i>el = ((lb + ub)/2)</i>
+        <i>F</i> = (freq1 freq2 ... freqk)'
+<p>
+    <i>A</i> and <i>F</i> are <i>k</i> x 1 vectors, where <i>k</i> is the number of classes. In <i>el</i>, <i>lb</i>
+    and <i>ub</i> are the lower and upper boundaries of the class intervals. In <i>F</i>,
+    <i>freq</i> is the class frequency. The number of non-missing observations is <i>n</i>.
+<p>
+    The standard deviation is calculated as
+<p>
+        (2) <i>sd = sqrt((1/n-1) * (B' * F))</i>
+<p>
+    with
+        <i>B = (el1 el2 ... elk)'</i>
+       <i>el = ((xm - M)^2)</i>
+<p>
+    In <i>el</i>, <i>xm</i> is the mid-point of the class interval (i.e. the elements of
+    A'), <i>M</i> is the mean - as calculated in (1).
+<p>
+    The median is calculated as
+<p>
+        (3) <i>p50 = lbm + ((n/2 - cf) / nmcl) * (ubm-lbm)</i>
+<p>
+    where <i>lbm</i> is the lower boundary of the median class, <i>cf</i> is the cumulative
+    frequency of the class prior to the median class, <i>nmcl</i> is the number of
+    observations in the median class and <i>ubm</i> is the upper boundary of the
+    median class.
+<p>
+<b><u>Author</u></b>
+<p>
+    Daniel Klein, University of Bamberg, daniel1.klein@gmx.de
+<p>
+<b><u>Also see</u></b>
+<p>
+    Online: summarize
+</pre>

@@ -1,0 +1,59 @@
+<pre>
+-------------------------------------------------------------------------------
+help for <b>labvalcombine</b>
+-------------------------------------------------------------------------------
+<p>
+<b><u>Combine two or more sets of value labels</u></b>
+<p>
+    <b>labvalcombine</b> <i>vallblname1</i> <i>vallblname2</i> [<i>vallblname3</i> ...] [ ,
+          <b>lblname(</b><i>lblname</i><b>)</b> ]
+<p>
+<p>
+<b><u>Description</u></b>
+<p>
+    <b>labvalcombine</b> combines two or more sets of value labels into one. Note
+    that existing definitions may be overwritten by the definitions in value
+    label sets named later in the command. Thus if the command is
+    <b>labvalcombine lbl1 lbl2</b>, definitions in <b>lbl2</b> will overwrite those in <b>lbl1</b>
+    for the same values. Users should specify the order of names accordingly.
+    A safe strategy is to use a new name for the set, but users can make
+    their own choices.
+<p>
+    By default the first name specified will be used for the new set of value
+    labels.
+<p>
+    The combined set of definitions is listed. This display may be suppressed
+        with quietly.
+<p>
+<p>
+<b><u>Options</u></b> 
+<p>
+    <b>lblname()</b> supplies a name for the combined set. This may be a new name or
+        an existing name.
+<p>
+<p>
+<b><u>Examples</u></b>
+<p>
+    <b>. label define lbl1 1 "one" 2 "two" 3 "three"</b>
+    <b>. label define lbl2 2 "deux" 3 "three" 4 "four"</b>
+    <b>. labvalcombine lbl1 lbl2, lblname(both)</b>
+    <b>. labvalcombine lbl1 lbl2, lblname(lbl2)</b>
+    <b>. labvalcombine lbl1 lbl2</b>
+<p>
+<p>
+<b><u>Author</u></b> 
+<p>
+    Nicholas J. Cox, Durham University, U.K.
+    n.j.cox@durham.ac.uk
+<p>
+<p>
+<b><u>Acknowledgments</u></b>  
+<p>
+    Jorge Eduardo Pérez Pérez suggested this problem on Statalist.
+<p>
+<p>
+<b><u>Also see</u></b>
+<p>
+    On-line: help for <b>[D] label</b>
+<p>
+</pre>

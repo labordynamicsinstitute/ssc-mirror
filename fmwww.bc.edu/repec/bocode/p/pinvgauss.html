@@ -1,0 +1,106 @@
+<pre>
+-------------------------------------------------------------------------------
+help for <b>pinvgauss</b>
+-------------------------------------------------------------------------------
+<p>
+<b><u>Probability plot for data versus fitted inverse Gaussian distribution</u></b>
+<p>
+        <b>pinvgauss</b> <i>varname</i> [<b>if</b> <i>exp</i>] [<b>in</b> <i>range</i>] [<i>weight</i>] [<b>,</b> <b><u>g</u></b><b>rid</b> <b>param(</b><i># #</i><b>)</b>
+                         <b>show(</b><i>condition</i><b>)</b> <b><u>gen</u></b><b>erate(</b><i>newvar1 newvar2</i><b>)</b>
+                         <i>graph_options</i> ]
+<p>
+    where <i>graph_options</i> are
+<p>
+        <b>rlopts(</b><i>cline_options</i><b>)</b> <b>addplot(</b><i>addplot</i><b>)</b> <i>scatter_options</i> <i>twoway_options</i>
+<p>
+    <b>fweight</b>s and <b>aweight</b>s are allowed; see help weights.
+<p>
+<p>
+<b><u>Description</u></b>
+<p>
+    <b>pinvgauss</b> produces a probability plot for <i>varname</i> compared with a
+    two-parameter inverse Gaussian distribution with probability density
+    function variable x &gt; 0, location parameter m &gt; 0 and scale parameter l &gt;
+    0 of (l / 2 pi x^3)^(1/2) exp((-l (x - m)^2 / 2 m^2 x)).  By default,
+    maximum likelihood estimation is carried out, using invgausscf, which
+    should be installed separately.
+<p>
+<p>
+<b><u>Remarks</u></b> 
+<p>
+    In the majority of cases, <b>pinvgauss</b> will be used to fit an inverse
+    Gaussian distribution on the fly and to assess that fit. In some cases,
+    it may be of interest to compare data with a inverse Gaussian
+    distribution with known or hypothesised parameters, which may be
+    specified using the <b>param()</b> option. In all cases it is important not only
+    to specify any <b>if</b> or <b>in</b> restrictions, but also to specify relevant
+    weights, which will (unless constant) affect the configuration of the
+    plot.
+<p>
+<p>
+<b><u>Options</u></b>
+<p>
+    <b>grid</b> is equivalent to <b>yla(0(.25)1, grid) xla(0(.25)1, grid)</b>.
+<p>
+    <b>param()</b> may be used to supply parameter values (namely, location and
+        scale parameters) directly for use in estimation of fitted quantiles.
+        m and l should be provided as separate values in precisely that
+        order.
+<p>
+    <b>show()</b> may be used to specify that you wish to restrict the graph
+        according to some condition, say looking at one tail of the
+        distribution only. Note that <b>if</b> and <b>in</b> should not be used for this
+        purpose.
+<p>
+    <b>generate()</b> specifies the names of two new variables, the first to hold
+        inverse Gaussian probabilities and the second to hold empirical
+        probabilities.
+<p>
+    <i>graph_options</i> are <b>rlopts(</b><i>cline_options</i><b>)</b>, <b>addplot(</b><i>addplot</i><b>)</b>,
+        <i>scatter_options</i>, and <i>twoway_options</i>.
+<p>
+    <b>rlopts(</b><i>cline_options</i><b>)</b> affect the rendition of the reference line; see
+        help cline_options.
+<p>
+    <b>addplot(</b><i>addplot</i><b>)</b> provides a way to add other plots to the generated
+        graph; see help addplot_option.
+<p>
+    <i>scatter_options</i> affect the rendition of the plotted points; see help 
+        scatter.
+<p>
+    <i>twoway_options</i> are any of the options documented in help twoway_options
+        excluding <b>by()</b>.  These include options for titling the graph (see
+        help title_options) and options for saving the graph to disk (see
+        help saving_option).
+<p>
+<p>
+<b><u>Examples</u></b>
+<p>
+    <b>. pinvgauss spacing</b>
+<p>
+    <b>. pinvgauss spacing, param(20 3)</b>
+<p>
+    <b>. pinvgauss spacing, gen(spacing_gam spacing_emp)</b>
+<p>
+<p>
+<b><u>Author</u></b>
+<p>
+    Nicholas J. Cox, Durham University, U.K.
+    n.j.cox@durham.ac.uk
+<p>
+<p>
+<b><u>References</u></b>
+<p>
+    Evans, M., Hastings, N. and Peacock, B. 2000. <i>Statistical distributions.</i>
+    New York: John Wiley.
+<p>
+    Johnson, N.L., Kotz, S. and Balakrishnan, N. 1994.  <i>Continuous univariate</i>
+    <i>distributions: Volume 1.</i> New York: John Wiley.
+<p>
+<p>
+<b><u>Also see</u></b>
+<p>
+    Online:  help for invgausscf, invgaussfit (if installed), qinvgauss (if
+             installed), graph, diagplots
+<p>
+</pre>

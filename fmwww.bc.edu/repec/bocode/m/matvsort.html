@@ -1,0 +1,52 @@
+<pre>
+-------------------------------------------------------------------------------
+help for <b>matvsort</b>
+-------------------------------------------------------------------------------
+<p>
+<b><u>Sort vector</u></b>
+<p>
+        <b>matvsort</b> <i>input_vector</i> <i>output_vector</i> [<b>,</b> <b><u>dec</u></b><b>rease</b>]
+<p>
+<p>
+<b><u>Description</u></b>
+<p>
+    <b>matvsort</b> sorts <i>input_vector</i> (a 1 X <i>c</i> matrix or an <i>r</i> X 1 matrix) into
+    numeric order and puts the resulting vector into <i>output_vector</i>.
+    <i>input_vector</i> and <i>output_vector</i> may have the same name.
+<p>
+<p>
+<b><u>Options</u></b>
+<p>
+    <b>decrease</b> specifies that values should be in decreasing order. The default
+        is increasing order.
+<p>
+<p>
+<b><u>Remarks</u></b> 
+<p>
+    <b>matvsort</b> may make it easier to identify the smallest or largest
+        element(s) of a vector. If a vector <b>b</b> has been sorted into increasing
+        order, its smallest element is accessible as <b>b[1,1]</b> and its largest
+        as <b>b[1,colsof(b)]</b> if <b>b</b> is a row vector and <b>b[rowsof(b),1]</b> if <b>b</b> is a
+        column vector.
+<p>
+    The corresponding names are accessible as for example
+<p>
+        <b>local c1name : word 1 of `: colnames b'</b>
+<p>
+<p>
+<b><u>Examples</u></b>
+<p>
+    <b>. matvsort A B</b>
+<p>
+<p>
+<b><u>Author</u></b>
+<p>
+    Nicholas J. Cox, University of Durham, U.K.
+    n.j.cox@durham.ac.uk
+<p>
+<p>
+<b><u>Also see</u></b>
+<p>
+    Online:  help for matrix
+<p>
+</pre>

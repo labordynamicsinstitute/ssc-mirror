@@ -1,0 +1,128 @@
+<pre>
+-------------------------------------------------------------------------------
+help for <b>fese</b>
+-------------------------------------------------------------------------------
+<p>
+<b><u>Standard errors for fixed effects</u></b>
+<p>
+<b><u>Syntax</u></b>
+<p>
+      <b>fese</b> <i>varlist</i> [<b>if</b> <i>exp</i>] [<b>in</b> <i>range</i>] [<b>,</b> <b>s(</b><i>string</i><b>)</b> <b><u>o</u></b><b>only</b> <b><u>a</u></b><b>bsorb(</b><i>varname</i><b>)</b>
+                <i>other areg_options</i> ]
+<p>
+<p>
+<a name="rd_description"></a><b><u>Description</u></b>
+<p>
+<b>fese</b> implements a fixed-effects regression using areg and saves the estimated
+fixed effects and their standard errors as new variables on the data.  Note
+that areg produces identical results to xtreg with the <b>fe</b> option except when
+the cluster-robust VCE is requested, in which case areg uses a different
+degrees of freedom adjustment, which is more appropriate for the present case.
+areg is always equivalent to running regress with an exhaustive set of
+indicator variables for panels.
+<p>
+These standard errors are not usually computed in a fixed-effects regression,
+but we may need them. One example takes student test scores as the dependent
+variable and teacher assignments as the explanatory variables, as in Rothstein
+(2007), where the fixed effects measure the assumed additive effect of a
+teacher on her students' test scores. The variance of estimated fixed effects
+captures both the variance of true fixed effects and the variance of the
+estimator: the variance of true fixed effects (i.e. how disparate are teachers'
+apparent impacts on students' scores) can be estimated as the observed variance
+in estimated fixed effects less the best estimate for the variance of the
+estimator, which is the mean of squared standard errors.
+<p>
+The estimated fixed effects, and OIM and heteroskedasticity- and cluster-robust
+standard errors (See vce_option and <b>[U] 20.15 Obtaining robust variance</b>
+<b>estimates</b>) are saved by default, as new variables which vary only across
+panels.  See Nichols and Schaffer (2007) for more on cluster-robust variance
+estimators.  Note, however, that the asymptotic justification for a
+cluster-robust variance estimator requires that the number of clusters m
+approaches infinity, which implies we cannot get consistent estimates of the
+fixed effects or the variance of the estimates, though if the number of
+observations per panel also increases without bound, the properties of the
+estimator may be acceptable. In the example above, it is implausible that the
+number of students per teacher is increasing without bound, but with strongly
+balanced clusters of 25 or so students per class, the behavior of the estimator
+may rest on how close 25 is to infinity for our purposes.
+<p>
+<a name="options"></a><b><u>Options</u></b>
+<p>
+<b>s(</b><i>string</i><b>)</b> specifies the stub to prefix to new variable names.
+<p>
+<b><u>o</u></b><b>only</b> requests that only OIM SEs be calculated (speeding up calculations).
+<p>
+<b><u>a</u></b><b>bsorb(varname)</b> specifies the panel variable over which to calculate fixed
+    effects.  When this option is not specified, <b>fese</b> reads the panel variable
+    from the data characteristic <b>iis</b> (often set by either xtset or tsset).
+<p>
+<a name="s_macros"></a><b><u>Remarks and saved results</u></b>
+<p>
+<b>fese</b> leaves the results from areg in <b>e()</b> and saves matrices of standard errors:
+<p>
+Matrices
+   <b>ov</b>            OIM SE vector
+   <b>rv</b>            heteroskedasticity-robust SE vector
+   <b>cv</b>            cluster-robust SE vector
+<p>
+<a name="s_examples"></a><b><u>Examples</u></b>
+-------------------------------------------------------------------------------
+        ssc install fese, replace
+        webuse grunfeld, clear
+        fese inv mval kst, s(fe_)
+        g b=.
+        g se=.
+        g hrse=.
+        g crse=.
+        qui tab com, g(d_)
+        qui reg inv mval kst d_*
+        qui forv i=1/10 {
+        replace b=_b[d_`i']
+        replace se=_se[d_`i']
+        }
+        qui reg inv mval kst d_*, r
+        qui forv i=1/10 {
+        replace hrse=_se[d_`i']
+        }
+        qui reg inv mval kst d_*, cl(com)
+        qui forv i=1/10 {
+        replace crse=_se[d_`i']
+        }
+-------------------------------------------------------------------------------
+        webuse nlswork, clear
+        fese ln age, s(o) oonly
+-------------------------------------------------------------------------------
+<p>
+<a name="s_refs"></a><b><u>References</u></b>
+<p>
+Nichols, Austin and Mark E. Schaffer. 2007. ``Cluster-robust and GLS
+    Corrections." Unpublished Working Paper.
+<p>
+Rothstein, Jesse. 2007. ``Do Value-Added Models Add Value? Tracking, Fixed
+    Effects, and Causal Inference." Working Paper, Princeton University.
+<p>
+<a name="s_citation"></a><b><u>Citation of fese</u></b>
+<p>
+<b>fese</b> is not an official Stata command. It is a free contribution to the
+research community, like a paper. Please cite it as such:
+<p>
+    Nichols, Austin. 2008.  fese: Stata module calculating standard errors
+        for fixed effects.  http://ideas.repec.org/c/boc/bocode/s456914.html
+<p>
+<b><u>Authors</u></b>
+<p>
+    Austin Nichols
+    Urban Institute
+    austinnichols@gmail.com
+<p>
+<p>
+<b><u>Also see</u></b>
+<p>
+ Manual:  <b>[U] 20 Estimation and post-estimation commands</b>, esp. <b>[U] 20.15</b>
+              <b>Obtaining robust variance estimates</b>
+          <b>[R] areg</b>
+          <b>[XT] xtreg</b>
+<p>
+ On-line: help for areg, xtreg, vce_option
+<p>
+</pre>

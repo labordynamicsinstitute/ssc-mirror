@@ -1,0 +1,24 @@
+d 'FASTSAMPLE': module to quickly draw random sample
+d
+d  This package contains fastsample and fastbsample. The expected
+d computation times for fastsample and fastbsample are strictly
+d less than the expected computation times for sample and bsample,
+d for any population size and any sample size. The performance
+d gains of fastsample and fastbsample relative to their
+d counterparts increases greater than linearly with population
+d size. 
+d
+d KW: sampling
+d KW: bootstrap
+d KW: random sample
+d
+d Requires: Stata version 13 (version 12 for fastbsample)
+d
+d Distribution-Date: 20140401
+d
+d Author: Andrew Maurer, Quantitative Risk Management
+d Support: email Andrew.Maurer@@qrm.com
+d
+f fastsample.ado
+f fastbsample.ado
+f fastsample.sthlp

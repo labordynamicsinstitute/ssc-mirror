@@ -1,0 +1,200 @@
+<pre>
+-------------------------------------------------------------------------------
+help for <b>ftrans</b>                                                     version 2.0
+                                                         get the newest version
+-------------------------------------------------------------------------------
+<p>
+<p>
+<b><u>Batch File Format Converter</u></b>
+<p>
+<p>
+<b><u>Description</u></b>
+<p>
+<p>
+    <b>ftrans</b> provides a <b>batch process</b> to exchange data of <b>current directory</b>
+    between different spreadsheet and statistics programs.
+<p>
+<b><u>Syntax</u></b>
+<p>
+<p>
+    <b>ftrans</b> <i>old_file_extension</i> <i>new_file_extension</i> <i>[options]</i>
+<p>
+<p>
+<a name="options"></a>    <i>options</i>               Description
+    -------------------------------------------------------------------------
+    <b>/o-</b>                   specifies that Stat/Transfer will not optimize the
+                            output data set to be as small as possible (as
+                            Stat/Transfer does by default).
+    <b>/oc</b>                   specifies that Stat/Transfer will optimize the
+                            output data set to be as small as possible, and
+                            automatically drop constant or missing variables.
+    <b>/od</b>                   specifies that Stat/Transfer will optimize the
+                            output data set to be as small as possible, but
+                            produce double precision variables where
+                            appropriate.
+    <b>/ocd</b>                  specifies that Stat/Transfer will optimize the
+                            output data set to be as small as possible, and
+                            automatically drop constant or missing variables,
+                            but produce double precision variables where
+                            appropriate.
+    <b>/q</b>                    specifies that Stat/Transfer will execute quietly,
+                            producing no messages, with the exception of
+                            error messages and warnings that a file is about
+                            to be overwritten.
+    <b>/r</b>[page!]<i>coor</i>         specifies a worksheet range, limited to page <i>page</i>
+                            and coordinates specified by <i>coor</i>, in an input
+                            worksheet file. The coordinates specify a top
+                            left and bottom right cell in the worksheet.  For
+                            instance, <b>/r2!b5:e75</b> specifies that the data are
+                            on page 2 of the input file, between the top left
+                            cell <b>b5</b> and the bottom right cell <b>e75</b>.
+    <b>/s</b>                    will turn on messages and leave the Stat/Transfer
+                            window open until the return key is pressed.
+                            This may be useful if Stat/Transfer appears not
+                            to be working.
+    <b>/t</b><i>tablename</i>           is used in order to specify a table (or worksheet)
+                            within a data source containing multiple tables
+                            (or worksheets).
+    <b>/v</b><i>version_number</i>      specifies that Stat/Transfer will write the output
+                            dataset in the version of the appropriate format
+                            specified by the <i>version_number</i>, which should be
+                            a positive integer.  If this switch is not
+                            specified, then Stat/Transfer writes the output
+                            dataset in the latest version of the appropriate
+                            format.
+    <b>/y</b>                    specifies that files with the
+                            <i>old_file_extension</i><b>.</b><i>ext</i> will be overwritten, if it
+                            already exists.  (If <b>/y</b> is not specified, then
+                            Stat/Transfer consults the user before
+                            overwriting files.)
+    -------------------------------------------------------------------------
+<p>
+<p>
+<b><u>Examples</u></b>
+<p>
+<p>
+    Convert all files in <b>current directory (d:\temp)</b> with <i>old_file_extension</i>
+    <b>.dta</b> to <i>new_file_extension</i> <b>.sav</b>, or <b>.sav</b> to <b>.sas7bdat</b>:
+<p>
+    . cd d:\temp
+<p>
+    . ftrans dta sav
+<p>
+    . ftrans sav sas7bdat
+<p>
+    Convert all files with the file extension <b>.sas7bdat</b> to <b>.dta</b>, old <b>.dta</b>
+    files will be overwritten with version 7.0 stata files:
+<p>
+    . ftrans sas7bdat dta /y /v7
+<p>
+<p>
+<b><u>Technical note</u></b>
+<p>
+<p>
+    Before using <b>ftrans</b>, you have to (1) install <b>Stat/Transfer</b> in your
+    computer, and (2) set the global macro <b>StatTransfer_path</b> for the path of
+    the Stat/Transfer <b>st</b> command, which is done easily by inserting a line
+    into the user's profile do-file to initialize this path every time you
+    starts Stata (if your <b>Stat/Transfer</b> has been installed in the directory
+    of "<i>c:\Program Files\StatTransfer10\</i>" ):
+<p>
+        <b>global StatTransfer_path `"c:\Program Files\StatTransfer10\st.exe"'</b>
+<p>
+    Note that, when the user upgrades to a new version of Stat/Transfer, the
+    upgrade creates a new directory, containing the new version of <b>st.exe</b>.
+    Therefore, when Stat/Transfer is upgraded, either the user's default
+    directory search path should be altered, or the line of code in the
+    user's profile do-file setting the global macro <b>StatTransfer_path</b> should
+    be altered.
+<p>
+<p>
+<b><u>Remarks</u></b>
+<p>
+<p>
+    <b>Stat/Transfer</b> can be installed on Microsoft Windows, MacOS, and some Unix
+    platforms.  It is available from Stata Corporation and developed by
+    Circle Systems.
+<p>
+<p>
+<b><u>References</u></b>
+<p>
+<p>
+    <b>ftrans supports the following file formats:</b>
+<p>
+    (If you have installed <b>Stat/Transfer 10</b> in your computer)
+<p>
+<p>
+    1-2-3 <i>(*.wk?)</i>
+    Microsoft Access (Versions 2.0 through Office XP version) <i>(*.MDB; ACCDB)</i>
+    dBASE (all versions) <i>(*.DBF)</i>
+    Delimited ASCII <i>(*.CSV; *.TXT)</i>
+    Delimited ASCII with a Stat/Transfer SCHEMA file <i>(*.STS*)</i>
+    Epi Info <i>(*.REC)</i>
+    Excel worksheets (all versions, including Excel 2007) <i>(*.XLS)</i>
+    Fixed format ASCII <i>(*.dat)</i>
+    FoxPro <i>(*.DBF)</i>
+    GAUSS (Windows and Unix) <i>(*.DAT)</i>
+    JMP <i>(*.JMP)</i>
+    LIMDEP <i>(*.LPJ)</i>
+    MATLAB <i>(*.MAT)</i>
+    MATLAB Seven Datasets
+    Mineset <i>(*.sch*)</i>
+    Minitab <i>(*.mtw)</i>
+    NLOGIT <i>(*.LPJ)</i>
+    ODBC data sources (Oracle, Sybase, Informix, etc.) <i>(*.DBF; *.XLS; *.MDB)</i>
+    OSIRIS (read-only) <i>(*.dic*; dct)</i>
+    Paradox <i>(*.DB)</i>
+    Quattro Pro for DOS and Windows <i>(*.WQ?; *.WB?)</i>
+    R <i>(*.RData)</i>
+    S-PLUS (now supported through version 7) <i>(*. )</i>
+    SAS CPORT datasets and catalogs (read only) <i>(*.stc)</i>
+    SAS for Unix¡ªHP, IBM, Sun <i>(*.SSD*; *.sas7bdat)</i>
+    SAS for Unix¡ªDEC Alpha
+    SAS for Windows and OS/2 <i>(*.sd*; *.sas7bdat; *.ssd)</i>
+    SAS PC/DOS 6.04 (read only)
+    SAS Transport <i>(*.STX; *.TPT; *.XPT)</i>
+    SAS Value Labels
+    SAS Version 7¨C9
+    SPSS Version 17 <i>(*.SAV)</i>
+    SPSS Datafiles (Windows and Unix) <i>(*.SAV)</i>
+    SPSS Portable Files <i>(*.POR)</i>
+    Stata (all versions, including 11) <i>(*.DTA)</i>
+    Statistica Versions 7¨C8 (Windows only) <i>(*.STA)</i>
+    SYSTAT (Windows and Mac) <i>(*.SY?)</i>
+    Triple-S Survey Interchange Format <i>(*.xml; *.sss)</i>
+<p>
+    HTML Table (Output) <i>(*.HTM*)</i>
+    SPSS Program + ASCII Data (Output) <i>(*.SPS)</i>
+    Stata Program + ASCII Data (Output) <i>(*.DO)</i>
+<p>
+<p>
+<b><u>Acknowledgements</u></b>
+<p>
+<p>
+    The codes to run Stat/Transfer st command are traced back to<b> Roger</b>
+    <b>Newson</b>'s stcmd, and the codes to get directory information are traced
+    back to<b> Morten Andersen</b>'s dirlist.
+<p>
+<p>
+<b><u>For problems and suggestions</u></b>
+<p>
+<p>
+    <b>Author: Liu wei</b>, The School of Sociology and Population Studies, Renmin
+    University of China. <b>Address: </b>Zhongguancun Street No. 59, Haidian
+    District, <b>ZIP Code:</b> 100872.  <b>E-mail:</b> rucwz-stata@yahoo.cn
+<p>
+<p>
+<b><u>Also see</u></b>
+<p>
+<p>
+    Other Commands I have written:
+<p>
+    curvefit (if installed)          ssc install curvefit (to install)
+    deci (if installed)              ssc install deci (to install)
+    fdta (if installed)              ssc install fdta (to install)
+    elife (if installed)             ssc install elife (to install)
+    freplace (if installed)          ssc install freplace (to install)
+    ftree (if installed)             ssc install ftree (to install)
+    fren (if installed)              ssc install fren (to install)
+<p>
+</pre>

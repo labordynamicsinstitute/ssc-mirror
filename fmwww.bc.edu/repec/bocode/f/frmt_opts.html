@@ -1,0 +1,1043 @@
+<pre>
+<b>help frmt_opts</b>
+-------------------------------------------------------------------------------
+<p>
+<a name="text_add_opts"></a><p>
+    <i>text additions</i>               Description
+    ---------------------------------------------------------------------------
+    <b><u>va</u></b><b>rlabels</b>                    use variable labels as rtitles
+    <b><u>t</u></b><b>itle(</b><i>textcolumn</i><b>)</b>            put title above table
+    <b><u>ct</u></b><b>itles(</b><i>textgrid</i><b>)</b>            headings at top of columns
+    <b><u>rt</u></b><b>itles(</b><i>textgrid</i><b>)</b>            headings to the left of each row
+    <b><u>not</u></b><b>e(</b><i>textcolumn</i><b>)</b>             put note below table
+    <b><u>pr</u></b><b>etext(</b><i>textcolumn</i><b>)</b>          regular text placed before the table
+    <b><u>po</u></b><b>sttext(</b><i>textcolumn</i><b>)</b>         regular text placed after the table
+    <b><u>noco</u></b><b>ltitl</b>                    no column titles
+    <b><u>noro</u></b><b>wtitl</b>                    no row titles
+    <b><u>ad</u></b><b>drows(</b><i>textgrid</i><b>)</b>            add rows at bottom of table
+    <b><u>addrt</u></b><b>c(</b><i>#</i><b>)</b>                    number of rtitles columns in addrows
+    <b><u>addc</u></b><b>ols(</b><i>textgrid</i><b>)</b>            add columns to right of table
+    <b><u>an</u></b><b>notate(</b><i>Stata matrix name</i><b>)</b>  grid of annotation locations
+    <b><u>as</u></b><b>ymbol(</b><i>textrow</i><b>)</b>             symbols for annotations
+    ---------------------------------------------------------------------------
+<a name="col_form_opts"></a><p>
+    <i>column formatting</i>                    Description
+    ---------------------------------------------------------------------------
+    <b><u>colw</u></b><b>idth(</b><i>numlist</i><b>)</b>*                   change column widths
+    <b><u>mu</u></b><b>lticol(</b><i>numtriple</i>[;<i>numtriple</i> ...]<b>)</b>  have column titles span multiple
+                                         columns
+    <b><u>colj</u></b><b>ust(</b><i>cjstring</i>[;<i>cjstring</i> ...]<b>)</b>     column justification: left, center,
+                                         right, or decimal
+    <b><u>noce</u></b><b>nter</b>                             Don't center table within page
+    ---------------------------------------------------------------------------
+      * Word-only option
+<a name="font_opts"></a><p>
+    <i>font specification</i>                 Description
+    ---------------------------------------------------------------------------
+    <b><u>ba</u></b><b>sefont(</b><i>fontlist</i><b>)</b>                 change the base font for all text
+    <b><u>titlf</u></b><b>ont(</b><i>fontcolumn</i><b>)</b>               change font for table title
+    <b><u>ctitlf</u></b><b>ont(</b><i>fontgrid</i>[;<i>fontgrid</i>...]<b>)</b>  change font for column titles
+    <b><u>rtitlf</u></b><b>ont(</b><i>fontgrid</i>[;<i>fontgrid</i>...]<b>)</b>  change font for row titles
+    <b><u>statf</u></b><b>ont(</b><i>fontgrid</i>[;<i>fontgrid</i>...]<b>)</b>   change font for statistics in body of
+                                       table
+    <b><u>notef</u></b><b>ont(</b><i>fontcolumn</i><b>)</b>               change font for notes below table
+    <b><u>addf</u></b><b>ont(</b><i>fontname</i><b>)</b>*                 add a new font type
+    <b><u>p</u></b><b>lain</b>                              plain text - one font size, no
+                                       justification
+    <i>table sections</i>                     explanation of formatted table sections
+    ---------------------------------------------------------------------------
+      * Word-only option
+<a name="lines_spaces_opts"></a><p>
+    <i>border lines and spacing</i>   Description
+    ---------------------------------------------------------------------------
+    <b><u>hl</u></b><b>ines(</b><i>linestring</i><b>)</b>         horizontal lines between rows
+    <b><u>vl</u></b><b>ines(</b><i>linestring</i><b>)</b>         verticle lines between columns
+    <b><u>hls</u></b><b>tyle(</b><i>lstylelist</i><b>)</b>*       change style of horizontal lines (e.g. double,
+                               dashed)
+    <b><u>vls</u></b><b>tyle(</b><i>lstylelist</i><b>)</b>*       change style of verticle lines (e.g. double,
+                               dashed)
+    <b><u>spaceb</u></b><b>ef(</b><i>spacestring</i><b>)</b>      put space above cell contents.
+    <b><u>spacea</u></b><b>ft(</b><i>spacestring</i><b>)</b>      put space below cell contents.
+    <b><u>spaceht(</u></b><i>#</i><b>)</b>                 change size of <b>spacebef</b> &amp; <b>spaceaft</b>.
+    ---------------------------------------------------------------------------
+      * Word-only option
+<a name="page_fmt_opts"></a><p>
+    <i>page formatting</i>          Description
+    ---------------------------------------------------------------------------
+    <b><u>la</u></b><b>ndscape</b>                pages in landscape orientation
+    <b><u>a4</u></b>                       A4 size paper (instead of 8 1/2” x 11”)
+    ---------------------------------------------------------------------------
+<a name="file_opts"></a><p>
+    <i>file and display options</i>   Description
+    ---------------------------------------------------------------------------
+    <b><u>tex</u></b>                        write a TeX file instead of the default Word
+                               file
+    <b><u>m</u></b><b>erge</b>[<b>(</b><i>tblname</i><b>)</b>]           merge as new columns to existing table
+    <b><u>replace</u></b>                    replace existing file
+    <b><u>addt</u></b><b>able</b>                   write a new table below an existing table
+    <b><u>ap</u></b><b>pend</b>[<b>(</b><i>tblname</i><b>)</b>]          append as new rows below an existing table
+    <b><u>re</u></b><b>play</b>[<b>(</b><i>tblname</i><b>)</b>]          write preexisting table
+    <b><u>sto</u></b><b>re(</b><i>tblname</i><b>)</b>             store table with name "<i>tblname</i>"
+    <b><u>clear</u></b>[<b>(</b><i>tblname</i><b>)</b>]           clear existing table from memory
+    <b><u>fr</u></b><b>agment</b>**                 create TeX code fragment to insert into TeX
+                               document
+    <b><u>nod</u></b><b>isplay</b>                  don't display table in results window
+    <b><u>dw</u></b><b>ide</b>                      display all columns however wide
+    ---------------------------------------------------------------------------
+      ** TeX-only option
+<a name="brack_opts"></a><p>
+    <i>brackets options</i>                      Description
+    ---------------------------------------------------------------------------
+    <b><u>sq</u></b><b>uarebrack</b>                           square brackets instead of
+                                          parentheses
+    <b><u>br</u></b><b>ackets(</b><i>textpair</i> [ \ <i>textpair</i> ...]<b>)</b>  symbols with which to bracket
+                                          substatistics
+    <b><u>nobrk</u></b><b>et</b>                               put no brackets on substatistics
+    <b><u>dbl</u></b><b>div(</b><i>text</i><b>)</b>                          symbol dividing double statistics
+                                          ("-")
+    ---------------------------------------------------------------------------
+<p>
+    Inline text formatting: superscripts, italics, Greek characters, etc.
+<p>
+<p>
+<a name="text_additions"></a>        +----------------+
+    ----+ Text additions +---------------------------------------------------
+<a name="varlabels"></a><p>
+    <b><u>va</u></b><b>rlabels</b> replaces variable names with variable labels in row and column
+        titles, if the variable labels exist.  For example, if using the
+        <b>auto.dta</b> data set, <b>varlabel</b> gives a coefficient for the <b>mpg</b> variable
+        the row title "Mileage (mpg)" instead of "mpg".  <b>varlabels</b> also
+        replaces "_cons" with "Constant" for constant coefficients.
+<p>
+    <i><u>Text structures used for titles</u></i>
+<a name="textcolumn"></a>        <i>textcolumn</i> is "<i>string</i>" [\"<i>string</i>"...]
+<a name="textrow"></a>        <i>textrow</i> is "<i>string</i>" [,"<i>string</i>"...]
+<a name="textgrid"></a>        <i>textgrid</i> is "<i>string</i>" [,"<i>string</i>"...] [\ "<i>string</i>"[,"<i>string</i>"...] [\
+            [...]]] or a <i>textrow</i> or a <i>textcolumn</i> as a special case
+        "<i>string</i>" ["<i>string</i>" ...] will often work in place of a <i>textrow</i> or a
+            <i>textcolumn</i> when the user's intent is clear, but if in doubt use
+            the proper <i>textrow</i> or <i>textcolumn</i> syntax above.
+<a name="title"></a><p>
+    <b>title(</b><i>textcolumn</i><b>)</b> specifies a title or titles above the table.  Subtitles
+        should be separated from the primary titles by backslashes ("\"),
+        like this: <b>title(</b>"Main Title" \ "First Sub-Title" \ "Second
+        Sub-Title"<b>)</b>.  By default, titles are set in a larger font than the
+        body of the table.  If title text does not contain backslashes, you
+        can dispense with the quotation marks, but if in doubt, include them.
+<a name="ctitles"></a><p>
+    <b>ctitles(</b><i>textgrid</i><b>)</b> specifies the column titles above the statistics.  A
+        simple form of <b>ctitles</b> is, for example, <b>ctitles(</b><i>"Variables", "First</i>
+        <i>Regression"</i><b>)</b>.  Note that if there is a column of row titles, the
+        first title in <b>ctitles</b> goes above this column and the second title
+        goes above the first statistics column.  If you want no heading above
+        the row titles column, specify <b>ctitles(</b><i>"", "First Regression"</i><b>)</b>.
+<p>
+        Fancier titles in <b>ctitles</b> can have multiple rows.  These are
+        specified as a <i>textgrid</i>.  For example, to put a number above the
+        column title for the estimation method using <b>outreg</b> (in preparation
+        for merging additional estimation results), one could use<b> ctitles(</b>"",
+        "Regression 1" \ "Independent Variables", "OLS"<b>)</b>.  The table would
+        now have a first column title of "Regression 1" above the
+        coefficients estimates, and a second column title of "OLS" in the row
+        below.
+<p>
+        See <b>outreg</b> Example 10 for an application of multi-row <b>ctitles</b>.
+<p>
+        The option <b>nocoltitl</b> removes even the default column titles.
+<a name="rtitles"></a><p>
+    <b>rtitles(</b><i>textgrid</i><b>)</b> fills the leftmost column of the table with new row
+        titles for the statistics. In <b>outreg</b>, the default row titles (with no
+        <b>rtitles</b> option) are variable names.  Multiple titles for the leftmost
+        column in <b>rtitles</b> should be separated by "\" since they are placed
+        below one another (if the titles are separated with commas, they will
+        all be placed in the first row of the estimates).  An example of
+        <b>rtitles</b> in <b>outreg</b> is <b>rtitles(</b>"Variable 1" \ "" \ "Variable 2" \ "" \
+        "Constant"<b>)</b>. The empty titles "" are to account for the <i>t</i> statistics
+        below the coefficients.
+<p>
+        Multicolumn <b>rtitles</b> are possible, and will be merged correctly with
+        other estimation results.  Multicolumn <b>rtitles</b> occur by default,
+        without a specified <b>rtitle</b>, after multi-equation estimations, where
+        the first <b>rtitle</b> column is the equation name, and the second <b>rtitle</b>
+        column is the variable name within the equation.  See the second part
+        of <b>outreg</b> Example 6 for a table showing this.
+<p>
+        The option <b>norowtitl</b> removes even the default row titles.
+<a name="note"></a><p>
+    <b>note(</b><i>textcolumn</i><b>)</b> specifies a note to be displayed below the formatted
+        table.  Multiple lines of a note should be separated by backslashes
+        ("\"), like this: <b>note(</b>"First note line." \ "Second note line." \
+        "Third note line."<b>)</b>.  Notes are centered immediately below the table.
+        By default, they are set in a smaller font than the body of the
+        table.  Blank note lines ("") are possible to insert space between
+        <b>note</b> rows.
+<a name="pretext"></a><a name="posttext"></a><p>
+    <b>pretext(</b><i>textcolumn</i><b>)</b> regular text placed before the table.
+    <b>posttext(</b><i>textcolumn</i><b>)</b> regular text placed after the table.
+        <b>pretext</b> and <b>posttext</b> contains regular paragraphs of text to be placed
+        before or after the formatted table in the document created.  This
+        allows a document to be created with regular paragraphs between the
+        tables.  The default font is applied, which can be changed with the
+        <b>basefont</b> option.  Text is left justified and spans the whole page.
+<p>
+        Multiple paragraphs can be separated by the backslash character:
+        <b>pretext(</b>"Paragraph 1" \ "Paragraph 2"<b>)</b>.
+<p>
+        When creating a Word document, you can create blank lines with empty
+        paragraphs: e.g. <b>posttext(</b>"" \ "" \ "This is text"<b>)</b> would create two
+        blank lines before the paragraph "This is text".
+<p>
+        For Word documents, you can also use the code "\line" for blank
+        lines.  You can insert page breaks between tables with the Word code
+        "\page" in <b>pretext(</b>"\page"<b>)</b>, which is useful when placing multiple
+        tables within one document with the <b>addtable</b> option.  The page break
+        or line break codes can be used within a text string, but they must
+        have a space between the codes and the subsequent text:  e.g.
+        <b>pretext(</b>"\page\line This is text"<b>)</b>.  Without the space, in
+        <b>pretext(</b>"\page\lineThis is text"<b>)</b>, Word would try to interpret the
+        code "\lineThis" which is not defined.
+<p>
+        When creating a TeX document (using option <b>tex</b>), you can insert blank
+        lines using the code "\bigskip" (the trick used above of inserting
+        blank paragraphs does not work in TeX files).  You can insert page
+        breaks between tables with the code "\pagebreak", as in
+        <b>pretext(</b>"\pagebreak"<b>)</b>, which is useful with the <b>addtable</b> option to
+        put each table on a separate page.  The page break or line break
+        codes must be in separate rows from text:  e.g.
+        <b>pretext(</b>"\pagebreak\bigskip" \ "This is text"<b>)</b>.
+<a name="nocoltitl"></a><p>
+    <b>nocoltitl</b> ensures that there are no column titles - the default column
+        title of the dependent variable name is not used.  To replace the
+        column headings, instead of eliminate them, use <b>ctitles</b>.
+<a name="norowtitl"></a><p>
+    <b>norowtitl</b> ensures that there are no row titles at all - the default row
+        titles not used.  To replace the row headings, instead of eliminate
+        them, use <b>rtitles</b>.
+<a name="addrows"></a><p>
+    <b>addrows(</b><i>textgrid</i><b>)</b> adds rows of text to the bottom of the table (above the
+        notes).  All elements of the rows must be converted from numbers to
+        text before including in the <i>textgrid</i>.  For example, to include the
+        test results of coefficient equality, you could use <b>addrows(</b>"t test
+        of b1=b2", "`ttest' **"<b>)</b> where "ttest" is the name of a local macro
+        with the value of the <i>t</i> test of ceofficient equality.  The asterisks
+        are included because the <i>t</i> test was significant at the 5% level.
+<p>
+        See <b>outreg</b> Example 7 for an application of <b>addrows</b>.
+<a name="addrtc"></a><p>
+    <b>addrtc(</b><i>#</i><b>)</b> is a rarely used option to specify the number of rtitle columns
+        in addrows.  It is only needed when either <b>rtitles</b> or <b>addrows</b> has
+        more than one column to ensure that the row titles are lined up
+        correctly vis-a-vis the data.  By default, <b>addrtc</b> is equal to 1.
+<a name="addcols"></a><p>
+    <b>addcols(</b><i>textgrid</i><b>)</b> adds columns to the right of table.  The contents of
+        the new columns are not merged - it is the user's responsibility to
+        ensure that the new columns line up in the appropriate way.
+<a name="annotate"></a><a name="asymbol"></a><p>
+    <b>annotate(</b><i>Stata matrix name</i><b>)</b> passes a matrix of annotation locations.
+    <b>asymbol(</b><i>textrow</i><b>)</b> provides symbols for each annotation location in
+        <b>annotate</b>.
+<p>
+        <b>annotate</b> and <b>asymbol</b> (always specified together) are useful for
+        placing footnotes or other annotations next to statistics in the
+        formatted table, but they are not the most user-friendly.  (Footnotes
+        or annotations in any of the title regions, including row and column
+        titles, can be included directly in the title text with options like
+        <b>rtitles</b> and <b>ctitles</b>.)
+<p>
+        The values in <b>annotate</b> range from 0 to the number of symbols in
+        <b>asymbols</b>.  In the case of <b>outreg</b> the dimensions of the matrix in
+        <b>annotate</b> has rows equal to the number of coefficients in the
+        estimation, and columns equal to the number of statistics displayed
+        (2, by default).  Whenever the <b>annotate</b> matrix has a value of zero,
+        no symbol is appended to the statistic in the corresponding cell of
+        the table.  Where the <b>annotate</b> matrix has a value of 1, the first
+        <b>asymbol</b> symbol is added on the left of the statistic, where there's a
+        value of 2, the second symbol is added, etc.
+<p>
+        The <i>textrow</i> in <b>asymbols</b> has the syntax "<i>text</i>"[, "<i>text</i>" ...]].  If you
+        want to have a space between the statistic in the table and the
+        <b>asymbol</b> <i>text</i>, make sure to include it in the <i>text</i>, e.g. <b>asymbols(</b>"
+        1"," 2"<b>)</b>.  Superscripts for the symbols in a Word file can be
+        included as follows: enclose the symbol with curly brackets "{}" and
+        prepend the superscript code "\super ".  So for a superscript one,
+        the <i>text</i> in <b>asymbols</b> would be "{\super 1}".  Make sure to include the
+        space after "\super".  For TeX files, "1" can be superscripted either
+        with the code "$^1$" or "\textsuperscript{1}".  See the discussion
+        about inline formatting.
+<p>
+        To understand the correspondence between the locations in the
+        <b>annotate</b> matrix and the final formatted table, it helps to know how
+        the <b>frmttable</b> program (called by <b>outreg</b> and other programs) creates
+        tables.  In the case of <b>outreg</b>, it sends the different estimation
+        statistics in separate columns, so for the default statistics of <b>b</b>
+        and <b>t_abs</b>, <b>outreg</b> sends a K by 2 matrix to <b>frmttable</b>, where K is the
+        number of coefficients.  The nonzero locations of <b>annotate</b> that
+        indicate a symbol should be added correspond to the locations of the
+        K by 2 matrix passed to <b>frmttable</b>, not the 2K by 1 table of
+        statistics created by <b>frmttable</b>.  Perhaps a simpler way of saying
+        this is that <b>annotate</b> positions correspond to the final table
+        positions when you use the <b>nosubstat</b> option.  If there are S
+        statistics (2 by default), the <b>annotate</b> matrix should be a K by S
+        Stata matrix where K is the number of columns in e(b).  This can be
+        created in a Stata for a regression with 5 coefficients and the
+        default of 2 statistics like this:
+            <b>. matrix annotmat = J(5,2,0)</b>
+            <b>. matrix annotmat[1,1] = 1</b>
+            <b>. matrix annotmat[3,2] = 2</b>
+            <b>. outreg ... , annotate(annotmat) asymbol(" (1)"," (2)")</b>
+        This will assign the first <b>asymbol</b> (" (1)") to the first coefficient,
+        and the second <b>asymbol</b> (" (2)") to the third <i>t</i> statistic.
+<p>
+        In fact, the <b>annotate</b> matrix can be smaller than K by S if there are
+        rows at the bottom of the table or columns on the right of the table
+        that don't need any symbols.  In other words, if the <b>annotate</b> matrix
+        is not the same size as the statistics, the missing, or too large,
+        parts of it are ignored.
+<p>
+        If <b>annotate</b> and <b>asymbol</b> are used to create footnote references, the
+        footnotes themselves can be included in the <b>note</b> option.
+<p>
+        See <b>outreg</b> Example 14 for an application of <b>annotate</b> and <b>asymbol</b>.
+<p>
+<a name="col_formats"></a>        +-------------------+
+    ----+ Column formatting +------------------------------------------------
+<a name="colwidth"></a><p>
+    <b>colwidth(</b><i>numlist</i><b>)</b> assigns column widths.  By default, the program makes
+        its best guess of the appropriate column width, but Word RTF files
+        have no algorithm to ensure that the column width exactly fits the
+        maximum width of the contents of its cells, the way TeX files do.  In
+        particular, when special non-printing formatting codes (such as
+        superscript codes) are included in <b>ctitles</b> and <b>rtitles</b>, the program
+        will probably get the width wrong, and <b>colwidth</b> will be needed.  This
+        option is only allowed for Word files, not TeX files, which
+        automatically determine column widths.
+<p>
+        If colwidth has fewer widths than the number of columns, the program
+        will guess the best width for the remaining columns.  Specifying
+        <b>colwidth(</b>10<b>)</b> will assign a width of 10 characters to the first column
+        in the table, but not change the width of other columns.  To assign a
+        width of 10 to all columns in a five column table, use <b>colwidth(</b>10 10
+        10 10 10<b>)</b>.  The width of the column using <b>colwidth(</b>1<b>)</b> is equal to the
+        width of one "n" of the currently assigned point size, with the
+        addition of the default buffers on either side of the cell.
+<a name="multicol"></a><p>
+    <b>multicol(</b><i>numtriple</i>[; <i>numtriple</i> ...]<b>)</b> combines table cells into one cell
+        that spans multiple columns.  This is mainly used for column titles
+        that apply to more than one column.
+<a name="numtriple"></a><p>
+        A <i>numtriple</i> means three numbers, separated by commas.  Each <i>numtriple</i>
+        consist of the row of the first cell to be combined, the column of
+        the first cell, and the number of cells to be combined (&gt;=2).
+<p>
+        For example, to combine the heading for the first two statistics
+        columns in a table (with only one <b>rtitles</b> column), the option would
+        be <b>multicol(</b>1,2,2<b>)</b>.  That is, the combined cells start in the first
+        row of the table (below the title) and the second column of the table
+        (the start of the statistics columns), and two cells are to be
+        combined.  See an example of this in <b>outreg</b> Example 10.
+<p>
+        It often looks good to underline the <b>ctitles</b> in the combined cell to
+        make clear that the column title applies to both columns below it.
+        In Word RTF files, underlining does not apply to blank spaces, so to
+        extend the underline to either side of the text in the <b>ctitle</b>, you
+        can insert tab characters, which will be underlined.  For example,
+        for the <b>ctitle</b> text "First 2", you could apply codes for underlining
+        and tabs like this: <b>ctitle(</b>"", "{\ul\tab First 2\tab\tab}"<b>)</b>.  Note
+        the obligatory space between RTF code ("\tab") and the text.
+        Underscore characters "_" can also be used to extend underlining
+        where there is no text, although they create a line that is slightly
+        lower than the underlining line.
+<a name="coljust"></a><p>
+    <b>coljust(</b><i>cjstring</i>[; <i>cjstring</i> ...]<b>)</b> specifies whether the table columns are
+        left, center, or right justified (that is, the text in each row is
+        flush with the left, center, or right side of the column) or centered
+        on the decimal point (for Word files only).  By default, the <b>rtitles</b>
+        columns are left justified, and the rest of the columns are decimal
+        justified for Word files.  For TeX files, <b>rtitles</b> columns are left
+        justified, and the rest of the columns are center justified.
+<a name="cjstring"></a><p>
+        <i>cjstring</i> is a string made up of:
+<p>
+          element                 action
+          ---------------------------------------
+            <b>l</b>                     left justification
+            <b>c</b>                     center justification
+            <b>r</b>                     right justification
+            <b>.</b>                     decimal justification
+                                    (Word only)
+            <b>{}</b>                    repetition
+          ---------------------------------------
+<p>
+        Left, center, and right justification are self-explanatory, but
+        decimal justification requires some elaboration.  Decimal
+        justification lines up all of the numbers in the column so that the
+        decimal points are in a verticle line.  Whole numbers are justified
+        to the left of the decimal point.  Text in the <b>ctitles</b> is not decimal
+        justified - otherwise the whole <b>ctitle</b> for the column would be to the
+        left of the decimal point, like whole numbers.  Instead, in columns
+        with decimal justification <b>ctitles</b> are center justified.
+<p>
+        Decimal justification works with comma decimal points used in many
+        European languages (to set comma decimal points in Stata, see <b>set dp</b>
+        comma).  However, Microsoft Word will recognize the comma decimal
+        points correctly only if the operating system has been changed to
+        specify comma decimal points.  In the Windows operating system, this
+        can be done in the Control Panel under Regional and Language Options.
+        In the OSX operating system, this is done in System Preferences under
+        Language and Text: Formats.
+<p>
+        Each letter in <i>cjstring</i> indicates the column justification for one
+        column.  For example, "lccr" left justifies the first column, center
+        justifies the second and third column, and right justifies the fourth
+        column.  If there are more than four columns, the remaining columns
+        will be right justified, since the last element in the string is
+        applied repeatedly.  If there are fewer than four columns, the extra
+        justification characters are ignored.
+<p>
+        The curly brackets "{}" repeat the middle of <i>cjstring</i>.  For example,
+        "l{c}rr" left justifies the first column, center justifies all the
+        subsequent columns up to the next to last column, and right justifies
+        the last two columns.
+<p>
+        The semi-colon ";" applies column justification to separate sections
+        of the formatted table, but is not needed by most users.  Formatted
+        tables have two column sections: the columns of <b>rtitles</b> (typically
+        one column), and the columns of statistics.
+<p>
+        The section divider allows you to specify the column justification
+        without knowing how many columns are in each section.  Hence, the
+        default <b>coljust</b> parameters for Word files are <b>coljust(</b>l;.<b>)</b>, which
+        applies left justification to all the columns in the first (<b>rtitles</b>)
+        section of the table and decimal justification to the remaining
+        column sections of the table.
+<p>
+        For example, <b>coljust(</b>l{c}r;r{c}l<b>)</b> would apply "l{c}r" only to the
+        first column section, and "r{c}l" to the second (or more) column
+        sections.
+<p>
+        <i>Technical Note:</i> TeX has the capability for decimal justification
+        using the dcolumn package or the {r@{.}l} column justification
+        syntax.  However, both these methods conflict with other capabilities
+        of formatted tables in ways that make them very difficult to
+        implement.  The dcolumn package imposes math mode for the decimal
+        justified columns, which is inconsistent with the default formatting,
+        and also interferes with the <b>multicol</b> option.  The {r@{.}l} syntax
+        splits the column in question into two columns, which would require
+        workarounds for many options.  Users who do not care to have their <i>t</i>
+        statstics displayed in a smaller font than the coefficient
+        estimations (the default), can modify their TeX tables manually to
+        implement decimal justification using the dcolumn package.
+<a name="nocenter"></a><p>
+    <b>nocenter</b>: Don't center the formatted table within the document page.
+        This does not apply to the display of the table in the Stata Results
+        window, which is always centered.
+<p>
+<a name="fonts"></a>        +--------------------+
+    ----+ Font specification +-----------------------------------------------
+<a name="basefont"></a><p>
+    <b>basefont(</b><i>fontlist</i><b>)</b> changes the base font for all text in the formatted
+        table, as well as <b>pretext</b> and <b>posttext</b>.  The default font
+        specification is 12 point Times New Roman for Word documents, and is
+        left unspecified for TeX documents (which normally means it is 10
+        point Times New Roman).
+<a name="fontlist"></a><p>
+        The <i>fontlist</i> is made up of elements in the tables below (different
+        for Word and TeX files), separated by spaces.  The elements of the
+        <i>fontlist</i> can specify font size, font type (e.g. Times Roman, Arial,
+        or a new font from <b>addfont</b>), and font style (like italic or bold).
+<p>
+        If you specify more than one font type (roman, arial, courier, and
+        perhaps fnew#), only the last choice in the <i>fontlist</i> will be in
+        effect.
+<p>
+        See <b>outreg</b> Example 11 for an application of <b>basefont</b>.
+<a name="fontlist_word"></a><p>
+        A <i>fontlist</i> for Word files is made up of:
+<p>
+          element                 action
+          ------------------------------------------------------
+            <b>fs</b><i>#</i>                   font size in points
+            <b>arial</b>                 Arial font
+            <b>roman</b>                 Times New Roman font
+            <b>courier</b>               Courier New font
+            <b>fnew</b><i>#</i>                 font specified in <b>addfont</b>
+            <b>plain</b>                 no special font effects
+            <b>b</b>                     bold text
+            <b>i</b>                     italize text
+            <b>scaps</b>                 small caps: capitalize lower
+                                    case letters
+            <b>ul</b>                    underline text
+            <b>uldb</b>                  underline text with a double
+                                    line
+            <b>ulw</b>                   underline words only (not
+                                    spaces between words)
+          ------------------------------------------------------
+<a name="fontlist_tex"></a><p>
+        A <i>fontlist</i> for TeX files is made up of:
+<p>
+          element                 action
+          ------------------------------------------------------
+            <b>fs#</b>                   font size in points (10, 11,
+                                    or 12)*
+            <b>Huge</b>                  bigger than huge
+            <b>huge</b>                  bigger than LARGE
+            <b>LARGE</b>                 bigger than Large
+            <b>Large</b>                 bigger than large
+            <b>large</b>                 bigger than normalsize
+            <b>normalsize</b>            default font size
+            <b>small</b>                 smaller than normalsize
+            <b>footnotesize</b>          smaller than small
+            <b>scriptsize</b>            smaller than footnotesize
+            <b>tiny</b>                  smaller than scriptsize
+            <b>rm</b>                    Times Roman font
+            <b>it</b>                    italic text
+            <b>bf</b>                    bold face text
+            <b>em</b>                    emphasize text (same as bf)
+            <b>sl</b>                    slanted text
+            <b>sf</b>                    sans-serif font, i.e. Arial
+            <b>sc</b>                    small caps
+            <b>tt</b>                    teletype, i.e. Courier
+            <b>underline</b>             underline text
+          ------------------------------------------------------
+        * fs# can only be specified in the <b>basefont</b> option for TeX files, not
+            in other font specification options.
+<a name="titlfont"></a><p>
+    <b>titlfont(</b><i>fontcolumn</i><b>)</b> changes the font for the table's title.
+<a name="notefont"></a>    <b>notefont(</b><i>fontcolumn</i><b>)</b> changes the font for notes below the table.
+<p>
+        <b>titlfont</b> and <b>notefont</b> take a <i>fontcolumn</i> rather than a <i>fontlist</i> to
+        allow for different fonts on different rows of titles or notes, such
+        as a smaller font for the subtitle than the main title.
+<a name="fontcolumn"></a><p>
+        A <i>fontcolumn</i> consists of <i>fontlist</i> [ \ <i>fontlist</i> ... ], where <i>fontlist</i>
+        is defined above for Word files or for TeX files.
+<p>
+        For example, to make the title font large and small caps, and the
+        subtitles still larger than regular text, without small caps, you
+        could use <b>titlfont(</b>fs17 scaps \ fs14<b>)</b> for a Word file, or
+        <b>titlfont(</b>Large sc \ large<b>)</b> for a TeX file.
+<a name="ctitlfont"></a><a name="rtitlfont"></a><a name="statfont"></a><p>
+    <b>ctitlfont(</b><i>fontgrid</i> [; <i>fontgrid</i> ...]<b>)</b> changes the fonts for column titles.
+    <b>rtitlfont(</b><i>fontgrid</i> [; <i>fontgrid</i> ...]<b>)</b> changes the fonts for row titles.
+    <b>statfont(</b><i>fontgrid</i> [; <i>fontgrid</i> ...]<b>)</b> changes the fonts for statistics in
+        the body of the table.
+<p>
+        <b>ctitlfont</b>'s, <b>rtitlfont</b>'s, and <b>statfont</b>'s arguments are <i>fontgrids</i> to
+        allow a different font specification for each cell of the <b>ctitles</b>,
+        <b>rtitles</b>, or the table statistics, respectively.  By default, all of
+        these areas of the table have the same font as the <b>basefont</b>, which by
+        default is Times Roman, 12 point for Word files.
+<a name="fontgrid"></a><p>
+        A <i>fontgrid</i> consists of <i>fontrow</i> [ \ <i>fontrow</i> ... ], where <i>fontrow</i> is
+        <i>fontlist</i> [ , <i>fontlist</i> ...] and where <i>fontlist</i> is defined above for
+        Word files and for TeX files.
+<p>
+        For example, to make the font for the first row of <b>ctitles</b> bold and
+        the second (and subsequent) rows of <b>ctitles</b> italic, you could use
+        <b>ctitlfont(</b>b \ i<b>)</b> for a Word file, or <b>ctitlfont(</b>bf \ it<b>)</b> for a TeX
+        file.
+<p>
+        The semi-colon ";" in the argument list applies different fonts to
+        separate sections of the formatted table.  This is more likely to be
+        useful for row sections than column sections.  Formatted tables have
+        two column sections: the columns of <b>rtitles</b> (typically one column),
+        and the columns of statistics.  <b>outreg</b> tables, for example, have four
+        row sections: the rows of <b>ctitles</b> (often one row), and three sections
+        for the <b>rtitles</b> and statistics:  the rows of regular coefficients,
+        the rows of constant coefficients, and the rows of summary statistics
+        below the coefficients.
+<p>
+        The section divider allows you to specify the column or row fonts
+        without knowing for a particular table how many columns or rows are
+        in each section.  To italicize the <i>t</i> statistics below coefficient
+        estimates for the coefficients, but not italicize the summary
+        statistics rows, you could use <b>statfont(</b>plain \ i; plain \ i; plain<b>)</b>
+        for a Word file, or <b>statfont(</b>rm \ it; rm \ it; rm<b>)</b> for a TeX file.
+<p>
+        Note that if you specify a new font type or a single font point size
+        in <b>titlfont</b> or <b>statfont</b>, this is applied to all rows of the <b>title</b> or
+        estimation statistics, removing the default behavior of making the
+        subtitles smaller than the first row of <b>title</b>, and the
+        "substatistics" like the <i>t</i> statistic smaller than the coefficient
+        estimates.  To retain this behavior, specify two rows of font sizes
+        in <b>titlfont</b> or <b>statfont</b>, with the second being smaller than the
+        first.  Changing the <b>basefont</b> does not have any effect on the
+        differing font sizes in the rows of <b>title</b> and estimation statistics.
+<a name="addfont"></a><p>
+    <b>addfont(</b>textrow<b>)</b> adds a new font type, making it available for use in the
+        font specifications for various parts of the formatted table.  This
+        option is available only for Word files, not TeX files.
+<p>
+        By default, only Times Roman ("roman"), Arial ("arial"), and Courier
+        New ("courier") are available for use in Word RTF documents.  <b>addfont</b>
+        makes it possible to make additional fonts available for use in the
+        Word documents created.
+<p>
+        textrow is a sequence of font names in quotation marks, separated by
+        commas.
+<p>
+        The new font in <b>addfont</b> can be referenced in the various font
+        specification options, like <b>basefont</b> and <b>titlfont</b> with the code
+        "fnew1" for the first new font in <b>addfont</b> and increments of it
+        ("fnew2", "fnew3", etc.) for each additional font.
+<p>
+        If the font specified in <b>addfont</b> is not available on your computer
+        when using the Word file created, the new font will not display
+        correctly - another font will be substituted.  You can find the
+        correct name of each available font in Word by scrolling through the
+        font selection window on the toolbar of the Word application.
+        Correct capitalization of the font name is necessary.
+<p>
+        See <b>outreg</b> Example 11 for an application of <b>addfont</b>.
+<a name="plain"></a><p>
+    <b>plain</b> eliminates default formatting, reverting to plain text: only one
+        font size for the whole table, no column justification, and no added
+        space above and below the horizontal border lines.  Instead of using
+        <b>plain</b>, the default formatting can also be reversed feature by feature
+        with <b>titlfont</b>, <b>notefont</b>, <b>coljust</b>, <b>spacebef</b>, and <b>spaceaft</b>.  The <b>plain</b>
+        option does this all at once.
+<a name="table_sections"></a><p>
+    <b>table sections</b>: It can be helpful for specifying fonts and other
+        formatting to understand how <b>outreg</b> divides the table into sections.
+        The following diagram illustrates the section divisions:
+<p>
+                   +--------------------------------------------------------+
+                   |                        title                           |
+                   +--------------------------------------------------------+
+                     column section 1           column section 2
+                   +--------------------------------------------------------+
+                +- +--------------------------------------------------------+
+                |  |                  |                                     |
+ row section 1  |  |     ctitles      |        ctitles                      |
+                |  |                  |                                     |
+                |- |------------------+-------------------------------------|
+                |  |                  |                                     |
+                |  |                  |                                     |
+                |  |                  |                                     |
+ row section 2  |  |     rtitles      |        coefficient estimates        |
+                |  |                  |        (except for constants)       |
+                |  |                  |                                     |
+                |  |                  |                                     |
+                |- |------------------+-------------------------------------|
+ row section 3  |  |     rtitles      |        constant coefficients        |
+                |- |------------------+-------------------------------------|
+ row section 4  |  |     summtitles   |        summstats                    |
+                +- +--------------------------------------------------------+
+<p>
+                   +--------------------------------------------------------+
+                   |                        note                            |
+                   +--------------------------------------------------------+
+<p>
+<p>
+<a name="lines_spaces"></a>        +--------------------------+
+    ----+ Border lines and spacing +-----------------------------------------
+<a name="hlines"></a><a name="vlines"></a><p>
+    <b>hlines(</b><i>linestring</i> [; <i>linestring</i> ...]<b>)</b> draws horizontal lines between
+        rows.
+    <b>vlines(</b><i>linestring</i> [; <i>linestring</i> ...]<b>)</b> draws verticle lines between
+        columns.
+<p>
+        <b>hlines</b> and <b>vlines</b> designate where horizontal and verticle lines will
+        be placed to delineate parts of the table.  By default the formatted
+        table has horizontal lines above and below the <b>ctitle</b> header rows and
+        at the bottom of the table above the notes, if any.  There are no
+        verticle lines by default.
+<a name="linestring"></a><p>
+        <i>linestring</i> is a string made up of:
+<p>
+          element                 action
+          ---------------------------------------
+            <b>1</b>                     add a line
+            <b>0</b>                     no line
+            <b>{}</b>                    repetition
+          ---------------------------------------
+<p>
+        Each "1" in <i>linestring</i> indicates a line and a 0 indicates no line.
+        For example, <b>hlines(</b>110001<b>)</b> would draw a line above and below the
+        first row of the table and below the fifth row (above the sixth row).
+        There is one more possible horizontal line than row (and one more
+        verticle line than column).  That is, for a five row table, to put a
+        line above and below every row one would specify six <b>hlines</b>:
+        <b>hlines(</b>111111<b>)</b>.
+<p>
+        <b>hlines</b> and <b>vlines</b> are not displayed correctly in the Stata Results
+        window.  They only apply to the final Word or TeX document.
+<p>
+        Curly brackets "{}" repeat the middle of <i>linestring</i>.  For example,
+        <b>hlines(</b>11{0}1<b>)</b> puts a horizontal line above and below the first row,
+        and another below the last row.
+<p>
+        The semi-colon ";" applies line designations to separate sections of
+        the formatted table.  <b>outreg</b> tables, for example, have two column
+        sections and four row sections.  The column sections are made up of
+        the columns of <b>rtitles</b> (typically one column), and the columns of the
+        estimation statistics.  The row sections are made up of the rows of
+        <b>ctitles</b> (often one row), the rows of the coefficient estimates
+        (except the constant), the rows of the constant coefficients, and the
+        rows of the summary statistics below the coefficients.
+<p>
+        The section divider allows you to specify the <b>hlines</b> and <b>vlines</b>
+        without knowing how many rows and columns are in each section.
+        Hence, the default <b>hlines</b> elements are <b>hlines(</b>1{0};1{0}1<b>)</b>, which puts
+        a horizontal line above the header rows, a line above the statistics
+        rows, and a line below the last statistics row.  By default, there
+        are no <b>vlines</b>, which some graphic designers think are best avoided.
+<a name="hlstyle"></a><a name="vlstyle"></a><p>
+    <b>hlstyle(</b><i>lstylestring</i> [; <i>lstylestring</i> ...]<b>)</b> changes the style of
+        horizontal lines.
+    <b>vlstyle(</b><i>lstylestring</i> [; <i>lstylestring</i> ...]<b>)</b> changes the style of verticle
+        lines.
+<p>
+        <b>hlstyle</b> and <b>vlstyle</b> options are only available for Word files.  By
+        default, all lines are solid single lines.
+<a name="lstylestring"></a><p>
+        <i>lstylestring</i> is a string made up of:
+<p>
+          element                 action
+          --------------------------------------------
+            <b>s</b>                     Single line
+            <b>d</b>                     Double line
+            <b>o</b>                     Dotted line
+            <b>a</b>                     Dashed line
+            <b>S</b>                     Heavy weight single
+                                    line
+            <b>D</b>                     Heavy weight double
+                                    line
+            <b>O</b>                     Heavy weight dotted
+                                    line
+            <b>A</b>                     Heavy weight dashed
+                                    line
+            <b>{}</b>                    repetition
+          --------------------------------------------
+<p>
+        Repetition using curly brackets "{}" and semi-colons ";" for section
+        dividers are used in the same way they are for <b>hlines</b> and <b>vlines</b>.
+<p>
+        Some word processing applications, like OpenOffice or Pages (for the
+        Mac) do not display all Word RTF line styles correctly.
+<a name="spacebef"></a><a name="spaceaft"></a><a name="spaceht"></a><p>
+    <b>spacebef(</b><i>spacestring</i> [; <i>spacestring</i> ...]<b>)</b> puts space above cell contents.
+    <b>spaceaft(</b><i>spacestring</i> [; <i>spacestring</i> ...]<b>)</b> puts space below cell contents.
+    <b>spaceht(</b><i>#</i><b>)</b> changes the size of the space above &amp; below cell contents in
+        <b>spacebef</b> and <b>spaceaft</b>.
+<p>
+        <b>spacebef</b> and <b>spaceaft</b> are options to make picky changes in the
+        appearance of the table.  They increase the height of the cells in
+        particular rows so that there is more space above and below the
+        contents of the cell.  They are used by default to put space between
+        the horizontal line at the top of the table and the first header row,
+        above and below the line separating the header row from the
+        statistics, and put space below the last row of the table, above the
+        horizontal line.
+<a name="spacestring"></a><p>
+        <i>spacestring</i> has the same form as <i>linestring</i> above.  A "1" indicates a
+        extra space (above the cell if in <b>spacebef</b> and below the cell if in
+        <b>spaceaft</b>), and a "0" indicates no extra space.  "{}" repeats
+        indicators and ";" separates row sections.
+<p>
+        <b>spaceht</b> controls how big the extra space is in <b>spacebef</b> and <b>spaceaft</b>.
+        Each one unit increase in <b>spaceht</b> increases the space by about a
+        third of the height of a capital letter.  The default is <b>spaceht(</b>1<b>)</b>.
+        <b>spaceht</b> is scaled proportionally to the base font size for the table.
+        For example <b>spaceht(</b>2<b>)</b> makes the extra spacing 100% larger than it is
+        by default.
+<p>
+        For TeX files (using the <b>tex</b> option), <b>spaceht</b> can only take the
+        values 2 or 3.  The default corresponds to the LaTeX code \smallskip.
+<p>
+        Values 2 and 3 for <b>spaceht</b> correspond to the LaTeX codes \medskip and
+        \bigskip, respectively.
+<a name="page_fmt"></a><p>
+        +-----------------+
+    ----+ Page formatting +--------------------------------------------------
+<a name="landscape"></a><p>
+    <b>landscape</b> puts the document page containing the formatted table in
+        landscape orientation.  This makes the page wider than it is tall, in
+        contrast to portrait orientation.  <b>landscape</b> is convenient for wide
+        tables.  An alternative way of fitting a table on the page is to use
+        a smaller <b>basefont</b>, without the need for the <b>landscape</b> option.
+<a name="a4"></a><p>
+    <b>a4</b> specifies A4 size paper (instead of the default 8 1/2” x 11”) for
+        the Word or TeX document containing the formatted table.
+<a name="file_options"></a><p>
+        +--------------------------+
+    ----+ File and display options +-----------------------------------------
+<a name="tex"></a><p>
+    <b>tex</b> writes a TeX output file rather than a Word file (as long as <b>using</b>
+        <i>filename</i> is specified).  The output is suitable for including in a
+        TeX document (see the <b>fragment</b> option) or loading into a TeX
+        typesetting program such as Scientific Word.
+<a name="merge"></a><p>
+    <b>merge</b>[<b>(</b><i>tblname</i>]<b>)</b> specifies that new statistics be merged to the most
+        recently created formatted table.  The new statistics are combined
+        with previous estimates, lined up according to the appropriate
+        variable name (or <b>rtitles</b>), with the statistics corresponding to new
+        row titles placed below the original statistics.  In the case of
+        <b>outreg</b>, coefficient estimates of new variables are placed below the
+        estimates for existing coefficients, but above the constant term.
+<p>
+        Note that previous versions of the <b>outreg</b> command, the <b>merge</b> option
+        was called <i>append</i>.  Users will usually want to specify <b>ctitles</b> when
+        using <b>merge</b>.
+<p>
+        <b>merge</b> can be used even if a previous formatted table does not exist
+        for merging.  This is to enable <b>merge</b> to be used in loops, as in 
+        <b>outreg</b> Example 16.  Users will see a warning message if no existing
+        table is found.
+<p>
+        If a <i>tblname</i> is specified, the current estimates will be merged to an
+        existing table named <i>tblname</i>, which could have been created with a
+        previous command using the <b>store(</b><i>tblname</i><b>)</b>, <b>merge(</b><i>tblname</i><b>)</b> or
+        <b>append(</b><i>tblname</i><b>)</b> options.
+<a name="tblname"></a><p>
+        A <i>tblname</i> consists of the characters A-Z, a-z, 0-9, and "_", and can
+        have a length of up to 25 characters.
+<a name="replace"></a><p>
+    <b>replace</b> specifies that it is okay to overwrite an existing file.
+<a name="addtable"></a><p>
+    <b>addtable</b> places the estimation results as a new table below an existing
+        table in the same document (rather than combining the tables as with
+        <b>merge</b>).  This makes it possible to build up a document with multiple
+        tables in it.
+<p>
+        Options <b>pretext</b> and <b>posttext</b> can add accompanying text between the
+        tables.  To put a page break between successive tables, so that each
+        table is on its own page, see the discussion for <b>pretext</b> and
+        <b>posttext</b>.
+<p>
+        See <b>outreg</b> Example 13 for an application of <b>addtable</b>.
+<a name="append"></a><p>
+    <b>append</b>[<b>(</b><i>tblname</i><b>)</b>] combines the statistics as new rows below an existing
+        table.  If a <i>tblname</i> is specified, the statistics will be appended to
+        an existing formatted table named <i>tblname</i> (see the <b>store</b> option).
+<p>
+        <b>Warning: this is not the append option from previous versions of </b>
+        <b>outreg</b><b> - use </b><b>merge</b>.
+<p>
+        <b>append</b> can be used even if no previous formatted table exists, which
+        is useful in loops for the first invocation of the <b>append</b> option.
+<p>
+        <b>append</b> does not match up column headings.  The column headings of the
+        new table being appended are ignored unless the new table has more
+        columns than the original table, in which case only the headings of
+        the new columns are used.
+<a name="replay"></a><p>
+    <b>replay</b>[<b>(</b><i>tblname</i><b>)</b>] is used to rewrite an existing formatted table to a
+        file without including any new statistics (unless paired with <b>merge</b>
+        or <b>append</b>).  This can be used to rewrite the same table with
+        different text formatting options.  It is also useful for use after
+        building a table in a loop to write the final table to a file.  If a
+        <i>tblname</i> is specified, <b>replay</b> will use the table with that name.
+<p>
+        <b>replay</b> is useful after running a loop that merges multiple estimation
+        results together, to write the final merged table to a document file.
+        See <b>outreg</b> Example 16.
+<p>
+        <b>replay</b> changes the behavior of <b>merge</b> and <b>append</b> when they have table
+        names, causing them to merge or append results <i>from</i> the table
+        specified into the table specified by <b>replay</b>.
+<a name="store"></a><p>
+    <b>store(</b><i>tblname</i><b>)</b> is used to assign a <i>tblname</i> to a formatted table.  This is
+        useful mainly for building more than one table simultaneously, by
+        merging new estimation results to separate tables when the estimation
+        commands must be run sequentially.
+<a name="clear"></a><p>
+    <b>clear</b>[<b>(</b><i>tblname</i><b>)</b>] removes the current formatted table from memory.  This
+        is helpful when using <b>merge</b> option in a loop so that the first time
+        it is invoked, the estimation results is not merged to an existing
+        formatted table (such as the one created the last time the <b>.do</b> file
+        was run).  <b>outreg, clear</b> clears the current table, allowing the user
+        to start with a blank slate.
+<p>
+        If a <i>tblname</i> is specified, the formatted table named <i>tblname</i> will be
+        removed from memory.  When using multiple <i>tblnames</i>, they must be
+        <b>clear</b>ed one by one.  An alternative is to use <b>mata: mata clear</b> to
+        clear all of Mata's memory space, including the formatted tables.
+<a name="fragment"></a><p>
+    <b>fragment</b> creates a TeX code fragment for inclusion in a larger TeX
+        document instead of a stand-along TeX document.  A TeX fragment saved
+        to the file auto.tex can then be included in the following TeX
+        document with the TeX \input{auto} command:
+<p>
+            \documentclass[]{article}
+            \begin{document}
+            ... text before inclusion of table auto.tex ...
+            \input{auto}
+            ... text after inclusion of table auto.tex ...
+            \end{document}
+<p>
+        Including TeX fragments with the TeX \input{} command allows the
+        formatted table to be updated without having to change the TeX code
+        for the document itself.  This is convenient because estimation
+        tables often require small modifications which can be made without
+        having to reinsert a new table manually.  Creating TeX fragments for
+        inclusion in larger TeX documents is especially useful when there are
+        many tables in a single document (see also the <b>addtable</b> option).
+<p>
+        An alternative to the TeX \input{} command is the TeX \include{}
+        command which inserts page breaks before and after the included
+        table.
+<a name="nodisplay"></a><p>
+    <b>nodisplay</b> suppresses displaying the table in the Stata Results window.
+<a name="dwide"></a><p>
+    <b>dwide</b> displays all columns in the Stata Results window, however wide the
+        table is.  This is mainly useful if you want to copy the table to
+        paste it into another document (which hopefully is not necessary).
+        Without the <b>dwide</b> option, very wide tables are displayed in the
+        Results window in sections containing as many columns as will fit
+        given the current width of the Results window.
+<p>
+<a name="brack_options"></a>        +------------------+
+    ----+ Brackets options +-------------------------------------------------
+<a name="squarebrack"></a><p>
+    <b>squarebrack</b> substitutes square brackets for parentheses around the
+        statistics placed below the first statistic.  For the default
+        statistics, this means that square brackets, rather than parentheses,
+        are placed around <i>t</i> statistics below the coefficient estimates.
+<p>
+        <b>squarebrack</b> is equivalent to <b>brackets(</b>"","" \ [,] \ (,) \ &lt;,&gt; \ |,|<b>)</b>.
+<a name="brackets"></a><p>
+    <b>brackets(</b><i>textpair</i> [<b>\</b> <i>textpair</i> ...]<b>)</b> specifies the symbols used to bracket
+        statistics.  By default, the first statistic has no brackets and
+        parentheses are placed around the second statistic, such as the <i>t</i>
+        statistic below the estimated coefficient estimate when using <b>outreg</b>.
+<a name="textpair"></a><p>
+        A <i>textpair</i> is made up of two elements of text separated by a comma.
+        The default brackets are <b>brackets(</b>"","" \ (,) \ [,] \ &lt;,&gt; \ |,|<b>)</b>.
+<p>
+        If there are a sufficient number of statistics for the symbols &lt;,&gt;
+        and |,| to be used with the <b>tex</b> option, they are replaced by $&lt;$,$&gt;$
+        and $|$,$|$ so that they show up correctly in TeX documents.
+<p>
+        <b>brackets</b> has no effect when the <b>nosubstats</b> option is in effect.
+<a name="nobrket"></a><p>
+    <b>nobrket</b> eliminates the application of <b>brackets</b>, so that there would be no
+        brackets around the second or higher statistics.
+<a name="dbldiv"></a><p>
+    <b>dbldiv(</b><i>text</i><b>)</b> is a rather obscure option that allows you to change the
+        symbol that divides double statistics.  Double statistics have both a
+        lower and and upper statistic, like confidence intervals.  The
+        default is a dash "-" between the lower and upper statistics, but
+        <b>dbldiv</b> allows you to substitute something else.  For example,
+        <b>dbldiv(</b>:<b>)</b> would put a colon between the lower and upper statistics.
+<a name="greek"></a><p>
+<p>
+<b><u> Inline text formatting: superscripts, italics, Greek characters, etc.</u></b>
+<p>
+    The font specification options allow users to control font
+    characteristics at the table cell level, but users often want change the
+    formatting of a word or just a character in text or a table cell.  This
+    is true for characteristics like superscripts, subscripts, italics, bold
+    text, and special characters such as Greek letters.
+<p>
+    Text strings in the formatted table can include inline formatting codes
+    that change the characteristics of just part of a string.  These codes
+    are distinct between Word and TeX files, since they are really just Word
+    and TeX formatting codes that are passed directly to the output files.
+<p>
+    See <b>outreg</b> Example 12 for an application of inline formatting codes in a
+    Word table.
+<p>
+    <i>Word inline formatting</i>
+<p>
+    The Word files are written in the Word Rich Text Format (RTF)
+    specification.  Most of the RTF specification codes can be included in
+    the formatted text (find the full 210 page specification in the links of
+    en.wikipedia.org/wiki/Rich_Text_Format).  This note will explain a subset
+    of the most useful codes.
+<p>
+    Word RTF codes at enclosed in curly braces "{" and "}".  Codes start with
+    a backslash character "\" and then the code word.  There must be a space
+    after the code word before the text begins so that the text is
+    distinguished from the code.  For example, the formatting to italicize
+    the letter "F" is "{\i F}", because "i" is the RTF code for italics.
+<p>
+    Be very careful to match opening and closing curly brackets because the
+    consistency of the nested curly brackets in a Word file is essential to
+    the file's integrity.  If one of the curly brackets is missing, the Word
+    file may be corrupted and unreadable.  You can trace problems of this
+    kind by temporarily removing inline formatting that includes curly
+    braces.
+<p>
+          RTF code      action
+          -----------------------------------------------------------
+            <b>\i</b>          italic
+            <b>\b</b>          bold
+            <b>\ul</b>         underline
+            <b>\scaps</b>      small capitals
+            <b>\sub</b>        subscript (and shrink point size)
+            <b>\super</b>      superscript (and shrink point size)
+            <b>\fs#</b>        font size (in points * 2; e.g. 12 point is
+                                    \fs24)
+          -----------------------------------------------------------
+<p>
+    Most of these codes are the same as those used in the font formatting
+    options, but there are some differences, such as the font size code \fs#
+    using half points, not points.
+<p>
+    <i>Greek and other Unicode characters in Word</i>
+<p>
+    Word RTF files can display Greek letters and any other Unicode character
+    (as long as it can be represented by the font type you are using).  The
+    codes are explained here.  Unicode codes in Word are an exception to the
+    rule that the code must be followed by a space before text.  Text can
+    follow immediately after the Unicode code.
+<p>
+    <i>TeX inline formatting</i>
+<p>
+    The discussion of TeX inline formatting is brief because TeX users are
+    usually familiar with inserting their own formatting codes into text.
+    Many online references explain how to use TeX formatting codes.  A good
+    place to start is the references section of en.wikipedia.org/wiki/TeX.
+<p>
+    For many formatting effects, TeX can generate inline formatting in two
+    alternative ways: in math mode, which surrounds the formatted text or
+    equation with dollar signs ("$"), or in text mode which uses a backslash
+    followed by formating code and text in curly brackets.
+<p>
+    For example, we can create a superscipted number 2 either as "$^2$" in
+    math mode or "\textsuperscript{2}" in text mode.  To display R-squared in
+    a TeX document with the "R" italicized and a superscript "2", one can
+    either use the code "$ R^2$" or the code "\it{R}\textsuperscript{2}".
+<p>
+    Note the space between the "$" and "R" in "$ R^2$", which is a Stata, not
+    a TeX, issue.  If we had instead written "$R^2$", Stata would have
+    interpreted the $R as a global macro, which is probably undefined and
+    empty, so the TeX document would just contain "^2$".  Whenever using TeX
+    inline formatting in math mode which starts with a letter, make sure to
+    place a space between the "$" and the first letter.
+<p>
+    Math mode generally italicizes text and is designed for writing formulas.
+    A detailed discussion of its capabilities is beyond the scope of this
+    note.  Below is a table of useful text mode formatting codes.
+<p>
+          TeX code                action
+          ------------------------------------------------------
+            <b>\it</b>                   italic
+            <b>\bf</b>                   bold
+            <b>\underline</b>            underline
+            <b>\sc</b>                   small capitals
+            <b>\textsubscript</b>        subscript (and shrink point
+                                    size)
+            <b>\textsuperscript</b>      superscript (and shrink point
+                                    size)
+          ------------------------------------------------------
+<p>
+    Keep in mind that many of the non-alphanumeric characters have special
+    meaning in TeX, namely _, %, #, $, &amp;, ^, {, }, ~, and \.  If you want
+    these characters to be printed in TeX like any other character, include a
+    \ in front of the character.  The exceptions are the last two, ~ and \
+    itself.  ~ is represented by \textasciitilde, and \ is represented by
+    either \textbackslash or $\backslash$ to render properly in TeX.
+<p>
+    <i>Greek letters in TeX</i>
+<p>
+    Greek letters can be coded in TeX documents with a backslash and the name
+    of the letter written in English, surrounded by "$".  For example, a
+    lowercase delta can be inserted with the code "$\delta$".  Upper case
+    Greek letters use the name in English with an initial capital, so an
+    uppercase delta is "$\Delta$".  If you can't remember how to spell Greek
+    letters in English, look at the table for Greek letter codes in Word 
+    here.
+<a name="spec_notes"></a><p>
+</pre>

@@ -1,0 +1,237 @@
+abw - Aruba
+afg - Afghanistan
+ago - Angola
+alb - Albania
+and - Andorra
+ant - Netherlands Antilles
+are - United Arab Emirates
+arg - Argentina
+arm - Armenia
+asm - American Samoa
+atg - Antigua and Barbuda
+aus - Australia
+aut - Austria
+aze - Azerbaijan
+bdi - Burundi
+bel - Belgium
+ben - Benin
+bfa - Burkina Faso
+bgd - Bangladesh
+bgr - Bulgaria
+bhr - Bahrain
+bhs - Bahamas, The
+bih - Bosnia and Herzegovina
+blr - Belarus
+blz - Belize
+bmu - Bermuda
+bol - Bolivia
+bra - Brazil
+brb - Barbados
+brn - Brunei Darussalam
+btn - Bhutan
+bwa - Botswana
+caf - Central African Republic
+can - Canada
+che - Switzerland
+chi - Channel Islands
+chl - Chile
+chn - China
+civ - Cote d'Ivoire
+cmr - Cameroon
+cod - Congo, Dem. Rep.
+cog - Congo, Rep.
+col - Colombia
+com - Comoros
+cpv - Cape Verde
+cri - Costa Rica
+cub - Cuba
+cym - Cayman Islands
+cyp - Cyprus
+cze - Czech Republic
+deu - Germany
+dji - Djibouti
+dma - Dominica
+dnk - Denmark
+dom - Dominican Republic
+dza - Algeria
+eap - East Asia & Pacific (developing only)
+eas - East Asia & Pacific (all income levels)
+eca - Europe & Central Asia (developing only)
+ecs - Europe & Central Asia (all income levels)
+ecu - Ecuador
+egy - Egypt, Arab Rep.
+emu - Euro area
+eri - Eritrea
+esp - Spain
+est - Estonia
+eth - Ethiopia
+fin - Finland
+fji - Fiji
+fra - France
+fro - Faeroe Islands
+fsm - Micronesia, Fed. Sts.
+gab - Gabon
+gbr - United Kingdom
+geo - Georgia
+gha - Ghana
+gib - Gibraltar
+gin - Guinea
+gmb - Gambia, The
+gnb - Guinea-Bissau
+gnq - Equatorial Guinea
+grc - Greece
+grd - Grenada
+grl - Greenland
+gtm - Guatemala
+gum - Guam
+guy - Guyana
+hic - High income
+hkg - Hong Kong SAR, China
+hnd - Honduras
+hpc - Heavily indebted poor countries (HIPC)
+hrv - Croatia
+hti - Haiti
+hun - Hungary
+idn - Indonesia
+imn - Isle of Man
+ind - India
+irl - Ireland
+irn - Iran, Islamic Rep.
+irq - Iraq
+isl - Iceland
+isr - Israel
+ita - Italy
+jam - Jamaica
+jor - Jordan
+jpn - Japan
+kaz - Kazakhstan
+ken - Kenya
+kgz - Kyrgyz Republic
+khm - Cambodia
+kir - Kiribati
+kna - St. Kitts and Nevis
+kor - Korea, Rep.
+ksv - Kosovo
+kwt - Kuwait
+lac - Latin America & Caribbean (developing only)
+lao - Lao PDR
+lbn - Lebanon
+lbr - Liberia
+lby - Libya
+lca - St. Lucia
+lcn - Latin America & Caribbean (all income levels)
+ldc - Least developed countries: UN classification
+lic - Low income
+lie - Liechtenstein
+lka - Sri Lanka
+lmc - Lower middle income
+lmy - Low & middle income
+lso - Lesotho
+ltu - Lithuania
+lux - Luxembourg
+lva - Latvia
+mac - Macao SAR, China
+mar - Morocco
+mco - Monaco
+mda - Moldova
+mdg - Madagascar
+mdv - Maldives
+mea - Middle East & North Africa (all income levels)
+mex - Mexico
+mhl - Marshall Islands
+mic - Middle income
+mkd - Macedonia, FYR
+mli - Mali
+mlt - Malta
+mmr - Myanmar
+mna - Middle East & North Africa (developing only)
+mne - Montenegro
+mng - Mongolia
+mnp - Northern Mariana Islands
+moz - Mozambique
+mrt - Mauritania
+mus - Mauritius
+mwi - Malawi
+mys - Malaysia
+myt - Mayotte
+nac - North America
+nam - Namibia
+ncl - New Caledonia
+ner - Niger
+nga - Nigeria
+nic - Nicaragua
+nld - Netherlands
+noc - High income: nonOECD
+nor - Norway
+npl - Nepal
+nzl - New Zealand
+oec - High income: OECD
+omn - Oman
+pak - Pakistan
+pan - Panama
+per - Peru
+phl - Philippines
+plw - Palau
+png - Papua New Guinea
+pol - Poland
+pri - Puerto Rico
+prk - Korea, Dem. Rep.
+prt - Portugal
+pry - Paraguay
+pse - West Bank and Gaza
+pyf - French Polynesia
+qat - Qatar
+rou - Romania
+rus - Russian Federation
+rwa - Rwanda
+sas - South Asia
+sau - Saudi Arabia
+sdn - Sudan
+sen - Senegal
+sgp - Singapore
+slb - Solomon Islands
+sle - Sierra Leone
+slv - El Salvador
+smr - San Marino
+som - Somalia
+srb - Serbia
+ssa - Sub-Saharan Africa (developing only)
+ssf - Sub-Saharan Africa (all income levels)
+stp - Sao Tome and Principe
+sur - Suriname
+svk - Slovak Republic
+svn - Slovenia
+swe - Sweden
+swz - Swaziland
+syc - Seychelles
+syr - Syrian Arab Republic
+tca - Turks and Caicos Islands
+tcd - Chad
+tgo - Togo
+tha - Thailand
+tjk - Tajikistan
+tkm - Turkmenistan
+tls - Timor-Leste
+ton - Tonga
+tto - Trinidad and Tobago
+tun - Tunisia
+tur - Turkey
+tuv - Tuvalu
+tza - Tanzania
+uga - Uganda
+ukr - Ukraine
+umc - Upper middle income
+ury - Uruguay
+usa - United States
+uzb - Uzbekistan
+vct - St. Vincent and the Grenadines
+ven - Venezuela, RB
+vir - Virgin Islands (U.S.)
+vnm - Vietnam
+vut - Vanuatu
+wld - World
+wsm - Samoa
+yem - Yemen, Rep.
+zaf - South Africa
+zmb - Zambia
+zwe - Zimbabwe

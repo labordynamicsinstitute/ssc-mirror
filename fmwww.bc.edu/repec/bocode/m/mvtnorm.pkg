@@ -1,0 +1,42 @@
+d 'MVTNORM': module to work with the multivariate normal and multivariate t distributions
+d
+d  A set of commands that allow users to compute the distribution
+d function, density, equi-coordinate quantiles, and random vectors
+d of the multivariate normal and multivariate t distributions. Any
+d non-degenerate cases of the multivariate normal and multivariate
+d t distributions can be worked with, along with a particular class
+d of non-central multivariate t distributions. The commands are
+d written in a combination of Stata and Mata for speed. 
+d
+d KW: normal distribution
+d KW: multivariate normal
+d KW: t distribution
+d KW: multivariate t
+d
+d Requires: Stata version 11
+d
+d Distribution-Date: 20160424
+d
+d Author: Michael J. Grayling, Cambridge University
+d Support: email mjg211@@cam.ac.uk
+d
+d Author: Adrian Mander 
+d Support: email Adrian.Mander@@mrc-hnr.cam.ac.uk
+d
+f mvnormal.ado
+f mvnormal.sthlp
+f mvnormalden.ado
+f mvnormalden.sthlp
+f ../i/invmvnormal.ado
+f ../i/invmvnormal.sthlp
+f ../i/invmvt.ado
+f ../i/invmvt.sthlp
+f mvt.ado
+f mvt.sthlp
+f mvtden.ado
+f mvtden.sthlp
+f ../r/rmvnormal.ado
+f ../r/rmvnormal.sthlp
+f ../r/rmvt.ado
+f ../r/rmvt.sthlp
+f ../l/lmvtnorm.do

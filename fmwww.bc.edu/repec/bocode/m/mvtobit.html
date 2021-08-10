@@ -1,0 +1,303 @@
+<pre>
+-------------------------------------------------------------------------------
+help for <b>mvtobit</b>                     Mikkel Barslund (mikkelbarslund@gmail.com)
+-------------------------------------------------------------------------------
+<p>
+<b><u>Multivariate tobit models estimated by maximum simulated likelihood</u></b>
+<p>
+    <b>mvtobit</b> <i>equation1</i> <i>equation2 ...</i> <i>equationM</i> [<i>weight</i>] [<b>if</b> <i>exp</i>] [<b>in</b> <i>range</i>] [<b>,</b>
+            <b><u>dr</u></b><b>aws(</b><i>#</i><b>)</b> <b>an</b> <b><u>s</u></b><b>eed(</b><i>#</i><b>)</b> <b><u>b</u></b><b>eta0</b> <b><u>a</u></b><b>trho0(</b><i>matrix_name</i><b>)</b> <b><u>pre</u></b><b>fix(</b><i>string</i><b>)</b>
+            <b><u>bu</u></b><b>rn(</b><i>integer</i><b>)</b> <b><u>ran</u></b><b>dom</b> <b><u>hran</u></b><b>dom</b> <b><u>sh</u></b><b>uffle</b> <b><u>adoon</u></b><b>ly</b> <b><u>prim</u></b><b>es(</b><i>matrix_name</i><b>)</b>
+            <b>init(</b><i>matrix_name</i><b>)</b> <b><u>r</u></b><b>obust</b> <b><u>cl</u></b><b>uster(</b><i>varname</i><b>)</b> <b><u>const</u></b><b>raints(</b><i>numlist</i><b>)</b>
+            <b><u>l</u></b><b>evel(</b><i>#</i><b>)</b> <i>maximize_options</i> ]
+<p>
+    where each equation is specified as
+<p>
+            <b>(</b> [<i>eqname</i><b>:</b>] <i>depvar</i> [<b>=</b>] [<i>varlist</i>] [<b>,</b> <b><u>nocon</u></b><b>stant</b>] <b>)</b>
+<p>
+    <b>by</b> <i>...</i> <b>:</b> may be used with <b>mvtobit</b>; see help by.
+<p>
+    <b>pweight</b>s, <b>fweight</b>s, <b>aweight</b>s, and <b>iweight</b>s are allowed; see help weights.
+<p>
+    <b>mvtobit</b> is likely to produce a series of "(not concave)" statements in
+    the beginning of the estimation process. It is recommended to specify the
+    <b>difficult</b> option; see help maximize.
+<p>
+    <b>mvtobit</b> shares the features of all estimation commands; see help est.
+<p>
+    <b>mvtobit</b> typed without arguments redisplays the last estimates.  The <b>level</b>
+    option may be used.
+<p>
+    <b>mvtobit</b> requires <b>mdraws</b> to be installed.
+<p>
+    <b>Note:</b> much code in this routine is hacked from or inspired by Cappellari
+    and Jenkins' <b>mvprobit</b> and <b>mdraws</b> commands (see mvprobit and mdraws if
+    installed). This in particular applies to the help and syntax handling
+    files.  <b>mdraws</b> must be installed for <b>mvtobit</b> to work. The <b>shuffle</b> option
+    requires installation of <b>_gclsort</b>. Both are available from SSC.
+<p>
+    <i>Using Stata version 9 or above? </i><i>Take a look at </i><i>cmp</i><i> and </i><i>Roodman (2009)</i><i>.</i>
+<p>
+<b><u>Description</u></b>
+<p>
+    <b>mvtobit</b> estimates <i>M</i>-equation tobit models (including bivariate models),
+    by the method of maximum simulated likelihood (MSL). Bivariate tobit
+    models are estimated without simulation (see also Daniel Lawsons bitobit
+    if installed). A limitation is that only models left-censored at zero can
+    be estimated, i.e.
+<p>
+                            y(i) = max[xb(i)+e(i),0]
+<p>
+    where <i>e</i> is <i>M</i>-variate normally distributed. Along with coefficients for
+    each equation <b>mvtobit</b> estimates the cross-equation error-correlations and
+    the variance of the error terms.
+<p>
+    <b>mvtobit</b> uses the Geweke-Hajivassiliou-Keane (GHK) simulator implemented
+    in <b>egen</b> function mvnp (if installed) and the related mdraws function to
+    draw random numbers for evaluation of the multi-dimensional Normal
+    integrals in the likelihood function.  For each observation, a likelihood
+    contribution is calculated for each replication, and the simulated
+    likelihood contribution is the average of the values derived from all the
+    replications. The simulated likelihood function for the sample as a whole
+    is then maximized using standard methods (<b>ml</b> in this case). For a brief
+    description of the GHK smooth recursive simulator, see Greene (2003,
+    931-933), who also provides references to the literature. See Cappellari
+    and Jenkins (2006) for detailed information on implemention of MSL in
+    Stata and the workings of mvnp and mdraws. Also see Train (2003).
+<p>
+    Under standard conditions, the MSL estimator is consistent as the number
+    of observations and the number of draws tend to infinity and is
+    asymptotically equivalent to the true maximum likelihood estimator as the
+    ratio of the square root of the sample size to the number of draws tends
+    to zero. Thus, other things equal, the more draws, the better. In
+    practice, however, it has been observed that a relatively small number of
+    draws may work well for `smooth' likelihoods in the sense that the change
+    in estimates as the number of draws is increased is negligible. It is the
+    responsibility of the user to check that this is the case. Simulation
+    variance may be reduced using antithetic draws in addition to the
+    pseudo-random uniform variates used in the calculation of the simulated
+    likelihood. The antithetic draws for a vector of pseudo-random uniform
+    draws, z, are 1-z.
+<p>
+    Estimation is numerically intensive and may be very slow if the data set
+    is large, if the number of draws is large, or (especially) if the number
+    of equations is large. Users may also need to <b>set matsize</b> and <b>set memory</b>
+    to values above the default ones. (See help for matsize and memory.) Use
+    of the <b>atrho0</b> option may speed up convergence.
+<p>
+    Models for which the error variance-covarince matrix is close to not
+    being positive definite are likely to be difficult to maximize.  (The
+    Cholesky factorization used by MSL requires positive definiteness.) In
+    these cases, <b>ml</b> may report difficulties calculating numerical derivatives
+    and a non-concave log likelihood. In difficult maximization problems, the
+    message "Warning: cannot do Cholesky factorization of rho matrix" may
+    appear between iterations. It may be safely ignored if the maximization
+    proceeds to a satisfactory conclusion. Results may differ depending on
+    the sort order of the data, because the sort order affects which values
+    of the random variable(s) get allocated to which observation. (Note,
+    <b>mvtobit</b> does not change the sort order of the data.) This potential
+    problem is reduced by the larger the number of random draws that is used.
+<p>
+<b><u>Options</u></b>
+<p>
+    <b>beta0</b> specifies that the estimates of the marginal tobit regressions
+        (used to provide starting values) are reported.
+<p>
+    <b>atrho0(</b><i>matrix_name</i><b>)</b> allows users to specify starting values for the
+        standard deviations and correlations that are different from the
+        default values (zeroes and ones, respectively).  The matrix
+        <i>matrix_name</i> contains values of the incidental parameters, /lnsigma<i>i</i>
+        and /atrho<i>ij</i>, for the <i>M</i> equations. Matrix <i>matrix_name</i> must have
+        properly named column names. E.g., if a starting value in /atrho<i>12</i> is
+        being set, one would first use the command <b>matrix </b><i>matrix_name</i><b> =</b>
+        <b>(</b><i>value</i><b>)</b>, followed by <b>matrix colnames </b><i>matrix_name</i><b> = atrho12:_cons</b>.
+        Between 1 and <i>M</i>(<i>M</i>-1)/2 /atrho<i>ij</i>, and between 1 and <i>M</i> /lnsigma<i>i</i>
+        starting values may be specified, where <i>i</i> = 1,...,<i>M-1</i>, and <i>j</i> &gt; <i>i</i>. One
+        likely source for a non-default starting value for atrho<i>ji</i> is the
+        /athrho parameter estimate from a bivariate model corresponding to
+        equations <i>i</i> and <i>j</i> of the full <b>mvtobit</b> model.
+<p>
+    <b>robust</b> specifies that the Huber/White/sandwich estimator of variance is
+        to be used in place of the traditional calculation; see <b>[U] 23.11</b>
+        <b>Obtaining robust variance estimates</b>.  <b>robust</b> combined with <b>cluster()</b>
+        allows observations that are not independent within clusters
+        (although they must be independent between clusters).  If you specify
+        pweights, <b>robust</b> is implied.
+<p>
+    <b>cluster(</b><i>varname</i><b>)</b> specifies that the observations are independent across
+        groups (clusters) but not necessarily within groups.  <i>varname</i>
+        specifies to which group each observation belongs; e.g.,
+        <b>cluster(personid)</b> in data with repeated observations on individuals.
+        See <b>[U] 23.11 Obtaining robust variance estimates</b>. <b>cluster()</b> can be
+        used with pweights to produce estimates for unstratified
+        cluster-sampled data.  Specifying <b>cluster()</b> implies <b>robust</b>.
+<p>
+    <b>noconstant</b> suppresses the constant term (intercept) in the relevant
+        regression.
+<p>
+    <b>constraints(</b><i>numlist</i><b>)</b> specifies the linear constraints to be applied
+        during estimation.  Constraints are defined using the <b>constraint</b>
+        command and are numbered; see help constraint. The default is to
+        perform unconstrained estimation.
+<p>
+    <b>level(</b><i>#</i><b>)</b> specifies the confidence level, in percent, for the confidence
+        intervals of the coefficients; see help level.
+<p>
+    <b>init(</b><i>matrix_name</i><b>)</b> specifies a matrix of starting values.  Options from <b>ml</b>
+        <b>init</b> can be specified inside the parenthesis.
+<p>
+    <i>maximize_options</i> control the maximization process; see help maximize. Use
+        of them is likely to be rare.
+<p>
+<b><u>Options related to random number generation</u></b>
+See also mdraws. The explanations below are taken from the <b>mdraws</b> helpfile.
+<p>
+    <b>draws(</b><i>#</i><b>)</b> specifies the number of pseudo-random standard uniform variates
+        drawn when calculating the simulated likelihood.  The default is 5.
+        (See the discussion above concerning the choice of the number of
+        draws.) If the <b>an</b> option is specified, the total number of draws used
+        in the calculations is twice the number specified in <b>draws(</b><i>#</i><b>)</b>.
+<p>
+    <b>prefix(</b><i>string</i><b>)</b> specifies the prefix common to the names of each of the
+        created variables containing the random numbers used by the <b>egen</b>
+        function mvnp(). The default prefix is X_MVT.
+<p>
+    <b>an</b> specifies that antithetic draws is to be used by <b>mdraws</b>.  The
+        antithetic draw for a vector of uniform draws, z, is 1-z.
+<p>
+    <b>random</b> specifies that pseudorandom number sequences are created rather
+        than Halton sequences (the default).
+<p>
+    <b>seed(</b><i>#</i><b>)</b> specifies the initial value of the (pseudo-)random-number seed
+        used by the <b>mdraws</b> function in the simulation process. The value
+        should be an integer (the default value is 123456789). Warning: if
+        the number of draws is 'small', changes in the seed value may lead to
+        surprisingly large changes in estimates. <b>seed(</b><i>#</i><b>)</b> only has effect when
+        <b>random</b>, <b>hrandom</b> or <b>shuffle</b> are specified.
+<p>
+    <b>primes(</b><i>matrix_name</i><b>)</b> specifies the name of an existing 1 x <i>M</i> or <i>M</i> x 1
+        matrix containing <i>M</i> different prime numbers. If the option is not
+        specified and as long as <i>M</i> &lt;= 20, the program uses the first <i>M</i> prime
+        numbers in ascending order to generate the Halton sequences.
+<p>
+    <b>burn(</b><i>#</i><b>)</b> specifies the number of initial sequence elements to drop for
+        each equation when creating Halton sequences. The default is zero,
+        and the option is ignored if <b>random</b> is specified. Specification of
+        this option reduces the correlation between the sequences in each
+        dimension.  Train (2003, 230) recommends that <i>#</i> should be at least as
+        large as the prime number used to generate the sequences.
+<p>
+    <b>hrandom</b> specifies that each Halton sequence should be transformed by a
+        random perturbation. For each dimension, a draw, <i>u</i>, is taken from the
+        standard uniform distribution.  Each sequence element has <i>u</i> added to
+        it. If the sum is greater than 1, the element is transformed to the
+        sum minus 1; otherwise, the element is transformed to the sum. See
+        Train (2003, 234).
+<p>
+    <b>shuffle</b> specifies that "shuffled" Halton draws should be created, as
+        proposed by Hess and Polak (2003). Each Halton sequence in each
+        dimension is randomly shuffled before sequence elements are allocated
+        to observations. Philippe Van Kerm's program<b> _gclsort</b>, available via
+        SSC, must be installed for this option to work.
+<p>
+    <b>adoonly</b> prevents using the Stata plugin to perform the intensive
+        numerical calculations. Specifying this option results in
+        slower-running code but may be necessary if the plugin is not
+        available for your platform. This option is also useful if you like
+        to do speed comparisons!
+<p>
+<b><u>Saved results</u></b>
+<p>
+    In addition to the usual results saved after <b>ml</b>, <b>mvtobit</b> also saves the
+    following:
+<p>
+    <b>e(draws)</b> is the number of pseudo-random draws used when simulating
+        probabilities. If the <b>an</b> option is specified, <b>e(draws)</b> is twice the
+        number specified in <b>draws(</b><i>#</i><b>)</b>, rather than equal to the number.
+<p>
+    <b>e(an)</b> is a local macro containing "yes" if the <b>an</b> option is specified,
+        and containing "no" otherwise.
+<p>
+    <b>e(seed)</b> is the initial seed value used by the random-number generator.
+<p>
+    <b>e(neqs)</b> is the number of equations in the <i>M</i>-equation model.
+<p>
+    <b>e(ll0)</b> is the log likehood for the comparison model (the sum of the log
+        likelihoods from the marginal univariate tobit models corresponding
+        to each equation).
+<p>
+    <b>e(chi2_c)</b> is chi-square test statistic for the likelihood ratio test of
+        the multivariate tobit model against the comparison model.
+<p>
+    <b>e(nrho)</b> is the number of estimated rhos (the degrees of freedom for the
+        likelihood ratio test against the comparison model).
+<p>
+    <b>e(sigma</b><i>i</i><b>)</b> is the estimate of the standard deviation of the <i>i</i>'th error
+        term.
+<p>
+    <b>e(sesigma</b><i>i</i><b>)</b> is the estimated standard error of sigma<i>i</i>.
+<p>
+    <b>e(rho</b><i>ji</i><b>)</b> is the estimate of correlation <i>ji</i> in the variance-covariance
+        matrix of cross-equation error terms.
+<p>
+    <b>e(serho</b><i>ji</i><b>)</b> is the estimated standard error of correlation <i>ji</i>.
+<p>
+    <b>e(rhs</b><i>i</i><b>)</b> is the list of explanatory variables used in equation <i>i</i>. This
+        list does not include the constant term, regardless of whether there
+        is one is implied by equation <i>i</i>.
+<p>
+    <b>e(nrhs</b><i>i</i><b>)</b> is the number of explanatory variables in equation <i>i</i>.  This
+        number includes the constant term if there is one implied by equation
+        <i>i</i>.
+<p>
+<p>
+<b><u>Examples</u></b>
+<p>
+        <b>. mvtobit (y1 = x11 x12) (y2 = x21 x22)</b>
+<p>
+        <b>. mvtobit (y1 = x11 x12) (y2 = x21 x22) (y3 = x31 x32), dr(20) an</b>
+<p>
+        <b>. constraint define 1 [y1]x11 = [y2]x22</b>
+<p>
+        <b>. mvtobit (y1 = x11 x12) (y2 = x21 x22) (y3 = x31 x32), dr(20) an</b>
+            <b>constraints(1)</b>
+<p>
+<b><u>Authors</u></b>
+<p>
+    Mikkel Barslund, Danish Economic Councils, Denmark
+    &lt;mikkelbarslund@gmail.com&gt;
+<p>
+<b><u>Acknowledgments</u></b>
+<p>
+    I have hacked a large amount of code from Cappellari and Jenkins <b>mvprobit</b>
+    (Cappellari and Jenkins, 2003). In addition most of the heavy work in
+    this routine is performed by their <b>mdraws</b> command. All errors are, of
+    course, mine.
+<p>
+<b><u>Version</u></b>
+<p>
+    Version 1.0, August, 2007.
+<p>
+<b><u>References</u></b>
+<p>
+    Cappellari, L. and S.P. Jenkins. 2003. Multivariate probit regression
+        using simulated maximum likelihood. <i>The Stata Journal</i> 3(3): 278-294.
+<p>
+    Cappellari, L. and S.P. Jenkins. 2006. Calculation of multivariate normal
+        probabilities by simulation, with applications to maximum simulated
+        likelihood estimation. <i>The Stata Journal</i> 6(2): 156-189.
+<p>
+    Greene, W.H. 2003. <i>Econometric Analysis</i>, 5th ed.  Upper Saddle River, NJ:
+        Prentice-Hall.
+<p>
+    Roodman, D. 2009. Estimating Fully Observed Recursive Mixed-Process
+        Models with cmp.  Working Paper 168. Center for Global Development.
+<p>
+<b><u>Also see</u></b>
+<p>
+    Manual:  <b>[R] intreg</b>,
+             <b>[R] tobit</b>
+<p>
+    Online:  help for constraint, est, ereturn, postest, ml, tobit, and (if
+                   installed) bitobit, mdraws, mvnp.
+</pre>

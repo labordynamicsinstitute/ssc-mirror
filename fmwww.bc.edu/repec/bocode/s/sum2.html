@@ -1,0 +1,73 @@
+<pre>
+<b>help sum2</b>
+<p>
+-------------------------------------------------------------------------------
+<p>
+<b><u>Title</u></b>
+<p>
+    <b>sum2</b> -- Store summary statistics suitable for use with table-making
+<p>
+<a name="s_Syntax"></a><p>
+<b><u>Syntax</u></b>
+<p>
+    <b>sum2</b> [, <i>options</i>]
+<p>
+<a name="s_Description"></a><p>
+<b><u>Description</u></b>
+<p>
+    <b>sum2</b> provides a fast and easy way to store summary statistics for use
+    with standard table-making programs such as outreg, outreg2,
+    estimates_table, xmltab, etc.
+<p>
+    <b>sum2</b> was motivated in part by mfx2 and margeff that do the same thing
+    for marginal effcts.
+<p>
+    <b>sum2</b> will only report for variables and observations used in the last
+    regression command. Therefore it will work only after a regression
+    has run.
+<p>
+    More specifically, <b>sum2</b> will store the mean in e(b) matrix and the
+    cross-product of the std. dev. in e(V) matrix.
+<p>
+<p>
+<a name="s_Options"></a><p>
+<b><u>Options</u></b>
+<p>
+        +------+
+    ----+ Main +-------------------------------------------------------------
+<p>
+    <b>replace</b> the stored estimates is replaced with summary stats. This is
+            a reminder that you are getting rid of the previously stored
+            estimates.
+<p>
+<a name="s_0"></a><p>
+<b><u>Examples</u></b>
+<p>
+    * use with outreg2
+    sysuse auto, clear
+    reg mpg headroom length rep78
+    outreg2 using myfile, replace
+    sum2, replace
+    outreg2 using myfile, see noaster
+<p>
+    * use with original outreg
+    sysuse auto, clear
+    reg mpg headroom length rep78
+    sum2, replace
+    outreg using myfile.txt, replace nonote noaster
+    type myfile.txt
+<p>
+<p>
+<b><u>Issues</u></b>
+<p>
+    Matsize limitations may bite if there is a large number of variables.
+            Try increasing matsize in that case.
+<p>
+<p>
+<b><u>Author</u></b>
+<p>
+    Roy Wada
+    roywada@hotmail.com
+<p>
+<p>
+</pre>

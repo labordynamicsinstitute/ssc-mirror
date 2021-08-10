@@ -1,0 +1,32 @@
+d 'MICE': module for multiple imputation of missing values
+d
+d This is a version, for Stata 7 up, of the package publicised in
+d Stata Journal 4(3):227-241 (2004) implementing the MICE
+d (multivariate imputation by chained equations) method of multiple
+d multivariate data imputation.   This re-release is a beta
+d version. Report problems to the author  (who is _not_ on
+d Statalist). In due course it is intended that  it will be
+d reissued via	the Stata Journal. Among other changes	(1) mlogit
+d is now supported by micombine;  (2) micombine now allows the id()
+d option to support use independent  of the rest of the package
+d (see help micombine). 
+d
+d Distribution-Date: 20041015
+d
+d Author: Patrick Royston, UK Medical Research Council
+d Support: email pr@@ctu.mrc.ac.uk
+d
+f ../_/_mvis.ado
+f ../c/cmdchk.ado
+f micombine.ado
+f micombine.hlp
+f mijoin.ado
+f mijoin.hlp
+f misplit.ado
+f misplit.hlp
+f mvis.ado
+f mvis.hlp
+f ../u/uvis.ado
+f ../u/uvis.hlp
+f ../b/brcaex.dta
+f ../b/brcaeximp7.do

@@ -1,0 +1,49 @@
+d 'RUNMIXREGLS': module to run the MIXREGLS software from within Stata
+d
+d  This module runs the MIXREGLS mixed-effects location scale
+d software (Hedeker and Nordgren 2013) from within Stata. The
+d mixed-effects location scale model extends the standard two-level
+d random-intercept mixed-effects model for continuous responses
+d (xtreg, mle) in three ways. First, the (log of the) within- and
+d between-group variances are further modeled as functions of the
+d covariates. Second, a new random effect, referred to as the
+d random-scale effect, is then entered into the within-group
+d variance function to account for any unexplained group
+d differences in the residual variance. The existing
+d random-intercept effect is now referred to as the random-location
+d effect. Third, a group-level association between the location and
+d the scale may be allowed for by entering the random-location
+d effect into the within-group variance function using either a
+d linear or quadratic functional form. The regression coefficients
+d of these linear and quadratic terms are then estimated. The
+d distributions of the random- location and random-scale effects
+d are assumed to be Gaussian. 
+d
+d KW:  mixed-effects local scale model
+d KW: mixed-effects model
+d KW: mixed model
+d KW: multilevel model
+d KW: hierarchical linear model
+d KW: random effects model
+d KW: random-intercept model
+d KW: random effects model
+d KW: error components model
+d KW: variance function
+d KW: heteroskedasticity
+d KW: heterogeneity of variance
+d KW: runmixregls
+d KW: MIXREGLS
+d KW: xtreg
+d KW: xtmixed
+d KW: runmlwin
+d KW: gllamm
+d
+d Requires: Stata version 12 and  mixregls software
+d
+d Distribution-Date: 20160627
+d
+d Author: George Leckie, Centre for Multilevel Modelling, University of Bristol
+d Support: email g.leckie@@bristol.ac.uk
+d
+f runmixregls.ado
+f runmixregls.sthlp

@@ -1,0 +1,43 @@
+<pre>
+.-
+help for ^matcfm^
+.-
+<p>
+Check that arguments are conformable for matrix multiplication
+--------------------------------------------------------------
+<p>
+    ^matcfm^ argname1 argname2
+<p>
+Description
+-----------
+<p>
+^matcfm^ checks that
+<p>
+matrix newmat = argname1 * argname2
+<p>
+would execute correctly. That is, either both arguments are matrices
+such that the number of columns of argname1 equals the number of rows of
+argname2; or one of the two arguments is a scalar and the other is a
+matrix. If not, an error message will be issued.
+<p>
+<p>
+Remarks
+-------
+<p>
+^matcfm^ is likely to be most useful within matrix programs.
+<p>
+<p>
+Example
+-------
+<p>
+    . ^matcfm A B^
+<p>
+<p>
+Author
+------
+<p>
+         Nicholas J. Cox, University of Durham, U.K.
+         n.j.cox@@durham.ac.uk
+<p>
+<p>
+</pre>

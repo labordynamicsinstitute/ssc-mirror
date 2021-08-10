@@ -1,0 +1,212 @@
+<pre>
+-------------------------------------------------------------------------------
+help for <b>decompose</b>
+-------------------------------------------------------------------------------
+<p>
+<b><u>Decomposition of wage differentials</u></b>
+<p>
+<p>
+Standard syntax:
+<p>
+        <b>decompose</b> <i>varlist</i> [<i>weight</i>] [<b>if</b> <i>exp</i>] [<b>in</b> <i>range</i>] <b>,</b> <b>by(</b><i>varname</i><b>)</b> [ <b><u>d</u></b><b>etail</b>
+              <b><u>e</u></b><b>stimates</b> <b><u>la</u></b><b>mbda(</b><i>varname</i><b>)</b> <b><u>n</u></b><b>oisy</b> <b><u>gp</u></b><b>ooled</b> <b><u>np</u></b><b>ooled</b> <i>regress_options</i> ]
+<p>
+<b>aweight</b>s, <b>fweight</b>s, <b>iweight</b>s, and <b>pweight</b>s are allowed; see help weights.
+<p>
+Alternative syntax:
+<p>
+        <b>decompose</b> <b>,</b> <b><u>s</u></b><b>ave(</b><b><u>h</u></b><b>igh</b> | <b><u>l</u></b><b>ow</b> | <b><u>p</u></b><b>ooled )</b>
+        <b>decompose</b> [ <b>,</b> <b><u>d</u></b><b>etail</b> <b><u>e</u></b><b>stimates</b> <b><u>la</u></b><b>mbda(</b><i>varname</i><b>)</b> ]
+<p>
+<p>
+<b><u>Description</u></b>
+<p>
+Given the results from two regressions (one for each of two groups), <b>decompose</b>
+computes several decompositions of the outcome variable difference. The
+decompositions show how much of the gap is due to differing endowments between
+the two groups, and how much is due to discrimination. Usually this is applied
+to wage differentials using Mincer type earnings equations.
+<p>
+Standard syntax (<i>varlist</i> and <b>by(</b><i>varname</i><b>)</b> specified):  Regression models will be
+estimated for each category of <i>varname</i> prior to the computation of the
+decomposition.
+<p>
+Alternative syntax: Results from stand-alone estimation commands may be saved
+using <b>decompose, save()</b>. The command <b>decompose</b> (without <i>varlist</i>, <b>by</b> or <b>save</b>)
+will capture these results and compute the decomposition.
+<p>
+See decomp by Ian Watson for a similar package.
+<p>
+<p>
+<b><u>Options</u></b>
+<p>
+Common options:
+<p>
+<b>detail</b> additionally displays decomposition results for variables.
+<p>
+<b>estimates</b> additionally displays a table of regressions coefficients and means.
+<p>
+<b>lambda(</b><i>varname</i><b>)</b> reduces the mean prediction by the effect of <i>varname</i> at its
+    mean. This might be reasonable if <i>varname</i> is a selection variable.
+<p>
+Standard syntax options:
+<p>
+<b>by(</b><i>varname</i><b>)</b> specifies the grouping variable (which may be numeric or string).
+    The group with highest mean on the dependent variable will be compared to
+    each of the other groups.
+<p>
+<b>noisy</b> switches on regression output.
+<p>
+<b>npooled</b> deactivates the estimation of pooled regression models (which are
+    required for the Neumark decomposition; see methods and formulas below).
+<p>
+<b>gpooled</b> requests the estimation of a pooled model over all groups rather than
+    casewise pooled models (note: if <b>by(</b><i>varname</i><b>)</b> only specifies two groups this
+    will have no effect).
+<p>
+<i>regress_options</i> control the regression estimation; see help regress.
+<p>
+Alternative syntax options:
+<p>
+<b>save()</b> saves the coefficients, means and the number of cases (or the sum of
+    weights, respectively) of the preceding estimation. Use <b>save(high)</b> for the
+    high group (i.e. the group with the higher mean on the dependent variable),
+    <b>save(low)</b> for the low group, and <b>save(pooled)</b> for the pooled model over
+    both groups. The right-hand-side varlists of the high and low models do not
+    necessarily need to be identical (if, e.g., a selection term is included in
+    one model; note that the consideration of a pooled model is not possible in
+    this case).
+<p>
+<p>
+<b><u>Examples</u></b>
+<p>
+Standard syntax:
+<p>
+        . decompose lnwage educ exp exp2, by(female) detail estimates
+<p>
+        . decompose lnwage educ exp exp2 lbda [pweight=1/prob], by(female)
+            lambda(lbda)
+<p>
+Alternative syntax:
+<p>
+        . regress lnwage educ exp exp2 [fweight=pop] if female==0
+        . decompose, save(high)
+        . regress lnwage educ exp exp2 [fweight=pop] if female==1
+        . decompose, save(low)
+        . regress lnwage educ exp exp2 [fweight=pop] if inlist(female,0,1)
+        . decompose, save(pooled)
+        . decompose
+<p>
+        . regress lnwage educ exp exp2 if female==0
+        . decompose, save(high)
+        . regress lnwage educ exp exp2 lbda if female==1
+        . decompose, save(low)
+        . decompose, lambda(lbda) detail
+<p>
+<p>
+<b><u>Saved Results</u></b>
+<p>
+<b>r(fH)</b>     proportion of obs. (or sum of wgts) in high group (scalar)
+<b>r(pred)</b>   vector of mean predictions
+<b>r(decomp)</b> detailed decomposition matrix
+<b>r(xb)</b>     matrix of coefficients and means
+<p>
+<p>
+<b><u>Methods and Formulas</u></b>
+<p>
+Let y1 and y2 be the means of the dependent variable Y, <b>x</b>1 and <b>x</b>2 the row
+vectors of the means of the explanatory variables X1,...,Xk, and <b>b</b>1 and <b>b</b>2 the
+column vectors of the coefficient for group 1 (high) and group 2 (low).  The
+raw differential y1-y2 may then be expressed as
+<p>
+    R = y1-y2 = (<b>x</b>1-<b>x</b>2)<b>b</b>2 + <b>x</b>2(<b>b</b>1-<b>b</b>2) + (<b>x</b>1-<b>x</b>2)(<b>b</b>1-<b>b</b>2) = E + C + CE
+<p>
+(Winsborough/Dickenson 1971; Jones/Kelley 1984; Daymont/Andrisani 1984), i.e.,
+R is decomposed into a part due to differences in endowments (E), a part due to
+differences in coefficients (including the intercept) (C), and a part due to
+interaction between coefficients and endowments (CE). Depending on the model
+which is assumed to be non-discriminating, these terms may be used to determine
+the "unexplained" (U; discrimination) and the "explained" (V) part of the
+differential (the question is how to allocate the interaction term CE). Oaxaca
+(1973) proposed to assume either the low group model or the high group model as
+non-discriminating, which leads to U=C+CE and V=E or U=C and V=E+CE,
+respectively. More generally the decomposition may be written as
+<p>
+    y1-y2 = (<b>x</b>1-<b>x</b>2)[<b>D</b>*<b>b</b>1+(<b>I</b>-<b>D</b>)*<b>b</b>2] + [<b>x</b>1*(<b>I</b>-<b>D</b>)+<b>x</b>2*<b>D</b>](<b>b</b>1-<b>b</b>2)
+<p>
+where <b>I</b> is a identity matrix and <b>D</b> is a diagonal matrix of weights. In the two
+cases proposed by Oaxaca (1973) <b>D</b> is a nullmatrix or equals <b>I</b>, respectively
+(<b>D</b>=<b>I</b> is also what Blinder 1973 suggested). Reimers (1983) proposed to use the
+mean coefficients between the low and the high model, i.e. the diagonal
+elements of <b>D</b> equal 0.5, Cotton (1988) proposed to weight the coefficients by
+group size, i.e. the diagonal elements of <b>D</b> equal fH, where fH is the relative
+proportion of subjects in the high group (or sum of weights, if weights are
+applied). Finally, Neumark (1988) proposed to estimate a pooled model over both
+groups, which leads to <b>D</b>=diag(<b>b</b>P-<b>b</b>2)*diag(<b>b</b>1-<b>b</b>2)^-1 or
+<p>
+    y1-y2 = (<b>x</b>1-<b>x</b>2)<b>b</b>P + [<b>x</b>1(<b>b</b>1-<b>b</b>P)+<b>x</b>2(<b>b</b>P-<b>b</b>2)]
+<p>
+where <b>b</b>P is the column vector of the coefficients in the pooled model.
+<p>
+<b>decompose</b> calculates and displays R, E, C, CE, as well as U and V according to
+the methods described. The coefficient vectors are taken from "e(b)" returned
+by the estimation commands, the means of the explanatory variables and group
+sizes are calculated for "e(sample)" using summarize (weighted if necessary).
+<p>
+Treatment of selection variables: Assume that a selection variable XS appears
+in both models. If it is not marked out by <b>lambda(</b>XS<b>)</b> it will be treated just
+as any other variable. If it is marked out, however, the group means of Y will
+be adjusted for selection, that is
+<p>
+    yS1 = y1 - xS1*bS1
+    yS2 = y2 - xS2*bS2
+<p>
+where xS1 and xS2 are the group means of XS, and bS1 and bS2 the corresponding
+coefficients. The raw differential will then be
+<p>
+    RS = yS1 - yS2 = y1 - y2 - (xS1*bS1 - xS2*bS2)
+<p>
+Now assume that the selection variable XS appears in only one model (as
+possible via alternative syntax). If XS is not marked out its effect will be
+fully enclosed in the explained part V in any case (this is accomplished by
+assuming xS=0 in the other model and bS1=bS2) (see Dolton/Makepeace 1986 for an
+alternative treatment which I did not get to incorporate yet). If it is marked
+out, the mean of the corresponding group will be adjusted for selection as
+described above.
+<p>
+<p>
+<b><u>References</u></b>
+<p>
+Blinder, A.S. (1973). Wage Discrimination: Reduced Form and Structural
+    Estimates. The Journal of Human Resources 8: 436-455.
+Cotton, J. (1988). On the Decomposition of Wage Differentials. The Review of
+    Economics and Statistics 70: 236-243.
+Daymont, T.N., Andrisani, P.J. (1984). Job Preferences, College Major, and the
+    Gender Gap in Earnings. The Journal of Human Resources 19: 408-428.
+Dolton, P.J., Makepeace, G.H. (1986). Sample Selection and Male-Female Earnings
+    Differentials in the Graduate Labour Market. Oxford Economic Papers 38:
+    317-341.
+Jones, F.L., Kelley, J. (1984). Decomposing Differences Between Groups. A
+    Cautionary Note on Measuring Discrimination. Sociological Methods and
+    Research 12: 323-343.
+Neumark, D. (1988). Employers' Discriminatory Behavior and the Estimation of
+    Wage Discrimination. The Journal of Human Resources 23: 279-295.
+Oaxaca, R. (1973). Male-Female Wage Differentials in Urban Labor Markets.
+    International Economic Review 14: 693-709.
+Reimers, C.W. (1983). Labor Market Discrimination Against Hispanic and Black
+    Men.  The Review of Economics and Statistics 65: 570-579.
+Winsborough, H.H., Dickenson, P. (1971). Components of Negro-White Income
+    Differences. Proceedings of the American Statistical Association, Social
+    Statistics Section: 6-8.
+<p>
+<p>
+<b><u>Author</u></b>
+<p>
+Ben Jann, ETH Zurich, jann@soz.gess.ethz.ch
+<p>
+<p>
+<b><u>Also see</u></b>
+<p>
+Manual:  <b>[R] regress</b>
+On-line:  help for regress
+</pre>

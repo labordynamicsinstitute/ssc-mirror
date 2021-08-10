@@ -1,0 +1,797 @@
+<pre>
+<b>help estadd</b>                           also see: <b>esttab</b>, <b>estout</b>, <b>eststo</b>, <b>estpost</b>
+                                               http://repec.org/bocode/e/estout
+-------------------------------------------------------------------------------
+<p>
+<b><u>Title</u></b>
+<p>
+    <b>estadd</b> -- Add results to (stored) estimates
+<p>
+<p>
+<b><u>Syntax</u></b>
+<p>
+        <b>estadd</b> <i>subcommand</i> [<b>,</b> <i>options</i> ] [ <b>:</b> <i>namelist</i> ]
+<p>
+<p>
+    where <i>namelist</i> is <b>_all</b> | <b>*</b> | <i>name</i> [<i>name</i> ...]
+<p>
+<a name="subcommands"></a><p>
+    <i>subcommands</i>          description
+    ----------------------------------------------------------------
+    Elementary
+      <b><u>loc</u></b><b>al</b> <i>name ...</i>     add a macro
+      <b><u>sca</u></b><b>lar</b> <i>name</i> <b>=</b> <i>exp</i>  add a scalar
+      <b><u>mat</u></b><b>rix</b> <i>name</i> <b>=</b> <i>mat</i>  add a matrix
+      <b>r(</b><i>name</i><b>)</b>            add contents of <b>r(</b><i>name</i><b>)</b> (matrix or scalar)
+<p>
+    Statistics for each
+    coefficient
+      <b>beta</b>               standardized coefficients
+      <b>vif</b>                variance inflation factors (after <b>regress</b>)
+      <b>pcorr</b>              partial (and semi-partial) correlations
+      <b>expb</b>               exponentiated coefficients
+      <b>ebsd</b>               standardized factor change coefficients
+      <b>mean</b>               means of regressors
+      <b>sd</b>                 standard deviations of regressors
+      <b>summ</b>               various descriptives of the regressors
+<p>
+    Summary statistics
+      <b>coxsnell</b>           Cox &amp; Snell's pseudo R-squared
+      <b>nagelkerke</b>         Nagelkerke's pseudo R-squared
+      <b>lrtest</b> <i>model</i>       likelihood-ratio test
+      <b>ysumm</b>              descriptives of the dependent variable
+<p>
+    Other
+      <b>margins</b>            add results from <b>margins</b> (Stata 11)
+<p>
+    SPost
+      <b>brant</b>              add results from <b>brant</b> (if installed)
+      <b>fitstat</b>            add results from <b>fitstat</b> (if installed)
+      <b>listcoef</b>           add results from <b>listcoef</b> (if installed)
+      <b>mlogtest</b>           add results from <b>mlogtest</b> (if installed)
+      <b>prchange</b>           add results from <b>prchange</b> (if installed)
+      <b>prvalue</b>            add results from <b>prvalue</b> (if installed)
+      <b>asprvalue</b>          add results from <b>asprvalue</b> (if installed)
+    ----------------------------------------------------------------
+<p>
+<a name="opts"></a><p>
+    <i>options</i>              description
+    ----------------------------------------------------------------
+      <b><u>r</u></b><b>eplace</b>            permit overwriting existing <b>e()</b>'s
+      <b><u>p</u></b><b>refix(</b><i>string</i><b>)</b>     specify prefix for names of added results
+      <b><u>q</u></b><b>uietly</b>            suppress output from subcommand (if any)
+      <i>subcmdopts</i>         subcommand specific options
+    ----------------------------------------------------------------
+<p>
+<p>
+<b><u>Description</u></b>
+<p>
+    <b>estadd</b> adds additional results to the <b>e()</b>-returns of an estimation
+    command (see help estcom, help <b>ereturn</b>). If no <i>namelist</i> is provided, then
+    the results are added to the currently active estimates (i.e. the model
+    fit last). If these estimates have been previously stored, the stored
+    copy of the estimates will also be modified. Alternatively, if <i>namelist</i>
+    is provided after the colon, results are added to all indicated sets of
+    stored estimates (see help <b>estimates store</b> or help <b>eststo</b>). You may use
+    the <b>*</b> and <b>?</b>  wildcards in <i>namelist</i>. Execution is silent if <i>namelist</i> is
+    provided.
+<p>
+    Adding additional results to the <b>e()</b>-returns is useful, for example, if
+    the estimates be tabulated by commands such as <b>estout</b> or <b>esttab</b>. See the
+    Examples section below for illustration of the usage of <b>estadd</b>.
+<p>
+    Technical note: Some of the subcommands below make use of the information
+    contained in <b>e(sample)</b> to determine estimation sample.  These subcommands
+    return error if the estimates do not contain <b>e(sample)</b>.
+<p>
+<p>
+<b><u>Subcommands</u></b>
+<p>
+        +------------+
+    ----+ Elementary +-------------------------------------------------------
+<a name="local"></a><p>
+    <b>estadd</b> <b><u>loc</u></b><b>al</b> <i>name ...</i>
+<p>
+        adds in macro <b>e(</b><i>name</i><b>)</b> the specified contents (also see help <b>ereturn</b>).
+<p>
+<a name="scalar"></a><p>
+    <b>estadd</b> <b><u>sca</u></b><b>lar</b> <i>name</i> <b>=</b> <i>exp</i>
+<p>
+        adds in scalar <b>e(</b><i>name</i><b>)</b> the evaluation of <i>exp</i> (also see help <b>ereturn</b>).
+<p>
+    <b>estadd</b> <b><u>sca</u></b><b>lar</b> <b>r(</b><i>name</i><b>)</b>
+<p>
+        adds in scalar <b>e(</b><i>name</i><b>)</b> the value of scalar <b>r(</b><i>name</i><b>)</b>.
+<p>
+    <b>estadd</b> <b><u>sca</u></b><b>lar</b> <i>name</i>
+<p>
+        adds in scalar <b>e(</b><i>name</i><b>)</b> the the value of scalar <i>name</i>.
+<p>
+<a name="matrix"></a><p>
+    <b>estadd</b> <b><u>mat</u></b><b>rix</b> <i>name</i> <b>=</b> <i>matrix_expression</i>
+<p>
+        adds in matrix <b>e(</b><i>name</i><b>)</b> the evaluation of <i>matrix_expression</i> (also see
+        help <b>matrix define</b>).
+<p>
+    <b>estadd</b> <b><u>mat</u></b><b>rix</b> <b>r(</b><i>name</i><b>)</b>
+<p>
+        adds in matrix <b>e(</b><i>name</i><b>)</b> a copy of matrix <b>r(</b><i>name</i><b>)</b>.
+<p>
+    <b>estadd</b> <b><u>mat</u></b><b>rix</b> <i>name</i>
+<p>
+        adds in matrix <b>e(</b><i>name</i><b>)</b> a copy of matrix <i>name</i>.
+<p>
+<a name="rreturn"></a><p>
+    <b>estadd</b> <b>r(</b><i>name</i><b>)</b>
+<p>
+        adds in <b>e(</b><i>name</i><b>)</b> the value of scalar <b>r(</b><i>name</i><b>)</b> or a copy of matrix
+        <b>r(</b><i>name</i><b>)</b>, depending on the nature of <b>r(</b><i>name</i><b>)</b>.
+<p>
+<p>
+        +---------------------------------+
+    ----+ Statistics for each coefficient +----------------------------------
+<a name="beta"></a><p>
+    <b>estadd</b> <b>beta</b>
+<p>
+        adds in <b>e(beta)</b> the standardized beta coefficients.
+<p>
+<a name="vif"></a><p>
+    <b>estadd</b> <b>vif</b> [<b>,</b> <b><u>tol</u></b><b>erance</b> <b><u>sqr</u></b><b>vif</b> ]
+<p>
+        adds in <b>e(vif)</b> the variance inflation factors (VIFs) for the
+        regressors (see help <b>vif</b>). Note that <b>vif</b> only works with estimates
+        produced by <b>regress</b>. <b>tolerance</b> additionally adds the tolerances
+        (1/VIF) in <b>e(tolerance)</b>.  <b>sqrvif</b> additionally adds the square roots
+        of the VIFs in <b>e(sqrvif)</b>.
+<p>
+<a name="pcorr"></a><p>
+    <b>estadd</b> <b>pcorr</b> [<b>, semi</b> ]
+<p>
+        adds the partial correlations (see help <b>pcorr</b>) and, optionally, the
+        semi-partial correlations between the dependent variable and the
+        individual regressors (see, e.g., the <b>pcorr2</b> package from the SSC
+        Archive). In the case of multiple-equations models, the results are
+        computed for the first equation only. The partial correlations will
+        be returned in <b>e(pcorr)</b> and, if <b>semi</b> is specified, the semi-partial
+        correlations will be returned in <b>e(spcorr)</b>.
+<p>
+<a name="expb"></a><p>
+    <b>estadd</b> <b>expb</b> [<b>,</b> <b><u>nocons</u></b><b>tant</b> ]
+<p>
+        adds in <b>e(expb)</b> the exponentiated coefficients (see the help 
+        <i>eform_option</i>). <b>noconstant</b> excludes the constant from the added
+        results.
+<p>
+<a name="ebsd"></a><p>
+    <b>estadd</b> <b>ebsd</b>
+<p>
+        adds in <b>e(ebsd)</b> the standardized factor change coefficients, i.e.
+        exp(b_jS_j), where b_j is the raw coefficient and S_j is the standard
+        deviation of regressor j, that are sometimes reported for logistic
+        regression (see Long 1997).
+<p>
+<a name="mean"></a><p>
+    <b>estadd</b> <b>mean</b>
+<p>
+        adds in <b>e(mean)</b> the means of the regressors.
+<p>
+<a name="sd"></a><p>
+    <b>estadd</b> <b>sd</b> [<b>,</b> <b><u>nob</u></b><b>inary</b> ]
+<p>
+        adds in <b>e(sd)</b> the standard deviations of the regressors.  <b>nobinary</b>
+        suppresses the computation of the standard deviation for 0/1
+        variables.
+<p>
+<a name="summ"></a><p>
+    <b>estadd</b> <b>summ</b> [<b>,</b> <i>stats</i> ]
+<p>
+        adds vectors of the regressors' descriptive statistics to the
+        estimates. The following <i>stats</i> are available:
+<a name="stats"></a><p>
+        <i>stats</i>            description
+        -----------------------------------------------------------
+          <b><u>me</u></b><b>an</b>           mean
+          <b><u>su</u></b><b>m</b>            sum
+          <b><u>mi</u></b><b>n</b>            minimum
+          <b><u>ma</u></b><b>x</b>            maximum
+          <b><u>ra</u></b><b>nge</b>          range = max - min
+          <b>sd</b>             standard deviation
+          <b><u>v</u></b><b>ar</b>            variance
+          <b>cv</b>             coefficient of variation (sd/mean)
+          <b><u>sem</u></b><b>ean</b>         standard error of mean = sd/sqrt(n)
+          <b><u>sk</u></b><b>ewness</b>       skewness
+          <b><u>k</u></b><b>urtosis</b>       kurtosis
+          <b>p1</b>             1st percentile
+          <b>p5</b>             5th percentile
+          <b>p10</b>            10th percentile
+          <b>p25</b>            25th percentile
+          <b>p50</b>            50th percentile
+          <b>p75</b>            75th percentile
+          <b>p90</b>            90th percentile
+          <b>p95</b>            95th percentile
+          <b>p99</b>            99th percentile
+          <b>iqr</b>            interquartile range = p75 - p25
+          <b>all</b>            all of the above
+          <b><u>med</u></b><b>ian</b>         equivalent to specifying "<b>p50</b>"
+          <b>q</b>              equivalent to specifying "<b>p25 p50 p75</b>"
+        -----------------------------------------------------------
+<p>
+        The default is <b>mean sd min max</b>. Alternatively, indicate the desired
+        statistics. For example, to add information on the regressors'
+        skewness and kurtosis, type
+<p>
+            . estadd summ, skewness kurtosis
+<p>
+        The statistics names are used as the names for the returned <b>e()</b>
+        matrices. For example, <b>estadd summ, mean</b> will store the means of the
+        regressors in <b>e(mean)</b>.
+<p>
+<p>
+        +--------------------+
+    ----+ Summary statistics +-----------------------------------------------
+<a name="coxsnell"></a><p>
+    <b>estadd</b> <b>coxsnell</b>
+<p>
+        adds in <b>e(coxsnell)</b> the Cox &amp; Snell pseudo R-squared, which is
+        defined as
+<p>
+            r2_coxsnell = 1 - ( L0 / L1 )^(2/N)
+<p>
+        where L0 is the likelihood of the model without regressors, L1 the
+        likelihood of the full model, and N is the sample size.
+<p>
+<a name="nagelkerke"></a><p>
+    <b>estadd</b> <b>nagelkerke</b>
+<p>
+        adds in <b>e(nagelkerke)</b> the Nagelkerke pseudo R-squared (or Cragg &amp;
+        Uhler pseudo R-squared), which is defined as
+<p>
+            r2_nagelkerke = r2_coxsnell / (1 - L0^(2/N))
+<p>
+<a name="lrtest"></a><p>
+    <b>estadd</b> <b>lrtest</b> <i>model</i> [<b>,</b> <b><u>n</u></b><b>ame(</b><i>string</i><b>)</b> <i>lrtest_options</i> ]
+<p>
+        adds the results from a likelihood-ratio test, where <i>model</i> is the
+        comparison model (see help <b>lrtest</b>). Added are <b>e(lrtest_chi2)</b>,
+        <b>e(lrtest_df)</b>, and <b>e(lrtest_p)</b>. The names may be modified using the
+        <b>name()</b> option. Specify <b>name(</b><i>myname</i><b>)</b> to add <b>e(</b><i>myname</i><b>chi2)</b>,
+        <b>e(</b><i>myname</i><b>df)</b>, and <b>e(</b><i>myname</i><b>p)</b>. See help <b>lrtest</b> for the <i>lrtest_options</i>.
+<p>
+<a name="ysumm"></a><p>
+    <b>estadd</b> <b>ysumm</b> [<b>,</b> <i>stats</i> ]
+<p>
+        adds descriptive statistics of the dependent variable. See the <b>summ</b>
+        subcommand above for a list of the available <i>stats</i>. The default is
+        <b>mean sd min max</b>. The default prefix for the names of the added
+        scalars is <b>y</b> (e.g. the mean of the dependent variable will be
+        returned in <b>e(ymean)</b>). Use <b>estadd</b>'s <b>prefix()</b> option to change the
+        prefix. If a model has multiple dependent variables, results for the
+        first variable will be added.
+<p>
+        +-------+
+    ----+ Other +------------------------------------------------------------
+<a name="margins"></a><p>
+    <b>estadd</b> <b>margins</b> [<i>marginlist</i>] [<i>if</i>] [<i>in</i>] [<i>weight</i>] [, <i>options</i> ]
+<p>
+        adds results from the <b>margins</b> command, which was introduced in Stata
+        11. See help <b>margins</b> for options. All results returned by <b>margins</b>
+        except <b>e(V)</b> are added using "<b>margins_</b>" as a default prefix. For
+        example, the margins are added in <b>e(margins_b)</b>. The standard errors
+        are added in <b>e(margins_se)</b>. Use the <b>prefix()</b> option to change the
+        default prefix.
+<p>
+<a name="spost"></a><p>
+        +-------+
+    ----+ SPost +------------------------------------------------------------
+<p>
+    The following subcommands are wrappers for commands from Long and
+    Freese's <b>SPost</b> package (see http://www.indiana.edu/~jslsoc/spost.htm).
+    Type
+<p>
+        . net from http://www.indiana.edu/~jslsoc/stata
+<p>
+    to obtain the latest <b>SPost</b> version (spost9_ado). <b>SPost</b> for Stata 8
+    (spostado) is not supported.
+<p>
+    For examples on using the subcommands see
+    http://repec.org/bocode/e/estout/spost.html.
+<p>
+<a name="brant"></a><p>
+    <b>estadd brant</b> [<b>,</b> <i>brant_options</i> ]
+<p>
+        applies <b>brant</b> from Long and Freese's <b>SPost</b> package and adds the
+        returned results to <b>e()</b>. You may specify <i>brant_options</i> as described
+        in help <b>brant</b>. The following results are added:
+<p>
+        <b>e(</b><i>...</i><b>)</b>        Contents
+        ------------------------------------------------------------
+        Scalars
+          <b>brant_chi2</b>  Chi-squared of overall Brant test
+          <b>brant_df</b>    Degrees of freedom of overall Brant test
+          <b>brant_p</b>     P-value of overall Brant test
+<p>
+        Matrix
+          <b>brant</b>       Test results for individual regressors
+                      (rows: chi2, p&lt;chi2)
+        ------------------------------------------------------------
+<p>
+    To address the rows of <b>e(brant)</b> in <b>estout</b>'s <b>cells()</b> option type
+    <b>brant[chi2]</b> and <b>brant[p&lt;chi2]</b>.
+<p>
+<a name="fitstat"></a><p>
+    <b>estadd fitstat</b> [<b>,</b> <i>fitstat_options</i> ]
+<p>
+        applies <b>fitstat</b> from Long and Freese's <b>SPost</b> package and adds the
+        returned scalars to <b>e()</b>. You may specify <i>fitstat_options</i> as described
+        in help <b>fitstat</b>. Depending on model and options, a selection of the
+        following scalar statistics is added:
+<p>
+        <b>e(</b><i>...</i><b>)</b>        Contents
+        ------------------------------------------------------------
+        <b>dev</b>           Deviance (D)
+        <b>dev_df</b>        Degrees of freedom of D
+        <b>lrx2</b>          LR or Wald X2
+        <b>lrx2_df</b>       Degrees of freedom of X2
+        <b>lrx2_p</b>        Prob &gt; LR or Wald X2
+        <b>r2_adj</b>        Adjusted R2
+        <b>r2_mf</b>         McFadden's R2
+        <b>r2_mfadj</b>      McFadden's Adj R2
+        <b>r2_ml</b>         ML (Cox-Snell) R2
+        <b>r2_cu</b>         Cragg-Uhler(Nagelkerke) R2
+        <b>r2_mz</b>         McKelvey &amp; Zavoina's R2
+        <b>r2_ef</b>         Efron's R2
+        <b>v_ystar</b>       Variance of y*
+        <b>v_error</b>       Variance of error
+        <b>r2_ct</b>         Count R2
+        <b>r2_ctadj</b>      Adj Count R2
+        <b>aic0</b>          AIC
+        <b>aic_n</b>         AIC*n
+        <b>bic0</b>          BIC
+        <b>bic_p</b>         BIC'
+        <b>statabic</b>      BIC used by Stata
+        <b>stataaic</b>      AIC used by Stata
+        <b>n_rhs</b>         Number of rhs variables
+        <b>n_parm</b>        Number of parameters
+        ------------------------------------------------------------
+<p>
+<a name="listcoef"></a><p>
+    <b>estadd listcoef</b> [<i>varlist</i>] [<b>,</b> <b>nosd</b> <i>listcoef_options</i> ]
+<p>
+        applies <b>listcoef</b> from Long and Freese's <b>SPost</b> package and adds the
+        returned results to <b>e()</b>. You may specify <i>listcoef_options</i> as
+        described in help <b>listcoef</b>. Furthermore, option <b>nosd</b> suppresses
+        adding the standard deviations of the variables in <b>e(b_sdx)</b>.
+<p>
+        Depending on the estimation command and options, several of the
+        following matrices are added:
+<p>
+        <b>e(</b><i>...</i><b>)</b>        Contents
+        ------------------------------------------------------------
+        <b>b_xs</b>          x-standardized coefficients
+        <b>b_ys</b>          y-standardized coefficients
+        <b>b_std</b>         Fully standardized coefficients
+        <b>b_fact</b>        Factor change coefficients
+        <b>b_facts</b>       Standardized factor change coefficients
+        <b>b_pct</b>         Percent change coefficients
+        <b>b_pcts</b>        Standardized percent change coefficients
+        <b>b_sdx</b>         Standard deviation of the Xs
+        ------------------------------------------------------------
+<p>
+        For nominal models (<b>mlogit</b>, <b>mprobit</b>) the original parametrization of
+        <b>e(b)</b> may not match the contrasts computed by <b>listcoef</b>. To be able to
+        tabulate standardized coefficients along with the raw coefficients
+        for the requested contrasts, the following additional matrices are
+        added for these models:
+<p>
+        <b>e(</b><i>...</i><b>)</b>        Contents
+        ------------------------------------------------------------
+        <b>b_raw</b>         raw coefficients
+        <b>b_se</b>          standard errors of raw coefficients
+        <b>b_z</b>           z statistics
+        <b>b_p</b>           p-values
+        ------------------------------------------------------------
+<p>
+<a name="mlogtest"></a><p>
+    <b>estadd mlogtest</b> [<i>varlist</i>] [<b>,</b> <i>mlogtest_options</i> ]
+<p>
+        applies <b>mlogtest</b> from Long and Freese's <b>SPost</b> package and adds the
+        returned results to <b>e()</b>. You may specify <i>mlogtest_options</i> as
+        described in help <b>mlogtest</b>.
+<p>
+        Depending on the specified options, a selection of the following
+        returns are added:
+<p>
+        <b>e(</b><i>...</i><b>)</b>               Contents
+        ------------------------------------------------------------
+        Scalars
+          <b>hausman_set</b><i>#</i><b>_chi2</b>  Hausman IIA tests using <b>hausman</b>
+          <b>hausman_set</b><i>#</i><b>_df</b>
+          <b>hausman_set</b><i>#</i><b>_p</b>
+<p>
+          <b>suest_set</b><i>#</i><b>_chi2</b>    Hausman IIA tests using <b>suest</b>
+          <b>suest_set</b><i>#</i><b>_df</b>
+          <b>suest_set</b><i>#</i><b>_p</b>
+<p>
+          <b>smhsiao_set</b><i>#</i><b>_chi2</b>  Small-Hsiao IIA tests
+          <b>smhsiao_set</b><i>#</i><b>_df</b>
+          <b>smhsiao_set</b><i>#</i><b>_p</b>
+<p>
+          <b>combine_</b><i>#1</i><b>_</b><i>#2</i><b>_chi2</b> Wald tests for combination of outcomes
+          <b>combine_</b><i>#1</i><b>_</b><i>#2</i><b>_df</b>
+          <b>combine_</b><i>#1</i><b>_</b><i>#2</i><b>_p</b>
+<p>
+          <b>lrcomb_</b><i>#1</i><b>_</b><i>#2</i><b>_chi2</b>  LR tests for combination of outcomes
+          <b>lrcomb_</b><i>#1</i><b>_</b><i>#2</i><b>_df</b>
+          <b>lrcomb_</b><i>#1</i><b>_</b><i>#2</i><b>_p</b>
+<p>
+          <b>wald_set</b><i>#</i><b>_chi2</b>     Wald tests for sets of independent
+          <b>wald_set</b><i>#</i><b>_df</b>       variables
+          <b>wald_set</b><i>#</i><b>_p</b>
+<p>
+          <b>lrtest_set</b><i>#</i><b>_chi2</b>   LR tests for sets of independent
+          <b>lrtest_set</b><i>#</i><b>_df</b>     variables
+          <b>lrtest_set</b><i>#</i><b>_p</b>
+<p>
+        Matrices
+          <b>wald</b>               Wald tests for individual variables
+                             (rows: chi2, df, p)
+          <b>lrtest</b>             LR tests for individual variables
+                             (rows: chi2, df, p)
+        ------------------------------------------------------------
+<p>
+    To address the rows of <b>e(wald)</b> and <b>e(lrtest)</b> in <b>estout</b>'s <b>cells()</b> option
+    type the row names in brackets, for example, <b>wald[p]</b> or <b>lrtest[chi2]</b>.
+<p>
+<a name="prchange"></a><p>
+    <b>estadd prchange</b> [<i>varlist</i>] [<b>if</b> <i>exp</i>] [<b>in</b> <i>range</i>] [<b>,</b> <b><u>pa</u></b><b>ttern(</b><i>typepattern</i><b>)</b>
+        <b><u>b</u></b><b>inary(</b><i>type</i><b>)</b> <b><u>c</u></b><b>ontinuous(</b><i>type</i><b>)</b> [<b>no</b>]<b><u>a</u></b><b>vg</b> <b>split</b>[<b>(</b><i>prefix</i><b>)</b>]
+        <i>prchange_options</i> ]
+<p>
+        applies <b>prchange</b> from Long and Freese's <b>SPost</b> package and adds the
+        returned results to <b>e()</b>. You may specify <i>prchange_options</i> as
+        described in help <b>prchange</b>. In particular, the <b>outcome()</b> option may
+        be used with models for count, ordered, or nominal outcomes to
+        request results for a specific outcome. Further options are:
+<p>
+        <b>pattern(</b><i>typepattern</i><b>)</b>, <b>binary(</b><i>type</i><b>)</b>, and <b>continuous(</b><i>type</i><b>)</b> to determine
+            which types of discrete change effects are added as the main
+            results. The default is to add the 0 to 1 change effect for
+            binary variables and the standard deviation change effect for
+            continuous variables. Use <b>binary(</b><i>type</i><b>)</b> and <b>continuous(</b><i>type</i><b>)</b> to
+            change these defaults. Available types are:
+<p>
+                <i>type</i>        Description
+                ------------------------------------------------
+                <b><u>mi</u></b><b>nmax</b>      minimum to maximum change effect
+                <b><u>0</u></b><b>1</b>          0 to 1 change effect
+                <b><u>d</u></b><b>elta</b>       <b>delta()</b> change effect
+                <b><u>s</u></b><b>d</b>          standard deviation change effect
+                <b><u>m</u></b><b>argefct</b>    marginal effect (some models only)
+                ------------------------------------------------
+<p>
+            Use <b>pattern(</b><i>typepattern</i><b>)</b> if you want to determine the type of the
+            added effects individually for each regressor. For example,
+            <b>pattern(minmax sd delta)</b> would add <b>minmax</b> for the first
+            regressor, <b>sd</b> for the second, and <b>delta</b> for the third, and then
+            proceed using the defaults for the remaining variables.
+<p>
+        <b>avg</b> to request that only the average results over all outcomes are
+            added if applied to ordered or nominal models (<b>ologit</b>, <b>oprobit</b>, 
+            <b>slogit</b>, <b>mlogit</b>, <b>mprobit</b>). The default is to add the average
+            results as well as the individual results for the different
+            outcomes (unless <b>prchange</b>'s <b>outcome()</b> option is specified, in
+            which case only results for the indicated outcome are added).
+            Furthermore, specify <b>noavg</b> to suppress the average results and
+            only add the outcome-specific results. <b>avg</b> cannot be combined
+            with <b>split</b> or <b>outcome()</b>.
+<p>
+        <b>split</b>[<b>(</b><i>prefix</i><b>)</b>] to save each outcome's results in a separate
+            estimation set if applied to ordered or nominal models (<b>ologit</b>, 
+            <b>oprobit</b>, <b>slogit</b>, <b>mlogit</b>, <b>mprobit</b>). The estimation sets are named
+            <i>prefix#</i>, where <i>#</i> is the value of the outcome at hand. If no
+            <i>prefix</i> is provided, the name of the estimation set followed by an
+            underscore is used as the prefix. If the estimation set has no
+            name (because it has not been stored yet) the name of the
+            estimation command followed by an underscore is used as the
+            prefix (e.g. <b>ologit_</b>). The estimation sets stored by the <b>split</b>
+            option are intended for tabulation only and should not be used
+            with other post-estimation commands.
+<p>
+        Depending on model and options, several of the following matrices and
+        scalars are added:
+<p>
+        <b>e(</b><i>...</i><b>)</b>        Contents
+        ------------------------------------------------------------
+        Scalars
+          <b>centered</b>    <b>1</b> if effects are centered, <b>0</b> else
+          <b>delta</b>       Value of <b>delta()</b>
+          <b>predval</b>[<i>#</i>]  Prediction(s) at the base values
+          <b>outcome</b>     Outcome value (<b>outcome()</b>/<b>split</b> only)
+<p>
+        Matrices
+          <b>dc</b>          Discrete change effects (rows: main, minmax,
+                      01, delta, sd [, margefct])
+          <b>pattern</b>     Types of effects in the main row of <b>e(dc)</b>
+          <b>X</b>           Base values and descriptive statistics
+                      (rows: X, SD, Min, Max)
+        ------------------------------------------------------------
+<p>
+        The <b>e(dc)</b> and <b>e(X)</b> matrices have multiple rows. The <b>e(dc)</b> matrix
+        contains the main results as determined by <b>pattern()</b>, <b>binary()</b>, and
+        <b>continuous()</b> in the first row.  The second and following rows contain
+        the separate results for each type of effect using the labels
+        provided by <b>prchange</b> as row names. Type <b>dc[</b><i>#</i><b>]</b> or <b>dc[</b><i>rowname</i><b>]</b> to
+        address the rows in <b>estout</b>'s <b>cells()</b> option, where <i>#</i> is the row
+        number or <i>rowname</i> is the row name. For example, type <b>dc[-+sd/2]</b> to
+        address the centered standard deviation change effects. To tabulate
+        the main results (1st row), simply type <b>dc</b>. <b>e(pattern)</b> indicates the
+        types of effects contained in the main row of <b>e(dc)</b> using numeric
+        codes. The codes are 1 for the minimum to maximum change effect, 2
+        for the 0 to 1 change effect, 3 for the <b>delta()</b> change effect, 4 for
+        the standard deviation change effect, and 5 for the marginal effect.
+        <b>e(X)</b> has four rows containing the base values, standard deviations,
+        minimums, and maximums. If the <b>fromto</b> option is specified, two
+        additional matrices, <b>e(dcfrom)</b> and <b>e(dcto)</b> are added.
+<p>
+<a name="prvalue"></a><p>
+    <b>estadd prvalue</b> [<b>if</b> <i>exp</i>] [<b>in</b> <i>range</i>] [<b>,</b> <b><u>lab</u></b><b>el(</b><i>string</i><b>)</b> <i>prvalue_options</i> ]
+<p>
+    <b>estadd prvalue</b> <b>post</b> [<i>name</i>] [<b>,</b> <b><u>t</u></b><b>itle(</b><i>string</i><b>)</b> <b>swap</b> ]
+<p>
+        applies <b>prvalue</b> from Long and Freese's <b>SPost</b> package and adds the
+        returned results to <b>e()</b>. The procedure is to first collect a series
+        of predictions by repeated calls to <b>estadd prvalue</b> and then apply
+        <b>estadd prvalue post</b> to prepare the results for tabulation as in the
+        following example:
+<p>
+            . logit lfp k5 k618 age wc hc lwg inc
+            . estadd prvalue, x(inc 10) label(low inc)
+            . estadd prvalue, x(inc 20) label(med inc)
+            . estadd prvalue, x(inc 30) label(high inc)
+            . estadd prvalue post
+            . estout
+<p>
+        You may specify <i>prvalue_options</i> with <b>estadd prvalue</b> as described in
+        help <b>prvalue</b>. For example, use <b>x()</b> and <b>rest()</b> to set the values of
+        the independent variables. Use <b>label()</b> to label the single calls.
+        "pred#" is used as label if <b>label()</b> is omitted, where # is the number
+        of the call. Labels may contain spaces but they will be trimmed to a
+        maximum length of 30 characters and some characters (<b>:</b>, <b>.</b>, <b>"</b>) will be
+        replaced by underscore. The results from the single calls are
+        collected in matrix <b>e(_estadd_prvalue)</b> (predictions) and matrix
+        <b>e(_estadd_prvalue_x)</b> (x-values). Specify <b>replace</b> to drop results from
+        previous calls.
+<p>
+        <b>estadd prvalue post</b> posts the collected predictions in <b>e(b)</b> so that
+        they can be tabulated. The following results are saved:
+<p>
+        <b>e(</b><i>...</i><b>)</b>        Contents
+        ------------------------------------------------------------
+        Scalars
+          <b>N</b>           number of observations
+<p>
+        Macros
+          <b>depvar</b>      name of dependent variable
+          <b>cmd</b>         <b>estadd_prvalue</b>
+          <b>model</b>       model estimation command
+          <b>properties</b>  <b>b</b>
+<p>
+        Matrices
+          <b>b</b>           predictions
+          <b>se</b>          standard errors
+          <b>LB</b>          lower confidence interval bounds
+          <b>UB</b>          upper confidence interval bounds
+          <b>Category</b>    outcome values
+          <b>Cond</b>        conditional predictions (some models only)
+          <b>X</b>           values of predictors (for each prediction)
+          <b>X2</b>          second equation predictors (some models only)
+        ------------------------------------------------------------
+<p>
+        <b>estadd prvalue post</b> replaces the current model unless <i>name</i> is
+        specified, in which case the results are stored under <i>name</i> and the
+        model remains active. However, if the model has a name (because it
+        has been stored), the name of the model is used as a prefix.  If, for
+        example, the model has been stored as <b>model1</b>, then <b>estadd prvalue</b>
+        <b>post</b> stores its results under <b>model1</b><i>name</i>.  Use <b>title()</b> to specify a
+        title for the stored results.
+<p>
+        The default for <b>estadd prvalue post</b> is to arrange <b>e(b)</b> in a way so
+        that predictions are grouped by outcome (i.e. outcome labels are used
+        as equations). Alternatively, specify <b>swap</b> to group predictions by
+        <b>prvalue</b> calls (i.e. to use the prediction labels as equations).
+<p>
+        <b>e(X)</b> contains one row for each independent variable. To address the
+        rows in <b>estout</b>'s <b>cells()</b> option type <b>X[</b><i>varname</i><b>]</b>, where <i>varname</i> is the
+        name of the variable of interest. <b>e(X2)</b>, if provided, is analogous to
+        <b>e(X)</b>.
+<p>
+<a name="asprvalue"></a><p>
+    <b>estadd asprvalue</b> [<b>,</b> <b><u>lab</u></b><b>el(</b><i>string</i><b>)</b> <i>asprvalue_options</i> ]
+<p>
+    <b>estadd asprvalue</b> <b>post</b> [<i>name</i>] [<b>,</b> <b><u>t</u></b><b>itle(</b><i>string</i><b>)</b> <b>swap</b> ]
+<p>
+        applies <b>asprvalue</b> from Long and Freese's <b>SPost</b> package and adds the
+        returned results to <b>e()</b>. The procedure is to first collect a series
+        of predictions by repeated calls to <b>estadd asprvalue</b> and then apply
+        <b>estadd asprvalue post</b> to prepare the results for tabulation as in the
+        following example:
+<p>
+            . clogit choice train bus time invc, group(id)
+            . estadd asprvalue, cat(train bus) label(at means)
+            . estadd asprvalue, cat(train bus) rest(asmean) label(at asmeans)
+            . estadd asprvalue post
+            . estout
+<p>
+        You may specify <i>asprvalue_options</i> with <b>estadd asprvalue</b> as described
+        in help <b>asprvalue</b>. For example, use <b>x()</b> and <b>rest()</b> to set the values
+        of the independent variables.  Use <b>label()</b> to label the single calls.
+        "pred#" is used as label if <b>label()</b> is omitted, where # is the number
+        of the call.  Labels may contain spaces but they will be trimmed to a
+        maximum length of 30 characters and some characters (<b>:</b>, <b>.</b>, <b>"</b>) will be
+        replaced by underscore. The results from the single calls are
+        collected in matrices <b>e(_estadd_asprval)</b> (predictions),
+        <b>e(_estadd_asprval_asv)</b> (values of alternative-specific variables),
+        and <b>e(_estadd_asprval_csv)</b> (values of case-specific variables).
+        Specify <b>replace</b> to drop results from previous calls.
+<p>
+        <b>estadd asprvalue post</b> posts the collected predictions in <b>e(b)</b> so that
+        they can be tabulated. The following results are saved:
+<p>
+        <b>e(</b><i>...</i><b>)</b>        Contents
+        ------------------------------------------------------------
+        Scalars
+          <b>N</b>           number of observations
+<p>
+        Macros
+          <b>depvar</b>      name of dependent variable
+          <b>cmd</b>         <b>estadd_asprvalue</b>
+          <b>model</b>       model estimation command
+          <b>properties</b>  <b>b</b>
+<p>
+        Matrices
+          <b>b</b>           predictions
+          <b>asv</b>         alternative-specific variables (if available)
+          <b>csv</b>         case-specific variables (if available)
+        ------------------------------------------------------------
+<p>
+        <b>estadd asprvalue post</b> replaces the current model unless <i>name</i> is
+        specified, in which case the results are stored under <i>name</i> and the
+        model remains active. However, if the model has a name (because it
+        has been stored), the name of the model is used as a prefix.  If, for
+        example, the model has been stored as <b>model1</b>, then <b>estadd asprvalue</b>
+        <b>post</b> stores its results under <b>model1</b><i>name</i>.  Use <b>title()</b> to specify a
+        title for the stored results.
+<p>
+        The default for <b>estadd asprvalue post</b> is to arrange <b>e(b)</b> in a way so
+        that predictions are grouped by outcome (i.e. outcome labels are used
+        as equations). Alternatively, specify <b>swap</b> to group predictions by
+        <b>prvalue</b> calls (i.e. to use the prediction labels as equations).
+<p>
+        <b>e(asv)</b> and <b>e(csv)</b> contain one row for each variable.  To address the
+        rows in <b>estout</b>'s <b>cells()</b> option type <b>asv[</b><i>varname</i><b>]</b> or <b>csv[</b><i>varname</i><b>]</b>,
+        where <i>varname</i> is the name of the variable of interest.
+<p>
+<a name="options"></a><p>
+<b><u>Options</u></b>
+<p>
+    <b>replace</b> permits <b>estadd</b> to overwrite existing <b>e()</b> macros, scalars, or
+        matrices.
+<p>
+    <b>prefix(</b><i>string</i><b>)</b> denotes a prefix for the names of the added results. The
+        default prefix is an empty string. For example, if <b>prefix(</b><i>string</i><b>)</b> is
+        specified, the <b>beta</b> subcommand will return the matrix <b>e(</b><i>string</i><b>beta)</b>.
+<p>
+    <b>quietly</b> suppresses the output from the called subcommand and displays
+        only the list of added results. Note that many of <b>estadd</b>'s
+        subcommands do not generate output, in which case <b>quietly</b> has no
+        effect.
+<p>
+    <i>subcmdopts</i> are subcommand specific options. See the descriptions of the
+        subcommands above.
+<p>
+<a name="examples"></a><p>
+<b><u>Examples</u></b>
+<p>
+    Example 1: Add <b>r()</b>-returns from other programs to the current estimates
+<p>
+        . sysuse auto
+        (1978 Automobile Data)
+<p>
+        . quietly regress price mpg weight
+        
+        . test mpg=weight
+<p>
+         ( 1)  mpg - weight = 0
+<p>
+               F(  1,    71) =    0.36
+            Prob &gt; F =    0.5514
+        
+        . estadd scalar p_diff = r(p)
+<p>
+        added scalar:
+                     e(p_diff) =  .55138216
+        
+        . estout, stats(p_diff)
+        
+        -------------------------
+                                b
+        -------------------------
+        mpg             -49.51222
+        weight           1.746559
+        _cons            1946.069
+        -------------------------
+        p_diff           .5513822
+        -------------------------
+<p>
+<p>
+    Example 2: Add means and standard deviations of the model's regressors to
+    the current estimates
+<p>
+        . quietly logit foreign price mpg
+        
+        . estadd summ, mean sd
+<p>
+        added matrices:
+                         e(sd) :  1 x 3
+                       e(mean) :  1 x 3
+        
+        . estout, cells("mean sd") drop(_cons)
+        
+        --------------------------------------
+                             mean           sd
+        --------------------------------------
+        price            6165.257     2949.496
+        mpg               21.2973     5.785503
+        --------------------------------------
+<p>
+<p>
+    Example 3: Add standardized beta coefficients to stored estimates
+<p>
+        . eststo: quietly regress price mpg
+        (est1 stored)
+<p>
+        . eststo: quietly regress price mpg foreign
+        (est2 stored)
+<p>
+        . estadd beta: *
+        
+        . estout, cells(beta)  drop(_cons)
+        
+        --------------------------------------
+                             est1         est2
+                             beta         beta
+        --------------------------------------
+        mpg             -.4685967    -.5770712
+        foreign                       .2757378
+        --------------------------------------
+<p>
+<p>
+    See http://repec.org/bocode/e/estout for additional examples.
+<p>
+<p>
+<b><u>Writing one's own subcommands</u></b>
+<p>
+    A program providing a new <b>estadd</b> subcommand should be called
+    <b>estadd_</b><i>mysubcommand</i> (see help <b>program</b> for advice on defining programs).
+    <i>mysubcommand</i> will be available to <b>estadd</b> as a new <i>subcommand</i> after the
+    program definition has been executed or saved to a file called
+    "estadd_<i>mysubcommand</i>.ado" in either the current directory or somewhere
+    else in the <b>adopath</b> (see help <b>sysdir</b>).
+<p>
+    Use the subcommands provided within "estadd.ado" as a starting point for
+    writing new subcommands. See
+    http://repec.org/bocode/e/estout/estadd.html#estadd007 for an example.
+<p>
+<p>
+<b><u>Author</u></b>
+<p>
+    Ben Jann, ETH Zurich, jannb@ethz.ch
+<p>
+<p>
+<b><u>Also see</u></b>
+<p>
+    Manual:  <b>[R] estimates</b>
+<p>
+    Online:  help for <b>estimates</b>, <b>ereturn</b>, <b>program</b>, <b>esttab</b>, <b>estout</b>, <b>eststo</b>, 
+             <b>estpost</b>
+</pre>

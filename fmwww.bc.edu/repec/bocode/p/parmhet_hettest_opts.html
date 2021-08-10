@@ -1,0 +1,120 @@
+<pre>
+-------------------------------------------------------------------------------
+<b>help parmhet_hettest_opts</b>                                        (Roger Newson)
+-------------------------------------------------------------------------------
+<p>
+<p>
+<b><u>Heterogeneity-test options for </u></b><b><u>parmhet</u></b><b><u> and </u></b><b><u>parmiv</u></b>
+<p>
+<p>
+    <i>options</i>                   Description
+    -------------------------------------------------------------------------
+    <b><u>chi</u></b><b>2het(</b><i>newvarname</i><b>)</b>       Heterogeneity chi-squared statistic variable
+    <b><u>df</u></b><b>het(</b><i>newvarname</i><b>)</b>         Heterogeneity degrees of freedom variable
+    <b><u>i</u></b><b>2het(</b><i>newvarname</i><b>)</b>         Heterogeneity <i>I</i>-squared statistic variable
+    <b><u>tau</u></b><b>2het(</b><i>newvarname</i><b>)</b>       Heterogeneity tau-squared statistic variable
+    <b><u>f</u></b><b>het(</b><i>newvarname</i><b>)</b>          Heterogeneity <i>F</i>-statistic variable
+    <b><u>res</u></b><b>dfhet(</b><i>newvarname</i><b>)</b>      Heterogeneity residual degrees of freedom
+                                variable
+    <b><u>p</u></b><b>het(</b><i>newvarname</i><b>)</b>          Heterogeneity <i>P</i>-value variable
+    -------------------------------------------------------------------------
+<p>
+<p>
+<b><u>Description</u></b>
+<p>
+    These options specify the names of generated variables, containing
+    heterogeneity-test statistics for the input dataset, or for the by-group
+    if the <b>by()</b> option is specified.  If specified for <b>parmhet</b>, these options
+    refer to generated variables in the <b>parmhet</b> resultsset (see help for
+    <i>parmhet_resultsset</i>), and cause the variable with the same name as the
+    option to be renamed to the name specified by the option.  If specified
+    for <b>parmiv</b>, these options cause a new variable of the specified name to
+    be added to the existing dataset in memory.
+<p>
+<p>
+<b><u>Options</u></b>
+<p>
+    <b>chi2het(</b><i>newvarname</i><b>)</b> specifies the name of an output variable containing
+        the heterogeneity chi-squared statistic defined by Cochrane (1954).
+<p>
+    <b>dfhet(</b><i>newvarname</i><b>)</b> specifies the name of an output variable containing the
+        degrees of freedom for the heterogeneity chi-squared statistic
+        defined by Cochrane (1954).
+<p>
+    <b>i2het(</b><i>newvarname</i><b>)</b> specifies the name of an output variable containing the
+        heterogeneity <i>I</i>-squared statistic defined by Higgins and Thompson
+        (2002).  This statistic is expressed on a percentage scale from 0 to
+        100, and denotes the percentage excess of the heterogeneity
+        chi-squared statistic, compared to its mean value under the null
+        hypothesis of no heterogeneity, specified by its degrees of freedom.
+        If the chi-squared statistic is less than its degrees of freedom,
+        then the <i>I</i>-squared statistic is zero.
+<p>
+    <b>tau2het(</b><i>newvarname</i><b>)</b> specifies the name of an output variable containing
+        the heterogeneity tau-squared statistic defined by Higgins and
+        Thompson (2002).  The tau-squared statistic is an estimate of the
+        variance of the true population values of the estimated parameters,
+        in the meta-population from which these populations are sampled.  It
+        is expressed in squared units of the input parameter estimates, or in
+        squared log units of the input parameter estimates, if the <b>eform</b>
+        option is specified (see help for <i>parmhet_basic_opts</i>).  If the
+        chi-squared statistic is less than its degrees of freedom, then the
+        tau-squared statistic is zero.
+<p>
+    <b>fhet(</b><i>newvarname</i><b>)</b> specifies the name of an output variable containing the
+        heterogeneity <i>F</i>-statistic defined by Welch (1951) and popularized by
+        Cochrane (1954).  This variable is only calculated if the user
+        specifies an input degrees of freedom variable, in addition to the
+        input estimate and standard error variables.  If an input degrees of
+        freedom variable is not provided, then the <b>fhet()</b> option is ignored.
+<p>
+    <b>resdfhet(</b><i>newvarname</i><b>)</b> specifies the name of an output variable containing
+        the residual (or denominator) degrees of freedom for the
+        heterogeneity <i>F</i>-statistic output to the <b>fhet()</b> variable.  This
+        denominator degrees of freedom variable may have non-integer values,
+        and is used, together with the numerator degrees of freedom output to
+        the <b>dfhet()</b> variable, to calculate a <i>P</i>-value (output to the <b>phet()</b>
+        variable) for the heterogeneity <i>F</i>-statistic (output to the <b>fhet()</b>
+        variable).  The <b>resdfhet()</b> variable is only calculated if the user
+        specifies an input degrees of freedom variable, in addition to the
+        input estimate and standard error variables.  If an input degrees of
+        freedom variable is not provided, then the <b>resdfhet()</b> option is
+        ignored.
+<p>
+    <b>phet(</b><i>newvarname</i><b>)</b> specifies the name of an output variable containing the
+        heterogeneity <i>P</i>-value.  If an input degrees of freedom variable is
+        specified, then this <i>P</i>-value is calculated using the <i>F</i>-statistic
+        output to the <b>fhet()</b> variable, with the numerator degrees of freedom
+        output to the <b>dfhet()</b> variable and the denominator degrees of freedom
+        output to the <b>resdfhet()</b> variable.  If an input degrees of freedom
+        variable is not specified, then this <i>P</i>-value is calculated using the
+        chi-squared statistic output to the <b>chi2het()</b> variable, with the
+        degrees of freedom output to the <b>dfhet()</b> variable.
+<p>
+<p>
+<b><u>Author</u></b>
+<p>
+    Roger Newson, National Heart and Lung Institute, Imperial College London,
+    UK.  Email: r.newson@imperial.ac.uk
+<p>
+<p>
+<b><u>References</u></b>
+<p>
+    Cochrane, W. G.  1954.  The combination of estimates from different
+        experiments.  <i>Biometrics</i> 10(1): 101-129.
+<p>
+    Higgins, J. P. T. and Thompson, S. G.  2002.  Quantifying heterogeneity
+        in a meta-analysis.  <i>Statistics in Medicine</i> 21(11): 1539-1558.
+<p>
+    Welch, B. L.  1951.  On the comparison of several mean values: an
+        alternative approach.  <i>Biometrika</i> 36(3/4): 330-336.
+<p>
+<p>
+<b><u>Also see</u></b>
+<p>
+     Manual: <b>[R] meta</b>, <b>[R] test</b>
+    On-line: help for <b>parmhet</b>, <b>parmiv</b>, <i>parmhet_basic_opts</i>,
+             <i>parmhet_resultsset_opts</i>, <i>parmhet_resultsset</i>
+             help for <b>test</b>
+             help for <b>parmest</b>, <b>parmby</b>, <b>parmcip</b>, <b>metaparm</b>, <b>metan</b> if installed
+</pre>

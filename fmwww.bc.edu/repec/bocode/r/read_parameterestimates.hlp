@@ -1,0 +1,20 @@
+{smcl}
+{hline}
+Help file for {hi:read_parameterestimates}
+{hline}
+
+
+{p 0 19}This file is called by {help runmplus}{p_end}
+
+
+
+{title:Author}
+{p 8 8 2}Richard N Jones, ScD{break}
+Institute for Aging Research{break}
+Hebrew SeniorLife, Boston, MA{break} 
+jones@mail.hrca.harvard.edu
+
+
+{title:See}
+
+{p 0 19}help for {help runmplus}{p_end}

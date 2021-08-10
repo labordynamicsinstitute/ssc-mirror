@@ -1,0 +1,222 @@
+<pre>
+-------------------------------------------------------------------------------
+help for <b>saswrapper</b>                                           manual:  <b>[R] none</b>
+                                                             dialog:  <b> none</b>    
+-------------------------------------------------------------------------------
+<p>
+<p>
+<b><u>Run a SAS program from within Stata</u></b>
+<p>
+        <b>saswrapper</b> [<i>varlist</i>] [<i>if</i>] [<i>in</i>] [<b>using</b> <i>sas program filename</i>] [<b>,</b>
+                 <b><u>pre</u></b><b>_sas_prog(`"</b><i>sas code</i><b>"')</b> <b><u>post</u></b><b>_sas_prog(`"</b><i>sas code</i><b>"')</b> <b><u>ch</u></b><b>eck</b>
+                 <b><u>me</u></b><b>ssy</b> <b>usesas</b> <b>nodata</b> <b>savasas(</b><i>sas dataset name</i><b>)</b> <b>noformats</b>
+                 <b>rename</b> <b>clear</b> <b>char2lab</b> <b>float</b> <b><u>qu</u></b><b>otes</b>]
+<p>
+        
+<b><u>Description</u></b>
+<p>
+    <b>saswrapper</b> runs a SAS program in batch and prints the output in the Stata
+    results window/log file.  This usually occurs by specifying a SAS program
+    file after <b>using</b>, but <b>saswrapper</b> can also run SAS code specified by the
+    <b>pre_sas_prog()</b> and/or <b>post_sas_prog()</b> options.  By default, <b>saswrapper</b>
+    will save the current data in memory using savasas and make it available
+    in SAS's WORK library.  If that is not desired, use the <b>nodata</b> option.
+    The <b>usesas</b> option tells <b>saswrapper</b> to load the last SAS dataset created
+    in the WORK library by the submitted SAS program into Stata using the
+    <b>SAVASTATA</b> SAS macro.
+<p>
+    <b>NOTE:  saswrapper</b> calls SAS to run the SAS program.  This requires the
+    ability to run SAS on your computer.  If <b>saswrapper</b> does not run SAS for
+    you, your <b>sasexe.ado</b> file may need to be edited to set the location of
+    your SAS executable file (<b>sas.exe</b>) and your <b>SAVASTATA</b> SAS macro file
+    (<b>savastata.sas</b>).  It may be that <b>saswrapper</b> will be able to run with the
+    default settings in <b>sasexe.ado</b>.  See the setup instructions below.
+<p>
+    <b>saswrapper</b> uses the <b>SAVASTATA</b> SAS macro to create the Stata dataset from
+    the SAS dataset when the <b>usesas</b> option is specified.  <b>saswrapper</b>
+    downloads the <b>SAVASTATA</b> SAS macro and stores it where user-written Stata
+    ado-files are stored that begin with the letter "s".  This macro can be
+    used in SAS.  Learn about <b>SAVASTATA</b> here:
+    http://www.cpc.unc.edu/research/tools/data_analysis/sas_to_stata/savastat
+    &gt; a.html
+<p>
+ 
+<b><u>Options</u></b>
+<p>
+    <b>using</b> <i>sas program filename</i> specifies <b>saswrapper</b> to run this SAS program.
+        <b>saswrapper</b> assumes the SAS program file extension <b>.sas</b> if no file
+        extension/suffix is specified.
+<p>
+    <b>pre_sas_prog()</b> and/or <b>post_sas_prog()</b> contain SAS code to be run by
+        <b>saswrapper</b>.  If SAS programming code is supplied by <b>using</b>,
+        <b>pre_sas_prog()</b>, and <b>post_sas_prog()</b> then the order the code will be
+        run is:
+<p>
+              <b>pre_sas_prog()</b>
+<p>
+              <b>using</b>
+<p>
+              <b>post_sas_prog()</b>
+<p>
+        It is best to enclose the SAS code within compound double quotes:
+<p>
+        <b>. saswrapper, pre_sas_prog(`"proc means;"')</b>
+<p>
+        in case the SAS code contains any double quotes.  An interesting way
+        to submit SAS code is to first put it in a local macro and use three
+        forward slashes to continue the line:
+<p>
+        <b>. local pre_sas_prog data new; ///</b>
+        <b>set work.stata_data; ///</b>
+        <b>gender = "female"; ///</b>
+        <b>run;</b>
+<p>
+        <b>.  saswrapper , pre_sas_prog(`" `pre_sas_prog' "')</b>
+<p>
+        You can put a lot of SAS code in a local macro if you don't use an
+        equal sign (<b>=</b>) after then local macro name.  For the above example to
+        work, Stata has to be using the carriage return as an end-of-line
+        delimiter and not semi-colons which is changed by the #delimit
+        command.  Stata will see Stata-style comments in the SAS code as
+        Stata comments so avoid starting a line with a star/asterisk "*":
+<p>
+        <b>* some comment ; ///</b>
+<p>
+        because Stata will comment out the three forward slashes at the end
+        and thus end the input to the local macro.  Since the contents of the
+        local macro will be one long line, do not attempt to do anything in
+        your SAS code that expects carriage returns like the SAS datalines
+        statement that reads in raw data.
+<p>
+    <b>check</b> specifies to generate basic stats for both the SAS and Stata
+        datasets for the user to make sure <b>saswrapper</b> created the files
+        correctly.  This is a comparison that should be done after any
+        datafile is converted to any other type of datafile by any software.
+        The SAS file is created in the same directory as the SAS program
+        specified in <b>using</b> or if no program was specified in <b>using</b> then it
+        will be created in the current directory.  The file is named starting
+        with the name of the datafile followed by "_SAScheck.lst" (SAS).
+        e.g. "mySASdata_SAScheck.lst"
+<p>
+    <b>messy</b> specifies that all the intermediary files created by <b>saswrapper</b>
+        during its operation are not to be deleted.  The <b>messy</b> option
+        prevents <b>saswrapper</b> from cleaning up after it has finished.  This
+        option is mostly useful for debugging purposes in order to find out
+        where something went wrong.  All intermediary files have a name
+        starting with an underscore "_" followed by the process ID and are
+        located in Stata's temp directory.
+<p>
+    <b>usesas</b> specifies to load the SAS dataset into memory that was most
+        recently created in the SAS WORK library in the SAS program submitted
+        to <b>saswrapper</b>.  <b>saswrapper</b> figures out how much memory the SAS
+        dataset will require to be loaded into Stata and sets Stata's memory
+        for you if your memory setting is less than is required.
+<p>
+<p>
+    <b>nodata</b> specifies to override the default behavior of <b>saswrapper</b> which is
+        to save the current dataset in memory to the SAS WORK library.  Use
+        this option when your SAS program is not going to use the dataset in
+        memory.
+<p>
+    <b>savasas</b> specifies a different dataset name than the name of the dataset
+        in memory.  If the dataset in memory does not have a name and the
+        option <b>savasas</b> is not used, then the dataset in memory will be
+        available in SAS's WORK library as "stata_data" (a.k.a.
+        "WORK.STATA_DATA").
+<p>
+<b><u>Options when saving data to SAS</u></b>
+<p>
+    <b>varlist</b> specifies what selection of variables in the dataset in memory
+        are to be saved to the SAS dataset in the WORK library in the SAS
+        program submitted to <b>saswrapper</b>. If no variables are specified then
+        all variables will be saved the SAS dataset.
+<p>
+    <b>if</b> <i>exp</i> subsets the dataset in memory before saving the dataset to the SAS
+        dataset in the WORK library in the SAS program submitted to
+        <b>saswrapper</b>.
+<p>
+    <b>in</b> <i>range</i> subsets the dataset in memory before saving the dataset to the
+        SAS dataset in the WORK library in the SAS program submitted to
+        <b>saswrapper</b>.
+<p>
+    <b>noformats</b> specifies that no value labels be saved as SAS formats.
+<p>
+    <b>rename</b> specifies that any required renaming of file name and/or variable
+        names is to be done when saving the dataset in memory to SAS using
+        savasas.  The <b>rename</b> option is only necessary when variable names are
+        not unique in SAS.  <b>savasas</b> displays the list of renamed variables.
+        <b>rename</b> also renames the SAS file name when the name provided is not a
+        valid SAS file name.
+<p>
+<b><u>Options when using the usesas option</u></b>
+<p>
+    <b>clear</b> specifies to clear the data currently in memory before running
+        <b>saswrapper</b>.
+<p>
+    <b>char2lab</b> specifies to encode long SAS character variables like the Stata
+        command encode.  Character variables that are too long for a Stata
+        string variable are maintained in value labels.
+<p>
+    <b>float</b> specifies that numeric variables that would otherwise be stored as
+        numeric type double be stored with numeric type float.  This option
+        should only be used if you are certain you have no integer variables
+        that have more than 7 digits (like an id variable).
+<p>
+    <b>quotes</b> specifies that double quotes that exist in string variables are to
+        be replaced with single quotes.  Since the data are written out to an
+        ASCII file and then read into Stata, there are rare instances when
+        double quotes are not allowed inside string variables.
+<p>
+<p>
+<p>
+<b><u>Examples</u></b>
+<p>
+    <b>. saswrapper using "mySASprog.sas"</b>
+<p>
+    <b>. saswrapper using "mySASprog.sas", nodata usesas clear</b>
+<p>
+    <b>. saswrapper using "c:\data\mySASprog.sas", savasas(tester) check</b>
+<p>
+    <b>. saswrapper , pre_sas_prog(`" proc print; "')</b>
+    
+    <b>. saswrapper , pre(`" data new; set work.stata_data; if income &gt; 0 then</b>
+        <b>do; employed = 1; output; end; run; "') usesas clear</b>
+<p>
+    <b>. saswrapper , post(`" proc univariate; "')</b>
+<p>
+<p>
+<p>
+    <b>NOTE:</b>  If you are setting up this program on your computer for the first
+        time, please edit sasexe.ado to set the location of your SAS
+        executable file (sas.exe).  If you do not, <b>saswrapper</b> will try to set
+        it for you.  The sasexe.ado file is an ASCII text file and should be
+        saved as such after editing.  Stata's <b>do-file</b> editor will do the
+        trick.
+<p>
+<a name="setup"></a><p>
+<b><u>Setting up saswrapper</u></b>
+<p>
+    If you are setting up this program on your computer for the first time,
+    you may need to edit the <b>sasexe.ado</b> file to set the location of your SAS
+    executable file (<b>sas.exe</b>).  If you do not, <b>saswrapper</b> will look in the
+    "usual" locations for it.  <b>saswrapper</b> also may need to have the location
+    of the SAS macro <b>savastata.sas</b> set.  The <b>sasexe.ado</b> file is an ASCII text
+    file and should be saved as such after editing.  Stata's do-file editor
+    will do the job.  edit sasexe.ado (click, to edit the <b>sasexe.ado</b> file,
+    remember to save when done.)
+<p>
+<p>
+<b><u>Author</u></b>
+<p>
+    Dan Blanchette
+    The Carolina Population Center
+    University of North Carolina - Chapel Hill, USA
+    dan_blanchette@unc.edu
+<p>
+<p>
+<b><u>Also see</u></b>
+<p>
+    On-line: savasas, usesas
+<p>
+<p>
+</pre>

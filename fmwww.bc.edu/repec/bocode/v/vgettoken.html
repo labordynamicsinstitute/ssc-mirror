@@ -1,0 +1,115 @@
+<pre>
+-------------------------------------------------------------------------------
+help for <b>vgettoken</b>                                                  Bill Rising
+-------------------------------------------------------------------------------
+<p>
+<b>Pull the First Token from Each Observation of a Variable</b>
+<p>
+        <b>vgettoken</b> <i>result_varname</i> [<i>rest_varname</i>] : <i>source_varname</i> [<b>if</b> <i>exp</i>] [<b>in</b>
+              <i>range</i>] <b>,</b> [<b><u>p</u></b><b>arse(delimiters)</b> <b>nospace</b> <b><u>replaceresu</u></b><b>lt</b> <b><u>replaceres</u></b><b>t</b>
+              <b><u>nodelim</u></b><b>iters</b>
+<p>
+<b><u>Description</u></b>
+<p>
+<b>vgettoken</b> does for variables what gettoken does for macros: it pulls a token
+from each observation of <i>source_varlist</i>, and stores the result in
+<i>result_variable</i>.  If the optional <i>rest_variable</i> is specified, the remainder
+(possibly minus the intervening delimiter) is stored in the <i>rest_variable</i>.
+<p>
+<b><u>Options</u></b>
+<p>
+<b>parse(delimiters)</b> gives the list of delimiters which are used to separate
+    tokens.  If omitted, the only delimiter is whitespace (one or more spaces).
+    There is no need to specify space a delimiter, though explicitly specifying
+    it will not cause problems.
+<p>
+<b>nospace</b> is used to <b>prevent</b> spaces from being used as delimiters.
+<p>
+<b>nodelimiters</b> is used to <b>prevent</b> delimiters from being stored as tokens.  Note
+    that just as with gettoken, spaces are never kept as tokens.
+<p>
+<b>replacereslt</b> allows the <i>result_variable</i> to be overwritten.
+<p>
+<b>replacerest</b> allows the <i>rest_variable</i> to be overwritten.
+<p>
+<b><u>Example(s)</u></b>
+<p>
+        . vgettoken foo : bar
+            Will take the first word (space delimited!) from each observation
+            in <i>bar</i> and put it in the corresponding observation of <i>foo</i>, leaving
+            <i>bar</i> unchanged.
+<p>
+        . vgettoken foo rest : bar
+            Will take the first word from each observation in <i>bar</i> and put it in
+            the corresponding observation of <i>foo</i>, leaving <i>bar</i> unchanged, and
+            putting the remaining words into <i>rest</i>.
+<p>
+        . vgettoken foo bar : bar
+            Will take the first word from each observation in <i>bar</i> and put it in
+            the corresponding observation of <i>foo</i>, and replace <i>bar</i> with the
+            remaining words.
+<p>
+        . vgettoken foo : bar, parse(":") nospace
+            Will take everything up to the first colon (:) from each
+            observation in <i>bar</i> and put it in the corresponding observation of
+            <i>foo</i>, leaving <i>bar</i> unchanged.  If the first character of an
+            observation of <i>bar</i> is itself a colon, the colon will be placed in
+            the corresponding observation of <i>foo</i>.
+<p>
+        . vgettoken foo rest : bar, parse(":") nospace
+            Will take everything up to the first colon (:) from each
+            observation in <i>bar</i> and put it in the corresponding observation of
+            <i>foo</i>, leaving <i>bar</i> unchanged.  If the first character of an
+            observation of <i>bar</i> is itself a colon, the colon will be placed in
+            the corresponding observation of <i>foo</i>.  The observations in <i>rest</i>
+            will contain everything left over, so concatinating <i>foo</i> and <i>rest</i>
+            will reconstruct <i>bar</i>.
+<p>
+        . vgettoken foo : bar, parse(":") nospace nodelimiters
+            Will take everything up to the first colon (:) from each
+            observation in <i>bar</i> and put it in the corresponding observation of
+            <i>foo</i>, leaving <i>bar</i> unchanged.  If the first character of an
+            observation of <i>bar</i> is itself a colon, an empty observation will be
+            placed in the corresponding observation of <i>foo</i>.
+<p>
+        . vgettoken foo rest : bar, parse(":") nospace nodelimiters
+            Will take everything up to the first colon (:) from each
+            observation in <i>bar</i> and put it in the corresponding observation of
+            <i>foo</i>, leaving <i>bar</i> unchanged.  If the first character of an
+            observation of <i>bar</i> is itself a colon, the corresponding observation
+            of <i>foo</i> will be empty.  The observations in <i>rest</i> will contain
+            everything left over, except any leading delimiters (just as would
+            happen if spaces were used as the delimiters).
+<p>
+        . vgettoken foo : bar, parse(":|!")
+            Will take everything up to either the first space, colon (:),
+            vertical bar (|), or exclamation point (!) from each observation in
+            <i>bar</i> and put it in the corresponding observation of <i>foo</i>, leaving <i>bar</i>
+            unchanged.  If the first character of an observation of <i>bar</i> is
+            itself a delimiter, the delimiter will be placed in the
+            corresponding observation of <i>foo</i> unless the delimiter is a space
+            (or spaces), in which case the observation in <i>foo</i> will be empty.
+<p>
+<b><u>Notes</u></b>
+<p>
+While this could possibly be useful for splitting up variables by hand when
+working with nasty text files, it will probably be more useful to use vtokenize
+to split up the <i>source_variable</i> into all its tokens.
+<p>
+<b><u>Also see</u></b>
+<p>
+gettoken, tokenize, vtokenize
+<p>
+<p>
+<b><u>Author</u></b>
+Bill Rising 
+email: brising@louisville.edu 
+web: http://www.louisville.edu/~wrrisi01
+<p>
+snailmail:
+Department of Bioinformatics and Biostatistics
+University of Louisville
+Louisville, KY  40292
+<p>
+<b><u>Last Updated</u></b>: December 9, 2003 @ 22:28:15
+</pre>

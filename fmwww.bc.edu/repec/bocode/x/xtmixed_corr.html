@@ -1,0 +1,188 @@
+<pre>
+<b>help xtmixed_corr</b>
+-------------------------------------------------------------------------------
+<p>
+<b><u>Title</u></b>
+<p>
+    <b>xtmixed_corr</b>  -- Model-implied intracluster correlations after <b>xtmixed</b>
+<p>
+<p>
+<b><u>Syntax</u></b>
+<p>
+        <b>xtmixed_corr</b> [<b>,</b> <i>options</i>]
+<p>
+<p>
+<a name="options"></a>    <i>options</i>             Description
+    -------------------------------------------------------------------------
+    Main
+      <b>at(</b><i>at_spec</i><b>)</b>       specify level values; the default is the first
+                          level-two cluster
+      <b>all</b>               correlations for all the data
+      <b>list</b>              list model data corresponding to displayed
+                          correlations
+      <b>nosort</b>            list matrices in the row order as listed in the data
+      <b>format(</b><i>format</i><b>)</b>    specify display format
+      <i>matlist_options</i>   style options for displaying matrices; see <b>[P]</b>
+                          <b>matlist</b>
+    -------------------------------------------------------------------------
+<p>
+<p>
+<b><u>Description</u></b>
+<p>
+    Linear mixed models as fit by <b>xtmixed</b> have complex expressions for
+    intracluster correlation.  Correlation comes from two sources:  (1) the
+    design of the random effects and their assumed covariance from the
+    multiple levels in your model; and (2) the correlation structure of the
+    residuals, whether they be treated as independent, auto-regressive,
+    Toeplitz, etc.  Residuals may also be modeled as heteroskedastic; see 
+    <b>xtmixed</b> for details.
+<p>
+    <b>xtmixed_corr</b> is designed to combine all sources of correlation into one
+    overall correlation matrix for a given cluster (or for a given group of
+    clusters, if you wish).  This allows you to compare different multilevel
+    models in terms of the ultimate intracluster correlation matrix that each
+    model implies.
+<p>
+<p>
+<b><u>Options</u></b>
+<p>
+        +------+
+    ----+ Main +-------------------------------------------------------------
+<p>
+<a name="atspec"></a>    <b>at(</b><i>at_spec</i><b>)</b>, where <i>at_spec</i> is
+<p>
+            <i>level_var</i><b> =</b> <i>value</i> [<i> level_var</i><b> =</b> <i>value</i> ...]
+<p>
+        specifies the cluster of observations for which you want the
+        intracluster correlation matrix.
+<p>
+        For example, if you specify
+<p>
+            <b>. xtmixed_corr, at(school = 33)</b>
+<p>
+        you get the intracluster correlation matrix for those observations in
+        school 33.  If you specify,
+<p>
+            <b>. xtmixed_corr, at(school = 33 classroom = 4)</b>
+<p>
+        you get the correlation matrix for classroom 4 in school 33.
+<p>
+        If <b>at()</b> is not specified, then you get the correlations for the first
+        level-two cluster encountered in the data.  This is usually what you
+        want.
+<p>
+    <b>all</b> specifies that you want the correlation matrix for all the data.
+        This is not recommended unless you have a relatively small dataset or
+        you enjoy seeing large N x N matrices.  However, this can prove
+        useful in some cases.
+<p>
+    <b>list</b> lists the model data for those observations depicted in the
+        displayed correlation matrix.  This option is useful if you have many
+        random-effects design variables (Z's in <b>xtmixed</b> terminology) and you
+        wish to see the represented values of these design variables.
+<p>
+    <b>nosort</b> lists the rows and columns of the correlation matrix in the order
+        that they were originally present in the data.  Normally,
+        <b>xtmixed_corr</b> will first sort the data according to level variables,
+        by-group variables, and time variables in order to produce
+        correlation matrices whose rows and columns follow a natural
+        ordering.  <b>nosort</b> suppresses this.
+<p>
+    <b>format(</b><i>format</i><b>)</b> sets the display format for the standard-deviation vector
+        and correlation matrix.  The default is <b>%6.3f</b>.
+<p>
+    <i>matlist_options</i> control how matrices are displayed.  See <b>[P] matlist</b> for
+        details.
+<p>
+<p>
+<b><u>Remarks</u></b>
+<p>
+    The intracluster variance-covariance matrix is given by V = Z*Psi*Z' + R,
+    where Z is the design matrix for the random effects, Psi is the
+    variance-covariance matrix of the random effects, and R is the residual
+    variance-covariance matrix.  <b>xtmixed_corr</b> performs this calculation for
+    the data subset that you specify and displays the resulting standard
+    deviations and correlations based on V.
+<p>
+<p>
+<b><u>Examples</u></b>
+<p>
+    ---------------------------------------------------------------------------
+    Setup
+        <b>. webuse pig, clear</b>
+<p>
+    Random-intercept model, analogous to <b>xtreg</b>
+        <b>. xtmixed weight week || id:</b>
+        <b>. xtmixed_corr</b>
+<p>
+    Random-intercept and random-slope (coefficient) model
+        <b>. xtmixed weight week || id: week, cov(un)</b>
+        <b>. xtmixed_corr, at(id = 33)</b>
+<p>
+    ---------------------------------------------------------------------------
+    Setup
+        <b>. webuse productivity, clear</b>
+<p>
+    Three-level model, observations nested within <b>state</b> nested within <b>region</b>
+        <b>. xtmixed gsp private emp hwy water other unemp || region: ||</b> <b>state:</b>
+        <b>. xtmixed_corr, at(region = 2 state = 28)</b>
+        <b>. xtmixed_corr, at(region = 2) format(%5.2f)</b>
+<p>
+    ---------------------------------------------------------------------------
+    Setup
+        <b>. webuse pig, clear</b>
+<p>
+    Crossed random effects
+        <b>. xtmixed weight week || _all: R.week || id:</b>
+        <b>. xtmixed_corr</b>
+<p>
+    ---------------------------------------------------------------------------
+    Setup
+        <b>. use http://www.stata-press.com/data/mlmus2/wagepan, clear</b>
+        <b>. gen educt = educ - 12</b>
+        <b>. gen yeart = year - 1980</b>
+<p>
+    Linear mixed model with AR 1 errors
+        <b>. xtmixed lwage black hisp union yeart educt || nr:, nocons res(ar 1,</b>
+            <b>t(yeart))</b>
+        <b>. xtmixed_corr</b>
+<p>
+    ---------------------------------------------------------------------------
+    Setup
+        <b>. webuse ovary, clear</b>
+        <b>. keep if time&lt;=7</b>
+<p>
+    Linear mixed model with MA 2 errors
+        <b>. xtmixed follicles sin1 cos1 || mare: sin1, residuals(ma 2, t(time))</b>
+        <b>. xtmixed_corr, list</b>
+<p>
+    ---------------------------------------------------------------------------
+    Setup
+        <b>. webuse childweight, clear</b>
+<p>
+    Linear mixed model with heteroskedastic error variances
+        <b>. xtmixed weight age || id:age, cov(un) residuals(independent,</b>
+            <b>by(girl))</b>
+        <b>. xtmixed_corr, list</b>
+        <b>. xtmixed_corr, at(id=4108) list</b>
+<p>
+    ---------------------------------------------------------------------------
+<p>
+<p>
+<b><u>Saved results</u></b>
+<p>
+    <b>xtmixed_corr</b> saves the following in <b>r()</b>:
+<p>
+    Matrices  
+      <b>r(sd)</b>          standard deviations
+      <b>r(corr)</b>        correlation
+      <b>r(V)</b>           variance-covariance
+      <b>r(psi)</b>         variance-covariance of random effects
+      <b>r(Z)</b>           model-based design matrix
+      <b>r(R)</b>           variance-covariance matrix of level-one errors
+<p>
+<p>
+<b><u>Also see</u></b>
+<p>
+      Help:  <b>[XT] xtmixed</b>; <b>[XT] xtmixed postestimation</b>
+</pre>

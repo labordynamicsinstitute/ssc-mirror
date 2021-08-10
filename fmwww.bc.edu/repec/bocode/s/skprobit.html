@@ -1,0 +1,82 @@
+<pre>
+<b>help skprobit</b>
+-------------------------------------------------------------------------------
+<p>
+<b><u>Title</u></b>
+<p>
+    <b> Performs Lagrange Multiplier Test for Normality for Probit model</b>
+<p>
+<p>
+<p>
+<b><u>Syntax</u></b>
+<p>
+        <b>skprobit</b> <i>depvar</i> <i>indepvars</i> [<i>if</i>] [<i>in</i>]
+<p>
+<p>
+<p>
+<b><u>Description</u></b>
+<p>
+    <b>skprobit</b> Performs a Lagrange Multiplier Test for the Normality of the
+    residuals of a Probit model of depvar on indepvars.
+<p>
+<p>
+<p>
+<b><u>Citation</u></b>
+<p>
+    <b>skprobit</b> is not an official Stata command. The usual disclimers apply:
+    all errors and imperfections in this package are mine and all comments
+    are very welcome.
+<p>
+<p>
+<p>
+<b><u>Return values</u></b>
+<p>
+   Scalars
+       <b>r(N)</b>               Number of observations used
+       <b>r(chi2_p)</b>          p value of the chi-squared statistic
+       <b>r(chi2)</b>            Chi-squared statistic
+<p>
+<p>
+<p>
+<b><u>Examples</u></b>
+<p>
+    sysuse auto
+<p>
+    probit foreign weight mpg
+<p>
+    skprobit foreign weight mpg
+<p>
+    The result shows that the Ho (Normality) hypothesis of the residuals is
+        rejected in this example. The residuals are not normal in this case.
+<p>
+    webuse lbw
+<p>
+    probit low age lwt race smoke ptl ht ui
+<p>
+    skprobit low age lwt race smoke ptl ht ui
+<p>
+    The result shows that the Ho (Normality) hypothesis of the residuals is
+        not rejected in this example. Hence the residuals are normal in this
+        case.
+<p>
+    webuse union
+<p>
+    probit union age grade not_smsa
+<p>
+    skprobit union age grade not_smsa
+<p>
+    The result shows that the Ho (Normality) hypothesis of the residuals is
+        rejected in this example. The residuals are not normal in this case.
+<p>
+<p>
+<p>
+<b><u>Author</u></b>
+<p>
+    Diallo Ibrahima Amadou, zavren@gmail.com
+<p>
+<p>
+<p>
+<b><u>Also see</u></b>
+<p>
+    Online:  help for <b>sktest</b>
+</pre>

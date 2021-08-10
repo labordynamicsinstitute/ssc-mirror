@@ -1,0 +1,19 @@
+d 'DISTPLOT': module to generate distribution function plot
+d
+d distplot produces a plot of cumulative distribution function(s). 
+d This shows the proportion (or if desired the frequency) of values
+d  less than or equal to each value. With the reverse option, 
+d distplot produces a plot of the complementary function.  This is
+d version 2.0.1 of the software and is rewritten for Stata 8.  Also
+d included in this package are distplot7 files, a clone of the 
+d last version of this program written for Stata 7.  
+d
+d Author: Nicholas J. Cox, University of Durham
+d Support: email N.J.Cox@@durham.ac.uk
+d
+d Distribution-Date: 20031010
+
+f distplot.ado
+f distplot.hlp
+f distplot7.ado
+f distplot7.hlp

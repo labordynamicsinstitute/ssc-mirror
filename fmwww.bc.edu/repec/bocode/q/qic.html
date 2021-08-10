@@ -1,0 +1,336 @@
+<pre>
+<b>help qic</b> 
+                                                              also see:  xtgee 
+-------------------------------------------------------------------------------
+<p>
+<b><u>Title</u></b>
+<p>
+    <b>qic</b> --        QIC criterion for model selection in GEE analyses
+<p>
+<p>
+<b><u>Syntax</u></b>
+<p>
+        <b>qic</b> <i>depvar</i> [<i>indepvars</i>] [<i>if</i>] [<i>in</i>] [<b>,</b> <i>options</i>]
+<p>
+    <i>options</i>                Description
+    -------------------------------------------------------------------------
+    Model
+      <b>i(</b><i>varname_i</i><b>)</b>         use <i>varname_i</i> as the panel ID variable
+      <b>t(</b><i>varname_t</i><b>)</b>         use <i>varname_t</i> as the time variable
+      <b><u>f</u></b><b>amily(</b><i>family</i><b>)</b>       distribution of <i>depvar</i>
+      <b><u>l</u></b><b>ink(</b><i>link</i><b>)</b>           link function
+<p>
+    Model 2
+      <b><u>e</u></b><b>xposure(</b><i>varname</i><b>)</b>    include ln(<i>varname</i>) in model with coefficient
+                             constrained to 1
+      <b><u>off</u></b><b>set(</b><i>varname</i><b>)</b>      include <i>varname</i> in model with coefficient
+                             constrained to 1
+      <b><u>nocon</u></b><b>stant</b>           suppress constant term
+      <b>force</b>                estimate even if observations unequally spaced in
+                             time
+<p>
+    Correlation
+      <b><u>c</u></b><b>orr(</b><i>correlation</i><b>)</b>    within-group correlation structure
+<p>
+    SE/Robust
+      <b><u>r</u></b><b>obust</b>               synonym for <b>vce(robust)</b>
+      <b>nmp</b>                  use divisor N-P instead of the default N
+      <b>rgf</b>                  multiply the robust variance estimate by
+                             (N-1)/(N-P)
+      <b><u>s</u></b><b>cale(x2)</b>            set scale parameter to Pearson chi-squared
+                             statistic
+      <b><u>s</u></b><b>cale(dev)</b>           set scale parameter to deviance divided by degrees
+                             of freedom
+      <b><u>s</u></b><b>cale(phi)</b>           do not rescale the variance
+      <b>scale(</b><i>#</i><b>)</b>             set scale parameter to <i>#</i>
+<p>
+    Reporting
+      <b>level(</b><i>#</i><b>)</b>             set confidence level; default is <b>level(95)</b>
+      <b><u>ef</u></b><b>orm</b>                report exponentiated coefficients
+<p>
+    Opt options
+      <i>optimize_options</i>     control the optimization process; seldom used
+<p>
+    <b><u>nodis</u></b><b>play</b>              suppress display of header and coefficients
+<p>
+    -------------------------------------------------------------------------
+    <i>depvar</i> and <i>indepvars</i> may contain time-series operators; see tsvarlist.
+    <b>iweight</b>s, <b>fweight</b>s, and <b>pweight</b>s are allowed; see weight.  Weights must
+      be constant within panel.
+<p>
+<a name="family"></a>    <i>family</i>                   Description
+    -------------------------------------------------------------------------
+    <b><u>gau</u></b><b>ssian</b>                 Gaussian (normal); <b>family(</b><b><u>nor</u></b><b>mal)</b> is a synonym
+    <b><u>ig</u></b><b>aussian</b>                inverse Gaussian
+    <b><u>b</u></b><b>inomial</b>                 Bernoulli/binomial (k=1)
+    <b><u>po</u></b><b>isson</b>                  Poisson
+    <b><u>nb</u></b><b>inomial</b>                negative binomial (k=1)
+    <b><u>gam</u></b><b>ma</b>                    gamma
+    -------------------------------------------------------------------------
+<p>
+<a name="link"></a>    <i>link</i>                     Description
+    -------------------------------------------------------------------------
+    <b><u>i</u></b><b>dentity</b>                 identity; y=y
+    <b>log</b>                      log; ln(y)
+    <b><u>logi</u></b><b>t</b>                    logit; ln{y/(1-y)}, natural log of the odds
+    <b><u>p</u></b><b>robit</b>                   probit; inverse Gaussian cumulative
+    <b><u>cl</u></b><b>oglog</b>                  cloglog; ln{-ln(1-y)}
+    <b><u>pow</u></b><b>er</b>[<i>#</i>]                 power; y^k with k=#; #=1 if not specified
+    <b><u>opo</u></b><b>wer</b>[<i>#</i>]                odds power; [{y/(1-y)}^k - 1]/k with k=#; #=1 if
+                               not specified
+    <b><u>nb</u></b><b>inomial</b>                negative binomial
+    <b><u>rec</u></b><b>iprocal</b>               reciprocal; 1/y
+    -------------------------------------------------------------------------
+<p>
+<a name="correlation"></a>    <i>correlation</i>              Description
+    -------------------------------------------------------------------------
+    <b><u>exc</u></b><b>hangeable</b>             exchangeable
+    <b><u>ind</u></b><b>ependent</b>              independent
+    <b><u>uns</u></b><b>tructured</b>             unstructured
+    <b><u>fix</u></b><b>ed</b> <i>matname</i>            user-specified
+    <b>ar</b> <i>#</i>                     autoregressive of order <i>#</i>
+    <b><u>sta</u></b><b>tionary</b> <i>#</i>             stationary of order <i>#</i>
+    <b><u>non</u></b><b>stationary</b> <i>#</i>          nonstationary of order <i>#</i>
+    -------------------------------------------------------------------------
+<p>
+<p>
+<b><u>Description</u></b>
+<p>
+    <b>qic</b> calculates the QIC and QIC_u criteria for model selection in GEE,
+    which is an extension of the widely used AIC criterion in ordinary
+    regression (Pan 2001).  It allows for specification of all 7
+    distributions - gaussian, inverse Gaussian, Bernoulli/binomial, Poisson,
+    negative binomial and gamma, all link functions and working correlation
+    structures and all se/robust options, except for the vce option, avaiable
+    in Stata 9.0.  It also calculates the trace of the matrix O^{-1}V, where
+    O is the variance estimate under the independent correlation structure
+    and V is the variance estimate under the specified working correlation
+    structure in GEE. When trace is close to the number of parametr p, the
+    QIC_u is a good approximation to QIC.
+<p>
+<p>
+<b><u>Options</u></b>
+<p>
+        +-------+
+    ----+ Model +------------------------------------------------------------
+<p>
+    <b>i(</b><i>varname_i</i><b>)</b>, <b>t(</b><i>varname_t</i><b>)</b>; see estimation options.
+<p>
+        <b>qic</b> does not need to know <b>t()</b> for the <b>corr(independent)</b> and
+        <b>corr(exchangeable)</b> correlation structures.  Whether you specify <b>t()</b>
+        makes no difference in these two cases.
+<p>
+    <b>family(</b><i>family</i><b>)</b> specifies the distribution of <i>depvar</i>; <b>family(gaussian)</b> is
+        the default.
+<p>
+    <b>link(</b><i>link</i><b>)</b> specifies the link function; the default is the canonical link
+        for the <b>family()</b> specified.
+<p>
+        +---------+
+    ----+ Model 2 +----------------------------------------------------------
+<p>
+    <b>exposure(</b><i>varname</i><b>)</b> and <b>offset(</b><i>varname</i><b>)</b> are different ways of specifying
+        the same thing.  <b>exposure()</b> specifies a variable that reflects the
+        amount of exposure over which the <i>depvar</i> events were observed for
+        each observation; ln(<i>varname</i>) with coefficient constrained to be 1 is
+        entered into the regression equation.  <b>offset()</b> specifies a variable
+        that is to be entered directly into the log-link function with its
+        coefficient constrained to be 1; thus, exposure is assumed to be
+        e^varname.  If you were fitting a Poisson regression model,
+        <b>family(poisson) link(log)</b>, for instance, you would account for
+        exposure time for specifying <b>offset()</b> containing the log of exposure
+        time.
+<p>
+    <b>noconstant</b> specifies that the linear predictor has no intercept term,
+        thus forcing it through the origin on the scale defined by the link
+        function.
+<p>
+    <b>force</b> specifies that estimation be forced even though <b>t()</b> is not equally
+        spaced.  This is relevant only for correlation structures that
+        require knowledge of <b>t()</b> and that require observations be equally
+        spaced.
+<p>
+        +-------------+
+    ----+ Correlation +------------------------------------------------------
+<p>
+    <b>corr(</b><i>correlation</i><b>)</b>; see estimation options.
+<p>
+        +-----------+
+    ----+ SE/Robust +--------------------------------------------------------
+<p>
+    <b>robust</b> specifies that the Huber/White/sandwich estimator of variance is
+        to be used in place of the default GLS variance estimator; This
+        produces valid standard errors even if the correlations within group
+        are not as hypothesized by the specified correlation structure.  It
+        does, however, require that the model correctly specifies the mean.
+        As such, the resulting standard errors are labeled "semi-robust"
+        instead of "robust".  Note that although there is no <b>cluster()</b>
+        option, results are as if there were a <b>cluster()</b> option and you
+        specified clustering on <b>i()</b>.
+<p>
+    <b>nmp</b>; see estimation options.
+<p>
+    <b>rgf</b> specifies that the robust variance estimate is multiplied by
+        (N-1)/(N-P), where N = # of observations, and P = # of coefficients
+        estimated.  This option can be used only with <b>family(gaussian)</b> when
+        <b>robust</b> is either specified or implied by the use of <b>pweight</b>s.  Using
+        this option implies that the robust variance estimate is not
+        invariant to the scale of any weights used.
+<p>
+    <b>scale(x2</b>|<b>dev</b>|<i>#</i>|<b>phi)</b> overrides the default scale parameter of <b>scale(1)</b>;
+        see estimation options.
+<p>
+        +-----------+
+    ----+ Reporting +--------------------------------------------------------
+<p>
+    <b>level(</b><i>#</i><b>)</b>; see estimation options.
+<p>
+    <b>eform</b> displays the exponentiated coefficients and corresponding standard
+        erros and confidence intervals as described in <b>maximize</b>.  For
+        <b>family(binomial) link(logit)</b> (i.e., logistic regression),
+        exponentiation results in odds ratios; for <b>family(poisson) link(log)</b>
+        (i.e., Poisson regression), exponentiated coefficients are
+        incidence-rate ratios.
+<p>
+        +-------------+
+    ----+ Opt options +------------------------------------------------------
+<p>
+<a name="optimize_options"></a>    <i>optimize_options</i> control the iterative optimization process.  These
+        options are seldom used.
+<p>
+        <b><u>iter</u></b><b>ate(</b><i>#</i><b>)</b> specifies the maximum number of iterations.  When the
+        number of iterations equals #, the optimization stops and presents
+        the current results, even if the convergence tolerance has not been
+        reached.  The default value of <b>iterate()</b> is 100.
+<p>
+        <b><u>tol</u></b><b>erance(</b><i>#</i><b>)</b> specifies the tolerance for the coefficient vector.
+        When the relative change in the coefficient vector from one iteration
+        to the next is less than or equal to #, the optimization process is
+        stopped.  <b>tolerance(1e-6)</b> is the default.
+<p>
+        <b>nolog</b> suppress the display of the iteration log.
+<p>
+        <b><u>tr</u></b><b>ace</b> specifies that the current estimates should be printed at each
+        iteration.
+<p>
+    <b>nodisplay</b> suppresses the display of the header and coefficients.
+<p>
+<p>
+<b><u>Examples1</u></b>
+<p>
+    use http://www.stata-press.com/data/r9/nlswork2, clear
+<p>
+    iis id
+<p>
+    qic ln_w grade age if race == 2
+<p>
+    qic ln_w grade age, t(year) corr(uns) scale(dev) force nolog nodis trace
+<p>
+    qic ln_w grade age, t(year) corr(exc) force
+<p>
+<p>
+<b><u>Examples2</u></b>
+<p>
+    use http://www.stata-press.com/data/r9/union, clear
+<p>
+    iis idcode
+<p>
+    tis year
+<p>
+    qic union age grade not_smsa south if black == 1, fam(bin)
+<p>
+    qic union age grade not_smsa south, fam(bin) link(probit) corr(uns) force
+        tol(1e-8) iter(20)
+<p>
+    qic union age grade not_smsa south, fam(bin) link(cloglog) corr(ar) force
+        scale(x2)
+<p>
+<p>
+<b><u>Examples3</u></b>
+<p>
+    use http://www.stata-press.com/data/r9/ships, clear
+<p>
+    egen wave = group(yr_con yr_op)
+<p>
+    iis ship
+<p>
+    tis wave
+<p>
+    qic accident op_75_79 co_65_69 co_70_74 co_75_79 if wave &lt;= 6, fam(poi)
+        corr(exc) ex(service)
+<p>
+    qic accident op_75_79 co_65_69 co_70_74 co_75_79, fam(poi) corr(sta)
+        ex(service) force tol(1e-10) scale(dev)
+<p>
+    qic accident op_75_79 co_65_69 co_70_74 co_75_79, fam(poi) corr(exc)
+        ex(service) force nodis
+<p>
+<p>
+<b><u>Examples4</u></b>
+<p>
+    use http://www.stata-press.com/data/r9/airacc, clear
+<p>
+    iis airline
+<p>
+    tis time
+<p>
+    qic i_cnt inprog if airline &lt;= 15, fam(nb 2) corr(exc) exposure(pmiles)
+<p>
+    qic i_cnt inprog, fam(nb 2) corr(sta) exposure(pmiles) force tol(1e-8)
+        nodis
+<p>
+    qic i_cnt inprog, fam(nb 2) corr(uns) exposure(pmiles) force scale(x2)
+<p>
+    qic i_cnt inprog, fam(gam) corr(sta) exposure(pmiles) force scale(dev)
+<p>
+    qic i_cnt inprog, fam(ig) corr(uns) exposure(pmiles) force
+<p>
+<p>
+<b><u>Also see</u></b>
+<p>
+    Manual:  <b>[XT] xtgee</b>
+<p>
+    Online:  xtgee postestimation;
+             <b>glm</b>, <b>logistic</b>, <b>prais</b>, <b>regress</b>, <b>svy</b>, xt, <b>xtcloglog</b>, <b>xtdata</b>, 
+             <b>xtdes</b>, <b>xtgls</b>, <b>xtintreg</b>, <b>xtlogit</b>, <b>xtnbreg</b>, <b>xtpcse</b>, <b>xtpoisson</b>, 
+             <b>xtprobit</b>, <b>xtreg</b>, <b>xtregar</b>, <b>xtsum</b>, <b>xttab</b>, <b>xttobit</b>
+<p>
+<p>
+<b><u>Reference</u></b>
+<p>
+    Cui J. QIC program and model selection in GEE analyses.<i>  Stata Journal</i>
+        2007; 7:209-220.
+<p>
+    Cui J and Qian G. Selection of working correlation structure and best
+        model in GEE analyses of longitudinal data.<i>  Communications in</i>
+        <i>Statistics, Simulation and Computation</i> 2007; 36:987-996.
+<p>
+    Cui J and Feng L. Correlation structure and model selection for negative
+        binomial distribution in GEE.<i>  Communications in Statistics,</i>
+        <i>Simulation and Computation</i> 2008 (in press).
+<p>
+    Pan W. Akaike's information criterion in generalized estimating
+        equations. <i>Biometrics</i> 2001; 57:120-125.
+<p>
+<p>
+<b><u>Author</u></b>
+<p>
+    James Cui, WHO Collaborating Centre for Obesity Prevention, Deakin
+    University.
+<p>
+    Email: jisheng.cui@deakin.edu.au
+<p>
+<p>
+Other Commands I have written:
+genhwcci   (if installed)      ssc install genhwcci     (to install this comman
+&gt; d)
+simuped2   (if installed)      ssc install simuped2     (to install this comman
+&gt; d)
+simuped3   (if installed)      ssc install simuped3     (to install this comman
+&gt; d)
+phenotype  (if installed)      ssc install phenotype    (to install this comman
+&gt; d)
+buckley    (if installed)      ssc install buckley      (to install this comman
+&gt; d)
+<p>
+</pre>

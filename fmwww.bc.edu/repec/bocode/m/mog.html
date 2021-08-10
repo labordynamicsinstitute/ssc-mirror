@@ -1,0 +1,311 @@
+<pre>
+<b>help mog</b>
+-------------------------------------------------------------------------------
+<p>
+<b><u>Title</u></b>
+<p>
+    <b>mog </b>-- Produce one way or two way tables of means (or totals) and
+           perform significance tests and quality control checks
+<p>
+<b><u>Syntax</u></b>
+<p>
+    <b>mog</b> <i>varname1</i> <i>varname2</i> [<i>varname3</i>] [<i>if</i>] [<i>in</i>] [<i>weight</i>] [<b>,</b> <i>options</i>]
+<p>
+    <i>options</i>                Description
+    -------------------------------------------------------------------------
+    Model
+      <b><u>tot</u></b><b>al</b>                changes the command to estimate totals and not
+                             means
+<p>
+    SE/Cluster
+      <b><u>su</u></b><b>rvey</b>               mog will use svyset information for variance
+                             estimation and weighting
+<p>
+    Reporting--estimates
+      <b><u>d</u></b><b>ecimals(</b><i>#</i><b>)</b>          number of decimals of estimates, default is 2
+      <b>round(</b><i>#</i><b>)</b>             estimates will be rounded to multiples of this
+                             number (see round function), default is 0--no
+                             rounding
+<p>
+    Reporting--significance tests
+      <b>ref1(</b><i>#</i><b>)</b>              specifies the reference group to use for varname2,
+                             default is 1
+      <b>ref2(</b><i>#</i><b>)</b>              specifies the reference group to use for varname3,
+                             default is 1
+      <b>sl(</b><i>#</i><b>)</b>                controls the significance level of tests, default
+                             is 0.05
+      <b><u>ret</u></b><b>est</b>               instructs mog to use estimates from last run
+      <b>notest</b>               suppresses the insertion of significance test
+                             symbols in the table
+      <b><u>F</u></b><b>wer</b>                 display information on the family-wise error rate
+<p>
+    Reporting--quality controls
+      <b><u>pubs</u></b><b>tand</b>             show quality control symbols for each estimate
+      <b><u>pubd</u></b><b>ichot</b>            use more conservative quality controls if varname1
+                             is dichotomous
+      <b><u>minc</u></b><b>ount(</b><i>#</i><b>)</b>          minimum sample size of each estimate, default is
+                             15
+      <b><u>symbm</u></b><b>incount(</b><i>string</i><b>)</b> symbol that indicates the sample size is too low
+                             for an estimate, see mincount, default is "X"
+      <b><u>cvw</u></b><b>arning(</b><i>#</i><b>)</b>         an estimate is "use with caution" grade if its cv
+                             is larger than this value and less than
+                             cvtoohigh, default is 1/6th
+      <b><u>symbw</u></b><b>arning(</b><i>string</i><b>)</b>  symbol used to indicate an estimate falls in the
+                             situation described in option cvwarning, default
+                             is "E"
+      <b><u>cvt</u></b><b>oohigh(</b><i>#</i><b>)</b>         an estimate is "too unreliable to use" grade if
+                             its cv is larger than this value, default is
+                             1/3rd
+      <b><u>symbt</u></b><b>oohigh(</b><i>string</i><b>)</b>  symbol used to indicate an estimate falls in the
+                             situation described in option cvtoohigh, default
+                             is "F"
+        
+    Reporting--miscellaneous
+      <b><u>nod</u></b><b>etail</b>             displays only the table
+      <b><u>cellw</u></b><b>idth(</b><i>#</i><b>)</b>         controls the width of table cells
+      <b><u>varw</u></b><b>idth(</b><i>#</i><b>)</b>          controls the width of the first column displaying
+                             varname2 labels, default is 15
+      <b><u>u</u></b><b>nderscores</b>          replaces spaces with underscores in labels--helps
+                             when copying data
+    -------------------------------------------------------------------------
+    <i>varname1</i> is the variable for which you want to estimate means.
+    <i>varname2</i> is a categorical variable over which the means are grouped,
+      creating a one way table.
+    <i>varname3</i> is an optional 2nd categorical variable over which the means
+      are also grouped, creating a two way table.
+    The<b> svy</b> prefix is not allowed. Use option survey instead.
+    All weight types are allowed; see weight.
+    Weights are not compatible with <b>survey</b>. If both are used, weight
+      information is ignored.
+    <b>retest</b> is combatible with changing any reporting option. Useful when
+      estimation is time consuming.
+<p>
+<b><u>Description</u></b>
+<p>
+    This progam calculates the mean of a variable across all the
+    combinations of categories of up to two other categorical variables
+    (the grouping variables) and produces a one or two way table showing
+    the means.  It is essentially a "front-end" for the mean and total
+    commands.
+<p>
+    Tests to calculate if there are significant differences from each
+    cell's estimate and the reference category are performed. Symbols are
+    placed in the table to indicate the results of the tests.
+<p>
+    <b>mog</b> also performs quality control tests on the sample sizes and
+    coefficients of variation (1/t-ratio) of each estimate. Symbols are
+    placed in the table to indicate if any of these checks have failed.
+<p>
+    Copy the fixed width tables into a spreadsheet using COPY TABLE. The
+    underscore option helps copying tables that have labels with spaces.
+<p>
+    The command will redisplay the table if it is entered without
+    arguments, as do many stata commands.
+<p>
+<b><u>Options</u></b>
+<p>
+    <b>ref1</b> and <b>ref2</b> change the reference groups for the grouping variables
+        varname2 and varname3. Note, do not put in the actual value of the
+        the variable, put in the integer that represents the ordinal rank of
+        the category you want. For instance, if the grouping variable has
+        values 1, 4, 5.5 and 6, then, if you want the second category to be
+        the reference group, type in <b>ref1</b>=2, NOT <b>ref1</b>=4. Similarly, if you
+        want the category with value 5.5 to be the reference group, then type
+        in <b>ref1</b>=3 (because it is the 3rd category when they are sorted), NOT
+        <b>ref1</b>=5.5.
+<p>
+    <b>round</b> specifies where the estimate should be rounded. Use numbers that
+        work with the round function. Note that even if a number is rounded
+        to an order of 10, it may still be displayed to the number of
+        decimals specified by the <b>decimal</b> option.
+<p>
+    <b>sl</b> specifies the significance level to be used for the tests. Tests are
+        two-tailed t-tests. Default is 0.05. Other possibilities inlcude
+        0.01, 0.10, and 0.20. The program will function with any number
+        between 0 and 1.
+<p>
+    <b>mincount</b> specifies the minimum sample size number to check for when
+        searching through the number of observations for each cell in the
+        table. All counts are displayed in a table at the beginning of the
+        output when the program runs. However,<b> mog</b> checks each value to
+        ensure it is equal to or larger than <b>mincount</b>. If it isn't, a warning
+        is displayed. If any cell count is less than 2, the program
+        terminates as no variance can be estimated for this estimate.
+        Institutional (company, government body, etc.) guidelines often
+        require a minimum sample size for an estimate to be published and
+        made available for public use, and preclude the possibility of anyone
+        (if the observations are people) to be identifiable. The default is
+        15.
+<p>
+    <b>cellwidth</b> allows the user to change the number of columns taken up by
+        each cell. Cell widths are automatically sized to the estimates size,
+        the number of decimal places and the number of symbols. However, one
+        may wish to increase this number in some cases to allow the column
+        labels to be fully displayed.
+<p>
+    <b>underscore</b> replaces spaces, " ", in the value labels of the grouping
+        variables with underscores, "_". This ensures that the copying
+        process of this table to another program will recognize the columns
+        properly. The default is to NOT make the replacement.
+<p>
+    <b>nodetail</b> makes<b> mog</b> run without displaying any preliminary checks,
+        estimation output, or test results. Only the final table will be
+        displayed. This is useful to cut back on the amount of output shown
+        when you have already checked the details and you wish to tweak other
+        options.  Also useful with the <b>retest</b> option.  The default is to show
+        the details.
+<p>
+    <b>retest</b> reruns<b> mog</b> again, checking to ensure that the same underlying
+        estimation just performed is being requested again, that is, varname1
+        to varname3 are the same, if and in statements, and the same weight
+        or <b>survey</b> option, and <b>total</b> option.  However, when it is rerun, the
+        command that perfoms the estimation will not execute, often saving a
+        lot of time if it uses variance estimation with bootstrap weights.
+        All reporting options are changable, such as the reference group for
+        testing (<b>ref1</b> and <b>ref2</b>), the significance level of the tests (<b>sl</b>),
+        and formatting options like <b>decimals</b>, <b>cellwidth</b> and <b>underscores</b>. The
+        default is not to retest. Note: although the estimation command<b> mean</b>
+        (or<b> total</b>) is not rerun, the estimation results from the last<b> mog</b>
+        command must be the active estimation results in memory. This
+        includes both the estimation results saved in<b> e()</b>, and<b> mog</b> results
+        saved in<b> r()</b>.
+<p>
+    <b>survey</b> tells<b> mog</b> to use the information entered in the <b>svyset</b> command
+        regarding the details of the survey design.  The <b>survey</b> option will
+        over-ride any weights specified. Use one or the other, not both.  The
+        default is not to use the svyset information. It is operationalized
+        by running the estimation command (<b>mean</b> or <b>total</b>) with the svy
+        prefix.
+<p>
+    <b>fwer</b> computes the family-wise error rate, based on each tests p-value in
+        the series of tests for the categories of a grouping variable.  This
+        may be useful when considering the error rates resulting from useage
+        by a diverse, independent audience who tend to pick and choose what
+        information they need.  It provides a sense of the overall error rate
+        for the set of tests in this context.  The default is not to make the
+        calculations.  Not to be confused with joint tests of significance
+        when a set of test results are used together to develop a conclusion,
+        see test for information on joint testing and associated adjustments
+        used in multiple tests (like bonferonni, sidak, etc.). Use test after
+        <b>mog</b> to conduct joint tests, if desired.  The family-wise error rate,
+        the probability that at least one test in a series of independently
+        used tests is incorrectly rejecting the null.  Formula: 1 -
+        (1-pvalue_1)*...*(1-pvalue_i)*...*(1-pvalue_n) , i subscripts tests
+        and n is the number of tests.
+<p>
+    <b>pubstand</b> will place symbols in the table that indicate if an estimate has
+        not passed confidentiality and reliability standards. Estimates with
+        cell counts less than <b>mincount</b> will have the symbol X (changable
+        using using <b>symbmincount</b>) placed to their right. Estimates with
+        coefficients of variation (1/t-ratio) greater than <b>cvtoohigh</b> will
+        have an F placed to their right.  Estimates with cvs between
+        <b>cvwarning</b> and <b>cvtoohigh</b> will have an E placed to their right. Symbols
+        are changeable with <b>symbwarning</b> and <b>symbtoohigh</b>.  There can be an X,
+        E, an F, or neither, but never more than one. F and E are mutually
+        exclusive. X replaces E and F.
+<p>
+    <b>pubdichot</b>. For dichotomous dependent variables for varname1, for
+        instance, indicator variables showing if an observation has a
+        particular characteristic, the pubdichot option may be used to
+        further slice the samples. They are further sliced by not just the
+        grouping variables, but also the dependent variable, varname1.  This
+        may be a requirement of your institutional quality assurance
+        guidelines for total and proportion estimates.  One example is the
+        total number of people who are disabled, by age category and sex. If
+        only using the <b>pubstand</b> option, just the sample sizes in a tabulation
+        by age and sex would be checked against <b>mincount</b> for a minium sample
+        size. This may be acceptable for continuous dependent variables.
+        However for estimating totals, when there are rare events where maybe
+        only 2 people are disabled in a particular category, it is this
+        number, and the number not disabled, that are checked individually
+        against <b>mincount</b>, instead of the sum of the two (representing the
+        overall sample size of the cell).
+<p>
+<b><u>Examples</u></b>
+-------------------------------------------------------------------------------
+    Setup
+        <b>. use auto</b>
+<p>
+    Estimate the mean of weight over foreign
+        <b>. mog weight foreign</b>
+<p>
+    With rounding and no decimals
+        <b>. mog weight foreign, dec(0) round(100)</b>
+<p>
+    Recode rep78
+        <b>. recode rep78 (1/3=3 "Good") (4=4 "Very Good") (5=5 "Exceptionally</b>
+            <b>Good"), gen(rep78new)</b>
+<p>
+    Now estimate means by foreign and rep78new
+        <b>. mog weight foreign rep78new, dec(0) round(100)</b>
+<p>
+    Suppress details with <b>nodetail</b>
+        <b>. mog weight foreign rep78new, dec(0) round(100) nodetail</b>
+<p>
+    Change the reference group for varname2 (rep78new) to the 3rd category
+        <b>. mog weight foreign rep78new, dec(0) round(100) nodetail ref2(3)</b>
+<p>
+    Perform quality control checks
+        <b>. mog weight foreign rep78new, dec(0) round(100) nodetail ref2(3)</b>
+            <b>pubstand</b>
+<p>
+    Change minimum sample size per estimate to 5
+        <b>. mog weight foreign rep78new, dec(0) round(100) nodetail ref2(3)</b>
+            <b>pubstand mincount(5)</b>
+<p>
+    Increase the cellwidth to see all rep78new labels
+        <b>. mog weight foreign rep78new, dec(0) round(100) nodetail ref2(3)</b>
+            <b>pubstand mincount(5) cellwidth(15)</b>
+<p>
+    Insert underscores to aid in pasting to a spreadsheet (use copy table
+    option in Edit or shortcut menu)
+        <b>. mog weight foreign rep78new, dec(0) round(100) nodetail ref2(3)</b>
+            <b>pubstand mincount(5) cellwidth(15) und</b>
+<p>
+    Do not perform significance tests
+        <b>. mog weight foreign rep78new, dec(0) round(100) nodetail ref2(3)</b>
+            <b>pubstand mincount(5) cellwidth(15) und notest</b>
+<p>
+    Show only formatted numbers
+        <b>. mog weight foreign rep78new, dec(0) round(100) nodetail notest</b>
+-------------------------------------------------------------------------------
+    Setup
+        <b>. use auto</b>
+<p>
+    Make a dummay variable to indicate foreign cars
+        <b>. xi i.foreign</b>
+<p>
+    Recode rep78
+        <b>. recode rep78 (1/3=3), gen(rep78new)</b>
+<p>
+    Estimate the total of weight over foreign and rep78new
+        <b>. mog weight foreign rep78new, total dec(0)</b>
+<p>
+    Estimate the total of foreign over rep78new
+        <b>. mog _Iforeign_1 rep78new, total dec(0)</b>
+-------------------------------------------------------------------------------
+<p>
+<b><u>Saved results</u></b>
+<p>
+    <b>mog</b> saves estimation results in <b>e()</b>. See mean or total for details on
+    what is saved by the respective estimation commands.
+<p>
+    <b>mog</b> saves one result in <b>r()</b>:
+<p>
+    Macros         
+      <b>r(cmdtext)</b>          command as typed
+<p>
+<b><u>Author</u></b>
+<p>
+    Matt Hurst
+    Statistics Canada
+    matt.hurst@statcan.gc.ca
+    Last revision: December 9, 2010
+<p>
+<b><u>Also see</u></b>
+<p>
+    Manual:  <b>[R] mean</b>; <b>[R] total</b>
+<p>
+      Help:  <b>[R] mean</b>, <b>[R] mean postestimation</b>;
+             <b>[R] summarize</b>, <b>[R] total</b>, <b>[R] tabulate</b>, <b>[R] test</b>
+</pre>

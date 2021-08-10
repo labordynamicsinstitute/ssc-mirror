@@ -1,0 +1,133 @@
+<pre>
+-------------------------------------------------------------------------------
+help for <b>relrank</b>
+-------------------------------------------------------------------------------
+<p>
+<b><u>Generate (quasi-) relative data (grade transformation)</u></b>
+<p>
+        <b>relrank</b> <i>varname</i> [<b>if</b> <i>exp</i>] [<b>in</b> <i>range</i>] [<i>weight</i>] <b>,</b> <b><u>g</u></b><b>enerate(</b><i>newvar</i><b>)</b>
+               <b><u>r</u></b><b>eference(</b><i>refvar</i> [<b>if</b> <i>exp</i>] [<b>in</b> <i>range</i>]<b>)</b> [ <b>cdf(</b><i>cdfvar</i><b>)</b> ]
+<p>
+<p>
+    <b>by</b> <i>...</i> : may be used with <b>relrank</b>; see help by.
+<p>
+    <b>fweight</b>s and <b>aweight</b>s are allowed; see help weights.
+<p>
+<p>
+<b><u>Description</u></b>
+<p>
+    <b>relrank</b> generates the so called <i>relative data</i> of <i>varname</i> compared to
+    <i>refvar</i>. That is, <b>relrank</b> generates a variable reflecting the relative
+    ranks of the values of <i>varname</i> in the distribution of <i>refvar</i>.
+    Technically, <b>relrank</b> first computes the empirical cumulative distribution
+    function of <i>refvar</i> (see help cumul) and then applies this reference CDF
+    to the values of <i>varname</i>. Because the reference distribution function
+    used by <b>relrank</b> is just an estimate of the "true" distribution, one might
+    prefer to speak of <i>quasi-relative</i> data.
+<p>
+    The distribution of the relative data produced by <b>relrank</b> is called the
+    <i>relative distribution</i> and, naturally, also has a CDF and a PDF
+    (probability density function). As a matter of fact, the PDF of the
+    relative data -- the relative PDF -- can be interpreted as a density
+    ratio:  it is equal to the ratio between the PDF of the untransformed
+    data and the PDF of the reference data. For an introduction to the
+    concept of relative distributions see, e.g., Handcock and Morris (1998,
+    1999). Also see the <b>ppplot</b> package by Nicholas J. Cox (available from the
+    SSC Archive), which may be used to plot the relative distribution.
+<p>
+    The transformation of <i>varname</i> to relative data -- also called the <i>grade</i>
+    <i>transformation</i> -- is used, for example, in the analysis of income or wage
+    differentials (see, e.g., Juhn, Murphy and Pierce 1991). Another useful
+    tool for such analyses is provided by the <b>invcdf</b> package (also available
+    from SSC), which may be used to apply the inverse cumulative distribution
+    function (the so called quantile function) to a variable containing
+    percentile ranks (<b>invcdf</b> is closely related to pctile). This is useful,
+    for example, to compute hypothetical wages for women if their relative
+    positions in the male wage distribution would have remained constant over
+    time.
+<p>
+<p>
+<b><u>Options</u></b>
+<p>
+    <b>generate(</b><i>newvar</i><b>)</b> it not optional. It specifies the name of the new
+        variable to be created.
+<p>
+    <b>reference(</b><i>refvar</i> [<b>if</b> <i>exp</i>] [<b>in</b> <i>range</i>]<b>)</b> is not optional. It specifies the
+        variable representing the reference distribution. Use <b>if</b> and <b>in</b>
+        within <b>reference()</b> to restrict the sample for <i>refvar</i> (the <b>if</b> and <b>in</b>
+        restrictions outside <b>reference()</b> do not apply to <i>refvar</i>). Note that
+        <i>refvar</i> and <i>varname</i> may refer to the same variable and that the
+        indicated samples for <i>refvar</i> and <i>varname</i> may overlap.
+<p>
+    <b>cdf(</b><i>cdfvar</i><b>)</b> may be used to specify a variable representing the empirical
+        cumulative distribution function (e.c.d.f.) of <i>refvar</i>. In this case,
+        <b>relrank</b> skips the computation of the e.c.d.f. and uses <i>cdfvar</i>
+        instead. Note that <i>cdfvar</i> should lie in [0,1] and must be defined for
+        all values of <i>refvar</i> in the specified sample.
+<p>
+<p>
+<b><u>Examples</u></b>
+<p>
+    Compute the relative positions of female wages in the distribution of
+    male wages:
+<p>
+        . relrank wage if female==1, ref(wage if female==0) g(rank)
+        . summarize rank
+        
+<p>
+    Hint: The code
+<p>
+        . relrank x1, reference(x2) generate(rank)
+        . cumul rank, generate(cum) equal
+        . line cum rank, sort connect(J) xscale(range(0 1))
+        
+<p>
+    will essentially produce the same plot as
+<p>
+        . ppplot line x1 x2, connect(J)
+        
+<p>
+    Hint: The command
+<p>
+        . relrank x1, reference(x1) generate(rank)
+        
+<p>
+    computes the empirical cumulative distribution function of x1, that is,
+    it produces the same result as
+<p>
+        . cumul x1, generate(rank) equal
+        
+<p>
+<b><u>Methods and Formulas</u></b>
+<p>
+    The relative ranks of the values of x in the distribution of y are
+    determined as follows:
+<p>
+                 { 0        if x &lt; y(i)
+        F_y(x) = { W(i)/W   if y(i) &lt;= x &lt; y(i+1), i=1,...,N-1
+                 { 1        if x &gt;= y(N)
+<p>
+    where y(1), y(2), ..., y(N) are the ordered values of the reference
+    distribution, W(i) is the running sum of weights of y, and W is the total
+    sum of weights (if not specified, all weights are 1).
+<p>
+<p>
+<b><u>References</u></b>
+<p>
+    Handcock, Mark S., Martina Morris (1998). Relative Distribution Methods.
+        Sociological Methodology 28: 53-97.
+    Handcock, Mark S., Martina Morris (1999). Relative Distribution Methods
+        in the Social Sciences. New York: Springer.
+    Juhn, Chinhui, Kevin M. Murphy, Brooks Pierce (1991). Accounting for the
+        Slowdown in Black-White Wage Convergence. Pp. 107-143 in: Workers and
+        Their Wages, ed. by Marvin Kosters, Washington, DC: AEI Press.
+<p>
+<p>
+<b><u>Author</u></b>
+<p>
+    Ben Jann, ETH Zurich, jann@soz.gess.ethz.ch
+<p>
+<p>
+<b><u>Also see</u></b>
+<p>
+</pre>

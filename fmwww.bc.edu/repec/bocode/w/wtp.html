@@ -1,0 +1,102 @@
+<pre>
+-------------------------------------------------------------------------------
+<b>help wtp</b>
+-------------------------------------------------------------------------------
+<p>
+<p>
+<b><u>Title</u></b>
+<p>
+    <b>wtp</b> - Confidence intervals for willingness to pay measures.
+<p>
+<p>
+<b><u>Syntax</u></b>
+<p>
+        <b>wtp</b> <i>namelist</i> [,<i>options</i>]
+<p>
+    <i>options</i>             Description
+    -------------------------------------------------------------------------
+      <b><u>de</u></b><b>lta</b>             delta method (the default)
+      <b><u>fi</u></b><b>eller</b>           Fieller's method
+      <b><u>kr</u></b><b>insky</b>           Krinsky Robb (parametric bootstrap) method
+      <b>reps(</b><i>#</i><b>)</b>           Set the number of repetitions for the Krinsky Robb
+                          method; default is <b>reps(1000)</b>
+      <b>seed(</b><i>#</i><b>)</b>           Set the seed; default is <b>seed(5426)</b>
+      <b><u>l</u></b><b>evel(</b><i>#</i><b>)</b>          Set the confidence level
+      <b><u>eq</u></b><b>uation(</b><i>name</i><b>)</b>    Specify the equation name
+<p>
+    -------------------------------------------------------------------------
+<p>
+<b><u>Description</u></b>
+<p>
+    <b>wtp</b> estimates confidence intervals for willingness to pay (WTP) measures
+    of the type -b_k/b_c, where b_c is the cost coefficient and b_k is the
+    coefficient for attribute x_k.  It uses one of three methods: the delta
+    method, Fieller's method or the Krinsky Robb (parametric bootstrap)
+    method. See Hole (2007) for a comparison of the accuracy of the methods
+    in this context.
+<p>
+    Any number &gt;1 of variable names may be specified. The first is taken to
+    be the cost variable, i.e. the variable which coefficient is the
+    denominator in the ratios. <b>wtp</b> returns and displays a 3xk matrix, r(wtp),
+    where k is the number of specified variables other than the cost
+    variable. The first row in r(wtp) contains the WTP estimates and the
+    second and third rows contain the lower and upper confidence limits of
+    the WTP estimates.
+<p>
+    <b>wtp</b> does not feature a (non-parametric) bootstrap option, since bootstrap
+    confidence intervals can easiliy be obtained using the <b>bootstrap</b> command
+    (see bootstrap).
+<p>
+    Note: <b>wtp</b> accepts "_cons" as a variable name. Shorthand conventions for
+    variable names such as xvar* or xvar1-xvar3 are not accepted, however -
+    all names must be written in full.
+<p>
+<p>
+<b><u>Options</u></b>
+<p>
+    <b>delta</b>; use the delta method to construct the confidence intervals (the
+        default).
+<p>
+    <b>fieller</b>; use Fieller's method to construct the confidence intervals.
+<p>
+    <b>krinsky</b>; use the Krinsky Robb (parametric bootstrap) method to construct
+        the confidence intervals.
+<p>
+    <b>reps(</b><i>#</i><b>)</b> sets the number of repetitions for the Krinsky Robb method;
+        default is <b>reps(1000)</b>.
+<p>
+    <b>seed(</b><i>#</i><b>)</b> sets the random-number seed; default is <b>seed(5426)</b>. This option
+        is only relevant for the Krinsky Robb method.
+<p>
+    <b>level(</b><i>#</i><b>)</b> sets the confidence level; default is <b>level(95)</b>.
+<p>
+    <b>equation(</b><i>name</i><b>)</b> specifies the equation name. This option is relevant if
+        <b>wtp</b> is used after multiple-equation models such as <b>mlogit</b>. If the
+        equation name is not specified the default is the first equation.
+<p>
+<p>
+<b><u>Examples</u></b>
+<p>
+    <b>. probit choice wait cost knows thoro</b>
+<p>
+    <b>. wtp cost wait knows</b>
+    <b>. wtp cost wait thoro _cons, fieller level(90)</b>
+    <b>. wtp cost wait knows thoro, krinsky reps(2000)</b>
+<p>
+<p>
+<b><u>References</u></b>
+<p>
+    Hole AR. 2007. A comparison of approaches to estimating confidence
+        intervals for willingness to pay measures. Health Economics 16,
+        827-840.  http://dx.doi.org/10.1002/hec.1197
+<p>
+<p>
+<b><u>Author</u></b>
+<p>
+    This command was written by Arne Risa Hole (a.r.hole@sheffield.ac.uk),
+        Department of Economics, University of Sheffield. I am grateful to
+        Jesper Kjær Hansen for helpful comments. Comments and suggestions are
+        welcome.
+<p>
+<p>
+</pre>

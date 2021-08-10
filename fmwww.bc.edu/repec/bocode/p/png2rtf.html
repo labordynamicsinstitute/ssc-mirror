@@ -1,0 +1,70 @@
+<pre>
+-------------------------------------------------------------------------------
+help for <b>png2rtf</b>
+-------------------------------------------------------------------------------
+<p>
+<b><u>Including PNG graphs in RTF output</u></b>
+<p>
+<b><u>Syntax</u></b>
+<p>
+      <b>png2rtf</b> using <i>newfile.doc</i> [<b>,</b> <b>replace</b> <b><u>a</u></b><b>ppend</b>
+                <b><u>g</u></b><b>raph(</b><i>PNG path and filename</i><b>)</b>
+                <b><u>h</u></b><b>eight(</b><i>height of graph in pixels, default 753</i><b>)</b>
+                <b><u>w</u></b><b>idth(</b><i>width of graph in pixels, default 548</i><b>)</b>
+                <b>author(</b><i>Author name for RTF file properties</i><b>)</b>
+                <b>title(</b><i>Title for RTF file properties</i><b>)</b>
+                <b>company(</b><i>Company for RTF file properties</i><b>)</b> ]
+<p>
+<a name="description"></a>        +-------------+
+    ----+ Description +------------------------------------------------------
+<p>
+Suppose you want to export graphs to a document that can be viewed easily by
+folks who don't use Stata.  Using TeX and making a PDF is arguably the easiest
+way to go; see e.g. texdoc on SSC for a primer.  Ulrich Kohler has advocated
+using ghostscript and Maarten Buis has advocated using file to write out html;
+see also log2html on SSC for related ideas.  There is also advice from Michael
+Blasnik on using a mail merge in Microsoft Word or similar software; see
+http://www.stata.com/statalist/archive/2004-06/msg00301.html and
+http://www.stata.com/meeting/4nasug/abstracts.html#blasnik.
+<p>
+<b>png2rtf</b> offers yet another alternative: you can export graphs as PNG files then
+convert the binary file into a hexdump for inclusion in an RTF file; <b>png2rtf</b>
+automates this second step.  The resulting file can be opened in Microsoft Word
+and many other word processors immediately.  Note that the hexdump roughly
+doubles the size of the graph file, so do what you can to make sure your PNG is
+as small as possible (e.g. don't plot symbols on top of each other).
+<p>
+You can add other material to the RTF including text and formatting tags much
+as you would in html or TeX, but that functionality is not provided in <b>png2rtf</b>
+(see also e.g. estout on SSC for a program that writes out estimates and other
+tables to RTF files).
+<p>
+<a name="examples"></a>        +----------+
+    ----+ Examples +---------------------------------------------------------
+<p>
+      sysuse auto, clear
+      sc mpg weight
+      gr export mpg.png, height(300) width(300) replace
+      png2rtf using mpg.doc, g(mpg.png) replace
+      eststo clear
+      _eststo mpg: reg mpg weight
+      _eststo pri: reg price weight
+      esttab mpg pri using mpg.doc, rtf la nogap onecell mti a ti(\par Here
+                is some text{\page}{\b A title})
+      sc price weight
+      gr export price.png, height(300) width(300) replace
+      png2rtf using mpg.doc, g(price.png) a
+<p>
+<b><u>Author</u></b>
+<p>
+    Austin Nichols
+    Urban Institute
+    Washington, DC, USA
+    austinnichols@gmail.com
+<p>
+<b><u>Also see</u></b>
+<p>
+ Manual:  <b>[G]</b> <i>png_options</i>, <b>[G] graph export</b>
+<p>
+ On-line: help for graph export.
+</pre>

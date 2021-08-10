@@ -1,0 +1,9 @@
+{smcl}
+{* 23nov2004}{...}
+{hline}
+{hi:estout}'s {it:output_options}
+{hline}
+
+INCLUDE help estout_output_options
+
+{back:(back)}

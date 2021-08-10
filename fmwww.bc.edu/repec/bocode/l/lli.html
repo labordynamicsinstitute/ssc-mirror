@@ -1,0 +1,50 @@
+<pre>
+-------------------------------------------------------------------------------
+Help file for <b>lli</b>
+-------------------------------------------------------------------------------
+<p>
+    Calculate the Satorra-Bentler Scaled Chi-Square using the loglikelihood
+    following an Mplus ML, MLM, MLR or WLSMV see
+    http://www.statmodel.com/chidiff.shtml for more information. Also see a
+    note in Mplus discussion from B. Muthén (e.g.,
+    http://www.statmodel.com/discussion/messages/9/189.html#POST7445)
+<p>
+<p>
+-------------------------------------------------------------------------------
+<p>
+        <b>lli</b> , <b>l0(</b><i>string</i><b>)</b> <b>p0(</b><i>string</i><b>)</b> [ <b>c0(</b><i>string</i><b>)</b> ] <b>l1(</b><i>string</i><b>)</b> <b>p1(</b><i>string</i><b>)</b> [
+                 <b>c1(</b><i>string</i><b>)</b> ]
+<p>
+<b><u>Required commands</u></b>
+<p>
+<b>l0</b> - Loglikelihood in analysis model
+<p>
+<b>l1</b> - Loglikelihood in the unconstrained or less constrained model
+<p>
+<b>p0</b> - Number of parameters in the analysis model
+<p>
+<b>p1</b> - Number of parameters in the unconstrained or less constrained model
+<p>
+<p>
+<b><u>Options</u></b>
+<p>
+<b>c0</b> <b>c1</b> - Specify the scaling correction factor, default = 1
+<p>
+<b><u>Example</u></b>
+<p>
+        .<b>  lli , l0(-2606) l1(-2583) c0(1.450) c1(1.546) p0(39) p1(47)</b>
+        difference test scaling correction (cd) = 2.014
+        Chi-square difference test = 22.840
+        P = 0.004
+<p>
+<p>
+<p>
+<b><u>Author</u></b>
+        Richard N Jones, ScD
+        Institute for Aging Research
+        Hebrew SeniorLife, Boston, MA
+        jones@mail.hrca.harvard.edu
+<p>
+<p>
+<p>
+</pre>

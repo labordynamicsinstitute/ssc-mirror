@@ -1,0 +1,59 @@
+<pre>
+-------------------------------------------------------------------------------
+help for <b>graphexportpdf</b>
+-------------------------------------------------------------------------------
+<p>
+<b><u>Improved support for saving graphs as pdf</u></b> 
+<p>
+        <b>graphexportpdf</b> <i>newfilename</i>[, <b>dropeps</b>]
+<p>
+<p>
+<b><u>Description</u></b> 
+<p>
+    <b>graphexportpdf</b> is an alternative to the standard <b>graph export</b> syntax,
+    which produces unsatisfactory pdf files in Mac and does not support pdf
+    for Linux or Solaris at all. <b>graphexportpdf</b> provides superior pdf output
+    for UNIX-like systems (sorry, no Windows support) by first saving as eps
+    then translating to pdf.
+<p>
+<p>
+<b><u>Remarks</u></b> 
+<p>
+    The program works by first using Stata's excellent support for eps, then
+    using the shell to convert eps to pdf. Because it relies on the shell for
+    the latter step, the ado-file only runs on UNIX-like systems (Mac, Linux,
+    Solaris). If run on a Windows computer it will just produce an eps.
+<p>
+    "Replace" is assumed so both <i>newfilename.eps</i> and <i>newfilename.pdf</i> will be
+    overwritten if they already exist.
+<p>
+    This command runs slower than using "<b>graph export</b> <i>newfilename.pdf</i>" on
+    Stata for Mac (the only version that supports that syntax), but the
+    output is much more attractive, especially for line graphs and kernel
+    density plots.
+<p>
+<b><u>Options</u></b> 
+ 
+    <b>dropeps</b> specifies that <i>newfilename.eps</i> (which is created as an
+        intermediate step) will be deleted.
+<p>
+<b><u>Examples</u></b>
+<p>
+<p>
+. graphexportpdf pricempg dropeps
+<p>
+    <b>. sysuse auto, clear</b>
+    <b>. twoway scatter price mpg</b>
+    <b>. graphexportpdf pricempg, dropeps</b>
+<p>
+<p>
+<b><u>Author</u></b>
+<p>
+    Gabriel Rossman, UCLA
+    rossman@soc.ucla.edu
+<p>
+<b><u>Also see</u></b>
+<p>
+    On-line:  help for graph export, help for shell
+<p>
+</pre>

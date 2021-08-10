@@ -1,0 +1,77 @@
+<pre>
+-------------------------------------------------------------------------------
+help for <b>ordvar</b>                                                  (Michael Lacy)
+-------------------------------------------------------------------------------
+<p>
+    <b>ordvar</b> --   Ordinal variation and consensus statistics
+<p>
+<b><u>Syntax</u></b>
+<p>
+        <b>ordvar</b> <i>varname</i> [if] [in] [,<b>low(</b><i>#</i><b>)</b> <b>high(</b><i>#</i><b>)</b>]
+<p>
+  -----------------------------------------------------------------------------
+ The <b>by</b> prefix is allowed.
+<p>
+<b><u>Description</u></b>
+<p>
+    <b>ordvar</b> calculates measures of ordinal consensus and dispersion. These
+    include <i>lsq</i> and 1-<i>lsq</i>, which are 0/1 normed ordinal consensus and
+    dispersion statistics described in Blair and Lacy (2000). The latter
+    statistic is essentially identical to the IOV measure of Berry and Mielke
+    (1992).  The non-normed version of the dispersion statistic, termed
+    d-squared by Lacy (2006), is also calculated, as are delta-method
+    standard errors for these statistics. These measures do not rely on
+    assumptions about intercategory distances or distributional form.
+<p>
+<b><u>Arguments and Options</u></b>
+    <i>varname</i> is the variable for which the dispersion and consensus statistics
+    are desired.  This variable is assumed to be coded with consecutive
+    integers, starting with the lowest value occurring in the data up to the
+    highest. As an option, to allow for situations in which the lowest or
+    highest theoretically possible value does not occur in the data, the user
+    may specify these values by using the low(#) and high(#) options.
+    Failure to specify this option when necessary will give incorrect
+    results.
+<p>
+<b><u>Returned results</u></b>
+<p>
+    <b>ordvar</b> saves the following in <b>r()</b>:
+<p>
+    Scalars    
+      <b>r(onemlsq)</b>       1-<i>lsq</i> normed ordinal dispersion statistic
+      <b>r(lsq)</b>           <i>lsq</i> normed ordinal dispersion statistic
+      <b>r(dsq)</b>           <i>d-squared</i> non-normed ordinal dispersion statistic
+      <b>r(dsqse)</b>         standard error of <i>d-squared</i>
+      <b>r(lsqse)</b>         standard error of 1-<i>lsq</i> or <i>lsq</i>
+ 
+<p>
+<b><u>Examples</u></b>
+<p>
+    <b>. sysuse auto</b>
+    <b>. ordvar rep78</b>
+    <b>.</b> // What if some theoretical minimum or maximum value did not occur in
+             the data?
+    <b>. keep if foreign==1</b>
+    <b>. tab1 rep78</b>
+    <b>. ordvar rep78, low(1) high(5)</b>
+<p>
+<p>
+<b><u>References</u></b>
+<p>
+    Blair, J. and M. Lacy. 2000. "Statistics of Ordinal Variation."
+        Sociological Methods and Research. 28: 251-280.
+<p>
+    Lacy, M. 2006.  "An Explained Variation Measure for Ordinal Response
+        Models with Comparisons to Other Ordinal R2 Measures." Sociological
+        Methods and Research 34:469-520.
+<p>
+    Berry, K. J. and P. W. Mielke, Jr. 1992. "Assessment of Variation in
+        Ordinal Data." Perceptual and Motor Skills 74:63-66.
+<p>
+<b><u>Author</u></b>
+<p>
+    Michael G. Lacy
+    Colorado State University
+    Fort Collins, Colorado
+    Michael.Lacy@colostate.edu
+</pre>

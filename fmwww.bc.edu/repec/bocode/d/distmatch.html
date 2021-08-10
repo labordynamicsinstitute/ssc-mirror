@@ -1,0 +1,159 @@
+<pre>
+<b>help distmatch</b>
+<p>
+-------------------------------------------------------------------------------
+<p>
+<b><u>Title</u></b>
+<p>
+    <b>distmatch</b> -- distance matching based on latitudes and longitudes
+<p>
+<a name="s_Syntax"></a><p>
+<b><u>Syntax</u></b>
+<p>
+    <b>distmatch</b> [<i>varlist</i>], <b>id(</b><i> </i><b>)</b> <b><u>lat</u></b><b>itude(</b><i> </i><b>)</b> <b><u>lon</u></b><b>gitude(</b><i> </i><b>)</b> [<i>options</i>]
+<p>
+<a name="s_Description"></a><p>
+<b><u>Description</u></b>
+<p>
+    <b>distmatch</b> provides a fast and easy way to perform distance matching
+    based on latitudes and longitudes. It mathces location identifiers,
+    attributes, or distances from one to another. It also counts the
+    number of neighboring locations within a given area, either in
+    circles or bands of concentric circles.
+<p>
+    Outputs produced by <b>distmatch</b> are typically used in studies of
+    geocoded data. These outputs can also be produced by non-Stata
+    softwares such as ArcGIS and ArcView.
+<p>
+    <b>distmatch</b> implements haversine formula for distance.
+<p>
+    Distance matching with full ranking of nearby neighbors can be
+    computationally intensive. Observations of 3,000 may take several
+    minutes to complete. Observations of 2,000,000 will take about 1 day
+    per nearest neighbor for each observations.
+<p>
+    The default setting is to calculate distances for each observation in
+    miles.
+<p>
+<a name="s_Options"></a><p>
+<b><u>Options</u></b>
+<p>
+        +------+
+    ----+ Main +-------------------------------------------------------------
+<p>
+    <b>id(</b><i>varname</i><b>)</b> unique identifiers. They cannot be missing.
+<p>
+    <b><u>lat</u></b><b>itude(</b><i>varname</i><b>)</b> decimal-degree latitude.
+<p>
+    <b><u>lon</u></b><b>gitude(</b><i>varname</i><b>)</b> decimal-degree longitude.
+<p>
+    <b><u>don</u></b><b>or(</b><i>varname</i><b>)</b> an indicator for donor. Neighbors will be found for
+            them. The default is 1 for everyone.
+<p>
+    <b><u>rec</u></b><b>ipient(</b><i>varname</i><b>)</b> an indicator for recipients. They are candidate to
+            be someone's neighbor. The default is 1 for everyone.
+<p>
+    <b><u>near</u></b><b>est(</b><i>#</i><b>)</b> the number of nearest neighbors to be found. <b><u>near</u></b><b>est(</b>.<b>)</b>
+            will make it look until it runs out of potential neighbors.
+            The default is 5.
+<p>
+    <b><u>min</u></b><b>imum(</b><i>#</i><b>)</b> the minimum distance.
+<p>
+    <b><u>max</u></b><b>imum(</b><i>#</i><b>)</b> the maximum distance.
+<p>
+    <b>count</b> count the number of neighbors within the area upto <b><u>near</u></b><b>est(</b><i>#</i><b>)</b>
+<p>
+    <b>km</b> kilometers instead of miles.
+<p>
+    <b><u>noi</u></b><b>sily</b> display the progress on the screen.
+<p>
+<p>
+        +--------------+
+    ----+ Nomenclature +-----------------------------------------------------
+<p>
+    <b>dist(</b><i> </i><b>)</b> name of variables to contain distnaces. The default is "dist"
+<p>
+    <b>count(</b><i> </i><b>)</b> name of variable to contain the number of neighbors. The
+            default is "count".
+<p>
+    <b><u>pre</u></b><b>fix(</b><i> </i><b>)</b> prefix. The default is "_".
+<p>
+    <b><u>suf</u></b><b>fix(</b><i> </i><b>)</b> non-index suffix before the indices. The default is none.
+<p>
+<p>
+<b><u>Hints</u></b>
+<p>
+    If you have more than one datasets, they need to be appeneded into
+    one dataset. They should have the same name for longigutes and
+    latitutudes so that they will appear in the same columns.
+<p>
+    Use donor( ) option to indicate the potential pool of neighbors. See
+    an example below.
+<p>
+    Use recipient( ) option to indicate locations for which neighbors
+    will be found. See an example below.
+<p>
+    Use noisily option to see the progress on the screen.
+<p>
+<a name="s_0"></a><p>
+<b><u>Examples</u></b>
+<p>
+    * suggestions on how to create unique identifier
+    gen id = _n
+    egen id = group(state county)
+<p>
+    * You should download the ancillary file containing population
+    centroids of U.S. counties
+    net describe distmatch, from(http://fmwww.bc.edu/RePEc/bocode/d)
+    use distmatch_county.dta, clear
+<p>
+    * noisily produces the id and the distance to 5 nearest neighbors by
+    default
+    distmatch, id(id) lat(lat) lon(lon)
+    browse
+<p>
+    * extracts values (attributes) associated with the nearest neighbors
+    drop _*
+    distmatch name lat longi, id(id) lat(lat) lon(lon)
+    browse
+<p>
+    * draw potential neighbors from a pool of donors and match them to
+    the recipients
+    drop _*
+    gen donor =1 in 1/1500
+    gen recipient =1 in 1501/3232
+    distmatch, id(id) lat(lat) lon(lon) don(donor) rec(recipient)
+        dist(one_to_the_other)
+    browse
+<p>
+    * searches in a band of concentric circle between 10 and 11 miles
+    inclusive (for obs 1-500)
+    clear
+    set maxvar 12000
+    use distmatch_county.dta, clear
+    keep in 1/500
+    distmatch, id(id) lat(lat) lon(lon) min(10) max(11) nearest(.)
+        count(conc_1_2)
+    browse
+<p>
+<p>
+<b><u>Acknowledgement</u></b>
+<p>
+    Austin Nichols provided suggestions on how to improve the package.
+<p>
+<p>
+<b><u>Remarks</u></b>
+<p>
+    The word "long" is reserved in Stata. Use "lon" or something else
+            instead.
+    <b><u>min</u></b><b>imum(</b><i> </i><b>)</b> and <b><u>max</u></b><b>imum(</b><i> </i><b>)</b> are inclusive, i.e. &gt;= and &lt;=.
+    Conflicts between options should be reported with detailed examples
+            to the address below.
+<p>
+<p>
+<b><u>Author</u></b>
+<p>
+    Roy Wada
+    roywada@hotmail.com
+<p>
+</pre>

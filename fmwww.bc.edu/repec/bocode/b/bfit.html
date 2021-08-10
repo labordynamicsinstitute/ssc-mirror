@@ -1,0 +1,136 @@
+<pre>
+<b><u>Title</u></b>
+<p>
+                  Best fit model selection
+<p>
+<p>
+<a name="syntax"></a><b><u>Syntax</u></b>
+<p>
+        <b>bfit regress</b> <i>depvar</i> <i>indepvars</i> [<i>if</i>] [<i>in</i>] [<b>,</b> <b>corder(</b><i>#</i><b>)</b> <b>sort(bic</b>|<b>aic)</b>
+               <i>options</i>]
+<p>
+        <b>bfit logit</b> <i>depvar</i> <i>indepvars</i> [<i>if</i>] [<i>in</i>] [<b>,</b> <b>corder(</b><i>#</i><b>)</b> <b>sort(bic</b>|<b>aic)</b>
+               <i>options</i>]
+<p>
+        <b>bfit poisson</b> <i>depvar</i> <i>indepvars</i> [<i>if</i>] [<i>in</i>] [<b>,</b> <b>corder(</b><i>#</i><b>)</b> <b>sort(bic</b>|<b>aic)</b>
+               <i>options</i>]
+<p>
+    <i>options</i>                       Description
+    -------------------------------------------------------------------------
+      <b><u>quant</u></b><b>iles</b>(<i>numlist</i>)          estimate specified quantiles
+<p>
+      <b>vce</b>(vcetype [, <i>vceoptions</i>]) <i>vcetype</i> may be <b>bootstrap</b>, <b>analytic</b>, or
+                                    <b>none</b>.
+                                  <b>analytic</b> is the default when <b>quantiles()</b> is
+                                  not specified.  <b>bootstrap</b> is the default
+                                  when <b>quantiles()</b> is specified.
+                                  <i>vceoptions</i> vary over <i>vcetype</i> and are
+                                  discussed below.
+<p>
+INCLUDE help shortdes-coeflegend
+    -------------------------------------------------------------------------
+    <i>gpsvars</i> and <i>cvars</i> may contain time-series operators; see fvvarlist.
+<p>
+<a name="description"></a><b><u>Description</u></b>
+<p>
+    <b>bfit</b> <i>subcmd</i> sorts a set of fitted candidate regression models by an
+    information criterion, puts the best-fitting model in <b>ereturn</b>, and
+    displays a table showing the ranking of the models fitted. The Bayesian
+    information criterion (BIC) is the default and the Akaike information
+    criterion (AIC) may optionally be specified as the ranking criterion.
+<p>
+    <b>bfit</b> <i>subcmd</i> sorts a set of fitted candidate regression models by <b>bfit</b>
+    <b>regress</b> fits the candidate linear-regression models by ordinary least
+    squares. <b>bfit mlogit</b> fits the candidate mulitinomial-logit models by
+    maximum likelihood. <b>bfit poisson</b> fits the candidate poisson regression
+    models by maximum likelihood.
+<p>
+    <b>bfit</b> <i>subcmd</i> sorts a set of fitted candidate regression models by For each
+    <i>subcmd</i>, the candidate models are a series of polynomials in <i>indepvars</i>.
+    The smallest of the candidate models includes only the first variable
+    specified in <i>indepvars</i>. The largest of the candidate models is a
+    fully-interacted polynomial of the order specified in <b>corder()</b>. See
+    <b>Methods and formulas</b> in !! for details on the set of candidate models.
+<p>
+    Cattaneo, Drukker, and Holland (2012) provides an introduction to this
+    command.
+<p>
+<a name="options"></a><b><u>Options</u></b>
+<p>
+    <b><u>cord</u></b><b>er(</b><i>#</i><b>)</b> specifies the maximum order of the covariate polynomial. The
+        default is 2 which specifies a fully-interacted second-order
+        polynomial.
+<p>
+    <b>sort()</b> specifies the information criterion by which the candidate models
+        are to be sorted. <b>sort(bic)</b>, the default, sorts the fitted candidate
+        models by the Bayesian information criterion. <b>sort(aic)</b> sorts the
+        fitted candidate models by the Akaike information criterion.
+<p>
+    <i>coptions</i> are passed to the estimation command. The allow options depend
+        on the estimation command invoked by the <i>subcommand</i>. For example,
+        <i>base()</i> may be specified only the with <b>logit</b> subcommand.  See regress,
+        mlogit, and poisson for the allowable command options.
+<p>
+<p>
+<a name="examples"></a><b><u>Examples</u></b>
+<p>
+    ---------------------------------------------------------------------------
+    Setup
+        <b>. use spmdata</b>
+<p>
+    Model selection with logit
+        <b>. bfit logit w pindex eindex</b>
+<p>
+    Model selection with logit up to a third-order model
+        <b>. bfit logit w pindex eindex, corder(3)</b>
+<p>
+    Model selection with logit, and AIC selection
+        <b>. bfit logit w pindex eindex, sort(aic)</b>
+<p>
+    Model selection with regress
+        <b>. bfit regress spmeasure pindex eindex</b>
+<p>
+<a name="saved_results"></a><b><u>Saved results</u></b>
+<p>
+    <b>bift</b> saves the following in <b>r()</b>:
+<p>
+    Macros         
+      <b>r(subcmd)</b>           <b>regress</b>, <b>logit</b>, or <b>poisson</b>
+      <b>r(bmodel)</b>           Name of selected model in <b>estimates store</b>
+      <b>r(bvlist)</b>           Variables in selected model
+      <b>r(sortby)</b>           <b>bic</b> or <b>aic</b>
+<p>
+    Matrices       
+      <b>e(S)</b>                Results for each model fit
+<p>
+    The matrix <b>r(S)</b> has 7 columns with the following model-specific
+    information in each row:
+        Column 1 contains the names of the model in <b>estimates store</b>
+        Column 2 contains the number of observations in the sample
+        Column 3 contains the value of the log-likelihood function for the
+          constant-only model
+        Column 4 contains the value of the log-likelihood function
+        Column 5 contains the degrees of freedom in the model
+        Column 6 contains the AIC
+        Column 7 contains the BIC
+<p>
+<p>
+<b><u>References</u></b>
+<p>
+    Cattaneo, M. D., D. M. Drukker, and A. Holland. 2012.  Estimation of
+        multivalued treatment effects under conditional independence.
+        Working paper, University of Michigan, Department of Economics, 
+        http://www-personal.umich.edu/~cattaneo/papers/Cattaneo-Drukker-Holla
+        &gt; nd_2012_STATA.pdf.
+<p>
+<p>
+<b><u>Authors</u></b>
+<p>
+    Matias D. Cattaneo, University of Michigan, Ann Arbor, MI.
+        cattaneo@umich.edu.
+<p>
+    David M. Drukker, StataCorp, College Station, TX.  ddrukker@stata.com.
+<p>
+    Ashley D. Holland, Grace College, Winona Lake, IN.  hollana@grace.edu.
+<p>
+</pre>

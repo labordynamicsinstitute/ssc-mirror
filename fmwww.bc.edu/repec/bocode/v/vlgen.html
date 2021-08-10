@@ -1,0 +1,108 @@
+<pre>
+<b>help vlgen</b>
+-------------------------------------------------------------------------------
+<p>
+<b><u>Title</u></b>
+<p>
+    <b>vlgen</b> -- Generate or replace variable labels automatically while
+        generating or replacing the variable.
+<p>
+<p>
+<b><u>Syntax</u></b>
+            <b>vlgen</b> <i>varname</i> {=exp} [<i>if</i>] [<i>in</i>] [<b>,</b> <i>options</i>]
+<p>
+    <b>vlgen</b> (<b>v</b>ariable and <b>l</b>abel <b>gen</b>erate) acts much like <b>labgen</b>, but uses
+    labels one from one level deeper -- see examples below.
+<p>
+    <i>options</i>               Description
+    -------------------------------------------------------------------------
+      <b>replace</b>             replace an existing variable and label
+      <b><u>nop</u></b><b>romote</b>           same as nopromote option with <b>replace</b>, see replace
+      <b><u>noc</u></b><b>onditionals</b>      keeps "if" and "in" statements out of the label
+    -------------------------------------------------------------------------
+<p>
+<p>
+<b><u>Examples</u></b>
+<p>
+    <b>Comparing </b><b>labgen</b><b> and </b><b>vlgen</b>
+    ------------------------------
+<p>
+    Suppose your data set contains the following variables.
+<p>
+           Name    Label
+           --------------
+            x1     blah
+            x2
+            x3     etc
+<p>
+    After
+<p>
+    <b>. labgen x4 = x1+x3</b>
+<p>
+    you would have
+<p>
+           Name    Label
+           --------------
+            x1     blah
+            x2
+            x3     etc
+            x4     x1+x3
+<p>
+    If instead you used
+<p>
+    <b>. vlgen x4 = x1+x3</b>
+<p>
+    you would have
+<p>
+           Name    Label
+           --------------
+            x1     blah
+            x2
+            x3     etc
+            x4     blah + etc
+<p>
+    If a variable has no label, the variable name is used, as in <b>labgen</b>.
+<p>
+    <b>. vlgen x5 = x1 + x2</b>
+<p>
+    would give you
+<p>
+           Name    Label
+           --------------
+            x1     blah
+            x2
+            x3     etc
+            x4     blah + etc   
+            x5     blah + x2
+<p>
+<p>
+<p>
+    <b>Using the replace option</b>
+    ------------------------------
+<p>
+    Starting with the data set
+<p>
+           Name    Label
+           --------------
+            x1     blah
+            x2
+            x3     etc
+            x4     blah + etc
+<p>
+    <b>. vlgen x4 = abs(x1) + x2, replace</b>
+<p>
+    would give you
+<p>
+           Name    Label
+           --------------
+            x1     blah
+            x2
+            x3     etc
+            x4     abs( blah ) + etc
+<p>
+    replacing both variable values and label.
+<p>
+<b><u>Author</u></b>
+<p>
+    James Fiedler, Universities Space Research Association
+</pre>

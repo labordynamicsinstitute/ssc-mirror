@@ -1,0 +1,54 @@
+<pre>
+-------------------------------------------------------------------------------
+help for <b>circylowess</b>
+-------------------------------------------------------------------------------
+<p>
+<b><u>Smoothing including lowess for circular data, y variable circular</u></b> 
+<p>
+        <b>circylowess</b> <i>yvar xvar</i> [<b>if</b> <i>exp</i>] [<b>in</b> <i>range</i>] [ <b>,</b> <b><u>g</u></b><b>enerate(</b><i>newvar</i><b>)</b>
+                 <b>lowess(</b><i>lowess_options</i><b>)</b> <b>scatter(</b><i>scatter_options</i><b>)</b> <b>plot(</b><i>plot</i><b>)</b> ]
+<p>
+<p>
+<b><u>Description</u></b> 
+<p>
+    <b>circylowess</b> carries out smoothing (including lowess) of a circular <i>y</i>
+    variable <i>yvar</i> (specified first in the <i>varlist</i>) with respect to some
+    non-circular <i>x</i> variable <i>xvar</i>. <i>yvar</i> should take on values between 0 and
+    360 degrees. The smoothed result is
+<p>
+        arctan(smoothed sine of <i>yvar</i> / smoothed cosine of <i>yvar</i>)
+<p>
+    and the kind and degree of smoothing are specified by invoking options of
+    <b>lowess</b>. <b>circscatter</b> is used to show the results graphically.
+<p>
+<p>
+<b><u>Options</u></b> 
+<p>
+    <b>generate()</b> specifies a new variable to be generated containing the
+        results of smoothing.
+<p>
+    <b>lowess()</b> specifies options allowed with lowess. The following are
+        relevant: <b>mean</b>, <b>noweight</b>, <b>bwidth()</b>, <b>logit</b> and <b>adjust</b>.
+<p>
+    <b>scatter()</b> specifies options allowed with circscatter.
+<p>
+    <b>plot(</b><i>plot</i><b>)</b> provides a way to add other plots to the generated graph; see
+        help plot_option.
+<p>
+<p>
+<b><u>Examples</u></b> 
+<p>
+    <b>. circylowess wallasp length, gen(lowess) scatter(yla(,ang(h)))</b>
+<p>
+<p>
+<b><u>Author</u></b> 
+<p>
+    Nicholas J. Cox, University of Durham, U.K.
+    n.j.cox@durham.ac.uk
+<p>
+<p>
+<b><u>Also see</u></b> 
+<p>
+    On-line: help for lowess, circscatter, circxlowess
+<p>
+</pre>

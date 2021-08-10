@@ -1,0 +1,97 @@
+<pre>
+-------------------------------------------------------------------------------
+help for <b>pnrcheck</b> 
+-------------------------------------------------------------------------------
+<p>
+<b><u>pnrcheck</u></b>
+<p>
+    <b>pnrcheck</b> <i>variable_pnr</i> [<b>,</b> <b><u>savep</u></b><b>nr(</b><i>variable_name</i><b>)</b> <b><u>savei</u></b><b>nd(</b><i>variable_name</i><b>)</b>
+        <b><u>listw</u></b><b>rong</b> <b><u>listm</u></b><b>issing</b> <b><u>di</u></b><b>splay</b> ]
+<p>
+<b><u>Description</u></b>
+<p>
+    <b>pnrcheck</b> Algorithm to verify the check digit in Swedish personal
+        identification numbers (PNRs).  The check digit is the tenth digit
+        constructed from the preceding nine digits, according to date of
+        birth and gender.
+<p>
+<b><u>Remark</u></b>
+<p>
+    The <i>variable_pnr</i> could be either a string (A) or a numeric variable (B).
+        The check digit could also be missing (C). See help datatypes.
+<p>
+<b>(A)</b> The <i>variable_pnr</i> could be stored as string
+<p>
+    Case 1 "4102179704" str10 (standard storage type)
+    Case 2 "194102179704" str12 (if there are 2 initial numbers of the year)
+    Case 3 "410217-9704" str11 (if there is a minus sign)
+    Case 4 "19410217-9704" str13 (if there is a minus sign and the 2 initial
+        numbers of the year)
+<p>
+<b>(B)</b> The <i>variable_pnr</i> could be stored as number with double precision
+<p>
+    Case 5 4.102e+09 double (corresponding to Case 1)
+    Case 6 1.914e+11 double (corresponding to Case 2)
+<p>
+<b>(C)</b> The tenth digit or check digit of the <i>variable_pnr</i> could be missing
+<p>
+    Case 7 4.102e+08 double (Case 5 without the check digit)
+    Case 8 "410217970" str9 (Case 1 without the check digit)
+<p>
+<b><u>Algorithm</u></b>
+<p>
+    <b>STEP 1</b> Multiply each of the first nine digits in the PNR by the digits
+        2,1,2,1,2,1,2,1,2
+<p>
+    <b>STEP 2</b> Calculate the cumulative sum of each of these 9 calculations
+<p>
+    <b>STEP 3</b> Verify if the check digit of <i>variable_pnr</i> is equal to the number
+        we would have to add to the cumulative sum (from STEP 2) to obtain a
+        multiple of 10
+<p>
+<b><u>Options</u></b>
+<p>
+    <b><u>savep</u></b><b>nr(</b><i>variable_name</i><b>)</b> saves the right PNR variable
+<p>
+    <b><u>savei</u></b><b>nd(</b><i>variable_name</i><b>)</b> saves an indicator variable according to the check
+        digit status (0=Right, 1=Wrong, 2=Missing)
+<p>
+    <b><u>di</u></b><b>splay</b> displays algorithm's results: number of wrong and right PNR,
+        percentage
+<p>
+    <b><u>listw</u></b><b>rong</b> lists temporary variables <i>input_pnr i_check output_pnr o_check</i>
+        only for individuals whose check digit is wrong
+<p>
+    <b><u>listm</u></b><b>issing</b> lists temporary variables <i>input_pnr i_check output_pnr</i>
+        <i>o_check</i> only for individuals whose check digit is missing
+<p>
+<b><u>Examples</u></b>
+<p>
+    . insheet using
+        http://nicolaorsini.altervista.org/stata/tutorial/p/ex_pnrs.txt,
+        clear
+    . pnrcheck pnr
+    . pnrcheck pnr, savep(pnrright) di
+    . pnrcheck pnr, savep(pnrright) savei(indvar) di listw
+        
+<p>
+<b><u>Authors</u></b>      
+<p>
+    Nicola Orsini, I.M.M., Karolinska Institutet, Sweden
+    Nicholas J. Cox, University of Durham, U.K.
+    Rino Bellocco, M.E.B., Karolinska Institutet, Sweden
+<p>
+<b><u>Support</u></b>
+<p>
+    Nicola Orsini, http://nicolaorsini.altervista.org, Karolinska Institutet,
+        Sweden
+    nicola.orsini@imm.ki.se
+<p>
+<b><u>Also see</u></b>
+<p>
+    <b>[R] destring</b>
+    <b>[U] Commands for dealing with strings</b>
+<p>
+On-line:  help for destring, macro, strfun
+<p>
+</pre>

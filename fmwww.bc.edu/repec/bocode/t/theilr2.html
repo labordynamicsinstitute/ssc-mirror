@@ -1,0 +1,116 @@
+<pre>
+-------------------------------------------------------------------------------
+<b>help: </b><b>theilr2</b>                                                        <b>dialog:</b> <b>th</b>
+<b>&gt; eilr2</b>
+-------------------------------------------------------------------------------
+<p>
+<b>        </b>+-------+
+<b>    </b>----+<b> Title </b>+------------------------------------------------------------
+<p>
+<b> theilr2: Theil R2 Multicollinearity Effect"</b>
+<p>
+<a name="00"></a><b>        </b>+-------------------+
+<b>    </b>----+<b> Table of Contents </b>+------------------------------------------------
+<p>
+     <b>Syntax</b>
+     <b>Options</b>
+     <b>Description</b>
+     <b>Saved Results</b>
+     <b>References</b>
+<p>
+ *** <b>Examples</b>
+<p>
+     <b>Author</b>
+<p>
+<a name="01"></a><b>        </b>+--------+
+<b>    </b>----+<b> Syntax </b>+-----------------------------------------------------------
+<p>
+    <b>theilr2</b> <i>depvar</i> <i>indepvars</i> [<i>if</i>] [<i>in</i>] [<i>weight</i>] , [ <b><u>noconst</u></b><b>ant</b> ]
+ 
+<p>
+<a name="02"></a><b>        </b>+---------+
+<b>    </b>----+<b> Options </b>+----------------------------------------------------------
+<p>
+    <i>options</i> Description
+    -------------------------------------------------------------------------
+<p>
+      <b><u>nocons</u></b><b>tant</b>
+              suppress constant term
+<p>
+<a name="03"></a><b>        </b>+-------------+
+<b>    </b>----+<b> Description </b>+------------------------------------------------------
+<p>
+  <b>theilr2</b> computes Theil R2 Multicollinearity Effect, and Determinant of
+    |X'X|
+  more details in: [Theil(1971, p.179)], [Judge, et al(1988, p.870-872)]
+<p>
+<a name="04"></a><b>        </b>+---------------+
+<b>    </b>----+<b> Saved Results </b>+----------------------------------------------------
+<p>
+    <b>theilr2</b> saves the following in <b>e()</b>:
+<p>
+   <b>e(r2t)</b>          Theil R2 Multicollinearity Effect
+   <b>e(dcor)</b>         Determinant of |X'X|
+<p>
+<a name="05"></a><b>        </b>+------------+
+<b>    </b>----+<b> References </b>+-------------------------------------------------------
+<p>
+    Judge, Georege, R. Carter Hill, William . E. Griffiths, Helmut Lutkepohl,
+        &amp; Tsoung-Chao Lee (1988)<b> "Introduction To The Theory And Practice Of</b>
+        <b>Econometrics",</b> <i>2nd ed., John Wiley &amp; Sons, Inc., New York, USA</i>;
+        870-872.
+<p>
+    Theil, Henri (1971)<b> "Principles of Econometrics",</b> <i>John Wiley &amp; Sons,</i>
+        <i>Inc., New York, USA</i>.
+<p>
+<a name="06"></a><b>        </b>+----------+
+<b>    </b>----+<b> Examples </b>+---------------------------------------------------------
+<p>
+  (1) Example of Theil R2 Multicollinearity Effect in: [Judge, et al(1988,
+    p.872)], for Klein-Goldberger data.
+<p>
+        clear all
+<p>
+        sysuse theilr2.dta, clear
+<p>
+        theilr2 y x1 x2 x3
+<p>
+<p>
+. theilr2 y x1 x2 x3
+-----------------------------------------------------------------
+* Theil R2 Multicollinearity Effect
+  R2 = 0 No Multicollinearity - R2 = 1 Multicollinearity
+<p>
+    - Theil R2:              (0 &lt; 0.8412 &lt; 1)
+-----------------------------------------------------------------
+<p>
+* Determinant of |X'X|:
+  |X'X| = 1 No Multicollinearity - |X'X| = 0 Multicollinearity
+<p>
+    Determinant of |X'X|:    (0 &lt; 0.0779 &lt; 1)
+-----------------------------------------------------------------
+<p>
+<a name="07"></a><b>        </b>+--------+
+<b>    </b>----+<b> Author </b>+-----------------------------------------------------------
+<p>
+  <b>Emad Abd Elmessih Shehata</b>
+  <b>Assistant Professor</b>
+  <b>Agricultural Research Center - Agricultural Economics Research Institute - Eg</b>
+<b>&gt; ypt</b>
+  <b>Email:   </b>emadstat@hotmail.com
+  <b>WebPage:                </b>http://emadstat.110mb.com/stata.htm
+  <b>WebPage at IDEAS:       </b>http://ideas.repec.org/f/psh494.html
+  <b>WebPage at EconPapers:  </b>http://econpapers.repec.org/RAS/psh494.htm
+<p>
+<b>        </b>+------------------+
+<b>    </b>----+<b> theilr2 Citation </b>+-------------------------------------------------
+<p>
+    Shehata, Emad Abd Elmessih (2012)
+    <b>THEILR2: "Stata Module to Compute Theil R2 Multicollinearity Effect"</b>
+<p>
+<b><u>Also see</u></b>
+<p>
+    Online: <b>theilr2</b>, <b>ridgereg</b>, (if installed).
+<p>
+<p>
+</pre>

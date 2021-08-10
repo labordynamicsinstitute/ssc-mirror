@@ -1,0 +1,315 @@
+<pre>
+<b>help libjson</b>
+-------------------------------------------------------------------------------
+<p>
+<b><u>Title</u></b>
+<p>
+     <b>libjson: a mata class library for obtaining and parsing JSON strings into </b>
+<b>&gt; object trees</b>
+<p>
+<p>
+<b><u>Description</u></b>
+    The libjson class (library) is designed to be called from the Mata
+    environement to perform tasks related to obtaining a JavaScript Object
+    Notation (JSON) formatted response from the file or website URL (via a
+    REST API).  Most users will want to write an ado file that employs the
+    libjson object to do all the heavy lifting, with the final tailoring of
+    the output to be handled by the ado file.  The first eight methods are
+    the workhorse methods that most programmers will use (plus perhaps the
+    four ulitily methods). The rest are included for exceptional cases.  See
+    the code examples below for more information.
+<p>
+<b><u>Public Methods</u></b>
+<p>
+       +-----------------------------------------------+
+    ---|<i> Methods used for calling JSON-based REST APIs </i>|-----------------------
+       +-----------------------------------------------+
+<p>
+        
+<b>static pointer (</b><i>class libjson scalar</i><b>)</b><i> scalar webcall</i><b>(</b><i>string scalar url_base</i><b>,</b>
+                                  <i>string matrix args</i><b>)</b>
+                                  Calls the REST API using the given URL and
+                                  Args, parses the JSON response, and returns
+                                  the root node of the libjson object tree.
+                                  Arguments in the form of the given N x 2
+                                  string matrix are used to construct the full
+                                  url with all values properly
+                                  formatted("escaped") for use in a URL.
+<p>
+        
+<b>static string matrix webcall_flatten(</b><i>string scalar url_base</i><b>,</b><i> string matrix</i>
+                                  <i>args</i><b>)</b>
+                                  Call the web REST API, and pass the results
+                                  though flatten().
+<p>
+       +--------------------+
+    ---|<i> Sub-Tree selection </i>|--------------------------------------------------
+       +--------------------+
+<p>
+        
+<b>pointer (</b><i>class libjson scalar</i><b>)</b><i> scalar getNode</i><b>(</b><i>string rowvector selector</i><b>)</b>
+                                  Returns the node branch address by given
+                                  selector.
+<p>
+        
+<b>string scalar getString(</b><i>string rowvector selector</i><b>,</b><i> string scalar missing_val</i><b>)</b>
+                                  Returns the Scalar addressed by given
+                                  selector.
+<p>
+        
+<b>real scalar getReal(</b><i>string rowvector selector</i><b>,</b><i> real scalar missing_val</i><b>)</b>
+                                  Returns the real number (converted from the
+                                  Scalar addressed by given selector).
+<p>
+        
+<b>static string rowvector parseSelector(</b><i>string scalar selstr</i><b>)</b>
+                                  Converts a selector string into the vector
+                                  format by breaking up the string at the
+                                  colons.
+<p>
+       +-----------------------------------+
+    ---|<i> Working with flat key-value pairs </i>|-----------------------------------
+       +-----------------------------------+
+<p>
+        
+<b>string matrix flattenToKV()</b>    Return the entire libjson object as a list of
+                                  flattened object names and values. Useful for
+                                  processing small json responses from web
+                                  servers.
+<p>
+        
+<b>static string scalar getFlattenedValue(</b><i>string matrix flattened_results</i><b>,</b><i> string</i>
+                                  <i>scalar key</i><b>,</b><i> string scalar value_if_missing</i><b>)</b>
+                                  Scans the given flatten() resutls for the
+                                  given key, and returns the scalar (string)
+                                  value. A helper function for scanning the
+                                  result of flatten() for particular key-value
+                                  pairs
+<p>
+       +----------------+
+    ---|<i> Utility methods</i>|------------------------------------------------------
+       +----------------+
+<p>
+        
+<b>static string scalar urlencode(</b><i>string scalar s</i><b>)</b>
+                                  Returns the given string with certain unsafe
+                                  characters escaped as necessary for use in a
+                                  URL.
+<p>
+        
+<b>static string scalar getrawcontents(</b><i>string scalar url_base</i><b>,</b><i> string matrix args</i><b>)</b>
+                                  Makes an http request using the given URL and
+                                  extra arguments, and returns the results as a
+                                  single string.
+<p>
+        
+<b>static real rowvector getVersion()</b>
+                                  Returns a vector with the library version
+                                  number, in form of (major, minor, build).
+<p>
+        
+<b>static real rowvector checkVersion(</b><i>real rowvector version_to_check</i><b>)</b>
+                                  True if the library version number exceeds
+                                  that of version_to_check.
+<p>
+       +----------------------------------+
+    ---|<i> Working with libjson trees/nodes </i>|------------------------------------
+       +----------------------------------+
+<p>
+        
+<b>real scalar isArray()</b>         true if this libjson object is holding an Array.
+<p>
+        
+<b>real scalar isObject()</b>        true if this libjson object is holding an Object.
+<p>
+        
+<b>real scalar isAttribute()</b>     true if this libjson object is holding an
+                                  Attribute (name/value pair).
+<p>
+        
+<b>real scalar isString()</b>        true if this libjson object is holding a string
+                                  literal, or an attribute that holds a
+                                  literal.
+<p>
+        
+<b>real scalar isScalar()</b>        true if this libjson object is holding a scalar
+                                  value (=string).
+<p>
+        
+<b>real scalar arrayLength()</b>      returns the number of objects in an Array.
+<p>
+        
+<b>pointer (</b><i>class libjson scalar</i><b>)</b><i> scalar getArrayValue</i><b>()</b>
+                                  returns the Nth element of the array.
+<p>
+        
+<b>string scalar getAttributeScalar(</b><i>string scalar key</i><b>,</b><i> string scalar</i>
+                                  <i>missing_value</i><b>)</b>
+                                  returns the named attribute as a scalar
+                                  (string) value
+<p>
+        
+<b>pointer (</b><i>class libjson scalar</i><b>)</b><i> scalar getAttribute</i><b>(</b><i>string scalar key</i><b>)</b>
+                                  returns a pointer to the named attribute
+                                  contained in this Object.
+<p>
+        
+<b>string scalar getAttributeName()</b>
+                                  returns the name of an Attribute.
+<p>
+        
+<b>string rowvector listAttributeNames(</b><i>real scalar one_string_flag</i><b>)</b>
+                                  Returns a list of the attributes of the
+                                  Object.
+<p>
+        
+<b>string scalar bracketArrayScalarValues()</b>
+                                  Returns all scalar values in the array in the
+                                  familiar bracket notation.
+<p>
+        
+<b>void prettyPrint()</b>            Print to the console the libjson object tree in a
+                                  human-readible form that is JSON compliant.
+<p>
+        
+<b>string scalar toString()</b>      Reconstitutes the given libjson tree into a JSON
+                                  string. Note that this will not be a perfect
+                                  reproduction of the original input becuase
+                                  all numbers and unquoted words get converted
+                                  to strings (ie. 'null','true','false', etc.).
+<p>
+       +------------------------+
+    ---|<i> Building libjson trees </i>|----------------------------------------------
+       +------------------------+
+<p>
+        
+<b>pointer (</b><i>class libjson scalar</i><b>)</b><i> scalar parse</i><b>(</b><i>string scalar libjson_string</i><b>)</b>
+                                  Parses the given JSON-formatted string into a
+                                  libjson object tree, and returns the root
+                                  node.
+<p>
+        
+<b>void addArrayValue(</b><i>pointer </i><b>(</b><i>class libjson scalar</i><b>)</b><i> scalar p</i><b>)</b>
+                                  Adds the libjson object to the end of the
+                                  array.
+<p>
+        
+<b>void addArrayScalar(</b><i>string scalar s</i><b>)</b>
+                                  Adds the string to the end of the array as a
+                                  Scalar object.
+<p>
+        
+<b>void addAttributeScalar(</b><i>string scalar key</i><b>,</b><i> string scalar val</i><b>)</b>
+                                  Adds the key/value(string) to the end of the
+                                  array as a Scalar Attribute object.
+<p>
+        
+<b>void addAttribute(</b><i>string scalar key</i><b>,</b><i> pointer </i><b>(</b><i>class libjson scalar</i><b>)</b><i> val</i><b>)</b>
+                                  Adds the libjson object to the end of the
+                                  array as a Scalar Attribute object.
+<p>
+        
+<b>void makeScalar()</b>              Force the libjson object to hold the given
+                                  string.
+<p>
+-------------------------------------------------------------------------------
+<p>
+<p>
+<b><u>Selectors</u></b>
+    Selectors are a series of named (or implicitly named in the case of
+    arrays, which start at index "1") branches to take, starting from the
+    given node (usually the root node).
+<p>
+Given the following example JSON object: 
+        {
+        "foo" : "1", 
+        "bar": {
+              "bar2":"2"
+              },
+        "foobar": [ "bar1","bar2"]
+     }
+      
+the results of the following selectors would be...
+          <b>(</b><i>"foo"</i><b>)</b>              --&gt; "1"
+       
+          <b>(</b><i>"bar"</i><b>,</b><i>"bar2"</i><b>)</b>       --&gt; "2"
+<p>
+          <b>(</b><i>"foobar"</i><b>,</b><i>"2"</i><b>)</b>       --&gt; "bar2"
+<p>
+          <b>(</b><i>"bar"</i><b>)</b>              --&gt; Depends. If a node is expected, then the nod
+&gt; e is selected. If a Scalar (string, real) is expected, then is NOT FOUND and 
+&gt; considered missing.
+<p>
+<b><u>Flattened Selectors</u></b>
+    A "flattened" selector is a single string with a colon inserted between
+    each selector. For example, ("foo":"bar") --&gt; "foo:bar".
+<p>
+<b><u>Code Examples</u></b>
+    In the following examples, it is assumed that the source is returns a
+                 JSON object with a status result in meta:result that we need
+                 to test.
+<p>
+ <b>Example with libjson object tree result</b>: 
+    pointer (class libjson scalar) scalar root
+    root = libjson::webcall("http://server.address/service_name/",("arg1","val1
+&gt; " \ "arg2", "val2"))
+    if (root &amp;&amp; root-&gt;getString(("meta", "result"),"") == "OK") 
+<p>
+ <b>Example with "flattened" response (for those not comfortable with object trees</b>
+<b>&gt; , or for trivial JSON responses)</b>: 
+    key_val_matrix = libjson::webcall_flatten("http://server.address/service_na
+&gt; me/",("arg1","val1" \ "arg2", "val2"))
+    if (libjson::getFlattenedValue(key_val_matrix, "meta:result")) == "OK") 
+<p>
+ <b>Example for loading a JSON object from a local file</b>: 
+    pointer (class libjson scalar) sclar root
+    root = libjson::webcall("/path/to/local/JSON/file",.)
+    if (root &amp;&amp; root-&gt;getString(("meta", "result"),"") == "OK") 
+<p>
+ <b>Note that to use these examples interactively from the command line (or when e</b>
+<b>&gt; mbedded in an ado file), one must wrap them in a mata function body. For exam</b>
+<b>&gt; ple,</b>
+<p>
+                        string rowvector getExampleDataRow(url, string rowvecto
+&gt; r selectors) {
+                                pointer (class libjson scalar) scalar root
+                            root = libjson::webcall(url,"")
+                            if (root) {
+                                    string rowvector res
+                                    res = J(1,cols(selectors),"")
+                                    for (c=1; c&lt;= cols(selectors); c++) {      
+&gt;  
+                                                res[c] = root-&gt;getString( libjs
+&gt; on::parseSelector(selectors[c]) ,"")
+                                    }
+                                        return(res)
+                                } else return(J(1,0,""));
+                        }
+                        data=getExampleDataRow("http://server.address/service_n
+&gt; ame/",("meta:result","flattened_selector1","flattened_selector2"))
+ 
+ <b>will extract the selected scalars values from a valid JSON response and place </b>
+<b>&gt; them in a string rowvector.</b>
+<p>
+        
+<b><u>Latest Version</u></b>
+    The latest version is always kept on the SSC website. To install the
+    latest version click on the following link
+<p>
+    ssc install libjson, replace.
+<p>
+<b><u>Recompiling</u></b>
+    If you get an error about the version of the .mlib file not being
+    compatible (and you are running Stata 11 or newer), the library can be
+    recompiled locally with:
+<p>
+    <b>do "libjson_source.mata"</b>
+<p>
+    However, you will likely then need to manually copy the new library over
+    the old one.
+<p>
+<b><u>Author</u></b>
+<p>
+    Erik Lindsley, Ph.D. ( ssc@holocron.org )
+<p>
+</pre>

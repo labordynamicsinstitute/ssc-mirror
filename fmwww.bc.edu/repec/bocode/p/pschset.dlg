@@ -1,0 +1,1204 @@
+/*************************************************************************/
+/* PRICESIM: Price Simulation Stata Toolkit  (version 1.0)               */
+/*************************************************************************/
+/* Conceived and programmed by Dr. Araar Abdelkrim  (2006-2012)          */
+/* Universite Laval, Quebec, Canada                                      */
+/* email : aabd@ecn.ulaval.ca                                            */
+/* Phone : 1 418 656 7507                                                */
+/*************************************************************************/
+/*   pschset.dlg                                                          */
+/*************************************************************************/
+
+//A FINALISER....
+
+
+VERSION 9.2
+
+SYNCHRONOUS_ONLY
+
+INCLUDE graph_header
+POSITION . . 780 640
+
+
+DIALOG main, label("SUBSIM| Setting the shedule of prices  --> pschset command") tabtitle("Main")
+  BEGIN
+  DEFINE col0  20
+  DEFINE col1 50
+  DEFINE col2 130
+  DEFINE col3 250
+  DEFINE col4 370
+  DEFINE col5 490
+  
+  DEFINE colwd0 55
+  DEFINE colwd1 100
+
+  DEFINE _x _xsetbu
+  DEFINE _y _top
+
+    GROUPBOX chk_per11  40    40  620 80,                         ///
+           label("Dialog box information: ")         ///
+		   
+    TEXT txt_vname11     50    +20    140      .,                 ///  
+                  label("Load the information:   ")                           
+       
+    BUTTON  bu_load    200    @     330      .,                 ///
+    label("Load") onpush("view dialog pschini") 
+	 
+	 
+	TEXT  tx_dbsfile     50    +25    140      .,                 ///  
+               label("Save the information:")                                  ///	  
+            
+        
+	FILE  dbsamex      200    @     330      .,                 ///
+	label ("Browse...")    save option("inisave")                   ///
+	filter("MetaFile (*.pcs)*.psc*.* (*.*)*.*")   
+  
+    GROUPBOX chk_per2  40    +60  620 60,                         ///
+           label("Name of shedule price structure: ")         ///
+		   
+    TEXT txt_vname     50    +20    100      .,                 ///  
+                  label("Name:   ")                           
+       
+    EDIT  ed_vname    160    @     350      .,                 ///
+     label("psch1") default("psch1")
+                
+
+			  
+  
+  GROUPBOX chk_per3  40    +60  620 400,                         ///
+           label("The tarification structure: ")         ///
+  
+  
+  TEXT     tx_ini 50      +20      180       .,           ///
+          label("Initialise information with:") 
+      
+ COMBOBOX cb_ini 180      @         180       .,       ///
+          contents(ini_contents)                             ///
+          values(ini_values)                                     ///                            
+          onselchangelist(ini_change) default(1)                  ///
+          dropdownlist option(oinf) 
+		  
+  
+   TEXT     tx_bracs 370      @      110       .,           ///
+          label("Number of brackets:") 
+          
+  COMBOBOX cb_bracs 480        @        40       .,        ///
+          contents(brac_contents)                                ///
+          values(brac_values)                                    ///
+          onselchangelist(brac_change) default(1)                          ///
+          dropdownlist option(nblock) 
+		  
+  EDIT    ed_bracs 480        @        40       .,        ///
+          default(1)                          ///
+          option(nblock) 
+		  
+		  
+  
+  TEXT     tx_bun 50      +30      200       .,           ///
+          label("Blocks defined by:") 
+          
+  COMBOBOX cb_bun 180        @        180       .,        ///
+          contents(bun_contents)                                ///
+          values(bun_values)                                    ///
+          onselchangelist(bun_change) default(1)                          ///
+          dropdownlist option(bun) 
+		  		  
+    
+  TEXT     tx_fr col2         +30      100    .,           ///
+          label("Minimun")
+  
+  TEXT   tx_max     col2     @      200    .,           ///
+          label("Maximum of block")
+  
+  TEXT     tx_sz col3          @  colwd1    .,           ///
+        label("Maximum")   
+
+  
+
+  TEXT     tx_in4     col4      @         @         .,           ///
+        label("Tariff")
+		
+  TEXT     tx_in5     col5      @         @         .,           ///
+        label("Subsidy")
+  
+      
+  TEXT     tx_brac1 col1      +20       60    .,           ///
+        label("Bracket_1:") right
+  
+  
+  TEXT  ln_brac1    col2     @         colwd1    .,           ///
+        label("0.0")      
+        
+        
+  EDIT     en_mxb1    col3     @         colwd1    .,           ///
+           label("")      option(mxb1) default(100)
+		
+ VARNAME   var_mxb    col2     @         colwd1    .,           ///
+           label("")      option(mxb) 
+  
+  TEXT   tx_mxb1    col3     @         colwd1    .,           ///
+        label("and more")       
+
+  EDIT  en_tarif1   col4      @         @         .,           ///
+        option(tr1)      default(1)                                        ///
+        label("")   
+		
+  VARNAME  var_tr   col4      @         @         .,           ///
+        option(tr)                                              ///
+        label("")  		
+ 
+  EDIT  en_sub1   col5     @         @         .,           ///
+        option(sub1)      default()                                        ///
+        label("")   
+   
+  VARNAME  var_sub   col5     @         @         .,           ///
+        option(sub)      default()                                        ///
+        label("")  
+		
+   
+  TEXT  tx_brac2    col1      +30       60    .,           ///
+        label("Bracket_2:") right
+  
+  TEXT  ln_brac2    col2      @         colwd1    .,           ///
+        label("Max Bracket_1")   
+        
+  EDIT  en_mxb2    col3     @         colwd1    .,           ///
+        label("")      option(mxb2) default(200)
+
+  TEXT   tx_mxb2    col3     @         colwd1    .,           ///
+        label("and more")  
+
+  EDIT  en_tarif2   col4      @         @         .,           ///
+        option(tr2)      default(1)                                        ///
+        label("")                    
+          
+		  
+   EDIT  en_sub2   col5     @         @         .,           ///
+        option(sub2)      default()                                        ///
+        label("") 		  
+         
+  TEXT     tx_brac3 col1      +30       60    .,           ///
+           label("Bracket_3:") right
+
+  
+  TEXT  ln_brac3    col2      @         colwd1    .,           ///
+        label("Max Bracket_2")               
+
+  EDIT  en_mxb3    col3     @         colwd1    .,           ///
+        label("")      option(mxb3) default(300)
+  
+   TEXT   tx_mxb3    col3     @         colwd1    .,           ///
+        label("and more")  
+                          
+    EDIT  en_tarif3   col4      @         @         .,           ///
+        option(tr3)      default(1)                                        ///
+        label("")  
+   
+     EDIT  en_sub3   col5     @         @         .,           ///
+        option(sub3)      default()                                        ///
+        label("") 
+           
+  TEXT   tx_brac4 col1      +30       60    .,           ///
+        label("Bracket_4:") right
+  
+   TEXT  ln_brac4    col2      @         colwd1    .,           ///
+        label("Max Bracket_2")  
+  
+  EDIT  en_mxb4    col3     @         colwd1    .,           ///
+        label("")      option(mxb4) default(400)
+		
+   TEXT   tx_mxb4    col3     @         colwd1    .,           ///
+        label("and more") 		
+        
+  
+  EDIT  en_tarif4   col4      @         @         .,           ///
+        option(tr4)      default(1)                                        ///
+        label("")                 
+  
+    EDIT  en_sub4   col5     @         @         .,           ///
+        option(sub4)      default()                                        ///
+        label("") 
+  
+  TEXT     tx_brac5 col1      +30       60    .,           ///
+        label("Bracket_5:") right
+  
+
+ TEXT  ln_brac5    col2      @         colwd1    .,           ///
+        label("Max Bracket_4")       
+  
+  EDIT  en_mxb5    col3     @         colwd1    .,           ///
+        label("")      option(mxb5) default(500)
+        
+   TEXT   tx_mxb5    col3     @         colwd1    .,           ///
+        label("and more")                  
+          
+  EDIT  en_tarif5   col4      @         @         .,           ///
+        option(tr5)      default(1)                                        ///
+        label("")        
+   
+  EDIT  en_sub5   col5     @         @         .,           ///
+        option(sub5)      default()                                        ///
+        label("") 
+        
+  TEXT     tx_brac6 col1      +30       60    .,           ///
+        label("Bracket_6:") right
+        
+   TEXT  ln_brac6    col2      @         colwd1    .,           ///
+        label("Max Bracket_5")   
+  
+  EDIT  en_mxb6    col3     @         colwd1    .,           ///
+        label("")      option(mxb6) default(600)
+              
+    TEXT   tx_mxb6    col3     @         colwd1    .,           ///
+        label("and more") 
+		
+    EDIT  en_tarif6   col4      @         @         .,           ///
+        option(tr6)      default(1)                                        ///
+        label("") 
+	
+  EDIT  en_sub6   col5     @         @         .,           ///
+        option(sub6)      default()                         ///
+        label("") 
+	
+TEXT     tx_brac7 col1      +30       60    .,           ///
+        label("Bracket_7:") right
+        
+   TEXT  ln_brac7    col2      @         colwd1    .,           ///
+        label("Max Bracket_6")   
+  
+   EDIT  en_mxb7    col3     @         colwd1    .,           ///
+        label("")      option(mxb7) default(700)
+                
+     TEXT   tx_mxb7    col3     @         colwd1    .,           ///
+        label("and more") 
+		
+   EDIT  en_tarif7   col4      @         @         .,           ///
+        option(tr7)      default(1)                                        ///
+        label("") 
+		
+   	EDIT  en_sub7   col5     @         @         .,           ///
+        option(sub7)      default()                                        ///
+        label("") 
+		
+		
+	TEXT     tx_brac8 col1      +30       60    .,           ///
+        label("Bracket_8:") right
+        
+	
+   TEXT  ln_brac8    col2      @         colwd1    .,           ///
+        label("Max Bracket_7")   
+  
+   EDIT  en_mxb8    col3     @         colwd1    .,           ///
+        label("")      option(mxb8) default(800)
+                
+    TEXT   tx_mxb8    col3     @         colwd1    .,           ///
+        label("and more") 
+		
+   EDIT  en_tarif8   col4      @         @         .,           ///
+        option(tr8)      default(1)                                        ///
+        label("") 
+		
+    EDIT  en_sub8   col5     @         @         .,           ///
+        option(sub8)      default()                                        ///
+        label("") 
+   
+   
+   TEXT     tx_brac9 col1      +30       60    .,           ///
+        label("Bracket_9:") right
+        
+   TEXT  ln_brac9    col2      @         colwd1    .,           ///
+        label("Max Bracket_8")   
+  
+   EDIT  en_mxb9    col3     @         colwd1    .,           ///
+        label("")      option(mxb9) default(900)
+                
+    TEXT   tx_mxb9    col3     @         colwd1    .,           ///
+        label("and more") 
+   
+   EDIT  en_tarif9   col4      @         @         .,           ///
+        option(tr9)      default(1)                                        ///
+        label("") 	
+	
+   EDIT  en_sub9   col5     @         @         .,           ///
+        option(sub9)      default()                                        ///
+        label("") 
+	
+   
+   
+   TEXT     tx_brac10 col1      +30       60    .,           ///
+        label("Bracket_10:") right
+        
+   TEXT  ln_brac10    col2      @         colwd1    .,           ///
+        label("Max Bracket_9")   
+  
+   EDIT  en_mxb10    col3     @         colwd1    .,           ///
+        label("")      option(mxb10) default(1000)
+                
+   TEXT   tx_mxb10    col3     @         colwd1    .,           ///
+        label("and more") 
+		
+   EDIT  en_tarif10   col4      @         @         .,           ///
+        option(tr10)      default(1)                                        ///
+        label("") 
+		
+   EDIT  en_sub10   col5     @         @         .,           ///
+        option(sub10)      default()                                        ///
+        label("") 
+
+   DEFINE _x 600
+   DEFINE _y 280
+     
+
+END
+
+
+
+PROGRAM POSTINIT_PROGRAM
+BEGIN
+	put "pschini2"
+	stata hidden
+END
+
+
+
+SCRIPT clear_all
+BEGIN
+        main.cb_bracs.setvalue "1"
+        main.ln_brac1.setvalue ""
+        main.ln_brac2.setvalue ""
+        main.ln_brac3.setvalue ""
+        main.ln_brac4.setvalue ""
+        main.ln_brac5.setvalue ""
+        main.ln_brac6.setvalue ""  
+		main.ln_brac7.setvalue ""
+        main.ln_brac8.setvalue ""
+        main.ln_brac9.setvalue ""
+        main.ln_brac10.setvalue "" 
+END
+
+LIST ini_contents
+BEGIN
+	Paramater values
+	Variables
+END
+
+
+
+LIST ini_values
+BEGIN
+	1
+	2
+END
+
+LIST bun_contents
+BEGIN
+	Household consumption
+	Individual consumption
+END
+
+
+
+LIST bun_values
+BEGIN
+	1
+	2
+END
+
+
+SCRIPT PREINIT
+BEGIN
+      
+        
+        create BOOLEAN has_brac1
+        create BOOLEAN has_brac2
+        create BOOLEAN has_brac3
+        create BOOLEAN has_brac4
+        create BOOLEAN has_brac5
+        create BOOLEAN has_brac6
+		create BOOLEAN has_brac7
+        create BOOLEAN has_brac8
+        create BOOLEAN has_brac9
+        create BOOLEAN has_brac10
+		create BOOLEAN has_ini
+		
+
+END
+
+
+
+
+
+
+LIST brac_contents
+BEGIN
+        1
+        2
+        3
+        4
+        5
+        6
+		7
+		8
+		9
+		10
+END
+
+
+
+
+LIST brac_change
+BEGIN
+        script brac1
+        script brac2
+        script brac3
+        script brac4
+        script brac5
+        script brac6
+	    script brac7
+        script brac8
+        script brac9
+        script brac10
+		
+END
+
+SCRIPT brac1
+BEGIN
+        has_brac1.settrue
+        has_brac2.setfalse
+        has_brac3.setfalse
+        has_brac4.setfalse
+        has_brac5.setfalse
+        has_brac6.setfalse
+	    has_brac7.setfalse
+        has_brac8.setfalse
+        has_brac9.setfalse
+        has_brac10.setfalse
+        program check_bracs
+END
+
+SCRIPT brac2
+BEGIN
+        has_brac1.settrue
+        has_brac2.settrue
+        has_brac3.setfalse
+        has_brac4.setfalse
+        has_brac5.setfalse
+        has_brac6.setfalse
+	    has_brac7.setfalse
+        has_brac8.setfalse
+        has_brac9.setfalse
+        has_brac10.setfalse
+        program check_bracs
+END
+
+SCRIPT brac3
+BEGIN
+        has_brac1.settrue
+        has_brac2.settrue
+        has_brac3.settrue
+        has_brac4.setfalse
+        has_brac5.setfalse
+        has_brac6.setfalse
+	    has_brac7.setfalse
+        has_brac8.setfalse
+        has_brac9.setfalse
+        has_brac10.setfalse
+        program check_bracs
+END
+
+SCRIPT brac4
+BEGIN
+        has_brac1.settrue
+        has_brac2.settrue
+        has_brac3.settrue
+        has_brac4.settrue
+        has_brac5.setfalse
+        has_brac6.setfalse
+	    has_brac7.setfalse
+        has_brac8.setfalse
+        has_brac9.setfalse
+        has_brac10.setfalse
+        program check_bracs
+END
+
+SCRIPT brac5
+BEGIN
+        has_brac1.settrue
+        has_brac2.settrue
+        has_brac3.settrue
+        has_brac4.settrue
+        has_brac5.settrue
+        has_brac6.setfalse
+	    has_brac7.setfalse
+        has_brac8.setfalse
+        has_brac9.setfalse
+        has_brac10.setfalse
+        program check_bracs
+END
+
+SCRIPT brac6
+BEGIN
+        has_brac1.settrue
+        has_brac2.settrue
+        has_brac3.settrue
+        has_brac4.settrue
+        has_brac5.settrue
+        has_brac6.settrue
+	    has_brac7.setfalse
+        has_brac8.setfalse
+        has_brac9.setfalse
+        has_brac10.setfalse
+        program check_bracs
+END
+
+
+SCRIPT brac7
+BEGIN
+        has_brac1.settrue
+        has_brac2.settrue
+        has_brac3.settrue
+        has_brac4.settrue
+        has_brac5.settrue
+        has_brac6.settrue
+	    has_brac7.settrue
+        has_brac8.setfalse
+        has_brac9.setfalse
+        has_brac10.setfalse
+        program check_bracs
+END
+
+SCRIPT brac8
+BEGIN
+        has_brac1.settrue
+        has_brac2.settrue
+        has_brac3.settrue
+        has_brac4.settrue
+        has_brac5.settrue
+        has_brac6.settrue
+	    has_brac7.settrue
+        has_brac8.settrue
+        has_brac9.setfalse
+        has_brac10.setfalse
+        program check_bracs
+END
+
+
+SCRIPT brac9
+BEGIN
+        has_brac1.settrue
+        has_brac2.settrue
+        has_brac3.settrue
+        has_brac4.settrue
+        has_brac5.settrue
+        has_brac6.settrue
+	    has_brac7.settrue
+        has_brac8.settrue
+        has_brac9.settrue
+        has_brac10.setfalse
+        program check_bracs
+END
+
+SCRIPT brac10
+BEGIN
+        has_brac1.settrue
+        has_brac2.settrue
+        has_brac3.settrue
+        has_brac4.settrue
+        has_brac5.settrue
+        has_brac6.settrue
+	    has_brac7.settrue
+        has_brac8.settrue
+        has_brac9.settrue
+        has_brac10.settrue
+        program check_bracs
+END
+
+
+
+LIST ini_change
+BEGIN
+        script ini1
+        script ini2
+END
+
+SCRIPT ini1
+BEGIN
+        has_ini.settrue
+        program check_bracs
+END
+
+SCRIPT ini2
+BEGIN
+        has_ini.setfalse
+        program check_bracs
+END
+
+
+PROGRAM check_bracs
+BEGIN
+ if  has_ini {
+ 				call main.var_mxb.hide
+				call main.var_tr.hide 
+				call main.var_sub.hide
+				call main.tx_max.hide
+				call main.tx_fr.show
+				call main.tx_sz.show
+				call main.ed_bracs.hide
+				call main.cb_bracs.show
+				
+        if has_brac1 {
+				call main.tx_mxb1.show
+				call main.tx_brac1.show
+				call main.ln_brac1.show
+		        call main.en_tarif1.show  
+				call main.en_sub1.show 
+				call main.en_mxb1.hide				
+				call main.tx_mxb2.hide
+				call main.tx_mxb3.hide
+				call main.tx_mxb4.hide
+				call main.tx_mxb5.hide
+				call main.tx_mxb6.hide
+				call main.tx_mxb7.hide
+				call main.tx_mxb8.hide
+				call main.tx_mxb9.hide
+				call main.tx_mxb10.hide
+                
+        }
+
+        if !has_brac1 {
+				call main.en_mxb1.show
+                call main.tx_brac1.show
+                call main.ln_brac1.hide
+		        call main.en_tarif1.hide
+				call main.en_sub1.hide
+        }
+		
+        if has_brac2 {
+		        call main.tx_mxb1.hide
+				call main.en_mxb1.show
+				call main.tx_mxb2.show
+			    call main.en_mxb2.hide
+                call main.tx_brac2.show
+                call main.ln_brac2.show
+				call main.en_sub2.show
+		call main.en_tarif2.show	
+        }
+        if !has_brac2 {
+                call main.tx_brac2.hide
+                call main.en_mxb2.hide
+                call main.ln_brac2.hide
+				call main.en_tarif2.hide
+				call main.en_sub2.hide
+        }
+        if has_brac3 {
+		        call main.tx_mxb2.hide
+				call main.en_mxb2.show
+				call main.tx_mxb3.show
+			    call main.en_mxb3.hide
+                call main.tx_brac3.show
+                call main.ln_brac3.show
+		        call main.en_tarif3.show
+				call main.en_sub3.show
+
+        }
+        if !has_brac3 {
+                call main.tx_brac3.hide
+                call main.en_mxb3.hide
+                call main.ln_brac3.hide
+				call main.en_tarif3.hide
+				call main.en_sub3.hide
+        }
+        if has_brac4 {
+		        call main.tx_mxb3.hide
+				call main.en_mxb3.show
+				call main.tx_mxb4.show
+			    call main.en_mxb4.hide
+                call main.tx_brac4.show
+                call main.ln_brac4.show
+		        call main.en_tarif4.show
+				call main.en_sub4.show
+
+        }
+        if !has_brac4 {
+                call main.tx_brac4.hide
+                call main.en_mxb4.hide
+                call main.ln_brac4.hide
+				call main.en_tarif4.hide
+				call main.en_sub4.hide
+  
+        }
+        if has_brac5 {
+	            call main.tx_mxb4.hide
+				call main.en_mxb4.show
+				call main.tx_mxb5.show
+			    call main.en_mxb5.hide
+                call main.tx_brac5.show
+                call main.ln_brac5.show
+		        call main.en_tarif5.show
+				call main.en_sub5.show
+     
+        }
+        if !has_brac5 {
+                call main.tx_brac5.hide
+                call main.en_mxb5.hide
+                call main.ln_brac5.hide
+				call main.en_tarif5.hide
+				call main.en_sub5.hide
+ 
+        }
+        if has_brac6 {
+		        call main.tx_mxb5.hide
+				call main.en_mxb5.show
+				call main.tx_mxb6.show
+			    call main.en_mxb6.hide
+                call main.tx_brac6.show
+                call main.ln_brac6.show
+		        call main.en_tarif6.show
+				call main.en_sub6.show
+
+        }
+        if !has_brac6 {
+                call main.tx_brac6.hide
+                call main.en_mxb6.hide
+                call main.ln_brac6.hide
+				call main.en_tarif6.hide
+				call main.en_sub6.hide
+ 
+        }
+		
+		 if has_brac7 {
+                call main.tx_mxb6.hide
+				call main.en_mxb6.show
+				call main.tx_mxb7.show
+			    call main.en_mxb7.hide
+                call main.tx_brac7.show
+                call main.ln_brac7.show
+		        call main.en_tarif7.show
+				call main.en_sub7.show
+
+        }
+        if !has_brac7 {
+                call main.tx_brac7.hide
+                call main.en_mxb7.hide
+                call main.ln_brac7.hide
+		        call main.en_tarif7.hide
+				call main.en_sub7.hide
+ 
+        }
+		
+		 if has_brac8 {
+                call main.tx_mxb7.hide
+				call main.en_mxb7.show
+				call main.tx_mxb8.show
+			    call main.en_mxb8.hide
+                call main.tx_brac8.show
+                call main.ln_brac8.show
+		        call main.en_tarif8.show
+				call main.en_sub8.show
+
+        }
+        if !has_brac8 {
+                call main.tx_brac8.hide
+                call main.en_mxb8.hide
+                call main.ln_brac8.hide
+				call main.en_tarif8.hide
+				call main.en_sub8.hide
+ 
+        }
+		
+		 if has_brac9 {
+                call main.tx_mxb8.hide
+				call main.en_mxb8.show
+				call main.tx_mxb9.show
+			    call main.en_mxb9.hide
+                call main.tx_brac9.show
+                call main.ln_brac9.show
+		        call main.en_tarif9.show
+				call main.en_sub9.show
+
+        }
+        if !has_brac9 {
+                call main.tx_brac9.hide
+                call main.en_mxb9.hide
+                call main.ln_brac9.hide
+		        call main.en_tarif9.hide
+				call main.en_sub9.hide
+ 
+        }
+		
+		 if has_brac10 {
+		         call main.tx_mxb9.hide
+				call main.en_mxb9.show
+				call main.tx_mxb10.show
+			    call main.en_mxb10.hide
+                call main.tx_brac10.show
+                call main.ln_brac10.show
+		         call main.en_tarif10.show	
+				 call main.en_sub10.show
+
+        }
+        if !has_brac10 {
+                call main.tx_brac10.hide
+                call main.en_mxb10.hide
+                call main.ln_brac10.hide
+		        call main.en_tarif10.hide
+			    call main.en_sub10.hide
+ 
+        }
+		
+		}
+		
+ if !has_ini {
+	   
+		    	call main.var_mxb.show
+				call main.var_tr.show
+				call main.var_sub.show
+				call main.tx_max.show
+				call main.tx_fr.hide
+				call main.tx_sz.hide
+				
+				call main.ed_bracs.show
+				call main.cb_bracs.hide
+		
+                
+				call main.tx_brac1.hide
+                call main.en_mxb1.hide
+				call main.tx_mxb1.hide
+                call main.ln_brac1.hide
+		        call main.en_tarif1.hide
+			    call main.en_sub1.hide
+				
+				call main.tx_brac2.hide
+                call main.en_mxb2.hide
+                call main.ln_brac2.hide
+		        call main.en_tarif2.hide
+			    call main.en_sub2.hide
+				call main.tx_mxb2.hide
+				
+				call main.tx_brac3.hide
+                call main.en_mxb3.hide
+				call main.tx_mxb3.hide
+                call main.ln_brac3.hide
+		        call main.en_tarif3.hide
+			    call main.en_sub3.hide
+				
+				call main.tx_brac4.hide
+                call main.en_mxb4.hide
+				call main.tx_mxb4.hide
+                call main.ln_brac4.hide
+		        call main.en_tarif4.hide
+			    call main.en_sub4.hide
+				
+				call main.tx_brac5.hide
+                call main.en_mxb5.hide
+				call main.tx_mxb5.hide
+                call main.ln_brac5.hide
+		        call main.en_tarif5.hide
+			    call main.en_sub5.hide
+				
+				call main.tx_brac6.hide
+                call main.en_mxb6.hide
+				call main.tx_mxb6.hide
+                call main.ln_brac6.hide
+		        call main.en_tarif6.hide
+			    call main.en_sub6.hide
+				
+				
+				call main.tx_brac7.hide
+                call main.en_mxb7.hide
+				call main.tx_mxb7.hide
+                call main.ln_brac7.hide
+		        call main.en_tarif7.hide
+			    call main.en_sub7.hide
+				
+				call main.tx_brac8.hide
+                call main.en_mxb8.hide
+				call main.tx_mxb8.hide
+                call main.ln_brac8.hide
+		        call main.en_tarif8.hide
+			    call main.en_sub8.hide
+				
+				call main.tx_brac9.hide
+                call main.en_mxb9.hide
+				call main.tx_mxb9.hide
+                call main.ln_brac9.hide
+		        call main.en_tarif9.hide
+			    call main.en_sub9.hide
+				
+				call main.tx_brac10.hide
+                call main.en_mxb10.hide
+				call main.tx_mxb10.hide
+                call main.ln_brac10.hide
+		        call main.en_tarif10.hide
+			    call main.en_sub10.hide
+				
+				
+				
+	   }		
+       
+END
+
+
+
+PROGRAM brac_output
+BEGIN
+ if has_brac1 & !has_brac2 {     	
+		         optionarg main.en_tarif1
+				  optionarg main.en_sub1
+				 
+}
+
+ if has_brac2 & !has_brac3 {
+                 optionarg main.en_mxb1
+		         optionarg main.en_tarif1
+				 optionarg main.en_tarif2
+				 optionarg main.en_sub1
+				 optionarg main.en_sub2
+
+}
+ if has_brac3 & !has_brac4{
+                 optionarg main.en_mxb1
+				 optionarg main.en_mxb2
+     	
+		         optionarg main.en_tarif1
+				 optionarg main.en_tarif2
+				 optionarg main.en_tarif3
+				 optionarg main.en_sub1
+				 optionarg main.en_sub2
+				 optionarg main.en_sub3
+
+}
+
+ if has_brac4 & !has_brac5 {
+ 				 optionarg main.en_mxb1
+				 optionarg main.en_mxb2
+				 optionarg main.en_mxb3
+    	
+		         optionarg main.en_tarif1
+				 optionarg main.en_tarif2
+				 optionarg main.en_tarif3
+				 optionarg main.en_tarif4
+				 optionarg main.en_sub1
+				 optionarg main.en_sub2
+				 optionarg main.en_sub3
+			     optionarg main.en_sub4
+}
+
+
+ if has_brac5 & !has_brac6 {
+ 				 optionarg main.en_mxb1
+				 optionarg main.en_mxb2
+				 optionarg main.en_mxb3
+				 optionarg main.en_mxb4
+
+                        	
+		         optionarg main.en_tarif1
+				 optionarg main.en_tarif2
+				 optionarg main.en_tarif3
+				 optionarg main.en_tarif4
+				 optionarg main.en_tarif5
+				 optionarg main.en_sub1
+				 optionarg main.en_sub2
+				 optionarg main.en_sub3
+			     optionarg main.en_sub4
+				 optionarg main.en_sub5
+	
+}
+
+ if has_brac6 & !has_brac7 {
+ 				 optionarg main.en_mxb1
+				 optionarg main.en_mxb2
+				 optionarg main.en_mxb3
+				 optionarg main.en_mxb4
+				 optionarg main.en_mxb5
+
+                        	
+		         optionarg main.en_tarif1
+				 optionarg main.en_tarif2
+				 optionarg main.en_tarif3
+				 optionarg main.en_tarif4
+				 optionarg main.en_tarif5
+				 optionarg main.en_tarif6
+				 optionarg main.en_sub1
+				 optionarg main.en_sub2
+				 optionarg main.en_sub3
+			     optionarg main.en_sub4
+				 optionarg main.en_sub5
+				 optionarg main.en_sub6
+}
+
+ if has_brac7 & !has_brac8 {
+ 
+ 				 optionarg main.en_mxb1
+				 optionarg main.en_mxb2
+				 optionarg main.en_mxb3
+				 optionarg main.en_mxb4
+				 optionarg main.en_mxb5
+				 optionarg main.en_mxb6
+
+                        	
+		         optionarg main.en_tarif1
+				 optionarg main.en_tarif2
+				 optionarg main.en_tarif3
+				 optionarg main.en_tarif4
+				 optionarg main.en_tarif5
+				 optionarg main.en_tarif6
+				 optionarg main.en_tarif7
+
+				 optionarg main.en_sub1
+				 optionarg main.en_sub2
+				 optionarg main.en_sub3
+			     optionarg main.en_sub4
+				 optionarg main.en_sub5
+				 optionarg main.en_sub6
+				 optionarg main.en_sub7
+
+}
+
+
+ if has_brac8 & !has_brac9 {
+ 				 optionarg main.en_mxb1
+				 optionarg main.en_mxb2
+				 optionarg main.en_mxb3
+				 optionarg main.en_mxb4
+				 optionarg main.en_mxb5
+				 optionarg main.en_mxb6
+				 optionarg main.en_mxb7
+
+                        	
+		         optionarg main.en_tarif1
+				 optionarg main.en_tarif2
+				 optionarg main.en_tarif3
+				 optionarg main.en_tarif4
+				 optionarg main.en_tarif5
+				 optionarg main.en_tarif6
+				 optionarg main.en_tarif7
+				 optionarg main.en_tarif8
+				 optionarg main.en_sub1
+				 optionarg main.en_sub2
+				 optionarg main.en_sub3
+			     optionarg main.en_sub4
+				 optionarg main.en_sub5
+				 optionarg main.en_sub6
+				 optionarg main.en_sub7
+				 optionarg main.en_sub8
+
+
+
+}
+
+ if has_brac9 & !has_brac10 {
+ 
+				 optionarg main.en_mxb1
+				 optionarg main.en_mxb2
+				 optionarg main.en_mxb3
+				 optionarg main.en_mxb4
+				 optionarg main.en_mxb5
+				 optionarg main.en_mxb6
+				 optionarg main.en_mxb7
+				 optionarg main.en_mxb8
+		
+                        	
+		         optionarg main.en_tarif1
+				 optionarg main.en_tarif2
+				 optionarg main.en_tarif3
+				 optionarg main.en_tarif4
+				 optionarg main.en_tarif5
+				 optionarg main.en_tarif6
+				 optionarg main.en_tarif7
+				 optionarg main.en_tarif8
+				 optionarg main.en_tarif9
+				 optionarg main.en_sub1
+				 optionarg main.en_sub2
+				 optionarg main.en_sub3
+			     optionarg main.en_sub4
+				 optionarg main.en_sub5
+				 optionarg main.en_sub6
+				 optionarg main.en_sub7
+				 optionarg main.en_sub8
+				 optionarg main.en_sub9
+
+}
+
+ if has_brac10 {
+                   
+				 optionarg main.en_mxb1
+				 optionarg main.en_mxb2
+				 optionarg main.en_mxb3
+				 optionarg main.en_mxb4
+				 optionarg main.en_mxb5
+				 optionarg main.en_mxb6
+				 optionarg main.en_mxb7
+				 optionarg main.en_mxb8
+				 optionarg main.en_mxb9
+				 
+		         optionarg main.en_tarif1
+				 optionarg main.en_tarif2
+				 optionarg main.en_tarif3
+				 optionarg main.en_tarif4
+				 optionarg main.en_tarif5
+				 optionarg main.en_tarif6
+				 optionarg main.en_tarif7
+				 optionarg main.en_tarif8
+				 optionarg main.en_tarif9
+				 optionarg main.en_tarif10
+				 optionarg main.en_sub1
+				 optionarg main.en_sub2
+				 optionarg main.en_sub3
+			     optionarg main.en_sub4
+				 optionarg main.en_sub5
+				 optionarg main.en_sub6
+				 optionarg main.en_sub7
+				 optionarg main.en_sub8
+				 optionarg main.en_sub9
+				 optionarg main.en_sub10
+}
+
+END
+
+
+
+
+
+
+HELP hlp1,   view("help pschset")
+RESET res1
+OK ok1,      label("OK")
+CANCEL can1, label("Cancel")
+SUBMIT sub1, label("Submit")
+COPY copy1
+
+PROGRAM command
+BEGIN
+        put "pschset "
+        
+        
+        require main.ed_vname
+        varlist main.ed_vname
+        put " "
+     
+       
+        
+        beginoptions
+		optionarg main.dbsamex
+		optionarg main.cb_bracs
+		optionarg main.ed_bracs
+		if !main.cb_bun.isdefault() {
+		optionarg main.cb_bun
+		}
+		
+      				                  
+        put " " /program brac_output
+        
+		       if !has_ini {
+					 
+						 optionarg main.var_tr 
+						 optionarg main.var_sub
+						 optionarg main.var_mxb 
+						 optionarg main.cb_ini
+                     }
+
+        endoptions 
+        
+        
+END

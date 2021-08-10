@@ -1,0 +1,59 @@
+<pre>
+-------------------------------------------------------------------------------
+help for <b>mizrachl2</b>                         (StataList distribution ?? ??? 2003)
+-------------------------------------------------------------------------------
+<p>
+<b><u>Mizrach robust forecast comparison statistic</u></b>
+<p>
+        <b>mizrachl2</b> <i>pred1 pred2</i> [<b>if</b> <i>exp</i>] [<b>in</b> <i>range</i>] [<b>,k(</b><i>lags</i><b>)</b> ]
+<p>
+<b>mizrachl2</b> is for use with time-series data.  You must <b>tsset</b> your data before
+using <b>mizrachl2</b>; see help tsset.
+<p>
+<i>varname</i> may contain time-series operators; see help varlist.
+<p>
+<p>
+<b><u>Description</u></b>
+<p>
+<b>mizrachl2</b> calculates a forecast comparison test proposed by Mizrach (1995).
+Given two competing predictions, a positive definite, robust statistic for
+comparing the predictions' accuracy may be calculated.
+<p>
+<p>
+<b><u>Options</u></b>
+<p>
+<b>k</b> specifies the maximum order of the lag to be used in calculating the long-run
+    variance of the difference series from its autocovariance function. If it
+    is not provided, the maximum lag order will be calculated as a function of
+    the sample size.
+<p>
+<p>
+<b><u>Examples</u></b>
+<p>
+        . use http://fmwww.bc.edu/ec-p/data/macro/barclaymonthly.dta,clear
+<p>
+        . mizrachl2 bbjpy1f bbjpy2f
+<p>
+        . mizrachl2 bbjpy1f bbjpy2f, k(10)
+<p>
+        . mizrachl2 D.bbjpy1f D.bbjpy2f if tin(1987m12,1996m12), k(4)
+<p>
+<b><u>References</u></b>
+<p>
+Bruce Mizrach, "Forecast Comparison in L2", Rutgers University Working Paper 
+     1995-24       
+<p>
+<b><u>Acknowledgements</u></b>
+<p>
+This routine is a translation of a Fortran program kindly provided by
+Bruce Mizrach. Remaining errors are my own.
+<p>
+<b><u>Author</u></b>
+<p>
+Christopher F Baum, Boston College, USA, baum@bc.edu
+<p>
+<b><u>Also see</u></b>
+<p>
+On-line:  help for predict; help for dmariano (if installed)
+<p>
+</pre>

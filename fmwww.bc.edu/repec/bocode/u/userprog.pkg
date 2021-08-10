@@ -1,0 +1,1 @@
+d 'USERPROG': module to install user-written programs (version 6)dd userprog shows you what is available for download at or via d http://www.stata.com/users and allows you to install any packaged you desire. This is version 1.1.0 of the software. dd Author: Nicholas J. Cox, University of Durhamd Support: email N.J.Cox@@durham.ac.ukf userprog.adof userprog.hlp

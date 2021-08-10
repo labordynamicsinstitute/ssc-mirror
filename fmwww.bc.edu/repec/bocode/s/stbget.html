@@ -1,0 +1,84 @@
+<pre>
+.-
+help for ^stbget^ 
+.-
+<p>
+Get packages from Stata Technical Bulletin
+------------------------------------------
+<p>
+    ^stbget^ issueno                                     
+<p>
+    ^stbget^ issueno pkgname [^, all replace^ ]
+    
+    ^stbget^ pkgname issueno [^, all replace^ ]
+    
+    ^stbget^ issueno pkgname [^, d^escribe ]
+    
+    ^stbget^ pkgname issueno [^, d^escribe ]
+   
+<p>
+Description
+-----------
+<p>
+^stbget^ works with packages from the Stata Technical Bulletin (STB) kept 
+on-line at http://www.stata.com. It requires a net-aware variant of 
+Stata 6.0 or Stata 7.0.
+<p>
+Understand that issueno means "STB issue number" and pkgname means "package 
+name". 
+<p>
+^stbget^ issueno is equivalent to 
+<p>
+        ^. net from http://www.stata.com/stb/stb^issueno
+<p>
+^stbget^ issueno pkgname or ^stbget^ pkgname issueno is equivalent to 
+<p>
+        ^. net from http://www.stata.com/stb/stb^issueno
+        ^. net install^ pkgname
+<p>
+^stbget^ is able to guess that an integer argument can only be an issue 
+number and to indulge (e.g.) ^dm97.3^ for what ^net^ knows as ^dm97_3^.
+It allows (e.g.) ^stb60^, ^stb-60^, ^STB60^ and ^STB-60^ as alternatives 
+to the issueno ^60^. 
+<p>
+<p>
+Options
+-------
+<p>
+^all^ and ^replace^ are options of ^net install^. See help on @net@. 
+<p>
+^describe^ specifies that packages are to be described, not installed. 
+<p>
+        ^. stbget^ issueno pkgname ^, describe^ 
+<p>
+is equivalent to        
+<p>
+        ^. net from http://www.stata.com/stb/stb^issueno
+        ^. net describe^ pkgname 
+<p>
+<p>
+Examples
+--------
+<p>
+    . ^stbget 60^ 
+<p>
+    . ^stbget 60 gr46^
+    
+    . ^stbget 60 gr46, d^ 
+<p>
+    . ^stbget 59 dm97.3, replace^ 
+<p>
+<p>
+Author
+------
+<p>
+         Nicholas J. Cox, University of Durham
+         n.j.cox@@durham.ac.uk 
+         
+<p>
+Also see
+--------
+<p>
+On-line:  help for @net@, @stb@, @stbutil@ (if installed) 
+<p>
+</pre>

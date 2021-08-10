@@ -1,0 +1,214 @@
+<pre>
+<p>
+<p>
+help for <b>iciss</b>
+-------------------------------------------------------------------------------
+<p>
+<b><u>Title</u></b>
+<p>
+    <b>iciss</b> -- ICD-9 based Injury Severity Score
+<p>
+<p>
+<b><u>Version</u></b>
+<p>
+    Version 3.0.
+<p>
+    ICDPIC Version 3.0 requires STATA 8.0 or higher.  ICDPIC Version 3.0 has
+    been tested in STATA 10 and STATA 11, but the authors believe it should
+    also work without incident in STATA 8 and STATA 9.  If you have any
+    problems using ICDPIC Version 3.0 in STATA 8 or STATA 9, please inform
+    the authors.
+<p>
+    ICDPIC Version 3.0 may be installed from within STATA using the <b>ssc</b>
+    command.  If you installed a previous version of ICDPIC from the SSC
+    archives website using the <b>ssc</b> command, we suggest that you first delete
+    it by typing <b>ssc uninstall icdpic</b> followed by <b>ssc install icdpic</b>.
+    Alternatively, you may use <b>ssc install icdpic, replace</b>.  See help for 
+    ssc.
+<p>
+    If you installed any previous ICDPIC files obtained directly from the
+    authors, please delete them <b>ALL</b> (.ado, .hlp and .dta files) to avoid any
+    conflicts with ICDPIC 3.0 files.
+<p>
+    Please enter complete variable names in the ICDPIC Version 3.0 dialog
+    boxes.  Do not use abbreviations.
+<p>
+    New to Version 3.0 is the addition of a dialog box (.dlg) file associated
+    with each individual ICDPIC Version 3.0 program (.ado) file.  To access
+    the ICDPIC dialog box, and all the ICDPIC programs, type: <b>db icdpic</b>.
+    Typing <b>icdpic</b>, as in earlier versions, will still work, but <b>ONLY</b> with
+    <b>icdpic</b>.  For example, to access the ICISS program directly, type: <b>db</b>
+    <b>iciss</b>.  Typing <b>iciss</b>, as in previous versions, will produce an error.
+<p>
+    Fixed in ICDPIC Version 3.0 is the ability to use path\file names
+    containing spaces.
+<p>
+    Fixed in ICDPIC Version 3.0 is the ability to run in STATA 11.0.
+<p>
+    Fixed in ICDPIC Version 3.0 is a bug that caused the <b>triss</b> program to
+    crash if the <i>rts</i> variable was named anything other than "rts".
+<p>
+    New in ICDPIC Version 3.0 (<b>trauma</b> program only) is the ability to choose
+    whether an AIS value of 6 automatically forces an ISS of 75 or to
+    automatically have all AIS values of 6 changed to an AIS value of 5 and
+    then have the ISS calculated normally.
+<p>
+    All dialog boxes in ICDPIC Version 3.0 have memory.  Each time a dialog
+    box is opened within the same STATA session, it will remember the values
+    last entered.
+<p>
+    All dialog boxes in ICDPIC Version 3.0 have the following buttons:
+<p>
+      <i>OK</i> executes the program and removes the dialog box from the screen.
+<p>
+      <i>SUBMIT</i> executes the program and leaves the dialog box on the screen.
+             Note that if an error message is generated the dialog box may be
+             minimized.
+<p>
+      <i>CANCEL</i> removes the dialog box from the screen and does nothing.
+             Clicking on the close icon of the dialog box does the same
+             thing.
+<p>
+      <i>HELP</i> leaves the dialog box on the screen and presents the program help
+           file.  The <i>HELP</i> button has a question mark on it.
+<p>
+      <i>COPY</i> leaves the dialog box on the screen and copies the program command
+           to the clipboard.
+<p>
+      <i>RESET</i> resets the values of the controls in the dialog box to their
+            initial state, just as if the dialog box were invoked for the
+            first time.  Each time a user invokes a dialog box, its controls
+            will be filled in with the values the user last entered.  <i>RESET</i>
+            restores the control values to their defaults.  The <i>RESET</i> button
+            has an R on it.
+<p>
+<p>
+<b><u>Syntax</u></b>
+<p>
+        <b>db iciss</b>
+<p>
+    The <i>ICISS</i> dialog box will open.  Follow the instructions.
+<p>
+                                      <i>OR</i>
+<p>
+        <b>db icdpic</b>
+<p>
+    The <i>ICDPIC</i> dialog box will open.  Choose <i>ICISS</i> and click <i>OK</i> or <i>Submit</i>.
+    The <i>ICISS</i> dialog box will open.  Follow the instructions.
+<p>
+<p>
+<b><u>Description</u></b>
+<p>
+    <b>iciss</b> calculates ICISS using both survival risk ratios (SRR's) and
+    independent survival risk ratios (SRRi's).
+<p>
+<p>
+                        ICISS= (SRR_1)(SRR_2)...(SRR_N)
+<p>
+                                      <b>OR</b>
+<p>
+                      ICISS = (SRRi_1)(SRRi_2)...(SRRi_N)
+<p>
+<p>
+    where ICISS for SRR is defined as the product of all survival risk ratios
+    (SRR's) for an individual patient's ICD-9-CM injury diagnosis codes
+    (N-Codes).  Similarly, ICISS for SRRi is defined as the product of all
+    independent survival risk ratios (SRRi's) for an individual patient's
+    N-Codes.  See help for srr for more infomation on SRR's and SRRi's.
+<p>
+<p>
+<b><u>Options</u></b>
+<p>
+    None
+<p>
+<p>
+<b><u>Remarks</u></b>
+<p>
+    The user should first run <b>srr</b> or <b>icdpic</b> on his/her data to produce the
+    necessary table of SRR and SRRi values.  See help for srr.
+<p>
+    The user's data must contain ICD-9-CM diagnosis codes.  Diagnosis codes
+    in the user's data must be of type string.  A decimal point in the
+    diagnosis codes is optional.  Diagnosis codes should have a width of 5 (6
+    if a decimal point is present).  The diagnosis code prefix must be the
+    same for all diagnosis codes and numbered sequentially starting with 1,
+    for example, dx1...dxN.
+<p>
+    <b>srr</b> adds the following variables to a new copy of the user's data stored
+    on disk:
+<p>
+<p>
+        <i>srr_1-srr_n</i>: survival risk ratio for ICD-9-CM diagnosis codes 1..n
+        <i>srri_1-srri_n</i>: independent survival risk ratio for ICD-9-CM diagnosis
+            codes 1..n
+        <i>srrprod</i>: ICISS (product of srr values for all N-Codes)
+        <i>srriprod</i>: ICISS (product of srri values for all N-Codes)
+        <i>min_srr</i>: minimum srr value amongst all N-Codes
+        <i>min_srri</i>: minimum srri value amongst all N-Codes
+        <i>srr_cnt</i>: number of srr values that were involved in computation of
+            srrprod
+        <i>srri_cnt</i>: number of srri values that were involved in computation of
+            srriprod
+<p>
+   
+    <i>srr</i> and <i>srri</i> variables for diagnosis codes that are not valid N-Codes
+    will have missing values.  If there are no valid N-Codes, variables
+    <i>srrprod</i>, <i>srriprod</i>, <i>min_srr</i> and <i>min_srri</i> will be missing and variables
+    <i>srr_cnt</i> and <i>srri_cnt</i> will be 0.  If there are no valid N-Codes with an
+    SRR, variables for <i>srrprod</i> and <i>min_srr</i> will have missing values and
+    variable <i>srr_cnt</i> will be 0.  If there are no valid N-Codes with an SRRi,
+    variables for <i>srriprod</i> and <i>min_srri</i> will have missing values and variable
+    <i>srri_cnt</i> will be 0.
+<p>
+    <i>srr</i> and <i>srri</i> variables and variables <i>srrprod</i>, <i>srriprod</i>, <i>min_srr</i> and
+    <i>min_srri</i> are rounded to the nearest 0.0001.  If any of these values are
+    equal, or round to, 0.0000 or 1.0000 they are replaced with 0.0001 and
+    0.9999 respectively.
+<p>
+<p>
+<b><u>Examples</u></b>
+<p>
+    None
+<p>
+<p>
+<b><u>Authors</u></b>
+<p>
+    David E. Clark, M.D.
+<p>
+        Maine Medical Center, Portland, Maine, USA
+        University of Vermont College of Medicine, Burlington, Vermont, USA
+        Harvard Injury Control Research Center, Harvard School of Public
+            Health, Boston, Massachusetts, USA
+<p>
+        Correspondence to Dr. Clark,
+        887 Congress Street, Portland ME 04102
+        Email:  clarkd@mmc.org
+<p>
+    Turner M. Osler, M.D.
+<p>
+        University of Vermont College of Medicine, Burlington, Vermont, USA
+<p>
+    David R. Hahn
+<p>
+        Maine Medical Center, Portland, Maine, USA
+<p>
+<p>
+<b><u>References</u></b>
+<p>
+    Osler T, Rutledge R, Deis J, Bedrick E. ICISS: An International
+        Classification of Disease-9 based injury severity score.  <i>J Trauma</i>
+        1996;41:380-386.
+<p>
+<p>
+<b><u>Also see</u></b>
+<p>
+    help for srr
+<p>
+    help for icdpic
+<p>
+    help for iciss
+<p>
+<p>
+<p>
+<p>
+</pre>

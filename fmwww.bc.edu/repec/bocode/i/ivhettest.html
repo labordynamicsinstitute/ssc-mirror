@@ -1,0 +1,186 @@
+<pre>
+-------------------------------------------------------------------------------
+help for <b>ivhettest</b>
+-------------------------------------------------------------------------------
+<p>
+<b><u>Perform Pagan-Hall and related heteroskedasticity tests after IV and OLS estima</u></b>
+<b><u>&gt; tion</u></b>
+<p>
+        <b>ivhettest</b> [<i>varlist</i>] [<b>,</b> <b>ivlev</b> <b>ivsq</b> <b>ivcp</b> <b>fitlev</b> <b>fitsq</b> <b>ph</b> <b>phnorm</b> <b>nr2</b> <b>bpg</b>
+              <b>all</b> ]
+<p>
+<b>ivhettest</b> is for use after ivreg, ivreg2 and regress.
+<p>
+Weights are not compatible with the current implementation of <b>ivhettest</b>.
+<p>
+<p>
+<b><u>Description</u></b>
+<p>
+<b>ivhettest</b> performs various flavors of Pagan and Hall's (1983) test of
+heteroskedasticity for instrumental variables (IV) estimation.  It will also
+perform the related standard heteroskedasticity tests of
+Breusch-Pagan/Godfrey/Cook-Weisberg and White/Koenker after estimation by OLS
+or IV.  These are all tests of whether there is heteroskedasticity in the
+estimated regression that is related to one or more indicator variables.  The
+test flavors vary according to the choice of indicator variables and the choice
+of test statistics.  Under the null of no heteroskedasticity, the test
+statistic is distributed as chi-sq with degrees of freedom = number of
+indicator variables.
+<p>
+<p>
+<b><u>Options</u></b>
+<p>
+<b>ivlev</b> requests that the set of indicator variables is the full set of
+    instruments (exogenous variables) used in the original regression
+    (excluding the constant).  This is the default choice of indicator
+    variables.  In this and other options, if the original regression was OLS
+    using <b>regress</b>, the instruments are the regressors.
+<p>
+<b>ivsq</b> requests that the set of indicator variables is the full set of
+    instruments (excluding the constant) and their squares.
+<p>
+<b>ivcp</b> requests that the set of indicator variables is the full set of
+    instruments (excluding the constant), their squares and cross-products.
+<p>
+<b>fitlev</b> requests that the indicator variable is the "fitted value" of the
+    dependent variable.  In the case of IV regression, "fitted values" are <i>not</i>
+    calculated directly from the regressors and the estimated coefficients.
+    Rather, the endogenous regressors are first replaced with their "first
+    stage" fitted values, i.e., with fitted values from regression of the
+    endogenous regressors on the full set of instruments.  The exogenous
+    regressors, the fitted values of the endogenous regressors, and the
+    estimated coefficients from the main regression are then used to calculate
+    the "fitted values" of the dependent variable.
+<p>
+<b>fitsq</b> requests that the indicator variables are the "fitted value" of the
+    dependent variable and its square.
+<p>
+A user-defined set of indicator variables can be specified in <i>varlist</i>.
+<p>
+If <i>varlist</i>, <b>ivlev</b>, <b>ivsq</b>, <b>ivcp</b>, <b>fitlev</b> and <b>fitsq</b> are all omitted, the default
+set of indicator variables is the full set of instruments (excluding the
+constant) only.
+<p>
+<b>ph</b> requests Pagan and Hall's (1983) general test statistic for
+    heteroskedasticity in an IV regression.  This statistic is the default for
+    regressions estimated by ivreg and ivreg2.
+<p>
+<b>phnorm</b> requests Pagan and Hall's (1983) test statistic for heteroskedasticity
+    in an IV regression when the error term in the IV regression is in addition
+    assumed to be normally distributed.
+<p>
+<b>nr2</b> requests the standard White/Koenker nR-sq test statistic for
+    heteroskedasticity.  For an IV regression, this test statistic will be
+    distributed as chi-sq under the null only if the system covariance matrix
+    is homoskedastic.  This statistic is the default for regressions estimated
+    by regress.
+<p>
+<b>bpg</b> requests the standard Breusch-Pagan/Godfrey/Cook-Weisberg test statistic
+    for heteroskedasticity in a linear regression when the error term is
+    assumed to be normally distributed.  For an IV regression, this test
+    statistic will be distributed as chi-sq under the null only if the system
+    covariance matrix is homoskedastic.
+<p>
+<b>all</b> requests all applicable statistics be reported:  White/Koenker,
+    Breusch-Pagan/Godfrey/Cook-Weisberg, and, if the regression is estimated by
+    IV, the two versions of the Pagan-Hall statistic.
+<p>
+<b><u>Remarks</u></b>
+<p>
+The Breusch-Pagan/Godfrey/Cook-Weisberg and White/Koenker statistics are
+standard tests of the presence of heteroskedasticity in an OLS regression.  The
+principle is to test for a relationship between the residuals of the regression
+and indicator variables that are hypothesized to be related to the
+heteroskedasticity.  Breusch &amp; Pagan (1979), Godfrey (1978), and Cook &amp;
+Weisberg (1983) separately derived the same test statistic.  This statistic is
+distributed as chi-squared under the null of no heteroskedasticity, and under
+the maintained hypothesis that the error of the regression is normally
+distributed.  Koenker (1981) showed that when the assumption of normality is
+removed, a version of the test is available that can be calculated as the
+sample size n times the centered R-sq from an artificial regression of the
+squared residuals from the original regression on the indicator variables.  The
+degrees of freedom of all these chi-sq tests are equal to the number of
+indicator variables.  When the indicator variables are the regressors, their
+squares and their cross-products, Koenker's test is identical to White's (1980)
+nR-sq general test for heteroskedasticity.  These tests are available using
+<b>ivhettest</b> as well as via hettest and whitetst.
+<p>
+As Pagan and Hall (1983) point out, these tests will be valid tests for
+heteroskedasticity in an IV regression only if heteroskedasticity is present in
+that equation <i>and nowhere else in the system</i>.  They derive a test which relaxes
+this requirement.  Under the null of homoskedasticity in the IV regression, the
+Pagan-Hall statistic is distributed as chi-sq with degrees of freedom equal to
+the number of indicator variables, irrespective of the presence of
+heteroskedasticity elsewhere in the system.
+<p>
+The trade-off in the choice of indicator variables in all these tests is that a
+smaller set of indicator variables will conserve on degrees of freedom, at the
+cost of being unable to detect heteroskedasticity in certain directions.  When
+the above tests are applied to an IV regression, the indicator variables must
+be functions of exogenous variables (instruments) only.  If, e.g., the
+indicator variable is the fitted value of the dependent variable, this
+prediction is calculated as a linear combination of the instruments alone as
+described above.
+<p>
+A full discussion of these computations and related topics can be found in
+Baum, Schaffer, and Stillman (2003).
+<p>
+<p>
+<b><u>Saved results</u></b>
+<p>
+<b>ivhettest</b> saves the value of the test statistics, their p-values, and the
+degrees of freedom of the test.  See <b>return list</b>.
+<p>
+<p>
+<b><u>Examples</u></b>
+<p>
+(IV)
+        . ivreg y x1 x2 x3 (y2 = z1 z2 z3)
+        . ivhettest
+        . ivhettest x1, ph nr2
+        . ivhettest, fitsq all
+<p>
+(OLS)
+        . regress y x1 x2 x3
+        . ivhettest
+        . ivhettest, ivcp bpg
+<p>
+<p>
+<b><u>References</u></b>
+<p>
+Baum, C. F., Schaffer, M. E., Stillman, S., 2003. Instrumental variables and
+    GMM:  Estimation and testing.  The Stata Journal, Vol. 3, No. 1, pp. 1-31.
+    Unpublished working paper version:  Boston College Department of Economics
+    Working Paper No. 545.  http://fmwww.bc.edu/ec-p/WP545.pdf
+<p>
+Breusch, T.S., and Pagan, A.R. "A Simple Test for Heteroskedasticity and Random
+    Coefficient Variation." Econometrica, Vol. 47, 1979, pp. 1287-1294.
+<p>
+Cook, R.D., and Weisberg, S.  "Diagnostics for Heteroscedasticity in
+    Regression." Biometrika, Vol. 70, 1983, pp. 1-10.
+<p>
+Godfrey, L.G.  "Testing for Multiplicative Heteroskedasticity." Journal of
+    Econometrics, Vol. 8, 1978, pp. 227-236.
+<p>
+Koenker, R.  "A Note on Studentizing a Test for Heteroskedasticity." Journal of
+    Econometrics, Vol. 17, 1981, pp. 107-112.
+<p>
+Pagan, A.R. and Hall, D.  "Diagnostic Tests as Residual Analysis." Econometric
+    Reviews, Vol. 2, No. 2, 1983, pp. 159-218.
+<p>
+White, H.  "A Heteroskedasticity-consistent Covariance Matrix Estimator and a
+    Direct Test for Heteroskedasticity." Econometrica, Vol. 48, 1980, pp.
+    817-838.
+<p>
+<p>
+<b><u>Author</u></b>
+<p>
+Mark E Schaffer, Heriot-Watt University, UK
+m.e.schaffer@hw.ac.uk
+<p>
+<p>
+<b><u>Also see</u></b>
+<p>
+ Manual:  <b>[R] ivreg</b>, <b>[R] regression diagnostics</b>
+On-line:  help for ivreg; ivreg2 (if installed)
+</pre>

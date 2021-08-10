@@ -1,0 +1,334 @@
+<pre>
+<b>help findname</b>                                                (SJ12-1: dm0048_2)
+-------------------------------------------------------------------------------
+<p>
+<b><u>Title</u></b>
+<p>
+    <b>findname</b> -- List variables matching name patterns or other properties
+<p>
+<p>
+<b><u>Syntax</u></b>
+<p>
+        <b>findname</b> [<i>varlist</i>] [<i>if</i>] [<i>in</i>] [<b>,</b> <i>options</i>]
+<p>
+    <i>options</i>                      Description
+    -------------------------------------------------------------------------
+    Control
+      <b><u>inse</u></b><b>nsitive</b>                perform case-insensitive pattern matching
+      <b><u>loc</u></b><b>al(</b><i>macname</i><b>)</b>             put list of variable names in local macro
+                                   <i>macname</i>
+      <b>not</b>                        list variable names not in <i>varlist</i>
+      <b><u>place</u></b><b>holder(</b><i>symbol</i><b>)</b>        specify alternative to <b>@</b>
+<p>
+    Display
+      <b><u>a</u></b><b>lpha</b>                      list variable names in alphabetical order
+      <b><u>d</u></b><b>etail</b>                     display additional details
+      <b>indent(</b><i>#</i><b>)</b>                  indent output
+      <b>skip(</b><i>#</i><b>)</b>                    gap between variables; default is <b>skip(2)</b>
+      <b><u>v</u></b><b>arwidth(</b><i>#</i><b>)</b>                display width for variable names; default is
+                                   <b>varwidth(12)</b>
+<p>
+    Selection by data types, values, and formats
+      <b><u>t</u></b><b>ype(</b><i>typelist</i><b>)</b>             has specified type
+      <b>all(</b><i>condition</i><b>)</b>             has all values satisfying <i>condition</i>
+      <b>any(</b><i>condition</i><b>)</b>             has any values satisfying <i>condition</i>
+      <b><u>f</u></b><b>ormat(</b><i>patternlist</i><b>)</b>        has display format matching <i>patternlist</i>
+<p>
+    Selection by variable and value labels
+      <b><u>varl</u></b><b>abel</b>                   has variable label
+      <b><u>varl</u></b><b>abeltext(</b><i>patternlist</i><b>)</b>  has variable label with text matching
+                                   <i>patternlist</i>
+      <b><u>vall</u></b><b>abel</b>                   has value label
+      <b><u>vall</u></b><b>abelname(</b><i>patternlist</i><b>)</b>  has value label with name matching
+                                   <i>patternlist</i>
+      <b><u>vallabelt</u></b><b>ext(</b><i>patternlist</i><b>)</b>  has value label with text matching
+                                   <i>patternlist</i>
+<p>
+    Selection by characteristics
+      <b><u>c</u></b><b>har</b>                       has characteristic(s)
+      <b><u>c</u></b><b>harname(</b><i>patternlist</i><b>)</b>      has characteristic(s) with name matching
+                                   <i>patternlist</i>
+      <b><u>chart</u></b><b>ext(</b><i>patternlist</i><b>)</b>      has characteristic(s) with text matching
+                                   <i>patternlist</i>
+<p>
+    -------------------------------------------------------------------------
+<p>
+    <i>typelist</i> used in <b>type(</b><i>typelist</i><b>)</b> is a list of one or more types, each of
+        which may be <b>numeric</b>, <b>string</b>, <b>byte</b>, <b>int</b>, <b>long</b>, <b>float</b>, or <b>double</b>, or
+        may be a <i>numlist</i> such as <b>1/8</b> to mean <b>str1</b> <b>str2</b> ...  <b>str8</b>.  Examples
+        include
+<p>
+            <b>type(int)</b>                     is of type <b>int</b>
+            <b>type(byte int long)</b>           is of integer <b>type</b>
+            <b>type(numeric)</b>                 is a numeric variable
+            <b>type(1/40)</b>                    is <b>str1</b>, <b>str2</b>, ..., <b>str40</b>
+            <b>type(numeric 1/2)</b>             is numeric or <b>str1</b> or <b>str2</b>
+<p>
+    <i>patternlist</i> used in, for example, <b>format(</b><i>patternlist</i><b>)</b>, is a list of one
+        or more <i>patterns</i>.  A pattern is the expected name or text with the
+        likely addition of the characters <b>*</b> and <b>?</b>.  <b>*</b> indicates 0 or more
+        characters go here and <b>?</b> indicates exactly 1 character goes here.
+        Examples include
+<p>
+<p>
+            <b>format(*f)</b>                    format is %<i>#</i>.<i>#</i><b>f</b>
+            <b>format(%t*)</b>                   has time or date format
+            <b>format(%-*s)</b>                  is a left-justified string
+            <b>varl(*weight*)</b>                variable label includes word <b>weight</b>
+            <b>varl(*weight* *Weight*)</b>       variable label includes word <b>weight</b>
+                                            or <b>Weight</b>
+<p>
+    To match a phrase, it is important to enclose the entire phrase in
+        quotes.
+<p>
+            <b>varl("*some phrase*")</b>    variable label has <b>some phrase</b>
+<p>
+    If instead you used <b>varl(*some phrase*)</b>, then only variables having
+        labels ending in <b>some</b> or starting with <b>phrase</b> would be listed.
+<p>
+    <i>condition</i> used in <b>all()</b> or <b>any()</b> is a true-or-false condition defined by
+        an expression in which variable names are represented by <b>@</b>.  For
+        example, <b>any(@ &lt; 0)</b> selects numeric variables in which any values are
+        negative.
+<p>
+<p>
+<b><u>Description</u></b>
+<p>
+    <b>findname</b> lists variable names of the dataset currently in memory in a
+    compact or detailed format, and lets you specify subsets of variables to
+    be listed, either by name or by properties (e.g., the variables are
+    numeric).  In addition, <b>findname</b> leaves behind in <b>r(</b><i>varlist</i><b>)</b> the names of
+    variables selected so that you can use them in a subsequent command.
+<p>
+    <b>findname</b>, typed without arguments, lists all variable names of the
+    dataset currently in memory in a compact form.
+<p>
+    If two or more options specifying properties of variables are specified,
+    <b>findname</b> identifies only those variables that satisfy all of the option
+    specifications, i.e. the intersection of all the subsets identified.  The
+    <b>not</b> option provides a direct way to identify the complementary set.  Two
+    or more calls to <b>findname</b> with results saved in local macros using the
+    <b>local()</b> option may be used together with macro operations to produce the
+    union, set difference, etc. of different subsets.
+<p>
+    <b>if</b> and <b>in</b> when specified only affect the operation of <b>any()</b>, <b>all()</b> or
+    <b>vallabeltext()</b>.
+<p>
+<p>
+<b><u>Options</u></b>
+<p>
+        +---------+
+    ----+ Control +----------------------------------------------------------
+<p>
+    <b>insensitive</b> specifies that the matching of any <i>pattern</i> in <i>patternlist</i> be
+        case-insensitive. For example, <b>varl(*weight*) inse</b> is an alternative
+        to, and more inclusive than, <b>varl(*weight* *Weight*)</b>.
+<p>
+    <b>local(</b><i>macname</i><b>)</b> puts the resulting list of variable names into local macro
+        <i>macname</i>.
+<p>
+    <b>not</b> specifies that <i>varlist</i> and/or the specifications given define the set
+        of variables <i>not</i> to be listed.  For instance, <b>findname pop*, not</b>
+        specifies that all variables not starting with the letters <b>pop</b> be
+        listed.  The default is to list all the variables in the dataset or,
+        if <i>varlist</i> and/or particular properties are specified, the variable
+        names so defined.
+<p>
+    <b>placeholder(</b><i>symbol</i><b>)</b> specifies an alternative to <b>@</b> to use in <b>any()</b> or
+        <b>all()</b> options. This should only be necessary for making string
+        comparisons involving <b>@</b> as a literal character, or if bizarrely your
+        <b>@</b> key is damaged or otherwise unavailable.
+<p>
+        +---------+
+    ----+ Display +---------------------------------------------------------- 
+<p>
+    <b>alpha</b> specifies that the variable names be listed in alphabetical order.
+<p>
+    <b>detail</b> specifies that detailed output identical to that of <b>describe</b> be
+        produced.  If <b>detail</b> is specified, <b>indent()</b>, <b>skip()</b> and <b>varwidth()</b>
+        are ignored.
+<p>
+    <b>indent(</b><i>#</i><b>)</b> specifies the amount the lines are indented.
+<p>
+    <b>skip(</b><i>#</i><b>)</b> specifies the number of spaces between variable names; the
+        default is <b>skip(2)</b>.
+<p>
+    <b>varwidth(</b><i>#</i><b>)</b> specifies the display width of the variable names; the
+        default is <b>varwidth(12)</b>.
+<p>
+        +----------------------------------------------+
+    ----+ Selection by data types, values, and formats +---------------------
+<p>
+    <b>type(</b><i>typelist</i><b>)</b> selects variables of the specified <i>typelist</i>.  Typing
+        <b>findname, type(string)</b> would list all names of string variables in
+        the dataset, and typing <b>findname pop*, type(string)</b> would list all
+        names of string variables beginning with the letters <b>pop</b>.
+<p>
+    <b>all(</b><i>condition</i><b>)</b> selects variables which have all values satisfying
+        <i>condition</i>. If either <b>if</b> or <b>in</b> is specified, attention is restricted
+        to the observations specified.
+<p>
+    <b>any(</b><i>condition</i><b>)</b> selects variables which have any values satisfying
+        <i>condition</i>. If either <b>if</b> or <b>in</b> is specified, attention is restricted
+        to the observations specified.
+<p>
+    With either <b>all()</b> or <b>any()</b> <i>condition</i>s that mismatch type are ignored.
+<p>
+    <b>format(</b><i>patternlist</i><b>)</b> selects variables whose format matches any of the
+        patterns in <i>patternlist</i>.  <b>format(*f)</b> would select all variables with
+        formats ending in <b>f</b>, which presumably would be all <b>%</b><i>#</i><b>.</b><i>#</i><b>f</b>, <b>%0</b><i>#</i><b>.</b><i>#</i><b>f</b>, and
+        <b>%-</b><i>#</i><b>.</b><i>#</i><b>f</b> formats.  <b>format(*f *fc)</b> would select all ending in <b>f</b> or <b>fc</b>.
+<p>
+        +----------------------------------------+
+    ----+ Selection by variable and value labels +---------------------------
+<p>
+    <b>varlabel</b> selects variables with defined variable labels.
+<p>
+    <b>varlabeltext(</b><i>patternlist</i><b>)</b> selects variables with variable label text
+        matching any of the words or phrases in <i>patternlist</i>.
+<p>
+    <b>vallabel</b> selects variables with defined value labels.
+<p>
+    <b>vallabelname(</b><i>patternlist</i><b>)</b> selects variables with value label names
+        matching any of the words in <i>patternlist</i>.
+<p>
+    <b>vallabeltext(</b><i>patternlist</i><b>)</b> selects variables with value label text
+        matching any of the words or phrases in <i>patternlist</i>. If either <b>if</b> or
+        <b>in</b> is specified, attention is restricted to the observations
+        specified. Either way, no attention is paid to value labels that do
+        not correspond to values present in the data.
+<p>
+        +------------------------------+
+    ----+ Selection by characteristics +-------------------------------------
+<p>
+    <b>char</b> selects variables with defined characteristics.  Note that notes are
+        characteristics.
+<p>
+    <b>charname(</b><i>patternlist</i><b>)</b> selects variables with characteristic names
+        matching any of the words in <i>patternlist</i>.
+<p>
+    <b>chartext(</b><i>patternlist</i><b>)</b> selects variables with characteristic text matching
+        any of the words or phrases in <i>patternlist</i>.
+<p>
+<p>
+<b><u>Examples</u></b>
+<p>
+    All variables
+<p>
+        <b>. findname</b>
+<p>
+    All string variables
+<p>
+        <b>. findname, type(string)</b>
+        <b>. edit `r(varlist)'</b>
+<p>
+    All <b>str1</b>, <b>str2</b>, <b>str3</b>, <b>str4</b> variables
+<p>
+        <b>. findname, type(1/4)</b>
+<p>
+    All numeric variables
+<p>
+        <b>. findname, type(numeric)</b>
+        <b>. order `r(varlist)'</b>
+<p>
+        <b>. findname, type(numeric)</b>
+        <b>. summarize `r(varlist)'</b>
+<p>
+    All <b>byte</b> or <b>int</b> variables
+<p>
+        <b>. findname, type(byte int)</b>
+<p>
+    All <b>float</b> variables
+<p>
+        <b>. findname, type(float)</b>
+<p>
+    All variables that are not <b>float</b>
+<p>
+        <b>. findname, type(float) not</b>
+<p>
+    All date variables, i.e., those with formats <b>%t*</b> or <b>%-t*</b>
+<p>
+        <b>. findname, format(%t* %-t*)</b>
+<p>
+    All variables with only integer values
+<p>
+        <b>. findname, all(@ == int(@))</b>
+<p>
+    All variables with any negative values
+<p>
+        <b>. findname, any(@ &lt; 0)</b>
+<p>
+    Variables with left-justified string formats
+<p>
+        <b>. findname, format(%-*s)</b>
+<p>
+    Variables with comma formats
+<p>
+        <b>. findname, format(*c)</b>
+<p>
+    All variables with value labels attached
+<p>
+        <b>. findname, vall</b>
+<p>
+    All variables with the value label <b>origin</b> attached
+<p>
+        <b>. findname, vall(origin)</b>
+<p>
+    Variables with characteristics defined
+<p>
+        <b>. findname, char</b>
+<p>
+    Variables with notes
+<p>
+        <b>. findname, charname(note*)</b> 
+<p>
+    Find text in characteristics
+<p>
+        <b>. notes mpg : hidden treasure</b>
+        <b>. findname, chartext(*treasure*)</b>
+<p>
+<p>
+<b><u>Author</u></b> 
+<p>
+    Nicholas J. Cox, Durham University, U.K.
+    n.j.cox@durham.ac.uk
+<p>
+<p>
+<b><u>Acknowledgments</u></b> 
+<p>
+    <b>findname</b> owes a major debt to ds. <b>ds</b> and its relatives under differing
+    names have had a complicated history in various official and user-written
+    versions (e.g. Anonymous 1992; Cox 2000, 2001; Weiss 2008; and <b>ds2</b>, <b>ds3</b>,
+    <b>ds5</b> on SSC). The author's earlier work was aided by suggestions from
+    Richard Goldstein, William Gould, Jay Kaufman, and Fred Wolfe. More
+    recently Maarten Buis, Martin Weiss, Vince Wiggins and several members of
+    Statalist provided helpful comments both directly and indirectly. Jeremy
+    Reynolds found a bug in the version originally published in <i>Stata Journal</i>
+    10(2).  Marc Kaulisch pointed out a problem with handling of double quote
+    characters embedded within text (e.g. within variable labels).
+<p>
+<p>
+<b><u>References</u></b> 
+<p>
+    Anonymous. 1992. Short describes, finding variables, and codebooks.
+        <i>Stata Technical Bulletin</i> 8: 3-5. (<i>STB Reprints</i> 2: 11-14.)
+<p>
+    Cox, N.J. 2000. Describing variables in memory.  <i>Stata Technical Bulletin</i>
+        56: 2-4. (<i>STB Reprints</i> 10: 15-17.)
+<p>
+    Cox, N.J. 2001. Describing variables in memory: update to Stata 7.  <i>Stata</i>
+        <i>Technical Bulletin</i> 60: 3. (<i>STB Reprints</i> 10: 17.)
+<p>
+    Cox, N.J. 2010. Speaking Stata: Finding variables.  <i>Stata Journal</i> 10:
+        281-296.
+<p>
+    Weiss, M. 2008. Stata tip 66: ds-A hidden gem.  <i>Stata Journal</i> 8: 448-449.
+<p>
+<p>
+<b><u>Also see</u></b>
+<p>
+    Manual:  <b>[D] ds</b>
+<p>
+      Help:  <b>[D] compress</b>, <b>[D] codebook</b>, <b>[D] describe</b>, <b>[D] ds</b>, <b>[D] format</b>, 
+             <b>[D] label</b>, <b>[D] lookfor</b>, <b>[D] notes</b>, <b>[D] order</b>, <b>[D] rename</b>
+</pre>

@@ -1,0 +1,116 @@
+<pre>
+<b>help sqmodalplot</b>                                                (SJ6-4: st0111)
+-------------------------------------------------------------------------------
+<p>
+<b><u>Title</u></b>
+<p>
+    <b>sqmodalplot</b> -- Sequence index plots of modal sequences
+<p>
+<p>
+<b><u>Syntax</u></b>
+<p>
+        <b>sqmodalplot</b> [<i>if</i>] [<i>in</i>] [<b>,</b> <i>options</i>]
+<p>
+    <i>options</i>               Description
+    -------------------------------------------------------------------------
+    <b>so</b>                    apply same order similarity
+    <b>over(</b><i>varname</i><b>)</b>         show plots for categories of <i>varname</i>
+    <b>by(</b><i>varname</i><b>)</b>           plot groups of sequences based on <i>varname</i>
+    <b>color(</b><i>colorstyle</i><b>)</b>     apply colors to the elements
+    <b>gapinclude</b>            include sequences with gaps in the tabulation
+    <b><u>subseq</u></b><b>uence(</b><i>a</i><b>,</b><i>b</i><b>)</b>      use only subsequence between positions a and b
+    <b>tie(</b><i>keyword</i><b>)</b>          how to resolve ties, if any
+    <i>twoway_options</i>        options allowed with <b>graph twoway</b>
+    -------------------------------------------------------------------------
+<p>
+<p>
+<b><u>Description</u></b>
+<p>
+    <b>sqmodalplot</b> draws sequence index plots of modal sequences. A modal
+    sequence is an artificial sequence composed by the most frequent element
+    for each position. Think of the modal sequence as some form of an
+    ideal-typical sequence. Note that the notion of "ideal"-type implies that
+    the modal sequence do not necessarily exist as a whole in the data set.
+<p>
+    The plot is usefull to show the results of a cluster analysis on the
+    distance matrix created by<b> sqom, full</b>. Another use is to inform the user
+    about possible settings for the option<b> idealtype()</b> of sqom.
+<p>
+<b><u>Options</u></b>
+<p>
+    <b>over(</b><i>varname</i><b>)</b> is used to show one line for each category of the
+        over-variable. A typical use of over is, to show the modal sequence
+        for each cluster found in a preceding cluster analysis.
+<p>
+    <b>tie(</b><i>keyword</i><b>)</b> deals with cases, in which more than one element is the most
+        frequent element at a certain position. The default behavior is to
+        plot the element that is the most frequent accross all positions (for
+        an category of over). Alternatively it is possible to plot a gap, the
+        previous, or the following element of the modal sequence at that
+        positon. The alternative behaviour are controlled using one of the
+        following keywords:
+<p>
+<p>
+        keyword  Explanation
+        -----------------------------------------------------
+        <b>gap</b>      plot nothing; the default
+        <b>mode</b>     most frequent element accross all positions
+        <b>lag</b>      the next element of the modal sequence
+        <b>lead</b>     the previous element of the modal sequence
+        <b>highest</b>  the element with the highest level
+        <b>lowest</b>   the element with the lowest level
+        -----------------------------------------------------
+<p>
+    <b>so</b> is used to request a plot where only the order of elements is shown
+        (same-order similarity). With this option the sequences A-B-B-A and
+        A-B-A-A would both be drawn as if they were A-B-A.
+<p>
+    <b>by(</b><i>varname</i><b>)</b> specifies to plot groups of sequences separately based on
+        <i>varname</i>.
+<p>
+    <b>color(</b><i>colorstyle</i><b>)</b> specifies the colors for the elements.  You can specify
+        one color for each element, whereby the first color refers to the
+        element with the lowest level. See <i>colorstyle</i> for a list of color
+        choices.
+<p>
+    <b>gapinclude</b> is used to include sequences with gaps. The default behavior
+        is to drop sequences with gaps from the graph.  The term gap refers
+        only to missing values on the element variable within a sequence.
+        Sequences with missing values at the begining and at the end of a
+        sequence are included in any case. You might consider using <b>sqset</b>
+        with option <b>trim</b> to get rid of superfluous missings (see sq for
+        details.)
+<p>
+    <b>subsequence(a,b)</b> is used to include only the part of the sequence that is
+        between position a and b, whereby a and b refer to the position
+        defined in order variable.
+<p>
+    <i>twoway_options</i> are a set of common options supported by all <b>twoway</b>
+        commands; see <i>twoway_options</i>.
+<p>
+<b><u>Examples</u></b>
+<p>
+    <b>. sqmodalplot</b>
+    <b>. sqmodalplot, over(sex) color(black red yellow)</b>
+    <b>. sqmodalplot, over(sex) tie(gap) so</b>
+<p>
+    <b>. sqom, full k(2)</b>
+    <b>. sqclusterdat</b>
+    <b>. clustermat wardslinkage SQdist, name(myname) add</b>
+    <b>. cluster generate cluster = groups(5)</b>
+    <b>. sqclusterdat, return keep(cluster)</b>
+    <b>. sqmodalplot, over(cluster) color(black red yellow green cranberry)</b>
+        by(sex)
+<p>
+<b><u>Author</u></b>
+<p>
+    Ulrich Kohler, WZB, kohler@wzb.eu
+<p>
+<b><u>Also see</u></b>
+<p>
+    Manual:  <b>[G] graph</b>, <b>[G] graph twoway rbar</b>, <b>[G] barlook options</b>
+<p>
+    Online: <b>sq</b>, <b>sqdemo</b>, <b>sqset</b>, <b>sqdes</b>, <b>sqegen</b>, <b>sqstat</b>, <b>sqindexplot</b>, 
+             <b>sqparcoord</b>, <b>sqom</b>, <b>sqclusterdat</b>, <b>sqclustermat</b>, <b>sqmdsadd</b>
+<p>
+</pre>

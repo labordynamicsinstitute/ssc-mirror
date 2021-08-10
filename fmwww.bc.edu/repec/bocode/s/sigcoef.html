@@ -1,0 +1,80 @@
+<pre>
+-------------------------------------------------------------------------------
+help for <b>sigcoef</b> - 0.0.6 - 2010-01-20
+-------------------------------------------------------------------------------
+<p>
+<b><u> Count significant coefficients from regression model</u></b>
+<p>
+        <b>sigcoef</b> <i>varlist</i> [if] [in] [<b>,</b> <b><u>r</u></b><b>eplace</b> <b><u>a</u></b><b>ppend</b> <b><u>l</u></b><b>evel(</b><i>int $S_level</i><b>)</b> <b><u>c</u></b><b>lear</b>
+               <b><u>dvs</u></b><b>ame</b> <b><u>disp</u></b><b>lay</b>
+<p>
+<b><u> Descriptions</u></b>
+<p>
+This is a Stata program to count the number of significant coefficients for the
+&gt;  same
+variables (using same names) across models using z as test statistics (usually
+using maximum likelihood estimation). This program is especially useful when 
+you want to examine effects of same independent variables across a large number
+&gt;  
+of sub-units (e.g, countries, schools, etc..)
+<p>
+Models using t statistics are also available for regress, areg, or survey 
+regressions, but you can tweak the codes to add more. The counting is from 
+the most recent sigcoef with the replace option to the one with the most 
+recent append option. 
+<p>
+<b><u> Options</u></b>
+<p>
+    <b><u>r</u></b><b>eplace</b> sets all globals to 0, and start counting with the most recent
+        estimation. Either replace, append, or clear has to be issued.
+<p>
+    <b><u>a</u></b><b>ppend</b> adds one to the counters stored in globals if the current model
+        has a significant coefficient for the same variable.
+<p>
+    <b><u>c</u></b><b>lear</b> clears out all globals created by this program.
+<p>
+    <b><u>l</u></b><b>evel()</b> specifies the width of confidence level, or the tolerance level
+        for significant coefficients to be counted.
+<p>
+    <b><u>dvs</u></b><b>ame</b> requests that the counting is valid only with the same dependent
+        variable between two most recent estimations.
+<p>
+    <b><u>disp</u></b><b>lay</b> displays counts from the most recent issuance of this command
+        with a replacement option till the most recent issuance with an
+        append option.
+<p>
+<b><u> Globals</u></b>
+<p>
+    posnum*: counts the positive number of significant coefficients for
+        varialble * (here * represents variable name listed in varlist)
+<p>
+    negnum*: counts the negative number of significant coefficients for
+        varialble * (here * represents variable name listed in varlist)
+<p>
+    signum*: counts the significant number of coefficients for varialble *
+        (here * represents variable name listed in varlist)
+<p>
+    poslhs*: lists the lhs variables with * as a rhs riable that is
+        positively affecting this lhs variable.
+<p>
+    neglhs*: lists the lhs variables with * as a rhs riable that is
+        negatively affects this lhs variable.
+<p>
+<b><u> Examples</u></b>
+<p>
+    .logit register male inc educ
+<p>
+    .sigcoef inc educ, replace
+<p>
+    .logit vote male inc educ
+<p>
+    .sigcoef inc educ, append
+<p>
+    .mac list incposnum incnegnum incsignum educposnum educnegnum educsignum
+<p>
+-------------------------------------------------------------------------------
+<p>
+  Authors: Jun Xu
+           jxu.iweb.bsu.edu
+<p>
+</pre>

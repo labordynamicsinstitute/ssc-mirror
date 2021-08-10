@@ -1,0 +1,128 @@
+<pre>
+<b>help sampsi_fleming</b>
+-------------------------------------------------------------------------------
+<p>
+<b><u>Title</u></b>
+<p>
+     <b> Exact sample size calculation for single-stage designs</b>
+<p>
+<b><u>Syntax</u></b>
+<p>
+        <b>sampsi_fleming</b> [<b>,</b> <i>options</i>]
+<p>
+    <i>options</i>               Description
+    -------------------------------------------------------------------------
+    Main
+      <b>p0</b>(#)                specifies the null proportion.
+      <b>p1</b>(#)                specifies the alternative proportion.
+      <b>alpha</b>(#)             specifies the type I error, the default is 0.05.
+      <b>power</b>(#)             specifies the power, the default is 0.9.
+      <b>start</b>(#)             specifies the start sample size in the initial
+                            sample size search, the default is 1.
+      <b>end</b>(#)               specifies the largest sample size in the initial
+                            sample size search, the default is 40.
+    -------------------------------------------------------------------------
+<p>
+<b><u>Description</u></b>
+<p>
+    A single stage design requires all <b>n</b> patients to receive and experimental
+    treatment.  Within a specified time period they will be observed to have
+    responded (success) or not (failure).  The probability of a success in
+    the trial is <b>p</b> and this is compared to a fixed value <b>p0</b>, which is the
+    probability of a success under the null hypothesis, this could represent
+    no treatment or standard treatment.  The trial therefore tests the null
+    hypothesis <b>H0:p=p0</b> against the alternative hypothesis <b>H1:p&gt;p0</b>.  A
+    particular value <b>p1</b> (<b>p1&gt;p0</b>) is considered to be the desired probability
+    of success.
+<p>
+    The number of successes, <b>S</b>, will follow a Binomial distribution with
+    parameters <b>n</b> and <b>p</b>. A sample size is found by using a search such that
+    <b>P(S&gt;=u|p0)&lt;=alpha</b> and <b>P(S&gt;=u|p1)&gt;=power</b>. The design is therefore
+    characterised by the sample size <b>n</b> and the critical value <b>u</b>, the null
+    hypothesis is rejected if there are <b>u</b> or more successes in a trial of
+    size <b>n</b>.
+<p>
+<b><u>Latest Version</u></b>
+<p>
+    The latest version is always kept on the SSC website. To install the
+    latest version click on the following link
+<p>
+    ssc install sampsi_fleming, replace.
+<p>
+<b><u>Options</u></b>
+<p>
+        +------+
+    ----+ Main +-------------------------------------------------------------
+<p>
+    <b>p0(</b><i>#</i><b>)</b> specifies the null proportion.
+<p>
+    <b>p1(</b><i>#</i><b>)</b> specifies the alternative proportion.
+<p>
+    <b>alpha(</b><i>#</i><b>)</b> specifies the type I error, the default is 0.05.
+<p>
+    <b>power(</b><i>#</i><b>)</b> specifies the power, the default is 0.9.
+<p>
+    <b>start(</b><i>#</i><b>)</b> specifies the start sample size in the initialgrid search, the
+        default is 1.
+<p>
+    <b>end(</b><i>#</i><b>)</b> specifies the largest sample size in the initial grid search, the
+        default is 40.
+<p>
+<b><u> Examples</u></b>
+<p>
+<p>
+    The default sample size calculation
+<p>
+      sampsi_fleming
+<p>
+    The default design has a sample size of 47 and a critical value of 15,
+    the type I error is 0.0366 and power is 0.9012.
+<p>
+      sampsi_fleming, p0(0.45) p1(0.5) s(800)
+<p>
+    A sample size of 861 and a critical value of 412 gives a type I error of
+    0.0499 and a power of 0.9024.
+<p>
+      sampsi_fleming, a(0.01) p(0.8)
+<p>
+    A sample size of 52 and a critical value of 18 gives a type I error of
+    0.0099 and a power of 0.8245.
+<p>
+      sampsi_fleming, p0(0.1) p1(0.35) a(0.01) p(0.8)
+<p>
+    A sample size of 25 and a critical value of 7 gives a type I error of
+    0.0095 and a power of 0.8266.
+<p>
+<b><u>Author</u></b>
+<p>
+    Adrian Mander, MRC Biostatistics Unit, Cambridge, UK.
+    Email adrian.mander@mrc-bsu.cam.ac.uk
+<p>
+<b><u>References</u></b>
+<p>
+    R.P.A'Hern (2001) Sample size tables for exact single-stage phase II
+    designs. <i>Statistics in Medicine</i> <b>20</b>:859-866.
+<p>
+    J.Whitehead (2008) Bayesian sample size for exploratory clinical trials
+    incorporating historical data. <i>Statistics in Medicine</i> <b>27</b>:2307-2327.
+<p>
+    T.R. Fleming (1982) One-sample multiple testing procedure for phase II
+    clinical trials. <i>Biometrics</i> <b>38</b>:143-151.
+<p>
+<b><u>Also see</u></b>
+<p>
+    Related commands
+<p>
+    HELP FILES              SSC installation links    Description
+<p>
+    samplesize (if installed)    (ssc install samplesize)        Sample Size
+    graphics
+    sampsi_reg (if installed)    (ssc install sampsi_reg)        Sample Size
+    for linear regression
+    sampsi_mcc (if installed)    (ssc install sampsi_mcc)        Sample Size
+    for matched case/control studies
+    sampsi_rho (if installed)    (ssc install sampsi_rho)        Sample Size
+    for Pearson correlation
+<p>
+<p>
+</pre>

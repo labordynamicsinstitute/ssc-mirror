@@ -1,0 +1,202 @@
+<pre>
+-------------------------------------------------------------------------------
+help for <b>ellip7</b>                                                 (SSC: 20030211)
+-------------------------------------------------------------------------------
+<p>
+<b><u>Graphing confidence ellipses</u></b>
+<b><u>[An update of </u></b><b><u>ellip</u></b><b><u> for Stata 7]</u></b>
+<p>
+        <b>ellip7</b> <i>yvar</i> [<i>xvar</i>] [<b>if</b> <i>exp</i>] [<b>in</b> <i>range</i>] [<b>,</b> {<b>means</b>|<b>coefs</b> [<b><u>p</u></b><b>ool(</b><i>#</i><b>)</b>]}
+               <b><u>c</u></b><b>onstant(</b><i>string</i> [<i>#</i>]<b>)</b> <b><u>l</u></b><b>evel(</b><i>#</i><b>)</b> <b><u>g</u></b><b>enerate(</b><i>ynewvar</i> <i>xnewvar</i><b>)</b>
+               <b><u>a</u></b><b>dd(</b><i>yoldvar</i> <i>xoldvar</i><b>)</b> <b><u>nogr</u></b><b>aph</b> <b>replace</b> <b>evr(</b><i>#</i><b>)</b> <b><u>np</u></b><b>oints(</b><i>#</i><b>)</b>
+               <b><u>yf</u></b><b>ormat</b>[<b>(%</b><i>fmt</i><b>)</b>] <b><u>xf</u></b><b>ormat</b>[<b>(%</b><i>fmt</i><b>)</b>] <i>graph_options</i> ]
+<p>
+<p>
+<b><u>Description</u></b>
+<p>
+<b>ellip7</b> graphs confidence ellipses for approximately normally distributed data,
+and is an update of <b>ellip</b> to Stata 7. A confidence ellipse is the boundary of
+an elliptical joint 100(1-alpha)% confidence region for two parameters. In
+<b>ellip7</b>, the centering variables <i>yvar</i> and <i>xvar</i> are two data variables or the
+first two independent variables after an immediately preceding <b>regress</b>. If
+<b>coefs</b> is specified without <i>xvar</i>, then the _cons in <b>regress</b> is used for <i>xvar</i>.
+The boundary constant determines the size of the confidence ellipse.
+<p>
+<p>
+<b><u>Options</u></b>
+<p>
+{<b>means</b>|<b>coefs</b>} specifies how to center the confidence ellipse. The default, and
+    the <b>means</b> option uses two variable means, whereas <b>coefs</b> uses the first two
+    regression coefficients from an immediately preceding <b>regress</b>. If you
+    restricted <b>regress</b> to a portion of the data using <b>if</b> or <b>in</b>, then you will
+    generally want to use the same conditions with <b>coefs</b>.
+<p>
+<b><u>p</u></b><b>ool(</b><i>#</i><b>)</b> displays a confidence ellipse labeled <b>bp</b> using all the data, a
+    confidence ellipse labeled <b>b</b> using a theoretically unproblematic subset,
+    and <i>#</i> lines connecting #+1 dots of fractionally pooled regression
+    coefficients dots at 1/# intervals.  <b>pool()</b> must be used with <b>if</b> or <b>in</b>, and
+    with <b>coefs</b>, <b>generate()</b>, and <b>add()</b>.  <b>pool()</b> is incompatible with <b>by()</b>.
+<p>
+<b><u>c</u></b><b>onstant(</b><i>string</i> [<i>#</i>]<b>)</b> specifies the boundary constant as a statname and an
+    optional #. The overall default, and the <b>means</b> default is the standard
+    deviation ellipse with <b>constant(</b><i>sd</i> <i>2</i><b>)</b> or, squared, <b>constant(</b><i>sq</i> <i>4</i><b>)</b>. The
+    standard deviation ellipse is a.k.a. the covariance, concentration, data,
+    error, or inertia ellipse. With the statname <i>sq</i>, the confidence level in
+    percent is (1 - exp^(-#/2)) * 100). It is the ellipse which is the most
+    representative of the data points without any a priori statistical
+    assumptions concerning their origin. The default corresponds to 95%
+    INDIVIDUAL confidence intervals, or 86% JOINT confidence intervals. <i>sd</i> and
+    <i>sq</i> cannot be used with <b>level()</b>. I have NOT implemented the standard
+    deviation curve for geographical data, see Gong (2002). The <b>coefs</b> default
+    is <b>constant(</b><i>f</i> <i>2</i><b>)</b>. The default <i>#</i> is 4 for <i>sq</i>, otherwise it is 2. Available
+    statistics are:
+<p>
+        <i>statname</i>    definition
+        ---------------------------------------------------
+        <b>sd</b>          standard deviation = #^2
+                    cannot be used with <b>level()</b>
+        <b>sq</b>          squared standard deviation = sd^2 = #
+                    cannot be used with <b>level()</b>
+        <b>tsq</b>         Hotelling one-sample T-squared
+        <b>hotel</b>       same as <b>tsq</b> = #(n-1)/(n-#) * F
+        <b>tsqn</b>        sample-adjusted tsq = tsq / n
+        <b>hoteln</b>      same as <b>tsqn</b>
+        <b>ptsqn</b>       Hotelling T-squared prediction or
+                    tolerance ellipse = tsqn * (n+1) / n
+        <b>photeln</b>     same as <b>ptsqn</b>
+        <b>chisq</b>       Chi-squared
+        <b>chisqn</b>      sample-adjusted Chi-squared = chisq / n
+        <b>f</b>           F = 2F * (#,n-#)
+        <b>fadj</b>        F-adjusted = = 2F * (2,n-#)
+                    Defaults <b>f</b><i>2</i> and <b>fadj</b><i>2</i> are equivalent
+<p>
+<b><u>l</u></b><b>evel(</b><i>#</i><b>)</b> specifies the confidence level, in percent, for calculation of the
+    confidence ellipse; the default <i>#</i> is 95.  <b>level()</b> cannot be used with
+    <b>constant(</b><i>sd</i><b>)</b> and <b>constant(</b><i>sq</i><b>)</b>.
+<p>
+<b><u>g</u></b><b>enerate(</b><i>ynewvar</i> <i>xnewvar</i><b>)</b> generates two new variables, <i>ynewvar</i> and <i>xnewvar</i>,
+    which define the confidence ellipse. If the current dataset contains fewer
+    observations than in <b>npoints()</b>, then the length of the dataset will be
+    expanded accordingly with missing values, even if ynewvar and xnewvar are
+    temporary variables, and a warning message is displayed. <b>generate()</b> cannot
+    be used with <b>by()</b>.
+<p>
+<b><u>a</u></b><b>dd(</b><i>yoldvar</i> <i>xoldvar</i><b>)</b> adds an old confidence ellipse to the new confidence
+    ellipse. The result is two overlaid confidence ellipses in the same graph.
+    May be used with but does not require <b>generate()</b>.
+<p>
+<b><u>nogr</u></b><b>aph</b> suppresses the display of the graph.
+<p>
+<b>replace</b> replaces any existing variables in <b>generate()</b>.
+<p>
+<b>evr(</b><i>#</i><b>)</b> specifies the error variance ratio, where # is a floating point number
+    between 0 and 10^36. The default is 1. evr(0) corresponds to regression of
+    x on y, evr(1) to orthogonal regression, and a larger number, say evr(999),
+    corresponds to regression of y on x. See McCartin (n.d.).
+<p>
+<b><u>np</u></b><b>oints(</b><i>#</i><b>)</b> specifies # points to be calculated for the confidence ellipse. The
+    default is 400. You seldom have to use this option, but users with Small
+    Stata may want to lower the number and if the output looks jagged try
+    increasing the number.
+<p>
+<b><u>yf</u></b><b>ormat</b>[<b>(%</b><i>fmt</i><b>)</b>] specifies the display format of the y-axis. The default is to
+    use a <b>%9.0g</b> format.
+<p>
+    <b>yformat</b> specifies that the y-axis uses the <i>yvar</i>'s display format.
+<p>
+    <b>yformat(%</b><i>fmt</i><b>)</b> specifies the format to be used for the y-axis (see help 
+    format).
+<p>
+<b><u>xf</u></b><b>ormat(%</b><i>fmt</i><b>)</b> specifies the display format of the x-axis; see the
+    <b><u>yf</u></b><b>ormat</b>[<b>(%</b><i>fmt</i><b>)</b>] option above.
+<p>
+<i>graph_options</i> are any options allowed with <b>graph, twoway</b>, including
+    <b>by(</b><i>varname</i><b>)</b>. <b>by()</b> is incompatible with <b>pool()</b>. <b>by()</b> with many groups may
+    exceed the "width" of the dataset because of the <b>stack</b> included in <b>ellip7</b>.
+    Defaults are: c(l) s(.) t1(" ") t2(" ") l1(<i>yvar</i>) b2(<i>xvar</i>) [or c(ll) s(..)
+    if <b>add()</b> is specified, etc.], and l1(Estimated <i>yvar</i>) and b2(Estimated <i>xvar</i>)
+    if <b>coefs</b> is specified.
+<p>
+<p>
+<b><u>Remarks</u></b>
+<p>
+    The latest version for Stata 7 is version 1.3.1 of <b>ellip7</b>. The last version
+    for Stata 6 was version 1.2.0 of <b>ellip6</b>. To use the <b><u>p</u></b><b>ool(</b><i>#</i><b>)</b> option, you
+    must have gphdt.ado and gphsave.ado installed.
+<p>
+    <b>ellip7</b> is a graphics command, but <b><u>g</u></b><b>enerate()</b> may lengthen the dataset. Only
+    one statistics may be requested in <b>constant()</b>; A simple but limited
+    workaround is to use <b>add()</b>.
+<p>
+    The <b>by(</b><i>varname</i><b>)</b> graph option bug has been fixed in <b>ellip7</b> but not in
+    <b>ellip6</b>. In <b>ellip7</b>, the graph option now displays an ellipse for each value
+    of <i>varname</i> in <b>by()</b>, as expected. <b>ellip7</b> also introduce the nograph option,
+    and the sq argument to constant().
+<p>
+    Stata 8 became available in January 2003. Stata 8 has a new graphics
+    programming language, and many new graphics features. For example, Stata 8
+    has a new built-in method for overlaying graphs with a ||-separator and a
+    ()-binding notation. To create overlaid confidence ellipses with Stata 7 or
+    Stata 6, I recommend Nick Cox's muxyplot.ado. That is, generate the ellipse
+    variables with the <b>gen()</b> option, and then use <b>muxyplot</b> <i>yvarlist</i> <i>xvarlist</i>.
+    The complementary command muxyplot with helpfile can be downloaded
+    separately from SSC.
+<p>
+    Version 1.3.0 from 20030116 had bugs which have been fixed in 1.3.1.  That
+    is, by() with coefs would not report results and, more importantly, would
+    incorrectly report the default (means) by-results; this bug does not apply
+    to ellip6 and ellip5, because they are not byable. pool() would only use
+    two independent variables as part of its calculations even if the
+    immediately preceding regress command used more independent variables; the
+    bug still affects ellip6 (the original version of ellip/ellip5 never had
+    the bug, because it was used after fit rather than after regress).
+<p>
+    The author is currently developing the program in Stata 8. Please contact
+    the author if you want to contribute in any way.
+<p>
+<p>
+<b><u>Examples</u></b>
+<p>
+ . ellip y x              (graph sd ellipse)
+ . ellip y x, g(sdy sdx)  (graph and generate sd ellipse)
+ . ellip y x, c(hoteln) a(sdy sdx)
+                          (overlaid graph of 95% Hotelling confidence ellipse
+                          and previous sd ellipse)
+ . reg dv iv
+ . ellip iv, coefs c(chisq)
+                          (graphs a 95% Chi-square confidence ellipse around
+                          the regression coeffient for iv and around _cons in
+                          the preceding regression)
+    
+<p>
+<b><u>Author</u></b>    
+<p>
+     Anders Alexandersson &lt;aalex@its.msstate.edu&gt;
+     ITS, Mississippi State University
+     Mississippi State, MS 39762
+     USA
+   
+   
+   
+<b><u>References</u></b>
+ 
+     Batschelet, E. 1981. Circular Statistics in Biology. London and New York:
+          Academic Press.
+<p>
+     Gong, J. 2002. Clarifying the Standard Deviational Ellipse. Geographical
+          Analysis 34(2): 155-167.
+<p>
+     Johnson, R., and D. Wichern. 2002. 5th ed. Applied Multivariate
+          Statistical Analysis. Upper Saddle River, NJ: Prentice Hall.
+<p>
+     McCartin, B. n.d. A Geometric Characterization of Linear Regression.
+          Statistics: A Journal of Theoretical and Applied Statistics.
+<p>
+<p>
+<b><u>Also see</u></b>
+<p>
+ Manual:  <b>[R] graph</b>, <b>[R] gph</b> 
+    STB:  <b>STB-46 gr32</b>, <b>STB-34 gr20</b>
+On-line:  help for gphsave, gphdt, muxyplot (if installed)
+<p>
+</pre>

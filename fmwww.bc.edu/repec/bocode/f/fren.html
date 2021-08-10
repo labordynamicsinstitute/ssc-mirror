@@ -1,0 +1,76 @@
+<pre>
+-------------------------------------------------------------------------------
+help for <b>fren</b>                                                       version 2.0
+                                                         get the newest version
+-------------------------------------------------------------------------------
+<p>
+<b><u>Batch File Renamer</u></b>
+<p>
+<p>
+<b><u>Description</u></b>
+<p>
+<p>
+    <b>fren</b> check the name of files with the extension of <i>file_extension</i>,
+    searching for <i>st1</i>.  Whenever a matching <i>str1</i> is found, it is replaced
+    with <i>str2</i>.
+<p>
+<p>
+<b><u>Syntax</u></b>
+<p>
+<p>
+    <b>fren</b> <i>file_extension</i> <b>,</b> <b><u>f</u></b><b>rom(</b><i>str1</i><b>)</b> [ <b><u>t</u></b><b>o(</b><i>str2</i><b>)</b> ]
+<p>
+<p>
+<a name="options"></a>    <i>options</i>               Description
+    -------------------------------------------------------------------------
+    * <b><u>f</u></b><b>rom(</b><i>str1</i><b>)</b>          find to be replaced
+    * <b><u>t</u></b><b>o(</b><i>str2</i><b>)</b>            use to replace occurrences of <b>from()</b>
+    -------------------------------------------------------------------------
+<p>
+<p>
+<b><u>Technical note</u></b>
+<p>
+<p>
+    This program runs only on Windows System!
+<p>
+<p>
+<b><u>Examples</u></b>
+<p>
+<p>
+    rename all <b>txt</b> files in current directory. as if there're characters <b>bad</b>
+    in file name, it will be changed to <b>good</b> :
+<p>
+    . fren txt, from(bad) to(good)
+<p>
+    rename all <b>dta</b> files in current directory. as if there're <b>spaces</b> in file
+    name, it will be trimed :
+<p>
+    . fren dta, from(" ") to("")
+<p>
+    <b>OR:</b>
+<p>
+    . fren dta, from(" ")
+<p>
+<p>
+<b><u>For problems and suggestions</u></b>
+<p>
+<p>
+    <b>Author: Liu wei</b>, The School of Sociology and Population Studies, Renmin
+    University of China. <b>Address: </b>Zhongguancun Street No. 59, Haidian
+    District, <b>ZIP Code:</b> 100872.  <b>E-mail:</b> rucwz-stata@yahoo.cn
+<p>
+<p>
+<b><u>Also see</u></b>
+<p>
+<p>
+    Other Commands I have written:
+<p>
+    curvefit (if installed)          ssc install curvefit (to install)
+    deci (if installed)              ssc install deci (to install)
+    fdta (if installed)              ssc install fdta (to install)
+    ftrans (if installed)            ssc install ftrans (to install)
+    freplace (if installed)          ssc install freplace (to install)
+    ftree (if installed)             ssc install ftree (to install)
+    elife (if installed)             ssc install elife (to install)
+<p>
+</pre>

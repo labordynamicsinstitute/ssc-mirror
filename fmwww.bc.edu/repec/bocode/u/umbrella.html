@@ -1,0 +1,165 @@
+<pre>
+<b>help umbrella</b>
+-------------------------------------------------------------------------------
+<p>
+<b><u>Title</u></b>
+<p>
+<b>O'Brien's Umbrella Test</b>       
+<p>
+<b><u>Syntax</u></b>
+<p>
+<b>umbrella</b> [<i>varlist</i>] [<i>if</i>] [<i>in</i>] [<b>,</b> <i>options</i>]
+<p>
+<p>
+    <i>options</i>             Description
+    -------------------------------------------------------------------------
+      <b>by(</b><i>groupvar</i><b>)</b>      is required.  It specifies the name of the grouping
+                          variable.
+      <b>highlow(</b><i>string</i><b>)</b>   gives a string of space-delimited letters that are
+                          either H or L.  There must be as many letters as
+                          there are dependent variables.  If the k-th such
+                          letter is an H then higher values of the k-th
+                          dependent variable denote a better outcome than
+                          lower values; if is is an L then the converse is
+                          true.  When this option is omitted higher values of
+                          all of the response variables are assumed to be
+                          better than lower values.
+      <b>ranktable</b>         generates a table of the ranks of each dependent
+                          variable grouped by groupvar.  The sum of ranks
+                          accross the dependent variables is also given.  By
+                          default, this table is omitted.
+      <b>id(</b><i>idvar</i><b>)</b>         specifies the data set's identification variable.  If
+                          the data set has a unique identifer and you wish
+                          this identifer to appear in the table of ranks then
+                          specify that variable here.  If <b>ranktable</b> is not
+                          specified then this option has no effect.
+<p>
+<b><u>Description</u></b>
+<p>
+    <b>umbrella</b> performs O'Brien's (1984) Umbrella Test (also known as O'Brien's
+    Multiple Endpoints Test).  It is used to test whether a continuous
+    response vector differs between groups of subjects and may be used as a
+    non-parametric alternative to Hotelling's T test. It is particularly
+    useful when each dependent variable denotes an outcome in which higher
+    values are better than lower values or vice versa.  See O'Brien (1984)
+    for more information.
+<p>
+<p>
+<b><u>Remarks</u></b>
+<p>
+    This test reduces to a Kruskal-Wallace one way analysis of variance if
+    there is a single response variable.
+<p>
+    This program gives results that are identical to those of the S+ program,
+    umbrella.s, that is posted at
+    http://mayoresearch.mayo.edu/mayo/research/biostat/splusfunctions.cfm .
+    umbrella.s was written by Susan Kunselman.
+<p>
+    A related program is obrien, by Richard Goldstein (sg43 from
+    http://www.stata.com/stb/stb28).  obrien provides extensions to the t and
+    ranksum tests described in O'Brien (1988).
+<p>
+<p>
+<b><u>Methods</u></b>
+<p>
+    Rank each dependent variable (ignoring the grouping variable).  For
+    dependent variables where lower values are better than higher values
+    invert the associated ranks.  For each patient, sum these ranks accross
+    all dependent variables.  Perform a one-way analysis of variance on the
+    sums of these ranks.
+<p>
+    In this program we do this analysis of variance using a Kruskal-Wallace
+    test.
+<p>
+<p>
+<b><u>Authors</u></b>
+<p>
+    William D. Dupont
+    W. Dale Plummer, Jr.
+    Department of Biostatistics
+    Vanderbilt University School of Medicine
+<p>
+    e-mail: william.dupont@vanderbilt.edu
+            dale.plummer@vanderbilt.edu 
+<p>
+<p>
+<b><u>Reference</u></b>
+<p>
+    O'Brien, P.C. Procedures for comparing samples with multiple endpoints.  
+    Biometrics 1984; 40: 1079-1087.
+    
+    O'Brien, P.C. Comparing two samples: extensions of the t, rank-sum, and
+    log-rank tests.  J Am Stat Assoc 1988; 83: 52-61.
+<p>
+<p>
+<b><u>Key Words</u></b>
+<p>
+    O'Brien, Peter C.
+    umbrella
+    multiple endpoints
+    multivariate analysis of variance
+    Hotelling's T test
+<p>
+<p>
+<b><u>Example</u></b>
+<p>
+. * Test whether the vector of mpg, weight and length differs between 
+. * foreign and domestic cars in the auto data set. Low values of mpg and 
+. * high values or weight and length are best.
+. *
+<p>
+. sysuse auto
+(1978 Automobile Data)
+<p>
+. umbrella mpg weight length, by(foreign) highlow(L H H)
+<p>
+Number of response variables: 3
+<p>
+    Variable |       Outcome
+-------------+-----------------------------------------------------
+         mpg |        lower values are better
+      weight |        higher values are better
+      length |        higher values are better
+<p>
+-------------------------------------------------------------------------------
+-&gt; foreign = Domestic
+<p>
+    Variable |       Obs        Mean    Std. Dev.       Min        Max
+-------------+--------------------------------------------------------
+         mpg |        52    19.82692    4.743297         12         34
+      weight |        52    3317.115    695.3637       1800       4840
+      length |        52    196.1346    20.04605        147        233
+<p>
+-------------------------------------------------------------------------------
+-&gt; foreign = Foreign
+<p>
+    Variable |       Obs        Mean    Std. Dev.       Min        Max
+-------------+--------------------------------------------------------
+         mpg |        22    24.77273    6.611187         14         41
+      weight |        22    2315.909    433.0035       1760       3420
+      length |        22    168.5455    13.68255        142        193
+<p>
+<p>
+Missing observations dropped from analysis = 0
+<p>
+O'Brien's Umbrella test is the following Kruskal-Wallis test on the
+sum of the ranks across the dependent variables.
+<p>
+<p>
+Kruskal-Wallis equality-of-populations rank test
+<p>
+  +---------------------------+
+  |  foreign | Obs | Rank Sum |
+  |----------+-----+----------|
+  | Domestic |  52 |  2336.00 |
+  |  Foreign |  22 |   439.00 |
+  +---------------------------+
+<p>
+chi-squared =    20.839 with 1 d.f.
+probability =     0.0001
+<p>
+chi-squared with ties =    20.841 with 1 d.f.
+probability =     0.0001
+<p>
+<p>
+</pre>

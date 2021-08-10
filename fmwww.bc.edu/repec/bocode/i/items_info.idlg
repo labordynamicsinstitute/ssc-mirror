@@ -1,0 +1,2647 @@
+
+
+
+DIALOG items_info,  tabtitle("Items")
+BEGIN
+  DEFINE colu0  00
+  DEFINE colu1 50
+  DEFINE colu11 135
+  DEFINE colu2 180
+  DEFINE colu3 290
+  DEFINE colu4 380
+  DEFINE colu5 470
+  DEFINE colu6 560
+  DEFINE colu7 650
+  DEFINE colu8 740
+  
+  DEFINE coluwd0 55
+  DEFINE coluwd1 100
+  DEFINE coluwd11 80
+  DEFINE coluwd111 40
+
+
+
+    
+ TEXT     tx_ini 20     20       120       .,           ///
+          label("Initialise information with:") 
+      
+ COMBOBOX cb_ini 150      @          140       .,       ///
+          contents(ini_contents)                             ///
+          values(ini_values)                                     ///                            
+          onselchangelist(ini_change) default(1)                  ///
+          dropdownlist option(oinf) 
+
+
+ TEXT     tx_items 330      @      90       .,           ///
+          label("Number of items*:") 
+          
+ COMBOBOX cb_items 430      @         80       .,        ///
+          contents(item_contents)                                ///
+          onselchangelist(item_change) default(1)                          ///
+          dropdownlist option(nitems)  
+	  
+ EDIT    ed_items 430      @         80       .,        ///
+         option(nitems) 		  
+   
+  TEXT     tx_fr colu1         +70      70    .,           ///
+          label("Short names")
+  
+   TEXT     tx_fra colu11       @       100    .,           ///
+          label("Q. Unit")
+  
+  TEXT     tx_fr2 colu2         @      100    .,           ///
+          label("Varnames*")
+		  
+  TEXT     tx_ps colu3          @     80    .,           ///
+        label("Price schedules*")		  
+  
+  
+  TEXT     tx_sz  colu4          @    coluwd1    .,           ///
+        label("Initial prices*")   
+  
+  TEXT     tx_su1 colu5       @         80    .,           ///
+           label("Subsidy:") 
+		   
+ TEXT     tx_unit 400          @    coluwd1    .,           ///
+        label("Quantity unit")  
+		
+  
+   TEXT     tx_in2     colu6      @         @         .,           ///
+        label("Final prices*") 
+		
+		
+		
+   /* TEXT     tx_in1 colu6      @         @         .,           ///
+        label("Subsidy")*/
+   
+   TEXT     tx_in3     colu7      @         @         .,           ///
+        label("Elasticity")
+		
+		
+
+  
+  
+  
+  TEXT     tx_item1 colu0      +20       40    .,           ///
+        label("Item_1") right
+  
+  
+  EDIT    en_sn1     colu1     @         coluwd11    .,           ///
+        label("")      option(sn) 
+   
+   EDIT   en_qu1    colu11     @         coluwd111    .,           ///
+        label("")      option(qu) 
+ 
+ 
+ VARNAME   var_sn    colu1     @         coluwd1    .,           ///
+        label("")      option(snames) 
+		
+  VARNAME  vn_item1    colu2     @         coluwd1    .,           ///
+        label("")  option(it)    
+  
+  VARNAME  var_item    colu2     @         coluwd1    .,           ///
+        label("")  option(itnames) 
+  
+  COMBOBOX cb_ps1     colu3      @        80      .,        ///
+          contents(item_ps1)                                ///
+          values(vitem_ps1)                                    ///
+          onselchangelist(item_change_ps1) default(1)                          ///
+          dropdownlist  option(ps)
+  
+  EDIT     en_pr1     colu4      @         @         .,           ///
+        option(ip)   default()                                         ///
+        label("") 
+		
+  BUTTON   bu_pr1    colu4      @         @         .,               ///
+        label("Initialise")  onpush(script pschdb_i_1)         ///
+        tooltip("Initialise the initial schedule price of item 1.")
+		
+    
+  VARNAME  var_ip   colu4      @         coluwd1         .,           ///
+        option(ipsch)   default()                                         ///
+        label("") 
+	
+		   
+  VARNAME  var_unit colu5       @         80    .,           ///
+           option(unit)                                           ///
+           label("") 
+		   
+  EDIT  en_su1   colu5      @         @         .,           ///
+        option(su)         default(0)                                    ///
+        label("")  
+		
+  EDIT  en_fp1   colu6      @         @         .,           ///
+        option(fp)      default()                                        ///
+        label("") 
+ 
+  BUTTON   bu_fr1    colu6      @         @         .,               ///
+        label("Initialise") onpush(script pschdb_f_1)        ///
+        tooltip("Initialise the final schedule price of item 1.")
+		
+  EDIT  en_elas1   colu7      @         @         .,           ///
+        option(el)      default(-0.5)                                        ///
+        label("")                 
+
+		
+
+   
+  TEXT     tx_item2 colu0      +30      40    .,           ///
+        label("Item_2") right
+ 
+		
+  EDIT   en_sn2    colu1     @         coluwd11    .,           ///
+        label("")      option(sn) 
+		
+  EDIT   en_qu2    colu11     @         coluwd111    .,           ///
+        label("")      option(qu) 		
+		
+  VARNAME  vn_item2    colu2     @         coluwd1    .,           ///
+        label("")  option(it) 
+   
+  COMBOBOX cb_ps2     colu3      @        80      .,        ///
+          contents(item_ps2)                                ///
+          values(vitem_ps2)                                   ///
+          onselchangelist(item_change_ps2) default()                          ///
+          dropdownlist 	option(ps) 	
+        
+  EDIT  en_pr2   colu4      @         @         .,           ///
+        option(ip)   default()                                         ///
+        label("") 
+
+  BUTTON   bu_pr2    colu4      @         @         .,               ///
+        label("Initialise")  onpush(script pschdb_i_2)         ///
+        tooltip("Initialise the initial schedule price of item 2.")		
+		
+  
+  EDIT  en_su2   colu5      @         @         .,           ///
+        option(su)         default(0)                                    ///
+        label("")  
+
+  EDIT  en_fp2   colu6      @         @         .,           ///
+        option(fp)      default()                                        ///
+        label("")  
+		
+   BUTTON   bu_fr2    colu6      @         @         .,               ///
+        label("Initialise") onpush(script pschdb_f_2)        ///
+        tooltip("Initialise the final schedule price of item 2.")		
+
+  EDIT  en_elas2   colu7      @         @         .,           ///
+        option(el)      default(-0.5)                                        ///
+        label("")          
+       
+	   
+  TEXT     tx_item3 colu0      +30       40    .,           ///
+        label("Item_3") right
+ 
+  
+  EDIT   en_sn3    colu1     @         coluwd11    .,           ///
+        label("")      option(sn) 
+		
+  EDIT   en_qu3    colu11     @         coluwd111    .,           ///
+        label("")      option(qu) 
+ 
+ VARNAME  vn_item3    colu2     @         coluwd1    .,           ///
+        label("")  option(it)    
+        
+  
+    COMBOBOX cb_ps3     colu3      @        80      .,        ///
+          contents(item_ps3)                                ///
+          values(vitem_ps3)   option(ps)                                  ///
+          onselchangelist(item_change_ps3) default()                          ///
+          dropdownlist 	
+  
+  EDIT  en_pr3   colu4      @         @         .,           ///
+        option(ip)   default()                                         ///
+        label("") 
+		
+    BUTTON   bu_pr3    colu4      @         @         .,               ///
+        label("Initialise")  onpush(script pschdb_i_3)         ///
+        tooltip("Initialise the initial schedule price of item 3.")		
+
+
+  
+  
+  EDIT  en_su3   colu5      @         @         .,           ///
+        option(su)         default(0)                                    ///
+        label("")  
+
+  EDIT  en_fp3   colu6      @         @         .,           ///
+        option(fp)      default()                                        ///
+        label("")  
+
+		
+  BUTTON   bu_fr3    colu6      @         @         .,               ///
+        label("Initialise") onpush(script pschdb_f_3)        ///
+        tooltip("Initialise the final schedule price of item 3.")
+		
+  EDIT  en_elas3   colu7      @         @         .,           ///
+        option(el)      default(-0.5)                                        ///
+        label("")  
+		
+		
+		
+TEXT     tx_item4 colu0      +30       40    .,           ///
+        label("Item_4") right
+ 
+  
+  EDIT   en_sn4    colu1     @         coluwd11    .,           ///
+        label("")      option(sn) 
+
+  EDIT   en_qu4    colu11     @         coluwd111    .,           ///
+        label("")      option(qu) 
+		
+  VARNAME  vn_item4    colu2     @         coluwd1    .,           ///
+        label("")  option(it)    
+        
+  
+    COMBOBOX cb_ps4     colu3      @        80      .,        ///
+          contents(item_ps4)                                ///
+          values(vitem_ps4)    option(ps)                                 ///
+          onselchangelist(item_change_ps4) default()                          ///
+          dropdownlist 	
+  
+  
+  EDIT  en_pr4   colu4      @         @         .,           ///
+        option(ip)   default()                                         ///
+        label("") 
+ 
+  BUTTON   bu_pr4    colu4      @         @         .,               ///
+        label("Initialise")  onpush(script pschdb_i_4)         ///
+        tooltip("Initialise the initial schedule price of item 4.")	
+		
+  
+  
+  EDIT  en_su4   colu5      @         @         .,           ///
+        option(su)         default(0)                                    ///
+        label("")  
+
+  EDIT  en_fp4   colu6      @         @         .,           ///
+        option(fp)      default()                                        ///
+        label("")  
+  BUTTON   bu_fr4    colu6      @         @         .,               ///
+        label("Initialise") onpush(script pschdb_f_4)        ///
+        tooltip("Initialise the final schedule price of item 4.")
+		
+  EDIT  en_elas4   colu7      @         @         .,           ///
+        option(el)      default(-0.5)                                        ///
+        label("")   
+		
+		
+		
+   TEXT     tx_item5 colu0      +30       40    .,           ///
+        label("Item_5") right
+ 
+  
+  EDIT   en_sn5    colu1     @         coluwd11    .,           ///
+        label("")      option(sn) 
+		
+  EDIT   en_qu5    colu11     @         coluwd111    .,           ///
+        label("")      option(qu) 
+  
+  VARNAME  vn_item5    colu2     @         coluwd1    .,           ///
+        label("")  option(it)    
+        
+  
+    COMBOBOX cb_ps5     colu3      @        80      .,        ///
+          contents(item_ps5)                                ///
+          values(vitem_ps5)     option(ps)                                ///
+          onselchangelist(item_change_ps5) default()                          ///
+          dropdownlist 	
+  
+  
+  EDIT  en_pr5   colu4      @         @         .,           ///
+        option(ip)   default()                                         ///
+        label("") 
+		
+  BUTTON   bu_pr5    colu4      @         @         .,               ///
+        label("Initialise")  onpush(script pschdb_i_5)         ///
+        tooltip("Initialise the initial schedule price of item 5.")			
+
+
+  
+  
+  EDIT  en_su5   colu5      @         @         .,           ///
+        option(su)         default(0)                                    ///
+        label("")  
+		
+  BUTTON   bu_fr5    colu6      @         @         .,               ///
+        label("Initialise") onpush(script pschdb_f_5)        ///
+        tooltip("Initialise the final schedule price of item 5.")
+		
+  EDIT  en_fp5   colu6      @         @         .,           ///
+        option(fp)      default()                                        ///
+        label("")  
+
+  EDIT  en_elas5   colu7      @         @         .,           ///
+        option(el)      default(-0.5)                                        ///
+        label("")   
+		
+		
+		
+   TEXT     tx_item6 colu0      +30       40    .,           ///
+        label("Item_6") right
+ 
+  
+  EDIT   en_sn6    colu1     @         coluwd11    .,           ///
+        label("")      option(sn) 
+		
+  EDIT   en_qu6    colu11     @         coluwd111    .,           ///
+        label("")      option(qu) 
+  
+  VARNAME  vn_item6    colu2     @         coluwd1    .,           ///
+        label("")  option(it)    
+        
+  
+    COMBOBOX cb_ps6     colu3      @        80      .,        ///
+          contents(item_ps6)                                ///
+          values(vitem_ps6)    option(ps)                                 ///
+          onselchangelist(item_change_ps6) default()                          ///
+          dropdownlist 	
+  
+  
+  EDIT  en_pr6   colu4      @         @         .,           ///
+        option(ip)   default()                                         ///
+        label("") 
+
+  BUTTON   bu_pr6    colu4      @         @         .,               ///
+        label("Initialise")  onpush(script pschdb_i_6)         ///
+        tooltip("Initialise the initial schedule price of item 6.")	
+
+  
+  EDIT  en_su6   colu5      @         @         .,           ///
+        option(su)         default(0)                                    ///
+        label("")  
+
+  EDIT  en_fp6   colu6      @         @         .,           ///
+        option(fp)      default()                                        ///
+        label("")  
+  
+  BUTTON   bu_fr6    colu6      @         @         .,               ///
+        label("Initialise") onpush(script pschdb_f_6)        ///
+        tooltip("Initialise the final schedule price of item 6.")
+		
+  EDIT  en_elas6   colu7      @         @         .,           ///
+        option(el)      default(-0.5)                                        ///
+        label("")   
+		
+		
+  TEXT     tx_item7 colu0      +30       40    .,           ///
+        label("Item_7") right
+ 
+  
+  EDIT   en_sn7    colu1     @         coluwd11    .,           ///
+        label("")      option(sn) 
+		
+  EDIT   en_qu7    colu11     @         coluwd111    .,           ///
+        label("")      option(qu) 
+		
+  VARNAME  vn_item7    colu2     @         coluwd1    .,           ///
+        label("")  option(it)    
+        
+  COMBOBOX cb_ps7     colu3      @        80      .,        ///
+          contents(item_ps7)                                ///
+          values(vitem_ps7)    option(ps)                                 ///
+          onselchangelist(item_change_ps7) default()                          ///
+          dropdownlist 	
+  
+  
+  EDIT  en_pr7   colu4      @         @         .,           ///
+        option(ip)   default()                                         ///
+        label("")
+		
+    
+  BUTTON   bu_pr7    colu4      @         @         .,               ///
+        label("Initialise")  onpush(script pschdb_i_7)         ///
+        tooltip("Initialise the initial schedule price of item 7.")			
+
+  
+  EDIT  en_su7   colu5      @         @         .,           ///
+        option(su)         default(0)                                    ///
+        label("")  
+
+  EDIT  en_fp7   colu6      @         @         .,           ///
+        option(fp)      default()                                        ///
+        label("")  
+
+   BUTTON   bu_fr7    colu6      @         @         .,               ///
+        label("Initialise") onpush(script pschdb_f_7)        ///
+        tooltip("Initialise the final schedule price of item 7.")
+ 
+ EDIT  en_elas7   colu7      @         @         .,           ///
+        option(el)      default(-0.5)                                        ///
+        label("")   
+		
+		     
+  TEXT     tx_item8 colu0      +30       40    .,           ///
+        label("Item_8") right
+ 
+  
+  EDIT   en_sn8    colu1     @         coluwd11    .,           ///
+        label("")      option(sn) 
+		
+  EDIT   en_qu8    colu11     @         coluwd111    .,           ///
+        label("")      option(qu) 		
+		
+		
+  VARNAME  vn_item8    colu2     @         coluwd1    .,           ///
+        label("")  option(it)    
+        
+  COMBOBOX cb_ps8     colu3      @        80      .,        ///
+          contents(item_ps8)                                ///
+          values(vitem_ps8)     option(ps)                                ///
+          onselchangelist(item_change_ps8) default()                          ///
+          dropdownlist 	
+  
+  EDIT  en_pr8   colu4      @         @         .,           ///
+        option(ip)   default()                                         ///
+        label("")
+		
+   BUTTON   bu_pr8    colu4      @         @         .,               ///
+        label("Initialise")  onpush(script pschdb_i_8)         ///
+        tooltip("Initialise the initial schedule price of item 8.")			
+
+
+  
+  EDIT  en_su8   colu5      @         @         .,           ///
+        option(su)         default(0)                                    ///
+        label("")  
+
+  EDIT  en_fp8   colu6      @         @         .,           ///
+        option(fp)      default()                                        ///
+        label("")  
+		
+  BUTTON   bu_fr8    colu6      @         @         .,               ///
+        label("Initialise") onpush(script pschdb_f_8)        ///
+        tooltip("Initialise the final schedule price of item 8.")		
+
+  EDIT  en_elas8   colu7      @         @         .,           ///
+        option(el)      default(-0.5)                         ///
+        label("")   
+		     
+
+ 
+  TEXT     tx_item9 colu0      +30       40    .,           ///
+        label("Item_9") right
+		
+		
+ EDIT   en_sn9    colu1     @         coluwd11    .,           ///
+        label("")      option(sn) 
+		
+  EDIT   en_qu9    colu11     @         coluwd111    .,           ///
+        label("")      option(qu) 		
+		
+  VARNAME  vn_item9    colu2     @         coluwd1    .,           ///
+        label("")  option(it)    
+        
+ 
+  COMBOBOX cb_ps9     colu3      @        80      .,        ///
+          contents(item_ps9)                                ///
+          values(vitem_ps9)      option(ps)                               ///
+          onselchangelist(item_change_ps9) default()                          ///
+          dropdownlist 	
+ 
+  EDIT  en_pr9   colu4      @         @         .,           ///
+        option(ip)   default()                                         ///
+        label("") 
+		
+    BUTTON   bu_pr9    colu4      @         @         .,               ///
+        label("Initialise")  onpush(script pschdb_i_9)         ///
+        tooltip("Initialise the initial schedule price of item 9.")			
+
+  
+  EDIT  en_su9   colu5      @         @         .,           ///
+        option(su)         default(0)                                    ///
+        label("")  
+
+  EDIT  en_fp9   colu6      @         @         .,           ///
+        option(fp)      default()                                        ///
+        label("")  
+
+ BUTTON   bu_fr9    colu6      @         @         .,               ///
+        label("Initialise") onpush(script pschdb_f_9)        ///
+        tooltip("Initialise the final schedule price of item 9.")
+ 
+ EDIT  en_elas9   colu7      @         @         .,           ///
+        option(el)      default(-0.5)                                        ///
+        label("")  
+		
+		
+  TEXT     tx_item10 colu0      +30       40    .,           ///
+        label("Item_10") right
+ 
+  
+  EDIT   en_sn10    colu1     @         coluwd11    .,           ///
+        label("")      option(sn) 
+		
+  EDIT   en_qu10    colu11     @         coluwd111    .,           ///
+        label("")      option(qu) 		
+		
+  VARNAME  vn_item10    colu2     @         coluwd1    .,           ///
+        label("")  option(it)    
+        
+   COMBOBOX cb_ps10     colu3      @        80      .,        ///
+          contents(item_ps10)                                ///
+          values(vitem_ps10)    option(ps)                                 ///
+          onselchangelist(item_change_ps10) default()                          ///
+          dropdownlist 	
+  
+  EDIT  en_pr10   colu4      @         @         .,           ///
+        option(ip)   default()                                         ///
+        label("")
+		
+  BUTTON   bu_pr10    colu4      @         @         .,               ///
+        label("Initialise")  onpush(script pschdb_i_10)         ///
+        tooltip("Initialise the initial schedule price of item 10.")			
+
+  
+  EDIT  en_su10   colu5      @         @         .,           ///
+        option(su)         default(0)                                    ///
+        label("")  
+
+  EDIT  en_fp10   colu6      @         @         .,           ///
+        option(fp)      default()                                        ///
+        label("")  
+
+ 
+   BUTTON   bu_fr10    colu6      @         @         .,               ///
+        label("Initialise") onpush(script pschdb_f_10)        ///
+        tooltip("Initialise the final schedule price of item 10.")
+		
+   EDIT  en_elas10   colu7      @         @         .,           ///
+        option(el)      default(-0.5)                                        ///
+        label("")  
+		
+		
+		
+  GROUPBOX chk_per88  70    160  380 200,                         ///
+           label("Scenario(s): ")         ///
+        
+   TEXT     tx_nscen 100      +30      160       .,           ///
+          label("Number of Scenarios:") 
+         
+  COMBOBOX cb_nscen 220        @        100       .,        ///
+		  contents(scen_contents)                             ///
+          onselchangelist(scen_change) default(1)             ///
+          dropdownlist  option(nscen)
+   
+   TEXT tx_fprice   130    +20         @         .,           ///
+        label("Final prices")
+			  
+
+  TEXT    tx_ela   240      @         @         .,           ///
+        label("Elasticity")
+		
+  TEXT    tx_ina4   360      @         @         .,           ///
+        label("Inflation (in %)")
+  
+      
+  TEXT     tx_scen1    90      +20       30    . ,           ///
+        label("S_1:") right
+  
+  
+ VARNAME   vn_fpsch1    130     @         colwd1    .,           ///
+        option(fpsch1)      
+        
+        
+ VARNAME    vn_elas1    240     @         colwd2    .,           ///
+        label("")      option(elas1) 
+  
+     
+
+  EDIT  en_inf1        360      @          colwd3         .,           ///
+        option(inf1)      default(0)                                        ///
+        label("")                 
+        
+   
+   
+   
+  TEXT  tx_scen2    90      +30       30    .,           ///
+        label("S_2:") right
+    
+  
+ VARNAME   vn_fpsch2    130     @         colwd1    .,           ///
+        option(fpsch2)  
+  
+ VARNAME  vn_elas2    240     @         colwd2    .,           ///
+        label("")      option(elas2) 
+ 
+
+  EDIT  en_inf2   360 @          colwd3         .,           ///
+        option(inf2)      default(0)                                        ///
+        label("")                    
+           
+          
+  TEXT     tx_scen3 90      +30       30    .,           ///
+           label("S_3:") right
+  
+  VARNAME   vn_fpsch3    130     @         colwd1    .,           ///
+        option(fpsch3) 
+
+  VARNAME   vn_elas3    240     @         colwd2   .,           ///
+        label("")      option(elas3) 
+   
+                          
+  EDIT  en_inf3   360      @          colwd3        .,           ///
+        option(inf3)      default(0)                                        ///
+        label("")  
+		
+ 
+		
+GROUPBOX grinf 70    420    380 60,                      ///
+           label("Governement revenue: inflation")
+               
+
+ TEXT     tx_inf11  +10      +25         80         .,           ///
+        label("Inflation (in %)")
+  
+  
+        
+		
+END
+
+
+
+LIST item_contents
+BEGIN
+        1
+        2
+        3
+        4
+        5
+        6
+		7
+		8
+		9
+		10
+END
+
+LIST ini_contents
+BEGIN
+	Paramater values
+	Variables
+END
+
+
+
+LIST ini_values
+BEGIN
+	1
+	2
+END
+
+
+LIST scen_contents
+BEGIN
+        1
+        2
+        3
+END
+
+
+LIST item_change
+BEGIN
+        script item1
+        script item2
+        script item3
+        script item4
+        script item5
+        script item6
+	    script item7
+        script item8
+        script item9
+        script item10
+END
+
+
+LIST item_ps1
+BEGIN
+    Linear
+    Non linear
+END
+
+LIST vitem_ps1
+BEGIN
+        1
+        2
+END
+
+LIST item_ps2
+BEGIN
+    Linear
+    Non linear
+END
+
+LIST vitem_ps2
+BEGIN
+        1
+        2
+END
+
+LIST item_ps3
+BEGIN
+    Linear
+    Non linear
+END
+
+LIST vitem_ps3
+BEGIN
+        1
+        2
+END
+
+LIST item_ps4
+BEGIN
+    Linear
+    Non linear
+END
+
+LIST vitem_ps4
+BEGIN
+        1
+        2
+END
+
+LIST item_ps5
+BEGIN
+    Linear
+    Non linear
+END
+
+LIST vitem_ps5
+BEGIN
+        1
+        2
+END
+
+LIST item_ps6
+BEGIN
+    Linear
+    Non linear
+END
+
+LIST vitem_ps6
+BEGIN
+        1
+        2
+END
+
+LIST item_ps7
+BEGIN
+    Linear
+    Non linear
+END
+
+LIST vitem_ps7
+BEGIN
+        1
+        2
+END
+
+LIST item_ps8
+BEGIN
+    Linear
+    Non linear
+END
+
+LIST vitem_ps8
+BEGIN
+        1
+        2
+END
+
+
+LIST item_ps9
+BEGIN
+    Linear
+    Non linear
+END
+
+LIST vitem_ps9
+BEGIN
+        1
+        2
+END
+
+LIST item_ps10
+BEGIN
+    Linear
+    Non linear
+END
+
+LIST vitem_ps10
+BEGIN
+        1
+        2
+END
+
+
+LIST scen_change
+BEGIN
+        script scen1
+        script scen2
+        script scen3
+END
+
+SCRIPT scen1
+BEGIN
+        has_scen1.settrue
+        has_scen2.setfalse
+        has_scen3.setfalse
+        program check_items
+		program check_items_c
+		program check_items_cc
+END
+
+SCRIPT scen2
+BEGIN
+        has_scen1.settrue
+        has_scen2.settrue
+        has_scen3.setfalse
+        program check_items
+		program check_items_c
+		program check_items_cc
+END
+
+SCRIPT scen3
+BEGIN
+        has_scen1.settrue
+        has_scen2.settrue
+        has_scen3.settrue
+        program check_items
+		program check_items_c
+		program check_items_cc
+END
+
+
+
+LIST item_change_ps1
+BEGIN
+        script ps10
+        script ps11
+END
+
+LIST item_change_ps2
+BEGIN
+        script ps20
+        script ps21
+END
+
+LIST item_change_ps3
+BEGIN
+        script ps30
+        script ps31
+END
+
+LIST item_change_ps4
+BEGIN
+        script ps40
+        script ps41
+END
+
+
+LIST item_change_ps5
+BEGIN
+        script ps50
+        script ps51
+END
+
+LIST item_change_ps6
+BEGIN
+        script ps60
+        script ps61
+END
+
+LIST item_change_ps7
+BEGIN
+        script ps70
+        script ps71
+END
+
+
+
+LIST item_change_ps8
+BEGIN
+        script ps80
+        script ps81
+END
+
+LIST item_change_ps9
+BEGIN
+        script ps90
+        script ps91
+END
+
+LIST item_change_ps10
+BEGIN
+        script ps100
+        script ps101
+END
+
+
+
+SCRIPT ps10
+BEGIN
+        has_ps1.settrue
+        program check_items
+		
+END
+
+SCRIPT ps11
+BEGIN
+        has_ps1.setfalse
+        program check_items
+		
+END
+
+SCRIPT ps20
+BEGIN
+        has_ps2.settrue
+        program check_items
+		
+END
+
+SCRIPT ps21
+BEGIN
+        has_ps2.setfalse
+        program check_items
+		
+END
+
+SCRIPT ps30
+BEGIN
+        has_ps3.settrue
+        program check_items
+		
+END
+
+SCRIPT ps31
+BEGIN
+        has_ps3.setfalse
+        program check_items
+		
+END
+
+
+SCRIPT ps40
+BEGIN
+        has_ps4.settrue
+        program check_items
+		
+END
+
+SCRIPT ps41
+BEGIN
+        has_ps4.setfalse
+        program check_items
+		
+END
+
+
+SCRIPT ps50
+BEGIN
+        has_ps5.settrue
+        program check_items
+		
+END
+
+SCRIPT ps51
+BEGIN
+        has_ps5.setfalse
+        program check_items
+		
+END
+
+SCRIPT ps60
+BEGIN
+        has_ps6.settrue
+        program check_items
+		
+END
+
+SCRIPT ps61
+BEGIN
+        has_ps6.setfalse
+        program check_items
+		
+END
+
+
+SCRIPT ps70
+BEGIN
+        has_ps7.settrue
+        program check_items
+		
+END
+
+SCRIPT ps71
+BEGIN
+        has_ps7.setfalse
+        program check_items
+		
+END
+
+SCRIPT ps80
+BEGIN
+        has_ps8.settrue
+        program check_items
+		
+END
+
+SCRIPT ps81
+BEGIN
+        has_ps8.setfalse
+        program check_items
+		
+END
+
+
+SCRIPT ps90
+BEGIN
+        has_ps9.settrue
+        program check_items
+		
+END
+
+SCRIPT ps91
+BEGIN
+        has_ps9.setfalse
+        program check_items
+		
+END
+
+SCRIPT ps100
+BEGIN 
+        has_ps10.settrue
+        program check_items
+		
+END
+
+SCRIPT ps101
+BEGIN
+        has_ps10.setfalse
+        program check_items
+	
+END
+
+
+LIST ini_change
+BEGIN
+        script ini1
+        script ini2
+END
+
+SCRIPT ini1
+BEGIN
+        has_ini.settrue
+        program check_items
+		program check_items_c
+		program check_items_cc
+END
+
+SCRIPT ini2
+BEGIN
+        has_ini.setfalse
+        program check_items
+		program check_items_c
+		program check_items_cc
+END
+
+SCRIPT item1
+BEGIN
+        has_item1.settrue
+        has_item2.setfalse
+        has_item3.setfalse
+        has_item4.setfalse
+        has_item5.setfalse
+        has_item6.setfalse
+		has_item7.setfalse
+        has_item8.setfalse
+        has_item9.setfalse
+        has_item10.setfalse
+        program check_items
+END
+
+SCRIPT item2
+BEGIN
+        has_item1.settrue
+        has_item2.settrue
+        has_item3.setfalse
+        has_item4.setfalse
+        has_item5.setfalse
+        has_item6.setfalse
+		has_item7.setfalse
+        has_item8.setfalse
+        has_item9.setfalse
+        has_item10.setfalse
+        program check_items
+END
+
+SCRIPT item3
+BEGIN
+        has_item1.settrue
+        has_item2.settrue
+        has_item3.settrue
+        has_item4.setfalse
+        has_item5.setfalse
+        has_item6.setfalse
+		has_item7.setfalse
+        has_item8.setfalse
+        has_item9.setfalse
+        has_item10.setfalse
+        program check_items
+END
+
+SCRIPT item4
+BEGIN
+        has_item1.settrue
+        has_item2.settrue
+        has_item3.settrue
+        has_item4.settrue
+        has_item5.setfalse
+        has_item6.setfalse
+		has_item7.setfalse
+        has_item8.setfalse
+        has_item9.setfalse
+        has_item10.setfalse
+        program check_items
+END
+
+SCRIPT item5
+BEGIN
+        has_item1.settrue
+        has_item2.settrue
+        has_item3.settrue
+        has_item4.settrue
+        has_item5.settrue
+        has_item6.setfalse
+		has_item7.setfalse
+        has_item8.setfalse
+        has_item9.setfalse
+        has_item10.setfalse
+        program check_items
+END
+
+SCRIPT item6
+BEGIN
+        has_item1.settrue
+        has_item2.settrue
+        has_item3.settrue
+        has_item4.settrue
+        has_item5.settrue
+        has_item6.settrue
+		has_item7.setfalse
+        has_item8.setfalse
+        has_item9.setfalse
+        has_item10.setfalse
+        program check_items
+END
+
+SCRIPT item7
+BEGIN
+        has_item1.settrue
+        has_item2.settrue
+        has_item3.settrue
+        has_item4.settrue
+        has_item5.settrue
+        has_item6.settrue
+		has_item7.settrue
+        has_item8.setfalse
+        has_item9.setfalse
+        has_item10.setfalse
+        program check_items
+END
+
+SCRIPT item8
+BEGIN
+        has_item1.settrue
+        has_item2.settrue
+        has_item3.settrue
+        has_item4.settrue
+        has_item5.settrue
+        has_item6.settrue
+		has_item7.settrue
+        has_item8.settrue
+        has_item9.setfalse
+        has_item10.setfalse
+        program check_items
+END
+
+SCRIPT item9
+BEGIN
+        has_item1.settrue
+        has_item2.settrue
+        has_item3.settrue
+        has_item4.settrue
+        has_item5.settrue
+        has_item6.settrue
+		has_item7.settrue
+        has_item8.settrue
+        has_item9.settrue
+        has_item10.setfalse
+        program check_items
+END
+
+SCRIPT item10
+BEGIN
+        has_item1.settrue
+        has_item2.settrue
+        has_item3.settrue
+        has_item4.settrue
+        has_item5.settrue
+        has_item6.settrue
+		has_item7.settrue
+        has_item8.settrue
+        has_item9.settrue
+        has_item10.settrue
+        program check_items
+END
+
+
+SCRIPT pos1
+BEGIN
+items_info.tx_sz.setposition 300 200 . .
+END
+
+PROGRAM check_items
+BEGIN
+ if has_ini {
+ 
+  
+ 				call items_info.var_sn.hide
+				call items_info.var_item.hide 
+				call items_info.var_ip.hide
+				call items_info.var_unit.hide
+				call  items_info.tx_unit.hide
+			
+				call items_info.tx_ps.show
+				call items_info.tx_in2.show
+				call items_info.tx_in3.show
+				
+				call items_info.chk_per88.hide  
+				call items_info.tx_nscen.hide
+				call items_info.cb_nscen.hide
+				call items_info.tx_fprice.hide  
+				call items_info.tx_ela.hide
+				call items_info.tx_ina4.hide  
+				call items_info.tx_scen1.hide   
+				call items_info.vn_fpsch1.hide    
+				call items_info.vn_elas1.hide    
+				 
+				call items_info.tx_scen2.hide
+				call items_info.vn_fpsch2.hide
+				call items_info.vn_elas2.hide
+				call items_info.en_inf2.hide
+				call items_info.tx_scen3.hide
+				call items_info.vn_fpsch3.hide
+				call items_info.vn_elas3.hide
+				call items_info.en_inf3.hide 
+				call items_info.tx_fra.show
+				/*
+				call items_info.grinf.show  
+				call items_info.tx_inf11.show    
+				
+				*/
+				
+				call items_info.grinf.hide 
+				call items_info.tx_inf11.hide    
+				/*call items_info.tx_fra.hide*/
+				call items_info.en_inf1.hide
+				call items_info.en_inf2.hide
+				call items_info.en_inf3.hide
+
+				call items_info.tx_sz.setposition  380 90 . .
+				call items_info.var_ip.setposition 380 110 . .
+				call items_info.var_unit.setposition 380 130 . .
+				call items_info.en_inf1.setposition 200 445 . .
+				
+			
+				
+				
+        if has_item1 {
+               
+                call items_info.en_sn1.show
+				call items_info.en_qu1.show
+                call items_info.vn_item1.show
+				call items_info.cb_ps1.show
+                call items_info.en_pr1.show
+				call items_info.tx_su1.show
+			    call items_info.en_su1.show
+				call items_info.bu_pr1.show
+				call items_info.bu_fr1.show
+				call items_info.tx_item1.show
+				if has_ps1 {
+				call items_info.tx_su1.show
+                call items_info.en_su1.show
+				call items_info.bu_pr1.hide
+				call items_info.bu_fr1.hide
+				}
+                call items_info.en_fp1.show
+                call items_info.en_elas1.show         
+               
+        }
+
+        if !has_item1 {
+                call items_info.tx_item1.show
+                call items_info.en_sn1.hide
+				call items_info.en_qu1.hide
+                call items_info.vn_item1.hide
+				call items_info.cb_ps1.hide
+                call items_info.en_pr1.hide
+				call items_info.tx_su1.hide
+                call items_info.en_su1.hide
+                call items_info.en_fp1.hide 
+                call items_info.en_elas1.hide 
+			
+        }
+          if has_item2 {
+               
+                call items_info.en_sn2.show
+				call items_info.en_qu2.show
+                call items_info.vn_item2.show
+				call items_info.cb_ps2.show
+                call items_info.en_pr2.show
+			    call items_info.en_su2.show
+				call items_info.bu_pr2.show
+				call items_info.bu_fr2.show
+				call items_info.tx_item2.show
+				if has_ps2 {
+                call items_info.en_su2.show
+				call items_info.bu_pr2.hide
+				call items_info.bu_fr2.hide
+				}
+                call items_info.en_fp2.show
+                call items_info.en_elas2.show         
+               
+        }
+
+        if !has_item2 {
+                call items_info.tx_item2.hide
+			    call items_info.bu_pr2.hide
+				call items_info.bu_fr2.hide
+                call items_info.en_sn2.hide
+				call items_info.en_qu2.hide
+                call items_info.vn_item2.hide
+				call items_info.cb_ps2.hide
+                call items_info.en_pr2.hide
+                call items_info.en_su2.hide
+                call items_info.en_fp2.hide 
+                call items_info.en_elas2.hide 
+		
+			
+        }
+               if has_item3 {
+                call items_info.en_sn3.show
+				call items_info.en_qu3.show
+                call items_info.vn_item3.show
+				call items_info.cb_ps3.show
+                call items_info.en_pr3.show
+			    call items_info.en_su3.show
+				call items_info.bu_pr3.show
+				call items_info.bu_fr3.show
+				call items_info.tx_item3.show
+				if has_ps3 {
+                call items_info.en_su3.show
+				call items_info.bu_pr3.hide
+				call items_info.bu_fr3.hide
+				}
+                call items_info.en_fp3.show
+                call items_info.en_elas3.show         
+               
+        }
+
+        if !has_item3 {
+                call items_info.tx_item3.hide
+			    call items_info.bu_pr3.hide
+				call items_info.bu_fr3.hide
+                call items_info.en_sn3.hide
+				call items_info.en_qu3.hide
+                call items_info.vn_item3.hide
+				call items_info.cb_ps3.hide
+                call items_info.en_pr3.hide
+                call items_info.en_su3.hide
+                call items_info.en_fp3.hide 
+                call items_info.en_elas3.hide 
+			
+        }
+                if has_item4 {
+               
+                call items_info.en_sn4.show
+				call items_info.en_qu4.show
+                call items_info.vn_item4.show
+				call items_info.cb_ps4.show
+                call items_info.en_pr4.show
+			    call items_info.en_su4.show
+				call items_info.bu_pr4.show
+				call items_info.bu_fr4.show
+				call items_info.tx_item4.show
+				if has_ps4 {
+                call items_info.en_su4.show
+				call items_info.bu_pr4.hide
+				call items_info.bu_fr4.hide
+				}
+                call items_info.en_fp4.show
+                call items_info.en_elas4.show         
+               
+        }
+
+        if !has_item4 {
+                call items_info.tx_item4.hide
+			    call items_info.bu_pr4.hide
+				call items_info.bu_fr4.hide
+                call items_info.en_sn4.hide
+				call items_info.en_qu4.hide
+                call items_info.vn_item4.hide
+				call items_info.cb_ps4.hide
+                call items_info.en_pr4.hide
+                call items_info.en_su4.hide
+                call items_info.en_fp4.hide 
+                call items_info.en_elas4.hide 
+			
+        }
+		
+		
+               if has_item5 {
+               
+                call items_info.en_sn5.show
+				call items_info.en_qu5.show
+                call items_info.vn_item5.show
+				call items_info.cb_ps5.show
+                call items_info.en_pr5.show
+			    call items_info.en_su5.show
+				call items_info.bu_pr5.show
+				call items_info.bu_fr5.show
+				call items_info.tx_item5.show
+				if has_ps5 {
+                call items_info.en_su5.show
+				call items_info.bu_pr5.hide
+				call items_info.bu_fr5.hide
+				}
+                call items_info.en_fp5.show
+                call items_info.en_elas5.show         
+               
+        }
+
+        if !has_item5 {
+		        call items_info.tx_item5.hide
+			    call items_info.bu_pr5.hide
+				call items_info.bu_fr5.hide
+                call items_info.en_sn5.hide
+				call items_info.en_qu5.hide
+                call items_info.vn_item5.hide
+				call items_info.cb_ps5.hide
+                call items_info.en_pr5.hide
+                call items_info.en_su5.hide
+                call items_info.en_fp5.hide 
+                call items_info.en_elas5.hide 
+			
+        }
+	   
+                if has_item6 {
+               
+                call items_info.en_sn6.show
+				call items_info.en_qu6.show
+                call items_info.vn_item6.show
+				call items_info.cb_ps6.show
+                call items_info.en_pr6.show
+			    call items_info.en_su6.show
+				call items_info.bu_pr6.show
+				call items_info.bu_fr6.show
+				call items_info.tx_item6.show
+				if has_ps6 {
+                call items_info.en_su6.show
+				call items_info.bu_pr6.hide
+				call items_info.bu_fr6.hide
+				}
+                call items_info.en_fp6.show
+                call items_info.en_elas6.show         
+               
+        }
+
+        if !has_item6 {
+              call items_info.tx_item6.hide
+			    call items_info.bu_pr6.hide
+				call items_info.bu_fr6.hide
+                call items_info.en_sn6.hide
+				call items_info.en_qu6.hide
+                call items_info.vn_item6.hide
+				call items_info.cb_ps6.hide
+                call items_info.en_pr6.hide
+                call items_info.en_su6.hide
+                call items_info.en_fp6.hide 
+                call items_info.en_elas6.hide 
+			
+        }
+		
+		        
+                if has_item7 {
+               
+                call items_info.en_sn7.show
+				call items_info.en_qu7.show
+                call items_info.vn_item7.show
+				call items_info.cb_ps7.show
+                call items_info.en_pr7.show
+			    call items_info.en_su7.show
+				call items_info.bu_pr7.show
+				call items_info.bu_fr7.show
+				call items_info.tx_item7.show
+				if has_ps7 {
+                call items_info.en_su7.show
+				call items_info.bu_pr7.hide
+				call items_info.bu_fr7.hide
+				}
+                call items_info.en_fp7.show
+                call items_info.en_elas7.show         
+               
+        }
+
+        if !has_item7 {
+              call items_info.tx_item7.hide
+			    call items_info.bu_pr7.hide
+				call items_info.bu_fr7.hide
+                call items_info.en_sn7.hide
+				call items_info.en_qu7.hide
+                call items_info.vn_item7.hide
+				call items_info.cb_ps7.hide
+                call items_info.en_pr7.hide
+                call items_info.en_su7.hide
+                call items_info.en_fp7.hide 
+                call items_info.en_elas7.hide 
+			
+        }
+		
+		
+		
+		        
+        if has_item8 {
+               
+               call items_info.en_sn8.show
+				call items_info.en_qu8.show
+                call items_info.vn_item8.show
+				call items_info.cb_ps8.show
+                call items_info.en_pr8.show
+			    call items_info.en_su8.show
+				call items_info.bu_pr8.show
+				call items_info.bu_fr8.show
+				call items_info.tx_item8.show
+				
+				if has_ps8 {
+                call items_info.en_su8.show
+				call items_info.bu_pr8.hide
+				call items_info.bu_fr8.hide
+				}
+                call items_info.en_fp8.show
+                call items_info.en_elas8.show         
+               
+        }
+
+        if !has_item8 {
+              call items_info.tx_item8.hide
+			    call items_info.bu_pr8.hide
+				call items_info.bu_fr8.hide
+                call items_info.en_sn8.hide
+				call items_info.en_qu8.hide
+                call items_info.vn_item8.hide
+				call items_info.cb_ps8.hide
+                call items_info.en_pr8.hide
+                call items_info.en_su8.hide
+                call items_info.en_fp8.hide 
+                call items_info.en_elas8.hide 
+			
+        }
+		        
+        if has_item9 {
+               
+                call items_info.en_sn9.show
+				call items_info.en_qu9.show
+                call items_info.vn_item9.show
+				call items_info.cb_ps9.show
+                call items_info.en_pr9.show
+			    call items_info.en_su9.show
+				call items_info.bu_pr9.show
+				call items_info.bu_fr9.show
+				call items_info.tx_item9.show
+				if has_ps9 {
+                call items_info.en_su9.show
+				call items_info.bu_pr9.hide
+				call items_info.bu_fr9.hide
+				}
+                call items_info.en_fp9.show
+                call items_info.en_elas9.show         
+               
+        }
+
+        if !has_item9 {
+              call items_info.tx_item9.hide
+			    call items_info.bu_pr9.hide
+				call items_info.bu_fr9.hide
+                call items_info.en_sn9.hide
+				call items_info.en_qu9.hide
+                call items_info.vn_item9.hide
+				call items_info.cb_ps9.hide
+                call items_info.en_pr9.hide
+                call items_info.en_su9.hide
+                call items_info.en_fp9.hide 
+                call items_info.en_elas9.hide 
+			
+        }
+		
+        if has_item10 {
+               
+                call items_info.en_sn10.show
+				call items_info.en_qu10.show
+                call items_info.vn_item10.show
+				call items_info.cb_ps10.show
+                call items_info.en_pr10.show
+			    call items_info.en_su10.show
+				call items_info.bu_pr10.show
+				call items_info.bu_fr10.show
+				call items_info.tx_item10.show
+				if has_ps10 {
+                call items_info.en_su10.show
+				call items_info.bu_pr10.hide
+				call items_info.bu_fr10.hide
+				}
+                call items_info.en_fp10.show
+                call items_info.en_elas10.show         
+               
+        }
+
+        if !has_item10 {
+				call items_info.tx_item10.hide
+			    call items_info.bu_pr10.hide
+				call items_info.bu_fr10.hide
+                call items_info.en_sn10.hide
+				call items_info.en_qu10.hide
+                call items_info.vn_item10.hide
+				call items_info.cb_ps10.hide
+                call items_info.en_pr10.hide
+                call items_info.en_su10.hide
+                call items_info.en_fp10.hide 
+                call items_info.en_elas10.hide
+			
+        }
+		
+         
+        
+               
+
+		if !has_ps1 {
+                   call items_info.en_su1.hide
+				   call items_info.en_pr1.hide
+				   call items_info.en_fp1.hide
+                   }   
+				   
+
+		if !has_ps2 {
+                   call items_info.en_su2.hide
+				   call items_info.en_pr2.hide
+				   call items_info.en_fp2.hide
+                   }  		   
+		
+
+		
+		if !has_ps3 {
+                   call items_info.en_su3.hide
+				   call items_info.en_pr3.hide
+				   call items_info.en_fp3.hide
+                   }
+				   
+
+		if !has_ps4 {
+                   call items_info.en_su4.hide
+                   call items_info.en_pr4.hide
+				   call items_info.en_fp4.hide
+                   }
+				   
+
+		if !has_ps5 {
+                   call items_info.en_su5.hide
+				   call items_info.en_pr5.hide
+				   call items_info.en_fp5.hide
+                   } 
+		
+
+		if !has_ps6 {
+                   call items_info.en_su6.hide
+				   call items_info.en_pr6.hide
+				   call items_info.en_fp6.hide                   
+				   } 
+				   
+				   
+		if !has_ps7 {
+                   call items_info.en_su7.hide
+				   call items_info.en_pr7.hide
+				   call items_info.en_fp7.hide
+                   } 
+
+		if !has_ps8 {
+                   call items_info.en_su8.hide
+				   call items_info.en_pr8.hide
+				   call items_info.en_fp8.hide
+                   } 
+		
+
+		if !has_ps9 {
+                   call items_info.en_su9.hide
+				   call items_info.en_pr9.hide
+				   call items_info.en_fp9.hide
+                   } 
+
+
+		if !has_ps10 {
+                   call items_info.en_su10.hide
+				   call items_info.en_pr10.hide
+				   call items_info.en_fp10.hide
+                   } 
+        
+      }
+	  
+ 
+ 
+		
+               
+			
+				
+				
+				program check_items_cc
+				
+	   
+	   
+	  
+            
+
+			END
+
+PROGRAM check_items_c
+BEGIN
+ if has_ini   {
+			   call  items_info.cb_items.show
+			   call  items_info.ed_items.hide
+			   }
+ if !has_ini   {
+			   call  items_info.cb_items.hide
+			   call  items_info.ed_items.show
+			   }			   
+			   
+END		
+
+PROGRAM check_items_cc
+BEGIN
+		        
+			if !has_ini {
+	           
+				call items_info.var_sn.show 
+				call items_info.var_item.show 
+				call items_info.var_ip.show 
+				call items_info.var_unit.show 
+				
+			
+				
+				call  items_info.tx_unit.show
+
+				call items_info.tx_ps.hide
+				call items_info.tx_in2.hide
+				call items_info.tx_in3.hide
+				
+				call items_info.grinf.hide  
+				call items_info.tx_inf11.hide   
+				call items_info.tx_fra.hide 
+				
+				call items_info.chk_per88.show  
+				call items_info.tx_nscen.show
+				call items_info.cb_nscen.show
+				call items_info.tx_fprice.show  
+				call items_info.tx_ela.show
+				call items_info.tx_ina4.hide  
+				call items_info.tx_scen1.show   
+				call items_info.vn_fpsch1.show    
+				call items_info.vn_elas1.show    
+				  
+				call items_info.tx_scen2.show
+				call items_info.vn_fpsch2.show
+				call items_info.vn_elas2.show
+				call items_info.en_inf2.hide
+				call items_info.tx_scen3.show
+				call items_info.vn_fpsch3.show
+				call items_info.vn_elas3.show
+				call items_info.en_inf3.hide
+				
+				call items_info.tx_sz.setposition 290 90 . .
+				call items_info.var_ip.setposition 290 110 . .
+				call items_info.var_unit.setposition 400 110 100 .
+				call items_info.en_inf1.setposition 360 230 . .
+				
+			
+				
+		if has_scen2 {
+			                    call items_info.tx_scen2.show
+                                call items_info.vn_elas2.show
+                                call items_info.vn_fpsch2.show
+                                call items_info.en_inf2.hide        
+        }
+        if !has_scen2 {
+		        call items_info.tx_scen2.hide
+                call items_info.vn_elas2.hide
+                call items_info.vn_fpsch2.hide
+                call items_info.en_inf2.hide
+        }
+        if has_scen3 {
+                                call items_info.tx_scen2.show
+								call items_info.vn_elas2.show
+                                call items_info.vn_fpsch2.show
+                                call items_info.en_inf2.hide
+								call items_info.tx_scen3.show
+								call items_info.vn_elas3.show
+                                call items_info.vn_fpsch3.show
+                                call items_info.en_inf3.hide    
+
+        }
+        if !has_scen3 {
+		        call items_info.tx_scen3.hide
+                call items_info.vn_elas3.hide
+                call items_info.vn_fpsch3.hide
+                call items_info.en_inf3.hide       
+        }	
+				call items_info.tx_item1.hide
+                call items_info.en_sn1.hide
+				call items_info.en_qu1.hide
+                call items_info.vn_item1.hide
+				call items_info.cb_ps1.hide
+                call items_info.en_pr1.hide
+				call items_info.tx_su1.hide
+                call items_info.en_su1.hide
+                call items_info.en_fp1.hide 
+				call items_info.bu_pr1.hide
+				call items_info.bu_fr1.hide
+                call items_info.en_elas1.hide 
+				
+				call items_info.tx_item2.hide
+                call items_info.en_sn2.hide
+				call items_info.en_qu2.hide
+                call items_info.vn_item2.hide
+				call items_info.cb_ps2.hide
+                call items_info.en_pr2.hide
+                call items_info.en_su2.hide
+                call items_info.en_fp2.hide 
+				call items_info.bu_pr2.hide
+				call items_info.bu_fr2.hide
+                call items_info.en_elas2.hide 
+				
+			    call items_info.tx_item3.hide
+                call items_info.en_sn3.hide
+				call items_info.en_qu3.hide
+                call items_info.vn_item3.hide
+				call items_info.cb_ps3.hide
+                call items_info.en_pr3.hide
+                call items_info.en_su3.hide
+                call items_info.en_fp3.hide 
+				call items_info.bu_pr3.hide
+				call items_info.bu_fr3.hide
+                call items_info.en_elas3.hide 
+				
+				call items_info.tx_item4.hide
+                call items_info.en_sn4.hide
+				call items_info.en_qu4.hide
+                call items_info.vn_item4.hide
+				call items_info.cb_ps4.hide
+                call items_info.en_pr4.hide
+                call items_info.en_su4.hide
+                call items_info.en_fp4.hide 
+				call items_info.bu_pr4.hide
+				call items_info.bu_fr4.hide
+                call items_info.en_elas4.hide 
+				
+				call items_info.tx_item5.hide
+                call items_info.en_sn5.hide
+				call items_info.en_qu5.hide
+                call items_info.vn_item5.hide
+				call items_info.cb_ps5.hide
+                call items_info.en_pr5.hide
+                call items_info.en_su5.hide
+                call items_info.en_fp5.hide 
+				call items_info.bu_pr5.hide
+				call items_info.bu_fr5.hide
+                call items_info.en_elas5.hide 
+				
+			    call items_info.tx_item6.hide
+                call items_info.en_sn6.hide
+				call items_info.en_qu6.hide
+                call items_info.vn_item6.hide
+				call items_info.cb_ps6.hide
+                call items_info.en_pr6.hide
+                call items_info.en_su6.hide
+                call items_info.en_fp6.hide 
+				call items_info.bu_pr6.hide
+				call items_info.bu_fr6.hide
+                call items_info.en_elas6.hide 
+				
+				call items_info.tx_item7.hide
+                call items_info.en_sn7.hide
+				call items_info.en_qu7.hide
+                call items_info.vn_item7.hide
+				call items_info.cb_ps7.hide
+                call items_info.en_pr7.hide
+                call items_info.en_su7.hide
+                call items_info.en_fp7.hide 
+				call items_info.bu_pr7.hide
+				call items_info.bu_fr7.hide
+                call items_info.en_elas7.hide 
+				
+				call items_info.tx_item8.hide
+                call items_info.en_sn8.hide
+				call items_info.en_qu8.hide
+                call items_info.vn_item8.hide
+				call items_info.cb_ps8.hide
+                call items_info.en_pr8.hide
+                call items_info.en_su8.hide
+                call items_info.en_fp8.hide
+				call items_info.bu_pr8.hide
+				call items_info.bu_fr8.hide
+                call items_info.en_elas8.hide 
+	            
+				call items_info.tx_item9.hide
+                call items_info.en_sn9.hide
+				call items_info.en_qu9.hide
+                call items_info.vn_item9.hide
+				call items_info.cb_ps9.hide
+                call items_info.en_pr9.hide
+                call items_info.en_su9.hide
+                call items_info.en_fp9.hide 
+			    call items_info.bu_pr9.hide
+				call items_info.bu_fr9.hide
+                call items_info.en_elas9.hide 
+				
+			    call items_info.tx_item10.hide
+                call items_info.en_sn10.hide
+				call items_info.en_qu10.hide
+                call items_info.vn_item10.hide
+				call items_info.cb_ps10.hide
+                call items_info.en_pr10.hide
+                call items_info.en_su10.hide
+                call items_info.en_fp10.hide 
+			    call items_info.bu_pr10.hide
+				call items_info.bu_fr10.hide
+                call items_info.en_elas10.hide 			   
+			   
+			   }
+END		
+	   
+
+PROGRAM item1_output
+BEGIN
+ if has_item1 {
+                                
+     
+                     put " opr1(" 
+					 optionarg items_info.en_sn1
+					 optionarg items_info.en_qu1
+					 optionarg items_info.vn_item1
+					 optionarg items_info.cb_ps1
+					 optionarg items_info.en_pr1
+                     optionarg items_info.en_su1
+                     optionarg items_info.en_fp1
+                     optionarg items_info.en_elas1    
+					 put ")"
+}
+END
+
+
+
+PROGRAM item2_output
+BEGIN
+        if has_item2 {
+					 put " opr2(" 
+					 optionarg items_info.en_sn2
+					 optionarg items_info.en_qu2
+                     optionarg items_info.vn_item2 
+					 optionarg items_info.cb_ps2    
+                     optionarg items_info.en_pr2
+                     optionarg items_info.en_su2
+                     optionarg items_info.en_fp2
+                     optionarg items_info.en_elas2    
+					 put ")"
+        }
+END
+
+PROGRAM item3_output
+BEGIN
+        if has_item3 {
+		              put " opr3(" 
+					 optionarg items_info.en_sn3
+					 optionarg items_info.en_qu3
+					 optionarg items_info.vn_item3
+					 optionarg items_info.cb_ps3         
+                     optionarg items_info.en_pr3
+                     optionarg items_info.en_su3
+                     optionarg items_info.en_fp3
+                     optionarg items_info.en_elas3
+					 put ")"
+        }
+END
+
+PROGRAM item4_output
+BEGIN
+        if has_item4 {
+					 put " opr4(" 
+					 optionarg items_info.en_sn4
+					 optionarg items_info.en_qu4
+                     optionarg items_info.vn_item4
+					 optionarg items_info.cb_ps4      
+                     optionarg items_info.en_pr4
+                     optionarg items_info.en_su4
+                     optionarg items_info.en_fp4
+                     optionarg items_info.en_elas4    
+
+					 put ")"
+        }
+END
+
+PROGRAM item5_output
+BEGIN
+       if has_item5 {
+					  put " opr5(" 
+					 optionarg items_info.en_sn5
+					 optionarg items_info.en_qu5
+					 optionarg items_info.vn_item5
+					 optionarg items_info.cb_ps5            
+                     optionarg items_info.en_pr5
+                     optionarg items_info.en_su5
+                     optionarg items_info.en_fp5
+                     optionarg items_info.en_elas5
+					 put ")"
+        }
+END
+
+PROGRAM item6_output
+BEGIN
+       if has_item6 {
+	                 put " opr6(" 
+					 optionarg items_info.en_sn6
+					 optionarg items_info.en_qu6
+					 optionarg items_info.vn_item6
+					 optionarg items_info.cb_ps6     
+                     optionarg items_info.en_pr6
+                     optionarg items_info.en_su6
+                     optionarg items_info.en_fp6
+                     optionarg items_info.en_elas6
+					 put ")"
+        }
+END
+
+PROGRAM item7_output
+BEGIN
+       if has_item7 {
+					  put " opr7(" 
+                     optionarg items_info.en_sn7
+					 optionarg items_info.en_qu7
+					 optionarg items_info.vn_item7
+					 optionarg items_info.cb_ps7
+                     optionarg items_info.en_pr7
+                     optionarg items_info.en_su7
+                     optionarg items_info.en_fp7
+                     optionarg items_info.en_elas7
+
+					 put ")"
+        }
+END
+
+PROGRAM item8_output
+BEGIN
+       if has_item8 {
+					  put " opr8(" 
+					 optionarg items_info.en_sn8
+					 optionarg items_info.en_qu8
+					 optionarg items_info.vn_item8
+					 optionarg items_info.cb_ps8        
+                     optionarg items_info.en_pr8
+                     optionarg items_info.en_su8
+                     optionarg items_info.en_fp8
+                     optionarg items_info.en_elas8
+
+					 put ")"
+        }
+END
+
+PROGRAM item9_output
+BEGIN
+       if has_item9 {
+					  put " opr9(" 
+					 optionarg items_info.en_sn9
+					 optionarg items_info.en_qu9
+                     optionarg items_info.vn_item9  
+					 optionarg items_info.cb_ps9
+                     optionarg items_info.en_pr9
+                     optionarg items_info.en_su9
+                     optionarg items_info.en_fp9
+                     optionarg items_info.en_elas9
+
+					 put ")"
+        }
+END
+
+        
+PROGRAM item10_output
+BEGIN
+       if has_item10 {
+					  put " opr10(" 
+					 optionarg items_info.en_sn10
+					 optionarg items_info.en_qu10
+                     optionarg items_info.vn_item10   
+					 optionarg items_info.cb_ps10
+                     optionarg items_info.en_pr10
+                     optionarg items_info.en_su10
+                     optionarg items_info.en_fp10
+                     optionarg items_info.en_elas10
+					 put ")"
+                     }
+END
+
+
+PROGRAM var_output
+BEGIN
+       if !has_ini {
+					 
+						 optionarg items_info.var_sn 
+						 optionarg items_info.var_item
+						 optionarg items_info.var_ip 
+						 optionarg items_info.var_unit
+						 optionarg items_info.cb_nscen
+						 
+						 optionarg items_info.vn_fpsch1
+						 optionarg items_info.vn_elas1
+						 
+						 
+						 optionarg items_info.vn_fpsch2
+						 optionarg items_info.vn_elas2
+						 
+						 optionarg items_info.en_inf2
+						 
+						 optionarg items_info.vn_fpsch3
+						 optionarg items_info.vn_elas3
+						 optionarg items_info.en_inf3
+						 
+						 
+						 
+						 optionarg items_info.cb_ini
+						 
+                     }
+					 optionarg items_info.en_inf1
+END
+
+
+
+PROGRAM pschdb_i_1s
+BEGIN
+if !has_act_bui1 {
+put "pschdb diolog "
+        beginoptions
+		put " item(1) per(i)"
+        endoptions 
+	    stata hidden
+	}
+	
+if has_act_bui1 {
+put "db pschset_i_1 "
+	stata hidden
+}	
+END
+
+SCRIPT pschdb_i_1
+BEGIN
+ program pschdb_i_1s
+ has_act_bui1.settrue
+END
+
+
+PROGRAM pschdb_f_1s
+BEGIN
+if !has_act_buf1 {
+put "pschdb diolog "
+        beginoptions
+		put " item(1) per(f)"
+        endoptions 
+	    stata hidden
+	}
+	
+if has_act_buf1 {
+put "db pschset_f_1 "
+	stata hidden
+}	
+END
+
+SCRIPT pschdb_f_1
+BEGIN
+ program pschdb_f_1s
+ has_act_buf1.settrue
+END
+
+PROGRAM pschdb_i_2s
+BEGIN
+if !has_act_bui2 {
+put "pschdb diolog "
+        beginoptions
+		put " item(2) per(i)"
+        endoptions 
+	    stata hidden
+	}
+	
+if has_act_bui2 {
+put "db pschset_i_2 "
+	stata hidden
+}	
+END
+
+SCRIPT pschdb_i_2
+BEGIN
+ program pschdb_i_2s
+ has_act_bui2.settrue
+END
+
+
+PROGRAM pschdb_f_2s
+BEGIN
+if !has_act_buf2 {
+put "pschdb diolog "
+        beginoptions
+		put " item(2) per(f)"
+        endoptions 
+	    stata hidden
+	}
+	
+if has_act_buf2 {
+put "db pschset_f_2 "
+	stata hidden
+}	
+END
+
+SCRIPT pschdb_f_2
+BEGIN
+ program pschdb_f_2s
+ has_act_buf2.settrue
+END
+
+PROGRAM pschdb_i_3s
+BEGIN
+if !has_act_bui3 {
+put "pschdb diolog "
+        beginoptions
+		put " item(3) per(i)"
+        endoptions 
+	    stata hidden
+	}
+	
+if has_act_bui3 {
+put "db pschset_i_3 "
+	stata hidden
+}	
+END
+
+SCRIPT pschdb_i_3
+BEGIN
+ program pschdb_i_3s
+ has_act_bui3.settrue
+END
+
+
+PROGRAM pschdb_f_3s
+BEGIN
+if !has_act_buf3 {
+put "pschdb diolog "
+        beginoptions
+		put " item(3) per(f)"
+        endoptions 
+	    stata hidden
+	}
+	
+if has_act_buf3 {
+put "db pschset_f_3 "
+	stata hidden
+}	
+END
+
+SCRIPT pschdb_f_3
+BEGIN
+ program pschdb_f_3s
+ has_act_buf3.settrue
+END
+
+PROGRAM pschdb_i_4s
+BEGIN
+if !has_act_bui4 {
+put "pschdb diolog "
+        beginoptions
+		put " item(4) per(i)"
+        endoptions 
+	    stata hidden
+	}
+	
+if has_act_bui4 {
+put "db pschset_i_4 "
+	stata hidden
+}	
+END
+
+SCRIPT pschdb_i_4
+BEGIN
+ program pschdb_i_4s
+ has_act_bui4.settrue
+END
+
+
+PROGRAM pschdb_f_4s
+BEGIN
+if !has_act_buf4 {
+put "pschdb diolog "
+        beginoptions
+		put " item(4) per(f)"
+        endoptions 
+	    stata hidden
+	}
+	
+if has_act_buf4 {
+put "db pschset_f_4 "
+	stata hidden
+}	
+END
+
+SCRIPT pschdb_f_4
+BEGIN
+ program pschdb_f_4s
+ has_act_buf4.settrue
+END
+
+PROGRAM pschdb_i_5s
+BEGIN
+if !has_act_bui5 {
+put "pschdb diolog "
+        beginoptions
+		put " item(5) per(i)"
+        endoptions 
+	    stata hidden
+	}
+	
+if has_act_bui5 {
+put "db pschset_i_5 "
+	stata hidden
+}	
+END
+
+SCRIPT pschdb_i_5
+BEGIN
+ program pschdb_i_5s
+ has_act_bui5.settrue
+END
+
+
+PROGRAM pschdb_f_5s
+BEGIN
+if !has_act_buf5 {
+put "pschdb diolog "
+        beginoptions
+		put " item(5) per(f)"
+        endoptions 
+	    stata hidden
+	}
+	
+if has_act_buf5 {
+put "db pschset_f_5 "
+	stata hidden
+}	
+END
+
+SCRIPT pschdb_f_5
+BEGIN
+ program pschdb_f_5s
+ has_act_buf5.settrue
+END
+
+PROGRAM pschdb_i_6s
+BEGIN
+if !has_act_bui6 {
+put "pschdb diolog "
+        beginoptions
+		put " item(6) per(i)"
+        endoptions 
+	    stata hidden
+	}
+	
+if has_act_bui6 {
+put "db pschset_i_6 "
+	stata hidden
+}	
+END
+
+SCRIPT pschdb_i_6
+BEGIN
+ program pschdb_i_6s
+ has_act_bui6.settrue
+END
+
+
+PROGRAM pschdb_f_6s
+BEGIN
+if !has_act_buf6 {
+put "pschdb diolog "
+        beginoptions
+		put " item(6) per(f)"
+        endoptions 
+	    stata hidden
+	}
+	
+if has_act_buf6 {
+put "db pschset_f_6 "
+	stata hidden
+}	
+END
+
+SCRIPT pschdb_f_6
+BEGIN
+ program pschdb_f_6s
+ has_act_buf6.settrue
+END
+
+PROGRAM pschdb_i_7s
+BEGIN
+if !has_act_bui7 {
+put "pschdb diolog "
+        beginoptions
+		put " item(7) per(i)"
+        endoptions 
+	    stata hidden
+	}
+	
+if has_act_bui7 {
+put "db pschset_i_7 "
+	stata hidden
+}	
+END
+
+SCRIPT pschdb_i_7
+BEGIN
+ program pschdb_i_7s
+ has_act_bui7.settrue
+END
+
+
+PROGRAM pschdb_f_7s
+BEGIN
+if !has_act_buf7 {
+put "pschdb diolog "
+        beginoptions
+		put " item(7) per(f)"
+        endoptions 
+	    stata hidden
+	}
+	
+if has_act_buf7 {
+put "db pschset_f_7 "
+	stata hidden
+}	
+END
+
+SCRIPT pschdb_f_7
+BEGIN
+ program pschdb_f_7s
+ has_act_buf7.settrue
+END
+
+PROGRAM pschdb_i_8s
+BEGIN
+if !has_act_bui8 {
+put "pschdb diolog "
+        beginoptions
+		put " item(8) per(i)"
+        endoptions 
+	    stata hidden
+	}
+	
+if has_act_bui8 {
+put "db pschset_i_8 "
+	stata hidden
+}	
+END
+
+SCRIPT pschdb_i_8
+BEGIN
+ program pschdb_i_8s
+ has_act_bui8.settrue
+END
+
+
+PROGRAM pschdb_f_8s
+BEGIN
+if !has_act_buf8 {
+put "pschdb diolog "
+        beginoptions
+		put " item(8) per(f)"
+        endoptions 
+	    stata hidden
+	}
+	
+if has_act_buf8 {
+put "db pschset_f_8 "
+	stata hidden
+}	
+END
+
+SCRIPT pschdb_f_8
+BEGIN
+ program pschdb_f_8s
+ has_act_buf8.settrue
+END
+
+PROGRAM pschdb_i_9s
+BEGIN
+if !has_act_bui9 {
+put "pschdb diolog "
+        beginoptions
+		put " item(9) per(i)"
+        endoptions 
+	    stata hidden
+	}
+	
+if has_act_bui9 {
+put "db pschset_i_9 "
+	stata hidden
+}	
+END
+
+SCRIPT pschdb_i_9
+BEGIN
+ program pschdb_i_9s
+ has_act_bui9.settrue
+END
+
+
+PROGRAM pschdb_f_9s
+BEGIN
+if !has_act_buf9 {
+put "pschdb diolog "
+        beginoptions
+		put " item(9) per(f)"
+        endoptions 
+	    stata hidden
+	}
+	
+if has_act_bui9 {
+put "db pschset_f_9 "
+	stata hidden
+}	
+END
+
+SCRIPT pschdb_f_9
+BEGIN
+ program pschdb_f_9s
+ has_act_buf9.settrue
+END
+
+PROGRAM pschdb_i_10s
+BEGIN
+if !has_act_bui10 {
+put "pschdb diolog "
+        beginoptions
+		put " item(10) per(i)"
+        endoptions 
+	    stata hidden
+	}
+	
+if has_act_bui10 {
+put "db pschset_i_10 "
+	stata hidden
+}	
+END
+
+SCRIPT pschdb_i_10
+BEGIN
+ program pschdb_i_10s
+ has_act_bui10.settrue
+END
+
+
+PROGRAM pschdb_f_10s
+BEGIN
+if !has_act_buf10 {
+put "pschdb diolog "
+        beginoptions
+		put " item(10) per(f)"
+        endoptions 
+	    stata hidden
+	}
+	
+if has_act_bui10 {
+put "db pschset_f_10 "
+	stata hidden
+}	
+END
+
+SCRIPT pschdb_f_10
+BEGIN
+ program pschdb_f_10s
+ has_act_buf10.settrue
+END
+
+
+
+
+
+

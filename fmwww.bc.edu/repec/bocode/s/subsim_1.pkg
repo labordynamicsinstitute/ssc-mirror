@@ -1,0 +1,81 @@
+d 'SUBSIM_1': module providing subsidy simulation toolkit (SUBSIM)
+d
+d  SUBSIM2 was conceived to automate the estimation of a large size
+d of results	about the impact of subsidy reforms on household
+d well-being and government revenue.  By   default, these are
+d reported by quinitiles, but the user can indicate any other
+d partition  of population. 
+d
+d KW: subsidy
+d KW: simulation
+d
+d Requires: package SUBSIM_2 from SSC
+d
+d Distribution-Date: 20140627
+d
+d Author: Abdelkrim Araar,  World Bank
+d Support: email aabd@@ecn.ulaval.ca
+d
+d Author:  Paolo Verme,  World Bank
+d Support: email pveme@@worldbank.org
+d
+f subjobstat.ado
+f ../a/aggrvar.ado       
+f ../a/asdbsave.ado      
+f ../a/asubini.ado       
+f ../a/asubini.dlg       
+f ../a/asubini2.ado      
+f ../a/asubsim.ado       
+f ../a/asubsim.dlg       
+f ../a/asubsim.sthlp       
+f ../a/basicstats.ado    
+f ../b/block.class       
+f ../c/clore.ado         
+f ../c/curvnpe.ado       
+f ../c/distable.ado      
+f ../e/extend_opt_graph.ado
+f ../e/extend_opt_price.ado
+f ../g/gropt.ado         
+f ../g/gr_options.idlg   
+f ../g/imq0sub.ado       
+f ../i/imqsub.ado        
+f ../i/imqsub_cob_doug.ado
+f ../i/imrsub.ado        
+f ../i/imsref.ado        
+f ../i/imwegsub.ado      
+f ../i/imwsub.ado        
+f ../i/imwsub_cob_doug.ado
+f ../i/incsub.ado        
+f ../i/items_info.idlg   
+f ../j/jgraphs.sthlp       
+f ../j/jtables.sthlp       
+f ../m/mk_xtab_m2.ado    
+f ../n/nargs.ado         
+f ../p/pschdb.ado        
+f ../p/pschdes.ado       
+f ../p/pschdes.dlg       
+f ../p/pschdes.sthlp       
+f ../p/pschedule.class   
+f ../p/pschini.ado       
+f ../p/pschini.dlg       
+f ../p/pschini2.ado      
+f ../p/pschinis.ado      
+f ../p/pschset.ado       
+f ../p/pschset.dlg       
+f ../p/pschset.sthlp       
+f ../p/pschseti.idlg     
+f ../p/pschsetn.ado      
+f ../p/pschsetv.ado      
+f ../p/pschset_f_1.dlg   
+f ../p/pschset_f_10.dlg  
+f ../p/pschset_f_2.dlg   
+f ../p/pschset_f_3.dlg   
+f ../p/pschset_f_4.dlg   
+f ../p/pschset_f_5.dlg   
+f ../p/pschset_f_6.dlg   
+f ../p/pschset_f_7.dlg   
+f ../p/pschset_f_8.dlg   
+f ../p/pschset_f_9.dlg   
+f ../p/pschset_i_1.dlg   
+f ../p/pschset_i_10.dlg  
+f ../p/pschset_i_2.dlg 

@@ -1,0 +1,22 @@
+d 'GEODIST': module to compute geodetic distances
+d
+d   geodist computes geodetic distances, i.e. the length of the
+d shortest curve between two points along the surface of a
+d mathematical model of the earth. By default, the Vincenty (1975)
+d equations are used to compute distances on the WGS 1984 reference
+d ellipsoid. Alternate ellipsoids can also be specified. geodist
+d can also compute great-circle distances (where a sphere is used
+d to approximate the shape of the earth). 
+d
+d KW: geodetic
+d KW: geodesic,Vincenty,great-circle,ellipsoid,distance
+d
+d Requires: Stata version 9.2
+d
+d Distribution-Date: 20120222
+d
+d Author: Robert Picard
+d Support: email picard@@netbox.com
+d
+f geodist.ado
+f geodist.hlp

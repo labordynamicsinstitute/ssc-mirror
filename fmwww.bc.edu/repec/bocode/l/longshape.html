@@ -1,0 +1,107 @@
+<pre>
+-------------------------------------------------------------------------------
+help for <b>longshape</b>
+-------------------------------------------------------------------------------
+<p>
+<b><u>Reshape to long (limited alternative version)</u></b>
+<p>
+        <b>longshape</b> <i>varlist</i> [<b>if</b> <i>exp</i>] [<b>in</b> <i>range</i>] <b>,</b> <b><u>i</u></b><b>name(</b><i>idvar(s)</i><b>)</b> <b><u>j</u></b><b>name(</b><i>newvar</i><b>)</b>
+                 [ <b><u>y</u></b><b>name(</b><i>newvar</i><b>)</b> <b>yvallab(</b><i>lblname</i><b>)</b> <b>replace</b> ]
+<p>
+   
+<b><u>Description</u></b> 
+<p>
+    <b>longshape</b> is a convenience command automating one kind of simple reshape
+    long. Please study the Remarks below carefully to see if it matches your
+    needs. Otherwise, it is likely that you really do need <b>reshape</b>.
+<p>
+<p>
+<b><u>Remarks</u></b> 
+<p>
+    Suppose that observations are identified by one or more existing
+    variables <i>idvar(s)</i> and that you want to reshape a single bunch of
+    variables <i>varlist</i> to long, i.e. to stack <i>varlist</i> into one variable.  Any
+    other variables are to be repeated alongside. <b>reshape</b> will do this for
+    you, but three details can bite:
+<p>
+        1. <b>reshape</b> requires that the variable names in <i>varlist</i> start with the
+        same prefix or stub. Thus if <b>a b c</b> are to be stacked into one
+        variable <b>y</b>, they would need to be called <b>ya yb yc</b>. It is easy enough
+        to rename these variables before a <b>reshape</b>, but with <b>longshape</b> it is
+        only necessary to specify a desired new name through the <b>yname()</b>
+        option.
+<p>
+        2. More awkwardly, with a <b>reshape long</b> the variable labels of <i>varlist</i>
+        would disappear, so that it would be necessary to save them somewhere
+        and put them back, or at worst to retype them. With <b>longshape</b> the
+        variable labels, when they exist, become the value labels of a new
+        variable.
+<p>
+        3. On occasion, you might want to specify directly that the new
+        variable be assigned particular value labels. <b>longshape</b> has an option
+        for that.
+<p>
+    One converse to this is that <b>longshape</b> does not support simultaneous
+    reshaping of several bunches of variables, so for that you need reshape
+    (or stack).
+<p>
+<p>
+<b><u>Options</u></b> 
+<p>
+    <b>iname()</b> specifies the name(s) of the variables that singly or jointly
+        specify observations uniquely.  This is a required option.
+<p>
+    <b>jname()</b> specifies a name for a new variable to hold information on
+        variables in <i>varlist</i>. Specifically, <b>longshape</b> creates two new
+        variables, as follows. Suppose you specify <b>jname(which)</b>. Then two new
+        variables <b>which</b> and <b>_which</b> will be created. <b>which</b> is a numeric
+        variable with value labels, which will be the original variable
+        labels if defined and otherwise the original variable names.  <b>_which</b>
+        is a string variable with the original variable names. Thus when
+        specifying <b>jname(</b><i>jname</i><b>)</b> it is necessary that both <i>jname</i> and <b>_</b><i>jname</i> be
+        available as new variable names.  This is a required option.
+<p>
+    <b>yname()</b> specifies a name for the single new variable formed by stacking
+        <i>varlist</i>. The name defaults to <b>y</b>, so long as that is a new variable
+        name.
+<p>
+    <b>replace</b> forces a replacement of the existing dataset by the new reshaped
+        dataset even though that existing dataset has changed since it was
+        last <b>save</b>d or has not been <b>save</b>d at all. See save. Although this
+        option may be used, it is better strategy to <b>save</b> the dataset first.
+<p>
+    <b>yvallab()</b> specifies that a particular set of value labels be assigned to
+        the new variable named in <b>yname()</b>. This is an occasionally used
+        option.
+<p>
+<p>
+<b><u>Examples</u></b> 
+<p>
+    <b>. clear</b>
+    <b>. set obs 6</b>
+    <b>. gen id = _n</b>
+    <b>. gen a = ceil(10 * runiform())</b>
+    <b>. label var a "the label of a"</b>
+    <b>. gen b = ceil(10 * runiform())</b>
+    <b>. label var b "the label of b"</b>
+    <b>. l</b>
+    <b>. save longshapetest, replace</b>
+    <b>. longshape a b, i(id) j(which)</b>
+    <b>. l</b>
+<p>
+    (ecological data, observations are sites, species abundances to be
+        stacked into one variable)
+    <b>. longshape achmil-calcus, i(id) j(species) y(abundance)</b>
+<p>
+<p>
+<b><u>Author</u></b> 
+<p>
+    Nicholas J. Cox, Durham University, U.K.
+    n.j.cox@durham.ac.uk
+<p>
+<p>
+<b><u>Also see</u></b> 
+<p>
+    Online: help for reshape, stack
+<p>
+</pre>

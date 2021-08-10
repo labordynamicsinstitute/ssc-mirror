@@ -1,0 +1,1551 @@
+<html>
+
+<head>
+<title>estout - Making Regression Tables in Stata</title>
+<meta name="author" content="Ben Jann">
+<meta name="keywords" content="Stata, estout, esttab, eststo, estadd,
+      LaTeX, regression table, statistics">
+<meta http-equiv="content-language" content="en">
+<meta http-equiv="content-type" content="text/html">
+<link rel="stylesheet" href="default.css" type="text/css">
+</head>
+
+<body>
+
+<div id="pagehead">
+
+<form style="text-align:right; border:0px; margin: 2.17em 0px 0px 0px; padding:5px 15px 0px 0px; float:right"
+ "method=GET action="http://www.google.com/search">
+    <input style="border-style:solid; border-color: #bcd" TYPE=text name=q size="15">
+    <INPUT TYPE=hidden name=sitesearch value="repec.org/bocode/e/estout">
+    <input style="border:0px; background-color: #F3F6F9"
+     type=submit name=sa value="search">
+</form>
+
+   <a href="index.html"><h1>estout</h1></a>
+   <p>Making Regression Tables in Stata<p>
+
+</div>
+
+<div id="pagebar">
+   <ul>
+     <li><a href="index.html">Overview</a>
+     </li>
+     <li><a href="installation.html">Installation</a>
+     </li>
+     <li><a href="examples.html">Examples</a>
+     <ul>
+          <li><a href="esttab.html">esttab</a>
+          </li>
+          <li><a href="estout.html">estout</a>
+          </li>
+          <li><a href="eststo.html">eststo</a>
+          </li>
+          <li><a href="estadd.html">estadd</a>
+          </li>
+          <li><a href="estpost.html">estpost</a>
+          </li>
+          <li><a href="advanced.html">Advanced</a>
+          </li>
+          <li><a href="spost.html">SPost</a>
+          </li>
+     </ul>
+     </li>
+     <li><a href="documentation.html">Documentation</a>
+     <ul>
+          <li><a href="hlp_esttab.html">esttab</a>
+          </li>
+          <li><a href="hlp_estout.html">estout</a>
+          </li>
+          <li><a href="hlp_eststo.html">eststo</a>
+          </li>
+          <li><a href="hlp_estadd.html">estadd</a>
+          </li>
+          <li><a href="hlp_estpost.html">estpost</a>
+          </li>
+     </ul>
+     </li>
+     <li><a href="history.html">History</a>
+     </li>
+     <li><a href="publications.html">Publications</a>
+     </li>
+     <li><a href="author.html">Author</a>
+     </li>
+     <li><a href="alsosee.html">Also see</a>
+     </li>
+   </ul>
+
+</div>
+
+<div id="pagebody">
+<h1>Examples for <b>estpost</b></h1>
+
+<div id="extoc">
+<ul>
+<li><a href="estpost.html#estpost001">Basic syntax and usage</a></li>
+<li><a href="estpost.html#estpost100">Applications</a></li>
+<ul>
+<li><a href="estpost.html#estpost101">Post summary statistics (<b>summarize</b>)</a></li>
+<li><a href="estpost.html#estpost102">Post summary statistics (<b>tabstat</b>)</a></li>
+<li><a href="estpost.html#estpost101b">Post summary statistics by subgroups (<b>summarize</b>)</a></li>
+<li><a href="estpost.html#estpost104">Post summary statistics by subgroups (<b>tabstat</b>)</a></li>
+<li><a href="estpost.html#estpost106">Post results from two-sample mean-comparison tests (<b>ttest</b>)</a></li>
+<li><a href="estpost.html#estpost107">Post results from two-group tests of proportions (<b>prtest</b>)</a></li>
+<li><a href="estpost.html#estpost108">Post a one-way frequency table (<b>tabulate</b>)</a></li>
+<li><a href="estpost.html#estpost110">Post a two-way frequency table (<b>tabulate</b>)</a></li>
+<li><a href="estpost.html#estpost120">Post a one-way frequency table for complex survey data (<b>svy: tabulate</b>)</a></li>
+<li><a href="estpost.html#estpost122">Post a two-way frequency table for complex survey data (<b>svy: tabulate</b>)</a></li>
+<li><a href="estpost.html#estpost112">Post correlation coefficients (<b>correlate</b>)</a></li>
+<li><a href="estpost.html#estpost114">Post confidence intervals for means, proportions, or counts (<b>ci</b>)</a></li>
+<li><a href="estpost.html#estpost116">Post confidence intervals for survival time (<b>stci</b>)</a></li>
+<li><a href="estpost.html#estpost130">Post results from <b>margins</b></a></li>
+</ul>
+</ul>
+</div>
+
+<a name="estpost001"></a>
+<h2>Basic syntax and usage</h2>
+
+<p>
+<b>esttab</b> and <b>estout</b> tabulate the <b>e()</b>-returns
+of a command, but not all commands return their results in <b>e()</b>.
+<b>estpost</b> is a tool make results from some of the most popular
+of these non-"e-class" commands available for tabulation. It collects
+results and posts them in an appropriate form in <b>e()</b>. 
+The basic syntax of <b>estpost</b> is:</p>
+<pre>
+<b>estpost</b> <i>command</i> [ <i>arguments</i> ] [<b>,</b> <i>options</i> ]
+</pre>
+<p>See the help file for a <a href="hlp_estpost.html#commands">list of supported commands</a>.
+For example, to post and then results from <b>summarize</b>
+you could type:
+</p>
+
+<pre>
+. sysuse auto
+(1978 Automobile Data)
+
+. estpost summarize price weight rep78 mpg
+
+             |  e(count)   e(sum_w)    e(mean)     e(Var)      e(sd) 
+-------------+-------------------------------------------------------
+       price | <b>       74</b>  <b>       74</b>  <b> 6165.257</b>  <b>  8699526</b>  <b> 2949.496</b> 
+      weight | <b>       74</b>  <b>       74</b>  <b> 3019.459</b>  <b> 604029.8</b>  <b> 777.1936</b> 
+       rep78 | <b>       69</b>  <b>       69</b>  <b> 3.405797</b>  <b> .9799659</b>  <b> .9899323</b> 
+         mpg | <b>       74</b>  <b>       74</b>  <b>  21.2973</b>  <b> 33.47205</b>  <b> 5.785503</b> 
+
+             |    e(min)     e(max)     e(sum) 
+-------------+---------------------------------
+       price | <b>     3291</b>  <b>    15906</b>  <b>   456229</b> 
+      weight | <b>     1760</b>  <b>     4840</b>  <b>   223440</b> 
+       rep78 | <b>        1</b>  <b>        5</b>  <b>      235</b> 
+         mpg | <b>       12</b>  <b>       41</b>  <b>     1576</b> 
+
+. esttab, cells("count mean sd min max") noobs
+
+-----------------------------------------------------------------------------
+                      (1)                                                    
+                                                                             
+                    count         mean           sd          min          max
+-----------------------------------------------------------------------------
+price       <b>           74     6165.257     2949.496         3291        15906</b>
+weight      <b>           74     3019.459     777.1936         1760         4840</b>
+rep78       <b>           69     3.405797     .9899323            1            5</b>
+mpg         <b>           74      21.2973     5.785503           12           41</b>
+-----------------------------------------------------------------------------
+<p style="text-align:right; padding:0px; margin:0px"><a href="estpost001.do">[do-file]</a>
+</pre>
+
+
+<a name="estpost100"></a>
+<h2>Applications</h2>
+
+
+<a name="estpost101"></a>
+<h3>Post summary statistics (<b>summarize</b>)</h3>
+
+<p>
+Example for <a href="hlp_estpost.html#summarize"><b>estpost summarize</b></a>:
+</p>
+
+<pre>
+. sysuse auto
+(1978 Automobile Data)
+
+. estpost summarize price mpg rep78 foreign, listwise
+
+             |  e(count)   e(sum_w)    e(mean)     e(Var)      e(sd) 
+-------------+-------------------------------------------------------
+       price | <b>       69</b>  <b>       69</b>  <b> 6146.043</b>  <b>  8482308</b>  <b>  2912.44</b> 
+         mpg | <b>       69</b>  <b>       69</b>  <b> 21.28986</b>  <b> 34.41475</b>  <b> 5.866408</b> 
+       rep78 | <b>       69</b>  <b>       69</b>  <b> 3.405797</b>  <b> .9799659</b>  <b> .9899323</b> 
+     foreign | <b>       69</b>  <b>       69</b>  <b> .3043478</b>  <b> .2148338</b>  <b> .4635016</b> 
+
+             |    e(min)     e(max)     e(sum) 
+-------------+---------------------------------
+       price | <b>     3291</b>  <b>    15906</b>  <b>   424077</b> 
+         mpg | <b>       12</b>  <b>       41</b>  <b>     1469</b> 
+       rep78 | <b>        1</b>  <b>        5</b>  <b>      235</b> 
+     foreign | <b>        0</b>  <b>        1</b>  <b>       21</b> 
+
+. esttab, cells("mean sd min max") nomtitle nonumber
+
+----------------------------------------------------------------
+                     mean           sd          min          max
+----------------------------------------------------------------
+price       <b>     6146.043      2912.44         3291        15906</b>
+mpg         <b>     21.28986     5.866408           12           41</b>
+rep78       <b>     3.405797     .9899323            1            5</b>
+foreign     <b>     .3043478     .4635016            0            1</b>
+----------------------------------------------------------------
+N           <b>           69                                       </b>
+----------------------------------------------------------------
+<p style="text-align:right; padding:0px; margin:0px"><a href="estpost101.do">[do-file]</a>
+</pre>
+
+
+<a name="estpost102"></a>
+<h3>Post summary statistics (<b>tabstat</b>)</h3>
+
+<p>
+Summary statistics can also be posted by
+<a href="hlp_estpost.html#tabstat"><b>estpost tabstat</b></a>.
+Use <b>columns(variables)</b> and <b>columns(statistics)</b> to determine
+whether to display variables or statistics in the columns. The default is
+<b>columns(variables)</b>:
+</p>
+
+<pre>
+. sysuse auto
+(1978 Automobile Data)
+
+. estpost tabstat price mpg rep78, listwise ///
+&gt;     statistics(mean sd)
+
+Summary statistics: mean sd
+     for variables: price mpg rep78
+
+             |  e(price)     e(mpg)   e(rep78) 
+-------------+---------------------------------
+        mean | <b> 6146.043</b>  <b> 21.28986</b>  <b> 3.405797</b> 
+          sd | <b>  2912.44</b>  <b> 5.866408</b>  <b> .9899323</b> 
+
+. esttab, cells("price mpg rep78") nomtitle nonumber
+
+---------------------------------------------------
+                    price          mpg        rep78
+---------------------------------------------------
+mean        <b>     6146.043     21.28986     3.405797</b>
+sd          <b>      2912.44     5.866408     .9899323</b>
+---------------------------------------------------
+N           <b>           69                          </b>
+---------------------------------------------------
+<p style="text-align:right; padding:0px; margin:0px"><a href="estpost102.do">[do-file]</a>
+</pre>
+
+
+<a name="estpost103"></a>
+<p>
+Type <b>columns(statistics)</b> to print statistics in columns:
+</p>
+
+<pre>
+. sysuse auto
+(1978 Automobile Data)
+
+. estpost tabstat price mpg rep78, listwise ///
+&gt;     statistics(mean sd) columns(statistics)
+
+Summary statistics: mean sd
+     for variables: price mpg rep78
+
+             |   e(mean)      e(sd) 
+-------------+----------------------
+       price | <b> 6146.043</b>  <b>  2912.44</b> 
+         mpg | <b> 21.28986</b>  <b> 5.866408</b> 
+       rep78 | <b> 3.405797</b>  <b> .9899323</b> 
+
+. esttab, cells("mean sd") nomtitle nonumber
+
+--------------------------------------
+                     mean           sd
+--------------------------------------
+price       <b>     6146.043      2912.44</b>
+mpg         <b>     21.28986     5.866408</b>
+rep78       <b>     3.405797     .9899323</b>
+--------------------------------------
+N           <b>           69             </b>
+--------------------------------------
+<p style="text-align:right; padding:0px; margin:0px"><a href="estpost103.do">[do-file]</a>
+</pre>
+
+
+<a name="estpost101b"></a>
+<h3>Post summary statistics by subgroups (<b>summarize</b>)</h3>
+
+<p>
+A table of summary statistics by subgroups can easily be produced using
+<a href="hlp_estpost.html#summarize"><b>estpost summarize</b></a>
+in connection with <b>eststo</b> and <b>by</b>:
+</p>
+
+<pre>
+. sysuse auto
+(1978 Automobile Data)
+
+. by foreign: eststo: quietly estpost summarize price mpg rep78, listwise
+
+-------------------------------------------------------------------------------
+-&gt; Domestic
+(<b>est1</b> stored)
+
+-------------------------------------------------------------------------------
+-&gt; Foreign
+(<b>est2</b> stored)
+
+. esttab, cells("mean sd") label nodepvar
+
+------------------------------------------------------------------------
+                              (1)                       (2)             
+                         Domestic                   Foreign             
+                             mean           sd         mean           sd
+------------------------------------------------------------------------
+Price               <b>      6179.25     3188.969     6070.143     2220.984</b>
+Mileage (mpg)       <b>     19.54167     4.753312     25.28571     6.309856</b>
+Repair Record 1978  <b>     3.020833      .837666     4.285714     .7171372</b>
+------------------------------------------------------------------------
+Observations        <b>           48                        21             </b>
+------------------------------------------------------------------------
+
+. eststo clear
+<p style="text-align:right; padding:0px; margin:0px"><a href="estpost101b.do">[do-file]</a>
+</pre>
+
+<p>
+Alternatively, you can also use
+<a href="hlp_estpost.html#tabstat"><b>estpost tabstat</b></a>
+(see next example).
+</p>
+
+
+<a name="estpost104"></a>
+<h3>Post summary statistics by subgroups (<b>tabstat</b>)</h3>
+
+<p>
+Use
+<a href="hlp_estpost.html#tabstat"><b>estpost tabstat</b></a>
+with the <b>by()</b> option
+to post summary statistics by subgroups:
+</p>
+
+<pre>
+. sysuse auto
+(1978 Automobile Data)
+
+. estpost tabstat price mpg rep78, by(foreign) ///
+&gt;     statistics(mean sd) columns(statistics) listwise
+
+Summary statistics: mean sd
+     for variables: price mpg rep78
+  by categories of: foreign
+
+     foreign |   e(mean)      e(sd) 
+-------------+----------------------
+<b>Domestic     </b>|                      
+       price | <b>  6179.25</b>  <b> 3188.969</b> 
+         mpg | <b> 19.54167</b>  <b> 4.753312</b> 
+       rep78 | <b> 3.020833</b>  <b>  .837666</b> 
+-------------+----------------------
+<b>Foreign      </b>|                      
+       price | <b> 6070.143</b>  <b> 2220.984</b> 
+         mpg | <b> 25.28571</b>  <b> 6.309856</b> 
+       rep78 | <b> 4.285714</b>  <b> .7171372</b> 
+-------------+----------------------
+<b>Total        </b>|                      
+       price | <b> 6146.043</b>  <b>  2912.44</b> 
+         mpg | <b> 21.28986</b>  <b> 5.866408</b> 
+       rep78 | <b> 3.405797</b>  <b> .9899323</b> 
+
+. esttab, main(mean) aux(sd) nostar unstack ///
+&gt;     noobs nonote nomtitle nonumber
+
+---------------------------------------------------
+                 Domestic      Foreign        Total
+---------------------------------------------------
+price       <b>       6179.2       6070.1       6146.0</b>
+            <b>     </b>(<b>3189.0</b>)<b>     </b>(<b>2221.0</b>)<b>     </b>(<b>2912.4</b>)
+
+mpg         <b>        19.54        25.29        21.29</b>
+            <b>      </b>(<b>4.753</b>)<b>      </b>(<b>6.310</b>)<b>      </b>(<b>5.866</b>)
+
+rep78       <b>        3.021        4.286        3.406</b>
+            <b>      </b>(<b>0.838</b>)<b>      </b>(<b>0.717</b>)<b>      </b>(<b>0.990</b>)
+---------------------------------------------------
+<p style="text-align:right; padding:0px; margin:0px"><a href="estpost104.do">[do-file]</a>
+</pre>
+
+
+<a name="estpost105"></a>
+<p>
+If the labels of the categories are too long or contain unsuitable characters,
+they are stored in macro <b>e(labels)</b>. Type <b>varlabels(`e(labels)')</b>
+or, depending on context, <b>eqlabels(`e(labels)')</b> to use
+these labels:
+</p>
+
+<pre>
+. sysuse auto
+(1978 Automobile Data)
+
+. estpost tabstat price in 1/15, by(make)
+
+Summary statistics: mean
+     for variables: price
+  by categories of: make
+
+        make |   e(mean) 
+-------------+-----------
+           1 | <b>     4099</b> 
+           2 | <b>     4749</b> 
+           3 | <b>     3799</b> 
+           4 | <b>     4816</b> 
+           5 | <b>     7827</b> 
+           6 | <b>     5788</b> 
+           7 | <b>     4453</b> 
+           8 | <b>     5189</b> 
+           9 | <b>    10372</b> 
+          10 | <b>     4082</b> 
+          11 | <b>    11385</b> 
+          12 | <b>    14500</b> 
+          13 | <b>    15906</b> 
+          14 | <b>     3299</b> 
+          15 | <b>     5705</b> 
+-------------+-----------
+       Total | <b>   7064.6</b> 
+
+category labels saved in macro e(labels)
+
+. esttab, cells(mean) noobs nomtitle nonumber ///
+&gt;     varlabels(`e(labels)') varwidth(20)
+
+---------------------------------
+                             mean
+---------------------------------
+AMC Concord         <b>         4099</b>
+AMC Pacer           <b>         4749</b>
+AMC Spirit          <b>         3799</b>
+Buick Century       <b>         4816</b>
+Buick Electra       <b>         7827</b>
+Buick LeSabre       <b>         5788</b>
+Buick Opel          <b>         4453</b>
+Buick Regal         <b>         5189</b>
+Buick Riviera       <b>        10372</b>
+Buick Skylark       <b>         4082</b>
+Cad. Deville        <b>        11385</b>
+Cad. Eldorado       <b>        14500</b>
+Cad. Seville        <b>        15906</b>
+Chev. Chevette      <b>         3299</b>
+Chev. Impala        <b>         5705</b>
+Total               <b>       7064.6</b>
+---------------------------------
+
+. lab def origin 0 "Car type: domestic" 1 "Car type: foreign", modify
+
+. estpost tabstat price weight, statistics(mean sd) by(foreign)
+
+Summary statistics: mean sd
+     for variables: price weight
+  by categories of: foreign
+
+     foreign |  e(price)  e(weight) 
+-------------+----------------------
+<b>1            </b>|                      
+        mean | <b> 6072.423</b>  <b> 3317.115</b> 
+          sd | <b> 3097.104</b>  <b> 695.3637</b> 
+-------------+----------------------
+<b>2            </b>|                      
+        mean | <b> 6384.682</b>  <b> 2315.909</b> 
+          sd | <b> 2621.915</b>  <b> 433.0035</b> 
+-------------+----------------------
+<b>Total        </b>|                      
+        mean | <b> 6165.257</b>  <b> 3019.459</b> 
+          sd | <b> 2949.496</b>  <b> 777.1936</b> 
+
+category labels saved in macro e(labels)
+
+. esttab, cells("price weight") noobs nomtitle nonumber ///
+&gt;     eqlabels(`e(labels)') varwidth(20)
+
+----------------------------------------------
+                            price       weight
+----------------------------------------------
+<b>Car type: domestic                            </b>
+mean                <b>     6072.423     3317.115</b>
+sd                  <b>     3097.104     695.3637</b>
+----------------------------------------------
+<b>Car type: foreign                             </b>
+mean                <b>     6384.682     2315.909</b>
+sd                  <b>     2621.915     433.0035</b>
+----------------------------------------------
+<b>Total                                         </b>
+mean                <b>     6165.257     3019.459</b>
+sd                  <b>     2949.496     777.1936</b>
+----------------------------------------------
+<p style="text-align:right; padding:0px; margin:0px"><a href="estpost105.do">[do-file]</a>
+</pre>
+
+
+<a name="estpost106"></a>
+<h3>Post results from two-sample mean-comparison tests (<b>ttest</b>)</h3>
+
+<p>
+Example for <a href="hlp_estpost.html#ttest"><b>estpost ttest</b></a>:
+</p>
+
+<pre>
+. sysuse auto
+(1978 Automobile Data)
+
+. estpost ttest price mpg headroom trunk, by(foreign)
+
+             |      e(b)   e(count)      e(se)       e(t)    e(df_t) 
+-------------+-------------------------------------------------------
+       price | <b>-312.2587</b>  <b>       74</b>  <b> 754.4488</b>  <b>-.4138899</b>  <b>       72</b> 
+         mpg | <b>-4.945804</b>  <b>       74</b>  <b> 1.362162</b>  <b>-3.630848</b>  <b>       72</b> 
+    headroom | <b> .5402098</b>  <b>       74</b>  <b> .2070884</b>  <b> 2.608596</b>  <b>       72</b> 
+       trunk | <b> 3.340909</b>  <b>       74</b>  <b> 1.022208</b>  <b> 3.268327</b>  <b>       72</b> 
+
+             |    e(p_l)       e(p)     e(p_u)     e(N_1)    e(mu_1) 
+-------------+-------------------------------------------------------
+       price | <b> .3400925</b>  <b> .6801851</b>  <b> .6599075</b>  <b>       52</b>  <b> 6072.423</b> 
+         mpg | <b> .0002627</b>  <b> .0005254</b>  <b> .9997373</b>  <b>       52</b>  <b> 19.82692</b> 
+    headroom | <b> .9944757</b>  <b> .0110486</b>  <b> .0055243</b>  <b>       52</b>  <b> 3.153846</b> 
+       trunk | <b>   .99917</b>  <b>   .00166</b>  <b>   .00083</b>  <b>       52</b>  <b>    14.75</b> 
+
+             |    e(N_2)    e(mu_2) 
+-------------+----------------------
+       price | <b>       22</b>  <b> 6384.682</b> 
+         mpg | <b>       22</b>  <b> 24.77273</b> 
+    headroom | <b>       22</b>  <b> 2.613636</b> 
+       trunk | <b>       22</b>  <b> 11.40909</b> 
+
+. esttab, wide nonumber mtitle("diff.")
+
+-----------------------------------------
+                    diff.                
+-----------------------------------------
+price       <b>       -312.3         </b>(<b>-0.41</b>)
+mpg         <b>       -4.946***      </b>(<b>-3.63</b>)
+headroom    <b>        0.540*         </b>(<b>2.61</b>)
+trunk       <b>        3.341**        </b>(<b>3.27</b>)
+-----------------------------------------
+N           <b>           74                </b>
+-----------------------------------------
+t statistics in parentheses
+* p&lt;0.05, ** p&lt;0.01, *** p&lt;0.001
+<p style="text-align:right; padding:0px; margin:0px"><a href="estpost106.do">[do-file]</a>
+</pre>
+
+
+<a name="estpost107"></a>
+<h3>Post results from two-group tests of proportions (<b>prtest</b>)</h3>
+
+<p>
+Example for <a href="hlp_estpost.html#prtest"><b>estpost prtest</b></a>:
+</p>
+
+<pre>
+. webuse cure2
+
+. gen noise = uniform()&gt;.5
+
+. estpost prtest cure noise, by(sex)
+
+             |      e(b)   e(count)      e(se)     e(se0)       e(z) 
+-------------+-------------------------------------------------------
+        cure | <b>-.0729167</b>  <b>      109</b>  <b> .0933123</b>  <b> .0942404</b>  <b>-.7737309</b> 
+       noise | <b> .0621528</b>  <b>      109</b>  <b> .0965586</b>  <b> .0969397</b>  <b> .6411491</b> 
+
+             |    e(p_l)       e(p)     e(p_u)     e(N_1)     e(P_1) 
+-------------+-------------------------------------------------------
+        cure | <b>  .219545</b>  <b>   .43909</b>  <b>  .780455</b>  <b>       64</b>  <b>   .59375</b> 
+       noise | <b> .7392871</b>  <b> .5214258</b>  <b> .2607129</b>  <b>       64</b>  <b>  .484375</b> 
+
+             |    e(N_2)     e(P_2) 
+-------------+----------------------
+        cure | <b>       45</b>  <b> .6666667</b> 
+       noise | <b>       45</b>  <b> .4222222</b> 
+
+. esttab, cell("b se0 z p") nomtitle nonumber
+
+----------------------------------------------------------------
+                        b          se0            z            p
+----------------------------------------------------------------
+cure        <b>    -.0729167     .0942404    -.7737309       .43909</b>
+noise       <b>     .0621528     .0969397     .6411491     .5214258</b>
+----------------------------------------------------------------
+N           <b>          109                                       </b>
+----------------------------------------------------------------
+<p style="text-align:right; padding:0px; margin:0px"><a href="estpost107.do">[do-file]</a>
+</pre>
+
+
+<a name="estpost108"></a>
+<h3>Post a one-way frequency table (<b>tabulate</b>)</h3>
+
+<p>
+Example for posting a one-way frequency table using
+<a href="hlp_estpost.html#tabulate"><b>estpost tabulate</b></a>:
+</p>
+
+<pre>
+. sysuse auto
+(1978 Automobile Data)
+
+. estpost tabulate foreign
+
+     foreign |      e(b)     e(pct)  e(cumpct) 
+-------------+---------------------------------
+    Domestic | <b>       52</b>  <b> 70.27027</b>  <b> 70.27027</b> 
+     Foreign | <b>       22</b>  <b> 29.72973</b>  <b>      100</b> 
+-------------+---------------------------------
+       Total | <b>       74</b>  <b>      100</b>  <b>         </b> 
+
+. esttab, cells("b(label(freq)) pct(fmt(2)) cumpct(fmt(2))") ///
+&gt;     varlabels(, blist(Total "{hline @width}{break}"))      ///
+&gt;     nonumber nomtitle noobs
+
+---------------------------------------------------
+                     freq          pct       cumpct
+---------------------------------------------------
+Domestic    <b>           52        70.27        70.27</b>
+Foreign     <b>           22        29.73       100.00</b>
+---------------------------------------------------
+Total       <b>           74       100.00             </b>
+---------------------------------------------------
+<p style="text-align:right; padding:0px; margin:0px"><a href="estpost108.do">[do-file]</a>
+</pre>
+
+
+<a name="estpost109"></a>
+<p>
+If the value labels are too long or contain unsuitable characters,
+they are stored in macro <b>e(labels)</b>. Type <b>varlabels(`e(labels)')</b>
+to use the labels in <b>esttab</b> or <b>estout</b> in this case:
+</p>
+
+<pre>
+. sysuse auto
+(1978 Automobile Data)
+
+. lab def origin 0 "Car type: domestic" 1 "Car type: foreign", modify
+
+. estpost tabulate foreign
+
+     foreign |      e(b)     e(pct)  e(cumpct) 
+-------------+---------------------------------
+           0 | <b>       52</b>  <b> 70.27027</b>  <b> 70.27027</b> 
+           1 | <b>       22</b>  <b> 29.72973</b>  <b>      100</b> 
+-------------+---------------------------------
+       Total | <b>       74</b>  <b>      100</b>  <b>         </b> 
+
+row labels saved in macro e(labels)
+
+. esttab, cells("b(label(freq)) pct(fmt(2)) cumpct(fmt(2))")       ///
+&gt;     varlabels(`e(labels)', blist(Total "{hline @width}{break}")) ///
+&gt;     varwidth(20) nonumber nomtitle noobs
+
+-----------------------------------------------------------
+                             freq          pct       cumpct
+-----------------------------------------------------------
+Car type: domestic  <b>           52        70.27        70.27</b>
+Car type: foreign   <b>           22        29.73       100.00</b>
+-----------------------------------------------------------
+Total               <b>           74       100.00             </b>
+-----------------------------------------------------------
+<p style="text-align:right; padding:0px; margin:0px"><a href="estpost109.do">[do-file]</a>
+</pre>
+
+
+<a name="estpost110"></a>
+<h3>Post a two-way frequency table (<b>tabulate</b>)</h3>
+
+<p>
+<a href="hlp_estpost.html#tabulate"><b>estpost tabulate</b></a>
+stores the columns of a two-way table in separate equations.
+Use the <b>unstack</b> option in <b>esttab</b> or <b>estout</b> to
+print these equations beside one another:
+</p>
+
+<pre>
+. sysuse auto
+(1978 Automobile Data)
+
+. estpost tabulate rep78 foreign
+
+<b>foreign     </b> |                                            
+       rep78 |      e(b)     e(pct)  e(colpct)  e(rowpct) 
+-------------+--------------------------------------------
+<b>Domestic     </b>|                                            
+           1 | <b>        2</b>  <b> 2.898551</b>  <b> 4.166667</b>  <b>      100</b> 
+           2 | <b>        8</b>  <b>  11.5942</b>  <b> 16.66667</b>  <b>      100</b> 
+           3 | <b>       27</b>  <b> 39.13043</b>  <b>    56.25</b>  <b>       90</b> 
+           4 | <b>        9</b>  <b> 13.04348</b>  <b>    18.75</b>  <b>       50</b> 
+           5 | <b>        2</b>  <b> 2.898551</b>  <b> 4.166667</b>  <b> 18.18182</b> 
+       Total | <b>       48</b>  <b> 69.56522</b>  <b>      100</b>  <b> 69.56522</b> 
+-------------+--------------------------------------------
+<b>Foreign      </b>|                                            
+           1 | <b>        0</b>  <b>        0</b>  <b>        0</b>  <b>        0</b> 
+           2 | <b>        0</b>  <b>        0</b>  <b>        0</b>  <b>        0</b> 
+           3 | <b>        3</b>  <b> 4.347826</b>  <b> 14.28571</b>  <b>       10</b> 
+           4 | <b>        9</b>  <b> 13.04348</b>  <b> 42.85714</b>  <b>       50</b> 
+           5 | <b>        9</b>  <b> 13.04348</b>  <b> 42.85714</b>  <b> 81.81818</b> 
+       Total | <b>       21</b>  <b> 30.43478</b>  <b>      100</b>  <b> 30.43478</b> 
+-------------+--------------------------------------------
+<b>Total        </b>|                                            
+           1 | <b>        2</b>  <b> 2.898551</b>  <b> 2.898551</b>  <b>      100</b> 
+           2 | <b>        8</b>  <b>  11.5942</b>  <b>  11.5942</b>  <b>      100</b> 
+           3 | <b>       30</b>  <b> 43.47826</b>  <b> 43.47826</b>  <b>      100</b> 
+           4 | <b>       18</b>  <b> 26.08696</b>  <b> 26.08696</b>  <b>      100</b> 
+           5 | <b>       11</b>  <b> 15.94203</b>  <b> 15.94203</b>  <b>      100</b> 
+       Total | <b>       69</b>  <b>      100</b>  <b>      100</b>  <b>      100</b> 
+
+. esttab, cell(colpct(fmt(2))) unstack noobs
+
+---------------------------------------------------
+                      (1)                          
+                                                   
+                 Domestic      Foreign        Total
+                   colpct       colpct       colpct
+---------------------------------------------------
+1           <b>         4.17         0.00         2.90</b>
+2           <b>        16.67         0.00        11.59</b>
+3           <b>        56.25        14.29        43.48</b>
+4           <b>        18.75        42.86        26.09</b>
+5           <b>         4.17        42.86        15.94</b>
+Total       <b>       100.00       100.00       100.00</b>
+---------------------------------------------------
+
+. esttab, cell(colpct(fmt(2)) b(fmt(g) par keep(Total))) ///
+&gt;     collabels(none) unstack noobs nonumber nomtitle    ///
+&gt;     eqlabels(, lhs("Repair Rec."))                     ///
+&gt;     varlabels(, blist(Total "{hline @width}{break}"))
+
+---------------------------------------------------
+Repair Rec.      Domestic      Foreign        Total
+---------------------------------------------------
+1           <b>         4.17         0.00         2.90</b>
+2           <b>        16.67         0.00        11.59</b>
+3           <b>        56.25        14.29        43.48</b>
+4           <b>        18.75        42.86        26.09</b>
+5           <b>         4.17        42.86        15.94</b>
+---------------------------------------------------
+Total       <b>       100.00       100.00       100.00</b>
+            <b>         (48)         (21)         (69)</b>
+---------------------------------------------------
+<p style="text-align:right; padding:0px; margin:0px"><a href="estpost110.do">[do-file]</a>
+</pre>
+
+
+<a name="estpost111"></a>
+<p>
+If the value labels are too long or contain unsuitable characters,
+they are stored in macros <b>e(labels)</b> (row labels) and <b>e(eqlabels)</b>
+(column labels). Type <b>varlabels(`e(labels)')</b> and
+<b>eqlabels(`e(eqlabels)')</b> to use these labels in <b>esttab</b> or <b>estout</b>:
+</p>
+
+<pre>
+. sysuse auto
+(1978 Automobile Data)
+
+. lab def origin 0 "Type: domestic" 1 "Type: foreign", modify
+
+. lab def rep78 1 "Rep. rec. 1" 2 "Rep. rec. 2" 3 "Rep. rec. 3" 4 "Rep. rec. 4"
+&gt;  5 "Rep. rec. 5"
+
+. lab val rep78 rep78
+
+. estpost tabulate rep78 foreign
+
+<b>foreign     </b> |                                            
+       rep78 |      e(b)     e(pct)  e(colpct)  e(rowpct) 
+-------------+--------------------------------------------
+<b>0            </b>|                                            
+           1 | <b>        2</b>  <b> 2.898551</b>  <b> 4.166667</b>  <b>      100</b> 
+           2 | <b>        8</b>  <b>  11.5942</b>  <b> 16.66667</b>  <b>      100</b> 
+           3 | <b>       27</b>  <b> 39.13043</b>  <b>    56.25</b>  <b>       90</b> 
+           4 | <b>        9</b>  <b> 13.04348</b>  <b>    18.75</b>  <b>       50</b> 
+           5 | <b>        2</b>  <b> 2.898551</b>  <b> 4.166667</b>  <b> 18.18182</b> 
+       Total | <b>       48</b>  <b> 69.56522</b>  <b>      100</b>  <b> 69.56522</b> 
+-------------+--------------------------------------------
+<b>1            </b>|                                            
+           1 | <b>        0</b>  <b>        0</b>  <b>        0</b>  <b>        0</b> 
+           2 | <b>        0</b>  <b>        0</b>  <b>        0</b>  <b>        0</b> 
+           3 | <b>        3</b>  <b> 4.347826</b>  <b> 14.28571</b>  <b>       10</b> 
+           4 | <b>        9</b>  <b> 13.04348</b>  <b> 42.85714</b>  <b>       50</b> 
+           5 | <b>        9</b>  <b> 13.04348</b>  <b> 42.85714</b>  <b> 81.81818</b> 
+       Total | <b>       21</b>  <b> 30.43478</b>  <b>      100</b>  <b> 30.43478</b> 
+-------------+--------------------------------------------
+<b>Total        </b>|                                            
+           1 | <b>        2</b>  <b> 2.898551</b>  <b> 2.898551</b>  <b>      100</b> 
+           2 | <b>        8</b>  <b>  11.5942</b>  <b>  11.5942</b>  <b>      100</b> 
+           3 | <b>       30</b>  <b> 43.47826</b>  <b> 43.47826</b>  <b>      100</b> 
+           4 | <b>       18</b>  <b> 26.08696</b>  <b> 26.08696</b>  <b>      100</b> 
+           5 | <b>       11</b>  <b> 15.94203</b>  <b> 15.94203</b>  <b>      100</b> 
+       Total | <b>       69</b>  <b>      100</b>  <b>      100</b>  <b>      100</b> 
+
+row labels saved in macro e(labels)
+column labels saved in macro e(eqlabels)
+
+. esttab, cell(colpct(fmt(2))) unstack noobs modelwidth(15) ///
+&gt;     varlabels(`e(labels)') eqlabels(`e(eqlabels)')
+
+------------------------------------------------------------
+                         (1)                                
+                                                            
+              Type: domestic   Type: foreign           Total
+                      colpct          colpct          colpct
+------------------------------------------------------------
+Rep. rec. 1 <b>            4.17            0.00            2.90</b>
+Rep. rec. 2 <b>           16.67            0.00           11.59</b>
+Rep. rec. 3 <b>           56.25           14.29           43.48</b>
+Rep. rec. 4 <b>           18.75           42.86           26.09</b>
+Rep. rec. 5 <b>            4.17           42.86           15.94</b>
+Total       <b>          100.00          100.00          100.00</b>
+------------------------------------------------------------
+<p style="text-align:right; padding:0px; margin:0px"><a href="estpost111.do">[do-file]</a>
+</pre>
+
+
+<a name="estpost120"></a>
+<h3>Post a one-way frequency table for complex survey data (<b>svy: tabulate</b>)</h3>
+
+<p>
+Example for posting a one-way frequency table for complex survey data using
+<a href="hlp_estpost.html#svy_tabulate"><b>estpost svy: tabulate</b></a>:
+</p>
+
+<pre>
+. webuse nhanes2b, clear
+
+. svyset psuid [pweight=finalwgt], strata(stratid)
+
+      pweight: <b>finalwgt</b>
+<b>          </b>VCE: <b>linearized</b>
+<b>  </b>Single unit: <b>missing</b>
+<b>     </b>Strata 1: <b>stratid</b>
+<b>         </b>SU 1: <b>psuid</b>
+<b>        </b>FPC 1: &lt;zero&gt;
+
+. estpost svy: tabulate race
+(running tabulate on estimation sample)
+
+Number of strata   = <b>       31</b>                Number of obs     = <b>      10,351</b>
+Number of PSUs     = <b>       62</b>                Population size   =<b>  117,157,513</b>
+                                              Design df         = <b>          31</b>
+
+----------------------
+1=white,  |
+2=black,  |
+3=other   | proportion
+----------+-----------
+    White |      <b>.8792</b>
+<b>    </b>Black |      <b>.0955</b>
+<b>    </b>Other |      <b>.0253</b>
+<b>          </b>| 
+    Total |          <b>1</b>
+----------------------
+  Key:  proportion  =  <b>cell proportion</b>
+
+saved vectors:
+             e(b) =  <b>cell proportions</b>
+<b>            </b>e(se) =  <b>standard errors of cell proportions</b>
+<b>            </b>e(lb) =  <b>lower 95% confidence bounds for cell proportions</b>
+<b>            </b>e(ub) =  <b>upper 95% confidence bounds for cell proportions</b>
+<b>          </b>e(deff) =  <b>deff for variances of cell proportions</b>
+<b>          </b>e(deft) =  <b>deft for variances of cell proportions</b>
+<b>          </b>e(cell) =  <b>cell proportions</b>
+<b>         </b>e(count) =  <b>weighted counts</b>
+<b>           </b>e(obs) =  <b>number of observations</b>
+
+. esttab, cell("b(f(4)) se lb ub deft")
+
+-----------------------------------------------------------------------------
+                      (1)                                                    
+                     Mean                                                    
+                        b           se           lb           ub         deft
+-----------------------------------------------------------------------------
+White       <b>       0.8792       0.0167       0.8408       0.9093       5.2090</b>
+Black       <b>       0.0955       0.0127       0.0725       0.1249       4.4130</b>
+Other       <b>       0.0253       0.0105       0.0108       0.0585       6.8246</b>
+Total       <b>       1.0000       0.0000                                       </b>
+-----------------------------------------------------------------------------
+N           <b>        10351                                                    </b>
+-----------------------------------------------------------------------------
+<p style="text-align:right; padding:0px; margin:0px"><a href="estpost120.do">[do-file]</a>
+</pre>
+
+
+<a name="estpost121"></a>
+<p>
+If the value labels are too long or contain unsuitable characters,
+they are stored in macro <b>e(labels)</b>. Type <b>varlabels(`e(labels)')</b>
+in this case:
+</p>
+
+<pre>
+. label define race 1 "Race: White" 2 "Race: Black" 3 "Race: Other", modify
+
+. estpost svy: tabulate race
+(running tabulate on estimation sample)
+
+Number of strata   = <b>       31</b>                Number of obs     = <b>      10,351</b>
+Number of PSUs     = <b>       62</b>                Population size   =<b>  117,157,513</b>
+                                              Design df         = <b>          31</b>
+
+----------------------
+1=white,  |
+2=black,  |
+3=other   | proportion
+----------+-----------
+ Race; Wh |      <b>.8792</b>
+<b> </b>Race; Bl |      <b>.0955</b>
+<b> </b>Race; Ot |      <b>.0253</b>
+<b>          </b>| 
+    Total |          <b>1</b>
+----------------------
+  Key:  proportion  =  <b>cell proportion</b>
+
+saved vectors:
+             e(b) =  <b>cell proportions</b>
+<b>            </b>e(se) =  <b>standard errors of cell proportions</b>
+<b>            </b>e(lb) =  <b>lower 95% confidence bounds for cell proportions</b>
+<b>            </b>e(ub) =  <b>upper 95% confidence bounds for cell proportions</b>
+<b>          </b>e(deff) =  <b>deff for variances of cell proportions</b>
+<b>          </b>e(deft) =  <b>deft for variances of cell proportions</b>
+<b>          </b>e(cell) =  <b>cell proportions</b>
+<b>         </b>e(count) =  <b>weighted counts</b>
+<b>           </b>e(obs) =  <b>number of observations</b>
+
+row labels saved in macro e(labels)
+
+. esttab, cell("b(f(4)) se lb ub deft") varlabels(`e(labels)')
+
+-----------------------------------------------------------------------------
+                      (1)                                                    
+                     Mean                                                    
+                        b           se           lb           ub         deft
+-----------------------------------------------------------------------------
+Race: White <b>       0.8792       0.0167       0.8408       0.9093       5.2090</b>
+Race: Black <b>       0.0955       0.0127       0.0725       0.1249       4.4130</b>
+Race: Other <b>       0.0253       0.0105       0.0108       0.0585       6.8246</b>
+Total       <b>       1.0000       0.0000                                       </b>
+-----------------------------------------------------------------------------
+N           <b>        10351                                                    </b>
+-----------------------------------------------------------------------------
+<p style="text-align:right; padding:0px; margin:0px"><a href="estpost121.do">[do-file]</a>
+</pre>
+
+
+<a name="estpost122"></a>
+<h3>Post a two-way frequency table for complex survey data (<b>svy: tabulate</b>)</h3>
+
+<p>
+<a href="hlp_estpost.html#svy_tabulate"><b>estpost svy: tabulate</b></a>
+stores the columns of a two-way table in separate equations.
+Use the <b>unstack</b> option in <b>esttab</b> or <b>estout</b> to
+print these equations beside one another:
+</p>
+
+<pre>
+. webuse nhanes2b, clear
+
+. svyset psuid [pweight=finalwgt], strata(stratid)
+
+      pweight: <b>finalwgt</b>
+<b>          </b>VCE: <b>linearized</b>
+<b>  </b>Single unit: <b>missing</b>
+<b>     </b>Strata 1: <b>stratid</b>
+<b>         </b>SU 1: <b>psuid</b>
+<b>        </b>FPC 1: &lt;zero&gt;
+
+. estpost svy: tabulate race diabetes, row percent
+(running tabulate on estimation sample)
+
+Number of strata   = <b>       31</b>                Number of obs     = <b>      10,349</b>
+Number of PSUs     = <b>       62</b>                Population size   =<b>  117,131,111</b>
+                                              Design df         = <b>          31</b>
+
+-------------------------------
+1=white,  |  diabetes, 1=yes,  
+2=black,  |        0=no        
+3=other   |     0      1  Total
+----------+--------------------
+    White |  <b>96.8  3.195    100</b>
+<b>    </b>Black |  <b>94.1  5.903    100</b>
+<b>    </b>Other | <b>97.97  2.034    100</b>
+<b>          </b>| 
+    Total | <b>96.58  3.425    100</b>
+-------------------------------
+  Key:  <b>row percentage</b>
+
+  Pearson:
+    Uncorrected   chi2(<b>2</b>)         = <b>  21.3483</b>
+    Design-based  F(<b>1.52</b>, <b>47.26</b>)  = <b>  15.0056     </b>P = <b>0.0000</b>
+
+saved vectors:
+             e(b) =  <b>row percentages</b>
+<b>            </b>e(se) =  <b>standard errors of row percentages</b>
+<b>            </b>e(lb) =  <b>lower 95% confidence bounds for row percentages</b>
+<b>            </b>e(ub) =  <b>upper 95% confidence bounds for row percentages</b>
+<b>          </b>e(deff) =  <b>deff for variances of row percentages</b>
+<b>          </b>e(deft) =  <b>deft for variances of row percentages</b>
+<b>          </b>e(cell) =  <b>cell percentages</b>
+<b>           </b>e(row) =  <b>row percentages</b>
+<b>           </b>e(col) =  <b>column percentages</b>
+<b>         </b>e(count) =  <b>weighted counts</b>
+<b>           </b>e(obs) =  <b>number of observations</b>
+
+. esttab ., se nostar nostar unstack
+
+---------------------------------------------------
+                      (1)                          
+                    Ratio                          
+                        0            1        Total
+---------------------------------------------------
+White       <b>        96.80        3.195          100</b>
+            <b>      </b>(<b>0.197</b>)<b>      </b>(<b>0.197</b>)<b>             </b>
+
+Black       <b>        94.10        5.903          100</b>
+            <b>      </b>(<b>0.614</b>)<b>      </b>(<b>0.614</b>)<b>             </b>
+
+Other       <b>        97.97        2.034          100</b>
+            <b>      </b>(<b>0.764</b>)<b>      </b>(<b>0.764</b>)<b>             </b>
+
+Total       <b>        96.58        3.425          100</b>
+            <b>      </b>(<b>0.181</b>)<b>      </b>(<b>0.181</b>)<b>             </b>
+---------------------------------------------------
+N           <b>        10349                          </b>
+---------------------------------------------------
+Standard errors in parentheses
+<p style="text-align:right; padding:0px; margin:0px"><a href="estpost122.do">[do-file]</a>
+</pre>
+
+
+<a name="estpost123"></a>
+<p>
+If the value labels are too long or contain unsuitable characters,
+they are stored in macros <b>e(labels)</b> (row labels) and <b>e(eqlabels)</b>
+(column labels). Type <b>varlabels(`e(labels)')</b> and
+<b>eqlabels(`e(eqlabels)')</b> to use these labels in <b>esttab</b> or <b>estout</b>:
+</p>
+
+<pre>
+. label define race 1 "Race: White" 2 "Race: Black" 3 "Race: Other", modify
+
+. label define diabetes 0 "no diab." 1 "diabetes"
+
+. label values diabetes diabetes
+
+. estpost svy: tabulate race diabetes, row percent
+(running tabulate on estimation sample)
+
+Number of strata   = <b>       31</b>                Number of obs     = <b>      10,349</b>
+Number of PSUs     = <b>       62</b>                Population size   =<b>  117,131,111</b>
+                                              Design df         = <b>          31</b>
+
+----------------------------------------
+1=white,  |
+2=black,  |    diabetes, 1=yes, 0=no    
+3=other   | no diab,  diabetes     Total
+----------+-----------------------------
+ Race; Wh |     <b>96.8     3.195       100</b>
+<b> </b>Race; Bl |     <b>94.1     5.903       100</b>
+<b> </b>Race; Ot |    <b>97.97     2.034       100</b>
+<b>          </b>| 
+    Total |    <b>96.58     3.425       100</b>
+----------------------------------------
+  Key:  <b>row percentage</b>
+
+  Pearson:
+    Uncorrected   chi2(<b>2</b>)         = <b>  21.3483</b>
+    Design-based  F(<b>1.52</b>, <b>47.26</b>)  = <b>  15.0056     </b>P = <b>0.0000</b>
+
+saved vectors:
+             e(b) =  <b>row percentages</b>
+<b>            </b>e(se) =  <b>standard errors of row percentages</b>
+<b>            </b>e(lb) =  <b>lower 95% confidence bounds for row percentages</b>
+<b>            </b>e(ub) =  <b>upper 95% confidence bounds for row percentages</b>
+<b>          </b>e(deff) =  <b>deff for variances of row percentages</b>
+<b>          </b>e(deft) =  <b>deft for variances of row percentages</b>
+<b>          </b>e(cell) =  <b>cell percentages</b>
+<b>           </b>e(row) =  <b>row percentages</b>
+<b>           </b>e(col) =  <b>column percentages</b>
+<b>         </b>e(count) =  <b>weighted counts</b>
+<b>           </b>e(obs) =  <b>number of observations</b>
+
+row labels saved in macro e(labels)
+column labels saved in macro e(eqlabels)
+
+. esttab ., se nostar nostar unstack ///
+&gt;     varlabels(`e(labels)') eqlabels(`e(eqlabels)')
+
+---------------------------------------------------
+                      (1)                          
+                    Ratio                          
+                 no diab.     diabetes        Total
+---------------------------------------------------
+Race: White <b>        96.80        3.195          100</b>
+            <b>      </b>(<b>0.197</b>)<b>      </b>(<b>0.197</b>)<b>             </b>
+Race: Black <b>        94.10        5.903          100</b>
+            <b>      </b>(<b>0.614</b>)<b>      </b>(<b>0.614</b>)<b>             </b>
+Race: Other <b>        97.97        2.034          100</b>
+            <b>      </b>(<b>0.764</b>)<b>      </b>(<b>0.764</b>)<b>             </b>
+Total       <b>        96.58        3.425          100</b>
+            <b>      </b>(<b>0.181</b>)<b>      </b>(<b>0.181</b>)<b>             </b>
+---------------------------------------------------
+N           <b>        10349                          </b>
+---------------------------------------------------
+Standard errors in parentheses
+<p style="text-align:right; padding:0px; margin:0px"><a href="estpost123.do">[do-file]</a>
+</pre>
+
+
+<a name="estpost112"></a>
+<h3>Post correlation coefficients (<b>correlate</b>)</h3>
+
+<p>
+By default,
+<a href="hlp_estpost.html#correlate"><b>estpost correlate</b></a>
+posts a vector of correlations between
+the first specified variable and the remaining variables. Example:
+</p>
+
+<pre>
+. sysuse auto
+(1978 Automobile Data)
+
+. estpost correlate price turn foreign rep78
+
+       price |      e(b)     e(rho)       e(p)   e(count) 
+-------------+--------------------------------------------
+        turn | <b> .3096174</b>  <b> .3096174</b>  <b> .0072662</b>  <b>       74</b> 
+     foreign | <b> .0487195</b>  <b> .0487195</b>  <b> .6801851</b>  <b>       74</b> 
+       rep78 | <b> .0065533</b>  <b> .0065533</b>  <b>   .95738</b>  <b>       69</b> 
+
+. esttab, cell("rho p count") noobs
+
+---------------------------------------------------
+                      (1)                          
+                    price                          
+                      rho            p        count
+---------------------------------------------------
+turn        <b>     .3096174     .0072662           74</b>
+foreign     <b>     .0487195     .6801851           74</b>
+rep78       <b>     .0065533       .95738           69</b>
+---------------------------------------------------
+<p style="text-align:right; padding:0px; margin:0px"><a href="estpost112.do">[do-file]</a>
+</pre>
+
+
+<a name="estpost113"></a>
+<p>
+Alternatively, specify the <b>matrix</b> option to post a correlation matrix. The columns
+of the matrix are stored in separate equations. Hence, use the <b>unstack</b> option
+in <b>esttab</b> or <b>estout</b> to print the matrix:
+</p>
+
+<pre>
+. sysuse auto
+(1978 Automobile Data)
+
+. estpost correlate price turn foreign rep78, matrix listwise
+
+             |      e(b)     e(rho)       e(p)   e(count) 
+-------------+--------------------------------------------
+<b>price        </b>|                                            
+       price | <b>        1</b>  <b>        1</b>  <b>         </b>  <b>       69</b> 
+        turn | <b> .3302013</b>  <b> .3302013</b>  <b> .0055897</b>  <b>       69</b> 
+     foreign | <b>-.0173639</b>  <b>-.0173639</b>  <b> .8873872</b>  <b>       69</b> 
+       rep78 | <b> .0065533</b>  <b> .0065533</b>  <b>   .95738</b>  <b>       69</b> 
+<b>turn         </b>|                                            
+        turn | <b>        1</b>  <b>        1</b>  <b>         </b>  <b>       69</b> 
+     foreign | <b> -.676836</b>  <b> -.676836</b>  <b> 1.72e-10</b>  <b>       69</b> 
+       rep78 | <b>-.4961308</b>  <b>-.4961308</b>  <b> .0000146</b>  <b>       69</b> 
+<b>foreign      </b>|                                            
+     foreign | <b>        1</b>  <b>        1</b>  <b>         </b>  <b>       69</b> 
+       rep78 | <b> .5922369</b>  <b> .5922369</b>  <b> 8.31e-08</b>  <b>       69</b> 
+<b>rep78        </b>|                                            
+       rep78 | <b>        1</b>  <b>        1</b>  <b>         </b>  <b>       69</b> 
+
+. esttab, unstack not noobs compress
+
+--------------------------------------------------------------
+                 (1)                                          
+                                                              
+               price         turn      foreign        rep78   
+--------------------------------------------------------------
+price     <b>         1                                          </b>
+turn      <b>     0.330**          1                             </b>
+foreign   <b>   -0.0174       -0.677***         1                </b>
+rep78     <b>   0.00655       -0.496***     0.592***         1   </b>
+--------------------------------------------------------------
+* p&lt;0.05, ** p&lt;0.01, *** p&lt;0.001
+<p style="text-align:right; padding:0px; margin:0px"><a href="estpost113.do">[do-file]</a>
+</pre>
+
+<p>
+(Also see "<a href="advanced.html#advanced908">More on correlation coefficients</a>"
+under "<a href="advanced.html">Advanced Examples</a>".)
+</p>
+
+
+<a name="estpost114"></a>
+<h3>Post confidence intervals for means, proportions, or counts (<b>ci</b>)</h3>
+
+<p>
+<a href="hlp_estpost.html#ci"><b>estpost ci</b></a>
+posts standard errors and confidence intervals for means,
+proportions or counts. Example:
+</p>
+
+<pre>
+. sysuse auto
+(1978 Automobile Data)
+
+. estpost ci price mpg rep78, listwise
+(confidence level is 95%)
+
+             |      e(b)   e(count)      e(se)      e(lb)      e(ub) 
+-------------+-------------------------------------------------------
+       price | <b> 6146.043</b>  <b>       69</b>  <b> 350.6166</b>  <b> 5446.399</b>  <b> 6845.688</b> 
+         mpg | <b> 21.28986</b>  <b>       69</b>  <b> .7062326</b>  <b> 19.88059</b>  <b> 22.69912</b> 
+       rep78 | <b> 3.405797</b>  <b>       69</b>  <b> .1191738</b>  <b> 3.167989</b>  <b> 3.643605</b> 
+
+. esttab, cells("b se lb ub") label
+
+------------------------------------------------------------------------
+                              (1)                                       
+                                                                        
+                                b           se           lb           ub
+------------------------------------------------------------------------
+Price               <b>     6146.043     350.6166     5446.399     6845.688</b>
+Mileage (mpg)       <b>     21.28986     .7062326     19.88059     22.69912</b>
+Repair Record 1978  <b>     3.405797     .1191738     3.167989     3.643605</b>
+------------------------------------------------------------------------
+Observations        <b>           69                                       </b>
+------------------------------------------------------------------------
+<p style="text-align:right; padding:0px; margin:0px"><a href="estpost114.do">[do-file]</a>
+</pre>
+
+
+<a name="estpost114b"></a>
+<p>
+<b>e(lb)</b> and <b>e(ub)</b> contain the the lower and upper bounds of the
+confidence intervals. The default confidence level is 95% or as set by
+<a href="http://www.stata.com/help.cgi?set level"><b>set level</b></a>.
+To post confidence intervals using another level, apply the <b>level()</b> option:
+</p>
+
+<pre>
+. sysuse auto
+(1978 Automobile Data)
+
+. estpost ci price mpg rep78, listwise level(90)
+(confidence level is 90%)
+
+             |      e(b)   e(count)      e(se)      e(lb)      e(ub) 
+-------------+-------------------------------------------------------
+       price | <b> 6146.043</b>  <b>       69</b>  <b> 350.6166</b>  <b> 5561.365</b>  <b> 6730.722</b> 
+         mpg | <b> 21.28986</b>  <b>       69</b>  <b> .7062326</b>  <b> 20.11216</b>  <b> 22.46755</b> 
+       rep78 | <b> 3.405797</b>  <b>       69</b>  <b> .1191738</b>  <b> 3.207066</b>  <b> 3.604528</b> 
+
+. esttab, cells("b se lb ub") label scalars(level)
+
+------------------------------------------------------------------------
+                              (1)                                       
+                                                                        
+                                b           se           lb           ub
+------------------------------------------------------------------------
+Price               <b>     6146.043     350.6166     5561.365     6730.722</b>
+Mileage (mpg)       <b>     21.28986     .7062326     20.11216     22.46755</b>
+Repair Record 1978  <b>     3.405797     .1191738     3.207066     3.604528</b>
+------------------------------------------------------------------------
+Observations        <b>           69                                       </b>
+level               <b>           90                                       </b>
+------------------------------------------------------------------------
+<p style="text-align:right; padding:0px; margin:0px"><a href="estpost114b.do">[do-file]</a>
+</pre>
+
+
+<a name="estpost115"></a>
+<p>
+Example with confidence intervals for proportions:
+</p>
+
+<pre>
+. sysuse auto
+(1978 Automobile Data)
+
+. eststo exact: estpost ci foreign, binomial exact
+(confidence level is 95%)
+
+             |      e(b)   e(count)      e(se)      e(lb)      e(ub) 
+-------------+-------------------------------------------------------
+     foreign | <b> .2972973</b>  <b>       74</b>  <b> .0531331</b>  <b>  .196584</b>  <b> .4148353</b> 
+
+. eststo agresti: estpost ci foreign, binomial agresti
+(confidence level is 95%)
+
+             |      e(b)   e(count)      e(se)      e(lb)      e(ub) 
+-------------+-------------------------------------------------------
+     foreign | <b> .2972973</b>  <b>       74</b>  <b> .0531331</b>  <b>  .204807</b>  <b> .4097942</b> 
+
+. esttab, cells(lb ub) mtitles
+
+--------------------------------------
+                      (1)          (2)
+                    exact      agresti
+                    lb/ub        lb/ub
+--------------------------------------
+foreign     <b>      .196584      .204807</b>
+            <b>     .4148353     .4097942</b>
+--------------------------------------
+N           <b>           74           74</b>
+--------------------------------------
+
+. eststo clear
+<p style="text-align:right; padding:0px; margin:0px"><a href="estpost115.do">[do-file]</a>
+</pre>
+
+
+<a name="estpost116"></a>
+<h3>Post confidence intervals for survival time (<b>stci</b>)</h3>
+
+<p>
+<a href="hlp_estpost.html#stci"><b>estpost stci</b></a>
+posts confidence intervals for means and percentiles
+of survival time. The default is to use the median (50% percentile). Example:
+</p>
+
+<pre>
+. webuse page2
+
+. estpost stci
+(confidence level is 95%)
+
+             |  e(count)     e(p50)      e(se)      e(lb)      e(ub) 
+-------------+-------------------------------------------------------
+       total | <b>       40</b>  <b>      232</b>  <b> 2.562933</b>  <b>      213</b>  <b>      239</b> 
+
+. esttab, cell("count p50 se lb ub") noobs compress
+
+------------------------------------------------------------
+                 (1)                                        
+                                                            
+               count       p50        se        lb        ub
+------------------------------------------------------------
+total     <b>        40       232  2.562933       213       239</b>
+------------------------------------------------------------
+<p style="text-align:right; padding:0px; margin:0px"><a href="estpost116.do">[do-file]</a>
+</pre>
+
+
+<a name="estpost117"></a>
+<p>
+To compute the statistics by subgroups, apply the <b>by()</b> option:
+</p>
+
+<pre>
+. webuse page2
+
+. estpost stci, by(group)
+(confidence level is 95%)
+
+             |  e(count)     e(p50)      e(se)      e(lb)      e(ub) 
+-------------+-------------------------------------------------------
+           1 | <b>       19</b>  <b>      216</b>  <b> 7.661029</b>  <b>      190</b>  <b>      234</b> 
+           2 | <b>       21</b>  <b>      233</b>  <b> 3.081611</b>  <b>      232</b>  <b>      280</b> 
+-------------+-------------------------------------------------------
+       total | <b>       40</b>  <b>      232</b>  <b> 2.562933</b>  <b>      213</b>  <b>      239</b> 
+
+. esttab, cell("count p50 se lb ub") noobs compress ///
+&gt;     varlabels(, blist(total "{hline @width}{break}"))
+
+------------------------------------------------------------
+                 (1)                                        
+                                                            
+               count       p50        se        lb        ub
+------------------------------------------------------------
+1         <b>        19       216  7.661029       190       234</b>
+2         <b>        21       233  3.081611       232       280</b>
+------------------------------------------------------------
+total     <b>        40       232  2.562933       213       239</b>
+------------------------------------------------------------
+<p style="text-align:right; padding:0px; margin:0px"><a href="estpost117.do">[do-file]</a>
+</pre>
+
+
+<a name="estpost130"></a>
+<h3>Post results from <b>margins</b></h3>
+
+<p>
+<a href="hlp_estpost.html#margins"><b>estpost margins</b></a>
+posts results from the <a href=http://www.stata.com/help.cgi?margins><b>margins</b></a>
+command. The following example illustrates how to plot logit coefficients
+along with average marginal effects:
+</p>
+
+<pre>
+. sysuse auto, clear
+(1978 Automobile Data)
+
+. logit foreign turn weight mpg, nolog
+
+Logistic regression                               Number of obs   = <b>        74</b>
+<b>                                                  </b>LR chi2(<b>3</b>)      = <b>     43.00</b>
+<b>                                                  </b>Prob &gt; chi2     = <b>    0.0000</b>
+Log likelihood = <b>-23.535653                       </b>Pseudo R2       = <b>    0.4774</b>
+
+------------------------------------------------------------------------------
+     foreign |      Coef.   Std. Err.      z    P&gt;|z|     [95% Conf. Interval]
+-------------+----------------------------------------------------------------
+        turn |  <b>-.3992939   .1634497    -2.44   0.015    -.7196494   -.0789384</b>
+<b>      </b>weight |  <b>-.0023879   .0011789    -2.03   0.043    -.0046985   -.0000773</b>
+<b>         </b>mpg |  <b> -.179312   .0937591    -1.91   0.056    -.3630766    .0044525</b>
+<b>       </b>_cons |  <b> 24.85926   6.718033     3.70   0.000     11.69216    38.02636</b>
+------------------------------------------------------------------------------
+
+. eststo logodds
+
+. estpost margins, dydx(*)
+Warning: cannot perform check for estimable functions.
+
+Average marginal effects                        Number of obs     = <b>        74</b>
+Model VCE    : <b>OIM</b>
+
+Expression   : <b>Pr(foreign), predict()</b>
+dy/dx w.r.t. : <b>turn weight mpg</b>
+
+------------------------------------------------------------------------------
+             |            Delta-method
+             |      dy/dx   Std. Err.      z    P&gt;|z|     [95% Conf. Interval]
+-------------+----------------------------------------------------------------
+        turn |<b>  -.0397669   .0133136    -2.99   0.003    -.0658612   -.0136726</b>
+      weight |<b>  -.0002378   .0001042    -2.28   0.022     -.000442   -.0000336</b>
+         mpg |<b>  -.0178582   .0082448    -2.17   0.030    -.0340177   -.0016988</b>
+------------------------------------------------------------------------------
+
+. eststo AMEs
+
+. esttab logodds AMEs, mtitles
+
+--------------------------------------------
+                      (1)             (2)   
+                  logodds            AMEs   
+--------------------------------------------
+turn        <b>       -0.399*        -0.0398** </b>
+            <b>      </b>(<b>-2.44</b>)<b>         </b>(<b>-2.99</b>)<b>   </b>
+
+weight      <b>     -0.00239*      -0.000238*  </b>
+            <b>      </b>(<b>-2.03</b>)<b>         </b>(<b>-2.28</b>)<b>   </b>
+
+mpg         <b>       -0.179         -0.0179*  </b>
+            <b>      </b>(<b>-1.91</b>)<b>         </b>(<b>-2.17</b>)<b>   </b>
+
+_cons       <b>        24.86***                </b>
+            <b>       </b>(<b>3.70</b>)<b>                   </b>
+--------------------------------------------
+N           <b>           74              74   </b>
+--------------------------------------------
+t statistics in parentheses
+* p&lt;0.05, ** p&lt;0.01, *** p&lt;0.001
+<p style="text-align:right; padding:0px; margin:0px"><a href="estpost130.do">[do-file]</a>
+</pre>
+
+
+<a name="estpost131"></a>
+<p>
+Note that in many cases <b>estpost margins</b> is not needed as you
+can specify <b>margins</b> with the <b>post</b> option to store results
+from <b>margins</b> in <b>e()</b>:
+</p>
+
+<pre>
+. sysuse auto, clear
+(1978 Automobile Data)
+
+. logit foreign turn weight mpg, nolog
+
+Logistic regression                               Number of obs   = <b>        74</b>
+<b>                                                  </b>LR chi2(<b>3</b>)      = <b>     43.00</b>
+<b>                                                  </b>Prob &gt; chi2     = <b>    0.0000</b>
+Log likelihood = <b>-23.535653                       </b>Pseudo R2       = <b>    0.4774</b>
+
+------------------------------------------------------------------------------
+     foreign |      Coef.   Std. Err.      z    P&gt;|z|     [95% Conf. Interval]
+-------------+----------------------------------------------------------------
+        turn |  <b>-.3992939   .1634497    -2.44   0.015    -.7196494   -.0789384</b>
+<b>      </b>weight |  <b>-.0023879   .0011789    -2.03   0.043    -.0046985   -.0000773</b>
+<b>         </b>mpg |  <b> -.179312   .0937591    -1.91   0.056    -.3630766    .0044525</b>
+<b>       </b>_cons |  <b> 24.85926   6.718033     3.70   0.000     11.69216    38.02636</b>
+------------------------------------------------------------------------------
+
+. eststo logodds
+
+. margins, dydx(*) post
+Warning: cannot perform check for estimable functions.
+
+Average marginal effects                        Number of obs     = <b>        74</b>
+Model VCE    : <b>OIM</b>
+
+Expression   : <b>Pr(foreign), predict()</b>
+dy/dx w.r.t. : <b>turn weight mpg</b>
+
+------------------------------------------------------------------------------
+             |            Delta-method
+             |      dy/dx   Std. Err.      z    P&gt;|z|     [95% Conf. Interval]
+-------------+----------------------------------------------------------------
+        turn |<b>  -.0397669   .0133136    -2.99   0.003    -.0658612   -.0136726</b>
+      weight |<b>  -.0002378   .0001042    -2.28   0.022     -.000442   -.0000336</b>
+         mpg |<b>  -.0178582   .0082448    -2.17   0.030    -.0340177   -.0016988</b>
+------------------------------------------------------------------------------
+
+. eststo AMEs
+
+. esttab logodds AMEs, mtitles
+
+--------------------------------------------
+                      (1)             (2)   
+                  logodds            AMEs   
+--------------------------------------------
+turn        <b>       -0.399*        -0.0398** </b>
+            <b>      </b>(<b>-2.44</b>)<b>         </b>(<b>-2.99</b>)<b>   </b>
+
+weight      <b>     -0.00239*      -0.000238*  </b>
+            <b>      </b>(<b>-2.03</b>)<b>         </b>(<b>-2.28</b>)<b>   </b>
+
+mpg         <b>       -0.179         -0.0179*  </b>
+            <b>      </b>(<b>-1.91</b>)<b>         </b>(<b>-2.17</b>)<b>   </b>
+
+_cons       <b>        24.86***                </b>
+            <b>       </b>(<b>3.70</b>)<b>                   </b>
+--------------------------------------------
+N           <b>           74              74   </b>
+--------------------------------------------
+t statistics in parentheses
+* p&lt;0.05, ** p&lt;0.01, *** p&lt;0.001
+<p style="text-align:right; padding:0px; margin:0px"><a href="estpost131.do">[do-file]</a>
+</pre>
+
+<p>
+Furthermore, see <a href="hlp_estadd.html#margins">estadd margins</a> if you want
+to add results from
+<a href=http://www.stata.com/help.cgi?margins><b>margins</b></a> to an existing
+model without replacing the original coefficients.
+</p>
+
+</div>
+
+</body></html>

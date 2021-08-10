@@ -1,0 +1,20 @@
+<pre>
+        capture program drop mysumhtm
+        program define mysumhtm
+            syntax varlist using [, replace append ] 
+            tempname fh
+            file open `fh' `using', write `replace' `append'
+            file write `fh' "&lt;html&gt;&lt;body&gt;&lt;table&gt;"
+            file write `fh' _n "&lt;thead&gt;&lt;th&gt;variable&lt;/th&gt;" ///
+                "&lt;th&gt;mean&lt;/th&gt;&lt;th&gt;sd&lt;/th&gt;&lt;/thead&gt;"
+            foreach v of local varlist {
+                quietly summarize `v'
+                file write `fh' _n "&lt;tr&gt;&lt;td&gt;`v'&lt;/td&gt;&lt;td&gt;" ///
+                     (r(mean)) "&lt;/td&gt;&lt;td&gt;" (r(sd)) "&lt;/td&gt;&lt;/tr&gt;"
+            }
+            file write `fh' _n  "&lt;/table&gt;&lt;/body&gt;&lt;/html&gt;"
+            file close `fh'
+        end
+        mysumhtm * using example.html, replace
+        type example.html
+</pre>

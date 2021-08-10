@@ -1,0 +1,22 @@
+d 'CDOUT': module to display the current working directory
+d
+d cdout provides a fast and easy way to open the current directory
+d (cd) for your viewing pleasure. It will also place clickable
+d interface on the screen, which may work for Mac and Unix
+d platforms. 
+d
+d KW: directory
+d KW: cd
+d KW: dir
+d KW: shell
+d KW: shellout
+d
+d Requires: Stata version 7.0
+d
+d Distribution-Date: 20090421
+d
+d Author: Roy Wada
+d Support: email roywada@@hotmail.com
+d
+f cdout.ado
+f cdout.hlp

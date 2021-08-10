@@ -1,0 +1,28 @@
+d 'SDMXUSE': module to import data from statistical agencies using the SDMX standard
+d
+d  sdmxuse imports data from statistical agencies using the SDMX
+d standard. Available providers are European Central Bank (ECB),
+d Eurostat (ESTAT), International Monetary Fund (IMF), Organisation
+d for Economic Co-operation and Development (OECD) and World Bank
+d (WB). You can get a complete list of publicly available datasets
+d from a provider by specifying the resource: dataflow.  Then, you
+d can obtain the Data Structure Definition (DSD) of a given dataset
+d by specifying the resource: datastructure.  Finally, you can
+d download the dataset by specifying the resource: data. 
+d
+d KW: data management
+d KW: ECB
+d KW: Eurostat
+d KW: IMF
+d KW: OECD
+d KW: World Bank
+d
+d Requires: Stata version 13 and moss from SSC (q.v.)
+d
+d Distribution-Date: 20160902
+d
+d Author: Sébastien Fontenay , Universite Catholique de Louvain
+d Support: email sebastien.fontenay@@uclouvain.be
+d
+f sdmxuse.ado
+f sdmxuse.sthlp

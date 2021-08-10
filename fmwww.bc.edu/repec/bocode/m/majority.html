@@ -1,0 +1,152 @@
+<pre>
+-------------------------------------------------------------------------------
+help for <b>majority</b>
+-------------------------------------------------------------------------------
+<p>
+<b><u>Majority calculations for real or hypothetical elections</u></b> 
+<p>
+        <b>majority</b> <i>varname</i> [<i>weight</i>] [<b>if</b> <i>exp</i>] [<b>in</b> <i>range</i>] <b>,</b> <b><u>pos</u></b><b>itive(</b><i>valuelist</i><b>)</b>
+                 <b><u>neg</u></b><b>ative(</b><i>valuelist</i><b>)</b> [ <b>by(</b><i>byvarlist</i><b>)</b> <b><u>perc</u></b><b>ent</b> <b>format(</b><i>format</i><b>)</b>
+                 <i>list_options</i> <b><u>g</u></b><b>enerate(</b><i>newvarlist</i><b>)</b> ]
+<p>
+        <b>majority</b> <i>varlist</i> [<i>weight</i>] [<b>if</b> <i>exp</i>] [<b>in</b> <i>range</i>] <b>,</b> <b><u>pos</u></b><b>itive(</b><i>varlist</i><b>)</b>
+                 <b><u>neg</u></b><b>ative(</b><i>varlist</i><b>)</b> [ <b>by(</b><i>byvarlist</i><b>)</b> <b><u>perc</u></b><b>ent</b> <b>format(</b><i>format</i><b>)</b>
+                 <i>list_options</i> <b><u>g</u></b><b>enerate(</b><i>newvarlist</i><b>)</b> ]
+<p>
+<p>
+<b><u>Description</u></b>
+<p>
+    <b>majority</b> reports on voting in real or hypothetical elections.  The <i>votes</i>
+    cast are summarized as being <i>positive</i> or <i>negative</i> and the difference
+    between these is reported.  This difference is here called the <i>majority</i>,
+    such terminology being a mild generalisation of usage in British English.
+<p>
+    There are two syntaxes. The first is for a long data structure in which
+    votes are recorded in a single variable, which may be numeric or string.
+    The second is for a wide data structure in which votes are recorded in
+    two or more variables, which must be numeric. Note that with both
+    syntaxes the percents calculated with the <b>percent</b> option will depend on
+    the totals as determined by all the variables supplied, except for any <b>if</b>
+    and <b>in</b> restrictions and missing values.
+<p>
+    <b>fweight</b>s and <b>aweight</b>s may be specified.
+<p>
+ 
+<b><u>Remarks</u></b> 
+ 
+    In 2000 the Electoral College of the United States voted as follows:
+    George W. Bush 271; Al Gore 266; absentions 1. Hence George W. Bush was
+    elected President of the United States by a majority of 5, or as a
+    percent 5 / 538 = 0.93%. The majority for Bush is here # votes for - #
+    votes against.  More generally we can calculate a <i>majority</i> given a
+    decision on which votes are counted as <i>positive</i> and which as <i>negative</i>.
+    Polls are often summarized in terms of the difference between those who
+    approve and those who disapprove, usually of some politician or policy.
+    In a poll reported in the <i>Independent</i> [London] on 28 April 2003, 14% of
+    (presumably British) adults were in favour of genetically modified food,
+    and 56% against. From this it would seem that a referendum on the issue
+    would yield a majority of 42% against.  In a survey of grocery shoppers
+    in Oxford, one question asked for agreement or disagreement with the
+    statement "I find getting to grocery shops very tiring" on a 5 point
+    scale running from <i>agree</i> to <i>disagree</i>.  Two possibilities here are to
+    calculate (1) (# <i>agree</i>) - (# <i>disagree</i>) and (2) (# <i>agree</i> + # <i>tend to</i>
+    <i>agree</i>) - (# <i>disagree</i> + # <i>tend to disagree</i>). Here as elsewhere it usually
+    seems best to ignore the neutral category in the middle of the scale, #
+    <i>in between</i>. In electoral terms, we might guess, in the absence of any
+    other information, that those who are undecided either might not vote at
+    all or might be split equally into <i>positive</i> and <i>negative</i>:  whatever we
+    guess, the majority is unchanged.  However, how to assign categories is a
+    substantive decision, rather than a statistical decision.
+<p>
+    More generally, the majority has various attractive properties. It is
+    simple, and familiar to many people, largely because of its widespread
+    use in reporting elections. It is a direct summary of the data which does
+    not go beyond the categories given, as compared with say assigning some
+    scores to the categories and averaging those. It is sensitive to
+    variations, without being unstable: note that by comparison a ratio such
+    as # <i>positive</i> / # <i>negative</i> is not only unstable but also indeterminate
+    for zero denominators.  As mentioned, the majority is unchanged if
+    neutral or don't know categories are split equally, unlike any ratio.
+    Perhaps the main disadvantage of the majority is that it does not have an
+    obvious link to any specific family of models.
+<p>
+    See also Wilkinson, L. 1999. <i>The grammar of graphics.</i>  New York:
+    Springer-Verlag and Zeisel, H. 1985.  <i>Say it with figures.</i> 6th ed. New
+    York: Harper &amp; Row.
+<p>
+    We deal here only with the simplest kind of voting.  For more information
+    on voting systems, see for example
+    http://www.barnsdle.demon.co.uk/vote/vote.html.
+<p>
+<p>
+<b><u>Options</u></b>
+<p>
+    <b>positive()</b> and <b>negative()</b> are required options.  With the first syntax,
+        the argument of each is a <i>valuelist</i>, i.e. a numeric list or a list of
+        string values. With the second syntax, it is a <i>varlist</i> of numeric
+        variables.
+<p>
+        In the first syntax, suppose we have data in a numeric variable
+        <b>opinion</b> on a 5 point opinion scale which we wish to summarize in
+        terms of the number who say 1 or 2 minus the number who say 4 or 5,
+        ignoring those who say 3. The syntax is, minimally, <b>majority opinion,</b>
+        <b>pos(1 2) neg(4 5)</b>.  Or suppose that we have data in a string variable
+        <b>candidate</b> which we wish to summarize in terms of votes for "Bush"
+        minus votes for "Gore". The syntax is, minimally, <b>majority candidate,</b>
+        <b>pos("Bush") neg("Gore")</b>.
+<p>
+        In the second syntax, suppose we have data in four numeric variables,
+        <b>Bush</b>, <b>Gore</b>, <b>Nader</b> and <b>others</b>, which we wish to summarize in terms of
+        the number who voted for Bush minus the number who voted for Gore.
+        The syntax is minimally <b>majority Bush Gore Nader others, pos(Bush)</b>
+        <b>neg(Gore)</b>.  If we wish to summarize in terms of the number who voted
+        for Bush minus the number who voted for all other candidates, the
+        syntax is minimally <b>majority Bush Gore Nader others, pos(Bush)</b>
+        <b>neg(Gore Nader others)</b>.
+<p>
+    <b>by()</b> specifies that reports are to be subdivided according to the
+        distinct combinations of <i>byvarlist</i>.  This is not a required option
+        but in practice perhaps the most useful handle provided by <b>majority</b>.
+<p>
+    <b>percent</b> stipulates that positive and negative votes and the majority be
+        reported as percents of the total. Thus <b>majority Bush Gore Nader</b>
+        <b>others, pos(Bush) neg(Gore Nader others) percent</b> will report Bush
+        minus all others as a percent of the total for all candidates, while
+        <b>majority Bush Gore, pos(Bush) neg(Gore) percent</b> will report Bush
+        minus Gore as a percent of their total.
+<p>
+    <b>format()</b> supplies a format to be used in displaying the results of
+        <i>positive</i>, <i>negative</i> and <i>majority</i>. The default is %3.2f if <b>percent</b> is
+        specified and %8.0g otherwise.
+<p>
+    <i>list_options</i> refers to options of list, which is used to display results.
+<p>
+    <b><u>g</u></b><b>enerate()</b> generates up to three new variables, as follows. With one new
+        variable name, the new variable contains the <i>majority</i> calculated.
+        With two new variable names, the second contains the total(s) of
+        <i>positive</i> votes. With three new variable names, the third contains the
+        total(s) of <i>negative</i> votes.  If <b>percent</b> is also specified, new
+        variables will be in percent form. Note that each new variable will
+        contain constants, unless <b>by()</b> is also specified, in which case each
+        new variable will contain the same constant for each block defined by
+        <b>by()</b>.
+<p>
+<p>
+<b><u>Examples</u></b>
+<p>
+    . use http://www.stata-press.com/data/r8/voter.dta
+    . majority candidat [w=frac], pos(2) neg(3)
+    . majority candidat [w=frac], pos(2) neg(3) by(inc)
+    . majority candidat [aw=pfrac], pos(2) neg(3) by(inc) format(%3.2f)
+<p>
+<p>
+<b><u>Author</u></b>
+<p>
+        Nicholas J. Cox, University of Durham
+        n.j.cox@durham.ac.uk
+<p>
+         
+<b><u>Also see</u></b>
+<p>
+On-line:  help for slideplot (if installed)
+</pre>

@@ -1,0 +1,400 @@
+<pre>
+<b>help texdoc</b>
+-------------------------------------------------------------------------------
+<p>
+<b><u>Title</u></b>
+<p>
+    <b>texdoc</b> -- Create a LaTeX document including Stata output
+<p>
+<p>
+<b><u>Syntax</u></b>
+<p>
+    Create LaTeX document
+<p>
+        <b>texdoc</b> <b><u>i</u></b><b>nit</b> <i>docname</i> [<b>,</b> <b><u>r</u></b><b>eplace</b> <b><u>a</u></b><b>ppend</b> <b><u>p</u></b><b>refix(</b><i>prefix</i><b>)</b> ]
+<p>
+        <b>tex</b> <i>...</i>
+<p>
+        <b>texdoc</b> <b><u>c</u></b><b>lose</b>
+<p>
+    Include Stata output in LaTeX document
+<p>
+        <b>texdoc</b> <b><u>s</u></b><b>tlog</b> [<i>name</i>]
+<p>
+        <b>texdoc</b> <b><u>s</u></b><b>tlog</b> <b><u>o</u></b><b>om</b> <i>cmdline</i>
+<p>
+        <b>texdoc</b> <b><u>s</u></b><b>tlog</b> <b>cnp</b>
+<p>
+        <b>texdoc</b> <b><u>s</u></b><b>tlog</b> <b><u>c</u></b><b>lose</b>
+<p>
+    Additional syntax for non-interactive mode
+<p>
+        <b>texdoc</b> <b>do</b> <i>filename</i> [<b>,</b> <b><u>i</u></b><b>nit(</b><i>docname</i><b>)</b> <b><u>c</u></b><b>lose</b> <b><u>r</u></b><b>eplace</b> <b><u>a</u></b><b>ppend</b>
+               <b><u>p</u></b><b>refix(</b><i>prefix</i><b>)</b> <b><u>s</u></b><b>avecmd(</b><i>newfile</i><b>)</b> ]
+<p>
+        <b>/*tex</b> <i>...</i> <b>tex*/</b>
+<p>
+    Remove all <b>texdoc</b> commands from do-file
+<p>
+        <b>texdoc</b> <b>strip</b> <i>oldfile</i> <i>newfile</i> [, <b><u>r</u></b><b>eplace</b> <b><u>a</u></b><b>ppend</b> ]
+<p>
+<p>
+<b><u>Description</u></b>
+<p>
+    <b>texdoc</b> provides tools to create a LaTeX document from within Stata in a
+    weaving fashion (on weaving with Stata also see Rising 2008). The basic
+    procedure is to first initialize the document using <b>texdoc init</b>, then
+    write the contents of the file, line by line, by repeated calls to <b>tex</b>,
+    and finally finish up typing <b>texdoc close</b>. Example:
+<p>
+        . texdoc init example1
+        (texdoc output file is example1.tex)
+<p>
+        . tex \documentclass{article}
+        
+        . tex \begin{document}
+        
+        . tex
+        
+        . tex Hello world.
+        
+        . tex
+        
+        . tex \end{document}
+        
+        . texdoc close
+        (texdoc output written to example1.tex)
+<p>
+        . type example1.tex
+        \documentclass{article}
+        \begin{document}
+<p>
+        Hello world.
+<p>
+        \end{document}
+        
+    <b>texdoc stlog</b> can be used to include Stata output in the LaTeX document.
+    This is useful if you want to produce a LaTeX document that contains
+    Stata examples such as a Stata Journal article or solutions to statistics
+    homework assignments. Example:
+<p>
+        . texdoc init example2
+        (texdoc output file is example2.tex)
+<p>
+        . tex \documentclass{article}
+        
+        . tex \usepackage{stata}
+        
+        . tex \begin{document}
+        
+        . tex
+        
+        . tex An example:
+        
+        . tex
+        
+        . texdoc stlog
+        (opening texdoc stlog example2_1)
+<p>
+        . sysuse auto
+        (1978 Automobile Data)
+<p>
+        . summarize price
+<p>
+            Variable |       Obs        Mean    Std. Dev.       Min        Max
+        -------------+--------------------------------------------------------
+               price |        74    6165.257    2949.496       3291      15906
+        
+        . texdoc stlog close
+        (texdoc stlog written to example2_1.log.tex)
+<p>
+        . tex
+        
+        . tex \end{document}
+        
+        . texdoc close
+        (texdoc output written to example2.tex)
+<p>
+        . type example2.tex
+        \documentclass{article}
+        \usepackage{stata}
+        \begin{document}
+<p>
+        An example:
+<p>
+        \begin{stlog}
+        \input{example2_1.log.tex}
+        \end{stlog}
+<p>
+        \end{document}
+        
+    As illustrated, <b>texdoc stlog</b> writes the Stata output to a separate file
+    and includes appropriate code in the LaTeX document to display the
+    contents of the file. Note that the <i>stata</i> LaTeX package providing the
+    <i>stlog</i> environment is to be loaded in the document preamble. <b>texdoc stlog</b>
+    provides an automatic name for the output file, but you can also specify
+    a custom name typing <b>texdoc stlog</b> <i>name</i> (<i>name</i> may contain a relative
+    path).
+<p>
+    <b>texdoc stlog oom</b> <i>cmdline</i> can be used after <b>texdoc stlog</b>. It suppresses
+    the output of the specified command and adds an "output omitted" tag
+    (\oom) in the Stata output file. <b>texdoc stlog cnp</b> is also for use after
+    <b>texdoc stlog</b> and adds a "continued on next page" tag (\cnp).
+<p>
+    As an alternative to the interactive usage in the examples above you can
+    also store the commands in a do-file and then execute the do-file using
+    <b>texdoc do</b>. The advantage of such a non-interactive approach is that you
+    can use the <b>/*tex</b> <i>...</i> <b>tex*/</b> delimiter structure to include blocks of
+    LaTeX code. A block may span multiple lines. However, make sure that the
+    opening tag is positioned at the beginning of a line and that the closing
+    tag is at the end of a line. For example, you could create a do-file
+    called "example2.do" containing
+<p>
+        texdoc init example2, replace
+<p>
+        /*tex
+        \documentclass{article}
+        \usepackage{stata}
+        \begin{document}
+<p>
+        An example:
+        tex*/
+<p>
+        texdoc stlog
+        sysuse auto
+        summarize price
+        texdoc stlog close
+<p>
+        /*tex \end{document} tex*/
+        texdoc close
+<p>
+    and then type
+<p>
+        . texdoc do example2.do
+<p>
+    to create the LaTeX file. Note that <b>texdoc init</b> and <b>texdoc close</b> can
+    either be specified in the do-file, as above, or as options to <b>texdoc do</b>.
+    That is, you could define the do-file simply as
+<p>
+        /*tex
+        \documentclass{article}
+        \usepackage{stata}
+        \begin{document}
+<p>
+        An example:
+        tex*/
+<p>
+        texdoc stlog
+        sysuse auto
+        summarize price
+        texdoc stlog close
+<p>
+        /*tex \end{document} tex*/
+<p>
+    and then type
+<p>
+        . texdoc do example2.do, init(example2) close replace
+<p>
+    <b>texdoc strip</b> can be used to remove all <b>texdoc</b> or <b>tex</b> commands and all
+    <b>/*tex</b> <i>...</i> <b>tex*/</b> blocks from a do-file. This is useful, for example, if
+    you want to create a cleared-out do-file from your solutions to hand out
+    to the students.
+<p>
+<p>
+<b><u>Dependencies</u></b>
+<p>
+    <b>texdoc</b> requires <b>sjlatex</b>. For more information and installation, type
+<p>
+        . net describe sjlatex, from(http://www.stata-journal.com/production)
+<p>
+<p>
+<b><u>Options</u></b>
+<p>
+    <b>replace</b> allows <b>texdoc init</b>, <b>texdoc do</b>, and <b>texdoc strip</b> to overwrite
+        existing files.
+<p>
+    <b>append</b> allows <b>texdoc init</b>, <b>texdoc do</b>, and <b>texdoc strip</b> to append to
+        existing files.
+<p>
+    <b>prefix(</b><i>prefix</i><b>)</b> can be used with <b>texdoc init</b> and <b>texdoc do</b> to specify a
+        custom prefix for the automatic names of the Stata output logs.
+        <i>prefix</i> may contain a relative path. This is useful if you want to
+        keep the Stata output files in a different folder than main LaTeX
+        file. The default prefix is <i>docname</i><b>_</b>.
+<p>
+    <b>init(</b><i>docname</i><b>)</b>, specified with <b>texdoc do</b>, initializes the LaTeX document.
+        Use this option if the do-file does not contain a <b>texdoc init</b>
+        command.
+<p>
+    <b>close</b>, specified with <b>texdoc do</b>, closes the LaTeX document. Use this
+        option if the do-file does not contain a <b>texdoc close</b> command.
+<p>
+    <b>savecmd(</b><i>newfile</i><b>)</b>, specified with <b>texdoc do</b>, saves a copy of the do-file
+        from which all <b>/*tex</b> <i>...</i> <b>tex*/</b> blocks have been removed.
+<p>
+<p>
+<b><u>Examples</u></b>
+<p>
+    Simple document:
+<p>
+        texdoc init example
+        tex \documentclass{article}
+        tex \begin{document}
+        tex
+        tex Hello world.
+        tex
+        tex \end{document}
+        texdoc close
+        
+<p>
+    Document with Stata output; output from single commands can be suppressed
+    using <b>texdoc stlog oom</b>:
+<p>
+        texdoc init example, replace
+        tex \documentclass{article}
+        tex \usepackage{stata}
+        tex \begin{document}
+        tex
+        tex The auto data:
+        tex
+<p>
+        texdoc stlog
+        sysuse auto
+        describe
+        texdoc stlog close
+<p>
+        tex
+        tex The output of the following regression model will be
+        tex suppressed and a note ``(output omitted)'' will be
+        tex printed:
+        tex
+<p>
+        texdoc stlog
+        generate mpgsq = mpg^2
+        texdoc stlog oom regress price weight mpg mpgsq foreign
+        test mpg mpgsq
+        texdoc stlog close
+<p>
+        tex
+        tex \end{document}
+        texdoc close
+        
+<p>
+    Keeping log files in a subdirectory (the subdirectory must exist):
+<p>
+        texdoc init example, replace prefix(log/example_)
+        tex \documentclass{article}
+        tex \usepackage{stata}
+        tex \begin{document}
+        tex
+        tex Some output:
+        tex
+<p>
+        texdoc stlog
+        sysuse auto
+        describe
+        texdoc stlog close
+<p>
+        tex
+        tex Some more output:
+        tex
+<p>
+        texdoc stlog
+        summarize
+        texdoc stlog close
+<p>
+        tex
+        tex \end{document}
+        texdoc close
+        
+<p>
+    Document including a Stata graph:
+<p>
+        texdoc init example, replace
+        tex \documentclass{article}
+        tex \usepackage{stata}
+        tex \usepackage{graphicx}
+        tex \begin{document}
+        tex
+        tex Here comes a scatterplot:
+<p>
+        sysuse auto
+        scatter price mpg
+        graph export plot1.eps
+<p>
+        tex
+        tex \includegraphics{plot1}
+        tex
+        tex \end{document}
+        texdoc close
+        
+<p>
+<b><u>Remarks</u></b>
+<p>
+    <i><u>Special characters</u></i>
+<p>
+    The <b>$</b> character is used for global macro expansion in Stata. If you use
+    the <b>tex</b> command to write LaTeX code containing <b>$</b> math delimiters, type <b>\$</b>
+    instead of <b>$</b>. For example, type
+<p>
+        . tex This is an inline equation: \$y = x^2\$
+<p>
+    An alternative is to abandon <b>$</b> and use <b>\(</b> and <b>\)</b> as math delimiters. That
+    is, type
+<p>
+        . tex This is an inline equation: \(y = x^2\)
+<p>
+    No such precautions are required if you use the <b>/*tex</b> <i>...</i> <b>tex*/</b> delimiter
+    structure, since in this case an exact copy of the specified code is
+    written as is to the LaTeX file.
+<p>
+    <i><u>Limitations</u></i>
+<p>
+    The algorithm used to process the <b>/*tex</b> <i>...</i> <b>tex*/</b> blocks is insensitive
+    to whether the block is surrounded by a <b>/*</b> <i>...</i> <b>*/</b> delimiter structure or
+    not. That is, a <b>/*tex</b> <i>...</i> <b>tex*/</b> block will be processed even if it is in
+    a portion of a do-file that is commented out by <b>/*</b> <i>...</i> <b>*/</b>.
+<p>
+    <b>texdoc stlog</b> closes the default log if it is on. Use a named log (see the
+    <b>name()</b> option in help <b>log</b>) to make a record of a Stata session in which
+    <b>texdoc stlog</b> is applied.
+<p>
+    <i><u>Global macros</u></i>
+<p>
+    <b>texdoc</b> maintains a set of global macros for communication between calls.
+    Do not change or erase these global macros while working with <b>texdoc</b>. The
+    macros are:
+<p>
+        <b>TeXdoc_docname</b>    name of LaTeX document (including path if
+                         specified)
+        <b>TeXdoc_path</b>       path of LaTeX document (if specified)
+        <b>TeXdoc_stprefix</b>   prefix for automatic Stata output log names
+        <b>TeXdoc_stcounter</b>  counter for automatic Stata output log names
+        <b>TeXdoc_stname</b>     name of current Stata output log
+<p>
+    <b>texdoc close</b> clears these macros.
+<p>
+<p>
+<b><u>References</u></b>
+<p>
+    Rising, Bill (2008). Reproducible Research: Weaving with Stata. Italian
+        Stata Users Group Meeting 2008. Available from
+        http://www.stata.com/meeting/italy08/rising_2008.pdf.
+<p>
+<p>
+<b><u>Author</u></b>
+<p>
+    Ben Jann, ETH Zurich, jannb@ethz.ch
+<p>
+    The <b>append</b> option has been suggested by Jorge Eduardo Pérez Pérez.
+<p>
+    Thanks for citing this software as follows:
+<p>
+        Jann, B. (2009). texdoc: Stata module to create a LaTeX document
+        including Stata output. Available from
+        http://ideas.repec.org/c/boc/bocode/s457021.html.
+<p>
+<p>
+<b><u>Also see</u></b>
+<p>
+</pre>

@@ -1,0 +1,129 @@
+<pre>
+<b>help mata rpnfcn()</b>
+-------------------------------------------------------------------------------
+<p>
+<b><u>Title</u></b>
+<p>
+    <b>rpnfcn() -- A generic function evaluator based on Reverse Polish Notation</b>
+    <b>(RPN)</b>
+<p>
+<p>
+<b><u>Syntax</u></b>
+<p>
+        <i>numeric matrix</i> <b>rpnfcn(</b><i>pointer matrix A</i><b>)</b>
+<p>
+<p>
+<b><u>Description</u></b>
+<p>
+    <b>mf_rpnfcn(</b><i>A</i><b>)</b> returns the result of sequentially evaluating the commands
+    given in the rows of matrix <i>A</i>.
+<p>
+    The fundamental commands allowed in <i>A</i> falls in the following categories
+<p>
+        Stack manipulation         Commands that enters matrices into the
+                                   stack, copies and interchange stack
+                                   elements.
+<p>
+        Binary operators           The four basic arithmetic operations of
+                                   addition, subtraction, multiplication, and
+                                   division.
+<p>
+        Single element functions   Distribution functions which are executed
+                                   on the current top element of the stack
+                                   and replace it with the result.
+<p>
+        Numerical integration      Functions used for numerical integration
+                                   based on Monte Carlo with stratified,
+                                   antithetic sampling.
+<p>
+<p>
+<p>
+<b><u>Remarks</u></b>
+<p>
+    Each row of <i>A</i> should consist of two elements, first a pointer to a
+    function, and second either a pointer to an appropriate argument matrix
+    or a null pointer. Upon completion of evaluation of all rows in <i>A</i>, only
+    one matrix should be present in the internal stack set up by <b>rpnfcn()</b>,
+    which is then returned as the result of the evaluation.
+<p>
+    Note, that it is the users responsibility that matrices are conformable,
+    as most procedures internally use the Mata colon operators, see Mata
+    colon operators. The lack of check on matrix dimensions is considered a
+    feature, as it for example allows specifying a (1 x 2) matrix as
+    parameter vector for a function which then uses this pair of parameter
+    values for evaluating all elements of a (n x m) matrix in the stack.
+    Equally well, a (n x 2) parameter matrix can be supplied to the same
+    function, now with the implication that the pair of values in each row of
+    the parameter matrix is applied to all elements of the corresponding row
+    in the (n x m) matrix in the stack.
+<p>
+<p>
+<b><u>Example</u></b>
+<p>
+    Consider the density for the minimum of two Weibull distributed random
+    variables at <i>x</i> with the two parameter vectors <i>theta1</i> and <i>theta2</i>. The
+    following code defines and evaluates the algorithm matrix corresponding
+    to this.
+<p>
+<p>
+. mata
+------------------------------------------------- mata (type <b>end</b> to exit) -----
+: x = (NULL)
+<p>
+: theta1 = (NULL)
+<p>
+: theta2 = (NULL)
+<p>
+: fweimin = (&amp;tostack(),  &amp;x \
+&gt;            &amp;enter(),    NULL \
+&gt;            &amp;enter(),    NULL \
+&gt;            &amp;fwei(),     &amp;theta1 \
+&gt;            &amp;swapst(),   NULL \
+&gt;            &amp;Swei(),     &amp;theta2 \
+&gt;            &amp;product(),  NULL \
+&gt;            &amp;rotst(),    NULL \
+&gt;            &amp;enter(),    NULL \
+&gt;            &amp;Swei(),     &amp;theta1 \
+&gt;            &amp;swapst(),   NULL \
+&gt;            &amp;fwei(),     &amp;theta2 \
+&gt;            &amp;product(),  NULL \
+&gt;            &amp;add(),      NULL
+&gt;            )
+<p>
+: x = (0, 2, 8 \
+&gt;      .7, 1, 6)
+<p>
+: theta1 = (-2, 2)
+<p>
+: theta2 = (0, .3)
+<p>
+: rpnfcn(fweimin)
+                 1             2             3
+    +-------------------------------------------+
+  1 |            0   .1344860648   4.74373e-08  |
+  2 |  .6423218484   .4965861523   .0000298698  |
+    +-------------------------------------------+
+<p>
+: end
+-------------------------------------------------------------------------------
+<p>
+<p>
+<b><u>Source code</u></b>
+<p>
+    rpnfcn.mata
+<p>
+<b><u>Author</u></b>
+<p>
+    Henrik Støvring, Research Unit of General Practice, University of
+    Southern Denmark.  Please email hstovring@health.sdu.dk if you have
+    comments, questions or observe any problems.
+<p>
+<p>
+<b><u>Also see</u></b>
+<p>
+    Manual:  <b>[M] Mata Reference Manual</b>
+<p>
+    Online:  help for <b>[M-0] mata</b>, <b>RPN stack manipulation functions</b>, <b>RPN</b>
+             <b>binary operators</b>, <b>RPN distribution functions</b>, <b>RPN functions for</b>
+             <b>integration</b>
+</pre>

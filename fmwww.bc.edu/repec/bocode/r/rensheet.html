@@ -1,0 +1,52 @@
+<pre>
+-------------------------------------------------------------------------------
+help for <b>rensheet</b>
+-------------------------------------------------------------------------------
+<p>
+<b><u>Renaming and relabeling variables and values in a spreadsheet format</u></b>
+<p>
+<b><u>Syntax</u></b>
+<p>
+      <b>rensheet</b> [<i>varlist</i>] using <i>filename</i> [<b>,</b> <b><u>l</u></b><b>abel</b> <b><u>v</u></b><b>al(</b><i>varlist</i><b>)</b> <b><u>d</u></b><b>o</b> <b><u>r</u></b><b>un</b> { <b><u>a</u></b><b>ppend</b>
+                | <b>replace</b> }]
+<p>
+    <i>options</i>               Description
+    -------------------------------------------------------------------------
+      <b><u>d</u></b><b>o</b>                  execute do file immediately
+      <b><u>r</u></b><b>un</b>                 execute do file immediately and suppress screen
+                            output
+      <b><u>l</u></b><b>abel</b>               edit variable labels as well as variable names
+      <b><u>v</u></b><b>al</b>                 edit value labels for specified variables
+      <b><u>a</u></b><b>ppend</b>              append generated code to existing do file
+      <b>replace</b>             replace existing do file
+    -------------------------------------------------------------------------
+<p>
+<b><u>Description</u></b>
+<p>
+<b>rensheet</b> facilitates renaming, and optionally relabeling, variables (and
+optionally their values) by opening an instance of Stata's Data Editor, a
+spreadsheet format where new values may be typed over old.  A filename is
+specified via <b>using</b> where the do-file that implements all changes is to be
+saved.  The resulting file can also be executed immediately via the <b>do</b> or <b>run</b>
+options.
+<p>
+<b>rensheet</b> typed without <i>varlist</i> opens a spreadsheet with all variable names on
+the data in memory, any of which can be selected and changed.  The option <b>label</b>
+allows editing variable labels in addition to variable names. The option <b>val</b>
+allows editing value labels for selected variables as well.
+<p>
+<b><u>Author</u></b>
+<p>
+    Austin Nichols
+    Urban Institute
+    Washington, DC, USA
+    austinnichols@gmail.com
+<p>
+<b><u>Also see</u></b>
+<p>
+ Manual:  <b>[U] 11.3 </b> Naming conventions<b> and [U] 12.6 </b> Dataset, variable, and
+              value labels
+<p>
+ On-line: edit, label, labelbook, rename,  labutil (on SSC)
+<p>
+</pre>

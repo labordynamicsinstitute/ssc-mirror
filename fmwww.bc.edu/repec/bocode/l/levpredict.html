@@ -1,0 +1,104 @@
+<pre>
+-------------------------------------------------------------------------------
+help for <b>levpredict</b>
+-------------------------------------------------------------------------------
+<p>
+<b><u>Compute level predictions from log-dependent-variable regression reducing retra</u></b>
+<b><u>&gt; nsformation bias</u></b>
+<p>
+        <b>levpredict</b><i> newvarname</i> [<b>,</b> <b>Duan</b> <b>PRint</b>]
+<p>
+<b>levpredict</b> is a post-estimation command for use after a linear regression model
+with a logarithmic dependent variable has been estimated.  It generates
+predictions of the levels of the dependent variable for the estimation sample.
+These predictions reduce the retransformation bias that arises when predictions
+of the log dependent variable are exponentiated.
+<p>
+<b><u>Description</u></b>
+<p>
+Cameron and Trivedi (2009), in section 3.6.3, "Prediction in logs: The
+retransformation problem" point out that if a regression model with a
+logarithmic dependent variable is estimated, predictions of the underlying
+level variable will be subject to retransformation bias.  That is, <b>predict</b> will
+calculate E[ln <i>y</i>|<b>x</b>], but we wish to calculate E[<i>y</i>|<b>x</b>]. Exponentiating the
+predicted values from the log model will not provide unbiased estimates of
+E[<i>y</i>|<b>x</b>], as E[<i>y_i</i>|<b>x</b>_i] = exp(<b>x</b>'beta) E[exp(u_i)], and the second term will be
+ignored. If u~N[0,sigma^2], E[exp(u)] = exp(0.5 sigma^2).  That quantity may be
+estimated by replacing sigma^2 with its consistent estimate s^2.
+Alternatively, Duan (1983) shows that for i.i.d. errors (which need not be
+Normal), E[exp(u)] = 1/n sum(exp(e_i)), where e_i are the residuals.
+<p>
+<b>levpredict</b> computes the predictions of the levels of the dependent variable
+from a prior model estimated with the log of the dependent variable. It assumes
+&gt;  that
+you have performed that estimation with some regression-type estimator, and tha
+&gt; t the 
+dependent variable of the prior model is indeed the log of the variable of inte
+&gt; rest.
+By default, <b>levpredict</b> computes the former formula, assuming normally distribut
+&gt; ed 
+errors, but with the <b>Duan</b> option the latter formula may be used.
+<p>
+It should be kept in mind that an alternative approach to this problem would
+be to avoid OLS estimation and use <b>glm</b> or <b>poisson</b> regression to 
+estimate the original model instead. The approach implemented by <b>levpredict</b> wil
+&gt; l 
+improve the mean prediction, but does not ensure that predictions for individua
+&gt; l cases 
+are particularly good.
+See Austin Nichols' presentation at the BOS'10 Stata Conference. 
+<p>
+<b><u>Options</u></b>
+<p>
+<b>Duan</b> specifies that Duan's formula should be used.
+<p>
+<b>PRint</b> specifies that printed output should be produced. In this case, estimates
+    of the mean of the exponentiated predicted values and its mean bias are
+    displayed.
+<p>
+<p>
+<b><u>Saved results</u></b>
+<p>
+<b>levpredict</b> does not save any results at this time. Its primary purpose is to
+calculate <i>newvarname</i>.  See <b>return list</b>.
+<p>
+<p>
+<b><u>Examples</u></b>
+<p>
+        . use http://fmwww.bc.edu/ec-p/data/mus/mus03data
+<p>
+        . reg ltotexp suppins phylim actlim totchr age female income
+<p>
+        . levpredict tenorm, print
+<p>
+        . levpredict teduan, duan print
+<p>
+        . su totexp ltotexp tenorm teduan if totexp &gt; 0
+<p>
+<p>
+<p>
+<b><u>References</u></b>
+<p>
+Cameron, A.C. Trivedi, P., 2009. Microeconometrics using Stata. Stata Press.
+<p>
+Duan, N., 1983. Smearing estimate: A nonparametric retransformation method.
+    Journal of the American Statistical Association 78:605-610.
+<p>
+Nichols, A., 2010. Regression for nonnegative skewed dependent variables.
+    BOS'10 Stata Conference. Accessible from
+    http://repec.org/bost10/nichols_boston2010.pdf
+<p>
+<b><u>Acknowledgements</u></b>
+<p>
+Development of this routine was stimulated by Cameron and Trivedi's discussion,
+&gt;  from
+which the computational logic and example were derived. 
+I thank Maarten Buis for helpful comments.
+<p>
+<b><u>Author</u></b>
+<p>
+Christopher F Baum, Boston College, USA
+baum@bc.edu
+<p>
+<p>
+</pre>

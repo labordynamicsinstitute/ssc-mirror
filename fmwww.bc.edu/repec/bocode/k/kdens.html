@@ -1,0 +1,502 @@
+<pre>
+<b>help kdens</b>
+-------------------------------------------------------------------------------
+<p>
+<b><u>Title</u></b>
+<p>
+    <b>kdens</b> -- Univariate kernel density estimation
+<p>
+<p>
+<b><u>Syntax</u></b>
+<p>
+        <b>kdens</b> <i>varname</i> [<i>if</i>] [<i>in</i>] [<i>weight</i>] [<b>,</b> <i>kdens_options</i> <i>graph_options</i> ]
+<p>
+        <b>_kdens</b> <i>varname</i> [<i>if</i>] [<i>in</i>] [<i>weight</i>] <b>,</b> <b><u>g</u></b><b>enerate(</b><i>d </i>[<i>x</i>]<b>)</b> [ <i>kdens_options</i> ]
+<p>
+        <b><u>tw</u></b><b>oway</b> <b>kdens</b> <i>varname</i> [<i>if</i>] [<i>in</i>] [<i>weight</i>] [<b>,</b> <i>twoway_kdens_options</i> ]
+<p>
+<p>
+<a name="1"></a>    <i>kdens_options</i>              Description
+    -------------------------------------------------------------------------
+    Main
+      <b><u>k</u></b><b>ernel(</b><i>kernel</i><b>)</b>           type of kernel function, where <i>kernel</i> is
+                                 <b><u>e</u></b><b>panechnikov</b>, <b>epan2</b> (the default), <b><u>b</u></b><b>iweight</b>,
+                                 <b><u>triw</u></b><b>eight</b>, <b><u>c</u></b><b>osine</b>, <b><u>g</u></b><b>aussian</b>, <b><u>p</u></b><b>arzen</b>,
+                                 <b><u>r</u></b><b>ectangle</b> or <b><u>t</u></b><b>riangle</b>.
+      <b>exact</b>                    use the exact estimator
+      <b>n(</b><i>#</i><b>)</b>                     estimate density using <i>#</i> points; default is
+                                 <b>n(512)</b>
+      <b>n2(</b><i>#</i><b>)</b>                    interpolate density estimate to <i>#</i> points
+    * <b><u>g</u></b><b>enerate(</b><i>d </i>[<i>x</i>]<b>)</b>          store the density estimate in <i>newvar</i> <i>d</i> and the
+                                 estimation points in <i>newvar</i> <i>x</i>
+      <b>at(</b><i>var_x</i><b>)</b>                estimate density at the values in <i>var_x</i>
+      <b><u>ra</u></b><b>nge(</b><i># #</i><b>)</b>               range of estimation points, minimum and
+                                 maximum
+      <b><u>r</u></b><b>eplace</b>                  overwrite existing variables
+<p>
+    Bandwidth
+      <b>bw(</b><i>#</i>|<i>type</i><b>)</b>               set bandwidth to <i>#</i>, <i>#</i> &gt; 0, or specify
+                                 automatic bandwidth selector where <i>type</i> is
+                                 <b><u>s</u></b><b>ilverman</b> (the default), <b><u>n</u></b><b>ormalscale</b>,
+                                 <b><u>o</u></b><b>versmoothed</b>, <b><u>sj</u></b><b>pi</b>, or <b><u>d</u></b><b>pi</b>[<b>(</b><i>#</i><b>)</b>]
+      <b><u>adj</u></b><b>ust(</b><i>#</i><b>)</b>                scale bandwidth by <i>#</i>, <i>#</i> &gt; 0
+      <b><u>a</u></b><b>daptive</b>[<b>(</b><i>#</i><b>)</b>]            use the adaptive kernel density estimator
+<p>
+    Boundary correction
+      <b>ll(</b><i>#</i><b>)</b>                    value of lower boundary
+      <b>ul(</b><i>#</i><b>)</b>                    value of upper boundary
+      <b><u>refl</u></b><b>ection</b> | <b>lc</b>          use the reflection method or the linear
+                                 combination method for boundary correction;
+                                 only one of <b>reflection</b> and <b>lc</b> is allowed;
+                                 the default method is renormalization
+<p>
+    Confidence intervals
+      <b>ci</b>[<b>(</b><i>stub</i>|<i>lo up</i><b>)</b>]         draw (or store) pointwise confidence intervals
+      <b>vce(</b><i>vcetype</i><b>)</b>             <i>vcetype</i> may be <b><u>boot</u></b><b>strap</b> or <b><u>jack</u></b><b>knife</b> plus
+                                 options; see <b>vce()</b> below for details
+      <b><u>us</u></b><b>mooth</b>[<b>(</b><i>#</i><b>)</b>]             apply undersmoothing for confidence interval
+                                 estimation
+      <b><u>var</u></b><b>iance(</b><i>V</i><b>)</b>              store variance estimate in <i>newvar</i> <i>V</i>
+      <b><u>l</u></b><b>evel(</b><i>#</i><b>)</b>                 set confidence level; default is <b>level(95)</b>
+    -------------------------------------------------------------------------
+    * <b>generate()</b> is required for <b>_kdens</b>
+<p>
+<p>
+<a name="2"></a>    <i>graph_options</i>              Description
+    -------------------------------------------------------------------------
+    Main
+      <b><u>nogr</u></b><b>aph</b>                  suppress graph
+<p>
+    Kernel plot
+      <i>cline_options</i>            affect rendition of the plotted kernel density
+                                 estimate
+      <b>ciopts(</b><i>area_options</i><b>)</b>     affect rendition of the plotted confidence
+                                 interval
+<p>
+    Density plots
+      <b><u>hist</u></b><b>ogram</b>[<b>(</b><i>#</i><b>)</b>]           add a histogram to the graph; <i>#</i> specifies the
+                                 number of bars
+      <b>histopts(</b><i>twoway_hist</i><b>)</b>    affect rendition of the histogram
+      <b><u>nor</u></b><b>mal</b>                   add normal density to the graph
+      <b>normopts(</b><i>cline_options</i><b>)</b>  affect rendition of normal density
+      <b><u>stu</u></b><b>dent(</b><i>#</i><b>)</b>               add Student's t density with <i>#</i> degrees of
+                                 freedom to the graph
+      <b>stopts(</b><i>cline_options</i><b>)</b>    affect rendition of the Student's t density
+<p>
+    Add plot
+      <b>addplot(</b><i>plot</i><b>)</b>            add other plots to the generated graph
+<p>
+    Y-Axis, X-Axis, Title, Caption, Legend, Overall
+      <i>twoway_options</i>           any options other than <b>by()</b> documented in
+                                 <b>[G] </b><i>twoway_options</i>
+    -------------------------------------------------------------------------
+<p>
+<p>
+<a name="3"></a>    <i>twoway_kdens_options</i>       Description
+    -------------------------------------------------------------------------
+      <b><u>k</u></b><b>ernel(</b><i>kernel</i><b>)</b>           type of kernel function, as specified above
+      <b>exact</b>                    use the exact estimator
+      <b>n(</b><i>#</i><b>)</b>                     estimate density using <i>#</i> points; default is
+                                 <b>n(512)</b>
+      <b>n2(</b><i>#</i><b>)</b>                    interpolate density estimate to <i>#</i> points
+      <b>at(</b><i>var_x</i><b>)</b>                estimate density at the values in <i>var_x</i>
+      <b><u>ra</u></b><b>nge(</b><i># #</i><b>)</b>               range of estimation points, minimum and
+                                 maximum
+      <b>bw(</b><i>#</i>|<i>type</i><b>)</b>               set bandwidth to <i>#</i> or specify automatic
+                                 bandwidth selector where <i>type</i> is <b><u>s</u></b><b>ilverman</b>
+                                 (the default), <b><u>n</u></b><b>ormalscale</b>, <b><u>o</u></b><b>versmoothed</b>,
+                                 <b><u>sj</u></b><b>pi</b>, or <b><u>d</u></b><b>pi</b>[<b>(</b><i>#</i><b>)</b>]
+      <b><u>adj</u></b><b>ust(</b><i>#</i><b>)</b>                scale bandwidth by <i>#</i>, <i>#</i> &gt; 0
+      <b><u>a</u></b><b>daptive</b>[<b>(</b><i>#</i><b>)</b>]            use the adaptive kernel density estimator
+<p>
+      <b>ll(</b><i>#</i><b>)</b>                    value of lower boundary
+      <b>ul(</b><i>#</i><b>)</b>                    value of upper boundary
+      <b><u>refl</u></b><b>ection</b> | <b>lc</b>          use the reflection method or the linear
+                                 combination method for boundary correction;
+                                 the default method is renormalization
+<p>
+      <b><u>hor</u></b><b>izontal</b>               graph horizontally
+<p>
+      <i>cline_options</i>            change the look of the line
+<p>
+      <i>axis_choice_options</i>      associate plot with alternative axis
+<p>
+      <i>twoway_options</i>           any options documented in <b>[G] </b><i>twoway_options</i>
+    -------------------------------------------------------------------------
+<p>
+    <b>fweight</b>s, <b>aweight</b>s, and <b>pweight</b>s are allowed; see weight.
+<p>
+<p>
+<b><u>Description</u></b>
+<p>
+    <b>kdens</b> produces univariate kernel density estimates and graphs the result.
+    <b>kdens</b> supplements official Stata's <b>kdensity</b> and also incorporates and
+    extends some of the capabilities of various previous user add-ons such as
+    <b>adgakern</b> (STB-16 snp6), <b>bandw</b> (STB-27 snp6_2), and <b>varwiker</b> (SJ 3-2
+    st0036) by Salgado-Ugarte et al., <b>akdensity</b> by Van Kerm (SJ 3-2 st0037),
+    and <b>asciker</b>/<b>bsciker</b> by Fiorio (SJ 4-2 st0064).
+<p>
+    Main features are:
+<p>
+         o  <b>kdens</b> is fast. It employs an approximation algorithm based on
+            linearly binned data over a regular grid of estimation points.
+            The algorithm produces very accurate results as long as the grid
+            size is not too small (see the <b>n()</b> option). Alternatively,
+            specify the <b>exact</b> option to use the slow exact estimator.
+<p>
+         o  Several automatic bandwidth selectors including the
+            Sheather-Jones plug-in estimate are available. See the <b>bw()</b>
+            option. In addition, adaptive (variable bandwidth) kernel density
+            estimation is supported (see the <b>adaptive</b> option).
+<p>
+         o  Optionally, <b>kdens</b> computes pointwise confidence intervals (see
+            the <b>ci</b> and <b>usmooth</b> options), either using asymptotic formulas or
+            replication techniques (see the <b>vce()</b> option).
+<p>
+         o  Boundary correction for variables with bounded domain is
+            supported. See the <b>ll()</b> and <b>ul()</b> options.
+<p>
+    <b>_kdens</b> is the engine used by <b>kdens</b>. The heavy lifting is done in Mata.
+    See <b>mata kdens()</b>.
+<p>
+<p>
+<b><u>Dependencies</u></b>
+<p>
+    <b>kdens</b> requires the <b>moremata</b> package. Type
+<p>
+        . ssc describe moremata
+<p>
+<p>
+<b><u>Options (density estimation)</u></b>
+<p>
+        +------+
+    ----+ Main +-------------------------------------------------------------
+<p>
+    <b>kernel(</b><i>kernel</i><b>)</b> specifies the kernel function. <i>kernel</i> may be <b>epanechnikov</b>
+        (Epanechnikov kernel function), <b>epan2</b> (alternative Epanechnikov
+        kernel function; the default), <b>biweight</b> (biweight kernel function),
+        <b>triweight</b> (triweight kernel function), <b>cosine</b> (cosine trace),
+        <b>gaussian</b> (Gaussian kernel function), <b>parzen</b> (Parzen kernel function),
+        <b>rectangle</b> (rectangle kernel function) or <b>triangle</b> (triangle kernel
+        function). Note that usually the different kernel functions produce
+        very similar results.  By default, <b>epan2</b>, specifying the Epanechnikov
+        kernel, is used.
+<p>
+    <b>exact</b> causes the exact kernel density estimator to be used instead of the
+        binned approximation estimator. The exact estimator can be slow in
+        large datasets.
+<p>
+    <b>n(</b><i>#</i><b>)</b>, where <i>#</i> &gt; 2, specifies the "evaluation grid size", i.e. the number
+        of (equally spaced) points at which the density estimate be
+        evaluated. The default is grid size 512. This should be enough for
+        the binned approximation estimator to be accurate in most situations
+        (see Hall and Wand 1996). Note that <b>n()</b> also sets the number of
+        estimation points for the <b>sjpi</b> and <b>dpi</b> bandwidth selectors (see the
+        <b>bw()</b> option below).
+<p>
+    <b>n2(</b><i>#</i><b>)</b>, where <i>#</i> must be equal to the value of <b>n()</b> or smaller, specifies
+        the "output grid size". If <b>n2()</b> is equal to <b>n()</b> (the default), then
+        the "evaluation" grid and the "output" grid coincide and the density
+        estimate is returned as is.  However, if <b>n2()</b> is smaller than <b>n()</b>,
+        the density estimate will be linearly interpolated from the
+        "evaluation" grid to the "output" grid. Note that <b>n2()</b> will be reset
+        to <b>_N</b>, the number of observations in the dataset, if <b>_N</b> is smaller
+        than <b>n2()</b>. <b>n2()</b> has no effect if <b>at()</b> is specified.
+<p>
+    <b>generate(</b><i>d </i>[<i>x</i>]<b>)</b> stores the results of the estimation. <i>newvar</i> <i>d</i> will
+        contain the density estimate. <i>newvar</i> <i>x</i> will contain the points at
+        which the density is evaluated. The results are written to the to the
+        first <b>n()</b> observations in the data set in ascending order of
+        evaluation points. Alternatively, if <b>at(</b><i>var_x</i><b>)</b> is specified, the
+        density estimate is written to the observations identified by <i>var_x</i>.
+        <i>x</i> must be omitted in this case.
+<p>
+    <b>at(</b><i>var_x</i><b>)</b> specifies a variable that contains the values at which the
+        density be estimated. This option allows you more easily to obtain
+        density estimates for different variables or different subsamples of
+        a variable and then overlay the estimated densities for comparison.
+        With the binned approximation estimator, the density is first
+        estimated using an equally-spaced grid of evaluation points (see the
+        <b>n()</b> option) and is then linearly interpolated to the values of <i>var_x</i>.
+        With the exact estimator, the density is directly estimated at the
+        values of <i>var_x</i> (unless the <b>adaptive</b> option is specified).
+<p>
+    <b>range(</b><i># #</i><b>)</b> specifies the range of values (minimum and maximum) at which
+        the density be estimated. The default range of the evaluation grid is
+        defined as [min(x)-h*tau, max(x)+h*tau], where h is the bandwidth and
+        tau is the halfwidth of the kernel support (in the case of the
+        gaussian kernel, tau is set to 3). This allows the density estimate
+        to become (approximately) zero on both sides of the observed data.
+        Specifying <b>ll(</b><i>#</i><b>)</b>, <b>ul(</b><i>#</i><b>)</b>, or <b>at(</b><i>var_x</i><b>)</b> may also change the evaluation
+        range.
+<p>
+        As with the <b>at()</b> option, <b>range()</b> only affects the "output grid".
+        Internally, the density will be estimated over the full data range.
+        An exception is again the exact estimator (unless the <b>adaptive</b> option
+        is specified).
+<p>
+    <b>replace</b> permits <b>kdens</b> to overwrite existing variables.
+<p>
+<p>
+        +-----------+
+    ----+ Bandwidth +--------------------------------------------------------
+<p>
+    <b>bw(</b><i>#</i>|<i>type</i><b>)</b> may be used to determine the bandwidth of the kernel, the
+        halfwidth of the density window around each evaluation point.  <b>bw(</b><i>#</i><b>)</b>,
+        where # &gt; 0, sets the bandwidth to #. Alternatively, specify <b>bw(</b><i>type</i><b>)</b>
+        to choose the automatic bandwidth selector determining the "optimal"
+        bandwidth. Choices are <b>silverman</b> (optimal of Silverman), <b>normalscale</b>
+        (normal scale rule), <b>oversmoothed</b> (oversmoothed rule), <b>sjpi</b>
+        (Sheather-Jones plug-in estimate) and <b>dpi</b>[<b>(</b><i>#</i><b>)</b>] (a variant of the
+        Sheather-Jones plug-in estimate called the direct plug-in bandwidth
+        estimate). The <i>#</i> in <b>dpi()</b> specifies the desired number of stages of
+        functional estimation and should be a nonnegative integer (the
+        default is 2; <b>dpi(0)</b> is equivalent to <b>normalscale</b>). <b>bw(silverman)</b> is
+        the default.
+<p>
+        Note that automatic bandwidth estimates are rescaled depending on the
+        canonical bandwidth of the kernel function. A consequence of this is
+        that density estimates from the different kernel functions are
+        directly comparable. For example, identical results are computed for
+        <b>epanechnikov</b> and <b>epan2</b> (apart from round-off error), because the two
+        kernel functions are just scaled versions of one another. No
+        bandwidth rescaling is applied if a specific bandwidth value, i.e.
+        <b>bw(</b><i>#</i><b>)</b>, is specified.
+<p>
+        Furthermore, note that <b>kdens</b> imposes a minimum bandwidth. Let d
+        denote the distance between two consecutive points on the evaluation
+        grid. The minimum bandwidth then is h_min = d/2 * cb_k / cb_r, where
+        cb_k is the canonical bandwidth of the applied kernel and cb_r is the
+        canonical bandwidth of the rectangular kernel. If the bandwidth is
+        smaller than h_min, it is reset to h_min.
+<p>
+    <b>adjust(</b><i>#</i><b>)</b>, where <i>#</i> &gt; 0, causes the bandwidth to be multiplied by #.
+        Default is <b>adjust(1)</b>.
+<p>
+    <b>adaptive</b>[<b>(</b><i>#</i><b>)</b>] specifies that the adaptive kernel density estimator be
+        applied. The adaptive estimator has less bias than the ordinary
+        estimator. <i>#</i> is the desired number of iterations used to determine
+        the local bandwidth factors. The default is 1 (additional iterations
+        usually do not significantly change the density estimate).
+<p>
+<p>
+        +---------------------+
+    ----+ Boundary correction +----------------------------------------------
+<p>
+    <b>ll(</b><i>#</i><b>)</b> and <b>ul(</b><i>#</i><b>)</b> specify the lower and upper boundary of the domain of the
+        variable. Note that <b>ll(</b><i>#</i><b>)</b> must be lower than or equal to the minimum
+        observed value and <b>ul(</b><i>#</i><b>)</b> must be larger than or equal to the maximum
+        observed value. The default method used by <b>kdens</b> for density
+        estimation near the boundaries is the renormalization method.
+<p>
+    <b>reflection</b> causes the reflection technique to be used for boundary
+        correction instead of the renormalization method.
+<p>
+    <b>lc</b> causes the linear combination technique to be used for boundary
+        correction instead of the renormalization method.
+<p>
+        Only one of <b>reflection</b> and <b>lc</b> is allowed. The renormalization method
+        and the reflection method have comparable properties with respect to
+        bias and variance. However, note that the reflection method implies
+        the slope of the density to be zero at the boundary. The linear
+        combination technique is better than the other methods in terms of
+        bias, but has larger variance (and the density estimate may get
+        negative in some situations).
+<p>
+<p>
+        +----------------------+
+    ----+ Confidence intervals +---------------------------------------------
+<p>
+    <b>ci</b>[<b>(</b><i>stub</i>|<i>lo up</i><b>)</b>] plots pointwise confidence intervals. If <b>ci(</b><i>stub</i><b>)</b> is
+        specified, the results are stored in <i>newvar</i> <i>stub</i><b>_lo</b> and <i>newvar</i>
+        <i>stub</i><b>_up</b>. Alternatively, specify <b>ci(</b><i>lo up</i><b>)</b> to save the results in 
+        <i>newvar</i> <i>lo</i> and <i>newvar</i> <i>up</i>. If <b>ci</b> is specified without arguments, but
+        <b>generate(</b><i>d </i>[<i>x</i>]<b>)</b> is specified, the confidence intervals are stored in 
+        <i>newvar</i> <i>d</i><b>_lo</b> and <i>newvar</i> <i>d</i><b>_up</b>.
+<p>
+<a name="vce"></a>    <b>vce(</b><i>vcetype</i> [<b>,</b> <i>vceopts</i>]<b>)</b> indicates that the confidence intervals be
+        estimated using replication techniques.  If <b>vce()</b> is omitted,
+        analytic formulas are used to compute the confidence intervals.
+        <i>vcetype</i> may be <b>bootstrap</b> or <b>jackknife</b>. <b>fweight</b>s and <b>aweight</b>s are not
+        allowed if <b>vce()</b> is specified.
+<p>
+        Common <i>vceopts</i>:
+<p>
+        <b><u>str</u></b><b>ata(</b><i>varname</i><b>)</b> specifies a variable that identifies strata. If this
+            option is specified, bootstrap samples are taken independently
+            within each stratum / stratified jackknife estimates are
+            produced.
+<p>
+        <b><u>cl</u></b><b>uster(</b><i>varname</i><b>)</b> specifies a variable that identifies sample
+            clusters. If this option is specified, the sample drawn during
+            each bootstrap replication is a sample of clusters / clusters are
+            left out for jackknife estimation.
+<p>
+        <b><u>nod</u></b><b>ots</b> suppresses display of the replication dots. By default, a
+            single dot character is displayed for each successful
+            replication.  A single red 'x' is displayed, if a replication is
+            not successful.
+<p>
+        <b>mse</b> indicates that the variances be computed using deviations of the
+            replicates from the density estimate based on the entire dataset.
+            By default, variances are computed using deviations from the
+            average of the replicates.
+<p>
+        Additional <i>vceopts</i> for <b>vce(jackknife)</b>:
+<p>
+        <b><u>sub</u></b><b>pop(</b><i>varname</i><b>)</b> specifies that estimates be computed for the single
+            subpopulation for which <i>varname</i>!=0.
+<p>
+        <b>fpc(</b><i>varname</i><b>)</b> requests a finite population correction for the variance
+            estimates. The values in <i>varname</i> are interpreted as stratum
+            sampling rates. The values must be in [0,1] and are assumed to be
+            constant within each stratum.
+<p>
+        Additional <i>vceopts</i> for <b>vce(bootstrap)</b>:
+<p>
+        <b><u>r</u></b><b>eps(</b><i>#</i><b>)</b> specifies the number of bootstrap replications to be
+            performed.  The default is 50. More replications are usually
+            required to get reliable results.
+<p>
+        <b><u>n</u></b><b>ormal</b> computes normal approximation confidence intervals.
+<p>
+        <b><u>p</u></b><b>ercentile</b> computes percentile confidence intervals.
+<p>
+        <b>bc</b> computes bias-corrected confidence intervals.
+<p>
+        <b>bca</b> computes bias-corrected and accelerated confidence intervals.
+<p>
+        <b>t</b> computes percentile-t confidence intervals. The default analytic
+            formulas are used for standard error estimation within the
+            bootstrap replicates.
+<p>
+        Only one of <b>normal</b>, <b>percentile</b>, <b>bc</b>, <b>bca</b>, and <b>t</b> is allowed. See <b>[R]</b>
+        <b>bootstrap</b> for methodical details. For the percentile-t method see
+        help for <b>mm_bs()</b>.
+<p>
+    <b>usmooth(</b><i>#</i><b>)</b> specifies that confidence intervals be based on an
+        undersmoothed density estimate in order to reduce the bias. <i>#</i>
+        specifies the degree of undersmoothing and should be within .2 and 1.
+        The default value is 1/4 = .25. Higher values result in stronger
+        undersmoothing. A value of 1/5 = .2 results in no undersmoothing.
+        (See Fiorio 2004.)
+<p>
+    <b>variance(</b><i>V</i><b>)</b> specifies that the pointwise variance be stored in <i>newvar</i> <i>V</i>.
+<p>
+    <b>level(</b><i>#</i><b>)</b> specifies the confidence level, as a percentage, for confidence
+        intervals. The default is <b>level(95)</b> or as set by <b>set level</b>.
+<p>
+<p>
+<b><u>Options (graph)</u></b>
+<p>
+        +------+
+    ----+ Main +-------------------------------------------------------------
+<p>
+    <b>nograph</b> suppresses the graph. Instead of specifying <b>nograph</b> you might as
+        well use <b>_kdens</b> directly.
+<p>
+        +-------------+
+    ----+ Kernel plot +------------------------------------------------------
+<p>
+    <i>cline_options</i> affect the rendition of the plotted kernel density
+        estimate. See <i>connect_options</i>.
+<p>
+    <b>ciopts(</b><i>area_options</i><b>)</b> specifies details about the rendition of the plotted
+        confidence interval. See <i>area_options</i>.
+<p>
+        +---------------+
+    ----+ Density plots +----------------------------------------------------
+<p>
+    <b>histogram</b>[<b>(</b><i>#</i><b>)</b>] requests that a histogram of the data be added to graph.
+        The histogram will be placed in the background, behind the density
+        estimate. <i>#</i> specifies the number of bins to be used.
+<p>
+    <b>histopts(</b><i>options</i><b>)</b> specifies details about the rendition of the histogram,
+        such as the look of the bars. See <b>twoway histogram</b>.
+<p>
+    <b>normal</b> requests that a normal density be overlaid on the density estimate
+        for comparison.
+<p>
+    <b>normopts(</b><i>cline_options</i><b>)</b> specifies details about the rendition of the
+        normal curve, such as the color and style of line used. See 
+        <i>connect_options</i>.
+<p>
+    <b>student(</b><i>#</i><b>)</b> specifies that a Student's t density with <i>#</i> degrees of freedom
+        be overlaid on the density estimate for comparison.
+<p>
+    <b>stopts(</b><i>cline_options</i><b>)</b> affect the rendition of the Student's t density.
+        See <i>connect_options</i>.
+<p>
+        +----------+
+    ----+ Add plot +---------------------------------------------------------
+<p>
+    <b>addplot(</b><i>plot</i><b>)</b> provides a way to add other plots to the generated graph.
+        See <i>addplot_option</i>.
+<p>
+        +-------------------------------------------------+
+    ----+ Y-Axis, X-Axis, Title, Caption, Legend, Overall +------------------
+<p>
+    <i>twoway_options</i> are any of the options documented in <i>twoway_options</i>,
+        excluding <b>by()</b>.  These include options for titling the graph (see 
+        <i>title_options</i>) and options for saving the graph to disk (see 
+        <i>saving_option</i>).
+<p>
+<p>
+<b><u>Examples</u></b>
+<p>
+        . use http://www.stata-press.com/data/r7/trocolen.dta
+<p>
+        . kdens length
+<p>
+        . kdens length, bw(sjpi)
+<p>
+        . kdens length, adaptive
+<p>
+        . kdens length, ci usmooth
+<p>
+        . kdens length, ci vce(jackknife)
+<p>
+        . kdens length, ci vce(bootstrap, reps(200))
+<p>
+        . _kdens length, kernel(parzen) gen(parzen x) replace
+        . _kdens length, kernel(cosine) gen(cosine) at(x)
+        . line parzen cosine x
+<p>
+        . gen length2 = abs(length-417)
+        . kdens length2, ll(0) ci
+<p>
+        . kdens length, histogram ciopts(recast(rline) pstyle(p2) lp(dash))
+<p>
+        . generate byte g = uniform()&lt;.5
+        . twoway kdens length if g==1 ||  kdens length if g==0
+<p>
+<p>
+<b><u>Methods and Formulas</u></b>
+<p>
+    See http://fmwww.bc.edu/RePEc/bocode/k/kdens.pdf.
+<p>
+<p>
+<b><u>References</u></b>
+<p>
+    Fiorio, C. V. 2004. Confidence intervals for kernel density estimation.
+        The Stata Journal 4: 168-179.
+<p>
+    Hall, P. and M. P. Wand. 1996. On the Accuracy of Binned Kernel Density
+        Estimators. Journal of Multivariate Analysis 56: 165-184.
+<p>
+<p>
+<b><u>Author</u></b>
+<p>
+    Ben Jann, ETH Zurich, jann@soz.gess.ethz.ch
+<p>
+    Thanks for citing this software as follows:
+<p>
+        Jann, B. (2005). kdens: Stata module for univariate kernel density
+        estimation. Available from
+        http://ideas.repec.org/c/boc/bocode/s456410.html.
+<p>
+<p>
+<b><u>Also see</u></b>
+<p>
+    Online:  <b>mata kdens()</b>, <b>kdensity</b>, <b>graph</b>, <b>histogram</b>, <b>lowess</b>
+</pre>

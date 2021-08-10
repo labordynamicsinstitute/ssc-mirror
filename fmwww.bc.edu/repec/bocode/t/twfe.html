@@ -1,0 +1,282 @@
+<pre>
+<b>help twfe</b>
+-------------------------------------------------------------------------------
+<p>
+<b><u>Title</u></b>
+<p>
+<p>
+<b><u>Regressions with two-way fixed effects or match effects for large datasets</u></b>
+<p>
+<p>
+<b><u>Syntax</u></b>
+<p>
+        <b>twfe</b> <i>depvar</i> [<i>indepvars</i>] [<i>if</i>] [<i>in</i>] [<b>,</b> <i>options</i>]
+<p>
+    <i>options</i>               Description
+    -------------------------------------------------------------------------
+    Required
+      <b><u>id</u></b><b>s(</b><i>vname1 vname2</i><b>)</b>  ID variables of fixed effects. Must include exactly
+                            two ID variables.
+    Optional
+      <b><u>m</u></b><b>atcheffect</b>         include match fixed effect
+      <b><u>c</u></b><b>luster(</b><i>varlist</i><b>)</b>    specify cluster variables for one- or two-way
+                            clustering
+      <b>replace</b>             replace data in memory by estimates of the fixed
+                            effects
+      <b><u>max</u></b><b>it(</b><i>#</i><b>)</b>            maximum number of iterations for the conjugate
+                            gradient algorithm; Default is 500.
+      <b><u>t</u></b><b>ol(</b><i>#</i><b>)</b>              set tolerance of cga; default is 1.0e-7
+      <b><u>v</u></b><b>erbose(</b><i>#</i><b>)</b>          controls how much detail cga displays
+    Reporting
+      <b><u>l</u></b><b>evel(</b><i>#</i><b>)</b>            set confidence level; default is <b>level(95)</b>
+      <b><u>ef</u></b><b>orm(</b><i>string</i><b>)</b>       report exponentiated coefficients and label as
+                            <i>string</i>
+      <i>display_options</i>     control column formats, row spacing, line width,
+                            and display of omitted variables and base and
+                            empty cells
+      <b><u>nohe</u></b><b>ader</b>            suppress table header
+      <b><u>notab</u></b><b>le</b>             suppress coefficient header
+    -------------------------------------------------------------------------
+    <b>predict</b> can be used after <b>twfe</b> with options xb,e,xbu and ue to predict
+      the linear prediction with fixed effects (xbu) and without them (xbu)
+      as well as residuals with fixed effects (ue) and without them (e).
+      Other functionality of <b>predict</b> may work, but I haven't tested it.
+<p>
+<b><u>Description</u></b>
+<p>
+    <b>twfe</b> fits a linear regression model of <i>depvar</i> on <i>indepvars</i> including
+    fixed effects for the two units defined by <b>ids(</b><i>varlist</i><b>)</b>.  If <b><u>m</u></b><b>atcheffect</b>
+    is specified, fixed effects for the interaction of the two id variables
+    are included. The estimates of the fixed effects are saved in new
+    variables called "fe1" (for ID with more units) and "fe2" (for ID with
+    fewer units). If <b><u>m</u></b><b>atcheffect</b> is specified additional variables for the
+    match id ("matchid"), the match fixed effect ("matchef") and the match
+    duration ("mlength") are created.  If the dataset already contains
+    variables with these names, the original variables are replaced.
+    <b>twfe</b> is intended for estimation in large data sets, where constraints on
+    memory and matsize make standard estimation difficult and time consuming.
+    Instead of solving (X'X)b=X'y by inverting X'X it solves the system by
+    computing the slopes first, then using the conjugate gradient algorithm
+    to compute the smaller set of fixed effects and finally solving for the
+    other fixed effects recursively. See Remarks for further info.
+<p>
+<b><u>Options</u></b>
+<p>
+        +----------+
+    ----+ Required +---------------------------------------------------------
+<p>
+    <b><u>id</u></b><b>s(</b><i>varname1 varname2</i><b>)</b> needs to contain the variable names for the
+        identifiers of the two sets of fixed effects. It has to contain
+        exactly two variables and they have to be numeric. The program always
+        considers the unit that contains more fixed effects (i.e. individuals
+        if there are more individuals than firms) as the first unit,
+        regardless of the order they are specified in <b><u>id</u></b><b>s()</b>. Specifying the
+        larger one as the first variable will make it slightly faster.
+<p>
+        +----------+
+    ----+ Optional +---------------------------------------------------------
+    <b><u>m</u></b><b>atcheffect</b> runs the match fixed effect model instead of the two-way
+        fixed effects model, i.e. in addition to the fixed effects specified
+        by <b><u>id</u></b><b>s(</b><i>varname1 varname2</i><b>)</b> a fixed effect for every unique combination
+        of the two identifiers is included in the model.
+<p>
+    <b><u>c</u></b><b>luster(</b><i>varlist</i><b>)</b> calculates robust as well as one or two-way clustered
+        standard errors using the method proposed in Cameron et al (2006).
+        <i>varlist</i> should contain the variable names of the variables that
+        define the clusters or "het" for heteroskedasticity robust standard
+        errors. If it contains one variable name, one-way clustering is used.
+        For two-way clustering, specify two variables. Optionally, a third
+        variable (order matters) can be specified that identifies unique
+        combinations of the first two clustering variables (i.e. a match id).
+        If such a variable is available, it speeds up the execution because
+        the program does not need to create this variable. Specifying three
+        variables does<b> not</b> do three-way clustering and specifying a variable
+        that is not the interaction between the first two variables will lead
+        to wrong results.
+<p>
+    <b>replace</b> By default,<b> twfe</b> saves the data in memory to disc as a temporaty
+        file in order to preserve memory. After estimation, it merges the
+        original data and the estimates of the fixed effects.  Specifying
+        <b>replace</b> skips the save and merge, so that the data in memory is
+        replaced by a dataset that only contains the ID variables and the
+        variables created by<b> twfe</b>. If the data in memory is large, this can
+        save time and disc space, but<b> the data currently in memory is</b>
+        <b>changed</b>. Additionally, e(sample) is not returned and <b>predict</b> will
+        probably return erratic results.
+<p>
+    <b><u>max</u></b><b>it(</b><i>#</i><b>)</b> The program terminates unsuccessfully if the conjugate gradient
+        algorithm has not converged within the number of iterations
+        specified. The default is 500, see Convergence for further details.
+<p>
+    <b><u>t</u></b><b>ol(</b><i>#</i><b>)</b> The conjugate gradient algorithm terminates successfully if the
+        residual is smaller than the number specified. The default is 1.0e-7,
+        see Convergence for further details.
+<p>
+    <b><u>v</u></b><b>erbose(</b><i>#</i><b>)</b> Controls how much detail the conjugate gradient algorithm
+        displays. Can take values 0 (none) 1 (summary) or 2 (size of residual
+        after every iteration).
+<p>
+        +-----------+
+    ----+ Reporting +--------------------------------------------------------
+<p>
+    <b>level(</b><i>#</i><b>)</b> controls levels for confidence intervals. See <b>[R] estimation</b>
+        <b>options</b>.
+<p>
+    <b>eform(</b><i>string</i><b>)</b> specifies that the coefficient table be displayed in
+        exponentiated form as defined in <b>[R] maximize</b> and that <i>string</i> be used
+        to label the exponentiated coefficients in the table.
+<p>
+<a name="display_options"></a>    <i>display_options</i>: see <b>[R] estimation options</b>. They should all work
+        correctly, but I haven't checked all of them.
+<p>
+    <b>noheader</b> suppresses the display of the ANOVA table and summary statistics
+        at the top of the output; only the coefficient table is displayed.
+<p>
+    <b>notable</b> suppresses display of the coefficient table.
+<p>
+<a name="remarks"></a><b><u>Remarks</u></b>
+    <b>Method</b>
+    For a full description of the method, see my paper in the References. The
+    algorithms employed for estimation of the two-way FE and the match effect
+    model are a little different.  However, both essentially proceed in three
+    steps:
+    1. Calculate the slope coefficients (by partial regression)
+    2. Set up a system of equations that is implied by the normal equations
+    and is solved by the OLS estimates of the smaller set of fixed effects.
+    Use the conjugate gradient algorithm to solve it.
+    3. Calculate all other fixed efffects using the fact that residuals sum
+    to zero.
+    This procedure yields the exact OLS estimates of the slopes and all fixed
+    effects if and only if the data matrix is of full rank. Contrary to the
+    <b>regress</b> command, the program does not verify this. A key advantage of the
+    method is the reduction in the size of the problem to solve by step 2.
+    There are as many equations as there are fixed effects for the second id
+    variable, so it is important to use the right order. The gains in
+    performance are larger the smaller the second set of fixed effects is
+    compared to the first.
+<p>
+    <b>Identification</b>
+    Identification conditions for the two-way fixed effects model are
+    discussed in Abowd et al. 2002. For the match fixed effects model, see
+    Woodcock 2008. The normalizations I impose to identify the two-way fixed
+    effects model are that the intercept is set to zero and the (unweighted)
+    fixed effects for id2 sum to zero in every group. The additional
+    normalizations imposed to identify the match fixed effects is that the
+    (duration weighted) match fixed effects sum to zero for every unit of the
+    two ID variables.
+<p>
+<a name="convergence"></a>    <b>Convergence</b>
+    Occasionally, the conjugate gradient algorithm may fail to converge. If
+    this happens, it may either be the case that the system of equations has
+    no unique solution or it may not have found it within the given number of
+    iterations and the specified tolerance. Most problems that have a
+    solution should converge within 500 iterations, but the default tolerance
+    may be quite low when dealing with really large problems.  On the other
+    hand, the problem may not have a solution if some of the regressors are
+    perfectly colinear. Generally, the algorithm has no problem with multiple
+    groups (as defined in Abowd et al 2002). In such cases, the group mean of
+    the fixed effects for id2 are set to zero. If there are units created by
+    id2 that have no movers, this implied that their fixed effect is zero as
+    well. However, if there are small groups, moving patterns can be such
+    that there is no unique solution even though people are moving between
+    units. The algorithm does not examine the group structure, so such groups
+    have to be excluded manually in case convergens persistently fails. Amine
+    Ouazad's a2group is a good program to examine the group structure of the
+    data.
+<p>
+    <b>Memory</b> (Stata 11 or earlier)
+    Most of the computations are done in Mata and are thus not subject to
+    Stata's memory limits. However, some calls to Stata are made and will not
+    work if Stata has not been assigned enough memory to perform them. If
+    possible, do not set Stata's memory limit really close to the size of the
+    dataset. If you do not have enough main memory to estimate the model, you
+    may be able to speed up the program by using "set virtual on".
+<p>
+    <b>Other</b>
+    If you find any mistakes or have any suggestions for improvements, please
+    send me an email to mittag@uchicago.edu. Feel free to use, change or
+    mutilate this program for private purpose, but please don't steal it,
+    give due credit. That being said, I learned a lot about writing code in
+    Mata from Amine Ouazad's a2reg code and would like to thank her for
+    making it publicly available. I would also like to thank Kit Baum for
+    several useful suggestions.
+<p>
+<b><u>Examples</u></b>
+    Two-way fixed effects model with two-way clustered standard errors
+        <b>. twfe wage age experience, ids(individual_id firm_id)</b>
+            <b>cluster(individual_id firm_id)</b>
+<p>
+    Match effects model with one-way clustered standard errors
+        <b>. twfe wage age experience, ids(individual_id firm_id)</b>
+            <b>cluster(match_id) matcheffect</b>
+<p>
+<b><u>Saved results</u></b>
+<p>
+    <b>twfe</b> saves the following in <b>e()</b>:
+<p>
+    Scalars   
+      <b>e(N)</b>           number of observations
+      <b>e(mss)</b>         model sum of squares
+      <b>e(df_m)</b>        model degrees of freedom
+      <b>e(rss)</b>         residual sum of squares
+      <b>e(df_e)</b>        residual degrees of freedom
+      <b>e(r2)</b>          R-squared
+      <b>e(ar2)</b>         adjusted R-squared
+      <b>e(rmse)</b>        root mean squared error
+      <b>e(ncov)</b>        number of covariates
+      <b>e(n1)</b>          number of fixed effects created by larger group
+      <b>e(n2)</b>          number of fixed effects created by smaller group
+      <b>e(nm)</b>          number of matches (only with <b><u>m</u></b><b>atcheffect</b>)
+      <b>e(F)</b>           F statistic of H0: all slopes and FEs are 0
+      <b>e(pval)</b>        p value of H0: all slopes and FEs are 0
+      <b>e(F_fe)</b>        F statistic of H0: all FEs are 0
+      <b>e(p_fe)</b>        p value of H0: all FEs are 0
+      <b>e(F_x)</b>         F statistic of H0: all slopes are 0
+      <b>e(p_x)</b>         p value of H0: all slopes are 0
+      <b>e(F_fe1)</b>       F statistic of H0: all FE by larger ID are 0 (not with
+                       <b><u>m</u></b><b>atcheffect</b>)
+      <b>e(p_fe1)</b>       p value of H0: all FE by larger ID are 0 (not with
+                       <b><u>m</u></b><b>atcheffect</b>)
+      <b>e(F_fe2)</b>       F statistic of H0: all FE by smaller ID are 0 (not with
+                       <b><u>m</u></b><b>atcheffect</b>)
+      <b>e(p_fe2)</b>       p value of H0: all FE by smaller ID are 0 (not with
+                       <b><u>m</u></b><b>atcheffect</b>)
+<p>
+    Macros    
+      <b>e(cmd)</b>         <b>twfe</b>
+      <b>e(depvar)</b>      name of dependent variable
+      <b>e(model)</b>       twfe or match
+      <b>e(title)</b>       title in estimation output
+      <b>e(clustvar)</b>    name of cluster variable(s)
+      <b>e(unit1)</b>       name of identifier for larger set of fixed effects
+      <b>e(unit2)</b>       name of identifier for smaller set of fixed effects
+      <b>e(predict)</b>     Program used to implement predict
+      <b>e(properties)</b>  b V
+<p>
+    Matrices  
+      <b>e(b)</b>           coefficient vector
+      <b>e(V)</b>           variance-covariance matrix of the estimators
+      <b>e(nomov)</b>       Identifies units in smaller ID that did not have any
+                       movers. Gives the positions of the units when unique
+                       values of smaller ID are sorted.
+<p>
+    Functions 
+      <b>e(sample)</b>      Marks estimation sample (not with <b>replace</b>
+<p>
+<p>
+<a name="ref"></a><b><u>References</u></b>
+<p>
+    Abowd, J. M., R. H. Creecy, and F. Kramarz 2002. Computing person and
+        firm effects using linked longitudinal employer-employee data. <i>Census</i>
+        <i>Bureau Technical Paper TP-2002-06.</i>
+    Cameron, C. A., J. B. Gelbach and D.L. Miller 2006. <i>Robust Inference With</i>
+        <i>Multi-Way Clustering</i>. Mimeo.
+    Mittag, N. 2012. <i>New methods to estimate models with large sets of fixed</i>
+        <i>effects with an application to matched employer-employee data from</i>
+        <i>Germany</i>.  FDZ-Methodenreport 02/2012.
+    Woodcock, S.D. 2008. <i>Match Effects</i>. Mimeo.
+<p>
+<b><u>Author</u></b>
+Nikolas Mittag, University of Chicago
+mittag@uchicago.edu
+</pre>

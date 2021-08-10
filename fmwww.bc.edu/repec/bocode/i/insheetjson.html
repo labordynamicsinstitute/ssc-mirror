@@ -1,0 +1,260 @@
+<pre>
+<b>help insheetjson</b>
+-------------------------------------------------------------------------------
+<p>
+<b><u>Title</u></b>
+<p>
+     <b> insheetjson: Importing tablular data from JSON sources</b>
+<p>
+<b><u>Syntax</u></b>
+<p>
+        <b>insheetjson</b> <i>varlist</i><b> </b>using<b>,</b> <b>columns(</b><i>string</i><b>)</b> [<i>options</i>]
+        <b>insheetjson</b> using<b>,</b> showresponse [flatten]
+<p>
+    <i>options</i>               Description
+    -------------------------------------------------------------------------
+    <i>Required</i>...
+<p>
+      <i>varlist</i>              are the string variables to store the retreived data
+&gt;  into 
+<p>
+      <b>using</b> "URL or file path"
+                            specifies the source of the JSON data
+<p>
+      <b>columns</b>(string)      specifies the column selectors associated with
+                            each specified variable
+<p>
+      <b>showresponse</b>         Make no changes to the Stata environment and
+                            instead just print the JSON reponse to the
+                            console
+<p>
+    <i>Optionals</i>...
+<p>
+      <b>tableselector</b>(string)
+                            specifies the selector to use in finding the
+                            table burried in the json object tree
+<p>
+      <b>replace</b>              Necessary if you need to replace existing data in
+                            varlist
+<p>
+      <b>printonly</b>            Make no changes to the Stata environment and
+                            instead just print the results to the console
+<p>
+      <b>flatten</b>              Output results as key(selector)-value pairs
+<p>
+      <b>savecontents</b>(filename)
+                            Copies the contents of the raw response to the
+                            specified file
+<p>
+      <b>limit</b>(#)             specifies the maximum number of observations to
+                            add to the stat environment
+<p>
+      <b>followurl</b>(selector [#])
+                            specifies the selector to use to find the
+                            follow-on url, and the maximum number of times to
+                            follow it
+<p>
+      <b>offset</b>(#)            Observation to begin filling in the results at
+<p>
+    -------------------------------------------------------------------------
+<p>
+<p>
+<b><u>Description</u></b>
+<p>
+    There are many data sources out on the web that operate by a URL query,
+    and which then respond with data formatted in JavaScript Object Notation
+    (JSON).  This command is designed to support querying those sources,
+    assuming that the user has some idea of what the JSON reponse will look
+    like (or can puzzle it out. See examples below.) Through the application
+    of data selectors, the JSON response can be examined and the data
+    extracted in the format of string data.  This data can then be stored in
+    string variables in the Stata enviroment for later processing by the
+    user.
+<p>
+    To use this command, you will need to know at least the URL of the JSON
+    data source.
+<p>
+<b><u>Required Library</u></b>
+    To use this command, you will need to have installed libjson, which is
+    also available from SSC via the following link
+<p>
+    ssc install libjson
+<p>
+<p>
+<b><u>Latest Version</u></b>
+<p>
+    The latest version is always kept on the SSC website. To install the
+    latest version click on the following link
+<p>
+    ssc install insheetjson, replace
+<p>
+<b><u>Options</u></b>
+<p>
+        +----------+
+    ----+ Required +---------------------------------------------------------
+<p>
+    <b>varlist</b> is a list of string stata variables for the retureived data to be
+    stored into. Note that if the string variable is not large enough to hold
+    the string, it will be truncated.  <u>If a non-string variable is specified</u>,
+    then the data destined for that variable will quiety be discarded.
+<p>
+    <b>using(</b><i>URL or file path</i><b>)</b> specifies where to get the JSON data from There
+    are two types of sources: local (file) and web (URL).  Normally, you want
+    to give a URL that includes any needed query options (the things which
+    follow a question mark), and a URL must have the leading "http:\\" to
+    distiguish them from file paths.
+<p>
+    <b>columns(</b><i>string</i><b>)</b> specifies the column selectors associated with each
+    specified variable (in order of appearance in varlist)
+<p>
+    <b>showresponse</b> makes no changes to the Stata environment and instead just
+    print the JSON reponse to the console.  Useful for exploring the data
+    source to figure out what your selectors should be.
+<p>
+        +-----------+
+    ----+ Optionals +--------------------------------------------------------
+<p>
+    <b>tableselector(</b><i>string</i><b>)</b> specifies the selector to use in finding the table
+    burried in the json object tree.  The default is that the table starts
+    immediately as an array of objects and contains no meta information.
+<p>
+    <b>replace</b> is necessary if you need to overrite existing data in varlist.
+<p>
+    <b>printonly</b> makes no changes to the Stata environment and instead just
+    prints the results to the console.  Useful for making "dry runs" to see
+    what you will get without commiting the results to Stata.
+<p>
+    <b>showresponse</b> makes no changes to the Stata environment and instead just
+    (pretty) print the actual JSON reponse to the console.  Useful for
+    exploring the data source to figure out what your selectors should be.
+<p>
+    <b>flatten</b> Cause the results to be converted into key(selector)-value pairs.
+    Useful for figuring out what the exact (flattented) selector is for a
+    given piece of data in the JSON response.  For complex JSON responses,
+    this can result is a prodigeous amount of output.
+<p>
+    <b>savecontents(</b><i>filename</i><b>)</b> causes the raw contents (usually a JSON string) of
+    the web response to the specified file.  Useful when you want to cache
+    the results locally for some reason, or if you are want to see the actual
+    server response for debugging your scripts.
+<p>
+    <b>limit(</b><i>#</i><b>)</b> specifies the maximum number of observations to add to the Stata
+    environment.
+<p>
+<a name="followurl"></a>    <b>followurl(</b><i>selector </i>[<i>#</i>]<b>)</b> is for those servers which spread their results
+    over more than one page, and give a url to follow for the next block.
+    This option specifies the selector to use to find this url, as well the
+    maximum number of times to follow the link.  If not specified, the
+    default is 9 to to avoid hammering servers when the followurl() is used
+    (for a total of 10 page loads).  A limit of zero (or less) signals that
+    there is no limit to the number of pages to be loaded, but this can be
+    very dangerous with some servers.
+<p>
+    <b>offset(</b><i>#</i><b>)</b> indicates the observation number to begin filling in the
+    results at, and defaults to 1.  Useful when a single dataset request must
+    be broken up over multiple distinct queries and the server does not
+    provide a follow-on URLs.
+<p>
+<b><u>Examples</u></b>
+<p>
+    <i>Load a single page of a twitter feed (about 15 observations) into three</i>
+    <i>variables</i>:
+          <b> . gen str240 tw_fu=""</b>
+          <b> . gen str240 tw_uid =""</b>
+          <b> . gen str240 tw_geo =""</b>
+          <b> . insheetjson tw_fu tw_uid tw_geo using "http://search.twitter.com/s</b>
+<b>&gt; earch.json?q=stata", table(results) col("from_user" "from_user_id_str" "geo:c</b>
+<b>&gt; oordinates")</b>
+<p>
+    <i>Load a single page of a twitter feed (about 15 observations), but don't</i>
+    <i>copy the obervations into Stata:</i>
+          <b> . gen str240 tw_fu=""</b>
+          <b> . gen str240 tw_uid =""</b>
+          <b> . gen str240 tw_geo =""</b>
+          <b> . insheetjson tw_fu tw_uid tw_geo using "http://search.twitter.com/s</b>
+<b>&gt; earch.json?q=stata", table(results) col("from_user" "from_user_id_str" "geo:c</b>
+<b>&gt; oordinates") print</b>
+<p>
+    <i>Load exactly 1000 entries from a twitter feed (possibly tossing some</i>
+    <i>away):</i>
+          <b> . gen str240 tw_fu=""</b>
+          <b> . gen str240 tw_uid =""</b>
+          <b> . gen str240 tw_geo =""</b>
+          <b> . insheetjson tw_fu tw_uid tw_geo using "http://search.twitter.com/s</b>
+<b>&gt; earch.json?q=stata", table(results) col("from_user" "from_user_id_str" "geo:c</b>
+<b>&gt; oordinates") followurl(next_page) limit(1000)</b>
+<p>
+    <i>Load an entire twitter feed (this may take some time):</i>
+          <b> . gen str240 tw_fu=""</b>
+          <b> . gen str240 tw_uid =""</b>
+          <b> . gen str240 tw_geo =""</b>
+          <b> . insheetjson tw_fu tw_uid tw_geo using "http://search.twitter.com/s</b>
+<b>&gt; earch.json?q=stata", table(results) col("from_user" "from_user_id_str" "geo:c</b>
+<b>&gt; oordinates")  followurl(next_page) pagelimit(0)</b>
+<p>
+    <i>Examine the json source to figure out what columns are possible:</i>
+          <b> . insheetjson using "http://search.twitter.com/search.json?q=stata",</b>
+<b>&gt;  showresponse </b>
+<p>
+<b><u>Selectors</u></b>
+    Selectors are a series of named (or implicitly named in the case of
+    arrays, which start at index "1") branches to take, starting from the
+    given node (usually the root node).  All column names in the
+    {opt:columns()} are flattened Selectors.
+<p>
+Given the following example JSON object: 
+        {
+        "foo" : "1", 
+        "bar": {
+              "bar2":"2"
+              },
+        "foobar": [ "bar1","bar2"]
+     }
+      
+the results of the following selectors would be...
+          <b>(</b><i>"foo"</i><b>)</b>              --&gt; "1"
+       
+          <b>(</b><i>"foo"</i><b>,</b><i>"bar"</i><b>,</b><i>"bar2"</i><b>)</b> --&gt; "2"
+<p>
+          <b>(</b><i>"foobar"</i><b>,</b><i>"2"</i><b>)</b>       --&gt; "bar2"
+<p>
+          <b>(</b><i>"foo"</i><b>,</b><i>"bar"</i><b>)</b>        --&gt; Depends. If a node is expected, then the nod
+&gt; e is selected. If a Scalar (string, real) is expected, then is NOT FOUND and 
+&gt; considered missing.
+<p>
+<b><u>Flattened Selectors</u></b>
+    A "flattened" selector is a single string with a colon inserted between
+    each selector. For example, ("foo":"bar") --&gt; "foo:bar".  Selectors must
+    be quoted if a space appears in one of the sub-selectors (ie. "foo
+    bar:bar2"), though such selectors are rare.
+<p>
+<b><u>Conversion Notes</u></b>
+    Be aware that all values are ultimately converted into strings, so any
+    further conversions are up to the user.  Also, for a given position in
+    the table (after the column selector has been applied), the following are
+    attempted in this order:
+       (1) Is it a string or other un-quoted literal (such as 'null')? If yes, 
+&gt; use it.
+       (2) Is it an Array? If yes, combine the array values (scalars only) into
+&gt;  a single string in the familiar "[ , ... ]" format.
+<p>
+<b><u>Missing libjson</u></b>
+    This command uses the generic libjson library (libjson.mlib), and must be
+    available in the Stata search path.  The latest library file can be
+    downloaded from SSC (Boston College Archive) via the following link:
+<p>
+    ssc install libjson, replace
+<p>
+<b><u>Author</u></b>
+<p>
+    Erik Lindsley, Ph.D. (ssc@holocron.org)
+<p>
+<b><u>See also</u></b>
+<p>
+    Required library: libjson
+<p>
+<b><u>Special Thanks</u></b>
+<p>
+    To my alpha tester:
+        Andrew Dyck ( http://www.andrewdyck.com/ )
+</pre>

@@ -1,0 +1,109 @@
+<pre>
+<b>help avg_effect</b>
+-------------------------------------------------------------------------------
+<p>
+<b><u>Title</u></b>
+<p>
+        
+    <b>avg_effect</b> -- Calculate mean (standardized) effect size across multiple
+    outcomes
+<p>
+<b><u>Syntax</u></b>
+<p>
+        <b>avg_effect</b> <i>yvar1</i> <i>yvar2</i> [ <i>yvar3</i> ... ] [<i>if</i>] <b>,</b> <b>x(</b><i>varlist</i><b>)</b> <b><u>e</u></b><b>ffectvar(</b>
+                 <i>varlist</i><b>)</b> <b><u>c</u></b><b>ontroltest(</b><i>string</i><b>)</b> [ <i>options</i> ]
+<p>
+    <i>options</i>               Description
+    -------------------------------------------------------------------------
+    Main
+      <b>x(</b><i>varlist</i><b>)</b>          list of all right-hand-side (independent) variables
+      <b><u>e</u></b><b>ffectvar(</b><i>varlist</i><b>)</b>  one or more <i>x</i> variables that constitute outcomes to
+                            test
+      <b><u>c</u></b><b>ontroltest(</b><i>string</i><b>)</b> if-style test for membership in the control group
+      <b><u>r</u></b><b>obust</b>              use heteroskedasticity-robust standard errors
+      <b><u>cl</u></b><b>uster(</b><i>varname</i><b>)</b>    use clustered standard errors
+      <b><u>keep</u></b><b>missing</b>         do not drop down to a common sample of observations
+    -------------------------------------------------------------------------
+<p>
+<b><u>Description</u></b>
+<p>
+    <b>avg_effect</b> follows Kling et al. (2004) and Clingingsmith et al. (2009) in
+    calculating average (standardized) effect size using the
+    seemingly-unrelated regression framework to account for covariance across
+    estimates.
+<p>
+    Call <b>avg_effect</b> with two or more y (outcome) variables and a list of x
+    variables in <b>x</b> (exactly as you would pass them to the regress command).
+<p>
+    Use <b>effectvar</b> to specify the variable whose coefficient represents the
+    individual effect estimates (e.g., <i>effectvar(treated)</i>). You can specify
+    multiple effect variables, separated by spaces.
+<p>
+    Use <b>controltest</b> to specify the if-style test for membership in the
+    control group (e.g., <i>controltest(treated==0)</i>). The control group is used
+    to calculate the standard deviation of each outcome variable, which is
+    then used to standardize the effect sizes.
+<p>
+    <u>Works cited</u>:
+<p>
+    Clingingsmith, David, Khwaja, Asim Ijaz and Kremer, Michael (2009)
+    “Estimating the Impact of the Hajj: Religion and Tolerance in Islam's
+    Global Gathering,” Quarterly Journal of Economics, 124(3), pp. 1133-1170.
+<p>
+    Kling, Jeffrey R., Liebman, Jeffrey B., Katz, Lawrence F. and
+    Sanbonmatsu, Lisa (2004) “Moving to Opportunity and Tranquility:
+    Neighborhood Effects on Adult Economic Self-Sufficiency and Health from a
+    Randomized Housing Voucher Experiment,” KSG Working Paper No. RWP04-035,
+    Available from: http://papers.ssrn.com/sol3/papers.cfm?abstract_id=588942
+    (Accessed 25 May 2010).
+<p>
+<a name="options"></a><p>
+<b><u>Options</u></b>
+<p>
+        +------+
+    ----+ Main +-------------------------------------------------------------
+<p>
+    <b>x(</b><i>varlist</i><b>)</b> specifies the full list of right-hand-side (independent)
+        variables, as when passed to regress. <i>Required.</i>
+<p>
+    <b>effectvar(</b><i>varlist</i><b>)</b> indicates which of the <b>x</b> variables corresponds to the
+        effect of interest (i.e., which coefficient constitutes the effect of
+        interest). To simultaneously test multiple effects, list multiple
+        variables separated by spaces. <i>Required.</i>
+<p>
+    <b>controltest(</b><i>string</i><b>)</b> specifies the if-style test used to identify the
+        control group (e.g., <i>controltest(treated==0)</i>).  The control group is
+        used to calculate the standard deviations by which effect sizes are
+        standardized. <i>Required.</i>
+<p>
+    <b>robust</b> uses heteroskedasticity-robust standard errors, using suest's
+        <b>vce(</b><i>robust</i><b>)</b> option.
+<p>
+    <b>cluster(</b><i>varlist</i><b>)</b> uses clustered standard errors, using suest's
+        <b>vce(</b><i>cluster varlist</i><b>)</b> option.
+<p>
+    <b>keepmissing</b> uses as many observations as possible when calculating each
+        standard deviation and running each individual regression.  By
+        default, <b>avg_effect</b> considers only observations with non-missing
+        values for the full set of y (outcome) variables; this ensures that
+        the results apply to a common sub-sample. For example, observations
+        with missing <i>yvar1</i> will not be used when considering the standard
+        deviation and regression for <i>yvar2</i>. With <b>keepmissing</b>, this is no
+        longer the case, and thus the sub-sample can change with each
+        individual regression.
+<p>
+<b><u>Examples</u></b>
+<p>
+    <b>. sysuse auto</b>
+<p>
+    <b>. avg_effect price mpg, x(foreign weight) effect(foreign)</b>
+        <b>control(foreign==0)</b>
+<p>
+<b><u>Author</u></b>
+<p>
+Christopher Robert, Harvard University, chris_robert@hksphd.harvard.edu
+<p>
+<b><u>Also see</u></b>
+<p>
+    Online: help for <b>suest</b>
+</pre>

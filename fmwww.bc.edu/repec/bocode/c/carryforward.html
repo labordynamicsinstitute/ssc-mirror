@@ -1,0 +1,242 @@
+<pre>
+<p>
+-------------------------------------------------------------------------------
+help for <b>carryforward</b>
+-------------------------------------------------------------------------------
+<p>
+<b><u>Carry values forward, filling in missing values.</u></b>
+<p>
+        <b>carryforward</b> <i>varname</i> [<b>if</b> <i>exp</i>] [<b>in</b> <i>range</i>]<b>, </b>{<b>gen(</b><i>newvar</i><b>)</b> | <b>replace</b>}
+                 [<b>cfindic(</b><i>newvar2</i><b>) back carryalong(</b><i>varlist</i><b>)</b>]
+<p>
+    <b>by</b> <i>...</i> <b>:</b> may be used with <b>carryforward</b>; see help by.
+<p>
+<p>
+<b><u>Description</u></b>
+<p>
+    <b>carryforward</b> will carry values forward from one observation to the next,
+    filling in missing values with the previous value. It is important to
+    note that this is not appropriate for imputing missing values; more on
+    this later.
+<p>
+    The carrying-forward action proceeds sequentially in the present sort
+    order (or as sorted by bysort), cascading values from one observation to
+    the next, potentially carrying a given value through many observations.
+    The process stops when a nonmissing value (or an excluded observation or
+    the end of a <b>by</b> group) is encountered, and resumes when another missing
+    value is encountered.
+<p>
+An example will illustrate:
+<p>
+. carryforward x, gen(y)
+(6 real changes made)
+<p>
+. list, noobs sep(0)
+<p>
+  +---------+
+  |  x    y |
+  |---------|
+  | 12   12 |
+  |  4    4 |
+  |  .    4 |
+  |  .    4 |
+  |  .    4 |
+  |  3    3 |
+  |  .    3 |
+  |  7    7 |
+  |  .    7 |
+  |  .    7 |
+  +---------+
+<p>
+    Notice that each value is carried until a non-missing value of x is
+    encountered.
+<p>
+<p>
+<b><u>Options</u></b>
+<p>
+    <b>gen(</b><i>newvar</i><b>)</b> specifies the new variable that will recieve the values.
+<p>
+    <b>replace</b> specifies that the new values are to go directly into <i>varname</i>.
+    Under this option, <b>carryforward</b> functions as a replace operation.
+<p>
+    You must use either <b>gen()</b> or <b>replace</b>, but not both.
+<p>
+    <b>cfindic(</b><i>newvar2</i><b>)</b> specifies an indicator variable that will be generated,
+    indicating which observations recieved carry-forward values.
+<p>
+    <b>carryalong(</b><i>varlist</i><b>)</b> specifies additional variables that will have their
+    values carried along in concert with <i>varname</i>.  These variables get their
+    values carried forward, but the set of observations that are affected is
+    determined by <i>varname</i> rather than the variables in <i>varlist</i> themselves.
+    Be aware that this is essentially a <b>replace</b> operation, with no regard for
+    the original values in <i>varlist</i>. Whereas<i> varname</i> or <i>newvar</i> never have
+    non-missing values overwritten, the variables in <i>varlist</i> can, indeed,
+    have non-missing values overwritten.  (If you are concerned about
+    overwriting values, keep a copy in a separate variable. But typically,
+    you would use this option to carry values into what were originally
+    missing values.)
+<p>
+    <b>back</b> merely affects the wording of labels and notes, changing "fwd" to
+    "back"; it has no effect on the data. Typically, you would use it when
+    you "fool" carryforward into carrying values backward (see example).
+<p>
+<p>
+<b><u>Remarks</u></b>
+<p>
+    The effect of <b>carryforward</b> is sensitive to the sort order of the data.
+    Thus, you should have the data sorted in an order that is meaningful with
+    respect to what is being carried forward. This can be done with a
+    preceeding sort operation, or in conjuction with bysort.  <b>carryforward</b>
+    will not <b>sort</b> the data, unless you specify <b>bysort</b> with it. With <b>by</b> or
+    <b>bysort</b>, you would typically include a secondary varlist (such as <b>year</b> and
+    <b>negyear</b> in the examples below) to control the order of observations
+    within <b>by</b> groups, and you should be sure that the totality of the <b>by</b>
+    variables are sufficient to uniquely sort the data, so as to get
+    meaningful and consistent results.
+<p>
+    Of course, the use of <b>by</b> or <b>bysort</b> will also constrain the cascading
+    action to stay within <b>by</b> groups.
+<p>
+    <b>carryforward</b> will create variable labels for generated variables, or will
+    add notes to <i>varname</i> under the <b>replace</b> option.
+<p>
+    When values are carried forward, you will see a message such as <b>(22 real</b>
+    <b>changes made)</b>, reporting the number of originally missing values that
+    were replaced. This refers to either <i>varname</i> or <i>newvar</i>, depending on
+    which option you used.
+<p>
+    When an <b>if</b> <i>exp</i> or <b>in</b> <i>range</i> condition is specified, observations failing
+    the condition will be excluded from having values carried into them, <i>and</i>
+    will interrupt the carrying of values. That is, they are not merely
+    excluded from consideration; they affect subsequent observations. An
+    example will illustrate.
+<p>
+. carryforward x if c1, gen(y)
+(4 real changes made)
+<p>
+. list, noobs sep(0)
+<p>
+  +--------------+
+  |  x   c1    y |
+  |--------------|
+  | 12    1   12 |
+  |  4    1    4 |
+  |  .    1    4 |
+  |  .    0    . |
+  |  .    1    . |
+  |  3    1    3 |
+  |  .    1    3 |
+  |  7    0    7 |
+  |  .    1    7 |
+  |  .    1    7 |
+  +--------------+
+<p>
+    Notice that the fourth observation did not recieve a value in y, since
+    c1==0, and that the fifth observtion also did not recieve a value, as the
+    fourth observation interrupted the flow of values. If, on the other hand,
+    you wish for such excluded observations to not interrupt the flow of
+    values, you should first sort the dataset so as to move these
+    observations out of the way.
+<p>
+           --------------------------------------------------------------------
+            <b>Technical note:</b> It would be possible to program an
+            option such that excluded observations were merely
+            skipped - and did stop the flow of values. (Thus,
+            observation 5 in the above example would recieve 4 in
+            y.)  This is a potential avenue for future development,
+            and the author welcomes comments on whether this is
+            desirable.
+           --------------------------------------------------------------------
+<p>
+    Also notice that the 0 in c1 in observation 8 had no effect, since x is
+    non-missing in that observation. When observations are excluded by
+    conditions, it is the observations where values are being replaced - not
+    the ones where the values come from - that matter.
+<p>
+    When using <b>carryalong(</b><i>varlist</i><b>)</b> there is nothing to stop you from
+    including <i>varname</i> among <i>varlist</i>, but there is no point in doing so. This
+    is effectively equivalent to specifying <b>replace</b>. (If you specified
+    <b>replace</b>, then there is no additional effect; if you specified
+    <b>gen(</b><i>newvar</i><b>)</b>, then <i>newvar</i> and <i>varname</i> will be equal - as if you had
+    specified both <b>gen(</b><i>newvar</i><b>)</b> and <b>replace</b>, if that were allowed.)
+<p>
+<p>
+<b><u>Examples</u></b>
+<p>
+    <b>. by personid spellno (year): carryforward statefp, replace</b>
+<p>
+    <b>. gen int negyear = -year</b>
+    <b>. bysort personid (negyear): carryforward educ2, gen(educ2b) back</b>
+        <b>cfindic(educ2b_cbi) carryalong(educ2_from_hw educ2_cfi)</b>
+<p>
+    In the latter example, we are going backwards; thus, the <b>back</b> option.
+    Also, educ2_from_hw is an attribute about how educ2 was constructed, so
+    we want it to be carried along with educ2. Similarly for educ2_cfi, but
+    that was actually a cfindic variable from an earlier carryforward
+    operation (not shown). (That earlier operation was in the forward
+    direction; the present one goes backward. In between, certain
+    observations were dropped; otherwise, there would be little use in having
+    educ2_cfi in the carryalong variables.)
+<p>
+<b><u>Additional Remarks</u></b>
+<p>
+    <b>carryforward</b> is not intended for imputing missing values; indeed, this
+    operation is often a bad choice for missing-value imputation.  The intent
+    is, rather, to fill in "holes", where it is natural that a value should
+    prevail from one observation to the next, depending on the order of the
+    data (typically based on time or date). A notable example is where you
+    have datasets of changes in attributes, and after a merge, you are left
+    with missing values in non-matched observations. An example will
+    illustrate.
+<p>
+    Suppose you have two or more datasets that represent changes in different
+    attributes over time, say salary and marital status for a set of people.
+    Each dataset should be uniquely sorted on person_id and date, but note
+    that these observations ("events" or "changes") may occur on different
+    dates in the different datasets. That is, there will be non-matched
+    observations when they are merged. Also, it is preferable that these
+    datasets should have non-missing values for the "content" variables
+    (salary, marital status), but our code will handle the possibility of
+    missing values. You would not want to carry actual values through such an
+    observation, as the given missing value presumably signifies a true
+    unknown.
+<p>
+    Suppose salary.dta contains salary, and marstat.dta contains marit_stat.
+<p>
+    <b>. use salary</b>
+    <b>. gen byte rec_sal = 1</b>
+<p>
+    <b>. merge person_id date using marstat, uniq</b>
+    <b>. gen byte rec_mar = (_merge==2 | _merge==3)</b>
+    <b>. drop _merge</b>
+<p>
+    <b>. recode rec_sal (mis=0)</b>
+<p>
+    <b>. assertky person_id date</b>
+    <b>. by person_id (date): carryforward salary if ~rec_sal, replace</b>
+    <b>. by person_id (date): carryforward marit_stat if ~rec_mar, replace</b>
+<p>
+    The use of <b>by person_id (date):</b> insures that you limit the carrying of
+    values to within person-based groups, as you don't want to carry a value
+    from one person to another. The inclusion of <b>(date)</b> assures that the sort
+    order is correct within each such group.
+<p>
+    The use of <b>if ~rec_sal</b> insures that you don't carry a value into and
+    potentially beyond an originally-missing value.  Cases with ~rec_sal
+    always have missing values for salary; they are the holes in salary data
+    created by the merge. On the other hand, missing values in salary for
+    cases with rec_sal were missing in the original salary data; they
+    presumably represent "unknown", rather than being an artifact of the
+    merge. Similarly for rec_mar and marit_stat.
+<p>
+    <b>assertky</b> is a program that sorts the data and assures that the sort order
+    is unique. It is available on SSC.
+<p>
+<b><u>Author</u></b>
+<p>
+    David Kantor, Institute for Policy Studies, Johns Hopkins University.
+    Email kantor.d@att.net if you observe any problems.
+<p>
+<b><u>Also See</u></b>
+<p>
+</pre>

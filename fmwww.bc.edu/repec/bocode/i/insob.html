@@ -1,0 +1,89 @@
+<pre>
+-------------------------------------------------------------------------------
+help for <b>insob</b>
+-------------------------------------------------------------------------------
+<p>
+<b><u>Insert empty observations</u></b>
+<p>
+        <b><u>insob</u></b> <i>nobs</i> <i>pos</i> [<b>,</b> <b>after</b> ]
+<p>
+<b><u>Description</u></b>
+<p>
+    <b>insob</b> inserts <i>nobs</i> empty observations before observation number <i>pos</i>.
+<p>
+<b><u>Options</u></b>
+<p>
+    <b>after</b> When the option "after" is specified, the empty observations are
+        inserted <i>after</i> observation number <i>pos</i> (in stead of before).
+<p>
+<b><u>Remarks</u></b>
+<p>
+    The program works by adding a local variable that fixes the original sort
+    order. After new observations have been added, the relative sort order of
+    pre-existing observations is restored with empty observations before
+    (after) observation number <i>pos</i>. This approach can be relatively slow for
+    large data files.
+<p>
+<p>
+<b><u>Examples</u></b>
+<p>
+    <b>. insob 1 1</b> // Inserts one observation at beginning of the dataset
+<p>
+    <b>. insob 2 _N, after</b> // Inserts two observations at end of the dataset
+<p>
+<p>
+    <i>Hint:</i> <b>insob</b> can be used to create custom LaTeX tables (assuming existing
+    commands like <b>tabstat</b>, <b>est2tex</b>, or <b>textab</b> are not what you are looking
+    for).  The following example suggests a procedure to export a matrix
+    <i>mtest</i> containing four columns as a LaTeX table.
+<p>
+    <b>. drop _all</b>
+<p>
+    <b>. svmat mtest</b>
+<p>
+    <b>. tostring mtest1 mtest2 mtest3 mtest4, replace force format(%9.2f)</b>
+<p>
+    <b>. insob 1 1</b> // Add row headers
+<p>
+    <b>. replace mtest1 = "$ V_1 $" in 1</b>
+<p>
+    <b>. replace mtest2 = "$ V_2 $" in 1</b>
+<p>
+    <b>. replace mtest3 = "$ V_3 $" in 1</b>
+<p>
+    <b>. replace mtest4 = "$ V_4 $" in 1</b>
+<p>
+    <b>. gen a = "&amp;"</b> // Column separator
+<p>
+    <b>. gen e = " \\\\"</b> // End of row
+<p>
+    <b>. </b>// Add tabular environment for use with the LaTeX-package <i>booktabs</i>
+<p>
+    <b>. insob 2 1</b>
+<p>
+    <b>. replace mtest1 = "\begin{tabular}{rrrr}" in 1</b>
+<p>
+    <b>. replace mtest1 = "\toprule\addlinespace[\defaultaddspace]" in 2</b>
+<p>
+    <b>. insob 1 4</b>
+<p>
+    <b>. replace mtest1 = "\midrule\addlinespace[\defaultaddspace]" in 4</b>
+<p>
+    <b>. insob 1 _N, after</b>
+<p>
+    <b>. replace mtest1 = "\bottomrule" in l/l</b>
+<p>
+    <b>. insob 1 _N, after</b>
+<p>
+    <b>. replace mtest1 = "\end{tabular}" in l/l</b>
+<p>
+    <b>. outfile mtest1 a mtest2 a mtest3 a mtest4 e using "testtable.tex",</b>
+        <b>noquote replace wide</b>
+<p>
+<p>
+<b><u>Author</u></b>
+<p>
+    Bas Straathof, ECIS, Eindhoven University of Technology.  Email me if you
+    observe any problems. Thanks to Nick Cox for substantial improvements.
+<p>
+</pre>

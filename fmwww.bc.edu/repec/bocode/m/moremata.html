@@ -1,0 +1,216 @@
+<pre>
+<b>help moremata</b>
+-------------------------------------------------------------------------------
+<p>
+<b><u>Title</u></b>
+<p>
+    <b>moremata -- Various Mata functions</b>
+<p>
+<p>
+<b><u>Contents</u></b>
+<p>
+      <b>Online</b>
+    <b>help entry       Function           Purpose</b>
+    ---------------------------------------------------------------------------
+<p>
+       +------------------+
+    ---|<i> Scalar functions </i>|----------------------------------------------------
+       +------------------+
+<p>
+    <b>mm_kern()</b>        <b>mm_kern()</b>          various kernel functions
+                     <b>mm_kint()</b>          kernel integral functions
+                     <b>mm_kdel0()</b>         canonical bandwidth of kernel
+<p>
+       +-----------------------+
+    ---|<i> Statistical functions </i>|-----------------------------------------------
+       +-----------------------+
+<p>
+    <i>Quantiles, ranks, frequencies, &amp; summary statistics</i>
+<p>
+    <b>mm_quantile()</b>    <b>mm_quantile()</b>      quantile function
+                     <b>mm_median()</b>        median
+                     <b>mm_iqrange()</b>       inter-quartile range
+<p>
+    <b>mm_ecdf()</b>        <b>mm_ecdf()</b>          cumulative distribution function
+                     <b>mm_relrank()</b>       grade transformation
+                     <b>mm_ranks()</b>         ranks/cumulative frequencies
+<p>
+    <b>mm_freq()</b>        <b>mm_freq()</b>          compute frequency counts
+<p>
+    <b>mm_histogram()</b>   <b>mm_histogram()</b>     produce histogram data
+<p>
+    <b>mm_mgof()</b>        <b>mm_mgof()</b>          multinomial goodness-of-fit tests
+<p>
+    <b>mm_collapse()</b>    <b>mm_collapse()</b>      summary statistics by subgroups
+                     <b>_mm_collapse()</b>     summary statistics by subgroups
+<p>
+    <b>mm_gini()</b>        <b>mm_gini()</b>          Gini coefficient
+<p>
+    <i>Sampling, resampling, &amp; combinations</i>
+<p>
+    <b>mm_sample()</b>      <b>mm_sample()</b>        draw random sample
+                     <b>mm_srswr()</b>         SRS with replacement
+                     <b>mm_srswor()</b>        SRS without replacement
+                     <b>mm_upswr()</b>         UPS with replacement
+                     <b>mm_upswor()</b>        UPS without replacement
+<p>
+    <b>mm_bs()</b>          <b>mm_bs()</b>            bootstrap estimation
+                     <b>mm_bs2()</b>           bootstrap estimation
+                     <b>mm_bs_report()</b>     report bootstrap results
+<p>
+    <b>mm_jk()</b>          <b>mm_jk()</b>            jackknife estimation
+                     <b>mm_jk_report()</b>     report jackknife results
+<p>
+    <b>mm_subset()</b>      <b>mm_subset()</b>        obtain subsets, one at a time
+                     <b>mm_composition()</b>   obtain compositions, one by one
+                     <b>mm_ncompositions()</b> determine number of compositions
+                     <b>mm_partition()</b>     obtain partitions, one at a time
+                     <b>mm_npartitionss()</b>  determine number of partitions
+                     <b>mm_rsubset()</b>       draw random subset
+                     <b>mm_rcomposition()</b>  draw random composition
+<p>
+    <i>Means, variances, &amp; correlations</i>
+<p>
+    <b>mm_colvar()</b>      <b>mm_colvar()</b>        variance, by column
+                     <b>mm_meancolvar()</b>    mean and variance, by column
+                     <b>mm_variance0()</b>     population variance
+                     <b>mm_meanvariance0()</b> mean and population variance
+                     <b>mm_mse()</b>           mean squared error
+                     <b>mm_colmse()</b>        mean squared error, by column
+                     <b>mm_sse()</b>           sum of squared errors
+                     <b>mm_colsse()</b>        sum of squared errors, by column
+<p>
+    <i>Densities &amp; distributions</i>
+<p>
+    <b>mm_benford()</b>     <b>mm_benford()</b>       Benford distribution
+<p>
+    <b>mm_cauchy()</b>      <b>mm_cauchy()</b>        cumulative Cauchy-Lorentz dist.
+                     <b>mm_cauchyden()</b>     Cauchy-Lorentz density
+                     <b>mm_cauchytail()</b>    reverse cumulative Cauchy-Lorentz
+                     <b>mm_invcauchy()</b>     inverse cumulative Cauchy-Lorentz
+<p>
+    <b>mm_rbinomial()</b>   <b>mm_rbinomial()</b>     generate binomial random numbers
+                     <b>mm_cebinomial()</b>    cond. expect. of binomial r.v.
+<p>
+       +------------------------------+
+    ---|<i> Other mathematical functions </i>|----------------------------------------
+       +------------------------------+
+<p>
+    <b>mm_root()</b>        <b>mm_root()</b>          Brent's univariate zero finder
+<p>
+    <b>mm_nrroot()</b>      <b>mm_nrroot()</b>        Newton-Raphson zero finder
+<p>
+    <b>mm_finvert()</b>     <b>mm_finvert()</b>       univariate function inverter
+<p>
+       +---------------------+
+    ---|<i> Graphical functions </i>|-------------------------------------------------
+       +---------------------+
+<p>
+    <b>mm_plot()</b>        <b>mm_plot()</b>          Draw twoway plot
+                     <b>_mm_plot()</b>         Draw twoway plot
+<p>
+       +--------------------------+
+    ---|<i> Matrix utility functions </i>|--------------------------------------------
+       +--------------------------+
+<p>
+    <b>mm_panels()</b>      <b>mm_panels()</b>        identify nested panel structure
+                     <b>_mm_panels()</b>       identify panel sizes
+                     <b>mm_npanels()</b>       identify number of panels
+<p>
+    <b>mm_nunique()</b>     <b>mm_nunique()</b>       count number of distinct values
+                     <b>mm_nuniqrows()</b>     count number of unique rows
+<p>
+    <b>mm_isconstant()</b>  <b>mm_isconstant()</b>    whether matrix is constant
+<p>
+    <b>mm_nobs()</b>        <b>mm_nobs()</b>          number of observations
+<p>
+    <b>mm_colrunsum()</b>   <b>mm_colrunsum()</b>     running sum of each column
+<p>
+    <b>mm_linbin()</b>      <b>mm_linbin()</b>        linear binning
+                     <b>mm_fastlinbin()</b>    fast linear binning
+                     <b>mm_exactbin()</b>      exact binning
+                     <b>mm_makegrid()</b>      equally spaced grid points
+<p>
+    <b>mm_cut()</b>         <b>mm_cut()</b>           categorize data vector
+<p>
+    <b>mm_posof()</b>       <b>mm_posof()</b>         find element in vector
+<p>
+    <b>mm_which()</b>       <b>mm_which()</b>         positions of nonzero elements
+<p>
+    <b>mm_locate()</b>      <b>mm_locate()</b>        search an ordered vector
+                     <b>mm_hunt()</b>          consecutive search
+<p>
+    <b>mm_ipolate()</b>     <b>mm_ipolate()</b>       linear interpolation
+<p>
+    <b>mm_polint()</b>      <b>mm_polint()</b>        polynomial inter-/extrapolation
+<p>
+       +-------------------------------+
+    ---|<i> Matrix manipulation functions </i>|---------------------------------------
+       +-------------------------------+
+<p>
+    <b>mm_cond()</b>        <b>mm_cond()</b>          matrix conditional operator
+<p>
+    <b>mm_expand()</b>      <b>mm_expand()</b>        duplicate single rows/columns
+                     <b>_mm_expand()</b>       duplicate rows/columns in place
+                     <b>mm_repeat()</b>        duplicate contents as a whole
+                     <b>_mm_repeat()</b>       duplicate contents in place
+<p>
+    <b>mm_unorder2()</b>    <b>mm_unorder2()</b>      stable version of <b>unorder()</b>
+                     <b>mm_jumble2()</b>       stable version of <b>jumble()</b>
+                     <b>mm__jumble2()</b>      stable version of <b>_jumble()</b>
+<p>
+       +------------------+
+    ---|<i> String functions </i>|----------------------------------------------------
+       +------------------+
+<p>
+    <b>mm_pieces()</b>      <b>mm_pieces()</b>        break string into pieces
+                     <b>mm_npieces()</b>       count number of pieces
+                     <b>_mm_npieces()</b>      count number of pieces
+<p>
+    <b>mm_invtokens()</b>   <b>mm_invtokens()</b>     reverse of <b>tokens()</b>
+<p>
+    <b>mm_realofstr()</b>   <b>mm_realofstr()</b>     convert string into real
+<p>
+    <b>mm_strexpand()</b>   <b>mm_strexpand()</b>     expand string argument
+<p>
+       +---------------+
+    ---|<i> I/O functions </i>|-------------------------------------------------------
+       +---------------+
+<p>
+    <b>mm_matlist()</b>     <b>mm_matlist()</b>       display a (real) matrix
+<p>
+    <b>mm_insheet()</b>     <b>mm_insheet()</b>       read spreadsheet file
+                     <b>mm_infile()</b>        read free-format file
+                     <b>mm_outsheet()</b>      write spreadsheet file
+<p>
+       +-----------------------+
+    ---|<i> Programming functions </i>|-----------------------------------------------
+       +-----------------------+
+<p>
+    <b>mm_callf()</b>       <b>mm_callf()</b>         pass optional args to function
+                     <b>mm_callf_setup()</b>   setup for <b>mm_callf()</b>
+    ---------------------------------------------------------------------------
+<p>
+<p>
+<b><u>Description</u></b>
+<p>
+    The functions above are general-purpose add-ons to official Mata.
+<p>
+<p>
+<b><u>Author</u></b>
+<p>
+    Ben Jann, ETH Zurich, jannb@ethz.ch
+<p>
+    The Cauchy-Lorentz distribution functions were provided by Christopher F
+    Baum, Boston College.
+<p>
+    Thanks for citing this software as follows:
+<p>
+        Jann, B. 2005. moremata: Stata module (Mata) to provide various
+        functions. Available from
+        http://ideas.repec.org/c/boc/bocode/s455001.html.
+<p>
+<p>
+<b><u>Also see</u></b>
+<p>
+</pre>

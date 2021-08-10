@@ -1,0 +1,169 @@
+<pre>
+<p>
+<b><u>Title</u></b>
+<p>
+    <b>landemets</b> -- Boundaries for group sequential clinical trials using alpha
+                 spending functions
+<p>
+<a name="syntax"></a><b><u>Syntax</u></b>
+<p>
+        <b>landemets</b> <b>,</b> [options]
+<p>
+    <i>options</i>          Description
+    -------------------------------------------------------------------------
+      <b>t(</b><i>numlist</i><b>)</b>     set monitoring times; default is <b>t(1)</b>
+      <b><u>a</u></b><b>lpha(</b><i>numlist</i><b>)</b> set type I error probability(ies); default is <b>alpha(.05)</b>
+      <b><u>m</u></b><b>ethod(</b><i>method</i><b>)</b> set the alpha spending function(s); default is
+                       <b>method(obf)</b>
+      <b><u>r</u></b><b>ho(</b><i>numlist</i><b>)</b>   set the parameter of alpha spending functions in the
+                       power family
+      <b><u>o</u></b><b>nesided</b>       control if one-sided boundaries are to be computed
+      <b><u>p</u></b><b>lot</b>           display a graph with the boundaries
+    -------------------------------------------------------------------------
+<p>
+<a name="description"></a><b><u>Description</u></b>
+<p>
+    <b>landemets</b> computes boundaries for group sequential clinical trials using
+    the method of Lan and DeMets (1983).
+<p>
+<a name="remarks"></a><b><u>Remarks</u></b>
+<p>
+    <b>landemets</b> requires that the Stata module -moremata- (Jann, 2005) be
+    installed.
+<p>
+<a name="examples"></a><b><u>Examples</u></b> 
+<p>
+    Compute boundaries with the default options:
+        <b>. landemets</b>
+<p>
+    Ten equally spaced monitoring times between 0.1 and 1:
+        <b>. landemets, t(0.1(0.1)1)</b>
+<p>
+    The same, but plotting the boundaries:
+        <b>. landemets, t(0.1(0.1)1) plot</b>
+<p>
+    Type I error probability set to 0.01, with a different choice of four,
+    not equally spaced times:
+        <b>. landemets, t(0.2 0.3 0.5 1) alpha(0.01)</b>
+<p>
+    The same, but using a Pocock type alpha spending function:
+        <b>. landemets, t(0.2 0.3 0.5 1) alpha(0.01) method(poc)</b>
+<p>
+    One-sided boundaries using an alpha spending function in the power
+    family, with parameter set to 1.5:
+        <b>. landemets, t(0.2(0.2)1) method(pow) rho(1.5) onesided</b>
+<p>
+    Two-sided asymmetric boundaries; the total type I error probability,
+    0.05, is divided in 0.04 and 0.01 for the lower and upper boundaries,
+    respectively; an O'Brien-Fleming type alpha spending function is used for
+    both boundaries:
+        <b>. landemets, t(0.2(0.2)1) alpha(0.04, 0.01) method(obf obf)</b>
+<p>
+    Two-sided asymmetric boundaries; the total type I error probability,
+    0.05, is equally divided between the lower and upper boundaries, but
+    different alpha spending functions are used for each boundary (lower:
+    power family, with rho = 2, upper:  O'Brien-Fleming type):
+        <b>. landemets, t(0.2(0.2)1) alpha(0.025, 0.025) method(pow obf) rho(2)</b>
+<p>
+<a name="options"></a><b><u>Options</u></b>
+<p>
+    <b>t(</b><i>numlist</i><b>)</b> specifies the times at which analyses are to be performed.
+        They must be contained in (0,1], and the maximum value should be 1.
+        The default is <b>t(1)</b>, meaning no interim analyses.
+<p>
+    <b>alpha(</b><i>numlist</i><b>)</b> specifies the type I error probability. The <i>numlist</i> may be
+        of length one or two. If it has only one value, two-sided (symmetric)
+        or one-sided stopping boundaries for a type I error probability equal
+        to that value are computed (whether two-sided or one-sided boundaries
+        are computed is controlled by the <b>onesided</b> option; see below). If the
+        length of <i>numlist</i> is two, its components give the type I error
+        probability for, respectively, the lower and upper boundaries. Thus,
+        if the two alpha values or the alpha spending function used for each
+        boundary are different (see the <b>method</b> option below), asymmetric
+        two-sided boundaries are obtained. The default is <b>alpha(0.05)</b>.
+<p>
+    <b>method(</b><i>method</i><b>)</b> specifies the alpha spending function(s) to be used. The
+        accepted arguments are:
+        a) one of <b>obf</b> (O'Brien-Fleming type), <b>poc</b>(Pocock type), or <b>pow</b> (power
+            family). This is the way to specify the alpha spending function
+            for symmetric two-sided or one-sided boundaries. When the method
+            is thus specified, the argument of the <b>alpha</b> option must be of
+            length one.
+        b) any two (possibly repeated) values in a) separated by one or more
+            spaces. This is the way to specify the alpha spending functions
+            used for each boundary (the first word for the lower boundary,
+            the second word for the upper one) for asymmetric boundaries.
+            When the method is thus specified, the argument of the <b>alpha</b>
+            option must be of length two.
+        The default is<b> method(obf)</b>. For details on the types of alpha
+        spending functions see, e.g., Cook and DeMets, 2008.
+<p>
+    <b>rho(</b><i>numlist</i><b>)</b> specifies the parameter(s) of the power family alpha
+        spending function(s). The <i>numlist</i> may be of length one or two,
+        depending on how many alpha spending functions of this type are
+        specified by the <b>method</b> option.
+<p>
+    <b>onesided</b> specifies if one-sided, instead of two-sided boundaries, are to
+        be computed.
+<p>
+    <b>plot</b> specifies if a plot of stopping boundaries vs. monitoring times is
+        to be displayed.
+<p>
+<a name="savedresults"></a><b><u>Saved results</u></b>
+<p>
+<b>landemets</b> saves the following in <b>r()</b>:
+<p>
+Scalars
+<p>
+    <b>r(alpha)</b>         overall probability of type I error (omitted when
+                         asymmetric boundaries are computed)
+    <b>r(alpha_lower)</b>   overall probability of type I error for the lower
+                         boundary (omitted when symmetric or one-sided
+                         boundaries are computed)
+    <b>r(alpha_upper)</b>   overall probability of type I error for the upper
+                         boundary(omitted when symmetric or one-sided
+                         boundaries are computed)
+    <b>r(K)</b>             number of interim analyses
+  
+Macros 
+<p>
+    <b>r(bound_type)</b>    type of boundaries computed: two-sided (asymmetric or
+                         not) or one-sided
+    <b>r(method)</b>        alpha spending function used (omitted when asymmetric
+                         boundaries are computed)
+    <b>r(method_lower)</b>  alpha spending function used for the lower boundary
+                         (omitted when symmetric or one-sided boundaries are
+                         computed)
+    <b>r(method_upper)</b>  alpha spending function used for the upper boundary
+                         (omitted when symmetric or one-sided boundaries are
+                         computed)
+<p>
+Matrices
+<p>
+    <b>r(bound_alpha)</b>   a matrix with the following named columns:
+                     <i> time</i>, monitoring times
+                     <i> lower</i>, lower boundaries (omitted if one-sided
+                         boundaries are computed)
+                     <i> upper</i>, upper boundaries
+                     <i> cumalpha</i>, cumulative alpha values
+                     <i> diffalpha</i>, first difference of the cumulative alpha
+                         values
+<p>
+<a name="author"></a><b><u>Author</u></b>
+<p>
+    Ignacio López de Ullibarri
+    Department of Mathematics
+    University of A Coruña, Spain
+    E-mail: ilu@udc.es
+<p>
+<a name="references"></a><b><u>References</u></b>
+<p>
+    Cook TD and DeMets DL (2008), <i>Introduction to Statistical Methods for</i>
+        <i>Clinical Trials</i>, Boca Raton: Chapman &amp; Hall/CRC
+<p>
+    Jann B (2005), <i>moremata: Stata module (Mata) to provide various</i>
+        <i>functions</i>, available from 
+        http://ideas.repec.org/c/boc/bocode/s455001.html
+<p>
+    Lan K and DeMets DL (1983), Discrete sequential boundaries for clinical
+</pre>

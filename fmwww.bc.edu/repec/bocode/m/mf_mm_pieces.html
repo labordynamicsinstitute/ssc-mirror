@@ -1,0 +1,101 @@
+<pre>
+<b>help mata mm_pieces()</b>
+-------------------------------------------------------------------------------
+<p>
+<b><u>Title</u></b>
+<p>
+    <b>mm_pieces() -- Break a string into pieces</b>
+<p>
+<p>
+<b><u>Syntax</u></b>
+<p>
+        <i>string rowvector</i> <b>mm_pieces(</b><i>str</i><b>,</b> <i>length</i> [<b>,</b> <i>nobreak</i>]<b>)</b>
+<p>
+        <i>real matrix</i>      <b>mm_npieces(</b><i>S</i><b>,</b> <i>length</i> [<b>,</b> <i>nobreak</i>]<b>)</b>
+<p>
+        <i>real scalar</i>      <b>_mm_npieces(</b><i>str</i><b>,</b> <i>length</i> [<b>,</b> <i>nobreak</i>]<b>)</b>
+<p>
+<p>
+    where
+<p>
+          <i>str</i>:  <i>string scalar</i> containing string to be broken
+<p>
+       <i>length</i>:  <i>real scalar</i> specifying maximum length of pieces
+<p>
+      <i>nobreak</i>:  <i>real scalar</i> indicating that long words are not to be broken
+<p>
+            <i>S</i>:  <i>string matrix S</i>
+<p>
+<p>
+<b><u>Description</u></b>
+<p>
+    <b>mm_pieces()</b> breaks a string into pieces of roughly the specified length.
+    Words are not broken unless they are longer than the specified length.
+    <i>nobreak</i>!=0 indicates that words are not to be broken even if they are
+    longer than the specified length.
+<p>
+    <b>mm_npieces()</b> and <b>_mm_npieces()</b> return the number of pieces a string would
+    be broken into by <b>mm_pieces()</b>. <b>mm_npieces()</b> may be applied to a <i>sting</i>
+    <i>matrix</i> in which case it returns element-by-element results. <b>_mm_npieces()</b>
+    is equivalent to <b>cols(mm_pieces())</b> but is faster and consumes less
+    memory.
+<p>
+<p>
+<b><u>Remarks</u></b>
+<p>
+    Example:
+<p>
+        : s = "A string to be cut into pieces"
+        
+        : mm_pieces(s, 10)
+                       1           2           3           4
+            +-------------------------------------------------+
+          1 |   A string   to be cut        into      pieces  |
+            +-------------------------------------------------+
+        
+        : _mm_npieces(s,10)
+          4
+        
+<p>
+<b><u>Conformability</u></b>
+<p>
+    <b>mm_pieces(</b><i>str</i><b>,</b> <i>length</i><b>,</b> <i>nobreak</i><b>)</b>:
+           <i>str</i>:  1 <i>x</i> 1
+        <i>length</i>:  1 <i>x</i> 1
+       <i>nobreak</i>:  1 <i>x</i> 1
+        <i>result</i>:  1 <i>x</i> 1
+        
+    <b>mm_npieces(</b><i>S</i><b>,</b> <i>length</i><b>,</b> <i>nobreak</i><b>)</b>:
+             <i>S</i>:  <i>r x c</i>
+        <i>length</i>:  1 <i>x</i> 1
+       <i>nobreak</i>:  1 <i>x</i> 1
+        <i>result</i>:  <i>r x c</i>
+        
+    <b>_mm_npieces(</b><i>str</i><b>,</b> <i>length</i><b>,</b> <i>nobreak</i><b>)</b>:
+           <i>str</i>:  1 <i>x</i> 1
+        <i>length</i>:  1 <i>x</i> 1
+       <i>nobreak</i>:  1 <i>x</i> 1
+        <i>result</i>:  1 <i>x</i> 1
+<p>
+<p>
+<b><u>Diagnostics</u></b>
+<p>
+    Leading and trailing blanks are removed from the returned pieces. One
+    piece is returned if <i>length</i> is missing. Pieces of length 1 will be
+    returned if <i>length</i>&lt;1.
+<p>
+<p>
+<b><u>Source code</u></b>
+<p>
+    mm_pieces.mata
+<p>
+<p>
+<b><u>Author</u></b>
+<p>
+    Ben Jann, ETH Zurich, jannb@ethz.ch
+<p>
+<p>
+<b><u>Also see</u></b>
+<p>
+    Online:  help for <b>[M-4] string</b>, <b>moremata</b>
+</pre>

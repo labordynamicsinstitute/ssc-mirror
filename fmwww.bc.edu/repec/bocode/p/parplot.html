@@ -1,0 +1,132 @@
+<pre>
+-------------------------------------------------------------------------------
+help for <b>parplot</b>
+-------------------------------------------------------------------------------
+<p>
+<b><u>Parallel coordinates plots</u></b>
+<p>
+        <b>parplot</b> <i>varlist</i> [<b>if</b> <i>exp</i>] [<b>in</b> <i>range</i>] [ <b>,</b> <b>by(</b><i>byvar</i> [<b>,</b><i> suboptions</i>]<b>)</b>
+                 <b><u>hor</u></b><b>izontal</b> <b><u>o</u></b><b>ver(</b><i>varname</i><b>)</b> <b><u>tr</u></b><b>ansform(</b><i>transform</i><b>)</b> <b>variablelabels</b>
+                 <b>plot(</b><i>plot</i><b>)</b> <b>addplot(</b><i>plot</i><b>)</b> <i>graph_options</i> ]
+<p>
+<p>
+<b><u>Description</u></b>
+<p>
+    <b>parplot</b> produces a parallel coordinates plot of <i>varlist</i>.  Each variable
+    is plotted on a separate vertical or horizontal scale and the values for
+    each observation are shown by connected line segments.  An observation
+    will be ignored if it has missing values for any variable in <i>varlist</i> (and
+    by default, if <b>by()</b> is specified, for <i>byvar</i>).
+<p>
+    Such plots have a long history under various guises. Wegman (1990) gave a
+    definitive account for a statistical readership.  Cooke and van Noortwijk
+    (2000) discuss their use, under the name cobweb plots, in sensitivity
+    analysis.  Robbins (2005) gives examples in an introductory text.
+    Andrienko and Andrienko (2005) give further examples and extensions.
+<p>
+<p>
+<b><u>Options</u></b> 
+<p>
+    <b>by()</b> specifies that a separate plot should be drawn for each value of
+        <i>byvar</i>. See help on by_option and note, among other possibilities, the
+        <i>suboptions</i> <b>total</b> and <b>missing</b>.
+<p>
+    <b>horizontal</b> draws variable scales horizontally. The default is vertical.
+<p>
+    <b>over()</b> specifies a variable to be used to identify different categories.
+        Different pens will be used for different categories, and it is
+        possible to specify different marker symbols, line patterns, and so
+        forth.
+<p>
+    <b>transform()</b> specifies a transformation to be applied to each variable
+        before plotting. Each transformation may be specified by as little as
+        one letter, <b>m</b>, <b>c</b>, <b>s</b> or <b>r</b>.
+<p>
+        <b>maxmin</b> specifies transforming to (value - minimum) /
+        (maximum - minimum), which is the default. Values shown thus vary
+        from 0 to 1.
+<p>
+        <b>centered</b> or <b>centred</b> specifies transforming to (value - median) /
+        max(maximum - median, median - minimum).  Each median thus is shown
+        at 0 and values shown vary from (possibly) -1 to (possibly) 1. Note
+        that transformed values for any given variable will attain both -1
+        and 1 if and only if maximum - median = median - minimum. This
+        transform was used by Gleason (1996).
+<p>
+        <b>standardized</b> or <b>standardised</b> specifies transforming to
+        (value - mean) / SD. Each mean thus is shown at 0.
+<p>
+        <b>raw</b> specifies no transform, i.e. data are shown as supplied.  This
+        may be a good choice for variables expressed in the same units.
+<p>
+    <b>variablelabels</b> specifies that multiple variables be labelled by their
+        variable labels. The default is to use variable names.
+<p>
+    <b>plot(</b><i>plot</i><b>)</b> provides a way to add other plots to the generated graph; see
+        help plot option. (Stata 8 only.)
+<p>
+    <b>addplot(</b><i>plot</i><b>)</b> provides a way to add other plots to the generated graph;
+        see help addplot option.  (Stata 9 up.)
+<p>
+    <i>graph_options</i> are options of twoway connected.
+<p>
+       
+<b><u>Examples</u></b> 
+<p>
+    <b>. sysuse census, clear</b>
+<p>
+    <b>. foreach v in death divorce marriage {</b>
+    <b>.         gen r_`v' = log10(`v' / pop)</b>
+    <b>. }</b>
+<p>
+    <b>. foreach t in maxmin centred standardised raw {</b>
+    <b>.         parplot r_* , tr(`t') by(region, caption(logarithmic scales)</b>
+                <b>title(US states 1980) t1(`t' scaling)) hor yla(1 "deaths" 2</b>
+                <b>"divorces" 3 "marriages", ang(h))</b>
+    <b>.         more</b>
+    <b>. }</b>
+<p>
+    <b>. sysuse auto, clear</b>
+    <b>. gen gpm = 1 / mpg</b>
+    <b>. parplot gpm weight disp, xsc(r(0.8 3.2)) yla(, ang(h)) over(foreign)</b>
+        <b>ms(oh dh) clp(_ ".#")</b>
+    <b>. parplot gpm weight disp, hor ysc(r(0.8 3.2)) yla(, ang(h))</b>
+        <b>over(foreign) ms(oh dh) clp(_ ".#")</b>
+<p>
+<p>
+<b><u>Acknowledgments</u></b>
+<p>
+    The <b>parcoord</b> program written by John R. Gleason for Stata 4 (Gleason
+    1996) was a most valuable start for this program.
+<p>
+    Vince Wiggins made very helpful comments. Ian S. Evans supplied the
+    Andrienko reference. Scott Merryman found a bug. Garry Anderson provoked
+    an update of the help.
+<p>
+<p>
+<b><u>Author</u></b>
+<p>
+    Nicholas J. Cox, Durham University, U.K.
+    n.j.cox@durham.ac.uk
+<p>
+<p>
+<b><u>References</u></b>
+<p>
+    Andrienko, G. and N. Andrienko. 2005. Blending aggregation and selection:
+        adapting parallel coordinates for the visualization of large
+        datasets. <i>Cartographic Journal</i> 42: 49-60.
+<p>
+    Cooke, R.M. and J.M. van Noortwijk. 2000. Graphical methods.  In
+        Santelli, A., K. Chan and E.M. Scott (eds) <i>Sensitivity analysis.</i>
+        Chichester: John Wiley, 245-264.
+<p>
+    Gleason, J.R. 1996. Graphing high-dimensional data using parallel
+        coordinates. <i>Stata Technical Bulletin</i> 29: 10-14 (<i>STB Reprints</i> 5:
+        53-60).
+<p>
+    Robbins, N.B. 2005. <i>Creating More Effective Graphs.</i>  Hoboken, NJ: Wiley.
+<p>
+    Wegman, E.J. 1990. Hyperdimensional data analysis using parallel
+        coordinates. <i>Journal, American Statistical Association</i> 85: 664-675.
+<p>
+</pre>

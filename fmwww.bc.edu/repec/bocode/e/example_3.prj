@@ -1,0 +1,71 @@
+.asubsim_dlg.main.vn_pcexp.setvalue "pc_exp_tot"
+.asubsim_dlg.main.vn_hhs.setvalue "hhsize"
+.asubsim_dlg.main.vn_pl1.setvalue "pline"
+.asubsim_dlg.main.cb_wmet.setvalue "2"
+.asubsim_dlg.main.dbsamex.setvalue "example_3"
+.asubsim_dlg.main.ed_cname.setvalue "MyCountry"
+.asubsim_dlg.main.ed_ysvy.setvalue "2008"
+.asubsim_dlg.main.ed_ysim.setvalue "2013"
+.asubsim_dlg.main.ed_lcur.setvalue "Dinar LYD"
+.asubsim_dlg.main.cb_tr.setvalue "1"
+.asubsim_dlg.main.vn_hhg.setvalue ""
+.asubsim_dlg.tb_options.ck_order.seton
+.asubsim_dlg.tb_options.ed_aggr.setvalue "1 2 : SUM_FLOUR | 10 11 : SUM_MILK"
+.asubsim_dlg.tb_options.ck_excel.seton
+.asubsim_dlg.tb_options.fnamex.setvalue "example3.xml"
+.asubsim_dlg.gr_options.en_min1.setvalue "0"
+.asubsim_dlg.gr_options.en_max1.setvalue "0.95"
+.asubsim_dlg.gr_options.en_min2.setvalue "0"
+.asubsim_dlg.gr_options.en_max2.setvalue "0.95"
+.asubsim_dlg.gr_options.en_min9.setvalue "0"
+.asubsim_dlg.gr_options.en_max9.setvalue "100"
+.asubsim_dlg.gr_options.en_min10.setvalue "0"
+.asubsim_dlg.gr_options.en_max10.setvalue "100"
+.asubsim_dlg.items_info.en_inf1.setvalue "0"
+pschset iflour , nblock(2) bun(2) mxb1(36) sub1(.94) tr1(.09) sub2(0) tr2(1.03)
+pschset f1_flour , nblock(2) bun(2) mxb1(36) sub1(0) tr1(.372) sub2(0) tr2(1.03)
+pschset f2_flour , nblock(1) bun(1) sub1(0) tr1(1.03)
+pschset iflour_bread , nblock(1) bun(2) sub1(.922) tr1(.037)
+pschset f1_flour_bread , nblock(1) bun(1) sub1(0) tr1(.3136)
+pschset f2_flour_bread , nblock(1) bun(1) sub1(0) tr1(.959)
+pschset isemolina , nblock(2) bun(2) mxb1(12) sub1(.831) tr1(.08) sub2(0) tr2(.911)
+pschset f1_semolina , nblock(2) bun(2) mxb1(12) sub1(0) tr1(.3293) sub2(0) tr2(.911)
+pschset f2_semolina , nblock(1) bun(1) sub1(0) tr1(.911)
+pschset irice , nblock(2) bun(2) mxb1(30) sub1(1.419) tr1(.14) sub2(0) tr2(1.559)
+pschset f1_rice , nblock(2) bun(2) mxb1(30) sub1(.9933) tr1(.5657) sub2(0) tr2(1.559)
+pschset f2_rice , nblock(1) bun(1) sub1(0) tr1(1.559)
+pschset isugar , nblock(2) bun(2) mxb1(24) sub1(1.068) tr1(.25) sub2(0) tr2(1.318)
+pschset f1_sugar , nblock(2) bun(2) mxb1(24) sub1(.7476) tr1(.5704) sub2(0) tr2(1.318)
+pschset f2_sugar , nblock(1) bun(1) sub1(0) tr1(1.318)
+pschset itea , nblock(2) bun(2) mxb1(2.4) sub1(3.597) tr1(1.5) sub2(0) tr2(5.097)
+pschset f1_tea , nblock(2) bun(2) mxb1(2.4) sub1(2.5179) tr1(2.5791) sub2(0) tr2(5.097)
+pschset f2_tea , nblock(1) bun(1) sub1(0) tr1(5.097)
+pschset imacaroni , nblock(2) bun(2) mxb1(18) sub1(1.194) tr1(.2) sub2(0) tr2(1.394)
+pschset f1_macaroni , nblock(2) bun(2) mxb1(18) sub1(.8358) tr1(.5582) sub2(0) tr2(1.394)
+pschset f2_macaroni , nblock(1) bun(1) sub1(0) tr1(1.394)
+pschset ioil , nblock(2) bun(2) mxb1(18) sub1(2.802) tr1(.6) sub2(0) tr2(3.402)
+pschset f1_oil , nblock(2) bun(2) mxb1(18) sub1(1.9614) tr1(1.4406) sub2(0) tr2(3.402)
+pschset f2_oil , nblock(1) bun(1) sub1(0) tr1(3.402)
+pschset itomato , nblock(2) bun(2) mxb1(12) sub1(1.541) tr1(.6) sub2(0) tr2(2.141)
+pschset f1_tomato , nblock(2) bun(2) mxb1(12) sub1(1.0787) tr1(1.0623) sub2(0) tr2(2.141)
+pschset f2_tomato , nblock(1) bun(1) sub1(0) tr1(2.141)
+pschset imilk_children , nblock(2) bun(2) mxb1(38.4) sub1(4.75) tr1(7.5) sub2(0) tr2(12.25)
+pschset f1_milk_children , nblock(2) bun(2) mxb1(38.4) sub1(3.325) tr1(8.925000000000001) sub2(0) tr2(12.25)
+pschset f2_milk_children , nblock(1) bun(1) sub1(0) tr1(12.25)
+pschset imilk_concentrated , nblock(2) bun(2) mxb1(14.76) sub1(1.647) tr1(.975) sub2(0) tr2(2.622)
+pschset f1_milk_concentrated , nblock(2) bun(2) mxb1(14.76) sub1(1.1529) tr1(1.4691) sub2(0) tr2(2.622)
+pschset f2_milk_concentrated , nblock(1) bun(1) sub1(0) tr1(2.622)
+.asubsim_dlg.items_info.cb_items.setvalue  11
+.asubsim_dlg.items_info.ed_items.setvalue  11
+.asubsim_dlg.items_info.cb_ini.setvalue 2"
+.asubsim_dlg.items_info.var_sn.setvalue "snames"
+.asubsim_dlg.items_info.var_item.setvalue "itnames"
+.asubsim_dlg.items_info.var_ip.setvalue "ipsch"
+.asubsim_dlg.items_info.var_unit.setvalue "unit"
+.asubsim_dlg.items_info.cb_nscen.setvalue  2
+.asubsim_dlg.items_info.vn_fpsch1.setvalue "fpsch1"
+.asubsim_dlg.items_info.vn_elas1.setvalue "elas1"
+.asubsim_dlg.items_info.en_inf1.setvalue "0"
+.asubsim_dlg.items_info.vn_fpsch2.setvalue "fpsch2"
+.asubsim_dlg.items_info.vn_elas2.setvalue "elas2"
+.asubsim_dlg.items_info.en_inf2.setvalue "0"

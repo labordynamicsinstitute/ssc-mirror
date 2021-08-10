@@ -1,0 +1,208 @@
+<pre>
+help for <b>margdistfit</b>
+-------------------------------------------------------------------------------
+<p>
+<b><u>Title</u></b>
+<p>
+    <b>margdistfit</b> -- Post-estimation command that compares the observed and
+                     theoretical marginal distributions.
+<p>
+<b><u>Syntax</u></b>
+<p>
+        <b>margdistfit</b> <b>,</b> [ { <b>pp</b> | <b>qq</b> | <b>cumul</b> | <b><u>hangr</u></b><b>oot</b>[<b>(</b>hangroot_options<b>)</b>] }
+               <b>sims(</b><i>#</i><b>)</b> <b><u>nopa</u></b><b>rsamp</b> <b>obsopts(</b>scatter_options<b>)</b>
+               <b>refopts(</b>line_options<b>)</b> <b>simopts(</b>line_options<b>)</b> <b>nosquare</b> <b>e(</b><i>#</i><b>)</b> ]
+<p>
+<p>
+<b><u>Description</u></b>
+<p>
+    <b>margdistfit</b> is a post-estimation command for checking how well
+    distributional assumptions of a regression model fit to the data. It does
+    so by comparing the marginal distribution implied by the regression model
+    to the distribution of the dependent variable. This comparison is done
+    through either a probability-probabilty plot, a quantile-quantile plot, a
+    hanging rootogram, or a plot of the two cumulative distribution
+    functions.
+<p>
+    The key concept in this command is the marginal distribution. Regression
+    models assume a distribution for the dependent variable, and this
+    distribution can be described in terms of a small number of parameters:
+    e.g. the mean and the standard deviation in case of the normal/Gaussian
+    distribution. One or more of these distribution parameters, typically the
+    mean, is allowed to differ from observation to observation depending on
+    the values of the explanatory variables. As a consequence, the
+    distribution of the explained variable implied by the model is a mixture
+    distribution such that each observation has its own parameters. This is
+    the marginal distribution.
+<p>
+    To give an indication of how much deviation from the theoretical
+    distribution is still legitimate, the graph will also show the
+    distribution of several (by default 20) simulated variables under the
+    assumption that the regression model is true. By default, the simulations
+    include both uncertainty due to uncertainty about the parameter estimates
+    and uncertainty due to the fact that they are random draws from a
+    distribution. This is achieved by creating the simulated variables in two
+    steps:  first the parameters are drawn from their sampling distribution,
+    and than the simulated variable is drawn given those parameters.
+<p>
+    <b>margdistfit</b> may be used after estimating a model with regress, poisson, 
+    zip, nbreg, gnbreg, zinb, or betafit (the latter is available from ssc).
+<p>
+<p>
+<b><u>Options</u></b>
+<p>
+    <b>pp</b> specifies that a probability-probability plot is to be displayed. This
+        graph is best for looking at the comparison of the theoretical and
+        observed distribution in the middle of the distribution. It may not
+        be combined with <b>qq</b>, <b>cumul</b>, or <b>hangroot</b>.
+<p>
+    <b>qq</b> specifies that a quantile-quantile plot is to be displayed. This graph
+        is best for looking at the comparison of the theoretical and observed
+        distribution in the tails of the distribution. This is the default.
+        It may not be combined with <b>pp</b>, <b>cumul</b>, or <b>hangroot</b>.
+<p>
+    <b>cumul</b> specifies that the observed and theoretical cumulative density
+        functions are to be graphed. It may not be combined with <b>pp</b>, <b>cumul</b>,
+        or <b>hangroot</b>.
+<p>
+    <b><u>hangr</u></b><b>oot</b>[<b>(</b>hangroot_options<b>)</b>] specifies that a hanging rootogram is used
+        to compare the observed and theoretical distributions. This requires
+        that the <b>hangroot</b> package is installed, which is available from ssc.
+        It may not be combined with <b>pp</b>, <b>qq</b>, or <b>cumul</b>.
+<p>
+    <b>sims(</b><i>#</i><b>)</b> specifies the number of simulated variables, the default is 20.
+<p>
+    <b><u>nopa</u></b><b>rsamp</b> specifies that the simulated variables should be drawn from the
+        distribution with parameters based on the point estimates of the
+        model and avoid drawing the parameters from the sampling
+        distribution.
+<p>
+    <b>obsopts(</b>scatter_options<b>)</b> options governing how the distribution of the
+        observed variable looks.
+<p>
+    <b>refopts(</b>line_options<b>)</b> options governing how the reference line looks.
+<p>
+    <b>simopts(</b>line_options<b>)</b> options governing how the distributions of the
+        simulated variable look.
+<p>
+    <b>nosquare</b> specifies that the graph is not forced to be square. By default
+        the probability-probability and quantile-quantile plots are forced to
+        be square as a perfect fit is represented by the 45 degree line. By
+        forcing the graph to be square the 45 degree line truely has an angle
+        of 45 degrees. This option is not allowed in combination with <b>cumul</b>
+        or <b>hangroot</b>.
+<p>
+    <b>e(</b><i>#</i><b>)</b> specifies the maximal error used when approximating the quantile
+        function or cumulative density function. The quantile function is
+        computed using the algorithm discussed in (hoermann and leydold
+        2003). A similar algorithm is used to compute the cumulative density
+        function. The latter is strictly speaking not necessary, but it
+        significantly speeds up the computation in medium to large datasets.
+        With <b>pp</b> or <b>cumul</b> it may be a number between 0 and 1e-3. The
+        cumulative density function will be directly computed instead of
+        approximated when a number less than 1e-12 is specified.  With <b>qq</b> it
+        may be a number between 1e-12 and 1e-3. The default is
+        min(1e-6,10^-ceil(log10(N))), where N is the sample size.
+<p>
+<p>
+<b><u>Examples</u></b>
+<p>
+    A well fitting model:
+<p>
+<b>    sysuse nlsw88, clear</b>
+<b>    gen lnw = ln(wage)</b>
+<b>    reg lnw grade ttl_exp tenure union</b>
+<b>    margdistfit, qq</b>
+    (click to run)
+<p>
+    A not so well fitting model. Note that linear regression is typically
+    quite robust against deviations from this assumption. However, knowing
+    that such deviations exist in your data and substantively understanding
+    why they are there can add a lot "flesh" to the "bare bones" of your
+    model.
+<p>
+<b>    sysuse auto, clear</b>
+<b>    reg price mpg foreign</b>
+<b>    margdistfit, pp</b>
+    (click to run)
+<p>
+    An example created to illustrate that the marginal distribution can look
+    very different from what one may expect. I use <b>regress</b>, so I assume a
+    normal distribution where the mean can change from observation to
+    observation depending on the value of x. In this case the data was
+    created such that we should see a distribution of y that has consists of
+    two humps, one at -2 and the other at 2, which is indeed the case.
+<p>
+<b>    preserve</b>
+<b>    set seed 12345</b>
+<b>    drop _all</b>
+<b>    set obs 500</b>
+<b>    gen x = runiform() &lt; .5</b>
+<b>    gen y = -2 + 4*x + rnormal()</b>
+<b>    regress y x</b>
+<b>    margdistfit, hangroot(jitter(5))</b>
+<b>    restore</b>
+    (click to run)
+<p>
+    An example that can be used to compare the fit of several count models.
+<p>
+    The strange pattern in the last graph is due to the large sampling
+    variability in the inflation parameter, and by default the parameters are
+    for each simulation drawn from the sampling distribution. That way some
+    of the samples are drawn from a distribution where the probability of a
+    degenerate zero is 1 - that is, the distribution reduces to a spike at 0
+    - while for the other samples that probability is 0 - that is, the
+    distribution reduces to a negative binomial. This means that in essence
+    the <b>zinb</b> model is not appropriate for this data.
+<p>
+<b>    preserve</b>
+<b>    use http://www.stata-press.com/data/lf2/couart2,clear</b>
+<b>    mkspline ment1 20 ment2 = ment</b>
+<b>          </b>
+<b>    // this is just to ensure that graph names do not conflict</b>
+<b>    // with any graph name you have open</b>
+<b>    tempname poisson zip nb zinb</b>
+<b>                </b>
+<b>    poisson art fem mar kid5 phd ment1 ment2</b>
+<b>    margdistfit, hangroot(susp notheor jitter(2)) title(poisson) name(`poisson'</b>
+<b>&gt; )</b>
+<b>                </b>
+<b>    zip art fem mar kid5 phd ment1 ment2, inflate(_cons)</b>
+<b>    margdistfit, hangroot(susp notheor jitter(2)) title(zip) name(`zip')</b>
+<b>          </b>
+<b>    nbreg art fem mar kid5 phd ment1 ment2</b>
+<b>    margdistfit, hangroot(susp notheor jitter(2)) title(nbreg) name(`nb')</b>
+<b>                </b>
+<b>    zinb art fem mar kid5 phd ment1 ment2, inflate(_cons)</b>
+<b>    margdistfit, hangroot(susp notheor jitter(2)) title(zinb) name(`zinb')</b>
+<b>                </b>
+<b>    restore</b>
+    (click to run)
+<p>
+<p>
+<b><u>Author</u></b>
+<p>
+    Maarten L. Buis
+    Universitaet Tuebingen
+    Institut fuer Soziologie
+    maarten.buis@uni-tuebingen.de
+<p>
+<p>
+<b><u>References</u></b>
+<p>
+    Hoermann, Wolfgang and Leydold, Josef. (2003). Continuous random variate
+        generation by fast numerical inversion.  <i>ACM Transactions on Modeling</i>
+        <i>and Computer Simulation</i>, <b>13</b>(4): 347--362.
+<p>
+<p>
+<b><u>Acknowledgement</u></b>
+    Garry Anderson, David Ashcraft, Ronan Conroy, Nick Cox and Austin Nichols
+    (in alphabetical order) made several useful comments.
+<p>
+<p>
+<b><u>Also see</u></b>
+<p>
+    Online: <b>pnorm</b>, <b>qnorm</b>
+<p>
+    If installed: <b>hangroot</b>, <b>qplot</b>, <b>pbeta</b>, <b>qbeta</b>
+</pre>

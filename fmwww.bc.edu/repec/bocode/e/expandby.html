@@ -1,0 +1,96 @@
+<pre>
+.- 
+help for ^expandby^ 
+.- 
+<p>
+Duplicate observations by variable
+----------------------------------
+<p>
+        ^expandby^ # [^if^ exp] [^in^ range] ^, by(^byvar^)^ [  ^miss^ing
+        ^sort^by^(^sortvar^) usesortmiss first g^enerate^(^newvar^)^ ] 
+<p>
+Description
+-----------
+<p>
+^expandby^ replaces one observation in each group of the current dataset 
+with # copies of the observation. # should be an integer which is 2 or more. 
+Groups are defined by the variable specified in ^by( )^. 
+<p>
+<p>
+Remarks 
+-------
+<p>
+By default the last observation in each group is copied. This will in general 
+be arbitrarily selected unless the ^sortby( )^ option is specified. For 
+example, ^sortby(time)^ means that the last observation in each group 
+according to ^time^ will be copied. By default missing values of the 
+by variable and of the sorting variable are ignored. These defaults 
+can be overridden. 
+<p>
+<p>
+Options
+-------
+<p>
+^by(^byvar^)^ specifies a variable defining groups and is a required 
+    option. If byvar takes on values 1 and 2, two groups are defined with 
+    those values. 
+<p>
+^miss^ing specifies that missing values of byvar are also used to  
+    define a group. By default observations for which byvar is missing are
+    ignored. 
+<p>
+^sortby(^sortvar^)^ specifies that observations should be sorted by 
+    sortvar within byvar. By default the observation with the last (highest) 
+    non-missing value of sortvar will be selected within each group of byvar.
+<p>
+^first^ specifies that the observation with the first (lowest) value of 
+    sortvar should be selected within each group of byvar. 
+<p>
+^usesortmiss^ specifies that observations of sortvar which are missing 
+    should be used in sorting. By default such observations are ignored. 
+<p>
+^generate(^newvar^)^ specifies a new variable to be generated which  
+    marks newly created observations. newvar is 1 for such observations 
+    and 0 otherwise. This allows subsequent commands such as ^edit^ or 
+    ^list^ to be issued with the condition ^if^ newvar. 
+<p>
+<p>
+Examples
+--------
+<p>
+Suppose we have records on individuals with identifiers ^id^ for distinct 
+times ^time^. 
+<p>
+The latest record for each individual can be copied by 
+<p>
+        ^. expandby 2 , by(id) sort(time) g(new)^  
+<p>
+With these options, any observations for which ^id^ is missing or 
+for which ^time^ is missing are ignored, and will not be copied. 
+<p>
+The resulting observations can be edited by 
+<p>
+        ^. edit if new^
+        
+        
+Author
+------
+<p>
+         Nicholas J. Cox, University of Durham, U.K.
+         n.j.cox@@durham.ac.uk
+         
+         
+Acknowledgments
+---------------
+<p>
+         John Moran suggested this problem.
+<p>
+<p>
+Also see
+--------
+<p>
+ Manual:  [R] expand
+ On-line:  help for @expand@
+<p>
+<p>
+</pre>

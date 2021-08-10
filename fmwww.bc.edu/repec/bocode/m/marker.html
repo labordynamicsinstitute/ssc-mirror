@@ -1,0 +1,73 @@
+<pre>
+..-
+help for ^marker^
+..-
+<p>
+Mark sample with all values present for later use
+-------------------------------------------------
+<p>
+        ^marker^ [varlist] [weight] [^if^ exp] [^in^ range]
+        [^,^ ^g^en^(^markvar^)^ ^st^rok]
+<p>
+Description
+-----------
+<p>
+^marker^ creates a 0-1 variable markvar, such that markvar has value
+<p>
+    1 if all values are present (not missing) for every variable in varlist
+         and have sensible non-zero weights if weights are specified
+         and satisfy any ^if^ or ^in^ condition specified
+<p>
+    and
+<p>
+    0 otherwise.
+<p>
+The name of markvar defaults to ^_marker^, providing that is not already
+in use.
+<p>
+The main use of ^marker^ is to define samples so that the results of
+commands that automatically ignore any observations with missing values
+on any of the variables specified (e.g. ^regress^) are comparable with
+the results of other commands that do not do this (e.g. ^summarize^).
+Once the sample has been defined, it can be specified by
+<p>
+    ... ^if ^markvar^ == 1^
+<p>
+or even more concisely by
+<p>
+    ... ^if ^markvar
+<p>
+Options
+-------
+<p>
+^gen(^markvar^)^ specifies the name of a new variable for markvar.
+<p>
+^strok^ indicates that non-missing string values (i.e. values other than
+    the empty string "") are acceptable for any string variables in
+    varlist as defining present observations.
+<p>
+<p>
+Examples
+--------
+<p>
+    . ^marker rep78^
+    . ^su if _marker^
+<p>
+    . ^regress a b c d e^
+    . ^marker a b c d e, g(regdata)^
+    . ^su if regdata^
+<p>
+Author
+------
+<p>
+         Nicholas J. Cox, University of Durham
+         n.j.cox@@durham.ac.uk
+<p>
+<p>
+Also see:
+--------
+<p>
+ On-line: help for @mark@
+  Manual: [R] mark
+<p>
+</pre>

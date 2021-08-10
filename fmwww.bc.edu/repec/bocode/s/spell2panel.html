@@ -1,0 +1,51 @@
+<pre>
+-------------------------------------------------------------------------------
+help for <b>spell2panel</b>                                                (E. Leuven)
+-------------------------------------------------------------------------------
+<p>
+<b><u>Create panel data from time-span data</u></b>
+<p>
+        <b>spell2panel</b> [<i>clist</i>] <b>,</b> <b>spell(</b><i>date0 date1</i><b>)</b> <b>p(</b><i>period</i><b>)</b> [<b>by(</b><i>varlist</i><b>)</b> nojoin]
+<p>
+where <i>clist</i> can be a <i>varlist</i> or
+<p>
+where <i>clist</i> can be [<b>(</b>stat<b>)</b>] <i>varlist</i> [ [<b>(</b>stat<b>)</b> ... ]
+<p>
+and stat is either <b>mean</b> or <b>sum</b>
+<p>
+<b><u>Description</u></b>
+<p>
+<b>spell2panel</b> creates a panel from time-span data.
+<p>
+By default overlapping spells are broken up in disjoint adjacent spells. <i>clist</i>
+with statistics instructs how to treat variables when spells overlap; to sum
+them or take an average.
+<p>
+As an example, if two overlapping spells refer to a job and the variable is
+hours worked one would like to sum (to get the total hours worker), whereas if
+the variable is the worker's age one would like to take the average (which will
+just be the worker's age).
+<p>
+Option <b>nojoin</b> allows the user to avoid the above procedure. Note that
+<b>spell2panel</b> only generates sensical results if spells do not overlap.
+<p>
+<b><u>Options</u></b>
+<p>
+<b>spell(</b><i>date0 date1</i><b>)</b> start and end date of spell.
+<p>
+<b>p(</b><i>period</i><b>)</b> define aggregation period:  y,h,q,m,w,d. That is: yearly, halfyearly,
+    quarterly, monthly, weekly, daily.
+<p>
+<b>by(</b><i>varlist</i><b>)</b> defines the groups (id's) for which the panel must be constructed.
+<p>
+<b><u>Example</u></b>
+<p>
+<b><u>Acknowledgement</u></b>
+<p>
+Thanks to Barbara Sianesi for suggesting the clever use of expand and pointing
+me to Stata's time series formats.
+<p>
+<b><u>Author</u></b>
+<p>
+E. Leuven, Department of Economics, University of Amsterdam. If you observe any
+</pre>

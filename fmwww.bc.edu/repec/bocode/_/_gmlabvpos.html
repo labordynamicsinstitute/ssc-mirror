@@ -1,0 +1,100 @@
+<pre>
+-------------------------------------------------------------------------------
+help for <b>_gmlabvpos</b>                                           manual: [R] egen 
+                                                                      dialog:  
+-------------------------------------------------------------------------------
+<p>
+<b><u>Egen-Function to generate a variable for mlabvpos()</u></b>
+<p>
+        <b>egen</b> [type] <i>newvar</i> <b>=</b> <b>mlabvpos(</b><i>yvar xvar</i><b>)</b> [<b>if</b> <i>exp</i>] [<b>in</b> <i>range</i>] [<b>,</b> <b>log</b>
+                  <b><u>poly</u></b><b>nom(</b><i>#</i><b>)</b> <b>mat:rix(</b><i> 5x5 matrix</i><b>)</b>
+<p>
+    whereby <i>yvar</i> is the name of a variable which is going to be plotted as
+    Y-variable in a scatterplot and <i>xvar</i> is the name of a variable which
+    forms the X-axis of that scatterplot.
+<p>
+<b><u>Description</u></b>
+<p>
+    <b>_gmlabvpos</b> is an attempt to automatically generate a variable for the
+    clockpositions of marker labels in scatterplots. That is, the command
+    generates a variable which can be filled into the scatter option
+    <b>mlabvpos()</b>.
+<p>
+    Note that the program does not attempt to prevent marker labels from
+    overploting, which is quite likely in dataset with many observations. In
+    such situations you might be better of in simply make randomized clock
+    positions:
+<p>
+    <b>. gen clock = int(uniform()*12)+1)</b>
+<p>
+    The general idea behind _gmlabvpos is to pull the marker label away from
+    the data-region. For example, marker symbols in the lower left edge of
+    the data region are labeled at clock-position 7 or 8, and marker symbols
+    in the upper right edge of the data region are labeled at clock-position
+    1 or 2, etc.  More precisely, if you consider the following rectangle as
+    the data-region of a scatterplot, than marker labels of symbols in the
+    indicated area gets the following clock-position:
+<p>
+         +--------------+
+         |11 12 12 12  1|
+         |10 11 12  1  2| 
+         | 9  9 12  3  3| 
+         | 8  7  6  5  4| 
+         | 7  6  6  6  5| 
+         +--------------+ 
+<p>
+    If <i>yvar</i> and <i>xvar</i> are highly correlated, than the clock-positions are
+    generated as follows (which is however the same general idea):
+<p>
+         +--------------+
+         |      12  1  3|
+         |   12 12  3  4| 
+         |11 11 12  5  5| 
+         |10  9  6  6   | 
+         | 9  7  6      | 
+         +--------------+ 
+<p>
+    To calculate the the clock-positions, Stata first categorize the x-axis
+    into 5 equal sized intervals around the mean of <i>xvar</i>. Afterwards the
+    residuals of a linear regression of <i>yvar</i> on <i>xvar</i> are categorized into 5
+    equal sized intervals. Both categorized variables are than used to form
+    the clockpositions according to the rule of the first table above.  The
+    rule can be changed with the option <b>matrix()</b>.
+<p>
+<b><u>Options</u></b>
+<p>
+    <b>log</b> is used, if you want to calculate the residuals from the regression
+        of <i>yvar</i> on a logarthmic version of <i>xvar</i>. This might be useful if the
+        scatter shows a strong curvilinar relationship.
+<p>
+    <b>polynom(#)</b> is used, if you want to calculate the residuals from the
+        regression of <i>yvar</i> on polynoms of <i>xvar</i>. For example use
+        {cmd:polynom(2) if the scatter shows a u-shaped relationship.
+<p>
+    <b>matrix(#)</b> is used to change the general rule for the plot-positions. The
+        clock positions are specified by a 5x5 matrix, whereby the upper left
+        cell refer to the clock position of marker labels in the upper left
+        part of the data-region. etc.
+<p>
+<p>
+<b><u>Examples</u></b>
+<p>
+    <b>. egen clock = mlabvpos(mpg weight)</b>
+    <b>. sc mpg weight, mlab(make) mlabvpos(clock)</b>
+    <b>. egen clock2 = mlabvpos(mpg weight), matrix(11 1 12 11 1 \\ 10 2 12 10 2</b>
+        <b>\\ 9 3 12 9 3 \\ 8 4 6 8 4 \\ 7 5 6 7 5)</b>
+    <b>. sc mpg weight, mlab(make) mlabvpos(clock2)</b>
+<p>
+<p>
+<b><u>Also see</u></b>
+<p>
+ 
+    Online:  help for scatter,
+<p>
+<p>
+<b><u>Author</u></b>
+<p>
+ 
+    Ulrich Kohler, WZB, kohler@wz-berlin.de
+<p>
+</pre>

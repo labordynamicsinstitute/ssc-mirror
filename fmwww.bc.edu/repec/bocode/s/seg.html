@@ -1,0 +1,282 @@
+<pre>
+.-
+help for ^seg^                                               (sean f. reardon)
+.-
+<p>
+Segregation Indices Calculation
+-------------------------------
+<p>
+    ^seg^ varlist [^if^ exp] [^in^ range], [^d^ ^g^ ^h^ ^c^ ^r^ ^p^ ^x^ ^s^ ^n^
+&gt;  
+          ^by(^varlist^)^ ^u^nit^(^var^)^ ^ba^se^(^num^)^ ^nodis^play 
+          ^gen^erate^(^genlist^)^ ^f^ile^(^filename^)^ ^replace^
+<p>
+Note: at least one of the index options (^d g h c r p x s n^) must be specified
+&gt; .
+<p>
+genlist must have the form: 
+    (^index^ ^newvar^ [^index^ ^newvar^ [^index^ ^newvar^ [...]]])
+<p>
+    where ^index^ indicates the index to be output, and ^newvar^
+    is the name of the variable to be created.  ^index^ must be 
+    one of the following:
+<p>
+        ^t^  for total by-group counts
+        ^u^  for the number of units within each by-group
+        ^i^  for Normalized Simpson Interaction Diversity Index
+        ^e^  for Entropy Diversity Index
+        ^d^  for Dissimilarity Segregation Index
+        ^g^  for Gini Segregation Index
+        ^h^  for Information Theory Segregation Index
+        ^c^  for Sqsuared Coefficient of Variation Segregation Index
+        ^r^  for Relative Diversity Segregation Index
+        ^p^  for (n-group) Normalized Exposure Segregation Index
+        ^x^  for Exposure Index
+        ^s^  for Isolation Index
+        ^n^  for 2-group Normalized Exposure Index
+<p>
+<p>
+Description
+-----------
+<p>
+^seg^ calculates multiple-group diversity and segregation indices 
+for the variables in varlist.  The ^by^ and ^unit^ options allow specification 
+of the organization level at which segregation is to be calculated.
+The ^generate^ and ^file^ options allow index values for each value of the 
+by-group variable(s) to be output to either the current file or a new file.
+<p>
+<p>
+Options
+--------
+<p>
+^d^ specifies that the Dissimilarity Index is to be calculated.  The Simpson 
+    Diversity Indices are also calculated if this option is specified.
+<p>
+^g^ specifies that the Gini Index is to be calculated.  The Simpson 
+    Diversity Indices are also calculated if this option is specified.
+<p>
+^h^ specifies that the Theil Information Theory Index is to be calculated.
+    The Theil Entropy Diversity Index is also calculated if this option is 
+    specified.
+<p>
+^c^ specifies that the Squared Coefficient of Variation Index is to be calculat
+&gt; ed.
+    The Simpson Diversity Indices are also calculated if this option is 
+    specified.
+<p>
+^r^ specifies that the Relative Diversity Index is to be calculated.  The Simps
+&gt; on 
+    Diversity Indices are also calculated if this option is specified.
+<p>
+^p^ specifies that the (multi-group) Normalized Exposure Index is to be 
+    calculated. The Simpson Diversity Indices are also calculated if this optio
+&gt; n
+    is specified.
+<p>
+^x^ specifies that the (two-group) Exposure Index is to be calculated.  The 
+    calculated exposure is the exposure of the group specified in var1 to the
+    group specified in var2.  Other groups listed in varlist are included in 
+    the calculation of the exposure index.
+<p>
+^s^ specifies that the Isolation Index is to be calculated for the group specif
+&gt; ied
+    in var1.  Other groups listed in varlist are included in 
+    the calculation of the isolation index.
+<p>
+^n^ specifies that the (two-group) Normalized Exposure Index is to be calculate
+&gt; d.
+    The calculated exposure is the exposure of the group specified in var1 to 
+    the group specified in var2.  Other groups listed in varlist are included i
+&gt; n
+    the calculation of the normalized exposure index.
+<p>
+^by(^varlist^)^ specifies that the indices are to be calculated within varlist.
+    If the ^by^ variable option is not sepcified, then segregation is 
+    calculated over the entire set of observations.
+<p>
+^unit(^varname^)^ specifies that segregation is to be calculated between
+    observations with distinct values of ^varname^.  Effectively, observations
+    are grouped on the unit variable, and segregation is calculated between 
+    these units.  This is used, for example, if each observation is a census
+    block group and one wants to calculate segregation between tracts.  If the
+    ^unit^ variable option is not specified, then each observation is treated
+    as a separate unit.
+<p>
+^base(^num^)^ specifies that the entropy index of diversity should be calculate
+&gt; d
+    using logarithms of base num, where num is an integer greater than 1.  The 
+    default is to use base M, where M is the number of groups specified in 
+    varlist.
+<p>
+^nodisplay^ specifies that output should be surpressed.  If two or more variabl
+&gt; es
+    are listed in the ^by^ option, ^nodisplay^ is the default.
+<p>
+^generate(^clist^)^ specifies that the values of the indices indicated in ^clis
+&gt; t^ 
+    are to be written to the current file, with variable names as indicated in 
+    ^clist^.  If the ^file^ option is also specified, ^generate^ will cause the
+&gt;  
+    variables listed in ^clist^ to be written to the new file rather than to 
+    the current file.
+<p>
+^file(^filename^)^ specifies that the values of the indices requested are to be
+    written to a separate file.  [Note: ^seg^ reserves several variable names a
+&gt; s
+    defaults if none are specified in ^generate^: ^Total^, ^nunits^, ^Dseg^, ^G
+&gt; seg^, 
+    ^Hseg^, ^Cseg^, ^Rseg^, ^Pseg^, ^Xseg^, ^Sseg^, ^Nseg^, ^Idiv^, and ^Ediv^.
+&gt;   
+    This can cause a conflict if a variable specified in the ^by^ option uses 
+    one of these reserved names.  Conflicts can be avoided in this case by 
+    using the ^generate^ option to specify new names for the variables written 
+    to the new file.]
+<p>
+^replace^, when specified with the ^file^ option, forces ^seg^ to overwrite the
+&gt;  
+    file specified in the ^file^ option, if it already exists.  If ^replace^ is
+    not specified and the file already exists, it will not be overwritten.
+<p>
+<p>
+Remarks
+-------
+<p>
+The varlist variables should be non-negative counts of mutually exclusive 
+categories (e.g. counts by race, sex, etc.).  The by option is used to
+specify the level of organization within which segregation is to be 
+calculated, and the unit option is used to specify the level of 
+organization between which segregation is to be calculated.  
+<p>
+Observations with missing values on any of the variables in ^varlist^ are 
+dropped, as are observations with missing values on ^by^ or ^unit^, if
+these are specified.
+<p>
+^seg^ calculates the indices as follows.
+For each unit, calculate the total count within the unit as 
+<p>
+    t = SUM(varlist)
+<p>
+and the proportion of the unit within category ^n^ as
+<p>
+    q^n^ = var^n^/t.
+<p>
+The Simpson Interaction Diversity Index of each unit is then
+<p>
+    I^u^ = SUM[q^n^ * (1 - q^n^)]
+<p>
+The Normalized Interaction Index of each unit is then
+<p>
+    NI^u^ = [n/(n-1)] * I^u^
+<p>
+The Entropy Diversity Index of each unit is then
+<p>
+    E^u^ = SUM[q^n^ * LOG(1/q^n^)].
+<p>
+The corresponding Diversity indices of each by-group (I^g^, NI^g^, &amp; E^g^)
+are calculated similarly
+<p>
+    I^g^ = SUM[Q^n^ * (1 - Q^n^)]
+<p>
+    NI^g^ = [n/(n-1)] * I^g^
+<p>
+    E^g^ = SUM[Q^n^ * LOG(1/Q^n^)]
+<p>
+where T and Q^n^ are calculated over each by-group rather than each unit.
+<p>
+The multiple-group segregation indices of each by-group `g' are defined 
+then as follows:
+<p>
+    D^g^ = SUMn[SUMu[t * |Q^n^ - q^n^|]] / (2 * T * I^g^)
+<p>
+    G^g^ = SUMn[SUMui[SUMuj[t^i^ * t^j^ * |q^ni^ - q^nj^|]]] / (2 * T * T * I^g
+&gt; ^)
+<p>
+    H^g^ = 1 - [SUM((t/T)*E^u^) / E^g^].
+<p>
+    C^g^ = SUMn[SUMu[t * (Q^n^ - q^n^) * (Q^n^ - q^n^)] / [T * Q^n^ * (M - 1)]]
+&gt; .
+<p>
+    R^g^ = SUMn[SUMu[t * (Q^n^ - q^n^) * (Q^n^ - q^n^)] / (T * I^g^)].
+<p>
+    P^g^ = SUMn[SUMu[t * (Q^n^ - q^n^) * (Q^n^ - q^n^)] / [T * (1 - Q^n^)]].
+<p>
+    X^g^ = SUMu((t * q^1^ * q^2^) / (T * Q^1^)].
+<p>
+    S^g^ = SUMu((t * q^1^ * q^1^) / (T * Q^1^)].
+<p>
+    N^g^ = 1 - X^g^/Q^2^.
+<p>
+where M is the number of groups specified in varlist; 
+where SUMn indicates a sum over all n groups in varlist; and 
+where SUMu (and SUMui or SUMuj) indicates as sum over all units.
+<p>
+Seven of the segregation indices (D G H C R P N) have a minimum of 0 
+(no segregation) and a maximum of 1 (complete segregation).  X has a minimum of
+&gt;  
+0 (no exposure) and an upper bound of 1 (complete exposure).  S has a lower 
+bound of 0 (no isolation) and a maximum of 1 (complete isolation).
+<p>
+<p>
+Examples
+---------
+        Suppose the data contain racial enrollment counts by school, with
+        variables ^sch^, ^dst^, and ^msa^ identifying the school, district, and
+        metropolitan area of each school, and with ^white^, ^black^, ^hisp^, ^a
+&gt; sian^,
+        and ^natam^ variables containing within-school enrollment counts for 5
+        racial/ethnic groups.  Then
+<p>
+        . ^seg white black, d^
+<p>
+            calculates the between-school dissimilarity index between White
+            and Black students among all schools in the data set.  
+<p>
+        . ^seg white black hisp asian, g by(msa) u(dst) gen(g gwbha i iwbha)^ 
+<p>
+            calculates for each metropolitan area the between-district
+            gini index among White, Black, Hispanic, and Asian students,
+            and outputs the gini index and diversity of each metropolitan area
+            to the variables ^gwbha^ and ^iwbha^.
+<p>
+        . ^seg white black, d g v h by(msa dst) file(c:\outfile.dta) replace^
+<p>
+            calculates and writes to file "c:\outfile.dta" the 
+            dissimilarity, gini, variance ratio, and entropy indices (and 
+            the relevant diversity indices) between White and Black students
+            within each district in each metropolitan area.  Because two 
+            variables are listed in the BY option, the results will not be 
+            displayed to the screen.
+<p>
+        . ^seg white black hisp asian natam, x s n^ 
+<p>
+            calculates the white-black exposure index, the white isolation 
+            index, and the normalized white-black exposure index among all 
+            schools in the data.  Note that this will give different results 
+            than
+<p>
+        . ^seg white black, x s n^ 
+<p>
+            which will calculate the exposure and isolation indices ignoring
+            all students other than black and white students.
+<p>
+<p>
+Author
+-------
+<p>
+         sean f. reardon
+         sean@@pop.psu.edu 
+<p>
+References
+-----------
+<p>
+James, David R. and Karl E. Taeuber. 1985. "Measures of segregation." 
+      Sociological Methodology 14:1-32
+Massey, Douglas S. and Nancy A. Denton. 1988. "The dimensions of racial 
+      segregation." Social Forces 67:281-315.
+Reardon, Sean F., and Glenn Firebaugh. 2002. "Measures of multigroup 
+      segregation."  Sociological Methodology 32: 33-67.
+White, Michael J. 1986. "Segregation and diversity measures in population 
+      distribution." Population Index 52:198-221.
+Zoloth, Barbara S. 1976. "Alternative measures of school segregation." Land 
+      Economics 52:278-298.
+</pre>

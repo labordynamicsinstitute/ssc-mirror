@@ -1,0 +1,127 @@
+<pre>
+-------------------------------------------------------------------------------
+help for <b>mpovline</b>                                            Joao Pedro Azevedo
+                                                              Viviane Sanfelice
+-------------------------------------------------------------------------------
+<p>
+<b><u>Calculate FGT0, FGT1 and FGT2 by intervals of multiple welfare lines.</u></b>
+<p>
+        <b>mpovline</b> <i>welfarevar</i> [<b>weight</b>] [<b>if</b> <i>exp</i>] [<b>in</b> <i>exp</i>], [ <b>varpl(</b><i>varname</i><b>)</b>
+                 <b>lines(</b><i>numlist</i><b>)</b> <b>indicator(</b><i>string</i><b>)</b> <b>mpl(</b><i>numlist</i><b>)</b> <b>max</b> ]
+<p>
+    <b>fweights</b> and <b>aweights</b> are allowed; see help weights. See help weight.
+<p>
+<p>
+<b><u>Description</u></b>
+<p>
+    <b>mpovline</b> calculate FGT0, FGT1 and FGT2 by intervals of multiple welfare
+    lines. It is useful to calculate headcount for the poor, vulnerable and
+    middle class lines as proposed by Ferreira et al (2012), and the
+    respective FGT1 and FGT2 reported by Azevedo and Sanfelice (2012).
+ 
+<p>
+<p>
+<b><u>Where</u></b>
+<p>
+    <b>welfarevar</b> is the welfare aggregate variable.
+<p>
+<p>
+<b><u>Options</u></b>
+<p>
+    <b>varpl(</b><i>varname</i><b>)</b> poverty line variables.
+<p>
+    <b><u>line</u></b><b>s(</b><i>numlist</i><b>)</b> sets of values for the poverty lines.
+<p>
+    <b><u>in</u></b><b>dicator(</b><i>string</i><b>)</b> poverty indicators. fgt0, fgt1, fgt2 are the currently
+    supported options. <i>fgt0</i> is the indicator default.
+<p>
+    <b>mpl(</b><i>numlist</i><b>)</b> to calculate the poverty indicators by range using multiples
+    of the poverty line. Must be combined with the <b>varpl</b> option
+<p>
+    <b>max</b> poverty indicators for the range between the last line and the
+    maximun value of<i> welfarevar</i>It is quite sensitive to outliers.
+<p>
+<p>
+<b><u>Saved Results</u></b>
+<p>
+<b>mpovline</b> returns results in <b>r()</b> format. 
+By typing <b>return list</b>, the following results are reported:
+<p>
+<p>
+    Matrices       
+      <b>r(b)</b>                 matrix in long format. The first column represents
+                            the index used, the sencond the range of the
+                            poverty line used and the last column reports the
+                            poverty numbers.
+      <b>r(fgt)</b>               short version of the matrix <i>r(b)</i> with results by
+                            indicator. <i>r(fgt0)</i>, <i>r(fgt1)</i> and <i>r(fgt2)</i> if
+                            <b>indicator</b> option specified.
+      <b>r(obs)</b>               matrix with the number of observation by range of
+                            the lines.
+<p>
+    <b>Obs:</b> On the reported matrices
+    <i>Indicator label</i>: 0 - FGT(0); 1 - FGT(1); 2 - FGT(2).
+    <i>Line label</i>: 1 represents the first range; 2 the second, and so on. The
+    last number indicates the range from the last line and the maximun value
+    if the option <b>max</b> is specified.
+<p>
+<p>
+<b><u>Examples</u></b>
+<p>
+        . mpovline percapitainc, varpl(pline1 plin2)
+<p>
+        . mpovline percapitainc [w=weight], line(100 500) in(fgt0 fgt1 fgt2)
+<p>
+        . mpovline percapitainc [w=weight], varpl(pline) mpl(1 3.5 6)
+<p>
+<p>
+    Headcount for moderate poverty, vunerable and middle class in terms of
+    $4USD a day, $4 to 10USD a day and $10 to 50USD a day, respectively.
+<p>
+        . mpovline percapitainc [w=weight], varpl(lp_4usd_ppp) mpl(1 2.5 12.5)
+    or
+        . mpovline percapitainc [w=weight], line(121.68 304.2 1521)
+    or
+        . mpovline percapitainc [w=weight], varpl(lp_4usd_ppp lp_10usd_ppp
+            lp_50usd_ppp)
+        
+<p>
+<b><u>References</u></b>
+<p>
+    Azevedo, Joao Pedro and Viviane Sanfelice (2012) "The rise of the middle
+    class in Latin America". World Bank (mimeo).
+<p>
+    Ferreira, Francisco H.G.; Messina, Julian; Rigolini, Jamele; López-Calva,
+    Luis-Felipe; Lugo, Maria Ana; Vakis, Renos. (2013) Economic Mobility and
+    the Rise of the Latin American Middle Class. Washington, DC: World Bank.
+    (link to publication)
+<p>
+    Foster, James; Joel Greer and Erik Thorbecke (1984) "A class of
+    decomposablepoverty measures". Econometrica. 2 81: 761–766.
+<p>
+    Lopez-Calva, Luis F. and Eduardo Ortiz-Juarez (2011) "A Vulnerability
+    Approach to the Definition of the Middle Class". Policy Research Working
+    Paper, World Bank, n. 5902.
+<p>
+<p>
+<b><u>Authors</u></b>
+<p>
+    Joao Pedro Azevedo, jazevedo@worldbank.org
+    Viviane Sanfelice, vsanfelice@worldbank.org
+<p>
+        
+<b><u>Acknowledgements</u></b>
+    
+    This program was developed by the  LAC Team for Statistical Development
+    (2012), in the Latin American and Caribbean Poverty Reduction and
+    Economic Managment Group of the World Bank.
+<p>
+<p>
+<b><u>Also see</u></b>
+<p>
+  Online:  help for apoverty; ainequal; wbopendata; adecomp; drdecomp; 
+    skdecomp (if installed)
+ 
+<p>
+<p>
+</pre>

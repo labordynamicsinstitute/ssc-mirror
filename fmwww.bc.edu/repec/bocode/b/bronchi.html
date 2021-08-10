@@ -1,0 +1,244 @@
+<pre>
+<b>help bronch</b>
+-------------------------------------------------------------------------------
+<p>
+<b><u>Title</u></b>
+<p>
+<p>
+    <b>bronch</b> -- Calculates severity of illness in bronchiolitis using the
+        National Children's Hospital severity of bronchiolitis model,
+        (NCH-SOB).
+<p>
+<p>
+<p>
+<b><u>Syntax</u></b>
+<p>
+        <b><u>bronch</u></b> [ work_of_breathing tachycardia age dehydration] {if} [<b>,</b>
+                 <i>options</i>]
+<p>
+        <b><u>bronchi</u></b> [ work_of_breathing tachycardia age dehydration] {if} [<b>,</b>
+                 <i>options</i>]
+<p>
+<p>
+    <i>options</i>               Description
+    -------------------------------------------------------------------------
+    Main
+      <b>nch</b>                 uses coefficients based on an inpatient derivation
+                            dataset, the default
+      <b><u>ol</u></b><b>hsc</b>               uses coefficients based on an emergency department
+                            validation dataset
+      <b><u>print</u></b><b>screen</b>         sends the output to a printer
+      <b><u>adm</u></b><b>it</b>               calculates the probability of admission
+      <b><u>dis</u></b><b>charge</b>           calculates the probability of discharge
+      <b><u>prob</u></b><b>abilities</b>       calculates the probability of a patient falling
+                            into another severity category
+    -------------------------------------------------------------------------
+<p>
+<p>
+<p>
+<p>
+<b><u>Description</u></b>
+<p>
+    <b>bronch</b> calculates the severity of illness for infants presenting with
+    bronchiolitis. It relies on four variables age(in months), dehydration
+    classified as none(0) mild(1) moderate(2) or severe(3), tachycardia
+    (heart rate at or above the 98th centile for age), Increased work of
+    breathing defined as (1)for moderate or severe increase in work of
+    breathing and (0) otherwise.
+  
+    This command categorizes bronchiolitis severity as mild, moderate or
+    severe using an ordinal logistic regression model.  <b>bronch</b> expects data
+    in the wide format i.e. one observation per row and all the required
+    variables in that row. When issuing bronch the order in which the
+    variables are specified matters. After executing <b>bronch</b> stata issues a
+    warning to the user reminding them which variable has been used to
+    specify each component in the model. It is the user's to ensure that they
+    have correctly specified the variables used to calculate the score.
+ 
+ 
+<p>
+<p>
+<b><u>Options</u></b>
+<p>
+        +------+
+    ----+ Main +-------------------------------------------------------------
+<p>
+    <b>nch</b> uses coefficients based on an inpatient derivation dataset. This is
+        the default.  The coefficients (odds ratio)for this option are as
+        follows. Age *** ()per month, Dehydration ***() per step increase
+        from none,mild, moderate, severe, Tachycardia ** (), Increased work
+        of breathing** ()
+<p>
+    <b>olhsc</b> uses coefficients based on an emergency department validation
+        dataset.  The coefficients (odds ratio)for this option are as
+        follows. Age *** ()per month, Dehydration ***() per step increase
+        from none,mild, moderate, severe, Tachycardia ** (), Increased work
+        of breathing** ()
+<p>
+    <b>probabilities</b> calculates the proabability for each observation falling
+        within each bronchiolitis severity classification (mild, moderate,
+        severe). This option creates three new variables for each observation
+        _pmild _pmoderate and _psevere containing the values for the mild
+        moderate and severe categories respectively.
+<p>
+    <b>admit</b> calculates the proabability for each observation of not having mild
+        disease. This is the probability of admission when using the <b>ohlsc</b>
+        option and the probability of being discharged in less than one day
+        with the <b>nch</b> option. This option creates a new variable for each
+        observation _padmit.
+<p>
+    <b>printscreen</b> sends the output to the screen.
+<p>
+    <b>generate(</b><i>newvar</i><b>)</b> creates <i>newvar</i> containing the value for bronchiolitis
+        severity.If not specified the default is bronch.
+<p>
+<p>
+<b><u>Saved Results</u></b>
+<p>
+        +---------+
+    ----+ Support +----------------------------------------------------------
+<p>
+    <b>_bronch</b> contains the severity of bronchiolitis (i.e. mild, moderate, or
+        severe)
+<p>
+    <b>_pmild</b> contains the probability of mild disease
+<p>
+    <b>_pmoderate</b> contains the probability of moderate disease
+<p>
+    <b>_psevere</b> contains the probability of severe disease
+<p>
+    <b>_tachycardia_product</b> contains the product of the coeficient (odds ratio)
+        of tachycardia and the record value for each observation
+<p>
+    <b>_age_product</b> contains the product of the coeficient (odds ratio) of age
+        and the record value for each observation
+<p>
+    <b>_dehydration_product</b> contains the product of the coeficient (odds ratio)
+        of dehydration and the record value for each observation
+<p>
+    <b>_work_of_breathing_product</b> contains the product of the coeficient (odds
+        ratio) of work of breathing and the record value for each observation
+<p>
+    <b>_Z</b> contains the summation of the products of the four parameters for each
+        observation
+<p>
+    <b>_Z_difference_Zi_k1</b> contains the data that corresponds to mild disease
+        for each observation
+<p>
+    <b>_difference_Zi_k2</b> contains the data that corresponds to both mild and
+        moderate disease for each observation
+<p>
+    <b>_probability_Zi_k2</b> contains the combined probability of mild and moderate
+        disease for each observation
+<p>
+    <b>_logit1_1</b> contains the probability of mild disease
+<p>
+    <b>_logit2_1</b> contains the probability of moderate disease
+<p>
+    <b>_logit3_1</b> contains the probability of severe disease
+<p>
+    <b>_padmit</b> contains the probability of admission using anything greater than
+        mild disease as a surrogate marker for a patient that should be
+        admitted
+<p>
+    <b>_discharge</b> contains the probability of discharge using mild disease as a
+        surrogote marker for a dischargable patient
+<p>
+    <b>_wob_processed</b> contains a simplified version of the mapped work of
+        breathing data
+<p>
+    <b>_wob_processed_mod</b> contains the mapped work of breathing data as
+        described in the algorithm in reference 1
+<p>
+    <b>_age_processed</b> contains the mapped age data as described in the algorithm
+        in reference 1
+<p>
+    <b>_dehyd_processed</b> contains the mapped dehydration data as described in the
+        algorithm in reference 1
+<p>
+    <b>_tachy_processed</b> contains the mapped tachycardia data as described in the
+        algorithm in reference 1
+<p>
+    <b>_missing_wob</b> contains the number of observation with missing data for
+        work of breathing
+<p>
+    <b>_missing_age</b> contains the number of observation with missing data for age
+<p>
+    <b>_missing_tachy</b> contains the number of observation with missing data for
+        tachycardia
+<p>
+    <b>_missing_dehydration</b> contains the number of observation with missing data
+        for dehydration
+<p>
+    <b>_valid_calculation</b> contains the number of observation with valid data
+<p>
+<p>
+<b><u>Remarks</u></b>
+<p>
+ The NCH-SOB was derived in one childrens hospital where mild was defined as im
+&gt; mediate 
+ discharge on review of the resident admission by an attending pediatrician, mo
+&gt; derate as 
+ hospital admission less than and including median length of stay, and severe d
+&gt; isease as 
+ admission greater than the median length of stay. The model was validated in a
+&gt; nother 
+ childrens hospital Emergency Department. In the validation 'mild' severity was
+&gt;  based on 
+ actual discharge from the  pediatric emergency room by a resident with at leas
+&gt; t five years
+ post graduate training.  'Moderate' disease was defined as hospital admission 
+&gt; less than and 
+ including median length of stay, and 'severe' disease as admission for greater
+&gt;  than the 
+ median length of stay. The median length of stay was the same in both derivati
+&gt; on and 
+ validation phases. 
+ 
+ 
+ Both models satisfied the proportional odds assumption. Users may select which
+&gt;  coefficents 
+ to use based on whether they are dealing primarily with inpatient or outpatien
+&gt; t data. Full 
+ details of the model used in this severity of illness classification tool can 
+&gt; be found in
+ reference 1.
+ 
+<p>
+<b><u>Examples</u></b>
+<p>
+<p>
+    <b>. bronchi mild 150 2 mild</b>
+<p>
+    <b>. bronch work_of_breathing tachycardia age dehydration</b>
+<p>
+    <b>. bronch work_of_breathing tachycardia age dehydration , olhsc prob admit</b>
+<p>
+    <b>. bronch work_of_breathing tachycardia age dehydration, by(gender)</b>
+<p>
+<p>
+<p>
+<b><u>Authors</u></b>
+<p>
+Carl E. Mitchell
+Department of Emergency Medicine
+Kern Medical Center
+Bakersfield, CA 93306
+<p>
+<p>
+Paul Walsh
+Department of Emergency Medicine
+Kern Medical Center
+Bakersfield, CA 93306
+<p>
+<p>
+<b><u>References</u></b>
+<p>
+ Walsh, P.  Rothenberg, S.J.,  O'Doherty, S., Hoey, H. and  Healy, R. 2004 A va
+&gt; lidated clinical
+ model to predict the need for admission and length of stay in children with ac
+&gt; ute 
+ bronchiolitis.<i> European Journal of Emergency Medicine </i> 11:5 265-72
+<p>
+<p>
+</pre>

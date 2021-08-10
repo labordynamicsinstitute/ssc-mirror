@@ -1,0 +1,197 @@
+<pre>
+<p>
+-------------------------------------------------------------------------------
+help for <b>powerq</b>
+-------------------------------------------------------------------------------
+<p>
+<b><u>Power for Cochran´s Q statistic and posterior probability of heterogeneity in a</u></b>
+<b><u>&gt;  meta-analysis</u></b>
+<p>
+<p>
+  <b>powerq</b> <i>varlist</i> <b>,</b> <b><u>method</u></b><b>(</b><i>name</i><b>)</b> [<b><u>alpha</u></b><b>(</b><i>#</i><b>)</b> <b><u>tau2</u></b><b>(</b><i>#</i><b>)</b> <b>rep</b>licates<b>(</b><i>#</i><b>)</b> graph]
+<p>
+<p>
+    where varlist can be:
+    4<i> variables</i>: 2x2 table cell counts in the same order as supplied
+              in <i>metan</i>, e.g. tdeath tnodeath cdeath cnodeath
+    2<i> variables</i>: the first is the ln of the effect size estimate and
+              the second the standard error of ln of the effect size
+              estimate. Only the method of <b>jackson</b> can be used with
+              these kind of data.
+<p>
+<b><u>Description</u></b>
+<p>
+<p>
+<p>
+  <b>powerq</b> computes the statistical power for the Cochran´s Q statistic
+         and calculates the posterior probability of heterogeneity in a
+         meta-analysis of <i>K</i> studies.The program handles with both
+         summary data (i.e. effect size and standard error) and 2x2
+         tables.  Power for the Q-test is computed as a function of the
+         information available for the meta-analysis (e.g. study sizes,
+         study weights, Q value and/or tau2 observed) depending on the
+         method specificied, as well as the alpha level choosen and
+         between-study variance. A total of four methods are available
+         to calculate the power of the Q test (<b>see below</b>), whereas the
+         posterior probability of heterogeneity in the meta-analysis is
+         assessed using the approach dicussed in detail by Salanti et
+         al. (<b>submitted</b>). A graphical output is also available.
+<p>
+<p>
+<p>
+<b><u>Options</u></b> 
+<p>
+    <b>method</b> is the approach to compute the power of the Q test. It
+          takes the values:<b>  jackson gardiner hedges</b> or <b>simulation</b>.
+<p>
+    <b>alpha</b> stands for the alpha level to claim statistal significance.
+          By default, alpha=0.1 is used. Values can be between 0-1.
+          One can set the alpha level to be equal to the estimated
+          p-value of the Q-test. To do so use 999.
+ 
+    <b>tau2</b> is the choosen between-study variance required for the
+          determination of power at a given significance level. If no
+          value is specified then the default value of 0.17989 will
+          be used (see the published paper for more details). Set to
+          999 to use the tau2 of the specific meta-analysis.
+<p>
+    <b>replicates</b> is the number of replications applied to compute the
+          power of the Q test when either the <b>simulation</b> or <b>gardiner</b>
+          options are specified. By default, 1000 replicates are
+          used.
+<p>
+<p>
+<b><u>Examples</u></b>
+<p>
+        ---------------------------------
+                     | Event  Non-event |
+        ---------------------------------
+            Exposed  | <b> a</b>       <b>b</b>       |   
+        Non-exposed  |  <b>c</b>       <b>d</b>       |
+        ---------------------------------
+<p>
+<p>
+in which <b> a b c d</b> are the cell counts for the 2x2 table.
+<p>
+        . use http://www.dhe.med.uoi.gr/assets/STATA/CD000213.dta
+<p>
+        Calculate the posterior probability of heterogeneity using the method o
+&gt; f <b>jackson</b> to obtain the power of Q. Alpha is set to 0.1, tau2 to the default 
+&gt; 0.17989. 2x2 table is used.   
+<p>
+        . powerq a b c d, method(jackson) 
+<p>
+        <i>(</i><i>click to run</i><i>)</i>
+        Calculate the posterior probability of heterogeneity using the method o
+&gt; f <b>jackson</b> to obtain the power of Q. Alpha is set to the p-value, tau2 to the 
+&gt; default 0.17989. 2x2 table is used.   
+<p>
+        . powerq a b c d, method(jackson) alpha(999)
+<p>
+        <i>(</i><i>click to run</i><i>)</i>
+<p>
+        Calculate the posterior probability of heterogeneity using the method o
+&gt; f <b>jackson</b> to obtain the power of Q. Alpha is set to the p-value, tau2 to the 
+&gt; meta-analysis specific tau2. 2x2 table is used.       
+<p>
+        . powerq a b c d, method(jackson) alpha(999) tau2(999)
+<p>
+        <i>(</i><i>click to run</i><i>)</i>
+<p>
+        Calculate the posterior probability of heterogeneity using <b>simulation</b> t
+&gt; o obtain the power of Q. Alpha is set to the p-value, tau2 to the meta-analys
+&gt; is specific tau2. 2x2 table is used. Number of replications are set to the de
+&gt; fault.
+        . powerq a b c d, method(simulation) alpha(999) tau2(999)
+<p>
+        <i>(</i><i>click to run</i><i>)</i>
+<p>
+        Calculate the posterior probability of heterogeneity using <b>simulation</b> t
+&gt; o obtain the power of Q. Alpha is set to the p-value, tau2 to the meta-analys
+&gt; is specific tau2. 2x2 table is used. Number of replications are set to 10,000
+&gt; .
+<p>
+        . powerq a b c d, method(simulation) alpha(999) tau2(999) rep(10000)
+<p>
+        <i>(</i><i>click to run</i><i>)</i>
+        
+        Calculate the posterior probability of heterogeneity using the method o
+&gt; f <b>jackson</b> to obtain the power of Q. Alpha is set to the p-value, tau2 to the 
+&gt; meta-analysis specific tau2. Inverse variance data are used (ln of effect siz
+&gt; e and respective standard error). Ask for a graph.
+<p>
+        . gen logor = ln( (a*d)/(b*c) ) // if the effect size is OR
+<p>
+        <i>(</i><i>click to run</i><i>)</i>
+<p>
+        . gen selogor = sqrt( (1/a) + (1/b) + (1/c) + (1/d) ) // if the effect 
+&gt; size is OR
+<p>
+        <i>(</i><i>click to run</i><i>)</i>
+<p>
+        . powerq logor selogor, method(jackson) alpha(999) tau2(999) graph
+<p>
+        <i>(</i><i>click to run</i><i>)</i>
+<p>
+<b><u>Returned values</u></b>
+<p>
+        r(probHeter1)           posterior probability of heterogeneity for 1% p
+&gt; rior probability 
+        r(probHeter..)          posterior probability of heterogeneity for ..% 
+&gt; prior probability 
+        r(probHeter99)          posterior probability of heterogeneity for 99% 
+&gt; prior probability 
+        r(power)                power of Q test 
+        r(p_Q)                  p-value of Q test 
+        r(df)                   degreed of freedom of Q test 
+        r(Q)                    value of Q test 
+<p>
+<b><u>Authors</u></b>
+<p>
+ 
+  Nikolaos A Patsopoulos, Department of Hygiene and Epidemiology
+         University of Ioannina School of Medicine, Greece
+  Tiago V Pereira, Department of Biochemsitry and Molecular Biology
+         Federal University of São Paulo, and Heart Institute (InCor),
+         Brazil
+<p>
+<p>
+<p>
+<b><u>Reference</u></b>
+<p>
+  Salanti G, Patsopoulos NA, Pereira TV, Ioannidis JPA. How likely is
+         that a meta-analysis has heterogeneity? (<i>submitted</i>)
+<p>
+<b><u>References for methods to calculate power of Q test</u></b>
+<p>
+  Jackson D. The power of the standard test for the presence of
+         heterogeneity in meta-analysis.  Statistic in Medicine
+         25(15):2688-99, 2006
+<p>
+  Gardiner J, Pathak D, Indurkhya A. Power calculations for detecting
+         interaction in stratified 2 x 2 tables Statistics &amp;
+         Probability Letters 41(3):267-275, 1999.
+<p>
+  Hedges LV, Pigott TD. The power of statistical tests in
+         meta-analysis.  Psycholical Methods 6(3):203-17, 2001
+<p>
+<p>
+<b><u>Support</u></b>
+<p>
+    npatsop@cc.uoi.gr
+    npatsop@gmail.com
+    tiago.pereira@incor.usp.br
+<p>
+<b><u>Also see</u></b>
+<p>
+On-line:  help for metan
+<p>
+<p>
+<p>
+<p>
+<p>
+<p>
+<p>
+<p>
+<p>
+</pre>

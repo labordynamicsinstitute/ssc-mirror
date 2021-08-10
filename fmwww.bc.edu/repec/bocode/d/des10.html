@@ -1,0 +1,55 @@
+<pre>
+<b>help des10</b>
+-------------------------------------------------------------------------------
+<p>
+<b><u>Title</u></b>
+<p>
+    <b>des10</b> --        Describe data in file Stata-10 format (for Stata-9 users)
+<p>
+<p>
+<b><u>Syntax</u></b>
+<p>
+<p>
+    Describe data in Stata-10 file
+<p>
+        <b>des10</b> <b>using</b> <i>filename</i>
+<p>
+<p>
+<b><u>Description</u></b>
+<p>
+    <b>des10</b> produces a summary of the dataset stored in the format od Stata-10.
+    This command is for Stata-9 users only.
+<p>
+    <b>des10</b> has no options. For saved results see help for official <b>describe</b>.
+        <i>varlist</i> and <i>sortlist</i> are always saved. The following are never saved:
+        <b>r(N_max)</b>, <b>r(k_max)</b>, and <b>r(widthmax)</b>. This command is primarily for
+        the programmers. Most users will <b>use10</b> the dataset and describe it
+        later with Stata's native <b>describe</b>.
+<p>
+    <b>des10</b> cannot describe datasets located on the web. Copy the data to a
+        temporary file first.
+<p>
+<b><u>Saved results</u></b>
+<p>
+    <b>des10</b> saves the following in <b>r()</b>:
+<p>
+    Scalars        
+      <b>r(N)</b>                number of observations
+      <b>r(k)</b>                number of variables
+      <b>r(width)</b>            width of dataset
+      <b>r(Version)</b>          file format version, e.g. 114 for Stata-10
+      <b>r(ByteOrder)</b>        byteorder 1=HILO (Mac, Unix), 2=LOHI (PC Windows)
+<p>
+    Macros         
+      <b>r(varlist)</b>          variables in dataset
+      <b>r(sortlist)</b>         variables by which data are sorted
+<p>
+<b><u>Author</u></b>
+<p>
+    <b>des10</b> was written by Sergiy Radyakin: sradyakin(at)worldbank.org
+<p>
+<p>
+<b><u>Also see</u></b>
+<p>
+    Online:  <b>describe</b>, <b>use10</b>
+</pre>

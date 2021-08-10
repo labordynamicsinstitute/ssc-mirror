@@ -1,0 +1,545 @@
+<pre>
+-------------------------------------------------------------------------------
+<b>help: </b><b>xtregsam</b>                                                   <b>dialog:</b> <b>xtregs</b>
+<b>&gt; am</b>
+-------------------------------------------------------------------------------
+<p>
+<b>        </b>+-------+
+<b>    </b>----+<b> Title </b>+------------------------------------------------------------
+<p>
+<b>xtregsam: Swamy-Arora Random-Effects Panel Data Regression</b>
+<p>
+<a name="00"></a><b>        </b>+-------------------+
+<b>    </b>----+<b> Table of Contents </b>+------------------------------------------------
+<p>
+     <b>Syntax</b>
+     <b>Description</b>
+     <b>Options</b>
+     <b>Ridge Options</b>
+     <b>Weight Options</b>
+     <b>Weighted Variable Type Options</b>
+     <b>Other Options</b>
+     <b>Model Selection Diagnostic Criteria</b>
+     <b>Heteroscedasticity Tests</b>
+     <b>Saved Results</b>
+     <b>References</b>
+<p>
+ *** <b>Examples</b>
+<p>
+     <b>Author</b>
+<p>
+<a name="01"></a><b>        </b>+--------+
+<b>    </b>----+<b> Syntax </b>+-----------------------------------------------------------
+<p>
+     <b>xtregsam</b> <i>depvar</i> <i>indepvars</i> [<i>if</i>] [<i>in</i>] , <b>id(var)</b> <b>it(var)</b>
+ 
+   [ <b><u>rid</u></b><b>ge(</b><i>orr</i>|<i>grr1</i>|<i>grr2</i>|<i>grr3</i><b>)</b> <b>kr(</b><i>#</i><b>)</b>
+ 
+    <b><u>lmh</u></b><b>et</b> <b>diag</b> <b>mfx(</b><i>lin</i>|<i>log</i><b>)</b> <b><u>pred</u></b><b>ict(</b><i>new_var</i><b>)</b> <b><u>res</u></b><b>id(</b><i>new_var</i><b>)</b>
+ 
+    <b>weights(</b><i>yh</i>|<i>yh2</i>|<i>abse</i>|<i>e2</i>|<i>le2</i>|<i>x</i>|<i>xi</i>|<i>x2</i>|<i>xi2</i><b>)</b> <b><u>wv</u></b><b>ar(</b><i>varname</i><b>)</b> <b>iter(</b><i>#</i><b>)</b>
+ 
+    <b><u>nocons</u></b><b>tant</b> <b>coll dn tolog</b> <b><u>l</u></b><b>evel(</b><i>#</i><b>)</b> ]
+<p>
+<a name="02"></a><b>        </b>+-------------+
+<b>    </b>----+<b> Description </b>+------------------------------------------------------
+<p>
+  <b>xtregsam</b> estimates Swamy-Arora Random-Effects Panel Data with Ridge and
+  Weighted Regression, and calculate Panel Heteroscedasticity, Model
+  Selection Diagnostic Criteria, and Marginal Effects and Elasticities
+<p>
+   R2, R2 Adjusted, and F-Test, are obtained from 4 ways:
+ 
+     1- (Buse 1973) R2.
+     2- Raw Moments R2.
+     3- squared correlation between predicted (Yh) and observed dependent
+    variable (Y).
+     4- Ratio of variance between predicted (Yh) and observed dependent
+    variable (Y).
+<p>
+     - Adjusted R2: R2_a=1-(1-R2)*(N-1)/(N-K-1).
+     - F-Test=R2/(1-R2)*(N-K-1)/(K).
+<p>
+<a name="03"></a><b>        </b>+---------+
+<b>    </b>----+<b> Options </b>+----------------------------------------------------------
+<p>
+  * <b> id(</b><i>var</i><b>)       Cross Sections ID variable name</b>
+  * <b> it(</b><i>var</i><b>)       Time Series ID variable name</b>
+<p>
+<a name="04"></a><b>        </b>+---------------+
+<b>    </b>----+<b> Ridge Options </b>+----------------------------------------------------
+<p>
+   <b>kr(</b><i>#</i><b>)</b> Ridge k value, must be in the range (0 &lt; k &lt; 1).
+<p>
+   IF <b>kr(0)</b> in <b>ridge(</b><i>orr</i><b>,</b><i> grr1</i><b>,</b><i> grr2</i><b>,</b><i> grr3</i><b>)</b>, the model will be normal panel
+      regression.
+<p>
+  <b>ridge(</b><i>orr</i><b>)</b> : Ordinary Ridge Regression    [Judge,et al(1988,p.878) eq.21.4.2]
+&gt; .
+  <b>ridge(</b><i>grr1</i><b>)</b>: Generalized Ridge Regression [Judge,et al(1988,p.881) eq.21.4.12
+&gt; ].
+  <b>ridge(</b><i>grr2</i><b>)</b>: Iterative Generalized Ridge  [Judge,et al(1988,p.881) eq.21.4.12
+&gt; ].
+  <b>ridge(</b><i>grr3</i><b>)</b>: Adaptive Generalized Ridge   [Strawderman(1978)].
+<p>
+  <b>xtregsam</b> estimates Ordinary Ridge regression as a multicollinearity
+    remediation method.
+  General form of Ridge Coefficients and Covariance Matrix are:
+<p>
+  <b>Br = inv[X'X + kI] X'Y</b>
+<p>
+  <b>Cov=Sig^2 * inv[X'X + kI] (X'X) inv[X'X + kI]</b>
+<p>
+where:
+    Br = Ridge Coefficients Vector (k x 1).
+   Cov = Ridge Covariance Matrix (k x k).
+     Y = Dependent Variable Vector (N x 1).
+     X = Independent Variables Matrix (N x k).
+     k = Ridge Value (0 &lt; k &lt; 1).
+     I = Diagonal Matrix of Cross Product Matrix (Xs'Xs).
+    Xs = Standardized Variables Matrix in Deviation from Mean. 
+  Sig2 = (Y-X*Br)'(Y-X*Br)/DF
+<p>
+<a name="05"></a><b>        </b>+----------------+
+<b>    </b>----+<b> Weight Options </b>+---------------------------------------------------
+<p>
+    <b>wvar(</b><i>varname</i><b>)</b>     Weighted Variable Name
+<p>
+         <b>xtregsam</b> not like official Stata command <b>xtreg</b> in weight option,
+         <b>xtregsam</b> can use large types of weighted regression options.
+         <b>wvar( )</b> <b>must be combined with:</b> <b>weights(x, xi, x2, xi2)</b>"
+<p>
+<a name="06"></a><b>        </b>+--------------------------------+
+<b>    </b>----+<b> Weighted Variable Type Options </b>+-----------------------------------
+<p>
+    <b>weights(</b><i>yh</i><b>)</b>       Yh - Predicted Value
+    <b>weights(</b><i>yh2</i><b>)</b>      Yh^2 - Predicted Value Squared
+    <b>weights(</b><i>abse</i><b>)</b>     abs(E) - Absolute Value of Residual
+    <b>weights(</b><i>e2</i><b>)</b>       E^2 - Residual Squared
+    <b>weights(</b><i>le2</i><b>)</b>      log(E^2) - Log Residual Squared
+    <b>weights(</b><i>x</i><b>)</b>        (x) Variable
+    <b>weights(</b><i>xi</i><b>)</b>       (1/x) Inverse Variable
+    <b>weights(</b><i>x2</i><b>)</b>       (x^2) Squared Variable
+    <b>weights(</b><i>xi2</i><b>)</b>      (1/x^2) Inverse Squared Variable
+<p>
+<a name="07"></a><b>        </b>+---------------+
+<b>    </b>----+<b> Other Options </b>+----------------------------------------------------
+<p>
+  <b>coll</b>             keep collinear variables; default is removing collinear vari
+&gt; ables.
+<p>
+  <b><u>nocons</u></b><b>tant</b>       Exclude Constant Term from Equation
+<p>
+                   <b>xtregsam</b> not like official Stata command <b>xtreg</b> in constant t
+&gt; erm option,
+                   <b>xtregsam</b> can exclude constant term.
+                   <b>weights</b> option also can be used here.
+<p>
+  <b>dn</b>               Use (N) divisor instead of (N-K) for Degrees of Freedom (DF)
+<p>
+  <b>iter(</b><i>#</i><b>)</b>          number of iterations; Default is iter(100)
+<p>
+  <b>level(</b><i>#</i><b>)</b>         confidence intervals level. Default is level(95)
+<p>
+  <b>mfx(</b><i>lin</i><b>,</b><i> log</i><b>)</b>    functional form: Linear model <b>(lin)</b>, or Log-Log model <b>(log)</b>,
+                   to compute Marginal Effects and Elasticities
+   - In Linear model: marginal effects are the coefficients (Bm),
+        and elasticities are (Es = Bm X/Y).
+   - In Log-Log model: elasticities are the coefficients (Es),
+        and the marginal effects are (Bm = Es Y/X).
+   - <b>mfx(</b><i>log</i><b>)</b> and <b>tolog</b> options must be combined, to transform linear variables
+&gt;  to log form.
+<p>
+  <b>tolog</b>            Convert dependent and independent variables
+                   to LOG Form in the memory for Log-Log regression.
+                   <b>tolog</b> Transforms <i>depvar</i> and <i>indepvars</i>
+                   to Log Form without lost the original data variables
+<p>
+  <b><u>pred</u></b><b>ict(</b><i>new_variable</i><b>)</b>      Predicted values variable
+<p>
+  <b><u>res</u></b><b>id(</b><i>new_variable</i><b>)</b>        Residuals values variable
+               computed as Ue=Y-Yh ; that is known as combined residual: [Ue = 
+&gt; U_i + E_it]
+               overall error component is computed as: [E_it]
+               see: xtreg postestimation##predict
+<p>
+<a name="08"></a><b>        </b>+-------------------------------------+
+<b>    </b>----+<b> Model Selection Diagnostic Criteria </b>+------------------------------
+<p>
+<b>diag</b> Model Selection Diagnostic Criteria:
+        - Log Likelihood Function                   LLF
+        - Akaike Information Criterion              (1974) AIC
+        - Akaike Information Criterion              (1973) Log AIC
+        - Schwarz Criterion                         (1978) SC
+        - Schwarz Criterion                         (1978) Log SC
+        - Amemiya Prediction Criterion              (1969) FPE
+        - Hannan-Quinn Criterion                    (1979) HQ
+        - Rice Criterion                            (1984) Rice
+        - Shibata Criterion                         (1981) Shibata
+        - Craven-Wahba Generalized Cross Validation (1979) GCV
+<p>
+<a name="09"></a><b>        </b>+------------------------------------------+
+<b>    </b>----+<b> Groupwise Panel Heteroscedasticity Tests </b>+-------------------------
+<b><u>lmh</u></b><b>et</b> Groupwise Panel Heteroscedasticity Tests:
+        * Ho: Panel Homoscedasticity - Ha: Panel Groupwise Heteroscedasticity
+        - Lagrange Multiplier LM Test
+        - Likelihood Ratio LR Test
+        - Wald Test
+<p>
+<a name="10"></a><b>        </b>+---------------+
+<b>    </b>----+<b> Saved Results </b>+----------------------------------------------------
+<p>
+  <b>xtregsam</b> saves the following results in <b>e()</b>:
+<p>
+*** Model Selection Diagnostic Criteria:
+   <b>e(N)</b>            number of observations
+   <b>e(r2bu)</b>         R-squared (Buse 1973)
+   <b>e(r2bu_a)</b>       R-squared Adj (Buse 1973)
+   <b>e(r2raw)</b>        Raw Moments R2
+   <b>e(r2raw_a)</b>      Raw Moments R2 Adj
+   <b>e(f)</b>            F-test
+   <b>e(fp)</b>           F-test P-Value
+   <b>e(wald)</b>         Wald-test
+   <b>e(waldp)</b>        Wald-test P-Value
+<p>
+   <b>e(r2h)</b>          R2 Between Predicted (Yh) and Observed DepVar (Y)
+   <b>e(r2h_a)</b>        Adjusted r2h
+   <b>e(fh)</b>           F-test due to r2h
+   <b>e(fhp)</b>          F-test due to r2h P-Value
+<p>
+   <b>e(r2v)</b>          R2 Variance Ratio Between Predicted (Yh) and Observed DepVar
+&gt;  (Y)
+   <b>e(r2v_a)</b>        Adjusted r2v
+   <b>e(fv)</b>           F-test due to r2v
+   <b>e(fvp)</b>          F-test due to r2v P-Value
+<p>
+   <b>e(sig)</b>          Root MSE (Sigma)
+   <b>e(llf)</b>          Log Likelihood Function                   LLF
+   <b>e(aic)</b>          Akaike Information Criterion              (1974) AIC
+   <b>e(laic)</b>         Akaike Information Criterion              (1973) Log AIC
+   <b>e(sc)</b>           Schwarz Criterion                         (1978) SC
+   <b>e(lsc)</b>          Schwarz Criterion                         (1978) Log SC
+   <b>e(fpe)</b>          Amemiya Prediction Criterion              (1969) FPE
+   <b>e(hq)</b>           Hannan-Quinn Criterion                    (1979) HQ
+   <b>e(rice)</b>         Rice Criterion                            (1984) Rice
+   <b>e(shibata)</b>      Shibata Criterion                         (1981) Shibata
+   <b>e(gcv)</b>          Craven-Wahba Generalized Cross Validation (1979) GCV
+<p>
+*** Groupwise Heteroscedasticity Tests:
+   <b>e(lmhglm)</b>       Lagrange Multiplier LM Test
+   <b>e(lmhglmp)</b>      Lagrange Multiplier LM Test P-Value
+   <b>e(lmhglr)</b>       Likelihood Ratio LR Test
+   <b>e(lmhglrp)</b>      Likelihood Ratio LR Test P-Value
+   <b>e(lmhgw)</b>        Wald Test
+   <b>e(lmhgwp)</b>       Wald Test P-Value
+<p>
+Matrixes
+   <b>e(b)</b>            coefficient vector
+   <b>e(V)</b>            variance-covariance matrix of the estimators
+   <b>e(mfxlin)</b>       Marginal Effect and Elasticity in Lin Form
+   <b>e(mfxlog)</b>       Marginal Effect and Elasticity in Log Form
+<p>
+<a name="11"></a><b>        </b>+------------+
+<b>    </b>----+<b> References </b>+-------------------------------------------------------
+<p>
+    Breusch, Trevor &amp; Adrian Pagan (1980)<b> "The Lagrange Multiplier Test and</b>
+        <b>its Applications to Model Specification in Econometrics",</b> <i>Review of</i>
+        <i>Economic Studies 47</i>; 239-253.
+<p>
+    Greene, William (2007)<b> "Econometric Analysis",</b> <i>6th ed., Macmillan</i>
+        <i>Publishing Company Inc., New York, USA.</i>.
+<p>
+    Judge, Georege, R. Carter Hill, William . E. Griffiths, Helmut Lutkepohl,
+        &amp; Tsoung-Chao Lee (1988)<b> "Introduction To The Theory And Practice Of</b>
+        <b>Econometrics",</b> <i>2nd ed., John Wiley &amp; Sons, Inc., New York, USA</i>.
+<p>
+    Judge, Georege, W. E. Griffiths, R. Carter Hill, Helmut Lutkepohl, &amp;
+        Tsoung-Chao Lee(1985)<b> "The Theory and Practice of Econometrics",</b> <i>2nd</i>
+        <i>ed., John Wiley &amp; Sons, Inc., New York, USA</i>.
+<p>
+    Swamy, P.A.V.B. (1970)<b> "Efficient Inference in a Random Coefficient</b>
+        <b>Regression Model"</b> <i>Econometrica 38</i>; 311-323.
+<p>
+    Swamy, P.A.V.B. &amp; S.S. Arora (1972)<b> "The Exact Finite Sample Properties</b>
+        <b>of the Estimators of Coefficients in the Error Components Regression</b>
+        <b>Models",</b> <i>Econometrica, 40</i>; 261–275.
+<p>
+<a name="12"></a><b>        </b>+----------+
+<b>    </b>----+<b> Examples </b>+---------------------------------------------------------
+<p>
+  clear all
+<p>
+  sysuse xtregsam.dta, clear
+<p>
+  db xtregsam
+<p>
+  xtregsam y x1 x2 , id(id) it(t) mfx(lin) predict(Yh) resid(Eu) diag lmh
+<p>
+  xtregsam y x1 x2 , id(id) it(t) mfx(log) predict(Yh) resid(Eu) diag lmh tolog
+<p>
+  xtregsam y x1 x2 , id(id) it(t) mfx(lin) ridge(orr) kr(0.5)
+<p>
+  xtregsam y x1 x2 , id(id) it(t) mfx(lin) ridge(grr1)
+<p>
+  xtregsam y x1 x2 , id(id) it(t) mfx(lin) ridge(grr2)
+<p>
+  xtregsam y x1 x2 , id(id) it(t) mfx(lin) ridge(grr3)
+<p>
+  xtregsam y x1 x2 , id(id) it(t) mfx(lin) ridge(grr1) weight(x) wvar(x1) diag 
+&gt; lmh
+-------------------------------------------------------------------------------
+<p>
+. clear all
+. sysuse xtregsam.dta, clear
+. xtregsam y x1 x2 , id(id) it(t) mfx(lin) ridge(grr1) weight(x) wvar(x1) diag 
+&gt; lmh
+<p>
+==============================================================================
+* Swamy-Arora Random-Effects Panel Data: Ridge and Weighted Regression
+==============================================================================
+  y = x1 + x2
+------------------------------------------------------------------------------
+* Weighted Regression Type: (X)     -   Variable: (x1) *
+------------------------------------------------------------------------------
+  Ridge k Value     =   0.07455     |   Generalized Ridge Regression
+------------------------------------------------------------------------------
+  Sample Size       =          49   |   Cross Sections Number   =           7
+  Wald Test         =   4101.4361   |   P-Value &gt; Chi2(2)       =      0.0000
+  F-Test            =   2050.7181   |   P-Value &gt; F(2 , 40)     =      0.0000
+ (Buse 1973) R2     =      0.7394   |   Raw Moments R2          =      0.9519
+ (Buse 1973) R2 Adj =      0.6873   |   Raw Moments R2 Adj      =      0.9422
+  Root MSE (Sigma)  =      8.6794   |   Log Likelihood Function =   -170.4428
+------------------------------------------------------------------------------
+- R2h= 0.5516   R2h Adj= 0.4620  F-Test =   28.30 P-Value &gt; F(2 , 40)  0.0000
+- R2v= 0.4338   R2v Adj= 0.3206  F-Test =   17.62 P-Value &gt; F(2 , 40)  0.0000
+------------------------------------------------------------------------------
+           y |      Coef.   Std. Err.      t    P&gt;|t|     [95% Conf. Interval]
+-------------+----------------------------------------------------------------
+          x1 |  -.2667096   .0095986   -27.79   0.000    -.2861092     -.24731
+          x2 |  -1.350062   .0327156   -41.27   0.000    -1.416183   -1.283941
+       _cons |   64.33976   .5427087   118.55   0.000     63.24291    65.43662
+------------------------------------------------------------------------------
+<p>
+==============================================================================
+* Panel Model Selection Diagnostic Criteria
+==============================================================================
+<p>
+- Log Likelihood Function       LLF               =  -170.4428
+- Akaike Final Prediction Error AIC               =   346.8855
+- Schwartz Criterion            SC                =   352.5610
+- Akaike Information Criterion  ln AIC            =     4.2414
+- Schwarz Criterion             ln SC             =     4.3572
+- Amemiya Prediction Criterion  FPE               =    79.9447
+- Hannan-Quinn Criterion        HQ                =    72.6289
+- Rice Criterion                Rice              =    70.0767
+- Shibata Criterion             Shibata           =    69.0260
+- Craven-Wahba Generalized Cross Validation-GCV   =    69.7787
+------------------------------------------------------------------------------
+<p>
+==============================================================================
+* Panel Groupwise Heteroscedasticity Tests
+==============================================================================
+  Ho: Panel Homoscedasticity - Ha: Panel Groupwise Heteroscedasticity
+<p>
+- Lagrange Multiplier LM Test     =   7.3373     P-Value &gt; Chi2(6)   0.2908
+- Likelihood Ratio LR Test        =   7.1253     P-Value &gt; Chi2(6)   0.3094
+- Wald Test                       =  12.4812     P-Value &gt; Chi2(7)   0.0858
+------------------------------------------------------------------------------
+<p>
+* Linear: Marginal Effect - Elasticity *
+<p>
++-----------------------------------------------------------------------------+
+|     Variable | Marginal_Effect(B) |     Elasticity(Es) |               Mean |
+|--------------+--------------------+--------------------+--------------------|
+|           x1 |            -0.2667 |            -0.2918 |            38.4362 |
+|           x2 |            -1.3501 |            -0.5525 |            14.3749 |
++-----------------------------------------------------------------------------+
+ Mean of Dependent Variable =   35.1288
+<p>
+<a name="13"></a><b>        </b>+--------+
+<b>    </b>----+<b> Author </b>+-----------------------------------------------------------
+<p>
+  <b>Emad Abd Elmessih Shehata</b>
+  <b>Professor (PhD Economics)</b>
+  <b>Agricultural Research Center - Agricultural Economics Research Institute - Eg</b>
+<b>&gt; ypt</b>
+  <b>Email: </b>emadstat@hotmail.com
+  <b>WebPage:                </b>http://emadstat.110mb.com/stata.htm
+  <b>WebPage at IDEAS:       </b>http://ideas.repec.org/f/psh494.html
+  <b>WebPage at EconPapers:  </b>http://econpapers.repec.org/RAS/psh494.htm
+<p>
+<b>        </b>+-------------------+
+<b>    </b>----+<b> XTREGSAM Citation </b>+------------------------------------------------
+<p>
+ <b>Shehata, Emad Abd Elmessih (2012)</b>
+ <b>XTREGSAM: "Swamy-Arora Random-Effects Panel Data: Ridge and Weighted</b>
+          <b>Regression"</b>
+<p>
+        http://ideas.repec.org/c/boc/bocode/s457460.html
+<p>
+        http://econpapers.repec.org/software/bocbocode/s457460.htm
+<p>
+<p>
+<b><u>Online Help:</u></b>
+<p>
+<b>* Econometric Regression Models:</b>
+<p>
+<b>* (1) (OLS) * Ordinary Least Squares Regression Models:</b>
+<b>olsreg</b>     OLS Econometric Ridge &amp; Weighted Regression Models: Stata Module Too
+&gt; lkit
+<b>ridgereg</b>   OLS Ridge Regression Models
+<b>gmmreg</b>     OLS Generalized Method of Moments (GMM): Ridge &amp; Weighted Regression
+<b>chowreg</b>    OLS Structural Change Regressions and Chow Test
+---------------------------------------------------------------------------
+<b>* (2) (2SLS-IV) * Two-Stage Least Squares &amp; Instrumental Variables Regression M</b>
+<b>&gt; odels:</b>
+<b>reg2</b>       2SLS-IV Econometric Ridge &amp; Weighted Regression Models: Stata Module
+&gt;  Toolkit
+<b>gmmreg2</b>    2SLS-IV Generalized Method of Moments (GMM): Ridge &amp; Weighted Regres
+&gt; sion
+<b>limlreg2</b>   Limited-Information Maximum Likelihood (LIML) IV Regression
+<b>meloreg2</b>   Minimum Expected Loss (MELO) IV Regression
+<b>ridgereg2</b>  Ridge 2SLS-LIML-GMM-MELO-Fuller-kClass IV Regression
+<b>ridge2sls</b>  Two-Stage Least Squares Ridge Regression
+<b>ridgegmm</b>   Generalized Method of Moments (GMM) IV Ridge Regression
+<b>ridgeliml</b>  Limited-Information Maximum Likelihood (LIML) IV Ridge Regression
+<b>ridgemelo</b>  Minimum Expected Loss (MELO) IV Ridge Regression
+---------------------------------------------------------------------------
+<b>* (3) * Panel Data Regression Models:</b>
+<b>regxt</b>      Panel Data Econometric Ridge &amp; Weighted Regression Models: Stata Mod
+&gt; ule Toolkit
+<b>xtregdhp</b>   Han-Philips (2010) Linear Dynamic Panel Data Regression
+<b>xtregam</b>    Amemiya Random-Effects Panel Data: Ridge &amp; Weighted Regression
+<b>xtregbem</b>   Between-Effects Panel Data: Ridge &amp; Weighted Regression
+<b>xtregbn</b>    Balestra-Nerlove Random-Effects Panel Data: Ridge &amp; Weighted Regress
+&gt; ion
+<b>xtregfem</b>   Fixed-Effects Panel Data: Ridge &amp; Weighted Regression
+<b>xtregmle</b>   Trevor Breusch MLE Random-Effects Panel Data: Ridge &amp; Weighted Regre
+&gt; ssion
+<b>xtregrem</b>   Fuller-Battese GLS Random-Effects Panel Data: Ridge &amp; Weighted Regre
+&gt; ssion
+<b>xtregsam</b>   Swamy-Arora Random-Effects Panel Data: Ridge &amp; Weighted Regression
+<b>xtregwem</b>   Within-Effects Panel Data: Ridge &amp; Weighted Regression
+<b>xtregwhm</b>   Wallace-Hussain Random-Effects Panel Data: Ridge &amp; Weighted Regressi
+&gt; on
+<b>xtreghet</b>   MLE Random-Effects Multiplicative Heteroscedasticity Panel Data Regr
+&gt; ession
+---------------------------------------------------------------------------
+<b>* (4) (MLE) * Maximum Likelihood Estimation Regression Models:</b>
+<b>mlereg</b>     MLE Econometric Regression Models: Stata Module Toolkit
+<b>mleregn</b>    MLE Normal Regression
+<b>mleregln</b>   MLE Log Normal Regression
+<b>mlereghn</b>   MLE Half Normal Regression
+<b>mlerege</b>    MLE Exponential Regression
+<b>mleregle</b>   MLE Log Exponential Regression
+<b>mleregg</b>    MLE Gamma Regression
+<b>mlereglg</b>   MLE Log Gamma Regression
+<b>mlereggg</b>   MLE Generalized Gamma Regression
+<b>mlereglgg</b>  MLE Log Generalized Gamma Regression
+<b>mleregb</b>    MLE Beta Regression
+<b>mleregev</b>   MLE Extreme Value Regression
+<b>mleregw</b>    MLE Weibull Regression
+<b>mlereglw</b>   MLE Log Weibull Regression
+<b>mleregilg</b>  MLE Inverse Log Gauss Regression
+---------------------------------------------------------------------------
+<b>* (5) * Autocorrelation Regression Models:</b>
+<b>autoreg</b>    Autoregressive Least Squares Regression Models: Stata Module Toolkit
+<b>alsmle</b>     Beach-Mackinnon AR(1) Autoregressive Maximum Likelihood Estimation R
+&gt; egression
+<b>automle</b>    Beach-Mackinnon AR(1) Autoregressive Maximum Likelihood Estimation R
+&gt; egression
+<b>autopagan</b>  Pagan AR(p) Conditional Autoregressive Least Squares Regression
+<b>autoyw</b>     Yule-Walker AR(p) Unconditional Autoregressive Least Squares Regress
+&gt; ion
+<b>autopw</b>     Prais-Winsten AR(p) Autoregressive Least Squares Regression
+<b>autoco</b>     Cochrane-Orcutt AR(p) Autoregressive Least Squares Regression
+<b>autofair</b>   Fair AR(1) Autoregressive Least Squares Regression
+---------------------------------------------------------------------------
+<b>* (6) * Heteroscedasticity Regression Models:</b>
+<b>hetdep</b>     MLE Dependent Variable Heteroscedasticity
+<b>hetmult</b>    MLE Multiplicative Heteroscedasticity Regression
+<b>hetstd</b>     MLE Standard Deviation Heteroscedasticity Regression
+<b>hetvar</b>     MLE Variance Deviation Heteroscedasticity Regression
+<b>glsreg</b>     Generalized Least Squares Regression
+---------------------------------------------------------------------------
+<b>* (7) * Non Normality Regression Models:</b>
+<b>robgme</b>     MLE Robust Generalized Multivariate Error t Distribution
+<b>bcchreg</b>    Classical Box-Cox Multiplicative Heteroscedasticity Regression
+<b>bccreg</b>     Classical Box-Cox Regression
+<b>bcereg</b>     Extended Box-Cox Regression
+---------------------------------------------------------------------------
+<b>* (8) (NLS) * Nonlinear Least Squares Regression Regression Models:</b>
+<b>autonls</b>    Non Linear Autoregressive Least Squares Regression
+<b>qregnls</b>    Non Linear Quantile Regression
+---------------------------------------------------------------------------
+<b>* (9) * Logit Regression Models:</b>
+<b>logithetm</b>  Logit Multiplicative Heteroscedasticity Regression
+<b>mnlogit</b>    Multinomial Logit Regression
+---------------------------------------------------------------------------
+<b>* (10) * Probit Regression Models:</b>
+<b>probithetm</b> Probit Multiplicative Heteroscedasticity Regression
+<b>mnprobit</b>   Multinomial Probit Regression
+---------------------------------------------------------------------------
+<b>* (11) * Tobit Regression Models:</b>
+<b>tobithetm</b>  Tobit Multiplicative Heteroscedasticity Regression 
+---------------------------------------------------------------------------
+<p>
+<b>Panel Data Tests:</b>
+<p>
+<b>* (1) * Autocorrelation Tests:</b>
+<b>lmaxt</b>      Panel Data Autocorrelation Tests
+<b>lmabxt</b>     Panel Data Autocorrelation Baltagi Test
+<b>lmabgxt</b>    Panel Data Autocorrelation Breusch-Godfrey Test
+<b>lmabpxt</b>    Panel Data Autocorrelation Box-Pierce Test
+<b>lmabpgxt</b>   Panel Data Autocorrelation Breusch-Pagan-Godfrey Test
+<b>lmadurhxt</b>  Panel Data Autocorrelation Dynamic Durbin h and Harvey LM Tests
+<b>lmadurmxt</b>  Panel Data Autocorrelation Dynamic Durbin m Test
+<b>lmadwxt</b>    Panel Data Autocorrelation Durbin-Watson Test
+<b>lmavonxt</b>   Panel Data Von Neumann Ratio Autocorrelation Test
+<b>lmawxt</b>     Panel Data Autocorrelation Wooldridge Test
+<b>lmazxt</b>     Panel Data Autocorrelation Z Test
+---------------------------------------------------------------------------
+<b>* (2) * Heteroscedasticity Tests:</b>
+<b>lmhxt</b>      Panel Data Heteroscedasticity Tests
+<b>lmhgwxt</b>    Panel Data Groupwise Heteroscedasticity Tests
+<b>ghxt</b>       Panel Groupwise Heteroscedasticity Tests
+<b>lmhlmxt</b>    Panel Data Groupwise Heteroscedasticity Breusch-Pagan LM Test
+<b>lmhlrxt</b>    Panel Data Groupwise Heteroscedasticity Greene LR Test
+<b>lmharchxt</b>  Panel Data Heteroscedasticity Engle (ARCH) Test
+<b>lmhcwxt</b>    Panel Data Heteroscedasticity Cook-Weisberg Test
+<b>lmhglxt</b>    Panel Data Heteroscedasticity Glejser Test
+<b>lmhharvxt</b>  Panel Data Heteroscedasticity Harvey Test
+<b>lmhhpxt</b>    Panel Data Heteroscedasticity Hall-Pagan Test
+<b>lmhmssxt</b>   Panel Data Heteroscedasticity Machado-Santos-Silva Test
+<b>lmhwaldxt</b>  Panel Data Heteroscedasticity Wald Test
+<b>lmhwhitext</b> Panel Data Heteroscedasticity White Test
+---------------------------------------------------------------------------
+<b>* (3) * Non Normality Tests:</b>
+<b>lmnxt</b>      Panel Data Non Normality Tests
+<b>lmnadxt</b>    Panel Data Non Normality Anderson-Darling Test
+<b>lmndhxt</b>    Panel Data Non Normality Doornik-Hansen Test
+<b>lmndpxt</b>    Panel Data Non Normality D'Agostino-Pearson Test
+<b>lmngryxt</b>   Panel Data Non Normality Geary Runs Test
+<b>lmnjbxt</b>    Panel Data Non Normality Jarque-Bera Test
+<b>lmnwhitext</b> Panel Data Non Normality White Test
+---------------------------------------------------------------------------
+<b>* (4) * Panel Data Error Component Tests:</b>
+<b>lmecxt</b>     Panel Data Error Component Tests
+---------------------------------------------------------------------------
+<b>* (5) * Panel Data Diagonal Covariance Matrix Test:</b>
+<b>lmcovxt</b>    Panel Data Breusch-Pagan Diagonal Covariance Matrix LM Test
+---------------------------------------------------------------------------
+<b>* (6) * Panel Data ModeL Selection Diagnostic Criteria:</b>
+<b>diagxt</b>     Panel Data ModeL Selection Diagnostic Criteria
+---------------------------------------------------------------------------
+<b>* (7) * Panel Data Specification Tests:</b>
+<b>lmhausxt</b>   Panel Data Hausman Specification Test
+<b>resetxt</b>    Panel Data REgression Specification Error Tests (RESET)
+---------------------------------------------------------------------------
+<b>* (8) * Panel Data Identification Variables:</b>
+<b>idt</b>        Create Identification Variables in Panel Data
+<b>xtidt</b>      Create Identification Variables in Panel Data
+---------------------------------------------------------------------------
+<p>
+<p>
+</pre>

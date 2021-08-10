@@ -1,0 +1,83 @@
+<pre>
+-------------------------------------------------------------------------------
+help for <b>vartyp</b>
+-------------------------------------------------------------------------------
+<p>
+<b><u>Set or list variable types (characteristics) for the </u></b><b><u>codebook2</u></b><b><u> command</u></b>
+<p>
+        <b>vartyp</b> [<i>varlist</i>] [, <b><u>s</u></b><b>et</b>(<i>type</i>) | <b><u>l</u></b><b>ist</b>(<i>type</i>)]
+        
+        Where "type" id one of:
+                disc - discrete
+                cont - continuous
+                ord - ordinal
+                date - elaspsed date
+                id - identification
+                undef - undefined type
+                clear - clear a set type
+<p>
+                
+<b><u>Description</u></b>
+<p>
+The <b>vartyp</b> command is used to set or list the variable type(s) used by the
+<b>codebook2</b> command.  With no variables or options specified, <b>vartyp</b> will simply
+list all variables and their types.  <b>vartyp</b> can also be used to clear types
+that have already been set.
+<p>
+<b><u>Saved Results</u></b>
+<p>
+Variables listed or set are returned in r(varlist).
+<p>
+<p>
+<b><u>Examples</u></b>
+<p>
+List all variables:
+        . vartyp
+<p>
+List specific variables:
+        . vartyp idnum var1 weight
+<p>
+List variables of a specific type:
+        . vartyp ,l(cont)
+        . vartyp ,l(id)
+<p>
+List variables that have no type set:
+        . vartyp, l(undef)
+<p>
+Set a type for a variable:
+        . vartyp idnum, s(id)
+        . vartyp birthdate weddate, s(date)
+<p>
+Clear a type set for a variable:
+        . vartyp var1, s(clear)
+<p>
+<p>
+If you simply want to change a variable's type, you only need to set it to 
+the new type, you do not have to clear it first.  The <b>vartyp</b> command can work
+nicely with the <b>ds3</b> command to set types for many variables at a time:
+<p>
+Set the type to "cont" for all variables that do not have a value label:
+        . ds3, not(vall)
+        . vartyp `r(varlist)', s(cont)
+<p>
+Set the type to "date" for all varaibles with the word "date" in the variable
+label:
+        . ds3, has(varl "*date*")
+        . vartyp `r(varlist)', s(date)
+<p>
+Now set all the remaining variables to "disc":
+        . vartyp, l(undef)
+        . vartyp `r(varlist)', s(disc)
+<p>
+-------------------------------------------------------------------------------
+<p>
+<b><u>Author</u></b>
+        Paul H. Bern, Syracuse University, phbern@syr.edu
+        
+<p>
+<b><u>See Also:</u></b>
+             Help for:    characteristic
+             Net Search:  ds3
+             Net Search:  codebook2
+       
+</pre>

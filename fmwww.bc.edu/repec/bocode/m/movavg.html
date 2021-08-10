@@ -1,0 +1,47 @@
+<pre>
+<b>help movavg</b>
+-------------------------------------------------------------------------------
+<p>
+<b><u>Title</u></b>
+<p>
+    <b>movavg</b> -- MATA based Moving Average generator
+<p>
+<b><u>Syntax</u></b>
+<p>
+        <b>movavg</b> <i>newvar</i> <b>=</b><i>varname</i> [if] [, <b><u>la</u></b><b>gs</b>(#) <b><u>r</u></b><b>eplace</b>]
+<p>
+    <b>by</b> is allowed for 1 varname.
+<p>
+    <i>options</i>                    Description
+    -------------------------------------------------------------------------
+      <b><u>la</u></b><b>gs(</b><i>#</i><b>)</b>                  Number of time periods (observations) to be
+                                 considered in the window.
+      <b><u>r</u></b><b>eplace</b>                  Same behavior as in <b>generate</b>.
+    -------------------------------------------------------------------------
+<p>
+<b><u>Description</u></b>
+<p>
+    <b>movavg</b> performs high speed Moving Average calculation using MATA base
+    computations.
+<p>
+    In the case of "by", efficiency gains are very high, in terms of
+    computation speed, as a contrast of loop based algorithms as this
+    implementations uses matrix algebra instead.
+<p>
+<b><u>Examples</u></b>
+<p>
+    Setup
+        <b>. sysuse auto</b>
+        <b>. sort rep78</b>
+<p>
+    Computes the moving average of <i>price</i> over a 3 period window
+        <b>. movavg ma3lags = price, lags(3)</b>
+<p>
+    Computes the moving average of <i>price</i> by <i>rep78</i> over a 3 period window
+        <b>. by rep78: movavg ma3lags_by = price, lags(3)</b>
+<p>
+<b><u>Author</u></b>
+<p>
+    George Vega Yon, Superindentencia de Pensiones. 
+    mailto:gvega@spensiones.cl
+</pre>

@@ -1,0 +1,63 @@
+<pre>
+-------------------------------------------------------------------------------
+help for <b>scheme_tufte</b>                                              (Ulrich Atz)
+-------------------------------------------------------------------------------
+<p>
+<b><u>Scheme description:  tufte</u></b>
+<p>
+    Schemes determine the overall look of a graph; see help for schemes.
+<p>
+    The <b>tufte</b> scheme is
+<p>
+        <i>schemename</i>   foreground  background  description
+        ----------------------------------------------------------------------
+        <b>tufte</b>        monochrome    white     black/dark gray on white 
+                                             with gray axes
+                                             and gray background lines
+        ----------------------------------------------------------------------
+<p>
+    For instance, you might type
+<p>
+        <b>. graph</b> ...<b>,</b> ...  <b>scheme(tufte)</b>
+<p>
+        <b>. set</b> <b>scheme</b> <b>tufte</b> [<b>,</b> <b><u>perm</u></b><b>anently</b> ]
+<p>
+    See help scheme_option and help set_scheme.
+<p>
+<p>
+<b><u>Description</u></b>
+<p>
+    <b>tufte</b> is Ulrich Atz's original personal default scheme. It aims for a
+    minimal look with gray background lines and gray axes inspired by Edward
+    Tufte (1983). The mother scheme is Stata's s2mono, yet it follows more
+    closely Roger Newson's rbn1mono scheme and the even more minimal Svend
+    Juul's lean schemes.
+<p>
+    The background is white and the default marker shape is a hollow circle.
+    The axis labels use value labels if these exist and the tick labels are
+    horizontal for improved readability. The default by-graph style avoids
+    clutter. Histograms have light gray bars with white lines that separate
+    them. Also the matrix plot is improved by alleviating auxiliary output.
+    The default number of columns in a legend is 1, to enable long and
+    explicit labels.
+<p>
+    Any of these defaults can be overridden by the user.
+<p>
+<p>
+<b><u>References</u></b>
+<p>
+    Tufte, E. R. (1983). <i>The Visual Display of Quantitative Information</i>.
+    Cheshire, CT: Graphics press.
+<p>
+<b><u>Author</u></b>
+<p>
+    Ulrich Atz, London School of Economics and Political Science, UK.  Email:
+    u.atz@lse.ac.uk
+<p>
+<b><u>Also see</u></b>
+<p>
+    Manual:  <b>[G] schemes</b>, <b>[G] </b><i>scheme_option</i>, <b>[G] set scheme</b>
+<p>
+    Online:  help for schemes, <i>scheme_option</i>, set_scheme, scheme_s1mono
+             help for scheme_lean and scheme_rbn1mono if installed
+</pre>

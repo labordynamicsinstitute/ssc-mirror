@@ -1,0 +1,127 @@
+<pre>
+..-
+help for undocumented ^for^ (version 2.1.1) features
+..-
+<p>
+    ^for^ [list1 [^\^list2 [^\^list3 ... [^\^list0]]] ... ] [^,^ ^a^ny
+        ^l^type^(^typelist^)^ ^noh^eader ^nos^top ^p^ause ^c^mdsep^(^sep_char^)
+&gt; ^
+        ^ma^cro^(^macro_string^)^ ^ms^tub^(^stub^)^ ^q^uote^(^quote_char^)^ ]^:
+&gt; ^
+        stata_cmd1 [ ^//^ stata_cmd2 [ ^//^ stata_cmd3... ]]
+<p>
+    ^for211^ [list1 [^\^list2 [^\^list3 ... [^\^list0]]] ... ] [^,^ ^a^ny
+        ^l^type^(^typelist^)^ ^noh^eader ^nos^top ^p^ause ^c^mdsep^(^sep_char^)
+&gt; ^
+        ^ma^cro^(^macro_string^)^ ^ms^tub^(^stub^)^ ^n^umeric ^q^uote^(^quote_c
+&gt; har^)^ 
+]^:^
+        stata_cmd1 [ ^//^ stata_cmd2 [ ^//^ stata_cmd3... ]]
+<p>
+Description
+- -----------
+<p>
+^for^ in Stata 5 includes various features not documented for various
+reasons either in the on-line help or in the manual. These include the
+use of multiple commands and options for controlling the use of
+quotation marks and of macros, which are documented here.
+<p>
+In addition, ^for211^ includes a new ^numeric^ option and it allows the
+use of multiple pairs of quotes within each stata_cmd.
+<p>
+<p>
+Undocumented features
+- ---------------------
+<p>
+^for^ executes stata_cmd1, stata_cmd2, ... repeatedly, substituting each
+member of list1 for ^@@1^ in stata_cmd1, stata_cmd2, ... , substituting
+each member of list2 (if given) for ^@@2^ in stata_cmd1, stata_cmd2, ...,
+and so on until all list members have been processed.
+<p>
+Up to 10 lists are allowed. The tenth list is referred to as ^@@0^ (not 
+^@@10^).
+<p>
+^for^ may also be used without specifying list1, list2, ... in order to execute
+stata_cmd1, stata_cmd2, ... exactly once. In this case the ^@@1^, ^@@2^ ... 
+dummy
+arguments are not required.
+<p>
+<p>
+Undocumented options
+- --------------------
+<p>
+^any^ is a synonym for ^ltype(any)^.
+<p>
+^cmdsep(^sep_char^)^ determines the PAIR of characters which separate different
+    stata_cmds. sep_char may be any character except backslash, comma, space.
+    Don't forget that TWO sep_chars are used to separate stata_cmds. Default
+    sep_char: forward-slash (^/^).
+<p>
+^macro(^macro_string^)^, ^mstub(^stub^)^: when macro_string is found in a 
+stata_cmd,
+    ^for^ substitutes ^\$^stub and the character which immediately follows
+    macro_string. This feature allows you to get access to the contents of
+    macros such as ^$S_1^ which are left behind by stata_cmds. The default
+    macro_string is ^%%^; the default stub is ^S_^. See also Remarks.
+<p>
+^numeric^ (in ^for211^) is a synonym for ^ltype(numeric)^.
+<p>
+^quote(^quote_char^)^ in ^for^ allows you to insert one pair (and no
+    more) of quotation marks ("") around part of a stata_cmd. This is
+    useful, for example, when setting up variable labels. quote_char
+    must be any character not used in any of the stata_cmds. There is no
+    default quote_char; it must be specified.
+<p>
+^quote(^quote_char^)^ in ^for211^ allows you to insert one or more pairs
+    of quotation marks ("") around part of a stata_cmd. This is useful,
+    for example, when setting up variable labels. quote_char must be any
+    character not used in any of the stata_cmds. There is no default
+    quote_char; it must be specified.
+<p>
+<p>
+Remarks
+- -------
+<p>
+You may occasionally wish to include a comma or a colon in a list of type 
+^any^.
+To avoid being mistaken for part of the syntax of the ^for^ command itself,
+such characters must be repeated, so ^::^ is translated to ^:^ and ^,,^ to ^,^.
+The exception is that ^::^ and ^,,^ may not be followed by space(s), as those
+space(s) will be removed. This is a very minor restriction.
+<p>
+Hash characters (^#^) in stata_cmds (and in list items) are converted to spaces
+and may therefore be used to produce literal spaces.  Multiple actual spaces in
+stata_cmds are reduced to single spaces. A minor limitation of ^for^ is that
+`real' ^#^s are not available.
+<p>
+Although you can access the contents of a global macro, say ^$S_1^, by 
+referring
+to it as ^%%1^ in a stata_cmd, you cannot redefine its contents this way. Thus
+a command like
+<p>
+ . ^for^ &lt;stuff&gt; ^global %%1 = ^&lt;value&gt;
+<p>
+will probably produce a syntax error. Stata will actually see
+<p>
+ . ^global $S_1 = ^&lt;value&gt;
+<p>
+and will try to assign &lt;value&gt; to a macro called ^$$S_1^. Instead you should
+enter
+<p>
+ . ^for^ &lt;stuff&gt; ^global S_1 = ^&lt;value&gt;
+<p>
+to get the expected result.
+<p>
+Author
+- ------
+<p>
+Patrick Royston &lt;proyston@@rpms.ac.uk&gt;
+<p>
+(Help file revised slightly by Nick Cox &lt;n.j.cox@@durham.ac.uk&gt;)
+<p>
+Also see
+- --------
+<p>
+On-line: help for @for@
+    STB: ip8.1 (STB-30)
+</pre>

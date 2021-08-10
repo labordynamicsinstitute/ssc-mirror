@@ -1,0 +1,107 @@
+<pre>
+-------------------------------------------------------------------------------
+help for <b>difd</b>                                                  (April 11, 2011)
+-------------------------------------------------------------------------------
+<p>
+<b><u>Detection of differential item function (DIF).</u></b>
+<p>
+        <b>difd</b><i> varlist</i> <b>,</b> <b>ABility</b><i>(varlist)</i> <b>GRoups</b><i>(varlist)</i>
+                 [<b>CATegorical</b><i>(varlist)</i> <b>RUnname</b><i>(str)</i> <b>NUL</b><i>(#)</i> <b>NUP</b><i>(#)</i> <b>NUPValue</b><i>(#)</i>
+                 <b>UBeta</b><i>(#)</i> <b>UBP</b><i>(#)</i> <b>ULPV</b><i>(#)</i> <b>UP</b><i>(#)</i> <b>UPPValue</b><i>(#)</i> <b>ITemsub</b><i>(#)</i>]
+<p>
+    where:
+<p>
+        <i>varlist</i> is the list of variables (items, blocks) to be tested for DIF
+<p>
+        <i>id</i> is the subject id variable.
+<p>
+        <i>ability</i> is the ability variable(s).
+<p>
+        <i>groups</i> is the list of grouping variables.  Continuous ‘grouping’
+            variables are permitted.
+<p>
+<b><u>Options</u></b>
+<p>
+        <b>categorical</b> is the list of any group variables that are categorical
+            and have more than 2 levels.  Note that it is simpler to omit
+            dichotomous variables from this list.  Default is none (all
+            continuous or dichotomous).
+<p>
+        <b>runname</b> names the log file DIFdRUnname.log.  Default is DIFd.log.
+<p>
+        <b>nul</b> indicates whether the log-likelihood test will be used as a
+            criterion for non-uniform DIF.  Default is yes (1).  Nul(0) will
+            omit this criterion.
+<p>
+        <b>nup</b> indicates whether the Wald test for the interaction term will be
+            used as a criterion for non-uniform DIF.  Default is no (0).
+            Nup(1) will include this criterion.
+<p>
+        <b>nupvalue</b> is the p-value for testing non-uniform DIF.  Default is
+            0.05.
+<p>
+        <b>ubeta</b> indicates whether the change in the ability coefficient will be
+            used as a criterion for uniform DIF.  Default is yes (1).
+            UBeta(0) will omit this criterion.
+<p>
+        <b>ubp</b> is percent change in the ability coefficient for determining
+            uniform DIF.  Default is .10.  A positive change indicates an
+            increase in the relationship between ability and the outcome with
+            a higher value of the grouping variable.
+<p>
+        <b>ul</b> indicates whether the log-likelihood test will be used as a
+            criterion for uniform DIF.  Default is no (0).  UL(1) will
+            include this criterion.
+<p>
+        <b>ulpvalue</b> is the p-value for testing uniform DIF with the
+            log-likelhood method.  Default is 0.05.
+<p>
+        <b>up</b> indicates whether the Wald test for the group term will be used as
+            a criterion for uniform DIF.  Default is no (0).  UP(1) will
+            include this criterion.
+<p>
+        <b>ulpvalue</b> is the p-value for testing uniform DIF with the Wald test.
+            Default is 0.05.
+<p>
+        <b>itemsub</b> subtracts the item value from the ability measure.  Default
+            is no (0).  ITemsub(1) will include this feature.
+<p>
+<b><u>Remarks</u></b>
+<p>
+        Sends DIF results to DIFd<i>runname</i>.log.
+<p>
+        DIF results for categorical grouping variables will be in terms of
+            the ordered values of group.  For example, if <i>ethnic</i> has 3
+            levels, 3 sets of DIF results will be reported: <i>ethnic12,</i>
+            <i>ethnic13, ethnic23</i>, where <i>ethnic12</i> compares the 2 lowest values
+            of <i>ethnic</i>, <i>ethnic13</i> the lowest and highest, etc.
+<p>
+        Generates an output data set, DIFd.dta, which includes individual
+            model results, with Brant test p-values for ordinal items and
+            Hosmer-Lemeshow p-values for binary items.  [The relevance of the
+            fit statistics has not been established for DIF.]
+<p>
+        Displays warning messages when models do not converge, collinearity
+            problems are observed, models are completely determined, standard
+            errors are large, or Brant tests are not possible.
+<p>
+<b><u>Examples</u></b>
+<p>
+    difd item1-item13, id(id) ru(gender0) ab(theta0) gr(g)
+<p>
+    difd apple - item13, id(id) ab(theta0) gr(eth) cat(eth) nupv(0.01) ul(1)
+        ulpv(.01)
+<p>
+<p>
+<b><u>Authors</u></b>
+<p>
+    Paul Crane, Laura Gibbons, Lance Jolley, and Gerald van Belle.
+    University of Washington, Copyright 2005.
+    Email:  gibbonsl@u.washington.edu
+<p>
+<b><u>Also see</u></b>
+<p>
+    <b>difwithpar</b>
+<p>
+<p>
+</pre>

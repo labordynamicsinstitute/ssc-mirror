@@ -1,0 +1,18 @@
+d 'X11AS'
+d
+d  under development.
+d
+d Requires: Stata version 13 for Mac OS X or Linux
+d
+d Distribution-Date: 20160821
+d
+d Author: Kit Baum, Boston College
+d Support: email baum@bc.edu
+d
+f x11as.ado
+f x11as.sthlp
+G MACINTEL64 x13as_static x13as
+G OSX.X8664  x13as_static x13as
+G LINUX64    x13as_linux  x13as
+h x13as  
+f x11as_test.do

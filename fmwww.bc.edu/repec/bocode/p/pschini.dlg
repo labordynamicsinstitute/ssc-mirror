@@ -1,0 +1,37 @@
+
+
+VERSION 9.2
+
+
+INCLUDE graph_header
+//INCLUDE header
+POSITION . . 560 100
+
+
+DIALOG main, label("SUBSIM| Initialise the dialog box of the pschset command: pschini") tabtitle("Main")
+
+  
+BEGIN
+  TEXT     tx_using      20     20     200        .,       ///
+        label("Filename of pschset dialog box information:")
+
+        FILE  fnamex      220    @     280      .,    ///
+        label ("Browse...")    save                    ///
+        filter("MetaFile (*.psc)|*.psc|*.* (*.*)|*.*")  
+  
+END
+
+
+HELP hlp1,   view("help asubini")
+RESET res1
+OK ok1,      label("OK")
+CANCEL can1, label("Cancel")
+COPY copy1
+
+PROGRAM command
+BEGIN
+        require main.fnamex
+		put "pschini  "
+		put `"""' main.fnamex `"""'
+        
+END

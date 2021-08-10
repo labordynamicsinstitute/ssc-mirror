@@ -1,0 +1,9 @@
+{smcl}
+{* 23nov2004}{...}
+{hline}
+{hi:estout}'s {it:label_subopts}
+{hline}
+
+INCLUDE help estout_label_subopts
+
+{back:(back)}

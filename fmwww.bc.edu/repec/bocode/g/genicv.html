@@ -1,0 +1,105 @@
+<pre>
+<p>
+<b>help genicv</b>
+-------------------------------------------------------------------------------
+<p>
+<b><u>Title</u></b>
+<p>
+     <b>genicv</b> -- <b>Gen</b>erate <b>i</b>nteraction between <b>c</b>ontinuous (or dummy) <b>v</b>ariables
+<p>
+<b><u>Syntax</u></b>
+<p>
+        <b>genicv</b> <i>varlist</i> [<i>if</i>] [<i>in</i>] [<b>,</b> <i>options</i>]
+<p>
+    <i>options</i>                Description
+    -------------------------------------------------------------------------
+      <b>replace</b>              replace existing variables
+      <b>x(</b><i>chars</i><b>)</b>             use <i>chars</i> as separator in variable labels
+      <b><u>sep</u></b><b>vars(</b><i>chars</i><b>)</b>       use <i>chars</i> as separator for variable names
+      <b>mvc(</b><i>mvc</i><b>)</b>             replace interactions with <i>mvc</i> if variables have
+                             hard missings
+      <b><u>l</u></b><b>ocal(</b><i>macname</i><b>)</b>       save created variable names in <i>macname</i>
+ 
+    -------------------------------------------------------------------------
+<p>
+<b><u>Description</u></b>
+<p>
+    <b>genicv</b> multiplies variables to create two or three-way interactions. If
+    two variables are specified in <i>varlist</i>, one new variable
+    <i>varname1_varname2</i> is created as the product of <i>var1</i> and <i>var2</i>. If three
+    variables are specified,<b> genicv</b> creates <i>varname1_varname2_varname3</i> and
+    all three two-way interactions (<i>varname1_varname2</i>, <i>varname1_varname3</i>,
+    <i>varname2_varname3</i>). If all variables in <i>varlist</i> are labeled, new variable
+    labels will be <i>"labeli * labelj</i> [<i>* labelk</i>]<i>"</i>. If one or more variables in
+    <i>varlist</i> are not labeled, new variables will not be labeled.
+<p>
+<b><u>Options</u></b>
+<p>
+        +---------+
+    ----+ options +----------------------------------------------------------
+<p>
+    <b>replace</b> replaces existing variables. Default is to only create variables,
+        that do not yet exist.
+<p>
+    <b>sepvars(</b><i>chars</i><b>)</b> use <i>varnamei</i><i>chars</i><i>varnamej</i> [<i>chars</i><i>varnamek</i>] as variable
+        names. Default is "<b>_</b>".
+<p>
+    <b>x(</b><i>chars</i><b>)</b> use <i>labeli</i> <i>chars</i> <i>labelj</i> [<i>chars</i> <i>labelk</i>] as variable labels.
+        Default is "<b>*</b>".
+<p>
+    <b>mvc(</b><i>mvc</i><b>)</b> replaces interactions with hard missing <i>mvc</i> (where <i>mvc</i> is one of
+        .a, ..., .z), if one of the original variables has hard missings.
+<p>
+    <b>local(</b><i>macname</i><b>)</b> saves the created variable names in <b>r(</b><i>macname</i><b>)</b>. Default
+        <i>macname</i> is <i>icv</i>.
+<p>
+<p>
+<b><u>Example</u></b>
+<p>
+        . sysuse nlsw88 ,clear
+        (NLSW, 1988 extract)
+<p>
+        <b>. genicv wage age married</b>
+<p>
+        . describe
+<p>
+        [...]
+        -----------------------------------------------------------------------
+&gt; -----
+                        [...] value
+        variable name   [...] label     variable label
+        -----------------------------------------------------------------------
+&gt; -----
+                [...]
+        age                             age in current year
+                [...]
+        married               marlbl    married
+                [...]
+        wage                            hourly wage
+                [...]
+        wage_age                        hourly wage * age in current year
+        wage_married                    hourly wage * married
+        age_married                     age in current year * married
+        wage_age_marr~d                 hourly wage * age in current year * mar
+&gt; ried
+        -----------------------------------------------------------------------
+&gt; -----
+<p>
+<p>
+<b><u>Saved results</u></b>
+<p>
+    <b>genicv</b> saves the following in <b>r()</b>:
+<p>
+    Macros
+      <b>r(macname)</b>           created variable names
+<p>
+<p>
+<b><u>Author</u></b>
+<p>
+    Daniel Klein, University of Bamberg, klein.daniel.81@gmail.com
+<p>
+<b><u>Also see</u></b>
+<p>
+    Online: generate, xi, fvvarlist
+    if installed: tuples, selectvars, chm
+</pre>

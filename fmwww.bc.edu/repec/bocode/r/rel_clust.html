@@ -1,0 +1,131 @@
+<pre>
+<b>help rel_clust</b>
+-------------------------------------------------------------------------------
+<p>
+<b><u>Title</u></b>
+<p>
+    <b>rel_clust</b> -- relative clusterability and weighted variables for cluster
+                  analysis
+<p>
+<b><u>Syntax</u></b>
+<p>
+    <b>rel_clust </b><i>varlist</i><b> [</b><i>if</i><b>] [</b><i>in</i><b>] [, </b><i>options</i><b>]</b>
+<p>
+<p>
+    <i>options</i>            Description
+    -------------------------------------------------------------------------
+    Main
+      <b><u>su</u></b><b>ffix(</b><i>suffix</i><b>)</b>   generation of transformed variables of <i>varlist</i> adding
+                       <i>suffix</i> to their variable names (default transformation
+                       is <b>vr_ratio</b>)
+      <b><u>tr</u></b><b>ansf(</b><i>arg</i><b>)</b>      type of variable transformation (requires option
+                       <b><u>su</u></b><b>ffix</b>)
+      <b>norc</b>             no output of "relative clusterability" indices
+      <b>replace</b>          replace existing variables requested by <b><u>su</u></b><b>ffix</b>
+<p>
+    Sub (<i>arguments</i> of <b><u>tr</u></b><b>ansf</b>)
+      <b><u>vr</u></b><b>_ratio</b>         variance-to-range ratio weighting (see Steinley &amp;
+                       Brusco, 2008, p. 83f.) (default when using option
+                       <b><u>su</u></b><b>ffix</b>)
+      <b><u>ra</u></b><b>nge</b>            range transformation [xij/range(xj)]
+      <b><u>z</u></b><b>_score</b>          z-score transformation [xij-(mean(xj))/sd(xj)]
+    -------------------------------------------------------------------------
+<p>
+<b><u>Description</u></b>
+<p>
+    <b>rel_clust</b> computes indices of relative clusterability of <i>varlist</i>
+    according to Steinley and Brusco (2008) and optionally generates
+    transformed or weighted variables for use in cluster analysis.
+<p>
+    <b>rel_clust</b> can be used to transform the variables of <i>varlist</i> by
+    <i>z</i>-standardization, by standardization by range, or by variance-to-range
+    (VR) ratio weighting. The VR ratio weighting procedure was designed
+    specifically for cluster analysis: It reflects the degree of
+    "clusterability" of the set of variables used. According to Steinley and
+    Brusco (2008), VR ratio weighting of variables together with their
+    proposed variable selection procedure clearly increases the ability of
+    K-means cluster analysis to accurately recover the true cluster
+    structure.
+<p>
+<b><u>Options</u></b>
+<p>
+        +------+
+    ----+ Main +-------------------------------------------------------------
+<p>
+    <b><u>su</u></b><b>ffix(</b><i>suffix</i><b>)</b> requests the generation of transformed variables. The
+        names of the new variables will be the original variable names with
+        <i>suffix</i> added. Transformation to variance-to-range ratio weighted
+        variables is the default.
+<p>
+    <b><u>tr</u></b><b>ansf(</b><i>arg</i><b>)</b> specifies the type of transformation (only necessary if other
+        than variance-to-range ratio weighting is requested). Three
+        transformations are possible according to <i>arg</i> (see below).
+<p>
+    <b>norc</b> requests not to show the table of "relative clusterability" per
+        variable in the results window.
+<p>
+    <b>replace</b> requests that the variables specified by using option <b><u>su</u></b><b>ffix</b> will
+        replace already existing variables.
+<p>
+        +---------------------+
+    ----+ Sub (option transf) +----------------------------------------------
+<p>
+    <b><u>vr</u></b><b>_ratio</b> requests a transformation by variance-to-range ratio weighting
+        of the original variables (see Steinley &amp; Brusco, 2008, p. 83f.)
+        (default when using option <b><u>su</u></b><b>ffix</b>).
+<p>
+    <b><u>ra</u></b><b>nge</b> requests a range transformation [xij/range(xj)] of the original
+        variables.
+<p>
+    <b><u>z</u></b><b>_score</b> requests a z-score transformation [xij-(mean(xj))/sd(xj)] of the
+        original variables.
+<p>
+<p>
+<b><u>Example</u></b>
+<p>
+    The following commands replicate the results shown in Steinley &amp; Brusco
+    (2008) - as to the "relative clusterability" indices see Table 7, p. 102
+    (x1 to x4), as to the variance and range of the original and transformed
+    variables see Table 6, p. 99:
+<p>
+    . webuse iris
+    . tabstat seplen-petwid, s(v r) f(%5.2f)
+    . rel_clust seplen-petwid, tr(z) su(_z1)
+    . tabstat *z1, s(v r) f(%5.2f)
+    . rel_clust seplen-petwid, tr(ra) su(_z2) norc
+    . tabstat *z2, s(v r) f(%5.2f)
+    . rel_clust seplen-petwid, su(_z3) norc
+    . tabstat *z3, s(v r) f(%5.2f)
+<p>
+<p>
+<b><u>Saved Results</u></b>
+<p>
+    <b>rel_clust</b> saves the following in <b>r()</b>:
+<p>
+    Scalars
+      <b>r(N)</b>        number of valid cases (listwise)
+<p>
+    Macros 
+      <b>r(trans)</b>    type of transformation used (if requested by option <b><u>su</u></b><b>ffix</b>)
+      <b>r(vars)</b>     list of variables used
+<p>
+    Matrices
+      <b>r(RC)</b>       matrix of relative clusterability index per variable
+<p>
+<p>
+<b><u>References</u></b>
+<p>
+    Steinley, D. &amp; Brusco, M. J. (2008). A new variable weighting and
+        selection procedure for K-means cluster analysis. <i>Multivariate</i>
+        <i>Behavioral Research</i>, <i>43</i>, 77-108.
+<p>
+<b><u>Also see</u></b>
+<p>
+    Help: cluster kmeans
+<p>
+<b><u>Author</u></b>
+<p>
+    Dirk Enzmann
+    Institute of Criminal Sciences, Hamburg
+    email: mailto:dirk.enzmann@uni-hamburg.de
+</pre>

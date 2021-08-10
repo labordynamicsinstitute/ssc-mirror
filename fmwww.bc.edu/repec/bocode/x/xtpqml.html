@@ -1,0 +1,60 @@
+<pre>
+-------------------------------------------------------------------------------
+help for <b>xtpqml</b>
+-------------------------------------------------------------------------------
+<p>
+<b><u> Fixed-effects Poisson (Quasi-ML) regression with Robust Standard Errors</u></b>
+<p>
+        <b>xtpqml</b> <i>depvar</i> [<i>indepvars</i>] [<b>if</b> <i>exp</i>] [<b>in</b> <i>range</i>]<b>,</b> <b>fe</b> <b><u>i</u></b><b>(</b><i>varname</i><b>)</b> <b>irr</b>
+                      <b><u>cluster</u></b><b>(</b><i>varname</i><b>)</b>]
+<p>
+<p>
+    <b>by</b> <i>...</i> <b>:</b> may be used with <b>xtpqml</b>; see help by.
+<p>
+    Weights are not allowed.
+<p>
+<p>
+<b><u>Description</u></b>
+<p>
+    <b>xtpqml</b> is simply a wrapper for the <b>xtpoisson</b> command that computes robust
+    standard errors.
+<p>
+    Persons interested in this regression model should also see help 
+    xtpoisson, and help poisson.
+<p>
+<p>
+<b><u>Options</u></b>
+<p>
+    <b>i(</b><i>varname</i><b>)</b> is not optional; it specifies the (numeric) identifier
+        variable for groups in the panel data. This option can be set using 
+        iis.
+<p>
+    <b>irr</b> reports the estimated coefficients transformed to incident rate
+        ratios, i.e., exp(b) rather than b.  Standard errors and confidence
+        intervals are similarly transformed.  This option affects how results
+        are displayed, not how they are estimated.
+<p>
+    <b>cluster</b> allows for cross-sectional clustering of residuals at a more
+        aggregated level than the individual fixed effect. This is an unusual
+        assumption and users are responsible for providing their own
+        interpretation of the results obtained by specifiying this option
+<p>
+<p>
+<b><u>Examples</u></b>
+<p>
+    <b>. xtpqml y x, i(id)</b>
+<p>
+    <b>. xtpqml y x, fe i(id)</b>
+<p>
+    <b>. xtpqml y x, i(id) irr</b>
+<p>
+    <b>. xtpqml y x, i(id) cluster(group)</b>
+<p>
+<p>
+<p>
+<b><u>Also see</u></b>
+<p>
+    Manual:  <b>[U] 23 Estimation and post-estimation commands</b>,
+             <b>[XT] xtpoisson</b>
+<p>
+</pre>

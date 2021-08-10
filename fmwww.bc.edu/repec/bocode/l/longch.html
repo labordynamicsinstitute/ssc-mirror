@@ -1,0 +1,62 @@
+<pre>
+Counting how many subjects have records satisfying a condition
+--------------------------------------------------------------
+<p>
+^longch^ idname [^if^ exp] [^in^ range], ^c(^string^)^
+<p>
+Description
+-----------
+<p>
+The command ^longch^ is used with data in which their are several
+records per subject. The variable ^idname^ identifies the subjects,
+and the string in ^c()^ contains a logical condition. The program
+reports the number of subjects for which some records satisfy the
+condition; the number for which no records satisfy the condition; and
+the number of subjects for which every record satisfies the condition.
+In addition the logical variables ^_some^, ^_none^ and ^_every^ which 
+flag the records are created. This is useful for dropping all records
+belonging to subjects of a particular type, eg those with no records
+satisfying the condition.
+<p>
+Options
+-------
+<p>
+^c()^ is not an option - it contains a logical condition
+<p>
+Example
+-------
+<p>
+Consider a longitudinal data set in which each record corresponds to a
+visit by a subject and the subject identity is in the variable id. The
+command
+<p>
+^longch id, c(height == . )^
+<p>
+results in the output
+<p>
+71  records fulfill the condition height == .
+<p>
+some : 46  subjects have height == . in at least one record
+none : 51  subjects have height == . in no records
+every: 0  subjects have height == . in every record
+<p>
+In addition three logical variables called ^_some^, ^_none^,
+and ^_every^, are created for convenience in further manipulation
+(eg dropping or keeping records). These flag all records belonging to
+subjects with some records satisfying the condition, and so on.
+<p>
+Authors
+-------
+<p>
+        Michael Hills
+        mhills@@regress.demon.co.uk
+<p>
+        Tony Brady
+        tbrady@@rpms.ac.uk
+<p>
+Also see
+--------
+<p>
+On-line: help for @count@, @unique@
+<p>
+</pre>

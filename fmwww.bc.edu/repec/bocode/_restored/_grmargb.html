@@ -1,0 +1,103 @@
+<pre>
+-------------------------------------------------------------------------------
+help for <b>_grmargb</b>                                                     08AUG2009
+-------------------------------------------------------------------------------
+<p>
+<b><u>Marginal effects and their differences from binary regressions using bootstrap </u></b>
+<b><u>&gt; method for inference</u></b>
+<p>
+        <b>_grmargb</b> [if] [in] [<b>,</b> <b>x(</b><i>variables_and_values</i><b>)</b> <b>rest(</b><i>stat</i><b>)</b> <b><u>l</u></b><b>evel(</b><i>#</i><b>)</b>
+               <b><u>r</u></b><b>eps(</b><i>#</i><b>)</b> <b><u>si</u></b><b>ze(</b><i>#</i><b>)</b> <b>save</b> <b>diff</b> <b><u>noba</u></b><b>se</b> <b>all match dots</b>]
+<p>
+    where <i>variables_and_values</i> is an alternating list of variables and either
+    numeric values or mean, median, min, max, upper, lower, previous and <i>stat</i>
+    is either mean, median, min, max, upper, lower, previous, grmean(group
+    mean), mrmedian, grmin, grmax.
+<p>
+<b><u> Description</u></b>
+<p>
+    <b>_grmargb</b> is a command that returns marginal effects, differences in
+    marginal effects and their confidence intervals using bootstrap method
+    with resampling technique. It can calculate boostrapped confidence
+    intervals using the normal approximation, percentile, and bias-corrected
+    methods.
+<p>
+<b><u> Options</u></b>
+<p>
+    <b>x(</b><i>variables_and_values</i><b>)</b> sets the values of independent variables for
+        calculating predicted values (marginal effects). The list must
+        alternate variable names and either numeric values or types of <b>stat</b>.
+<p>
+    <b>rest(</b><i>stat</i><b>)</b> sets the independent variables not specified in
+        <b>x(</b><i>variables_and_values</i><b>)</b> to one of the types of <b>stat</b>.
+<p>
+    <b>level()</b> sets the level of the confidence interval for differences in
+        group average marginal effects. The default is 95.
+<p>
+    <b>reps(</b><i>#</i><b>)</b> specifies the number of bootstrap replications to be performed.
+        The default is 1000.
+<p>
+    <b>size(</b><i>#</i><b>)</b> specifies the size of the samples to be drawn.  The default is
+        e(N), the same size as the estimation sample.
+<p>
+    <b>save</b> saves current values of independent variables and predictions for
+        computing changes using the diff option.
+<p>
+    <b>diff</b> computes difference between current predictions and those that were
+        saved.
+<p>
+    <b>nobase</b> suppresses inclusion of the base values of x in the output.
+<p>
+    <b>all</b> specifies that any calculation of means, medians, etc., should use
+        the entire sample instead of the sample used to estimate the model.
+<p>
+    <b>match</b> requests <b>grmargb</b> to resample from each category group of the
+        dependent variable in proportion of the resample size to the original
+        sample size.
+<p>
+    <b>dots</b> requests a dot be placed on the screen at the beginning of each
+        replication, thus providing entertainment when a large number of
+        reps() are requested. It also prints out the percent replications
+        finished.
+<p>
+<b><u> Returned Matrices</u></b>
+<p>
+    r(marg):  saves marginal effects.
+<p>
+    r(margci):  saves confidence intervals for marginal effects. Column 1 - 6
+        correspond to lower bounds, upper bounds for percentile normal
+        approximation, and bias-corrected methods.
+<p>
+    r(margvar): saves variance-covariance matrix for marginal effects
+<p>
+    r(margse):  saves standard errors for marginal effects
+<p>
+    r(dmarg):  saves differences in marginal effects when <b>diff</b> option is used
+<p>
+    r(dmargci): saves confidence intervals for differences in marginal
+        effects when <b>diff</b> option is used. Column 1 - 6 correspond to lower
+        bounds, upper bounds for percentile normal approximation, and
+        bias-corrected methods.
+<p>
+<p>
+<p>
+<b><u>Examples</u></b>
+<p>
+    To compute the predicted marginal effects, differences in marginal
+    effects, and their confidence intervals using bootstrap method for a
+    logit model. All independent variables are held at their means except for
+    black and education specifed in x().
+<p>
+    <b>.logit vote black educ income</b>
+<p>
+    <b>.grmargb, x(black=1 educ=16) save</b>
+<p>
+    <b>.grmargb, x(black=0 educ=16) diff</b>
+<p>
+    :::
+<p>
+-------------------------------------------------------------------------------
+<p>
+  Authors: Jun Xu
+<p>
+</pre>

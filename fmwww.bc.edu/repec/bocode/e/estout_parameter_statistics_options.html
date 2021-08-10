@@ -1,0 +1,153 @@
+<pre>
+    <b>cells(</b><i>array</i><b>)</b> specifies the parameter statistics to be reported and how
+        they are to be arranged. The default is for cells to report raw
+        coefficients only, i.e. <b>cells(b)</b>. <b>cells(none)</b> may be used to
+        completely suppress the printing of parameter statistics.
+        Alternatively, <b>cells(b se)</b> would result in the reporting of raw
+        coefficients and standard errors. Multiple statistics are placed in
+        separate rows beneath one another by default. However, elements of
+        <i>array</i> that are listed in quotes, e.g. <b>cells("b se")</b>, are placed
+        beside one another. For example, <b>cells("b p" se)</b> would produce a
+        table with raw coefficients and standard errors beneath one another
+        in the first column and p-values in the top row of the second column
+        for each model.
+<p>
+        The parameter statistics available are <b>b</b> (coefficients), <b>se</b> (standard
+        errors), <b>t</b> (t/z-statistics), <b>p</b> (p-values), and <b>ci</b> (confidence
+        intervals; to display the lower and upper bounds in separate cells
+        use <b>ci_l</b> and <b>ci_u</b>). Any additional parameter statistics included in
+        the <b>e()</b>-returns for the models can be tabulated as well. If, for
+        example, <b>e(beta)</b> contains the standardized coefficients, type
+        <b>cells(beta)</b> to tabulate them (see help estadd). Also see the <b>eform</b>
+        and <b>margin</b> options for more information on the kinds of statistics
+        that can be displayed.
+<p>
+        A set of suboptions may be specified in parentheses for each
+        statistic named in <i>array</i>. For example, to add significance stars to
+        the coefficients and place the standard errors in parentheses,
+        specify <b>cells(b(star) se(par))</b>. The following suboptions are
+        available. Use:
+<p>
+            <b>star</b> to specify that stars denoting the significance of the
+                coefficients be attached to the statistic: <b>*</b> for p&lt;.05, <b>**</b>
+                for p&lt;.01, and <b>***</b> for p&lt;.001. The symbols and the values for
+                the thresholds and the number of levels are fully
+                customizable (see the <i>significance_stars_options</i>).
+<p>
+            <b>fmt(%</b><i>fmt</i> [<b>%</b><i>fmt</i> ...]<b>)</b> to specify the display format(s) of a
+                statistic. It defaults to the display format for raw
+                coefficients (<b>b</b>), or <b>%9.0g</b>. If only one format is specified,
+                it is used for all occurrences of the statistic. If multiple
+                formats are specified, the first format is used for the first
+                regressor in the estimates table, the second format for the
+                second regressor, and so on. The last format is used for the
+                remaining regressors if the number of regressors in the table
+                is greater than the number of specified formats. Note that,
+                regardless of the display format chosen, leading and trailing
+                blanks are removed from the numbers. White space can be added
+                by specifying a <b>modelwidth()</b> (see the <i>layout_options</i>).
+<p>
+            <b>label(</b>&lt;<i>string</i>&gt;<b>)</b> to specify a label to appear in the column
+                heading. The default is the name of the statistic.
+<p>
+            <b>par</b>[<b>(</b>&lt;<i>left</i>&gt; &lt;<i>right</i>&gt;<b>)</b>] to specify that the statistic in question
+                be placed in parentheses. It is also possible to specify
+                custom "parentheses". For example, <b>se(par({ }))</b> would display
+                the standard errors in curly brackets. For <b>ci</b> the syntax is:
+<p>
+                    <b>ci(par</b>[<b>(</b>&lt;<i>left</i>&gt; &lt;<i>middle</i>&gt; &lt;<i>right</i>&gt;<b>)</b>]<b>)</b>
+<p>
+            <b>drop(</b><i>droplist</i><b>)</b> to cause certain individual statistics to be
+                dropped. For example, specifying <b>t(drop(_cons))</b> suppresses
+                the t-statistics for the constants. A <i>droplist</i> comprises one
+                or more specifications, separated by white space. A
+                specification can be either a variable name (e.g. <b>price</b>), an
+                equation name followed by a colon (e.g. <b>mean:</b>), or a full
+                name (e.g. <b>mean:price</b>). Be sure to refer to the matched
+                equation names, and not to the original equation names in the
+                models, when using the <b>equations()</b> option to match equations.
+<p>
+            <b>keep(</b><i>keeplist</i><b>)</b> to cause certain individual statistics to be kept.
+                For example, the specification <b>t(keep(mpg))</b> would display the
+                t-statistics exclusively for the variable <b>mpg</b>. See the <b>drop()</b>
+                suboption above for further details.
+<p>
+            <b>pattern(</b><i>pattern</i><b>)</b> to designate a pattern of models for which the
+                statistics are to be reported, where the <i>pattern</i> consists of
+                zeros and ones. A <b>1</b> indicates that the statistic be printed;
+                <b>0</b> indicates that it be suppressed. For example <b>beta(pattern(1</b>
+                <b>0 1))</b> would result in <b>beta</b> being reported for the first and
+                third models, but not for the second.
+<p>
+            <b>abs</b> to specify that absolute t-statistics be used instead of
+                regular t-statistics (relevant only if used with <b>t()</b>).
+<p>
+    <b>drop(</b><i>droplist</i><b>)</b> identifies the coefficients to be dropped from the table.
+        This option is passed to the internal call of <b>estimates table</b>.  See
+        help estimates for details.
+<p>
+    <b>keep(</b><i>keeplist</i><b>)</b> selects the coefficients to be included in the table. The
+        <b>keep()</b> option may also be used to change the order of the
+        coefficients and equations within the table. This option is passed to
+        the internal call of <b>estimates table</b>. See help estimates for details.
+<p>
+    <b>equations(</b><i>eqmatchlist</i><b>)</b> specifies how the models' equations are to be
+        matched. This option is passed to the internal call of <b>estimates</b>
+        <b>table</b>. See help estimates on how to specify this option.
+<p>
+    <b>eform</b>[<b>(</b><i>pattern</i><b>)</b>] displays the coefficient table in exponentiated form.
+        The exponent of <b>b</b> is displayed in lieu of the untransformed
+        coefficient; standard errors and confidence intervals are transformed
+        as well. Specify a <i>pattern</i> if the exponentiation is to be applied
+        only for certain models. For instance, <b>eform(1 0 1)</b> would transform
+        the statistics for Models 1 and 3, but not for Model 2. Note that,
+        unlike <b>regress</b> and <b>estimates table</b>, <b>estout</b> in eform-mode does not
+        suppress the display of the intercept. To drop the intercept in
+        eform-mode, specify <b>drop(_cons)</b>.
+<p>
+    <b>margin</b>[<b>(</b>{<b>u</b>|<b>c</b>|<b>p</b>}<b>)</b>] indicates that the marginal effects or elasticities be
+        reported instead of the raw coefficients. This option has an effect
+        only if <b>mfx</b> has been applied to a model before its results were
+        stored (see help mfx) or if a <b>dprobit</b> (see help probit),
+        <b>truncreg,marginal</b> (help truncreg), or <b>dtobit</b> (Cong 2000) model is
+        estimated. One of the parameters <b>u</b>, <b>c</b>, or <b>p</b>, corresponding to the
+        unconditional, conditional, and probability marginal effects,
+        respectively, is required for <b>dtobit</b>. Note that the standard errors,
+        confidence intervals, t-statistics, and p-values are transformed as
+        well.
+<p>
+        Using the <b>margin</b> option with multiple-equation models can be tricky.
+        The marginal effects of variables that are used in several equations
+        are printed repeatedly for each equation because the equations per se
+        are meaningless for <b>mfx</b>. To display the effects for certain equations
+        only, specify the <b>meqs()</b> option. Alternatively, use the <b>keep()</b> and
+        <b>drop()</b> options to eliminate redundant rows. The <b>equations()</b> option
+        might also be of help here.
+<p>
+    <b>discrete(</b><i>string</i><b>)</b> may be used to override the default symbol and
+        explanatory text used to identify dummy variables when reporting
+        marginal effects. The first token in <i>string</i> is used as the symbol.
+        The default is:
+<p>
+            <b>discrete(" (d)" marginals for discrete change of dummy variable</b>
+            <b>from 0 to 1)</b>
+<p>
+        To display explanatory text, specify either the <b>legend</b> option or use
+        the <b>@discrete</b> variable.
+<p>
+        Use <b>nodiscrete</b> to disable the identification of dummy variables as
+        such. The default is to indicate the dummy variables unless they have
+        been interpreted as continuous variables in all of the models for
+        which results are reported (for <b>dprobit</b> and <b>dtobit</b>, however, dummy
+        variables will always be listed as discrete variables unless
+        <b>nodiscrete</b> is specified).
+<p>
+    <b>meqs(</b><i>eq_list</i><b>)</b> specifies that marginals be printed only for the equations
+        in <i>eq_list</i>. Specifying this option does not affect how the marginals
+        are calculated.  An <i>eq_list</i> comprises one or more equation names
+        (without colons) separated by white space. If you use the <b>equations()</b>
+        option to match equations, be sure to refer to the matched equation
+        names and not to the original equation names in the models.
+<p>
+    <b>level(</b><i>#</i><b>)</b> assigns the confidence level, in percent, for the confidence
+</pre>

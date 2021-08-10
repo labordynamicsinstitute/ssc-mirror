@@ -1,0 +1,17 @@
+d 'INTREG2': module to perform interval regression with multiplicative heteroskedasticity
+d
+d This program is an expansion of -intreg-. It adds one more option
+d to  specify the conditional variance. The model then will contain
+d multiplicative heteroskedasticity. 
+d
+d KW: interval regression
+d KW: heteroskedasticity
+d
+d Requires: Stata version 6.0
+d
+d
+d Author: Weihua Guan, Stata Corporation
+d Support: email  wguan@@stata.com
+d
+d Distribution-Date: 20011020
+

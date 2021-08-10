@@ -1,0 +1,51 @@
+d 'RANKTEST': module to test the rank of a matrix using the Kleibergen-Paap rk statistic
+d
+d  ranktest implements the Kleibergen-Paap (2006) rk test for the
+d rank of a matrix.  Tests of the rank of a matrix have many
+d practical applications.  For example, in econometrics the
+d requirement for identification is the rank condition, which
+d states that a particular matrix must be of full column rank. 
+d Another example from econometrics concerns cointegration in
+d vector autoregressive (VAR) models; the Johansen trace test is a
+d test of a rank of a particular matrix.  The traditional test of
+d the rank of a matrix for the standard (stationary) case is the
+d Anderson (1951) canonical correlations test.	If we denote one
+d list of variables as Y and a second as Z, and we calculate the
+d squared canonical correlations between Y and Z, the LM form of
+d the Anderson test, where the null hypothesis is that the matrix
+d of correlations or regression parameters B between Y and Z has
+d rank(B)=r, is N times the sum of the r+1 largest squared
+d canonical correlations.  A large test statistic and rejection of
+d the null indicates that the matrix has rank at least r+1.  The
+d Cragg-Donald (1993) statistic is a closely related Wald test for
+d the rank of a matrix.  Both the Anderson and Cragg-Donald tests
+d require the assumption that the covariance matrix has a Kronecker
+d form; when this is not so, e.g., when disturbances are
+d heteroskedastic or autocorrelated, the test statistics are no
+d longer valid. The Kleibergen-Paap (2006) rk statistic is a
+d generalization of the Anderson canonical correlation rank test to
+d the case of a non-Kronecker covariance matrix.  The
+d implementation in ranktest will calculate rk statistics that are
+d robust to various forms of heteroskedasticity, autocorrelation,
+d and clustering.  
+d
+d KW: matrix
+d KW: rank
+d KW: collinearity
+d KW: cointegration
+d
+d Requires: Stata version 11.2 (version 9.2 for ranktest9)
+d
+d Distribution-Date: 20150124
+d
+d Author: Frank Kleibergen, Brown University
+d Support: email  Frank_Kleibergen@@brown.edu
+d
+d Author: Mark E Schaffer, Heriot-Watt University
+d Support: email m.e.schaffer@@hw.ac.uk
+d
+f ranktest.ado
+f ranktest9.ado
+f ranktest.hlp
+f ../l/livreg2.mlib
+f ../c/cs_ranktest_1.4.01.do

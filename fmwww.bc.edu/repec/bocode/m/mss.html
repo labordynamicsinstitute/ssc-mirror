@@ -1,0 +1,89 @@
+<pre>
+<b>help mss</b> 
+<p>
+-------------------------------------------------------------------------------
+<p>
+<b><u>Title</u></b>
+<p>
+       <b>mss</b> --  Heteroskedasticity test for quantile or OLS regressions
+<p>
+<b><u>Syntax</u></b>
+<p>
+<p>
+        <b>mss</b> [,<i>varlist</i>]
+<p>
+    <b>mss</b> allows <b>fweight</b>s; see weight.
+<p>
+<p>
+<p>
+<b><u>Description</u></b>
+<p>
+    <b>mss</b> computes the Machado-Santos Silva (2000) test for heteroskedasticity.
+    This test is valid after quantile regression estimation and by default
+    the test variables are the fitted values of the dependent variable and
+    its squares as in the "Special case of the White test"; see Wooldridge
+    (2009, p. 276). Alternative sets of test variables can be specified with
+    <i>varlist</i>. The test is also valid after OLS regressions (see Im, 2000, and
+    Machado and Santos Silva, 2000).
+<p>
+<p>
+<b><u>Remarks</u></b>
+<p>
+    <b>mss</b> was written by By J.A.F. Machado and J.M.C. Santos Silva and it is
+    not an official Stata command.  For further help and support, please
+    contact jmcss@essex.ac.uk. Please notice that this software is provided
+    as is, without warranty of any kind, express or implied, including but
+    not limited to the warranties of merchantability, fitness for a
+    particular purpose and noninfringement. In no event shall the author be
+    liable for any claim, damages or other liability, whether in an action of
+    contract, tort or otherwise, arising from, out of or in connection with
+    the software or the use or other dealings in the software.
+<p>
+<p>
+<p>
+<b><u>Examples</u></b>
+<p>
+    ---------------------------------------------------------------------------
+    Setup
+        <b>. sysuse auto</b>
+<p>
+    MSS test after median regression
+        <b>. qreg price weight length foreign</b>
+        <b>. mss</b>
+<p>
+    MSS test after 0.25 quantile regression using the regressors as test
+    variables
+        <b>. qreg price weight length foreign, quantile(.25)</b>
+        <b>. mss weight length foreign</b>
+<p>
+    MSS test after OLS regression
+        <b>. reg price weight length foreign</b>
+        <b>. mss</b>
+<p>
+    ---------------------------------------------------------------------------
+<p>
+<p>
+<b><u>Saved results</u></b>
+<p>
+    <b>mss</b> saves the following in <b>r()</b>:
+<p>
+      <b>r(mss_chi2)</b>    MSS test statistic
+      <b>r(mss_df)</b>      degrees of freedom of the MSS test
+      <b>r(mss_p)</b>       p-value of the MSS test
+<p>
+<p>
+<b><u>References</u></b>
+<p>
+    Im, K.S. (2000), Robustifying the Glejser test of heteroskedasticity.
+        Journal of Econometrics 97(1), 179-188.
+ 
+    Machado, J.A.F. and Santos Silva, J.M.C. (2000), Glejser's Test
+        Revisited, Journal of Econometrics, 97(1), 189-202.
+ 
+    Wooldridge, J.M. (2009), Introductory Econometrics, 4th edition, Mason
+        (OH): South Western.
+<p>
+<p>
+        
+<p>
+</pre>

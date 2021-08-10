@@ -1,0 +1,23 @@
+d 'USSWM': module to provide US state and county spatial weight (contiguity) matrices
+d
+d  This package contains two Stata data files for US state and
+d county level (48 contiguous states) spatial weight matrices.
+d These can be used with Maurizio Pisati's STB-60 sg162 "Tools for
+d spatial data analysis." A do-file illustrates their usage. The
+d original spatial weight matrices were created by Luc Anselin.
+d They were converted to Stata data files with permission. 
+d
+d KW: spatial
+d KW: states
+d KW: counties
+d KW: GIS
+d KW: matrices
+d
+d Requires: Stata version 10.1
+d
+d Distribution-Date: 20080827
+d
+d Author: Scott Merryman, Risk Management Agency, USDA
+d Support: email scott.merryman@@gmail.com
+d
+f ../s/spatial_matrix.zip

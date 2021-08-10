@@ -1,0 +1,55 @@
+<pre>
+-------------------------------------------------------------------------------
+help for <b>qsim</b>
+-------------------------------------------------------------------------------
+<p>
+<b><u>Automation for clarify</u></b> 
+<p>
+        <b>qsim</b>, [<b><u>c</u></b><b>ommand(</b><i>string asis)</i> <b>setx2(</b><i>setx list</i> <b>by(</b><i>xi variable</i> ]
+<p>
+<p>
+<b><u>Description</u></b>
+<p>
+<b>qsim</b> provides a wrapper for the<b> clarify</b> series of program that automates
+simulation with dummy variables produced by Stata's <b>xi</b> prefix. If xi: variables
+are not used, the automation process works without them.
+<p>
+<b><u>Remarks</u></b>
+<p>
+Without <b>qsim</b> each of the 3 <b>clarify</b> programs has to be run separately for each
+level of the xi: categorical variable. <b>qsim</b> can be placed into one or more
+<b>foreach</b> loops and a large series of simulations can be run at one time.
+<p>
+The output can be pasted into a text editor. Marking <b>E(</b> identifies the line
+with the simulation data output. This line then can be cut to Excel (or similar
+programs) to make an output table. The whole process takes less than a minute.
+<p>
+The <b>levels</b> module of Nicholas J. Cox (available from the Boston College
+archives) is required to run <b>qsim</b> and is installed as part of this package.
+<p>
+<b><u>Options</u></b>
+<p>
+<b>setx2()</b> expects the appropriate <b>clarify setx</b> commands. The contents of <b><u>c</u></b><b>ommand</b>
+must be put in quotations.
+<p>
+<b>by()</b> expects one xi: variable. If left blank the programs runs as if there were
+no xi: variable. Do not enter the xi: variable in the <b>setx2()</b> option.
+<p>
+<b><u>Examples</u></b>
+<p>
+    . qsim, c("reg euroutil age sex white ra i.edcat") setx2(age 55 sex 1)
+        by(edcat)
+    . qsim, c("reg euroutil age sex white ra i.edcat") setx2(age 55)
+<p>
+<b><u>Author</u></b>
+<p>
+    Fred Wolfe, National Data Bank for Rheumatic Diseases, Wichita, KS  
+    fwolfe@arthritis-research.org
+<p>
+<p>
+<b><u>Also see</u></b>
+<p>
+ 
+On-line help: clarify, estsimp, setx, simqi, if installed.
+  
+</pre>

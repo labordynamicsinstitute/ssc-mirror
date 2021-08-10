@@ -1,0 +1,36 @@
+d 'MULTISTATE': module to perform multi-state survival analysis
+d
+d  multistate provides a set of commands for multi-state survival
+d analysis. This includes msset, a data  preparation tool which
+d converts a dataset from wide (one observation per subject,
+d multiple time and status variables) to long  (one observation for
+d each transition of which a subject is at risk), and predictms,
+d which calculates transition  probabilities, and many other useful
+d measures of absolute risk, following the fit of a model using
+d streg, or stpm2.  predictms allows different families of models
+d to be specified for each transition. All quantities are
+d calculated through  simulation, including confidence intervals.
+d Differences and ratios across covariate patterns can be
+d calculated. 
+d
+d KW: survival analysis
+d KW: multiple states
+d KW: state transitions
+d
+d Requires: Stata version 14.1
+d
+d Distribution-Date: 20161122
+d
+d Author: Michael J. Crowther, University of Leicester
+d Support: email mjc76@@le.ac.uk
+d
+f msset.ado
+f msset.sthlp
+f msgraph.ado
+f ../p/predictms.ado
+f ../p/predictms_model.ado
+f ../p/predictms_model_at2.ado
+f ../p/predictms_atparse.ado
+f ../p/predictms.sthlp
+f ../l/lmultistate.mlib
+f multistate_example.dta

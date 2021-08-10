@@ -1,0 +1,105 @@
+<pre>
+<b>help nonparmde</b>                                                    Version 1.0.0
+-------------------------------------------------------------------------------
+<p>
+<b><u>Title</u></b>
+<p>
+    <b>nonparmde</b> -- Calculates the minimum detectable effect (MDE) using a
+    Horvitz-Thompson estimator and a size (and covariate) adjusted Raj
+    estimator for cluster randomized controlled experiments.
+<p>
+<a name="syntax"></a><b><u>Syntax</u></b>
+<p>
+    <b>nonparmde</b> <i>varlist</i> <b>,</b> <b>mtreatment(</b><i>clusternum</i><b>)</b> <b>mcontrol(</b><i>clusternum</i><b>)</b>
+    [<b>n(</b><i>clustersizevar</i><b>)</b> <b>kx(</b><i>numlist</i><b>)</b> <b>averages</b> <b>power(</b><i>num</i><b>)</b> <b>ci(</b><i>num</i><b>)</b> <b>crossfold(</b><i>num</i><b>)</b>
+    <b>avgclustersize(</b><i>num</i><b>)</b>]
+<p>
+<a name="desc"></a><b><u>Description</u></b>
+<p>
+    <b>nonparmde</b> is a method for calculating the minimum detectable effect (MDE)
+    using the nonparametric estimators proposed in Middleton &amp; Aronow (2011).
+    This program is for use on cluster-level data to calculate the minimum
+    effect that a cluster randomized experiment would be able to reliably
+    detect at a given level of statistical power.
+<p>
+<a name="opt"></a><b><u>Options</u></b>
+<p>
+    <i>varlist</i> the name of the prior DV variable, optionally followed by a list
+    of covariates that are expected to explain variance in the DV variable
+    (all variables must be either cluster averages or cluster totals)
+<p>
+    <b>mtreatment(</b><i>clusternum</i><b>)</b> number of clusters assigned to treatment group
+ 
+    <b>mcontrol(</b><i>clusternum</i><b>)</b> number of clusters assigned to control group
+ 
+    <b>n(</b><i>clustersizevar</i><b>)</b> name of the variable that denotes cluster size (if left
+    unspecified <b>avgclustersize(</b><i>num</i><b>)</b> must be specified)
+ 
+    <b>kx(</b><i>numlist</i><b>)</b> regression coefficients of covariates regressed on prior DV
+    variable, controlling for cluster size (calculated automatically if left
+    unspecified)
+ 
+    <b>averages</b> forces the program to treat all variables as cluster averages
+    (<b>n(</b><i>clustersizevar</i><b>)</b> must be specified if this option is used)
+ 
+    <b>power(</b><i>num</i><b>)</b> statistical power (if left unspecified assumes 80% power)
+ 
+    <b>ci(</b><i>num</i><b>)</b> confidence interval (if left unspecified assumes 95% CI)
+ 
+    <b>crossfold(</b><i>num</i><b>)</b> crossfolds used for the calculation of kx; can be either
+    an integer or a variable specifying cutoffs (if left unspecified no
+    crossfolding is done). The command <b>xvalols</b> must be installed.
+ 
+    <b>avgclustersize(</b><i>num</i><b>)</b> average cluster size (use only if <b>n(</b><i>clustersizevar</i><b>)</b>
+    is left unspecified)
+ 
+<p>
+<p>
+<a name="ex"></a><b><u>Examples</u></b>
+<p>
+    . nonparmde Y_total, mtreatment(50) mcontrol(50) avgclustersize(20.61)
+<p>
+    . nonparmde y_avg x_avg n, n(n) averages mtreatment(50) mcontrol(50)
+<p>
+    . nonparmde Y_total X_total Z_total, mtreatment(50) mcontrol(50) kx(.2
+    .1) averageclustersize(20.61)
+<p>
+    . nonparmde Y_total X_total Z_total, mtreatment(50) mcontrol(50)
+    averageclustersize(20.61)
+<p>
+    . nonparmde Y_total X_total Z_total, mtreatment(50) mcontrol(50) n(n)
+<p>
+    . nonparmde Y_total X_total Z_total n, mtreatment(50) mcontrol(50) n(n)
+<p>
+    . nonparmde Y_total X_total Z_total n, mtreatment(50) mcontrol(50) n(n)
+    crossfold(cut)
+<p>
+    . nonparmde Y_total X_total Z_total n, mtreatment(50) mcontrol(50) n(n)
+    crossfold(2)
+<p>
+<p>
+<a name="res"></a><b><u>Saved Results</u></b>
+<p>
+    <b>nonparmde</b> saves the following in <b>e()</b>:
+<p>
+    Scalars             
+      <b>e(Vht)</b>                   Horvitz-Thompson variance
+      <b>e(Vraj)</b>                  Raj variance
+      <b>e(Vrajcovars)</b>            covariate adjusted Raj variance
+<p>
+<a name="ref"></a><b><u>References</u></b>
+    Middleton, Joel A. and Aronow, Peter M., Unbiased Estimation of the
+    Average Treatment Effect in Cluster-Randomized Experiments (April 5,
+    2011). Available at SSRN: http://ssrn.com/abstract=1803849
+<p>
+<b><u>Authors</u></b>
+<p>
+    Joel Middleton
+    New York University
+    joel.middleton@gmail.com
+<p>
+    John Ternovski
+    Analyst Institute
+    johnt1@gmail.com
+<p>
+</pre>

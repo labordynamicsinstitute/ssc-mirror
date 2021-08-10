@@ -1,0 +1,107 @@
+<pre>
+<b>help diplot</b>
+-------------------------------------------------------------------------------
+<p>
+<b><u>Title</u></b>
+<p>
+    <b>diplot</b> -- double interval plot
+<p>
+<p>
+<b><u>Syntax</u></b>
+<p>
+        <b>diplot</b> <i>shape</i> <i>yvar</i> <i>evar</i> <i>xvar</i> <i>uvar</i> [<i>if</i>] [<i>in</i>] [<b>,</b> <i>options</i>]
+<p>
+        <b>diplot</b> <i>shape</i> <i>y1var</i> <i>y2var</i> <i>x1var</i> <i>x2var</i> [<i>if</i>] [<i>in</i>] <b>,</b> <b>limits</b> [<i>options</i>]
+<p>
+        where <i>shape</i> is one of
+<p>
+        <b><u>r</u></b><b>ectangle</b>          rectangle with sides parallel to axes
+        <b><u>p</u></b><b>lus</b>               intersecting horizontal and vertical lines
+        <b><u>c</u></b><b>applus</b>            as above, but line ends capped
+        <b><u>d</u></b><b>iamond</b>            diamond, with diagonals parallel to axes
+        <b><u>b</u></b><b>arrow</b>             bidirectional arrow
+<p>
+    <i>options</i>                        Description
+    -------------------------------------------------------------------------
+    Interpretation of variables
+      <b>limits</b>                       variables are to be interpreted as
+                                     vertical and horizontal limits
+<p>
+    Main plot
+      <b>shape()</b>                      affect rendering of shape
+      <i>twoway_options</i>               affect other features of graph
+<p>
+    Add plot
+      <b>addplot(</b><i>plot</i><b>)</b>                add other plots to the generated graph
+<p>
+    -------------------------------------------------------------------------
+<p>
+<p>
+<b><u>Description</u></b>
+<p>
+    <b>diplot</b> produces double interval plots using various specified shapes
+    whose vertical and horizontal extents are specified by variables.
+<p>
+    With the first syntax <b>diplot</b> produces symbols extending vertically from
+    <i>yvar - evar</i> to <i>yvar + evar</i> and horizontally from <i>xvar - uvar</i> to <i>xvar +</i>
+    <i>uvar</i>. <i>evar</i> and <i>uvar</i> must contain non-negative values.
+<p>
+    With the second syntax, flagged by the <b>limits</b> option, <b>diplot</b> produces
+    symbols extending vertically from <i>yvar1</i> to <i>yvar2</i> and horizontally from
+    <i>xvar1</i> to <i>xvar2</i>. Each symbol will have centres at (<i>x1var</i> + <i>x2var</i>)/2,
+    (<i>y1var</i> + <i>y2var</i>)/2.
+<p>
+<p>
+<b><u>Options</u></b>
+<p>
+        +-----------------------------+
+    ----+ Interpretation of variables +--------------------------------------
+<p>
+    <b>limits</b> specifies that the four variables specified are to be interpreted
+        as lower and upper vertical and horizontal limits.
+<p>
+        +-----------+
+    ----+ Main plot +--------------------------------------------------------
+<p>
+    <b>shape()</b> specifies options that affect rendering of the shapes defining
+        the double intervals.  Know that shapes <b>rectangle</b>, <b>plus</b> and <b>diamond</b>
+        entail calls to twoway pcspike and that shapes <b>capplus</b> and <b>barrow</b>
+        entail calls to twoway pcbarrow. Thus their options may be specified
+        as appropriate.
+<p>
+    <i>twoway_options()</i> are options of graph twoway controlling other features
+        of the graph.
+<p>
+        +----------+
+    ----+ Add plot +---------------------------------------------------------
+<p>
+    <b>addplot(</b><i>plot</i><b>)</b> provides a way to add other plots to the generated graph.
+        See <i>addplot_option</i>.
+<p>
+<p>
+<b><u>Examples</u></b>
+<p>
+    <b>. diplot capplus y yerror x xerror, shape(lcolor(blue) mcolor(blue))</b>
+        <b>addplot(scatter y x, color(blue))</b>
+<p>
+    <b>. diplot rectangle y1 y2 x1 x2, limits title(y versus x)</b>
+<p>
+<p>
+<b><u>Acknowledgments</u></b>
+<p>
+    Vince Wiggins made encouraging noises. Nick Winter helpfully pointed out
+    a silly bug.
+<p>
+<p>
+<b><u>Author</u></b>
+<p>
+    Nicholas J. Cox, Durham University
+    n.j.cox@durham.ac.uk
+<p>
+<p>
+<b><u>Also see</u></b>
+<p>
+    Manual:  <b>[G] twoway</b>
+<p>
+    Online:  <b>twoway</b>
+</pre>

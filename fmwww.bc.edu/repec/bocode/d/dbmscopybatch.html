@@ -1,0 +1,94 @@
+<pre>
+-------------------------------------------------------------------------------
+<p>
+help for <b>dbmscopybatch</b>                        Amadou B. DIALLO: The World Bank.
+<p>
+-------------------------------------------------------------------------------
+<p>
+<p>
+<b><u>Data conversion utility. Creates a log/batch file for DBMS Copy.</u></b>
+<p>
+<p>
+    <b>dbmscopybatch</b> <b>,</b> <b><u>p</u></b><b>ath(</b><i>string</i><b>)</b> <b><u>d</u></b><b>path(</b><i>string</i><b>)</b> <b><u>l</u></b><b>og(</b><i>string</i><b>)</b> <b><u>i</u></b><b>n(</b><i>string</i><b>)</b>
+    <b><u>o</u></b><b>ut(</b><i>string</i><b>)</b> [<b><u>v</u></b><b>ersion(</b><i>#</i><b>)</b> <b><u>op</u></b><b>tions(</b><i>string</i><b>)</b> <b><u>c</u></b><b>all</b> ]
+<p>
+<p>
+    where :
+<p>
+    <i>path</i> is the directory where the files to be transfered are stored, 
+<p>
+    <i>dpath</i> is the directory where the DBMS Copy executable is stored,
+<p>
+    <i>log</i> is the name of the log file (stored in "path"),
+<p>
+    <i>in</i> is the type of original dataset to be transfered,
+<p>
+    <i>out</i> is the type of final dataset,
+<p>
+    <i>version</i> is the version of DBMS Copy, with default 7,
+<p>
+    <i>options</i> optionally adds options (embedded in double quotes) to the 
+    log/batch file (to be executed by DBMS Copy),
+  
+    <i>call</i> is an option to make Stata invoke DBMS Copy (available only for Window
+&gt; s Operating Systems).
+<p>
+<p>
+<b><u>Description</u></b>
+<p>
+    <b>dbmscopybatch</b> is a routine to create a log (also called a batch) file for
+    DBMS Copy.
+<p>
+    When you have a lot of datasets to convert to other formats, doing it
+    interactively in DBMS Copy could be painful and time consuming. Stata
+    will automatically create a log (batch) file which could be run (see run
+    or open batch in DBMS Copy menus).
+<p>
+<p>
+<b><u>Remarks</u></b>
+<p>
+    Using dbmscopybatch requires knowing extensions allowed by DBMS Copy. See
+    DBMS manuals.  Most known are ASCII (.dat, .prn or .txt), SPSS (.sav),
+    SAS (.sas7bdat) and Stata (.dta).
+<p>
+<p>
+<b><u>Examples</u></b>
+<p>
+    <b>. local path "..\Data\Countries\"</b>
+<p>
+    <b>. local dpath "..\DBMS\V7\"</b>
+<p>
+    <b>. cd "`path'"</b>
+<p>
+    <b>. local datas "country1 country2"</b>
+<p>
+    <b>. dbmscopybatch `datas', p(`path') d(`dpath') l(dbmscopylog) i(spsswin)</b>
+    <b>o(stata7) v(7) c</b>
+<p>
+    <b>. dbmscopybatch `datas', p(`path') d(`dpath') l(dbmscopylog) i(spsswin)</b>
+    <b>o(stata7) v(7)</b>
+    <b>opt("keep if region==1; keep if sex=2; keep if age&gt;=60")</b>
+<p>
+<p>
+<b><u>Author</u></b>
+<p>
+    Amadou Bassirou DIALLO, Poverty and Health Specialist. AFTPM, The World
+    Bank.
+    Email: adiallo5@worldbank.org
+<p>
+<p>
+<b><u>Aknowledgements</u></b>
+<p>
+    I would like to thank Roger Newson for suggesting this program and Yulia
+    Marchenko of StataCorp for her support.
+<p>
+<p>
+<b><u>Also see</u></b>
+<p>
+    Manual:  <b>[R] shell</b>, <b>[R] winexec</b>.
+<p>
+    Online:  help for cd, dir, mkdir and copy if installed.
+<p>
+<p>
+<p>
+</pre>

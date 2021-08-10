@@ -1,0 +1,95 @@
+<pre>
+-------------------------------------------------------------------------------
+help for <b>qll</b>
+-------------------------------------------------------------------------------
+<p>
+<b><u>Perform Elliott-Müller efficient test for general persistent time variation in </u></b>
+<b><u>&gt; regression coefficients</u></b>
+<p>
+<b><u>Syntax</u></b>
+<p>
+        <b>qll</b> <i>depvar</i> <i>varlist</i> [ <b>(</b><i>zvarlist</i><b>)</b> ] [<b>if</b> <i>exp</i>] [<b>in</b> <i>range</i>] [<b>,</b> <b>rlag(</b><i>#</i><b>)</b> ]
+<p>
+<b>qll</b> is for use with time-series data.  You must <b>tsset</b> your data before using
+<b>qll</b>; see tsset. You may apply <b>qll</b> to a single time series of a panel dataset.
+<b>varlist</b> may contain time-series operators; see <b>help varlist</b>.
+<p>
+<b><u>Description</u></b>
+<p>
+<b>qll</b> performs the qLL efficient test for general persistence in time variation
+in regression coefficients proposed by Elliott and Müller (2006). The test
+contrasts a stable regression model y = X beta + Z gamma + epsilon from the
+unstable alternative y = X beta(t) + Z gamma + epsilon. This very general
+specification nests many of the 'structural break' and 'time varying parameter'
+models in the literature, allowing for almost any pattern of variation in the
+coefficients of the X variables, with good power and size even in a
+heteroskedastic context.
+<p>
+<i>zvarlist</i> specifies the set of Z regressors, whose coefficients are assumed to
+be fixed over time.
+<p>
+<b><u>Options</u></b>
+<p>
+<b>rlag(</b><i>#</i><b>)</b> specifies the number of lags to be used in computing the long-run
+    variance matrix. If a positive value is given, that number of lags is used,
+    just as in <b>newey</b>. If a negative value is given, the optimal lag order is
+    chosen by the BIC criterion.
+<p>
+<b><u>Saved results</u></b>
+<p>
+<b>qll</b> saves the value of the test statistic, the number of observations in the
+estimation sample, and a three-element matrix (<i>r(cvmat)</i>) containing the 10%, 5%
+and 1% critical values of the test for up to 10 regressors in X. If the number
+of lags is chosen by the BIC criterion, it is also saved as <i>r(biclags)</i>.  See
+<b>return list</b>.
+<p>
+<p>
+<b><u>Examples</u></b>
+<p>
+        . use http://www.stata-press.com/data/r9/lutkepohl.dta
+<p>
+        (Quarterly SA West German macro data, Bil DM, from Lutkepohl 1993 Table
+            E.1)
+<p>
+        . qll linvestment lincome (lconsumption)
+<p>
+        . qll linvestment lincome (lconsumption), rlag(4)
+<p>
+        . qll linvestment L(1/4).lincome (L(1/4).lconsumption)
+<p>
+        . qll linvestment lincome (lconsumption) if tin(30,85)
+<p>
+<p>
+<b><u>Acknowledgements</u></b>
+<p>
+I am grateful to Graham Elliott for his clear presentation of the underlying th
+&gt; eory when 
+visiting Boston College in Spring 2007, and for his MATLAB code from which this
+&gt;  routine was
+constructed. Remaining errors are my own.
+<p>
+<b><u>References</u></b>
+<p>
+Elliott, G. and Müller, U.K., 2006. Efficient Tests for General Persistent Time
+    Variation in Regression Coefficients.  Review of Economic Studies, Vol. 73,
+    pp. 907-940.
+<p>
+<b><u>Citation</u></b>
+<p>
+<b>qll</b> is not an official Stata command. It is a free contribution to the research
+community, like a paper. Please cite it as such:
+<p>
+    Baum, C.F., 2007.  qll: Stata module to perform Elliott-Müller efficient
+        test for general persistent time variation in regression
+        coefficients.  http://ideas.repec.org/c/boc/bocode/s456862.html
+<p>
+<b><u>Author</u></b>
+<p>
+Christopher F Baum, Boston College, USA
+baum@bc.edu
+<p>
+<p>
+<b><u>Also see</u></b>
+<p>
+On-line:  help for newey
+</pre>

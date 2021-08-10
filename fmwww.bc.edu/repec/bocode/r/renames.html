@@ -1,0 +1,77 @@
+<pre>
+.-
+help for ^renames^
+.-
+<p>
+Rename variables
+----------------
+<p>
+    ^renames^ varlist ^\^ newvarlist
+<p>
+    ^renames^ varlist ^, p^refix^(^string^) t^runcate 
+    
+    ^renames^ varlist ^, s^uffix^(^string^) t^runcate 
+<p>
+<p>
+Description
+-----------
+<p>
+^renames^ renames one or more variables in memory. 
+<p>
+There are three syntaxes: 
+<p>
+^renames^ varlist ^\^ newvarlist renames each variable named in varlist 
+by the corresponding name in newvarlist. 
+<p>
+^renames^ varlist^, prefix(^string^)^ renames each variable with its 
+varname prefixed by the specified prefix string.
+<p>
+^renames^ varlist^, suffix(^string^)^ renames each variable with its 
+varname suffixed by the specified suffix string. 
+<p>
+^renames^ will not rename any variable unless all the new names 
+specified are acceptable as new variable names. 
+<p>
+Prefixed or suffixed variable names longer than 8 letters will not 
+be truncated to 8 letters unless ^truncate^ is specified. 
+<p>
+<p>
+Options
+-------
+<p>
+^prefix(^string^)^ specifies a prefix to be added to all varnames in varlist.
+<p>
+^suffix(^string^)^ specifies a suffix to be added to all varnames in varlist. 
+<p>
+^truncate^ specifies that prefixed or suffixed names that are too long 
+    should be truncated. 
+<p>
+<p>
+Examples
+--------
+<p>
+    . ^renames foreign \ origin^  
+    . ^renames a-d \ v1-v4^ 
+<p>
+    . ^renames pop employ births, p(uk)^ 
+    result is ^ukpop ukemploy ukbirths^ 
+    
+    . ^renames pop employ births, s(00)^ 
+    result is ^pop00 employ00 births00^ 
+<p>
+<p>
+Author
+------
+<p>
+         Nicholas J. Cox, University of Durham, U.K.
+         n.j.cox@@durham.ac.uk
+<p>
+<p>
+Also see
+--------
+<p>
+On-line: help for @rename@
+ Manual: ^[R] rename^, ^[U] 14 Language syntax^
+<p>
+<p>
+</pre>

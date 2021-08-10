@@ -1,0 +1,26 @@
+TITLE: `METAPOW' : module for simulation based sample size calculations for designing new clinical trials and diagnostic
+test accuracy studies to update an existing meta-analysis.
+
+DESCRIPTION/AUTHOR:
+The metapow package contains a suite of programs which enable the user to estimate the probability the conclusions 
+of a meta-analysis will change with the inclusion of a new study(ies). Using the -metasim- program, a simulation 
+approach to estimating the effects in future studies is taken. The method assumes that the effect sizes of future 
+studies are consistent with those observed previously, as represented by the current meta-analysis. 
+Both the contexts of two-arm randomised controlled trials and studies of diagnostic test accuracy are considered 
+for a variety of outcome measures.  Calculations are possible under both fixed and random effect assumptions and 
+several approaches to inference including statistical significance and limits of clinical significance are possible. 
+Calculations for specific sample sizes can be conducted (using -metapow-), and plots, akin to traditional power 
+curves, indicating the probability a new study(ies) will change inferences for a range of sample sizes can be produced 
+(using -metapowplot-). We hope the package will be useful to i) trialists who want to assess the impact potential new 
+trials will have on the overall evidence base; and ii) meta-analysts who want to assess the robustness of the 
+current meta-analysis to the inclusion of future data.
+
+Keywords: meta-analysis, simulation, sample size, evidence based medicine
+
+Author: Michael J. Crowther, University of Leicester
+Support: email michael.crowther@le.ac.uk
+
+Author: Sally R. Hinchliffe, University of Leicester
+Support: email srh20@le.ac.uk
+
+Requires: Stata version 11.2

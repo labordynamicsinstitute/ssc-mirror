@@ -1,0 +1,82 @@
+<pre>
+<b>help mean2</b>
+-------------------------------------------------------------------------------
+<p>
+<b><u>Title</u></b>
+<p>
+    <b>mean2</b> --  Makes a table of estimate means with subpopulation differences
+<p>
+<p>
+<b><u>Syntax</u></b>
+<p>
+        <b>mean2</b> [<i>if</i>] [<i>in</i>] [<i>weight</i>], <i>options</i>
+<p>
+<p>
+<b><u>Description</u></b>
+<p>
+    <b>mean2</b> provides a fast and easy way to make a table of estimate means with
+    subpopulation differences.
+<p>
+<p>
+<b><u>Options</u></b>
+<p>
+    <b>replace</b> is required because will be replacing any existing file
+<p>
+    <b>over( )</b> one variable specifying subpopulations
+<p>
+    <b><u>cat</u></b><b>egory(</b><i> </i><b>)</b> two cateogires of subpopulations, see examples below
+<p>
+    <b>svy</b> specify survey means
+<p>
+    <b>vce(</b><i>vcetype</i><b>)</b> <i>vcetype</i> may be <b><u>boot</u></b><b>strap</b> or <b><u>jack</u></b><b>knife</b>
+<p>
+    <b><u>cl</u></b><b>uster(</b><i>varname</i><b>)</b> adjust standard errors for intragroup correlation
+<p>
+    <b>excel</b> specifies excel output
+<p>
+    <b>word</b> specifies word output
+<p>
+    <b>tex</b> specifies tex output
+<p>
+<p>
+<b><u>Remarks</u></b>
+<p>
+    <b>mean2</b> is based on mean. You will also need to install the latest versions
+    of outreg2 and sxpose from ssc. There must be at least two variables
+    specified in the varlist.
+<p>
+<p>
+<b><u>Acknowledgement</u></b>
+<p>
+    sxpose is by Nick Cox.
+<p>
+<p>
+<b><u>Examples for Version 11 or later</u></b>
+<p>
+    . use http://www.stata-press.com/data/r11/nhanes2f
+    . svyset psuid [pweight=finalwgt], strata(stratid)
+    . mean2 height age weight smsa using myfile.txt, over(sex) cat(Male
+        Female) svy excel replace
+<p>
+    Basically the above codes produces the same stuff as this:
+    . svy: mean height age weight smsa, over(sex)
+<p>
+    Plus the statistical differences computed by something like this:
+    . lincom [height]Male - [height]Female
+<p>
+    You get the idea.
+<p>
+<p>
+<b><u>Examples for Version 9 or later</u></b>
+<p>
+    . clear
+    . use http://www.stata-press.com/data/r9/nhanes2f
+    . mean2 height age weight smsa using myfile.txt, over(sex) cat(Male
+        Female) svy excel replace
+<p>
+<p>
+<b><u>Also see</u></b>
+<p>
+    Manual:  <b>[R] mean</b>
+<p>
+</pre>

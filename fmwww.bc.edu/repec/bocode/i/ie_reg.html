@@ -1,0 +1,104 @@
+<pre>
+<b>help ie_reg</b>
+-------------------------------------------------------------------------------
+<p>
+<b><u>Title</u></b>
+<p>
+    <b>ie_reg</b> -- intrinsic estimator for age, period, cohort (APC) applications
+<p>
+<b><u>Syntax</u></b>
+        <b>ie_reg</b> <i>depvar</i> [<i>indepvars</i>] [<i>if</i>] [<i>in</i>] [<i>weight</i>] [,<i> options</i>]
+<p>
+<a name="opt"></a>    <i>options</i>                    Description
+    -------------------------------------------------------------------------
+      <b>irr</b>                       eform results
+        
+<b><u>Description</u></b>
+<p>
+    <b>ie_reg</b> computes coefficients from an APC analysis characterized by a
+    design matrix that is not full rank due to perfect linear dependence
+    between age, period, and cohort. However, <b>ie_reg</b> does not require strict
+    linear dependence to estimate APC parameters.
+<p>
+    The dependent variable is assumed to be in the form of a log rate or
+    rate.  In order to obtain APC estimates that are normalized according to
+    conventional applications (i.e., <b>apc_ie</b>), it is necessary that an ANOVA
+    design matrix be constructed using the <i>last</i> factor level of each APC
+    factor as the reference as shown below. Optionally, the user may request
+    the full set of ANOVA normalized estimates that include the reference
+    category which are obtained using <b>ie_norm</b>, a modified version of Ben
+    Jann's <b>devcon</b> utility with exactly the same syntax.
+<p>
+<b><u>Example code for ANOVA design coding</u></b>
+<p>
+qui tab age, gen(a)
+scal arow = r(r)
+qui tab period, gen(p)
+scal prow = r(r)
+qui gen cohort = period - age
+qui tab cohort, gen(c)
+scal crow = r(r) 
+<p>
+* construct ANOVA normalization using last category as reference
+<p>
+forval i = 1/`=arow' {
+ gen aC`i' = a`i' - a`=arow'
+ }
+<p>
+forval i = 1/`=prow' {
+ gen pC`i' = p`i' - p`=prow'
+ }
+ 
+forval i = 1/`=crow' {
+ gen cC`i' = c`i' - c`=crow'
+}
+<p>
+<p>
+<b><u>Examples</u></b>
+<p>
+<b>APC regression model</b>
+<p>
+    ie_reg logr aC1-aC6 pC1-pC3 cC1-cC9
+<p>
+<b>fully normalized solution</b>
+<p>
+    ie_norm, groups(aC1-aC7, pC1-pC4, cC1-cC10)
+<p>
+<b><u>Estimation Details</u></b>
+<p>
+<b>ie_reg</b> employes a generalized inverse.
+<p>
+<b><u>Saved Results</u></b>
+<p>
+<b>ie_reg</b> saves the following in <b>e()</b>:
+<p>
+    Scalars   
+      <b>e(N)</b>           number of cells
+      <b>e(ll)</b>          MSE
+      <b>e(k)</b>           number of estimated parameters
+<p>
+    Macros    
+      <b>e(depvar)</b>      name of dependent variable
+<p>
+    Matrices  
+      <b>e(Coef)</b>        1 X <i>K</i> vector of estimates
+      <b>e(Var)</b>         <i>K</i> X <i>K</i> variance-covariance matrix
+<p>
+    Functions 
+      <b>e(sample)</b>       marks estimation sample
+<p>
+<b><u>References</u></b>
+<p>
+    Daniel A. Powers (2012). "Black-White Differences in Maternal Age,
+        Maternal Birth Cohort, and Period Effects on Infant Mortality in the
+        U.S. (1983-2002)." Presented at the annual meetings of the Population
+        Research Association of America, San Francisco, CA, May 4 2012.
+<p>
+<b><u>Author</u></b>
+<p>
+    Daniel A. Powers, University of Texas at Austin,
+    dpowers@austin.utexas.edu
+<p>
+<b><u>Also see</u></b>
+<p>
+</pre>

@@ -1,0 +1,403 @@
+<pre>
+<b>help adolist</b>
+-------------------------------------------------------------------------------
+<p>
+<b><u>Title</u></b>
+<p>
+    <b>adolist</b> -- Ado package lists
+<p>
+<p>
+<b><u>Syntax</u></b>
+<p>
+        +----------------------+
+    ----+ Package lists at SSC +---------------------------------------------
+<p>
+    List available package lists at SSC
+<p>
+        <b>adolist ssc</b>
+<p>
+    Describe specified package list at SSC
+<p>
+        <b>adolist</b> <b>ssc</b> <i>pkl</i>
+<p>
+    Install specified package list from SSC
+<p>
+        <b>adolist</b> <b>ssc</b> <i>pkl</i> <b>,</b> <b><u>ins</u></b><b>tall</b> [ <b>all</b> <b><u>r</u></b><b>eplace</b> <b>force</b> <b><u>ado</u></b><b>dir(</b><i>dir</i><b>)</b> ]
+<p>
+        +----------------------------------+
+    ----+ Package lists at other locations +---------------------------------
+<p>
+    Describe specified package list
+<p>
+        <b>adolist</b> <b><u>d</u></b><b>escribe</b> <i>filename</i> [ <b>,</b> <b><u>fr</u></b><b>om(</b><i>path</i><b>)</b> ]
+<p>
+    Install specified package list
+<p>
+        <b>adolist</b> <b><u>ins</u></b><b>tall</b> <i>filename</i> [ <b>,</b> <b><u>fr</u></b><b>om(</b><i>path</i><b>)</b> <b>all</b> <b><u>r</u></b><b>eplace</b> <b>force</b> <b><u>ado</u></b><b>dir(</b><i>dir</i><b>)</b>
+               ]
+<p>
+        +-------------------------+
+    ----+ Installed package lists +------------------------------------------
+<p>
+    List all installed package lists
+<p>
+        <b>adolist</b> [<b>dir</b>] [<b>,</b> <b><u>ado</u></b><b>dir(</b><i>dir</i><b>)</b> ]
+<p>
+    Describe an installed package list
+<p>
+        <b>adolist</b> <b><u>d</u></b><b>escribe</b> <i>pkl</i> [<b>,</b> <b><u>ado</u></b><b>dir(</b><i>dir</i><b>)</b> ]
+<p>
+    Update an installed package list
+<p>
+        <b>adolist</b> <b><u>up</u></b><b>date</b> <i>pkl</i> [<b>,</b> <b><u>k</u></b><b>eep</b> <b>dropmost</b> <b>dropall</b> <b>all</b> <b>force</b> <b><u>ado</u></b><b>dir(</b><i>dir</i><b>)</b> ]
+<p>
+    Uninstall a previously installed package list
+<p>
+        <b>adolist</b> <b><u>unins</u></b><b>tall</b> <i>pkl</i> [<b>,</b> <b><u>k</u></b><b>eep</b> <b>dropmost</b> <b>dropall</b> <b><u>ado</u></b><b>dir(</b><i>dir</i><b>)</b> ]
+<p>
+        +-----------------------+
+    ----+ Create a package list +--------------------------------------------
+<p>
+        <b>adolist</b> <b><u>sto</u></b><b>re</b> <i>filename</i> [<b>,</b> <i>store_options</i> ]
+<p>
+        <b>adolist</b> <b><u>sto</u></b><b>re</b> [<i>packages</i>] <b>using</b> <i>filename</i> [<b>,</b> <i>store_options</i> ]
+<p>
+        <b>adolist</b> <b><u>li</u></b><b>st</b> [<i>packages</i>] [<b>,</b> <i>store_options</i> ]
+<p>
+        <i>store_options</i>        description
+        --------------------------------------------------------
+        <b><u>nol</u></b><b>ocal</b>              do not include local packages
+        <b><u>l</u></b><b>ocalonly</b>            include local packages only
+        <b><u>nos</u></b><b>ort</b>               do not sort the package list
+        <b><u>ti</u></b><b>tle(</b><i>str</i><b>)</b>           include a title
+        <b><u>des</u></b><b>cription(</b><i>str</i><b>)</b>     include a description
+        <b><u>aut</u></b><b>hor(</b><i>str</i><b>)</b>          identify package list author
+        <b><u>h</u></b><b>elp</b>[<b>(</b><i>strlist</i><b>)</b>]      produce a help file
+        <b><u>r</u></b><b>eplace</b>              overwrite existing files
+        <b><u>ado</u></b><b>dir(</b><i>dir</i><b>)</b>          include packages installed in <i>dir</i>
+        --------------------------------------------------------
+<p>
+    In the above commands, <i>pkl</i> denotes the name of the package list, possibly
+    including a suffix (the default suffix is <b>.pkl</b>).  <i>filename</i> is like <i>pkl</i>
+    but may also include a file path, which can be a local path on your
+    computer or an URL.
+<p>
+<p>
+<b><u>Description</u></b>
+<p>
+    <b>adolist</b> manages lists of user ado packages.
+<p>
+    <b>adolist ssc</b> lists, describes, and installs package lists from the SSC
+    archive.
+<p>
+    <b>adolist describe</b> describes the contents of a specified package list.
+<p>
+    <b>adolist install</b> installs a specified package list.
+<p>
+    <b>adolist dir</b> gives an overview of the package lists that are installed on
+    your computer.
+<p>
+    <b>adolist update</b> updates a previously installed package list.
+<p>
+    <b>adolist uninstall</b> uninstalls from your computer a previously installed
+    package list. The single packages are only uninstalled if they are not
+    part of another package list and if they were not on the system prior to
+    installing the package list.
+<p>
+    <b>adolist store</b> creates a package list file (and, optionally, a help file)
+    from the packages that are installed on your computer. <i>packages</i> specifies
+    the packages to be included. You may use the <b>*</b> and <b>?</b> wildcards in
+    <i>packages</i>. All installed packages are included if <i>packages</i> is omitted.
+    <b>adolist list</b> is like <b>adolist store</b>, but displays the package list instead
+    of storing it to a file. The <b>help</b> option is without effect for <b>adolist</b>
+    <b>list</b>.
+<p>
+    Note that <i>packages</i> may also include packages that are not installed on
+    your computer. However, for such packages to be added to the package
+    list, you have to provide the package's URL after the package name and
+    enclose name and URL in double quotes. In fact, the full syntax for
+    <i>packages</i> is
+<p>
+        &lt;<i>pkg</i>&gt; [ &lt;<i>pkg</i>&gt; ... ]
+<p>
+    where <i>pkg</i> is
+<p>
+        <i>name</i> &lt;<i>url</i>&gt; &lt;<i>title</i>&gt; &lt;<i>author</i>&gt; &lt;<i>heading</i>&gt;
+<p>
+    and &lt;<i>str</i>&gt; signifies that <i>str</i> must be enclosed in double quotes if it
+    contains spaces (or compound double quote if it contains double quotes).
+    An example would be
+<p>
+        "abc http://a.b.c/ ABC-Module" `"xyz c:/x/y/z/ "My XYZ Package""'
+<p>
+    <i>url</i> may be <b>SSC</b> to indicate that the package is located in the
+    SSC-Archive. <i>title</i> and <i>author</i> are relevant only for the help file (see
+    the <b>help</b> option). <i>heading</i>, if specified, will be inserted on a separate
+    line before the package's entry in the list and may be used to structure
+    the package list (you may want to specify the <b>nosort</b> option if making use
+    of headings). It affects both, the package list source file and the help
+    file. <i>url</i> and <i>title</i>, if specified, take precedence over the package's URL
+    and title determined from the local system. Packages that are not found
+    on the local system and for which no URL is provided are discarded.
+<p>
+<p>
+<b><u>Options for adolist ssc</u></b>
+<p>
+    <b>install</b> causes the specified package list to be installed. The default is
+        to describe the package.
+<p>
+    <b>all</b> copies any additional files (ancillary files) in the packages to your
+        current directory (or location determined by <b>net set other</b>).
+<p>
+    <b>replace</b> specifies that the downloaded files replace existing files.
+<p>
+    <b>force</b> specifies that the downloaded package files replace existing files
+        even if Stata thinks all the files are the same. <b>force</b> implies
+        <b>replace</b>.
+<p>
+    <b>adodir(</b><i>dir</i><b>)</b> specifies where to install the package list. The default is
+        <b>adodir(PLUS)</b> (see help <b>sysdir</b>).
+<p>
+<p>
+<b><u>Options for adolist describe</u></b>
+<p>
+    <b>from(</b><i>path</i><b>)</b> specifies the location of the package list, where path may be
+        a local path on your computer or an URL. Alternatively, the path may
+        also be specified as part of <i>filename</i>. If no path is specified,
+        neither as part of <i>filename</i> nor in <b>from()</b>, <b>adolist describe</b> first
+        looks among the installed package lists and then in the current
+        working directory.
+<p>
+    <b>adodir(</b><i>dir</i><b>)</b> specifies that the package to be described is installed in
+        <i>dir</i>. The default <i>dir</i> is <b>PLUS</b> (see help <b>sysdir</b>).
+<p>
+<p>
+<b><u>Options for adolist install</u></b>
+<p>
+    <b>from(</b><i>path</i><b>)</b> specifies the location of the package list, where path may be
+        a local path on your computer or an URL. Alternatively, the path may
+        also be specified as part of <i>filename</i>.
+<p>
+    <b>all</b> copies any additional files (ancillary files) in the packages to your
+        current directory (or location determined by <b>net set other</b>).
+<p>
+    <b>replace</b> specifies that the downloaded files replace existing files.
+<p>
+    <b>force</b> specifies that the downloaded package files replace existing files
+        even if Stata thinks all the files are the same. <b>force</b> implies
+        <b>replace</b>.
+<p>
+    <b>adodir(</b><i>dir</i><b>)</b> specifies where to install the package list. The default is
+        <b>adodir(PLUS)</b> (see help <b>sysdir</b>).
+<p>
+<p>
+<b><u>Options for adolist dir</u></b>
+<p>
+    <b>adodir(</b><i>dir</i><b>)</b> specifies where the package lists are installed. The default
+        is <b>adodir(PLUS)</b> (see help <b>sysdir</b>).
+<p>
+<p>
+<b><u>Options for adolist update</u></b>
+<p>
+    <b>keep</b> causes discontinued packages (packages that are no longer part of
+        the package list) to be kept in the system. The default is to delete
+        these packages unless they were in the system prior to installing the
+        package list or are part of other installed package lists.
+<p>
+    <b>dropmost</b> specifies that all discontinued packages be uninstalled, except
+        for packages that are part of other installed package lists. The
+        default is to delete discontinued packages unless they were in the
+        system prior to installing the package list or are part of other
+        installed package lists.
+<p>
+    <b>dropall</b> specifies that all discontinued packages be uninstalled, even if
+        some of these packages were in the system prior to installing the
+        package list or are also part of other installed package lists.
+<p>
+    <b>all</b> copies any additional files (ancillary files) in the packages to your
+        current directory (or location determined by <b>net set other</b>).
+<p>
+    <b>force</b> specifies that the downloaded package files replace existing files
+        even if Stata thinks all the files are the same.
+<p>
+    <b>adodir(</b><i>dir</i><b>)</b> specifies where where the package list is installed. The
+        default is <b>adodir(PLUS)</b> (see help <b>sysdir</b>).
+<p>
+<p>
+<b><u>Options for adolist uninstall</u></b>
+<p>
+    <b>keep</b> causes the single packages to be kept in the system. Use the <b>keep</b>
+        option if you want to drop the package list definition, but keep the
+        packages.
+<p>
+    <b>dropmost</b> specifies that all packages in the package list be uninstalled,
+        except for packages that are part of other installed package lists.
+        The default is to uninstall only packages that have not been in the
+        system prior to installing the package list and that are not part of
+        other installed package lists.
+<p>
+    <b>dropall</b> specifies that all packages in the package list be uninstalled,
+        even if some of the packages have already been in the system before
+        installing the package list or if some of the packages are also part
+        of other installed package lists. The default is to uninstall only
+        packages that have not been in the system prior to installing the
+        package list and that are not part of other installed package lists.
+<p>
+    <b>adodir(</b><i>dir</i><b>)</b> specifies where the package list is installed. The default is
+        <b>adodir(PLUS)</b> (see help <b>sysdir</b>).
+<p>
+<p>
+<b><u>Options for adolist store and adolist list</u></b>
+<p>
+    <b>nolocal</b> omits packages that have been installed from a local path.
+<p>
+    <b>localonly</b> omits packages that have been installed from the net.
+<p>
+    <b>nosort</b> omits sorting the package list. The default is to return the list
+        in alphabetical order.
+<p>
+    <b>title(</b><i>str</i><b>)</b> specifies a title to appear in the header of the package list
+        file (and in the help file).
+<p>
+    <b>description(</b><i>strlist</i><b>)</b> specifies a description to appear in the header of
+        the package list file (and in the help file). Use double quotes to
+        specify multiple lines (i.e. "line 1" "line 2" etc.).
+<p>
+    <b>author(</b><i>str</i><b>)</b> specifies information on the "author" of the package list to
+        appear in the header of the package list file (and in the help file).
+<p>
+    <b>help</b> generates a Stata help file for the package list. <b>help</b> has no effect
+        if specified with <b>adolist list</b>. The help file will contain the list
+        of packages and also include the title, description, and author
+        information. Additional text to be added to the help file can be
+        specified as <b>help(</b><i>strlist</i><b>)</b>. The text will be inserted as is after the
+        section containing the list of packages. Use double quotes and SMCL
+        directives to format the text. For example <b>""</b> inserts an empty line,
+        <b>{title:</b><i>...</i><b>}</b> creates a new help file section, and <b>{pstd}</b> inserts a
+        standard help file paragraph:
+<p>
+            . adolist <i>...</i>, help("" "{title:Remarks}" "" "{pstd} blah etc." "")
+<p>
+    <b>replace</b> permits <b>adolist</b> to overwrite existing files.
+<p>
+    <b>adodir(</b><i>dir</i><b>)</b> specifies where the packages to be stored are installed.  The
+        default is <b>adodir(PLUS)</b> (see help <b>sysdir</b>).
+<p>
+<p>
+<b><u>Examples</u></b>
+<p>
+    The following command produces a package list of all installed user ado's
+    on your system and stores the list file in the working directory:
+<p>
+        . adolist store myadosystem
+        (myadosystem.pkl created; containing 99 packages)
+<p>
+    To install the same set of ado packages on an another computer, copy
+    "myadosystem.pkl" to, say "C:\temp" on this computer and run
+<p>
+        . adolist install C:\temp\myadosystem
+        (output omitted)
+<p>
+<p>
+<b><u>Conventions for package list files</u></b>
+<p>
+    The <b>adolist store</b> command is a convenient tool to produce a package list,
+    but it also has its limitations. Fortunately, it is easy to produce a
+    package list file "by hand" or edit an existing package file. Here are
+    the details:
+<p>
+     1. The first line of a package list file must start with
+<p>
+            <b>*! Stata package list</b>
+<p>
+     2. Lines containing comments must start with <b>*</b>. For example, the header
+        of a package list file might read:
+<p>
+            <b>*! Stata package list  21aug2007</b>
+            <b>*  My favorite packages</b>
+<p>
+        The second line of the file is assumed to contain the title of the
+        package list, if it is a comment line. Consecutive comment lines, up
+        to the first line that contains a package entry or that is entirely
+        blank, are assumed to contain the description and author information.
+        Example:
+<p>
+            <b>*! Stata package list  21aug2007</b>
+            <b>*  My favorite packages</b>
+            <b>*  This list contains</b>
+            <b>*  my favorite packages.</b>
+            <b>*</b>
+            <b>*  Assembled by: me</b>
+<p>
+     3. A package list entry is a line containing a package name (with an
+        optional <b>.pkg</b> suffix), followed by a path or URL indicating the
+        location of the package, followed by an optional title. Use double
+        quotes if a path or title contains spaces. Example:
+<p>
+            <b>*! Stata package list  21aug2007</b>
+            <b>*  My favorite packages</b>
+            <b>*  This list contains</b>
+            <b>*  my favorite packages.</b>
+            <b>* </b>
+            <b>*  Assembled by: me</b>
+            <b>estout.pkg   http://fmwww.bc.edu/repec/bocode/e "a title"</b>
+            <b>moremata.pkg http://fmwww.bc.edu/repec/bocode/m</b>
+<p>
+     4. Empty lines or comment lines may be inserted between package list
+        entries. Example:
+<p>
+            <b>*! Stata package list  21aug2007</b>
+            <b>*  My favorite packages</b>
+            <b>*  This list contains</b>
+            <b>*  my favorite packages.</b>
+            <b>*</b>
+            <b>*  Assembled by: me</b>
+            
+            <b>*! some packages</b>
+            <b>estout.pkg   http://fmwww.bc.edu/repec/bocode/e "a title"</b>
+            <b>moremata.pkg http://fmwww.bc.edu/repec/bocode/m</b>
+            
+            <b>*! some more packages</b>
+            <b>center.pkg   http://fmwww.bc.edu/repec/bocode/c</b>
+<p>
+        Note that comment lines are printed by <b>adolist describe</b> if they start
+        with "<b>*!</b>".
+<p>
+     5. The recommended suffix for a package list file is <b>.pkl</b> (although this
+        is not a strict requirement).
+<p>
+<p>
+<b><u>Returned results</u></b>
+<p>
+    <b>adolist describe</b> returns in macro <b>r(names)</b> the names of the contained
+    packages.
+<p>
+    <b>adolist install</b> returns in macro <b>r(installed)</b> the names of the
+    successfully installed packages and in macro <b>r(omitted)</b> the names of the
+    omitted packages due to, say, network problems.
+<p>
+    <b>adolist update</b> returns in macro <b>r(installed)</b> the names of the
+    successfully installed/updated packages, in macro <b>r(omitted)</b> the names of
+    the omitted packages due to, say, network problems, and in <b>r(uninstalled)</b>
+    the names of the uninstalled packages.
+<p>
+    <b>adolist uninstall</b> returns in macro <b>r(names)</b> the names of the uninstalled
+    packages.
+<p>
+    <b>adolist dir</b> returns in macro <b>r(names)</b> the names of the installed package
+    lists.
+<p>
+    <b>adolist store</b> and <b>adolist list</b> return in macro <b>r(names)</b> the names of the
+    included packages.
+<p>
+<p>
+<b><u>Authors</u></b>
+<p>
+    Ben Jann, ETH Zurich, jann@soz.gess.ethz.ch
+<p>
+    Stefan Wehrli, ETH Zurich, wehrli@soz.gess.ethz.ch
+<p>
+<p>
+<b><u>Also see</u></b>
+<p>
+</pre>

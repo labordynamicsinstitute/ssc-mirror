@@ -1,0 +1,104 @@
+<pre>
+<p>
+<b><u>Title</u></b>
+<p>
+    <b>dftol</b> -- Distribution-free tolerance intervals
+<p>
+<a name="syntax"></a><b><u>Syntax</u></b>
+<p>
+        <b>dftol</b> varname [<i>if</i>] [<i>in</i>] <b>,</b> [<b><u>c</u></b><b>onf(</b><i>#</i><b>)</b> <b><u>b</u></b><b>eta(</b><i>#</i><b>)</b> <b><u>r</u></b><b>lower</b> <b><u>d</u></b><b>etail</b>]
+<p>
+    <i>options</i>       Description
+    -------------------------------------------------------------------------
+      <b><u>c</u></b><b>onf(</b><i>#</i><b>)</b>     set confidence level of the tolerance interval; default is
+                    <b>conf(95)</b>
+      <b><u>b</u></b><b>eta(</b><i>#</i><b>)</b>     set percentage of the population covered by the tolerance
+                    interval; default is <b>beta(95)</b>
+      <b><u>r</u></b><b>lower</b>      control how an odd number of blocks is removed
+      <b><u>d</u></b><b>etail</b>      display additional information
+    -------------------------------------------------------------------------
+<p>
+<a name="description"></a><b><u>Description</u></b>
+<p>
+    <b>dftol</b> computes distribution-free tolerance intervals for <i>varname</i>
+    following the method proposed by Murphy (1948).
+<p>
+<a name="remarks"></a><b><u>Remarks</u></b>
+<p>
+    <b>dftol</b> requires that the Stata module -moremata- (Jann, 2005) be
+    installed.
+<p>
+<a name="options"></a><b><u>Options</u></b>
+<p>
+    <b>conf(</b><i>#</i><b>)</b> specifies the confidence level of the tolerance interval as a
+        percentage. The default is <b>conf(95)</b>, meaning a 95% confidence level.
+<p>
+    <b>beta(</b><i>#</i><b>)</b> specifies the percentage of the sampled population to be
+        contained in the tolerance interval. The default is <b>beta(95)</b>, meaning
+        a percentage equal to 95%.
+<p>
+    <b>rlower</b> specifies the way the blocks are removed from the left and right
+        ends of the ordered sample, when an odd number of blocks is to be
+        removed. Denoting by <i>r</i> the number of blocks, if <i>r</i> is an odd number
+        and this option is used, then (<i>r</i>-1)/2 and (<i>r</i>+1)/2 blocks are removed
+        from the left and right ends, respectively. If <i>r</i> is an even number
+        this option has no effect and exactly the same number of blocks are
+        removed from each end (see Hahn and Meeker, 1991). To better
+        understand the name chosen for the option, note that when only one
+        block is removed (<i>r</i>=1) the result is a lower bound (i.e., a tolerance
+        interval whose right limit is infinity) if the option is used, and an
+        upper bound (i.e., a tolerance interval whose left limit is minus
+        infinity) if the option is not used.
+<p>
+    <b>detail</b> displays auxiliary information. The following items are printed:
+        a) Index(es) of the observation(s) defining the interval, b) number
+        of blocks removed and c) actual confidence level. Note that even is
+        this option is not used, the information is always saved and may be
+        recovered from the saved results (see below and also <b>[P] return</b>).
+<p>
+<a name="examples"></a><b><u>Examples</u></b> 
+<p>
+<b> . sysuse auto</b>
+<b> . dftol price</b>
+<b> . dftol price, c(99) b(99)</b>
+<b> . dftol price, b(90)</b>
+<b> . dftol price, b(90) nulower</b>
+<b> . dftol price, detail</b>
+<p>
+<a name="savedresults"></a><b><u>Saved results</u></b>
+<p>
+<b>dftol</b> saves the following in <b>r()</b>:
+<p>
+Scalars
+<p>
+    <b>r(lower)</b>       lower limit of the tolerance interval (omitted if exactly
+                       one block is removed without <b>rlower</b>)
+    <b>r(indexlower)</b>  index of the observation of the ordered sample giving the
+                       lower limit of the tolerance interval (omitted if
+                       exactly one block is removed without <b>rlower</b>)
+    <b>r(upper)</b>       upper limit of the tolerance interval (omitted if exactly
+                       one block is removed with <b>rlower</b>)
+    <b>r(indexupper)</b>  index of the observation of the ordered sample giving the
+                       upper limit of the tolerance interval (omitted if
+                       exactly one block is removed with <b>rlower</b>)
+    <b>r(removed)</b>     number of blocks removed
+    <b>r(actualconf)</b>  actual confidence level of the tolerance interval
+<p>
+<a name="author"></a><b><u>Author</u></b>
+<p>
+    Ignacio López de Ullibarri
+    Department of Mathematics
+    University of A Coruña, Spain
+    E-mail: ilu@udc.es
+<p>
+<a name="references"></a><b><u>References</u></b>
+<p>
+    Hahn G and Meeker WQ (1991), <i>Statistical Intervals</i>, New York: Wiley &amp;
+        Sons
+<p>
+    Jann B (2005), <i>moremata: Stata module (Mata) to provide various</i>
+        <i>functions</i>, available from 
+        http://ideas.repec.org/c/boc/bocode/s455001.html
+<p>
+    Murphy RB (1948), Non-parametric tolerance limits, <i>Annals of Mathematical</i>
+</pre>

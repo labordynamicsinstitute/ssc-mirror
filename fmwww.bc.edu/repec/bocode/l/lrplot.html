@@ -1,0 +1,92 @@
+<pre>
+.-
+help for ^lrplot^
+.-
+<p>
+Plots coefficients from a logistic regression
+----------------------------
+<p>
+<p>
+    ^lrplot^  [ ^, XLab LEGgend SAVing(string) REPLace ^
+                   ^ti_s(integer) ax_s(integer) leg_s(integer) xlab_s(integer)^
+                   ^ti1(string) t2(string)^
+                   ^GROPT(string) MATrix(string) debug ^]
+<p>
+Description
+-----------
+<p>
+Plots the coefficients from a logistic regression
+with confidence intervals, on a log scale.
+<p>
+Simplest use: do lrplot immediately after a logistic
+regression.
+<p>
+<p>
+Options
+-------
+<p>
+^xlab^    gives coefficient labels on the x-axis
+^legend^  gives a legend to the right
+^sav^     saves the graph to a Stata graph file
+^replace^ replaces the graph if it already exists
+^ti1,ti2^ specifies the two title lines
+^ti_s^
+^ax_s^
+^leg_s^
+^xlab_s^  specify title, axis, legend and xlab-name size
+          as a percentage (0-400)
+^gropt^   gives options to pass on to graph
+^matrix^  is used to specify a matrix that holds
+          the coefficients and odds ratios that are to be
+          used 
+^debug^   is intended for developers. More or less useful.
+<p>
+Remarks 
+-------
+The utility @lrmatx@ is required. Not very extensively tested. 
+Please inform the author of any bugs. Presently can only 
+calculate 95% C.I. Modify lrmatx if you want this changed.
+<p>
+The coefficients are put in a matrix by the utility @lrmatx@.
+Run it immediately after a logistic regression command
+or use:
+^logistic regression command^
+^lrmatx^                    and
+^matrix name=r(or),r(ci)^   to store results. Then use 
+^lrplot , matrix(name)^     to get results
+<p>
+The advantages of putting results in a matrix are 
+are that interactions and  different scalings of 
+continuous variables can be made a lot more acessible 
+graphically. 
+<p>
+For plotting of interactions, see @lrint@.
+<p>
+Examples
+--------
+<p>
+    . ^logistic^ response age gender
+    . ^lrplot^, legend
+    . ^lrplot^, legend ti_s(150) ax_s(120)
+    . ^lrplot^, xlab sav("model a")
+<p>
+<p>
+    . ^xi: logistic age gender i.gender^
+      [code fragment to generate easily 
+       interpretable values of the 
+       interaction terms. See ^lrint^]
+    . ^lrplot^, matrix(model) legend
+<p>
+Author
+-------
+<p>
+    Jan Brogger, University of Bergen, Norway
+    jan.brogger@@med.uib.no
+<p>
+<p>
+Shameless plug :)
+--------------
+ I am looking for internship &amp; residency  in internal 
+ medicine/pulmonary medicine US/EU. Am doing PhD in respiratory 
+ epidemiology now. 
+</pre>

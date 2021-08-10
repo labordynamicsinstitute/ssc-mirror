@@ -1,0 +1,86 @@
+<pre>
+-------------------------------------------------------------------------------
+help for <b>wridit</b>                                                  (Roger Newson)
+-------------------------------------------------------------------------------
+<p>
+<b><u>Generate weighted ridits</u></b>
+<p>
+        <b>wridit</b> <i>varname</i> [<i>if</i>] [<i>in</i>] [<i>weight</i>] , <b><u>g</u></b><b>enerate(</b><i>newvarname</i><b>)</b>
+                     [ <b>by(</b><i>varlist</i><b>)</b> <b><u>fol</u></b><b>ded</b> <b><u>rev</u></b><b>erse</b> <b><u>perc</u></b><b>ent</b> <b>float</b> ]
+<p>
+    <b>fweight</b>s, <b>pweight</b>s, <b>aweight</b>s, and <b>iweight</b>s are allowed; see weight.
+<p>
+<p>
+<b><u>Description</u></b>
+<p>
+    <b>wridit</b> inputs a variable and generates its weighted ridits.  If no
+    weights are provided, then all weights are assumed equal to 1, so
+    unweighted ridits are generated.  Zero weights are allowed, and imply
+    that the ridits calculated for the observations with zero weights will
+    refer to the distribution of weights in the observations with nonzero
+    weights.
+<p>
+<p>
+<b><u>Options</u></b>
+<p>
+    <b>generate(</b><i>newvarname</i><b>)</b> must be specified.  It specifies the name of the
+        generated output variable, containing the weighted ridits.
+<p>
+    <b>by(</b><i>varlist</i><b>)</b> specifies a list of by-variables.  If <b>by()</b> is specified, then
+        the weighted ridits are computed within by-groups.
+<p>
+    <b>folded</b> specifies that the weighted ridits generated will be folded
+        ridits.  A folded ridit, on a proportion scale from -1 to 1, is
+        defined as <b>2*R-1</b>, where <b>R</b> is the corresponding unfolded ridit (on a
+        proportion scale from 0 to 1).
+<p>
+    <b>reverse</b> specifies that the weighted ridits will be reverse ridits, based
+        on reverse cumulative probabilities.
+<p>
+    <b>percent</b> specifies that the weighted ridits will be generated on a
+        percentage scale from 0 to 100, or from -100 to 100 if <b>folded</b> is
+        specified.  If <b>percent</b> is not specified, then the weighted ridits
+        will be generated on a proportion scale from 0 to 1, or from -1 to 1
+        if <b>folded</b> is specified.
+<p>
+    <b>float</b> specifies that the weighted ridits will be generated with storage
+        type <b>float</b>.  If <b>float</b> is not specified, then the weighted ridits will
+        be generated with storage type <b>double</b>.
+<p>
+<p>
+<b><u>Remarks</u></b>
+<p>
+    Ridits were introduced by Bross (1958).  Given a variable <i>X</i>, the unfolded
+    ridit for a value <i>x</i> is equal to the probability that <i>X&lt;x</i> plus half the
+    probability that <i>X==x</i>.  The folded ridit for <i>x</i> is equal to the
+    probability that <i>X&lt;x</i> minus the probability that <i>X&gt;x</i>.  Nicholas J. Cox
+    introduced an <b>egen</b> function <b>ridit()</b>, computing unweighted ridits, as part
+    of the <b>egenmore</b> package, downloadable from SSC.
+<p>
+<p>
+<b><u>Examples</u></b>
+<p>
+        <b>. wridit mpg, gene(wrid1)</b>
+<p>
+        <b>. wridit mpg [pwei=weight], gene(wrid2) by(foreign)</b>
+<p>
+<p>
+<b><u>References</u></b>
+<p>
+    Bross, I. D. J.  1958.  How to use ridit analysis.  <i>Biometrics</i> 14(1):
+        18-38.
+<p>
+<p>
+<b><u>Author</u></b>
+<p>
+    Roger Newson, National Heart and Lung Institute, Imperial College London,
+    UK.
+    Email: r.newson@imperial.ac.uk
+<p>
+<p>
+<b><u>Also see</u></b>
+<p>
+     Manual: <b>[D] egen</b>
+    On-line: help for <b>egen</b>
+             help for <b>egenmore</b> if installed
+</pre>

@@ -1,0 +1,135 @@
+<pre>
+-------------------------------------------------------------------------------
+help for <b>drdecomp</b>                                            Joao Pedro Azevedo
+                                                              Andres Castanedas
+                                                              Viviane Sanfelice
+-------------------------------------------------------------------------------
+<p>
+<b><u>Shapley value of growth and distribution components of on changes in poverty in</u></b>
+<b><u>&gt; dicators</u></b>
+<p>
+        <b>drdecomp</b> <i>welfarevar</i> [<b>weight</b>] [<b>if</b> <i>exp</i>] [<b>in</b> <i>exp</i>], <b>by(</b><i>varname</i><b>)</b>
+                 <b>varpl(</b><i>varlist</i><b>)</b> [ <b>indicator(</b><i>string</i><b>)</b> <b>mpl(</b><i>numlist</i><b>)</b> ]
+<p>
+    <b>fweights</b> and <b>aweights</b> are allowed; see help weights. See help weight.
+<p>
+<p>
+<b><u>Description</u></b>
+<p>
+    <b>drdecomp</b> implements the shapley value of the Datt and Ravallion (1992)
+    decomposition of changes in a welfare indicator into growth and
+    distribution, however, following the shapley and non parametric
+    methodology suggested by Shorrocks (1999/2012) and Kolenikov and
+    Shorrocks (2003).
+<p>
+    For examples of applications please see Azevedo and Sanfelice (2012) and
+    Ferreira et al (2012).
+ 
+<p>
+<b><u>Where</u></b>
+<p>
+    <i>welfarevar</i> is the welfare aggregate variable.
+<p>
+    <b>by</b> is the comparison indicator. It must take two categorical values and
+    is usually defines two points in time or two geographic locations, which
+    the difference of the indicator of choice is being decomposed.
+<p>
+    <b>varpl(</b><i>varname</i><b>)</b> poverty line variable.
+<p>
+<b><u>Options</u></b>
+<p>
+    <b><u>in</u></b><b>dicator(</b><i>string</i><b>)</b> poverty indicators. fgt0, fgt1, fgt2 are the currently
+    supported options. <i>fgt0</i> is the indicator default.
+<p>
+    <b>mpl(</b><i>numlist</i><b>)</b> allow to calculate the poverty indicators by range using
+    multiples of the poverty line.
+<p>
+<b><u>Saved Results</u></b>
+<p>
+<b>drdecomp</b> returns results in <b>r()</b> format. 
+By typing <b>return list</b>, the following results are reported:
+<p>
+    Matrices       
+      <b>r(b)</b>                average effect of the two factors and the total
+                            change on the poverty indicator.
+      <b>r(shapley)</b>          besides the average effect, returns the
+                            contribution for the two paths.
+      <b>r(poverty)</b>           returns the value of the <i>indicator</i> by categorical
+                            value of <i>by</i>.
+<p>
+    <b>Obs:</b> On the reported matrices
+    <i>Indicator label</i>: 0 - FGT(0); 1 - FGT(1); 2 - FGT(2).
+    <i>Effect label</i>: 1 represents the <i>growth</i>; 2 <i>redistribtuion</i> and 3 the total
+    change on the indicator.
+    <i>Line label</i> (if <i>mpl</i> specified): 1 represents the first multiple; 2 the
+    second, and so on. The last indicates the range from the last multiple
+    and the maximun value.
+<p>
+<p>
+<b><u>Examples</u></b>
+<p>
+        . drdecomp percapitainc, by(year) varpl(pline)
+<p>
+        . drdecomp percapitainc, by(year) varpl(pline) in(fgt0 fgt1 fgt2)
+<p>
+        . drdecomp percapitainc, by(year) varpl(pline) mpl(1 3.5 6)
+<p>
+<p>
+      (click to run the example below)
+<p>
+        . use exdata_drdecomp, clear
+        
+        <b>. drdecomp income [w=weight], by(year) varpl(lp_4usd_ppp)</b> ///
+    <b>    . in(fgt0 fgt1 fgt2) </b>
+        
+<p>
+<b><u>References</u></b>
+<p>
+    Azevedo, Joao Pedro and Viviane Sanfelice (2012) "The rise of the middle
+    class in Latin America". World Bank (mimeo).
+<p>
+    Ferreira, Francisco H.G.; Messina, Julian; Rigolini, Jamele; López-Calva,
+    Luis-Felipe; Lugo, Maria Ana; Vakis, Renos. (2013) Economic Mobility and
+    the Rise of the Latin American Middle Class. Washington, DC: World Bank.
+    (link to publication)
+<p>
+    Datt, G.; Ravallion, M. (1992) Growth and Redistribution Components of
+    Changes in Poverty Measures: A Decomposition with Applications to Brazil
+    and India in the 1980s. Journal of Development Economics, 38: 275-296.
+<p>
+    Shorrocks, A. F. (2012) Decomposition procedures for distributional
+    analysis: a unified framework based on the Shapley value. Journal of
+    Economic Inequality.
+<p>
+    Shorrocks, A.; Kolenikov, S. (2003) A Decomposition Analysis of Regional
+    Poverty in Russia, Discussion Paper No. 2003/74 United Nations
+    University.
+<p>
+    World Bank (2011) On The Edge Of Uncertainty: Poverty Reduction in Latin
+    America and the Caribbean during the Great Recession and Beyond. <b>LAC</b>
+    <b>Poverty and Labor Brief</b>. World Bank: Washington DC.   (link to
+    publication)
+<p>
+<b><u>Authors</u></b>
+<p>
+    Joao Pedro Azevedo, jazevedo@worldbank.org
+    Andres Castanedas, acastanedaa@worldbank.org
+    Viviane Sanfelice, vsanfelice@worldbank.org
+        
+<p>
+<b><u>Acknowledgements</u></b>
+    
+    This program was developed by the  LAC Team for Statistical Development
+    (2012), in the Latin American and Caribbean Poverty Reduction and
+    Economic Managment Group of the World Bank.
+<p>
+<p>
+<b><u>Also see</u></b>
+<p>
+  Online:  help for gidecomposition; apoverty; ainequal; wbopendata; adecomp;
+    mpovline; skdecomp (if installed)
+ 
+<p>
+<p>
+<p>
+</pre>

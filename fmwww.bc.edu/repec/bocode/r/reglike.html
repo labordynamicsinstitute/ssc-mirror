@@ -1,0 +1,73 @@
+<pre>
+.-
+help for ^reglike^                                  Posted to statalist
+14may1998
+.-
+<p>
+Obtaining log-likelihood values for linear regression
+-----------------------------------------------------
+<p>
+        ^reglike^ [^,^ ^c^ommand^(^commandname^)^ ^df(^#^)^ ]
+<p>
+<p>
+^reglike^ is run following ^regress^.
+<p>
+<p>
+Description
+-----------
+<p>
+After running ^regress^, ^reglike^ computes the log-likelihood and puts its
+value into the global macro ^S_E_ll^.
+<p>
+The ^command()^ and ^df()^ options allow one to trick the ^lrtest^ command into
+working when the linear regression is nested within another maximum-likelihood
+estimator.
+<p>
+<p>
+Options
+-------
+<p>
+^command(^commandname^)^ specifies the name of another ML estimation command
+    with which you wish to use ^lrtest^.  Note that using this option wipes
+    out
+    the saved results of ^regress^.
+<p>
+^df(^#^)^ specifies the "model" degrees of freedom to be used by ^lrtest^ for t
+&gt; he
+    linear regression model.  This should be set to whatever number is
+    necessary to give the right degrees of freedom for the chi-squared
+    statistic from ^lrtest^.
+<p>
+<p>
+Examples
+--------
+<p>
+  . ^regress mpg weight displ^
+  . ^reglike^
+<p>
+  . ^xtreg y x1 x2 x3, i(group) mle^
+  . ^lrtest, saving(0)^
+  . ^reg y x1 x2 x3 if group~=.^
+  . ^reglike, c(xtreg) df(2)^
+  . ^lrtest^
+<p>
+<p>
+Author
+------
+<p>
+        Bill Sribney
+        Stata Corporation
+        702 University Drive East
+        College Station, TX 77840
+        Phone: 409-696-4600
+               800-782-8272
+        Fax:   409-696-4601
+        email: tech_support@@stata.com
+<p>
+<p>
+Also see
+--------
+<p>
+ Manual:  ^[R] lrtest^
+On-line:  help for @lrtest@
+</pre>

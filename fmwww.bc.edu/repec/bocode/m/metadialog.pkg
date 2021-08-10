@@ -1,0 +1,37 @@
+d 'METADIALOG': module to provide sub-menu and dialogs for meta-analysis commands
+d
+d This module provides Stata Version 8 dialog boxes (.dlg files)
+d and the commands needed to create a Meta-Analysis sub-menu that
+d contains the publicly available meta-analysis commands. The 14
+d dialogs, included in this package, that may be placed on the menu
+d are: meta, metan, metap, metareg, metacum, funnel, metafunnel,
+d labbe, metannt, metaninf, metaninf, galbr, metabias, and
+d metatrim. The actual programs (.ado files) must be installed
+d separately. Please read the instructions in the included help
+d file, meta_dialog.hlp, to install the menu and use the dialogs. 
+d
+d KW: meta-analysis
+d
+d Requires: Stata version 8.0
+d
+d
+d Author: Thomas Steichen
+d Support: email  steichen@@triad.rr.com
+d
+d Distribution-Date: 20051205
+
+f ../f/funnel.dlg
+f ../g/galbr.dlg
+f ../l/labbe.dlg
+f meta_dialog.hlp
+f meta.dlg
+f metabias.dlg
+f metacum.dlg
+f metafunnel.dlg
+f metainf.dlg
+f metan.dlg
+f metaninf.dlg
+f metannt.dlg
+f metap.dlg
+f metareg.dlg
+f metatrim.dlg

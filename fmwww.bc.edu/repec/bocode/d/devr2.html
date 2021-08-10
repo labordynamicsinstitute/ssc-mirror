@@ -1,0 +1,52 @@
+<pre>
+<b>help devr2</b>
+-------------------------------------------------------------------------------
+<p>
+<b><u>Title</u></b>
+<p>
+    <b>devr2</b> -- Calculates a deviance based R-squared measure for models
+        estimated using the <b>[R] glm</b> command. The measure is based on Cameron
+        and Windmeijer, 1997.
+<p>
+<b><u>Description</u></b>
+<p>
+    <b>devr2</b> calculates a deviance based R-squared measure for regression models
+    in the exponential family with known scale parameter. This is equal to
+<p>
+        1-[(deviance of the fitted model)/(deviance of the constant only
+        model)]
+<p>
+    It measures the proportionate reduction in recoverable information due to
+    the inclusion of regressors, where information is measured by the
+    estimated Kullback-Leibler divergence, and may be loosely interpreted as
+    the fraction of uncertainty explained by the fitted model.
+<p>
+    Further details are given in Cameron and Windmeijer, 1997.
+<p>
+    Currently, the command can only be used following model estimation using
+    the <b>[R] glm</b> command.
+<p>
+<b><u>Saved results</u></b>
+<p>
+    <b>devr2</b> saves the following in <b>r()</b>:
+<p>
+    Scalars   
+      <b>r(dev_model)</b>    Deviance of the fitted model
+      <b>r(dev_null)</b>     Deviance of the constant only model
+      <b>r(devr2)</b>        Deviance based R-squared value
+<p>
+<b><u>Author</u></b>
+<p>
+    Brilleman, S. email: louis-george@hotmail.com
+<p>
+<b><u>Reference</u></b>
+<p>
+    Cameron, A. C. &amp; Windmeijer, F. A. G. (1997). An R-squared measure of
+    goodness of fit for some common nonlinear regression models.<i>  Journal of</i>
+    <i>Econometrics</i> 77:329-342.
+<p>
+<b><u>Also see</u></b>
+<p>
+    Online:  <b>[R] glm</b>
+<p>
+</pre>

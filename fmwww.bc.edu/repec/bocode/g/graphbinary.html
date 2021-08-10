@@ -1,0 +1,89 @@
+<pre>
+-------------------------------------------------------------------------------
+help for <b>graphbinary</b>
+-------------------------------------------------------------------------------
+<p>
+<b><u>An exploratory graphic investigating a binary endpoint</u></b>
+<p>
+        <b>graphbinary</b> <i>varlist</i> , [ <b><u>s</u></b><b>ort(</b><i>graph_options</i><b>)</b> <b><u>l</u></b><b>egend(</b><i>string</i><b>)</b> <b>or</b> <b>rr</b> <b>size(</b>
+                           <i>relativesize</i><b>)</b> <b><u>l</u></b><b>evel(</b><i>#</i><b>)</b> <i>graph_combine_options</i> ]
+<p>
+<p>
+<b><u>Description</u></b>
+<p>
+This command creates an exploratory graphic looking at relationships between a
+binary dependent variable against several explanatory variables.  Explanatory
+variables that have more than 2 values will be dichotomised by its median. When
+the median is equal to the minimum value this variable will be excluded from
+the graphic.
+<p>
+The graphic consists of two panels, the percentage of people that are coded 1
+for the dependent variable for each level of the explanatory variable.  The
+second panel plots the relative risk and confidence intervals against the
+variable name.
+<p>
+There are very few built-in options for this graphic and relies on the use of
+graph_combine options.
+<p>
+Make sure you have the latest version of this command ssc install graphbinary,
+replace
+<p>
+<b><u>Options</u></b>
+<p>
+<b><u>s</u></b><b>ort(</b><i>graph_options</i><b>)</b> specifies the order in which the explanatory variables are
+specified on the y-axis. There are only a handful of choices sorting by
+variable name <b>name</b>, by relative risk magnitude <b>effect</b>, by the relative risk's
+upper/lower confidence limit<b> upper / lower</b> or by the percentage of people with
+outcome 1 and high/yes or low/no for the explanatory variable<b> yes</b> or<b> low</b>.
+<p>
+<b><u>l</u></b><b>egend(</b><i>string</i><b>)</b> specifies the legend for the graphic in panel 1.
+<p>
+<b>or</b> specify that the odds ratio rather than risk ratio be plotted in panel 2.
+<p>
+<b>rr</b> specifies that the risk ratio be plotted in panel 2.
+<p>
+<b>size(</b><i>relative size percentage</i><b>)</b> specifies the percent of width available for
+panel 2. 50% means that panel 2 covers half the space in the final graphic, the
+default is 40%.
+<p>
+<b><u>l</u></b><b>evel(</b><i>#</i><b>)</b> specifies the confidence level, in percent, for confidence intervals;
+see help level.
+<p>
+<b><u>Examples</u></b>
+<p>
+The examples are all the analysis of the low birth weight data that can be
+obtained by the <b>webuse</b> command.
+<p>
+** webuse lbw  (MUST load data first) **
+<p>
+<p>
+graphbinary low age lwt race smoke ht ui 
+graphbinary low age lwt smoke ht ui, or 
+graphbinary low age lwt smoke ht ui, sort(effect)
+graphbinary low age lwt smoke ht ui, sort(lower) title(Risk Factors)
+graphbinary low age lwt smoke ht ui, sort(upper) legend(lab(1 "Unexposed") lab(
+&gt; 2 "Exposed"))
+graphbinary low age lwt smoke ht ui, sort(name) title(Risk Factors)
+subtitle(sorted by variable name)
+graphbinary low age lwt smoke ht ui, sort(yes)
+<p>
+The last graph is a little more complicated by changing the size of panel 2.
+<p>
+graphbinary low age lwt smoke ht ui, sort(no) size(16) subtitle(sorted by
+unexposed risk) legend(lab(1 "Unexposed") lab(2 "Exposed")) l(99)
+<p>
+<p>
+<b><u>Author</u></b>
+<p>
+Adrian Mander, MRC HNR Unit, Cambridge, UK.  Email
+adrian.mander@mrc-hnr.cam.ac.uk
+<p>
+<b><u>Also see</u></b>
+<p>
+Related commands
+<p>
+graph_combine.
+<p>
+<p>
+<p>
+</pre>

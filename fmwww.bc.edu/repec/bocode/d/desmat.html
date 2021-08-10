@@ -1,0 +1,291 @@
+<pre>
+-------------------------------------------------------------------------------
+help for <b>desmat</b>                                                  John Hendrickx
+-------------------------------------------------------------------------------
+<p>
+<b><u>desmat</u></b>
+<p>
+        <b>desmat</b> <i>model</i> [<b>,</b> <b><u>c</u></b><b>olinf</b> <b><u>d</u></b><b>efcon(</b><i>string</i><b>)</b> ]
+<p>
+        <b>desmat</b> : <i>any_stata_command</i> [<b>using</b>] [<i>if,in,weights_for_command</i>] <i>model</i> [<b>,</b>
+                           <b>verbose</b> <b>defcon(</b><i>string</i><b>)</b> <b>desrep(</b><i>string</i><b>)</b>
+                           [<i>command_options</i>] ]
+<p>
+<p>
+<b><u>Description</u></b>
+<p>
+<b>desmat</b> is used to generate a design matrix, i.e. a set of dummy variables based
+on categorical and/or continuous variables. These dummy variables _x_* can then
+be used in any appropriate Stata procedure.  <b>desmat</b> therefore serves the same
+purpose as xi, but allows different types of parameterizations than the
+indicator contrast (i.e. dummy variables with a fixed reference category). In
+addition, <b>desmat</b> allows the specification of higher order interaction effects
+and an easier specification of the reference category. After estimating a
+model, desrep can be used to produce a compact overview of the estimates with
+informative labels. In addition, the program destest can be used to perform a
+Wald test on model terms.
+<p>
+Like xi, <b>desmat</b> can be used as either as a command or as a command prefix. When
+used as a command, <b>desmat</b> generates a set of dummy variables for use by
+subsequent Stata programs. When used as a command prefix, the model is
+estimated after the dummy variables are generated and the results are presented
+using desrep.
+<p>
+A <b>model</b> consists of one or more terms separated by spaces. A term can be a
+single variable, two or more variables joined by period(s), or two or more
+variables joined by asterisk(s). A period is used to specify an interaction
+effect as such, whereas an asterisk indicates hierarchical notation, in which
+both the interaction effect itself plus all possible nested interactions and
+main effects are included. For example, the term vote*educ*race is expanded to
+vote educ vote.educ race vote.race educ.race vote.educ.race.
+<p>
+All variables in the model will be treated as categorical unless specified as
+continuous using the <b>pzat</b> characteristic (discussed below) or by specifying a
+contrast for the term (also discussed below).  Alternatively, a variable can be
+prefixed by an <b>@</b> to flag it as a continuous variable. For example:
+<p>
+desmat: regress brate @medage @medagesq region
+<p>
+The variables <b>medage</b> and <b>medagesq</b> will be treated as continuous variables. The
+variable <b>region</b> will be treated as categorical and dummy variables will be
+generated using its first category as reference category.
+<p>
+When <b>desmat</b> is used as a command prefix, weights, <b>if</b>, or <b>in</b> options may be
+specified in the usual manner and will be passed on to the procedure in
+question. Any options besides <b>verbose</b>, <b>defcon</b> and <b>desrep</b> will be passed on to
+the procedure as well.
+<p>
+If <b>using</b> <i>filename</i> is specified then the results will be written to a
+tab-delimited ascii file. The default extension for <i>filename</i> is <b>.out</b> (cf.
+outshee2). See desrep for further details
+<p>
+<b><u>Options</u></b>
+<p>
+<b>defcon</b> specifies a default contrast to be used in the model. See the section on
+    contrasts below for details.  By default, <b>desmat</b> generates dummy variables
+    using the first category as reference category.
+<p>
+    For compatibility with earlier versions of <b>desmat</b>, a default
+    parameterization may be specified as an option rather than an argument for
+    the <b>defcon</b> option. This option is only available when <b>desmat</b> is used as a
+    command by itself.
+<p>
+<b>colinf</b> lets <b>desmat</b> report which variables are dropped because of collinearity.
+    <b>desmat</b> will generate duplicate dummy variables if the same variable is
+    specified twice in a model, e.g. in interaction terms. <b>desmat</b> subsequently
+    uses the <b>Stata</b> facilities for removing collinear variables to delete these
+    duplicates. The information on which variables are dropped will therefore
+    usually be uninteresting. If variables are being dropped because they are
+    actually collinear rather than duplicates, the <b>colinf</b> can be used to find
+    out where the problems are.
+<p>
+<b>verbose</b> prints information on the design matrix generated and the regular
+    output of the Stata command being executed when <b>desmat</b> is used as a command
+    prefix.
+<p>
+<b>desrep</b> passes option on to desrep, which displays after the model has been
+    estimated. Note that most of these options can be specified using global
+    macro variables; see desrep for details. An exception could be the <b>exp</b>
+    option. desrep displays linear coefficients even if the procedure prints
+    exponential coefficients, e.g.  the odds-ratios produced by logistic.
+    Specify:
+<p>
+    desmat: logistic vote memb educ*race [fw=pop], desrep(exp all)
+<p>
+    to display odds-ratios. See desrep for further details.
+<p>
+<b><u>Contrasts</u></b>
+<p>
+By default, <b>desmat</b> generates dummy variables using the first category as the
+reference category, as does xi. However, it can also use different types of
+restrictions (contrasts) and different reference categories when generating the
+dummy variables. A restriction of some type is required for the effects of
+categorical variables to be identifiable.  The restriction used does not affect
+the fit of the model but does determine the meaning of the parameters. A common
+restriction and the one used by xi is to drop the dummy variable for a
+reference category. The parameters for that variable are then relative to the
+reference category. Another common constraint is the <i>deviation contrast</i>, in
+which parameters have a sum of zero. One parameter can therefore be dropped as
+redundant during estimation and found afterwards using minus the sum of the
+estimated parameters, or by re-estimating the model using a different omitted
+category. Bock (1975) and Finn (1974) discuss other types of parameterizations
+(or contrasts) and the technical details in implementing them.
+<p>
+A contrast can be specified as a name, of which the first three characters are
+significant, optionally followed by a specification of the reference category
+in parentheses (no spaces). The reference category should refer to the category
+number, not the category value. So for a variable with values 0 to 3, the
+specification <b>dev(1)</b> indicates that the deviation contrast is to be used with
+the first category (i.e. 0) as the reference.  If no reference category is
+specified or the category specified is less than 1 then the first category is
+used as reference category. If the reference category specified is larger than
+the number of categories then the highest category is used. Note that for
+certain types of contrasts, the <i>reference</i> specifiation has a different meaning.
+<p>
+The available contrasts are:
+<p>
+<b>ind(</b><i>ref</i><b>)</b> specifies the <i>indicator</i> contrast, i.e.  dummy variables with <i>ref</i> as
+    reference category.  This is the contrast used by xi and the default
+    contrast for <b>desmat</b>.
+<p>
+<b>full</b> specifies a <i>full</i> contrast, i.e. dummy variables are included for all
+    categories and no restrictions are imposed. Because of this, <b>desmat</b> also
+    does not check for collinearity due to duplicat dummy variables in e.g.
+    interaction terms.
+<p>
+<b>dir</b> specifies a <i>direct</i> effect. This is used to include continuous variables in
+    the model.
+<p>
+<b>dev(</b><i>ref</i><b>)</b> specifies the deviation contrast. Parameters sum to zero over the
+    categories of the variable. The parameter for <i>ref</i> is omitted as redundant,
+    but can be found from minus the sum of the estimated parameters.
+<p>
+<b>sim(</b><i>ref</i><b>)</b> specifies the simple contrast with <i>ref</i> as the reference category. The
+    highest order effects are the same as indicator contrast effects, but lower
+    order effects and the constant will be different.
+<p>
+<b>dif(</b><i>ref</i><b>)</b> specifies the <i>difference</i> contrast, for variables with ordered
+    categories. Parameters are relative to the <i>following</i> category. If the first
+    letter of <i>ref</i> is <b>b</b> then the <i>backward difference</i> contrast is used instead,
+    and parameters are relative to the <i>previous</i> category.
+<p>
+<b>hel(</b><i>ref</i><b>)</b> specifies the <i>Helmert</i> contrast, which is again used for variables with
+    ordered categories.  Parameters represents the contrast between that
+    category and the mean of the subsequent categories. If the first letter of
+    <i>ref</i> is <b>b</b> then the <i>reverse Helmert</i> contrast is used and parameters are
+    relative to the mean of the <i>preceding</i> categoriees.
+<p>
+<b>orp(</b><i>ref</i><b>)</b> specifies <i>orthogonal polynomials</i> of degree <i>ref</i>.  The first parameter
+    is a linear effect, the second quadratic, etc. This option calls orthpoly
+    to generate the design (sub)matrix.
+<p>
+<b>use(</b><i>ref</i><b>)</b> specifies a <i>user-defined</i> contrast.  <i>ref</i> refers to an <b>R</b> by <b>C</b> <i>contrast</i>
+    <i>matrix</i>, where <b>C</b> is the number of categories and <b>R</b> &lt; <b>C</b>.  If rownames are
+    specified for this matrix, these names will be used as variable labels for
+    the resulting dummy variables. [Single lowercase letters as names for the
+    contrast matrix cause problems at the moment, e.g use(c). Use uppercase
+    names or more than one letter, e.g.  use(cc) or use(C)]
+<p>
+<b><u>Specifying contrasts using the </u></b><i><u>defcon</u></i><b><u> option</u></b>
+<p>
+The defcon option can be used to specify a different contrast than <b>ind(1)</b> for
+all variables in all terms, e.g.
+<p>
+desmat: logistic vote memb educ*race [fw=pop], desrep(exp all) defcon(dev(99))
+<p>
+The deviation contrast will now be used with the highest category as the
+redundant category.
+<p>
+The global variable <b>$D_CON</b> can be used to specify a default contrast for
+the current Stata session. For example:
+<p>
+global D_CON "dev(99)"
+<p>
+will cause <b>desmat</b> to use the deviation contrast for the duration of the
+Stata session. By specifing this command in their profile.do, users can
+specify a different contrast for all <b>desmat</b> models. The <b>$D_CON</b> global
+variable is overridden by the <b>defcon</b> option if this is specified.
+<p>
+<b><u>Specifying contrasts using the </u></b><i><u>pzat</u></i><b><u> characteristic</u></b>
+<p>
+A <b>pzat</b> characteristic can be assigned to a variable to specifify a contrast to
+be used for that variable. For example, to use the backward difference contrast
+for education but the default indicator contrast for the other variables, use:
+<p>
+char educ[pzat] dif(b)
+desmat logistic vote memb educ*race [fw=pop], desrep(exp all)
+<p>
+The <b>pzat</b> characteristic will override the contrast specified by the defcon
+option. So in
+<p>
+char educ[pzat] dif(b)
+desmat: logistic vote memb educ*race [fw=pop], desrep(exp all) defcon(dev(99))
+<p>
+The <i>difference</i> contrast will be used for all variables <i>except</i> educ.
+<p>
+<b><u>Specifying contrasts in the model specification</u></b>
+<p>
+It is also possible to specify contrasts in the model specification, on a
+variable by variable basis if so desired. This is done by appending <b>=con(</b><i>ref</i><b>)</b>
+to a single variable, <b>=con(</b><i>ref</i><b>).con(</b><i>ref</i><b>)</b> to an interaction effect, and
+<b>=con(</b><i>ref</i><b>)*con(</b><i>ref</i><b>)</b> to an interaction using hierarchical notation. A somewhat
+contrived example:
+<p>
+desmat race=ind(1) educ=hel memb vote vote.memb=dif.dev(1), defcon(ind(99))
+<p>
+The variable <b>race</b> will use the <i>indicator</i> contrast with the first category as
+reference. The variable <b>educ</b> will use the <i>helmert</i> contrast, <b>vote</b> will use the
+<i>difference</i> contrast in its interaction with <b>memb</b>, whereas <b>memb</b> will use the
+<i>deviation</i> contrast in its interaction with <b>vote</b>. The main effects of <b>memb</b> and
+<b>vote</b> will use the default contrast, which is specified here as the <i>indicator</i>
+contrast with the highest contrast as reference. Interpreting this mishmash of
+parameterizations would be quite a chore of course.
+<p>
+A variable's <b>pzat</b> characteristic overrides the defcon option, but is itself
+overridden by a specification in the model. For example:
+<p>
+char educ[pzat] dif(b)
+desmat vote*memb vote*educ*race=dev(99)*orp(1)*dev(99) educ*race*memb, defcon(d
+&gt; ev(99))
+<p>
+<b>educ</b> will use a <i>first degree polynomial</i> restriction in the <b>vote*educ*race</b> term
+and a <i>backward difference</i> contrast elsewhere. All other variables will use the
+<i>deviation</i> contrast.
+<p>
+Specifying contrasts in the model statement will tend to look messy and
+provides an overkill in flexibility. Use of the <b>pzat</b> characteristic in
+conjunction with the <b>defcon</b> option and the <b>@</b> prefix to flag continuous
+variables will usually be preferable.
+<p>
+<b><u>showtrms</u></b>
+<p>
+When used as a command, or in command prefix mode in conjunction with the
+<b>verbose</b> option, <b>desmat</b> produces a legend of dummy variables it has produced,
+the model term these pertain to, and the contrast used. The showtrms command
+can be used afterwards to generate this legend for the last model generated by
+<b>desmat</b>. This can be useful when <b>desmat</b> is used as a command prefix to check on
+the types of contrasts being used.
+<p>
+<b><u>Estimation</u></b>
+<p>
+When used as a command rather than a command prefix, the dummy variables
+generated by <b>desmat</b> can be included in any Stata procedure as _x_*.  After
+estimating the model,the companion program desrep can be used to present the
+results with descriptive labels.
+<p>
+<b>desmat</b> creates global macro variables <b>$term1</b>, <b>$term2</b>, etc. for each terms in
+the model. The program destest can be used to perform a Wald test on model
+terms.
+<p>
+Note that either in command mode or command prefix mode, <b>desmat</b> produces a set
+of dummy variables <b>_x_*</b>. These variables must be present for destest and 
+showtrms to work. The commands:
+<p>
+drop _x_*
+macro drop term*
+<p>
+can be used to cleanup after <b>desmat</b> if so desired.
+<p>
+<b><u>References</u></b>
+<p>
+Hendrickx, J. 1999. dm73: Using categorical variables in Stata.  <i>Stata</i>
+    <i>Technical Bulletin</i> 52: 2-8. Reprinted in <i>Stata Technical Bulletin Reprints</i>,
+    vol. 9. pp. 51-59.
+<p>
+--. 2000. dm73.1: Contrasts for categorical variables: update.  <i>Stata Technical</i>
+    <i>Bulletin</i> 54: 7. Reprinted in <i>Stata Technical Bulletin Reprints</i>, vol. 9. pp.
+    60-61.
+<p>
+--. 2001. dm73.2: Contrasts for categorical variables: update.  <i>Stata Technical</i>
+    <i>Bulletin</i> 59: 2-5.
+<p>
+Direct comments to: John Hendrickx
+<p>
+<b>desmat</b> is available at SSC-IDEAS.  Use findit <b>desmat</b> to locate the latest
+version.
+<p>
+<b><u>Aso see</u></b>
+ Manual: <b>[R] xi</b> <b>[U] Commands for dealing with categorical variables</b>
+On-line: help for desrep, destest, showtrms, xi
+<p>
+</pre>

@@ -1,0 +1,85 @@
+<pre>
+-------------------------------------------------------------------------------
+<b>help multencode</b>
+-------------------------------------------------------------------------------
+<p>
+<b><u>Encode multiple string variables into numeric</u></b>
+<p>
+<p>
+<b><u>Syntax</u></b>
+<p>
+        <b>multencode</b> <i>strvarlist</i> [<i>if</i>] [<i>in</i>] <b>,</b> <b><u>g</u></b><b>enerate(</b><i>newvarlist</i><b>)</b> [ <b><u>l</u></b><b>abel(</b><i>name</i><b>)</b>
+                <b>force</b> ]
+<p>
+<p>
+<b><u>Description</u></b>
+<p>
+    <b>multencode</b> creates new numeric variables <i>newvarlist</i>, with value labels
+    defined and attached, based on the string variables <i>strvarlist</i>. The same
+    set of value labels is used for all the new variables. By default a new
+    set of labels will be created with the same name as the first variable in
+    <i>strvarlist</i>. Optionally, a name may be specified using the <b>label()</b> option.
+    In either case, no existing set of value labels with the same name will
+    be used, unless the <b>force</b> option is specified, in which case those value
+    labels will be over-written. In this way, the user is assured that the
+    new variables will have the same alphabetically ordered set of value
+    labels, provided as usual that the request does not breach any limits
+    that apply.
+<p>
+    Do not use <b>multencode</b> if <i>strvarlist</i> contains numbers that merely happen
+    to be stored as strings. Instead, use <b>destring</b>. See destring.
+<p>
+<p>
+<b><u>Remarks</u></b> 
+<p>
+    <b>multencode</b> uses Mata to determine the distinct values of the variables to
+    be encoded. Thus Stata 9 up is required.
+<p>
+    A multiple decode is easy enough, perhaps as easy as
+<p>
+        <b>foreach v of var</b> <i>varlist</i> { 
+                <b>decode `v', gen(s_`v')</b> 
+        } 
+<p>
+    - so long as no variable name is close enough to the limit of 32
+    characters.
+<p>
+<p>
+<b><u>Options</u></b>
+<p>
+    <b>generate()</b> is required and specifies the names of the variables to be
+        created. Hyphenated lists such as <b>nvar1-nvar8</b> are allowed.
+<p>
+    <b>label()</b> specifies the name of the value label to be created.  If <b>label()</b>
+        is not specified, <b>multencode</b> attempts to use the same name for the
+        label as the first existing variable specified. In neither case will
+        an existing set of value labels be overwritten unless <b>force</b> is also
+        specified.
+<p>
+    <b>force</b> specifies that any existing value labels with the same name as
+        implied by other choices will be overwritten. Only rarely should this
+        option be used: it may have serious consequences for other variables.
+        Proceed with extreme caution and never use if in doubt.
+<p>
+<p>
+<b><u>Example</u></b>
+<p>
+    <b>. multencode svar1-svar8, gen(nvar1-nvar8)</b>
+<p>
+<p>
+<b><u>Author</u></b> 
+<p>
+    Nicholas J. Cox, Durham University, UK
+    n.j.cox@durham.ac.uk
+<p>
+<p>
+<b><u>Acknowledgments</u></b> 
+<p>
+    This problem was suggested on Statalist by Moleps Islon.
+<p>
+<p>
+<b><u>Also see</u></b>
+<p>
+    help for encode, destring, label
+<p>
+</pre>

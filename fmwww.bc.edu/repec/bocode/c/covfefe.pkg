@@ -1,0 +1,17 @@
+d 'COVFEFE': module despite the constant negative press
+d
+d  Despite rumors, covfefe is not a Stata option used to produce a
+d particular VCE in a fixed effects model. 
+d
+d KW: twitter
+d KW: covfefe
+d
+d Requires: Stata version 13
+d
+d Distribution-Date: 20170531
+d
+d Author: Michael Stepner
+d Support: email michael@@stepner.ca
+d
+f covfefe.ado
+f covfefe.sthlp

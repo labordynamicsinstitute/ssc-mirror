@@ -1,0 +1,25 @@
+d 'FASTCOLLAPSE': module to make dataset of summary statistics using fast hash-based algorithm
+d
+d   fastcollapse is a much faster version of calculating sums over
+d groups than collapse that scales in O(n) time rather than
+d O(nlogn). It achieves this by generating a hash map from the by()
+d varlist and requires no internal sorting. 
+d
+d KW: data management
+d KW: summary statistics
+d KW: collapse
+d KW: hash
+d
+d Requires: Stata version 12
+d
+d Distribution-Date: 20141125
+d
+d Author: Andrew Maurer, Quantitative Risk Management
+d Support: email Andrew.Maurer@@qrm.com
+d
+f fastcollapse.ado
+f fastcollapse.sthlp
+f ../h/hash.ado
+f ../h/hash.sthlp
+f ../u/unhash.ado
+f ../u/unhash.sthlp

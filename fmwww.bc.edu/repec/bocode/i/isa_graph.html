@@ -1,0 +1,61 @@
+<pre>
+<b>help isa_graph</b>
+-------------------------------------------------------------------------------
+<p>
+<b><u>Title</u></b>
+<p>
+        <b>isa_graph</b> --
+                    Wrapper Program for -isa- for Drawing Graph
+<p>
+<p>
+<b><u>Syntax</u></b>
+<p>
+        <b>isa_graph</b> <i>depvar</i> <i>treatmentvar</i> [<i>indepvars</i>] [<i>if</i>] [<i>in</i>] <b>,</b> <b>tau(</b><i>real</i><b>)</b> <i>or</i>
+               <b>tstat(</b><i>real</i><b>)</b> [<b>nplots(</b><i>int</i><b>)</b>]
+<p>
+    <i>options</i>                     Description
+    -------------------------------------------------------------------------
+    Model
+      <b>tau(</b><i>real</i><b>)</b>                 the target size of the coefficient of the
+                                  treatment variable.
+      <b>tstat(</b><i>real</i><b>)</b>               the target size of the t-value of the
+                                  treatment variable.
+      <b>nplots(</b><i>int</i><b>)</b>               specifies the number of control variables
+                                  plotted on the graph; default is<b> nplots(5)</b>.
+                                  The first <i>n</i> variables in <i>indepvars</i> are
+                                  selected.
+<p>
+    -------------------------------------------------------------------------
+    <i>depvarlist</i>,<i> treatmentvar</i>, and <i>indepvars</i>, and <b>tau(</b><i>real</i><b>)</b> or <b>tstat(</b><i>real</i><b>)</b>
+      must be set in the same way as the user set in -<b>isa</b>-.
+<p>
+<b><u>Description</u></b>
+<p>
+    <b>isa_graph</b> is a wrapper program of -isa- Imbens' (2003) Sensitivity
+    Analysis.  This program reproduces the graph after closing the original
+    or manually dropping problematic results.  The entries of the following
+    variables must be located in the top rows: isa_partial_rsq_yx
+    isa_partial_rsq_tx isa_plotvar.
+<p>
+<p>
+<b><u>Example (after running the example codes in -</u></b><b><u>isa</u></b><b><u>-</u></b>)
+<p>
+    . isa_graph wage union age black other grade married south c_city mnfctr,
+        tau(.314) nplots(8)
+<p>
+<p>
+<b><u>Also see</u></b>
+<p>
+      Help:  isa and isa_search
+<p>
+<p>
+<b><u>Reference</u></b>
+<p>
+    If you use this program, please cite:
+<p>
+    Imbens, Guido W. 2003. "Sensitivity to Exogeneity Assumptions in Program
+    Evaluation." <i>The American Economic Review</i> 93(2):126-132.
+<p>
+    Harada, Masataka "Generalized Sensitivity Analysis." <i>Working paper</i>.
+<p>
+</pre>

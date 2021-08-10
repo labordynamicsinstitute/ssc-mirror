@@ -1,0 +1,641 @@
+<pre>
+-------------------------------------------------------------------------------
+help for <b>metan</b>, <b>labbe</b>
+-------------------------------------------------------------------------------
+<p>
+<p>
+<b><u>Fixed and random effects meta-analysis</u></b>
+<p>
+        <b>metan</b> <i>varlist</i> [<b>if</b> <i>exp</i>] [<b>in</b> <i>range</i>] [<i>weight</i>] [<b>,</b>
+            <i>measure_and_model_options</i> <i>options_for_continuous_data</i>
+            <i>output_options</i> <i>forest_plot_options</i> ]
+<p>
+            where <i>measure_and_model_options</i> may be
+<p>
+            <b>or</b> <b>rr</b> <b>rd</b> <b>fixed</b> <b>random</b> <b>fixedi</b> <b>peto</b> <b>cornfield</b> <b>chi2</b> <b>breslow</b>
+            <b><u>noint</u></b><b>eger</b> <b>cc(</b><i>#</i><b>)</b> <b>wgt(</b><i>weightvar</i><b>)</b> <b>second(</b><i>model</i> or <i>estimates and</i>
+            <i>description</i><b>)</b> <b>first(</b><i>estimates and description</i><b>)</b>
+<p>
+            and where <i>options_for_continuous_data</i> may be
+<p>
+            <b>cohen</b> <b>hedges</b> <b>glass</b> <b>nostandard</b> <b>fixed</b> <b>random</b>
+<p>
+            and where <i>output_options</i> may be
+<p>
+            <b>by(</b><i>byvar</i><b>)</b> <b>nosubgroup</b> <b>sgweight</b> <b>log</b> <b>eform</b> <b>efficacy</b> <b><u>il</u></b><b>evel(</b><i>#</i><b>)</b>
+            <b><u>ol</u></b><b>evel(</b><i>#</i><b>)</b> <b>sortby(</b><i>varlist</i><b>)</b> <b>label(</b><i>namevar yearvar</i><b>)</b> <b>nokeep</b> <b>notable</b>
+            <b>nograph</b> <b>nosecsub</b>
+<p>
+            and where <i>forest_plot_options</i> may be
+<p>
+            <b>legend(</b><i>string</i><b>)</b> <b><u>xla</u></b><b>bel(</b><i>#</i>,...<b>)</b> <b><u>xt</u></b><b>ick(</b><i>#</i>,...<b>)</b> <b>boxsca(</b><i>#</i><b>)</b> <b>nobox</b>
+            <b>nooverall</b> <b>nowt</b> <b>nostats</b> <b>group1(</b><i>string</i><b>)</b> <b>group2(</b><i>string</i><b>)</b>
+            <b>effect(</b><i>string</i><b>)</b> <b>force</b>
+<p>
+            ...with further <i>forest_plot_options</i> in the version 9 update
+<p>
+            <b>lcols(</b><i>varlist</i><b>)</b> <b>rcols(</b><i>varlist</i><b>)</b> <b>astext(</b><i>#</i><b>)</b> <b>double</b> <b>nohet</b> <b>summaryonly</b>
+            <b>rfdist</b> <b><u>rfl</u></b><b>evel(</b><i>#</i><b>)</b> <b>null(</b><i>#</i><b>)</b> <b>nulloff</b> <b>favours(</b><i>string</i> # <i>string</i><b>)</b>
+            <b>firststats(</b><i>string</i><b>)</b> <b>secondstats(</b><i>string</i><b>)</b> <b>boxopt()</b> <b>diamopt()</b>
+            <b>pointopt()</b> <b>ciopt()</b> <b>olineopt()</b> <b>classic</b> <b>nowarning</b> <i>graph_options</i>
+<p>
+<p>
+        <b>labbe</b> <i>varlist</i> [<b>if</b> <i>exp</i>] [<b>in</b> <i>range</i>] [<i>weight</i>] [<b>,</b> <b>nowt</b> <b><u>per</u></b><b>cent</b> <b>or(</b><i>#</i><b>)</b>
+            <b>rr(</b><i>#</i><b>)</b> <b>rd(</b><i>#</i><b>)</b> <b>null</b> <b>logit</b> <b>wgt(</b><i>weightvar</i><b>)</b> <b>symbol(</b><i>symbolstyle</i><b>)</b>
+            <b>nolegend</b> <b>id(</b><i>idvar</i><b>)</b> <b>textsize(</b><i>#</i><b>)</b> <b>clockvar(</b><i>clockvar</i><b>)</b> <b>gap(</b><i>#</i><b>)</b>
+            <i>graph_options</i>
+<p>
+<p>
+<b><u>Description</u></b>
+<p>
+    These routines provide facilities to conduct meta-analyses of data from
+    more than one study and to graph the results. Either binary (event) or
+    continuous data from two groups may be combined using the <b>metan</b> command.
+    Additionally, intervention effect estimates with corresponding standard
+    errors or confidence intervals may be meta-analysed. Several
+    meta-analytic methods are available, and the results may be displayed
+    graphically in a Forest plot. A test of whether the summary effect
+    measure is equal to the null is given, as well as a test for
+    heterogeneity, i.e., whether the true effect in all studies is the same.
+    Heterogeneity is also quantified using the I-squared measure (Higgins et
+    al 2003).
+<p>
+    <b>metan</b> (the main meta-analysis routine) requires either two, three, four
+    or six variables to be declared. When four variables are specified these
+    correspond to the number of events and non-events in the experimental
+    group followed by those of the control group, and analysis of binary data
+    is performed on the 2x2 table.  With six variables, the data are assumed
+    continuous and to be the sample size, mean and standard deviation of the
+    experimental group followed by those of the control group.  If three
+    variables are specified these are assumed to be the effect estimate and
+    its lower and upper confidence interval, and it is suggested that these
+    are log transformed for odds ratios or risk ratios and the<b> eform</b> option
+    used.  If two variables are specified these are assumed to be the effect
+    estimate and standard error; again, it is recommended that odds ratios or
+    risk ratios are log transformed.
+<p>
+    <b>labbe</b> draws a L'Abbe plot for event data (proportion of successes in the
+    two groups). This is an alternative to the graph produced by <b>metan8</b>.
+<p>
+    Note that the <b>metan</b> command now requires Stata version 9 and has been
+    updated with several new options. Changes are mainly to graphics options
+    which are collected in the section<i> Further options in the v9 update for</i>
+    <i>metan: Forest plot</i>, or otherwise marked <i>v9 update</i>. The previous version
+    is still available under the name -metan7-
+<p>
+<p>
+<b><u>Remarks on funnel (discontinued)</u></b>
+<p>
+    The <b>metafunnel</b> command has more options for funnel plots and version 8
+    graphics; as such <b>funnel</b> has been removed.  See metafunnel (if installed)
+<p>
+<p>
+<p>
+<b><u>Options for metan</u></b>
+<p>
+        +----------------------------------+
+    ----+ Specifying the measure and model +---------------------------------
+<p>
+    These options apply to binary data.
+<p>
+    <b>rr</b> pools risk ratios (the default).
+<p>
+    <b>or</b> pools odds ratios.
+<p>
+    <b>rd</b> pools risk differences.
+<p>
+    <b>fixed</b> specifies a fixed effect model using the method of Mantel and
+        Haenszel (the default).
+<p>
+    <b>fixedi</b> specifies a fixed effect model using the inverse variance method.
+<p>
+    <b>peto</b> specifies that Peto's method is used to pool odds ratios.
+<p>
+    <b>random</b> specifies a random effects model using the method of DerSimonian &amp;
+        Laird, with the estimate of heterogeneity being taken from the from
+        the Mantel-Haenszel model.
+<p>
+    <b>randomi</b> specifies a random effects model using the method of DerSimonian
+        &amp; Laird, with the estimate of heterogeneity being taken from the
+        inverse-variance fixed-effect model.
+<p>
+    <b>cornfield</b> computes confidence intervals for odds ratios by method of
+        Cornfield, rather than the (default) Woolf method.
+<p>
+    <b>chi2</b> displays chi-squared statistic (instead of z) for the test of
+        significance of the pooled effect size. This is available only for
+        odds ratios pooled using Peto or Mantel-Haenszel methods.
+<p>
+    <b>breslow</b> produces Breslow-Day test for homogeneity of ORs.
+<p>
+    <b>cc(</b><i>#</i><b>)</b> defines a fixed continuity correction to add in the case where a
+        study contains a zero cell. By default, <b>metan8</b> adds 0.5 to each cell
+        of a trial where a zero is encountered when using Inverse-Variance,
+        Der-Simonian &amp; Laird or Mantel-Haenszel weighting to enable finite
+        variance estimators to be derived.  However, the <b>cc()</b> option allows
+        the use of other constants (including none). See also the <b>nointeger</b>
+        option.
+<p>
+    <b>nointeger</b> allows the cell counts to be non-integers. This may be useful
+        when a variable continuity correction is sought for studies
+        containing zero cells, but also may be used in other circumstances,
+        such as where a cluster-randomised trial is to be incorporated and
+        the "effective sample size" is less than the total number of
+        observations.
+<p>
+    <b>wgt(</b><i>weightvar</i><b>)</b> specifies alternative weighting for any data type. The
+        effect size is to be computed by assigning a weight of <i>weightvar</i> to
+        the studies. When RRs or ORs are declared, their logarithms are
+        weighted. You should only use this option if you are satisfied that
+        the weights are meaningful.
+<p>
+    <b>second(</b><i>model</i> or <i>estimates and description</i><b>)</b> (<i>v9 update</i>) A second analysis
+        may be performed using another method, using <b>fixed</b>, <b>random</b> or <b>peto</b>.
+        Alternatively, the user may define their own estimate and 95% CI
+        based on calculations performed externally to <b>metan</b>, along with a
+        description of their method, in the format<i> es lci uci description</i>.
+        The results of this analysis are then displayed in the table and
+        forest plot. Note that if <b>by</b> is used then sub-estimates from the
+        second method are not displayed with user defined estimates, for
+        obvious reasons.
+<p>
+    <b>first(</b><i>estimates and description</i><b>)</b> (<i>v9 update</i>) Use of this command
+        completely changes the way <b>metan</b> operates, as results are no longer
+        based on any standard methods. The user defines their own estimate,
+        95% CI and description as in the above, and must supply their own
+        weightings using <b>wgt(</b><i>weightvar</i><b>)</b> to control display of box sizes. Note
+        that data must be supplied in the 2 or 3 variable syntax (<i>theta</i>
+        <i>se_theta</i> or <i>es lci uci</i>) and <b>by</b> may not be used used for obvious
+        reasons.
+<p>
+        +-----------------+
+    ----+ Continuous data +--------------------------------------------------
+<p>
+    <b>cohen</b> pools standardised mean differences by the method of Cohen (the
+        default).
+<p>
+    <b>hedges</b> pools standardised mean differences by the method of Hedges.
+<p>
+    <b>glass</b> pools standardised mean differences by the method of Glass.
+<p>
+    <b>nostandard</b> pools unstandardised mean differences.
+<p>
+    <b>fixed</b> specifies a fixed effect model using the inverse variance method
+        (the default).
+<p>
+    <b>random</b> specifies a random effects model using the DerSimonian &amp; Laird
+        method.
+<p>
+    <b>nointeger</b> denotes that the number of observations in each arm does not
+        need to be an integer. By default, the first and fourth variables
+        specified (containing N_intervention and N_control respectively) may
+        occasionally be non-integer (see entry for <b>nointeger</b> under binary
+        data).
+<p>
+        +--------+
+    ----+ Output +-----------------------------------------------------------
+<p>
+    <b>by()</b> specifies that the meta-analysis is to be stratified according to
+        the variable declared.
+<p>
+    <b>sgweight</b> specifies that the display is to present the percentage weights
+        within each subgroup separately. By default <b>metan</b> presents weights as
+        a percentage of the overall total.
+<p>
+    <b>log</b> reports the results on the log scale (valid for OR and RR analyses
+        from raw data counts only).
+<p>
+    <b>nosubgroup</b> indicates that no within-group results are to be presented.
+        By default <b>metan</b> pools trials both within and across all studies.
+<p>
+    <b>eform</b> exponentiates all effect sizes and confidence intervals (valid only
+        when the input variables are log odds ratios or log hazard ratios
+        with standard error or confidence intervals).
+<p>
+    <b>efficacy</b> expresses results as the vaccine efficacy (the proportion of
+        cases that would have been prevented in the placebo group that would
+        have been prevented had they received the vaccination).  Only
+        available with odds ratios (OR) or risk ratios (RR).
+<p>
+    <b>ilevel(</b><i>#</i><b>)</b> specifies the coverage (eg 90,95,99 percent) for the individual
+        trial confidence intervals. Default: <b>$S_level</b>.  <b>ilevel()</b> and <b>olevel()</b>
+        need not be the same. See set level.
+<p>
+    <b>olevel(</b><i>#</i><b>)</b> specifies the coverage (eg 90,95,99 percent) for the overall
+        (pooled) trial confidence intervals. Default: <b>$S_level</b>.  <b>ilevel()</b> and
+        <b>olevel()</b> need not be the same. See set level.
+<p>
+    <b>sortby(</b><i>varlist</i><b>)</b> sorts by variable(s) in <i>varlist</i>
+<p>
+    <b>label([namevar=</b><i>namevar</i><b>], [yearvar=</b><i>yearvar</i><b>])</b> labels the data by its name,
+        year or both. Either or both option/s may be left blank. For the
+        table display the overall length of the label is restricted to 20
+        characters. The option <b>lcols()</b> will override this if invoked.
+<p>
+    <b>nokeep</b> prevents the retention of study parameters in permanent variables
+        (see saved results below).
+<p>
+    <b>notable</b> prevents display of table of results.
+<p>
+    <b>nograph</b> prevents display of graph.
+<p>
+    <b>nosecsub</b> (<i>v9 update</i>) prevents the display of sub-estimates using the
+        second method if <b>second()</b> is used. Note that this is invoked
+        automatically with user-defined estimates.
+<p>
+        +-------------+
+    ----+ Forest plot +------------------------------------------------------
+<p>
+    <b>effect()</b> may be used when the effect size and its standard error are
+        declared. This allows the graph to name the summary statistic used.
+<p>
+    <b>nooverall</b> revents display of overall effect size on graph (automatically
+        enforces the <b>nowt</b> option).
+<p>
+    <b>nowt</b> prevents display of study weight on the graph.
+<p>
+    <b>nostats</b> prevents display of study statistics on graph.
+<p>
+    <b>counts</b> (<i>v9 update</i>) displays data counts (n/N) for each group when using
+        binary data, or the sample size, mean and SD for each group if mean
+        differences are used (the latter is a new feature).
+<p>
+    <b>group1(</b><i>string</i><b>)</b>, <b>group2(</b><i>string</i><b>)</b> may be used with the <b>counts</b> option: the
+        text should contain the names of the two groups.
+<p>
+    <b>xlabel()</b> (<i>v9 update</i>) defines x-axis labels. This has been modified so
+        that any number of points may defined. Also, there are no longer any
+        checks made as to whether these points are sensible, so the user may
+        define anything if the <b>force</b> option is used. Points must be comma
+        separated.
+<p>
+    <b>xtick()</b> adds tick marks to the x-axis. Points must be comma separated.
+<p>
+    <b>force</b> forces the x-axis scale to be in the range specified by <b>xlabel()</b>.
+<p>
+    <b>boxsca()</b> (<i>v9 update</i>) controls box scaling.  This has been modified
+        slightly so that the default is 100 (as in a percentage) and may be
+        increased or decreased as such (e.g., 80 or 120 for 20% smaller or
+        larger respectively)
+<p>
+    <b>nobox</b> prevents a "weighted box" being drawn for each study and markers
+        for point estimates only are shown.
+<p>
+    <b>texts()</b> (<i>v9 update</i>) specifies font size for text display on graph.  This
+        has been modified slightly so that the default is 100 (as in a
+        percentage) and may be increased or decreased as such (e.g., 80 or
+        120 for 20% smaller or larger respectively)
+<p>
+        +------------------------------------------------------+
+    ----+ Further options for the forest plot in the v9 update +-------------
+<p>
+    <b>lcols(</b><i>varlist</i><b>)</b>, <b>rcols(</b><i>varlist</i><b>)</b> define columns of additional data to the
+        left or right of the graph. The first two columns on the right are
+        automatically set to effect size and weight, unless suppressed using
+        the options <b>nostats</b> and <b>nowt</b>. If <b>counts</b> is used this will be set as
+        the third column. <b>textsize()</b> can be used to fine-tune the size of the
+        text in order to acheive a satisfactory appearance.  The columns are
+        labelled with the variable label, or the variable name if this is not
+        defined. The first variable specified in <b>lcols()</b> is assumed to be the
+        study identifier and this is used in the table output.
+<p>
+    <b>astext(</b><i>#</i><b>)</b> specifies the percentage of the graph to be taken up by text.
+        The default is 50 and the percentage must be in the range 10-90.
+<p>
+    <b>double</b> allows variables specified in <b>lcols</b> and <b>rcols</b> to run over two
+        lines in the plot. This may be of use if long strings are to be used.
+<p>
+    <b>nohet</b> prevents display of heterogeneity statistics in the graph.
+<p>
+    <b>summaryonly</b> shows only summary estimates in the graph (may be of use for
+        multiple subgroup analyses)
+<p>
+    <b>rfdist</b> displays the confidence interval of the approximate predictive
+        distribution of a future trial, based on the extent of heterogeneity.
+        This incorporates uncertainty in the location and spread of the
+        random effects distribution using the formula<b> t(df) x sqrt(se2 +</b>
+        <b>tau2)</b> where t is the t-distribution with k-2 degrees of freedom, se2
+        is the squared standard error and tau2 the heterogeneity statistic.
+        The CI is then displayed with lines extending from the diamond. Note
+        that with &lt;3 studies the distribution is inestimable and effectively
+        infinite, thus displayed with dotted lines, and where heterogeneity
+        is zero there is still a slight extension as the t-statistic is
+        always greater than the corresponding normal deviate. For further
+        information see Higgins JPT, Thompson SG (2006)
+<p>
+    <b>rflevel(</b><i>#</i><b>)</b> specifies the coverage (eg 90,95,99 percent) for the
+        confidence interval of the predictive distribution. Default:
+        <b>$S_level</b>.  See set level.
+<p>
+    <b>null(</b><i>#</i><b>)</b> displays the null line at a user-defined value rather than 0 or
+        1.
+<p>
+    <b>nulloff</b> removes the null hypothesis line from the graph
+<p>
+    <b>favours(</b><i>string</i> # <i>string</i><b>)</b> applies a label saying something about the
+        treatment effect to either side of the graph (strings are separated
+        by the # symbol). This replaces the feature available in <b>b1title</b> in
+        the previous version of metan.
+<p>
+    <b>firststats(</b><i>string</i><b>)</b>, <b>secondstats(</b><i>string</i><b>)</b> labels overall user-defined
+        estimates when these have been specified.  Labels are displayed in
+        the position usually given to the heterogeneity statistics.
+<p>
+    <b>boxopt()</b>, <b>diamopt()</b>, <b>pointopt()</b>, <b>ciopt()</b>, <b>olineopt()</b> specify options for
+        the graph routines within the program, allowing the user to alter the
+        appearance of the graph. Any options associated with a particular
+        graph command may be used, except some that would cause incorrect
+        graph appearance. For example, diamonds are plotted using the twoway
+        pcspike command, so options for line styles are available (see line
+        options); however, altering the x-y orientation with the option
+        <b>horizontal</b> or <b>vertical</b> is not allowed. So, <b>diamopt(lcolor(green)</b>
+        <b>lwidth(thick))</b> feeds into a command such as <b>pcspike(y1 x1 y2 x2,</b>
+        <b>lcolor(green) lwidth(thick))</b>
+<p>
+        <b>boxopt()</b> controls the boxes and uses options for a weighted marker
+        (e.g., shape, colour; but not size). See marker options
+<p>
+        <b>diamopt()</b> controls the diamonds and uses options for pcspike (not
+        horizontal/vertical).  See line options
+<p>
+        <b>pointopt()</b> controls the point estimate using marker options.  See 
+        marker options and marker label options
+<p>
+        <b>ciopt()</b> controls the confidence intervals for studies using options
+        for pcspike (not horizontal/vertical). See line options
+<p>
+        <b>olineopt()</b> controls the overall effect line with options for an
+        additional line (not position). See line options
+<p>
+    <b>classic</b> specifies that solid black boxes without point estimate markers
+        are used as in the previous version of metan.
+<p>
+    <b>nowarning</b> switches off the default display of a note warning that studies
+        are weighted from random effects anaylses.
+<p>
+    <i>graph_options</i> specifies overall graph options that would appear at the
+        end of a <b>twoway</b> graph command. This allows the addition of titles,
+        subtitles, captions etc., control of margins, plot regions, graph
+        size, aspect ratio and the use of schemes.  As titles may be added in
+        this way previous options <b>b2title</b> etc. are no longer necessary. See 
+        graph options
+<p>
+<p>
+<b><u>Options for labbe</u></b>
+<p>
+    <b>nowt</b> declares that the plotted data points are to be the same size.
+<p>
+    <b>percent</b> displays the event rates as percentages rather than proportions.
+<p>
+    <b>null</b> draws a line corresponding to a null effect (ie p1=p2).
+<p>
+    <b>or(</b><i>#</i><b>)</b> draws a line corresponding to a fixed odds ratio of <i>#</i>.
+<p>
+    <b>rd(</b><i>#</i><b>)</b> draws a line corresponding to a fixed risk difference of <i>#</i>.
+<p>
+    <b>rr(</b><i>#</i><b>)</b> draws a line corresponding to a fixed risk ratio of <i>#</i>. See also the
+        <b>rrn()</b> option.
+<p>
+    <b>rrn(</b><i>#</i><b>)</b> draws a line corresponding to a fixed risk ratio (for the
+        non-event) of <i>#</i>.  The <b>rr()</b> and <b>rrn()</b> options may require explanation.
+        Whereas the OR and RD are invariant to the definition of which of the
+        binary outcomes is the "event" and which is the "non-event", the RR
+        is not.  That is, while the command <b>metan a b c d , or</b> gives the same
+        result as <b>metan b a d c , or</b> (with direction changed), an RR analysis
+        does not.  The L'Abbe plot allows the display of either or both to be
+        superimposed risk difference.
+<p>
+    <b>logit</b> is for use with the <b>or()</b> option; it displays the probabilities on
+        the logit scale ie log(p/1-p). On the logit scale the odds ratio is a
+        linear effect, and so this makes it easier to assess the "fit" of the
+        line.
+<p>
+    <b>wgt(</b><i>weightvar</i><b>)</b> specifies alternative weighting by the specified variable
+        (default is sample size).
+<p>
+    <b>symbol(</b><i>symbolstyle</i><b>)</b> allows the symbol to be changed (see help 
+        symbolstyle) the default being hollow circles (or points if weights
+        are not used).
+<p>
+    <b>nolegend</b> suppresses a legend being displayed (the default if more than
+        one line corresponding to effect measures are specified).
+<p>
+    <b>id(</b><i>idvar</i><b>)</b> displays marker labels with the specified ID variable <i>idvar</i>.
+        <b>clockvar()</b> and <b>gap()</b> may be used to fine-tune the display, which may
+        become unreadable if studies are clustered together in the graph.
+<p>
+    <b>textsize(</b><i>#</i><b>)</b> increases or decreases the text size of the id label by
+        specifying <i>#</i> to be more or less than unity. The default is usually
+        satisfactory, but may need to be adjusted.
+<p>
+    <b>clockvar(</b><i>clockvar</i><b>)</b> specifies the position of <i>idvar</i> around the study
+        point, as if it were a clock face (values must be integers- see 
+        clockposstyle).  This may be used to organise labels where studies
+        are clustered together. By default, labels are positioned to the left
+        (9 o'clock) if above the null and to the right (3 o'clock) if below.
+        Missing values in <i>clockvar</i> will be assigned the default position, so
+        this need not be specified for all observations.
+<p>
+    <b>gap(</b><i>#</i><b>)</b> increases or decreases the gap between the study marker and the id
+        label by specifying <i>#</i> to be more or less than unity. The default is
+        usually satisfactory, but may need to be adjusted.
+<p>
+    <i>graph_options</i> are options for Stata 8 graphs (see help on graph).
+<p>
+<p>
+<b><u>Remarks on metan</u></b>
+<p>
+    For two or three variables, a variance-weighted analysis is performed in
+    a similar fashion to the meta command; the two variable syntax is <i>theta</i>
+    and <i>SE(theta)</i>. The 3 variable syntax is <i>theta</i>, <i>lower ci (theta)</i>, <i>upper ci</i>
+    <i>(theta)</i>. Note that in this situation "<i>theta</i>" is taken to be the logarithm
+    of the effect size if the odds ratio or risk ratio is used. <b>This differs</b>
+    <b>from the equivalent in the meta command</b>.  This program does not assume
+    the three variables need log transformation:  if odds ratios or risk
+    ratios are combined, it is up to the user to log-transform them first.
+    The <b>eform</b> option may be used to change back to the original scale if
+    needed. By default the confidence intervals are assumed symmetric, and
+    the studies are pooled by taking the variance to be equal to (CI
+    width)/2z.
+<p>
+    Note that for graphs on the log scale (that is, ORs or RRs), values
+    outside the range [10e-8,10e8] are not displayed, and similarly graphs of
+    other measures (log ORs, RDs, SMDs) are restricted to the range
+    [-10e8,10e8].  A confidence interval which extends beyond this, or the
+    specified scale if <b>force</b> is used, will have an arrow added at the end of
+    the range.
+<p>
+    <b>Further notes on v9 update:</b> If <b>by</b> is used with a string variable the
+    stratification variable is not sorted alpha-numerically and the original
+    order that the groups appear in the data is preserved. This may be of use
+    if a particular display order is required; if not, <b>sortby</b> may be used.
+    The option <b>counts</b> is now available for continuous data and displays
+    sample size, mean and SD in each group. The estimate for heterogeneity
+    between groups from a stratified analysis using the Mantel-Haenszel
+    method, and arguably the Peto method, is invalid. Therefore this is not
+    displayed in the output for either of these methods.
+<p>
+<p>
+<b><u>Remarks on labbe</u></b>
+<p>
+    By default the size of the plotting symbol is proportional to the sample
+    size of the study. If weights are specified the plotting size will be
+    proportional to the weight variable. Note that <b>labbe</b> has now been updated
+    to version 8 graphics.  All options work the same as in the previous
+    version, and some minor graphics options have been added.
+<p>
+<p>
+<p>
+<b><u>Stored</u></b>
+<p>
+By default, <b>metan</b> adds the following new variables to the data set:
+<p>
+      _ES        Effect size (ES)
+      _seES      Standard error of ES 
+                 or, when OR or RR are specfied: 
+      _selogES   the standard error of its logarithm 
+      _LCI       Lower confidence limit for ES
+      _UCI       Upper confidence limit for ES
+      _WT        Study percentage weight
+      _SS        Study sample size
+<p>
+<p>
+<b><u>Examples</u></b>
+<p>
+    All examples use a simulated example dataset (Ross Harris 2006)
+<p>
+        . use http://fmwww.bc.edu/repec/bocode/m/metan_example_data
+<p>
+    Risk difference from raw cell counts, random effects model, "label"
+        specification with counts displayed
+<p>
+        <b>. metan tdeath tnodeath cdeath cnodeath,</b>
+            <b>rd random label(namevar=id, yearid=year) counts</b>
+            <i>(</i><i>click to run</i><i>)</i>
+<p>
+    Sort by year, use data columns syntax. Text size increased, specify
+        percentage of graph as text and two lines per study; suppress stats,
+        weight, heterogeneity stats and table.
+<p>
+<p>
+        <b>. metan tdeath tnodeath cdeath cnodeath,</b>
+            <b>sortby(year) lcols(id year country) rcols (population)</b>
+            <b>textsize(110) astext(60) double nostats nowt nohet notable</b>
+            <i>(</i><i>click to run</i><i>)</i>
+<p>
+    Analyse continuous data (6 parameter syntax), stratify by type of study,
+        with weights summing to 100 within sub group, second analysis
+        specified, display random effects distribution, show raw data counts,
+        display "favours treatment vs. favours control" labels
+<p>
+        <b>. metan tsample tmean tsd csample cmean csd,</b>
+            <b>by(type_study) sgweight fixed second(random) rfdist</b>
+            <b>counts label(namevar = id)</b>
+            <b>favours(Treatment reduces blood pressure # Treatment increases</b>
+            <b>blood pressure)</b>
+            <i>(</i><i>click to run</i><i>)</i>
+<p>
+    Generate log odds ratio and standard error, analyse with 2 parameter
+        syntax. Graph has exponential form, scale is forced within set limits
+        and ticks added, effect label specified.
+<p>
+        <b>. gen logor = ln( (tdeath*cnodeath)/(tnodeath*cdeath) )</b>
+<p>
+        <b>. gen selogor = sqrt( (1/tdeath) + (1/tnodeath) + (1/cdeath) +</b>
+            <b>(1/cnodeath) )</b>
+<p>
+        <b>. metan logor selogor, eform xlabel(0.5, 1, 1.5, 2, 2.5)</b>
+            <b>force xtick(0.75, 1.25, 1.75, 2.25) effect(Odds ratio)</b>
+            <i>(</i><i>click to run</i><i>)</i>
+<p>
+    Display diagnostic test data with 3 parameter syntax. Weight is number of
+        positive diagnoses, axis label set and null specified at 50%. Overall
+        effect estimate is not displayed, graph for visual examination only.
+<p>
+        <b>. metan percent lowerci upperci, wgt(n_positives)</b>
+            <b>xlabel(0,10,20,30,40,50,60,70,80,90,100) force</b>
+            <b>null(50) label(namevar=id) nooverall notable</b>
+            <b>title(Sensitivity, position(6))</b>
+            <i>(</i><i>click to run</i><i>)</i>
+<p>
+    User has analysed data with a non-standard technique and supplied effect
+        estimates, weights and description of statistics.  The scheme
+        "Economist" has been used.
+<p>
+        <b>. metan OR ORlci ORuci, wgt(bweight)</b>
+            <b>first(0.924 0.753 1.095 Bayesian)</b>
+            <b>firststats(param V=3.86, p=0.012)</b>
+            <b>label(namevar=id)</b>
+            <b>xlabel(0.25, 0.5, 1, 2, 4) force</b>
+            <b>null(1) aspect(1.2) scheme(economist)</b>
+            <i>(</i><i>click to run</i><i>)</i>
+<p>
+    Variable "counts" defined showing raw data. Options to change the box,
+        effect estimate marker and confidence interval used, and the counts
+        variable has been attached to the estimate marker as a label.
+<p>
+        <b>. gen counts = ". " + string(tdeath) + "/" + string(tdeath+tnodeath)</b>
+            <b>+ ", " + string(cdeath) + "/" + string(cdeath+cnodeath)</b>
+<p>
+        <b>. metan tdeath tnodeath cdeath cnodeath,</b>
+            <b>lcols(id year) notable</b>
+            <b>boxopt( mcolor(forest_green) msymbol(triangle) )</b>
+            <b>pointopt( msymbol(triangle) mcolor(gold) msize(tiny)</b>
+            <b>mlabel(counts) mlabsize(vsmall) mlabcolor(forest_green)</b>
+            <b>mlabposition(1) )</b>
+            <b>ciopt( lcolor(sienna) lwidth(medium) )</b>
+            <i>(</i><i>click to run</i><i>)</i>
+<p>
+    L'Abbe plot with labelled axes and display of risk ratio and risk
+        difference.
+<p>
+        <b>. labbe tdeath tnodeath cdeath cnodeath,</b>
+            <b>xlabel(0,0.25,0.5,0.75,1) ylabel(0,0.25,0.5,0.75,1)</b>
+            <b>rr(1.029) rd(0.014) null</b>
+            <i>(</i><i>click to run</i><i>)</i>
+<p>
+<p>
+<p>
+<b><u>Authors</u></b>
+<p>
+    Michael J Bradburn, Jonathan J Deeks, Douglas G Altman.  Centre for
+    Statistics in Medicine, University of Oxford, Wolfson College Annexe,
+    Linton Road, Oxford, OX2 6UD, UK
+<p>
+<b><u>Version 9 update</u></b>
+<p>
+    Ross J Harris (rossharris1978@yahoo.co.uk), Roger M Harbord, Jonathan A C
+    Sterne.  Department of Social Medicine, University of Bristol, Canynge
+    Hall, Whiteladies Road, Bristol BS8 2PR, UK
+<p>
+<b><u>Other updates and improvements to code and help file</u></b>
+<p>
+    Patrick Royston. MRC Clinical Trials Unit, 222 Euston Road, London, NW1 2DA
+<p>
+<b><u>Acknowledgements</u></b>
+<p>
+    Thanks to Vince Wiggins, Kit Baum and Jeff Pitblado of Statacorp who
+    offered advice and helped facilitate the version 9 update.  Thanks also to
+    all the people who helped with beta-testing and made comments and suggested
+    improvements.
+<p>
+<b><u>References</u></b>
+<p>
+    Higgins JPT, Thompson SG, Deeks JJ, Altman DG.  Measuring inconsistency in
+    meta-analyses.  BMJ 2003; 327:557-560.
+    http://dx.doi.org/10.1136/bmj.327.7414.557
+<p>
+    Higgins JPT, Thompson SG (2006) Presenting random effects meta-analyses:
+    where we are going wrong? (from presentation, work in preparation)
+<p>
+<p>
+<b><u>Also see</u></b>
+<p>
+    STB: STB-44 sbe24
+On-line: help for metan7, metannt
+         meta (if installed), metacum (if installed),
+         metareg (if installed), metabias (if installed), 
+         metatrim (if installed), metainf (if installed), 
+         galbr (if installed), metafunnel (if installed)
+<p>
+</pre>

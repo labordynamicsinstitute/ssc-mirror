@@ -1,0 +1,75 @@
+<pre>
+-------------------------------------------------------------------------------
+help for <b>rvpplot27</b>
+-------------------------------------------------------------------------------
+<p>
+<b><u>Graph residual-versus-predictor plot after regression-type command</u></b>
+<p>
+        <b>rvpplot27</b> <i>varname</i> [<b>,</b> <i>residualtype</i> <b>force</b> <b><u>sc</u></b><b>ale(</b><i>exp</i><b>)</b> <b>ksm(</b><i>ksm_options</i><b>)</b>
+                <i>graph_options</i>]
+<p>
+<p>
+<b>rvpplot27</b> is for use after <b>regress</b> and similar commands; see help on the
+command of interest. It is a generalisation of official Stata's <b>rvpplot</b>, except
+for different defaults for the <b>l1title()</b> option.
+<p>
+<p>
+<b><u>Description</u></b>
+<p>
+<b>rvpplot27</b> graphs a residual-versus-predictor plot (a.k.a. independent variable
+plot, a.k.a. carrier plot), a graph of the residuals versus the specified
+predictor <i>varname</i> from the last regression-type model. The residuals are, by
+default, those calculated by <b>predict, residuals</b> or (if the previous estimation
+command was <b>glm</b>) by<b> predict, response</b>.  This is a clone of <b>rvpplot2</b> 1.0.0 for
+users of Stata 7.  Users of Stata 8 should use <b>rvpplot2</b> 2.0.0 or later.
+<p>
+<b><u>Options</u></b>
+<p>
+<i>residualtype</i> specifies a type of residual other than the default.  The
+    following types are currently supported: <b><u>a</u></b><b>nscombe</b>, <b><u>d</u></b><b>eviance</b>, <b><u>l</u></b><b>ikelihood</b>,
+    <b><u>p</u></b><b>earson</b>, <b><u>r</u></b><b>esiduals</b>, <b><u>resp</u></b><b>onse</b>, <b><u>rsta</u></b><b>ndard</b>, <b><u>rstu</u></b><b>dent</b>, <b><u>s</u></b><b>core</b>, <b><u>w</u></b><b>orking</b>.
+<p>
+<b>force</b> allows you to specify a predictor variable not included in the previous
+    model.
+<p>
+<b>scale(</b><i>exp</i><b>)</b> specifies a transformed scale on which to show the residuals using
+    Stata syntax and <b>X</b> as a placeholder for the residual variable name. Thus
+    <b>scale(X^2)</b> specifies squaring, to show relative contribution to residual
+    variance; <b>scale(abs(X))</b> specifies absolute value, to set aside sign;
+    <b>scale(sqrt(abs(X)))</b> specifies root of absolute value, a useful scale on
+    which to check for heteroscedasticity.
+<p>
+<b>ksm(</b><i>ksm_options</i><b>)</b> specifies that the residuals will be smoothed as a function of
+    the predictor using <b>ksm</b> with the options named.
+<p>
+<i>graph_options</i> are any of the options allowed with <b>graph, twoway</b>. See help on 
+    grtwoway.
+<p>
+<p>
+<b><u>Examples</u></b>
+<p>
+        . reg width length
+        . rvpplot27 length
+        
+        . glm price weight, link(log)
+        . rvpplot27 weight, anscombe yli(0)
+<p>
+<p>
+<b><u>Author</u></b>
+<p>
+    Nicholas J. Cox, University of Durham, U.K.
+    n.j.cox@durham.ac.uk
+    
+    
+<b><u>Acknowledgements</u></b> 
+<p>
+    Kit Baum identified an error in a previous version of this help. 
+<p>
+<p>
+<b><u>Also see</u></b>
+<p>
+ Manual:  <b>[R] regression diagnostics</b>
+On-line:  help for graph, regdiag; predict
+<p>
+<p>
+</pre>

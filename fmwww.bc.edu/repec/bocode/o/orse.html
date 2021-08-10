@@ -1,0 +1,69 @@
+<pre>
+-------------------------------------------------------------------------------
+help for <b>orse</b>                                     (SSC distribution, 24apr2007)
+-------------------------------------------------------------------------------
+<p>
+<b><u>Save odds ratios and their standard errors after </u></b><b><u>logit, ologit</u></b>
+<p>
+        <b>orse</b> [, add(<i>string</i>) ]
+<p>
+<b><u>Description</u></b>
+<p>
+<b>orse</b> allows you to save the odds ratios for logit and ordered logit models as
+Stata matrices. It also saves the standard errors of the odds ratios. These
+statistics are displayed on the output if the or option is used in <b>logit,</b>
+<b>ologit</b>, but are not otherwise accessible. <b>orse</b> saves these statistics as Stata
+matrices <b>or</b> and <b>orse</b>.
+<p>
+If the only concern is to produce tabulated results of the odds ratios and
+their standard errors, they can be produced with
+<b> estout, cells(b se(par)) style(fixed) drop(_cons) eform</b>.
+<p>
+<b><u>Options</u></b>
+<p>
+<b>add(</b><i>string</i><b>)</b> requests that the odds ratios and their standard errors be added to
+    the set of stored estimates named <i>string</i> as <b>e(or)</b> and <b>e(orse)</b>,
+    respectively. This option requires that Ben Jann's <b>estout</b> package is
+    installed, as it uses the <b>estadd</b> and <b>eststo</b> commands from that package.
+    After <b>orse</b> is executed, you may use <b>estout</b> to display a results table
+    containing the odds ratios and their standard errors.
+<p>
+<p>
+<b><u>Examples</u></b>
+<p>
+        . sysuse auto
+<p>
+        . logit foreign weight turn length, or
+<p>
+        . orse
+<p>
+        . mat list or
+<p>
+        . mat list orse
+<p>
+        . ologit rep78 weight turn length, or
+<p>
+        . orse, add(test1)
+<p>
+        . estout test1, cells(or orse(par)) style(fixed) drop(_cons)
+<p>
+<b><u>Acknowledgements</u></b>
+<p>
+        I thank Nicola Lostumbo for suggesting the need for this routine, and
+        providing details of the necessary computations. I am indebted to Ben J
+&gt; ann
+        for providing the very useful estadd and eststo routines as 
+        adjuncts to estout.
+<p>
+<b><u>Author</u></b>
+<p>
+        Christopher F Baum, Boston College, USA
+        baum@bc.edu
+<p>
+<p>
+<b><u>Also see</u></b>
+<p>
+ Manual:  <b>[R] logit, ologit</b>
+On-line:  help for logit; ologit
+<p>
+</pre>

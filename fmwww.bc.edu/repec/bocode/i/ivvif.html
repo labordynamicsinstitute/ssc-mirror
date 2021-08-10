@@ -1,0 +1,38 @@
+<pre>
+-------------------------------------------------------------------------------
+help for <b>ivvif</b>}
+-------------------------------------------------------------------------------
+<p>
+<b><u>Augmented version of </u></b><b><u>vif</u></b><b><u>/</u></b><b><u>estat ivvif</u></b><b><u> to report variance inflation factors.</u></b>
+<p>
+    <b>ivvif</b> accepts no arguments. It can run after <b>regress</b>, <b>ivreg</b>, and <b>ivreg2</b>.
+<p>
+<b><u>Description</u></b>
+<p>
+    <b>ivvif</b> extends Stata's official <b>vif</b>/<b>estat vif</b> command, which reports
+    variance inflation factors.  It differs in two ways. As well as working
+    after<b> regress</b>, it can run after instrumented regressions done with <b>ivreg</b>
+    or <b>ivreg2</b>.  In this case, it projects regressors onto instruments before
+    computing VIFs.  In other words, it reports the VIFs for the second stage
+    of two-stage least squares.  The other difference is that it makes the
+    results available in a return matrix, named "vif", along with<b> vif</b>'s
+    return macros, which can ease working with the results in Stata code.
+<p>
+<b><u>Examples</u></b>
+<p>
+    <b>. ivreg n (w = k)</b>
+    <b>. ivvif</b>
+<p>
+    <b>. reg n w k</b>
+    <b>. ivvif</b>
+    <b>. mat list r(vif)</b>
+<p>
+<b><u>Author</u></b>
+<p>
+    David Roodman
+    Center for Global Development
+    Washington, DC
+    droodman@cgdev.org
+<p>
+<b><u>Also see</u></b>
+</pre>

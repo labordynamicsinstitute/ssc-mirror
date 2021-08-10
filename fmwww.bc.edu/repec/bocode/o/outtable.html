@@ -1,0 +1,117 @@
+<pre>
+-------------------------------------------------------------------------------
+help for <b>outtable</b>                             (SSC distribution: 20 April 2008)
+-------------------------------------------------------------------------------
+<p>
+<b><u>Output matrix to LaTeX table</u></b>
+<p>
+    <b>outtable</b> <b>using</b> <i>filename</i> <b>,</b> <b>mat(</b><i>matrixname</i><b>)</b> [ <b><u>r</u></b><b>eplace</b> <b><u>app</u></b><b>end</b> <b>nobox</b> <b><u>c</u></b><b>enter</b>
+                     <b><u>cap</u></b><b>tion(</b><i>"Caption"</i><b>)</b> <b><u>f</u></b><b>ormat(</b><i>formatlist</i><b>)</b> <b><u>norow</u></b><b>lab</b> <b>longtable</b>
+                     <b>label</b> <b>clabel(</b><i>string</i><b>)</b>]
+<p>
+This command makes use of the <b>file</b> command, added to Stata on 8 May 2001.  If
+<b>file</b> is not recognized, <b>update query</b>.
+<p>
+<p>
+<b><u>Description</u></b>
+<p>
+<b>outtable</b> automates the conversion of a Stata matrix to a LaTeX table, written
+to an external file. The table is presented with row and column names taken
+from the specified matrix.  Thus, one need only generate the appropriate matrix
+using standard Stata commands. By default, only the lower triangle of a
+symmetric matrix will be written, as inferred by Stata's issym() function.
+<p>
+The <b>using</b> clause is required, and must specify the name of a file to which the
+LaTeX table is to be written, without the <b>.tex</b> extension. If the file exists,
+either the <b>replace</b> option or the <b>append</b> option must be specified.
+<p>
+The <b>mat</b> qualifier specifies the name of the existing matrix which is to be
+written in tabular form.
+<p>
+<b><u>Options</u></b>
+<p>
+<b>replace</b> specifies that if <i>filename</i> exists, it should be overwritten with the
+    contents of <i>mat</i>.
+<p>
+<b>append</b> specifies that output should be appended to an existing <i>filename</i>.  It
+    may be used even if the file has not been previously created.
+<p>
+<b>nobox</b> specifies that the default behavior of providing borders for each cell of
+    the table should not be applied.
+<p>
+<b>center</b> specifies that elements in the second and following columns of the table
+    should be centered, rather than flush left.
+<p>
+<b>asis</b> specifies that the row and column names of <i>mat</i> should be passed through to
+    the TeX file without alteration. This permits use of the underscore (_) to
+    create subscripts in row or column headings. However, if the names of
+    regressors are being used as labels, the default label <i>_cons</i> should be
+    changed.
+<p>
+<b>caption</b> specifies a caption to be produced above the table. The table will be
+    automatically numbered according to the style of the document.
+<p>
+<b>formatlist</b> specifies the format to be applied to the elements in the body of
+    the table, which will then override the default format used to display
+    matrix elements.  If one value is specified, all columns are output with
+    that format.  If more than one space-delimited format is listed, they are
+    mapped 1-to-1 to the columns of the matrix.
+<p>
+<b>norowlab</b> suppresses the row labels.
+<p>
+<b>longtable</b> option allows to create tables that span over several pages using the
+    "longtable" package (do not forget to \usepackage{longtable} in the
+    preamble of your .tex document)
+<p>
+<b>label</b> option allows to display variable labels (if they exist) instead of
+    variable names.
+<p>
+<b>clabel</b> allows you to enter the \caption{\label{ }} information which is used by
+    LaTeX for cross-referencing tables.  This option may be omitted and later
+    typed into your LaTeX document.
+<p>
+<p>
+<b><u>Examples</u></b>
+<p>
+    . use auto
+    . forv r=2/5 { 
+    .      qui reg price headroom-turn if rep78==`r'
+    .      mat c`r'=e(b)'
+    .      }
+    .  mat c=c2,c3,c4,c5
+    .  mat colnames c=rep78_2 rep78_3 rep78_4 rep78_5
+<p>
+    .  outtable using cars,mat(c) replace
+<p>
+    .  outtable using cars,mat(c) append center f(%9.2f)
+    
+    .  outtable using cars,mat(c) replace center f(%9.2f %9.3f %9.1f %9.2f)
+<p>
+    .  outtable using cars,mat(c) replace c 
+               cap("Regression coefficients by rep78")
+        
+<p>
+<p>
+<b><u>Authors</u></b>
+Christopher F Baum, Boston College
+baum@bc.edu
+<p>
+Joao Pedro Azevedo, Instituto de Pesquisa Economica Aplicada, Rio de Janeiro, B
+&gt; razil
+jazevedo@ipea.gov.br
+<p>
+<p>
+<b><u>Acknowledgements</u></b>
+This command was made possible by Bill Gould's implementation of the file comma
+&gt; nd,
+and inspired by conversations with Petia Petrova. Suggestions from David Drukke
+&gt; r,
+Alan Feiveson and Nicholas J. Cox have improved its functionality. Formatting c
+&gt; ode was
+borrowed from Blasnik and Jann's mat2txt.
+<p>
+<p>
+<b><u>Also see</u></b>
+<p>
+On-line:  help for file, outseries (if installed), tosql (if installed)
+</pre>

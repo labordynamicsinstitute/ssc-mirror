@@ -1,0 +1,176 @@
+<pre>
+<p>
+<b>help dep4asm, indep4asm</b>
+-------------------------------------------------------------------------------
+<p>
+<b><u>Title</u></b>
+<p>
+     <b>[in]dep4asm</b> -- Create [in]dependent variable for alternative-specific
+                     models
+<p>
+<b><u>Syntax</u></b>
+<p>
+     Create dependent variable for alternative-specific models
+<p>
+        <b>dep4asm</b> <i>varname</i> [<b>,</b> <i>dep_options</i>]
+<p>
+<p>
+     Create independent variable for alternative-specific model
+<p>
+        <b>indep4asm</b> <i>varlist</i> <b>,</b> <b><u>alt</u></b><b>ernatives(</b><i>varname</i><b>)</b> <b><u>gen</u></b><b>erate(</b><i>newvarlist</i><b>)</b>
+<p>
+<p>
+    <i>options</i>                Description
+    -------------------------------------------------------------------------
+    <i>dep_options</i>
+      <b><u>dep</u></b><b>endent(</b><i>varlbl</i><b>)</b>    use <i>varlbl</i> as label for dependent variable
+      <b>case(</b><i>varlbl</i><b>)</b>         create id for each observation and use <i>varlbl</i> as
+                             variable label
+      <b><u>alt</u></b><b>ernatives(</b><i>varlbl</i><b>)</b> create variable containing alternatives and use
+                             <i>varlbl</i> as variable label
+    -------------------------------------------------------------------------
+    <i>indep_options</i>
+      <b><u>alt</u></b><b>ernatives(</b><i>vname</i><b>)</b>   use <i>vname</i> to identify alternatives
+      <b><u>gen</u></b><b>erate(</b><i>newvarlist</i><b>)</b>  create <i>newvariables</i> as independent variable/s in
+                             an alternative-specific model
+    -------------------------------------------------------------------------
+<p>
+<b><u>Description</u></b>
+<p>
+    <b>dep4asm</b> creates a new variable that can be used as the dependent variable
+    in an alternative-specific model. The variable containing the
+    alternatives is identified by <i>varname</i>. Each observation will be
+    duplicated as many times as there are alternatives, that may be chosen.
+    The created new variable (labeled <i>choice</i> by default) indicates which
+    alternative has actually been chosen.
+<p>
+    <b>indep4asm</b> creates variables that can be used as independent (alternative-
+    specific) variables in alternative-specific models. The
+    <b>alternatives(</b><i>varname</i><b>)</b> option must be specified, indicating the variable
+    that contains the alternatives. The user also has to specify the
+    <b>generate(</b><i>newvarlist</i><b>)</b> option which creates new variables containing
+    combined information of the variables specified in <i>varlist</i>. The variables
+    given in <i>varlist</i> must be in the same order as the alternatives.
+<p>
+    <b>Note:</b> In order to work properly <b>[in]dep4asm</b> requires the alternatives
+    given in <i>varname</i> to be integers. The values must start at 1 and must be
+    incremented by one.
+<p>
+<b><u>Options</u></b>
+<p>
+        +-------------+
+    ----+ dep_options +------------------------------------------------------
+<p>
+    <b>dependent(</b><i>varlbl</i><b>)</b> uses <i>varlbl</i> as label for the created (dependent)
+        variable. The default label is <i>choice</i> and is used if <b>dependent()</b> is
+        not specified.
+<p>
+    <b>case(</b><i>varlbl</i><b>)</b> creates variable <i>varlbl</i> that contains _n for each
+        observation in the original data. Each case can then be identified
+        referring to <i>varlbl</i>.  Probably there is already a variable in your
+        data set (e.g. id, respnr) that uniquely identifies each case. If
+        there is none, you should however specify the <b>case()</b> option since
+        programs that fit alternative-specific models require a variable to
+        identify each case.
+<p>
+    <b>alternatives(</b><i>varlbl</i><b>)</b> leaves the variable specified in <i>varname</i> unchanged.
+        Since each observation (row) needs to represent a different
+        alternative using commands like asclogit, the variable indicating the
+        alternatives (and specified in <i>varname</i>) will be changed. It will
+        contain each alternative for each case. If you want the original
+        variable to remain unchanged, specify <b>alternatives()</b> and the new
+        variable <i>varlbl</i> will contain each alternative for each case.
+<p>
+        +---------------+
+    ----+ indep_options +----------------------------------------------------
+<p>
+    <b>alternatives(</b><i>varname</i><b>)</b> uses <i>varname</i> to identify alternatives
+<p>
+    <b>generate(</b><i>newvarlist</i><b>)</b> creates <i>newvariables</i> containing combined information
+        of variables specified in <i>varlist</i>. The variables in <i>varlist</i> must be
+        give in the same order as the alternatives (see example).
+<p>
+<b><u>Example</u></b>
+<p>
+    Suppose you want to model the choice between using a car (1), a bus (2)
+    or the tram (3) to travel to work. One important variable to explain this
+    choice might be the time needed using each alternative, another might be
+    costs per month. Before you can estimate an alternative-specific model
+    you have to change the structure of your data, which looks something like
+    this:
+<p>
+        . list
+<p>
+           +-------------------------------------------------------+
+           | id   mode   tcar   tbus   ttram   ccar   cbus   ctram |
+           |-------------------------------------------------------|
+        1. |  1    car     13     18      15     25     30      24 |
+        2. |  2    bus     24     22      27     32   27.5    25.5 |
+        3. |  3   tram     35     33      31   38.5   24.5    25.5 |    
+        4. |  4    bus     44     42      43   42.5     46      44 |
+           +-------------------------------------------------------+
+<p>
+    Using <b>dep4asm</b> changes the data structure and creates the dependent
+    variable.
+<p>
+     <b>. dep4asm mode</b>
+<p>
+     . list ,sep(3)
+<p>
+          +----------------------------------------------------------------+
+          | id   mode   tcar   tbus   ttram   ccar   cbus   ctram   choice |
+          |----------------------------------------------------------------|
+       1. |  1    car     13     18      15     25     30      24        1 |
+       2. |  1    bus     13     18      15     25     30      24        0 |
+       3. |  1   tram     13     18      15     25     30      24        0 |
+          |----------------------------------------------------------------|
+       4. |  2    car     24     22      27     32   27.5    25.5        0 |
+       5. |  2    bus     24     22      27     32   27.5    25.5        1 |
+       6. |  2   tram     24     22      27     32   27.5    25.5        0 |
+          |----------------------------------------------------------------|
+       7. |  3    car     35     33      31   38.5   24.5    25.5        0 |
+       8. |  3    bus     35     33      31   38.5   24.5    25.5        0 |
+       9. |  3   tram     35     33      31   38.5   24.5    25.5        1 |
+          |----------------------------------------------------------------|
+      10. |  4    car     44     42      43   42.5     46      44        0 |
+      11. |  4    bus     44     42      43   42.5     46      44        1 |
+      12. |  4   tram     44     42      43   42.5     46      44        0 | 
+          +----------------------------------------------------------------+
+<p>
+    Now that your data has the required structure and the dependent variable
+    <i>choice</i> is created, you can go on creating the independent variables
+    "travelling time" and "costs". In order to do so type:
+<p>
+        <b>. indep4asm tcar tbus ttram ccar cbus ctram ///</b>
+        <b>,alternatives(mode) generate(trtime trcosts)</b>
+<p>
+        . list id choice trtime trcost ,sep(3)
+<p>
+             +--------------------------------+
+             | id   choice   trtime   trcosts |
+             |--------------------------------|
+          1. |  1        1       13        25 |
+          2. |  1        0       18        30 |
+          3. |  1        0       15        24 |
+             |--------------------------------|
+          4. |  2        0       24        32 |
+          5. |  2        1       22      27.5 |
+          6. |  2        0       27      25.5 |
+             |--------------------------------|
+          7. |  3        0       35      38.5 |
+          8. |  3        0       33      24.5 |
+          9. |  3        1       31      25.5 |
+             |--------------------------------|
+         10. |  4        0       44      42.5 |
+         11. |  4        1       42        46 |
+         12. |  4        0       43        44 |
+             +--------------------------------+
+<p>
+<b><u>Author</u></b>
+<p>
+    D. Klein, University of Bamberg, daniel1.klein@gmx.de
+<p>
+<b><u>Also see</u></b>
+<p>
+    Online: <b>asclogit</b>, <b>asmprobit</b>, expand
+</pre>

@@ -1,0 +1,24 @@
+d 'LTIMBIMATA': module containing six general-purpose Mata functions
+d
+d This is a new Mata library with six general-purpose functions. 
+d
+d KW: Mata
+d KW: panel data
+d KW: lags
+d
+d Requires: Stata version 10
+d
+d Distribution-Date: 20080913
+d
+d Author: Diallo Ibrahima Amadou
+d Support: email zavren@@gmail.com
+d
+f ltimbimata.mlib
+f ltimbimata.hlp
+f ltimbimata_source.hlp
+f ../m/mf_mz_decalen.hlp
+f ../m/mf_mz_pancolshape.hlp
+f ../m/mf_mz_panrowshape.hlp
+f ../m/mf_mz_reshape.hlp
+f ../m/mf_mz_stdc.hlp
+f ../m/mf_mz_trimrows.hlp

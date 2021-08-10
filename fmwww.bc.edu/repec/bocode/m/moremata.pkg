@@ -1,0 +1,151 @@
+d 'MOREMATA': module (Mata) to provide various functions
+d
+d   This package includes various Mata functions. kern(): various
+d kernel functions; kint(): kernel integral functions; kdel0():
+d canonical	   bandwidth of kernel; quantile(): quantile
+d function; median(): median;	     iqrange(): inter-quartile
+d range; ecdf(): cumulative distribution	function;
+d relrank(): grade transformation; ranks(): ranks/cumulative	   
+d frequencies; freq(): compute frequency counts; histogram():
+d produce	 histogram data; mgof(): multinomial
+d goodness-of-fit tests;	collapse(): summary statistics by
+d subgroups; _collapse(): summary	 statistics by subgroups;
+d gini(): Gini coefficient; sample(): draw	  random sample;
+d srswr(): SRS with replacement; srswor(): SRS without	     
+d replacement; upswr(): UPS with replacement; upswor(): UPS without
+d	 replacement; bs(): bootstrap estimation; bs2(): bootstrap
+d estimation;	     bs_report(): report bootstrap results; jk():
+d jackknife estimation;        jk_report(): report jackknife
+d results; subset(): obtain subsets, one	at a time;
+d composition(): obtain compositions, one by one;	
+d ncompositions(): determine number of compositions; partition():  
+d      obtain partitions, one at a time; npartitionss(): determine
+d number of	   partitions; rsubset(): draw random subset;
+d rcomposition(): draw	      random composition; colvar():
+d variance, by column; meancolvar(): mean	 and variance, by
+d column; variance0(): population variance;	   meanvariance0():
+d mean and population variance; mse(): mean squared	   error;
+d colmse(): mean squared error, by column; sse(): sum of squared   
+d     errors; colsse(): sum of squared errors, by column;
+d benford():	    Benford distribution; cauchy(): cumulative
+d Cauchy-Lorentz dist.;        cauchyden(): Cauchy-Lorentz density;
+d cauchytail(): reverse cumulative	  Cauchy-Lorentz;
+d invcauchy(): inverse cumulative Cauchy-Lorentz;	
+d rbinomial(): generate binomial random numbers; cebinomial():
+d cond.        expect. of binomial r.v.; root(): Brent's univariate
+d zero finder;	      nrroot(): Newton-Raphson zero finder;
+d finvert(): univariate function	inverter; integrate_sr():
+d univariate function integration (Simpson's	    rule);
+d integrate_38(): univariate function integration (Simpson's 3/8   
+d     rule); ipolate(): linear interpolation; polint(): polynomial 
+d	inter-/extrapolation; plot(): Draw twoway plot; _plot():
+d Draw twoway	     plot; panels(): identify nested panel
+d structure; _panels(): identify	panel sizes; npanels():
+d identify number of panels; nunique(): count	     number of
+d distinct values; nuniqrows(): count number of unique rows;	   
+d isconstant(): whether matrix is constant; nobs(): number of	   
+d  observations; colrunsum(): running sum of each column; linbin():
+d	 linear binning; fastlinbin(): fast linear binning;
+d exactbin(): exact	   binning; makegrid(): equally spaced grid
+d points; cut(): categorize	   data vector; posof(): find
+d element in vector; which(): positions of	  nonzero elements;
+d locate(): search an ordered vector; hunt():	     consecutive
+d search; cond(): matrix conditional operator; expand():       
+d duplicate single rows/columns; _expand(): duplicate rows/columns
+d in	    place; repeat(): duplicate contents as a whole;
+d _repeat(): duplicate	      contents in place; unorder2(): stable
+d version of unorder();        jumble2(): stable version of
+d jumble(); _jumble2(): stable version of	 _jumble();
+d pieces(): break string into pieces; npieces(): count	     
+d number of pieces; _npieces(): count number of pieces;
+d invtokens():	      reverse of tokens(); realofstr(): convert
+d string into real;	   strexpand(): expand string argument;
+d matlist(): display a (real)	     matrix; insheet(): read
+d spreadsheet file; infile(): read free-format	      file;
+d outsheet(): write spreadsheet file; callf(): pass optional args  
+d      to function; callf_setup(): setup for mm_callf(); sqrt():
+d square root of a s.p.d. matrix.	
+d
+d KW: Mata
+d KW:  quantile
+d KW: median
+d KW: inter-quartile range
+d KW: integration
+d KW: cumulative distribution
+d KW: Cauchy distribution
+d KW: Cauchy-Lorentz distribution
+d KW: relative ranks
+d KW: running sum
+d KW: linear interpolation
+d KW: insheet
+d KW: infile
+d KW: outsheet
+d KW: spreadsheet
+d KW: tokens
+d KW: rowvector
+d KW: string
+d KW: real
+d KW: grid
+d KW: linear binning
+d KW: histogram
+d
+d Requires: Stata version 9
+d
+d Distribution-Date: 20170531
+d
+d Author: Ben Jann, University of Bern
+d Support: email jann@@soz.unibe.ch
+d
+f moremata.zip
+f ../l/lmoremata.mlib
+f ../l/lmoremata10.mlib
+f ../l/lmoremata14.mlib
+f mf_mm_sample.hlp
+f moremata.hlp
+f moremata_source.hlp
+f moremata10_source.hlp
+f moremata14_source.hlp
+f mf_mm_unorder2.hlp
+f mf_mm_panels.hlp
+f mf_mm_quantile.hlp
+f mf_mm_strexpand.hlp
+f mf_mm_realofstr.hlp
+f mf_mm_posof.hlp
+f mf_mm_ipolate.hlp
+f mf_mm_invtokens.hlp
+f mf_mm_linbin.hlp
+f mf_mm_histogram.hlp
+f mf_mm_ecdf.hlp
+f mf_mm_colrunsum.hlp
+f mf_mm_rbinomial.hlp
+f mf_mm_insheet.hlp
+f mf_mm_cut.hlp
+f mf_mm_freq.hlp
+f mf_mm_colvar.hlp
+f mf_mm_gini.hlp
+f mf_mm_nunique.hlp
+f mf_mm_bs.hlp
+f mf_mm_callf.hlp
+f mf_mm_expand.hlp
+f mf_mm_finvert.hlp
+f mf_mm_jk.hlp
+f mf_mm_kern.hlp
+f mf_mm_locate.hlp
+f mf_mm_nobs.hlp
+f mf_mm_nrroot.hlp
+f mf_mm_polint.hlp
+f mf_mm_root.hlp
+f mf_mm_which.hlp
+f mf_mm_plot.hlp
+f mf_mm_pieces.hlp
+f mf_mm_benford.hlp
+f mf_mm_isconstant.hlp
+f mf_mm_mgof.hlp
+f mf_mm_subset.hlp
+f mf_mm_cauchy.hlp
+f mf_mm_matlist.hlp
+f mf_mm_cond.hlp
+f mf_mm_collapse.hlp
+f mf_mm_integrate.hlp
+f mf_mm_regexr.hlp
+f mf_mm_sqrt.hlp

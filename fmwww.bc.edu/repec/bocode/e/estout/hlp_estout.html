@@ -1,0 +1,2039 @@
+<html>
+
+<head>
+<title>estout - Making Regression Tables in Stata</title>
+<meta name="author" content="Ben Jann">
+<meta name="keywords" content="Stata, estout, esttab, eststo, estadd,
+      LaTeX, regression table, statistics">
+<meta http-equiv="content-language" content="en">
+<meta http-equiv="content-type" content="text/html">
+<link rel="stylesheet" href="default.css" type="text/css">
+</head>
+
+<body>
+
+<div id="pagehead">
+
+<form style="text-align:right; border:0px; margin: 2.17em 0px 0px 0px; padding:5px 15px 0px 0px; float:right"
+ "method=GET action="http://www.google.com/search">
+    <input style="border-style:solid; border-color: #bcd" TYPE=text name=q size="15">
+    <INPUT TYPE=hidden name=sitesearch value="repec.org/bocode/e/estout">
+    <input style="border:0px; background-color: #F3F6F9"
+     type=submit name=sa value="search">
+</form>
+
+   <a href="index.html"><h1>estout</h1></a>
+   <p>Making Regression Tables in Stata<p>
+
+</div>
+
+<div id="pagebar">
+   <ul>
+     <li><a href="index.html">Overview</a>
+     </li>
+     <li><a href="installation.html">Installation</a>
+     </li>
+     <li><a href="examples.html">Examples</a>
+     <ul>
+          <li><a href="esttab.html">esttab</a>
+          </li>
+          <li><a href="estout.html">estout</a>
+          </li>
+          <li><a href="eststo.html">eststo</a>
+          </li>
+          <li><a href="estadd.html">estadd</a>
+          </li>
+          <li><a href="estpost.html">estpost</a>
+          </li>
+          <li><a href="advanced.html">Advanced</a>
+          </li>
+          <li><a href="spost.html">SPost</a>
+          </li>
+     </ul>
+     </li>
+     <li><a href="documentation.html">Documentation</a>
+     <ul>
+          <li><a href="hlp_esttab.html">esttab</a>
+          </li>
+          <li><a href="hlp_estout.html">estout</a>
+          </li>
+          <li><a href="hlp_eststo.html">eststo</a>
+          </li>
+          <li><a href="hlp_estadd.html">estadd</a>
+          </li>
+          <li><a href="hlp_estpost.html">estpost</a>
+          </li>
+     </ul>
+     </li>
+     <li><a href="history.html">History</a>
+     </li>
+     <li><a href="publications.html">Publications</a>
+     </li>
+     <li><a href="author.html">Author</a>
+     </li>
+     <li><a href="alsosee.html">Also see</a>
+     </li>
+   </ul>
+
+</div>
+
+<div id="pagebody">
+<h1>Documentation for estout</h1>
+<pre>
+<b>help estout</b>                           also see: <a href="hlp_esttab.html"><b>esttab</b></a>, <a href="hlp_eststo.html"><b>eststo</b></a>, <a href="hlp_estadd.html"><b>estadd</b></a>, <a href="hlp_estpost.html"><b>estpost</b></a>
+                                               http://repec.org/bocode/e/estout
+-------------------------------------------------------------------------------
+
+<b><u>Title</u></b>
+
+    <b>estout</b> -- Making regression tables from stored estimates
+
+
+<b><u>Table of contents</u></b>
+
+    <a href="hlp_estout.html#syn">Syntax</a>
+    <a href="hlp_estout.html#des">Description</a>
+    <a href="hlp_estout.html#opt">Options</a>
+    <a href="hlp_estout.html#exa">Examples</a>
+    <a href="hlp_estout.html#rem">Remarks</a>
+    <a href="hlp_estout.html#ret">Saved results</a>
+    <a href="hlp_estout.html#ref">Backmatter</a>
+
+<a name="syn"></a>
+<b><u>Syntax</u></b>
+
+        <b>estout</b> [ <a href="hlp_estout.html#what"><i>what</i></a> ] [ <b>using</b> <i>filename</i> ] [ <b>,</b> <a href="hlp_estout.html#opt0"><i>options</i></a> ]
+
+<a name="what"></a>
+    <i>what</i>                     description
+    ----------------------------------------------------------------------
+    <i>namelist</i>                 tabulate stored estimation sets; <i>namelist</i> is
+                               a name, a list of names, or <b>_all</b>; the <b>*</b> and
+                               <b>?</b> wildcards are allowed; a name may also be
+                               <b>.</b>, meaning the current (active) estimates
+
+    <b><u>m</u></b><b>atrix(</b><i>name</i>[<b>,</b> <i>subopts</i>]<b>)</b>  tabulate matrix <i>name</i>
+    <b>e(</b><i>name</i>[<b>,</b> <i>subopts</i>]<b>)</b>       tabulate matrix <b>e(</b><i>name</i><b>)</b>
+    <b>r(</b><i>name</i>[<b>,</b> <i>subopts</i>]<b>)</b>       tabulate matrix <b>r(</b><i>name</i><b>)</b>
+      <i>subopts</i>:
+        <a href="hlp_estout.html#mfmt"><b><u>f</u></b></a><a href="hlp_estout.html#mfmt"><b>mt</b></a><b>(</b><i>fmtlist</i><b>)</b>         set the display format(s)
+        <a href="hlp_estout.html#mtranspose"><b><u>t</u></b></a><a href="hlp_estout.html#mtranspose"><b>ranspose</b></a>            tabulate transposed matrix
+    ----------------------------------------------------------------------
+
+<a name="opt0"></a>
+    <i>options</i>                          description
+    ----------------------------------------------------------------------
+    Parameter statistics
+      <a href="hlp_estout.html#cells"><b><u>c</u></b></a><a href="hlp_estout.html#cells"><b>ells</b></a><b>(</b><i>elements and subopts</i><b>)</b>    contents of the table cells, where
+                                       an <i>element</i>'s <i>subopts</i> are in paren-
+                                       theses, i.e. <i>element</i>[<b>(</b><i>subopts</i><b>)</b>]
+          <i>elements</i>:
+          <b>b</b>                          raw coefficient (point estimate)
+          <b>se</b>                         standard error
+          <b>var</b>                        variance
+          <b>t</b>                          t or z statistic
+          <b>z</b>                          t or z statistic (synonym for <b>t</b>)
+          <b>p</b>                          p-value
+          <b>ci</b>                         confidence interval
+          <b>ci_l</b>                       lower bound of confidence interval
+          <b>ci_u</b>                       upper bound of confidence interval
+          <b>_star</b>                      "significance stars"
+          <b>_sign</b>                      sign of point estimate
+          <b>_sigsign</b>                   sign and significance of estimate
+          <b>.</b>                          null element (empty cell)
+          <b>&amp;</b>                          combine elements in single cell
+          <i>myel</i>                       results from <b>e(</b><i>myel</i><b>)</b>
+          <i>myel</i><b>[</b><i>#</i><b>]</b>                    results from row <i>#</i> in <b>e(</b><i>myel</i><b>)</b>
+          <i>myel</i><b>[</b><i>rowname</i><b>]</b>              results from row <i>rowname</i> in <b>e(</b><i>myel</i><b>)</b>
+
+
+          <i>subopts</i> (for each <i>element</i>,
+                except for <b>.</b> and <b>&amp;</b>):
+          [<b><u>no</u></b>]<a href="hlp_estout.html#cstar"><b><u>s</u></b></a><a href="hlp_estout.html#cstar"><b>tar</b></a>                   attach "significance stars"
+          <a href="hlp_estout.html#cfmt"><b><u>f</u></b></a><a href="hlp_estout.html#cfmt"><b>mt</b></a><b>(</b><a href="hlp_estout.html#fmt"><i>fmt</i></a> [<a href="hlp_estout.html#fmt"><i>fmt</i></a> ...]<b>)</b>         set the display format(s)
+          <a href="hlp_estout.html#clabel"><b><u>l</u></b></a><a href="hlp_estout.html#clabel"><b>abel</b></a><b>(</b><i>string</i><b>)</b>              define a label for <i>element</i>
+          <a href="hlp_estout.html#cpar"><b>par</b></a>[<b>(</b><i>l</i> <i>r</i><b>)</b>] | <b>nopar</b>         place results in parentheses
+          <a href="hlp_estout.html#cvacant"><b><u>v</u></b></a><a href="hlp_estout.html#cvacant"><b>acant</b></a><b>(</b><i>string</i><b>)</b>             print <i>string</i> if coefficient is absent
+          <a href="hlp_estout.html#cdrop"><b><u>d</u></b></a><a href="hlp_estout.html#cdrop"><b>rop</b></a><b>(</b><i>droplist</i><b>)</b>             drop certain individual results
+          <a href="hlp_estout.html#ckeep"><b><u>k</u></b></a><a href="hlp_estout.html#ckeep"><b>eep</b></a><b>(</b><i>keeplist</i><b>)</b>             keep certain individual results
+          <a href="hlp_estout.html#cpattern"><b><u>pat</u></b></a><a href="hlp_estout.html#cpattern"><b>tern</b></a><b>(</b><i>pattern</i><b>)</b>           model selection
+          <a href="hlp_estout.html#cpvalue"><b><u>pval</u></b></a><a href="hlp_estout.html#cpvalue"><b>ue</b></a><b>(</b><i>name</i><b>)</b>               set p-values for <b>star</b> (default: <b>p</b>)
+          [<b>no</b>]<a href="hlp_estout.html#cabs"><b>abs</b></a>                    use absolute t-statistics
+          [<b><u>no</u></b>]<a href="hlp_estout.html#ctranspose"><b><u>t</u></b></a><a href="hlp_estout.html#ctranspose"><b>ranspose</b></a>              transpose <b>e(</b><i>myel</i><b>)</b> for tabulation
+
+      <a href="hlp_estout.html#drop"><b><u>d</u></b></a><a href="hlp_estout.html#drop"><b>rop</b></a><b>(</b><i>droplist</i><b>)</b>                 drop individual coefficients
+      [<b><u>no</u></b>]<a href="hlp_estout.html#omitted"><b><u>omit</u></b></a><a href="hlp_estout.html#omitted"><b>ted</b></a>                    include omitted coefficients
+      [<b><u>no</u></b>]<a href="hlp_estout.html#baselevels"><b><u>base</u></b></a><a href="hlp_estout.html#baselevels"><b>levels</b></a>                 include base levels
+      <a href="hlp_estout.html#keep"><b><u>k</u></b></a><a href="hlp_estout.html#keep"><b>eep</b></a><b>(</b><i>keeplist</i><b>)</b>                 keep individual coefficients
+      <a href="hlp_estout.html#order"><b><u>o</u></b></a><a href="hlp_estout.html#order"><b>rder</b></a><b>(</b><i>orderlist</i><b>)</b>               change order of coefficients
+      <a href="hlp_estout.html#indicate"><b><u>i</u></b></a><a href="hlp_estout.html#indicate"><b>ndicate</b></a><b>(</b><i>groups</i> [<b>,</b> <i>subopt</i>]<b>)</b>    indicate presence of parameters
+        <i>subopt</i>: <b><u>l</u></b><b>abels(</b><i>yes</i> <i>no</i><b>)</b>       redefine "Yes" and "No" labels
+      <a href="hlp_estout.html#rename"><b><u>ren</u></b></a><a href="hlp_estout.html#rename"><b>ame</b></a><b>(</b><i>old</i> <i>new</i> [<i>old</i> <i>new</i> ...]<b>)</b>  rename individual coefficients
+      <a href="hlp_estout.html#equations"><b><u>eq</u></b></a><a href="hlp_estout.html#equations"><b>uations</b></a><b>(</b><i>eqmatchlist</i><b>)</b>         match the models' equations
+      <a href="hlp_estout.html#eform"><b>eform</b></a>[<b>(</b><i>pattern</i><b>)</b>] | <b>noeform</b>     report exponentiated coefficients
+      <a href="hlp_estout.html#transform"><b><u>tr</u></b></a><a href="hlp_estout.html#transform"><b>ansform</b></a><b>(</b><i>list</i> [<b>,</b> <i>subopt</i>]<b>)</b>     apply transformations to coefficients
+        <i>subopt</i>: <b><u>p</u></b><b>attern(</b><i>pattern</i><b>)</b>]<b>)</b>   select models
+      <a href="hlp_estout.html#margin"><b><u>m</u></b></a><a href="hlp_estout.html#margin"><b>argin</b></a>[<b>(u</b>|<b>c</b>|<b>p)</b>] | <b><u>nom</u></b><b>argin</b>     report marginal effects after <a href="http://www.stata.com/help.cgi?mfx"><b>mfx</b></a>
+      <a href="hlp_estout.html#discrete"><b><u>di</u></b></a><a href="hlp_estout.html#discrete"><b>screte</b></a><b>(</b><i>string</i><b>)</b> | <b><u>nodi</u></b><b>screte</b>  identify 0/1 variables (if <b>margin</b>)
+      <a href="hlp_estout.html#meqs"><b><u>meq</u></b></a><a href="hlp_estout.html#meqs"><b>s</b></a><b>(</b><i>eq_list</i><b>)</b>                  select equations for marginal effects
+      <a href="hlp_estout.html#dropped"><b>dropped</b></a>[<b>(</b><i>string</i><b>)</b>] | <b>nodropped</b>  indicate null coefficients as dropped
+      <a href="hlp_estout.html#level"><b>level</b></a><b>(</b><i>#</i><b>)</b>                       set level for confidence intervals
+
+    Summary statistics
+      <a href="hlp_estout.html#stats"><b><u>s</u></b></a><a href="hlp_estout.html#stats"><b>tats</b></a><b>(</b><i>scalarlist</i>[<b>,</b> <i>subopts</i>]<b>)</b>   display summary statistics at the
+                                     bottom of the table
+        <i>subopts</i>:
+          <a href="hlp_estout.html#statsfmt"><b><u>f</u></b></a><a href="hlp_estout.html#statsfmt"><b>mt</b></a><b>(</b><a href="hlp_estout.html#fmt"><i>fmt</i></a> [<a href="hlp_estout.html#fmt"><i>fmt</i></a> ...]<b>)</b>         set the display formats
+          <a href="hlp_estout.html#statslabels"><b><u>l</u></b></a><a href="hlp_estout.html#statslabels"><b>abels</b></a><b>(</b><i>strlist</i>[<b>,</b>           label the summary statistics
+             <a href="hlp_estout.html#lsub0"><i>label_subopts</i></a>]<b>)</b>
+          <a href="hlp_estout.html#statsstar"><b><u>s</u></b></a><a href="hlp_estout.html#statsstar"><b>tar</b></a>[<b>(</b><i>sca'list</i><b>)</b>] | <b><u>nos</u></b><b>tar</b>  denote the model significance
+          <a href="hlp_estout.html#statslayout"><b><u>lay</u></b></a><a href="hlp_estout.html#statslayout"><b>out</b></a><b>(</b><i>array</i><b>)</b>              arrange the summary statistics
+          <a href="hlp_estout.html#statspchar"><b><u>pc</u></b></a><a href="hlp_estout.html#statspchar"><b>har</b></a><b>(</b><i>symbol</i><b>)</b>              placeholder in <b>layout()</b>; default is <b>@</b>
+
+    Significance stars
+      <a href="hlp_estout.html#starlevels"><b><u>starl</u></b></a><a href="hlp_estout.html#starlevels"><b>evels</b></a><b>(</b><i>levelslist</i><b>)</b>         define thresholds and symbols,
+                                       where '<i>levelslist</i>' is '<i>symbol</i> <i>#</i>
+                                       [<i>symbol</i> <i>#</i> ...]' with <i>#</i> in (0,1] and
+                                       listed in descending order
+      <a href="hlp_estout.html#stardrop"><b><u>stard</u></b></a><a href="hlp_estout.html#stardrop"><b>rop</b></a><b>(</b><i>droplist</i><b>)</b>             drop stars for individual coefs
+      <a href="hlp_estout.html#starkeep"><b><u>stark</u></b></a><a href="hlp_estout.html#starkeep"><b>eep</b></a><b>(</b><i>keeplist</i><b>)</b>             keep stars for individual coefs
+      [<b><u>no</u></b>]<a href="hlp_estout.html#stardetach"><b><u>stard</u></b></a><a href="hlp_estout.html#stardetach"><b>etach</b></a>                 display the stars in their own column
+
+    Layout
+      <a href="hlp_estout.html#varwidth"><b><u>var</u></b></a><a href="hlp_estout.html#varwidth"><b>width</b></a><b>(</b><i>#</i><b>)</b>                    set width of the table's left stub
+      <a href="hlp_estout.html#modelwidth"><b><u>model</u></b></a><a href="hlp_estout.html#modelwidth"><b>width</b></a><b>(</b><i>#</i> [<i>#</i> ...]<b>)</b>          set width of the results columns
+      [<b><u>no</u></b>]<a href="hlp_estout.html#unstack"><b><u>uns</u></b></a><a href="hlp_estout.html#unstack"><b>tack</b></a>                    place equations from multiple-
+                                       equation models in separate columns
+      <a href="hlp_estout.html#begin"><b><u>beg</u></b></a><a href="hlp_estout.html#begin"><b>in</b></a><b>(</b><i>string</i><b>)</b>                  specify the beginning of the rows
+      <a href="hlp_estout.html#delimiter"><b><u>del</u></b></a><a href="hlp_estout.html#delimiter"><b>imiter</b></a><b>(</b><i>string</i><b>)</b>              specify the column delimiter
+      <a href="hlp_estout.html#end"><b>end</b></a><b>(</b><i>string</i><b>)</b>                    specify the ending of the table rows
+      <a href="hlp_estout.html#incelldel"><b><u>incell</u></b></a><a href="hlp_estout.html#incelldel"><b>delimiter</b></a><b>(</b><i>string</i><b>)</b>        specify delimiter within cell
+      <a href="hlp_estout.html#dmarker"><b><u>dm</u></b></a><a href="hlp_estout.html#dmarker"><b>arker</b></a><b>(</b><i>string</i><b>)</b>                define the decimal marker
+      <a href="hlp_estout.html#msign"><b><u>ms</u></b></a><a href="hlp_estout.html#msign"><b>ign</b></a><b>(</b><i>string</i><b>)</b>                  define the minus sign
+      [<b>no</b>]<a href="hlp_estout.html#lz"><b>lz</b></a>                         print the leading zero of fixed
+                                       format numbers in (-1,1)
+      <a href="hlp_estout.html#extracols"><b><u>extra</u></b></a><a href="hlp_estout.html#extracols"><b>cols</b></a><b>(</b><i>numlist</i><b>)</b>             add empty column to the table
+      <a href="hlp_estout.html#substitute"><b><u>sub</u></b></a><a href="hlp_estout.html#substitute"><b>stitute</b></a><b>(</b><i>subst</i><b>)</b>              apply end-of-pipe substitutions, where
+                                       '<i>subst</i>' is '<i>from</i> <i>to</i> [<i>from</i> <i>to</i> ... ]'
+
+    Labeling
+      [<b><u>no</u></b>]<a href="hlp_estout.html#label"><b><u>l</u></b></a><a href="hlp_estout.html#label"><b>abel</b></a>                      make use of variable labels
+      [<b><u>no</u></b>]<a href="hlp_estout.html#abbrev"><b><u>ab</u></b></a><a href="hlp_estout.html#abbrev"><b>brev</b></a>                     abbreviate long names and labels
+      [<b><u>no</u></b>]<a href="hlp_estout.html#wrap"><b>wrap</b></a>                       wrap long labels (if space permits)
+      <a href="hlp_estout.html#interaction"><b><u>interact</u></b></a><a href="hlp_estout.html#interaction"><b>ion</b></a><b>(</b><i>string</i><b>)</b>            specify interaction operator
+      <a href="hlp_estout.html#title"><b><u>ti</u></b></a><a href="hlp_estout.html#title"><b>tle</b></a><b>(</b><i>string</i><b>)</b>                  specify a title for the table
+      <a href="hlp_estout.html#note"><b>note</b></a><b>(</b><i>string</i><b>)</b>                   specify a note for the table
+      [<b><u>no</u></b>]<a href="hlp_estout.html#legend"><b><u>le</u></b></a><a href="hlp_estout.html#legend"><b>gend</b></a>                     add a significance symbols legend
+      <a href="hlp_estout.html#prehead"><b><u>preh</u></b></a><a href="hlp_estout.html#prehead"><b>ead</b></a><b>(</b><i>strlist</i><b>)</b>               add text before the table heading
+      <a href="hlp_estout.html#prehead"><b><u>posth</u></b></a><a href="hlp_estout.html#prehead"><b>ead</b></a><b>(</b><i>strlist</i><b>)</b>              add text after the table heading
+      <a href="hlp_estout.html#prehead"><b><u>pref</u></b></a><a href="hlp_estout.html#prehead"><b>oot</b></a><b>(</b><i>strlist</i><b>)</b>               add text before the table footer
+      <a href="hlp_estout.html#prehead"><b><u>postf</u></b></a><a href="hlp_estout.html#prehead"><b>oot</b></a><b>(</b><i>strlist</i><b>)</b>              add text after the table footer
+      <a href="hlp_estout.html#hlinechar"><b><u>hl</u></b></a><a href="hlp_estout.html#hlinechar"><b>inechar</b></a><b>(</b><i>string</i><b>)</b>              specify look of <b>@hline</b>
+      <a href="hlp_estout.html#varlabels"><b><u>varl</u></b></a><a href="hlp_estout.html#varlabels"><b>abels</b></a><b>(</b><i>matchlist</i>[<b>,</b> <i>sub.</i>]<b>)</b>   relabel the parameters
+        <i>subopts</i>:
+          <b><u>bl</u></b><b>ist(</b><i>matchlist</i><b>)</b>           assign prefixes to certain rows
+          <b><u>el</u></b><b>ist(</b><i>matchlist</i><b>)</b>           assign suffixes to certain rows
+          <a href="hlp_estout.html#lsub0"><i>label_subopts</i></a>
+      <a href="hlp_estout.html#labcol2"><b><u>labcol</u></b></a><a href="hlp_estout.html#labcol2"><b>2</b></a><b>(</b><i>strlist</i>[<b>,</b> <i>subopts</i>]<b>)</b>    add a second labeling column
+        <i>subopts</i>:
+          <b><u>t</u></b><b>itle(</b><i>strlist</i><b>)</b>             add column title in table header
+          <b><u>w</u></b><b>idth(</b><i>#</i><b>)</b>                   set width of column
+      <a href="hlp_estout.html#refcat"><b><u>ref</u></b></a><a href="hlp_estout.html#refcat"><b>cat</b></a><b>(</b><i>matchlist</i>[<b>,</b> <i>subopts</i>]<b>)</b>   add reference category information
+        <i>subopts</i>:
+          <b><u>l</u></b><b>abel(</b><i>string</i><b>)</b> | <b><u>nol</u></b><b>abel</b>    redefine the "ref." label
+          <b><u>b</u></b><b>elow</b>                      change positioning of refcat
+      <a href="hlp_estout.html#mlabels"><b><u>ml</u></b></a><a href="hlp_estout.html#mlabels"><b>abels</b></a><b>(</b><i>strlist</i>[<b>,</b> <i>subopts</i>]<b>)</b>    label the models
+        <i>subopts</i>:
+          [<b><u>no</u></b>]<b><u>dep</u></b><b>vars</b>                use the name/label of the dependent
+                                         variable as model label
+          [<b><u>no</u></b>]<b><u>ti</u></b><b>tles</b>                 use estimates title as model label
+          [<b><u>no</u></b>]<b><u>num</u></b><b>bers</b>                number models labels consecutively
+          <a href="hlp_estout.html#lsub0"><i>label_subopts</i></a>
+      <a href="hlp_estout.html#collabels"><b><u>coll</u></b></a><a href="hlp_estout.html#collabels"><b>abels</b></a><b>(</b><i>strlist</i>[<b>,</b>            label the columns within models
+        <a href="hlp_estout.html#lsub0"><i>label_subopts</i></a>]<b>)</b>
+      <a href="hlp_estout.html#eqlabels"><b><u>eql</u></b></a><a href="hlp_estout.html#eqlabels"><b>abels</b></a><b>(</b><i>strlist</i>[<b>,</b> <i>subopts</i>]<b>)</b>   label the equations
+        <i>subopts</i>:
+          [<b><u>no</u></b>]<b><u>m</u></b><b>erge</b>                  merge equation and parameter labels
+          <a href="hlp_estout.html#lsub0"><i>label_subopts</i></a>
+      <a href="hlp_estout.html#mgroups"><b><u>mgr</u></b></a><a href="hlp_estout.html#mgroups"><b>oups</b></a><b>(</b><i>strlist</i>[<b>,</b> <i>subopts</i>]<b>)</b>    define and label groups of models
+        <i>subopts</i>:
+          <b><u>pat</u></b><b>tern(</b><i>pattern</i><b>)</b>           define the grouping of the models
+          <a href="hlp_estout.html#lsub0"><i>label_subopts</i></a>
+      <a href="hlp_estout.html#numbers"><b><u>num</u></b></a><a href="hlp_estout.html#numbers"><b>bers</b></a>[<b>(</b><i>l</i> <i>r</i><b>)</b>] | <b><u>nonum</u></b><b>bers</b>     add a row containing model numbers
+
+    Output
+      [<b><u>no</u></b>]<a href="hlp_estout.html#replace"><b><u>r</u></b></a><a href="hlp_estout.html#replace"><b>eplace</b></a>                    overwrite an existing file
+      [<b><u>no</u></b>]<a href="hlp_estout.html#append"><b><u>a</u></b></a><a href="hlp_estout.html#append"><b>ppend</b></a>                     append the output to an existing file
+      [<b><u>no</u></b>]<a href="hlp_estout.html#type"><b><u>ty</u></b></a><a href="hlp_estout.html#type"><b>pe</b></a>                       print the table in the results window
+      [<b>no</b>]<a href="hlp_estout.html#showtabs"><b>showtabs</b></a>                   display tabs as <b>&lt;T&gt;</b>s
+      <a href="hlp_estout.html#topfile"><b><u>top</u></b></a><a href="hlp_estout.html#topfile"><b>file</b></a><b>(</b><i>filename</i><b>)</b>              insert file contents above table
+      <a href="hlp_estout.html#topfile"><b><u>bot</u></b></a><a href="hlp_estout.html#topfile"><b>tomfile</b></a><b>(</b><i>filename</i><b>)</b>           insert file contents below table
+
+    Defaults
+      <a href="hlp_estout.html#style"><b><u>sty</u></b></a><a href="hlp_estout.html#style"><b>le</b></a><b>(</b><i>style</i><b>)</b>                   specify a style for the output table
+
+        <i>styles</i>:
+          <b>smcl</b>                       SMCL formatted table (screen default)
+          <b>tab</b>                        tab delimited table (export default)
+          <b>fixed</b>                      fixed format table
+          <b>tex</b>                        table for use with LaTeX
+          <b>html</b>                       table for use with HTML
+          <i>mystyle</i>                    user defined addition
+    ----------------------------------------------------------------------
+
+<a name="lsub0"></a>
+    <a href="hlp_estout.html#lsub"><i>label_subopts</i></a>                    Description
+    ----------------------------------------------------------------------
+      [<b>no</b>]<b>none</b>                       suppress the labels
+      <b><u>p</u></b><b>refix(</b><i>string</i><b>)</b>                 add a common prefix
+      <b><u>s</u></b><b>uffix(</b><i>string</i><b>)</b>                 add a common suffix
+      <b><u>b</u></b><b>egin(</b><i>strlist</i><b>)</b>                 add an overall prefix
+      [<b><u>no</u></b>]<b><u>f</u></b><b>irst</b>                      print the first occurrence of <b>begin()</b>
+      <b><u>e</u></b><b>nd(</b><i>strlist</i><b>)</b>                   add an overall suffix
+      [<b><u>no</u></b>]<b><u>l</u></b><b>ast</b>                       print the last occurrence of <b>end()</b>
+      <b><u>r</u></b><b>eplace</b>                        replace global <b>begin()</b>/<b>end()</b>
+      [<b>no</b>]<b>span</b>                       span columns if appropriate
+      <b><u>er</u></b><b>epeat(</b><i>string</i><b>)</b>                add a "span" suffix
+      <b>lhs(</b><i>string</i><b>)</b>                    label the table's left stub
+    ----------------------------------------------------------------------
+
+<a name="des"></a>
+<b><u>Description</u></b>
+
+    <b>estout</b> assembles a table of coefficients, "significance stars", summary
+    statistics, standard errors, t- or z-statistics, p-values, confidence
+    intervals, and other statistics for one or more models previously fitted
+    and stored by <a href="http://www.stata.com/help.cgi?estimates+store"><b>estimates store</b></a> or <a href="hlp_eststo.html"><b>eststo</b></a>.  It then displays the table in
+    Stata's results window or writes it to a text file specified by <b>using</b>.
+    The default is to use <a href="http://www.stata.com/help.cgi?smcl">SMCL</a> formatting tags and horizontal lines to
+    structure the table. However, if <b>using</b> is specified, a tab-delimited
+    table without lines is produced.
+
+    <i>namelist</i> provides the names of the stored estimation sets to be
+    tabulated. You may use the <b>*</b> and <b>?</b> wildcards in <i>namelist</i>. The results
+    estimated last may be indicated by a period (<b>.</b>), even if they have not
+    yet been stored. If no model is specified, <b>estout</b> tabulates the
+    estimation sets stored by <b>eststo</b> (see help <a href="hlp_eststo.html"><b>eststo</b></a>) or, if no such
+    estimates are present, the currently active estimates (i.e. the model fit
+    last).  <b>estout</b> may be used after any estimation command that returns its
+    results in <b>e()</b>.
+
+    See the <a href="hlp_estout.html#intro">Introduction</a> in the <a href="hlp_estout.html#exa">Examples</a> section for an introduction on using
+    <b>estout</b>. See help <a href="http://www.stata.com/help.cgi?estimates"><b>estimates</b></a> for general information about managing
+    estimation results. Furthermore, see help <a href="hlp_eststo.html"><b>eststo</b></a> for an alternative to
+    the <b>estimates store</b> command.
+
+    The default for <b>estout</b> is to produce a plain table containing point
+    estimates. Producing a fully formatted end-product may involve specifying
+    many options. However, note that a simple-to-use <b>estout</b> wrapper producing
+    pre-formatted publication style tables is available as <a href="hlp_esttab.html"><b>esttab</b></a>.
+    Furthermore, use <a href="hlp_estadd.html"><b>estadd</b></a> to make additional results available for
+    tabulation (such as the standardized coefficients or the means and
+    standard deviations of the regressors) and <a href="hlp_estpost.html"><b>estpost</b></a> to tabulate results
+    from non-estimation commands such as <a href="http://www.stata.com/help.cgi?summarize"><b>summarize</b></a> or <a href="http://www.stata.com/help.cgi?tabulate"><b>tabulate</b></a>.
+
+    <b>estout</b> can also be used to tabulate the contents of a Stata matrix (see
+    help <a href="http://www.stata.com/help.cgi?matrix"><b>matrix</b></a>). Type <b>estout marix(</b><i>name</i><b>)</b>, where <i>name</i> is the name of the
+    matrix, instead of providing a <i>namelist</i> of stored estimation sets. See
+    the <a href="hlp_estout.html#ex7">examples</a> below. Alternatively, you may also specify <b>e(</b><i>name</i><b>)</b> or
+    <b>r(</b><i>name</i><b>)</b> to tabulate an <b>e()</b>-matrix or an <b>r()</b>-matrix. The <b>cells()</b> option is
+    disabled if tabulating a matrix.
+
+    Programms similar to <b>estout</b> include <b>outreg</b> by John Luke Gallup, <b>outreg2</b>
+    by Roy Wada, <b>modltbl</b> by John H. Tyler, <b>mktab</b> by Nicholas Winter, <b>outtex</b>
+    by Antoine Terracol, or <b>est2tex</b> by Marc Muendler. Also see Newson (2003)
+    for a very appealing approach.
+
+<a name="opt"></a>
+<b><u>Options</u></b>
+
+    Contents
+
+        <a href="hlp_estout.html#par">Parameter statistics</a>
+        <a href="hlp_estout.html#sum">Summary statistics</a>
+        <a href="hlp_estout.html#sig">Significance stars</a>
+        <a href="hlp_estout.html#lay">Layout</a>
+        <a href="hlp_estout.html#lab">Labeling</a>
+        <a href="hlp_estout.html#out">Output</a>
+        <a href="hlp_estout.html#def">Defaults</a>
+        <a href="hlp_estout.html#lsub"><i>label_subopts</i></a>
+        <a href="hlp_estout.html#msub"><i>matrix_subopts</i></a>
+<a name="par"></a>
+        +----------------------+
+    ----+ Parameter statistics +---------------------------------------------
+<a name="cells"></a>
+    <b>cells(</b><i>array</i><b>)</b> specifies the parameter statistics to be reported and how
+        they are to be arranged. The default is for cells to report point
+        estimates only, i.e. <b>cells(b)</b>. <b>cells(none)</b> may be used to completely
+        suppress the printing of parameter statistics.  Alternatively,
+        <b>cells(b se)</b> would result in the reporting of point estimates and
+        standard errors. Multiple statistics are placed in separate rows
+        beneath one another by default. However, elements of <i>array</i> that are
+        listed in quotes or in parentheses, e.g.  <b>"b se"</b> or <b>`"b se"'</b> or
+        <b>(b se)</b>, are placed beside one another. For example, <b>cells("b p" se)</b>
+        or, equivalently, <b>cells((b p) se)</b> would produce a table with point
+        estimates and p-values beside one another in first row and standard
+        errors in the second row beneath the point estimates.
+
+        The parameter statistics available are <b>b</b> (point estimates), <b>se</b>
+        (standard errors), <b>var</b> (variance), <b>t</b> (t/z-statistics), <b>z</b> (synonym for
+        <b>t</b>), <b>p</b> (p-values), and <b>ci</b> (confidence intervals; to display the lower
+        and upper bounds in separate cells use <b>ci_l</b> and <b>ci_u</b>). Any additional
+        parameter statistics included in the <b>e()</b>-returns for the models can
+        be tabulated as well. If, for example, <b>e(beta)</b> contains the
+        standardized coefficients, type <b>cells(beta)</b> to tabulate them (use 
+        <a href="hlp_estadd.html"><b>estadd</b></a> to add statistics such as the standardized coefficients to the
+        <b>e()</b>-returns of a model). The syntax <i>name</i><b>[</b><i>#</i><b>]</b> or <i>name</i><b>[</b><i>rowname</i><b>]</b> can be
+        used to refer to specific rows in <b>e(</b><i>name</i><b>)</b>. For example, type
+        <b>cell(ci_bc[1] ci_bc[2])</b> or <b>cell(ci_bc[ll] ci_bc[ul])</b> to tabulate the
+        lower and upper bounds of the bias-corrected confidence intervals
+        after <a href="http://www.stata.com/help.cgi?bootstrap"><b>bootstrap</b></a>.  The default is to report the results from the first
+        row.  Also see the <b>eform</b> and <b>transform()</b> options for more information
+        on the kinds of statistics that can be displayed.
+
+        Further available elements in <i>array</i> are <b>_star</b>, <b>_sign</b>, and <b>_sigsign</b>.
+        <b>_star</b> causes stars denoting the significance of the coefficients to
+        be printed (* for p&lt;.05, ** for p&lt;.01, and *** for p&lt;.001;
+        customizable via the <b>starlevels()</b> option below).  <b>_star</b> places the
+        significance stars in their own cells. See the <b>star</b> suboption below
+        if you want to attach the stars to another element. <b>_sign</b> prints the
+        signs of the coefficients ("+", "-", or "0"). <b>_sigsign</b>, a combination
+        of <b>_star</b> and <b>_sign</b>, repeats the signs of the coefficients where the
+        number of repetitions reflects the level of significance
+        (non-significant coefficients are left empty; however, you may set
+        the first level to 1 in the <b>starlevels()</b> option).
+
+        Finally, <b>.</b> and <b>&amp;</b> may be used in <i>array</i>. <b>.</b> inserts a "null" element.
+        Use this to add empty cells. For example, <b>cells("b p" ". se")</b> would
+        produce a table with point estimates in the first column and p-values
+        and standard errors beneath one another in the second column. <b>&amp;</b> is
+        used to combine elements in the same cell. Use the <a href="hlp_estout.html#incelldel"><b>incelldelimiter()</b></a>
+        option to specify the text to be printed between the combined
+        elements (the default is to print a single blank). For example, in
+        HTML, use <b>cell(b &amp; se)</b> and <b>incelldelimiter(&lt;br&gt;)</b> to include point
+        estimates and standard errors in a single cell and insert a line
+        break between them.
+
+        A set of suboptions may be specified in parentheses for each element
+        named in <i>array</i> (except for <b>.</b> and <b>&amp;</b>). For example, to add significance
+        stars to the coefficients and place the standard errors in
+        parentheses, specify <b>cells(b(star) se(par))</b>. The following suboptions
+        are available. Use:
+<a name="cstar"></a>
+            <b>star</b> to specify that stars denoting the significance of the
+                coefficients be attached to the statistic: <b>*</b> for p&lt;.05, <b>**</b>
+                for p&lt;.01, and <b>***</b> for p&lt;.001. The symbols and the values for
+                the thresholds and the number of levels are fully
+                customizable (see the <a href="hlp_estout.html#sig">Significance stars</a> options).
+<a name="cfmt"></a>
+            <b>fmt(</b><a href="hlp_estout.html#fmt"><i>fmt</i></a> [<a href="hlp_estout.html#fmt"><i>fmt</i></a> ...]<b>)</b> to specify the display format(s) of a
+                statistic. It defaults to <b>%9.0g</b> or the format for the first
+                statistic in <b>cells()</b>. If only one format is specified, it is
+                used for all occurrences of the statistic. For example, type
+
+                    . estout <i>...</i>, cells("b(fmt(3)) t(fmt(2))")
+
+                to print coefficients and t-values beside one another using
+                three decimal places for coefficients and two decimal places
+                for t-values. If multiple formats are specified, the first
+                format is used for the first regressor in the estimates
+                table, the second format for the second regressor, and so on.
+                The last format is used for the remaining regressors if the
+                number of regressors in the table is greater than the number
+                of specified formats.  For instance, type
+
+                    . estout <i>...</i>, cells(b(fmt(3 4 2)))
+
+                to use three decimal places for the first coefficient, four
+                decimal places for the second, and two decimal places for all
+                remaining coefficients. Note that, regardless of the display
+                format chosen, leading and trailing blanks are removed from
+                the numbers. White space can be added by specifying a
+                <b>modelwidth()</b> (see the <a href="hlp_estout.html#lay">Layout</a> options). <a href="hlp_estout.html#fmt"><i>fmt</i></a> may be any of
+                Stata's numerical display formats, e.g., <b>%9.0g</b> or <b>%8.2f</b>, an
+                integer <i>#</i> such as <b>1</b> or <b>3</b> to use a fixed format with <i>#</i> decimal
+                places, or <b>a</b><i>#</i> such as <b>a1</b> or <b>a3</b> to use <b>estout</b>'s adaptive
+                display format (see <a href="hlp_estout.html#fmt">Numerical formats</a> in the <a href="hlp_estout.html#rem">Remarks</a> section
+                for details).
+<a name="clabel"></a>
+            <b>label(</b><i>string</i><b>)</b> to specify a label to appear in the column heading.
+                The default is the name of the statistic.
+<a name="cpar"></a>
+            <b>par</b>[<b>(</b><i>l</i> <i>r</i><b>)</b>] to specify that the statistic in question be placed in
+                parentheses. It is also possible to specify custom
+                "parentheses". For example, <b>se(par({ }))</b> would display the
+                standard errors in curly brackets. Or, <b>se(par(`"="("'</b>
+                <b>`")""'))</b> will write parentheses in a way that Excel can
+                recognize. For <b>ci</b> the syntax is:
+
+                    <b>ci(par</b>[<b>(</b><i>l</i> <i>m</i> <i>r</i><b>)</b>]<b>)</b>
+<a name="cvacant"></a>
+            <b>vacant(</b><i>string</i><b>)</b> to print <i>string</i> if a coefficient is not in the
+                model. The default is to leave such cells empty.
+<a name="cdrop"></a>
+            <b>drop(</b><i>droplist</i> [<b>, relax</b>]<b>)</b> to cause certain individual statistics
+                to be dropped. For example, specifying <b>t(drop(_cons))</b>
+                suppresses the t-statistics for the constants.  <i>droplist</i> is
+                specified as in the global <a href="hlp_estout.html#drop"><b>drop()</b></a> option (see below).
+<a name="ckeep"></a>
+            <b>keep(</b><i>keeplist</i> [<b>, relax</b>]<b>)</b> to cause certain individual statistics
+                to be kept. For example, the specification <b>t(keep(mpg))</b> would
+                display the t-statistics exclusively for the variable <b>mpg</b>.
+                <i>keeplist</i> is specified analogous to <i>droplist</i> in <a href="hlp_estout.html#drop"><b>drop()</b></a> (see
+                below).
+<a name="cpattern"></a>
+            <b>pattern(</b><i>pattern</i><b>)</b> to designate a pattern of models for which the
+                statistics are to be reported, where the <i>pattern</i> consists of
+                zeros and ones. A <b>1</b> indicates that the statistic be printed;
+                <b>0</b> indicates that it be suppressed. For example <b>beta(pattern(1</b>
+                <b>0 1))</b> would result in <b>beta</b> being reported for the first and
+                third models, but not for the second.
+<a name="cpvalue"></a>
+            <b>pvalue(</b><i>name</i><b>)</b> to specify the p-values used to determine the
+                significance stars (see <b>star</b> above). The default is
+                <b>pvalue(p)</b>, indicating that the standard p-values are to be
+                used (i.e. the p-values computed form the coefficients vector
+                and the variance matrix). Alternatively, specify
+                <b>pvalue(</b><i>mypvalue</i><b>)</b>, in which case the significance stars will
+                be determined from the values in <b>e(</b><i>mypvalue</i><b>)</b>. Values outside
+                [0,1] will be ignored.
+<a name="cabs"></a>
+            <b>abs</b> to specify that absolute t-statistics be used instead of
+                regular t-statistics (relevant only if used with <b>t()</b>).
+<a name="ctranspose"></a>
+            <b>transpose</b> to specify that <b>e(</b><i>myel</i><b>)</b> be transposed for tabulation.
+<a name="drop"></a>
+    <b>drop(</b><i>droplist</i> [<b>, relax</b>]<b>)</b> identifies the coefficients to be dropped from
+        the table. A <i>droplist</i> comprises one or more specifications, separated
+        by white space. A specification can be either a parameter name (e.g.
+        <b>price</b>), an equation name followed by a colon (e.g. <b>mean:</b>), or a full
+        name (e.g. <b>mean:price</b>). You may use the <b>*</b> and <b>?</b> wildcards in equation
+        names and parameter names. Be sure to refer to the matched equation
+        names, and not to the original equation names in the models, when
+        using the <b>equations()</b> option to match equations.  Specify the <b>relax</b>
+        suboption to allow <i>droplist</i> to contain elements for which no match
+        can be found.
+<a name="omitted"></a>
+    <b>omitted</b> includes omitted coefficients (only relevant in Stata 11 or
+        newer). This is the default. Type <b>noomitted</b> to drop omitted
+        coefficients.
+<a name="baselevels"></a>
+    <b>baselevels</b> includes base levels of factor variables (only relevant in
+        Stata 11 or newer). This is the default. Type <b>nobaselevels</b> to drop
+        base levels of factor variables.
+<a name="keep"></a>
+    <b>keep(</b><i>keeplist</i> [<b>, relax</b>]<b>)</b> selects the coefficients to be included in the
+        table. <i>keeplist</i> is specified analogous to <i>droplist</i> in <a href="hlp_estout.html#drop"><b>drop()</b></a> (see
+        above). Note that <b>keep()</b> does <i>not</i> change the the order of the
+        coefficients. Use <b>order()</b> to change the order of coefficients.
+<a name="order"></a>
+    <b>order(</b><i>orderlist</i><b>)</b> changes the order of the coefficients and equations
+        within the table. <i>orderlist</i> is specified analogous to <i>droplist</i> in
+        <b>drop()</b> (see above). Reordering of coefficients is performed equation
+        by equation, unless equations are explicitly specified. Coefficients
+        and equations that do not appear in <i>orderlist</i> are placed last (in
+        their original order). Extra table rows are inserted for elements in
+        <i>orderlist</i> that are not found in the table.
+<a name="indicate"></a>
+    <b>indicate(</b><i>groups</i> [<b>,</b> <b><u>l</u></b><b>abels(</b><i>yes</i> <i>no</i><b>)</b>]<b>)</b> indicates for each model (or, if
+        <b>unstack</b> is specified, for each equation) the presence of certain
+        groups of coefficients at the end of the table body. The syntax for
+        <i>groups</i> is
+
+            "<i>group</i>" [ "<i>group</i>" <i>...</i> ]
+
+        where a <i>group</i> is
+
+            [<i>name</i> = ] <i>list</i>
+
+        and <i>list</i> is a list of coefficient specifications as defined in <b>drop()</b>
+        above. The single groups should be enclosed in quotes unless there is
+        only one group and <i>name</i> is specified. Note that <i>name</i> may contain
+        spaces.
+
+        For example, if some of the models contain a set of year dummies, say
+        <b>y1 y2 y3</b>, specify
+
+            estout <i>...</i>, indicate(year effects = y1 y2 y3)
+
+        to drop the dummies from the table and add a "year effects" row
+        containing "Yes" for models in which <i>at least one</i> of the dummies is
+        present, and "No" for the other models. Furthermore, if some models
+        also contain a set of region dummies, say <b>reg_1</b> through <b>reg_17</b>, you
+        could type
+
+            estout <i>...</i>, indicate("years = y1 y2 y3" "regions = reg_*")
+
+        Use the <b>labels()</b> suboption to redefine the indication labels to be
+        printed in the table. The default is <b>labels(Yes No)</b>. Use quotes if
+        the labels include spaces, e.g. <b>labels("in model"  "not in model")</b>.
+<a name="rename"></a>
+    <b>rename(</b><i>matchlist</i><b>)</b> changes the names of individual coefficients, where
+        <i>matchlist</i> is
+
+            <i>oldname</i> <i>newname</i> [<i>oldname</i> <i>newname</i> ...]
+
+        <i>oldname</i> can be a parameter name (e.g. <b>price</b>) or a full name including
+        an equation specification (e.g. <b>mean:price</b>) (abbreviation and
+        wildcards not allowed); <i>newname</i> is a name without equation
+        specification and must not already occur in a model's equation.
+        <b>rename()</b> is applied before matching the models and equations and can
+        therefore be used to merge different coefficients across models (or
+        equations if <b>unstack</b> is specified) into a single table row. See the
+        <b>varlabels()</b> option if you are interested in relabeling coefficients
+        after matching models and equations.
+<a name="equations"></a>
+    <b>equations(</b><i>matchlist</i><b>)</b> specifies how the models' equations are to be
+        matched. The default is to match all first equations into one
+        equation (named <b>main</b>, if the equations have different names) and
+        match the remaining equations by name. Specify <b>equations("")</b> to match
+        all equations by name. Alternatively, specify <i>matchlist</i>, which has
+        the syntax
+
+                <i>term</i> [<b>,</b> <i>term</i> ... ]
+
+        where <i>term</i> is
+
+                [<i>eqname</i> <b>=</b>] <i>#</i><b>:</b><i>#</i>...<b>:</b><i>#</i>              (syntax 1)
+
+                [<i>eqname</i> <b>=</b>] <i>#</i>                     (syntax 2)
+
+        In syntax 1, each <i>#</i> is a number or a period (<b>.</b>).  If a number, it
+        specifies the position of the equation in the corresponding model;
+        <b>1:3:1</b> would indicate that equation 1 in the first model matches
+        equation 3 in the second, which matches equation 1 in the third.  A
+        period indicates that there is no corresponding equation in the
+        model; <b>1:.:1</b> indicates that equation 1 in the first matches equation
+        1 in the third.
+
+        In syntax 2, you specify just one number, say, <b>1</b> or <b>2</b>, and that is
+        shorthand for <b>1:1</b>...<b>:1</b> or <b>2:2</b>...<b>:2</b>, meaning that equation 1 matches
+        across all models specified or that equation 2 matches across all
+        models specified.
+
+        <i>eqname</i> is used to name the matched equations. If it is suppressed, a
+        name such as <b>#1</b> or <b>#2</b> etc. is used, depending on the position of the
+        <i>term</i>. For example, <b>equations(1)</b> indicates that all first equations
+        are to be matched into one equation named <b>#1</b>. All equations not
+        matched by position are matched by name.
+<a name="eform"></a>
+    <b>eform</b>[<b>(</b><i>pattern</i><b>)</b>] displays the coefficient table in exponentiated form.
+        The exponent of <b>b</b> is displayed in lieu of the untransformed
+        coefficient; standard errors and confidence intervals are transformed
+        as well. Specify a <i>pattern</i> if the exponentiation is to be applied
+        only for certain models. For instance, <b>eform(1 0 1)</b> would transform
+        the statistics for Models 1 and 3, but not for Model 2. Note that,
+        unlike <b>regress</b> and <b>estimates table</b>, <b>estout</b> in eform-mode does not
+        suppress the display of the intercept. To drop the intercept in
+        eform-mode, specify <b>drop(_cons)</b>. Note: <b>eform</b> is implemented via the
+        <b>transform()</b> option. If both options are specified, <b>transform()</b> takes
+        precedence over <b>eform</b>.
+<a name="transform"></a>
+    <b>transform(</b><i>list</i> [, <b>pattern(</b><i>pattern</i><b>)</b>]<b>)</b> displays transformed coefficients,
+        standard errors and confidence intervals. <i>list</i> may be
+
+            <i>fx</i> <i>dfx</i>
+
+        where <i>fx</i> is the transformation function and <i>dfx</i> is its first
+        derivative. <i>fx</i> is applied to coefficients and confidence intervals,
+        that is, <i>fx</i>(<b>b</b>) and <i>fx</i>(<b>ci</b>) is displayed instead of <b>b</b> and <b>ci</b>. <i>dfx</i> is
+        used to delta transform standard errors, i.e. <b>se</b>*<i>dfx</i>(<b>b</b>) is displayed
+        instead of <b>se</b>. Use <b>@</b> as a placeholder for the function's argument in
+        <i>fx</i> and <i>dfx</i>. For example, type
+
+            estout <i>...</i>, transform(exp(@) exp(@))
+
+        to report exponentiated results (this is equivalent to specifying the
+        <b>eform</b> option).
+
+        Alternatively, <i>list</i> may be specified as
+
+            <i>coefs</i> <i>fx</i> <i>dfx</i> [ <i>...</i> [<i>coefs</i>] <i>fx</i> <i>dfx</i> ]
+
+        where <i>coefs</i> identifies the coefficients to be transformed. Syntax for
+        <i>coefs</i> is as explained above in the description of the <b>drop()</b> option
+        (however, include <i>coefs</i> in quotes if it contains multiple elements).
+        Say, a model has two equations, <b>price</b> and <b>select</b>, and you want to
+        exponentiate the <b>price</b> equation but not the <b>select</b> equation. You
+        could then type
+
+            estout <i>...</i>, transform(price: exp(@) exp(@))
+
+        Note that omitting <i>coef</i> in the last transformation specification
+        causes the last transformation to be applied to all remaining
+        coefficients.
+
+        Specify the <b>pattern()</b> suboption if the transformations are to be
+        applied only for certain models. For instance, <b>pattern(1 0 1)</b> would
+        apply the transformation to Models 1 and 3, but not Model 2.
+<a name="margin"></a>
+    <b>margin</b>[<b>(u</b>|<b>c</b>|<b>p)</b>] indicates that the marginal effects or elasticities be
+        reported instead of the raw coefficients. This option has an effect
+        only if <b>mfx</b> has been applied to a model before its results were
+        stored (see help <a href="http://www.stata.com/help.cgi?mfx"><b>mfx</b></a>) or if a <b>dprobit</b> (see help <a href="http://www.stata.com/help.cgi?probit"><b>probit</b></a>),
+        <b>truncreg,marginal</b> (help <a href="http://www.stata.com/help.cgi?truncreg"><b>truncreg</b></a>), or <b>dtobit</b> (Cong 2000) model is
+        estimated. One of the parameters <b>u</b>, <b>c</b>, or <b>p</b>, corresponding to the
+        unconditional, conditional, and probability marginal effects,
+        respectively, is required for <b>dtobit</b>. Note that the standard errors,
+        confidence intervals, t-statistics, and p-values are transformed as
+        well.
+
+        Using the <b>margin</b> option with multiple-equation models can be tricky.
+        The marginal effects of variables that are used in several equations
+        are printed repeatedly for each equation because the equations per se
+        are meaningless for <b>mfx</b>. To display the effects for certain equations
+        only, specify the <b>meqs()</b> option. Alternatively, use the <b>keep()</b> and
+        <b>drop()</b> options to eliminate redundant rows. The <b>equations()</b> option
+        might also be of help here.
+
+        As of Stata 11, the use of <a href="http://www.stata.com/help.cgi?mfx"><b>mfx</b></a> is no longer suggested, since <a href="http://www.stata.com/help.cgi?mfx"><b>mfx</b></a> has
+        been superseded by <a href="http://www.stata.com/help.cgi?margins"><b>margins</b></a>. Results from <a href="http://www.stata.com/help.cgi?margins"><b>margins</b></a> can directly be
+        tabulated by <b>estout</b> as long as the <b>post</b> option is specified with 
+        <a href="http://www.stata.com/help.cgi?margins"><b>margins</b></a>. Alternatively, you may add results from <a href="http://www.stata.com/help.cgi?margins"><b>margins</b></a> to an
+        existing model using <a href="hlp_estadd.html"><b>estadd margins</b></a> or <a href="hlp_estpost.html"><b>estpost margins</b></a>. See the
+        examples on tabulating results from <a href="http://www.stata.com/help.cgi?margins"><b>margins</b></a> at 
+        http://repec.org/bocode/e/estout/advanced.html.
+<a name="discrete"></a>
+    <b>discrete(</b><i>string</i><b>)</b> may be used to override the default symbol and
+        explanatory text used to identify dummy variables when applying the
+        <a href="hlp_estout.html#margin"><b>margin</b></a> option. The first token in <i>string</i> is used as the symbol. The
+        default is:
+
+            discrete(" (d)" for discrete change of dummy variable from 0 to
+            1)
+
+        To display explanatory text, specify either the <b>legend</b> option or use
+        the <b>@discrete</b> variable (see the <a href="hlp_estout.html#atvar">Remarks on using @-variables</a>).
+
+        Use <b>nodiscrete</b> to disable the identification of dummy variables as
+        such. The default is to indicate the dummy variables unless they have
+        been interpreted as continuous variables in all of the models for
+        which results are reported (for <b>dprobit</b> and <b>dtobit</b>, however, dummy
+        variables will always be listed as discrete variables unless
+        <b>nodiscrete</b> is specified).
+<a name="meqs"></a>
+    <b>meqs(</b><i>eq_list</i><b>)</b> specifies that marginal effects requested by the <a href="hlp_estout.html#margin"><b>margin</b></a>
+        option be printed only for the equations in <i>eq_list</i>. Specifying this
+        option does not affect how the marginal effects are calculated.  An
+        <i>eq_list</i> comprises one or more equation names (without colons)
+        separated by white space. If you use the <b>equations()</b> option to match
+        equations, be sure to refer to the matched equation names and not to
+        the original equation names in the models.
+<a name="dropped"></a>
+    <b>dropped</b>[<b>(</b><i>string</i><b>)</b>] causes null coefficients (coefficients for which <b>e(b)</b>
+        and <b>e(V)</b> is zero) to be indicated as dropped. <i>string</i> specifies the
+        text to be printed in place of the estimates. The default text is
+        "(dropped)".
+<a name="level"></a>
+    <b>level(</b><i>#</i><b>)</b> assigns the confidence level, in percent, for the confidence
+        intervals of the coefficients (see help <a href="http://www.stata.com/help.cgi?level">level</a>).
+
+<a name="sum"></a>
+        +--------------------+
+    ----+ Summary statistics +-----------------------------------------------
+<a name="stats"></a>
+    <b>stats(</b><i>scalarlist</i>[<b>,</b> <i>stats_subopts</i>]<b>)</b> specifies one or more scalar
+        statistics - separated by white space - to be displayed at the bottom
+        of the table. The <i>scalarlist</i> may contain numeric <b>e()</b>-scalars such as,
+        e.g., <b>N</b>, <b>r2</b>, or <b>chi2</b>, but also string <b>e()</b>-macros such as <b>cmd</b> or
+        <b>depvar</b>. In addition, the following statistics are available:
+
+            <b>aic</b>     Akaike's information criterion
+            <b>bic</b>     Schwarz's information criterion
+            <b>rank</b>    rank of <b>e(V)</b>, i.e. the number of free parameters in model
+            <b>p</b>       the p-value of the model (overall model significance)
+
+        See <b>[R] estimates table</b> for details on the <b>aic</b> and <b>bic</b> statistics.
+        The rules for the determination of <b>p</b> are as follows (note that
+        although the procedure outlined below is appropriate for most models,
+        there might be some models for which it is not):
+
+            1) p-value provided: If the <b>e(p)</b> scalar is provided by the
+               estimation command, it will be interpreted as indicating the
+               p-value of the model.
+
+            2) F test: If <b>e(p)</b> is not provided, <b>estout</b> checks for the
+               presence of the <b>e(df_m)</b>, <b>e(df_r)</b>, and <b>e(F)</b> scalars and, if
+               they are present, the p-value of the model will be calculated
+               as <b>Ftail(df_m,df_r,F)</b>. This p-value corresponds to the
+               standard overall F test of linear regression.
+
+            3) chi2 test: Otherwise, if neither <b>e(p)</b> nor <b>e(F)</b> is provided,
+               <b>estout</b> checks for the presence of <b>e(df_m)</b> and <b>e(chi2)</b> and, if
+               they are present, calculates the p-value as
+               <b>chi2tail(df_m,chi2)</b>. This p-value corresponds to the
+               Likelihood-Ratio or Wald chi2 test.
+
+            4) If neither <b>e(p)</b>, <b>e(F)</b>, nor <b>e(chi2)</b> is available, no p-value
+               will be reported.
+
+        Type <b>ereturn list</b> after estimating a model to see a list of the
+        returned <b>e()</b>-scalars and macros (see help <a href="http://www.stata.com/help.cgi?ereturn"><b>ereturn</b></a>). Use the <a href="hlp_estadd.html"><b>estadd</b></a>
+        command to add extra statistics and other information to the
+        <b>e()</b>-returns.
+
+        The following <i>stats_subopts</i> are available. Use:
+<a name="statsfmt"></a>
+            <b>fmt(</b><a href="hlp_estout.html#fmt"><i>fmt</i></a> [<a href="hlp_estout.html#fmt"><i>fmt</i></a> <i>...</i>]<b>)</b> to set the display formats for the scalars
+                statistics in <i>scalarlist</i>.  <a href="hlp_estout.html#fmt"><i>fmt</i></a> may be any of Stata's
+                numerical display formats, e.g., <b>%9.0g</b> or <b>%8.2f</b>, an integer <i>#</i>
+                such as <b>1</b> or <b>3</b> to use a fixed format with <i>#</i> decimal places,
+                or <b>a</b><i>#</i> such as <b>a1</b> or <b>a3</b> to use <b>estout</b>'s adaptive display
+                format (see <a href="hlp_estout.html#fmt">Numerical formats</a> in the {help
+                estout##rem:Remarks} section for details). For example, <b>fmt(3</b>
+                <b>0)</b> would be suitable for <b>stats(r2_a N)</b>. Note that the last
+                specified format is used for the remaining scalars if the
+                list of scalars is longer than the list of formats. Thus,
+                only one format needs to be specified if all scalars are to
+                be displayed in the same format. If no format is specified,
+                the default format is the display format of the coefficients.
+<a name="statslabels"></a>
+            <b>labels(</b><i>strlist</i>[<b>,</b> <a href="hlp_estout.html#lsub"><i>label_subopts</i></a>]<b>)</b> to specify labels for rows
+                containing the scalar statistics. If specified, the labels
+                are used instead of the scalar names. For example:
+
+                    . estout <i>...</i>, stats(r2_a N, labels("Adj. R-Square"
+                    "Number of Cases"))
+
+                Note that names like <b>r2_a</b> produce an error in LaTeX because
+                the underscore character has a special meaning in LaTeX (to
+                print the underscore in LaTeX, type <b>\_</b>). Use the <b>label()</b>
+                suboption to rename such statistics, e.g. <b>stats(r2_a,</b>
+                <b>labels(r2\_a))</b>. An alternative approach is to use <b>estout</b>'s
+                <b>substitute()</b> option (see the <a href="hlp_estout.html#lay">Layout</a> options).
+<a name="statsstar"></a>
+            <b>star</b>[<b>(</b><i>scalarlist</i><b>)</b>] to specify that the overall significance of
+                the model be denoted by stars. The stars are attached to the
+                scalar statistics specified in <i>scalarlist</i>. If <i>scalarlist</i> is
+                omitted, the stars are attached to the first reported scalar
+                statistic. The printing of the stars is suppressed in empty
+                results cells (i.e. if the scalar statistic in question is
+                missing for a certain model). The determination of the model
+                significance is based on the p-value of the model (see
+                above).
+
+                Hint: It is possible to attach the stars to different scalar
+                statistics within the same table. For example, specify
+                <b>stats(,star(r2_a r2_p))</b> when tabulating OLS estimates and,
+                say, probit estimates. For the OLS models, the F test will be
+                carried out and the significance stars will be attached to
+                the <b>r2_a</b>; for the probit models, the chi2 test will be used
+                and the stars will appear next to the <b>r2_p</b>.
+<a name="statslayout"></a>
+            <b>layout(</b><i>array</i><b>)</b> to rearrange the summary statistics. The default is
+                to print the statistics in separate rows beneath one another
+                (in each model's first column). The syntax for <i>array</i> is
+
+                    &lt;<i>row</i>&gt; [ &lt;<i>row</i>&gt; ... ]
+
+                where <i>row</i> is
+
+                    &lt;<i>cell</i>&gt; [ &lt;<i>cell</i>&gt; ... ]
+
+                and <b>@</b> is used as a placeholder for the statistics, one after
+                another. Rows and cells that contain blanks have to be
+                embraced in quotes. For example,
+
+                     ... stats(chi2 df_m N, layout("@ @" @))
+
+                prints for each model in row 1/column 1 the chi-squared, in
+                row1/column 2 the degrees of freedom, and in row 2/column 1
+                the number of observations. Cells may contain multiple
+                statistics and text other than the placeholder symbol is
+                printed as is (provided the cells' statistics are part of the
+                model). For example,
+
+                     ... stats(chi2 df_m N, layout(`""@ (@)""' @))
+
+                prints a cell containing "chi2 (df_m)" in the first row and
+                the number of observations in the second row. Note that the
+                number of columns in the table only depends on the <b>cells()</b>
+                option (see above) and not on the <b>layout()</b> suboption. If, for
+                example, the table has two columns per model and you specify
+                three columns of summary statistics, the summary statistics
+                in the third column are not printed.
+<a name="statspchar"></a>
+            <b>pchar(</b><i>symbol</i><b>)</b> to specify the placeholder symbol used in <b>layout()</b>.
+                The default placeholder is <b>@</b>.
+
+<a name="sig"></a>
+        +--------------------+
+    ----+ Significance stars +-----------------------------------------------
+<a name="starlevels"></a>
+    <b>starlevels(</b><i>levelslist</i><b>)</b> overrides the default thresholds and symbols for
+        "significance stars". For instance, <b>starlevels(+ 0.10 * 0.05)</b> sets
+        the following thresholds: <b>+</b> for p&lt;.10 and <b>*</b> for p&lt;.05. Note that the
+        thresholds must lie in the (0,1] interval and must be specified in
+        descending order. To, for example, denote insignificant results, type
+        <b>starlevels(* 1 "" 0.05)</b>.
+<a name="stardrop"></a>
+    <b>stardrop(</b><i>droplist</i> [<b>, relax</b>]<b>)</b> identifies the coefficients for which the
+        significance stars be suppressed. <i>droplist</i> is specified as in <a href="hlp_estout.html#drop"><b>drop()</b></a>
+        (see above).
+<a name="starkeep"></a>
+    <b>starkeep(</b><i>keeplist</i> [<b>, relax</b>]<b>)</b> selects the coefficients for which the
+        significance stars, if requested, be printed. <i>keeplist</i> is specified
+        analogous to <i>droplist</i> in <a href="hlp_estout.html#drop"><b>drop()</b></a> (see above).
+<a name="stardetach"></a>
+    <b>stardetach</b> specifies that a delimiter be placed between the statistics
+        and the significance stars (i.e. that the stars are to be displayed
+        in their own column).
+
+<a name="lay"></a>
+        +--------+
+    ----+ Layout +-----------------------------------------------------------
+<a name="varwidth"></a>
+    <b>varwidth(</b><i>#</i><b>)</b> specifies the number of characters used to display the names
+        (labels) of regressors and statistics (i.e. <b>varwidth</b> specifies the
+        width of the table's left stub). Long names (labels) are abbreviated
+        (depending on the <b>abbrev</b> option) and short or empty cells are padded
+        out with blanks to fit the width specified by the user.  <b>varwidth</b> set
+        to 0 means that the names are not abbreviated and no white space is
+        added. Specifying low values may cause misalignment.
+<a name="modelwidth"></a>
+    <b>modelwidth(</b><i>#</i> [<i>#</i> ...]<b>)</b> designates the number of characters used to display
+        the results columns. If a non-zero <b>modelwidth</b> is specified, model
+        names are abbreviated if necessary (depending on the <b>abbrev</b> option)
+        and short or empty results cells are padded out with blanks. In
+        contrast, <b>modelwidth</b> does not shorten or truncate the display of the
+        results themselves (coefficients, t-statistics, summary statistics,
+        etc.) although it may add blanks if needed.  <b>modelwidth</b> set to 0
+        means that the model names are not abbreviated and no white space is
+        added. Specifying low values may cause misalignment. Specify a list
+        of numbers in <b>modelwidth()</b> to assign individual widths to the
+        different results columns (the list is recycled if there are more
+        columns than numbers).
+
+        The purpose of <b>modelwidth</b> is to be able to construct a fixed-format
+        table and thus make the raw table more readable. Be aware, however,
+        that the added blanks may cause problems with the conversion to a
+        table in word processors or spreadsheets.
+<a name="unstack"></a>
+    <b>unstack</b> specifies that the individual equations from multiple-equation
+        models (e.g. <b>mlogit</b>, <b>reg3</b>, <b>heckman</b>) be placed in separate columns.
+        The default is to place the equations below one another in a single
+        column. Summary statistics will be reported for each equation if
+        <b>unstack</b> is specified and the estimation command is either <b>reg3</b>,
+        <b>sureg</b>, or <b>mvreg</b> (see help <a href="http://www.stata.com/help.cgi?reg3"><b>reg3</b></a>, help <a href="http://www.stata.com/help.cgi?sureg"><b>sureg</b></a>, help <a href="http://www.stata.com/help.cgi?mvreg"><b>mvreg</b></a>).
+<a name="begin"></a>
+    <b>begin(</b><i>string</i><b>)</b> specifies a string to be printed at the beginning of every
+        table row. It is possible to use special functions such as <b>_tab</b> or
+        <b>_skip</b> in <b>begin()</b>. For more information on using such functions, see
+        the description of the functions in help <a href="http://www.stata.com/help.cgi?file"><b>file</b></a>.
+<a name="delimiter"></a>
+    <b>delimiter(</b><i>string</i><b>)</b> designates the delimiter used between the table
+        columns. See the <b>begin</b> option above for further details.
+<a name="end"></a>
+    <b>end(</b><i>string</i><b>)</b> specifies a string to be printed at the end of every table
+        row. See the <b>begin</b> option above for further details.
+<a name="incelldel"></a>
+    <b>incelldelimiter(</b><i>string</i><b>)</b> specifies text to be printed between parameter
+        statistics that have been combined in a single cell by the <b>&amp;</b>
+        operator. See the <a href="hlp_estout.html#par"><b>cells()</b></a> option for details. The default string is a
+        single blank.
+<a name="dmarker"></a>
+    <b>dmarker(</b><i>string</i><b>)</b> specifies the form of the decimal marker. The standard
+        decimal symbol (a period or a comma, depending on the input provided
+        to <b>set dp</b>; see help <a href="http://www.stata.com/help.cgi?format">format</a>) is replaced by <i>string</i>.
+<a name="msign"></a>
+    <b>msign(</b><i>string</i><b>)</b> determines the form of the minus sign. The standard minus
+        sign (<b>-</b>) is replaced by <i>string</i>.
+<a name="lz"></a>
+    <b>lz</b> specifies that the leading zero of fixed format numbers in the
+        interval (-1,1) be printed. This is the default. Use <b>nolz</b> to advise
+        <b>estout</b> to omit the leading zeros (that is, to print numbers like
+        <b>0.021</b> or <b>-0.33</b> as <b>.021</b> and <b>-.33</b>).
+<a name="extracols"></a>
+    <b>extracols(</b><a href="http://www.stata.com/help.cgi?numlist"><i>numlist</i></a><b>)</b> inserts empty table columns at the indicated
+        positions. For example, <b>extracols(1)</b> adds an extra column between the
+        left stub of the table and the first column.
+<a name="substitute"></a>
+    <b>substitute(</b><i>subst_list</i><b>)</b> specifies that the substitutions specified in
+        <i>subst_list</i> be applied to the estimates table after it has been
+        created. Specify <i>subst_list</i> as a list of substitution pairs, that is:
+
+            <i>from</i> <i>to</i> [<i>from</i> <i>to</i> ...]
+
+        For example, specify <b>substitute(_ \_)</b> to replace the underscore
+        character (as in <b>_cons</b> or <b>F_p</b>) with it's LaTeX equivalent <b>\_</b>.
+
+<a name="lab"></a>
+        +----------+
+    ----+ Labeling +---------------------------------------------------------
+<a name="label"></a>
+    <b>label</b> specifies that variable labels be displayed instead of variable
+        names in the left stub of the table.
+<a name="abbrev"></a>
+    <b>abbrev</b> specifies that long names and labels be abbreviated if a
+        <b>modelwidth()</b> and/or a <b>varwidth()</b> is specified.
+<a name="wrap"></a>
+    <b>wrap</b> causes long variable labels to be wrapped if space permits and a
+        <b>varwidth()</b> is specified. The <b>wrap</b> option is only useful if several
+        parameter statistics are printed beneath one another and, therefore,
+        white space is available beneath the labels.
+<a name="interaction"></a>
+    <b>interaction(</b><i>string</i><b>)</b> specifies the string to be used as delimiter for
+        interaction terms (only relevant in Stata 11 or newer). The default
+        is <b>interaction(" # ")</b>. For <b>style(tex)</b> the default is <b>interaction("</b>
+        <b>$\times$ ")</b>.
+<a name="title"></a>
+    <b>title(</b><i>string</i><b>)</b> may be used to specify a title for the table.  The <i>string</i>
+        is printed at the top of the table unless <b>prehead()</b>, <b>posthead()</b>,
+        <b>prefoot()</b>, or <b>postfoot()</b> is specified. In the latter case, the
+        variable <b>@title</b> can be used to insert the title.
+<a name="note"></a>
+    <b>note(</b><i>string</i><b>)</b> may be used to specify a note for the table.  The <i>string</i> is
+        printed at the bottom, of the table unless <b>prehead()</b>, <b>posthead()</b>,
+        <b>prefoot()</b>, or <b>postfoot()</b> is specified. In the latter case, the
+        variable <b>@note</b> can be used to insert the note.
+<a name="legend"></a>
+    <b>legend</b> adds a legend explaining the significance symbols and thresholds.
+<a name="prehead"></a>
+    <b>prehead(</b><i>strlist</i><b>)</b>, <b>posthead(</b><i>strlist</i><b>)</b>, <b>prefoot(</b><i>strlist</i><b>)</b>, and
+        <b>postfoot(</b><i>strlist</i><b>)</b> may be used to define lists of text lines to appear
+        before and after the table heading or the table footer. For example,
+        the specification
+
+            . estout <i>...</i>, prehead("\S_DATE \S_TIME" "")
+
+        would add a line containing the current date and time followed by an
+        empty line before the table. Various substitution functions can be
+        used as part of the text lines specified in <i>strlist</i> (see the <a href="hlp_estout.html#atvar">Remarks</a>
+        <a href="hlp_estout.html#atvar">on using @-variables</a>). For example, <b>@hline</b> plots a horizontal "line"
+        (series of dashes, by default; see the <b>hlinechar()</b> option) or <b>@M</b>
+        inserts the number of models in the table. <b>@M</b> could be used in a
+        LaTeX table heading as follows:
+
+            . estout <i>...</i>, prehead(\begin{tabular}{l*{@M}{r}})
+<a name="hlinechar"></a>
+    <b>hlinechar(</b><i>string</i><b>)</b> specifies the character(s) to be used in <b>@hline</b>. The
+        default is <b>hlinechar(-)</b>, resulting in a dashed line. To produce a
+        solid line, specify <b>hlinechar(`=char(151)')</b> (Windows only; other
+        systems may use other codes).
+<a name="varlabels"></a>
+    <b>varlabels(</b><i>matchlist</i>[<b>,</b> <i>suboptions</i>]<b>)</b> may be used to relabel the regressors
+        from the models, where <i>matchlist</i> is
+
+            <i>name</i> <i>label</i> [<i>name</i> <i>label</i> ...]
+
+        A <i>name</i> is a parameter name (e.g. <b>price</b>) or a full name (e.g.
+        <b>mean:price</b>) (abbreviation and wildcards not allowed). For example,
+        specify <b>varlabels(_cons Constant)</b> to replace each occurrence of <b>_cons</b>
+        with <b>Constant</b>. (Note that, in LaTeX, the underscore character
+        produces an error unless it is specified as <b>\_</b>. Thus, names such as
+        <b>_cons</b> should always be changed if the estimates table is to be used
+        with LaTeX. The <b>substitute()</b> may also be helpful; see the <a href="hlp_estout.html#lay">Layout</a>
+        options.) The <i>suboptions</i> are:
+
+            <b>blist(</b><i>matchlist</i><b>)</b> to assign specific prefixes to certain rows in
+                the table body. Specify the <i>matchlist</i> as pairs of regressors
+                and prefixes, that is:
+
+                    <i>name</i> <i>prefix</i> [<i>name</i> <i>prefix</i> ...]
+
+                A <i>name</i> is a parameter name (e.g. <b>price</b>), an equation name
+                followed by a colon (e.g. <b>mean:</b>), or a full name (e.g.
+                <b>mean:price</b>) (abbreviation and wildcards not allowed). Note
+                that equation names cannot be used if the <b>unstack</b> option is
+                specified.
+
+            <b>elist(</b><i>matchlist</i><b>)</b> to assign specific suffixes to certain rows in
+                the table body (see the analogous <b>blist()</b> option above). This
+                option may, for example, be useful for separating thematic
+                blocks of variables by adding vertical space at the end of
+                each block. A LaTeX example:
+
+                    . estout <i>...</i>, varlabels(,elist(price \addlinespace mpg
+                    \addlinespace))
+
+                (the macro <b>\addlinespace</b> is provided by the <b>booktabs</b> package
+                in LaTeX)
+
+            <a href="hlp_estout.html#lsub"><i>label_subopts</i></a>, which are explained in their own section.
+<a name="labcol2"></a>
+    <b>labcol2(</b><i>strlist</i>[<b>,</b> <i>suboptions</i>]<b>)</b> adds a second column containing additional
+        labels for the coefficients and summary statistics. Labels containing
+        spaces should be embraced in double quotes (<b>"</b><i>label 1</i><b>"</b> <b>"</b><i>label 2</i><b>"</b>
+        etc.). An example would be to add a column indicating the
+        hypothesized directions of effects, e.g.,
+
+        . estout <i>...</i>, labcol2(+ - +/- + 0)
+
+        The <i>suboptions</i> are:
+
+            <b>title(</b><i>strlist</i><b>)</b> to add text in the table header above the column.
+                Use double quotes to break the title into several rows (given
+                there are multiple header rows), i.e. specify <i>strlist</i> as
+                <b>"</b><i>line 1</i><b>"</b> <b>"</b><i>line 2</i><b>"</b> etc.
+
+            <b>width(</b><i>#</i><b>)</b> to set the width, in number of characters, of the
+                column. The default is the value of <b>modelwidth()</b>.
+<a name="refcat"></a>
+    <b>refcat(</b><i>matchlist</i>[<b>,</b> <i>suboptions</i>]<b>)</b> may be used to insert a row containing
+        information on the reference category of a categorical variable in
+        the model. <i>matchlist</i> is
+
+            <i>name</i> <i>refcat</i> [<i>name</i> <i>refcat</i> ...]
+
+        A <i>name</i> is a parameter name (e.g. <b>_Irep78_2</b>) (abbreviation and
+        wildcards not allowed). For example, assume that you include the
+        categorical variable <b>rep78</b> ("Repair Record 1978" from the auto
+        dataset) in some of your models using <b>xi</b> (see help <a href="http://www.stata.com/help.cgi?xi"><b>xi</b></a>). Since <b>rep78</b>
+        has five levels, 1 through 5, <b>xi</b> will create 4 dummy variables,
+        <b>_Irep78_2</b> through <b>_Irep78_5</b>. You can now type
+
+            . estout <i>...</i>, refcat(_Irep78_2 _Irep78_1)
+
+        to add a table row containing "_Irep78_1" in the left stub and "ref."
+        in each column in which the <b>_Irep78_2</b> dummy appears. The <i>suboptions</i>
+        are:
+
+            <b>label(</b><i>string</i><b>)</b> to specify the label that is printed in the table
+                columns. The default is <b>label(ref.)</b>. Type <b>nolabel</b> to suppress
+                the default label.
+
+            <b>below</b> to position the reference category row below the specified
+                coefficient's row. The default is above. For example, if the
+                5th category of <b>rep78</b> is used as reference category, i.e. if
+                <b>_Irep78_1</b> through <b>_Irep78_4</b> are included in the models, you
+                might want to type <b>refcat(_Irep78_4 _Irep78_5, below)</b>.
+<a name="mlabels"></a>
+    <b>mlabels(</b><i>strlist</i>[<b>,</b> <i>suboptions</i>]<b>)</b> determines the model captions printed in
+        the table heading. The default is to use the names of the stored
+        estimation sets (or their titles, if the <b>label</b> option is specified
+        and titles are available). The <i>suboptions</i> for use with <b>mlabels</b> are:
+
+            <b>depvars</b> to specify that the name (or label) of the (first)
+                dependent variable of the model be used as model label.
+
+            <b>titles</b> to specify that, if available, the title of the stored
+                estimation set be used as the model label. Note that the
+                <b>label</b> option implies <b>titles</b> (unless <b>notitles</b> is specified).
+                <b>depvars</b> takes precedence over <b>titles</b>.
+
+            <b>numbers</b> to cause the model labels to be numbered consecutively.
+
+            <a href="hlp_estout.html#lsub"><i>label_subopts</i></a>, which are explained in their own section.
+<a name="collabels"></a>
+    <b>collabels(</b><i>strlist</i>[<b>,</b> <a href="hlp_estout.html#lsub"><i>label_subopts</i></a>]<b>)</b> specifies labels for the columns
+        within models or equations. The default is to compose a label from
+        the names or labels of the statistics printed in the cells of that
+        column. The <i>label_subopts</i> are explained in their own section below.
+<a name="eqlabels"></a>
+    <b>eqlabels(</b><i>strlist</i>[<b>,</b> <i>suboptions</i>]<b>)</b> labels the equations. The default is to
+        use the equation names as stored by the estimation command, or to use
+        the variable labels if the equation names correspond to individual
+        variables and the <b>label</b> option is specified. The <i>suboptions</i> for use
+        with <b>eqlabels</b> are:
+
+            <b>merge</b> to merge equation labels and parameter labels instead of
+                printing equation labels in separate rows. Equation and
+                parameter labels will be separated by ":" unless another
+                delimiter is specified via the <b>suffix()</b> suboption (see
+                <a href="hlp_estout.html#lsub"><i>label_subopts</i></a>).  <b>merge</b> has no effect if <b>unstack</b> is specified.
+
+            <a href="hlp_estout.html#lsub"><i>label_subopts</i></a>, which are explained in their own section. Note
+                that <b>eqlabels(none)</b> causes <b>_cons</b> to be replaced with the
+                equation name or label, if <b>_cons</b> is the only parameter in an
+                equation. This is useful, e.g., for tabulating <b>ologit</b> or
+                <b>oprobit</b> results in Stata 9. Specify <b>eqlabels("", none)</b> to not
+                replace <b>_cons</b>.
+<a name="mgroups"></a>
+    <b>mgroups(</b><i>strlist</i>[<b>,</b> <i>suboptions</i>]<b>)</b> may be used to labels groups of
+        (consecutive) models at the top of the table heading. The labels are
+        placed in the first physical column of the output for the group of
+        models to which they apply. The <i>suboptions</i> for use with <b>mgroups</b> are:
+
+            <b>pattern(</b><i>pattern</i><b>)</b> to establish how the models are to be grouped.
+                <i>pattern</i> should be a list of zeros and ones, with ones
+                indicating the start of a new group of models. For example,
+
+                    . estout <i>...</i>, mgroups("Group 1" "Group 2", pattern(1 0 0
+                    1 0))
+
+                would group Models 1, 2, and 3 together and then groups
+                Models 4 and 5 together as well. Note that the first group
+                will always start with the first model regardless of whether
+                the first token of <i>pattern</i> is a one or a zero.
+
+            <a href="hlp_estout.html#lsub"><i>label_subopts</i></a>, which are explained in their own section. In
+                particular, the <b>span</b> suboption might be of interest here.
+<a name="numbers"></a>
+    <b>numbers</b>[<b>(</b><i>l</i> <i>r</i><b>)</b>] adds a row to the table header displaying consecutive
+        model numbers. The default is to enclose the numbers in parentheses,
+        i.e. <b>(1)</b>, <b>(2)</b>, etc.  Alternatively, specify <i>l</i> and <i>r</i> to change the
+        tokens on the left and right of each number. For example, <b>numbers(""</b>
+        <b>")")</b> would result in <b>1)</b>, <b>2)</b>, etc.
+
+<a name="out"></a>
+        +--------+
+    ----+ Output +-----------------------------------------------------------
+<a name="replace"></a>
+    <b>replace</b> permits <b>estout</b> to overwrite an existing file.
+<a name="append"></a>
+    <b>append</b> specifies that the output be appended to an existing file. It may
+        be used even if the file does not yet exist.
+<a name="type"></a>
+    <b>type</b> specifies that the assembled estimates table be printed in the
+        results window and the log file. This is the default unless <b>using</b> is
+        specified. Use <b>notype</b> to suppress the display of the table.
+<a name="showtabs"></a>
+    <b>showtabs</b> requests that tabs be displayed as <b>&lt;T&gt;</b>s in both the results
+        window and the log file instead of in expanded form. This option does
+        not affect how tabs are written to the text file specified by <b>using</b>.
+<a name="topfile"></a>
+    <b>topfile(</b><i>filename</i><b>)</b> and <b>bottomfile(</b><i>filename</i><b>)</b> may be used to insert text
+        before and after the table, where the text is imported from a file on
+        disk. Note that <b>substitute()</b> does not apply to text inserted by
+        <b>topfile()</b> or <b>bottomfile()</b>.
+
+<a name="def"></a>
+        +----------+
+    ----+ Defaults +---------------------------------------------------------
+<a name="style"></a>
+    <b>style(</b><i>style</i><b>)</b> specifies a "style" for the output table. <b><u>def</u></b><b>aults(</b><i>style</i><b>)</b> is
+        a synonym for <b>style(</b><i>style</i><b>)</b>. A "style" is a named combination of
+        options that is saved in an auxiliary file called <b>estout_</b><i>style</i><b>.def</b>.
+        In addition, there are five internal styles called <b>smcl</b> (default for
+        screen display), <b>tab</b> (export default), <b>fixed</b>, <b>tex</b>, and <b>html</b>. The <b>smcl</b>
+        style is suitable for displaying the table in Stata's results window
+        and is the default unless <b>using</b> is specified. It includes <a href="http://www.stata.com/help.cgi?smcl">SMCL</a>
+        formatting tags and horizontal lines to structure the table. The
+        particulars of the other styles are:
+
+            settings                 styles
+                         <b>tab</b>     <b>fixed</b>   <b>tex</b>     <b>html</b>
+            -----------------------------------------------
+            <b>begin</b>                                <b>&lt;tr&gt;&lt;td&gt;</b>
+            <b>delimiter</b>    <b>_tab</b>    <b>" "</b>     <b>&amp;</b>       <b>&lt;/td&gt;&lt;td&gt;</b>
+            <b>end</b>                          <b>\\</b>      <b>&lt;/td&gt;&lt;/tr&gt;</b>
+            <b>varwidth</b>     <b>0</b>       <b>12/20</b>*  <b>12/20</b>*  <b>12/20</b>*
+            <b>modelwidth</b>   <b>0</b>       <b>12</b>      <b>12</b>      <b>12</b>
+            <b>abbrev</b>       off     on      off     off
+                                         (* if <b>label</b> is on)
+
+        <b>tab</b> is the default export style (i.e. if <b>using</b> is specified).
+
+        Note that explicitly specified options take precedence over settings
+        provided by a style. For example, if you type
+
+            . estout, delimiter("") style(tab)
+
+        then the column delimiter will be set to empty string since the
+        <b>delimiter()</b> option overwrites the default from the <b>tab</b> style.
+        Similarly, specifying <b>noabbrev</b> will turn abbreviation off if using
+        the <b>fixed</b> style.
+
+        See <a href="hlp_estout.html#defaults">Defaults files</a> in the <a href="hlp_estout.html#rem">Remarks</a> section to make available your own
+        style.
+
+<a name="lsub"></a>
+<i>        </i>+---------------+
+<i>    </i>----+<i> label_subopts </i>+----------------------------------------------------
+
+    The following suboptions may be used within the <b>mgroups()</b>, <b>mlabels()</b>,
+    <b>collabels()</b>, <b>eqlabels()</b>, <b>varlabels()</b>, and <b>stats(, labels())</b> options:
+
+    <b>none</b> suppresses the printing of the labels or drops the part of the table
+        heading to which it applies. Note that instead of typing
+        <i>option</i><b>(, none)</b> you may simply specify <i>option</i><b>(none)</b>.
+
+    <b>prefix(</b><i>string</i><b>)</b> specifies a common prefix to be added to each label.
+
+    <b>suffix(</b><i>string</i><b>)</b> specifies a common suffix to be added to each label.
+
+    <b>begin(</b><i>strlist</i><b>)</b> specifies a prefix to be printed at the beginning of the
+        part of the table to which it applies. If <b>begin</b> is specified in
+        <b>varlabels()</b> or <b>stats(,labels())</b>, the prefix will be repeated for each
+        regressor or summary statistic.
+
+    <b>first</b> specifies that the first occurrence of the <b>begin()</b>-prefix in
+        <b>varlabels()</b> or <b>stats(,labels())</b> be printed. This is the default. Use
+        <b>nofirst</b> to suppress the first occurrence of the prefix. In
+        <b>varlabels()</b>, <b>nofirst</b> applies equation-wise, i.e., the first
+        <b>begin()</b>-prefix in each equation is suppressed (unless <b>unstack</b> is
+        specified).
+
+    <b>end(</b><i>strlist</i><b>)</b> specifies a suffix to be printed at the end of the part of
+        the table to which it applies. If <b>end</b> is specified in <b>varlabels()</b> or
+        <b>stats(,labels())</b>, the suffix will be repeated for each regressor or
+        summary statistic.
+
+    <b>last</b> specifies that the last occurrence of the <b>end()</b>-suffix in
+        <b>varlabels()</b> or <b>stats(,labels())</b> be printed. This is the default. Use
+        <b>nolast</b> to suppress the last occurrence of the suffix. In <b>varlabels()</b>,
+        <b>nolast</b> applies equation-wise, i.e., the last <b>end()</b>-suffix in each
+        equation is suppressed (unless <b>unstack</b> is specified).
+
+    <b>replace</b> causes the label suboption <b>begin()</b>-prefix and <b>end()</b>-suffix to be
+        used instead of the global <b>begin()</b> and <b>end()</b> strings. The default is
+        to print both. <b>replace</b> also applies to <b>blist()</b> and <b>elist()</b> if
+        specified in <b>varlabels()</b>.
+
+    <b>span</b> causes labels to span columns, i.e. extends the labels across
+        several columns, if appropriate. This suboption is relevant only for
+        the <b>mgroups()</b>, <b>mlabels()</b>, <b>eqlabels()</b>, and <b>collabels()</b> options. The
+        <b>@span</b> string returns the number of spanned columns if it is included
+        in the label, prefix, or suffix. A LaTeX example:
+
+        . estout <i>...</i>, mlabels(, span prefix(\multicolumn{@span}{c}{)
+        suffix(}))
+
+    <b>erepeat(</b><i>string</i><b>)</b> specifies a string that is repeated for each group of
+        spanned columns at the very end of the row if the <b>span</b> suboption is
+        specified. This suboption is relevant only for the <b>mgroups()</b>,
+        <b>mlabels()</b>, <b>eqlabels()</b>, and <b>collabels()</b> options. If the <b>@span</b> string
+        is included in <i>string</i> it will be replaced by the range of columns
+        spanned. A LaTeX example:
+
+        . estout <i>...</i>, mlabels(, span erepeat(\cline{@span}))
+
+    <b>lhs(</b><i>string</i><b>)</b> inserts <i>string</i> into the otherwise empty cell in the left stub
+        of the row of the table heading to which it applies. This suboption
+        is relevant only for the <b>mgroups()</b>, <b>mlabels()</b>, <b>eqlabels()</b>, and
+        <b>collabels()</b> options.
+
+<a name="msub"></a>
+<i>        </i>+----------------+
+<i>    </i>----+<i> matrix_subopts </i>+---------------------------------------------------
+
+    The following suboptions may be applied within the <b>matrix()</b>, <b>e()</b>, or <b>r()</b>
+    argument used to tabulate a matrix:
+<a name="mfmt"></a>
+    <b>fmt(</b><i>fmtlist</i><b>)</b> sets the display formats for the matrix.  <i>fmtlist</i> contains a
+        list of format specifications, one for each column of the matrix.
+        <i>fmtlist</i> is recycled if it supplies less specifications than there are
+        columns in the matrix. A format specification may be a single <a href="hlp_estout.html#fmt"><i>fmt</i></a>
+        such as, e.g., <b>%9.0g</b> or <b>a3</b> (see <a href="hlp_estout.html#fmt">Numerical formats</a> in the <a href="hlp_estout.html#rem">Remarks</a>
+        section for details) to be applied to all cells in the column.
+        Alternatively, a format specification may be a list of <a href="hlp_estout.html#fmt"><i>fmt</i></a>s, enclosed
+        in double quotes, to be used for the cells in the column one by one.
+        The last format in the list is used for the remaining cells if the
+        number of cells in the column is greater than the number of formats
+        in the list. Also see the <a href="hlp_estout.html#ex7">examples</a> below.
+<a name="mtranspose"></a>
+    <b>transpose</b> causes the matrix to be transposed for tabulation.
+
+<a name="exa"></a>
+<b><u>Examples</u></b>
+
+    Contents
+        <a href="hlp_estout.html#intro">Introduction</a>
+        <a href="hlp_estout.html#ex1">Publication style table</a>
+        <a href="hlp_estout.html#ex2">t-statistics for selected variables only</a>
+        <a href="hlp_estout.html#ex3">Summary statistics only</a>
+        <a href="hlp_estout.html#ex4">Table of descriptives</a>
+        <a href="hlp_estout.html#ex5">Unstack multiple equations</a>
+        <a href="hlp_estout.html#ex7">Tabulating a matrix</a>
+
+    Please first read the <a href="hlp_estout.html#intro">Introduction</a>. The other examples are more advanced
+    and intended for users already familiar with the basic features of
+    <b>estout</b>. Additional examples can be found in Jann (2005) and at 
+    http://repec.org/bocode/e/estout.
+
+<a name="intro"></a>
+        +--------------+
+    ----+ Introduction +-----------------------------------------------------
+
+    The full syntax of <b>estout</b> is rather complex and is to be found above.
+    However, consider the following basic syntax, which includes only the
+    most important options:
+
+        <b>estout</b> [ <i>namelist</i> ] [ <b>using</b> <i>filename</i> ] [ <b>,</b> <b><u>c</u></b><b>ells(</b><i>array</i><b>)</b>
+               <b><u>s</u></b><b>tats(</b><i>scalarlist</i><b>)</b> <b><u>sty</u></b><b>le(</b><i>style</i><b>)</b> <i>more_options</i> ]
+
+    where <i>namelist</i> is a list of the names of stored estimation sets (the name
+    list can be entered as <b>*</b> to refer to all stored estimates). The <b>cells()</b>
+    and <b>stats()</b> options determine the primary contents of the table. The
+    <b>style()</b> option determines the basic formatting of the table.
+
+    <u>Basic usage</u>
+
+    The general procedure for using <b>estout</b> is to first store several models
+    using the <b>estimates store</b> or the <a href="hlp_eststo.html"><b>eststo</b></a> command and then apply <b>estout</b> to
+    display or save a table of the estimates. By default, <b>estout</b> displays a
+    plain table of the coefficients of the models and uses <a href="http://www.stata.com/help.cgi?SMCL">SMCL</a> tags and
+    horizontal lines to structure the table:
+
+        . sysuse auto
+        (1978 Automobile Data)
+
+        . replace price = price / 1000
+        price was <b>int</b> now <b>float</b>
+<b>        </b>(74 real changes made)
+
+        . replace weight = weight / 1000
+        weight was <b>int</b> now <b>float</b>
+<b>        </b>(74 real changes made)
+
+        . quietly regress price weight mpg
+        
+        . estimates store m1, title(Model 1)
+        
+        . generate forXmpg = foreign * mpg
+        
+        . quietly regress price weight mpg forXmpg foreign
+        
+        . estimates store m2, title(Model 2)
+        
+        . estout m1 m2
+        
+<b>        </b>--------------------------------------
+                               m1           m2
+                                b            b
+        --------------------------------------
+        weight      <b>     1.746559     4.613589</b>
+        mpg         <b>    -.0495122     .2631875</b>
+        forXmpg     <b>                 -.3072165</b>
+        foreign     <b>                  11.24033</b>
+        _cons       <b>     1.946068    -14.44958</b>
+        --------------------------------------
+
+    Alternatively, if <b>using</b> is specified, <b>estout</b> writes a raw tab-delimited
+    table (without SMCL tags and without lines) to the indicated file (<b>*</b> is
+    used in the following example to indicate that all stored models be
+    tabulated):
+
+        . estout * using example.txt
+        (output written to example.txt)
+
+        . type example.txt
+        <b>        m1      m2</b>
+<b>                b       b</b>
+<b>        weight  1.746559        4.613589</b>
+<b>        mpg     -.0495122       .2631875</b>
+<b>        forXmpg         -.3072165</b>
+<b>        foreign         11.24033</b>
+<b>        _cons   1.946068        -14.44958</b>
+<b>        </b>
+    The table looks messy in the Stata results window or the Stata log
+    because the columns are tab-separated (note that tab characters are not
+    preserved in the results window or the log). However, the table would
+    look tidy if "example.txt" were opened, for example, in a spreadsheet
+    program.
+
+    <u>Choosing a style</u>
+
+    <b>estout</b> has a <b>style()</b> option to set the basic format of the table. The
+    default style for screen display is the <b>smcl</b> style.  The default export
+    style (i.e. if <b>using</b> is specified) is the <b>tab</b> style. (See the examples
+    above.) Other predefined styles are <b>fixed</b>, <b>tex</b>, and <b>html</b>, but it is also
+    possible to define one's own styles (see <a href="hlp_estout.html#defaults">Defaults files</a> in the <a href="hlp_estout.html#rem">Remarks</a>
+    section). The <b>tex</b> style, for example, modifies the output table for use
+    with LaTeX's tabular environment:
+
+        . estout *, style(tex) varlabels(_cons \_cons)
+        
+<b>                    &amp;          m1&amp;          m2\\</b>
+<b>                    &amp;           b&amp;           b\\</b>
+<b>        weight      &amp;    1.746559&amp;    4.613589\\</b>
+<b>        mpg         &amp;   -.0495122&amp;    .2631875\\</b>
+<b>        forXmpg     &amp;            &amp;   -.3072165\\</b>
+<b>        foreign     &amp;            &amp;    11.24033\\</b>
+<b>        \_cons      &amp;    1.946068&amp;   -14.44958\\</b>
+<b>        </b>
+    Note that <b>_cons</b> has been replaced by its LaTeX equivalent in the example
+    above using the <b>varlabels()</b> option (the underscore character produces an
+    error in LaTeX unless it is preceded by a backslash). For more
+    information on the <b>varlabels()</b> option, see <b>estout</b>'s <a href="hlp_estout.html#lab">Labeling</a> options.
+
+    <u>The cells option</u>
+
+    Use the <b>cells()</b> option to specify the parameter statistics to be
+    tabulated and how they are to be arranged. The parameter statistics
+    available are <b>b</b> (point estimates; the default), <b>se</b> (standard errors), <b>t</b>
+    (t-/z-statistics), <b>p</b> (p-values), <b>ci</b> (confidence intervals; to display the
+    lower and upper bounds in separate cells use <b>ci_l</b> and <b>ci_u</b>), as well as
+    any additional parameter statistics included in the <b>e()</b>-returns for the
+    models (see <b>estout</b>'s <a href="hlp_estout.html#par">Parameter Statistics</a> options). For example, <b>cells(b</b>
+    <b>se)</b> results in the reporting of point estimates and standard errors:
+
+        . estout *, cells(b se)
+        
+<b>        </b>--------------------------------------
+                               m1           m2
+                             b/se         b/se
+        --------------------------------------
+        weight      <b>     1.746559     4.613589</b>
+                    <b>     .6413538     .7254961</b>
+        mpg         <b>    -.0495122     .2631875</b>
+                    <b>      .086156     .1107961</b>
+        forXmpg     <b>                 -.3072165</b>
+                    <b>                  .1085307</b>
+        foreign     <b>                  11.24033</b>
+                    <b>                  2.751681</b>
+        _cons       <b>     1.946068    -14.44958</b>
+                    <b>      3.59705      4.42572</b>
+        --------------------------------------
+
+    Multiple statistics are placed in separate rows beneath one another by
+    default as in the example above. However, elements that are listed in
+    quotes or in parentheses are placed beside one another. For example,
+    specifying <b>cells("b se t p")</b> or, equivalently, <b>cells((b se t p))</b> produces
+    the following table:
+
+        . estout m2, cells("b se t p")
+        
+<b>        </b>----------------------------------------------------------------
+                               m2
+                                b           se            t            p
+        ----------------------------------------------------------------
+        weight      <b>     4.613589     .7254961     6.359219     1.89e-08</b>
+        mpg         <b>     .2631875     .1107961     2.375421     .0203122</b>
+        forXmpg     <b>    -.3072165     .1085307    -2.830687     .0060799</b>
+        foreign     <b>     11.24033     2.751681     4.084896     .0001171</b>
+        _cons       <b>    -14.44958      4.42572     -3.26491     .0017061</b>
+        ----------------------------------------------------------------
+
+    The two approaches can be combined. For example, <b>cells("b p" se)</b> would
+    produce a table with point estimates and standard errors beneath one
+    another in the first column and p-values in the top row of the second
+    column for each model.
+
+    Note that for each statistic named in the <b>cells()</b> option a set of
+    suboptions may be specified in parentheses. For example, in social
+    sciences it is common to report standard errors or t-statistics in
+    parentheses beneath the coefficients and to indicate the significance of
+    individual coefficients with stars. Furthermore, the results are rounded.
+    Just such a table can be created using the following procedure:
+
+        . estout *, cells(b(star fmt(3)) t(par fmt(2)))
+        
+<b>        </b>--------------------------------------------
+                               m1              m2
+                              b/t             b/t
+        --------------------------------------------
+        weight      <b>        1.747**         4.614***</b>
+                    <b>       (2.72)          (6.36)   </b>
+        mpg         <b>       -0.050           0.263*  </b>
+                    <b>      (-0.57)          (2.38)   </b>
+        forXmpg     <b>                       -0.307** </b>
+                    <b>                      (-2.83)   </b>
+        foreign     <b>                       11.240***</b>
+                    <b>                       (4.08)   </b>
+        _cons       <b>        1.946         -14.450** </b>
+                    <b>       (0.54)         (-3.26)   </b>
+        --------------------------------------------
+
+    The <b>estout</b> default is to display <b>*</b> for p&lt;.05, <b>**</b> for p&lt;.01, and <b>***</b> for
+    p&lt;.001. However, note that the significance thresholds and symbols are
+    fully customizable (see <b>estout</b>'s <a href="hlp_estout.html#sig">Significance stars</a> options).
+
+    <u>The stats option</u>
+
+    Finally, use the <b>stats()</b> option to specify scalar statistics to be
+    displayed for each model in the table footer. The available scalar
+    statistics are <b>aic</b> (Akaike's information criterion), <b>bic</b> (Schwarz's
+    information criterion), <b>rank</b> (the rank of <b>e(V)</b>, i.e. the number of free
+    parameters in model), <b>p</b> (the p-value of the model), as well as any
+    numeric or string scalars contained in the <b>e()</b>-returns for the models
+    (see <b>estout</b>'s <a href="hlp_estout.html#sum">Summary statistics</a> options). For example, specify <b>stats(r2</b>
+    <b>bic N)</b> to add the R-squared, BIC, and the number of cases:
+
+        . estout *, stats(r2 bic N)
+        
+<b>        </b>--------------------------------------
+                               m1           m2
+                                b            b
+        --------------------------------------
+        weight      <b>     1.746559     4.613589</b>
+        mpg         <b>    -.0495122     .2631875</b>
+        forXmpg     <b>                 -.3072165</b>
+        foreign     <b>                  11.24033</b>
+        _cons       <b>     1.946068    -14.44958</b>
+        --------------------------------------
+        r2          <b>     .2933891     .5516277</b>
+        bic         <b>     356.2918     331.2406</b>
+        N           <b>           74           74</b>
+        --------------------------------------
+<a name="ex1"></a>
+        +-------------------------+
+    ----+ Publication style table +------------------------------------------
+
+        . label variable foreign "Foreign car type"
+        
+        . label variable forXmpg "Foreign*Mileage"
+        
+        . estout *, cells(b(star fmt(%9.3f)) se(par))                ///
+        &gt;     stats(r2_a N, fmt(%9.3f %9.0g) labels(R-squared))      ///
+        &gt;     legend label collabels(none) varlabels(_cons Constant)
+        
+<b>        </b>----------------------------------------------------
+                                  Model 1         Model 2
+        ----------------------------------------------------
+        Weight (lbs.)       <b>        1.747**         4.614***</b>
+                            <b>      (0.641)         (0.725)   </b>
+        Mileage (mpg)       <b>       -0.050           0.263*  </b>
+                            <b>      (0.086)         (0.111)   </b>
+        Foreign*Mileage     <b>                       -0.307** </b>
+                            <b>                      (0.109)   </b>
+        Foreign car type    <b>                       11.240***</b>
+                            <b>                      (2.752)   </b>
+        Constant            <b>        1.946         -14.450** </b>
+                            <b>      (3.597)         (4.426)   </b>
+        ----------------------------------------------------
+        R-squared           <b>        0.273           0.526   </b>
+        N                   <b>           74              74   </b>
+        ----------------------------------------------------
+        * p&lt;0.05, ** p&lt;0.01, *** p&lt;0.001
+<a name="ex2"></a>
+        +------------------------------------------+
+    ----+ t-statistics for selected variables only +-------------------------
+
+        . estout *, cells(b(star) t(par keep(mpg)))
+        
+<b>        </b>--------------------------------------------
+                               m1              m2
+                              b/t             b/t
+        --------------------------------------------
+        weight      <b>     1.746559**      4.613589***</b>
+        mpg         <b>    -.0495122        .2631875*  </b>
+                    <b>  (-.5746806)      (2.375421)   </b>
+        forXmpg     <b>                    -.3072165** </b>
+        foreign     <b>                     11.24033***</b>
+        _cons       <b>     1.946068       -14.44958** </b>
+        --------------------------------------------
+<a name="ex3"></a>
+        +-------------------------+
+    ----+ Summary statistics only +------------------------------------------
+
+        . estout *, cells(none) stats(r2_a bic N, star)
+        
+<b>        </b>--------------------------------------------
+                               m1              m2
+        --------------------------------------------
+        r2_a        <b>     .2734846***     .5256351***</b>
+        bic         <b>     356.2918        331.2406   </b>
+        N           <b>           74              74   </b>
+        --------------------------------------------
+<a name="ex4"></a>
+        +-----------------------+
+    ----+ Table of descriptives +--------------------------------------------
+
+        . quietly generate x = uniform()
+        
+        . quietly regress x price weight mpg foreign
+        
+        . estadd mean
+
+        added matrix:
+                       e(mean) :  <b>1 x 5</b>
+<b>        </b>
+        . estadd sd, nobinary
+
+        added matrix:
+                         e(sd) :  <b>1 x 5</b>
+<b>        </b>
+        . estout, cells("mean sd") stats(N) mlabels(,none) drop(_cons)
+        
+<b>        </b>--------------------------------------
+                             mean           sd
+        --------------------------------------
+        price       <b>     6.165257     2.949496</b>
+        weight      <b>     3.019459     .7771936</b>
+        mpg         <b>      21.2973     5.785503</b>
+        foreign     <b>     .2972973             </b>
+        --------------------------------------
+        N           <b>           74             </b>
+        --------------------------------------
+<a name="ex5"></a>
+        +----------------------------+
+    ----+ Unstack multiple equations +---------------------------------------
+
+        . quietly sureg (price foreign weight length) ///
+        &gt;               (mpg displ = foreign weight)
+        
+        . estout, cells(b t(par)) stats(r2 chi2 p) unstack
+        
+<b>        </b>---------------------------------------------------
+                            price          mpg displacement
+                              b/t          b/t          b/t
+        ---------------------------------------------------
+        foreign     <b>      3.57526    -1.650029     -25.6127</b>
+                    <b>   (5.749891)  (-1.565555)  (-2.047999)</b>
+        weight      <b>     5.691462    -6.587886     96.75485</b>
+                    <b>   (6.182983)  (-10.55641)   (13.06594)</b>
+        length      <b>    -.0882711                          </b>
+                    <b>  (-2.809689)                          </b>
+        _cons       <b>     4.506212      41.6797    -87.23547</b>
+                    <b>   (1.255897)   (19.64914)   (-3.46585)</b>
+        ---------------------------------------------------
+        r2          <b>      .548808     .6627029     .8115213</b>
+        chi2        <b>     89.73586     145.3912     318.6174</b>
+        p           <b>     2.50e-19     2.68e-32     6.50e-70</b>
+        ---------------------------------------------------
+<a name="ex7"></a>
+        +---------------------+
+    ----+ Tabulating a matrix +----------------------------------------------
+
+    Use <b>estout matrix(</b><i>matname</i><b>)</b> to tabulate Stata matrix <i>matname</i>. Example:
+
+        . set seed 123
+        
+        . matrix A = matuniform(3,2)
+        
+        . matrix list A
+
+        A[3,2]
+                c1         c2
+        r1  <b>.91204397   .0075452</b>
+<b>        </b>r2  <b>.28085881  .46027868</b>
+<b>        </b>r3  <b>.56010592  .67319061</b>
+<b>        </b>
+        . estout matrix(A)
+        
+<b>        </b>--------------------------------------
+                                A
+                               c1           c2
+        --------------------------------------
+        r1          <b>      .912044     .0075452</b>
+        r2          <b>     .2808588     .4602787</b>
+        r3          <b>     .5601059     .6731906</b>
+        --------------------------------------
+
+    Numeric formats for the columns can be set using the <b>fmt()</b> suboption:
+
+        . estout matrix(A, fmt(2 3))
+        
+<b>        </b>--------------------------------------
+                                A
+                               c1           c2
+        --------------------------------------
+        r1          <b>         0.91        0.008</b>
+        r2          <b>         0.28        0.460</b>
+        r3          <b>         0.56        0.673</b>
+        --------------------------------------
+
+    A list of formats can be specified for each column:
+
+        . estout matrix(A, fmt("2 3 4" "4 3 2"))
+        
+<b>        </b>--------------------------------------
+                                A
+                               c1           c2
+        --------------------------------------
+        r1          <b>         0.91       0.0075</b>
+        r2          <b>        0.281        0.460</b>
+        r3          <b>       0.5601         0.67</b>
+        --------------------------------------
+<a name="rem"></a>
+<b><u>Remarks</u></b>
+
+    Contents
+
+        <a href="hlp_estout.html#fmt">Numerical formats</a>
+        <a href="hlp_estout.html#spchar">Special characters</a>
+        <a href="hlp_estout.html#atvar">Using @-variables</a>
+        <a href="hlp_estout.html#defaults">Defaults files</a>
+<a name="fmt"></a>
+        +-------------------+
+    ----+ Numerical formats +------------------------------------------------
+
+    Numerical display formats may be specified in <b>estout</b> as follows:
+
+     1. Official Stata's display formats: You may specify formats, such as
+        <b>%9.0g</b> or <b>%8.2f</b>. See help <a href="http://www.stata.com/help.cgi?format">format</a> for a list of available formats. <b>%g</b>
+        or <b>g</b> may be used as a synonym for <b>%9.0g</b>.
+
+     2. Fixed format: You may specify an integer value such as <b>0</b>, <b>1</b>, <b>2</b>, etc.
+        to request a display format with a fixed number of decimal places.
+        For example, <b>cells(t(fmt(3)))</b> would display t-statistics with three
+        decimal places.
+
+     3. Automatic format: You may specify <b>a1</b>, <b>a2</b>, ..., or <b>a9</b> to cause <b>esttab</b>
+        to choose a reasonable display format for each number depending on
+        the number's value. <b>a</b> may be used as a synonym for <b>a3</b>. The <i>#</i> in <b>a</b><i>#</i>
+        determines the minimum precision according to the following rules:
+
+          o Absolute numbers smaller than 1 are displayed with <i>#</i> significant
+            decimal places (i.e. with <i>#</i> decimal places ignoring any leading
+            zeros after the decimal point). For example, <b>0.00123456</b> is
+            displayed as <b>0.00123</b> if the format is <b>a3</b>.
+
+          o Absolute numbers greater than 1 are displayed with as many digits
+            required to retain at least one decimal place and are displayed
+            with a minimum of (<i>#</i> + 1) digits. For example, if the format is
+            <b>a3</b>, <b>1.23456</b> is displayed as <b>1.235</b>, <b>12.3456</b> is displayed as <b>12.35</b>,
+            and <b>1234.56</b> is displayed as <b>1234.6</b>.
+
+          o In any case, integers are displayed with zero decimal places, and
+            very large or very small absolute numbers are displayed in
+            exponential format.
+
+<a name="spchar"></a>
+        +--------------------+
+    ----+ Special characters +-----------------------------------------------
+
+    The <b>\</b> and <b>$</b> characters and quotation marks have special meanings in
+    Stata. You should therefore consider the following instructions if you,
+    for example, intend to specify akward delimiters or specify special
+    characters in labels:
+
+      - Strings containing unmatched quotes should be enclosed in compound
+        double quotes (thus, <b>delimiter(`"""')</b> results in columns delimited by
+        <b>"</b>, while <b>delimiter(")</b> produces an error).
+
+      - The backslash character is used to delay macro expansion in Stata.
+        Specifying <b>\\</b> in Stata 8 just results in the printing of <b>\</b>. To get a
+        double backslash in Stata 8 (the <b>\newline</b> command in TeX), type <b>\\\</b>.
+
+      - The dollar sign is used for global macro expansion in Stata. Thus, <b>$x</b>
+        would result in the display of the contents of global macro <b>x</b> (or
+        nothing, if the macro is empty). Therefore, use <b>\$</b> to produce <b>$</b> in
+        the output. For math mode in LaTeX I recommend using <b>\(</b>...<b>\)</b> instead
+        of <b>$</b>...<b>$</b>.
+
+    Stata's <b>char()</b> function may also be used to specify odd characters (see
+    help <a href="http://www.stata.com/help.cgi?strfun">strfun</a>). In particular, <b>"`=char(9)'"</b> results in a tab character and
+    <b>"`=char(13)'"</b> results in a carriage return. For example,
+    <b>delimiter(" `=char(9)' ")</b> specifies that a tab character with a leading
+    and a trailing blank be used as delimiter.
+
+    <i>Tip:</i> It is sometimes very useful to set the format of all cells in a
+    spreadsheet to "Text" before pasting the estimates table. This prevents
+    the spreadsheet program from trying to interpret the cells and ensures
+    that the contents of the table remain unchanged.
+
+<a name="atvar"></a>
+        +-------------------+
+    ----+ Using @-variables +------------------------------------------------
+
+    <b>estout</b> features several variables that can be used within string
+    specifications. The following list provides an overview of these
+    variables.
+
+     o  In <b>prehead()</b>, <b>posthead()</b>, <b>prefoot()</b>, and <b>postfoot()</b>, in the <b>begin()</b>
+        and <b>end()</b> label suboptions, and in the <b>blist()</b> and <b>elist()</b> suboptions
+        in <b>varlabels()</b>:
+
+            <b>@span</b> to return the value of a count variable for the total
+                number of physical columns of the table.
+
+            <b>@M</b> to return the number of models in the table.
+
+            <b>@E</b> to return the total number columns containing separate
+                equations.
+
+            <b>@width</b> to return the total width of the table (number of
+                characters).
+
+            <b>@hline</b> to return a horizontal line (series of dashes, by default;
+                see the <b>hlinechar()</b> option).
+
+     o  In <b>prehead()</b>, <b>posthead()</b>, <b>prefoot()</b>, and <b>postfoot()</b>:
+
+            <b>@title</b> to return the title specified with the <b>title()</b> option.
+
+            <b>@note</b> to return the note specified with the <b>note()</b> option.
+
+            <b>@discrete</b> to return the explanations provided by the <b>discrete()</b>
+                option (provided that the <b>margin</b> option is activated).
+
+            <b>@starlegend</b> to return a legend explaining the significance
+                symbols.
+
+     o  In the <b>prefix()</b> and <b>suffix()</b> suboptions of <b>mgroups()</b>, <b>mlabels()</b>,
+        <b>eqlabels()</b>, and <b>collabels()</b>, and in the labels specified in these
+        options:
+
+            <b>@span</b> to return the number of spanned columns.
+
+     o  In the <b>erepeat()</b> suboption of <b>mgroups()</b>, <b>mlabels()</b>, <b>eqlabels()</b>, and
+        <b>collabels()</b>:
+
+            <b>@span</b> to return the range of spanned columns (e.g. <b>2-4</b> if columns
+                2, 3 and 4 are spanned).
+
+<a name="defaults"></a>
+        +----------------+
+    ----+ Defaults files +---------------------------------------------------
+
+    <u>Creating new defaults files:</u>
+
+    To make available an own set of default options, proceed as follows:
+
+        1. Download "estout_mystyle.def" from the SSC Archive (click here to
+           copy the file from SSC and store it in the working directory).
+
+        2. Open "estout_mystyle.def" in a text editor and make the desired
+           modifications (click here to open "estout_mystyle.def" in Stata's
+           Do-File Editor).
+
+        3. Save the file in the current directory or elsewhere in the
+           ado-file path as <b>estout_</b><i>newstyle</i><b>.def</b> (see help <a href="http://www.stata.com/help.cgi?sysdir">sysdir</a>).
+
+    To use the new options set in <b>estout</b>, then type:
+
+        . estout <i>...</i> , style(<i>newstyle</i>)
+
+
+    <u>Defaults files syntax:</u>
+
+    <b>estout</b> has two main types of options, which are treated differentially in
+    defaults files. On the one hand, there are simple on/off options without
+    arguments, like <b>legend</b> or <b>showtabs</b>. To turn such an option on, enter the
+    option followed by the options name as an argument, i.e. add the line
+
+        <i>option</i> <i>option</i>
+
+    to the defaults file. For example,
+
+        legend legend
+
+    specifies that a legend be printed in the table footer. Otherwise, if you
+    want to turn the option of, just delete or comment out the line that
+    contains it (or specify <i>option</i> without an argument).
+
+    To temporarily turn off an option that has been activated in a defaults
+    file, specify <b>no</b><i>option</i> in the command line (do not, however, use <b>no</b><i>option</i>
+    in defaults files). For example, if the legend has been turned on in the
+    defaults file, but you want to suppress it in a specific call of <b>estout</b>,
+    type
+
+        . estout <i>...</i>, nolegend
+
+    On the other hand, there are options that take arguments, such as
+    <b>prehead(</b><i>args</i><b>)</b>, <b>delimiter(</b><i>args</i><b>)</b>, or <b>stats(</b><i>args</i><b>,</b> <i>...</i><b>)</b>. Such options are
+    specified as
+
+        <i>option</i> <i>args</i>
+
+    in the defaults file (where <i>args</i> must not include suboptions; see below).
+    Specifying an option in the command line overwrites the settings from the
+    defaults file. However, note that a <b>no</b> form, which exists for the first
+    options type, is not available here.
+
+    Last but not least, there are two options that reflect a combination of
+    the first and second types: <b>eform</b>[<b>(</b><i>args</i><b>)</b>] and <b>margin</b>[<b>(</b><i>args</i><b>)</b>]. These
+    options can be specified as either
+
+        <i>option</i> <i>option</i>
+
+    or
+
+        <i>option</i> <i>args</i>
+
+    in the defaults file; the <b>no</b> form is allowed.
+
+    Many <b>estout</b> options have suboptions, i.e., an option might take the form
+    <i>option</i><b>(</b><i>...</i><b>,</b> <i>suboption</i><b>)</b> or <i>option</i><b>(</b><i>...</i><b>,</b> <i>suboption</i><b>(</b><i>args</i><b>))</b>. In the defaults
+    file, the suboptions cannot be included in the definition of a
+    higher-level option. Instead, they must be specified in their own lines,
+    as either
+
+        <i>optionsuboption</i> <i>suboption</i>
+
+    or
+
+        <i>optionsuboption</i> <i>args</i>
+
+    In the case of a two-level nesting of options, the name used to refer to
+    the suboption is a concatenation of the option's name and the suboption's
+    name, i.e. <b>"</b><i>optionsuboption</i><b>"="</b><i>option</i><b>"+"</b><i>suboption</i><b>"</b>. For example, the
+    <b>labels()</b> suboption of the <b>stats()</b> option would be set by the term
+    <b>statslabels</b>. Analogously, the three level nesting in the <b>stats()</b> option
+    yields suboption names composed of three names. For instance, the
+    suboption called by the command
+
+        . estout <i>...</i>, stats(<i>...</i>, labels(<i>...</i>, prefix(<i>args</i>)))
+
+    would be referred to as
+
+        statslabelsprefix <i>args</i>
+
+    in the defaults file. The <b>cells()</b> option represents an exception to this
+    rule. It may be defined in the defaults file using only a plain array of
+    cells elements without suboptions, e.g.
+
+        cells "b se" p
+
+    However, the suboptions of the cells elements may be referred to as
+    <i>el_suboption</i>, for example
+
+        b_star star
+
+    or
+
+        se_par [ ]
+
+
+    <u>Comments in defaults files:</u>
+
+    Be aware that the support for comments in defaults files is limited. In
+    particular, the <b>/*</b> and <b>*/</b> comment indicators cannot be used.  The other
+    comment indicators work (more or less) as usual, that is:
+
+     o  Empty lines and lines beginning with <b>*</b> (with or without preceding
+        blanks) will be ignored.
+
+     o  <b>//</b> preceded by one or more blanks indicates that the rest of the line
+        should be ignored. Lines beginning with <b>//</b> (with or without preceding
+        blanks) will be ignored.
+
+     o  <b>///</b> preceded by one or more blanks indicates that the rest of the
+        line should be ignored and the part of the line preceding it should
+        be added to the next line. In other words, <b>///</b> can be used to split
+        commands into two or more lines of code.
+
+<a name="ret"></a>
+<b><u>Saved results</u></b>
+
+    <b>estout</b> saves the following in <b>r()</b>:
+
+    Scalars
+      <b>r(nmodels)</b>    number of models
+      <b>r(ccols)</b>      number of columns per model in <b>r(coefs)</b>
+
+    Macros
+      <b>r(cmdline)</b>    command as typed
+      <b>r(names)</b>      names of models
+      <b>r(m</b><i>#</i><b>_</b><i>name</i><b>)</b>    model-specific macros where <i>#</i> is the model number and
+                    <i>name</i> is macro name
+
+    Matrices
+      <b>r(coefs)</b>      coefficients
+      <b>r(stats)</b>      summary statistics
+
+<a name="ref"></a>
+<b><u>References</u></b>
+
+    Cong, R. (2000). sg144: Marginal effects of the tobit model.  <i>Stata</i>
+        <i>Technical Bulletin</i> 56: 27-34.
+
+    Jann, B. (2005). Making regression tables from stored estimates.  <i>The</i>
+        <i>Stata Journal</i> 5(3): 288-308.
+
+    Jann, B. (2007). Making regression tables simplified.  <i>The Stata Journal</i>
+        7(2): 227-244.
+
+    Newson, R. (2003). Confidence intervals and p-values for delivery to the
+        end user. <i>The Stata Journal</i> 3(3): 245-269.
+
+<a name="ack"></a>
+<b><u>Acknowledgements</u></b>
+
+    I would like to thank numerous people for their comments and suggestions.
+    Among them are Joao Pedro Azevedo, Kit Baum, Elisabeth Coutts, Henriette
+    Engelhardt, Jonathan Gardnerand, Simone Hirschvogl, Daniel Hoechle,
+    Friedrich Huebler, Maren Kandulla, J. Scott Long, David Newhouse, Clive
+    Nicholas, Fredrik Wallenberg, Ian Watson, and Vince Wiggins.
+
+<a name="aut"></a>
+<b><u>Author</u></b>
+
+    Ben Jann, Institute of Sociology, University of Bern, jann@soz.unibe.ch
+
+<a name="als"></a>
+<b><u>Also see</u></b>
+
+    Manual:  <b>[R] estimates</b>
+
+    SJ:      SJ5-3 st0085 (Jann 2005)
+             SJ7-2 st0085_1 (Jann 2007)
+
+    Online:  help for <a href="http://www.stata.com/help.cgi?estimates"><b>estimates</b></a>, <a href="http://www.stata.com/help.cgi?estcom">estcom</a>, <a href="http://www.stata.com/help.cgi?est_table"><b>estimates table</b></a>, <a href="http://www.stata.com/help.cgi?ereturn"><b>ereturn</b></a>, <a href="http://www.stata.com/help.cgi?format">format</a>, 
+             <a href="http://www.stata.com/help.cgi?file"><b>file</b></a>, <a href="http://www.stata.com/help.cgi?mfx"><b>mfx</b></a>, <a href="hlp_eststo.html"><b>eststo</b></a>, <a href="hlp_esttab.html"><b>esttab</b></a>, <a href="hlp_estadd.html"><b>estadd</b></a>, <a href="hlp_estpost.html"><b>estpost</b></a>
+</pre>
+</div>
+
+</body></html>

@@ -1,0 +1,14 @@
+apc is a Stata package for estimating age-period-cohort models. It 
+contains two ado files and an example program.
+
+apc_cglim estimates generalized linear models in which a single equality 
+constraint on the coefficients is used to solve the age-period-cohort 
+identification problem.
+
+apc_ie estimates generalized linear models with age, period and cohort 
+effects using the intrinsic estimator (IE) described by Yang, Fu and Land 
+(2004). The IE employs a special principal components regression that 
+removes the influence of the null (column) space of the design matrix on 
+the estimator.
+
+Both commands are implemented as wrappers for Stata's glm command.

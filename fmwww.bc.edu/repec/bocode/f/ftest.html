@@ -1,0 +1,101 @@
+<pre>
+<p>
+help for <b>ftest</b>
+-------------------------------------------------------------------------------
+<p>
+<b><u>Title</u></b>
+<p>
+    <b>ftest</b> --  compare two nested models using an F-test.
+<p>
+<b><u>Syntax</u></b>
+<p>
+        <b>ftest</b> <i>modelspec1</i> [<i>modelspec2</i>]
+<p>
+    where <i>modelspec</i> is
+<p>
+        <i>name</i>|<b>.</b>
+<p>
+    where <i>name</i> is the name under which estimation results were saved using
+        <b>estimates store</b>, and "<b>.</b>" refers to the last estimation results,
+        whether or not these were already stored.
+<p>
+<p>
+<b><u>Description</u></b>
+<p>
+    <b>ftest</b> compares two nested models estimated using <b>regress</b> and performs an
+    F-test for the null hypothesis that the constraint implict in the
+    restricted model holds. For example if a variable is left out of the
+    restricted model, the implict constraint is that the coefficient for that
+    variable equals zero. To conduct the test, both the unrestricted and the
+    restricted models must be fitted using <b>regress</b>, and the results of at
+    least one must be stored using <b>estimates store</b>.
+<p>
+    <i>modelspec1</i> and <i>modelspec2</i> specify the restricted and unrestricted model
+    in any order.  If <i>modelspec2</i> is not specified, the last estimation result
+    is used; this is equivalent to specifying <i>modelspec2</i> as a period (<b>.</b>).
+<p>
+<p>
+<b><u>Remarks</u></b>
+<p>
+    <b>ftest</b> is a convenience command; anything that can be done with<b> ftest</b> can
+        be done with <b>test</b>, and it will produce exactly the same results. The
+        difference is that with test the constraint needs to be explicitly
+        specified, while with ftest the constraint is implicit. However,<b> test</b>
+        will work with all vce types, while<b> ftest</b> will only work with the
+        default vce type.
+<p>
+<p>
+    <b>ftest</b> requires that both models are estimated on exactly the same sample.
+        This can easily be violated when the restricted model leaves a
+        variable out that contains missing values. The solution is to use the
+        if qualifier in <b>regress</b> when estimating the restricted model, see the
+        Examples below.
+<p>
+<p>
+<b><u>Examples</u></b>
+<p>
+    <b>Various ways specifying the models</b>
+<p>
+    sysuse auto, clear
+    reg price mpg foreign
+    est store a
+    reg price mpg
+    est store b
+    ftest a b
+    ftest a .
+    ftest a
+<p>
+    <b>This test can also be performed using </b><b>test</b>
+<p>
+    est restore a
+    test foreign
+<p>
+    <b>this will cause an error because rep78 contains missing values</b>
+<p>
+    reg price mpg rep78
+    est store a
+    reg price mpg
+    est store b
+    ftest a b
+<p>
+    <b>this is the solution</b>
+<p>
+    reg price mpg rep78
+    est store a
+    reg price mpg if e(sample)
+    est store b
+    ftest a b
+<p>
+<p>
+<b><u>Author</u></b>
+<p>
+    Maarten L. Buis
+    Vrije Universiteit Amsterdam
+    Department of Social Research Methodology
+    m.buis@fsw.vu.nl
+<p>
+<p>
+<b><u>Also see</u></b>
+<p>
+    Online: <b>regress</b> <b>estimates</b> <b>test</b> <b>lrtest</b>
+</pre>

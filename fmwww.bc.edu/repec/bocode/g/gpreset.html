@@ -1,0 +1,63 @@
+<pre>
+-------------------------------------------------------------------------------
+help for <b>gpreset</b>                                                 (Roger Newson)
+-------------------------------------------------------------------------------
+<p>
+<b><u>Reset preferences for a custom graphics scheme to their original values</u></b>
+<p>
+        <b>gpreset</b> <i>#</i>
+<p>
+where <i>#</i> is a number from 1 to 3, specifying one of the customized graphics
+schemes <b>custom1</b> to <b>custom3</b>.
+<p>
+<b><u>Description</u></b>
+<p>
+<b>gpreset</b> resets the preferences for a specified customized graphics scheme to
+their original values as shipped with Stata. That is to say, <b>custom1</b> is set to
+be the same as <b>blackbg</b>, <b>custom2</b> is set to be the same as <b>whitebg</b>, and <b>custom3</b>
+is set to be the same as <b>monochrome</b>.  The user can therefore change the
+preferences of scheme <b>custom</b><i>#</i> temporarily, and return them to their original
+values afterwards. For further details on graphics preference schemes, see help
+for gprefs.
+<p>
+<b><u>Remarks</u></b>
+<p>
+Stata provides six graphics schemes, of which three (<b>blackbg</b>, <b>whitebg</b> and
+<b>monochrome</b>) are standard and cannot be modified by the user, and the other
+three (<b>custom1</b>, <b>custom2</b> and <b>custom3</b>) are customizable and can be modified by
+the user.  However, when shipped, <b>custom1</b> is identical to <b>blackbg</b>, <b>custom2</b> is
+identical to <b>whitebg</b>, and <b>custom3</b> is identical to <b>monochrome</b>. This makes it
+easy for users to create customized schemes similar to one of the standard
+schemes, but different in a few details. <b>gpreset</b> allows the user to reset the
+customized settings in a single command. It is probably a good idea for the
+user to store frequently-used customized settings as sequences of gprefs
+commands in ado-files, which can convert the original values of the preferences
+of one of the customized schemes to the desired values. The user may also
+include one or more <b>gpreset</b> commands in the file <b>profile.do</b>, so that every
+Stata session starts with the customized schemes set to their original values;
+see help for profile.
+<p>
+<b><u>Examples</u></b>
+<p>
+The following example will reset the settings of the scheme <b>custom3</b> to their
+original values, then set the thickness of pen 1 temporarily to 4, create a
+plot, and finally reset the settings back to their original values again.
+<p>
+                . gpreset 3
+                . gprefs set custom3 pen1_thick 4
+                . gprefs query custom3
+                . gprefs set window scheme custom3
+                . gprefs set window update
+                . grap mpg weight,s([foreign]) ylabel xlabel
+                . gpreset 3
+                . gprefs query custom3
+<p>
+<b><u>Author</u></b>
+<p>
+Roger Newson, King's College, London, UK.  Email: roger.newson@kcl.ac.uk
+<p>
+<b><u>Also see</u></b>
+<p>
+ Manual:  <b>[G] gprefs</b>, <b>[G] pens</b>, <b>[G] symbol</b>
+On-line:  help for gprefs, grsym, grcolor, graph
+</pre>

@@ -1,0 +1,78 @@
+<pre>
+<b>help mata mm_cebinomial()</b>
+-------------------------------------------------------------------------------
+<p>
+<b><u>Title</u></b>
+<p>
+    <b>mm_cebinomial() -- Conditional expectation of a binomial distributed</b>
+                       <b>random variable</b>
+<p>
+<p>
+<b><u>Syntax</u></b>
+<p>
+        <i>real matrix</i> <b>mm_cebinomial(</b><i>n</i><b>,</b> <i>k</i><b>,</b> <i>p</i><b>)</b>
+<p>
+    where
+<p>
+        <i>n</i>:  <i>real matrix n</i>
+        <i>k</i>:  <i>real matrix k</i>
+        <i>p</i>:  <i>real matrix p</i>
+<p>
+<p>
+<b><u>Description</u></b>
+<p>
+    <b>mm_cebinomial()</b> returns the expected value of a binomial distributed
+    random variable conditional on the variable being equal to <i>k</i> or larger.
+    That is, <b>mm_cebinomial()</b> returns
+<p>
+        E(<i>X</i>|<i>X</i>&gt;=<i>k</i>)
+<p>
+    where
+<p>
+        <i>X</i> ~ B(<i>n</i>, <i>p</i>)
+<p>
+    and <i>n</i> is the number of trials and <i>p</i> is the success probability.
+<p>
+    When <i>n</i>, <i>k</i>, and <i>p</i> are not scalar, <b>mm_cebinomial()</b> returns
+    element-by-element results. <i>n</i>, <i>k</i>, and <i>p</i> are required to be r-conformable
+    (see help <b>[M-6] glossary</b>).
+<p>
+<b><u>Remarks</u></b>
+<p>
+    The expectation of <i>X</i> ~ B(<i>n</i>, <i>p</i>) conditional on <i>X</i>&gt;=<i>k</i> may be written as
+<p>
+        E(<i>X</i>|<i>X</i>&gt;=<i>k</i>) = <i>k</i> + [ P(<i>X</i>&gt;=<i>k</i>+1) + ... + P(<i>X</i>=<i>n</i>) ] / P(<i>X</i>&gt;=<i>k</i>)
+<p>
+    where P(<i>X</i>&gt;=<i>k</i>) is the probability of <i>k</i> or more successes, which is
+    computed as <b>Binomial(</b><i>n</i><b>,</b><i> k</i><b>,</b><i> p</i><b>)</b> (see <b>[M-5] normal()</b>).
+<p>
+<p>
+<b><u>Conformability</u></b>
+<p>
+    <b>mm_cebinomial(</b><i>n</i><b>,</b><i>k</i><b>,</b><i>p</i><b>)</b> requires <i>n</i>, <i>k</i>, and <i>p</i> be r-conformable (see help
+    <b>[M-6] glossary</b>). Returned is a matrix of max(argument rows) rows and
+    max(argument columns) columns containing element-by-element calculated
+    results.
+<p>
+<p>
+<b><u>Diagnostics</u></b>
+<p>
+    <b>mm_cebinomial()</b> returns missing if any of the arguments are missing.
+<p>
+    <b>mm_cebinomial()</b> returns missing if arguments are out of range (<i>p</i>&gt;1, <i>p</i>&lt;0,
+    <i>n</i>&lt;=0, <i>k</i>&lt;0, or <i>k</i>&gt;<i>n</i>) or if <i>n</i> or <i>k</i> are non-integer.
+<p>
+<p>
+<b><u>Source code</u></b>
+<p>
+    mm_cebinomial.mata
+<p>
+<p>
+<b><u>Author</u></b>
+<p>
+    Ben Jann, ETH Zurich, jann@soz.gess.ethz.ch
+<p>
+<p>
+<b><u>Also see</u></b>
+<p>
+</pre>

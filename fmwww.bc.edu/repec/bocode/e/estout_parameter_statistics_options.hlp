@@ -1,0 +1,9 @@
+{smcl}
+{* 23nov2004}{...}
+{hline}
+{hi:estout}'s {it:parameter_statistics_options}
+{hline}
+
+INCLUDE help estout_parameter_statistics_options
+
+{back:(back)}

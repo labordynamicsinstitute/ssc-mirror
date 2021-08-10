@@ -1,0 +1,91 @@
+<pre>
+<b>help metandi postestimation</b>                                     (Roger Harbord)
+                                                             also see:  metandi
+-------------------------------------------------------------------------------
+<p>
+<b><u>Title</u></b>
+<p>
+    <b>metandi postestimation</b> -- postestimation tools for metandi
+<p>
+<p>
+<b><u> Description</u></b>
+<p>
+    Many of Stata's standard postestimation tools will not work after 
+    <b>metandi</b>, or won't work as expected, as <b>metandi</b> reshapes the data before
+    fitting the model.
+<p>
+    The notable exception is <b>predict</b>, which can be used to obtain posterior
+    predictions (empirical Bayes estimates) of the sensitivity and
+    specificity in each study (<b>mu</b>), as well as various statistics that may be
+    useful for detecting outliers (e.g. <b>ustd</b>) and influential observations
+    (<b>cooksd</b>).
+<p>
+    <b>metandiplot</b> graphs the results from <b>metandi</b>.
+<p>
+<p>
+<b><u>Syntax for predict</u></b>
+<p>
+        <b>predict</b> [type] <i>newvarlist</i> [<i>if</i>] [<i>in</i>] [<b>,</b> <i>statistic</i>]
+<p>
+    where <i>statistic</i> is
+<p>
+        <b>mu</b>           posterior predicted (empirical Bayes) sensitivity and
+                         specificity; the default
+        <b>u</b>            posterior means (empirical Bayes predictions, BLUPs) of
+                         random effects
+        <b>sdu</b>          posterior standard deviations of the random effects
+        <b>ustd</b>         standardized posterior means of random effects
+        <b><u>li</u></b><b>npred</b>      linear predictor with empirical Bayes predictions
+                         plugged in. linpred = xb + u
+        <b><u>co</u></b><b>oksd</b>       Cook's distance for each study.  Only available when
+                         model was fitted using <b>gllamm</b>.
+<p>
+<p>
+    Most of the above statistics require two new variables to store them, one
+    for the statistic associated with sensitivity, and one for the statistic
+    associated with specificity.  If <i>newvarlist</i> contains only one <i>newvar</i>, the
+    statistics associated with sensitivity and specificity will be stored in
+    <i>newvar</i><b>1</b> and <i>newvar</i><b>0</b> respectively.  <b>cooksd</b>, however, is computed once for
+    each study and therefore requires only one <i>newvar</i>.
+<p>
+<p>
+<b><u>Remarks</u></b>
+<p>
+    If the model was fitted using <b>gllamm</b>, the predictions are obtained using 
+    <b>gllapred</b>, whose help page contains further details of the statistics
+    available.  See also the GLLAMM manual (Rabe-Hesketh, Skrondal &amp; Pickles
+    2004) and Rabe-Hesketh &amp; Skrondal (2005).  If the model was fitted using
+    <b>xtmelogit</b>, the predictions are obtained using <b>predict</b> - see xtmelogit
+    postestimation##predict.
+<p>
+<b><u>Examples</u></b>
+<p>
+        <b>. metandi tp fp fn tn</b>
+<p>
+    Add empirical Bayes estimates to <b>metandiplot</b>:
+<p>
+        <b>. predict eb</b>
+<p>
+        <b>. metandiplot, addplot(scatter eb1 eb0)</b>
+<p>
+    Check for particularly influential observations using Cook's distance:
+<p>
+        <b>. predict cook, cooksd</b>
+<p>
+        <b>. scatter cook studyid, mlabel(author)</b>
+<p>
+    Check for outliers using standardized predicted random effects
+    (interpretable as standardized level-2 residuals):
+<p>
+        <b>. predict ustd_Se ustd_Sp, ustd</b>
+<p>
+        <b>. scatter ustd_Se ustd_Sp, xscale(rev) mlab(studyid) xline(0)</b>
+              <b>yline(0)</b>
+<p>
+<p>
+<b><u>Also see</u></b>
+<p>
+    Online:  <b>gllapred</b>, <b>metandi</b>, <b>metandiplot</b>
+<p>
+<p>
+</pre>

@@ -1,0 +1,83 @@
+<pre>
+-------------------------------------------------------------------------------
+help for <b>tabm</b>
+-------------------------------------------------------------------------------
+<p>
+<b><u>Tabulation of multiple variables</u></b>
+<p>
+        <b>tabm</b> <i>varlist</i> [<i>weight</i>] [<b>if</b> <i>exp</i>] [<b>in</b> <i>range</i>] [<b>,</b> <b><u>miss</u></b><b>ing</b> <b>replace</b>
+                 <b><u>tr</u></b><b>anspose</b> <b><u>v</u></b><b>aluelabel(</b><i>lblname</i><b>)</b> <i>tabulate_options</i>]
+<p>
+    <b>by</b> <i>...</i> <b>:</b> may be used with <b>tabm</b>:  see help by.
+<p>
+    <b>fweight</b>s, <b>aweight</b>s and <b>iweight</b>s are allowed with <b>tabm</b>; see help weights.
+<p>
+<p>
+<b><u>Description</u></b>
+<p>
+    <b>tabm</b> tabulates <i>varlist</i>, containing two or more comparable variables, in a
+    combined two-way table of variables in <i>varlist</i> by values in <i>varlist</i>.
+    Either all variables should be numeric, or all variables should be
+    string: the type of the first variable named is taken to indicate the
+    user's intentions. By default, variables are listed in the rows of the
+    table and values in the columns.
+<p>
+<p>
+<b><u>Remarks</u></b> 
+<p>
+    For further discussion of handling multiple responses in Stata, see Cox
+    and Kohler (2003) and Jann (2005).
+<p>
+<p>
+<b><u>Options</u></b>
+<p>
+    <b>missing</b> specifies that observations with missing values are to be
+        included. The default is that any observation with any missing value
+        on the variables specified is excluded.
+<p>
+    <b>replace</b> specifies that the tabulated data overwrite the data in question.
+        The new variables will be <b>_stack</b>, indexing variables, <b>_values</b>, the
+        distinct values of <i>varlist</i>, and (if weights are specified) <b>_weight</b>,
+        the weights. <b>replace</b> may not be specified with <b>by:</b>.
+<p>
+    <b>transpose</b> transposes rows and columns as compared with the default.  This
+        option may be needed if there are too many values to show as columns.
+<p>
+    <b>valuelabel(</b><i>lblname</i><b>)</b> specifies a value label name to be used in
+        tabulation. The default is that any value label associated with the
+        first numeric variable in <i>varlist</i> will be used.  This option will be
+        ignored in tabulation of string variables.
+<p>
+    <i>tabulate_options</i> are options allowed with tabulate <i>varname1 varname2</i>.
+<p>
+<p>
+<b><u>Examples</u></b> 
+<p>
+    <b>. tabm q1-q15</b>
+<p>
+<p>
+<b><u>Author</u></b> 
+<p>
+    Nicholas J. Cox, Durham University, U.K.
+    n.j.cox@durham.ac.uk
+<p>
+<p>
+<b><u>Acknowledgments</u></b> 
+<p>
+    Lee Sieswerda suggested making <b>tabm</b> <b>by</b>able and helped in testing.
+<p>
+<p>
+<b><u>References</u></b> 
+<p>
+    Cox, N.J. and Kohler, U. 2003.  On structure and shape: the case of
+        multiple responses.  <i>Stata Journal</i> 3: 81-99.
+<p>
+    Jann, B. 2005. Tabulation of multiple responses.  <i>Stata Journal</i> 5:
+        92-122.
+<p>
+<p>
+<b><u>Also see</u></b> 
+<p>
+    On-line: help for tabulate; mrtab (if installed)
+<p>
+</pre>

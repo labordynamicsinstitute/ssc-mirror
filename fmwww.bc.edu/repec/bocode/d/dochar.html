@@ -1,0 +1,80 @@
+<pre>
+<b>help dochar</b> 
+-------------------------------------------------------------------------------
+<p>
+<b><u>Title</u></b>
+<p>
+    <b>dochar</b> - Running Stata commands stored in characteristics
+<p>
+<b><u>Syntax</u></b>
+<p>
+        <b>dochar</b> <i>evarname</i><b>[</b><i>charname</i><b>]</b> [[<b>"</b>]<i>text</i>[<b>"</b>]] <b>,</b> [<b>self(</b><i>varname</i><b>)</b>
+                <b><u>temp</u></b><b>names(</b><i>special name list</i><b>)</b> <b>loud</b> <b>tmpfile</b> ]
+<p>
+<b><u>Description</u></b>
+<p>
+    <b>dochar</b> is a utility for running commands stored as characteristics, in
+    Stata parlance, <b>do</b>ing <b>char</b>acteristics. This can be used to attach simple
+    do files to the dataset or to particular variables. This can be of great
+    use for data validation. Warning: this could seem a bit obscure, but as
+    long as you understand macros well, it could be very useful. See 
+    docharprog for the details of programming with chars.
+<p>
+<b><u>Options</u></b>
+<p>
+    <b>self</b> By default, <b>dochar</b> uses the local macro `self' to refer to the
+        variable to which the characteristic is attached. It does this so
+        that the command will still run if the variable is renamed.
+        Sometimes, but rarely, it is worth using the <b>self</b> option to override
+        the default with another variable name (for example, this is used for
+        recursion within <b>dochar</b>).
+<p>
+    <b>tempnames</b> is a method for passing values of local macros to the commands
+        stored in the characteristics. This facilitates <b>dochar</b> being able to
+        be used from within do or ado files which have any locally named
+        items. The <b>tempnames</b> are passed as a space-delimited list of items,
+        each of which is of the form <i>lclname</i>:<i>value</i>. This means that passing
+        the local macro bleen would be done as <b>bleen:`bleen'</b>, and passing the
+        temporary variable `foo' would be done as <b>foo:`foo'</b>.
+<p>
+    <b>loud</b> is primarily for debugging code which is run via <b>dochar</b>. It echos
+        information at critical places, so that it is possible to see exactly
+        what steps are being executed. Think of it as similar to using a <b>set</b> 
+        trace <b>on</b> when running a do-file.
+<p>
+    <b>tmpfile</b> writes the characteristic as a temporary do file, and then
+        executes the do file. This is worthwhile if the characteristic needs
+        to have any commands which use curly braces ({ and }). If <b>loud</b> is
+        specified, the temporary file is executed using do, so every step is
+        echoed to the results window. If <b>loud</b> is not specified, then the
+        temporary file is executed using the run command, so all output
+        (including that from display statements) is silenced.
+<p>
+<b><u>Examples</u></b>
+<p>
+    <b>. dochar bling[valid_check]</b>
+        runs the list of commands stored in the characteristic
+        <b>bling[error_check]</b>
+<p>
+    <b>. dochar foo[bar], tempnames(aVar:`aVar' aMacro:`aMacro')</b>
+        runs the list of commands stored in the characteristic <b>foo[bar]</b>,
+        allowing the use of the temporary variable <b>aVar</b> and local macro
+        <b>aMacro</b> inside the mini-do-characteristic. Note that some care is
+        needed when using local macros in characteristics. See docharprog for
+        more direction.
+<p>
+<b><u>Notes</u></b>
+<p>
+    To see how these are used, take a peek at docharprog, ckvar_overview and 
+    ckvaredit.
+<p>
+<b><u>Also see</u></b>
+<p>
+    Online: docharedit, docharprog
+<p>
+<b><u>Author</u></b>
+<p>
+    Bill Rising, StataCorp
+    email: brising@stata.com
+    web: http://homepage.mac.com/brising
+</pre>

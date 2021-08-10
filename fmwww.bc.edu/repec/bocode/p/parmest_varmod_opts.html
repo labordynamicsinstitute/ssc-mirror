@@ -1,0 +1,90 @@
+<pre>
+-------------------------------------------------------------------------------
+<b>help parmest_varmod_opts</b>                                         (Roger Newson)
+-------------------------------------------------------------------------------
+<p>
+<p>
+<b><u>Variable-modifying options for </u></b><b><u>parmest</u></b><b><u> and </u></b><b><u>parmby</u></b>
+<p>
+<p>
+<b><u>Syntax</u></b>
+<p>
+<p>
+    <i>options</i>                   Description
+    -------------------------------------------------------------------------
+    <b><u>ren</u></b><b>ame(</b><i>renaming_list</i><b>)</b>     Rename variables in the output dataset
+    <b><u>fo</u></b><b>rmat(</b><i>formatting_list</i><b>)</b>   Display formats for variables in the output
+                                dataset
+    <b>float</b>                     Set storage type of numeric variables to <b>float</b>
+                                or lower precision
+    <b>no</b><b><u>dou</u></b><b>ble</b>                  Alternative option for specifying <b>float</b>
+    -------------------------------------------------------------------------
+<p>
+    where <i>renaming_list</i> is a list of  variable names of form
+<p>
+    <i>oldvarname_1 newvarname_1 ... oldvarname_n newvarname_n</i>
+<p>
+    and <i>formatting_list</i> is a list of form
+<p>
+    <i>varlist_1</i><i> </i><i>format_1</i><i> ... </i><i>varlist_n</i><i> </i><i>format_n</i>
+<p>
+<p>
+<b><u>Description</u></b>
+<p>
+    These options allow the user to change the names, display formats and
+    storage types of variables in the output dataset (or resultsset) created
+    by <b>parmest</b> or <b>parmby</b>.
+<p>
+<p>
+<b><u>Options</u></b>
+<p>
+    <b>rename(</b><i>oldvarname_1 newvarname_1 ... oldvarname_n newvarname_n</i><b>)</b> specifies
+        a list of pairs of variable names.  The first variable name of each
+        pair specifies a variable in the <b>parmest</b> output dataset, which is
+        renamed to the second variable name of the pair.  This option may be
+        used to change the names of output variables to prevent name clashes,
+        especially with variables specified in the <b>by()</b> option of <b>parmby</b>,
+        which cannot be renamed using the <b>rename()</b> option.
+<p>
+    <b>format(</b><i>varlist_1 format_1 ... varlist_n format_n</i><b>)</b> specifies a list of
+        pairs of variable lists and display formats.  The formats will be
+        allocated to the variables in the output dataset specified by the
+        corresponding <i>varlist</i>s.  If <b>rename()</b> is specified, then any variable
+        names specified by the <b>format()</b> option must be the new names.
+<p>
+    <b>float</b> specifies that there will be no variables in the output dataset of
+        storage type double.  If <b>float</b> is not specified, then all numeric
+        variables in the output dataset will be of type double, and therefore
+        stored to double precision, except if they can be compressed without
+        loss of precision, in which case they will be compressed as far as
+        possible without loss of precision.  If <b>float</b> is specified, then
+        variables of type double in the output dataset will be converted to
+        type float, even if this results in loss of precision.  (See help for
+        <b>recast</b>.)
+<p>
+    <b>nodouble</b> is an alternative way of specifying <b>float</b>.
+<p>
+<p>
+<b><u>Notes</u></b>
+<p>
+    See <i>parmest_resultssets</i> for details of the variables in datasets created
+    by <b>parmest</b> and <b>parmby</b>.
+<p>
+<p>
+<b><u>Author</u></b>
+<p>
+    Roger Newson, Imperial College London, UK.  Email:
+    r.newson@imperial.ac.uk
+<p>
+<p>
+<b><u>Also see</u></b>
+<p>
+<p>
+    Manual:  <b>[U] 11.4 varlists</b>,
+             <b>[D] rename</b>, <b>[D] format</b>, <b>[D] recast</b>, <b>[D] data types</b>
+<p>
+      Help:  <b>[U] 11.4 varlists</b>,
+             <b>[D] rename</b>, <b>[D] format</b>, <b>[D] recast</b>, <b>[D] data types</b>
+             <b>parmest</b>, <b>parmby</b>, <i>parmest_outdest_opts</i>, <i>parmest_ci_opts</i>,
+             <i>parmest_varadd_opts</i>, <i>parmby_only_opts</i>, <i>parmest_resultssets</i>
+</pre>

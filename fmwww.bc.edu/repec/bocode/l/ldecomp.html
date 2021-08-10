@@ -1,0 +1,230 @@
+<pre>
+<p>
+help for <b>ldecomp</b>
+-------------------------------------------------------------------------------
+<p>
+<b><u>Title</u></b>
+<p>
+    <b>ldecomp</b> -- Decomposes total effects in logistic regresion into direct and
+                 indirect effects.
+<p>
+<b><u>Syntax</u></b>
+<p>
+        <b>ldecomp</b> <i>depvar</i> [ <i>control_var1</i> [...]] } [<i>if</i>] [<i>in</i>] [<i>weight</i>] <b>,</b>
+               <b><u>d</u></b><b>irect(</b><i>varname</i><b>)</b> <b><u>i</u></b><b>ndirect(</b><i>varlist</i><b>)</b> [ <b>at(</b><i>control_var1 # </i>[<i>;</i>
+               <i>control_var2 #</i>]<i> </i>[...]<b>)</b> <b><u>obs</u></b><b>pr</b> <b><u>predp</u></b><b>r</b> <b><u>predo</u></b><b>dds</b> <b>or</b> <b><u>ri</u></b><b>ndirect</b>
+               <b><u>norm</u></b><b>al</b> <b>range(</b><i># #</i><b>)</b> <b>nip(</b><i>#</i><b>)</b> <b><u>int</u></b><b>eractions</b> <b><u>noleg</u></b><b>end</b> <b><u>nodec</u></b><b>omp</b>
+               <b><u>noboot</u></b><b>strap</b> <i>bootstrap_options</i> ]
+<p>
+        fweights, pweights, and iweights are allowed when the <b>nobootstrap</b>
+        option is specified.
+<p>
+<b><u>Description</u></b>
+<p>
+    <b>ldecomp</b> decomposes the total effects of a categorical variable in
+    logistic regresion into direct and indirect effects using a method method
+    by Erikson et al. (2005) and a generalization of this method by Buis
+    (2008). Say our dependent variable is whether or not someone attends
+    college, and we are interested in decomposing the total effect of class
+    background (high or low). We suspect that part of the total effect can be
+    explained by differences between the classes in performance during high
+    school: higher class children do better at high school and children that
+    do better at high school are more likely to attend college.  This is the
+    indirect effect. The direct effect of class is the effect while
+    controlling for the performance: higher class children are more likely to
+    attend college even if they have the same performance during high school.
+<p>
+    There are two ways in which one can see the impact of differences in the
+    distribution of performance across classes, and thus get the indirect
+    effect. One can fix the logistic regresion coefficients to be equal to
+    the coefficients for the lower class and compare the proportion attending
+    college of the group with a distribution of performance equal to the
+    lower class and proportion attending college of the group with a
+    distribution of performance equal to the higher class.  This way the only
+    difference between the two groups is the distribution of performance.
+    Call this method 1. Alternatively, one can make the same comparison but
+    fix the logistic regression coefficients to be equal to the coefficients
+    of the higher class. Call this method 2.
+<p>
+    Similarly, one can control for performance, and thus get the direct
+    effect, by fixing the distribution of performance to be equal to the
+    distribution of performance of the higher class (method 1) or the lower
+    class (method 2). Once these distributions are fixed one can compare the
+    proportion attending college of the group with the logistic regression
+    coefficients of the lower class with the proportion attending college of
+    the group with the logistic regression coefficients of the higher class.
+<p>
+    If these direct and indirect effects are represented as odds ratios than
+    the total effect is the product of the the direct and indirect effect, as
+    can be seen in equations 1 (method 1) and 2 (method 2). The O represents
+    the odds of attending college, the first subscript the distribution of
+    performance and the second subscript the logistic regression
+    coefficients.
+<p>
+       O_hl     O_hh     O_hh
+      ------ X ------ = ------              (1)
+       O_ll     O_hl     O_ll
+<p>
+       O_hh     O_lh     O_hh
+      ------ X ------ = ------              (2)
+       O_lh     O_ll     O_ll
+<p>
+    If these direct and indirect effects are represented as log odds ratios
+    than the total effect is the sum of the the direct and indirect effect,
+    as can be seen in equations 1' (method 1) and 2' (method 2).
+<p>
+        +      +     +      +     +      +
+        | O_hl |     | O_hh |     | O_hh |
+      ln|------| + ln|------| = ln|------|  (1')
+        | O_ll |     | O_hl |     | O_ll |
+        +      +     +      +     +      +
+<p>
+        +      +     +      +     +      +
+        | O_hh |     | O_lh |     | O_hh |
+      ln|------| + ln|------| = ln|------|  (2')
+        | O_lh |     | O_ll |     | O_ll |
+        +      +     +      +     +      +
+<p>
+    By default <b>ldecomp</b> shows the decomposition in terms of log odds ratios
+    for both method 1 and 2, and computes standard errors using <b>bootstrap</b>. By
+    specifying the <b>relindir</b> option <b>ldecomp</b> will also show estimates of the
+    size of the indirect relative to the total effect, using method 1 and 2
+    and the average of these two, and their standard errors, also computed
+    using the bootstrap.
+<p>
+    In order for this decomposition to work one needs a whole set of odds of
+    attending college, both of groups that actually exist in the data like
+    the group with the distribution of performance and the logistic
+    regression coefficients of the lower class, and of groups that don't
+    exist in the data, like the group with the distribution of performance of
+    the lower class and the logistic regression coefficients of the higher
+    class. All these odds are computed by transforming the average predicted
+    probability of all these actual and counterfactual groups. Erikson et al.
+    (2005) and Buis (2008) differ with respect to the way these average
+    probabilities are computed: Erikson et al. assume that ability is normaly
+    distributed and numerically integrate over this distribution, while Buis
+    makes no assumption about this distribution and just computes the
+    predicted probabilities and then computes the mean, effectively
+    integrating over the empirical distribution of performance instead of
+    over a normal distribution.
+<p>
+    Other than Erikson et al. (2005) <b>ldecomp</b> also allows one to add control
+    variables.  While computing this decompostion these will by default be
+    fixed at their mean value if no value was specified in the <b>at()</b> option
+<p>
+<p>
+<b><u>Options</u></b>
+<p>
+    <b>direct(</b><i>varname</i><b>)</b> specifies the variable whose direct effect we want to
+        decompose into an indirect and total effect. This has to be a
+        categorical variable, each value of varnameis assumed to represent a
+        group.
+<p>
+    <b>indirect(</b><i>varlist</i><b>)</b> specifies the variable(s) through which the indirect
+        effect occurs. By default multiple variables are allowed and these
+        can be from any distribution. If the <b>normal</b> option is specified only
+        one variable can be entered, and this variable is assumed to be
+        normally distributed.
+<p>
+    <b>at(</b><i>control_var1 # </i>[<i>; control_var2 #</i>]<i> </i>[...]<b>)</b> specifies the values at which
+        the control variables are to be fixed. The default is to fix the
+        value of control variable at its mean value.
+<p>
+    <b>obspr</b> specifies that a table of the observed proportions are to be
+        displayed.
+<p>
+    <b>predpr</b> specifies that a table of predicted and counterfactual proportions
+        is to be displayed.  If the <b>normal</b> option is not specified the
+        diagonal elements of this table will be exactly the same as the
+        observed proportions.
+<p>
+    <b>predodds</b> specifies that a table of predicted and counterfactual odds is
+        to be displayed.
+<p>
+    <b>or</b> specifies that the decomposition is displayed in terms of odds-ratios
+        instead of log odds-ratios.
+<p>
+    <b>rindirect</b> specifies that the relative contributions of the indirect
+        effects to the total effect (in terms of log odds ratios) is to be
+        displayed.
+<p>
+    <b>normal</b> specifies that the predicted and counterfactual proportions are to
+        be computed according to the method specified by Erikson et al.
+        (2005). This means that the variable specified in <b>indirect()</b> is
+        assumed to be normally distributed. This option was primarily added
+        for compatibility with Erikson et al. (2005). By default the method
+        by Buis (2008) is used, which allows multiple variables to be
+        specified in <b>indirect()</b> and makes no assumptions about the
+        distribution of these variables.
+<p>
+    <b>range(</b><i>##</i><b>)</b> specifies the range over which the numerical integration of
+        varlist is to be performed. The default is the minimum of the
+        variable in varlist minus 10% of the range of varlist and the maximum
+        of varlist plus 10% of the range of varlist. This option can only be
+        specified with the <b>normal</b> option because in the default method there
+        is no need for numerical integration.
+<p>
+    <b>nip(</b><i>#</i><b>)</b> specifies the number of integration points used in the numerical
+        integration of the variable in varlist. The default is 1000. This
+        option can only be specified with the <b>normal</b> option because in the
+        default method there is no need for numerical integration.
+<p>
+    <b>interactions</b> specifies that interactions between the categories of the
+        variable specified in<b> direct()</b> and the variable(s) specified in
+        <b>indirect()</b>. In other words the effects of the variables specified in
+        <b>indirect()</b> on the dependent variable are allowed to differ from one
+        another for each category of the variable specified in<b> direct()</b>. This
+        option was primarily added for compatibility with Erikson et al.
+        (2005).
+<p>
+    <b>nolegend</b> suppresses a legend that is by default displayed at the bottom
+        of the main table.
+<p>
+    <b>nodecomp</b> prevents<b> ldecomp</b> from displaying the table of decompositions,
+        which can be useful in combination with the<b> obspr</b>,<b> predpr</b>, and/or
+        <b>predodds</b> options.
+<p>
+    <b>nobootstrap</b> prevents <b>ldecomp</b> from using <b>bootstrap</b> to calculate standard
+        errors.
+<p>
+<a name="bootopt"></a>    <i>bootstrap_options</i> The following options of <b>bootstrap</b> are allowed:
+        <b><u>r</u></b><b>eps(</b><i>#</i><b>)</b>, <b><u>str</u></b><b>ata(</b><i>varlist</i><b>)</b>, <b><u>si</u></b><b>ze(</b><i>#</i><b>)</b>, <b><u>cl</u></b><b>uster(</b><i>varlist</i><b>)</b>,
+        <b><u>id</u></b><b>cluster(</b><i>newvar</i><b>)</b>, <b>saving</b>(<i>filename</i>[, <i>suboptions</i>]), <b>bca</b>, <b>mse</b>,
+        <b><u>l</u></b><b>evel(</b><i>#</i><b>)</b>, <b>nodots</b>, <b>seed(</b><i>#</i><b>)</b>, and <b><u>jack</u></b><b>knifeopts(</b><i>jkopts</i><b>)</b>.
+<p>
+<p>
+<b><u>Example</u></b>
+<p>
+    <b>. use wisconsin.dta, clear</b>
+    <b>. ldecomp college , direct(ocf57) indirect(hsrankq)</b>
+<p>
+<p>
+<b><u>Author</u></b>
+<p>
+    Maarten L. Buis
+    Universitaet Tuebingen
+    Instituet fur Soziologie
+    maarten.buis@uni-tuebingen.de
+<p>
+<p>
+<b><u>References</u></b>
+<p>
+    Buis, M.L. (2009). Direct and indirect effects in a logit model.  
+        http://www.maartenbuis.nl/wp/ldecomp.html
+<p>
+    Erikson, R, J.H. Goldthorpe, M. Jackson, M. Yaish, D.R. Cox (2005).  On
+        class differentials in educational attainment.  <i>Proceedings of the</i>
+        <i>National Academy of Science</i>, 102(27): 9730-9732.
+<p>
+    Jackson, M, R. Erikson, J. Goldthorpe, M. Yaish (2007). Primary and
+        secondary effects in class differentials in educational attainment:
+        The transition to A-level courses in England and Wales. <i>Acta</i>
+        <i>Sociologica</i>, 50(3): 211-229.
+<p>
+<p>
+<b><u>Also see</u></b>
+<p>
+    Online: <b>logit</b> <b>bootstrap</b> <b>bootstrap_postestimation</b> <b>jackknife</b>
+<p>
+    If installed: <b>fairlie</b> <b>gdecomp</b>
+</pre>

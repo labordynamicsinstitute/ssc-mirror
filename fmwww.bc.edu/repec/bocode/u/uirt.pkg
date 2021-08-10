@@ -1,0 +1,28 @@
+d 'UIRT': module to fit unidimensional Item Response Theory models
+d
+d   uirt is a Stata module for estimating variety of unidimensional
+d IRT models (2PLM, 3PLM, GRM, PCM, GPCM).  It features multi-group
+d modelling, DIF analysis, extended graphical item fit analysis and
+d generating plausible values (PVs) conditioned via latent
+d regression.  uirt implements the EM algorithm (Dempster, Laird &
+d Rubin, 1977) in the form of marginal maximum likelihood
+d estimation (MML) proposed by Bock & Aitkin (1981) with normal
+d Gauss-Hermite quadrature.  LR test is used for DIF testing and
+d model based P-DIF effect size measures are provided (Wainer,
+d 1993).  Generating PVs is performed by adapting a MCMC method
+d developed for IRT models by Patz & Junker (1999).  Unconditioned
+d PVs are used to plot observed response proportions against the
+d item characteristic curves allowing for detailed graphical item
+d fit analysis. 
+d
+d KW: item response theory; differential item functioning; item fit; plausible values
+d
+d Requires: Stata version 12
+d
+d Distribution-Date: 20161013
+d
+d Author:   Bartosz Kondratek, Educational Research Institute
+d Support: email  b.kondratek@@ibe.edu.pl
+d
+f uirt.ado
+f uirt.sthlp

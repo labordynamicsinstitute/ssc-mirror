@@ -1,0 +1,40 @@
+<pre>
+<b>help weathr</b>
+-------------------------------------------------------------------------------
+<p>
+<b><u>Title</u></b>
+<p>
+    <b>weather</b> -- Weather conditions from weather.com
+<p>
+<p>
+<b><u>Syntax</u></b>
+<p>
+        <b>weathr</b> [zipcode(s)]
+<p>
+<b><u>Description</u></b>
+<p>
+    <b>weathr</b> retrieves the current weather conditions and the forecast for the
+    next 36 hours from yahoo.com for one or more US zipcodes. It requires a
+    connection to the internet.
+<p>
+<b><u>Remarks</u></b>
+<p>
+    If you define a global macro weathrzipcode with one or more zipcodes,
+    seperated by spaces, you need not enter anything after <b>weathr</b>. Note that
+    weathrzipcode, like <b>weathr</b>, is missing an e. A convienent place to define
+    $weathrzipcode is in your profile.do.
+<p>
+<b><u>Examples</u></b>
+<p>
+        . weathr 27599
+<p>
+        . weathr 77845 27513 60606
+<p>
+        . global weathrzipcode 90210
+<p>
+        . weathr
+<p>
+<p>
+<b><u>Author</u></b>
+<p>
+</pre>

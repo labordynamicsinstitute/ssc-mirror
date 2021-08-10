@@ -1,0 +1,66 @@
+<pre>
+<b>help caplog</b>
+<p>
+-------------------------------------------------------------------------------
+<p>
+<b><u>Title</u></b>
+<p>
+    <b>caplog</b> --  captures a ASCII log file (for use with logout)
+<p>
+<a name="s_Syntax"></a><p>
+<b><u>Syntax</u></b>
+<p>
+    <b>caplog</b> using filename [, <i>options</i>] : command
+<p>
+<a name="s_Description"></a><p>
+<b><u>Description</u></b>
+<p>
+    <b>caplog</b> provides a fast and easy way to capture text-based log file,
+    possibly for use with logout. The default is text log files.
+<p>
+<p>
+<b><u>Command</u></b>
+<p>
+    Any command accepted, i.e. estimation commands, tabulation, summary,
+            descrition, etc.
+<p>
+<p>
+<a name="s_Options"></a><p>
+<b><u>Options</u></b>
+<p>
+        +------+
+    ----+ Main +-------------------------------------------------------------
+<p>
+    <b>replace</b> Replace pre-exiting log files.
+<p>
+    <b>append</b> Append.
+<p>
+    <b>smcl</b> Save smcl file instead of text file.
+<p>
+<p>
+<a name="s_0"></a><p>
+<b><u>Examples</u></b>
+<p>
+<p>
+    <b>* table</b>
+    sysuse auto, clear
+    caplog using mystuff.txt, replace: table trunk rep78 , c(n mpg mean
+    mpg sd mpg median mpg)
+    caplog using mystuff.txt, append: table trunk rep78 , c(n mpg mean
+    mpg sd mpg median mpg)
+<p>
+<p>
+<b><u>Remarks</u></b>
+<p>
+    PREVIOUSLY OPENED LOG FILES WILL BE CLOSED BY CAPLOG.
+    version 7: do not include colon characters (:) in the file path. Use
+            -cd- instead.
+<p>
+<p>
+<b><u>Author</u></b>
+<p>
+    Roy Wada
+    roywada@hotmail.com
+<p>
+<p>
+</pre>

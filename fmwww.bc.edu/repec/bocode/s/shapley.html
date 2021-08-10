@@ -1,0 +1,196 @@
+<pre>
+.-
+help for ^shapley^                                      skolenik@@recep.glasnet
+&gt; .ru
+.-
+<p>
+ Shapley value decomposition
+ ---------------------------
+<p>
+        ^shapley^ factor_list , ^result^([^global^] sample_stat) [^perc^ent
+            ^fromto^ ^d^ots ^sav^ing(filename) ^sto^ring(filename) ^replace^
+            ^ti^tle(str) ^noi^sily] : call_to_program ^@@^ , [call_options]
+<p>
+<p>
+ Description
+ -----------
+<p>
+^shapley^ performs (exact additive) decomposition of a sample statistics by
+effects specified in factor list. To perform Shapley decomposition, the
+effects are eliminated one by one, and marginal effects from each exclusion
+are weighted according to the stage of exclustion. The weights of the
+marginal effects are assigned in such a way that all exclusion trajectories
+have equal weights.
+<p>
+In other words, ^shapley^ effectively creates 2^^(# factors) patterns of
+included and excluded factors from the list specified by user, runs
+call_to_program with call_options where the ^@@^ is substituted for the
+current pattern, saves the results and weights them in some "fair" way.
+<p>
+It is written in the most general format and saves as much of the results
+as possible, so that the end user could fill the Shapley framework with
+whatever contents required.
+<p>
+<p>
+ Options
+ -------
+<p>
+^result^ is the sample statistics to be "shapleyed" in the form "^r(^something^
+&gt; )^",
+        "^e(^something^)^", or a global macro defined by the called program. Se
+&gt; e
+        help for @global@ and @return@. Specify ^global^ if you are referring t
+&gt; o
+        a global macro defined in your program, and strip the leading $ from
+        it. For instance, if your program saves $S_1 for future reference,
+        then you need to specify ^result(global S_1)^.
+<p>
+^percent^ is used to report the percentages of Shapley value contributions
+        corresponding to the factors.
+<p>
+^fromto^ reports the values of the statistic when all factors are present
+        and when no factors is present.
+<p>
+^dots^ entertains the user by displaying progress indicator.
+<p>
+^noisily^ keeps the output of the program you are calling. Be prepared for
+        a huge amount of output if you specify this; you won't want it
+        unless your program returns crazy results. You could want to use
+        @quietly@ in your program to reduce amount of output produced.
+<p>
+^saving^ saves the results of various patterns of factors substitution in
+        the call to the external program into the user-defined file. Use
+        this file for hierarchical Shapley-Owen decomposition, where
+        a different set of weights is to be used.
+<p>
+^storing^ saves the marginal differences of the factor exclusion into the
+        user-defined file.
+<p>
+^replace^ indicates to Stata that the files specified in ^saving^ and ^storing^
+        options may be replaced if necessary.
+<p>
+^title^ allows to add the name of the thing you are decomposing to the output.
+<p>
+<p>
+ Saved results
+ -------------
+<p>
+Matrices:
+^r(decompos)^ the Shapley decomposition results, by factors
+<p>
+Macros:
+^r(factors)^  the list of the factors.
+^r(call)^     the call statement with ^@@^ inside.
+<p>
+Global macros:
+^$SHsave^     the location of the file specified in ^saving^ options.
+^$SHstore^    the location of the file specified in ^storing^ options.
+            If none specified, contains junk.
+^$SHfactor^   factor list
+^$SHres^      saved result
+^$SHdiff^     total difference: the returned value when all factors are
+            included vs. the case when all factors are excluded.
+^$SHcall^     call to the external program
+<p>
+These names, as long as ^$SHbase^, ^$SHdebug^ ,^$SHMD^, ^$SHfile^, ^$SHreplc^,
+^$SHgl^, should be avoided in the program performing actual calculations.
+<p>
+Files:
+  ^saving^ option, or global ^$SHsave^ -- the complete set of returned values
+  factors  : present 1/not present 0
+  __ID     : binary representation of 0/1 pattern
+  __result : the corresponding result
+  __round  : number of 1s in the pattern; round of exclusion = #factors - it
+<p>
+  ^storing^ option, or global ^$SHstore^ -- the set of marginal differences
+  __factor : the name of the factor
+  __fno    : the number of the factors in the list
+  __from   : the pattern of the parent node
+  __to     : the pattern of the successor node
+  __stage  : the stage of exclusion; 0 is nothing excluded; # factors
+             when all excluded
+  __weight : the number of trajectories passing through
+  __diff   : the marginal difference
+<p>
+<p>
+ Examples
+ --------
+<p>
+ . ^use auto^
+ (1978 automobile data)
+<p>
+ . ^replace price=price/1000^
+ price was int now float
+ (74 real changes made)
+<p>
+ . ^shapley weight foreign mpg length, result(e(mss)) : regress price @@^
+<p>
+<p>
+      Shapley decomposition
+<p>
+<p>
+   Factors | 1st round |  Shapley
+           |  effects  |   value
+  ---------+-----------+-----------
+  weight   |  184.234  |  148.168
+  for      |  1.50738  |  79.6461
+  mpg      |  139.449  |  54.1969
+  leng     |  118.426  |  66.6984
+  ---------+-----------+-----------
+  Resdiual | -94.9077  |
+  ---------+-----------+-----------
+     Total |  348.709  |  348.709
+<p>
+<p>
+This sequence performs the Shapley value decomposition of the explained
+variance from the regression model of price on weight, foreign, mpg and
+length variables. The scaling of price is done to make output more
+readable. The first round effects are obtained by eliminating the factor
+from the saturated model.
+<p>
+(In fact, the initial aim of the Shapley decomposition was to isolate the
+effects of various sources of income on the income inequality indices.
+Detailed examples with the do-files and dta-files are available upon
+request.)
+<p>
+<p>
+ Tips
+ ----
+<p>
+1. As long as ^shapley^ is computationally intensive, you might think of
+   writing your own simplified and thus faster versions of base or STB
+   programs, or dropping unnecessary observations prior to ^shapley^.
+<p>
+2. ^call_to_program @@ , call_options^ in fact might be any valid Stata
+   statement where ^@@^ would be substituted for the current pattern
+   of factors: do-file, ado-file, built-in command, whatever, and ^@@^
+   may be among options, as well. It is user's responsibility to use
+   these patterns in the way (s)he likes and to supply the non-missing
+   returned values to the ^shapley^. Returned missing value is likely to
+   crash ^shapley^ at some point.
+<p>
+3. No standard errors for factor contributions are provided so far.
+   A reasonable thing to do would be to bootstrap your data; see help
+   @bstrap@. Doing so, however, would result in ^awfully^ computationally
+   intensive calculations...
+<p>
+4. Sometimes, conformability error @search:rc 503!r(503)@ is returned. I was un
+&gt; able to
+   safely reproduce the problem, however. Just rerun your shapley statement.
+<p>
+<p>
+ Authors &amp; references
+ --------------------
+<p>
+Theoretical foundation: Tony Shorrocks, shora@@essex.ac.uk
+Current draft is available at @http://giganda.komkon.org/~tacik/shapley.pdf@
+<p>
+Implementation: Stas Kolenikov, skolenik@@recep.glasnet.ru
+<p>
+<p>
+ Additional
+ ----------
+<p>
+This is the help file for the shapley.ado version 3.1, 17 Feb 2000.
+Refer to the author for the up-to-date version of the package.
+</pre>

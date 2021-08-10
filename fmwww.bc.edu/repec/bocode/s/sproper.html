@@ -1,0 +1,168 @@
+<pre>
+-------------------------------------------------------------------------------
+help for <b>sproper</b>
+-------------------------------------------------------------------------------
+<p>
+<b><u>Proper name case for foreign names in variables</u></b>
+<p>
+<b><u>Syntax</u></b>
+<p>
+      <b>sproper</b> [<i>varlist</i>] [<i>if</i>] [<i>in</i>] [<b>,</b> <b><u>g</u></b><b>enerate(</b><i>stubname</i><b>)</b> <b>replace</b> <b>oe</b> ]
+<p>
+      <b>supper</b> [<i>varlist</i>] [<i>if</i>] [<i>in</i>] [<b>,</b> <b><u>g</u></b><b>enerate(</b><i>stubname</i><b>)</b> <b>replace</b> <b>oe</b> ]
+<p>
+      <b>slower</b> [<i>varlist</i>] [<i>if</i>] [<i>in</i>] [<b>,</b> <b><u>g</u></b><b>enerate(</b><i>stubname</i><b>)</b> <b>replace</b> <b>oe</b> ]
+<p>
+<a name="description"></a>        +-------------+
+    ----+ Description +------------------------------------------------------
+<p>
+The proper(), upper(), and lower() string functions do not include foreign
+letters in their definition of letters, but <b>sproper</b>, <b>supper</b>, and <b>slower</b> will
+treat foreign names correctly if the ASCII encoding is such that codes 065 to
+090 map to A to Z (add 32 to get lowercase versions), codes 192 to 222 map to
+characters with diacritical marks (add 32 to get lowercase versions) as shown
+below in charset latin1 (ISO-8859-1).  The problem was posed by a a question on
+Statalist.  Note that this package operates on variables, as a program, not on
+strings, as would a function.  However, the Mata functions included with the
+programs may be of use in other contexts. viewsource the programs to see the
+Mata functions.
+<p>
+Option <b>oe</b> adds to the definitions of letters by specifying that ASCII codes 138
+(S hachek), 140 (OE), 142 (Z hachek), and 159 (Y double dot) are also letters
+with lowercase versions at 154, 156, 158, and 255 respectively (not officially
+part of charset latin1, but represented on many Stata user's charsets).
+<p>
+-------------------------------------------------------------------------------
+    The natural way to display the 256-character latin1 (ISO-8859-1)
+                character set is in a 16 by 16 hexadecimal grid, 0 to F in
+                each dimension, but skipping the first 32 reserved characters
+                numbered 0 to 31, starting with the space character at
+                position 0x20 (32 in hexadecimal):
+<p>
+  0123456789ABCDEF
+2  !"#$%&amp;'()*+,-./
+3 0123456789:;&lt;=&gt;?
+4 @ABCDEFGHIJKLMNO
+5 PQRSTUVWXYZ[\]^_
+6 `abcdefghijklmno
+7 pqrstuvwxyz{|}~
+8 €‚ƒ„…†‡ˆ‰Š‹Œ
+9 ‘’“”•–—˜™š›œŸ
+A  ¡¢£¤¥¦§¨©ª«¬­®¯
+B °±²³´µ¶·¸¹º»¼½¾¿
+C ÀÁÂÃÄÅÆÇÈÉÊËÌÍÎÏ
+D ĞÑÒÓÔÕÖ×ØÙÚÛÜİŞß
+E àáâãäåæçèéêëìíîï
+F ğñòóôõö÷øùúûüışÿ
+<p>
+    Here you can see adding 16 as a displacement of one line from  to  ()
+                and adding 32 as a displacement of 2 lines from Ñ to ñ () You
+                can reproduce this mapping on your own Stata with this code:
+<p>
+  forv i=2/15 {
+   if `i'==2 di "  0123456789ABCDEF"
+   if `i'&lt;10 di %1.0f `i' " " _c
+   if `i'&gt;9 di in smcl "{c `=55+`i''} " _c
+   forv j=0/15 {
+    di in smcl "{c `=`i'*16+`j''}" _c
+    }
+   di
+   }
+<p>
+    A less natural way but perhaps more intuitive to display the latin1
+                (ISO-8859-1) character set is in a 23 by 10 decimal grid, 0
+                to 9 in the x dimension, again skipping the first 32 reserved
+                characters, and starting with the space at position 32:
+<p>
+   0123456789
+03    !"#$%&amp;'
+04 ()*+,-./01
+05 23456789:;
+06 &lt;=&gt;?@ABCDE
+07 FGHIJKLMNO
+08 PQRSTUVWXY
+09 Z[\]^_`abc
+10 defghijklm
+11 nopqrstuvw
+12 xyz{|}~€
+13 ‚ƒ„…†‡ˆ‰Š‹
+14 Œ‘’“”•
+15 –—˜™š›œŸ
+16  ¡¢£¤¥¦§¨©
+17 ª«¬­®¯°±²³
+18 ´µ¶·¸¹º»¼½
+19 ¾¿ÀÁÂÃÄÅÆÇ
+20 ÈÉÊËÌÍÎÏĞÑ
+21 ÒÓÔÕÖ×ØÙÚÛ
+22 ÜİŞßàáâãäå
+23 æçèéêëìíîï
+24 ğñòóôõö÷øù
+25 úûüışÿ
+<p>
+<p>
+    You can reproduce this table on your own system (to see any differences)
+                with this code:
+<p>
+  forv i=3/25 {
+   if `i'==3 di "   0123456789"
+   di %02.0f `i' _c
+   loc s=cond(`i'==3,2,0)
+   loc e=cond(`i'==25,5,9)
+   forv j=0/`s' {
+    di " " _c
+    }
+   forv j=`s'/`e' {
+    di in smcl "{c `=`i'*10+`j''}" _c
+    }
+   di
+   }
+<p>
+<p>
+-------------------------------------------------------------------------------
+<p>
+<a name="examples"></a>        +---------+
+    ----+ Example +----------------------------------------------------------
+<p>
+clear 
+set charset latin1
+set obs 5
+g p="ZUÑIGA RODRÍGUEZ "+char(86)+char(85)+char(138)+char(159)+char(223)+char(14
+&gt; 2)+char(68)
+list
+replace p=proper(p)
+list
+sproper p in 1, replace
+supper p in 2/3, replace
+list
+slower p in 3, replace
+slower p in 4, replace oe
+g t="sproper"
+replace t="supper" in 2
+replace t="slower" in 3
+replace t="slower, oe" in 4
+replace t="proper()" in 5
+list
+<p>
+<p>
+<a name="options"></a>        +---------+
+    ----+ Options +----------------------------------------------------------
+<p>
+    <b><u>g</u></b><b>enerate(</b><i>stubname</i><b>)</b> specifies a stubname, to prefix nealy created proper
+        case versions of variables.
+<p>
+    <b>replace</b> specifies that variables should be overwritten by proper case
+        versions.
+<p>
+<b><u>Author</u></b>
+<p>
+    Austin Nichols
+    Urban Institute
+    Washington, DC, USA
+    austinnichols@gmail.com
+<p>
+<b><u>Also see</u></b>
+<p>
+ On-line: help for set charset, FAQ on charset proper(), lower(), upper(), 
+          char(), string functions, [M-4] string, asciiplot (if installed;
+          findit asciiplot if not).
+</pre>

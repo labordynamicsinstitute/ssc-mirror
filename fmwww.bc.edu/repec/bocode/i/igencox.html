@@ -1,0 +1,288 @@
+<pre>
+<b>help igencox</b>                                  also see:  <b>igencox postestimation</b>
+                                                                          <b>stcox</b>
+                                                                          <b>streg</b>
+-------------------------------------------------------------------------------
+<p>
+<p>
+<b><u>Title</u></b>
+<p>
+    <b>igencox</b> -- Generalized Cox model
+<p>
+<p>
+<a name="syntax"></a><b><u>Syntax</u></b>
+<p>
+        <b>igencox</b> [<i>varlist</i>] [<i>if</i>] [<i>in</i>] [<b>,</b> <i>options</i>]
+<p>
+    <i>options</i>                              Description
+    -------------------------------------------------------------------------
+    Model
+      <b><u>trans</u></b><b>form(</b><i>trans </i>[<i>#</i>]<b>)</b>               transformation function; default is
+                                           <b>transform(boxcox 1)</b>
+      <b>baseq(</b><i>newvarname</i><b>)</b>                  save jump sizes of the Lambda
+                                           function in <i>newvarname</i>
+      <b><u>savesi</u></b><b>gma(</b><i>filename</i> [<b>, replace</b>]<b>)</b>    save Sigma matrix to <i>filename</i>
+<p>
+    SE/Robust
+      <b>vce(bootstrap, </b><i>bootstrap_options</i><b>)</b>   use a bootstrap to estimate the
+                                           variance-covariance matrix
+<p>
+    Reporting
+      <b><u>l</u></b><b>evel(</b><i>#</i><b>)</b>                           set confidence level; default is
+                                           <b>level(95)</b>
+      <b><u>nosh</u></b><b>ow</b>                             do not show st setting information
+      <i>display_options</i>                    control INCLUDE help
+                                           shortdes-displayoptall INCLUDE
+                                           help shortdes-coeflegend
+<p>
+    EM
+      <b><u>iter</u></b><b>ate(</b><i>#</i><b>)</b>                         perform maximum # of iterations;
+                                           defalut is <b>iterate(1000)</b>
+      <b><u>tol</u></b><b>erance(</b><i>#</i><b>)</b>                       specify tolerance for the
+                                           coefficient vector; default is
+                                           <b>tolerance(1e-6)</b>
+      <b>nolog</b>                              supress the iteration log
+      <b>from(</b><i>init_specs</i><b>)</b>                   specify initial values for the
+                                           coefficients
+<p>
+    Advanced
+      <b><u>savesp</u></b><b>ace</b>                          conserve memory during estimation
+    -------------------------------------------------------------------------
+    You must <b>stset</b> your data before using <b>stcox</b>; see <b>[ST] stset</b>.
+    <i>varlist</i> may contain factor variables; see fvvarlist.
+<p>
+<p>
+<a name="description"></a><b><u>Description</u></b>
+<p>
+    <b>igencox</b> fits, via the EM algorithm, transformation models for failure
+    time data (Zeng and Lin 2006, 2007).  The transformation models
+    considered are
+<p>
+        <i>Lambda(t|Z) = G{Lambda(t)*e^(beta'*Z)}</i>
+<p>
+    where <i>G()</i> is a known transformation function and <i>Lambda(t)</i> is an unknown
+    increasing function with <i>Lambda(0)=0</i>.  The available transformations
+    include the class of Box-Cox transformations, BoxCox(<i>rho</i>):
+<p>
+        <i>G(x) = {(1+x)^rho - 1}/rho</i>, <i>rho&gt;=0</i>
+<p>
+    and the class of logarithmic transformations, Logarithmic(<i>r</i>):
+<p>
+        <i>G(x) = {log(1+r*x)}/r</i>, <i>r&gt;=0</i>
+<p>
+    Special cases of these transformation models correspond to proportional
+    hazards models (Cox 1972) and proportional odds models (Bennett 1983).
+    Specifically, BoxCox(1) and Logarithmic(0) reduce to the proportional
+    hazards model, and BoxCox(0) and Logarithmic(1) reduce to the
+    proportional odds model.
+<p>
+    The <b>igencox</b> command allows you to fit more flexible survival models with
+    non-proportional hazards.  Logarithmic transformation models assume that
+    covariate effects always decrease over time for any <i>r</i> whereas Box-Cox
+    models allow covariate effects to increase over time when <i>rho</i>&gt;1.
+<p>
+<p>
+<a name="options"></a><b><u>Options</u></b>
+<p>
+        +-------+
+    ----+ Model +------------------------------------------------------------
+<p>
+    <b>transform(</b><i>trans </i>[<i>#</i>]<b>)</b> specifies the transformation function <i>G()</i> of the
+        cumulative hazard function <i>Lambda(t|Z)</i>.  <i>trans</i> can be <b><u>box</u></b><b>cox</b>
+        (default) or <b><u>log</u></b><b>arithmic</b>.  The optional <i>#</i> specifies the value of the
+        transformation parameter <i>rho</i> for the Box-Cox transformation and <i>r</i> for
+        the logarithmic transformation.  By default, <i>#</i> is set to 1.
+<p>
+        <b>transform(boxcox 1)</b> or <b>transform(logarithmic 0)</b> corresponds to a
+        proportional hazards model.  <b>transform(boxcox 0)</b> or
+        <b>transform(logarithmic 1)</b> corresponds to a proportional odds model.
+<p>
+    <b>baseq(</b><i>newvarname</i><b>)</b> saves the jump sizes of the <i>Lambda(t)</i> function in the
+        new variable <i>newvarname</i>.  This option is required for later
+        prediction of the survivor or cumulative hazard functions using
+        <b>predict</b>.
+<p>
+    <b>savesigma(</b><i>filename</i> [<b>, replace</b>]<b>)</b> saves the <i>(N_f+q)x(N_f+q)</i> matrix Sigma to
+        <i>filename</i> in the current directory, where <i>N_f</i> is the number of failed
+        observations and <i>q</i> is the number of coefficients.  This matrix is
+        required by <b>predict</b> for calculating the standard errors of the
+        survivor function.  <b>replace</b> specifies that the file may be replaced
+        if it already exists.
+<p>
+        +-----------+
+    ----+ SE/Robust +--------------------------------------------------------
+<p>
+    <b>vce(bootstrap, </b><i>bootstrap_options</i><b>)</b> uses a bootstrap to compute the
+        variance-covariance matrix.  <i>bootstrap_options</i> allow you to control
+        the bootstrap process.  The most commonly used <i>bootstrap_options</i> is
+        <b>reps(</b><i>#</i><b>)</b>, which controls the number of replications performed.  The
+        default is <b>reps(50)</b>.
+<p>
+        +------------+
+    ----+  Reporting +-------------------------------------------------------
+<p>
+    <b>level(</b><i>#</i><b>)</b>; see <b>[R] estimation options</b>.
+<p>
+    <b>noshow</b> prevents <b>igencox</b> from showing the key st variables.  This option
+        is seldom used because most people type <b>stset, show</b> or <b>stset, noshow</b>
+        to set whether they want to see these variables mentioned at the top
+        of the output of every st command; see <b>[ST] stset</b>.
+<p>
+<a name="display_options"></a>    <i>display_options</i>:  <b><u>noomit</u></b><b>ted</b>, <b>vsquish</b>, <b><u>noempty</u></b><b>cells</b>, <b><u>base</u></b><b>levels</b>,
+        <b><u>allbase</u></b><b>levels</b>, <b>cformat(</b><i>%fmt</i><b>)</b>, <b>pformat(%</b><i>fmt</i><b>)</b>, <b>sformat(%</b><i>fmt</i><b>)</b>, and
+        <b>nolstretch</b>; see <b>[R] estimation options</b>.
+<p>
+    <b>coeflegend</b>; see <b>[R] estimation options</b>.
+<p>
+<a name="EM"></a>        +----+
+    ----+ EM +---------------------------------------------------------------
+ 
+    <b><u>iter</u></b><b>ate(</b><i>#</i><b>)</b> specifies the maximum number of iterations.  The default is
+        <b>iterate(1000)</b>.
+<p>
+    <b><u>tol</u></b><b>erance(</b><i>#</i><b>)</b> specifies the tolerance for the coefficient vector.  The
+        delault is <b>tolerance(1e-6)</b>.
+<p>
+    <b>nolog</b> supresses the iteration log.
+<p>
+    <b>from(</b><i>matname</i><b>)</b> specifies initial values for the coefficients.  <b>from(b0)</b>
+        causes <b>igencox</b> to begin the optimization algorithm with the values in
+        <b>b0</b>.  <b>b0</b> must be a row vector, and the number of columns must be equal
+        to the number of parameters in the model.
+<p>
+<a name="Advanced"></a>        +----------+
+    ----+ Advanced +---------------------------------------------------------
+<p>
+    <b>savespace</b> conserves memory during estimation and turns off the calculaton
+        of the covariance matrix.  If the covariance matrix is desired, it
+        should be obtained by specifying <b>vce(bootstrap)</b>.
+<p>
+<p>
+<a name="examples"></a><b><u>Examples</u></b>
+<p>
+<b><u>Example of a proportional hazards model</u></b>
+<p>
+    Setup
+        <b>. use va, clear</b>
+<p>
+    Show st settings
+        <b>. stset</b>
+<p>
+    Fit Cox proportional hazards model
+        <b>. igencox status type1 type2 type3</b>
+<p>
+        or, equivalently,
+ 
+        <b>. igencox status type1 type2 type3, transform(boxcox 1)</b>
+<p>
+    Replay results with 90% confidence intervals
+        <b>. igencox, level(90)</b>
+<p>
+<p>
+<b><u>Example of a proportional odds model</u></b>
+<p>
+    Setup
+        <b>. sysuse cancer, clear</b>
+<p>
+    Map values for <b>drug</b> into 0 for placebo and 1 for nonplacebo
+        <b>. replace drug = drug == 2 | drug == 3</b>
+<p>
+    Declare data to be survival-time data
+        <b>. stset studytime, failure(died)</b>
+<p>
+    Fit a proportional odds model
+        <b>. igencox drug age, transform(log)</b>
+<p>
+        or, equivalently,
+ 
+        <b>. igencox drug age, transform(logarithmic 1)</b>
+<p>
+<p>
+<b><u>Saving the jump sizes of Lambda and the Sigma matrix</u></b>
+<p>
+    Setup
+        <b>. use va, clear</b>
+<p>
+    Fit Cox proportional hazards model and save jump sizes and Sigma
+        <b>. igencox status type1 type2 type3, baseq(bq) savesigma(sigma)</b>
+<p>
+<p>
+<b><u>Compute estimates of the survivor function and its standard errors</u></b>
+<p>
+<p>
+<a name="saved_results"></a><b><u>Saved results</u></b>
+<p>
+    <b>igencox</b> saves the following in <b>e()</b>:
+<p>
+    Scalars   
+      <b>e(N)</b>                  number of observations
+      <b>e(N_sub)</b>              number of subjects
+      <b>e(N_fail)</b>             number of failures
+      <b>e(risk)</b>               total time at risk
+      <b>e(ties)</b>               <b>1</b> if there are ties in sample, <b>0</b> otherwise
+      <b>e(k_eq_model)</b>         number of equations in model Wald test
+      <b>e(d_fm)</b>               model degrees of freedom
+      <b>e(ll)</b>                 log likelihood
+      <b>e(chi2)</b>               chi-squared statistic
+      <b>e(p)</b>                  significance
+      <b>e(rank)</b>               rank of <b>e(V)</b>
+      <b>e(rho)</b>                transformation parameter
+      <b>e(iter)</b>               number of iterations
+      <b>e(crit)</b>               convergence criterion
+      <b>e(tol)</b>                tolerance for the coefficient vector
+      <b>e(converged)</b>          <b>1</b> if converged, <b>0</b> otherwise
+<p>
+    Macros    
+      <b>e(cmdline)</b>            command as typed
+      <b>e(cmd)</b>                <b>igencox</b>
+      <b>e(depvar)</b>             <b>_t</b>
+      <b>e(covariates)</b>         list of covariates
+      <b>e(t0)</b>                 <b>_t0</b>
+      <b>e(transformation)</b>     transformation used
+      <b>e(chi2type)</b>           type of model chi-squared test
+      <b>e(predict)</b>            program used to implement <b>predict</b>
+      <b>e(baseq)</b>              name of variable specified in <b>baseq()</b>
+      <b>e(sigma)</b>              filename specified in <b>savesigma()</b>
+      <b>e(properties)</b>         <b>b V</b>
+<p>
+    Matrices  
+      <b>e(b)</b>                  coefficient vector
+      <b>e(V)</b>                  variance-covariance matrix of the coefficient
+                              estimates
+<p>
+    Functions 
+      <b>e(sample)</b>             marks estimation sample
+<p>
+<p>
+<b><u>Acknowledgments</u></b>
+<p>
+    This work was supported by the NIH Phase I SBIR contract “Software for
+    Modern Extensions of the Cox Model” (HHSN261201000090C) to StataCorp
+    LP.
+<p>
+<p>
+<b><u>References</u></b>
+<p>
+    Bennett, S. 1983. Analysis of survival data by the proportional odds
+        model.<i>  Statist. Med.</i>, 2, 273-277.
+<p>
+    Cox, D. R. 1972. Regression models and life-tables (with discussion).<i>  J.</i>
+        <i>R. Statist. Soc. B</i>, 34, 187-220.
+<p>
+    Zeng, D. and Lin, D. Y. 2006. Efficient estimation of semiparametric
+        transformation models for counting processes.<i>  Biometrika</i>, 93,
+        627-640.
+<p>
+    Zeng, D. and Lin, D. Y. 2007. Maximum likelihood estimation in
+        semiparametric regression models with censored data (with
+        discussion).<i>  J. R. Statist. Soc. B</i>, 69, 507-564.
+<p>
+<p>
+<b><u>Authors</u></b>
+<p>
+    Rafal Raciborski, StataCorp, College Station, TX.  rraciborski@stata.com.
+<p>
+    Yulia Marchenko, StataCorp, College Station, TX.  ymarchenko@stata.com.
+<p>
+<p>
+</pre>

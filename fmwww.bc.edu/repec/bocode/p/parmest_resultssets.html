@@ -1,0 +1,115 @@
+<pre>
+-------------------------------------------------------------------------------
+<b>help parmest_resultssets</b>                                         (Roger Newson)
+-------------------------------------------------------------------------------
+<p>
+<p>
+<b><u>Output datasets created by </u></b><b><u>parmest</u></b><b><u> and </u></b><b><u>parmby</u></b>
+<p>
+    The output dataset (or resultsset) created by <b>parmest</b> or <b>parmby</b> has one
+    observation per parameter of a set of estimation results, or one
+    observation per parameter per by-group if the <b>by()</b> option is specified
+    with <b>parmby</b>.  If the <b>rename()</b> option is not specified, then the output
+    dataset contains the following variables:
+<p>
+   Default name    Description
+   --------------------------------------------------------------------------
+   <b>idnum</b>           Numeric dataset ID
+   <b>idstr</b>           String dataset ID
+   <b>eq</b>              Equation name
+   <b>parm</b>            Parameter name
+   <b>label</b>           Parameter label
+   <b>ylabel</b>          <i>Y</i>-variable label
+   <b>estimate</b>        Parameter estimate
+   <b>stderr</b>          SE of parameter estimate
+   <b>dof</b>             Degrees of freedom
+   <b>t</b>               <i>t</i>-test statistic
+   <b>z</b>               <i>z</i>-test statistic
+   <b>p</b>               <i>P</i>-value
+   <b>stars</b>           Stars for <i>P</i>-value
+   <b>min</b><i>yy</i>           Lower <i>xx</i>% confidence limit
+   <b>max</b><i>yy</i>           Upper <i>xx</i>% confidence limit
+   <b>em_</b><i>y</i>            <i>y</i>th macro estimation result specified by <b>emac()</b>
+   <b>es_</b><i>y</i>            <i>y</i>th scalar estimation result specified by <b>escal()</b>
+   <b>ev_</b><i>y</i>            <i>y</i>th vector estimation result specified by <b>evec()</b>
+   <b>er_</b><i>y</i><b>_</b><i>k</i>          <i>k</i>th row of <i>y</i>th estimation result specified by <b>erows()</b>
+   <b>ec_</b><i>y</i><b>_</b><i>k</i>          <i>k</i>th column of <i>y</i>th estimation result specified by <b>ecols()</b>
+   --------------------------------------------------------------------------
+<p>
+<p>
+    The variables <b>idnum</b> and <b>idstr</b> are only present if the user specifies the
+    options <b>idnum()</b> and <b>idstr()</b>, respectively.  The variable <b>eq</b> is only
+    present if the estimation results are from a command which creates
+    estimation matrices with equation names, which is usually a command which
+    fits a multiple equation model.  The variable <b>label</b> is only present if
+    the <b>label</b> option is specified.  The variable <b>ylabel</b> is only present if
+    the <b>ylabel</b> option is specified.  Either the variables <b>dof</b> and <b>t</b> are
+    present or the variable <b>z</b> is present, depending on the setting of the
+    <b>dof()</b> option, or on the estimation results, if <b>dof()</b> is not specified.
+    The variable <b>dof</b> is calculated as specified in the section on the <b>dof()</b>
+    option.  Note that the degrees of freedom in <b>dof</b> may be different for
+    different parameters of the same model, and are not always integers.  The
+    <i>P</i>-values in the variable <b>p</b> test the hypothesis that the corresponding
+    parameter is zero, or one if the <b>eform</b> option is specified.  The variable
+    <b>stars</b> is only present if the option <b>stars()</b> is specified, and contains
+    the specified numbers of stars for the <i>P</i>-values in the variable <b>p</b>.  The
+    <i>xx</i>% confidence limits <b>min</b><i>yy</i> and <b>max</b><i>yy</i> are calculated using a list of one
+    or more confidence levels <i>xx</i>, which may be specified in the <b>level()</b>
+    option, or by set level, and which is a single confidence level of 95% if
+    not specified.  The number <i>yy</i> used to number the <i>xx</i> percent confidence
+    limits <b>min</b><i>yy</i> and <b>max</b><i>yy</i> is equal to the confidence level <i>xx</i> unless the
+    user specifies <b>clnumber(rank)</b>, in which case the number <i>yy</i> is the rank,
+    in ascending order, of the confidence level <i>xx</i>.  There is one <b>em_</b><i>y</i>
+    variable for each macro estimation result in the list specified by the
+    <b>emac()</b> option, one <b>es_</b><i>y</i> variable for each scalar estimation result
+    specified by the <b>escal()</b> option, one <b>ev_</b><i>y</i> variable for each vector
+    estimation result specified by the <b>evec()</b> option, one <b>er_</b><i>y</i><b>_</b><i>k</i> variable for
+    each row of each matrix estimation result specified by the <b>erows()</b>
+    option, and one <b>ec_</b><i>y</i><b>_</b><i>k</i> variable for each column of each matrix estimation
+    result specified by the <b>ecols()</b> option.  The variables <b>em_</b><i>y</i> are string
+    variables, truncated if necessary to the maximum length for a string
+    variable under the edition of Stata used.  All of these variables can be
+    renamed using the <b>rename()</b> option.
+<p>
+    The output dataset (or resultsset) created by <b>parmby</b> contains all the
+    variables in the output dataset created by <b>parmest</b>, and also the
+    following additional variables:
+<p>
+   Default name    Description
+   --------------------------------------------------------------------------
+   <i>by-variables</i>    Variables specified in the <b>by()</b> option
+   <b>parmseq</b>         Parameter sequence number
+   <b>command</b>         Estimation command
+   --------------------------------------------------------------------------
+<p>
+<p>
+    The <i>by-variables</i> are only present if the <b>by()</b> option is specified.  The
+    variable <b>command</b> is only present if the <b>command</b> option is specified.  The
+    <b>parmby</b> output dataset is sorted primarily by the <i>by-variables</i>, in the
+    order specified in the <b>by()</b> option, if the <b>by()</b> option is specified, and
+    sorted secondarily by <b>parmseq</b>, which contains the sequential order of the
+    parameter in the estimation result vector (which is usually <b>e(b</b>}).  The
+    variables <b>command</b> and <b>parmseq</b> can be renamed by <b>parmby</b> using the <b>rename()</b>
+    option, but the <i>by-variables</i> cannot be renamed by <b>parmby</b>.
+<p>
+    The <b>eform</b>, <b>dof()</b>, <b>level()</b> and <b>clnumber()</b> options are described in
+    <i>parmest_ci_opts</i>.  The <b>idnum()</b>, <b>idstr()</b>, <b>label</b>, <b>ylabel</b>, <b>stars()</b>, <b>emac()</b>,
+    <b>escal()</b>, <b>evec()</b>, <b>erows()</b> and <b>ecols()</b> options are described in
+    <i>parmest_varadd_opts</i>.  The <b>rename()</b> option is described in
+    <i>parmest_varmod_opts</i>.  The <b>by()</b> and <b>command</b> options are described in
+    <i>parmby_only_opts</i>.
+<p>
+<p>
+<b><u>Author</u></b>
+<p>
+    Roger Newson, Imperial College London, UK.  Email:
+    r.newson@imperial.ac.uk
+<p>
+<p>
+<b><u>Also see</u></b>
+<p>
+     Manual: <b>[U] 20 Estimation and postestimation commands</b>
+    On-line: help for estcom
+             help for <b>parmest</b>, <b>parmby</b>, <i>parmest_outdest_opts</i>, <i>parmest_ci_opts</i>,
+             <i>parmest_varadd_opts</i>, <i>parmest_varmod_opts</i>, <i>parmby_only_opts</i>
+</pre>

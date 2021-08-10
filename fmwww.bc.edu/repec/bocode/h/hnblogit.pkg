@@ -1,0 +1,20 @@
+d 'HNBLOGIT': module to estimate negative binomial-logit hurdle regression
+d
+d hnblogit fits a negative binomial-logit maximum-likelihood hurdle
+d model  of depvar on indepvars, where depvar is a non-negative
+d count variable. 
+d
+d KW: hurdle
+d KW: negative binomial
+d KW: logit
+d
+d Requires: Stata version 9.1
+d
+d Distribution-Date: 20051007
+d
+d Author: Joseph Hilbe
+d Support: email jhilbe@@aol.com
+d
+f hnblogit.ado
+f ../j/jhnb_logit_ll.ado
+f hnblogit.hlp

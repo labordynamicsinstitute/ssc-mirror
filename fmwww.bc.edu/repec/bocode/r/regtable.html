@@ -1,0 +1,61 @@
+<pre>
+<b>help regtable</b>                                                     Version 3.0.0
+-------------------------------------------------------------------------------
+<p>
+<b><u>Title</u></b>
+<p>
+    <b>regtable</b> -- This command is designed to simplify visualizing subgroup
+    analysis results from randomized experiments.  The command outputs a
+    table of conditional average treatment effects with corresponding
+    standard errors across a subgroup variable.
+<p>
+<p>
+<a name="syntax"></a><b><u>Syntax</u></b>
+<p>
+        <b>regtable</b><i> regtype depvar treatvar</i> [<i>if</i>] [<i>in</i>] [<i>weight</i>] <b>,</b> <b>group(</b><i>groupvar</i><b>)</b>
+                [<b>vce(</b><i>vcetype</i><b>)</b>] [<b>covars(</b><i>varlist</i><b>)</b>] [<b>file(</b><i>path</i><b>)</b>] [<b>replace</b>]
+<p>
+    <i>regtype</i> type of regression (e.g., ols, logistic, poisson, etc.)
+ 
+    <i>depvar</i> dependent variable
+ 
+    <i>treatvar</i> treatment variable
+ 
+    <b>group(</b><i>groupvar</i><b>)</b> name of the subgroup variable
+ 
+    <b>covars(</b><i>varlist</i><b>)</b> list of control variables
+ 
+    <b>file(</b><i>path</i><b>)</b> directory and file name (if unspecified the resulting table is
+    saved as `regtype'_`depvar'_`treatvar'_across_`groupvar'_table.csv in the
+    working directory)
+ 
+    <b>replace</b> replaces the file, if it already exists
+ 
+<p>
+<p>
+<a name="desc"></a><b><u>Description</u></b>
+<p>
+    <b>regtable</b> creates a csv output file of conditional average treatment
+    effects and corresponding standard errors for each category of a subgroup
+    variable.  The resulting file could then be used for the construction of
+    subgroup analysis graphs using graphing and data visualization software
+    outside of Stata.
+  
+<p>
+<a name="ex"></a><b><u>Examples</u></b>
+<p>
+    . regtable reg y x, group(gender)
+<p>
+<a name="res"></a><b><u>Saved Results</u></b>
+    The resulting table is saved in
+    `regtype'_`depvar'_`treatvar'_across_`groupvar'_table.csv if the file
+    option is left unspecified.
+  
+<p>
+<b><u>Author</u></b>
+<p>
+    John Ternovski
+    Analyst Institute
+    johnt1@gmail.com
+<p>
+</pre>

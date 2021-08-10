@@ -1,0 +1,115 @@
+<pre>
+<b>help plssas</b>
+-------------------------------------------------------------------------------
+<p>
+<b><u>Title</u></b>
+<p>
+    <b> SAS's PROC PLS (Partial Least Squares)</b>
+<p>
+<b><u>Syntax</u></b>
+<p>
+        <b>plssas</b> [varlist] [<b>,</b> <i>options</i>]
+<p>
+    <i>options</i>               Description
+    -------------------------------------------------------------------------
+    Main
+      <b>y(</b><i>varlist</i><b>)</b>           specify a list of y-variables.
+      <b>x(</b><i>varlist</i><b>)</b>           specify a list of x-variables.
+      <b><u>n</u></b><b>fac(</b><i>integer 0</i><b>)</b>      specify the number of factors to extract.
+      <b>nosas</b>                specify that SAS should not be run (only used when
+                            the output files exist).
+      <b>nofile</b>               specifies that the Stata dataset is not exported
+                            to a csv file.
+      <b><u>m</u></b><b>ethod(</b><i>string</i><b>)</b>       specify the general factor extraction method to
+                            use, the default is PLS partial least squares.
+      <b><u>p</u></b><b>refix(</b><i>string</i><b>)</b>       specify a prefix to be added to the names of the
+                            output csv files.
+      <b>exe(</b><i>string asis</i><b>)</b>     specify the path and executable to run SAS.
+    -------------------------------------------------------------------------
+<p>
+<b><u>Description</u></b>
+<p>
+    <b>plssas</b> creates a *.sas program to run a PLS analysis, then runs this file
+    in the background and the output datasets created by SAS are converted to
+    *.CSV files. The set of files of OUTPUT csv files are:
+<p>
+      yweights.csv
+      xweights.csv
+      xload.csv
+      xeff.csv
+      pest.csv
+      perc.csv
+      csp.csv
+      codedcoef.csv
+      out.csv
+<p>
+    Also a file called temp.sas will contain the syntax and temp.csv will be
+    the dataset created ready for importing into SAS.
+<p>
+    The default version of SAS used is 9.1 and the path is by default
+    <b>c:\Program Files\SAS\SAS 9.1\sas.exe</b>.
+<p>
+    A full description of the PLS procedure can be found in the SAS help
+    files. Not all the options are implemented but might be added on request.
+<p>
+    A SAS logfile will also be created called temp.log.
+<p>
+<b><u>Options</u></b>
+<p>
+        +------+
+    ----+ Main +-------------------------------------------------------------
+<p>
+    <b>y(</b><i>varlist</i><b>)</b> specifies the list of y-variables or responses.
+<p>
+    <b>x(</b><i>varlist</i><b>)</b> specifies the list of x-variables or predictors.
+<p>
+    <b><u>n</u></b><b>fac(</b><i>integer 0</i><b>)</b> specifies the number of factors to extract. The default
+        is exactly the same as the SAS default of the minimum of 15 and the
+        number of predictors.
+<p>
+    <b>nosas</b> specifies that SAS will not be executed. This option can only be
+        used if the output csv files from a previous analysis exist in the
+        current directory.
+<p>
+    <b>nofile</b> specifies that the Stata dataset is not exported to a csv file.
+        This option should only be used when the output files already exist
+        and hence this command is being used to replay results from a
+        previous analysis.
+<p>
+    <b><u>m</u></b><b>ethod(</b><i>string</i><b>)</b> specifies the general factor extraction method to use. The
+        default is PLS partial least squares, SIMPLS uses the method of de
+        Jong (1993), PCR is principal components regression, and RRR is
+        reduced rank regression.
+<p>
+    <b><u>p</u></b><b>refix(</b><i>string</i><b>)</b> specifies a prefix to the csv output filenames.
+<p>
+    <b>exe(</b><i>string asis</i><b>)</b> specifies the path and name of the SAS executable; note
+        spaces are fine there is no need to use quotes in this option.  At
+        present this has been implemented for only the Windows version but
+        will in the future be extended to both Unix and Mac operating
+        systems. The default is the path<b> c:\Program Files\SAS\SAS</b>
+        <b>9.1\sas.exe</b>.
+<p>
+<b><u>Examples</u></b>
+<p>
+    plssas, y(fibd99 fat99) x(fber995)
+<p>
+    plssas, y(fibd99 fat99) x(fber995)
+<p>
+    plssas, y(fibd99 fat99) x(fber995)
+        exe(P:\sas_network_image_8\SAS\sas.exe)
+<p>
+<b><u>Author</u></b>
+<p>
+Adrian Mander, MRC Biostatistics Unit Hub for Trials Methodology Research, Camb
+&gt; ridge, UK.
+<p>
+Email adrian.mander@mrc-bsu.cam.ac.uk
+<p>
+<b><u>See Also</u></b>
+<p>
+Related commands:
+<p>
+mvreg
+<p>
+</pre>

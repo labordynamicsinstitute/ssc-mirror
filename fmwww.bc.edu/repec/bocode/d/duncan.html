@@ -1,0 +1,120 @@
+<pre>
+-------------------------------------------------------------------------------
+help for <b>duncan</b>
+-------------------------------------------------------------------------------
+<p>
+<b><u>Duncan &amp; Duncan dissimilarity index</u></b>
+<p>
+        <b>duncan</b> <i>depvar</i> <i>groupvar</i> [<i>weight</i>] [<b>if</b> <i>exp</i>] [<b>in</b> <i>range</i>] [<b>,</b> <b><u>freq</u></b><b>uencies</b>
+               <b><u>m</u></b><b>issing</b> <b><u>nol</u></b><b>abel</b> <b><u>f</u></b><b>ormat(%</b><i>fmt</i><b>)</b> ]
+<p>
+        <b>duncan2</b> <i>depvar</i> <i>groupvar</i> [<i>weight</i>] [<b>if</b> <i>exp</i>] [<b>in</b> <i>range</i>] [<b>,</b> <b><u>m</u></b><b>issing</b>
+               <b><u>f</u></b><b>ormat(%</b><i>fmt</i><b>)</b> <b>d(</b><i>newvar</i><b>)</b> <b>ncat(</b><i>newvar</i><b>)</b> <b>nobs(</b><i>newvar</i><b>)</b> <b>dj(</b><i>newvar</i><b>)</b> ]
+<p>
+<p>
+    <b>by</b> <i>...</i> <b>:</b> may be used with <b>duncan</b> and <b>duncan2</b>; see help by.
+<p>
+    <b>fweight</b>s and <b>aweight</b>s are allowed; see help weights.
+<p>
+<p>
+<b><u>Description</u></b>
+<p>
+    <b>duncan</b> computes the segregation statistic known as dissimilarity index D
+    (Duncan and Duncan 1955). <i>depvar</i> is the categorical characteristic of
+    interest (e.g. occupations) and <i>groupvar</i> defines the groups (e.g. sex). D
+    will be displayed for all pairwise comparisons of groups. The maximum
+    number of distinct categories in <i>depvar</i> is limited to 300 in Intercooled
+    Stata and 1200 in Stata/SE.
+<p>
+    <b>duncan2</b> also computes D, but has no limitation concerning the number of
+    categories in <i>depvar</i>. However, note that the <i>groupvar</i> must be 0/1 with
+    <b>duncan2</b>.
+<p>
+    Furthermore, <b>duncan</b> and <b>duncan2</b> differ in the treatment of the <b>by</b> prefix.
+    <b>duncan</b> computes and displays D one after another for each by-group,
+    whereas <b>duncan2</b> does all computations in one call and displays all
+    results in one table.
+<p>
+    <b>duncan</b> and <b>duncan2</b> compute D from individual level data. To calculate D
+    from aggregate data, see the <b>dissim</b> package by Nicholas J. Cox. Also
+    consider the <b>seg</b> package by Sean F. Reardon, which may be used to compute
+    a variety of segregation indices.
+<p>
+<p>
+<b><u>Options</u></b>
+<p>
+    <b>frequencies</b> specifies that a two-way table of frequency counts be
+        displayed (<b>duncan</b> only).
+<p>
+    <b>missing</b> requests that missing values be treated like other values.
+<p>
+    <b>nolabel</b> causes the numeric codes of the groups to be displayed rather
+        than the value labels (<b>duncan</b> only).
+<p>
+    <b>format(%</b><i>fmt</i><b>)</b> specifies the format to be used to display the results. The
+        default is <b>format(%10.0g)</b>.
+<p>
+    <b>d(</b><i>newvar</i><b>)</b>, <b>ncat(</b><i>newvar</i><b>)</b>, <b>nobs(</b><i>newvar</i><b>)</b> may be used to save the results (D,
+    the number of categories, the number of observations) as variables
+    (<b>duncan2</b> only).
+<p>
+    <b>dj(</b><i>newvar</i><b>)</b> may be used to save the dissimilarity values of the individual
+    categories as a variable (the sum over these values results in D)
+    (<b>duncan2</b> only).
+<p>
+<p>
+<b><u>Examples</u></b>
+<p>
+    Occupational sex segregation:
+<p>
+        . duncan isco88 sex
+<p>
+    Sex segregation in schools by country:
+<p>
+        . sort country
+        . by country: duncan2 schoolid sex
+<p>
+<p>
+<b><u>Saved Results</u></b>
+<p>
+    <b>duncan</b> saves in <b>r()</b>:
+<p>
+    Scalars:
+<p>
+    <b>r(c)</b>    number of distinct categories in <i>depvar</i>
+    <b>r(N)</b>    number of observations
+<p>
+    Matrices:
+<p>
+    <b>r(D)</b>    pairwise dissimilarity indices
+<p>
+<p>
+<b><u>Methods and Formulas</u></b>
+<p>
+    Let N(A_j) be the frequency of category j in group A (e.g. the frequency
+    of male janitors) and N(B_j) be the frequency of category j in group B
+    (e.g. the frequency of female janitors). The dissimilarity index D is
+    defined as
+<p>
+        D = 0.5 * sum_j | N(A_j)/N(A) - N(B_j)/N(B) |      j = 1,...,J
+<p>
+    where N(A) and N(B) are the overall group sizes. D may be interpreted as
+    the proportion of subjects in group B that would have to change category
+    in order to get the same relative distribution as in group A (or vice
+    versa).
+<p>
+<p>
+<b><u>References</u></b>
+<p>
+    Duncan, O.D., Duncan, B., 1955: A Methodological Analysis of Segregation
+        Indexes.  American Sociological Review 20: 210-217.
+<p>
+<p>
+<b><u>Author</u></b>
+<p>
+    Ben Jann, ETH Zurich, jann@soz.gess.ethz.ch
+<p>
+<p>
+<b><u>Also see</u></b>
+<p>
+</pre>

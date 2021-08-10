@@ -1,0 +1,30 @@
+<pre>
+*! Source of lmoremata10.mlib
+<p>
+<p>
+*! 
+<a name="_mm_colrunsum10"></a>*! <b>_mm_colrunsum10.mata</b>
+*! version 1.0.1  11jan2008  Ben Jann
+<p>
+version 10.0
+mata:
+<p>
+numeric matrix _mm_colrunsum10(numeric matrix A)
+{
+    //version 10
+    real scalar i
+    numeric matrix B
+<p>
+    if (cols(A)==1) return(runningsum(A))
+<p>
+    if (isfleeting(A)) {
+        for (i=1; i&lt;=cols(A); i++) A[,i] = runningsum(A[,i])
+        return(A)
+    }
+    B = A
+    for (i=1; i&lt;=cols(B); i++) B[,i] = runningsum(B[,i])
+    return(B)
+}
+<p>
+end
+</pre>

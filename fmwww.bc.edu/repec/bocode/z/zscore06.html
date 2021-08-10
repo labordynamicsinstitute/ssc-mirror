@@ -1,0 +1,157 @@
+<pre>
+<b>help zscore06</b>
+-------------------------------------------------------------------------------
+<p>
+<b><u>Title</u></b>
+<p>
+    <b>zscore06</b> -- Calculate anthropometric z-scores using the 2006 WHO child
+        growth standards
+<p>
+<p>
+<b><u>Syntax</u></b>
+<p>
+<p>
+        <b>zscore06</b> [<i>if</i>] [<i>in</i>] [<b>,</b> <i>options</i>]
+<p>
+    <i>options</i>               Description
+    -------------------------------------------------------------------------
+    Main
+      <b>a(</b><i>varname</i><b>)</b>          child's age <i>varname</i>
+      <b>s(</b><i>varname</i><b>)</b>          child's sex <i>varname</i>
+      <b>h(</b><i>varname</i><b>)</b>          child's length <i>varname</i>
+      <b>w(</b><i>varname</i><b>)</b>          child's weight <i>varname</i>
+      <b>w(</b><i>varname</i><b>)</b>          child's weight <i>varname</i>
+      <b>female(</b><i>#</i><b>)</b>           value used for girls in sex <i>varname</i>
+      <b>male(</b><i>#</i><b>)</b>             value used for boys in sex <i>varname</i>
+      <b>measure(</b><i>varname</i><b>)</b>    recumbent length or standing height <i>varname</i>
+      <b>recum(</b><i>#</i><b>)</b>            value used for recumbent length in recum <i>varname</i>
+      <b>stand(</b><i>#</i><b>)</b>            value used for standing height in recum <i>varname</i>
+      <b>o(</b><i>varname</i><b>)</b>          oedema <i>varname</i>
+      <b>oyes(</b><i>#</i><b>)</b>             value used for presence of oedema in oedema <i>varname</i>
+      <b>ono(</b><i>#</i><b>)</b>              value used for absence of oedema in oedema <i>varname</i>
+<p>
+<p>
+<b><u>Description</u></b>
+<p>
+    <b>zscore06</b> calculates anthropometric z-scores using the 2006 WHO child
+    growth standards.  Lenght/heigh-for-age, weight-for-height, BMI-for-age
+    and weight-for-age Z-scores are calculated for children 0 to 5 years of
+    age.
+<p>
+<b><u>Options</u></b>
+<p>
+        +------+
+    ----+ Main +-------------------------------------------------------------
+<p>
+    <b>a(</b><i>varname</i><b>)</b> specifies the child age <i>varname</i>. Age must be in months.
+<p>
+    <b>s(</b><i>varname</i><b>)</b> specifies the child sex <i>varname</i>. The default is to code boys
+        as 1 and girls as 2. If other values are used, they must be specified
+        in <b>male(#)</b> and <b>female(#)</b>.
+<p>
+    <b>h(</b><i>varname</i><b>)</b> specifies the child length/height <i>varname</i>. Lenght/height must
+        be in cm. Recumbent lenght is assumed for children &lt; 24 months,
+        standing height for children &gt; 24 months.  If this is not the case,
+        <b>measure(</b><i>varname</i><b>)</b> must be specified. At least one of <b>h(</b><i>varname</i><b>)</b> or <b>w(</b>
+        <i>varname</i><b>)</b> must be specified.
+<p>
+    <b>w(</b><i>varname</i><b>)</b> specifies the child weight <i>varname</i>. Weight must be in kg. At
+        least one of <b>h(</b><i>varname</i><b>)</b> or <b>w(</b><i>varname</i><b>)</b> must be specified.
+<p>
+    <b>female(</b><i>#</i><b>)</b> value used for girls in the child sex <i>varname</i> specified in <b>s(</b>
+        <i>varname</i><b>)</b> if different from 2.
+<p>
+    <b>male(</b><i>#</i><b>)</b> value used for boys in the the child sex <i>varname</i> specified in <b>s(</b>
+        <i>varname</i><b>)</b> if different from 1.
+<p>
+    <b>measure(</b><i>varname</i><b>)</b> specifies the <i>varname</i> indicating whether recumbent
+        length or standing height was measured. If the 24 month cut-off was
+        correctly applied <b>measure(</b><i>varname</i><b>)</b> need not be pecified. If the 24
+        month cut-off was not used correctly <b>measure(</b><i>varname</i><b>)</b> needs to be 1
+        for recumbent length and 2 for standing height. If other values are
+        used, they must be specified in <b>recum(#)</b> and <b>stand(#)</b>.
+<p>
+    <b>recum(</b><i>#</i><b>)</b> value used for recumbent length in the measure <i>varname</i> specified
+        in <b>measure(</b><i>varname</i><b>)</b> if different from 1.
+<p>
+    <b>stand(</b><i>#</i><b>)</b> value used for standing height in the measure <i>varname</i> specified
+        in <b>measure(</b><i>varname</i><b>)</b> if different from 2.
+<p>
+    <b>o(</b><i>varname</i><b>)</b> specifies the <i>varname</i> indicating whether oedema was observed.
+        <b>zscore06</b> assumes that children had no oedema. If this is the case,
+        there is no need to define <b>o(</b><i>varname</i><b>)</b>. If some children had oedema
+        the default is to code children with oedema as 1 and children wihtout
+        oedema as 2. If other values are used, they must be specified in
+        <b>oyes(#)</b> and <b>ono(#)</b>. Weight-for-age, weight-for-height and BMI-for-age
+        are not calculated for children with oedema.
+<p>
+    <b>oyes(</b><i>#</i><b>)</b> value used for the presence of oedema in the oedema <i>varname</i>
+        specified in <b>o(</b><i>varname</i><b>)</b> if different from 1.
+<p>
+    <b>ono(</b><i>#</i><b>)</b> value used for the absence of oedema in the oedema <i>varname</i>
+        specified in <b>o(</b><i>varname</i><b>)</b> if different from 2.
+<p>
+<b><u>Remarks</u></b>
+    Even though<b> zscore06</b> uses the same algorithm to calculate anthropometric
+    z-scores as WHO's igrowup macro, there are some differences in the
+    created variables:
+<p>
+    .<b>  zscore06</b> does not calculate any of the z-scores if child age is
+        missing. Igrowup does calculate the weight-for-height z-score.
+<p>
+    . If the age, height or weight values are outside the range of the
+        reference values (e.g. a child older than 5 years of age), the
+        corresponding z-score(s) will be set to 99. Igrowup will assign a
+        missing value to these observations.
+<p>
+    . Differences in the precision of the storage types used in zscore06 (all
+        stored as double) and igrowup (some stored as float) can lead to
+        small differences (&lt;=0.01) in the calculated Z-scores. These
+        differences, however, are rare (&lt;1/1000). In the cases we have
+        identified to date, we believe that zscore06 produces the correct
+        result. For example, take the following child:
+<p>
+                        <b>variable                 value</b>
+                        ------------------------------
+                         sex                       girl
+                         age (days)                 407
+                         length (cm)               70.5
+<p>
+        The reference values for this child are:
+<p>
+                        <b>parameter      reference value</b>
+                        ------------------------------
+                         l                            1
+                         m                      75.6546
+                         s                      0.03503
+<p>
+        Using the equation from the WHO publication cited below, we find:
+<p>
+            haz06 = (((70.5/75.6546)^1)-1)/(0.03503*1)} = -1.94499949 ~=
+            -1.94 as calculated by<b> zscore06</b> and not -1.95 as calculated by
+            igrowup
+<p>
+<p>
+<p>
+<b><u>Acknowledgements</u></b>
+    James Beard (University College London) provided very useful comments on
+    the previous version of this command.
+<p>
+<b><u>References</u></b>
+    Mercedes de Onis et al. 2006. WHO child growth standards :
+    length/height-for-age, weight-for-age, weight-for-length,
+    weight-for-height and body mass index-for-age : methods and development.
+    World Health Organization. Geneve.
+<p>
+<p>
+<b><u>Citation of zscore06</u></b>
+    <b>zscore06</b> is not an official Stata command. It is a free contribution to
+    the research community. Please cite it as such:
+<p>
+    Leroy, Jef L (2011).  zscore06: Stata command for the calculation of
+        anthropometric z-scores using the 2006 WHO child growth standards 
+        http://www.ifpri.org/staffprofile/jef-leroy
+<p>
+<b><u>Author</u></b>
+    Jef L Leroy, International Food Policy Research Institute, Washington DC,
+</pre>

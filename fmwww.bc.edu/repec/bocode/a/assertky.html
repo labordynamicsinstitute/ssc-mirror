@@ -1,0 +1,146 @@
+<pre>
+<p>
+-------------------------------------------------------------------------------
+help for <b>assertky</b>
+-------------------------------------------------------------------------------
+<p>
+<b><u>Sort the data and assert that the given varlist is a key for the dataset</u></b>
+<p>
+        <b>assertky</b> <i>varlist</i> [<b>if</b> <i>exp</i>] [<b>in</b> <i>range</i>] [<b>, stable gen_n(</b><i>varname1</i><b>)</b>
+                 <b>gen_N(</b><i>varname2</i><b>)</b>]
+<p>
+    Alternative syntax:
+<p>
+        <b>assertky</b> [<b>if</b> <i>exp</i>] [<b>in</b> <i>range</i>] <b>, basis(</b><i>varlist</i><b>)</b> [<b>stable gen_n(</b><i>varname1</i><b>)</b>
+                 <b>gen_N(</b><i>varname2</i><b>)</b>]
+<p>
+<p>
+<b><u>Description</u></b>
+<p>
+    <b>assertky</b> will sort the data on <i>varlist</i> and test whether <i>varlist</i> is a key
+    for the dataset, that is, whether the values in <i>varlist</i> uniquely identify
+    observations.  This is useful when you wish to simultaneously sort the
+    data and test for whether <i>varlist</i> is a key, such as in preparation for a 
+    merge or certain by operations.  If the test fails, <b>assertky</b> exits with
+    an error condition.  <b>assertky</b> will leave the data sorted on <i>varlist</i>
+    (regardless of whether the test succeeds).
+<p>
+<p>
+<b><u>Remarks</u></b>
+<p>
+    You must use one of the two syntaxes shown; you may not combine them.
+    (The first syntax may be easier to use; the second syntax is allowed for
+    backward-compatibility.)
+<p>
+    The <b>if</b> and <b>in</b> qualifiers would presumably be rarely used.  They would be
+    useful when the key test fails on the entire set, but might succeed on a
+    specific subset.  If this feature is used, then the dataset is left
+    sorted on <i>varlist</i>, with the excluded cases appearing at the front of each
+    subset of constant values of <i>varlist</i>.
+<p>
+<p>
+<b><u>Options</u></b>
+<p>
+    <b>stable</b> specifies that you want a stable sort; cases that have the same
+    values in <i>varlist</i> (i.e., those that violate the key condition) will
+    appear, within sets of constant values of <i>varlist</i>, in the same order as
+    they were prior to the sort.  See sort.  <b>stable</b> makes no difference if
+    the key test succeeds.
+<p>
+    <b>gen_n(</b><i>varname1</i><b>)</b> specifies that if the key test fails, then a variable
+    will be generated that enumerates the cases within sets having the same
+    values in <i>varlist</i>.  Note that in order to have these values set
+    consistently, you should also specify <b>stable</b>.
+<p>
+    <b>gen_N(</b><i>varname2</i><b>)</b> specifies that if the key test fails, then a variable
+    will be generated that reports the numbers of cases having the same
+    values in <i>varlist</i>.
+<p>
+    Note that both <b>gen_n</b> and <b>gen_N</b> will generate the variables only if the
+    key test fails.  These options can be used to identify cases that cause
+    the test to fail (the "key violations").  (<b>gen_N</b> may be more useful than
+    <b>gen_n</b>.) See examples, below.  Also, any cases excluded by an <b>if</b> or <b>in</b>
+    qualifier will recieve a missing value.
+<p>
+<p>
+<b><u>Examples</u></b>
+<p>
+    <b>. assertky familyid person_no year</b>
+<p>
+    <b>. assertky emplid effdate</b>
+    <b>. merge emplid effdate using otherdataset</b>
+<p>
+    <b>. assertky cust_no prod_serial_no</b>
+    varlist is not a key
+    r(459);
+    <b>. assertky cust_no prod_serial_no if status=="A"</b>
+<p>
+    <b>. assertky emplid effdate</b>
+    varlist is not a key
+    r(459);
+    <b>. assertky emplid effdate, gen_N(N)</b>
+    varlist is not a key
+    r(459);
+    <b>list if N&gt;1, sepby(emplid effdate)</b>
+        /* shows all sets of key violations */
+<p>
+    <b>. assertky emplid effdate, gen_n(n) gen_N(N)</b>
+    varlist is not a key
+    r(459);
+    <b>list if N&gt;1 &amp; n==1</b>
+        /* shows one example from each set of key violations */
+<p>
+    Note that if an <b>if</b> or <b>in</b> qualifier is used in combination with <b>gen_n</b> or
+    <b>gen_N</b>, you should accomodate the possibility of missing values in the
+    generated variables:
+<p>
+    <b>. assertky emplid effdate if status=="A", gen_N(N)</b>
+    varlist is not a key
+    r(459);
+    <b>list if N&gt;1 &amp; ~mi(N), sepby(emplid effdate)</b>
+<p>
+    Or you could also code,
+<p>
+    <b>list if N&gt;1 &amp; status=="A", sepby(emplid effdate)</b>
+<p>
+<p>
+<b><u>Further Remarks</u></b>
+<p>
+    <b>assertky</b> is useful prior to a merge, though sort is just as good,
+    provided that the <b>merge</b> command is used with the <b>uniq</b> or <b>uniqm</b> option.
+    (<b>assertky</b> was initially developed prior to the advent of these options in
+    <b>merge</b>, and one of the motivations for its development was to facilitate
+    insuring the key condition in a <b>merge</b>.)
+<p>
+    Another useful application is prior to a <b>by:</b> prefix command, where a
+    secondary sort varlist is used.  (The "secondary" variables are those
+    that appear in parenthese in a <b>by:</b> prefix command.  See help by.) In that
+    case, you will often want to be sure that the variables, including the
+    secondaries, put the data into a unique sort order.  (In these instances,
+    the primary <b>by:</b> variables serve mainly to group the observations; the
+    actual order of the groups is unimportant, but the uniquness of the sort
+    on the secondary variable(s) may be necessary for the correct functioning
+    of the subsequent command.) Example:
+<p>
+    <b>. assertky emplid effdate</b>
+    <b>. by emplid (effdate):</b> <b>gen int spellno = _n</b>
+<p>
+    In this situation, <b>assertky</b> is useful because <b>sort</b> (or <b>bysort</b>) alone is
+    not enough to insure a unique result.
+<p>
+    <b>assertky</b> (without an <b>if</b> or <b>in</b> or options) is similar to isid but users
+    may find it easier to use.  It is ostensibly equivalent to
+<p>
+        <b>isid</b> <i>varlist</i><b>, sort missok</b>
+<p>
+    though the author has not verified that it is exactly equivalent.
+<p>
+<p>
+<p>
+<b><u>Author</u></b>
+<p>
+    David Kantor.  Email kantor.d@att.net if you observe any problems.
+<p>
+<b><u>Also See</u></b>
+<p>
+</pre>

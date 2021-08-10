@@ -1,0 +1,105 @@
+<pre>
+<b>help moss</b>
+-------------------------------------------------------------------------------
+<p>
+<b><u>Title</u></b>
+<p>
+    <b>moss</b> -- Find multiple occurrences of substrings
+<p>
+<p>
+<b><u>Syntax</u></b>
+<p>
+        <b>moss</b> <i>strvar</i> [<i>if</i>] [<i>in</i>] <b>,</b> <b><u>m</u></b><b>atch(</b>[<b>"</b>]<i>pattern</i>[<b>"</b>]<b>)</b> [ <b><u>r</u></b><b>egex</b> <b><u>p</u></b><b>refix(</b><i>prefix</i><b>)</b>
+                 <b><u>s</u></b><b>uffix(</b><i>suffix</i><b>)</b> <b><u>max</u></b><b>imum(</b><i>#</i><b>)</b> <b><u>c</u></b><b>ompact</b> ]
+<p>
+<p>
+<b><u>Description</u></b>
+<p>
+    <b>moss</b> finds occurrences of substrings matching a pattern in a given string
+    variable. Depending on what is sought and what is found, variables are
+    created giving the count of occurrences (always); the positions of
+    occurrences (whenever any are found); and the exact substrings found
+    (when a regular expression defines a subexpression to be returned). The
+    default names are respectively <b>_count</b>, <b>_pos1</b> up, and <b>_match1</b> up.
+<p>
+<p>
+<b><u>Remarks</u></b> 
+<p>
+    By default, <b>moss</b> finds repeated occurrences of the string specified in
+    <b>match()</b> using Stata's strpos() string function (in older versions of
+    Stata, strpos() was named index()). A <b>_count</b> variable is created to
+    indicate the number of occurrences per observation. The position, per
+    observation, of the first instance will be recorded in <b>_pos1</b>, the second
+    in <b>_pos2</b>, and so on.
+<p>
+    With the <b>regex</b> option, <b>moss</b> can be used to repeatedly find more complex
+    patterns of text. The specification of the search pattern must follow 
+    regexm() syntax and include one and only one subexpression to be matched.
+    When using regular expressions, subexpressions are identified using
+    parentheses.  For example, <b>match("AMC ([A-Za-z]+)")</b> will match <b>"AMC</b>
+    <b>Concord"</b>, <b>"AMC Pacer"</b>, and <b>"AMC AMC Spirit"</b> but <b>moss</b> will put in <b>_match1</b>
+    the matched subexpressions <b>"Concord"</b>, <b>"Pacer"</b>, and <b>"AMC Spirit"</b>.
+<p>
+    <b>moss</b> follows the principle that occurrences must be disjoint and may not
+    overlap. That is, it finds just one occurrence of <b>"ana"</b> in <b>"banana"</b>, not
+    two.
+<p>
+<p>
+<b><u>Options</u></b> 
+<p>
+    <b>match()</b> is required and the pattern can be either literal text or a
+        regular expression.
+<p>
+    <b>regex</b> specifies that the pattern is to be interpreted as a regular
+        expression. Such a pattern must contain precisely one subexpression
+        to be extracted. See Examples.
+<p>
+    <b>prefix()</b> specifies an alternative prefix for new variable names to be
+        created by <b>moss</b>. Such a prefix must start either with a letter or
+        with an underscore.
+<p>
+    <b>suffix()</b> specifies a suffix for new variable names to be created.
+<p>
+    <b>prefix()</b> and <b>suffix()</b> may not be combined.
+<p>
+    <b>maximum()</b> specifies an upper limit to the number of position and match
+        variables to be created. That is, specify <b>max(3)</b> if you want to see
+        details of at most the first 3 occurrences of your pattern.
+<p>
+    <b>compact</b> specifies that the most compact storage types possible be used
+        during calculations. Specifying this option may slow <b>moss</b> down.
+<p>
+<p>
+<b><u>Examples</u></b>
+<p>
+    <b>. moss make, match(",")</b>
+<p>
+    <b>. moss make, match("([0-9]+)") regex</b>
+<p>
+    <b>. moss history, match("(X+)") regex</b>
+<p>
+    <b>. moss s, match("([^ ]+)") prefix(s_) regex</b>
+ 
+<p>
+<p>
+<b><u>Authors</u></b>
+<p>
+    Robert Picard
+    picard@netbox.com
+<p>
+    Nicholas J. Cox, Durham University
+    n.j.cox@durham.ac.uk
+<p>
+<p>
+<b><u>Acknowledgments</u></b>
+<p>
+    A question on Statalist from Rebecca A. Pope was the stimulus for writing
+    this program.
+<p>
+<p>
+<b><u>Also see</u></b>
+<p>
+    Help:  <b>[D] strpos()</b>, <b>[D] regexm()</b>, <b>[D] split</b>
+<p>
+    FAQs:  What are regular expressions and how can I use them in Stata?
+</pre>

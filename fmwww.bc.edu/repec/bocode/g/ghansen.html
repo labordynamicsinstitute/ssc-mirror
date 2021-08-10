@@ -1,0 +1,159 @@
+<pre>
+<b>help ghansen</b>
+-------------------------------------------------------------------------------
+<p>
+<b><u>Title</u></b>
+<p>
+    <b>ghansen</b> -- Gregory-Hansen test for cointegration with regime shifts
+<p>
+<b><u>Syntax</u></b>
+<p>
+        <b>ghansen</b> <i>depvar</i> <i>indepvars</i> [<i>if</i>] [<i>in</i>] <b>,</b> <b>break(</b><i>string</i><b>)</b> <b>lagmethod(</b><i>string</i><b>)</b>
+                [<b>maxlags(</b><i>integer</i><b>)</b> <b>trim(</b><i>real</i><b>)</b> <b>level(</b><i>real</i><b>)</b>]
+<p>
+<p>
+    <i>options</i>               Description
+    -------------------------------------------------------------------------
+    Main
+      <b>break</b>                type of structural break of cointegration vector
+      <b>lagmethod</b>            Method for lag selection in adf test
+      <b>maxlags</b>              Maximum lags to search in adf test
+      <b>trim</b>                 fraction of data range to skip at either end when
+                            examining possible break points
+      <b>level</b>                confidence level for downward t statistic lag
+                            selection in adf test
+    -------------------------------------------------------------------------
+    <b>by</b> is allowed; see <b>[D] by</b>.
+    You must <b>tsset</b> your data before using <b>ghansen</b>; see <b>[TS] tsset</b>.
+    <i>depvar</i> and <i>indepvars</i> may contain time-series operators; see tsvarlist.
+<p>
+<b><u>Description</u></b>
+<p>
+    <b>ghansen</b> performs the Gregory-Hansen test for cointegration with regime
+    shifts proposed in Gregory and Hansen (1996) on a dependent variable 
+    <i>depvar</i> and up to four independent variables in <i>indepvars</i> . The test's
+    null hypothesis is no cointegration against the alternative of
+    cointegration with a single shift at an unknown point in time.  <b>ghansen</b>
+    does not allow gaps within the observations of the time series.
+<p>
+<b><u>Options</u></b>
+<p>
+        +------+
+    ----+ Main +-------------------------------------------------------------
+<p>
+    <b>break(</b><i>string</i><b>)</b> is required and specifies the type of break in the
+        cointegration vector. Details are provided in Gregory and Hansen
+        (1996) and Gregory and Hansen (1996a).
+<p>
+        <b>break(level)</b> specifies a break in the constant term.
+<p>
+        <b>break(trend)</b> specifies a break in the constant and the trend.
+<p>
+        <b>break(regime)</b> specifies a break in the constant and the slope.
+<p>
+        <b>break(regimetrend)</b> specifies a break in the constant, the slope and
+            the trend (Gregory and Hansen 1996a)
+<p>
+    <b>lagmethod(</b><i>string</i><b>)</b> is required and specifies the algorithm to choose the
+        number of lags in the Augmented Dickey Fuller tests.
+<p>
+        <b>lagmethod(fixed)</b> sets the number of lags equal to the maximum lags
+            specified in <b>maxlag(</b><i>integer</i><b>)</b>
+<p>
+        <b>lagmethod(aic)</b> chooses the number of lags that minimize the Akaike
+            information criterion.
+<p>
+        <b>lagmethod(bic)</b> chooses the number of lags that minimize the Bayesian
+            information criterion.
+<p>
+        <b>lagmethod(downt)</b> chooses the number of lags such that the last lag is
+            significant according to its t-statistic, starting from a maximum
+            number of lags.
+<p>
+    <b>maxlags(</b><i>integer</i><b>)</b> is optional and specifies the maximum number of lags to
+        include in the Augmented Dickey Fuller test, or the number of lags to
+        include if <b>lagmethod</b> is fixed. <b>maxlags</b> is required if <b>lagmethod</b> is
+        fixed. Default is T^0.25, where T is the sample size.
+<p>
+    <b>trim(</b><i>real</i><b>)</b> is optional and specifies the fraction of the data range to
+        skip at either end when examining possible break points. Default is
+        0.15. <b>trim</b> must be a positive real number between 0 and 0.25.
+<p>
+    <b>level(</b><i>real</i><b>)</b> is optional and specifies the cutoff confidence level for the
+        downt lag selection method. Default is 0.95.
+<p>
+<b><u>Examples</u></b>
+<p>
+    . webuse balance2 ,clear
+<p>
+    Break in level, lags chosen by Akaike criterion, maximum of 5 lags.
+<p>
+    . ghansen y i c, break(level) lagmethod(aic) maxlags(5)
+<p>
+    Change in regime , 5 lags chosen by user.
+<p>
+    . ghansen y i c, break(regime) lagmethod(fixed) maxlags(5)
+<p>
+    Change in regime and trend , downward t lag selection at the 99%
+    confidence level, trim 10% of sample.
+<p>
+    . ghansen y i c, break(regimetrend) lagmethod(downt) level(0.99)
+    trim(0.1)
+<p>
+<b><u>Saved results</u></b>
+<p>
+    <b>ghansen</b> saves the following in <b>r()</b>:
+<p>
+    Scalars        
+      <b>r(tstat)</b>            t-statistic for adf test
+      <b>r(lag)</b>              lags for adf test
+      <b>r(breakptadf)</b>       estimated breakpoint for adf test
+      <b>r(za)</b>               za statistic
+      <b>r(breakptza)</b>        estimated breakpoint for za test
+      <b>r(zt)</b>               zt statistic
+      <b>r(breakptzt)</b>        estimated breakpoint for zt test
+<p>
+    Macros         
+      <b>r(break)</b>            Type of break
+      <b>r(badfdate)</b>         estimated break date for adf test
+      <b>r(bzadate)</b>          estimated break date for za test
+      <b>r(bztdate)</b>          estimated break date for zt test
+<p>
+<p>
+<p>
+<b><u>Author</u></b>
+<p>
+    Jorge Pérez, Inter-American Development Bank
+    jperezperez@iadb.org
+<p>
+<b><u>References</u></b>
+<p>
+    Gregory, Allan W. and Bruce E. Hansen (1996). "Residual-Based Tests for
+    Cointegration in Models with Regime Shifts",<i> Journal of Econometrics</i>
+    70(1), pp. 99-126.
+<p>
+    Gregory, Allan W. and Bruce E. Hansen (1996a). "Tests for Cointegration
+    in Models with Regime and Trend Shifts",<i> Oxford Bulletin of Economics and</i>
+    <i>Statistics</i> 58 (3), pp. 555-60.
+<p>
+    Hansen, Bruce E. (n.d.) Residual-based tests for cointegration in models
+    with regime shifts.<i>  Programs -- Cointegration</i>. Retrieved August 1, 2011
+    from http://www.ssc.wisc.edu/~bhansen/progs/joe_96.html
+<p>
+<b><u>Acknowledgements</u></b> 
+<p>
+    This command is based on R code provided in Hansen (n.d.) I am grateful
+    to Muhammad Anees and Nicholas Cox for help in identifying a bug in a
+    previous version of the program.
+<p>
+<b><u>Disclaimer</u></b>
+<p>
+    This program is provided without warranty of any kind. The author is not
+    responsible for any cost derived by the usage of this program.
+<p>
+<b><u>Also see</u></b>
+<p>
+      Help:  <b>[TS] vec</b>, <b>[TS] vecrank</b>, zandrews (if installed),
+<p>
+<p>
+</pre>

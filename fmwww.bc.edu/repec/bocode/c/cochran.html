@@ -1,0 +1,81 @@
+<pre>
+-------------------------------------------------------------------------------
+help for <b>cochran</b>
+-------------------------------------------------------------------------------
+<p>
+<b><u>Test for equality of proportions in matched samples (Cochran's Q)</u></b>
+<p>
+        <b>cochran</b> <i>varlist</i> [<i>weight</i>] [<b>if</b> <i>exp</i>] [<b>in</b> <i>range</i>] [<b>,</b> <b><u>d</u></b><b>etail</b> ]
+<p>
+<p>
+    <b>by</b> <i>...</i> <b>:</b> may be used with <b>cochran</b>; see help by.
+<p>
+    <b>fweight</b>s are allowed with <b>cochran</b>; see help weights.
+<p>
+<p>
+<b><u>Description</u></b>
+<p>
+    <b>cochran</b> performs a test for equality of two or more proportions in
+    matched samples: Taking the 1-to-1 matching of observations into account,
+    <b>cochran</b> tests that the proportion of nonzero outcomes is constant for the
+    variables in <i>varlist</i>.
+<p>
+    The chi-squared calculated by <b>cochran</b> is known as Cochran's Q (Cochran
+    1950). If only two proportions are compared, Cochran's Q is equal to the
+    McNemar chi-squared calculated by mcc. An exact significance probability
+    will be reported in this case.
+<p>
+<p>
+<b><u>Options</u></b>
+<p>
+    <b>detail</b> specifies to display the proportions and counts (i.e. number of
+        nonzero outcomes).
+<p>
+<p>
+<b><u>Saved Results</u></b>
+<p>
+    Scalars:
+<p>
+    <b>r(N)</b>         number of cases
+    <b>r(chi2)</b>      Cochran's Q
+    <b>r(df)</b>        degrees of freedom
+    <b>r(p)</b>         p-value
+    <b>r(p_exact)</b>   exact p-value (if only two proportions are compared)
+<p>
+    Matrices:
+<p>
+    <b>r(T)</b>         proportions and counts
+<p>
+<p>
+<b><u>Methods and Formulas</u></b>
+<p>
+    Cochran's Q is defined as
+<p>
+             <i>c</i> * (<i>c</i>-1) * sum_<i>j</i> ( <i>T</i>_<i>j</i> - <i>T</i>_<i>bar</i> )^2
+        <i>Q</i> = -------------------------------------
+             <i>c</i> * sum_<i>i</i> ( <i>u</i>_<i>i</i> ) - sum_<i>i</i> ( <i>u</i>_<i>i</i>^2 )
+<p>
+    where <i>c</i> is the number columns (= number of proportions = number of
+    variables), <i>T</i>_<i>j</i> is the number of nonzero outcomes in the <i>j</i>th column,
+    <i>T</i>_<i>bar</i> is the mean number of nonzero outcomes (i.e. the proportion of
+    nonzero outcomes) per column, and <i>u</i>_<i>i</i> is the number of nonzero outcomes
+    in the <i>i</i>th row (= number of nonzero outcomes in the <i>i</i>th observarion).
+<p>
+    For large samples, <i>Q</i> is chi-square distributed with (<i>c</i>-1) degrees of
+    freedom.
+<p>
+<p>
+<b><u>Reference</u></b>
+<p>
+    Cochran, W. G. 1950. The Comparison of Percentages in Matched Samples.
+        <i>Biometrika</i> 37(3/4): 256-266.
+<p>
+<p>
+<b><u>Author</u></b>
+<p>
+    Ben Jann, ETH Zurich, jann@soz.gess.ethz.ch
+<p>
+<p>
+<b><u>Also see</u></b>
+<p>
+</pre>

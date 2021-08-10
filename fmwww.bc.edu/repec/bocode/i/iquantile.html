@@ -1,0 +1,195 @@
+<pre>
+-------------------------------------------------------------------------------
+<b>help iquantile</b>
+-------------------------------------------------------------------------------
+<p>
+<b><u>Interpolated quantiles</u></b>
+<p>
+<p>
+<b><u>Syntax</u></b>
+<p>
+        <b>iquantile</b> <i>varlist</i> [<i>if</i>] [<i>in</i>] [<i>weight</i>] [ <b>,</b> <b>by(</b><i>byvarlist</i><b>)</b> <b><u>f</u></b><b>ormat(</b><i>format</i><b>)</b>
+                  <b>p(</b><i>numlist</i><b>)</b> <i>list_options</i> ]
+<p>
+    <b>fweight</b>s and <b>aweight</b>s are allowed.
+<p>
+<p>
+<b><u>Description</u></b>
+<p>
+    <b>iquantile</b> calculates and displays quantiles estimated by linear
+    interpolation in the mid-distribution function. The user may specify one
+    or more numeric variables, one or more grouping variables and one or more
+    quantiles.
+<p>
+<p>
+<b><u>Remarks</u></b> 
+<p>
+    By quantiles here are meant those summaries defined by the fact that some
+    percent of a batch of values is fewer.  Thus the median (50%) and the
+    quartiles (25% and 75%) are examples. Most commands in Stata that
+    calculate such summaries select particular sample values or at most
+    average two sample values. That is often sufficient for the purpose
+    intended. <b>iquantile</b> offers an alternative, which is perhaps most useful
+    when the number of distinct values is small. For example, although the
+    variable in question may be measured coarsely, say on an integer scale,
+    and many ties may be observed, it may be hoped or imagined that a
+    property on a continuous scale lies beneath. Note that <b>iquantile</b> performs
+    no white magic, just elementary linear interpolation.
+<p>
+    The cumulative probability is here defined as
+<p>
+        SUM counts of values below + (1/2) count of this value
+        ------------------------------------------------------.
+                       SUM counts of all values
+                   
+    With terminology from Tukey (1977, 496-497), this could be called a
+    `split fraction below'. It is also a `ridit' as defined by Bross (1958):
+    see also Fleiss et al. (2003, 198-205) or Flora (1988).  Yet again, it is
+    also the mid-distribution function of Parzen (1993, 3295) and the grade
+    function of Haberman (1996, 240-241). Parzen's term appears best for the
+    purposes of this command. The numerator is a `split count'. Using this
+    numerator, rather than
+<p>
+        SUM counts of values below 
+<p>
+    or
+<p>
+        SUM counts of values below + count of this value, 
+        
+    treats distributions symmetrically. For applications to plotting ordinal
+    categorical data, see Cox (2004).
+<p>
+    The technique used in <b>iquantile</b> is illustrated by a worked example using
+    Mata calculator-style. We first enter the data as values and frequencies:
+<p>
+        : y = 2, 3, 4, 5
+<p>
+        : f = 2, 9, 8, 8
+<p>
+    Then we can work out the cumulative frequencies:
+<p>
+        : runningsum(f)
+                1    2    3    4
+            +---------------------+
+          1 |   2   11   19   27  |
+            +---------------------+
+<p>
+    Subtract half the frequencies and get the cumulative proportions,
+    symmetrically considered, i.e. the mid-distribution function:
+<p>
+        : runningsum(f) :- f/2
+                 1     2     3     4
+            +-------------------------+
+          1 |    1   6.5    15    23  |
+            +-------------------------+
+<p>
+        : (runningsum(f) :- f/2) / 27
+                         1             2             3             4
+            +---------------------------------------------------------+
+          1 |   .037037037   .2407407407   .5555555556   .8518518519  |
+            +---------------------------------------------------------+
+<p>
+        : cup = (runningsum(f) :- f/2) / 27
+<p>
+    To get the median, we need to interpolate between the 2nd and 3rd values
+    of y.
+<p>
+        : y[2] + (y[3] - y[2]) * (0.5 - cup[2]) / (cup[3] - cup[2])
+          3.823529412
+<p>
+    <b>iquantile</b> uses list to show results.
+<p>
+    <b>iquantile</b> issues a warning if any quantile was calculated by
+    extrapolation, i.e. it lies in one or other tail of the distribution
+    beyond the observed mid-distribution function. Such results should be
+    treated with extreme caution.
+<p>
+    If the data consist of a single distinct value, then exactly that value
+    is always returned as a quantile.
+<p>
+    <b>iquantile</b> uses Mata for its innermost calculations.  Thus Stata 9 up is
+    required.
+<p>
+<p>
+<b><u>Options</u></b> 
+<p>
+    <b>by()</b> specifies that calculations are to be carried out separately for the
+        distinct groups defined by <i>byvarlist</i>. The variable(s) in <i>byvarlist</i>
+        may be numeric or string.
+<p>
+    <b>format()</b> specifies a numeric format to be used to display the quantiles.
+        This option has no lasting effect.
+<p>
+    <b>p()</b> specifies a numlist of integers betweem 1 and 99 to indicate the <i>p</i>%
+        quantiles. If <b>p()</b> is not specified, it defaults to 50, i.e. the 50%
+        point or median is calculated.  <b>p(25(25)75)</b> specifies the median and
+        quartiles.
+<p>
+    <i>list_options</i> are options of list other than <b>noobs</b> and <b>subvarname</b>. They
+        may be specified to tune the display of quantiles.
+<p>
+<p>
+<b><u>Examples</u></b>
+<p>
+    <b>. iquantile mpg</b>
+    <b>. iquantile mpg, p(25 50 70)</b>
+    <b>. iquantile mpg, p(25 50 70) format(%2.1f)</b>
+    <b>. iquantile mpg, p(25 50 70) format(%2.1f) by(rep78)</b>
+    <b>. iquantile mpg weight price</b>
+<p>
+<p>
+<b><u>Saved results</u></b> 
+<p>
+    Saved results are best explained by example. After <b>iquantile mpg</b>, two
+    results are saved, <b>r(mpg_50_1)</b> and <b>r(mpg_50_1_epolate)</b>.  The elements of
+    the name for both are first, the variable name (if necessary, abbreviated
+    to 16 characters); second, the percent defining the quantile; third, the
+    number of the group in question in the observations processed (here, the
+    first of one). The extra flag <b>epolate</b> indicates whether extrapolation was
+    needed (1 for true, 0 for false).
+<p>
+<p>
+<b><u>Author</u></b> 
+<p>
+    Nicholas J. Cox, Durham University, UK
+    n.j.cox@durham.ac.uk
+<p>
+<p>
+<b><u>Acknowledgments</u></b> 
+<p>
+    This command grew out of a thread on Statalist started by Taggert J.
+        Brooks. See
+        http://www.hsph.harvard.edu/cgi-bin/lwgate/STATALIST/archives/statali
+        &gt; st.0901/date/article-689.html
+<p>
+<p>
+<b><u>References</u></b>
+<p>
+    Bross, I. D. J. 1958. How to use ridit analysis. <i>Biometrics</i> 14: 38-58.
+<p>
+    Cox, N. J. 2004. Speaking Stata: Graphing categorical and compositional
+        data. <i>Stata Journal</i> 4(2): 190-215.  See Section 5.
+        http://www.stata-journal.com/sjpdf.html?articlenum=gr0004
+<p>
+    Fleiss, J. L., B. Levin, and M. C. Paik. 2003.  <i>Statistical Methods for</i>
+        <i>Rates and Proportions</i>.  Hoboken, NJ: Wiley.
+<p>
+    Flora, J. D. 1988. Ridit analysis. In <i>Encyclopedia of Statistical</i>
+        <i>Sciences</i>, ed. S. Kotz and N. L. Johnson, (8) 136-139.  New York:
+        Wiley.
+<p>
+    Haberman, S. J. 1996.  <i>Advanced Statistics Volume I: Description of</i>
+        <i>Populations</i>.  New York: Springer.
+<p>
+    Parzen, E. 1993. Change <i>PP</i> plot and continuous sample quantile function.
+        <i>Communications in Statistics </i>-<i>Theory and Methods</i> 22: 3287-3304.
+<p>
+    Tukey, J. W. 1977. <i>Exploratory Data Analysis</i>.  Reading, MA:
+    Addison-Wesley.
+<p>
+<p>
+<b><u>Also see</u></b>
+<p>
+    help for summarize, centile, pctile, tabstat, hdquantile (if installed)
+<p>
+</pre>

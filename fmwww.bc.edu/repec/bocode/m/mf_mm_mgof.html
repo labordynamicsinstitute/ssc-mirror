@@ -1,0 +1,299 @@
+<pre>
+<b>help mata mm_mgof()</b>
+-------------------------------------------------------------------------------
+<p>
+<b><u>Title</u></b>
+<p>
+    <b>mm_mgof() -- Goodness-of-fit tests for multinomial data</b>
+<p>
+<p>
+<b><u>Syntax</u></b>
+<p>
+        <i>real matrix</i> <b>mm_mgof(</b><i>f</i> [<b>,</b> <i>h</i><b>,</b> <i>method</i><b>,</b> <i>stats</i><b>,</b> <i>lambda</i><b>,</b> <i>nfit</i>|<i>reps</i><b>,</b> <i>dots</i>]<b>)</b>
+<p>
+<p>
+    where
+<p>
+            <i>f</i>:  <i>real colvector</i> containing observed counts
+<p>
+            <i>h</i>:  <i>real colvector</i> containing expected counts (or probabilities;
+                the scale does not matter)
+<p>
+       <i>method</i>:  <i>string scalar</i> containing <b>"</b><b><u>a</u></b><b>pprox"</b> (large sample chi-squared
+                approximation test; the default), <b>"</b><b><u>m</u></b><b>c"</b> (Monte Carlo exact
+                test), or <b>"</b><b><u>e</u></b><b>e"</b> (exhaustive enumeration exact test)
+<p>
+        <i>stats</i>:  <i>string vector</i> specifying the test statistics to be used;
+                available statistics are <b>"</b><b><u>x</u></b><b>2"</b> (Pearson's X2 statistic; the
+                default), <b>"</b><b><u>l</u></b><b>r"</b> (log likelihood ratio statistic), <b>"</b><b><u>c</u></b><b>r"</b>
+                (statistic from the Cressie-Read family), <b>"</b><b><u>m</u></b><b>lnp"</b> (outcome
+                probability statistic), <b>"</b><b><u>k</u></b><b>smirnov"</b> (two-sided
+                Kolmogorov-Smirnov statistic); <b>"mlnp"</b> and <b>"ksmirnov"</b> are not
+                allowed with the <b>"approx"</b> method
+<p>
+       <i>lambda</i>:  <i>real scalar</i> specifying the lambda parameter for the
+                Cressie-Read statistic; default is <b>2/3</b>
+<p>
+         <i>nfit</i>:  <i>real scalar</i> specifying the number of fitted parameters
+                (imposed restrictions) for the chi-squared approximation test
+                (default is <b>0</b>)
+<p>
+         <i>reps</i>:  <i>real scalar</i> specifying the number of replications for the
+                <b>"mc"</b> method (default is <b>10000</b>)
+<p>
+         <i>dots</i>:  <i>real scalar</i> causing progress dots to be displayed with the
+                <b>"mc"</b> or <b>"ee"</b> method
+<p>
+<p>
+<b><u>Description</u></b>
+<p>
+    <b>mm_mgof()</b> performs goodness-of-fit tests for discrete distributions. It
+    returns a matrix containing for each requested statistic a row with the
+    statistic's value in the first column and the associated p-value in the
+    second column. <i>f</i> is a <i>colvector</i> containing the observed frequency
+    distribution (i.e. the observed counts for each category; <b>sum(</b><i>f</i><b>)</b> is the
+    sample size). <i>h</i> is a <i>colvector</i> specifying the null distribution (in
+    counts or proportions) against which the observed distribution be tested.
+    If <i>h</i> is omitted or if <b>rows(</b><i>h</i><b>)</b>==1, the uniform distribution is used as the
+    null distribution.
+<p>
+    <i>method</i> specifies the method used to evaluate the p-values. Available
+    methods are:
+<p>
+        <b>"approx"</b> to perform a classic large sample chi-squared approximation
+            test. <b>"approx"</b> is the default method.
+<p>
+        <b>"mc"</b> to approximate the exact p-value by sampling from the null
+            distribution (Monte Carlo simulation). The proportion of samples
+            in which the test statistic exceeds the observed statistic gives
+            the p-value. The number of replications (i.e. the number of drawn
+            samples) is 10000 or as specified by <i>reps</i>.
+<p>
+        <b>"ee"</b> to compute the exact p-value by iterating through all possible
+            data compositions given the number of observations and the number
+            of categories.  The number of possible compositions grows very
+            fast with the number of observations and categories (it is equal
+            to <b>comb(</b><i>n</i>+<i>k</i>-1<b>,</b><i>k</i>-1<b>)</b> = <b>comb(</b><i>n</i>+<i>k</i>-1<b>,</b><i>n</i><b>)</b> = (<i>n</i>+<i>k</i>-1)!/((<i>k</i>-1)!<i>n</i>!). The
+            <b>"ee"</b> method is therefore only useful for very small samples with
+            few categories. An important exception is when the null
+            distribution is the uniform distribution (and <i>stats</i> does not
+            contain <b>ksmirnov</b>). In this case the p-values are computed based
+            on the partitions of <i>n</i>. The number of partitions is typically
+            much smaller than the number of compositions.
+<p>
+    <i>stats</i> specifies the test statistics for which the p-values be computed.
+    Available statistics are:
+<p>
+        <b>"x2"</b>: Pearson's X2 statistic
+<p>
+                X2 = sum( (<i>f</i>-<i>h</i>)^2 / <i>h</i> )
+<p>
+            where <i>f</i> are the observed counts and <i>h</i> are the expected counts. X2
+            is asymptotically chi-square distributed with <i>k</i>-<i>nfit</i>-1 degrees of
+            freedom. <b>"x2"</b> is the default for the <b>"approx"</b> method (<b>"approx"</b>
+            with <b>"x2"</b> is <i>the</i> classical chi-squared goodness-of-fit test for
+            multinomial data).
+<p>
+        <b>"lr"</b>: The log likelihood ratio statistic (or deviance)
+<p>
+                LR = G2 = 2 * sum( <i>f</i> * ln(<i>f</i>/<i>h</i>) )
+<p>
+            LR is an alternative to Pearson's X2 and is also asymptotically
+            chi-square distributed with <i>k</i>-<i>nfit</i>-1 degrees of freedom.
+<p>
+        <b>"cr"</b>: The Cressie-Read statistic
+<p>
+                CR = 2/(<i>l</i>*(<i>l</i>+1)) * sum( <i>f</i> * ((<i>f</i>/<i>h</i>)^<i>l</i> - 1) )
+<p>
+            where <i>l</i> stands for <i>lambda</i>, which defaults to 2/3. The
+            Cressie-Read family includes Pearson's X2 and the LR statistic as
+            special cases (<i>lambda</i>=1 and <i>lambda</i>=0, respectively; other special
+            cases are <i>lambda</i>=-1/2 for the Freeman-Tukey statistic, <i>lambda</i>=-1
+            for the Kullback-Leibler information, and <i>lambda</i>=-2 for Neyman's
+            modified X2 statistic; see Cressie and Read 1984, Weesie 1997).
+            All members are asymptotically chi-square distributed with
+            <i>k</i>-<i>nfit</i>-1 degrees of freedom.
+<p>
+        <b>"mlnp"</b>: The statistic -ln(<i>p</i>), where
+<p>
+                <i>p</i> = <i>n</i>!/(<i>f1</i>!*...*<i>fk</i>!) * <i>p1</i>^<i>f1</i>*...*<i>pk</i>^<i>fk</i>
+<p>
+            is the probability of the observed outcome given the null
+            distribution (<i>n</i> denotes the sample size, <i>p1</i>,...,<i>pk</i> are the
+            theoretical probabilities of the categories, and <i>f1</i>,...,<i>fk</i> are
+            the observed counts). <b>"mlnp"</b> is not allowed with the <b>"approx"</b>
+            method. <b>"mlnp"</b> corresponds to the "exact multinomial test", i.e.
+            the computed p-value reflects the exact probability to observe an
+            outcome that is less probable, given the null distribution, than
+            the actually observed outcome (see, e.g., Horn 1977, Cressie and
+            Read 1989).
+<p>
+        <b>"ksmirnov"</b>: The two-sided Kolmogorov-Smirnov statistic
+<p>
+                D = max( abs(<i>H</i> - <i>F</i>) )
+<p>
+            where <i>H</i> is the theoretical and <i>F</i> is the empirical cumulative
+            distribution function. D is sensitive to the order of the
+            categories and should therefore only be used with data that has a
+            natural order (i.e. ordinal or discrete metric data). While the
+            distribution of D is well known for continuous data, the standard
+            Kolmogorov-Smirnov test (see help <b>ksmirnov</b>) is conservative in
+            the case of discrete data (see, e.g., Conover 1972). <b>mm_mgof()</b>
+            performs the Kolmogorov-Smirnov test without making assumptions
+            about the distribution of D. <b>"ksmirnov"</b> is not available with the
+            <b>"approx"</b> method.
+<p>
+    <i>stats</i> may include several statistics in which case <b>mm_mgof()</b> returns
+    results for each of the specified statistics. In the case of the <b>"mc"</b>
+    method, the same set of samples is used for all specified statistics.
+<p>
+    <i>dots</i>!=0 causes progress dots to be displayed with the <b>"mc"</b> or <b>"ee"</b> method
+    (one dot = 2 percent of computations).
+<p>
+    See Jann (2008) for a working paper discussing multinomial
+    goodness-of-fit tests (available from 
+    http://ideas.repec.org/p/ets/wpaper/2.html).
+<p>
+<p>
+<b><u>Remarks</u></b>
+<p>
+    Examples:
+<p>
+        : uniformseed(46)
+        
+        : x = ceil(uniform(7,1)*5) \ 5 \ 5 \ 5 \ 5
+        
+        : x
+                1
+             +-----+
+           1 |  5  |
+           2 |  3  |
+           3 |  1  |
+           4 |  4  |
+           5 |  3  |
+           6 |  4  |
+           7 |  5  |
+           8 |  5  |
+           9 |  5  |
+          10 |  5  |
+          11 |  5  |
+             +-----+
+<p>
+        : f = mm_freq(x, 1, (1::5))
+        
+        : (1::5), f
+               1   2
+            +---------+
+          1 |  1   1  |
+          2 |  2   0  |
+          3 |  3   2  |
+          4 |  4   2  |
+          5 |  5   6  |
+            +---------+
+<p>
+        : mm_mgof(f,1,"approx",("x2","lr","cr"))
+                         1             2
+            +-----------------------------+
+          1 |  9.454545455   .0506896631  |
+          2 |  9.700229147   .0457916588  |
+          3 |  9.102749235   .0585819271  |
+            +-----------------------------+
+<p>
+        : mm_mgof(f,J(5,1,1/5),"approx",("x2","lr","cr"))
+                         1             2
+            +-----------------------------+
+          1 |  9.454545455   .0506896631  |
+          2 |  9.700229147   .0457916588  |
+          3 |  9.102749235   .0585819271  |
+            +-----------------------------+
+<p>
+        : mm_mgof(f,1,"ee",("x2","lr","cr","mlnp","ksmirnov"))
+                         1             2
+            +-----------------------------+
+          1 |  9.454545455    .057135616  |
+          2 |  9.700229147     .08694016  |
+          3 |  9.102749235    .057135616  |
+          4 |  8.167054764     .08694016  |
+          5 |  .3454545455   .0286034534  |
+            +-----------------------------+
+<p>
+        : mm_mgof(f,1,"mc",("x2","lr","cr","mlnp","ks"))
+                         1             2
+            +-----------------------------+
+          1 |  9.454545455         .0546  |
+          2 |  9.700229147         .0842  |
+          3 |  9.102749235         .0546  |
+          4 |  8.167054764         .0842  |
+          5 |  .3454545455         .0281  |
+            +-----------------------------+
+        
+<p>
+<b><u>Conformability</u></b>
+<p>
+    <b>mm_mgof(</b><i>f</i><b>,</b> <i>h</i><b>,</b> <i>method</i><b>,</b> <i>stats</i><b>,</b> <i>lambda</i><b>,</b> <i>nfit</i>|<i>reps</i><b>)</b>:
+             <i>f</i>:  <i>k x</i> 1
+             <i>h</i>:  <i>k x</i> 1 or 1 <i>x</i> 1
+        <i>method</i>:  1 <i>x</i> 1
+         <i>stats</i>:  1 <i>x s</i> or <i>s x</i> 1
+        <i>lambda</i>:  1 <i>x</i> 1
+          <i>nfit</i>:  1 <i>x</i> 1
+          <i>reps</i>:  1 <i>x</i> 1
+        <i>result</i>:  max(s,1) <i>x</i> 2
+<p>
+<p>
+<b><u>Diagnostics</u></b>
+<p>
+    <b>mm_mgof</b> aborts with error if <i>h</i> contains zero or if <i>f</i> or <i>h</i> contain
+    negative or missing values.
+<p>
+    <b>mm_mgof</b> aborts with error if <i>f</i> contains non-integer values and the method
+    is <b>"ee"</b> or the method is <b>"mc"</b> and the <b>"mlnp"</b> statistic is requested. The
+    number of observations, i.e. <b>sum(</b><i>f</i><b>)</b>, is rounded to the nearest integer
+    with the <b>"mc"</b> method.
+<p>
+    <b>mm_mgof</b> aborts with error if <i>f</i> contains zero and the <b>"cr"</b> statistic is
+    used with <i>lambda</i>&lt;0. Furthermore, <i>lambda</i>&lt;0 is only allowed with the
+    <b>"approx"</b> method.
+<p>
+    <b>mm_mgof</b> returns <b>(0,1)</b> for each statistic if <b>rows(</b><i>f</i><b>)</b>&lt;2 or <b>sum(</b><i>f</i><b>)</b>==0.
+<p>
+<p>
+<b><u>Source code</u></b>
+<p>
+    mm_mgof.mata
+<p>
+<p>
+<b><u>References</u></b>
+<p>
+    Conover, W. J. (1972). A Kolmogorov Goodness-of-Fit Test for
+        Discontinuous Distributions. Journal of the American Statistical
+        Association 67: 591-596.
+<p>
+    Cressie, N., T. R. C. Read (1984). Multinomial Goodness-of-Fit Tests.
+        Journal of the Royal Statistical Society (Series B) 46: 440-464.
+<p>
+    Cressie, N., T. R. C. Read (1989). Pearson's X^2 and the Loglikelihood
+        Ratio Statistic G^2: A Comparative Review. International Statistical
+        Review 57: 19-43.
+<p>
+    Horn, S. D. (1977). Goodness-of-Fit Tests for Discrete Data: A Review and
+        an Application to a Health Impairment Scale. Biometrics 33: 237-247.
+<p>
+    Jann, B. (2008). Multinomial goodness-of-fit: large sample tests with
+        survey design correction and exact tests for small samples. ETH
+        Zurich Sociology Working Paper No. 2. Available from: 
+        http://ideas.repec.org/p/ets/wpaper/2.html.
+<p>
+    Weesie, J. (1997). sg68: Goodness-of-fit statistics for multinomial
+        distributions. Stata Technical Bulletin Reprints 6: 183-186.
+<p>
+<p>
+<b><u>Author</u></b>
+<p>
+    Ben Jann, ETH Zurich, jann@soz.gess.ethz.ch
+<p>
+<p>
+<b><u>Also see</u></b>
+<p>
+    Online:  help for <b>ksmirnov</b>, <b>mm_freq()</b>, <b>mm_subset()</b>, <b>moremata</b>; <b>mgof</b> (if
+</pre>

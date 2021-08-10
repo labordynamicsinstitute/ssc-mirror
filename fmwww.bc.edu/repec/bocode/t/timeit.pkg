@@ -1,0 +1,19 @@
+d 'TIMEIT': module to provide single line version of timer on/off
+d
+d  With the timeit command, you can prefix any command by “timeit
+d # [name]:” and it will save the runtime of your command in
+d timer # and optionally in the scalar [name]. 
+d
+d KW: timer
+d KW: elapsed time
+d KW: runtime
+d
+d Requires: Stata version 10
+d
+d Distribution-Date: 20161227
+d
+d Author:  Jesse Wursten, KU Leuven
+d Support: email jesse.wursten@@kuleuven.be 
+d
+f timeit.ado
+f timeit.sthlp

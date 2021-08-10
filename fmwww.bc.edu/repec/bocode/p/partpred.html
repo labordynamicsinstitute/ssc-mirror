@@ -1,0 +1,108 @@
+<pre>
+<b>help partpred</b>
+-------------------------------------------------------------------------------
+<p>
+<b><u>Title</u></b>
+<p>
+    <b>partpred</b> --     partial predictions after fitting a model
+<p>
+<p>
+<b><u>Syntax</u></b>
+<p>
+        <b>partpred</b> <i>newvar</i> [<i>if</i>] [<i>in</i>] <b>, for(</b><i>varlist</i><b>)</b> [<i>options</i>]
+<p>
+    <i>options</i>                Description
+    -------------------------------------------------------------------------
+    Options
+      <b>for(</b><i>varlist</i><b>)</b>         variables included in partial prediction
+      <b>at(</b><i>varname # </i>...<b>)</b>    define certain covariates to take single values
+      <b>ref(</b><i>varname # </i>...<b>)</b>   define reference values for certain covariates
+      <b>ci(</b><i>newvars</i><b>)</b>          create <i>newvars</i> containing lower and upper
+                             confidence intervals
+      <b>se(</b><i>newvar</i><b>)</b>           create <i>newvar</i> containing standard error of
+                             predictions
+      <b>cons</b>                 include constant in prediction
+      <b>eform</b>                exponentiate partial predictions
+      <b>eq(</b><i>name</i><b>)</b>             name of equation used for prediction; default is
+                             to use the first equation
+      <b>level(</b><i>#</i><b>)</b>             set confidence level; default is level(95)
+<p>
+<b><u>Description</u></b>
+<p>
+    <b>partpred</b> calculates partial predictions for regression equations.
+    Multi-equation models are supported via the <b>eq()</b> option.
+<p>
+<b><u>Options</u></b>
+<p>
+    <b>for(</b><i>varlist</i><b>)</b> defines which variables are to be included in the
+        prediction. Factor variables are allowed.
+<p>
+    <b>at(</b><i>varname # </i>...<b>)</b> allows some covariates to take single values over the
+        whole sample.
+<p>
+    <b>ref(</b><i>varname # </i>...<b>)</b> defines a reference value for continuous variables.
+        For example if the coefficient of variable<i> x</i> is b then in the linear
+        predictor it is included as b(<i>x</i>-#).
+<p>
+    <b>ci(</b><i>newvars</i><b>)</b> requires the specification of two <i>newvars</i>, giving the
+        variable names for the lower and upper confidence limits.  The level
+        of the confidence intervals is determined by level(#).
+<p>
+    <b>se(</b><i>newvar</i><b>)</b> requires the specification of a <i>newvar</i>. The standard error of
+        the partial prediction is generated.  Note that if the<b> eform</b> option
+        is used the standard error is still reported on the original scale.
+<p>
+    <b>cons</b> forces the constant term in the partial prediction.
+<p>
+    <b>eform</b> Exponentiates the partial prediction (and confidence intervals if
+        applicable).
+<p>
+    <b>eq(</b><i>name</i><b>)</b> Gives the equation name for multiple equations. The default is
+        to use the first equation.
+<p>
+    <b>level(</b><i>#</i><b>)</b> specifies the confidence level, as a percentage, for confidence
+        intervals.  The default is <b>level(95)</b> or as set by set level.
+<p>
+<b><u>Example:</u></b>
+    When using non-linear effects using polynomials, splines or similar, it
+    can be useful to plot with a reference value.  The following fits a
+    non-linear effect of age using polynomials and then uses <b>partpred</b> to
+    obtain the hazard ratio for different ages with age 60 as the reference
+    age.
+<p>
+<b>. webuse brcancer</b>
+<b>. stset rectime, failure(censrec=1) scale(365.25)</b>
+<b>. gen age = x1</b>
+<b>. gen age2 = age^2</b>
+<b>. stcox age age2 hormon</b>
+<b>. partpred hr_age, for(age age2) ref(age 60 age2 3600) ci(hr_age_lci hr_age_uci</b>
+<b>&gt; ) eform</b>
+<b>. twoway        (rarea hr_age_lci hr_age_uci age, sort pstyle(ci)) ///</b>
+<b>                (line hr_age age, sort) ///</b>
+<b>                , legend(off) xtitle(age) ytitle(Hazard Ratio)</b>
+                <i>(</i><i>click to run</i><i>)</i>  
+<p>
+    Factor variables can be used. The following fits an interaction between
+    hormon therapy and age and then uses<b> partpred</b> to obtain an estimate of
+    the hazard ratio for hormone therapy as a function of age.
+<p>
+<b>. webuse brcancer</b>
+<b>. stset rectime, failure(censrec=1) scale(365.25)</b>
+<b>. gen age = x1</b>
+<b>. gen age2 = age^2</b>
+<b>. stcox (c.age c.age2)##hormon</b>
+<b>. partpred hr_hormon if hormon==1, for(1.hormon 1.hormon#c.age 1.hormon#c.age2)</b>
+<b>&gt;  ///</b>
+<b>                ci(hr_hormon_lci hr_hormon_uci) eform</b>
+<b>. twoway        (rarea hr_hormon_lci hr_hormon_uci age, sort pstyle(ci)) ///</b>
+<b>                (line hr_hormon age, sort) ///</b>
+<b>                , legend(off) xtitle(age) ytitle(Hazard Ratio)</b>
+                <i>(</i><i>click to run</i><i>)</i>  
+<p>
+<b><u>Author</u></b>
+<p>
+  Paul Lambert (paul.lambert@le.ac.uk).
+<p>
+<b><u>Also see</u></b>
+<p>
+</pre>

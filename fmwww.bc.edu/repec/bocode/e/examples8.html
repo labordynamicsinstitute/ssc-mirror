@@ -1,0 +1,68 @@
+<pre>
+-------------------------------------------------------------------------------
+help for <b>examples8</b>, <b>wexamples</b> 
+-------------------------------------------------------------------------------
+<p>
+<b><u>Show examples from on-line help files</u></b>
+<p>
+        <b>examples8</b> <i>topicname</i>
+<p>
+        <b>wexamples</b> <i>topicname</i>
+<p>
+        <b>examples8</b> <i>function()</i>
+<p>
+        <b>wexamples</b> <i>function()</i>
+<p>
+<p>
+<b><u>Description</u></b>
+<p>
+    <b>examples8</b> looks for help on <i>topicname</i> and displays any Examples sections
+    found in the Results window. Alternatively, <b>examples8</b> looks for help on
+    <i>function()</i> (note the parentheses) and displays a definition in the
+    Results window. It is especially designed to show quick and easy
+    reminders of the syntax of a given command.
+<p>
+    <b>wexamples</b> is identical except that output appears in the Viewer.
+<p>
+<p>
+<b><u>Remarks</u></b>
+<p>
+    <b>examples8</b> is a renaming of the original version of <b>examples</b>, which is
+    otherwise unchanged. <b>examples8</b> should work in Stata 8 or 9. As from July
+    2007, <b>examples</b> downloaded from SSC should work in Stata 10 upwards,
+    modulo unforeseeable changes in syntax.
+<p>
+    Given a <i>topicname</i>, <b>examples8</b> looks for sections starting with titles
+    specified in SMCL containing the word <b>Examples</b> (or alternatively <b>Example</b>)
+    within any help file corresponding to <i>topicname</i>. It will not be able to
+    show material from older, pre-SMCL help files or examples given
+    otherwise.
+<p>
+<p>
+<b><u>Examples</u></b>
+<p>
+    . examples8 regress
+    . examples8 reg
+<p>
+    . examples8 normden()
+<p>
+<p>
+<b><u>Author</u></b>
+<p>
+    Nicholas J. Cox, Durham University U.K.
+    n.j.cox@durham.ac.uk
+<p>
+<p>
+<b><u>Acknowledgments</u></b>
+<p>
+    Ken Higbee gave valuable help on aliases. Clive Nicholas pointed towards
+    a bug. Roger Harbord identified a bug and fixed it. Dick Campbell pointed
+    out that <b>examples</b> (as was) was broken by Stata 10.
+<p>
+<p>
+<b><u>Also see</u></b>
+<p>
+    On-line:  help for help; smcl
+<p>
+<p>
+</pre>

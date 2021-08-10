@@ -1,0 +1,76 @@
+<pre>
+-------------------------------------------------------------------------------
+help for <b>mclgen</b>                                                  John Hendrickx
+-------------------------------------------------------------------------------
+<p>
+Stata macros for multinomial conditional logit models
+<p>
+<i>MCL</i> stands for <i><u>M</u></i><i>ultinomial </i><i><u>C</u></i><i>onditional </i><i><u>L</u></i><i>ogit</i> model. A conditional logit program
+is used to estimate a multinomial logistic model. This produces the same
+coefficients and standard errors as a regular multinomial logit program but has
+the advantage that it provides great flexibility for imposing constraints on
+the dependent variable.  <b>mclgen</b> restructures the data so the model can be
+estimated by clogit, mclest estimates the model using <b>clogit</b>.
+<p>
+In addition, <b>mclest</b> can estimate two special models:  <i>stereotyped ordered</i>
+<i>regression</i> (SOR) and Goodman's <i>row and columns model</i> 2 (RC2). Both models
+estimate a scaling metric for the dependent variable; the RC2 model estimates a
+scaling metric for a categorical independent variable as well.
+<p>
+<b><u>Syntax</u></b>
+<p>
+        <b>mclgen</b> <i>depvar</i>
+<p>
+The <i>depvar</i> argument is required. <i>depvar</i> corresponds with the dependent variable
+in a multinomial logit model and should indicate a categorical <i>response factor</i>
+with a maximum of 12 levels.
+<p>
+<b><u>Description</u></b>
+<p>
+Note that <b>mclgen</b> will <b>modify the data</b>, and that the data should be <b>saved</b> before
+running <b>mclgen</b>.
+<p>
+An MCL model uses a conditional logit model to estimate a multinomial logistic
+model. This provides great flexibility for imposing constraints on the response
+factor, the dependent variable in a multinomial logistic model. Different
+constraints can be imposed on the response factor for each independent (dummy)
+variable. One application is to specify loglinear models for square tables such
+as quasi-independence, uniform association, symmetric association, into a
+multinomial logistic model. A further extension provided by mclest is to
+estimate special nonlinear designs, such as stereotyped ordered regression and
+Goodman's row and columns model 2.
+<p>
+In order to estimate an MCL model, the data must be transformed into a
+<i>person/choice</i> file. In a <i>person/choice</i> file, each respondent has a <u>separate</u>
+<u>record</u> for each category of the <i>response factor</i> (i.e. the dependent variable in
+a multinomial logit model). The <i>reponse factor</i> indexes the <i>response options</i> for
+respondents, a <i>stratifying variable</i> indexes the respondents, and a <i>dichotomous</i>
+<i>dependent variable</i> indicates which record corresponds with response option
+chosen by the repondent.
+<p>
+So for a response factor with 5 levels, the dataset is expanded 5 times. The
+response factor specified in <b>mclgen</b> indexes the <i>response options</i> for each
+respondent. <b>mclgen</b> creates <b>__strata</b> and <b>__didep</b>, the <i>stratifying variable</i> and
+<i>dichotomous dependent variable</i> for use by clogit or mclest.
+<p>
+In clogit, the <i>dichotomous dependent variable</i> is specified as the dependent
+variable and the <i>stratifying variable</i> is specified in the <b>strata(</b><i>varname</i><b>)</b>
+option. The main effects of the <i>response factor</i> correspond with the intercept
+of a multinomial logistic model. Interactions of the response factor with
+independent variables correspond with the effects of these independent
+variables.
+<p>
+If the response factor is modelled using a fixed reference category, the log
+likelihood, estimates and standard errors will be exactly the same as a model
+estimated with mlogit. However, this procedure followed here allows much more
+flexibility in imposing restrictions on the response factor.
+<p>
+See mclest for further information
+<p>
+Direct comments to: John Hendrickx
+<p>
+<b>mclest</b> is available at SSC-IDEAS.  Use findit <b>mcl</b> to locate the latest version.
+<p>
+<b><u>Also see</u></b>
+On-line: help for mclest, mlogit, clogit, desmat, desrep, xi, xi3, ologit
+</pre>

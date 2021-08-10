@@ -1,0 +1,5 @@
+v 3
+d Ado package lists
+d PACKAGE LISTS you could describe:
+d {col 5}{stata "adolist ssc wagegap":wagegap} {col 23}Wage gap decomposition packages
+t ../

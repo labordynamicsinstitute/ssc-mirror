@@ -1,0 +1,70 @@
+<pre>
+-------------------------------------------------------------------------------
+help for <b>sdline</b>
+-------------------------------------------------------------------------------
+<p>
+<b><u>SD line (reduced major axis)</u></b>
+<p>
+        <b>sdline</b> <i>yvar</i> <i>xvar</i> [<b>if</b> <i>exp</i>] [<b>in</b> <i>range</i>] [ <b>,</b> <b><u>gen</u></b><b>erate(</b><i>ysdlvar</i><b>)</b> <b>nograph</b>
+                 <i>graph_options</i> ]
+<p>
+<p>
+<b><u>Description</u></b>
+<p>
+    <b>sdline</b> produces a scatter plot of <i>yvar</i> versus <i>xvar</i> with the SD line or
+    reduced major axis superimposed.
+<p>
+    This line goes through the intersection of the means (mean of <i>xvar</i>, mean
+    of <i>yvar</i>) and has slope
+<p>
+        sign of corr(<i>xvar</i>, <i>yvar</i>) * (SD of <i>yvar</i>) / (SD of <i>xvar</i>)
+<p>
+<p>
+<b><u>Options</u></b>
+<p>
+    <b>generate()</b> saves the values of <i>yvar</i> predicted from the SD line as a new
+        variable.
+<p>
+    <i>graph_options</i> are options allowed with twoway scatter.  The default
+        options include <b>ms(oh none) connect(none l) sort</b>.  Know that the data
+        points are plotted first and the SD line second by <b>twoway scatter</b>.
+        These options include plot_option (Stata 8 only) and addplot_option
+        (Stata 9).
+<p>
+    <b>nograph</b> suppresses the graph and is for situations in which only the
+        numerical results for the SD line are desired.
+<p>
+<p>
+<b><u>Examples</u></b>
+<p>
+    <b>. sdline length width</b>
+    <b>. sdline length width, gen(length_sd)</b>
+    <b>. sdline length width, addplot(lfit length width)</b>
+<p>
+<p>
+<b><u>Saved results</u></b> 
+<p>
+    <b>r(N)</b>            number of observations
+    <b>r(ymean)</b>        mean of <i>yvar</i>
+    <b>r(ysd)</b>          SD of <i>yvar</i>
+    <b>r(xmean)</b>        mean of <i>xvar</i>
+    <b>r(xsd)</b>          SD of <i>xvar</i>
+    <b>r(slope)</b>        slope of SD line
+<p>
+<p>
+<b><u>Author</u></b>
+<p>
+    Nicholas J. Cox, Durham University, U.K.
+    n.j.cox@durham.ac.uk
+<p>
+<p>
+<b><u>Acknowledgements</u></b>
+<p>
+    Allan Reese found typos in this help.
+<p>
+<p>
+<b><u>Also see</u></b>
+<p>
+    On-line: twoway scatter
+<p>
+</pre>

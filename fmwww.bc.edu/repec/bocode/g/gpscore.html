@@ -1,0 +1,169 @@
+<pre>
+<b>help gpscore</b>                                                    (SJ8-3: st0150)
+-------------------------------------------------------------------------------
+<p>
+<b><u>Title</u></b>
+<p>
+    <b>gpscore</b> -- Estimation of the generalized propensity score
+<p>
+<p>
+<b><u>Syntax</u></b>
+<p>
+        <b>gpscore</b><i> varlist</i> [<i>if</i>] [<i>in</i>] [<i>weight</i>]<b>,</b> <b>t(</b><i>varname</i><b>)</b> <b>gpscore(</b><i>newvar</i><b>)</b>
+                <b>predict(</b><i>newvar</i><b>)</b> <b>sigma(</b><i>newvar</i><b>)</b> <b>cutpoints(</b><i>varname</i><b>)</b>
+                <b>index(</b><i>string</i><b>)</b> <b>nq_gps(</b><i>#</i><b>)</b> [<b>t_transf(</b><i>transformation</i><b>)</b>
+                <b>normal_test(</b><i>test</i><b>)</b> <b>norm_level(</b><i>#</i><b>)</b> <b>test_varlist(</b><i>varlist</i><b>)</b>
+                <b>test(</b><i>type</i><b>)</b> <b>flag(</b><i>#</i><b>)</b> <b><u>det</u></b><b>ail</b>]
+<p>
+    <b>fweight</b>s, <b>iweight</b>s, and <b>pweight</b>s are allowed; see weight.
+<p>
+<p>
+<b><u>Description</u></b>
+<p>
+    <b>gpscore</b> estimates the parameters of the conditional distribution of the
+    treatment given the control variables in <i>varlist</i> by maximum likelihood,
+    which is assumed to be normal; assesses the validity of the assumed
+    normal distribution model by a user-specified goodness-of-fit test; and
+    estimates the generalized propensity score (GPS).  The estimated GPS is
+    defined as<i> R=r(T,X)</i>, where <i>r(.,.)</i> is the conditional density of the
+    treatment given the covariates, <i>T</i> is the observed treatment, and <i>X</i> is the
+    vector of the observed covariates. Then <b>gpscore</b> tests the balancing
+    property by using the algorithm suggested by Hirano and Imbens (2004),
+    and informs the user whether and at what extent the balancing property is
+    supported by the data.
+<p>
+<p>
+<b><u>Options</u></b>
+<p>
+    <b><u>Required</u></b>
+<p>
+    <b>t(</b><i>varname</i><b>)</b> specifies that <i>varname</i> is the treatment variable.
+<p>
+    <b>gpscore(</b><i>newvar</i><b>)</b> specifies the variable name for the estimated GPS, which
+        is added to the dataset.
+<p>
+    <b>predict(</b><i>newvar</i><b>)</b> creates a new variable to hold the fitted values of the
+        treatment variable.
+<p>
+    <b>sigma(</b><i>newvar</i><b>)</b> creates a new variable to hold the maximum likelihood
+        estimate of the conditional standard error of the treatment given the
+        covariates.
+<p>
+    <b>cutpoints(</b><i>varname</i><b>)</b> divides the set of potential treatment values into
+        intervals according to the sample distribution of the treatment
+        variable, cutting at <i>varname</i> quantiles.
+<p>
+    <b>index(</b><i>string</i><b>)</b> specifies the representative point of the treatment
+        variable at which the GPS has to be evaluated within each treatment
+        interval. <i>string</i> identifies either the mean (<i>string</i> = <b>mean</b>) or a
+        percentile (<i>string</i> = <b>p1</b>, ..., <b>p100</b>) of the treatment.
+<p>
+    <b>nq_gps(</b><i>#</i><b>)</b> specifies that the values of the GPS evaluated at the
+        representative point <b>index(</b><i>string</i><b>)</b> of each treatment interval have to
+        be divided into <i>#</i> (1 &lt;= <i>#</i> &lt;= 100) intervals, defined by the quantiles
+        of the GPS evaluated at the representative point <b>index(</b><i>string</i><b>)</b>.
+<p>
+    <b><u>Optional</u></b>
+<p>
+    <b>t_transf(</b><i>transformation</i><b>)</b> specifies the transformation of the treatment
+        variable used in estimating the GPS. The default <i>transformation</i> is
+        the identity function.  The supported transformations are the
+        logarithmic transformation, <b>t_transf(ln)</b>; the zero-skewness log
+        transformation, <b>t_transf(lnskew0)</b>; the zero-skewness Box-Cox
+        transformation, <b>t_transf(bcskew0)</b>; and the Box-Cox transformation,
+        <b>t_transf(boxcox)</b>.
+<p>
+    <b>normal_test(</b><i>test</i><b>)</b> specifies the goodness-of-fit test that <b>gpscore</b> will
+        perform to assess the validity of the assumed normal distribution
+        model for the treatment conditional on the covariates. By default,
+        <b>gpscore</b> performs the Kolmogorov-Smirnov test (<b>normal_test(ksmirnov)</b>).
+        Possible alternatives are the Shapiro-Francia test,
+        <b>normal_test(sfrancia)</b>; the Shapiro-Wilk test, <b>normal_test(swilk)</b>; and
+        the Stata skewness and kurtosis test for normality,
+        <b>normal_test(sktest)</b>.
+<p>
+    <b>norm_level(</b><i>#</i><b>)</b> sets the significance level of the goodness-of-fit test for
+        normality. The default is <b>norm_level(0.05)</b>.
+<p>
+    <b>test_varlist(</b><i>varlist</i><b>)</b> specifies that the extent of covariate balancing
+        has to be inspected for each variable of <i>varlist</i>.  The default
+        <i>varlist</i> consists of the variables used to estimate the GPS.  This
+        option is useful when there are categorical variables among the
+        covariates to test the balancing property for the omitted group.
+<p>
+    <b>test(</b><i>type</i><b>)</b> specifies whether the balancing property has to be tested
+        using a standard two-sided t test (the default) or a
+        Bayes-factor-based method.
+<p>
+    <b>flag(</b><i>#</i><b>)</b> specifies that <b>gpscore</b> estimates the GPS without performing
+        either a goodness-of-fit test for normality or a balancing test. The
+        default <i>#</i> is 1, meaning that both the normal distribution model and
+        the balancing property are tested; the default level is recommended.
+<p>
+    <b>detail</b> displays more detailed output showing the results of the
+        goodness-of-fit test for normality, some summary statistics of the
+        distribution of the GPS evaluated at the representative point of each
+        treatment interval, and the results of the balancing test within each
+        treatment interval.
+<p>
+<p>
+<b><u>Remarks</u></b> 
+<p>
+    Please remember to use the <b>update query</b> command before running this
+    program to make sure you have an up-to-date version of Stata installed.
+    Otherwise, this program may not run properly.
+<p>
+    The treatment has to be continuous.
+<p>
+    Make sure that the variables in <i>varlist</i> do not contain missing values.
+<p>
+<p>
+<b><u>Examples</u></b>
+<p>
+   . #delimit ;
+   . gpscore  agew ownhs male tixbot workthen yearw,
+   . t(prize) gpscore(mygps) predict(hat_treat) sigma(hat_sd) 
+   . cutpoints(cut) index(p50) nq_gps(5)
+   . ;
+<p>
+   . #delimit ;
+   . gpscore  agew ownhs male tixbot workthen yearw,
+   . t(prize) gpscore(mygps) predict(hat_treat) sigma(hat_sd) 
+   . cutpoints(cut) index(p50) nq_gps(5)
+   . t_transf(ln) normal_test(0.01) 
+   . ;
+<p>
+   . #delimit ;
+   . gpscore  agew ownhs male tixbot workthen yearw,
+   . t(prize) gpscore(mygps) predict(hat_treat) sigma(hat_sd) 
+   . cutpoints(cut) index(p50) nq_gps(5)
+   . t_transf(ln) normal_test(0.01) test(Bayes_factor)
+   . ;
+<p>
+<p>
+<b><u>Reference</u></b>
+<p>
+    Hirano, K., and G. W. Imbens. 2004. The propensity score with continuous
+        treatments. In <i>Applied Bayesian Modeling and Causal Inference from</i>
+        <i>Incomplete-Data</i> <i>Perspectives</i>, ed. A. Gelman and X.-L. Meng, 73-84.
+        West Sussex, England:  Wiley InterScience.
+<p>
+<p>
+<b><u>Authors</u></b>
+<p>
+    Michela Bia
+    Laboratorio Riccardo Revelli
+    Centre for Employment Studies, Collegio Carlo Alberto
+    michela.bia@laboratoriorevelli.it
+<p>
+    Alessandra Mattei
+    Department of Statistics,"Giuseppe Parenti", University of Florence
+    mattei@ds.unifi.it
+<p>
+<p>
+<b><u>Also see</u></b>
+<p>
+    Article: <i>Stata Journal</i>, volume 8, number 3: st0150
+<p>
+    Online:  <b>doseresponse</b>, <b>doseresponse_model</b>
+</pre>

@@ -1,0 +1,55 @@
+<pre>
+-------------------------------------------------------------------------------
+help for <b>dotex</b>                                                   (Roger Newson)
+-------------------------------------------------------------------------------
+<p>
+<p>
+<b><u>Execute commands from a file, creating a log file in SJ LaTeX</u></b>
+<p>
+        <b>dotex</b> <i>filename</i> [ <i>arguments</i> ]
+<p>
+<p>
+<b><u>Description</u></b>
+<p>
+<b>dotex</b> causes Stata to execute the commands stored in <i>filename</i> as if they were
+entered from the keyboard, and echos the commands as it executes them, creating
+a log file <i>filename</i>.tex in Stata Journal (SJ) LaTeX.  The LaTeX log file (or
+parts of it) can then be included in a SJ LaTeX file (eg a SJ submission),
+using the SJ LaTeX <b>stlog</b> environment.  If <i>filename</i> is specified without an
+extension, <i>filename</i>.do is assumed.  If <i>filename</i> is specified with an extension,
+then the log file will have .log as an additional extension (so <b>dotex</b> will not
+overwrite the original do-file).  Arguments are allowed (as with do), but the
+<b>nostop</b> option is not available.
+<p>
+<p>
+<b><u>Remarks</u></b>
+<p>
+<b>dotex</b> is adapted from dolog, which creates a generic text log file instead of a
+SJ LaTeX file. <b>dotex</b> is similar in function to the <b>logopen</b> and <b>logclose</b>
+programs, which can also be used to create SJ LaTeX log files. However, <b>dotex</b>
+has the advantage that one do-file can be run with either <b>dotex</b>, dolog or do,
+creating, respectively, a SJ LaTeX log, a generic text log or no log. Further
+information on SJ LaTeX can be found at the SJ website.
+<p>
+<p>
+<b><u>Examples</u></b>
+<p>
+        . dotex example1
+<p>
+        . dotex example1 argone argtwo
+<p>
+<p>
+<b><u>Author</u></b>
+<p>
+Roger Newson, National Heart and Lung Institute, Imperial College London, UK.
+Email: r.newson@imperial.ac.uk
+<p>
+<p>
+<b><u>Also see</u></b>
+<p>
+ Manual:  <b>[GSM] 14 Using the do-file editor</b>, <b>[GSW] 14 Using the do-file editor</b>,
+                     <b>[U] 18 Printing and preserving output</b>, <b>[U] 19 Do-files</b>,
+                     <b>[R] do</b>.
+On-line:  help for log, do, run and doedit
+          help for dolog if installed
+</pre>

@@ -1,0 +1,96 @@
+<pre>
+-------------------------------------------------------------------------------
+help for <b>rvfplot27</b>                        (manual:  <b>[R] regression diagnostics</b>)
+-------------------------------------------------------------------------------
+<p>
+<b><u>Graph residual-versus-fitted plot after regression-type command</u></b>
+<p>
+        <b>rvfplot27</b> [<b>,</b> <i>residualtype</i> <b><u>sc</u></b><b>ale(</b><i>exp</i><b>)</b> <b><u>fsc</u></b><b>ale(</b><i>exp</i><b>)</b> <b>ksm(</b><i>ksm_options</i><b>)</b>
+                <i>graph_options</i>]
+<p>
+<p>
+<b>rvfplot27</b> is for use after <b>regress</b> and similar commands; see help on the
+command of interest.
+<p>
+<p>
+<b><u>Description</u></b>
+<p>
+<b>rvfplot27</b> graphs a residual-versus-fitted plot, a graph of the residuals versus
+the fitted values. The residuals are, by default, those calculated by <b>predict,</b>
+<b>residuals</b> or (if the previous estimation command was <b>glm</b>) by<b> predict, response</b>.
+The fitted values are those produced by <b>predict</b> by default after each
+estimation command.
+<p>
+<b>rvfplot27</b> is offered as a generalisation of <b>rvfplot</b> in official Stata. It is a
+clone of <b>rvfplot2</b> 1.2.0 for users of Stata 7.  Users of Stata 8 should use
+<b>rvfplot2</b> 2.0.0 or later.
+<p>
+<p>
+<b><u>Options</u></b>
+<p>
+<i>residualtype</i> specifies a type of residual other than the default.  The
+    following types are currently supported: <b><u>a</u></b><b>nscombe</b>, <b><u>d</u></b><b>eviance</b>, <b><u>l</u></b><b>ikelihood</b>,
+    <b><u>p</u></b><b>earson</b>, <b><u>r</u></b><b>esiduals</b>, <b><u>resp</u></b><b>onse</b>, <b><u>rsta</u></b><b>ndard</b>, <b><u>rstu</u></b><b>dent</b>, <b><u>s</u></b><b>core</b>, <b><u>w</u></b><b>orking</b>.
+<p>
+<b>scale(</b><i>exp</i><b>)</b> specifies a transformed scale on which to show the residuals using
+    Stata syntax and <b>X</b> as a placeholder for the residual variable name. Thus
+    <b>scale(X^2)</b> specifies squaring, to show relative contribution to residual
+    variance; <b>scale(abs(X))</b> specifies absolute value, to set aside sign;
+    <b>scale(sqrt(abs(X)))</b> specifies root of absolute value, a useful scale on
+    which to check for heteroscedasticity.
+<p>
+<b>fscale(</b><i>exp</i><b>)</b> specifies a transformed scale on which to show the fitted values
+    using Stata syntax and <b>X</b> as a placeholder for the fitted variable name.
+    Thus for example <b>fscale(2 * ln(X))</b> specifies twice the natural logarithm,
+    which is the constant information scale for a generalised linear model with
+    gamma error. Similarly, arguments of <b>2 * sqrt(X)</b>, <b>2 * asin(sqrt(X))</b>, and <b>-2</b>
+    <b>/ sqrt(X)</b> specify the constant information scale for Poisson, binomial and
+    inverse Gaussian errors respectively. See McCullagh and Nelder (1989,
+    p.398) for background.
+<p>
+<b>ksm(</b><i>ksm_options</i><b>)</b> specifies that the residuals will be smoothed as a function of
+    the fitted using <b>ksm</b> with the options named.
+<p>
+<i>graph_options</i> are any of the options allowed with <b>graph, twoway</b>; see help 
+    grtwoway.
+<p>
+<p>
+<b><u>Examples</u></b>
+<p>
+        . gen forxmpg = foreign * mpg
+<p>
+        . regress price weight mpg forxmpg foreign
+        . rvfplot27
+<p>
+        . anova price rep foreign rep*foreign weight, cont(weight)
+        . rvfplot27, scale(sqrt(abs(X)))
+<p>
+        . glm price weight, link(log)
+        . rvfplot27, anscombe yli(0)
+<p>
+        . glm price weight, link(log)
+        . rvfplot27, anscombe yli(0) ksm(lowess)
+<p>
+<p>
+<b><u>Author</u></b>
+<p>
+    Nicholas J. Cox, University of Durham, U.K.
+    n.j.cox@durham.ac.uk
+<p>
+<p>
+<b><u>Acknowledgements</u></b> 
+<p>
+    Phil Ender provided very helpful comments. 
+<p>
+<p>
+<b><u>References</u></b>     
+<p>
+McCullagh, P. and Nelder, J.A. 1989. <i>Generalized linear models.</i>  London:
+Chapman and Hall.
+<p>
+<p>
+<b><u>Also see</u></b>
+<p>
+ Manual:  <b>[R] regression diagnostics</b>
+On-line:  help for graph, regdiag; predict
+</pre>

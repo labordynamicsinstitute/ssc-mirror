@@ -1,0 +1,54 @@
+<pre>
+<b>help mvsktest</b>
+<p>
+-------------------------------------------------------------------------------
+<p>
+<b><u>Multivariate skewness and kurtosis</u></b>
+<p>
+    <b>mvsktest</b> --   Multivariate skewness and kurtosis test
+<p>
+<p>
+<b><u>Syntax</u></b>
+<p>
+        <b>mvsktest</b> <i>varlist</i> [<b>if</b> <i>exp</i>] [<b>in</b> <i>range</i>]
+<p>
+<p>
+<p>
+<b><u>Description</u></b>
+<p>
+    <b>mvsktest</b> performs an (asymptotic) test for multivariate skewness and
+    kurtosis using the results in Mardia (1970). Separate p-values are given
+    for the multivariate skewness and multivariate kurtosis.
+<p>
+<b><u>Example</u></b>
+<p>
+    <b>. sysuse auto</b>
+<p>
+    <b>. mvsktest wei len turn head trunk</b>
+<p>
+    Multvariate skewness b_1,p = 5.0866
+    chi2(35)= 62.7349; Prob &gt; chi2 = 0.0027
+<p>
+    Multivariate kurtosis b_2,p = 34.3138
+    z = 0.1270; Prob &gt; |z| = 0.8989
+<p>
+    <b>. mvsktest wei len turn head trunk disp for</b>
+<p>
+    Multvariate skewness b_1,p = 15.9989
+    chi2(84)= 197.3198; Prob &gt; chi2 = 0.0000
+    #D.f. &lt; #obs.; asymptotic distribution may not be accurate
+<p>
+    Multivariate kurtosis b_2,p = 66.3341
+    z = 1.9213; Prob &gt; |z| = 0.0547
+<p>
+<p>
+<p>
+<b><u>See also</u></b>
+Online:  help for sktest
+On paper: Mardia, K. V. (1970) Measures of Multivariate Skewness and Kurtosis
+                     with Applications.  Biometrika,<b> 57</b> (3), pp. 519-530
+<p>
+<p>
+<b><u>Contributed by</u></b>
+Stas Kolenikov, skolenik at gmail.com
+</pre>

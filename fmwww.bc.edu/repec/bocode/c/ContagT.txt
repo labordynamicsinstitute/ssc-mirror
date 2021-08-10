@@ -1,0 +1,21 @@
+/* ContagT.PRG*/
+
+Title: ContagT: GAUSS module to implement a pairwise bootstrap test for contagion.
+
+Abstract:  This GAUSS module performs the Hatemi-J and Hacker (2005) pairwise 
+bootstrap test for contagion during financial crisis and it also gives pairwise bootstrap estimators and 
+the corresponding bootstrap P-values as suggested by the authors.
+For technical description see the published paper.
+
+No performance guarantee is made. Bug reports are welcome. 
+
+Reference: Hatemi-J and Hacker (2005) "An Alternative Method to Test for Contagion 
+with an Application to the Asian Financial Crisis, Applied Financial Economics Letters, 1(6), 343-347".
+
+Keywords: Financial Crisis, Contagion, Pairwise Bootstrap
+
+Files needed: data file in text format.
+
+
+
+          

@@ -1,0 +1,258 @@
+<pre>
+help for <b>sheafcoef</b>
+-------------------------------------------------------------------------------
+<p>
+<b><u>Title</u></b>
+<p>
+    <b>sheafcoef</b> -- Post-estimation command that displays sheaf coefficients.
+<p>
+<b><u>Syntax</u></b>
+<p>
+        <b>sheafcoef</b> <b>,</b> <b><u>lat</u></b><b>ent(</b><i>latend_spec</i><b>)</b> [ <b><u>eq</u></b><b>uation(#</b><i>#</i> | <i>name</i><b>)</b> <b>eform</b> <b>beta</b> <b>post</b>
+               <b>level(</b><i>#</i><b>)</b> ]
+<p>
+<p>
+<b><u>Description</u></b>
+<p>
+    <b>sheafcoef</b> is a post-estimation command that estimates sheaf coefficients
+    (Heise 1972). A sheaf coefficient assumes that a block of variables
+    influence the dependent variable through a latent variable. <b>shearcoef</b>
+    displays the effect of the latent variable and the effect of the observed
+    variables on the latent variable. The scale of the latent variable is
+    identified by setting the standard deviation equal to one. The origin of
+    the latent variable is identified by setting it to zero when all observed
+    variables in its block are equal to zero. This means that the mean of the
+    latent variable is not (necesarily) equal to zero. The final identifying
+    assumption is that the effect of the latent variable is always positive,
+    so to give a substantive interpretation of the direction of the effect,
+    one needs to look at the effects of the observed variables on the latent
+    variable. Alternatively, one can specify one "key" variable in each
+    bloack of variables, which identifies the direction of a latent variable,
+    either by spedifying that the latent variable has a high value when the
+    key variable has a high value or that the latent variable has a low value
+    when the key variable has a high value.
+<p>
+    The assumption that the effect of a block of variables occurs through a
+    latent variable is not a testable constraint; it is just a different way
+    of presenting the results from the original model. Its main usefulness is
+    in comparing the relative strength of the influence of several blocks of
+    variables. For example, say we want to know what determines the
+    probability of working non-standard hours and we have a block of
+    variables representing characteristics of the job and another block of
+    variables representing the family situation of the respondent, and we
+    want to say something about the relative importance of job
+    characteristics versus family situation. In that case one could estimate
+    a <b>logit</b> model with both blocks of variables and optionally some other
+    control variables. After that one can use <b>sheafcoef</b> to display the
+    effects of two latent variables, family background and job
+    characteristics, which are both standardized to have a standard deviation
+    of 1, and can thus be more easily compared.
+<p>
+    The output is divided into a number of equations. The top equation,
+    labeled "main", represents the effects of the latent variables and other
+    control variables (if any) on the dependent variable. The names of the
+    latent variables are as specified in the <b>latent()</b> option. If no names are
+    specified, they will be called "lvar1", "lvar2", etc. Below the main
+    equation, one additional equation for every latent variable is displayed,
+    labelled "on_name1", "on_name2", etc., where "name1" and "name2" are the
+    names of the latent variables. These are the effects of the observed
+    variables on the latent variable.
+<p>
+    The sheaf coeficients and the variance covariance matrix of all the
+    coefficients are estimated using <b>nlcom</b>. <b>sheafcoef</b> can be used after any
+    regular estimation command (that is, a command that leaves its results
+    behind in e(b) and e(V)), The only constraint is that the observed
+    variables that make up the latent variable(s) must all come from the same
+    equation.
+<p>
+<p>
+<b><u>Options</u></b>
+<p>
+    <b><u>lat</u></b><b>ent(</b><i>latent_spec</i><b>)</b> specifies the blocks of variables that make up the
+        latent variabls. In summary, the syntax for <i>latent_spec</i> is:
+<p>
+        [<i>name1</i>:]<i>varlist_1 </i>[<i>if</i>] [; [<i>name2</i>:]<i>varlist_2 </i>[<i>if</i>] [; [<i>name3</i>:]<i>varlist_3</i>
+        [<i>if</i>][...]]]
+<p>
+        It consists of blocks each such that each block is seperated by a
+        semicolon (;).  Each block needs to constist of at least two
+        variables. These variables must be explanatory variables in the
+        estimation command preceding <b>sheafcoef</b>, and the same variable can
+        only appear in one block. Optionally, each block of variables can be
+        preceded by a name for the latent variable followed by a colon (:).
+<p>
+        Moreover, one can identify one key variable in each block of
+        variables, by attaching a <b>+</b> or <b>-</b> (without a space) to a variable in a
+        block. If one of the observed variables has <b>+</b> attached to it, then
+        the latent variable will have a high value when that observed
+        variable is high and a low value when that observed variable is low.
+        The opposite is true when one of the observed variables has a <b>-</b>
+        attached to it. If no observed variable in a block has a <b>+</b> or a <b>-</b>
+        attached to it, than the direction of that latent variable is
+        identified such that it's effect on the dependent variable is
+        positive.
+<p>
+        Finaly the <i>if</i> conditions determine which observations are used to
+        identify the scale of the latent variable. This can be useful when
+        comparing effects across groups. Consider the following example:
+<p>
+<p>
+<b>        sysuse nlsw88, clear</b>
+<p>
+<b>        gen ln_w = ln(wage)</b>
+<p>
+<b>        drop if race == 3</b>
+<b>        gen byte black = race == 2</b>
+<b>        gen byte white = race == 1</b>
+<p>
+<b>        gen blackXmarried = black*married</b>
+<b>        gen blackXnever_married = black*never_married</b>
+<b>        gen whiteXmarried = white*married</b>
+<b>        gen whiteXnever_married = white*never_married</b>
+<p>
+<b>        reg ln_w black* white*, nocons</b>
+<p>
+        (click to run)
+<p>
+        In this example we look at the effect of marital status on income for
+        black and white women. The interaction effect with <i>black</i> are the
+        effects of the marital status variables in the black sample, while
+        the interaction effects with <i>white</i> are the effects of the marital
+        status variables in the white sample. To use <b>sheafcoef</b> in this case
+        we need to make sure that we identifiy the scale of the latent
+        martial status variable for the black sample using only the black
+        respondents and identify the scale of the latent variable for the
+        white sample using only the white respondents.  This is what the <i>if</i>
+        conditions are for:
+<p>
+<p>
+<b>        sheafcoef, latent(black_marst: blackXmarried blackXnever_married if bla</b>
+<b>&gt; ck ; ///</b>
+<b>                          white_marst: whiteXmarried whiteXnever_married if whi</b>
+<b>&gt; te )</b>
+<p>
+        (click to run)
+<p>
+    <b><u>eq</u></b><b>uation(#</b><i>#</i> | <i>name</i><b>)</b> specifies the equation from the previous estimation
+        command to be used when computing the sheaf coefficients.  This
+        option is relevant when using <b>sheafcoef</b> after commands like mlogit or
+        heckman that return results in multiple equations. One can either
+        specify whether <b>sheafcoef</b> should consider the first, second, etc.
+        equation or one can type in the name of that equation. In the former
+        case the number of the equation should be preceded by a <b>#</b>.
+<p>
+    <b>eform</b> specifies that the effects of the latent variable and the control
+        variables are exponentiated. The effects of the observed variables in
+        each block on its latent variable are not exponentiated, because
+        these represent the effects of these variables on the standardized
+        latent variable and not on the dependent variable.
+<p>
+    <b>beta</b> asks that standardized beta coefficients be reported.  The beta
+        coefficients are the regression coefficients obtained by first
+        standardizing all variables to have a mean of 0 and a standard
+        deviation of 1. When specifying the <b>beta</b> option after logit, logistic
+        or probit the latent dependent variable (often refered to as y*) is
+        standardized. <b>beta</b> may only be specified after regress, logit, 
+        logistic, or probit, and may not be specified when the previous
+        estimation command used clustered standard errors or the <b>svy</b> prefix.
+<p>
+    <b>post</b> causes <b>sheafcoef</b> to behave like a Stata estimation (<b>eclass</b>) command.
+        When <b>post</b> is specified, <b>sheafcoef</b> will post the vector of transformed
+        estimators and its estimated variance-covariance matrix to <b>e()</b>. This
+        option, in essence, makes the transformation permanent.  Thus you
+        could, after <b>post</b>ing, treat the transformed estimation results in the
+        same way as you would treat results from other Stata estimation
+        commands.  For example, after posting, you could use <b>test</b> to perform
+        simultaneous tests of hypotheses on linear combinations of the
+        transformed estimators.
+<p>
+        Specifying <b>post</b> clears out the previous estimation results, which can
+        be recovered only by refitting the original model or by storing the
+        estimation results before running <b>nlcom</b> and then restoring them; see 
+        <b>[R] estimates store</b>.
+<p>
+    <b>level(</b><i>#</i><b>)</b> specifies the confidence level, as a percentage, for confidence
+        intervals.  The default is <b>level(95)</b> or as set by <b>set level</b>.
+<p>
+<p>
+<b><u>Examples</u></b>
+<p>
+<p>
+<b>    sysuse nlsw88, clear</b>
+<b>    gen byte lower = inlist(occupation, 9, 10, 11, 12, 13) if occupation &lt; .</b>
+<b>    gen byte middle = inlist(occupation, 3, 4, 5, 6, 7, 8) if occupation &lt; .</b>
+<b>        </b>
+<b>    glm wage lower middle married never_married union grade, link(log)</b>
+<b>        </b>
+<b>    sheafcoef, latent(class:   lower middle;          ///</b>
+<b>                      marital: married never_married) ///</b>
+<b>               post</b>
+<b>    test [main]_b[class]=[main]_b[marital]</b>
+<p>
+    (click to run)
+<p>
+    Notice that in the example above the scale of class, as shown in the
+    equation "on_class", runs from lower (large negative value) to higher (0)
+    indicating that the effect of class is possitive: women with higher
+    occupations receive more income.
+<p>
+<p>
+<b>    sysuse nlsw88, clear</b>
+<b>    gen byte lower = inlist(occupation, 9, 10, 11, 12, 13) if occupation &lt; .</b>
+<b>    gen byte middle = inlist(occupation, 3, 4, 5, 6, 7, 8) if occupation &lt; .</b>
+<b>        </b>
+<b>    logit union middle lower married never_married</b>
+<b>        </b>
+<b>    sheafcoef, latent(class:   lower middle;          ///</b>
+<b>                      marital: married never_married)</b>
+<b>    sheafcoef, latent(class:   lower middle;          ///</b>
+<b>                      marital: married never_married) ///</b>
+<b>               eform</b>
+<p>
+    (click to run)
+<p>
+    Notice that in the example above the scale of class, as shown in the
+    equation "on_class", runs from higher (0) to lower (large positive value)
+    indicating that the effect of class is negative: women with higher
+    occupations are less likely to be a union member.
+<p>
+<p>
+<b>    sysuse nlsw88, clear</b>
+<b>    gen byte lower = inlist(occupation, 9, 10, 11, 12, 13) if occupation &lt; .</b>
+<b>    gen byte middle = inlist(occupation, 3, 4, 5, 6, 7, 8) if occupation &lt; .</b>
+<b>        </b>
+<b>    logit union middle lower married never_married</b>
+<b>        </b>
+<b>    sheafcoef, latent(class:  -lower middle;         ///</b>
+<b>                      marital: married never_married)</b>
+<p>
+    (click to run)
+<p>
+    Notice that in the example above, by attaching a <b>-</b> to <i>lower</i>, we are
+    saying that we want the latent variable to have a low value when the
+    observed variable <i>lower</i> has a high value and <i>vice versa</i>. The consequence
+    is that we changed the direction of latent variable class such that the
+    scale of class runs from lower (large negative number) to higher (zero),
+    and the effect of class now becomes negative.
+<p>
+<p>
+<b><u>Author</u></b>
+<p>
+    Maarten L. Buis
+    Universitaet Tuebingen
+    Institut fuer Soziologie
+    maarten.buis@uni-tuebingen.de
+<p>
+<p>
+<b><u>References</u></b>
+<p>
+    Heise, David R. (1972). Employing nominal variables, induced variables,
+        and block variables in path analysis.  <i>Sociological Methods &amp;</i>
+        <i>Research</i>, <b>1</b>(2): 147--173.
+<p>
+<b><u>Also see</u></b>
+<p>
+    Online: <b>nlcom</b>
+<p>
+    If installed: <b>propcnsreg</b>
+</pre>

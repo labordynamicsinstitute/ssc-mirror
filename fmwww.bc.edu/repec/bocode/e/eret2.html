@@ -1,0 +1,59 @@
+<pre>
+-------------------------------------------------------------------------------
+help for <b>eret2</b>
+-------------------------------------------------------------------------------
+<p>
+<b><u>Save results in e()</u></b>
+<p>
+        <b>eret2</b> <b><u>loc</u></b><b>al</b> <i>name ...</i> [<b>,</b> <b>replace</b> ]
+<p>
+        <b>eret2</b> <b><u>sca</u></b><b>lar</b> <i>name</i> <b>=</b> <i>exp</i> [<b>,</b> <b>replace</b> ]
+<p>
+        <b>eret2</b> <b><u>mat</u></b><b>rix</b> <i>name</i> [<b>=</b>] <i>matname</i> [<b>,</b> <b>copy</b> <b>replace</b> ]
+<p>
+<p>
+    where <i>name</i> is the name of the macro, scalar, or matrix that will be
+    returned in <b>e(</b><i>name</i><b>)</b> and <i>matname</i> is the name of an existing matrix.
+<p>
+<p>
+<b><u>Description</u></b>
+<p>
+    <b>eret2</b> is a hack to save a macro, scalar, or matrix in <b>e()</b> and may be used
+    after any estimation command (see help estcom) to add additional results
+    to the <b>e()</b>-returns. It is implemented as a wrapper for the <b>ereturn</b>
+    command (see help ereturn). However, <b>eret2</b> can be used in any context
+    whereas <b>ereturn</b> can only be used within an e-class program (see help 
+    program).
+<p>
+    <b>eret2</b> may be useful, for example, if the estimation results be tabulated
+    by estimates table or estout (available from the SSC archive; type 
+    ssc describe estout).
+<p>
+<p>
+<b><u>Options</u></b>
+<p>
+    <b>copy</b> specified with <b>eret2 matrix</b> indicates that the matrix is to be
+        copied, leaving the original in place.  The default is to move the
+        matrix.
+<p>
+    <b>replace</b> permits <b>eret2</b> to replace an existing <b>e()</b> macro, scalar, or
+        matrix.
+<p>
+<p>
+<b><u>Examples</u></b>
+<p>
+        . sysuse auto
+        . regress price weight mpg
+        . test weight = mpg
+        . eret2 scalar p_wtmpg = r(p)
+        
+<p>
+<b><u>Author</u></b>
+<p>
+    Ben Jann, ETH Zurich, jann@soz.gess.ethz.ch
+<p>
+<p>
+<b><u>Also see</u></b>
+<p>
+    Online:  help for ereturn, estimates, program, return, estcom, matrix, 
+</pre>

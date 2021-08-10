@@ -1,0 +1,56 @@
+d 'MITOOLS': module of tools for analyzing multiple imputed datasets
+d
+d  The method of multiple imputation (MI) is used increasingly for 
+d analyzing datasets with missing observations. Two sets of tasks
+d are required in  order to implement the method: (a) generating
+d multiple complete datasets  in which missing values have been
+d imputed by simulating from an appropriate  probability
+d distribution and (b) analyzing the multiple imputed datasets and 
+d combining complete data inferences from them to form an overall
+d inference for  parameters of interest. The Stata tools published
+d here address task (b) and  enable analysis of multiple datasets
+d to be performed with similar ease to the  analysis of a single
+d dataset. These commands not only implement techniques for 
+d inference from multiple imputed datasets but also allow standard
+d manipulations  such as transformation and recoding of variables. 
+d
+d Distribution-Date: 20030726
+d
+d Author: John B. Carlin, Clinical Epidemiology and Biostatistics Unit, Murdoch Children's Research Institute, and University of Melbourne Department of Paediatrics, Royal Children's Hospital
+d Support: email jbcarlin@@unimelb.edu.au
+d
+d Author: Ning Li
+d
+d Author: Philip Greenwood
+d
+d Author: Carolyn Coffey
+d
+f ../_/_mi_ESTIMATE.ado
+f ../_/_mi_RUBIN.ado
+f ../_/_mi_unique.ado
+f ../_/_mici_bin.ado
+f ../_/_parmest.ado
+f miappend.ado
+f miappend.hlp
+f mici_warn1.hlp
+f mici_warn2.hlp
+f mici.ado
+f mici.hlp
+f mido.ado
+f mido.hlp
+f mifit_warn1.hlp
+f mifit.ado
+f mifit.hlp
+f milincom.ado
+f milincom.hlp
+f mimerge.ado
+f mimerge.hlp
+f mireset.ado
+f mireset.hlp
+f misave.ado
+f misave.hlp
+f miset.ado
+f miset.hlp
+f mitestparm.ado
+f mitestparm.hlp
+f ../c/carlin.pdf

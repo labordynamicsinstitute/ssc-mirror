@@ -1,0 +1,77 @@
+<pre>
+-------------------------------------------------------------------------------
+help for <b>grdiame</b>                                            - v001 25dec2009 jx
+-------------------------------------------------------------------------------
+<p>
+<b><u>Differences in Averaged Marginal effects in binary regressions</u></b>
+<p>
+        <b>grdiame</b> [<b>if</b> exp] [<b>in</b> range] [<b>,</b> <b>x(</b><i>variables_and_values</i><b>)</b> <b><u>r</u></b><b>est(</b><i>stat</i><b>)</b>
+               <b><u>l</u></b><b>evel(</b><i>#</i><b>)</b> <b>all</b> <b><u>g</u></b><b>roup(</b><i>grpvar_g0value_g1value</i><b>)</b>]
+<p>
+    where <i>variables_and_values</i> is an alternating list of variables and either
+    numeric values or mean, median, min, max, upper, lower, previous.
+<p>
+    <i>stat</i> is either mean, median, min, max, upper, lower, previous,
+    grmean(group mean), mrmedian, grmin, grmax.
+<p>
+<p>
+<b><u>Description</u></b>
+<p>
+    After estimating a binary regression model, <b>grdiame</b> computes the
+    differences in average marginal effects between the 1 and 0 groups coded
+    by the <b>group</b> variable.  <b>grdiame</b> uses a closed form solution with the 
+    delta method.
+<p>
+<b><u>Options</u></b>
+<p>
+    <b>level()</b> sets the level of the confidence interval for differences in
+        group average marginal effects. The default is 95.
+<p>
+    <b>x()</b> sets the values of independent variables for calculating predicted
+        values.  The list must alternate variable names and values.  The
+        values may be either numeric values or can be mean, median, min, max,
+        previous, upper, or lower.  The latter cannot be used if rest()
+        specifies a group summary statistic (e.g., grmean).
+<p>
+    <b>rest()</b> sets the independent variables not specified in x() to their <b>mean</b>
+        (default), <b>minimum</b>, <b>maximum</b>, <b>median</b> when calculating predicted
+        values. <b>grmean</b> sets these independent variables to the mean
+        conditional on the variables and values specified in x();
+        <b>grmedian</b>,<b>grmax</b>, and <b>grmin</b> can also be used.
+<p>
+    <b>all</b> specifies that any calculations of means, medians, etc., should use
+        the entire sample instead of the sample used to estimate the model.
+<p>
+    <b><u>g</u></b><b>roup</b> identifies a group indictor variable. After the group variable,
+        specify the value for the group 0, then the value for group 1 of the
+        group variable.  This program takes a difference of AMEg1-AMEg0.
+<p>
+<b><u>Returned Matrices</u></b>
+<p>
+    r(avgmarg):  saves group average marginal effects.
+<p>
+    r(avgmargdif):  saves differences in and confidence intervals for group
+        average marginal effects
+<p>
+<b><u>Examples</u></b>
+<p>
+    To compute the differences in group average marginal effects and
+    confidence intervals using delta method for a logit in which all
+    independent variables are held at the mean, and we compare black with
+    whites.
+<p>
+    <b>.logit vote black asian hispn educ income</b>
+<p>
+    <b>.grdiame, group(race 1 4)</b>
+<p>
+    In this case, the grdiame compares group averaged marginal effects
+    between whites (race=1) and asians (race=4).
+<p>
+    :::
+<p>
+-------------------------------------------------------------------------------
+<p>
+  Authors: Jun Xu
+<p>
+<p>
+</pre>

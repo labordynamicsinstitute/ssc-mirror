@@ -1,0 +1,208 @@
+<pre>
+<p>
+<p>
+help for <b>srr</b>
+-------------------------------------------------------------------------------
+<p>
+<b><u>Title</u></b>
+<p>
+    <b>srr</b> -- Survival Risk Ratio and Independent Survival Risk Ratio Table
+<p>
+<p>
+<b><u>Version</u></b>
+<p>
+    Version 3.0.
+<p>
+    ICDPIC Version 3.0 requires STATA 8.0 or higher.  ICDPIC Version 3.0 has
+    been tested in STATA 10 and STATA 11, but the authors believe it should
+    also work without incident in STATA 8 and STATA 9.  If you have any
+    problems using ICDPIC Version 3.0 in STATA 8 or STATA 9, please inform
+    the authors.
+<p>
+    ICDPIC Version 3.0 may be installed from within STATA using the <b>ssc</b>
+    command.  If you installed a previous version of ICDPIC from the SSC
+    archives website using the <b>ssc</b> command, we suggest that you first delete
+    it by typing <b>ssc uninstall icdpic</b> followed by <b>ssc install icdpic</b>.
+    Alternatively, you may use <b>ssc install icdpic, replace</b>.  See help for 
+    ssc.
+<p>
+    If you installed any previous ICDPIC files obtained directly from the
+    authors, please delete them <b>ALL</b> (.ado, .hlp and .dta files) to avoid any
+    conflicts with ICDPIC 3.0 files.
+<p>
+    Please enter complete variable names in the ICDPIC Version 3.0 dialog
+    boxes.  Do not use abbreviations.
+<p>
+    New to Version 3.0 is the addition of a dialog box (.dlg) file associated
+    with each individual ICDPIC Version 3.0 program (.ado) file.  To access
+    the ICDPIC dialog box, and all the ICDPIC programs, type: <b>db icdpic</b>.
+    Typing <b>icdpic</b>, as in earlier versions, will still work, but <b>ONLY</b> with
+    <b>icdpic</b>.  For example, to access the SRR\SRRi Table program directly,
+    type: <b>db srr</b>.  Typing <b>srr</b>, as in previous versions, will produce an
+    error.
+<p>
+    Fixed in ICDPIC Version 3.0 is the ability to use path\file names
+    containing spaces.
+<p>
+    Fixed in ICDPIC Version 3.0 is the ability to run in STATA 11.0.
+<p>
+    Fixed in ICDPIC Version 3.0 is a bug that caused the <b>triss</b> program to
+    crash if the <i>rts</i> variable was named anything other than "rts".
+<p>
+    New in ICDPIC Version 3.0 (<b>trauma</b> program only) is the ability to choose
+    whether an AIS value of 6 automatically forces an ISS of 75 or to
+    automatically have all AIS values of 6 changed to an AIS value of 5 and
+    then have the ISS calculated normally.
+<p>
+    All dialog boxes in ICDPIC Version 3.0 have memory.  Each time a dialog
+    box is opened within the same STATA session, it will remember the values
+    last entered.
+<p>
+    All dialog boxes in ICDPIC Version 3.0 have the following buttons:
+<p>
+      <i>OK</i> executes the program and removes the dialog box from the screen.
+<p>
+      <i>SUBMIT</i> executes the program and leaves the dialog box on the screen.
+             Note that if an error message is generated the dialog box may be
+             minimized.
+<p>
+      <i>CANCEL</i> removes the dialog box from the screen and does nothing.
+             Clicking on the close icon of the dialog box does the same
+             thing.
+<p>
+      <i>HELP</i> leaves the dialog box on the screen and presents the program help
+           file.  The <i>HELP</i> button has a question mark on it.
+<p>
+      <i>COPY</i> leaves the dialog box on the screen and copies the program command
+           to the clipboard.
+<p>
+      <i>RESET</i> resets the values of the controls in the dialog box to their
+            initial state, just as if the dialog box were invoked for the
+            first time.  Each time a user invokes a dialog box, its controls
+            will be filled in with the values the user last entered.  <i>RESET</i>
+            restores the control values to their defaults.  The <i>RESET</i> button
+            has an R on it.
+<p>
+<p>
+<b><u>Syntax</u></b>
+<p>
+        <b>db srr</b>
+<p>
+    The <i>SRR\SRRi Table</i> dialog box will open.  Follow the instructions.
+<p>
+                                      <i>OR</i>
+<p>
+        <b>db icdpic</b>
+<p>
+    The <i>ICDPIC</i> dialog box will open.  Choose <i>SRR\SRRi Table</i> and click <i>OK</i> or
+    <i>Submit</i>.  The <i>SRR\SRRi Table</i> dialog box will open.  Follow the
+    instructions.
+<p>
+<p>
+<b><u>Description</u></b>
+<p>
+    <b>srr</b> calculates the survival risk ratio (SRR) and the independent survival
+    risk ratio (SRRi) for all valid ICD-9-CM injury codes (N-Codes) in a data
+    set and stores them in a file on disk.
+<p>
+    SRR and SRRi are defined by analysis of whatever population is deemed the
+    index population.
+<p>
+    SRR is equivalent to the number of survivors with a given N-Code divided
+    by the number of survivors plus non survivors with that same N-Code.
+<p>
+    SRRi is equivalent to the number of survivors with a given N-Code (and no
+    other N-Codes) divided by the number of survivors plus non survivors with
+    that same N-Code (and no other N-Codes).
+<p>
+<p>
+<b><u>Options</u></b>
+<p>
+    ICD-9-CM diagnosis codes in the user's data may, or may not, contain a
+    decimal point.  Simply choose the option that applies to your data in the
+    <i>SRR\SRRi Table</i> dialog box.
+<p>
+<p>
+<b><u>Remarks</u></b>
+<p>
+    The user's data must contain ICD-9-CM diagnosis codes.  Diagnosis codes
+    in the user's data must be of type string.  A decimal point in the
+    diagnosis codes is optional.  Diagnosis codes should have a width of 5 (6
+    if a decimal point is present).  The diagnosis code prefix must be the
+    same for all diagnosis codes and numbered sequentially starting with 1,
+    for example, dx1...dxN.
+<p>
+    The user's data also requires a Boolean variable of type byte to indicate
+    discharge status.  0 if the patient was discharged alive and 1 if the
+    patient died.
+<p>
+    <b>srr</b> adds the following variables to a new file stored on disk:
+<p>
+<p>
+        <i>dx</i>: N-Code
+        <i>survive1</i>: number of observations in the user's data in which a given
+            N-Code occurred and the patient survived
+        <i>expire1</i>: number of observations in the user's data in which a given
+            N-Code occurred and the patient died
+        <i>srr</i>: survival risk ratio (SRR), or survive1/(survive1 + expire1)
+        <i>survive2</i>: number of observations in the user's data in which a given
+            N-Code is the only N-Code and the patient survived
+        <i>expire2</i>: number of observations in the user's data in which a given
+            N-Code is the only N-Code code and the patient died
+        <i>srri</i>: independent survival risk ratio (SRRi), or survive2/(survive2 +
+            expire2)
+<p>
+<p>
+    SRR and SRRi are rounded to the nearest 0.0001.  If SRR or SRRi are
+    equal, or round to, 0.0000 or 1.0000 they are replaced with 0.0001 and
+    0.9999 respectively.
+<p>
+    <b>srr</b> requires the use of lookup tables <b>ntab_s1.dta</b> and <b>ntab_s2.dta</b>.  These
+    data tables are supplied.  _s1 tables are for use with data without the
+    decimal point in ICD-9-CM codes and _s2 tables are for data that include
+    the decimal point.  See help for icdpic, specifically the LOOKUP TABLES
+    part of the <b>Remarks</b> section.
+<p>
+<p>
+<b><u>Examples</u></b>
+<p>
+None
+<p>
+<p>
+<b><u>Authors</u></b>
+<p>
+    David E. Clark, M.D.
+<p>
+        Maine Medical Center, Portland, Maine, USA
+        University of Vermont College of Medicine, Burlington, Vermont, USA
+        Harvard Injury Control Research Center, Harvard School of Public
+            Health, Boston, Massachusetts, USA
+<p>
+        Correspondence to Dr. Clark,
+        887 Congress Street, Portland ME 04102
+        Email:  clarkd@mmc.org
+<p>
+    Turner M. Osler, M.D.
+<p>
+        University of Vermont College of Medicine, Burlington, Vermont, USA
+<p>
+    David R. Hahn
+<p>
+        Maine Medical Center, Portland, Maine, USA
+<p>
+<p>
+<b><u>References</u></b>
+<p>
+    None
+<p>
+<p>
+<b><u>Also see</u></b>
+<p>
+    help for iciss
+<p>
+    help for icdpic
+<p>
+    help for srr
+<p>
+<p>
+</pre>

@@ -1,0 +1,57 @@
+<pre>
+-------------------------------------------------------------------------------
+help for <b>fagani</b>
+-------------------------------------------------------------------------------
+<p>
+<b><u>Fagan's bayesian nomogram</u></b>
+<p>
+    <b>fagan</b> <b>#prev</b> <b>#lrp</b> <b>#lrn</b> [<b>,</b> <i>options</i>]
+<p>
+    where
+    <b>#prev</b> is the prior or pretest probability of disease
+    <b>#lrp</b> is the likelihood ratio of a positive test result
+    <b>#lrn</b> the likelihood ratio of a negative test result
+<p>
+<b><u>Description</u></b>
+<p>
+    <b>fagani</b> creates a plot showing the relationship between the prior
+        probability, the LR (combination of sensitivity and specificity), and
+        the posterior probability.
+ 
+<p>
+<b><u>Remarks</u></b>
+<p>
+    It is an immediate command, see help immed.
+    When Bayes theorem is expressed in terms of log-odds, the posterior
+        log-odds are a linear function of the prior log-odds and the log
+        likelihood ratio.
+    <b>fagan</b> plots an axis on the left with the prior log-odds, an axis in the
+        middle representing the log likelihood ratio and an axis on the right
+        representing the posterior log-odds.
+  
+    Lines are drawn from the prior probability on the left through the LRs in
+        the center and extended to the respective posterior probability on
+        the right.
+<p>
+<b><u>Options</u></b>
+<p>
+    <b><u>legend</u></b><b>opts(</b><i>#</i><b>)</b> specify options that affect the plot legend.
+    <b>ysize()</b> and <b>xsize()</b> specify the height and width of plot respectively.
+<p>
+<p>
+<p>
+<b><u>Example</u></b>
+<p>
+        . fagani 0.5 14.4 0.25 
+<p>
+        . fagani 0.25 20 0.05, ysize(8) xsize(6) 
+<p>
+        . fagani 0.45 6.4 0.25, scheme(s2mono) 
+<p>
+<p>
+    
+<b><u>Author</u></b>
+<p>
+    Ben Adarkwa Dwamena, Division of Nuclear Medicine, Department of
+    Radiology, University of Michigan Medical School, Ann Arbor, Michigan.
+</pre>

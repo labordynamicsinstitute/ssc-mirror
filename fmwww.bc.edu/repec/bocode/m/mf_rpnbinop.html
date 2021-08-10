@@ -1,0 +1,58 @@
+<pre>
+<b>help mata add()</b>
+<b>help mata subtract()</b>
+<b>help mata product()</b>
+<b>help mata divide()</b>
+-------------------------------------------------------------------------------
+<p>
+<b><u>Title</u></b>
+<p>
+    <b>Fundamental arithmetic operations for use with rpnfcn()</b>
+<p>
+<p>
+<b><u>Syntax</u></b>
+<p>
+                <b><u>Command name</u></b>      <u>Argument</u>
+<p>
+                <b>&amp;add()</b>            NULL
+<p>
+                <b>&amp;subtract()</b>       NULL
+<p>
+                <b>&amp;product()</b>        NULL
+<p>
+                <b>&amp;divide()</b>         NULL
+<p>
+<p>
+<b><u>Description</u></b>
+<p>
+    These functions perform the four fundamental arithmetic operations on the
+    two top elements of the stack. They remove the top element and replaces
+    the upper but one element with the result of the operation, i.e. the
+    number of elements in the stack are reduced by one and the result is the
+    new top element. All four perform their operations element-wise without
+    checking for conformability as they rely on the Mata colon operators <b>:+</b>,
+    <b>:-+</b>, <b>:*</b>, and <b>:/</b>, see Mata colon operators.  <b>&amp;subtract()</b> subtracts the
+    current top element of the stack element from the element just below,
+    <b>&amp;divide()</b> divides the upper but one element of the stack with the top
+    element.
+<p>
+<p>
+<b><u>Source code</u></b>
+<p>
+    rpnbinop.mata
+<p>
+<b><u>Author</u></b>
+<p>
+    Henrik Støvring, Research Unit of General Practice, University of
+    Southern Denmark.  Please email hstovring@health.sdu.dk if you have
+    comments, questions or observe any problems.
+<p>
+<p>
+<b><u>Also see</u></b>
+<p>
+    Manual:  <b>[M] Mata Reference Manual</b>
+<p>
+    Online:  help for <b>[M-0] mata</b>, <b> Evaluation of algorithm matrix using RPN</b>,
+             <b>RPN stack manipulation functions</b>, <b>RPN distribution functions</b>,
+             <b>RPN functions for integration</b>
+</pre>

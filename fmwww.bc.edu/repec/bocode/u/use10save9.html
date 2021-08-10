@@ -1,0 +1,106 @@
+<pre>
+<b>help use10save9</b> (vs1.1: 2011-10-25)
+-------------------------------------------------------------------------------
+<p>
+<b><u>Title</u></b>
+<p>
+<b>use10save9</b> -- Saving matched files in Stata 9 format - either as new files in a
+&gt; utomatically 
+created directory or through replacing previous Stata 10+ files. 
+<p>
+<p>
+<b><u>Syntax</u></b>
+<p>
+    <b>use10save9</b> [<b>,</b> <b>folder</b>(<i>string</i>) <b>match</b>(<i>string</i>) <b>prefix</b>(<i>string</i>) <b>suffix</b>(<i>string</i>)
+                <b>subs</b> <b>replace</b>]
+<p>
+<p>
+<p>
+<b><u>Description</u></b>
+<p>
+    <b>use10save9</b> is a program that helps out with opening Stata 10+ files from
+    within Stata 9 and then saving them in Stata 9 format (using<b> use10</b> and
+    <b>save9</b>). May be applied to a quite generally defined set of Stata datasets
+    within a defined folder and, if selected, also with respect to all
+    corresponding subfolders.  The simplest syntax is purely based on
+    defaults. All options are optional.
+<p>
+    An alternative, secondary, usage might be to simply use the function as
+    an extension to<b> save9</b> (Ercolani, 2011) in order to save matched sets of
+    datasets in Stata 9 format while being in Stata 10+.
+<p>
+<p>
+<b><u>Options</u></b>
+<p>
+    <b>folder</b>(<i>string</i>) Defines the directory from within where to look for files.
+    The default directory is the current working directory (cwd; '.').
+<p>
+    <b>match</b>(<i>string</i>) Defines the matching criterion used in order to select
+    files from the selected directory <b>folder</b>. The default is all files in the
+    directory ('*').
+<p>
+    <b>prefix</b>(<i>string</i>) Defines a prefix string to put in front of all new files
+    corresponding to matched cases.
+<p>
+    <b>suffix</b>(<i>string</i>) Defines a suffix string to put at the end of all new files
+    corresponding to matched cases.
+<p>
+    <b>subs</b> An indicator for whether, or not, matched files in corresponding
+    subdirectories (recursively) also should be affected.
+<p>
+    <b>replace</b> An indicator for whether, or not, the matched files should be
+    saved as new files in subdirectory 'stata9'(which is then - if not
+    existing - automatically created) or rather simply be saved (with
+    'replace') in <b>folder</b> (potentially overwriting, if no prefix/suffix
+    assigned, the old versions).
+<p>
+<p>
+<b><u>Examples</u></b>
+<p>
+    ---------------------------------------------------------------------------
+    1. Save all (Stata dataset) files in current working directory in Stata 9
+    format in subdirectory 'stata9'.
+        <b>. use10save9</b>
+<p>
+    ---------------------------------------------------------------------------
+    2. Save all files with prefix <i>name</i> located in cwd-subdirectory <i>data</i> in
+    Stata 9 format in subdirectory 'stata9'.
+        <b>. use10save9 , folder(".\data") match("name*")</b>
+<p>
+    ---------------------------------------------------------------------------
+    3. Same as Example 2, but in this case all matched files in
+    subdirectories to folder <i>data</i> are also to be affected.
+        <b>. use10save9 , folder(".\data") match("name*") subs</b>
+<p>
+    ---------------------------------------------------------------------------
+<p>
+    4. Same as Example 2, but in this case all matched files in folder <i>data</i>
+    should simply be saved replacing the original ones.
+        <b>. use10save9 , folder(".\data") match("name*") replace</b>
+<p>
+    ---------------------------------------------------------------------------
+    5. Same as Example 4, but in this case all new files will have prefix
+    's9_' added to filenames (e.g. to avoid overwriting).
+        <b>. use10save9 , folder(".\data") match("name*") prefix("s9_") replace</b>
+<p>
+    ---------------------------------------------------------------------------
+<p>
+<p>
+<b><u>Requires</u></b>
+<p>
+    Stata 9; user written functions<b> use10</b> (Radyakin, 2008) &amp;<b> save9</b> (Ercolani,
+    2011)
+<p>
+<p>
+<b><u>Author</u></b>
+<p>
+    Lars Ängquist
+    la@ipm.regionh.dk
+    lars.angquist@telia.com
+<p>
+<p>
+<b><u>Also see</u></b>
+<p>
+      Help:  [help pages on] use10 (user-written), save9 (user-written),
+                             save, varlist, string functions.
+</pre>

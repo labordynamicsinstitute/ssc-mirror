@@ -1,0 +1,137 @@
+<pre>
+-------------------------------------------------------------------------------
+help for <b>ivreg2h</b>
+-------------------------------------------------------------------------------
+<p>
+<b><u>Instrumental variables estimation using heteroskedasticity-based instruments</u></b>
+<p>
+<b><u>Description</u></b>
+<p>
+<b>ivreg2h</b> estimates an instrumental variables regression model providing the
+option to generate instruments using Lewbel's (2012) method. This technique
+allows the identification of structural parameters in regression models with
+endogenous or mismeasured regressors in the absence of traditional identifying
+information, such as external instruments or repeated measurements.
+Identification is achieved in this context by having regressors that are
+uncorrelated with the product of heteroskedastic errors, which is a feature of
+many models where error correlations are due to an unobserved common factor.
+The greater the degree of scale heteroskedasticity in the error process, the
+higher will be the correlation of the generated instruments with the included
+endogenous variables which are the regressands in the auxiliary ('first stage')
+regressions.
+<p>
+Using this form of Lewbel's method, instruments may be constructed as simple
+functions of the model's data.  This approach may thus be applied when no
+external instruments are available, or, alternatively, used to supplement
+external instruments to improve the efficiency of the IV estimator.
+Supplementing external instruments can also allow Sargan-Hansen tests of the
+orthogonality conditions or overidentifying restrictions to be performed, which
+would not be available in the case of exact identification by external
+instruments.
+<p>
+This implementation has been built using the existing <b>xtivreg2</b> (Schaffer) and
+<b>ivreg2</b> (Baum, Schaffer, Stillman) routines. At present it does not provide any
+explicit support for panel data. As <b>ivreg2h</b> is a variant of <b>ivreg2</b>, essentially
+all of the features and options of that program are available in <b>ivreg2h</b>. For
+that reason, you should consult help ivreg2 for details of the available
+options.
+<p>
+<b>ivreg2h</b> can be invoked to estimate a traditionally identified single equation,
+or a single equation that--before augmentation with the generated
+instruments--fails the order condition for identification:  either (i) by
+having no excluded instruments, or (ii) by having fewer excluded instruments
+than needed for traditional identification.
+<p>
+In the former case, of external instruments augmented by generated instruments,
+the program provides three sets of estimates: the traditional IV estimates,
+estimates using only generated instruments, and estimates using both generated
+and excluded instruments. <b>ivreg2h</b> automatically produces a Hayashi "C" test of
+the excluded instruments' validity (equivalent to use of the <b>orthog</b> option in
+{cmd{ivreg2}). The results of the third estimation (that including both
+generated and excluded instruments) are saved in the ereturn list. All three
+sets of estimates are saved, named <i>StdIV</i>, <i>GenInst</i> and <i>GenExtInst</i>, respectively.
+<p>
+In the latter case, of an underidentified equation, the only the estimates
+using generated instruments are displayed. Unlike <b>ivreg2</b> or <b>ivregress</b>, <b>ivreg2h</b>
+allows the syntax <i>ivreg2h depvar exogvar (endogvar=)</i>, as after augmentation
+with the generated regressors, the order condition for identification will be
+satisfied.  The resulting estimates are saved in the ereturn list and as a set
+of estimates named <i>GenInst</i>.
+<p>
+<b><u>Saved Results</u></b>
+<p>
+Note that in the <b>estimates table</b> output, the displayed results <i>j</i>, <i>jdf</i> and <i>jp</i>
+refer to the Hansen J statistic, its degrees of freedom, and its p-value. If
+i.i.d. errors are assumed, and a Sargan test is displayed in the standard
+output, the Sargan statistic, degrees of freedom and p-value are displayed in
+<i>j</i>, <i>jdf</i> and <i>jpval</i>, as the Hansen and Sargan statistics coincide in that case.
+<p>
+The results of the most recent estimation are saved in the ereturn list. Please
+see <b>help ivreg2</b> for details.
+<p>
+<b><u>Examples</u></b>
+<p>
+        Example from Lewbel (2012). Note that centering of regressors is only
+            used to match the results.
+<p>
+        . ssc install center // (if needed)
+<p>
+        . ssc install bcuse // (if needed)
+<p>
+        . bcuse engeldat
+<p>
+        . center age-twocars, prefix(z_)
+<p>
+        . ivreg2h foodshare z_* (lrtotexp=), small robust
+<p>
+        . ivreg2h foodshare z_* (lrtotexp = lrinc), small robust
+<p>
+        . ivreg2h foodshare z_* (lrtotexp = lrinc), small robust gmm2s
+<p>
+        Example using panel data and HAC standard errors. Centering used to
+            remove firm fixed effects.
+<p>
+        .  webuse grunfeld
+<p>
+        .  by company: center invest kstock mvalue
+<p>
+        .  ivreg2h c_invest L(1/2).c_kstock (c_mvalue=)
+<p>
+        .  ivreg2h c_invest L(1/2).c_kstock (c_mvalue=L(1/4).c_mvalue), robust
+            gmm2s bw(3)
+<p>
+<b><u>Acknowledgements</u></b>
+<p>
+We thank participants in the 2012 UK Stata Users Group meetings for their
+    constructive comments.
+<p>
+<b><u>References</u></b>
+<p>
+Baum CF, Lewbel A, Schaffer ME, Talavera O, 2012. Instrumental variables
+    estimation using heteroskedasticity-based instruments.
+    http://repec.org/usug2012/UK12_baum.pdf.
+<p>
+Lewbel, A, 2012.  Using Heteroscedasticity to Identify and Estimate Mismeasured
+    and Endogenous Regressor Models.  Journal of Business and Economic
+    Statistics, 30:1, 67-80. http://fmwww.bc.edu/EC-P/wp587.pdf.
+<p>
+<p>
+<p>
+<b><u>Citation</u></b>
+<p>
+<b>ivreg2h</b> is not an official Stata command. It is a free contribution to the
+research community, like a paper. Please cite it as such:
+<p>
+    Baum, CF, Schaffer, ME, 2012.  ivreg2h: Stata module to perform
+        instrumental variables estimation using heteroskedasticity-based
+        instruments.  http://ideas.repec.org/c/boc/bocode/s457555.html
+<p>
+<b><u>Authors</u></b>
+<p>
+Christopher F Baum, Boston College, USA
+baum@bc.edu
+Mark E Schaffer, Heriot-Watt University, UK
+M.E.Schaffer@hw.ac.uk
+<p>
+<p>
+</pre>

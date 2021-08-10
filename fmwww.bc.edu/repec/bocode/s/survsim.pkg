@@ -1,0 +1,27 @@
+d 'SURVSIM': module to simulate complex survival data
+d
+d  survsim simulates survival times from parametric distributions
+d and user-defined hazard functions. Standard distributions
+d available  include the exponential, Gompertz and Weibull.
+d Alternatively, a user defined [log] [cumulative] hazard function
+d can be specified, in Mata code using	colon operators, with
+d survival times generated using a combination of Gaussian
+d quadrature and root finding techniques. Finally, survival times
+d can be  generated under cause-specific hazard models for
+d competing risks, using standard parametric distributions.
+d Baseline covariates and complex time-dependent  effects can also
+d be specified.Keywords: survival analysis, survival time, Weibull
+d distribution 
+d
+d
+d Requires: Stata version 11.2
+d
+d Distribution-Date: 20131221
+d
+d Author: Michael J. Crowther, University of Leicester
+d Support: email mjc76@@le.ac.uk
+d
+f survsim.ado
+f ../g/gensurvsim.ado
+f ../g/gensurvsim_core.ado
+f survsim.sthlp

@@ -1,0 +1,427 @@
+<pre>
+<b>help mcmcsum</b>
+-------------------------------------------------------------------------------
+<p>
+<b><u>Title</u></b>
+<p>
+    <b>mcmcsum</b> - <b>runmlwin</b> postestimation - MCMC summary statistics and plots 
+   
+<p>
+<a name="syntax"></a><b><u>Syntax</u></b>
+<p>
+    <b>mcmcsum</b> in parameter mode
+<p>
+        <b>mcmcsum</b> <i>parameter_list</i> [<i>if</i>] [<i>in</i>] [<b>,</b> <i>options</i> <b><u>get</u></b><b>chains</b>]
+<p>
+    <b>mcmcsum</b> in variable mode
+<p>
+        <b>mcmcsum</b> <i>varlist</i> [<i>if</i>] [<i>in</i>] [<b>,</b> <i>options</i>] <b><u>var</u></b><b>iables</b>
+<p>
+<p>
+    <i>options</i>                      Description
+    -------------------------------------------------------------------------
+    Parameter mode only options
+      <b><u>get</u></b><b>chains</b>                  save the MCMC parameter chains from the
+                                   current <b>runmlwin</b> estimation results as
+                                   variables in the current data set
+<p>
+    Variable mode only options
+      <b><u>var</u></b><b>iables</b>                  reads the data from the variables currently
+                                   in memory instead of the current
+                                   estimation results
+<p>
+    Main
+      <b><u>sq</u></b><b>rt</b>                       base MCMC summary statistics on square
+                                   rooted MCMC chains
+      <b><u>e</u></b><b>form</b>                      base MCMC summary statistics on
+                                   exponentiated MCMC chains
+      <b><u>mo</u></b><b>de</b>                       report MCMC chain modes rather than means
+      <b><u>me</u></b><b>dian</b>                     report MCMC chain medians rather than means
+      <b><u>z</u></b><b>ratio</b>                     report classical z-ratios and p-values
+      <b><u>l</u></b><b>evel(</b><i>#</i><b>)</b>                   set credible level; default is level(95)
+      <b><u>w</u></b><b>idth(</b><i>#</i><b>)</b>                   parameter/variable width; default is
+                                   <b>width(12)</b>
+      <b><u>d</u></b><b>etail</b>                     display additional MCMC statistics
+<p>
+    Graphics
+      <b><u>traj</u></b><b>ectories</b>               trajectory plot for each MCMC chain
+      <b><u>dens</u></b><b>ities</b>                  kernel density plot for each MCMC chain
+      <b><u>five</u></b><b>way</b>                    trajectory, kernal density, ACF, PACF, and
+                                   MCSE plots for a single chosen MCMC chain
+<p>
+    Advanced options
+      <b><u>t</u></b><b>hinning(</b><i>#</i><b>)</b>                specifies that thinning every # iterations
+                                   was used when storing the MCMC chains
+    -------------------------------------------------------------------------
+<p>
+<p>
+<a name="description"></a><b><u>Description</u></b>
+<p>
+    <b>mcmcsum</b> is a postestimation command for <b>runmlwin</b>.  <b>mcmcsum</b> calculates and
+    displays a variety of MCMC summary statistics and plots.  These
+    statistics and plots can be based on either the current <b>runmlwin</b>
+    estimation results or the variables currently in memory.
+<p>
+<p>
+<a name="options"></a><b><u>Options</u></b>
+<p>
+        +-----------------------------+
+    ----+ Parameter mode only options +--------------------------------------
+<p>
+    <b>getchains</b> save the MCMC parameter chains from the current <b>runmlwin</b>
+        estimation results as variables in the current data set.  Note this
+        will overwrite the current data set.
+<p>
+<p>
+        +----------------------------+
+    ----+ Variable mode only options +---------------------------------------
+<p>
+    <b>variables</b> reads the data from the variables currently in memory instead
+        of the current estimation results.  The latter is useful if the MCMC
+        chains have been saved to disk.
+<p>
+<p>
+        +------+
+    ----+ Main +-------------------------------------------------------------
+<p>
+    <b>sqrt</b> base MCMC summary statistics on square rooted MCMC chains.  This is
+        useful for MCMC variance parameter chains.
+<p>
+    <b>eform</b> base MCMC summary statistics on exponentiated MCMC chains.  This is
+        useful for parameters fitted on the log-odds and log scales (i.e.
+        multilevel logit and poisson models).
+<p>
+    <b>mode</b> reports the modes of the MCMC chains rather than the means.
+<p>
+    <b>median</b> reports the medians of the MCMC chains rather than the means.
+<p>
+    <b>zratio</b> reports classical z-ratios and p-values (i.e. under the assumption
+        that the chains are normally distributed)
+<p>
+    <b>level(</b><i>#</i><b>)</b> set credible level; default is <b>level(95)</b>.
+<p>
+    <b>width(</b><i>#</i><b>)</b> parameter/variable width; default is <b>width(12)</b>.
+<p>
+    <b>detail</b> display additional MCMC statistics including various percentiles,
+        the Raftery Lewis statistics and the Brooks Draper statistic.
+<p>
+<p>
+        +----------+
+    ----+ Graphics +---------------------------------------------------------
+<p>
+    <b>trajectories</b> display a trajectory plot for each MCMC chain.
+<p>
+    <b>densities</b> displays a kernel density plot for each MCMC chain.
+<p>
+    <b>fiveway</b> displays a five-way plot containing the MCMC trajectory plot,
+        kernel density plot, ACF plot, PACF plot, and MCSE plot for the
+        chosen MCMC chain.  The trajectory and kernel density plots are as
+        described above.  Note that only one MCMC chain can be specified when
+        using this option.
+<p>
+<p>
+        +------------------+
+    ----+ Advanced options +-------------------------------------------------
+<p>
+    <b>thinning(</b><i>#</i><b>)</b> specifies that thinning every # iterations was used when
+        storing the MCMC chains.
+<p>
+<p>
+<p>
+<a name="remarks"></a><b><u>Remarks</u></b>
+<p>
+    Remarks are presented under the following headings:
+<p>
+    Remarks on referencing specific parameters when using parameters mode
+    Remarks on referencing specific parameters when using variables mode
+    Remarks on MCMC summary statistics
+    Remarks on MCMC plots
+<p>
+<p>
+<a name="Remarks_using_parameters_mode"></a><b><u>Remarks on referencing specific parameters when using parameters mode</u></b>
+<p>
+    You can find the names assigned to parameters by <b>runmlwin</b> using the <b>mat</b>
+    <b>list e(b)</b> command.  For example, if your model contains the parameter
+    FP1:cons, you would refer to this as [FP1]cons.  Similarly, the parameter
+    RP2:var(cons) would be referred to as [RP2]var(cons).  See the <b>Examples</b>
+    section for an example.
+<p>
+<p>
+<a name="Remarks_variables_mode"></a><b><u>Remarks on referencing specific parameters when using variables mode</u></b>
+<p>
+    An alternative to referencing the parameters in the current <b>runmlwin</b>
+    estimation results is to use the <b>getchains</b> option to save these parameter
+    chains as variables in the current data set.  Note this will overwrite
+    the current data set.  For example, if your model contains the parameter
+    FP1:cons, this would be saved as the variable FP1_cons in your current
+    data set.  Similarly, the parameter RP2:var(cons) would be saved as
+    RP2_var_cons_.  See the <b>Examples</b> section for an example.
+<p>
+<p>
+<a name="remarks_on_mcmc_summary_statisti"></a><b><u>Remarks on MCMC summary statistics</u></b>
+<p>
+    <b>mcmcsum</b> calculates and displays a variety of MCMC summary statistics.
+<p>
+        (1) The chain mean (posterior mean).  This gives the parameter point
+            estimate.
+<p>
+        (2) The MCSE of this mean.  The MCSE will decrease as the chain
+            length is increased.
+<p>
+        (3) The chain standard deviation.  This gives the parameter standard
+            error.
+<p>
+        (4) The chain mode.
+<p>
+        (5) The proportion of chain values of the opposite sign to the chain
+            mean.
+<p>
+        (6) The proportion of chain values of the opposite sign to the chain
+            mode.
+<p>
+        (7) The proportion of chain values of the opposite sign to the chain
+            median.
+<p>
+        (8) The 0.5th, 2.5th, 5th, 25th, 50th, 75th, 95th, 97.5th, and 99.5th
+            quantiles.  The 2.5th and 97.5th quantiles give the 95% Bayesian
+            credible interval.  This is equivalent to a 95% confidence
+            interval in maximum likelihood.  Unlike maximum likelihood, this
+            is not based on a normal sampling distribution assumption.
+<p>
+        (9) The thinned chain length.
+<p>
+        (10) The Effective Sample Size (ESS) gives an estimate of the
+            equivalent number of independent iterations that the chain
+            represents.  The ESS will typically be less than the number of
+            actual iterations because the chain is positively autocorrelated
+            (it is a Markov chain).
+<p>
+        (11) Brooks-Draper (mean):  This statistic is based on the mean of
+            the distribution.  It is used to estimate the length of chain
+            required to produce a mean estimate to 2 significant figures with
+            a given accuracy.
+<p>
+        (12) Raftery-Lewis (quantile):  This statistic is based on the 2.5th
+            and 97.5th quantiles of the posterior distribution (i.e. the 95%
+            credible interval).  It is used to estimate the length of chain
+            required to estimate the boundaries of the 95% credible interval
+            to a given accuracy.
+<p>
+    We recommend users seeking further information to consult the
+    comprehensive MLwiN MCMC manual by Browne (2012).
+<p>
+<p>
+<a name="remarks_on_MCMC_plots"></a><b><u>Remarks on MCMC plots</u></b>
+<p>
+    <b>mcmcsum</b> calculates and displays a variety of MCMC plots.
+<p>
+    Trajectory plots can be thought of as "time series" plots of each chain.
+    The chain values are plotted against the iteration number.  Healthy
+    chains are those that resemble white noise.
+<p>
+    Kernel density plots are smoothed histograms of the chains.  They plot
+    the posterior distributions, the fundamental things of interest.  Note
+    that posterior distributions for variance parameters will typically be
+    right skewed.
+<p>
+    The ACF plot shows the autocorrelation between iteration t and t - k.  A
+    Markov chain should have a power relationship in the lags i.e. if ACF(1)
+    = rho then ACF(2) = rho^2 etc.  This is known as an AR(1) process.  The
+    less correlated the chain the better.
+<p>
+    The PACF plot shows the autocorrelation between iteration t and t - k,
+    having accounted for t - 1,...,t - (k - 1).  It is used to identify the
+    extent to which the chain departs from an ACF(1).  That is, it is used to
+    identify the extent of the lag in the chain.  Look for the point on the
+    plot where the partial autocorrelations for all higher lags are
+    essentially zero.
+<p>
+    The MCSE is an indication of how much error is in the mean estimate due
+    to the fact that MCMC is used.  As the number of iterations increases the
+    MCSE tends to 0.  The MCSE is used to calculate how long to run the chain
+    to achieve a mean estimate with a particular desired MCSE.
+<p>
+    We recommend users seeking further information to consult the
+    comprehensive MLwiN MCMC manual by Browne (2012).
+<p>
+<p>
+<p>
+<a name="examples"></a><b><u>Examples</u></b>
+<p>
+    The following examples will only work on your computer if you have
+    installed <b>runmlwin</b>.
+<p>
+    Two-level random-intercept model, analogous to xtreg
+    ---------------------------------------------------------------------------
+    Setup
+        <b>. use http://www.bristol.ac.uk/cmm/media/runmlwin/tutorial, clear</b>
+<p>
+    Fit model using IGLS
+        <b>. runmlwin normexam cons standlrt, level2(school: cons)</b>
+            <b>level1(student: cons) nopause</b>
+<p>
+    Fit model using MCMC
+        <b>. runmlwin normexam cons standlrt, level2(school: cons)</b>
+            <b>level1(student: cons) mcmc(on) initsprevious nopause</b>
+<p>
+    Calculate and display MCMC summary statistics for all model parameters
+        <b>. mcmcsum</b>
+<p>
+    Calculate and display additional MCMC summary statistics for all model
+    parameters
+        <b>. mcmcsum, detail</b>
+<p>
+    Trajectory plots for all model parameters
+        <b>. mcmcsum, trajectories</b>
+<p>
+    Kernel density plots for all model parameters
+        <b>. mcmcsum, densities</b>
+<p>
+    Fiveway plot for the level 2 variance parameter ([RP2]var(cons))
+        <b>. mcmcsum [RP2]var(cons), fiveway</b>
+<p>
+    Save the MCMC parameter chains from the current <b>runmlwin</b> model as
+    variables in the current data set
+        <b>. mcmcsum, getchains</b>
+<p>
+    Compute the intraclass correlation (a non-linear combination of model
+    parameters)
+        <b>. gen icc = RP2_var_cons_/(RP2_var_cons_ + RP1_var_cons_)</b>
+<p>
+    Calculate and display a variety of MCMC summary statistics for the
+    derived ICC parameter
+        <b>. mcmcsum icc, variables</b>
+<p>
+    Fiveway plot for the ICC parameter
+        <b>. mcmcsum icc, fiveway variables</b>
+<p>
+<p>
+<a name="saved_results"></a><b><u>Saved results</u></b>
+<p>
+    <b>mcmcsum</b> saves the following in <b>r()</b> when no <i>plot</i> is specified:
+<p>
+    Scalars    
+      <b>r(thinnedchain)</b> length of chain after thinning
+      <b>r(mean)</b>         mean of parameter chain
+      <b>r(mode)</b>         mode of parameter chain
+      <b>r(sd)</b>           standard deviation of parameter chain
+      <b>r(ess)</b>          effective sample size
+      <b>r(meanmcse)</b>     mean Monte-Carlo standard error
+      <b>r(bd)</b>           Brook-Draper diagnostic statistic
+      <b>r(rlub)</b>         Raftery-Lewis upper bound
+      <b>r(rllb)</b>         Raftery-Lewis lower bound
+      <b>r(p99_5)</b>        99.5% quantile of the chain
+      <b>r(p95)</b>          95% quantile of the chain
+      <b>r(p75)</b>          75% quantile of the chain
+      <b>r(p50)</b>          50% quantile (median) of the chain
+      <b>r(p25)</b>          25% quantile of the chain
+      <b>r(p5)</b>           5% quantile of the chain
+      <b>r(p2_5)</b>         2.5% quantile of the chain
+      <b>r(p0_5)</b>         0.5% quantile of the chain
+<p>
+<p>
+<a name="about_cmm"></a><b><u>About the Centre for Multilevel Modelling</u></b>
+<p>
+    The MLwiN software is developed at the Centre for Multilevel Modelling.
+    The Centre was established in 1986, and has been supported largely by
+    project grants from the UK Economic and Social Research Council.  The
+    Centre has been based at the University of Bristol since 2005.
+<p>
+    The Centre’s website:
+<p>
+        http://www.bristol.ac.uk/cmm
+<p>
+    contains much of interest, including new developments, and details of
+    courses and workshops.  This website also contains the latest information
+    about the MLwiN software, including upgrade information, maintenance
+    downloads, and documentation.
+<p>
+    The Centre also runs a free online multilevel modelling course:
+<p>
+        http://www.bristol.ac.uk/cmm/learning/course.html
+<p>
+    which contains modules starting from an introduction to quantitative
+    research progressing to multilevel modelling of continuous and
+    categorical data.  Modules include a description of concepts and models
+    and instructions of how to carry out analyses in MLwiN, Stata and R.
+    There is a also a user forum, videos and interactive quiz questions for
+    learners’ self-assessment.
+<p>
+<p>
+<a name="citation"></a><b><u>Citation of </u></b><b><u>runmlwin</u></b><b><u> and MLwiN</u></b>
+<p>
+    <b>runmlwin</b> (and <b>mcmcsum</b>) is not an official Stata command.  It is a free
+    contribution to the research community, like a paper.  Please cite it as
+    such:
+<p>
+        Leckie, G. and Charlton, C. 2011. <b>runmlwin</b>: Stata module for fitting
+            multilevel models in the MLwiN software package. Centre for
+            Multilevel Modelling, University of Bristol.
+<p>
+    Similarly, please also cite the MLwiN software:
+<p>
+        Rasbash, J., Charlton, C., Browne, W.J., Healy, M. and Cameron, B.
+            2009. MLwiN Version 2.1. Centre for Multilevel Modelling,
+            University of Bristol.
+<p>
+    For models fitted using MCMC estimation, we ask that you additionally
+    cite:
+<p>
+        Browne, W.J. 2012. MCMC Estimation in MLwiN, v2.26. Centre for
+            Multilevel Modelling, University of Bristol.
+<p>
+<p>
+<a name="user_forum"></a><b><u>The </u></b><b><u>runmlwin</u></b><b><u> user forum</u></b>
+<p>
+    Please use the <b>runmlwin</b> user forum to post any questions you have about
+    <b>mcmcsum</b> (or <b>runmlwin</b>).  We will try to answer your questions as quickly
+    as possible, but where you know the answer to another user's question
+    please also reply to them!
+<p>
+        http://www.cmm.bristol.ac.uk/forum/
+<p>
+<p>
+<a name="authors"></a><b><u>Authors</u></b>
+<p>
+    Chris Charlton
+    Centre for Multilevel Modelling
+    University of Bristol
+    c.charlton@bristol.ac.uk
+<p>
+    George Leckie
+    Centre for Multilevel Modelling
+    University of Bristol
+<p>
+<p>
+<a name="acknowledgments"></a><b><u>Acknowledgments</u></b>
+<p>
+    The code to calculate the MCMC summary statistics was adapted from that
+    written by Bill Browne for the MCMC engine in the MLwiN software (Browne,
+    2012).  We are very grateful to colleagues at the Centre for Multilevel
+    Modelling and the University of Bristol for their useful comments.
+<p>
+    The development of this command was funded under the LEMMA project, a
+    node of the UK Economic and Social Research Council's National Centre for
+    Research Methods (grant number RES-576-25-0003).
+<p>
+<p>
+<a name="disclaimer"></a><b><u>Disclaimer</u></b>
+<p>
+    <b>mcmcsum</b> comes with no warranty.  Where users are using <b>mcmcsum</b> after
+    fitting a model by <b>runmlwin</b>, we recommend that users check their results
+    with those obtained through operating MLwiN by its graphical user
+    interface.
+<p>
+<p>
+<a name="references"></a><b><u>References</u></b>
+<p>
+    Browne, W.J. 2009. MCMC Estimation in MLwiN, v2.13.  Centre for
+        Multilevel Modelling, University of Bristol.
+        http://www.bristol.ac.uk/cmm/software/mlwin/download/manuals.html
+<p>
+<p>
+<b><u>Also see</u></b>
+<p>
+    Online:  <b>runmlwin</b>, <b>savewsz</b>, <b>reffadjust</b>, <b>winbugs</b>
+<p>
+</pre>

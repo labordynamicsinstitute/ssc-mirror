@@ -1,0 +1,41 @@
+<pre>
+-------------------------------------------------------------------------------
+help for <b>xb2pi</b>
+-------------------------------------------------------------------------------
+<p>
+<b><u>Transform the logit scores into probabilities</u></b>
+<p>
+    <b>xb2pi</b> #1 #2 #3 ... [ , <b><u>f</u></b><b>ormat(%</b><i>fmt</i><b>)</b> ]
+<p>
+<b><u>Description</u></b>
+<p>
+    <b>xb2pi</b> provides the probabilities corresponding to the logit
+          scores.
+<p>
+<b><u>Options</u></b>
+<p>
+    <b><u>f</u></b><b>ormat(%</b><i>fmt</i><b>)</b> specifies the display format for presenting numbers. The
+        default is %3.2f.
+<p>
+<b><u>Examples</u></b>
+<p>
+     xb2pi 0.15
+     xb2pi 0.15 0.10 0.20
+     xb2pi 0.15 0.10 0.20 , f(%3.2f)
+<p>
+     sysuse cancer
+     logit died
+     xb2pi _b[_cons]
+     mat v = e(V)
+     xb2pi _b[_cons] _b[_cons]-1.96*sqrt(v[1,1]) _b[_cons]+1.96*sqrt(v[1,1])
+<p>
+<b><u>Author</u></b>
+<p>
+    Nicola Orsini, Division of Nutritional Epidemiology, IMM, Karolinska
+    Institutet, Sweden
+ 
+<b><u>Support</u></b>
+<p>
+    http://nicolaorsini.altervista.org
+    nicola.orsini@ki.se
+</pre>

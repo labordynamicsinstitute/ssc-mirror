@@ -1,0 +1,56 @@
+<pre>
+<p>
+<b>help labmm</b>
+-------------------------------------------------------------------------------
+<p>
+<b><u>Title</u></b>
+<p>
+     <b>labmm</b> -- Modify multiple value labels
+<p>
+<b><u>Syntax</u></b>
+<p>
+        <b>labmm</b> [<i>namelist</i>] <b>\</b> <i>#</i> <b>"</b><i>label</i><b>"</b> [<i>#</i> <b>"</b><i>label</i><b>"</b> <i>...</i>] [<b>,</b> <b><u>var</u></b><b>iables</b>]
+<p>
+<p>
+     where <i>namelist</i> is a list of value label names or, if <b><u>var</u></b><b>iables</b> is
+        specified, a <i>varlist</i>
+<p>
+<p>
+<b><u>Description</u></b>
+<p>
+    <b>labmm</b> modifies (multiple) value labels. All value labels specified in
+    <i>namelist</i> are modified according to definitions.  The syntax is very
+    similar to label define with one exception. Associations of intergers and
+    text must be separated from <i>namelist</i> using <b>\</b>. If no <i>namelist</i> is
+    specified, it defaults to <i>_all</i>, meaning all value labels in memory, or if
+    <b><u>var</u></b><b>iables</b> is specified, all value labels attached to variables in the
+    dataset.
+<p>
+<b><u>Options</u></b>
+<p>
+    <b>variables</b> causes <i>namelist</i> to be interpreted as a <i>varlist</i>.
+<p>
+<p>
+<b><u>Examples</u></b>
+<p>
+        . sysuse nlsw88 ,clear
+        (NLSW, 1988 extract)
+<p>
+        <b>. labmm _all \ .a "don't know" .b "refused"</b>
+        
+        
+<b><u>Acknowledgments</u></b>
+<p>
+    Modifying multiple value labels was suggested by Anna Reimondos on
+    statalist.  Michael Norman Mitchell's solution led to this ado.
+<p>
+<b><u>Author</u></b>
+<p>
+    Daniel Klein, University of Bamberg, klein.daniel.81@gmail.com
+<p>
+<b><u>Also see</u></b>
+<p>
+    Online: <b>label</b>
+<p>
+    if installed: strrec
+</pre>

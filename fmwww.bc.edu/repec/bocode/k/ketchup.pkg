@@ -1,0 +1,30 @@
+d 'KETCHUP': module to produce modern-looking dynamic reports in HTML and PDF
+d
+d  Ketchup produces modern-looking dynamic reports in HTML and PDF
+d by translating SMCL log file. It allows writing and styling text
+d using Markdown codes and also adding graph and image to the
+d translated document through Markdown codes. The current version
+d is available for 5 different document styles which are
+d classic,modern, stata, elegant, and minimal. 
+d
+d KW: reports
+d KW: pdf
+d KW: smcl
+d KW: HTML
+d
+d Requires: Stata version 11 and synlight from SSC (q.v.)
+d
+d Distribution-Date: 20141024
+d
+d Author: E.F. Haghish, University of Freiburg
+d Support: email haghish@@imbi.uni-freiburg.de
+d
+f ketchup.ado
+f ketchupcheck.ado
+f ketchuppandoc.ado
+f ketchupprince.ado
+f ketchupwkhtmltopdf.ado
+f ketchupversion.ado
+f ket.ado
+f ketchup.sthlp
+f ket.sthlp

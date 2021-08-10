@@ -1,0 +1,119 @@
+<pre>
+-------------------------------------------------------------------------------
+help for <b>triprobit</b>                    Antoine Terracol, terracol@univ-paris1.fr
+-------------------------------------------------------------------------------
+<p>
+<b><u>Trivariate probit model using the GHK simulator</u></b>
+<p>
+    <b>triprobit</b> <b>(</b> <i>depvar1</i> = <i>varlist1</i> [, <b><u>nocons</u></b><b>tant</b>]<b>)</b> <b>(</b><i>depvar2</i> = <i>varlist2</i> [,
+            <b><u>nocons</u></b><b>tant</b>] <b>)</b> <b>(</b> <i>depvar3</i> = <i>varlist3</i> [, <b><u>nocons</u></b><b>tant</b>] <b>)</b> [<i>weight</i>] [<b>if</b>
+            <i>exp</i>] [<b>in</b> <i>range</i>] [<b>,</b> <b><u>r</u></b><b>obust</b> <b><u>cl</u></b><b>uster(</b><i>varname</i><b>)</b> <b><u>dr</u></b><b>aws(</b><i>#</i><b>)</b> <b><u>seed</u></b><b>(</b><i>#</i><b>)</b> <b><u>noinit</u></b>
+            <i>maximize_options</i>]
+<p>
+<b>pweight</b>s, <b>fweight</b>s, <b>aweight</b>s, and <b>iweight</b>s are allowed; see help weights.
+<p>
+<b><u>Description</u></b>
+<p>
+<b>triprobit</b> estimates simulated maximum-likelihood three-equation probit models
+using the GHK smooth recursive simulator.
+<p>
+The simulated maximum likelihood technique consists in simulating the
+multivariate normal integrals which are involved in the likelihhod equation.
+The simulated probabilities are fed into the likelihood function which is then
+maximized using traditional techniques. See Greene (2000, pp 184-185) for a
+description of the simulation algorithm used here.
+<p>
+<b>triprobit</b> performs a likelihood-ratio test of no correlation between the
+equations.
+<p>
+<b>Warning</b>: due to the estimation technique, convergence can be <b>very</b> slow in large
+samples (and/or with a large number of draws)
+<p>
+<b><u>Options</u></b>
+<p>
+<b>robust</b> specifies that the Huber/White/sandwich estimator of variance is to be
+    used in place of the traditional calculation; see <b>[U] 23.11 Obtaining</b>
+    <b>robust variance estimates</b>.  <b>robust</b> combined with <b>cluster()</b> allows
+    observations which are not independent within cluster (although they must
+    be independent between clusters).  If you specify pweights, <b>robust</b> is
+    implied.
+<p>
+<b>cluster(</b><i>varname</i><b>)</b> specifies that the observations are independent across groups
+    (clusters) but not necessarily within groups.  <i>varname</i> specifies to which
+    group each observation belongs; e.g., <b>cluster(personid)</b> in data with
+    repeated observations on individuals.  See <b>[U] 23.11 Obtaining robust</b>
+    <b>variance estimates</b>.  <b>cluster()</b> can be used with pweights to produce
+    estimates for unstratified cluster-sampled data.  Specifying <b>cluster()</b>
+    implies <b>robust</b>.
+<p>
+<b>draws</b> specifies the number of draws to be used in the simulation process.
+    Default is 25, which is usually considered as a reasonable number of draws
+    to make.
+<p>
+<b>seed</b> specifies the seed to be set in the simulation process, default is
+    123456789
+<p>
+<b>noinit</b> prevents that parameters values from three independant probits are
+    specified as starting values for the estimation process.
+<p>
+<i>maximize_options</i> control the maximization process; see help maximize.
+<p>
+<b><u>Saved results</u></b>
+<p>
+In addition to the results saved by <b>maximize</b> (see <b>[R] maximize</b>), <b>triprobit</b> also
+    saves the following results.
+<p>
+ 
+<b>e(ll_c)</b> stores the likelihood value of the comparison model
+<p>
+<b>e(chi2_c)</b> stores the chi2 statistic of the LR test against the comparison model
+<p>
+<b>e(rho12)</b> stores the estimated correlation coefficient between equation 1 and
+    equation 2
+<p>
+<b>e(rho12_se)</b> stores the estimated standard-error of the correlation coefficient
+    between equation 1 and equation 2
+<p>
+<b>e(rho13)</b> stores the estimated correlation coefficient between equation 1 and
+    equation 3
+<p>
+<b>e(rho13_se)</b> stores the estimated standard-error of the correlation coefficient
+    between equation 1 and equation 3
+<p>
+<b>e(rho23)</b> stores the estimated correlation coefficient between equation 2 and
+    equation 3
+<p>
+<b>e(rho23_se)</b> stores the estimated standard-error of the correlation coefficient
+    between equation 2 and equation 3
+<p>
+<b>e(draws)</b> stores the number of draws used in the simulation
+<p>
+<b>e(seed)</b> stores the seed which is set for the simulation
+<p>
+<b>e(depvar)</b> stores the names of the dependat variables
+<p>
+<b>e(cmd)</b> stores the command name (i.e: <i>triprobit</i>)
+<p>
+<p>
+<b><u>Note</u></b>
+<p>
+rho12 represents the correlation coefficient between equation 1 and equation 2
+<p>
+rho13 represents the correlation coefficient between equation 1 and equation 3
+<p>
+rho23 represents the correlation coefficient between equation 2 and equation 3
+<p>
+<p>
+<p>
+<b><u>Examples</u></b>
+<p>
+        . triprobit (y1 = x1 x2 x3) (y2 = z1 z2 z3) (y3 = v1 v2 v3), draws(30)
+<p>
+<p>
+<b><u>Also see</u></b>
+<p>
+On-line:  help for biprobit probit
+<p>
+<b><u>References</u></b>
+<p>
+</pre>

@@ -1,0 +1,125 @@
+<pre>
+-------------------------------------------------------------------------------
+help for <b>tgmixed</b>
+-------------------------------------------------------------------------------
+<p>
+<b><u>Perform Theil-Goldberger mixed estimation of regression equation</u></b>
+<p>
+        <b>tgmixed</b><i> varlist</i> [<b>if</b> <i>exp</i>] [<b>in</b> <i>range</i>], <b><u>pri</u></b><b>or(</b><i>string</i>) [ <b>cov(</b><i>string</i>)
+              <b><u>qui</u></b><b>etly</b>]
+<p>
+<i>varlist</i> may not contain time-series operators nor factor variables; see help 
+varlist.
+<p>
+<b><u>Description</u></b>
+<p>
+<b>tgmixed</b> estimates a regression equation subject to stochastic linear
+constraints, using the Theil-Goldberger (1961) mixed estimation technique. This
+estimator is a generalization of <b>cnsreg</b>, which applies exact linear constraints
+to a regression equation. In the Theil-Goldberger technique, the constraints
+hold with some degree of subjective belief. The routine computes the Theil
+compatibility statistic (Theil, 1963) for the null hypothesis that the sample
+and non-sample information are compatible. Under the null, this statistic is
+distributed Chi-squared, with degrees of freedom equal to the number of
+stochastic constraints.
+<p>
+<b><u>Options</u></b>
+<p>
+<b><u>pri</u></b><b>or</b>(<i>string</i>) is a required option. It must contain triples of <i>varname</i>
+    <i>prior_value prior_se</i> where <i>varname</i> must be a regressor in the <i>varlist</i>. The
+    stochastic constraint indicates that this regressor has a <i>prior_value</i> and a
+    <i>prior_se</i>.  If multiple regressors have priors, each should be listed within
+    the <i>prior()</i> option.  Note that at present <b>tgmixed</b> does not support
+    stochastic constraints involving multiple variables (e.g., adding-up or
+    equality constraints).
+<p>
+<b>cov</b>(<i>string</i>) may be used to specify prior covariances between pairs of
+    coefficients included in the <i>prior()</i> option.
+<p>
+<b>quietly</b> may be used to suppress the listing of the unconstrained OLS regression
+    estimates.
+<p>
+<p>
+<b><u>Saved results</u></b>
+<p>
+<b>tgmixed</b> saves the following scalars:
+<p>
+        e(rmse) : the root mean squared error of the mixed estimates
+<p>
+        e(r2) : the R-squared of the mixed estimates
+<p>
+        e(N): the number of observations in the estimation sample
+<p>
+        e(df_r) : the number of degrees of freedom of the residual sum of
+            squares
+<p>
+        e(compat) : the Theil compatibility statistic
+<p>
+        e(vrank) : the rank of the matrix of stochastic constraints
+<p>
+        e(pvalue) : the p-value of the compatibility statistic
+<p>
+        e(frac_sample) : the proportion of precision due to sample information
+<p>
+        e(frac_prior) : the proportion of precision due to prior information
+<p>
+<b>tgmixed</b> saves the following macros:
+<p>
+        e(cmd) : tgmixed
+<p>
+        e(predict) : regres_p
+<p>
+        e(depvar) : the name of the dependent variable
+<p>
+        e(marginsok) : XB default
+<p>
+        e(cmdline) : the command line used for estimation
+<p>
+        e(prior) : the content of the prior() option
+<p>
+        e(properties) : b V
+<p>
+<b>tgmixed</b> saves the following matrices:
+<p>
+        e(b) : the vector of mixed coefficient estimates
+<p>
+        e(V) : the VCE of mixed coefficient estimates
+<p>
+        e(Vprior) : the VCE of stochastic prior estimates
+<p>
+<b>tgmixed</b> saves the following function:
+<p>
+        e(sample) : indicator for inclusion in the estimation sample
+<p>
+<b><u>References</u></b>
+<p>
+        Theil, H. and A.S. Goldberger, On pure and mixed statistical
+            information in economics.  <i>International Economic Review</i>, 2:1,
+            65-78, 1961.
+<p>
+        Theil, H., On the Use of Incomplete Prior Information in Regression
+            Analysis.  <i>Journal of the American Statistical Association</i>, 58:302,
+            401-414, 1963.
+<p>
+        For more information, see the Stata Conference 2011 presentation at
+            http://econpapers.repec.org/paper/bocchic11/14.htm
+<p>
+<b><u>Example: reproduce textile example in Theil, 1963</u></b>
+<p>
+        . use http://fmwww.bc.edu/ec-p/data/micro/theiltextile
+<p>
+        . tgmixed lconsump lincome lprice, prior(lprice -0.7 0.15 lincome 1
+            0.15) cov(lprice lincome -0.01)
+<p>
+<b><u>Acknowledgements</u></b>
+<p>
+        The Mata code for <b>tgmixed</b> includes a copy of Ben Jann's <b>mm_posof()</b> from
+            his <i>moremata</i> package.
+<p>
+<b><u>Author</u></b>
+<p>
+Christopher F Baum, Boston College, USA
+baum@bc.edu
+<p>
+<p>
+</pre>

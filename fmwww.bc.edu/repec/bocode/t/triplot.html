@@ -1,0 +1,183 @@
+<pre>
+-------------------------------------------------------------------------------
+help for <b>triplot</b>
+-------------------------------------------------------------------------------
+<p>
+<b><u>Triangular plot</u></b>
+<p>
+        <b>triplot</b> <i>leftvar rightvar botvar</i> [<b>if</b> <i>exp</i>] [<b>in</b> <i>range</i>]
+<p>
+                 [ <b>,</b> <b>max(</b><i>#</i><b>)</b> <b><u>sep</u></b><b>arate(</b><i>varname</i><b>)</b> <b>by(</b><i>byvar</i> [<b>,</b> <i>by_options</i>]<b>)</b>
+<p>
+                 <b><u>la</u></b><b>bel(</b><i>numlist</i><b>)</b> <b>grid(</b><i>grid_options</i><b>)</b>
+<p>
+                 <b><u>vert</u></b><b>ices(</b><i>#</i><b>)</b> <b>frame(</b><i>frame_options</i><b>)</b>
+<p>
+                 <b>y</b> <b>y(</b><i>y_options</i><b>)</b>
+<p>
+                 <b>centre(</b><i>#left #right #bottom</i><b>)</b>
+<p>
+                 <b>ltext(</b><i>string</i><b>)</b> <b>rtext(</b><i>string</i><b>)</b> <b>btext(</b><i>string</i><b>)</b> <b>bltext(</b><i>string</i><b>)</b>
+                 <b>ttext(</b><i>string</i><b>)</b> <b>brtext(</b><i>string</i><b>)</b> <b>text(</b><i>text_options</i><b>)</b>
+<p>
+                 <i>scatter_options</i> ]
+<p>
+<p>
+<b><u>Description</u></b> 
+<p>
+    <b>triplot</b> produces a triangular plot of the three variables <i>leftvar</i>,
+    <i>rightvar</i> and <i>botvar</i>, which are plotted on the left, right and bottom
+    sides of an equilateral triangle. Each should have values between 0 and
+    some maximum value (default 1) and the sum of the three variables should
+    be equal to that maximum (within rounding error). Most commonly, three
+    fractions or proportions add to 1, or three percents add to 100.
+<p>
+    The constraint that the three variables have a constant sum means that
+    there are just two independent pieces of information. Hence it is
+    possible to plot observations in two dimensions within a triangle, which
+    is a 2-simplex.
+<p>
+    Triangular plots appear under various names in the literature, including
+    tripolar, trinomial, trilinear, triaxial, three-element maps, ternary,
+    simplex, reference triangles, percentage triangles, mixture, barycentric.
+    Common geological applications are to sedimentary facies or particle
+    form:  hence more specific terms such as facies and form triangles.  In
+    genetics, applications are often called de Finetti diagrams.
+<p>
+<p>
+<b><u>Remarks</u></b> 
+<p>
+    The author recommends the <b>s1color</b> scheme for defaults congenial with
+    these plots.
+<p>
+<p>
+<b><u>Options</u></b> 
+<p>
+    <b>max()</b> indicates the upper limit of each variable, and the sum of all
+        three variables. Default value is 1. <b>max(100)</b> indicates percents.
+<p>
+    <b>separate()</b> indicates that observations are to be subdivided into classes
+        according to a specified variable. A legend will be shown if and only
+        if more than one class is so defined. Each class is plotted as if it
+        defined a single variable. Thus if <b>separate()</b> subdivides into two
+        classes, and you want points for each class to be connected and have
+        different marker colours of your choice, specify also options such as
+        <b>c(l l) mcolor(pink blue)</b>.
+<p>
+    <b>by()</b> specifies that plots are to be shown separately according to the
+        categories of a specified variable.
+<p>
+    <b>label()</b> specifies a list of numeric labels to be shown on each side of
+        the triangle, which imply a grid of reference lines within the
+        triangle.  The default is <b>0(0.2)1</b>, or <b>0(20)100</b> if <b>max(100)</b> is
+        specified, or <b>0(200)1000</b> if <b>max(1000)</b> is specified.  As a special
+        case, <b>label(nolabels)</b> specifies no labels and no reference lines.
+<p>
+    <b>grid()</b> specifies options controlling the rendering of the labels and grid
+        lines.  Know that twoway connected is used for rendering and that the
+        labels are shown as marker labels: hence use connect options or
+        marker label options to make changes from the default. Example:
+        <b>grid(lpat(shortdash))</b> changes the line pattern to shortdash.
+<p>
+    <b>vertices()</b> specifies that only the vertices should be shown and not the
+        complete triangular frame. The argument is the fraction of each side
+        that is shown. <b>vertices(0.1)</b> means that 0.1 or 10% of each side will
+        be shown.
+<p>
+    <b>frame()</b> specifies options controlling the rendering of the triangular
+        frame.  Know that line is used for rendering: hence use connect
+        options to make changes from the default.  Example: <b>frame(lpat(dot))</b>
+        changes the line pattern to dot.
+<p>
+    <b>y</b> specifies that the Y is to be drawn that divides the triangle into
+        regions in which each variable is greater than the other two. Some
+        political scientists call the spokes of the Y 'win lines'.  Unless
+        <b>centre()</b> is specified, each spoke connects the midpoint of each side
+        to the centroid of the triangle (which, by virtue of symmetry, is
+        also the incentre, the circumcentre, the orthocentre and the Fermat
+        point of the triangle).
+<p>
+    <b>y()</b> specifies options controlling the rendering of the Y. Know that line
+        is used for rendering: hence use connect options to make changes from
+        the default.  Example: <b>y(lcolor(green))</b> changes the line colour to
+        green.
+<p>
+    <b>centre()</b> specifies three numbers to be used as centre for the triangle,
+        referring in order to left, right and bottom variables.  Suppose
+        three percent variables <i>p</i>, <i>q</i>, <i>r</i> are being shown, and three numbers <i>P</i>,
+        <i>Q</i> and <i>R</i> are specified as centre, with sum 100. Then data are
+        transformed to
+<p>
+        (<i>p/P</i>) / (<i>p/P</i>  + <i>q/Q</i>  + <i>r/R</i>) 
+        (<i>q/Q</i>) / (<i>p/P</i>  + <i>q/Q</i>  + <i>r/R</i>) 
+        (<i>r/R</i>) / (<i>p/P</i>  + <i>q/Q</i>  + <i>r/R</i>) 
+<p>
+        Vertices remain vertices and contours of <i>p</i>, <i>q</i>, <i>r</i> remain straight. See
+        Upton (2001).
+<p>
+        As a convenience to users who do not use standard English spelling,
+        the synonym <b>center()</b> is also allowed.
+<p>
+    <b>ltext()</b>, <b>rtext()</b> and <b>btext()</b> control text on the left, right and bottom
+        sides of the plot. They default to the variable labels (or if those
+        do not exist, the names) of <i>leftvar</i>, <i>rightvar</i> and <i>botvar</i>. In each
+        case, specifying <b>" "</b> blanks out the text.
+<p>
+    <b>bltext()</b>, <b>ttext()</b>, <b>brtext()</b> control text by the bottom left, top and
+        bottom right vertices of the triangle.  These options are intended as
+        an alternative to numeric labels at the vertices.
+<p>
+    <b>text()</b> specifies options controlling the rendering of the text specified
+        by the <b>*text()</b> options.  Know that scatter is used for rendering the
+        text as marker labels: hence use marker label options to make changes
+        from the default.  Example: <b>text(mlabsize(medium))</b> changes the label
+        text size pattern to medium.
+<p>
+    <i>scatter_options</i> are options of scatter.
+<p>
+<p>
+<b><u>Examples</u></b> 
+<p>
+    <b>. triplot services industry agriculture, max(100) title("Structure of GDP</b>
+        <b>1996: 112 economies")</b>
+<p>
+    <b>. triplot services industry agriculture, max(100) title("Structure of GDP</b>
+        <b>1996: 112 economies") vert(0.2) la(nolabels) y ttext(services)</b>
+        <b>bltext(agriculture) brtext(industry) ltext(" ") rtext(" ") btext(" ")</b>
+<p>
+    <b>. triplot Dem Rep other, separate(region)</b>
+<p>
+<p>
+<b><u>Author</u></b>
+<p>
+    Nicholas J. Cox, Durham University, U.K.
+    n.j.cox@durham.ac.uk
+<p>
+<p>
+<b><u>Acknowledgments</u></b> 
+<p>
+    Friedrich Huebler pointed to some bugs and posed some useful questions.
+    Scott Merryman and Thomas Steichen found other bugs.  Vince Wiggins
+    provided encouragement.
+<p>
+<p>
+<b><u>References</u></b>
+<p>
+    Cox, N.J. 2004. Graphing categorical and compositional data. <i>Stata</i>
+    <i>Journal</i> 4: 190-215.
+    http://www.stata-journal.com/article.html?article=gr0004
+<p>
+    Gray, J. 1993. Möbius's geometrical mechanics. In Fauvel, J., R. Flood
+    and R. Wilson (eds) <i>Möbius and his band: mathematics and astronomy in</i>
+    <i>nineteenth-century Germany.</i>  Oxford: Oxford University Press, pp.79-103.
+<p>
+    Möbius, August Ferdinand. 1827. <i>Der barycentrische Calcul: ein neues</i>
+    <i>Hülfsmittel zur analytischen Behandlung der Geometrie</i> <i>dargestellt und</i>
+    <i>insbesondere auf die Bildung neuer Classen von Aufgaben und die</i>
+    <i>Entwicklung mehrerer Eigenschaften der Kegelschnitte.</i>  Leipzig: Johann
+    Ambrosius Barth. [1790-1868]
+<p>
+    Upton, G.J.G. 2001. A toroidal scatter diagram for ternary variables.
+    <i>The American Statistician</i> 55: 247-250.
+<p>
+</pre>

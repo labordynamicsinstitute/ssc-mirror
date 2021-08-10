@@ -1,0 +1,66 @@
+<pre>
+-------------------------------------------------------------------------------
+help for netplot
+-------------------------------------------------------------------------------
+<p>
+<b><u>netplot - Social Network Visualization</u></b>
+<p>
+<p>
+<b><u>Syntax</u></b>
+        
+        <b>netplot</b><i> var1 var2</i> [<i>if</i>] [<i>in</i>] [<b>,</b> <i>options</i>]
+<p>
+<p>
+<b><u>Description</u></b>
+<p>
+<b>netplot</b> produces a graphical representation of a network stored as an extended 
+&gt; edgelist or arclist in <i> var1</i> and <i> var2</i>. 
+<p>
+<p>
+<b><u>Options</u></b>
+<p>
+    <b><u>t</u></b><b>ype(</b><i>string</i><b>)</b> specifies the type of layout. Valid values are:
+<p>
+        <b>circle</b>: vertices are arranged on a circle
+<p>
+        <b>mds</b>: positions of vertices are calculated using multidimensional
+            scaling. This is the default; omitting <b>type()</b> is equivalent to
+            specifying <b>type(</b><i>mds</i><b>)</b>.
+<p>
+    <b><u>l</u></b><b>abel</b> specifies that vertices are to be labeled using their identifiers
+        in<i> var1</i> and<i> var2</i>
+<p>
+    <b><u>a</u></b><b>rrows</b> specifies that arrows rather than lines are drawn between
+        vertices. Arrows run from the vertex in<i> var1</i> to the vertex in<i> var2</i>.
+        This option is useful for arclists that represent directed relations.
+<p>
+    <b><u>i</u></b><b>terations(</b><i>#</i><b>)</b> specifies the maximum number of iterations in the
+        multidimensional scaling procedure. The default is<b> iterate(1000)</b>.
+<p>
+<p>
+<b><u>Remarks</u></b>
+<p>
+An extended edglelist or arclist is a set of two variables representing
+relations (i.e., edges (undirected) or arcs (undirected)) between entities
+(vertices). Vertices are identified by the entries in the cells.  For example:
+<p>
+                 +----------+
+                 |  v1   v2 |
+                 |----------|
+              1. |  1    2  |
+              2. |  2    3  |
+              3. |  4    .  |
+                 +----------+
+<p>
+represents relations among four vertices. There are edges between 1 and 2 and
+between 2 and 3. The fact that the value in v2 for vertex 4 is missing
+indicates that vertex 4 is isolated.
+<p>
+<p>
+<p>
+<p>
+<p>
+<b><u>Also see</u></b>
+<p>
+    Online: <b>[MV] mdsmat</b>, <b>[G] twoway_scatter</b>, <b>[G] twoway_pcspike</b>
+</pre>

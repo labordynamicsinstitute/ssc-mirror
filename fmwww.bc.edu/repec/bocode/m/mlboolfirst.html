@@ -1,0 +1,244 @@
+<pre>
+<p>
+ ------------------------------------------------------------------------------
+help for <b>mlboolean</b>,<b>mlboolfirst</b>
+-------------------------------------------------------------------------------
+<p>
+<b><u>Boolean Logit and Probit</u></b>
+<p>
+    <b>mlboolean</b> <i>link_function</i> <i>n</i> (<i>calculus</i>) (<i>depvar</i>) (<i>indepvars1</i>) (<i>indepvars2</i>)
+            ...  <b>ystar(</b><i>varname</i><b>),</b> <i>ml_options</i>
+<p>
+<p>
+The syntax of <b>mlboolfirst</b> after <b>mlboolean</b> is
+<p>
+    <b>mlboolfirst</b> <i>indepvar</i>
+<p>
+<p>
+<b><u>Description</u></b>
+<p>
+<b>mlboolean</b> conducts a maximum-likelihood Boolean logit or probit estimation
+(see Braumoeller 2003) in which there are multiple causal "paths" to a given
+outcome or nonoutcome.  Each of the <i>n</i> paths is modeled as a standard logit or
+probit curve, and the predicted values for all of the curves cumulate in a
+manner described by a Boolean probability calculus (for example, a and (b or
+c) cause y) to produce the observed binary dependent variable.
+<p>
+    <u>Example</u>. Imagine that in a given firm there are three ways in which an
+    employee can be fired: as a result of embezzlement, as a result of poor
+    performance, or as a result of a combination of company-wide budget
+    cutbacks and a low position in the company's hierarchy.  We know whether
+    each employee was fired, how much he or she embezzled, some general
+    indicators of job performance (on-time percentage, recent customer
+    service ratings, and recent overall performance ratings), changes in the
+    company's earnings and stock value, and where the employee's position is
+    in the company hierarchy.  We do not know the combination of reasons that
+    resulted in termination.  This gives a system with four unobserved
+    variables, modeled here as standard probit equations
+<p>
+        y1* = norm(b1 + b2(embezzle))
+<p>
+        y2* = norm(b3 + b4(ontime) + b5(custserv) + b6(performance))
+<p>
+        y3* = norm(b7 + b8(earnings) + b9(stock))
+<p>
+        y4* = norm(b10 + b11(hierarchy)),
+<p>
+    and an observed dependent variable that is the binary realization of an
+    underlying process of the form
+<p>
+        p(fired) = 1 - (1-y1*) x (1-y2*) x (1-(y3* x y4*))
+<p>
+    - that is, y1 or y2 or (y3 and y4) cause termination.  We might then
+    estimate an equation of the following form:
+<p>
+        . mlboolean probit 4 (aorbor(candd)) (fired) (embezzle) (ontime
+        custserv performance) (earnings stock) (hierarchy)
+<p>
+    The predicted values for "fired" and for the various yn* are estimated
+    automatically (see "Saved Variables," below).
+<p>
+<p>
+<b>mlboolfirst</b> calculates and graphs predicted values for a given independent
+variable.  All other variables are set to their means except for variables of
+type int, which are set to their modal values.  Similarly, predictions are
+plotted as curves for continuous variables and points for integers.  To
+manipulate whether or not <b>mlboolfirst</b> flags the variable as an integer,
+simply use the recast command.
+<p>
+<p>
+<b><u>Required Input</u></b>
+<p>
+<b>mlboolean</b> requires the following, in order:
+<p>
+    A link function (either <i>logit</i> or <i>probit</i>).
+<p>
+    The number of causal paths <i>n</i> (<i>n</i> ² 5).
+<p>
+    The probability calculus that describes how they cumulate, using "a" to
+    denote y1*, "b" to denote y2*, and so on, connected by "and" or "or".
+<p>
+            <u>Examples</u>: (aorborc), ((aorb)andcandd).
+<p>
+    The binary dependent variable, in parentheses.
+<p>
+    <i>n</i> sets of independent variables, in parentheses.  The independent
+    variables can overlap partially - for example, one set might consist of
+    x1-x4 and another of x1, x2, x5 and x6 if the probabilities of the
+    antecedent events in question are thought to be correlated because each
+    is influenced by x1 and x2.
+<p>
+<p>
+<b><u>Options</u></b>
+<p>
+<b>ystar(</b><i>varname</i><b>)</b> specifies the names of the variables that will contain the
+    predicted values of the latent variables associated with each of the <i>n</i>
+    "paths" (see "Saved Variables").  The default is <b>ystar(ystar)</b>.
+<p>
+<i>ml_options:</i> All other options are passed directly to <b>ml</b>, so any options that
+work with the latter should work with the former.  See the ml documentation
+for further details.  It is worth noting, however, that some of these options
+are particularly relevant in the context of <b>mlboolean</b>:
+<p>
+<b>gtolerance(</b><i>#</i><b>)</b> specifies an optional tolerance for the gradient relative to
+    the coefficients. When |g*b| &lt;= <b>gtolerance()</b> for all parameters b_i and
+    the corresponding elements of the gradient g_i, then the gradient
+    tolerance criterion is met.  Unlike <b>tolerance()</b> and <b>ltolerance()</b>, the
+    <b>gtolerance()</b> criterion must be met in addition to any other tolerance.
+    That is, convergence is declared when <b>gtolerance()</b> is met and <b>tolerance()</b>
+    or <b>ltolerance()</b> is also met.  The <b>gtolerance()</b> option is provided for
+    particularly deceptive likelihood functions that may trigger premature
+    declarations of convergence.  The option must be specified for gradient
+    checking to be activated; by default the gradient is not checked.
+<p>
+<b>lf0(</b><i>#k #ll</i><b>)</b> specifies the number of parameters and log-likelihood value of
+    the "constant-only" model so that <b>mlboolean</b> can report a likelihood-ratio
+    test rather than a Wald test.
+<p>
+<b>difficult</b> specifies that the likelihood function is likely to be difficult to
+    maximize.  In particular, <b>difficult</b> states that there may be regions
+    where -H is not invertible and that, in those regions, Stata's standard
+    fixup may not work well.  <b>difficult</b> specifies that a different fixup
+    requiring substantially more computer time is to be used.  <b>difficult</b> can
+    be of some help in obtaining "normal" parameter estimates when plateaus
+    in profile likelihoods produce absurdly large standard errors; it can
+    also make things worse.  Such situations are typically indicative of a
+    dangerous lack of information and should be treated with caution.
+<p>
+<b>init(</b><i>ml_init_args</i><b>)</b> sets the initial parameter values. Because <b>mlboolean</b> can
+    produce convoluted likelihood functions, the wise investigator will try
+    an array of different starting values before reporting final results.
+<p>
+<b>nrtolerance(</b><i>#</i><b>)</b> specifies an optional tolerance that is based on the gradient
+    g and Hessian H.  The tolerance is met when g*inv(H)*g' &lt; <b>gtolerance()</b>.
+    Like <b>gtolerance()</b>, the <b>nrtolerance()</b> criterion must be met in addition to
+    any other tolerance.  This option must be specified for g*inv(H)*g' to be
+    checked; by default it is not.
+<p>
+<b>technique()</b> specifies how the likelihood function is to be maximized.  The
+    following algorithms are currently implemented in ml.
+<p>
+    <b>technique(nr)</b> specifies Stata's modified Newton-Raphson (NR) algorithm.
+<p>
+    <b>technique(bhhh)</b> specifies the Berndt-Hall-Hall-Hausman (BHHH) algorithm.
+<p>
+    <b>technique(dfp)</b> specifies Davidon-Fletcher-Powell (DFP) algorithm.
+<p>
+    <b>technique(bfgs)</b> specifies the Broyden-Fletcher-Goldfarb-Shanno (BFGS)
+        algorithm.
+<p>
+    It is possible to switch between algorithms by specifying more than one
+    in the <b>technique()</b> option.  For example, specifying <b>technique(bhhh</b> <b>dfp)</b>
+    will cause <b>ml</b> to switch between the BHHH and DFP algorithms. <b>ml</b> will use
+    an algorithm for 5 iterations, by default, before switching to the next
+    algorithm.  Thus <b>technique(bhhh dfp)</b> will cause <b>ml</b> to switch between BHHH
+    and DFP every 5 iterations.  You may specify a different number of
+    iterations for each algorithm by including a count after it.  For example
+    <b>technique(bhhh 10 nr 1000)</b> will cause <b>ml</b> to optimize the likelihood using
+    BHHH for 10 iterations before switching to the modified Newton-Raphson
+    algorithm, then switch back to BHHH after <b>ml</b> spends 1000 iterations using
+    NR.
+<p>
+<p>
+<b>search(on</b>|<b>quietly</b>|<b>off)</b> specifies whether <b>ml search</b> is to be used to improve
+    the initial values.  Note that <b>search(on)</b> is the default.
+<p>
+<b>nowarning</b> is allowed only with <b>iterate(0)</b>.  <b>nowarning</b> suppresses the
+    "convergence not achieved" message.  Not remotely recommended.
+<p>
+<p>
+<b><u>Saved Variables</u></b>
+<p>
+<i>boolpred</i>: Predicted probability of occurrence of dependent variable in a
+    given case.
+<p>
+<i>ystar_n</i>: Predicted values of latent variables associated with each of the <i>n</i>
+    "paths." Variable names can be changed with the <b>ystar(</b><i>varname</i><b>)</b> option,
+    above; default is <b>ystar(</b>ystar<b>)</b>.
+<p>
+    <u>Example</u>. In the job-termination example above, we might estimate for a
+    given employee that the probability of termination due to embezzlement
+    (<i>ystar_a</i>) is 0.1, the probability of termination due to poor performance
+    (<i>ystar_b</i>) is 0.5, the probability that cutbacks will occur given the
+    company's recent performance (<i>ystar_c</i>) is 0.7, and the probability that
+    the employee will be vulnerable to cutbacks should they occur (<i>ystar_d</i>)
+    is 0.6.  In that case, the prediction would be that the employee will be
+    fired with probability 1-((1-0.1)x(1-0.5)x(1-(0.6x0.7))), or 73.9%.
+<p>
+<p>
+<b><u>Examples</u></b>
+<p>
+        . mlboolean logit 2 (aandb) (y) (x1 x2) (x3)
+<p>
+        . mlboolean probit 4 ((aandb)or(candd)) (y) (x1 x2) (x3 x4 x5) (x6
+            x7) (x8), difficult
+<p>
+        . mlboolean logit 2 (aandb) (plantliv) (H2O) (sunlite lamplite),
+            robust
+<p>
+        . mlboolean probit 3 (aorborc) (nonvoter) (apathy) (alienation)
+            (indifference) [pweight=weight]
+<p>
+        . mlboolean probit 3 (aand(borc)) (y) (x1 x2) (x1 x3 x4) (x5 x6),
+            init(Path1:x1=0 Path1:x2=0 Path2:x1=0 Path2:x3=0 Path2:x4=0
+            Path3:x5=0 Path3:x6=0)
+<p>
+        . probit dv
+<p>
+        . mlboolean probit 2 (aandb) (dv) (x1 x2) (x1 x3 x4), lf0(1
+            -2517.1859)
+<p>
+<p>
+<p>
+<b><u>Known Issues</u></b>
+<p>
+The maximum number of paths is five.
+<p>
+Partial observability routines are generically starved for information, and
+    this one is no different.  The routine requires substantial variation for
+    each independent variable at different levels of all of the others.  The
+    warning sign of the absence of such variation is exploding standard
+    errors, which typically correspond to plateaus in the relevant profile
+    likelihood.  This is an indicator that more data are required.
+<p>
+The probability calculus must contain as few parentheses as logically
+    possible; otherwise it will not be recognized.  For example,
+    ((aorb)andcandd) will be recognized, but ((aandb)and(candd)) will not.
+<p>
+<p>
+<b><u>Version</u></b>
+<p>
+Version 1.3.  Contact bfbraum@fas.harvard.edu with comments or questions.
+    Click here to check for updated versions.
+<p>
+<p>
+<b><u>Required Files</u></b>
+<p>
+mlboolean.ado, mlboolean.hlp, mlboolfirst.ado, mlboollog.ado, mlboolpred.ado,
+    mlboolprep.ado, mlboolprob.ado
+<p>
+<p>
+<b><u>References</u></b>
+<p>
+    Braumoeller, Bear F. (2003) "Causal Complexity and the Study of
+</pre>

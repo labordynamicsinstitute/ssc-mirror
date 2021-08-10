@@ -1,0 +1,60 @@
+<pre>
+-------------------------------------------------------------------------------
+help for <b>toroman</b>
+-------------------------------------------------------------------------------
+<p>
+<b><u>Conversion of decimal numbers to Roman numerals</u></b>
+<p>
+        <b>toroman</b> <i>numvar</i> [<b>if</b> <i>exp</i>] [<b>in</b> <i>range</i>] <b>,</b> <b><u>g</u></b><b>enerate(</b><i>romanvar</i><b>)</b> [<b>lower</b>]
+<p>
+   
+<b><u>Description</u></b> 
+<p>
+    <b>toroman</b> creates a string variable <i>romanvar</i> containing Roman numerals from
+    a numeric variable <i>numvar</i> following these rules:
+<p>
+        1. Negative, zero and fractional numbers are ignored.
+<p>
+        2. The conversion uses M, D, C, L, X, V, I to represent 1000, 500,
+        100, 50, 10, 5, 1 as many times as they occur, except that CM, CD,
+        XC, XL, IX, IV are used to represent 900, 400, 90, 40, 9, 4.
+<p>
+        3. No number that is 233888 or greater is converted.  This limit is
+        implied by the limits on string variables, so that using these rules
+        any number greater than 244000 (and some numbers less than that)
+        could not be stored as Roman numerals in a Stata string variable.
+        (The smallest problematic number is 233888, which would convert to a
+        Roman numeral consisting of 233 Ms followed by DCCCLXXXVIII, i.e. a
+        numeral 245 characters long.) See help on data types.
+<p>
+<p>
+<b><u>Options</u></b> 
+<p>
+    <b>generate()</b> specifies the name of the new string variable to be created
+        and is not optional.
+<p>
+    <b>lower</b> specifies that numerals are to be produced as lower case letters,
+        such as mmxi rather than MMXI.
+<p>
+<p>
+<b><u>Examples</u></b> 
+<p>
+    <b>. toroman numeq, gen(roman)</b>
+<p>
+<p>
+<b><u>Acknowledgments</u></b> 
+<p>
+    Peter A. [Tony] Lachenbruch suggested the reverse problem on Statalist.
+<p>
+<p>
+<b><u>Author</u></b> 
+<p>
+    Nicholas J. Cox, Durham University, U.K.
+    n.j.cox@durham.ac.uk
+<p>
+<p>
+<b><u>Also see</u></b> 
+<p>
+    Online: help for fromroman
+<p>
+</pre>

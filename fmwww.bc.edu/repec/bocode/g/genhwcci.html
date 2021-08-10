@@ -1,0 +1,101 @@
+<pre>
+<b>help genhwcci</b>
+                                                                (STB-57: sg150)
+                                                              also see:  genhwi
+-------------------------------------------------------------------------------
+<p>
+<b><u>Title</u></b>
+<p>
+    <b>genhwcci</b> --   Hardy-Weinberg equilibrium test in case-control studies
+<p>
+<p>
+<b><u>Syntax</u></b>
+<p>
+        <b>genhwcci</b> #AA1 #Aa1 #aa1 #AA2 #Aa2 #aa2 [<b>,</b> <i>options</i>]
+<p>
+<p>
+    <i>options</i>                Description
+    -------------------------------------------------------------------------
+    Main
+      <b><u>l</u></b><b>abel(</b><i>genotypes</i><b>)</b>     requests that labels are used in the output of the
+                             genotype frequency table
+      <b><u>bin</u></b><b>var</b>               requests that the standard errors from a binomial
+                             distribution are reported for each allele
+                             frequency
+    -------------------------------------------------------------------------
+<p>
+<p>
+<b><u>Description</u></b>
+<p>
+    <b>genhwcci</b> is an immediate command used for estimating allele frequency,
+    genotype frequencies, disequilibrium coefficients and the associated
+    standard error for codominant traits or data of completely known
+    genotypes in case-control studies.  For both genotypic counts of cases
+    and controls, it performs asymptotic Hardy-Weinberg Equilibrium (HWE)
+    tests. It also tests the HWE for genotypic counts of cases, under the
+    assumption that the genotypic counts of controls are under HWE; where
+    #AA1, #Aa1 and #aa1 are genotypic counts for the AA, Aa and aa of cases;
+    while #AA2, #Aa2 and #aa2 are genotypic counts of the controls. This
+    command works for biallelic loci only.
+<p>
+<p>
+<b><u>Options</u></b>
+<p>
+        +------+
+    ----+ Main +-------------------------------------------------------------
+<p>
+    <b>label(</b><i>genotypes</i><b>))</b> requests that labels are used in the output of the
+        genotype frequency table.
+<p>
+    <b>binvar</b> requests that the standard errors from a binomial distribution are
+        reported for each allele frequency, under the assumption that the
+        population is under HWE.  By default, standard errors without this
+        assumption are calculated and reported.
+<p>
+<p>
+<b><u>Examples</u></b>
+<p>
+    genhwcci 67 156 146 31 135 118, binvar label(AA Aa aa)
+<p>
+    genhwcci 41 47 21 37 58 18
+<p>
+<p>
+<b><u>Also see</u></b>
+<p>
+    STB:  STB-48 sg110, STB-57 sg150
+<p>
+    Online:  genhwi
+<p>
+<p>
+<b><u>References</u></b>
+<p>
+    Cui J. Hardy-Weinberg equilibrium test in case-control studies. Stata
+        Technical Bulletin 2000; 57: 17-19.
+<p>
+    Cleves M. Hardy-Weinberg equilibrium test and allele frequency
+        estimation. Stata Technical Bulletin 1999; 48: 34-37.
+<p>
+<p>
+<b><u>Author</u></b>
+<p>
+    James Cui, Department of Epidemiology and Preventive Medicine, Monash
+    University.
+<p>
+    Email: james.cui@med.monash.edu.au
+<p>
+<p>
+<p>
+Other Commands I have written:
+simuped2   (if installed)      ssc install simuped2     (to install this comman
+&gt; d)
+simuped3   (if installed)      ssc install simuped3     (to install this comman
+&gt; d)
+phenotype  (if installed)      ssc install phenotype    (to install this comman
+&gt; d)
+buckley    (if installed)      ssc install buckley      (to install this comman
+&gt; d)
+qic        (if installed)      ssc install qic          (to install this comman
+&gt; d)
+<p>
+<p>
+</pre>

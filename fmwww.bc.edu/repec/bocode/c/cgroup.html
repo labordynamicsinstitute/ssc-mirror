@@ -1,0 +1,64 @@
+<pre>
+-------------------------------------------------------------------------------
+help for <b>cgroup</b>                                                  (Roger Newson)
+-------------------------------------------------------------------------------
+<p>
+<b><u>Group contiguous observations with identical values of a </u></b><i><u>varlist</u></i>
+<p>
+        <b>cgroup</b> <i>varlist</i> , <b><u>g</u></b><b>enerate(</b><i>newvarname</i><b>)</b>
+<p>
+<p>
+<b><u>Description</u></b>
+<p>
+    <b>cgroup</b> inputs a list of variables specified by a <i>varlist</i>, and generates,
+    as output, a new integer-valued variable, indicating, in each
+    observation, membership of a group of contiguous observations with
+    identical values of the <i>varlist</i>.  It is therefore a non-sorting version
+    of <b>gsort</b>.
+<p>
+<p>
+<b><u>Options</u></b>
+<p>
+    <b>generate(</b><i>varname</i><b>)</b> is required, and specifies the name of an output
+        variable to be generated.  This output variable will contain, in each
+        observation, the group to which that observation belongs.  It will
+        have 1 integer value per contiguous group of observations with
+        identical values for the variables in the <i>varlist</i>, in ascending order
+        of appearance in the dataset, starting with 1.
+<p>
+<p>
+<b><u>Examples</u></b>
+<p>
+    The following example demonstrates the use of <b>cgroup</b> with the <b>sencode</b>
+    package, downloadable from SSC.
+<p>
+        <b>.sysuse auto, clear</b>
+        <b>.gene firm=word(make,1)</b>
+        <b>.cgroup foreign firm, gene(firmseq)</b>
+        <b>.sencode firm, replace manyto1 gsort(firmseq)</b>
+        <b>.tab firm, missing</b>
+<p>
+    The following example demonstrates the use of <b>cgroup</b> with the <b>group()</b>
+    function of <b>egen</b>.  Alternatively, we could have used the <b>xgroup</b> package,
+    downloadable from SSC.
+<p>
+        <b>.sysuse auto, clear</b>
+        <b>.gene firm=word(make,1)</b>
+        <b>.cgroup foreign firm, gene(firmseq)</b>
+        <b>.egen firmord=group(firmseq foreign firm), label</b>
+        <b>.tab firmord, m</b>
+<p>
+<p>
+<b><u>Author</u></b>
+<p>
+    Roger Newson, National Heart and Lung Institute, Imperial College London,
+    UK.
+    Email: r.newson@imperial.ac.uk
+<p>
+<p>
+<b><u>Also see</u></b>
+<p>
+     Manual: <b>[D] egen</b>, <b>[D] gsort</b>
+    On-line: help for <b>egen</b>, <b>gsort</b>
+             help for <b>sencode</b>, <b>xgroup</b> if installed
+</pre>

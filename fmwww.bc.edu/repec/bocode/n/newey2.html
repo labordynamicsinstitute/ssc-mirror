@@ -1,0 +1,129 @@
+<pre>
+-------------------------------------------------------------------------------
+help for <b>newey2</b>                                  (SSC distribution XX XXX 2002)
+-------------------------------------------------------------------------------
+<p>
+<b><u>Extended newey, regression with Newey-West standard errors</u></b>
+<p>
+        <b>newey2</b> <i>depvar</i> [<i>varlist1</i>] [<b>(</b><i>varlist2</i><b>=</b><i>varlist_iv</i><b>)</b>] [<i>weight</i>] [<b>if</b> <i>exp</i>] [<b>in</b>
+              <i>range</i>]<b>,</b> <b>lag(</b><i>#</i><b>)</b> [<b>i(</b><i>varname</i><b>)</b> <b>t(</b><i>varname</i><b>)</b> <b>force</b> <b><u>nocon</u></b><b>stant</b> <b><u>l</u></b><b>evel(</b><i>#</i><b>)</b> ]
+<p>
+        <b>neweyvif</b>
+<p>
+        <b>neweydmexog</b> [<i>varlist3</i>]
+<p>
+<p>
+<b><u>Description</u></b>
+<p>
+<b>newey2</b> provides extensions to Stata's official <b>newey</b>.  It accepts panel as well
+as time series data sets, and can instrument variables. For time series data
+without instruments, <b>newey2</b> behaves the same as <b>newey</b>.
+<p>
+<b>neweyvif</b> works like Stata's official <b>vif</b> but can run after <b>newey</b>, as well as
+after <b>newey2</b> without instrumented variables. It computes variance inflation
+factors; see help vif. <b>neweydmexog</b> is an extension of the unofficial Stata
+command <b>dmexog</b> that runs after <b>newey2</b> with instrumental variables. It tests for
+consistency of OLS after an instrumental variables regression; see <b>net search</b>
+<b>dmexog</b>.
+<p>
+<p>
+<b>aweight</b>s are allowed in <b>newey2</b>; see help weights. They are not allowed in
+<b>neweydmexog</b>.
+<p>
+<b>newey</b> shares the features of all estimation commands; see help est.
+<p>
+<p>
+The syntax of predict following <b>newey2</b> is
+<p>
+        <b>predict</b> [<i>type</i>] <i>newvarname</i> [<b>if</b> <i>exp</i>] [<b>in</b> <i>range</i>] [<b>,</b> [ <b>xb</b> | <b>residuals</b> |
+                <b>stdp</b> ] ]
+<p>
+<b>xb</b>, <b>resid</b>, and <b>stdp</b> are available both in and out of sample; type "<b>predict</b> <i>...</i>
+<b>if e(sample)</b> <i>...</i>" if wanted only for the estimation sample.
+<p>
+<b>newey2</b> produces Newey-West standard errors for coefficients estimated by OLS or
+2SLS.  The error structure is assumed to be heteroskedastic and possibly
+autocorrelated up to some lag.
+<p>
+For panel data sets, <b>newey2</b> computes pooled OLS or 2SLS estimates; it does not
+implement panel models such as fixed or random effects.<b>  newey2</b> handles missing
+observations differently for time series and panel data sets. Consider the
+example of a time series data set containing gaps, which is then recast using
+<b>tsset</b> as a panel data set with one group. <b>newey</b> and <b>newey2</b> will not run on the
+time series version without <b>force</b>; with <b>force</b> they treat available observations
+as equally spaced.  After the set is cast as a panel, <b>newey2</b> will run without <b>,</b>
+<b>force</b>, and will assume zero serial correlation with missing observations.
+<p>
+For both time series and panel data sets, <b>newey2</b> can instrument variables using
+the same syntax as<b> ivreg</b>; see help ivreg. In computing the Newey-West sum for
+the second-stage regression, <b>newey2</b> uses residuals e=Y-XB where X contains all
+actual, not instrumented, values.
+<p>
+If <b>lag(0)</b> is specified, the variance estimates produced by <b>newey2</b> are the
+Huber/White/sandwich robust variance estimates calculated by <b>regress, robust</b> or
+<b>ivreg, robust</b>; see help regress or help ivreg.
+<p>
+<p>
+<b><u>Options for newey2</u></b>
+<p>
+<b>lag(</b><i>#</i><b>)</b> is not optional; it specifies the maximum lag to consider in the
+    autocorrelation structure.
+<p>
+<b>t(</b><i>varname</i><b>)</b> specifies the variable recording the time of each observation.  If
+    this option is not used, t must already have been set using <b>tis</b> or <b>tsset</b>;
+    see help tis and help tsset.  If the data set is a time series rather than
+    a panel and observations are not equally spaced in time, you must use the
+    <b>force</b> option.
+<p>
+<b>i(</b><i>varname</i><b>)</b> specifies the variable recording the "group," "panel," or
+    "independent unit" of each observation.  <b>newey2</b> will treat the data set as
+    a panel set if this option is used, or if the set has already been
+    configured as such with <b>iis</b> or <b>tsset</b>.
+<p>
+For time series, <b>force</b> specifies that estimation is to be forced even though
+    <b>t()</b> shows the data not to be equally spaced.  <b>newey2</b> will estimate the
+    model assuming the lags based on the data ordered by <b>t()</b> are appropriate.
+    <b>force</b> has no effect for panel data sets.
+<p>
+<b>noconstant</b> specifies that no intercept is to be included in the model.
+<p>
+<b>level(</b><i>#</i><b>)</b> specifies the confidence level, in percent, for confidence intervals;
+    see help level.
+<p>
+<p>
+<b><u>Options for </u></b><b><u>predict</u></b>
+<p>
+<b>xb</b>, the default, calculates the linear prediction.
+<p>
+<b>residuals</b> calculates the residuals of the linear prediction.
+<p>
+<b>stdp</b> calculates the standard error of the linear prediction.
+<p>
+<p>
+<b><u>Example</u></b>
+<p>
+        . newey2 usr idle sysv, lag(3) t(time)
+<p>
+        . newey2 usr idle (sysv = month temperature), lag(0)
+        . neweyvif
+<p>
+        . tsset countrycode period
+        . newey2 gdpg lgdp (aid = egypt centam), lag(1)
+        . neweydmexog
+<p>
+<p>
+<b><u>Author</u></b>
+<p>
+        David Roodman, Center for Global Development, USA
+        droodman@cgdev.org
+<p>
+<b><u>Also see</u></b>
+<p>
+ Manual:  <b>[U] 23 Estimation and post-estimation commands</b>,
+          <b>[U] 29 Overview of model estimation in Stata</b>,
+          <b>[R] newey</b>
+          <b>[R] regress</b>, <b>[R] regression diagnostics</b>
+On-line:  help for est, postest; regress, svyreg, xtgls, xtpcse, regdiag, 
+                   regress
+<p>
+</pre>

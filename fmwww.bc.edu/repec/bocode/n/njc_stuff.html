@@ -1,0 +1,1823 @@
+<pre>
+-------------------------------------------------------------------------------
+index of NJC's Stata stuff (version 10 December 2012) 
+-------------------------------------------------------------------------------
+<p>
+<b><u>Description</u></b>
+<p>
+    This is a list of my Stata packages or commands that are in the public
+    domain. Most commonly you might want to search this file in the Viewer.
+    If a help file is not accessible to you, use findit to find out where the
+    files are. The help files carry details on people who kindly reported
+    bugs or made useful suggestions. What I regard as my best packages and
+    commands are listed thematically at NJC best stuff.
+<p>
+<p>
+<b><u>Contributor to official Stata commands</u></b>
+<p>
+    command             version added
+    --------------------------------- 
+    
+    clonevar            8 update 
+    tostring            8 update 
+    ci                  8 update (advisor) 
+    cumul               8 update 
+    ds                  8 update 
+    levels              8 update (levelsof in 9 up)   
+    duplicates          8 
+    split               8 
+    ssc                 7 update 
+    findit              7 update 
+    destring            7 
+    egen                7 
+    contract            6
+    separate            6 
+    serrbar             6 
+    spikeplot           6
+<p>
+<p>
+<b><u>Packages</u></b> 
+<p>
+    OS means official Stata
+    obs means obsolete
+    pobs means partially obsolete
+    sup means superseded
+    psup means partially superseded
+    + means good
+    judgements assume availability of Stata 12 
+<p>
+    aaplot
+    SSC (NJC)
+    scatter plot with linear and/or quadratic fit, automatically annotated
+    + 
+<p>
+    acplot
+    SSC (NJC)
+    autocorrelogram plots
+    obs(OS ac)
+<p>
+    adjacent
+    SSC (NJC)
+    list adjacent values of variables
+<p>
+    adotype
+    SSC (NJC)
+    type ado file
+    pobs(OS findfile)
+<p>
+    allpossible
+    SSC (NJC)
+    fit all possible models with subsets of predictors
+<p>
+    archutil
+    ip29 stb52 (C.F. Baum, NJC)
+    utilities for using SSC archive (1)
+    obs(OS ssc)
+<p>
+    archutil
+    ip29_1 stb54 (NJC, C.F. Baum)
+    utilities for using SSC archive (2)
+    obs(OS ssc)
+<p>
+    asciiplot
+    SSC (M. Blasnik, S. Juul, NJC)
+    graph ASCII character set in current graph font
+    +
+<p>
+    avplot2
+    SSC (NJC)
+    added variable plots
+    sup(favplots)
+<p>
+    bandplot 
+    SSC (NJC) 
+    plot summary statistics of responses for bands of predictors
+    +
+<p>
+    barplot
+    SSC (NJC)
+    bar plots
+    obs(OS graph)
+<p>
+    barplot2
+    SSC (NJC)
+    bar plots with optional error bars
+    obs(OS graph)
+<p>
+    bcoeff
+    SSC (Z. Wang, NJC)
+    save regression coefficients to new variable
+    pobs(OS statsby)
+<p>
+    beamplot
+    SSC (NJC)
+    horizontal dotplots using beams
+    +
+<p>
+    betafit
+    SSC (M.L. Buis, NJC, S.P. Jenkins)
+    fit two-parameter beta distribution
+    +
+<p>
+    bincoverage
+    www.stata.com/users/rgutierrez (R.G. Gutierrez, NJC)
+    true coverage probabilities for binomial confidence intervals
+<p>
+    binsm
+    gr26 stb37 (NJC)
+    bin smoothing and summary on scatter plots
+    sup(SJ 6-1)
+<p>
+    binsm
+    gr26_1 sj6-1 (NJC)
+    bin smoothing and summary on scatter plots (2)
+    +
+<p>
+    biv
+    ip26 stb45 (NJC)
+    bivariate results for each pair of variables in a list
+    sup(makematrix)
+<p>
+    bkrosenblatt
+    SSC (NJC)
+    Blum, Kiefer and Rosenblatt test of bivariate independence
+    +
+<p>
+    blogit2
+    SSC (NJC)
+    grouped data logit with support for in
+    obs(OS blogit)
+<p>
+    bsmplot
+    gr22 stb35 (NJC)
+    binomial smoothing plots (1) 
+    sup(SJ 4-4)
+<p>
+    bsmplot
+    gr22_1 sj4-4 (NJC)
+    binomial smoothing plots (2)
+<p>
+    catenate
+    SSC (NJC)
+    concatenate variables into string variable
+    obs(OS egen)
+<p>
+    catplot
+    SSC (NJC)
+    plots of frequencies, fractions or percents of categorical data
+    +
+<p>
+    cbarplot
+    SSC (NJC)
+    centred bar plots of absolute or relative frequencies 
+<p>
+    cfvars 
+    SSC (NJC)
+    compare variable name lists in two data sets
+<p>
+    chaos
+    SSC (NJC)
+    iterate a logistic difference equation
+<p>
+    charlist
+    SSC (NJC)
+    list characters present in string variable
+    +
+<p>
+    charutil
+    SSC (NJC)
+    utilities for working with characteristics
+<p>
+    chplot
+    gr16_1 stb36 (NJC)
+    convex hull plots
+<p>
+    cibplot
+    SSC (NJC)
+    bar-on-bar plots of confidence intervals
+<p>
+    cihplot
+    SSC (NJC)
+    horizontally labelled plots showing confidence intervals
+    obs(ciplot)
+<p>
+    cij
+    SSC (NJC)
+    binomial confidence intervals using Jeffreys prior
+    pobs(OS ci)
+<p>
+    ciplot
+    SSC (NJC)
+    plots of confidence intervals
+    +
+<p>
+    cipolate
+    SSC (NJC)
+    cubic interpolation
+    +
+<p>
+    circstat
+    www.stata.com/users/njc (NJC)
+    circular statistics (1) 
+    sup(SSC circular)
+<p>
+    circstat
+    SSC (NJC)
+    circular statistics (2)
+    sup(SSC circular)
+<p>
+    circular
+    SSC (NJC)
+    circular statistics (3; for Stata 8 up)
+    +
+<p>
+    cistat
+    SSC (NJC)
+    confidence intervals in matrix form
+<p>
+    civplot
+    SSC (NJC)
+    plot confidence intervals vertically
+    obs(ciplot)
+<p>
+    ciw
+    SSC (NJC)
+    binomial confidence intervals using Wilson scores
+    obs(OS ci)
+<p>
+    collfreq
+    dm59 stb44 (NJC)
+    collapsing datasets to frequencies
+    sup(OS contract)
+<p>
+    concord
+    sg84 stb43 (T.J. Steichen, NJC)
+    concordance correlation (1)
+    sup(SJ 10-4)
+<p>
+    concord
+    sg84_1 stb45 (T.J. Steichen, NJC)
+    concordance correlation (2)
+    sup(SJ 10-4)
+<p>
+    concord
+    sg84_2 stb54 (T.J. Steichen, NJC)
+    concordance correlation (3)
+    sup(SJ 10-4)
+<p>
+    concord
+    sg84_3 stb58 (T.J. Steichen, NJC)
+    concordance correlation (4)
+    sup(SJ 10-4)
+<p>
+    concord
+    st0015 sj2-2 (T.J. Steichen, NJC)
+    concordance correlation (5)
+    sup(SJ 10-4)
+<p>
+    concord
+    SSC (T.J. Steichen, NJC)
+    concordance correlation (6)
+    sup(SJ 10-4)
+<p>
+    concord
+    st0015_1 sj4-4 (T.J. Steichen, NJC)
+    concordance correlation (7)
+    sup(SJ 10-4)
+<p>
+    concord
+    st0015_2 sj5-3 (T.J. Steichen, NJC)
+    concordance correlation (8)
+    sup(SJ 10-4)
+<p>
+    concord
+    st0015_3 sj6-2 (T.J. Steichen, NJC)
+    concordance correlation (9)
+    sup(SJ 10-4)
+<p>
+    concord
+    st0015_4 sj7-3 (T.J. Steichen, NJC)
+    concordance correlation (10)
+    sup(SJ 10-4)
+<p>
+    concord
+    st0015_5 sj8-4 (T.J. Steichen, NJC)
+    concordance correlation (11)
+    sup(SJ 10-4)
+<p>
+    concord
+    st0015_6 sj10-4 (T.J. Steichen, NJC)
+    concordance correlation (12)
+    +
+<p>
+    condraw
+    gr16_2 stb41 (J.P. Gray, NJC)
+    convex hull plots
+<p>
+    copydesc
+    SSC (NJC)
+    copy description of variable
+    pobs(OS clonevar)
+<p>
+    corrci, corrcii 
+    pr0041 sj8-3 (NJC) 
+    correlation with z-based confidence intervals (1)  
+    sup(SJ 10-4) 
+<p>
+    corrci, corrcii 
+    pr0041_1 sj10-4 (NJC) 
+    correlation with z-based confidence intervals (2) 
+    +
+<p>
+    corrtable 
+    SSC (NJC) 
+    correlation matrix as graphical table 
+    +
+<p>
+    countmatch
+    SSC (NJC)
+    count matching values for one variable in another
+<p>
+    cp
+    ip27 stb45 (NJC)
+    results for all possible combinations of arguments
+    sup(cpr)/pobs(foreach, forval)
+<p>
+    cpcorr
+    SSC (NJC)
+    correlations for each row vs each column variable
+<p>
+    cpr
+    SSC (NJC)
+    results for all possible combinations of arguments
+    pobs(foreach, forval)
+<p>
+    cpyxplot
+    www.stata.com/users/njc (NJC)
+    scatter plots for each y vs each x variable (1) 
+    sup(SSC)
+<p>
+    cpyxplot
+    SSC (NJC)
+    scatter plots for each y vs each x variable (2) 
+    +
+<p>
+    cquantile
+    SSC (NJC)
+    generate corresponding quantiles
+<p>
+    csipolate
+    SSC (NJC) 
+    cubic spline interpolation 
+    + 
+<p>
+    ctabstat
+    SSC (NJC)
+    table of summary statistics
+<p>
+    cycleplot
+    SSC (NJC)
+    cycle plots (month plots or seasonal subseries plots)
+    see also SJ 6-3
+<p>
+    cycleplot, sliceplot
+    gr0025 sj6-3 (NJC)
+    cycle plot, slice plot
+    +
+<p>
+    destring
+    dm45 stb37 (NJC, W. Gould)
+    change string variables to numeric (1)
+    sup(OS destring)
+<p>
+    destring
+    dm45_1 stb49 (NJC)
+    change string variables to numeric (2)
+    sup(OS destring)
+<p>
+    destring
+    dm45_2 stb52 (NJC)
+    change string variables to numeric (3)
+    sup(OS destring)
+<p>
+    devnplot
+    SSC (NJC)
+    deviation plots
+    +
+<p>
+    diagsm, doublesm, polarsm 
+    gr0021 sj5-4 (NJC)
+    diagonal, double and polar smoothing
+    sup(SJ 10-1) 
+<p>
+    diagsm, doublesm, polarsm 
+    gr0021_1 sj10-1 (NJC)
+    diagonal, double and polar smoothing
+    +
+<p>
+    diplot
+    SSC (NJC)
+    double interval plot
+<p>
+    diptest 
+    SSC (NJC) 
+    dip statistic to test for unimodality
+    +
+<p>
+    dirifit
+    SSC (M.L. Buis, NJC, S.P. Jenkins)
+    fit Dirichlet distribution
+    + 
+<p>
+    disjoint
+    SSC (NJC)
+    demarcating disjoint spells
+<p>
+    dissim
+    SSC (NJC)
+    dissimilarity index
+<p>
+    distinct
+    SSC (G. Longton, NJC)
+    display number of distinct values of variables
+    + 
+<p>
+    distinct
+    dm0042 sj8-4 (G. Longton, NJC)
+    display number of distinct values of variables
+    sup(SJ 12-2) 
+<p>
+    distinct
+    dm0042_1 sj12-2 (G. Longton, NJC)
+    display number of distinct values of variables
+    +
+<p>
+    distplot
+    SSC (NJC)
+    distribution function plots (1) 
+    sup(SJ 10-1)
+<p>
+    distplot
+    gr41 stb51 (NJC)
+    distribution function plots (2) 
+    sup(SJ 10-1)
+<p>
+    distplot
+    gr41_1 sj3-2 (NJC)
+    distribution function plots (3)
+    sup(SJ 10-1)
+<p>
+    distplot
+    gr41_2 sj3-4 (NJC)
+    distribution function plots (4)
+    sup(SJ 10-1)
+<p>
+    distplot
+    gr41_3 sj5-3 (NJC)
+    distribution function plots (5)
+    sup(SJ 10-1) 
+<p>
+    distplot
+    gr41_4 sj10-1 (NJC)
+    distribution function plots (6)
+    +
+<p>
+    dlist
+    SSC (NJC)
+    list with variable labels
+<p>
+    domdiag
+    SSC (NJC)
+    dominance diagrams
+<p>
+    doubmass
+    SSC (NJC)
+    double mass plots
+<p>
+    dpplot
+    SSC (NJC)
+    density probability plots
+    sup(SJ 7-4)
+<p>
+    dpplot
+    gr0012 sj5-2 (NJC)
+    density probability plots
+    sup(SJ 7-4)
+<p>
+    dpplot
+    gr0012_1 sj7-4 (NJC)
+    density probability plots
+    +
+<p>
+    dropmiss
+    dm89 stb60 (NJC)
+    dropping variables or observations with missing values
+    sup(SJ 8-4) 
+<p>
+    dropmiss
+    dm89_1 sj8-4 (NJC)
+    dropping variables or observations with missing values
+    + 
+<p>
+    ds2
+    SSC (NJC)
+    describe variables in memory (for Stata 6)
+    sup(OS ds, findname)
+<p>
+    ds2
+    dm78 stb56 (NJC)
+    describe variables in memory (for Stata 6)
+    sup(OS ds, findname)
+<p>
+    ds2
+    dm78_1 stb60 (NJC)
+    describe variables in memory (for Stata 7)
+    sup(OS ds, findname)
+<p>
+    ds3
+    SSC (NJC)
+    describe variables in memory (for Stata 7)
+    sup(OS ds, findname)
+<p>
+    ds5
+    SSC (NJC)
+    describe variables in memory (for Stata 5)
+    sup(OS ds, findname)
+<p>
+    dummies
+    SSC (NJC)
+    families of dummy variables
+    obs(foreach)
+<p>
+    dummieslab
+    SSC (P. van Kerm, NJC)
+    dummy variables using value labels
+<p>
+    dups
+    SSC (T.J. Steichen, NJC)
+    identify and optionally remove duplicate observations (1)
+    sup(OS duplicates)
+<p>
+    dups
+    dm53 stb41 (T.J. Steichen, NJC)
+    identify and optionally remove duplicate observations (2)
+    sup(OS duplicates)
+<p>
+    egen extensions
+    dm70 stb50 (NJC)
+    egen extensions)
+    pobs(OS egen)
+<p>
+    egen extensions
+    dm70_1 stb57 (NJC)
+    egen extensions (update)
+    pobs(OS egen)
+<p>
+    egen rank
+    dm72 stb51 (NJC, R. Goldstein)
+    alternative ranking procedures
+    sup(OS egen)
+<p>
+    egen rank
+    dm72_1 stb52 (NJC, R. Goldstein)
+    alternative ranking procedures (update)
+    sup(OS egen)
+<p>
+    egenmore
+    SSC (NJC, C.F. Baum, U. Kohler, S. Stillman, N. Winter)
+    more egen functions
+    +
+<p>
+    egenodd
+    www.stata.com/users/njc (NJC)
+    egen extensions
+    sup(STB 50, 57)
+<p>
+    eofplot
+    SSC (NJC)
+    plot coefficients or loadings after principal component or factor analysis
+    +
+<p>
+    eqprhistogram
+    SSC (NJC)
+    equal probability histograms
+    +
+<p>
+    ewma
+    SSC (NJC)
+    exponentially weighted moving average
+    obs(OS tssmooth)
+<p>
+    examples
+    SSC (NJC)
+    show examples from on-line help files
+<p>
+    expandby
+    SSC (NJC)
+    duplicate observations by variable
+<p>
+    extremes
+    SSC (NJC)
+    list extreme values of a variable
+    +
+<p>
+    favplots
+    SSC (NJC)
+    formatted added-variable plot(s)
+    + 
+<p>
+    fbar
+    SSC (NJC)
+    bar charts showing frequencies of categorical variables
+    obs(OS graph, catplot)
+<p>
+    fedit
+    SSC (NJC)
+    find and edit text file from within Stata
+    +
+<p>
+    filei 
+    SSC (NJC) 
+    write lines to end or beginning of text files
+<p>
+    findname
+    SSC (NJC)
+    list variables matching name patterns or other properties
+    sup(SJ 12-1)
+<p>
+    findname
+    dm0048 sj10-2 (NJC) 
+    list variables matching name patterns or other properties
+    sup(SJ 12-1)
+<p>
+    findname
+    dm0048_1 sj10-4 (NJC) 
+    list variables matching name patterns or other properties
+    sup(SJ 12-1)
+<p>
+    findname
+    dm0048_2 sj12-1 (NJC) 
+    list variables matching name patterns or other properties
+    + 
+<p>
+    firstdigit
+    SSC (NJC)
+    first digits of numeric variables
+    +
+<p>
+    fixsort
+    SSC (NJC)
+    sort and align variables, others fixed in position
+    +
+<p>
+    flower
+    SSC (T.J. Steichen, NJC)
+    sunflower plots
+    obs(OS graph)
+<p>
+    fndmtch
+    SSC (NJC, D.E. Williams)
+    find matching values
+<p>
+    fndmtch2
+    SSC (NJC)
+    find matching values for one variable in another
+    sup(SSC countmatch)
+<p>
+    fractileplot
+    SSC (NJC)
+    smoothing with respect to distribution function predictors
+    +
+<p>
+    fs
+    SSC (NJC)
+    show names of files in compact form
+    +
+<p>
+    fsx
+    SSC (G. Rossman, NJC)
+    show names of files in compact form (Unix variant) 
+<p>
+    gammafit
+    SSC (NJC, S.P. Jenkins)
+    fit two-parameter gamma distribution
+    +
+<p>
+    genfreq
+    SSC (NJC)
+    frequency distribution for a variable
+    obs(OS graph)
+<p>
+    ghistcum
+    SSC (C.F. Baum, NJC)
+    histograms with cumulative distribution
+    obs(OS graph)
+<p>
+    glmcorr
+    SSC (NJC)
+    correlation measure of predictive power for GLMs
+    +
+<p>
+    group1d
+    SSC (NJC)
+    grouping or clustering in one dimension
+    +
+<p>
+    groups
+    SSC (NJC)
+    list group frequencies
+    +
+<p>
+    gumbelfit
+    SSC (NJC, S.P. Jenkins)
+    fit two-parameter Gumbel distribution
+    +
+<p>
+    hansen2
+    SSC (NJC)
+    Hansen's test for parameter instability
+<p>
+    hbar
+    SSC (NJC)
+    horizontal bar charts
+    obs(OS graph)
+<p>
+    hbox
+    SSC (NJC)
+    horizontal box plots
+    obs(OS graph)
+<p>
+    hdquantile
+    SSC (NJC)
+    Harrell-Davis estimator of quantiles
+    +
+<p>
+    histplot
+    SSC (NJC)
+    histograms
+    obs(OS graph)
+<p>
+    hlist
+    SSC (NJC)
+    horizontally listing values
+<p>
+    hlpdir
+    SSC (NJC)
+    find location(s) of help file
+    pobs(OS findfile)
+<p>
+    hplot
+    SSC (NJC)
+    horizontal plots
+    obs(OS graph)
+<p>
+    hsmode
+    SSC (NJC)
+    half-sample modes
+    +
+<p>
+    ineq
+    SSC (NJC)
+    measures of inequality
+<p>
+    invgammafit
+    SSC (NJC, S.P. Jenkins)
+    fit two-parameter inverse gamma distribution
+    +
+<p>
+    invgaussfit
+    SSC (NJC, S.P. Jenkins)
+    fit two-parameter inverse Gaussian distribution
+    +
+<p>
+    iquantile
+    SSC (NJC) 
+    interpolated quantiles 
+    + 
+<p>
+    irrepro
+    SSC (NJC)
+    simulation of irreproducible results
+<p>
+    isvar
+    SSC (NJC)
+    filter names into variable names and others
+<p>
+    kaplansky
+    SSC (NJC)
+    graph examples of distributions of varying kurtosis
+    +
+<p>
+    kernreg2
+    SSC (NJC, I.H. Salgado-Ugarte, M. Shimizu, T. Taniuchi)
+    kernel regression (Nadaraya-Watson estimator)
+    obs(OS lpoly)
+<p>
+    keyplot
+    SSC (NJC)
+    scatter plots with keys in user-chosen positions
+    obs(OS graph)
+<p>
+    labgen
+    SSC (NJC) 
+    generate or replace variables with definitions copied to variable labels
+<p>
+    labmask
+    gr0034 sj8-2 (NJC) 
+    values or value labels of one variable as value labels of another
+    +
+<p>
+    labutil
+    SSC (NJC)
+    managing value and variable labels
+<p>
+    lambda
+    SSC (NJC)
+    Goodman and Kruskal's lambda measures for two-way tables
+<p>
+    levels
+    SSC (NJC)
+    distinct levels of integer or string variable
+    sup(OS levelsof)
+<p>
+    linkplot
+    SSC (NJC)
+    linked (connected) scatter plots
+    + (note also OS pcarrow, etc.)
+<p>
+    listutil
+    SSC (NJC)
+    manipulate lists of words
+    pobs(OS foreach, forval, macrolists)
+<p>
+    ljs
+    SSC (NJC)
+    left-justify string variables for printing
+    obs(OS format)
+<p>
+    lmoments
+    SSC (NJC)
+    L-moments and derived statistics
+    +
+<p>
+    log2html
+    SSC (C.F. Baum, NJC, B. Rising)
+    produce HTML log files
+<p>
+    longplot
+    SSC (Z. Wang, NJC)
+    exploratory plots for longitudinal data
+    pobs(linkplot, OS)
+<p>
+    longshape
+    SSC (NJC)
+    reshape to long (limited alternative)
+    + 
+<p>
+    loopplot
+    SSC (NJC)
+    scatter plots with loops
+<p>
+    lstack
+    SSC (NJC)
+    stack variables with labelled _stack
+<p>
+    majority
+    SSC (NJC)
+    majority calculations for real or hypothetical elections
+<p>
+    makematrix
+    SSC (NJC)
+    make a matrix of results from other commands
+<p>
+    marker
+    SSC (NJC)
+    generate indicator variable marking desired sample 
+<p>
+    markov
+    SSC (NJC)
+    generate Markov probabilities
+    pobs(OS xttrans, xttrans2)
+<p>
+    matmap
+    SSC (NJC)
+    elementwise calculations for matrices
+    pobs(OS Mata)
+<p>
+    matmore
+    dm79 stb56 (NJC)
+    yet more new matrix commands
+    pobs(OS Mata)
+<p>
+    matodd
+    www.stata.com/users/njc (NJC)
+    various matrix tasks
+    pobs(OS Mata)
+<p>
+    matodd
+    dm69 stb50 (NJC)
+    various matrix tasks
+    pobs(OS Mata)
+<p>
+    matodd
+    SSC (NJC)
+    various matrix tasks
+    psup(STB 50); pobs(OS Mata)
+<p>
+    matrixof
+    SSC (NJC)
+    matrix or vector of results for paired or single variables
+    sup(makematrix)
+<p>
+    matvsort
+    SSC (NJC)
+    sorting vectors or rows or columns of matrices
+    pobs(OS Mata)
+<p>
+    mdensity
+    SSC (NJC)
+    univariate kernel density estimation, for variables or groups
+<p>
+    missingplot
+    SSC (NJC)
+    plot showing patterns of missing values in a dataset
+    +
+<p>
+    mlowess
+    SSC (NJC)
+    lowess smoothing with multiple predictors
+    +
+<p>
+    mnthplot
+    SSC (NJC)
+    scatter plots for monthly data with repetition of data
+<p>
+    modeldiag
+    SSC (NJC)
+    generate graphics after regression
+    (also SJ 4-4)
+<p>
+    modeldiag
+    gr0009 sj4-4 (NJC)
+    generate graphics after regression
+    sup(SJ 10-1) 
+<p>
+    modeldiag
+    gr0009_1 sj10-1 (NJC)
+    generate graphics after regression
+    +
+<p>
+    modes
+    sg113 stb50 (NJC)
+    tabulation of modes (1)
+    sup(SJ 9-4)
+<p>
+    modes
+    sg113_1 sj3-2 (NJC)
+    tabulation of modes (2)
+    sup(SJ 9-4)
+<p>
+    modes
+    sg113_2 sj9-4 (NJC)
+    tabulation of modes (3)
+    +
+<p>
+    moments
+    SSC (NJC)
+    moment-based statistics
+    +
+<p>
+    moreobs
+    SSC (NJC)
+    add observations to dataset
+<p>
+    moss
+    SSC (R. Picard, NJC)
+    multiple occurrences of substrings 
+    +
+<p>
+    movsumm
+    sg85 stb44 (NJC)
+    moving summaries
+    obs(OS rolling)
+<p>
+    mrunning
+    gr0017 sj5-3 (P. Royston, NJC)
+    multivariable scatterplot smoother
+    +
+<p>
+    msplot
+    SSC (NJC)
+    multiple median-spline plots
+<p>
+    mstdize
+    SSC (NJC)
+    marginal standardization of two-way tables
+<p>
+    multencode 
+    SSC (NJC) 
+    encode multiple string variables into numeric 
+<p>
+    multqplot
+    gr0053 sj12-3 (NJC) 
+    multiple quantile plots
+    +
+<p>
+    muxplot
+    SSC (NJC)
+    scatter plots with y vs multiple x variables
+    obs(OS graph)
+<p>
+    muxyplot
+    SSC (NJC)
+    scatter plots with multiple x and y variables
+    obs(OS graph)
+<p>
+    mvcorr
+    SSC (C.F. Baum, NJC)
+    moving-window correlation or autocorrelation in time series
+    pobs(OS rolling)
+<p>
+    mvsumm
+    SSC (C.F. Baum, NJC)
+    moving-window descriptive statistics in time series
+    pobs(OS rolling)
+<p>
+    mylabels
+    SSC (NJC, S. Merryman)
+    axis labels or ticks on transformed scales
+    +
+<p>
+    mypkg
+    SSC (NJC)
+    inform on packages installed over net
+<p>
+    nbfit
+    SSC (NJC, R.G. Gutierrez)
+    fitting negative binomial distribution by maximum likelihood
+<p>
+    nearest
+    SSC (NJC)
+    calculate nearest neighbours from point coordinates
+<p>
+    nicedates
+    SSC (NJC)
+    nice dates, especially for time series graphs
+<p>
+    nmissing
+    dm67 stb49 (NJC)
+    numbers of missing and present values (1)
+    sup(SSC)
+<p>
+    nmissing
+    dm67_1 stb60 (NJC)
+    numbers of missing and present values (2)
+    sup(SJ 5-4)
+<p>
+    nmissing
+    dm67_2 sj3-4 (NJC)
+    numbers of missing and present values (3)
+    sup(SJ 5-4)
+<p>
+    nmissing
+    SSC (NJC)
+    numbers of missing and present values (4)
+    also SJ 5-4
+<p>
+    nmissing
+    dm67_3 sj5-4 (NJC)
+    numbers of missing and present values (5)
+    + (but cf. OS misstable)
+<p>
+    nnipolate 
+    SSC (NJC) 
+    nearest neighbour interpolation
+    +
+<p>
+    nruns
+    st0044_1 sj6-4 (N. Smeeton, NJC)
+    number of runs compared with random shuffles
+    +
+<p>
+    ntimeofday, stimeofday
+    dm0018 sj6-1 (NJC)
+    generate time of day variables
+    pobs(OS dates and times)
+<p>
+    nvars 
+    SSC (NJC) 
+    count number of variables
+    obs(OS describe, c(k))
+<p>
+    omninorm
+    SSC (C.F. Baum, NJC) 
+    omnibus test for univariate or multivariate normality
+    + (but cf. OS mvtest normality)
+<p>
+    onewplot
+    SSC (NJC)
+    oneway plots (for Stata 6)
+    sup(SSC stripplot)
+<p>
+    onewayplot
+    SSC (NJC)
+    oneway plots (for Stata 8)
+    sup(SSC stripplot)
+<p>
+    ordplot
+    SSC (NJC)
+    cumulative distribution plots of ordinal variable
+    sup(SSC distplot)
+<p>
+    outfix2
+    SSC (NJC)
+    output formatted data
+    obs(OS file)
+<p>
+    panelthin 
+    SSC (NJC) 
+    identify observations for possible thinned panel dataset
+<p>
+    pairplot
+    SSC (NJC)
+    paired observations plots
+    +
+<p>
+    parplot
+    SSC (NJC)
+    parallel coordinates plots
+    +
+<p>
+    pbeta
+    SSC (NJC)
+    probability plots for data vs fitted beta distribution
+    +
+<p>
+    pchipolate 
+    SSC (NJC) 
+    piecewise cubic Hermite interpolation
+    +
+<p>
+    pdplot
+    SSC (NJC)
+    Pareto dot plots
+    +
+<p>
+    personage
+    SSC (NJC) 
+    calculate people's ages or similar daily date differences
+<p>
+    pexp
+    SSC (NJC)
+    probability plots for data vs fitted exponential distribution
+    +
+<p>
+    pgamma
+    SSC (NJC)
+    probability plots for data vs fitted gamma distribution
+    +
+<p>
+    pieplot
+    SSC (NJC) 
+    plot pie charts of categorical frequencies 
+<p>
+    ppplot
+    SSC (NJC)
+    P-P plots
+    +
+<p>
+    psbayes
+    SSC (NJC)
+    pseudo-Bayes smoothing of cell estimates
+    sup(SJ qsbayes) 
+<p>
+    pwcorrw
+    SSC (NJC)
+    print wide correlation matrix with significance indicators
+<p>
+    pweibull
+    SSC (NJC)
+    probability plots for data vs fitted Weibull distribution
+    +
+<p>
+    qbeta
+    SSC (NJC)
+    quantile-quantile plots for data vs fitted beta distribution
+    +
+<p>
+    qenv: qenvnormal, qenvgamma
+    SSC (NJC) 
+    generate quantile envelopes for quantile-quantile plots
+    +   
+<p>
+    qexp
+    SSC (NJC)
+    quantile-quantile plots for data vs fitted exponential distribution
+    +
+<p>
+    qgamma
+    SSC (NJC)
+    quantile-quantile plots for data vs fitted gamma distribution
+    +
+<p>
+    qlognorm
+    SSC (NJC)
+    diagnostic plots for lognormal distribution
+    sup(SSC qpfit) 
+<p>
+    qpfit
+    SSC (NJC)
+    various quantile and probability plots for assessing distribution fit
+    +
+<p>
+    qplot
+    gr42_2 sj4-1 (NJC)
+    quantile plots, generalized (4)
+    sup(SJ 12-1)
+<p>
+    qplot
+    gr42_3 sj5-3 (NJC)
+    quantile plots, generalized (5)
+    sup(SJ 12-1)
+<p>
+    qplot
+    gr42_4 sj6-4 (NJC)
+    quantile plots, generalized (6) 
+    sup(SJ 12-1)
+<p>
+    qplot
+    gr42_5 sj10-4 (NJC)
+    quantile plots, generalized (7) 
+    sup(SJ 12-1)         
+<p>
+    qplot
+    gr42_6 sj12-1 (NJC)
+    quantile plots, generalized (8) 
+    +                    
+<p>
+    qqplot2
+    SSC (NJC)
+    quantile-quantile plots
+    obs(OS qqplot)
+<p>
+    qsbayes, qsbayesi 
+    st0168 sj9-2 (NJC)
+    quasi-Bayes smoothing 
+    +
+<p>
+    quantil2
+    gr42 stb51 (NJC) 
+    quantile plots, generalized (1)
+    sup(SJ 12-1 qplot)
+<p>
+    quantil2
+    gr42_1 stb61 (NJC)
+    quantile plots, generalized (2)
+    sup(SJ 12-1 qplot)
+<p>
+    quantil2
+    SSC (NJC)
+    quantile plots, generalized (3)
+    sup(SJ 12-1 qplot)
+<p>
+    qweibull
+    SSC (NJC)
+    quantile-quantile plots for data vs fitted Weibull distribution
+    +
+<p>
+    rcspline
+    SSC (NJC)
+    restricted cubic spline smoothing
+    + 
+<p>
+    regresby
+    SSC (NJC)
+    generate regression residuals by byvarlist
+    pobs(OS foreach, forval)
+<p>
+    renames
+    SSC (NJC)
+    rename variables
+    sup(renvars, OS rename) 
+<p>
+    rensfix
+    dm83 stb59 (S.P. Jenkins, NJC)
+    rename variables and change suffix
+    sup(renvars, OS rename) 
+<p>
+    renvars
+    dm88 stb60 (NJC, J. Weesie)
+    rename variables, multiply and systematically
+    psup(OS rename)
+<p>
+    renvars
+    dm88_1 sj5-4 (NJC, J. Weesie)
+    rename variables, multiply and systematically (2)
+    psup(OS rename) 
+<p>
+    reorder
+    SSC (NJC)
+    reorder variables in dataset, reversibly
+<p>
+    roman
+    SSC (NJC)
+    handling Roman numerals and decimal equivalents
+    sup(SJ 11-1) 
+<p>
+    roman
+    dm0053 sj11-1 (NJC) 
+    handling Roman numerals and decimal equivalents
+<p>
+    romantoarabic
+    SSC (NJC)
+    converting Roman numerals to arabic numbers
+    sup(roman)
+<p>
+    rowranks
+    SSC (NJC)
+    row ranks of a set of variables
+    sup(SJ 9-1)
+<p>
+    rowranks 
+    pr0046 sj9-1 (NJC) 
+    row ranks of a set of variables
+    +
+<p>
+    rowsort
+    SSC (NJC)
+    row sort a set of integer variables
+    sup(SJ 9-1)
+<p>
+    rowsort 
+    pr0046 sj9-1 (NJC) 
+    row sort a set of variables
+    +
+<p>
+    running
+    sed9_2 sj5-2 (P. Sasieni, P. Royston, NJC)
+    symmetric nearest neighbor linear smoothers
+    sup(SSC) 
+<p>
+    running
+    SSC (P. Sasieni, P. Royston, NJC)
+    symmetric nearest neighbor linear smoothers
+    +
+<p>
+    safedrop
+    SSC (NJC)
+    drop variables if and only if varnames specified in full
+<p>
+    savesome
+    SSC (NJC)
+    save subset of data
+<p>
+    sbplot
+    SSC (NJC)
+    scatter plots, one y variable shown by vertical bars (for Stata 6)
+    obs(OS graph)
+<p>
+    sbplot5
+    SSC (NJC)
+    scatter plots, one y variable shown by vertical bars (for Stata 5)
+    obs(OS graph)
+<p>
+    scat3
+    SSC (NJC)
+    crude 3-dimensional graphics
+<p>
+    sdline
+    SSC (NJC)
+    SD line (reduced major axis)
+    +
+<p>
+    selectvars
+    SSC (NJC)
+    selecting all possible n-tuples from a varlist
+    sup(SSC tuples)
+<p>
+    seq
+    dm44 stb37 (NJC)
+    generate sequences of integers
+    obs(OS egen)
+<p>
+    seq
+    SSC (NJC)
+    generate sequences of integers
+    obs(OS egen)
+<p>
+    seqvar
+    gr0034 sj8-2 (NJC) 
+    assign integer numlists to variables
+    +
+<p>
+    shorth
+    SSC (NJC)
+    descriptive statistics based on shortest halves
+    +
+<p>
+    showgph
+    SSC (J. Brogger, NJC)
+    show graphs previously saved
+<p>
+    shownear
+    SSC (NJC)
+    show nearby values of numeric variable
+<p>
+    Singh-Maddala etc.
+    gr35 stb48 (NJC)
+    plots for assessing Singh-Maddala and Dagum distributions
+    sup(qpfit)
+<p>
+    skewplot
+    SSC (NJC)
+    skewness plots
+    +
+<p>
+    sliceplot
+    SSC (NJC)
+    time series or other plot in slices
+    see also SJ 6-3
+<p>
+    slideplot
+    SSC (NJC)
+    sliding bar plots for frequencies or percents
+<p>
+    sparl
+    SSC (NJC)
+    scatter plots with y-x regression line
+    pobs(OS graph); sup(aaplot) 
+<p>
+    spautoc
+    SSC (NJC)
+    spatial autocorrelation (Moran and Geary measures)
+<p>
+    spell
+    SSC (NJC, R. Goldstein)
+    identification of spells or runs of similar values
+    pobs(tsspell)
+<p>
+    spikeplt
+    SSC (NJC, A. Brady)
+    spike plots showing fine structure of the data (1)
+    sup(OS spikeplot)
+<p>
+    spikeplt
+    gr25 stb36 (NJC, A. Brady)
+    spike plots showing fine structure of the data (2)
+    sup(OS spikeplot)
+<p>
+    spikeplt
+    gr25_1 stb40 (NJC, A. Brady)
+    spike plots showing fine structure of the data (3)
+    sup(OS spikeplot)
+<p>
+    spineplot
+    SSC (NJC)
+    spine plots for two-way categorical data 
+    see SJ 8-1
+<p>
+    spineplot
+    gr0031 sj8-1 (NJC)
+    spine plots for two-way categorical data 
+    +
+<p>
+    split
+    SSC (NJC)
+    splitting string variables into parts
+    sup(OS split)
+<p>
+    sqr
+    SSC (NJC)
+    make graphs square, or any other shape
+    obs(OS graph)
+<p>
+    sssplot
+    SSC (NJC)
+    seasonal subseries plots
+    sup(cycleplot)
+<p>
+    statplot
+    SSC (E.A. Booth, NJC) 
+    plots of summary statistics 
+    +
+<p>
+    statsmat
+    SSC (NJC, C.F. Baum)
+    descriptive statistics in matrix
+<p>
+    stbget
+    SSC (NJC)
+    get packages from <i>Stata Technical Bulletin</i> 
+<p>
+    stemplot
+    gr0028 sj7-3 (NJC) 
+    stem-and-leaf plots
+    +
+<p>
+    sto
+    SSC (NJC)
+    toggle trace switch
+    obs(OS trace)
+<p>
+    storecmd
+    SSC (NJC)
+    store and repeat commands using characteristics
+<p>
+    strgen
+    SSC (NJC)
+    generate string variables without knowing string type
+    obs(OS generate)
+<p>
+    stripplot
+    SSC (NJC)
+    strip plots
+    +
+<p>
+    strparse
+    SSC (M. Blasnik, NJC)
+    parse string variables
+    obs(OS split)
+<p>
+    stylerules
+    SSC (NJC)
+    suggestions on programming style
+    sup(see SJ 5: 560-566, 2005)
+<p>
+    summdate
+    SSC (NJC)
+    summarizing date variable
+<p>
+    swapval
+    SSC (NJC)
+    swapping values of two variables
+<p>
+    swor
+    dm86 stb59 (NJC)
+    sampling without replacement (1)
+    pobs(OS sample)
+<p>
+    swor
+    dm0086_1 sj5-1 (NJC)
+    sampling without replacement (2)
+    pobs(OS sample)
+<p>
+    sxpose
+    SSC (NJC)
+    transpose string variable dataset
+<p>
+    t2way5
+    SSC (NJC)
+    Tukey's two-way analysis by medians (update of t2way)
+<p>
+    tab2i
+    sg57 stb33 (NJC)
+    immediate command for two-way tables
+    sup(tab_chi)
+<p>
+    tab_chi
+    www.stata.com/users/njc (NJC)
+    tabulation and chi-square tasks (1) 
+    sup(SSC)
+<p>
+    tab_chi
+    SSC (NJC)
+    tabulation and chi-square tasks (2) 
+    + (chitest/chitesti/tabsplit)
+<p>
+    taba
+    SSC (NJC)
+    tabulation of frequencies
+<p>
+    tabcond
+    SSC (NJC)
+    tabulate frequencies satisfying specified conditions
+<p>
+    tabcount
+    SSC (NJC)
+    tabulate frequencies, with zeros explicit
+    +
+<p>
+    tabexport
+    SSC (NJC)
+    export tables of summary statistics to text files
+<p>
+    tabhbar
+    SSC (NJC)
+    table of frequencies as horizontal bar chart
+    obs(catplot)
+<p>
+    tabhplot
+    SSC (NJC)
+    table of frequencies as horizontal plots
+    obs(catplot)
+<p>
+    tablab
+    SSC (NJC)
+    autocrosstabulate a variable
+    pobs(OS numlabel) 
+<p>
+    tablepc
+    SSC (NJC)
+    percent calculation prior to table
+<p>
+    tableplot
+    SSC (NJC)
+    graphical display in two-way table format
+<p>
+    tabmerge
+    SSC (NJC)
+    tabulate report on merge
+<p>
+    tabplot
+    SSC (NJC)
+    table of frequencies as table of bars
+    +
+<p>
+    tails
+    www.stata.com/meetings/6uk (NJC)
+    plotting and fitting distributions with long or heavy tails
+<p>
+    textbarplot
+    SSC (NJC) 
+    horizontal text and bar plot 
+    use labmask and seqvar instead 
+<p>
+    text editors 
+    texteditors.html
+    some notes on text editors for Stata users
+<p>
+    tkdensity
+    SSC (NJC) 
+    kernel density estimation, calculation on transformed scale
+    +
+<p>
+    todate
+    SSC (NJC)
+    generate date variables from run-together date variables
+    psup(OS date())
+<p>
+    tolower
+    SSC (NJC)
+    rename variables with lower case names
+    sup(renvars; OS rename)
+<p>
+    tomode
+    SSC (NJC, F. Wolfe)
+    change values of a variable to mode(s)
+    sup(STB 50, OS egen)
+<p>
+    topichlp
+    www.stata.com/users/njc (NJC)
+    help files on various general topics
+    sup(SSC)
+<p>
+    torats
+    SSC (C.F. Baum, NJC)
+    facilitate transfer of data to RATS
+<p>
+    tostring
+    www.stata.com/users/jwernow (NJC, J.B. Wernow)
+    change numeric variables to string
+    sup(OS tostring)
+<p>
+    tostring
+    dm80 stb56 (NJC, J.B. Wernow)
+    change numeric variables to string
+    sup(OS tostring)
+<p>
+    tostring
+    dm80_1 stb57 (NJC, J.B. Wernow)
+    change numeric variables to string (update)
+    sup(OS tostring)
+<p>
+    tpvar
+    SSC (NJC)
+    turning-point variable for graphics labelling
+    obs(OS graph)
+<p>
+    transint
+    SSC (NJC)
+    help files for transformations
+    +
+<p>
+    triplot
+    SSC (NJC)
+    triangular plots
+    +
+<p>
+    tsgraph
+    SSC (NJC, C.F. Baum)
+    time series line graphs
+    obs(OS graph)
+<p>
+    tsspell
+    SSC (NJC)
+    identification of spells or runs in time series
+    +
+<p>
+    tuples
+    SSC (NJC)
+    selecting all possible tuples from a list
+    +
+<p>
+    univstat
+    www.stata.com/users/njc (NJC)
+    summary statistics in matrix form (1)
+    sup(SSC)
+<p>
+    univstat
+    SSC (NJC)
+    summary statistics in matrix form (2)
+<p>
+    vallab
+    SSC (NJC)
+    pack values and labels into a new string variable
+    pobs(OS numlabel) 
+<p>
+    vallist
+    dm90 stb60 (NJC)
+    listing distinct values of a variable
+    sup(OS levelsof)
+<p>
+    variog
+    SSC (NJC)
+    calculate and graph semi-variograms
+<p>
+    vbar
+    gr24 stb36 (NJC)
+    vertical bar charts (1)
+    obs(OS graph, catplot)
+<p>
+    vbar
+    gr24_1 stb40 (NJC)
+    vertical bar charts (2)
+    obs(OS graph, catplot)
+<p>
+    vclose
+    SSC (NJC)
+    close viewer windows
+<p>
+    vplplot
+    SSC (NJC)
+    paired data plots
+    sup(pairplot)
+<p>
+    vreverse
+    SSC (NJC)
+    reverse existing categorical variable
+<p>
+    wbull
+    SSC (NJC)
+    fit Weibull distribution by maximum likelihood
+    sup(weibullfit)
+<p>
+    weibullfit
+    SSC (NJC, S.P. Jenkins)
+    fit two-parameter Weibull distribution
+    +
+<p>
+    whitetst
+    SSC (C.F. Baum, NJC)
+    tests for heteroskedasticity in regression error distribution
+    sup(STB 55)
+<p>
+    whitetst
+    sg137 stb55 (C.F. Baum, NJC, V. Wiggins)
+    tests for heteroskedasticity in regression error distribution
+    psup(OS imtest)
+<p>
+    winsor
+    SSC (NJC)
+    Winsorize a variable
+<p>
+    xcorplot
+    SSC (NJC, A. Tobias)
+    calculate and graph cross-correlation function
+    obs(OS xcor)
+<p>
+    xtpattern
+    SSC (NJC)
+    code showing pattern of xt data
+<p>
+    xtpatternvar
+    SSC (NJC)
+    generate variable describing panel patterns
+    +
+<p>
+    xttrans2
+    SSC (NJC)
+    tables of transition probabilities
+<p>
+    zmap
+    SSC (NJC)
+    binned scatter maps 
+    +
+<p>
+<p>
+<b><u>Author</u></b>
+<p>
+    Nicholas J. Cox, Durham University
+    n.j.cox@durham.ac.uk
+<p>
+<p>
+</pre>

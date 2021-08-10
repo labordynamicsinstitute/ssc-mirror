@@ -1,0 +1,73 @@
+<pre>
+<b>help labdu</b>
+-------------------------------------------------------------------------------
+<p>
+<b><u>Title</u></b>
+<p>
+     <b>labdu</b> -- Drop unused value labels from memory or delete values from value
+labels
+<p>
+<p>
+<b><u>Syntax</u></b>
+<p>
+        <b>labdu</b> [<i>lblname-list</i>] [<b>,</b> <b><u>del</u></b><b>ete</b> <b><u>k</u></b><b>eep</b> <b><u>c</u></b><b>urrent</b> <b><u>r</u></b><b>eport</b> <b><u>d</u></b><b>ryrun</b>]
+<p>
+<p>
+<b><u>Description</u></b>
+<p>
+    <b>labdu</b> drops unused value labels from memory. Optionally, values that do
+    no occur in the current dataset are deleted from value labels.  If
+    <i>lblname-list</i> is not specified it defaults to all value labels in memory.
+<p>
+<p>
+<b><u>Options</u></b>
+<p>
+    <b>delete</b> deletes values and the associated text from value labels if values
+        do not occur in any variable using the respective value label.
+<p>
+    <b>keep</b> does not drop value labels that are currently not used from memory.
+        May only be specified with <b>delete</b>.
+<p>
+    <b>current</b> drops value labels not used in the current label language.
+<p>
+    <b>report</b> displays dropped value label names and values that are deleted
+        from value labels.
+<p>
+    <b>dryrun</b> displays unused value labels and values that do not occur in the
+        dataset. No value labels will be dropped and no values will be
+        deleted. <b>dryrun</b> implies <b>report</b>.
+<p>
+<p>
+<b><u>Examples</u></b>
+<p>
+        <b>. sysuse nlsw88</b>
+        <b>. label define unused 1 "something"</b>
+        <b>. drop if race == 1</b>
+        <b>. labdu ,delete report</b>
+<p>
+<p>
+<b><u>Saved results</u></b>
+<p>
+    <b>labdu</b> saves the following in <b>r()</b>:
+<p>
+    Macros
+      <b>r(dropped)</b>     dropped value labels (if <b>dryrun</b> is not specified)
+      <b>r(unused)</b>      unused value labels (only if <b>dryrun</b> is specified)
+<p>
+<p>
+<b><u>Acknowledgments</u></b>
+<p>
+    Option <b>current</b> is adopted from Jeroen Weesie's labelrename.
+<p>
+<p>
+<b><u>Author</u></b>
+<p>
+    Daniel Klein, University of Bamberg, klein.daniel.81@gmail.com
+<p>
+<p>
+<b><u>Also see</u></b>
+<p>
+    Online: label
+<p>
+    if installed: labdel, labeldup, labutil2
+</pre>

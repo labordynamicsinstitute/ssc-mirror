@@ -1,0 +1,69 @@
+<pre>
+-------------------------------------------------------------------------------
+<b>help metaparm_resultssets</b>                                        (Roger Newson)
+-------------------------------------------------------------------------------
+<p>
+<p>
+<b><u>Output datasets created by </u></b><b><u>metaparm</u></b><b><u> and </u></b><b><u>parmcip</u></b>
+<p>
+    The output datasets (or resultssets) created by <b>metaparm</b> and <b>parmcip</b> have
+    one observation per parameter and data on their estimation results. After
+    <b>parmcip</b> has executed successfully, the dataset in memory will contain the
+    following variables (and possibly others):
+<p>
+   Default name    Description
+   --------------------------------------------------------------------------
+   <b>estimate</b>        Parameter estimate
+   <b>stderr</b>          SE of parameter estimate
+   <b>dof</b>             Degrees of freedom
+   <b>t</b>               <i>t</i>-test statistic
+   <b>z</b>               <i>z</i>-test statistic
+   <b>p</b>               <i>P</i>-value
+   <b>stars</b>           Stars for <i>P</i>-value
+   <b>min</b><i>yy</i>           Lower <i>xx</i>% confidence limit
+   <b>max</b><i>yy</i>           Upper <i>xx</i>% confidence limit
+   --------------------------------------------------------------------------
+<p>
+<p>
+    These variables contain the same information, and have the same
+    characteristics, as the variables of the same names in the parmest
+    resultsset.  The variables <b>estimate</b>, <b>stderr</b> and <b>dof</b> are usually present
+    before the execution of <b>parmcip</b>.  THe others are added to the dataset by 
+    <b>parmcip</b>.  The variable <b>t</b> is created only if the <b>tdist</b> option is in force,
+    the variable <b>z</b> is only present if the <b>notdist</b> option is in force, and the
+    variable <b>stars</b> is only present if the <b>stars()</b> option is specified.  All
+    of these variables may have non-default names, which can be specified by
+    the options in <i>parmcip_opts</i>.
+<p>
+    The output dataset created by <b>metaparm</b> contains all of these variables,
+    and may also contain the following additional variables:
+<p>
+   Default name        Description
+   --------------------------------------------------------------------------
+   <b>idnum</b>               Numeric dataset ID
+   <b>idstr</b>               String dataset ID
+   <i>by-variables</i>        Variables specified in the <b>by()</b> option
+   <i>sumvar-variables</i>    Variables specified in the <b>sumvar()</b> option
+   --------------------------------------------------------------------------
+<p>
+<p>
+    The variables with default names <b>idnum</b> and <b>idstr</b> may have non-default
+    names, which can be specified using the <b>nidnum()</b> and <b>nidstr()</b> options,
+    described in <i>metaparm_content_opts</i>.  The <i>by-variables</i> and
+    <i>sumvar-variables</i> aare also described in <i>metaparm_content_opts</i>.
+<p>
+<p>
+<b><u>Author</u></b>
+<p>
+    Roger Newson, Imperial College London, UK.  Email:
+    r.newson@imperial.ac.uk
+<p>
+<p>
+<b><u>Also see</u></b>
+<p>
+    Manual:  <b>[U] 20 Estimation and postestimation commands</b>
+<p>
+      Help:  <b>[U] 20 Estimation and postestimation commands</b>
+             <b>parmest</b>, <b>parmby</b> <b>parmcip</b>, <b>metaparm</b>, <i>metaparm_outdest_opts</i>,
+             <i>metaparm_content_opts</i>, <i>parmcip_opts</i>, <i>parmest_resultssets</i>
+</pre>

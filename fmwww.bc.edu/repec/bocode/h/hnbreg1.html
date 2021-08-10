@@ -1,0 +1,150 @@
+<pre>
+-------------------------------------------------------------------------------
+help for <b>hnbreg1</b>                                                 (Joseph Hilbe)
+-------------------------------------------------------------------------------
+<p>
+<b><u>Heterogeneous linear negative binomial regression (NB-1)</u></b>
+<p>
+        <b>hnbreg1</b>  <i>depvar</i> [<i>varlist</i>] [<b>if</b> <i>exp</i>] [<b>in</b> <i>range</i>] [, <b><u>lnd</u></b><b>elta(</b><i>varlist</i><b>)</b>
+             <b><u>off</u></b><b>set(</b><i>varname</i><b>)</b> <b><u>exp</u></b><b>osure(</b><i>varname</i><b>)</b> <b><u>cl</u></b><b>uster(</b><i>varname</i><b>)</b> <b><u>l</u></b><b>evel(</b><i>#</i><b>)</b>
+             <b><u>from</u></b><b>(</b><i>asis</i><b>)</b> <b><u>ir</u></b><b>r</b> <b>eform</b> <b><u>rob</u></b><b>ust</b> <b>nolog</b> <i>maximize_options</i>
+             <i>survey_options</i>]
+<p>
+<p>
+    <b>aweight</b>s, <b>fweight</b>s, <b>iweight</b>s, and <b>pweight</b>s are allowed; see help weights.
+<p>
+    <b>hnbreg1</b> provides access to all <i>maximize</i> options; see help maximize.
+<p>
+    <b>hnbreg1</b> provides access to all <i>survey</i> options; see help svy.
+<p>
+<p>
+<b><u>Description</u></b>
+<p>
+    <b>hnbreg1</b> fits a maximum-likelihood linear negative binomial regression
+    model (NB-1), with a heterogeneous (Stata: -generalized-)
+    parameterization of <i>depvar</i> on <i>indepvars</i>, where <i>depvar</i> is a non-negative
+    count variable.
+<p>
+    <b>hnbreg1</b> acccepts all of the <i>help maximize</i> options, the <i>constraint()</i>
+    option, and all survey options and capabilities documented in <b>[SVY]</b>;
+    including multi-level surveys; poststratification; and BRR, jackknife,
+    and linearization VCE estimators.
+<p>
+    The <b>lndelta</b>() option parameterizes the natural log of delta, the linear
+    negative binomial heterogeneity or ancillary parameter. When
+    parameterized, the displayed value of delta is the exponential of the
+    parameterized constant, and has little value for understanding predictor
+    contributions to the parameter.
+<p>
+    This program uses <b>ml lf</b> method.
+<p>
+<p>
+<b><u>Options</u></b>
+<p>
+        +-------+
+    ----+ Model +------------------------------------------------------------
+<p>
+    <b>lndelta(</b><i>varlist</i><b>)</b> in which ancillary parameter delta is parameterized by
+        listed variables.
+<p>
+    <b>offset(</b><i>varname</i><b>)</b> specifies a <i>varname</i> in model with coefficient constrained
+        to 1.
+<p>
+    <b>exposure(</b><i>varname</i><b>)</b> specifies a <i>ln(varname)</i> in model with coefficient
+        constrained to 1.
+<p>
+    <b>constraints(</b><i>constraints</i><b>)</b> apply specified linear constraints.
+<p>
+<p>
+<p>
+        +-----------+
+    ----+ SE/Robust +--------------------------------------------------------
+<p>
+    <b>cluster(</b><i>varname</i><b>)</b>
+<p>
+    <b>robust</b> specifies that the Huber/White/sandwich estimator of variance is
+        to be used in place of the traditional calculation.  <b>robust</b> combined
+        with <b>cluster()</b> allows observations which are not independent within
+        cluster (although they must be independent between clusters).  If you
+        specify <b>pweight</b>s, <b>robust</b> is implied.
+<p>
+    <b>vce(</b><i>options</i><b>)</b> allowed. <b>vce()</b> supports <i>robust</i>, <i>opg</i>, and <i>native</i>.  <b>vce</b> does
+        not support options <i>bootstrap</i> or <i>jacknife</i>, However, <b>hnbreg1</b> supports
+        the <b>bootstrap</b> and <b>jacknife</b> commands.
+<p>
+<p>
+        +-----------+
+    ----+ Reporting +--------------------------------------------------------
+   
+    <b>level(</b><i>#</i><b>)</b> specifies the confidence level, in percent, for confidence
+        intervals of the coefficients; see help level.
+<p>
+    <b>nolog</b> suppresses the iteration log.
+<p>
+    A likelihood ratio test is provided between <b>hnbreg1</b> with delta=0 and the
+        estimated model.  <b>hnbreg1</b> with delta=0 is a <b>poisson</b> model.
+<p>
+<p>
+        +-------------+
+    ----+ max options +------------------------------------------------------
+<p>
+<p>
+    <i>maximize_options</i>: technique(algorithm_spec), [no]log, trace, hessian,
+        gradient, showstep, shownrtolerance, difficult, iterate(#),
+        tolerance(#), ltolerance(#), gtolerance(#), nrtolerance(#),
+        nonrtolerance, from(init_specs); see maximize.
+<p>
+<p>
+        +-------------+
+    ----+ svy options +------------------------------------------------------
+<p>
+    <i>survey_options</i> are all available. See help svy
+<p>
+<p>
+<p>
+<p>
+<b><u>Author and support</u></b>
+<p>
+    <b>Joseph Hilbe</b>,<b> Arizona State University</b>:<b>  Hilbe@asu.edu</b>
+<p>
+<p>
+<b><u>Remarks</u></b>
+<p>
+    <b>hnbreg1</b> is a user authored program. Support is by author.  <b>NOTE</b>: The
+    heterogeneous linear negative binomial is similar to Stata's gnbreg
+    command, except that it provides for the parameterization of the negative
+    binomial heterogeneity parameter when the dispersion is specified as
+    constant.
+<p>
+    <b>hnbreg1</b> requires a nonnegative response.
+<p>
+<p>
+<b><u>Examples</u></b>
+<p>
+    <b>. hnbreg1 los hmo white type2 type3, nolog irr</b>
+<p>
+    <b>. hnbreg1 los hmo white type2 type3, nolog lndelta(hmo white)</b>
+<p>
+    <b>. hnbreg1 los hmo white type2 type3, nolog exposure(pop) cluster(state)</b>
+<p>
+    <b>. bootstrap: hnbreg1 los hmo white type2 type3, nolog lndelta(hmo white)</b>
+        <b>eform</b>
+<p>
+<p>
+<b><u>Reference</u></b>
+<p>
+    Hilbe, J. (2007), <i>Negative Binomial Regression</i>, Cambridge, UK: Cambridge
+        University Press.
+<p>
+    Hardin, J. &amp; J. Hilbe (2007), <i>Generalized Linear Models and Extensions</i>,
+        2nd ed., Stata Press.
+<p>
+<p>
+<b><u>Also see</u></b>
+<p>
+    Online:  <b>help</b> <b>gnbreg</b> <b>nbreg</b>
+<p>
+<p>
+<p>
+<p>
+</pre>

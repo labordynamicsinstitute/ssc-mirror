@@ -1,0 +1,519 @@
+<pre>
+-------------------------------------------------------------------------------
+help for <b>rtfutil</b>                                                 (Roger Newson)
+-------------------------------------------------------------------------------
+<p>
+<p>
+<b><u>Utilities for writing Rich Text Format (RTF) files</u></b>
+<p>
+    Open a new RTF file
+<p>
+        <b>rtfopen</b> <i>handle</i> <b>using</b> <i>filename</i> [ , <b>replace</b> <b><u>te</u></b><b>mplate(</b><i>template_name</i><b>)</b>
+                     <b><u>pa</u></b><b>per(</b><i>paper_size</i><b>)</b> <b><u>la</u></b><b>ndscape</b> <b><u>ma</u></b><b>rgins(</b><i>#1 #2 #3 #4</i><b>)</b> ]
+<p>
+    where <i>template_name</i> is
+<p>
+    <b>minimal</b> | <b>fnmono1</b> | <b>fnmono2</b>
+<p>
+    and <i>paper_size</i> is
+<p>
+    <b>us</b> | <b>usland</b> | <b>a4</b> | <b>a4land</b> | <i>#1 #2</i>
+<p>
+    Open an existing RTF file for appending RTF code
+<p>
+        <b>rtfappend</b> <i>handle</i> <b>using</b> <i>filename</i> [ , <b>replace</b> <b><u>fr</u></b><b>om(</b><i>filename</i><b>)</b> ]
+<p>
+    Start a new section in an open RTF file
+<p>
+        <b>rtfsect</b> <i>handle</i> [ , <b><u>de</u></b><b>fault</b> <b><u>pa</u></b><b>per(</b><i>paper_size</i><b>)</b> <b><u>la</u></b><b>ndscape</b> <b><u>ma</u></b><b>rgins(</b><i>#1 #2</i>
+                     <i>#3 #4</i><b>)</b> ]
+<p>
+    Insert a graphic file as a linked object into an open RTF file
+<p>
+        <b>rtflink</b> <i>handle</i> <b>using</b> <i>filename</i>
+<p>
+    Insert a hyperlink into an open RTF file
+<p>
+        <b>rtfhyper</b> <i>handle</i> , <b><u>h</u></b><b>yperlink(</b><i>URL</i><b>)</b> [ <b><u>t</u></b><b>ext(</b><i>string</i><b>)</b> ]
+<p>
+    Compute cumulative sums for a number list
+<p>
+        <b>rtfcumlist</b> <i>numlist</i> [ , <b><u>lo</u></b><b>cal(</b><i>local_macro_name</i><b>)</b> ]
+<p>
+    Create a <b>listtab</b> row style for specified cell widths
+<p>
+        <b>rtfrstyle</b> [ <i>varlist</i> ] [ , <b><u>cw</u></b><b>idths(</b><i>numlist</i><b>)</b> <b>trgaph(</b><i>#</i><b>)</b> <b>trleft(</b><i>#</i><b>)</b>
+                     <b><u>tdp</u></b><b>osition(</b><i>tabdef_position</i><b>)</b> <b><u>tda</u></b><b>dd(</b><i>string</i><b>)</b>
+                     <b><u>cda</u></b><b>dd(</b><i>string_list</i><b>)</b> <b><u>m</u></b><b>issnum(</b><i>string</i><b>)</b>
+                     <b><u>lo</u></b><b>cal(</b><i>local_macro_name_list</i><b>)</b> ]
+<p>
+    where <i>tabdef_position</i> is
+<p>
+    <b>b</b> | <b>e</b> | <b>be</b> | <b>eb</b>
+<p>
+    Close an open RTF file
+<p>
+        <b>rtfclose</b> <i>handle</i>
+<p>
+    where <i>handle</i> is a file handle as recognized by the <b>file</b> utility.
+<p>
+<p>
+<b><u>Description</u></b>
+<p>
+    The <b>rtfutil</b> package is a suite of file handling utilities for producing
+    Rich Text Format (RTF) files in Stata, possibly containing plots and
+    tables.  These RTF files can then be opened by Microsoft Word, and
+    possibly by alternative free word processors.  The plots can be included
+    by inserting, as linked objects, graphics files that might be produced by
+    the <b>graph export</b> command in Stata.  The tables can be included by using
+    the <b>listtab</b> command, downloadable from SSC, with the <b>handle()</b> option.
+<p>
+<p>
+<b><u>Options for </u></b><b><u>rtfopen</u></b>
+<p>
+    <b>replace</b> specifies that any existing file with the name specified by the
+        <i>filename</i> will be replaced.
+<p>
+    <b>template(</b><i>template_name</i><b>)</b> specifies the name of an RTF template, on which
+        the output RTF file will be based.  A template is a sequence of RTF
+        commands, which specifies a file with an RTF format but no content,
+        which will be created if the user uses <b>rtfclose</b> immediately after
+        using <b>rtfopen</b>.  The user may add content by using other commands
+        between <b>rtfopen</b> and <b>rtfclose</b>.  Currently, 3 templates are available.
+        <b>minimal</b> (the default) specifies that the template begins with the
+        line <b>{\rtf1</b> and ends with the line <b>}</b>, with no font table, no header,
+        and no formatting commands (apart from any specified by the <b>paper()</b>
+        and <b>margins()</b> options).  <b>fnmono1</b> specifies that the template contains
+        a small font table, no color table, stylesheet, or info group, a
+        small set of formatting commands, and a header group, displaying only
+        the name of the file specified by <b>using</b> together with the current
+        page number.  <b>fnmono2</b> specifies the same template as <b>fnmono1</b>, except
+        that the header group displays the file name, the current page
+        number, and the total number of pages in the document.  The option
+        <b>template(fnmono2)</b> may produce RTF documents that cannot be read
+        correctly by RTF readers other than Microsoft Word.
+<p>
+    <b>paper(</b><i>paper_size</i><b>)</b> specifies the dimensions (width and height) of the
+        paper for the output RTF document.  These dimensions may be given as
+        two numbers <i>#1 #2</i>, where <i>#1</i> is width (in twips) and <i>#2</i> is height (in
+        twips), or they may be given as a named paper size <b>us</b>, <b>usland</b>, <b>a4</b>, or
+        <b>a4land</b>, where <b>us</b> specifies the standard US paper size of width 12240
+        twips and height 15840 twips, <b>usland</b> specifies the standard
+        landscaped US paper size of width 15840 twips and height 12240 twips,
+        <b>a4</b> specifies the standard A4 paper size of width 11909 twips and
+        height 16834 twips, and <b>a4land</b> specifies the standard landscaped A4
+        paper size of width 16834 twips and height 11909 twips.  The implied
+        default dimensions in RTF are <b>papersize(12240 15840)</b>, or US paper
+        size.  A twip is 1/1440 of an inch, or 1/20 of a point, and is the
+        standard unit of length most commonly used in RTF documents.
+<p>
+    <b>landscape</b> specifies that the orientation of the document, when printed,
+        will be landscape.  If <b>landscape</b> is not specified, then the
+        orientation will be portrait.  Note that the <b>landscape</b> option is
+        independent of the <b>paper()</b> option.  Therefore, if the user specifies
+        <b>paper(usland)</b> or <b>paper(a4land)</b>, then the user must also specify
+        <b>landscape</b> for the document to have a landscape orientation when
+        printed.
+<p>
+    <b>margins(</b><i>#1 #2 #3 #4</i><b>)</b> specifies the left, right, top and bottom margins
+        (in twips) for the output RTF document.  The implied default in RTF
+        is <b>margins(1800 1800 1440 1440)</b>.
+<p>
+<p>
+<b><u>Options for </u></b><b><u>rtfappend</u></b>
+<p>
+    <b>replace</b> specifies that any existing file with the name specified by the
+        <b>using</b> <i>filename</i> will be replaced.
+<p>
+    <b>from(</b><i>filename</i><b>)</b> specifies an input file, to which additional RTF input
+        will be appended to produce the output file specified by the <b>using</b>
+        <i>filename</i>.  If <b>from()</b> is unspecified, then <b>rtfappend</b> inputs the file
+        specified by <b>using</b>, assuming that that file already exists, and
+        overwrites it, if <b>replace</b> is specified.
+<p>
+<p>
+<b><u>Options for </u></b><b><u>rtfsect</u></b>
+<p>
+    <b>default</b> specifies that all section settings will be restored to the
+        document default, usually as set by <b>rtfopen</b>.
+<p>
+    <b>paper()</b>, <b>landscape</b> and <b>margins()</b> are defined as the options of the same
+        names for <b>rtfopen</b>.  However, they apply only to the section, not to
+        the whole document.  This is useful if the user wants to have
+        landscape pages in a mainly portrait document.
+<p>
+<p>
+<b><u>Options for </u></b><b><u>rtfhyper</u></b>
+<p>
+    <b>hyperlink(</b><i>URL</i><b>)</b> specifies the uniform resource location (URL) for the
+        hyperlink.  This option must be specified.
+<p>
+    <b>text(</b><i>string</i><b>)</b> specifies the text used in the hypertext for the hyperlink.
+        If <b>text()</b> is not specified, then the <b>hyperlink()</b> option is used.
+        Note that it is the user's responsibility to add underlining, colors,
+        or any other formatting used to indicate hypertext.
+<p>
+<p>
+<b><u>Options for </u></b><b><u>rtfcumlist</u></b>
+<p>
+    <b>local(</b><i>local_macro_name</i><b>)</b> specifies the name of a local macro, in which the
+        result will be saved.  <b>rtfcumlist</b> inputs a <i>numlist</i>, and computes, as
+        output, a second number list, containing the cumulative sums of the
+        input <i>numlist</i>.  This is useful if the input <i>numlist</i> contains a
+        sequence of table row widths (in twips), and the user wants the
+        cumulative sums for use in <b>cellx</b><i>N</i> control words, defining the
+        corresponding table row right boundaries (in twips).
+<p>
+<p>
+<b><u>Options for </u></b><b><u>rtfrstyle</u></b>
+<p>
+    <b>cwidths(</b><i>numlist</i><b>)</b> specifies a list of column widths, expressed in twips,
+        to be used in the generated <b>listtab</b> row style.  A <b>listtab</b> row style
+        is a combination of the <b>listtab</b> options <b>begin()</b>, <b>delimiter()</b>, <b>end()</b>
+        and <b>missnum()</b>.  The column widths must be positive integers.  If a 
+        <i>varlist</i> is specified, then the list of column widths is truncated, or
+        extended on the right with copies of the last column width in the
+        list, to make the number of column widths equal to the number of
+        variables in the <i>varlist</i>.  If <b>cwidths()</b> is not specified, then it is
+        initialized to a single width of 1440 twips (equal to one inch), and
+        then extended with copies if a <i>varlist</i> is specified.  The final list
+        of column widths is used to construct the RTF table row definition,
+        which will be output as part of the <b>listtab</b> row style.
+<p>
+    <b>trgaph(</b><i>#</i><b>)</b> specifies half the space between the cells of a table row
+        (expressed in twips).  If absent, then it is set to 40 twips, or 2
+        points.
+<p>
+    <b>trleft(</b><i>#</i><b>)</b> specifies the position in twips of the leftmost edge of the
+        table, with respect to the left edge of its left column.  If absent,
+        then it is set to <i>-trgaph</i>, where <i>trgaph</i> is the number set by
+        <b>trgaph()</b>.
+<p>
+    <b>tdposition(</b><i>tabdef_position</i><b>)</b> specifies whether the RTF table definition
+        will be part of the <b>begin()</b> option or the <b>end()</b> option of the <b>listtab</b>
+        row style generated.  It may be set to <b>b</b>, <b>e</b>, <b>be</b> or <b>eb</b>.  If it is set
+        to <b>b</b>, then it will be part of the <b>begin()</b> option.  If it is set to <b>e</b>,
+        then it will be part of the <b>end()</b> option.  If it is set to <b>be</b> or <b>eb</b>,
+        then it will be part of both options.  In RTF documents, the table
+        definition is sometimes part of the beginning of the row definition
+        (before the cells), and is sometimes part of the end of the row
+        definition (after the cells), and is sometimes repeated in both
+        places.
+<p>
+    <b>tdadd(</b><i>string</i><b>)</b> specifies additional RTF commands to be added to the table
+        row definition, in order to customize the table rows defined by the
+        row style.  For instance, <b>tdadd("\trqr")</b> specifies that the generated
+        table rows will be right-justified in their page (or in their
+        containing column).
+<p>
+    <b>cdadd(</b><i>string_list</i><b>)</b> specifies a list of sequences of additional RTF
+        commands, to be added to the table cell definitions, in order to
+        customize the table cells generated by the generated <b>listtab</b> row
+        style.  The list of strings will be truncated, or extended on the
+        right with copies of the last string in the list, to make the number
+        of additional strings equal to the final number of columns.  (The
+        final number of columns is defined as the final number of column
+        widths specified by <b>cwidths()</b>, after any necessary truncation or
+        extension to match the length of the <i>varlist</i>.) If <b>cdadd()</b> is not
+        specified, then it is initialized to a single empty string (<b>""</b>), and
+        then extended with copies if there will be more than one column in
+        the table.  The final list of additional strings is used to construct
+        the RTF table cell definitions, which will be output as part of the 
+        <b>listtab</b> row style.
+<p>
+    <b>missnum(</b><i>string</i><b>)</b> specifies the <b>missnum()</b> option of the generated <b>listtab</b>
+        row style.  If not specified, then it is set to an empty string (<b>""</b>).
+<p>
+    <b>local(</b><i>local_macro_name_list</i><b>)</b> specifies a list of up to 4 names of local
+        macros, which, if supplied, will be set to the <b>begin()</b>, <b>delimiter()</b>,
+        <b>end()</b> and <b>missnum()</b> options, respectively, of the row style generated
+        by <b>rtfrstyle</b>.  These macro names can then be used when calling 
+        <b>listtab</b>.  They can be useful, because the strings beginning,
+        delimiting and ending RTF table rows are often long and difficult to
+        remember.
+<p>
+<p>
+<b><u>Remarks</u></b>
+<p>
+    The <b>rtfopen</b> command produces minimal Rich Text Format (RTF) documents,
+    with no character set declaration, default font declaration, font tables,
+    color tables, stylesheets, info groups, preliminary formatting commands,
+    headers, footers, or other extra information, unless the user adds them,
+    either using the <b>template()</b> option of <b>rtfopen</b> or using the <b>file write</b>
+    command.  <b>rtfopen</b> opens a file and initializes the output with a line
+<p>
+    <b>{\rtf1</b>
+<p>
+    and possibly other lines of RTF code specified by the <b>template()</b> option.
+    The <b>rtfappend</b> command opens an existing RTF file for appending additional
+    RTF code to the end of the file, just before the terminal <b>}</b> character
+    used to terminate a well-formed RTF document.  The <b>rtfclose</b> command
+    simply outputs, to a file already open for text output, the line
+<p>
+    <b>}</b>
+<p>
+    and then closes the open file.  This ensures that, if the user outputs
+    legible code with no unmatched brackets <b>{</b> and <b>}</b>, then the RTF document as
+    a whole will be legible and have no unmatched brackets.  More information
+    on the use of <b>rtfutil</b> with <b>listtab</b> and other SSC packages can be found in
+    Newson (2012).  More information on Rich Text Format can be found in
+    Burke (2003).
+<p>
+    It is a good idea to enclose all code between a <b>rtfopen</b> or <b>rtfappend</b>
+    command and the corresponding <b>rtfclose</b> command in a <b>capture noisily</b>
+    block, beginning with the command
+<p>
+    <b>capture noisily {</b>
+<p>
+    and ending with the command
+<p>
+    <b>}</b>
+<p>
+    This ensures that, if any command in the <b>capture noisily</b> block fails,
+    then Stata will transfer control to the <b>rtfclose</b> command immediately
+    following the <b>capture noisily</b> block, and the RTF file specified by
+    <b>rtfopen</b> or <b>rtfappend</b> will be closed, and will be available for inspection
+    by the user, using Microsoft Word or other RTF file readers.
+<p>
+    Note that <b>rtflink</b> inserts a graphics file into a RTF document as a linked
+    object, and not as an embedded object, using nonstandard RTF code used by
+    Microsoft Word versions in Word 2000 or above.  This implies that the
+    linked object may not be recognized by non-Microsoft word processors (or
+    obsolete Microsoft word processors) that use RTF.  It also implies that,
+    if the RTF document is moved to another folder (or another computer),
+    then the graphics file may no longer be visible, unless it is moved as
+    well.  Users who wish to include graphics files as embedded objects
+    should probably open the RTF document (using a post-2000 version of
+    Microsoft Word), and then select the graphic, and embed it into the
+    document by using the menu sequence
+<p>
+    <b>Edit -&gt; Links</b>
+<p>
+    and checking the box marked <b>Save file in document</b>.  This is an annoying
+    and labor-intensive feature of <b>rtflink</b>.  Also, it has been known for RTF
+    documents with embedded graphics to have compatability problems when
+    users try to convert them to OpenOffice.  However, it probably requires
+    less work than most other available methods, if the user wanted to
+    produce a RTF document (with tables and graphics) in a hurry, for
+    colleagues to read using Microsoft Word.
+<p>
+    Note that the <b>rtfhyper</b> command, and the <b>template(fnmono2)</b> option of
+    <b>rtfopen</b>, also use nonstandard RTF additions.  These also may not work in
+    non-Microsoft word processors, although they appear to work in Microsoft
+    Word.
+<p>
+    In general, RTF is designed as a Rich <i>TEXT</i> Format, which implements text
+    (and probably tables) to be portable between systems.  Users who
+    introduce graphics, hypertext, and headers or footers containing the
+    total number of pages into RTF documents for input to Microsoft Word
+    should probably not expect to be able to port them to other packages.
+<p>
+<p>
+<b><u>Technical note</u></b>
+<p>
+    <b>rtfrstyle</b> inputs a variable list and/or a list of column widths, and
+    outputs a <b>listtab</b> row style, which can be saved in the local macros
+    specified by the <b>local()</b> option, and has 4 components, which are values
+    for the <b>listtab</b> options <b>begin()</b>, <b>delimiter()</b>, <b>end()</b> and <b>misnum()</b>.  The
+    <b>missnum()</b> option is as specified by the user, defaulting to an empty
+    string (<b>""</b>).  The <b>delimiter()</b> option is the string <b>"\cell\pard\intbl "</b>,
+    which terminates one RTF table cell and initiates another.  The <b>begin()</b>
+    option is <b>"{\trowd\pard\intbl "</b> if the user specifies <b>tdposition(e)</b>, and
+    otherwise has the syntax <b>"{</b><i>&lt;tabdef&gt;</i><b>\pard\intbl "</b>, where <i>&lt;tabdef&gt;</i> is a RTF
+    table definition.  The <b>end()</b> option is <b>"\cell\row}"</b> if the user specifies
+    <b>tdposition(b)</b> (either explicitly or by default), and otherwise has the
+    syntax <b>"\cell</b><i>&lt;tabdef&gt;</i><b>\row}"</b>.
+<p>
+    The RTF table definition <i>&lt;tabdef&gt;</i> has the syntax
+<p>
+    <b>"\trowd\trgaph</b><i>&lt;trgaph_option&gt;</i><b>\trleft</b><i>&lt;trleft_option&gt;&lt;tdadd_option&gt;&lt;celldef</i>
+    <i>&gt; s&gt;</i><b>"</b>
+<p>
+    where <i>&lt;trgaph_option&gt;</i> is the <b>trgaph()</b> option, <i>&lt;trleft_option&gt;</i> is the
+    <b>trleft()</b> option, <i>tdadd_option&gt;</i> is the <b>tdadd()</b> option, and <i>&lt;celldefs&gt;</i> is a
+    list of RTF cell definitions (with no intervening commas or spaces), one
+    for each column of the RTF table to be output by <b>listtab</b>.  The <i>k</i>th cell
+    definition of the <i>&lt;celldefs&gt;</i> has the syntax
+<p>
+    <b>"</b><i>&lt;cdadd_item&gt;</i><b>\cellx</b><i>&lt;crbound_item&gt;</i><b>"</b>
+<p>
+    where <i>&lt;crbound_item&gt;</i> is the <i>k</i>th cell right boundary in the final list of
+    cell right boundaries implied by the <b>cwidths()</b> option, and <i>&lt;cdadd_item&gt;</i>
+    is the <i>k</i>th item in the final list of items implied by the <b>cdadd()</b> option.
+    Note that <b>rtfrstyle</b> creates a <b>listtab</b> row style to create RTF table rows
+    each enclosed within a RTF group, beginning with <b>{</b> and ending with <b>}</b>.
+    This prevents paragraph formatting specifications within table rows from
+    having effects on the formatting of RTF code in the same document after
+    the table.
+<p>
+    This syntax allows the user to specify a very wide range of RTF table row
+    styles for input to <b>listtab</b>.  The <i>varlist</i> used with <b>rtfrstyle</b> should be
+    the same <i>varlist</i> later used with <b>listtab</b>, as this will ensure that the
+    number of <i>&lt;celldefs&gt;</i> is the same as the number of columns in the table,
+    which is the number of variables in the <i>varlist</i>.  Microsoft Word usually
+    fails uninformatively if a RTF document contains a table row with a
+    number of cell definitions unequal to the number of cells.
+<p>
+<p>
+<b><u>Examples</u></b>
+<p>
+    The following example generates a document <b>mydoc1.rtf</b>, which includes, as
+    a linked object, a file <b>myplot1.eps</b>, produced by <b>graph export</b>.  The <b>file</b>
+    command <b>file write</b> is used to add a heading before the plot, and two
+    paragraphs after the plot, each containing a hyperlink added using
+    <b>rtfhyper</b>.
+<p>
+        <b>. sysuse auto, clear</b>
+        <b>. scatter mpg weight, by(foreign) scheme(s2color)</b>
+        <b>. graph export myplot1.eps, replace</b>
+        <b>. tempname handle1</b>
+        <b>. rtfopen `handle1' using "mydoc1.rtf", template(fnmono1) replace</b>
+        <b>. capture noisily {</b>
+        <b>. file write `handle1' "{\pard\b Plots of mileage against weight by</b>
+            <b>car origin\par}" _n</b>
+        <b>. rtflink `handle1' using "myplot1.eps"</b>
+        <b>. file write `handle1' _n "{\line}" _n "{\pard A package for linking</b>
+            <b>plots like these into RTF documents can be downloaded from Roger</b>
+            <b>Newson's website at {\ul "</b>
+        <b>. rtfhyper `handle1',</b>
+            <b>hyper("http://www.imperial.ac.uk/nhli/r.newson/")</b>
+        <b>. file write `handle1' "}\par}"</b>
+        <b>. file write `handle1' "\line" _n "{\pard Find out more about Stata</b>
+            <b>at "</b>
+        <b>. rtfhyper `handle1', hyper("http://www.stata.com/") text("{\ul The</b>
+            <b>Stata website}")</b>
+        <b>. file write `handle1' ".\par}" _n "\line" _n</b>
+        <b>. }</b>
+        <b>. rtfclose `handle1'</b>
+<p>
+    The following example generates a document <b>mydoc2.rtf</b>, which contains a
+    RTF table of the mileages and weights of the 22 non-American cars in the
+    <b>auto</b> data.  This table is generated using the <b>listtab</b> package, using a
+    RTF row style generated by <b>rtfrstyle</b>.  The numeric variables <b>mpg</b> and
+    <b>weight</b> are converted to string variables before output, using the <b>sdecode</b>
+    package, adding RTF prefixes causing them to be right-justified in the
+    output RTF table.  The string variable <b>make</b> is not prefixed or suffixed,
+    implying that (by default) it will be left-justified in the output RTF
+    table.  Note the use of the <b>local()</b> option of <b>rtfrstyle</b>, which generates
+    local macros <b>b</b>, <b>d</b> and <b>e</b>, containing the <b>begin()</b>, <b>delimiter()</b> and <b>end()</b>
+    options, respectively, that are then passed to <b>listtab</b>.  The <b>listtab</b> and 
+    <b>sdecode</b> packages can be downloaded from SSC.
+<p>
+        <b>. sysuse auto, clear</b>
+        <b>. keep if foreign==1</b>
+        <b>. sdecode mpg, replace prefix("\qr{") suffix("}")</b>
+        <b>. sdecode weight, replace prefix("\qr{") suffix("}")</b>
+        <b>. tempname handle2</b>
+        <b>. rtfopen `handle2' using "mydoc2.rtf", template(fnmono1) replace</b>
+        <b>. capture noisily {</b>
+        <b>. file write `handle2' "{\pard\b Mileage and weight in non-US</b>
+            <b>cars\par}" _n</b>
+        <b>. rtfrstyle make mpg weight, cwidths(2160 1440 1440) local(b d e)</b>
+        <b>. listtab make mpg weight, handle(`handle2') begin("`b'")</b>
+            <b>delim("`d'") end("`e'") head("`b'\ql{\i Make}`d'\qr{\i Mileage</b>
+            <b>(mpg)}`d'\qr{\i Weight (lb)}`e'")</b>
+        <b>. }</b>
+        <b>. rtfclose `handle2'</b>
+<p>
+    The following example is like the previous example, except that the
+    generated document is named <b>mydoc3.rtf</b>, and the table (and its heading)
+    are right-justified on their page, and the cells of the top row of the
+    table (containing the column titles) have upper and lower treble-line
+    borders.  The right-justification is specified by the option
+    <b>tdadd("\trqr")</b>.  The upper and lower borders are specified by the <b>cdadd()</b>
+    option of the first <b>rtfrstyle</b> command, which generates an alternative
+    <b>begin()</b> option, stored in the macro <b>B</b>.
+<p>
+        <b>. sysuse auto, clear</b>
+        <b>. keep if foreign==1</b>
+        <b>. sdecode mpg, replace prefix("\qr{") suffix("}")</b>
+        <b>. sdecode weight, replace prefix("\qr{") suffix("}")</b>
+        <b>. tempname handle3</b>
+        <b>. rtfopen `handle3' using "mydoc3.rtf", template(fnmono1) replace</b>
+        <b>. capture noisily {</b>
+        <b>. file write `handle3' "{\pard\qr{\b Mileage and weight in non-US</b>
+            <b>cars}\par}" _n</b>
+        <b>. rtfrstyle make mpg weight, tdadd("\trqr")</b>
+            <b>cdadd("\clbrdrt\brdrw20\brdrtriple\clbrdrb\brdrw20\brdrtriple")</b>
+            <b>cwidths(2160 1440 1440) local(B)</b>
+        <b>. rtfrstyle make mpg weight, tdadd("\trqr") cwidths(2160 1440 1440)</b>
+            <b>local(b d e)</b>
+        <b>. listtab make mpg weight, handle(`handle3') begin("`b'")</b>
+            <b>delim("`d'") end("`e'") head("`B'\ql{\i Make}`d'\qr{\i Mileage</b>
+            <b>(mpg)}`d'\qr{\i Weight (lb)}`e'")</b>
+        <b>. }</b>
+        <b>. rtfclose `handle3'</b>
+<p>
+    The following example demonstrates the use of <b>rtfappend</b> and <b>rtflink</b> to
+    add a graph to a file <b>mydoc12.rtf</b>, generated using the <b>estpost</b> and <b>esttab</b>
+    modules of the SSC package <b>estout</b>, written by Ben Jann.  The <b>estout</b> and
+    <b>rtfutil</b> packages are complementary, as more users produce tables using 
+    <b>estout</b> than using <b>rtfutil</b> and <b>listtab</b>, but <b>estout</b> cannot produce graphs.
+<p>
+        <b>. sysuse auto, clear</b>
+        <b>. estpost ta foreign</b>
+        <b>. esttab using mydoc12.rtf, replace</b>
+        <b>. tempname handle4</b>
+        <b>. rtfappend `handle4' using mydoc12.rtf, replace</b>
+        <b>. capture noisily {</b>
+        <b>. scatter mpg weight, by(foreign)</b>
+        <b>. graph export myplot3.eps, replace</b>
+        <b>. rtflink `handle4' using myplot3.eps</b>
+        <b>. file write `handle4' "\line"</b>
+        <b>. }</b>
+        <b>. rtfclose `handle4'</b>
+<p>
+    A more advanced example using <b>rtfutil</b> can be found in Newson (2012).
+<p>
+<p>
+<b><u>Saved results</u></b>
+<p>
+    <b>rtfcumlist</b> saves the following in <b>r()</b>:
+<p>
+    Macros    
+      <b>r(cumlist)</b>     list of cumulative sums
+<p>
+    <b>rtfrstyle</b> saves the following in <b>r()</b>:
+<p>
+    Scalars   
+      <b>r(trgaph)</b>      <b>trgaph()</b> option
+      <b>r(trleft)</b>      <b>trleft()</b> option
+<p>
+    Macros    
+      <b>r(tdadd)</b>       <b>tdadd()</b> option
+      <b>r(cwidths)</b>     final list of column widths (in twips)
+      <b>r(crbounds)</b>    final list of column right boundaries (in twips)
+      <b>r(cdadd)</b>       final <b>cdadd()</b> option (string list)
+      <b>r(celldefs)</b>    cell definitions section of table row definition
+      <b>r(tabdef)</b>      table row definition
+      <b>r(begin)</b>       <b>begin()</b> option of generated row style
+      <b>r(delimiter)</b>   <b>delimiter()</b> option of generated row style
+      <b>r(end)</b>         <b>end()</b> option of generated row style
+      <b>r(missnum)</b>     <b>missnum()</b> option of generated row style
+<p>
+<p>
+<b><u>Author</u></b>
+<p>
+    Roger Newson, National Heart and Lung Institute, Imperial College London,
+    UK.
+    Email: r.newson@imperial.ac.uk
+<p>
+<p>
+<a name="references"></a><b><u>References</u></b>
+<p>
+    Burke S. M.  2003.  <i>RTF Pocket Guide</i>.  Sebastopol, CA: O'Reilly &amp;
+        Associates Inc.  Download more information from Sean Burke's RTF web
+        page.
+<p>
+    Newson, R. B.  2012.  From resultssets to resultstables in Stata.  <i>The</i>
+        <i>Stata Journal</i> 12(2): 191-213.  Download from <i>The Stata Journal</i>
+        website.
+<p>
+<p>
+<b><u>Also see</u></b>
+<p>
+    Manual:  <b>[P] file</b>
+<p>
+      Help:  <b>[P] file</b>
+             <b>listtab</b>, <b>sdecode</b>, <b>estout</b>, <b>esttab</b>, <b>estpost</b> if installed
+</pre>

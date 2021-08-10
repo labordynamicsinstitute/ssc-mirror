@@ -1,0 +1,93 @@
+<pre>
+-------------------------------------------------------------------------------
+help for <b>allpossible</b>
+-------------------------------------------------------------------------------
+<p>
+<b><u>All possible models with subsets of predictors</u></b> 
+<p>
+        <b>allpossible</b> <i>modelcmd</i> <i>depvar</i> <i>varlist</i> [<b>if</b> <i>exp</i>] [<b>in</b> <i>range</i>] [<i>weight</i>] , {
+                <b>eclass(</b><i>statistics_list</i><b>)</b> | <b>rclass(</b><i>progname statistics_list</i><b>)</b> } [
+                <b><u>d</u></b><b>etail</b> <b>npmax(</b><i>#</i><b>)</b> <b><u>f</u></b><b>ormat(</b><i>format</i><b>)</b> <b><u>cellw</u></b><b>idth(</b><i>#</i><b>)</b> <i>modelcmd_options</i>]
+<p>
+<p>
+<b><u>Description</u></b>
+<p>
+<b>allpossible</b> by default (1) computes all possible models fitted by <i>modelcmd</i> to
+response <i>depvar</i> and subsets of up to 6 predictors from <i>varlist</i> and (2)
+tabulates various summary statistics for each model fitted.  Alternatively,
+(1') the maximum number of predictors fitted may be specified as a number less
+than 6 by the <b>npmax()</b> option.
+<p>
+<i>modelcmd</i> must be a command fitting a model to a single response variable. At
+least one of <b>eclass()</b> or <b>rclass()</b> must be specified.  <b>eclass()</b> must include one
+or more names of e-class results, as would be displayed by <b>estimates list</b> after
+fitting an individual model.  <b>rclass()</b> must include the name of a program that
+would execute without arguments after a model command and one or more names of
+r-class results it produces.
+<p>
+<p>
+<b><u>Remarks</u></b>
+<p>
+The number of models fitted must not exceed the number of observations.
+<p>
+The upper limit of 6 is not a matter of principle. The limit may be changed in
+a future version.
+<p>
+Naturally, this command does not purport to replace the detailed scrutiny of
+individual models or to offer an unproblematic way of finding "best" models.
+Its main use may lie in demonstrating that several models exist within many
+projects possessing roughly equal merit as measured by omnibus statistics.
+<p>
+<p>
+<b><u>Options</u></b>
+<p>
+<b>eclass()</b> specifies one or more model statistics to be tabulated. Statistics
+    displayed by <b>estimates list</b> as <b>e(</b><i>result</i>) should be specified as <i>result</i>.
+    See the manual entry for whatever is <i>modelcmd</i>.
+<p>
+<b>rclass()</b> specifies the name of a program that would execute without arguments
+    after a model command and one or more names of r-class results it produces.
+    For example, users may write an r-class program to pick up e-class results
+    after <i>modelcmd</i> and compute from them one or more statistics not included in
+    the e-class results.  Statistics left behind after <i>progname</i> as <b>r(</b><i>result</i>)
+    should be specified as <i>result</i>.
+<p>
+<b>detail</b> specifies that the results of <i>modelcmd</i> be echoed for each individual
+    model. This may produce a large amount of output.
+<p>
+<b>npmax()</b> specifies the maximum number of predictors to be fitted.
+<p>
+<b>format()</b> and <b>cellwidth()</b> are options of tabdisp. The default values are
+    <b>format(%4.3f) cellwidth(12)</b>.
+<p>
+<i>modelcmd_options</i> are other options of <i>modelcmd</i>.
+<p>
+<p>
+<b><u>Examples</u></b>
+<p>
+    . gen gpm = 1 / mpg
+ 
+    . allpossible regress gpm head-disp, eclass(rmse r2_a)
+<p>
+    . allpossible glm mpg weight-displacement, rclass(glmcorr rmse rho jrho)
+        link(power -1)
+<p>
+<p>
+<b><u>Author</u></b>
+<p>
+    Nicholas J. Cox, University of Durham, U.K.  
+    n.j.cox@durham.ac.uk
+<p>
+<p>
+<b><u>Acknowledgements</u></b> 
+<p>
+    This program draws upon the rsquare program by Philip B. Ender and Rie von
+    Eyben, UCLA.
+<p>
+<p>
+<b><u>Also see</u></b>
+<p>
+On-line:  help for estimates, return, rsquare (if installed), glmcorr (if
+installed)
+<p>
+</pre>

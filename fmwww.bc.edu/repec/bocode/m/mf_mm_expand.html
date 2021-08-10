@@ -1,0 +1,152 @@
+<pre>
+<b>help mata mm_expand()</b>
+-------------------------------------------------------------------------------
+<p>
+<b><u>Title</u></b>
+<p>
+    <b>mm_expand() -- Duplicate rows and columns</b>
+<p>
+<p>
+<b><u>Syntax</u></b>
+<p>
+        <i>t. matrix</i> <b>mm_expand(</b><i>X</i><b>,</b> <i>real vector nr</i> [<b>,</b> <i>real vector nc</i><b>,</b> <i>sort</i>]<b>)</b>
+<p>
+        <i>void</i>      <b>_mm_expand(</b><i>X</i><b>,</b> <i>real vector nr</i><b>,</b> <i>real vector nc</i><b>,</b> <i>sort</i><b>)</b>
+<p>
+<p>
+        <i>t. matrix</i> <b>mm_repeat(</b><i>X</i><b>,</b> <i>real scalar nr</i> [<b>,</b> <i>real scalar nc</i>]<b>)</b>
+<p>
+        <i>void</i>      <b>_mm_repeat(</b><i>X</i><b>,</b> <i>real scalar nr</i><b>,</b> <i>real scalar nc</i><b>)</b>
+<p>
+<p>
+    where <i>X</i> is a transmorphic matrix and <i>sort</i> is a real scalar.
+<p>
+<p>
+<b><u>Description</u></b>
+<p>
+    <b>mm_expand()</b> duplicates rows and columns in <i>X</i> and returns the result as a
+    new matrix. Vector <i>nr</i> specifies for each row the desired number of
+    duplicates (with 1 indicating that no copies are added). <i>nr</i> may also be
+    scalar, in which case <i>nr</i> duplicates are returned of each row. <i>nc</i>
+    analogously specifies the column duplicates.
+<p>
+    The default for <b>mm_expand()</b> is to append additional copies of rows at the
+    bottom of <i>X</i> and append additional copies of columns at the right.
+    Alternatively, <i>sort</i>!=0 causes duplicates to be tied together and arranged
+    in the original sort order of <i>X</i>.
+<p>
+    <b>mm_repeat()</b> returns a matrix composed of repetitions of <i>X</i>. <i>nr</i> specifies
+    the desired number of repetitions of <i>X</i> in the direction of rows. <i>nc</i>
+    specifies the desired number of repetitions of <i>X</i> in the direction of
+    columns.
+<p>
+    <b>_mm_expand()</b> and <b>_mm_repeat()</b> expand <i>X</i> in place.
+<p>
+    With all of the above functions, values less than 1 or missing values are
+    interpreted as if they were 1 in <i>nr</i> and <i>nc</i>. See help for <b>select()</b> if you
+    want to delete rows or columns from a matrix.
+<p>
+    With the 25feb2008 update of Stata 10 a matrix version of the <b>J()</b>
+    function has been introduced, which supersedes the <b>mm_repeat()</b> function.
+<p>
+<p>
+<b><u>Remarks</u></b>
+<p>
+    Some examples:
+<p>
+        : X = (1,2)'
+        
+        : X
+               1
+            +-----+
+          1 |  1  |
+          2 |  2  |
+            +-----+
+<p>
+        : mm_expand(X,(3,2))
+               1
+            +-----+
+          1 |  1  |
+          2 |  2  |
+          3 |  1  |
+          4 |  1  |
+          5 |  2  |
+            +-----+
+<p>
+        : mm_expand(X,(3,2),1,1)
+               1
+            +-----+
+          1 |  1  |
+          2 |  1  |
+          3 |  1  |
+          4 |  2  |
+          5 |  2  |
+            +-----+
+<p>
+        : mm_expand(X',2,(3,2))
+               1   2   3   4   5
+            +---------------------+
+          1 |  1   2   1   1   2  |
+          2 |  1   2   1   1   2  |
+            +---------------------+
+<p>
+        : mm_expand(X',2,(3,2),1)
+               1   2   3   4   5
+            +---------------------+
+          1 |  1   1   1   2   2  |
+          2 |  1   1   1   2   2  |
+            +---------------------+
+<p>
+        : S = ("a","b")\("c","d")
+        
+        : S
+               1   2
+            +---------+
+          1 |  a   b  |
+          2 |  c   d  |
+            +---------+
+<p>
+        : mm_repeat(S,3,2)
+               1   2   3   4
+            +-----------------+
+          1 |  a   b   a   b  |
+          2 |  c   d   c   d  |
+          3 |  a   b   a   b  |
+          4 |  c   d   c   d  |
+          5 |  a   b   a   b  |
+          6 |  c   d   c   d  |
+            +-----------------+
+<p>
+        : _mm_repeat(S,3,2)
+        
+        : S
+               1   2   3   4
+            +-----------------+
+          1 |  a   b   a   b  |
+          2 |  c   d   c   d  |
+          3 |  a   b   a   b  |
+          4 |  c   d   c   d  |
+          5 |  a   b   a   b  |
+          6 |  c   d   c   d  |
+            +-----------------+
+<p>
+<p>
+<b><u>Diagnostics</u></b>
+<p>
+    Non-integer values in <i>nr</i> and <i>nc</i> are truncated.
+<p>
+<p>
+<b><u>Source code</u></b>
+<p>
+    mm_expand.mata
+<p>
+<p>
+<b><u>Author</u></b>
+<p>
+    Ben Jann, ETH Zurich, jann@soz.gess.ethz.ch
+<p>
+<p>
+<b><u>Also see</u></b>
+<p>
+    Online:  help for <b>[M-5] select()</b>, <b>moremata</b>
+</pre>

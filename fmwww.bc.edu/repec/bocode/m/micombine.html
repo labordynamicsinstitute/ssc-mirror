@@ -1,0 +1,265 @@
+<pre>
+-------------------------------------------------------------------------------
+help for <b>micombine</b>                                              Patrick Royston
+-------------------------------------------------------------------------------
+<p>
+<b><u>Estimation of regression models with multiply imputed samples</u></b>
+<p>
+<p>
+        <b>micombine</b> {<i>supported_regression_cmd</i> | <i>other_regression_cmd</i>} [<i>yvar</i>]
+                 [<i>covarlist</i>] [<i>other_stuff]</i> [<b>if</b> <i>exp</i>] [<b>in</b> <i>range</i>] [<i>weight</i>] [ <b>,</b>
+                 <b>br</b> <b><u>nocons</u></b><b>tant</b> <b><u>det</u></b><b>ail</b> <b><u>ef</u></b><b>orm</b>|{<b><u>ef</u></b><b>orm(</b><i>string</i><b>)</b>} <b><u>g</u></b><b>enxb(</b><i>newvarname</i><b>)</b>
+                 <b><u>imp</u></b><b>id(</b><i>varname</i><b>)</b> <b><u>inf</u></b><b>gain</b> <b>lrr</b> <b><u>nowar</u></b><b>ning</b> <b><u>obs</u></b><b>id(</b><i>varname</i><b>)</b>
+                 <b>svy</b>[<b>(</b><i>svy_options</i><b>)</b>] <i>regression_cmd_options</i> ]
+<p>
+    where
+<p>
+        <i>supported_regression_cmd</i>s are clogit, cnreg, glm, logistic, logit, 
+        mlogit, ologit, oprobit, poisson, probit, qreg, regress, rreg, stcox,
+        streg, or xtgee, and <i>other_regression_cmd</i> is any other Stata
+        regression command (see Remarks).
+<p>
+    <b>micombine</b> shares a subset of the features of all estimation commands (see
+    help estimates); see <i>Remarks</i>.
+<p>
+    All weight types supported by <i>regression_cmd</i> are allowed; see help 
+    weights.
+<p>
+<p>
+<b><u>Description</u></b>
+<p>
+    <b>micombine</b> estimates the parameters of a regression model whose type is
+    determined by <i>supported_regression_cmd</i> or <i>other_regression_cmd</i>.
+    Parameter estimates are combined across several replicates obtained
+    previously by multiple imputation, e.g. by using ice to create a file of
+    imputed data.  See <i>Remarks</i> for a brief account of how <b>micombine</b> combines
+    the estimates and obtains standard errors.
+<p>
+<p>
+<b><u>Options</u></b>
+<p>
+    <b>br</b> calculates degrees of freedom and tests of significance for each
+        predictor according to the formulae (3)-(5) of Barnard &amp; Rubin
+        (1999).  After estimation, the required degrees of freedom are stored
+        in a matrix (column vector) <b>e(nutilde)</b>. Note that if <b>test</b> is used
+        after <b>micombine</b> for significance testing of regression coefficients,
+        such tests assume that the degrees of freedom are equal to the number
+        of observations minus the number of parameters estimated, not those
+        given in <b>e(nutilde)</b>.
+<p>
+    <b>detail</b> gives details of the regression model for each imputation.
+<p>
+    <b>eform(</b><i>string</i><b>)</b> indicates that the exponentiated form of the coefficients
+        is to be output and reporting of the constant is to be suppressed;
+        <i>string</i> is used to label the exponentiated coefficients.
+<p>
+    <b>eform</b> indicates that the exponentiated form of the coefficients is to be
+        output and reporting of the constant is to be suppressed; the
+        exponentiated coefficients are labelled <b>exp(b)</b>.
+<p>
+    <b>genxb(</b><i>newvarname</i><b>)</b> creates <i>newvarname</i> to hold the linear predictor from
+        each regression model, averaged over all the imputations.
+<p>
+    <b>impid(</b><i>varname</i><b>)</b> specifies that <i>varname</i> is the variable identifying the
+        imputations. The number of imputations is determined as the number of
+        unique values of <i>varname</i>. All observations for which <i>varname</i> takes
+        the value zero are ignored in the analysis.  Default <i>varname</i>: <b>_mj</b>.
+<p>
+    <b>infgain</b> reports the percentage increase in information and sample size
+        due to the use of multiple imputation. The information gain is the
+        percent increase in Wald chisquare for the entire model, comparing
+        the Wald chisquare for the model on the original data (complete case
+        analysis) with that using the variance-covariance matrix of the
+        parameters estimated using Rubin's rules. With a bad imputation model
+        the information increase could be negative.
+<p>
+    <b>lrr</b> specifies that the Li-Raghunathan-Rubin (LRR) robust estimate of the
+        variance-covariance matrix of the regression coefficients be used.
+<p>
+    <b>noconstant</b> suppresses the regression constant in all regressions.
+<p>
+    <b>nowarning</b> suppresses the warning message about the use of
+        <i>other_regression_cmd</i>s (see <i>Remarks</i>).
+<p>
+    <b>obsid(</b><i>varname</i><b>)</b> is provided to allow <b>micombine</b> to analyse datasets created
+        by programs other than <b>ice</b>. <i>varname</i> specifies the name of a variable
+        holding the "observation ID", i.e. the sequence number of each
+        observation in a given imputation. The number of observations should
+        be identical between imputations, as should the order of the
+        observations.  <i>varname</i> should run 1,...,N for imputation 1, 1,...,N
+        for imputation 2, and so on. <b>ice</b> automatically stores the information
+        with the data, so this option is not required. Default <i>varname</i>: <b>_mi</b>.
+<p>
+    [Stata 9] <b>svy</b>[<b>(</b><i>svy_options</i><b>)</b>] performs survey regression.  The prefix <b>svy:</b>
+        is placed before <i>regression_cmd</i>. If <i>svy_options</i> is supplied then <b>,</b>
+        <i>svy_options</i> is placed after <b>svy</b> and before the colon.  The data must
+        be <b>svyset</b> before this option is used. This must be done before <b>ice</b> is
+        used to impute missing values. That the data have been <b>svyset</b> is
+        inherited by the file of imputations created by <b>ice</b>.
+<p>
+    [Stata 8] <b>svy</b> performs survey regression.  The prefix <b>svy</b> is placed
+        before <i>regression_cmd</i>, so that for example <b>micombine regress ..., svy</b>
+        is interpreted as <b>micombine svyregress ...</b>. Options for survey
+        regression are included as options to <b>micombine</b>.  The data must be
+        <b>svyset</b> before the <b>svy</b> option is used. This must be done before <b>ice</b> is
+        used to impute missing values. That the data have been <b>svyset</b> is
+        inherited by the file of imputations created by <b>ice</b>.
+<p>
+    <i>regression_cmd_options</i> may be any of the options appropriate to
+        <i>regression_cmd</i>.
+<p>
+<p>
+<b><u>Remarks</u></b>
+<p>
+    Details of statistical inference from multiple imputed datasets are
+    nicely described in a recent Stata Journal article by John Carlin and
+    colleagues (Carlin et al, 2003).  Here, with due acknowledgment to John,
+    I give an edited version of Section 2 of his article.
+<p>
+    A simple method of combining estimates from several models was derived by
+    Rubin (1987).  Suppose initially that primary interest lies in estimating
+    a scalar quantity, Q.  Here, Q is a regression coefficient, for example,
+    the log hazard ratio in a proportional hazards model. Suppose that we
+    have imputed m complete datasets using an appropriate model. In each
+    dataset, standard complete-data methods are used to obtain an estimate of
+    Q with an associated standard error.  Let Q_j and V_j denote the point
+    estimate and variance respectively from the jth (j = 1, 2, ... , m)
+    dataset. The point estimate Q^ of Q from multiple imputation is simply
+    the arithmetic mean of Q_1,...,Q_m.
+<p>
+    Obtaining a valid standard error for this estimate of Q^ requires
+    combining information on within-imputation and between-imputation
+    variation. The latter is important in reflecting uncertainty due to
+    variability between imputation samples. First, a within-imputation
+    variance component, W, is obtained as the mean over the m imputations of
+    the complete-data variance-covariance matrices, V_1,....,V_m.  Second, a
+    between-imputation variance component, B, is calculated as the sum of
+    squares of Q_1,....,Q_m about Q^, divided by m-1. In summary,
+<p>
+        Q^ = (Q_1 + ... + Q_m)/m
+<p>
+        W = (V_1 + ... + V_m)/m
+<p>
+        B = ((Q_1 - Q^)^2 + ... + (Q_m - Q^)^2)/(m - 1)
+<p>
+    The (total) variance T of Q^ is given by
+<p>
+        T = W + B * (1 + 1/m)
+<p>
+    Rubin (1987) showed that (Q - Q^)/sqrt(T) is distributed approximately as
+    Student's t on nu degrees of freedom, where
+<p>
+        nu = (m - 1) * (1 + W /(B * (1 + 1/m)))^2
+<p>
+    The (1 + 1/m) term in these expressions indicates that it is not
+    necessary to a create large number of imputed datasets, particularly when
+    B is much smaller than W. The condition will be satisfied unless there is
+    much missing data and the parameter estimates within each dataset are
+    very precise.
+<p>
+    <b><u>Available regression commands</u></b>
+<p>
+    <b>micombine</b> has been tested with the commands listed under
+    <i>supported_regression_cmd</i> at the beginning of this help file. <b>micombine</b>
+    <i>may</i> work satisfactorily with <i>other_regression_cmd</i>s, but this cannot be
+    guaranteed. This facility is provided so that the researcher familiar
+    with a particular Stata command has a fighting chance of obtaining
+    correct MI estimates and standard errors.  <b>HOWEVER, THE AUTHOR DISCLAIMS</b>
+    <b>RESPONSIBILITY FOR</b> <b>THE CORRECTNESS OF RESULTS ARISING FROM USE OF AN</b>
+    <i>other_regression_cmd</i>.  Note that <i>other_stuff</i> in the syntax diagram is
+    code that may be required by some <i>other_regression_cmd</i>s, for example
+    <b>ivreg</b> wants <b>(</b><i>varlist2</i><b> = </b><i>varlist_iv</i><b>)</b>.  <b>micombine</b> parses for the occurrence
+    of an opening parenthesis. There may be other syntaxes that are not
+    accommodated by this approach; if so, please contact the author with
+    details.
+<p>
+    <b><u>Post-estimation prediction</u></b>
+<p>
+    The <b>predict</b> command <i>may</i> work as you expect after <b>micombine</b>, but this
+    feature should be treated with caution. <b>micombine</b> stores the quantities
+    needed by <b>predict</b> at the last execution of the regression command, that
+    is at the final imputation, but prediction following some regression
+    commands has non-standard features that are hard to emulate accurately.
+    Known issues are as follows:
+<p>
+        1.  After <b>micombine mlogit</b>: <b>predict</b> may require that the outcome
+            levels are known as 0, 1, 2, ... , so it may be necessary to drop
+            the score label for the outcome variable, if such a label is
+            defined.  This is KNOWN to be a problem using <b>mfx</b> following
+            <b>micombine mlogit</b>.  For example, <b>mfx compute, predict(outcome(0))</b>
+            will work only if the lowest level of the outcome is 0, and is
+            not labelled.
+<p>
+<p>
+    <b><u>Sample size</u></b>
+<p>
+    The sample size reported by <b>micombine</b> is the number of observations found
+    when fitting the model in the first imputation (i.e. by default: for
+    <b>_mj==1</b>).  It may happen that the sample size varies between imputations,
+    for example, when the effect of an <b>if</b> or <b>in</b> filter differs between
+    imputations, or when a weighting scheme effectively removes different
+    observations in different imputations. The resulting parameter estimates
+    and their SEs are believed still to be approximately valid in this
+    situation.  The program alerts you to the occurrence of variable sample
+    size, but no action need be taken by you. Post-estimation commands <b>test</b>
+    and <b>testparm</b> use the sample size found when the model is fitted in the
+    final imputed dataset.
+<p>
+<p>
+<b><u>Examples</u></b>
+<p>
+    <b>. ice y x1 x2 x3 using imp, m(10) genmiss(m_)</b>
+    <b>. use imp, clear</b>
+    <b>. micombine regress y x1 x2 x3</b>
+    <b>. stset time, failure(cens)</b>
+    <b>. micombine stcox x1 x2 x3, genxb(index)</b>
+    <b>. test x2==1</b>
+    <b>. testparm x1 x2</b>
+    <b>. micombine regress y x1 x2 x3, svy(subpop(if sex==1))</b>
+<p>
+<p>
+<b><u>Author</u></b>
+<p>
+    Patrick Royston, MRC Clinical Trials Unit, London.  pr@ctu.mrc.ac.uk
+<p>
+<p>
+<b><u>References</u></b>
+<p>
+    Barnard, J. and D. B. Rubin. 1999. Small-sample degrees of freedom with
+        multiple imputation. <i>Biometrika</i> <b>86</b>: 948-955.
+<p>
+    Carlin, J. B., N. Li, P. Greenwood, and C. Coffey. 2003.  Tools for
+        analyzing multiple imputed datasets. <i>Stata Journal</i> <b>3(3)</b>: 226-244.
+<p>
+    Carlin, J. B., N. Li, P. Greenwood, and C. Coffey. 2003.  Tools for
+        analyzing multiple imputed datasets. <i>Stata Journal</i> <b>3(3)</b>: 226-244.
+<p>
+    Li, K., T. Raghunathan, and D. Rubin. 1991. Large sample significance
+        levels from multiply-imputed data using moment-based statistics and
+        an F reference distribution.  <i>Journal of the American Statistical</i>
+        <i>Association</i> <b>86</b>: 1065-1073.
+<p>
+    Royston P. 2004. Multiple imputation of missing values.  <i>Stata Journal</i>
+        <b>4(3)</b>:227-241.
+<p>
+    Royston P. 2005. Multiple imputation of missing values: update.  <i>Stata</i>
+        <i>Journal</i> <b>5(2)</b>:188-201.
+<p>
+    Royston P. 2006. Multiple imputation of missing values: update of ice.
+        <i>Stata Journal</i> in preparation.
+<p>
+    Rubin, D. 1987. Multiple Imputation for Nonresponse in Surveys. New York:
+        John Wiley &amp; Sons.
+<p>
+    Schafer, J. 1997. Analysis of Incomplete Multivariate Data. London:
+        Chapman &amp; Hall.
+<p>
+    van Buuren, S., H. C. Boshuizen and D. L. Knook. 1999. Multiple
+        imputation of missing blood pressure covariates in survival analysis.
+        <i>Statistics in Medicine</i> <b>18</b>:681-694. (Also see
+        http://www.multiple-imputation.com.)
+<p>
+<p>
+<b><u>Also see</u></b>
+<p>
+</pre>

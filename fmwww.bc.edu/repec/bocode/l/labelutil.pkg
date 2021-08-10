@@ -1,0 +1,21 @@
+d 'LABELUTIL': programs to create multiple value labels
+d
+d Mata functions Labels_v2() and Labelvar() create multiple value
+d labels. 
+d
+d KW: labels
+d KW: value labels
+d
+d Requires: Stata version 10.0
+d
+d Distribution-Date: 20090418
+d
+d Author: Alfonso Miranda, Institute of Education, University of London
+d Support: email A.Miranda@@ioe.ac.uk
+d
+f labelvar.hlp
+f labels_v2.hlp
+f labelvar.mata.do
+f labels_v2.mata.do
+f labelvar.mo
+f labels_v2.mo

@@ -1,0 +1,96 @@
+<pre>
+-------------------------------------------------------------------------------
+help for <b>abar</b>
+-------------------------------------------------------------------------------
+<p>
+<b><u>Arellano-Bond test for autocorrelation</u></b>
+<p>
+        <b>abar</b> [<b>if</b> <i>exp</i>] [<b>in</b> <i>range</i>] [<b>,</b> <b><u>l</u></b><b>ags(</b><i>#</i><b>)</b>]
+<p>
+    <b>abar</b> is for use after regress, ivreg, ivreg2, ivregress, newey, and 
+    newey2.
+<p>
+    <b>abar</b> is for use with cross-section time-series data.  You must tsset your
+    data before using <b>abar</b>.
+<p>
+<b><u>Description</u></b>
+<p>
+    <b>abar</b> performs the Arellano-Bond (1991) test for autocorrelation.  The
+    test was originally proposed for a particular linear Generalized Method
+    of Moments dynamic panel data estimator, but is quite general in its
+    applicability--more general than dwstat, durbina, bgodfrey, and xtserial.
+    It can be applied to linear GMM regressions in general, and thus to the
+    special cases of ordinary least squares (OLS) and two-stage least-squares
+    (2SLS).  It can also be made consistent in the presence of various
+    patterns of error covariance.  Specifically, <b>abar</b> will run after regress,
+    ivreg, ivreg2, ivreg2, gmm2s, and ivregress 2sls in their "plain"
+    (homoskedastic), robust, and cluster variants.  It will also run after
+    regressions using the Bartlett/Newey-West kernel, whether performed by 
+    newey, newey2, ivreg2, or ivregress.
+<p>
+    <b>abar</b> is not appropriate for fixed-effects regressions for dynamic models,
+    assuming those are done via a mean-deviation transformation.  This is
+    because the Arellano-Bond AR() test assumes that right-hand-side
+    variables are not "post-determined," i.e., not correlated with future
+    errors.  In a dynamic setting, future values of regressors can depend on
+    future errors. And after the mean-deviations transformation, future
+    values of the original regressors affect current values of the
+    transformed versions.
+<p>
+    The optional <b>if</b> and <b>in</b> clauses allow one to test for autocorrelation in a
+    subset of the residuals.
+<p>
+<b><u>Citation</u></b>
+    <b>abar</b> is not an official Stata command.  It is a free contribution to the
+        research community.  Please cite it as such:
+        Roodman, D. 2006. How to Do xtabond2: An Introduction to "Difference"
+        and "System" GMM in Stata. Working Paper 103. Center for Global
+        Development, Washington.
+<p>
+<b><u>Options</u></b>
+<p>
+    <b>lags(</b><i>#</i><b>)</b> specifies the maximum number of lags over which to test for AR()
+        autocorrelation.  <b>abar</b> will perform separate tests for each lag up to
+        the maximum.  The default is 1.
+<p>
+<b><u>References</u></b>
+<p>
+    Arellano, M. and S. Bond. 1991.  Some tests of specification for panel
+        data: Monte Carlo evidence and an application to employment
+        equations. <i>The Review of Economic Studies</i> 58: 277-97.
+    Roodman, D. 2006. How to Do xtabond2: An Introduction to "Difference" and
+        "System" GMM in Stata. Working Paper 103. Center for Global
+        Development, Washington.
+<p>
+<b><u>Examples</u></b>
+    . use http://www.stata-press.com/data/r7/abdata.dta
+    <b>. * Make a close match with first regression (OLS) in abest2.out, in</b>
+        <b>http://www.nuff.ox.ac.uk/Users/Doornik/software/dpdox121.zip</b>
+    <b>. * Differs because Stata's</b> regress <b>does small-sample correction.</b>
+    . regress n L(1/2).n L(0/1).w L(0/2).(k ys) yr1979-yr1984, cluster(id)
+    . abar, lags(2)
+    <b>. * Now do a perfect match with last regression (2SLS, Anderson-Hsiao) in</b>
+        <b>same file.</b>
+    . ivreg2 D.n DL2.n DL(0/1).w DL(0/2).(k ys) yr1980-yr1984 (DL.n = L3.n),
+        cluster(id)
+    . abar, lags(2)
+    <b>. * Now do same via </b>xtabond2
+    . xtabond2 D.n DL(1/2).n DL(0/1).w DL(0/2).(k ys) y*98*,iv(L3.n DL2.n
+        DL(0/1).w DL(0/2).(k ys) y*98*,eq(lev)) rob arle
+<p>
+<p>
+<p>
+<b><u>Author</u></b>
+<p>
+    David Roodman, Center for Global Development, Washington, DC
+    Center for Global Development
+    Washington, DC
+    droodman@cgdev.org
+<p>
+<b><u>Also see</u></b>
+<p>
+    Online: help for regress, ivreg, ivreg2, dwstat, durbina, bgodfrey, 
+             xtserial, xtabond2.
+<p>
+<p>
+</pre>

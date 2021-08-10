@@ -1,0 +1,58 @@
+<pre>
+..-
+help for ^symmetry^                                      (Statalist distributio
+&gt; n)
+..-
+<p>
+Symmetry and Marginal Homogeneity test for matched samples/ TDT test
+- --------------------------------------------------------------------
+<p>
+ ^symmetry^ var_cases var_controls [^if^ exp] [^in^ range] [^,^ ^not^able ^con^
+&gt; trib ^ex^act]
+<p>
+<p>
+<p>
+Description
+- -----------
+<p>
+^symmetry^ performs symmetry and marginal homogeneity tests on square NxN
+tables where there is a 1 to 1 matching of cases and controls
+(non-independence).  In genetics, the test is known as the
+Transmission/Disequilibrium test (TDT) and is used to test the association
+between transmitted and non-transmitted parental marker alleles to an affected
+child.
+<p>
+<p>
+Options
+- -------
+<p>
+^notable^ suppresses the output of the contingency table. 
+<p>
+^contrib^ reports the contribution of each off-diagonal cell-pair to the
+    overall symmetry chi-square.
+<p>
+^exact^ performs an exact test of table symmetry. CAUTION:  the exact test
+    requires substantial amounts of time and memory for large tables.
+<p>
+<p>
+Examples
+- --------
+<p>
+ . ^symmetry cases controls^
+ . ^symmetry cases controls, not^
+ . ^symmetry cases controls, con^
+ . ^symmetry cases controls, not con^
+ . ^symmetry cases controls, ex  con^
+<p>
+<p>
+Author
+- ------
+<p>
+Mario Cleves &lt;mcleves@@stata.com&gt;.
+<p>
+<p>
+Also see
+- --------
+<p>
+On-line:  @epitab@
+</pre>

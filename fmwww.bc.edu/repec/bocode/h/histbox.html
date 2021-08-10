@@ -1,0 +1,48 @@
+<pre>
+-------------------------------------------------------------------------------
+help for <b>histbox</b>
+-------------------------------------------------------------------------------
+  
+<b><u>Histogram with Boxplot</u></b>
+<p>
+        <b>histbox</b> [<i>variable</i>] [<i>weight</i>] [<b>if</b> <i>exp</i>] [<b>in</b> <i>range</i>]<b>,</b> [ <b><u>m</u></b><b>ean</b> <i>common_options</i>
+              <b><u>b</u></b><b>in(</b><i>#</i><b>)</b> <b><u>f</u></b><b>req</b> <b><u>norm</u></b><b>al</b>[<b>(</b><i>#</i><b>,</b><i>#</i><b>)</b>] <b><u>d</u></b><b>ensity(</b><i>#</i><b>)</b>]
+<p>
+            <i>common_options</i>                                See help
+            ------------------------------------------------------
+            title and axes options                        graxes  
+            symbol and line options                       grsym   
+            color and shading options                     grcolor 
+            saving, printing, &amp; multiple image options    grother 
+            ------------------------------------------------------
+<p>
+        Only <b>fweights</b> are allowed; see help weights.
+<p>
+        Syntax basically the same as grhist.
+<p>
+<b><u>Description</u></b>
+ <b>histbox</b> plots a boxplot above the bins of a histogram. The wiskers on the
+ boxplot extend to min and max.  Potential outliers are not indicated.
+  
+<b><u>Options</u></b>
+<p>
+ <b>mean</b> include mean in boxplot.
+<p>
+ Does not allow the <b>by</b> option.
+<p>
+ Other options same as grhist.
+<p>
+<b><u>Examples</u></b>
+     . histbox mpg
+     . histbox mpg, mean freq normal bin(10)
+<p>
+<b><u>Author</u></b>
+     Philip B. Ender
+     UCLA Department of Education
+     UCLA Academic Technology Services
+     ender@ucla.edu
+<p>
+ Manual:  <b>[G] graph</b>, <b>[G] graph options</b>, <b>[G] histogram</b>
+On-line:  help for graph, grhist, graxes, grcolor, grother
+  
+</pre>

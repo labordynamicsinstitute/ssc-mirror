@@ -1,0 +1,87 @@
+<pre>
+-------------------------------------------------------------------------------
+help for <b>matwrite</b>
+-------------------------------------------------------------------------------
+<p>
+<b><u>MAT-file export plugin</u></b>
+<p>
+    <b>matwrite</b> [<i>anything</i>] <b>using</b> <i>filename</i> [<b>if</b> <i>exp</i>] [<b>in</b> <i>range</i>] <b>[,</b>
+    <b><u>mat</u></b><b>rix(</b><i>namelist</i><b>)</b> <b>replace</b> <b>]</b>
+<p>
+<b><u>Description</u></b>
+<p>
+    <b>matwrite</b> allows you to export data in the MATLAB MAT-file format from
+    within Stata. Variables as specified in <i>anything</i> can be exported as
+    column vectors, and groups of variables can be exported as matrices.
+    Stata matrices as specified in <b><u>mat</u></b><b>rix(</b><i>namelist</i><b>)</b> are exported as matrices.
+<p>
+<b><u>Options</u></b>
+<p>
+    <i>anything</i> can contain a <i>varlist</i>, as well as facilitating the export of a
+        group of variables as a matrix. <b>matwrite</b> identifies user specified
+        matrices by the matrix name being followed by a <i>varlist</i> contained
+        within square brackets: <i>matrixname[varlist]</i>. For example, income[y*]
+        will export a matrix named "income" which contains all variables
+        which begin with "y".
+<p>
+    <b><u>mat</u></b><b>rix(</b><i>namelist</i><b>)</b> specifies the Stata matrices that will be exported by
+        <b>matwrite</b>. If any of the specified matrices do not exist, a warning
+        message will be displayed, although an error will not be raised.
+<p>
+<b><u>Notes</u></b>
+<p>
+    If <i>anything</i> is not specified, all variable in the open Stata dataset will
+    be exported as column vectors. Similarly, if <b><u>mat</u></b><b>rix(</b><i>namelist</i><b>)</b> is not
+    specified, all Stata matrices will be exported.
+<p>
+    Missing values in both variables and matrices are recoded as positive
+    infinity in MATLAB.
+<p>
+    String variables can not be exported as this is not allowed by the Stata
+    plugin interface.
+<p>
+    Variable names and matrix names can not be longer than 19 characters as
+    this is not supported by the Level 4 MAT-File format. A future version of
+    <b>matwrite</b> will support the Level 5 MAT-File format which does not impose
+    this restriction.
+<p>
+<b><u>Examples</u></b>
+<p>
+    . matwrite using c:\matlabfile,replace
+<p>
+    . matwrite var1 var2 var3 using c:\matlabfile, mat(mat1 mat2) replace
+<p>
+    . matwrite var1 if var2&lt;=10 using c:\matlabfile, mat(mat1 mat2) replace
+<p>
+    . matwrite mymat1[var*] var1 var2 using c:\matlabfile, mat(mat1 mat2)
+    replace
+<p>
+<b><u>Acknowledgments</u></b>
+<p>
+    MATLAB is a registered trademark of The MathWorks, Inc. Sections of this
+    code make use of the Stata plugin interface.
+<p>
+<b><u>Disclaimer</u></b>
+<p>
+    THIS SOFTWARE IS PROVIDED "AS IS" WITHOUT WARRANTY OF ANY KIND, EITHER
+    EXPRESSED OR IMPLIED, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+    WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE. THE
+    ENTIRE RISK AS TO THE QUALITY AND PERFORMANCE OF THE PROGRAM IS WITH YOU.
+    SHOULD THE PROGRAM PROVE DEFECTIVE, YOU ASSUME THE COST OF ALL NECESSARY
+    SERVICING, REPAIR OR CORRECTION.
+<p>
+    IN NO EVENT WILL THE COPYRIGHT HOLDERS OR THEIR EMPLOYERS, OR ANY OTHER
+    PARTY WHO MAY MODIFY AND/OR REDISTRIBUTE THIS SOFTWARE, BE LIABLE TO YOU
+    FOR DAMAGES, INCLUDING ANY GENERAL, SPECIAL, INCIDENTAL OR CONSEQUENTIAL
+    DAMAGES ARISING OUT OF THE USE OR INABILITY TO USE THE PROGRAM (INCLUDING
+    BUT NOT LIMITED TO LOSS OF DATA OR DATA BEING RENDERED INACCURATE OR
+    LOSSES SUSTAINED BY YOU OR THIRD PARTIES OR A FAILURE OF THE PROGRAM TO
+    OPERATE WITH ANY OTHER PROGRAMS), EVEN IF SUCH HOLDER OR OTHER PARTY HAS
+    BEEN ADVISED OF THE POSSIBILITY OF SUCH DAMAGES.
+<p>
+<b><u>Author</u></b>
+<p>
+    Andrew Shephard, Institute for Fiscal Studies, London, UK 
+    mailto:a.shephard@ifs.org.uk.
+<p>
+</pre>

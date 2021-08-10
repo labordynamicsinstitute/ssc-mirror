@@ -1,0 +1,287 @@
+<pre>
+-------------------------------------------------------------------------------
+help for <b>mmerge</b>                                              [jw]  Feb 26, 2002
+-------------------------------------------------------------------------------
+<p>
+<b><u>Easy and safe merging of datasets</u></b>
+<p>
+    Basic syntax
+<p>
+        <b>mmerge</b> <i>match-variable(s)</i> <b>using</b> <i>filename</i> [<b>,</b> {<b><u>si</u></b><b>mple</b> | <b><u>ta</u></b><b>ble</b>}
+            <b><u>um</u></b><b>atch(</b><i>varlist</i><b>)</b> <b><u>uk</u></b><b>eep(</b><i>varlist</i><b>)</b> ]
+<p>
+    Full Syntax
+<p>
+        <b>mmerge</b> <i>match-variable(s)</i> <b>using</b> <i>filename</i> [<b>,</b>
+            { <b><u>t</u></b><b>ype(</b><i>type_value</i><b>)</b> <b><u>unm</u></b><b>atched(</b><i>unmatched_value</i><b>)</b> | <b><u>si</u></b><b>mple</b> | <b><u>ta</u></b><b>ble</b> }
+            <b><u>m</u></b><b>issing(</b><i>m_value</i><b>)</b> <b><u>nol</u></b><b>abel</b> <b>replace</b> <b>update</b> <b>_merge(</b><i>varname</i><b>)</b> <b><u>nosh</u></b><b>ow</b>
+            { <b><u>uk</u></b><b>eep(</b><i>varlist</i><b>)</b> | <b><u>ud</u></b><b>rop(</b><i>varlist</i><b>)</b> } <b>uif(</b><i>exp</i><b>)</b> <b><u>um</u></b><b>atch(</b><i>varlist</i><b>)</b>
+            { <b><u>un</u></b><b>ame(</b><i>stub</i><b>)</b> | <b><u>uren</u></b><b>ame(</b><i>rename_specs</i><b>)</b> } <b><u>ul</u></b><b>abel(</b><i>stub</i><b>)</b> ]
+<p>
+        where
+<p>
+            <i>type_value</i>      = { <b><u>a</u></b><b>uto</b> | <b>1:1</b> | <b>1:n</b> | <b>n:1</b> | <b>n:n</b> | <b><u>sp</u></b><b>read</b> }
+<p>
+            <i>unmatched_value</i> = { <b><u>b</u></b><b>oth</b> | <b><u>n</u></b><b>one</b> | <b><u>m</u></b><b>aster</b> | <b><u>u</u></b><b>sing</b> }
+<p>
+            <i>missing_value</i>   = { <b><u>non</u></b><b>e</b> | <b><u>v</u></b><b>alue</b> | <b><u>nom</u></b><b>atch</b> }
+<p>
+            <i>rename_specs</i>    = <i>oldname newname</i> [<b>\</b> <i>oldname newname</i> <b>\</b> ...]
+<p>
+<p>
+<b><u>Description</u></b>
+<p>
+<b>mmerge</b> is an extension of <b>merge</b> that makes matched merging <b>safe</b>. It requires
+users to specify the type of match to be performed; <b>mmerge</b> verifies that the
+requirements hold. It also makes merging <b>easy</b>, though that may not be obvious
+at a first look at the full syntax diagram. Look at the examples first!
+<p>
+<p>
+<b><u>Detailed description</u></b>
+<p>
+<i>Safety features</i>
+<p>
+  - The safety of merging crucially depends on the requirement that users
+    should specify whether the match-variables form a key in the master and
+    using data.  A key uniquely defines observations and does not contain
+    missing values.
+  - In contrast with <b>merge</b>, the resulting data after <b>mmerge</b> is <b>independent</b> of
+    the order of observations in master and using data.  As a consequence, you
+    are not required to sort the data yourself.
+  - <b>merge</b> distinguishes between unmatched records due to missing values in the
+    match variables (<b>_merge=-1,-2</b>) and to non-missing values (<b>_merge=1,2</b>). Here
+    1/-1 and 2/-2 refer to unmatched obs originating in the master and using
+    data respectively.
+  - <b>mmerge</b> displays names of variables that occur in both master and using
+    data.
+<p>
+<i>Convenience features</i>
+<p>
+  - The master and using data are automatically sorted
+  - A <b>_merge</b> variable in master or using data will be silently overwritten;
+    this is not so bad as <b>mmerge</b> automatically tabulates <b>_merge</b>
+  - The match-variable(s) of the using data can be named differently from the
+    master data
+  - Selection of observations and variables in the using dataset is facilitated
+  - Prefixing strings to the names (and labels) of variables in the using data
+    is supported
+  - Full renaming of variables in the using data is supported
+  - Value labels are added for the <b>_merge</b> variable (label name <b>__MERGE</b>)
+<p>
+<p>
+<b><u>Options to specify special cases</u></b>
+<p>
+<b>simple</b> specifies matched merging in which the master and using data supposedly
+    describe the same objects, fully identified by the match variables;, i.e.,
+    the match variables form a key in the master and using data.
+<p>
+    <b>simple</b> is equivalent to specifying options <b>type(1:1)</b> and <b>unmatched(both)</b>,
+    and invoking assert _merge==3 upon the completion of <b>mmerge</b>.
+<p>
+<b>table</b> specifies a "table lookup merge", in which the master data contains data
+    on objects of type A (e.g., households) that contain an object of type B
+    (e.g., a city), identified by the match-variables (e.g., the city of
+    residence), while the using data contains descriptions of type B (cities).
+    Thus, the match variables should form a key in the using data.
+<p>
+    <b>table</b> is equivalent to specifying options <b>type{n:1} unmatched(master)</b>.
+<p>
+    In a future version of <b>mmerge</b>, I may support additional "special types of
+    matched merging".
+<p>
+<p>
+<b><u>Options for matching</u></b>
+<p>
+<b>types(</b><i>str</i><b>)</b> specifies whether the match variables are keys in master and using
+    data. Valid values are
+<p>
+        <b>1:1</b>         key in the master and using data
+        <b>1:n</b>         key in master data
+        <b>n:1</b>         key in using data
+        <b>n:n</b>         no keys; <b>mmerge</b> performs a relational join via <b>joinby</b>
+<p>
+        <b>spread</b>      <b>mmerge</b> determines which of <b>1:n</b> or <b>n:1</b> holds
+        <b>auto</b>        <b>mmerge</b> determines the match-type. (default)
+<p>
+    While <b>auto</b> is easy, you are strongly advised to specify your knowledge of
+    the relationship between the master and using data via one of the other
+    values.  This allows <b>mmerge</b> to test whether your understanding is
+    consistent with the data.
+<p>
+    <b>missing(</b><i>str</i><b>)</b> specifies how missing values in the match variables are
+    treated.  Valid values are
+<p>
+        <b>none</b>        missing values not allowed in the match vars (default)
+        <b>value</b>       missing values are treated as ordinary values
+        <b>nomatch</b>     missing values of the match vars in the master should <b>not</b>
+                    match missing values in the match-vars of the using data.
+<p>
+<p>
+<b><u>Options for merging</u></b>
+<p>
+<b>unmatched(</b><i>str</i><b>)</b> specifies whether non-matching observations in the master and
+    using data are included in the merge result. Valid values are
+<p>
+        <b>none</b>        only completely maching obs are retained
+        <b>both</b>        non-matching obs from master and using are included
+                    (default)
+        <b>master</b>      non-matching obs from master are included
+        <b>using</b>       non-matching obs from using are included
+<p>
+<b>nolabel</b> prevents Stata from copying the value label definitions from the disk
+    dataset.  Even if you do not specify this option, in no event do label
+    definitions from disk replace those already in meory.
+<p>
+<b>update</b> varies the action merge takes when an observation is matched.  By
+    default, the master data is held inviolate--values from the master data are
+    retained when the same variables are found in both datasets.  If <b>update</b> is
+    specified, however, the values from the using data are retained in cases
+    where the master data constains missing.
+<p>
+<b>replace</b>, allowed with update only, specified that even in the case when the
+    master data contains nomissing values, they are to be replaced with
+    corresponding values from the using data when corresponding data are not
+    equal.  A nonmissing value, however, will never be replaced with a missing
+    value.
+<p>
+<b>_merge(</b><i>varname</i><b>)</b> specifies the name of the variable that will mark the source of
+    the resulting observation.  The default is <b>_merge(_merge)</b>.
+<p>
+<b>noshow</b> specifies that the report on the files and the contents of <b>_merge</b> is
+    suppressed.
+<p>
+<p>
+<b><u>Options for manipulating the using data ("u"-options)</u></b>
+<p>
+<b>ukeep(</b><i>varlist</i><b>)</b> <b>udrop(</b><i>varlist</i><b>)</b> specifies a varlist in the using data that has to
+    be kept (dropped) before being merged into the master data.  It is not
+    valid to specify both <b>ukeep</b> and <b>udrop</b>.  If neither is specified, all
+    variables of the using data are used.  The match variable(s) need not be
+    specified in <b>ukeep</b>; they are automatically included in <b>ukeep</b> (excluded from
+    <b>udrop</b>).
+<p>
+<b>uif(</b><i>exp</i><b>)</b> specifies that only the observations in the using data that meet
+    expression <i>exp</i> are to be used.  Properness of the key in the using data is
+    determined <b>after</b> <i>uif</i> is processed.
+<p>
+<b>umatch(</b><i>varlist</i><b>)</b> specifies the names of the match variables in the using data.
+    The <b>umatch</b> variables are associated with the match variables in the
+    specified order.  Clearly, the number of match variables in <b>umatch</b> should
+    be the same as the number of matching variables in the master.
+<p>
+    <b>mmerge</b> renames the <b>umatch</b> variables to the master match variable names
+    after <b>ukeep</b>/<b>udrop</b> have been processed, but before <b>urename</b> is processed. An
+    error occurs if there are naming conflicts.
+<p>
+<b>urename(</b><i>speclist</i><b>)</b> specifies a list of "oldname newname" clauses to be applied
+    to the using data, separated by a backslash <b>\</b>.  Note that <b>urename</b> is
+    applied <b>after</b> <b>ukeep</b>/<b>udrop</b>, and hence <b>ukeep</b>/<b>udrop</b> should use the original
+    names.  It is not allowed to rename the match variables here.  Use <b>umatch</b>
+    instead.
+<p>
+<b>uname(</b>{it:stub<b>)</b> specifies a stub prefixed to the names of the variables
+    imported from the using data, truncated at 32 characters.  <b>uname</b> may not be
+    combined with <b>urename</b>.
+<p>
+<b>ulabel(</b><i>stub</i><b>)</b> specifies a stub to be prefixed to the variable labels of the
+    imported variables from the using data.
+<p>
+<p>
+<b><u>Examples</u></b>
+<p>
+1.  You have two datasets (<b>auto1</b> and <b>auto2</b>) with properties of cars, identified
+    by the variable <b>make</b> in both files.  You can merge the two datasets with
+<p>
+        . use auto1
+        . mmerge make using auto2, type(1:1) unmatched(both)
+<p>
+    to obtain a dataset on all cars represented in either of the data sets.
+    Since <b>both</b> is the default value of the option <b>unmatched</b>, it could actually
+    have been omitted.  To obtain a dataset that does not include cars that
+    occur in only of the datasets, issue the command
+<p>
+        . mmerge make using auto2, type(1:1) unmatched(none)
+<p>
+    If the identifier in <b>auto2</b> was named <b>brand</b>,
+<p>
+        . mmerge make using auto2, type(1:1) umatch(brand)
+<p>
+    If you had been convinced that the auto1 and auto2 describe the same cars,
+    you could have specified <b>simple</b> instead of <b>type(1:1)</b> and <b>unmatched(both)</b>.
+    Then, in addition, <b>mmerge</b> would verify that your conviction holds true,
+    displaying an error message otherwise.
+<p>
+<p>
+2.  You have a data set of individuals (indiv) and a dataset of households
+    (<b>hhold</b>) with key <b>hhid</b>.  The variable <b>hhid</b> is also in dataset <b>indiv</b> to
+    specify the household to which individuals belong.  You want to add the
+    household level variables to the individuals.  This is an example of "table
+    lookup merging",
+<p>
+        . use indiv
+        . mmerge hhid using hhold, table
+<p>
+    One might also have typed
+<p>
+        . mmerge hhid using hhold, type(n:1)
+        
+    Alternatively, you could switch the role of <b>indiv</b> and <b>hhold</b>,
+<p>
+        . use hhold
+        . mmerge hhid using indiv, type(1:n)
+<p>
+    If you are a bit like me, you'll be easily confused between <b>1:n</b> and <b>n:1</b>.
+    You can ask <b>mmerge</b> to settle the issue for you with the match type <b>spread</b>.
+<p>
+        . use indiv
+        . mmerge hhid using hhold, type(spread)
+<p>
+    Typically, <b>hhold</b> contains many variables, and you only want to import some
+    of them, say the city of residence (<b>city</b>) and number of kids (<b>nkids</b>).  This
+    is faciliated by the <b>ukeep</b> option.
+<p>
+        . use indiv
+        . mmerge hhid using hhold, table ukeep(city nkids)
+<p>
+<p>
+<b><u>Saved results</u></b>
+<p>
+<b>mmerge</b> saves in <b>r()</b>
+<p>
+    scalar
+<p>
+        <b>mobs</b>      number of obs in master data
+        <b>mvar</b>      number of vars (incl match vars) in master data
+        <b>mkey</b>      boolean: match vars form key in master data
+        <b>uobs</b>      number of obs in using data
+        <b>uvar</b>      number of vars (incl match vars) in using data
+        <b>ukey</b>      boolean: match vars form key in using data
+<p>
+    local
+<p>
+        <b>mfile</b>     full name of master data
+        <b>mmatch</b>    names of matching vars in master data
+        <b>ufile</b>     full name of using data
+        <b>umatch</b>    (original) names of matching vars in using data
+        <b>common</b>    common variables (excl match vars) in master and using
+<p>
+<p>
+<b><u>Author</u></b>
+<p>
+This commands was written by Jeroen Weesie, Dept of Sociology, Utrecht
+University.  I want to acknowledge stimulating discussions with Bill Gould,
+Chris Snijders, and Fred Wolfe.  Comments and suggestions are welcomed.
+<p>
+<p>
+<b><u>Also See</u></b>
+<p>
+ Manual:  <b>[U] 25 Commands for combining data</b>
+          <b>[R] merge</b>
+          <b>[R] joinby</b>
+<p>
+On-line:  append    Append datasets -- add cases
+          cross     Form every pairwise combination of two datasets
+          fillin    Rectangularize dataset
+          joinby    Form all pairwise combinations within groups
+          merge     Merge datasets -- add variables
+</pre>

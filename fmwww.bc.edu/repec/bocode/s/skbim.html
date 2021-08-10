@@ -1,0 +1,107 @@
+<pre>
+.-
+help for skewed bimodal generator
+.-
+<p>
+Skewed bimodal generator
+------------------------
+<p>
+         ^skbim^ p v1 v2 v3 v4 option [obs] [seednum] [sk1] [ku1] [sk2] [ku2]
+<p>
+<p>
+Description
+-----------
+<p>
+The program generates random numbers from a bimodal distribution. The two unimo
+&gt; dal distributions
+that make up the bimodal can be normal or skewed-normal (see sknor for more det
+&gt; ails). Different
+arguments can be inputted to the function, as specified by 'option'
+<p>
+p: the probability of the 1st unimodal distribution (obviously the prob for the
+&gt;  2nd will be 1-p)
+option: takes values 1, 2 or 3 and defines v1-v4.
+    for option=1: v1 the mean v2 the variance of the 1st unimodal, v3 the mean 
+&gt; v4 the variance of the 2nd unimodal
+    for option=2: v1 the mean v2 the variance of the bimodal, v3 &amp; v4 the varia
+&gt; nces of the unimodals
+    for option=3: v1 the mean v2 the variance of the bimodal, v3 the mean v4 th
+&gt; e variance of the 1st unimodal
+[obs]: number of observations to be generated (optional; set to current
+    dataset size if omitted)
+[seednum]: seed number to be used for drawing 'random' numbers - makes a differ
+&gt; ence if your simulations occur
+    on the same second (i.e. running a batch of simulations)
+[sk1]: skewness of the 1st unimodal (optional; set to 0 if omitted)
+[ku1]: kurtosis of the 1st unimodal (optional; set to 3 if omitted)
+[sk2]: skewness of the 2nd unimodal (optional; set to 0 if omitted)
+[ku2]: kurtosis of the 2nd unimodal (optional; set to 3 if omitted)
+<p>
+<p>
+Remarks
+-------
+<p>
+When using options 2 and 3, parameters of the distribution may not be computed 
+&gt; for certain sets of
+inputted values.
+    for option 1 it must hold that: var - p*var(d1) - (1-p)*var(d2)&gt;=0
+    for option 2 it must hold that: var &gt; p*var(d1) + p(1-p)*(m1-m2)^2
+    where var the variance of the bimodal; m1,m2,v1,v2 means and variances of t
+&gt; he unimodals
+<p>
+For the default skewness and kurtosis values the generated distributions are no
+&gt; rmal.
+The program is based on a method described in  "Ramberg et al, A probability Di
+&gt; stribution
+and its uses in fitting data, Technometrics, 1979".
+The method uses a formula with 4 parameters and parameter values which generate
+data of various degrees of skewness and kurtosis have been provided in the pape
+&gt; r.
+Only a few of those have been included in this program the command, but it can
+easily be updated with more.
+The included pairs of values are (sk,ku): (0,1.75), (0,3), (0,3.2), (0,3.3), (0
+&gt; ,3.4),
+(0,3.6), (0,4), (0,4.4), (0,5), (0,6), (0,7), (0,8), (0,9), (0.5,3), (0.5,4), (
+&gt; 0.5,5),
+(0.5,6), (0.5,7), (0.5,8), (0.5,9), (1,4), (1,5), (1,6), (1,7), (1,8), (1,9), (
+&gt; 1,10),
+(1.5,6), (1.5,7), (1.5,8), (1.5,9), (1.5,10), (1.5,11), (1.5,12), (2,9), (2,10)
+&gt; , (2,11),
+(2,12), (2,13), (2,14), (2,15),
+For sk=2 and ku=9 the most extreme distribution is generated.
+Negative skewness values can be inputted for left-skew distributions (the oppos
+&gt; ite values
+of the ones listed above)
+<p>
+<p>
+Examples
+--------
+<p>
+ . ^skbim 0.5 5 1 7 1.5 1^
+ . ^skbim 0.3 5 2 1.2 1.5 2 10000^
+ . ^skbim 0.3 5 2 1.2 1.5 2 10000 1234^
+ . ^skbim 0.5 9 3.5 8 2 3 10000 1234 1.5 6 -0.5 9^
+<p>
+<p>
+Keywords
+--------
+bimodal, normal, distribution, skewness (skew, skewed), kurtosis
+<p>
+<p>
+Author
+-------
+<p>
+        Evangelos Kontopantelis
+        National Primary Care Reserch and Development Centre
+        University of Manchester
+        M13 9PL
+        e.kontopantelis@manchester.ac.uk
+<p>
+<p>
+Also see
+--------
+    Ramberg et al paper: http://www.jstor.org/view/00401706/ap040083/04a00080/0
+    STB:  STB-41 sg44.1, STB-28 sg44
+<p>
+<p>
+</pre>

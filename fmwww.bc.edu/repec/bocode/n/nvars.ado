@@ -1,0 +1,1 @@
+program def nvars, rclass *! NJC 1.0.0 8 July 1999 	version 6.0 	args stub	if "`stub'" != "" { 		local lstub = length("`stub'")		if substr("`stub'",`lstub',1) != "*" {			local stub "`stub'*" 		}		}			local vars = cond("`stub'" == "", "_all","`stub'")  	unab vlist : `vars' 	local nvars : word count `vlist'	di `nvars' 	return local nvars = `nvars'  end 

@@ -1,0 +1,214 @@
+<pre>
+-------------------------------------------------------------------------------
+<b>help: </b><b>meloreg2</b>                                                        <b>dialog:</b> <b>m</b>
+<b>&gt; eloreg2</b>
+-------------------------------------------------------------------------------
+<p>
+<b>        </b>+-------+
+<b>    </b>----+<b> Title </b>+------------------------------------------------------------
+<p>
+<b> meloreg2: Minimum Expected Loss (MELO) Instrumental Variables Regression</b>
+<p>
+<b>        </b>+-------------------+
+<b>    </b>----+<b> Table of Contents </b>+------------------------------------------------
+<p>
+     <b>Syntax</b>
+     <b>Options</b>
+     <b>Weight Options</b>
+     <b>Weighted Variable Type Options</b>
+     <b>Description</b>
+     <b>Saved Results</b>
+     <b>References</b>
+<p>
+ *** <b>Examples</b>
+<p>
+     <b>Author</b>
+<p>
+<a name="1"></a><b>        </b>+--------+
+<b>    </b>----+<b> Syntax </b>+-----------------------------------------------------------
+<p>
+  <b>meloreg2</b> <i>depvar</i> <i>indepvars</i> <b>(</b><i>endog</i><b> = </b><i>inst</i><b>)</b> [<i>if</i>] [<i>in</i>] , [ <b><u>nocons</u></b><b>tant</b> <b>noconexog</b>
+    <b>dn</b>
+ 
+            <b>weights(</b><i>type</i><b>)</b> <b><u>wv</u></b><b>ar(</b><i>varname</i><b>)</b> <b><u>pred</u></b><b>ict(</b><i>new_var</i><b>)</b> <b><u>res</u></b><b>id(</b><i>new_var</i><b>)</b> ]
+<p>
+<a name="2"></a><b>        </b>+---------+
+<b>    </b>----+<b> Options </b>+----------------------------------------------------------
+<p>
+<p>
+    <b><u>nocons</u></b><b>tant</b>        Exclude Constant Term from RHS Equation only
+<p>
+    <b>noconexog</b>         Exclude Constant Term from all Equations (both RHS and
+                        Instrumental Equations). Results of using <b>noconexog</b>
+                        option are identical to Stata <b>ivregress</b> and <b>ivreg2</b>.
+                        Including Constant Term in both RHS and Instrumental
+                        Equations is default in <b>meloreg2</b>
+<p>
+    <b>dn</b>                Use (N) divisor instead of (N-K) for Degrees of Freedom
+                        (DF)
+<p>
+    <b><u>pred</u></b><b>ict(</b><i>new_var</i><b>)</b>  Predicted values variable
+<p>
+    <b><u>res</u></b><b>id(</b><i>new_var</i><b>)</b>    Residuals values variable
+<p>
+<a name="3"></a><b>        </b>+----------------+
+<b>    </b>----+<b> Weight Options </b>+---------------------------------------------------
+<p>
+    <b>wvar(</b><i>varname</i><b>)</b>     Weighted Variable Name
+<p>
+<a name="4"></a><b>        </b>+--------------------------------+
+<b>    </b>----+<b> Weighted Variable Type Options </b>+-----------------------------------
+<p>
+    <i>Type Options</i>      Description
+<p>
+    <b>weights(</b><i>yh</i><b>)</b>       Yh - Predicted Value
+    <b>weights(</b><i>yh2</i><b>)</b>      Yh^2 - Predicted Value Squared
+    <b>weights(</b><i>abse</i><b>)</b>     abs(E) - Absolute Value of Residual
+    <b>weights(</b><i>e2</i><b>)</b>       E^2 - Residual Squared
+    <b>weights(</b><i>le2</i><b>)</b>      log(E^2) - Log Residual Squared
+    <b>weights(</b><i>x</i><b>)</b>        (x) Variable
+    <b>weights(</b><i>xi</i><b>)</b>       (1/x) Inverse Variable
+    <b>weights(</b><i>x2</i><b>)</b>       (x^2) Squared Variable
+    <b>weights(</b><i>xi2</i><b>)</b>      (1/x^2) Inverse Squared Variable
+<p>
+<a name="5"></a><b>        </b>+-------------+
+<b>    </b>----+<b> Description </b>+------------------------------------------------------
+<p>
+    <b>meloreg2</b> estimate Minimum Expected Loss (MELO) Instrumental Variables
+    Regression. <b>meloreg2</b> dont deal with Missing values (.) in variables
+<p>
+<a name="6"></a><b>        </b>+---------------+
+<b>    </b>----+<b> Saved Results </b>+----------------------------------------------------
+<p>
+    <b>meloreg2</b> saves the following in <b>e()</b>:
+<p>
+   <b>e(f)</b>            F Test
+   <b>e(fp)</b>           F Test P-Value
+   <b>e(N)</b>            Number of obs
+   <b>e(r2c)</b>          R2
+   <b>e(r2c_a)</b>        adj R2
+   <b>e(r2cc)</b>         Corrected R2
+   <b>e(r2cc_a)</b>       adj Corrected R2
+   <b>e(r2u)</b>          Raw R2
+   <b>e(r2u_a)</b>        Adj Raw R2
+   <b>e(sig)</b>          Sigma (MSE)
+   <b>e(wald)</b>         Wald Test
+   <b>e(waldp)</b>        Wald Test P-Value
+<p>
+Matrixes
+   <b>e(b)</b>              coefficient vector
+   <b>e(V)</b>              variance-covariance matrix of the estimators
+<p>
+<a name="7"></a><b>        </b>+------------+
+<b>    </b>----+<b> References </b>+-------------------------------------------------------
+<p>
+    Judge, Georege, W. E. Griffiths, R. Carter Hill, Helmut Lutkepohl, &amp;
+        Tsoung-Chao Lee(1985)<b> "The Theory and Practice of Econometrics",</b> <i>2nd</i>
+        <i>ed., John Wiley &amp; Sons, Inc., New York, USA</i>; 615.
+<p>
+    Park, S. (1982)<b> "Some Sampling Properties of Minimum Expected Loss (MELO)</b>
+        <b>Estimators of Structural Coefficients",</b> <i>J. Econometrics, Vol. 18, No.</i>
+        <i>2, April,</i>; 295-311.
+<p>
+    Zellner, Arnold (1978)<b> "Estimation of Functions of Population Means and</b>
+        <b>Regression Coefficients Including Structural Coefficients: A Minimum</b>
+        <b>Expected Loss (MELO) Approach",</b> <i>J. Econometrics, Vol. 8,</i>; 127-158.
+<p>
+    Zellner, Arnold &amp; S. Park (1979)<b> "Minimum Expected Loss (MELO) Estimators</b>
+        <b>for Functions of Parameters and Structural Coefficients of</b>
+        <b>Econometric Models",</b> <i>J. Am. Stat. Assoc., Vol. 74</i>; 185-193.
+<p>
+<a name="8"></a><b>        </b>+----------+
+<b>    </b>----+<b> Examples </b>+---------------------------------------------------------
+<p>
+ clear all
+<p>
+ sysuse meloreg2.dta , clear
+<p>
+ db meloreg2
+<p>
+ meloreg2 y1 x1 x2 (y2 = x1 x2 x3 x4)
+<p>
+ ereturn list
+<p>
+ tsset t
+<p>
+ gen y1_1=L.y1
+<p>
+*** replace missing value in first observation with (0).
+ replace y1_1= 0 if y1_1 == .
+<p>
+ meloreg2 y1 y1_1 x1 x2 (y2 = y1_1 x1 x2 x3 x4)
+<p>
+-------------------------------------------------------------------------------
+<p>
+<b>* Weighted MELO (WMELO)</b>
+<p>
+ meloreg2 y1 x1 x2 (y2 = x1 x2 x3 x4) , weights(yh)
+<p>
+ meloreg2 y1 x1 x2 (y2 = x1 x2 x3 x4) , weights(yh2)
+<p>
+ meloreg2 y1 x1 x2 (y2 = x1 x2 x3 x4) , weights(abse)
+<p>
+ meloreg2 y1 x1 x2 (y2 = x1 x2 x3 x4) , weights(e2)
+<p>
+ meloreg2 y1 x1 x2 (y2 = x1 x2 x3 x4) , weights(le2)
+<p>
+ meloreg2 y1 x1 x2 (y2 = x1 x2 x3 x4) , weights(x) wvar(x1)
+<p>
+ meloreg2 y1 x1 x2 (y2 = x1 x2 x3 x4) , weights(xi) wvar(x1)
+<p>
+ meloreg2 y1 x1 x2 (y2 = x1 x2 x3 x4) , weights(x2) wvar(x1)
+<p>
+ meloreg2 y1 x1 x2 (y2 = x1 x2 x3 x4) , weights(xi2) wvar(x1)
+-------------------------------------------------------------------------------
+<p>
+. clear all
+. sysuse meloreg2.dta , clear
+. meloreg2 y1 x1 x2 (y2 = x1 x2 x3 x4)
+==============================================================================
+* Minimum Expected Loss (MELO) Instrumental Variables Regression)
+==============================================================================
+  y1 = y2 + x1 + x2
+------------------------------------------------------------------------------
+ K - Class (MELO) Value  =   0.72727
+  Number of Obs    =         17
+  Wald Test        =    81.2132         P-Value &gt; Chi2(3)        =     0.0000
+  F Test           =    27.0711         P-Value &gt; F(3 , 13)      =     0.0000
+  R-squared        =     0.8616         Raw R2                   =     0.9955
+  R-squared Adj    =     0.8297         Raw R2 Adj               =     0.9945
+  Root MSE (Sigma) =    10.1364         Log Likelihood Function  =   -61.2160
+------------------------------------------------------------------------------
+          y1 |      Coef.   Std. Err.      t    P&gt;|t|     [95% Conf. Interval]
+-------------+----------------------------------------------------------------
+          y2 |   .1951374   .2125644     0.92   0.375    -.2640801    .6543549
+          x1 |   .3229772   .5276595     0.61   0.551    -.8169618    1.462916
+          x2 |  -1.101973   .3260175    -3.38   0.005    -1.806291   -.3976546
+       _cons |   152.1958   58.82774     2.59   0.023     25.10624    279.2854
+------------------------------------------------------------------------------
+<p>
+<a name="9"></a><b>        </b>+--------+
+<b>    </b>----+<b> Author </b>+-----------------------------------------------------------
+<p>
+  <b>Emad Abd Elmessih Shehata</b>
+  <b>Assistant Professor</b>
+  <b>Agricultural Research Center - Agricultural Economics Research Institute - Eg</b>
+<b>&gt; ypt</b>
+  <b>Email:   </b>emadstat@hotmail.com
+  <b>WebPage:                </b>http://emadstat.110mb.com/stata.htm
+  <b>WebPage at IDEAS:       </b>http://ideas.repec.org/f/psh494.html
+  <b>WebPage at EconPapers:  </b>http://econpapers.repec.org/RAS/psh494.htm
+<p>
+<b>        </b>+-------------------+
+<b>    </b>----+<b> meloreg2 Citation </b>+------------------------------------------------
+<p>
+    Shehata, Emad Abd Elmessih (2012)
+    <b>MELOREG2: "Stata Module to Estimate Minimum Expected Loss (MELO)</b>
+        <b>Instrumental Variables Regression"</b>
+<p>
+<b><u>Online Help:</u></b>
+<p>
+    <b>ivregress</b>, <b>diagreg2</b>, <b>meloreg2</b>, (if installed)}.
+<p>
+<p>
+</pre>

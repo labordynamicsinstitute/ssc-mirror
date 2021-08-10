@@ -1,0 +1,48 @@
+<pre>
+-------------------------------------------------------------------------------
+help for <b>ice_reformat</b>                                           Patrick Royston
+-------------------------------------------------------------------------------
+<p>
+<b><u>Reformat -ice- file</u></b>
+<p>
+<p>
+        <b>ice_reformat using</b> <i>filename</i> <b>,</b> <b>replace</b>
+<p>
+<p>
+<b><u>Description</u></b>
+<p>
+    <b>ice_reformat</b> reformats files of imputations created by versions of <b>ice</b>
+    earlier than 1.4.0 to the current format. This ensures compatibility with
+    mim. The changes are described under <i>Remarks</i>.
+<p>
+<p>
+<b><u>Options</u></b>
+<p>
+    <b>replace</b> is not optional. It permits <i>filename</i> to be replaced.
+<p>
+<p>
+<b><u>Remarks</u></b>
+<p>
+    <b>ice_reformat</b> makes the following small changes to <i>filename</i>:
+<p>
+        (i) Variables <b>_i</b> and <b>_j</b> are renamed to <b>_mi</b> and <b>_mj</b> respectively.
+<p>
+        (ii) The characteristic <b>_dta[mi_id]</b> is changed from <b>_i</b> to <b>_mi</b>.
+<p>
+    These changes ensure that the file is compatible with mim.
+<p>
+<p>
+<b><u>Example</u></b>
+<p>
+    <b>. ice_reformat "c:\data\myimputations.dta", replace</b>
+<p>
+<p>
+<b><u>Author</u></b>
+<p>
+    Patrick Royston, MRC Clinical Trials Unit, London.
+    pr@ctu.mrc.ac.uk
+<p>
+<p>
+<b><u>Also see</u></b>
+<p>
+</pre>

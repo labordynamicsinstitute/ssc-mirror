@@ -1,0 +1,18 @@
+Title: MV-ARCH: GAUSS module to implement the multivariate ARCH test.
+
+Authors: Scott Hacker and Abdulnasser Hatemi-J   
+
+Abstract: This GAUSS module implements the multivariate ARCH test developed by Hacker and Hatemi-J (2005). 
+It provides p-values based on asymptotic as well as bootstrap distributions. For technical description see the published paper.
+
+Applications are allowed only if proper reference is provided. For non-Commercial applications only.
+
+No performance guarantee is made. Bug reports are welcome. 
+
+Reference: Hacker S and Hatemi-J A (2005) "A Test for Multivariate ARCH Effects, Applied Financial Economics Letters, 12(7), 411-417".
+
+Keywords: LM test, ARCH, Bootstrap, Multivariate
+
+Files needed: data file in text format.
+
+	

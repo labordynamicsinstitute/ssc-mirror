@@ -1,0 +1,64 @@
+<pre>
+<p>
+<b>help iccvar</b>
+-------------------------------------------------------------------------------
+<p>
+<b><u>Title</u></b>
+<p>
+    <b>iccvar</b> --    intraclass correlation values and stadard errors for 2, 3,
+                   and 4 level models after <b>xtmixed</b>.
+<p>
+<b><u>Syntax</u></b>
+        <b>iccvar,</b> [<i>unb</i>]
+<p>
+  -----------------------------------------------------------------------------
+<p>
+  <b>iccvar</b> has a special routine for 3-level models with unbalanced data. To
+  enact this routine use the <i>unb</i> option.
+<p>
+  -----------------------------------------------------------------------------
+<p>
+<b><u>Description</u></b>
+<p>
+    <b>iccvar</b> is a post-estimation command for <b>xtmixed</b>.  After fitting a 2, 3,
+    or 4 level model with a random intercept (random slopes are not
+    supported), <b>iccvar</b> will calculate the intraclass correlation (ICC) values
+    and the associated standard errors based on the variance components and
+    standard errors of the variance components estimated from <b>xtmixed</b>.
+<p>
+<b><u>Saved results</u></b>
+<p>
+    <b>iccvar</b> saves the following in <b>r()</b>:
+<p>
+    Scalars        
+      <b>r(p)</b>                the harmonic mean number of level 2 units per level
+                            3 unit
+      <b>r(r)</b>                the harmonic mean number of level 3 units per level
+                            4 unit
+      <b>r(tv)</b>               the total estimated variance
+      <b>r(l</b><i>k</i><b>vc)</b>             the <i>k</i> level variance component
+      <b>r(l</b><i>k</i><b>vc_v)</b>           the <i>k</i> level variance component variance
+<p>
+    Macros         
+      <b>r(model)</b>            the <b>xtmixed</b> model
+<p>
+    Matrices       
+      <b>r(b)</b>                the matrix of ICCs
+      <b>r(V)</b>                the variance-covariance matrix of ICCs
+<p>
+<b><u>Acknowledgments</u></b>
+<p>
+The algorithms used in this program are based on
+    Hedges, L. V., E. C. Hedberg and A. M. Kuyper. 2012. The Variance of
+        Intraclass Correlations in Three- and Four-Level Models. Educational
+        and Psychological Measurement. DOI: 10.1177/0013164412445193. Click
+        for paper: link.
+<p>
+<b><u>Contact</u></b>
+<p>
+    This program was written by Eric Hedberg, National Opinion Research
+    Center at the University of Chicago.  Any questions or comments can be
+    directed to ech@uchicago.edu.
+<p>
+<p>
+</pre>

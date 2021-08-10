@@ -1,0 +1,43 @@
+<pre>
+.-
+help for ^spaces^
+.-
+<p>
+Usage
+-----
+        ^spaces^ , s(string)  [chr(string)]
+<p>
+<p>
+Description
+-----------
+^spaces^ parses a string for certain delimiters that are commonly used in
+Stata output. The string is returned in r(s)
+<p>
+The delimiters are replaced by chr(). Default is ";", which is useful
+when importing into Excel. Anybody tell me
+<p>
+Options
+-------
+chr     Changes substitute delimiter to that character.
+<p>
+Remarks
+-------
+<p>
+        This is imperfect as a table processor. 
+        Suggestions for improvements are welcome.
+<p>
+<p>
+Examples
+--------
+<p>
+        local s "age   |   .9056697   .0562934     -1.594   0.111       .801792
+&gt; 6"
+        spaces , "`s'"
+        local s2 "`r(s)'"
+        display "`s2'"
+<p>
+Author
+------
+Jan Brogger, jan.brogger@@med.uib.no
+20. May 2000
+</pre>

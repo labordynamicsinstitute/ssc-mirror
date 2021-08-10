@@ -1,0 +1,84 @@
+<pre>
+-------------------------------------------------------------------------------
+help for <b>factortest</b>                                          Joao Pedro Azevedo
+-------------------------------------------------------------------------------
+<p>
+<p>
+<b><u>Calculate specification tests before </u></b><b><u>factor</u></b><b><u> or </u></b><b><u>pca</u></b>
+<p>
+<p>
+        <b>factortest</b> [<i>varlist</i>] [<b>if</b> <i>exp</i>] [<b>in</b> <i>range</i>]
+<p>
+<p>
+<b><u>Description</u></b>
+<p>
+    <b>factortest</b> performs the <b>Bartlett's test for sphericity</b> and the
+    <b>Kaiser-Meyer-Olkin Measure of Sampling Adequacy</b>. Both tests should be
+    used prior to a factor or a principal component analysis.
+<p>
+<p>
+<b><u>Technical details</u></b>
+<p>
+    <b>Determinant of the matrix of correlation</b>: This determinant will equal 1.0
+    only if all correlations equal 0, otherwise the determinant will be less
+    than 1.
+<p>
+    <b>Bartlett's test for sphericity</b>: Calculates the determinant of the matrix
+    of the sums of products and cross-products (S) from which the
+    intercorrelations matrix is derived. The determinant of the matrix S is
+    converted to a chi-square statistic and tested for significance.
+    
+    The null hypothesis is that the intercorrelation matrix comes from a
+    population in which the variables are noncollinear (i.e. an identity
+    matrix), and that the non-zero correlations in the sample matrix are due
+    to sampling error.
+    
+    <b>Kaiser-Meyer-Olkin Measure of Sampling Adequacy</b>: is an index for
+    comparing the magnitudes of the observed correlation coefficients to the
+    magnitudes of the partial correlation coefficients.
+    
+    Large values for the KMO measure indicate that a factor analysis of the
+    variables is a good idea.
+    
+                                90 or above, excelent
+                                80 or above, meritorious
+                                70 or above, middling
+                                60 or above, mediocre
+                                50 or above, miserable; and
+                                below .50, unacceptable.
+<p>
+<b><u>Examples</u></b>
+<p>
+        <b>. factortest price mpg rep78 rep77 hdroom rseat trunk</b>
+<p>
+<p>
+<b><u>References</u></b>
+<p>
+    Box,G.E.P.(1949) "A general distribution theory for a class of likelihood
+        criteria." <i>Biometrica</i>, 36: 317-346.
+<p>
+    Cureton, E.E., &amp; D'Agostino, R.B. (1983). Factor analysis: An applied
+        approach. Hillsdale, NJ: Erlbaum.
+<p>
+<p>
+<b><u>Authors</u></b>
+<p>
+    Joao Pedro Azevedo, IPEA, Brazil
+    jazevedo@ipea.gov.br
+<p>
+<p>
+<b><u>Aknowledgements</u></b>
+<p>
+    I would like to thank May M. Boggess for her help and Roberto De Miguel
+        for his suggestions.
+<p>
+<p>
+<b><u>Also see</u></b>
+<p>
+    Manual:  <b>[R] factor</b> <b>[R] pca</b> <b>[R] alpha</b>
+    Online:  help for factor; pca; alpha
+<p>
+<p>
+<p>
+<p>
+</pre>

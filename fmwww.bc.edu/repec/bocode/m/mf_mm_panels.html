@@ -1,0 +1,184 @@
+<pre>
+<b>help mata mm_panels()</b>
+-------------------------------------------------------------------------------
+<p>
+<b><u>Title</u></b>
+<p>
+    <b>mm_panels() -- Identify panel sizes and sub-panels</b>
+<p>
+<p>
+<b><u>Syntax</u></b>
+<p>
+        <i>void</i>           <b>mm_panels(</b><i>X</i><b>,</b> <i>Xinfo</i> [<b>,</b> <i>Y</i><b>,</b> <i>Yinfo</i>]<b>)</b>
+<p>
+        <i>real colvector</i> <b>_mm_panels(</b><i>X</i><b>)</b>
+<p>
+        <i>real scalar</i>    <b>mm_npanels(</b><i>X</i><b>)</b>
+<p>
+<p>
+    where
+<p>
+            <i>X</i>:  <i>transmorphic vector</i> containing (upper level) panel ID
+                variable (e.g. strata)
+<p>
+        <i>Xinfo</i>:  will be replaced by a <i>real colvector</i> containing panel sizes
+                or, if <i>Y</i> is present, a <i>k</i> x 2 <i>real matrix</i> containing upper
+                level panel sizes and numbers of lower level panels within
+                upper level panels
+<p>
+            <i>Y</i>:  <i>transmorphic vector</i> containing lower level panel ID variable
+                (e.g. clusters within strata)
+<p>
+        <i>Yinfo</i>:  will be replaced by a <i>real colvector</i> containing lower level
+                panel sizes
+<p>
+<p>
+<p>
+<b><u>Description</u></b>
+<p>
+    <b>mm_panels(</b><i>X</i><b>,</b> <i>Xinfo</i><b>)</b> stores in <i>colvector Xinfo</i> the sizes of the panels in
+    <i>X</i>. A panel is defined as a consecutive series of identical values.  Note
+    that <b>mm_panels()</b> does not sort the data. A new panel simply begins each
+    time <i>X</i> changes from one row to the next. Identical values that are
+    separated by rows containing other values do not belong to the same
+    panel. The "size" of a panel is the number of rows it contains.
+<p>
+    <b>mm_panels(</b><i>X</i><b>,</b> <i>Xinfo</i><b>,</b> <i>Y</i><b>,</b> <i>Yinfo</i><b>)</b> stores in the first column of <i>matrix Xinfo</i>
+    the sizes of the <i>X</i>-panels (e.g. strata). In the second column of <i>matrix</i>
+    <i>Xinfo</i>, the number of <i>Y</i>-panels (e.g. clusters) within each <i>X</i>-panel is
+    stored. Furthermore, the <i>Y</i>-panel sizes within <i>X</i>-panels are stored in
+    <i>colvector Yinfo</i>.
+<p>
+    <b>_mm_panels(</b><i>X</i><b>)</b> is a subroutine used by <b>mm_panels()</b>. It returns the panel
+    sizes in <i>X</i>. Essentially,
+<p>
+        : Xinfo = _mm_panels(X)
+<p>
+    is equivalent to
+<p>
+        : mm_panels(X, Xinfo=.)
+<p>
+<p>
+<b><u>Remarks</u></b>
+<p>
+    For example, consider the following data
+<p>
+        : X,Y
+                1   2
+             +---------+
+           1 |  1   1  |
+           2 |  1   2  |
+           3 |  1   2  |
+           4 |  2   1  |
+           5 |  2   2  |
+           6 |  2   2  |
+           7 |  2   2  |
+           8 |  3   1  |
+           9 |  4   1  |
+          10 |  4   1  |
+             +---------+
+<p>
+    Typing
+<p>
+        : mm_panels(X, Xinfo=.)
+        
+        : Xinfo
+               1
+            +-----+
+          1 |  3  |
+          2 |  4  |
+          3 |  1  |
+          4 |  2  |
+            +-----+
+<p>
+    informs us that there are four panels in X. The first panel contains
+    three observations, the second panel contains four observations, etc.
+<p>
+    Furthermore,
+<p>
+        : mm_panels(X, Xinfo=., Y, Yinfo=.)
+        
+        : Xinfo
+               1   2
+            +---------+
+          1 |  3   2  |
+          2 |  4   2  |
+          3 |  1   1  |
+          4 |  2   1  |
+            +---------+
+<p>
+    indicates that in the first and second panel there are two sub-panels
+    each and in the third and fourth panel there is one sub-panel each.
+<p>
+    Finally,
+<p>
+        : Yinfo
+               1
+            +-----+
+          1 |  1  |
+          2 |  2  |
+          3 |  1  |
+          4 |  3  |
+          5 |  1  |
+          6 |  2  |
+            +-----+
+<p>
+    displays the sizes of the sub-panels.
+<p>
+    See help for <b>mm_sample()</b> for an application of <b>mm_panels()</b> in the context
+    of stratified and clustered sampling.
+<p>
+<p>
+<b><u>Conformability</u></b>
+<p>
+    <b>mm_panels(</b><i>X</i><b>,</b> <i>Xinfo</i><b>)</b>
+      <i>input:</i>
+                  <i>X</i>:  <i>n x</i> 1 or 1 <i>x n</i>
+      <i>output:</i>
+              <i>Xinfo</i>:  <i>k x</i> 1, where <i>k</i> is the number of panels in <i>X</i>, <i>k</i>&lt;=<i>n</i>
+<p>
+    <b>mm_panels(</b><i>X</i><b>,</b> <i>Xinfo</i><b>,</b> <i>Y</i><b>,</b> <i>Yinfo</i><b>)</b>
+      <i>input:</i>
+                  <i>X</i>:  <i>n x</i> 1 or 1 <i>x n</i>
+                  <i>Y</i>:  <i>n x</i> 1 or 1 <i>x n</i>
+      <i>output:</i>
+              <i>Xinfo</i>:  <i>k x</i> 2, where <i>k</i> is the number of panels in <i>X</i>, <i>k</i>&lt;=<i>n</i>
+              <i>Yinfo</i>:  <i>l x</i> 1, where <i>l</i> is the number of sub-panels in <i>Y</i>, <i>l</i>&lt;=<i>n</i>
+<p>
+    <b>_mm_panels(</b><i>X</i><b>)</b>
+                  <i>X</i>:  <i>n x</i> 1 or 1 <i>x n</i>
+             <i>result</i>:  <i>k x</i> 1, where <i>k</i> is the number of panels in <i>X</i>
+<p>
+    <b>mm_panels(</b><i>X</i><b>)</b>
+                  <i>X</i>:  <i>n x</i> 1 or 1 <i>x n</i>
+             <i>result</i>:  <i>1 x</i> 1
+<p>
+<p>
+<b><u>Diagnostics</u></b>
+<p>
+    If <i>Y</i> is missing (i.e. <i>Y</i>==.) or void (i.e. length(Y)==0), <b>mm_panels()</b> does
+    not replace <i>Yinfo</i>. If both <i>X</i> and <i>Y</i> are missing or void, <b>mm_panels()</b> does
+    not replace <i>Xinfo</i>.
+<p>
+    If <i>X</i> is missing or void and <i>Y</i> is not missing and not void, all
+    observations are interpreted as belonging to the same stratum.
+<p>
+    If <i>X</i> is not missing and not void and <i>Y</i> is missing or void, each
+    observation is interpreted as belonging to it's individual cluster.
+<p>
+<p>
+<b><u>Source code</u></b>
+<p>
+    mm_panels.mata
+<p>
+<p>
+<b><u>Author</u></b>
+<p>
+    Ben Jann, ETH Zurich, jann@soz.gess.ethz.ch
+<p>
+<p>
+<b><u>Also see</u></b>
+<p>
+    Online:  help for <b>mm_sample()</b>, <b>[M-5] panelsetup()</b>, <b>[M-4] utility</b>, 
+             <b>moremata</b>
+</pre>

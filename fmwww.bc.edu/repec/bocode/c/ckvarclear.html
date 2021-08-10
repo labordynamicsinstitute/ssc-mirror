@@ -1,0 +1,48 @@
+<pre>
+<b>help ckvarclear</b> 
+-------------------------------------------------------------------------------
+<p>
+<b><u>Title</u></b>
+<p>
+    <b>ckvarclear</b> - clears characteristics used by ckvar
+<p>
+<b><u>Syntax</u></b>
+<p>
+        <b>ckvarclear</b> [<i>varlist</i>] [ <b>,</b> <b>stubs(</b><i>stubs to clear</i><b>)</b> ]
+<p>
+<b><u>Description</u></b>
+<p>
+    This is a helper command for ckvar which clears characteristics used for
+    validation or scoring. Its main use is when experimenting with ckvar.
+<p>
+<b><u>Options</u></b>
+<p>
+    <b>stubs</b> specifies that stubs (or prefixes) whose characteristics should be
+        cleared. Its default value is <b>valid</b>.
+<p>
+<b><u>Example(s)</u></b>
+<p>
+    <b>. ckvarclear</b>
+        Clears all characteristics whose names start with <b>valid_</b> from all
+            variables in the dataset.
+<p>
+    <b>. ckvarclear foo bar, stubs(valid score)</b>
+        Clears all characteristics whose names start with <b>valid_</b> and <b>score</b>
+            from the two variables <b>foo</b> and <b>bar</b>.
+<p>
+<b><u>Notes</u></b>
+<p>
+    Clearing characteristics from just a few of the variables could cause 
+    ckvar to have problems.
+<p>
+<b><u>Also see</u></b>
+<p>
+    Online: help for ckvar, ckvaredit, ckvardo, and dochar.
+<p>
+<b><u>Author</u></b>
+<p>
+    Bill Rising, StataCorp
+    email: brising@stata.com
+    web: http://homepage.mac.com/brising
+<p>
+</pre>

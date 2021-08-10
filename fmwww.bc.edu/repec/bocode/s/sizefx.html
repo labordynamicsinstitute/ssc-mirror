@@ -1,0 +1,73 @@
+<pre>
+<b>help sizefx</b>
+-------------------------------------------------------------------------------
+<p>
+<b><u>Title</u></b>
+<p>
+<b>sizefx</b> -- Calculate Cohen's <i>d</i>, Hedges' <i>g</i>, and the effect size (ES) correlation 
+&gt; (<i>r</i>)
+<p>
+<p>
+<b><u>Syntax</u></b>
+<p>
+        <b>sizefx</b>  <i>varlist</i>  [<i>if</i>] [<i>in</i>]
+<p>
+<p>
+<b><u>Description</u></b>
+<p>
+<p>
+<b>sizefx</b> computes Cohen's <i>d</i>, Hedges' <i>g</i>, and effect size (ES) correlations (<i>r</i>) for
+the two variables specified in <b>varlist</b>. The two variables specified correspond
+to the variables in a <b>ttest</b>, although the "==" operator is not used in the
+<b>sizefx</b> syntax.
+<p>
+The command displays Cohen's <i>d</i> statistic (Cohen 1988) using the pooled variance
+of the variables and Hedges' <i>g</i> statistic. The pooled variance for an unpaired
+t-test is used to calculate effect size even when using a dependent sample or
+correlated designs (Dunlap et al. 1996).
+<p>
+Additionally, it displays the effect size (ES) correlation (<i>r</i>) using the value
+of Cohen's <i>d</i>.
+<p>
+<p>
+<b><u>Examples</u></b>
+<p>
+        . <b>sizefx</b> age1 age2
+        . <b>sizefx</b> before after
+        
+<p>
+<b><u>References</u></b>
+<p>
+    Cohen, J. (1988) <i>Statistical power analysis for the behavioral sciences,</i>
+        <i>2nd ed</i>. Hillsdale, NJ: Lawrence Earlbaum Associates.
+<p>
+    Dunlap, William P., Cortina, Jose M., Vaslow, Joel B., and Burke, Michael
+        J. (1996) Meta-analysis of experiments with matched groups or
+        repeated measures designs. <i>Psychological Methods</i> 1 no. 2, 170-177.
+<p>
+    Thalheimer, W., and Cook, S. (2002, August) <i>How to calculate effect sizes</i>
+        <i>from published research articles: A simplified methodology</i>. Retrieved
+        01 Apr 2010 from http://work-learning.com/effect_sizes.htm.
+<p>
+Additional resources may be found at:
+     http://www.gseis.ucla.edu/courses/ed230a2/notes/effect.html
+     http://web.uccs.edu/lbecker/Psy590/es.htm
+     
+<p>
+Links active as of 01 Apr 2010.
+<p>
+<p>
+<b><u>Author</u></b>
+<p>
+        Matthew S. Openshaw, The University of Texas at Dallas, USA
+        openshaw@utdallas.edu
+<p>
+    
+Please send comments, suggestions or constructive criticism to the above email
+address.
+<p>
+        sizefx
+        v1.3
+        Update 01 Apr 2010
+<p>
+</pre>

@@ -1,0 +1,1 @@
+d '_GSTD01': modules to standardize a variabledd This program is an extension to the egen command that standardized the specified variable into [0,1] range so that 0 corresponds tod the minimum value, and 1 to the maximum dd Author: Stanislav Kolenikov, University of North Carolina, Chapel Hilld Support: email skolenik@@unc.edudd Distribution-Date: 20010423

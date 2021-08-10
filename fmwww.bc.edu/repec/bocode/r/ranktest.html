@@ -1,0 +1,416 @@
+<pre>
+-------------------------------------------------------------------------------
+help for <b>ranktest</b>
+-------------------------------------------------------------------------------
+<p>
+<b><u>ranktest: module for testing the rank of a matrix using the Kleibergen-Paap rk </u></b>
+<b><u>&gt; statistic</u></b>
+<p>
+    Full syntax
+<p>
+        <b>ranktest</b> <b>(</b><i>varlist1</i><b>)</b> <b>(</b><i>varlist2</i><b>)</b> [<i>weight</i>] [<b>if</b> <i>exp</i>] [<b>in</b> <i>range</i>]
+              [<b>, partial(</b><i>varlist3</i><b>)</b> <b>wald</b> <b><u>all</u></b><b>rank</b> <b><u>full</u></b><b>rank</b> <b><u>null</u></b><b>rank</b> <b><u>r</u></b><b>obust</b> <b>bw(</b><i>#</i><b>)</b>
+              <b>kernel(</b><i>string</i><b>)</b> <b><u>cl</u></b><b>uster(</b><i>varlist</i><b>)</b> <b><u>noc</u></b><b>onstant</b> ]
+<p>
+    Version syntax
+<p>
+        <b>ranktest</b>, <b>version</b>
+<p>
+<b>ranktest</b> may be used with time-series or panel data, in which case the data
+must be <b>tsset</b> before using <b>ranktest</b>; see help tsset.
+<p>
+All <i>varlists</i> may contain time-series operators; see help varlist.  If
+<b>(</b><i>varlist1</i><b>)</b> or <b>(</b><i>varlist1</i><b>)</b> contain a single variable, the parentheses <b>()</b> may be
+omitted.
+<p>
+<b>aweight</b>s, <b>fweight</b>s, <b>iweight</b>s and <b>pweight</b>s are allowed; see help weights.
+<p>
+<b>ranktest</b> is an r-class program.
+<p>
+<b><u>Contents</u></b>
+  Description
+  Options
+  Examples
+  References
+  Acknowledgements
+  Authors
+  Citation of ranktest
+<p>
+<a name="s_description"></a><b><u>Description</u></b>
+<p>
+<b>ranktest</b> implements the Kleibergen-Paap (2006) rk test for the rank of a
+matrix.  Tests of the rank of a matrix have many practical applications.  For
+example, in econometrics the requirement for identification is the rank
+condition, which states that a particular matrix must be of full column rank.
+Another example from econometrics concerns cointegration in vector
+autoregressive (VAR) models; the Johansen trace test is a test of a rank of a
+particular matrix.  The traditional test of the rank of a matrix for the
+standard (stationary) case is the Anderson (1951) canonical correlations test.
+If we denote one list of variables as Y and a second as Z, and we calculate the
+squared canonical correlations between Y and Z, the LM form of the Anderson
+test, where the null hypothesis is that the matrix of correlations or
+regression parameters B between Y and Z has rank(B)=r, is N times the sum of
+the r+1 largest squared canonical correlations.  A large test statistic and
+rejection of the null indicates that the matrix has rank at least r+1.  The
+Cragg-Donald (1993) statistic is a closely related Wald test for the rank of a
+matrix.  Both the Anderson and Cragg-Donald tests require the assumption that
+the covariance matrix has a Kronecker form; when this is not so, e.g., when
+disturbances are heteroskedastic or autocorrelated, the test statistics are no
+longer valid.
+<p>
+The Kleibergen-Paap (2006) rk statistic is a generalization of the Anderson
+canonical correlation rank test to the case of a non-Kronecker covariance
+matrix.  The implementation in <b>ranktest</b> will calculate rk statistics that are
+robust to various forms of heteroskedasticity, autocorrelation, and clustering.
+For a full discussion of the test statistic and its relationship other test
+statistics for the rank of a matrix, see Kleibergen-Paap (2006).
+<p>
+The text is applied to Y and Z, where Y=<i>varlist1</i> and Z=<i>varlist2</i>.  Optionally, a
+third set of variables X=<i>varlist3</i> can be partialled-out of Y and Z with the
+<b>partial()</b> option.  A constant is automatically partialled out, unless the user
+specifies the <b>nocons</b> option.  To test if a matrix is rank r+1, the null
+hypothesis is Ho: rank(B)=r.  Rejection of the null indicates that the matrix
+has at least rank=r+1.  In the standard (stationary) case, the test statistic
+is distributed as chi-squared with degrees of freedom = (K-r)*(L-r), where K is
+the number of Y variables, L is the number of Z variables, and r is the rank
+being tested in Ho.  For example, to test if the matrix is full column rank K
+where K&lt;L, the null would be Ho:rank(B)=K-1 and the degrees of freedom of the
+test would be (K-r)*(L-r) = (K-(K-1))*(L-(K-1) = (L-K+1).  The default behavior
+of <b>ranktest</b> is to perform all possible tests of rank; the <b><u>full</u></b><b>rank</b> option
+causes only the test of whether the matrix is full rank (Ho:r=K-1) to be
+reported; the <b><u>null</u></b><b>rank</b> option causes only the test of whether the matrix is
+zero rank (Ho:r=0) to be reported.
+<p>
+The default behavior of <b>ranktest</b> is to report LM tests; the <b>wald</b> option will
+cause it to report Wald tests.  P-values are for the standard (stationary) case
+using the chi-squared distribution.  Specifying <b>robust</b>, <b>bw(#)</b> (where # is the
+bandwidth), or <b>cluster(varname)</b> will generate an rk statistic that is robust to
+heteroskedasticity, autocorrelation or within-group clustering; <b>robust</b> combined
+with <b>bw(#)</b> will generate a heteroskedasticity and autocorrelation-consistent
+(HAC) statistic.  The implementation of an autocorrelation-consistent statistic
+and the options available for various kernels follow that in ivreg2; for more
+details, see Baum et al. (2007) or help ivreg2 if installed.  If none of the
+above options is specified, <b>ranktest</b> defaults to reporting the Anderson
+canonical correlations LM test, or, if <b>wald</b> is specified, the Cragg-Donald
+(1993) Wald test.
+<p>
+It is useful to note that in the special case of a test for whether a matrix
+has rank=zero (e.g., if there is a single variable Y), the Anderson,
+Cragg-Donald, and Kleibergen-Paap statistics reduce to familiar statistics
+available from OLS estimation.  Thus if K=1, the Cragg-Donald Wald statistic
+can be calculated by regressing the single Y on Z and X and testing the joint
+significance of Z using a standard Wald test and a traditional non-robust
+covariance estimator.  The Anderson LM statistic can be obtained by calculating
+an LM test of the same joint hypothesis.  The robust Kleibergen-Paap rk
+statistics can be obtained by performing the same tests with the desired robust
+covariance estimator.  Similarly, if K&gt;1 the test statistics for rank=0
+reported by <b>ranktest</b> can be reproduced by testing the joint significance of the
+Z variables across the K equations for the Y variables.  See the examples
+below.
+<p>
+<a name="s_options"></a><b><u>Options summary</u></b>
+<p>
+<b>partial(</b><i>varlist3</i><b>)</b> requests that the variables in <b>(</b><i>varlist3</i><b>)</b> are partialled out
+    of the variables in <b>(</b><i>varlist1</i><b>)</b> and <b>(</b><i>varlist2</i><b>)</b>.  A constant is automatically
+    partialled out as well, unless the option <b>noconstant</b> is specified.
+<p>
+<b>wald</b> requests the Wald instead of the LM version of the test.  The LM version
+    is the default.
+<p>
+<b><u>all</u></b><b>rank</b> requests that test statistics for rank=0, rank=1, ..., rank=(#cols-1)
+    be reported, where (#cols-1) is the number of columns of the smaller of the
+    two matrices (varlists).  <b><u>all</u></b><b>rank</b> is the default.
+<p>
+<b><u>full</u></b><b>rank</b> requests that only the test statistic for Ho: rank=(#cols-1) be
+    reported, where (#cols-1) is the number of columns of the smaller of the
+    two matrices (varlists).  Rejection of the null indicates that the matrix
+    is of full column rank.
+<p>
+<b><u>null</u></b><b>rank</b> requests that only the test statistic for Ho: rank=0 be reported.
+    Rejection of the null indicates that the matrix has at least rank=1.
+<p>
+<b>robust</b> specifies that the Eicker/Huber/White/sandwich heteroskedastic-robust
+    estimator of variance is to be used.  The reported rk statistic will be
+    robust to heteroskedasticity.
+<p>
+<b>cluster(</b><i>varlist</i><b>)</b> specifies that observations are independent across groups
+    (clusters) but not necessarily independent within groups.  <i>varname</i>
+    specifies to which group each observation belongs.  Specifying <b>cluster()</b>
+    implies <b>robust</b>, i.e., the reported rk statistic will be robust to both
+    heteroskedasticity and within-cluster correlation.  If <b>ivreg2</b> version 3.0
+    or later is installed, 2-way clustering is supported; see help ivreg2 for
+    details.
+<p>
+<b>bw(</b><i>#</i><b>)</b> impements autocorrelation-consistent (AC) or heteroskedasticity- and
+    autocorrelation-consistent (HAC) covariance estimation with bandwidth equal
+    to <i>#</i>, where <i>#</i> is an integer greater than zero.  Specifying <b>robust</b> together
+    with <b>bw(</b><i>#</i><b>)</b> implements HAC covariance estimation; omitting <b>robust</b> implements
+    AC covariance estimation.
+<p>
+<b>kernel(</b><i>string)</i><b>)</b> specifies the kernel to be used for AC and HAC covariance
+    estimation; the default kernel is Bartlett (also known in econometrics as
+    Newey-West).  Kernels available are (abbreviations in parentheses):
+    Bartlett (bar); Truncated (tru); Parzen (par); Tukey-Hanning (thann);
+    Tukey-Hamming (thamm); Daniell (dan); Tent (ten); and Quadratic-Spectral
+    (qua or qs).  Note that for some kernels (bar, par, thann and thamm) the
+    bandwidth must be at least 2 to obtain an autocorrelation-consistent
+    estimator.
+<p>
+<b>noconstant</b> suppresses the constant term (intercept) in the list of
+    partialled-out variables.
+<p>
+<b>version</b> causes <b>ranktest</b> to display its current version number and to leave it
+    in the macro <b>s(version)</b>.  It cannot be used with any other options.
+<p>
+<a name="s_macros"></a><b><u>Saved results</u></b>
+<p>
+<b>ranktest</b> saves the following results in <b>r()</b>:
+<p>
+Scalars
+   <b>r(N)</b>          Number of observations
+   <b>r(N_clust)</b>    Number of clusters
+   <b>r(chi2)</b>       rk statistic for highest rank tested
+   <b>r(p)</b>          p-value of rk statistic
+   <b>r(rdf)</b>        dof of rk statistic
+   <b>r(rank)</b>       Rank of matrix under Ho for highest rank tested
+<p>
+Macros
+   <b>r(version)</b>    Version number of <b>ranktest</b>
+<p>
+Matrices
+   <b>r(rkmarix)</b>    Saved results of rank tests
+   <b>r(ccorr)</b>      Matrix of canonical correlations
+   <b>r(eval)</b>       Matrix of eigenvalues (=squared canonical correlations)
+   <b>r(V)</b>          Covariance matrix (W in Kleibergen-Paap (2006), p. 103)
+<p>
+<a name="s_examples"></a><b><u>Examples</u></b>
+<p>
+<b>Tests for underidentification of Klein consumption equation.</b>
+<p>
+(Underidentification means endogenous regressors (profits wagetot) are not iden
+&gt; tified
+by the excluded instruments (govt taxnetx year wagegovt capital1 L.totinc) afte
+&gt; r
+partialling-out the included instruments (L.totinc _cons).  Test is equivalent 
+&gt; to
+testing whether the matrix of reduced form coefficients for the endogenous regr
+&gt; essors
+is full rank (#cols=2) vs. less than full rank (#cols=1).  The test for underid
+&gt; entification
+should not be confused with a test for "weak identification"; see e.g. Stock an
+&gt; d Yogo (2005)
+or Baum et al. (2007).)
+<p>
+        . webuse klein, clear
+<p>
+        . tsset yr
+<p>
+(Klein consumption equation - for reference)
+<p>
+        . ivreg2 consump L.profits (profits wagetot = govt taxnetx year
+            wagegovt capital1 L.totinc)
+<p>
+(Homoskedasticity, LM =&gt; Anderson canonical correlations test; test all ranks. 
+&gt;  Ho of
+rank=1 can be rejected, suggesting the model is identified.)
+<p>
+        . ranktest (profits wagetot) (govt taxnetx year wagegovt capital1
+            L.totinc), partial(L.profits)
+<p>
+(Homoskedasticity, Wald =&gt; Cragg-Donald (1993) test; test all ranks.  Ho of ran
+&gt; k=1 can
+be rejected, suggesting model is identified.)
+<p>
+        . ranktest (profits wagetot) (govt taxnetx year wagegovt capital1
+            L.totinc), partial(L.profits) wald
+<p>
+(Heteroskedastic robust, LM statistic, test for full rank only.  Ho of rank=1 n
+&gt; ow
+cannot be rejected, suggesting model may be underidentified.)
+<p>
+        . ranktest (profits wagetot) (govt taxnetx year wagegovt capital1
+            L.totinc), partial(L.profits) full robust
+<p>
+(Heteroskedastic and autocorrelation robust, LM statistic, test for null rank o
+&gt; nly)
+<p>
+        . ranktest (profits wagetot) (govt taxnetx year wagegovt capital1
+            L.totinc), partial(L.profits) null robust bw(2)
+<p>
+<b>Testing for reduced rank in VAR models.</b>
+<p>
+(Relationship of Johansen trace statistic and Anderson canonical correlations s
+&gt; tatistic.
+Former is an LR test, <b>ranktest</b> reports LM version of latter, but based on the s
+&gt; ame
+eigenvalues.  Note that the p-values reported by <b>ranktest</b> are not valid in this
+&gt;  application
+because they are for the standard stationary case.)
+<p>
+        . vecrank consump profits wagetot, lags(1)
+<p>
+        . ranktest (d.consump d.profits d.wagetot) (L1.consump L1.profits
+            L1.wagetot)
+<p>
+        . mat eval=r(eval)
+<p>
+        . mat list eval
+<p>
+(<b>vecrank</b> LR trace statistic for maximum rank=0 vs. <b>ranktest</b> LM canonical correl
+&gt; ations
+statistic for same.  Both statistics calculated using the same eigenvalues.)
+<p>
+        . di -r(N)*(ln(1-eval[1,1]) + ln(1-eval[1,2]) + ln(1-eval[1,3]))
+<p>
+        . di r(N)*(eval[1,1] + eval[1,2] + eval[1,3])
+<p>
+<b>Equalities between rk statistic and other test statistics</b>
+<p>
+(Equivalence of rk statistic and canonical correlations under homoskedasticity)
+<p>
+        . canon (profits wagetot) (govt taxnetx year wagegovt)
+<p>
+        . mat list e(ccorr)
+<p>
+        . ranktest (profits wagetot) (govt taxnetx year wagegovt)
+<p>
+        . mat list r(rkmatrix)
+<p>
+(Equality of rk statistic and Wald test from OLS regression in special case
+ of single regressor)
+<p>
+        . ranktest (profits) (govt taxnetx year wagegovt capital1 L.totinc),
+            partial(L.profits) wald robust
+<p>
+        . regress profits govt taxnetx year wagegovt capital1 L.totinc
+            L.profits, robust
+<p>
+        . testparm govt taxnetx year wagegovt capital1 L.totinc
+<p>
+        . di r(F)*r(df)*e(N)/e(df_r)
+<p>
+(Equality of rk statistic and LM test from OLS regression in special case
+ of single regressor. Generate a group variable to illustrate <b>cluster</b>)
+<p>
+        . gen clustvar = round(yr/2)
+<p>
+        . ranktest (profits) (govt taxnetx year wagegovt capital1 L.totinc),
+            partial(L.profits) cluster(clustvar)
+<p>
+        . ivreg2 profits L.profits (=govt taxnetx year wagegovt capital1
+            L.totinc), cluster(clustvar)
+<p>
+        . di e(j)
+<p>
+(Equality of rk statistic of null rank and Wald test from OLS regressions and a
+Kronecker covariance matrix (independent and homoskedastic equations).  To show
+&gt;  equality,
+estimate the equations using <b>reg3</b> specifying that all regressors are exogenous,
+and then test joint significance of Z variables in both regressions.  L.profits
+&gt;  is the
+partialled-out variable and is not tested.)
+<p>
+        . ranktest (profits wagetot) (govt taxnetx year wagegovt capital1
+            L.totinc), partial(L.profits) wald null
+<p>
+        . global e1 (profits govt taxnetx year wagegovt capital1 L.totinc
+            L.profits)
+<p>
+        . global e2 (wagetot govt taxnetx year wagegovt capital1 L.totinc
+            L.profits)
+<p>
+        . reg3 $e1 $e2, allexog
+<p>
+        . qui test [profits]govt [profits]taxnetx [profits]year
+            [profits]wagegovt [profits]capital1 [profits]L.totinc
+<p>
+        . test [wagetot]govt [wagetot]taxnetx [wagetot]year [wagetot]wagegovt
+            [wagetot]capital1 [wagetot]L.totinc, accum
+<p>
+(Equality of rk statistic of null rank and Wald test from OLS regressions and <b>s</b>
+<b>&gt; uest</b>.
+To show equality, use <b>suest</b> to test joint significance of Z variables in both
+regressions.  L.profits is the partialled-out variable and is not tested.   Not
+&gt; e that
+<b>suest</b> introduces a finite sample adjustment of (N-1)/N.)
+<p>
+        . ranktest (profits wagetot) (govt taxnetx year wagegovt capital1
+            L.totinc), partial(L.profits) wald null robust
+<p>
+        . di r(chi2)*(r(N)-1)/r(N)
+<p>
+        . qui regress profits govt taxnetx year wagegovt capital1 L.totinc
+            L.profits
+<p>
+        . est store e1
+<p>
+        . qui regress wagetot govt taxnetx year wagegovt capital1 L.totinc
+            L.profits
+<p>
+        . est store e2
+<p>
+        . qui suest e1 e2
+<p>
+        . qui test [e1_mean]govt [e1_mean]taxnetx [e1_mean]year
+            [e1_mean]wagegovt [e1_mean]capital1 [e1_mean]L.totinc
+<p>
+        . test [e2_mean]govt [e2_mean]taxnetx [e2_mean]year [e2_mean]wagegovt
+            [e2_mean]capital1 [e2_mean]L.totinc, accum
+<p>
+<p>
+<a name="s_refs"></a><b><u>References</u></b>
+<p>
+Anderson, T.W. 1951. Estimating linear restrictions on regression coefficients
+    for multivariate normal distributions. Annals of Mathematical Statistics,
+    Vol. 22, pp. 327-51.
+<p>
+Anderson, T.W. 1984. Introduction to Multivariate Statistical Analysis.  2d ed.
+    New York: John Wiley &amp; Sons.
+<p>
+Baum, C. F., Schaffer, M.E., and Stillman, S. 2007. Enhanced routines for
+    instrumental variables/GMM estimation and testing. Boston College
+    Department of Economics Working Paper No. 667.
+    http://ideas.repec.org/p/boc/bocoec/667.html
+<p>
+Cragg, J.G. and Donald, S.G. 1993. Testing Identfiability and Specification in
+    Instrumental Variables Models. Econometric Theory, Vol. 9, pp. 222-240.
+<p>
+Kleibergen, F. and Paap, R.  2006.  Generalized Reduced Rank Tests Using the
+    Singular Value Decomposition.  Journal of Econometrics, Vol. 133, pp.
+    97-126.
+<p>
+Stock, J.H. and Yogo, M.  2005.  Testing for Weak Instruments in Linear IV
+    Regression. In D.W.K. Andrews and J.H. Stock, eds. Identification and
+    Inference for Econometric Models: Essays in Honor of Thomas Rothenberg.
+    Cambridge: Cambridge University Press, 2005, pp. 80–108.  Working paper
+    version: NBER Technical Working Paper 284.
+    http://www.nber.org/papers/T0284.
+<p>
+<a name="s_acknow"></a><b><u>Acknowledgements</u></b>
+<p>
+We would like to thank Kit Baum and Austin Nichols for helpful suggestions and
+feedback.
+<p>
+<a name="s_citation"></a><b><u>Citation of ranktest</u></b>
+<p>
+<b>ranktest</b> is not an official Stata command. It is a free contribution to the
+research community, like a paper. Please cite it as such:
+<p>
+    Kleibergen, F., Schaffer, M.E. 2010.  ranktest: module for testing the
+        rank of a matrix using the Kleibergen-Paap rk statistic
+        http://ideas.repec.org/c/boc/bocode/s456865.html
+<p>
+<b><u>Authors</u></b>
+<p>
+        Frank Kleibergen, Brown University, US
+        Frank_Kleibergen@brown.edu
+<p>
+        Mark E Schaffer, Heriot-Watt University, UK
+        m.e.schaffer@hw.ac.uk
+<p>
+<b><u>Also see</u></b>
+<p>
+ Manual:  <b>[R] canon</b>
+<p>
+ On-line: help for canon, vecrank, ivreg2 (if installed)
+</pre>

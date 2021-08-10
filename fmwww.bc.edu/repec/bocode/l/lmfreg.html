@@ -1,0 +1,170 @@
+<pre>
+-------------------------------------------------------------------------------
+<b>help: </b><b>lmfreg</b>                                                   <b>dialog:</b> <b>lmfreg</b>
+-------------------------------------------------------------------------------
+<p>
+<b>        </b>+-------+
+<b>    </b>----+<b> Title </b>+------------------------------------------------------------
+<p>
+<b> lmfreg: OLS Linear vs Log-Linear Functional Form Tests</b>
+<p>
+<b>        </b>+--------+
+<b>    </b>----+<b> Syntax </b>+-----------------------------------------------------------
+<p>
+        <b>lmfreg</b> <i>depvar</i> <i>indepvars</i> [<i>if</i>] [<i>in</i>] , [ <b><u>nocons</u></b><b>tant</b> <b>coll</b> ]
+ 
+<p>
+<b>        </b>+---------+
+<b>    </b>----+<b> Options </b>+----------------------------------------------------------
+<p>
+  <b><u>nocons</u></b><b>tant</b>       suppress constant term
+<p>
+  <b>coll</b>             Keep Collinear Variables
+<p>
+<b>        </b>+-------------+
+<b>    </b>----+<b> Description </b>+------------------------------------------------------
+<p>
+  <b>lmfreg</b> computes OLS Linear vs Log-Linear Functional Form Tests.
+ 
+<p>
+        - R-squared
+        - Log Likelihood Function (LLF)
+        - Antilog R2
+        - Box-Cox Test
+        - Bera-McAleer BM Test
+        - Davidson-Mackinnon PE Test
+<p>
+<b>        </b>+---------------+
+<b>    </b>----+<b> Saved Results </b>+----------------------------------------------------
+<p>
+    <b>lmfreg</b> saves the following in <b>e()</b>:
+<p>
+    Scalars
+<p>
+*** Linear vs Log-Linear Functional Form Tests:
+   <b>e(r2lin)</b>        Linear R2
+   <b>e(r2log)</b>        Log-Log R2
+   <b>e(llflin)</b>       LLF - Linear
+   <b>e(llflog)</b>       LLF - Log-Log
+   <b>e(r2lina)</b>       Antilog R2 Linear  vs Log-Log: R2Lin
+   <b>e(r2loga)</b>       Antilog R2 Log-Log vs Linear: R2log
+   <b>e(boxcox)</b>       Box-Cox Test
+   <b>e(boxcoxp)</b>      Box-Cox Test P-Value
+   <b>e(bmlin)</b>        Bera-McAleer BM Test - Linear ModeL
+   <b>e(bmlinp)</b>       Bera-McAleer BM Test - Linear ModeL P-Value
+   <b>e(bmlog)</b>        Bera-McAleer BM Test - Log-Log ModeL
+   <b>e(bmlogp)</b>       Bera-McAleer BM Test - Log-Log ModeL P-Value
+   <b>e(dmlin)</b>        Davidson-Mackinnon PE Test - Linear ModeL
+   <b>e(dmlinp)</b>       Davidson-Mackinnon PE Test - Linear ModeL P-Value
+   <b>e(dmlog)</b>        Davidson-Mackinnon PE Test - Log-Log ModeL
+   <b>e(dmlogp)</b>       Davidson-Mackinnon PE Test - Log-Log ModeL P-Value
+<p>
+<b>        </b>+------------+
+<b>    </b>----+<b> References </b>+-------------------------------------------------------
+<p>
+    Judge, Georege, R. Carter Hill, William . E. Griffiths, Helmut Lutkepohl,
+        &amp; Tsoung-Chao Lee (1988)<b> "Introduction To The Theory And Practice Of</b>
+        <b>Econometrics",</b> <i>2nd ed., John Wiley &amp; Sons, Inc., New York, USA</i>.
+<p>
+    Judge, Georege, W. E. Griffiths, R. Carter Hill, Helmut Lutkepohl, &amp;
+        Tsoung-Chao Lee(1985)<b> "The Theory and Practice of Econometrics",</b> <i>2nd</i>
+        <i>ed., John Wiley &amp; Sons, Inc., New York, USA</i>; 242.
+<p>
+<b>        </b>+----------+
+<b>    </b>----+<b> Examples </b>+---------------------------------------------------------
+<p>
+        clear all
+<p>
+        db lmfreg
+<p>
+        sysuse lmfreg.dta, clear
+<p>
+        lmfreg y x1 x2
+<p>
+        ereturn list
+<p>
+==============================================================================
+* Ordinary Least Squares (OLS)
+==============================================================================
+  y = x1 + x2
+------------------------------------------------------------------------------
+  Sample Size       =          17
+  Wald Test         =    273.3662   |   P-Value &gt; Chi2(2)       =      0.0000
+  F-Test            =    136.6831   |   P-Value &gt; F(2 , 14)     =      0.0000
+ (Buse 1973) R2     =      0.9513   |   Raw Moments R2          =      0.9986
+ (Buse 1973) R2 Adj =      0.9443   |   Raw Moments R2 Adj      =      0.9984
+  Root MSE (Sigma)  =      5.5634   |   Log Likelihood Function =    -51.6471
+------------------------------------------------------------------------------
+- R2h= 0.9513   R2h Adj= 0.9443  F-Test =  136.68 P-Value &gt; F(2 , 14)  0.0000
+- R2v= 0.9513   R2v Adj= 0.9443  F-Test =  136.68 P-Value &gt; F(2 , 14)  0.0000
+------------------------------------------------------------------------------
+           y |      Coef.   Std. Err.      t    P&gt;|t|     [95% Conf. Interval]
+-------------+----------------------------------------------------------------
+          x1 |   1.061709   .2666739     3.98   0.001     .4897506    1.633668
+          x2 |  -1.382986   .0838143   -16.50   0.000    -1.562749   -1.203222
+       _cons |   130.7066   27.09429     4.82   0.000     72.59515    188.8181
+------------------------------------------------------------------------------
+==============================================================================
+*** OLS Linear vs Log-Linear Functional Form Tests
+==============================================================================
+ (1) R-squared
+      Linear  R2                   =    0.9513
+      Log-Log R2                   =    0.9711
+---------------------------------------------------------------------------
+ (2) Log Likelihood Function (LLF)
+      LLF - Linear                 =  -51.6471
+      LLF - Log-Log                =  -47.5914
+---------------------------------------------------------------------------
+ (3) Antilog R2
+      Linear  vs Log-Log: R2Lin    =    0.9649
+      Log-Log vs Linear : R2log    =    0.9576
+---------------------------------------------------------------------------
+ (4) Box-Cox Test                  =    4.0556   P-Value &gt; Chi2(1)   0.0440
+      Ho: Choose Log-Log Model - Ha: Choose Linear  Model
+---------------------------------------------------------------------------
+ (5) Bera-McAleer BM Test
+      Ho: Choose Linear  Model     =   11.9464   P-Value &gt; F(1, 13)  0.0043
+      Ho: Choose Log-Log Model     =    6.1092   P-Value &gt; F(1, 13)  0.0280
+---------------------------------------------------------------------------
+ (6) Davidson-Mackinnon PE Test
+      Ho: Choose Linear  Model     =   11.9462   P-Value &gt; F(1, 13)  0.0043
+      Ho: Choose Log-Log Model     =    6.1092   P-Value &gt; F(1, 13)  0.0280
+------------------------------------------------------------------------------
+<p>
+<b>        </b>+---------+
+<b>    </b>----+<b> Authors </b>+----------------------------------------------------------
+<p>
+- <b>Emad Abd Elmessih Shehata</b>
+  <b>Professor (PhD Economics)</b>
+  <b>Agricultural Research Center - Agricultural Economics Research Institute - Eg</b>
+<b>&gt; ypt</b>
+  <b>Email:   </b>emadstat@hotmail.com
+  <b>WebPage:                </b>http://emadstat.110mb.com/stata.htm
+  <b>WebPage at IDEAS:       </b>http://ideas.repec.org/f/psh494.html
+  <b>WebPage at EconPapers:  </b>http://econpapers.repec.org/RAS/psh494.htm
+<p>
+- <b>Sahra Khaleel A. Mickaiel</b>
+  <b>Professor (PhD Economics)</b>
+  <b>Cairo University - Faculty of Agriculture - Department of Economics - Egypt</b>
+  <b>Email:   </b>sahra_atta@hotmail.com
+  <b>WebPage:                </b>http://sahraecon.110mb.com/stata.htm
+  <b>WebPage at IDEAS:       </b>http://ideas.repec.org/f/pmi520.html
+  <b>WebPage at EconPapers:  </b>http://econpapers.repec.org/RAS/pmi520.htm
+<p>
+<b>        </b>+-----------------+
+<b>    </b>----+<b> lmfreg Citation </b>+--------------------------------------------------
+<p>
+ <b>Shehata, Emad Abd Elmessih &amp; Sahra Khaleel A. Mickaiel (2012)</b>
+ <b>LMFREG: "OLS Linear vs Log-Linear Functional Form Tests"</b>
+<p>
+        http://ideas.repec.org/c/boc/bocode/s457507.html
+<p>
+        http://econpapers.repec.org/software/bocbocode/s457507.htm
+<p>
+<b><u>Online Help:</u></b>
+<p>
+<b>lmfreg</b>       OLS Linear vs Log-Linear Functional Form Tests
+<b>lmfreg2</b>      2SLS-IV Linear vs Log-Linear Functional Form Tests
+<p>
+<p>
+</pre>

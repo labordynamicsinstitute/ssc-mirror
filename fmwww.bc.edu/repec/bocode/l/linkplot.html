@@ -1,0 +1,119 @@
+<pre>
+-------------------------------------------------------------------------------
+help for <b>linkplot</b>
+-------------------------------------------------------------------------------
+<p>
+<b><u>Linked scatter plots</u></b>
+<p>
+        <b>linkplot</b> <i>yvarlist</i> <i>xvar</i> [<b>if</b> <i>exp</i>] [<b>in</b> <i>range</i>] [<i>weight</i>] <b>,</b> <b>link(</b><i>linkvar</i><b>)</b> [
+                 <b><u>asy</u></b><b>vars</b> <b><u>cmis</u></b><b>sing(</b>{<b>y</b>|<b>n</b>}<b>)</b> <b>sort(</b><i>sort_varlist</i><b>)</b> <b>plot(</b><i>plot</i><b>)</b>
+                 <i>graph_options</i> ]
+<p>
+<p>
+<b><u>Description</u></b>
+<p>
+    <b>linkplot</b> plots <i>yvarlist</i> versus <i>xvar</i> such that data points are linked
+    (i.e. connected) within groups defined by distinct values of <i>linkvar</i>. For
+    example, with paired data it might be desired to link each pair, or with
+    panel data it might be desired to link observations within each panel.
+<p>
+    <b>aweight</b>s, <b>fweight</b>s and <b>pweight</b>s are allowed; see help weights.
+<p>
+<p>
+<b><u>Options</u></b>
+ 
+    <b>link(</b><i>linkvar</i><b>)</b> specifies that values of each variable in <i>yvarlist</i> are to
+        be linked if they have the same value of <i>linkvar</i>. This option is
+        required.
+<p>
+    <b>asyvars</b> specifies that the groups defined by <i>linkvar</i> should be plotted as
+        if they were separate <i>y</i> variables.
+<p>
+    <b>cmissing(</b>{<b>y</b>|<b>n</b>}<b>)</b> specifies whether missing values are ignored.  The
+        default is to ignore missing values.  Note that this is a slight
+        variant on <b>cmissing()</b> as explained at help connect_options.  The only
+        allowed arguments are <b>y</b>, to ignore, and <b>n</b>, not to ignore.  These are
+        automatically expanded to all variables plotted.
+<p>
+    <b>sort(</b><i>sort_varlist</i><b>)</b> specifies that values are to be linked in order of
+        <i>sort_varlist</i>. By default values are linked in sort order of <i>xvar</i>, the
+        last variable specified before the option comma.  Do not specify
+        <i>linkvar</i>, as this will automatically be used.
+<p>
+    <b>plot(</b><i>plot</i><b>)</b> provides a way to add other plots to the generated graph; see
+        help plot option.
+<p>
+    <i>graph_options</i> are options of twoway connected.
+<p>
+<p>
+<b><u>Examples</u></b> 
+<p>
+    Box, Hunter and Hunter (1978, p.100) gave data for 10 boys on the wear of
+    shoes made using materials A and B. The data are also analysed by Wild
+    and Seber (2000, p.446). The units are not specified. Before exemplifying
+    <b>linkplot</b> we make some general comments on graphing such paired data.  One
+    natural data structure would be something like this:
+<p>
+         <b>A          B         id</b>
+      13.2       14.0          1
+       8.2        8.8          2
+      10.9       11.2          3
+      14.3       14.2          4
+      10.7       11.8          5
+       6.6        6.4          6
+       9.5        9.8          7
+      10.8       11.3          8
+       8.8        9.3          9
+      13.3       13.6         10
+<p>
+    This data structure permits some Stata graphs, but inhibits others.  A
+    scatter plot such as <b>scatter A B</b> may be useful, but does not allow easy
+    decoding of the difference, say <b>A</b> - <b>B</b>, which is here of central interest.
+    Similarly, it is difficult to read off ratios such as <b>A</b> / <b>B</b>. If <b>A</b> and <b>B</b>
+    are plotted versus <b>id</b>, or <i>vice versa</i>, the resulting graphs suffer from
+    the arbitrariness of <b>id</b>. See also the possibilities offered by pairplot,
+    which may be installed using ssc.
+<p>
+    Other possibilities are available after a reshape:
+<p>
+    <b>. rename A wearA</b>
+    <b>. rename B wearB</b>
+    <b>. reshape long wear, string i(id) j(j)</b>
+    <b>. encode j, gen(material)</b>
+<p>
+    Now we have a choice, including
+<p>
+    <b>. linkplot material wear, link(id) yla(1 2, valuelabel) ysc(r(0.5 2.5))</b>
+        <b>yla(, ang(h))</b>
+    <b>. linkplot wear material, link(id) xla(1 2, valuelabel) xsc(r(0.5 2.5))</b>
+        <b>yla(, ang(h))</b>
+<p>
+<p>
+<b><u>Acknowledgements</u></b>
+<p>
+        
+        Vince Wiggins made encouraging noises.
+<p>
+<p>
+<b><u>Author</u></b>
+<p>
+        
+        Nicholas J. Cox, University of Durham, U.K.
+        n.j.cox@durham.ac.uk
+<p>
+<p>
+<b><u>References</u></b> 
+<p>
+    Box, G.E.P., W.G. Hunter and J.S. Hunter. 1978.<i>  Statistics for</i>
+        <i>experimenters: an introduction to design, data analysis, and model</i>
+        <i>building.</i>  New York: John Wiley.
+<p>
+    Wild, C.J. and G.A.F. Seber. 2000.  <i>Chance encounters: a first course in</i>
+        <i>data analysis and inference.</i>  New York: John Wiley.
+<p>
+<p>
+<b><u>Also see</u></b> 
+<p>
+On-line: help for pairplot (if installed) 
+<p>
+</pre>

@@ -1,0 +1,96 @@
+<pre>
+-------------------------------------------------------------------------------
+help for <b>zandrews</b> 
+-------------------------------------------------------------------------------
+<p>
+<b><u>Zivot-Andrews Unit Root test allowing for a single break in intercept and/or tr</u></b>
+<b><u>&gt; end</u></b>
+<p>
+        <b>zandrews</b> [<i>varname</i>] [<b>if</b> <i>exp</i>] [<b>in</b> <i>range</i>]<b>,</b> <b>maxlags(</b><i>#</i><b>)</b> <b>trim(</b><i>#</i><b>)</b> <b>break()</b>
+              <b>generate(</b><i>varname</i><b>)</b> <b>lagmethod() level(</b><i>#</i><b>) graph</b>
+<p>
+<p>
+        <b>zandrews</b> is for use with time-series data. You must <i>tsset</i> your data
+              before using these routines.  <i>Varname</i> may contain time-series
+              operators. <b>zandrews</b> may be applied to a single time series within
+              a panel.
+<p>
+<b><u>Description</u></b>
+<p>
+<b>zandrews</b> computes the Zivot-Andrews (1992) unit root test for <i>varname</i>.
+<p>
+<p>
+<b><u>Options</u></b>
+<p>
+<b>maxlags(</b><i>#</i><b>)</b> specifies the number of additional lags or the maximum number of
+    lags to consider.  It must be a positive integer. If not specified, T^0.25
+    is used. Maxlags must be given with lagmethod (input).
+<p>
+<b>trim(</b><i>#</i><b>)</b> specifies the fraction of data range to skip at either end when
+    examining possible break points. It has a default value of fifteen percent
+    (0.15).  TRIM must be a positive real number greater than 0 and less than
+    0.25.
+<p>
+<b>break()</b> selects which elements of the process are allowed to have a break.
+    BREAK can be INTERCEPT, TREND, or BOTH.  The default selection is
+    intercept.
+<p>
+<b>lagmethod()</b> Selects the method for deciding the number of additional lags. If
+    INPUT, the number of lags given by the MAXLAGS option is used. If AIC, the
+    AIC-minimizing value is used.  If BIC, the BIC-minimizing value is used. If
+    TTEST, the number of lags is that for which the last included lag has a
+    marginal significance level less than the cutoff given by the LEVEL option.
+<p>
+<p>
+<b>level(</b><i>#</i><b>)</b> specifies the cutoff significance level for LAGMETHOD=TTEST.  It has a
+    default value of 0.10. LEVEL must be a real number between 0 and 0.25.
+<p>
+<b>graph</b> requests a graph of the unit-root test statistics for the different break
+    points.  The default is NOGRAPH.
+<p>
+<b><u>Examples</u></b>
+<p>
+        . webuse turksales
+<p>
+        . dfuller sales
+        . zandrews sales, graph
+        
+        . zandrews sales, break(trend)
+        
+        . zandrews sales, break(both) trim(0.10)
+        
+        . zandrews sales, lagmethod(BIC)
+         
+        . zandrews D.sales, graph
+        
+        . webuse grunfeld
+<p>
+        . zandrews invest if company==3, break(trend) graph
+        
+<p>
+<p>
+<b><u>References</u></b>
+<p>
+Andrews, D., Zivot, E. 1992. Further evidence on the Great Crash, the oil price
+&gt;  shock, and 
+the unit-root hypothesis. Journal of Business and Economic Statistics 10, 251-7
+&gt; 0.
+<p>
+<b><u>Acknowledgements</u></b>
+<p>
+This module was translated from RATS code. Much of the work of implementing and
+    testing its features was done by Margaret Green, sponsored by an
+    Undergraduate Research Assistantship from the College of Arts and Sciences,
+    Boston College.
+<p>
+<b><u>Author</u></b>
+<p>
+Christopher F. Baum (baum@bc.edu) Boston College
+<p>
+<p>
+<b><u>Also see</u></b> 
+<p>
+<b>dfuller</b>, <b>dfgls</b>
+<p>
+<p>
+</pre>

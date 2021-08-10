@@ -1,0 +1,214 @@
+<pre>
+-------------------------------------------------------------------------------
+ help for <b>metabias6</b>                                    dialog: metabias6       
+-------------------------------------------------------------------------------
+<p>
+ <b>metabias</b> 1.2.4                  (STB's 41, 44, 57, 58, 61: sbe19-sbe19.5)
+<p>
+<p>
+Tests for publication bias in meta-analysis
+-------------------------------------------
+<p>
+   <b>metabias6</b> { theta { se_theta | var_theta } | exp(theta) ll ul [cl] }
+            [ <b>if</b> exp ] [ <b>in</b> range ] [<b>, by(</b>by_var<b>)</b> { <b>v</b>ar | <b>ci</b> }
+              <b>g</b>raph<b>(</b>{ <b>b</b>egg | <b>e</b>gger }<b>) gw</b>eight <b>l</b>evel<b>(</b>#<b>)</b> graph_options ]
+<p>
+      where { a | b |...} means choose one and only one of {a, b, ...}.
+<p>
+<p>
+Description
+-----------
+<p>
+<b>metabias6</b> is the Stata 6 version of metabias originally published in the 
+Stata Technical Bulletin as package sbe19 with updates through to sbe19.5.
+<p>
+<b>metabias6</b> performs the Begg and Mazumdar adjusted rank correlation test for
+publication bias and performs the Egger et al. regression asymmetry test for
+publication bias.  As options, it provides a funnel graph of the data or the
+regression asymmetry plot.
+<p>
+The Begg adjusted rank correlation test is a direct statistical analogue of
+the visual funnel graph.  Note that both the test and the funnel graph have
+low power for detecting publication bias.  The Begg and Mazumdar procedure
+tests for publication bias by determining if there is a significant
+correlation between the effect estimates and their variances.  <b>metabias6</b>
+carries out this test by, first, standardizing the effect estimates to
+stabilize the variances and, second, performing an adjusted rank correlation
+test based on Kendall's tau.
+<p>
+The Egger et al. regression asymmetry test and the regression asymmetry plot
+tend to suggest the presence of publication bias more frequently than the Begg
+approach.  The Egger test detects funnel plot asymmetry by determining whether
+the intercept deviates significantly from zero in a regression of the
+standardized effect estimates against their precision.
+<p>
+Egger et al. claim that the test predicts the discordance (if any) of
+meta-analytic results and single large trials, but no formal analysis of
+coverage (i.e., nominal significance level) or power has been performed.
+<p>
+The user provides the effect estimate, <b>theta</b>, to <b>metabias6</b> as a log
+risk ratio, log odds ratio, or other direct measure of effect.  Along
+with theta, the user supplies a measure of theta's variability (i.e.,
+its standard error, <b>se_theta</b>, or its variance, <b>var_theta</b>).
+Alternatively, the user may provide the exponentiated form,
+<b>exp(theta)</b>, (i.e., a risk ratio or odds ratio) and its confidence
+interval, <b>(ll, ul)</b>.
+<p>
+The funnel graph plots <b>theta</b> versus <b>se_theta</b>.  Guide lines to assist in
+visualizing the funnel are plotted at the variance-weighted (fixed effects)
+meta-analytic effect estimate and at pseudo confidence interval limits about
+that effect estimate (i.e., at <b>theta +/- z * se_theta</b>, where <b>z</b> is the
+standard Normal variate for the confidence level specified by option <b>level()</b>.
+Asymmetry on the right of the graph (where studies with high standard error
+are plotted) may give evidence of publication bias.
+<p>
+The regression asymmetry graph plots the standardized effect estimates,
+<b>theta / se_theta</b>, versus precision, <b>1 / se_theta</b>, along with the
+regression line and the confidence interval about the intercept.  Failure of
+this confidence interval to include zero indicates asymmetry in the funnel
+plot and may give evidence of publication bias.  Guide lines at x = 0 and
+y = 0 are plotted to assist in visually determining if zero is in the
+confidence interval.
+<p>
+<b>metabias6</b> will perform stratified versions of both the Begg and Mazumdar test
+and the Egger regression asymmetry test when option <b>by(by_var)</b> is specified.
+Variable <b>by_var</b> indicates the categorical variable that defines the strata.
+The procedure reports results for each strata and for the stratified tests.
+The graphs, if selected, plot only the combined unstratified data.
+<p>
+<p>
+Options
+-------
+<p>
+<b>by(by_var)</b> requests that the stratified tests be carried out with strata
+defined by <b>by_var</b>.
+<p>
+<b>var</b> indicates that <b>var_theta</b> was supplied on the command line instead of
+<b>se_theta</b>.  Option <b>ci</b> should not be specified when option <b>var</b> is specified.
+<p>
+<b>ci</b> indicates that <b>exp(theta)</b> and its confidence interval, <b>(ll, ul)</b>, were
+supplied on the command line instead of <b>theta</b> and <b>se_theta</b>.  Option <b>var</b>
+should not be specified when option <b>ci</b> is specified.
+<p>
+<b>graph(begg)</b> requests the Begg funnel graph showing the data, the
+fixed-effects (variance-weighted) meta-analytic effect, and the pseudo
+confidence interval limits about the meta-analytic effect.
+<p>
+<b>graph(egger)</b> requests the Egger regression asymmetry plot showing the
+standardized effect estimates versus precision, the regression line, and
+the confidence interval about the intercept.
+<p>
+<b>gweight</b> requests that the graphic symbols representing the data in the
+plot be sized proportional to the inverse variance.
+<p>
+<b>level()</b> sets the confidence level % for the pseudo confidence intervals;
+the default is 95%.
+<p>
+<b>graph_options</b> are those allowed with <b>graph, twoway</b>.  For <b>graph(begg)</b>, the
+default graph_options include <b>connect(lll.)</b>, <b>symbol(iiio)</b>, and <b>pen(3552)</b> for
+displaying the meta-analytic effect, the pseudo confidence interval limits
+(two lines), and the data points, respectively.  For <b>graph(egger)</b>, the default
+graph_options include <b>connect(.ll)</b>, <b>symbol(oid)</b>, and <b>pen(233)</b> for displaying
+the data points, regression line, and the confidence interval about the
+intercept, respectively.  Setting <b>t2title(.)</b> blanks out the default <b>t2title</b> in
+either graph.
+<p>
+<p>
+Required input variables
+------------------------
+<p>
+  <b>theta</b>        the effect estimate
+  <b>se_theta</b>     the corresponding standard error
+<p>
+ or
+<p>
+  <b>theta</b>        the effect estimate
+  <b>var_theta</b>    the corresponding variance
+<p>
+ or
+<p>
+  <b>exp(theta)</b>   the risk (or odds) ratio
+  <b>ll</b>           the lower limit of the risk ratio's confidence interval
+  <b>ul</b>           the upper limit of the risk ratio's confidence interval
+ [<b>cl</b>]          optional (see below)
+<p>
+<p>
+Optional input variable
+-----------------------
+<p>
+<b>cl</b> contains the confidence level of the confidence interval defined by <b>ll</b>
+and <b>ul</b>.  If <b>cl</b> is not provided, the procedure assumes that each confidence
+interval is at the 95% confidence level.  <b>cl</b> allows the user to provide the
+confidence level, by study, when the confidence interval is not at the default
+level.  <b>cl</b> can be specified with or without a decimal point.  For example,
+90 and .90 are equivalent and may be mixed (i.e., 90, .95, 80, .90 etc.).
+<p>
+<p>
+Note
+----
+<p>
+If your data are in raw count format, program <b>metan</b> can be used to facilitate
+conversion to effect format.  <b>metan</b> automatically adds <b>exp(theta)</b> and <b>se_theta</b>
+variables to the dataset, calling them <b>_ES</b> and <b>_seES</b>.  You must manually
+generate <b>theta</b> as the natural log of <b>_ES</b> (for example, <b>gen _lnES = ln(_ES)</b>)
+then input the effect-format variables, <b>_lnES</b> and <b>_seES</b>, using <b>metabias6</b>'s
+default input method.
+<p>
+<p>
+<p>
+Saved values
+------------
+<p>
+The following items are saved in the global <b>S_</b># macros and are returned in <b>r()</b>.
+<p>
+ <b>S_1   r(k)</b>         number of studies
+ <b>S_2   r(score)</b>     Begg's score
+ <b>S_3   r(score_sd)</b>  s.d. of Begg's score
+ <b>S_4   r(Begg_p)</b>    Begg's p value
+ <b>S_5   r(Begg_pcc)</b>  Begg's p, continuity corrected
+ <b>S_6   r(Egger_bc)</b>  Egger's bias coefficient
+ <b>S_7   r(Egger_p)</b>   Egger's p value
+ <b>S_8   r(effect)</b>    overall effect (log scale)
+<p>
+<p>
+Examples
+--------
+<p>
+ . <b>metabias6 logrr selogrr, graph(begg)</b>
+ . <b>metabias6 logrr varlogrr if site==3, var graph(egger)</b>
+ . <b>metabias6 rr ll ul, ci by(site)</b>
+ . <b>metabias6 logor selogor if region==4, graph(egger) level(90)</b>
+<p>
+<p>
+Note
+----
+<p>
+<b>metabias6</b> calls program <b>ktau2</b>, a modification of the <b>ktau</b> program
+supplied with Stata.  <b>ktau2</b> is included in the distribution files
+for this version of <b>metabias6</b>.
+<p>
+<p>
+References
+----------
+<p>
+Begg, C. B., Mazumdar, M., 1994.  Operating characteristics of a rank
+correlation test for publication bias.  Biometrics 50: 1088-1101.
+<p>
+Egger, M., Smith, G. D., Schneider, M., Minder, C., 1997.  Bias in
+meta-analysis detected by a simple, graphical test.  British Medical
+Journal 315: 629-634.
+<p>
+<p>
+Author
+------
+<p>
+Thomas J. Steichen, RJRT, steicht@rjrt.com
+<p>
+<p>
+Also see
+--------
+<p>
+    STB:  STB-41 sbe19; STB-44 sbe19.1
+ Manual:  [R] spearman
+On-line:  help for meta, metan, and ktau (if installed)
+</pre>

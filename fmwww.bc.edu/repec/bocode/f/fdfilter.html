@@ -1,0 +1,124 @@
+<pre>
+-------------------------------------------------------------------------------
+help for <b>fdfilter</b>
+-------------------------------------------------------------------------------
+<p>
+<b><u>Apply frequency domain filter to time series</u></b>
+<p>
+<b><u>Syntax</u></b>
+<p>
+        <b>fdfilter</b> <i>varlist</i> [<b>if</b> <i>exp</i>] [<b>in</b> <i>range</i>] <b>,</b> <b>s(</b><i>#</i><b>)</b> <b>e(</b><i>#</i><b>)</b> <b>stub(</b><i>abbrev</i><b>)</b>
+<p>
+    <b>fdfilter</b> is for use with time-series data. You must <b>tsset</b> your data
+    before using <b>fdfilter</b>; see help <b>tsset</b>. <b>fdfilter</b> supports the <b>by</b> prefix,
+    which may be used to operate on each time series in a panel.
+<p>
+    <b>varlist</b> may contain time-series operators; see help <b>varlist</b>.
+<p>
+<b><u>Description</u></b>
+<p>
+    <b>fdfilter</b> applies the frequency domain filter of Corbae, Ouliaris and
+    Phillips (2002) and Corbae and Ouliaris (2006) to one or more time series
+    in <i>varlist</i>. Series can be stationary, or can have a unit root. It tends
+    to produce output similar to the Baxter-King (1999) filter, though
+    without the end-point issue (it estimates end-points directly). The
+    filtered series and smoothed series are placed in new variables,
+    specified with the <b>stub()</b> option. The smoothed variables are identified
+    by "_sm" in their names.  The <b>s()</b> and <b>e()</b> arguments can either specify
+    the minimum period of oscillation and maximum period of oscillation of
+    the desired component of the time series, with 2 &lt; <i>s</i> &lt; <i>e</i> &lt; infinity, or
+    the desired frequencies, with 0 &lt; <i>s</i> &lt; <i>e</i> &lt;= 1. <b>fdfilter</b> does not allow
+    gaps within the observations of the time series.
+<p>
+<b><u>Options</u></b>
+<p>
+    <b>s(</b><i>#</i><b>)</b> and <b>e(</b><i>#</i><b>)</b> specify the minimum and maximum period of oscillation to be
+        retained in the time series, either as the number of periods or as
+        the frequencies expressed as fractions of pi. <b>s(</b><i>#</i><b>)</b> and <b>e(</b><i>#</i><b>)</b> are
+        required. For quarterly data, common values are 6 and 32 periods
+        (frequencies 1/16 and 1/3) , which preserve the components of the
+        data with period between 1.5 and 8.0 years. For monthly data, common
+        values are 18 and 96 periods (frequencies 1/48 and 1/9), which
+        preserves the component of the data with period between 1.5 and 8.0
+        years. For annual data, common values are 2 and 8 (frequencies 1/4
+        and 1).
+<p>
+    <b>stub(</b><i>abbrev</i><b>)</b>, which must be provided, specifies the "stub" from which new
+        variable names will be created. Variables created by <b>stub</b> must be new
+        variables. If the <i>varlist</i> contains time-series operators, the dots in
+        their names are replaced by underscores so that the resulting new
+        variables' names are legal.
+<p>
+<b><u>Examples</u></b>
+<p>
+    . webuse lutkepohl,clear
+<p>
+    . fdfilter investment, s(6) e(32) stub(FD)
+<p>
+    Same as above, expressing <b>s()</b> and <b>e()</b> as fractions of pi
+<p>
+    . fdfilter investment, s(1/6) e(1/3) stub(FDpi)
+<p>
+    Several variables
+<p>
+    . fdfilter investment income consumption, s(6) e(32) stub(filt)
+<p>
+    Time series operators
+<p>
+    . fdfilter D.investment, s(4) e(12) stub(fl)
+<p>
+    Application in a panel:
+<p>
+    . use http://fmwww.bc.edu/ec-p/data/hayashi/sheston91.dta,clear
+<p>
+    . drop if country&gt;4
+<p>
+    . tsset
+<p>
+    . by country:fdfilter rgdppc, s(2) e(8) stub(fd) k(3)
+<p>
+    . egen double fd_sm = rowtotal(fd_rgdppc_sm_*)
+<p>
+    . drop fd_rgdppc_sm_*
+<p>
+    . egen double fd_res = rowtotal(fd_rgpdpc_*)
+<p>
+    . drop fd_rgdppc_*
+<p>
+<p>
+<b><u>Author</u></b>
+<p>
+    Jorge Pérez, Inter-American Development Bank
+    jperezperez@iadb.org
+<p>
+<b><u>References</u></b>
+<p>
+    Baxter, Marianne and Robert G. King (1999). "Measuring Business Cycles:
+    Approximate Band-Pass Filters for Economic Time Series",<i> Review of</i>
+    <i>Economics and Statistics</i> 81(4), pp. 575-593.
+<p>
+    Corbae, Dean, Sam Ouliaris and Peter C.B Phillips (2002). "Band Spectral
+    Regression with Trending-Data",<i> Econometrica</i> 70 (3), pp.  1067-1109.
+<p>
+    Corbae, Dean and Sam Ouliaris (2006). "Extracting Cycles from Non
+    stationary Data",<i> Econometric Theory and Practice: Frontiers of Analysis</i>
+    <i>and Applied Research</i> Cambridge Cambridge and New York.
+<p>
+    Ouliaris, Sam (2009) "Ideal Band Pass Filter For
+    Stationary/Non-Stationary Series"
+    http://forums.eviews.com/viewtopic.php?f=15&amp;t=1513
+<p>
+<b><u>Acknowledgements</u></b> 
+<p>
+    This command was translated from Eviews code in Ouliaris(2009). The stata
+    syntax was drawn from the commands <b>bking</b> and <b>hprescott</b> by Christopher F.
+    Baum and Martha Lopez.
+<p>
+<b><u>Disclaimer</u></b>
+<p>
+    This program is provided without warranty of any kind. The author is not
+    responsible for any cost derived by the usage of this program.
+<p>
+<b><u>Also see</u></b>
+<p>
+</pre>

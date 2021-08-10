@@ -1,0 +1,75 @@
+<pre>
+-------------------------------------------------------------------------------
+help for <b>cprplots</b>, <b>acprplots</b>
+-------------------------------------------------------------------------------
+<p>
+<b><u>Graph (augmented) component-plus-residual plots in a single image</u></b>
+<p>
+        <b>cprplots</b> [<i>varlist</i>] [<b>,</b> <b>rlopts(</b><i>cline_options</i><b>)</b> <b><u>low</u></b><b>ess</b>
+                <b>lsopts(</b><i>lowess_options</i><b>)</b> <b><u>msp</u></b><b>line</b> <b>msopts(</b><i>mspline_options</i><b>)</b>
+                <i>scatter_options</i> <i>combine_options</i> ]
+<p>
+        <b>acprplots</b> [<i>varlist</i>] [<b>,</b> <b>rlopts(</b><i>cline_options</i><b>)</b> <b><u>low</u></b><b>ess</b>
+                <b>lsopts(</b><i>lowess_options</i><b>)</b> <b><u>msp</u></b><b>line</b> <b>msopts(</b><i>mspline_options</i><b>)</b>
+                <i>scatter_options</i> <i>combine_options</i> ]
+<p>
+    <b>cprplots</b> and <b>acprplots</b> are for use after <b>regress</b> and <b>anova</b>; see help 
+    regress and anova.
+<p>
+<p>
+<b><u>Description</u></b>
+<p>
+    <b>cprplots</b> graphs component-plus-residual plots (a.k.a. partial residual
+    plots) for the specified variables in a single image.  <b>acprplots</b> graphs
+    the augmented component-plus-residual plots.  The variables in <i>varlist</i>
+    must be independent variables that are currently in the model.  If
+    <i>varlist</i> is omitted, all independent variables in the model are used.
+<p>
+    <b>cprplots</b> and <b>acprplots</b> are implemented as wrappers for <b>cprplot</b> and
+    <b>acprplot</b> (see help cprplot).
+<p>
+<p>
+<b><u>Options</u></b>
+<p>
+    <b>rlopts(</b><i>cline_options</i><b>)</b> affect the rendition of the reference line; see
+        help cline_options.
+<p>
+    <b>lowess</b> adds a lowess smooth of the plotted points in order to assist in
+        detecting nonlinearities.
+<p>
+    <b>lsopts(</b><i>lowess_options</i><b>)</b> affect the rendition of the lowess smooth; see
+        help twoway_lowess.  Specifying <b>lsopts()</b> implies the <b>lowess</b> option.
+<p>
+    <b>mspline</b> adds a median spline of the plotted points in order to assist in
+        detecting nonlinearities.
+<p>
+    <b>msopts(</b><i>mspline_options</i><b>)</b> affect the rendition of the median spline smooth;
+        see help twoway_mspline.  Specifying <b>msopts()</b> implies the <b>mspline</b>
+        option.
+<p>
+    <i>scatter_options</i> affect the rendition of the plotted points; see help 
+        scatter.
+<p>
+    <i>combine_options</i> are any of the options documented in help graph_combine.
+        These include options for titling the graph (see help title_options)
+        and options for saving the graph to disk (see help saving_option).
+<p>
+<p>
+<b><u>Examples</u></b>
+<p>
+    <b>. regress price weight mpg</b>
+    <b>. cprplots</b>
+    <b>. acprplots</b>
+<p>
+<p>
+<b><u>Author</u></b>
+<p>
+    Ben Jann, ETH Zurich, jann@soz.gess.ethz.ch
+<p>
+<p>
+<b><u>Also see</u></b>
+<p>
+    Manual:  <b>[R] regress</b>,
+             <b>[R] regression diagnostics</b>
+<p>
+</pre>

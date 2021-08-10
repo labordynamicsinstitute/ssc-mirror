@@ -1,0 +1,785 @@
+<html>
+
+<head>
+<title>estout - Making Regression Tables in Stata</title>
+<meta name="author" content="Ben Jann">
+<meta name="keywords" content="Stata, estout, esttab, eststo, estadd,
+      LaTeX, regression table, statistics">
+<meta http-equiv="content-language" content="en">
+<meta http-equiv="content-type" content="text/html">
+<link rel="stylesheet" href="default.css" type="text/css">
+</head>
+
+<body>
+
+<div id="pagehead">
+
+<form style="text-align:right; border:0px; margin: 2.17em 0px 0px 0px; padding:5px 15px 0px 0px; float:right"
+ "method=GET action="http://www.google.com/search">
+    <input style="border-style:solid; border-color: #bcd" TYPE=text name=q size="15">
+    <INPUT TYPE=hidden name=sitesearch value="repec.org/bocode/e/estout">
+    <input style="border:0px; background-color: #F3F6F9"
+     type=submit name=sa value="search">
+</form>
+
+   <a href="index.html"><h1>estout</h1></a>
+   <p>Making Regression Tables in Stata<p>
+
+</div>
+
+<div id="pagebar">
+   <ul>
+     <li><a href="index.html">Overview</a>
+     </li>
+     <li><a href="installation.html">Installation</a>
+     </li>
+     <li><a href="examples.html">Examples</a>
+     <ul>
+          <li><a href="esttab.html">esttab</a>
+          </li>
+          <li><a href="estout.html">estout</a>
+          </li>
+          <li><a href="eststo.html">eststo</a>
+          </li>
+          <li><a href="estadd.html">estadd</a>
+          </li>
+          <li><a href="estpost.html">estpost</a>
+          </li>
+          <li><a href="advanced.html">Advanced</a>
+          </li>
+          <li><a href="spost.html">SPost</a>
+          </li>
+     </ul>
+     </li>
+     <li><a href="documentation.html">Documentation</a>
+     <ul>
+          <li><a href="hlp_esttab.html">esttab</a>
+          </li>
+          <li><a href="hlp_estout.html">estout</a>
+          </li>
+          <li><a href="hlp_eststo.html">eststo</a>
+          </li>
+          <li><a href="hlp_estadd.html">estadd</a>
+          </li>
+          <li><a href="hlp_estpost.html">estpost</a>
+          </li>
+     </ul>
+     </li>
+     <li><a href="history.html">History</a>
+     </li>
+     <li><a href="publications.html">Publications</a>
+     </li>
+     <li><a href="author.html">Author</a>
+     </li>
+     <li><a href="alsosee.html">Also see</a>
+     </li>
+   </ul>
+
+</div>
+
+<div id="pagebody">
+<h1>Documentation for esttab</h1>
+<pre>
+<b>help esttab</b>                           also see: <a href="hlp_estout.html"><b>estout</b></a>, <a href="hlp_eststo.html"><b>eststo</b></a>, <a href="hlp_estadd.html"><b>estadd</b></a>, <a href="hlp_estpost.html"><b>estpost</b></a>
+                                               http://repec.org/bocode/e/estout
+-------------------------------------------------------------------------------
+
+<b><u>Title</u></b>
+
+    <b>esttab</b> -- Display formatted regression table
+
+
+<b><u>Table of contents</u></b>
+
+    <a href="hlp_esttab.html#syn">Syntax</a>
+    <a href="hlp_esttab.html#des">Description</a>
+    <a href="hlp_esttab.html#opt">Options</a>
+    <a href="hlp_esttab.html#exa">Examples</a>
+    <a href="hlp_esttab.html#aut">Backmatter</a>
+
+<a name="syn"></a>
+<b><u>Syntax</u></b>
+
+        <b>esttab</b> [ <i>namelist</i> ] [ <b>using</b> <i>filename</i> ] [ <b>,</b> <i>options</i> ]
+
+
+    where <i>namelist</i> is a name, a list of names, or <b>_all</b>. The <b>*</b> and <b>?</b> wildcards
+    are allowed in <i>namelist</i>. A name may also be <b>.</b>, meaning the current
+    (active) estimates.
+
+
+    <i>options</i>              description
+    ----------------------------------------------------------------------
+    <a href="hlp_esttab.html#main">Main</a>
+      <b>b(</b><a href="hlp_esttab.html#fmt"><i>fmt</i></a><b>)</b>             specify format for point estimates
+      <b>beta</b>[<b>(</b><a href="hlp_esttab.html#fmt"><i>fmt</i></a><b>)</b>]        display beta coefficients instead of point est's
+      <b>main(</b><i>name</i> [<a href="hlp_esttab.html#fmt"><i>fmt</i></a>]<b>)</b>   display contents of <b>e(</b><i>name</i><b>)</b> instead of point e's
+      <b>t(</b><a href="hlp_esttab.html#fmt"><i>fmt</i></a><b>)</b>             specify format for t-statistics
+      <b>abs</b>                use absolute value of t-statistics
+      <b>not</b>                suppress t-statistics
+      <b>z</b>[<b>(</b><a href="hlp_esttab.html#fmt"><i>fmt</i></a><b>)</b>]           display z-statistics (affects label only)
+      <b>se</b>[<b>(</b><a href="hlp_esttab.html#fmt"><i>fmt</i></a><b>)</b>]          display standard errors instead of t-statistics
+      <b>p</b>[<b>(</b><a href="hlp_esttab.html#fmt"><i>fmt</i></a><b>)</b>]           display p-values instead of t-statistics
+      <b>ci</b>[<b>(</b><a href="hlp_esttab.html#fmt"><i>fmt</i></a><b>)</b>]          display confidence intervals instead of t-stat's
+      <b>aux(</b><i>name</i> [<a href="hlp_esttab.html#fmt"><i>fmt</i></a>]<b>)</b>    display contents of <b>e(</b><i>name</i><b>)</b> instead of t-stat's
+      [<b><u>no</u></b>]<b><u>con</u></b><b>stant</b>       do not/do report the intercept
+
+    <a href="hlp_esttab.html#stars">Significance stars</a>
+      [<b>no</b>]<b>star</b>[<b>(</b><i>list</i><b>)</b>]   do not/do report significance stars
+      <b>staraux</b>            attach stars to t-stat's instead of point est's
+
+    <a href="hlp_esttab.html#stat">Summary statistics</a>
+      <b>r2</b>|<b>ar2</b>|<b>pr2</b>[<b>(</b><a href="hlp_esttab.html#fmt"><i>fmt</i></a><b>)</b>]  display (adjusted, pseudo) R-squared
+      <b>aic</b>|<b>bic</b>[<b>(</b><a href="hlp_esttab.html#fmt"><i>fmt</i></a><b>)</b>]     display Akaike's or Schwarz's information crit.
+      <b><u>sca</u></b><b>lars(</b><i>list</i><b>)</b>      display any other scalars contained in <b>e()</b>
+      <b>sfmt(</b><a href="hlp_esttab.html#fmt"><i>fmt</i></a> [<i>...</i>]<b>)</b>    set format(s) for <b>scalars()</b>
+      <b>noobs</b>              do not display the number of observations
+      <b>obslast</b>            place the number of observations last
+
+    <a href="hlp_esttab.html#layout">Layout</a>
+      <b>wide</b>               place point est's and t-stat's beside one another
+      <b><u>one</u></b><b>cell</b>            combine point est's and t-stat's in a single cell
+      [<b><u>no</u></b>]<b><u>pa</u></b><b>rentheses</b>    do not/do print parentheses around t-statistics
+      <b><u>br</u></b><b>ackets</b>           use brackets instead of parentheses
+      [<b><u>no</u></b>]<b><u>gap</u></b><b>s</b>           suppress/add vertical spacing
+      [<b><u>no</u></b>]<b><u>li</u></b><b>nes</b>          suppress/add horizontal lines
+      <b><u>noeqli</u></b><b>nes</b>          suppress lines between equations
+      <b>compress</b>           reduce horizontal spacing
+      <b>plain</b>              produce a minimally formatted table
+
+    <a href="hlp_esttab.html#label">Labeling</a>
+      <b><u>l</u></b><b>abel</b>              make use of variable labels
+      <b><u>ti</u></b><b>tle(</b><i>string</i><b>)</b>      specify a title for the table
+      <b><u>mti</u></b><b>tles</b>[<b>(</b><i>list</i><b>)</b>]    specify model titles to appear in table header
+      <b><u>nomti</u></b><b>tles</b>          disable model titles
+      [<b><u>no</u></b>]<b><u>dep</u></b><b>vars</b>        do not/do use dependent variables as model titles
+      [<b><u>no</u></b>]<b><u>num</u></b><b>bers</b>        do not/do print model numbers in table header
+      <b><u>coef</u></b><b>labels(</b><i>list</i><b>)</b>   specify labels for coefficients
+      [<b><u>no</u></b>]<b><u>note</u></b><b>s</b>          suppress/add notes in the table footer
+      <b><u>addn</u></b><b>otes(</b><i>list</i><b>)</b>     add lines at the end of the table
+
+    <a href="hlp_esttab.html#format">Document format</a>
+      <b>smcl</b> | <b><u>fix</u></b><b>ed</b> | <b>tab</b> | <b>csv</b> | <b><u>sc</u></b><b>sv</b> | <b>rtf</b> | <b><u>htm</u></b><b>l</b> | <b>tex</b> | <b><u>bookt</u></b><b>abs</b>
+                         set the document format (<b>smcl</b> is the default)
+      <b><u>f</u></b><b>ragment</b>           suppress table opening and closing (LaTeX, HTML)
+      <b>page</b>[<b>(</b><i>packages</i><b>)</b>]   add page opening and closing (LaTeX, HTML)
+      <b><u>align</u></b><b>ment(</b><i>string</i><b>)</b>  set alignment within columns (LaTeX, HTML, RTF)
+      <b>width(</b><i>string</i><b>)</b>      set width of table (LaTeX, HTML)
+      <b><u>long</u></b><b>table</b>          multi-page table (LaTeX)
+
+    <a href="hlp_esttab.html#output">Output</a>
+      <b><u>r</u></b><b>eplace</b>            overwrite an existing file
+      <b><u>a</u></b><b>ppend</b>             append the output to an existing file
+      <b><u>ty</u></b><b>pe</b>               force prining the table in the results window
+      <b><u>n</u></b><b>oisily</b>            display the executed <a href="hlp_estout.html"><b>estout</b></a> command
+
+    <a href="hlp_esttab.html#advanced">Advanced</a>
+      <b><u>d</u></b><b>rop(</b><i>list</i><b>)</b>         drop individual coefficients
+      <b><u>k</u></b><b>eep(</b><i>list</i><b>)</b>         keep individual coefficients
+      <b><u>o</u></b><b>rder(</b><i>list</i><b>)</b>        change order of coefficients
+      <b><u>eq</u></b><b>uations(</b><i>list</i><b>)</b>    match the models' equations
+      <b>eform</b>              report exponentiated coefficients
+      <b><u>m</u></b><b>argin</b>             report marginal effects/elasticities
+      <b><u>uns</u></b><b>tack</b>            place multiple equations in separate columns
+      <i>estout_options</i>     any other <a href="hlp_estout.html"><b>estout</b></a> options
+    ----------------------------------------------------------------------
+
+<a name="des"></a>
+<b><u>Description</u></b>
+
+    <b>esttab</b> is a wrapper for <a href="hlp_estout.html"><b>estout</b></a>. It produces a pretty-looking
+    publication-style regression table from stored estimates without much
+    typing. The compiled table is displayed in the Stata results window or,
+    optionally, written to a text file specified by <b>using</b> <i>filename</i>. If
+    <i>filename</i> is specified without suffix, a default suffix is added depending
+    on the specified document format (".smcl" for <b>smcl</b>, ".txt" for <b>fixed</b> and
+    <b>tab</b>, ".csv" for <b>csv</b> and <b>scsv</b>, ".rtf" for <b>rft</b>, ".html" for <b>html</b>, and
+    ".tex" for <b>tex</b> and <b>booktabs</b>).
+
+    <i>namelist</i> provides the names of the stored estimation sets to be
+    tabulated. You may use the <b>*</b> and <b>?</b> wildcards in <i>namelist</i>. If <i>namelist</i> is
+    omitted, <b>esttab</b> tabulates the estimation sets stored by <b>eststo</b> (see help 
+    <a href="hlp_eststo.html"><b>eststo</b></a>) or, if no such estimates are present, the currently active
+    estimates (i.e. the model fit last).
+
+    See help <a href="http://www.stata.com/help.cgi?estimates"><b>estimates</b></a> for information about storing estimation results. An
+    alternative to the <b>estimates store</b> command is provided by <a href="hlp_eststo.html"><b>eststo</b></a>.
+
+    <b>esttab</b> can also be used to tabulate a Stata matrix applying syntax
+    <b>esttab</b> <b><u>m</u></b><b>atrix(</b><i>name</i><b>)</b>, where <i>name</i> is the name of the matrix. Furthermore,
+    an <b>e()</b>-matrix or <b>r()</b>-matrix can be tabulated specifying <b>esttab e(</b><i>name</i><b>)</b> or
+    <b>esttab r(</b><i>name</i><b>)</b>. Most options under the headings 'Main', 'Significance
+    stars', and 'Summary statistics' are irrelevant in this case. See help 
+    <a href="hlp_estout.html"><b>estout</b></a> for further details on tabulating matrices.
+
+<a name="opt"></a>
+<b><u>Options</u></b>
+<a name="main"></a>
+        +------+
+    ----+ Main +-------------------------------------------------------------
+
+    <b>b(</b><a href="hlp_esttab.html#fmt"><i>fmt</i></a><b>)</b> sets the numerical display format for the point estimates. The
+        default format is <b>a3</b>. (See <a href="hlp_esttab.html#fmt">Numerical formats</a> below for details on
+        available formats.)
+
+    <b>beta</b>[<b>(</b><a href="hlp_esttab.html#fmt"><i>fmt</i></a><b>)</b>] requests that standardized beta coefficients be displayed in
+        place of the raw point estimates and, optionally, sets the display
+        format (the default is to print three decimal places). Note that <b>beta</b>
+        causes the intercept to be dropped from the table (unless <b>constant</b> is
+        specified).
+<a name="main"></a>
+    <b>main(</b><i>name</i> [<a href="hlp_esttab.html#fmt"><i>fmt</i></a>]<b>)</b> requests that the statistics stored in <b>e(</b><i>name</i><b>)</b> be
+        displayed in place of the point estimates and, optionally, sets the
+        display format (the default is to use the display format for point
+        estimates). For example, <b>e(</b><i>name</i><b>)</b> may contain statistics added by
+        <b>estadd</b> (see help <a href="hlp_estadd.html"><b>estadd</b></a>).
+
+    <b>t(</b><a href="hlp_esttab.html#fmt"><i>fmt</i></a><b>)</b> sets the display format for t-statistics. The default is to
+        display two decimal places.
+
+    <b>abs</b> causes absolute values of t-statistics to be reported.
+
+    <b>not</b> suppresses the printing of t-statistics.
+
+    <b>z</b>[<b>(</b><a href="hlp_esttab.html#fmt"><i>fmt</i></a><b>)</b>] requests that z-statistics be displayed. z-statistics are the
+        same as t-statistics. Hence, specifying <b>z</b> does not change the table
+        contents, it only changes the label.
+
+    <b>se</b>[<b>(</b><a href="hlp_esttab.html#fmt"><i>fmt</i></a><b>)</b>] requests that standard errors be displayed in place of
+        t-statistics and, optionally, sets the display format (the default is
+        to use the display format for point estimates).
+
+    <b>p</b>[<b>(</b><a href="hlp_esttab.html#fmt"><i>fmt</i></a><b>)</b>] requests that p-values be displayed in place of t-statistics
+        and, optionally, sets the display format (the default is to print
+        three decimal places)
+
+    <b>ci</b>[<b>(</b><a href="hlp_esttab.html#fmt"><i>fmt</i></a><b>)</b>] requests that confidence intervals be displayed in place of
+        t-statistics and, optionally, sets the display format (the default is
+        to use the display format for point estimates). <b>level(</b><i>#</i><b>)</b> assigns the
+        confidence level, in percent. The default is <b>level(95)</b> or as set by 
+        <a href="http://www.stata.com/help.cgi?set+level"><b>set level</b></a>.
+<a name="aux"></a>
+    <b>aux(</b><i>name</i> [<a href="hlp_esttab.html#fmt"><i>fmt</i></a>]<b>)</b> requests that the statistics stored in <b>e(</b><i>name</i><b>)</b> be
+        displayed in place of t-statistics and, optionally, sets the display
+        format (the default is to use the display format for point
+        estimates). For example, <b>e(</b><i>name</i><b>)</b> may contain statistics added by
+        <b>estadd</b> (see help <a href="hlp_estadd.html"><b>estadd</b></a>, if installed).
+
+    <b>noconstant</b> causes the intercept be dropped from the table.  Specify
+        <b>constant</b> to include the constant in situations where it is dropped by
+        default.
+
+<a name="stars"></a>
+        +--------------------+
+    ----+ Significance stars +-----------------------------------------------
+
+    <b>star</b>[<b>(</b><i>symbol</i> <i>level</i> [<i>...</i>]<b>)</b>] causes stars denoting the significance of the
+        coefficients to be printed next to the point estimates. This is the
+        default. Type <b>nostar</b> to suppress the stars. The default symbols and
+        thresholds are:  <b>*</b> for p&lt;.05, <b>**</b> for p&lt;.01, and <b>***</b> for p&lt;.001.
+        Alternatively, for example, type <b>star(+ 0.10 * 0.05)</b> to set the
+        following thresholds: <b>+</b> for p&lt;.10 and <b>*</b> for p&lt;.05. Note that the
+        thresholds must lie in the (0,1] interval and must be specified in
+        descending order.
+
+    <b>staraux</b> causes the significance stars be printed next to the t-statistics
+        (or standard errors, etc.) instead of the point estimates.
+
+<a name="stat"></a>
+        +--------------------+
+    ----+ Summary statistics +-----------------------------------------------
+
+    <b>r2</b>[<b>(</b><a href="hlp_esttab.html#fmt"><i>fmt</i></a><b>)</b>], <b>ar2</b>[<b>(</b><a href="hlp_esttab.html#fmt"><i>fmt</i></a><b>)</b>], and <b>pr2</b>[<b>(</b><a href="hlp_esttab.html#fmt"><i>fmt</i></a><b>)</b>] include the R-squared, the adjusted
+        R-squared, and the pseudo-R-squared in the table footer and,
+        optionally, set the corresponding display formats (the default is to
+        display three decimal places).
+
+    <b>aic</b>[<b>(</b><a href="hlp_esttab.html#fmt"><i>fmt</i></a><b>)</b>] and <b>bic</b>[<b>(</b><a href="hlp_esttab.html#fmt"><i>fmt</i></a><b>)</b>] include Akaike's and Schwarz's information
+        criterion in the table footer and, optionally, set the corresponding
+        display formats (the default is to use the display format for point
+        estimates).
+<a name="scalars"></a>
+    <b>scalars(</b><i>list</i><b>)</b> may be used to add other <b>e()</b>-scalars to the table footer
+        (type <b>ereturn list</b> to display a list of available <b>e()</b>-scalars after
+        fitting a model; see help <a href="http://www.stata.com/help.cgi?ereturn"><b>ereturn</b></a>). For example, <b>scalars(df_m)</b> would
+        report the model degrees of freedom for each model. <i>list</i> may be a
+        simple list of names of <b>e()</b>-scalars, e.g.
+
+            . esttab, scalars(ll_0 ll chi2)
+
+        or, alternatively, a list of quoted name-label pairs, e.g.
+
+            . esttab, scalars("ll Log lik." "chi2 Chi-squared")
+
+    <b>sfmt(</b><a href="hlp_esttab.html#fmt"><i>fmt</i></a> [<i>...</i>]<b>)</b> sets the display format(s) for the statistics specified
+        in <b>scalars()</b> (the default is to use the display format for point
+        estimates). If <b>sfmt()</b> contains less elements than <b>scalars()</b>, the last
+        specified format is used for the remaining scalars. That is, only one
+        format needs to be specified if the same format be used for all
+        scalars.
+
+    <b>noobs</b> suppresses displaying information on the number of observations.
+        The default is to report the number of observations for each model in
+        the table footer.
+
+    <b>obslast</b> displays the number of observations in the last row of the table
+        footer. The default is to use the first row.
+
+<a name="layout"></a>
+        +--------+
+    ----+ Layout +-----------------------------------------------------------
+<a name="wide"></a>
+    <b>wide</b> causes point estimates and t-statistics (or standard errors, etc.)
+        to be printed beside one another instead of beneath one another.
+<a name="onecell"></a>
+    <b>onecell</b> causes point estimates and t-statistics (or standard errors,
+        etc.) to be combined in a single table cell. This option is useful
+        primarily in <b>rtf</b> or <b>html</b> mode. In these modes a line break is
+        inserted between the two statistics. The benefit from using <b>onecell</b>
+        in <b>rtf</b> or <b>html</b> mode is that long coefficients labels do not derange
+        the table layout. The default for other modes is to insert a blank
+        between the statistics. Use <b>estout</b>'s <a href="hlp_estout.html#incelldel"><b>incelldelimiter()</b></a> option to
+        change this.
+
+    <b>parentheses</b> encloses t-statistics (or standard errors, etc.) in
+        parentheses. This is the default. Specify <b>noparentheses</b> to suppress
+        the parentheses.
+
+    <b>brackets</b> uses square brackets, [], instead of parentheses. Note that
+        brackets are the default for confidence intervals.
+
+    <b>gaps</b> adds empty rows (or, more generally, additional vertical space)
+        between coefficients to increase readability (empty rows are also
+        inserted between the table's header, body, and footer, unless <b>lines</b>
+        is activated). This is the default unless <b>wide</b> or <b>not</b> is specified.
+        Type <b>nogaps</b> to suppress the extra spacing.
+
+    <b>lines</b> adds horizontal lines to the table separating the table's header,
+        body, and footer and, in the case of multiple equation models, the
+        equations. This is the default. Specify <b>nolines</b> to suppress the
+        lines. Lines are always suppressed in the <b>tab</b> and <b>csv</b> modes.
+
+    <b>noeqlines</b> suppresses the horizontal lines between equations in the case
+        of multiple equation models.
+<a name="compress"></a>
+    <b>compress</b> reduces the amount of horizontal spacing (so that more models
+        fit on screen without line breaking). The option has no effect in the
+        <b>tab</b> and <b>csv</b> modes. Furthermore, note that in the TeX and HTML modes
+        the <b>compress</b> option only changes the arrangement the table's code,
+        but not the look of the compiled end-product. In <b>rtf</b>, however,
+        <b>compress</b> changes the look of the formatted table.
+<a name="plain"></a>
+    <b>plain</b> produces a minimally formatted table. It is a shorthand to
+        specifying <b>nostar</b>, <b>nodepvars</b>, <b>nonumbers</b>, <b>noparentheses</b>, <b>nogaps</b>,
+        <b>nolines</b> and <b>nonotes</b> and setting all formats to <b>%9.0g</b>. Note that the
+        disabled options can be switched on again. For example, type
+
+            . esttab, plain star
+
+        to produce a plain table including significance stars.
+
+<a name="label"></a>
+        +----------+
+    ----+ Labeling +---------------------------------------------------------
+
+    <b>label</b> specifies that variable labels be used instead of variable names
+        (and estimation set titles be used instead of estimation set names).
+        Furthermore, <b>label</b> prints "Constant" instead of "_cons".
+<a name="title"></a>
+    <b>title(</b><i>string</i><b>)</b> may be used to provide a title for the table. If specified,
+        <i>string</i> is printed at the top of the table.  Note that specifying a
+        title causes the table to be set up as a floating object in LaTeX
+        mode. You may want to set a label for referencing in this case. For
+        example, if you type <b>title(...\label{tab1})</b>, then "\ref{tab1}" could
+        be used in the LaTeX document to point to the table.
+
+    <b>mtitles</b>, without argument, specifies that for each model the title (or,
+        if empty, the name) of the stored estimation set be printed as the
+        model's title in the table header. If <b>mtitles</b> is omitted, the default
+        is to use name or label of the dependent variable as the model's
+        title (see the <b>depvar</b> option). Alternatively, use <b>mtitles(</b><i>list</i><b>)</b>
+        specifies a list of model titles. Enclose the titles in double quotes
+        if they contain spaces, e.g. <b>mtitles("Model 1" "Model 2")</b>.
+
+    <b>nomtitles</b> suppresses printing of model titles.
+
+    <b>depvars</b> prints the name (or label) of the (first) dependent variable of a
+        model as the model's title in the table header. This is the default.
+        Specify <b>nodepvars</b> to use the names of the stored estimation sets as
+        titles.
+
+    <b>numbers</b> includes a row containing consecutive model numbers in the table
+        header. This is the default. Specify <b>nonumbers</b> to suppress printing
+        the model numbers.
+
+    <b>coeflabels(</b><i>name</i> <i>label</i> [...]<b>)</b> specifies labels for the coefficients.
+        Specify names and labels in pairs and, if necessary, enclose labels
+        in double quotes, e.g. <b>coeflabels(mpg Milage rep78 "Repair Record")</b>.
+
+    <b>notes</b> prints notes at the end of the table explaining the significance
+        symbols and the type of displayed statistics. This is the default.
+        Specify <b>nonotes</b> to suppress the notes.
+
+    <b>addnotes(</b><i>list</i><b>)</b> may be used to add further lines of text at the bottom of
+        the table. Lines containing blanks must be enclosed in double quotes,
+        e.g. <b>addnotes("Line 1" "Line 2")</b>.
+
+<a name="format"></a>
+        +-----------------+
+    ----+ Document format +--------------------------------------------------
+
+    <b>smcl</b>, <b>fixed</b>, <b>tab</b>, <b>csv</b>, <b>scsv</b>, <b>rtf</b>, <b>html</b>, <b>tex</b>, and <b>booktabs</b> choose the
+        table's basic output format. The default format is <b>smcl</b> unless <b>using</b>
+        is specified, in which case the default format depends on the
+        filename's suffix (<b>smcl</b> for ".smcl", <b>csv</b> for ".csv", <b>rtf</b> for ".rtf",
+        <b>html</b> for ".htm" or ".html", <b>tex</b> for ".tex", and <b>fixed</b> for all other
+        filenames).
+
+        <b>smcl</b> produces a <a href="http://www.stata.com/help.cgi?SMCL">SMCL</a> formatted table to be displayed in the Stata
+        results window or the Stata viewer.
+
+        <b>fixed</b> produces a fixed-format ASCII table. This is suitable, for
+        example, if the table be displayed in a text editor.
+
+        <b>tab</b> produces a tab-delimited ASCII table.
+<a name="csv"></a>
+        <b>csv</b> produces a CSV (<u>C</u>omma <u>S</u>eparated <u>V</u>alue format) table for use with
+        Microsoft Excel. Delimiter is a comma. In order to prevent Excel from
+        interpreting the contents of the table cells, they are enclosed
+        double quotes preceded by an equal sign (i.e. ="..."). However, if
+        the <b>plain</b> option is specified, the table cells are enclosed in double
+        quotes without the leading equal sign. The first method is
+        appropriate if you want to preserve the table's formatting. The
+        second method is appropriate if you want to use the table's contents
+        for further computations in Excel.
+<a name="scsv"></a>
+        <b>scsv</b> is a variant on the CSV format that uses a semicolon as the
+        delimiter. This is appropriate for some non-English versions of Excel
+        (e.g. the German version).
+<a name="rtf"></a>
+        <b>rtf</b> produces a Rich Text Format table for use with word processors.
+
+        <b>html</b> produces a simple HTML formatted table.
+
+        <b>tex</b> produces a LaTeX formatted table.
+<a name="booktabs"></a>
+        <b>booktabs</b> produces a LaTeX formatted table for use with LaTeX's
+        <i>booktabs</i> package.
+<a name="fragment"></a>
+    <b>fragment</b> causes the table's opening and closing specifications to be
+        suppressed. This is relevant primarily in LaTeX and HTML mode.
+
+    <b>page</b>[<b>(</b><i>packages</i><b>)</b>] adds opening and closing code to define a whole LaTeX or
+        HTML document. The default is to produce a raw table that can then be
+        included into an existing LaTeX or HTML document. Specifying <i>packages</i>
+        in parentheses causes <b>\usepackage{</b><i>packages</i><b>}</b> to be added to the
+        preamble of the LaTeX document (note that the <i>booktabs</i> package is
+        automatically loaded if <b>booktabs</b> is specified).
+
+    <b>alignment(</b><i>string</i><b>)</b> may be used to specify the alignment of the models'
+        columns in LaTeX, HTML, or RTF mode.
+
+        In LaTeX mode <i>string</i> should be a LaTeX column specifier. The default
+        is to center the columns. To produce right-aligned columns, for
+        example, type <b>alignment(r)</b>. If the table contains multiple columns
+        per model/equation, the alignment specification should define all
+        columns. For example, if the <b>wide</b> option is specified, you could type
+        <b>alignment(cr)</b> to, say, center the point estimates and right-align the
+        t-statistics. Note that more sophisticated column definitions are
+        often needed to produce appealing results. In particular, LaTeX's
+        <i>dcolumn</i> package proves useful to align columns on the decimal point.
+
+        In HTML mode <i>string</i> should be a HTML alignment specifier. The default
+        is to omit alignment specification, which results in left aligned
+        columns. To center the columns in HTML, for example, specify
+        <b>alignment(center)</b>. Other than in LaTeX mode, the same alignment is
+        used for all columns if the table contains multiple columns per
+        model/equation in the HTML mode.
+
+        In RTF mode <i>string</i> should be one of <b>l</b>, <b>c</b>, <b>r</b>, and <b>j</b>. The default is to
+        center the columns. To produce right-aligned columns, for example,
+        type <b>alignment(r)</b>. The same alignment is used for all columns if the
+        table contains multiple columns per model/equation in the RTF mode.
+
+        Note that <b>alignment()</b> does not change the alignment of the variable
+        names/labels in the left stub of the table. They are always
+        left-aligned.
+
+    <b>width(</b><i>string</i><b>)</b> sets the overall width of the table in LaTeX or HTML.
+        <i>string</i> should be LaTeX or HTML literal. For example, specify
+        <b>width(\hsize)</b> in LaTeX or <b>width(100%)</b> in HTML to span the whole page.
+        The table columns will spread regularly over the specified width.
+        Note that in RTF mode <a href="hlp_estout.html"><b>estout</b></a>'s <b>varwidth()</b> and <b>modelwidth()</b> options
+        may be used to change the width of the table columns.
+
+    <b>longtable</b> causes the <i>longtable</i> environment to be used in LaTeX. Use
+        <b>longtable</b> for tables that are too long to fit on a single page.
+        <b>longtable</b> cannot be combined with <b>width()</b>.
+
+<a name="output"></a>
+        +--------+
+    ----+ Output +-----------------------------------------------------------
+
+    <b>replace</b> permits <b>esttab</b> to overwrite an existing file.
+
+    <b>append</b> specifies that the output be appended to an existing file. It may
+        be used even if the file does not yet exist. Specifying <b>append</b>
+        together with <b>page</b> in TeX or HTML mode causes the new table to be
+        inserted at the end of the body of an existing document (<b>esttab</b> seeks
+        a line reading "\end{document}" or "&lt;/body&gt;", respectively, and
+        starts appending from there; contents after this line will be
+        overwritten). In RTF mode, existing documents are assumed to end with
+        a line containing a single "}".
+
+    <b>type</b> specifies that the assembled table be printed in the results window
+        and the log file. This is the default unless <b>using</b> is specified.
+
+    <b>noisily</b> displays the executed <a href="hlp_estout.html"><b>estout</b></a> command.
+
+<a name="advanced"></a>
+        +----------+
+    ----+ Advanced +---------------------------------------------------------
+
+    <b>drop(</b><i>droplist</i><b>)</b> identifies the coefficients to be dropped from the table.
+        A <i>droplist</i> comprises one or more specifications, separated by white
+        space. A specification can be either a parameter name (e.g. <b>price</b>),
+        an equation name followed by a colon (e.g. <b>mean:</b>), or a full name
+        (e.g. <b>mean:price</b>). You may use the <b>*</b> and <b>?</b> wildcards in equation
+        names and parameter names. Be sure to refer to the matched equation
+        names, and not to the original equation names in the models, when
+        using the <b>equations()</b> option to match equations.
+
+    <b>keep(</b><i>keeplist</i><b>)</b> selects the coefficients to be included in the table.
+        <i>keeplist</i> is specified analogous to <i>droplist</i> in <b>drop()</b> (see above).
+
+    <b>order(</b><i>orderlist</i><b>)</b> changes the order of the coefficients and equations
+        within the table. <i>orderlist</i> is specified analogous to <i>droplist</i> in
+        <b>drop()</b> (see above).  Coefficients and equations that do not appear in
+        <i>orderlist</i> are placed last (in their original order).
+
+    <b>equations(</b><i>eqmatchlist</i><b>)</b> specifies how the models' equations are to be
+        matched. This option is passed to the internal call of <b>estimates</b>
+        <b>table</b>. See help <a href="http://www.stata.com/help.cgi?estimates"><b>estimates</b></a> on how to specify this option. The most
+        common usage is <b>equations(1)</b> to match all the first equations in the
+        models.
+
+    <b>eform</b> displays the regression table in exponentiated form. The exponent
+        of a coefficient is displayed in lieu of the untransformed
+        coefficient; standard errors and confidence intervals are transformed
+        as well. Note that the intercept is dropped in eform-mode, unless
+        <b>constant</b> is specified.
+
+    <b>margin</b> indicates that the marginal effects or elasticities be reported
+        instead of the raw coefficients. A prerequisite for this option to
+        work correctly is that <b>mfx</b> has been applied to a model prior to
+        storing its results (see help <a href="http://www.stata.com/help.cgi?mfx"><b>mfx</b></a>). Note that the standard errors,
+        etc. are transformed as well. Furthermore, the intercept is dropped,
+        unless <b>constant</b> is specified.
+
+    <b>unstack</b> specifies that the individual equations from multiple-equation
+        models (e.g. <b>mlogit</b>, <b>reg3</b>, <b>heckman</b>) be placed in separate columns.
+        The default is to place the equations below one another in a single
+        column.
+
+    <i>estout_options</i> are any other <b>estout</b> options (see help <a href="hlp_estout.html"><b>estout</b></a>). Note that
+        <b>estout</b> options take precedence over <b>esttab</b> options. For example,
+
+        <b>cells()</b>     disables <b>b()</b>, <b>beta()</b>, <b>main()</b>, <b>t()</b>, <b>abs</b>, <b>not</b>, <b>se()</b>, <b>p()</b>,
+                    <b>ci()</b>, <b>aux()</b>, <b>star</b>, <b>staraux</b>, <b>wide</b>, <b>onecell</b>, <b>parentheses</b>,
+                    and <b>brackets</b>,
+
+        <b>stats()</b>     disables <b>r2()</b>, <b>ar2()</b>, <b>pr2()</b>, <b>aic()</b>, <b>bic()</b>, <b>scalars()</b>,
+                    <b>sfmt()</b>, <b>noobs</b>, and <b>obslast</b>.
+
+        Other <b>estout</b> options that should be used with care are <b>begin()</b>,
+        <b>delimiter()</b>, <b>end()</b>, <b>prehead()</b>, <b>posthead()</b>, <b>prefoot()</b>, <b>postfoot()</b>,
+        <b>mlabels()</b>, and <b>varlabels()</b>.
+
+<a name="fmt"></a>
+        +-------------------+
+    ----+ Numerical formats +------------------------------------------------
+
+    Numerical display formats may be specified in <b>esttab</b> as follows:
+
+     1. Official Stata's display formats: You may specify formats, such as
+        <b>%9.0g</b> or <b>%8.2f</b>. See help <a href="http://www.stata.com/help.cgi?format">format</a> for a list of available formats. <b>%g</b>
+        or <b>g</b> may be used as a synonym for <b>%9.0g</b>.
+
+     2. Fixed format: You may specify an integer value such as <b>0</b>, <b>1</b>, <b>2</b>, etc.
+        to request a display format with a fixed number of decimal places.
+        For example, <b>t(3)</b> would display t-statistics with three decimal
+        places.
+
+     3. Automatic format: You may specify <b>a1</b>, <b>a2</b>, ..., or <b>a9</b> to cause <b>esttab</b>
+        to choose a reasonable display format for each number depending on
+        the number's value. <b>a</b> may be used as a synonym for <b>a3</b>. The <i>#</i> in <b>a</b><i>#</i>
+        determines the minimum precision according to the following rules:
+
+          o Absolute numbers smaller than 1 are displayed with <i>#</i> significant
+            decimal places (i.e. with <i>#</i> decimal places ignoring any leading
+            zeros after the decimal point). For example, <b>0.00123456</b> is
+            displayed as <b>0.00123</b> if the format is <b>a3</b>.
+
+          o Absolute numbers greater than 1 are displayed with as many digits
+            required to retain at least one decimal place and are displayed
+            with a minimum of (<i>#</i> + 1) digits. For example, if the format is
+            <b>a3</b>, <b>1.23456</b> is displayed as <b>1.235</b>, <b>12.3456</b> is displayed as <b>12.35</b>,
+            and <b>1234.56</b> is displayed as <b>1234.6</b>.
+
+          o In any case, integers are displayed with zero decimal places, and
+            very large or very small absolute numbers are displayed in
+            exponential format.
+
+<a name="exa"></a>
+<b><u>Examples</u></b>
+
+    The following examples are intended to illustrate the basic usage of
+    <b>esttab</b>.  Additional examples can be found at 
+    http://repec.org/bocode/e/estout.
+
+    The procedure is to first fit and store some models (see <a href="hlp_eststo.html"><b>eststo</b></a>) and then
+    apply <b>esttab</b> to these stored estimates:
+
+        . eststo clear
+        
+        . sysuse auto
+        (1978 Automobile Data)
+        
+        . eststo: quietly regress price weight mpg
+        (<b>est1</b> stored)
+        
+        . eststo: quietly regress price weight mpg foreign
+        (<b>est2</b> stored)
+        
+        . esttab, ar2
+        
+<b>        </b>--------------------------------------------
+                              (1)             (2)   
+                            price           price   
+        --------------------------------------------
+        weight      <b>        1.747**         3.465***</b>
+                    <b>       </b>(<b>2.72</b>)<b>          </b>(<b>5.49</b>)<b>   </b>
+        
+        mpg         <b>       -49.51           21.85   </b>
+                    <b>      </b>(<b>-0.57</b>)<b>          </b>(<b>0.29</b>)<b>   </b>
+        
+        foreign     <b>                       3673.1***</b>
+                    <b>                       </b>(<b>5.37</b>)<b>   </b>
+        
+        _cons       <b>       1946.1         -5853.7   </b>
+                    <b>       </b>(<b>0.54</b>)<b>         </b>(<b>-1.73</b>)<b>   </b>
+        --------------------------------------------
+        N           <b>           74              74   </b>
+        adj. R-sq   <b>        0.273           0.478   </b>
+        --------------------------------------------
+        t statistics in parentheses
+        * p&lt;0.05, ** p&lt;0.01, *** p&lt;0.001
+
+
+    The same table using labels:
+
+        . esttab, ar2 label
+        
+<b>        </b>----------------------------------------------------
+                                      (1)             (2)   
+                                    Price           Price   
+        ----------------------------------------------------
+        Weight (lbs.)       <b>        1.747**         3.465***</b>
+                            <b>       </b>(<b>2.72</b>)<b>          </b>(<b>5.49</b>)<b>   </b>
+        
+        Mileage (mpg)       <b>       -49.51           21.85   </b>
+                            <b>      </b>(<b>-0.57</b>)<b>          </b>(<b>0.29</b>)<b>   </b>
+        
+        Car type            <b>                       3673.1***</b>
+                            <b>                       </b>(<b>5.37</b>)<b>   </b>
+        
+        Constant            <b>       1946.1         -5853.7   </b>
+                            <b>       </b>(<b>0.54</b>)<b>         </b>(<b>-1.73</b>)<b>   </b>
+        ----------------------------------------------------
+        Observations        <b>           74              74   </b>
+        Adjusted R-squared  <b>        0.273           0.478   </b>
+        ----------------------------------------------------
+        t statistics in parentheses
+        * p&lt;0.05, ** p&lt;0.01, *** p&lt;0.001
+
+
+    Plain table:
+
+        . esttab, ar2 plain
+        
+<b>        </b>                     est1         est2
+                              b/t          b/t
+        weight      <b>     1.746559     3.464706</b>
+                    <b>     2.723238     5.493003</b>
+        mpg         <b>    -49.51222      21.8536</b>
+                    <b>    -.5746808     .2944391</b>
+        foreign     <b>                   3673.06</b>
+                    <b>                  5.370142</b>
+        _cons       <b>     1946.069    -5853.696</b>
+                    <b>      .541018    -1.733408</b>
+        N           <b>           74           74</b>
+        adj. R-sq   <b>     .2734846     .4781119</b>
+
+
+    Using standard errors in brackets and suppress significance stars:
+
+        . esttab, se nostar brackets
+        
+<b>        </b>--------------------------------------
+                              (1)          (2)
+                            price        price
+        --------------------------------------
+        weight      <b>        1.747        3.465</b>
+                    <b>      </b>[<b>0.641</b>]<b>      </b>[<b>0.631</b>]
+        
+        mpg         <b>       -49.51        21.85</b>
+                    <b>      </b>[<b>86.16</b>]<b>      </b>[<b>74.22</b>]
+        
+        foreign     <b>                    3673.1</b>
+                    <b>                   </b>[<b>684.0</b>]
+        
+        _cons       <b>       1946.1      -5853.7</b>
+                    <b>     </b>[<b>3597.0</b>]<b>     </b>[<b>3377.0</b>]
+        --------------------------------------
+        N           <b>           74           74</b>
+        --------------------------------------
+        Standard errors in brackets
+
+
+    Printing beta coefficients:
+
+        . esttab, beta
+        
+<b>        </b>--------------------------------------------
+                              (1)             (2)   
+                            price           price   
+        --------------------------------------------
+        weight      <b>        0.460**         0.913***</b>
+                    <b>       </b>(<b>2.72</b>)<b>          </b>(<b>5.49</b>)<b>   </b>
+        
+        mpg         <b>       -0.097           0.043   </b>
+                    <b>      </b>(<b>-0.57</b>)<b>          </b>(<b>0.29</b>)<b>   </b>
+        
+        foreign     <b>                        0.573***</b>
+                    <b>                       </b>(<b>5.37</b>)<b>   </b>
+        --------------------------------------------
+        N           <b>           74              74   </b>
+        --------------------------------------------
+        Standardized beta coefficients; t statistics in parentheses
+        * p&lt;0.05, ** p&lt;0.01, *** p&lt;0.001
+
+<a name="aut"></a>
+<b><u>Author</u></b>
+
+    Ben Jann, ETH Zurich, jannb@ethz.ch
+
+<a name="als"></a>
+<b><u>Also see</u></b>
+
+    Manual:  <b>[R] estimates</b>
+
+    Online:  help for <a href="http://www.stata.com/help.cgi?estimates"><b>estimates</b></a>, <a href="http://www.stata.com/help.cgi?estcom">estcom</a>, <a href="hlp_estout.html"><b>estout</b></a>, <a href="hlp_eststo.html"><b>eststo</b></a>, <a href="hlp_estadd.html"><b>estadd</b></a>, <a href="hlp_estpost.html"><b>estpost</b></a>
+</pre>
+</div>
+
+</body></html>

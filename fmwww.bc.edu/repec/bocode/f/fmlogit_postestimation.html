@@ -1,0 +1,133 @@
+<pre>
+-------------------------------------------------------------------------------
+help for <b>fmlogit postestimation</b>
+-------------------------------------------------------------------------------
+<p>
+<b><u>Title</u></b>
+<p>
+    <b>fmlogit postestimation</b> --  Postestimation tools for fmlogit
+<p>
+<p>
+<b><u>Description</u></b>
+<p>
+post estimation tool specifically for fmlogit:
+<p>
+    <b>dfmlogit</b> displays discrete changes and marginal effects after fmlogit.
+<p>
+<p>
+The following standard postestimation commands are also available:
+<p>
+    command         description
+    -------------------------------------------------------------------------
+INCLUDE help post_estat
+INCLUDE help post_estimates
+INCLUDE help post_lincom
+INCLUDE help post_lrtest
+INCLUDE help post_mfx
+INCLUDE help post_nlcom
+      <b>predict</b>       predictions
+INCLUDE help post_predictnl
+INCLUDE help post_suest
+INCLUDE help post_test
+INCLUDE help post_testnl
+    -------------------------------------------------------------------------
+<p>
+<a name="dfmlogit"></a><b><u>dfmlogitit: displaying discrete changes and marginal effects from fmlogit outpu</u></b>
+<b><u>&gt; t</u></b>
+<p>
+<b><u>Syntax</u></b>
+<p>
+        <b>dfmlogit</b> [<b>,</b> <b>at(</b><i>variables_and_values</i><b>)</b> ]
+<p>
+<p>
+<b><u>Description</u></b>
+<p>
+    <b>dfmlogit</b> displays the change in predicted dependent variable for three
+    types of discrete changes in explanatory variable and the marginal
+    effects:
+<p>
+<p>
+        <b>Discrete Changes</b>
+<p>
+        <b>Min --&gt; Max</b> shows the change in predicted dependent variable when the
+        explanatory variable changes from its minimum value to its maximum
+        value, while keeping all other explanatory variables at their
+        specified values (by default the mean). This is the only effect shown
+        for dummy variables (variables with only two distinct values).
+<p>
+        <b>+-SD/2</b> shows the change in predicted dependent variable when the
+        explanatory variable moves from half a standard deviation below its
+        specified value (by default the mean) to half a standard deviation
+        above its specified value, while keeping all other variables at their
+        specified values. In other words: It shows the effect of a standard
+        deviation change in explanatory variable, centered around the
+        specified value, on the predicted dependent variable.
+<p>
+        <b>+-1/2</b> shows the change in predicted dependent variable when the
+        explanatory variable moves from half a unit below its specified value
+        to half a unit above its specified value, while keeping all other
+        variables at their specified values. In other words: It shows the
+        effect of a unit change in explanatory variable, centered around the
+        specified value, on the predicted dependent variable.
+<p>
+<p>
+        <b>Marginal Effects</b>
+<p>
+        <b>MFX at x</b> shows the marginal effect of each (non dummy) variable,
+        while keeping all variables at their specified values. The marginal
+        effect is the change in predicted dependent variable for a unit
+        change in the explanatory variable, assuming that the effect doesn't
+        change over that interval.
+<p>
+<p>
+<b><u>Options</u></b>
+<p>
+    <b>at(</b><i>variables_and_values</i><b>)</b> allow the user to specify at which values of the
+        explanatory variables the effects are calculated.
+        <i>variables_and_values</i> is an alternating list of variables and either
+        numeric values or mean, median, min, max, p1, p5, p10 p25, p50, p75,
+        p90, p95, p99. The default is mean for all variables. The statistics
+        p1, p5, ..., p99, are the 1st, 5th, ..., 99th percentile.
+<p>
+<b><u>Examples</u></b>
+<p>
+<p>
+<b>    use http://fmwww.bc.edu/repec/bocode/c/citybudget.dta, clear</b>
+<p>
+<b>    fmlogit governing safety education recreation social urbanplanning, ///</b>
+<b>        eta(minorityleft noleft houseval popdens)</b>
+<p>
+<b>    dfmlogit, at(minorityleft 0 noleft 0 )</b>
+<p>
+    (click to run)
+<p>
+<p>
+<a name="predict"></a><b><u>Syntax for predict</u></b>
+<p>
+        <b>predict</b> [<i>type</i>] <i>newvar</i> [<i>if</i>] [<i>in</i>] [<b>,</b> <i>statistic</i> <b><u>out</u></b><b>come(</b><i>varname</i><b>)</b>
+                <b><u>eq</u></b><b>uation(</b><i>eqno</i><b>)</b> ]
+<p>
+    <i>statistic</i>       Description
+    -------------------------------------------------------------------------
+      <b>xb</b>            xb, the linear predictor
+      <b>stdp</b>          standard error of the prediction
+      <b>pr</b>            proportion
+      <b><u>sc</u></b><b>ore</b>         first derivative of the log likelihood with respect to
+                      the linear predictor.
+    -------------------------------------------------------------------------
+<p>
+<b><u>Options for predict</u></b>
+<p>
+    <b><u>out</u></b><b>come(</b><i>varname</i><b>)</b> specifies the outcome. This option may only be used with
+        the <b>pr</b> option.
+<p>
+    <b><u>eq</u></b><b>uation(</b><i>#</i><b>)</b> specifies the equation, as in predict. This option may only
+        be used with the <b>xb</b>, <b>stdp</b>, and <b>score</b> options.
+<p>
+<p>
+<b><u>Also see</u></b>
+<p>
+    Online: help for <b>fmlogit</b>, <b>estimates</b>, <b>lincom</b>, <b>lrtest</b>, <b>mfx</b>, <b>nlcom</b>, 
+             <b>predictnl</b>, <b>suest</b>, <b>test</b>, <b>testnl</b>
+<p>
+</pre>

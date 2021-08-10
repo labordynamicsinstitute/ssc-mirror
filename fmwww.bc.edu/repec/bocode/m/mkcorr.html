@@ -1,0 +1,97 @@
+<pre>
+-------------------------------------------------------------------------------
+help for <b>mkcorr</b>
+-------------------------------------------------------------------------------
+<p>
+<b><u>Generate correlation table formatted for easy inclusion in articles</u></b>
+<p>
+        <b>mkcorr</b> <i>varlist</i> [<b>if</b> <i>exp</i>] [<b>in</b> <i>range</i>] <b>,</b> <b><u>l</u></b><b>og(</b><i>filename</i><b>)</b> [<b><u>r</u></b><b>eplace</b> <b><u>m</u></b><b>eans</b>
+                 <b><u>noc</u></b><b>orr</b> <b><u>s</u></b><b>ig</b> <b><u>l</u></b><b>ab</b> <b><u>n</u></b><b>um</b> <b><u>cd</u></b><b>ec(</b><i>#</i><b>)</b> <b><u>md</u></b><b>ec(</b><i>#</i><b>)</b> <b><u>case</u></b><b>wise</b>]
+<p>
+<b><u>Description</u></b>
+<p>
+    <b>mkcorr</b> produces a correlation table in a format that is easy to import
+    into a spreadsheet or word processing document.  In this, it is inspired
+    by the indispensable <b>mktab</b> and <b>outreg</b> commands.  By writing the output
+    directly to a logfile, it avoids two problems with taking correlation
+    tables from the results window.  First, it allows an effectively
+    unlimited number of variables without wrapping around.  Second, it
+    requires less post-processing in a spreadsheet or word-processor,
+    particularly for more involved tables.  It also offers a number of small
+    advantages such as allowing the use of labels, controlling the number of
+    decimal places used, and other formatting options.
+<p>
+<b><u>Options</u></b>
+<p>
+    <b>log(</b><i>filename</i><b>)</b> specifies the name of the file in which the output is to be
+        stored.  The output file, <i>filename</i>.log, can be opened with any
+        spreadsheet or word-processing program. If the user specifies a file
+        name that includes an extension, that extension will be used rather
+        than <i>.log</i>. Thus, <b>log(foo.out)</b> yields the logfile <i>foo.out</i>.  The
+        <i>filename</i> specification may include the path of a directory other than
+        the current working directory.
+<p>
+    <b>replace</b> must be specified for the log file to replace an existing file of
+        the same name.
+<p>
+    <b>means</b> requests that summary statistics (mean, s.d., min, max) be
+        included.
+<p>
+    <b>nocorr</b> suppresses the output of the correlation table.  It is only
+        sensible in combination with <b>means</b> as a way to output descriptive
+        statistics.
+<p>
+    <b>lab</b> uses variable labels rather than variable names.
+<p>
+    <b>num</b> is a formatting option that labels each variable with a number in the
+        first column and uses the same numbers as the column headers for the
+        correlation table.  This is especially useful when you have either a
+        large number of variables or variables with long names.
+<p>
+    <b>sig</b> requests that the significance of each correlation be printed under
+        it.
+<p>
+    <b>cdec(</b><i>#</i><b>)</b> set the number of decimal places displayed in the correlation
+        table.
+<p>
+    <b>mdec(</b><i>#</i><b>)</b> set the number of decimal places displayed in the summary
+        statistics portion of the table.
+<p>
+    <b>casewise</b> cause the table to reflect casewise deletion. In other words,
+        results will reflect only those observations for which no listed
+        variables are missing. This command will yield results identical to
+        using <b>corrrelate</b>.  The default is to engage in pairwise deletion,
+        yielding results identical to using <b>pwcorr</b>.
+<p>
+<b><u>Examples</u></b>
+<p>
+    .mkcorr price mpg, log(auto) replace
+<p>
+    .mkcorr price mpg, log(auto) replace num label
+<p>
+    .mkcorr price mpg, log(auto) replace label means mdec(2) cdec(3)
+<p>
+<b><u>Remarks</u></b> 
+<p>
+    This is version 2.0 of this software. It should be preferred to any
+    version 1.x. Please inform the author of any bugs you find.
+<p>
+<b><u>Author</u></b> 
+<p>
+        Glenn Hoetker, College of Business, University of Illinois at Urbana-Ch
+&gt; ampaign
+        ghoetker@uiuc.edu
+<p>
+<b><u>Acknowledgement</u></b> 
+<p>
+    This program owes a debt of inspiration to <b>mktab</b>, <b>outreg</b> and <b>corrtab</b>.
+    The helpful feedback of Nick Cox, Jonathan Gardner and Stephen Jenkins
+    contributed to substantial improvements from version 1.0 to version 1.3.
+    Comments from Herve Stolowy contributed to significant improvement from
+    version 1.3 to 2.0.
+<p>
+<b><u>Also see</u></b>
+<p>
+    On-line:  help for correlate and pwcorr.
+<p>
+</pre>

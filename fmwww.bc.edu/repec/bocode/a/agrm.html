@@ -1,0 +1,98 @@
+<pre>
+<b> help agrm</b>
+-------------------------------------------------------------------------------
+<p>
+<p>
+<b><u>Title</u></b>
+<p>
+    <b>agrm</b> -- Calculate measure of agreement "A".
+<p>
+<p>
+<b><u>Syntax</u></b>
+<p>
+    [by:<i>varlist</i>] <b>agrm</b> <i>varlist</i> [<i>if</i>] [<i>in</i>] [<i>weight</i>] [<b>,</b> <b><u>gen</u></b><b>erate(</b><i>newvar</i><b>)</b>
+    <b><u>cat</u></b><b>egories(</b><i>integer</i><b>)</b> <b><u>bou</u></b><b>nds(</b><i>numlist</i><b>)</b> <b><u>m</u></b><b>issing(</b><i>numlist</i><b>)</b> <b><u>d</u></b><b>etail</b> <b>noprint</b>]
+<p>
+<p>
+<b><u>Description</u></b>
+<p>
+    <b>agrm</b> calculates Cees van der Eijk's (2001) alternative measure of
+    agreement "A".  This measure is a weighted average of the degree of
+    agreement among respondents that exists in the simple component parts –
+    layers – into which any frequency distribution can be disaggregated.  It
+    is especially useful when calculating agreement in ordered rating scales
+    and easily interpretable, ranging from -1 (perfect bimodality) to +1
+    (perfect unimodality).
+<p>
+<p>
+<b><u>Options</u></b>
+<p>
+    <b>generate(</b><i>newvar</i><b>)</b> creates a new variable <i>newvar</i> which returns the
+    according value of "A".
+<p>
+    <b>categories(</b><i>integer</i><b>)</b> specifies the number of total categories.  It allows
+    to calculate the measure of agreement regardless of empty categories.
+<p>
+    <b>bounds(</b><i>numlist</i><b>)</b> customizes the lower and upper bounds of the measure of
+    agreement.
+<p>
+    <b>missing(</b><i>numlist</i><b>)</b> specifies the numeric values of missing values.
+<p>
+    <b>detail</b> displays additional statistics.
+<p>
+    <b>noprint</b> suppresses the output.
+<p>
+<p>
+<b><u>Remarks</u></b>
+<p>
+    The measure of agreement is highly sensitve to the number of categories
+    of the ordered rating scale.  In order to mitigate the risk of
+    miscounting the number of categories the <b>agrm</b> command takes advantage of
+    all the information provided in the data set (e.g. value labels).  The
+    output window reports the number of categories used to calculate the
+    measure of agreement.  Please double-check with the actual length of the
+    ordered rating scale.  If necessary, use the <b>categories(</b><i>integer</i><b>)</b> option
+    to manually adjust the number of categories.
+<p>
+    Please note that the <b>agrm</b> command is unable to handle both negative
+    category values and noninteger category values.  If you encounter such
+    data in your data set, use the recode command to obtain an ordered rating
+    scale with positive and integer category values.
+<p>
+    For more detailed informtion on the measure of agreement, see van der
+    Eijk (2001).
+<p>
+<p>
+<b><u>Examples</u></b>
+<p>
+    <b>. bysort country: agrm socsec</b>
+<p>
+    <b>. agrm tax environment, generate(agreement)</b>
+<p>
+    <b>. agrm socsec, categories(5)</b>
+<p>
+    <b>. agrm tax, bounds(0 1) missing(99) detail</b>
+<p>
+<p>
+<b><u>Saved results</u></b>
+<p>
+    <b>agrm</b> saves the following in <b>r()</b>:
+<p>
+      <b>r(mean)</b>     mean
+      <b>r(min)</b>      minimum
+      <b>r(max)</b>      maximum
+      <b>r(sd)</b>       standard deviation
+      <b>r(A)</b>        measure of agreement "A"
+<p>
+<b><u>Refereces</u></b>
+<p>
+    van der Eijk, Cees. 2001. "Measuring Agreement in Ordered Rating Scales."
+    <i>Quality and Quantity</i> 35 (3): 325-341.
+<p>
+<p>
+<b><u>Author</u></b>
+<p>
+    A. Ecker, Department of Government, University of Vienna. Please email to
+    alejandro.ecker@univie.ac.at if you observe any problems.
+<p>
+</pre>

@@ -1,0 +1,161 @@
+<pre>
+<b>help mata mz_reshape()</b>
+-------------------------------------------------------------------------------
+<p>
+<b><u>Title</u></b>
+<p>
+    <b>mz_reshape() -- Remodels a matrix according both to specified rows and</b>
+              <b>columns</b>
+<p>
+<p>
+<b><u>Syntax</u></b>
+<p>
+    <i>transmorphic matrix</i> <b>mz_reshape(</b><i>x</i><b>,</b> <i>m</i><b>,</b> <i>n</i><b>)</b>
+<p>
+<p>
+    where
+<p>
+            <i>x</i>:  <i>transmorphic matrix</i>
+<p>
+            <i>m</i>:  <i>real scalar</i> containing the new row dimension
+<p>
+            <i>n</i>:  <i>real scalar</i> containing the new column dimension
+<p>
+<p>
+<b><u>Description</u></b>
+<p>
+    <b>mz_reshape()</b> returns a new matrix which is the matrix <i>x</i> remodeled to a
+    matrix with <i>m</i> rows and <i>n</i> columns. <b>mz_reshape()</b> is similar to <b>mata</b>
+    official built in functions <b>[M-5] colshape()</b> and <b>[M-5] rowshape()</b>. But it
+    is more flexible in that the user can set the number of rows and columns
+    he/she wants for the new matrix. That makes that <b>mz_reshape()</b> performs
+    transformations where both <b>[M-5] colshape()</b> and <b>[M-5] rowshape()</b> returns
+    errors.  <b>mz_reshape()</b> forms matrices by row. <b>mz_reshape()</b> returns to the
+    first components of <i>x</i> and gets components from there if there are less
+    components in <i>x</i> to make the new matrix.  The lingering components are
+    left over if there are more components in <i>x</i> than in the new matrix.
+<p>
+<p>
+<b><u>Remarks</u></b>
+<p>
+    Examples:
+<p>
+        : x
+                1    2    3    4
+            +---------------------+
+          1 |  50   51   52   53  |
+          2 |  54   55   56   57  |
+          3 |  58   59   60   61  |
+          4 |  62   63   64   65  |
+            +---------------------+
+<p>
+        : mz_reshape(x, 2, 8)
+                1    2    3    4    5    6    7    8
+            +-----------------------------------------+
+          1 |  50   51   52   53   54   55   56   57  |
+          2 |  58   59   60   61   62   63   64   65  |
+            +-----------------------------------------+
+<p>
+        : mz_reshape(x, 2, 6)
+                1    2    3    4    5    6
+            +-------------------------------+
+          1 |  50   51   52   53   54   55  |
+          2 |  56   57   58   59   60   61  |
+            +-------------------------------+
+<p>
+        : mz_reshape(x, 8, 2)
+                1    2
+            +-----------+
+          1 |  50   51  |
+          2 |  52   53  |
+          3 |  54   55  |
+          4 |  56   57  |
+          5 |  58   59  |
+          6 |  60   61  |
+          7 |  62   63  |
+          8 |  64   65  |
+            +-----------+
+<p>
+        : mz_reshape(x, 6, 2)
+                1    2
+            +-----------+
+          1 |  50   51  |
+          2 |  52   53  |
+          3 |  54   55  |
+          4 |  56   57  |
+          5 |  58   59  |
+          6 |  60   61  |
+            +-----------+
+        
+          If the matrix <i>x</i> has only one element
+<p>
+        : x
+                1
+            +------+
+          1 |  50  |
+            +------+
+<p>
+          We have
+<p>
+        : mz_reshape(x, 3, 5)
+                1    2    3    4    5
+            +--------------------------+
+          1 |  50   50   50   50   50  |
+          2 |  50   50   50   50   50  |
+          3 |  50   50   50   50   50  |
+            +--------------------------+
+<p>
+          Case where we have a string matrix
+<p>
+        : A
+                 1     2     3     4     5
+            +-------------------------------+
+          1 |  a11   a12   a13   a14   a15  |
+          2 |  a21   a22   a23   a24   a25  |
+          3 |  a31   a32   a33   a34   a35  |
+            +-------------------------------+
+<p>
+        : mz_reshape(A, 2, 6)
+                 1     2     3     4     5     6
+            +-------------------------------------+
+          1 |  a11   a12   a13   a14   a15   a21  |
+          2 |  a22   a23   a24   a25   a31   a32  |
+            +-------------------------------------+
+<p>
+        : mz_reshape(A, 4, 7)
+                 1     2     3     4     5     6     7
+            +-------------------------------------------+
+          1 |  a11   a12   a13   a14   a15   a21   a22  |
+          2 |  a23   a24   a25   a31   a32   a33   a34  |
+          3 |  a35   a11   a12   a13   a14   a15   a21  |
+          4 |  a22   a23   a24   a25   a31   a32   a33  |
+            +-------------------------------------------+
+<p>
+<p>
+<b><u>Conformability</u></b>
+<p>
+    <b>mz_reshape(</b><i>x</i><b>,</b> <i>m</i><b>,</b> <i>n</i><b>)</b>
+         <i>x</i>:  <i>r x c</i>
+         <i>m</i>:  <i>1 x 1</i>
+         <i>n</i>:  <i>1 x 1</i>
+    <i>result</i>:  <i>m x n</i>.
+<p>
+<p>
+<b><u>Diagnostics</u></b>
+<p>
+    None
+<p>
+<b><u>Source code</u></b>
+<p>
+    mz_reshape.mata
+<p>
+<p>
+<b><u>Author</u></b>
+<p>
+    Diallo Ibrahima Amadou, zavren@gmail.com
+<p>
+<p>
+<b><u>Also see</u></b>
+<p>
+    Online:  help for <b>[M-5] colshape()</b>, <b>[M-5] rowshape()</b>, <b>ltimbimata</b>
+</pre>

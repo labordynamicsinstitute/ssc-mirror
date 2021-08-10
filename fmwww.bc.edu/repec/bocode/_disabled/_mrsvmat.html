@@ -1,0 +1,99 @@
+<pre>
+-------------------------------------------------------------------------------
+help for <b>_mrsvmat</b>
+-------------------------------------------------------------------------------
+<p>
+<b><u>Post-</u></b><b><u>mrtab</u></b><b><u> utility</u></b>
+<p>
+<p>
+        <b>_mrsvmat</b> [ <b>,</b> <b><u>s</u></b><b>tat(</b><i>statname</i><b>)</b> <b><u>rt</u></b><b>otal</b> <b><u>ct</u></b><b>otal</b> <b><u>nop</u></b><b>ercent</b> <b><u>nol</u></b><b>abel</b> <b>clear</b> ]
+<p>
+    where <i>statname</i> is { <b><u>f</u></b><b>req</b> | <b><u>co</u></b><b>lumn</b> | <b><u>r</u></b><b>ow</b> | <b><u>ce</u></b><b>ll</b> | <b><u>rcol</u></b><b>umn</b> | <b><u>rce</u></b><b>ll</b> }
+<p>
+<p>
+<b><u>Description</u></b>
+<p>
+    <b>_mrsvmat</b> can be used after mrtab to create a data matrix from the results
+    left behind (note that the data in memory will be lost). Do not use
+    <b>_mrsvmat</b> unless you are confident that mrgraph does not meet your needs.
+<p>
+    Each row of the data created by <b>_mrsvmat</b> will represent one response
+    category. The variables are:
+<p>
+        R           Values/names of the response categories.
+<p>
+        L           Labels of the response categories (if available).
+<p>
+        C1, C2, ... Frequencies. Each variable represents one column of the
+                    two-way frequency table. In the case of one-way tables,
+                    just one variable, C1, will be created.
+<p>
+        T           Row totals (optionally).
+<p>
+<p>
+<b><u>Options</u></b>
+<p>
+    <b>clear</b> allows <b>_mrsvmat</b> to clear the data in memory without asking for
+        confirmation.
+<p>
+    <b>ctotal</b> specifies that column totals be saved.
+<p>
+    <b>nolabel</b> specifies that labels be ignored.
+<p>
+    <b>nopercent</b> specifies that relative frequencies be formatted as proportions
+        (.271) rather than percentages (27.1).
+<p>
+    <b>rtotal</b> specifies that row totals be saved.
+<p>
+    <b>stat(</b><i>statname</i><b>)</b> determines the statistic to be saved. <i>statname</i> is either
+        <b>freq</b> for raw frequencies or <b>column</b> (base: column total of
+        observations), <b>row</b> (base: row total), <b>cell</b> (base: grand total of
+        valid observations), <b>rcolumn</b> (base: column total of responses), or
+        <b>rcell</b> (base: grand total of responses) for relative frequencies.
+        <b>stat(freq)</b> is the default.
+<p>
+<p>
+<b><u>Example</u></b>
+<p>
+        . use http://fmwww.bc.edu/RePEc/bocode/d/drugs.dta
+        (1997 Survey Data on Swiss Drug Addicts)
+<p>
+        . mrtab crime1-crime5, include response(2 3) by(sex) nofreq
+        
+        . preserve
+        
+        . _mrsvmat, stat(column) ctotal rtotal clear
+        
+        . list, clean string(20)
+        
+                    R   L                              C1         C2          T
+&gt;  
+          1.   crime1   hit someone              14.46281   14.15663   14.23841
+&gt;  
+          2.   crime2   use a weapon against..   1.652893   3.313253   2.869757
+&gt;  
+          3.   crime3   sexual harassment, r..   12.80992          0   3.421633
+&gt;  
+          4.   crime4   robbery (including d..   13.22314   9.939759   10.81678
+&gt;  
+          5.   crime5   blackmail                5.785124   2.108434   3.090508
+&gt;  
+          6.        T   Total                    47.93388   29.51807   34.43708
+&gt;  
+<p>
+        . generate x=_n
+        
+        . scatter C1 C2 x in 1/5, xtitle(Type of crime) ytitle(Percent)
+           title(Criminal experiences (as a victim))
+        
+<p>
+<b><u>Author</u></b>
+<p>
+    Ben Jann, ETH Zurich, jann@soz.gess.ethz.ch
+<p>
+<p>
+<b><u>Also see</u></b>
+<p>
+    Manual:  <b>[P] matrix mkmat</b>
+<p>
+</pre>
