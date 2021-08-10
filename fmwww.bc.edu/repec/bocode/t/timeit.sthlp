@@ -1,5 +1,5 @@
 {smcl}
-{* *! version 1.1.2 14jan19}{...}
+{* *! version 1.2.0 10jun2021}{...}
 {findalias asfradohelp}{...}
 {title:timeit}
 

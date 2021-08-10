@@ -31,7 +31,7 @@ d Requires: Stata version 10.1
 d
 d Distribution-Date: 20200215
 d
-d Author:  Matthew Blackwell, Harvard University
+d Author:  Matthew Blackwell, Harvard University 
 d Support: email mblackwell@@gov.harvard.edu
 d
 d Author: Stefano Iacus, University of Milan
@@ -50,4 +50,4 @@ f ../i/imb.sthlp
 f ../l/listwise.ado
 f ../l/listwise.sthlp
 f ../l/lcem.mlib
-F cem-mata.do
+f cem-mata.do

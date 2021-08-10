@@ -9,13 +9,16 @@ d extension, then the log file will have .log as an additional
 d extension (so dolog will not overwrite the original do-file).
 d Arguments are allowed (as with do). 
 d
+d KW: CPRD
+d KW: data management
+d KW: entity conversion
 d
 d Requires: Stata version 16
 d
-d Distribution-Date: 20190629
+d Distribution-Date: 20210707
 d
-d Author: Roger Newson,  Imperial College London
-d Support: email r.newson@@imperial.ac.uk
+d Author: Roger Newson,  King's College London
+d Support: email roger.newson@@kcl.ac.uk
 d
 f dolog.ado
 f dolog.sthlp

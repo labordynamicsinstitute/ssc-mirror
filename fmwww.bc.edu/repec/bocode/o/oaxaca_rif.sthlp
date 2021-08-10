@@ -1,12 +1,12 @@
 {smcl}
-{* *! version 2.2 July 2019}{...}
+{* *! version 2.3 Nov 2020}{...}
 {cmd:help oaxaca_rif}
 {hline}
 
 {title:Title}
 
 {p2colset 5 19 21 2}{...}
-{p2col :{cmd:oaxaca_rif} {hline 2}}Recentered influence
+{p2col :{cmd:oaxaca_rif {hline 2}}}Recentered influence
 function decomposition: Oaxaca-Blinder
 decomposition of outcome distributional differences{p_end}
 {p2colreset}{...}
@@ -42,6 +42,7 @@ see {helpb rifvar:rifvar()} for details on options{p_end}
 {synopt :{opt scale(real)}}specify a value to rescale the recentered influence
 function (RIF) statistic; default is {cmd:scale(1)} (no rescaling){p_end}
 {synopt :{opt cluster(varname)}}specify a variable to be used as cluster{p_end}
+{synopt :{opt robust}}specify using robust standard errors{p_end}
 {synopt :{opt retain(newvar)}}specify a new variable where the generated RIF
 will be stored; for the reweighted decomposition, this option
 does not store the RIF for the counterfactual{p_end}
@@ -57,6 +58,7 @@ estimation of the reweighting factors; default is no reweight{p_end}
 estimation of the reweighting factors; default is no reweight{p_end}
 {synopt :{opt iseed(str)}}create replicable results with rank-dependent indices{p_end}
 {synopt :{opt nose}}suppress computation of standard errors. {p_end}
+{synopt :{cmd:old}} This option request using the older {cmd:rifvar} function (for replication purposes). {p_end}
 {synoptline}
 {p 4 6 2}
 {cmd:aweight}s, {cmd:fweight}s, {cmd:iweight}s, and {cmd:pweight}s are allowed;
@@ -75,6 +77,9 @@ statistics including the mean, quantiles, and Gini coefficient, among others.
 See {helpb rifvar:rifvar()} for a full list  of all statistics currently
 permitted.
 
+{pstd} The current version has changed some of the component names for easier access. 
+However, the older command is still available under the name {cmd:oaxaca_rif_old}.
+
 {pstd} 
 OB decompositions are often used to analyze average outcome gaps over two
 groups.  In combination with RIFs, they can be used to analyze outcome
@@ -91,9 +96,10 @@ the option {cmd: rwlogit()} or {cmd: rwprobit()} is used, it estimates the
 reweighted OB decomposition as described in Firpo, Fortin, and Lemieux (2018).
 
 {pstd} 
-By default, robust standard errors clustered at the individual level are
-reported.  When using {cmd: cluster()}, standard errors are estimated using this
-cluster variable.  For methods and formulas, see Jann (2008).
+By default, The standard errors of the decomposition components are computed using the delta method
+and take into account the variability induced by stochastic regressors. For methods and formulas, see Jann (2008).
+One may also request clustered standard errors {cmd: cluster()}, possibly at the individual level,
+or robust standard errors.
 
 {pstd} 
 Firpo, Fortin, and Lemieux (2018) suggest to estimate standard errors using

@@ -1,5 +1,5 @@
 {smcl}
-{* *! version 1.0  31 March 2018}{...}
+{* *! version 1.21  9 June 202}{...}
 {cmd:help moransi}
 {hline}
 
@@ -31,8 +31,9 @@
 {p2coldent:* {opt dunit}{cmd:(km}|{cmd:mi)}}specify the unit of distance (kilometers or miles){p_end}
 {synopt:{opt dms}}convert the degrees, minutes, and seconds format to a decimal format{p_end}
 {synopt:{opt app:rox}}use bilateral distance approximated by the simplified version of the Vincenty formula{p_end}
-{synopt:{opt d:etail}}display summary statistics of the bilateral distance{p_end}
+{synopt:{opt det:ail}}display summary statistics of the bilateral distance{p_end}
 {synopt:{opt nomat:save}}does not save the bilateral distance matrix on the memory{p_end}
+{synopt:{opt gen:erate}}stores the spatial lag of {varname} in the dataset.{p_end}
 {synoptline}
 {p2colreset}{...}
 {pstd}* {cmd:lat()}, {cmd:lon()}, {cmd:swm()}, {cmd:dist()}, and {cmd:dunit()}
@@ -49,35 +50,35 @@ are required.
 {title:Options}
 
 {phang}
-{opth lat(varname)} specifies the variable of latitude in the dataset.  The
-decimal format is expected in the default setting.  A positive value denotes
-the north latitude, whereas a negative value denotes the south latitude.
-{cmd:lat()} is required.
+{opth lat(varname)} specifies the variable of latitude in the dataset. The
+decimal format is expected in the default setting. A positive value denotes
+the north latitude, whereas a negative value denotes the south latitude. {cmd:lat()} is required.
 
 {phang}
-{opth lon(varname)} specifies the variable of longitude in the dataset.  The
-decimal format is expected in the default setting.  A positive value denotes
-the east longitude, whereas a negative value denotes the west longitude.
-{cmd:lon()} is required.
+{opth lon(varname)} specifies the variable of longitude in the dataset. The
+decimal format is expected in the default setting. A positive value denotes
+the east longitude, whereas a negative value denotes the west longitude. {cmd:lon()} is required.
 
 {phang}
-{opt swm(swmtype)} specifies a type of spatial weight matrix.  One of the
-following three types of spatial weight matrix must be specified: {opt bin}
-(binary), {opt exp} (exponential), or {opt pow} (power).  The distance decay
-parameter {it:#} must be specified for the exponential and power function
+{opt swm(swmtype)} specifies a type of spatial weight matrix. One of the
+following four types of spatial weight matrix must be specified: {opt bin}
+(binary), {opt knn} ({it:k}-nearest neighbor), {opt exp} (exponential), or
+{opt pow} (power). The parameter {it:k} must be specified for the {it:k}-nearest
+neighbor as follows: {cmd:swm(knn} {it:#}{cmd:)}. The distance decay parameter
+{it:#} must be specified for the exponential and power function
 types of spatial weight matrix as follows: {cmd:swm(exp} {it:#}{cmd:)} and
-{cmd:swm(pow} {it:#}{cmd:)}.  {cmd:swm()} is required.
+{cmd:swm(pow} {it:#}{cmd:)}. {cmd:swm()} is required.
 
 {phang}
 {opt dist(#)} specifies the threshold distance {it:#} for the spatial weight
-matrix.  The unit of distance is specified by the {opt dunit()} option.
-Regions located within the threshold distance {it:#} take a value of 1 in the
+matrix. The unit of distance is specified by the {opt dunit()} option. Regions
+located within the threshold distance {it:#} take a value of 1 in the
 binary spatial weight matrix or a positive value in the nonbinary spatial
-weight matrix, and take 0 otherwise.  {cmd:dist()} is required.
+weight matrix, and take 0 otherwise. {cmd:dist()} is required.
 
 {phang}
-{opt dunit}{cmd:(km}|{cmd:mi)} specifies the unit of distance.  Either {cmd:km}
-(kilometers) or {cmd:mi} (miles) must be specified.  {cmd:dunit()} is required.
+{opt dunit}{cmd:(km}|{cmd:mi)} specifies the unit of distance. Either {cmd:km}
+(kilometers) or {cmd:mi} (miles) must be specified. {cmd:dunit()} is required.
 
 {phang}
 {opt dms} converts the degrees, minutes, and seconds format to a decimal
@@ -88,10 +89,14 @@ format.
 version of the Vincenty formula.
 
 {phang}
-{opt d:etail} displays summary statistics of the bilateral distance.
+{opt det:ail} displays summary statistics of the bilateral distance.
 
 {phang}
-{opt nomat:save} does not save the bilateral distance matrix {bf:r(D)} on the memory.
+{opt nomat:save} does not save the bilateral distance matrix {bf:r(D)} and spatial
+weight matrix {bf:r(W)} on the memory.
+
+{phang}
+{opt gen:erate} stores the spatial lag of {varname} in the dataset.
 
 
 {marker examples}{...}
@@ -99,18 +104,31 @@ version of the Vincenty formula.
 
 {pstd}
 Case 1: Binary spatial weight matrix{p_end}
-{phang2}{cmd:. moransi MFIL59, lat(y_cntrd) lon(x_cntrd) swm(bin) dist(50) dunit(km) approx detail}{p_end}
+{phang2}{cmd:. moransi CRIME, lat(y_cntrd) lon(x_cntrd) swm(bin) dist(50) dunit(km)}{p_end}
 
 {pstd}
-Case 2: Nonbinary spatial weight matrix by exponential function{p_end}
-{phang2}{cmd:. moransi MFIL59, lat(y_cntrd) lon(x_cntrd) swm(exp 0.03) dist(.) dunit(km) approx detail}{p_end}
+Case 2: Knn spatial weight matrix{p_end}
+{phang2}{cmd:. moransi CRIME, lat(y_cntrd) lon(x_cntrd) swm(knn 1) dist(50) dunit(km)}{p_end}
 
 {pstd}
-Case 3: Nonbinary spatial weight matrix by power function{p_end}
-{phang2}{cmd:. moransi MFIL59, lat(y_cntrd) lon(x_cntrd) swm(pow 1) dist(.) dunit(km) approx detail}{p_end}
+Case 3: Nonbinary spatial weight matrix by exponential function{p_end}
+{phang2}{cmd:. moransi CRIME, lat(y_cntrd) lon(x_cntrd) swm(exp 0.03) dist(.) dunit(km)}{p_end}
 
 {pstd}
-Results can be displayed in a map using the {cmd:shp2dta} and {cmd:spmap} commands. 
+Case 4: Nonbinary spatial weight matrix by power function{p_end}
+{phang2}{cmd:. moransi CRIME, lat(y_cntrd) lon(x_cntrd) swm(pow 1) dist(.) dunit(km)}{p_end}
+
+{pstd}
+Case 5: {opt app:rox} option{p_end}
+{phang2}{cmd:. moransi CRIME, lat(y_cntrd) lon(x_cntrd) swm(pow 1) dist(.) dunit(km) approx}{p_end}
+
+{pstd}
+Case 6: {opt gen:erate} option{p_end}
+{phang2}{cmd:. moransi CRIME, lat(y_cntrd) lon(x_cntrd) swm(pow 1) dist(.) dunit(km) generate}{p_end}
+
+{pstd}
+Results can be displayed in a map using the {cmd:spshape2dta} and {cmd:grmap} commands for Stata 15
+or later (for the earlier version, {cmd:shp2dta} and {cmd:spmap} commands). 
 
 
 {title:Stored results}
@@ -128,6 +146,7 @@ Results can be displayed in a map using the {cmd:shp2dta} and {cmd:spmap} comman
 {synopt:{cmd:r(N)}}number of observations{p_end}
 {synopt:{cmd:r(td)}}threshold distance{p_end}
 {synopt:{cmd:r(dd)}}distance decay parameter{p_end}
+{synopt:{cmd:r(knn)}}parameter {it:k} for swm(knn #){p_end}
 {synopt:{cmd:r(dist_mean)}}mean of distance{p_end}
 {synopt:{cmd:r(dist_sd)}}standard deviation of distance{p_end}
 {synopt:{cmd:r(dist_min)}}minimum value of distance{p_end}
@@ -144,7 +163,7 @@ Results can be displayed in a map using the {cmd:shp2dta} and {cmd:spmap} comman
 {synoptset 20 tabbed}{...}
 {p2col 5 20 24 2: Matrices}{p_end}
 {synopt:{cmd:r(D)}}lower triangle distance matrix{p_end}
-
+{synopt:{cmd:r(W)}}spatial weight matrix{p_end}
 
 {marker author}{...}
 {title:Author}

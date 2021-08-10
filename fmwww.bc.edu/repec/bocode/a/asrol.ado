@@ -1,10 +1,15 @@
-*! Attaullah Shah 4.6 May 22, 2019
-*! Email: attaullah.shah@imsciences.edu.pk
-*! Version 4.6 Improves the calculation of gmean for large numbers
-*! Version 4.5 Gmean improvement
-*! Version 4.4 10May2018: product fuction improvement
-*! Support website: www.OpenDoors.Pk
-*! This version supports multiple variables and multiple statistics
+*! Attaullah Shah; Email: attaullah.shah@imsciences.edu.pk; Support website: www.FinTechProfessor.com
+*! Version 5.4: July 13, 2021 : The error 'PRODUCT():  3201  vector required' fixed. This error would occur in the calculation of product if extended missing values were present
+
+* Version 5.3: June 14, 2021 : Bug fixed related to missing value in the rangeevar
+* Version 5.2: Nov 29, 2020 : Bug fix when 0 was used in the back window
+* Version 5.1: Sep 4, 2020 : Mutilple statistics / variables can used used now in the flexible window
+* Version 5.0: Adding forward window : May 22, 2020
+* Version 4.6 Improves the calculation of gmean for large numbers
+* Version 4.5 Gmean improvement
+* Version 4.4 10May2018: product fuction improvement
+* This version supports multiple variables and multiple statistics
+
 cap prog drop asrol
 prog asrol, byable(onecall) sortpreserve
 	version 11
@@ -20,6 +25,7 @@ prog asrol, byable(onecall) sortpreserve
 		XFocal(string) 	   ///
 		ADD (real 0)      ///
 		IGnorezero       ///
+		TYPE(str)		///
 		] 
 	preserve
 	marksample touse, nov
@@ -34,8 +40,9 @@ prog asrol, byable(onecall) sortpreserve
 	foreach  z of local stat {
 		if "`z'"~="mean" & "`z'"~ = "gmean" & "`z'"~="sd"        ///
 			& "`z'"~="sum" & "`z'"~="product" & "`z'"~="median"  ///
-			& "`z'"~="count" & "`z'"~="min" & "`z'"~="max"       ///
-			& "`z'"~="first" & "`z'"~="last" & "`z'"~="missing" { 
+			& "`z'"~="count" & "`z'"~="min" & "`z'"~="max"      ///
+			& "`z'"~="first" & "`z'"~="last" & "`z'"~="missing" ///
+			& "`z'"~="skewness"{ 
 			display as error " Incorrect statistics specified!"
 			display as text "You have entered {cmd: `z'} in the {cmd: stat option}. However, only the following staticts are allowed with {help asrol}"
 			dis as res "mean, gmean, sd, sum, product, median, count, min, max, first, last, missing"
@@ -72,6 +79,13 @@ prog asrol, byable(onecall) sortpreserve
 			local XF = 3
 		}
 	}
+	if "`type'" != "" {
+		if !inlist("`type'", "s", "sample", "p", "population") {
+			display as error "Option type accepts sample or population only"
+			display as error "The default of population is used in the calculation"
+		}
+		else global type "`type'"
+	}
 	global addtofunc = `add'
 	global ignorezero `ignorezero'
 	if "`XF'" != "1" global XF 1
@@ -79,25 +93,43 @@ prog asrol, byable(onecall) sortpreserve
 
 	if "`window'"!=""{
 		local nwindow : word count `window'
-		if `nwindow'!=2 {
+		if !inrange(`nwindow', 2, 3) {
 			dis ""
-			display as error "Option window must have two arguments: rangevar and length of the rolling window"
-			display as text " e.g, If your range variable is year, then the syntax would be {opt window(year 10)}"
+			display as error "Option window must have either two arguments: rangevar and length of the rolling window, e.g., {opt window(year 10)}"
+			dis as error " Or three arguments : rangeevar, length of the backward, and the forward windows e.g., {opt window(year -10 20)}"
 			exit
 		}
 		else if `nwindow'==2 {
 			tokenize `window'
 			gettoken    rangevar window : window
-			gettoken  rollwindow window : window
+			gettoken  bw window : window
+			confirm number `bw'
+			confirm numeric variable `rangevar'
 		}
-		confirm number `rollwindow'
-		confirm numeric variable `rangevar'
-		if `rollwindow' <=1 {
-			dis ""
-			display as error "Length of the rolling window should be at least 1"
-			display as res " Alternatively, If you are interested in statistics over a grouping variable, you should omit the {opt w:indow} otpion"
-			exit
+		else if `nwindow' == 3 {
+		    local rangevar : word 1 of `window'
+			local bw : word 2 of `window'
+			local fw : word 3 of `window'
+			confirm number `bw'
+			confirm number `fw'
+			confirm numeric variable `rangevar'
+
+
+
+			if (`bw' >= `fw') {
+			    display as error "The lower bound of the window is either equal to or less than the upper bound."
+				display as error "Rolling window calculations are not possible when this is the case!"
+				exit
+			}
+
+			if `fw' == 0 {
+			    loc fw
+				loc bw = abs(`bw')
+			}
 		}
+
+		markout `touse' `rangevar'
+
 		if "`_byvars'"!="" {
 			local by "`_byvars'"
 		}
@@ -110,58 +142,155 @@ prog asrol, byable(onecall) sortpreserve
 		qui bysort `by' (`rangevar'): gen  `__000first' = _n == 1
 		qui gen `__GByVars'=sum(`__000first')
 		qui drop `__000first' 
+
 		qui by `by' : gen `__0dIf' = `rangevar' - `rangevar'[_n-1]
 
-		if  `mult'<=1 {
-			if "`stat'"=="median" {
-				if "`perc'"==""{
-					global Q = .5
+
+		loc dt = 2
+		cap qui assert `__0dIf' == 1 | `__0dIf' == .
+		if _rc == 0 loc dt = 1
+		else {
+		    cap assert `__0dIf' == 0  if `__0dIf' < 1, fast null
+			if _rc != 8 & _rc != 9 {
+				loc dt = 3
+				tempvar touse2
+				qui bysort `__GByVars' `rangevar' : gen `touse2' = _n == 1
+			} 
+		}
+
+
+		if "`fw'" == "" {
+			loc bw = abs(`bw')
+
+			if  `mult'<=1 {
+				if "`stat'"=="median" {
+					if "`perc'"==""{
+						global Q = .5
+					}
+					else {
+						confirm number `perc'
+						global Q = `perc'
+					}
 				}
-				else {
-					confirm number `perc'
-					global Q = `perc'
+
+				if "`generate'" == "" local generate "`varlist'_`stat'`bw'"
+				loc generate = subinstr("`generate'", "-", "_", .)
+				loc generate = subinstr("`generate'", " ", "", .)
+
+				mata: asrolw(				      ///
+					"`varlist'", 		         ///
+					"`__GByVars'" ,	    		///
+					"`generate'" , 	  		   ///
+					`bw',			          /// 
+					"`stat'", 	    		 ///
+					"`minimum'", 	   		///
+					"`rangevar'",	  	   /// 
+					`XF' ,    			  ///
+					"`__0dIf'" ,		 ///
+					`cversion',	        ///
+					"`touse'" 		      )
+				cap qui label var `generate' "`stat' of `varlist' in a `bw' `fw' periods rol. wind."
+			}
+			else {
+				loc windname = abs(`bw')
+				foreach v of varlist `varlist'  {
+					foreach z  of  local    stat    {
+
+						local generate "`v'_`z'`bw'"
+						loc generate = subinstr("`generate'", "-", "_", .)
+						loc generate = subinstr("`generate'", " ", "", .)
+
+						mata: asrolw(				      ///
+							"`v'", 		                 ///
+							"`__GByVars'" ,	    		///
+							"`generate'" , 	  		   ///
+							`bw',			          /// 
+							"`z'", 	    		     ///
+							"`minimum'", 	   		///
+							"`rangevar'",	  	   /// 
+							`XF' ,    			  ///
+							"`__0dIf'" ,		 ///
+							`cversion',	        ///
+							"`touse'" 		      )
+						cap qui label variable `generate' "`z' of `v' in a `bw' `fw' periods rol. wind."
+					}
 				}
 			}
 
-			if "`generate'" == "" local generate "`stat'`rollwindow'_`varlist'"
-			mata: asrolw(				      ///
-				"`varlist'", 		         ///
-				"`__GByVars'" ,	    		///
-				"`generate'" , 	  		   ///
-				`rollwindow',			  /// 
-				"`stat'", 	    		 ///
-				"`minimum'", 	   		///
-				"`rangevar'",	  	   /// 
-				`XF' ,    			  ///
-				"`__0dIf'" ,		 ///
-				`cversion',	        ///
-				"`touse'" 		      )
-			cap qui label var `generate' "`stat' of `varlist' in a `rollwindow'-periods rol. wind."
 		}
+
+
+
+
+		// If forward window
 		else {
-			foreach v of varlist `varlist'  {
-				foreach z  of  local    stat    {
-					local generate "`z'`rollwindow'_`v'"
-					mata: asrolw(				      ///
-						"`v'", 		                 ///
-						"`__GByVars'" ,	    		///
-						"`generate'" , 	  		   ///
-						`rollwindow',			  /// 
-						"`z'", 	    		     ///
-						"`minimum'", 	   		///
-						"`rangevar'",	  	   /// 
-						`XF' ,    			  ///
-						"`__0dIf'" ,		 ///
-						`cversion',	        ///
-						"`touse'" 		      )
-					cap qui label variable `generate' "`z' of `v' in a `rollwindow'-periods rol. wind."
+			if  `mult'<=1 {
+				if "`stat'"=="median" {
+					if "`perc'"==""{
+						global Q = .5
+					}
+					else {
+						confirm number `perc'
+						global Q = `perc'
+					}
+				}
+
+				if "`generate'" == "" local generate "`stat'`bw'_`varlist'"
+				loc generate = subinstr("`generate'", "-", "_", .)
+				loc generate = subinstr("`generate'", " ", "", .)
+
+				mata: asrolfw(				      ///
+					"`varlist'", 		         ///
+					"`__GByVars'" ,	    		///
+					"`generate'" , 	  		   ///
+					`bw',			  		  /// 
+					`fw',				     ///
+					"`stat'", 	    		///
+					"`minimum'", 	   	   ///
+					"`rangevar'",	  	  /// 
+					`XF' ,    			 ///
+					"`dt'" ,			///
+					"`touse2'", 	   ///
+					`cversion',	       ///
+					"`touse'" 		      )
+				cap qui label var `generate' "`stat' of `varlist' in a `bw' `fw' periods rol. wind."
+			}
+
+			// if forward window and multi
+			else {
+
+				foreach v of varlist `varlist'  {
+					foreach z  of  local    stat    {
+
+						local generate "`v'_`z'`bw'_`fw'"
+						loc generate = subinstr("`generate'", "-", "_", .)
+						loc generate = subinstr("`generate'", " ", "", .)
+
+						mata: asrolfw(				      ///
+							"`v'", 		         		 ///
+							"`__GByVars'" ,	    		///
+							"`generate'" , 	  		   ///
+							`bw',			  		  /// 
+							`fw',				     ///
+							"`z'", 	    			///
+							"`minimum'", 	   	   ///
+							"`rangevar'",	  	  /// 
+							`XF' ,    			 ///
+							"`dt'" ,			///
+							"`touse2'", 	   ///
+							`cversion',	       ///
+							"`touse'" 		      )
+						cap qui label variable `generate' "`z' of `v' in a `bw' `fw' periods rol. wind."
+					}
 				}
 			}
 		}
-	}
+	} 
+
+	// End window
 
 	else { 
-		local rollwindow = 0
+		local bw = 0
 		tempvar GByVars dup first n  dif
 		if "`_byvars'"!="" {
 			local by "`_byvars'"
@@ -173,20 +302,20 @@ prog asrol, byable(onecall) sortpreserve
 
 			gen `n'=_n
 			bysort `by' (`rangevar' `n'): gen  `first' = _n == 1
-			qui gen `GByVars'=sum(`first')
+			qui gen `GByVars' = sum(`first')
 			drop `first' `n'
 		}
 		if "`by'"=="" {
 			tempvar GByVars
 			qui gen `GByVars' = 1
-			if `XF'==3{
+			if `XF'==3 {
 				local rangevar "`xfocal'"
 				sort `GByVars' `rangevar'
 			}
 		}
 
 		if  `mult' <= 1 {
-			if   "`generate'" == ""  local    generate   "`stat'_`varlist'"
+			if   "`generate'" == ""  local    generate   "`varlist'_`stat'"
 			mata: asrolnw(		 		     ///
 				"`varlist'", 	   	 	    ///
 				"`GByVars'" ,	           ///
@@ -196,9 +325,9 @@ prog asrol, byable(onecall) sortpreserve
 				"`rangevar'", 		   /// 
 				`XF' ,   	 	      ///
 				"`touse'"   	     ///
-				                       )
-capture    quietly       label    variable  `generate' "`stat' of `varlist'"
-		
+				)
+			capture    quietly       label    variable  `generate' "`stat' of `varlist'"
+
 		}
 	    else{
 			foreach v of varlist `varlist' {
@@ -213,11 +342,30 @@ capture    quietly       label    variable  `generate' "`stat' of `varlist'"
 						"`rangevar'", 	     /// 
 						`XF' ,   	 		///
 						"`touse'"          ///
-						                     )
-capture  quietly  label  variable  `generate'   "`z' of `v'"
+						)
+					capture  quietly  label  variable  `generate'   "`z' of `v'"
 				}
 			}
 		}
 	}
 	restore, not
-end
+
+	if `mult' <= 1 {
+		if "`dt'" == "3" & `XF' != 2 {
+			qui bys `__GByVars' `rangevar': replace `generate' =`generate'[1]
+		}
+	}
+	else  {
+		foreach v of varlist `varlist' {
+			foreach z of local stat {
+				loc generate "`v'_`z'`bw'"
+				loc generate = subinstr("`generate'", "-", "_", .)
+				loc generate = subinstr("`generate'", " ", "", .)
+				qui bys `__GByVars' `rangevar': replace `generate' =`generate'[1]
+
+			}
+		}
+	}
+
+	global type
+	end

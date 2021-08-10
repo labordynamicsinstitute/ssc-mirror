@@ -28,9 +28,9 @@ d KW: Gowrisankaran
 d KW: Town
 d KW: model quality
 d
-d Requires: Stata version 14
+d Requires: Stata version 15.1
 d
-d Distribution-Date: 20191111
+d Distribution-Date: 20210728
 d
 d Author: Kelli Marquardt, University of Arizona
 d Support: email marquardtk@@email.arizona.edu
@@ -44,10 +44,10 @@ d
 f ggt.ado
 f ../c/callCcode.ado
 f ggt.sthlp
-G WIN64  ../b/bayesqual12_win.plugin      bayesqual12.plugin
-G MACINTEL64 ../b/bayesqual12_mac.plugin  bayesqual12.plugin
-G OSX.X8664 ../b/bayesqual12_mac.plugin   bayesqual12.plugin
-h bayesqual12.plugin
+G WIN64  ../b/bayesqual13_win.plugin      bayesqual13.plugin
+G MACINTEL64 ../b/bayesqual13_mac.plugin  bayesqual13.plugin
+G OSX.X8664 ../b/bayesqual13_mac.plugin   bayesqual13.plugin
+h bayesqual13.plugin
 f GGT_test_data.dta
 f GGT_Documentation_Full.pdf
 f GGT_examples.pdf

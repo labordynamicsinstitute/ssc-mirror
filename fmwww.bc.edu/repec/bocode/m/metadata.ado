@@ -1,4 +1,4 @@
-*! Part of package matrixtools v. 0.27
+*! Part of package matrixtools v. 0.28
 *! Support: Niels Henrik Bruun, niels.henrik.bruun@gmail.com
 /*
 2020-05-24 >    nhb_msa_variable_description() has been modified

@@ -1,4 +1,6 @@
-*!version 2.34 April  2020 Fernando Rios Avila
+*!version 2.4 Nov 2020 Fernando Rios Avila
+* Took out the Robust and cluster as default options. This may give users more flexibility, and avoid the "robust" problem/
+* version 2.34 April  2020 Fernando Rios Avila
 * added alert for Robust standard errors. 
 * Note to myself: How to add info about Cluster? and allow for NO SE?
 * version 2.33 April  2020 Fernando Rios Avila
@@ -29,7 +31,7 @@ program oaxaca_rif, eclass sortpreserve byable(recall)  properties( svyb )
     }
    version 12.0
    syntax anything [if] [in] [aw fw iw pw] , by(varname) rif(string)  ///
-						[ swp swap Weights(str) rwlogit(str) rwprobit(str) wgt(int -1) cluster(varname) ///
+						[old swp swap Weights(str) rwlogit(str) rwprobit(str) wgt(int -1) cluster(varname) robust ///
 								relax Noisily scale(real 1.0) retain(str) replace iseed(str) s2var(varlist) nose]
    *iseed undocumented. The idea is to make some indices reproducible
 	/*if c(stata_version)>=16 {
@@ -117,7 +119,10 @@ program oaxaca_rif, eclass sortpreserve byable(recall)  properties( svyb )
 	    * this is "cheating" for creating the data			
 	if "`retain'"!="" {
 	tempvar rifretain
-		qui:egen `rifretain'=rifvar(`y') if `touse', `rif' weight(`exp') by(`by')
+		if "`old'"=="" qui:egen `rifretain'=rifvar(`y') if `touse', `rif' weight(`exp') by(`by')
+		else           qui:egen `rifretain'=rifvar_old(`y') if `touse', `rif' weight(`exp') by(`by')
+		qui: replace `rifretain'=`rif_var'*`scale' 
+		
 		if "`replace'"!="" {
 			capture:gen double `retain'=`rifretain'
 			capture:replace    `retain'=`rifretain'
@@ -145,7 +150,9 @@ program oaxaca_rif, eclass sortpreserve byable(recall)  properties( svyb )
 		}
 		************************************************************
  		tempvar rif_var
- 		qui: egen `rif_var'=rifvar(`y') if `touse'==1, `rif' weight(`exp') by(`by') seed(`iseed')
+		if "`old'"=="" qui:egen `rif_var'=rifvar(`y') if `touse'==1, `rif' weight(`exp') by(`by') seed(`iseed')
+		else           qui:egen `rif_var'=rifvar_old(`y') if `touse'==1, `rif' weight(`exp') by(`by') seed(`iseed')
+		
 		qui: replace `rif_var'=`rif_var'*`scale'
 		 
 		
@@ -163,7 +170,7 @@ program oaxaca_rif, eclass sortpreserve byable(recall)  properties( svyb )
 		    local cnt=`cnt'+1
 		    if `cnt'==1 display in w "RIF regression group 1"
 			if `cnt'==2 display in w "RIF regression group 2"
-			rifhdreg `y' `rest2' `re' [`weight'=`exp'] if `touse'==1 & `by'==`i',  robust cluster(`cluster') rif(`rif') iseed(`iseed')
+			rifhdreg `y' `rest2' `re' [`weight'=`exp'] if `touse'==1 & `by'==`i',  `robust' cluster(`cluster') rif(`rif') iseed(`iseed')
 			tempname bf`cnt'  Vf`cnt'
 			matrix `bf`cnt''=e(b)
 			matrix `Vf`cnt''=e(V)
@@ -171,9 +178,10 @@ program oaxaca_rif, eclass sortpreserve byable(recall)  properties( svyb )
 		}
 		  
 		*qui:reg `re' if `touse'==1
-		qui:`fv'oaxaca `rif_var' `rest' `re' [`weight'=`exp'] if `touse'==1,   by(`by') w(`wgt') robust cluster(`cluster') `relax'  `se'
+		qui:`fv'oaxaca `rif_var' `rest' `re' [`weight'=`exp'] if `touse'==1,   by(`by') w(`wgt') `robust' cluster(`cluster') `relax'  `se'
  		drop `rif_var'
 		local lgd "" `e(legend)'  ""
+		local N_clust `e(N_clust)'
 		tempname b V
 		matrix `b'=e(b)
 		if "`se'"==""		matrix `V'=e(V)
@@ -275,7 +283,9 @@ program oaxaca_rif, eclass sortpreserve byable(recall)  properties( svyb )
         tempvar rifvar
 		tempvar wexp
 		qui:gen double `wexp'=`exp'*`ipw'
- 		qui:egen `rifvar'=rifvar(`y') if `touse', `rif' weight(`wexp') by(`ddy') seed(`iseed')
+ 		
+		if "`old'"=="" qui:egen `rifvar'=rifvar(`y') if `touse', `rif' weight(`wexp') by(`ddy') seed(`iseed')
+		else           qui:egen `rifvar'=rifvar_old(`y') if `touse', `rif' weight(`wexp') by(`ddy') seed(`iseed')
 		
 		** Rescaling
 		if "`scale'"!="1"  qui:replace `rifvar'=`rifvar'*`scale'
@@ -289,7 +299,7 @@ program oaxaca_rif, eclass sortpreserve byable(recall)  properties( svyb )
 		}
 			
 		if "`cluster'"!="" 	local idcluster `cluster'
-		else 				local idcluster `id'
+		*else 				local idcluster `id'
 		
 		if "`noisily'"!="" {
 		  local cnt=0
@@ -299,24 +309,27 @@ program oaxaca_rif, eclass sortpreserve byable(recall)  properties( svyb )
 		    if `cnt'==1   display in w "RIF regression group 1"
 			else if `cnt'==2   display in w "RIF regression counterfactual group"
 			else if `cnt'==3   display in w "RIF regression group 2"
-			rifhdreg `y' `rest2' `re' [`weight'=`exp'*`ipw'] if `touse'==1 & `ddy'==`i',  robust cluster(`cluster') rif(`rif') iseed(`iseed')
+			rifhdreg `y' `rest2' `re' [`weight'=`exp'*`ipw'] if `touse'==1 & `ddy'==`i',  `robust' cluster(`cluster') rif(`rif') iseed(`iseed')
 			tempname bf`cnt'  Vf`cnt'
 			matrix `bf`cnt''=e(b)
 			matrix `Vf`cnt''=e(V)
 		   }	
 		}
 		** re is the created s2var
-		qui:`fv'oaxaca `rifvar' `rest'  `re' [aw=`exp'*`ipw'] if `touse'==1 & (`ddy'==1 | `ddy'==3),   by(`ddy') w(`wgt') nodetail robust cluster(`idcluster')  `relax'   `se'
+		qui:`fv'oaxaca `rifvar' `rest'  `re' [aw=`exp'*`ipw'] if `touse'==1 & (`ddy'==1 | `ddy'==3),   by(`ddy') w(`wgt') nodetail `robust' cluster(`idcluster')  `relax'   `se'
+		local N_clust `e(N_clust)'
 		tempname b0 v0 bb vb bx vx bc vc
         matrix `b0'=e(b)
         matrix `v0'=e(V)  
 		if `wgt'==0 { 
 		   ** Delta B
-	 		qui:`fv'oaxaca `rifvar' `rest'  `re' [aw=`exp'*`ipw'] if `touse'==1 & inlist(`ddy',1,2),   by(`ddy') w(0) cluster(`idcluster')   `relax'   `se'
+	 		qui:`fv'oaxaca `rifvar' `rest'  `re' [aw=`exp'*`ipw'] if `touse'==1 & inlist(`ddy',1,2),   by(`ddy') w(0) `robust' cluster(`idcluster')   `relax'   `se'
+			local N_clust `e(N_clust)'
 			matrix `bb'=e(b)
 			matrix `vb'=e(V)
 		   ** Delta x
-			qui:`fv'oaxaca `rifvar' `rest'  `re' [aw=`exp'*`ipw'] if `touse'==1 & inlist(`ddy',2,3),   by(`ddy') w(0) cluster(`idcluster')   `relax'  `se'
+			qui:`fv'oaxaca `rifvar' `rest'  `re' [aw=`exp'*`ipw'] if `touse'==1 & inlist(`ddy',2,3),   by(`ddy') w(0) `robust' cluster(`idcluster')   `relax'  `se'
+			local N_clust `e(N_clust)'
 			matrix `bx'=e(b)
 			matrix `vx'=e(V)
 			local lgd "" `e(legend)'  ""
@@ -326,11 +339,13 @@ program oaxaca_rif, eclass sortpreserve byable(recall)  properties( svyb )
 			}
 		if `wgt'==1 {
 		   ** Delta X
-			qui:`fv'oaxaca `rifvar' `rest'  `re' [aw=`exp'*`ipw'] if `touse'==1 & inlist(`ddy',1,2),   by(`ddy') w(1) cluster(`idcluster') `relax'   `se'
+			qui:`fv'oaxaca `rifvar' `rest'  `re' [aw=`exp'*`ipw'] if `touse'==1 & inlist(`ddy',1,2),   by(`ddy') w(1) `robust' cluster(`idcluster') `relax'   `se'
+			local N_clust `e(N_clust)'
 			matrix `bx'=e(b)
 			matrix `vx'=e(V)
 		   ** Delta B
-			qui:`fv'oaxaca `rifvar' `rest'  `re' [aw=`exp'*`ipw'] if `touse'==1 & inlist(`ddy',2,3),   by(`ddy') w(1) cluster(`idcluster') `relax'   `se'
+			qui:`fv'oaxaca `rifvar' `rest'  `re' [aw=`exp'*`ipw'] if `touse'==1 & inlist(`ddy',2,3),   by(`ddy') w(1) `robust' cluster(`idcluster') `relax'   `se'
+			local N_clust `e(N_clust)'
 			matrix `bb'=e(b)
 			matrix `vb'=e(V)
 			local lgd `e(legend)'
@@ -353,10 +368,10 @@ program oaxaca_rif, eclass sortpreserve byable(recall)  properties( svyb )
 		matrix `bx1'=`bx'[.,"overall:"]
 		matrix `bx2'=`bx'[.,"explained:"]
 		matrix `bx3'=`bx'[.,"unexplained:"] 
-		matrix coleq   `bx1'="Explained"
-		matrix colname `bx1'=Group_1 Group_2 Total Pure_explained Specif_err
-		matrix coleq   `bx2'="Pure_explained"
-		matrix coleq   `bx3'="Specif_err"
+		matrix coleq   `bx1'="explained"
+		matrix colname `bx1'=group_1 group_2 total p_explained specif_err
+		matrix coleq   `bx2'="p_explained"
+		matrix coleq   `bx3'="specif_err"
 		matrix `bx'=`bx1'[.,3...],`bx2',`bx3'
         *matrix drop bx1 bx2' bx3'
 	
@@ -365,19 +380,19 @@ program oaxaca_rif, eclass sortpreserve byable(recall)  properties( svyb )
 		matrix `bb1'=`bb'[.,"overall:"]
 		matrix `bb2'=`bb'[.,"explained:"]
 		matrix `bb3'=`bb'[.,"unexplained:"] 
-		matrix coleq   `bb1'="Unexplained"
-		matrix colname `bb1'=Group_1 Group_2 Total  Reweight_err Pure_Unexplained
-		matrix coleq   `bb3'="Pure_Unexplained"
-		matrix coleq   `bb2'="Reweight_err"
+		matrix coleq   `bb1'="unexplained"
+		matrix colname `bb1'=group_1 group_2 total  rwg_error p_unexplained
+		matrix coleq   `bb3'="p_unexplained"
+		matrix coleq   `bb2'="rwg_error"
 		matrix `bb'=`bb1'[.,3...],`bb3',`bb2'
 		*matrix drop bb1 bb3 bb2
 		**Label VCOV to extract Total Explained and Total unexplained.
 		*
 		**Putting all together
 		*For Beta0
-		matrix `b0'=`b0',`bx'[.,"Explained:Total"],`bb'[.,"Unexplained:Total"] 
+		matrix `b0'=`b0',`bx'[.,"explained:total"],`bb'[.,"unexplained:total"] 
 		matrix coleq `b0'=Overall
-		matrix colname `b0'=Group_1 Group_c Group_2 Tdifference ToT_Explained ToT_Unexplained
+		matrix colname `b0'=group_1 group_c group_2 tdifference t_explained t_unexplained
 		tempname b V
 		matrix `b'=`b0',`bx',`bb'
 		**now for V0
@@ -411,7 +426,7 @@ program oaxaca_rif, eclass sortpreserve byable(recall)  properties( svyb )
 			matrix rowname `V'=`cb'
 			matrix roweq `V'=`ceqb'		
 		}
-		** returing results
+		** retoring results
 		
 	restore	
 
@@ -465,7 +480,14 @@ program oaxaca_rif, eclass sortpreserve byable(recall)  properties( svyb )
 		}
 	*capture matrix drop v0 vb vx b0 bb bx vc bc xs bs xcx bcx xc xm bm
 	ereturn local lgd `lgd'
-	ereturn local vcetype  "Robust"
+	if "`robust'`cluster'"!="" {
+		ereturn local vcetype  "Robust"
+		if "`cluster'"!="" {
+    		ereturn local vce "cluster"
+			ereturn local clustvar "`cluster'"
+			ereturn scalar N_clust =`N_clust' 
+		}
+	}
 	display_ob
 end
 
@@ -505,7 +527,7 @@ prog Display_legend
 end
 
 
-*** This part of the code was extracted from -Oaxaca-
+*** This part of the code was extracted from -Oaxaca- Jan(2008)
 
 program ParseVar, rclass
     capt ParseVarCheckNormalize, `0'
@@ -534,7 +556,7 @@ program ParseVar, rclass
         }
         if `"`base'"'=="" gettoken base: vars  // pick first
         local xvars: list vars - base
-        ret local normalize `""`cons' `vars'" "'
+        ret local normalize `" "`cons' `vars'" "'
     }
     else {
         Unab vars: `0'

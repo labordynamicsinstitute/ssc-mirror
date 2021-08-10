@@ -210,10 +210,17 @@ values at reference points on the x-axis.
 {pstd}Namur, Belgium{p_end}
 {pstd}vincenzo.verardi@fundp.ac.be{p_end}
 
-{title: Warning}
+{title:Warning}
 
 {pstd} Users of Stata versions older than 16 should use older versions of bspline as well that can be installed 
 by typing, e.g. "net install sg151_2.pkg" {p_end}
+
+{title:Remark}
+
+{pstd} The “if” and “in” conditions in semipar work in the same way as when Stata’s difference operator is used.
+xtsemipar y x1 x2 x3 if x2>=0 is the semiparametric equivalent to d.(y x*) if x2>=0. This is not necessarily the 
+same as restricting the sample before the estimations. {p_end}
+
 
 
 {title:Also see}

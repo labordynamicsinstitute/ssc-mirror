@@ -1,5 +1,5 @@
 {smcl}
-{* *! version 2.5 Fernando Rios-Avila July 2019}{...}
+{* *! version 2.6 Fernando Rios-Avila May 2021}{...}
 {cmd:help rifvar()}
 {hline}
 
@@ -19,6 +19,12 @@ functions{p_end}
 {ifin}
 [{cmd:,} {it:options}]
 
+{p 8 17 2}
+{cmd:egen} [{it:type}] {it:newvar} {cmd:=}
+{cmd:rifvar_old}{cmd:(}{it:varname}{cmd:)} 
+{ifin}
+[{cmd:,} {it:options}]
+
 {synoptset 40 tabbed}{...}
 {marker options}{...}
 {synopthdr :options}
@@ -29,7 +35,7 @@ influence
 functions (RIFs) will be estimated{p_end}
 {synopt:{opt weight(varname)}}indicate the weight to be used for the estimation of RIFs{p_end}
 {synopt:{opt seed(str)}}indicate a particular seed for replication
-of rank-dependent indices{p_end}
+of rank-dependent indices. no longer needed with newer algorithm{p_end}
 
 {marker rifopt}{...}
 {syntab:RIF_options}
@@ -115,7 +121,9 @@ is available in their respective help files{p_end}
 {cmd:egen} {cmd:rifvar()} creates a new variable, {it:newvar}, of the
 optionally specified storage type equal to the RIF of the specified statistic,
 over a set of groups specified with {cmd:by()} and considering weights
-specified by {cmd:weight()}.
+specified by {cmd:weight()}. The newest version uses {cmd:Mata} for all RIF calculations
+improving the precision and stability of some concentration and rank dependence indices. 
+For replication purposes, one can use the older program now named {cmd:rifvar_old()}
 
 
 {title:Remarks}
@@ -129,11 +137,11 @@ set of groups defined in {opt by()} and allowing for the use of weights
 {pstd}
 Because of their nature, rank-dependent indices like the concentration ratio
 may be slightly different every time if there are ties within
-observations.{p_end}
+observations. In the newest algorithm, this has been fixed, and seed is no longer needed.{p_end}
 
 {pstd}
 A similar problem is observed with indices like the Lorenz and generalized
-Lorenz coordinates.  To obtain indices that can be fully replicated, one can
+Lorenz coordinates. To obtain indices that can be fully replicated, one can
 use the option {cmd:seed()}.  This option creates an auxiliary random variable
 that is used to break the ties when ranking observations.{p_end}
 
@@ -155,7 +163,7 @@ various sources, all cited in the reference section.
 
 {pstd}
 An intuitive description of RIFs, RIF regressions, and RIF decompositions is
-provided in Rios-Avila (2019).  The appendix of that article also provides the
+provided in Rios-Avila (2020).  The appendix of that article also provides the
 exact formulas used for defining the RIFs, as well as the sources that were
 used to obtain them.
 

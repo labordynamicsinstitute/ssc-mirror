@@ -1,5 +1,5 @@
 {smcl}
-{* *! version 1.0 July 2 2019 J. N. Luchman}{...}
+{* *! version 1.0.1 April 17, 2021 J. N. Luchman}{...}
 {cmd:help domme}
 {hline}{...}
 
@@ -11,20 +11,12 @@
 {title:Syntax}
 
 {phang}
-{cmd:domme} [{cmd:(}{it:eqname1 = paramlist1}{cmd:)} 
-{cmd:(}{it:eqname2 = paramlist2}{cmd:)} ...
-{cmd:(}{it:eqnameN = paramlistN}{cmd:)}] 
+{cmd:domme} [{cmd:(}{it:eqname1 = parmnamelist1}{cmd:)} 
+{cmd:(}{it:eqname2 = parmnamelist2}{cmd:)} ...
+{cmd:(}{it:eqnameN = parmnamelistN}{cmd:)}] 
 {ifin} {weight}{cmd:,} {opt r:eg(full_estcmd)} 
 {opt f:itstat(returned_scalar | built_in_options)}
-[{cmd:{ul on}s{ul off}ets( [(}
-{it:eqnameS11 = paramlistS11}{cmd:)}...{cmd:(}{it:eqnameS1N = paramlistS1N}{cmd:) ]} ... 
-{cmd:[ (}{it:eqnameSM1 = paramlistSM1}{cmd:)}...{cmd:(}{it:eqnameSMN = paramlistSMN}{cmd:)] )}
-{cmd:{ul on}a{ul off}ll((}{it:eqname1 = paramlist1}{cmd:)}...
-{cmd:(}{it:eqnameN = paramlistN}{cmd:))} 
-{opt rop:ts(opts_list)}
-{opt nocond:itional} 
-{opt nocom:plete} 
-{opt rev:erse}]
+[{it:options}]
 
 {synoptline}
 {phang}{cmd:pweight}s, {cmd:aweight}s, {cmd:iweight}s, and {cmd:fweight}s are allowed but must 
@@ -38,7 +30,28 @@ must be accepted by the command in {opt reg()}.
 {stata ssc install domin:domin} as well and read over its help file for basic information on 
 dominance analysis.
 
-{title:Description}
+{title:Development Webpage}
+
+{phang} Additional discussion of results, options, and conceptual issues on: 
+
+{phang}{browse "http://github.com/jluchman/domme/blob/master/README.md"}
+
+{phang} Please report bugs, requests for features, and contribute to as well as follow on-going development of {cmd:domin} on:
+
+{phang}{browse "http://github.com/jluchman/domme"}
+
+{title:Table of Contents}
+
+{help domme##desc: 1. Description}
+{help domme##setup: 2. Set-up}
+{help domme##opts: 3. Options}
+{help domme##remark: 4. Final Remarks}
+{help domme##examp: 5. Examples}
+{help domme##sav: 6. Saved Results}
+{help domme##refs: 7. References}
+
+{marker desc}{...}
+{title:1. Description}
 
 {pstd}
 Dominance analysis for mulitple equation models is an extention of standard dominance analysis 
@@ -59,13 +72,14 @@ using {help constraint}s which permit each parameter estimate to be estimated fr
 data or constrained to zero in a given statistical model.  Constraining a parameter estimate to 
 zero effectively omits the parameter from estimation and it cannot contribute to model fit.
 
-{title:Set-up}
+{marker setup}{...}
+{title:2. Set-up}
 
 {pstd}
 {cmd:domme} requires that all parameters to be dominance analyzed are written out in the 
-initial {res:(eqname = paramlist)} statements.  {cmd:domme} will use the {res:(eqname = paramlist)} 
+initial {res:(eqname = parmnamelist)} statements.  {cmd:domme} will use the {res:(eqname = parmnamelist)} 
 statements (similar to those of commands like {help sureg}) to create parameter statements that 
-it will produce {help constraint:constraints} from.  Each entry in {res:paramlist} is given a 
+it will produce {help constraint:constraints} from.  Each entry in {res:parmnamelist} is given a 
 separate constraint with the associated {res:eqname}.  For example, the statement:
 
 {pstd}
@@ -84,10 +98,10 @@ such parameters would be produced by a model like {cmd:glm price mpg turn trunk 
 parameters supplied it are in the model and it is the user's responsibility to ensure that the lists 
 supplied are valid parameters in the estimated model.  
 
-{marker options}{...}
-{title:Options}
+{marker opts}{...}
+{title:3. Options}
 
-{phang}{opt reg(full_estcmd)} refers {cmd:domme} to a command that accepts {help constraint}s, 
+{phang}{opt reg(full_estimation_command)} refers {cmd:domme} to a command that accepts {help constraint}s, 
 uses {help ml} to estimate parameters, and that can produce the scalar in the {opt fitstat()} option.  
 {cmd:domme} is quite flexible and can be applied to any built-in or user-written 
 {help program}.  
@@ -114,12 +128,13 @@ for the desired fit statistic.  For example, to ask {cmd:domme} to compute McFad
 square as a fit statistic, type {res:fitstat(e(), mcf)}.  Note that {cmd:domme} has no default 
 and the user is required to provide a valid fit statistic.
 
-{phang}{opt sets()} binds together parameter estimates as a set in the all possible combinations 
+{phang}{opt sets([(eqname1_set1 = parmnamelist1_set1) ... (eqnameR_set1 = parmnamelistR_set1)] ... [ ... (eqnameR_setN = parmnamelistR_setN)])} 
+binds together parameter estimates as a set in the all possible combinations 
 ensemble. Hence, all parameter estimates in a set will always appear together and are considered a 
 single parameter estimate in the all possible combinations ensemble. 
 
 {pmore}{opt sets()} are generated in a way similar to that of the initial statements to {cmd:domme} 
-in that a series of {res:(eqname = paramlist)} statements must be provided and then bound together
+in that a series of {res:(eqname = parmnamelist)} statements must be provided and then bound together
 to produce a set.  Any set of {res:(eqname = paramlist)} in a single set must be bound by brackets 
 "{res:[]}".  For example, consider again the model {cmd:glm price mpg turn trunk foreign}.  To 
 produce two sets of parameters, one that includes {it:mpg} and {it:turn} as well as a second that 
@@ -130,7 +145,8 @@ includes {it:trunk} and {it:foreign}, the {opt sets()} type {res:sets( [(price =
 a model.  A single set can include parameters from multiple equations - in fact, doing so is 
 how independent variable dominance statistics can be computed in {cmd:domme} ... note re: independent variables ...
 
-{phang}{opt all()} defines a set of parameter estimates to be included in all the combinations in the 
+{phang}{opt all((eqname1_all = parmnamelist1_all) ... (eqnameR_all = parmnamelistR_all))} 
+defines a set of parameter estimates to be included in all the combinations in the 
 ensemble.  Thus, all parameter estimates included in the {opt all()} option are effectively used 
 as of covariates which are to be included in the model fit metric, but for which dominance 
 statistics will not be computed.  Thus, the magnitude of the overall fit statistic associated 
@@ -139,9 +155,9 @@ to the computation of dominance statistics for all the parameter estimiates to b
 analyzed. ...note this is how to take them out of the constant...
 
 {pmore}The {opt all()} statements are set up in a way identical to that of the initial statments 
-in a {res:(eqname = paramlist)} format.
+in a {res:(eqname = parmnamelist)} format.
 
-{phang}{opt ropts()} supplies the command in {opt reg()} with any relevant estimation options.  
+{phang}{opt ropts(command_options)} supplies the command in {opt reg()} with any relevant estimation options.  
 Any options formally following the comma in standard Stata syntax, besides {opt constraints()}, 
 can be supplied to the statisical model this way.  
 
@@ -166,7 +182,8 @@ However, dominance analysis can be applied to any model fit statistic
 for the interpetation of dominance statistics based on overall model fit statistics 
 that decrease with better fit (e.g., the built in AIC, BIC statistics).
 
-{title:Final Remarks}
+{marker remark}{...}
+{title:4. Final Remarks}
 
 {pstd}Any parameter estimates in the model but not in either the initial syntax for 
 to dominance analyze, the {opt sets()} option, or the {opt all()} option are assumed to act as 
@@ -186,41 +203,41 @@ with increases to the fit statistic and all marginal contributions can be obtain
 For model fit statistics that decrease with better fit (i.e., AIC, BIC, deviance), the 
 interpretation of the dominance relationships need to be reversed (see Example #2).  
 
-{title:Introductory examples}
+{marker examp}{...}
+{title:5. Examples}
 
-{phang} {cmd:webuse auto}{p_end}
+{phang} {stata sysuse auto}{p_end}
 
 {phang}Example 1: Path analysis/seemingly unrelated regression (SUR) with built in McFadden pseudo-R squared{p_end}
-{phang} {cmd:sureg (price = length foreign gear_ratio) (headroom = mpg)} {p_end}
-{phang} {cmd:domme (price = length foreign gear_ratio) (headroom = mpg), reg(sureg (price = length foreign gear_ratio) (headroom = mpg)) fitstat(e(), mcf)} {p_end}
+{phang} {stata sureg (price = length foreign gear_ratio) (headroom = mpg)} {p_end}
+{phang} {stata domme (price = length foreign gear_ratio) (headroom = mpg), reg(sureg (price = length foreign gear_ratio) (headroom = mpg)) fitstat(e(), mcf)} {p_end}
 
 {phang}Example 2: Zero-inflated Poisson with built in BIC{p_end}
-{phang} {cmd:generate zi_pr = price*foreign} {p_end}
-{phang} {cmd:zip zi_pr headroom trunk,inflate(gear_ratio turn)} {p_end}
-{phang} {cmd:domme (zi_pr = headroom trunk) (inflate = gear_ratio turn), reg(zip zi_pr headroom trunk) f(e(), bic) ropt(inflate(gear_ratio turn)) reverse} {p_end}
+{phang} {stata generate zi_pr = price*foreign} {p_end}
+{phang} {stata zip zi_pr headroom trunk,inflate(gear_ratio turn)} {p_end}
+{phang} {stata domme (zi_pr = headroom trunk) (inflate = gear_ratio turn), reg(zip zi_pr headroom trunk) f(e(), bic) ropt(inflate(gear_ratio turn)) reverse} {p_end}
 
 {phang}Example 3: Path analysis/SUR model with all option {p_end}
-{phang} {cmd:sem (foreign <- headroom) (price <- foreign length weight) (weight <- turn)} {p_end}
-{phang} {cmd:estat ic} {p_end}
-{phang} {cmd:domme (price = length foreign) (foreign = headroom), all((price = weight) (weight = turn)) reg(sem (foreign <- headroom) (price <- foreign length weight) (weight <- turn)) fitstat(e(), aic) reverse} {p_end}
+{phang} {stata sem (foreign <- headroom) (price <- foreign length weight) (weight <- turn)} {p_end}
+{phang} {stata estat ic} {p_end}
+{phang} {stata domme (price = length foreign) (foreign = headroom), all((price = weight) (weight = turn)) reg(sem (foreign <- headroom) (price <- foreign length weight) (weight <- turn)) fitstat(e(), aic) reverse} {p_end}
 
 {phang}Example 4: Generalized negative binomial with all and parmeters treated as _cons in the dominance analysis (i.e., _b[price:foreign]) {p_end}
-{phang} {cmd:gnbreg price foreign weight turn headroom, lnalpha(weight length)} {p_end}
-{phang} {cmd:domme (price = turn headroom) (lnalpha = weight length), reg(gnbreg price foreign weight turn headroom) f(e(), mcf) ropt(lnalpha(weight length)) all( (price = weight) )} {p_end}
+{phang} {stata gnbreg price foreign weight turn headroom, lnalpha(weight length)} {p_end}
+{phang} {stata domme (price = turn headroom) (lnalpha = weight length), reg(gnbreg price foreign weight turn headroom) f(e(), mcf) ropt(lnalpha(weight length)) all( (price = weight) )} {p_end}
 
 {phang}Example 5: Generalized structural equation model with factor variables{p_end}
-{phang} {cmd:webuse nlsw88, clear} {p_end}
-{phang} {cmd:gsem (wage <- union hours, regress) (south <- age ib1.race union, logit)} {p_end}
-{phang} {cmd:domme (wage = union hours) (south = age union 2.race 3.race), reg(gsem (wage <- union hours, regress) (south <- age ib1.race union, logit)) fitstat(e(), mcf)}{p_end}
+{phang} {stata sysuse nlsw88, clear} {p_end}
+{phang} {stata gsem (wage <- union hours, regress) (south <- age ib1.race union, logit)} {p_end}
+{phang} {stata domme (wage = union hours) (south = age union 2.race 3.race), reg(gsem (wage <- union hours, regress) (south <- age ib1.race union, logit)) fitstat(e(), mcf)}{p_end}
 
 {phang}Example 6: Generalized structural equation model with sets to evaluate independent variables{p_end}
-{phang} {cmd:gsem (south smsa union <- wage tenure ttl_exp, logit)} {p_end}
-{phang} {cmd:domme, reg(gsem ( south smsa union <- wage tenure ttl_exp, logit)) sets( [(south = wage) (smsa = wage) (union = wage)] [(south = tenure) (smsa = tenure) (union = tenure)] [(south = ttl_exp) (smsa = ttl_exp) (union = ttl_exp)])} 
-{cmd:fitstat(e(), mcf)} {p_end}
+{phang} {stata gsem (south union <- wage tenure ttl_exp, logit)} {p_end}
+{phang} {stata domme, reg(gsem ( south smsa union <- wage tenure ttl_exp, logit)) fitstat(e(), mcf) sets( [(south = wage) (union = wage)] [(south = tenure) (union = tenure)] [(south = ttl_exp) (union = ttl_exp)]) } 
+{p_end}
 
-
-
-{title:Saved results}
+{marker sav}{...}
+{title:6. Saved Results}
 
 {phang}{cmd:domme} saves the following results to {cmd: e()}:
 
@@ -235,11 +252,11 @@ interpretation of the dominance relationships need to be reversed (see Example #
 {synopt:{cmd:e(title)}}{cmd:Dominance analysis for multiple equations}{p_end}
 {synopt:{cmd:e(cmd)}}{cmd:domme}{p_end}
 {synopt:{cmd:e(fitstat)}}contents of the {opt fitstat()} option{p_end}
-{synopt:{cmd:e(reg)}}contents of the {opt reg()} option (before comma){p_end}
-{synopt:{cmd:e(regopts)}}contents of the {opt reg()} option (after comma){p_end}
+{synopt:{cmd:e(reg)}}contents of the {opt reg()} option{p_end}
+{synopt:{cmd:e(ropts)}}contents of the {opt ropts()} option{p_end}
 {synopt:{cmd:e(properties)}}{cmd:b}{p_end}
-{synopt:{cmd:e(set{it:#})}}variables included in {opt set(#)}{p_end}
-{synopt:{cmd:e(all)}}variables included in {opt all()}{p_end}
+{synopt:{cmd:e(set{it:#})}}parameters included in {opt set(#)}{p_end}
+{synopt:{cmd:e(all)}}parameters included in {opt all()}{p_end}
 {p2col 5 15 19 2: matrices}{p_end}
 {synopt:{cmd:e(b)}}general dominance statistics vector{p_end}
 {synopt:{cmd:e(std)}}general dominance standardized statistics vector{p_end}
@@ -249,9 +266,11 @@ interpretation of the dominance relationships need to be reversed (see Example #
 {p2col 5 15 19 2: functions}{p_end}
 {synopt:{cmd:e(sample)}}marks estimation sample{p_end}
 
-{title:References}
+{marker refs}{...}
+{title:7. References}
 
-{p 4 8 2}Luchman, J. N., Lei, X., and Kaplan, S. A. (2019/forthcoming). Relative importance analysis with multivariate models: Shifting the focus from independent variables to parameter estimates. {it:SAGE Open, x(x)}, 1–10.{p_end}
+{p 4 8 2}Luchman, J. N., Lei, X., and Kaplan, S. A. (2020). Relative importance analysis with multivariate models: Shifting the focus from independent variables to parameter estimates. 
+{it:Journal of Applied Structural Equation Modeling, 4(2)}, 40–59.{p_end}
 
 {title:Author}
 

@@ -1,6 +1,6 @@
 d 'USSWM': module to provide US state and county spatial weight (contiguity) matrices
 d
-d  This package contains two Stata data files for US state and
+d   This package contains two Stata data files for US state and
 d county level (48 contiguous states) spatial weight matrices.
 d These can be used with Maurizio Pisati's STB-60 sg162 "Tools for
 d spatial data analysis." A do-file illustrates their usage. The

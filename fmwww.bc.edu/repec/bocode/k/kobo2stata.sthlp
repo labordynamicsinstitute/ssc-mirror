@@ -1,5 +1,5 @@
 {smcl}
-{* *! version 1.05 Felix Schmieding 14/06/2020}{...}
+{* *! version 1.06 Felix Schmieding 19/07/2021}{...}
 {title:Title}
 
 {phang}
@@ -135,4 +135,4 @@ surveylabel("Label::English") choiceslabel("Label::English")
 
 {pstd}Felix Schmieding{p_end}
 {pstd}For questions or suggestions, e-mail kobo2stata@gmail.com{p_end}
-{pstd}(v1.05){p_end}
+{pstd}(v1.06){p_end}

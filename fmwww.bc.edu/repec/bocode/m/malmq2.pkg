@@ -10,12 +10,14 @@ d KW: index numbers
 d
 d Requires: Stata version 16
 d
-d Distribution-Date: 20200502
+d Distribution-Date: 20210808
 d
 d Author: Kerry Du, Shandong University
 d Support: email kerrydu@@sdu.edu.cn
 d
 f malmq2.ado
+f ../_/_get_version.ado
+f ../_/_compile_mata.ado
 f malmq2.sthlp
-f ../l/lmalmq2.mlib
+f malmq2.mata
 f ../e/exdata.dta

@@ -1,9 +1,10 @@
 * Tool to download data through the Census API
-*! Version 2.0.0 29mar21
+*! Version 2.0.2 03jun21
 * Contact jesse.wursten@kuleuven.be for bug reports/inquiries.
 
 
 * Changelog
+** 03jun21: Fixed examples
 ** 29mar21: Replacing spaces by %20, more output
 ** 01mar19: Minor fixes and help file written.
 ** 28feb19: The command is born

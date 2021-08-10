@@ -52,7 +52,7 @@ program define metaan, rclass
 	*/ BOXSCA(real 100.0) noOVERALL NOHET NULL(real 999) NULLOFF NOWARNING XLAbel(passthru) /*
 	*/ XTick(passthru) FORCE SUMMARYONLY EFFECT(string) FAVOURS(string) /*
 	*/ DOUBLE BOXOPT(string) CLASSIC DIAMOPT(string) POINTOPT(string) CIOPT(string) /*
-	*/ OLINEOPT(string) noSTATS noWT /*
+	*/ OLINEOPT(string) noSTATS noWT lcols(string) rcols(string) /*
 	*/ /*junk now*/ forestw(real -127.5) * ]
     /*temp variables used in all methods*/
     tempvar temp1 temp2 temp3 temp4

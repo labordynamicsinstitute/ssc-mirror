@@ -23,6 +23,7 @@ p use10 module to use and describe version 10 datafiles in Stata 9.2
 p use10save9 module to save matched Stata 10/11 files, from within Stata 9+, in Stata 9 format - either as new files in an automatically created directory or through replacing previous Stata 10/11 files
 p use13 module to import Stata 13 (*.dta) data into older versions of Stata
 p use13save12 module to load sets of matched Stata 13-files into Stata 10-12 and saving them in older formats readable for the Stata 10-12 user
+p usecausaldata module providing datasets used in causal analysis
 p uselab module to  list value labels and variables using them
 p useold module to provide a convenient wrapper for unicode translate in Stata 14+ 
 p usepackage module to find and install a list of user-written packages needed to run a do-file

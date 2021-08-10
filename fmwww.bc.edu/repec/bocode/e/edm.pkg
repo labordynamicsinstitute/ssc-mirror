@@ -8,7 +8,7 @@ d KW: convergent cross mapping
 d
 d Requires: Stata version 14
 d
-d Distribution-Date: 20201210
+d Distribution-Date: 20210617
 d
 d Author:   Jinjing Li, National Centre for Social and Economic Modelling, University of Canberra
 d Support: email jinjing.li@@canberra.edu.au
@@ -16,8 +16,8 @@ d
 d Author:  Michael Zyphur, University of Melbourne 
 d Support: email 
 d
-d Author: Patrick Laub, Université de Lyon
-d Support: email 
+d Author: Patrick Laub, University of Melbourne 
+d Support: email patrick.laub@unimelb.edu.au
 d
 d Author: Edoardo Tescari, NA
 d Support: email 
@@ -30,8 +30,9 @@ d Support: email
 d
 f edm.ado
 f edm.sthlp
-g MACINTEL64 edm_MacOSX_x64.plugin edm_plugin.plugin
-g WIN64 edm_Windows_x64.plugin edm_plugin.plugin
-g LINUX64 edm_Unix_x64.plugin edm_plugin.plugin
-h edm_plugin.plugin
+g MACINTEL64 edm_MacOSX_x64.plugin edm.plugin
+g MACARM64 edm_MacOSX_arm.plugin edm.plugin
+g WIN64 edm_Windows_x64.plugin edm.plugin
+g LINUX64 edm_Unix_x64.plugin edm.plugin
+h edm.plugin
 f ../c/chicago.dta

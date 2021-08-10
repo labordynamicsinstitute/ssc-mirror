@@ -55,6 +55,16 @@ and then creating a version of this intermediate file translated to {help sjlate
 However, {cmd:dotex} does not save the intermediate {help smcl:SMCL} log file,
 and does report the date and time when this intermediate log file was opened and closed.
 
+{pstd}
+{cmd:dotex} works under {help version:version control}. As in:
+
+{p 8 16}{inp:. version 15: dotex example1}{p_end}
+
+{pstd}
+However, for most do-files other than {help cscript:certification scripts},
+it is a good idea to set the Stata version using a {helpb version} statement
+inside the do-file to be executed using {cmd:dotex}.
+
 
 {title:Examples}
 
@@ -66,8 +76,8 @@ and does report the date and time when this intermediate log file was opened and
 {title:Author}
 
 {p}
-Roger Newson, Imperial College London, UK.{break}
-Email: {browse "mailto:r.newson@imperial.ac.uk":r.newson@imperial.ac.uk}
+Roger Newson, King's College London, UK.{break}
+Email: {browse "mailto:roger.newson@kcl.ac.uk":roger.newson@kcl.ac.uk}
 
 
 {title:Also see}

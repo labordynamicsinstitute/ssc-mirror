@@ -178,12 +178,10 @@ such options are compatible with {cmd:xthybrid} and that error messages produced
 {title:Authors}
 
 {p 2 4}Francisco Perales{p_end}
-{p 2 4}ARC Centre of Excellence for Children and Families over the Life Course{p_end}
-{p 2 4}Institute for Social Science Research, The University of Queensland{p_end}
+{p 2 4}School of Social Science, The University of Queensland{p_end}
 {p 2 4}f.perales@uq.edu.au{p_end}
 	
 {p 2 4}Reinhard Schunck{p_end}
-{p 2 4}GESIS - Institute for the Social Sciences, Cologne, Germany{p_end}
-{p 2 4}reinhard.schunck@gesis.org{p_end}
-	
+{p 2 4}School of Human and Social Sciences, University of Wuppertal{p_end}
+{p 2 4}schunck@uni-wuppertal.de{p_end}
 	                 

@@ -51,5 +51,5 @@ f k_other.ado
 f k_penn.ado
 f k_stuck.ado
 f k_unc.ado
-F k_other_extras.txt
-F kountry.dta
+f k_other_extras.txt
+f kountry.dta

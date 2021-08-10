@@ -1,5 +1,5 @@
 {smcl}
-{* *! version 1.0  18oct2019}{...}
+{* *! version 2.0  23jul2021}{...}
 
 {cmd: help ggt}
 {hline}
@@ -13,7 +13,7 @@
 {title:Syntax}
 
 {p 8 18 2}
-{cmdab:GGT,} 
+{cmdab:ggt,} 
 outcomevar({it:varname})
 orgchar({it:varname})
 indID({it:varname})
@@ -41,7 +41,7 @@ rates, prison rehabilitation programs based on recidivism rates, and job trainin
 {pstd}
 The parameters are estimated using Bayesian inference through Markov chain Monte Carlo techniques to simulate 
 parameters and latent variables conditional on data to determine the posterior distribution of parameters. 
-While we present the basics of the model in the associated auxiliary file "{bf:GGT_methods.pdf}," (accessed via the command: {cmd: ssc desc GGT}), 
+While we present the basics of the model in the associated auxiliary file "{bf:ggt_methods.pdf}," (accessed via the command: {cmd: ssc desc ggt}), 
 we encourage all users of this Stata function to read the GGT 
 paper to fully understand the model, assumptions underneath the model, and parameters used in the estimation. 
 
@@ -54,13 +54,13 @@ parameters via MCMC Gibbs Sampling.
 {title:Methods and Equations}
 
 {pstd}
-We include a brief, yet important, explanation of the appropriate GGT model in the auxiliary file "{bf:GGT_methods.pdf,}" which can be obtained
-via command {cmd: ssc desc GGT}. This file shows which variables and parameters are references in the calling for the GGT Stata function. 
+We include a brief, yet important, explanation of the appropriate GGT model in the auxiliary file "{bf:ggt_methods.pdf,}" which can be obtained
+via command {cmd: ssc desc ggt}. This file shows which variables and parameters are references in the calling for the ggt Stata function. 
 
 {pstd} 
 {bf:Technical Note:} Users may notice some slight differences in the model description of prior 
 distributions from that in GGT Section 2.2. These do not change the model but do make the Stata 
-code more tractable. We also describe these changes in the {bf:"GGT_methods.pdf"} file. 
+code more tractable. We also describe these changes in the {bf:"ggt_methods.pdf"} file. 
 
 
 {title:Options}
@@ -84,20 +84,20 @@ individual.
 
 {phang}
 {opt choicechar(varlist)} is required. It specifies the name of the variables that should be 
-included in the choice equation. These are the Z variables referenced in {bf:"GGT_methods.pdf"} auxiliary file. 
+included in the choice equation. These are the Z variables referenced in {bf:"ggt_methods.pdf"} auxiliary file. 
 
 
 {dlgtab:Optional Model Variables}
 
 {phang}
 {opt orgchar(varlist)} specifies the name of the variables that hold the different organization 
-characteristics. These are the k and l variables referenced in {bf:"GGT_methods.pdf"} auxiliary file.
+characteristics. These are the k and l variables referenced in {bf:"ggt_methods.pdf"} auxiliary file.
 The maximum number of variables in this varlist is 10. The variables must be categorical in nature 
 and can either be of Stata type string or factor. 
 	
 {phang}
 {opt indchar(varlist)} specifies the name of the variables that should be included in the individual 
-outcome probit equation. These are the X variables referenced in {bf:"GGT_methods.pdf"} auxiliary file.
+outcome probit equation. These are the X variables referenced in {bf:"ggt_methods.pdf"} auxiliary file.
 The maximum number of variables in this varlist is 20. 
  
 {dlgtab:Optional Model Parameters}
@@ -119,8 +119,8 @@ on choosing this value. The default is 0.038416.
 
 {phang}
 {opt priortau(real, integer)} is the hyper-parameters for the organization characteristic variance 
-hierarchical prior distributions. GGT allows users to specify the s2 and v terms in the hierarchical prior, 		
-s2 / tauo2 ~ chi2(v) for organization characteristic, o. These terms are all referenced in referenced in {bf:"GGT_methods.pdf}" auxiliary file. 
+hierarchical prior distributions. ggt allows users to specify the s2 and v terms in the hierarchical prior, 		
+s2 / tauo2 ~ chi2(v) for organization characteristic, o. These terms are all referenced in referenced in {bf:"ggt_methods.pdf}" auxiliary file. 
 The first and second numbers in priortau() are s2 and v respectively. The default is priortau(1.25,5). Users must specify both elements 
 if choosing to use this option. 
 
@@ -144,15 +144,15 @@ via the MCMC Gibbs Sampling routine.
 {title:Examples}
 
 {pstd}
-In this section, we present the data structure necessary to run {cmd:GGT} along with 
-3 examples to demonstrate different calls to the program. Please see the auxiliary file {bf:"GGT_examples.pdf"} for more 
-detailed explanation of the following data and examples. We provide the sample data, {bf:"GGT_test_data.dta"} 
+In this section, we present the data structure necessary to run {cmd:ggt} along with 
+3 examples to demonstrate different calls to the program. Please see the auxiliary file {bf:"ggt_examples.pdf"} for more 
+detailed explanation of the following data and examples. We provide the sample data, {bf:"ggt_test_data.dta"} 
 as an additional auxiliary file as well. 
 
 {bf:Data Structure}
 
 {pstd}
-Assume we are interested in hospital quality. The dataset {bf:"GGT_test_data.dta"} contains data on 
+Assume we are interested in hospital quality. The dataset {bf:"ggt_test_data.dta"} contains data on 
 300 patients and 8 hospitals. The variables include the individual patient identifier, {it:indnumber}, and the hospital identifier,
 {it:hospnum}. The patient specific variables are {it:mortality} and {it:severity}.
 The individual choice variables are {it:dist} and {it:dist2} representing the distance from each patient to each 
@@ -162,9 +162,9 @@ hospital characteristic variables, {it:hosp_size} and {it:hosp_ownership}.
 {pstd}
 In the Stata dataset, there should be an observation for each individual-hospital pair, even if the 
 individual did not choose that hospital. For example, with 300 patients and 8 hospitals, we have 
-300*8=2400 observations in the data. Please see the {bf:"GGT_test_data.dta"} auxiliary file to explore the appropriate dataset format. 
+300*8=2400 observations in the data. Please see the {bf:"ggt_test_data.dta"} auxiliary file to explore the appropriate dataset format. 
 
-{pstd}{cmd:. use GGT_test_data.dta}{p_end}
+{pstd}{cmd:. use ggt_test_data.dta}{p_end}
 
 {bf:Example 1}
 
@@ -172,8 +172,7 @@ individual did not choose that hospital. For example, with 300 patients and 8 ho
 Suppose we want to estimate the selection-correction hospital quality measures using all the default settings. 
 
 {pstd}{cmd:. ggt, outcomevar(mortality) orgchoice(hosp_choice) indID(indnumber) orgID(hospnum) choicechar(dist dist2)}{p_end}
-
-{pstd}complete
+{pstd}{txt}complete
 
 {pstd}
 This will apply the selection model using {it:dist} and {it:dist2} as the choice characteristics. 
@@ -190,20 +189,17 @@ deleting the first 10000 draws as burn-in.
 
 {pstd}
 {bf:Note:} The code may take several minutes to complete running due to its computational complexity. Once the 
-code is complete, the word "complete" will display on the Stata screen. If after a couple minutes the code
-does not complete or Stata simply quits, this is likely due to an error with the prior variance 
-specifications which are not compatible with the data. We suggest re-loading Stata and trying to call the program again using 
-different prior variance values. 
+code is complete, the word "complete" will display on the Stata screen. 
 
 {bf:Example 2}
 
 {pstd}
-Now, suppose we want to include the severity measure in the mortality equation and we also want to allow hospital correlation based on size and ownership. 
+Now, suppose we want to include the severity measure in the morality equation and we also want to allow hospital correlation based on size and ownership. 
 Additionally, we want to rescale the prior variances based on the structure of the data. Specifically, we want the prior variance of alpha to be 5, 
-the prior variance of gamma to be 3, selection term for delta to be 1, and the parameters for the hyperpriors to be 1 and 5.  Finally, we want to save 
+the prior variance of gamma to be 3, selection term for delta to be .1, and the parameters for the hyperpriors to be 1 and 5.  Finally, we want to save 
 the draws for each of the parameters in a csv file to the directory. 
 
-{pstd}{cmd:. ggt, outcomevar(mortality) orgchoice(hosp_choice) indID(indnumber) orgID(hospnum) choicechar(dist dist2) indchar(severity) orgchar(hosp_size hosp_ownership) alphapriorvar(5) gammapriorvar(3) deltapriorvar(1) priortau(1,5) savedraws }{p_end}
+{pstd}{cmd:. ggt, outcomevar(mortality) orgchoice(hosp_choice) indID(indnumber) orgID(hospnum) choicechar(dist dist2) indchar(severity) orgchar(hosp_size hosp_ownership) alphapriorvar(5) gammapriorvar(3) deltapriorvar(.1) priortau(1,5) savedraws }{p_end}
 
 {pstd}complete
 
@@ -220,7 +216,6 @@ Note: Even though the equation we wish to estimate does not depend on patient-or
 characteristics, the code will still require choice characteristics in its estimation of alpha. 
 
 {pstd}{cmd:. ggt, outcomevar(mortality) orgchoice(hosp_choice) indID(indnumber) orgID(hospnum) choicechar(dist dist2) indchar(severity) orgchar(hosp_size hosp_ownership) alphapriorvar(5) gammapriorvar(3) priortau(1,5) noselection}{p_end}
-
 {pstd}{txt}complete
 
 

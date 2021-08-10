@@ -1,0 +1,436 @@
+# -*- coding: utf-8 -*-
+#******************************************************************************
+#   Name of the program: PYEOCPS
+#   Title of the program:Python Module for the Evaluation of Options and
+#                        Calculation of the Price Sensitivities  
+#   Version: 001
+# 
+#   This program is released under GNU General Public License, version 3.
+# 
+#   This program is free software: you can redistribute it and/or modify
+#   it under the terms of the GNU General Public License as published by
+#   the Free Software Foundation, either version 3 of the License, or
+#   (at your option) any later version.
+# 
+#   This program is distributed in the hope that it will be useful,
+#   but WITHOUT ANY WARRANTY; without even the implied warranty of
+#   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#   GNU General Public License for more details.
+# 
+#   You should have received a copy of the GNU General Public License
+#   along with this program.  If not, see <http://www.gnu.org/licenses/>.
+# 
+#   This software has been developed by Dr. Alan Mustafa under supervision of 
+#   Prof. Abdulnasser Hatemi-J (Hatemi-J, 2012).
+#   Contacts:
+#    - Prof. Abdulnasser Hatemi-J: AHatemi@uaeu.ac.ae
+#    - Dr. Alan Mustafa: Alan.Mustafa@ieee.org
+# 
+#    Date: March 2021
+#
+#    © 2021 Prof. Abdulnasser Hatemi-J and Dr. Alan Mustafa
+# 
+#******************************************************************************
+import numpy as np
+from scipy.stats import norm
+#######################################
+import tkinter as tk
+from datetime import datetime
+###############################################################################
+#                         Start of GUI
+###############################################################################
+
+
+#========================= functions =========================================
+class create_window_menu_UI(tk.Frame):
+
+    def __init__(self, master):
+        tk.Frame.__init__(self, master)
+        self.master = master
+        #============= Application Title --------------------------------------
+       
+        #============= Adding a Blank Row --------------------------------------
+        self.lblBlank = tk.Label(self, text=" ", font=("Helvetica", 8))
+        self.lblBlank.grid(row=0, column=0, columnspan=1, sticky="w")
+
+        # self.lblTitle = tk.Label(self, text="Option Pricing and Price Sensitivities via Two Alternative Methods", font=("Helvetica", 14))
+        self.lblTitle = tk.Label(self, text="Python Module for the Evaluation of Options and Calculation of Price Sensitivities", font=("Helvetica", 14))
+        self.lblTitle.grid(row=0, column=1, columnspan=11, sticky="w")
+        
+        #============= Drawing Horizontal Line --------------------------------
+        hr = tk.Frame(self,height=2,width=900,bg="green")
+        hr.grid(row=1, column=0, columnspan=12, sticky="w")
+
+       #============= Adding a Blank Row --------------------------------------
+        self.lblBlank = tk.Label(self, text=" ", font=("Helvetica", 8))
+        self.lblBlank.grid(row=2, column=0, columnspan=12, sticky="w")
+
+        #============= Sigma - The Standard Deviation -------------------------------------
+        self.lblSigma = tk.Label(self, text="sig:", font=("Helvetica", 10), justify="right")
+        self.lblSigma.grid(row=3, column=0, columnspan=1, sticky="e")        
+        
+        var_sig = tk.StringVar()
+        self.tbx_sig = tk.Entry(self, textvariable=var_sig, font=("Helvetica", 10))
+        var_sig.set(0.2)
+        self.tbx_sig.grid(row=3, column=1, columnspan=3, sticky="W")
+
+        self.lblSigmaDesc = tk.Label(self, text="The standard deviation of the original asset.", font=("Helvetica", 10, "italic"))
+        self.lblSigmaDesc.grid(row=3, column=4, columnspan=4, sticky="W")
+
+        infoText = """A copy of the report with additional decimal numbers has been added to the same folder as the program resides in. [Option_rprt_YMD_Time.txt]"""
+        self.txtFileRprtMsg = tk.Label(self, text=infoText, font=("Helvetica", 10, "italic"), anchor="w", justify="left", wraplength=250, bg='#d4d4d4')
+        self.txtFileRprtMsg.grid(row=3, column=8, columnspan=5, rowspan=7, sticky="nw")
+
+        #============= r - Risk Free Rate -------------------------------------
+        self.lbl_r = tk.Label(self, text="r:", font=("Helvetica", 10))
+        self.lbl_r.grid(row=4, column=0, columnspan=1, sticky="E")        
+        
+        var_r = tk.StringVar()
+        self.tbx_r = tk.Entry(self, textvariable=var_r, font=("Helvetica", 10))
+        var_r.set(0.05)
+        self.tbx_r.grid(row=4, column=1, columnspan=3, sticky="W")
+
+        self.lbl_r_Desc = tk.Label(self, text="The risk free rate.", font=("Helvetica", 10, "italic"))
+        self.lbl_r_Desc.grid(row=4, column=4, columnspan=4, sticky="W")        
+
+        #============= s - Spot Price of the Underlying Asset -------------------------------------
+        self.lbl_s = tk.Label(self, text="s:", font=("Helvetica", 10))
+        self.lbl_s.grid(row=5, column=0, columnspan=1, sticky="E")        
+        
+        var_s = tk.StringVar()
+        self.tbx_s = tk.Entry(self, textvariable=var_s, font=("Helvetica", 10))
+        var_s.set(1200)
+        self.tbx_s.grid(row=5, column=1, columnspan=3, sticky="W")
+
+        self.lbl_s_Desc = tk.Label(self, text="The spot price of the undelrying asset.", font=("Helvetica", 10, "italic"))
+        self.lbl_s_Desc.grid(row=5, column=4, columnspan=4, sticky="W")        
+
+        #============= T - Maturity as a Proportion of a Year -------------------------------------
+        self.lbl_T = tk.Label(self, text="T:", font=("Helvetica", 10))
+        self.lbl_T.grid(row=6, column=0, columnspan=1, sticky="E")        
+        
+        var_T = tk.StringVar()
+        self.tbx_T = tk.Entry(self, textvariable=var_T, font=("Helvetica", 10))
+        var_T.set(0.5)
+        self.tbx_T.grid(row=6, column=1, columnspan=3, sticky="W")
+
+        self.lbl_T_Desc = tk.Label(self, text="Maturity as a proportion of a year.", font=("Helvetica", 10, "italic"))
+        self.lbl_T_Desc.grid(row=6, column=4, columnspan=4, sticky="W")        
+
+        #============= k - Exercise price of the option -------------------------------------
+        self.lbl_k = tk.Label(self, text="k:", font=("Helvetica", 10))
+        self.lbl_k.grid(row=7, column=0, columnspan=1, sticky="E")        
+        
+        var_k = tk.StringVar()
+        self.tbx_k = tk.Entry(self, textvariable=var_k, font=("Helvetica", 10))
+        var_k.set(1250)
+        self.tbx_k.grid(row=7, column=1, columnspan=3, sticky="W")
+
+        self.lbl_k_Desc = tk.Label(self, text="Exercise price of the option.", font=("Helvetica", 10, "italic"))
+        self.lbl_k_Desc.grid(row=7, column=4, columnspan=4, sticky="W")
+
+        #============= q - Dividend as a proportion of the share price -------------------------------------
+        self.lbl_q = tk.Label(self, text="q:", font=("Helvetica", 10))
+        self.lbl_q.grid(row=8, column=0, columnspan=1, sticky="E")        
+        
+        var_q = tk.StringVar()
+        self.tbx_q = tk.Entry(self, textvariable=var_q, font=("Helvetica", 10))
+        var_q.set(0.02)
+        self.tbx_q.grid(row=8, column=1, columnspan=3, sticky="W")
+
+        self.lbl_q_Desc = tk.Label(self, text="Dividend as a proportion of the share price.", font=("Helvetica", 10, "italic"))
+        self.lbl_q_Desc.grid(row=8, column=4, columnspan=4, sticky="W")
+
+        #============= beta - Effect of a Crisis -------------------------------------
+        self.lbl_b = tk.Label(self, text="beta:", font=("Helvetica", 10))
+        self.lbl_b.grid(row=9, column=0, columnspan=1, sticky="E")        
+        
+        var_b = tk.StringVar()
+        self.tbx_b = tk.Entry(self, textvariable=var_b, font=("Helvetica", 10))
+        var_b.set(0.5)
+        self.tbx_b.grid(row=9, column=1, columnspan=3, sticky="W")
+
+        self.lbl_b_Desc = tk.Label(self, text="The pramater value that accounts for the effect of a crisis in the El-Khatib and Hatemi-J model.", font=("Helvetica", 10, "italic"), wraplength=250, justify="left")
+        self.lbl_b_Desc.grid(row=9, column=4, columnspan=4, sticky="W")
+
+        #=========================================================================================================
+        #=========================================================================================================
+        #=========================================================================================================
+ 
+        #============= Adding a Blank Row --------------------------------------
+        self.lblBlank = tk.Label(self, text=" ", font=("Helvetica", 8))
+        self.lblBlank.grid(row=74, column=0, columnspan=12, sticky="w")
+    
+        #============= Adding a Blank Cell --------------------------------------
+        self.lblBlank = tk.Label(self, text=" ", font=("Helvetica", 8))
+        self.lblBlank.grid(row=75, column=0, columnspan=1, sticky="w")
+        
+        #============= Calculate the Option --------------------------------
+        self.btnCalcOption = tk.Button(self, text="Calculate Option - based on Two Models", command=lambda: calc_option(float(self.tbx_sig.get()), float(self.tbx_r.get()), float(self.tbx_s.get()), float(self.tbx_T.get()), float(self.tbx_k.get()), float(self.tbx_q.get()), float(self.tbx_b.get()), self), font=("Helvetica", 10))
+        self.btnCalcOption.grid(row=75, column=1, columnspan=6, sticky="w")
+        
+        #============= Adding a Blank Cell --------------------------------------
+        self.lblBlank = tk.Label(self, text=" ", font=("Helvetica", 8))
+        self.lblBlank.grid(row=75, column=7, columnspan=1, sticky="w")
+        
+        #============= Close Button -------------------------------------------
+        self.btnExit = tk.Button(self, text="Close", command=self.master.destroy, font=("Helvetica", 10))
+        self.btnExit.grid(row=75, column=8, columnspan=2, sticky="w")
+
+        #============= Adding a Blank Cell --------------------------------------
+        self.lblBlank = tk.Label(self, text=" ", font=("Helvetica", 8))
+        self.lblBlank.grid(row=75, column=10, columnspan=2, sticky="w")
+
+        #============= Adding a Blank Row --------------------------------------
+        self.lblBlank = tk.Label(self, text=" ", font=("Helvetica", 8))
+        self.lblBlank.grid(row=76, column=0, columnspan=12, sticky="w")
+  
+       
+        #============= Printing Results and Credits ---------------------------------------
+
+        #============= Drawing Horizontal Line --------------------------------
+        hr = tk.Frame(self,height=2,width=900,bg="green")
+        hr.grid(row=77, column=0, columnspan=12, sticky="w")
+        
+        #============= Output Message - Black Sholes Mode       ---------------
+        self.msgOutputMsg_BlackSholes = tk.Message(self, text="", font=("Helvetica", 10), anchor="w", justify="left")
+        self.msgOutputMsg_BlackSholes.grid(row=78, column=0, columnspan=5, sticky="w")
+                 
+         #============= Adding a Blank Cell -----------------------------------
+        self.lblBlank = tk.Label(self, text=" ", font=("Helvetica", 10), anchor="w", justify="left")
+        self.lblBlank.grid(row=78, column=5, columnspan=1, sticky="w")
+                 
+        #============= Output Message - El-Khatib Hatemi Mode      ------------
+        self.msgOutputMsg_ElKhatib_Hatemi = tk.Message(self, text="", font=("Helvetica", 10), anchor="e", justify="left")
+        self.msgOutputMsg_ElKhatib_Hatemi.grid(row=78, column=6, columnspan=6, sticky="w")
+                 
+        #============= Drawing Horizontal Line --------------------------------
+        hr = tk.Frame(self,height=2,width=900,bg="green")
+        hr.grid(row=79, column=0, columnspan=12, sticky="w")
+        
+        #============= Output EndNote         ---------------------------------
+        self.msgEndNote = tk.Message(self, text="", font=("Helvetica", 8, "italic"), anchor="w", justify="left", bg="#d4d4d4")
+        self.msgEndNote.bind("<Configure>", lambda e: self.msgEndNote.configure(width=e.width-10))
+        self.msgEndNote.grid(row=80, column=0, columnspan=12, sticky="ew")
+
+###############################################################################
+#                           End of GUI                                        #
+###############################################################################
+
+###############################################################################
+#             Start of Calculations: Options                                  #
+###############################################################################
+
+def calc_option(sig,r,s,T,k,q,beta,self):
+    fileName = create_rprt_file();
+    calc_Option_BlackSholes(fileName,sig,r,s,T,k,q,self);
+    calc_Option__ElKhatib_Hatemi(fileName,sig,r,s,T,k,q,beta,self);
+    EndNote(fileName,self);
+    
+    return;
+
+################################################
+def create_rprt_file():
+
+    #=============== creating Output Report File ==============================
+    now = datetime.now()
+    dt_string2 = now.strftime("%Y%m%d_%H%M%S")
+    fileName = 'Option_rprt' + "_" + dt_string2 + '.txt'
+    output_rprt_file = open(fileName,'w')
+    output_rprt_file.write('###############################################################################\n')
+    output_rprt_file.write('#                                                                             #\n')
+    output_rprt_file.write('#                             OPTION REPORT                                   #\n')
+    output_rprt_file.write('#                                                                             #\n')
+    output_rprt_file.write('###############################################################################\n')
+    output_rprt_file.close
+    return(fileName);
+
+################################################
+def calc_Option_BlackSholes(fileName,sig,r,s,T,k,q,self):
+    row_ = 22 # number of rows
+    col_ = 2 # number of columns
+    #oBS: Option Black Scholes array
+    oBS = [ [ 0 for i in range(col_) ] for j in range(row_) ]
+    #--------------------Calculating Options based on the Black and Scholes Model ----------------------
+    S_prime = s * np.exp(-q*T); oBS[0][0] = S_prime; oBS[0][1] = "S_prime";
+    D1 = (np.log(s/k) + (r + -q + sig * sig * 0.5) * T) / (sig * np.sqrt(T)); oBS[1][0] = D1; oBS[1][1] = "D1";
+    #ND1 = cdfn(D1);
+    ND1 = norm.cdf(D1); oBS[2][0] = ND1; oBS[2][1] = "ND1";
+    D2 = D1 - sig * np.sqrt(T); oBS[3][0] = D2; oBS[3][1] = "D2";
+    ND2 = norm.cdf(D2); oBS[4][0] = ND2;  oBS[4][1] = "ND2";
+    Cc = S_prime * ND1 - (np.exp(-r * T) * k) * ND2; oBS[5][0]= Cc; oBS[5][1] = "Premium for the Call Option";
+    N_negD1 = norm.cdf(-D1); oBS[6][0]= N_negD1; oBS[6][1]= "N_neg_D1";
+    Pp = k * np.exp(-r * T) + Cc - S_prime; oBS[7][0]= Pp; oBS[7][1]= "Premium for the Put Option";
+    N_negD2 = norm.cdf(-D2); oBS[8][0]= N_negD2; oBS[8][1]= "N_negD2";
+    Np_negD1 = norm.pdf(D1); oBS[9][0]= Np_negD1; oBS[9][1]= "Np_negD1";
+    #--------------------------------------------------------------------------
+    delta_call = np.exp(-q * T) * ND1; oBS[10][0] = delta_call; oBS[10][1] = "Delta for the Call Option";
+    delta_put = 1 - ND1; oBS[11][0] = delta_put; oBS[11][1] = "Delta for the Put Option";
+    gama_call = np.exp(-q * T) * Np_negD1 / (s * sig * np.sqrt(T)); oBS[12][0] = gama_call; oBS[12][1] = "Gama for the Call Option";
+    gama_put = np.exp(-q * T) * Np_negD1 / (s * sig * np.sqrt(T)); oBS[13][0] = gama_put; oBS[13][1] = "Gama for the Put Option";
+    theta_call = (-s * Np_negD1 * sig * np.exp(-q * T) / (2 * np.sqrt(T)) + q * s * ND1 * np.exp(-q * T) - r * k * np.exp(-r * T) * ND2); oBS[14][0] = theta_call; oBS[14][1] = "Theta for the Call Option";
+    theta_put = (-s * Np_negD1 * sig * np.exp(-q * T) / (2 * np.sqrt(T)) - q * s * N_negD1 * np.exp(-q * T) + r * k * np.exp(-r * T) * N_negD2); oBS[15][0] = theta_put; oBS[15][1] = "Theta for the Put Option";
+    daily_theta_call = theta_call / 365; oBS[16][0] = daily_theta_call; oBS[16][1] = "Daily Theta for the Call Option";
+    daily_theta_put = theta_put / 365; oBS[17][0] = daily_theta_put; oBS[17][1] = "Daily Theta for the Put Option";
+    vega_call = s * np.sqrt(T) * Np_negD1 * np.exp(-q * T) / 100; oBS[18][0] = vega_call; oBS[18][1] = "Vega for the Call Option";
+    vega_put = s * np.sqrt(T) * Np_negD1 * np.exp(-q * T) / 100; oBS[19][0] = vega_put; oBS[19][1] = "Vega for the Put Option";
+    rho_call = k * T * np.exp(-r * T) * ND2/ 100; oBS[20][0] = rho_call; oBS[20][1] = "Rho for the Call Option";
+    rho_put = -k * T * np.exp(-r * T) * N_negD2/ 100; oBS[21][0] = rho_put; oBS[21][1] = "Rho for the Put Option";
+    #--------------------------------------------------------------------------
+    output_rprt_file = open(fileName,'a');
+    output_rprt_file.write('===============================================================\n');
+    output_rprt_file.write('			Via Black and Scholes (1973) model\n');
+    output_rprt_file.write('===============================================================\n');
+    
+    for i in range(0,len(oBS)):
+        output_rprt_file.write(str(oBS[i][1]) + ' = ' + str(oBS[i][0]) + '\n')
+   
+    output_rprt_file.write('\n');
+ 
+    output_rprt_file.close
+    #--------------------------------------------------------------------------
+    
+    txtEndNote = '';
+    txtEndNote = txtEndNote + '=====================================\n';
+    txtEndNote = txtEndNote + '|	Via Black and Scholes (1973) model 	   |\n';
+    txtEndNote = txtEndNote + '=====================================\n';
+    
+    txtEndNote = txtEndNote + '\n';
+
+    for i in range(0,len(oBS)):
+        txtEndNote = txtEndNote + str(oBS[i][1]) + ' = ' + str("{:.6f}".format(round(oBS[i][0], 6))) + '\n';
+
+    self.msgOutputMsg_BlackSholes["text"] = "%s" % (txtEndNote)
+
+    return;
+
+    ################################################
+def calc_Option__ElKhatib_Hatemi(fileName,sig,r,s,T,k,q,beta,self):
+    
+    row_ = 23 # number of rows
+    col_ = 2 # number of columns
+    #oEH: Optin ElKhatib Hatemi array
+    oEH = [ [ 0 for i in range(col_) ] for j in range(row_) ]
+
+    #--------------------Calculating Options based on the ElKhatib_Hatemi Model ----------------------
+    
+    X = s - beta / sig; oEH[0][0] = X; oEH[0][1] = "X";
+    S_prime = X * np.exp(-q * T); oEH[1][0] = S_prime; oEH[1][1] = "The Spot Price Adjusted for the Dividend";
+    D1 = (np.log(X/(k + (beta/sig) * np.exp(r * T))) + (r + sig * sig * 0.5) * T)/(sig * np.sqrt(T)); oEH[2][0] = D1; oEH[2][1] = "D1";
+    ND1 = norm.cdf(D1); oEH[3][0] = ND1; oEH[3][1] = "ND1";
+    D2 = D1 - sig * np.sqrt(T); oEH[4][0] = D2; oEH[4][1] = "D2";
+    ND2 = norm.cdf(D2); oEH[5][0] = ND2; oEH[5][1] = "ND2";
+    Cc = S_prime * ND1 - (np.exp(-r * T) * k + beta/sig) * ND2; oEH[6][0] = Cc; oEH[6][1] = "Premium for the Call Option";
+    N_negD1 = norm.cdf(-D1); oEH[7][0] = N_negD1; oEH[7][1] = "N_negD1";
+    Pp = k * np.exp(-r * T) + Cc - S_prime; oEH[8][0] = Pp; oEH[8][1] = "Premium for the Put Option";
+    N_negD2 = norm.cdf(-D2); oEH[9][0] = N_negD2; oEH[9][1] = "N_negD2";
+    Np_negD1 = norm.pdf(D1); oEH[10][0] = Np_negD1; oEH[10][1] = "Np_negD1";
+    #--------------------------------------------------------------------------
+    delta_call = np.exp(-q * T) * ND1; oEH[11][0] = delta_call; oEH[11][1] = "Delta for the Call Option";
+    delta_put = ND1 -1; oEH[12][0] = delta_put; oEH[12][1] = "Delta for the Put Option";
+    gama_call = np.exp(-q * T) * Np_negD1 / ((X * sig + beta * np.exp(r * T)) * np.sqrt(2 * np.pi * T)); oEH[13][0] = gama_call; oEH[13][1] = "Gama for the Call Option";
+    gama_put = np.exp(-q * T) * Np_negD1 / (X * sig * np.sqrt(T)); oEH[14][0] = gama_put; oEH[14][1] = "Gama for the Put Option";
+    theta_call = 0.5 * Np_negD1 * (-(X * sig +  beta * np.exp(r * T))/ np.sqrt(T)) + r * (beta/sig) * np.exp(r * T) * ND1 - ((r * k * (np.exp(-r * T)) + r * (beta/sig) * np.exp(r * T))) * ND2; oEH[15][0] = theta_call; oEH[15][1] = "Theta for the Call Option";
+    theta_put = theta_call + r * k * np.exp(-r * T); oEH[16][0] = theta_put; oEH[16][1] = "Theta for the Put Option";
+    daily_theta_call = theta_call / 365; oEH[17][0] = daily_theta_call; oEH[17][1] = "Daily Theta for the Call Option";
+    daily_theta_put = theta_put / 365; oEH[18][0] = daily_theta_put; oEH[18][1] = "Daily Theta for the Call Option";
+    vega_call = ((beta/(sig * sig)) * (np.exp(r * T)) * (ND2 - ND1) * 0.01) + ((Np_negD1 * np.sqrt(T))) * (X + (np.exp(r * T)) * (beta / sig)) * 0.01; oEH[19][0] = vega_call; oEH[19][1] = "Vega for the Call Option";
+    vega_put = vega_call - beta/sig/100; oEH[20][0] = vega_put; oEH[20][1] = "Vega for the Put Option";
+    rho_call = k * T * np.exp(-r * T) * ND2/100 + (beta * T / sig) * (-ND2 + ND1) * np.exp(r * T) / 100; oEH[21][0] = rho_call; oEH[21][1] = "Rho for the Call Option";
+    rho_put = rho_call - T * k * np.exp(-r * T) / 100; oEH[22][0] = rho_put; oEH[22][1] = "Rho for the Put Option";
+
+    #--------------------------------------------------------------------------
+    output_rprt_file = open(fileName,'a');
+    output_rprt_file.write('===============================================================\n');
+    output_rprt_file.write('			Via El-Khatib and Hatemi-J (2017) model\n');
+    output_rprt_file.write('===============================================================\n');
+    
+    for i in range(0,len(oEH)):
+        output_rprt_file.write(str(oEH[i][1]) + ' = ' + str(oEH[i][0]) + '\n')
+    
+    output_rprt_file.write('\n');
+    
+    output_rprt_file.close
+    #--------------------------------------------------------------------------
+    
+    txtEndNote = '';
+    txtEndNote = txtEndNote + '=====================================\n';
+    txtEndNote = txtEndNote + '|	Via El-Khatib and Hatemi-J (2017) model |\n';
+    txtEndNote = txtEndNote + '=====================================\n';
+ 
+    for i in range(0,len(oEH)):
+        txtEndNote = txtEndNote + str(oEH[i][1]) + ' = ' + str("{:.6f}".format(round(oEH[i][0], 6))) + '\n';
+
+    self.msgOutputMsg_ElKhatib_Hatemi["text"] = "%s" % (txtEndNote)
+
+    return;
+
+    ################################################
+def EndNote(fileName,self):
+
+    output_rprt_file = open(fileName,'a');
+
+    output_rprt_file.write('===============================================================================\n');
+    output_rprt_file.write('|							REFERENCES											|\n');
+    output_rprt_file.write('|	-Black F. and Scholes M. (1973), ''The Pricing of Options and Corporate		|\n');
+    output_rprt_file.write('|	Liabilities'', Journal of Political Economy,									|\n');
+    output_rprt_file.write('|  	81(3),  637-654.															|\n');
+    output_rprt_file.write('|																				|\n');
+    output_rprt_file.write('|	- El-Khatib, Y. and Hatemi-J, A. (2017), ''Option valuation and hedging in	|\n');
+    output_rprt_file.write('|	markets with a crunch'',														|\n');
+    output_rprt_file.write('|	Journal of Economic Studies, 44(5), pp. 801-815.							|\n');
+    output_rprt_file.write('|	https://doi.org/10.1108/JES-04-2016-0083.       	               			|\n');
+    output_rprt_file.write('|																				|\n');
+    output_rprt_file.write('===============================================================================\n');
+    output_rprt_file.write('\n');
+    
+    output_rprt_file.write('===============================================================================\n');
+    output_rprt_file.write('|							ADDITIONAL INFORMATION								|\n');
+    output_rprt_file.write('|																				|\n');
+    output_rprt_file.write('|	This program code is the copyright of the authors. Applications are allowed |\n');
+    output_rprt_file.write('|	only if proper reference and acknowledgments are 							|\n');
+    output_rprt_file.write('|	provided. For non-Commercial applications only. No performance guarantee is	|\n');
+    output_rprt_file.write('|	made. Bug reports are welcome. If this code is used for research or in any	|\n');
+    output_rprt_file.write('|	other code, proper attribution needs to be included.						|\n');
+    output_rprt_file.write('|																				|\n');
+    output_rprt_file.write('|	© 2021 Prof. Abdulnasser Hatemi-J and Dr. Alan Mustafa						|\n');
+    output_rprt_file.write('===============================================================================\n');
+    
+    output_rprt_file.close;
+    #--------------------------------------------------------------------------
+    
+    txtEndNote = "";
+    txtEndNote = txtEndNote + """REFERENCES:
+    - Black F. and Scholes M. (1973), 'The Pricing of Options and Corporate Liabilities', Journal of Political Economy, 81(3), 637-654.
+    - El-Khatib, Y. and Hatemi-J, A. (2017), 'Option valuation and hedging in markets with a crunch', Journal of Economic Studies, 44(5), pp. 801-815. https://doi.org/10.1108/JES-04-2016-0083.
+
+    ADDITIONAL INFORMATION:
+    This program code is the copyright of the authors. Applications are allowed only if proper reference and acknowledgments are provided. For non-Commercial 
+    applications only. No performance guarantee is made. Bug reports are welcome. If this code is used for research or in any other code, proper attribution 
+    needs to be included.
+    © 2021 Prof. Abdulnasser Hatemi-J and Dr. Alan Mustafa
+    """
+    self.msgEndNote["text"] = "%s" % (txtEndNote)
+    
+    return;    
+
+###############################################################################
+#              End of Calculations: Calculating Options             #
+###############################################################################
+
+#In our main function, create the GUI and pass it to our App class
+def main():
+#    window= Tk()
+    window= tk.Tk()
+    window.title("Evaluation of Options and Calculation of Price Sensitivities (PYEOCPS 1.0)")
+    # window.geometry('900x900')
+    window.geometry('900x900+50+50')
+    # window.resizable(width=False, height=False)
+
+    create_window_menu_UI(window).grid(row=0, column=1, columnspan=1)
+    window.mainloop()
+
+#Run the main function
+if __name__ == "__main__":
+    main()
+

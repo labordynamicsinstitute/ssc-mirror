@@ -25,8 +25,8 @@ d Requires: Stata version 13 and keyby, lablist, addinby, chardef, intext from S
 d
 d Distribution-Date: 20190224
 d
-d Author: Roger Newson, Department of Primary Care and Public Health at Imperial College London
-d Support: email r.newson@@imperial.ac.uk
+d Author: Roger Newson,  King's College London
+d Support: email roger.newson@@kcl.ac.uk
 d
 f cprd_additional.ado
 f cprd_batchnumber.ado

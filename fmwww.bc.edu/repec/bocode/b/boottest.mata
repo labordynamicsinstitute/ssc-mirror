@@ -1,4 +1,4 @@
-*! boottest 3.1.4 29 March 2021
+*! boottest 3.2.3 3 June 2021
 *! Copyright (C) 2015-21 David Roodman
 
 * This program is free software: you can redistribute it and/or modify
@@ -45,8 +45,8 @@ pointer (real matrix) pcol(real matrix A, real vector p)
 pointer (real matrix) scalar pXB(real matrix X, real matrix M) {
 	scalar r
   r = rows(M)
-	return (all(colsum(M) :== 1) & all(colsum(!M) :== r-1)?  // is M 0's but for one 1 in each col, so it's just copying/reording cols?
-             (all(diagonal(M))?  // is M just the identity matrix?
+	return (all(colsum(M) :== 1) & all(colsum(!M) :== r-1)?  // is M 0's but for one 1 in each col, so it's just copying/reordering cols?
+             (all(diagonal(M)) & rows(M)==cols(M)?  // is M just the identity matrix?
                 &X            :
                 &X[,colsum(M:*(1::r))]) :  // reorder X
              &(X * M))
@@ -54,7 +54,7 @@ pointer (real matrix) scalar pXB(real matrix X, real matrix M) {
 
 // return [X1 X2]B where X1 or X2 may have 0 cols
 pointer(real matrix) scalar pX12B(real matrix X1, real matrix X2, real matrix B)
-	return(cols(B)? (cols(X1)? (cols(X2)? &(*pXB(X1, B[|.,.\cols(X1),.|]) + *pXB(X2, B[|cols(X1)+1,.\.,.|])) : pXB(X1, B)) : pXB(X2, B)) : &J(rows(X1),0,0))
+  return(cols(B)? (cols(X1)? (cols(X2)? &(*pXB(X1, B[|.,.\cols(X1),.|]) + *pXB(X2, B[|cols(X1)+1,.\.,.|])) : pXB(X1, B)) : pXB(X2, B)) : &J(rows(X1),0,0))
 
 // return &X[|S|] with appropiate behavior if cols(X)=0 or S requests no rows (S[2,1]=0), presuming that in degenerate cases S does not specify columns
 // if retval = X, doesn't duplicate data
@@ -66,7 +66,7 @@ pointer(real matrix) scalar pXS(real matrix X, real matrix S)
 pointer (real colvector) scalar pvHadw(real matrix v, real matrix w)
 	return(w==1? &v : (v==1? &w : &(v :* w)))
 
-class boottestOLS {  // class for analyitcal OLS, 2SLS, LIML, GMM estimation--everything but iterative ML
+class boottestOLS {  // class for performing OLS
 	real scalar LIML, Fuller, ARubin, kappa, isDGP, kZ
 	real colvector y1, u1ddot, u1dddot, beta, beta0, PXy1, invXXXy1par
 	real rowvector Yendog
@@ -101,7 +101,7 @@ class boottestIVGMM extends boottestOLS {
 
 class boottest {
 	real scalar scoreBS, B, small, weighttype, null, dirty, initialized, ML, Nobs, _Nobs, kZ, kY2, kX1, sumwt, NClustVar, haswt, REst, multiplier, smallsample, quietly, FEboot, NErrClustCombs, ///
-		sqrt, hascons, LIML, Fuller, kappa, WRE, WREnonARubin, ptype, twotailed, df, df_r, ARubin, confpeak, willplot, notplotted, NumH0s, p, NBootClustVar, NErrClust, BootClust, ///
+		sqrt, hascons, LIML, Fuller, kappa, WRE, WREnonARubin, ptype, twotailed, df, df_r, ARubin, confpeak, willplot, notplotted, NumH0s, p, NBootClustVar, NErrClust, BootClust, FEdfadj, ///
 		NFE, granular, purerobust, subcluster, Nstar, BFeas, u_sd, level, ptol, MaxMatSize, Nw, enumerate, bootstrapt, q, interpolable, interpolating, interpolate_u, robust, kX2, kX
 	real matrix AR, v, ustar, CI, CT_WE, infoBootData, infoBootAll, infoErrAll, JNcapNstar, statDenom, uXAR, SuwtXA, numer0, betadev, IDCap, deltadenom_b, _Jcap, YYstar_b, YPXYstar_b, numerw
 	real colvector DistCDR, plotX, plotY, beta, ClustShare, WeightGrpStart, WeightGrpStop, gridmin, gridmax, gridpoints, numersum, uddot0, anchor, poles, invFEwt
@@ -346,8 +346,8 @@ void boottestOLS::Estimate(real colvector r1)
   beta = beta0 - dbetadr * r1
 
 void boottestARubin::Estimate(real colvector r1) {
+  beta = beta0 - dbetadr * r1
   py1par = &(*parent->py1  - *parent->pY2 * r1)
-  beta = beta0  - dbetadr * r1
 }
 
 void boottestIVGMM::MakeH() {
@@ -482,7 +482,7 @@ pointer(real matrix) scalar boottest::partialFE(pointer(real matrix) scalar pIn)
 
 void boottest::new() {
 	ARubin = LIML = Fuller = WRE = small = scoreBS = weighttype = ML = initialized = quietly = sqrt = hascons = ptype = robust = NFE = FEboot = granular = NErrClustCombs = subcluster = B = BFeas = interpolating = 0
-	twotailed = null = dirty = willplot = u_sd = bootstrapt = notplotted = 1
+	twotailed = null = dirty = willplot = u_sd = bootstrapt = notplotted = FEdfadj = 1
 	level = 95
   ptol = 1e-6
 	confpeak = MaxMatSize = .
@@ -605,8 +605,8 @@ void boottest::setID      (real matrix ID, | real scalar NBootClustVar, real sca
 	this.pID = &ID; this.NBootClustVar = editmissing(NBootClustVar,1); this.NErrClust=editmissing(NErrClust,1); setdirty(1)
 	if (cols(ID)) this.robust = 1
 }
-void boottest::setFEID(real matrix ID, real scalar NFE) {
-	this.pFEID = &ID; this.NFE = NFE; setdirty(1)
+void boottest::setFEID(real matrix ID, real scalar NFE, real scalar FEdfadj) {
+	this.pFEID = &ID; this.NFE = NFE; this.FEdfadj = FEdfadj; setdirty(1)
 }
 void boottest::setlevel(real scalar level)
 	this.level = level
@@ -1097,7 +1097,7 @@ void boottest::Init() {  // for efficiency when varying r repeatedly to make CI,
   if (df==1) setsqrt(1)  // work with t/z stats instead of F/chi2
 
   if (small)
-    multiplier = (smallsample = (_Nobs - kZ - NFE) / (_Nobs - robust)) / df  // divide by # of constraints because F stat is so defined
+    multiplier = (smallsample = (_Nobs - kZ - FEdfadj * NFE) / (_Nobs - robust)) / df  // divide by # of constraints because F stat is so defined
   else
     multiplier = smallsample = 1
 
@@ -2129,7 +2129,7 @@ real matrix boottest::combs(real scalar d) {
 
 // Like Mata's order() but does a stable sort
 real colvector boottest::stableorder(real matrix X, real rowvector idx)
-	return (order((X, (1::rows(X))), (idx,cols(X)+1)))
+  return (order((X, (1::rows(X))), (idx,cols(X)+1)))
 	
 // Stata interface
 void boottest_stata(string scalar statname, string scalar dfname, string scalar dfrname, string scalar pname, string scalar padjname, string scalar ciname, 
@@ -2137,7 +2137,7 @@ void boottest_stata(string scalar statname, string scalar dfname, string scalar 
 	real scalar kappa, real scalar ARubin, real scalar null, real scalar scoreBS, string scalar weighttype, string scalar ptype, string scalar statistic, string scalar madjtype, real scalar NumH0s,
 	string scalar X1names, string scalar Y2names, real scalar hascons, string scalar Ynames, string scalar bname, string scalar Aname, 
 	string scalar X2names, string scalar samplename, string scalar scnames, real scalar robust, string scalar IDnames, real scalar NBootClustVar, real scalar NErrClust, 
-	string scalar FEname, real scalar NFE, string scalar wtname, string scalar wttype, string scalar R1name, string scalar r1name, string scalar Rname, string scalar rname, real scalar B, string scalar repsname, string scalar repsFeasname, 
+	string scalar FEname, real scalar NFE, real scalar FEdfadj, string scalar wtname, string scalar wttype, string scalar R1name, string scalar r1name, string scalar Rname, string scalar rname, real scalar B, string scalar repsname, string scalar repsFeasname, 
 	real scalar small, string scalar diststat, string scalar distname, string scalar gridmin, string scalar gridmax, string scalar gridpoints, real scalar MaxMatSize, real scalar quietly,
 	string scalar b0name, string scalar V0name, string scalar vname, string scalar NBootClustname) {
 	real matrix X2, ID, FEID, sc, Y2, X1
@@ -2148,7 +2148,7 @@ void boottest_stata(string scalar statname, string scalar dfname, string scalar 
 
 	M._st_view(sc, ., scnames, samplename)
 	M._st_view(Y , ., Ynames , samplename)
-	M._st_view(X2, ., X2names , samplename)
+	M._st_view(X2, ., X2names, samplename)
 	if (FEname != "" ) FEID = st_data(., FEname , samplename)
 	if (IDnames != "") ID   = st_data(., IDnames, samplename)
 	if (wtname  != "") wt   = st_data(., wtname , samplename) // panelsum() doesn't like views as weights
@@ -2160,8 +2160,8 @@ void boottest_stata(string scalar statname, string scalar dfname, string scalar 
 	M.setX2(X2)
 	M.setwt (wt)
 	M.setID(ID, NBootClustVar, NErrClust)
-	M.setFEID(FEID, NFE)
-	M.setR1(st_matrix(R1name), st_matrix(r1name))
+	M.setFEID(FEID, NFE, FEdfadj)
+  M.setR1(st_matrix(R1name), st_matrix(r1name))
 	M.setR (st_matrix(Rname ), st_matrix(rname ))
 	M.setnull(null)
 	M.setsmall(small)

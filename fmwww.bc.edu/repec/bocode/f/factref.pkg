@@ -23,8 +23,8 @@ d Requires: Stata version 7.0
 d
 d Distribution-Date: 20070222
 d
-d Author: Roger Newson, National Heart and Lung Institute, Imperial College London
-d Support: email r.newson@@imperial.ac.uk
+d Author: Roger Newson,  King's College London
+d Support: email roger.newson@@kcl.ac.uk
 d
 f factref.ado
 f factref.hlp

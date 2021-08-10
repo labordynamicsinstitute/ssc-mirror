@@ -1,6 +1,7 @@
-* *! Version 1.2.0 by Francisco Perales & Reinhard Schunck 01-April-2020
+* *! Version 1.3.0 by Francisco Perales & Reinhard Schunck 31-July-2021
 * Version 1.1.0: Corrects issues which emerged when the names of existing user variables begun with certain prefixes
 * Version 1.2.0: Adds the option 'keepvars' to retain newly created variables into the data
+* Version 1.3.0: Fixes a problem with variable naming when the 'cre' option is used & makes calculations for the 'percentage' option more precise
 
 program define xthybrid, rclass
 syntax varlist(min=2) [if] [in] , Clusterid(varname) [Family(string) Link(string) cre Nonlinearities(string) RANDOMslope(varlist) Use(string) PERCentage(integer 0) TEst Full STats(string) vce(string) se t p star iterations MEGLMopts(string) KEEPvars]
@@ -45,7 +46,7 @@ display ""
 gettoken depvar indvars : varlist
 
 quietly xtreg `depvar' if `touse', i(`clusterid')
-local within_dep "floor((1-`e(rho)')*100)"
+local within_dep "(1-`e(rho)')*100"
 	if `within_dep' == 0{
 		disp in red "The dependent variable (`depvar') does not vary within clusters."
 	exit
@@ -60,7 +61,7 @@ if "`use'" != ""{
 
 foreach var of varlist `used_variables'{
 	quietly xtreg `var' if `touse'
-	local within "floor((1-`e(rho)')*100)"				
+	local within "(1-`e(rho)')*100"				
 		if `within' != 0 & `within'>`percentage'{
 			quietly{
 				bysort `clusterid': egen mEaN__`var' = mean(`var') if `touse'
@@ -79,9 +80,10 @@ foreach var of varlist `used_variables'{
 		}
 				
 		if `within' == 0 | `within'<`percentage'{
+			local within_rounded : di %4.0f `within'
 			disp in green "The variable '`var'' does not vary sufficiently within clusters"
 			disp in green "and will not be used to create additional regressors."
-			disp in yellow "[~" `within' "% of the total variance in '`var'' is within clusters]"
+			disp in yellow "[~" `within_rounded' "% of the total variance in '`var'' is within clusters]"
 			local invariant_vars "`invariant_vars' `var'"
 		}
 }
@@ -93,12 +95,14 @@ if "`cre'" != ""{
 	rename mEaN__* D__*
 	foreach variable in `indvars'{
 		capture des D__`variable', varlist
-		if !_rc rename `variable' W__`variable'
-		if _rc rename `variable' R__`variable'
-	}	
-	capture rename D__*_2 B__*_2
-	capture rename D__*_3 B__*_3
-	capture rename D__*_4 B__*_4
+		if !_rc quietly clonevar  W__`variable' = `variable'
+		if _rc quietly clonevar R__`variable' = `variable' 
+	}
+	quietly{
+		capture clonevar B__*_2 = D__*_2
+		capture clonevar B__*_3 = D__*_2
+		capture clonevar B__*_4 = D__*_2
+	}
 	local model_name "Correlated random effects model. Family: `family'. Link: `link'."
 }
 
@@ -107,12 +111,10 @@ if "`cre'" == ""{
 	rename dIfF__* W__*
 	foreach variable in `indvars'{
 		capture des B__`variable', varlist
-		if _rc gen R__`variable' = `variable' 
+		if _rc quietly gen R__`variable' = `variable' 
 	}
 	local model_name "Hybrid model. Family: `family'. Link: `link'."
 }
-
-
 
 foreach var_group in R__* W__* B__* D__*{
 	capture des `var_group', varlist
@@ -182,6 +184,8 @@ if "`test'"!=""{
 	}
 }
 if "`keepvars'"!=""{
+	capture drop mEaN__*
+	capture drop dIfF__*
 	display in yellow "Please remember to remove any variables beginning with the prefix B__, W__ or R__ from the data before executing xthybrid again"
 }
 if "`keepvars'"=="" restore

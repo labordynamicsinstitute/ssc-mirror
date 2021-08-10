@@ -20,9 +20,9 @@ d KW: Kutlu
 d KW: production frontier
 d KW: cost frontier
 d
-d Requires: Stata version 13.1 and estout from SSC (q.v.)
+d Requires: Stata version 15 and estout from SSC (q.v.)
 d
-d Distribution-Date: 20201214
+d Distribution-Date: 20210614
 d
 d Author: Mustafa Ugur Karakaplan, 	Georgetown University
 d Support: email mukarakaplan@@yahoo.com

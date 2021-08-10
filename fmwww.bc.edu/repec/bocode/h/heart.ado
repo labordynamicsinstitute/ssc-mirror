@@ -7,6 +7,7 @@ syntax	,									/// No variable required
 	   [SCAtter]								/// Displays scatter plot of hearts
 	   [PIe]									/// Displays pie chart of heart
 	   [FLIrt]									/// Displays pick up line
+	   [PRide]									/// Displays a row of hearts in the color of the pride flag
 
 // Set minimum version for this command
 	version 10
@@ -36,8 +37,10 @@ syntax	,									/// No variable required
 		
 		gen `var4' = "♥" if `var3' == 0
 		replace `var4' = "♡" if `var3' == 1
+		set graphics on
 		twoway ///
-		(scatter `var1' `var2', msymbol(none) mlabel(`var4') xtitle("") ytitle("") title("Love is in the air!"))
+		(scatter `var1' `var2', msymbol(none) mlabel(`var4') mlabc(cranberry) xtitle("") ytitle("") title("Love is in the air!") fc(maroon) ///
+			xscale(off) yscale(off))  ///
 
 		}
 		}
@@ -57,6 +60,7 @@ syntax	,									/// No variable required
 		
 		generate `var5' = 1
 		label variable `var5' "Extremely"
+		set graphics on
 		graph pie `var5', pie(1, color(lavender)) title("How cute is the person reading this?") note("Source: Survey across everyone in the universe") legend(on)
 
 		}
@@ -321,13 +325,140 @@ syntax	,									/// No variable required
 	loc n = int((252)*runiform())
 	noi di "`w`n''"
 	}
+	
+if "`pride'" != "" {
+quietly {
+set graphics off
 		
+		describe
+		
+		if r(N)<500 {
+			set obs 500
+		}
+		
+	tempvar t x y  // define the temporary variables
+	gen `t' = runiform(0, 2 * _pi)
+	sort `t'
+	gen `x' = 16*sin(`t')^3
+	gen `y' = 13*cos(`t')-5*cos(2*`t')-2*cos(3*`t')-cos(4*`t')
+	twoway (area `y' `x', leg(off) nodropbase lc(black) fc(red)), ///
+		aspect(0.8) leg(off) ///
+			xscale(off) yscale(off)  ///
+				xlabel(, nogrid) ylabel(, nogrid) ///
+					xsize(1) ysize(1) name(a_1, replace) 
+
+clear
+
+		describe
+		
+		if r(N)<500 {
+			set obs 500
+		}
+		
+	tempvar t x y  // define the temporary variables
+	gen `t' = runiform(0, 2 * _pi)
+	sort `t'
+	gen `x' = 16*sin(`t')^3
+	gen `y' = 13*cos(`t')-5*cos(2*`t')-2*cos(3*`t')-cos(4*`t')
+	twoway (area `y' `x', leg(off) nodropbase lc(black) fc(orange)), ///
+		aspect(0.8) leg(off) ///
+			xscale(off) yscale(off)  ///
+				xlabel(, nogrid) ylabel(, nogrid) ///
+					xsize(1) ysize(1) name(b_2, replace) 
+
+clear
+
+		describe
+		
+		if r(N)<500 {
+			set obs 500
+		}
+		
+	tempvar t x y  // define the temporary variables
+	gen `t' = runiform(0, 2 * _pi)
+	sort `t'
+	gen `x' = 16*sin(`t')^3
+	gen `y' = 13*cos(`t')-5*cos(2*`t')-2*cos(3*`t')-cos(4*`t')
+	twoway (area `y' `x', leg(off) nodropbase lc(black) fc(yellow)), ///
+	 aspect(0.8) ///
+	  xscale(off) yscale(off)  ///
+	  xlabel(, nogrid) ylabel(, nogrid) ///
+	  xsize(1) ysize(1) name(c_3, replace)
+
+clear
+
+		describe
+		
+		if r(N)<500 {
+			set obs 500
+		}
+		
+	tempvar t x y  // define the temporary variables
+	gen `t' = runiform(0, 2 * _pi)
+	sort `t'
+	gen `x' = 16*sin(`t')^3
+	gen `y' = 13*cos(`t')-5*cos(2*`t')-2*cos(3*`t')-cos(4*`t')
+	twoway (area `y' `x', leg(off) nodropbase lc(black) fc(green)), ///
+	 aspect(0.8) ///
+	  xscale(off) yscale(off)  ///
+	  xlabel(, nogrid) ylabel(, nogrid) ///
+	  xsize(1) ysize(1) name(d_4, replace)
+
+	  
+clear
+
+		describe
+		
+		if r(N)<500 {
+			set obs 500
+		}
+		
+	tempvar t x y  // define the temporary variables
+	gen `t' = runiform(0, 2 * _pi)
+	sort `t'
+	gen `x' = 16*sin(`t')^3
+	gen `y' = 13*cos(`t')-5*cos(2*`t')-2*cos(3*`t')-cos(4*`t')
+	twoway (area `y' `x', leg(off) nodropbase lc(black) fc(blue)), ///
+	 aspect(0.8) ///
+	  xscale(off) yscale(off)  ///
+	  xlabel(, nogrid) ylabel(, nogrid) ///
+	  xsize(1) ysize(1) name(e_5, replace)
+	  
+clear
+
+		describe
+		
+		if r(N)<500 {
+			set obs 500
+		}
+		
+	tempvar t x y  // define the temporary variables
+	gen `t' = runiform(0, 2 * _pi)
+	sort `t'
+	gen `x' = 16*sin(`t')^3
+	gen `y' = 13*cos(`t')-5*cos(2*`t')-2*cos(3*`t')-cos(4*`t')
+	twoway (area `y' `x', leg(off) nodropbase lc(black) fc(purple)), ///
+	 aspect(0.8) ///
+	  xscale(off) yscale(off)  ///
+	  xlabel(, nogrid) ylabel(, nogrid) ///
+	  xsize(1) ysize(1) name(f_6, replace)
+
+//Final graph
+	set graphics on
+	graph combine a_1 b_2 c_3 d_4 e_5 f_6, title(Happy Pride!, size(vhuge)) cols(6) 
+	  
+	  
+	  
+ }
+	}
+	
+	
 //If all options missing display line 
 
-	if "`line'" == "" & "`scatter'" == "" & "`pie'" == "" & "`flirt'" == ""{
+	if "`line'" == "" & "`scatter'" == "" & "`pie'" == "" & "`flirt'" == "" & "`pride'" == ""{
 		di "♥♥♥♥♥♥♥♥♥♥♥♥♥♥♥♥♥♥♥♥♥♥♥♥♥♥♥♥♥♥♥♥♥♥♥♥♥♥♥♥♥♥♥♥♥♥♥♥♥♥♥♥♥♥♥♥♥♥♥♥♥♥♥♥♥♥♥♥♥♥♥♥♥♥♥♥♥♥♥♥♥♥♥♥♥♥♥♥♥♥♥♥♥♥♥♥"
 	}
 		end
 		
 
-		
+

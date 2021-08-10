@@ -1,5 +1,6 @@
 #delim ;
 program define dosmcl;
+local cversion=c(version);
 version 16.0;
 *
  Execute a do-file `1', outputting to `1'.smcl,
@@ -7,7 +8,7 @@ version 16.0;
  Adapted from an example called dofile, given in net course 151,
  and installed at the KCL site by Jonathan Sterne.
 *!Author: Roger Newson
-*!Date: 27 June 2019
+*!Date: 07 July 2021
 *;
 
 syntax [ anything ] [ , * ];
@@ -29,7 +30,7 @@ mata: st_local("abdfname",pathrmsuffix(st_local("dfname")));
 *;
 tempname currentlog;
 log using `"`abdfname'.smcl"', replace name(`currentlog');
-capture noisily do `"`dfname'"' `arglist', `options';
+capture noisily version `cversion': do `"`dfname'"' `arglist', `options';
 local retcod = _rc;
 log close `currentlog';
 exit `retcod';

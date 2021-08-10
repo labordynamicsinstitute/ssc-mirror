@@ -1,0 +1,28 @@
+d 'MORANPLOT': module to produce Moran scatter plots
+d
+d  moranplot draws Moran scatterplots. Although it is currently
+d possible to draw Moran scatterplots	 using the spatlsa command,
+d but the graphics are not pretty.  The scatterplots has an ugly
+d black    background and cannot be further edited.  It cannot be
+d published in academic papers. To solve this	 problem, we
+d developed the moranplot command. This command can draw Moran
+d scatterplots of multiple    variables simultaneously, graphics
+d are standard and pretty. In addition, using grss command solves  
+d  the problem that the current picture will automatically cover
+d the previous picture in the drawing	 process of Stata. 
+d
+d KW: Moran plot
+d KW: spatial
+d KW: weighting matrix
+d
+d Requires: Stata version 16.1
+d
+d Distribution-Date: 20210808
+d
+d Author: Zhenhuan Chen, Northeast Forestry University
+d Support: email  czh2017@@nefu.edu.cn
+d
+f moranplot.ado
+f moranplot.sthlp
+f ../w/W1.spmat
+f moranplot_data.dta

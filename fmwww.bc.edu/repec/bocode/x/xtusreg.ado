@@ -9,7 +9,7 @@
  program define xtusreg, eclass
     version 14.2
  
-    syntax varlist(numeric) [if] [in]
+    syntax varlist(numeric) [if] [in] [, twostep nonormalization gamma(real 0.0) beta(real 0.0)]
     marksample touse
  
 	qui xtset
@@ -22,11 +22,22 @@
     local cnames `r(varlist)'
  
     tempname b V N
+	
+	local two = 1
+	if "`twostep'" == "" {
+	  local two = 0
+	}
+	
+	local nonormal = 1
+	if "`nonormalization'" == ""{
+	  local nonormal = 0
+	}
 
 	// The following part focuses on the case of having X
 	if "`cnames'" != "" {
 	        mata: gmm_estimation("`depvar'", "`cnames'", ///
-						 "`panelid'", "`timeid'", ///
+						 "`panelid'", "`timeid'", `two', `nonormal', ///
+						 `gamma', `beta', ///
 						 "`touse'", "`b'", "`V'", "`N'") 
  
 			local cnames L1 `cnames'
@@ -38,7 +49,8 @@
 	// The following part focuses on the case of having no X
 	if "`cnames'" == "" {
 			mata: gmm_estimation_noX("`depvar'", ///
-							 "`panelid'", "`timeid'", ///
+							 "`panelid'", "`timeid'", `two', `nonormal', ///
+							 `gamma', `beta', ///
 							 "`touse'", "`b'", "`V'", "`N'") 
  
 			local cnames L1 
@@ -67,7 +79,7 @@ void GMMc(todo, para, tauDeltat, yX, year, t0primeYears, t1primeYears, t2primeYe
 	p = cols(X)-1
 	gamma = para[1]
 	beta = ( para[2..length(para)] )'
-	beta = (beta \ 1)
+	beta = (beta \ 0)
 	
 	Eg = J((1+p)*length(t0primeYears)*length(t1primeYears)*length(t2primeYears)*length(t3primeYears),1,0)
 	index = 1
@@ -97,16 +109,18 @@ void GMMc(todo, para, tauDeltat, yX, year, t0primeYears, t1primeYears, t2primeYe
 					}
 					//Begin the Looping Contents////////////////////////////////
 					Eg[index,1] = Eg[index,1] + mean ( 
-					( select(y, year :== t3primeYear) :* select(y, year :== t3primeYear+Deltat+tau+1) - select(y, year :== t1primeYear) :* select(y, year :== t1primeYear+tau+1) ) -
-					( select(y, year :== t2primeYear) :* select(y, year :== t2primeYear+Deltat+tau) - select(y, year :== t0primeYear) :* select(y, year :== t0primeYear+tau) ) :* gamma -
-					( select(y, year :== t3primeYear) :* select(X, year :== t3primeYear+Deltat+tau+1) - select(y, year :== t1primeYear) :* select(X, year :== t1primeYear+tau+1) ) * beta
+					( select(y, year :== t3primeYear) :* select(y, year :== t3primeYear+Deltat+tau+1) :- select(y, year :== t1primeYear) :* select(y, year :== t1primeYear+tau+1) ) -
+					( select(y, year :== t2primeYear) :* select(y, year :== t2primeYear+Deltat+tau) :- select(y, year :== t0primeYear) :* select(y, year :== t0primeYear+tau) ) :* gamma -
+					( select(y, year :== t3primeYear) :* select(X, year :== t3primeYear+Deltat+tau+1) :- select(y, year :== t1primeYear) :* select(X, year :== t1primeYear+tau+1) ) * beta
 					)
 					index++
 					for( jdx = 1 ; jdx <= p ; jdx++ ){
+						sd2 = 2*(mean(X[.,jdx]:^2):-mean(X[.,jdx]):^2):^.5
+						m = mean(X[.,jdx])
 						Eg[index,1] = Eg[index,1] + mean ( 
-						( select(X[.,jdx], year :== t3primeYear) :* select(y, year :== t3primeYear+Deltat+tau+1) - select(X[.,jdx], year :== t1primeYear) :* select(y, year :== t1primeYear+tau+1) ) -
-						( select(X[.,jdx], year :== t2primeYear) :* select(y, year :== t2primeYear+Deltat+tau) - select(X[.,jdx], year :== t0primeYear) :* select(y, year :== t0primeYear+tau) ) :* gamma -
-						( select(X[.,jdx], year :== t3primeYear) :* select(X, year :== t3primeYear+Deltat+tau+1) - select(X[.,jdx], year :== t1primeYear) :* select(X, year :== t1primeYear+tau+1) ) * beta
+						( select(X[.,jdx]:+sd2:-m, year :== t3primeYear) :* select(y, year :== t3primeYear+Deltat+tau+1) :- select(X[.,jdx]:+sd2:-m, year :== t1primeYear) :* select(y, year :== t1primeYear+tau+1) ) -
+						( select(X[.,jdx]:+sd2:-m, year :== t2primeYear) :* select(y, year :== t2primeYear+Deltat+tau) :- select(X[.,jdx]:+sd2:-m, year :== t0primeYear) :* select(y, year :== t0primeYear+tau) ) :* gamma -
+						( select(X[.,jdx]:+sd2:-m, year :== t3primeYear) :* select(X, year :== t3primeYear+Deltat+tau+1) :- select(X[.,jdx]:+sd2:-m, year :== t1primeYear) :* select(X, year :== t1primeYear+tau+1) ) * beta
 						)
 						index++
 					}
@@ -181,7 +195,7 @@ void GMMs(para, tauDeltat, yX, year, t0primeYears, t1primeYears, t2primeYears, t
 	p = cols(X)-1
 	gamma = para[1]
 	beta = ( para[2..length(para)] )'
-	beta = (beta \ 1)
+	beta = (beta \ 0)
 	
 	Eg = J((1+p)*length(t0primeYears)*length(t1primeYears)*length(t2primeYears)*length(t3primeYears),Ni,0)
 	index = 1
@@ -217,10 +231,12 @@ void GMMs(para, tauDeltat, yX, year, t0primeYears, t1primeYears, t2primeYears, t
 					)'
 					index++
 					for( jdx = 1 ; jdx <= p ; jdx++ ){
+						sd2 = 2*(mean(X[.,jdx]:^2):-mean(X[.,jdx]):^2):^.5
+						m = mean(X[.,jdx])
 						Eg[index,.] = Eg[index,.] + ( 
-						( select(X[.,jdx], year :== t3primeYear) :* select(y, year :== t3primeYear+Deltat+tau+1) - select(X[.,jdx], year :== t1primeYear) :* select(y, year :== t1primeYear+tau+1) ) -
-						( select(X[.,jdx], year :== t2primeYear) :* select(y, year :== t2primeYear+Deltat+tau) - select(X[.,jdx], year :== t0primeYear) :* select(y, year :== t0primeYear+tau) ) :* gamma -
-						( select(X[.,jdx], year :== t3primeYear) :* select(X, year :== t3primeYear+Deltat+tau+1) - select(X[.,jdx], year :== t1primeYear) :* select(X, year :== t1primeYear+tau+1) ) * beta
+						( select(X[.,jdx]:+sd2:-m, year :== t3primeYear) :* select(y, year :== t3primeYear+Deltat+tau+1) - select(X[.,jdx]:+sd2:-m, year :== t1primeYear) :* select(y, year :== t1primeYear+tau+1) ) -
+						( select(X[.,jdx]:+sd2:-m, year :== t2primeYear) :* select(y, year :== t2primeYear+Deltat+tau) - select(X[.,jdx]:+sd2:-m, year :== t0primeYear) :* select(y, year :== t0primeYear+tau) ) :* gamma -
+						( select(X[.,jdx]:+sd2:-m, year :== t3primeYear) :* select(X, year :== t3primeYear+Deltat+tau+1) - select(X[.,jdx]:+sd2:-m, year :== t1primeYear) :* select(X, year :== t1primeYear+tau+1) ) * beta
 						)'
 						index++
 					}
@@ -399,6 +415,8 @@ void GMMg_noX(para, tauDeltat, y, year, t0primeYears, t1primeYears, t2primeYears
 // GMM Estimation with X
 void gmm_estimation( string scalar depvar,  string scalar indepvars, 
 					 string scalar panelid, string scalar timeid,  
+					 real scalar twostep, 	real scalar nonormalization, 
+					 real scalar gamma,		real scalar beta,
 					 string scalar touse,   string scalar bname,   
 					 string scalar Vname,   string scalar nname) 
 {
@@ -485,6 +503,7 @@ void gmm_estimation( string scalar depvar,  string scalar indepvars,
 	////////////////////////////////////////////////////////////////////////////
 	// Location-Scale Normalization as in Appendix C.1
 	////////////////////////////////////////////////////////////////////////////
+	if( !nonormalization ){
 	for( idx = 1 ; idx <= length(listYears) ; idx++ ){
 		avg = mean( select(y, year :== year[idx]) )
 		var = mean( select(y:^2, year :== year[idx]) ) :- (avg^2)
@@ -496,8 +515,9 @@ void gmm_estimation( string scalar depvar,  string scalar indepvars,
 			X[,jdx] = (year :== year[idx]) :* (X[,jdx] :- avg) :/ var:^0.5 + (year :~= year[idx]) :* X[,jdx]			
 		}
 	}
+	} // END IF !nonormalization //
 
-	t0primeYears = t0primeYears[1]
+	// t0primeYears = t0primeYears[1]
 	////////////////////////////////////////////////////////////////////////////
 	// GMM 1st Step
 	////////////////////////////////////////////////////////////////////////////
@@ -506,9 +526,13 @@ void gmm_estimation( string scalar depvar,  string scalar indepvars,
 	Deltat = secondConsecutiveGapIndex - firxtConsecutiveGapIndex
 	W = diag(J((1+p)*length(t0primeYears)*length(t1primeYears)*length(t2primeYears)*length(t3primeYears),1,1))
 
-	printf("{hline 32}\nGMM: 1st Step Estimation\n{hline 32}\n")
-	init_gamma = 0
-	init_beta = J(1, cols(X)-1, 0)
+	if( twostep ){
+		printf("{hline 32}\nGMM: 1st Step Estimation\n{hline 32}\n")
+	}else{	
+		printf("{hline 32}\nGMM Estimation\n{hline 32}\n")
+	}
+	init_gamma = gamma
+	init_beta = J(1, cols(X)-1, beta)
 	init = ( init_gamma, init_beta )
 	S = optimize_init()
 	optimize_init_evaluator(S,&GMMc())
@@ -534,12 +558,13 @@ void gmm_estimation( string scalar depvar,  string scalar indepvars,
 	GMMs(est, (tau,Deltat), (y,X), year, t0primeYears, t1primeYears, t2primeYears, t3primeYears, Ni, Smatrix)
 	W = luinv(Smatrix)
 	
+	if( twostep ){
 	////////////////////////////////////////////////////////////////////////////
 	// GMM 2nd Step
 	////////////////////////////////////////////////////////////////////////////
 	printf("{hline 32}\nGMM: 2nd Step Estimation\n{hline 32}\n")
-	init_gamma = 1
-	init_beta = J(1, cols(X)-1, 2)
+	init_gamma = gamma
+	init_beta = J(1, cols(X)-1, beta)
 	init = ( init_gamma, init_beta )
 	S = optimize_init()
 	optimize_init_evaluator(S,&GMMc())
@@ -563,6 +588,7 @@ void gmm_estimation( string scalar depvar,  string scalar indepvars,
 	////////////////////////////////////////////////////////////////////////////
 	GMMs(est, (tau,Deltat), (y,X), year, t0primeYears, t1primeYears, t2primeYears, t3primeYears, Ni, Smatrix)
 	W = luinv(Smatrix)
+	} //END IF TWOSTEP//
 	
 	////////////////////////////////////////////////////////////////////////////
 	// Gradient Estimation (Estimation of G)
@@ -571,7 +597,7 @@ void gmm_estimation( string scalar depvar,  string scalar indepvars,
 	GMMg(est, (tau,Deltat), (y,X), year, t0primeYears, t1primeYears, t2primeYears, t3primeYears, Ni, Gmatrix)
 
 	b = est'
-	V = luinv(Gmatrix'*W*Gmatrix) / Ni 
+	V = luinv(Gmatrix'*W*Gmatrix) / Ni
 
     st_matrix(bname, b')
     st_matrix(Vname, V)
@@ -589,7 +615,9 @@ void gmm_estimation( string scalar depvar,  string scalar indepvars,
 //////////////////////////////////////////////////////////////////////////////// 
 // GMM Estimation with NO X
 void gmm_estimation_noX( string scalar depvar,  
-						 string scalar panelid, string scalar timeid,  
+						 string scalar panelid, string scalar timeid,   
+						 real scalar twostep, 	real scalar nonormalization,
+						 real scalar gamma,		real scalar beta,
 						 string scalar touse,   string scalar bname,   
 						 string scalar Vname,   string scalar nname) 
 {
@@ -672,13 +700,15 @@ void gmm_estimation_noX( string scalar depvar,
 	////////////////////////////////////////////////////////////////////////////
 	// Location-Scale Normalization as in Appendix C.1
 	////////////////////////////////////////////////////////////////////////////
+	if( !nonormalization ){
 	for( idx = 1 ; idx <= length(listYears) ; idx++ ){
 		avg = mean( select(y, year :== year[idx]) )
 		var = mean( select(y:^2, year :== year[idx]) ) :- (avg^2)
 		y = (year :== year[idx]) :* (y :- avg) :/ var:^0.5 + (year :~= year[idx]) :* y
 	}
+	} // END IF !nonormalization //
 
-	t0primeYears = t0primeYears[1]
+	//t0primeYears = t0primeYears[1]
 	////////////////////////////////////////////////////////////////////////////
 	// GMM 1st Step
 	////////////////////////////////////////////////////////////////////////////
@@ -686,8 +716,12 @@ void gmm_estimation_noX( string scalar depvar,
 	Deltat = secondConsecutiveGapIndex - firxtConsecutiveGapIndex
 	W = diag(J(length(t0primeYears)*length(t1primeYears)*length(t2primeYears)*length(t3primeYears),1,1))
 	
-	printf("{hline 32}\nGMM: 1st Step Estimation\n{hline 32}\n")
-	init_gamma = 0
+	if( twostep ){
+		printf("{hline 32}\nGMM: 1st Step Estimation\n{hline 32}\n")
+	}else{	
+		printf("{hline 32}\nGMM Estimation\n{hline 32}\n")
+	}
+	init_gamma = gamma
 	init = J(1,1, init_gamma )
 	S = optimize_init()
 	optimize_init_evaluator(S,&GMMc_noX())
@@ -713,11 +747,12 @@ void gmm_estimation_noX( string scalar depvar,
 	GMMs_noX(est, (tau,Deltat), y, year, t0primeYears, t1primeYears, t2primeYears, t3primeYears, Ni, Smatrix)
 	W = luinv(Smatrix)
 	
+	if( twostep ){	
 	////////////////////////////////////////////////////////////////////////////
 	// GMM 2nd Step
 	////////////////////////////////////////////////////////////////////////////
 	printf("{hline 32}\nGMM: 2nd Step Estimation\n{hline 32}\n")
-	init_gamma = 1
+	init_gamma = gamma
 	init = ( init_gamma )
 	S = optimize_init()
 	optimize_init_evaluator(S,&GMMc_noX())
@@ -741,6 +776,7 @@ void gmm_estimation_noX( string scalar depvar,
 	////////////////////////////////////////////////////////////////////////////
 	GMMs_noX(est, (tau,Deltat), y, year, t0primeYears, t1primeYears, t2primeYears, t3primeYears, Ni, Smatrix)
 	W = luinv(Smatrix)
+	} //END IF TWOSTEP//
 	
 	////////////////////////////////////////////////////////////////////////////
 	// Gradient Estimation (Estimation of G)
@@ -749,7 +785,7 @@ void gmm_estimation_noX( string scalar depvar,
 	GMMg_noX(est, (tau,Deltat), y, year, t0primeYears, t1primeYears, t2primeYears, t3primeYears, Ni, Gmatrix)
 
 	b = est'
-	V = luinv(Gmatrix'*W*Gmatrix) / Ni 
+	V = luinv(Gmatrix'*W*Gmatrix ) / Ni 
 
     st_matrix(bname, b')
     st_matrix(Vname, V)

@@ -1,4 +1,4 @@
-*! Part of package matrixtools v. 0.27
+*! Part of package matrixtools v. 0.28
 *! Support: Niels Henrik Bruun, niels.henrik.bruun@gmail.com
 *! 2020-06-15 Bug with zero length variables fixed
 program define strofnum

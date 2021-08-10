@@ -263,7 +263,7 @@ or
 {p_end}
 
 {pstd}
-In the above, {varlist} is the expanded variable list {it:lblnamelist} is the expanded {it:elblnamelist}, , and {it:arguments} are {it:arguments} as 
+In the above, {varlist} is the expanded variable list {it:lblnamelist} is the expanded {it:elblnamelist}, and {it:arguments} are {it:arguments} as 
 typed; note that {it:iff} and {it:options} are also passed through as 
 typed. Typically, {cmd:elabel_fcn_{it:newfcn}.ado} reads
 

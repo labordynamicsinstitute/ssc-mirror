@@ -1,5 +1,5 @@
-*! cmp 8.5.0 13 November 2020
-*! Copyright (C) 2007-20 David Roodman
+*! cmp 8.6.2 1 June 2021
+*! Copyright (C) 2007-21 David Roodman
 
 * This program is free software: you can redistribute it and/or modify
 * it under the terms of the GNU General Public License as published by
@@ -52,7 +52,8 @@ program define cmp_p
 		foreach var of newlist `_varlist' {
 			gen `vartype' `var' = . in 1
 		}
-		`e(cmdline)' predict(if `touse', `scores'`lnl'(`_varlist') eq(`_eqspec'))
+
+		`=cond("`e(command)'"=="", "`e(cmdline)'", "`e(command)'")' predict(if `touse', `scores'`lnl'(`_varlist') eq(`_eqspec'))
 		exit
 	}
 
@@ -133,8 +134,8 @@ program define cmp_p
 			
 			mata `Sigma' = st_matrix("`Sigma'")[|`lo',`lo' \ `hi',`hi'|]
 			mata `d' = cols(`Sigma')
-			mata `M' = cmp_insert(I(`d'-1), `k', J(1, `d'-1, -1))
-			mata `Sigma' = `M' ' `Sigma' * `M' // eq (12) in cmp article
+			mata _mod = cmp_model(); `M' = _mod.insert(I(`d'-1), `k', J(1, `d'-1, -1))
+			mata `Sigma' = `M' ' `Sigma' * `M'  // eq (12) in cmp article
 			mata st_view(`E'=., ., "`xbs'", "`touse'")
 			if colsof(`Sigma') > 3 {
 				mata `t1' = select(0..3, ("", "sqrt", "negsqrt", "fl"):=="`e(ghkscramble)'")
@@ -143,7 +144,7 @@ program define cmp_p
 			else mata `ghk2DrawSet' = .
 			gen `vartype' `_varlist' = . in 1
 			mata st_view(`pr'=., ., "`_varlist'", "`touse'")
-			mata `pr'[,] = vecmultinormal(`E', J(0,0,0), `Sigma', cols(`Sigma'), J(1,0,0), (1::rows(`E')), 0, `t1', `t1', `t1', `ghk2DrawSet', 0`e(ghkanti)', ., .)
+			mata `pr'[,] = _mod.vecmultinormal(`E', J(0,0,0), `Sigma', cols(`Sigma'), J(1,0,0), ., 0, `t1', `t1', `t1', `ghk2DrawSet', 0`e(ghkanti)', ., .)
 			mata mata drop `t1' `d' `M' `E' `ghk2DrawSet' `pr'
 			exit
 		}
@@ -270,6 +271,7 @@ program define cmp_p
 		}
 		macro shift
 	}
+set trace off
 end
 
 cap program drop Predict

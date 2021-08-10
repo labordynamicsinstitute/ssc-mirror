@@ -1,21 +1,23 @@
-*! ver 2.0; 2020-09-05
-* ver 1.91; 2020-06-09 
-* ver 1.9; 2020-05-21 
-* ver 1.8; 2020-05-07 
-* ver 1.7; 2020-04-24 
-* ver 1.6; 2020-01-16
-* ver 1.5; 2020-01-04
-* ver 1.4; 2019-12-25
-* ver 1.3; 2019-12-19
-* ver 1.2; 2019-12-18
-* ver 1.1; 2019-12-12
-* ver 1.0; 2019-12-06
+*! ver 2.2; 2021-05-25 
+*  ver 2.1; 2021-05-11 
+*  ver 2.0; 2020-09-05
+*  ver 1.91; 2020-06-09 
+*  ver 1.9; 2020-05-21 
+*  ver 1.8; 2020-05-07 
+*  ver 1.7; 2020-04-24 
+*  ver 1.6; 2020-01-16
+*  ver 1.5; 2020-01-04
+*  ver 1.4; 2019-12-25
+*  ver 1.3; 2019-12-19
+*  ver 1.2; 2019-12-18
+*  ver 1.1; 2019-12-12
+*  ver 1.0; 2019-12-06
 
 program define bunchbounds, sortpreserve rclass
         version 14
 		syntax varname(numeric) [if] [in] [fw] ///
-		,  Kink(real) M(real) tax0(real) tax1(real) ///
-		[ NOPIC SAVING(string asis) ]
+		,  Kink(real) M(real) s0(real) s1(real) ///
+		[ NOPIC SAVINGBOUNDS(string asis) ]
 		
 		********************************************************************************************
 		*1. SETUP
@@ -30,30 +32,30 @@ program define bunchbounds, sortpreserve rclass
 				di as err "Strictly positive value for {bf:m} is required to run the code"
 				exit 198
 		}
-		if `tax0' >= `tax1' {
-				di as err "Value of {bf:tax1} must be bigger that {bf:tax0}"
+		if `s0' <= `s1' {
+				di as err "Value of {bf:s0} must be bigger that {bf:s1}"
 				exit 198
 		}		
 
-		* 3. -saving()- specified, file exists, -replace- omitted
-		CheckSaveOpt `saving'
-		local saving `s(filename)'
+		* 3. -savingbounds()- specified, file exists, -replace- omitted
+		CheckSaveOpt `savingbounds'
+		local savingbounds `s(filename)'
 		local replace_opt `s(replace)'
-		if `"`saving'"' != "" & `"`replace_opt'"' == "" {
+		if `"`savingbounds'"' != "" & `"`replace_opt'"' == "" {
 			
 			* confirm file ezists with file extension (un)specified (.dta)
-			local ext = substr("`saving'", strpos("`saving'", ".") + 1, 3)
+			local ext = substr("`savingbounds'", strpos("`savingbounds'", ".") + 1, 3)
 
-			if "`ext'" == "" | "`ext'" == "`saving'" {
-				cap confirm file "`saving'.dta"
+			if "`ext'" == "" | "`ext'" == "`savingbounds'" {
+				cap confirm file "`savingbounds'.dta"
 			}
 			else {
-				cap confirm file "`saving'"
+				cap confirm file "`savingbounds'"
 			}
 			
 			* raise an error in case a file exists
 			if !_rc {
-				di as err "file `saving' already exists. Use " `"""' "replace" `"""' " option to overwrite the file"
+				di as err "file `savingbounds' already exists. Use " `"""' "replace" `"""' " option to overwrite the file"
 				exit 602
 			}
 		}
@@ -68,13 +70,13 @@ program define bunchbounds, sortpreserve rclass
 				di ""
 				di as text "References:"
 				di ""
-				di as text "Cattaneo, Jansson and Ma (2019): Simple Local Polynomial Density Estimators, Journal of the American Statistical Association, forthcoming."
+				di as text "Cattaneo, M., Jansson, M., Ma, X. (2020), Simple Local Polynomial Density Estimators. Journal of the American Statistical Association, 115(531), pg 1449 - 1455."
 				di ""
-				di as text "sites.google.com/site/nppackages/lpdensity"
+				di as text "Website: https://nppackages.github.io/lpdensity/"
 				di ""
 				di as text "To install in Stata try:"
-				local http = "https://sites.google.com/site/nppackages/lpdensity/stata"
-				display as input `"{stata "net install lpdensity, from(`http') replace"}"'
+				local http = "https://raw.githubusercontent.com/nppackages/lpdensity/master/stata"
+				display as input `"{stata "net install lpdensity, from(`http') replace"}"'				
 				exit 199
 			}
 	
@@ -97,7 +99,7 @@ program define bunchbounds, sortpreserve rclass
                 * variables
 				tempvar bunch left right gridvar case emin emax eps_trap cdf_y cdf_y_hat pdf_y dpdf_y gridM gridy
 				* scalars & matrices
-				tempname s0 s1 B_hat temp M_hat M_min_hat fyminus_hat fyplus_hat 
+				tempname B_hat temp M_hat M_min_hat fyminus_hat fyplus_hat 
 				tempname e_trap emin_mhat emax_mhat emin_mmax emax_mmax 
 				tempname M_data_min M_data_max M_min_hat M_hat
  				tempname gridM_mat emin_mat emax_mat
@@ -106,9 +108,9 @@ program define bunchbounds, sortpreserve rclass
 		********************************************************************************************
 		* 2. Estimate bunching mass and side limits of PDF of y_i 
 		********************************************************************************************
-		* the log of one minus the tax rates 
-		scalar `s0' = ln(1 - `tax0') 
-		scalar `s1' = ln(1 - `tax1') 
+		* define scalars to be the log of the slopes
+		*scalar `s0' = `s0' 
+		*scalar `s1' = `s1' 
 
 		* bunching mass 
 		qui gen `bunch' = (`1' == `kink')
@@ -244,9 +246,9 @@ program define bunchbounds, sortpreserve rclass
 			
 			replace `case' = 3 if `gridM' >= `=scalar(`M_hat')'
 			
-			gen `emin' = ( 2*sqrt((`=scalar(`fyplus_hat')'^2)/2 + (`=scalar(`fyminus_hat')'^2)/2 + `gridM' * `=scalar(`B_hat')') - (`=scalar(`fyplus_hat')' + `=scalar(`fyminus_hat')')) / (`gridM'*(`=scalar(`s0')' - `=scalar(`s1')')) if (`case'==2)|(`case'==3) 
+			gen `emin' = ( 2*sqrt((`=scalar(`fyplus_hat')'^2)/2 + (`=scalar(`fyminus_hat')'^2)/2 + `gridM' * `=scalar(`B_hat')') - (`=scalar(`fyplus_hat')' + `=scalar(`fyminus_hat')')) / (`gridM'*( `s0' - `s1')) if (`case'==2)|(`case'==3) 
 						
-			gen `emax' = (-2*sqrt((`=scalar(`fyplus_hat')'^2)/2 + (`=scalar(`fyminus_hat')'^2)/2 - `gridM' * `=scalar(`B_hat')') + (`=scalar(`fyplus_hat')' + `=scalar(`fyminus_hat')')) / (`gridM'*(`=scalar(`s0')' - `=scalar(`s1')')) if  `case'==2 
+			gen `emax' = (-2*sqrt((`=scalar(`fyplus_hat')'^2)/2 + (`=scalar(`fyminus_hat')'^2)/2 - `gridM' * `=scalar(`B_hat')') + (`=scalar(`fyplus_hat')' + `=scalar(`fyminus_hat')')) / (`gridM'*( `s0'  -  `s1' )) if  `case'==2 
 		}
 
 
@@ -343,13 +345,13 @@ program define bunchbounds, sortpreserve rclass
 		
 		
 		** export the data used for the graph 
-		if "`saving'" != "" {
+		if "`savingbounds'" != "" {
 			ren `gridM' __gridM
 			ren `emax'  __emax
 			ren `emin'  __emin
 			ren `case'  __case
 			
-			savesome __case __gridM __emin __emax using "`saving'" if __gridM != . , `replace_opt'
+			savesome __case __gridM __emin __emax using "`savingbounds'" if __gridM != . , `replace_opt'
 		}
 		
 		restore
@@ -401,15 +403,15 @@ program define bunchbounds, sortpreserve rclass
 end
 
 program CheckSaveOpt, sclass
-/* parse the contents of the -saving- option:
- * saving(filename [, replace])
+/* parse the contents of the -savingbounds- option:
+ * savingbounds(filename [, replace])
  */
 
 	syntax [anything] [, replace ]
 	
 	if `"`replace'`anything'"' != "" {
 		if 0`:word count `anything'' > 2 {
-			di as err "option saving() incorrectly specified"
+			di as err "option savingbounds() incorrectly specified"
 			exit 198
 		}
 	}

@@ -52,33 +52,33 @@ f runmixregls.sthlp
 f runmixregmls.ado
 f runmixregmls.sthlp
 f runmixreg.ado
-g WIN32 mixregls_plugin.win32 mixregls.plugin
-g WIN32 mixreg_plugin.win32 mixreg.plugin
-G WIN32 mixregls_lib.win32 mixregls.dll
-G WIN32 mixreg_lib.win32 mixreg.dll
-g WIN64 mixregls_plugin.win64 mixregls.plugin
-g WIN64 mixreg_plugin.win64 mixreg.plugin
-G WIN64 mixregls_lib.win64 mixregls.dll
-G WIN64 mixreg_lib.win64 mixreg.dll
-g WIN64A mixregls_plugin.win64 mixregls.plugin
-g WIN64A mixreg_plugin.win64 mixreg.plugin
-G WIN64A mixregls_lib.win64 mixregls.dll
-G WIN64A mixreg_lib.win64 mixreg.dll
-g LINUX mixregls_plugin.lin32 mixregls.plugin
-g LINUX mixreg_plugin.lin32 mixreg.plugin
-G LINUX mixregls_lib.lin32 mixregls.so.1
-G LINUX mixreg_lib.lin32 mixreg.so.1
-g LINUX64 mixregls_plugin.lin64 mixregls.plugin
-g LINUX64 mixreg_plugin.lin64 mixreg.plugin
-G LINUX64 mixregls_lib.lin64 mixregls.so.1
-G LINUX64 mixreg_lib.lin64 mixreg.so.1
-g MACINTEL64 mixregls_plugin.mac mixregls.plugin
-g MACINTEL64 mixreg_plugin.mac mixreg.plugin
-G MACINTEL64 mixregls_lib.mac mixregls.dynlib
-G MACINTEL64 mixreg_lib.mac mixreg.dynlib
-g OSX.X8664 mixregls_plugin.mac mixregls.plugin
-g OSX.X8664 mixreg_plugin.mac mixreg.plugin
-G OSX.X8664 mixregls_lib.mac mixregls.dynlib
-G OSX.X8664 mixreg_lib.mac mixreg.dynlib
+g WIN32 ../m/mixregls_plugin.win32 mixregls.plugin
+g WIN32 ../m/mixreg_plugin.win32 mixreg.plugin
+G WIN32 ../m/mixregls_lib.win32 mixregls.dll
+G WIN32 ../m/mixreg_lib.win32 mixreg.dll
+g WIN64 ../m/mixregls_plugin.win64 mixregls.plugin
+g WIN64 ../m/mixreg_plugin.win64 mixreg.plugin
+G WIN64 ../m/mixregls_lib.win64 mixregls.dll
+G WIN64 ../m/mixreg_lib.win64 mixreg.dll
+g WIN64A ../m/mixregls_plugin.win64 mixregls.plugin
+g WIN64A ../m/mixreg_plugin.win64 mixreg.plugin
+G WIN64A ../m/mixregls_lib.win64 mixregls.dll
+G WIN64A ../m/mixreg_lib.win64 mixreg.dll
+g LINUX ../m/mixregls_plugin.lin32 mixregls.plugin
+g LINUX ../m/mixreg_plugin.lin32 mixreg.plugin
+G LINUX ../m/mixregls_lib.lin32 mixregls.so.1
+G LINUX ../m/mixreg_lib.lin32 mixreg.so.1
+g LINUX64 ../m/mixregls_plugin.lin64 mixregls.plugin
+g LINUX64 ../m/mixreg_plugin.lin64 mixreg.plugin
+G LINUX64 ../m/mixregls_lib.lin64 mixregls.so.1
+G LINUX64 ../m/mixreg_lib.lin64 mixreg.so.1
+g MACINTEL64 ../m/mixregls_plugin.mac mixregls.plugin
+g MACINTEL64 ../m/mixreg_plugin.mac mixreg.plugin
+G MACINTEL64 ../m/mixregls_lib.mac mixregls.dynlib
+G MACINTEL64 ../m/mixreg_lib.mac mixreg.dynlib
+g OSX.X8664 ../m/mixregls_plugin.mac mixregls.plugin
+g OSX.X8664 ../m/mixreg_plugin.mac mixreg.plugin
+G OSX.X8664 ../m/mixregls_lib.mac mixregls.dynlib
+G OSX.X8664 ../m/mixreg_lib.mac mixreg.dynlib
 h mixregls.plugin
 h mixreg.plugin

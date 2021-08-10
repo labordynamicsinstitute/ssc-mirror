@@ -1,0 +1,28 @@
+d 'RMLOA': module to compute limits of agreement for data with repeated measures
+d
+d   rmloa computes Bland and Altman's limits of agreement (LOA) for
+d paired X-Y observations. When i() is not specified, the LOA is   
+d computed assuming that each X-Y paired observation is independent
+d of all other observations (Bland and Altman 1986). When i()	 is
+d specified, LOA is computed for repeated measures, using either
+d the method where the true value of the difference is	  constant
+d (by specifying the constant option), or the default, which uses
+d the method where the true value of the difference    varies (see
+d Bland and Altman [2007] for the details of these methods). 
+d
+d KW: agreement
+d KW: repeated measures
+d KW: Bland
+d KW: Altman
+d
+d Requires: Stata version 11
+d
+d Distribution-Date: 20210804
+d
+d Author: Ariel Linden, Linden Consulting Group, LLC
+d Support: email alinden@@lindenconsulting.org
+d
+f rmloa.ado
+f rmloa.sthlp
+f ../b/bland1986.dta
+f ../b/bland2007.dta

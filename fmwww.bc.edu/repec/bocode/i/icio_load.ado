@@ -1,5 +1,5 @@
 
-*! version 1.2.4  27may2020
+*! version 1.2.6  10mar2021
 *! author: Federico Belotti, Michele Mancini and Alessandro Borin
 *! see end of file for version comments
 
@@ -32,7 +32,7 @@ if "`iciotable'"=="tivan" & "`year'"=="" loc year 2015
 if "`iciotable'"=="wiodo" & "`year'"=="" loc year 2011
 if "`iciotable'"=="wiodn" & "`year'"=="" loc year 2014
 if "`iciotable'"=="eora" & "`year'"=="" loc year 2015
-if "`iciotable'"=="adb" & "`year'"=="" loc year 2018
+if "`iciotable'"=="adb" & "`year'"=="" loc year 2019
 
 // Here we need to create an ado file for icio_table_releases
 // Brute force fix: just copy and past the content of icio_table_releases.do below
@@ -47,15 +47,15 @@ local wiodo "2013"
 local wiodn "2016"
 /* EORA */
 local eora "199.82"
-local eora_rel "199.82"
+local eora_rel "199_82"
 /* ADB */
-local adb "2019"
-local adb_rel "2019"
+local adb "2021"
+local adb_rel "jan2021"
 
 // Here display the table releases and exit
 if "`info'"!="" {
 qui {
-	mat _tab_rels = `wiodn', 2000, 2014 \ `tivan', 2005, 2015 \ `eora' , 1990, 2015 \ `adb', 2000, 2018 \ `wiodo', 1995, 2011 \ `tivao', 1995, 2011
+	mat _tab_rels = `wiodn', 2000, 2014 \ `tivan', 2005, 2015 \ `eora' , 1990, 2015 \ `adb', 2000, 2019 \ `wiodo', 1995, 2011 \ `tivao', 1995, 2011
 	mat rownames _tab_rels = "wiodn" "tivan" "eora" "adb" "wiodo" "tivao"
 	mat colnames _tab_rels = "version" "from" "to"
 	noi matlist _tab_rels, row(table_name) cspec(|%5s|%9.0g|%9.0g|%9.0g|) rspec(--&&&&&-)
@@ -66,13 +66,12 @@ qui {
 
 }
 
-
 if "`iciotable'" == "wiodn" local filename "icio_`wiodn'_wiod"
 if "`iciotable'" == "wiodo" local filename "icio_`wiodo'_wiod"
 if "`iciotable'" == "tivan" local filename "icio_`tivan'_tiva"
 if "`iciotable'" == "tivao" local filename "icio_`tivao'_tiva"
-if "`iciotable'" == "eora" local filename "icio_eora"
-if "`iciotable'" == "adb" local filename "icio_adb"
+if "`iciotable'" == "eora" local filename "icio_`eora_rel'_eora"
+if "`iciotable'" == "adb" local filename "icio_`adb_rel'_adb"
 
 
 *** Check if year has 4 digits
@@ -109,7 +108,7 @@ if `user_defi_table'==0 {
 		di as error "Year `year' is not available for the EORA `eora' release."
 		error 198
 	}
-	if "`iciotable'" == "adb" & inlist("`year'","2000","2007","2008","2009","2010","2011","2012")==0 & inlist("`year'","2013","2014","2015","2016","2017","2018")==0 {
+	if "`iciotable'" == "adb" & inlist("`year'","2000","2007","2008","2009","2010","2011","2012")==0 & inlist("`year'","2013","2014","2015","2016","2017","2018","2019")==0 {
 		di as error "Year `year' is not available for the ADB `adb' release."
 		error 198
 	}
@@ -326,6 +325,10 @@ di in yel " loaded"
 m st_local("_icio_nr_countries", strofreal(_icio_in_.nr_pae))
 m st_local("_icio_nr_sectors", strofreal(_icio_in_.nr_sett))
 
+*** Info for Users
+di in gr "For the available list of countries and sectors type{stata icio, info: icio, info}"
+di in gr "For details about the {cmd:icio} syntax, help {help icio}"
+
 loc mobjlist io __fh _areeacr _countryacr
 foreach mo of local mobjlist {
 	cap m mata drop `mo'
@@ -400,5 +403,6 @@ end
 * version 1.2.2  10sep2019 - Fixed a bug preventing the download and load of the variuos vintages
 * version 1.2.3  2oct2019 - Added -info- option and updated to work with tradeconomics.com
 * version 1.2.4  27may2020 - Added ADB tables
-
+* version 1.2.5 13nov2020 - Added links to help and -icio, info- after -icio_load-.
+* version 1.2.6 10mar2021 - Now also eora and adb tables have the official release date/code in the name of each table
 */

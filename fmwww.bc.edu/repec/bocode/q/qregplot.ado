@@ -1,3 +1,5 @@
+*! version 1.03  (April 2021) when requesting Constant, Only constant will comeup
+*! version 1.02  (March 2021) More Bug with Weights.
 *! version 1.01  (Feb 2021) Bug with Weights.
 *! version 1.0  (Feb 2021) By Fernando Rios-Avila
 * Inspired  by grqreg (Pedro Azevedo)
@@ -329,13 +331,128 @@ program define qreg_stripper, rclass
 	local qnt  `quantile'
 	local oth  `options'
 	local ifin `if' `in'
-	if "`e(wtype)'`e(wexp)'"!="" local wgt  [`weight'`exp']
+	if "`weight'`exp'"!="" local wgt  [`weight'`exp']
 	return local xvar `xvar'
 	return local yvar `yvar'
 	return local oth  `oth'
 	return local ifin `ifin'
 	return local wgt `wgt'
 end
+
+program define rifhdreg_stripper, rclass
+	syntax anything [if] [in] [aw iw pw fw], rif(str)  [*]
+	local xvar `=subinstr("`anything'","`e(depvar)'","",1)' 
+	local yvar `e(depvar)'
+	local oth  `options'
+	local ifin `if' `in'
+	if "`weight'`exp'"!="" local wgt [`weight'`exp']
+	local rif  `rif'
+	rif_stripper, `rif'
+	
+	return local xvar `xvar'
+	return local yvar `yvar'
+	return local oth  `oth'
+	return local ifin `ifin'
+	return local wgt `wgt'
+	return local q    `r(q)'
+	return local qopt `r(oth)'
+end
+
+program define rif_stripper, rclass
+	syntax , q(numlist) [*]
+	return local q    `q'
+	return local oth  `options'
+end
+
+program define sqreg_stripper, rclass
+	syntax anything [if] [in] [aw iw pw fw], *
+	
+	local xvar `=subinstr("`anything'","`e(depvar)'","",1)' 
+	local yvar `e(depvar)'
+	local ifin `if' `in'
+	if "`weight'`exp'"!="" local wgt  [`weight'`exp']
+	
+	return local xvar `xvar'
+	return local yvar `yvar'
+	return local ifin `ifin'
+	return local wgt `wgt'
+end
+
+program define short_local, rclass
+	syntax, llocal(string) [maxlength(integer 20) lines(integer 1)]
+	local lng = length("`llocal'")
+	
+	local dlt2 = round(`lng'/`lines')
+	local dlt = max(`maxlength',`dlt2')
+	/*if "`maxlength'"!="" {
+		local dlt `maxlength'
+	}
+	if "`lines'"!="" {
+		local dlt = round(`lng'/`lines')
+	}*/
+	scalar out=""
+	local cnt =1
+	local low =1
+	while ((`low')<=`lng') {		
+		local cnt=`cnt'+1
+		local dlt0 = `dlt'
+		while (substr("`llocal'",`low'+`dlt0',1)!=" ") & ((`low'+`dlt0')<= `lng') {
+			local dlt0=`dlt0'+1
+		}
+		*display substr("`llocal'",`low',`dlt0')
+		local aux =strtrim(substr("`llocal'",`low',`dlt0'))
+		local out "`out' "`aux'""
+		local low =`low'+`dlt0'+1
+	}
+	forvalues x=`cnt'/`lines' {
+		local out "`out' "  ""
+	}
+	
+	local out ""`out'
+	return local out `out'""
+end
+
+program define label_var_lab, rclass
+	syntax, var(string) [label]
+	local dot = strpos("`var'",".")
+	local b_dot = substr("`var'",1,`=`dot'-1')
+	local a_dot = substr("`var'",`=`dot'+1',.)
+	** Option 1: Value label
+	
+	if "`label'"!="" {
+		capture:local lout1:variable label `a_dot'
+		if "`lout1'"!="" & _rc==0 {
+			if "`b_dot'"!="" {
+				capture:local lout2:label (`a_dot') `b_dot'
+				local lout1 "`lout1': `lout2'"
+			}
+			else {
+				local lout1 "`lout1'"
+			}
+		}
+		else if "`lout1'"=="" & _rc==0 {
+			capture:local lout2:label (`a_dot') `b_dot', strict
+			if "`lout2'"=="" & _rc==0 {
+				local lout1 "`a_dot':`b_dot'"
+			}
+			else if "`lout2'"!="" {
+				local lout1 `lout2'
+			}
+		}
+		else if "`lout1'"=="" | _rc!=0 {
+			local lout1 `var'
+		}
+	}
+	else local lout1 `var'
+	*********************************
+	
+	if "`lout1'"=="" {
+			local lout1 `var'
+		}
+	** Option 2: Variable label
+ return local labout `lout1'
+end
+
 
 program define qrgraph,
 *[varlist( fv default=none)]             
@@ -375,7 +492,7 @@ program define qrgraph,
 	}*/
 	
 	local cnt =0
-	if "`vlist'"=="" {
+	if "`vlist'"=="" & "`cons'"=="" {
 	    local vlist `xlist'
 	}    
  
@@ -442,123 +559,5 @@ program define qrgraph,
 	
 	/*capture:est restore `lastreg'*/
 	
-end
-
-** for RIF REG
-
-program define rifhdreg_stripper, rclass
-	syntax anything [if] [in] [aw iw pw fw], rif(str)  [*]
-	local xvar `=subinstr("`anything'","`e(depvar)'","",1)' 
-	local yvar `e(depvar)'
-	local oth  `options'
-	local ifin `if' `in'
-	if "`e(wtype)'`e(wexp)'"!="" local wgt [`weight'`exp']
-	local rif  `rif'
-	rif_stripper, `rif'
-	
-	return local xvar `xvar'
-	return local yvar `yvar'
-	return local oth  `oth'
-	return local ifin `ifin'
-	return local wgt `wgt'
-	return local q    `r(q)'
-	return local qopt `r(oth)'
-end
-
-program define rif_stripper, rclass
-	syntax , q(numlist) [*]
-	return local q    `q'
-	return local oth  `options'
-end
-
-
-program define sqreg_stripper, rclass
-	syntax anything [if] [in] [aw iw pw fw], *
-	
-	local xvar `=subinstr("`anything'","`e(depvar)'","",1)' 
-	local yvar `e(depvar)'
-	local ifin `if' `in'
-	if "`e(wtype)'`e(wexp)'"!="" local wgt  [`weight'`exp']
-	
-	return local xvar `xvar'
-	return local yvar `yvar'
-	return local ifin `ifin'
-	return local wgt `wgt'
-end
-
-program define short_local, rclass
-	syntax, llocal(string) [maxlength(integer 20) lines(integer 1)]
-	local lng = length("`llocal'")
-	
-	local dlt2 = round(`lng'/`lines')
-	local dlt = max(`maxlength',`dlt2')
-	/*if "`maxlength'"!="" {
-		local dlt `maxlength'
-	}
-	if "`lines'"!="" {
-		local dlt = round(`lng'/`lines')
-	}*/
-	scalar out=""
-	local cnt =1
-	local low =1
-	while ((`low')<=`lng') {		
-		local cnt=`cnt'+1
-		local dlt0 = `dlt'
-		while (substr("`llocal'",`low'+`dlt0',1)!=" ") & ((`low'+`dlt0')<= `lng') {
-			local dlt0=`dlt0'+1
-		}
-		*display substr("`llocal'",`low',`dlt0')
-		local aux =strtrim(substr("`llocal'",`low',`dlt0'))
-		local out "`out' "`aux'""
-		local low =`low'+`dlt0'+1
-	}
-	forvalues x=`cnt'/`lines' {
-		local out "`out' "  ""
-	}
-	
-	local out ""`out'
-	return local out `out'""
-end
-
-
-program define label_var_lab, rclass
-	syntax, var(string) [label]
-	local dot = strpos("`var'",".")
-	local b_dot = substr("`var'",1,`=`dot'-1')
-	local a_dot = substr("`var'",`=`dot'+1',.)
-	** Option 1: Value label
-	
-	if "`label'"!="" {
-		capture:local lout1:variable label `a_dot'
-		if "`lout1'"!="" & _rc==0 {
-			if "`b_dot'"!="" {
-				capture:local lout2:label (`a_dot') `b_dot'
-				local lout1 "`lout1': `lout2'"
-			}
-			else {
-				local lout1 "`lout1'"
-			}
-		}
-		else if "`lout1'"=="" & _rc==0 {
-			capture:local lout2:label (`a_dot') `b_dot', strict
-			if "`lout2'"=="" & _rc==0 {
-				local lout1 "`a_dot':`b_dot'"
-			}
-			else if "`lout2'"!="" {
-				local lout1 `lout2'
-			}
-		}
-		else if "`lout1'"=="" | _rc!=0 {
-			local lout1 `var'
-		}
-	}
-	else local lout1 `var'
-	*********************************
-	
-	if "`lout1'"=="" {
-			local lout1 `var'
-		}
-	** Option 2: Variable label
- return local labout `lout1'
 end
 

@@ -56,6 +56,7 @@ effect ({cmd:ate});
 one can also specify to obtain the treatment effect on the treated ({cmd:att}) or
 on the untreated ({cmd:atu}){p_end}
 {synopt :{it:sureg_options}}most options in {helpb sureg} can be used but have not been extensively tested{p_end}
+{synopt :{cmd:old}} This option request using the older {cmd:rifvar} function (for replication purposes). {p_end}
 {synoptline}
 {p 4 6 2}
 {cmd:fweight}s and {cmd:aweight}s are allowed.  When using
@@ -133,7 +134,7 @@ This command is based on the community-contributed command {cmd:rifreg}.
 
 {pstd}
 RIF variables are estimated using the {cmd:egen} add-on {cmd:rifvar()}.  An
-intuitive description of RIF regressions is provided in Rios-Avila (2019).
+intuitive description of RIF regressions is provided in Rios-Avila (2020).
 
 {pstd}
 All errors are my own.

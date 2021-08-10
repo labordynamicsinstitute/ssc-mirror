@@ -1,5 +1,5 @@
 {smcl}
-{* *! version 2.0.0 29mar2021}{...}
+{* *! version 2.0.2 03jun2021}{...}
 {findalias asfradohelp}{...}
 {title:censusapi}
 
@@ -10,7 +10,7 @@
 {marker syntax}{...}
 {title:Syntax}
 
-{p 8 17 2}
+{p 4 17 2}
 {cmd: censusapi }
 {cmd:,} [url(string)] [{ul:dest}ination(string)] [dataset(string) {ul:var}iables(string) predicate(string)] [key(string) savekey]
 
@@ -44,10 +44,10 @@ Example 1 (see below) illustrates this method. The command will then simply send
 You can also use the {opt destination(string)} option to immediately save the cleaned csv file to disk.
 
 {phang}
-Alternatively, you can use the {opt dataset(string)}, {opt variables(string)} and {opt predicate(string)} options to make your life a bit easier. 
+Alternatively, you can use the {opt dataset(string)}, {opt variables(string)} and {opt predicate(string)} options to make your life a bit easier.
 This essentially cuts the url up into its constituent parts. Example 2 (see below) illustrates this method.
-Now, you first specify the link to the {bf dataset} you are downloading from, then which {bf variables} you are interested in and 
-finally the {bf predicate} part, which determines which geographic regions you'll be downloading information on. 
+Now, you first specify the link to the {opt dataset} you are downloading from, then which {opt variables} you are interested in and 
+finally the {opt predicate} part, which determines which geographic regions you'll be downloading information on. {break}
 One nifty advantage of the {cmd:censusapi} command is that it parses variable lists for you. 
 Say, you want to download all age shares. With this command, you can simply specify P0110001-P0110031 and it will immediately convert this to P0110001,P0110002,...,P0110031 for you.
 It will also split your census call if you are requesting more than 50 variables (the maximum allowed by one call) and combine the data afterwards.
@@ -56,17 +56,17 @@ It will also split your census call if you are requesting more than 50 variables
 You might need a census API key to complete your download (at the time of writing these could be requested for free). 
 You can add this to your request through the {opt key(string)} option. If you are as lazy and forgetful as I am, then you will be happy
 to hear that there is also a {opt savekey} option. This will save the key in your profile.do (google it). 
-From that points onwards, {cmd censusapi} will always use that key. Specifying a different key will overwrite this setting. Specifying key(overwrite) will run
+From that points onwards, {cmd:censusapi} will always use that key. Specifying a different key will overwrite this setting. Specifying {opt key(overwrite)} will run
 censusapi without a key.
 
 {marker examples}{...}
 {title:Examples}
 
-{pstd}BROKEN DUE TO CENSUS API CHANGES Example 1: the url() way: some info about San Francisco{p_end}
-{phang2}{cmd:. censusapi, url("https://api.census.gov/data/1990/sf1?get=P0010001,ANPSADPI,H0010001&for=place:67000&in=state:6")}{p_end}
+{pstd}Example 1: the url() way: count number of people below poverty level by US county{p_end}
+{phang2}{cmd:. censusapi, url(https://api.census.gov/data/2019/acs/acs5?get=B17001_001E,B17001_002E&for=county:*)}{p_end}
 
-{pstd}BROKEN DUE TO CENSUS API CHANGES Example 2: the alternative method, illustrating also the variable parsing and saving capacities {p_end}
-{phang2}{cmd:. censusapi, dataset("https://api.census.gov/data/1990/sf1") variables("P0010001 AREALAND P0110001-P0110031 P0060001-P0060005 H0010001 H0230001-H0230020") predicate("for=place:*&in=state:*") destination("test.txt")}{p_end}
+{pstd}Example 2: the alternative method, illustrating also the variable parsing and saving capacities {p_end}
+{phang2}{cmd:. censusapi, dataset(https://api.census.gov/data/2019/acs/acs5) variables(B17001_001E B17001_002E) predicate("for=county:*") destination("2019_acs_data.txt")}{p_end}
 
 {pstd}Example 3: using the url() way to access the QWI {p_end}
 {phang2}{cmd:. censusapi, url("https://api.census.gov/data/timeseries/qwi/sa?get=Emp&for=county:*&in=state:02&time=from 1990-Q1 to 2010-Q3&sex=0&agegrp=A00&ownercode=A05&seasonadj=U&industry=44-45")}{p_end}
@@ -95,12 +95,12 @@ censusapi without a key.
 
 {title:Author}
 
-Jesse Wursten
-Faculty of Economics and Business
-KU Leuven
-{browse "mailto:jesse.wursten@kuleuven.be":jesse.wursten@kuleuven.be} 
+{space 4}Jesse Wursten
+{space 4}Faculty of Economics and Business
+{space 4}KU Leuven
+{space 4}{browse "mailto:jesse.wursten@kuleuven.be":jesse.wursten@kuleuven.be} 
 
-Other commands by the same author
+{space 4}Other commands by the same author
 
 {synoptset 14 tabbed}{...}
 {synopt:{cmd:sendtoslack}} Stata Module to send notifications from Stata to your smartphone through Slack{p_end}
@@ -113,4 +113,4 @@ Other commands by the same author
 {synopt:{cmd:pwcorrf}} Faster version of pwcorr, with builtin reshape option{p_end}
 {p2colreset}{...}
 
-
+{space 4}Thanks to Evan Galloway for providing the ACS example.

@@ -1,4 +1,4 @@
-*! Part of package matrixtools v. 0.25
+*! Part of package matrixtools v. 0.28
 *! Support: Niels Henrik Bruun, niels.henrik.bruun@gmail.com
 *! 2021-01-03 toxl added
 *2019-03-14 > Option transposed added

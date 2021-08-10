@@ -22,6 +22,7 @@ p varmi module to create a dummy variable that takes 1 when all the variable in 
 p varprod module to Generate Row Product of Variables
 p varsearch program to search variable names and labels
 p vartyp module to set variable types for codebook2
+p vc_pack module for the estimation of smooth varying coefficient models 
 p vce2way module to adjust a Stata command's standard errors for two-way clustering
 p vcemway module to adjust a Stata command's standard errors for multi-way clustering
 p vcf module to import VCF (Variant Caller Format) Files into Stata and format genotype data

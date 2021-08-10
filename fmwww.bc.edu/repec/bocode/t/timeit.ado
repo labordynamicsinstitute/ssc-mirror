@@ -1,8 +1,9 @@
-*! version 1.1.2 14jan19
+*! version 1.2.0 10jun21
 * Contact jesse.wursten@kuleuven.be for bug reports/inquiries.
 * Many thanks to Daniel Klein for his suggestions and code snippets.
 
 * Changelog
+** 10jun2021: timeit now executes commands in host version rather than the version 11 specified by this particular ado
 ** 14jan2019: Fixed space-before-colon issue
 ** 27nov2018: Fixed space-in-command issue
 ** 16apr2018: Fixed some parsing issues, added r-results (this is a pain) and incremental timer results
@@ -90,9 +91,10 @@ program define timeit, rclass
 	** Time and execute the command
 	** The nobreak + capture ... break combination ensures the timer stops when the user manually stops the program
 	** The capture noisily ... cmd combination ensures the timer stops when the cmd returns an error. exit _rc then presents the error to the user
+	** The version `=_caller()' ensures that commands are executed in the original version, not the one set by timeit (thanks Daniel Klein!)
 	nobreak {
 		timer on `theTimer'
-		capture noisily break `theCommand'
+		capture noisily break version `=_caller()': `theCommand'
 		timer off `theTimer'
 	}
 	

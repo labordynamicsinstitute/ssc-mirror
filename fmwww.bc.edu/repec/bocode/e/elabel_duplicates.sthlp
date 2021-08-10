@@ -14,8 +14,8 @@
 Report duplicate value labels
 
 {p 8 12 2}
-{cmd:elabel} {cmdab:dup:licates} {cmdab:rep:ort}
-[ {it:{help elabel##elblnamelist:elblnamelist}} ]
+{cmd:elabel} {cmdab:dup:licates} [ {cmdab:rep:ort} 
+[ {it:{help elabel##elblnamelist:elblnamelist}} ]]
 
 
 {p 4 8 2}
@@ -102,14 +102,14 @@ Scalars{p_end}
 value labels
 {p_end}
 {synopt:{cmd:r(n_duplicates}{it:#}{cmd:)}}number of value 
-labels in group {it:#}; 0<{it:#}<{cmd:r(N_duplicates)}.
+labels in group {it:#}; 0<{it:#}<={cmd:r(N_duplicates)}.
 {p_end}
 
 {pstd}
 Macros{p_end}
 {synoptset 18 tabbed}{...}
 {synopt:{cmd:r(duplicates}{it:#}{cmd:)}}duplicate value 
-labels in group {it:#}; 0<{it:#}<{cmd:r(N_duplicates)}.
+labels in group {it:#}; 0<{it:#}<={cmd:r(N_duplicates)}.
 {p_end}
 
 

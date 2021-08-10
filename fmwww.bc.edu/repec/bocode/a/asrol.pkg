@@ -26,9 +26,9 @@ d KW: by-group statistics
 d KW: statistics excluding focal observation
 d KW: fast rolling window calculations
 d
-d Requires: Stata version 11
+d Requires: Stata version 13
 d
-d Distribution-Date: 20190620
+d Distribution-Date: 20210723
 d
 d Author: Attaullah Shah, Institute of Management Sciences
 d Support: email attashah15@@hotmail.com

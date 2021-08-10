@@ -22,6 +22,7 @@ p igeset module to estimate intergenerational income elasticities (IGEs) with a 
 p igesetci module to compute confidence intervals for partially identified intergenerational income elasticities (IGEs)
 p igini module to perform Gini index decomposition by individual and group
 p igini1 module to perform Gini index decomposition by individual and group
+p ihelp module to display the help documents in PDF format using the default browser
 p ihstrans module for generating inverse hyperbolic sine (IHS) transformed variables
 p iia module to test the iia assumption in conditional logistic regression (version 5)
 p imbalance module to check covariate imbalance before and after matching
@@ -30,6 +31,7 @@ p importsav module to convert SPSS file to Stata
 p imputeitems module to impute missing data of binary items
 p imputemok module to impute binary data by a Mokken scale
 p imputerasch module to impute binary data by a Rasch model
+p imusic module to find music and enjoy while working on Stata
 p imvol module to compute Implied Volatility in Black-Scholes European Option Pricing Model
 p inccat module to concatenate one or more input files to an output file inserting additional input files
 p indeplist module to returns lists of independent variables from the active estimation command
@@ -51,6 +53,7 @@ p insheetjson module for importing tabular data from JSON sources on the interne
 p insingap module to insert a single gap observation at the top of each by-group
 p insob module to insert empty observations
 p instabilitycerdi module for Calculating the Instability or the Volatility of a Variable by the CERDI Method in some Time Window
+p installpkg module to install Stata packages by specifying zipfile/pkgfile or local directory
 p int_utils module to perform interval computations in Mata
 p intcens module to perform interval-censored survival analysis
 p inteff3 module to compute partial effects in a probit or logit model with a triple dummy variable interaction term
@@ -103,6 +106,7 @@ p itsp_ado module to accompany Introduction to Stata Programming book
 p itspower module for simulation based power calculations for linear interrupted time series (ITS) designs
 p itvalpctile module for estimation of interval-valued percentiles (quantiles) for interval-valued data
 p ivactest module to perform Cumby-Huizinga test for autocorrelation after IV/OLS estimation
+p ivbounds module providing instrumental variable method to bound treatment-effects estimates with potentially misreported and endogenous program participation
 p ivcheck module to choose between OLS and contaminated IV
 p ivcrc module to implement the instrumental variables correlated random coefficients estimator 
 p ivdesc module to profile compliers and non-compliers for instrumental variable analysis

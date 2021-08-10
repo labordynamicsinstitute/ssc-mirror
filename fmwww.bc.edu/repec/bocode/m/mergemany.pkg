@@ -15,8 +15,8 @@ d Requires: Stata version 10
 d
 d Distribution-Date: 20120809
 d
-d Author: Damian Clarke, University of Oxford
-d Support: email damian.c.clarke@@gmail.com
+d Author: Damian Clarke, Universidad de Santiago de Chile
+d Support: email dclarke@@fen.uchile.cl
 d
 f mergemany.ado
 f mergemany.sthlp

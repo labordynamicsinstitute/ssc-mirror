@@ -16,7 +16,7 @@ d KW: hexplot
 d
 d Requires: Stata version 13 and gtools, palettes, colrspace (>=14.2) from SSC (q.v.)
 d
-d Distribution-Date: 20201013
+d Distribution-Date: 20210723
 d
 d Author: Ben Jann, University of Bern
 d Support: email jann@@soz.unibe.ch

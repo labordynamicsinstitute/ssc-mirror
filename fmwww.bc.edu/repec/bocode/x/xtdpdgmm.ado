@@ -1,4 +1,4 @@
-*! version 2.3.1  08oct2020
+*! version 2.3.7  30jul2021
 *! Sebastian Kripfganz, www.kripfganz.de
 
 *==================================================*
@@ -152,7 +152,7 @@ program define xtdpdgmm_gmm, eclass
 		qui gen byte `nltouse' = `touse'
 		if "`nl'" == "noserial" {
 		    tempvar maxt
-			by id: egen `maxt' = max(`_dta[_TStvar]') if `touse'
+			qui by `_dta[_TSpanel]': egen `maxt' = max(`_dta[_TStvar]') if `touse'
 			qui replace `nltouse' = 0 if F`s(lag)'.`_dta[_TStvar]' > `maxt'
 			drop `maxt'
 		}
@@ -167,10 +167,9 @@ program define xtdpdgmm_gmm, eclass
 		mata: xtdpdgmm_init_nl_weight(`mopt', `s(weight)')
 	}
 	tempvar obs
-	qui by `_dta[_TSpanel]': gen `obs' = _n
+	qui by `_dta[_TSpanel]': gen int `obs' = _n
 	sum `obs', mean
 	loc maxlag			= r(max) - r(min)
-	drop `obs'
 	loc ivnum			= 0
 	if "`model'" == "" {
 		loc model			"level"
@@ -319,10 +318,10 @@ program define xtdpdgmm_gmm, eclass
 	mata: xtdpdgmm_init_vce_model(`mopt', "`vcem'")
 	if "`vce'" == "conventional" {
 		if ("`twostep'`igmm'" != "" | "`nl'" != "") {
-			di as txt "note: standard errors can be severely biased in finite samples"
+			di as txt "note: standard errors can be severely biased in finite samples; use vce(robust)"
 		}
 		else {
-			di as txt "note: standard errors may not be valid"
+			di as txt "note: standard errors may not be valid; use vce(robust)"
 		}
 	}
 
@@ -426,6 +425,8 @@ program define xtdpdgmm_gmm, eclass
 		loc fodivvars		: list retok fodivnames
 	}
 	loc ivnames			""
+	sum `obs' if `touse', mean
+	loc maxlag			= r(max) - r(min) + 1
 	forv j = 1 / `ivnum' {
 		tempname nocol
 		mata: st_matrix("`nocol'", xtdpdgmm_result_ivvars_nocol(`mopt', `j'))
@@ -1162,6 +1163,12 @@ end
 
 *==================================================*
 *** version history ***
+* version 2.3.7  30jul2021  bug with factor variables fixed in estat hausman
+* version 2.3.6  11jul2021  bug fixed that was introduced in version 2.3.5
+* version 2.3.5  07jul2021  bug fixed with labels of GMM-type instruments in dynamic models
+* version 2.3.4  11may2021  bug fixed with labels of GMM-type instruments in static models
+* version 2.3.3  16mar2021  bug with estat mmsc fixed that was introduced in version 2.3.2
+* version 2.3.2  25jan2021  bug fixed with option nl(noserial); option n() added for estat mmsc and default changed if vce(cluster) specified
 * version 2.3.1  08oct2020  bug fixed with lagged interaction terms as instruments
 * version 2.3.0  26aug2020  suboption lag() added for option nl(noserial); bug with time-series operators in dependent variable fixed in postestimation command predict; option nofootnote replaced by nofooter
 * version 2.2.7  21jul2020  bug with interaction terms fixed in estat serial; bug with option noomitted fixed; improved help files

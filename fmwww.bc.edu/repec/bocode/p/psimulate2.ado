@@ -1,5 +1,5 @@
 *! parallelise simulate2
-*! Version 1.03 - 27.02.2020
+*! Version 1.04 - 03.02.2021
 *! by Jan Ditzen - www.jan.ditzen.net
 /* changelog
 To version 1.01
@@ -14,7 +14,11 @@ To version 1.02
 To version 1.03
 	- 27.02.2020	- improved behaviour for long lines in do files or programs
 					- warning message if no seed set
-
+To version 1.04
+	- 07.10.2020	- added "/" to temppath locals
+	- 03.02.2021 	- bug fixed if data appended to frame but frame does not exists
+To version 1.05
+	- 02.08.2021 	- bug fix in exepath
 
 */
 program psimulate2 , rclass
@@ -96,7 +100,10 @@ program psimulate2 , rclass
 			psim2_getExePath
 			local exepath `"`r(exepath)'"'
 		}
-		
+		else {
+              	local exepath "`exe'"
+              }
+
 		*** Copy mata matrices
 		local matamatsave = 0
 		cap erase "`temppath'/psim2_matamat.mmat"
@@ -209,7 +216,7 @@ program psimulate2 , rclass
 			if "`whichsim'" == "simulate2" {
 				psim2_WriteDofile 	`exp_list' , ///
 									/// sim2 options
-									saving("`temppath'psim2_results_`inst'", replace) reps(`repsi')  ///
+									saving("`temppath'/psim2_results_`inst'", replace) reps(`repsi')  ///
 									perindicator(100, perindicpath(`"`temppath'"') performid(`inst')) ///
 									seed("`seed'" "`seedstartop'") seedsave("`seedsave'") seedstream(`seedstream')	///
 									/// writeBatch options
@@ -220,7 +227,7 @@ program psimulate2 , rclass
 			else {
 				psim2_WriteDofile 	`exp_list' , ///
 									/// sim options
-									saving("`temppath'psim2_results_`inst'", replace) reps(`repsi')  ///
+									saving("`temppath'/psim2_results_`inst'", replace) reps(`repsi')  ///
 									`seed' 	///
 									/// writeBatch options
 									id(`inst')  processors(`processors') simulate ///
@@ -247,7 +254,7 @@ program psimulate2 , rclass
 			forvalues inst = 1(1)`instance' {
 			*	noi disp `"command line to execute: winexec `exepath' `winexec_e' do  "`temppath'psim2_DoFile_`inst'.do" "'
 			*	local lastcmd `"winexec `exepath' `winexec_e' do  "`temppath'psim2_DoFile_`inst'.do" "'
-				winexec `exepath' `winexec_e' do  "`temppath'psim2_DoFile_`inst'.do"
+				winexec `exepath' `winexec_e' do  "`temppath'/psim2_DoFile_`inst'.do"
 			}
 		}
 		else {
@@ -278,7 +285,8 @@ program psimulate2 , rclass
 					cap qui mata mata matuse "`temppath'/psim2_performance_`inst'", replace
 					if _rc != 0 {
 						** build in artifical sleep
-						sleep 500
+						noi disp "error in saving psim2_performance_`inst'"
+						sleep 1000
 						cap qui mata mata matuse "`temppath'/psim2_performance_`inst'", replace
 					}
 					qui mata st_local("done_`inst'",strofreal(p2sim_performance[1,1]))
@@ -317,7 +325,8 @@ program psimulate2 , rclass
 			noi disp as text ""
 			noi disp "psimulate2 - parallelise `whichsim'"
 			noi disp as text  ""
-			noi disp as text `"command: `after' "'
+			local aftertt = strtrim(`"`after'"'')
+			noi disp as text `"command: `aftertt' "'
 			noi disp as text ""
 			noi disp as text  "Timings (hour, minute, sec):"  _col(40) "Estimated:"
 			noi disp as text  "  Average Run: " _col(24) %tcHH:MM:SS.sss `avg_run' _col(40) "  Time left (min):" _col(60) %tcHH:MM:SS `exp_time_left' 
@@ -388,9 +397,9 @@ program psimulate2 , rclass
 			}
 			*** Collect data
 			clear
-			use "`temppath'psim2_results_1"
+			use "`temppath'/psim2_results_1"
 			forvalues inst = 2(1)`instance' {
-				qui append using "`temppath'psim2_results_`inst'", force
+				qui append using "`temppath'/psim2_results_`inst'", force
 			}
 			
 			if "`saving'" != "" { 
@@ -399,7 +408,12 @@ program psimulate2 , rclass
 				
 				if "`frame'" != "" {
 					if "`append'" != "" {
-							frame `anything': save "`temppath'/psim2_oldframe", replace	
+							*** check if frame exists
+							frame dir
+							if regexm("`r(frames)'","`anything'") == 0 {
+								frame create `anything'
+							}
+							frame `anything': save "`temppath'/psim2_oldframe", replace	emptyok
 							append using "`temppath'/psim2_oldframe"
 						}
 					cap frame drop `anything'
@@ -486,8 +500,12 @@ program define psim2_WriteDofile
 		**** set new ado path to library in do file
 		mata mata memory
 		if `r(Nf_def)' > 0 {
-			lmbuild lpsim2_matafunc , dir(`temppath') replace			
-			file write `dofile' `"adopath + `temppath'"' _n
+			cap lmbuild lpsim2_matafunc , dir(`temppath') replace		
+			if _rc != 0 {
+				sleep 200
+				cap lmbuild lpsim2_matafunc , dir(`temppath') replace	
+			}	
+			file write `dofile' `"adopath + "`temppath'""' _n
 		}
 		
 		**** Mata programs
@@ -666,7 +684,8 @@ program define psim2_programlist, rclass
 							gettoken n1 n2: next
 							if regexm(`"`n1'"',">") == 1 {
 								local rest = strtrim(`"`rest'"')
-								local n2 = strtrim(`"`n2'"')
+								*local n2 = strtrim(`"`n2'"')
+								local n2 = subinstr(`"`n2'"',"  ","",1)
 								file write `dofilenew' `"`macval(rest)'`macval(n2)'"' _n
 								
 								/// now shift both files one line down

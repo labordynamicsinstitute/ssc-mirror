@@ -1,5 +1,5 @@
-capture program drop mergegz
-*! version 0.2.3 24sep2019
+*capture program drop mergegz
+*! version 0.3.0 25sep2019
 program define mergegz
 	version 11
 	
@@ -14,8 +14,9 @@ program define mergegz
 		}
 	}
 	
-	syntax anything(everything) [, keepusing(name) generate(name) Nogenerate ///
-								 Nolabel Nonotes update replace Noreport force]
+	syntax anything(everything) [, keepusing(varlist) generate(name) ///
+	                             Nogenerate Nolabel Nonotes update replace ///
+								 Noreport force]
 	
 	local anything = subinstr(`""`anything'""', `"""', "", .)
 	

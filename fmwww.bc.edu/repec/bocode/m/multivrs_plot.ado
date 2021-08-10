@@ -6,7 +6,9 @@ syntax [,normal nozero plotbs bs(string)]
 	local intvar `"`r(intvar)'"'
 	local prefb `"`r(prefb)'"'
 	local weights `"`r(weights)'"'
-	local weights_option "[aweight=wt_`weights']"
+	if ("`weights'" == "no" | "`weights'" == "uniform") local weights_option ""
+	else local weights_option "[aweight=wt_`weights']"
+	
 	return add
 	if "`bs'" == "" quietly sum b_intvar
 	else quietly sum b_intvar if i_bs == 1

@@ -7,7 +7,7 @@
 {viewerjumpto "Examples" "xtheckmanfe##examples"}{...}
 
 {p2colset 1 17 19 2}{...}
-{p2col:{bf: xtheckmanfe} {hline 2}} Panel data models in the presence of endogeneity and selection
+{p2col:{bf: xtheckmanfe} {hline 2}} CRE Panel data models in the presence of endogeneity and selection
 {p_end}
 {p2colreset}{...}
 
@@ -48,6 +48,8 @@ the command will use information from {help svyset} as default. Othewise Both mu
 the command will use information from {help svyset} as default. Othewise Both must be specified. {p_end}
 {synopt :{cmdab:reps(#)}} specifies the number of bootstrap samples that will be used for the estimation of standard errors. Default is 50  {p_end}
 {synopt :{cmdab:seed(#)}} specifies the seed for the generation of bootstrap random samples. Used for replication. {p_end}
+{synopt :{cmdab:ml}} Request the estimation using a -pseudo- two-step by mle. See Rios-Avila & Canavire-Bacarreza (2018). This option is not available for cases with 
+endogenous variables. {p_end}
 {synoptline}
 {p2colreset}{...}
 
@@ -60,7 +62,8 @@ INCLUDE help fvvarlist
 
 {pstd}
 {cmd:xtheckmanfe} implements the estimation of panel data with selection and endogenous variables, as proposed by Wooldridge(1995)
-and Semykina and Wooldridge (2010), based on the parametric correction, and applying Mundlak's (1978) modeling device to model. {p_end}
+and Semykina and Wooldridge (2010), based on the parametric correction, and applying Mundlak's (1978) modeling device to model. 
+This is in fact, a correlated random effects model. {p_end}
 
 {pstd} This estimator assumes that you have at least an instrument for the selection equation, as well as one instrument for each endogenous variable in the model. {p_end}
 
@@ -74,8 +77,14 @@ and the instruments to address endogeneity. {p_end}
 
 {pstd} Standard errors of the model are obtained using a panel bootstrap procedure, using the panel id as cluster. {p_end}
 
-{pstd} Internally, and the command creates auxiliary variables with the prefix "_mn_", that store the individual specific averages for all exogenous variables. 
-The command also creates the variable "_sel_imr", which contains the inverse mills ratio. This variables are dropped everytime the command is run. {p_end}
+{pstd} If the model assumes selection problem only, one can requests the pseudo two-step approach, which is estimated via -ml-. This standard errors,
+which are cluster by the panel id, would already be corrected for the two-step approach. However, because selection and outcome are 
+estimated jointly, point estimates will differ from the bootstrap approach. {p_end}
+
+{pstd} Internally, the command creates auxiliary variables with the prefix "_mn_", 
+that store the individual specific averages for all exogenous variables. 
+The command also creates the variable "_sel_imr", which contains the inverse mills ratio. 
+This variables are dropped everytime the command is run. {p_end}
 			
 {marker examples}{...}
 {title:Examples}
@@ -92,6 +101,9 @@ The command also creates the variable "_sel_imr", which contains the inverse mil
 {pstd}The results above can be compared to the results of xtheckmanfe{p_end}
 {phang2}{stata "xtheckmanfe wage age tenure, select(working = age market)"}{p_end}
 
+{pstd}Using the pseudo two step approach for xtheckmanfe{p_end}
+{phang2}{stata "xtheckmanfe wage age tenure, select(working = age market) ml "}{p_end}
+
 {pstd}The command above, however, uses the information from xtset. If data is not xtset, it would give you an error{p_end}
 {phang2}{stata "xtset, clear"}{p_end}
 {phang2}{stata "xtheckmanfe wage age tenure, select(working = age market)"}{p_end}
@@ -106,9 +118,12 @@ The command also creates the variable "_sel_imr", which contains the inverse mil
 {title:Acknowledgments}
 
 {pstd}
-This command was written for presenting this methodology for a class in econometrics.{break}
-It is based on the dofile written by Anastasia Semykina for the two-step parametric approach
+This command was written with the intention of presenting this methodology for an econometrics class.{break}
+The basic structure is based on the dofile written by Anastasia Semykina for the two-step parametric approach
 that is posted on her website http://myweb.fsu.edu/asemykina/. {break}
+
+{pstd}
+The new approach based on pseudo two-step, is based on the strategies suggested in Rios-Avila and Canavire-Bacarreza (2018).
 
 {pstd}
 Program has been tested to work under Stata 13.
@@ -130,8 +145,16 @@ friosavi@levy.org
 Mundlak, Yair. 1978. "On the Pooling of Time Series and Cross Section Data."  Econometrica 46 (1):69-85. doi: 10.2307/1913646.
 
 {phang}
-Semykina, Anastasia, and Jeffrey M. Wooldridge. 2010. "Estimating panel data models in the presence of endogeneity and selection."  Journal of Econometrics 157 (2):375-380. doi: https://doi.org/10.1016/j.jeconom.2010.03.039.
+Rios-Avila, Fernando and Canavire-Bacarreza, Gustavo. 2018. 
+"Standard-error correction in two-stage optimization models: A quasi–maximum likelihood estimation approach" 
+Stata Journal 18 (1):206-222. doi: 10.1177/1536867X1801800113.
+
 
 {phang}
-Wooldridge, Jeffrey M. 1995. "Selection corrections for panel data models under conditional mean independence assumptions."  Journal of Econometrics 68 (1):115-132. doi: https://doi.org/10.1016/0304-4076(94)01645-G.
+Semykina, Anastasia, and Jeffrey M. Wooldridge. 2010. "Estimating panel data models in the presence of endogeneity and selection."
+  Journal of Econometrics 157 (2):375-380. doi: https://doi.org/10.1016/j.jeconom.2010.03.039.
+
+{phang}
+Wooldridge, Jeffrey M. 1995. "Selection corrections for panel data models under conditional mean independence assumptions." 
+ Journal of Econometrics 68 (1):115-132. doi: https://doi.org/10.1016/0304-4076(94)01645-G.
 

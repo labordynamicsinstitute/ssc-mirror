@@ -6,7 +6,7 @@ version 16.0;
  with respect to a distribution identified
  by an equivalent variable in a data frame.
 *! Author: Roger Newson
-*! Date: 26 October 2020
+*! Date: 20 July 2021
 */
 
 
@@ -35,7 +35,10 @@ if _rc {;
 };
 local fframename `"`r(fframename)'"';
 local fframeweightvar `"`r(ffweightvar)'"';
-
+local fframexvar `"`r(ffxvar)'"';
+if `"`fframexvar'"'=="" {;
+  local fframexvar `varlist';
+};
 
 *
  Extract foreign distribution from frame specified in fframe()
@@ -45,10 +48,10 @@ tempname fforeign;
 tempvar tempwei;
 confirm frame `fframename';
 frame `fframename' {;
-  cap noi conf var `by' `varlist' `fframeweightvar';
+  cap noi conf var `by' `fframexvar' `fframeweightvar';
   if _rc {;
     disp as error "Not all these variables found in frame `fframename':";
-    disp "`by' `varlist' `fframeweightvar'";
+    disp "`by' `fframexvar' `fframeweightvar'";
     error 498;
   };
   if `"`fframeweightvar'"'=="" {;
@@ -62,7 +65,7 @@ frame `fframename' {;
     };
     qui gene double `tempwei'=`fframeweightvar';
   };
-  frame put `by' `varlist' `tempwei' if !missing(`varlist') & !missing(`tempwei'),
+  frame put `by' `fframexvar' `tempwei' if !missing(`fframexvar') & !missing(`tempwei'),
     into(`fforeign');
   drop `tempwei';
 };
@@ -70,10 +73,15 @@ frame `fframename' {;
 
 *
  Collapse foreign distribution frame
- to have 1 obs per by-group per x-value
+ to have 1 obs per by-group per x-value,
+ renaming x-variable if necessary
 *;
 frame `fforeign' {;
-  collapse (sum) `tempwei', by(`by' `varlist') fast;
+  collapse (sum) `tempwei', by(`by' `fframexvar') fast;
+  cap conf var `varlist';
+  if _rc {;
+    qui rename `fframexvar' `varlist';
+  };
   local N_fforeign=_N;
 };
 
@@ -164,9 +172,10 @@ version 16.0;
   Parse syntax of fframe() option.
 */
 
-syntax name(name=name) [ , Weightvar(name) ];
+syntax name(name=name) [ , Weightvar(name) Xvar(name) ];
 
 return local fframename "`name'";
 return local ffweightvar "`weightvar'";
+return local ffxvar "`xvar'";
 
 end;

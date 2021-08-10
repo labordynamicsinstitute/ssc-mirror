@@ -55,9 +55,16 @@ and not under the Stata version of the current version of {cmd:dolog} or {cmd:do
 
 {p}
 An exception to this rule occurs when the do-file is a
-{help cscript:certification script}. For these, it is better to use the
-{helpb dologx} package instead of {cmd: dolog}. To find unofficial Stata packages
-which you might want to download, use {helpb net:net search} or {helpb findit}.
+{help cscript:certification script}.
+For these, it is best to use the {cmd:version:} prefix with {cmd: dolog}.
+For instance, to run a certification script {cmd:dolog.do}
+under Stata Version 16,
+the user should type
+
+{p 8 16}{inp:. version 16: dolog dolog}{p_end}
+
+{p}
+and {cmd:dolog.do} will be executed under Stata Version 16.
 
 {p}
 {cmd:dolog} and {cmd:dosmcl} are recursive,
@@ -87,8 +94,8 @@ before executing the whole sequence using the master do-file.
 {title:Author}
 
 {p}
-Roger Newson, Imperial College London, UK.
-Email: {browse "mailto:r.newson@imperial.ac.uk":r.newson@imperial.ac.uk}
+Roger Newson, King's College London, UK.
+Email: {browse "mailto:roger.newson@kcl.ac.uk":roger.newson@kcl.ac.uk}
 
 
 {title:Also see}
@@ -100,6 +107,4 @@ Manual:  {manlink R do}, {manlink R doedit}, {manlink R log}, {manlink P smcl}, 
 {psee}
 {space 2}Help:  {manhelp do R}, {manhelp run R}, {manhelp doedit R}, {manhelp log R}, {manhelp smcl P},
 {manhelp version P}, {manhelp cscript P}
-{break}
-{helpb dologx} if installed
-{p_end}
+p_end}

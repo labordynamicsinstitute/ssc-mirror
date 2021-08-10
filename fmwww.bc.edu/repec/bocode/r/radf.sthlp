@@ -1,5 +1,5 @@
 ﻿{smcl}
-{* *! version 1 23jul2020}{...}
+{* *! version 1 20may2021}{...}
 {cmd:help radf}
 {hline}
 
@@ -80,7 +80,7 @@ to the default value of {opt FIX}.
 
 {phang}
 {opt window} The initial window width used in the rolling ADF regressions takes the default value of r = 0.01 + 1.8/sqrt(T). The {opt window()} option can be used to select a different window width.
-However, as the critical values have been developed for the defsult window width, a warning is provided if the window width is set by the user, showing the default width and the selected width. 
+However, as the critical values have been developed for the default window width, a warning is provided if the window width is set by the user, showing the default width and the selected width. 
 
 {phang}
 {opt bs} computes right-tail Monte Carlo critical values for 90, 95 and 99 percentiles based on the wild bootstrap advocated by Phillips and Shi (2020), using 199 replications.

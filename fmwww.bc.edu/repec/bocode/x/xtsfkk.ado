@@ -1,3 +1,4 @@
+*! version 2.0.1  10jun2021
 *! version 2.0.0  08dec2020
 *! version 1.1.0  12jun2019
 *! version 1.0.1  09jan2018
@@ -40,12 +41,12 @@ Regressors." Economics Letters
 */
 
 program xtsfkk
-	version 13.1
+	version 15
 	if replay() {
 		if "`2'"=="version" | "`2'"=="ver" | "`2'"=="vers" | "`2'"=="versi" | "`2'"=="versio" {
 			di _n(1) "{bf:{ul:Version}}"
-			di _n(1) "{txt}{sf}    xtsfkk version 2.0.0"
-			di "    December 8, 2020"
+			di _n(1) "{txt}{sf}    xtsfkk version 2.0.1"
+			di "    June 10, 2021"
 			di _n(1) "{bf:{ul:Program Author}}"
 			di _n(1) "    Dr. Mustafa Ugur Karakaplan"
 			di `"    E-mail: {browse "mailto:mukarakaplan@yahoo.com":mukarakaplan@yahoo.com}"'

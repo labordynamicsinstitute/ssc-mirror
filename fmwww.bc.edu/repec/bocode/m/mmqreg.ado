@@ -1,4 +1,6 @@
-*! v1.7 corrects e(cmd_line) to cmdline and problems with "program drop"
+*! v2  Corrects Bug and Speeds up Clustered SE
+* v1.8 adds Obs
+* v1.7 corrects e(cmd_line) to cmdline and problems with "program drop"
 * v1.6 Small improvements estimation efficiencies. I also allow for WEIGHTS!
 * v1.5 August 2020 MMQREG by Fernando Rios-Avila
 * Bug for simmultanous MMQREG fixed
@@ -55,7 +57,7 @@ program define mmqreg , eclass
 		exit
 	}
 	else {
-	    display in red "Last estimattions not found"
+	    display in red "Last estimations not found"
 		error 301
 	}
  }
@@ -104,10 +106,11 @@ end
 
 program define display_mmqreg
 	display as text "MM-qreg Estimator"
+	display as text "Number of obs = " as result "`=e(N)'"
 	if "`absorb'"!="" display as text "Absorbed Variables: " as result "`absorb'"
 	if rowsof(e(qth))==1 {
 	    local qqq=det(e(qth))*100
-		display "Quantile:" %3.2g `qqq'
+		display as text "Quantile:" as result %3.2g `qqq'
 		}
 	ereturn display  
 end
@@ -238,7 +241,7 @@ program define mmqreg1, eclass sortpreserve
 	
 	ereturn post __bq __vq, esample(`touse') buildfvinfo findomitted  obs(`nobs')
 	ereturn local cmd "mmqreg"
-	ereturn local cmd_line "mmqreg `0'"
+	ereturn local cmdline "mmqreg `0'"
 	*ereturn local predict  "mmqreg_p"
 	ereturn local vce "mmvce"
 	ereturn matrix qth `qth'
@@ -480,7 +483,7 @@ end
 
 
 mata:
-mata clear
+ 
 void mmqreg_vce1x(string scalar yvar_,  string scalar xvar_,	
 			 	  string scalar beta_,  string scalar gama_,
 				  string scalar qval_,  string scalar qth_, 
@@ -496,23 +499,24 @@ void mmqreg_vce1x(string scalar yvar_,  string scalar xvar_,
 		real matrix omgx
 		st_view(xvar =.,.,xvar_ ,touse)
 		st_view(yvar =.,.,yvar_ ,touse)
-		st_view(wgt  =.,.,wgt_  ,touse)
+		wgt=st_data(.,wgt_  ,touse)
+		wgt=wgt:/mean(wgt)
 		//wgt=wgt:/mean(wgt)
 		// first load data
-		beta=st_matrix(beta_)'
-		gama=st_matrix(gama_)'
+		beta = st_matrix(beta_)'
+		gama = st_matrix(gama_)'
 		// N obs k rows
-		nobs=rows(xvar)
-		k   =cols(xvar)
+		nobs = rows(xvar)
+		k    = cols(xvar)
 		// fden qth qval
-		qval=st_matrix(qval_)
-		qth =st_matrix(qth_)
-		fden=st_matrix(fden_)
+		qval = st_matrix(qval_)
+		qth  = st_matrix(qth_)
+		fden = st_matrix(fden_)
 		qs  =cols(qth)
 		// std residuals : residuals and fitted values will be obtained with reghdfe		
 		u_hat=xvar*gama
-		u    =(yvar-xvar*beta):/u_hat
-		v    =2*u:*((u:>=0):-mean(u:>=0,wgt)):-1
+		u    = (yvar-xvar*beta):/u_hat
+		v    = 2*u:*((u:>=0):-mean(u:>=0,wgt)):-1
 		
 		// other elements common 
 		// elements that do not depend on w
@@ -520,7 +524,7 @@ void mmqreg_vce1x(string scalar yvar_,  string scalar xvar_,
 	    iqxx = invsym(qxx)
 		
 		// E(U_s) E(U_s^2)
-		us1 = quadcross(u_hat,wgt,J(rows(u_hat),1,1))
+		us1 = mean(u_hat,wgt)
 		
 		// Betas and VCOV for first and second
 		// This residual changes by quantile
@@ -529,20 +533,20 @@ void mmqreg_vce1x(string scalar yvar_,  string scalar xvar_,
 		
  		for(i=1;i<=qs;i++) {
 			
-			w[.,i]= 1/fden[i]*(qth[i]:-((u:-qval[i]):<=0)) - (u:+(qval[i]*(v:-1)))
+			w[.,i]= ( 1/fden[i]*(qth[i]:-((u:-qval[i]):<=0)) - (u:+(qval[i]*v)) ) :/  (us1 * nobs)
 			
 		}	
 		
 		// Xi and Omg
-		xi=J(qs,1,1)#iqxx , qval'#iqxx , I(qs) # (1/us1*gama)  
+		
 		xi2=( iqxx    , J(k,k+qs,0)      )  \ ///
-			( J(k,k,0), iqxx , J(k,qs,0) )  \ xi 
-		//xi =  ( iqxx    , qval[1]*iqxx , 1/us1*gama, J(k,1,0) ) \ ///
-		//		( iqxx    , qval[2]*iqxx , J(k,1,0), 1/us1*gama)
+			( J(k,k,0), iqxx , J(k,qs,0) )  \ ///
+			J(qs,1,1)#iqxx , qval'#iqxx , I(qs) # (gama)  
+
 		real matrix xvar_uhat, omg_x
 		xvar_uhat = xvar:*u_hat
-		omg_x=(xvar_uhat:*u,xvar_uhat:*v,u_hat:*w)
-		omg = quadcross(omg_x,wgt:^2,omg_x)	
+		omg_x     =(xvar_uhat:*u,xvar_uhat:*v,u_hat:*w):*wgt
+		omg       =quadcross(omg_x,omg_x)	
 
 		betaq=beta', gama'
 		for(i=1;i<=qs;i++) {
@@ -579,8 +583,8 @@ void mmqreg_vce1c(string scalar yvar_, string scalar xvar_,
 		st_view(xvar =.,.,xvar_ ,touse)
 		st_view(yvar =.,.,yvar_ ,touse)
 		st_view(cvar =.,.,cvar_ ,touse)
-		st_view(wgt  =.,.,wgt_  ,touse)
-		//wgt=wgt:/mean(wgt)
+		wgt = st_data(.,wgt_  ,touse)
+		wgt=wgt:/mean(wgt)		//wgt=wgt:/mean(wgt)
 		// first load data
 		
 		beta=st_matrix(beta_)'
@@ -595,71 +599,54 @@ void mmqreg_vce1c(string scalar yvar_, string scalar xvar_,
 		qs=cols(qth)
 		// std residuals : residuals and fitted values will be obtained with reghdfe		
 		u_hat=xvar*gama
-		u=(yvar-xvar*beta):/u_hat
-		v=2*u:*((u:>=0):-mean(u:>=0, wgt)):-1
- 
+		u    = (yvar-xvar*beta):/u_hat
+		v    = 2*u:*((u:>=0):-mean(u:>=0,wgt)):-1
 		
 		// other elements common 
-
 		// elements that do not depend on w
-		qxx=quadcross(xvar,wgt,xvar)
-	   iqxx=invsym(qxx)
+		 qxx = quadcross(xvar,wgt,xvar)
+	    iqxx = invsym(qxx)
 		
 		// E(U_s) E(U_s^2)
-		us1=quadcross(u_hat,wgt,J(rows(u_hat),1,1))
+		us1 = mean(u_hat,wgt)
 		
 		// Betas and VCOV for first and second
-		// vcvb=eu2*iqxx*pxx*iqxx/rows(x)
-		// vcvg=ev2*iqxx*pxx*iqxx/rows(x)
 		// This residual changes by quantile
+		
 		w=J(nobs,qs,0)
+		
  		for(i=1;i<=qs;i++) {
-			w[.,i]=1/fden[i]*(qth[i]:-((u:-qval[i]):<=0))-(u:+(qval[i]*(v:-1)))
+			
+			w[.,i]= ( 1/fden[i]*(qth[i]:-((u:-qval[i]):<=0)) - (u:+(qval[i]*v)) ) :/  (us1 * nobs)
+			
 		}	
 		
 		// Xi and Omg
-		xi=J(qs,1,1)#iqxx,qval'#iqxx,I(qs)#(1/us1*gama)  
-		xi2=( iqxx    , J(k,k+qs,0)      )  \ ///
-			( J(k,k,0), iqxx , J(k,qs,0) )  \ xi 
- 
-		real matrix info, uhatu, uhatv, uhatw , omgs
-		real scalar nc, dfr,one
 		
-		  // lxvar=(xvar:*u_hat:*u,xvar:*u_hat:*v,u_hat:*w)
- 		  omg  = J(cols(xvar)*2+cols(qval),cols(xvar)*2+cols(qval),0)
-		  info = panelsetup(cvar, 1)
-		  nc   = rows(info)
-		  dfr  = nc - 1
-		  real matrix wgt_i, u_hat_i, u_u , u_v, u_w, v_v, v_w, w_w
-		  
-        for(i=1; i<=nc; i++) {
-			xi      = panelsubmatrix(xvar ,i,info)
-			u_hat_i = panelsubmatrix(u_hat,i,info)
-			wgt_i   = panelsubmatrix(wgt,i,info)
-			one   = J(rows(xi),1,1)
+		xi2=( iqxx    , J(k,k+qs,0)      )  \ ///
+			( J(k,k,0), iqxx , J(k,qs,0) )  \ ///
+			J(qs,1,1)#iqxx , qval'#iqxx , I(qs) # (gama)  
+
+		real matrix xvar_uhat, omg_x, omg_xx
+		xvar_uhat = xvar:*u_hat
+		omg_x     =(xvar_uhat:*u,xvar_uhat:*v,u_hat:*w):*wgt
+		
+		real matrix info 
+		real scalar nc 
+	    
+		info = panelsetup(cvar, 1)
+		nc   = rows(info)
+		omg_xx 	  =panelsum(omg_x,info)
+		 
+        omg  =cross(omg_xx,omg_xx)
 			
-			uhatu = quadcross(xi ,wgt_i,u_hat_i:*panelsubmatrix(u,i,info))'
-			uhatv = quadcross(xi ,wgt_i,u_hat_i:*panelsubmatrix(v,i,info))'
-			uhatw = quadcross(one,wgt_i,u_hat_i:*panelsubmatrix(w,i,info))
-			 
-			u_u = quadcross(uhatu,uhatu)
-			u_v = quadcross(uhatu,uhatv)
-			u_w = quadcross(uhatu,uhatw)
-			v_v = quadcross(uhatv,uhatv) 
-			v_w = quadcross(uhatv,uhatw)
-			w_w = quadcross(uhatw,uhatw)
-			omgs= ( u_u  , u_v  , u_w \ ///
-			        u_v' , v_v  , v_w \ ///
-			        u_w' , v_w' , w_w )
-            omg  =omg + omgs
-			
-        }
-		 real scalar ncone
+        real scalar ncone
 		ncone=0
 		betaq=beta', gama'
 		for(i=1;i<=qs;i++) {
 			betaq=betaq,(beta+gama*qval[i])'
 		}
+ 
 		if (dfadj!="") {
 			nn=nobs-(k-diag0cnt(qxx))
 			ncone=1
@@ -667,8 +654,10 @@ void mmqreg_vce1c(string scalar yvar_, string scalar xvar_,
 		else {
 			nn=nobs-1
 		}
+		
 		//n=(nobs-(k-diag0cnt(qxx)))
 		vcvq = xi2*omg*xi2'*(nobs-1)/nn*(nc/(nc-ncone))
+ 
 		st_matrix("__bq",betaq)
 		st_matrix("__vq",makesymmetric(vcvq) )	
 		st_numscalar("df_r", dfr)
@@ -676,7 +665,7 @@ void mmqreg_vce1c(string scalar yvar_, string scalar xvar_,
 }
 /// this will be another "hidden" option that will try to obtained clustered standard errors.
  
-
+// This is for the basic no FE noRobust
 void mmqreg_vce1(string scalar yvar_, string scalar xvar_,	
 				 string scalar beta_,  string scalar gama_,
 				 string scalar qval_,  string scalar qth_, 
@@ -693,57 +682,69 @@ void mmqreg_vce1(string scalar yvar_, string scalar xvar_,
 		// first load data
 		st_view(xvar=.,.,xvar_,touse)
 		st_view(yvar=.,.,yvar_,touse)
-		st_view(wgt =.,., wgt_,touse)
+		wgt =st_data( ., wgt_,touse)
+		wgt = wgt:/mean(wgt)
 		//wgt=wgt:/mean(wgt)
 		beta=st_matrix(beta_)'
 		gama=st_matrix(gama_)'
 		// N obs k rows
 		nobs=rows(xvar)
-		k=cols(xvar)
+		k   =cols(xvar)
 		// fden qth qval
 		qval=st_matrix(qval_)
 		qth =st_matrix(qth_)
 		fden=st_matrix(fden_)
 		qs=cols(qth)
 		// std residuals : residuals and fitted values will be obtained with reghdfe		
-		u=(yvar-xvar*beta):/(xvar*gama)
-		v=2*u:*((u:>=0):-mean(u:>=0,wgt)):-1
+		
+		// Residuals
 		u_hat=xvar*gama
-	
+		// Std Residual First regression   y = xb + u * sigma
+		u    =(yvar-xvar*beta):/(u_hat)
+		// Std Residual Second regression  abs(u * sigma) = xg + RR 
+		// Std Residual Second regression  abs(u * sigma) - xg = RR    || 1/xg
+		// This just makes a change from Abs(X) = 2*X(...)
+		// Std Residual Second regression  abs(u * sigma)/xg - 1 = V
+		v    = 2*u:*((u:>=0):-mean(u:>=0,wgt)):-1
+		
+	    // The idea here is S2=i(X'X) (X * e^2 * X )    i(X'X)
+		// The idea here is S2=i(X'X) * (X * ( u * sigma )^2 * X ) *  i(X'X)
+		// The idea here is S2= E(u^2) * i(X'X) * (X * (sigma )^2 * X ) *  i(X'X)
 		// other elements common 
 		eu2=mean(u:^2,wgt)
 		ev2=mean(v:^2,wgt)
 		euv=mean(u:*v,wgt)
 		// elements that do not depend on w
-		qxx=quadcross(xvar,wgt,xvar)
 		
-	   iqxx=invsym(qxx)	
-	   
-		pxx=quadcross(xvar,wgt:*(u_hat:^2),xvar)
-		px =quadcross(xvar,wgt:*(u_hat:^2))
+		qxx   = quadcross(xvar,wgt,xvar)
+		iqxx  = invsym(qxx)	
+		pxx   = quadcross(xvar,wgt:*(u_hat:^2),xvar)
+		px    = quadcross(xvar,wgt:*u_hat:^2)
 	
 		// E(U_s) E(U_s^2)
-		us1=mean(u_hat,wgt)*nobs
-		us2=quadcross(u_hat,wgt,u_hat)
+		us1 = mean(u_hat,wgt)
+		us2 = quadcross(u_hat,wgt,u_hat)
 		
 		w=J(nobs,qs,0)
 
 		for(i=1;i<=qs;i++) {
-			w[.,i]=1/fden[i]*(qth[i]:-((u:-qval[i]):<=0))-(u:+(qval[i]*(v:-1)))
+			w[.,i]=(1/fden[i]*(qth[i]:-((u:-qval[i]):<=0))-(u:+(qval[i]*(v)))):/(us1*nobs)
 		}	
 		
-		euw=quadcross(u,wgt,w)/nobs
-		evw=quadcross(v,wgt,w)/nobs
-		ew2=quadcross(w,wgt,w)/nobs
+		euw=mean(u:*w,wgt)
+		evw=mean(v:*w,wgt)
+		ew2=mean(w:^2,wgt)
+		 
 		
 		// Xi and Omg
-		xi=J(qs,1,1)#iqxx,qval'#iqxx,I(qs)#(1/us1*gama)  
+		//xi=J(qs,1,1)#iqxx,qval'#iqxx,I(qs)#(gama)  
 		xi2=( iqxx    , J(k,k+qs,0)      )  \ ///
-			( J(k,k,0), iqxx , J(k,qs,0) )  \ xi 
+			( J(k,k,0), iqxx , J(k,qs,0) )  \ ///
+			J(qs,1,1)#iqxx,qval'#iqxx,I(qs)#(gama)
 			
- 		omg=(eu2*pxx, euv*pxx , euw#px \  ///
-             euv*pxx, ev2*pxx , evw#px \   ///  
-	        (euw#px)', (evw#px)', us2*ew2)
+ 		omg=(eu2*pxx , euv*pxx  , euw#px \  ///
+             euv*pxx , ev2*pxx  , evw#px \   ///  
+	        (euw#px)', (evw#px)', ew2*us2)
  	
 		betaq=beta', gama'
 		for(i=1;i<=qs;i++) {
@@ -756,6 +757,7 @@ void mmqreg_vce1(string scalar yvar_, string scalar xvar_,
 			nn=nobs
 		}
 		vcvq = xi2*omg*xi2'*nobs/nn
+		
 		st_matrix("__bq",betaq)
 		st_matrix("__vq",makesymmetric(vcvq) )	
 		st_numscalar("df_r", nn)
@@ -778,9 +780,10 @@ void mmqreg_vce2(string scalar yvar_, string scalar xvar_,
 		// first load data. y may not be needed
 		st_view(xvar=. ,.,xvar_ ,touse)
 		st_view(yvar=. ,.,yvar_ ,touse)
-		st_view(wgt =. ,.,wgt_  ,touse)
-		st_view(u=.    ,.,u_    ,touse)
+ 		st_view(u=.    ,.,u_    ,touse)
 		st_view(u_hat=.,.,u_hat_,touse)
+		wgt = st_data(.,wgt_  ,touse)
+		wgt=wgt:/mean(wgt)
 		
 		beta=st_matrix(beta_)'
 		gama=st_matrix(gama_)'
@@ -802,19 +805,19 @@ void mmqreg_vce2(string scalar yvar_, string scalar xvar_,
 		ev2=mean(v:^2,wgt)
 		euv=mean(u:*v,wgt)
 		// elements that do not depend on w
-		qxx=quadcross(xvar,wgt,xvar)/nobs
+		qxx=quadcross(xvar,wgt,xvar)
 		
 	   iqxx=invsym(qxx)
 	   
 		//pxx=quadcross(xvar,wgt,u_hat:^2,xvar)/nobs
 		//px =quadcross(xvar,wgt,u_hat:^2)/nobs
 
-		pxx=quadcross(xvar,wgt:*(u_hat:^2),xvar)/nobs
-		px =quadcross(xvar,wgt:*(u_hat:^2))/nobs
+		pxx=quadcross(xvar,wgt:*(u_hat:^2),xvar)
+		px =quadcross(xvar,wgt:*(u_hat:^2))
 		
 		// E(U_s) E(U_s^2)
 		us1=mean(u_hat,wgt)
-		us2=mean(u_hat:^2,wgt)
+		us2=quadcross(u_hat:^2,wgt)
 		
 		// Betas and VCOV for first and second
 		//vcvb=eu2*iqxx*pxx*iqxx/rows(x)
@@ -823,21 +826,22 @@ void mmqreg_vce2(string scalar yvar_, string scalar xvar_,
 		w=J(nobs,qs,0)
 
 		for(i=1;i<=qs;i++) {
-			w[.,i]=1/fden[i]*(qth[i]:-((u:-qval[i]):<=0))-(u:+(qval[i]*(v:-1)))
+			w[.,i]=(1/fden[i]*(qth[i]:-((u:-qval[i]):<=0))-(u:+(qval[i]*v))):/(us1*nobs)
 		}	
 		
-		euw=quadcross(u,wgt,w)/nobs
-		evw=quadcross(v,wgt,w)/nobs
-		ew2=quadcross(w,wgt,w)/nobs
+		euw=mean(u:*w,wgt)
+		evw=mean(v:*w,wgt)
+		ew2=mean(w:^2,wgt) 
 		
 		// Xi and Omg
-		xi=J(qs,1,1)#iqxx,qval'#iqxx,I(qs)#(1/us1*gama)  
+		// xi=J(qs,1,1)#iqxx,qval'#iqxx,I(qs)#( gama)  
 		xi2=( iqxx    , J(k,k+qs,0)      )  \ ///
-			( J(k,k,0), iqxx , J(k,qs,0) )  \ xi 
+			( J(k,k,0), iqxx , J(k,qs,0) )  \ ///
+			J(qs,1,1)#iqxx,qval'#iqxx,I(qs)#( gama) 
 		
 		omg=(eu2*pxx , euv*pxx  , euw#px \  ///
              euv*pxx , ev2*pxx  , evw#px \   ///  
-	        (euw#px)', (evw#px)', us2*ew2)
+	        (euw#px)', (evw#px)', ew2*us2)
  	
 		// create all 
 		betaq=beta', gama'
@@ -851,8 +855,8 @@ void mmqreg_vce2(string scalar yvar_, string scalar xvar_,
 		else {
 			nn=nobs
 		}
-		
-		vcvq = xi2*omg*xi2'/nn
+ 
+		vcvq = xi2*omg*xi2'*nobs/nn
 			//bq="b"+strofreal(i)
 			//vq="v"+strofreal(i)
 		st_matrix("__bq",betaq)
@@ -878,10 +882,10 @@ void mmqreg_vce2x(string scalar yvar_, string scalar xvar_,
 
 		st_view(xvar =.,.,xvar_ ,touse)
 		st_view(yvar =.,.,yvar_ ,touse)
-		st_view(wgt  =.,.,wgt_  ,touse)
-		st_view(u    =.,.,u_  ,touse)
+ 		st_view(u    =.,.,u_  ,touse)
 		st_view(u_hat=.,.,u_hat_  ,touse)
-		
+		wgt = st_data(.,wgt_  ,touse)
+		wgt=wgt:/mean(wgt)
 		// first load data. y may not be needed
 		
 		beta=st_matrix(beta_)'
@@ -897,14 +901,14 @@ void mmqreg_vce2x(string scalar yvar_, string scalar xvar_,
 		qs=cols(qth)
 		// std residuals : residuals and fitted values will be obtained with reghdfe		
 		
-		v=2*u:*((u:>=0):-mean(u:>=0,wgt)):-1
+		v = 2*u:*((u:>=0):-mean(u:>=0,wgt)):-1
 
 		// elements that do not depend on w
 		qxx=quadcross(xvar,wgt,xvar)
 	   iqxx=invsym(qxx)
  
 		// E(U_s) E(U_s^2)
-		us1=quadsum(u_hat:*wgt)
+		us1=mean(u_hat,wgt)
 
 		// Betas and VCOV for first and second
 		//vcvb=eu2*iqxx*pxx*iqxx/rows(x)
@@ -914,11 +918,11 @@ void mmqreg_vce2x(string scalar yvar_, string scalar xvar_,
 
 		for(i=1;i<=qs;i++) {
 			//w[.,i]=1/fden[i]*(qth[i]:-((u:+qval[i]):<=0))-(u:+qth[i])
-			w[.,i]=1/fden[i]*(qth[i]:-((u:-qval[i]):<=0))-(u:+(qval[i]*(v:-1)))
+			w[.,i]=(1/fden[i]*(qth[i]:-((u:-qval[i]):<=0))-(u:+(qval[i]*v))):/(us1*nobs)
 		}	
 		
 		// Xi and Omg
-		xi =J(qs,1,1)#iqxx,qval'#iqxx,I(qs)#(1/us1*gama)  
+		xi =J(qs,1,1)#iqxx,qval'#iqxx,I(qs)#(gama)  
 		xi2=( iqxx    , J(k,k+qs,0)      )  \ ///
 			( J(k,k,0), iqxx , J(k,qs,0) )  \ xi 
 		real matrix xvar_uhat 
@@ -964,10 +968,10 @@ void mmqreg_vce2c(string scalar yvar_, string scalar xvar_,
 		st_view(xvar =.,.,xvar_ ,touse)
 		st_view(yvar =.,.,yvar_ ,touse)
 		st_view(cvar =.,.,cvar_ ,touse)
-		st_view(wgt  =.,.,wgt_  ,touse)
 		st_view(u    =.,.,u_  ,touse)
 		st_view(u_hat=.,.,u_hat_  ,touse)
-		
+		wgt = st_data(.,wgt_  ,touse)
+		wgt=wgt:/mean(wgt)
 		
 		// first load data. y may not be needed
 		
@@ -993,7 +997,7 @@ void mmqreg_vce2c(string scalar yvar_, string scalar xvar_,
 	   iqxx=invsym(qxx)
  
 		// E(U_s) E(U_s^2)
-		us1=quadcross(u_hat,wgt,J(rows(u_hat),1,1))
+		us1=mean(u_hat,wgt)
 		
 		// Betas and VCOV for first and second
 		//vcvb=eu2*iqxx*pxx*iqxx/rows(x)
@@ -1003,48 +1007,27 @@ void mmqreg_vce2c(string scalar yvar_, string scalar xvar_,
 
 		for(i=1;i<=qs;i++) {
 			//w[.,i]=1/fden[i]*(qth[i]:-((u:+qval[i]):<=0))-(u:+qth[i])
-			w[.,i]=1/fden[i]*(qth[i]:-((u:-qval[i]):<=0))-(u:+(qval[i]*(v:-1)))
+			w[.,i]=(1/fden[i]*(qth[i]:-((u:-qval[i]):<=0))-(u:+(qval[i]*v))):/(us1*nobs)
 		}	
 		
 		// Xi and Omg
-		xi =J(qs,1,1)#iqxx,qval'#iqxx,I(qs)#(1/us1*gama)  
-		xi2=( iqxx    , J(k,k+qs,0)      )  \ ///
-			( J(k,k,0), iqxx , J(k,qs,0) )  \ xi 
-		//xi =( iqxx    , qval[1]*iqxx , 1/us1*gama, J(k,1,0) ) \ ///
-		//		( iqxx    , qval[2]*iqxx , J(k,1,0), 1/us1*gama)
-		//vcov matrix
-		real matrix info, uhatu, uhatv, uhatw , omgs
-		real scalar nc, dfr,one
 		
-		  // lxvar=(xvar:*u_hat:*u,xvar:*u_hat:*v,u_hat:*w)
- 		  omg  = J(cols(xvar)*2+cols(qval),cols(xvar)*2+cols(qval),0)
-		  info = panelsetup(cvar, 1)
-		  nc   = rows(info)
-		  dfr  = nc - 1
-		  real matrix wgt_i, u_hat_i, u_u , u_v, u_w, v_v, v_w, w_w
-		  
-        for(i=1; i<=nc; i++) {
-			xi      = panelsubmatrix(xvar ,i,info)
-			u_hat_i = panelsubmatrix(u_hat,i,info)
-			wgt_i   = panelsubmatrix(wgt,i,info)
-			one   = J(rows(xi),1,1)
-			
-			uhatu = quadcross(xi ,wgt_i,u_hat_i:*panelsubmatrix(u,i,info))'
-			uhatv = quadcross(xi ,wgt_i,u_hat_i:*panelsubmatrix(v,i,info))'
-			uhatw = quadcross(one,wgt_i,u_hat_i:*panelsubmatrix(w,i,info))
-			 
-			u_u = quadcross(uhatu,uhatu)
-			u_v = quadcross(uhatu,uhatv)
-			u_w = quadcross(uhatu,uhatw)
-			v_v = quadcross(uhatv,uhatv) 
-			v_w = quadcross(uhatv,uhatw)
-			w_w = quadcross(uhatw,uhatw)
-			omgs= ( u_u  , u_v  , u_w \ ///
-			        u_v' , v_v  , v_w \ ///
-			        u_w' , v_w' , w_w )
-            omg  =omg + omgs
-			
-        }
+		xi2=( iqxx    , J(k,k+qs,0)      )  \ ///
+			( J(k,k,0), iqxx , J(k,qs,0) )  \ ///
+			J(qs,1,1)#iqxx,qval'#iqxx,I(qs)#( gama)
+ 
+		real matrix xvar_uhat, omg_x, omg_xx
+		xvar_uhat = xvar:*u_hat
+		omg_x     =(xvar_uhat:*u,xvar_uhat:*v,u_hat:*w):*wgt
+		
+		real matrix info 
+		real scalar nc 
+	    
+		info = panelsetup(cvar, 1)
+		nc   = rows(info)
+		omg_xx 	  =panelsum(omg_x,info)
+		 
+        omg  =cross(omg_xx,omg_xx)
 		
 		// create all 
 		betaq=beta', gama'

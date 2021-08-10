@@ -1,11 +1,11 @@
 {smcl}
-{* *! version 1.1.1 4oct2020}{...}
+{* *! version 1.1.2 7may2021}{...}
 {cmd:help heart}
 {hline}
 
 {title:Title}
 
-    {hi:heart} {c -} displays row of hearts, graphs about love and randomly generated pick-up line to relieve coding stress and make coding fun and accessible!  
+    {hi:heart} {c -} displays row of hearts, graphs about love and randomly generated pick-up line to celebrate love in all its types and forms!  
 
 {title:Syntax}
 
@@ -21,6 +21,7 @@
 {synopt:{opt sca:tter}}displays a scatter plot of hearts{p_end}
 {synopt:{opt pi:e}}displays a pie chart answering a very important question{p_end}
 {synopt:{opt fli:rt}}randomly generates pick up lines! {p_end}
+{synopt:{opt pr:ide}}displays a row of hearts in the color of the Pride Flag {p_end}
 {synoptline}
 {p2colreset}{...}
 
@@ -31,7 +32,7 @@
 
 {marker overview}
 {title:Overview}
-{text}{p 2}The {cmdab: heart} package aims to celebrate love in all its types and forms and spread joy while coding! Fill in your Stata breaks, send yourself some hearts for smooth code, find out how cute you are through a pie 
+{text}{p 2}The {cmdab: heart} package aims to celebrate love, relieve coding stress and make coding fun and accessible! Spread joy while coding by filling in your Stata breaks, send yourself some hearts for smooth code, find out how cute you are through a pie 
 chart, let hearts scatter on your screen, show your admiration for your collaborators by sneaking it in code for others to run or let Stata dazzle you with 
 its wit and try to win you over with its pick up lines to once and for all settle the Stata vs R debate. 
 
@@ -53,6 +54,10 @@ its wit and try to win you over with its pick up lines to once and for all settl
 {phang}{text} 4. Randomly generate a pick-up line.{p_end}
 
 {phang}{inp} {stata heart, flirt}
+
+{phang}{text} 5. Generate a plot of hearts in the color of the Pride flag{p_end}
+
+{phang}{inp} {stata heart, pride}
 
 {break}
 

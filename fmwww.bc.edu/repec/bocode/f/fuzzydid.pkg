@@ -37,6 +37,6 @@ f ../s/special_cases.ado
 f ../c/createYvalues.mo
 f ../m/my_sort.mo
 f ../q/qq_transfo.mo
-f fuzzydid_Gentzkowappli.do
+f fuzzydid_gentzkowappli.do
 f ../s/simus.do
 f ../t/turnout_dailies_1868-1928.dta

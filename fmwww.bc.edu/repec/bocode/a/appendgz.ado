@@ -1,5 +1,5 @@
 *capture program drop appendgz
-*! version 0.3.0 25sep2019
+*! version 0.3.1 24jun2021
 program define appendgz
 	version 11
   
@@ -15,7 +15,8 @@ program define appendgz
 		}
 	}
 	
-	syntax [anything(everything)] [, GENerate(name) keep(name) Nolabel Nonotes force]
+	syntax [anything(everything)] [, GENerate(name) *]
+	//syntax [anything(everything)] [, GENerate(name) keep(varlist) Nolabel Nonotes force]
 	
 	gettoken using filenames : anything
 	
@@ -67,8 +68,7 @@ program define appendgz
 		local tempfiles = `"`tempfiles'"' + " " + `""`temp`filecounter''\\`bare_name'""'
 	}
 	
-	append using `tempfiles', generate(`generate') keep(`keep') `nolabel' ///
-		`nonotes' `force'
+	append using `tempfiles', generate(`generate') `options'
 	
 	// clean up
 	foreach tempfile of local tempfiles {

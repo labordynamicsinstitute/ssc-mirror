@@ -1,5 +1,5 @@
 {smcl}
-{* *! version 2.17  06Nov2020}{...}
+{* *! version 3  11Apr2021}{...}
 {cmd:help lianxh {stata "help lianxh_cn": Chinese Version}}
 {hline}
 
@@ -55,10 +55,10 @@ The retrieval result is saved as a markdown / CSV / TXT document with the specif
 Display the result after clearing the Results window
 {p_end}
 {synopt:{cmdab:noc:at}}
-Do not list the category of posts. It needs to be used with {opt:mlink} or {opt:mtext}
+Do not list the category of posts. It needs to be used with {opt mlink} or {opt mtext}
 {p_end}
 {synopt:{cmdab:c:atfirst}}
-List categories of all posts, and then posts. It needs to be used with {opt:mtext}
+List categories of all posts, and then posts. It needs to be used with {opt mtext}
 {p_end}
 {synoptline}
 
@@ -108,7 +108,7 @@ Stata {browse "https://www.stata.com/support/faqs/":FAQs},
 
 {pstd}Specify the folder{p_end}
 
-{phang2}. {stata "lianxh DID, s(D:\连享会推文/mydid)"}{p_end}
+{phang2}. {stata "lianxh DID, s(D:/连享会推文/mydid)"}{p_end}
 
 {pstd}List the post in Wechat format, BlogTile: URL{p_end}
 
@@ -139,12 +139,12 @@ Note: You can share your results with your friend in Wechat (Weixin) or your Blo
 {phang2}. {stata "lianxh DID 倍分法, mt"}{p_end}
 {phang2}. {stata "lianxh DID 倍分法, mt m"}{p_end}
 
-Attention-1: {opt:nocat} should be used with {opt:mlink} or {opt:mtext}
+Attention-1: {opt nocat} should be used with {opt mlink} or {opt mtext}
 
 {phang2}. {stata "lianxh DID, m  noc"}{p_end}
 {phang2}. {stata "lianxh DID, mt noc"}{p_end}
 
-Attention-2: {opt:catfirst} should be used with {opt:mlink} ^-^
+Attention-2: {opt catfirst} should be used with {opt mlink} ^-^
 
 {phang2}. {stata "lianxh DID, m c"}{p_end}
 
@@ -152,18 +152,18 @@ Attention-2: {opt:catfirst} should be used with {opt:mlink} ^-^
 {title:Author}
 
 {phang}
-{cmd:Yujun, Lian* (连玉君)} Lingnan College, Sun Yat-Sen University, China.{break}
+{cmd:Yujun, Lian} Lingnan College, Sun Yat-Sen University, China.{break}
 E-mail: {browse "mailto:arlionn@163.com":arlionn@163.com}. {break}
-Blog: {browse "lianxh.cn":https://www.lianxh.cn}. {break}
+Blog: {browse "https://www.lianxh.cn":lianxh.cn} {break}
 {p_end}
 
 {phang}
-{cmd:Junjie, Kang (康峻杰)} Lingnan College, Sun Yat-Sen University, China.{break}
+{cmd:Junjie, Kang} Lingnan College, Sun Yat-Sen University, China.{break}
 E-mail: {browse "mailto:642070192@qq.com":642070192@qq.com}. {break}
 {p_end}
 
 {phang}
-{cmd:Qingqing, Liu (刘庆庆)} Lingnan College, Sun Yat-Sen University, China.{break}
+{cmd:Ruihan, Liu} Lingnan College, Sun Yat-Sen University, China.{break}
 E-mail: {browse "mailto:2428172451@qq.com":2428172451@qq.com}. {break}
 {p_end}
 
@@ -182,3 +182,10 @@ You can also submit keywords you can't find and suggestions here:
 The latest version of package can be obtained from the project home page: {browse "https://gitee.com/arlionn/lianxh":https://gitee.com/arlionn/lianxh}
 
 
+{title:Also see}
+
+{psee} 
+Online:  
+{help songbl} (if installed),  
+{help lxhuse} (if installed),
+{help lxh} (if installed)

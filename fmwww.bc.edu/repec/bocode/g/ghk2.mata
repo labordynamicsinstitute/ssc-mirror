@@ -1,5 +1,5 @@
-* ghk2() 1.7.0  16 March 2017
-*! Copyright (C) 2017 David Roodman
+* ghk2() 1.7.1  20 May 2021
+*! Copyright (C) 2007-21 David Roodman
 
 * This program is free software: you can redistribute it and/or modify
 * it under the terms of the GNU General Public License as published by
@@ -15,6 +15,7 @@
 * along with this program. If not, see <http://www.gnu.org/licenses/>.
 
 * Version history
+* 1.7.1 Fixed crash when optional pfnScrambler arg not provided to ghk2setup()
 * 1.7.0 Added Faure-Lemieux (2009) scrambler
 * 1.6.1 Added a few more primes
 * 1.6.0 Dropped u argument from scramblers since u=0::p-1 always
@@ -27,7 +28,7 @@
 * 1.3.1 Fixed longstanding bug in computing score w.r.t to top-left entry of Cholesky factor of Sigma
 * 1.3.0 More precise calculation of normal(U)-normal(L) when U, L large in _ghk_2() and _ghk_2d()
 * 1.2.0 Added s argument
-* 1.1.2 added ghk2version command
+* 1.1.2 Added ghk2version command
 * 1.1.1 Fixed bug in _ghk2_d() and _ghk2_2d() in conversion of df/dT to df/dV
 * 1.1.0 Fixed problems in score computation in _ghk2_2d()
 * 1.0.3 Fixed bug in computation of scores (X :/ Y / Z != (X :/ Y) / Z  !!)
@@ -57,7 +58,7 @@ struct ghk2points {
 	struct sssmatrix colvector W  // 2-vector (incl antitheticals) of m-vectors of d-1-vectors of n-vectors
 }
 
-struct ghk2points scalar ghk2setup(real scalar n, real scalar m, real scalar d, string scalar type, | real scalar pi, pointer (real colvector function) pfnScrambler) {
+struct ghk2points scalar ghk2setup(real scalar n, real scalar m, real scalar d, string scalar type, | real scalar pi, pointer (real colvector function) scalar pfnScrambler) {
 	real scalar itype, j, k, hammersley
 	real rowvector primes
 	real matrix U, S

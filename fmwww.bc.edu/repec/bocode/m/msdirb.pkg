@@ -23,11 +23,10 @@ d Requires: Stata version 10.0 for Windows
 d
 d Distribution-Date: 20150507
 d
-d Author: Roger Newson,  Imperial College London
-d Support: email r.newson@@imperial.ac.uk
+d Author: Roger Newson,  King's College London
+d Support: email roger.newson@@kcl.ac.uk
 d
-f WIN64 msdirb.ado
+f msdirb.ado
 f msdirb.sthlp
 f ../l/lmsdirb.ado
 f ../l/lmsdirb.sthlp
-h msdirb.ado

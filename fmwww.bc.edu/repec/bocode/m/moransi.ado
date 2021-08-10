@@ -2,13 +2,27 @@
 ** (C) KEISUKE KONDO
 ** 
 ** Release Date: March 31, 2018
-** Version: 1.00
+** Latest Update: June 9, 2021
+** 
+** Version: 1.21
 ** 
 ** [Contact]
 ** Email: kondo-keisuke@rieti.go.jp
-** URL: https://sites.google.com/site/keisukekondokk/
+** URL: https://keisukekondokk.github.io/
 *******************************************************************************/
-
+** Version: 1.21
+** Added generate option
+** Coding improvement for saving memory space
+** Version: 1.20
+** Bug fix for p-value
+** Added swm(knn #) option
+** Added "r(W)" in r()
+** Alert message for missing observations
+** Coding improvement
+** Version: 1.10
+** Abbreviation of "detail" option changed
+** 
+** 
 capture program drop moransi
 program moransi, sortpreserve rclass
 	version 11
@@ -21,11 +35,13 @@ program moransi, sortpreserve rclass
 			*/ [ /*
 			*/ DMS /*
 			*/ APProx /*
-			*/ Detail /*
-			*/ NOMATsave ]
+			*/ DETail /*
+			*/ NOMATsave /*
+			*/ GENerate ]
 	
 	local vY `varlist'
-	local swmtype = substr("`swm'",1,3)
+	local swmtype = substr("`swm'", 1, 3)
+	local swmtype_short = substr("`swm'", 1, 1)
 	local unit = "`dunit'"
 	marksample touse
 	markout `touse' `vY' `lon' `lat'
@@ -35,6 +51,24 @@ program moransi, sortpreserve rclass
 		display as error "Multiple variables are not allowed."
 		exit 198
 	}
+	
+	/*Check Missing Values of Variable*/
+	qui: egen ______missing_count_spgen = rowmiss(`vY')
+	qui: count if ______missing_count_spgen > 0
+	local nummissing = r(N)
+	local errormissing = 0
+	if(`nummissing' > 0){
+		local errormissing = 1
+	}
+	if( `errormissing' == 1){
+		if(`nummissing' == 1){
+			display as text "Warning: `nummissing' observation with missing value is dropped."
+		}
+		if(`nummissing' > 1){
+			display as text "Warning: `nummissing' observations with missing value are dropped."
+		}
+	}
+	qui: drop ______missing_count_spgen
 	
 	/*Check Latitude Range*/
 	qui: sum `lat'
@@ -63,8 +97,8 @@ program moransi, sortpreserve rclass
 	}
 	
 	/*Check Spatial Weight Matrix*/
-	if( "`swmtype'" != "bin" & "`swmtype'" != "exp" & "`swmtype'" != "pow" ){
-		display as error "swm(swmtype) must be one of bin, exp, and pow."
+	if( "`swmtype'" != "bin" & "`swmtype'" != "knn" & "`swmtype'" != "exp" & "`swmtype'" != "pow"){
+		display as error "swm() must be one of bin, knn, exp, and pow."
 		exit 198
 	}
 
@@ -72,8 +106,30 @@ program moransi, sortpreserve rclass
 	if( "`swmtype'" == "bin" ){
 		local dd = . /*not used*/
 	}
+	else if( "`swmtype'" == "knn" ){
+		local dd = real(substr("`swm'", strpos("`swm'", "knn") + length("knn") + 1, .))
+		capture confirm integer number `dd'
+		if( _rc != 0 ){
+			display as error "Parameter {it:k} of swm(knn) must be integer."
+			exit 198
+		}
+		if( `dd' <= 0 ){
+			display as error "Parameter {it:k} of swm(knn) must be more than 0."
+			exit 198
+		}
+		if( `dd' > _N ){
+			qui: count
+			local totalobs = r(N)
+			display as error "Parameter {it:k} of swm(knn) must be less than `totalobs' (# of obs)."
+			exit 198
+		}
+		else if( `dd' == . ){
+			display as error "Numerical type is expected for distance-decay parameter."
+			exit 198
+		}
+	}
 	else if( "`swmtype'" == "exp" ){
-		local dd = real(substr("`swm'",strpos("`swm'","exp")+length("exp")+1,.))
+		local dd = real(substr("`swm'", strpos("`swm'", "exp") + length("exp") + 1, .))
 		if( `dd' <= 0 ){
 			display as error "Distance-decay parameter must be more than 0."
 			exit 198
@@ -84,7 +140,7 @@ program moransi, sortpreserve rclass
 		}
 	}
 	else if( "`swmtype'" == "pow" ){
-		local dd = real(substr("`swm'",strpos("`swm'","pow")+length("pow")+1,.))
+		local dd = real(substr("`swm'", strpos("`swm'", "pow") + length("pow") + 1, .))
 		if( `dd' <= 0 ){
 			display as error "Distance-decay parameter must be more than 0."
 			exit 198
@@ -99,6 +155,10 @@ program moransi, sortpreserve rclass
 	if( `dist' <= 0 ){
 		display as error "dist(#) must be more than 0."
 		exit 198
+	}
+	if( "`swmtype'" == "knn" & `dist' > 0 & `dist' != . ){
+		local dist = .
+		display as text "Warning: dist() is ignored for swm(knn) option."
 	}
 	
 	/*Check Unit of Distance*/
@@ -131,77 +191,39 @@ program moransi, sortpreserve rclass
 		local matsave = 0
 	}
 	
-	/*Large Size Option*/
-	local large = 0
-	if( "`largesize'" != "" ){
-		local large = 1
-		local matsave = 0
-		local appdist = 1
-	}
-	
-	/*Extend Outcome Variables of Getis-Ord G*i(d) Statistic*/
-	local generateallbin = 0
-	if( "`genallbin'" != "" ){
-		if( "`swmtype'" == "bin" ){
-			local generateallbin = 1
+	/*Check before Making Output Variable*/
+	local gensplag = 0
+	if( "`generate'" != "" ){
+		capture confirm new variable splag_`vY'_`swmtype_short', exact
+		if( _rc == 0 ) {
+			local gensplag = 1
 		}
-		else if( "`swmtype'" == "exp" | "`swmtype'" == "pow" ){
-			display as error "genallbin option is invalid when either swm(exp #) or swm(pow #) is specified."
-			exit 198
+		else if( _rc != 0 ) {
+			display as error "Outcome variable for `vY' already exists."
+			exit _rc
 		}
-	}
-	
-	/*Make Variables for Error Check*/
-	local error1 = 0
-	local error2 = 0
-	local error3 = 0
-	local error4 = 0
-	local error5 = 0
-	if( "`swmtype'" == "bin" ){
-		capture confirm new variable go_z_`vY'_b, exact
-		local error1 = _rc
-		capture confirm new variable go_p_`vY'_b, exact
-		local error2 = _rc
-		if( `generateallbin' == 1 ){
-			capture confirm new variable go_u_`vY'_b, exact
-			local error3 = _rc
-			capture confirm new variable go_e_`vY'_b, exact
-			local error4 = _rc
-			capture confirm new variable go_s_`vY'_b, exact
-			local error5 = _rc
-		}
-	}
-	else if( "`swmtype'" == "exp" ){
-		capture confirm new variable go_z_`vY'_e, exact
-		local error1 = _rc
-		capture confirm new variable go_p_`vY'_e, exact
-		local error2 = _rc
-	} 
-	else if( "`swmtype'" == "pow" ){
-		capture confirm new variable go_z_`vY'_p, exact
-		local error1 = _rc
-		capture confirm new variable go_p_`vY'_p, exact
-		local error2 = _rc
-	}
-
-	/*Error Check*/
-	if( `error1' == 110 | `error2' == 110 | `error3' == 110 | `error4' == 110 | `error5' == 110 ){
-		display as error "Outcome variables already exist. Change variable names."
-		exit 110
 	}
 	
 	/*+++++CALL Mata Program+++++*/
-	mata: calcmoransi("`vY'", "`lon'", "`lat'", `fmdms', "`swmtype'", `dist', "`unit'", `dd', `appdist', `dispdetail', `matsave', "`touse'")
+	mata: calcmoransi("`vY'", "`lon'", "`lat'", `fmdms', "`swmtype'", `dist', "`unit'", `dd', `appdist', `dispdetail', `matsave', `gensplag', "`touse'")
 	/*+++++END Mata Program+++++*/
 	
-	/*Return rclass*/
+	/*Store Results in return*/
 	return add
 	
+	/*Generate Spatial Lag*/
+	if( "`generate'" != "" ){
+		/*Add Variable Label*/
+		label var splag_`vY'_`swmtype_short' "sptial lag, swm(`swm'), td=`dist', od=`order', row-standadized"
+
+		/*Display Results*/
+		display as txt "{bf:splag_`vY'_`swmtype_short'} was generated in the dataset."
+	}
 end
 
 version 11
 mata:
-void calcmoransi(vY, lon, lat, fmdms, swmtype, dist, unit, dd, appdist, dispdetail, matsave, touse)
+void calcmoransi(vY, lon, lat, fmdms, swmtype, dist, unit, dd, appdist, dispdetail, matsave, gensplag, touse)
 {
 	/*Make Variable*/
 	if( fmdms == "1" ){
@@ -217,69 +239,455 @@ void calcmoransi(vY, lon, lat, fmdms, swmtype, dist, unit, dd, appdist, dispdeta
 	/*Make Variable*/
 	st_view(vy, ., vY, touse)
 	cN = rows(vlon)
-	mW = J(cN,cN,0)
-	printf("{txt}Size of spatial weight matrix:{res} %8.0f\n", cN)
+	
+	/*Size of SWM*/
+	printf("{txt}Size of spatial weight matrix:{res} %1.0f * %1.0f\n", cN, cN)
 
+	/*Variables*/
+	if( matsave == 1 ){
+		mD = J(cN, cN, 0)
+	}
+	mD_L = .
+	cN_vD = .
+	dist_mean = .
+	dist_sd = .
+	dist_min = .
+	dist_max = 0
+	numErrorSwm = 0
+	numErrorSwmNoNeighbor = 0
+	
+	/*Spatial Lag*/
+	vDist = J(1, cN, 0)
+	vW = J(1, cN, 0)
+	mW = J(cN, cN, 0)
+	vsy = ( vy :- mean(vy) ) :/ sqrt( variance(vy) )
+	vwy = J(cN, 1, 0)
+	vwsy = J(cN, 1, 0)
+	
 	/*Make Distance Matrix using Vincenty (1975) */
 	if( appdist == 1 ){
 		/*Simplified Version of Vincenty Formula*/
-		calcdist2(cN, latr, lonr, unit, &mW)
-	} 
-	else {
+		for( i = 1; i <= cN; ++i ){
+		
+			/* Display Iteration Process */
+			if( i == 1 ){
+				printf("{txt}{c TT}{hline 15}{c TT}\n")
+			}
+
+			/*Distance between i and j*/
+			A = J(1, cN, 1) :* lonr[i]
+			B = J(1, cN, 1) :* lonr'
+			C = J(1, cN, 1) :* latr[i]
+			D = J(1, cN, 1) :* latr'
+			difflonr = abs( A - B )
+			numer1 = ( cos(D):*sin(difflonr) ):^2
+			numer2 = ( cos(C):*sin(D) :- sin(C):*cos(D):*cos(difflonr) ):^2
+			numer = sqrt( numer1 :+ numer2 )
+			denom = sin(C):*sin(D) :+ cos(C):*cos(D):*cos(difflonr)
+			vDist = 6378.137 * atan2( denom, numer )
+			/*Missing between i and i*/
+			vDist[i] = .
+			
+			/*Convert Unit of Distance*/
+			if( unit == "mi" ){
+				vDist = 0.621371 :* vDist
+			}
+			
+			/*Store Min and Max Distance*/
+			if( min(vDist) < dist_min ){
+				dist_min = min(vDist)
+			}
+			if( max(vDist) > dist_max ){
+				dist_max = max(vDist)
+			}
+			
+			/*Save Distance Matrix*/
+			if( matsave == 1 ){
+				mD[i,] = vDist
+			}
+			
+			/*Binary SWM*/
+			if( swmtype == "bin" ){
+				vW = ( vDist :< dist )
+				vDist = .
+				/*ERROR CHECK*/
+				numErrorSwm = numErrorSwm + (rowsum(vW) == 0)
+				/*Diagonal Element*/
+				vW[i] = 0
+				vW = vW :/ rowsum(vW)
+			}
+			/*K-Nearest Neighbor SWM*/
+			if( swmtype == "knn" ){
+				/*Obtain Threshold Distance for KNN*/
+				vDistSorted = sort(vDist', 1)'
+				dDistKnn = vDistSorted[dd]
+				vW = ( vDist :<= dDistKnn )
+				vDist = .
+				/*ERROR CHECK*/
+				numErrorSwm = numErrorSwm + (rowsum(vW :!= 0) > dd)
+				/*Diagonal Element*/
+				vW[i] = 0
+				vW = vW :/ rowsum(vW)
+			}
+			/*Exponential SWM*/
+			if( swmtype == "exp" ){
+				vW = ( vDist :< dist ) :* exp( - dd :* vDist )
+				vDist = .
+				vW[i] = 0 
+				vW = vW :/ rowsum(vW)
+			}
+			/*Power SWM*/
+			if( swmtype == "pow" ){
+				vW = ( vDist :< dist ) :* vDist :^(-dd)
+				vDist = .
+				/*ERROR CHECK*/
+				numErrorSwmNoNeighbor = numErrorSwmNoNeighbor + (rowsum(vW) == 0)
+				/*ERROR CHECK*/
+				numErrorSwm = numErrorSwm + (rowsum(vW :== .) > 1 | rowsum(vW) == 0)
+				/*Diagonal Element*/
+				vW[i] = 0
+				vW = vW :/ rowsum(vW)
+			}
+			
+			/*Spatial Lagged Variable*/
+			mW[i,] = vW
+			vwy[i,] = vW * vy
+			vwsy[i,] = vW * vsy
+			
+			/* Display Iteration Process */
+			if( i == trunc(cN/10) ){
+				printf("{txt}{c |}Completed:  10%%{c |}\n")
+			}
+			else if( i == 2*trunc(cN/10) ){
+				printf("{txt}{c |}Completed:  20%%{c |}\n")
+			}
+			else if( i == 3*trunc(cN/10) ){
+				printf("{txt}{c |}Completed:  30%%{c |}\n")
+			}
+			else if( i == 4*trunc(cN/10) ){
+				printf("{txt}{c |}Completed:  40%%{c |}\n")
+			}
+			else if( i == trunc(cN/2) ){
+				printf("{txt}{c |}Completed:  50%%{c |}\n")
+			}
+			else if( i == trunc(cN/2) + trunc(cN/10) ){
+				printf("{txt}{c |}Completed:  60%%{c |}\n")
+			}
+			else if( i == trunc(cN/2) + 2*trunc(cN/10) ){
+				printf("{txt}{c |}Completed:  70%%{c |}\n")
+			}
+			else if( i == trunc(cN/2) + 3*trunc(cN/10) ){
+				printf("{txt}{c |}Completed:  80%%{c |}\n")
+			}
+			else if( i == trunc(cN/2) + 4*trunc(cN/10) ){
+				printf("{txt}{c |}Completed:  90%%{c |}\n")
+			}
+			else if( i == cN ){
+				printf("{txt}{c |}Completed: 100%%{c |}\n")
+				printf("{txt}{c BT}{hline 15}{c BT}\n")
+			}
+		}
+
+		/*REPORT ERROR CHECK*/
+		if( swmtype == "bin" ){
+			if(numErrorSwm > 0){
+				if(numErrorSwm == 1){
+					printf("{txt}Warning: %1.0f observation has no neighbors. Confirm dist() option.\n", numErrorSwm)
+				}
+				if(numErrorSwm > 1){
+					printf("{txt}Warning: %1.0f observations have no neighbors. Confirm dist() option.\n", numErrorSwm)
+				}
+			}
+		}
+		if( swmtype == "knn" ){
+			if(numErrorSwm > 0){
+				if(numErrorSwm == 1){
+					printf("{txt}Warning: %1.0f observation has multiple k-nearest neighbors.\n", numErrorSwm)
+				}
+				if(numErrorSwm > 1){
+					printf("{txt}Warning: %1.0f observations have multiple k-nearest neighbors.\n", numErrorSwm)
+				}
+			}
+		}
+		if( swmtype == "pow" ){
+			if(numErrorSwmNoNeighbor > 0){
+				if(numErrorSwmNoNeighbor == 1){
+					printf("{txt}Warning: %1.0f observation has no neighbors. Confirm dist() option.\n", numErrorSwmNoNeighbor)
+				}
+				if(numErrorSwmNoNeighbor > 1){
+					printf("{txt}Warning: %1.0f observations have no neighbors. Confirm dist() option.\n", numErrorSwmNoNeighbor)
+				}
+			}
+			if(numErrorSwm > 0){
+				if(numErrorSwm == 1){
+					printf("{txt}Warning: %1.0f observation has missing value.\n", numErrorSwm)
+				}
+				if(numErrorSwm > 1){
+					printf("{txt}Warning: %1.0f observations have missing values.\n", numErrorSwm)
+				}
+			}
+		}
+	}
+	else if( appdist == 0 ){
 		/*Vincenty Formula*/
-		calcdist1(cN, latr, lonr, unit, &mW)
-	}
 
-	/*Summary Statistics of Distance Matrix*/
-	mD_L = lowertriangle(mW)
-	vD = select(vech(mD_L), vech(mD_L):>0)
-	cN_vD = rows(vD)
-	dist_mean = mean(vD)
-	dist_sd = sqrt(variance(vD))
-	dist_min = min(vD)
-	dist_max = max(vD)
-	vD = .
-	if( matsave == 0 ){
-		mD_L = .
-	}
-	
-	/*Spatial Weight Matrix*/
-	if( swmtype == "bin" ){
-		mW = ( mW :< dist )
-	} 
-	else if( swmtype == "exp" ){
-		mW = ( mW :< dist ) :* exp( - dd :* mW ) 
-	} 
-	else if( swmtype == "pow" ){
-		mW = ( mW :< dist ) :* ( mW:^(-dd) )
-	}
-	_diag(mW,0)
-	mW = mW :/ rowsum( mW )
+		/*Variables*/
+		a = 6378.137
+		b = 6356.752314245
+		f = (a-b)/a
+		eps = 1e-12
+		maxIt = 1e+5
 
-	/*Moran Scatterplot*/
-	vsy = ( vy :- mean(vy) ) :/ sqrt( variance(vy) )
-	vwsy = mW * vsy
+		/*LOOP for Vincenty Formula*/
+		for( i = 1; i <= cN; ++i ){
+		
+			/* Display Iteration Process */
+			if( i == 1 ){
+				printf("{txt}{c TT}{hline 15}{c TT}\n")
+			}
+			
+			Alon = J(1, cN, 1) :* lonr[i]
+			Blon = J(1, cN, 1) :* lonr'
+			Clat = J(1, cN, 1) :* latr[i]
+			Dlat = J(1, cN, 1) :* latr'
+			U1 = atan( (1-f) :* tan(Clat) )
+			U2 = atan( (1-f) :* tan(Dlat) )
+			L = abs( Alon :- Blon )
+			lam = L
+			l1_lam = lam
+			cnt = 0
+			do{
+				numer1 = ( cos(U2) :* sin(lam) ):^2
+				numer2 = ( cos(U1) :* sin(U2) :- sin(U1) :* cos(U2) :* cos(lam) ):^2
+				numer = sqrt( numer1 :+ numer2 )
+				denom = sin(U1) :* sin(U2) :+ cos(U1) :* cos(U2) :* cos(lam)
+				sig = atan2( denom, numer )
+				sinalp = (cos(U1) :* cos(U2) :* sin(lam)) :/ sin(sig)
+				cos2alp = 1 :- sinalp:^2
+				cos2sigm = cos(sig) :- ( 2 :* sin(U1) :* sin(U2) ) :/ cos2alp
+				C = f:/16 :* cos2alp :* ( 4 :+ f :* (4 :- 3 :* cos2alp) )
+				lam = L :+ (1:-C) :* f :* sinalp :* ( sig :+ C :* sin(sig) :* ( cos2sigm :+ C :* cos(sig) :*(-1 :+ 2 :* cos2sigm:^2) ) )
+				cri = abs( max(lam :- l1_lam) )
+				l1_lam = lam;
+				if( cnt++ > maxIt ){
+					printf("{err}Convergence not achieved in Vincenty formula \n")
+					printf("{err}Add approx option to avoid convergence error \n")
+					exit(error(430))
+				}
+			}while( cri > eps )
+
+			/*After Iteration*/
+			u2 = cos2alp :* ( (a^2 - b^2) / b^2 )
+			A = 1 :+ (u2 :/ 16384) :* ( 4096 :+ u2 :* (-768 :+ u2 :* (320 :- 175 :* u2)) )
+			B = u2 :/ 1024 :* (256 :+ u2 :* (-128 :+ u2 :* (74 :- 47 :*u2)) )
+			dsig = B:*sin(sig) :* ( cos2sigm :+ 0.25:*B:*( cos(sig):*(-1:+2:*cos2sigm:^2) :- 1:/6:*B:*cos2sigm:*(-3:+4:*sin(sig):^2):*(-3:+4:*cos2sigm) ) )
+			vDist = b :* A :* (sig :- dsig)
+			
+			/*Distance = 0*/
+			if(missing(vDist) > 1){
+				_editmissing(vDist, 0)
+			}
+			
+			/*Missing between i and i*/
+			vDist[i] = .
+			
+			/*Convert Unit of Distance*/
+			if( unit == "mi" ){
+				vDist = 0.621371 :* vDist
+			}
+			
+			/*Store Min and Max Distance*/
+			if( min(vDist) < dist_min ){
+				dist_min = min(vDist)
+			}
+			if( max(vDist) > dist_max ){
+				dist_max = max(vDist)
+			}
+			
+			/*Save Distance Matrix*/
+			if( matsave == 1 ){
+				mD[i,] = vDist
+			}
+			
+			/*Binary SWM*/
+			if( swmtype == "bin" ){
+				vW = ( vDist :< dist )
+				vDist = .
+				/*ERROR CHECK*/
+				numErrorSwm = numErrorSwm + (rowsum(vW) == 0)
+				/*Diagonal Element*/
+				vW[i] = 0 
+				vW = vW :/ rowsum(vW)
+			}
+			/*K-Nearest Neighbor SWM*/
+			if( swmtype == "knn" ){
+				/*Obtain Threshold Distance for KNN*/
+				vDistSorted = sort(vDist', 1)'
+				dDistKnn = vDistSorted[dd]
+				vW = ( vDist :<= dDistKnn )
+				vDist = .
+				/*ERROR CHECK*/
+				numErrorSwm = numErrorSwm + (rowsum(vW :!= 0) > dd)
+				/*Diagonal Element*/
+				vW[i] = 0 
+				vW = vW :/ rowsum(vW)
+			}
+			/*Exponential SWM*/
+			if( swmtype == "exp" ){
+				vW = ( vDist :< dist ) :* exp( - dd :* vDist )
+				vDist = .
+				vW[i] = 0 
+				vW = vW :/ rowsum(vW)
+			}
+			/*Power SWM*/
+			if( swmtype == "pow" ){
+				vW = ( vDist :< dist ) :* vDist :^(-dd)
+				vDist = .
+				/*ERROR CHECK*/
+				numErrorSwmNoNeighbor = numErrorSwmNoNeighbor + (rowsum(vW) == 0)
+				/*ERROR CHECK*/
+				numErrorSwm = numErrorSwm + (rowsum(vW :== .) > 1 | rowsum(vW) == 0)
+				/*Diagonal Element*/
+				vW[i] = 0 
+				vW = vW :/ rowsum(vW)
+			}
+			
+			/*Spatial Lagged Variable*/
+			mW[i,] = vW
+			vwy[i,] = vW * vy
+			vwsy[i,] = vW * vsy
+			
+			/* Display Iteration Process */
+			if( i == trunc(cN/10) ){
+				printf("{txt}{c |}Completed:  10%%{c |}\n")
+			}
+			else if( i == 2*trunc(cN/10) ){
+				printf("{txt}{c |}Completed:  20%%{c |}\n")
+			}
+			else if( i == 3*trunc(cN/10) ){
+				printf("{txt}{c |}Completed:  30%%{c |}\n")
+			}
+			else if( i == 4*trunc(cN/10) ){
+				printf("{txt}{c |}Completed:  40%%{c |}\n")
+			}
+			else if( i == trunc(cN/2) ){
+				printf("{txt}{c |}Completed:  50%%{c |}\n")
+			}
+			else if( i == trunc(cN/2) + trunc(cN/10) ){
+				printf("{txt}{c |}Completed:  60%%{c |}\n")
+			}
+			else if( i == trunc(cN/2) + 2*trunc(cN/10) ){
+				printf("{txt}{c |}Completed:  70%%{c |}\n")
+			}
+			else if( i == trunc(cN/2) + 3*trunc(cN/10) ){
+				printf("{txt}{c |}Completed:  80%%{c |}\n")
+			}
+			else if( i == trunc(cN/2) + 4*trunc(cN/10) ){
+				printf("{txt}{c |}Completed:  90%%{c |}\n")
+			}
+			else if( i == cN ){
+				printf("{txt}{c |}Completed: 100%%{c |}\n")
+				printf("{txt}{c BT}{hline 15}{c BT}\n")
+			}
+		}
+
+		/*REPORT ERROR CHECK*/
+		if( swmtype == "bin" ){
+			if(numErrorSwm > 0){
+				if(numErrorSwm == 1){
+					printf("{txt}Warning: %1.0f observation has no neighbors. Confirm dist() option.\n", numErrorSwm)
+				}
+				if(numErrorSwm > 1){
+					printf("{txt}Warning: %1.0f observations have no neighbors. Confirm dist() option.\n", numErrorSwm)
+				}
+			}
+		}
+		if( swmtype == "knn" ){
+			if(numErrorSwm > 0){
+				if(numErrorSwm == 1){
+					printf("{txt}Warning: %1.0f observation has multiple k-nearest neighbors.\n", numErrorSwm)
+				}
+				if(numErrorSwm > 1){
+					printf("{txt}Warning: %1.0f observations have multiple k-nearest neighbors.\n", numErrorSwm)
+				}
+			}
+		}
+		if( swmtype == "pow" ){
+			if(numErrorSwmNoNeighbor > 0){
+				if(numErrorSwmNoNeighbor == 1){
+					printf("{txt}Warning: %1.0f observation has no neighbors. Confirm dist() option.\n", numErrorSwmNoNeighbor)
+				}
+				if(numErrorSwmNoNeighbor > 1){
+					printf("{txt}Warning: %1.0f observations have no neighbors. Confirm dist() option.\n", numErrorSwmNoNeighbor)
+				}
+			}
+			if(numErrorSwm > 0){
+				if(numErrorSwm == 1){
+					printf("{txt}Warning: %1.0f observation has missing value.\n", numErrorSwm)
+				}
+				if(numErrorSwm > 1){
+					printf("{txt}Warning: %1.0f observations have missing values.\n", numErrorSwm)
+				}
+			}
+		}
+	}
 
 	/*Moran's I from Definition*/
-	dS0 = colsum( rowsum(mW) )
-	dI = (cN/dS0) * (vsy'vwsy) / (vsy'vsy)
+	dS0 = cN
+	dI = (vsy'vwsy) / (vsy'vsy)
 
 	/*Calculate Expectation and Variance of Moran's I*/
-	dS1 = 0.5 * colsum( rowsum( (mW :+ mW'):^2 ) )
-	dS2 = 1. * colsum( ( rowsum(mW :+ mW') ):^2 )
+	vS1 = J(cN, 1, 0)
+	vS2 = J(cN, 1, 0)
+	for( i = 1; i <= cN; ++i ){
+		vS1[i] = rowsum( (mW[i,] :+ mW[,i]'):^2 )
+		vS2[i] = ( rowsum(mW[i,] :+ mW[,i]'):^2 )
+	}
+	dS1 = 0.5 * colsum( vS1 )
+	dS2 = 1.0 * colsum( vS2 )
+	vS1 = .
+	vS2 = .
 	dD = cN * colsum( vsy:^4 ) / (colsum(vsy:^2))^2
 	dC = (cN-1)*(cN-2)*(cN-3)*dS0^2
 	dB = dD * ( (cN^2-cN)*dS1 - 2*cN*dS2 + 6*dS0^2 )
 	dA = cN * ( (cN^2-3*cN+3)*dS1 - cN*dS2 + 3*dS0^2 )
 
 	/*Calculate Z-value of Moran's I*/
-	dEI = - 1 / ( cN - 1 )
-	dEI2 = (dA-dB) / dC
-	dVI = dEI2 - (dEI)^2
-	dSEI = sqrt(dVI)
-	dZI = (dI-dEI) / dSEI
-	dPI = 2 * ( 1 - normal(dZI) )
+	if(dI == .){
+		dEI = .
+		dEI2 = .
+		dVI = .
+		dSEI = .
+		dZI = .
+		dPI = .
+	}
+	else {
+		dEI = - 1 / ( cN - 1 )
+		dEI2 = (dA - dB) / dC
+		dVI = dEI2 - (dEI)^2
+		dSEI = sqrt(dVI)
+		dZI = (dI - dEI) / dSEI
+		dPI = 2 * ( 1 - normal(abs(dZI)) )
+	}
 
+	/*Summary Statistics of Distance Matrix*/
+	if( matsave == 1 ){
+		mD_L = lowertriangle(mD)
+		mD = .
+		vD = select(vech(mD_L), vech(mD_L):>0)
+		cN_vD = rows(vD)
+		dist_mean = mean(vD)
+		dist_sd = sqrt(variance(vD))
+		vD = .
+	}
+	else {
+		mW = .
+		mD_L = .
+		cN_vD = .
+		dist_mean = .
+		dist_sd = .
+	}
+	
 	/*Display Summary Statistics of Distances*/
 	printf("\n")
 	if( appdist == 1 ){
@@ -299,40 +707,39 @@ void calcmoransi(vY, lon, lat, fmdms, swmtype, dist, unit, dd, appdist, dispdeta
 		}
 	}
 	if( dispdetail == 1 ){
-		printf("{txt}{hline 13}{c TT}{hline 63} \n")
-		printf("{txt}{space 12} {c |}{space 8}Obs.{space 8}Mean{space 9}S.D.{space 9}Min.{space 9}Max.\n")
-		printf("{txt}{hline 13}{c +}{hline 63} \n")
-		printf("{txt}{space 4}Distance {c |}{res}  %10.0f  %10.3f   %10.3f   %10.3f   %10.3f\n", 
+		printf("{txt}{hline 21}{c TT}{hline 63} \n")
+		printf("{txt}{space 20} {c |}{space 8}Obs.{space 8}Mean{space 9}S.D.{space 9}Min.{space 9}Max.\n")
+		printf("{txt}{hline 21}{c +}{hline 63} \n")
+		printf("{txt}{space 12}Distance {c |}{res}  %10.0f  %10.3f   %10.3f   %10.3f   %10.3f\n", 
 					cN_vD, dist_mean, dist_sd, dist_min, dist_max )	
-		printf("{txt}{hline 13}{c BT}{hline 63} \n")
+		printf("{txt}{hline 21}{c BT}{hline 63} \n")
 		if( unit == "km" ){
 			printf("{txt}Distance threshold (unit: km):{res} %10.0f\n", dist)
 		}
 		else if( unit == "mi" ){
 			printf("{txt}Distance threshold (unit: mi):{res} %10.0f\n", dist)
 		}
-		printf("{txt}{hline 77}\n")
+		printf("{txt}{hline 85}\n")
 	}
 
 	/*For Long Variable Name*/
-	sVarLen2 = strlen(vY)
-	if( sVarLen2 > 12 ){
-		sY = substr(vY,1,10) + "~" + substr(vY,sVarLen2,1)
-	}
-	else{
-		sY = vY
-	}
+	sY = abbrev(vY, 20)
 
 	/*Results of Moran's I*/
 	printf("\n")
-	printf("{txt}Moran's I Statistic {space 32} Number of Obs = {res}%8.0f \n",cN)
-	printf("{txt}{hline 13}{c TT}{hline 63} \n")
-	printf("{txt}{space 4}Variable {c |}  Moran's I{space 9}E(I){space 8}SE(I){space 9}Z(I){space 6}p-value \n")
-	printf("{hline 13}{c +}{hline 63} \n")
-	printf("{txt}%12s {c |} {res}%10.5f   %10.5f   %10.5f   %10.5f   %10.5f \n", sY,dI,dEI,dSEI,dZI,dPI )
-	printf("{txt}{hline 13}{c BT}{hline 63} \n")
+	printf("{txt}Moran's I Statistic {space 40} Number of Obs = {res}%8.0f\n",cN)
+	printf("{txt}{hline 21}{c TT}{hline 63}\n")
+	printf("{txt}{space 12}Variable {c |}  Moran's I{space 9}E(I){space 8}SE(I){space 9}Z(I){space 6}p-value\n")
+	printf("{hline 21}{c +}{hline 63}\n")
+	printf("{txt}%20s {c |} {res}%10.5f   %10.5f   %10.5f   %10.5f   %10.5f\n", sY, dI, dEI, dSEI, dZI, dPI )
+	printf("{txt}{hline 21}{c BT}{hline 63}\n")
 	printf("{txt}Null Hypothesis: Spatial Randomization\n")
 
+	/*Return Results in Mata to Stata*/
+	if( gensplag == 1 ){
+		st_store(., st_addvar("float", "splag"+"_"+vY+"_"+substr(swmtype, 1, 1)), st_local("touse"), vwy)
+	}
+	
 	/*rreturn command in Stata*/
 	st_rclear()
 	st_numscalar("r(dist_max)", dist_max)
@@ -347,6 +754,7 @@ void calcmoransi(vY, lon, lat, fmdms, swmtype, dist, unit, dd, appdist, dispdeta
 	st_numscalar("r(seI)", dSEI)
 	st_numscalar("r(EI)", dEI)
 	st_numscalar("r(I)", dI)
+	st_matrix("r(W)", mW)
 	st_matrix("r(D)", mD_L)
 	if( swmtype == "bin" ){
 		st_global("r(swm)", "binary")
@@ -383,122 +791,5 @@ void convlonlat2decimal(lat, lon, touse, vlat, vlon)
 	st_view(vlon_, ., lon, touse)
 	(*vlat) = floor(vlat_) :+ (floor((vlat_:-floor(vlat_)):*100):/60) :+ (floor((vlat_:*100:-floor(vlat_:*100)):*100):/3600)
 	(*vlon) = floor(vlon_) :+ (floor((vlon_:-floor(vlon_)):*100):/60) :+ (floor((vlon_:*100:-floor(vlon_:*100)):*100):/3600)
-}
-end
-
-/*## MATA ## Vincenty Formula*/
-/*Each Iteration*/
-version 11
-mata:
-void calcdist1(cN, latr, lonr, unit, mW)
-{
-	/*Variables*/
-	mDist = J(cN,cN,0)
-	a = 6378.137
-	b = 6356.752314245
-	f = (a-b)/a
-	eps = 1e-12
-	maxIt = 100000
-	itr = 0
-	cItr = cN*(cN-1)/2
-	
-	/*Distance between i and j*/
-	for( i=1; i<=cN; ++i ){
-		for(j=i+1; j<=cN; ++j){
-			U1 = atan( (1-f)*tan(latr[i]) )
-			U2 = atan( (1-f)*tan(latr[j]) )
-			L = lonr[i] - lonr[j]
-			lam = L
-			l1_lam = lam
-			cnt = 0
-			/*Iteration for Vincenty Formula*/
-			do{
-				numer1 = ( cos(U2)*sin(lam) )^2;
-				numer2 = ( cos(U1)*sin(U2) - sin(U1)*cos(U2)*cos(lam) )^2;
-				numer = sqrt( numer1 + numer2 );
-				denom = sin(U1)*sin(U2) + cos(U1)*cos(U2)*cos(lam);
-				sig = atan2( denom, numer );
-				sinalp = (cos(U1)*cos(U2)*sin(lam)) / sin(sig);
-				cos2alp = 1 - sinalp^2;
-				cos2sigm = cos(sig) - ( 2*sin(U1)*sin(U2) ) / cos2alp;
-				C = f/16 * cos2alp * ( 4+f*(4-3*cos2alp) );
-				lam = L + (1-C)*f*sinalp*( sig+C*sin(sig)*( cos2sigm+C*cos(sig)*(-1+2*cos2sigm^2) ) );
-				cri = abs( lam - l1_lam );
-				l1_lam = lam;
-				if( cnt++ > maxIt ){
-					printf("{err}Convergence not achieved in Vincenty formula \n")
-					printf("{err}region %f, \t region %f \n", i, j )
-					printf("{err}Add approx option to avoid convergence error \n")
-					exit(error(430))
-				}
-			}while( cri > eps )
-			/*After Iteration*/
-			u2 = cos2alp * ( (a^2-b^2)/b^2 )
-			A = 1 + (u2/16384) * ( 4096 + u2*(-768+u2*(320-175*u2)) )
-			B = u2/1024 * (256 + u2*(-128+u2*(74-47*u2)) )
-			dsig = B*sin(sig)*( cos2sigm + 0.25*B*( cos(sig)*(-1+2*cos2sigm^2)-1/6*B*cos2sigm*(-3+4*sin(sig)^2)*(-3+4*cos2sigm) ) )
-			mDist[i,j] = b*A*(sig-dsig)
-			/* Display Iteration Process */
-			++itr
-			if( itr == 1 ){
-				printf("{txt}Calculating bilateral distance...\n")
-			}
-			else if( itr == cItr ){
-				printf("{txt}Calculating spatial weight matrix...\n")
-			}
-		}
-	}
-
-	/*Convert Unit of Distance*/
-	if( unit == "mi" ){
-		mDist = 0.621371 :* mDist
-	}
-
-	/*Return Distance Matrix*/
-	mDist = mDist + mDist'
-	(*mW) = mDist
-}
-end
-
-/*## MATA ## Simplified Version of Vincenty Formula*/
-/*Each Iteration*/
-version 11
-mata:
-void calcdist2(cN, latr, lonr, unit, mW)
-{
-	/*Variables*/
-	mDist = J(cN,cN,0)
-	itr = 0
-	cItr = cN*(cN-1)/2
-	
-	/*Distance between i and j*/
-	for( i=1; i<=cN; ++i ){
-		for(j=i+1; j<=cN; ++j){
-			difflonr = abs( lonr[i] - lonr[j] )
-			numer1 = ( cos(latr[j])*sin(difflonr) )^2
-			numer2 = ( cos(latr[i])*sin(latr[j]) - sin(latr[i])*cos(latr[j])*cos(difflonr) )^2
-			numer = sqrt( numer1 + numer2 )
-			denom = sin(latr[i])*sin(latr[j]) + cos(latr[i])*cos(latr[j])*cos(difflonr)
-			mDist[i,j] = 6378.137 * atan2( denom, numer )
-			/* Display Iteration Process */
-			++itr
-			if( itr == 1 ){
-				printf("{txt}Calculating bilateral distance...\n")
-			}
-			else if( itr == cItr ){
-				printf("{txt}Calculating spatial weight matrix...\n")
-			}
-		}
-	}
-
-	/*Convert Unit of Distance*/
-	if( unit == "mi" ){
-		mDist = 0.621371 :* mDist
-	}
-
-	/*Return Distance Matrix*/
-	mDist = mDist + mDist'
-	(*mW) = mDist
-	mDist = .
 }
 end

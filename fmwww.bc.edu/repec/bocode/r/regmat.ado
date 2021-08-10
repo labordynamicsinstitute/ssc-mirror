@@ -1,4 +1,4 @@
-*! Part of package matrixtools v. 0.27
+*! Part of package matrixtools v. 0.28
 *! Support: Niels Henrik Bruun, niels.henrik.bruun@gmail.com
 *! 2021-01-03 Option names for alternative adjustment names
 *! 2021-01-03 Option btext for alternative column name for b added
