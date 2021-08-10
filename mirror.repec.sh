@@ -11,7 +11,8 @@ cat << EOF
 EOF
 exit 0
 fi
-wget --mirror --convert-links --adjust-extension --page-requisites --no-parent $SRCURL
+#wget --mirror --convert-links --adjust-extension --page-requisites --no-parent $SRCURL
+wget --mirror --convert-links --page-requisites --no-parent $SRCURL
 # clean up
 rm fmwww.bc.edu/repec/repec.css
 rm fmwww.bc.edu/ecstyle.css
