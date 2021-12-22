@@ -334,10 +334,12 @@ iteration.
 
 {title:Examples}
 
-    {hline}
+{hline}
 {pstd}Setup{p_end}
 
 {phang2}{stata "webuse brcancer"}{p_end}
+{pstd}Rename variable for age at diagnosis {p_end}
+{phang2}{stata "rename x1 agediag"}{p_end}
 
 {pstd}Modelling one timescale (time since diagnosis) {p_end}
 {phang2}{stata "stset rectime, failure(censrec = 1) scale(365.24)"}{p_end}
@@ -347,7 +349,7 @@ iteration.
 {phang2}{stata "stmt hormon, time1(df(4) tvc(hormon) dftvc(3))"}{p_end}
 
 {pstd}Modelling two timescales (time since diagnosis and attained age){p_end}
-{phang2}{stata "stmt hormon, time1(df(4)) time2(start(x1) df(2))"}{p_end}
+{phang2}{stata "stmt hormon, time1(df(4)) time2(start(agediag) df(2))"}{p_end}
 
 
 {marker results}{...}

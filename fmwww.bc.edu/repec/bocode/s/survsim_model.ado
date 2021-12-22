@@ -18,12 +18,12 @@ program define survsim_model
 		display in yellow ". {stata ssc install merlin}"
 		exit 198
 	}
-// 	cap which predictms
-// 	if _rc {
-// 		display in yellow "You need to install the multistate package. This can be installed using,"
-// 		display in yellow ". {stata ssc install multistate}"
-// 		exit 198
-// 	}
+	cap which predictms
+	if _rc {
+		display in yellow "You need to install the multistate package. This can be installed using,"
+		display in yellow ". {stata ssc install multistate}"
+		exit 198
+	}
 		
 	//====================================================================================================================//
 
@@ -39,19 +39,18 @@ program define survsim_model
 			//make sure right censoring handled
 			//-> gets replaced if less than row specific maxtime() afterwards
 			tempvar tvar
-			gen `tvar' = 0 in 1/2
 			su `maxtime'
-			replace `tvar' = `r(max)' in 2
+			gen `tvar' = `r(max)' in 1
 					
-			galahad , 	models(`model') 				///
+			predictms , models(`model') 				///
 						singleevent 					///
 						survsim(`stime') 				///
 						survsimtouse(`modtouse') 		///
 						n(`N') 							///
 						timevar(`tvar')					///
-						transprob						//
-
-		
+						probability						///
+						simulate						//
+						
 		}
 		
 end

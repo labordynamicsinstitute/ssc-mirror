@@ -26,16 +26,16 @@ d KW: meta-regression
 d
 d Requires: Stata version 14 and xblc from st0215_1
 d
-d Distribution-Date: 20200820
+d Distribution-Date: 20211016
 d
 d Author: Luis Furuya-Kanamori, Research School of Population Health, Australian National University
 d Support: email Luis.Furuya-Kanamori@@anu.edu.au
 d
 d Author:  Chang Xu, College of Medicine, Qatar University
-d Support: email NA
+d Support: email 
 d
 d Author: Suhail AR Doi, College of Medicine, Qatar University
-d Support: email NA
+d Support: email 
 d
 f remr.ado
 f remr.sthlp

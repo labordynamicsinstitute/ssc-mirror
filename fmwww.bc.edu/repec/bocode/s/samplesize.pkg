@@ -1,6 +1,6 @@
 d 'SAMPLESIZE': module to execute sampsi multiple times and produce a graph
 d
-d samplesize does everything that sampsi does but in addition
+d  samplesize does everything that sampsi does but in addition
 d allows multiple values for every numeric parameter e.g. the
 d number of follow-up measurements. The resulting values for either
 d power or sample size are plotted in a twoway graph. 

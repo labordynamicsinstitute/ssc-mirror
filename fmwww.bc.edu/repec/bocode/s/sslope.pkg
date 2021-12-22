@@ -1,6 +1,6 @@
 d 'SSLOPE': module to calculate slope coefficients for regression interactions 
 d
-d This routine calculates simple slopes for interactions between
+d  This routine calculates simple slopes for interactions between
 d continuous variables in regression analysis. 
 d
 d KW: slopes

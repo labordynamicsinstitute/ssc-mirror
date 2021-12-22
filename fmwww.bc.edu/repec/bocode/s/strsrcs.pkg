@@ -1,6 +1,6 @@
 d 'STRSRCS': module to fit flexible parametric models for relative survival using restricted cubic splines
 d
-d strsrcs fits relative survival models using an extension of the
+d  strsrcs fits relative survival models using an extension of the
 d methods proposed  for 'standard' survival analysis available
 d using the stpm command. Models can be fitted on  either the (log)
 d cumulative hazard or the (log) cumulative odds scales.  See

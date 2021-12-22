@@ -54,7 +54,10 @@ contain spaces, {it:label} must be enclosed in quotes.
 {pstd}
 Remember that value labels may be attached to more than one 
 variable. Thus, changing one set of value labels might affect 
-more than one variable.
+more than one variable. Conversely, variables might have 
+different value labels attached in different 
+{help label language:label languages}; consider recoding such 
+value labels, too. 
 
 
 {title:Options}
@@ -87,9 +90,26 @@ as the separator.
 by {help elabel##iffeexp:{bf:iff} {it:eexp}} from old value labels.
 
 {phang}
-{opt var:list} additionally returns, in {cmd:r(varlist)}, 
-the variable names that have one of the recoded value labels 
-attached (in any {help label language:label language}). 
+{opt recodevar:list} recodes all variables that have one of the 
+recoded value labels attached (in any label language) according 
+to {it:rules}. If variables have different value labels attached 
+in different label languages, all value labels must be recoded; 
+otherwise, an error message is issued. Option {opt recodevarlist} 
+returns the names of recoded variables in {cmd:r(varlist)}. 
+
+{phang2}
+Remember that {cmd:elabel recode} expands ranges, such as 
+{cmd:42/73}, in {it:rules} to the integer sequence from 42 
+to 73. Option {opt recodevarlist} applies these expanded 
+{it:rules} to recode variables; this is different from how 
+the {helpb recode} command interprets ranges in {it:rules}. 
+
+{phang}
+{opt var:list} additionally returns, in {cmd:r(varlist)}, the variable 
+names that have one of the recoded value labels attached (in any label 
+language). Note that variables might have different value labels 
+attached in different label languages; consider recoding such value 
+labels, too. Also, see option {opt recodevarlist}.
 
 {phang}
 {opt d:ryrun} does not recode values but lists implied new value labels 
@@ -147,5 +167,5 @@ Online: {help label}
 {p_end}
 
 {psee}
-if installed: {help elabel}
+if installed: {help elabel adjust}, {help elabel}
 {p_end}

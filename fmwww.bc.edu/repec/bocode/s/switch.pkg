@@ -1,6 +1,6 @@
 d 'SWITCH': module to evaluate a given value against possible cases and their corresponding values
 d
-d switch evaluates a given value against possible cases and their
+d  switch evaluates a given value against possible cases and their
 d corresponding values. 
 d
 d KW: data management

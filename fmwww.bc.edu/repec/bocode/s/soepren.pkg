@@ -1,6 +1,6 @@
 d 'SOEPREN': module providing easy SOEP renames
 d
-d Renames a SOEP-Varlist into newnames formed by newname and wave.
+d  Renames a SOEP-Varlist into newnames formed by newname and wave.
 d Each newname starts with the string defined in the option
 d newstub() and ends with an element of the numlist in waves(). The
 d original names are stored as notes. 

@@ -1,7 +1,7 @@
 * metan.ado
 * Study-level (aka "aggregate-data" or "published data") meta-analysis
 
-*! version 4.03  28apr2021
+*! version 4.05  29nov2021
 *! Current version by David Fisher
 *! Previous versions by Ross Harris and Michael Bradburn
 
@@ -114,6 +114,18 @@
 // - corrected behaviour of `proportion' with `cumulative'/`influence'; also denominator(#) in forest plot
 // - with Mantel-Haenszel Risk Ratios with zero cells, pooled result sometimes displayed erroneously as 1.000
 
+* version 4.04
+// - improvements to Freeman-Tukey double-arcsine transformation for proportions
+// - fixed bug which prevented saving when calling from -ipdmetan- under certain circumstances
+// - improvements to "clear" option to enable it to be used within ipdmetan/ipdover
+
+* version 4.05
+// - option "summaryonly" now saves the same (extended) set of variables as cumulative/influence
+// - fixed bug that meant "summaryonly" with "saving()/clear" and "nograph" saved the *full* results-set (i.e. as if ignoring "summaryonly")
+// - addition of prefix() option so that saved variables are `prefix'_ES etc.
+// - tweaked _rsample so that it takes on 0, 1, 2;  where 2 corresponds to "insufficient data"
+//   ... note that r(n), r(ovstats) and r(bystats) always give the counts for _USE/_rsample==1 *only*.
+
 
 program define metan, rclass
 
@@ -124,7 +136,7 @@ program define metan, rclass
 	    local hidden hidden
 		local historical historical
 	}
-	return `hidden' local metan_version "4.03"
+	return `hidden' local metan_version "4.05"
 
 	// Clear historical global macros (see metan9.ado)
 	forvalues i = 1/15 {
@@ -134,7 +146,7 @@ program define metan, rclass
 	
 	syntax varlist(numeric min=2 max=6) [if] [in] [, SORTBY(varlist) ///
 		LABEL(passthru) BY(passthru) ///
-		FORESTplot(passthru) CLEAR   /// forestplot (ultimately -twoway-) options; leave results-set in memory
+		FORESTplot(passthru) /// forestplot (ultimately -twoway-) options
 		///
 		USE(varname numeric) CREATEDBY(passthru) STUDY(passthru) ESTEXP(passthru) EXPLIST(passthru) noPRESERVE noHEADER ///
 		/// ^^ undocumented options (for use with e.g. -ipdmetan- )
@@ -379,10 +391,29 @@ program define metan, rclass
 	local 0 `", `opts_adm'"'
 	syntax [, CUmulative INFluence PRoportion ///
 		noOVerall noSUbgroup noSECsub SUMMARYONLY INTERaction OVWt SGWt ALTWt ///
-		LOGRank NPTS(string) noINTeger KEEPOrder KEEPAll noTABle noGRaph noHET noBETWeen noWT SAVING(passthru) ///
-		noKEEPvars noRSample        		/// whether to leave behind study-estimate variables
+		LOGRank NPTS(string) noINTeger KEEPOrder KEEPAll noTABle noGRaph noHET noBETWeen noWT SAVING(passthru) PREfix(name local) ///
+		noKEEPvars noRSample CLEAR CLEARSTACK /// whether to leave behind study-estimate variables; leave results-set in memory; undocumented alternative
 		DF(passthru) TSQLEVEL(passthru) HLevel(passthru) RFLevel(passthru) DENOMinator(passthru) NOPR TESTBased ISQParam * ]
 
+	// July 2021: prefix() option
+	if length("`prefix'") > 5 {
+		disp as err `"{bf:prefix()} invalid; stub name too long ( >5 )"'
+		exit 198
+	}
+	
+	// Added July 2021
+	if `"`clearstack'"'!=`""' local clear clear
+	if `"`clear'"'!=`""' & `"`createdby'"'==`""' {
+		if `"`keepvars'"'!=`""' {
+			nois disp as err `"Option {bf:clear} specified; option {bf:nokeepvars} will be ignored"'
+			local keepvars
+		}
+		if `"`rsample'"'!=`""' {
+			nois disp as err `"Option {bf:clear} specified; option {bf:norsample} will be ignored"'
+			local rsample
+		}
+	}
+		
 	// May 2020:
 	// Restore -metan9- behaviour that noOVerall ==> noHET and noWT
 	if `"`overall'"'!=`""' & !(`"`_BY'"'!=`""' & `"`subgroup'"'==`""') {
@@ -406,6 +437,7 @@ program define metan, rclass
 		qui count if `touse' & `_USE'==2
 		local keepall_n = r(N)
 		qui replace `touse' = 0 if `_USE'==2
+		qui replace `touse_build' = 0 if `_USE'==2		// added July 2021
 	}
 	if `"`_BY'"'!=`""' {
 		qui levelsof `_BY' if `touse', missing local(bylist)	// "missing" since `touse' should already be appropriate for missing yes/no
@@ -561,7 +593,9 @@ program define metan, rclass
 	// that is, "ES, seES", "ES, LCI, UCI", or "OE, V"
 	if `"`npts'"'!=`""' {
 		if `params' > 3 | "`proportion'"!="" {
-			nois disp as err `"option {bf:npts(}{it:varname}{bf:)} syntax only valid with generic inverse-variance model or with logrank (O-E & V) HR"'
+		    if `"`use'"'!=`""' local orwith `" or with logrank (O-E & V) HR"'		// if passed from -ipdmetan-
+			nois disp as err `"option {bf:npts(}{it:varname}{bf:)} syntax only valid with generic inverse-variance model`orwith'"'
+			nois disp as err `"maybe the option {bf:npts} was intended?"'
 			exit 198
 		}
 		
@@ -645,13 +679,26 @@ program define metan, rclass
 	//   (plus Q, tausq, sigmasq, df from each analysis.)
 	// Meanwhile `outvlist' contains effect sizes etc. for each individual *study*, as usual,
 	//   which will be left behind in the current dataset.
-	if `"`cumulative'`influence'"'!=`""' {
-		local npts_el npts
+	
+	// Nov 2021: a simplified version of `xoutvlist' is also needed if `summaryonly' and saving()/clear.
+	if `"`cumulative'`influence'"'!=`""' ///
+		| (`"`summaryonly'"'!=`""' & !(`"`saving'"'==`""' & `"`clear'"'==`""')) {
+		// local npts_el npts
+		// local xrownames : copy local rownames
+		// local xrownames : list xrownames - npts_el
+
+		// Nov 2021
+		local toremove npts
+		if `"`cumulative'`influence'"'==`""' {
+			local toremove `toremove' eff se_eff eff_lci eff_uci		
+		}
 		local xrownames : copy local rownames
-		local xrownames : list xrownames - npts_el
+		local xrownames : list xrownames - toremove
 		local xrownames `xrownames' Q Qdf Q_lci Q_uci
 		if `: list posof "tausq" in rownames' local xrownames `xrownames' sigmasq
-		local xrownames `xrownames' _WT2
+		if `"`cumulative'`influence'"'!=`""' {
+			local xrownames `xrownames' _WT2
+		}
 		
 		local nt = `: word count `xrownames''
 		forvalues i = 1 / `nt' {
@@ -676,7 +723,7 @@ program define metan, rclass
 	//  - with the same contents as the elements of `rownames'
 	//  - but *without* npts (as _NN is handled separately)
 	//  - and with the addition of Q, Qdf, Q_lci, Q_uci, [sigmasq]
-	//  - and with the addition of a separate weight variable (`_WT2')
+	//  - and with the addition of a separate weight variable (`_WT2') if cumulative/inflence
 
 	// Subsequently, `rownames' will be passed between subroutines
 	// and `xrownames' will be re-derived whenever needed
@@ -1146,7 +1193,10 @@ program define metan, rclass
 	local mhpeto mh peto
 	if r(N) & `"`: list modellist & mhpeto'"'==`""' {
 		qui replace `_USE' = 2 if `touse' & `_USE'==1 & missing(`_seES')
-		if `"`keepall'"'==`""' qui replace `touse' = 0 if `_USE'==2
+		if `"`keepall'"'==`""' {
+			qui replace `touse' = 0 if `_USE'==2
+			qui replace `touse_build' = 0 if `_USE'==2		// added July 2021
+		}
 	}
 	local esmiss = cond(`m'==1, 0, r(N))
 	
@@ -1163,7 +1213,7 @@ program define metan, rclass
 	//  so that the cumul/infl versions of _ES, _seES etc. are stored in `outvlist' (so overwriting the "standard" _ES, _seES etc.)
 	//  for display onscreen, in forest plot and in saved dataset.
 	// Then `xoutvlist' just contains the remaining "extra" tempvars _tausq, _Q, _Qdf etc.
-	if `"`xoutvlist'"'!=`""' {
+	if `"`cumulative'`influence'"'!=`""' {
 
 		// Firstly, tidy up: If nokeepvars *and* altwt not specified, then we can drop
 		//   any members of `outvlist' that didn't already exist in the dataset
@@ -1211,7 +1261,8 @@ program define metan, rclass
 		// Finally, we can separate off `xoutvlist', and thereby reset `outvlist'
 		local outvlist `eff' `se_eff' `eff_lci' `eff_uci' `_WT2' `_NN'
 		local xoutvlist : list xoutvlist - outvlist
-		local xv_opt xoutvlist(`xoutvlist')
+		// local xv_opt xoutvlist(`xoutvlist')
+		// Nov 2021: ^^ don't use `xv_opt'; instead *always* send `xoutvlist' to BuildResultsSet, because this now also may include `summaryonly'
 		
 		tokenize `outvlist'
 		args _ES _seES _LCI _UCI _WT _NN
@@ -1391,23 +1442,12 @@ program define metan, rclass
 		matrix `coeffs' = r(coeffs)
 		return matrix coeffs = `coeffs'
 	}
-
+	
 	
 	
 	********************************
 	* Build forestplot results set *
 	********************************
-	
-	* 1. Create the results-set structure
-	//  (including some tempvars; hence the subroutine)
-	* 2. Send the data to -forestplot- to create the forest plot
-	* 3. Save the results-set (in Stata "dta" format)
-	//  (after renaming tempvars to permanent names)
-	//   and with characteristics set so that "forestplot, useopts" can be called.
-
-	// default is to preserve data later, if forestplot/saving [UNLESS option -clear- is used!]
-	if "`clear'"=="" & "`preserve'"=="" local preserve_opt preserve
-	`preserve_opt'
 	
 	// Store contents of existing characteristics
 	//  with same names as those to be used by BuildResultsSet
@@ -1420,48 +1460,70 @@ program define metan, rclass
 	if `"`_BY'"'!=`""' {
 		label variable `_BY' `"`byvarlab'"'
 	}
-
-	cap nois BuildResultsSet `_USE' `invlist' if `touse_build', labels(`_LABELS') ///
-		modellist(`modellist') summstat(`summstat') ///
-		qstat(`qstat') qlist(`qlist') byq(`byQ') hetstats(`hetstats') byhetlist(`byhetlist') ///
-		sortby(`sortby' `obs') study(`_STUDY') `byopts' mwt(`mwt') ovstats(`ovstats') ///
-		`cumulative' `influence' `proportion' `subgroup' `overall' `secsub' `het' `between' `wt' `summaryonly' ///
-		`ovwt' `sgwt' `altwt' effect(`effect') `eform' `logrank' `ccvaropt' `model1opts' `labelopts' `isqparam' ///
-		outvlist(`outvlist') `xv_opt' `prv_opt' `denominator' `nopr' `sfmtlen' ///
-		forestplot(`opts_fplot' `interaction') `fpnote' `graph' `saving' `clear' ///
-		`keepall' `keeporder' `ilevel' `olevel' `tsqlevel' `rflevel' `useflag' `createdby' `opts_adm'
 	
-	if _rc {
-		if `"`err'"'==`""' {
-			if _rc==1 nois disp as err `"User break in {bf:metan.BuildResultsSet}"'
-			else nois disp as err `"Error in {bf:metan.BuildResultsSet}"'
-			nois disp as err `"(Note: meta-analysis model was fitted successfully)"'
+	* 1. Create the results-set structure
+	//  (including some tempvars; hence the subroutine)
+	* 2. Send the data to -forestplot- to create the forest plot
+	* 3. Save the results-set (in Stata "dta" format)
+	//  (after renaming tempvars to permanent names)
+	//   and with characteristics set so that "forestplot, useopts" can be called.
+
+	// July 2021:
+	// Only need to do this if:
+	// - saving a results set
+	// - creating a forest plot
+	// - clearing the original data, to leave the results set in memory
+	if `"`saving'"'!=`""' | `"`clear'"'!=`""' | `"`graph'"'==`""' {
+	
+		// Note: if option -nopreserve- , assumption is that (original) data is *already* preserved (e.g. by -ipdmetan-)
+		if `"`preserve'"'==`""' {
+			local preserve_opt preserve
+			`preserve_opt'
 		}
-		c_local err noerr
-		local rc = _rc
-						
-		// in case *not* under -preserve- (e.g. if _rsample required)
-		summ `_USE', meanonly
-		if r(N) & r(max) > 9 {
-			qui replace `_USE' = `_USE' / 10	// in case break was while _USE was scaled up -- see latter part of BuildResultsSet
-		}
-		qui drop if `touse' & !inlist(`_USE', 1, 2)
+
+		cap nois BuildResultsSet `_USE' `invlist' if `touse_build', labels(`_LABELS') ///
+			modellist(`modellist') summstat(`summstat') ///
+			qstat(`qstat') qlist(`qlist') byq(`byQ') hetstats(`hetstats') byhetlist(`byhetlist') ///
+			sortby(`sortby' `obs') study(`_STUDY') `byopts' mwt(`mwt') ovstats(`ovstats') ///
+			`cumulative' `influence' `proportion' `subgroup' `overall' `secsub' `het' `between' `wt' `summaryonly' ///
+			`ovwt' `sgwt' `altwt' effect(`effect') `eform' `logrank' `ccvaropt' `model1opts' `labelopts' `isqparam' ///
+			outvlist(`outvlist') xoutvlist(`xoutvlist') `prv_opt' `denominator' `nopr' `sfmtlen' ///
+			forestplot(`opts_fplot' `interaction') `fpnote' `graph' `saving' `clear' `clearstack' prefix(`prefix') ///
+			`keepall' `keeporder' `ilevel' `olevel' `tsqlevel' `rflevel' `useflag' `createdby' `opts_adm'
 		
-		// clear/restore characteristics
-		char _dta[FPUseOpts]    `char_fpuseopts'
-		char _dta[FPUseVarlist] `char_fpusevlist'
-		exit `rc'
-	}		// end if _rc	
-		
-	// Restore original data; but preserve it again temporarily while "stored" variables are processed
-	//   if all goes well, this -preserve- will be cancelled later with -restore, not- ...
-	if `"`preserve_opt'"'!=`""' {
-		restore, preserve
+		if _rc {
+			if `"`err'"'==`""' {
+				if _rc==1 nois disp as err `"User break in {bf:metan.BuildResultsSet}"'
+				else nois disp as err `"Error in {bf:metan.BuildResultsSet}"'
+				nois disp as err `"(Note: meta-analysis model was fitted successfully)"'
+			}
+			c_local err noerr
+			local rc = _rc
+			
+			// clear/restore characteristics
+			char _dta[FPUseOpts]    `char_fpuseopts'
+			char _dta[FPUseVarlist] `char_fpusevlist'
+			
+			exit `rc'
+		}	// end if _rc
 	}
-	
-	// exit early if no -preserve- (e.g. -clear- option, or if called from -ipdmetan- )
-	if `"`preserve_opt'"' == `""' exit
+		
+	// exit early:
+	// (1) if option -nopreserve- (e.g. if called from -ipdmetan- )
+	// (2) if option "clear" (so no need for stored variables)
+	if `"`clear'"'!=`""' | `"`preserve'"'!=`""'{
+		if `"`preserve_opt'"'!=`""' {
+			restore, not
+		}
+		exit
+	}
 
+	// Otherwise, restore "original" data (that is, original *observations* but with added tempvars);
+	//   but preserve it again temporarily while "stored" variables are processed
+	//   if all goes well, this -preserve- will be cancelled later with -restore, not- ...
+	if `"`preserve_opt'"'!=`""' local restore_opt restore,
+	`restore_opt' preserve
+	
 	
 	** Stored (left behind) variables
 	// Unless -noKEEPVars- (i.e. "`keepvars'"!=""), leave behind _ES, _seES etc. in the original dataset
@@ -1469,29 +1531,29 @@ program define metan, rclass
 	//   (as opposed to `outvlist', which contains the *temporary* names `_ES', `_seES', etc.)
 	//   (N.B. this code applies whether or not cumulative/influence options are present)	
 	if `"`keepvars'"'==`""' {
-
-		// June 2020: _CC is defined within BuildResultsSet using c_local
+	
+		// July 2021: _CC is defined within DrawTableAD using c_local
 		local tostore _ES _seES _LCI _UCI _WT _NN _CC
 		
 		foreach v of local tostore {
 			if `"``v''"'!=`""' {
-				if `"``v''"'!=`"`v'"' {		// If pre-existing var has the same name (i.e. was named _ES etc.), nothing needs to be done.
-					cap drop `v'			// Else, first drop any existing var named _ES (e.g. left over from previous analysis)
+				if `"``v''"'!=`"`prefix'`v'"' {		// If pre-existing var has the same name (i.e. was named _ES etc.), nothing needs to be done.
+					cap drop `prefix'`v'			// Else, first drop any existing var named _ES (e.g. left over from previous analysis)
 				
 					// If in `tvlist', we can directly rename
 					if `: list v in tvlist' {
-						qui rename ``v'' `v'
+						qui rename ``v'' `prefix'`v'
 					}
 					
 					// Otherwise, ``v'' is a pre-existing var which needs to be retained at program termination
 					// so, use -clonevar-
-					else qui clonevar `v' = ``v'' if `touse'
+					else qui clonevar `prefix'`v' = ``v'' if `touse'
 				}
-				local `v' `v'				// for use with subsequent code (local _ES now contains "_ES", etc.)
+				local `v' `prefix'`v'		// for use with subsequent code (local _ES now contains "_ES", etc.)
 			}
-			else cap drop `v'				// in any case, drop existing vars named _ES etc.
+			else cap drop `prefix'`v'		// in any case, drop existing vars named _ES etc.
 		}
-		qui compress `tvlist'
+		// qui compress `tvlist'
 		order `_ES' `_seES' `_LCI' `_UCI' `_WT' `_NN' `_CC' `_rsample', last
 		
 		// Obtain `ilevel' for labelling LCI/UCI
@@ -1517,7 +1579,8 @@ program define metan, rclass
 		}
 		if `"`_rsample'"'==`""' {
 			cap drop _rsample
-			qui gen byte _rsample = `_USE'==1		// this shows which observations were used
+			qui gen byte _rsample = 0
+			qui replace _rsample = `_USE' if inlist(`_USE', 1, 2)		// this shows which observations were used
 			label variable _rsample "Sample included in most recent model"
 		}		
 	}	
@@ -1536,21 +1599,22 @@ program define metan, rclass
 
 			// create _rsample
 			cap drop _rsample
-			qui gen byte _rsample = `_USE'==1		// this shows which observations were used
+			qui gen byte _rsample = 0
+			qui replace _rsample = `_USE' if inlist(`_USE', 1, 2)		// this shows which observations were used
 			label variable _rsample "Sample included in most recent model"
 			
 			local warnlist
 			local rc = 111
 			foreach v in _ES _seES _LCI _UCI _WT _NN `_CC' {
-				cap confirm var `v'
-				if !_rc local warnlist `"`warnlist' {bf:`v'}"'
+				cap confirm var `prefix'`v'
+				if !_rc local warnlist `"`warnlist' {bf:`prefix'`v'}"'
 				local rc = min(`rc', _rc)
 			}
 			if !`rc' {
 				disp _n `"{error}Warning: option {bf:nokeepvars} specified, but the following "stored" variables already exist:"'
 				disp `"{error}`warnlist'"'
 				disp `"{error}Note that these variables are therefore no longer associated with the most recent analysis"'
-				disp `"{error}(although {bf:_rsample} {ul:is})."'
+				disp `"{error}(although {bf:`prefix'_rsample} {ul:is})."'
 			}
 		}
 		
@@ -1558,18 +1622,18 @@ program define metan, rclass
 		else {
 		
 			// give warning if variable named _rsample already existed
-			cap confirm var _rsample
+			cap confirm var `prefix'_rsample
 			if !_rc {
-				disp _n `"{error}Warning: option {bf:norsample} specified, but "stored" variable {bf:_rsample} already exists"'
+				disp _n `"{error}Warning: option {bf:norsample} specified, but "stored" variable {bf:`prefix'_rsample} already exists"'
 			}
 			local rsrc = _rc
 
 			local warnlist
 			local rc = 111
 			foreach v in _ES _seES _LCI _UCI _WT _NN _CC {
-				cap confirm var `v'
+				cap confirm var `prefix'`v'
 				if !_rc {
-					local warnlist `"`warnlist' {bf:`v'}"'
+					local warnlist `"`warnlist' {bf:`prefix'`v'}"'
 					local rc = 0
 				}
 			}
@@ -2285,7 +2349,7 @@ program define ProcessInputVarlist, sclass
 	syntax varlist(numeric min=3 max=7 default=none) [if] [in], [SUMMSTAT(name) ///
 		COHend GLAssd HEDgesg noSTANdard TRansform(string) FTT /// model options (`ftt' included for compatibility with -metaprop-)
 		CORnfield EXact WOolf CItype(name) CIMEThod(name)  /// individual study CI options
-		MH PETO BREslow TArone CMH CMHNocc CHI2 CC(passthru) noCC2 /// 
+		MH PETO BREslow TArone CMH CMHNocc CHI2 CC(passthru) noCC2 NPTS ///
 		/*options which can be checked against `summstat' and/or `params' for "quick wins", since not model-dependent*/ ///
 		EFORM LOG LOGRank PRoportion NOPR DENOMinator(string) noINTeger ZTOL(real 1.0x-1a) * ]
 	
@@ -2364,12 +2428,11 @@ program define ProcessInputVarlist, sclass
 					exit 184
 				}
 			}
-			/*
 			if inlist("`summstat'", "wmd", "cohend", "glassd", "hedgesg") {
 				nois disp as err "Specified method of constructing effect size {bf:`summstat'} is incompatible with the data"
 				exit 184
-			}		
-			*/
+			}
+			
 			// input is HR logrank (2 vars: OE & V)
 			if "`logrank'" != "" {
 				cap assert "`3'"=="" & "`2'"!=""
@@ -2377,6 +2440,12 @@ program define ProcessInputVarlist, sclass
 					nois disp as err "Option {bf:logrank} is only appropriate with two-variable syntax"
 					exit 184
 				}
+				if "`npts'"!="" {		// [MOVED HERE AUG 2021]
+					nois disp as err _n `"Option {bf:npts} is not appropriate with logrank OE & V data"'
+					nois disp as err `"maybe the option {bf:npts(}{it:varname}{bf:)} was intended?"'
+					exit 198
+				}
+				
 				local params = 2
 				local summstat hr
 				local effect `"Haz. Ratio"'
@@ -2410,7 +2479,7 @@ program define ProcessInputVarlist, sclass
 					exit 184
 				}
 				local params = 2
-				
+
 				if "`denominator'"=="" local effect "Proportion"
 				else {
 					cap confirm number `denominator'
@@ -2446,10 +2515,14 @@ program define ProcessInputVarlist, sclass
 						exit _rc
 					}
 				}
+				/*
 				else if !inlist(`"`citype'"', `""', `"wald"') {
 					nois disp as err `"Cannot specify {bf:citype(`citype')} with {bf:nointeger}"'
 					exit 198
 				}
+				*/
+				// DF July 2021: Removed; since CIs for proportions may have to be generated manually anyway (see GenConfIntsPr)
+				// there is no real need for this restriction
 				
 				cap assert `succ'>=0 & `_NN'>=0 if `touse'
 				if _rc {
@@ -2466,7 +2539,7 @@ program define ProcessInputVarlist, sclass
 				}
 				
 				local 0 `transform'
-				syntax [name(name=transform id="transform" ) ] [, N(string) Arithmetic Geometric Harmonic IVariance INVVariance ]
+				syntax [name(name=transform id="transform" ) ] [, N(string) POVERV(real 2) Arithmetic Geometric Harmonic IVariance INVVariance ]
 				// N.B. `n' is an undocumented generalisation of `arithmetic' | `geometric' | `harmonic'
 				// Jan 2021: added Barendregt/Doi's suggested "inverse-variance"-based back-transform
 				
@@ -2484,25 +2557,48 @@ program define ProcessInputVarlist, sclass
 							assert `n' > 0 & !missing(`n')
 						}
 						if _rc {
-							nois disp as err `"In option {bf:transform(ftukey, n(#))}, # must be > 0 and non-missing"'
+							nois disp as err `"In option {bf:transform(ftukey, n(}{it:#}{bf:))}, {it:#} must be > 0 and non-missing"'
 							exit 198
 						}
 						if `"`arithmetic'`geometric'`harmonic'`ivariance'`invvariance'"'!=`""' {
 							local erropt : word 1 of `arithmetic' `geometric' `harmonic' `ivariance' `invvariance'
 							nois disp as err `"option {bf:transform()} invalid;"'
-							nois disp as err `"only one of {bf:n(#)} or {bf:`erropt'} is allowed"'
+							nois disp as err `"only one of {bf:n(}{it:#}{bf:)} or {bf:`erropt'} is allowed"'
 							exit 184
 						}
 					}
 					else {
 						opts_exclusive `"`arithmetic' `geometric' `harmonic' `ivariance' `invvariance'"' transform 184
 						local n `arithmetic'`geometric'`harmonic'`ivariance'`invvariance'
-						if "`n'"=="invvariance" local n ivariance		// these are synonyms
+						if `"`n'"'==`"invvariance"' local n ivariance		// these are synonyms
+					}					
+					if `"`n'"'==`"ivariance"' {
+						cap {
+							confirm number `poverv'
+							assert `poverv' >= 0 & !missing(`poverv')
+						}
+						if _rc {
+							nois disp as err `"In option {bf:transform(ftukey, ivariance poverv(}{it:#}{bf:))}, {it:#} must be >= 0 and non-missing"'
+							exit 198
+						}
 					}
-					local tnopt `"tn(`n')"'
+					local tnopt `"tn(`n') poverv(`poverv')"'
 				}
-				else if "`summstat'"=="" local summstat pr
-
+				else {
+					if `"`n'"'!=`""' {
+						nois disp as err `"option {bf:transform()} invalid;"'
+						nois disp as err `"option {bf:n(}#{bf:)} only allowed with {bf:transform(ftukey)}"'
+						exit 198
+					}
+					if `"`arithmetic'`geometric'`harmonic'`ivariance'`invvariance'"'!=`""' {
+						local erropt : word 1 of `arithmetic' `geometric' `harmonic' `ivariance' `invvariance'
+						nois disp as err `"option {bf:transform()} invalid;"'
+						nois disp as err `"option {bf:`erropt'} only allowed with {bf:transform(ftukey)}"'
+						exit 198
+					}
+					if "`summstat'"=="" local summstat pr
+				}
+				
 				// Identify studies with insufficient data (`_USE'==2)
 				qui replace `_USE' = 2 if `touse' & `_NN' < 2
 				
@@ -2524,6 +2620,11 @@ program define ProcessInputVarlist, sclass
 						nois disp as err `"Option {bf:`opt'} is not appropriate without proportion or 2x2 count data"' 
 						exit 184
 					}
+				}
+				if "`npts'"!="" {		// [MOVED HERE AUG 2021]
+					nois disp as err _n `"Option {bf:npts} is not appropriate without proportion or 2x2 count data"'
+					nois disp as err `"maybe the option {bf:npts(}{it:varname}{bf:)} was intended?"'
+					exit 198
 				}
 	
 				// citype
@@ -2735,7 +2836,7 @@ program define ProcessInputVarlist, sclass
 		local params = 6
 		args n1 mean1 sd1 n0 mean0 sd0
 
-        // input is form N mean SD for continuous outcome data
+		// input is form N mean SD for continuous outcome data
 		if "`integer'"=="" {
 			cap assert int(`n1')==`n1' & int(`n0')==`n0' if `touse'
 			if _rc {
@@ -2821,8 +2922,8 @@ program define ProcessInputVarlist, sclass
 	
 	sreturn clear
 	
-	local options `breslow' `tarone' `cmh' `cmhnocc' `chi2'
-	local options `options' `logrank' `proportion' `denom_opt' `nopr' `mh' `peto' `integer' `cc' `cc2' `tnopt'
+	local options `breslow' `tarone' `cmh' `cmhnocc' `chi2' `logrank' `proportion' `denom_opt' `nopr'
+	local options `options' `mh' `peto' `integer' `cc' `cc2' `tnopt' `npts'
 	sreturn local options `"`macval(opts_adm)' `options'"'
 	
 	sreturn local effect `"`effect'"'
@@ -2857,7 +2958,7 @@ program define ProcessModelOpts, sclass
 	** First, parse options needed throughout this subroutine
 	syntax, PARAMS(passthru) ///
 		[ SUMMSTAT(passthru) SUMMORIG(passthru) ///
-		RFDist CUmulative INFluence LOGRank PRoportion TN(passthru) ///
+		RFDist CUmulative INFluence LOGRank PRoportion TN(passthru) POVERV(passthru) ///
 		/// /* Test (`teststat') and heterogeneity (`hetstat') statistics */
 		T Z CHI2 CMH CMHNocc BREslow TArone COCHranq ///
 		///
@@ -2921,7 +3022,7 @@ program define ProcessModelOpts, sclass
 
 		// [Nov 2020:]
 	    local first      = cond(`j'==1, "first", "")		// marker of this model being the first/main/primary model
-		cap nois ParseModel `model`j'' `summstat' `summorig' `params' `logrank' `proportion' `tn' `first' ///
+		cap nois ParseModel `model`j'' `summstat' `summorig' `params' `logrank' `proportion' `tn' `poverv' `first' ///
 			globalopts(`teststat' `wgt' `ccopt' `opts_adm')
 		if _rc {
 			if _rc==1 nois disp as err `"User break in {bf:metan.ParseModel}"'
@@ -3011,7 +3112,7 @@ program define ProcessModelOpts, sclass
 		}
 	}
 
-	
+
 	
 	***********************
 	* Initialise rownames *
@@ -3020,7 +3121,7 @@ program define ProcessModelOpts, sclass
 	//  ... and "parametrically-defined Isq" -based heterogeneity if specified and appropriate [Sep 2020]
 	// (c.f. r(table) after regression)
 
-	local rownames eff se_eff eff_lci eff_uci 
+	local rownames eff se_eff eff_lci eff_uci
 	if "`proportion'"!="" {
 		local 0 `", `summstat'"'
 		syntax , [ SUMMSTAT(name) ]
@@ -3340,7 +3441,7 @@ program define ParseModel, sclass
 		, PARAMS(integer) [ SUMMSTAT(name) SUMMORIG(name) GLOBALOPTS(string asis) ///	// default/global options: `teststat' `hetstat' [WGT() CC() etc.]
 		Z T CHI2 CMH CMHNocc ///														// test statistic options
 		HKSj HKnapp KHartung KRoger BArtlett PETO RObust SKovgaard EIM OIM QWT(varname numeric) /*contains quality weights*/ ///
-		INIT(name) CC(passthru) noCC2 LOGRank PRoportion TN(passthru) ///
+		INIT(name) CC(passthru) noCC2 LOGRank PRoportion TN(passthru) POVERV(passthru) ///
 		LAbel(string asis) EXtralabel(string asis) FIRST /*SECOND*/ ///		// [Oct 2020:] user-defined model labelling
 		WGT(passthru) TRUNCate(passthru) ISQ(string) TAUSQ(string) ///
 		ITOL(passthru) MAXTausq(passthru) REPS(passthru) MAXITer(passthru) QUADPTS(passthru) DIFficult TECHnique(passthru) ]
@@ -3608,13 +3709,13 @@ program define ParseModel, sclass
 	//  it only remains to check them against the *model* (and teststat/hetstat)
 	opts_exclusive `"`cc' `cc2'"' `""' 184
 	local old_ccopt `"`cc'`cc2'"'
-	foreach opt in wgt truncate isq tausq tn itol maxtausq reps maxiter quadpts difficult technique {
+	foreach opt in wgt truncate isq tausq tn poverv itol maxtausq reps maxiter quadpts difficult technique {
 		local old_`opt' : copy local `opt'
 	}
 		
 	local 0 `", `globalopts'"'
 	syntax [, Z T CHI2 CMH CMHNocc ///
-		CC(passthru) noCC2 WGT(passthru) TRUNCate(passthru) ISQ(string) TAUSQ(string) TN(passthru) ///
+		CC(passthru) noCC2 WGT(passthru) TRUNCate(passthru) ISQ(string) TAUSQ(string) TN(passthru) POVERV(passthru) ///
 		ITOL(passthru) MAXTausq(passthru) REPS(passthru) MAXITer(passthru) QUADPTS(passthru) DIFficult TECHnique(passthru) * ]
 		// last line ^^  "global" opts to compare with "specific model" opts
 		// add "*" as this macro also contains `opts_adm' (not relevant to this subroutine)
@@ -3627,7 +3728,7 @@ program define ParseModel, sclass
 	opts_exclusive `"`cc' `cc2'"' `""' 184
 	local ccopt    `"`cc'`cc2'"'
 
-	foreach opt in ccopt wgt truncate isq tausq tn itol maxtausq reps maxiter quadpts difficult technique {
+	foreach opt in ccopt wgt truncate isq tausq tn poverv itol maxtausq reps maxiter quadpts difficult technique {
 		if `"`old_`opt''"'!=`""' {
 			local `opt' : copy local old_`opt'
 		}
@@ -3924,7 +4025,7 @@ program define ParseModel, sclass
 	sreturn clear
 
 	// Model options
-	local modelopts `"`cmhnocc' `robust' `hksj_opt' `kr_opt' `bartlett' `skovgaard' `eim' `oim' `ccopt_final' `tn'"'
+	local modelopts `"`cmhnocc' `robust' `hksj_opt' `kr_opt' `bartlett' `skovgaard' `eim' `oim' `ccopt_final' `tn' `poverv'"'
 	local modelopts `"`modelopts' `wgt' `truncate' `tsqlevel' `isqsa_opt' `tsqsa_opt' `qe_opt' `init_opt'"'
 	local modelopts `"`modelopts' `itol' `maxtausq' `reps' `maxiter' `quadpts' `difficult' `technique'"'
 	local modelopts = trim(itrim(`"`modelopts'"'))
@@ -5170,7 +5271,7 @@ program define DrawTableAD, rclass sortpreserve
 		[ CUmulative INFluence noOVerall noSUbgroup noSECsub SUMMARYONLY OVWt SGWt ///
 		LABELS(varname string) STITLE(string asis) ETITLE(string asis) CC(string) CCVAR(name) SUMMSTAT(name) TESTBased ISQParam ///
 		STUDY(varname numeric) BY(varname numeric) BYLIST(numlist miss) BYSTATSLIST(namelist) noMODELLABels /* <-- NEW NOV 2020 */ ///
-		QLIST(numlist miss min=2 max=6) BYQ(name) HETSTATS(name) MWT(name) OVSTATS(name) PRoportion PRVLIST(varlist numeric) DENOMinator(real 1) ///
+		QLIST(numlist miss min=2 max=6) BYQ(name) HETSTATS(name) MWT(name) OVSTATS(name) PRoportion PRVLIST(varlist numeric min=3 max=3) DENOMinator(real 1) ///
 		EFORM noTABle noHET noBETWeen noWT noKEEPvars KEEPOrder ILevel(cilevel) OLevel(cilevel) HLevel(cilevel) NZT(real 0) ISQSA(real 80) TSQSA(real -99) ///
 		 * ]
 
@@ -5296,16 +5397,24 @@ program define DrawTableAD, rclass sortpreserve
 	}
 	local m2 : word count `modellist2'	
 	
-	if `"`table'"'==`""' {
-
-		* Expand `cc'
-		if `"`cc'"'!=`""' {
-			local 0 `cc'
-			syntax anything(name=ccval id="value supplied to {bf:cc()}") [, *]
-			confirm number `ccval'
+	* Expand `cc'
+	if `"`cc'"'!=`""' {
+		local 0 `cc'
+		syntax anything(name=ccval id="value supplied to {bf:cc()}") [, *]
+		confirm number `ccval'
+		
+		// June 2021: also use c_local to define _CC in main routine
+		// Note that similar code is repeated within BuildResultsSet,
+		//  but this code is here in case BuildResultsSet is not run.
+		cap confirm numeric var `ccvar'
+		if !_rc & `ccval' {
+			c_local _CC `ccvar'
 		}
-		else local ccval = 0
-
+	}
+	else local ccval = 0	
+	
+	if `"`table'"'==`""' {
+		
 		* Find maximum length of labels in LHS column
 		qui gen long `vlablen' = length(`_LABELS')		
 		if "`cc'"!="" & "`ccvar'"!="" {							// cc used with "primary" model
@@ -6463,33 +6572,31 @@ program define BuildResultsSet, rclass
 	
 	
 	*****************
-	* Initial setup *
+	* Initial setup *  ... starting with "required options"
 	*****************
-	syntax varlist(numeric min=3 max=7) [if] [in], ///
-		OUTVLIST(varlist numeric min=5 max=9) MODELLIST(namelist) QSTAT(name) SORTBY(varlist) [ NPTS * ]
+	syntax varlist(numeric min=3 max=7) [if] [in], LABELS(varname) ///
+		OUTVLIST(varlist numeric min=5 max=9) MODELLIST(namelist) QSTAT(name) SORTBY(varlist) [ * ]
 	
 	marksample touse, novarlist	// -novarlist- option prevents -marksample- from setting `touse' to zero if any missing values in `varlist'
 								// we want to control this behaviour ourselves, e.g. by using KEEPALL option
 	
 	// unpack varlists
 	gettoken _USE invlist : varlist
+	local params : word count `invlist'
 	tokenize `outvlist'
-	args _ES _seES _LCI _UCI _WT _NN
+	args _ES _seES _LCI _UCI _WT _NN	
+	
+	// Multiple models
+	local m : word count `modellist'
+	gettoken model1 : modellist
+	forvalues j = 1 / `m' {
+		local 0 `", `options'"'
+		syntax [, LABEL`j'opt(string asis) EXTRA`j'opt(string asis) USER`j'stats(numlist min=3 max=3) * ]
+	}	
 
-	if `"`npts'"'!=`""' {
-		cap confirm numeric var `_NN'
-		if _rc {
-			nois disp as err _n "cannot use {bf:npts} option; no patient numbers available"
-			nois disp as err "maybe the option {bf:npts(}{it:varname}{bf:)} was intended?"
-			exit 198
-		}
-		local npts npts(`_NN')
-		local nptsvar `_NN'
-	}
-		
 
 	******************************
-	* Initial parsing of options *
+	* Initial parsing of options *  ... that is, "optional options"
 	******************************
 
 	// Need to parse *all* (expected) options here,
@@ -6498,20 +6605,20 @@ program define BuildResultsSet, rclass
 	// Jan 2021: Before Stata 15, -syntax- statements could only have 70 named options
 	// Therefore, to avoid errors, we need to parse options in smaller groups:
 	local 0 `", `options'"'
-	syntax, [ LABELS(varname) SUMMSTAT(string) STUDY(varname numeric) BY(varname numeric) BYLIST(numlist miss) BYSTATSLIST(namelist) ///
+	syntax, [ SUMMSTAT(string) STUDY(varname numeric) BY(varname numeric) BYLIST(numlist miss) BYSTATSLIST(namelist) ///
 		QLIST(numlist miss min=2 max=6) BYQ(name) HETSTATS(name) BYHETLIST(namelist) MWT(name) OVSTATS(name) ///
 		CUmulative INFluence PRoportion noOVerall noSUbgroup noSECsub SUMMARYONLY OVWt SGWt ALTWt WGT(varname numeric) ///
-		EFORM EFFect(string asis) LOGRank CC(string) CCVAR(name) ISQParam /* <-- NEW SEP 2020*/ ///
+		EFORM EFFect(string asis) LOGRank CC(string) CCVAR(name) NPTS ISQParam /* <-- NEW SEP 2020*/ ///
 		* ]
 		
 	local 0 `", `options'"'
 	syntax, [ LCols(varlist) RCols(varlist) COUNTS(string asis) EFFIcacy OEV ///
-		XOUTVLIST(varlist numeric) PRVLIST(varlist numeric) DENOMinator(real 1) NOPR RFDist RFLevel(cilevel) ILevel(cilevel) OLevel(cilevel) ///
+		XOUTVLIST(varlist numeric) PRVLIST(varlist numeric min=3 max=3) DENOMinator(real 1) NOPR RFDist RFLevel(cilevel) ILevel(cilevel) OLevel(cilevel) ///
 		EXTRALine(string) HETINFO(string) noHET noBETWeen HLevel(cilevel) noWT noSTATs ///
-		KEEPAll KEEPOrder noGRaph noWARNing SAVING(string) CLEAR FORESTplot(string asis) FPNOTE(string asis) ///
-		SFMTLEN(integer 8) PLOTID(passthru) noRSample noMODELLABels /* <-- NEW NOV 2020 */ ///
+		KEEPAll KEEPOrder noGRaph noWARNing SAVING(string) CLEAR CLEARSTACK /* <-- NEW JUL 2021*/ FORESTplot(string asis) FPNOTE(string asis) ///
+		SFMTLEN(integer 8) PLOTID(passthru) noRSample noMODELLABels /* <-- NEW NOV 2020*/ PREfix(name local) /* <-- NEW JUL 2021*/ ///
 		* ]
-	
+
 	/* IPD+AD options; undocumented */
 	local 0 `", `options'"'
 	syntax, [USEFLAG SOURCE(varname numeric) LRVLIST(varlist numeric) ESTEXP(string) EXPLIST(passthru) CREATEDBY(string) * ]
@@ -6528,19 +6635,17 @@ program define BuildResultsSet, rclass
 	local _LABELS `labels'
 	local _SOURCE `source'
 	
-	// Multiple models
-	local m : word count `modellist'
-	gettoken model1 : modellist
-	forvalues j = 1 / `m' {
-		local 0 `", `options'"'
-		syntax [, LABEL`j'opt(string asis) EXTRA`j'opt(string asis) USER`j'stats(numlist min=3 max=3) * ]
-	}
+	if `"`_NN'"'!=`""' local nn_opt _NN		// [AUG 2021] for `tosave' further down
+
+	// July 2021:
+	// Note: -clearstack- is undocumented; it is shorthand for "clear" + "saving(, stacklabel)", but without the actual saving
+	if `"`clearstack'"'!=`""' local clear clear
 
 	// Trap any additional options; give suitable error message
 	// Should only be un-parsed elements of `model1opts', i.e. suitable for PerformPooling
 	//  remove these, as they are irrelevant here
 	local 0 `", `options'"'
-	syntax [, HKsj BArtlett SKovgaard RObust TN(passthru) QWT(passthru) ///
+	syntax [, HKsj BArtlett SKovgaard RObust TN(passthru) POVERV(passthru) QWT(passthru) ///
 		ISQsa(passthru) TSQsa(passthru) INIT(passthru) TRUNCate(passthru) KRoger EIM OIM CMHNocc ///
 		ITOL(passthru) MAXTausq(passthru) REPS(passthru) MAXITer(passthru) QUADPTS(passthru) DIFficult TECHnique(passthru) * ]
 	
@@ -6582,7 +6687,7 @@ program define BuildResultsSet, rclass
 			CheckPlotIDOpts if `touse', `plotid' twowayopts(`options')
 		}
 		local twowayopts : copy local options		// any remaining options are assumed to be -twoway- options
-
+		
 		// May 2020:
 		// Assume that remaining options (stored in `options') are valid -twoway- options (if they are not, -forestplot- will exit with error!)
 		// These may have been valid with -metan9- (i.e. metan v3.x and earlier) and hence must also be allowed here, for backwards compatibility.
@@ -6594,40 +6699,8 @@ program define BuildResultsSet, rclass
 			exit 198
 		}
 		// Otherwise: after -metan- has taken back control from -forestplot- , check these options again and print warning message if applicable.
-	}	
-
-	// Modified and moved downwards June 2020
-	// ...and moved back upwards March 2021 (before -exit- so that _CC is saved even if no graph/saving/clear!)
-	cap confirm numeric var `ccvar'
-	if !_rc & `"`cc'"'!=`""' {
-		local 0 `cc'
-		syntax anything(name=ccval) [, *]
-		if `ccval' {
-			local _CC `ccvar'
-			c_local _CC `ccvar'
-		}
 	}
-	/*
-	// Modified March 2021: always save _CC if applicable, even if no studies needed it
-	if `params'==4 | "`proportion'"!="" {
-		cap confirm numeric var `ccvar'
-		if _rc {
-			qui gen byte `ccvar' = 0 if `touse' & inlist(`_USE', 1, 2)
-		}
-		local _CC `ccvar'
-		c_local _CC `ccvar'
-	}
-	*/	
 	
-	
-	// Now, if !(`"`saving'"'!=`""' | `"`clear'"'!=`""' | `"`graph'"'==`""'), exit the subroutine without error
-	if !(`"`saving'"'!=`""' | `"`clear'"'!=`""' | `"`graph'"'==`""') {
-		exit
-	}
-	if `"`_LABELS'"'==`""' {
-		nois disp as err "option {bf:labels()} required"
-		exit 198
-	}
 	
 	
 	********************************
@@ -6637,13 +6710,32 @@ program define BuildResultsSet, rclass
 	// To keep things simple, forbid any varnames:
 	//  - beginning with a single underscore followed by a capital letter
 	//  - beginning with "_counts" 
-	// (Oct 2018: N.B. was `badnames')
+	// (Oct 2018: N.B. was `badnames'; Nov 2021 new `badnames' code added below)
+	local badnames _USE _SOURCE _STUDY _LABELS _BY
+	local badnames `badnames' _ES _seES _LCI _UCI _WT _NN _rfLCI _rfUCI _OE _V _CC _VE
+	if `"`cumulative'`influence'"'!=`""' {
+		local badnames `badnames' _crit _chi2 _dfkr _pvalue _Q _Qdf _Qlci _Quci _H _Isq _HsqM _sigmasq _tausq _tsq_lci _tsq_uci
+	}
+	// also _Prop*, _counts* ; see below
+	
 	local lrcols `lcols' `rcols'
-	local check = 0	
+	local check = 0
 	if trim(`"`lrcols'"') != `""' {
-		local cALPHA `c(ALPHA)'
+		// local cALPHA `c(ALPHA)'
 
 		foreach el of local lrcols {
+		    foreach bad of local badnames {
+			    local el_len = length(`"`el'"')
+			    local badlen = length(`"`bad'"')
+				if (substr(`"`el'"', 1, `badlen')==`"`bad'"') | (substr(`"`bad'"', 1, `el_len')==`"`el'"') {
+					nois disp as err _n `"Error in option {bf:lcols()} or {bf:rcols()}:"'
+					nois disp as err `" Variable name {bf:`el'} is reserved for use by {bf:ipdmetan}, {bf:ipdover} and {bf:forestplot}."'
+					nois disp as err `"In order to save the results set, please rename this variable or use {bf:{help clonevar}}."'
+					exit 101
+				}
+			}
+			
+			/*
 			local el2 = substr(`"`el'"', 2, 1)
 			if substr(`"`el'"', 1, 1)==`"_"' & `: list el2 in cALPHA' {
 				nois disp as err _n `"Error in option {bf:lcols()} or {bf:rcols()}:  Variable names such as {bf:`el'}, beginning with an underscore followed by a capital letter,"'
@@ -6651,12 +6743,20 @@ program define BuildResultsSet, rclass
 				nois disp as err `"In order to save the results set, please rename this variable or use {bf:{help clonevar}}."'
 				exit 101
 			}
+			*/
+			
 			else if substr(`"`el'"', 1, 7)==`"_counts"' {
 				nois disp as err _n `"Error in option {bf:lcols()} or {bf:rcols()}:  Variable names beginning {bf:_counts} are reserved for use by {bf:ipdmetan}, {bf:ipdover} and {bf:forestplot}."'
 				nois disp as err `"In order to save the results set, please rename this variable or use {bf:{help clonevar}}."'
 				exit 101
 			}
 		
+			else if `"`proportion'"'!=`""' & substr(`"`el'"', 1, 5)==`"_Prop"' {
+				nois disp as err _n `"Error in option {bf:lcols()} or {bf:rcols()}:  Variable names beginning {bf:_Prop} are reserved for use by {bf:ipdmetan}, {bf:ipdover} and {bf:forestplot}."'
+				nois disp as err `"In order to save the results set, please rename this variable or use {bf:{help clonevar}}."'
+				exit 101
+			}
+
 			// `saving' / `clear' only:
 			// Test validity of (value) *label* names: just _BY, _STUDY, _SOURCE as applicable
 			// Value labels are unique within datasets. Hence, not a problem for a var in lcols/rcols to have same value label as the by() or study() variable.
@@ -6665,22 +6765,22 @@ program define BuildResultsSet, rclass
 			if `"`saving'"'!=`""' | `"`clear'"'!=`""' {
 			
 				local lrlab : value label `el'
-				if `"`lrlab'"'==`"_BY"' {
+				if `"`lrlab'"'==`"`prefix'_BY"' {
 					if `"`_BY'"'==`""' local check = 1
 					else {
-						if `"`: value label `_BY''"'!=`"_BY"' local check = 1
+						if `"`: value label `_BY''"'!=`"`prefix'_BY"' local check = 1
 					}
 				}
-				if `"`lrlab'"'==`"_STUDY"' {
+				if `"`lrlab'"'==`"`prefix'_STUDY"' {
 					if `"`_STUDY'"'==`""' local check = 1
 					else {
-						if `"`: value label `_STUDY''"'!=`"_STUDY"' local check = 1
+						if `"`: value label `_STUDY''"'!=`"`prefix'_STUDY"' local check = 1
 					}
 				}
-				if `"`lrlab'"'==`"_SOURCE"' {
+				if `"`lrlab'"'==`"`prefix'_SOURCE"' {
 					if `"`_SOURCE'"'==`""' local check = 1
 					else {
-						if `"`: value label `_SOURCE''"'!=`"_SOURCE"' local check = 1
+						if `"`: value label `_SOURCE''"'!=`"`prefix'_SOURCE"' local check = 1
 					}
 				}
 				if `check' {
@@ -6704,28 +6804,8 @@ program define BuildResultsSet, rclass
 	// N.B. Such observations may already have been created if passed through from -ipdmetan-
 	//   but in any case, cover all bases by checking for (if applicable) a _USE==3 corresponding to each `by'-value,
 	//   plus a single overall _USE==5.
-	
-	// If `saving' or `clear', need to -preserve- at this point
-	//  (also take the opportunity to test validity of filename)
-	if `"`saving'"'!=`""' | `"`clear'"'!=`""'{
-	
-		if `"`saving'"'!=`""' {
-			// use modified version of _prefix_saving.ado to handle `stacklabel' option
-			my_prefix_savingAD `saving'
-			local saving `"`s(filename)'"'
-			local 0 `", `s(options)'"'
-			syntax [, STACKlabel * ]
-			local saveopts `"`options'"'
-		}
 		
-		// (N.B. if _rsample!="", i.e. no saved vars: already preserved)
-		if `"`rsample'"'==`""' preserve
-		
-		// keep `touse' itself for now to make subsequent coding easier
-		qui keep if `touse'
-
-	}		// end if `"`saving'"'!=`""' | `"`clear'"'!=`""'
-	
+	qui keep if `touse'
 	tempvar obs
 	qui gen long `obs' = _n
 
@@ -6738,8 +6818,8 @@ program define BuildResultsSet, rclass
 	if `"`xoutvlist'"'!=`""' {
 		local rownames
 		cap local rownames : rownames `ovstats'
-		if _rc cap local rownames : rownames `bystatslist'	// if `xoutvlist', multiple models not allowed
-															// so `bystatslist' should contain (at most) a single element
+		if _rc cap local rownames : rownames `: word 1 of `bystatslist''
+
 		if `"`rownames'"'!=`""' {
 			// [DEC 2020:] re-form `xrownames' from `rownames'
 			local core eff se_eff eff_lci eff_uci npts
@@ -6948,6 +7028,14 @@ program define BuildResultsSet, rclass
 	if `"`useflag'"'!=`""' {
 		if `"`subgroup'"'!=`""' cap drop if `_USE'==3
 		if `"`overall'"'!=`""'  cap drop if `_USE'==5
+		
+		// June 2021: niche case - passed from -ipdmetan- with subgroup observations (_USE==3) for which no data
+		//  - need to set `obs' to something else to avoid being caught by "assert"
+		if `"`_BY'"'!=`""' {
+			local bylist2 : subinstr local bylist " " ",", all
+			qui replace `obs' = -`obs' if `_USE'==3 & !inlist(`_BY', `bylist2')
+			qui replace `touse' = 0 if `_USE'==3 & !inlist(`_BY', `bylist2')
+		}
 	}
 	
 	// `obs' is not needed anymore, so use it to identify models for USE==3, 5
@@ -6973,7 +7061,6 @@ program define BuildResultsSet, rclass
 	*******************************
 	* Fill down counts, npts, oev *
 	*******************************	
-	local params : word count `invlist'
 	
 	// Setup `counts' and `oev' options
 	if `"`counts'"'!=`""' | `"`oev'"'!=`""' {
@@ -7031,6 +7118,7 @@ program define BuildResultsSet, rclass
 			}
 		}
 		if `"`oev'"'!=`""' {
+			local oev_vlist _OE _V
 			label variable `_OE' `"O-E(o)"'
 			label variable `_V'  `"V(o)"'
 			format `_OE' %6.2f
@@ -7052,8 +7140,7 @@ program define BuildResultsSet, rclass
 			tempvar _counts1 _counts0
 		}
 	}
-	if `"`oev'"'!=`""' local sumvlist `sumvlist' _OE _V
-	if "`nptsvar'"!="" local sumvlist `sumvlist' _NN
+	local sumvlist `sumvlist' `oev_vlist' `nn_opt'
 	
 	if `"`cumulative'`influence'"'!=`""' & `"`altwt'"'==`""' {
 		foreach x of local sumvlist {
@@ -7217,16 +7304,13 @@ program define BuildResultsSet, rclass
 			exit _rc
 		}
 	
-		if `"`saving'"'!=`""' | `"`clear'"'!=`""' {
-			cap drop _VE
-			local _VE _VE
-		}
-		else tempvar _VE
+		tempvar _VE
 		qui gen `_VE' = string(100*(1 - exp(`_ES')), "%4.0f") + " (" ///
 			+ string(100*(1 - exp(`_LCI')), "%4.0f") + ", " ///
 			+ string(100*(1 - exp(`_UCI')), "%4.0f") + ")" if `_USE'==1 | (inlist(`_USE', 3, 5) & `useModel'==1)
 		
 		label variable `_VE' "Vaccine efficacy (%)"
+		local ve_opt _VE		// for `tosave' below
 		
 		qui gen `strlen' = length(`_VE')
 		summ `strlen', meanonly
@@ -7241,18 +7325,17 @@ program define BuildResultsSet, rclass
 	* Rename tempvars to permanent varnames *
 	*****************************************
 
-	// Modified and moved downwards June 2020
-	/*
+	// Modified June 2020, March 2021
+	// (July 2021: see also DrawTableAD)
 	cap confirm numeric var `ccvar'
 	if !_rc & `"`cc'"'!=`""' {
 		local 0 `cc'
 		syntax anything(name=ccval) [, *]
 		if `ccval' {
-			local _CC `ccvar'
-			c_local _CC `ccvar'
+		    local _CC `ccvar'
+			local cc_opt _CC		// for `tosave' below
 		}
 	}
-	*/
 	
 	// Initialize varlists to save in Results Set:
 	// `core':  "core" variables (N.B. *excluding* _NN)
@@ -7260,12 +7343,7 @@ program define BuildResultsSet, rclass
 	
 	// tosave':  additional "internal" vars created by specific options
 	// [may contain:  _NN;  _OE _V if `oev';  `countsvl' if `counts';  _VE if `efficacy';  _CC if `cc';  _rfLCI _rfUCI if `rfdist']
-	if `"`_NN'"'!=`""' local tosave _NN
-	if `"`oev'"'!=`""' local tosave `tosave' _OE _V
-	if `"`counts'"'!=`""' local tosave `tosave' `countsvl'
-	if `"`efficacy'"'!=`""' local tosave `tosave' _VE
-	if `"`_CC'"'!=`""' local tosave `tosave' _CC
-	if `"`rfdist'"'!=`""' local tosave `tosave' _rfLCI _rfUCI
+	local tosave `nn_opt' `oev_vlist' `countsvl' `ve_opt' `cc_opt' `rfdnames'
 	if `"`xoutvlist'"'!=`""' local tosave : list tosave | vnames
 	local tosave : list tosave - core
 	
@@ -7279,6 +7357,18 @@ program define BuildResultsSet, rclass
 	// If `saving' / `clear', finish off renaming tempvars to permanent varnames
 	// ...in order to store them in the *saved* dataset (NOT the data in memory)
 	if `"`saving'"'!=`""' | `"`clear'"'!=`""' {
+		
+		// ... also, if `saving', need to extract `stacklabel' option
+		// [July 2021: moved downwards]
+		if `"`saving'"'!=`""' {
+			// use modified version of _prefix_saving.ado to handle `stacklabel' option
+			my_prefix_savingAD `saving'
+			local saving `"`s(filename)'"'
+			local 0 `", `s(options)'"'
+			syntax [, STACKlabel * ]
+			local saveopts `"`options'"'
+		}
+		if `"`clearstack'"'!=`""' local stacklabel stacklabel	// July 2021; see explanation above
 		
 		local tocheck `labelvars' `core' `tosave'
 		foreach v of local tocheck {
@@ -7299,14 +7389,14 @@ program define BuildResultsSet, rclass
 				// Similar logic now applies to variable names:
 				// Check if pre-existing var has the same name (i.e. was named _BY, _STUDY etc.)
 				// If it does not, first drop any existing var named _BY, _STUDY (e.g. left over from previous -metan- call), then rename.
-				if `"``v''"'!=`"`v'"' {
-					cap drop `v'
+				if `"``v''"'!=`"`prefix'`v'"' {
+					cap drop `prefix'`v'
 					
 					// If ``v'' is in `lrcols', use -clonevar-, so as also to keep original name
 					if `: list `v' in lrcols' {
-						qui clonevar `v' = ``v'' if `touse'
+						qui clonevar `prefix'`v' = ``v'' if `touse'
 					}
-					else qui rename ``v'' `v'
+					else qui rename ``v'' `prefix'`v'
 				}
 
 				// IF RENAMING, DON'T REFORMAT; KEEP ORIGINAL FORMAT
@@ -7314,18 +7404,13 @@ program define BuildResultsSet, rclass
 				// APPLIES TO _ES, _seES, _LCI, _UCI
 				else if inlist("`v'", "_ES", "_seES", "_LCI", "_UCI") {
 					format  %6.3f ``v''
-					label variable ``v'' "`v'"
+					label variable ``v'' `"`prefix'`v'"'
 				}
-				
-				local `v' `v'				// for use with subsequent code
 
-				// Added Jan 2019 [CHECK IF THERE IS A BETTER WAY TO HANDLE THIS]
-				if "`v'"=="_NN" & `"`npts'"'!=`""' {
-					local npts npts(_NN)
-					local nptsvar _NN
-				}				
-			}
-		}
+				local `v' `prefix'`v'				// for use with subsequent code
+				
+			}		// end if `"``v''"'!=`""'
+		}		// end foreach v of local tocheck
 	}		// end if `"`saving'"'!=`""' | `"`clear'"'!=`""'
 
 				
@@ -7910,18 +7995,18 @@ program define BuildResultsSet, rclass
 		summ `_UCI' if `touse', meanonly
 		local fmtx = max(1, ceil(log10(abs(`xexp'(r(max)))))) + 1 + `dp'
 			
-		cap drop _EFFECT
-		qui gen str _EFFECT = string(`xexp'(`_ES'), `"%`fmtx'.`dp'f"') if !missing(`_ES')
-		qui replace _EFFECT = _EFFECT + " " if !missing(_EFFECT)
-		qui replace _EFFECT = _EFFECT + "(" + string(`xexp'(`_LCI'), `"%`fmtx'.`dp'f"') + ", " + string(`xexp'(`_UCI'), `"%`fmtx'.`dp'f"') + ")"
-		qui replace _EFFECT = `""' if !(`touse' & inlist(`_USE', 1, 3, 5))
-		qui replace _EFFECT = "(Insufficient data)" if `touse' & `_USE' == 2
-		qui replace _EFFECT = "(Insufficient data)" if `touse' & inlist(`_USE', 3, 5) & missing(`_LCI')	// added March 2020, in case of "empty" subgroups
+		local _EFFECT `prefix'_EFFECT
+		cap drop `_EFFECT'
+		qui gen str `_EFFECT' = string(`xexp'(`_ES'), `"%`fmtx'.`dp'f"') if !missing(`_ES')
+		qui replace `_EFFECT' = `_EFFECT' + " " if !missing(`_EFFECT')
+		qui replace `_EFFECT' = `_EFFECT' + "(" + string(`xexp'(`_LCI'), `"%`fmtx'.`dp'f"') + ", " + string(`xexp'(`_UCI'), `"%`fmtx'.`dp'f"') + ")"
+		qui replace `_EFFECT' = `""' if !(`touse' & inlist(`_USE', 1, 3, 5))
+		qui replace `_EFFECT' = "(Insufficient data)" if `touse' & `_USE' == 2
+		qui replace `_EFFECT' = "(Insufficient data)" if `touse' & inlist(`_USE', 3, 5) & missing(`_LCI')	// added March 2020, in case of "empty" subgroups
 
-		local f = abs(fmtwidth("`: format _EFFECT'"))
-		format _EFFECT %-`f's		// left-justify
-		label variable _EFFECT `"`effect' (`ilevel'% CI)"'
-		local _EFFECT _EFFECT
+		local f = abs(fmtwidth(`"`: format `_EFFECT''"'))
+		format `_EFFECT' %-`f's		// left-justify
+		label variable `_EFFECT' `"`effect' (`ilevel'% CI)"'
 	}
 
 
@@ -7940,7 +8025,8 @@ program define BuildResultsSet, rclass
 	// *BUT* watch out for options that contain text strings!  They must be left alone.
 	// This involves: effect() and note(), plus `forestplot' and `twowayopts' which could contain anything
 	// if "`prvlist'"=="" local proportion			// only pass `proportion' to -forestplot- if on original scale
-	local useopts  = trim(itrim(`"use(`_USE') labels(`_LABELS') wgt(`_WT') `cumulative' `influence' `denom_opt' `eform'"'))
+	if `"`prefix'"'!=`""' local useopts prefix(`prefix')
+	local useopts  = trim(itrim(`"`macval(useopts)' use(`_USE') labels(`_LABELS') wgt(`_WT') `cumulative' `influence' `denom_opt' `eform'"'))
 	local useopts2 = trim(itrim(`"`keepall' `overall' `subgroup' `het' `wt' `stats' `warning' `plotid'"'))
 	
 	if `"`effect'"'!=`""'     local useopts `"`macval(useopts)' effect(`effect')"'
@@ -7949,10 +8035,13 @@ program define BuildResultsSet, rclass
 	if `"`twowayopts'"'!=`""' local useopts `"`macval(useopts)' `twowayopts'"'
 	if `"`_BY'"'!=`""'        local useopts `"`macval(useopts)' by(`_BY')"'
 
-	if `"`lcols'`nptsvar'`_counts1'`_counts1msd'`_counts0'`_counts0msd'`_OE'`_V'"' != `""' {
-		local useopts2 = trim(itrim(`"`nptsvar' `_counts1' `_counts1msd' `_counts0' `_counts0msd' `_OE' `_V'"'))
-		local useopts `"`macval(useopts)' lcols(`lcols' `useopts2') `lcolscheck'"'
+	// lcols() option [tweaked AUG 2021]
+	if `"`npts'"'!=`""' local lcols_opt `_NN'
+	local lcols_opt = trim(itrim(`"`lcols' `lcols_opt' `_counts1' `_counts1msd' `_counts0' `_counts0msd' `_OE' `_V'"'))
+	if `"`lcols_opt'"'!=`""' {
+		local useopts `"`macval(useopts)' lcols(`lcols_opt') `lcolscheck'"'	    
 	}
+
 	if `"`_VE'`rcols'"' != `""' local useopts `"`macval(useopts)' rcols(`_VE' `rcols')"'
 	if `"`rfdist'"'!=`""' local useopts `"`macval(useopts)' rfdist(`_rfLCI' `_rfUCI')"'
 	if `"`fpnote'"'!=`""' local useopts `"`macval(useopts)' note(`fpnote')"'
@@ -7960,19 +8049,19 @@ program define BuildResultsSet, rclass
 	
 	// Store data characteristics
 	// NOTE: Only relevant if `saving' / `clear' (but setup anyway; no harm done)
+	// if `"`prefix'"'!=`""' char define _dta[FPUsePrefix] `"`prefix'"'
 	char define _dta[FPUseOpts] `"`useopts'"'
 	char define _dta[FPUseVarlist] `fpvlist'
 
+	// If `summaryonly', limit observations to _USE==1 or 2
+	if `"`summaryonly'"'!=`""' {
+		qui replace `touse' = 0 if inlist(`_USE', 1, 2)
+	}
 
+	
 	** Pass to forestplot
 	if `"`graph'"'==`""' {
 	
-		// Where necessary, set certain obs to "`touse'==0"
-		//   note that they will still appear in the saved dataset!
-		if `"`summaryonly'"'!=`""' {
-			qui replace `touse' = 0 if inlist(`_USE', 1, 2)
-		}
-
 		cap nois forestplot `fpvlist' if `touse', `useopts'
 		
 		if _rc {
@@ -8000,10 +8089,16 @@ program define BuildResultsSet, rclass
 
 	** Finally, save dataset
 	if `"`saving'"'!=`""' | `"`clear'"'!=`""' {
-		keep  `labelvars' `core' `tosave' `_EFFECT' `_WT' `lrcols'
-		order `labelvars' `core' `tosave' `_EFFECT' `_WT' `lrcols'
-			
-		if `"`summaryonly'"'!=`""' qui drop if inlist(`_USE', 1, 2)
+		qui keep if `touse'
+		
+		// Extract permanent names from locals `labelvars' `core' `tosave'
+		local finalvars
+		foreach v in `labelvars' `core' `tosave' {
+			local finalvars `finalvars' ``v''
+		}		
+		
+		keep  `finalvars' `_EFFECT' `_WT' `lrcols'
+		order `finalvars' `_EFFECT' `_WT' `lrcols'
 			
 		if `"`createdby'"'==`""' local createdby metan
 		label data `"Results set created by `createdby'"'
@@ -8012,7 +8107,6 @@ program define BuildResultsSet, rclass
 		if `"`saving'"'!=`""' {
 			qui save `"`saving'"', `saveopts'
 		}
-		if `"`clear'"'!=`""' cap restore, not
 	}
 
 end
@@ -8209,7 +8303,7 @@ program define ProcessPoolingVarlist, sclass
 
 	syntax varlist(numeric min=3 max=7 default=none) [if] [in], ///
 		SUMMSTAT(name) MODEL(name) TESTSTAT(name) OUTVLIST(varlist numeric min=5 max=9) ///
-		[ /*PRVLIST(varlist numeric)*/ TVLIST(namelist) CCLIST(namelist) ///
+		[ TVLIST(namelist) CCLIST(namelist) ///
 		LOGRank PRoportion noINTeger CC(string) CCVAR(name) WGT(name) OLevel(cilevel) ILevel(cilevel) ]
 	
 	sreturn clear
@@ -8730,7 +8824,6 @@ program define PerformPooling, rclass
 	cap nois {
 		if "`model'"=="mh" PerformPoolingMH `0'
 		else {
-			
 			// Nov 2020: fork depending on whether v16.1+ or not
 			// If v16.1+, use pre-complied Mata library; otherwise use on-the-fly Mata code
 			local v161 = 0
@@ -8764,7 +8857,7 @@ program define PerformPoolingIV, rclass
 		[SUMMSTAT(name) TESTSTAT(name) QSTAT(passthru) TESTBased ISQParam ///
 		OEVLIST(varlist numeric min=2 max=2) INVLIST(varlist numeric min=2 max=6) ///
 		NPTS(varname numeric) WGT(varname numeric) WTVAR(varname numeric) ///
-		HKsj KRoger BArtlett SKovgaard RObust LOGRank PRoportion TN(string) /*noTRUNCate*/ TRUNCate(string) EIM OIM ///
+		HKsj KRoger BArtlett SKovgaard RObust LOGRank PRoportion TN(string) POVERV(real 2) /*noTRUNCate*/ TRUNCate(string) EIM OIM ///
 		ISQSA(real 80) TSQSA(real -99) QWT(varname numeric) INIT(name) OLevel(cilevel) HLevel(cilevel) RFLevel(cilevel) ///
 		ITOL(real 1.0x-1a) MAXTausq(real -9) REPS(real 1000) MAXITer(real 1000) QUADPTS(real 100) DIFficult TECHnique(string) * ]
 
@@ -9428,18 +9521,95 @@ program define PerformPoolingIV, rclass
 	
 	// Proportions
 	if "`proportion'"!="" {
-		tempname z eff_lci eff_uci
-		scalar `z' = `eff'/`se_eff'
+		tempname eff_lci eff_uci
 		scalar `crit' = invnormal(.5 + `olevel'/200)
-		scalar `pvalue' = 2*normal(-abs(`z'))
 		scalar `eff_lci' = `eff' - `crit' * `se_eff'
 		scalar `eff_uci' = `eff' + `crit' * `se_eff'
 
-		if "`summstat'"=="ftukey" {
-			tokenize `invlist'
-			args succ _NN
+		tokenize `invlist'
+		args succ _NN
+		
+
+		** Perform back-transforms
+		// first, truncate intervals at `mintes' and `maxtes'
+		tempname mintes maxtes
+		scalar `mintes' = 0
+		scalar `maxtes' = 1
+		
+		// Logit and Single-arcsine
+		if inlist("`summstat'", "logit", "arcsine") {
+
+			// Logit transform
+			if "`summstat'"=="logit" {
+				summ `_NN' if `touse', meanonly
+				scalar `mintes' = logit(.1/`r(sum)')			// use limits of 1/10 difference from `totalN'
+				scalar `maxtes' = logit(1 - (.1/`r(sum)'))
+			}
 			
-			tempname hmean mintes maxtes prop_eff prop_lci prop_uci
+			// Single arcsine transform
+			else {
+				scalar `mintes' = 0
+				scalar `maxtes' = _pi/2
+			}
+			
+			if      `eff' < `mintes' scalar `eff' = `mintes'
+			else if `eff' > `maxtes' scalar `eff' = `maxtes'
+			
+			if      `eff_lci' < `mintes' scalar `eff_lci' = `mintes'
+			else if `eff_lci' > `maxtes' scalar `eff_lci' = `maxtes'
+
+			if      `eff_uci' < `mintes' scalar `eff_uci' = `mintes'
+			else if `eff_uci' > `maxtes' scalar `eff_uci' = `maxtes'
+			
+			// Predictive intervals
+			if `k' >= 3 {
+				if      `rflci' < `mintes' scalar `rflci' = `mintes'
+				else if `rflci' > `maxtes' scalar `rflci' = `maxtes'
+
+				if      `rfuci' < `mintes' scalar `rfuci' = `mintes'
+				else if `rfuci' > `maxtes' scalar `rfuci' = `maxtes'
+			}
+			
+			
+			** Perform back-transforms
+			tempname prop_eff prop_lci prop_uci prop_rflci prop_rfuci
+
+			// Logit transform
+			if "`summstat'"=="logit" {
+				return scalar prop_eff = invlogit(`eff')
+				return scalar prop_lci = invlogit(`eff_lci')
+				return scalar prop_uci = invlogit(`eff_uci')
+
+				// Predictive intervals
+				if `k' >= 3 {
+					return scalar prop_rflci = invlogit(`rflci')
+					return scalar prop_rfuci = invlogit(`rfuci')
+				}
+			}
+			
+			// Single arcsine back-transform
+			else {
+				return scalar prop_eff = sin(`eff')^2
+				return scalar prop_lci = sin(`eff_lci')^2
+				return scalar prop_uci = sin(`eff_uci')^2
+				
+				// Predictive intervals
+				if `k' >= 3 {
+					return scalar prop_rflci = sin(`rflci')^2
+					return scalar prop_rfuci = sin(`rfuci')^2
+				}
+			}
+		}
+		
+		
+		** Freeman-Tukey double-arcsine transform
+		// Do this separately, for several reasons; one of which is that, as the value of `hmean' is not fixed...
+		// (e.g. suggested as harmonic mean by Miller, but without much justification, with equally reasonable alternatives suggested by e.g. Scharwzer and Doi)
+		// ...there is little justification for truncating the transformed values at `mintes' and `maxtes'.
+		// "Raw" values are therefore presented if option -nopr-
+		// ...but these values *are* truncated prior to back-transformation (if requested) because a specific value of `hmean' then applies.
+		else if "`summstat'"=="ftukey" {
+			tempname hmean
 			qui ameans `_NN' if `touse'
 			if      "`tn'"=="arithmetic" scalar `hmean' = r(mean)				// Arithmetic mean
 			else if "`tn'"=="geometric"  scalar `hmean' = r(mean_g)				// Geometric mean
@@ -9454,88 +9624,84 @@ program define PerformPoolingIV, rclass
 			// so to get our limits `mintes' and `maxtes', we subsitute `hmean' for `_NN', and let `succ' vary from 0 to `hmean'.
 			scalar `mintes' = /*asin(sqrt(0      /(`hmean' + 1))) + */        asin(sqrt((0       + 1)/(`hmean' + 1 )))
 			scalar `maxtes' =   asin(sqrt(`hmean'/(`hmean' + 1))) + asin(1) /*asin(sqrt((`hmean' + 1)/(`hmean' + 1 )))*/
-
-			// Barendregt & Doi use s/v < 2 or (1-s)/v < 2
-			// where s = sin(eff/2)^2 ~= d/n
-			// and where v = se_eff ~= 1/n
-			// ==> s/v ~= d;  (1-s)/v ~= n-d
-			
-			// ... in order to avoid "blow up" when sin(eff) is near zero
-			// Personal communication:  "blow up" may result in confidence limits which do not include the point estimate
-			// Therefore, test for this; and use simplified formula sin(eff)^2 in those cases
 		
-			if      `eff' < `mintes' scalar `prop_eff' = 0
-			else if `eff' > `maxtes' scalar `prop_eff' = 1
-			else scalar `prop_eff' = 0.5 * (1 - sign(cos(`eff')) * sqrt(1 - (sin(`eff') + (sin(`eff') - 1/sin(`eff')) / `hmean')^2 ) )
+			// Back-transform
+			tempname prop_eff prop_lci prop_uci
 			
-			if      `eff_lci' < `mintes' scalar `prop_lci' = 0
-			else if `eff_lci' > `maxtes' scalar `prop_lci' = 1
-			else scalar `prop_lci' = 0.5 * (1 - sign(cos(`eff_lci')) * sqrt(1 - (sin(`eff_lci') + (sin(`eff_lci') - 1/sin(`eff_lci')) / `hmean')^2 ) )
+			scalar  `prop_eff' = `eff'
+			if      `prop_eff' < `mintes' scalar `prop_eff' = `mintes'
+			else if `prop_eff' > `maxtes' scalar `prop_eff' = `maxtes'
+			
+			scalar  `prop_lci' = `eff_lci'
+			if      `prop_lci' < `mintes' scalar `prop_lci' = `mintes'
+			else if `prop_lci' > `maxtes' scalar `prop_lci' = `maxtes'
 
-			if      `eff_uci' < `mintes' scalar `prop_uci' = 0
-			else if `eff_uci' > `maxtes' scalar `prop_uci' = 1
-			else scalar `prop_uci' = 0.5 * (1 - sign(cos(`eff_uci')) * sqrt(1 - (sin(`eff_uci') + (sin(`eff_uci') - 1/sin(`eff_uci')) / `hmean')^2 ) )
+			scalar  `prop_uci' = `eff_uci'
+			if      `prop_uci' < `mintes' scalar `prop_uci' = `mintes'
+			else if `prop_uci' > `maxtes' scalar `prop_uci' = `maxtes'
 			
-			cap {
-			    assert `prop_lci' <= `prop_eff' & `prop_eff' <= `prop_uci'
-				assert !missing(`prop_eff', `prop_lci', `prop_uci')
+			scalar `prop_eff' = 0.5 * (1 - sign(cos(`prop_eff')) * sqrt(1 - (sin(`prop_eff') + (sin(`prop_eff') - 1/sin(`prop_eff')) / `hmean')^2 ) )
+			scalar `prop_lci' = 0.5 * (1 - sign(cos(`prop_lci')) * sqrt(1 - (sin(`prop_lci') + (sin(`prop_lci') - 1/sin(`prop_lci')) / `hmean')^2 ) )
+			scalar `prop_uci' = 0.5 * (1 - sign(cos(`prop_uci')) * sqrt(1 - (sin(`prop_uci') + (sin(`prop_uci') - 1/sin(`prop_uci')) / `hmean')^2 ) )
+	
+			// Predictive intervals
+			if `k' >= 3 {				
+				tempname prop_rflci prop_rfuci
+				
+				scalar  `prop_rflci' = `rflci'
+				if      `prop_rflci' < `mintes' scalar `prop_rflci' = `mintes'
+				else if `prop_rflci' > `maxtes' scalar `prop_rflci' = `maxtes'
+
+				scalar  `prop_rfuci' = `rfuci'
+				if      `prop_rfuci' < `mintes' scalar `prop_rfuci' = `mintes'
+				else if `prop_rfuci' > `maxtes' scalar `prop_rfuci' = `maxtes'
+				
+				scalar `prop_rflci' = 0.5 * (1 - sign(cos(`prop_rflci')) * sqrt(1 - (sin(`prop_rflci') + (sin(`prop_rflci') - 1/sin(`prop_rflci')) / `hmean')^2 ) )
+				scalar `prop_rfuci' = 0.5 * (1 - sign(cos(`prop_rfuci')) * sqrt(1 - (sin(`prop_rfuci') + (sin(`prop_rfuci') - 1/sin(`prop_rfuci')) / `hmean')^2 ) )
 			}
-			if _rc {
-				scalar `prop_eff' = sin(`eff'    /2)^2
-				scalar `prop_lci' = sin(`eff_lci'/2)^2
-				scalar `prop_uci' = sin(`eff_uci'/2)^2
+		
+			if `"`tn'"'==`"ivariance"' {
+				// To avoid problems with boundary values (i.e. proportions ~0 or ~1),
+				// Barendregt & Doi use an extra check/truncation:
+				// s/v < 2 or (1-s)/v < 2   (`poverv' = p/v = 2 by default but can be changed as undocumented option)
+				// where s = sin(eff/2)^2 ~= d/n
+				// and where v = se_eff ~= 1/n
+				// ==> s/v ~= d;  (1-s)/v ~= n-d
+								
+				tempname prop_eff_prime
+				scalar `prop_eff_prime' = sin(`eff'/2)^2
+				if `prop_eff_prime' * `hmean' < `poverv' {
+					scalar `prop_eff' = `prop_eff_prime'
+					scalar `prop_lci' = 0
+					scalar `prop_rflci' = 0
+					
+					// adjust upper limit(s) if `prop_eff' is now inconsistent
+					if `prop_uci'   < `prop_eff' scalar `prop_uci'   = 1
+					if `prop_rfuci' < `prop_eff' scalar `prop_rfuci' = 1
+					
+				}
+				if (1 - `prop_eff_prime') * `hmean' < `poverv' {
+					scalar `prop_eff' = `prop_eff_prime'
+					scalar `prop_uci' = 1
+					scalar `prop_rflci' = 1
+					
+					// adjust lower limit(s) if `prop_eff' is now inconsistent
+					if `prop_lci'   > `prop_eff' scalar `prop_lci'   = 0
+					if `prop_rflci' > `prop_eff' scalar `prop_rflci' = 0
+				}
 			}
-			
-			scalar `z' = 0
-			if `eff' > `mintes' scalar `z' = abs(`eff' - `mintes') / `se_eff'
-			
+
 			return scalar prop_eff = `prop_eff'
 			return scalar prop_lci = `prop_lci'
 			return scalar prop_uci = `prop_uci'
 			
 			// Predictive intervals
 			if `k' >= 3 {
-				tempname prop_rflci prop_rfuci
-				
-				if      `rflci' < `mintes' scalar `prop_rflci' = 0
-				else if `rflci' > `maxtes' scalar `prop_rflci' = 1
-				else scalar `prop_rflci' = 0.5 * (1 - sign(cos(`rflci')) * sqrt(1 - (sin(`rflci') + (sin(`rflci') - 1/sin(`rflci')) / `hmean')^2 ) )
-
-				if      `rfuci' < `mintes' scalar `prop_rfuci' = 0
-				else if `rfuci' > `maxtes' scalar `prop_rfuci' = 1
-				else scalar `prop_rfuci' = 0.5 * (1 - sign(cos(`rfuci')) * sqrt(1 - (sin(`rfuci') + (sin(`rfuci') - 1/sin(`rfuci')) / `hmean')^2 ) )
-
-				if _rc {		// from earlier "cap assert"
-					scalar `prop_rflci' = sin(`rflci'/2)^2
-					scalar `prop_rfuci' = sin(`rfuci'/2)^2
-				}
-				
 				return scalar prop_rflci = `prop_rflci'
 				return scalar prop_rfuci = `prop_rfuci'
 			}
-		}
-		else if "`summstat'"=="arcsine" {
-			return scalar prop_eff = sin(`eff')^2
-			return scalar prop_lci = sin(`eff_lci')^2
-			return scalar prop_uci = sin(`eff_uci')^2
-			
-			// Predictive intervals
-			if `k' >= 3 {
-				return scalar prop_rflci = sin(`rflci')^2
-				return scalar prop_rfuci = sin(`rfuci')^2
-			}
-		}
-		else if "`summstat'"=="logit" {
-			return scalar prop_eff = invlogit(`eff')
-			return scalar prop_lci = invlogit(`eff_lci')
-			return scalar prop_uci = invlogit(`eff_uci')
-			
-			// Predictive intervals
-			if `k' >= 3 {
-				return scalar prop_rflci = invlogit(`rflci')
-				return scalar prop_rfuci = invlogit(`rfuci')
-			}
-		}
+		}		// end else if "`summstat'"=="ftukey"
+		
 		else {
 			return scalar prop_eff = `eff'
 			return scalar prop_lci = `eff_lci'
@@ -9548,6 +9714,11 @@ program define PerformPoolingIV, rclass
 			}
 		}
 		
+		// Proportions: always use z-statistic
+		tempname z
+		scalar `z' = `eff'/`se_eff'
+		scalar `pvalue' = 2*normal(-abs(`z'))		
+
 		return scalar z = `z'
 		return scalar eff_lci = `eff_lci'
 		return scalar eff_uci = `eff_uci'
@@ -10170,7 +10341,7 @@ program define GenConfInts, rclass sortpreserve
 
 	syntax varlist(numeric min=2 max=6 default=none) [if] [in], ///
 		CItype(string) OUTVLIST(varlist numeric min=5 max=9) ///
-		[ SUMMSTAT(name) noINTeger CUmulative INFluence PRoportion PRVLIST(varlist numeric) NOPR DF(varname numeric) ILevel(cilevel) ]
+		[ SUMMSTAT(name) noINTeger CUmulative INFluence PRoportion PRVLIST(varlist numeric min=3 max=3) NOPR DF(varname numeric) ILevel(cilevel) ]
 
 	marksample touse, novarlist
 	local invlist `varlist'			// list of "original" vars passed by the user to the program 
@@ -10196,39 +10367,40 @@ program define GenConfInts, rclass sortpreserve
 		tokenize `invlist'
 		args n N
 
-		// `prvlist' exists if "`summstat'"!="pr" & "`nopr'"==""
-		// 		_ES, _LCI, _UCI on transformed scale
-		//		_Prop_ES etc. on back-transformed (original) scale
-		// else if "`summstat'"!="pr"
-		// 		_ES, _LCI, _UCI on transformed scale
-		// else 
-		//		_ES, _LCI, _UCI are on *original* scale
+		// if "`summstat'"!="pr" & "`nopr'"==""
+		//    then `prvlist' exists, containing _Prop_ES _Prop_LCI _Prop_UCI
+		//    = back-transformed (original) scale
+		//    (and _ES, _LCI, _UCI contain values on *transformed* scale)
+		
+		// else if "`summstat'"!="pr" (i.e. & "`nopr'"!="")
+		//    `nopr' suppresses the back-transform
+		//    _ES, _LCI, _UCI on transformed scale; no need for `prvlist'
+		
+		// else (i.e. if "`summstat'"=="pr")
+		//    proportions are presented & pooled entirely on their original scale
+		//    (i.e. equivalent of "back-transformed", although there was no actual transform in the first place)
+		//    use _ES, _LCI, _UCI for this; no need for `prvlist'
+		
 		if "`summstat'"!="pr" {
 			
-			// Unless "`summstat'"=="pr",
-			// _ES _LCI _UCI will be on transformed (interval) scale
+			// _ES _LCI _UCI are on transformed (interval) scale
 			// so generate CIs using normal distribution
 			qui replace `_LCI' = `_ES' - invnormal(.5 + `ilevel'/200) * `_seES' if `touse'
 			qui replace `_UCI' = `_ES' + invnormal(.5 + `ilevel'/200) * `_seES' if `touse'
 		
-			// _Prop_ES _Prop_LCI _Prop_LCI (in `prvlist') contain proportion & CI on "original" (back-transformed) scale
-			// so use built-in -cii-
-			
+			// Now, _Prop_ES _Prop_LCI _Prop_LCI (in `prvlist') contain proportion & CI on "original" (back-transformed) scale
 			// March 2021: Don't do this if cumulative/influence, as in this case
 			// all observations are mini meta-analyses, so have had _Prop_ES _Prop_LCI _Prop_UCI calculated already via back-transform
+			
 			if `"`prvlist'"'!=`""' & `"`cumulative'`influence'"'==`""' {
 				tokenize `prvlist'
 				args _Prop_ES _Prop_LCI _Prop_UCI
 				qui replace `_Prop_ES' = `n' / `N' if `touse'
 			
-				// non-integer values: calculate Wald CI "manually"
-				if `"`integer'"'!=`""' {
-					qui replace `_Prop_LCI' = `_Prop_ES' - invnormal(.5 + `ilevel'/200) * sqrt(`_Prop_ES' * (1 - `_Prop_ES') / `N') if `touse'
-					qui replace `_Prop_UCI' = `_Prop_ES' + invnormal(.5 + `ilevel'/200) * sqrt(`_Prop_ES' * (1 - `_Prop_ES') / `N') if `touse'
-				}
-			
-				else {
-					// sort appropriately, then find observation number of first relevant obs
+				// Modified June 2021
+				// default: use built-in -cii-
+				// sort appropriately, then find observation number of first relevant obs
+				if `"`integer'"'==`""' & `"`citype'"'!=`"transform"' {
 					tempvar obs
 					qui bysort `touse' : gen long `obs' = _n if `touse'
 					sort `obs'
@@ -10239,18 +10411,18 @@ program define GenConfInts, rclass sortpreserve
 						qui replace `_Prop_UCI' = `r(ub)' in `j'
 					}
 				}
+				else GenConfIntsPr `invlist' if `touse', outvlist(`_ES' `_LCI' `_UCI') prvlist(`prvlist') ///
+					summstat(`summstat') citype(`citype') level(`ilevel')
 			}
 		}
 
 		// If "`summstat'"=="pr", proportions are presented & pooled entirely on their original scale
-		// so use built-in -cii- (unless -nointeger- )
 		else {
-			if `"`integer'"'!=`""' {
-				qui replace `_LCI' = `_ES' - invnormal(.5 + `ilevel'/200) * sqrt(`_ES' * (1 - `_ES') / `N') if `touse'
-				qui replace `_UCI' = `_ES' + invnormal(.5 + `ilevel'/200) * sqrt(`_ES' * (1 - `_ES') / `N') if `touse'
-			}
 
-			else {
+			// Modified June 2021
+			// default: use built-in -cii-
+			// sort appropriately, then find observation number of first relevant obs
+			if `"`integer'"'==`""' & `"`citype'"'!=`"transform"' {
 				tempvar obs
 				qui bysort `touse' : gen long `obs' = _n if `touse'
 				sort `obs'
@@ -10261,6 +10433,7 @@ program define GenConfInts, rclass sortpreserve
 					qui replace `_UCI' = `r(ub)' in `j'
 				}
 			}
+			else GenConfIntsPr `invlist' if `touse', outvlist(`_ES' `_LCI' `_UCI') summstat(`summstat') citype(`citype') level(`ilevel')
 		}
 	}
 	
@@ -10296,8 +10469,7 @@ program define GenConfInts, rclass sortpreserve
 				}
 				tempvar df
 				qui gen `: type `_NN'' `df' = `_NN' - 2			// use npts-2 as df for t distribution of df not explicitly given
-				local disperr `"disp `"{error}Note: Degrees of freedom for {bf:`citype'}-based confidence intervals not supplied; using {it:n-2} as default"'"'
-				// delay error message until after checking _ES is between 0 and 1 for logit
+				disp `"{error}Note: Degrees of freedom for {bf:`citype'}-based confidence intervals not supplied; using {it:n-2} as default"'
 			}
 			else {
 				nois disp as err `"Neither degrees-of-freedom nor participant numbers available;"'
@@ -10308,22 +10480,8 @@ program define GenConfInts, rclass sortpreserve
 		
 		tempvar critval
 		qui gen double `critval' = invttail(`df', .5 - `ilevel'/200)
-		
-		// if "`citype'"=="t" {
-			qui replace `_LCI' = `_ES' - `critval'*`_seES' if `touse'
-			qui replace `_UCI' = `_ES' + `critval'*`_seES' if `touse'
-		// }
-		/*
-		else {								// logit, proportions only (for formula, see Stata manual for -proportion-)
-			summ `_ES' if `touse', meanonly
-				if r(min)<0 | r(max)>1 {
-				nois disp as err "option {bf:citype(logit)} may only be used with proportions"
-				exit 198
-			}
-			qui replace `_LCI' = invlogit(logit(`_ES') - `critval'*`_seES'/(`_ES'*(1 - `_ES'))) if `touse'
-			qui replace `_UCI' = invlogit(logit(`_ES') + `critval'*`_seES'/(`_ES'*(1 - `_ES'))) if `touse'
-		}
-		*/
+		qui replace `_LCI' = `_ES' - `critval'*`_seES' if `touse'
+		qui replace `_UCI' = `_ES' + `critval'*`_seES' if `touse'
 	}
 		
 	else if inlist("`citype'", "cornfield", "exact", "woolf") {		// options to pass to -cci-; summstat==OR only
@@ -10341,14 +10499,103 @@ program define GenConfInts, rclass sortpreserve
 			qui replace `_UCI' = ln(`r(ub_or)') in `j'
 		}
 	}
-	
-	// Now display delayed error message if appropriate
-	`disperr'
 
 end
 
 
+* Program to generate confidence intervals for individual studies (NOT pooled estimates)
+// SPECIFICALLY FOR PROPORTIONS
+// subroutine of GenConfInts
 
+program define GenConfIntsPr, rclass
+
+	syntax varlist(numeric min=2 max=2 default=none) [if] [in], ///
+		OUTVLIST(varlist numeric min=3 max=3) SUMMSTAT(name) CItype(string) ///
+		[ PRVLIST(varlist numeric min=3 max=3) Level(cilevel) ]
+
+	marksample touse, novarlist
+	tokenize `varlist'
+	args n N
+	
+	// if citype=="transform", summstat cannot be "pr" and we must have `prvlist'
+	if "`citype'"=="transform" {
+		cap {
+			assert "`summstat'"!="pr"
+			assert "`prvlist'"!=""
+		}
+		if _rc {
+			nois disp as err "option {bf:citype(transform)} is not compatible with some other aspect of the command and/or data"
+			exit 198
+		}
+		
+		tokenize `outvlist'
+		args _ES _LCI _UCI
+		
+		tokenize `prvlist'
+		args _Prop_ES _Prop_LCI _Prop_UCI
+				
+		if "`summstat'"=="logit" {
+			qui replace `_Prop_LCI' = invlogit(`_LCI')
+			qui replace `_Prop_UCI' = invlogit(`_UCI')
+		}
+		else if "`summstat'"=="arcsine" {
+			qui replace `_Prop_LCI' = sin(`_LCI')^2
+			qui replace `_Prop_UCI' = sin(`_UCI')^2
+		}
+		else if "`summstat'"=="ftukey" {
+			qui replace `_Prop_LCI' = 0.5 * (1 - sign(cos(`_LCI')) * sqrt(1 - (sin(`_LCI') + (sin(`_LCI') - 1/sin(`_LCI')) / `N')^2 ) )
+			qui replace `_Prop_UCI' = 0.5 * (1 - sign(cos(`_UCI')) * sqrt(1 - (sin(`_UCI') + (sin(`_UCI') - 1/sin(`_UCI')) / `N')^2 ) )
+		}
+		else {
+			nois disp as err "option {bf:citype(transform)} is not compatible with {bf:transform(}`summstat'{bf:)}"
+			exit 198
+		}
+	}
+	
+	// else, if `prvlist' exists, use it;  if not, assume `outvlist' contains _Prop_ES _Prop_LCI _Prop_UCI
+	else {
+		if `"`prvlist'"'!=`""' tokenize `prvlist'
+		else tokenize `outvlist'
+		args _Prop_ES _Prop_LCI _Prop_UCI
+
+		if "`citype'"=="exact" {
+			qui replace `_Prop_LCI' =     invbinomial(`N', `n', .5 + `level'/200)
+			qui replace `_Prop_UCI' = 1 - invbinomial(`N', `n', .5 + `level'/200)
+		}
+		else if "`citype'"=="wald" {
+			qui replace `_Prop_LCI' = `_Prop_ES' - invnormal(.5 + `level'/200) * sqrt(`_Prop_ES' * (1 - `_Prop_ES') / `N') if `touse'
+			qui replace `_Prop_UCI' = `_Prop_ES' + invnormal(.5 + `level'/200) * sqrt(`_Prop_ES' * (1 - `_Prop_ES') / `N') if `touse'
+		}
+		else if inlist("`citype'", "wilson", "agresti") {
+			local z = invnormal(.5 + `level'/200)
+			
+			tempvar n_tilde N_tilde p_tilde
+			qui gen double `n_tilde' = `n' + (`z'^2) / 2
+			qui gen double `N_tilde' = `N' + (`z'^2)
+			qui gen double `p_tilde' = `n_tilde' / `N_tilde'
+			
+			if "`citype'"=="wilson" {
+				qui replace `_Prop_LCI' = `p_tilde' - (`z' * sqrt(`N') / `N_tilde') * sqrt(`_Prop_ES'*(1 - `_Prop_ES') + (`z'^2)/(4*`N') ) if `touse'
+				qui replace `_Prop_UCI' = `p_tilde' + (`z' * sqrt(`N') / `N_tilde') * sqrt(`_Prop_ES'*(1 - `_Prop_ES') + (`z'^2)/(4*`N') ) if `touse'
+			} 
+			else {
+				qui replace `_Prop_LCI' = `p_tilde' - `z' * sqrt(`p_tilde' * (1 - `p_tilde') / `N_tilde') if `touse'
+				qui replace `_Prop_UCI' = `p_tilde' + `z' * sqrt(`p_tilde' * (1 - `p_tilde') / `N_tilde') if `touse' 
+			}
+		}
+		else if "`citype'"=="jeffreys" {
+			qui replace `_Prop_LCI' = 1 - invibeta(`n' + .5, `N' - `n' + .5, .5 + `level'/200)
+			qui replace `_Prop_UCI' =     invibeta(`n' + .5, `N' - `n' + .5, .5 + `level'/200)
+		}
+		else {
+			nois disp as err "invalid {bf:citype()}"
+			exit 198
+		}
+	}
+	
+end
+
+	
 
 
 ********************************************************************************

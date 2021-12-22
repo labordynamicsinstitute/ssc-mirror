@@ -25,3 +25,6 @@ d Support: email sar48@@berkeley.edu
 d
 f stndzxage.ado
 f stndzxage.sthlp
+f stndzxage_sample_data.dta
+f stndzxage_tutorial.do
+f stndzxage_tutorial.pdf

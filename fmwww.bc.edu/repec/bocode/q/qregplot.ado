@@ -1,3 +1,4 @@
+*! version 1.04  (August 2021) Modify stripper
 *! version 1.03  (April 2021) when requesting Constant, Only constant will comeup
 *! version 1.02  (March 2021) More Bug with Weights.
 *! version 1.01  (Feb 2021) Bug with Weights.
@@ -326,8 +327,9 @@ end
 
 program define qreg_stripper, rclass
 	syntax anything [if] [in] [aw iw pw fw], [Quantile(string)] *
-	local xvar `=subinstr("`anything'","`e(depvar)'","",1)' 
-	local yvar `e(depvar)'
+	gettoken yvar xvar:anything  
+	*local xvar `=subinstr("`anything'","`e(depvar)'","",1)' 
+	*local yvar `e(depvar)'
 	local qnt  `quantile'
 	local oth  `options'
 	local ifin `if' `in'
@@ -341,8 +343,9 @@ end
 
 program define rifhdreg_stripper, rclass
 	syntax anything [if] [in] [aw iw pw fw], rif(str)  [*]
-	local xvar `=subinstr("`anything'","`e(depvar)'","",1)' 
-	local yvar `e(depvar)'
+	gettoken yvar xvar:anything  
+	*local xvar `=subinstr("`anything'","`e(depvar)'","",1)' 
+	*local yvar `e(depvar)'
 	local oth  `options'
 	local ifin `if' `in'
 	if "`weight'`exp'"!="" local wgt [`weight'`exp']
@@ -367,8 +370,9 @@ end
 program define sqreg_stripper, rclass
 	syntax anything [if] [in] [aw iw pw fw], *
 	
-	local xvar `=subinstr("`anything'","`e(depvar)'","",1)' 
-	local yvar `e(depvar)'
+	gettoken yvar xvar:anything  
+	*local xvar `=subinstr("`anything'","`e(depvar)'","",1)' 
+	*local yvar `e(depvar)'
 	local ifin `if' `in'
 	if "`weight'`exp'"!="" local wgt  [`weight'`exp']
 	

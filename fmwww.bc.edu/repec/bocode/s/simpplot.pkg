@@ -16,8 +16,8 @@ d Requires: Stata version 10.1
 d
 d Distribution-Date: 20130705
 d
-d Author: Maarten L. Buis, WZB, Berlin
-d Support: email maarten.buis@@wzb.eu
+d Author: Maarten L. Buis, University of Konstanz
+d Support: email maarten.buis@@uni-konstanz.de
 d
 f simpplot.ado
 f simpplot.sthlp

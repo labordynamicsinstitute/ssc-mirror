@@ -1,0 +1,19 @@
+d 'RAS': module to implement biproportional scaling (RAS) method
+d
+d   Ras module helps you use RAS Method (Biproportional Scaling
+d Method) to update the input-output matrices. 
+d
+d KW: RAS
+d KW: input-output
+d KW: biproportional scaling
+d KW: Richard Stone
+d
+d Requires: Stata version 12 
+d
+d Distribution-Date: 20211222
+d
+d Author: P.S. Xia, University of Chinese Academy of Sciences
+d Support: email xia_ps@@yeah.net
+d
+f ras.sthlp
+f ras.ado

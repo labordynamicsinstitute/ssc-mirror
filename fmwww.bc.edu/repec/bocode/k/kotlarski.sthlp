@@ -22,17 +22,20 @@
 
 {phang}
 {cmd:kotlarski} executes deconvolution kernel density estimation and a robust construction of its uniform confidence band based on 
-{browse "https://qeconomics.org/ojs/index.php/qe/article/view/1560":Kato, Sasaki, and Ura (2021)}. 
-The command requires as input two measurements, {bf:x1} and {bf:x2}, of the unobserved latent variable {bf:x} with classical measurement errors, {bf:e1} = {bf:x1} - {bf:x} and {bf:e2} = {bf:x2} - {bf:x}, respectively. The output consists of a deconvolution kernel density estimate of {it:f}({bf:x}) and their uniform confidence band over a domain of {bf:x}.
+{browse "https://qeconomics.org/ojs/index.php/qe/article/view/1560":Kato, Sasaki, and Ura (2021)}.
+The command requires as input two measurements, {bf:x1} and {bf:x2}, of the unobserved latent variable {bf:x} with classical measurement errors, {bf:e1} = {bf:x1} - {bf:x} and {bf:e2} = {bf:x2} - {bf:x}, respectively. 
+The output consists of a deconvolution kernel density estimate of {it:f}({bf:x}) and their uniform confidence band over a domain of {bf:x}.
 
 {phang}
-FAQ: Why do {bf:kotlarski x1 x2} and {bf:kotlarski x2 x1} produce different results?
-Answer: This is because Kotlarski's identity treats {bf:x1} and {bf:x2} separately in that {bf:x1} is assumed to have the zero mean of its measurement error, while {bf:x2} is not.
-See Assumption 1 in 
+FAQ: Why do kotlarski x1 x2 and kotlarski x2 x1 produce different results?  
+Answer: This is because Kotlarski's identity treats x1 and x2 asymmetrically in that x1 is assumed to have the zero mean of its measurement error, while x2 is not.  See Assumption 1 in 
 {browse "https://qeconomics.org/ojs/index.php/qe/article/view/1560":Kato, Sasaki, and Ura (2021)}.
 
+		
 {marker options}{...}
 {title:Options}
+
+{phang}
 
 {phang}
 {bf:numx({it:real})} sets the number of grid points of {bf:x} for deconvolution kernel density estimation and its uniform confidence band. The default value is {bf: numx(20)}.
@@ -70,13 +73,60 @@ See Assumption 1 in
 {phang}{cmd:. kotlarski x1982 x1983, domain(4) cover(0.90)}{p_end}
 
 
-{title:Reference}
+{marker stored}{...}
+{title:Stored results}
 
-{p 4 8}Kato, K., Y. Sasaki., and T. Ura 2021. Robust Inference in Deconvolution. {it:Quantitative Economics}, 12 (1), pp. 109-142. 
-{browse "https://qeconomics.org/ojs/index.php/qe/article/view/1560":Link to Paper}.
+{phang}
+{bf:kotlarski} stores the following in {bf:e()}: 
+{p_end}
+
+{phang}
+Scalars
+{p_end}
+{phang2}
+{bf:r(N)} {space 10}observations
+{p_end}
+{phang2}
+{bf:r(h)} {space 10}tuning parameter
+{p_end}
+{phang2}
+{bf:r(q)} {space 10}order of Hermite polynomial basis
+{p_end}
+{phang2}
+{bf:r(L)} {space 10}grid size in frequency domain
+{p_end}
+
+{phang}
+Macros
+{p_end}
+{phang2}
+{bf:r(cmd)} {space 8}{bf:kotlarski}
+{p_end}
+
+{phang}
+Matrices
+{p_end}
+{phang2}
+{bf:r(x)} {space 10}vector of x
+{p_end}
+{phang2}
+{bf:r(fx)} {space 9}vector of density values
+{p_end}
+{phang2}
+{bf:r(lower)} {space 6}confidence band (lower boundary)
+{p_end}
+{phang2}
+{bf:r(upper)} {space 6}confidence band (upper boundary)
 {p_end}
 
 
+{title:Reference}
+
+{p 4 8}Kato, K., Y. Sasaki., and T. Ura 2021. Robust Inference in Deconvolution. {it:Quantitative Economics}, 12 (1): 109-142. 
+{browse "https://qeconomics.org/ojs/index.php/qe/article/view/1560":Link to Paper}
+{p_end}
+ 
+ 
 {title:Authors}
 
 {p 4 8}Kengo Kato, Cornell University, Ithaca, NY.{p_end}
@@ -84,6 +134,3 @@ See Assumption 1 in
 {p 4 8}Yuya Sasaki, Vanderbilt University, Nashville, TN.{p_end}
 
 {p 4 8}Takuya Ura, University of California, Davis, CA.{p_end}
-
-
-

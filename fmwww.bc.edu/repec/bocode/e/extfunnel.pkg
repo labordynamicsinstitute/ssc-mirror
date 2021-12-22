@@ -28,8 +28,8 @@ d Requires: Stata version 11
 d
 d Distribution-Date: 20120709
 d
-d Author: Michael J. Crowther, University of Leicester
-d Support: email mjc76@@le.ac.uk
+d Author: Michael J. Crowther, Karolinska Institutet
+d Support: email michael.crowther@@ki.se
 d
 f extfunnel.ado
 f extfunnel.sthlp

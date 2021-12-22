@@ -1,3 +1,9 @@
+*! version 1.16 beta RhMD 18 Jul 2021
+*! with bug fixed for the bootstrap when no CDE is estimated - thanks to Tra Pham.
+*!
+*! version 1.15 beta RhMD 19 Jan 2019
+*! with bug fixed for dynamic interventions - thanks to Koen Simon.
+*!
 *! version 1.14 beta RhMD 11 Nov 2013
 *! with "specific" added as a new mediation option. This allows the user
 *! to specify two values of a single continuous exposure for which all
@@ -1704,7 +1710,7 @@ if "`mediation'"=="" {
 			}
 			*update intervention variables (needed if interventions are dynamic)
 			forvalues ii=1/`nint' {
-				forvalues jj=1/`nintcomp`i'' {
+				forvalues jj=1/`nintcomp`ii'' {
 					capture qui replace `intcomp`ii'`jj'' if `int_no'==`ii'
 					if _rc!=0 {
 						local intcomp`ii'`jj'=subinword("`intcomp`ii'`jj''","if","if (",1)+" )"

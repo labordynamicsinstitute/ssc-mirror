@@ -7,7 +7,7 @@
 {viewerjumpto "Examples" "merlin##examples"}{...}
 {title:Title}
 
-{p2colset 5 36 39 2}{...}
+{p2colset 5 34 38 2}{...}
 {p2col:{helpb merlin estimation options} {hline 2}}Options affecting estimation{p_end}
 {p2colreset}{...}
 
@@ -29,8 +29,9 @@
 {synopt :{cmd:zeros}}specify all initial values set to {cmd:0}; see details{p_end}
 {synopt :{cmd:random}}specify all initial values set to draws from U(0,1); see details{p_end}
 
-{synopt :{cmdab:intm:ethod(}{it:{help merlin_estimation##intmethod:intmethod}}{cmd:)}}integration method{p_end}
-{synopt :{opt intp:oints(#)}}set the number of integration points{p_end}
+{synopt :{opt chintp:oints(#)}}set the number of integration points to calculate the cumulative hazard function{p_end}
+{synopt :{cmdab:intm:ethod(}{it:{help merlin_estimation##intmethod:intmethod}}{cmd:)}}integration method used to integrate the random effects{p_end}
+{synopt :{opt intp:oints(#)}}set the number of integration points to integrate the random effects{p_end}
 {synopt :{cmdab:adapt:opts(}{it:{help merlin_estimation##adaptopts:adaptopts}}{cmd:)}}options for adaptive quadrature{p_end}
 
 {synopt :{it:{help merlin##maximize_options:maximize_options}}}control the maximization process for specified model; seldom used{p_end}
@@ -108,6 +109,10 @@ starting values, rather than fit the fixed effect model. Both {cmd:restartvalues
 and {cmd:apstartvalues()} can be used with {cmd:random}.
 
 {phang}
+{opt chintpoints(#)} defines the number of Gauss-Legendre integration (quadrature) points used to calculate analytically intractable 
+cumulative hazard functions. Default is {cmd:chintpoints(30)}
+
+{phang}
 {opt intmethod(intmethod)},
 {opt intpoints(#)}, and
 {opt adaptopts(adaptopts)}
@@ -183,3 +188,13 @@ For detailed examples, see {bf:{browse "https://www.mjcrowther.co.uk/software/me
 {phang2}{cmd:. merlin (logb time age trt time#M1[id]@1 M2[id]@1, family(gaussian)), intmethod(mcarlo)}{p_end}
 
 
+{title:Author}
+
+{p 5 12 2}
+{bf:Michael J. Crowther}{p_end}
+{p 5 12 2}
+Red Door Analytics{p_end}
+{p 5 12 2}
+Stockholm, Sweden{p_end}
+{p 5 12 2}
+michael@reddooranalytics.se{p_end}

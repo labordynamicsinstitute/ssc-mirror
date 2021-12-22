@@ -1,6 +1,7 @@
 *! Attaullah Shah; Email: attaullah.shah@imsciences.edu.pk; Support website: www.FinTechProfessor.com
-*! Version 5.4: July 13, 2021 : The error 'PRODUCT():  3201  vector required' fixed. This error would occur in the calculation of product if extended missing values were present
+*! Version 5.5: Nov 6, 2021 : Added max2, max3, max4, and max5 for finding second, third, fourth and fifth largest values.
 
+* Version 5.4: July 13, 2021 : The error 'PRODUCT():  3201  vector required' fixed. This error would occur in the calculation of product if extended missing values were present
 * Version 5.3: June 14, 2021 : Bug fixed related to missing value in the rangeevar
 * Version 5.2: Nov 29, 2020 : Bug fix when 0 was used in the back window
 * Version 5.1: Sep 4, 2020 : Mutilple statistics / variables can used used now in the flexible window
@@ -38,19 +39,20 @@ prog asrol, byable(onecall) sortpreserve
 	}
 
 	foreach  z of local stat {
-		if "`z'"~="mean" & "`z'"~ = "gmean" & "`z'"~="sd"        ///
-			& "`z'"~="sum" & "`z'"~="product" & "`z'"~="median"  ///
-			& "`z'"~="count" & "`z'"~="min" & "`z'"~="max"      ///
-			& "`z'"~="first" & "`z'"~="last" & "`z'"~="missing" ///
-			& "`z'"~="skewness"{ 
+		if "`z'" != "mean" 		& "`z'" != "gmean" 		& "`z'" 	!= "sd"        ///
+			& "`z'" != "sum" 	& "`z'" != "product" 	& "`z'" 	!= "median"   ///
+			& "`z'" != "count" 	& "`z'" != "min" 		& "`z'" 	!= "max"      ///
+			& "`z'" != "first" 	& "`z'" != "last" 		& "`z'" 	!= "missing" ///
+			& "`z'" != "skewness" & "`z'" != "max2" 	& "`z'" 	!= "max3"  ///
+			& "`z'" != "max4" 	& "`z'" != "max5"{ 
 			display as error " Incorrect statistics specified!"
 			display as text "You have entered {cmd: `z'} in the {cmd: stat option}. However, only the following staticts are allowed with {help asrol}"
 			dis as res "mean, gmean, sd, sum, product, median, count, min, max, first, last, missing"
 			exit
 		}
-		if "`z'"!="median" & "`perc'"!="" dis as error "option {cmd: perc()} is used only when finding {cmd: percentiles with option median}, see help file {help asrol}"
-		if "`z'"=="median" {
-			if "`perc'"==""{
+		if "`z'" != "median" & "`perc'"!="" dis as error "option {cmd: perc()} is used only when finding {cmd: percentiles with option median}, see help file {help asrol}"
+		if "`z'" == "median" {
+			if "`perc'" == ""{
 				global Q = .5
 			}
 			else {
@@ -67,7 +69,7 @@ prog asrol, byable(onecall) sortpreserve
 		if _rc==0 {
 			local varfocal "yes"
 		}
-		if "`xfocal'"~="focal" & "`varfocal'"!="yes"{
+		if "`xfocal'" != "focal" & "`varfocal'"!="yes"{
 			display as error " Option xfocal either accepts the word focal or name of an existing numeric variable"
 			display as text "For example, you can specify xfocal option as {cmd: xfocal(focal)} or {cmd: xfocal(year)}"
 			exit
@@ -369,3 +371,4 @@ prog asrol, byable(onecall) sortpreserve
 
 	global type
 	end
+	

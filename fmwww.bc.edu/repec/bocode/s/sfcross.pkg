@@ -5,7 +5,7 @@ d functionality, adding new features such as: i ) the estimation of
 d Normal-Gamma models via Simulated Maximum Likelihood (Greene
 d 2003); ii ) the estimation of the Normal-Truncated Normal model
 d proposed by Wang (2002) in which both the location and the scale
-d parameters of the ineciency distribution can be expressed as a
+d parameters of the inefficiency distribution can be expressed as a
 d function of exogenous covariates; and iii ) the opportunity to
 d manage complex survey data characteristics (via the -svyset-
 d command). 

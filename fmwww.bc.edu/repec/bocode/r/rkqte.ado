@@ -1,15 +1,15 @@
 ////////////////////////////////////////////////////////////////////////////////
 // STATA FOR Chen, H., Chiang, H.D., & Sasaki, Y. (2020): Quantile Treatment 
-//           Effects in Regression Kink Designs. Econometric Theory 36 (6), 1167
-//           -1191.
+//           Effects in Regression Kink Designs. Econometric Theory, 36 (6): 
+//           1167-1191.
 //
 // Use it when you consider a regression kink design and you are interested in 
 // analyzing heterogeneous causal effects of a binary treatment.
 ////////////////////////////////////////////////////////////////////////////////
-program define rkqte, eclass
+program define rkqte, rclass
     version 14.2
- 
-    syntax varlist(numeric min=3 max=3) [if] [in] [, k(real 0) cover(real 0.95) ql(real 0.25) qh(real 0.75) qn(real 3) bw(real -1)]
+
+    syntax varlist(numeric) [if] [in] [, k(real 0) cover(real 0.95) ql(real 0.25) qh(real 0.75) qn(real 3) bw(real -1)]
     marksample touse
  
     gettoken depvar indepvars : varlist
@@ -17,28 +17,30 @@ program define rkqte, eclass
     fvexpand `indepvars' 
     local cnames `r(varlist)'
  
-    tempname b V N cb
+    tempname b V N cb h q CBlower CBupper
 	
 	mata: estimate("`depvar'", "`cnames'", ///
 				   `k', `ql', `qh', ///
 			       `qn', `bw', "`touse'", ///
 				   "`b'", "`V'", "`N'", ///
-				   `cover', "`cb'")
+				   `cover', "`cb'", "`h'", ///
+				   "`q'", "`CBlower'", "`CBupper'")
 	
-	loc lbl	
-	forv i=1/`nq' {	
-		sca _elt = _qq[1,`i']
-		loc lbl "`lbl' QTE`=string(_elt)'"
-	}
-	matrix colnames `b' = `lbl'
-	matrix colnames `V' = `lbl'
-	matrix rownames `V' = `lbl'
-	
-    ereturn post `b' `V', esample(`touse') buildfvinfo
-    ereturn scalar N    = `N'
-	ereturn matrix Q = _qq
-    ereturn local  cmd  "rkqte"
+	return scalar cover = `cover'
+	return scalar k    = `k'
+    return scalar h    = `h'
+    return scalar N    = `N'
+    return local  cmd  "rdqte"
+	return matrix V    = `V'
+	return matrix CBupper = `CBupper'
+	return matrix CBlower = `CBlower'
+	return matrix b    = `b'
+	return matrix q    = `q'
 end
+
+		
+		
+		
 		
 mata:
 //////////////////////////////////////////////////////////////////////////////// 
@@ -52,11 +54,12 @@ void estimate( string scalar yv,       string scalar dxv,
 			   real scalar cut, 	   real scalar q_low, 	   real scalar q_high, 	 
 	  		   real scalar q_num, 	   real scalar b_w,	       string scalar touse,   
 			   string scalar bname,    string scalar Vname,    string scalar nname,
-			   real scalar cover,	   string scalar cbname) 
+			   real scalar cover,	   string scalar cbname,   string scalar hname,
+			   string scalar qname,    string scalar cblname,  string scalar cbuname) 
 {
 	printf("\n{hline 78}\n")
 	printf("Executing:    Chen, H., Chiang, H.D., & Sasaki, Y. (2020): Quantile Treatment \n")
-	printf("              Effects in Regression Kink Designs. Econometric Theory 36 (6),  \n")
+	printf("              Effects in Regression Kink Designs. Econometric Theory, 36 (6): \n")
 	printf("              1167-1191.                                                      \n")
 	printf("{hline 78}\n")
     real vector y, d, x, qlist
@@ -333,9 +336,11 @@ void estimate( string scalar yv,       string scalar dxv,
 
     st_matrix(bname, b)
     st_matrix(Vname, V)
+	st_matrix(qname, qlist)
+	st_matrix(cblname, bl)
+	st_matrix(cbuname, bu)
     st_numscalar(nname, n)
-	st_local("nq",strofreal(length(qlist)))
-	st_matrix("_qq",qlist:*100)
+    st_numscalar(hname, h)
 
 	////////////////////////////////////////////////////////////////////////////
 	// Console output

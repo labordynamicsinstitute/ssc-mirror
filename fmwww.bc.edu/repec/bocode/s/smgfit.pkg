@@ -1,6 +1,6 @@
 d 'SMGFIT': module to fit a Singh-Maddala distribution to grouped data via ML
 d
-d smgfit fits by ML the 3 parameter  Singh-Maddala (1976)
+d  smgfit fits by ML the 3 parameter  Singh-Maddala (1976)
 d distribution to a sample of counts or frequencies  by income
 d category. (For an estimator designed for  unit record data, ssc
 d desc smfit). Optionally specified variables z1var and z2var

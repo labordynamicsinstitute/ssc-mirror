@@ -1,5 +1,5 @@
 {smcl}
-{* 01jun2020}{...}
+{* 15oct2021}{...}
 {cmd:help remr}
 {hline}
 
@@ -95,30 +95,30 @@ It is not recommended to use a wide range to maintain homogeneity. The range {it
 {title:Examples}
 
 {pstd} The example is taken from Qin Liu  et al.  Comput Stat Data Anal 2009; 53, 4157–4167. https://doi.org/10.1016/j.csda.2009.05.001 {p_end}
-{phang2} {cmd:. use http://nicolaorsini.altervista.org/data/bmi_rc, clear} {p_end}
+{phang2} {stata "use http://nicolaorsini.altervista.org/data/bmi_rc, clear"} {p_end}
 
 {pstd}	Generate the category variable {p_end}
-{phang2} {cmd:. sort id bmi} {p_end}
-{phang2} {cmd:. bysort id: gen cat = _n-1} {p_end}
+{phang2} {stata sort id bmi} {p_end}
+{phang2} {stata "bysort id: gen cat = _n-1"} {p_end}
 
 {pstd} Three variables entry - restricted cubic spline with three knots, center at 20, include studies with start doses between 18 to 22 {p_end}
-{phang2} {cmd:. remr logor selogor bmi, id(id) cat(cat) rcs(3) center(20) start(18 22)  eform} {p_end}
+{phang2} {stata remr logor selogor bmi, id(id) cat(cat) rcs(3) center(20) start(18 22) eform} {p_end}
 
 {pstd} Four variables entry - restricted cubic spline with four knots at 19 24 27 33, center at 20, include studies with start doses between 18 to 22, and bubble plot {p_end}
-{phang2} {cmd:. remr case control n bmi, id(id) cat(cat) knots(19 24 27 33) center(20) start(18 22)  bplot eform} {p_end}
+{phang2} {stata remr case control n bmi, id(id) cat(cat) knots(19 24 27 33) center(20) start(18 22) bplot eform} {p_end}
 
 {pstd} Testing for linearity (syntax is test __doses2 … __doses(k-1) where k is the number of knots {p_end}
-{phang2} {cmd:. test __doses2 __doses3} {p_end}
+{phang2} {stata test __doses2 __doses3} {p_end}
 
 {pstd} Four variables entry - linear dose response analysis {p_end}
-{phang2} {cmd:. remr case control n bmi, id(id) cat(cat) center(20) start(18 22)  bplot eform}{p_end}
+{phang2} {stata remr case control n bmi, id(id) cat(cat) center(20) start(18 22) bplot eform}{p_end}
 
 
 
 {title:Authors}
 
-{pstd} Luis Furuya-Kanamori, Research School of Population Health, Australian National University, Australia {p_end}
-{pstd} {browse "mailto:luis.furuya-kanamori@anu.edu.au?subject=REMR Stata enquiry":luis.furuya-kanamori@anu.edu.au} {p_end}
+{pstd} Luis Furuya-Kanamori, UQ Centre for Clinical Research, The University of Queensland, Australia {p_end}
+{pstd} {browse "mailto:l.furuya@uq.edu.au?subject=REMR Stata enquiry":l.furuya@uq.edu.au} {p_end}
 	
 {pstd} Chang Xu, Department of Population Medicine, College of Medicine, Qatar University, Qatar
 

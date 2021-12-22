@@ -1,6 +1,6 @@
 d 'SIXPLOT': module to display six diagnostic and descriptive graphs for a single variable
 d
-d sixplot displays six diagnostic and descriptive graphs for a
+d  sixplot displays six diagnostic and descriptive graphs for a
 d single variable formatted as a 2 row, 3 column array. 
 d
 d KW: diagnostics

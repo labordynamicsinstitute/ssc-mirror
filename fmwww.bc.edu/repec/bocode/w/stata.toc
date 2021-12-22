@@ -20,6 +20,7 @@ p welflossas module to compute well-being (monetary) gain/loss measures and soci
 p wgttest module to test the impact of sampling weights in regression analysis
 p whereis module to keep track of ancillary programs and files
 p which_version module to return location and programmer's version of ado-files
+p whichlist module to input list of package file items and output lists of present and absent items
 p whichpkg module to display information on components of a Stata package
 p white module to perform White's test for heteroscedasticity
 p whitetst module to perform White's test for heteroskedasticity
@@ -28,6 +29,7 @@ p whotdeck module to perform multiple imputation using the Approximate Bayesian 
 p wid module to download data from the World Inequality Database (WID.world)
 p williams module to estimate logistic regression via Williams procedure
 p windowsmonitor module to send a winexec command to a Windows operating system and display the output in the Stata results window in (almost) real time
+p winratio module to calculate the unmatched Win Ratio for prioritised outcomes 
 p winsor module to Winsorize a variable
 p winsor2 module to winsorize data
 p witch module to mystically manage files on adopath

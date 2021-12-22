@@ -1,5 +1,5 @@
-*! Date    : 03 Jan 2019
-*! Version : 1.5
+*! Date    : 17 Aug 2021
+*! Version : 1.6
 *! Authors : Michael J Grayling & Adrian P Mander
 
 /*
@@ -12,6 +12,7 @@
                 support for non-integer df.
   03/01/19 v1.5 Minor changes for speed. Converted delta and sigma to be
                 optional with internal defaults.
+  17/08/21 v1.6	Fixed a small printing error.
 */
 
 program define mvt, rclass
@@ -582,7 +583,7 @@ real colvector pmvnormal_mata(real vector lower, real vector upper,
   else {
     a                           = lower - mean
     b                           = upper - mean
-	C         = J(k, k, 0)
+	C                           = J(k, k, 0)
     zero_k_min_2                = J(1, k - 2, 0)
 	zero_k_min_1                = (zero_k_min_2, 0)
     y                           = zero_k_min_1
@@ -689,8 +690,7 @@ real colvector pmvnormal_mata(real vector lower, real vector upper,
                                     (normal(btilde[i]) - normal(atilde[i]))
 	  }
     }
-    C[k, k] = sqrt(Sigma[k, k] - sum(C[k, 1::(k - 1)]:^2))
-	C
+    C[k, k]                     = sqrt(Sigma[k, k] - sum(C[k, 1::(k - 1)]:^2))
     I                           = V = 0
     if (a[1] != .) {
       d                         = J(samples, 1, (normal(a[1]/C[1, 1]), J(1, k - 1, 0)))
@@ -705,7 +705,7 @@ real colvector pmvnormal_mata(real vector lower, real vector upper,
 	  e                         = J(samples, 1, J(1, k, 1))
 	}
     f                           = (e[, 1] - d[, 1], J(samples, k - 1, 0))
-	y = J(samples, k - 1, 0)
+	y                           = J(samples, k - 1, 0)
 	Delta                       = runiform(shifts, k - 1)
 	samples_sqrt_primes         =
 	  (1::samples)*sqrt((2, 3, 5, 7, 11, 13, 17, 19, 23, 29, 31, 37, 41, 43, 47,
@@ -718,7 +718,6 @@ real colvector pmvnormal_mata(real vector lower, real vector upper,
 						 433, 439, 443, 449, 457, 461, 463, 467, 479, 487, 491,
 						 499, 503, 509, 521, 523, 541)[1::(k - 1)])
 	Ii                          = J(1, shifts, 0)
-	"h"
 	for (i = 1; i <= shifts; i++) {
 	  for (l = 2; l <= k; l++) {
 		l_vec                 = 1::(l - 1)

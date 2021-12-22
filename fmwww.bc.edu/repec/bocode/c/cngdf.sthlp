@@ -21,7 +21,7 @@
 {synopthdr:Options}
 {synoptline}
 {synopt:{cmdab:year(int)}}
-the {cmd:year(int)} option must exist. the national GDP deflator ranges from 1978 to 2019, and the provincial GDP deflator ranges from 1993 to 2019.
+the {cmd:year(int)} option must exist. 
 {p_end}
 {synopt:{cmdab:china}}
 if {cmd:china} option is specified, the national GDP deflator is calculated. if {cmd:china} option is not specified,, the provincial GDP deflator is calculated.
@@ -61,5 +61,5 @@ if {cmd:china} option is specified, the national GDP deflator is calculated. if 
 {title:Author}
 
 {phang}
-{cmd:Bolin, Song (松柏林)} Shenzhen University, China. {cmd:wechat}：YJYSY91{break}
+{cmd:Bolin, Song (松柏林)} Shenzhen University, China. {cmd:wechat}：songbl_stata{break}
 {p_end}

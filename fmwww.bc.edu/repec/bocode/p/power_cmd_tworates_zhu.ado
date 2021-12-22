@@ -1,4 +1,8 @@
-*! version 1.0  2019-03-14 Mark Chatfield
+*! version 1.1  2021-08-23 Mark Chatfield
+* specifying two of n,n1,n2 did not update nratio BEFORE v1 and v0 were calculated. Now fixed.
+* "dispersion parameter" (Zhu's language) has been replaced with "overdispersion parameter" (Stata's language)
+
+* version 1.0  2019-03-14 
 
 program power_cmd_tworates_zhu, rclass
 
@@ -10,20 +14,33 @@ syntax,  r1(real)             /// Rate in group 1
 		[n1(integer 0)]       /// group 1 sample size 
 		[n2(integer 0)]       /// group 2 sample size
 		[NRATio(real 1)]      /// theta, sample allocation ratio (N2/N1)
-		[DISPersion(real 0)]  /// negative binomial dispersion parameter		
+		[OVERDISPersion(real 0)]  /// negative binomial overdispersion parameter		
         [DURation(real 1)]    /// mu_t, average treatment duration
 		[VARMethod(integer 3)] /// method for variance under null hypothesis in Zhu and Lakkis (2014)
         [Alpha(real 0.05)]    /// significance level
-		[Power(real 0)]	      /// default for sample size calc is actually 0.8, see line 38
-		[Beta(real 0)]        //  default for sample size calc is actually 0.2, see line 39	 
+		[Power(real 0)]	      /// default for sample size calc is actually 0.8, see below
+		[Beta(real 0)]        //  default for sample size calc is actually 0.2, see below	 
 
-		
+			
+	if "`n'" != "0" & "`n1'" != "0" {
+		local n2 = `n' - `n1'
+		local nratio = `n2'/`n1'
+	}
+	if "`n'" != "0" & "`n2'" != "0" {
+		local n1 = `n' - `n2'
+		local nratio = `n2'/`n1'
+	}
+	if "`n1'" != "0" & "`n2'" != "0" {
+		local n = `n1' + `n2'
+		local nratio = `n2'/`n1'
+	}
+	
 *(r0 and r1 used in the equations in Zhu 2014, I have switched to r1 and r2. Same with n0 and n1.) 	
 tempname theta mu r2 k v1 v0
 scalar `theta' = `nratio' 
 scalar `mu' = `duration'
 scalar `r2' = `r1'*`irr'
-scalar `k' = `dispersion'		 
+scalar `k' = `overdispersion'	 
 scalar `v1' = (1/`mu') * (1/`r1' + 1/(`theta'*`r2'))  +  (1 + `theta')*`k'/`theta'		 
 scalar `v0' = (1 + `theta')^2 / (`mu' * `theta' * (`r1' + `theta'*`r2'))  +  (1 + `theta')*`k'/`theta'
 if "`varmethod'" == "2" scalar `v0' = `v1'
@@ -56,18 +73,6 @@ else {
 		exit 198
 	}
 
-	if "`n'" != "0" & "`n1'" != "0" {
-		local n2 = `n' - `n1'
-		local nratio = `n2'/`n1'
-	}
-	if "`n'" != "0" & "`n2'" != "0" {
-		local n1 = `n' - `n2'
-		local nratio = `n2'/`n1'
-	}
-	if "`n1'" != "0" & "`n2'" != "0" {
-		local n = `n1' + `n2'
-		local nratio = `n2'/`n1'
-	}
 	if "`n'" != "0" & "`n1'" == "0" & "`n2'" == "0" {
 		local n1 = `n' / (1+`theta')
 		local n1 = ceil(`n1')
@@ -93,7 +98,7 @@ else {
 /* return results */
 return scalar varmethod = `varmethod'
 return scalar duration = `duration'
-return scalar dispersion = `k'
+return scalar overdispersion = `k'
 return scalar nratio = `nratio'
 return scalar N2 = `n2'
 return scalar N1 = `n1'

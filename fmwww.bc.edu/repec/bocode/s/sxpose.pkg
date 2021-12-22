@@ -1,6 +1,6 @@
 d 'SXPOSE': module to transpose string variable dataset
 d
-d sxpose transposes a dataset of string variables,  so that
+d  sxpose transposes a dataset of string variables,  so that
 d observations become variables, and vice versa. It is a rough and
 d ready utility: use circumspectly. With a force option, datasets
 d containing numeric variables may also be transposed. 

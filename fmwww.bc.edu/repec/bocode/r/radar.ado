@@ -1,5 +1,5 @@
-*! Date        : 19 Feb 2021
-*! Version     : 1.15
+*! Date        : 6 Dec 2021
+*! Version     : 1.16
 *! Author      : Adrian Mander
 *! Email       : mandera@cardiff.ac.uk
 *! Description : Radar graphs
@@ -19,6 +19,7 @@
 13Aug18 v1.13 Added area in the radar line
 28Aug18 v1.14 Added in maximum area of the polygon
 19Feb21 v1.15 Added in "1 2 3" colours
+ 6Dec21 v1.16 Added in ability to alter marker size (suggested by Jaco Voorham)
 FUTURE release should include, varying text on axes. ALSO adding marker variable labels..
 */
 
@@ -42,6 +43,7 @@ opt[lc the string argument is a {help colorstyle}list and specifies the colors f
 opt[lp the string argument is a {help linepatternstyle}list and specifies the patterns for the observations (not axes).]
 opt[lw the string argument is a {help linewidthstyle}list and specifies the line widths for the observations (not axes).]
 opt[ms the string argument is a {help symbolstyle}list and specifies the marker symbols to use for observations BUT must be used in conjunction with the connected option (not axes).]
+opt[msize the string argument is a {help markersizestyle}list and specifies the size of the marker symbols to use for observations (not axes).]
 opt[mcolor the string argument is a {help symbolstyle}list and specifies the marker colors to use for observations BUT must be used in conjunction with the connected option (not axes).]
 opt[axelc the string argument is a colorlist and specifies the colors for the axes.]
 opt[axelp the string argument is a patternlist and specifies the patterns for the axes.]
@@ -117,7 +119,6 @@ If you want to remove the labels from the axes use the axelaboff option
 
 {pstd}
 {stata radar make turn mpg if foreign,radial(trunk) title(Nice Radar graph) lc(red blue green) lw(*1 *2 *4) r(0 12 14 18 50) labsize(*.5) axelaboff aspect(1)}
-
 ]
 
 author[Prof Adrian Mander]
@@ -152,7 +153,7 @@ pr radar, rclass
   preserve
   /* Allow use on earlier versions of stata that have not been fully tested */
   local version = _caller()
-  local myversion = 16.1
+  local myversion = 17.0
   if `version' < `myversion' {
     di "{err}WARNING: Tested only for Stata version `myversion' and higher."
     di "{err}Your Stata version `version' is not supported by me."
@@ -161,7 +162,7 @@ pr radar, rclass
     version `myversion'
   }
 
-  syntax [varlist] [if] [in] [, LC(string asis) LP(string) LW(string)  MS(string) MColor(string) Rlabel(numlist) LABSIZE(string) RADIAL(varname) AXELABOFF AXELC(string) AXELW(string) AXELP(string) CONNECTED *]
+  syntax [varlist] [if] [in] [, LC(string asis) LP(string) LW(string) MSIZE(string) MS(string) MColor(string) Rlabel(numlist) LABSIZE(string) RADIAL(varname) AXELABOFF AXELC(string) AXELW(string) AXELP(string) CONNECTED *]
   if "`c(dp)'"=="comma" {
     di "{err} Warning you might need to type -set dp period- if a numlist message appears
   }
@@ -173,6 +174,7 @@ pr radar, rclass
   if "`lp'"~="" local xopt `"`xopt' lp(`lp')"'
   if "`lw'"~="" local xopt `"`xopt' lw(`lw')"'
   if "`ms'"~="" local xopt `"`xopt' ms(`ms')"'
+  if "`msize'"~="" local xopt `"`xopt' msize(`msize')"'
   if "`mcolor'"~="" local xopt `"`xopt' mc(`mcolor')"'
   if "`labsize'"~=""  local labsize "si(`labsize')"
   else local labsize "si(*1)"
@@ -391,7 +393,7 @@ end
  *****************************************************/
 
 pr _drawobs, rclass
-  syntax [varlist] [, maxlevels(integer 0) max(real 0) min(real 0) LC(string asis) LP(string) LW(string) MS(string) MC(string) CONNECTED]
+  syntax [varlist] [, maxlevels(integer 0) max(real 0) min(real 0) LC(string asis) LP(string) LW(string) MS(string) MC(string) MSIZE(string) CONNECTED]
   local minlist : di %6.4f `min'
   local maxlist : di %6.4f `max'
   local steplist : di %7.5f (`max'-`min')/5
@@ -456,6 +458,11 @@ pr _drawobs, rclass
       local con: word `n' of `ms'
       if `"`xopt'"'==`""' & "`con'"~="" local xopt `", ms(`con')"'
       if `"`xopt'"'~=`""' & "`con'"~="" local xopt `"`xopt' ms(`con')"'
+    }
+    if "`msize'"~="" & "`connected'"~="" {
+      local con: word `n' of `msize'
+      if `"`xopt'"'==`""' & "`con'"~="" local xopt `", msize(`con')"'
+      if `"`xopt'"'~=`""' & "`con'"~="" local xopt `"`xopt' msize(`con')"'
     }
     if "`mc'"~="" & "`connected'"~="" {
       local con: word `n' of `mc'

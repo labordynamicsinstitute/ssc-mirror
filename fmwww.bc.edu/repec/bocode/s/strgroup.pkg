@@ -14,16 +14,16 @@ d KW: levenshtein
 d
 d Requires: Stata version 9.2
 d
-d Distribution-Date: 20150927
+d Distribution-Date: 20211009
 d
-d Author: Julian Reif , University of Chicago
-d Support: email jreif@@uchicago.edu
+d Author: Julian Reif , University of Illinois
+d Support: email jreif@@illinois.edu
 d
 f strgroup.ado
 f strgroup.hlp
 f ../l/levenshtein.ado
 f ../l/levenshtein.hlp
-f strgroup.Macintosh.MacOSX.plugin
-f strgroup.PC.Unix64.plugin
-f strgroup.PC(64-bit_x86-64).Windows.plugin
-f strgroup.PC.Windows.plugin
+f strgroup.macosx.plugin
+f strgroup.unix.plugin
+f strgroup.windows32.plugin
+f strgroup.windows64.plugin

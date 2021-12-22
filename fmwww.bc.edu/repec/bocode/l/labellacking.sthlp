@@ -1,5 +1,5 @@
 {smcl}
-{* 23 June 2013}{...}
+{* 23 June 2013/28oct2021}{...}
 {hline}
 help for {hi:labellacking}
 {hline}
@@ -62,6 +62,13 @@ if installed).
 {p 4 8 2}{cmd:. labellacking rep78, missing}{p_end}
 {p 4 8 2}{cmd:. replace rep78 = .a if rep78 == .}{p_end}
 {p 4 8 2}{cmd:. labellacking rep78, missing}
+
+
+{title:Acknowledgment} 
+
+{p 4 4 2}
+Chen Samulsion and Daniel Klein helped identify a problem when the 
+first character of a value label was a multi-byte character. 
 
 
 {title:Authors} 

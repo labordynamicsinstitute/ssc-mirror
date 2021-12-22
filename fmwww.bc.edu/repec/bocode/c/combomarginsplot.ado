@@ -1,8 +1,9 @@
 *! combomarginsplot.ado - Nicholas Winter
-*! version 1.5.0 25feb2021
+*! version 1.5.1 25feb2021
 *! based on marginsplot version 1.2.4  21oct2019 (Stata 16 version)
 
 * Changes
+* 1.5.1: added compound quotes to allow quotes within labels
 * 1.4.0: can chain output into new cmp call.
 * 1.2.0: draws official marginsplot version 1.2.1 11jul2019 (Stata 16 version)
 *        brought cmp_marginsplot16 into this adofile
@@ -207,16 +208,16 @@ program combomarginsplot
 		
 		// predict_label, margin_label, title
 		if `filenum'==1 {
-			local predict_label 	`: char _dta[predict_label]'
-			local expression_label 	`: char _dta[expression]'
-			local margin_label  	`: variable label _margin'
-			local title_label   	`: char _dta[title]'
+			local predict_label 	: char _dta[predict_label]
+			local expression_label 	: char _dta[expression]
+			local margin_label  	: variable label _margin
+			local title_label   	: char _dta[title]
 		}
 		else {
-			local predict_label = 		cond("`predict_label'"   =="`: char _dta[predict_label]'","`predict_label'"   ,"Predictions")
-			local expression_label = 	cond("`expression_label'"=="`: char _dta[expression]'"   ,"`expression_label'","Predictions")
-			local margin_label  = 		cond("`margin_label'"    =="`: variable label _margin'"  ,"`margin_label'"    ,"Prediction")
-			local title_label   = 		cond("`title_label'"     =="`: char _dta[title]'"        ,"`title_label'"     ,"Combined margins results")
+			local predict_label = 		cond(`"`predict_label'"'   ==`"`: char _dta[predict_label]'"',`"`predict_label'"'   ,"Predictions")
+			local expression_label = 	cond(`"`expression_label'"'==`"`: char _dta[expression]'"'   ,`"`expression_label'"',"Predictions")
+			local margin_label  = 		cond(`"`margin_label'"'    ==`"`: variable label _margin'"'  ,`"`margin_label'"'    ,"Prediction")
+			local title_label   = 		cond(`"`title_label'"'     ==`"`: char _dta[title]'"'        ,`"`title_label'"'     ,"Combined margins results")
 
 			// if one file has prediction and another has expression, reset both to generic
 			if !mi(`"`predict_label'"') & !mi(`"`expression_label'"') {

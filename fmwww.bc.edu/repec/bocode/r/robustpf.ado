@@ -1,6 +1,7 @@
 ////////////////////////////////////////////////////////////////////////////////
 // STATA FOR Hu, Y., Huang, G., & Sasaki, Y. (2020): Estimating Production 
-//           Functions with Robustness Against Errors in the Proxy Variables. //           Journal of Econometrics 215 (2), pp. 375-398.
+//           Functions with Robustness Against Errors in the Proxy Variables. 
+//           Journal of Econometrics 215 (2), pp. 375-398.
 //
 // Use this code for estimation of production functions with robustness against
 // errors in the proxy variables.
@@ -8,7 +9,7 @@
  program define robustpf, eclass
     version 14.2
  
-    syntax varlist(min=3 numeric) [if] [in] [, proxy(varname numeric) m1(varname numeric) m2(varname numeric) m3(varname numeric) m4(varname numeric) m5(varname numeric) init_k(real 0) init_l(real 0) init_m(real 0.5)]
+    syntax varlist(min=3 numeric) [if] [in] [, proxy(varname numeric) m1(varname numeric) m2(varname numeric) m3(varname numeric) m4(varname numeric) m5(varname numeric) init_k(real 0) init_l(real 0) init_m(real 0.5) onestep dfp bfgs]
     marksample touse
  
 	qui xtset
@@ -19,7 +20,22 @@
     _fv_check_depvar `depvar'
     fvexpand `indepvars' 
     local cnames `r(varlist)'
-
+	
+	local ones = 1
+	if "`onestep'" == ""{
+		local ones = 0
+	}
+	
+	local method_dfp = 1
+	if "`dfp'" == ""{
+		local method_dfp = 0
+	}
+	
+	local method_bfgs = 1
+	if "`bfgs'" == ""{
+		local method_bfgs = 0
+	}
+	
 	tempvar m1var m2var m3var m4var m5var xvar
 	local m1in = 0 
 	if "`m1'" != "" {
@@ -56,7 +72,7 @@
 	if "`proxy'" != "" {
 		gen `xvar' = `proxy'
 
-		tempname b V N
+		tempname b V br Vr NT N T minT maxT Obj
 		mata: estimation("`depvar'", "`cnames'", "`xvar'", ///
 						 "`panelid'", "`timeid'", ///
 						 "`m1var'", `m1in', ///
@@ -64,17 +80,47 @@
 						 "`m3var'", `m3in', ///
 						 "`m4var'", `m4in', ///
 						 "`m5var'", `m5in', ///
-						 `init_k', `init_l', `init_m', ///
-						 "`touse'", "`b'", "`V'", "`N'") 
+						 `init_k', 	`init_l', `init_m', ///
+						 `ones', ///
+						 `method_dfp',	`method_bfgs', ///
+						 "`touse'", "`b'", "`V'", "`br'", "`Vr'", "`NT'", "`N'", "`T'", "`minT'", "`maxT'", "`Obj'") 
 	 
-		local cnames `cnames' Intermediate
+		//local cnames `cnames' Intermediate
 	 
-		matrix colnames `b' = `cnames'
-		matrix colnames `V' = `cnames'
-		matrix rownames `V' = `cnames'
+		local lbl `cnames'
+		if "`m1'" != "" {
+		 local lbl "`lbl' m1"
+		}
+		local m2in = 0 
+		if "`m2'" != "" {
+		 local lbl "`lbl' m2"
+		}
+		local m3in = 0 
+		if "`m3'" != "" {
+		 local lbl "`lbl' m3"
+		}
+		local m4in = 0 
+		if "`m4'" != "" {
+		 local lbl "`lbl' m4"
+		}
+		local m5in = 0 
+		if "`m5'" != "" {
+		 local lbl "`lbl' m5"
+		}
+	 
+		matrix colnames `b' = `lbl'
+		matrix colnames `V' = `lbl'
+		matrix rownames `V' = `lbl'
 
 		ereturn post `b' `V', esample(`touse') buildfvinfo
+		ereturn scalar NT   = `NT'
 		ereturn scalar N    = `N'
+		ereturn scalar T    = `T'
+		ereturn scalar minT = `minT'
+		ereturn scalar maxT = `maxT'
+		ereturn matrix br	= `br'
+		ereturn matrix Vr	= `Vr'
+		ereturn scalar objective = `Obj'
 		ereturn local  cmd  "robustpf"
 	 
 		ereturn display
@@ -103,8 +149,11 @@ void GMMc(todo, para, NT, numlmumm, yearlist, yearyk, l, m, x, z, W, crit, g, H)
 	year = yearyk[.,1]
 	y    = yearyk[.,2]
 	k    = yearyk[.,3]
-
-	ytilde = y :- k * b_k :- l * b_l :- m * b_m
+	
+	ytilde = y :- k * b_k :- l * b_l
+	if( numm > 0 ){
+		ytilde = y :- k * b_k :- l * b_l :- m * b_m
+	}
 	xtilde = x :- a_x0 :- k * a_xk
 	ytilde_tplus1 = ytilde
 	xtilde_tplus1 = xtilde
@@ -148,7 +197,10 @@ void GMMv(para, NT, numlmumm, yearlist, yearyk, l, m, x, z, variance){
 	y    = yearyk[.,2]
 	k    = yearyk[.,3]
 
-	ytilde = y :- k * b_k :- l * b_l :- m * b_m
+	ytilde = y :- k * b_k :- l * b_l
+	if( numm > 0 ){
+		ytilde = y :- k * b_k :- l * b_l :- m * b_m
+	}
 	xtilde = x :- a_x0 :- k * a_xk
 	ytilde_tplus1 = ytilde
 	xtilde_tplus1 = xtilde
@@ -197,7 +249,10 @@ void GMMm(para, NT, numlmumm, yearlist, yearyk, l, m, x, z, moments){
 	y    = yearyk[.,2]
 	k    = yearyk[.,3]
 
-	ytilde = y :- k * b_k :- l * b_l :- m * b_m
+	ytilde = y :- k * b_k :- l * b_l
+	if( numm > 0 ){
+		ytilde = y :- k * b_k :- l * b_l :- m * b_m
+	}
 	xtilde = x :- a_x0 :- k * a_xk
 	ytilde_tplus1 = ytilde
 	xtilde_tplus1 = xtilde
@@ -249,8 +304,14 @@ void estimation( string scalar depvar,  string scalar indepvar,
 				 string scalar m4var,	real scalar m4in,
 				 string scalar m5var,	real scalar m5in,
 				 real scalar init_k,	real scalar init_l, real scalar init_m,
+				 real scalar onestep,
+				 real scalar dfp,		real scalar bfgs,
 				 string scalar touse,   string scalar bname,   
-				 string scalar Vname,   string scalar nname) 
+				 string scalar Vname,   string scalar brname,
+				 string scalar Vrname,	string scalar ntname,
+				 string scalar nname,	string scalar tname,	
+				 string scalar mintname, string scalar maxtname,
+				 string scalar oname) 
 {
 	printf("{hline 78}\n")
 	printf("Executing:  Hu, Y., Huang, G., & Sasaki, Y. (2020): Estimating Production     \n")
@@ -380,7 +441,7 @@ void estimation( string scalar depvar,  string scalar indepvar,
 	// 1st Step GMM Estimation
 	printf("{hline 32}\n    GMM: 1st Step Estimation\n{hline 32}\n")
 	W = diag(J(cols(z)*2,1,1))
-	
+
 	a_x0 = J(1,1,0.0)
 	a_xk = J(1,1,0.0)
 	a_xomega = J(1,1,0)
@@ -394,6 +455,12 @@ void estimation( string scalar depvar,  string scalar indepvar,
 	optimize_init_which(S,"min")
 	optimize_init_evaluatortype(S, "d0")
 	optimize_init_technique(S,"nr")
+	if( dfp ){
+		optimize_init_technique(S,"dfp")
+	}
+	if( bfgs ){
+		optimize_init_technique(S,"bfgs")
+	}
 	optimize_init_singularHmethod(S,"hybrid") 
 	optimize_init_argument(S,1,(N,T))
 	optimize_init_argument(S,2,(numl,numm))
@@ -416,6 +483,12 @@ void estimation( string scalar depvar,  string scalar indepvar,
 	//variance
 	
 	////////////////////////////////////////////////////////////////////////////
+	// Estimate 1st GMM gradients
+	real matrix graidents
+	GMMg(est, (N,T), (numl,numm), yearlist, (year,y,k), l, m, x, z, gradients)
+	
+	if( !onestep ){
+	////////////////////////////////////////////////////////////////////////////
 	// 2nd Step GMM Estimation
 	printf("{hline 32}\n    GMM: 2nd Step Estimation\n{hline 32}\n")
 	W = luinv(variance)
@@ -425,6 +498,12 @@ void estimation( string scalar depvar,  string scalar indepvar,
 	optimize_init_which(S,"min")
 	optimize_init_evaluatortype(S, "d0")
 	optimize_init_technique(S,"nr")
+	if( dfp ){
+		optimize_init_technique(S,"dfp")
+	}
+	if( bfgs ){
+		optimize_init_technique(S,"bfgs")
+	}
 	optimize_init_singularHmethod(S,"hybrid") 
 	optimize_init_argument(S,1,(N,T))
 	optimize_init_argument(S,2,(numl,numm))
@@ -447,21 +526,29 @@ void estimation( string scalar depvar,  string scalar indepvar,
 	
 	////////////////////////////////////////////////////////////////////////////
 	// Estimate 2nd GMM gradients
-	real matrix graidents
 	GMMg(est, (N,T), (numl,numm), yearlist, (year,y,k), l, m, x, z, gradients)
 	
 	//gradients' * luinv(variance) * gradients / (N*(T-1))
-	
+	} // END IF !onestep //
+		
 	b = est[1,4..(length(est)-1)]'
 	V = ( gradients' * luinv(variance) * gradients / (N*(T-1)) )[4..(length(est)-1),4..(length(est)-1)]
 
     st_matrix(bname, b')
     st_matrix(Vname, V)
+    st_numscalar(ntname, N*T)
     st_numscalar(nname, N)
+    st_numscalar(tname, T)
+    st_numscalar(mintname, min(year))
+    st_numscalar(maxtname, max(year))
+	st_numscalar(oname, optimize_result_value(S))
 	
 	RTS = J(1,length(b),1) * b
 	V_RTS = J(1,length(b),1) * V * J(1,length(b),1)'
-	SE_RTS = V_RTS^0.5
+	SE_RTS = (V_RTS)^0.5
+	
+    st_matrix(brname, RTS)
+    st_matrix(Vrname, V_RTS)
 	
 	printf("\n")
 	printf("{hline 78}\n")

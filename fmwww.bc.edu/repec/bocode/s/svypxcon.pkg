@@ -1,6 +1,6 @@
 d 'SVYPXCON': module to calculate predicted means or proportions for a continuous X variable for survey data
 d
-d svypxcon calculates and prints predicted values and 95%
+d  svypxcon calculates and prints predicted values and 95%
 d confidence intervals	 for linear or logistic model estimates for
 d a continuous X variable corrected for   the survey sampling
 d scheme (weights), adjusted for covariates.  Default prints  

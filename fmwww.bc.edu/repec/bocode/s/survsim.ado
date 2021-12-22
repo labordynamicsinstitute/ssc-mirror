@@ -1,7 +1,13 @@
-*! version 4.0.3 25may2020 MJC
+*! version 4.0.6 13oct2021 MJC
 
 /*
 History
+13oct2021 version 4.0.6 - bug fix with varnames in chazard() or logchazard() not parsed correctly with survsim user; now fixed
+						- error check for negative hazard() added
+						- Now tidies up after itself if it errors out
+02sep2021 version 4.0.5 - bug fix; mixture + tde() would error out, now fixed
+24aug2020 version 4.0.4 - re-syncing with predictms for merlin model simulation
+                        - bug fix in missing value warning text; now fixed
 25may2020 version 4.0.3 - efficiency of _msm improved
 						- bug fix: Stata variables in user-defined hazard functions not parsed correctly; now fixed
 30mar2020 version 4.0.2 - bug fix; missing value issue when t = 0 in chq function, now fixed
@@ -69,6 +75,7 @@ program define survsim
 							Gammas(passthru)			///	
 							COVariates(passthru)		///	-baseline covariates, e.g, (sex 0.5 race -0.4)-
 							TDE(passthru)				///	-time dependent effects-
+							MARGinal					///
 														//
 
 	local commonopts	 								///
@@ -142,13 +149,21 @@ program define survsim
 		syntax , [`opts1' *]
 		
 		if "`model'"!="" {
-			survsim_model `newvars', 	`model' 		///
-										`maxtopt'		//
-										
-			RCREPORT 	_survsim_rc
-			MISSREPORT 	`stime'
-			GENEVENT 	`stime' `died' `maxtime'
-			exit
+			capture survsim_model `newvars', 	`model' 		///
+												`maxtopt'		//
+			local rc = c(rc)
+			if `rc' {
+				cap drop _survsim_rc
+				cap drop `stime'
+				cap drop `died'
+                                exit `rc'
+			}
+			else {
+				RCREPORT 	_survsim_rc
+				MISSREPORT 	`stime'
+				GENEVENT 	`stime' `died' `maxtime'
+                                exit
+			}
 		}	
 	
 		local 0 , `options'
@@ -161,22 +176,31 @@ program define survsim
 		local useropt "`loghazard'`hazard'`logchazard'`chazard'`mixture'"
 		
 		if "`useropt'"!="" {
-			survsim_user `newvars', 	`useropt' 		///
-										`nodes'			///
-										`maxtopt' 		///
-										`ltopt'			///
-										`covariates'	///
-										`tde'			///
-										`tdefunction'	///
-										`distribution'	///	-for mixture-
-										`lambdas'		///
-										`gammas'		///
-										`pmix'			//
-
-			RCREPORT 	_survsim_rc
-			MISSREPORT 	`stime'
-			GENEVENT 	`stime' `died' `maxtime'
-			exit
+			capture survsim_user `newvars', 	`useropt' 		///
+												`nodes'			///
+												`maxtopt' 		///
+												`ltopt'			///
+												`covariates'	///
+												`tde'			///
+												`tdefunction'	///
+												`distribution'	///	-for mixture-
+												`lambdas'		///
+												`gammas'		///
+												`pmix'			///
+												`marginal'		//
+            local rc = c(rc)
+			if `rc' {
+				cap drop _survsim_rc
+				cap drop `stime'
+				cap drop `died'
+                                exit `rc'
+			}
+			else {
+				RCREPORT 	_survsim_rc
+				MISSREPORT 	`stime'
+				GENEVENT 	`stime' `died' `maxtime'
+                                exit
+			}
 		}
 		
 		local 0 , `options'
@@ -402,6 +426,6 @@ program MISSREPORT
 	args time
 	qui count if `time'==.
 	if `r(N)'>0 {
-		di as warning "`r(N)' missing values generated in simulated survival times"		
+		di in yellow "`r(N)' missing values generated in simulated survival times"		
 	}
 end

@@ -1,6 +1,6 @@
 d 'SKILMACK': module to calculate Skillings-Mack statistic
 d
-d skilmack reports the Skillings-Mack statistic which is an
+d  skilmack reports the Skillings-Mack statistic which is an
 d extension of	the Friedman test when there is missing data. It
 d can also be useful when there  are many ties or equal ranks (in
 d which case the Friedman test is conservative).  And it is

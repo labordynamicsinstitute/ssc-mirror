@@ -1,6 +1,6 @@
 d 'SIGCOEF': module to count statistically significant coefficients across models
 d
-d This is a Stata program to count the number of statistically 
+d  This is a Stata program to count the number of statistically 
 d significant	    coefficients for the same variables (using same
 d names) across models using z	     as test statistics (usually
 d using maximum likelihood estimation). This program	   is

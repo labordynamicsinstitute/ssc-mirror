@@ -1,9 +1,9 @@
 d 'SENSATT': module to compute sensitivity for matching estimators
 d
-d sensatt  implements the sensitivity analysis for propensity-score
-d  matching estimators proposed by Ichino, Mealli and Nannicini
-d (2005).  The proposed analysis builds on Rosenbaum and Rubin
-d (1983) and Rosenbaum	(1987), and simulates a potential
+d  sensatt  implements the sensitivity analysis for
+d propensity-score  matching estimators proposed by Ichino, Mealli
+d and Nannicini (2005).  The proposed analysis builds on Rosenbaum
+d and Rubin (1983) and Rosenbaum  (1987), and simulates a potential
 d confounder in order to assess the robustness	of the estimated
 d treatment effect with respect to specific deviations from the 
 d Conditional Independence Assumption (CIA). The program "sensatt"

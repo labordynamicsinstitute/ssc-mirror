@@ -1,0 +1,26 @@
+d 'WHICHLIST': module to input list of package file items and output lists of present and absent items
+d
+d      whichlist inputs a list of one or more items that might be
+d included in	   Stata packages and/or input to the which
+d command, and (optionally) a	   list of Stata package names that
+d might belong to packages including the      input items.  It
+d outputs lists of present and absent items and      (optionally)
+d lists of complete and incomplete Stata packages.  It is     
+d useful for finding out which of a list of Stata packages the user
+d has	   installed. 
+d
+d KW: SSC
+d KW: packages
+d KW: adopath
+d KW: plus
+d KW: personal
+d
+d Requires: Stata version 10 
+d
+d Distribution-Date: 20211209
+d
+d Author: Roger Newson,  King's College London
+d Support: email roger.newson@@kcl.ac.uk
+d
+f whichlist.sthlp
+f whichlist.ado

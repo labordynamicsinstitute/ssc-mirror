@@ -47,6 +47,7 @@ p geodist2 module to calculate straight line distance between two coordinates
 p geoinpoly module to match geographic locations to shapefile polygons
 p geonear module to find nearest neighbors using geodetic distances
 p georoute module to calculate travel distance and travel time between two addresses or two geographical points
+p getcensus module to load American Community Survey data from the U.S. Census Bureau API into Stata
 p getdata module to import SDMX data from several providers
 p getfilename2 program for handling filename specifications
 p getmstatistic module to Quantify Systematic Heterogeneity in Meta-Analysis

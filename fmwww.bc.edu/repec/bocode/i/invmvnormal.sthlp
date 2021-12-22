@@ -125,11 +125,11 @@ It defaults to 1000.
 {p}
 
 Dr Michael J Grayling
-Institute of Health & Society, Newcastle University, UK
+Population Health Sciences Institute, Newcastle University, UK
 Email: {browse "michael.grayling@newcastle.ac.uk":michael.grayling@newcastle.ac.uk}
 
-Dr Adrian P Mander
-MRC Biostatistics Unit, University of Cambridge, Cambridge, UK
+Prof Adrian P Mander
+Centre for Trials Research, Cardiff University, Cardiff, UK
 
 {title:See also}
 

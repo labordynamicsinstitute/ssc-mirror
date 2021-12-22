@@ -1,0 +1,32 @@
+d 'RQR': module to estimate the residualized quantile regression model
+d
+d   The rqr package includes the rqr and rqrplot commands. The rqr
+d command implements the residualized quantile regression model,
+d which estimates unconditional quantile treatment effects. It is a
+d flexible and fast approach that can easily handle all types of
+d observed control variables, including high-dimensional fixed
+d effects. The rqrplot command effortless plots quantile regression
+d coefficients and their confidence intervals. 
+d
+d KW: quantile regressions
+d KW: residualized quantile regression (RQR) model
+d KW: quantile treatment effects
+d KW: fixed effects
+d
+d Requires: Stata version 12 and qrprocess, reghdfe from SSC (q.v.)
+d
+d Distribution-Date: 20211005
+d
+d Author: Nicolai T. Borgen ,  University of Oslo
+d Support: email    n.t.borgen@@isp.uio.no
+d
+d Author:    Andreas Haupt,  Karlsruhe Institute of Technology
+d Support: email  andreas.haupt@@kit.edu
+d
+d Author: Øyvind Wiborg , University of Oslo
+d Support: email o.n.wiborg@@sosge.uio.no
+d
+f rqr.ado
+f rqr.sthlp
+f rqrplot.ado
+f rqrplot.sthlp

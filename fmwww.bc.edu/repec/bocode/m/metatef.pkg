@@ -1,0 +1,33 @@
+d 'METATEF': module to perform IPD meta analysis of an interaction between treatment and a continuous covariate
+d
+d     metatef models an interaction between a response variable
+d (yvar) and a fractional polynomial (FP) function of a continuous
+d covariate (xvar), optionally adjusting for other    variable(s)
+d specified in adjust(). Estimated "treatment effect functions" are
+d averaged across the studies specified by by().    metatef
+d assembles a weighted mean curve and pointwise confidence interval
+d based on a treatment x covariate interaction estimated in several
+d studies. The variables used to    adjust for confounding in
+d multivariable models may differ between the studies, in which
+d case adjust() may consist of an 'index' (linear predictor)
+d representing the    estimated confounder adjustment from each
+d study. It is strongly recommended that the index be standardised
+d to have mean zero.	The user must specify, in fixpowers(), the
+d FP powers to be used to model the main effect of xvar and its
+d interaction with trtvar.  To specify a linear function, enter   
+d fixpowers(1).  See Sauerbrei & Royston (2011) for a description
+d of a closely related problem. 
+d
+d KW: meta-analysis
+d KW: fractional polynomials
+d KW: treatment effect
+d
+d Requires: Stata version 11
+d
+d Distribution-Date: 20170922
+d
+d Author: Patrick Royston, University College London
+d Support: email  j.royston@@ucl.ac.uk
+d
+f metatef.ado
+f metatef.sthlp

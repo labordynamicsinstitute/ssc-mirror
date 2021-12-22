@@ -1,6 +1,6 @@
 {smcl}
-{* *!Version 1.15 20.06.2018}{...}
-{title:Titel}
+{* *!Version 1.2 28.09.2021}{...}
+{title:Title}
 {cmd:multif} {hline 1} Constructs multiple if-restrictions with the same value for different variables. 
 
 {title:Description}
@@ -25,7 +25,7 @@ A {stata db multif:dialog file} is provided to make the usage of this command ea
 {synopt :{opt var:id()}}	defines a different variable identifier used in the {opt cond:ition()} option. The default value is "VAR".{p_end}
 {synopt :{cmdab:add:if}()} adds another if-restriction  to the command option {p_end}
 {synopt :{cmdab:addc:on}()} connector for {opt add:if()} option {p_end}
-{synopt :{opt test}} enables an experimental test for equality of variable identifier in all restrictions with the supplied identifier {p_end}
+{synopt :{opt test}} enables a test for equality of variable identifier in all restrictions with the supplied identifier {p_end}
 {synopt :{opt disp:lay}} displays the resulting restriction(s).{p_end}
 
 {title:Options}
@@ -57,7 +57,7 @@ A {stata db multif:dialog file} is provided to make the usage of this command ea
 {cmdab:addc:on}() connector for {opt add:if()} option.
 
 {phang} 
-{opt test} enables an experimental test for equality of variable identifier in all restrictions with the supplied identifier.
+{opt test} enables a test for equality of variable identifier in all restrictions with the supplied identifier. 
 
 {phang} 
 {opt disp:lay} displays the resulting restriction(s).
@@ -89,7 +89,8 @@ Sven-Kristjan Bormann
 {title:Bug Reporting}
 {psee}
 Please submit bugs, comments and suggestions via email to:	{browse "mailto:sven-kristjan@gmx.de":sven-kristjan@gmx.de}{p_end}
-{psee}Further Stata programs and development versions can be found under {browse "https://github.com/skbormann/stata-tools":https://github.com/skbormann/stata-tools }{p_end}
+{psee}
+Further Stata programs and development versions can be found under {browse "https://github.com/skbormann/stata-tools":https://github.com/skbormann/stata-tools }{p_end}
 
 {title:Known Bugs}
 The variable ID must be set correctly in all conditions, otherwise {cmd:multif} returns silently a condition which cannot be used further!

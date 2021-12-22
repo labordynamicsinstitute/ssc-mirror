@@ -1,7 +1,7 @@
 d 'SDLIM': module to rescale variables measured with a limited rating scale
 d
-d sdlim rescales the standard deviation of a variable such that the
-d result is the proportion of the raw standard deviation at the
+d  sdlim rescales the standard deviation of a variable such that
+d the result is the proportion of the raw standard deviation at the
 d maximum standard deviation for a given mean. 
 d
 d KW: data management

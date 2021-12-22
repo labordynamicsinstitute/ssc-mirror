@@ -39,12 +39,12 @@ f ../d/distances.do
 f ../d/dynhamming.ado
 f ../d/dynhamming.sthlp
 f ../e/elzspelladd.c
-f ../e/elzspelladd.linux.plugin
-f ../e/elzspelladd.linux64.plugin
-f ../e/elzspelladd.mac.plugin
-f ../e/elzspelladd.plugin
-f ../e/elzspelladd.w32.plugin
-f ../e/elzspelladd.w64.plugin
+g LINUX ../e/elzspelladd.linux.plugin elzspelladd.plugin
+g LINUX64 ../e/elzspelladd.linux64.plugin elzspelladd.plugin
+g MACINTEL64 ../e/elzspelladd.mac.plugin elzspelladd.plugin
+g WIN ../e/elzspelladd.w32.plugin elzspelladd.plugin
+g WIN64 ../e/elzspelladd.w64.plugin elzspelladd.plugin
+h ../e/elzspelladd.plugin
 f ../e/entropy.ado
 f ../e/entropy.sthlp
 f ../h/hamming.ado
@@ -61,18 +61,12 @@ f ../n/nspells.sthlp
 f ../o/oma.ado
 f ../o/oma.sthlp
 f ../o/omamatv3.c
-g WIN   ../o/omamatv3.w32.plugin omamatv3.plugin
-g WIN64A  ../o/omamatv3.w64.plugin omamatv3.plugin
-g LINUX   ../o/omamatv3.linux.plugin omamatv3.plugin
-g LINUX64   ../o/omamatv3.linux64.plugin omamatv3.plugin
-g MACINTEL64   ../o/omamatv3.mac.plugin omamatv3.plugin
-h omamatv3.plugin
-g WIN  ../e/elzspelladd.w32.plugin elzspelladd.plugi
-g WIN64A ../e/elzspelladd.w64.plugin elzspelladd.plugi
-g LINUX  ../e/elzspelladd.linux.plugin elzspelladd.plugi
-g LINUX64  ../e/elzspelladd.linux64.plugin elzspelladd.plugi
-g MACINTEL64  ../e/elzspelladd.mac.plugin elzspelladd.plugi
-h elzspelladd.plugin
+g LINUX ../o/omamatv3.linux.plugin omamatv3.plugin
+g LINUX64 ../o/omamatv3.linux64.plugin omamatv3.plugin
+g MACINTEL64 ../o/omamatv3.mac.plugin omamatv3.plugin
+g WIN ../o/omamatv3.w32.plugin omamatv3.plugin
+g WIN64A ../o/omamatv3.w64.plugin omamatv3.plugin
+h ../o/omamatv3.plugin
 f ../o/omav.ado
 f ../o/omav.sthlp
 f ../p/permtab.ado

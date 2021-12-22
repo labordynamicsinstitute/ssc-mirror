@@ -1,9 +1,8 @@
 ################################################################################
-#! "r_nearestneighbor.py": Nearest neighbor regression using Python Scikit-learn, and called by
-#! the Stata command "r_nearestneighbor.ado" 
+#! "r_nearestneighbor.py": Nearest neighbor regression using Python Scikit-learn 
 #! Author: Giovanni Cerulli
-#! Version: 3
-#! Date: 23 July 2020
+#! Version: 4
+#! Date: 09 November 2021
 ################################################################################
 
 # IMPORT NEEDED PACKAGES
@@ -49,11 +48,11 @@ weight_options = ['uniform', 'distance']
 param_grid = dict(n_neighbors=k_range, weights=weight_options)
 print(param_grid)
 
+# READ THE NUMBER OF CV-FOLDS "n_folds" FROM STATA
+n_folds=int(Macro.getLocal("n_folds"))
+
 # INSTANTIATE THE GRID
-# BUILD A "GRID SEARCH CLASSIFIER"
-grid = GridSearchCV(model,param_grid,cv=10,
-                    scoring='explained_variance',
-					return_train_score=True)
+grid = GridSearchCV(model, param_grid, cv=n_folds, scoring='explained_variance', return_train_score=True)
 
 # FIT THE GRID
 grid.fit(X, y)
@@ -114,7 +113,7 @@ Data.store(D, None, y_hat)
 ################################################################################
 
 # SET THE TRAIN/TEST DATASET AND THE NEW-INSTANCES-DATASET
-D=Macro.getLocal("out_sample") 
+D=Macro.getLocal("out_sample_x") 
 D=D+".dta"
 
 # LOAD A STATA DATASET LOCATED INTO THE DIRECTORY AS PANDAS DATAFRAME

@@ -64,7 +64,7 @@ Access additional post-estimation statistics via {cmd:estat bootstrap}.{p_end}
 {synopt :{opt k:ernel()}}Choose alternative kernel functions; default is the epanechnikov kernel. 
 Other options: {it:uniform}, {it:triangle}, {it:biweight}, {it:triweight}, {it:cosine}, and {it:gaussian}.{p_end}
 
-{synopt :{opt band:width()}}Bandwidth of kernel; default is 0.05. If multiple (comma separated) values are specified, estimates for each bandwidth are reported. 
+{synopt :{opt band:width()}}Bandwidth of kernel; default is rule-of-thumb. If multiple (comma separated) values are specified, estimates for each bandwidth are reported. 
 Sub-option: together with {cmd:varcoef}, specify the bandwidth for a varying coefficients model.{p_end}
 
 {synopt :{opt r:anks(integer)}}Use (1/{it:integer},...,1 - 1/{it:integer}) evenly spaced quantiles for 

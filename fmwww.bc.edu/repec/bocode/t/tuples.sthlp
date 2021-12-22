@@ -1,5 +1,5 @@
 {smcl}
-{* 5may2020}{...}
+{* 9aug2021}{...}
 {cmd:help tuples}
 {hline}
 
@@ -48,23 +48,11 @@ to specified conditions
 {p_end}
 
 {syntab:Method}
-{synopt:{opt ncr}}produce tuples using a variation of algorithm AS 88 
-(Gentleman 1975)
-{p_end}
-{synopt:{opt cvp}}produce tuples using a method based on Mata
-{help [M-5] cvpermute():permutation} function; seldom used
-{p_end}
-{synopt:{opt kronecker}}produce tuples using a method based on 
-{help [M-2] op_kronecker:Kronecker} products; seldom used
-{p_end}
-{synopt:{opt naive}}produce tuples using a "naive" method; seldom 
-used
-{p_end}
 {synopt:{opt nopy:thon}}do not use {help python:Python}; seldom used
 {p_end}
 {synopt:{opt nom:ata}}do not use {help mata:Mata}; seldom used
 {p_end}
-{synopt:{opt nos:ort}}do not sort tuples; seldom used
+{synopt:{opt nos:ort}}do sort tuples; seldom used
 {p_end}
 {synoptline}
 {p2colreset}{...}
@@ -77,10 +65,9 @@ used
 a list of the items defining a tuple selected from a given list. 
 
 {pstd}
-By default the set of created macros is complete, other than the tuple 
-containing no selections. By default the given list is tried as a variable 
-list, but if it is not a variable list any other kind of list is acceptable,
-except that no other kind of expansion takes place.
+By default the given list is tried as a variable list, but if it is not a 
+variable list any other kind of list is acceptable, except that no other 
+kind of expansion takes place. 
 
 {pstd}
 More details are discussed in the {help tuples##remarks:Remarks} section.
@@ -111,88 +98,60 @@ list.
 in a tuple. Default {it:#} is {cmd:1}. 
 
 {phang}
-{cmd:conditionals()} specifies conditional statements to eliminate 
-possible tuples according to the rule(s) specified. 
+{cmd:conditionals()} specifies conditional statements to eliminate possible 
+tuples according to the rule(s) specified. 
 
 {p 8 8 2}
-{cmd:conditionals()} 
-accepts the logicals {cmd:&} for intersections or "and" statements, 
-{cmd:|} for unions or "or" statements, {cmd:()} for binding statements 
-and giving statements priority, and {cmd:!} for complements or "not" 
-statements.  
+{cmd:conditionals()} accepts the {help operator:logical operators} {cmd:&} 
+for intersections or "and" statements, {cmd:|} for unions or "or" statements, 
+{cmd:()} for binding statements and giving statements priority, and {cmd:!} for complements or "not" statements.  
 
 {p 8 8 2}
-Other than the foregoing logicals, {cmd:conditionals()} only
-accepts positional arguments.  That is, to refer to the first element of
-the list, use {cmd:1}; to refer to the second element, use {cmd:2}; and so 
-forth.  Inapplicable positional arguments (e.g., referring to {cmd:4} in a 
-list of size 3) will produce an error.  
+Other than the foregoing logical operators, {cmd:conditionals()} only accepts 
+positional arguments. That is, to refer to the first element of the list, use 
+{cmd:1}; to refer to the second element, use {cmd:2}; and so forth. Inapplicable 
+positional arguments (e.g., referring to {cmd:4} in a list of size 3) will 
+produce an error.  
 
 {p 8 8 2}
-Spaces are used to separate conditional statements with
-{cmd:conditionals()}.  A single statement must, then, contain no spaces.  
+Spaces are used to separate conditional statements with {cmd:conditionals()}. A 
+single statement must, then, contain no spaces.
 
 {p 8 8 2}
-For an example, see {help tuples##conditionals:Using conditionals()}.
+For a worked example, see: {help tuples##conditionals:Using conditionals()}.
 
 {p 8 8 2}
-{cmd:conditionals()} may not be combined with {opt naive} and is not 
-allowed with Stata based {help tuples##methods:methods to produce tuples}.
+{cmd:conditionals()} is not allowed with Stata based 
+{help tuples##methods:methods to produce tuples}.
 
 {dlgtab:Reporting}
 
 {phang}
 {cmd:display} specifies that tuples should be displayed.
 
-{dlgtab:Method}
-
-{phang}
-{opt ncr} produces tuples using a variation of algorithm AS 88 
-(Gentleman, 1975). {opt ncr} may not be combined with {opt nomata}, 
-{opt naive}, {opt cvp}, or {opt kronecker}. See
-{help tuples##methods:Methods to produce tuples}.
-
-{phang}
-{opt cvp} produces tuples using a method based on permutations (see 
-{help [M-5] cvpermute():cvpermute()}). {cmd:cvp} may not be combined 
-with {opt nomata}, {opt naive}, {opt kronecker}, or {opt ncr}. See 
-{help tuples##methods:Methods to produce tuples}.
-
-{phang}
-{opt kronecker} produces tuples using a method based on staggered 
-{help [M-2] op_kronecker:Kronecker} products. {cmd:kronecker} may not be 
-combined with {opt nomata}, {opt naive}, {opt cvp}, or {opt ncr}. See
-{help tuples##methods:Methods to produce tuples}.
-
-{phang}
-{opt naive} produces tuples using a "naive" method, selecting one 
-tuple at a time. {opt naive} requires that {opt nosort} is also 
-specified. {opt naive} may not be combined with {opt conditionals()}, 
-{opt nomata}, {opt cvp}, {opt kronecker}, or {opt ncr}. {opt naive} 
-is seldom used. 
+{dlgtab:Method} 
 
 {phang}
 {opt nopython} does not call Python to produce the tuples. This option 
-is implied for Stata versions prior to version 16 (but greater than 
-version 9.2) and for users without a {help python:python script}-able 
-version of Python on their machine. 
+is implied for Stata versions prior to version 16 or if Python is not 
+available. {cmd:nopython} is seldom used.
 
 {phang}
 {opt nomata} produces tuples outside of the {help mata:Mata} 
 environment. This option is implied for Stata versions prior to 
-version 10 and for Stata versions greater or equal to version 16 
-(with a {help python:python script}-able version of Python). When 
-combined with {opt nopython}, {opt nomata} is typically slow. {opt nomata} 
-may not be combined with {opt conditionals()}, {opt naive}, {opt kronecker}, 
-or {opt cvp}, and it is seldom used. 
+version 10 or for Stata versions greater or equal to version 16 
+with {help python:Python} installed. If combined with {opt nopython}, 
+{opt nomata} is generally slow; {opt nomata} is seldom used. 
 
 {phang}
-{opt nosort} is for use with the default method, {opt nopython}, and {opt naive}, and 
-it produces tuples in a different sort order. By default, {cmd:tuples} 
-first produces all singletons, then all distinct pairs, and so on. The {opt nosort} 
-option produces tuples in a different sort order but it produces them more quickly. 
-{opt nosort} may not be used with {opt ncr}, {opt cvp}, or {opt kronecker}. 
-In general, {opt nosort} is seldom used. 
+{opt nosort} does not sort the produced tuples. By default, {cmd:tuples} 
+first produces all singletons, starting with the last item in the list, 
+then all distinct pairs, and so on. {opt nosort}, if specified with the 
+{help tuples##methods:default method}, produces tuples in a different 
+sort order. The exact sort order depends on other options; specifying 
+{opt nosort} implies that the exact sort order is irrelevant. The speed 
+gain, if any, is typically trivial, unless {opt nopython} and {opt nomata} 
+are also specified or implied. In general, {opt nosort} is seldom used.
 
 
 {marker remarks}{...}
@@ -203,42 +162,47 @@ Remarks are presented under the following headings
 
 {phang2}{help tuples##intro:Introduction}{p_end}
 {phang2}{help tuples##conditionals:Using conditionals()}{p_end}
-{phang2}{help tuples##method:Methods to produce tuples}{p_end}
+{phang2}{help tuples##methods:Methods to produce tuples}{p_end}
 
 {marker:intro}{...}
 {title:Introduction}
 
 {pstd} 
-Given a list of {it:n} items, {cmd:tuples} by default produces 2{it:n} - 1 
+Given a list of {it:n} items, {cmd:tuples} by default produces 2^{it:n} - 1 
 macros, named {cmd:tuple1} upwards, which are all possible distinct singletons 
 (each individual item); all possible distinct pairs; and so forth. Thus 
 given {cmd:frog toad newt}, local macros {cmd:tuple1} through {cmd:tuple7} 
 contain 
 
-    {cmd:newt}
-    {cmd:toad} 
-    {cmd:frog} 
-    {cmd:toad newt} 
-    {cmd:frog newt} 
-    {cmd:frog toad} 
-    {cmd:frog toad newt} 
+{phang2}
+{...}{break}
+{cmd:newt}{break}
+{cmd:toad}{break} 
+{cmd:frog}{break}
+{cmd:toad newt}{break}
+{cmd:frog newt}{break}
+{cmd:frog toad}{break}
+{cmd:frog toad newt}{break}
+{p_end}
 
 {pstd}
 Here {it:n} = 3, 2^{it:n} - 1 = 7 = {cmd:comb(3,1) + comb(3,2) + comb(3,3)}; 
 see {help comb:comb()}.
 
-{pstd} 
-Note that no tuple is the empty tuple with no selections. Users wishing
-to cycle over a set of tuples including the empty tuple can exploit the
-fact that the local macro {cmd:tuple0} is undefined, and so empty
-(unless the user has previously defined it explicitly), so that
-{cmd:tuple0} can be invoked with the correct result. 
+{pstd}
+By default the set of created macros is complete, other than the tuple 
+containing no selections. Users wishing to cycle over a set of tuples 
+including the empty tuple can exploit the fact that the local macro 
+{cmd:tuple0} is undefined, and so empty (unless the user has previously 
+defined it explicitly), so that {cmd:tuple0} can be invoked with the correct 
+result. 
 
 {pstd} 
 Remember that the number of possible macros will explode with the number
 of items supplied. For example, if 10 items are supplied, there will be
-1,023 macros. The number of macros created by {cmd:tuples} is returned
-in local macro {cmd:ntuples}. 
+1,023 macros, 15 items will result in 32,767, and 20 items imply 1,048,575 
+macros. The number of macros created by {cmd:tuples} is returned in local 
+macro {cmd:ntuples}. 
 
 {pstd}
 As of January 2011, {cmd:tuples} is declared to supersede Nicholas
@@ -263,7 +227,7 @@ variables to model in an estimation command that contain products without
 first-order (linear) terms (see {help tuples##example2:Example 2} and
 {help tuples##example4:Example 4} below). To do so, consider what is to be 
 done.  Imagine 2 variables and their product: {cmd:A}, {cmd:B}, and 
-{cmd:A#B} (using {help fvvarlist:factor variable notation}).  Assume they 
+{cmd:A#B} (using {help fvvarlist:factor variable notation}). Assume they 
 are listed as
 
 {pstd}
@@ -271,7 +235,7 @@ are listed as
 
 {pstd}
 in the list offered to {cmd:tuples}. You need to make sure that {cmd:A#B} 
-never appears without both {cmd:A} and {cmd:B}.  The challenge is then 
+never appears without both {cmd:A} and {cmd:B}. The challenge is then 
 translating that language into a logical statement. 
 
 {pstd}
@@ -282,18 +246,18 @@ contains
 which can be represented as
 "{hi}{cmd:A}&{cmd:B}{txt}" 
 or {c -} because {cmd:conditionals()} requires a
-positional statement {c -} "{hi}1&2{txt}".  Thus, you are left with
+positional statement {c -} "{hi}1&2{txt}". Thus, you are left with
 "{hi}...{cmd:A#B} never appears without both 1&2{txt}".
 
 {pstd}
 In addition, 
 "{hi}...{cmd:A#B} never appears without both 1&2{txt}" 
-contains the term "{hi}both{txt}".  The "{hi}both{txt}"
+contains the term "{hi}both{txt}". The "{hi}both{txt}"
 implies that "{hi}1&2{txt}" is a unit and, therefore, should be put in
 parentheses, leading to 
 "{hi}...{cmd:A#B} never appears without (1&2){txt}".  
 Next, consider the word "{hi}without{sf}" which can be
-represented as a "{hi}and not{txt}" statement.  Including the 
+represented as a "{hi}and not{txt}" statement. Including the 
 "{hi}and not{txt}" statement,  
 "{hi}...{cmd:A#B} never appears &!(1&2)){txt}".
 
@@ -302,11 +266,11 @@ Finally, the most tricky component: you need to represent the
 fact that {cmd:A#B} and not both {cmd:A} and {cmd:B} cannot be allowed.
 Hence, the language "{hi}appears{txt}" can be translated first into a
 statement binding the positional statement for {cmd:A#B} to the existing
-logical statement, producing "{hi}...never 3&!(1&2){txt}".  The last
+logical statement, producing "{hi}...never 3&!(1&2){txt}". The last
 component is simpler, as the "{hi}never{txt}" is clearly a
 "{hi}not{txt}" statement.  Because that "{hi}never{txt}" refers to the
 notion of {cmd:A#B} appearing with {cmd:A} and {cmd:B}, the
-statement must be bound in parentheses, then negated.  Incorporating the
+statement must be bound in parentheses, then negated. Incorporating the
 last component results in "{hi}!(3&!(1&2)){txt}". Note that there are no 
 spaces in the statement.
 
@@ -318,81 +282,50 @@ require the skillful use of the "{hi}!{txt}" operator.
 {title:Methods to produce tuples}
 
 {pstd}
-As of {cmd:tuples} version 4.0, the default method for computing the tuples 
-is to call 
-{help python:Python}'s {browse "https://docs.python.org/3/library/itertools.html":itertools} 
-module with the {cmd:combinations()} method using the {cmd:Stata function interface} 
-to import the tuples as local macros. To invoke the Python-based method, the 
-user must have Stata version 16 or greater and an installation of Python usable by 
-{help python:python script}. The Python-based method tends to require the least memory 
-and tends to execute the fastest for long lists. Note that {cmd:tuples} has only been 
-tested in Python versions 3.6 through 3.9 and, if Python has not been initalized prior 
-to use of {cmd:tuples}, the default method will intitialize the Python environment 
-configured in {help python:{bf:python query}}.
+This section is technical and it is of little practical relevance. 
 
 {pstd}
-In the remainder of this section, we describe other methods to produce 
-tuples. If you are running Stata 16 and have Python installed, these methods 
-are of little interest. We recommend using the Python-based implementation 
-whenever possible.
+For Stata versions 16 or higher, {cmd:tuples} is implemented as a 
+{help python:Python} {help python:script file} in terms of the 
+{browse "https://docs.python.org/3/library/itertools.html#itertools.combinations":combinations()} 
+method from the 
+{browse "https://docs.python.org/3/library/itertools.html":itertools} 
+module. Note that {cmd:tuples} has only been tested in Python versions 3.6 
+through 3.9 and, if Python has not been initialized prior to using {cmd:tuples}, {cmd:tuples} will initialize the Python environment as configured in 
+{help python:{bf:python query}}.
 
 {pstd}
-The {cmd:tuples} default Mata-based/{opt nopython} method creates an 
-{it:n} x (2^{it:n}-1) indicator matrix to produce the tuples. This is the 
-fastest method for short lists but it also requires most memory. For long 
-ists, the default method might require more memory than your operating system 
-is willing to provide. In these cases, {cmd:tuples} will exit with an error 
-message and return code 
-{search r(3900):r(3900);} If you need to use one of 
-the Mata-based/{opt nopython} methods and have long lists or run out of 
-memory, switch to one of the other methods described below.
-
-{phang2}
-{opt ncr} requires less memory than the default {opt nopython} method and is 
-fast(er), especially for long lists and if {opt min()} and/or {opt max()} are 
-specified. The only situation in which {cmd:ncr} is slow is when 
-{opt conditionals()} is specified.
-
-{phang2}
-{opt cvp} requires less memory than the default {opt nopython} method if 
-(and only if) {opt min()} and/or {opt max()} are specified. For long lists, 
-if the fraction of tuples selected with {opt min()} and/or {opt max()} is 
-small (< 0.01), and if there are many items in a tuple, {opt cvp} tends to 
-produce tuples more quickly than the default {opt nopython} method. 
-
-{phang2}
-{opt kronecker} requires less memory than the default {opt nopython} method 
-if (and only if) {opt min()} and/or {opt max()} are specified. For long lists, 
-if the fraction of tuples selected with {opt min()} and/or {opt max()} is small 
-(< 0.01), and if there are few items in a tuple, {opt kronecker} tends to 
-produce tuples more quickly than the default {opt nopython} method.
+For Stata versions prior to version 16, or if Python is not available, 
+{cmd:tuples} is implemented in {help mata:Mata} as a variation of 
+algorithm AS 88 (Gentleman, 1975).
 
 {pstd}
-To summarize, {cmd:tuples} has several methods to produce the tuples but they 
-are slower than the default methods in many cases. We recommend the default 
-{help python:Python}-based method in all situations where Python is 
-available.  For Stata versions prior to version 16 or when Python is not 
-available, we summarize the recommended methods in the table below.
-
-{col 13}items{col 38}fraction{col 49}items{col 60}recommended
-{col 13}in {it:list}{col 22}{opt conditionals()}{col 38}of tuples{col 49}per tuple{col 60}method
-{col 13}{hline 63}
-{col 13}few{col 22}yes/no{col 38}any{col 49}any{col 60}{it:default} {opt nopython}
-{col 13}many{col 22}no{col 38}any{col 49}any{col 60}{cmd:ncr}
-{col 13}many{col 22}yes{col 38}> 0.01{col 49}any{col 60}{it:default} {opt nopython}
-{col 13}many{col 22}yes{col 38}< 0.01{col 49}many{col 60}{cmd:cvp}
-{col 13}many{col 22}yes{col 38}< 0.01{col 49}few{col 60}{cmd:kronecker}
-{col 13}{hline 63}
+For Stata versions prior to version 10, {cmd:tuples} is implemented in 
+terms of nested {help forvalues} loops in Stata. The Stata implementation 
+is generally slow.
 
 {pstd}
-When you think of few items in a list, think {it:n}<17. Use
+Earlier implementations of {cmd:tuples} used different methods to produce 
+the tuples. These methods are still available as options. The available 
+methods are
 
-{phang2}
-{cmd:. mata : rowsum(comb(}{it:n}{cmd:, (}{it:min}{cmd:..}{it:max}{cmd:)))/(2^}{it:n}{cmd:-1)}
+{p2colset 9 20 20 2}{...}
+{p2col:{opt noncr}}combined with {opt nopython} creates an 
+{it:n} x (2^{it:n}-1) indicator matrix to produce the tuples
 {p_end}
+{p2col:{opt kronecker}}implements a method based on staggered 
+{help [M-2] op_kronecker:Kronecker} products
+{p_end}
+{p2col:{opt cvp}}implements a method based on permutations; see 
+{help [M-5] cvpermute():cvpermute()}
+{p_end}
+{p2col:{opt naive}}implements the Stata based method in Mata
+{p_end}
+{p2colreset}{...}
 
 {pstd}
-to determine the fraction of tuples selected.
+These alternative methods are typically slower than the default methods and 
+sometimes require more memory; the respective options are rarely ever used.
 
 
 {title:Examples}
@@ -462,14 +395,22 @@ Extension of Example 3, with AIC and an interaction using
 {title:Acknowledgments} 
 
 {pstd}
-Sebastian Orbe reported a problem which led to a bug fix. Volodymyr 
-Vovchack suggested including the {cmd:min()} option. E-mail communication 
+Sebastian Orbe, Dejin Xie, Fred Lee, and Raymond Zhang reported problems 
+that led to bug fixes. 
+
+{pstd}
+Volodymyr Vovchack suggested including the {cmd:min()} option. 
+
+{pstd}
+E-mail communication 
 with William Buchanan and a discussion with John Mullahy on 
 {browse "https://www.statalist.org/forums/forum/general-stata-discussion/general/1526657-using-tuples-to-generate-combinations":Statalist}
-led to the addition of the {opt ncr} option; Mike Lacy pointed to 
-algorithm AS 88 (Gentleman, 1975) and shared code on which the {opt ncr} 
-implementation is based. Thanks also to Regina Chua for assistance in testing 
-{cmd:tuples} v 4.0. Dejin Xie reported two bugs. Fred Lee reproted a bug. 
+led to the implementation of the new default {opt nopython} method to produce 
+the tuples. Mike Lacy pointed to algorithm AS 88 (Gentleman, 1975) and shared 
+code on which the default {opt nopython} implementation is based. 
+
+{pstd}
+Thanks to Regina Chua for assistance in testing {cmd:tuples} version 4.0. 
 
 
 {title:References}
@@ -487,7 +428,7 @@ Joseph N. Luchman, Fors Marsh Group LLC{break}
 jluchman@forsmarshgroup.com
 
 {pstd}
-Daniel Klein, INCHER-Kassel, Universit{c a:}t Kassel{break}
+Daniel Klein, Universit{c a:}t Kassel{break}
 klein.daniel.81@gmail.com
 
 {pstd}

@@ -18,8 +18,8 @@ d Requires: Stata version 14.2 and merlin from SSC (q.v.)
 d
 d Distribution-Date: 20191217
 d
-d Author: Michael J. Crowther, University of Leicester
-d Support: email mjc76@@le.ac.uk
+d Author: Michael J. Crowther, Karolinska Institutet
+d Support: email michael.crowther@@ki.se
 d
 f stmixed.ado
 f stmixed.sthlp

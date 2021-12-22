@@ -1,6 +1,6 @@
 d 'SVYBSAMP2': module to perform re-sampling for complex survey data
 d
-d -svybsamp2- creates a new data set with _N randomly drawn
+d  -svybsamp2- creates a new data set with _N randomly drawn
 d observations	(with replacement). As with -svysamp-, the
 d procedure respects survey design,  re-sampling within different
 d combinations of strata and PSU. Therefore using the  inflation

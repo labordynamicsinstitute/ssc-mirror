@@ -1,5 +1,5 @@
-*! Date        : 24 May 2021
-*! Version     : 1.21
+*! Date        : 18 Nov 2021
+*! Version     : 1.24
 *! Authors     : Adrian Mander
 *! Email       : mandera@cardiff.ac.uk
 *!
@@ -28,8 +28,13 @@ v1.18 26Oct20 added in deletion of rows/columns in the final table (the rows was
 v1.19 28Apr21 doing an exact variable check on rowsby to stop any Stata approx varname matching
 v1.20 19May21 removing some white space in row titles.. and allowing formatting!
 v1.21 24May21 removed a bug in the cell values for the summary tables.
+v1.22 10Jun21 misspelt options were passed through to putdocx paragraph, options.. now extra checks put in
+v1.23  6Jul21 saving file problem
+v1.24 18Nov21 dealing with a cellfmt but it wasn't a bug just needed a helpfile update.
 
 NEED to remove temp temptemp and tempname into tempfile,  missing() for continuous variables
+ALLOW deletion of middle rows and columns... i.e. alter syntax
+put in user name generating table and directory of the file being run
 */
 
 /* START HELP FILE
@@ -137,7 +142,7 @@ A recent  addition to the report command is the ability to alter the formatting 
 added with a | symbol in between. The first number is for specifying the rows, the second number is for specifying the columns and the third part is the text 
 used in the format option.
 
-{stata report, rows(heatdd, mean %5.2f | heatdd, count | heatdd, sd %5.3f | tempjan, mean %5.2f | tempjan, sd  %5.2f| tempjan, count) cols(region agecat) font(,8) landscape cellfmt(2,2, font(palatino, 12, red) | 3,1, font(palatino, 12, red))}
+{stata report, rows(heatdd, mean %5.2f | heatdd, count | heatdd, sd %5.3f | tempjan, mean %5.2f | tempjan, sd  %5.2f| tempjan, count) cols(region agecat) font(,8) landscape cellfmt(6,6,font(palatino, 12, red) | 5,., shading(lime))}
 
 
 {p 0 0}
@@ -174,7 +179,7 @@ prog def report
   NOTE(string) NOFREQ REPLACE MISSING DROPFIRSTROWS(integer 0) DROPLASTROWS(integer 0) DROPFIRSTCOLS(integer 0) ///
   DROPLASTCOLS(integer 0) ROWTOTALS COLTOTALS ///
   rowsby(string)  overall OLDSTYLE CELLFMT(string) *]
-  /* I have removed the two options MEMORY(string) JOINTABLES(string) for now the code still exists */
+  /* I have removed the two options MEMORY(string) JOINTABLES(string) for now --- the code still exists */
   local docx_options "`options'"
 
   if "`oldstyle'"~="" {
@@ -253,21 +258,37 @@ prog def report
     tempname fileroot
     local file "`fileroot'.docx"
   }
+  
   /**** holds a table in memory but doesn't close the file ***/
-  if "`memory'"=="" {
+  if "`memory'"=="" { /* this used to be specified by the user */
     /* start putdocx */
     putdocx clear
     `begindoc' `landscape'
-    putdocx paragraph, `docx_options'
+    cap putdocx paragraph, `docx_options'
+    if _rc~=0 {
+      di "{err}WARNING: you have attempted to use the options `docx_options' in the command putdocx paragraph"
+      putdocx paragraph, `docx_options'
+      exit(198)
+    }
     putdocx text ("`title'"), `toptions'
   }
   else {
-    cap `begindoc' `landscape'
-    putdocx paragraph, `docx_options'
+    /* First check whether a file is already open in putdocx */
+    cap putdocx describe
+    if _rc==0 {
+       di "{err}WARNING a putdocx file is already open!"
+       exit(198)
+    }
+    `begindoc' `landscape'
+    cap putdocx paragraph, `docx_options'
+    if _rc~=0 {
+      di "{err}WARNING: you have attempted to use the options `docx_options' in the command putdocx paragraph"
+      putdocx paragraph, `docx_options'
+    }
     putdocx text ("`title'"), `toptions'
     local mtab `"memtable"'
   }
-  if "`memory'"=="" local memory "whole"
+  if "`memory'"=="" local memory "whole" /* This is the name of table whole */
 
   /* work out if you are including row and column percentages */
   if ("`row'"~="" & "`column'"~="") local xtra `"`xtra' note("Row and Column percentages")"' 
@@ -2910,6 +2931,13 @@ else if strpos(`"`rows'"',",")~=0 {
     }
     putdocx table `memory'(`=`tabvarline'-1', .),  border(bottom, thick) /* line at the end of the table*/
     /* Do the format statements here and this should overrule the other formats earlier */
+/*
+di "{err} what is the cellfmt  `cellfmt'"
+putdocx table `memory'(2,2), font(courier)
+putdocx table `memory'(2,.), border(top, thick)
+putdocx table `memory'(3,3), font(red)
+putdocx table `memory'(2,.), shading(lime)
+*/
     if "`cellfmt'"~="" {
       tokenize "`cellfmt'" , parse("|")
       while ("`1'"~="") {
@@ -2965,21 +2993,34 @@ else if strpos(`"`cols'"',",")~=0 {
       if _rc==198 di "{err}ERROR:can't delete columns possibly because some cells are merged"
     }
   }
+  
+/*****************  Handling the saving of the DOCX file ***********/
 
-  if "`memory'"=="whole" {
+  if "`memory'"=="whole" { /* this is the memory macro for the tables */
     if "`replace'"~="" {
-      putdocx save "`file'",replace
+      putdocx save "`file'", replace
     }
     else {
-      cap putdocx save "`file'",append  /* if it doesn't exist then just save it*/
-      if _rc==601 putdocx save "`file'"
+      cap putdocx save "`file'", append  /* if it doesn't exist then just save it*/
+      if _rc==601 {
+          /* the file is not found so a new one is created */
+          di "{err}Note: `file' not found so creating it."
+          putdocx save "`file'"
+      }
+      else if (_rc~=0 & _rc~=601 ) {
+        di "{err}Error with saving `file' with the append option, trying again...."
+        putdocx save "`file'", append
+      }
     }
   }
 
+/*
   cap putdocx describe tab1
   if _rc==0 putdocx describe tab1
   cap putdocx describe tab2
   if _rc==0 putdocx describe tab2
+  */
+  
 /* Some old code that I thought would join multiple tables but it doesn't solve
 the problem of cells not lining up, so I abandoned this.
   if "`jointables'"~="" {
@@ -3011,9 +3052,11 @@ the problem of cells not lining up, so I abandoned this.
  
   }
 */
+
 restore
 if "`if'"~="" use `saveif',replace
 end
+
 /*************************************************************************
  * Program to extract the vector of values from a variables value list
  *************************************************************************/

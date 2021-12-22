@@ -92,11 +92,21 @@
 * version 4.02  David Fisher  23feb2021
 // No changes to -forestplot- code; upversioned to match with -metan-
 
-*! version 4.03  David Fisher  28apr2021
+* version 4.03  David Fisher  28apr2021
 // fixed automated choice of x-axis with proportions with denominator(#)
 // now catches extreme cases where `DXmin' or `DXmax' are missing
 // only implement lalign() if 15.1+ , following user reports that fails with 15.0
 // corrected bug which failed to show diamonds correctly if off-scale
+
+* version 4.04  David Fisher  16aug2021
+// added prefix() option
+
+*! version 4.05  David Fisher  29nov2021
+// fixed bug preventing plotid() and dataid() being specified together
+// added ability to modify "border line" between the data and the column headings
+// new option "nooverlay" in two new places:
+//  - for drawing weighted boxes on top of conf. ints. (instead of default = overlaying CIs on top of boxes)
+//  - for drawing data (boxes, CIs etc.) on top of null and/or overall line(s)
 
 
 program define forestplot, sortpreserve rclass
@@ -104,21 +114,21 @@ program define forestplot, sortpreserve rclass
 	version 11.0		// needs v11 for SMCL in graphs
 
 	// June 2018 [updated Oct 2018]: check for "useopts", which recreates previous -metan- (or ipdmetan/ipdover) call
-	syntax [varlist(numeric max=5 default=none)] [if] [in] [, USEOPTs *]
+	syntax [varlist(numeric max=5 default=none)] [if] [in] [, USEOPTs * ]
 	local graphopts `"`options'"'
 
 	local usevlist `varlist'
 	local useifin  `if' `in'
-	
+
 	if `"`useopts'"'!=`""' {
 		local orig_gropts : copy local graphopts
 	
 		local fpusevlist : char _dta[FPUseVarlist]
-		local fpuseifin  : char _dta[FPUseIfIn]
-		local fpuseopts  : char _dta[FPUseOpts]
+		local fpuseifin : char _dta[FPUseIfIn]
+		local fpuseopts : char _dta[FPUseOpts]
 
 		if `"`fpusevlist'`fpuseifin'`fpuseopts'"'==`""' {
-			disp as err `"No stored {bf:forestplot} options found"'
+			nois disp as err `"No stored {bf:forestplot} options found"'
 			exit 198
 		}
 	
@@ -128,15 +138,15 @@ program define forestplot, sortpreserve rclass
 
 		nois disp as text `"Full command line as defined by {bf:useopts} is as follows:"'
 		nois disp as res `"  forestplot `usevlist' `if' `in', `fpuseopts' `graphopts'"'
-		nois disp as text `"(Note: only the rightmost of any repeated options will be honoured"'
-		nois disp as text `"  with the exception of built in Stata graph options; see {help repeated_options}"'
+		nois disp as text `"(Note: any or all of this information may be over-ridden by other options;"'
+		nois disp as text `" in general only the rightmost of any repeated options will be honoured, but see {help repeated_options})"'
 	}
 
 	// Nov 2018: note that -syntax- is *leftmost*, not rightmost; so `graphopts' must come first to overrule `fpuseopts'
 	local 0 `"`usevlist' `useifin', `graphopts' `fpuseopts'"'
 	
 	// June 2018: main parse
-	syntax [varlist(numeric max=5 default=none)] [if] [in] [, WGT(string) USE(varname numeric) ///
+	syntax [varlist(numeric max=5 default=none)] [if] [in] [, WGT(string) USE(varname numeric) PREfix(name local) ///
 		///
 		/// /* General user-specified -forestplot- options */
 		BY(varname) EFORM EFFect(string asis) LABels(varname string) DP(integer 2) KEEPAll USESTRICT /*(undocumented)*/ ///
@@ -156,12 +166,12 @@ program define forestplot, sortpreserve rclass
 
 	marksample touse, novarlist				// do this immediately, so that -syntax- can be used again
 	local graphopts `"`options'"'			// "graph region" options (also includes plotopts for now)		
-	local _USE `use'
+	if `"`use'"'!=`""' local _USE `prefix'`use'
 	
 	tokenize `varlist'
-	local _ES  `1'
-	local _LCI `2'
-	local _UCI `3'	
+	if `"`1'"'!=`""' local _ES  `prefix'`1'
+	if `"`2'"'!=`""' local _LCI `prefix'`2'
+	if `"`3'"'!=`""' local _UCI `prefix'`3'	
 	
 	
 	** N.B. Parts of this early setup may repeat work already done by calling program (e.g. -metan- )
@@ -169,10 +179,10 @@ program define forestplot, sortpreserve rclass
 
 	// Set up variable names
 	if `"`varlist'"'==`""' {		// if not specified, assume "standard" varnames			
-		local _ES  _ES
-		local _LCI _LCI
-		local _UCI _UCI
-		nois disp as text `"Note: no {it:varlist} specified; using default {it:varlist}"' as res `" {bf:_ES _LCI _UCI}"'
+		local _ES  `prefix'_ES
+		local _LCI `prefix'_LCI
+		local _UCI `prefix'_UCI
+		nois disp as text `"Note: no {it:varlist} specified; using default {it:varlist}"' as res `" {bf:`prefix'_ES `prefix'_LCI `prefix'_UCI}"'
 	}
 	else if `"`4'"'!=`""' {
 		nois disp as err `"Syntax has changed as of ipdmetan v2.0 09may2017"'
@@ -181,23 +191,23 @@ program define forestplot, sortpreserve rclass
 	}
 	foreach x in _ES _LCI _UCI {
 		confirm numeric var ``x''
-	}		
+	}
 
 	// Set up data sample to use
 	if `"`_USE'"'==`""' {
-		capture confirm numeric var _USE
+		capture confirm numeric var `prefix'_USE
 		if !_rc {
-			nois disp as text `"Note: option {bf:use(}{it:varname}{bf:)} not specified; using default {it:varname}"' as res `" {bf:_USE}"'
-			local _USE _USE
+			nois disp as text `"Note: option {bf:use(}{it:varname}{bf:)} not specified; using default {it:varname}"' as res `" {bf:`prefix'_USE}"'
+			local _USE `prefix'_USE
 		}
 		else {
 			if _rc!=7 {			// if _USE does not exist
 				tempvar _USE
 				qui gen byte `_USE' = cond(missing(`_ES', `_LCI', `_UCI'), 2, 1)
-				nois disp as text `"Note: default variable"' as res `" {bf:_USE} "' as text `"not found; all included observations will be assumed to contain study estimates"'
+				nois disp as text `"Note: default variable"' as res `" {bf:`prefix'_USE} "' as text `"not found; all included observations will be assumed to contain study estimates"'
 			}
 			else {
-				nois disp as err `"Default variable {bf:_USE} exists but is not numeric"'
+				nois disp as err `"Default variable {bf:`prefix'_USE} exists but is not numeric"'
 				exit 198
 			}
 		}
@@ -228,20 +238,20 @@ program define forestplot, sortpreserve rclass
 
 	// Weighting variable
 	if `"`wgt'"'==`""' {
-		capture confirm numeric var _WT
+		capture confirm numeric var `prefix'_WT
 		if !_rc {
-			nois disp as text `"Note: option {bf:wgt(}{it:varname}{bf:)} not specified; using default {it:varname}"' as res `" {bf:_WT}"'
-			local wgt _WT
+			nois disp as text `"Note: option {bf:wgt(}{it:varname}{bf:)} not specified; using default {it:varname}"' as res `" {bf:`prefix'_WT}"'
+			local wgt `prefix'_WT
 		}
 		else {
 			if _rc!=7 {			// if _WT does not exist
 				tempvar wgt
 				qui gen byte `wgt' = 1 if `touse' & inlist(`_USE', 1, 3, 5)		// generate as constant if doesn't exist
-				nois disp as text `"Note: default variable"' as res `" {bf:_WT} "' as text `"not found; all observations will have equal weights"'
+				nois disp as text `"Note: default variable"' as res `" {bf:`prefix'_WT} "' as text `"not found; all observations will have equal weights"'
 				local wt nowt						// don't display as text column
 			}
 			else {
-				nois disp as err `"Default variable {bf:_WT} exists but is not numeric"'
+				nois disp as err `"Default variable {bf:`prefix'_WT} exists but is not numeric"'
 				exit 198
 			}
 		}
@@ -251,18 +261,18 @@ program define forestplot, sortpreserve rclass
 	foreach x in labels by {
 		if `"``x''"'==`""' {
 			local X = upper("`x'")
-			cap confirm var _`X'
+			cap confirm var `prefix'_`X'
 			if !_rc {
-				local `x' "_`X'"			// use default varnames if they exist and option not explicitly given
+				local `x' `prefix'_`X'		// use default varnames if they exist and option not explicitly given
 				if "`x'"=="labels" {		// don't print message r.e. `by' as it is only used in a minor way by -forestplot-
 					confirm string var `labels'
-					nois disp as text `"Note: option {bf:labels(}{it:varname}{bf:)} not specified; using default {it:varname}"' as res `" {bf:_LABELS}"'
+					nois disp as text `"Note: option {bf:labels(}{it:varname}{bf:)} not specified; using default {it:varname}"' as res `" {bf:`prefix'_LABELS}"'
 				}
 			}
 			
 			// Jan 2019
 			else if "`x'"=="labels" {
-				nois disp as text `"Note: option {bf:labels(}{it:varname}{bf:)} not specified and default {it:varname} {bf:_LABELS} not found; observations will be unlabelled"'
+				nois disp as text `"Note: option {bf:labels(}{it:varname}{bf:)} not specified and default {it:varname} {bf:`prefix'_LABELS} not found; observations will be unlabelled"'
 				local names nonames
 			}
 		}
@@ -290,7 +300,7 @@ program define forestplot, sortpreserve rclass
 	
 	
 	// Sort out `dataid' and `plotid'
-	tempvar obs
+	tempvar obs touse2
 	qui gen long `obs' = _n
 
 	// local nd=1
@@ -305,11 +315,13 @@ program define forestplot, sortpreserve rclass
 
 		if `"`newwt'"'==`""' local dataid `varlist'
 		else {
+			qui gen byte `touse2' = `touse' * inlist(`_USE', 1, 2, 3, 5)
+			
 			local dataid
 			tempvar dtobs dataid					// create ordinal version of dataid
-			qui bysort `touse' `varlist' (`obs') : gen long `dtobs' = `obs'[1] if `touse'
-			qui bysort `touse' `dtobs' : gen long `dataid' = (_n==1) if `touse'
-			qui replace `dataid' = sum(`dataid')
+			qui bysort `touse2' `varlist' (`obs') : gen long `dtobs' = `obs'[1] if `touse2'
+			qui bysort `touse2' `dtobs' : gen long `dataid' = (_n==1) if `touse2'
+			qui replace `dataid' = sum(`dataid') if `touse2'
 			label variable `dataid' "dataid"
 		}
 	}
@@ -320,8 +332,8 @@ program define forestplot, sortpreserve rclass
 	}
 	else {
 		disp _n _c								// spacing, in case following on from ipdmetan (etc.)
-		cap confirm var _OVER
-		local over = cond(_rc, "", "_OVER")
+		cap confirm var `prefix'_OVER
+		local over = cond(_rc, `""', `"`prefix'_OVER"')
 		
 		local 0 `plotid'
 		syntax name(name=plname id="plotid") [, List noGRaph]
@@ -345,14 +357,17 @@ program define forestplot, sortpreserve rclass
 		}
 		
 		* Create ordinal version of plotid...
-		tempvar touse2
-		qui gen byte `touse2' = `touse' * inlist(`_USE', 1, 2, 3, 5)
+		// tempvar touse2
+		cap confirm variable `touse2'
+		if _rc {
+			qui gen byte `touse2' = `touse' * inlist(`_USE', 1, 2, 3, 5)
+		}
 		// local plvar `plname'
 
 		// ...extra tweaking if passed through from (ad)metan/ipdmetan/ipdover (i.e. _STUDY, and possibly _OVER, exists)
 		if inlist("`plname'", "_STUDY", "_n", "_LEVEL", "_OVER") {
-			cap confirm var _STUDY
-			local study = cond(_rc, "_LEVEL", "_STUDY")
+			cap confirm var `prefix'_STUDY
+			local study = cond(_rc, `"`prefix'_LEVEL"', `"`prefix'_STUDY"')
 			tempvar smiss
 			qui gen byte `smiss' = missing(`study')
 			
@@ -364,15 +379,15 @@ program define forestplot, sortpreserve rclass
 				tempvar plvar
 				qui bysort `touse2' `smiss' `by' (`over' `study') : gen long `plvar' = _n if `touse2' & !`smiss'
 			}
-			else local plvar `plname'
+			else local plvar `prefix'_OVER
 		}
 		else local plvar `plname'
 		
 		tempvar plobs plotid
 		qui bysort `touse2' `smiss' `plvar' (`obs') : gen long `plobs' = `obs'[1] if `touse2'
 		qui bysort `touse2' `smiss' `plobs' : gen long `plotid' = (_n==1) if `touse2'
-		qui replace `plotid' = sum(`plotid')
-		local np = `plotid'[_N]					// number of `plotid' levels
+		qui replace `plotid' = sum(`plotid') if `touse2'
+		local np = `plotid'[_N]					// number of `plotid' levels (N.B. `plotid' is guaranteed to be ordinal)
 		label variable `plotid' "plotid"
 		
 		* Optionally list observations contained within each plotid group
@@ -439,8 +454,8 @@ program define forestplot, sortpreserve rclass
 	
 		if `"`keepvars'"'!=`""' tempvar _EFFECT
 		else {
-			cap drop _EFFECT
-			local _EFFECT _EFFECT
+			cap drop `prefix'_EFFECT
+			local _EFFECT `prefix'_EFFECT
 		}
 		qui gen str `_EFFECT' = string(`xexp'(`_ES'), `"%`fmtx'.`dp'f"') if !missing(`_ES')
 		qui replace `_EFFECT' = `_EFFECT' + " " if !missing(`_EFFECT')
@@ -523,7 +538,7 @@ program define forestplot, sortpreserve rclass
 
 	if `"`nulloff'"'!=`""' local null nonull
 	// "nulloff" and "nonull" are permitted alternatives to null(none|off),
-	//  for compatability with previous versions of -metan-
+	//  for compatibility with previous versions of -metan-
 	
 	else if `"`null2'"'!=`""' {
 		if inlist("`null2'", "none", "off") local null nonull
@@ -1162,17 +1177,38 @@ program define forestplot, sortpreserve rclass
 		exit _rc
 	}
 
-	local olinePlot  `"`s(olineplot)'"'
+	// local scPlot        `"`s(scplot)'"'
+	// local CIPlot        `"`s(ciplot)'"'
+	local RFPlot        `"`s(rfplot)'"'
+	local PCIPlot       `"`s(pciplot)'"'
+	local diamPlot      `"`s(diamplot)'"'
+	local pointPlot     `"`s(pointplot)'"'
+	local ppointPlot    `"`s(ppointplot)'"'
+	// local olinePlot     `"`s(olineplot)'"'
 	local olineAreaPlot `"`s(olineareaplot)'"'
-	local nullCommand `"`s(nullcommand)'"'
-	local scPlot     `"`s(scplot)'"'
-	local CIPlot     `"`s(ciplot)'"'
-	local RFPlot     `"`s(rfplot)'"'
-	local PCIPlot    `"`s(pciplot)'"'
-	local diamPlot   `"`s(diamplot)'"'
-	local pointPlot  `"`s(pointplot)'"'
-	local ppointPlot `"`s(ppointplot)'"'
-	local graphopts  `"`s(options)'"'
+	// local nullCommand   `"`s(nullcommand)'"'
+	local borderCommand `"`s(bordercommand)'"'
+
+	local graphopts     `"`s(options)'"'
+	
+	// Nov 2021: see notes within BuildPlotCmds
+	if `"`s(g_overlay_ci)'"'!=`""' {
+		local firstPlot  `"`s(ciplot)'"'
+		local secondPlot `"`s(scplot)'"'
+	}
+	else {		// current default
+		local firstPlot  `"`s(scplot)'"'
+		local secondPlot `"`s(ciplot)'"'
+	}
+	if `"`s(g_olinefirst)'"'!=`""' {
+		local olinePlotFirst `"`s(olineplot)'"'
+	}
+	else local olinePlot     `"`s(olineplot)'"'
+	if `"`s(g_nlinefirst)'"'!=`""' {
+		local nullCommandFirst `"`s(nullcommand)'"'
+	}
+	else local nullCommand     `"`s(nullcommand)'"'
+	
 
 	qui count if `touse'
 	if !r(N) {
@@ -1181,7 +1217,7 @@ program define forestplot, sortpreserve rclass
 	}
 	return scalar obs = r(N)
 	
-
+	
 	
 	***************************
 	***     DRAW GRAPH      ***
@@ -1208,7 +1244,8 @@ program define forestplot, sortpreserve rclass
 			ADDHeight(real 0) /// /* from GetAspectRatio */
 			CLASSIC noDIAmonds WGT(varname numeric) NEWwt BOXscale(real 100.0) noBOX /// /* from BuildPlotCmds */
 			/// /* standard options */
-			BOXOPts(string asis) DIAMOPts(string asis) POINTOPts(string asis) CIOPts(string asis) OLINEOPts(string asis) NLINEOPts(string asis) ///
+			BOXOPts(string asis) DIAMOPts(string asis) POINTOPts(string asis) CIOPts(string asis) OLINEOPts(string asis) ///
+			NLINEOPts(string asis) HLINEOPts(string asis) ///
 			/// /* non-diamond and predictive interval options */
 			PPOINTOPts(string asis) PCIOPts(string asis) RFOPts(string asis) * ]
 		
@@ -1216,21 +1253,11 @@ program define forestplot, sortpreserve rclass
 	}
 	
 	local xtitleopt = cond(`"`xtitle'"'==`""', `"xtitle("")"', `"`xtitle'"')		// to prevent tempvar name being printed as xtitle
-	
+
 	summ `id', meanonly
-	// local DYmin = r(min) - 1
-	local DYmin = 0						// amended Apr 2020
+	// local DYmin = r(min) - 1			// amended Apr 2020
+	local DYmin = 0
 	local DYmax = r(max) + 1
-
-	
-	// Amended Apr 2020
-	summ `id' if `touse' & `_USE'==9, meanonly
-	if r(N) local borderline = r(min) - 1 - 0.25
-	else {
-		summ `id' if `touse' & `_USE'!=9, meanonly
-		local borderline = r(max) + 1 - 0.25
-	}
-
 	
 	// Re-ordered 28th June 2017 so that all twoway options are given together at the end	
 	#delimit ;
@@ -1238,15 +1265,19 @@ program define forestplot, sortpreserve rclass
 	twoway
 
 	/* Nov 2017: order was: columns, overall, weighted, diamonds */
+
+	/* Nov 2021: if requested, place overall and null lines underneath everything else */
+		`olinePlotFirst' `nullCommandFirst'
 	
 	/* Jan 2020: if applicable, OVERALL CI AREA PLOT first, so that data points remain visible */
 		`olineAreaPlot'
 	
 	/* WEIGHTED SCATTERPLOT BOXES (plus plot-specific options) */ 
 	/*  and CONFIDENCE INTERVALS (incl. "offscale" if necessary) */
-		`scPlot' `CIPlot'
+		/*`scPlot' `CIPlot'*/
+		`firstPlot' `secondPlot'
 	
-	/* OVERALL AND NULL LINES (plus plot-specific options) */ 
+	/* OVERALL AND NULL LINES (plus plot-specific options) (Nov 2021: unless placed underneath; see above) */ 
 		`olinePlot' `nullCommand'
 	
 	/* DIAMONDS (or markers+CIs if appropriate) FOR SUMMARY ESTIMATES */
@@ -1262,8 +1293,7 @@ program define forestplot, sortpreserve rclass
 		, `favopt' `xtitleopt'
 	
 	/* Y-AXIS OPTIONS */
-		yscale(range(`DYmin' `DYmax') noline) ylabel(none) ytitle("")
-			yline(`borderline', lwidth(thin) lcolor(gs12))
+		yscale(range(`DYmin' `DYmax') noline) ylabel(none) ytitle("") `borderCommand'
 	
 	/* X-AXIS OPTIONS */
 		xscale(range(`AXmin' `AXmax')) `xlabopt' `xmlabopt' `xtickopt' `xmtickopt' legend(off)
@@ -3302,8 +3332,8 @@ program define GetRows, rclass
 	}
 	return scalar rows = `rows'
 end
-		
-		
+
+
 
 *********************************************************************************
 
@@ -3313,6 +3343,9 @@ end
 // August 2018: removed "sortpreserve" (since we are adding new obs).
 // Instead, repect sort order (of `touse' `id') "manually".
 // (N.B. no further sorting takes place in main routine hereafter.)
+
+// August 2018: N.B. unusually, have to pass `touse' as an option here (rather than using marksample)
+// since we need to have the same tempname appearing in the created plot commands
 
 program define BuildPlotCmds, sclass
 
@@ -3348,10 +3381,10 @@ program define BuildPlotCmds, sclass
 	cap confirm var `dataid'
 	if _rc local nd = 1
 	else {
-		summ `dataid' if `touse', meanonly
-		local nd = r(max)	
+		qui tab `dataid' if `touse'		// Nov 2021: changed from "summ `dataid'" as may not be ordinal
+		local nd = r(r)
 		local dataidopt `"& `dataid'==`dataid'[_n-1]"'
-	}	
+	}
 		
 
 	** SETUP OFF-SCALE ARROWS -- fairly straightforward
@@ -3448,7 +3481,8 @@ program define BuildPlotCmds, sclass
 		// create new `touse', including new dummy obs
 		qui gen byte `tv0' = `touse'
 		local tousePlotID `tv0'
-					
+		
+		/*
 		// find global min & max weights, to maintain consistency across subgroups
 		if `"`newwt'"'==`""' {		// weight consistent across dataid, so just use locals
 			summ `_WT' if `touse' & inlist(`_USE', 1, 2), meanonly	
@@ -3461,12 +3495,32 @@ program define BuildPlotCmds, sclass
 			qui by `touse' `dataid' : gen double `minwt' = `_WT'[1] if `touse'
 			qui by `touse' `dataid' : gen double `maxwt' = `_WT'[_N] if `touse'
 		}
+		*/
+
+		// find global min & max weights, to maintain consistency across subgroups
+		if `"`newwt'"'==`""' {		// weight consistent across dataid, so just do this once
+			summ `_WT' if `touse' & inlist(`_USE', 1, 2), meanonly
+			local minwt = r(min)
+			local maxwt = r(max)
+		}
+		
 		local oldN = _N
 		local newN = `oldN' + 2*`nd'*`np'	// N.B. `nd' indexes `dataid'; `np' indexes `plotid'
 		qui set obs `newN'
 		forvalues i=1/`nd' {
 			forvalues j=1/`np' {
+				
+				// dataid-specific min/max weights required
+				if `"`newwt'"'!=`""' {		// weight consistent across dataid, so just use locals
+					summ `_WT' if `touse' & inlist(`_USE', 1, 2) & `dataid'==`i', meanonly	
+					local minwt = r(min)
+					local maxwt = r(max)
+				}
+				
 				local k = `oldN' + (`i'-1)*2*`np' + 2*`j'
+				if `"`dataidopt'"'!=`""' {
+					qui replace `dataid' = `i' in `=`k'-1' / `k'
+				}
 				qui replace `plotid' = `j' in `=`k'-1' / `k'
 				qui replace `_WT' = `minwt' in `=`k'-1'
 				qui replace `_WT' = `maxwt' in `k'
@@ -3505,7 +3559,6 @@ program define BuildPlotCmds, sclass
 	local defOlineOpts `"lwidth(thin) lcolor(maroon) lpattern(shortdash)"'
 	local defOCIlineOpts  `"`defOlineOpts'"'					// CI of overall effect
 	local defRFCIlineOpts `"`defOlineOpts'"'					// CI of predictive interval
-	local defNlineOpts `"lwidth(thin) lcolor(black)"'
 	
 	// ...and for "pooled" estimates
 	local defShape = cond("`interaction'"!="", "circle", "diamond")
@@ -3519,18 +3572,32 @@ program define BuildPlotCmds, sclass
 	local defPCIOpts `"lcolor("`defColor'") mcolor("`defColor'")"'						// "pooled" CI options (alternative to diamond)
 	local defRFOpts `"`defPCIOpts'"'													// prediction interval options (includes "mcolor" for arrows)
 
+	local defHlineOpts `"lwidth(thin) lcolor(gs12)"'	// horizontal upper border line
+	local defNlineOpts `"lwidth(thin) lcolor(black)"'	// null line
+	
 	
 	** Default options for graph elements that may be plotted in more than one way
 	// (plus, may as well parse some other options too, including disallowed ones)
 	local 0 `", `options'"'
 	syntax [, ///
 		/// /* standard options */
-		BOXOPts(string asis) DIAMOPts(string asis) POINTOPts(string asis) CIOPts(string asis) NLINEOPts(string asis) ///
+		BOXOPts(string asis) DIAMOPts(string asis) POINTOPts(string asis) CIOPts(string asis) ///
 		OLINEOPts(string asis) OCILINEOPts(string asis) RFCILINEOPts(string asis) ///
+		HLINEOPts(string asis) NLINEOPts(string asis) ///
 		/// /* non-diamond and prediction interval options */
 		PPOINTOPts(string asis) PCIOPts(string asis) RFOPts(string asis) * ]
 
 	local rest `"`options'"'
+	
+	* Overall and Null lines
+	// NOTE NOV 2021: parse to find "global" noOVerlay options
+	// everything else will be parsed later, with plot#opts
+	foreach plot in oline nline {
+		local 0 `", ``plot'opts'"'
+		syntax [, noOVerlay * ]
+		local g_`plot'first : copy local overlay
+		local `plot'opts `"`macval(options)'"'
+	}
 	
 	* Confidence intervals
 	// since capped lines require a different -twoway- command (-rcap- vs -rspike-)
@@ -3541,25 +3608,47 @@ program define BuildPlotCmds, sclass
 
 	// Same routine applies to study CIs, "pooled" CIs (alternative to diamond), and to prediction intervals:
 	foreach plot in ci pci rf {
+
+		// NOTE NOV 2021:
+		// Currently we have an option "overlay" here for use with rfplotopts only
+		// the default is "nooverlay" meaning that the pred. int. lines extend outwards from extremities of diamond
+		// the option "overlay" instead places a single line passing straight through and over the top of the diamond.
+		
+		// It has been brought to my attention that it may be desirable for confidence interval lines to be *obscured* by weighted boxes
+		// rather than to be seen overlaid on weighted boxes (current default -- so you can see e.g. very short CIs over large boxes)
+		// however, the default behaviour should not be changed due to backwards-compatibility
+		// solution: use *two* options:  "OVerlay" for rf;  and "noOVerlay" for ci/pci.
+		
+		// However, the new option noOVerlay behaves differently from old option OVerlay2:
+		// - not allowed within the plotid-specific loops later on (because it's currently implemented as a "global" ordering of plot elements with the -twoway- command)
+		// - similarly: it's not really *used* here; it's simply returned as-is (as an extra soption) to be picked up by the main -twoway- command.
+		
+		// "overlay" options (see "Note" above)
+		local overlay_opt = cond(`"`plot'"'==`"rf"', "OVerlay", "noOVerlay")
+		
 		local 0 `", ``plot'opts'"'
 		syntax [, LColor(passthru) MColor(passthru) LWidth(passthru) MLWidth(passthru) ///
-			RCAP OVerlay HORizontal VERTical * ]
-		
+			RCAP `overlay_opt' HORizontal VERTical * ]
+
 		// disallowed options
 		if `"`horizontal'"'!=`""' | `"`vertical'"'!=`""' {
 			nois disp as err `"suboptions {bf:horizontal} and {bf:vertical} not allowed in option {bf:`plot'opts()}"'
 			exit 198
-		}			
+		}
+		/*
 		if `"`overlay'"'!=`""' & "`plot'"!="rf" {
 			nois disp as err `"suboption {bf:overlay} not allowed in option {bf:`plot'opts()}"'
 			exit 198
 		}
+		*/
 
 		// rebuild the option list
 		if `"`lcolor'"'!=`""' & `"`mcolor'"'==`""'  local mcolor = subinstr(`"`lcolor'"', "l", "m", 1)		// for pc(b)arrow
 		if `"`lwidth'"'!=`""' & `"`mlwidth'"'==`""' local mlwidth m`lwidth'									// for pc(b)arrow
 		local `plot'opts `"`mcolor' `lcolor' `mlwidth' `lwidth' `options'"'
-		local g_overlay "`overlay'"		// "global" overlay option
+		
+		// "overlay" options (see "Note" above)
+		local g_overlay_`plot' : copy local overlay
 		
 		local uplot = upper("`plot'")
 		local `uplot'PlotType = cond("`rcap'"=="", "rspike", "rcap")
@@ -3900,7 +3989,7 @@ program define BuildPlotCmds, sclass
 						local RFPlot`p'Type = cond("`rcap'"=="", "`RFPlotType'", "rcap")
 					
 						// if overlay, use same approach as for CI/PCI
-						if trim(`"`overlay'`g_overlay'"') != `""' {
+						if trim(`"`overlay'`g_overlay_rf'"') != `""' {
 							local touse_add `"float(`_rfUCI')>=float(`CXmin') & float(`_rfLCI')<=float(`CXmax') & float(`_rfLCI')!=float(`_rfUCI')"'
 					
 							// default: both ends within scale (i.e. no arrows)
@@ -3996,7 +4085,8 @@ program define BuildPlotCmds, sclass
 		exit 198
 	}
 
-	sreturn local options `"`rest'"'	// This is now *just* the standard "twoway" options
+	local opts_rest : copy local rest
+	// sreturn local options `"`rest'"'	// This is now *just* the standard "twoway" options
 										//   i.e. the specialist "forestplot" options have been filtered out
 	
 	
@@ -4231,7 +4321,7 @@ program define BuildPlotCmds, sclass
 				local RFPlotOpts `"`defRFOpts' `rfopts'"'
 			
 				// if overlay, use same approach as for CI/PCI
-				if `"`g_overlay'"'!=`""' {
+				if `"`g_overlay_rf'"'!=`""' {
 					local touse_add `"float(`_rfUCI')>=float(`CXmin') & float(`_rfLCI')<=float(`CXmax') & float(`_rfLCI')!=float(`_rfUCI')"'
 			
 					// default: both ends within scale (i.e. no arrows)
@@ -4484,7 +4574,26 @@ program define BuildPlotCmds, sclass
 		}
 	}
 	
-	// DF: modified to use added line approach instead of pcspike (less complex & poss. more efficient as fewer vars)
+	// null line, and upper horizontal border line
+	// amended Nov 2021	
+	summ `id' if `touse' & `_USE'==9, meanonly
+	if r(N) {
+		local borderline = r(min) - 1 - 0.25
+	}
+	else {
+		summ `id' if `touse' & `_USE'!=9, meanonly
+		local borderline = r(max) + 1 - 0.25
+	}	
+	
+	// horizontal "border" line between data and headings
+	local 0 `", `hlineopts'"'
+	syntax [, HORizontal VERTical /*Connect(string)*/ * ]
+	if `"`horizontal'"'!=`""' | `"`vertical'"'!=`""' {
+		nois disp as err `"suboptions {bf:horizontal} and {bf:vertical} not allowed in option {bf:hlineopts()}"'
+		exit 198
+	}
+	local borderCommand `"yline(`borderline', `defHlineOpts' `options')"'
+
 	// null line (unless switched off)
 	if "`null'" == "" {
 		local 0 `", `nlineopts'"'
@@ -4500,33 +4609,33 @@ program define BuildPlotCmds, sclass
 		}
 		*/
 		
-		// Amended Apr 2020
-		// summ `id', meanonly
-		// local DYmin = r(min)-1
-		local DYmin = 0
-		
-		summ `id' if `_USE'==9, meanonly
-		if r(N) local borderline = r(min) - 1 - 0.25
-		else {
-			summ `id' if `_USE'!=9, meanonly
-			local borderline = r(max) + 1 - 0.25
-		}
-		
-		local nullCommand `" function y=`h0', horiz range(`DYmin' `borderline') n(2) `defNlineOpts' `options' ||"'
+		// DF: modified to use added line approach instead of pcspike (less complex & poss. more efficient as fewer vars)
+		local nullCommand `" function y=`h0', horiz range(0 `borderline') n(2) `defNlineOpts' `options' ||"'
 	}
+
+	
+	sreturn clear
+	sreturn local options `"`macval(opts_rest)'"'	// This is now *just* the standard "twoway" options
+													//   i.e. the specialist "forestplot" options have been filtered out
 	
 	// Return plot commands [unless `colsonly' **BETA**]
 	if `"`colsonly'"'==`""' {
-		sreturn local olineplot  `"`olinePlot'"'
+		sreturn local scplot        `"`scPlot'"'
+		sreturn local ciplot        `"`CIPlot'"'
+		sreturn local rfplot        `"`RFPlot'"'
+		sreturn local pciplot       `"`PCIPlot'"'
+		sreturn local diamplot      `"`diamPlot'"'
+		sreturn local pointplot     `"`pointPlot'"'
+		sreturn local ppointplot    `"`ppointPlot'"'
+		sreturn local olineplot     `"`olinePlot'"'
 		sreturn local olineareaplot `"`olineAreaPlot'"'
-		sreturn local nullcommand `"`nullCommand'"'
-		sreturn local scplot     `"`scPlot'"'
-		sreturn local ciplot     `"`CIPlot'"'
-		sreturn local rfplot     `"`RFPlot'"'
-		sreturn local pciplot    `"`PCIPlot'"'
-		sreturn local diamplot   `"`diamPlot'"'
-		sreturn local pointplot  `"`pointPlot'"'
-		sreturn local ppointplot `"`ppointPlot'"'
+		sreturn local nullcommand   `"`nullCommand'"'
+		sreturn local bordercommand `"`borderCommand'"'
+		
+		// Nov 2021: see notes above
+		sreturn local g_olinefirst  `"`g_olinefirst'"'
+		sreturn local g_nlinefirst  `"`g_nlinefirst'"'
+		sreturn local g_overlay_ci  `"`g_overlay_ci'"'
 	}
 	
 end	

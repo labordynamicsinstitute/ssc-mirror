@@ -1,5 +1,13 @@
 {smcl}
+{* *! version 1.10 10nov2021}{...}
 {* 23dec2014}{...}
+{vieweralsosee "sampsi (if installed)" "sampsi"}{...}
+{viewerjumpto "Definitions and usage" "artbindlg##def"}{...}
+{viewerjumpto "Combination of options" "artbindlg##combinationsofoptions"}{...}
+{viewerjumpto "Examples" "artbindlg##examples"}{...}
+{viewerjumpto "References" "artbindlg##refs"}{...}
+{viewerjumpto "Authors" "artbindlg##authors"}{...}
+{viewerjumpto "Also see" "artbindlg##alsosee"}{...}
 
 {title:Title}
 
@@ -7,11 +15,43 @@
 {p2col :{hi:artbindlg} {hline 2}}ART (Binary Outcomes) - Sample Size and Power dialog{p_end}
 {p2colreset}{...}
 
-
+{marker def}{...}
 {title:Definitions and usage}
 
 {p 0 4}
-{cmd:Number of groups} (default 2, max. 6) Number of arms in the clinical trial.
+{cmd:Proportions} specifies the proportions to be compared. {it: p1} is the anticipated proportion in the control
+arm and {it: p2}, {it:p3}, ... are the anticipated proportions in the
+intervention arms.
+{p_end}
+
+{p 0 4}
+{cmd:Margin (NI/SS only)} is used with two-arm trials and must be specified if a non-inferiority or
+substantial-superiority trial is being designed. The default margin is {it:# = 0},
+denoting a superiority trial.  If the event of interest is unfavourable, the null hypothesis
+for all these designs is {it:p2 – p1 >= m}, where {it:m} is the
+pre-specified margin. The alternative hypothesis is {it:p2 – p1 < m}.
+{it:m < 0} denotes a non-inferiority trial, whereas {it:m > 0} denotes
+a substantial-superiority trial. If on the other hand the event of interest is favourable, the above
+inequalities are reversed. The null hypothesis for all these designs
+is then {it:p2 – p1 <= m} and the alternative hypothesis is
+{it:p2 – p1 > m}. {it:m > 0} denotes a non-inferiority trial,
+while {it:m < 0} denotes a substantial-superiority trial.  The hypothesised margin for the 
+difference in proportions, {it:#}, must lie between -1 and 1. If {it:p1 + m} 
+(the null value of {it:p2}) lies outside (0,1), a warning is issued.
+{p_end}
+
+{p 0 4}
+{cmd:Favourable or Unfavourable} are used with two-arm trials
+to specify whether the outcome is favourable or unfavourable.
+If either option is used, {cmd:artbin} checks the assumptions;
+otherwise, it infers the favourability status.
+{p_end}
+
+{p 0 4}
+{cmd:Power or N} Power is the power of the trial, N is the total sample size 
+(all groups combined). When using Menu, the radio buttons allow you to choose 
+whether the program will display the power for given N or the N for specified 
+power.
 {p_end}
 
 {p 0 4}
@@ -23,224 +63,278 @@
 {p_end}
 
 {p 0 4}
-{cmd:Proportions} These are the target event probabilities in the arms
-			of the trial. Values must all be in the range (0,1).
-{p_end}
-
-{p 0 4}
 {cmd:Trend} Allows a linear trend test across the groups, with
 			scores 1, 2, 3,... attached to the groups. A trend
 			test may be more powerful than a general comparison
-			between the groups. See also ^dose^.
+			between the groups. See also {opt dose}.
 {p_end}
 
 {p 0 4}
-{cmd:Dose} A quantity assigned to each group which represents the
-			dose of some medication or other intervention received
-			by the subjects in that group. If you specify a dose
-			level for any group, you must specify a level for
-			every group.
+{cmd:Dose} A quantity assigned to each group which represents the 
+dose of some medication or other measure of the level of the intervention 
+received by the subjects in that group. If you specify a dose level for any 
+group, you must specify a level for every group. A {opt trend} test is assumed with 
+score proportional to the dose levels.
 {p_end}
 
 {p 0 4}
-{cmd:Alpha} (default 0.05 two-sided) Alpha is the Type I error probability.
+{cmd:Loss to follow-up} Adjusts for the total percentage of patients lost to follow-up, 
+expressed as a decimal number between 0 and 1.  For example if the total anticipated loss 
+to follow-up is 20%, then 0.2 should be inputted.
 {p_end}
 
 {p 0 4}
-{cmd:Power or N} Power is the power of the trial, N is the total
-			sample size (all groups combined). The radio buttons
-			allow you to choose whether the program will display
-			the power for given N or the N for specified power.
+{cmd:Alpha} (default 0.05 two-sided test) Alpha is the significance level 
+(an upper bound for type I error probability).
 {p_end}
 
 {p 0 4}
-{cmd:Local alternatives} Under local alternatives (the default option), the
-			program uses the covariance matrix appropriate to the
-			null hypothesis of no difference among the proportions
-			under both the null and the alternative hypotheses.
-			This approach is reasonable if the odds ratio(s)
-			under the alternative hypothesis are between about
-			0.5 and 2. For two-group studies, the sample sizes
-			tend to be somewhat larger with local alternatives
-			than with global (non-local) alternatives.
+{cmd:One-sided test} specifies that the trial will be analysed using a one-sided significance test.
+The default is a two-sided test.
 {p_end}
 
 {p 0 4}
-{cmd:Distant alternatives} Under non-local alternatives, different covariance
-			matrices are assumed according to the proportions
-			proposed under the alternative hypothesis.
+{cmd:Conditional test (Peto)} specifies that the trial will be analysed using Peto's conditional test. 
+This test conditions on the total number of events observed and is based on Peto's local approximation 
+to the log odds ratio.  This option is also likely to be a good approximation
+with other conditional tests.  The default is the usual Pearson chisquare test. 
 {p_end}
 
 {p 0 4}
-{cmd:Unconditional test} The unconditional test (the default) with local
-			alternatives (also the default, see above) is the
-			usual Pearson chisquare test. For two-group studies,
-			the sample sizes may be anywhere from slightly larger
-			to considerably larger with the unconditional test
-			than with the conditional test.
+{cmd:Continuity correction} specifies that the trial will be analysed using a continuity correction. The default is no continuity correction.
 {p_end}
 
 {p 0 4}
-{cmd:Conditional test (Peto)} The test is conditional on the total number of
-			observed events and is based on Peto's approximation
-			to the log odds ratio. It is available with local
-			alternatives only. It gives smaller sample sizes,
-			but perhaps should not be used unless you are willing
-			to analyse the results of the study using the same
-			test.
+{cmd:Score test (default)} This is the default test used.  Alternatively the {opt wald} test can be used.
 {p_end}
 
 {p 0 4}
-{cmd:Non-inferiority design} In a non-inferiority design one wishes to test whether the effects of the
-			control and experimental treatments differ by no more than a
-			a prespecified amount. In the calculations the roles of the null
-			and alternative (alternate) hypotheses are reversed. That is,
-			the sample size is calculated with signficance level equal to
-			1-power and power equal to 1-alpha. A side-effect of this reversal is that
-			the program is not able to compute the power of a non-inferiority
-			design for a given sample size. However, the power can still be determined
-			by trial and error, by repeatedly entering alpha and power until the desired
-			sample size is achieved.
+{cmd:Wald} specifies that the trial will be analysed using the Wald test.
+The default is the usual Pearson chisquare test.
 {p_end}
 
 {p 0 4}
-{cmd:One-sided alpha} (default two-sided) With one-sided alpha the significance level
-			used by the program is doubled, resulting in a larger power or
-			smaller sample size. This option should be used with caution.
+{cmd:Local alternatives} specifies that the calculation should use the variance of the difference in proportions only under the null.
+This approximation is valid when the treatment effect is small. 
+The default uses the variance of the difference in proportions both under the null and under the alternative hypothesis.  
+The local method is not recommended and is only included to allow comparisons with other software.
 {p_end}
 
+{p 0 4}
+{cmd:Do not round} prevents rounding of the calculated sample size in each arm
+up to the nearest integer. The default is to round.
+{p_end}
 
+{marker combinationsofoptions}{...}
+{title:Combinations of options not allowed/uncoded which will result in error/warning messages}
+
+{p 0 4}
+Non-inferiority/substantial-superiority design with conditional test or trend.
+{p_end}
+{p 0 4}
+Conditional test and non-local alternatives.
+{p_end}
+{p 0 4}
+Conditional test and wald test.
+{p_end}
+{p 0 4}
+Wald test and local alternatives.
+{p_end}
+{p 0 4}
+Continuity correction and the conditional case.
+{p_end}
+{p 0 4}
+Also an error message will be produced for > 2 groups if the user specifies less numbers
+in {opt aratios()} than in {opt pr()}.
+
+{marker examples}{...}
 {title:Examples}
 
 {hi:Example 1}
 
-Number of groups	2		Allocation ratios	[Default]
-Proportions		0.2 0.3
-Trend			No		Dose
-Alpha			0.05		Power or N		0.8
-Specify power		Yes		Specify sample size	No
-Local alternatives	Yes		Global (non-local) alt	No
-Unconditional test	Yes		Conditional test	No
-Non-inferiority design	No		One-sided alpha		No
+Proportions		0.2 0.3         Margin (NI/SS only)     0
+Favourable              Yes             Allocation ratios	[Default]
+Specify power		Yes             Power or N		0.8	
+Alpha			0.05            One-sided test	        No 
+Trend		        No              Dose                    Ltfu   
 
+    
+Score test (default)  Yes   Wald test No   Local alternatives No   Conditional test No  
+Continuity Correction No    Do not round No
+             
 {hi:Result}
 
-. artbin, pr(0.2 0.3) ngroups(2) aratios(1 1) distant(0) alpha(0.05) power(0.8) onesided(0) ni(0)
+. artbin, pr(.2 .3) margin(0) alpha(0.05) power(0.8) fav
 
-ART - ANALYSIS OF RESOURCES FOR TRIALS (version 1.1.0 12feb2014)
+ART - ANALYSIS OF RESOURCES FOR TRIALS (binary version 2.0 08nov2021)
 ------------------------------------------------------------------------------
-A sample size program by Abdel Babiker, Patrick Royston & Friederike Barthel,
-MRC Clinical Trials Unit at UCL, London WC2B 6NH, UK.
+A sample size program by Abdel Babiker, Patrick Royston, Friederike Barthel, 
+Ella Marley-Zagar and Ian White
+MRC Clinical Trials Unit at UCL, London WC1V 6LJ, UK.
 ------------------------------------------------------------------------------
-Type of trial                          Superiority - binary outcome
-Statistical test assumed               Unconditional comparison of 2
-                                        binomial proportions
+Type of trial                          superiority
 Number of groups                       2
-Allocation ratio                       Equal group sizes
+Favourable/unfavourable outcome        favourable
+Allocation ratio                       equal group sizes
+Statistical test assumed               unconditional comparison of 2
+                                        binomial proportions P1 and P2
+                                        using the score test
+Local or distant                       distant
+Continuity correction                  no
 
-Anticipated event probabilities        0.200, 0.300
+Anticipated event probabilities        0.200 , 0.300 
 
 Alpha                                  0.050 (two-sided)
+                                       (taken as .025 one-sided)
 Power (designed)                       0.800
 
-Total sample size (calculated)         589
-Expected total number of events        148
+Total sample size (calculated)         588
+
+Sample size per group (calculated)     294 294
+Expected total number of events        147.00   
 ------------------------------------------------------------------------------
 
-Machin & Campbell (Table 3.1, p. 24) give n = 294 per group.
+Machin et. al. 2008 (Table 3.1, p. 38) gives n = 294 per group.
+
 
 {hi:Example 2}
 
-Number of groups	4		Allocation ratios	[Default]
-Proportions		0.1 0.2 0.3 0.4
-Trend			No		Dose
-Alpha			0.05		Power or N		0.9
-Specify power		Yes		Specify sample size	No
-Local alternatives	Yes		Global (non-local) alt	No
-Unconditional test	Yes		Conditional test	No
-Non-inferiority design	No		One-sided alpha		No
+Proportions		0.1 0.2 0.3 0.4  Margin (NI/SS only)    [Default]
+Favourable              n/a              Allocation ratios	[Default]
+Specify power		Yes              Power or N		0.9	
+Alpha			0.05             One-sided test	        No 
+Trend		        No               Dose                   Ltfu    
+
+    
+Score test (default)  Yes   Wald test No   Local alternatives Yes   Conditional test No  
+Continuity Correction No    Do not round No
 
 {hi:Result}
 
-. artbin, pr(0.1 0.2 0.3 0.4) ngroups(2) distant(0) alpha(0.05) power(0.9) onesided(0) ni(0)
+. artbin, pr(.1 .2 .3 .4) local alpha(0.05) power(0.9)
 
-ART - ANALYSIS OF RESOURCES FOR TRIALS (version 1.1.0 12feb2014)
+ART - ANALYSIS OF RESOURCES FOR TRIALS (binary version 2.0 08nov2021)
 ------------------------------------------------------------------------------
-A sample size program by Abdel Babiker, Patrick Royston & Friederike Barthel,
-MRC Clinical Trials Unit at UCL, London WC2B 6NH, UK.
+A sample size program by Abdel Babiker, Patrick Royston, Friederike Barthel, 
+Ella Marley-Zagar and Ian White
+MRC Clinical Trials Unit at UCL, London WC1V 6LJ, UK.
 ------------------------------------------------------------------------------
-Type of trial                          Superiority - binary outcome
-Statistical test assumed               Unconditional comparison of 4
-                                        binomial proportions
+Type of trial                          superiority
 Number of groups                       4
-Allocation ratio                       Equal group sizes
+Favourable/unfavourable outcome        not determined
+Allocation ratio                       equal group sizes
+Statistical test assumed               unconditional comparison of 4
+                                        binomial proportions
+                                        using the score test
+Local or distant                       local
+Continuity correction                  no
 
 Anticipated event probabilities        0.100, 0.200, 0.300, 0.400
 
 Alpha                                  0.050 (two-sided)
 Power (designed)                       0.900
 
-Total sample size (calculated)         213
-Expected total number of events        54
+Total sample size (calculated)         216
+
+Sample size per group (calculated)     54 54 54 54
+Expected total number of events        54.00    
 ------------------------------------------------------------------------------
+
 
 {hi:Example 3}
 
 As Example 2 but with Trend checked (doses unspecified)
 
-. artbin, pr(0.1 0.2 0.3 0.4) ngroups(4) distant(0) alpha(0.05) power(0.9) trend onesided(0) ni(0)
+. artbin, pr(.1 .2 .3 .4) local alpha(0.05) power(0.9) trend
 
-ART - ANALYSIS OF RESOURCES FOR TRIALS (version 1.1.0 12feb2014)
+ART - ANALYSIS OF RESOURCES FOR TRIALS (binary version 2.0 08nov2021)
 ------------------------------------------------------------------------------
-A sample size program by Abdel Babiker, Patrick Royston & Friederike Barthel,
-MRC Clinical Trials Unit at UCL, London WC2B 6NH, UK.
+A sample size program by Abdel Babiker, Patrick Royston, Friederike Barthel, 
+Ella Marley-Zagar and Ian White
+MRC Clinical Trials Unit at UCL, London WC1V 6LJ, UK.
 ------------------------------------------------------------------------------
-Type of trial                          Superiority - binary outcome
-Statistical test assumed               Unconditional comparison of 4
-                                        binomial proportions
+Type of trial                          superiority
 Number of groups                       4
-Allocation ratio                       Equal group sizes
-Linear trend test: doses are           1,...,4
+Favourable/unfavourable outcome        not determined
+Allocation ratio                       equal group sizes
+Statistical test assumed               unconditional comparison of 4
+                                        binomial proportions
+                                        using the score test
+Local or distant                       local
+Continuity correction                  no
+Linear trend test: doses are           1, 2, 3, 4
 
 Anticipated event probabilities        0.100, 0.200, 0.300, 0.400
 
 Alpha                                  0.050 (two-sided)
 Power (designed)                       0.900
 
-Total sample size (calculated)         158
-Expected total number of events        40
+Total sample size (calculated)         160
+
+Sample size per group (calculated)     40 40 40 40
+Expected total number of events        40.00    
 ------------------------------------------------------------------------------
+
 
 {hi:Example 4}
 
-As Example 1 but assuming a non-inferiority design
+As Example 1 but assuming a non-inferiority design and wald test
 
-. artbin, pr(0.2 0.3) ngroups(2) distant(0) alpha(0.05) power(0.8) onesided(0) ni(1)
+Proportions		0.2 0.2         Margin (NI/SS only)     0.1
+Unfavourable            Yes             Allocation ratios	[Default]
+Specify power		Yes             Power or N		0.8	
+Alpha			0.05            One-sided test	        No 
+Trend		        No              Dose                    Ltfu   
 
-ART - ANALYSIS OF RESOURCES FOR TRIALS (version 1.1.0 12feb2014)
+    
+Score test (default)  No   Wald test Yes   Local alternatives No   Conditional test No  
+Continuity Correction No    Do not round No
+
+. artbin, pr(.2 .2) margin(.1) alpha(0.05) power(0.8) unf wald
+
+ART - ANALYSIS OF RESOURCES FOR TRIALS (binary version 2.0 08nov2021)
 ------------------------------------------------------------------------------
-A sample size program by Abdel Babiker, Patrick Royston & Friederike Barthel,
-MRC Clinical Trials Unit at UCL, London WC2B 6NH, UK.
+A sample size program by Abdel Babiker, Patrick Royston, Friederike Barthel, 
+Ella Marley-Zagar and Ian White
+MRC Clinical Trials Unit at UCL, London WC1V 6LJ, UK.
 ------------------------------------------------------------------------------
-Type of trial                          Non-inferiority - binary outcome
-Statistical test assumed               Comparison of 2 binomial proportions
-                                        P1 and P2.
-Null hypothesis H0:                    P2-P1 = 0.100
-Alternative hypothesis H1:             P2-P1 = 0.000
-Null variance estimation method        Sample estimate
+Type of trial                          non-inferiority
 Number of groups                       2
-Allocation ratio                       Equal group sizes
+Favourable/unfavourable outcome        unfavourable
+Allocation ratio                       equal group sizes
+Statistical test assumed               unconditional comparison of 2
+                                        binomial proportions P1 and P2
+                                        using the wald test
+Local or distant                       distant
+Continuity correction                  no
+Null hypothesis H0:                    H0: p2-p1>= .1
+Alternative hypothesis H1:             H1: p2-p1< .1
 
-Anticipated event probabilities        0.200, 0.200
+Anticipated event probabilities        0.200 , 0.200 
 
 Alpha                                  0.050 (two-sided)
+                                       (taken as .025 one-sided)
 Power (designed)                       0.800
 
 Total sample size (calculated)         504
-Expected total number of events        101
+
+Sample size per group (calculated)     252 252
+Expected total number of events        100.80   
 ------------------------------------------------------------------------------
 
-{title:Authors}
+
+{marker refs}{...}
+{title:References}
+
+{phang}
+Machin, D., Campbell, M.J., Tan S.B. and Tan S.H. 2008. Sample Size Tables for Clinical Studies, Third Edition. Wiley.
+
+{phang}
+Marley-Zagar E, White IR, Royston P, Barthel F M-S, Parmar M, Babiker AG. {cmd: artbin}: Extended sample size for randomised 
+trials with binary outcomes.  Stata Journal, in preparation.
+
+{marker authors}{...}
+{title:Authors and Updates}
 
 {pstd}Abdel Babiker, MRC Clinical Trials Unit at UCL{break}
 {browse "mailto:a.babiker@ucl.ac.uk":Ab Babiker}
@@ -254,11 +348,17 @@ Expected total number of events        101
 {pstd}Patrick Royston, MRC Clinical Trials Unit at UCL{break}
 {browse "mailto:j.royston@ucl.ac.uk":Patrick Royston}
 
+{pstd}Ella Marley-Zagar, MRC Clinical Trials Unit at UCL{break}
+{browse "mailto:e.marley-zagar@ucl.ac.uk":Ella Marley-Zagar}
 
+{pstd}Ian White, MRC Clinical Trials Unit at UCL{break}
+{browse "mailto:ian.white@ucl.ac.uk":Ian White}
+
+{marker alsosee}{...}
 {title:Also see}
 
 {psee}
 Manual:  {hi:[R] sampsi}
 
 {psee}
-Online:  help for {help artmenu}, {help artbin}, {help artbindlg}, {help artbindlg}
+Online:  help for {help artmenu}, {help artbin}

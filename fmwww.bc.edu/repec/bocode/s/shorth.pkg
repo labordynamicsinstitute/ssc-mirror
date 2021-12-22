@@ -1,6 +1,6 @@
 d 'SHORTH': module for descriptive statistics based on shortest halves
 d
-d shorth calculates descriptive statistics based on the shortest
+d  shorth calculates descriptive statistics based on the shortest
 d half of the distribution of each variable or group specified: 
 d the shorth, the mean of values in that shortest half; the 
 d midpoint of that half, which is the least median of squares 

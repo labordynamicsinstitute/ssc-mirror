@@ -2,12 +2,20 @@
 v0.1 07/08/2015: first release
 v0.2 07/09/2015: correct normalization for loadings
 v0.3 04/12/2017: correct weight
-
+v0.4 09/01/2021: remove error when N < T + preserve tsset
 ***************************************************************************************************/
 program define regife, sortpreserve
 	version 12.0
-	syntax [varlist(min=1 numeric fv ts)] [if] [in] [aweight fweight pweight iweight] , Factors(string) [vce(string) Absorb(string) RESiduals(string) * ]
+	syntax [varlist(min=1 numeric fv ts)] [if] [in] [aweight fweight pweight iweight] , [Factors(string) ife(string) vce(string) Absorb(string) RESiduals(string) * ]
 
+	if "`factors'" != ""{
+		di as  txt "The option factors() was renamed to ife(). In the future, please use the syntax ife(`factors') to specify the factor model."
+		local ife `factors'
+	}
+	if "`ife'" == ""{
+		di as error "option ife() required"
+		exit 111
+	}
 
 
 	local optionlist `options'
@@ -54,7 +62,7 @@ program define regife, sortpreserve
 	}
 
 	/* syntax factors */
-	if regexm("`factors'", "(.*),(.*)"){
+	if regexm("`ife'", "(.*),(.*)"){
 		local factors  = regexs(1)
 		local dimension = regexs(2)
 	}
@@ -95,10 +103,8 @@ program define regife, sortpreserve
 
 	local id `id1'
 	local time `id2'
-	
-	tsset
-	local tssettimevar = r(timevar)
-	local tssetpanelvar = r(panelvar)
+
+
 
 	if ("`weight'"!=""){
 		local wtype `weight'
@@ -167,6 +173,9 @@ program define regife, sortpreserve
 		}
 		else{
 			tempvar clusterid
+			cap tsset
+			cap local tssettimevar = r(timevar)
+			cap local tssetpanelvar = r(panelvar)
 			tsset, clear
 			if "`id'" == "`cluster'"{
 				local absorbvars = substr("`absorbvars'", "`id'", "`clusterid'")
@@ -182,12 +191,10 @@ program define regife, sortpreserve
 				bootstrap, cluster(`cluster') idcluster(`clusterid') `bootstrapoptions': ///
 				innerregife, dimension(`dimension') id(`id') time(`time') y(`y') x(`x') yname(`yname') xname(`xname') touse(`touse') wtype(`wtype') wvar(`wvar') absorb(`absorb') absorbvars(`absorbvars')  fast  bstart(`bstart')`optionlist'
 			}
-
+			if ("`tssettimevar'" != "") {
+				tsset `tssetpanelvar' `tssettimevar' 
+			}
 		}
-	}
-	
-	if ("`tssettimevar'" != "") {
-		tsset `tssetpanelvar' `tssettimevar' 
 	}
 
 end

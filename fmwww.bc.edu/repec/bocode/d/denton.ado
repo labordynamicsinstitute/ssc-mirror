@@ -1,6 +1,7 @@
 prog drop _all
-*! denton  1.2.1   sh/cfb 16jul2014
+*! denton  1.2.1   sh/cfb 26sep2021
 *! 1.2.1: correct definition of orimin
+*! 1.2.2: ensure interp variable is double
 program define denton
 	version 11.1
 	syntax varname(numeric ts) using/ [if] [in], INTerp(string) from(string) GENerate(string) [stock old] 
@@ -265,13 +266,15 @@ program define denton
 	
 * Merge the two datasets 
  
-	 capture merge 1:m `h_timevar' using `from', keepusing(`h_timevar' `interp') 	
+	 capture merge 1:m `h_timevar' using `from', keepusing(`h_timevar' `interp')
 
 * Verify merge was successful
 	if _rc {
 		di in r "Error while merging datasets."
 		exit _rc
 	}
+	
+
 	
 	qui tsset `h_timevar', `h_unit'	
 
@@ -280,6 +283,11 @@ program define denton
        qui gen `stock1' = D.`interp'
        qui replace `interp' = `stock1'
    }
+	
+// cfb Sep2021: recast `interp' to double to prevent overflows, scale
+
+	recast double `interp', force
+	replace `interp' = `interp'/1e3
 	
 	qui keep if `h_timevar' >= `h_ofd'(`l_mindate') & `h_timevar' <= `h_ofd'(`l_maxdate')
 	qui keep `varlist' `interp' `h_timevar' `touse' `l_timevar' `vlist'
@@ -292,6 +300,10 @@ program define denton
 		local iadj = abs(`r(min)') + 1
 		}
 	qui gen double `iv' = `interp' + `iadj' 
+	
+//	desc `interp'
+//	su `interp'
+	
 
 * Generate the new variable	
 	qui gen double `generate' = .
@@ -302,7 +314,7 @@ program define denton
 * generate: new variable
 * mult: equal to 4, 12, or 3 depening on data
 * skip: equal to 0 with flow data, or equal to 4, 12, 3 with stock data. 
-
+	
 * pass as numeric scalars
 	mata : interplor("`vlist'","`iv'", "`generate'", `=`mult'', `=`skip'') 
 	

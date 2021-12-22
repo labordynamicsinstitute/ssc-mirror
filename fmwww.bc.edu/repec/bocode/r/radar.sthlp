@@ -1,5 +1,5 @@
 {smcl}
-{* *! version 1.0 26 Nov 2020}{...}
+{* *! version 1.0  6 Dec 2021}{...}
 {vieweralsosee "" "--"}{...}
 {vieweralsosee "Install command2" "ssc install command2"}{...}
 {vieweralsosee "Help command2 (if installed)" "help command2"}{...}
@@ -27,11 +27,13 @@
 {synoptline}
 
 {syntab:Optional}
-{synopt:{opt lc(string)}} the string argument is a {help colorstyle}list and specifies the colors for the observations (not axes).
+{synopt:{opt lc(string asis)}} the string argument is a {help colorstyle}list and specifies the colors for the observations (not axes).
 
 {synopt:{opt lp(string)}} the string argument is a {help linepatternstyle}list and specifies the patterns for the observations (not axes).
 
 {synopt:{opt lw(string)}} the string argument is a {help linewidthstyle}list and specifies the line widths for the observations (not axes).
+
+{synopt:{opt msize(string)}} the string argument is a {help markersizestyle}list and specifies the size of the marker symbols to use for observations (not axes).
 
 {synopt:{opt ms(string)}} the string argument is a {help symbolstyle}list and specifies the marker symbols to use for observations BUT must be used in conjunction with the connected option (not axes).
 
@@ -79,13 +81,16 @@ This option is implemented using the {opt cmiss(n)} option of the twoway line gr
 {dlgtab:Main}
 
 {phang}
-{opt lc(string)}  the string argument is a {help colorstyle}list and specifies the colors for the observations (not axes).
+{opt lc(string asis)}  the string argument is a {help colorstyle}list and specifies the colors for the observations (not axes).
 
 {phang}
 {opt lp(string)}  the string argument is a {help linepatternstyle}list and specifies the patterns for the observations (not axes).
 
 {phang}
 {opt lw(string)}  the string argument is a {help linewidthstyle}list and specifies the line widths for the observations (not axes).
+
+{phang}
+{opt msize(string)}  the string argument is a {help markersizestyle}list and specifies the size of the marker symbols to use for observations (not axes).
 
 {phang}
 {opt ms(string)}  the string argument is a {help symbolstyle}list and specifies the marker symbols to use for observations BUT must be used in conjunction with the connected option (not axes).
@@ -181,7 +186,6 @@ If you want to remove the labels from the axes use the axelaboff option
 
 {pstd}
 {stata radar make turn mpg if foreign,radial(trunk) title(Nice Radar graph) lc(red blue green) lw(*1 *2 *4) r(0 12 14 18 50) labsize(*.5) axelaboff aspect(1)}
-
 
 {title:Stored results}
 

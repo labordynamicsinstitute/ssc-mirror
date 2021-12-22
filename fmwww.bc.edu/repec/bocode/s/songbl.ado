@@ -9,74 +9,128 @@
 *Songbl makes it easy for users to search and open thousands of Stata blog posts and useful Stata information in Stata window. You can also browse the papers and replication data & programs etc of China's industrial economy by category.
 
 
-
 capture program drop songbl
 program define songbl
 
 version 14
 
-syntax [anything(name = class)] 				///
-	   [,                       				///
-		Mlink                   				///   //  - [推文标题](URL)
-		MText                   				///   //    [推文标题](URL)
-		MUrl		            				///   // n. [推文标题](URL)
-		Wlink                   				///   //    推文标题： URL
-		WText                   				///   //    推文标题： URL	
-		WUrl		            				///   // n. 推文标题： URL		
-		NOCat                   				///   //    不呈现推文分类信息 
-		Paper                   				///   //    搜索论文。		
-		Cls                     				///   //    清屏后显示结果
-		Gap                     				///   //    在输出的结果推文之间进行空格一行
-		File(string)            				///   //    括号内为文档类型，包括 do 、pdf。
-		AUTHor(string)          				///   //    按照推文来源进行检索。
-	    Navigation              				///   //    导航功能
-		TIme			        				///   //    输出检索结果的末尾带有返回推文分类目录或者论文分类目录的快捷方式	
-		SAVE(string)           					///   //    利用文档打开分享的内容。
-		REPLACE                 				///   //    生成分享内容的 STATA 数据集。  
-        So                      				///   //    网页搜索功能快捷方式	
-        Sou(string)             				///   //    网页搜索功能    
-		Num(numlist  integer max=1 min=1 >0 )   ///   //	指定要列出的最新推文的数量；N(10)是默认值。与 songbl new 搭配使用
-		Line                    				///   //   	搜索推文的另一种输出风格，具有划线
-        SSC                     				///	  //	检索外部命令介绍
-		CLIP                    				///   //	点击剪切分享，与 Wlink 搭配使用
-		FY                      				///   //    谷歌翻译命令 Help 文档
-		DIR                      				///   //    搜索电脑文件		
-	   ]
+syntax [anything(name = class)] 				  ///
+	   [,                       				  ///
+		Mlink                   				  ///   //  - [推文标题](URL)
+		MText                   				  ///   //    [推文标题](URL)
+		MUrl		            				  ///   // n. [推文标题](URL)
+		Wlink                   				  ///   //    推文标题： URL
+		WText                   				  ///   //    推文标题： URL	
+		WUrl		            				  ///   // n. 推文标题： URL		
+		NOCat                   				  ///   //    不呈现推文分类信息 
+		Paper                   				  ///   //    搜索论文。		
+		Cls                     				  ///   //    清屏后显示结果
+		Gap                     				  ///   //    在输出的结果推文之间进行空格一行
+		File(string)            				  ///   //    括号内为文档类型，包括 do 、pdf。
+		AUTHor(string)          				  ///   //    按照推文来源进行检索。
+	    Navigation              				  ///   //    导航功能
+		TIme			        				  ///   //    输出检索结果的末尾带有返回推文分类目录或者论文分类目录的快捷方式	
+		SAVE(string)           					  ///   //    利用文档打开分享的内容。
+		REPLACE                 				  ///   //    生成分享内容的 STATA 数据集。  
+        So                      				  ///   //    网页搜索功能快捷方式	
+        Sou(string)             				  ///   //    网页搜索功能    
+		Num(numlist  integer max=1 min=1 >0 )     ///   //	  指定要列出的最新推文的数量；N(10)是默认值。与 songbl new 搭配使用
+		Line                    				  ///   //    搜索推文的另一种输出风格，具有划线
+        SSC                     				  ///	//	  检索外部命令介绍
+        SSCI                     				  ///	//	  检索外部命令介绍		
+		CLIP                    				  ///   //	  点击剪切分享，与 Wlink 搭配使用
+		FY                      				  ///   //    谷歌翻译命令 Help 文档
+		DIR                      				  ///   //    搜索电脑文件
+		Forum                                     ///   //    检索论坛帖子
+		POST(numlist  integer max=1 min=1 >0 <11) ///	//    打印论坛帖子页数
+		MAXdeep(numlist  integer max=1 min=1 >0 ) ///	//    检索文件夹层次
+		CIE                                       ///   //    检索代码		
+	   ] 
+	   
 
-		tokenize `class'
         
 
 *		
 *==============================================================================* 		
 *==============================================================================*
-		cap which sbldo
-		if  _rc!=0 {
-		   dis as text "Installing..., ^-^"
-		   cap songbl install sbldo
-		   cap which sbldo
-		   if _rc!=0{
-				cap ssc install sbldo
-				if _rc{
-					dis as error "Cannot install package -sbldo-, please install by hand at ssc install sbldo"
-					exit
-				}
-		   }
+		
+		cap local class=stritrim(`"`class'"') 
+		if _rc!=0{
+			local class=stritrim("`class'") 	
 		}
-	
+		tokenize `class'		
+		
+		* "cls" options识别   
+		if "`cls'" != ""{
+			cls
+            dis ""
+		}	
+
+        if "`class'"=="help" {
+				view browse https://songbl-1304948727.cos.ap-guangzhou.myqcloud.com/ado/s/songbl.html
+				exit
+		}		
+				
+        if "`class'"=="cie" | "`class'"=="sj" | "`class'"=="论文重现"| "`class'"=="fy"{
+				local  navigation navigation
+		}		
+				
+		
+		if strmatch("`class'","*+*")==1 & strmatch("`class'","*-*")==1{
+			dis as error `"  "+" 或者 "-" 号不能同时选择"' 
+			exit 198
+		}		
+		
+		
+        if "`paper'"!="" & "`class'"=="new" {		
+			dis as error `"暂时无法查看最新的论文资源"'   				
+            exit 198
+        }	
+
         if "`paper'"!="" & "`ssc'"!="" {
             dis as error `"不能同时选定 paper 与 ssc "'    
             exit 198
         }
+		
+        if "`paper'"!="" & "`forum'"!="" {
+            dis as error `"不能同时选定 paper 与 forum "'    
+            exit 198
+        }
+		
+        if "`ssc'"!="" & "`forum'"!="" {
+            dis as error `"不能同时选定 ssc 与 forum "'    
+            exit 198
+        }
+		
+        if "`ssc'"!="" & "`ssci'"!="" {
+            dis as error `"不能同时选定 ssc 与 ssci "'    
+            exit 198
+        }		
+		
+        if "`paper'"!="" & "`ssci'"!="" {
+            dis as error `"不能同时选定 paper 与 ssci "'    
+            exit 198
+        }			
+	
+        if "`forum'"!="" & "`ssci'"!="" {
+            dis as error `"不能同时选定 forum 与 ssci "'    
+            exit 198
+        }		
+	
         if "`ssc'"!="" & ("`wlink'"!="" | "`wtext'"!="" | "`mlink'"!=""   ///   
        |"`mtext'"!="" | "`murl'"!="" | "`wurl'"!="" ) {
             dis as error `"检索ssc外部命令时, 不能使用分享功能"'    
             exit 198
         }
 
-		
-*       预先设定option   
+        if "`ssci'"!="" & ("`wlink'"!="" | "`wtext'"!="" | "`mlink'"!=""   ///   
+       |"`mtext'"!="" | "`murl'"!="" | "`wurl'"!="" ) {
+            dis as error `"ssci不能使用分享功能"'    
+            exit 198
+        }		
+ 
 
- 		* "gap" options识别 
+ 		* "gap" options识别 				
  		
 		if "`dir'"!=""  {  
 			
@@ -91,23 +145,31 @@ syntax [anything(name = class)] 				///
 			}			
 			if  "`class'"!=""{
 				local pattern ="pattern(`class')" 
-			}     	
+			}   
+			if  "`maxdeep'"!=""{
+				local maxdeep ="maxdeep(`maxdeep')" 
+			} 
 			
-			songbl_dir,`gap' `pattern'
+			songbl_dir,`gap' `pattern' `line' `nocat' `maxdeep'
 			exit
 		}  
 		
+       
+	   if "`forum'"!="" {
+	       if "`class'"==""{
+				sblsf,c `gap' `line' `mlink'  `wlink'   
+				exit
+		   }
+	       if  "`class'"=="new"{
+				sblsf, `gap' `line' `mlink'  `wlink' 
+				exit
+		   }		   
+        }		
+	
 		if "`gap'" != "" {		 
 			local gap dis ""
 			local gap1 post  songbl_post  ("" ) 
 		} 
-	
-		* "cls" options识别   
-		if "`cls'" != ""{
-			cls
-            dis ""
-            dis ""
-		}	
 		
 		* "cls" options识别   
 		if "`fy'" != ""{
@@ -118,8 +180,7 @@ syntax [anything(name = class)] 				///
 		* "sou" options识别        
 		if "`sou'"!=""{
 
-            *local sou =subinstr("`sou'"," ","",.)
-            local class=stritrim("`class'") 
+            *local sou =subinstr("`sou'"," ","",.)            
             tokenize `sou'
             local 1=ustrleft("`1'",1)             
 
@@ -181,7 +242,11 @@ syntax [anything(name = class)] 				///
             exit  			
 		}	        
         		
-
+		if "`class'"=="fy1"  {	
+			view browse "https://www.deepl.com/translator"
+			exit
+		}	
+	
         if "`class'"=="care"  {
             
             preserve
@@ -190,19 +255,19 @@ syntax [anything(name = class)] 				///
 					  ?method=download&shareKey=5531c4b5e748def50424abb57f1dd159
     
         qui{
-            cap copy `"`url'"' "`html_text'.txt", replace  			
+            cap copy `"`url'"' `"`html_text'.txt"', replace  			
             local times = 0
             while _rc ~= 0 {
                 local times = `times' + 1
                 sleep 1000
-                cap copy `"`url'"' "`html_text'.txt", replace
+                cap copy `"`url'"' `"`html_text'.txt"', replace
                 if `times' > 10 {
                     disp as error "Internet speeds is too low to get the data"
                     exit 601
                     }
             }
-            infix strL v 1-100000 using "`html_text'.txt", clear
-            cap erase "`html_text'.txt"  
+            infix strL v 1-100000 using `"`html_text'.txt"', clear
+            cap erase `"`html_text'.txt"'  
             drop if v==""
             local n = _N
             loc n = runiformint(1, `n')
@@ -213,6 +278,11 @@ syntax [anything(name = class)] 				///
             exit
             restore
         }	        
+					
+
+		
+		
+		
 		
 		if "`class'"=="music"  {
             
@@ -228,19 +298,19 @@ syntax [anything(name = class)] 				///
 					 
     
         qui{
-            cap copy `"`url'"' "`html_text'.txt", replace  			
+            cap copy `"`url'"' `"`html_text'.txt"', replace  			
             local times = 0
             while _rc ~= 0 {
                 local times = `times' + 1
                 sleep 1000
-                cap copy `"`url'"' "`html_text'.txt", replace
+                cap copy `"`url'"' `"`html_text'.txt"', replace
                 if `times' > 10 {
                     disp as error "Internet speeds is too low to get the data"
                     exit 601
                     }
             }
-            infix strL v 1-100000 using "`html_text'.txt", clear
-            cap erase "`html_text'.txt"  
+            infix strL v 1-100000 using `"`html_text'.txt"', clear
+            cap erase `"`html_text'.txt"'  
             drop if v==""
             local n = _N
             loc n = runiformint(1, `n')
@@ -262,19 +332,19 @@ syntax [anything(name = class)] 				///
 					 
     
         qui{
-            cap copy `"`url'"' "`html_text'.txt", replace  			
+            cap copy `"`url'"' `"`html_text'.txt"', replace  			
             local times = 0
             while _rc ~= 0 {
                 local times = `times' + 1
                 sleep 1000
-                cap copy `"`url'"' "`html_text'.txt", replace
+                cap copy `"`url'"' `"`html_text'.txt"', replace
                 if `times' > 10 {
                     disp as error "Internet speeds is too low to get the data"
                     exit 601
                     }
             }
-            infix strL v 1-100000 using "`html_text'.txt", clear
-            cap erase "`html_text'.txt"  
+            infix strL v 1-100000 using `"`html_text'.txt"', clear
+            cap erase `"`html_text'.txt"'  
             drop if v==""
 			local n = _N
 			forvalues i = 1/`n'{
@@ -288,15 +358,61 @@ syntax [anything(name = class)] 				///
             exit
             restore
         }			
-				
+	
+        if  "`1'"=="text" & "`2'"!="" & "`3'"==""  {
+            
+            preserve
+            tempfile  html_text 
+            local url https://songbl-1304948727.cos.ap-guangzhou.myqcloud.com/txt/text.txt
+			cap copy `"`url'"' `"`html_text'.txt"', replace 
+			qui infix strL v 1-100000 using `"`html_text'.txt"', clear	
+			local url=v[`2']
+			local n =_N
+			if `2'>`n'{
+			disp as error "没有发现文本内容"
+                exit 601			    
+			}
+        qui{
+            cap copy `"`url'"' `"`html_text'.txt"', replace  			
+            local times = 0
+            while _rc ~= 0 {
+                local times = `times' + 1
+                sleep 1000
+                cap copy `"`url'"' `"`html_text'.txt"', replace
+                if `times' > 10 {
+                    disp as error "Internet speeds is too low to get the data"
+                    exit 601
+                    }
+            }
+            infix strL v 1-100000 using `"`html_text'.txt"', clear
+            cap erase `"`html_text'.txt"' 
+			gen len = strlen(v)
+			sum len
+			local col =`r(max)'/4
+			local col= round(`col')
+			local title=v[1]
+			n dis   as  txt  _col(`col') `"{bf:`title'}"'	
+			*n dis as txt "{hline}"
+			local n = _N
+			forvalues i = 2/`n'{
+				local text=v[`i']
+					n dis  as txt  `"`text'"'  
+			}
+		}	
+		
+		*n dis as txt "{hline}"
+            exit
+            restore
+        }				
+	
 		if ("`replace'"=="") {
 			preserve		
 		}		
         
- 
 		clear    // 避免变量与用户变量冲突
 
-*		
+	 
+*		songbl sgmediation,cie   save(txt)
 *==============================================================================* 		
 *==============================================================================*
 *		动态导航功能设置
@@ -309,12 +425,12 @@ syntax [anything(name = class)] 				///
 			local http3 "download&shareKey=47627301c0a7cd1e39e2fe0577d1f10c"
 			local URL1   "`http1'`http2'`http3'"
 			local URL https://songbl-1304948727.cos.ap-guangzhou.myqcloud.com/navigation/songbl.txt			        	
-			cap copy `"`URL'"' "`html_text'.txt", replace
+			cap copy `"`URL'"' `"`html_text'.txt"', replace
 			if _rc ~= 0 {
 				local URL `URL1'
 			}			
 			songbl_links ,url(`URL')
-            cap erase "`html_text'.txt"  
+            cap erase `"`html_text'.txt"'  
 			exit
 		}		
 
@@ -325,7 +441,7 @@ syntax [anything(name = class)] 				///
 			local http3 "download&shareKey=7cf2334a57eb484a478b5c5feeb3d18a"
 			local URL   "`http1'`http2'`http3'"		
 			songbl_links1 , url(`URL')
-            cap erase "`html_text'.txt"              
+            cap erase `"`html_text'.txt"'              
 			exit
 		}	
         
@@ -336,7 +452,7 @@ syntax [anything(name = class)] 				///
 			local http3 "download&shareKey=872dfb4ae9e8e363e59dc551e8f594be"
 			local URL   "`http1'`http2'`http3'"
 			songbl_links1  ,url(`URL')
-            cap erase "`html_text'.txt"  
+            cap erase `"`html_text'.txt"'  
 			exit
 		}	        
 		
@@ -347,7 +463,7 @@ syntax [anything(name = class)] 				///
 			local http3 "download&shareKey=f4b970a98aa619af543e79ff4856992c"
 			local URL   "`http1'`http2'`http3'"	
 			songbl_links1  , url(`URL')
-            cap erase "`html_text'.txt"  
+            cap erase `"`html_text'.txt"'  
 			exit
 		} 
 		
@@ -358,7 +474,7 @@ syntax [anything(name = class)] 				///
 			local http3 "download&shareKey=19fb9b5596d80cb85717cc210d7c9b81"
 			local URL   "`http1'`http2'`http3'"							
 			songbl_links ,url(`URL')
-            cap erase "`html_text'.txt"  
+            cap erase `"`html_text'.txt"'  
 			exit
 		} 
 		
@@ -370,7 +486,7 @@ syntax [anything(name = class)] 				///
 			local http3 "download&shareKey=bc1dfb9cd7a3cde598aed799d10ec86b"
 			local URL   "`http1'`http2'`http3'"		
 			songbl_links1  , url(`URL')
-            cap erase "`html_text'.txt"  
+            cap erase `"`html_text'.txt"'  
 			exit
 		}  
 		
@@ -381,7 +497,7 @@ syntax [anything(name = class)] 				///
 			local http3 "download&shareKey=fab80cea7b6883d16be1c5b795634d3e"
 			local URL   "`http1'`http2'`http3'"	
 			songbl_links  ,url(`URL')
-            cap erase "`html_text'.txt"  
+            cap erase `"`html_text'.txt"'  
 			exit
 		} 
 		
@@ -394,22 +510,22 @@ syntax [anything(name = class)] 				///
 			local URL   "`http1'`http2'`http3'"
             local URL1 https://songbl-1304948727.cos.ap-guangzhou.myqcloud.com/songbl_URL.txt
 			
-            cap copy `"`URL1'"' "`html_text'.txt", replace  			
+            cap copy `"`URL1'"' `"`html_text'.txt"', replace  			
 			if _rc ~= 0 {
-				cap copy `"`URL'"' "`html_text'.txt", replace  
+				cap copy `"`URL'"' `"`html_text'.txt"', replace  
 			}
 			local times = 0
 			while _rc ~= 0 {
 				local times = `times' + 1
 				sleep 1000
-				cap copy `"`URL'"' "`html_text'.txt", replace
+				cap copy `"`URL'"' `"`html_text'.txt"', replace
 				if `times' > 10 {
 					disp as error "Internet speeds is too low to get the data"
 					exit 601
 				}
 			}
-			qui infix strL v 1-100000 using "`html_text'.txt", clear
-            cap erase "`html_text'.txt"              
+			qui infix strL v 1-100000 using `"`html_text'.txt"', clear
+            cap erase `"`html_text'.txt"'              
 			qui split v,  p("++")       
 			cap keep v1 v2 v3	
             local o_class= "`class'"
@@ -468,26 +584,119 @@ syntax [anything(name = class)] 				///
 		
 		tempfile  html_text  html_text_dta  html_text_seminar_paper_dta Share_txt  songbl_post 
 
-	   						
-	    * 论文链接文本下载
-		if "`paper'"!="" {      
-			
-            if "`class'"=="r" {
-                cap copy `"`paper_youdao'"' "`html_text'.txt", replace 
+        if "`cie'"!=""{
+            cap which carryforward
+            if _rc!=0{
+                qui ssc install carryforward,replace
             }
-            else{
-                cap copy `"`paper_tengxun'"' "`html_text'.txt", replace  
-            }			
-			
+			local url https://note.youdao.com/yws/api/personal/file/A591767E58A84994B25171581E136448?method=download&shareKey=a00a0dca31ca8cd8025a890286f08cc3
+			cap copy `"`url'"' `"`html_text'.txt"', replace  
 			if _rc ~= 0 {
-				cap copy `"`paper_youdao'"' "`html_text'.txt", replace  
+				local url https://songbl-1304948727.cos.ap-guangzhou.myqcloud.com/cie.txt
+				cap copy `"`url'"'  `"`html_text'.txt"', replace  
 			}			
 			
 			local times = 0
 			while _rc ~= 0 {
 				local times = `times' + 1
 				sleep 1000
-				cap copy `"`paper_youdao'"' "`html_text'.txt", replace
+				cap copy `"`url'"' `"`html_text'.txt"', replace
+				if `times' > 10 {
+					disp as error "Internet speeds is too low to get the data"
+					exit 601
+				}
+			}			
+						
+			infix strL v 1-100000 using `"`html_text'.txt"', clear 
+			replace v = lower(v) 
+			local o_class= "`class'"
+			local class = lower("`class'")
+			cap erase `"`html_text'.txt"' 
+			gen n=_n
+			gen title=v if index(v[_n-1],"**#论文标题：") 
+			replace title=title[_n+10]
+			gen id=n if index(v[_n+9],"**#论文标题：") 
+			carryforward title id,replace
+			bysort id:gen gap=_n
+			levelsof id
+			gen num=.
+			local j=1
+			foreach num in `r(levels)'{
+				replace num=`j' if id==`num'
+				local j=`j'+1
+			}
+			tostring num ,replace
+			gen cie="cie"+num
+			*gen id=n if title!=""
+			keep if strmatch(v,`"*`class'*"')
+			keep v cie title gap id
+			gen 论文题目=title
+			gen 发现在do文档第几行=gap
+			rename v 详细内容
+			*exit
+			if ("`save'"=="")&("`replace'"==""){ 
+				cap duplicates drop id, force
+				if _rc!=0{
+					dis as error "《中国工业经济》代码没有发现相关内容"
+					exit
+				}
+			}
+			
+			if ("`save'"!="") {  
+					insobs 2,before(1)
+					replace 论文题目="论文题目" in 1
+					tostring 发现在do文档第几行,replace
+					replace 发现在do文档第几行="发现在do文档第几行" in 1
+					replace 详细内容="详细内容" in 1
+					qui export delimited 论文题目 发现在do文档第几行 详细内容 using "`Share_txt'.`save'" , ///
+					novar nolabel delimiter(tab) replace				
+					view browse  "`Share_txt'.`save'"	
+					drop in 1/2
+					cap duplicates drop id, force
+					if _rc!=0{
+						dis as error "《中国工业经济》代码没有发现相关内容"
+						exit
+					}
+					*exit	
+			}	
+				
+			local n=_N
+			n dis as w `" 代码 >>"' `"{stata "songbl `class',cie save(txt)": 详细检索}"'
+			forvalues i =1/`n'{
+				local cie  =cie[`i']
+				local title=title[`i']
+				n dis in text _col(4)  "{stata qui sbldo `cie',replace:`title'}"
+				n `gap'
+			}	
+			n dis ""
+			n dis in red  _col(4)"检索到`n'篇存在 {bf:`o_class'} 关键词的do文档"
+			if "`replace'"!="" {
+				keep 论文题目 发现在do文档第几行 详细内容
+				browse
+			}
+			exit
+		}		
+        
+                       						
+	    * 论文链接文本下载
+		if "`paper'"!="" {      
+			
+            if "`class'"=="r" {
+                cap copy `"`paper_youdao'"' `"`html_text'.txt"', replace 
+            }
+            else{
+                cap copy `"`paper_tengxun'"' `"`html_text'.txt"', replace  
+            }			
+			
+			if _rc ~= 0 {
+				cap copy `"`paper_youdao'"' `"`html_text'.txt"', replace  
+			}			
+			
+			local times = 0
+			while _rc ~= 0 {
+				local times = `times' + 1
+				sleep 1000
+				cap copy `"`paper_youdao'"' `"`html_text'.txt"', replace
 				if `times' > 10 {
 					disp as error "Internet speeds is too low to get the data"
 					exit 601
@@ -495,26 +704,50 @@ syntax [anything(name = class)] 				///
 			}
 		
 		}
-
-	    * 论文链接文本下载
-		else if "`ssc'"!="" {      
+		
+		* 论坛链接文本下载
+		else if "`forum'"!="" {      
+			local url https://note.youdao.com/yws/api/personal/file/6416D2AB38AC4FDC930C67B30897380C?method=download&shareKey=9c012a753b99c6a470581d6df10042af
+		    
+			cap copy `"`url'"' `"`html_text'.txt"', replace  		
 			
-            if "`class'"=="r" {
-                cap copy `"`ssc_youdao'"' "`html_text'.txt", replace  
-            }
-            else{
-                cap copy `"`ssc_tengxun'"' "`html_text'.txt", replace   
-            }
-            
 			if _rc ~= 0 {
-				cap copy `"`ssc_youdao'"' "`html_text'.txt", replace  
+				cap copy `"`url'"' `"`html_text'.txt"', replace  
 			}			
 			
 			local times = 0
 			while _rc ~= 0 {
 				local times = `times' + 1
 				sleep 1000
-				cap copy `"`ssc_youdao'"' "`html_text'.txt", replace
+				cap copy `"`url'"' `"`html_text'.txt"'', replace
+				if `times' > 10 {
+					disp as error "Internet speeds is too low to get the data"
+					exit 601
+				}
+			}
+		
+		
+		}		
+
+	    * 论文链接文本下载
+		else if "`ssc'"!="" {      
+			
+            if "`class'"=="r" {
+                cap copy `"`ssc_youdao'"' `"`html_text'.txt"', replace  
+            }
+            else{
+                cap copy `"`ssc_tengxun'"' `"`html_text'.txt"', replace   
+            }
+            
+			if _rc ~= 0 {
+				cap copy `"`ssc_youdao'"' `"`html_text'.txt"', replace  
+			}			
+			
+			local times = 0
+			while _rc ~= 0 {
+				local times = `times' + 1
+				sleep 1000
+				cap copy `"`ssc_youdao'"' `"`html_text'.txt"', replace
 				if `times' > 10 {
 					disp as error "Internet speeds is too low to get the data"
 					exit 601
@@ -523,25 +756,50 @@ syntax [anything(name = class)] 				///
 		
 		}  
      
+	    * 论文链接文本下载
+		else if "`ssci'"!="" {      
+			
+            cap copy `"https://songbl-1304948727.cos.ap-guangzhou.myqcloud.com/txt/ssci.txt"' `"`html_text'.txt"', replace   
+
+            
+			if _rc ~= 0 {
+				cap copy `"https://songbl-1304948727.cos.ap-guangzhou.myqcloud.com/txt/ssci.txt"' `"`html_text'.txt"', replace  
+			}			
+			
+			local times = 0
+			while _rc ~= 0 {
+				local times = `times' + 1
+				sleep 1000
+				cap copy `"https://songbl-1304948727.cos.ap-guangzhou.myqcloud.com/txt/ssci.txt"' `"`html_text'.txt"', replace
+				if `times' > 10 {
+					disp as error "Internet speeds is too low to get the data"
+					exit 601
+				}
+			}
+		
+		}  	 
+	 
+	 	
+	 
 		* 推文链接文本下载
 		else{ 
 		
             if "`class'"=="r" {
-                cap copy `"`stata_paper_youdao'"' "`html_text'.txt", replace  
+                cap copy `"`stata_paper_youdao'"' `"`html_text'.txt"', replace  
             }
             else{
-                cap copy `"`stata_paper_tengxun'"' "`html_text'.txt", replace    
+                cap copy `"`stata_paper_tengxun'"' `"`html_text'.txt"', replace    
             }	        	
 			
 			if _rc ~= 0 {
-				cap copy `"`stata_paper_youdao'"' "`html_text'.txt", replace  
+				cap copy `"`stata_paper_youdao'"' `"`html_text'.txt"', replace  
 			}
 
 			local times = 0
 			while _rc ~= 0 {
 				local times = `times' + 1
 				sleep 1000
-				cap copy `"`stata_paper_youdao'"' "`html_text'.txt", replace
+				cap copy `"`stata_paper_youdao'"' `"`html_text'.txt"', replace
 				if `times' > 10 {
 					disp as error "Internet speeds is too low to get the data"
 					exit 601
@@ -551,14 +809,41 @@ syntax [anything(name = class)] 				///
         
 		
 	    * 导入文本数据到stata
-		infix strL v 1-100000 using "`html_text'.txt", clear 
-        cap erase "`html_text'.txt"  
-		split v,  p("++")       
-		*erase "`html_text'.txt"
-		if _rc ~= 0 {
-			di as err "Failed to get the data"
-			exit 601
+
+*		infix strL v 1-100000 using "forum.txt", clear 
+	
+
+	
+	
+        if "`forum'"!=""{
+			import delimited `"`html_text'.txt"', clear
+		    cap erase `"`html_text'.txt"'
+			rename v1 v
+			replace v2 = v2-1
+			replace v2=10 if v2>=10
+			rename v2 post
+			gen v1= "https://www.statalist.org/forums/forum/general-stata-discussion/general/"+v
+			gen v2 = ustrregexra(v, "^[0-9]+|-", " ") 
+			replace v2 = strproper(v2)
+			gen v3 = "The Stata Forums" 
+			gen v4 = "Posts From The Stata Forums"
+			gen v5 = "帖子"
+			gen v6 = "2021/07/21"
+
+			if "`post'"!=""{
+				keep if post >=`post'
+			}							
+		}	
+		else{	
+			infix strL v 1-100000 using `"`html_text'.txt"', clear
+			split v,  p("++")       
+			*erase "`html_text'.txt"
+			if _rc ~= 0 {
+				di as err "Failed to get the data"
+				exit 601
+			}	
 		}
+		cap erase `"`html_text'.txt"'
 
 	*==============================================================================*
 	*       文本数据处理   		
@@ -591,31 +876,9 @@ syntax [anything(name = class)] 				///
         
 		
         * 后续检索关键词不区分大小写		
-        local 11 = "`1'" 
-        local 22 = "`2'"  
-        local 33 = "`3'" 
-        local 44 = "`4'" 
-        local 55 = "`5'" 
-        local 1 = strlower("`1'")  
-        local 2 = strlower("`2'") 
-        local 3 = strlower("`3'") 
-        local 4 = strlower("`4'") 
-        local 5 = strlower("`5'") 
         gen title1 = lower(title) 
-        gen style1 = lower(style)
-
-
-	    * 关键词"class"识别		
-        gen yjy1 = strmatch(title1,"*`1'*") 
-        gen yjy2 = strmatch(title1,"*`2'*") 
-        gen yjy3 = strmatch(title1,"*`3'*") 
-        gen yjy4 = strmatch(title1,"*`4'*") 
-        gen yjy5 = strmatch(title1,"*`5'*") 
-        gen y1   = strmatch(style1,"*`1'*") 
-        gen y2   = strmatch(style1,"*`2'*") 
-        gen y3   = strmatch(style1,"*`3'*") 
-        gen y4   = strmatch(style1,"*`4'*") 
-        gen y5   = strmatch(style1,"*`5'*")
+        gen style1 = lower(style) 
+		gen text=title1+" "+style1
 		gen ad   = strmatch(type,"*gg*")
         drop if style1=="未分类学术论文"
         drop if  strmatch(seminar_paper,"*advert*")==1
@@ -627,11 +890,69 @@ syntax [anything(name = class)] 				///
 *		
 *==============================================================================* 		
 *==============================================================================*
-
-	if link[3]=="更新"{
-	    qui cap songbl install songbl
+	cap which sbldo
+	if  _rc!=0 {
+		dis in red "首次使用需要安装-sbldo-命令..." 
+		dis as txt "	正在Installing..."
+		dis as txt "	请您稍等数秒钟...^-^" _n
+		sleep 2000
+	   cap ssc install sbldo,replace
+	   cap which sbldo
+	   if _rc!=0{
+			cap ssc install sbldo,replace
+			cap which sbldo
+			if _rc!=0{
+				dis as error "Cannot install package -sbldo-, please install by hand at " "{stata ssc install sbldo,replace:ssc install sbldo,replace}"
+				exit
+			}
+	   }
 	}
 
+	if link[4]=="内测更新"{
+		dis in red "songbl命令有更新..." 
+		dis as txt "	正在Installing..."
+		dis as txt "	请您稍等数秒钟...^-^" _n
+		sleep 3000
+	    qui cap songbl install songbl
+		qui cap songbl install sbldo
+		if _rc!=0{
+			cap net install songbl, replace from(https://songbl-1304948727.cos.ap-guangzhou.myqcloud.com/ado/s/)
+		    if _rc!=0{
+					dis as error "无法自动更新 -songbl- 命令, 请按照" `" {browse "https://songbl-1304948727.cos.ap-guangzhou.myqcloud.com/ado/s/songbl.html#2-2-命令更新":Songbl命令手册.pdf}"' "进行手动下载更新"
+					exit 601
+		   }			
+		}
+		dis as txt  "命令已经更新完成。点击：" `"{browse "https://songbl-1304948727.cos.ap-guangzhou.myqcloud.com/ado/s/songbl.html#5-更新日志":Songbl命令更新日志}"'
+		dis in red "请输入：clear all 或者重启 Stata ，再重新使用-songbl-命令"		
+		dis in red "否则，会重复不断更新！！！" _n
+		exit 
+	}
+
+	
+	if link[4]=="SSC更新"{
+		dis in red "songbl命令有更新..." 
+		dis as txt "	正在Installing..."
+		dis as txt "	请您稍等数秒钟...^-^" _n
+		sleep 2000
+	    cap ssc install songbl,replace
+		cap ssc install sbldo ,replace
+		if _rc!=0{
+			cap ssc install songbl,replace
+			cap ssc install sbldo ,replace
+		    if _rc!=0{
+					dis as error "由于网络问题，无法自动更新 -songbl- 命令, 请手动更新以下两个命令：" 
+					n dis "	{stata ssc install songbl,replace:ssc install songbl,replace}"
+					n dis "	{stata ssc install sbldo,replace:ssc install sbldo,replace}"
+					exit 601
+		   }			
+		}
+		dis as txt  "命令已经更新完成，点击：" `"{browse "https://songbl-1304948727.cos.ap-guangzhou.myqcloud.com/ado/s/songbl.html#5-更新日志":Songbl命令更新日志}"'
+		dis in red "请输入：clear all 或者重启 Stata ，再重新使用 songbl 命令"		
+		dis in red "否则，会重复不断更新！！！" _n
+		exit 
+	}
+	
+ 
 	* 当前日期转为通用年、月、日格式
     local start: disp %dCYND date("`c(current_date)'","DMY")
 	local year  = substr("`start'",1,4)
@@ -642,7 +963,7 @@ syntax [anything(name = class)] 				///
 	local new_title =title[1]
     local search_link =link[2]
 	qui drop in 1/2
-	qui drop if link=="更新"
+	qui drop if link=="*更新*"
     qui drop if seminar_paper==""
     qui keep if strmatch(type,"*`author'*")==1    
 *  
@@ -683,14 +1004,14 @@ syntax [anything(name = class)] 				///
             dis _col(6) in text  "Support: Stata微信交流群 " `"{browse "`weixin_link'":{bf:songbl_stata}}"' 				     
             dis as txt "{hline 110} "	
             dis as  text _col(3) `"{stata  songbl new,g: (查看最新上传Songbl平台的资源)}"' _n	
-            cap erase "`html_text'.txt" 
+            cap erase `"`html_text'.txt"' 
             exit
         }	
         
         if "`class'"=="网页检索" & "`paper'"=="" & "`wlink'" =="" & "`wtext'"  =="" & "`mlink'" ==""   ///   
        & "`mtext'" =="" & "`murl'" =="" & "`wurl'" ==""  & "`replace'" =="" & "`save'" ==""  {
             h songbl_cn
-            cap erase "`html_text'.txt" 
+            cap erase `"`html_text'.txt"' 
             exit
         }	
                 
@@ -719,7 +1040,7 @@ syntax [anything(name = class)] 				///
     
 		if "`1'"!="" & "`2'"=="" {    	                  	
 					                      
-            if "`1'"=="new" & "`paper'"=="" & "`wlink'" =="" & "`wtext'"  =="" & "`mlink'" ==""   ///   
+            if "`1'"=="new" & "`paper'"=="" & "`forum'"=="" & "`wlink'" =="" & "`wtext'"  =="" & "`mlink'" ==""   ///   
 		    & "`mtext'" =="" & "`murl'" =="" & "`wurl'" ==""  & "`replace'" =="" & "`save'" ==""  & "`ssc'"=="" {   
 				if  "`num'"==""{
 					local num=10
@@ -770,11 +1091,11 @@ syntax [anything(name = class)] 				///
 						dis as txt "{hline 135} "	
 					}         
 					dis as  text _col(3) `"{stata  songbl 公告: (Songbl平台公告与资源上传)}"' _n	
-				cap erase "`html_text'.txt"     
+				cap erase `"`html_text'.txt"'     
                 exit
             }    
                 
-            if "`1'"=="new" & "`paper'"=="" & "`wlink'" =="" & "`wtext'"  =="" & "`mlink'" ==""   ///   
+            if "`1'"=="new" & "`paper'"=="" & "`forum'"=="" & "`wlink'" =="" & "`wtext'"  =="" & "`mlink'" ==""   ///   
 		    & "`mtext'" =="" & "`murl'" =="" & "`wurl'" ==""  & "`replace'" =="" & "`save'" ==""  & "`ssc'"!="" {   
 				if  "`num'"==""{
 					local num=10
@@ -1015,7 +1336,7 @@ syntax [anything(name = class)] 				///
                     dis as txt "{hline 140} "	
                 }         	
                     dis as  text _col(3) `"注：由谷歌翻译自动转为中文"' _n	
-				cap erase "`html_text'.txt"     
+				cap erase `"`html_text'.txt"'     
                 exit
             }    
                             
@@ -1025,7 +1346,8 @@ syntax [anything(name = class)] 				///
 
                 if  "`num'"==""{
                         local num=10
-                    }			
+                    }		
+					qui sort date type style title	
                     qui drop  if strmatch(link,"* *")==1		
                     qui drop  if title=="new_songbl"
                     qui drop  in 1
@@ -1085,7 +1407,15 @@ syntax [anything(name = class)] 				///
             }      
             
             if "`1'"!="songbl" & "`1'"!="new"{
-				quietly keep if yjy1==1 | y1==1 | ad==1 			 			 
+				cap local 1 = strlower(`"`1'"') 
+				if _rc!=0{
+					local 1 = strlower("`1'")	
+				}
+				cap gen yjy1 = strmatch(text,`"*`1'*"') 
+				if _rc!=0{
+					gen yjy1 = strmatch(text,"*`1'*") 
+				}
+				quietly keep if yjy1==1 | ad==1 			 			 
 			}			
 			
 		}	
@@ -1094,74 +1424,60 @@ syntax [anything(name = class)] 				///
 		***输入2个关键词***    
 		
 	qui{
-	
-		if "`2'"!="" & "`3'"==""  {    	    
-			
-			keep if (yjy1==1 | y1==1) & (yjy2==1 | y2==1) | ad==1 
-			
-		}	
-
-		*------------------------------------------------------------------------*
-		***输入3个关键词***	    
-			
-		if  "`3'"!="" & "`4'"=="" {
-
-			if "`2'"=="-"{	     	  	  
-				keep if (yjy1==1 | y1==1) & (yjy3==0 & y3==0)  | ad==1  //第二个关键词为 "-" 
-			} 		 	
-	
-			else if "`2'"=="+"{	     	  	              
-				keep if (yjy1==1 | y1==1)  | (yjy3==1 | y3==1) | ad==1  //第二个关键词为 "+"       
-			} 	
-
-			else {  
-				keep if (yjy1==1 | y1==1) & (yjy2==1 | y2==1) & (yjy3==1 | y3==1) | ad==1 //其余情况
-			}    
-		
-		}
-
-		*------------------------------------------------------------------------*
-		***输入4个关键词***	 
-
-		if "`4'"!="" & "`5'"=="" {     
-	
-			if "`2'"=="+" {     	  	  
-				keep if [(yjy1==1 | y1==1 ) | (yjy3==1 | y3==1)] & (yjy4==1 | y4==1) | ad==1  //第二个关键词为 "+"	
-			}	
-
-			else if "`2'"=="-" {     	  	  
-				keep if (yjy1==1 | y1==1) & (yjy3==0 & y3==0) & (yjy4==1 | y4==1) | ad==1  //第二个关键词为 "-"	  
-			}	
-
-			else if "`3'"=="+" {     	  	  
-				keep if (yjy1==1 | y1==1) & (yjy2==1 | y2==1) | (yjy4==1 | y4==1) | ad==1 //第三个关键词为 "+"		
-			}	
-
-			else if "`3'"=="-" {     	  	  
-				keep if (yjy1==1 | y1==1) & (yjy2==1 | y2==1) & (yjy4==0 & y4==0) | ad==1  //第三个关键词为 "-"	
-			}	
+		else{
 					
-			else {
-     
-				keep if (yjy1==1 | y1==1) & (yjy2==1 | y2==1) & (yjy3==1 | y3==1) & (yjy4==1 | y4==1) | ad==1  //其余情况
+			if strmatch(`"`class'"',"*+*")==1{
+				local class_new = subinstr(`"`class'"',"+"," ",.)		
+				tokenize `class_new'
+				local wordn = wordcount("`class_new'")
+				forvalues i = 1/`wordn'{
+					local `i' = strlower(`"``i''"')   
+					gen yjy`i'   = strmatch(text,`"*``i''*"') 
+				}  			
+			cap egen yjy=rowtotal(yjy*)	
+			if _rc!=0{
+				dis as error  `"  songbl :  invalid songbl type"'	
+				exit 198	
+			}			
+			keep if yjy>=1|ad==1
+			}
+			
+			if strmatch(`"`class'"',"*-*")==1{
+				local class_new = subinstr(`"`class'"',"-"," ",.)		
+				tokenize `class_new'
+				local wordn = wordcount("`class_new'")
+				forvalues i = 1/`wordn'{
+					local `i' = strlower(`"``i''"')  
+					gen yjy`i'   = strmatch(text,`"*``i''*"') 
+				}  			
+			cap egen yjy=rowtotal(yjy*)	
+			if _rc!=0{
+				dis as error  `"  songbl :  invalid songbl type"'	
+				exit 198	
+			}
+			keep if (yjy1==1 & yjy==1)  | ad==1
+			}
 
-			}    
+			if strmatch(`"`class'"',"*+*")==0 & strmatch(`"`class'"',"*-*")==0{
+				local class_new = subinstr(`"`class'"',"-"," ",.)		
+				tokenize `class_new'
+				local wordn = wordcount(`"`class_new'"')
+				forvalues i = 1/`wordn'{	
+					local `i' = strlower(`"``i''"')  
+					gen yjy`i'   = strmatch(text,`"*``i''*"') 
+				}  					
+			cap egen yjy=rowtotal(yjy*)	
+			if _rc!=0{
+				dis as error  `"  songbl :  invalid songbl type"'	
+				exit 198	
+			}			
+			keep if yjy==`wordn'| ad==1
+			}
+			
 		}
-	    
-    }    
+	}
+	
 		
-        if "`5'"!=""{
-        
-            if strmatch("`class'","*+*")==1 | strmatch("`class'","*-*")==1{
-                dis as error `"  "+" 或者 "-" 号，则最多仅能出现一次"' 
-            }
-            else {
-                dis as error `"最多仅支持4个关键词搜索。"'
-            }
-            cap erase "`html_text'.txt" 
-		    exit 198
-            
-		}
         qui keep if strmatch(type,"*`author'*")==1 | ad==1
         qui drop if seminar_paper=="删除"
 		local n  =_N                  //排除无效数据
@@ -1171,23 +1487,29 @@ syntax [anything(name = class)] 				///
 		
 		if `coun_ad'<=0{
 					
-			if missing("`paper'"){
-		    dis as error  `"  {bf:抱歉，没有找到与 {bf:`*'} 相关的内容。}"' _n
-            dis as red    `"  试试：{stata "songbl":[分类查看推文]}"'  `"  或者  {stata "h songbl_cn":[查看帮助文档]}"' _n
-            dis as text   `"  或者试试网页搜索："'
-            dis as text _col(5)`"  {stata " songbl `*',s(计量圈) "}  或  {stata " songbl `*',s(百度) "}"'                   
-            dis as text _col(5)`"  {stata " songbl `*',s(公众号) "}  或  {stata " songbl `*',s(知乎) "}"'  
-            dis as text _col(5)`"  {stata " songbl `*',s(经管家) "}  或  {stata " songbl `*',s(全部) "}"'  _n                 
-			dis as text   `"  如果仍然未找到相关的资料，您可以通过以下链接填写资料需求，我们将竭尽全力为您解决。"'
-            dis as text   `"  {bf:点击链接:}"' `" {browse "`search_link'":`search_link'}"'      
-            cap erase "`html_text'.txt" 
-            exit
+			if missing("`paper'") &  missing("`forum'"){
+				dis as error  `"  {bf:抱歉，没有找到与 [ {it:`class'} ] 相关的内容。}"' _n
+				dis as red    `"  试试：{stata "songbl":[分类查看推文]}"'  `"  或者  {stata "h songbl_cn":[查看帮助文档]}"' _n
+				dis as text   `"  或者试试网页搜索："'
+				dis as text _col(5)`"  {stata " songbl `*',s(计量圈) "}  或  {stata " songbl `*',s(百度) "}"'                   
+				dis as text _col(5)`"  {stata " songbl `*',s(公众号) "}  或  {stata " songbl `*',s(知乎) "}"'  
+				dis as text _col(5)`"  {stata " songbl `*',s(经管家) "}  或  {stata " songbl `*',s(全部) "}"'  _n                 
+				dis as text   `"  如果您发现Songbl命令的使用Bug，或者对Songbl命令的改善有什么建议"'
+				dis as text   `"  您可以通过以下链接填写资料告知我们"' 
+				dis as error  `"  {bf:点击链接:}"'
+				dis as text _col(8)  `"  ({browse "`search_link'":`search_link'})"'  
+				cap erase `"`html_text'.txt"' 
+				dis ""
+				dis as red    `"  或者试试检索代码：{stata "songbl `*',cie"}"' 
+				exit
 			}
-			
+			else if missing("`paper'") {
+				dis as error _col(3) `"没有搜到[ {it:`class'} ]相关的论坛帖子"'   
+			}
 			else{
-				dis as error _col(3) `"没有搜到{`*'}相关的论文。{stata "songbl paper":{bf:[分类查看论文]}}"'
+				dis as error _col(3) `"没有搜到[ {it:`class'} ]相关的论文。{stata "songbl paper":{bf:[分类查看论文]}}"'
 			}	
-            cap erase "`html_text'.txt"               
+            cap erase `"`html_text'.txt"'               
 			exit 
 		}       
                 
@@ -1451,10 +1773,9 @@ syntax [anything(name = class)] 				///
                 }  
 				
                 dis as  text _col(3) `"注：由谷歌翻译自动转为中文"' _n	
-				cap erase "`html_text'.txt"   
+				cap erase `"`html_text'.txt"'   
                 exit
             }    
-
 
 
 		if  "`wlink'" =="" & "`wtext'"  =="" & "`mlink'" =="" & "`mtext'" =="" & "`murl'" =="" & "`wurl'" =="" {
@@ -1474,9 +1795,11 @@ syntax [anything(name = class)] 				///
 							sort  title 
 							if missing("`nocat'"){
 								local name = plural(2,"`num'","-学术论文")							
+							
 								if missing("`paper'"){ 
 									dis as w " `seminar_paper' >>"`"{stata "songbl `name'": `name'}"'"
-								}
+								}								
+								
 								else{
 									dis as w " `seminar_paper' >>"`"{stata "songbl `name',paper": `name'}"'"
 								}
@@ -1486,41 +1809,52 @@ syntax [anything(name = class)] 				///
 						else {
 							sort type2   title        
 							if missing("`nocat'"){
-								dis as w " `seminar_paper' >>"`"{stata "songbl `num'": `num'}"'" 
+								if missing("`ssci'"){
+									dis as w `" `seminar_paper' >>"' `"{stata "songbl `num'": `num'}"'
+								}
+								else{
+									dis as w `" `seminar_paper' >>"' `"{stata "songbl `num',ssci": `num'}"'									
+								}
+								
 							}
 						}    
 						
-                        if "`line'"!=""{
-                            if missing("`nocat'"){
-                                dis as txt "{hline 100} "
-                            }
-                            forvalues i = 1/`n' {         
-                                local link=link[`i']
-                                local title=title[`i']
-                                local type=type[`i']
-                                local style=style[`i']
-                                local seminar_paper =seminar_paper[`i']                   
-                                dis _col(5) `"{browse "`link'":{bf:-}}"'_col(7) `"`title'"'	 	
-                                `gap'
-                            }   
-                        }  						
-						else{
-							forvalues i = 1/`n' {         
-                                local link=link[`i']
-                                local title=title[`i']
-                                if strmatch(`"`link'"',"* *")==1{	
-                                    dis _col(4) `"{stata `"`link'"': `title'}"'
-                                }			 				 
-                                else{
-                                    dis _col(4) `"{browse `"`link'"': `title'}"'
-                                }															
-                                if "`file'"!="" & strmatch(`"`title'"', `"*.`file'"')==1  {
-                                    gitee `"`link'"',cla(`file')
-                                }                                
-                                `gap'
-                            }
-                        }
-                    }
+
+						forvalues i = 1/`n' {         
+							local link=link[`i']
+							local title=title[`i']
+							cap dis strmatch(`"`link'"',"* *")==1
+							if _rc==0{
+								if strmatch(`"`link'"',"* *")==1{	
+									if "`ssci'"!=""{
+										dis _col(4) `"{browse `"`link'"': `title'}"'										
+									}
+									else{
+										dis _col(4) `"{stata `"`link'"': `title'}"'
+									}
+								}			 				 
+								else{
+									dis _col(4) `"{browse `"`link'"': `title'}"'
+								}															
+								if "`file'"!="" & strmatch(`"`title'"', `"*.`file'"')==1  {
+									gitee `"`link'"',cla(`file')
+								} 	
+							}
+							else{
+								if strmatch("`link'","* *")==1{	
+									dis _col(4) `"{stata `"`link'"': `title'}"'
+								}			 				 
+								else{
+									dis _col(4) `"{browse `"`link'"': `title'}"'
+								}															
+								if "`file'"!="" & strmatch("`title'", "*.`file'")==1  {
+									gitee `"`link'"',cla(`file')
+								} 										
+							}
+
+							`gap'
+						}
+				   }
 					*use "`html_text_dta'", clear
 					if missing("`nocat'"){
                         dis ""
@@ -1532,7 +1866,7 @@ syntax [anything(name = class)] 				///
 			if "`save'"!="" {
 				dis as error `" 命令格式有误，see { stata  " help songbl_cn" }"'
 				dis as error `" Note:save 选择项必须与 wlink 、wtext 、mlink 、mtext、murl、wurl 等分享功能一起使用  "'
-				cap erase "`html_text'.txt" 
+				cap erase `"`html_text'.txt"' 
                 exit 198	
 			}		
 		    use "`html_text_dta'", clear
@@ -1540,7 +1874,7 @@ syntax [anything(name = class)] 				///
 
 		else {	
             if  "`mlink'" !="" | "`mtext'" !="" | "`murl'" !=""{
-            	qui drop  if strmatch(link,"* *")==1 
+            	qui drop  if strmatch(link,`"* *"')==1 
             }
             qui save "`html_text_dta'", replace	  // 保存关键词 "class" 搜索到的数据    
 			capture postclose songbl_post
@@ -1563,9 +1897,7 @@ syntax [anything(name = class)] 				///
                 
 				dis ""	
 				dis as txt _n "{hline 24} wlink文本格式 {hline 24}"	
-				post songbl_post  ("------------------------ wink文本格式 ------------------------") 
 				dis as txt	
-				post songbl_post  (" ") 
 				if missing("`paper'"){
                     dis as res "* 以下内容由 -songbl- 命令生成，安装命令：ssc install songbl,replace"
 					dis as res "* 查看更多内容请在 Stata 窗口输入代码：songbl `class'"
@@ -1623,9 +1955,12 @@ syntax [anything(name = class)] 				///
 							forvalues i = 1/`n' {         
 								local link=link[`i']
 								local title=title[`i']	
-								post songbl_post (`"`title': `link'"') 
+								cap di wordcount(`"`title': `link'"')
+								if _rc==0{
+									post songbl_post (`"`title': `link'"') 
+								}
 								if  "`clip'"==""{
-									dis as y "`title': `link'"
+									dis as y `"`title': `link'"'
 								}
 								else{
 									local  clip1 `"`title': `link'"'
@@ -1650,6 +1985,13 @@ syntax [anything(name = class)] 				///
 					dis as red  "        建议分多次复制到微信对话框，每次 10 行，否则超链接无法生效"
                     dis as red   "        长链接断行导致打印失败。请使用" `" {stata `"songbl `class',w p replace"':songbl `class',p w replace }"' "或者" `" {stata `"songbl `class',w p save(txt)"':songbl `class',w p save(txt)}"'
 				}
+				
+				else if "`forum'"!=""{
+                    dis as red "{bf:小提示：}" `"使用 {stata `"songbl `class',f w clip "':songbl `class',f w clip} 后，"' "点击超链接，按Ctrl+V可进行粘贴"  
+					dis as red  "        建议分多次复制到微信对话框，每次 10 行，否则超链接无法生效"
+                    dis as red   "        长链接断行导致打印失败。请使用" `" {stata `"songbl `class',w f replace"':songbl `class',f w replace }"' "或者" `" {stata `"songbl `class',w f save(txt)"':songbl `class',w f save(txt)}"'
+				}				
+				
                 else{
                     dis as red "{bf:小提示：}" `"使用 {stata `"songbl `class', w clip "':songbl `class', w clip} 后，"' "点击超链接，按Ctrl+V可进行粘贴"                      
 					dis as red  "        建议分多次复制到微信对话框，每次 10 行，否则超链接无法生效"
@@ -1660,9 +2002,7 @@ syntax [anything(name = class)] 				///
 			if "`wtext'" !=""{		
 				dis ""	
 				dis as txt _n "{hline 24} wtxt文本格式 {hline 24}"	
-				post songbl_post  ("------------------------ wtxt文本格式 ------------------------") 
-				dis as txt	
-				post songbl_post  (" ") 			
+				dis as txt				
 				if missing("`paper'"){
                     dis as res "* 以下内容由 -songbl- 命令生成，安装命令：ssc install songbl,replace"
 					dis as res "* 查看更多内容请在 Stata 窗口输入代码：songbl `class'"
@@ -1718,11 +2058,14 @@ syntax [anything(name = class)] 				///
 							}     					
 							forvalues i = 1/`n' {         
 								local link=link[`i']
-								local title=title[`i']						
-								dis  as text "`title'"
-								dis  as text `"`link'"'
-								post songbl_post  (`"`title'"') 
-								post songbl_post  (`"`link'"') 							
+								local title=title[`i']
+								cap di wordcount(`"`title': `link'"')
+								if _rc==0{
+									dis  as text `"`title'"'
+									dis  as text `"`link'"'								
+									post songbl_post  (`"`title'"') 
+									post songbl_post  (`"`link'"') 	
+								}
 								`gap'
 								`gap1'
 							}
@@ -1738,6 +2081,11 @@ syntax [anything(name = class)] 				///
 				if "`paper'"!=""{
 					dis as red "{bf:小提示：}多条长链接直接复制会断行。建议使用" `" {stata `"songbl `class',wt p replace"':songbl `class',wt p replace }"' "或者" `" {stata `"songbl `class',wt p save(txt)"':songbl `class',wt p save(txt)}"'  
                 }
+				
+				else if "`forum'"!=""{
+					dis as red "{bf:小提示：}多条长链接直接复制会断行。建议使用" `" {stata `"songbl `class',wt f replace"':songbl `class',wt f replace }"' "或者" `" {stata `"songbl `class',wt f save(txt)"':songbl `class',wt f save(txt)}"'  
+                }		
+				
 				else{
 					dis as red "{bf:小提示：}多条长链接直接复制会断行。建议使用" `" {stata `"songbl `class',wt replace"':songbl `class',wt replace }"' "或者" `" {stata `"songbl `class',wt save(txt)"':songbl `class',wt save(txt)}"' 					
 				}
@@ -1746,9 +2094,7 @@ syntax [anything(name = class)] 				///
 			if "`wurl'"  !=""{
 				dis ""	
 				dis as txt _n "{hline 24} wurl文本格式 {hline 24}"	
-				post songbl_post  ("------------------------ wurl文本格式 ------------------------") 
-				dis as txt	
-				post songbl_post  (" ") 			
+				dis as txt				
 				if missing("`paper'"){
                     dis as res "* 以下内容由 -songbl- 命令生成，安装命令：ssc install songbl,replace"
 					dis as res "* 查看更多内容请在 Stata 窗口输入代码：songbl `class'"
@@ -1806,15 +2152,18 @@ syntax [anything(name = class)] 				///
 
 							forvalues i = 1/`n' {         
 								local link=link[`i']
-								local title=title[`i']							
-								if `n'==1{
-									dis as text "`title': `link'"
-									post songbl_post  ("`title': `link'") 								
+								local title=title[`i']		
+								cap di wordcount(`"`title': `link'"')
+								if _rc==0{
+									if `n'==1{
+										dis as text `"`title': `link'"'
+										post songbl_post  (`"`title': `link'"') 								
+									}
+									else {
+										dis as text `"`i'. `title': `link'"'
+										post songbl_post  (`"`i'. `title': `link'"') 
+									}	
 								}
-								else {
-									dis as text "`i'. `title': `link'"
-									post songbl_post  ("`i'. `title': `link'") 
-								}							
 								`gap'
 								`gap1'
 							}
@@ -1830,6 +2179,11 @@ syntax [anything(name = class)] 				///
 				if "`paper'"!=""{
 					dis as red "{bf:小提示：}多条长链接直接复制会断行。建议使用" `" {stata `"songbl `class',wu p replace"':songbl `class',wu p replace }"' "或者" `" {stata `"songbl `class',wu p save(txt)"':songbl `class',wu p save(txt)}"'  
                 }
+				
+				if "`forum'"!=""{
+					dis as red "{bf:小提示：}多条长链接直接复制会断行。建议使用" `" {stata `"songbl `class',wu f replace"':songbl `class',wu f replace }"' "或者" `" {stata `"songbl `class',wu f save(txt)"':songbl `class',wu f save(txt)}"'  
+                }				
+				
 				else{
 					dis as red "{bf:小提示：}多条长链接直接复制会断行。建议使用" `" {stata `"songbl `class',wu replace"':songbl `class',wu replace }"' "或者" `" {stata `"songbl `class',wu save(txt)"':songbl `class',wu save(txt)}"' 					
 				}
@@ -1838,23 +2192,21 @@ syntax [anything(name = class)] 				///
 			if "`mlink'" !=""{
 				dis ""	
 				dis as txt _n "{hline 24} mlik文本格式 {hline 24}"	
-				post songbl_post  ("~~------------------------ mlink文本格式 ------------------------~~") 
-				dis as txt	
-				post songbl_post  (" ") 			
+				dis as txt				
 				if missing("`paper'"){
                     dis as res "> 以下内容由 -songbl- 命令生成，安装命令：**ssc install songbl,replace**"
 					dis as res "> 查看更多内容请在 Stata 窗口输入代码：**songbl `class'**"
-                    
-                    
-                    post songbl_post  ("## 参考文献：") 
-                    post songbl_post  ("**以下推文列表由 **lianxh** 与 **songbl** 命令生成**") 
-                    post songbl_post  ("> Note：产生如下推文列表的 Stata 命令为：") 
-                    post songbl_post  ("> `. lianxh `class'`") 
-                    post songbl_post  ("> `. songbl `class'`") 
-                    post songbl_post  ("> 安装最新版 `lianxh`/ `songbl` 命令：") 
-                    post songbl_post  ("> `. ssc install lianxh, replace`  ") 
-                    post songbl_post  ("> `. ssc install songbl, replace`  ")  
-				}
+                    post songbl_post  ("# <center>`class'</center>") 
+                    post songbl_post  ("**以下推文列表由 **lianxh** 与 **songbl** 命令生成**")                     
+					post songbl_post  ("```")    					
+					post songbl_post  ("Note：产生如下推文列表的 Stata 命令为：")  
+					post songbl_post  (". lianxh `class'")  
+					post songbl_post  (". songbl `class'")  
+					post songbl_post  ("安装最新版 lianxh/songbl命令：")    					
+					post songbl_post  (". ssc install lianxh, replace ")  
+					post songbl_post  (". ssc install songbl, replace")  										
+					post songbl_post  ("```")  
+			}
 				else {
                     dis as res "> 以下内容由 -songbl- 命令生成，安装命令：**ssc install songbl,replace**"
 					dis as res "> 查看更多内容请在 Stata 窗口输入代码：**songbl `class',paper**"
@@ -1905,9 +2257,12 @@ syntax [anything(name = class)] 				///
 							}   
 							forvalues i = 1/`n' {         
 								local link=link[`i']
-								local title=title[`i']						
-								dis as text "- [`title'](`link')"
-								post songbl_post  ("- [`title'](`link')") 							
+								local title=title[`i']		
+								cap di wordcount(`"`title': `link'"')
+								if _rc==0{
+									dis as text `"- [`title'](`link')"'
+									post songbl_post  (`"- [`title'](`link')"') 
+								}
 								`gap'
 								`gap1'
 							}
@@ -1918,39 +2273,48 @@ syntax [anything(name = class)] 				///
 						}         
 					}
 				}	
+				post songbl_post  ("## **Stata** 交流群微信：songbl_stata")  					
 				dis ""	
 				dis as txt "{hline 24} 分享复制以上内容 {hline 24}"		
 				if "`paper'"!=""{
-					dis as red "{bf:小提示：}多条长链接直接复制会断行。建议使用" `" {stata `"songbl `class',m p replace"':songbl `class',m p replace }"' "或者" `" {stata `"songbl `class',m p save(txt)"':songbl `class',m p save(txt)}"'  
+					dis as red "{bf:小提示：}多条长链接直接复制会断行。建议使用" `" {stata `"songbl `class',m p replace"':songbl `class',m p replace }"'  
+					dis as red _col(9) "利用" `"{browse "https://editor.mdnice.com/": Mdnice }"' "编辑器输出PDF格式"  `" {stata `"songbl `class',m p save(txt)"':     songbl `class',m p save(txt)}"' 
                 }
+				else if "`forum'"!=""{
+					dis as red "{bf:小提示：}多条长链接直接复制会断行。建议使用" `" {stata `"songbl `class',m f replace"':songbl `class',m f replace }"'  
+					dis as red _col(9) "利用" `"{browse "https://editor.mdnice.com/": Mdnice }"' "编辑器输出PDF格式"  `" {stata `"songbl `class',m f save(txt)"':     songbl `class',m f save(txt)}"' 
+                }
+				
 				else{
-					dis as red "{bf:小提示：}多条长链接直接复制会断行。建议使用" `" {stata `"songbl `class',m replace"':songbl `class',m replace }"' "或者" `" {stata `"songbl `class',m save(txt)"':songbl `class',m save(txt)}"' 					
+					dis as red "{bf:小提示：}多条长链接直接复制会断行。建议使用：" `" {stata `"songbl `class',m replace"':songbl `class',m replace }"'
+					dis as red _col(9) "利用" `"{browse "https://editor.mdnice.com/": Mdnice }"' "编辑器输出PDF格式"  `" {stata `"songbl `class',m save(txt)"':       songbl `class',m save(txt)}"' 
 				}
 			}
 
 			if "`mtext'" !=""{
 				dis ""	
 				dis as txt _n "{hline 24} mtext文本格式 {hline 24}"	
-				post songbl_post  ("~~------------------------ mtext文本格式 ------------------------~~") 
-				dis as txt	
-				post songbl_post  (" ") 			
+				dis as txt				
 				if missing("`paper'"){
                     dis as res "> 以下内容由 -songbl- 命令生成，安装命令：**ssc install songbl,replace**"
 					dis as res "> 查看更多内容请在 Stata 窗口输入代码：**songbl `class'**"
-                    post songbl_post  ("## 以下推文列表由 **lianxh** 与 **songbl** 命令生成") 
-                    post songbl_post  ("> Note：产生如下推文列表的 Stata 命令为：") 
-                    post songbl_post  ("> `. lianxh `class'`") 
-                    post songbl_post  ("> `. songbl `class'`") 
-                    post songbl_post  ("> 安装最新版 `lianxh`/ `songbl` 命令：") 
-                    post songbl_post  ("> `. ssc install lianxh, replace`  ") 
-                    post songbl_post  ("> `. ssc install songbl, replace`  ")     
+                    post songbl_post  ("# <center>`class'</center>") 
+                    post songbl_post  ("**以下推文列表由 **lianxh** 与 **songbl** 命令生成**")                     
+					post songbl_post  ("```")    					
+					post songbl_post  ("Note：产生如下推文列表的 Stata 命令为：")  
+					post songbl_post  (". lianxh `class'")  
+					post songbl_post  (". songbl `class'")  
+					post songbl_post  ("安装最新版 lianxh/songbl命令：")    					
+					post songbl_post  (". ssc install lianxh, replace ")  
+					post songbl_post  (". ssc install songbl, replace")  					
+					post songbl_post  ("```")  
 				}
 				else {
                     dis as res "> 以下内容由 -songbl- 命令生成，安装命令：**ssc install songbl,replace**"
 					dis as res "> 查看更多内容请在 Stata 窗口输入代码：**songbl `class',paper**"
                     post songbl_post  ("> 以下内容由 -songbl- 命令生成，安装命令：**ssc install songbl,replace**") 
 					post songbl_post  ("> 查看更多内容请在 Stata 窗口输入代码：**songbl `class',paper**") 
-				}	
+				}
 				dis as txt "---"	
 				post songbl_post  ("---") 			
 				use "`html_text_dta'", clear
@@ -1996,9 +2360,12 @@ syntax [anything(name = class)] 				///
 							}     
 							forvalues i = 1/`n' {         
 								local link=link[`i']
-								local title=title[`i']								
-								dis as text "[`title'](`link')"
-								post songbl_post  ("[`title'](`link')") 							
+								local title=title[`i']		
+								cap di wordcount(`"`title': `link'"')
+								if _rc==0{
+									dis as text `"[`title'](`link')"'
+									post songbl_post  (`"[`title'](`link')"') 
+								}														
 								`gap'
 								`gap1'
 							}
@@ -2009,34 +2376,49 @@ syntax [anything(name = class)] 				///
 						}          
 					}
 				}	
+				post songbl_post  ("## **Stata** 交流群微信：songbl_stata")  				
 				dis ""	
 				dis as txt "{hline 24} 分享复制以上内容 {hline 24}"	
 				if "`paper'"!=""{
-					dis as red "{bf:小提示：}多条长链接直接复制会断行。建议使用" `" {stata `"songbl `class',mt p replace"':songbl `class',mt p replace }"' "或者" `" {stata `"songbl `class',mt p save(txt)"':songbl `class',mt p save(txt)}"'  
+					dis as red "{bf:小提示：}多条长链接直接复制会断行。建议使用" `" {stata `"songbl `class',mt p replace"':songbl `class',mt p replace }"'  
+					dis as red _col(9) "利用" `"{browse "https://editor.mdnice.com/": Mdnice }"' "编辑器输出PDF格式"  `" {stata `"songbl `class',mt p save(txt)"':     songbl `class',mt p save(txt)}"' 
                 }
+				
+				else if "`forum'"!=""{
+					dis as red "{bf:小提示：}多条长链接直接复制会断行。建议使用" `" {stata `"songbl `class',mt f replace"':songbl `class',mt f replace }"'  
+					dis as red _col(9) "利用" `"{browse "https://editor.mdnice.com/": Mdnice }"' "编辑器输出PDF格式"  `" {stata `"songbl `class',mt f save(txt)"':     songbl `class',mt f save(txt)}"' 
+                }
+				
 				else{
-					dis as red "{bf:小提示：}多条长链接直接复制会断行。建议使用" `" {stata `"songbl `class',mt replace"':songbl `class',mt replace }"' "或者" `" {stata `"songbl `class',mt save(txt)"':songbl `class',mt save(txt)}"' 					
+					dis as red "{bf:小提示：}多条长链接直接复制会断行。建议使用：" `" {stata `"songbl `class',mt replace"':songbl `class',mt replace }"'
+					dis as red _col(9) "利用" `"{browse "https://editor.mdnice.com/": Mdnice }"' "编辑器输出PDF格式"  `" {stata `"songbl `class',mt save(txt)"':       songbl `class',mt save(txt)}"' 
 				}
 			}		
 			
 			if "`murl'"  !=""{
 				dis ""	
 				dis as txt _n "{hline 24} murl文本格式 {hline 24}"	
-				post songbl_post  ("~~------------------------ murl文本格式 ------------------------~~") 
-				dis as txt	
-				post songbl_post  (" ") 			
+				dis as txt				
 				if missing("`paper'"){
                     dis as res "> 以下内容由 -songbl- 命令生成，安装命令：**ssc install songbl,replace**"
 					dis as res "> 查看更多内容请在 Stata 窗口输入代码：**songbl `class'**"
-                    post songbl_post  ("> 以下内容由 -songbl- 命令生成，安装命令：**ssc install songbl,replace**") 
-					post songbl_post  ("> 查看更多内容请在 Stata 窗口输入代码：**songbl `class'**") 
+                    post songbl_post  ("# <center>`class'</center>") 
+                    post songbl_post  ("**以下推文列表由 **lianxh** 与 **songbl** 命令生成**")                     
+					post songbl_post  ("```")    					
+					post songbl_post  ("Note：产生如下推文列表的 Stata 命令为：")  
+					post songbl_post  (". lianxh `class'")  
+					post songbl_post  (". songbl `class'")  
+					post songbl_post  ("安装最新版 lianxh/songbl命令：")    					
+					post songbl_post  (". ssc install lianxh, replace ")  
+					post songbl_post  (". ssc install songbl, replace")  					
+					post songbl_post  ("```")  
 				}
 				else {
                     dis as res "> 以下内容由 -songbl- 命令生成，安装命令：**ssc install songbl,replace**"
 					dis as res "> 查看更多内容请在 Stata 窗口输入代码：**songbl `class',paper**"
                     post songbl_post  ("> 以下内容由 -songbl- 命令生成，安装命令：**ssc install songbl,replace**") 
 					post songbl_post  ("> 查看更多内容请在 Stata 窗口输入代码：**songbl `class',paper**") 
-				}	
+				}
 				dis as txt "---"	
 				post songbl_post  ("---") 				
 				use "`html_text_dta'", clear
@@ -2081,18 +2463,22 @@ syntax [anything(name = class)] 				///
 							}    
 							forvalues i = 1/`n' {         
 								local link=link[`i']
-								local title=title[`i']							
-								if `n'==1{
-									dis ""
-									dis as text "[`title'](`link')"								
-									post songbl_post  ("") 
-									post songbl_post  ("[`title'](`link')") 	
-									
-								}
-								else {
-									dis as text "`i'. [`title'](`link')"
-									post songbl_post  ("`i'. [`title'](`link')") 	
-								}							
+								local title=title[`i']
+								cap di wordcount(`"`title': `link'"')
+								if _rc==0{
+									if `n'==1{
+										dis ""
+										dis as text `"[`title'](`link')"'								
+										post songbl_post  ("") 
+										post songbl_post  (`"[`title'](`link')"') 	
+										
+									}
+									else {
+										dis as text `"`i'. [`title'](`link')"'
+										post songbl_post  (`"`i'. [`title'](`link')"') 	
+									}
+								}									
+							
 								`gap'
 								`gap1'
 							}
@@ -2103,14 +2489,23 @@ syntax [anything(name = class)] 				///
 							dis ""
 						}           
 					}
-				}	
+				}		
+				post songbl_post  ("## **Stata** 交流群微信：songbl_stata")  				
 				dis ""	
 				dis as txt "{hline 24} 分享复制以上内容 {hline 24}"	
 				if "`paper'"!=""{
-					dis as red "{bf:小提示：}多条长链接直接复制会断行。建议使用" `" {stata `"songbl `class',mu p replace"':songbl `class',mu p replace }"' "或者" `" {stata `"songbl `class',mu p save(txt)"':songbl `class',mu p save(txt)}"'  
+					dis as red "{bf:小提示：}多条长链接直接复制会断行。建议使用" `" {stata `"songbl `class',mu p replace"':songbl `class',mu p replace }"'  
+					dis as red _col(9) "利用" `"{browse "https://editor.mdnice.com/": Mdnice }"' "编辑器输出PDF格式"  `" {stata `"songbl `class',mu p save(txt)"':     songbl `class',mu p save(txt)}"' 
                 }
+				
+				else if "`forum'"!=""{
+					dis as red "{bf:小提示：}多条长链接直接复制会断行。建议使用" `" {stata `"songbl `class',mu f replace"':songbl `class',mu f replace }"'  
+					dis as red _col(9) "利用" `"{browse "https://editor.mdnice.com/": Mdnice }"' "编辑器输出PDF格式"  `" {stata `"songbl `class',mu f save(txt)"':     songbl `class',mu f save(txt)}"' 
+                }				
+				
 				else{
-					dis as red "{bf:小提示：}多条长链接直接复制会断行。建议使用" `" {stata `"songbl `class',mu replace"':songbl `class',mu replace }"' "或者" `" {stata `"songbl `class',mu save(txt)"':songbl `class',mu save(txt)}"' 					
+					dis as red "{bf:小提示：}多条长链接直接复制会断行。建议使用：" `" {stata `"songbl `class',mu replace"':songbl `class',mu replace }"'
+					dis as red _col(9) "利用" `"{browse "https://editor.mdnice.com/": Mdnice }"' "编辑器输出PDF格式"  `" {stata `"songbl `class',mu save(txt)"':       songbl `class',mu save(txt)}"' 
 				}
 			}		
 			
@@ -2126,7 +2521,6 @@ syntax [anything(name = class)] 				///
             qui cap label variable style "分类"
             qui cap label variable type "来源"
             qui cap label variable seminar_paper "论文 or 推文"           
-			browse
 		}			
 							
 		if ("`save'"!="") {	         
@@ -2157,7 +2551,7 @@ syntax [anything(name = class)] 				///
 												
 		}	
         
-        cap erase "`html_text'.txt"   
+        cap erase `"`html_text'.txt"'   
         
 		if ("`replace'"=="") {	
 
@@ -2209,20 +2603,20 @@ syntax anything( name = git)  ,Cla(string)
 if "`cla'"=="do"{
 	local URL `"`git'"'
 	tempfile  html_text   
-	copy   `URL' "`html_text'.`cla'", replace  
-	doedit "`html_text'.`cla'"
+	copy   `URL' `"`html_text'.`cla'"', replace  
+	doedit `"`html_text'.`cla'"'
 }
 
 foreach i in  pdf txt docx md .xls .xlsx{
 	if "`cla'"=="`i'"{
 		local URL `"`git'"'
 		tempfile  html_text   
-		copy `URL'   "`html_text'.`cla'", replace  
-		view browse  "`html_text'.`cla'"
+		copy `URL'   `"`html_text'.`cla'"', replace  
+		view browse  `"`html_text'.`cla'"'
 	}
 }
 
-cap erase "`html_text'.txt"  
+cap erase `"`html_text'.txt"'  
 end
 *==============================================================================*	
 ****Sub programs****
@@ -2255,7 +2649,7 @@ syntax anything  (name = pkgname )
                 exit 601
 			}
 		}                     
-    local cla  hlp  sthlp do dta 
+    local cla  hlp  sthlp 
     foreach j in `cla'{
         cap copy  "`URL'`pkgname'.`j'"   "`PATH'\`pkgname'.`j'"       ,replace
     }
@@ -2312,20 +2706,20 @@ syntax [anything] [,URL(string)]
                     					     
 		tempfile  html_text    		
 
-        cap copy `"`url'"' "`html_text'.txt", replace  			 			
+        cap copy `"`url'"' `"`html_text'.txt"', replace  			 			
         local times = 0
         while _rc ~= 0 {
             local times = `times' + 1
             sleep 1000
-            cap copy `"`URL'"' "`html_text'.txt", replace
+            cap copy `"`URL'"' `"`html_text'.txt"', replace
             if `times' > 10 {
                 disp as error "Internet speeds is too low to get the data"
-                cap erase "`html_text'.txt" 
+                cap erase `"`html_text'.txt"' 
                 exit 601
                 }
         }
-        infix strL v 1-100000 using "`html_text'.txt", clear
-        cap erase "`html_text'.txt"          
+        infix strL v 1-100000 using `"`html_text'.txt"', clear
+        cap erase `"`html_text'.txt"'          
         split v,  p("++")       
         cap keep v1 v2 							
    				
@@ -2364,11 +2758,11 @@ syntax [anything] [,URL(string)]
 			}			 
 			 
 			forvalues i=1/6{			 
-				if strmatch("`b`k`i'''","*http*")==1{	
-					local browse_stata`i' browse
+				if strmatch("`b`k`i'''","* *")==1{	
+					local browse_stata`i' stata
 				}			 				 
 				else{
-					local browse_stata`i' stata
+					local browse_stata`i' browse
 				}				 
 			}
 			 
@@ -2395,11 +2789,11 @@ syntax [anything] [,URL(string)]
 		}
 		 
 		forvalues i=1/6{			 
-			if strmatch("`b`a_n`i'''","*http*")==1{	
-				local browse_stata`i' browse
+			if strmatch("`b`a_n`i'''","* *")==1{	
+				local browse_stata`i' stata
 			}			 				 
 			else{
-				local browse_stata`i' stata
+				local browse_stata`i' browse
 			}				 
 		}		 
 		 
@@ -2440,7 +2834,7 @@ syntax [anything] [,URL(string)]
 				_col(`c1') `"{`browse_stata4' "`b`a_n4''":`a`a_n4''}"'    ///
 				_col(`c2') `"{`browse_stata5' "`b`a_n5''":`a`a_n5''}"'  
 		}	
-         cap erase "`html_text'.txt"              
+         cap erase `"`html_text'.txt"'              
 	     restore
          
 
@@ -2457,19 +2851,19 @@ syntax [anything][,URL(string)]                       ///
         clear  
 		
         tempfile  html_text 
-        cap copy `"`url'"' "`html_text'.txt", replace  			
+        cap copy `"`url'"' `"`html_text'.txt"', replace  			
         local times = 0
         while _rc ~= 0 {
             local times = `times' + 1
             sleep 1000
-            cap copy `"`url'"' "`html_text'.txt", replace
+            cap copy `"`url'"' `"`html_text'.txt"', replace
             if `times' > 10 {
                 disp as error "Internet speeds is too low to get the data"
                 exit 601
                 }
         }
-            infix strL v 1-100000 using "`html_text'.txt", clear
-            cap erase "`html_text'.txt"              
+            infix strL v 1-100000 using `"`html_text'.txt"', clear
+            cap erase `"`html_text'.txt"'              
             split v,  p("++")       
             cap keep v1 v2 							
 	}
@@ -2500,28 +2894,28 @@ syntax [anything][,URL(string)]                       ///
 			 local a`k3'= v1[`k3']
 			 local b`k3'= v2[`k3']
 			 
-			if strmatch("`b`k1''","*http*")==1{
-				dis in w  _col(`c1') `"{browse "`b`k1''":`a`k1''}"' _continue
+			if strmatch("`b`k1''","* *")==1{
+				dis in w  _col(`c1') `"{stata "`b`k1''":`a`k1''}"' _continue
 			}
 			
 			else{
-				dis in w  _col(`c1') `"{stata  "`b`k1''":`a`k1''}"'  _continue
+				dis in w  _col(`c1') `"{browse  "`b`k1''":`a`k1''}"'  _continue
 			}			
 			
-			if strmatch("`b`k2''","*http*")==1{
-				dis in w  _col(`c2') `"{browse "`b`k2''":`a`k2''}"' _continue
+			if strmatch("`b`k2''","* *")==1{
+				dis in w  _col(`c2') `"{stata "`b`k2''":`a`k2''}"' _continue
 			}
 			
 			else{
-				dis in w  _col(`c2') `"{stata  "`b`k2''":`a`k2''}"'  _continue
+				dis in w  _col(`c2') `"{browse  "`b`k2''":`a`k2''}"'  _continue
 			}			
 			
-			if strmatch("`b`k3''","*http*")==1{
-				dis in w  _col(`c3') `"{browse "`b`k3''":`a`k3''}"' _n
+			if strmatch("`b`k3''","* *")==1{
+				dis in w  _col(`c3') `"{stata "`b`k3''":`a`k3''}"' _n
 			}
 			
 			else{
-				dis in w  _col(`c3') `"{stata  "`b`k3''":`a`k3''}"'  _n
+				dis in w  _col(`c3') `"{browse  "`b`k3''":`a`k3''}"'  _n
 			}			
 						     
 			local k1=`k1'+3		
@@ -2535,32 +2929,32 @@ syntax [anything][,URL(string)]                       ///
 		local b`a_n2'=v2[`a_n2']
 		
 		if `mod'==1{
-			if strmatch("`b`k1''","*http*")==1{
-				dis in w  _col(`c1') `"{browse "`b`a_n1''":`a`a_n1''}"'  
+			if strmatch("`b`k1''","* *")==1{
+				dis in w  _col(`c1') `"{stata "`b`a_n1''":`a`a_n1''}"'  
 		}
 			
 			else{
-				dis in w  _col(`c1') `"{stata "`b`a_n1''":`a`a_n1''}"'  
+				dis in w  _col(`c1') `"{browse "`b`a_n1''":`a`a_n1''}"'  
 			}			 
 			     
 		 }
 		 
 		if `mod'==2{
 		     
-			if strmatch("`b`k1''","*http*")==1{
-				dis in w  _col(`c1') `"{browse "`b`a_n1''":`a`a_n1''}"' _continue 
+			if strmatch("`b`k1''","* *")==1{
+				dis in w  _col(`c1') `"{stata "`b`a_n1''":`a`a_n1''}"' _continue 
 			}
 			
 			else {
-				dis in w  _col(`c1') `"{stata "`b`a_n1''":`a`a_n1''}"'  _continue
+				dis in w  _col(`c1') `"{browse "`b`a_n1''":`a`a_n1''}"'  _continue
 			}				 
 			 
-			if strmatch("`b`k2''","*http*")==1{
-				dis in w  _col(`c2') `"{browse "`b`a_n2''":`a`a_n2''}"'  
+			if strmatch("`b`k2''","* *")==1{
+				dis in w  _col(`c2') `"{stata "`b`a_n2''":`a`a_n2''}"'  
 			}
 			
 			else{
-				dis in w  _col(`c2') `"{stata "`b`a_n2''":`a`a_n2''}"'  
+				dis in w  _col(`c2') `"{browse "`b`a_n2''":`a`a_n2''}"'  
 			}				   
 		}  
 	restore
@@ -2570,14 +2964,16 @@ end
 *! Verion: 1.0
 *! Update: 2021/5/30 12:32
 
-cap program drop songb_ldir
+cap program drop songbl_dir
 program define songbl_dir
 version 14
-syntax [anything(name = paper)][,Gap PATtern(string) ] 
+syntax [anything(name = paper)][,Gap PATtern(string) Line NOCat MAXdeep(string)] 
 preserve  
 qui{	
  		tempfile  tempdata2  tempdata3 tempdata4 tempdata5 tempdata6 tempdata7 tempdata8 tempdata9 //可以打印8层文件夹
-		
+		if  "`maxdeep'"!=""{
+			local maxdeep ="maxdeep(`maxdeep')" 
+		}  		
 		if  "`pattern'"!=""{
 			local pattern ="pattern(`pattern')" 
 		}     	
@@ -2586,7 +2982,8 @@ qui{
 		}	
 		n dis ""
 		local root_files `c(pwd)'
-		cap filelist , `pattern'	
+		cap filelist , `pattern' `maxdeep'
+		drop if strmatch(filename,"~*") 
 		count
 		local Number_of_files_found = r(N)			
 		if _rc==601 {
@@ -2602,7 +2999,9 @@ qui{
 				exit 601				
 			}
 			else{
-				n dis as erro    `"{browse "`root_files'":{bf:>>}}"'  `" {bf:当前目录}"' 				
+			    if "`nocat'"==""{
+					n dis as erro    `"{browse "`root_files'":{bf:>>}}"'  `" {bf:当前目录}"'
+ 				}
 				sort filename
 				local n=_N
 				forvalues i = 1/`n'{
@@ -2610,15 +3009,29 @@ qui{
 					local filename=filename[`i']
 					if usubstr("`url'",-3,3) ==".do" | usubstr("`url'",-4,4) ==".ado" | ///
 					   usubstr("`url'",-4,4) ==".hlp"| usubstr("`url'",-6,6) ==".sthlp"	{
-						local view doedit
+					    if "`line'"!=""{
+						 n dis _col(4) in txt `"{stata `"doedit `"`url'"'"':{bf:-}}"' `"  `filename'"'  
+						}
+						else{
+						 n dis _col(4) `"{stata `"doedit `"`url'"'"':`filename'}"'
+						}							
 					}
 					else if usubstr("`url'",-4,4) ==".dta"{
-						 local view use
+					    if "`line'"!=""{
+						 n dis _col(4) in txt `"{stata `"use `"`url'"'"':{bf:-}}"' `"  `filename'"'  
+						}
+						else{
+						 n dis _col(4) `"{stata `"use `"`url'"'"':`filename'}"'
+						}					    						 						 
 					}					
 					else{
-						 local view view browse
+					    if "`line'"!=""{
+						 n dis _col(4) in txt `"{browse `"`url'"':{bf:-}}"' `"  `filename'"'  
+						}
+						else{
+						 n dis _col(4) `"{browse `"`url'"':`filename'}"'
+						}
 					} 
-					n dis _col(4) `"{stata `"`view' `url'"':`filename'}"'
 					n `gap'
 				}
 			if "`RC'"==""{
@@ -2633,24 +3046,40 @@ qui{
 		ds dirname*
 		local n : word count `r(varlist)'
 		save "`tempdata2'",replace
-		n dis as erro    `"{browse "`root_files'":{bf:>>}}"'  `" {bf:当前目录}"' 
+		if "`nocat'"==""{
+			n dis as erro    `"{browse "`root_files'":{bf:>>}}"'  `" {bf:当前目录}"' 
+		}
 		cap keep if  dirname2==""
 		sort filename
 		local n=_N
 		forvalues i = 1/`n'{
 			local url=url[`i']
 			local filename=filename[`i']
-				if usubstr("`url'",-3,3) ==".do" | usubstr("`url'",-4,4) ==".ado" | ///
-				   usubstr("`url'",-4,4) ==".hlp"| usubstr("`url'",-6,6) ==".sthlp"	{
-					local view doedit
+			if usubstr("`url'",-3,3) ==".do" | usubstr("`url'",-4,4) ==".ado" | ///
+			   usubstr("`url'",-4,4) ==".hlp"| usubstr("`url'",-6,6) ==".sthlp"	{
+				if "`line'"!=""{
+				 n dis _col(4) in txt `"{stata `"doedit `"`url'"'"':{bf:-}}"' `"  `filename'"'  
 				}
-				else if usubstr("`url'",-4,4) ==".dta"{
-					 local view use
-				}					
 				else{
-					 local view view browse
-				} 			
-				n dis _col(4) `"{stata `"`view' `url'"':`filename'}"'
+				 n dis _col(4) `"{stata `"doedit `"`url'"'"':`filename'}"'
+				}							
+			}
+			else if usubstr("`url'",-4,4) ==".dta"{
+				if "`line'"!=""{
+				 n dis _col(4) in txt `"{stata `"use `"`url'"'"':{bf:-}}"' `"  `filename'"'  
+				}
+				else{
+				 n dis _col(4) `"{stata `"use `"`url'"'"':`filename'}"'
+				}					    						 						 
+			}					
+			else{
+				if "`line'"!=""{
+				 n dis _col(4) in txt `"{browse `"`url'"':{bf:-}}"' `"  `filename'"'  
+				}
+				else{
+				 n dis _col(4) `"{browse `"`url'"':`filename'}"'
+				}
+			} 			
 				n `gap'
 		}	
 		
@@ -2660,31 +3089,47 @@ qui{
 		foreach  dirname2  in  `dirname2' { 		
 			use "`tempdata2'", clear
 			cap keep if dirname2=="`dirname2'"
-			if `n'<=3{
+			if "`nocat'"==""{
 				n dis "" 			
 			}
-			else{
-				n dis "" _n		
+			*else{
+			*	n dis "" _n		
+			*}
+			if "`nocat'"==""{
+				n dis as erro   _col(4)  `"{browse "`root_files'/`dirname2'":{bf:>>}}"'  `" {bf:`dirname2'}"' 	
 			}
-			n dis as erro   _col(4)  `"{browse "`root_files'/`dirname2'":{bf:>>}}"'  `" {bf:`dirname2'}"' 									
 			cap keep if  dirname3==""
 			sort filename
 			local n=_N
 			forvalues i = 1/`n'{
 				local url=url[`i']
 				local filename=filename[`i']
-					if usubstr("`url'",-3,3) ==".do" | usubstr("`url'",-4,4) ==".ado" | ///
-					   usubstr("`url'",-4,4) ==".hlp"| usubstr("`url'",-6,6) ==".sthlp"	{
-						local view doedit
+				if usubstr("`url'",-3,3) ==".do" | usubstr("`url'",-4,4) ==".ado" | ///
+				   usubstr("`url'",-4,4) ==".hlp"| usubstr("`url'",-6,6) ==".sthlp"	{
+					if "`line'"!=""{
+					 n dis _col(7) in txt `"{stata `"doedit `"`url'"'"':{bf:-}}"' `"  `filename'"'  
 					}
-					else if usubstr("`url'",-4,4) ==".dta"{
-						 local view use
-					}					
 					else{
-						 local view view browse
-					} 				
-					n dis _col(7) `"{stata `"`view' `url'"':`filename'}"' 
-					n `gap'
+					 n dis _col(7) `"{stata `"doedit `"`url'"'"':`filename'}"'
+					}							
+				}
+				else if usubstr("`url'",-4,4) ==".dta"{
+					if "`line'"!=""{
+					 n dis _col(7) in txt `"{stata `"use `"`url'"'"':{bf:-}}"' `"  `filename'"'  
+					}
+					else{
+					 n dis _col(7) `"{stata `"use `"`url'"'"':`filename'}"'
+					}					    						 						 
+				}					
+				else{
+					if "`line'"!=""{
+					 n dis _col(7) in txt `"{browse `"`url'"':{bf:-}}"' `"  `filename'"'  
+					}
+					else{
+					 n dis _col(7) `"{browse `"`url'"':`filename'}"'
+					}
+				} 
+				n `gap'
 			}	
 			use "`tempdata2'", clear
 			cap keep if dirname2=="`dirname2'"	
@@ -2695,7 +3140,9 @@ qui{
 					foreach  dirname3  in  `dirname3' { 
 						use "`tempdata3'", clear	
 						cap keep if dirname3=="`dirname3'"
-						n dis as erro   _col(7)  `"{browse "`root_files'/`dirname2'/`dirname3'":{bf:>>}}"'  `" {bf:`dirname3'}"' 		
+						if "`nocat'"==""{
+							n dis as erro   _col(7)  `"{browse "`root_files'/`dirname2'/`dirname3'":{bf:>>}}"'  `" {bf:`dirname3'}"' 
+						}
 						cap keep if  dirname4==""
 						sort filename
 						local n=_N
@@ -2704,15 +3151,29 @@ qui{
 							local filename=filename[`i']
 							if usubstr("`url'",-3,3) ==".do" | usubstr("`url'",-4,4) ==".ado" | ///
 							   usubstr("`url'",-4,4) ==".hlp"| usubstr("`url'",-6,6) ==".sthlp"	{
-								local view doedit
+								if "`line'"!=""{
+								 n dis _col(10) in txt `"{stata `"doedit `"`url'"'"':{bf:-}}"' `"  `filename'"'  
+								}
+								else{
+								 n dis _col(10) `"{stata `"doedit `"`url'"'"':`filename'}"'
+								}							
 							}
 							else if usubstr("`url'",-4,4) ==".dta"{
-								 local view use
+								if "`line'"!=""{
+								 n dis _col(10) in txt `"{stata `"use `"`url'"'"':{bf:-}}"' `"  `filename'"'  
+								}
+								else{
+								 n dis _col(10) `"{stata `"use `"`url'"'"':`filename'}"'
+								}					    						 						 
 							}					
 							else{
-								 local view view browse
-							} 							
-							n dis _col(10) `"{stata `"`view' `url'"':`filename'}"'
+								if "`line'"!=""{
+								 n dis _col(10) in txt `"{browse `"`url'"':{bf:-}}"' `"  `filename'"'  
+								}
+								else{
+								 n dis _col(10) `"{browse `"`url'"':`filename'}"'
+								}
+							} 
 							n `gap'
 						}	
 						use "`tempdata3'", clear
@@ -2724,7 +3185,9 @@ qui{
 								foreach  dirname4  in  `dirname4' { 
 									use "`tempdata4'", clear	
 									cap keep if dirname4=="`dirname4'"
-									n dis as erro   _col(10)  `"{browse "`root_files'/`dirname2'/`dirname3'/`dirname4'":{bf:>>}}"'   `" {bf:`dirname4'}"' 	  	
+									if "`nocat'"==""{
+										n dis as erro   _col(10)  `"{browse "`root_files'/`dirname2'/`dirname3'/`dirname4'":{bf:>>}}"'   `" {bf:`dirname4'}"' 
+									}
 									cap keep if  dirname5==""
 									sort filename
 									local n=_N
@@ -2733,15 +3196,29 @@ qui{
 										local filename=filename[`i']
 										if usubstr("`url'",-3,3) ==".do" | usubstr("`url'",-4,4) ==".ado" | ///
 										   usubstr("`url'",-4,4) ==".hlp"| usubstr("`url'",-6,6) ==".sthlp"	{
-											local view doedit
+											if "`line'"!=""{
+											 n dis _col(13) in txt `"{stata `"doedit `"`url'"'"':{bf:-}}"' `"  `filename'"'  
+											}
+											else{
+											 n dis _col(13) `"{stata `"doedit `"`url'"'"':`filename'}"'
+											}							
 										}
 										else if usubstr("`url'",-4,4) ==".dta"{
-											 local view use
+											if "`line'"!=""{
+											 n dis _col(13) in txt `"{stata `"use `"`url'"'"':{bf:-}}"' `"  `filename'"'  
+											}
+											else{
+											 n dis _col(13) `"{stata `"use `"`url'"'"':`filename'}"'
+											}					    						 						 
 										}					
 										else{
-											 local view view browse
-										} 										
-										n dis _col(13) `"{stata `"`view' `url'"':`filename'}"'  
+											if "`line'"!=""{
+											 n dis _col(13) in txt `"{browse `"`url'"':{bf:-}}"' `"  `filename'"'  
+											}
+											else{
+											 n dis _col(13) `"{browse `"`url'"':`filename'}"'
+											}
+										}  
 										n `gap'
 									}	
 									use "`tempdata4'", clear
@@ -2753,7 +3230,9 @@ qui{
 											foreach  dirname5  in  `dirname5' { 
 												use "`tempdata5'", clear	
 												cap keep if dirname5=="`dirname5'"
-												n dis as erro   _col(13)  `"{browse "`root_files'/`dirname2'/`dirname3'/`dirname4'/`dirname5'":{bf:>>}}"'  `" {bf:`dirname5'}"' 
+												if "`nocat'"==""{
+													n dis as erro   _col(13)  `"{browse "`root_files'/`dirname2'/`dirname3'/`dirname4'/`dirname5'":{bf:>>}}"'  `" {bf:`dirname5'}"'
+												}	
 												cap keep if  dirname6==""
 												sort filename
 												local n=_N
@@ -2762,15 +3241,29 @@ qui{
 													local filename=filename[`i']
 													if usubstr("`url'",-3,3) ==".do" | usubstr("`url'",-4,4) ==".ado" | ///
 													   usubstr("`url'",-4,4) ==".hlp"| usubstr("`url'",-6,6) ==".sthlp"	{
-														local view doedit
+														if "`line'"!=""{
+														 n dis _col(16) in txt `"{stata `"doedit `"`url'"'"':{bf:-}}"' `"  `filename'"'  
+														}
+														else{
+														 n dis _col(16) `"{stata `"doedit `"`url'"'"':`filename'}"'
+														}							
 													}
 													else if usubstr("`url'",-4,4) ==".dta"{
-														 local view use
+														if "`line'"!=""{
+														 n dis _col(16) in txt `"{stata `"use `"`url'"'"':{bf:-}}"' `"  `filename'"'  
+														}
+														else{
+														 n dis _col(16) `"{stata `"use `"`url'"'"':`filename'}"'
+														}					    						 						 
 													}					
 													else{
-														 local view view browse
-													} 													
-													n dis _col(16) `"{stata `"`view' `url'"':`filename'}"'  
+														if "`line'"!=""{
+														 n dis _col(16) in txt `"{browse `"`url'"':{bf:-}}"' `"  `filename'"'  
+														}
+														else{
+														 n dis _col(16) `"{browse `"`url'"':`filename'}"'
+														}
+													} 
 													n `gap'
 												}	
 												use "`tempdata5'", clear
@@ -2782,7 +3275,9 @@ qui{
 														foreach  dirname6  in  `dirname6' { 
 															use "`tempdata6'", clear	
 															cap keep if dirname6=="`dirname6'"
-															n dis as erro   _col(16)  `"{browse "`root_files'/`dirname2'/`dirname3'/`dirname4'/`dirname5'/`dirname6'":{bf:>>}}"'  `" {bf:`dirname6'}"' 	
+															if "`nocat'"==""{
+																n dis as erro   _col(16)  `"{browse "`root_files'/`dirname2'/`dirname3'/`dirname4'/`dirname5'/`dirname6'":{bf:>>}}"'  `" {bf:`dirname6'}"' 	
+															}	
 															cap keep if  dirname7==""
 															sort filename
 															local n=_N
@@ -2791,15 +3286,29 @@ qui{
 																local filename=filename[`i']
 																if usubstr("`url'",-3,3) ==".do" | usubstr("`url'",-4,4) ==".ado" | ///
 																   usubstr("`url'",-4,4) ==".hlp"| usubstr("`url'",-6,6) ==".sthlp"	{
-																	local view doedit
+																	if "`line'"!=""{
+																	 n dis _col(19) in txt `"{stata `"doedit `"`url'"'"':{bf:-}}"' `"  `filename'"'  
+																	}
+																	else{
+																	 n dis _col(19) `"{stata `"doedit `"`url'"'"':`filename'}"'
+																	}							
 																}
 																else if usubstr("`url'",-4,4) ==".dta"{
-																	 local view use
+																	if "`line'"!=""{
+																	 n dis _col(19) in txt `"{stata `"use `"`url'"'"':{bf:-}}"' `"  `filename'"'  
+																	}
+																	else{
+																	 n dis _col(19) `"{stata `"use `"`url'"'"':`filename'}"'
+																	}					    						 						 
 																}					
 																else{
-																	 local view view browse
-																} 																
-																n dis _col(19) `"{stata `"`view' `url'"':`filename'}"' 
+																	if "`line'"!=""{
+																	 n dis _col(19) in txt `"{browse `"`url'"':{bf:-}}"' `"  `filename'"'  
+																	}
+																	else{
+																	 n dis _col(19) `"{browse `"`url'"':`filename'}"'
+																	}
+																} 
 																n `gap'
 															}	
 															use "`tempdata6'", clear
@@ -2811,7 +3320,9 @@ qui{
 																	foreach  dirname7  in  `dirname7' { 
 																		use "`tempdata7'", clear	
 																		cap keep if dirname7=="`dirname7'"
-																		n dis as erro   _col(19)  `"{browse "`root_files'/`dirname2'/`dirname3'/`dirname4'/`dirname5'/`dirname6'/`dirname7'":{bf:>>}}"'  `" {bf:`dirname7'}"' 	
+																		if "`nocat'"==""{
+																			n dis as erro   _col(19)  `"{browse "`root_files'/`dirname2'/`dirname3'/`dirname4'/`dirname5'/`dirname6'/`dirname7'":{bf:>>}}"'  `" {bf:`dirname7'}"' 	
+																		}
 																		cap keep if  dirname8==""
 																		sort filename
 																		local n=_N
@@ -2820,15 +3331,29 @@ qui{
 																			local filename=filename[`i']
 																			if usubstr("`url'",-3,3) ==".do" | usubstr("`url'",-4,4) ==".ado" | ///
 																			   usubstr("`url'",-4,4) ==".hlp"| usubstr("`url'",-6,6) ==".sthlp"	{
-																				local view doedit
+																				if "`line'"!=""{
+																				 n dis _col(22) in txt `"{stata `"doedit `"`url'"'"':{bf:-}}"' `"  `filename'"'  
+																				}
+																				else{
+																				 n dis _col(22) `"{stata `"doedit `"`url'"'"':`filename'}"'
+																				}							
 																			}
 																			else if usubstr("`url'",-4,4) ==".dta"{
-																				 local view use
+																				if "`line'"!=""{
+																				 n dis _col(22) in txt `"{stata `"use `"`url'"'"':{bf:-}}"' `"  `filename'"'  
+																				}
+																				else{
+																				 n dis _col(22) `"{stata `"use `"`url'"'"':`filename'}"'
+																				}					    						 						 
 																			}					
 																			else{
-																				 local view view browse
-																			} 																			
-																			n dis _col(22) `"{stata `"`view' `url'"':`filename'}"' 
+																				if "`line'"!=""{
+																				 n dis _col(22) in txt `"{browse `"`url'"':{bf:-}}"' `"  `filename'"'  
+																				}
+																				else{
+																				 n dis _col(22) `"{browse `"`url'"':`filename'}"'
+																				}
+																			} 
 																			n `gap'
 																		}	
 																		use "`tempdata7'", clear
@@ -2840,14 +3365,40 @@ qui{
 																				foreach  dirname8  in  `dirname8' { 
 																					use "`tempdata8'", clear	
 																					cap keep if dirname8=="`dirname8'"
-																					n dis as erro   _col(22)  `"{browse "`root_files'/`dirname2'/`dirname3'/`dirname4'/`dirname5'/`dirname6'/`dirname7'/`dirname8'":{bf:>>}}"'  `" {bf:`dirname8'}"' 	
+																					if "`nocat'"==""{
+																						n dis as erro   _col(22)  `"{browse "`root_files'/`dirname2'/`dirname3'/`dirname4'/`dirname5'/`dirname6'/`dirname7'/`dirname8'":{bf:>>}}"'  `" {bf:`dirname8'}"' 	
+																					}	
 																					cap keep if  dirname9==""
 																					sort filename
 																					local n=_N
 																					forvalues i = 1/`n'{
 																						local url=url[`i']
 																						local filename=filename[`i']
-																							n dis _col(25) `"{stata `"`view' `url'"':`filename'}"' 
+																						if usubstr("`url'",-3,3) ==".do" | usubstr("`url'",-4,4) ==".ado" | ///
+																						   usubstr("`url'",-4,4) ==".hlp"| usubstr("`url'",-6,6) ==".sthlp"	{
+																							if "`line'"!=""{
+																							 n dis _col(25) in txt `"{stata `"doedit `"`url'"'"':{bf:-}}"' `"  `filename'"'  
+																							}
+																							else{
+																							 n dis _col(25) `"{stata `"doedit `"`url'"'"':`filename'}"'
+																							}							
+																						}
+																						else if usubstr("`url'",-4,4) ==".dta"{
+																							if "`line'"!=""{
+																							 n dis _col(25) in txt `"{stata `"use `"`url'"'"':{bf:-}}"' `"  `filename'"'  
+																							}
+																							else{
+																							 n dis _col(25) `"{stata `"use `"`url'"'"':`filename'}"'
+																							}					    						 						 
+																						}					
+																						else{
+																							if "`line'"!=""{
+																							 n dis _col(25) in txt `"{browse `"`url'"':{bf:-}}"' `"  `filename'"'  
+																							}
+																							else{
+																							 n dis _col(25) `"{browse `"`url'"':`filename'}"'
+																							}
+																						} 
 																							n `gap'
 																					}	
 																					use "`tempdata8'", clear
@@ -2859,7 +3410,9 @@ qui{
 																							foreach  dirname9  in  `dirname9' { 
 																								use "`tempdata9'", clear	
 																								cap keep if dirname9=="`dirname9'"
-																								n dis as erro   _col(25)  `"{browse "`root_files'/`dirname2'/`dirname3'/`dirname4'/`dirname5'/`dirname6'/`dirname7'/`dirname8'/`dirname9'":{bf:>>}}"'  `" {bf:`dirname9'}"' 	
+																								if "`nocat'"==""{
+																									n dis as erro   _col(25)  `"{browse "`root_files'/`dirname2'/`dirname3'/`dirname4'/`dirname5'/`dirname6'/`dirname7'/`dirname8'/`dirname9'":{bf:>>}}"'  `" {bf:`dirname9'}"' 	
+																								}	
 																								cap keep if  dirname10==""
 																								sort filename
 																								local n=_N
@@ -2868,16 +3421,30 @@ qui{
 																									local filename=filename[`i']
 																									if usubstr("`url'",-3,3) ==".do" | usubstr("`url'",-4,4) ==".ado" | ///
 																									   usubstr("`url'",-4,4) ==".hlp"| usubstr("`url'",-6,6) ==".sthlp"	{
-																										local view doedit
+																										if "`line'"!=""{
+																										 n dis _col(28) in txt `"{stata `"doedit `"`url'"'"':{bf:-}}"' `"  `filename'"'  
+																										}
+																										else{
+																										 n dis _col(28) `"{stata `"doedit `"`url'"'"':`filename'}"'
+																										}							
 																									}
 																									else if usubstr("`url'",-4,4) ==".dta"{
-																										 local view use
+																										if "`line'"!=""{
+																										 n dis _col(28) in txt `"{stata `"use `"`url'"'"':{bf:-}}"' `"  `filename'"'  
+																										}
+																										else{
+																										 n dis _col(28) `"{stata `"use `"`url'"'"':`filename'}"'
+																										}					    						 						 
 																									}					
 																									else{
-																										 local view view browse
-																									} 																									
-																									dis _col(28) `"{stata `"`view' `url'"':`filename'}"' 
-																									`gap'
+																										if "`line'"!=""{
+																										 n dis _col(28) in txt `"{browse `"`url'"':{bf:-}}"' `"  `filename'"'  
+																										}
+																										else{
+																										 n dis _col(28) `"{browse `"`url'"':`filename'}"'
+																										}
+																									} 
+																									n `gap'
 																								}	
 																								use "`tempdata9'", clear
 																								cap keep if dirname8=="`dirname9'"												
@@ -2911,8 +3478,236 @@ qui{
 }		
 restore	
 end
-	
 
+* Authors:
+* Program written by Bolin, Song (松柏林) Shenzhen University , China.
+* Wechat:songbl_stata
+*! Verion: 1.0
+*! Update: 2021/7/21 
+
+* Authors:
+* Program written by Song Bolin(松柏林) Shenzhen University , China.
+* Wechat:songbl_stata
+*! Verion: 1.0
+*! Update: 2021/7/21 
+
+capture program drop sblsf
+program define sblsf
+
+version 14
+
+ syntax [,Page(numlist integer max=1 min=1 >0 ) CLS Line Gap Mlink Wlink Complete Sort(string)]
+	   
+qui{
+ 	if "`cls'"!=""{
+		 cls
+		n dis "" _n
+	}  
+	
+	if "`page'"==""{
+		local page=1
+	}
+	
+	if "`page'"!=""{
+		if `page'==1{
+			local url http://www.statalist.org/forums/forum/general-stata-discussion/general
+		}
+		else {
+			local url http://www.statalist.org/forums/forum/general-stata-discussion/general/page`page'
+		}
+	}
+	
+	if "`sort'"!=""{
+		if "`sort'"=="title"{
+			local url="`url'"+"?filter_sort=title"
+		}
+		else if "`sort'"=="last"{
+			local url="`url'"+"?filter_sort=lastcontent"
+		}		
+		else if "`sort'"=="start"{
+			local url="`url'"+"?filter_sort=created"
+		}	
+		
+		else if "`sort'"=="replie"{
+			local url="`url'"+"?filter_sort=replies"
+		}
+		
+		else if "`sort'"=="member"{
+			local url="`url'"+"?filter_sort=author"
+		}
+		
+		else if "`sort'"=="like"{
+			local url="`url'"+"?filter_sort=votes"
+		}	
+		
+		else{
+			dis as  error `"sort() :  invalid sort type"' 
+			exit 198		
+		}
+	}
+	
+	if ("`mlink'"=="") & ("`wlink'"=="")  {
+		preserve		
+	}		
+	
+	clear
+	tempfile  html_text  
+	cap copy "`url'"  `"`html_text'.txt"', replace
+	local times = 0
+	while _rc ~= 0 {
+		local times = `times' + 1
+		sleep 1000
+		cap copy `"`url'"' `"`html_text'.txt"', replace
+		if `times' > 5 {
+			n dis as  text _col(3) `"{browse "`url'":(contacting https://www.statalist.org/forums)}"' 			
+			disp as error "Internet speeds is too low to get the data"
+			exit 601
+		}
+	}
+	
+    infix strL v 1-100000 using `"`html_text'.txt"', clear
+    keep if index(v, "js-topic-title") | index(v, "posts-count") | index(v, "views-count")| index(v, "post-date") | ///
+			index(v, "Started by") | index(v[_n-2], `"<div class="lastpost-by">"')
+	gen id = int((_n - 1)/6) + 1 
+	egen year = seq(), from(1) to(6) 
+	reshape wide v, i(id) j(year) 
+	drop id	
+	split v1, p(`"<a href=""' `"" class="topic-title js-topic-title">"' "</a>" )
+	split v2, p(`"Started by <a href=""' `"">"' `"</a>, <span class="date">"' `"</span>"')	
+	replace v3 = ustrregexra(v3, ",","")  
+	replace v4 = ustrregexra(v4, ",","")  
+	gen post = ustrregexs(0) if ustrregexm(v3, "\d+$")
+	gen view = ustrregexs(0) if ustrregexm(v4, "\d+$")
+	split v5, p(`"by <a href=""' `"">"' "</a>")
+	split v6, p(`"<span class="post-date">"'  "</span>")
+	rename (v12 v13 v22 v23 v24 v52 v53  v62)(link title  start_author_link start_author start_date post_author_link post_author post_date  )
+	*replace title = ustrregexra(title, `"""',"") 
+	*replace title = ustrregexra(title, "`","") 
+	*replace title = ustrregexra(title, "'","") 
+	cap keep post view link title  start_author_link start_author start_date post_author_link post_author post_date 
+	compress
+	keep in -50/-1
+	local n=_N 	
+	local col1 = 4
+	local col2 = 10
+	local col3 = 16
+	local col4 = 23 
+	
+	local col11 = 90
+	local col22 = 110
+	local col33 = 130
+	local col44 = 150
+    n dis   as  text   "{center:The Stata Forums}" 	
+    n dis as txt "{hline}"	
+	
+	if "`complete'"!=""{
+		n dis in text _col(`col1') "{bf:ID}" _col(`col2') "{bf:Posts}" _col(`col3') "{bf:Views}" _col(`col4') "{bf:Topics}" _col(`col11') "{bf:Posted By}" _col(`col22') "{bf:Post Date }" _col(`col33') "{bf:Started By}" _col(`col44')  "{bf:Started Date}"
+	}
+	
+	else{
+		n dis in text _col(`col1')  "{bf:ID}" _col(`col2') "{bf:Posts}"  _col(`col3') "{bf:Views}"  _col(`col4')  "{bf:Topics}" 
+	}
+	
+	n dis as txt "{hline}"			
+	forvalues i = 1/`n' {         
+		local link =link[`i']
+		local title=title[`i']
+		local post =post[`i']	
+		local view =view[`i']	
+		local start_author_link=start_author_link[`i']
+		local start_author=start_author[`i']
+		local start_date=start_date[`i']
+		local post_author_link=post_author_link[`i']
+		local post_author=post_author[`i']
+		local post_date=post_date[`i']	
+		
+		if "`complete'"==""{
+			n dis as text  _col(`col1') `"{browse `"`link'"':`i' }"'  _col(`col2') "`post'"  _col(`col3') "`view'" _col(`col4') `"`title'"' 
+		}			
+		else{
+			n dis as text  _col(`col1') `"{browse `"`link'"':`i' }"'  _col(`col2') "`post'"  _col(`col3') "`view'" _col(`col4') `"`title'"' 
+			n dis as text  _col(`col11') `"{browse `"`post_author_link'"':`post_author'}"'    _col(`col22') "`post_date'"  _col(`col33') `"{browse `"`start_author_link'"':`start_author' }"' _col(`col44') `"`start_date'"'  
+		}						
+				
+		if "`line'"!=""{
+			n dis as txt "{hline}"
+		}
+		
+		if "`gap'"!=""{
+			n dis ""
+		}
+	}
+	
+	if "`line'"==""{
+		n dis as txt "{hline}"
+	}	
+	n dis as  text _col(3) `"{browse "`url'":(contacting https://www.statalist.org/forums)}"' _n
+
+	if "`wlink'"!=""{
+		gen wlink = link+"："+title
+		br wlink
+	}
+				
+	if "`mlink'"!=""{
+		gen mlink ="- "+"["+title+"]"+"("+link+")"
+		br mlink
+	}	
+}
+	if ("`mlink'"=="") & ("`wlink'"=="") {
+		restore		
+	}			
+ end
+
+capture program drop cie
+program define cie
+
+version 14
+
+ syntax anything(name = class)
+ 
+		preserve
+	    qui if "`cie'"!=""{
+			tempfile  html_text
+			local url https://note.youdao.com/yws/api/personal/file/A591767E58A84994B25171581E136448?method=download&shareKey=a00a0dca31ca8cd8025a890286f08cc3
+			cap copy `"`url'"' `"`html_text'.txt"', replace  
+			infix strL v 1-100000 using `"`html_text'.txt"', clear 
+			cap erase `"`html_text'.txt"' 
+			gen n=_n
+			gen title=v if index(v[_n-1],"**#论文标题：") 
+			replace title=title[_n+10]
+			gen id=n if index(v[_n+9],"**#论文标题：") 
+			carryforward title id,replace
+			bysort id:gen gap=_n
+			levelsof id
+			gen num=.
+			local j=1
+			foreach num in `r(levels)'{
+				replace num=`j' if id==`num'
+				local j=`j'+1
+			}
+			tostring num ,replace
+			gen cie="cie"+num
+			*gen id=n if title!=""
+			gen row=1  if strmatch(v,"*`class'*")
+			keep if row==1
+			cap duplicates drop id, force
+			if _rc!=0{
+				dis as error "《中国工业经济》代码没有发现相关内容"
+				exit
+			}
+			local n=_N
+			n dis as w `" 代码 >>"' `"{stata "songbl 论文代码": 论文代码}"'
+			forvalues i =1/`n'{
+				local cie  =cie[`i']
+				local title=title[`i']
+				n dis in text _col(4)  "{stata sbldo `cie':`title'}"
+				n `gap'
+			}	
+			n dis ""
+			exit
+		}	
+		restore
+end
 *! Verion: 3.0
 *! Update: 2021/1/20 12:32
 
@@ -2951,7 +3746,13 @@ end
 *! Verion: 7.0
 *! Update: 2021/7/1
 *1 增加了外部命令的网页翻译：songbl merge,fy
-*2 增加了电脑文件的搜索：songbl dir,f(*.pdf)
+*2 增加了电脑文件的搜索：songbl *.pdf, dir
 *3 songbl care
 *4 songbl r
 *5 songbl music 
+
+*! Verion: 8.0
+*! Update: 2021/8/1
+*1 增加了 The Stata Forums 帖子资源：songbl did,f
+*2 增加了 The Stata Forums 帖子资源：songbl new,f
+*3 修复了一些错误

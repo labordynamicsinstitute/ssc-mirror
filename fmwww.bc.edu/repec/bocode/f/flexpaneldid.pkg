@@ -14,7 +14,7 @@ d KW: treatment
 d
 d Requires: Stata version 13 and cem, psmatch2 from SSC (q.v.)
 d
-d Distribution-Date: 20201208
+d Distribution-Date: 20211209
 d
 d Author:   Eva Dettmann, Halle Institute for Economic Research (IWH)
 d Support: email eva.dettmann@@iwh-halle.de
@@ -29,4 +29,5 @@ f flexpaneldid.ado
 f flexpaneldid.sthlp
 f flexpaneldid_preprocessing.ado
 f flexpaneldid_preprocessing.sthlp
+f ../g/gen_examples_flexpaneldid.do
 f flexpaneldid_example_data.dta

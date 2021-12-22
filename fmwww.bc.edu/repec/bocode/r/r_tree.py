@@ -1,9 +1,8 @@
 ################################################################################
-#! "r_tree.py": Tree regression using Python Scikit-learn, and called by
-#! the Stata command "r_tree.ado" 
+#! "r_tree.py": Tree regression using Python Scikit-learn 
 #! Author: Giovanni Cerulli
-#! Version: 3
-#! Date: 23 July 2020
+#! Version: 5
+#! Date: 09 November 2021
 ################################################################################
 
 # IMPORT NEEDED PACKAGES
@@ -47,12 +46,11 @@ k_range = list(range(1,16))
 # CREATE A PARAMETER GRID: MAP THE PARAMETER NAMES TO THE VALUES THAT SHOULD BE SEARCHED
 param_grid = dict(max_depth=k_range)
 
+# READ THE NUMBER OF CV-FOLDS "n_folds" FROM STATA
+n_folds=int(Macro.getLocal("n_folds"))
 
 # INSTANTIATE THE GRID
-# BUILD A "GRID SEARCH CLASSIFIER"
-grid = GridSearchCV(model,param_grid,cv=10,
-                    scoring='explained_variance',
-					return_train_score=True)
+grid = GridSearchCV(model, param_grid, cv=n_folds, scoring='explained_variance', return_train_score=True)
 					
 # FIT THE GRID
 grid.fit(X, y)
@@ -112,7 +110,7 @@ Data.store(D, None, y_hat)
 ################################################################################
 
 # SET THE TRAIN/TEST DATASET AND THE NEW-INSTANCES-DATASET
-D=Macro.getLocal("out_sample") 
+D=Macro.getLocal("out_sample_x") 
 D=D+".dta"
 
 # LOAD A STATA DATASET LOCATED INTO THE DIRECTORY AS PANDAS DATAFRAME

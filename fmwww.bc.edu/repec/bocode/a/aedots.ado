@@ -1,5 +1,5 @@
 *! ae_dot v1.2 05/03/2021
-/*Update to incorporate inclusion of a column displaying the number of events
+/*Update to incorporate inclusion of a column displaying the number of participants with an event
 	and displaying relative risk on x-axis on the log scale 
 */
 *start   with dataset with a variable for number of events in each arm  and totals in each arm

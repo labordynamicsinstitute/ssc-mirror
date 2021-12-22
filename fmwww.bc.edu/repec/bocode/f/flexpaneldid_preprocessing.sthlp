@@ -123,7 +123,7 @@ After preprocessing the dataset is no longer in a panel structure. Every observa
 {cmd: . use flexpaneldid_example_data.dta, clear}
 
 {phang}
-{cmd: . flexpaneldid_preprocessing, id(cusip) treatment(treatment) time(year) matchvars(employ stckpr rnd sales return pats_cat rndstck_cat rndeflt_cat) matchtimerel(-1) matchvarsexact(sic_cat) prepdataset("preprocessed_data.dta") replace}                              
+{cmd: . flexpaneldid_preprocessing, id(cusip) treatment(treatment) time(year) matchvars(employ stckpr rnd sales return pats_cat rndstck_cat rndflt_cat) matchtimerel(-1) matchvarsexact(sic_cat) prepdataset("preprocessed_data.dta") replace}                              
 
 {title:Also see}
 

@@ -13,10 +13,10 @@ d KW: Pesaran
 d
 d Requires: Stata version 10
 d
-d Distribution-Date: 20200626
+d Distribution-Date: 20210816
 d
-d Author: Jan Ditzen, Heriot-Watt University
-d Support: email  j.ditzen@@hw.ac.uk
+d Author: Jan Ditzen, Free University of Bozen-Bolzano
+d Support: email  jan.ditzen@@unibz.it
 d
 f xtcd2.ado
 f xtcd2.sthlp

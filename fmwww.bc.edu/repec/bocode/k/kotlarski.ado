@@ -1,6 +1,6 @@
 ////////////////////////////////////////////////////////////////////////////////
 // STATA FOR  Kato, K., Sasaki, Y., Ura, T. (2021): Robust Inference in 
-//            Deconvolution. Quantitative Economics, 12 (1), 109-142.
+//            Deconvolution. Quantitative Economics, 12 (1): 109-142.
 //
 // Use it when you consider repeated measurements x1 and x2 for the true latent
 // variable x with measurement errors e1 = x1 - x and e2 = x2 - x. The command
@@ -17,12 +17,26 @@ program define kotlarski, rclass
     fvexpand `indepvars' 
     local cnames `r(varlist)'
  
-    tempname N CB
+    tempname N CB h q L eta delta x fx lower upper
 
 		mata: estimate("`depvar'", "`cnames'", `numx', `domain', ///
-					   `tp', `cover', `order', `grid', "`touse'", "`N'", "`CB'") 
+					   `tp', `cover', `order', `grid', "`touse'", "`N'", "`CB'", ///
+					   "`h'", "`q'", "`L'", "`eta'", "`delta'", "`x'", "`fx'", ///
+					   "`lower'", "`upper'") 
 
 	_matplot `CB', connect(1) noname ytitle("f{sub:X}(x)") xtitle("x") recast(line) name(UCB, replace)		
+
+    return scalar delta = `delta'
+	return scalar eta = `eta'
+	return scalar L = `L'
+	return scalar q = `q'
+	return scalar h = `h'
+	return scalar N = `N'
+	return matrix upper = `upper'
+	return matrix lower = `lower'
+	return matrix fx = `fx'
+	return matrix x = `x'
+    return local cmd "kotlarski"
 end
 
 		
@@ -326,11 +340,15 @@ void estimate( string scalar x1v,     string scalar x2v,
 			   real scalar tuning,	  real scalar cover,
 			   real scalar q,   	  real scalar L,
 			   string scalar touse,   string scalar nname, 
-			   string scalar cbname) 
+			   string scalar cbname,  string scalar hname,
+			   string scalar qname,   string scalar Lname,
+			   string scalar etaname, string scalar deltaname,
+			   string scalar xname,   string scalar fxname,
+			   string scalar lowname, string scalar upname) 
 {
 	printf("\n{hline 78}\n")
-	printf("Executing:          Kato, K., Sasaki, Y., & Ura, T. (2021): Robust Inference \n")
-	printf("                    in Deconvolution. Quantitative Economics, 12 (1), 109-142.\n")
+	printf("Executing:          Kato, K., Sasaki, Y., & Ura, T. (2020): Robust Inference \n")
+	printf("                    in Deconvolution. Quantitative Economics, 12 (1): 109-142.\n")
 	printf("{hline 78}\n")
 
     x1      = st_data(., x1v, touse)
@@ -470,7 +488,8 @@ for( j=0 ; j<=q ; j++ ){
 		optimize_init_argument(S,7,psi_list)
 		optimize_init_argument(S,8,phi_list)
 		optimize_init_params(S, theta)
-		optimize_init_conv_maxiter(S, 100)
+		optimize_init_conv_maxiter(S, 1000)
+		optimize_init_conv_warning(S,"off")
 		optimize_init_tracelevel(S,"none")
 		min_theta_estimate=optimize(S)
 		min_estimate = psi_list[x_idx,] * min_theta_estimate' :- eta
@@ -489,7 +508,8 @@ for( j=0 ; j<=q ; j++ ){
 		optimize_init_argument(S,6,(n,alpha,eta,delta,L,q))
 		optimize_init_argument(S,7,psi_list)
 		optimize_init_argument(S,8,phi_list)
-		optimize_init_conv_maxiter(S, 100)
+		optimize_init_conv_maxiter(S, 1000)
+		optimize_init_conv_warning(S,"off")
 		optimize_init_tracelevel(S,"none")
 		optimize_init_params(S, theta)
 		max_theta_estimate=optimize(S)
@@ -550,6 +570,16 @@ for( j=0 ; j<=q ; j++ ){
     st_matrix(cbname, (BBB,XXX))
 	
     st_numscalar(nname, n)
+	st_numscalar(hname, h)
+	st_numscalar(qname, q)
+	st_numscalar(Lname, L)
+	st_numscalar(etaname, eta)
+	st_numscalar(deltaname, delta)
+	
+	st_matrix(xname, final_xlist)
+	st_matrix(fxname, final_fx')
+	st_matrix(lowname, final_CBl')
+	st_matrix(upname, final_CBu')
 }
 end
 ////////////////////////////////////////////////////////////////////////////////

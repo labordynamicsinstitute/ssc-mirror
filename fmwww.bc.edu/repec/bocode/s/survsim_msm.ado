@@ -284,8 +284,6 @@ program define survsim_msm
 		//====================================================================================================================//
 		//core 
 		
-			gaussquad_ss, n(`nodes')	//Gauss-Legendre nodes and weights
-		
 			//first pass to turn distributions into user functions
 			forvalues z = 1/`Nhazards' {
 				
@@ -414,27 +412,48 @@ program define survsim_msm
 				
 				//transition-specific hazards
 				mata: Phfs = J(`Nhazards',1,NULL)
+				findfile survsim_msm_mataf.mata
+				local smfile `r(fn)'
 				forvalues i=1/`Nhazards' {
-					mata: function hf`i'(tnodes,expxb,tdexb,hvars,lt,time0) return(`matahazard`i'')
+					global i `i'
+					global matahazard`i' `matahazard`i''
+					do `smfile'
+					//mata: function hf`i'(tnodes,expxb,tdexb,hvars,lt,time0) return(`matahazard`i'')
 					mata: Phfs[`i'] = &hf`i'()
+					macro drop i matahazard`i'
 				}
 				
 				//total hazard from each state
 				mata: Ptotalhfs = J(`Nstates',1,NULL)
+				findfile survsim_msm_mataf_total.mata
+				local smfile `r(fn)'
 				forvalues i=1/`Nstates' {
 					if "`totalhazard`i''"!="" {
-						
-						mata: function totalhf`i'(tnodes,expxb,tdexb,hvars,lt,time0) return(`totalhazard`i'')
+						global i `i'
+						global totalhazard`i' `totalhazard`i''
+						do `smfile'
+ 						//mata: function totalhf`i'(tnodes,expxb,tdexb,hvars,lt,time0) return(`totalhazard`i'')
 						mata: Ptotalhfs[`i'] = &totalhf`i'()
+						macro drop i totalhazard`i'
 					}
 				}
 				
 			}
+
+			gaussquad_ss, n(`nodes')	//Gauss-Legendre nodes and weights
 			
 			mata: survsim_msm(Phfs,Ptotalhfs)
 			
 	//done
 	mata mata drop Phfs Ptotalhfs
+	forvalues i=1/`Nhazards' {
+		mata mata drop hf`i'()
+	}
+	forvalues i=1/`Nstates' {
+		if "`totalhazard`i''"!="" {
+			mata mata drop totalhf`i'()
+		}
+	}
 		
 end
 
@@ -597,7 +616,7 @@ void survsim_msm(`PC' Phfs, `PC' Ptotalhfs)
 			}
 			
 		}
-		
+
 		// update done for those now in an absorbing state		
 		// and new times of entry into each state
 		notdoneindex = selectindex(done:==0)
@@ -622,6 +641,7 @@ void survsim_msm(`PC' Phfs, `PC' Ptotalhfs)
 		id1 = st_addvar("double", stime+strofreal(varindex))
 		id2 = st_addvar("int", state+strofreal(varindex))
 		id3 = st_addvar("byte", event+strofreal(varindex))
+
 		st_store(.,id1,.,times[,2])
 		st_store(.,id2,.,states[,2])
 		st_store(.,id3,.,events)

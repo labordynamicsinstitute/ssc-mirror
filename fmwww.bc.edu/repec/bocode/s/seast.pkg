@@ -1,6 +1,6 @@
 d 'SEAST': module to calculate tests for seasonality with a variable population at risk
 d
-d seast tests for seasonality of a binary outcome with a variable
+d  seast tests for seasonality of a binary outcome with a variable
 d population at risk.  Two tests are available, the Edwards test,
 d and the Walter and Elwood test. The Edwards test takes no account
 d of the variation  in the population at risk, and so does not

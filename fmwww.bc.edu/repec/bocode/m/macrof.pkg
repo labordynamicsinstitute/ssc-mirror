@@ -1,0 +1,18 @@
+d 'MACROF': module to compute the macroF evaluation criterion for multi-class outcomes
+d
+d  macrof computes the macroF evaluation criterion for multi-class
+d outcomes. 
+d
+d KW: macroF
+d KW: evaluation
+d KW: multi-class outcomes.
+d
+d Requires: Stata version 17
+d
+d Distribution-Date: 20210813
+d
+d Author: Matthias Schonlau,  University of Waterloo
+d Support: email schonlau@@uwaterloo.ca
+d
+f macrof.ado
+f macrof.sthlp

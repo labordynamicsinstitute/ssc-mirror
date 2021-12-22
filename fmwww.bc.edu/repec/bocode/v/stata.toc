@@ -11,6 +11,7 @@ p valtovar module to rename value labels to match variable names
 p valuesof module  to return the contents of a variable in a macro
 p vam module to compute teacher value-added measures
 p vanelteren module to perform van Elteren's test  (generalized Wilcoxon-Mann-Whitney ranksum test)
+p var_nr module to estimate set identified SVARS 
 p varcase module to toggle the case of variable names
 p vardistinct module to generate a variable representing the number(s) of distinct observations or values
 p variog module to calculate and graph semi-variograms 
@@ -22,6 +23,7 @@ p varmi module to create a dummy variable that takes 1 when all the variable in 
 p varprod module to Generate Row Product of Variables
 p varsearch program to search variable names and labels
 p vartyp module to set variable types for codebook2
+p vbkw module to perform Vector-Based Kernel Weighting
 p vc_pack module for the estimation of smooth varying coefficient models 
 p vce2way module to adjust a Stata command's standard errors for two-way clustering
 p vcemway module to adjust a Stata command's standard errors for multi-way clustering

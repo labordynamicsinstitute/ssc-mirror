@@ -56,8 +56,8 @@ program define innerregife, eclass
 		tempname prefix
 		cap qui hdfe `y' `x'   if `touse' `wt', a(`absorbvars') gen(`prefix') sample(`sample')
 		if _rc ~= 0{
-				display as error "internall call to hdfe failed (error code: `=_rc'). This may be due to implicit categorical variables / time series variables in the model (i.e. i.var or L.var)". 
-				exit 0
+			display as error "internall call to hdfe failed (error code: `=_rc'). This may be due to implicit categorical variables / time series variables in the model (i.e. i.var or L.var)". 
+			exit 0
 		}
 		scalar `df_a' = e(df_a)
 		local touse `sample'
@@ -115,17 +115,13 @@ program define innerregife, eclass
 
 
 	/* some checks */
-	cap assert `T' >= `dimension'
+	cap assert min(`T', `N') >= `dimension'
 	if _rc{
 		di as error "The factor structure dimension should be lower than the number of distinct values of the time variable"
 		exit 0
 	}
-	cap assert `N' >= `T'
-	if _rc{
-		di as error "The first factor should have higher cardinality than the second factor"
-		exit 0
-	}
-	cap assert `N' < _N & `T' <_N
+	
+	cap assert max(`N', `T') <_N
 	if _rc{
 		di as error "More levels of FE than observations!"
 		exit 3498
@@ -175,6 +171,10 @@ program define innerregife, eclass
 			local timefactors `timefactors'	i.`id'#c.`factor'
 		}
 
+		cap which reghdfe
+		if _rc == 111{
+			di as error  `"Fixed effects feature requires command {cmd:reghdfe}"'
+		}
 		qui cap reghdfe `yhdfe' `xhdfe' `wt'  if `touse',  a(`absorb' `idfactors' `timefactors')  tol(`tolerance') `vceoption' keepsingletons
 		if _rc ~= 0{
 			display as error "internall call to reghdfe failed (error code: `=_rc'). Returning the estimate without standard errors". 
@@ -654,9 +654,9 @@ program define Ftest
 	if !missing(e(F)) {
 		.`right'.Arrpush                                ///
 		`C3' "F("                              ///
-			as res %4.0f e(df_m)                         ///
-			as txt ","                                   ///
-			as res %7.0f `df' as txt ")" `C4' "= "       ///
+		as res %4.0f e(df_m)                         ///
+		as txt ","                                   ///
+		as res %7.0f `df' as txt ")" `C4' "= "       ///
 		as res %`c4wfmt'.2f e(F)
 		.`right'.Arrpush                                ///
 		`C3' "Prob > F" `C4' "= "              ///
@@ -685,8 +685,8 @@ program define Chi2test
 	if !missing(e(chi2)) {
 		.`right'.Arrpush                                ///
 		`C3' "`type' chi2("                   ///
-			as res e(df_m)                               ///
-			as txt ")" `C4' "= "                         ///
+		as res e(df_m)                               ///
+		as txt ")" `C4' "= "                         ///
 		as res %`c4wfmt'.2f e(chi2)
 		.`right'.Arrpush                                ///
 		`C3' "Prob > chi2" `C4' "= "          ///

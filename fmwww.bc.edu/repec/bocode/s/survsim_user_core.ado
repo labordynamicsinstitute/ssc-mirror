@@ -12,6 +12,7 @@ program define survsim_user_core
 			[								///
 				ltruncated(varname) 		///
 				CHazard						///
+				MARGinal					///
 			]								//
 			
 	mata: survsim_user($overallsyntax2)
@@ -22,6 +23,7 @@ mata:
 void survsim_user($overallsyntax1)
 {
 	N = st_nobs()
+	ismarginal = st_local("marginal")!=""
 	st_view(time = .,.,st_local("stime"))
 	st_view(maxt = .,.,st_local("maxtime"))
 
@@ -44,13 +46,25 @@ void survsim_user($overallsyntax1)
 	tol 	= 0
 	
 	if (hazard) {
-		for (i=1;i<=N;i++){
-			rc[i] 	= mm_root(															///
-								t=.,&survsim_user_hazard(),lt[i],maxt[i],tol,maxit,		///
-								logu[i],nodes,weights,i,expxb[i,],lt[i],tdexb[i,] 		///
-								${mmrootsyntax1}										///
-								)														//
-			time[i] = t
+		if (ismarginal) {
+			for (i=1;i<=N;i++){
+				rc[i] 	= mm_root(																///
+									t=.,&survsim_user_hazard_marg(),lt[i],maxt[i],tol,maxit,	///
+									logu[i],nodes,weights,i,expxb,lt[i],tdexb,N			 		///
+									${mmrootsyntax1}											///
+									)															//
+				time[i] = t
+			}
+		}
+		else {
+			for (i=1;i<=N;i++){
+				rc[i] 	= mm_root(															///
+									t=.,&survsim_user_hazard(),lt[i],maxt[i],tol,maxit,		///
+									logu[i],nodes,weights,i,expxb[i,],lt[i],tdexb[i,] 		///
+									${mmrootsyntax1}										///
+									)														//
+				time[i] = t
+			}
 		}
 	}
 	else {
@@ -79,6 +93,10 @@ function survsim_user_hazard(	`RS' t, 			///
 	tnodes 		= (t :- lt) :* 0.5 :* nodes :+ (t :+ lt) :/ 2
 	tweights 	= (t :- lt) :* weights :/ 2
 	chq 		= $chaz
+	if (min(chq)<0) {
+		errprintf("hazard() gives negative values\n")
+		exit(198)
+	}
 	return(chq * tweights :+ logu)
 }
 
@@ -92,6 +110,24 @@ function survsim_user_chazard(	`RS' t,				///
 								)					//
 {
 	return((${chaz}) :+ logu)
+}
+
+function survsim_user_hazard_marg(	`RS' t, 			///
+									`RS' logu, 			///
+									`RM' nodes, 		///
+									`RM' weights, 		///
+									`RS' i, 			///
+									`RM' expxb, 		///
+									`RS' lt,	 		///
+									`RM' tdexb, 		///
+									`RS' N				///
+									${mmrootsyntax2}	///
+									)					//
+{
+	tnodes 		= (t :- lt) :* 0.5 :* J(N,1,nodes) :+ (t :+ lt) :/ 2
+	tweights 	= (t :- lt) :* weights :/ 2
+	chq 		= $chaz
+	return(log(mean(exp(-chq * tweights))) :- logu)
 }
 
 end

@@ -1,10 +1,10 @@
 d 'SKBIM': module to generate a sample from a bimodal distribution using normal or skewed (skew-normal) unimodal distributions, as defined by the user
 d
-d The program generates random numbers from a bimodal distribution.
-d The two unimodal distributions that make up the bimodal can be
-d normal or skewed-normal (see sknor for more details). Different
-d arguments can be inputted to the function, as specified by
-d 'option'. 
+d  The program generates random numbers from a bimodal
+d distribution. The two unimodal distributions that make up the
+d bimodal can be normal or skewed-normal (see sknor for more
+d details). Different arguments can be inputted to the function, as
+d specified by 'option'. 
 d
 d KW: bimodal distribution
 d KW: normal distribution

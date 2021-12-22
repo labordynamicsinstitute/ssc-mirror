@@ -24,6 +24,7 @@ program define survsim_user
 										TDE(string)					///
 										TDEFUNCtion(string)			///
 																	///
+										MARGinal					///
 									]								//
 		
 		local stime : word 1 of `varlist'
@@ -241,9 +242,9 @@ program define survsim_user
 				}
 				
 				//push variables found in loghazard()/hazard() into Mata
+                local Nhvars = 0
 				if "`mixture'"=="" {
-					
-					local Nhvars = 0
+						
 					macro drop overallsyntax1 overallsyntax2 mmrootsyntax1 mmrootsyntax2				
 					
 					gettoken first rest : matahazard, parse("[ ,\^\*\(\)-\+/:<>=]")
@@ -276,7 +277,8 @@ program define survsim_user
 						mata: st_view(hvars=.,.,tokens("`covlist'"))
 						global overallsyntax1 real matrix hvars
 						global overallsyntax2 hvars
-						global mmrootsyntax1 , hvars[i,]
+						if "`marginal'"=="" global mmrootsyntax1 , hvars[i,]
+						else				global mmrootsyntax1 , hvars
 						global mmrootsyntax2 , hvars
 					}
 				}
@@ -301,7 +303,8 @@ program define survsim_user
 									logu(`logu') 				///
 									expxb(`expxb')				///
 									tdexb(`tdexb')				///
-									ltruncated(`ltruncated') 	//
+									ltruncated(`ltruncated') 	///
+									`marginal'					//
 				
 				//tidy up
 				cap macro drop cumhaz
@@ -346,7 +349,7 @@ program define survsim_user
 				//any variables in ch() or logch()
 				local nhazvars = 0
 				macro drop overallsyntax1 overallsyntax2 mmrootsyntax1 mmrootsyntax2				
-				gettoken first rest : tempcumhaz, parse("[ ,\^\*\(\)-\+/:<>=]")
+				gettoken first rest : matachazard, parse("[ ,\^\*\(\)-\+/:<>=]")
 				while "`rest'"!="" {
 					if trim("`first'")!="," {
 						cap confirm var `first', exact
@@ -371,7 +374,8 @@ program define survsim_user
 					mata: st_view(hvars=.,.,tokens("`covlist'"))
 					global overallsyntax1 real matrix hvars
 					global overallsyntax2 hvars
-					global mmrootsyntax1 , hvars[i,]
+					if "`marginal'"=="" global mmrootsyntax1 , hvars[i,]
+					else				global mmrootsyntax1 , hvars
 					global mmrootsyntax2 , hvars
 				}
 						
@@ -399,7 +403,8 @@ program define survsim_user
 									expxb(`expxb')				///
 									tdexb(`tdexb')				///
 									ltruncated(`ltruncated') 	///
-									chazard						//
+									chazard						///
+									`marginal'					//
 				
 				//tidy up
 				cap macro drop chaz

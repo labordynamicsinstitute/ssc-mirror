@@ -9,7 +9,7 @@ program define _getmxdatabie
 	gettoken varname vars:vars
 	local varname `varname'
 	local link "https://www.inegi.org.mx/app/api/indicadores/desarrolladores/jsonxml/INDICATOR/`varname'/es/0700/false/BIE/2.0/`tokenbie'?type=json"
-	copy "`link'" `f1'
+	copy "`link'" `f1', replace
 	filefilter `f1' `f2', from("{") to(\r) replace
 	import delimited using `f2', delim(":,") stripquotes(yes) clear
 	set type double
@@ -66,10 +66,10 @@ if `frecuencia'!=3{
 	*metadata
 	preserve
 	local link "https://www.inegi.org.mx/app/api/indicadores/desarrolladores/jsonxml/CL_INDICATOR/`varname'/es/BIE/2.0/`tokenbie'?type=json"
-	copy "`link'" `meta1'
+	copy "`link'" `meta1', replace
 	filefilter `meta1' `meta2', from("[") to(\r) replace
 	local link "https://www.inegi.org.mx/app/api/indicadores/desarrolladores/jsonxml/CL_UNIT/`unidades'/es/BIE/2.0/`tokenbie'?type=json"
-	copy "`link'" `meta3'
+	copy "`link'" `meta3', replace
 	filefilter `meta3' `meta4', from("[") to(\r) replace
 	import delimited using `meta2', delim(":}") stripquotes(yes) clear
 	local varlabel = inegiversion[1]

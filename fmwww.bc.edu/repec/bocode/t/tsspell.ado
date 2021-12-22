@@ -1,3 +1,4 @@
+*! 2.1.2 NJC 30 October 2021 
 *! 2.1.1 NJC 2 July 2021 
 *! 2.1.0 NJC 11 May 2014 
 *! 2.0.1 NJC 4 June 2013 
@@ -69,7 +70,7 @@ program define tsspell, sort
 	foreach what in end seq spell { 
 		local `what' = cond("``what''" == "", "_`what'", "``what''")
 		if "`replace'" != "" { 
-			capture confirm new variable ``what'''
+			capture confirm new variable ``what''
 			if _rc { drop ``what'' } 
 		} 
 		else confirm new variable ``what'' 

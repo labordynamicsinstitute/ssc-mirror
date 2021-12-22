@@ -168,7 +168,7 @@ IMPORTANT NOTE: Since both models are based on the assumption of homogeneous eff
 
 {synoptset 30 tabbed}{...}
 {synopt:{cmd:id}}id variable as defined in {cmd:id()} option{p_end}
-{synopt:{cmd:treatment}}treatment variable as defined in {cmd:treatment()} option{p_end}
+{synopt:{cmd:treated}}dummy variable, 1 if {cmd:id} is treated, else 0{p_end}
 {synopt:{cmd:first_treatment}}first treatment time of treated and it's matched control{p_end}
 {synopt:{cmd:last_treatment}}last treatment time of treated and it's matched control{p_end}
 {synopt:{cmd:nt_multi_select}}number of assignments for multiple assigned controls; for controls assigned only once, this variable contains a missing{p_end}
@@ -206,7 +206,7 @@ IMPORTANT NOTE: Since both models are based on the assumption of homogeneous eff
 {pstd}Preprocessing{p_end}
 
 {phang}{cmd: . use flexpaneldid_example_data.dta, clear}{p_end}
-{phang}{cmd: . flexpaneldid_preprocessing, id(cusip) treatment(treatment) time(year) matchvars(employ stckpr rnd sales return pats_cat rndstck_cat rndeflt_cat) matchtimerel(-1) matchvarsexact(sic_cat) prepdataset("preprocessed_data.dta") replace} {p_end}
+{phang}{cmd: . flexpaneldid_preprocessing, id(cusip) treatment(treatment) time(year) matchvars(employ stckpr rnd sales return pats_cat rndstck_cat rndflt_cat) matchtimerel(-1) matchvarsexact(sic_cat) prepdataset("preprocessed_data.dta") replace} {p_end}
 
 {pstd}flexpaneldid{p_end}
 

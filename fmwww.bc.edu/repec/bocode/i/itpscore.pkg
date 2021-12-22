@@ -1,0 +1,39 @@
+d 'ITPSCORE': module to implement Iterative Propensity Score Logistic Regression Model Search Procedure
+d
+d  itpscore performs the iterative propensity score logistic
+d regression model search procedure described by Imbens and Rubin
+d (2015). Given a binary outcome measure and a list of candidate
+d explanatory variables, the program iteratively selects
+d explanatory variables for inclusion into a propensity score model
+d based upon changes in the logistic regression log-likelihood. 
+d The program also produces multiplicative interactions (and second
+d order terms) of all explanatory variables selected for model
+d inclusion and treats interaction terms as additional candidate
+d covariates.  The package accommodates user defined convergence
+d thresholds and the option to specify a set of explanatory
+d variables for default model inclusion.  The resulting propensity
+d score model supports propensity score matching techniques,
+d methods utilizing propensity scores to control for endogenous
+d selection, and methods utilizing propensity scores in the
+d estimation of heterogenous treatment effects. 
+d
+d KW: propensity score
+d KW: logit
+d KW: logistic regression
+d
+d Requires: Stata version 17
+d
+d Distribution-Date: 20211124
+d
+d Author: Ravaris Moore, Princeton University 
+d Support: email  rlmoore@@princeton.edu
+d
+d Author: Jennie E. Brand, UCLA
+d Support: email  brand@@soc.ucla.edu
+d
+d Author: Tanvi Shinkre, UCLA
+d Support: email   tanvishinkre@@ucla.edu
+d
+f itpscore.ado
+f itpscore.sthlp
+f itpscore_pdf_supplement.pdf

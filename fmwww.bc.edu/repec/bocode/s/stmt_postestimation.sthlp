@@ -142,12 +142,14 @@ or as set by (help set level}.
 
 {pstd}Setup{p_end}
 {phang2}{stata "webuse brcancer"}{p_end}
+{pstd}Rename variable for age at diagnosis {p_end}
+{phang2}{stata "rename x1 agediag"}{p_end}
 
 {pstd}Stset with time since diagnosis as timescale 1 {p_end}
 {phang2}{stata "stset rectime, f(censrec==1) scale(365.25) exit(time 365.25*5)"}{p_end}
 
 {pstd}Fit model with attained age as timescale 2 and time-dependent effects of hormon on both timescales {p_end}
-{phang2}{stata "stmt hormon, time1(df(5) tvc(hormon) dftvc(2)) time2(df(2) start(x1) tvc(hormon) dftvc(2) logtoff)"}{p_end}
+{phang2}{stata "stmt hormon, time1(df(5) tvc(hormon) dftvc(2)) time2(df(2) start(agediag) tvc(hormon) dftvc(2) logtoff)"}{p_end}
 
 {pstd} Predict the hazard rate with predictions on timescale 1 (time since diagnosis) from 0 to 3 years where variable hormon is set to 1
 when timescale 2 (attained age) is 53. Note that the user must create the timescale variables first before using the predict command.{p_end}
@@ -204,6 +206,9 @@ P. Royston, P.C. Lambert. Flexible parametric survival analysis in Stata:
 Beyond the Cox model StataPress, 2011
 
 {title:Also see}
+{psee}
+Online:  {manhelp stmt ST};
+{p_end}
 
 {psee}
 Online:  {manhelp strcs ST};

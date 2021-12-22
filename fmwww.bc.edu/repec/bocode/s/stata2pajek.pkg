@@ -1,6 +1,6 @@
 d 'STATA2PAJEK': module to export data to Pajek .net format
 d
-d stata2pajek exports data to the ".net" format read by Pajek,
+d  stata2pajek exports data to the ".net" format read by Pajek,
 d Network  Workbench, and many other social network analysis
 d packages. 
 d

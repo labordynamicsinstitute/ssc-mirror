@@ -1,4 +1,5 @@
-*! 2.0.0 Ariel Linden 29May2019 // Made esizereg a postestimation command and converted version 1.0.0 to an immediate command (esizeregi)
+*! 2.0.1 Ariel Linden 27Oct2021 // changed 'est' to a scalar to avoid issues with squaring negative values (which happens with local)
+*! 2.0.0 Ariel Linden 29May2019 // made esizereg a postestimation command and converted version 1.0.0 to an immediate command (esizeregi)
 *! 1.0.0 Ariel Linden 02Feb2019
 
 program define esizereg, rclass
@@ -34,7 +35,9 @@ version 11.0
 				" Use the model's option -coeflegend- to display coefficient names"
 				exit 498
 			}
-			local est = b[1,colnumb(matrix(b),"`treat'")]
+			
+			tempname est
+			scalar `est' = b[1,colnumb(matrix(b),"`treat'")]
 			
 			if "`e(wtype)'" != "" & "`e(wtype)'" != "aweight" {
 				di as err "{bf:esizereg} accepts only {bf:aweights} in the estimation model"

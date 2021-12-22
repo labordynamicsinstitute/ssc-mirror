@@ -1,31 +1,78 @@
-*! Date        : 9 novembre 2020
-*! Version     : 3.1
+*! Date        : 23 june 2021
+*! Version     : 4.0
 *! Author      : Charlie Joyez, Universite Cote d'Azur
 *! Email	   : charlie.joyez@univ-cotedazur.fr
 
 * Computes Complexity indexes. See Haussman & Hidalgo Atlas for Economic Complexity (2012)
 * or simply the website https://oec.world/fr/resources/methodology/ for the methodology followed
-*Latest fixes : method() option added, including both MR and fitness. Bug fix for small values, and iteration choice for MR method
-			 *Returns EV Stata matrix
-			 * In fitness method : Returns a product complexity score, reverse to the initial fitness score (cf Tachela et al 2012 : "Finally inverting the sum makes Q coherent with its positive meaning of complexity")
+* See Tachela et al (2012) for fitness method.
 
+
+*Major changes :  v2.0 Add MR computation and fitness one. Method() option is added to chose the computation technique
+			   *  v2.1 Add the sign correction for Eigenvector method by correlating with MR
+			   *  v3.0 method() option added, including both MR and fitness. Bug fix for small values, and iteration choice for MR method
+			   *  v3.0 Returns EV Stata matrix
+			   *  v3.1 In fitness method : Returns a product complexity score, reverse to the initial fitness score (cf Tachela et al (2012) : "Finally inverting the sum makes Q coherent with its positive meaning of complexity")
+			   *  v4.0 allows Stata variables as inputs. Therefore removes the .dta possibility for matsource (no longer useful)
+			   *  v4.0 introduces RCA option, and makes default input non RCA matrix
+	
+			 
 capture program drop complexity
 program complexity, rclass
 	version 9
-	syntax , Matrix(string) [Source(string) Projection(string) METhod(string) ITERations(string) Xvar Transpose]
+	syntax , [ VARlist(varlist) Matrix(string) MATSource(string) Projection(string) METhod(string) ITERations(string) Xvar Transpose RCA]
 
 	*****************
 *Options
-	*Source	
-	if (mi(`"`source'"')){
-        local source="mata"
+
+*Source 
+	if (mi(`"`matsource'"')) & "`varlist'"=="" & "`matrix'"=="" {
+	 display as err "invalid options : varlist() or matsource() required."
+	 exit 198
+	}
+	
+	*Varlist : use varlist as specilisation inputs
+	if "`varlist'"!="" {
+capture matrix drop A
+mkmat `varlist' ,mat(A)
+mata comp_M=st_matrix("A")
+}
+
+	***MATSource if not Varlist
+	* mata by default
+	if (mi(`"`matsource'"')) & "`varlist'"=="" & "`matrix'"!="" {
+        local matsource="mata"
     }
-    if !inlist(`"`source'"', "", "mata", "dta", ".dta", "matrix") {
-        display as err "invalid option source(), only {res}dta {err}(stata .dta file), {res}matrix {err}(stata matrix) or {res}mata {err}(mata matrix, default) arguments possible"
+	*If something else is type : error.
+    if !inlist(`"`matsource'"', "", "mata", "dta", ".dta", "matrix") & "`varlist'"=="" {
+		noi display "matsource() only accepts following arguments : {res}dta {err}(stata .dta file), {res}matrix {err}(stata matrix) or {res}mata {err}(mata matrix, default)"
         exit 198
     }	
 
-	
+	*Load Matrix into mata
+if "`matsource'"!=""{
+	if "`matsource'"!="mata"{
+		if "`matsource'"=="matrix"{ /*Stata matrix*/
+			 mata comp_M=st_matrix(`"`matrix'"')
+		}
+		/*
+		if "`matsource'"=="dta" | "`matsource'"==".dta" {
+			preserve
+			use `"`matrix'"',clear 
+			mata comp_M=st_data(.,.)
+			restore
+		}
+		*/
+		}
+	else{
+	mata comp_M=`matrix'
+	}
+}
+
+
+****
+*Computation options
+
 	*Projection individuals (e.g countries) / Nodes (e.g Products)
 		if (mi(`"`projection'"')){
         local projection="indiv"
@@ -34,7 +81,7 @@ program complexity, rclass
         display as err "invalid option projection(), only {res}nodes {err}or  {res}indiv {txt}(default) arguments are possible"
         exit 198
     }	
-	
+
 	*Alternative methods (MR, eingenvalue, fitness)
 		if (mi(`"`method'"')){
         local method="eigenvalue"
@@ -43,7 +90,7 @@ program complexity, rclass
         display as err "invalid option {res}method() {err}, only {res}mr {err} (Method of Reflections), {res}fitness {err}  or  {res}eigenvalue {txt}(default) arguments are possible"
         exit 198
     }	
-	
+
 	*Iterations (for MR only (and sign correction in Eigenvalue))
 if "`method'"=="fitness"{
 	if (mi(`"`iterations'"')){
@@ -52,6 +99,7 @@ if "`method'"=="fitness"{
 	noi di "note: iteration option not considered. Only for MR method"
 	}
 }
+
 *if "`method'"!="fitness"{
 	if (mi(`"`iterations'"')){
         local it=20 /*default nb of iteration : 20 as recommended by Hidalgo for the Economic Complexity*/
@@ -73,33 +121,24 @@ if "`method'"=="fitness"{
 		}
 *}	
 
-	*Load com_M Matrix (binary RCA)	
-	if "`source'"!="mata"{
-		if "`source'"=="matrix"{
-			 mata comp_M=st_matrix(`"`matrix'"')
-		}
-		if "`source'"=="dta" | "`source'"==".dta" {
-			preserve
-			use `"`matrix'"',clear
-			mata comp_M=st_data(.,.)
-			restore
-		}
-		}
-	else{
-	mata comp_M=`matrix'
-	}
-	
 	*Transpose RCA matrix if required
 	if "`transpose'"!=""{
 		mata comp_M=comp_M'
 	}
 	
-	
-***** Core of program	
+**********************	
+***** Core of program
+**********************
+*Transform specialization data in RCA if not yet.	
+if "`rca'"==""{ 
+mata T=comp_M
+mata comp_M=(T:/rowsum(T)):/(colsum(T):/sum(T))
+}
 
-	mata comp_M=mm_cond(comp_M:<1,0,1) /*make binary matrix if not initially, requires more_mata from SSC*/
+mata comp_M=mm_cond(comp_M:<1,0,1) /*make binary matrix if not initially, requires more_mata from SSC*/
 	
 	mata comp_D=rowsum(comp_M) /*Diversification*/
+
 	mata comp_U=rowsum(comp_M') /*ubiquity*/
 	
 
@@ -134,13 +173,15 @@ forvalues j=2 (2)`it'{
 		gen _drank=_new_rank-_old_rank
 		sort _ini_rank
 		qui su _drank
-		local s=r(max)
+		local s=r(max) /*s captures max changes in rank*/
 			drop _newiter _olditer 
 			drop _old_rank _new_rank _drank _ini_rank
-		if `s'==0 {
+		if `s'==0 { /*rank stops to change (max delta rank=0)*/
 		local ns=`ns'+1
-			if `ns'==1{
-				noi di "note : MR's optimal iteration reached at the `j'th"
+			if `ns'==1 {
+				if  "`method'"=="mr"{
+					noi di "note : MR's optimal iteration reached at the `j'th"
+				}
 				local optiter=`j'
 			mata mkc`optiter'=sum(kc`optiter')/rows(kc`optiter')
 			mata dkc`optiter'=(kc`optiter':-mkc`optiter')
@@ -149,8 +190,10 @@ forvalues j=2 (2)`it'{
 			}
 		}
 			
-		if `s'!=0 & `j'==`it'{
-		noi di "note : MR's optimal iteration is of higher order than specified" 
+		if `s'!=0 & `j'==`it' { 
+			if"`method'"=="mr"{ /*rank still changes but max iter reached*/
+				noi di "note : MR's optimal iteration is of higher order than specified" 
+			}
 		mata mkc`it'=sum(kc`it')/rows(kc`it')
 		mata dkc`it'=(kc`it':-mkc`it')
 		mata sdkc`it'=sqrt((1/rows(kc`it'))*(sum(dkc`it':^2)))
@@ -170,7 +213,7 @@ forvalues j=2 (2)`it'{
 
 *EigenValue Method 
 if "`method'"!="mr"{
-	*Problem in mata with very small numbers, sometimes return missing eigensystem:
+	*Problem in mata with very small numbers, sometimes return missing eigensystem: Solved with inflate if missing values.
 	*If eingensystem missing, then inflate square matrix by a fixed value. Doesn't change the selected eigenvector
 			
 	*Complexity of individuals		
@@ -178,7 +221,7 @@ if "`method'"!="mr"{
 		mata comp_R=(comp_M:/comp_D)*(comp_M':/comp_U) 
 		mata eigensystemselecti(comp_R, (1,2), comp_X=., comp_L=.)
 		mata	mis=missing(eigenvalues(comp_R))
-		mata inflate=0
+		mata inflate=0 /*inflate matrix to avoid mata issue with eigenvalues of large matrices with low values*/
 		mata if (mis>0) comp_R=comp_R:*1e+100  ; ;
 		mata if (mis>0) inflate=1  ; ;
 		mata eigensystemselecti(comp_R, (1,2), comp_X=., comp_L=.) 
@@ -214,7 +257,7 @@ if "`method'"!="mr"{
 	mata st_matrix("Complexity_n", comp_n)		 
 	
 
-*Correct ECI/PCI sign if required
+*Correct ECI/PCI sign if required : Correlate with MR
 	quietly{
 		mata st_matrix("comp_i_MR", comp_i_MR)
 		mata st_matrix("comp_n_MR", comp_n_MR)
@@ -269,6 +312,7 @@ if "`method'"!="mr"{
 		 if `n'>`N'{
 		 set obs `n'
 		 }
+		capture drop Complexity_i
 		svmat Complexity_i
 		capture rename Complexity_i1 Complexity_i
 		}
@@ -284,6 +328,7 @@ if "`method'"!="mr"{
 		 if `n'>`N'{
 		 set obs `n'
 		 }
+		 capture drop Complexity_n
 		 svmat Complexity_n
 		 capture rename Complexity_n1 Complexity_n
 	   }
@@ -303,6 +348,7 @@ if "`method'"!="mr"{
 		 if `n'>`N'{
 		 set obs `n'
 		 }
+		capture drop MR_Complexity_i
 		svmat comp_i_MR
 		capture rename comp_i_MR MR_Complexity_i
 		}
@@ -318,6 +364,7 @@ if "`method'"!="mr"{
 		 if `n'>`N'{
 		 set obs `n'
 		 }
+		 capture drop MR_Complexity_n
 		 svmat comp_n_MR
 		 capture rename comp_n_MR MR_Complexity_n
 	   }
@@ -338,6 +385,7 @@ if "`method'"!="mr"{
 	return matrix Complexity_individualMR=comp_i_MR
 	return matrix Complexity_nodeMR=comp_n_MR
 	}
+	return scalar iterations=`it'
 }	
 	
 
@@ -362,6 +410,7 @@ if "`method'"=="fitness"{
 	if "`projection'"!="nodes"{
 		capture drop fitness_i
 		if "`xvar'"==""{
+			capture drop fitness_i
 			svmat fitness_i
 			capture rename fitness_i1 fitness_i
 			}
@@ -369,25 +418,50 @@ if "`method'"=="fitness"{
 	else{
 		capture drop fitness_n
 		if "`xvar'"==""{
+			capture drop fitness_n
 			svmat fitness_n
 			capture rename fitness_n1 fitness_n
 			}
 		}
 	capt drop complexity_n
-	gen complexity_n=1/fitness_n
+	capture replace fitness_n=1/fitness_n
 	mata fitness_i=fkc`it'
-	mata fitness_n=fkp`it'
-	mata complexity_n=1:/fkp`it'
-	mata st_matrix("complexity_n", fkp`it')
+	mata fitness_n=1:/fkp`it'
+	*mata complexity_n=1:/fkp`it'
+	mata st_matrix("fitness_n", fitness_n)
 	mata st_matrix("Ubiquity", fkp0)
 	mata st_matrix("Diversity", fkc0)
 	return matrix Ubiquity=Ubiquity
 	return matrix Diversity=Diversity
 	return matrix Fitness_individual=fitness_i
 	return matrix Fitness_node=fitness_n
-	return matrix Complexity_node=complexity_n
+	*return matrix Complexity_node=complexity_n
 	return scalar iterations=`it'
 }
-	
+if "`method'"=="eigenvalue"{
+	if "`projection'"=="indiv"{
+		su Complexity_i
+	}
+	if "`projection'"=="nodes"{
+		su Complexity_n
+	}
+}
+if "`method'"=="mr"{
+	if "`projection'"=="indiv"{
+		su MR_Complexity_i
+	}
+	if "`projection'"=="nodes"{
+		su MR_Complexity_n
+	}
+}
+
+if "`method'"=="fitness"{
+	if "`projection'"=="indiv"{
+		su fitness_i
+	}
+	if "`projection'"=="nodes"{
+		su fitness_n
+	}
+}
 	end
 

@@ -31,8 +31,8 @@ d Requires: Stata version 9.0
 d
 d Distribution-Date: 20100904
 d
-d Author: Maarten L. Buis, WZB, Berlin
-d Support: email maarten.buis@@wzb.eu
+d Author: Maarten L. Buis, University of Konstanz
+d Support: email maarten.buis@@uni-konstanz.de
 d
 f sheafcoef.ado
 f sheafcoef.hlp

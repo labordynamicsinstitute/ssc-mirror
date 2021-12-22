@@ -1,7 +1,7 @@
 d 'SIMUPED': module to simulate two- and three-generation family data
 d
-d simuped2 and simuped3 are immediate commands to generate two- and
-d three-generation family data, respectively.  The number of
+d  simuped2 and simuped3 are immediate commands to generate two-
+d and three-generation family data, respectively.  The number of
 d siblings in a family is determined by a Poisson distribution with
 d a mean specified by sib(#) or si3(#), where the Poisson variate 
 d is generated using rndpoix. This program needs to be installed

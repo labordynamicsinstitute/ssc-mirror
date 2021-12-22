@@ -1,3 +1,4 @@
+*! version 3.2 Agust 2021 Fernando Rios-Avila Quick fixed to iqratio. 
 *! version 3.1 July 2021 Fernando Rios-Avila Quick fixed to CINDEX. 
 * Indices are now faster. Just a bit slower than ado
 * version 3. March 2021 Fernando Rios-Avila
@@ -525,10 +526,8 @@ void rif_q3(string scalar ywb,touse,newvar, real scalar q, bw, k ) {
 	    //prep
 	    aux = panelsubmatrix(ywby, i, info)
 		//aux=aux 
-		//k type of kernel
-		
+		//k type of kernel		
 		qth=qtile(&aux,q)
-		"here"
 		qden(&aux,qth,bw,k)
  		aux2 = qth:+ (-(aux[,1]:<qth):+q/100):/ mean( qden(&aux,qth,bw,k) , aux[,2] )
 		
@@ -565,7 +564,7 @@ void rif_q3(string scalar ywb,touse,newvar, real scalar q, bw, k ) {
 			else if (k==7) d=(9/2)^.2
 			else if (k==8) d=24^.2
 			else if (k==9) d=(9450/143)^.2
-			bw = 1.3643*d*rows((*y)[,1])^(-.2)*min( (  sqrt(variance((*y)[,1], (*y)[,2])) , (qtile(y,75)-qtile(y,25))/1.349   ) ) 
+			bw = 1.3643*d*rows((*y)[,1])^(-.2)*min( (  sqrt(variance((*y)[,1], (*y)[,2])) , (qtile(y,75)-qtile(y,25))/ (invnormal(.75)-invnormal(.25))  ) ) 
 			//    cons *d*Nobs   ^(-1/5) * min (IQR,SD)
 		}
 	    z=((*y)[,1]:-q):/bw
@@ -742,15 +741,17 @@ void rif_iqratio(string scalar ywb,touse,newvar, real scalar q1,q2, bw, k ) {
 			else if (k==7) d=(9/2)^.2
 			else if (k==8) d=24^.2
 			else if (k==9) d=(9450/143)^.2
-			bwx = 1.3643*d*nobs^-.2*min( (sqrt(variance(aux[,1], aux[,2])), qtile(&aux,75)-qtile(&aux,25)) )
+			bw = 1.3643*d*nobs^-.2*min( (sqrt(variance(aux[,1], aux[,2])), 
+				(qtile(&aux,75)-qtile(&aux,25))) / (invnormal(.75)-invnormal(.25)) )
 			//    cons *d*Nobs   ^(-1/5) * min (IQR,SD)
 		}
 		qlow = (-(aux[,1]:<qth1):+q1/100):/  mean( qden(&aux,qth1,bw,k) , aux[,2] )
 		qhigh= (-(aux[,1]:<qth2):+q2/100):/  mean( qden(&aux,qth2,bw,k) , aux[,2] )
-		rif[|info[i,1],1 \ info[i,2],1|] =		
-		qth2/qth1:+1/qth1:*(qhigh:-qth2/qth1:*qlow)
+		rif[|info[i,1],1 \ info[i,2],1|] =	qth2/qth1:+1/qth1:*(qhigh:-qth2/qth1:*qlow)
 	}
 	st_store(.,newvar,touse,rif[invorder(ord1),])
+	st_numscalar("bbww",bw)
+
 }
 
 
@@ -783,7 +784,8 @@ void rif_iqratio2(string scalar ywb,touse,newvar, real scalar q1,q2, bw, k ) {
 			else if (k==7) d=(9/2)^.2
 			else if (k==8) d=24^.2
 			else if (k==9) d=(9450/143)^.2
-			bwx = 1.3643*d*nobs^-.2*min( (sqrt(variance(aux[,1], aux[,2])), qtile(&aux,75)-qtile(&aux,25)) )
+			bw = 1.3643*d*nobs^-.2*min( (sqrt(variance(aux[,1], aux[,2])), 
+				(qtile(&aux,75)-qtile(&aux,25))) / (invnormal(.75)-invnormal(.25)) )
 			//    cons *d*Nobs   ^(-1/5) * min (IQR,SD)
 		}
 		qlow = (-(aux[,1]:<qth1):+q1/100):/  mean( qden(&aux,qth1,bw,k) , aux[,2] ):*(aux[,1]:!=qth1)
@@ -792,6 +794,8 @@ void rif_iqratio2(string scalar ywb,touse,newvar, real scalar q1,q2, bw, k ) {
 		qth2/qth1:+1/qth1:*(qhigh:-qth2/qth1:*qlow)
 	}
 	st_store(.,newvar,touse,rif[invorder(ord1),])
+		st_numscalar("bbww",bw)
+
 }
 
  

@@ -1,0 +1,24 @@
+d 'WINRATIO': module to calculate the unmatched Win Ratio for prioritised outcomes 
+d
+d  The winratio command calculates the unmatched Win Ratio for
+d prioritised outcomes as described by Pocock 2012 (Eur Heart J.
+d 2012 Jan;33(2):176-82.). The winratio command can handle, binary,
+d continuous, ordinal, time-to-event and repeat event outcomes. 
+d
+d KW: win ratio
+d KW: prioritized outcomes
+d
+d Requires: Stata version 12
+d
+d Distribution-Date: 20210818
+d
+d Author: John Gregson, Medical Statistics Department, London School of Hygiene and Tropical Medicine
+d Support: email John.Gregson@@lshtm.ac.uk
+d
+d Author: Tim Collier, Medical Statistics Department, London School of Hygiene and Tropical Medicine
+d Support: email Tim.Collier@@lshtm.ac.uk
+d
+f winratio.ado
+f ../d/decide_winner.ado
+f winratio.sthlp
+f winratio_example.dta

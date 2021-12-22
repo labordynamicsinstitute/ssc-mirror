@@ -1,5 +1,5 @@
 {smcl}
-{* 10dec2020}{...}
+{* 15oct2021}{...}
 {cmd:help diagma}
 {hline}
 
@@ -97,7 +97,7 @@ These features tend to lead to extreme 2x2 tables with low cell frequencies in w
 
 {title:Examples}
 
-{pstd} The data for the example is taken from Whiting et al. Health Technol Assess. 2006 Oct;10(36):iii-iv, xi-xiii, 1-154. doi: 10.3310/hta10360.{p_end}
+{pstd} The data for the example is taken from Whiting et al. {it:Health Technol Assess.} 2006;10(36):iii-iv, xi-xiii, 1-154. doi: 10.3310/hta10360.{p_end}
 {phang2} {stata "use http://fmwww.bc.edu/repec/bocode/d/diagma_example_data.dta":. use http://fmwww.bc.edu/repec/bocode/d/diagma_example_data.dta} {p_end}
 
 {pstd} Summary estimates using the inverse variance heterogeneity model and summary ROC curve {p_end}
@@ -113,8 +113,8 @@ These features tend to lead to extreme 2x2 tables with low cell frequencies in w
 
 {title:Authors}
 
-{pstd} Luis Furuya-Kanamori, Research School of Population Health, Australian National University, Australia {p_end}
-{pstd} {browse "mailto:luis.furuya-kanamori@anu.edu.au?subject=DIAGMA Stata enquiry":luis.furuya-kanamori@anu.edu.au} {p_end}
+{pstd} Luis Furuya-Kanamori, UQ Centre for Clinical Research, The University of Queensland, Australia {p_end}
+{pstd} {browse "mailto:l.furuya@uq.edu.au?subject=DIAGMA Stata enquiry":l.furuya@uq.edu.au} {p_end}
 
 {pstd} Suhail AR Doi, Department of Population Medicine, College of Medicine, Qatar University, Qatar
 
@@ -122,7 +122,7 @@ These features tend to lead to extreme 2x2 tables with low cell frequencies in w
 
 {title:Reference}
 
-{pstd} Furuya-Kanamori L, Kostoulas P, Doi SA. A new method for synthesizing test accuracy data outperformed the bivariate method. J Clin Epidemiol. 2020. {p_end}
+{pstd} Furuya-Kanamori L, Kostoulas P, Doi SA. A new method for synthesizing test accuracy data outperformed the bivariate method. {it:J Clin Epidemiol.} 2021;132:51-58. doi: 10.1016/j.jclinepi.2020.12.015. {p_end}
 
 
 

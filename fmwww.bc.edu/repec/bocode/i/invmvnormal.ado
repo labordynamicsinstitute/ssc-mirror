@@ -1,5 +1,5 @@
-*! Date    : 03 Jan 2019
-*! Version : 1.6
+*! Date    : 17 Aug 2021
+*! Version : 1.7
 *! Authors : Michael J Grayling & Adrian P Mander
 
 /*
@@ -14,6 +14,7 @@
   30/10/17 v1.5 Added integrator option
   03/01/19 v1.6 Minor changes for speed. Converted mean and sigma to be
                 optional with internal defaults.
+  17/08/21 v1.7	Fixed a small printing error.
   
 */
 
@@ -312,7 +313,7 @@ real colvector pmvnormal_mata(real vector lower, real vector upper,
   else {
     a                           = lower - mean
     b                           = upper - mean
-	C         = J(k, k, 0)
+	C                           = J(k, k, 0)
     zero_k_min_2                = J(1, k - 2, 0)
 	zero_k_min_1                = (zero_k_min_2, 0)
     y                           = zero_k_min_1
@@ -353,7 +354,7 @@ real colvector pmvnormal_mata(real vector lower, real vector upper,
 	  C[2::k, 1]                = Sigma[2::k, 1]/C[1, 1]
 	}
 	else {
-	  C[, 1]                     = (sqrt_Sigma11 \ Sigma[2::k, 1]/sqrt_Sigma11)
+	  C[, 1]                    = (sqrt_Sigma11 \ Sigma[2::k, 1]/sqrt_Sigma11)
 	}
     if (atilde[1] != btilde[1]) {
 	  y[1]                      = (normalden(atilde[1]) - normalden(btilde[1]))/
@@ -419,8 +420,7 @@ real colvector pmvnormal_mata(real vector lower, real vector upper,
                                     (normal(btilde[i]) - normal(atilde[i]))
 	  }
     }
-    C[k, k] = sqrt(Sigma[k, k] - sum(C[k, 1::(k - 1)]:^2))
-	C
+    C[k, k]                     = sqrt(Sigma[k, k] - sum(C[k, 1::(k - 1)]:^2))
     I                           = V = 0
     if (a[1] != .) {
       d                         = J(samples, 1, (normal(a[1]/C[1, 1]), J(1, k - 1, 0)))
@@ -435,7 +435,7 @@ real colvector pmvnormal_mata(real vector lower, real vector upper,
 	  e                         = J(samples, 1, J(1, k, 1))
 	}
     f                           = (e[, 1] - d[, 1], J(samples, k - 1, 0))
-	y = J(samples, k - 1, 0)
+	y                           = J(samples, k - 1, 0)
 	Delta                       = runiform(shifts, k - 1)
 	samples_sqrt_primes         =
 	  (1::samples)*sqrt((2, 3, 5, 7, 11, 13, 17, 19, 23, 29, 31, 37, 41, 43, 47,
@@ -450,13 +450,13 @@ real colvector pmvnormal_mata(real vector lower, real vector upper,
 	Ii                          = J(1, shifts, 0)
 	for (i = 1; i <= shifts; i++) {
 	  for (l = 2; l <= k; l++) {
-		l_vec                 = 1::(l - 1)
-		y[, l - 1]            =
+		l_vec                   = 1::(l - 1)
+		y[, l - 1]              =
 		  invnormal(d[, l - 1] + abs(2*mod(samples_sqrt_primes[, l - 1] :+
        				                     Delta[i, l - 1], 1) :- 1):*
 								   (e[, l - 1] - d[, l - 1]))
 		if ((a[l] != .) & (b[l] != .)) {
-		  Cy                  = rowsum(J(samples, 1, C[l, l_vec]):*y[, l_vec])
+		  Cy                    = rowsum(J(samples, 1, C[l, l_vec]):*y[, l_vec])
 		  d[, l]                = normal((a[l] :- Cy)/C[l, l])
 	      e[, l]                = normal((b[l] :- Cy)/C[l, l])
 		  f[, l]                = (e[, l] :- d[, l]):*f[, l - 1]

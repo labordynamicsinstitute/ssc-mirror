@@ -251,7 +251,7 @@ return(chaz)
 
 {title:Examples}
 
-{phang2}
+{phang}
 For detailed examples, see {bf:{browse "https://www.mjcrowther.co.uk/software/merlin":mjcrowther.co.uk/software/merlin}}.
 
 
@@ -260,17 +260,34 @@ For detailed examples, see {bf:{browse "https://www.mjcrowther.co.uk/software/me
 {p 5 12 2}
 {bf:Michael J. Crowther}{p_end}
 {p 5 12 2}
-Biostatistics Research Group{p_end}
+Red Door Analytics{p_end}
 {p 5 12 2}
-Department of Health Sciences{p_end}
+Stockholm, Sweden{p_end}
 {p 5 12 2}
-University of Leicester{p_end}
-{p 5 12 2}
-michael.crowther@le.ac.uk{p_end}
+michael@reddooranalytics.se{p_end}
 
 
 {title:References}
 
-{p 5 12 2}
-Crowther MJ. Extended multivariate generalised linear and non-linear mixed effect models. 2017; {it:Submitted}.{p_end}
+{phang}
+{bf:Crowther MJ}. Extended multivariate generalised linear and non-linear mixed effects models. 
+{browse "https://arxiv.org/abs/1710.02223":https://arxiv.org/abs/1710.02223}
+{p_end}
 
+{phang}
+{bf:Crowther MJ}. merlin - a unified framework for data analysis and methods development in Stata. {browse "https://journals.sagepub.com/doi/pdf/10.1177/1536867X20976311":{it:Stata Journal} 2020;20(4):763-784}.
+{p_end}
+
+{phang}
+{bf:Crowther MJ}. Multilevel mixed effects parametric survival analysis: Estimation, simulation and application. {browse "https://journals.sagepub.com/doi/abs/10.1177/1536867X19893639?journalCode=stja":{it:Stata Journal} 2019;19(4):931-949}.
+{p_end}
+
+{phang}
+{bf:Crowther MJ}, Lambert PC. Parametric multi-state survival models: flexible modelling allowing transition-specific distributions with 
+application to estimating clinically useful measures of effect differences. {browse "https://onlinelibrary.wiley.com/doi/full/10.1002/sim.7448":{it: Statistics in Medicine} 2017;36(29):4719-4742.}
+{p_end}
+
+{phang}
+Weibull CE, Lambert PC, Eloranta S, Andersson TM-L, Dickman PW, {bf:Crowther MJ}. A multi-state model incorporating 
+estimation of excess hazards and multiple time scales. {browse "https://onlinelibrary.wiley.com/doi/10.1002/sim.8894":{it:Statistics in Medicine} 2021; (In Press)}.
+{pstd}

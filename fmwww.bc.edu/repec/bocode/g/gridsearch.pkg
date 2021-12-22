@@ -15,9 +15,9 @@ d KW: grid search
 d KW: support vector machines
 d KW: random forests
 d
-d Requires: Stata version 14 and crossvalidate from SSC (q.v.)
+d Requires: Stata version 14 and crossvalidate from SSC (q.vc)
 d
-d Distribution-Date: 20201029
+d Distribution-Date: 20210824
 d
 d Author: Matthias Schonlau,  University of Waterloo
 d Support: email schonlau@@uwaterloo.ca

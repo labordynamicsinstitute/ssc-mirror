@@ -149,7 +149,7 @@ The R code is available after running {cmd:tstf} command by typing {hi: viewsour
 Zhou X, Crippa A, Danielsson AK, Galanti R, Orsini N (2019). Effect of tobacco control policies on the Swedish Smoking Quitline using intervention time series analysis. {it:BMJ Open}.
 
 {phang}
-Box GEP, Tiao GC (1975). Effect of tobacco control policies on the Swedish Smoking Quitline using intervention time series analysis. {it:Journal of the American Statistical Association},
+Box GEP, Tiao GC (1975). Intervention analysis with applications to economic and environmental problems. {it:Journal of the American Statistical Association},
 70(349), 70–79.
  
 {title:Authors}

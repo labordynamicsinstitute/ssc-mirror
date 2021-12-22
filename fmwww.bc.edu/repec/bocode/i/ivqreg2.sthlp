@@ -1,5 +1,5 @@
 {smcl}
-{* *! version 1.3 28 Aug 2020}{...}
+{* *! version 1.4 29 Sep 2021}{...}
 {cmd:help ivqreg2} 
 
 {hline}
@@ -93,8 +93,8 @@ dealings in the software.
 {title:Examples}
 
     {hline}
-{pstd}Setup{p_end}
-{phang2}{cmd:. use http://people.brandeis.edu/~kgraddy/datasets/fishdata.dta}{p_end}
+{pstd}Setup{p_end}        
+{phang2}{cmd:. use https://people.brandeis.edu/~kgraddy/datasets/fishdata.dta}{p_end}
 
 {pstd}Structural quantile functions for a range of quantiles using stormy and rainy as instruments for price{p_end}
 {phang2}{cmd:. ivqreg2 qty price, inst(stormy rainy) q(0.15 .25 .5 .75 .85)}{p_end}

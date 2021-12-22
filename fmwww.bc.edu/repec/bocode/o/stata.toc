@@ -17,6 +17,7 @@ p ofrtplot module to plot observed, fitted and residuals versus time variable
 p oglm module to estimate Ordinal Generalized Linear Models
 p oglm9 module to estimate Ordinal Generalized Linear Models
 p omega module to calculate the omega reliability coefficient
+p omegacoef module to calculate the omega reliability coefficient
 p omninorm module to calculate omnibus test for univariate/multivariate normality
 p omodel modules to perform tests on ordered probit and ordered logit models
 p onespell module to generate single longest spell for each unit in panel data, listwise
@@ -30,6 +31,7 @@ p opplot module to generate a vertical bar chart to summarize a binary outcome i
 p oprobpr module to display predicted probabilities from ordered probit and logit
 p optaspect module to compute heuristic criteria for optimal aspect ratios in a two-variable line plot
 p optifact module to find the best summated rating scale from a list of items
+p ordcatsampsi module to compute power and sample size for ordered categorical outcomes
 p ordplot module for cumulative distribution plot of ordinal variable
 p ordvar module to calculate measures of ordinal consensus and dispersion
 p orse module to save odds ratios and their standard errors after logit, ologit

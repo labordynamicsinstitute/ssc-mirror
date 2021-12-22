@@ -1,6 +1,6 @@
 d 'SAMPICC': module to compute sample size for an intra-class correlation (ICC)
 d
-d sampicc computes the sample size or, alternatively, the power
+d  sampicc computes the sample size or, alternatively, the power
 d required to test an ICC (p1) against a null value (p0).  In
 d addition, the program will compute the sample size for a
 d specified width of a confidence interval for the ICC.  

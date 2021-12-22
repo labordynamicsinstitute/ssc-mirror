@@ -1,6 +1,6 @@
 d 'SIZEFX': module to compute effect size correlations
 d
-d sizefx computes Cohen's d, Hedges' g, and effect size (ES) 
+d  sizefx computes Cohen's d, Hedges' g, and effect size (ES) 
 d correlations	(r) for the two variables specified in varlist. The
 d two variables specified in  varlist correspond to the variables
 d in the command "ttest varname1 == varname2,  unpaired unequal"

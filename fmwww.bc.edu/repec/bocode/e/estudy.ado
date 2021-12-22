@@ -1,4 +1,4 @@
-*! version 1.0.2  08mar2019 
+*! version 2.1.2  16sep2021
 program define estudy, rclass
         version 13
 
@@ -636,13 +636,23 @@ forvalues z=1/`p' {
 			scalar carvariance_`i'_`j' = num*variance
 			
 			if "`modtype'" == "" | "`modtype'" == "SIM" {
-				qui sum `idv_`i'_1' if `event' <= `upp_bound' & `event' >= `low_bound'
+				if "`commonevent'" == "" {
+					qui sum `idv_`i'_1' if `event' <= `upp_bound' & `event' >= `low_bound' 
+				}
+				else{
+					qui sum `idv_1' if `event' <= `upp_bound' & `event' >= `low_bound' 
+				}
 				scalar mean_mkt_ret = r(mean)
 				scalar var_mkt_ret = r(Var)
 				scalar n_mkt_ret = r(N)
 				scalar corr_fac_den = var_mkt_ret*n_mkt_ret
 				tempvar mean_resid
-				qui gen `mean_resid' = `idv_`i'_1' - mean_mkt_ret 
+				if "`commonevent'" == "" {
+					qui gen `mean_resid' = `idv_`i'_1' - mean_mkt_ret  
+				}
+				else{
+					qui gen `mean_resid' = `idv_1' - mean_mkt_ret
+				}
 				qui sum `mean_resid' if `event' >= `evlbound_`j'' & `event' <= `evubound_`j''
 				scalar corr_fac_num = r(sum)
 				scalar corr_fac_num = corr_fac_num^2

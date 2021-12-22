@@ -1,4 +1,5 @@
-*! rifhdreg 2.54 July 2021 by FRA Changes anything to drop []
+*! rifhdreg 2.55 August 2021 by FRA Bug with Sample definition
+* rifhdreg 2.54 July 2021 by FRA Changes anything to drop []
 * rifhdreg 2.53 May 2021 by Fernando Rios Avila Adds "old"
 * rifhdreg 2.52 Sep 2020 by Fernando Rios Avila
 * Added a new option. Trim. This will specify the min and max of the Pscore to avoid large IPWs
@@ -50,7 +51,7 @@ syntax anything [if] [in] [aw fw iw pw], rif(str)  [,* ] ///
 	 svy /// allows using SVY for regressions.
 	 ]
  marksample touse
- markout   `touse'   `abs' `rwprobit' `rwlobit' `over' `rwmprobit' `rwmlogit' 
+ markout   `touse'  `anything'  `abs' `rwprobit' `rwlobit' `over' `rwmprobit' `rwmlogit' 
 
 if "`svy'"=="" { 
 qui {

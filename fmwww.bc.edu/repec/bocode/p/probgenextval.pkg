@@ -1,0 +1,46 @@
+d 'PROBGENEXTVAL': module to Estimate Binary Generalized Extreme Value (GEV) Models
+d
+d  probgenextval performs estimations of binary generalized extreme
+d value (GEV) models. The generalized extreme value (GEV)
+d distribution is a lineage of continuous probability laws that are
+d utilized to characterize extreme values phenomena. It
+d incorporates the Gumbel, Frechet and Weibull distributions
+d lineages also known as type I, II and III extreme value
+d distributions. The generalized extreme value (GEV) distribution,
+d by incorporating the previous three distributions, permits to
+d obtain a continuous spectrum of possible shapes encompassing all
+d the three preceding distributions. In this sense, it is more
+d flexible because it lets the data speak and choose which
+d distribution is more suitable. The command probgenextval
+d estimates a generalized extreme value (GEV) model for a binary
+d dependent variable, typically with one of the outcomes rare, or
+d extremely rare, relative to the other.  The command probgenextval
+d can calculate robust and cluster-robust standard errors and
+d remodel results for complex survey designs. The generalized
+d extreme value (GEV) distribution is employed in Extreme Value
+d Theory or Extreme Value Analysis to model the probability of
+d events that are more extreme than any formerly noticed. That is,
+d it is utilized to estimate the risk of extreme, rare events, for
+d example: the 1755 Lisbon Earthquake, the 2004 Indian Ocean
+d Earthquake and Tsunami, Credit Defaults, and the Modeling of
+d COVID-19/CORONAVIRUS. The theory behind the command probgenextval
+d can be found in Calabrese and Osmetti (Journal of Applied
+d Statistics, 2013), and Wang and Dey (The Annals of Applied
+d Statistics, 2010).   
+d
+d KW: generalized extreme value
+d KW: binary outcomes
+d KW: GEV
+d
+d Requires: Stata version 16
+d
+d Distribution-Date: 20211130
+d
+d Author: Diallo Ibrahima Amadou, FERDI, University of Clermont Auvergne
+d Support: email zavren@@gmail.com
+d
+f probgenextval.ado
+f probgenextval_ll.ado
+f probgenextval_p.ado
+f probgenextval.sthlp
+f probgenextvalcovid.dta

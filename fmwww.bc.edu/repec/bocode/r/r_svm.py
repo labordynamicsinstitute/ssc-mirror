@@ -1,9 +1,8 @@
 ################################################################################
-#! "r_svm.py": SVM regression using Python Scikit-learn, and called by
-#! the Stata command "r_svm.ado" 
+#! "r_svm.py": SVM regression using Python Scikit-learn
 #! Author: Giovanni Cerulli
-#! Version: 3
-#! Date: 23 July 2020
+#! Version: 4
+#! Date: 09 November 2021
 ################################################################################
 
 # IMPORT NEEDED PACKAGES
@@ -42,19 +41,19 @@ R=int(Macro.getLocal("seed"))
 # INITIALIZE A SVM (with parameters: kernel='rbf', C = 10.0, gamma=0.1)
 model = SVR(kernel='rbf', C = 10.0, gamma=0.1)
 
-# SVMR "CROSS-VALIDATION" FOR "C" AND "GAMMA" BY PRODUCING A "GRID SEARCH"
+# SVMC "CROSS-VALIDATION" FOR "C" AND "GAMMA" BY PRODUCING A "GRID SEARCH"
 # GENERATE THE TWO PARAMETERS' GRID AS A "LIST"
 gridC=list(range(1,101,10))
-gridG=list([x*0.5/10 for x in range(2*1, 2*10+1)])
+gridG=[0.1,0.2,0.35,0.5,0.65,0.8,1,10]
 
 # PUT THE GENERATED GRIDS INTO A PYTHON DICTIONARY 
 param_grid = {'C': gridC, 'gamma': gridG}
 
+# READ THE NUMBER OF CV-FOLDS "n_folds" FROM STATA
+n_folds=int(Macro.getLocal("n_folds"))
+
 # INSTANTIATE THE GRID
-# BUILD A "GRID SEARCH CLASSIFIER"
-grid = GridSearchCV(model,param_grid,cv=10,
-                    scoring='explained_variance',
-					return_train_score=True)
+grid = GridSearchCV(model, param_grid, cv=n_folds, scoring='explained_variance', return_train_score=True)
 
 # FIT THE GRID
 grid.fit(X, y)
@@ -118,7 +117,7 @@ Data.store(D, None, y_hat)
 ################################################################################
 
 # SET THE TRAIN/TEST DATASET AND THE NEW-INSTANCES-DATASET
-D=Macro.getLocal("out_sample") 
+D=Macro.getLocal("out_sample_x") 
 D=D+".dta"
 
 # LOAD A STATA DATASET LOCATED INTO THE DIRECTORY AS PANDAS DATAFRAME

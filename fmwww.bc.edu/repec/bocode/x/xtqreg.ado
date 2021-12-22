@@ -1,4 +1,4 @@
-* Version 1.4 - 22 April 2020
+* Version 1.5 - 30 Sep 2021
 * By J.A.F. Machado and J.M.C. Santos Silva
 * Please email jmcss@surrey.ac.uk for help and support
 
@@ -18,7 +18,7 @@ version 14.0
 syntax varlist(numeric min=2 fv) [if] [in] ,  [ Id(string) Quantile(numlist) SAVEfe(string) ls Predict(string)]  
 marksample touse 
 markout `touse' 
-tempname _obsr _ones alpha alphat gammat gamma b be V Ve u up au auhat deltas g xm inprod si k O auhat2 aauhat Qxx Pxx Px XI us ///
+tempname _obsr _ones alpha alphat gammat gamma b be V Ve u up au auhat deltas g xm inprod si k O auhat2 aauhat Qxx Pxx Px XI us s_hat ///
 us2 bpost Vpost vp uv av v2 si2 w uw avw w2 Q V_location V_scale  Vmss 
 gettoken _y _rhs: varlist
 
@@ -89,8 +89,9 @@ matrix `g'=e(b)
 matrix `V_scale'=e(V)
 qui predict double `deltas'  , u
 qui predict double `auhat' , xbu
-qui su `auhat' if `touse'
-if r(min)<=0 di as txt "WARNING: some fitted values of the scale function are negative"
+qui g `s_hat' = (`auhat')<=0 if `touse'
+su `s_hat' if `touse', meanonly 
+if r(max)==1 di as error "WARNING: " 100*r(mean) "% of the fitted values of the scale function are not positive"
 qui g double `us'=(`u')/(`auhat') if `touse'
 
 qui g  byte  `_ones'=1 if `touse'

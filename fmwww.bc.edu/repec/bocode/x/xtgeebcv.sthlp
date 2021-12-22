@@ -1,5 +1,5 @@
 {smcl}
-{* *! version 5.0.0 05Apr2021}
+{* *! version 5.1.0 03Dec2021}
 {cmd:help xtgeebcv}
 {hline}
 
@@ -49,6 +49,9 @@ by the user.
 
 {marker description}{...}
 {title:Description}
+
+{pstd}
+{hi: Updates as of December 03, 2021}: {cmd:xtgeebcv} was not allowing for intercept-only models.  The code has now been updated to permit the use of intercept-only models.
 
 {pstd}
 {hi: Updates as of April 05, 2021}: The MBN correction was missing a constant from the trace in the computation of phi that is listed in {help xtgeebcv##KC2001:Morel et al. (2003)}, but not listed

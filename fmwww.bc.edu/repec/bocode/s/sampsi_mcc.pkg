@@ -1,6 +1,6 @@
 d 'SAMPSI_MCC': module to calculate Sample Size or Power for Matched Case-Control Studies
 d
-d sampsi_mcc} calculates the power and sample size for a matched
+d  sampsi_mcc} calculates the power and sample size for a matched
 d case control study. The theory behind this command is described
 d in Dupont (1988) Power Calculations for Matched Case-Control
 d Studies, Biometrics. The calculations require the usual alpha and

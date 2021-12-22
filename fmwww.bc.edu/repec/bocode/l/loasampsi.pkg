@@ -1,0 +1,21 @@
+d 'LOASAMPSI': module to compute power and sample size for limits of agreement (LOA) analysis
+d
+d   loasampsi computes sample size at a specified power, and power
+d at a specified sample size, for Bland and Altman's (1986) limits
+d of agreement (LOA) analysis, according to the method	developed
+d by Lu et al. (2016). The results produced by loasampsi are
+d identical to those produced by the PASS Sample Size Software and
+d the R package blandPower. 
+d
+d KW: limits of agreement
+d KW: Bland and Altman plot
+d
+d Requires: Stata version 11
+d
+d Distribution-Date: 20210903
+d
+d Author: Ariel Linden, Linden Consulting Group, LLC
+d Support: email alinden@@lindenconsulting.org
+d
+f loasampsi.ado
+f loasampsi.sthlp

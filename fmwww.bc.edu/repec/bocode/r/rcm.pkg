@@ -1,0 +1,31 @@
+d 'RCM': module to implement regression control method / panel data approach to program evaluation
+d
+d      rcm effectively implements regression control method (RCM),
+d aka a panel data approach for program evaluation (Hsiao et al.,
+d J. Ap. Met.	 2012), which exploits cross-sectional correlation
+d to construct counterfactual outcomes for a single treated unit by
+d linear    regression (OLS), lasso or post-lasso OLS.	Covariates
+d (indepvars) are allowed to further improve prediction as proposed
+d by	Hsiao and Zhou (J. Ap. Met., 2019).  rcm also supports
+d placebo tests using fake treatment unit and/or time for
+d statistical inferences. For a    detailed guidence to the usage
+d of rcm, you are referred to Yan and Chen (2021). 
+d
+d KW: regression control
+d KW: program evaluation
+d KW: placebo tests
+d
+d Requires: Stata version 16
+d
+d Distribution-Date: 20211101
+d
+d Author:  Guanpeng Yan, Shandong University
+d Support: email  guanpengyan@@mail.sdu.edu.com
+d
+d Author:  Qiang Chen, Shandong University
+d Support: email qiang2chen2@@126.com
+d
+f rcm.ado
+f rcm.sthlp
+f ../g/growth.dta
+f repgermany.dta

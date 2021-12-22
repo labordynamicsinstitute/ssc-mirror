@@ -1,11 +1,12 @@
-*! Date    : 03 Jan 2019
-*! Version : 1.1
+*! Date    : 17 Aug 2021
+*! Version : 1.2
 *! Authors : Michael J Grayling & Adrian P Mander
 
 /*
   30/10/17 v1.0 Basic version complete.
   03/01/19 v1.1 Minor changes for speed. Converted delta and sigma to be 
                 optional with internal defaults.
+  17/08/21 v1.2	Fixed a small printing error.
 */
 
 program define invtmvt, rclass
@@ -771,7 +772,7 @@ real colvector pmvnormal_mata(real vector lower, real vector upper,
 	  C[2::k, 1]                = Sigma[2::k, 1]/C[1, 1]
 	}
 	else {
-	  C[, 1]                     = (sqrt_Sigma11 \ Sigma[2::k, 1]/sqrt_Sigma11)
+	  C[, 1]                    = (sqrt_Sigma11 \ Sigma[2::k, 1]/sqrt_Sigma11)
 	}
     if (atilde[1] != btilde[1]) {
 	  y[1]                      = (normalden(atilde[1]) - normalden(btilde[1]))/
@@ -838,7 +839,6 @@ real colvector pmvnormal_mata(real vector lower, real vector upper,
 	  }
     }
     C[k, k] = sqrt(Sigma[k, k] - sum(C[k, 1::(k - 1)]:^2))
-	C
     I                           = V = 0
     if (a[1] != .) {
       d                         = J(samples, 1, (normal(a[1]/C[1, 1]), J(1, k - 1, 0)))
@@ -853,7 +853,7 @@ real colvector pmvnormal_mata(real vector lower, real vector upper,
 	  e                         = J(samples, 1, J(1, k, 1))
 	}
     f                           = (e[, 1] - d[, 1], J(samples, k - 1, 0))
-	y = J(samples, k - 1, 0)
+	y                           = J(samples, k - 1, 0)
 	Delta                       = runiform(shifts, k - 1)
 	samples_sqrt_primes         =
 	  (1::samples)*sqrt((2, 3, 5, 7, 11, 13, 17, 19, 23, 29, 31, 37, 41, 43, 47,
@@ -866,16 +866,15 @@ real colvector pmvnormal_mata(real vector lower, real vector upper,
 						 433, 439, 443, 449, 457, 461, 463, 467, 479, 487, 491,
 						 499, 503, 509, 521, 523, 541)[1::(k - 1)])
 	Ii                          = J(1, shifts, 0)
-	"h"
 	for (i = 1; i <= shifts; i++) {
 	  for (l = 2; l <= k; l++) {
-		l_vec                 = 1::(l - 1)
-		y[, l - 1]            =
+		l_vec                   = 1::(l - 1)
+		y[, l - 1]              =
 		  invnormal(d[, l - 1] + abs(2*mod(samples_sqrt_primes[, l - 1] :+
        				                     Delta[i, l - 1], 1) :- 1):*
 								   (e[, l - 1] - d[, l - 1]))
 		if ((a[l] != .) & (b[l] != .)) {
-		  Cy                  = rowsum(J(samples, 1, C[l, l_vec]):*y[, l_vec])
+		  Cy                    = rowsum(J(samples, 1, C[l, l_vec]):*y[, l_vec])
 		  d[, l]                = normal((a[l] :- Cy)/C[l, l])
 	      e[, l]                = normal((b[l] :- Cy)/C[l, l])
 		  f[, l]                = (e[, l] :- d[, l]):*f[, l - 1]

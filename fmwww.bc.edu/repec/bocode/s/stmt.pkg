@@ -11,7 +11,7 @@ d KW: log-hazard
 d
 d Requires: Stata version 13.1
 d
-d Distribution-Date: 20210323
+d Distribution-Date: 20210907
 d
 d Author: Hannah Bower, Department of Medical Epidemiology and Biostatistics, Karolinska Institutet
 d Support: email hannah.bower@@ki.se
@@ -19,10 +19,10 @@ d
 d Author: Therese M-L Andersson, Karolinska Institutet
 d Support: email therese.andersson@@ki.se
 d
-d Author: Michael J. Crowther, University of Leicester
-d Support: email mjc76@@le.ac.uk
+d Author: Michael J. Crowther, Karolinska Institutet
+d Support: email michael.crowther@@ki.se
 d
-d Author: Paul Lambert, Karolinska Institutet
+d Author: Paul Lambert, University of Leicester
 d Support: email paul.lambert@@le.ac.uk
 d
 f stmt.ado

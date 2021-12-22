@@ -30,6 +30,7 @@ p partpred module to generate partial predictions
 p parttau module to calculate Kendall's partial tau and confidence interval
 p pascal module to draw Pascal's triangle
 p path module to support file path manipulation
+p pathmaker module to set global path variables using subfolder names
 p pathof module to return the absolute path of any parent directory of the current working directory
 p pathutil module to support file path manipulation
 p paverage module to calculate p-period-average series in a panel dataset
@@ -104,6 +105,7 @@ p poverty module to calculate poverty measures
 p povguide module to generate the U.S. Poverty Guideline value for a given family size and year
 p povimp module to provide poverty estimates in the absence of actual consumption data
 p povtime module to compute aggregate intertemporal poverty measures (poverty in a panel accounting for time)
+p power_swgee module to compute power (under both a Z and t distribution) for cluster randomized stepped wedge designs 
 p power_tworates_zhu module to calculate sample size or power for a two-sample test of rates
 p powercal module to perform general power and sample size calculations
 p powerclus module to calculate sample size and/or cluster size for cluster designed studies
@@ -128,6 +130,7 @@ p primes module to generate prime numbers
 p printgph module to execute command for each matching file
 p probcalc module to calculate probabilities for Binomial, Poisson, and Normal Distributions
 p probexog-tobexog modules to test exogeneity in probit/tobit 
+p probgenextval module to Estimate Binary Generalized Extreme Value (GEV) Models
 p probitfe module to compute analytical and jackknife bias corrections for fixed effects estimators of panel probit models with individual and time effects
 p probitiv module to perform instrumental variables probit
 p probitmiss module for Efficient Probit Estimation with Partially missing Covariates
@@ -176,6 +179,6 @@ p pweibull module to generate probability plot for data vs fitted Weibull distri
 p pwexp module to fit piecewise exponential model
 p pwmc module to compute pairwise multiple comparisons (unequal variances)
 p pwploti module to plot power curve for sample size and power calculation
-p pyconvertu module to converts a string variable into a classification from the default or user-provided JSON file with the help of Python 3
+p pyconvertu module to convert a string variable into a classification from the default or user-provided JSON file with the help of Python 3
 p pyramid tutorial for population pyramids
 p python module for using the Python language within Stata

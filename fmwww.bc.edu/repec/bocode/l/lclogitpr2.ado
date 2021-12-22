@@ -1,5 +1,5 @@
 *! Author: Hong Il Yoo (h.i.yoo@durham.ac.uk) 
-*! HIY 1.1.0 24 February 2019
+*! HIY 1.1.1 07 November 2021
 
 program define lclogitpr2, sortpreserve
 	version 13.1	
@@ -94,9 +94,9 @@ program define lclogitpr2, sortpreserve
 	if ("`pr0'" == "") {
 		foreach c of numlist `class' {
 			gen `typlist' `varlist'`c' = `pr_`c'' if `touse'
-			if ("`up'" == "") label variable `varlist'`c' "prior probability of being in class `c'"
-			if ("`cp'" == "") label variable `varlist'`c' "posterior probability of being in class `c'"
-			if ("`pr'" == "") label variable `varlist'`c' "probability of choice if in class `c'"
+			if ("`up'" != "") label variable `varlist'`c' "prior probability of being in class `c'"
+			if ("`cp'" != "") label variable `varlist'`c' "posterior probability of being in class `c'"
+			if ("`pr'" != "") label variable `varlist'`c' "probability of choice if in class `c'"
 		}
 	}
 	if ("`up'" == "" & "`cp'" == "") {

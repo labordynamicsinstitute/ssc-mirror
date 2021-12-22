@@ -1,13 +1,14 @@
-*! version 1.0.3  26apr2011  CFBaum
+*! version 1.0.4  26nov2021 CFBaum
 * 1.0.1: 04feb2003
 * 1.0.2: 27jun2006, corrected for calculation of autocovariances using Mata
 * 1.0.3: 26apr2011, add Oliver Jones' suggested MAPE criterion
+* 1.0.4: 26nov2021, allow onepanel
 
 program define dmariano, rclass
 	version 9.2
 	syntax varlist(ts min=3 max=3) [if] [in] [, Crit(string) Maxlag(integer -1) Kernel(string)]
 	marksample touse
-	_ts timevar, sort
+	_ts timevar panelvar `if' `in', sort onepanel
 	markout `touse' `timevar'
 * MSE default criterion
 	local criterion "MSE"

@@ -1,6 +1,7 @@
 ////////////////////////////////////////////////////////////////////////////////
-// STATA FOR  Beresteanu, A. & Sasaki, Y. (2020): Quantile Regression with
-//            Interval Data. Econometric Reviews, forthcoming.
+// STATA FOR  Beresteanu, A. & Sasaki, Y. (2021): Quantile Regression with
+//            Interval Data. Econometric Reviews (Special Issue Honoring Cheng 
+//            Hsiao), 40 (6): 562-583.
 //
 // Use it when you have interval-valued data (consisting of lower and upper 
 // bounds) and want to compute set percentiles with their confidence sets.
@@ -15,16 +16,27 @@ program define itvalpctile, rclass
     _fv_check_depvar `depvar'
     fvexpand `indepvars' 
     local cnames `r(varlist)'
+	tempname N percent lowerEST upperEST lowerCS upperCS
  
  	if "`conditional'" == "" {
-		mata: estimate_setp("`depvar'", "`cnames'", `pl', `ph', `np', "`touse'", `cover') 
+		mata: estimate_setp("`depvar'", "`cnames'", `pl', `ph', `np', "`touse'", `cover', "`N'", ///
+		                    "`percent'", "`lowerEST'", "`upperEST'", "`lowerCS'", "`upperCS'") 
 	}
 	
 	if "`conditional'" != "" {
 		tempvar x
 		gen `x' = `conditional'
-		mata: estimate_conditional_setp("`depvar'", "`cnames'", "`x'", `pl', `ph', `np', "`touse'", `cover', `location') 
+		mata: estimate_conditional_setp("`depvar'", "`cnames'", "`x'", `pl', `ph', `np', "`touse'", `cover', `location', "`N'", ///
+		                                "`percent'", "`lowerEST'", "`upperEST'", "`lowerCS'", "`upperCS'") 
 	}
+	
+    return scalar N = `N'
+    return local cmd "itvalpctile"
+	return matrix CSupper = `upperCS'
+	return matrix CSlower = `lowerCS'
+	return matrix upper = `upperEST'
+	return matrix lower = `lowerEST'
+	return matrix percent = `percent'
 end
 
 		
@@ -39,11 +51,15 @@ void kernel(u, kout){
 // Unconditional
 void estimate_setp( string scalar yv,      string scalar xv,
 					real scalar q_low, 	   real scalar q_high, 	   	real scalar q_num,
-					string scalar touse,   real scalar cover) 
+					string scalar touse,   real scalar cover,       
+					string scalar nname,   string scalar pname,
+					string scalar lename,  string scalar uename,
+					string scalar lcname,  string scalar ucname) 
 {
 	printf("\n{hline 78}\n")
 	printf("Executing:  Beresteanu, A. & Sasaki, Y. (2020): Quantile Regression with\n")
-	printf("            Interval Data. Econometric Reviews, forthcoming.\n")
+	printf("            Interval Data. Econometric Reviews (Special Issue Honoring Cheng\n")
+	printf("            Hsiao), 40 (6): 562-583.\n")
 	printf("{hline 78}\n")
  
     yl     = st_data(., yv, touse)
@@ -92,17 +108,27 @@ void estimate_setp( string scalar yv,      string scalar xv,
 	    printf("    %3.0f       [%10.4f   %10.4f]       [%10.4f   %10.4f]\n",qlist[idx]*100,lower[idx],upper[idx],conf_lower[idx],conf_upper[idx])
 	}
 	printf(  "{hline 78}\n")
+	
+	st_numscalar(nname, n)
+	st_matrix(pname, qlist':*100)
+	st_matrix(lename, lower)
+	st_matrix(uename, upper)
+	st_matrix(lcname, conf_lower)
+	st_matrix(ucname, conf_upper)
 }
 //////////////////////////////////////////////////////////////////////////////// 
 // Conditional
 void estimate_conditional_setp( string scalar yv,      string scalar xv,		string scalar xx,
 								real scalar q_low, 	   real scalar q_high, 	   	real scalar q_num,
-								string scalar touse,   real scalar cover,		real scalar location) 
+								string scalar touse,   real scalar cover,		real scalar location,
+								string scalar nname,   string scalar pname,
+					            string scalar lename,  string scalar uename,
+					            string scalar lcname,  string scalar ucname) 
 {
 	printf("\n{hline 78}\n")
 	printf("Executing:  Beresteanu, A. & Sasaki, Y. (2020): Quantile Regression with\n")
-	printf("            Interval Data. Econometric Reviews, Special Issue in Honor of\n")
-	printf("            Cheng Hsiao, forthcoming.\n")
+	printf("            Interval Data. Econometric Reviews (Special Issue Honoring Cheng\n")
+	printf("            Hsiao), 40 (6): 562-583.\n")
 	printf("{hline 78}\n")
  
     yl     = st_data(., yv, touse)
@@ -163,6 +189,13 @@ void estimate_conditional_setp( string scalar yv,      string scalar xv,		string
 	    printf("    %3.0f       [%10.4f   %10.4f]       [%10.4f   %10.4f]\n",qlist[idx]*100,lower[idx],upper[idx],conf_lower[idx],conf_upper[idx])
 	}
 	printf(  "{hline 78}\n")
+	
+	st_numscalar(nname, n)
+	st_matrix(pname, qlist':*100)
+	st_matrix(lename, lower)
+	st_matrix(uename, upper)
+	st_matrix(lcname, conf_lower)
+	st_matrix(ucname, conf_upper)
 }
 end
 ////////////////////////////////////////////////////////////////////////////////

@@ -1,6 +1,6 @@
 d 'DENTON': module to interpolate a flow or stock series from low-frequency totals via proportional Denton method
 d
-d denton computes the proportional Denton method of interpolation
+d  denton computes the proportional Denton method of interpolation
 d of a low-frequency flow time series by use of an associated
 d high-frequency "indicator series",  imposing the constraints that
 d the interpolated series obeys the low-frequency  totals. The
@@ -20,14 +20,13 @@ d KW: interpolation
 d
 d Requires: Stata version 11.1 (7.0 for denton7, dentonmq7)
 d
+d Distribution-Date: 20210926
 d
 d Author: Christopher F Baum, Boston College
 d Support: email baum@@bc.edu
 d
 d Author: Sylvia Hristakeva, Boston College
 d Support: email hristakeva@@gmail.com
-d
-d Distribution-Date: 20140717
 d
 f denton.ado
 f denton.sthlp

@@ -1,69 +1,109 @@
-import sys																							# used to pull in arguments passed to Python from Stata
-import itertools as it																				# key module used for collecting all combinations
-import sfi																							# Stata function interface
-import re																							# regular expression module
+"""Implement Stata/Mata -tuples- in Python.
 
-count = 0																							# initialize count of tuples
+This script is supposed to be called by tuples.ado.
 
-tuple_args = sys.argv[7:sys.argv.__len__()] 														# separate all pieces to be used in combination generation for tuples
-
-
-# check whether numeric list references are in the range 0<#<n
-# n := lenght of tuples list
-# Note: tuples.ado asserts that only " 0123456789()!&|" are used
-def check_conditionals(condits, max_val):
-	tokens_condits = condits.split(" ")
-	for cs in tokens_condits:
-		if not conditional_statement_OK(cs, max_val) == True:
-			sfi.SFIToolkit.errprintln("option conditionals() invalid")
-			sfi.SFIToolkit.errprintln("Statement '" + cs + "' contains an illiegal list element reference.")
-			sfi.SFIToolkit.exit(198)
-
-def conditional_statement_OK(cs, max_val):
-	cs_vals = list(map(int, re.findall("[0-9]+", cs)))
-	max_cs_vals = max(cs_vals)
-	min_cs_vals = min(cs_vals)
-	if max_cs_vals > max_val or min_cs_vals < 1:
-		return(False)
-	else:
-		return(True)
+version 2.0.0 09aug2021 Joseph N. Luchman & daniel klein
+"""
+import sys
+from itertools import combinations 
+from sfi       import Macro
+from sfi       import SFIToolkit as Stata
 
 
-def parse_conditionals(condits):																	# function to reproduce behavior of conditionals() in Mata
-	py_condits = condits.split(" ")							# split the conditionals string
-	py_condits = ["(" + condit for condit in py_condits]	# remove right parens
-	py_condits = [condit + ")" for condit in py_condits]	# remove left parens
-	py_condits = " and ".join(py_condits)					# combine all statements with "and"s
-	py_condits = re.sub("\!", " not ", py_condits)			# change to python "not"
-	py_condits = re.sub("\|", " or ", py_condits)			# change to python "or"
-	py_condits = re.sub("\&", " and ", py_condits)			# change to python "and"
-	for arg in range(0, tuple_args.__len__()):														# loop over all elements of tuple_args (the elements of the list from which to create tuples) function...
-		py_condits = re.sub('(?<![0-9])'+str(arg+1)+'(?![0-9])', chr(34) + tuple_args[arg] + chr(34)  +						# ... because the conditionals are represented as numbers (needed to be to work in Mata), they are replaced with their names here in Python - this loop does so and adds "in tupl" to make the filter + lambda function in line 33 work
-		" in tupl " , py_condits)
-		
-	return(py_condits)																				# return the formatted conditionals
+def st_tuples(
+        min, 
+        max, 
+        conditionals, 
+        display, 
+        sort,
+        lmacname,
+        anything
+        ):
+    """Create the tuples and set the respective locals in Stata."""
+    if len(conditionals) > 0:
+        # conditionals are implemented in terms of positional arguments.
+        # We enumerate the items in the list (anything) and later use the 
+        # resulting numeric tuples as indices for the original list items.
+        conditionals = rpn_to_infix(conditionals)
+        anything_cpy = anything.copy()
+        anything = list(range(len(anything)))
+    
+    count = 0
+    for r in range(min, max+1):
+        tuples = list(combinations(anything, r))
+        
+        if len(conditionals) > 0:
+            tuples = eval("[tuple for tuple in tuples if "+conditionals+"]")
+            
+        if sort:
+            tuples.reverse()
+            
+        for tuple in tuples:
+            
+            if len(conditionals) > 0:
+                tuple = [anything_cpy[t] for t in tuple]
+                
+            count+=1
+            mac_name = lmacname+str(count)
+            mac_str  = " ".join(tuple)
+            st_c_local(mac_name, mac_str)
+            
+            if display:
+                Stata.displayln("{res}" + mac_name + ": {txt}" + mac_str)
+        
+    st_c_local("n"+lmacname+"s", str(count))
 
 
-if sys.argv[3].__len__() > 0: 
-	check_conditionals(sys.argv[3], tuple_args.__len__())
-	py_condits = parse_conditionals(sys.argv[3])													# invoke the parse_conditionals() function on the conditional statements to format them for removal in the main loop below
-	
-for n_combs in range(int(sys.argv[1]), int(sys.argv[2])+1):											# loop computing combinations by looping over numbers of elements in a combination ...
+def st_c_local(mac_name, mac_str):
+    """Mimic Stata's -c_local-."""
+    # We use (extended) Macro functions to deal with awkward nested
+    # double and single quotes in the tuples.  We use an awkward name 
+    # for the local that we set in tuples.ado to avoid name conflicts.
+    Macro.setLocal("t_u_p_l_e", mac_str)
+    Stata.stata("c_local " + mac_name + " : copy local t_u_p_l_e")
 
-	tuplelist = list(it.combinations(tuple_args, n_combs))
-	
-	if sys.argv[4] not in ['nosort']: tuplelist.reverse()
-	
-	if sys.argv[3].__len__() > 0:
-		exec("tuplelist = list(filter(lambda tupl: " + py_condits + ", tuplelist))")
-	
-	for tuple_comb in range(0, tuplelist.__len__()):
-		
-		count = count + 1
-		
-		sfi.SFIToolkit.stata("c_local " + sys.argv[6] + str(count) + chr(32) + chr(96) + chr(34) + chr(32).join(tuplelist[tuple_comb]) + chr(34) + chr(39) )
-		
-		if sys.argv[5].__len__() > 0: 
-			sfi.SFIToolkit.displayln("{res}" + sys.argv[6] + str(count) + ": {txt}" + " ".join(tuplelist[tuple_comb]))
 
-sfi.SFIToolkit.stata("c_local " + 'n'+sys.argv[6]+'s' + " " + str(count) )									# return number of "ntuples" macro
+def rpn_to_infix(conditionals):
+    """Built logical statement to select the tuples.
+    
+    Input:
+    string, -tuples- option -conditionals() ,
+    space separated, reverse polish notation, checked for errors
+    
+    Return:
+    string, logical statement in terms of tuple
+    e.g., (4 in tuple & 2 in tuple)
+    """
+    stack = []
+    for el in conditionals.split():
+        if el.isnumeric():
+            # Python indices run from 0 to n-1
+            stack.append(str(int(el)-1)+" in tuple")
+        elif el == "&":
+            stack.append(pop_append(stack, "and"))
+        elif el == "|":
+            stack.append(pop_append(stack, "or"))
+        elif el == "!":
+            stack.append("(not "+stack.pop()+")")
+        else:
+            Stata.errprintln("unexpected error in st_tuples_py")
+            Stata.exit(499)
+    return "".join(stack)
+
+
+def pop_append(stack, op):
+    return "("+stack.pop(-2)+" "+op+" "+stack.pop(-1)+")"
+
+
+# This is the entry point for -tuples.ado- to this Python script.
+# We implement this as a script to avoid parsing awkward nested 
+# double and single quotes in the supplied arguments.
+st_tuples(
+    int(sys.argv[1]),           # min
+    int(sys.argv[2]),           # max
+    sys.argv[3],                # conditionals
+    sys.argv[4] == "display",   
+    sys.argv[5] != "nosort",
+    sys.argv[6],                # lmacname
+    sys.argv[7:len(sys.argv)]   # anything
+    )

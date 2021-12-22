@@ -25,21 +25,26 @@ d KW: regression
 d KW: multivariate outcome
 d KW: random effects
 d
-d Requires: Stata version 14.2
+d Requires: Stata version 15.1
 d
-d Distribution-Date: 20190706
+d Distribution-Date: 20211222
 d
-d Author: Michael J. Crowther, University of Leicester
-d Support: email mjc76@@le.ac.uk
+d Author: Michael J. Crowther, Karolinska Institutet
+d Support: email michael.crowther@@ki.se
 d
 f merlin.ado
 f merlin.sthlp
 f merlin_p.ado
 f merlin_parse.ado
+f ../e/exptorcs.ado
+f ../s/stmerlin.ado
 f merlin_estimation.sthlp
 f merlin_model_options.sthlp
 f merlin_models.sthlp
 f merlin_postestimation.sthlp
 f merlin_user.sthlp
 f merlin_reporting.sthlp
+f ../e/exptorcs.sthlp
+f ../s/stmerlin.sthlp
+f ../s/stmerlin_postestimation.sthlp
 f ../l/lmerlin.mlib

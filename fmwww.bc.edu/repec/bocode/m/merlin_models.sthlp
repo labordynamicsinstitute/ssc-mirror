@@ -6,7 +6,7 @@
 {vieweralsosee "merlin postestimation" "help merlin_postestimation"}{...}
 {title:Title}
 
-{p2colset 5 17 19 2}{...}
+{p2colset 5 15 17 2}{...}
 {p2col:{helpb merlin} {hline 2}}Command syntax for model specification{p_end}
 {p2colreset}{...}
 
@@ -34,41 +34,47 @@ and each {it:elementn} can take one of the forms described in {it:{help merlin_m
 with {it:@{it:real}} described in {it:{help merlin_models##elements_details:elements details}}.
 
 
-{synoptset 25}{...}
+{synoptset 35}{...}
 {marker model_options}{...}
 {synopthdr:model_options}
 {synoptline}
-{synopt :{cmd: family({it:{help merlin_models##family:family}})}}distributional family{p_end}
-{synopt :{opth timevar(varname)}}time variable{p_end}
+{synopt :{cmd: {ul:f}amily({it:{help merlin_models##family:family}})}}distributional family{p_end}
+{synopt :{opth time:var(varname)}}time variable{p_end}
 {synopt :{opt nocons:tant}}omit the constant term{p_end}
 {synopt :{opt nap(#)}}number of ancillary parameters to estimate{p_end}
 {synoptline}
 
-{synoptset 25}{...}
+{synoptset 35}{...}
 {marker family}{...}
 {synopthdr:family}
 {synoptline}
-{synopt :{opt gau:ssian}}Gaussian (normal){p_end}
+{synopt :{opt e:xponential}{cmd: [, {it:{help merlin_models##survival:survival}}]}}exponential{p_end}
 {synopt :{opt bern:oulli}}Bernoulli{p_end}
 {synopt :{opt bet:a}}beta{p_end}
-{synopt :{opt p:oisson}}Poisson{p_end}
+{synopt :{opt cox}{cmd: [, {it:{help merlin_models##survival:survival}}]}}Cox model{p_end}
+{synopt :{opt gam:ma}}gamma distribution{p_end}
+{synopt :{opt gau:ssian}}Gaussian (normal){p_end}
+{synopt :{opt gg:amma}{cmd: [, {it:{help merlin_models##survival:survival}}]}}generalised gamma{p_end}
+{synopt :{opt go:mpertz}{cmd: [, {it:{help merlin_models##survival:survival}}]}}Gompertz{p_end}
+{synopt :{opt haz:ard}{cmd: [, {it:{help merlin_models##survival:survival}}]}}additive hazard model{p_end}
+{synopt :{opt lq:uantile}{cmd: [, }{opt q:uantile(#)}{cmd:]}}linear quantile model with asymmetric Laplace distribution{p_end}
+{synopt :{cmd: logchazard [, {it:{help merlin_models##survival:survival}}]}}general log cumulative hazard model{p_end}
+{synopt :{cmd: loghazard [, {it:{help merlin_models##survival:survival}}]}}general log hazard model{p_end}
+{synopt :{opt logl:ogistic}{cmd: [, {it:{help merlin_models##survival:survival}}]}}log logistic{p_end}
+{synopt :{opt logn:ormal}{cmd: [, {it:{help merlin_models##survival:survival}}]}}log normal{p_end}
 {synopt :{opt nb:inomial}}negative binomial with mean dispersion{p_end}
+{synopt :{opt null}}does not contribute to the log-likelihood; see details{p_end}
 {synopt :{opt ol:ogit}}ordinal response with logit link{p_end}
 {synopt :{opt op:robit}}ordinal response with probit link{p_end}
-{synopt :{opt gam:ma}}gamma distribution{p_end}
-{synopt :{opt lq:uantile}{cmd: [, }{opt q:uantile(#)}{cmd:]}}linear quantile model with asymmetric Laplace distribution{p_end}
-{synopt :{opt e:xponential}{cmd: [, {it:{help merlin_models##survival:survival}}]}}exponential{p_end}
-{synopt :{opt go:mpertz}{cmd: [, {it:{help merlin_models##survival:survival}}]}}Gompertz{p_end}
+{synopt :{opt p:oisson}}Poisson{p_end}
+{synopt :{opt pwe:xponential}{cmd: [, {it:{help merlin_models##survival:survival}} {it:{help merlin_models##pweopts:pweopts}}]}}piecewise-exponential{p_end}
 {synopt :{cmd: rp [, {it:{help merlin_models##survival:survival}} {it:{help merlin_models##rpopts:rpopts}}]}}Royston-Parmar model on the log cumulative hazard scale{p_end}
-{synopt :{cmd: loghazard [, {it:{help merlin_models##survival:survival}}]}}general log hazard model{p_end}
-{synopt :{cmd: logchazard [, {it:{help merlin_models##survival:survival}}]}}general log cumulative hazard model{p_end}
+{synopt :{cmd: user [, {it:{help merlin_models##user:user}} [{it:{help merlin_models##survival:survival}}]]}}user-defined{p_end}
 {synopt :{opt w:eibull}{cmd: [, {it:{help merlin_models##survival:survival}}]}}Weibull{p_end}
-{synopt :{cmd: user [, {it:{help merlin_models##user:user}} {it:{help merlin_models##survival:survival}}]}}user-defined{p_end}
-{synopt :{opt null}}does not contribute to the log-likelihood; see details{p_end}
 {synoptline}
 {p2colreset}{...}
 
-{synoptset 25}{...}
+{synoptset 35}{...}
 {marker survival}{...}
 {synopthdr:survival}
 {synoptline}
@@ -79,18 +85,26 @@ with {it:@{it:real}} described in {it:{help merlin_models##elements_details:elem
 {synoptline}
 {p2colreset}{...}
 
-{synoptset 25}{...}
-{marker rpopts}{...}
-{synopthdr:rpopts - family(rp)}
+{synoptset 35}{...}
+{marker pweopts}{...}
+{synopthdr:pweopts - family(pwexponential)}
 {synoptline}
-{synopt :{opth df(#)}}degrees of freedom for the baseline log cumulative hazard function{p_end}
-{synopt :{opt knots(knots_list)}}knot locations for the baseline log cumulative hazard function - includes 
-boundary knots, should be in increasing order.{p_end}
-{synopt :{opt scale(scale)}}which scale to fit the model on; only {cmd:scale(hazard)} is currently supported, meaning the log cumulative hazard scale{p_end}
+{synopt :{opt knots(knots_list)}}knot locations (cut-points), for the piecewise-exponential distribution. Should be in increasing order.{p_end}
 {synoptline}
 {p2colreset}{...}
 
-{synoptset 25}{...}
+{synoptset 35}{...}
+{marker rpopts}{...}
+{synopthdr:rpopts - family(rp)}
+{synoptline}
+{synopt :{opth df(#)}}degrees of freedom for the baseline log cumulative hazard function (does not include the intercept){p_end}
+{synopt :{opt knots(knots_list)}}knot locations for the baseline log cumulative hazard function - includes 
+boundary knots, should be in increasing order.{p_end}
+{synopt :{opt noorth:og}}turns off the default orthogonalisation of the spline terms{p_end}
+{synoptline}
+{p2colreset}{...}
+
+{synoptset 35}{...}
 {marker user}{...}
 {synopthdr:user}
 {synoptline}
@@ -103,13 +117,14 @@ boundary knots, should be in increasing order.{p_end}
 {pstd}See {helpb merlin_user:merlin user-defined functions}.
 
 
-{synoptset 25}{...}
+{synoptset 35}{...}
 {marker elements}{...}
 {synopthdr:element}
 {synoptline}
 {synopt :{opt {varname}}}a variable in the dataset{p_end}
 {synopt :{bf:M}#{cmd:[}{it:levelvar...}{cmd:]}}a random effect at the specified level; see {it:{help merlin_models##elements_details:{it:details}}}{p_end}
 {synopt :{cmd: fp(}{it:varname}, {help merlin_models##fpopts:{it:fp_opts}}{cmd:)}}a fractional polynomial function of {it:varname}{p_end}
+{synopt :{cmd: pc(}{it:varname}, {help merlin_models##pc_opts:{it:pc_opts}}{cmd:)}}a piecewise-constant spline function of {it:varname}{p_end}
 {synopt :{cmd: rcs(}{it:varname}, {help merlin_models##rcs_opts:{it:rcs_opts}}{cmd:)}}a restricted cubic spline function of {it:varname}{p_end}
 {synopt :{cmd: bs(}{it:varname}, {help merlin_models##bsopts:{it:bs_opts}}{cmd:)}}a {it:B}-spline function of {it:varname}{p_end}
 {synopt :{opt mf(function_name)}}a user-defined Mata function; see {it:{help merlin_models##elements_details:{it:details}}}{p_end}
@@ -124,16 +139,28 @@ boundary knots, should be in increasing order.{p_end}
 {synoptline}
 {pstd}More detailed descriptions can be found in {it:{help merlin_models##elements_details:{bf:elements details}}}
 
-{synoptset 25}{...}
+{synoptset 35}{...}
 {marker fpopts}{...}
 {synopthdr:fp_opts}
 {synoptline}
 {synopt :{opth pow:ers(#)}}powers of the fractional polynomial; up to 2 degress can be used{p_end}
 {synopt :{opth off:set(varname)}}to add before the fractional polynomial is calculated{p_end}
+{synopt :{opth moff:set(varname)}}adds the negative of {it:varname} before the fractional polynomial is calculated{p_end}
 {synoptline}
 {p2colreset}{...}
 
-{synoptset 25}{...}
+{synoptset 35}{...}
+{marker pc_opts}{...}
+{synopthdr:pc_opts}
+{synoptline}
+{synopt :{opt knots(knots_list)}}knot locations (cut-points) for the piecewise-constant spline function{p_end}
+{synopt :{opt noref:erence}}include an indicator variable for the first interval{p_end}
+{synopt :{opth off:set(varname)}}to add before the spline function is calculated{p_end}
+{synopt :{opth moff:set(varname)}}adds the negative of {it:varname} before the spline function is calculated{p_end}
+{synoptline}
+{p2colreset}{...}
+
+{synoptset 35}{...}
 {marker rcs_opts}{...}
 {synopthdr:rcs_opts}
 {synoptline}
@@ -143,10 +170,11 @@ boundary knots, should be in increasing order.{p_end}
 {synopt :{opt event}}when using {cmd:df()}, calculate internal knot locations based on centiles of the observations that had an event (i.e. for survival models){p_end}
 {synopt :{opt log}}calculate splines of the log of {it:varname}, rather than {it:varname}{p_end}
 {synopt :{opth off:set(varname)}}to add before the spline function is calculated{p_end}
+{synopt :{opth moff:set(varname)}}adds the negative of {it:varname} before the spline function is calculated{p_end}
 {synoptline}
 {p2colreset}{...}
 
-{synoptset 25}{...}
+{synoptset 35}{...}
 {marker bsopts}{...}
 {synopthdr:bs_opts}
 {synoptline}
@@ -159,6 +187,7 @@ boundary knots, should be in increasing order.{p_end}
 {synopt :{opt log}}calculate splines of the log of {it:varname}, rather than {it:varname}{p_end}
 {synopt :{opt int:ercept}}include the intercept basis function{p_end}
 {synopt :{opth off:set(varname)}}to add before the spline function is calculated{p_end}
+{synopt :{opth moff:set(varname)}}adds the negative of {it:varname} before the spline function is calculated{p_end}
 {synoptline}
 {p2colreset}{...}
 
@@ -215,6 +244,19 @@ at {cmd:level1}, and {cmd:M2[level1>level2]} defines a random effect called {cmd
 
 {phang3}{opt offset(varname)} defines an offset to be added to the {cmd:fp()} variable prior to the fractional polynomial being derived.
 
+{phang3}{opt moffset(varname)} defines a negative offset to be taken away from the {cmd:fp()} variable prior to the fractional polynomial being derived.
+
+{phang2}{cmd:pc(}{it:varname}, {help merlin_models##pcopts:{it:pc_opts}}{cmd:)} a piecewise-constant spline function of {it:varname}, where {it:pc_opts} are:
+
+{p 12 16 2}{cmd:knots(numlist)} specifies the knot locations (cut-points), which must be in ascending order. Binary indicator variables are 
+created for each interval, except the first which is the reference group, and included in the linear predictor.
+
+{phang3}{opt noreference} specifies an indicator variable is also included for the first interval.
+
+{phang3}{opt offset(varname)} defines an offset to be added to the {cmd:pc()} variable prior to the spline function being derived.
+
+{phang3}{opt moffset(varname)} defines a negative offset to be taken away from the {cmd:pc()} variable prior to the spline function being derived.
+
 {phang2}{cmd:rcs(}{it:varname}, {help merlin_models##rcsopts:{it:rcs_opts}}{cmd:)} a restricted cubic spline function of {it:varname}, where {it:rcs_opts} are:
 
 {p 12 16 2}{cmd:df(#)} specifies the degrees of freedom for the spline function. Boundary knots are assumed to be the min and max of 
@@ -230,6 +272,8 @@ the {it:varname}. Internal knots are placed at equally spaced centiles.
 based on centiles of event times. Only valid when the {cmd:family()} is a survival model.
 
 {phang3}{opt offset(varname)} defines an offset to be added to the {cmd:rcs()} variable prior to the spline function being derived.
+
+{phang3}{opt moffset(varname)} defines a negative offset to be taken away from the {cmd:rcs()} variable prior to the spline function being derived.
 
 {phang2}{cmd:bs(}{it:varname}, {help merlin_models##bsopts:{it:bs_opts}}{cmd:)} a {it:B}-spline function of {it:varname}, where {it:bs_opts} are:
 
@@ -253,7 +297,9 @@ Must be in ascending order. Default is the minimum and maximum of {it:varname}.
 {p 12 16 2}{cmd:event} can be used in combination with {cmd:df()} and specifies that the internal knots are calculated 
 based on centiles of event times. Only valid when the {cmd:family()} is a survival model.
 
-{phang3}{opt offset(varname)} defines an offset to be added to the {cmd:rcs()} variable prior to the spline function being derived.
+{phang3}{opt offset(varname)} defines an offset to be added to the {cmd:bs()} variable prior to the spline function being derived.
+
+{phang3}{opt moffset(varname)} defines a negative offset to be taken away from the {cmd:bs()} variable prior to the spline function being derived.
 
 {phang2}{opt mf(function_name)} a user-defined Mata function. It should be defined as follows:
 
@@ -321,6 +367,8 @@ where {cmd:#} must be between 0 and 1. The default is {cmd:quantile(0.5)}. In my
 I recommend you explore different integration techniques through {cmd:intmethod()}, along with increasing {cmd:intpoints()}, 
 and most importantly vary your starting values with {cmd:from()}.
 
+{phang2}{cmd: family(cox)} fits a Cox model using maximum partial likelihood, assuming the Breslow method for handling ties.
+
 {phang2}{cmd: family(user, {it:{help merlin_models##user:user}})} which can take the following forms
 
 {p 12 12 2}{cmd: family(user, llfunction(}{it:fnc_name}{cmd:))} defines a Mata function which returns the observation level log 
@@ -356,7 +404,13 @@ fitting a delayed-entry survival model. If there are random effects in the assoc
 the likelihood is calculated by dividing through by the marginal survival function at the entry times, which results 
 in a second set of numerical integration.
 
-{phang}{opth bhazard(varname)} invokes a relative survival model, by specifying the expected mortality (event) rate in the reference population at the observed event times.
+{phang}{opth bhazard(varname)} invokes a relative survival (excess hazard) model, by specifying the expected mortality (event) rate in the reference population at the observed event times.
+
+
+{dlgtab:Piecewise-exponential options}
+
+{phang}{opt knots(knots_list)} defines the knot locations (cut-points) for the piecewise-constant baseline function. 
+Knots should be specified in increasing order.
 
 
 {dlgtab:Royston-Parmar options}
@@ -379,17 +433,34 @@ For detailed examples, see {bf:{browse "https://www.mjcrowther.co.uk/software/me
 {p 5 12 2}
 {bf:Michael J. Crowther}{p_end}
 {p 5 12 2}
-Biostatistics Research Group{p_end}
+Red Door Analytics{p_end}
 {p 5 12 2}
-Department of Health Sciences{p_end}
+Stockholm, Sweden{p_end}
 {p 5 12 2}
-University of Leicester{p_end}
-{p 5 12 2}
-michael.crowther@le.ac.uk{p_end}
+michael@reddooranalytics.se{p_end}
 
 
 {title:References}
 
-{p 5 12 2}
-Crowther MJ. Extended multivariate generalised linear and non-linear mixed effect models. 2017; {it:Submitted}.{p_end}
+{phang}
+{bf:Crowther MJ}. Extended multivariate generalised linear and non-linear mixed effects models. 
+{browse "https://arxiv.org/abs/1710.02223":https://arxiv.org/abs/1710.02223}
+{p_end}
 
+{phang}
+{bf:Crowther MJ}. merlin - a unified framework for data analysis and methods development in Stata. {browse "https://journals.sagepub.com/doi/pdf/10.1177/1536867X20976311":{it:Stata Journal} 2020;20(4):763-784}.
+{p_end}
+
+{phang}
+{bf:Crowther MJ}. Multilevel mixed effects parametric survival analysis: Estimation, simulation and application. {browse "https://journals.sagepub.com/doi/abs/10.1177/1536867X19893639?journalCode=stja":{it:Stata Journal} 2019;19(4):931-949}.
+{p_end}
+
+{phang}
+{bf:Crowther MJ}, Lambert PC. Parametric multi-state survival models: flexible modelling allowing transition-specific distributions with 
+application to estimating clinically useful measures of effect differences. {browse "https://onlinelibrary.wiley.com/doi/full/10.1002/sim.7448":{it: Statistics in Medicine} 2017;36(29):4719-4742.}
+{p_end}
+
+{phang}
+Weibull CE, Lambert PC, Eloranta S, Andersson TM-L, Dickman PW, {bf:Crowther MJ}. A multi-state model incorporating 
+estimation of excess hazards and multiple time scales. {browse "https://onlinelibrary.wiley.com/doi/10.1002/sim.8894":{it:Statistics in Medicine} 2021; (In Press)}.
+{pstd}

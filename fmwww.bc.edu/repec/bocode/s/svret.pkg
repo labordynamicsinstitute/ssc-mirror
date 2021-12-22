@@ -10,8 +10,8 @@ d Requires: Stata version 10
 d
 d Distribution-Date: 20190719
 d
-d Author: Julian Reif , University of Chicago
-d Support: email jreif@@uchicago.edu
+d Author: Julian Reif , University of Illinois
+d Support: email jreif@@illinois.edu
 d
 f svret.ado
 f svret.sthlp

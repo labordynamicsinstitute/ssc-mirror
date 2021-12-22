@@ -1,7 +1,7 @@
 d 'SUM2': module to store summary statistics
 d
-d sum2 provides a fast and easy way to store summary statistics for
-d use	with standard table-making programs such as outreg,
+d  sum2 provides a fast and easy way to store summary statistics
+d for use   with standard table-making programs such as outreg,
 d outreg2, estimates_table, xmltab, etc. sum2 was motivated in part
 d by mfx2 and margeff that do the same thing for marginal effects. 
 d

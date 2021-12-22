@@ -10,7 +10,7 @@ d test of all the interaction terms is carried out to test the
 d proportional-hazards assumption. Lastly, stphcoxrcs produces a
 d graph of the time-varying Hazard Ratio. 
 d
-d KW: propotional hazards
+d KW: proportional hazards
 d KW: restricted cubic splines
 d KW: stcox
 d

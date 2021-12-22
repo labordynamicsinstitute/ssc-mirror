@@ -17,14 +17,15 @@
 {title:Syntax}
 
 {p 8 17 2}
-{cmdab:getmxdata} id_1 [id_2 ... id_n] {cmd:,}{cmdab:API_options} 
+{cmdab:getmxdata} id_1 [id_2 ... id_n] {cmd:,} {cmdab: {bie | banxico} key(token)} 
 
 {synoptset 27 tabbed}{...}
-{synopthdr:API_options}
+{synopthdr:Options}
 {synoptline}
 {synopt :{opt bie}}use INEGI's API for Bank of economic information (BIE) database {p_end}
 {synopt :{opt banxico}}use Banxico's API for Economic Information System (SIE) database{p_end}
-{synopt :{opt key}(token)}token for use webservice{p_end}
+{synopt :{opt key}(token)}token for use webservice. Alphanumeric code
+used to identify a user and give access to the service, one for each source.{p_end}
 
 {marker description}{...}
 {title:Description}
@@ -45,7 +46,7 @@ prefix to avoid an error. If you consult nominal GDP (ID is 494072) on Stata wil
 {pstd}
 2.- Before using getmxdata, you must get a token from INEGI and Banxico.
 
-{p 4 4 2} {hline 1} To get your token for INEGI webservice enter here:  {browse "http://www3.inegi.org.mx//sistemas/api/indicadores/v1/tokenVerify.aspx":INEGI's API service}.{p_end}
+{p 4 4 2} {hline 1} To get your token for INEGI webservice enter here:  {browse "https://www.inegi.org.mx/app/desarrolladores/generatoken/Usuarios/token_Verify":INEGI's API service}.{p_end}
 
 {p 4 4 2} {hline 1} To get your token for Bancico webservice enter here:  {browse "https://www.banxico.org.mx/SieAPIRest/service/v1/":Banxico's API service}.{p_end}
 
@@ -83,5 +84,7 @@ if you want to import variables that have diferent frequencies
 
 {pstd}
 Miguel Angel Gonzalez Favila
+
 {pstd}
-miguel.gfavila@gmail.com
+For any inquiries please contac: miguel.gfavila@gmail.com
+

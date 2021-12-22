@@ -1,5 +1,5 @@
 ﻿{smcl}
-{* 20Dec2018}{...}
+{* 15Jan2021}{...}
 {hi:help cntraveltime}
 {hline}
 
@@ -7,32 +7,21 @@
 
 {phang}
 {bf:cntraveltime} {hline 2} 
-This Stata module helps to extract the time needed for traveling between two locations from Baidu Map API(http://api.map.baidu.com).
+This Stata module helps to extract the travel distance and travel time between two locations from Baidu Map API(http://api.map.baidu.com).
 
 {marker syntax}{...}
 {title:Syntax}
 
 {p 8 17 2}
-{cmdab:cntraveltime}{cmd:,} baidukey(string) {startlat(varname) startlng(varname) endlat(varname) endlng(varname)} [{it:options}]
-
-Extracts the time spent in traveling and other relevant informations with BaiduMap API, conditional on a given travel mode.
+{cmdab:cntraveltime}{cmd:,} baidukey(string) start_lat(varname) start_long(varname) end_lat(varname) end_long(varname) [{it:options}]
 
 
 {marker description}{...}
 {title:Description}
 
 {pstd}
-Baidu Map API is widely used in China.
-{cmd:cntraveltime} use Baidu Map API to extract the time traveling from one location to another.
-Forthermore, it can also extract the detailed information about the route of traveling and corresponding longitude & latitude of the two locations.
-Before using this command, a Baidu key from Baidu Map API is needed.
-A typical Baidu key is an alphanumeric string. The option baidukey(string) is actually not optional.
-If you have a Baidu key, which is, say CH8eakl6UTlEb1OakeWYvofh, the baidukey option must be specified as baidukey(CH8eakl6UTlEb1OakeWYvofh). 
-You can get a secret key from Baidu Map's open platform (http://lbsyun.baidu.com). 
-The process normally will take 3-5 days after you submit your application online.
-Following information can be extract when using {cmd:cntraveltime}, conditional on the travel mode specified.
-(1) time spent from one location to another.
-(2) detail information of route chosen.
+Baidu Map is widely used in China.
+{cmd:cntraveltime} use Baidu Map API to extract the travel time and distance from one location to another.To be close to the real world,{cmd:cntraveltime} can calculate result with respect to different mode of transportation (car-driving, public transport and cycling) and perference of transportation (less walk, as quickly as possible ,etc). Forthermore, it can also extract the description of the traveling route.Before using this command, a Baidu key from Baidu Map API is needed.A typical Baidu key is an alphanumeric string.  You can get a secret key from Baidu Map's open platform (http://lbsyun.baidu.com).The process normally will take few minutes after you submit your application online.
 {p_end}
 
 {pstd}
@@ -45,65 +34,47 @@ Following information can be extract when using {cmd:cntraveltime}, conditional 
 {dlgtab:Credentials(required)}
 
 {phang}
-{opt baidukey(string)} is required before using this command. 
-You can get a secret key from Baidumap open platform(http://lbsyun.baidu.com). 
-The process normally will take 3-5 days after you submit your application online.
+{opt baidukey(string)} is required before using this command. A typical Baidu Map API key is an alphanumeric string. Suppose the user already has a Baidu Map API key, which is, say, CH8eakl6UTlEb1OakeWYvofh;then, the baidukey() option must be specified as baidukey(CH8eakl6UTlEb1OakeWYvofh).
 {p_end}
 
 {phang}
-{opt startlat(varname)} & {opt startlng(varname)} specify the longitude and latitude of the origin
-location.  
+{opt start_lat(varname)} & {opt start_long(varname)} specify the longitude and latitude of the origin location.  
 {p_end}
 
 {phang}
-{opt endlat(varname)} & {opt endlng(varname)} specify the longitude and latitude of the destination
-location.
+{opt end_lat(varname)} & {opt end_long(varname)} specify the longitude and latitude of the destination location.
 {p_end}
 
 {dlgtab:Search options}
 
 {phang}
-{opt instruction:}: If users need detail information about the route chosen, option {opt instruction} helps. The default is not to show this information.
+{opt detail}: If the user needs a detail information on the route chosen by {cmd:cntraveltime} , option {opt detail} helps. The default is not to show this information.
 {p_end}
 
 {phang}
-{opt transport(string)} can change the travel mode. Based on the assumptions of this choice, BaiduMap will calculate the distance and duration between the specified place.
-When the option {opt transport} is empty, the default is "bus". There are three specific options of transport that "car", "bus" and "bike". other input will give an error.
+{opt mode(string)} allows the user to choose different travel modes. It can be car, public or bike. The default choice is public transport. Baidu Map will calculate the travel distance and travel time between two specified locations upon your choice of transport mode, as the route for bicycle may be different from a car driving route. There will be an error message if users specify a transit mode other than car, public or bike, for example, subway
 {p_end}
 
 {phang}
-{opt intercity(numlist)} can choose the detail preference when the given locations in different cities. This option can only be used when specify "bus" in {opt transport(string)}. 
-you can enter two numbers in the option, like intercity(1 2), where the first number represents the priority requirement and the second number specifies the mode of transportation.
-If the option is empty, both two numbers are 0.
+{opt route_option(real)} can choose the detail preference when the given locations in the same cities. Please note that for different transport mode, the effective range and meaning of the route_option are also different. Enter the number in the option and the preferences represented by different numbers as follows. 
 {p_end}
 {pmore}
-The first number represents the priority requirement where 0 is "as quickly as possible", 1 is "Start as early as possible" and 2 is "as cheap as possible".
+public 0: default, recommendation
 {p_end}
 {pmore}
-The second number specifies the mode of transportation where 0 is "train", 1 is "plane" and 2 is "bus"
-{p_end}
-
-{phang}
-{opt tactic(real)} can choose the detail preference when the given locations in same cities. Please note that if the transport content is different, the effective range and meaning of the {opt tactic} are also different.
-Enter the number in the option and the preferences represented by different numbers are as follows.
+public 1: less transit
 {p_end}
 {pmore}
-bus 0: default, recommendation
+public 2: less walk
 {p_end}
 {pmore}
-bus 1: Less transfer
+public 3: no subway
 {p_end}
 {pmore}
-bus 2: less walk
+public 4: as quickly as possible
 {p_end}
 {pmore}
-bus 3: no subway
-{p_end}
-{pmore}
-bus 4: as quickly as possible
-{p_end}
-{pmore}
-bus 5: subway
+public 5: subway
 {p_end}
 {pmore}
 car 0: default
@@ -142,6 +113,39 @@ bike 0: default, common
 bike 1: electric bicycle
 {p_end}
 
+{phang}
+{opt intercitytype(real)} can choose a more specific cross-city public transport. When the two locations are in different cities, the program will calculate the travel distance and travel time according to the selected transportation. If the two locations are in the same city, this option will not work. It should be noted that this option is only valid when the content of the mode () option is "public". This option accepts a number as a parameter, and the default is 0, the number specifies the mode of transportation where
+{p_end}
+
+{pmore}
+0	: train
+{p_end}
+{pmore}
+1	: plane
+{p_end}
+{pmore}
+2	: bus
+{p_end}
+
+
+
+{phang}
+{opt intercity_route_option(real)} represents the priority requirement for cross-city public transportation, the default is 0, the preferences represented by different numbers are as follows.
+{p_end}
+
+{pmore}
+0	: as quickly as possible 
+{p_end}
+{pmore}
+1	: start as early as possible
+{p_end}
+{pmore}
+2	: as cheap as possible
+{p_end}
+
+
+
+
 {marker example}{...}
 {title:Example}
 
@@ -171,7 +175,7 @@ Input the address
 Extracts the detail information of drving between the two place.
 
 {phang}
-{stata `"cntraveltime, baidukey(your secret key) startlat(startlat) startlng(startlng) endlat(endlat) endlng(endlng) transport("car") instruction tactic(4)"'}
+{stata `"cntraveltime, baidukey(your secret key) start_lat(startlat) start_long(startlng) end_lat(endlat) end_long(endlng) mode("car") detail route_option(4)"'}
 {p_end}
 
 {phang}
@@ -183,7 +187,7 @@ Extracts the detail information of drving between the two place.
 Extracts the detail information by bus between the two place.
 
 {phang}
-{stata `"cntraveltime, baidukey(your secret key) startlat(startlat) startlng(startlng) endlat(endlat) endlng(endlng) transport("bus") instruction intercity(1 1) tactic(4)"'}
+{stata `"cntraveltime, baidukey(your secret key) start_lat(startlat) start_long(startlng) end_lat(endlat) end_long(endlng) mode("public") detail route_option(4) intercitytype(1)  intercity_route_option(1)"'}
 {p_end}
 
 {phang}
@@ -196,15 +200,15 @@ Extracts the detail information by bus between the two place.
 {pstd}Chuntao LI{p_end}
 {pstd}China Stata Club(爬虫俱乐部){p_end}
 {pstd}Wuhan, China{p_end}
-{pstd}chtl@zuel.edu.cn{p_end}
+{pstd}chtl@henu.edu.cn{p_end}
 
 {pstd}Yuan Xue{p_end}
 {pstd}China Stata Club(爬虫俱乐部){p_end}
 {pstd}Wuhan, China{p_end}
-{pstd}xueyuan@hust.edu.cn{p_end}
+{pstd}xueyuan19920310@163.com{p_end}
 
 {pstd}Xueren Zhang{p_end}
 {pstd}China Stata Club(爬虫俱乐部){p_end}
 {pstd}Wuhan, China{p_end}
-{pstd}zhijunzhang_hi@163.com{p_end}
+{pstd}snowmanzhang@whu.edu.cn{p_end}
 

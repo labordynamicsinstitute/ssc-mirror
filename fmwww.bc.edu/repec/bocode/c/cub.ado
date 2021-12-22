@@ -1,32 +1,9 @@
 ********************************************************************************
-*! "cub", v.28, Cerulli, 22may2021
+*! "cub", v.29, Cerulli, 14dic2021
 ********************************************************************************
-*
-********************************************************************************
-* READ-ME
-********************************************************************************
-* This DO-file codes the following Stata commands:
-********************************************************************************
-* "cub"         // estimates the cub model
-********************************************************************************
-* "pr_pred_cub"   // estimates model predicted probability 
-********************************************************************************
-* "scattercub"  // produces the scatterplot of "Uncertainty" and "Feeling" for cub00
-********************************************************************************
-* "gr_prob_cub"  // produces the graph comparing the actual and the expected (or model) probabilities for cub00
-********************************************************************************
-*
-********************************************************************************
-* "get_hidden_prob": PROGRAM GENERATING PREDICTED PROBABILITIES BY CATEGORY   
-********************************************************************************
-* INPUTS:
-* -> m = # of categories
-* -> y = original target variable
-* -> theta1 = variable of index parameters 1
-* -> theta2 = variable of index parameters 2
+*! "get_hidden_prob", v.29, Cerulli, 14dic2021
 ********************************************************************************
 program get_hidden_prob , eclass
-********************************************************************************
 args y m theta1 theta2 theta3
 ********************************************************************************
 quietly{ // start quietly
@@ -96,12 +73,14 @@ restore
 ********************************************************************************
 * ACTUAL PROBABILITIES
 ********************************************************************************
+preserve
 tempvar prob_real
-gen `prob_real'=1 
+gen `prob_real'=1 if `theta1'!=. & `theta2'!=. 
 collapse (percent) `prob_real' , by(`y')
 replace `prob_real'=`prob_real'/100
 tempfile data1
 save `data1' , replace
+restore
 ********************************************************************************
 preserve
 clear 
@@ -138,107 +117,10 @@ noi di as text "{hline}"
 restore
 ********************************************************************************
 end
-*
-********************************************************************************
-*! "cub14", v.28, Cerulli, 28may2021
 ********************************************************************************
 *
 ********************************************************************************
-* Code "cub14" and "cub14s" --> Likelihood Maximization via Stata "ml" (type "d0")
-********************************************************************************
-*
-********************************************************************************
-* CUB14 --> CUB14 (no-shelter)
-********************************************************************************
-cap program drop cub14
-program cub14 , eclass
-version 14.1
-args todo b lnf
-tempvar theta1 theta2
-mleval `theta1' = `b', eq(1)
-mleval `theta2' = `b', eq(2)
-local y "$ML_y1" // this is just for readability
-local m=e(M)
-tempvar p M R S D
-* Calculate p
-quietly generate double `p' = 1/(1+exp(-`theta1'))
-* Calculate M
-local c = exp(lnfactorial(`m'-1))
-tempname cmb
-mat `cmb' = J(`m',1,.)
-levelsof `y' , local(LEV_Y) 
-*di in red "m = " `m'
-*di in red "`LEV_Y'"
-********************************************************************************
-forvalues  i=1/`m'{
-foreach j of local LEV_Y {
-if `j'==`i'{	
-  scalar d = (exp(lnfactorial(`j'-1))*exp(lnfactorial(`m'-`j')))
-  mat `cmb'[`i',1] = `c'/d
-}
-}
-}
-********************************************************************************
-qui gen double `M' = `cmb'[`y',1]
-********************************************************************************
-* Calculate R 
-quietly generate double `R' = ((exp(-`theta2'))^(`y'-1))/((1+exp(-`theta2'))^(`m'-1))
-* Calculate S
-quietly generate double `S' = 1/`m'
-mlsum `lnf' = ln(`p'*(`M'*`R'-`S')+`S')  
-ereturn scalar M=`m'
-end
-********************************************************************************
-*
-********************************************************************************
-*! "cub14s", v.28, Cerulli, 28may2021 (cub with shelter)
-********************************************************************************
-program cub14s , eclass
-version 14.1
-args todo b lnf
-tempvar theta1 theta2 theta3
-mleval `theta1' = `b', eq(1)
-mleval `theta2' = `b', eq(2)
-mleval `theta3' = `b', eq(3) // new for shelter
-local y "$ML_y1" // this is just for readability
-local m=e(M)
-tempvar p M R S D delta
-* Calculate p
-quietly generate double `p' = 1/(1+exp(-`theta1'))
-* Calculate M
-local c = exp(lnfactorial(`m'-1))
-tempname cmb
-mat `cmb' = J(`m',1,.)
-levelsof `y' , local(LEV_Y) 
-********************************************************************************
-forvalues  i=1/`m'{
-foreach j of local LEV_Y {
-if `j'==`i'{	
-  scalar d = (exp(lnfactorial(`j'-1))*exp(lnfactorial(`m'-`j')))
-  mat `cmb'[`i',1] = `c'/d
-}
-}
-}
-********************************************************************************
-qui gen double `M' = `cmb'[`y',1]
-********************************************************************************
-* Calculate R 
-quietly generate double `R' = ((exp(-`theta2'))^(`y'-1))/((1+exp(-`theta2'))^(`m'-1))
-* Calculate S
-quietly generate double `S' = 1/`m'
-* Calculate D
-quietly generate double `D'=(`y'==`e(SHELTER)')  // new for shelter
-* Calculate delta
-quietly generate double `delta'= 1/(1+exp(-`theta3'))  // new for shelter
-mlsum `lnf' = ln(`delta'*`D' + (1-`delta')*(`p'*(`M'*`R'-`S')+`S'))  // new for shelter
-ereturn scalar M=`m'
-end
-********************************************************************************
-* END
-********************************************************************************
-*
-********************************************************************************
-* Main ADO-file --> "cub", v.28, Cerulli, 28may2021
+* Main ADO-file --> "cub", v.29, Cerulli, 14dic2021
 ********************************************************************************
 capture program drop cub 
 program cub , eclass sortpreserve
@@ -402,9 +284,9 @@ gen `prob' = (`p'*(`M'*`R'-`S')+`S') if `touse'
 ********************************************************************************
 preserve
 tempvar theta1 
-predict `theta1' , equation(pi_beta)   
+predict `theta1' if `touse' , equation(pi_beta)   
 tempvar theta2 
-predict `theta2' , equation(xi_gamma) 
+predict `theta2' if `touse' , equation(xi_gamma) 
 get_hidden_prob `y' `m' `theta1' `theta2'
 restore
 }
@@ -427,11 +309,11 @@ gen `prob' = (`DELTA'+(1-`DELTA')*(`p'*(`M'*`R'-`S')+`S'))*`D' ///
 ********************************************************************************
 preserve
 tempvar theta1 
-predict `theta1' , equation(pi_beta)   
+predict `theta1' if `touse' , equation(pi_beta)   
 tempvar theta2 
-predict `theta2' , equation(xi_gamma) 
+predict `theta2' if `touse' , equation(xi_gamma) 
 tempvar theta3 
-predict `theta3' , equation(lambda) 
+predict `theta3' if `touse' , equation(lambda) 
 get_hidden_prob `y' `m' `theta1' `theta2' `theta3'
 restore
 }
@@ -485,4 +367,6 @@ restore
 } // end if on 'graph'
 ********************************************************************************
 end
+********************************************************************************
+* END
 ********************************************************************************

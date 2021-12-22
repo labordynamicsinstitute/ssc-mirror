@@ -1,5 +1,5 @@
 {smcl}
-{* *! version 1.0 18 May 2021}{...}
+{* *! version 1.0 18 Nov 2021}{...}
 {vieweralsosee "" "--"}{...}
 {vieweralsosee "Install command2" "ssc install command2"}{...}
 {vieweralsosee "Help command2 (if installed)" "help command2"}{...}
@@ -266,7 +266,7 @@ A recent  addition to the report command is the ability to alter the formatting 
 added with a | symbol in between. The first number is for specifying the rows, the second number is for specifying the columns and the third part is the text 
 used in the format option.
 
-{stata report, rows(heatdd, mean %5.2f | heatdd, count | heatdd, sd %5.3f | tempjan, mean %5.2f | tempjan, sd  %5.2f| tempjan, count) cols(region agecat) font(,8) landscape cellfmt(2,2, font(palatino, 12, red) | 3,1, font(palatino, 12, red))}
+{stata report, rows(heatdd, mean %5.2f | heatdd, count | heatdd, sd %5.3f | tempjan, mean %5.2f | tempjan, sd  %5.2f| tempjan, count) cols(region agecat) font(,8) landscape cellfmt(6,6,font(palatino, 12, red) | 5,., shading(lime))}
 
 
 {p 0 0}

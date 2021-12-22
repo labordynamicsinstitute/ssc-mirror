@@ -7,7 +7,7 @@
 
 {marker syntax}{...}
 {title:Syntax}
-
+ 
 {p 4 17 2}
 {cmd:xtusreg}
 {it:depvar}
@@ -71,6 +71,62 @@ To account for heterogeneity across time-invariant variables, one can run a regr
 
 {phang}{cmd:. xtusreg logincome if !white}{p_end}
 {phang}{cmd:. xtusreg logincome if white}{p_end}
+
+{marker stored}{...}
+{title:Stored results}
+
+{phang}
+{bf:robustpf} stores the following in {bf:e()}: 
+{p_end}
+
+{phang}
+Scalars
+{p_end}
+{phang2}
+{bf:e(NT)} {space 9}observations
+{p_end}
+{phang2}
+{bf:e(N)} {space 10}cross sectional units
+{p_end}
+{phang2}
+{bf:e(T)} {space 10}time periods
+{p_end}
+{phang2}
+{bf:e(objective)} {space 2}value of the GMM objective
+{p_end}
+
+{phang}
+Macros
+{p_end}
+{phang2}
+{bf:e(cmd)} {space 8}{bf:xtusreg}
+{p_end}
+{phang2}
+{bf:e(steps)} {space 6}number of GMM steps: {bf:one} or {bf:two}
+{p_end}
+{phang2}
+{bf:e(properties)} {space 1}{bf:b V}
+{p_end}
+
+{phang}
+Matrices
+{p_end}
+{phang2}
+{bf:e(b)} {space 10}coefficient vector
+{p_end}
+{phang2}
+{bf:e(V)} {space 10}variance-covariance matrix of the estimators
+{p_end}
+{phang2}
+{bf:e(tlist)} {space 6}list of time periods
+{p_end}
+
+{phang}
+Functions
+{p_end}
+{phang2}
+{bf:e(sample)} {space 5}marks estimation sample
+{p_end}
 
 {title:Reference}
 

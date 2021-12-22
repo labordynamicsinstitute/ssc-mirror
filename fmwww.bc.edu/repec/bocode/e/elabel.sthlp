@@ -149,6 +149,10 @@ Save value labels in do-file{p_end}
 {synoptset 24 tabbed}{...}
 
 {...}
+{synopt:{helpb elabel_adjust:elabel adjust}}
+Adjust value labels to changed values{p_end}
+
+{...}
 {synopt:{helpb elabel_compare:elabel compare}}
 Compare value labels{p_end}
 

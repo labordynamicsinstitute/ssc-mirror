@@ -1,0 +1,48 @@
+d 'XTBREAK': module for detecting and dating multiple structural breaks in time series and panel data
+d
+d   xtbreak provides researchers with a complete toolbox for
+d analysing multiple structural breaks in time series and panel
+d data as discussed in Bai & Perron (1998, 2003), Karavias,
+d Narayan, Westerlund (2021) and Ditzen, Karavias, Westerlund
+d (2021). xtbreak can detect the existence of breaks, determine
+d their number and location, and provide break date confidence
+d intervals. The number and period of occurrence of structural
+d breaks can be known and unknown. In the case of a known
+d breakpoint xtbreak can test if the break occurs at a specific
+d point in time. For unknown breaks, three different hypothesises
+d are implemented. The first is no break against the alternative of
+d s breaks, the second hypothesis is no breaks against a lower and
+d upper limit of breaks. The last hypothesis tests the null of s
+d breaks against the alternative of one more break (s+1). 
+d
+d KW: structural breaks
+d KW: time series
+d KW: panel data
+d
+d Requires: Stata version 15.1
+d
+d Distribution-Date: 20211027
+d
+d Author: Jan Ditzen, Free University of Bozen-Bolzano
+d Support: email jan.ditzen@@unibz.it
+d
+d Author: Yiannis Karavias, University of Birmingham
+d Support: email i.Karavias@@bham.ac.uk
+d
+d Author: Joakim Westerlund, Lund University
+d Support: email  joakim.westerlund@@nek.lu.se
+d
+f xtbreak.ado
+f xtbreak.sthlp
+f xtbreak_auxiliary.ado
+f xtbreak_estat.ado
+f xtbreak_estimate.ado
+f xtbreak_tests.ado
+f xtbreak_about.ihlp
+f xtbreak_estimate.sthlp
+f xtbreak_options_detail.ihlp
+f xtbreak_options.ihlp
+f xtbreak_PanelVarCov.ihlp
+f xtbreak_tests.sthlp
+f ../l/lxtbreak.mlib
+f xtbreak_example.do

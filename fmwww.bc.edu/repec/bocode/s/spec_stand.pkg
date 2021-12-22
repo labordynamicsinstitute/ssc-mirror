@@ -1,6 +1,6 @@
 d 'SPEC_STAND': module to create dataset of stratum-specific, unadjusted and standardized rates
 d
-d spec_stand creates a dataset of rates for num in the population 
+d  spec_stand creates a dataset of rates for num in the population 
 d defined by pop, across the strata defined by stratavars, in order
 d to  obtain a comparison across groups identified by groupvars.
 d Both	stratum-specific and standardized rates are computed, the

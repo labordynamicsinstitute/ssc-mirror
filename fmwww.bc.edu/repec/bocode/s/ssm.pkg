@@ -1,6 +1,6 @@
 d 'SSM': program to estimate endogenous switching and sample selection models for binary, count, and ordinal variables using ML
 d
-d ssm is a gllamm `wrapper' that estimates by ML endogenous
+d  ssm is a gllamm `wrapper' that estimates by ML endogenous
 d switching and sample selection models for binary, count, and
 d ordinal variables.  ssm accepts data in the usal wide form,	 
 d has a     straightforward	syntax,     and reports output	  

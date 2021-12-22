@@ -1,0 +1,29 @@
+d 'TTESTEX': module to perform t-tests and export the results to excel for multiple dependent and by multiple binary variables/across sub-samples
+d
+d   ttestex contains two commands, ttestex and ttestex_time. They
+d export the means and the p-value of t-tests to excel, as well as
+d the variable labels of the dependent variables and the value
+d labels of the binary/categorical variables. Multiple dependent
+d variables and binary/categorical variables can be specified,
+d results are exported below and to the right of one another. Both
+d commands assume variances to be equal. ttestex performs two
+d sample t-tests on the equality of means using binary variables.
+d ttestex_time performs paired t-tests using variables. Here, the
+d t-tests can be performed among the total sample only but adding
+d results for sub-samples is also possible by including
+d binary/categorical variables (crosscuts) as an option. 
+d
+d KW: t-test
+d KW: excel
+d
+d Requires: Stata version 14.2 and excelcol from SSC (q.v.)
+d
+d Distribution-Date: 20211217
+d
+d Author: Annina Hittmeyer , University of Oxford
+d Support: email annina.hittmeyer@@qeh.ox.ac.uk
+d
+f ttestex.sthlp
+f ttestex.ado
+f ttestex_time.sthlp
+f ttestex_time.ado

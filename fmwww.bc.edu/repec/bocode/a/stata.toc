@@ -26,6 +26,7 @@ p adjust module (corrected) to compute adjusted predictions and probabilities af
 p admetan module to provide comprehensive meta-analysis
 p adodev module to reorder ado-path for developers and other independent-minded users
 p adoedit module to edit ado file in Stata's do-file editor
+p adoinstall module to install Stata packages in a specified path
 p adolist module to manage lists of ado packages
 p adostore module to store and restore the current ado-path
 p adotype module to type ado file
@@ -37,6 +38,7 @@ p affiliationexposure module to compute an affiliation exposure model using two-
 p aformat module to condense the display format of a variable
 p aggind module to aggregate indicators among units within a specified radius
 p agrm module to calculate van der Eijk's measure of agreement "A"
+p aic_model_selection module to perform Forward Model Selection using AIC or BIC
 p ainequal module to compute measures of inequality
 p airnet module to create networks from airline traffic data
 p akdensity module to perform adaptive kernel density estimation 
@@ -76,7 +78,8 @@ p armadiag module to compute post-estimation residual diagnostics for time serie
 p armaroots module to compute roots of AR- and MA-polynomials
 p array package to support arrays of variables 
 p arrowplot module to produce combined plot for graphing inter-group and intra-group trends
-p art module for complex sample size calculation in randomized trials
+p art module to compute sample size and power for complex randomised trial designs with binary or time-to-event outcomes
+p artbin module to compute extended sample size for randomised trials with binary outcomes
 p ascii module to display the ASCII character set
 p asciiplot module to generate ASCII character map
 p ascol module to convert frequency of stock returns or stock prices
@@ -90,6 +93,7 @@ p assertky module to assert unique dataset keys
 p astile module to provide a faster and byable alternative for xtile
 p astx module to create a table of descriptive statistics and t-statistics by a grouping variable
 p atkplot module to generate Atkinson residual normality plots
+p autofill module to fill missing values with existing values
 p autofmt module to automatically format a significant number of digits
 p autolog module to generate dialog to create log files
 p autorename module to automatically rename variables

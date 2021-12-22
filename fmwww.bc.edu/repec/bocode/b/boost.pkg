@@ -13,7 +13,7 @@ d
 d
 d Requires: Stata version 16
 d
-d Distribution-Date: 20201020
+d Distribution-Date: 20201109
 d
 d Author: Matthias Schonlau, University of Waterloo
 d Support: email schonlau@@uwaterloo.ca
@@ -26,6 +26,8 @@ f boost.sthlp
 f ../i/influence_barchart.ado
 f ../i/influence_delete.ado
 f ../i/influence_barchart.sthlp
-f boost_linux64.plugin
-f boost_mac64.plugin
-f boost_win64.plugin
+g WIN64 boost_win64.plugin boost_plugin.plugin
+g MACINTEL64 boost_mac64.plugin boost_plugin.plugin
+g OSX.X8664 boost_mac64.plugin boost_plugin.plugin
+g LINUX64 boost_linux64.plugin boost_plugin.plugin
+h boost_plugin.plugin

@@ -1,4 +1,4 @@
-d 'SUM2DOCX': module to report summary statistics to formatted table in DOCX file.
+d 'SUM2DOCX': module to report summary statistics to formatted table in DOCX file
 d
 d  sum2docx can report all the statistics which can be reported by
 d command summarize in detail model. You can	specify those

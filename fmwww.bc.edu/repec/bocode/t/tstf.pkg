@@ -10,7 +10,7 @@ d KW: transfer function
 d
 d Requires: Stata version 11 and R with packages TSA, car, aod
 d
-d Distribution-Date: 20191021
+d Distribution-Date: 20211030
 d
 d Author: Nicola Orsini, Department of Public Health Sciences, Karolinska Institutet
 d Support: email Nicola.Orsini@@ki.se

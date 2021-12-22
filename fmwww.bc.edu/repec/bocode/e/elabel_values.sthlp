@@ -46,8 +46,11 @@ In the basic syntax, if {it:varlist} is a single token, such as {varname},
 
 {pstd}
 In the extended syntax, specify as many {it:elblnames} as there are 
-variables in {it:varlist}; the mapping of {it:elblnames} to varlist 
-is one-to-one. 
+variables in {it:varlist}; the mapping of {it:elblnames} to {it:varlist} 
+is one-to-one. If only one {it:elblname} is specified, the respcetive 
+value label is attached to all variables in {it:varlist}; this is the 
+same as the basic syntax, except that {cmd:.} must be specified to 
+detach value labels from {it:varlist}.
 
 
 {title:Options}

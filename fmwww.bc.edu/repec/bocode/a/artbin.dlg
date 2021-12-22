@@ -1,6 +1,24 @@
 /*
 artbin
 
+VERSION 2.1 EMZ 16sep2021. // Added ltfu() option.
+VERSION 2.0 EMZ 20may2021. // Removed ngroups from the dialogue box and rearranged layout of set up boxes/options.  Removed score box being ticked as 
+                              default.  Uses artbin_v127.
+VERSION 1.9 EMZ 03may2021. // Corrections from Henry Bern testing.
+VERSION 1.8 EMZ 15apr2021. // Changed to use with latest version of artbin (v126).
+VERSION 1.7 EMZ 29mar2021. // Took out non-inferiority check box and associated programming as no longer being included in documented syntax (old 
+                              syntax).    Changed the default allocation ratio from [1 1] to blank as it fails for >2 groups. 
+VERSION 1.6 EMZ 29mar2021. // Changed Margin box title to NI/SS Margin. Moved trend and dose boxes up to set-up box section.
+VERSION 1.5 EMZ 01mar2021. // Reorganised dialogue box as per IW suggestion with main checkboxes for Wald/Score/Local/Conditional.
+VERSION 1.4 EMZ 25feb2021. // took out nvm box, put in fav/unfav options.  If user selects NI button, don't allow condit, ccorrect or trend.  Changed 		
+							  condit and uncondit from radio buttons to checkboxes so could be included in ni exclusion set, and made condit/uncondit 
+							  mututally exclusive. Changed code so that if the user specifies condit then distant will not be allowed.  		
+							  Changed local and distant from radio buttons to checkboxes so could be included in condit exclusion. Made local and distant 
+							  mutually exclusive. Don’t allow local and wald to be selected at the same time.  Also don’t allow conditional and wald 
+							  together.  Made distant alternatives checkbox ticked as default.
+VERSION 1.3 EMZ 26oct2020. // added in noround option.  Changed "Method" to be "Null variance method" and "one-sided alpha" to be "one-sided test"//
+VERSION 1.2 EMZ 07oct2020.
+VERSION 1.1 EMZ 12aug2020.
 VERSION 1.0 SB 03mar2004.
 
 Binary outcomes
@@ -9,41 +27,55 @@ keyword: rclass
 
 */
 
+
 VERSION 8.0
 
 INCLUDE _std_large
 
 
-
-DIALOG main, title("ART - ANALYSIS OF RESOURCES FOR TRIALS - Binary outcomes") tabtitle("Main")
+DIALOG main, title("ART - Binary outcomes") tabtitle("Main")
 BEGIN
  /*--+----1----+----2----+----3----+----4----+----5----+----6----+----7----+*/
  
- GROUPBOX gb_setup    	10      10      _iwd    _ht11h, label("Set-up")	
- TEXT tx_nu		15	30	90	., label("Number of groups") 
- EDIT vl_ngroups	110	@	40	., label("Number of groups") default(2) option(ngroups)
- TEXT tx_all		250	@	90	., label("Allocation ratios") 
- EDIT vl_aratios	350	@	120	., label("aratios") default(1 1) option(aratios)
- TEXT tx_alp		15	60	90	., label("Alpha (2-sided)")
- EDIT vl_alpha	110	@	40	., label("alpha") default(0.05) option(alpha)
- TEXT tx_pow		250	@	90	., label("Power or N")
- EDIT vl_pow		350	@	40	., label("power") default(0.8) option(pow)
- CHECKBOX ck_trend	15	90	90	., label("Trend") option(trend) onclickon("script dose_on") onclickoff("script dose_off")
- TEXT tx_doses		250	@	90	., label("Dose")
- EDIT vl_doses	350	@	90	., label("Dose") option(doses)
- TEXT tx_pro		15	120	90	., label("Proportions")
- EDIT vl_pr		110	@	160	., label("Proportions")	option(pr)
+ GROUPBOX gb_setup    	10      10      _iwd    _ht14h, label("Set-up")	
+ TEXT tx_pro		15	30	90	., label("Proportions")
+ EDIT vl_pr		    110	@	120	., label("Proportions")	option(pr)
+ TEXT tx_margin		250	@	120	., label("Margin (NI/SS only)")
+ EDIT vl_margin	    370	@	100	., label("Margin") option(margin)
+ RADIO r1_fav		15	60	120 ., first label("Favourable") option(fav)
+ RADIO r2_unfav		110	@	110	., last label("Unfavourable") option(unfav)
+ TEXT tx_all		250	@	120	., label("Allocation ratios") 
+ EDIT vl_aratios	370	@	100	., label("aratios") option(aratios) 
+ RADIO r1_rpow		15	90	120	., first label("Specify power") option(rpow)
+ RADIO r2_samp		110	@	130	., last label("Specify sample size") option(samp) 
+ TEXT tx_pow		250	@	120	., label("Power or N")
+ EDIT vl_pow		370	@	100	., label("power") default(0.8) option(pow)
+ TEXT tx_alp		15	120	90	., label("Alpha")
+ EDIT vl_alpha	    110	@	120	., label("alpha") default(0.05) option(alpha)
+ CHECKBOX ck_ones   250	@	150 ., label("One-sided test (alpha)") option(ones) 
+ CHECKBOX ck_trend	15	150	170	., label("Trend") option(trend) onclickon("script dose_on") onclickoff("script dose_off")
+ TEXT tx_doses		70 @	90	., label("Dose")
+ EDIT vl_doses	110	@	120	., label("Dose") option(doses)
+ TEXT tx_ltfu		250	@	120	., label("Loss to follow-up")
+ EDIT vl_ltfu		370	@	100	., label("ltfu") option(ltfu)
  
- 
- GROUPBOX gb_options 	10	160	_iwd	_ht10h, label("Options")
- RADIO r1_rpow		15	180	170	., first label("Specify power") option(rpow)
- RADIO r2_samp		250	@	170	., last label("Specify sample size") option(samp)
- RADIO r1_loc		15	210	170	., first label("Local alternatives")
- RADIO r2_dist		250	@	170	., last label("Distant alternatives") option(distant)
- RADIO r1_unc		15	240	170	., first label("Unconditional test")
- RADIO r2_con		250	@	170	., last label("Conditional test (Peto)") option(con)
- CHECKBOX ck_ni		15	270	170	., label("Non-inferiority design") option(ni)
- CHECKBOX ck_ones	250	@	170	., label("One-sided alpha") option(onesided)
+ GROUPBOX gb_options 	10	190	_iwd	_ht7h, label("Options")
+
+ CHECKBOX ck_score   15	220	170 ., label("Score test (default)") ///
+	onclickon(script main_ck_score_on)                       ///
+    onclickoff(script main_ck_score_off) 
+ CHECKBOX ck_wald	150	@	130	., label("Wald test") option(wald) ///
+ 	onclickon(script main_ck_wald_on)                       ///
+    onclickoff(script main_ck_wald_off)
+ CHECKBOX ck_loc		230	@	230	., label("Local alternatives") option(loc) ///
+	onclickon(script main_ck_loc_on)                       ///
+    onclickoff(script main_ck_loc_off)
+ CHECKBOX ck_con		350	220	350	., label("Conditional test (Peto)") option(con) ///
+	onclickon(script main_ck_con_on)                       ///
+    onclickoff(script main_ck_con_off)
+ CHECKBOX ck_cc	15 250 170	., label("Continuity correction") option(cc)
+ CHECKBOX ck_noround 	230	250	350	., label("Do not round") option(noround) 
+	
 
  
 END
@@ -75,6 +107,81 @@ BEGIN
 END
 
 
+********************************
+*make score and wald options mutually exclusive
+SCRIPT main_ck_score_on
+BEGIN
+   main.ck_wald.disable
+END
+
+SCRIPT main_ck_score_off
+BEGIN
+   main.ck_wald.enable
+END
+
+
+
+* If user selects condit, disable wald.
+
+SCRIPT main_ck_con_on
+BEGIN
+   main.ck_wald.disable
+END
+
+SCRIPT main_ck_con_off
+BEGIN
+   main.ck_wald.enable
+END
+
+/*
+* If user selects ni, disable conditional, ccorrect and trend options
+
+SCRIPT main_ck_ni_on
+BEGIN
+   main.ck_con.disable
+   main.ck_cc.disable
+   main.ck_trend.disable
+END
+
+SCRIPT main_ck_ni_off
+BEGIN
+   main.ck_con.enable
+   main.ck_cc.enable
+   main.ck_trend.enable
+END
+*/
+
+* also don't allow local and wald to be selected together
+
+SCRIPT main_ck_loc_on
+BEGIN
+   main.ck_wald.disable
+END
+
+SCRIPT main_ck_loc_off
+BEGIN
+   main.ck_wald.enable
+END
+
+SCRIPT main_ck_wald_on
+BEGIN
+   main.ck_loc.disable
+   main.ck_score.disable
+   main.ck_con.disable
+END
+
+SCRIPT main_ck_wald_off
+BEGIN
+   main.ck_loc.enable
+   main.ck_score.enable
+    main.ck_con.enable
+END
+
+
+
+************************************
+
+
 INCLUDE header
 HELP   hlp1, label("Help") view("help artbindlg")
 RESET  res1
@@ -84,16 +191,20 @@ BEGIN
 
 	require main.vl_pr
 
-	put "artbin "
+	put "artbin "  /* EMZ change to make work with updated program*/
 
 	beginoptions
 		optionarg main.vl_pr
-		optionarg main.vl_ngroups
+*		optionarg main.vl_ngroups
 		optionarg main.vl_aratios
-		if main.r2_con {
+		optionarg main.vl_margin
+		optionarg main.vl_ltfu
+		if main.ck_con {
 			put "condit "
 		}
-		optionarg main.r2_dist
+		if main.ck_loc {
+			put "local "
+		}
 		optionarg main.vl_alpha
 		if main.r1_rpow {
 			put "power("main.vl_pow ") "
@@ -101,10 +212,30 @@ BEGIN
 		if main.r2_samp {
 			put "n("main.vl_pow ") "
 		}
+		if main.r1_fav {
+			put "fav "
+		}
+		if main.r2_unfav {
+			put "unf "
+		}
 		option main.ck_trend
 		optionarg main.vl_doses
-		optionarg main.ck_ones
-		optionarg main.ck_ni
+		/* EMZ change to option onesided(#) to onesided */
+		/* optionarg main.ck_ones */
+		if main.ck_ones {
+			put "onesided "
+		}
+		/* EMZ change to option ccorrect(#) to ccorrect */
+		/* optionarg main.ck_cc */
+		if main.ck_cc {
+			put "ccorrect "
+		}
+		if main.ck_wald {
+			put "wald "
+		}
+		if main.ck_noround {
+			put "noround "
+		}
 	endoptions
 	
 END

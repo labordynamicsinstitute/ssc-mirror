@@ -1,6 +1,6 @@
 d 'SVYPXCAT': module to calculate predicted means or proportions for nominal X's for survey data
 d
-d svypxcat calculates and optionally graphs means from linear
+d  svypxcat calculates and optionally graphs means from linear
 d regression   models or proportions from logistic regression
 d models corrected for the survey   sampling scheme (weights) for
 d one or two nominal X variables, adjusted   for covariates. If a

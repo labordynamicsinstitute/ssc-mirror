@@ -1,5 +1,5 @@
-*! Date    : 03 Jan 2019
-*! Version : 1.7
+*! Date    : 17 Aug 2021
+*! Version : 1.8
 *! Authors : Michael J Grayling & Adrian P Mander
 
 /*
@@ -15,10 +15,11 @@
   03/01/19 v1.7 Additional minor changes for speed - including vectorising the
                 'shifts' loop (i.e., to remove the 'samples' loop). Converted
 				mean and sigma to be optional with internal defaults.
+  17/08/21 v1.8	Fixed a small printing error.
 */
 
 program define pmvnormal, rclass
-version 15.0
+version 1.0
 syntax , LOWer(numlist miss) UPPer(numlist miss) [MEan(numlist) ///
          Sigma(string) SHIfts(integer 12) SAMples(integer 1000) ALPha(real 3)]
 
@@ -276,8 +277,7 @@ real colvector pmvnormal_mata(real vector lower, real vector upper,
                                     (normal(btilde[i]) - normal(atilde[i]))
 	  }
     }
-    C[k, k] = sqrt(Sigma[k, k] - sum(C[k, 1::(k - 1)]:^2))
-	C
+    C[k, k]                     = sqrt(Sigma[k, k] - sum(C[k, 1::(k - 1)]:^2))
     I                           = V = 0
     if (a[1] != .) {
       d                         = J(samples, 1, (normal(a[1]/C[1, 1]), J(1, k - 1, 0)))
@@ -292,7 +292,7 @@ real colvector pmvnormal_mata(real vector lower, real vector upper,
 	  e                         = J(samples, 1, J(1, k, 1))
 	}
     f                           = (e[, 1] - d[, 1], J(samples, k - 1, 0))
-	y = J(samples, k - 1, 0)
+	y                           = J(samples, k - 1, 0)
 	Delta                       = runiform(shifts, k - 1)
 	samples_sqrt_primes         =
 	  (1::samples)*sqrt((2, 3, 5, 7, 11, 13, 17, 19, 23, 29, 31, 37, 41, 43, 47,

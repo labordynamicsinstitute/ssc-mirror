@@ -1,6 +1,6 @@
 d 'SPEARMAN2': module to calculate Spearman rank correlations, extended
 d
-d spearman2 performs the same functions as Stata's original
+d  spearman2 performs the same functions as Stata's original
 d spearman with one exception. If a varlist of two variables is
 d given, spearman produces a test of the hypothesis of a zero rank
 d correlation, and provides a p-value for that test. It does not

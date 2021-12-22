@@ -1,4 +1,4 @@
-* Version 2.5 - 28 Au 2020
+* Version 2.6 - 29 Sep 2021
 * By J.M.C. Santos Silva
 * Please email jmcss@surrey.ac.uk for help and support
 
@@ -23,7 +23,7 @@ conv_nrtol(real 1e-6) tracelevel(string) quickd from(string) MUsigma  ///
 
 marksample touse
 markout `touse' `instruments'
-tempname  _y _rhs bb vold _u b g fsd CC C X fsd1 ones G O fsdu fsdg fsdv g31 g32 _u2 _uv _v U fiu fiv A V bpost V_location V_scale Q OM _uf _uvf
+tempname  _y _rhs bb vold _u b g fsd s_hat CC C X fsd1 ones G O fsdu fsdg fsdv g31 g32 _u2 _uv _v U fiu fiv A V bpost V_location V_scale Q OM _uf _uvf
 gettoken _y _rhs: varlist
 
 unab _rhs :  `_rhs'
@@ -68,8 +68,8 @@ if ("`from'"=="") {
 if ("`musigma'"=="") {
 qui ivreg `_y' (`_rhs' = `instruments') if `touse'
 mat `b'=e(b)
-qui predict `_uf' if `touse', res    
-qui g `_uvf'=abs(`_uf')
+qui predict double `_uf' if `touse', res    
+qui g double `_uvf'=abs(`_uf')
 qui ivreg  `_uvf' (`_rhs' = `instruments') if `touse'
 mat `g'=e(b)
 mat `A'=`b',`g'
@@ -153,11 +153,11 @@ di as input "                                                              Scale
 ereturn display, first
 di
 }
-qui mat score `fsd' = `g' if `touse'
+qui mat score double `fsd' = `g' if `touse'
 qui replace `fsd' = `fsd'+`bb'[1,`k'-1]
-qui su `fsd'
-if r(min)<=0 di as error "WARNING: some fitted values of the scale function are negative"
-
+qui g `s_hat' = (`fsd')<=0  if `touse'
+su `s_hat' if `touse', meanonly
+if r(max)==1 di as error "WARNING: " 100*r(mean) "% of the fitted values of the scale function are not positive"
 
 qui g `ones'=1
 mata st_view(`C'=.,.,"`instruments' `ones'","`touse'")
@@ -166,25 +166,25 @@ mata st_view(`X'=.,.,"`_rhs' `ones'","`touse'")
 
 matrix `G'=J(2*(`wq'+1)+1,`k',0)
 
-qui g `fsd1'=1/`fsd' if `touse'
+qui g double `fsd1'=1/`fsd' if `touse'
 mata `fsd1'=st_data(.,"`fsd1'","`touse'")
 mata st_matrix("`OM'", ((`X')')*((J(1,`wq'+1,1)#(`fsd1')):*(`C')))
 mat `G'[1,1]=(`OM')'
 
 
-qui g `fsdu'=`_u'/`fsd' if `touse'
+qui g double `fsdu'=`_u'/`fsd' if `touse'
 mata `fsdu'=st_data(.,"`fsdu'","`touse'")
 mata st_matrix("`OM'", ((`X')')*(((J(1,`wq'+1,1)#(`fsdu'))):*(`C')))
 matrix `G'[1,`k1'+1]=(`OM')'
 
 
-qui g `fsdg'=sign(`_u')/`fsd' if `touse'
+qui g double `fsdg'=sign(`_u')/`fsd' if `touse'
 mata `fsdg'=st_data(.,"`fsdg'","`touse'")
 mata st_matrix("`OM'", ((`X')')*(((J(1,`wq'+1,1)#(`fsdg')):*(`C'))))
 mat `G'[`wq'+2,1]=(`OM')'
 
 
-qui g `fsdv'=abs(`_u')/`fsd' if `touse'
+qui g double `fsdv'=abs(`_u')/`fsd' if `touse'
 mata `fsdv'=st_data(.,"`fsdv'","`touse'")
 mata st_matrix("`OM'", ((`X')')*(((J(1,`wq'+1,1)#(`fsdv')):*(`C'))))
 matrix `G'[`wq'+2,`k1'+1]=(`OM')'
@@ -200,18 +200,18 @@ matrix `G'[2*`wq'+3,`k1'+1]=`g32'
 mat `O'=J(2*(`wq'+1)+1,2*(`wq'+1)+1,0)
 qui matrix accum `CC' = `instruments' if `touse'
 
-qui g `_u2'=(`_u')^2 if `touse'
+qui g double `_u2'=(`_u')^2 if `touse'
 su `_u2' if `touse', meanonly
 matrix `O'[1,1]=r(mean)*`CC'
 
 
-qui g `_uv'=(`_u')*(abs(`_u')-1) if `touse'
+qui g double `_uv'=(`_u')*(abs(`_u')-1) if `touse'
 su `_uv' if `touse', meanonly
 matrix `O'[1,(`wq'+1)+1]=r(mean)*`CC'
 matrix `O'[(`wq'+1)+1,1]=r(mean)*`CC'
 
 
-qui g `_v'=(abs(`_u')-1)^2 if `touse'
+qui g double `_v'=(abs(`_u')-1)^2 if `touse'
 su `_v' if `touse', meanonly
 matrix `O'[(`wq'+1)+1,(`wq'+1)+1]=r(mean)*(`CC')
 
@@ -260,7 +260,6 @@ ereturn post `bpost' `V', obs(`enne') depname("`_y'")
 if `insts'==1 di as txt `qu' " Structural quantile function"
 else di as txt `qu' " Restricted quantile regression"
 ereturn display, first
-di
 }
 if `insts'==1 di as txt "Instruments used: `instruments'"  
 ereturn repost , esample(`touse')

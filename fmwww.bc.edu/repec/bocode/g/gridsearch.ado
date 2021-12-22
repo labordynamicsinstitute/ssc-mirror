@@ -4,7 +4,7 @@
 ///////////////////////////////////////////////////////////////////////////////////////////////
 cap program drop gridsearch
 program define gridsearch , rclass
-*! version 1.0.0  Oct 27, 2020,  changed to rclass
+*! version 1.1.0  Aug, 2021,  using frames 
 	version 14.0 
 	
 	// parse the estimation command
@@ -61,14 +61,15 @@ program define gridsearch , rclass
 		qui gen `train'=0  // not used for crossvalidation but needed for evaluation of criteria: all predicted values are test data
 	}
 
-	tempvar  tune1 tune2 evaluation time
-	qui gen `tune1'=.			// tuning parameter 1
-	label var `tune1' "`par1name'"
-	qui gen `tune2'=. 			// tuning parameter 2
-	label var `tune2' "`par2name'"
-	qui gen `evaluation'=.   	// results: one value for each tuning combination
-	qui gen `time'=.       		// computational time
-	label var `time' "seconds"
+	tempname results
+	frame create `results' tune1 tune2 evaluation seconds 
+	frame `results' { 
+		format tune1  %8.3g
+		format tune2  %8.3g
+		format evaluation  %8.3g
+		format seconds %8.1g
+	}
+	
 	timer clear
 
 	// if !grid and par1list and par2list are of unequal length: there is currently no warning
@@ -165,7 +166,7 @@ program define gridsearch , rclass
 					//	//***untested ; this statement is risky; what if multi-class?
 					//    replace  `predvar'= `predvar'_1  // probability
 					//} 
-					evaluate_crit  if !`train', pred(`predvar') y(`y') criterion(`criterion') evaluation(`evaluation') 
+					evaluate_crit  if !`train', pred(`predvar') y(`y') criterion(`criterion') 
 					local eval=r(eval)
 				}
 				else {
@@ -184,7 +185,7 @@ program define gridsearch , rclass
 					if ("`estimator'"=="boost" & "`criterion'"!="AUC" & ("`distribution'"=="bernoulli"  | "`distribution'"=="logistic"))  {
 						qui replace `predvar' = round(`predvar')  // round probabilities, could potentially move this to "boost_predict, class"
 					}
-					evaluate_crit_av  if !`train', pred(`predvar') y(`y') criterion(`criterion') evaluation(`evaluation') nfolds(`methodarg') folds(folds)	
+					evaluate_crit_av  if !`train', pred(`predvar') y(`y') criterion(`criterion') nfolds(`methodarg') folds(folds)	
 					local eval=r(eval_av)
 				}
 				
@@ -193,45 +194,45 @@ program define gridsearch , rclass
 				local temp= r(t1)
 				
 				// save values 
-				qui replace `time'= `temp' in `counter'
-				qui replace `tune1'= `par1' in `counter'
-				qui replace `tune2'= `par2' in `counter'
-				qui replace `evaluation'= `eval' in `counter'
+				frame post `results' (`par1') (`par2') (`eval') (`temp') 
 				//di "par1=`par1' par2=`par2' `evaluation'=`eval' `time'=`temp' "
 			}
 		}
 	}
 
 		  
-	// gsort does not have a "stable option". Ties in gsort use random resources, this may cause seemingly "random" behaviour.
-	// this changes sort order ; but restore later also restores sort order
-	tempvar tempsort 
-	qui gen `tempsort'= `evaluation'   // find the smallest mse /rmse
-	if ("`criterion'"=="accuracy" | "`criterion'"=="AUC"  )  replace `tempsort'=  -`evaluation'  // find largest accuracy
-    sort `tempsort', stable
+	frame `results' {
+		// gsort does not have a "stable option". Ties in gsort use random resources, this may cause seemingly "random" behaviour.
+		// this changes sort order ; but restore later also restores sort order
+		tempvar tempsort 
+		qui gen `tempsort'= evaluation   // find the smallest mse /rmse
+		if ("`criterion'"=="accuracy" | "`criterion'"=="AUC"  )  replace `tempsort'=  -evaluation  // find largest accuracy
+		sort `tempsort', stable
 
-	
-	// advanced syntax needed for list, subvarname
-	char `evaluation'[varname] "`: variable label `evaluation''"
-	char `tune1'[varname] "`: variable label `tune1''"
-	char `tune2'[varname] "`: variable label `tune2''"
-	char `time'[varname] "`: variable label `time''"
-	// list tune2 and tune 3 only if specified
-	if "`par2name'"!=""    	list `evaluation' `tune1' `tune2'  `time'  in 1 , subvarname
-	else     				list `evaluation' `tune1'          `time'  in 1 , subvarname
-	
-	if "`par2name'"!=""  	mkmat `tune1' `tune2' `evaluation' `time'  in 1/`counter', matrix(gridsearch)
-	else 			  		mkmat `tune1' 		  `evaluation' `time'  in 1/`counter', matrix(gridsearch)
-	
-	// variable label of tune2 is empty if "`par2name'"==""
-	local colnames  `:variable label `tune1'' `:variable label `tune2'' `:variable label `evaluation''  seconds
-	matrix colnames gridsearch = `colnames'
-	return matrix gridsearch = gridsearch
-	
-	local one=`tune1' in 1
-	local two=`tune2' in 1
-	return scalar  tune1 =`one'
-	return scalar tune2 =`two'
+		// advanced syntax needed for list, subvarname
+		char tune1[varname]  "`par1name'"
+		char tune2[varname]  "`par2name'"
+		char evaluation[varname] "`criterion'"
+		char seconds[varname] "seconds"
+
+		// list tune2 and tune 3 only if specified
+		if "`par2name'"!=""    	list evaluation tune1 tune2  seconds  in 1 , subvarname
+		else     				list evaluation tune1        seconds  in 1 , subvarname
+			
+		if "`par2name'"!=""  	mkmat tune1 tune2 evaluation seconds  in 1/`counter', matrix(gridsearch)
+		else 			  		mkmat tune1 		 evaluation seconds  in 1/`counter', matrix(gridsearch)
+
+
+		// variable label of tune2 is empty if "`par2name'"==""
+		local colnames `par1name'   `par2name'  `criterion'  seconds
+		matrix colnames gridsearch = `colnames'
+		return matrix gridsearch = gridsearch
+
+		local one=tune1 in 1
+		local two=tune2 in 1
+		return scalar  tune1 =`one'
+		return scalar tune2 =`two'
+	}
 	
 	restore 
 end
@@ -318,7 +319,7 @@ end
 cap program drop evaluate_crit_av
 program define evaluate_crit_av , rclass
 	version 16.0
-	syntax [if] [in] , pred(str) y(str) criterion(str) evaluation(str) nfolds(int) folds(str)
+	syntax [if] [in] , pred(str) y(str) criterion(str)  nfolds(int) folds(str)
 	
 	// check nfolds is consistent with folds
 	qui sum `folds'
@@ -327,8 +328,7 @@ program define evaluate_crit_av , rclass
 
 	local eval=0 // av evaluation in fold
 	foreach i of numlist  1/`nfolds' {
-		evaluate_crit if `folds'==`i', pred("`pred'") y(`y') criterion(`criterion') ///
-			evaluation(`evaluation')
+		evaluate_crit if `folds'==`i', pred("`pred'") y(`y') criterion(`criterion') 
 		local eval= `eval' + r(eval)
 	}
 	local eval= `eval' / `nfolds'
@@ -340,25 +340,21 @@ end
 cap program drop evaluate_crit
 program define evaluate_crit , rclass
 	version 14.0
-	syntax [if] [in] , pred(str) y(str) criterion(str) evaluation(str)
+	syntax [if] [in] , pred(str) y(str) criterion(str) 
 											
 	if ("`criterion'"=="accuracy") {
-		label var `evaluation' "accuracy"
 		critaccuracy `if' `in', pred(`pred') y(`y') 
 		local eval=r(eval)
 	}
 	else if ("`criterion'"=="mse") {
-		label var `evaluation' "mse"
 		critmse `if' `in', pred(`pred') y(`y') 
 		local eval=r(mse)
 	}
 	else if ("`criterion'"=="rmse") {
-		label var `evaluation' "rmse"
 		critmse `if' `in', pred(`pred') y(`y') 
 		local eval=r(rmse)
 	}
 	else if ("`criterion'"=="AUC") {
-		label var `evaluation' "AUC"
 		qui tab `pred'
 		if r(r)==2 {
 			di as error "Warning: Predictions have only two distinct values." 
@@ -469,4 +465,5 @@ end
  version 0.2.6  May 22, 2020,  criterion AUC
  version 0.2.7  Jun 22, 2020,  average criterion over folds, not over obs
  version 1.0.0  Oct 27, 2020,  changed to rclass
+ version 1.1.0  Aug, 2021,  using frames 
 */

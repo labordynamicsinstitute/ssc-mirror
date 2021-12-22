@@ -13,7 +13,7 @@
 {title:Title}
 
 {phang}
-{bf:pkonfound} {hline 2} Beta version: For published studies, this command calculates (1) how much bias there must be in an estimate to invalidate/sustain an inference; (2) the impact of an omitted variable necessary to invalidate/sustain an inference for a regression coefficient.
+{bf:pkonfound} {hline 2} Beta version: For published studies, this command calculates (1) % bias necessary to invalidate/sustain an inference; (2) the impact threshold of an omitted confounding variable to invalidate/sustain an inference.
 
 
 {marker syntax}{...}
@@ -42,10 +42,16 @@
 {marker description}{...}
 {title:Description}
 
-{pstd}
-{cmd:pkonfound} this command calculates (1) how much bias there must be in an estimate to invalidate/sustain an inference. 
-The bias necessary to invalidate/sustain an inference is interpreted in terms of sample replacement; (2) the impact of an omitted variable necessary to invalidate/sustain an inference for a regression coefficient. 
-It also assesses how strong an omitted variable has to be correlated with the outcome and the predictor of interest to invalidate/sustain the inference.
+{phang}
+{cmd: pkonfound} takes users' input of numerical values (e.g., from a published study) and calculates (1) the % bias 
+in an estimate necessary to invalidate/sustain an inference.  The % bias necessary to invalidate/sustain an inference is 
+interpreted in terms of sample replacement; (2) the impact of an omitted variable necessary to invalidate/sustain an inference 
+for a regression coefficient.  It also assesses how strong an omitted variable must be correlated with the outcome and with the predictor of interest 
+to invalidate/sustain the inference. {p_end} 
+{phang}
+Four numbers must be input. The first number is the estimated value of the effect (e.g., the estimated regression coefficient); the second number is 
+the standard error of the estimated effect (regression coefficient); the third number is the sample size; the fourth number is 
+the number of covariates in the model. {p_end} 
 
 {marker options}{...}
 {title:Options}
@@ -64,7 +70,7 @@ default is 0 {cmd:nu(0)}
 		to change to one-tail use {cmd:onetail(1)}
 
 {phang}
-{opt rep_0(#)} For % bias, this controls the effect in the replacement cases;
+{opt rep_0(#)} For % bias to invalidate the inference, this controls the effect in the replacement cases;
                the default is the null effect (which may or may not be 0) {cmd:rep_0(0)}; to force replacing cases with effect of zero use {cmd:rep_0(1)}
 
 {marker remarks}{...}
@@ -76,6 +82,8 @@ For a graphical illustration of the impact of a confounding variable see  {brows
 {phang}
 For additional details of the calculations in a spreadsheet format and other supporting materials see {browse "https://msu.edu/~kenfrank/research.htm#causal"}. {p_end}
 
+{phang}
+For a web-based version of konfound see {browse "http://konfound-it.com"}. {p_end}
 
 {marker examples}{...}
 {title:Examples}

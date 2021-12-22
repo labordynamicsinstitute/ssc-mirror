@@ -8,7 +8,7 @@
 
 {marker syntax}{...}
 {title:Syntax}
-
+ 
 {p 4 17 2}
 {cmd:rkqte}
 {it:y}
@@ -26,6 +26,10 @@
 {browse "https://www.cambridge.org/core/journals/econometric-theory/article/quantile-treatment-effects-in-regression-kink-designs/75836ABC1C92059C67F4D132AE3B4EDD":Chen, Chiang, and Sasaki (2020)}. 
 The command takes an outcome variable {it:y}, a binary treatment variable {it:d}, and a running variable or forcing variable {it:x}.
 The primary results consist of estimates and a {it:uniform} 95% confidence band of QTEs across multiple quantiles. In addition to these primary results, the command also conducts tests of: 1. the null hypothesis that the QTEs are zero for all the quantiles (i.e., uniformly null treatment effects); and 2. the null hypothesis that the QTEs are constant across all the quantiles (i.e., homogeneous treatment effects) against the alternative of heterogeneous treatment effects.
+
+{phang}
+This command works only for a binary treatment {it:d}.
+For a continuous treatment, refer to {cmd:qrkd}.
 
 
 {marker options}{...}
@@ -67,10 +71,60 @@ The primary results consist of estimates and a {it:uniform} 95% confidence band 
 {phang}(The default is the inter-quartile range: 25th, 50th & 75th percentiles.)
 
 
+{marker stored}{...}
+{title:Stored results}
+
+{phang}
+{bf:rkqte} stores the following in {bf:r()}: 
+{p_end}
+
+{phang}
+Scalars
+{p_end}
+{phang2}
+{bf:r(N)} {space 10}observations
+{p_end}
+{phang2}
+{bf:r(h)} {space 10}bandwidth
+{p_end}
+{phang2}
+{bf:r(k)} {space 10}kink location
+{p_end}
+{phang2}
+{bf:r(cover)} {space 6}coverage probability
+{p_end}
+
+{phang}
+Macros
+{p_end}
+{phang2}
+{bf:r(cmd)} {space 8}{bf:rkqte}
+{p_end}
+
+{phang}
+matrices
+{p_end}
+{phang2}
+{bf:r(q)} {space 10}quantiles
+{p_end}
+{phang2}
+{bf:r(b)} {space 10}QTE estimates
+{p_end}
+{phang2}
+{bf:r(CBlower)} {space 4}lower bounds of confidence band
+{p_end}
+{phang2}
+{bf:r(CBupper)} {space 4}upper bounds of confidence band
+{p_end}
+{phang2}
+{bf:r(V)} {space 10}variance matrix
+{p_end}
+
+
 {title:Reference}
 
 {p 4 8}Chen, H., H.D. Chiang, and Y. Sasaki. 2020. Quantile Treatment Effects in Regression Kink Designs.
-{it:Econometric Theory}, 36 (6), pp. 1167-1191.
+{it:Econometric Theory}, 36 (6): 1167-1191.
 {browse "https://www.cambridge.org/core/journals/econometric-theory/article/quantile-treatment-effects-in-regression-kink-designs/75836ABC1C92059C67F4D132AE3B4EDD":Link to Paper}.
 {p_end}
 
@@ -82,6 +136,3 @@ The primary results consist of estimates and a {it:uniform} 95% confidence band 
 {p 4 8}Harold. D. Chiang, Vanderbilt University, Nashville, TN.{p_end}
 
 {p 4 8}Yuya Sasaki, Vanderbilt University, Nashville, TN.{p_end}
-
-
-

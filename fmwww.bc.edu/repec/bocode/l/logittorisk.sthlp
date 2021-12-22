@@ -1,5 +1,5 @@
 {smcl}
-{* 01dec2020}{...}
+{* 15oct2021}{...}
 {cmd:help LogitToRisk}
 {hline}
 
@@ -104,8 +104,8 @@ This does not apply to {cmd: logittoriski} (immediate form).
 
 {title:Authors}
 
-{pstd} Luis Furuya-Kanamori, Research School of Population Health, Australian National University, Australia {p_end}
-{pstd} {browse "mailto:luis.furuya-kanamori@anu.edu.au?subject=LogitToRisk Stata enquiry":luis.furuya-kanamori@anu.edu.au} {p_end}
+{pstd} Luis Furuya-Kanamori, UQ Centre for Clinical Research, The University of Queensland, Australia {p_end}
+{pstd} {browse "mailto:l.furuya@uq.edu.au?subject=LogitToRisk Stata enquiry":l.furuya@uq.edu.au} {p_end}
 
 {pstd} Suhail AR Doi, Department of Population Medicine, College of Medicine, Qatar University, Qatar {p_end}
 

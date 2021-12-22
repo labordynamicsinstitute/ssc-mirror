@@ -1,10 +1,10 @@
-*! verion 1.0.0 16apr2019 MJC
+*! verion 1.1.0 03feb2020 MJC
 
 program define exptorcs, eclass
-	syntax varlist(default=empty) , 	EVENT(varname numeric)			///
-										EXPosure(varname numeric)		///
-										YEAR(string)					///
-										AGE(string)						///
+	syntax [varlist(default=none)] , 	EVENT(string)			///
+										EXPosure(string)		///
+										YEAR(string)			///
+										AGE(string)				///
 										EXPDATA(string)					
 										
 	cap which rcsgen
@@ -29,6 +29,17 @@ program define exptorcs, eclass
 	preserve
 	qui use `expdata', clear
 	
+	cap confirm variable `event'
+	if _rc {
+		di as error "`event' variable not found in expdata()"
+		exit 198
+	}
+	cap confirm variable `exposure'
+	if _rc {
+		di as error "`exposure' variable not found in expdata()"
+		exit 198
+	}
+	
 	//==================================================================================================//
 	
 	local mainvars `varlist'
@@ -39,15 +50,26 @@ program define exptorcs, eclass
 									KNOTS(string) 			///
 								[	 						///
 									LOG 					///
-									OFFset(passthru)		///
 									NOORTHOG				///
 								]
 		local yvar `varlist'
 		local yknots `knots'
 		local ylog `log'
-		local yoffset `offset'
 		local ynoorthog `noorthog'
-	
+		
+		//build temp year splines
+		tempvar ycore
+		qui gen double `ycore' = `yvar'
+		
+		if "`log'"!="" {
+			qui replace `ycore' = log(`ycore')
+		}
+		if "`noorthog'"=="" {
+			local yorthog orthog
+		}
+		tempname ysp
+		qui rcsgen `ycore', knots(`knots') gen(`ysp') `yorthog'
+		local yspvars `r(rcslist)'
 	
 	//splines for age
 	local 0 `age'
@@ -55,18 +77,31 @@ program define exptorcs, eclass
 									KNOTS(string) 			///
 								[	 						///
 									LOG 					///
-									OFFset(passthru)		///
 									NOORTHOG				///
 								]
 		local avar `varlist'
 		local aknots `knots'
 		local alog `log'
-		local aoffset `offset'
 		local anoorthog `noorthog'
+	
+		//build temp age splines
+			tempvar acore
+			qui gen double `acore' = `avar'
+			
+			if "`log'"!="" {
+				qui replace `acore' = log(`acore')
+			}
+			if "`noorthog'"=="" {
+				local aorthog orthog
+			}
+			tempname asp
+			qui rcsgen `acore', knots(`knots') gen(`asp') `aorthog'
+			local aspvars `r(rcslist)'
+	
 	
 	
 	//fit poisson model
-	qui poisson `event' `varlist'   , exposure(`exposure')
+	qui poisson `event' `mainvars' `yspvars' `aspvars' , exposure(`exposure')
 		
 		tempname init
 		matrix `init' = e(b)
@@ -74,9 +109,17 @@ program define exptorcs, eclass
 	restore
 	
 	//merlin model
+	
+	di as result "Note; age is assumed to be the main timescale"
+	di as result "      year is modelled as attained age with an offset of: "
+	qui gen double _offset = `yvar'-`avar'
+	di as result "-> gen double _offset = `yvar' - `avar'"
+	di 
+	
+	di as result "Building merlin model:"
 	merlin	(`avar' `mainvars' 														///
-					rcs(`avar', knots(`yknots') `ylog' `ynoorthog' `yoffset') 		///
-					rcs(`avar', knots(`aknots') `alog' `anoorthog' `aoffset') 		///
+					rcs(`avar', knots(`yknots') `ylog' `ynoorthog' offset(_offset)) ///
+					rcs(`avar', knots(`aknots') `alog' `anoorthog')			 		///
 				, family(loghazard, failure(_status)) 								///
 					timevar(`avar')) 												///
 				, from(`init') iter(0)

@@ -1,27 +1,32 @@
-*! xtcse2, version 1.01, July 2019
+*! xtcse2, version 1.02, Jan 2021
 *! author Jan Ditzen
-*! www.jan.ditzen.net - j.ditzen@hw.ac.uk
+*! www.jan.ditzen.net - jan.ditzen@unibz.it
 /*
 Changelog
 **********1.01*****************************
 - support for unbalanced panels
+**********1.02 - xx.0x.2019
+- added support for residuals (BKP 2019)
+- bug fixes
+- added option no center
+- added xtbalance2 to balance paneldataset. automatically balances with respect to N.
 */
 program define xtcse2, rclass
-	syntax [varlist(default=none)] [if], [pca(integer 4) STANDardize nocd inprog ]
+	syntax [varlist(default=none ts)] [if], [pca(integer 4) STANDardize nocd inprog size(real 0.1) tuning(real 0.5) Reps(integer 0) RESidual lags(integer 0) NOCENTER SAMESample ]
 	version 14
+	
+	tempname xtdcceest xtdcceesttouse
+	cap _estimates hold `xtdcceest' ,  restore copy  varname(`xtdcceesttouse')
+		
 	preserve
 	
 		qui{		
-		if "`if'" != "" {
-			keep `if'
-		}
 		
 		tempvar touseAll 
 		if "`varlist'" == "" {
 			tempvar varl
 			gen `touseAll' = e(sample)  
 			predict double `varl' if `touseAll' , residuals
-			*local `varl' `varl'
 			local varn "residuals"
 		}
 		else {
@@ -31,18 +36,19 @@ program define xtcse2, rclass
 			local varn "`varlist'"
 		}
 		
-		tempname xtdcceest
-		cap _estimates hold `xtdcceest' ,  restore 
+		if "`if'" != "" {
+			keep `if'
+		}
 		
+		if "`samesample'" == "" {
+			local noadjust "noadjust"
+		}
+
 		keep if `touseAll'
+		
 		*** Get info
 		local unbal = 0
-		qui xtset
-		if "`r(balanced)'" != "strongly balanced"  {
-				noi disp "Observations will be restricted to union of time periods across cross sectional units."
-				noi disp "Number of observations can become very small."
-				noi disp ""
-		}
+		qui xtset		
 		local idvar "`r(panelvar)'"
 		local tvar "`r(timevar)'"
 		tempvar tmpid tmpt
@@ -51,112 +57,130 @@ program define xtcse2, rclass
 		tempname ResultMatrix
 		mata `ResultMatrix' = J(8,`=wordcount("`varl'")',.)		
 		local run = 1
+
 		foreach res in `varl' {
-			tempvar touse
+			tempvar touse tousecd
+			sort `idvar' `tvar'
+
 			gen `touse' = (`res' != . & `touseAll')
-			
+			gen `tousecd' = `touse'
 			egen `tmpid' = group(`idvar') if `touse'
 			egen `tmpt' = group(`tvar') if `touse'
-			
-			** correct minimum
-			qui sum `tmpt' if `touse'
-			replace `tmpt' = `tmpt' - `r(min)' + 1 if `touse'
-			
-			qui sum `tmpid' if `touse'
-			replace `tmpid' = `tmpid' - `r(min)' + 1 if `touse'	
-			
-			** restrict to same sample
-			tempname NumCross NumCrossIndic
-			by `tmpt', sort: egen `NumCross' = total(1) if `touse'
-			qui sum `tmpid' if `touse'
-			gen `NumCrossIndic' = (`r(max)'==`NumCross') 
-			
-			qui sum `NumCrossIndic' if `touse'
-			local NCI = r(sum)
-			qui sum `touse' if `touse'
-			local TI = r(sum)
-			
-			replace `touse' = `NumCrossIndic' 
-			
-			if `TI' != `NCI'{
-				local vartmp = word("`varn'",`run')
-				noi disp "Number of observations for variable `vartmp' adjusted from `TI' to `NCI' due to unbalanced panel or variable."
-				drop `tmpid' `tmpt'
-				egen `tmpid' = group(`idvar') if `touse'
-				egen `tmpt' = group(`tvar') if `touse' 
-				
+
+
+			xtset2 if `touse' , checkvars(`res')
+
+			if "`r(balanced)'" != "strongly balanced" {
+				cap which xtbalance2
+
+				if _rc != 0 {
+					noi disp as smcl "Please install {help xtbalance2} to balance unbalanced panel."
+					noi disp as smcl `"Install from {net "des xtbalance2, from(https://janditzen.github.io/xtbalance2/)":github} or {stata ssc install xtbalance2:SSC}"'
+					error 199
+				}
+
+				tempname touse2
+				xtbalance2 `res' , gen(`touse2')
+				replace `touse' = `touse2'
+				drop `touse2' `tmpid' `tmpt'
+
 				** correct minimum
-				qui sum `tmpt' if `touse'
-				replace `tmpt' = `tmpt' - `r(min)' + 1 if `touse'
-			
-				qui sum `tmpid' if `touse'
-				replace `tmpid' = `tmpid' - `r(min)' + 1 if `touse'	
-				
-			}			
-			
-			drop `NumCrossIndic'  `NumCross'		
-			
-			*** standardize						
-			if "`standardize'" != "" {
-				tempvar meantmp sdtmp
-				by `tmpid', sort: egen `meantmp' = mean(`res') if `touse'
-				by `tmpid', sort: egen `sdtmp' = sd(`res') if `touse'
-				replace `res' = (`res' - `meantmp') / `sdtmp' if `touse'
-				drop `meantmp' `sdtmp'
+				egen `tmpid' = group(`idvar') if `touse'
+				egen `tmpt' = group(`tvar') if `touse'
+				local isbalanced `isbalanced' `res'
+
+				if "`noadjust'" == "" {
+					replace `tousecd' = `touse'
+				}
 			}
-			
-			tempname xx PC 
-			tempname eigenval eigenvec
-			sum `tmpt' if `touse'
-			local T = `r(max)'
 
-			mata `xx' = st_data(.,"`res'","`touse'")
-			mata `xx' = colshape(`xx',`T')'
-
-			mata st_local("Nt",strofreal(cols(`xx'))) 
+			if "`residual'" == "" {
 			
-			if `Nt' < `T' {
-				mata eigensystem(`xx''*`xx',`eigenvec'=.,`eigenval'=.)
-				mata `eigenvec' = Re(`eigenvec'[.,(1..`pca')])
-				mata `PC'= `xx' * `eigenvec'
+				*** Center variables so mean is zero
+				if "`nocenter'" == "" {
+					tempvar meantmp 
+					by `tmpid', sort: egen `meantmp' = mean(`res') if `touse'
+					replace `res' = (`res' - `meantmp')  if `touse'
+					drop `meantmp' 
+				}
+				
+				*** standardize						
+				if "`standardize'" != "" {
+					tempvar meantmp sdtmp
+					by `tmpid', sort: egen `meantmp' = mean(`res') if `touse'
+					by `tmpid', sort: egen `sdtmp' = sd(`res') if `touse'
+					replace `res' = (`res' - `meantmp') / `sdtmp' if `touse'
+					drop `meantmp' `sdtmp'
+				}
+				
+				sort `idvar' `tvar'
+				
+				tempname xx PC 
+				tempname eigenval eigenvec
+				sum `tmpt' if `touse'
+				local T = `r(max)'
+
+				mata `xx' = st_data(.,"`res'","`touse'")
+				mata `xx' = colshape(`xx',`T')'
+
+				mata st_local("Nt",strofreal(cols(`xx'))) 
+				
+				if `Nt' < `T' {
+					mata eigensystem(`xx''*`xx',`eigenvec'=.,`eigenval'=.)
+					mata `eigenvec' = Re(`eigenvec'[.,(1..`pca')])
+					mata `PC'= `xx' * `eigenvec'
+				}
+				else {
+					mata eigensystem(`xx'*`xx'',`eigenvec'=.,`eigenval'=.)
+					mata `PC' = Re(`eigenvec'[.,(1..`pca')])
+				}
+				
+				***eit and mub
+				tempvar partial eit
+				tempname eitm  eitt eitv
+				gen double `partial' = `res'
+				gen double `eit' = .
+				tempvar tousei
+				gen `tousei' = 0
+				mata `eitv' = .
+				
+				sort `idvar' `tvar'
+				mata st_view(`eitv',.,"`eit'","`touse'")
+				
+				
+				mata `eitm' = `xx' - `PC'*m_xtdcce_inverter(quadcross(`PC',`PC')) * quadcross(`PC',`xx')
+				
+				sum `tmpid' if `touse'
+				forvalues i = 1(1)`r(max)' {			
+					*** eit
+					replace `tousei' = (`tmpid' == `i' & `touse')
+					mata `eitt' = xtdcce_selectindex(st_data(.,"`tousei'","`touse'"))
+					mata `eitv'[`eitt',.] = `eitm'[.,`i']
+					
+					replace `tousei' = 0
+				}		
+				
+				mata mata drop `eitm'  `eitt' `eitv'
+				*** mata program which calcultes alpha and alpha hat
+				tempname alphas 
+				sort `idvar' `tvar'
+				mata `alphas' =  xtdcce_m_alphaest("`res'","`eit'","`tmpid'","`tmpt'","`touse'",`size')
+			
+				drop `eit'
 			}
 			else {
-				mata eigensystem(`xx'*`xx'',`eigenvec'=.,`eigenval'=.)
-				mata `PC' = Re(`eigenvec'[.,(1..`pca')])
-			}
-			
-			***eit and mub
-			tempvar partial eit
-			tempname eitm  eitt eitv
-			gen double `partial' = `res'
-			gen double `eit' = .
-			tempvar tousei
-			gen `tousei' = 0
-			mata `eitv' = .
-			mata st_view(`eitv',.,"`eit'","`touse'")
-			
-			mata `eitm' = `xx' - `PC'*m_xtdcce_inverter(quadcross(`PC',`PC')) * quadcross(`PC',`xx')
-			
-			sum `tmpid'
-			forvalues i = 1(1)`r(max)' {			
-				*** eit
-				replace `tousei' = (`tmpid' == `i' & `touse')
-				mata `eitt' = selectindex(st_data(.,"`tousei'","`touse'"))
-				mata `eitv'[`eitt',.] = `eitm'[.,`i']
+				tempname alphas 
+				noi mata `alphas' = xtdcce_m_alpha_res("`res'","`tmpid'","`tmpt'","`touse'",`size',`tuning',`lags',`reps')
 				
-				replace `tousei' = 0
-			}		
-			
-			mata mata drop `eitm'  `eitt' `eitv'
-			*** mata program which calcultes alpha and alpha hat
-			tempname alphas 
-			mata `alphas' =  xtdcce_m_alphaest("`res'","`eit'","`tmpid'","`tmpt'","`touse'",0.1)
-			
-			drop `eit'
-			
+				sum `tmpt' if `touse'
+				local T = `r(max)'
+				
+				sum `tmpid' if `touse'
+				local Nt = `r(max)'
+			}
 			*** CD Test
 			if "`cd'" == "" & "`inprog'" == "" {		
-				cap xtcd2 `res' , noest
+				cap xtcd2 `res' if `tousecd', noest
 				if _rc == 199 {
 					noi display as error "xtcd2 not installed" 
 					local cd nocd
@@ -182,22 +206,32 @@ program define xtcse2, rclass
 		}
 	}
 	restore
-	cap _estimates unhold `xtdcceest'
+	*cap _estimates unhold `xtdcceest', copy
 	
 	** Output
 	tempname alpha_circ alpha_circSE CDm CDpm Nm Tm alpham tm
-	mata st_matrix("`alpha_circ'",`ResultMatrix'[3,.])
-	mata st_matrix("`tm'",`ResultMatrix'[3,.]:/`ResultMatrix'[4,.])
-	mata st_matrix("`alpham'",`ResultMatrix'[(1..3),.])
-	mata st_matrix("`alpha_circSE'",`ResultMatrix'[4,.])
+	
+	if "`residual'" == "" {
+		mata st_matrix("`alpha_circ'",`ResultMatrix'[3,.])
+		mata st_matrix("`tm'",`ResultMatrix'[3,.]:/`ResultMatrix'[4,.])
+		mata st_matrix("`alpham'",`ResultMatrix'[(1..3),.])
+		mata st_matrix("`alpha_circSE'",`ResultMatrix'[4,.])
+	}
+	else {
+		tempname alpha_circLow alpha_circUp
+		mata st_matrix("`alpha_circ'",`ResultMatrix'[1,.])
+		mata st_matrix("`alpha_circSE'",`ResultMatrix'[2,.])
+		mata st_matrix("`alpha_circLow'",`ResultMatrix'[3,.])
+		mata st_matrix("`alpha_circUp'",`ResultMatrix'[4,.])
+	}
 	mata st_matrix("`CDm'",`ResultMatrix'[5,.])
 	mata st_matrix("`CDpm'",`ResultMatrix'[6,.])
 	mata st_matrix("`Nm'",`ResultMatrix'[7,.])
 	mata st_matrix("`Tm'",`ResultMatrix'[8,.])
 	
 	
-	foreach mat in alpha_circ alpha_circSE CDm CDpm Nm Tm alpham tm {
-		matrix colnames ``mat'' = `varn'
+	foreach mat in alpha_circ alpha_circLow alpha_circLow alpha_circUp alpha_circSE CDm CDpm Nm Tm alpham tm {
+		cap matrix colnames ``mat'' = `varn'
 	}
 	matrix rownames `alpha_circ' = "alpha"
 	matrix rownames `alpha_circSE' = "alpha"
@@ -205,10 +239,10 @@ program define xtcse2, rclass
 	matrix rownames `CDpm' = "CDp"
 	matrix rownames `Nm' = "N_g"
 	matrix rownames `Tm' = "T"
-	matrix rownames `alpham' = "alpha hat" "alpha tilde" "alpha"
-	matrix rownames `tm' = "t"
-	
+	cap matrix rownames `alpham' = "alpha hat" "alpha tilde" "alpha"
+	cap matrix rownames `tm' = "t"
 
+	
 	
 	*** Setting for Output
 	local maxline = c(linesize)	
@@ -253,6 +287,9 @@ program define xtcse2, rclass
 	noi disp as text "Estimation of Cross-Sectional Exponent (alpha)"
 	
 	local level =  `c(level)'
+	if "`residual'" != "" {
+		local level 95
+	}
 	local col_i = `abname' + 1
 	local maxline = `maxline' - 2
 	scalar cv = invnorm(1 - ((100-`level')/100)/2)
@@ -268,10 +305,28 @@ program define xtcse2, rclass
 	di as text "{hline `col_i'}{c +}{hline `=`maxline'-`col_i'-15'}"
 
 	foreach var in `varn' {
-		xtdcce_output_table `var' `col_i' `alpha_circ' `alpha_circSE'  cv `var'	
+		if "`residual'" == "" {
+			xtdcce_output_table `var' `col_i' `alpha_circ' `alpha_circSE'  cv `var'	
+		}
+		else {
+			xtdcce_output_table_res `var' `col_i' `alpha_circ' `alpha_circSE' `alpha_circLow' `alpha_circUp' `var'	
+		}
 	}
 	di as text "{hline `col_i'}{c BT}{hline `=`maxline'-`col_i'-15'}"
 	di "0.5 <= alpha < 1 implies strong cross-sectional dependence."
+	
+	if "`residual'" != "" {
+		if `reps' > 0 {
+			di as text "SE and CI bootstrapped with `reps' repetitions."
+		}
+		else {
+			di as text "SE and CI not available. Use option reps() to bootstrap SE and CI."
+		}
+	}
+	if "`isbalanced'" != "" & "`noadjust'" != "" {
+		noi disp "Panel balanced for variables: `isbalanced'."
+	}
+
 	if "`cd'" == "" {
 		di ""
 		di as text "Pesaran (2015) test for weak cross-sectional dependence."
@@ -295,233 +350,60 @@ program define xtcse2, rclass
 		di as text "{hline `col_i'}{c BT}{hline `=`maxline'-`col_i'-22'}"
 	}
 	
+	if "`nocenter'" == "" {
+		noi disp "Variables are centered around zero."
+	}
+	else if "`standardize'" != "" {
+		noi disp "Variables are standardized."
+	}
+
+	if "`isbalanced'" != "" & "`noadjust'" == "" {
+		noi disp "Panel balanced for variables: `isbalanced'."
+	}
 	
 	*** Return
+
+	if rowsof(`alpha_circ') == 1 {
+		scalar `alpha_circ' = `alpha_circ'[1,1]
+		return scalar alpha = `alpha_circ'
+		scalar `alpha_circSE' = `alpha_circSE'[1,1]
+		return scalar alphaSE = `alpha_circSE'
+	}
+	else {
+		return matrix alpha = `alpha_circ'
+		return matrix alphaSE = `alpha_circSE'
+	}
+	cap return matrix alphas = `alpham'
 	
-	return matrix alpha = `alpha_circ'
-	return matrix alphas = `alpham'
-	return matrix alphaSE = `alpha_circSE'
-	return matrix N_g = `Nm'
-	return matrix T = `Tm'	
-	
+	if rowsof(`Nm')  == 1 {
+		scalar `Nm' = `Nm'[1,1]
+		return scalar N_g = `Nm'
+		scalar `Tm' = `Tm'[1,1]
+		return scalar T = `Tm'	
+	}
+	else {
+		return matrix N_g = `Nm'
+		return matrix T = `Tm'	
+	}
 	if "`cd'" == "" & "`inprog'" == "" {
-		return matrix CD = `CDm'
-		return matrix CDp = `CDpm'
+		if colsof(`CDm') == 1 {
+			scalar `CDm' = `CDm'[1,1]
+			return scalar CD = `CDm'
+			scalar `CDpm' = `CDpm'[1,1]
+			return scalar CDp = `CDpm'
+		}
+		else {
+			return matrix CD = `CDm'
+			return matrix CDp = `CDpm'
+		}
 	}
 	
 	
 end
-// Mata utility for sequential use of solvers
-// Default is cholesky;
-// if that fails, use QR;
-// if overridden, use QR.
-// By Mark Schaffer 2015
-capture mata mata drop cholqrsolve()
-mata:
-	function cholqrsolve (  numeric matrix A,
-							numeric matrix B,
-						  | real scalar useqr)
-	{
-			
-			if (args()==2) useqr = 0
-			
-			real matrix C
 
-			if (!useqr) {
-					C = cholsolve(A, B)
-					if (C[1,1]==.) {
-							C = qrsolve(A, B)
-					}
-			}
-			else {
-					C = qrsolve(A, B)
-			}
-			return(C)
-
-	};
-end
-
-
-capture mata mata drop cholqrinv()
-mata:
-	function cholqrinv (  numeric matrix A,
-						  | real scalar useqr)
-	{
-			if (args()==2) useqr = 0
-
-			real matrix C
-
-			if (!useqr) {
-					C = cholinv(A)
-					if (C[1,1]==.) {
-							C = qrinv(A)
-					}
-			}
-			else {
-					C = qrinv(A)
-			}
-			return(C)
-
-	};
-end
-
-///Program for matrix inversion.
-///Default is cholesky
-///if not full rank use invsym (Stata standard) 
-///and obtain columns to use
-///options: 
-///1. if columns are specified, force use invsym
-///2. allow for old method (cholinv, if fails qrinv)
-///output
-///return: inverse
-///indicator for rank (1x2, rank and rows), which method used and variables used
-
-capture mata mata drop m_xtdcce_inverter()
-mata:
-	function m_xtdcce_inverter(	numeric matrix A,
-								| real scalar useold,
-								real matrix rank,
-								real matrix coln,
-								string scalar method)
-								
-	{
-		real matrix C
-		
-		if (args() == 1) {
-			useold = 0
-			coln = 0
-		}
-		if (args() == 2){
-			coln = 0
-		}
-		if (useold == 2) {
-			coln = (1..cols(A))
-		}
-		
-		if (useold == 1) {			
-			C = cholqrinv(A)
-			qrinv(A,rank)
-			method = "cholqr"		
-		}
-		else {
-			if (coln[1,1] == 0) {
-				/// calculate rank seperate. if A is not full rank, cholinv still produces results
-				/// 1..cols(A) makes sure variables from left are not dropped
-				C = invsym(A,(1..cols(A)))
-				rank = rows(C)-diag0cnt(C)
-				
-				if (rank < rows(A)) {	
-					/// not full rank, use invsym
-					method = "invsym"
-					coln = selectindex(colsum(A1:==0):==rows(A1):==0)			
-				}
-				else {
-					/// full rank use cholsolve
-					C = cholinv(A)
-					method = "chol"
-				}				
-			}
-			else {
-				C = invsym(A,coln)
-				rank = rows(C)-diag0cnt(C)
-				method = "invsym"
-			}			
-		}
-		rank = (rank, rows(C))
-		return(C)
-	}
-
-end
-/// same as inverter, rank is for matrix A (which is inverted) 
-capture mata mata drop m_xtdcce_solver()
-mata:
-	function m_xtdcce_solver(	numeric matrix A,
-								numeric matrix B,
-								| real scalar useold,
-								real matrix rank,
-								real matrix coln,
-								string scalar method)
-								
-	{
-		real matrix C
-		
-		if (args() == 2) {
-			useold = 0
-			coln = 0
-		}
-		if (args() < 5){
-			coln = 0
-		}		
-		
-		if (useold == 2) {
-			coln = (1..cols(A))
-		}
-		
-		if (useold == 1) {			
-			C = cholqrsolve(A,B)
-			qrinv(A,rank)
-			method = "cholqr"
-			rank = (rank, rows(C))
-		}
-		else {
-			if (coln[1,1] == 0) {
-				
-				/// calculate rank seperate. if A is not full rank, cholsolve still produces results
-				/// 1..cols(A) makes sure variables from left are not dropped
-				A1 = invsym(A,(1..cols(A)))
-				rank = rows(A1)-diag0cnt(A1)
-				
-				if (rank < rows(A)) {	
-					/// not full rank, solve by hand
-					C = A1 * B
-					method = "invsym"
-					coln = selectindex(colsum(A1:==0):==rows(A1):==0)			
-				}
-				else {
-					/// full rank use cholsolve
-					C = cholsolve(A,B)
-					method = "chol"
-					coln = 0
-				}
-			}
-			else {
-				/// coln is defined, use invsym on specified columns
-				A1 = invsym(A,coln)
-				C = A1 * B
-				method = "invsym"
-				rank = rows(A1)-diag0cnt(A1)
-			}
-			rank = (rank, rows(A1))
-		}		
-		return(C)		
-	}
-
-end
-
-capture mata mata drop xtdcce_m_partialout()
-mata:
-	function xtdcce_m_partialout (  string scalar X2_n,
-									string scalar X1_n, 
-									string scalar touse,
-									real scalar useold,
-									| real scalar rk)
-	{
-		"start partial out"
-		real matrix X1
-		real matrix X2
-		
-		st_view(X2,.,tokens(X2_n),touse)
-		st_view(X1,.,tokens(X1_n),touse)
-		X1X1 = quadcross(X1,X1)
-		X1X2 = quadcross(X1,X2)
-		"x1x1 and x1x2 calculated"
-		//Get rank
-		X2[.,.] = (X2 - X1*m_xtdcce_solver(X1X1,X1X2,useold,rk))
-		"partial out done"
-		"rank condition:"
-		rk
-	}
-end
+** auxiliary file with auxiliary programs
+findfile "xtdcce2_auxiliary.ado"
+include "`r(fn)'"
 
 capture mata mata drop xtdcce_m_alphaest()
 mata:
@@ -553,7 +435,7 @@ mata:
 		/// loop necessary because difference between xbart and xbar, need to get xbart
 		/// build et here (see below)
 		while (i <=T) {
-			indic = selectindex(idt[.,2] :==i)
+			indic = xtdcce_selectindex(idt[.,2] :==i)
 			
 			xbartt = quadcolsum(x[indic,.]):/N
 			xbart[i,.] = xbartt
@@ -591,7 +473,9 @@ mata:
 		etmp = xm - xbart_I * coef
 		s2 = etmp'etmp:/(T-cols(xbart_I))
 		se = sqrt(diagonal(s2*m_xtdcce_inverter(quadcross(xbart,xbart))))
+		/// step 2, calculate t stat
 		t_test = (coef[2,.]:/se[1,.])'
+		/// step 3, calculate xstr with cp = invnormal(1-p/(2 * (N-i)) [ Holms approach]
 		size = J(N,1,0)
 		x_str = J(T,1,0)
 		order = (1::N)
@@ -612,7 +496,8 @@ mata:
 		s_size = sort((size,s_ttest[.,2]),2)
 		
 		x_str = (s_size[.,1]':*xm)'
-		x_str1 = x_str[selectindex(x_str[.,1]:!=0),.]
+		x_str1 = x_str[xtdcce_selectindex(x_str[.,1]:!=0),.]
+		/// step 4
 		if (x_str[1,1] == .) {
 			"missings"
 			theta = 1
@@ -738,6 +623,30 @@ program define xtdcce_output_table
 
 end
 
+capture program drop xtdcce_output_table_res
+program define xtdcce_output_table_res
+	syntax anything ,[noci]
+
+	tokenize `anything'
+	local var `1'
+	local col =  `2'
+	local b_p_mg `3'
+	local se_p_mg `4'
+	local cvlow  `5'
+	local cvup  `6'
+	local i `7'
+
+	di as text %`col's abbrev("`var' ",`=`col'-1') "{c |}"  _continue
+	local col = `col' + 3
+	di as result _column(`col') %9.8g `b_p_mg'[1,colnumb(`b_p_mg',"`i'")] _continue
+	local col = `col' + 8 + 3
+	di as result _column(`col') %9.8g `se_p_mg'[1,colnumb(`se_p_mg',"`i'")] _continue
+	local col = `col' + 8 + 5
+	di as result _column(`col') %9.7g ( `cvlow'[1,colnumb(`cvlow',"`i'")] ) _continue
+	local col = `col' + 12
+	di as result _column(`col') %9.7g ( `cvup'[1,colnumb(`cvup',"`i'")] )
+
+end
 
 capture program drop xtdcce_output_tableCD
 program define xtdcce_output_tableCD
@@ -763,3 +672,196 @@ program define xtdcce_output_tableCD
 	di as result _column(`col') %9.0f `T'[1,colnumb(`T',"`i'")] 
 
 end
+
+
+/// estimator for residual
+capture mata mata drop xtdcce_m_alpha_res()
+mata:
+	function xtdcce_m_alpha_res (
+								string scalar resid_name,
+								string scalar id_name,
+								string scalar t_name,
+								string scalar touse,
+								real scalar a_size,
+								real scalar delta,
+								real scalar H,
+								real scalar B)
+								
+								
+	{
+		r = st_data(.,resid_name,touse)
+		id = st_data(.,id_name,touse)
+		tvec = st_data(.,t_name,touse)
+		
+		idt = (id,tvec)
+		
+		t_uniq = uniqrows(tvec)
+		T = rows(t_uniq)
+		N = rows(uniqrows(id))
+
+		zm = J(T,N,.)
+
+		i=1
+		if (H==0) {	
+			/// case of non dynamic panel (strong exogenous regressors)
+			/// standardize residuals
+			
+			///"no lags"
+			while (i<=N) {
+				indic = xtdcce_selectindex(idt[.,1]:==i)
+				tindic = idt[indic,2]		
+				
+				eit = r[indic,.]
+				sd = sqrt(eit'eit:/rows(eit))
+				if (hasmissing(sd):==1) {
+					"sd has missing"
+					i
+				}
+				if (hasmissing(eit):==1) {
+					"eit has missing in"
+					i
+				}
+				
+				tti = xtdcce2_mm_which2(t_uniq,tindic)
+				zm[tti,i] = eit / sd
+				i++
+				
+			}	
+			
+		}
+		else {
+			/// standardize residuals			
+			"with lags"
+			
+			while (i<=N) {
+				indic = xtdcce_selectindex(idt[.,1]:==i)
+				tindic = idt[indic,2]
+				
+				eit = r[indic,.]
+				ii = (1::rows(eit))
+				/// standard error, sum over eit^2 over ii-1 for small sample adjustment
+				sd = sqrt(quadrunningsum((eit:^2)):/(ii:-1))				
+				tti = xtdcce2_mm_which2(t_uniq,tindic)
+				zm[tti,i] = eit :/ sd
+				i++
+			}
+	
+		}
+		/// Point Estimate
+		alpha=xtdcce_m_alphares_calc(zm,id,tvec,a_size,delta,H) 
+		
+		/// Bootstrap for SE
+		if (B > 0) {
+			alphab = J(B,1,.)
+			b = 1
+			while (b<=B) {
+				/// resample columns of r
+				indic = runiformint(1,cols(zm),1,cols(zm))				
+				rb = zm[.,indic]
+				alphab[b] = xtdcce_m_alphares_calc(rb,id,tvec,a_size,delta,H) 
+				b++
+			}
+			
+			if (hasmissing(alphab)==1) {
+				alphab = alphab[xtdcce_selectindex(alphab:!=.)]
+			}			
+			alphabq = mm_quantile(alphab,1,(1-c("level")/100, c("level")/100))
+			///alphabq = mm_quantile(alphab,1,((100-c("level"))/2,(1-(100-c("level"))/2,(100-c("level"))/2))
+			
+			alpha = (alpha \ sqrt(quadvariance(alphab)) \alphabq')
+			
+		}
+		else {
+			alpha = (alpha \ . \ . \ .)
+		}
+		return(alpha)
+	}
+end
+
+
+capture mata mata drop xtdcce_m_alphares_calc()
+mata:
+	function xtdcce_m_alphares_calc(
+								real matrix z,
+								real matrix id,
+								real matrix tvec,
+								real scalar a_size,
+								real scalar delta,
+								real scalar H)
+	{
+
+
+		idt = (id,tvec)
+		T = rows(uniqrows(tvec))
+		N = rows(uniqrows(id))
+		rho = J(N,N,.)
+
+		if (H==0) {
+			/// case of strong exogenous regressors	
+			/// calculate rho_ij
+			i=1		
+			while (i<=N) {
+				j = i + 1
+				while (j<=N) {
+					zi = z[.,i]
+					zj = z[.,j]
+		
+					indici = zi :!=.
+					indicj = zj :!=.
+					
+					indic = xtdcce_selectindex(indici:*indicj)
+
+					///rhoij = quadsum(zi[indic,.]:*zj[indic,.]) :/ (rows(indic))
+					rhoij = quadcorrelation((zi[indic,.],zj[indic,.]))[2,1]
+					rho[i,j] = rhoij
+					rho[j,i] = rhoij
+					j++
+				}
+				i++ 				
+			}
+		}
+		else {
+			/// case of weak exogenous regressors			
+			/// correct H if H > T
+			if (H> rows(z)) {
+				H = rows(z)-1
+			}
+			/// calculate rho_ij
+			i=1		
+			while (i<=N) {
+				j = i + 1
+				while (j<=N) {
+					zi = z[(H..rows(z)),i]
+					zj = z[(H..rows(z)),j]					
+					
+					indici = zi :!=.
+					indicj = zj :!=.
+					
+					indic = xtdcce_selectindex(indici:*indicj)	
+				
+					rhoij = quadsum(zi[indic,.]:*zj[indic,.]) :/ (rows(indic)-H)
+					///rhoij = quadcorrelation((zi[indic,.],zj[indic,.]))[2,1] :* rows(indic) :/ (rows(indic-H))
+					
+					rho[i,j] = rhoij
+					rho[j,i] = rhoij
+					j++
+				}
+				i++ 				
+			}
+		}
+		/// calcualte indicator
+		n = 0.5*N*(N-1)
+		cp = invnormal(1-(a_size/2)/(n:^delta)):/sqrt(T)
+		indic = ((abs(rho) :> cp))
+		rho = abs(rho):*indic
+		_editmissing(rho,0)
+		/// make diagonal to 1
+		deltaij = rho
+		_diag(deltaij,1)
+		tau = J(N,1,1)
+		alphatilde = ln(tau' * deltaij * tau) :/ (2*ln(N))
+		return(alphatilde)
+	}
+	
+end
+

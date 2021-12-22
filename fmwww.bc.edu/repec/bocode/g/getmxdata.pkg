@@ -8,9 +8,9 @@ d KW: Mexico
 d
 d Requires: Stata version 13 and moss from SSC (q.v.)
 d
-d Distribution-Date: 20200105
+d Distribution-Date: 20211016
 d
-d Author: Miguel Gonzalez, NA
+d Author: Miguel Gonzalez
 d Support: email miguel.gfavila@@gmail.com
 d
 f getmxdata.ado

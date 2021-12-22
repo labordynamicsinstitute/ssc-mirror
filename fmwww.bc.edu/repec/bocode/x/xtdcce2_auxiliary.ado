@@ -14,6 +14,8 @@ xtdcce2 auxiliary programs
 10. xtdcce2_csa 
 11. xtdcce2_errorcalc
 12. xtdcce2_wbsadj
+13. issorted
+14. xtdcce2_mata2stata
 */
 
 
@@ -119,7 +121,7 @@ mata:
 				if (rank < rows(A)) {	
 					/// not full rank, use invsym
 					method = "invsym"
-					coln = xtdcce_selectindex(colsum(A:==0):==rows(A):==0)			
+					coln = xtdcce_selectindex(colsum(C:==0):==rows(C):==0)			
 				}
 				else {
 					/// full rank use cholsolve
@@ -227,7 +229,7 @@ mata:
 	}
 end
 
-*** Partial Out Program
+*** Partial Out Program - single cross-section
 ** quadcross automatically removes missing values and therefore only uses (and updates) entries without missing values
 ** X1 variable which is partialled out
 capture mata mata drop xtdcce_m_partialout()
@@ -346,6 +348,11 @@ capture mata mata drop xtdcce2_mm_which2()
 mata:
 	function xtdcce2_mm_which2(source,search,|real scalar exact )
 	{		
+		if (eltype(source):=="string") {
+			source = strlower(source)
+			search = strlower(search)
+		}		
+
 		sums = 0
 		for (i=1;i<=length(search);i++) {
 			sums = sums + sum(source:==search[i])
@@ -409,7 +416,7 @@ mata:
 		i = 1
 		
 		while (i<=search_N) {
-			new_elvec = source:==search[i]	
+			new_elvec = strlower(source):==strlower(search[i])	
 			if (anyof(new_elvec,1)) {
 				output[i]= xtdcce_selectindex(new_elvec)
 			}
@@ -428,20 +435,25 @@ mata:
 		real scalar ids
 		real scalar output
 		real scalar id
+
 		id = st_data(.,idname,touse)
+		
 		ids = uniqrows(id)
+		
 		CoeffNames = st_matrixcolstripe(MatrixName)[.,2]
 		CoeffOriginal = st_matrix(MatrixName)
 		///CoeffNames
 		output = J(rows(id),cols(tokens(VarName)),.)
 		/// bring Coeff Matrix into NxK order
 		K = cols(tokens(VarName))
-		coeff = J(rows(ids),K,.)		
+		coeff = J(rows(ids),K,.)	
 		c=1
-		while (c<=K) {			
+		while (c<=K) {		
 			namei=tokens(ColNames)[c]
 			namei=namei[1]:+"_":+strofreal(ids)
 			index = xtdcce2_mm_which2(CoeffNames,namei)
+			
+			
 			coeff[.,c] = CoeffOriginal[index]'			
 			c++
 		}
@@ -490,12 +502,20 @@ program define xtdcce2_csa, rclass
 			}
 			local ii `=strtoname("`var'")'
 			tempvar `ii'
-			*by `tvar' `clusteri' (`idvar'), sort: egen ``ii'' = mean(`var') if `touse'		
-			by `tvar' `clusteri' (`idvar'), sort: gen ``ii'' = sum(`var') if `touse'
-			by `tvar' `clusteri' (`idvar'), sort: replace ``ii'' = ``ii''[_N] / _N if `touse'
+		
+			*by `tvar' `clusteri' `touse' (`idvar'), sort: gen ``ii'' = sum(`var') if `touse'			
+			*by `tvar' `clusteri' `touse'  (`idvar'), sort: replace ``ii'' = ``ii''[_N] / _N
+			*** keep slow version :/, is using _N, then if statement does not work
+			by `tvar' `clusteri' (`idvar'), sort: egen double ``ii'' = mean(`var') if `touse'				
+			
+			*** replace CSA with . if touse == 0 to make sure it is missing
+			replace ``ii'' = . if `touse' == 0
+			
 			local clist `clist' ``ii''
 			local c_i = `c_i' + 1
+			
 		}
+				
 		if "`cr_lags'" == "" {
 			local cr_lags = 0
 		}
@@ -510,7 +530,7 @@ program define xtdcce2_csa, rclass
 				local lagidef = `lagi'					
 			}
 			sort `idvar' `tvar'
-			noi disp "lags `lagi'"
+			
 			tsrevar L(0/`lagi').`var'		
 			local clistfull `clistfull' `r(varlist)'
 			

@@ -1,15 +1,18 @@
+*! NJC 1.1.0 3 December 2021 
 *! NJC 1.0.0 19 January 2009 
 program iquantile, sort rclass 
 version 9 
 syntax varlist(numeric) [if] [in] [fweight aweight/] ///
-[, p(numlist >0 <100 int) by(varlist) format(str) ABbreviate(int 12) * ] 
+[, p(numlist >0 <100 int) by(varlist) format(str) ABbreviate(int 12) /// 
+allobs * ] 
 
 quietly { 
 	if "`format'" != "" { 
 		confirm numeric format `format' 
 	} 
 
-	marksample touse
+	if "`allobs'" != "" marksample touse, novarlist
+	else marksample touse
 	if "`by'" != "" markout `touse' `by', strok 
 	count if `touse' 
 	if r(N) == 0 error 2000
@@ -17,7 +20,7 @@ quietly {
 	if "`p'" == "" local p 50 
 	local nq : word count `p' 
 
-	tempvar w group work vuse guse 
+	tempvar w group work vuse guse TOUSE 
 	tempname iqu ep
 
 	if "`weight'" != "" { 
@@ -37,18 +40,31 @@ quietly {
 	gen double `work' = .
 	gen byte `vuse' = . 
 	gen byte `guse' = . 
+	gen byte `TOUSE' = . 
 	tokenize `varlist' 
 	local warn = 0 
 	local nv : word count `varlist' 
 
 	forval v = 1/`nv' {
 		local V = abbrev("``v''", 16) 
-		sort `touse' `group' ``v'' 
-		by `touse' `group': replace `work' = sum(`w') 
-		by `touse' `group' ``v'': replace `work' = `work'[_N]
-		by `touse' `group': replace `work' = `work'/`work'[_N] 
-		by `touse' `group' ``v'': ///
-			replace `vuse' = (_n == _N) & `touse' 
+		replace `TOUSE' = `touse' * !missing(``v'') 
+		sort `TOUSE' `group' ``v'' 
+		by `TOUSE' `group': replace `work' = sum(`w') 
+		by `TOUSE' `group' ``v'': replace `work' = `work'[_N]
+		by `TOUSE' `group': replace `work' = `work'/`work'[_N] 
+		by `TOUSE' `group' ``v'': ///
+			replace `vuse' = (_n == _N) & `TOUSE' 
+
+		
+		tempvar n 
+		gen `n' = .
+		if "`allobs'" != "" | `v' == 1 {   
+			local showlist `showlist' `n' 
+		} 
+		if "`allobs'" == "" { 
+			char `n'[varname] "n" 
+		} 
+		else char `n'[varname] "n ``v''" 
 
 		forval q = 1/`nq' { 
 			tempvar show 
@@ -63,6 +79,10 @@ quietly {
 			else char `show'[varname] "`P'% ``v''" 
 		
 			forval g = 1/`ng' { 
+				count if `TOUSE' & (`group' == `g')
+				if "`allobs'" == "" return scalar n_`g' = r(N)  
+				else return scalar `V'_n_`g' = r(N) 
+				replace `n' = r(N) if `group' == `g'  
 				replace `guse' = `vuse' & (`group' == `g') 
 mata: i_quantile("``v''", "`work'", "`guse'", `P'/100, "`iqu'", "`ep'")   
 				local warn = `warn' + (scalar(`ep') == 1) 

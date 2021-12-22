@@ -1,6 +1,6 @@
 d 'SETRNGSEED': module to to set random-number seed using truly random  integer from random.org
 d
-d Typing setrngseed without arguments is an alternative to using
+d  Typing setrngseed without arguments is an alternative to using
 d Stata's  set seed command.  setrngseed obtains truly random
 d integers from  www.random.org and uses those results to set the
 d seed of Stata's  pseudo-random-number generator. 

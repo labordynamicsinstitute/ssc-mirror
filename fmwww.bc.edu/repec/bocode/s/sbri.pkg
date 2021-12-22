@@ -1,6 +1,6 @@
 d 'SBRI': module to calculate the Spearman-Brown reliability
 d
-d xb2pi provides the Spearman-Brown reliability. It's a
+d  xb2pi provides the Spearman-Brown reliability. It's a
 d post-estimation	command of xtreg. 
 d
 d KW: Spearman-Brown

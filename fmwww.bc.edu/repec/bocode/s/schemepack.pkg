@@ -1,0 +1,51 @@
+d 'SCHEMEPACK': module providing ready-to-use graph schemes
+d
+d  schemepack releases a suite of graph schemes as part of The
+d Stata Guide (https://medium.com/the-stata-guide) series. See the
+d help file (help schemepack) for details after installation. 
+d
+d KW: Stata
+d KW: scheme
+d KW: graphs
+d
+d Requires: Stata version 15
+d
+d Distribution-Date: 20211116
+d
+d Author: Asjad Naqvi, WU Vienna
+d Support: email asjadnaqvi@@gmail.com
+d
+f schemepack.sthlp
+f scheme-black_brbg.scheme
+f scheme-black_cividis.scheme
+f scheme-black_hue.scheme
+f scheme-black_jet.scheme
+f scheme-black_piyg.scheme
+f scheme-black_ptol.scheme
+f scheme-black_set3.scheme
+f scheme-black_tableau.scheme
+f scheme-black_viridis.scheme
+f scheme-black_w3d.scheme
+f scheme-gg_brbg.scheme
+f scheme-gg_cividis.scheme
+f scheme-gg_hue.scheme
+f scheme-gg_jet.scheme
+f scheme-gg_piyg.scheme
+f scheme-gg_ptol.scheme
+f scheme-gg_set3.scheme
+f scheme-gg_tableau.scheme
+f scheme-gg_viridis.scheme
+f scheme-gg_w3d.scheme
+f scheme-neon.scheme
+f scheme-rainbow.scheme
+f scheme-swift_red.scheme
+f scheme-white_brbg.scheme
+f scheme-white_cividis.scheme
+f scheme-white_hue.scheme
+f scheme-white_jet.scheme
+f scheme-white_piyg.scheme
+f scheme-white_ptol.scheme
+f scheme-white_set3.scheme
+f scheme-white_tableau.scheme
+f scheme-white_viridis.scheme
+f scheme-white_w3d.scheme

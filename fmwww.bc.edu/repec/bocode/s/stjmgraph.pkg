@@ -17,8 +17,8 @@ d Requires: Stata version 11.2
 d
 d Distribution-Date: 20150423
 d
-d Author: Michael J. Crowther, University of Leicester
-d Support: email mjc76@@le.ac.uk
+d Author: Michael J. Crowther, Karolinska Institutet
+d Support: email michael.crowther@@ki.se
 d
 f stjmgraph.ado
 f stjmgraph.sthlp

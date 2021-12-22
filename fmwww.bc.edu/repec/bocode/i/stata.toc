@@ -82,6 +82,7 @@ p ipf module to perform log-linear modelling using Iterative Proportional Fittin
 p ipfraking module to perform iterative proportional fitting, aka raking
 p ipfweight module to create adjustment weights for surveys
 p ipshin module to perform Im-Pesaran-Shin panel unit root test
+p ipwbreg module to compute inverse propensity weights from Bernoulli regression
 p iquantile module to calculate interpolated quantiles
 p ira module to calculate rwg and related interrater agreement indices
 p irax module to perform isotonic regression analysis
@@ -98,6 +99,7 @@ p isograph module to compute inequality over logit ranks of social hierarchy
 p isopoverty module to generate data for Inequality-Poverty and Iso-Poverty curves
 p istdize module to generate indirectly standardized rates using a standard population
 p isvar module  to filter names into variable names and others
+p itpscore module to implement Iterative Propensity Score Logistic Regression Model Search Procedure
 p itsa module to perform interrupted time series analysis for single and multiple groups
 p itsamatch module to perform matching in multiple group interrupted time-series analysis
 p itsaperm module to perform permutation tests for matched multiple group interrupted time series analysis 
@@ -116,6 +118,7 @@ p ivglog module to estimate inverse Gaussian distribution-log link MLE model
 p ivgmm0 module to perform instrumental variables via GMM
 p ivgravity module containing method-of-moment IV estimators of exponential-regression models with two-way fixed effects from a cross-section of data on dyadic interactions and endogenous covariates
 p ivhettest module to perform Pagan-Hall and related heteroskedasticity tests after IV 
+p ivolsdec module to produce decomposition of the IV-OLS coefficient gap
 p ivpois module to estimate an instrumental variables Poisson regression via GMM
 p ivprob-ivtobit modules to estimate instrumental variables probit and tobit
 p ivprob-ivtobit6 modules to estimate instrumental variables probit and tobit

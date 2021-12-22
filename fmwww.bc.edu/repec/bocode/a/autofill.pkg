@@ -1,0 +1,21 @@
+d 'AUTOFILL': module to fill missing values with existing values
+d
+d   The autofill program makes it easy to fill in missing values
+d with existing values in the data. It applies to all types of
+d missing values in the Stata and can operate on lots of variables
+d simultaneously. In addition, it provides a way to fill the
+d missing values by group. 
+d
+d KW: data management
+d KW: fill
+d KW: missing values
+d
+d Requires: Stata version 12
+d
+d Distribution-Date: 20211005
+d
+d Author: Xia P.S.,  School of Economics and Management, University of Chinese Academy of Sciences
+d Support: email xia_ps@@yeah.net
+d
+f autofill.ado
+f autofill.sthlp

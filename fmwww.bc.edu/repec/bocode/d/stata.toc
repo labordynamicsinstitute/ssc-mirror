@@ -75,6 +75,7 @@ p discrepancy module to implement a pseudo-ANOVA method for partitions of pairwi
 p disjoint module to generate end variable demarcating disjoint spells
 p dissim module to calculate dissimilarity index
 p distan module to generate similarity measures
+p distcomp module to compare distributions
 p distinct module to display distinct values of variables
 p distmatch module to perform distance matching based on latitudes and longitudes
 p distplot module to generate distribution function plot
@@ -91,6 +92,8 @@ p dmexogxt module to test consistency of OLS vs XT-IV estimates
 p dmout module to create difference-in-means tables
 p do2screen module to display do-files in result window
 p docd module to change the working directory before executing a do-file
+p docxtab module to list variables to a Word table with head or foot rows from characteristics
+p doiplot module for visualization of asymmetry and heterogeneity in meta-analysis 
 p dolog modules to execute commands from a file with logging
 p dologx modules to execute commands from a file with logging
 p domdiag module to construct dominance diagrams 

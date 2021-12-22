@@ -1,39 +1,118 @@
-program tolerance, rclass 
-	version 8.2
-	syntax varname [if] [in] ///
-	[, p(numlist >0.5 <1 max=1) Gamma(numlist >0.5 <1 max=1) ]
-	
-	marksample touse 
-	qui count if `touse' 
-	if r(N) == 0 error 2000
-	local N = r(N) 
+*! version 1.0  2021-10-25 Mark Chatfield
 
-	if "`p'" == "" local p = 0.95 
-	if "`gamma'" == "" local gamma = 0.90 
-	
-	tempname zp chi2 kpg low upp 
-	scalar `zp' = invnorm(1 - (1 - `p')/2) 
-	scalar `chi2' = invchi2(`N' - 1,1 - `gamma')
-	
-	noisily su `varlist' if `touse' 
-	scalar `kpg' = `zp' * sqrt(1 + 1/`N') * ///
-	sqrt((`N' - 1)/`chi2') 
-/* sqrt(1 + (`N' - 3 - `chi2')/2/(`N' + 1)) - This is a correction factor that ///
-I can't seem to recover.  The constant found with the formula without the correction ///
-factor agrees with tabled values */
-	scalar `low' = r(mean) - `kpg' * r(sd) 
-	scalar `upp' = r(mean) + `kpg' * r(sd) 
-	
-	di _n as txt "Confidence level     " as res `p' ///
-	_n as txt "Coverage probability " as res `gamma' 
-	di    as txt "Tolerance multiplier " as res %6.0g `kpg' 
-	local LOW = `low' 
-	local LOW = trim("`: di `: format `varlist'' `LOW''")  
-	local UPP = `upp' 
-	local UPP = trim("`: di `: format `varlist'' `UPP''")  
-	di as txt    "Tolerance limits     " as res "`LOW', `UPP'"             
+program define tolerance, rclass
+		version 9.0
+        syntax varlist (min=1 max=1 numeric) [if] [in], percentofpop(numlist max=1 >0 <100) [Confidence(numlist max=1 >0 <100) onesided Method(string asis)] 
 
-	return scalar kpg = `kpg' 
+		local p = `percentofpop'/100  
+					
+		preserve
+		marksample touse
+		qui keep if `touse'  
+		qui count 
+		if r(N) == 0 error 2000
+		
+		su `varlist'
+		local N = r(N)
+		local mean = r(mean)
+		local sd = r(sd)	
+		restore
+		di " "
+
+		if "`onesided'" == "onesided" {
+			
+			if "`confidence'" == "" {
+			*prediction interval  (Meeker eqn 4.7 with m=1, replacing alpha/2 with alpha)
+			local k = invt((`N' - 1), 1 - (1 - `p')) * sqrt(1 + 1/`N')				
+			di as txt _col(1) "One-sided `percentofpop'%-expectation tolerance intervals, or equivalently, one-sided `percentofpop'% prediction intervals are:"	
+			local low = `mean' - `k' * `sd'
+			local upp = `mean' + `k' * `sd'
+			
+			di as res _col(5) %9.0g `low' _c
+			di as txt _col(15) "to +infinity  (lower bound = mean -"  _c
+			di as res _col(50) %9.0g `k' _c
+			di as txt _col(60) %9.0g  "× sd)"
+
+			di as txt _col(5) "-infinity to "  _c			
+			di as res _col(15) %9.0g `upp' _c
+			di as txt _col(28) " (upper bound = mean +"  _c
+			di as res _col(50) %9.0g `k' _c
+			di as txt _col(60) %9.0g  "× sd)"
+				
+			return scalar k_lb = `k'
+			return scalar k_ub = `k'
+			return scalar upp = `upp'		
+			return scalar low = `low' 			
+			}	
+		    
+			else {
+			*Meeker section sections 4.6.3, 4.4
+			local zp = invnorm(`p')
+			local df = `N'-1
+			local np = -`zp'*sqrt(`N')
+			local biggamma   = 1 - `confidence'/100
+			local smallgamma = 1 - `biggamma'			
+			local bigk   =  -invnt(`df',`np',`biggamma')   / sqrt(`N')
+			local smallk =  -invnt(`df',`np',`smallgamma') / sqrt(`N')
+			
+			local low = `mean' + `smallk' * `sd'
+			local upp = `mean' + `bigk' * `sd'
+			
+			di as txt _col(1) "One-sided `percentofpop'% tolerance intervals with `confidence'% confidence are:"  		
+			di as res _col(5) %9.0g `low' _c
+			di as txt _col(15) "to +infinity  (lower bound = mean +"  _c
+			di as res _col(50) %9.0g `smallk' _c
+			di as txt _col(60) %9.0g  "× sd)"
+
+			di as txt _col(5) "-infinity to "  _c			
+			di as res _col(15) %9.0g `upp' _c
+			di as txt _col(28) " (upper bound = mean +"  _c
+			di as res _col(50) %9.0g `bigk' _c
+			di as txt _col(60) %9.0g  "× sd)"
+
+			local twosidedconfidence = 100 - 2*(100-`confidence')
+			if `twosidedconfidence' >=0 {
+				di as txt _col(1) "[Extra] Two-sided `twosidedconfidence'% CI for the `percentofpop'th percentile: "
+				di as res _col(5) %9.0g `low' _c
+				di as txt _col(15) "to"  _c
+				di as res _col(18) %9.0g `upp' _c 
+			}
+
+			return scalar k_ub = `bigk'			
+			return scalar k_lb = `smallk'
+			return scalar upp = `upp'		
+			return scalar low = `low' 
+			}
+		}		
+		
+	else {		
+        if "`confidence'" == "" {        
+			*prediction interval  (Meeker eqn 4.7 with m=1)
+			local k = invt((`N' - 1), 1 - (1 - `p')/2) * sqrt(1 + 1/`N')				
+			di as txt _col(1) "`percentofpop'%-expectation tolerance interval, or equivalently, `percentofpop'% prediction interval:"			
+		}
+		else {
+			*beta-gamma tolerance interval   [Peter Lachenbruch's tolerance.ado describes beta and gamma the wrong way around]		    
+			local gamma = `confidence'/100		
+			local k = invnorm(1 - (1 - `p')/2) * sqrt(1 + 1/`N') * sqrt((`N' - 1) / invchi2(`N' - 1,1 - `gamma') )  // Howe 1969 lambda_1
+			if "`method'" != "howesimpler" local k = `k' * sqrt(1 + (`N' - 3 - invchi2(`N' - 1,1 - `gamma'))/2/(`N' + 1)^2)   // Howe 1969 lambda_3
+			if "`method'" == "howesimpler" local extra " [method(howesimpler)]"			
+			di as txt _col(1) "`percentofpop'% tolerance interval with `confidence'% confidence`extra':"	
+		}
+	
+	local low = `mean' - `k' * `sd'
+	local upp = `mean' + `k' * `sd'
+	
+	di as res _col(5) %9.0g `low' _c
+	di as txt _col(16) "to"  _c
+	di as res _col(19) %9.0g `upp'  _c
+	di as txt _col(33) %9.0g "(i.e.  mean  ± "  _c
+	di as res _col(45) %9.0g `k' _c
+	di as txt _col(58) %9.0g  "× sd)" _c
+		
+	return scalar k = `k'
+	return scalar upp = `upp'		
 	return scalar low = `low' 
-	return scalar upp = `upp' 
+	}
+di " "		
 end

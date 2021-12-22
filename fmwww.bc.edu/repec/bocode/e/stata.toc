@@ -3,6 +3,7 @@ p eba module to perform extreme bound analysis
 p ebalance module to perform Entropy reweighting to create balanced samples
 p ebalfit module to perform entropy balancing
 p ebct module to perform entropy reweighting to create balanced samples for continuous treatments
+p ebreg module to compute Robust Empirical Bayes Confidence Intervals
 p ebrowse module to to display variables in the Data Editor, ordered by varlist
 p eclpci module to compute Exact and Approximate Confidence Limits for Poisson Counts
 p eclplot module to generate estimates and confidence limits plots
@@ -88,6 +89,7 @@ p eventstudy2 module to perform event studies with complex test statistics
 p eventstudyinteract module to implement the interaction weighted estimator for an event study
 p eventstudyweights module to estimate the implied weights on the cohort-specific average treatment effects on the treated (CATTs) (event study specifications)
 p evhistplot module to produce event history plot
+p evi module to compute Epidemic Volatility Index (EVI) for detecting epidemic waves
 p ewma module to calculate exponentially weighted moving average
 p ewreg module to estimate errors-in-variable model with mismeasured regressor
 p exampleobs module to prints example observations 
@@ -95,6 +97,7 @@ p examples module to show examples from on-line help files
 p excel2latex module to convert Excel table to LaTeX table
 p excelclean module to clean and integrate excel files
 p excelcol module to convert a column index into a name of an Excel column
+p exceloutput module to output regression results directly to specific cells in excel file
 p excelsave module to provide a convenient way to export matched Stata datasets from a specified input directory (also including, if wanted, additionally recursively matched subsets of files within distinctly matched offspring-directories) to Excel-files
 p expand_n module to expand dataset
 p expandby module to duplicate observations by variable

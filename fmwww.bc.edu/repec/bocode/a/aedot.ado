@@ -1,4 +1,7 @@
-*! ae_dot v1.2 05/03/2021
+*! ae_dot v1.3 17/11/2021
+/*Update to incorporate inclusion of columns displaying the number of participants and number of events 
+*/
+
 *start with row per event
 cap prog drop aedot
 cap postclose ae_dot 
@@ -10,7 +13,7 @@ tempfile ae_dot_1
 
 /*
   DESCRIPTION: Creating a dot plot for AE data in clinical trials
-  v2.0: original 
+  v3.0: original 
     
   */
 
@@ -26,7 +29,7 @@ syntax varlist, treat(varname) id(varname) n1(integer) n2(integer)  ///
 	 brightmargin(real 2) trightmargin(real 5) aspectright(real 0)  ///
 	 bleftmargin(real 0) tleftmargin(real 0) aspectleft(real 0)  ///
  	 nummargin(integer 0)  margin(integer 0)   marginpos(string)  event1pos(real 0) event2pos(real 0) ///
-	 event1posy(real 0.5) event2posy(real 0.5) event1name(string) event2name(string)  ///
+	 event1posy(real 0.4) event2posy(real 0.6) event1name(string) event2name(string) numppl(string) numevent(string) ///
 	 title(string) subtitle(string) grphcol(string) plotcol(string) ///
 	 SAVing(string) graphsave(string) clear ]
 	 
@@ -137,21 +140,27 @@ syntax varlist, treat(varname) id(varname) n1(integer) n2(integer)  ///
 
 *For inclusion of numbers on columns
 (40) nummargin(integer 0) used to indicate if columns with number of events should be added to the right of the plot on the right 
-marginpos used to indicate if numbers added to the right or the left of the right panel - l indicates left and r indicates right
 margin(integer 0)  % increase added to the right of the the right plot - refer to margin help
 event1pos(real 0) x axis point at which to place the column of events for group 1
 event2pos(real 0) x axis point at which to place the column of events for group 2
 event1name(string) label for the column representing group 1 
 event2name(string) label for the column representing group 2
 
+******************VERSION 3 UPDATE*********************************
+event1posy(real 0.4) y axis position for first column heading e.g. group 1 or group 2
+event2posy(real 0.6) y axis position for second column headings
+numppl(string) label for column subheading for first column within group - default 'n' represents # people
+numevent(string) label for column subheading for second column within group - default 'events' represents # events
+******************************************************************
  
+******************VERSION 2 UPDATE*********************************
 *For relative risk on log scale
 (41) LOGoff(integer 0) used to indicate if plot on the right shows logRelRisk or Rel Risk (x axis scale log so still symmetical
 
 *Additional option
 (42) rightxlabel(numlist) - allows user to change right a axis tick labels - if not specified Stata picks sensible defaults apart from
 when logoff=1 and display rel risk on log scale, the defaults then are specified as 0.5 1 and 2, the user can still specify own list to override this
-
+******************************************************************
 
 */
 	
@@ -542,7 +551,7 @@ local by "`1'"
 			
 			save `original'.dta  , replace
 
-			postfile  ae_dot r1 eventn1 N1 r2 eventn2 N2 perc1 perc2 risk_diff seRD lowerRD upperRD n_events p_val log_p_val str20 event relrisk logRR stderrRR loglowerCIRR logupperCIRR lowerCIRR upperCIRR using `ae_dot_1'.dta, replace
+			postfile  ae_dot r1 eventn1 N1 r2 eventn2 N2 perc1 perc2 risk_diff seRD lowerRD upperRD n_events n_events1 n_events2 p_val log_p_val str20 event relrisk logRR stderrRR loglowerCIRR logupperCIRR lowerCIRR upperCIRR using `ae_dot_1'.dta, replace
 
 			forvalues i=1(1)`count' {
 			*runs through the following for each AE
@@ -587,6 +596,12 @@ local by "`1'"
 					
 					local n`t'_p2 = `n`t''-`n_`t''
 					*local var with number on treatment arm minus those with event - gives number without event
+					
+					count if `treat'==`arm_level'
+					*count is a local var that will call number of individual AEs
+			
+					local events`t' = r(N)
+					
 									
 				}
 	
@@ -623,6 +638,7 @@ local by "`1'"
 					local n_1 = `n_1'+0.5
 					local tot_1 = `tot_1'+0.5
 					local tot_2 = `tot_2'+0.5
+					
 					}
 				
 			
@@ -642,10 +658,13 @@ local by "`1'"
 			*count is a local var that will call number of individual AEs
 			
 			local events = r(N)
+			
+
+			
 			local e_name = "`varlist'" in 1 
 			di `e_name'
 			
-			post ae_dot (`r1') (`nevents_1') (`n1') (`r2') (`nevents_2') (`n2') (`perc1') (`perc2') (`risk_diff') (`seRD') (`lowerRD') (`upperRD') (`events') (`p_val') (`log_p') (`e_name') (`rel_risk') (`logRR') (`seRR') (`log_lowerRR') (`log_upperRR') (`lowerRR') (`upperRR')  
+			post ae_dot (`r1') (`nevents_1') (`n1') (`r2') (`nevents_2') (`n2') (`perc1') (`perc2') (`risk_diff') (`seRD') (`lowerRD') (`upperRD') (`events') (`events1') (`events2') (`p_val') (`log_p') (`e_name') (`rel_risk') (`logRR') (`seRR') (`log_lowerRR') (`log_upperRR') (`lowerRR') (`upperRR')  
 			
 			use `original'.dta , clear
 
@@ -670,7 +689,7 @@ local by "`1'"
 			
 			save `original'.dta  , replace
 
-			postfile  ae_dot r1 eventn1 N1 r2 eventn2 N2 perc1 perc2 risk_diff seRD lowerRD upperRD n_events p_val log_p_val str20 event  eventnum relrisk logRR stderrRR loglowerCIRR logupperCIRR  lowerCIRR upperCIRR   using `ae_dot_1'.dta, replace
+			postfile  ae_dot r1 eventn1 N1 r2 eventn2 N2 perc1 perc2 risk_diff seRD lowerRD upperRD n_events n_events1 n_events2 p_val log_p_val str20 event  eventnum relrisk logRR stderrRR loglowerCIRR logupperCIRR  lowerCIRR upperCIRR   using `ae_dot_1'.dta, replace
 
 			forvalues i=1(1)`count' {
 					
@@ -701,6 +720,12 @@ local by "`1'"
 					local r`t' = `n_`t''/`n`t''		
 					local perc`t' = (`n_`t''/`n`t''	)*100
 					local n`t'_p2 = `n`t''-`n_`t''
+					
+					
+					count if `treat'==`arm_level'
+					*count is a local var that will call number of individual AEs
+			
+					local events`t' = r(N)
 		
 				}
 	
@@ -759,7 +784,7 @@ local by "`1'"
 
 			
 
-				post ae_dot (`r1') (`nevents_1') (`n1') (`r2') (`nevents_2') (`n2') (`perc1') (`perc2') (`risk_diff') (`seRD') (`lowerRD') (`upperRD') (`events') (`p_val') (`log_p') ("`e_name'") (`e_name_num')   (`rel_risk') (`logRR') (`seRR') (`log_lowerRR') (`log_upperRR') (`lowerRR') (`upperRR') 
+				post ae_dot (`r1') (`nevents_1') (`n1') (`r2') (`nevents_2') (`n2') (`perc1') (`perc2') (`risk_diff') (`seRD') (`lowerRD') (`upperRD') (`events') (`events1') (`events2')  (`p_val') (`log_p') ("`e_name'") (`e_name_num')   (`rel_risk') (`logRR') (`seRR') (`log_lowerRR') (`log_upperRR') (`lowerRR') (`upperRR') 
 	
 				use `original'.dta , clear
 			}
@@ -782,6 +807,8 @@ lab var seRD "stderr(risk difference)"
 lab var lowerRD "lower 95% CI risk difference"
 lab var upperRD "upper 95% CI risk difference"
 lab var n_events "Total number of events"
+lab var n_events1 "Total number of events in group 1"
+lab var n_events2 "Total number of events in group 2"
 lab var p_val "Fisher's exact p-value"
 lab var log_p_val "log(Fisher's exact p-value)"
 lab var event "AE name"
@@ -976,16 +1003,23 @@ if `riskdiff'==1 {
 	}
 	
 *******************VERSION 2 ADDITIONS TO ADD COLUMNS OF NUMBERS***********************		
+*******************VERSION 3 ADDITIONS TO ADD COLUMNS OF NUMBER OF PARTICIPANTS AND NUMBER OF EVENTS FOR EACH TREATMENT GROUP***********************	
 *Looping through each event and creating a local macro containing the number of events in each treatment group		
 foreach num of numlist  1(1)`max' {
 		local events_1_`num' = eventn1 in `num'
+		local nevents_1_`num' = n_events1 in `num' /*v3.0 addition*/
+
 		local events_2_`num' = eventn2  in `num'
-		local numtexttit1 "`events_1_`num''"
-		local numtexttit2 "`events_2_`num''"
+		local nevents_2_`num' = n_events2 in `num' /*v3.0 addition*/
+		
+		local numtexttit1 "`events_1_`num''         `nevents_1_`num''"
+		local numtexttit2 "`events_2_`num''         `nevents_2_`num''"
 
 		local otxt1 `" text(`num' `event1pos' "`numtexttit1'" , size(medsmall)) "'
 		local otxt2 `" text(`num' `event2pos' "`numtexttit2'" , size(medsmall)) "'
-		local all_otxt "`all_otxt' `otxt1' `otxt2' "
+		
+	
+		local all_otxt "`all_otxt' `otxt1' `otxt2'  "
 	}
 	
 *Creating default labels for columns*
@@ -1007,7 +1041,30 @@ if `nummargin' ==1 & "`event2name'"!="" {
 if `nummargin' ==1 & "`event1name'"==""  & "`event2name'"=="" {
 	local event1label = "Group 1"
 	local event2label = "Group 2"
+	}	
+	
+	
+/*v3.0 addition*/
+if `nummargin' ==1 & "`numppl'"=="" {
+	local event1sublabel = "n"
+	}
+
+if `nummargin' ==1 & "`numppl'"!="" {
+	local event1sublabel = "`numppl'"
+	}
+	
+if `nummargin' ==1 & "`numevent'"=="" {
+	local event2sublabel = "events"
+	}
+if `nummargin' ==1 & "`numevent'"!="" {
+	local event2sublabel = "`numevent'"
+	}
+	
+if `nummargin' ==1 & "`numppl'"==""  & "`numevent'"=="" {
+	local event1sublabel = "n"
+	local event2sublabel = "events"
 	}		
+	
 
 **********************************************************************	
 
@@ -1030,10 +1087,9 @@ tempfile graph_rd
 			graphregion(color(`grphcol')) plotregion(color(`plotcol') margin(b `bleftmargin' t `tleftmargin')) aspect(`aspectleft')  ///
 			legend(`legendtext'  pos(`legendleftpos') col(`legendleftcol') row(`legendleftrow'))
 			
-			
 		graph save Graph `graph_abs'.gph , replace
 			
-		twoway  (dot logRR n1   , ysc(off)  horizontal sort(n1) dcolor(`rightdcolor') mcolor(`rightdotcol'%`rightdotsat') ) /// 
+		twoway  (dot logRR n1   , ysc(off) horizontal sort(n1) dcolor(`rightdcolor') mcolor(`rightdotcol'%`rightdotsat') ) /// 
 		   (rcap loglowerCIRR logupperCIRR n1  , horizontal sort(n1) lcolor(`rightlincol'%`rightlinsat')), /// 
 			ylabel( "", angle(0) noticks nogrid) ytitle("" ) yscale(reverse) yscale(range (1 `max'))   ///
 			xlabel(,  angle(0))  xtitle(`rightplot' , color(white) size(vlarge)) xline(`xnum' ,  lpattern(`rightxlinepat') lcolor(`rightxlinecol') lwidth(0.5)  ) ///
@@ -1050,6 +1106,9 @@ tempfile graph_rd
 
 ******VERSION 2 ADDITION***************		
 *Option to include columns of numbers of events
+******VERSION 3 ADDITION***************		
+*Option to include columns of numbers of participants and number of events
+
 	if `riskdiff'==0 {
 	if `nummargin'==1 {	
 	if `logoff'==0 {	
@@ -1069,7 +1128,10 @@ tempfile graph_rd
 			xlabel(,  angle(0))  xtitle(`rightplot' , color(white) size(vlarge)) xline(`xnum' ,  lpattern(`rightxlinepat') lcolor(`rightxlinecol') lwidth(0.5)  ) ///
 			legend(`legendtext_scat' pos(`legendrightpos') col(`legendrightcol') row(`legendrightrow')   ) ///
 			graphregion(color(`grphcol')) plotregion(color(`plotcol') margin(b `brightmargin' t `trightmargin'))  aspect(`aspectright')  ///
-			plotr(style(none) margin("`marginpos'"  `margin')) text(`event1posy' `event1pos' "`event1label'" , size(medsmall)) text(`event2posy' `event2pos' "`event2label'" , size(medsmall)) ///
+			plotr(style(none) margin("`marginpos'" `margin')) ///
+			text(`event1posy' `event1pos' "`event1label'" , size(medsmall)) text(`event1posy' `event2pos' "`event2label'" , size(medsmall)) ///
+			text(`event2posy' `event1pos' "`event1sublabel'     `event2sublabel'" , size(medsmall)) ///
+			text(`event2posy' `event2pos' "`event1sublabel'     `event2sublabel'" , size(medsmall)) ///
 			`all_otxt'
 			
 		graph save Graph `graph_rel'.gph , replace
@@ -1096,13 +1158,14 @@ tempfile graph_rd
 			
 		graph save Graph `graph_abs'.gph , replace
 			
-		twoway  (dot relrisk n1   ,  ysc(off) horizontal sort(n1) dcolor(`rightdcolor') mcolor(`rightdotcol'%`rightdotsat') ) ///
+		twoway  (dot relrisk n1   , ysc(off)  horizontal sort(n1) dcolor(`rightdcolor') mcolor(`rightdotcol'%`rightdotsat') ) ///
 		   (rcap lowerCIRR upperCIRR n1  , horizontal sort(n1) lcolor(`rightlincol'%`rightlinsat')), /// 
 		    xscale(log) ///
 			ylabel( "", angle(0) noticks nogrid) ytitle("" ) yscale(reverse) yscale(range (1 `max'))   ///
 			xlabel(`rightxlabel',  angle(0))  xtitle(`rightplot' , color(white) size(vlarge)) xline(`xnum' ,  lpattern(`rightxlinepat') lcolor(`rightxlinecol') lwidth(0.5)  ) ///
 			legend(`legendtext_scat' pos(`legendrightpos') col(`legendrightcol') row(`legendrightrow')   ) ///
 			graphregion(color(`grphcol')) plotregion(color(`plotcol') margin(b `brightmargin' t `trightmargin'))  aspect(`aspectright') 
+			
 			
 		graph save Graph `graph_rel'.gph , replace
 
@@ -1114,7 +1177,10 @@ tempfile graph_rd
 ***************************************
 
 ******VERSION 2 ADDITION***************		
-*Column of numbers and displaying rel risk on x-axis of right plot 		
+*Column of numbers and displaying rel risk on x-axis of right plot 	
+******VERSION 3 ADDITION***************		
+*Option to include columns of numbers of participants and number of events
+	
 	if `riskdiff'==0 {
 	if `nummargin'==1 {	
 	if `logoff'==1 {	
@@ -1135,7 +1201,10 @@ tempfile graph_rd
 			xlabel(`rightxlabel',  angle(0))  xtitle(`rightplot' , color(white) size(vlarge)) xline(`xnum' ,  lpattern(`rightxlinepat') lcolor(`rightxlinecol') lwidth(0.5)  ) ///
 			legend(`legendtext_scat' pos(`legendrightpos') col(`legendrightcol') row(`legendrightrow')   ) ///
 			graphregion(color(`grphcol')) plotregion(color(`plotcol') margin(b `brightmargin' t `trightmargin'))  aspect(`aspectright')  ///
-			plotr(style(none) margin("`marginpos'"  `margin')) text(`event1posy' `event1pos' "`event1label'" , size(medsmall)) text(`event2posy' `event2pos' "`event2label'" , size(medsmall)) ///
+			plotr(style(none) margin("`marginpos'" `margin')) ///
+			text(`event1posy' `event1pos' "`event1label'" , size(medsmall)) text(`event1posy' `event2pos' "`event2label'" , size(medsmall)) ///
+			text(`event2posy' `event1pos' "`event1sublabel'     `event2sublabel'" , size(medsmall)) ///
+			text(`event2posy' `event2pos' "`event1sublabel'     `event2sublabel'" , size(medsmall)) ///
 			`all_otxt'
 			
 		graph save Graph `graph_rel'.gph , replace
@@ -1153,7 +1222,7 @@ tempfile graph_rd
 	
 		graph dot perc1 perc2 , over(event, sort(n1) relabel(`leftlabel')   label(labsize(*`leftlabsize') angle(`leftlabang') ))   ///
 			marker(1, mfcolor(`leftcolor1'%`leftcolsat1') mlcolor(`leftcolor1') msymbol(`leftsymb1') ) marker(2, mfcolor(`leftcolor2'%`leftcolsat2') mlcolor(`leftcolor2') msymbol(`leftsymb2')) ///
-			dots(mcolor(gray))  ytitle(`leftxtitle') yscale(range (1 `leftaxis'))  ///
+			dots(mcolor(gray))  ytitle(`leftxtitle') yscale(range (1 `max'))  ///
 			graphregion(color(`grphcol')) plotregion(color(`plotcol') margin(b `bleftmargin' t `tleftmargin')) aspect(`aspectleft')  ///
 			legend(`legendtext'  pos(`legendleftpos') col(`legendleftcol') row(`legendleftrow'))
 			
@@ -1174,27 +1243,31 @@ tempfile graph_rd
 		}
 		
 ******VERSION 2 ADDITION***************		
-*Risk difference with columns of numbers of events		
+*Risk difference with columns of numbers of events	
+******VERSION 3 ADDITION***************		
+*Option to include columns of numbers of participants and number of events	
 	if `riskdiff'==1 {
 	if `nummargin'==1 {	
 	
 		graph dot perc1 perc2 , over(event, sort(n1) relabel(`leftlabel')   label(labsize(*`leftlabsize') angle(`leftlabang') ))   ///
 			marker(1, mfcolor(`leftcolor1'%`leftcolsat1') mlcolor(`leftcolor1') msymbol(`leftsymb1') ) marker(2, mfcolor(`leftcolor2'%`leftcolsat2') mlcolor(`leftcolor2') msymbol(`leftsymb2')) ///
-			dots(mcolor(gray))  ytitle(`leftxtitle') yscale(range (1 `leftaxis'))  ///
+			dots(mcolor(gray))  ytitle(`leftxtitle') yscale(range (1 `max'))  ///
 			graphregion(color(`grphcol')) plotregion(color(`plotcol') margin(b `bleftmargin' t `tleftmargin')) aspect(`aspectleft')  ///
 			legend(`legendtext'  pos(`legendleftpos') col(`legendleftcol') row(`legendleftrow'))
 			
 		graph save Graph `graph_abs'.gph , replace
 	 
-		twoway  (dot risk_diff n1   , ysc(off)  horizontal sort(n1) dcolor(`rightdcolor') mcolor(`rightdotcol'%`rightdotsat') ) /// 
+		twoway  (dot risk_diff n1   , ysc(off) horizontal sort(n1) dcolor(`rightdcolor') mcolor(`rightdotcol'%`rightdotsat') ) /// 
 		   (rcap lowerRD upperRD n1  , horizontal sort(n1) lcolor(`rightlincol'%`rightlinsat')), /// 
 			ylabel( "", angle(0) noticks nogrid) ytitle("" ) yscale(reverse)  yscale(range (1 `max'))  ///
 			xlabel(,  angle(0))  xtitle(`rightplot' , color(white) size(vlarge)) xline(`xnum' ,  lpattern(`rightxlinepat') lcolor(`rightxlinecol') lwidth(0.5)  ) ///
 			legend(`legendtext_scat' pos(`legendrightpos') col(`legendrightcol') row(`legendrightrow')   ) ///
 			graphregion(color(`grphcol')) plotregion(color(`plotcol') margin(b `brightmargin' t `trightmargin'))  aspect(`aspectright')  ///
-			plotr(style(none) margin("`marginpos'"  `margin')) text(`event1posy' `event1pos' "`event1label'" , size(medsmall)) text(`event1posy' `event2pos' "`event2label'" , size(medsmall)) ///
+			plotr(style(none) margin("`marginpos'" `margin')) text(`event1posy' `event1pos' "`event1label'" , size(medsmall)) text(`event1posy' `event2pos' "`event2label'" , size(medsmall)) ///
+			text(`event2posy' `event1pos' "`event1sublabel'     `event2sublabel'" , size(medsmall)) ///
+			text(`event2posy' `event2pos' "`event1sublabel'     `event2sublabel'" , size(medsmall)) ///
 			`all_otxt'
-			
+
 		graph save Graph `graph_rd'.gph , replace
 		
 		graph combine  `graph_abs'.gph  `graph_rd'.gph   ,  xcommon ycommon iscale(0.5) title(`title') subtitle(`subtitle')  graphregion(color(`grphcol'))

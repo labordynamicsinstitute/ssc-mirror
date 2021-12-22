@@ -1,0 +1,2034 @@
+{smcl}
+{com}{sf}{ul off}{txt}{.-}
+      name:  {res}<unnamed>
+       {txt}log:  {res}/gsfs0/data/baum/CountyData/Stata/ala2.smcl
+  {txt}log type:  {res}smcl
+ {txt}opened on:  {res} 8 Aug 2021, 15:01:37
+{txt}
+{com}. // use ../natalCfiles/natal2005_2018C
+. use natal2005_2018C
+{txt}
+{com}. desc
+
+{txt}Contains data from {res}natal2005_2018C.dta
+{txt} Observations:{res}    56,496,154                  
+{txt}    Variables:{res}           128                  8 Aug 2021 10:30
+{txt}{hline}
+Variable      Storage   Display    Value
+    name         type    format    label      Variable label
+{hline}
+{p 0 48}{res}{bind:version        }{txt}{bind: str1    }{bind:{txt}%9s       }{space 1}{bind:         }{bind:  }{res}{res}Revision{p_end}
+{p 0 48}{bind:birthyear      }{txt}{bind: int     }{bind:{txt}%9.0g     }{space 1}{bind:         }{bind:  }{res}{res}Birth Year{p_end}
+{p 0 48}{bind:birthmonth     }{txt}{bind: byte    }{bind:{txt}%21.0g    }{space 1}{bind:months   }{bind:  }{res}{res}Birth Month{p_end}
+{p 0 48}{bind:birthday       }{txt}{bind: byte    }{bind:{txt}%9.0g     }{space 1}{bind:         }{bind:  }{res}{res}Birth Day{p_end}
+{p 0 48}{bind:weekday        }{txt}{bind: byte    }{bind:{txt}%9.0g     }{space 1}{bind:wkday    }{bind:  }{res}{res}Weekday{p_end}
+{p 0 48}{bind:ostate         }{txt}{bind: str2    }{bind:{txt}%9s       }{space 1}{bind:         }{bind:  }{res}{res}Occurrence State{p_end}
+{p 0 48}{bind:xostate        }{txt}{bind: str2    }{bind:{txt}%9s       }{space 1}{bind:         }{bind:  }{res}{res}Expanded Occurrence State{p_end}
+{p 0 48}{bind:ocntyfips      }{txt}{bind: int     }{bind:{txt}%27.0g    }{space 1}{bind:ocpop2   }{bind:  }{res}{res}Occurrence FIPS County{p_end}
+{p 0 48}{bind:ocntypop       }{txt}{bind: byte    }{bind:{txt}%9.0g     }{space 1}{bind:         }{bind:  }{res}{res}Occurrence County Population{p_end}
+{p 0 48}{bind:bfacil         }{txt}{bind: byte    }{bind:{txt}%28.0g    }{space 1}{bind:facility }{bind:  }{res}{res}Birth Place (Revised only){p_end}
+{p 0 48}{bind:ubfacil        }{txt}{bind: byte    }{bind:{txt}%9.0g     }{space 1}{bind:         }{bind:  }{res}{res}Birth Place{p_end}
+{p 0 48}{bind:bfacil3        }{txt}{bind: byte    }{bind:{txt}%21.0g    }{space 1}{bind:lbfacil3 }{bind:  }{res}{res}Facility Recode{p_end}
+{p 0 48}{bind:mage_impflg    }{txt}{bind: byte    }{bind:{txt}%31.0g    }{space 1}{txt}lmage_impflg{p_end}
+{p 0 48}{space 44}{bind:  }{res}{res}Mother's Age Imputed yn{p_end}
+{p 0 48}{bind:mager          }{txt}{bind: byte    }{bind:{txt}%11.0g    }{space 1}{bind:mage     }{bind:  }{res}{res}Mother's Age recode{p_end}
+{p 0 48}{bind:mager14        }{txt}{bind: byte    }{bind:{txt}%9.0g     }{space 1}{bind:         }{bind:  }{res}{res}Mother's Age recode 14{p_end}
+{p 0 48}{bind:mager9         }{txt}{bind: byte    }{bind:{txt}%9.0g     }{space 1}{bind:         }{bind:  }{res}{res}Mother's Age recode 9{p_end}
+{p 0 48}{bind:mbcntry        }{txt}{bind: str2    }{bind:{txt}%9s       }{space 1}{bind:         }{bind:  }{res}{res}Mother's Birth Country{p_end}
+{p 0 48}{bind:umbstate       }{txt}{bind: str2    }{bind:{txt}%9s       }{space 1}{bind:         }{bind:  }{res}{res}Mother's Birth State{p_end}
+{p 0 48}{bind:mbstate_rec    }{txt}{bind: byte    }{bind:{txt}%44.0g    }{space 1}{bind:born     }{bind:  }{res}{res}Mother's Nativity{p_end}
+{p 0 48}{bind:mrcntry        }{txt}{bind: str2    }{bind:{txt}%9s       }{space 1}{bind:         }{bind:  }{res}{res}Mother's Residence Country{p_end}
+{p 0 48}{bind:xmrstate       }{txt}{bind: str2    }{bind:{txt}%9s       }{space 1}{bind:         }{bind:  }{res}{res}Expanded State of Residence - Mother{p_end}
+{p 0 48}{bind:mrstate        }{txt}{bind: str2    }{bind:{txt}%9s       }{space 1}{bind:         }{bind:  }{res}{res}Mother's Residence State{p_end}
+{p 0 48}{bind:mrfips         }{txt}{bind: int     }{bind:{txt}%9.0g     }{space 1}{bind:         }{bind:  }{res}{res}Mother's FIPS County{p_end}
+{p 0 48}{bind:rcnty_pop      }{txt}{bind: byte    }{bind:{txt}%30.0g    }{space 1}{bind:ocpop    }{bind:  }{res}{res}Population of Residence County{p_end}
+{p 0 48}{bind:rcity_pop      }{txt}{bind: byte    }{bind:{txt}%28.0g    }{space 1}{bind:cpop     }{bind:  }{res}{res}Population of Residence City{p_end}
+{p 0 48}{bind:resnotres      }{txt}{bind: byte    }{bind:{txt}%21.0g    }{space 1}{bind:lyn      }{bind:  }{res}{res}State/county of occurrence/residence same yn{p_end}
+{p 0 48}{bind:restatus       }{txt}{bind: byte    }{bind:{txt}%51.0g    }{space 1}{bind:lres     }{bind:  }{res}{res}Residence Status code{p_end}
+{p 0 48}{bind:mbrace         }{txt}{bind: byte    }{bind:{txt}%30.0g    }{space 1}{txt}lmracerec{p_end}
+{p 0 48}{space 44}{bind:  }{res}{res}Bridged Race Mother{p_end}
+{p 0 48}{bind:mhisp          }{txt}{bind: byte    }{bind:{txt}%9.0g     }{space 1}{bind:         }{bind:  }{res}{res}Mother's Hispanic Origin{p_end}
+{p 0 48}{bind:mhispr         }{txt}{bind: byte    }{bind:{txt}%28.0g    }{space 1}{bind:lumhisp  }{bind:  }{res}{res}Mother's Hispanic Origin Recode{p_end}
+{p 0 48}{bind:mracehisp      }{txt}{bind: byte    }{bind:{txt}%9.0g     }{space 1}{bind:         }{bind:  }{res}{res}Mother's Race/Hispanic Origin{p_end}
+{p 0 48}{bind:dmar           }{txt}{bind: byte    }{bind:{txt}%21.0g    }{space 1}{bind:lmar     }{bind:  }{res}{res}Mother's Marital Status{p_end}
+{p 0 48}{bind:meduc          }{txt}{bind: byte    }{bind:{txt}%67.0g    }{space 1}{bind:lmeduc   }{bind:  }{res}{res}Mother's Education{p_end}
+{p 0 48}{bind:meduc_rec      }{txt}{bind: byte    }{bind:{txt}%11.0g    }{space 1}{bind:lmeducr  }{bind:  }{res}{res}Mother's Education (U){p_end}
+{p 0 48}{bind:fagerpt        }{txt}{bind: byte    }{bind:{txt}%9.0g     }{space 1}{bind:         }{bind:  }{res}{res}Father's Reported Age{p_end}
+{p 0 48}{bind:fager11        }{txt}{bind: byte    }{bind:{txt}%9.0g     }{space 1}{bind:         }{bind:  }{res}{res}Father's Age Recode 11{p_end}
+{p 0 48}{bind:fbrace         }{txt}{bind: byte    }{bind:{txt}%30.0g    }{space 1}{txt}lmracerec{p_end}
+{p 0 48}{space 44}{bind:  }{res}{res}Father's Bridged Race{p_end}
+{p 0 48}{bind:fhisp          }{txt}{bind: byte    }{bind:{txt}%9.0g     }{space 1}{bind:         }{bind:  }{res}{res}Father's Hispanic Origin{p_end}
+{p 0 48}{bind:fhispr         }{txt}{bind: byte    }{bind:{txt}%9.0g     }{space 1}{bind:         }{bind:  }{res}{res}Father's Hispanic Origin Recode{p_end}
+{p 0 48}{bind:fracehisp      }{txt}{bind: byte    }{bind:{txt}%9.0g     }{space 1}{bind:         }{bind:  }{res}{res}Father's Race/Hispanic Origin{p_end}
+{p 0 48}{bind:feduc          }{txt}{bind: byte    }{bind:{txt}%67.0g    }{space 1}{bind:lmeduc   }{bind:  }{res}{res}Father's Education{p_end}
+{p 0 48}{bind:priorlive      }{txt}{bind: byte    }{bind:{txt}%21.0g    }{space 1}{bind:unknown  }{bind:  }{res}{res}Prior Births Living{p_end}
+{p 0 48}{bind:priordead      }{txt}{bind: byte    }{bind:{txt}%21.0g    }{space 1}{bind:unknown  }{bind:  }{res}{res}Prior Births Dead{p_end}
+{p 0 48}{bind:priorterm      }{txt}{bind: byte    }{bind:{txt}%21.0g    }{space 1}{bind:unknown  }{bind:  }{res}{res}Prior Other Terminations{p_end}
+{p 0 48}{bind:lbo            }{txt}{bind: byte    }{bind:{txt}%9.0g     }{space 1}{bind:         }{bind:  }{res}{res}Live Birth Order{p_end}
+{p 0 48}{bind:lbo_rec        }{txt}{bind: byte    }{bind:{txt}%21.0g    }{space 1}{bind:llbo_rec }{bind:  }{res}{res}Live Birth Order Recode{p_end}
+{p 0 48}{bind:tbo            }{txt}{bind: byte    }{bind:{txt}%9.0g     }{space 1}{bind:         }{bind:  }{res}{res}Total Birth Order{p_end}
+{p 0 48}{bind:tbo_rec        }{txt}{bind: byte    }{bind:{txt}%22.0g    }{space 1}{bind:ltbo     }{bind:  }{res}{res}Total Birth Order Recode{p_end}
+{p 0 48}{bind:dllb_mm        }{txt}{bind: byte    }{bind:{txt}%9.0g     }{space 1}{bind:         }{bind:  }{res}{res}Date of Last Live Birth - Month{p_end}
+{p 0 48}{bind:dllb_yy        }{txt}{bind: int     }{bind:{txt}%9.0g     }{space 1}{bind:         }{bind:  }{res}{res}Date of Last Live Birth - Year{p_end}
+{p 0 48}{bind:precare        }{txt}{bind: byte    }{bind:{txt}%21.0g    }{space 1}{bind:lprecare }{bind:  }{res}{res}Month Prenatal Care Began{p_end}
+{p 0 48}{bind:precare5       }{txt}{bind: byte    }{bind:{txt}%21.0g    }{space 1}{bind:lpc      }{bind:  }{res}{res}Month Prenatal Care Began Recode{p_end}
+{p 0 48}{bind:dfpc_mm        }{txt}{bind: byte    }{bind:{txt}%9.0g     }{space 1}{bind:         }{bind:  }{res}{res}First Prenatal Care Month{p_end}
+{p 0 48}{bind:dfpc_yy        }{txt}{bind: byte    }{bind:{txt}%9.0g     }{space 1}{bind:         }{bind:  }{res}{res}First Prenatal Care Year{p_end}
+{p 0 48}{bind:mbpc_rev5      }{txt}{bind: byte    }{bind:{txt}%21.0g    }{space 1}{bind:lpc      }{bind:  }{res}{res}Month Prenatal Care Began (U){p_end}
+{p 0 48}{bind:previs         }{txt}{bind: byte    }{bind:{txt}%9.0g     }{space 1}{bind:         }{bind:  }{res}{res}Number of Prenatal Visits (R){p_end}
+{p 0 48}{bind:previs_rec     }{txt}{bind: byte    }{bind:{txt}%21.0g    }{space 1}{txt}lprevis_rec{p_end}
+{p 0 48}{space 44}{bind:  }{res}{res}Number of Prenatal Visits Recode{p_end}
+{p 0 48}{bind:apncu          }{txt}{bind: byte    }{bind:{txt}%9.0g     }{space 1}{bind:         }{bind:  }{res}{res}Adequacy of Prenatal Care (R){p_end}
+{p 0 48}{bind:wtgain         }{txt}{bind: byte    }{bind:{txt}%21.0g    }{space 1}{bind:lwtgain  }{bind:  }{res}{res}Weight Gain, lb{p_end}
+{p 0 48}{bind:wic            }{txt}{bind: str1    }{bind:{txt}%9s       }{space 1}{bind:         }{bind:  }{res}{res}WIC{p_end}
+{p 0 48}{bind:cig_0          }{txt}{bind: byte    }{bind:{txt}%27.0g    }{space 1}{bind:lcig     }{bind:  }{res}{res}Cigarettes before pregnancy daily{p_end}
+{p 0 48}{bind:cig_1          }{txt}{bind: byte    }{bind:{txt}%27.0g    }{space 1}{bind:lcig     }{bind:  }{res}{res}Number of cigarettes daily, 1st tm{p_end}
+{p 0 48}{bind:cig_2          }{txt}{bind: byte    }{bind:{txt}%27.0g    }{space 1}{bind:lcig     }{bind:  }{res}{res}Number of cigarettes daily, 2nd tm{p_end}
+{p 0 48}{bind:cig_3          }{txt}{bind: byte    }{bind:{txt}%27.0g    }{space 1}{bind:lcig     }{bind:  }{res}{res}Number of cigarettes daily, 3rd tm{p_end}
+{p 0 48}{bind:cigs           }{txt}{bind: byte    }{bind:{txt}%9.0g     }{space 1}{bind:         }{bind:  }{res}{res}Number of cigarettes daily (U){p_end}
+{p 0 48}{bind:m_ht_in        }{txt}{bind: byte    }{bind:{txt}%9.0g     }{space 1}{bind:         }{bind:  }{res}{res}Mother's height, in{p_end}
+{p 0 48}{bind:bmi            }{txt}{bind: float   }{bind:{txt}%9.0g     }{space 1}{bind:         }{bind:  }{res}{res}Body mass index{p_end}
+{p 0 48}{bind:pwgt           }{txt}{bind: int     }{bind:{txt}%21.0g    }{space 1}{bind:lunkn    }{bind:  }{res}{res}Pre-pregnancy weight, lb{p_end}
+{p 0 48}{bind:dwgt           }{txt}{bind: int     }{bind:{txt}%21.0g    }{space 1}{bind:lunkn    }{bind:  }{res}{res}Delivery weight, lb{p_end}
+{p 0 48}{bind:rf_diab        }{txt}{bind: str1    }{bind:{txt}%9s       }{space 1}{bind:         }{bind:  }{res}{res}Prepregnancy diabetes (R){p_end}
+{p 0 48}{bind:rf_gest        }{txt}{bind: str1    }{bind:{txt}%9s       }{space 1}{bind:         }{bind:  }{res}{res}Gestational diabetes (R){p_end}
+{p 0 48}{bind:rf_phyp        }{txt}{bind: str1    }{bind:{txt}%9s       }{space 1}{bind:         }{bind:  }{res}{res}Prepregnancy hypertension (R){p_end}
+{p 0 48}{bind:rf_ghyp        }{txt}{bind: str1    }{bind:{txt}%9s       }{space 1}{bind:         }{bind:  }{res}{res}Gestational hypertension (R){p_end}
+{p 0 48}{bind:rf_ehype       }{txt}{bind: str1    }{bind:{txt}%9s       }{space 1}{bind:         }{bind:  }{res}{res}Hypertension Eclampsia (R){p_end}
+{p 0 48}{bind:rf_ppterm      }{txt}{bind: str1    }{bind:{txt}%9s       }{space 1}{bind:         }{bind:  }{res}{res}Previous preterm birth (R){p_end}
+{p 0 48}{bind:rf_inftr       }{txt}{bind: str1    }{bind:{txt}%9s       }{space 1}{bind:         }{bind:  }{res}{res}Infertility Treatment (R){p_end}
+{p 0 48}{bind:rf_fedrg       }{txt}{bind: str1    }{bind:{txt}%9s       }{space 1}{bind:         }{bind:  }{res}{res}Fertility Enhancing Drugs (R){p_end}
+{p 0 48}{bind:rf_artec       }{txt}{bind: str1    }{bind:{txt}%9s       }{space 1}{bind:         }{bind:  }{res}{res}Asst Reproductive Technology (R){p_end}
+{p 0 48}{bind:rf_cesar       }{txt}{bind: str1    }{bind:{txt}%9s       }{space 1}{bind:         }{bind:  }{res}{res}Previous Cesarians (R){p_end}
+{p 0 48}{bind:rf_cesarn      }{txt}{bind: byte    }{bind:{txt}%21.0g    }{space 1}{bind:lprecare }{bind:  }{res}{res}Number of previous Cesarian deliveries (R){p_end}
+{p 0 48}{bind:me_pres        }{txt}{bind: byte    }{bind:{txt}%21.0g    }{space 1}{bind:lme_pres }{bind:  }{res}{res}Fetal presentation (R){p_end}
+{p 0 48}{bind:me_rout        }{txt}{bind: byte    }{bind:{txt}%21.0g    }{space 1}{bind:lme_rout }{bind:  }{res}{res}Route & method of delivery (R){p_end}
+{p 0 48}{bind:me_trial       }{txt}{bind: str1    }{bind:{txt}%9s       }{space 1}{bind:         }{bind:  }{res}{res}Trial of labor attempted (R){p_end}
+{p 0 48}{bind:rdmeth_rec     }{txt}{bind: byte    }{bind:{txt}%62.0g    }{space 1}{txt}lrdmeth_rec{p_end}
+{p 0 48}{space 44}{bind:  }{res}{res}Delivery method recode (revised) (R){p_end}
+{p 0 48}{bind:dmeth_rec      }{txt}{bind: byte    }{bind:{txt}%9.0g     }{space 1}{txt}ldmeth_rec{p_end}
+{p 0 48}{space 44}{bind:  }{res}{res}Delivery method recode{p_end}
+{p 0 48}{bind:mm_mtr         }{txt}{bind: str1    }{bind:{txt}%9s       }{space 1}{bind:         }{bind:  }{res}{res}Maternal transfusion{p_end}
+{p 0 48}{bind:mm_plac        }{txt}{bind: str1    }{bind:{txt}%9s       }{space 1}{bind:         }{bind:  }{res}{res}Perineal laceration{p_end}
+{p 0 48}{bind:mm_rupt        }{txt}{bind: str1    }{bind:{txt}%9s       }{space 1}{bind:         }{bind:  }{res}{res}Ruptured uterus{p_end}
+{p 0 48}{bind:mm_uhyst       }{txt}{bind: str1    }{bind:{txt}%9s       }{space 1}{bind:         }{bind:  }{res}{res}Unplanned hysterectomy{p_end}
+{p 0 48}{bind:mm_aicu        }{txt}{bind: str1    }{bind:{txt}%9s       }{space 1}{bind:         }{bind:  }{res}{res}Admit to ICU{p_end}
+{p 0 48}{bind:pay            }{txt}{bind: byte    }{bind:{txt}%40.0g    }{space 1}{bind:lpay     }{bind:  }{res}{res}Payment source{p_end}
+{p 0 48}{bind:pay_rec        }{txt}{bind: byte    }{bind:{txt}%17.0g    }{space 1}{bind:lpay_rec }{bind:  }{res}{res}Payment recode{p_end}
+{p 0 48}{bind:apgar5         }{txt}{bind: byte    }{bind:{txt}%9.0g     }{space 1}{txt}lfagecomb{p_end}
+{p 0 48}{space 44}{bind:  }{res}{res}Five minute APGAR score{p_end}
+{p 0 48}{bind:plural         }{txt}{bind: byte    }{bind:{txt}%9.0g     }{space 1}{bind:         }{bind:  }{res}{res}Plurality{p_end}
+{p 0 48}{bind:dplural        }{txt}{bind: byte    }{bind:{txt}%20.0g    }{space 1}{bind:ldplural }{bind:  }{res}{res}Plurality recode{p_end}
+{p 0 48}{bind:sex            }{txt}{bind: str1    }{bind:{txt}%9s       }{space 1}{bind:         }{bind:  }{res}{res}Sex of infant{p_end}
+{p 0 48}{bind:dlmp_mm        }{txt}{bind: byte    }{bind:{txt}%21.0g    }{space 1}{bind:months   }{bind:  }{res}{res}Last normal menses (month){p_end}
+{p 0 48}{bind:dlmp_dd        }{txt}{bind: byte    }{bind:{txt}%9.0g     }{space 1}{bind:         }{bind:  }{res}{res}Last normal menses (day){p_end}
+{p 0 48}{bind:dlmp_yy        }{txt}{bind: int     }{bind:{txt}%9.0g     }{space 1}{bind:years    }{bind:  }{res}{res}Last normal menses (year){p_end}
+{p 0 48}{bind:estgest        }{txt}{bind: byte    }{bind:{txt}%9.0g     }{space 1}{bind:         }{bind:  }{res}{res}Obstetric estimate of gestation, weeks{p_end}
+{p 0 48}{bind:combgest       }{txt}{bind: byte    }{bind:{txt}%9.0g     }{space 1}{txt}lfagecomb{p_end}
+{p 0 48}{space 44}{bind:  }{res}{res}Computed Gestation in weeks{p_end}
+{p 0 48}{bind:dbwt           }{txt}{bind: int     }{bind:{txt}%23.0g    }{space 1}{bind:lbw      }{bind:  }{res}{res}Birth weight, g{p_end}
+{p 0 48}{bind:ca_anen        }{txt}{bind: str1    }{bind:{txt}%9s       }{space 1}{bind:         }{bind:  }{res}{res}Anencephalus{p_end}
+{p 0 48}{bind:ca_mnsb        }{txt}{bind: str1    }{bind:{txt}%9s       }{space 1}{bind:         }{bind:  }{res}{res}Spina bifida{p_end}
+{p 0 48}{bind:ca_cchd        }{txt}{bind: str1    }{bind:{txt}%9s       }{space 1}{bind:         }{bind:  }{res}{res}Cyanotic congenital heart disease{p_end}
+{p 0 48}{bind:ca_hernia      }{txt}{bind: str1    }{bind:{txt}%9s       }{space 1}{bind:         }{bind:  }{res}{res}Congenital diaphragmatic Hernia{p_end}
+{p 0 48}{bind:ca_omph        }{txt}{bind: str1    }{bind:{txt}%9s       }{space 1}{bind:         }{bind:  }{res}{res}Omphalocele{p_end}
+{p 0 48}{bind:ca_gast        }{txt}{bind: str1    }{bind:{txt}%9s       }{space 1}{bind:         }{bind:  }{res}{res}Gastroschisis{p_end}
+{p 0 48}{bind:ca_limb        }{txt}{bind: str1    }{bind:{txt}%9s       }{space 1}{bind:         }{bind:  }{res}{res}Limb reduction defect{p_end}
+{p 0 48}{bind:ca_cleft       }{txt}{bind: str1    }{bind:{txt}%9s       }{space 1}{bind:         }{bind:  }{res}{res}Cleft lip{p_end}
+{p 0 48}{bind:ca_clpal       }{txt}{bind: str1    }{bind:{txt}%9s       }{space 1}{bind:         }{bind:  }{res}{res}Cleft palate{p_end}
+{p 0 48}{bind:ca_down        }{txt}{bind: str1    }{bind:{txt}%9s       }{space 1}{bind:         }{bind:  }{res}{res}Down syndrome{p_end}
+{p 0 48}{bind:ca_disor       }{txt}{bind: str1    }{bind:{txt}%9s       }{space 1}{bind:         }{bind:  }{res}{res}Suspected Chromosomal Disorder{p_end}
+{p 0 48}{bind:ca_hypo        }{txt}{bind: str1    }{bind:{txt}%9s       }{space 1}{bind:         }{bind:  }{res}{res}Hypospadias{p_end}
+{p 0 48}{bind:bfed           }{txt}{bind: str1    }{bind:{txt}%9s       }{space 1}{bind:         }{bind:  }{res}{res}Breastfed at discharge{p_end}
+{p 0 48}{bind:revision       }{txt}{bind: str1    }{bind:{txt}%9s       }{space 1}{bind:         }{bind:  }{res}{res}{p_end}
+{p 0 48}{bind:bmi_r          }{txt}{bind: byte    }{bind:{txt}%27.0g    }{space 1}{bind:lbmi_r   }{bind:  }{res}{res}BMI recode{p_end}
+{p 0 48}{bind:mrace31        }{txt}{bind: byte    }{bind:{txt}%9.0g     }{space 1}{bind:         }{bind:  }{res}{res}Mother's Race Recode 31{p_end}
+{p 0 48}{bind:mrace6         }{txt}{bind: byte    }{bind:{txt}%25.0g    }{space 1}{bind:lr6      }{bind:  }{res}{res}Mother's Race Recode 6{p_end}
+{p 0 48}{bind:mrace15        }{txt}{bind: byte    }{bind:{txt}%9.0g     }{space 1}{bind:         }{bind:  }{res}{res}Mother's Race Recode 15{p_end}
+{p 0 48}{bind:mar_g          }{txt}{bind: str1    }{bind:{txt}%9s       }{space 1}{bind:         }{bind:  }{res}{res}Mother's Marital Status During Pregnancy{p_end}
+{p 0 48}{bind:frace31        }{txt}{bind: byte    }{bind:{txt}%9.0g     }{space 1}{bind:         }{bind:  }{res}{res}Father's Race Recode 31{p_end}
+{p 0 48}{bind:frace6         }{txt}{bind: byte    }{bind:{txt}%25.0g    }{space 1}{bind:lr6      }{bind:  }{res}{res}Father's Race Recode 6{p_end}
+{p 0 48}{bind:frace15        }{txt}{bind: byte    }{bind:{txt}%9.0g     }{space 1}{bind:         }{bind:  }{res}{res}Father's Race Recode 15{p_end}
+{p 0 48}{bind:cig0_r         }{txt}{bind: byte    }{bind:{txt}%21.0g    }{space 1}{bind:lcp      }{bind:  }{res}{res}Cigarettes before Pregnancy recode{p_end}
+{p 0 48}{bind:no_risks       }{txt}{bind: byte    }{bind:{txt}%21.0g    }{space 1}{bind:lyn      }{bind:  }{res}{res}No risk factors checked{p_end}
+{p 0 48}{bind:no_mmorb       }{txt}{bind: byte    }{bind:{txt}%12.0g    }{space 1}{bind:lnmm     }{bind:  }{res}{res}No maternal morbidity checked{p_end}
+{p 0 48}{bind:no_congen      }{txt}{bind: byte    }{bind:{txt}%12.0g    }{space 1}{bind:lnmm     }{bind:  }{res}{res}No congenital anomalies{p_end}
+{txt}{hline}
+Sorted by: 
+
+{com}. 
+. // prep for merging with state-level data: fips3 
+. merge m:1 mrstate using stfips_crosswalk
+{res}
+{txt}{col 5}Result{col 33}Number of obs
+{col 5}{hline 41}
+{col 5}Not matched{col 30}{res}               0
+{txt}{col 5}Matched{col 30}{res}      56,496,154{txt}  (_merge==3)
+{col 5}{hline 41}
+
+{com}. drop _merge
+{txt}
+{com}. // prep for merging with county-level data: fips
+. g fips = fips3*1000 + mrfips
+{txt}
+{com}. tab fips3, mi
+
+      {txt}fips3 {c |}      Freq.     Percent        Cum.
+{hline 12}{c +}{hline 35}
+          1 {c |}{res}    846,461        1.50        1.50
+{txt}          2 {c |}{res}    155,247        0.27        1.77
+{txt}          4 {c |}{res}  1,258,263        2.23        4.00
+{txt}          5 {c |}{res}    545,667        0.97        4.97
+{txt}          6 {c |}{res}  7,177,345       12.70       17.67
+{txt}          8 {c |}{res}    937,058        1.66       19.33
+{txt}          9 {c |}{res}    530,098        0.94       20.27
+{txt}         10 {c |}{res}    158,532        0.28       20.55
+{txt}         11 {c |}{res}    128,392        0.23       20.77
+{txt}         12 {c |}{res}  3,126,059        5.53       26.31
+{txt}         13 {c |}{res}  1,903,141        3.37       29.68
+{txt}         15 {c |}{res}    259,840        0.46       30.14
+{txt}         16 {c |}{res}    323,769        0.57       30.71
+{txt}         17 {c |}{res}  2,296,311        4.06       34.77
+{txt}         18 {c |}{res}  1,190,100        2.11       36.88
+{txt}         19 {c |}{res}    550,245        0.97       37.85
+{txt}         20 {c |}{res}    554,770        0.98       38.84
+{txt}         21 {c |}{res}    788,850        1.40       40.23
+{txt}         22 {c |}{res}    883,965        1.56       41.80
+{txt}         23 {c |}{res}    183,329        0.32       42.12
+{txt}         24 {c |}{res}  1,038,041        1.84       43.96
+{txt}         25 {c |}{res}  1,029,332        1.82       45.78
+{txt}         26 {c |}{res}  1,636,450        2.90       48.68
+{txt}         27 {c |}{res}    981,622        1.74       50.42
+{txt}         28 {c |}{res}    569,404        1.01       51.42
+{txt}         29 {c |}{res}  1,076,848        1.91       53.33
+{txt}         30 {c |}{res}    170,614        0.30       53.63
+{txt}         31 {c |}{res}    368,777        0.65       54.28
+{txt}         32 {c |}{res}    516,622        0.91       55.20
+{txt}         33 {c |}{res}    181,612        0.32       55.52
+{txt}         34 {c |}{res}  1,499,062        2.65       58.17
+{txt}         35 {c |}{res}    380,487        0.67       58.85
+{txt}         36 {c |}{res}  3,378,287        5.98       64.83
+{txt}         37 {c |}{res}  1,722,924        3.05       67.88
+{txt}         38 {c |}{res}    138,555        0.25       68.12
+{txt}         39 {c |}{res}  1,986,769        3.52       71.64
+{txt}         40 {c |}{res}    740,913        1.31       72.95
+{txt}         41 {c |}{res}    643,699        1.14       74.09
+{txt}         42 {c |}{res}  2,006,969        3.55       77.64
+{txt}         44 {c |}{res}    158,565        0.28       77.92
+{txt}         45 {c |}{res}    822,939        1.46       79.38
+{txt}         46 {c |}{res}    168,577        0.30       79.68
+{txt}         47 {c |}{res}  1,145,891        2.03       81.71
+{txt}         48 {c |}{res}  5,496,409        9.73       91.43
+{txt}         49 {c |}{res}    723,804        1.28       92.72
+{txt}         50 {c |}{res}     84,929        0.15       92.87
+{txt}         51 {c |}{res}  1,453,112        2.57       95.44
+{txt}         53 {c |}{res}  1,227,473        2.17       97.61
+{txt}         54 {c |}{res}    285,477        0.51       98.12
+{txt}         55 {c |}{res}    959,343        1.70       99.81
+{txt}         56 {c |}{res}    105,206        0.19      100.00
+{txt}{hline 12}{c +}{hline 35}
+      Total {c |}{res} 56,496,154      100.00
+{txt}
+{com}. // define ym as month of conception
+. g ymb = ym(birthyear,birthmonth)
+{txt}
+{com}. format ymb %tm
+{txt}
+{com}. g ym = ymb - 8
+{txt}
+{com}. format ym %tm
+{txt}
+{com}. lab var ymb "Birth month"
+{txt}
+{com}. lab var ym "Month of conception"
+{txt}
+{com}. tab ym, mi
+
+   {txt}Month of {c |}
+ conception {c |}      Freq.     Percent        Cum.
+{hline 12}{c +}{hline 35}
+     2004m5 {c |}{res}    331,478        0.59        0.59
+{txt}     2004m6 {c |}{res}    309,620        0.55        1.13
+{txt}     2004m7 {c |}{res}    349,321        0.62        1.75
+{txt}     2004m8 {c |}{res}    332,477        0.59        2.34
+{txt}     2004m9 {c |}{res}    346,276        0.61        2.95
+{txt}    2004m10 {c |}{res}    350,879        0.62        3.58
+{txt}    2004m11 {c |}{res}    357,053        0.63        4.21
+{txt}    2004m12 {c |}{res}    369,316        0.65        4.86
+{txt}     2005m1 {c |}{res}    363,369        0.64        5.50
+{txt}     2005m2 {c |}{res}    344,639        0.61        6.11
+{txt}     2005m3 {c |}{res}    335,667        0.59        6.71
+{txt}     2005m4 {c |}{res}    348,254        0.62        7.33
+{txt}     2005m5 {c |}{res}    340,297        0.60        7.93
+{txt}     2005m6 {c |}{res}    319,235        0.57        8.49
+{txt}     2005m7 {c |}{res}    356,786        0.63        9.12
+{txt}     2005m8 {c |}{res}    329,809        0.58        9.71
+{txt}     2005m9 {c |}{res}    355,437        0.63       10.34
+{txt}    2005m10 {c |}{res}    358,251        0.63       10.97
+{txt}    2005m11 {c |}{res}    367,934        0.65       11.62
+{txt}    2005m12 {c |}{res}    387,798        0.69       12.31
+{txt}     2006m1 {c |}{res}    374,711        0.66       12.97
+{txt}     2006m2 {c |}{res}    367,354        0.65       13.62
+{txt}     2006m3 {c |}{res}    351,832        0.62       14.24
+{txt}     2006m4 {c |}{res}    356,111        0.63       14.88
+{txt}     2006m5 {c |}{res}    354,943        0.63       15.50
+{txt}     2006m6 {c |}{res}    326,891        0.58       16.08
+{txt}     2006m7 {c |}{res}    360,828        0.64       16.72
+{txt}     2006m8 {c |}{res}    338,224        0.60       17.32
+{txt}     2006m9 {c |}{res}    362,319        0.64       17.96
+{txt}    2006m10 {c |}{res}    358,606        0.63       18.60
+{txt}    2006m11 {c |}{res}    379,616        0.67       19.27
+{txt}    2006m12 {c |}{res}    390,378        0.69       19.96
+{txt}     2007m1 {c |}{res}    366,904        0.65       20.61
+{txt}     2007m2 {c |}{res}    369,324        0.65       21.26
+{txt}     2007m3 {c |}{res}    353,660        0.63       21.89
+{txt}     2007m4 {c |}{res}    354,540        0.63       22.52
+{txt}     2007m5 {c |}{res}    356,457        0.63       23.15
+{txt}     2007m6 {c |}{res}    338,521        0.60       23.75
+{txt}     2007m7 {c |}{res}    350,630        0.62       24.37
+{txt}     2007m8 {c |}{res}    346,397        0.61       24.98
+{txt}     2007m9 {c |}{res}    354,886        0.63       25.61
+{txt}    2007m10 {c |}{res}    348,587        0.62       26.22
+{txt}    2007m11 {c |}{res}    375,384        0.66       26.89
+{txt}    2007m12 {c |}{res}    373,333        0.66       27.55
+{txt}     2008m1 {c |}{res}    367,965        0.65       28.20
+{txt}     2008m2 {c |}{res}    357,875        0.63       28.83
+{txt}     2008m3 {c |}{res}    323,788        0.57       29.41
+{txt}     2008m4 {c |}{res}    353,871        0.63       30.03
+{txt}     2008m5 {c |}{res}    337,980        0.60       30.63
+{txt}     2008m6 {c |}{res}    316,641        0.56       31.19
+{txt}     2008m7 {c |}{res}    347,803        0.62       31.81
+{txt}     2008m8 {c |}{res}    337,272        0.60       32.40
+{txt}     2008m9 {c |}{res}    345,257        0.61       33.02
+{txt}    2008m10 {c |}{res}    346,971        0.61       33.63
+{txt}    2008m11 {c |}{res}    368,450        0.65       34.28
+{txt}    2008m12 {c |}{res}    359,554        0.64       34.92
+{txt}     2009m1 {c |}{res}    361,922        0.64       35.56
+{txt}     2009m2 {c |}{res}    347,625        0.62       36.17
+{txt}     2009m3 {c |}{res}    320,195        0.57       36.74
+{txt}     2009m4 {c |}{res}    340,995        0.60       37.35
+{txt}     2009m5 {c |}{res}    323,249        0.57       37.92
+{txt}     2009m6 {c |}{res}    301,994        0.53       38.45
+{txt}     2009m7 {c |}{res}    338,613        0.60       39.05
+{txt}     2009m8 {c |}{res}    325,028        0.58       39.63
+{txt}     2009m9 {c |}{res}    328,273        0.58       40.21
+{txt}    2009m10 {c |}{res}    334,535        0.59       40.80
+{txt}    2009m11 {c |}{res}    345,199        0.61       41.41
+{txt}    2009m12 {c |}{res}    349,747        0.62       42.03
+{txt}     2010m1 {c |}{res}    350,745        0.62       42.65
+{txt}     2010m2 {c |}{res}    336,809        0.60       43.25
+{txt}     2010m3 {c |}{res}    326,220        0.58       43.82
+{txt}     2010m4 {c |}{res}    338,974        0.60       44.42
+{txt}     2010m5 {c |}{res}    320,477        0.57       44.99
+{txt}     2010m6 {c |}{res}    297,961        0.53       45.52
+{txt}     2010m7 {c |}{res}    330,151        0.58       46.10
+{txt}     2010m8 {c |}{res}    313,275        0.55       46.66
+{txt}     2010m9 {c |}{res}    326,647        0.58       47.24
+{txt}    2010m10 {c |}{res}    337,280        0.60       47.83
+{txt}    2010m11 {c |}{res}    345,560        0.61       48.44
+{txt}    2010m12 {c |}{res}    359,404        0.64       49.08
+{txt}     2011m1 {c |}{res}    345,548        0.61       49.69
+{txt}     2011m2 {c |}{res}    328,488        0.58       50.27
+{txt}     2011m3 {c |}{res}    321,479        0.57       50.84
+{txt}     2011m4 {c |}{res}    327,320        0.58       51.42
+{txt}     2011m5 {c |}{res}    316,315        0.56       51.98
+{txt}     2011m6 {c |}{res}    304,505        0.54       52.52
+{txt}     2011m7 {c |}{res}    324,322        0.57       53.09
+{txt}     2011m8 {c |}{res}    306,700        0.54       53.64
+{txt}     2011m9 {c |}{res}    330,146        0.58       54.22
+{txt}    2011m10 {c |}{res}    327,189        0.58       54.80
+{txt}    2011m11 {c |}{res}    347,542        0.62       55.42
+{txt}    2011m12 {c |}{res}    361,114        0.64       56.06
+{txt}     2012m1 {c |}{res}    340,113        0.60       56.66
+{txt}     2012m2 {c |}{res}    345,497        0.61       57.27
+{txt}     2012m3 {c |}{res}    325,146        0.58       57.84
+{txt}     2012m4 {c |}{res}    324,252        0.57       58.42
+{txt}     2012m5 {c |}{res}    323,691        0.57       58.99
+{txt}     2012m6 {c |}{res}    291,748        0.52       59.51
+{txt}     2012m7 {c |}{res}    320,529        0.57       60.08
+{txt}     2012m8 {c |}{res}    311,645        0.55       60.63
+{txt}     2012m9 {c |}{res}    329,520        0.58       61.21
+{txt}    2012m10 {c |}{res}    319,779        0.57       61.78
+{txt}    2012m11 {c |}{res}    349,158        0.62       62.39
+{txt}    2012m12 {c |}{res}    353,485        0.63       63.02
+{txt}     2013m1 {c |}{res}    338,008        0.60       63.62
+{txt}     2013m2 {c |}{res}    340,562        0.60       64.22
+{txt}     2013m3 {c |}{res}    318,482        0.56       64.78
+{txt}     2013m4 {c |}{res}    335,574        0.59       65.38
+{txt}     2013m5 {c |}{res}    326,366        0.58       65.96
+{txt}     2013m6 {c |}{res}    298,404        0.53       66.48
+{txt}     2013m7 {c |}{res}    323,572        0.57       67.06
+{txt}     2013m8 {c |}{res}    318,990        0.56       67.62
+{txt}     2013m9 {c |}{res}    334,613        0.59       68.21
+{txt}    2013m10 {c |}{res}    325,981        0.58       68.79
+{txt}    2013m11 {c |}{res}    355,524        0.63       69.42
+{txt}    2013m12 {c |}{res}    354,257        0.63       70.05
+{txt}     2014m1 {c |}{res}    348,424        0.62       70.66
+{txt}     2014m2 {c |}{res}    343,356        0.61       71.27
+{txt}     2014m3 {c |}{res}    317,998        0.56       71.83
+{txt}     2014m4 {c |}{res}    340,591        0.60       72.44
+{txt}     2014m5 {c |}{res}    325,955        0.58       73.01
+{txt}     2014m6 {c |}{res}    298,058        0.53       73.54
+{txt}     2014m7 {c |}{res}    328,923        0.58       74.12
+{txt}     2014m8 {c |}{res}    320,832        0.57       74.69
+{txt}     2014m9 {c |}{res}    327,917        0.58       75.27
+{txt}    2014m10 {c |}{res}    330,541        0.59       75.86
+{txt}    2014m11 {c |}{res}    353,415        0.63       76.48
+{txt}    2014m12 {c |}{res}    351,791        0.62       77.11
+{txt}     2015m1 {c |}{res}    347,516        0.62       77.72
+{txt}     2015m2 {c |}{res}    339,007        0.60       78.32
+{txt}     2015m3 {c |}{res}    318,820        0.56       78.89
+{txt}     2015m4 {c |}{res}    335,722        0.59       79.48
+{txt}     2015m5 {c |}{res}    316,707        0.56       80.04
+{txt}     2015m6 {c |}{res}    306,015        0.54       80.58
+{txt}     2015m7 {c |}{res}    328,526        0.58       81.16
+{txt}     2015m8 {c |}{res}    313,485        0.55       81.72
+{txt}     2015m9 {c |}{res}    327,631        0.58       82.30
+{txt}    2015m10 {c |}{res}    332,324        0.59       82.89
+{txt}    2015m11 {c |}{res}    342,728        0.61       83.49
+{txt}    2015m12 {c |}{res}    357,830        0.63       84.13
+{txt}     2016m1 {c |}{res}    345,552        0.61       84.74
+{txt}     2016m2 {c |}{res}    330,958        0.59       85.32
+{txt}     2016m3 {c |}{res}    319,389        0.57       85.89
+{txt}     2016m4 {c |}{res}    324,730        0.57       86.46
+{txt}     2016m5 {c |}{res}    313,786        0.56       87.02
+{txt}     2016m6 {c |}{res}    289,054        0.51       87.53
+{txt}     2016m7 {c |}{res}    319,625        0.57       88.10
+{txt}     2016m8 {c |}{res}    300,116        0.53       88.63
+{txt}     2016m9 {c |}{res}    322,456        0.57       89.20
+{txt}    2016m10 {c |}{res}    323,920        0.57       89.77
+{txt}    2016m11 {c |}{res}    334,924        0.59       90.37
+{txt}    2016m12 {c |}{res}    352,151        0.62       90.99
+{txt}     2017m1 {c |}{res}    337,175        0.60       91.59
+{txt}     2017m2 {c |}{res}    329,869        0.58       92.17
+{txt}     2017m3 {c |}{res}    316,511        0.56       92.73
+{txt}     2017m4 {c |}{res}    315,913        0.56       93.29
+{txt}     2017m5 {c |}{res}    314,808        0.56       93.85
+{txt}     2017m6 {c |}{res}    284,250        0.50       94.35
+{txt}     2017m7 {c |}{res}    316,044        0.56       94.91
+{txt}     2017m8 {c |}{res}    298,394        0.53       95.44
+{txt}     2017m9 {c |}{res}    320,622        0.57       96.00
+{txt}    2017m10 {c |}{res}    314,816        0.56       96.56
+{txt}    2017m11 {c |}{res}    329,009        0.58       97.14
+{txt}    2017m12 {c |}{res}    344,750        0.61       97.75
+{txt}     2018m1 {c |}{res}    322,772        0.57       98.33
+{txt}     2018m2 {c |}{res}    326,778        0.58       98.90
+{txt}     2018m3 {c |}{res}    308,703        0.55       99.45
+{txt}     2018m4 {c |}{res}    310,766        0.55      100.00
+{txt}{hline 12}{c +}{hline 35}
+      Total {c |}{res} 56,496,154      100.00
+{txt}
+{com}. 
+. // age screen
+. keep if inrange(mager, 16, 49)
+{txt}(231,766 observations deleted)
+
+{com}. tab mager, mi
+
+   {txt}Mother's {c |}
+ Age recode {c |}      Freq.     Percent        Cum.
+{hline 12}{c +}{hline 35}
+         16 {c |}{res}    400,491        0.71        0.71
+{txt}         17 {c |}{res}    747,434        1.33        2.04
+{txt}         18 {c |}{res}  1,263,529        2.25        4.29
+{txt}         19 {c |}{res}  1,900,633        3.38        7.66
+{txt}         20 {c |}{res}  2,255,379        4.01       11.67
+{txt}         21 {c |}{res}  2,433,714        4.33       16.00
+{txt}         22 {c |}{res}  2,639,346        4.69       20.69
+{txt}         23 {c |}{res}  2,760,002        4.91       25.59
+{txt}         24 {c |}{res}  2,891,357        5.14       30.73
+{txt}         25 {c |}{res}  3,031,503        5.39       36.12
+{txt}         26 {c |}{res}  3,147,466        5.59       41.72
+{txt}         27 {c |}{res}  3,245,025        5.77       47.48
+{txt}         28 {c |}{res}  3,313,540        5.89       53.37
+{txt}         29 {c |}{res}  3,322,796        5.91       59.28
+{txt}         30 {c |}{res}  3,253,661        5.78       65.06
+{txt}         31 {c |}{res}  3,126,517        5.56       70.62
+{txt}         32 {c |}{res}  2,891,202        5.14       75.76
+{txt}         33 {c |}{res}  2,621,776        4.66       80.42
+{txt}         34 {c |}{res}  2,350,288        4.18       84.59
+{txt}         35 {c |}{res}  2,053,170        3.65       88.24
+{txt}         36 {c |}{res}  1,711,258        3.04       91.28
+{txt}         37 {c |}{res}  1,370,225        2.44       93.72
+{txt}         38 {c |}{res}  1,074,053        1.91       95.63
+{txt}         39 {c |}{res}    826,682        1.47       97.10
+{txt}         40 {c |}{res}    600,196        1.07       98.16
+{txt}         41 {c |}{res}    411,997        0.73       98.90
+{txt}         42 {c |}{res}    265,163        0.47       99.37
+{txt}         43 {c |}{res}    160,942        0.29       99.65
+{txt}         44 {c |}{res}     91,118        0.16       99.82
+{txt}         45 {c |}{res}     49,934        0.09       99.90
+{txt}         46 {c |}{res}     26,495        0.05       99.95
+{txt}         47 {c |}{res}     14,393        0.03       99.98
+{txt}         48 {c |}{res}      8,033        0.01       99.99
+{txt}         49 {c |}{res}      5,070        0.01      100.00
+{txt}{hline 12}{c +}{hline 35}
+      Total {c |}{res} 56,264,388      100.00
+{txt}
+{com}. 
+. // gest age screen
+. keep if inrange(combgest, 30, 44)
+{txt}(1,164,599 observations deleted)
+
+{com}. tab combgest, mi
+
+   {txt}Computed {c |}
+  Gestation {c |}
+   in weeks {c |}      Freq.     Percent        Cum.
+{hline 12}{c +}{hline 35}
+         30 {c |}{res}    186,254        0.34        0.34
+{txt}         31 {c |}{res}    242,792        0.44        0.78
+{txt}         32 {c |}{res}    344,566        0.63        1.40
+{txt}         33 {c |}{res}    508,920        0.92        2.33
+{txt}         34 {c |}{res}    882,523        1.60        3.93
+{txt}         35 {c |}{res}  1,382,668        2.51        6.44
+{txt}         36 {c |}{res}  2,472,211        4.49       10.93
+{txt}         37 {c |}{res}  5,083,772        9.23       20.15
+{txt}         38 {c |}{res}  9,766,595       17.73       37.88
+{txt}         39 {c |}{res} 16,008,901       29.05       66.93
+{txt}         40 {c |}{res} 10,837,975       19.67       86.60
+{txt}         41 {c |}{res}  4,715,584        8.56       95.16
+{txt}         42 {c |}{res}  1,492,698        2.71       97.87
+{txt}         43 {c |}{res}    768,676        1.40       99.26
+{txt}         44 {c |}{res}    405,654        0.74      100.00
+{txt}{hline 12}{c +}{hline 35}
+      Total {c |}{res} 55,099,789      100.00
+{txt}
+{com}. 
+. // LBW indicator
+. g lbw = dbwt<2500 & !mi(dbwt)
+{txt}
+{com}. tab lbw, mi
+
+        {txt}lbw {c |}      Freq.     Percent        Cum.
+{hline 12}{c +}{hline 35}
+          0 {c |}{res} 51,136,314       92.81       92.81
+{txt}          1 {c |}{res}  3,963,475        7.19      100.00
+{txt}{hline 12}{c +}{hline 35}
+      Total {c |}{res} 55,099,789      100.00
+{txt}
+{com}. 
+. // preterm indicator
+. g preterm = combgest<37 & !mi(combgest)
+{txt}
+{com}. tab preterm, mi
+
+    {txt}preterm {c |}      Freq.     Percent        Cum.
+{hline 12}{c +}{hline 35}
+          0 {c |}{res} 49,079,855       89.07       89.07
+{txt}          1 {c |}{res}  6,019,934       10.93      100.00
+{txt}{hline 12}{c +}{hline 35}
+      Total {c |}{res} 55,099,789      100.00
+{txt}
+{com}. 
+. // SGA, LGA
+. tab sex, mi
+
+     {txt}Sex of {c |}
+     infant {c |}      Freq.     Percent        Cum.
+{hline 12}{c +}{hline 35}
+          F {c |}{res} 26,911,908       48.84       48.84
+{txt}          M {c |}{res} 28,187,881       51.16      100.00
+{txt}{hline 12}{c +}{hline 35}
+      Total {c |}{res} 55,099,789      100.00
+{txt}
+{com}. do SGA_LGA_rev 
+{txt}
+{com}. *Revised paper - updated using obstetric estimates of gestational age
+. *https://www.ncbi.nlm.nih.gov/pubmed/31201230
+. *small for gestational age (SGA): fetal growth < 10th percentile
+. *Boys
+. gen sga=0
+{txt}
+{com}. replace sga=1 if sex=="M" & combgest==20 & dbwt<396
+{txt}(0 real changes made)
+
+{com}. replace sga=1 if sex=="M" & combgest==21 & dbwt<396
+{txt}(0 real changes made)
+
+{com}. replace sga=1 if sex=="M" & combgest==22 & dbwt<396
+{txt}(0 real changes made)
+
+{com}. replace sga=1 if sex=="M" & combgest==23 & dbwt<467
+{txt}(0 real changes made)
+
+{com}. replace sga=1 if sex=="M" & combgest==24 & dbwt<519
+{txt}(0 real changes made)
+
+{com}. replace sga=1 if sex=="M" & combgest==25 & dbwt<575
+{txt}(0 real changes made)
+
+{com}. replace sga=1 if sex=="M" & combgest==26 & dbwt<641
+{txt}(0 real changes made)
+
+{com}. replace sga=1 if sex=="M" & combgest==27 & dbwt<718
+{txt}(0 real changes made)
+
+{com}. replace sga=1 if sex=="M" & combgest==28 & dbwt<815
+{txt}(0 real changes made)
+
+{com}. replace sga=1 if sex=="M" & combgest==29 & dbwt<937
+{txt}(0 real changes made)
+
+{com}. replace sga=1 if sex=="M" & combgest==30 & dbwt<1085
+{txt}(9,114 real changes made)
+
+{com}. replace sga=1 if sex=="M" & combgest==31 & dbwt<1246
+{txt}(11,475 real changes made)
+
+{com}. replace sga=1 if sex=="M" & combgest==32 & dbwt<1409
+{txt}(14,257 real changes made)
+
+{com}. replace sga=1 if sex=="M" & combgest==33 & dbwt<1606
+{txt}(21,703 real changes made)
+
+{com}. replace sga=1 if sex=="M" & combgest==34 & dbwt<1830
+{txt}(38,891 real changes made)
+
+{com}. replace sga=1 if sex=="M" & combgest==35 & dbwt<2070
+{txt}(64,312 real changes made)
+
+{com}. replace sga=1 if sex=="M" & combgest==36 & dbwt<2307
+{txt}(128,118 real changes made)
+
+{com}. replace sga=1 if sex=="M" & combgest==37 & dbwt<2522
+{txt}(249,114 real changes made)
+
+{com}. replace sga=1 if sex=="M" & combgest==38 & dbwt<2754
+{txt}(501,970 real changes made)
+
+{com}. replace sga=1 if sex=="M" & combgest==39 & dbwt<2952
+{txt}(944,024 real changes made)
+
+{com}. replace sga=1 if sex=="M" & combgest==40 & dbwt<3068
+{txt}(733,922 real changes made)
+
+{com}. replace sga=1 if sex=="M" & combgest==41 & dbwt<3168
+{txt}(397,855 real changes made)
+
+{com}. replace sga=1 if sex=="M" & combgest==42 & dbwt<3225
+{txt}(189,925 real changes made)
+
+{com}. replace sga=1 if sex=="M" & combgest==43 & dbwt<3225
+{txt}(106,767 real changes made)
+
+{com}. replace sga=1 if sex=="M" & combgest==44 & dbwt<3225
+{txt}(56,624 real changes made)
+
+{com}. 
+. *Girls
+. replace sga=1 if sex=="F" & combgest==20 & dbwt<379
+{txt}(0 real changes made)
+
+{com}. replace sga=1 if sex=="F" & combgest==21 & dbwt<379
+{txt}(0 real changes made)
+
+{com}. replace sga=1 if sex=="F" & combgest==22 & dbwt<379
+{txt}(0 real changes made)
+
+{com}. replace sga=1 if sex=="F" & combgest==23 & dbwt<435
+{txt}(0 real changes made)
+
+{com}. replace sga=1 if sex=="F" & combgest==24 & dbwt<480
+{txt}(0 real changes made)
+
+{com}. replace sga=1 if sex=="F" & combgest==25 & dbwt<530
+{txt}(0 real changes made)
+
+{com}. replace sga=1 if sex=="F" & combgest==26 & dbwt<591
+{txt}(0 real changes made)
+
+{com}. replace sga=1 if sex=="F" & combgest==27 & dbwt<670
+{txt}(0 real changes made)
+
+{com}. replace sga=1 if sex=="F" & combgest==28 & dbwt<760
+{txt}(0 real changes made)
+
+{com}. replace sga=1 if sex=="F" & combgest==29 & dbwt<871
+{txt}(0 real changes made)
+
+{com}. replace sga=1 if sex=="F" & combgest==30 & dbwt<1008
+{txt}(7,524 real changes made)
+
+{com}. replace sga=1 if sex=="F" & combgest==31 & dbwt<1161
+{txt}(9,503 real changes made)
+
+{com}. replace sga=1 if sex=="F" & combgest==32 & dbwt<1333
+{txt}(12,592 real changes made)
+
+{com}. replace sga=1 if sex=="F" & combgest==33 & dbwt<1525
+{txt}(18,702 real changes made)
+
+{com}. replace sga=1 if sex=="F" & combgest==34 & dbwt<1747
+{txt}(35,065 real changes made)
+
+{com}. replace sga=1 if sex=="F" & combgest==35 & dbwt<1990
+{txt}(61,308 real changes made)
+
+{com}. replace sga=1 if sex=="F" & combgest==36 & dbwt<2212
+{txt}(118,048 real changes made)
+
+{com}. replace sga=1 if sex=="F" & combgest==37 & dbwt<2415
+{txt}(235,173 real changes made)
+
+{com}. replace sga=1 if sex=="F" & combgest==38 & dbwt<2644
+{txt}(459,794 real changes made)
+
+{com}. replace sga=1 if sex=="F" & combgest==39 & dbwt<2841
+{txt}(914,643 real changes made)
+
+{com}. replace sga=1 if sex=="F" & combgest==40 & dbwt<2958
+{txt}(739,493 real changes made)
+
+{com}. replace sga=1 if sex=="F" & combgest==41 & dbwt<3056
+{txt}(411,860 real changes made)
+
+{com}. replace sga=1 if sex=="F" & combgest==42 & dbwt<3080
+{txt}(178,567 real changes made)
+
+{com}. replace sga=1 if sex=="F" & combgest==43 & dbwt<3080
+{txt}(100,603 real changes made)
+
+{com}. replace sga=1 if sex=="F" & combgest==44 & dbwt<3080
+{txt}(53,020 real changes made)
+
+{com}. label variable sga "Small for gestational age revised using OE"
+{txt}
+{com}. label define sga 0 "normal" 1 "SGA"
+{txt}
+{com}. label values sga sga
+{txt}
+{com}. tab sga, missing
+
+  {txt}Small for {c |}
+gestational {c |}
+age revised {c |}
+   using OE {c |}      Freq.     Percent        Cum.
+{hline 12}{c +}{hline 35}
+     normal {c |}{res} 48,275,823       87.62       87.62
+{txt}        SGA {c |}{res}  6,823,966       12.38      100.00
+{txt}{hline 12}{c +}{hline 35}
+      Total {c |}{res} 55,099,789      100.00
+{txt}
+{com}. 
+. *large for gestational age (LGA): fetal growth > 90th percentile
+. *Boys
+. gen lga=0
+{txt}
+{com}. replace lga=1 if sex=="M" & combgest==20 & dbwt>586
+{txt}(0 real changes made)
+
+{com}. replace lga=1 if sex=="M" & combgest==21 & dbwt>586
+{txt}(0 real changes made)
+
+{com}. replace lga=1 if sex=="M" & combgest==22 & dbwt>586
+{txt}(0 real changes made)
+
+{com}. replace lga=1 if sex=="M" & combgest==23 & dbwt>713
+{txt}(0 real changes made)
+
+{com}. replace lga=1 if sex=="M" & combgest==24 & dbwt>827
+{txt}(0 real changes made)
+
+{com}. replace lga=1 if sex=="M" & combgest==25 & dbwt>954
+{txt}(0 real changes made)
+
+{com}. replace lga=1 if sex=="M" & combgest==26 & dbwt>1100
+{txt}(0 real changes made)
+
+{com}. replace lga=1 if sex=="M" & combgest==27 & dbwt>1264
+{txt}(0 real changes made)
+
+{com}. replace lga=1 if sex=="M" & combgest==28 & dbwt>1439
+{txt}(0 real changes made)
+
+{com}. replace lga=1 if sex=="M" & combgest==29 & dbwt>1622
+{txt}(0 real changes made)
+
+{com}. replace lga=1 if sex=="M" & combgest==30 & dbwt>1835
+{txt}(37,490 real changes made)
+
+{com}. replace lga=1 if sex=="M" & combgest==31 & dbwt>2071
+{txt}(46,697 real changes made)
+
+{com}. replace lga=1 if sex=="M" & combgest==32 & dbwt>2305
+{txt}(65,917 real changes made)
+
+{com}. replace lga=1 if sex=="M" & combgest==33 & dbwt>2565
+{txt}(93,137 real changes made)
+
+{com}. replace lga=1 if sex=="M" & combgest==34 & dbwt>2837
+{txt}(144,508 real changes made)
+
+{com}. replace lga=1 if sex=="M" & combgest==35 & dbwt>3117
+{txt}(194,050 real changes made)
+
+{com}. replace lga=1 if sex=="M" & combgest==36 & dbwt>3406
+{txt}(230,759 real changes made)
+
+{com}. replace lga=1 if sex=="M" & combgest==37 & dbwt>3646
+{txt}(372,958 real changes made)
+
+{com}. replace lga=1 if sex=="M" & combgest==38 & dbwt>3852
+{txt}(622,830 real changes made)
+
+{com}. replace lga=1 if sex=="M" & combgest==39 & dbwt>4024
+{txt}(849,776 real changes made)
+
+{com}. replace lga=1 if sex=="M" & combgest==40 & dbwt>4122
+{txt}(509,266 real changes made)
+
+{com}. replace lga=1 if sex=="M" & combgest==41 & dbwt>4245
+{txt}(184,417 real changes made)
+
+{com}. replace lga=1 if sex=="M" & combgest==42 & dbwt>4407
+{txt}(26,954 real changes made)
+
+{com}. replace lga=1 if sex=="M" & combgest==43 & dbwt>4407
+{txt}(11,377 real changes made)
+
+{com}. replace lga=1 if sex=="M" & combgest==44 & dbwt>4407
+{txt}(5,915 real changes made)
+
+{com}. 
+. *Girls
+. replace lga=1 if sex=="F" & combgest==20 & dbwt>561
+{txt}(0 real changes made)
+
+{com}. replace lga=1 if sex=="F" & combgest==21 & dbwt>561
+{txt}(0 real changes made)
+
+{com}. replace lga=1 if sex=="F" & combgest==22 & dbwt>561
+{txt}(0 real changes made)
+
+{com}. replace lga=1 if sex=="F" & combgest==23 & dbwt>668
+{txt}(0 real changes made)
+
+{com}. replace lga=1 if sex=="F" & combgest==24 & dbwt>781
+{txt}(0 real changes made)
+
+{com}. replace lga=1 if sex=="F" & combgest==25 & dbwt>911
+{txt}(0 real changes made)
+
+{com}. replace lga=1 if sex=="F" & combgest==26 & dbwt>1046
+{txt}(0 real changes made)
+
+{com}. replace lga=1 if sex=="F" & combgest==27 & dbwt>1196
+{txt}(0 real changes made)
+
+{com}. replace lga=1 if sex=="F" & combgest==28 & dbwt>1360
+{txt}(0 real changes made)
+
+{com}. replace lga=1 if sex=="F" & combgest==29 & dbwt>1547
+{txt}(0 real changes made)
+
+{com}. replace lga=1 if sex=="F" & combgest==30 & dbwt>1752
+{txt}(34,475 real changes made)
+
+{com}. replace lga=1 if sex=="F" & combgest==31 & dbwt>1970
+{txt}(43,117 real changes made)
+
+{com}. replace lga=1 if sex=="F" & combgest==32 & dbwt>2216
+{txt}(57,918 real changes made)
+
+{com}. replace lga=1 if sex=="F" & combgest==33 & dbwt>2471
+{txt}(81,335 real changes made)
+
+{com}. replace lga=1 if sex=="F" & combgest==34 & dbwt>2741
+{txt}(129,272 real changes made)
+
+{com}. replace lga=1 if sex=="F" & combgest==35 & dbwt>3019
+{txt}(167,794 real changes made)
+
+{com}. replace lga=1 if sex=="F" & combgest==36 & dbwt>3300
+{txt}(198,273 real changes made)
+
+{com}. replace lga=1 if sex=="F" & combgest==37 & dbwt>3523
+{txt}(314,713 real changes made)
+
+{com}. replace lga=1 if sex=="F" & combgest==38 & dbwt>3711
+{txt}(563,085 real changes made)
+
+{com}. replace lga=1 if sex=="F" & combgest==39 & dbwt>3869
+{txt}(808,204 real changes made)
+
+{com}. replace lga=1 if sex=="F" & combgest==40 & dbwt>3968
+{txt}(528,988 real changes made)
+
+{com}. replace lga=1 if sex=="F" & combgest==41 & dbwt>4083
+{txt}(181,376 real changes made)
+
+{com}. replace lga=1 if sex=="F" & combgest==42 & dbwt>4213
+{txt}(31,734 real changes made)
+
+{com}. replace lga=1 if sex=="F" & combgest==43 & dbwt>4213
+{txt}(13,632 real changes made)
+
+{com}. replace lga=1 if sex=="F" & combgest==44 & dbwt>4213
+{txt}(7,208 real changes made)
+
+{com}. label variable lga "Large for gestational age revised using OE"
+{txt}
+{com}. label define lga 0 "normal" 1 "LGA"
+{txt}
+{com}. label values lga lga
+{txt}
+{com}. tab lga, missing
+
+  {txt}Large for {c |}
+gestational {c |}
+age revised {c |}
+   using OE {c |}      Freq.     Percent        Cum.
+{hline 12}{c +}{hline 35}
+     normal {c |}{res} 48,542,614       88.10       88.10
+{txt}        LGA {c |}{res}  6,557,175       11.90      100.00
+{txt}{hline 12}{c +}{hline 35}
+      Total {c |}{res} 55,099,789      100.00
+{txt}
+{com}. 
+. *exclude births if inconsistency between gestational age and birth weight - Alexander ref
+. drop if combgest==30 & (dbwt<375|dbwt>3000)
+{txt}(31,741 observations deleted)
+
+{com}. drop if combgest==31 & (dbwt<375|dbwt>3250)
+{txt}(27,530 observations deleted)
+
+{com}. drop if combgest==32 & (dbwt<500|dbwt>3500)
+{txt}(22,954 observations deleted)
+
+{com}. drop if combgest==33 & (dbwt<500|dbwt>3750)
+{txt}(16,950 observations deleted)
+
+{com}. drop if combgest==34 & (dbwt<750|dbwt>4000)
+{txt}(14,798 observations deleted)
+
+{com}. drop if combgest==35 & (dbwt<750|dbwt>4500)
+{txt}(5,384 observations deleted)
+
+{com}. drop if combgest==36 & (dbwt<750|dbwt>5000)
+{txt}(3,154 observations deleted)
+
+{com}. drop if combgest==37 & (dbwt<1000|dbwt>5500)
+{txt}(3,976 observations deleted)
+
+{com}. drop if combgest==38 & (dbwt<1000|dbwt>6000)
+{txt}(5,366 observations deleted)
+
+{com}. drop if combgest==39 & (dbwt<1000|dbwt>6000)
+{txt}(8,634 observations deleted)
+
+{com}. drop if combgest==40 & (dbwt<1000|dbwt>6000)
+{txt}(6,239 observations deleted)
+
+{com}. drop if combgest==41 & (dbwt<1000|dbwt>6000)
+{txt}(2,680 observations deleted)
+
+{com}. drop if combgest==42 & (dbwt<1000|dbwt>6000)
+{txt}(895 observations deleted)
+
+{com}. drop if combgest==43 & (dbwt<1000|dbwt>6000)
+{txt}(442 observations deleted)
+
+{com}. drop if combgest==44 & (dbwt<1000|dbwt>6000)
+{txt}(223 observations deleted)
+
+{com}. 
+{txt}end of do-file
+
+{com}. 
+. lab def yn 1 Yes 0 No 
+{txt}
+{com}. 
+. // race/ethnicity
+. tab mbrace, nolab
+
+    {txt}Bridged {c |}
+Race Mother {c |}      Freq.     Percent        Cum.
+{hline 12}{c +}{hline 35}
+          1 {c |}{res} 42,018,499       76.47       76.47
+{txt}          2 {c |}{res}  8,667,285       15.77       92.24
+{txt}          3 {c |}{res}    618,476        1.13       93.37
+{txt}          4 {c |}{res}  3,644,563        6.63      100.00
+{txt}{hline 12}{c +}{hline 35}
+      Total {c |}{res} 54,948,823      100.00
+{txt}
+{com}. tab mbrace
+
+           {txt}Bridged Race Mother {c |}      Freq.     Percent        Cum.
+{hline 31}{c +}{hline 35}
+                         White {c |}{res} 42,018,499       76.47       76.47
+{txt}                         Black {c |}{res}  8,667,285       15.77       92.24
+{txt}American Indian/Alaskan Native {c |}{res}    618,476        1.13       93.37
+{txt}        Asian/Pacific Islander {c |}{res}  3,644,563        6.63      100.00
+{txt}{hline 31}{c +}{hline 35}
+                         Total {c |}{res} 54,948,823      100.00
+{txt}
+{com}. 
+. tab mhispr, nolab
+
+   {txt}Mother's {c |}
+   Hispanic {c |}
+     Origin {c |}
+     Recode {c |}      Freq.     Percent        Cum.
+{hline 12}{c +}{hline 35}
+          0 {c |}{res} 41,601,383       75.71       75.71
+{txt}          1 {c |}{res}  8,106,135       14.75       90.46
+{txt}          2 {c |}{res}    927,113        1.69       92.15
+{txt}          3 {c |}{res}    257,854        0.47       92.62
+{txt}          4 {c |}{res}  1,994,059        3.63       96.25
+{txt}          5 {c |}{res}  1,653,099        3.01       99.26
+{txt}          9 {c |}{res}    409,180        0.74      100.00
+{txt}{hline 12}{c +}{hline 35}
+      Total {c |}{res} 54,948,823      100.00
+{txt}
+{com}. tab mhispr
+
+    {txt}Mother's Hispanic Origin {c |}
+                      Recode {c |}      Freq.     Percent        Cum.
+{hline 29}{c +}{hline 35}
+                Non-Hispanic {c |}{res} 41,601,383       75.71       75.71
+{txt}                     Mexican {c |}{res}  8,106,135       14.75       90.46
+{txt}                Puerto Rican {c |}{res}    927,113        1.69       92.15
+{txt}                       Cuban {c |}{res}    257,854        0.47       92.62
+{txt}   Central or South American {c |}{res}  1,994,059        3.63       96.25
+{txt}  Other and Unknown Hispanic {c |}{res}  1,653,099        3.01       99.26
+{txt}                           9 {c |}{res}    409,180        0.74      100.00
+{txt}{hline 29}{c +}{hline 35}
+                       Total {c |}{res} 54,948,823      100.00
+{txt}
+{com}. tab mhispr mbrace
+
+    {txt}Mother's Hispanic {c |}             Bridged Race Mother
+        Origin Recode {c |}     White      Black  American   Asian/Pac {c |}     Total
+{hline 22}{c +}{hline 44}{c +}{hline 10}
+         Non-Hispanic {c |}{res}29,688,150  7,954,243    524,556  3,434,434 {txt}{c |}{res}41,601,383 
+{txt}              Mexican {c |}{res} 7,823,669    174,894     51,853     55,719 {txt}{c |}{res} 8,106,135 
+{txt}         Puerto Rican {c |}{res}   757,574    141,521      5,984     22,034 {txt}{c |}{res}   927,113 
+{txt}                Cuban {c |}{res}   239,706     15,688        712      1,748 {txt}{c |}{res}   257,854 
+{txt}Central or South Amer {c |}{res} 1,766,215    185,556      9,655     32,633 {txt}{c |}{res} 1,994,059 
+{txt}Other and Unknown His {c |}{res} 1,462,193    129,181     18,396     43,329 {txt}{c |}{res} 1,653,099 
+{txt}                    9 {c |}{res}   280,992     66,202      7,320     54,666 {txt}{c |}{res}   409,180 
+{txt}{hline 22}{c +}{hline 44}{c +}{hline 10}
+                Total {c |}{res}42,018,499  8,667,285    618,476  3,644,563 {txt}{c |}{res}54,948,823 
+{txt}
+{com}. g       raceeth = 1 if mbrace==1 & (mhispr==0 | mhispr==9) & !mi(mbrace)
+{txt}(24,979,681 missing values generated)
+
+{com}. replace raceeth = 2 if mbrace==2 & (mhispr==0 | mhispr==9) & !mi(mbrace)
+{txt}(8,020,445 real changes made)
+
+{com}. replace raceeth = 3 if mhispr > 0 & mhispr < 9 & !mi(mhispr)
+{txt}(12,938,260 real changes made)
+
+{com}. replace raceeth = 4 if mbrace==4 & (mhispr==0 | mhispr==9) & !mi(mbrace)
+{txt}(3,489,100 real changes made)
+
+{com}. replace raceeth = 5 if mbrace==3 & (mhispr==0 | mhispr==9) & !mi(mbrace)
+{txt}(531,876 real changes made)
+
+{com}. lab def re 1 "White, nonHispanic" 2 "Black, nonHispanic" 3 "Hispanic" 4 "Asian, nonHispanic" 5 "Other, nonHispanic"
+{txt}
+{com}. lab val raceeth re
+{txt}
+{com}. lab var raceeth "Mother's race/ethnicity"
+{txt}
+{com}. tab raceeth, mi
+
+          {txt}Mother's {c |}
+    race/ethnicity {c |}      Freq.     Percent        Cum.
+{hline 19}{c +}{hline 35}
+White, nonHispanic {c |}{res} 29,969,142       54.54       54.54
+{txt}Black, nonHispanic {c |}{res}  8,020,445       14.60       69.14
+{txt}          Hispanic {c |}{res} 12,938,260       23.55       92.68
+{txt}Asian, nonHispanic {c |}{res}  3,489,100        6.35       99.03
+{txt}Other, nonHispanic {c |}{res}    531,876        0.97      100.00
+{txt}{hline 19}{c +}{hline 35}
+             Total {c |}{res} 54,948,823      100.00
+{txt}
+{com}. 
+. // education
+. tab meduc, nolab
+
+   {txt}Mother's {c |}
+  Education {c |}      Freq.     Percent        Cum.
+{hline 12}{c +}{hline 35}
+          1 {c |}{res}  1,817,575        4.28        4.28
+{txt}          2 {c |}{res}  5,380,626       12.67       16.95
+{txt}          3 {c |}{res} 10,852,000       25.55       42.50
+{txt}          4 {c |}{res}  8,752,911       20.61       63.10
+{txt}          5 {c |}{res}  3,286,464        7.74       70.84
+{txt}          6 {c |}{res}  7,960,859       18.74       89.58
+{txt}          7 {c |}{res}  3,444,609        8.11       97.69
+{txt}          8 {c |}{res}    979,248        2.31      100.00
+{txt}{hline 12}{c +}{hline 35}
+      Total {c |}{res} 42,474,292      100.00
+{txt}
+{com}. tab meduc
+
+                     {txt}Mother's Education {c |}      Freq.     Percent        Cum.
+{hline 40}{c +}{hline 35}
+                      8th grade or less {c |}{res}  1,817,575        4.28        4.28
+{txt} 9th through 12th grade with no diploma {c |}{res}  5,380,626       12.67       16.95
+{txt}  High school graduate or GED completed {c |}{res} 10,852,000       25.55       42.50
+{txt}  Some college credit, but not a degree {c |}{res}  8,752,911       20.61       63.10
+{txt}              Associate degree (AA, AS) {c |}{res}  3,286,464        7.74       70.84
+{txt}         Bachelor's degree (BA, AB, BS) {c |}{res}  7,960,859       18.74       89.58
+{txt}               Master's degree (MA, MS) {c |}{res}  3,444,609        8.11       97.69
+{txt}Doctorate (PhD, EdD) or Professional De {c |}{res}    979,248        2.31      100.00
+{txt}{hline 40}{c +}{hline 35}
+                                  Total {c |}{res} 42,474,292      100.00
+{txt}
+{com}. recode meduc (1/2 = 1 "0-11") (3 = 2 "12") (4/5 = 3 "13-15") (6/8 = 4 ">= 16"), gen(educ)
+{txt}(40656717 differences between {bf:meduc} and {bf:educ})
+
+{com}. tab educ, mi
+
+  {txt}RECODE of {c |}
+      meduc {c |}
+  (Mother's {c |}
+ Education) {c |}      Freq.     Percent        Cum.
+{hline 12}{c +}{hline 35}
+       0-11 {c |}{res}  7,198,201       13.10       13.10
+{txt}         12 {c |}{res} 10,852,000       19.75       32.85
+{txt}      13-15 {c |}{res} 12,039,375       21.91       54.76
+{txt}      >= 16 {c |}{res} 12,384,716       22.54       77.30
+{txt}          . {c |}{res} 11,957,514       21.76       99.06
+{txt}         .b {c |}{res}    517,017        0.94      100.00
+{txt}{hline 12}{c +}{hline 35}
+      Total {c |}{res} 54,948,823      100.00
+{txt}
+{com}. 
+. tab meduc_rec, nolab
+
+   {txt}Mother's {c |}
+  Education {c |}
+        (U) {c |}      Freq.     Percent        Cum.
+{hline 12}{c +}{hline 35}
+          1 {c |}{res}    420,147        5.11        5.11
+{txt}          2 {c |}{res}  1,119,670       13.61       18.72
+{txt}          3 {c |}{res}  2,439,541       29.66       48.39
+{txt}          4 {c |}{res}  1,785,661       21.71       70.10
+{txt}          5 {c |}{res}  2,362,383       28.73       98.82
+{txt}          6 {c |}{res}     96,682        1.18      100.00
+{txt}{hline 12}{c +}{hline 35}
+      Total {c |}{res}  8,224,084      100.00
+{txt}
+{com}. tab meduc_rec
+
+   {txt}Mother's {c |}
+  Education {c |}
+        (U) {c |}      Freq.     Percent        Cum.
+{hline 12}{c +}{hline 35}
+  0-8 years {c |}{res}    420,147        5.11        5.11
+{txt} 9-11 years {c |}{res}  1,119,670       13.61       18.72
+{txt}   12 years {c |}{res}  2,439,541       29.66       48.39
+{txt}13-15 years {c |}{res}  1,785,661       21.71       70.10
+{txt}   16+ more {c |}{res}  2,362,383       28.73       98.82
+{txt} not stated {c |}{res}     96,682        1.18      100.00
+{txt}{hline 12}{c +}{hline 35}
+      Total {c |}{res}  8,224,084      100.00
+{txt}
+{com}. recode meduc_rec (1/2 = 1 "0-11") (3 = 2 "12") (4 = 3 "13-15") (5 = 4 ">= 16") (6=.), gen(meducu)
+{txt}(7803937 differences between {bf:meduc_rec} and {bf:meducu})
+
+{com}. tab meducu, nolab mi
+
+  {txt}RECODE of {c |}
+  meduc_rec {c |}
+  (Mother's {c |}
+  Education {c |}
+       (U)) {c |}      Freq.     Percent        Cum.
+{hline 12}{c +}{hline 35}
+          1 {c |}{res}  1,539,817        2.80        2.80
+{txt}          2 {c |}{res}  2,439,541        4.44        7.24
+{txt}          3 {c |}{res}  1,785,661        3.25       10.49
+{txt}          4 {c |}{res}  2,362,383        4.30       14.79
+{txt}          . {c |}{res} 46,821,421       85.21      100.00
+{txt}{hline 12}{c +}{hline 35}
+      Total {c |}{res} 54,948,823      100.00
+{txt}
+{com}. tab meducu
+
+  {txt}RECODE of {c |}
+  meduc_rec {c |}
+  (Mother's {c |}
+  Education {c |}
+       (U)) {c |}      Freq.     Percent        Cum.
+{hline 12}{c +}{hline 35}
+       0-11 {c |}{res}  1,539,817       18.95       18.95
+{txt}         12 {c |}{res}  2,439,541       30.02       48.96
+{txt}      13-15 {c |}{res}  1,785,661       21.97       70.93
+{txt}      >= 16 {c |}{res}  2,362,383       29.07      100.00
+{txt}{hline 12}{c +}{hline 35}
+      Total {c |}{res}  8,127,402      100.00
+{txt}
+{com}. replace educ = meducu if mi(meduc)
+{txt}(8,644,419 real changes made, 517,017 to missing)
+
+{com}. tab educ, mi
+
+  {txt}RECODE of {c |}
+      meduc {c |}
+  (Mother's {c |}
+ Education) {c |}      Freq.     Percent        Cum.
+{hline 12}{c +}{hline 35}
+       0-11 {c |}{res}  8,738,018       15.90       15.90
+{txt}         12 {c |}{res} 13,291,541       24.19       40.09
+{txt}      13-15 {c |}{res} 13,825,036       25.16       65.25
+{txt}      >= 16 {c |}{res} 14,747,099       26.84       92.09
+{txt}          . {c |}{res}  4,347,129        7.91      100.00
+{txt}{hline 12}{c +}{hline 35}
+      Total {c |}{res} 54,948,823      100.00
+{txt}
+{com}. 
+. // age recode
+. recode mager (16/19 = 1 "<= 19") (20/24 = 2 "20-24") (25/29 = 3 "25-29") ///
+> (30/34 = 4 "30-34") (35/49 = 5 ">= 35"), gen(age)
+{txt}(54948823 differences between {bf:mager} and {bf:age})
+
+{com}. tab age, m
+
+  {txt}RECODE of {c |}
+      mager {c |}
+  (Mother's {c |}
+Age recode) {c |}      Freq.     Percent        Cum.
+{hline 12}{c +}{hline 35}
+      <= 19 {c |}{res}  4,177,242        7.60        7.60
+{txt}      20-24 {c |}{res} 12,638,535       23.00       30.60
+{txt}      25-29 {c |}{res} 15,703,670       28.58       59.18
+{txt}      30-34 {c |}{res} 13,955,832       25.40       84.58
+{txt}      >= 35 {c |}{res}  8,473,544       15.42      100.00
+{txt}{hline 12}{c +}{hline 35}
+      Total {c |}{res} 54,948,823      100.00
+{txt}
+{com}. 
+. // nativity: correct logic
+. tab mbstate_rec, nolab mi
+
+   {txt}Mother's {c |}
+   Nativity {c |}      Freq.     Percent        Cum.
+{hline 12}{c +}{hline 35}
+          1 {c |}{res} 41,849,052       76.16       76.16
+{txt}          2 {c |}{res} 12,880,655       23.44       99.60
+{txt}          . {c |}{res}     60,393        0.11       99.71
+{txt}         .b {c |}{res}    158,723        0.29      100.00
+{txt}{hline 12}{c +}{hline 35}
+      Total {c |}{res} 54,948,823      100.00
+{txt}
+{com}. tab mbstate_rec, mi
+
+                      {txt}Mother's Nativity {c |}      Freq.     Percent        Cum.
+{hline 40}{c +}{hline 35}
+        Born in the U.S. (50 US States) {c |}{res} 41,849,052       76.16       76.16
+{txt}Born outside the U.S. (includes possess {c |}{res} 12,880,655       23.44       99.60
+{txt}                                      . {c |}{res}     60,393        0.11       99.71
+{txt}                                     .b {c |}{res}    158,723        0.29      100.00
+{txt}{hline 40}{c +}{hline 35}
+                                  Total {c |}{res} 54,948,823      100.00
+{txt}
+{com}. g usborn = mbstate_rec == 1 if !mi(mbstate_rec)
+{txt}(219,116 missing values generated)
+
+{com}. lab val usborn yn
+{txt}
+{com}. lab var usborn "Native born"
+{txt}
+{com}. tab usborn, mi
+
+{txt}Native born {c |}      Freq.     Percent        Cum.
+{hline 12}{c +}{hline 35}
+         No {c |}{res} 12,880,655       23.44       23.44
+{txt}        Yes {c |}{res} 41,849,052       76.16       99.60
+{txt}          . {c |}{res}    219,116        0.40      100.00
+{txt}{hline 12}{c +}{hline 35}
+      Total {c |}{res} 54,948,823      100.00
+{txt}
+{com}. 
+. // marital status
+. tab dmar,nolab
+
+   {txt}Mother's {c |}
+    Marital {c |}
+     Status {c |}      Freq.     Percent        Cum.
+{hline 12}{c +}{hline 35}
+          1 {c |}{res} 32,701,211       60.52       60.52
+{txt}          2 {c |}{res} 21,333,266       39.48      100.00
+{txt}{hline 12}{c +}{hline 35}
+      Total {c |}{res} 54,034,477      100.00
+{txt}
+{com}. tab dmar, mi
+
+     {txt}Mother's Marital {c |}
+               Status {c |}      Freq.     Percent        Cum.
+{hline 22}{c +}{hline 35}
+                  Yes {c |}{res} 32,701,211       59.51       59.51
+{txt}                   No {c |}{res} 21,333,266       38.82       98.34
+{txt}                    . {c |}{res}    914,346        1.66      100.00
+{txt}{hline 22}{c +}{hline 35}
+                Total {c |}{res} 54,948,823      100.00
+{txt}
+{com}. 
+. // parity
+. tab tbo_rec
+
+     {txt}Total Birth Order {c |}
+                Recode {c |}      Freq.     Percent        Cum.
+{hline 23}{c +}{hline 35}
+                     1 {c |}{res} 17,673,102       32.45       32.45
+{txt}                     2 {c |}{res} 15,571,608       28.59       61.04
+{txt}                     3 {c |}{res} 10,087,157       18.52       79.56
+{txt}                     4 {c |}{res}  5,495,311       10.09       89.65
+{txt}                     5 {c |}{res}  2,778,237        5.10       94.75
+{txt}                     6 {c |}{res}  1,360,929        2.50       97.25
+{txt}                     7 {c |}{res}    689,896        1.27       98.52
+{txt}8 or more total births {c |}{res}    807,187        1.48      100.00
+{txt}{hline 23}{c +}{hline 35}
+                 Total {c |}{res} 54,463,427      100.00
+{txt}
+{com}. recode tbo_rec (1 = 1 "1") (2 = 2 "2") (3/8 = 3 "3+") (.b = .), gen(parity)
+{txt}(11616956 differences between {bf:tbo_rec} and {bf:parity})
+
+{com}. tab parity, mi
+
+  {txt}RECODE of {c |}
+    tbo_rec {c |}
+     (Total {c |}
+Birth Order {c |}
+    Recode) {c |}      Freq.     Percent        Cum.
+{hline 12}{c +}{hline 35}
+          1 {c |}{res} 17,673,102       32.16       32.16
+{txt}          2 {c |}{res} 15,571,608       28.34       60.50
+{txt}         3+ {c |}{res} 21,218,717       38.62       99.12
+{txt}          . {c |}{res}    485,396        0.88      100.00
+{txt}{hline 12}{c +}{hline 35}
+      Total {c |}{res} 54,948,823      100.00
+{txt}
+{com}. 
+. // plurality
+. tab dplural
+
+    {txt}Plurality recode {c |}      Freq.     Percent        Cum.
+{hline 21}{c +}{hline 35}
+              Single {c |}{res} 53,175,729       96.77       96.77
+{txt}                Twin {c |}{res}  1,718,051        3.13       99.90
+{txt}             Triplet {c |}{res}     52,673        0.10      100.00
+{txt}          Quadruplet {c |}{res}      2,172        0.00      100.00
+{txt}Quintuplet or higher {c |}{res}        198        0.00      100.00
+{txt}{hline 21}{c +}{hline 35}
+               Total {c |}{res} 54,948,823      100.00
+{txt}
+{com}. recode dplural (1 = 1 "Singleton") (2/5 = 2 "Multiple"), gen(plurality)
+{txt}(55043 differences between {bf:dplural} and {bf:plurality})
+
+{com}. tab plurality, mi
+
+  {txt}RECODE of {c |}
+    dplural {c |}
+ (Plurality {c |}
+    recode) {c |}      Freq.     Percent        Cum.
+{hline 12}{c +}{hline 35}
+  Singleton {c |}{res} 53,175,729       96.77       96.77
+{txt}   Multiple {c |}{res}  1,773,094        3.23      100.00
+{txt}{hline 12}{c +}{hline 35}
+      Total {c |}{res} 54,948,823      100.00
+{txt}
+{com}. 
+. // prenatal care - merge unrev, rev measures
+. tab precare5,mi
+
+  {txt}Month Prenatal Care {c |}
+         Began Recode {c |}      Freq.     Percent        Cum.
+{hline 22}{c +}{hline 35}
+               1st-3d {c |}{res} 30,681,811       55.84       55.84
+{txt}              4th-6th {c |}{res}  7,690,196       14.00       69.83
+{txt}                 7th+ {c |}{res}  1,890,364        3.44       73.27
+{txt}     No prenatal care {c |}{res}    639,454        1.16       74.44
+{txt}Unknown or not stated {c |}{res}  1,561,103        2.84       77.28
+{txt}                    . {c |}{res} 12,485,895       22.72      100.00
+{txt}{hline 22}{c +}{hline 35}
+                Total {c |}{res} 54,948,823      100.00
+{txt}
+{com}. tab mbpc_rev5,mi
+
+  {txt}Month Prenatal Care {c |}
+            Began (U) {c |}      Freq.     Percent        Cum.
+{hline 22}{c +}{hline 35}
+               1st-3d {c |}{res}  7,188,818       13.08       13.08
+{txt}              4th-6th {c |}{res}  1,114,272        2.03       15.11
+{txt}                 7th+ {c |}{res}    219,158        0.40       15.51
+{txt}     No prenatal care {c |}{res}     78,937        0.14       15.65
+{txt}Unknown or not stated {c |}{res}    151,280        0.28       15.93
+{txt}                    . {c |}{res} 46,196,358       84.07      100.00
+{txt}{hline 22}{c +}{hline 35}
+                Total {c |}{res} 54,948,823      100.00
+{txt}
+{com}. g precareUR = cond(mi(precare5),mbpc_rev5,precare5)
+{txt}(3,733,430 missing values generated)
+
+{com}. recode precareUR (4 = 1 "None") (1 = 2 "First") (2 = 3 "Second") (3 = 4 "Third") ///
+> (5 = 5 "Unknown"), gen(prenatal)
+{txt}(49503010 differences between {bf:precareUR} and {bf:prenatal})
+
+{com}. tab prenatal, mi
+
+  {txt}RECODE of {c |}
+  precareUR {c |}      Freq.     Percent        Cum.
+{hline 12}{c +}{hline 35}
+       None {c |}{res}    718,391        1.31        1.31
+{txt}      First {c |}{res} 37,870,629       68.92       70.23
+{txt}     Second {c |}{res}  8,804,468       16.02       86.25
+{txt}      Third {c |}{res}  2,109,522        3.84       90.09
+{txt}    Unknown {c |}{res}  1,712,383        3.12       93.21
+{txt}          . {c |}{res}  3,733,430        6.79      100.00
+{txt}{hline 12}{c +}{hline 35}
+      Total {c |}{res} 54,948,823      100.00
+{txt}
+{com}. 
+. // smoking in 1st, 2d, 3d trimesters
+. su cig_1 cig_2 cig_3
+
+{txt}    Variable {c |}        Obs        Mean    Std. dev.       Min        Max
+{hline 13}{c +}{hline 57}
+{space 7}cig_1 {c |}{res} 39,530,118     .899739    3.870878          0         98
+{txt}{space 7}cig_2 {c |}{res} 39,526,509    .6787338    3.189546          0         98
+{txt}{space 7}cig_3 {c |}{res} 39,526,837    .6065177    2.998235          0         98
+{txt}
+{com}. g cigfirst = cig_1 > 0 if !mi(cig_1)
+{txt}(15,418,705 missing values generated)
+
+{com}. lab val cigfirst yn
+{txt}
+{com}. lab var cigfirst "Smoked in 1st trimester"
+{txt}
+{com}. tab cigfirst, mi
+
+  {txt}Smoked in {c |}
+        1st {c |}
+  trimester {c |}      Freq.     Percent        Cum.
+{hline 12}{c +}{hline 35}
+         No {c |}{res} 36,280,300       66.03       66.03
+{txt}        Yes {c |}{res}  3,249,818        5.91       71.94
+{txt}          . {c |}{res} 15,418,705       28.06      100.00
+{txt}{hline 12}{c +}{hline 35}
+      Total {c |}{res} 54,948,823      100.00
+{txt}
+{com}. 
+. g cigsecond = cig_2 > 0 if !mi(cig_2)
+{txt}(15,422,314 missing values generated)
+
+{com}. lab val cigsecond yn
+{txt}
+{com}. lab var cigsecond "Smoked in 2d trimester"
+{txt}
+{com}. tab cigsecond, mi
+
+  {txt}Smoked in {c |}
+         2d {c |}
+  trimester {c |}      Freq.     Percent        Cum.
+{hline 12}{c +}{hline 35}
+         No {c |}{res} 36,738,132       66.86       66.86
+{txt}        Yes {c |}{res}  2,788,377        5.07       71.93
+{txt}          . {c |}{res} 15,422,314       28.07      100.00
+{txt}{hline 12}{c +}{hline 35}
+      Total {c |}{res} 54,948,823      100.00
+{txt}
+{com}. 
+. g cigthird = cig_3 > 0 if !mi(cig_3)
+{txt}(15,421,986 missing values generated)
+
+{com}. lab val cigthird yn
+{txt}
+{com}. lab var cigthird "Smoked in 3d trimester"
+{txt}
+{com}. tab cigthird, mi
+
+  {txt}Smoked in {c |}
+         3d {c |}
+  trimester {c |}      Freq.     Percent        Cum.
+{hline 12}{c +}{hline 35}
+         No {c |}{res} 36,860,690       67.08       67.08
+{txt}        Yes {c |}{res}  2,666,147        4.85       71.93
+{txt}          . {c |}{res} 15,421,986       28.07      100.00
+{txt}{hline 12}{c +}{hline 35}
+      Total {c |}{res} 54,948,823      100.00
+{txt}
+{com}. 
+. g cigpreg = cigfirst | cigsecond | cigthird if !mi(cigfirst) & !mi(cigsecond) & !mi(cigthird)
+{txt}(15,425,882 missing values generated)
+
+{com}. lab val cigpreg yn
+{txt}
+{com}. lab var cigpreg "Smoked during pregnancy"
+{txt}
+{com}. tab cigpreg, mi
+
+     {txt}Smoked {c |}
+     during {c |}
+  pregnancy {c |}      Freq.     Percent        Cum.
+{hline 12}{c +}{hline 35}
+         No {c |}{res} 36,194,325       65.87       65.87
+{txt}        Yes {c |}{res}  3,328,616        6.06       71.93
+{txt}          . {c |}{res} 15,425,882       28.07      100.00
+{txt}{hline 12}{c +}{hline 35}
+      Total {c |}{res} 54,948,823      100.00
+{txt}
+{com}. 
+. recode cigs (99=.)
+{txt}(0 changes made to {bf:cigs})
+
+{com}. lab val cigs yn
+{txt}
+{com}. lab var cigs "Smoked during pregnancy [unrev]"
+{txt}
+{com}. tab cigs, mi
+
+     {txt}Smoked {c |}
+     during {c |}
+  pregnancy {c |}
+    [unrev] {c |}      Freq.     Percent        Cum.
+{hline 12}{c +}{hline 35}
+         No {c |}{res}  6,926,488       12.61       12.61
+{txt}        Yes {c |}{res}     33,671        0.06       12.67
+{txt}          2 {c |}{res}     48,266        0.09       12.75
+{txt}          3 {c |}{res}     53,152        0.10       12.85
+{txt}          4 {c |}{res}     39,682        0.07       12.92
+{txt}          5 {c |}{res}     95,584        0.17       13.10
+{txt}          6 {c |}{res}     30,440        0.06       13.15
+{txt}          7 {c |}{res}     21,360        0.04       13.19
+{txt}          8 {c |}{res}     16,508        0.03       13.22
+{txt}          9 {c |}{res}      3,397        0.01       13.23
+{txt}         10 {c |}{res}    229,019        0.42       13.64
+{txt}         11 {c |}{res}      2,208        0.00       13.65
+{txt}         12 {c |}{res}      8,936        0.02       13.66
+{txt}         13 {c |}{res}      2,406        0.00       13.67
+{txt}         14 {c |}{res}        879        0.00       13.67
+{txt}         15 {c |}{res}     22,158        0.04       13.71
+{txt}         16 {c |}{res}        585        0.00       13.71
+{txt}         17 {c |}{res}        819        0.00       13.71
+{txt}         18 {c |}{res}        838        0.00       13.72
+{txt}         19 {c |}{res}        192        0.00       13.72
+{txt}         20 {c |}{res}     88,059        0.16       13.88
+{txt}         21 {c |}{res}        795        0.00       13.88
+{txt}         22 {c |}{res}        416        0.00       13.88
+{txt}         23 {c |}{res}        217        0.00       13.88
+{txt}         24 {c |}{res}        487        0.00       13.88
+{txt}         25 {c |}{res}      1,223        0.00       13.88
+{txt}         26 {c |}{res}         28        0.00       13.88
+{txt}         27 {c |}{res}        104        0.00       13.88
+{txt}         28 {c |}{res}         31        0.00       13.88
+{txt}         29 {c |}{res}         19        0.00       13.88
+{txt}         30 {c |}{res}      4,669        0.01       13.89
+{txt}         31 {c |}{res}         24        0.00       13.89
+{txt}         32 {c |}{res}         25        0.00       13.89
+{txt}         33 {c |}{res}         36        0.00       13.89
+{txt}         34 {c |}{res}         20        0.00       13.89
+{txt}         35 {c |}{res}        177        0.00       13.89
+{txt}         36 {c |}{res}         16        0.00       13.89
+{txt}         37 {c |}{res}         15        0.00       13.89
+{txt}         38 {c |}{res}          5        0.00       13.89
+{txt}         39 {c |}{res}          2        0.00       13.89
+{txt}         40 {c |}{res}      2,125        0.00       13.89
+{txt}         41 {c |}{res}          9        0.00       13.89
+{txt}         42 {c |}{res}         15        0.00       13.89
+{txt}         43 {c |}{res}          5        0.00       13.89
+{txt}         44 {c |}{res}          9        0.00       13.89
+{txt}         45 {c |}{res}         37        0.00       13.90
+{txt}         46 {c |}{res}          5        0.00       13.90
+{txt}         47 {c |}{res}          5        0.00       13.90
+{txt}         48 {c |}{res}          8        0.00       13.90
+{txt}         49 {c |}{res}          2        0.00       13.90
+{txt}         50 {c |}{res}        122        0.00       13.90
+{txt}         51 {c |}{res}          8        0.00       13.90
+{txt}         52 {c |}{res}          5        0.00       13.90
+{txt}         53 {c |}{res}          6        0.00       13.90
+{txt}         54 {c |}{res}          1        0.00       13.90
+{txt}         55 {c |}{res}          4        0.00       13.90
+{txt}         56 {c |}{res}          8        0.00       13.90
+{txt}         57 {c |}{res}          2        0.00       13.90
+{txt}         58 {c |}{res}          1        0.00       13.90
+{txt}         60 {c |}{res}        154        0.00       13.90
+{txt}         63 {c |}{res}          2        0.00       13.90
+{txt}         64 {c |}{res}          1        0.00       13.90
+{txt}         65 {c |}{res}          3        0.00       13.90
+{txt}         66 {c |}{res}          2        0.00       13.90
+{txt}         67 {c |}{res}          1        0.00       13.90
+{txt}         69 {c |}{res}          2        0.00       13.90
+{txt}         70 {c |}{res}          8        0.00       13.90
+{txt}         71 {c |}{res}          1        0.00       13.90
+{txt}         72 {c |}{res}          4        0.00       13.90
+{txt}         75 {c |}{res}          3        0.00       13.90
+{txt}         77 {c |}{res}         13        0.00       13.90
+{txt}         79 {c |}{res}          1        0.00       13.90
+{txt}         80 {c |}{res}         22        0.00       13.90
+{txt}         82 {c |}{res}          1        0.00       13.90
+{txt}         87 {c |}{res}          1        0.00       13.90
+{txt}         90 {c |}{res}          5        0.00       13.90
+{txt}         95 {c |}{res}          1        0.00       13.90
+{txt}         98 {c |}{res}          8        0.00       13.90
+{txt}          . {c |}{res} 47,313,257       86.10      100.00
+{txt}{hline 12}{c +}{hline 35}
+      Total {c |}{res} 54,948,823      100.00
+{txt}
+{com}. 
+. tab mbpc_rev5, nolab
+
+      {txt}Month {c |}
+   Prenatal {c |}
+ Care Began {c |}
+        (U) {c |}      Freq.     Percent        Cum.
+{hline 12}{c +}{hline 35}
+          1 {c |}{res}  7,188,818       82.13       82.13
+{txt}          2 {c |}{res}  1,114,272       12.73       94.87
+{txt}          3 {c |}{res}    219,158        2.50       97.37
+{txt}          4 {c |}{res}     78,937        0.90       98.27
+{txt}          5 {c |}{res}    151,280        1.73      100.00
+{txt}{hline 12}{c +}{hline 35}
+      Total {c |}{res}  8,752,465      100.00
+{txt}
+{com}. tab mbpc_rev5, mi
+
+  {txt}Month Prenatal Care {c |}
+            Began (U) {c |}      Freq.     Percent        Cum.
+{hline 22}{c +}{hline 35}
+               1st-3d {c |}{res}  7,188,818       13.08       13.08
+{txt}              4th-6th {c |}{res}  1,114,272        2.03       15.11
+{txt}                 7th+ {c |}{res}    219,158        0.40       15.51
+{txt}     No prenatal care {c |}{res}     78,937        0.14       15.65
+{txt}Unknown or not stated {c |}{res}    151,280        0.28       15.93
+{txt}                    . {c |}{res} 46,196,358       84.07      100.00
+{txt}{hline 22}{c +}{hline 35}
+                Total {c |}{res} 54,948,823      100.00
+{txt}
+{com}. recode mbpc_rev5 (4 = 1) (1 = 2) (2 = 3) (3 = 4) (5 = 5), gen(mbpcu)
+{txt}(8601185 differences between {bf:mbpc_rev5} and {bf:mbpcu})
+
+{com}. tab mbpcu, nolab mi
+
+  {txt}RECODE of {c |}
+  mbpc_rev5 {c |}
+     (Month {c |}
+   Prenatal {c |}
+ Care Began {c |}
+       (U)) {c |}      Freq.     Percent        Cum.
+{hline 12}{c +}{hline 35}
+          1 {c |}{res}     78,937        0.14        0.14
+{txt}          2 {c |}{res}  7,188,818       13.08       13.23
+{txt}          3 {c |}{res}  1,114,272        2.03       15.25
+{txt}          4 {c |}{res}    219,158        0.40       15.65
+{txt}          5 {c |}{res}    151,280        0.28       15.93
+{txt}          . {c |}{res} 46,196,358       84.07      100.00
+{txt}{hline 12}{c +}{hline 35}
+      Total {c |}{res} 54,948,823      100.00
+{txt}
+{com}. tab mbpcu, mi
+
+  {txt}RECODE of {c |}
+  mbpc_rev5 {c |}
+     (Month {c |}
+   Prenatal {c |}
+ Care Began {c |}
+       (U)) {c |}      Freq.     Percent        Cum.
+{hline 12}{c +}{hline 35}
+          1 {c |}{res}     78,937        0.14        0.14
+{txt}          2 {c |}{res}  7,188,818       13.08       13.23
+{txt}          3 {c |}{res}  1,114,272        2.03       15.25
+{txt}          4 {c |}{res}    219,158        0.40       15.65
+{txt}          5 {c |}{res}    151,280        0.28       15.93
+{txt}          . {c |}{res} 46,196,358       84.07      100.00
+{txt}{hline 12}{c +}{hline 35}
+      Total {c |}{res} 54,948,823      100.00
+{txt}
+{com}. replace prenatal = mbpcu if mi(prenatal)
+{txt}(0 real changes made)
+
+{com}. tab prenatal, mi
+
+  {txt}RECODE of {c |}
+  precareUR {c |}      Freq.     Percent        Cum.
+{hline 12}{c +}{hline 35}
+       None {c |}{res}    718,391        1.31        1.31
+{txt}      First {c |}{res} 37,870,629       68.92       70.23
+{txt}     Second {c |}{res}  8,804,468       16.02       86.25
+{txt}      Third {c |}{res}  2,109,522        3.84       90.09
+{txt}    Unknown {c |}{res}  1,712,383        3.12       93.21
+{txt}          . {c |}{res}  3,733,430        6.79      100.00
+{txt}{hline 12}{c +}{hline 35}
+      Total {c |}{res} 54,948,823      100.00
+{txt}
+{com}. 
+. desc
+
+{txt}Contains data from {res}natal2005_2018C.dta
+{txt} Observations:{res}    54,948,823                  
+{txt}    Variables:{res}           152                  8 Aug 2021 10:30
+{txt}{hline}
+Variable      Storage   Display    Value
+    name         type    format    label      Variable label
+{hline}
+{p 0 48}{res}{bind:version        }{txt}{bind: str1    }{bind:{txt}%9s       }{space 1}{bind:         }{bind:  }{res}{res}Revision{p_end}
+{p 0 48}{bind:birthyear      }{txt}{bind: int     }{bind:{txt}%9.0g     }{space 1}{bind:         }{bind:  }{res}{res}Birth Year{p_end}
+{p 0 48}{bind:birthmonth     }{txt}{bind: byte    }{bind:{txt}%21.0g    }{space 1}{bind:months   }{bind:  }{res}{res}Birth Month{p_end}
+{p 0 48}{bind:birthday       }{txt}{bind: byte    }{bind:{txt}%9.0g     }{space 1}{bind:         }{bind:  }{res}{res}Birth Day{p_end}
+{p 0 48}{bind:weekday        }{txt}{bind: byte    }{bind:{txt}%9.0g     }{space 1}{bind:wkday    }{bind:  }{res}{res}Weekday{p_end}
+{p 0 48}{bind:ostate         }{txt}{bind: str2    }{bind:{txt}%9s       }{space 1}{bind:         }{bind:  }{res}{res}Occurrence State{p_end}
+{p 0 48}{bind:xostate        }{txt}{bind: str2    }{bind:{txt}%9s       }{space 1}{bind:         }{bind:  }{res}{res}Expanded Occurrence State{p_end}
+{p 0 48}{bind:ocntyfips      }{txt}{bind: int     }{bind:{txt}%27.0g    }{space 1}{bind:ocpop2   }{bind:  }{res}{res}Occurrence FIPS County{p_end}
+{p 0 48}{bind:ocntypop       }{txt}{bind: byte    }{bind:{txt}%9.0g     }{space 1}{bind:         }{bind:  }{res}{res}Occurrence County Population{p_end}
+{p 0 48}{bind:bfacil         }{txt}{bind: byte    }{bind:{txt}%28.0g    }{space 1}{bind:facility }{bind:  }{res}{res}Birth Place (Revised only){p_end}
+{p 0 48}{bind:ubfacil        }{txt}{bind: byte    }{bind:{txt}%9.0g     }{space 1}{bind:         }{bind:  }{res}{res}Birth Place{p_end}
+{p 0 48}{bind:bfacil3        }{txt}{bind: byte    }{bind:{txt}%21.0g    }{space 1}{bind:lbfacil3 }{bind:  }{res}{res}Facility Recode{p_end}
+{p 0 48}{bind:mage_impflg    }{txt}{bind: byte    }{bind:{txt}%31.0g    }{space 1}{txt}lmage_impflg{p_end}
+{p 0 48}{space 44}{bind:  }{res}{res}Mother's Age Imputed yn{p_end}
+{p 0 48}{bind:mager          }{txt}{bind: byte    }{bind:{txt}%11.0g    }{space 1}{bind:mage     }{bind:  }{res}{res}Mother's Age recode{p_end}
+{p 0 48}{bind:mager14        }{txt}{bind: byte    }{bind:{txt}%9.0g     }{space 1}{bind:         }{bind:  }{res}{res}Mother's Age recode 14{p_end}
+{p 0 48}{bind:mager9         }{txt}{bind: byte    }{bind:{txt}%9.0g     }{space 1}{bind:         }{bind:  }{res}{res}Mother's Age recode 9{p_end}
+{p 0 48}{bind:mbcntry        }{txt}{bind: str2    }{bind:{txt}%9s       }{space 1}{bind:         }{bind:  }{res}{res}Mother's Birth Country{p_end}
+{p 0 48}{bind:umbstate       }{txt}{bind: str2    }{bind:{txt}%9s       }{space 1}{bind:         }{bind:  }{res}{res}Mother's Birth State{p_end}
+{p 0 48}{bind:mbstate_rec    }{txt}{bind: byte    }{bind:{txt}%44.0g    }{space 1}{bind:born     }{bind:  }{res}{res}Mother's Nativity{p_end}
+{p 0 48}{bind:mrcntry        }{txt}{bind: str2    }{bind:{txt}%9s       }{space 1}{bind:         }{bind:  }{res}{res}Mother's Residence Country{p_end}
+{p 0 48}{bind:xmrstate       }{txt}{bind: str2    }{bind:{txt}%9s       }{space 1}{bind:         }{bind:  }{res}{res}Expanded State of Residence - Mother{p_end}
+{p 0 48}{bind:mrstate        }{txt}{bind: str2    }{bind:{txt}%9s       }{space 1}{bind:         }{bind:  }{res}{res}Mother's Residence State{p_end}
+{p 0 48}{bind:mrfips         }{txt}{bind: int     }{bind:{txt}%9.0g     }{space 1}{bind:         }{bind:  }{res}{res}Mother's FIPS County{p_end}
+{p 0 48}{bind:rcnty_pop      }{txt}{bind: byte    }{bind:{txt}%30.0g    }{space 1}{bind:ocpop    }{bind:  }{res}{res}Population of Residence County{p_end}
+{p 0 48}{bind:rcity_pop      }{txt}{bind: byte    }{bind:{txt}%28.0g    }{space 1}{bind:cpop     }{bind:  }{res}{res}Population of Residence City{p_end}
+{p 0 48}{bind:resnotres      }{txt}{bind: byte    }{bind:{txt}%21.0g    }{space 1}{bind:lyn      }{bind:  }{res}{res}State/county of occurrence/residence same yn{p_end}
+{p 0 48}{bind:restatus       }{txt}{bind: byte    }{bind:{txt}%51.0g    }{space 1}{bind:lres     }{bind:  }{res}{res}Residence Status code{p_end}
+{p 0 48}{bind:mbrace         }{txt}{bind: byte    }{bind:{txt}%30.0g    }{space 1}{txt}lmracerec{p_end}
+{p 0 48}{space 44}{bind:  }{res}{res}Bridged Race Mother{p_end}
+{p 0 48}{bind:mhisp          }{txt}{bind: byte    }{bind:{txt}%9.0g     }{space 1}{bind:         }{bind:  }{res}{res}Mother's Hispanic Origin{p_end}
+{p 0 48}{bind:mhispr         }{txt}{bind: byte    }{bind:{txt}%28.0g    }{space 1}{bind:lumhisp  }{bind:  }{res}{res}Mother's Hispanic Origin Recode{p_end}
+{p 0 48}{bind:mracehisp      }{txt}{bind: byte    }{bind:{txt}%9.0g     }{space 1}{bind:         }{bind:  }{res}{res}Mother's Race/Hispanic Origin{p_end}
+{p 0 48}{bind:dmar           }{txt}{bind: byte    }{bind:{txt}%21.0g    }{space 1}{bind:lmar     }{bind:  }{res}{res}Mother's Marital Status{p_end}
+{p 0 48}{bind:meduc          }{txt}{bind: byte    }{bind:{txt}%67.0g    }{space 1}{bind:lmeduc   }{bind:  }{res}{res}Mother's Education{p_end}
+{p 0 48}{bind:meduc_rec      }{txt}{bind: byte    }{bind:{txt}%11.0g    }{space 1}{bind:lmeducr  }{bind:  }{res}{res}Mother's Education (U){p_end}
+{p 0 48}{bind:fagerpt        }{txt}{bind: byte    }{bind:{txt}%9.0g     }{space 1}{bind:         }{bind:  }{res}{res}Father's Reported Age{p_end}
+{p 0 48}{bind:fager11        }{txt}{bind: byte    }{bind:{txt}%9.0g     }{space 1}{bind:         }{bind:  }{res}{res}Father's Age Recode 11{p_end}
+{p 0 48}{bind:fbrace         }{txt}{bind: byte    }{bind:{txt}%30.0g    }{space 1}{txt}lmracerec{p_end}
+{p 0 48}{space 44}{bind:  }{res}{res}Father's Bridged Race{p_end}
+{p 0 48}{bind:fhisp          }{txt}{bind: byte    }{bind:{txt}%9.0g     }{space 1}{bind:         }{bind:  }{res}{res}Father's Hispanic Origin{p_end}
+{p 0 48}{bind:fhispr         }{txt}{bind: byte    }{bind:{txt}%9.0g     }{space 1}{bind:         }{bind:  }{res}{res}Father's Hispanic Origin Recode{p_end}
+{p 0 48}{bind:fracehisp      }{txt}{bind: byte    }{bind:{txt}%9.0g     }{space 1}{bind:         }{bind:  }{res}{res}Father's Race/Hispanic Origin{p_end}
+{p 0 48}{bind:feduc          }{txt}{bind: byte    }{bind:{txt}%67.0g    }{space 1}{bind:lmeduc   }{bind:  }{res}{res}Father's Education{p_end}
+{p 0 48}{bind:priorlive      }{txt}{bind: byte    }{bind:{txt}%21.0g    }{space 1}{bind:unknown  }{bind:  }{res}{res}Prior Births Living{p_end}
+{p 0 48}{bind:priordead      }{txt}{bind: byte    }{bind:{txt}%21.0g    }{space 1}{bind:unknown  }{bind:  }{res}{res}Prior Births Dead{p_end}
+{p 0 48}{bind:priorterm      }{txt}{bind: byte    }{bind:{txt}%21.0g    }{space 1}{bind:unknown  }{bind:  }{res}{res}Prior Other Terminations{p_end}
+{p 0 48}{bind:lbo            }{txt}{bind: byte    }{bind:{txt}%9.0g     }{space 1}{bind:         }{bind:  }{res}{res}Live Birth Order{p_end}
+{p 0 48}{bind:lbo_rec        }{txt}{bind: byte    }{bind:{txt}%21.0g    }{space 1}{bind:llbo_rec }{bind:  }{res}{res}Live Birth Order Recode{p_end}
+{p 0 48}{bind:tbo            }{txt}{bind: byte    }{bind:{txt}%9.0g     }{space 1}{bind:         }{bind:  }{res}{res}Total Birth Order{p_end}
+{p 0 48}{bind:tbo_rec        }{txt}{bind: byte    }{bind:{txt}%22.0g    }{space 1}{bind:ltbo     }{bind:  }{res}{res}Total Birth Order Recode{p_end}
+{p 0 48}{bind:dllb_mm        }{txt}{bind: byte    }{bind:{txt}%9.0g     }{space 1}{bind:         }{bind:  }{res}{res}Date of Last Live Birth - Month{p_end}
+{p 0 48}{bind:dllb_yy        }{txt}{bind: int     }{bind:{txt}%9.0g     }{space 1}{bind:         }{bind:  }{res}{res}Date of Last Live Birth - Year{p_end}
+{p 0 48}{bind:precare        }{txt}{bind: byte    }{bind:{txt}%21.0g    }{space 1}{bind:lprecare }{bind:  }{res}{res}Month Prenatal Care Began{p_end}
+{p 0 48}{bind:precare5       }{txt}{bind: byte    }{bind:{txt}%21.0g    }{space 1}{bind:lpc      }{bind:  }{res}{res}Month Prenatal Care Began Recode{p_end}
+{p 0 48}{bind:dfpc_mm        }{txt}{bind: byte    }{bind:{txt}%9.0g     }{space 1}{bind:         }{bind:  }{res}{res}First Prenatal Care Month{p_end}
+{p 0 48}{bind:dfpc_yy        }{txt}{bind: byte    }{bind:{txt}%9.0g     }{space 1}{bind:         }{bind:  }{res}{res}First Prenatal Care Year{p_end}
+{p 0 48}{bind:mbpc_rev5      }{txt}{bind: byte    }{bind:{txt}%21.0g    }{space 1}{bind:lpc      }{bind:  }{res}{res}Month Prenatal Care Began (U){p_end}
+{p 0 48}{bind:previs         }{txt}{bind: byte    }{bind:{txt}%9.0g     }{space 1}{bind:         }{bind:  }{res}{res}Number of Prenatal Visits (R){p_end}
+{p 0 48}{bind:previs_rec     }{txt}{bind: byte    }{bind:{txt}%21.0g    }{space 1}{txt}lprevis_rec{p_end}
+{p 0 48}{space 44}{bind:  }{res}{res}Number of Prenatal Visits Recode{p_end}
+{p 0 48}{bind:apncu          }{txt}{bind: byte    }{bind:{txt}%9.0g     }{space 1}{bind:         }{bind:  }{res}{res}Adequacy of Prenatal Care (R){p_end}
+{p 0 48}{bind:wtgain         }{txt}{bind: byte    }{bind:{txt}%21.0g    }{space 1}{bind:lwtgain  }{bind:  }{res}{res}Weight Gain, lb{p_end}
+{p 0 48}{bind:wic            }{txt}{bind: str1    }{bind:{txt}%9s       }{space 1}{bind:         }{bind:  }{res}{res}WIC{p_end}
+{p 0 48}{bind:cig_0          }{txt}{bind: byte    }{bind:{txt}%27.0g    }{space 1}{bind:lcig     }{bind:  }{res}{res}Cigarettes before pregnancy daily{p_end}
+{p 0 48}{bind:cig_1          }{txt}{bind: byte    }{bind:{txt}%27.0g    }{space 1}{bind:lcig     }{bind:  }{res}{res}Number of cigarettes daily, 1st tm{p_end}
+{p 0 48}{bind:cig_2          }{txt}{bind: byte    }{bind:{txt}%27.0g    }{space 1}{bind:lcig     }{bind:  }{res}{res}Number of cigarettes daily, 2nd tm{p_end}
+{p 0 48}{bind:cig_3          }{txt}{bind: byte    }{bind:{txt}%27.0g    }{space 1}{bind:lcig     }{bind:  }{res}{res}Number of cigarettes daily, 3rd tm{p_end}
+{p 0 48}{bind:cigs           }{txt}{bind: byte    }{bind:{txt}%9.0g     }{space 1}{bind:yn       }{bind:  }{res}{res}Smoked during pregnancy [unrev]{p_end}
+{p 0 48}{bind:m_ht_in        }{txt}{bind: byte    }{bind:{txt}%9.0g     }{space 1}{bind:         }{bind:  }{res}{res}Mother's height, in{p_end}
+{p 0 48}{bind:bmi            }{txt}{bind: float   }{bind:{txt}%9.0g     }{space 1}{bind:         }{bind:  }{res}{res}Body mass index{p_end}
+{p 0 48}{bind:pwgt           }{txt}{bind: int     }{bind:{txt}%21.0g    }{space 1}{bind:lunkn    }{bind:  }{res}{res}Pre-pregnancy weight, lb{p_end}
+{p 0 48}{bind:dwgt           }{txt}{bind: int     }{bind:{txt}%21.0g    }{space 1}{bind:lunkn    }{bind:  }{res}{res}Delivery weight, lb{p_end}
+{p 0 48}{bind:rf_diab        }{txt}{bind: str1    }{bind:{txt}%9s       }{space 1}{bind:         }{bind:  }{res}{res}Prepregnancy diabetes (R){p_end}
+{p 0 48}{bind:rf_gest        }{txt}{bind: str1    }{bind:{txt}%9s       }{space 1}{bind:         }{bind:  }{res}{res}Gestational diabetes (R){p_end}
+{p 0 48}{bind:rf_phyp        }{txt}{bind: str1    }{bind:{txt}%9s       }{space 1}{bind:         }{bind:  }{res}{res}Prepregnancy hypertension (R){p_end}
+{p 0 48}{bind:rf_ghyp        }{txt}{bind: str1    }{bind:{txt}%9s       }{space 1}{bind:         }{bind:  }{res}{res}Gestational hypertension (R){p_end}
+{p 0 48}{bind:rf_ehype       }{txt}{bind: str1    }{bind:{txt}%9s       }{space 1}{bind:         }{bind:  }{res}{res}Hypertension Eclampsia (R){p_end}
+{p 0 48}{bind:rf_ppterm      }{txt}{bind: str1    }{bind:{txt}%9s       }{space 1}{bind:         }{bind:  }{res}{res}Previous preterm birth (R){p_end}
+{p 0 48}{bind:rf_inftr       }{txt}{bind: str1    }{bind:{txt}%9s       }{space 1}{bind:         }{bind:  }{res}{res}Infertility Treatment (R){p_end}
+{p 0 48}{bind:rf_fedrg       }{txt}{bind: str1    }{bind:{txt}%9s       }{space 1}{bind:         }{bind:  }{res}{res}Fertility Enhancing Drugs (R){p_end}
+{p 0 48}{bind:rf_artec       }{txt}{bind: str1    }{bind:{txt}%9s       }{space 1}{bind:         }{bind:  }{res}{res}Asst Reproductive Technology (R){p_end}
+{p 0 48}{bind:rf_cesar       }{txt}{bind: str1    }{bind:{txt}%9s       }{space 1}{bind:         }{bind:  }{res}{res}Previous Cesarians (R){p_end}
+{p 0 48}{bind:rf_cesarn      }{txt}{bind: byte    }{bind:{txt}%21.0g    }{space 1}{bind:lprecare }{bind:  }{res}{res}Number of previous Cesarian deliveries (R){p_end}
+{p 0 48}{bind:me_pres        }{txt}{bind: byte    }{bind:{txt}%21.0g    }{space 1}{bind:lme_pres }{bind:  }{res}{res}Fetal presentation (R){p_end}
+{p 0 48}{bind:me_rout        }{txt}{bind: byte    }{bind:{txt}%21.0g    }{space 1}{bind:lme_rout }{bind:  }{res}{res}Route & method of delivery (R){p_end}
+{p 0 48}{bind:me_trial       }{txt}{bind: str1    }{bind:{txt}%9s       }{space 1}{bind:         }{bind:  }{res}{res}Trial of labor attempted (R){p_end}
+{p 0 48}{bind:rdmeth_rec     }{txt}{bind: byte    }{bind:{txt}%62.0g    }{space 1}{txt}lrdmeth_rec{p_end}
+{p 0 48}{space 44}{bind:  }{res}{res}Delivery method recode (revised) (R){p_end}
+{p 0 48}{bind:dmeth_rec      }{txt}{bind: byte    }{bind:{txt}%9.0g     }{space 1}{txt}ldmeth_rec{p_end}
+{p 0 48}{space 44}{bind:  }{res}{res}Delivery method recode{p_end}
+{p 0 48}{bind:mm_mtr         }{txt}{bind: str1    }{bind:{txt}%9s       }{space 1}{bind:         }{bind:  }{res}{res}Maternal transfusion{p_end}
+{p 0 48}{bind:mm_plac        }{txt}{bind: str1    }{bind:{txt}%9s       }{space 1}{bind:         }{bind:  }{res}{res}Perineal laceration{p_end}
+{p 0 48}{bind:mm_rupt        }{txt}{bind: str1    }{bind:{txt}%9s       }{space 1}{bind:         }{bind:  }{res}{res}Ruptured uterus{p_end}
+{p 0 48}{bind:mm_uhyst       }{txt}{bind: str1    }{bind:{txt}%9s       }{space 1}{bind:         }{bind:  }{res}{res}Unplanned hysterectomy{p_end}
+{p 0 48}{bind:mm_aicu        }{txt}{bind: str1    }{bind:{txt}%9s       }{space 1}{bind:         }{bind:  }{res}{res}Admit to ICU{p_end}
+{p 0 48}{bind:pay            }{txt}{bind: byte    }{bind:{txt}%40.0g    }{space 1}{bind:lpay     }{bind:  }{res}{res}Payment source{p_end}
+{p 0 48}{bind:pay_rec        }{txt}{bind: byte    }{bind:{txt}%17.0g    }{space 1}{bind:lpay_rec }{bind:  }{res}{res}Payment recode{p_end}
+{p 0 48}{bind:apgar5         }{txt}{bind: byte    }{bind:{txt}%9.0g     }{space 1}{txt}lfagecomb{p_end}
+{p 0 48}{space 44}{bind:  }{res}{res}Five minute APGAR score{p_end}
+{p 0 48}{bind:plural         }{txt}{bind: byte    }{bind:{txt}%9.0g     }{space 1}{bind:         }{bind:  }{res}{res}Plurality{p_end}
+{p 0 48}{bind:dplural        }{txt}{bind: byte    }{bind:{txt}%20.0g    }{space 1}{bind:ldplural }{bind:  }{res}{res}Plurality recode{p_end}
+{p 0 48}{bind:sex            }{txt}{bind: str1    }{bind:{txt}%9s       }{space 1}{bind:         }{bind:  }{res}{res}Sex of infant{p_end}
+{p 0 48}{bind:dlmp_mm        }{txt}{bind: byte    }{bind:{txt}%21.0g    }{space 1}{bind:months   }{bind:  }{res}{res}Last normal menses (month){p_end}
+{p 0 48}{bind:dlmp_dd        }{txt}{bind: byte    }{bind:{txt}%9.0g     }{space 1}{bind:         }{bind:  }{res}{res}Last normal menses (day){p_end}
+{p 0 48}{bind:dlmp_yy        }{txt}{bind: int     }{bind:{txt}%9.0g     }{space 1}{bind:years    }{bind:  }{res}{res}Last normal menses (year){p_end}
+{p 0 48}{bind:estgest        }{txt}{bind: byte    }{bind:{txt}%9.0g     }{space 1}{bind:         }{bind:  }{res}{res}Obstetric estimate of gestation, weeks{p_end}
+{p 0 48}{bind:combgest       }{txt}{bind: byte    }{bind:{txt}%9.0g     }{space 1}{txt}lfagecomb{p_end}
+{p 0 48}{space 44}{bind:  }{res}{res}Computed Gestation in weeks{p_end}
+{p 0 48}{bind:dbwt           }{txt}{bind: int     }{bind:{txt}%23.0g    }{space 1}{bind:lbw      }{bind:  }{res}{res}Birth weight, g{p_end}
+{p 0 48}{bind:ca_anen        }{txt}{bind: str1    }{bind:{txt}%9s       }{space 1}{bind:         }{bind:  }{res}{res}Anencephalus{p_end}
+{p 0 48}{bind:ca_mnsb        }{txt}{bind: str1    }{bind:{txt}%9s       }{space 1}{bind:         }{bind:  }{res}{res}Spina bifida{p_end}
+{p 0 48}{bind:ca_cchd        }{txt}{bind: str1    }{bind:{txt}%9s       }{space 1}{bind:         }{bind:  }{res}{res}Cyanotic congenital heart disease{p_end}
+{p 0 48}{bind:ca_hernia      }{txt}{bind: str1    }{bind:{txt}%9s       }{space 1}{bind:         }{bind:  }{res}{res}Congenital diaphragmatic Hernia{p_end}
+{p 0 48}{bind:ca_omph        }{txt}{bind: str1    }{bind:{txt}%9s       }{space 1}{bind:         }{bind:  }{res}{res}Omphalocele{p_end}
+{p 0 48}{bind:ca_gast        }{txt}{bind: str1    }{bind:{txt}%9s       }{space 1}{bind:         }{bind:  }{res}{res}Gastroschisis{p_end}
+{p 0 48}{bind:ca_limb        }{txt}{bind: str1    }{bind:{txt}%9s       }{space 1}{bind:         }{bind:  }{res}{res}Limb reduction defect{p_end}
+{p 0 48}{bind:ca_cleft       }{txt}{bind: str1    }{bind:{txt}%9s       }{space 1}{bind:         }{bind:  }{res}{res}Cleft lip{p_end}
+{p 0 48}{bind:ca_clpal       }{txt}{bind: str1    }{bind:{txt}%9s       }{space 1}{bind:         }{bind:  }{res}{res}Cleft palate{p_end}
+{p 0 48}{bind:ca_down        }{txt}{bind: str1    }{bind:{txt}%9s       }{space 1}{bind:         }{bind:  }{res}{res}Down syndrome{p_end}
+{p 0 48}{bind:ca_disor       }{txt}{bind: str1    }{bind:{txt}%9s       }{space 1}{bind:         }{bind:  }{res}{res}Suspected Chromosomal Disorder{p_end}
+{p 0 48}{bind:ca_hypo        }{txt}{bind: str1    }{bind:{txt}%9s       }{space 1}{bind:         }{bind:  }{res}{res}Hypospadias{p_end}
+{p 0 48}{bind:bfed           }{txt}{bind: str1    }{bind:{txt}%9s       }{space 1}{bind:         }{bind:  }{res}{res}Breastfed at discharge{p_end}
+{p 0 48}{bind:revision       }{txt}{bind: str1    }{bind:{txt}%9s       }{space 1}{bind:         }{bind:  }{res}{res}{p_end}
+{p 0 48}{bind:bmi_r          }{txt}{bind: byte    }{bind:{txt}%27.0g    }{space 1}{bind:lbmi_r   }{bind:  }{res}{res}BMI recode{p_end}
+{p 0 48}{bind:mrace31        }{txt}{bind: byte    }{bind:{txt}%9.0g     }{space 1}{bind:         }{bind:  }{res}{res}Mother's Race Recode 31{p_end}
+{p 0 48}{bind:mrace6         }{txt}{bind: byte    }{bind:{txt}%25.0g    }{space 1}{bind:lr6      }{bind:  }{res}{res}Mother's Race Recode 6{p_end}
+{p 0 48}{bind:mrace15        }{txt}{bind: byte    }{bind:{txt}%9.0g     }{space 1}{bind:         }{bind:  }{res}{res}Mother's Race Recode 15{p_end}
+{p 0 48}{bind:mar_g          }{txt}{bind: str1    }{bind:{txt}%9s       }{space 1}{bind:         }{bind:  }{res}{res}Mother's Marital Status During Pregnancy{p_end}
+{p 0 48}{bind:frace31        }{txt}{bind: byte    }{bind:{txt}%9.0g     }{space 1}{bind:         }{bind:  }{res}{res}Father's Race Recode 31{p_end}
+{p 0 48}{bind:frace6         }{txt}{bind: byte    }{bind:{txt}%25.0g    }{space 1}{bind:lr6      }{bind:  }{res}{res}Father's Race Recode 6{p_end}
+{p 0 48}{bind:frace15        }{txt}{bind: byte    }{bind:{txt}%9.0g     }{space 1}{bind:         }{bind:  }{res}{res}Father's Race Recode 15{p_end}
+{p 0 48}{bind:cig0_r         }{txt}{bind: byte    }{bind:{txt}%21.0g    }{space 1}{bind:lcp      }{bind:  }{res}{res}Cigarettes before Pregnancy recode{p_end}
+{p 0 48}{bind:no_risks       }{txt}{bind: byte    }{bind:{txt}%21.0g    }{space 1}{bind:lyn      }{bind:  }{res}{res}No risk factors checked{p_end}
+{p 0 48}{bind:no_mmorb       }{txt}{bind: byte    }{bind:{txt}%12.0g    }{space 1}{bind:lnmm     }{bind:  }{res}{res}No maternal morbidity checked{p_end}
+{p 0 48}{bind:no_congen      }{txt}{bind: byte    }{bind:{txt}%12.0g    }{space 1}{bind:lnmm     }{bind:  }{res}{res}No congenital anomalies{p_end}
+{p 0 48}{bind:fips3          }{txt}{bind: float   }{bind:{txt}%9.0g     }{space 1}{bind:         }{bind:  }{res}{res}{p_end}
+{p 0 48}{bind:st             }{txt}{bind: str2    }{bind:{txt}%9s       }{space 1}{bind:         }{bind:  }{res}{res}{p_end}
+{p 0 48}{bind:stname         }{txt}{bind: str20   }{bind:{txt}%20s      }{space 1}{bind:         }{bind:  }{res}{res}{p_end}
+{p 0 48}{bind:fips           }{txt}{bind: float   }{bind:{txt}%9.0g     }{space 1}{bind:         }{bind:  }{res}{res}{p_end}
+{p 0 48}{bind:ymb            }{txt}{bind: float   }{bind:{txt}%tm       }{space 1}{bind:         }{bind:  }{res}{res}Birth month{p_end}
+{p 0 48}{bind:ym             }{txt}{bind: float   }{bind:{txt}%tm       }{space 1}{bind:         }{bind:  }{res}{res}Month of conception{p_end}
+{p 0 48}{bind:lbw            }{txt}{bind: float   }{bind:{txt}%9.0g     }{space 1}{bind:         }{bind:  }{res}{res}{p_end}
+{p 0 48}{bind:preterm        }{txt}{bind: float   }{bind:{txt}%9.0g     }{space 1}{bind:         }{bind:  }{res}{res}{p_end}
+{p 0 48}{bind:sga            }{txt}{bind: float   }{bind:{txt}%9.0g     }{space 1}{bind:sga      }{bind:  }{res}{res}Small for gestational age revised using OE{p_end}
+{p 0 48}{bind:lga            }{txt}{bind: float   }{bind:{txt}%9.0g     }{space 1}{bind:lga      }{bind:  }{res}{res}Large for gestational age revised using OE{p_end}
+{p 0 48}{bind:raceeth        }{txt}{bind: float   }{bind:{txt}%18.0g    }{space 1}{bind:re       }{bind:  }{res}{res}Mother's race/ethnicity{p_end}
+{p 0 48}{bind:educ           }{txt}{bind: byte    }{bind:{txt}%9.0g     }{space 1}{bind:educ     }{bind:  }{res}{res}RECODE of meduc (Mother's Education){p_end}
+{p 0 48}{bind:meducu         }{txt}{bind: byte    }{bind:{txt}%9.0g     }{space 1}{bind:meducu   }{bind:  }{res}{res}RECODE of meduc_rec (Mother's Education (U)){p_end}
+{p 0 48}{bind:age            }{txt}{bind: byte    }{bind:{txt}%9.0g     }{space 1}{bind:age      }{bind:  }{res}{res}RECODE of mager (Mother's Age recode){p_end}
+{p 0 48}{bind:usborn         }{txt}{bind: float   }{bind:{txt}%9.0g     }{space 1}{bind:yn       }{bind:  }{res}{res}Native born{p_end}
+{p 0 48}{bind:parity         }{txt}{bind: byte    }{bind:{txt}%9.0g     }{space 1}{bind:parity   }{bind:  }{res}{res}RECODE of tbo_rec (Total Birth Order Recode){p_end}
+{p 0 48}{bind:plurality      }{txt}{bind: byte    }{bind:{txt}%9.0g     }{space 1}{txt}plurality{p_end}
+{p 0 48}{space 44}{bind:  }{res}{res}RECODE of dplural (Plurality recode){p_end}
+{p 0 48}{bind:precareUR      }{txt}{bind: float   }{bind:{txt}%9.0g     }{space 1}{bind:         }{bind:  }{res}{res}{p_end}
+{p 0 48}{bind:prenatal       }{txt}{bind: float   }{bind:{txt}%9.0g     }{space 1}{bind:prenatal }{bind:  }{res}{res}RECODE of precareUR{p_end}
+{p 0 48}{bind:cigfirst       }{txt}{bind: float   }{bind:{txt}%9.0g     }{space 1}{bind:yn       }{bind:  }{res}{res}Smoked in 1st trimester{p_end}
+{p 0 48}{bind:cigsecond      }{txt}{bind: float   }{bind:{txt}%9.0g     }{space 1}{bind:yn       }{bind:  }{res}{res}Smoked in 2d trimester{p_end}
+{p 0 48}{bind:cigthird       }{txt}{bind: float   }{bind:{txt}%9.0g     }{space 1}{bind:yn       }{bind:  }{res}{res}Smoked in 3d trimester{p_end}
+{p 0 48}{bind:cigpreg        }{txt}{bind: float   }{bind:{txt}%9.0g     }{space 1}{bind:yn       }{bind:  }{res}{res}Smoked during pregnancy{p_end}
+{p 0 48}{bind:mbpcu          }{txt}{bind: byte    }{bind:{txt}%9.0g     }{space 1}{bind:         }{bind:  }{res}{res}RECODE of mbpc_rev5 (Month Prenatal Care Began (U)){p_end}
+{txt}{hline}
+Sorted by: 
+{res}     Note: Dataset has changed since last saved.
+{txt}
+{com}. su
+
+{txt}    Variable {c |}        Obs        Mean    Std. dev.       Min        Max
+{hline 13}{c +}{hline 57}
+{space 5}version {c |}{res}          0
+{txt}{space 3}birthyear {c |}{res} 54,948,823    2011.379    4.030155       2005       2018
+{txt}{space 2}birthmonth {c |}{res} 54,948,823    6.572424    3.417412          1         12
+{txt}{space 4}birthday {c |}{res}          0
+{txt}{space 5}weekday {c |}{res} 54,948,823    4.051723    1.836766          1          7
+{txt}{hline 13}{c +}{hline 57}
+{space 6}ostate {c |}{res}          0
+{txt}{space 5}xostate {c |}{res}          0
+{txt}{space 3}ocntyfips {c |}{res} 54,948,788    91.31871    109.5167          1        840
+{txt}{space 4}ocntypop {c |}{res} 54,646,999    1.747292    1.606319          0          6
+{txt}{space 6}bfacil {c |}{res} 42,989,522    1.029129    .2845221          1          7
+{txt}{hline 13}{c +}{hline 57}
+{space 5}ubfacil {c |}{res} 35,861,381    1.027243    .2795657          1          9
+{txt}{space 5}bfacil3 {c |}{res} 54,946,564    1.012554    .1113408          1          2
+{txt}{space 1}mage_impflg {c |}{res}    296,656           1           0          1          1
+{txt}{space 7}mager {c |}{res} 54,948,823    28.05968    5.978457         16         49
+{txt}{space 5}mager14 {c |}{res} 54,948,823    9.141479    1.399664          4         13
+{txt}{hline 13}{c +}{hline 57}
+{space 6}mager9 {c |}{res} 54,948,823    4.211123    1.232007          2          8
+{txt}{space 5}mbcntry {c |}{res}          0
+{txt}{space 4}umbstate {c |}{res}          0
+{txt}{space 1}mbstate_rec {c |}{res} 54,729,707     1.23535    .4242176          1          2
+{txt}{space 5}mrcntry {c |}{res}          0
+{txt}{hline 13}{c +}{hline 57}
+{space 4}xmrstate {c |}{res}          0
+{txt}{space 5}mrstate {c |}{res}          0
+{txt}{space 6}mrfips {c |}{res} 54,948,823    89.22259    102.6066          1        840
+{txt}{space 3}rcnty_pop {c |}{res} 54,948,823     2.05848    1.919268          0          9
+{txt}{space 3}rcity_pop {c |}{res} 54,948,822    6.553248    3.547409          0          9
+{txt}{hline 13}{c +}{hline 57}
+{space 3}resnotres {c |}{res} 54,948,823    1.274882    .4464546          1          2
+{txt}{space 4}restatus {c |}{res} 54,948,823    1.296596    .5020315          1          3
+{txt}{space 6}mbrace {c |}{res} 54,948,823    1.379224    .8098662          1          4
+{txt}{space 7}mhisp {c |}{res}  3,703,772    .6461372    1.575014          0          9
+{txt}{space 6}mhispr {c |}{res} 54,948,823    .5579423    1.371807          0          9
+{txt}{hline 13}{c +}{hline 57}
+{space 3}mracehisp {c |}{res} 54,752,414    4.510577    2.537038          1          9
+{txt}{space 8}dmar {c |}{res} 54,034,477    1.394808    .4888095          1          2
+{txt}{space 7}meduc {c |}{res} 42,474,292    4.150515    1.746581          1          8
+{txt}{space 3}meduc_rec {c |}{res}  8,224,084    3.588577    1.210788          1          6
+{txt}{space 5}fagerpt {c |}{res}          0
+{txt}{hline 13}{c +}{hline 57}
+{space 5}fager11 {c |}{res} 54,948,822    5.590507    2.444407          1         11
+{txt}{space 6}fbrace {c |}{res} 37,454,965    1.386575    1.074358          1         24
+{txt}{space 7}fhisp {c |}{res}  7,891,932     1.65682    3.112136          0          9
+{txt}{space 6}fhispr {c |}{res} 50,760,663    1.655029    3.115714          0          9
+{txt}{space 3}fracehisp {c |}{res} 54,752,414    5.040918    2.775797          1          9
+{txt}{hline 13}{c +}{hline 57}
+{space 7}feduc {c |}{res} 29,782,672    4.155343    1.764407          1          8
+{txt}{space 3}priorlive {c |}{res} 19,043,046     1.12385    1.287174          0         23
+{txt}{space 3}priordead {c |}{res} 19,019,987    .0153074    .1828103          0         29
+{txt}{space 3}priorterm {c |}{res} 38,209,666    .3980378    .8608538          0         30
+{txt}{space 9}lbo {c |}{res}          0
+{txt}{hline 13}{c +}{hline 57}
+{space 5}lbo_rec {c |}{res} 54,687,886    2.097734    1.247922          1          8
+{txt}{space 9}tbo {c |}{res}          0
+{txt}{space 5}tbo_rec {c |}{res} 54,463,427    2.467758    1.550366          1          8
+{txt}{space 5}dllb_mm {c |}{res} 12,435,686    67.42946    41.57865          1         99
+{txt}{space 5}dllb_yy {c |}{res} 12,435,686    7132.173    3607.193       1973       9999
+{txt}{hline 13}{c +}{hline 57}
+{space 5}precare {c |}{res} 40,901,825    2.983352    1.548037          0         10
+{txt}{space 4}precare5 {c |}{res} 42,462,928    1.462373    .9322777          1          5
+{txt}{space 5}dfpc_mm {c |}{res}          0
+{txt}{space 5}dfpc_yy {c |}{res}          0
+{txt}{space 3}mbpc_rev5 {c |}{res}  8,752,465    1.273582    .7143798          1          5
+{txt}{hline 13}{c +}{hline 57}
+{space 6}previs {c |}{res} 18,377,216    11.32875    4.105272          0         98
+{txt}{space 2}previs_rec {c |}{res} 53,240,304    6.812847    1.859874          1         11
+{txt}{space 7}apncu {c |}{res}  3,219,900    4.169996    2.719674          1          9
+{txt}{space 6}wtgain {c |}{res} 51,405,961    30.44664    14.77923          0         98
+{txt}{space 9}wic {c |}{res}          0
+{txt}{hline 13}{c +}{hline 57}
+{space 7}cig_0 {c |}{res} 33,090,408    1.388187    5.245118          0         98
+{txt}{space 7}cig_1 {c |}{res} 39,530,118     .899739    3.870878          0         98
+{txt}{space 7}cig_2 {c |}{res} 39,526,509    .6787338    3.189546          0         98
+{txt}{space 7}cig_3 {c |}{res} 39,526,837    .6065177    2.998235          0         98
+{txt}{space 8}cigs {c |}{res}  7,635,566    .8334341    3.223523          0         98
+{txt}{hline 13}{c +}{hline 57}
+{space 5}m_ht_in {c |}{res} 34,275,877    64.16712    2.850639         30         78
+{txt}{space 9}bmi {c |}{res} 36,067,923      25.757    7.050164          7       69.9
+{txt}{space 8}pwgt {c |}{res}  2,529,497    152.3724    38.96992         74        375
+{txt}{space 8}dwgt {c |}{res}  2,537,957    183.0954    39.16763         99        400
+{txt}{space 5}rf_diab {c |}{res}          0
+{txt}{hline 13}{c +}{hline 57}
+{space 5}rf_gest {c |}{res}          0
+{txt}{space 5}rf_phyp {c |}{res}          0
+{txt}{space 5}rf_ghyp {c |}{res}          0
+{txt}{space 4}rf_ehype {c |}{res}          0
+{txt}{space 3}rf_ppterm {c |}{res}          0
+{txt}{hline 13}{c +}{hline 57}
+{space 4}rf_inftr {c |}{res}          0
+{txt}{space 4}rf_fedrg {c |}{res}          0
+{txt}{space 4}rf_artec {c |}{res}          0
+{txt}{space 4}rf_cesar {c |}{res}          0
+{txt}{space 3}rf_cesarn {c |}{res} 42,850,280    .1978344    .5478224          0         25
+{txt}{hline 13}{c +}{hline 57}
+{space 5}me_pres {c |}{res} 42,038,609    1.075588    .3315424          1          3
+{txt}{space 5}me_rout {c |}{res} 42,963,166    2.027343    1.398544          1          4
+{txt}{space 4}me_trial {c |}{res}          0
+{txt}{space 2}rdmeth_rec {c |}{res} 42,963,166    1.793761    1.161388          1          6
+{txt}{space 3}dmeth_rec {c |}{res} 54,846,311    1.319049    .4661082          1          2
+{txt}{hline 13}{c +}{hline 57}
+{space 6}mm_mtr {c |}{res}          0
+{txt}{space 5}mm_plac {c |}{res}          0
+{txt}{space 5}mm_rupt {c |}{res}          0
+{txt}{space 4}mm_uhyst {c |}{res}          0
+{txt}{space 5}mm_aicu {c |}{res}          0
+{txt}{hline 13}{c +}{hline 57}
+{space 9}pay {c |}{res} 34,400,888    1.819891    1.227154          1          8
+{txt}{space 5}pay_rec {c |}{res} 34,400,888    1.699642    .7492632          1          4
+{txt}{space 6}apgar5 {c |}{res} 53,680,608    8.842328    .6896071          0         10
+{txt}{space 6}plural {c |}{res}          0
+{txt}{space 5}dplural {c |}{res} 54,948,823    1.033317    .1854835          1          5
+{txt}{hline 13}{c +}{hline 57}
+{space 9}sex {c |}{res}          0
+{txt}{space 5}dlmp_mm {c |}{res} 52,266,704    6.614667    3.480839          1         12
+{txt}{space 5}dlmp_dd {c |}{res} 14,868,822    15.15969    8.765232          1         31
+{txt}{space 5}dlmp_yy {c |}{res} 52,377,010    2010.631    4.057698       2003       2018
+{txt}{space 5}estgest {c |}{res} 54,948,823     39.8022    8.606968          1         99
+{txt}{hline 13}{c +}{hline 57}
+{space 4}combgest {c |}{res} 54,948,823    38.71503    1.986641         30         44
+{txt}{space 8}dbwt {c |}{res} 54,948,823    3289.892    542.9571        375       6000
+{txt}{space 5}ca_anen {c |}{res}          0
+{txt}{space 5}ca_mnsb {c |}{res}          0
+{txt}{space 5}ca_cchd {c |}{res}          0
+{txt}{hline 13}{c +}{hline 57}
+{space 3}ca_hernia {c |}{res}          0
+{txt}{space 5}ca_omph {c |}{res}          0
+{txt}{space 5}ca_gast {c |}{res}          0
+{txt}{space 5}ca_limb {c |}{res}          0
+{txt}{space 4}ca_cleft {c |}{res}          0
+{txt}{hline 13}{c +}{hline 57}
+{space 4}ca_clpal {c |}{res}          0
+{txt}{space 5}ca_down {c |}{res}          0
+{txt}{space 4}ca_disor {c |}{res}          0
+{txt}{space 5}ca_hypo {c |}{res}          0
+{txt}{space 8}bfed {c |}{res}          0
+{txt}{hline 13}{c +}{hline 57}
+{space 4}revision {c |}{res}          0
+{txt}{space 7}bmi_r {c |}{res} 33,533,287     2.87538    1.182265          1          6
+{txt}{space 5}mrace31 {c |}{res} 18,958,653    1.631721    2.142097          1         99
+{txt}{space 6}mrace6 {c |}{res} 18,958,653    1.511773    1.099809          1          9
+{txt}{space 5}mrace15 {c |}{res} 18,958,653    1.927972    2.882414          1         99
+{txt}{hline 13}{c +}{hline 57}
+{space 7}mar_g {c |}{res}          0
+{txt}{space 5}frace31 {c |}{res} 18,958,653    19.10107    37.42734          1         99
+{txt}{space 6}frace6 {c |}{res} 18,958,653    2.843023    3.044744          1          9
+{txt}{space 5}frace15 {c |}{res} 18,958,653    19.32832    37.35954          1         99
+{txt}{space 6}cig0_r {c |}{res} 18,879,962    .2588635    .8813312          0          6
+{txt}{hline 13}{c +}{hline 57}
+{space 4}no_risks {c |}{res} 18,944,508    .7114199    .5213228          0          9
+{txt}{space 4}no_mmorb {c |}{res} 18,944,508    .9943493    .3183514          0          9
+{txt}{space 3}no_congen {c |}{res} 18,879,962    1.009004    .3205721          0          9
+{txt}{space 7}fips3 {c |}{res} 54,948,823    27.64857    16.23516          1         56
+{txt}{space 10}st {c |}{res}          0
+{txt}{hline 13}{c +}{hline 57}
+{space 6}stname {c |}{res}          0
+{txt}{space 8}fips {c |}{res} 54,948,823     27737.8    16263.97       1001      56045
+{txt}{space 9}ymb {c |}{res} 54,948,823    622.1238    48.48576        540        707
+{txt}{space 10}ym {c |}{res} 54,948,823    614.1238    48.48576        532        699
+{txt}{space 9}lbw {c |}{res} 54,948,823    .0720586    .2585849          0          1
+{txt}{hline 13}{c +}{hline 57}
+{space 5}preterm {c |}{res} 54,948,823    .1073257    .3095269          0          1
+{txt}{space 9}sga {c |}{res} 54,948,823     .124116    .3297138          0          1
+{txt}{space 9}lga {c |}{res} 54,948,823    .1166567    .3210108          0          1
+{txt}{space 5}raceeth {c |}{res} 54,948,823    1.846092    1.047988          1          5
+{txt}{space 8}educ {c |}{res} 50,601,694      2.6834    1.069859          1          4
+{txt}{hline 13}{c +}{hline 57}
+{space 6}meducu {c |}{res}  8,127,402    2.611587    1.094443          1          4
+{txt}{space 9}age {c |}{res} 54,948,823    3.180348    1.171483          1          5
+{txt}{space 6}usborn {c |}{res} 54,729,707    .7646497    .4242176          0          1
+{txt}{space 6}parity {c |}{res} 54,463,427    2.065101    .8425274          1          3
+{txt}{space 3}plurality {c |}{res} 54,948,823    1.032268    .1767113          1          2
+{txt}{hline 13}{c +}{hline 57}
+{space 3}precareUR {c |}{res} 51,215,393    1.430109    .9015953          1          5
+{txt}{space 4}prenatal {c |}{res} 51,215,393    2.340567    .7318626          1          5
+{txt}{space 4}cigfirst {c |}{res} 39,530,118    .0822112    .2746862          0          1
+{txt}{space 3}cigsecond {c |}{res} 39,526,509    .0705445    .2560624          0          1
+{txt}{space 4}cigthird {c |}{res} 39,526,837    .0674516    .2508024          0          1
+{txt}{hline 13}{c +}{hline 57}
+{space 5}cigpreg {c |}{res} 39,522,941    .0842198    .2777172          0          1
+{txt}{space 7}mbpcu {c |}{res}  8,752,465    2.220223    .5861289          1          5
+{txt}
+{com}. save natal2005_2018C2, replace
+{txt}{p 0 4 2}
+file {bf}
+natal2005_2018C2.dta{rm}
+saved
+{p_end}
+
+{com}. log close
+      {txt}name:  {res}<unnamed>
+       {txt}log:  {res}/gsfs0/data/baum/CountyData/Stata/ala2.smcl
+  {txt}log type:  {res}smcl
+ {txt}closed on:  {res} 8 Aug 2021, 15:16:29
+{txt}{.-}
+{smcl}
+{txt}{sf}{ul off}

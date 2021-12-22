@@ -15,7 +15,7 @@ d KW: selection
 d
 d Requires: Stata version 8 (version 10 for some options; version 16 and Python versions 3.6-3.8 for others)
 d
-d Distribution-Date: 20210517
+d Distribution-Date: 20210815
 d
 d Author: Joseph N. Luchman, Fors Marsh Group LLC
 d Support: email   jluchman@@forsmarshgroup.com 

@@ -1,6 +1,6 @@
 d 'DMARIANO': module to calculate Diebold-Mariano comparison of forecast accuracy
 d
-d dmariano calculates a measure of predictive accuracy proposed by
+d  dmariano calculates a measure of predictive accuracy proposed by
 d Diebold and Mariano (1995). Given an actual series and two
 d competing predictions,  one may apply a loss criterion (such as
 d squared error, mean absolute error, or mean absolute percentage
@@ -19,11 +19,10 @@ d KW: Newey-West
 d
 d Requires: Stata version 9.2
 d
+d Distribution-Date: 20211126
 d
 d Author: Christopher F Baum, Boston College
-d Support: email  baum@@bc.edu
-d
-d Distribution-Date: 20110426
+d Support: email baum@@bc.edu
 d
 f dmariano.ado
-f dmariano.hlp
+f dmariano.sthlp

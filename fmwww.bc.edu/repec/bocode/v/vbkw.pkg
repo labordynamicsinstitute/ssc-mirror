@@ -1,0 +1,27 @@
+d 'VBKW': module to perform Vector-Based Kernel Weighting
+d
+d    vbkw implements vector-based kernel weighting to adjust for
+d pre-treatment observable differences between treatment groups in
+d a    multiple-treatment setting, as described in Garrido, Lum,
+d Pizer, Statistics in Medicine, 2021. 
+d
+d KW: propensity score
+d KW: treatment
+d KW: multiple treatment
+d KW: kernel
+d KW: kernel weighting
+d
+d Requires: Stata version 14.2
+d
+d Distribution-Date: 20211124
+d
+d Author:   Jessica Lum, Department of Veterans Affairs 
+d Support: email jlum917@@gmail.com
+d
+d Author: Melissa M. Garrido, Boston University School of Public Health
+d Support: email NA
+d
+f vbkw.ado
+f vbkw_main.ado
+f vbkwbstrap.ado
+f vbkw.sthlp

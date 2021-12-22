@@ -1,0 +1,53 @@
+d 'MADOT': module to create dot plot for summarizing pooled estimates of multiple outcomes from meta-analysis
+d
+d  madot creates a figure to summarize pooled estimates from
+d meta-analysis for multiple outcomes in systematic reviews.  This
+d figure presents two plots adjacent to each other.  For
+d dichotomous outcomes, the figure shows for each outcome the
+d pooled absolute rate of events in each treatment arm in the left
+d dot plot, as well as the pooled relative risk and 95% confidence
+d interval in right scatter plot. The figure also includes 6
+d columns that display relative risk and 95% confidence interval,
+d the total number of events and total sample size for each
+d treatment group, the number of trials, the heterogeneity
+d statistic (I-square), and the strength of evidence grade. For
+d continuous outcomes, the left dot plot shows for each outcome the
+d baseline pooled weighted mean in both treatment groups and the
+d right scatter plot shows the pooled mean difference and 95%
+d confidence interval, as well as the baseline pooled weighted
+d means of both groups, number of trials, I-square, and strength of
+d evidence grade.  The content to be included in the 6 text columns
+d can be customized. 
+d
+d KW: graphics
+d KW: dot plot
+d KW: meta-analysis
+d
+d Requires: Stata version 16.1
+d
+d Distribution-Date: 20211005
+d
+d Author: Yun Yu,  Oregon Health & Sciences University
+d Support: email yun.yu.y@@gmail.com
+d
+d Author: Rongwei Fu, Pacific Northwest Evidence-based Practice Center
+d Support: email NA
+d
+d Author: Jesse Wagner, Pacific Northwest Evidence-based Practice Center 
+d Support: email NA
+d
+d Author:  Azrah Ahmed, Pacific Northwest Evidence-based Practice Center
+d Support: email NA
+d
+d Author: Connor Smith,   Pacific Northwest Evidence-based Practice Center
+d Support: email NA
+d
+d Author: Roger Chou, Pacific Northwest Evidence-based Practice Center
+d Support: email NA
+d
+f madot.ado
+f madot.sthlp
+f madot_code_example.do
+f ../d/data_madot_continuous.dta
+f ../d/data_madot_dichotomous_customized.dta
+f ../d/data_madot_dichotomous_default.dta

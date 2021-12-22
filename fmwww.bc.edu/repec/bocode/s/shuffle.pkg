@@ -11,8 +11,8 @@ d Requires: Stata version 9
 d
 d Distribution-Date: 20050511
 d
-d Author: Ben Jann, ETH Zurich
-d Support: email ben.jann@@soz.gess.ethz.ch
+d Author: Ben Jann, University of Bern
+d Support: email jann@@soz.unibe.ch
 d
 f shuffle.ado
 f shuffle.hlp

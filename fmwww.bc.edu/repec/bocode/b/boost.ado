@@ -3,7 +3,7 @@ program boost_plugin, plugin
 
 ***********************************************************************************************
 program define boost, eclass
-*! version 1.3.4  Oct 16, 2020 Matthias Schonlau
+*! version 1.3.5  Oct 16, 2020 Matthias Schonlau
 
  version 8.1
  syntax [varlist] [if] [in], DISTribution(str)  [ INfluence maxiter(int 20000)  /*
@@ -89,7 +89,7 @@ program define boost, eclass
  if ("`distribution'"=="multinomial") {
  	di "	Number of categories (in training data): `kgroups'"
  }
- di  "predict=`predict'"
+ if ("`predict'"!="nopredict") di  "predict=`predict'"
  di  "Trainfraction=`trainfraction' Shrink=`shrink' Bag=`bag' maxiter=`maxiter' Interaction=`interaction'"
  local nleafs=`interaction'+1
  
@@ -310,6 +310,7 @@ end
 /*
 Revision history
 Version date 
+1.3.5	Oct 16, 2020  if predict="nopredict", don't "display predict=`predict'"
 1.3.4	Oct 16, 2020  bug: if (`trainfraction'<1) don't compute accuracy/mse for prediction
 1.3.3   Oct  2, 2020  added "qui" in front of 3 replace/gen *=. commands
 1.3.2   May  9, 2020  boost_predict now generates var with predicted class in addition to 

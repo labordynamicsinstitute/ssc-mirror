@@ -25,13 +25,13 @@ d KW: Doi plot
 d
 d Requires: Stata version 14 
 d
-d Distribution-Date: 20200601
+d Distribution-Date: 20211016
 d
 d Author: Luis Furuya-Kanamori, Research School of Population Health, Australian National University
 d Support: email Luis.Furuya-Kanamori@@anu.edu.au
 d
 d Author: Suhail AR Doi, College of Medicine, Qatar University
-d Support: email NA
+d Support: email 
 d
 f lfk.ado
 f lfk.sthlp

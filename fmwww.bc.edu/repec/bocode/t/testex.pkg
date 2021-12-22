@@ -1,0 +1,34 @@
+d 'TESTEX': module for a statistical test of the exclusion restriction of an instrumental variable (IV)
+d
+d  This program executes a statistical test of the exclusion
+d restriction of an instrumental variable (IV) based on
+d D'Haultfoeuille, Hoderlein, & Sasaki (J. Econometrics, 2021). The
+d command takes as input a scalar outcome variable y, a scalar
+d endogenous variable x that is continuous, and a scalar
+d instrumental variable z.  If the instrument is not binary, then
+d the program transforms the original instrument into a binary one.
+d  The output of the command includes the p-value of the test and
+d the indicators of whether the test rejects the null hypothesis at
+d various levels of statistical significance. The program gives a
+d caution when there is no crossing of conditional CDFs required by
+d Assumption 5 in D'Haultfoeuille, Hoderlein, & Sasaki (2021). 
+d
+d KW: instrumental variables
+d KW: exclusion restriction
+d KW: control function
+d
+d Requires: Stata version 14.2
+d
+d Distribution-Date: 2021114
+d
+d Author:   Xavier D'Haultfoeuille, CREST
+d Support: email   xavier.dhaultfoeuille@@ensae.fr
+d
+d Author: Stefan Hoderlein, Emory University 
+d Support: email NA
+d
+d Author: Yuya Sasaki, Department of Economics, Vanderbilt University
+d Support: email yuya.sasaki@@gmail.com
+d
+f testex.ado
+f testex.sthlp

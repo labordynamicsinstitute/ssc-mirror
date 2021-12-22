@@ -19,7 +19,7 @@ d KW: two-arm clinical trial
 d
 d Requires: Stata version 15
 d
-d Distribution-Date: 20210306
+d Distribution-Date: 20211117
 d
 d Author: Rachel Phillips, Imperial College
 d Support: email  r.phillips@@imperial.ac.uk
@@ -33,3 +33,6 @@ f ../e/example_dot.dta
 f aedots.ado
 f aedots.sthlp
 f ../e/example_dot_summ.dta
+f aedots2.ado
+f aedots2.sthlp
+f ../e/example_dot_summ2.dta

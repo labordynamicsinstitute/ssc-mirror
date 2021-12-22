@@ -1,6 +1,6 @@
 d 'SPIKE': module to allow for a zero willingness to pay
 d
-d spike command allows for a non-zero probability of zero
+d  spike command allows for a non-zero probability of zero
 d willingness-to-pay in referendum-style contingent valuation
 d experiments as suggested by Kristrom (1997). This property is
 d particular usefull in experiments in which a large fraction of

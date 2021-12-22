@@ -16,8 +16,8 @@ d Requires: Stata version 8.2
 d
 d Distribution-Date: 20061025
 d
-d Author: Ben Jann, ETH Zurich
-d Support: email ben.jann@@soz.gess.ethz.ch
+d Author: Ben Jann, University of Bern
+d Support: email jann@@soz.unibe.ch
 d
 f smithwelch.ado
 f smithwelch.hlp

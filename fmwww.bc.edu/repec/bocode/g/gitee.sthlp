@@ -25,9 +25,8 @@ The {bf:gitee} command takes two subcommands:
 {synoptset 20 tabbed}{...}
 {synopthdr:subcommand}
 {synoptline}
-{synopt:{opt install}}installs the specified repository. The command should be 
-followed by the {bf:username/repository}{p_end}
-{synopt:{opt uninstall}}uninstalls a package{p_end}
+{synopt:{opt install}}installs the package from the specified repository. {p_end}
+{synopt:{opt get}} copies the ancillary files of a specified package to your computer.{p_end}
 
 {synoptline}
 {p2colreset}{...}
@@ -46,7 +45,7 @@ files if any of the files already exists.{p_end}
 
 {synopt:{opt force}}specifies that the downloaded files replace existing 
 files if any of the files already exists, even if Stata thinks all the files 
-are the same.  force implies replace.{p_end}
+are the same. force implies replace.{p_end}
 
 {synopt:{opt from(directory_or_url)}}specifies the directory or URL where installable packages 
 may be found.{p_end} 
@@ -60,16 +59,19 @@ may be found.{p_end}
 
 {p 4 4 2}
 
-    install the gtfpch package from Gitee
-        . gitee install arlionn/gtfpch
+    install the fect package from Gitee
+        . gitee install arlionn/fect_stata
 		
 	or
-	
-        . gitee install gtfpch, from(https://gitee.com/arlionn/gtfpch?_from=gitee_search)	
-                
-    Uninstall gtfpch repository
-        . gitee uninstall gtfpch
-                
+        . gitee install fect, from(https://gitee.com/arlionn/fect_stata)	
+
+    copies the ancillary files of fect package
+
+        . gitee get arlionn/fect_stata  
+
+    or 
+
+        . gitee get fect, from(https://gitee.com/arlionn/fect_stata)                 
 
 
 {title:Author}

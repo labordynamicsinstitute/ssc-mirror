@@ -1,9 +1,9 @@
-*! version 4.2.2 09jul2021 daniel klein
+*! version 4.4.0 07nov2021 daniel klein
 // -------------------------------------- elabel.mata
 version 11.2
 
 // -------------------------------------- elabel version
-local elabel_version 4.2.2
+local elabel_version 4.4.0
 local stata_version  `c(stata_version)'
 local date_time      "`c(current_date)' `c(current_time)'"
 
@@ -2812,7 +2812,8 @@ void Elabel::cmd_values()
     varlist = u_st_numvarlist(varlist)
     lbllist = cmd_values_lblnames(lbllist)
     
-    u_err_fewmany((i=cols(lbllist))-cols(varlist))
+    if (cols(lbllist) == 1) lbllist = J(1, (i=cols(varlist)), lbllist)
+    else u_err_fewmany((i=cols(lbllist))-cols(varlist))
     
     breakoff()
     if ( O.fixfmt() ) {
@@ -4675,7 +4676,7 @@ mata :
 }
 
     // ---------------------------------- _aandb()
-`BooleanR' _aandb(`TR' a, `TR' b)
+`BooleanR' _aandb(`TR' a, `TR' b, | `RS' uniq)
 {
     `BooleanR' v
     `RS'       na, nb, i, j, jj
@@ -4696,10 +4697,20 @@ mata :
         idx = strofreal(idx, sprintf("%%0%g.0f", floor(log10(na))+1))
     o  = order((a', idx), (1, 2))
     sb = sort(b', 1)
-    for (i=jj=1; i<=na; ++i) {
-        j=jj
-        while (a[o[i]]>sb[j++]) if (j>nb) break
-        if ((v[o[i]]=(a[o[i]]==sb[j-1]))) if ((jj=j)>nb) break
+    
+    if (uniq) {
+        for (i=jj=1; i<=na; ++i) {
+            j=jj
+            while (a[o[i]]>sb[j++]) if (j>nb) break
+            if ((v[o[i]]=(a[o[i]]==sb[j-1]))) if ((jj=j)>nb) break
+        }
+    }
+    else {
+        for (i=1; i<=na; i++) {
+            j=1
+            while (a[o[i]]>sb[j++]) if (j>nb) break
+            v[o[i]]=(a[o[i]]==sb[j-1])
+        }
     }
     
     return(v)
@@ -4745,7 +4756,7 @@ mata :
 }
 
     // ---------------------------------- _aposb()
-`BooleanR' _aposb(`TR' a, `TR' b, | `RS' d)
+`BooleanR' _aposb(`TR' a, `TR' b, | `RS' disjoint)
 {
     `RS'       n, na, i
     `BooleanR' v
@@ -4763,7 +4774,7 @@ mata :
     if ((na--)>n)             return(v)
     
     n = (n-na)
-    if (!d) for (i=1; i<=n; ++i) (v[i]=(a==b[i..(i+na)]))
+    if (!disjoint) for (i=1; i<=n; ++i) (v[i]=(a==b[i..(i+na)]))
     else for (i=1; i<=n; ++i) if (v[i]=(a==b[i..(i+na)])) i=(i+na)
     
     return(v)
@@ -4895,10 +4906,20 @@ end
 exit
 
 /* ---------------------------------------
+4.4.0 07nov2021 new elabel_cmd_adjust
+                update elabel_cmd_recode
+                revised help files
+4.3.1 20oct2021 -_aandb()- has an optional third argument
+                updated help file
+                never released
+4.3.0 07oct2021 -elabel values- extended syntax now allows many-to-one mappings
+                updated help file
+                first version on GitHub
 4.2.2 09jul2021 polished output for -elabel duplicates report-
 4.2.1 16may2021 -elabel duplicates- w/o arguments defaults to -report-
                 new error message for attempt to label . (sysmiss)
 4.2.0 09feb2021 bug fix ElabelValueLabel() -sep-
+                submitted to SJ
 4.1.1 28dec2020 tokendiscard() no longer changes 2nd argument
                 rewrite _distinctrowsof()
                 implement _auniq() in terms of _distinctrowsof()
@@ -5028,8 +5049,8 @@ exit
                 update elabel_cmd_load
                 update elabel_cmd_recode
                 update elabel_fcn_levels
-                new internal command data; not documented
-                new internal command cmd; not documented
+                new internal command -data-; not documented
+                new internal command -cmd-; not documented
                 new elabel_cmd_uselabel; not documented
                 -elabel preserver- now works for elabel_fcn_*.ado
                 elabel_fcn_*.ado can now set locals in the caller

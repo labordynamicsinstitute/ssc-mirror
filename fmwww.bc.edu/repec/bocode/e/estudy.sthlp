@@ -27,7 +27,7 @@
 {synoptline}
 
 {syntab:Date specifications}
-{p2coldent:* {opth dat:evar(varname)}}specify the date variable in the dataset. Option {opt datevar} must be always specified.{p_end}
+{p2coldent:* {opth dat:evar(varname)}}specify the date variable in the dataset. Option {opt datevar}  must be always specified and sorted in chronological order.{p_end}
 {p2coldent:* {opth evd:ate(strings:string)} or {opth evd:ate(varlists:namelist datelist)}}specify {opth evd:ate(strings:string)} in case of common event/event date clustering or {opth evd:ate(varlists:namelist datelist)} in case of multiple events (i.e. when each security has its own event date). Either as {it:string} or as {it: namelist datelist}, the {opt evdate} option must be always specified.{p_end} 
 {p2coldent:* {opt lb1(#)} {opt ub1(#)} [{cmd:... lb6(#) ub6(#)}]}specify lower and upper bounds of event window(s). Only the first upper ({opt lb1(#)}) and lower ({opt ub1(#)}) bounds must be always specified.{p_end}
 {synopt :{opt eswlb(#)}}specify the lower bound of the estimation window; default is the first trading day available.{p_end}
@@ -176,8 +176,8 @@ Labels cannot contain the "." character. Their length is automatically cut to 45
 {pstd}Performs an event study on two varlists using prices, specifying two event windows and multiple event dates, using the Bohemer, Musumeci and Paulsen test with the Kolari and Pynnonen adjustment, printing a latex formatted table.{p_end}
 {phang2}{bf:estudy pr_ibm-pr_boeing (pr_apple pr_netflix pr_google pr_facebook) , datevar(date) evdate(security_names event_dates) modt(HMM) indexlist(pr_sp500) pri diagn(KP) lb1(-3) ub1(0) lb2(0) ub2(5) dec(4) tex}{p_end}
 
-{pstd}Performs an event study on a single varlist using returns, specifying three event windows on multiple event dates, using the Bohemer, Musumeci and Paulsen test with the Kolari and Pynnonen adjustment, showing the group CAAR only and printing it over the [-50 +50] window around the event dates.{p_end}
-{phang2}{cmd:estpipp ret_ibm-ret_amazon , datevar(date) evdate(security_names event_dates) modt(HMM) indexlist(ret_mkt ret_smb ret_hml) diagn(KP) supp(ind) lb1(-3) ub1(0) lb2(-20) ub2(20) dec(4) graph(-20 20)}{p_end}
+{pstd}Performs an event study on a single varlist using returns, specifying two event windows on multiple event dates, using the Bohemer, Musumeci and Paulsen test with the Kolari and Pynnonen adjustment, showing the group CAAR only and printing it over the [-20 +20] window around the event dates.{p_end}
+{phang2}{cmd:estudy ret_ibm-ret_amazon , datevar(date) evdate(security_names event_dates) modt(HMM) indexlist(ret_mkt ret_smb ret_hml) diagn(KP) supp(ind) lb1(-3) ub1(0) lb2(-20) ub2(20) dec(4) graph(-20 20)}{p_end}
 
 {marker storedres}{...}
 {title:Stored results}

@@ -1,6 +1,6 @@
 d 'SVYSELMLOG': module to compute selectivity adjustment based on the multinomial logit for survey design
 d
-d -svyselmlog- estimates the parameters of the main equation
+d  -svyselmlog- estimates the parameters of the main equation
 d correcting  for selectivity using the conditional probabilities
 d from a multinomial logit.  -svyselmlog- allows for three
 d parametric selectivity-correction methods like the  ones

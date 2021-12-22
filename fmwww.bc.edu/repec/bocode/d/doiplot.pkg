@@ -1,0 +1,31 @@
+d 'DOIPLOT': module for visualization of asymmetry and heterogeneity in meta-analysis 
+d
+d  doiplot generates the Doi plot and its variants (combinations
+d with the funnel and Galbraith    plots).  The plots also include
+d the LFK index and Egger's test P-value as a note.  The Doi   
+d plot replaces the conventional scatter (funnel) plot of precision
+d versus effect with a	  folded normal quantile (Z-score) versus
+d effect plot.	Combined with the Galbraith plot, the	
+d Doi-Galbraith plot delivers a combined graphical overview of both
+d study symmetry and	heterogeneity at a glance. 
+d
+d KW: metan
+d KW: meta-analysis
+d KW: Doi plot
+d KW: Galbraith plot
+d
+d Requires: Stata version 14
+d
+d Distribution-Date: 20211027
+d
+d Author: Chang Xu, College of Medicine, Qatar University
+d Support: email   xuchang2016@@runbox.com
+d
+d Author: Luis Furuya-Kanamori,  UQ Centre for Clinical Research, The University of Queensland
+d Support: email NA
+d
+d Author: Suhail A.R. Doi, College of Medicine, Qatar University
+d Support: email  sardoi@@gmx.net
+d
+f doiplot.ado
+f doiplot.sthlp

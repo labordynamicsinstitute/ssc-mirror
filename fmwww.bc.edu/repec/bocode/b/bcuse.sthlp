@@ -10,7 +10,7 @@
 {title:Syntax}
 {p 8 17 2}
 {cmd:bcuse}
-{it:filename} 
+{it:filename} | {it:list}
 [ 
 {cmd:,}
 {cmd:nodesc} 
@@ -26,12 +26,17 @@ If you receive an error message, check the web page listing
 these datasets on the BC Economics web site, 
 {browse "http://fmwww.bc.edu/ec-p/data/wooldridge/datasets.list.html"}
 
+{pstd}If the filename is given as list, a list of all .dta files available on the 
+server is produced.
+
 {pstd}If a Stata data file has been saved in .zip format on the server (usually because 
 it is very large), you may give the {it:filename}, including .zip, and the zip file
 will be copied to your working directory, unzipped, and read into Stata.
 
 {pstd}If the dataset is declared as a timeseries or panel, the {cmd:tsset} command will be 
 issued to display those characteristics.
+
+
 
 {title:Options}
 

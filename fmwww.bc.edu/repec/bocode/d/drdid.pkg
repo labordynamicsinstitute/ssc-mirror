@@ -18,7 +18,7 @@ d KW: csdid
 d
 d Requires: Stata version 14 
 d
-d Distribution-Date: 20210804
+d Distribution-Date: 20211110
 d
 d Author: Fernando Rios-Avila, Levy Economics Institute of Bard College
 d Support: email friosavi@@levy.org
@@ -30,7 +30,10 @@ d Author:  Asjad Naqvi, International Institute for Applied Systems Analysis
 d Support: email snaqvi@@wu.ac.at
 d
 f drdid.ado
+f drdid_display.ado
+f drdid_predict.ado
 f ../_/_gmm_regipw.ado
 f ../_/_het_did_gmm.ado
 f ../_/_gmm_dripw.ado
+f ../_/_gmm_repeated.ado
 f drdid.sthlp

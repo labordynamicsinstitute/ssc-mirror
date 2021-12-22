@@ -1,9 +1,9 @@
-*!version5.0 05Apr2021
+*!version5.1 03Dec2021
 
 /* -----------------------------------------------------------------------------
 ** PROGRAM NAME: xtgeebcv
-** VERSION: 5.0
-** DATE: APR 05, 2021
+** VERSION: 5.1
+** DATE: DEC 03, 2021
 ** -----------------------------------------------------------------------------
 ** CREATED BY: JOHN GALLIS, FAN LI, LIZ TURNER
 ** -----------------------------------------------------------------------------
@@ -29,6 +29,7 @@
 			Aug 25, 2020 - Adding functionality for the offset term to be included in the calculations.
 			Apr 05, 2021 - Modifying the trace in the MBN correction so it lines up with what is in Morel et al. (2003) rather than what is in Li and Redden (2015)
 						 - Only slightly changes the standard error.
+			Dec 03, 2021 - Program wasn't allowing for intercept-only models. Now updated to allow for intercept-only model.
 **			
 ** -----------------------------------------------------------------------------
 ** OPTIONS: SEE HELP FILE
@@ -447,6 +448,7 @@ end
 /* |||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
 |||||||||||||||||||| MATA PROGRAM ||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
 |||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||| */
+capture mata: mata drop gee()
 mata:
 matrix gee(string scalar newvarlist, string scalar beginend, string scalar cluster, string scalar Beta, string scalar Beta2, scalar wcorr, scalar phi, string scalar famlink) {
 	
@@ -454,7 +456,13 @@ matrix gee(string scalar newvarlist, string scalar beginend, string scalar clust
 	X2=st_data(.,tokens(newvarlist),0)
 	// SUBSETTING TO DESIGN MATRIX WITHOUT OUTCOME (WHICH IS ROW 2) AND WITHOUT OFFSET VARIABLE (WHICH IS THE LAST ROW)
 	colnum = cols(X2)-1
-	X=X2[.,(1,3..colnum)]
+	if (colnum >= 3) {
+		X=X2[.,(1,3..colnum)]
+	}
+	// for intercept-only models
+	else {
+		X=X2[.,(1)]
+	}
 	// SUBSETTING TO OUTCOME COLUMN VECTOR
 	y=X2[.,2]
 	// SUBSETTING TO OFFSET VARIABLE COLUMN VECTOR
@@ -467,11 +475,10 @@ matrix gee(string scalar newvarlist, string scalar beginend, string scalar clust
 	// BETA COEFFICIENT MATRIX
 	B = st_matrix(Beta)'
 		
-	// NUMBER OF COLUMNS IN x
+	// NUMBER OF COLUMNS IN X
 	p=cols(X)
 	// NUMBER OF CLUSTERS
 	K=rows(Cnum)
-	
 
 	//https://www.stata.com/statalist/archive/2012-01/msg01032.html
 	a=(0)
@@ -480,6 +487,7 @@ matrix gee(string scalar newvarlist, string scalar beginend, string scalar clust
 	U=a#b'
 	Ustar=J(p,p,0)
 	UUtran=J(p,p,0)
+	
 
 // SCORE FUNCTION START ///////////////////////////////////////////////////////////////
 	for (i=1; i<=rows(Cnum); i++) {
@@ -494,7 +502,6 @@ matrix gee(string scalar newvarlist, string scalar beginend, string scalar clust
 		// o_c = cluster-specific column vector of the offset variable
 		o_c = offset[bend[i,1]..bend[i,2],]
 
-		
 		// mu_c = cluster-specific marginal mean of y_c
 		// D = partial derivative of mu_c with respect to Beta; corresponds to D_i in GEE
 		if (famlink=="binomial logit") {
@@ -509,15 +516,14 @@ matrix gee(string scalar newvarlist, string scalar beginend, string scalar clust
 			mu_c = X_c*B :+ o_c
 			D=X_c
 		}
-		
-		
 		// r = residuals y_c - mu_c
 		r=y_c-mu_c
-		
+
 		M=J(Cnum[i],Cnum[i],wcorr/((1-wcorr)*(1-wcorr+Cnum[i]:*wcorr)))
 		N=diag(J(1,Cnum[i],1/(1-wcorr)))
 		// INVR = inverse of workin correlation matrix R
 		INVR=N-M		
+		
 		
 		// INVV = inverse of the working variance matrix V
 		// O corresponds to the inverse of A_c^1/2
@@ -564,6 +570,7 @@ matrix gee(string scalar newvarlist, string scalar beginend, string scalar clust
 		UUtran=UUtran+UUtran_c
 		Ustar=Ustar+Ustar_c
 	}
+	
 // SCORE FUNCTION END ////////////////////////////////////////////////////////////////////////////
 	//computations for naive, model-based estimator
 	AHALF=cholesky(Ustar)'
@@ -583,6 +590,7 @@ matrix gee(string scalar newvarlist, string scalar beginend, string scalar clust
 //////////////////////////////////////////////
 
 	dbar = 1/K*U
+	
 	
 // mbn BIAS-CORRECTED  STANDARD ERROR ///////
 	nstar = rows(X)
@@ -667,7 +675,6 @@ matrix gee(string scalar newvarlist, string scalar beginend, string scalar clust
 		  }
 	// INVERSE END ///////////////////////////////////////////////////////////////////////////////////
 		 
-		  
 		U_c=D'*ai1A
 	  
 		  
@@ -693,7 +700,6 @@ matrix gee(string scalar newvarlist, string scalar beginend, string scalar clust
 	}
 // LOOP END ///////////////////////////////////////////////////////////////////////////
 
-
 // kc BIAS-CORRECTED STANDARD ERRORS /////////////////////////////	
 	kc=naive*(UUbc2+UUbc2')*naive':/2
 //////////////////////////////////////////////////////////////////
@@ -710,54 +716,69 @@ matrix gee(string scalar newvarlist, string scalar beginend, string scalar clust
 	// reverse order since Stata puts _cons (the intercept) last
 	// for generalizability, simply put the first last
 	
-	// reversing naive
-	naive2 = naive[(2::cols(naive)),1]'
-	naive3 = naive[1,1]
-	naive4 = (naive2,naive3)'
-	naive5 = naive[2::rows(naive),2::cols(naive)]
-	varNaive=(naive5 \ naive2),naive4
+	finalcol=cols(naive)
+	// for models with at least one predictor
+	if (finalcol >= 2) {
+		// reversing naive
+		naive2 = naive[(2::cols(naive)),1]'
+		naive3 = naive[1,1]
+		naive4 = (naive2,naive3)'
+		naive5 = naive[2::rows(naive),2::cols(naive)]
+		varNaive=(naive5 \ naive2),naive4
 
-	// reversing robust
-	robust2 = robust[(2::cols(robust)),1]'
-	robust3 = robust[1,1]
-	robust4 = (robust2,robust3)'
-	robust5 = robust[2::rows(robust),2::cols(robust)]
-	varrb = (robust5 \ robust2),robust4
+		// reversing robust
+		robust2 = robust[(2::cols(robust)),1]'
+		robust3 = robust[1,1]
+		robust4 = (robust2,robust3)'
+		robust5 = robust[2::rows(robust),2::cols(robust)]
+		varrb = (robust5 \ robust2),robust4
+		
+		// reversing df
+		df2 = df[(2::cols(df)),1]'
+		df3 = df[1,1]
+		df4 = (df2,df3)'
+		df5 = df[2::rows(df),2::cols(df)]
+		vardf = (df5 \ df2),df4
+		
+		// reversing kc
+		kc2 = kc[(2::cols(kc)),1]'
+		kc3 = kc[1,1]
+		kc4 = (kc2,kc3)'
+		kc5 = kc[2::rows(kc),2::cols(kc)]
+		varkc = (kc5 \ kc2),kc4
+		
+		// reversing md
+		md2 = md[(2::cols(md)),1]'
+		md3 = md[1,1]
+		md4 = (md2,md3)'
+		md5 = md[2::rows(md),2::cols(md)]
+		varmd = (md5 \ md2),md4
+		
+		// reversing fg
+		fg2 = fg[(2::cols(fg)),1]'
+		fg3 = fg[1,1]
+		fg4 = (fg2,fg3)'
+		fg5 = fg[2::rows(fg),2::cols(fg)]
+		varfg = (fg5 \ fg2),fg4
+		
+		// reversing mbn
+		mbn2 = mbn[(2::cols(mbn)),1]'
+		mbn3 = mbn[1,1]
+		mbn4 = (mbn2,mbn3)'
+		mbn5 = mbn[2::rows(mbn),2::cols(mbn)]
+		varmbn = (mbn5 \ mbn2),mbn4
+	}
 	
-	// reversing df
-	df2 = df[(2::cols(df)),1]'
-	df3 = df[1,1]
-	df4 = (df2,df3)'
-	df5 = df[2::rows(df),2::cols(df)]
-	vardf = (df5 \ df2),df4
-	
-	// reversing kc
-	kc2 = kc[(2::cols(kc)),1]'
-	kc3 = kc[1,1]
-	kc4 = (kc2,kc3)'
-	kc5 = kc[2::rows(kc),2::cols(kc)]
-	varkc = (kc5 \ kc2),kc4
-	
-	// reversing md
-	md2 = md[(2::cols(md)),1]'
-	md3 = md[1,1]
-	md4 = (md2,md3)'
-	md5 = md[2::rows(md),2::cols(md)]
-	varmd = (md5 \ md2),md4
-	
-	// reversing fg
-	fg2 = fg[(2::cols(fg)),1]'
-	fg3 = fg[1,1]
-	fg4 = (fg2,fg3)'
-	fg5 = fg[2::rows(fg),2::cols(fg)]
-	varfg = (fg5 \ fg2),fg4
-	
-	// reversing mbn
-	mbn2 = mbn[(2::cols(mbn)),1]'
-	mbn3 = mbn[1,1]
-	mbn4 = (mbn2,mbn3)'
-	mbn5 = mbn[2::rows(mbn),2::cols(mbn)]
-	varmbn = (mbn5 \ mbn2),mbn4
+	// for intercept-only models
+	else {
+		varNaive=naive
+		varrb = robust
+		vardf = df
+		varkc = kc
+		varmd = md
+		varfg = fg
+		varmbn = mbn
+	}
 
 	st_matrix("varNaive",varNaive)
 	st_matrix("varrb",varrb)
@@ -766,6 +787,7 @@ matrix gee(string scalar newvarlist, string scalar beginend, string scalar clust
 	st_matrix("varmd",varmd)
 	st_matrix("varfg",varfg)
 	st_matrix("varmbn",varmbn)
+	
 ////////////////////////////////////////////////////////////////////////////////
 
 // OUTPUT T-TEST INFO BACK TO STATA /////////////////////////////////////////////////	

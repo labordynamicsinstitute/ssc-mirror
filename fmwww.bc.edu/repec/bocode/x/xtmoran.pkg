@@ -1,0 +1,29 @@
+d 'XTMORAN': module to calculate Moran's I and Moran's Ii statistics for panel data and displaying a Moran scatterplot
+d
+d   xtmoran computes the global spatial autocorrelation statistic: 
+d Moran's I and local spatial autocorrelation statistics: Moran's
+d Ii. xtmoran computes and displays in tabular form the statistic
+d itself, the expected value of the statistic under the null
+d hypothesis of global spatial independence, the standard deviation
+d of the statistic, the z-value, and the corresponding 2-tail
+d p-value.xtmoran also displays a Moran scatterplot. 
+d
+d KW: Moran
+d KW: panel data
+d KW: spatial autocorrelation
+d
+d Requires: Stata version 11
+d
+d Distribution-Date: 20210903
+d
+d Author: Chen  Zihou, Party School of the Guangdong Provincial Committee of CPC, China
+d Support: email econometricalc@@outlook.com
+d
+d Author: Liu Xiangge, Party School of the Guangdong Provincial Committee of CPC, China
+d Support: email  1920888280@@qq.com
+d
+d Author: Xu Jiahui, Party School of the Guangdong Provincial Committee of CPC, China
+d Support: email xujiahui0106@@163.com
+d
+f xtmoran.ado
+f xtmoran.sthlp

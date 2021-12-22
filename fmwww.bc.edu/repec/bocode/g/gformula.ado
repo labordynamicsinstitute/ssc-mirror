@@ -1,3 +1,9 @@
+*! version 1.16 beta RhMD 18 Jul 2021
+*! with bug fixed for the bootstrap when no CDE is estimated - thanks to Tra Pham.
+*!
+*! version 1.15 beta RhMD 19 Jan 2021
+*! with bug fixed for dynamic interventions - thanks to Koen Simon.
+*!
 *! version 1.14 beta RhMD 11 Nov 2013
 *! with "specific" added as a new mediation option. This allows the user
 *! to specify two values of a single continuous exposure for which all
@@ -991,8 +997,13 @@ else {
 		}
 	}	
 	if "`oce'"=="" {
-		local _po="r(tce) r(nde) r(nie) r(pm) r(cde)"
-	}
+        if `r(cde)' != . {
+			local _po="r(tce) r(nde) r(nie) r(pm) r(cde)"
+        }
+        else {
+            local _po="r(tce) r(nde) r(nie) r(pm)"
+        }
+     }
 	else {
 		local _po=""
 		qui tab `exposure', matrow(_matrow)

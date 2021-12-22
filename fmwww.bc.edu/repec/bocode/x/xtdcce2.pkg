@@ -20,16 +20,20 @@ d KW: common correlated effects
 d
 d Requires: Stata version 10, xtcd2, xtcse2, ivreg2 and moremata from SSC (q.v.)
 d
-d Distribution-Date: 20190715
+d Distribution-Date: 20210816
 d
-d Author: Jan Ditzen, Heriot-Watt University
-d Support: email  j.ditzen@@hw.ac.uk
+d Author: Jan Ditzen, Free University of Bozen-Bolzano
+d Support: email  jan.ditzen@@unibz.it
 d
 f xtdcce2.ado
 f xtdcce2.sthlp
+f xtdcce2fast.ado
+f xtdcce2fast.sthlp
 f xtset2.ado
 f xtset2.sthlp
+f xtdcce2_auxiliary.ado
 f xtdcce2_estat.ado
 f xtdcce2_p.ado
+f ../b/bootstrap_xtdcce2.ado
 f xtdcce2_xtcd2_helpfile.do
 f xtdcce2_sample_dataset.dta

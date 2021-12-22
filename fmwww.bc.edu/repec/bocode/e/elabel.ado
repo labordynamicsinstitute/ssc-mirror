@@ -1,4 +1,4 @@
-*! version 4.2.2 09jul2021 daniel klein
+*! version 4.4.0 07nov2021 daniel klein
 program elabel
     version 11.2
     version `= _caller()' : mata : elabel()

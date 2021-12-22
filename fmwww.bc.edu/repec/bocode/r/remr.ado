@@ -1,7 +1,8 @@
-* REMR version 1.1 - 19 August 2020
-* Authors: Luis Furuya-Kanamori (luis.furuya-kanamori@anu.edu.au), Chang Xu, Suhail AR Doi
+* REMR version 1.2 - 15 October 2021
+* Authors: Luis Furuya-Kanamori (l.furuya@uq.edu.au), Chang Xu, Suhail AR Doi
 
-*version 1.1 - ref(#) not part of dataset, added warning message ""Graph not rendered - reference value should match one of the dose levels in the dataset"
+	*version 1.1 - ref(#) not part of dataset, added warning message ""Graph not rendered - reference value should match one of the dose levels in the dataset"
+	*version 1.2 - keep all data after if/in selected
 
 
 program define remr, rclass

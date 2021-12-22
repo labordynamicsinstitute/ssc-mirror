@@ -145,7 +145,7 @@ spreadsheet in software such as Microsoft Excel. {p_end}
 {phang2}{cmd:local subpops "total male female age18to34-age65plus"}{p_end}
 
 {pstd}/* Open the output file */{p_end}
-{phang2}{cmd:file open outfile using "myoutput.txt", write replace}{p_end}
+{phang2}{cmd:file open outfile using "myoutput1a.txt", write replace}{p_end}
 
 {pstd}/* Write the header line listing the subpopulations and labeling columns that have proportions/means, estimated SEs, and sample sizes */{p_end}
 {phang2}{cmd:tabsheet `subpops', type(header)}{p_end}
@@ -194,7 +194,7 @@ The {bf:simple} option only displays one column for each subpopulation (with the
 {phang2}{cmd:{c )-} }{p_end}
 
 {pstd}/* Open output file */{p_end}
-{phang2}{cmd:file open outfile using "myoutput2", write replace}{p_end}
+{phang2}{cmd:file open outfile using "myoutput1b.txt", write replace}{p_end}
 
 {pstd}/* Output a header and then proportions for the recoded variables */{p_end}
 {phang2}{cmd:tabsheet RegionNE RegionSE, type(header)}{p_end}
@@ -217,7 +217,7 @@ The {bf:simple} option only displays one column for each subpopulation (with the
 {phang2}{cmd:{c )-} }{p_end}
 
 {pstd}/* Open output file */{p_end}
-{phang2}{cmd:file open outfile using "myoutput3", write replace}{p_end}
+{phang2}{cmd:file open outfile using "myoutput2.txt", write replace}{p_end}
 
 {pstd}/* Create headers and output proportions the basic way */{p_end}
 {phang2}{cmd:tabsheet total hlth1-hlth9, type(header)}{p_end}
@@ -289,4 +289,4 @@ Thank you to several others at FMG who shared feedback on previous versions, sha
 
 {title:Author}
 
-{pstd}Jonathan Mendelson, Fors Marsh Group, jmendelson@forsmarshgroup.com{p_end}
+{pstd}Jonathan Mendelson, jmendelson@gmail.com{p_end}

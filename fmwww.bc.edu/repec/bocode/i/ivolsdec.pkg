@@ -1,0 +1,23 @@
+d 'IVOLSDEC': module to produce decomposition of the IV-OLS coefficient gap
+d
+d     ivolsdec performs a decomposition of the IV-OLS coefficient
+d gap suggested by Ishimaru (arXiv, 2021). This decomposition
+d accounts for	  nonlinearity and observed heterogeneity in a
+d relation between the outcome variable and the treatment variable,
+d generalizing	  the one suggested by Lochner and Moretti
+d (Rev.Ec.Stat., 2015). 
+d
+d KW: estimation
+d KW: IV
+d KW: OLS
+d KW: coefficient gap
+d
+d Requires: Stata version 12.1
+d
+d Distribution-Date: 20211217
+d
+d Author:  Shoya Ishimaru, Hitotsubashi University
+d Support: email shoya.ishimaru@@r.hit-u.ac.jp
+d
+f ivolsdec.ado
+f ivolsdec.sthlp

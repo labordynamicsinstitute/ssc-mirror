@@ -1,6 +1,6 @@
 d 'SLICEPLOT': module for time series or other plot in slices
 d
-d sliceplot produces a time series or other plot divided into a
+d  sliceplot produces a time series or other plot divided into a
 d series of slices and then combined. The horizontal variable may
 d be any numeric variable, but the program is motivated by the case
 d of time series plots that would benefit from a short and wide

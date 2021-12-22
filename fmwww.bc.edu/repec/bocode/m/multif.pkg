@@ -11,9 +11,9 @@ d KW: conditional
 d
 d Requires: Stata version 10
 d
-d Distribution-Date: 20180818
+d Distribution-Date: 20210929
 d
-d Author: Sven-Kristjan Bormann , NA
+d Author: Sven-Kristjan Bormann 
 d Support: email sven-kristjan@@gmx.de
 d
 f multif.ado

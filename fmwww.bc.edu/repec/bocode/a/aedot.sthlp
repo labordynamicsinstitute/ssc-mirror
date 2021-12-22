@@ -1,5 +1,5 @@
 {smcl}
-{* *! aedot version 1.2 05March2021}{...}
+{* *! aedot version 1.3 17November2021}{...}
 {cmd:help aedot}
 {hline}
 
@@ -81,11 +81,13 @@
 {synopt:{opt marginpos(string)}}to indicate if the data table of event frequencies is displayed on the right or left of the plot; {cmd:marginpos()} takes value l to indicate positioned to the left and r to indicate positioned to the right.{p_end}
 {synopt:{opt event1pos(#)}}specify x-axis position to place the column of event frequencies for the first treatment group.{p_end}
 {synopt:{opt event2pos(#)}}specify x-axis position to place the column of event frequencies for the second treatment group.{p_end}
-{synopt:{opt event1posy(#)}}specify y-axis position to place the title of the column of event frequencies for the first treatment group; default is {cmd:event1posy(0.5)}.{p_end}
-{synopt:{opt event2posy(#)}}specify y-axis position to place the title of the column of event frequencies for the second treatment group; default is {cmd:event2posy(0.5)}.{p_end}
-{synopt:{opt event1name(string)}}specify text for the title of the column of event frequencies for the first treatment group; default text is {it:"Group 1"}{p_end}
-{synopt:{opt event2name(string)}}specify text for the title of the column of event frequencies for the second treatment group; default text is {it:"Group 2"}{p_end}
-	 
+{synopt:{opt event1posy(#)}}specify y-axis position to place the main column titles indicating treatment groups; default is {cmd:event1posy(0.4)}{p_end}
+{synopt:{opt event2posy(#)}}specify y-axis position to place the column subtitles; default is {cmd:event2posy(0.6)}{p_end}
+{synopt:{opt event1name(string)}}specify text for the title of the column for the first treatment group; default text is {it:"Group 1"}{p_end}
+{synopt:{opt event2name(string)}}specify text for the title of the column for the second treatment group; default text is {it:"Group 2"}{p_end}
+{synopt:{opt numppl(string)}}specify text for the subtitle representing column with number of participants; default text is {it:"n"}{p_end}
+{synopt:{opt numevent(string)}}specify text for the subtitle representing column with number of events; default text is {it:"events"}{p_end}
+ 
 {synopt:{opt title(string)}}specify an overall title for the plot{p_end}
 {synopt:{opt subtitle(string)}}specify an overall subtitle for the plot{p_end}
 {synopt:{cmd: grphcol(}{it:{help colorstyle}})}colour of the graph background; default is {cmd:grphcol(white)}{p_end}
@@ -101,15 +103,9 @@ required.{p_end}
 {title:Description}
 
 {pstd}
-{cmd:aedot} creates a dot plot for adverse event data from a two-arm clinical trial, 
-as proposed by {help aedot##R2008:Amit, Heiberger, and Lane (2008)}. 
-The dot plot produces two graphs plotted adjacent to each other. The first plot on the left of the graph
-displays the incidence of each event by treatment arm giving a visual summary of absolute differences. 
-The second plot on the right of the graph displays either the relative risk with corresponding 95% 
-confidence interval or the risk difference with  corresponding 95% confidence interval.
-Events are ordered by largest positive difference through to largest negative difference.
-An optional data table of event frequencies for each treatment group can be included 
-on the far right of the plot or in the centre of the plot as per the examples in {help aedot##R2020:Cornelius, Cro, and Phillips (2020)}
+{cmd:aedot} creates a dot plot for adverse event data from a two-arm clinical trial, as proposed by {help aedot##R2008:Amit, Heiberger, and Lane (2008)}. 
+The dot plot produces two graphs plotted adjacent to each other. The first plot on the left displays the incidence of each event by treatment group giving a visual summary of absolute differences. The second plot on the right displays either the relative risk with corresponding 95% 
+confidence interval or the risk difference with corresponding 95% confidence interval. An optional data table containing the number of participants with each event and the number of events for each treatment group can be included on the far right of the plot or in the centre of the plot as per the examples in {help aedot##R2020:Cornelius, Cro, and Phillips (2020)}.
 
 
 {marker options}{...}
@@ -358,12 +354,12 @@ working on log scale or not when specifying this option.
 working on log scale or not when specifying this option. Also note position of {cmd:event1pos()} to prevent overlap.
 
 {phang}
-{opt event1posy(#)} specifies y-axis position to place the title of the column of event frequencies for the first treatment group; 
-default is {cmd:event1posy(0.5)}.
+{opt event1posy(#)} specifies y-axis position to place the main column titles indicating treatment groups; 
+default is {cmd:event1posy(0.4)}. As the number of events increase titles may start to overlap, use these options to prevent overlap.
 
 {phang}
-{opt event2posy(#)} specifies y-axis position to place the title of the column of event frequencies for the first treatment group; 
-default is {cmd:event2posy(0.5)}.
+{opt event2posy(#)} specifies y-axis position to place the column subtitles; default is {cmd:event2posy(0.6)}.
+As the number of events increase titles may start to overlap, use these options to prevent overlap.
 
 {phang}
 {opt event1name(string)} label for the title of the column of event frequencies for the first treatment group;
@@ -372,6 +368,14 @@ default text is {it:"Group 1"}
 {phang}
 {opt event2name(string)} label for the title of the column of event frequencies for the second treatment group;
 default text is {it:"Group 2"}
+
+{phang}
+{opt numppl(string)} label for the subtitle representing column with number of participants;
+default text is {it:"n"}
+
+{phang}
+{opt numevent(string)} label for the subtitle representing column with number of events;
+default text is {it:"events"}
 
 {phang}
 {cmd: grphcol(}{it:{help colorstyle}}) specifies the colour of the graph background.
@@ -427,10 +431,10 @@ process lowest coded value first. For example:{break}
 therefore we advise users to split their data into groups of events and produce a separate plot for each group if necessary.
      
 {pstd}
-(8) If the dataset contains more than two treatment arms then we recommend users present separate graphs for each pairwise comparison.
+(8) If the dataset contains more than two treatment groups then we recommend users present separate graphs for each pairwise comparison.
 
 {pstd}
-(9) Event frequencies by treatment arm can be added to the plot in a separate data table in either the centre of the plot or on the far right.
+(9) Event frequencies including number of participants with each event and the number of events by treatment group can be added to the plot in a separate data table in either the centre of the plot or on the far right.
 
 
 {marker examples}{...}
@@ -495,17 +499,24 @@ Dot plot using the {cmd: logoff} option to plot relative risks instead of the lo
 {phang2}{cmd:. aedot aebodsys, treat(arm) id(usubjid) n1(30) n2(31)  brightmargin(7)  trightmargin(8) logoff(1) rightxlabel(0.03 0.1 0.5 0 1 5 10 20 50)}{p_end}
 
 {pstd}
-Dot plot using the {cmd: nummargin}, {cmd: margin}, {cmd: marginpos}, {cmd: event1pos}  and {cmd: event2pos} options to include a data table of event frequencies on the far right of the plot{p_end} 
+Dot plot using the {cmd: nummargin}, {cmd: margin}, {cmd: marginpos}, {cmd: event1pos}  and {cmd: event2pos} options to include a data table on the far right of the plot{p_end} 
 {phang2}{cmd:. use example_dot.dta, clear}{p_end}
-{phang2}{cmd:. aedot aebodsys, treat(arm) id(usubjid) n1(30) n2(31) brightmargin(7)  trightmargin(8) nummargin(1) margin(20)  event1pos(4.2) event2pos(5.5) marginpos(r)}{p_end}
+{phang2}{cmd:. aedot aebodsys, treat(arm) id(usubjid) n1(30) n2(31) brightmargin(7)  trightmargin(8) nummargin(1) margin(50)  event1pos(5) event2pos(8) marginpos(r)}{p_end}
 
 {pstd}
-Dot plot using the {cmd: nummargin}, {cmd: margin}, {cmd: marginpos}, {cmd: event1pos}  and {cmd: event2pos} options to include a data table of event frequencies in the centre of the plot{p_end} 
+Dot plot using the {cmd: nummargin}, {cmd: margin}, {cmd: marginpos}, {cmd: event1pos}  and {cmd: event2pos} options to include a data table in the centre of the plot{p_end} 
 {phang2}{cmd:. use example_dot.dta, clear}{p_end}
-{phang2}{cmd:. aedot aebodsys, treat(arm) id(usubjid) n1(30) n2(31) brightmargin(7)  trightmargin(8) nummargin(1) margin(25)  event1pos(-5.5) event2pos(-4.5) marginpos(l)}{p_end}
+{phang2}{cmd:. aedot aebodsys, treat(arm) id(usubjid) n1(30) n2(31) brightmargin(7)  trightmargin(8) nummargin(1) margin(45)  event1pos(-7.5) event2pos(-4.5) marginpos(l)}{p_end}
 
+{pstd}
+Dot plot using the {cmd: nummargin}, {cmd: margin}, {cmd: marginpos}, {cmd: event1pos}  and {cmd: event2pos} options to include a data table on the far right of the plot and change column titles{p_end} 
+{phang2}{cmd:. use example_dot.dta, clear}{p_end}
+{phang2}{cmd:. aedot aebodsys, treat(arm) id(usubjid) n1(30) n2(31) brightmargin(7)  trightmargin(8) nummargin(1) margin(45)  event1pos(5) event2pos(8) marginpos(r)  event1name(Intervention) event2name(Control) numppl(n) numevent(N)}{p_end}
 
-
+{pstd}
+Dot plot including a data table on the far right of the plot, changing column titles and adding space between column title and subtitles{p_end} 
+{phang2}{cmd:. use example_dot.dta, clear}{p_end}
+{phang2}{cmd:. aedot aebodsys, treat(arm) id(usubjid) n1(30) n2(31) nummargin(1) margin(45)  event1pos(5) event2pos(8) marginpos(r) event1name(Intervention) event2name(Control) numppl(n) numevent(N) event1posy(0.2) event2posy(0.7)}{p_end}
 
 {title:Acknowledgments}
 
@@ -519,14 +530,13 @@ Giles Partington (Imperial College London) for their helpful comments on the pro
 
 {marker R2008}{...}
 {phang}
-Amit, O. , Heiberger, R. M. and Lane, P. W. 2008. Graphical approaches to the analysis of safety data from clinical trials. 
+Amit, O., Heiberger, R. M. and Lane, P. W. 2008. Graphical approaches to the analysis of safety data from clinical trials. 
 {it:Pharmaceut. Statist.} 7: 20-35. doi:10.1002/pst.254
 
 {marker R2020}{...}
 {phang}
-Cornelius, V., Cro, S. & Phillips, R. 2020. Advantages of visualisations to evaluate and communicate adverse event information in randomised controlled trials. 
+Cornelius, V., Cro, S. and Phillips, R. 2020. Advantages of visualisations to evaluate and communicate adverse event information in RCTs. 
 {it:Trials} 21: 1028. doi.org/10.1186/s13063-020-04903-0
-
 
 {title:Authors}
 

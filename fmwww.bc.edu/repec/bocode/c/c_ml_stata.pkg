@@ -26,7 +26,7 @@ d KW: support vector machine
 d
 d Requires: Stata version 16.1 
 d
-d Distribution-Date: 20210126
+d Distribution-Date: 20211202
 d
 d Author: Giovanni Cerulli, IRCrES-CNR
 d Support: email giovanni.cerulli@@ircres.cnr.it
@@ -38,10 +38,10 @@ f c_naivebayes.py
 f c_nearestneighbor.py
 f c_neuralnet.py
 f c_randomforest.py
-F c_multinomial.py
 f c_regularizedmultinomial.py
+f c_multinomial.py
 f c_svm.py
 f c_tree.py
 f ../e/example_c_ml_stata.do
-f c_ml_stata_data_example.dta
-f c_ml_stata_data_new_example.dta
+f ../d/data_new_x.dta
+f ../d/data_new_y.dta

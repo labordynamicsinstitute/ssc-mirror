@@ -1,6 +1,6 @@
 d 'SOEPDO': module to handle SOEP drop-outs
 d
-d soepdo is intended for people who need to build datasets which
+d  soepdo is intended for people who need to build datasets which
 d contain drop-outs from the German Socio-Economic Panel Study
 d (SOEP Group, 2001). In the current version only the retrieval of
 d variables in YPBRUTTO is supported. 

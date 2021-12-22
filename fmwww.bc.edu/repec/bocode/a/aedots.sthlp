@@ -6,7 +6,7 @@
 {title:Title}
 
 {p2colset 5 14 16 2}{...}
-{p2col :{cmd:aedots} {hline 2} Dot plot for summary level adverse event data}{p_end}
+{p2col :{cmd:aedots} {hline 2} Dot plot for summary level adverse event data with data table containing number of participants}{p_end}
 {p2colreset}{...}
 
 
@@ -109,8 +109,8 @@ The second plot on the right of the graph displays either the relative risk with
 confidence interval or the risk difference with  corresponding 95% confidence interval.
 Events are ordered by largest positive difference through to largest negative difference.
 An optional data table of event frequencies for each treatment group can be included 
-on the far right of the plot or in the centre of the plot as per the examples in {help aedots##R2020:Cornelius, Cro, and Phillips (2020)}
-
+on the far right of the plot or in the centre of the plot as per the examples in {help aedots##R2020:Cornelius, Cro, and Phillips (2020)}.
+In the event that information on the number of events is available a data table with both the number of participants and number of events can be produced using the {cmd:aedots2} command. 
 
 {marker options}{...}
 {title:Options}
@@ -424,6 +424,9 @@ therefore we advise users to split their data into groups of events and produce 
 
 {pstd}
 (9) Event frequencies by treatment arm can be added to the plot in a separate data table in either the centre of the plot or on the far right.
+
+{pstd}
+(10) In the event that information on the number of events is available a data table that contains columns of the number of participants and number of events can be produced using the {cmd:aedots2} command. 
 
 
 {marker examples}{...}

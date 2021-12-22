@@ -9,6 +9,8 @@ d
 d KW: subsidy
 d KW: simulation
 d
+d Requires: Stata version 10
+d
 d Distribution-Date: 20150603
 d
 d Author: Abdelkrim Araar,  World Bank

@@ -1,6 +1,6 @@
 {smcl}
 {hline}
-{hi:help xtcse2}{right: v. 1.01 - 15. July 2019}
+{hi:help xtcse2}{right: v. 1.02 - 11. January 2021}
 {hline}
 {title:Title}
 
@@ -11,7 +11,15 @@
 {p 4 13}{cmd:xtcse2} [{varlist}] [if] [{cmd:,}
 {cmd:pca(integer)}
 {cmdab:stand:ardize}
-{cmd:nocd}]
+{cmd:nocenter}
+{cmd:nocd}
+{cmdab:RES:sidual}
+{cmdab:R:eps(integer)}
+{cmd:size(real)}
+{cmd:tuning(real)}
+{cmd:lags(integer)}
+{cmdab:sames:ample}
+]
 
 {p 4 4}Data has to be {cmd:xtset} before using {cmd:xtcse2}; see {help tsset}.
 {it:varlist} may contain time-series operators, see {help tsvarlist}. 
@@ -35,7 +43,7 @@ unit if the panel is unbalanced.{p_end}
 
 {p 4 4}{cmd:xtcse2} estimates the exponent of cross-sectional dependence in a panel
 with a large number of observations over time (T) and cross-sectional units (N).
-The estimation method follows Bailey, Kapetanios, Pesaran (2016) (henceforth BKP).{break}
+The estimation method follows Bailey, Kapetanios, Pesaran (2016,2019) (henceforth BKP).{break}
 A variable or a residual is cross-sectional dependent if it inhibits an
 across cross-sectional units common factor.{p_end}
 
@@ -54,7 +62,7 @@ For a discussion of {cmd:xtdcce2} and {cmd:xtcd2} see Ditzen (2018,2019).{p_end}
 
 {p 4 4}If the panel is unbalanced or observations are missing for a specific cross-section 
 unit-time combination, then the sample is restricted to the union of all time periods across
-cross-sectional units. 
+cross-sectional units using {help xtbalance2}.
 For unbalanced panels with many missings or a variable with many missings, many
 observations might be lost.{p_end}
 
@@ -65,7 +73,26 @@ calculation of {it:cn}. Default is to use the first 4 components.{p_end}
 
 {p 4 8}{cmdab:stand:ardize} standardizes variables.{p_end}
 
+{p 4 8}{cmd:nocenter} do not center variables.{p_end} 
+
 {p 4 8}{cmd:nocd} suppresses test for cross-sectional dependence using {help xtcd2}.{p_end}
+
+{p 4 8}{cmd:size(real)} size of the test. Default is 10% (0.1).{p_end}
+
+{p 4 8}{cmdab:RES:sidual} estimates the exponent of cross-sectional depdendence
+in residuals, following BKP 2019.{p_end}
+
+{p 4 8}{cmd:tuning(real)} tuning parameter for estimation of the exponent in residuals.
+Default is 0.5.{p_end}
+
+{p 4 8}{cmdab:R:eps(integer)} number of repetitions for bootstrap for calculation of
+standard error and confidence interval for exponent in residuals. Default is 0.{p_end}
+
+{p 4 8}{cmd:lags(integer)} number of lags (or training period) for calculation of 
+recursive residuals when estimating the exponent after a regression with weakly exogenous regressors.{p_end}
+
+{p 4 8}{cmdab:sames:ample} If {cmd:xtcse2} detects an unbalanced panel, it tries to create a balanced subsample using {help xtbalance2}.
+If {cmdab:sames:ample} is used, then CD test will be applied to the balanced subsample.{p_end}
 
 {marker model}{title:Econometric Model and Estimation of the Exponent}
 
@@ -129,7 +156,7 @@ a careful reading of the assumptions and theorems is strongly encouraged.{p_end}
 
 {p 4 4}where {it:sigma_x^2} is the variance of the cross-sectional averages. 
 {it:mu^2} is average variance of significant regression coefficients of {it:x(i,t)} on
-standardized cross-sectional averages. 
+standardized cross-sectional averages with a pre specified size of the test. 
 {it:cn} is the variance of scaled errors from a regression of the {it:x(i,t)} on 
 its first {it:K(PC)} principle components. 
 The number of principle components can be set using the option 
@@ -154,6 +181,29 @@ cross-sectional averages. q is the third root of T. {it:S} is the squared sum di
 N^(alpha-1) of OLS coefficients of x(it) on standardized cross-sectional averages 
 sorted according to their absolute value.{p_end} 
 
+{p 4 4}In the case of estimating the exponent of cross-sectional dependence in residuals
+Bailey, Kapetanios and Pesaran (2019) propose to use pair-wise correlations to estimate 
+the exponent. For the calculation, only significant correlations are taken into account. 
+The exponent is estiamted according to (Eq 25 in BKP 2019):{p_end}
+
+{col 10} alpha = ln(tau' delta tau) / [2 ln(N)]
+
+{p 4 4}where tau is a Nx1 vector of ones and delta is a matrix which contains 
+the significant pair-wise correlations. 
+For the significance, the size of the test and a tuning parameter need to be 
+set a priori. 
+{cmd:xtcse2} uses a size of 10% and a tuning parameter of 0.5 as a default.
+Both can be changed with the options {cmd:size()} and {cmd:tuning()}.{p_end}
+
+{p 4 4}In the case of a panel with weakly exogenous regressors, the pair-wise correlations
+are based on recursive residuals, see BKP 2019, section 5.2. 
+{cmd:xtcse2} allows for this if the option {cmd:lags()} is used.{p_end}
+
+{p 4 4}BKP 2019 do not derive a closed form solution for standard errors. 
+Therefore standard errors and confidence intervals are calculated using a simple bootstrap, 
+where the cross-sectional units are replaced with replacement. This approach is
+outlined in BKP 2019 section 5.3.{p_end}
+
 {marker saved_vales}{title:Saved Values}
 
 {cmd:xtcse2} stores the following in {cmd:r()}:
@@ -169,7 +219,7 @@ sorted according to their absolute value.{p_end}
 
 {marker examples}{title:Examples}
 
-{p 4 4}An example dataset of the Penn World Tables 8 is available for download {browse "https://www.dropbox.com/s/0087vh8brhid5ws/xtdcce2_sample_dataset.dta?dl=0":here}.
+{p 4 4}An example dataset of the Penn World Tables 8 is available for download {browse "https://github.com/JanDitzen/xtdcce2/raw/master/xtdcce2_sample_dataset.dta":here}.
 The dataset contains yearly observations from 1960 until 2007 and is already tsset.
 To estimate a growth equation the following variables are used:
 log_rgdpo (real GDP), log_hc (human capital), log_ck (physical capital) and log_ngd (population growth + break even investments of 5%).{p_end}
@@ -184,25 +234,23 @@ above 1. Therefore an
 estimation method taking cross-sectional dependence is required. 
 {help xtdcce2} is uses such an estimation method by adding cross-sectional averages 
 to the model. After running {cmd:xtdcce2} it is possible to use {cmd:xtcse2} to estimate
-the strength of the exponent of the residual.{p_end}
+the strength of the exponent of the residual using the option {cmd:residuals}.{p_end}
 
-{p 8}{stata xtdcce2135 log_rgdpo L.log_rgdpo log_ck log_ngd  log_hc , cr(log_rgdpo log_ck log_ngd  log_hc)  }.{p_end}
-{p 8}{stata xtcse2}{p_end}
+{p 8}{stata xtdcce2 log_rgdpo L.log_rgdpo log_ck log_ngd  log_hc , cr(log_rgdpo log_ck log_ngd  log_hc)  }.{p_end}
+{p 8}{stata xtcse2, res}{p_end}
 
 {p 4 4}{cmd:xtcse2} automatically predicts the residuals using {help predict} 
 ({help xtdcce2#postestimation:predict after xtdcce2}). 
 The CD statistic is still in a rejection region, therefore the residuals 
-exhibit strong cross-sectional dependence. 
-This is confirmed by the confidence interval of {it:alpha} which just overlaps
-with 0.5.{p_end}
+exhibit strong cross-sectional dependence. {p_end}
 
 {p 4 4}The estimated model above is mis-specified as it is a dynamic model, but no lags
 of the cross-sectional averages are added. The number of lags should be in the
 region of T^(1/3), so with 47 periods 3 lags are added. Then {cmd:xtcse2} is used 
 to estimate alpha again, this time the CD test is omitted:{p_end}
 
-{p 8}{stata xtdcce2135 log_rgdpo L.log_rgdpo log_ck log_ngd  log_hc , cr(log_rgdpo log_ck log_ngd  log_hc) cr_lags(3) }.{p_end}
-{p 8}{stata xtcse2,nocd}{p_end}
+{p 8}{stata xtdcce2 log_rgdpo L.log_rgdpo log_ck log_ngd  log_hc , cr(log_rgdpo log_ck log_ngd  log_hc) cr_lags(3) }.{p_end}
+{p 8}{stata xtcse2 ,nocd residual lags(3) reps(200)}{p_end}
 
 {p 4 4}The value of the CD test statistic is 1.32 and in a non-rejection region.
 The estimate of {it:alpha} is considerably small the confidence interval does not 
@@ -223,6 +271,10 @@ the option {cmd:standardize} is used to standardize the variable as done in BKP:
 {p 4 8}Bailey, N., G. Kapetanios and M. H. Pesaran. 2016.
 Exponent of cross-sectional dependence: estimation and inference.
 Journal of Applied Econometrics 31: 929-960.{p_end}
+
+{p 4 8}Bailey, N., G. Kapetanios and M. H. Pesaran. 2019.
+Exponent of Cross-sectional Dependence for Residuals.
+Sankhya B. The Indian Journal of Statistics: forthcoming.{p_end}
 
 {p 4 8}Chudik, A., M. H. Pesaran and E. Tosetti. 2011. 
 Weak and strong cross-section dependence and estimation of large panels.
@@ -247,20 +299,24 @@ Econometric Reviews 34(6-10):1089–1117.{p_end}
 
 {marker about}{title:Author}
 
-{p 4}Jan Ditzen (Heriot-Watt University){p_end}
-{p 4}Email: {browse "mailto:j.ditzen@hw.ac.uk":j.ditzen@hw.ac.uk}{p_end}
+{p 4}Jan Ditzen (Free University of Bozen-Bolzano){p_end}
+{p 4}Email: {browse "mailto:jan.ditzen@unibz.it":jan.ditzen@unibz.it}{p_end}
 {p 4}Web: {browse "www.jan.ditzen.net":www.jan.ditzen.net}{p_end}
 
 {p 4 8}I am grateful to Sean Holly for the suggestion to implement the test 
-to {help xtdcce2} and {help xtcd2}.
+to {help xtdcce2} and {help xtcd2} and Hashem Pesaran and Natalia Bailey for their 
+help.
 Part of the code is taken from BKP and transferred from Gauss to Stata.
-The original Gauss code is available onPesaran's 
+The original Gauss code is available on Pesaran's 
 {browse "http://www.econ.cam.ac.uk/people/emeritus/mhp1/published-articles#2016":webpage}
 and for download {browse "http://www.econ.cam.ac.uk/people-files/emeritus/mhp1/fp15/BKP_GAUSS_procedures.zip":here}.
  All remaining errors are my own.{p_end}
 
 {p 4 4}In the fashion of {cmd:xtdcce2} and {cmd:xtcd2} {cmd:xtcse2} has a {cmd:2} as a suffix.
 There is no such program called {help xtcsee}.{p_end}
+
+{p 4 4}Small discrepancies to BKP 2018 and 2019 can arise due to different programs
+Stata vs. Gauss.{p_end}
 
 {p 4 8}Please cite as follows:{break}
 Ditzen, J. 2019. xtcse2: Estimating Exponent of Cross-Sectional Dependence in large panels.
@@ -270,7 +326,11 @@ Ditzen, J. 2019. xtcse2: Estimating Exponent of Cross-Sectional Dependence in la
 .{p_end}
 
 {marker ChangLog}{title:Changelog}
-{p 4 8}This version: 1.0 - 13. July 2019{p_end}
+{p 4 8}This version: 1.2 - 11. January 2021{p_end}
+{p 8 8}- added support for residuals{p_end}
+{p 8 8}- bug fixed{p_end}
+{p 8 8}- added option {cmd:nocenter}{p_end}
+{p 8 8}- added xtbalance2 to balance paneldataset{p_end}
 
 {title:Also see}
-{p 4 4}See also: {help xtdcce2}, {help xtcd2}{p_end} 
+{p 4 4}See also: {help xtdcce2}, {help xtcd2}, {help xtbalance2}{p_end} 

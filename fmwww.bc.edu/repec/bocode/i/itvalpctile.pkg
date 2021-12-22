@@ -16,7 +16,7 @@ d KW: quantiles
 d
 d Requires: Stata version 14.2
 d
-d Distribution-Date: 20210213
+d Distribution-Date: 20211124
 d
 d Author: Arie Beresteanu, University of Pittsburgh
 d Support: email arie@@pitt.edu
@@ -26,3 +26,4 @@ d Support: email yuya.sasaki@@gmail.com
 d
 f itvalpctile.ado
 f itvalpctile.sthlp
+f ../c/CHTdata_extract10percent.dta

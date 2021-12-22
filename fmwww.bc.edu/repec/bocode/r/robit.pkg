@@ -1,0 +1,18 @@
+d 'ROBIT': module to estimate robit regression for binary outcomes
+d
+d  robit fits a robit regression model, with a number of degrees   
+d   of freedom specified by the user, as a robust alternative to
+d logistic regression. 
+d
+d KW: robit
+d KW: regression
+d
+d Requires: Stata version 16 and xlink from SSC (q.v.)
+d
+d Distribution-Date: 20211221
+d
+d Author: Roger Newson,  King's College London
+d Support: email roger.newson@@kcl.ac.uk
+d
+f robit.sthlp
+f robit.ado

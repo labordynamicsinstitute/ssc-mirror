@@ -1,9 +1,9 @@
 d 'STCOXGOF': module to produce goodness-of-fit test and plot after a Cox model
 d
-d stcoxgof is a post-estimation command testing the goodness of fit
-d after a Cox model. So you must use this command after stcox. To
-d compute Gronnesby and Borgan test  and to obtain Arjas like plots
-d Martingale residuals must also be saved specifying stcox's
+d  stcoxgof is a post-estimation command testing the goodness of
+d fit after a Cox model. So you must use this command after stcox.
+d To compute Gronnesby and Borgan test	and to obtain Arjas like
+d plots Martingale residuals must also be saved specifying stcox's
 d mgale() option; see help stcox. stcoxgof calls scoretest_cox,
 d written by Isabel Canette of StataCorp, to compute score test
 d statistics. 

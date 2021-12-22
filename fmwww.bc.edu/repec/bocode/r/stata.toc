@@ -30,6 +30,7 @@ p rankseg module to compute rank-order segregation measures with finite sample-b
 p ranktest module to test the rank of a matrix 
 p ranova module to estimate single factor repeated measures ANOVA
 p ranvar module to compute the random group variance estimator of the mean for survey data
+p ras module to implement biproportional scaling (RAS) method
 p raschcvt module to produce data in WINSTEPS format
 p raschfit module to implement the Raschfit algorithm defined by Hardouin and Mesbah (2004)
 p raschify module to transform 1PL model estimates to Rasch metric
@@ -46,6 +47,7 @@ p rcall module to provide seamless R in Stata
 p rcd module to run commands recursively
 p rcentile module to compute robust confidence intervals for percentiles
 p rcl module for estimation and simulation of random coefficient logit models
+p rcm module to implement regression control method / panel data approach to program evaluation
 p rcolp2mat module to produce a two-way table with row and column percentages as a matrix
 p rcsgen module to generate restricted cubic splines and their derivatives
 p rcspline module  for restricted cubic spline smoothing 
@@ -168,6 +170,7 @@ p rioc module to compute Relative improvement over chance (RIOC)
 p ritest module to perform randomization inference and permutation tests
 p rkqte module for estimation and robust inference for quantile treatment effects (QTE) in regression kink designs (RKD)
 p rmanova module to estimate repeated measures ANOVA
+p rmclass module to compute classification statistics for data with repeated measures
 p rmcorr module to compute a correlation for data with repeated measures
 p rmfiles module to provide a convenient way to remove matched files within a specified directory and possibly, if applicable, corresponding empty directories (which will also, if wanted, be applied recursively to a matched subset of offspring-directories)
 p rmhbounds module to refine mhbounds to remove the cap on the number of strata and replace the large sample approximation for E and V with exact moments
@@ -176,6 +179,7 @@ p rmpw module to implement the RMPW method of causal mediation analysis to decom
 p rmse module to calculate raw or adjusted RMSE (Root MSE)
 p rnd modules for random number generation
 p robbox module to compute generalized box plots
+p robit module to estimate robit regression for binary outcomes
 p robjb module to compute Brys et al. (2008) robust Jarque-Bera Normality test
 p roblpr module to estimate long memory in a set of timeseries
 p robmv module for robust multivariate estimation of location and covariance 
@@ -204,6 +208,7 @@ p rpaxioms module to test and evaluate axioms of revealed preferences
 p rpme module to compute Robust Pareto midpoint estimator
 p rpnfcn module to provide a Mata generic function evaluator based on Reverse Polish Notation
 p rq module to compute Reynal-Querol index of ethnic polarization
+p rqr module to estimate the residualized quantile regression model
 p rqrs module to install required community-contributed packages
 p rrcalc module to calculate AAPOR compliant response rates
 p rrlogit module to estimate logistic regression for randomized response data

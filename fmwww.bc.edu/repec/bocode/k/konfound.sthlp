@@ -116,9 +116,9 @@ For additional details of the calculations in a spreadsheet format and other sup
 {phang} Michigan State University {p_end}
 
 {phang} Ran Xu {p_end}
-{phang} Michigan State University {p_end}
+{phang} University of Connecticut {p_end}
 
-{phang} Please email {bf:ranxu@msu.edu} if you observe any problems. {p_end}
+{phang} Please email {bf:ran.2.xu@uconn.edu} if you observe any problems. {p_end}
 
 {marker references}{...}
 {title:References}

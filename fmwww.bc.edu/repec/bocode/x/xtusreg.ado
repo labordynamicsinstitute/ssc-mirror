@@ -21,7 +21,7 @@
     fvexpand `indepvars' 
     local cnames `r(varlist)'
  
-    tempname b V N
+    tempname b V N T NT listyears Objective
 	
 	local two = 1
 	if "`twostep'" == "" {
@@ -38,7 +38,7 @@
 	        mata: gmm_estimation("`depvar'", "`cnames'", ///
 						 "`panelid'", "`timeid'", `two', `nonormal', ///
 						 `gamma', `beta', ///
-						 "`touse'", "`b'", "`V'", "`N'") 
+						 "`touse'", "`b'", "`V'", "`N'", "`T'", "`NT'", "`listyears'", "`Objective'") 
  
 			local cnames L1 `cnames'
  
@@ -51,7 +51,7 @@
 			mata: gmm_estimation_noX("`depvar'", ///
 							 "`panelid'", "`timeid'", `two', `nonormal', ///
 							 `gamma', `beta', ///
-							 "`touse'", "`b'", "`V'", "`N'") 
+							 "`touse'", "`b'", "`V'", "`N'", "`T'", "`NT'", "`listyears'", "`Objective'") 
  
 			local cnames L1 
  
@@ -61,8 +61,18 @@
 	}
 
     ereturn post `b' `V', esample(`touse') buildfvinfo
+    ereturn scalar NT   = `NT'
     ereturn scalar N    = `N'
-    ereturn local  cmd  "xtusreg"
+    ereturn scalar T    = `T'
+	ereturn matrix tlist= `listyears'
+	ereturn scalar objective = `Objective'
+	if `two' {
+		ereturn local  steps  "two"
+	}
+	if !`two' {
+		ereturn local  steps  "one"
+	}
+	ereturn local  cmd  "xtusreg"
  
     ereturn display
 end
@@ -418,7 +428,9 @@ void gmm_estimation( string scalar depvar,  string scalar indepvars,
 					 real scalar twostep, 	real scalar nonormalization, 
 					 real scalar gamma,		real scalar beta,
 					 string scalar touse,   string scalar bname,   
-					 string scalar Vname,   string scalar nname) 
+					 string scalar Vname,   string scalar nname,
+					 string scalar tname,	string scalar ntname,
+					 string scalar lname,	string scalar oname) 
 {
 	printf("\n{hline 78}\n")
 	printf("Executing: Sasaki, Y. & Xin, Y. (2017): Unequal Spacing in Dynamic Panel Data:\n")
@@ -601,15 +613,37 @@ void gmm_estimation( string scalar depvar,  string scalar indepvars,
 
     st_matrix(bname, b')
     st_matrix(Vname, V)
-    st_numscalar(nname, n)
+    st_numscalar(nname, Ni)
+	st_numscalar(tname, Nt)
+	st_numscalar(ntname, n)
+	st_numscalar(oname, optimize_result_value(S))
+	
+	////////////////////////////////////////////////////////////////////////////
+	// Compute list of years
+	////////////////////////////////////////////////////////////////////////////
+	listyears = year
+	index = 1
+	for( idx = 2 ; idx <= n ; idx++ ){
+		if( sum( year[idx] :== listyears[1..index] ) == 0 ){
+			listyears[index++] = year[idx]
+		}
+	}
+	listyears = listyears[1..(index-1)]
+	listyears = sort(listyears, 1)
+	
+	st_matrix(lname, listyears')
 	
 	printf("\nBalanced Portion of Panel Data")
 	printf("\n{hline 78}")
 	printf("\nNumber of observations:          %f ", n)
 	printf("\nNumber of cross-section units:   %f ", Ni)
 	printf("\nNumber of time periods:          %f ", Nt)
+	printf("\nList of time periods:            %f", listyears[1])
+	for( idx = 2 ; idx <= length(listyears) ; idx++ ){
+	    printf(", %f", listyears[idx])
+	}
 	printf("\n{hline 78}")
-	printf("\nL1 = Autoregressive Coefficient (rho)\n")
+	printf("\nL1 = Autoregressive Coefficient (gamma)\n")
 }
 
 //////////////////////////////////////////////////////////////////////////////// 
@@ -619,7 +653,9 @@ void gmm_estimation_noX( string scalar depvar,
 						 real scalar twostep, 	real scalar nonormalization,
 						 real scalar gamma,		real scalar beta,
 						 string scalar touse,   string scalar bname,   
-						 string scalar Vname,   string scalar nname) 
+						 string scalar Vname,   string scalar nname,
+						 string scalar tname,	string scalar ntname,
+						 string scalar lname,	string scalar oname) 
 {
 	printf("\n{hline 78}\n")
 	printf("Executing: Sasaki, Y. & Xin, Y. (2017): Unequal Spacing in Dynamic Panel Data:\n")
@@ -789,7 +825,10 @@ void gmm_estimation_noX( string scalar depvar,
 
     st_matrix(bname, b')
     st_matrix(Vname, V)
-    st_numscalar(nname, n)
+    st_numscalar(nname, Ni)
+	st_numscalar(tname, Nt)
+	st_numscalar(ntname, n)
+	st_numscalar(oname, optimize_result_value(S))
 
 	////////////////////////////////////////////////////////////////////////////
 	// Compute list of years
@@ -804,6 +843,8 @@ void gmm_estimation_noX( string scalar depvar,
 	listyears = listyears[1..(index-1)]
 	listyears = sort(listyears, 1)
 	
+	st_matrix(lname, listyears')
+	
 	printf("\nBalanced Portion of Panel Data")
 	printf("\n{hline 78}")
 	printf("\nNumber of observations:          %f ", n)
@@ -814,7 +855,7 @@ void gmm_estimation_noX( string scalar depvar,
 	    printf(", %f", listyears[idx])
 	}
 	printf("\n{hline 78}")
-	printf("\nL1 = Autoregressive Coefficient (rho)\n")
+	printf("\nL1 = Autoregressive Coefficient (gamma)\n")
 }
 
 end

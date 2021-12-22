@@ -15,52 +15,47 @@ program define cntraveltime
 		exit 9
 	}
 	version 14
-	syntax, baidukey(string) startlat(string) startlng(string) endlat(string) endlng(string) [transport(string) instruction ///
-		intercity(numlist int max=2 >=0 <=2 ) tactic(real 0)]
+	syntax, baidukey(string) startlat(string) startlng(string) endlat(string) endlng(string) [mode(string) detail ///
+		intercitytype(real 0) intercitytactic(real 0) tactic(real 0)]
 
-	if "`transport'" == "" local transport = "bus"
-	if !inlist("`transport'", "car", "bus", "bike") {
-		disp as error "you specify the option routetype() wrongly."
+	if "`mode'" == "" local mode = "public"
+	if !inlist("`mode'", "car", "public", "bike") {
+		disp as error "you specify the option mode() wrongly."
 		exit 198
 	}
 
-	if "`transport'" != "bus" & "`intercity'" != "" {
-		disp as error `"you could not specify the option intercity() when you specify "bike" in the option transport()."'
+	if "`mode'" != "public" & "`intercitytype'" != "0" {
+		disp as error `"you could not specify the option intercitytype() when you specify "bike" or "car" in the option mode()."'
 		exit 198
 	}
 
 	if "`tactic'" == "" local tactic = 0
-	else if ("`transport'" == "bus" & !inrange(`tactic', 0, 5)) ///
-	| ("`transport'" == "car" & !inlist(`tactic', 0, 1)) ///
-	| ("`transport'" == "bike" & `tactic' != 0 & !inrange(`tactic', 3, 11)) {
+	else if ("`mode'" == "public" & !inrange(`tactic', 0, 5)) ///
+	| ("`mode'" == "bike" & !inlist(`tactic', 0, 1)) ///
+	| ("`mode'" == "car" & `tactic' != 0 & !inrange(`tactic', 3, 11)) {
 		disp as error "you specify a wrong number in the option tactic()"
 		exit 198
 	}
 
-	if "`intercity'" == "" {
+	if "`intercitytype'" == "" {
 		local intercitytrans = 0
+	}
+	else{
+		local intercitytrans = `intercitytype'
+	}
+	if "`intercitytactic'" == ""{
 		local intercitytactic = 0
 	}
-	else {
-		numlist `"`intercity'"'
-		if wordcount(r(numlist)) == 1 {
-			local intercitytrans = word(r(numlist), 1)
-			local intercitytactic = 0
-		}
-		else {
-			local intercitytrans = word(r(numlist), 1)
-			local intercitytactic = word(r(numlist), 2)
-		}
-	}
+
 
 	qui {
 		tempvar baidumap
 
-		if "`transport'" == "bus" {
+		if "`mode'" == "public" {
 			local url1 = "http://api.map.baidu.com/direction/v2/transit?origin="
 			local url2 = "&ak=`baidukey'&tactics_incity=`tactic'&trans_type_intercity=`intercitytrans'&tactics_intercity=`intercitytactic'&output=xml"
 		}
-		else if "`transport'" == "bike" {
+		else if "`mode'" == "bike" {
 			local url1 = "http://api.map.baidu.com/direction/v2/riding?origin="
 			local url2 = "&ak=`baidukey'&riding_type=`tactic'&output=xml"
 		}
@@ -96,15 +91,15 @@ program define cntraveltime
 		gen distance = real(ustrregexs(1)) if ustrregexm(`baidumap', `"<distance>(.*?)</distance>"')
 		gen duration = real(ustrregexs(1)) if ustrregexm(`baidumap', `"<duration>(.*?)</duration>"')
 		
-		if "`instruction'" != "" {
+		if "`detail'" != "" {
 			replace `baidumap' = substr(`baidumap', index(`baidumap', "<steps>"), index(`baidumap', "</steps>") - index(`baidumap', "<steps>") + length("</steps>"))
 			replace `baidumap' = ustrregexra(`baidumap', "&lt;.*?&gt;", "")
-			if "`transport'" == "bus" {
+			if "`mode'" == "public" {
 				replace `baidumap' = ustrregexra(`baidumap', "^.*?<instructions>", "")
 				replace `baidumap' = ustrregexra(`baidumap', "</instructions>.*?<instructions>", ",")
 				replace `baidumap' = ustrregexra(`baidumap', "</instructions>.*$", "")
 			}
-			else if "`transport'" == "bike" {
+			else if "`mode'" == "bike" {
 				replace `baidumap' = ustrregexra(`baidumap', "^.*?<instructions>", "")
 				replace `baidumap' = ustrregexra(`baidumap', "</instructions>.*?<turn_type>", ",")
 				replace `baidumap' = ustrregexra(`baidumap', "</turn_type>.*?<instructions>", ",")
@@ -116,7 +111,7 @@ program define cntraveltime
 				replace `baidumap' = ustrregexra(`baidumap', "</road_name>.*?<road_name>", ",")
 				replace `baidumap' = ustrregexra(`baidumap', "</road_name>.*$", "")
 			}
-			gen instruction = `baidumap'
+			gen detail = `baidumap'
 		}
 	}
 end

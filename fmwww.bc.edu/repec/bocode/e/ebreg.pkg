@@ -1,0 +1,28 @@
+d 'EBREG': module to compute Robust Empirical Bayes Confidence Intervals
+d
+d  This Stata package implements robust empirical Bayes confidence
+d intervals from Armstrong, Kolesár, and Plagborg-Møller (2021)
+d by shrinking preliminary estimates toward a regression line. 
+d
+d KW: empirical Bayes
+d KW: confidence intervals
+d
+d Requires: Stata version 15 and moremata from SSC (q.v.)
+d
+d Distribution-Date: 20211016
+d
+d Author: Timothy Armstrong , Department of Economics, University of Southern California
+d Support: email timothy.armstrong@@usc.edu
+d
+d Author:  Michal Kolesár , Department of Economics, Princeton University
+d Support: email mkolesar@@princeton.edu
+d
+d Author: Mikkel Plagborg-Møller , Department of Economics, Princeton University
+d Support: email mikkelpm@@princeton.edu
+d
+d Author: Luther Yap, Department of Economics, Princeton University
+d Support: email lyap@@princeton.edu
+d
+f ebreg.ado
+f ebreg.sthlp
+f ../c/cz.dta

@@ -1,6 +1,6 @@
 d 'STCOMPADJ': module to estimate the covariate-adjusted cumulative incidence function in the presence of competing risks
 d
-d stcompadj estimates the adjusted cumulative incidence function
+d  stcompadj estimates the adjusted cumulative incidence function
 d based on a Cox or a flexible parametric regression model in the
 d presence of competing risks.	Cox regression in the presence of
 d competing risks is usually performed by fitting separate models

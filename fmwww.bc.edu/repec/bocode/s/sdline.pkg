@@ -1,6 +1,6 @@
 d 'SDLINE': module to plot SD line or reduced major axis
 d
-d sdline produces a scatter plot of yvar versus xvar with the  SD
+d  sdline produces a scatter plot of yvar versus xvar with the	SD
 d line or reduced major axis superimposed. This line goes  through
 d the intersection of the means and has slope given by	sign of
 d corr(xvar, yvar) * (SD of yvar) / (SD of xvar). 

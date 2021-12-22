@@ -1,9 +1,9 @@
 d 'SRATIO': module to calculate ratio study statistics
 d
-d The sratio command calculates and displays a variety of ratio
+d  The sratio command calculates and displays a variety of ratio
 d study statistics, particularly for mass appraisal performance
-d evaluation.  These include measures of appraisal level, appraisal
-d uniformity (dispersion and concentration), and reliability.  The
+d evaluation. These include measures of appraisal level, appraisal
+d uniformity (dispersion and concentration), and reliability. The
 d sratio takes, as input, a list of two scales variables that have
 d positive values. This command implicitly computes the ratio of
 d these two variables by dividing the first variable (the

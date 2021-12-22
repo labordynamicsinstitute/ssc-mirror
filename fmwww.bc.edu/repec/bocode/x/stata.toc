@@ -12,6 +12,7 @@ p xframeappend module to append data frames to the end of the current data frame
 p xglm module to extend glm
 p xgroup module to create a grouping variable with key values in an output dataset
 p xlincom module to estimate multiple linear combinations of parameters
+p xlink module to provide extra link functions for use with glm
 p xls2dta module to save Excel files as Stata datasets
 p xls2stata module to provide Stata Dialog Box to Import Excel Files into Stata
 p xmiss module to perform cross-tabulation of missing data
@@ -31,6 +32,7 @@ p xtavplot module to produce added-variable plots for panel data estimation
 p xtbalance module to transform the dataset into balanced Panel Data
 p xtbalance2 module to create a balanced subsample from unbalanced panel data
 p xtbcfe module to perform bootstrap-corrected Fixed Effects estimation and inference in dynamic panel models
+p xtbreak module for detecting and dating multiple structural breaks in time series and panel data
 p xtbunitroot module to perform unit root tests for panel data with structural breaks
 p xtcaec module to estimate heterogeneous error correction models in cross-sectional dependent panel data
 p xtcbfe module to perform bootstrap-corrected Fixed Effects estimation and inference in dynamic panel models
@@ -52,6 +54,7 @@ p xtdpdml module to estimate Dynamic Panel Data Models using Maximum Likelihood
 p xtdpdqml module to perform quasi-maximum likelihood linear dynamic panel data estimation
 p xtendothresdpd module to estimate a Dynamic Panel Data Threshold Effects Model with Endogenous Regressors
 p xteurostat module to import data from Eurostat in panel data structure
+p xtevent module to estimate and visualize linear panel event-study models
 p xtewreg module to estimate errors-in-variable model with mismeasured regressors
 p xtfeis module to estimate linear Fixed-Effects model with Individual-specific Slopes (FEIS)
 p xtfisher module to compute Fisher type unit root test for panel data 
@@ -85,6 +88,7 @@ p xtmissingfill module to balance panel datasets and fill in missing values
 p xtmixed_corr module to compute model-implied intracluster correlations after xtmixed
 p xtmixediou module to estimate Linear mixed effects Integrated Ornstein-Uhlenbeck model
 p xtmod module to analyze and display interactions based on time-series data
+p xtmoran module to calculate Moran's I and Moran's Ii statistics for panel data and displaying a Moran scatterplot
 p xtmrho module to calculate intra-class correlations after xtmixed
 p xtnptimevar module to estimate non-parametric time-varying coefficients panel data models with fixed effects
 p xtoos module for evaluating the out-of-sample prediction performance of panel-data models

@@ -1,4 +1,4 @@
-*! version 1.0.4  03aug2021  Ben Jann
+*! version 1.0.6  14aug2021  Ben Jann
 
 program ebalfit_p
     if `"`e(cmd)'"'!="ebalfit" {
@@ -119,7 +119,7 @@ void ebalfit_p_IFs()
 {
     real scalar      k, pop, pooled, W, Wref, tau
     real colvector   b, omit, w, wbal
-    real rowvector   mref
+    real rowvector   mu, madj, adj, noadj
     real matrix      X, Xref
     string rowvector xvars, IFs
     string scalar    touse, touse1, touse0
@@ -131,7 +131,8 @@ void ebalfit_p_IFs()
     touse  = st_local("touse")
     touse1 = st_local("touse1")
     touse0 = st_local("touse0")
-    mref = st_matrix("e(baltab)")[,3]'
+    mu   = st_matrix("e(baltab)")[,1]'
+    madj = st_matrix("e(baltab)")[,4]'
     W    = st_matrix("e(_W)")[1,1]
     Wref = st_matrix("e(_W)")[1,2]
     tau  = st_numscalar("e(tau)")
@@ -142,7 +143,7 @@ void ebalfit_p_IFs()
     if (st_local("w0")!="") w = st_data(., st_local("w0"), touse1)
     else                    w = 1
     if (pop) {
-        Xref = mref
+        Xref = mu
     }
     else if (pooled) {
         st_subview(Xref, X, ., .)
@@ -156,6 +157,8 @@ void ebalfit_p_IFs()
     k = rows(b)
     wbal = w :* exp(X*b[|1\k-1|] :+ b[k])
     omit = st_matrix("e(omit)")'
+    adj = strtoreal(tokens(st_global("e(adjust)")))
+    noadj = strtoreal(tokens(st_global("e(noadjust)")))
     
     // prepare tempvars
     IFs = st_tempname(k)
@@ -163,7 +166,8 @@ void ebalfit_p_IFs()
     st_local("IFs", invtokens(IFs))
     
     // compute IFs
-    _mm_ebalance_IF_b(IF, X, Xref, w, wbal, mref, tau, Wref, omit)
+    _mm_ebalance_IF_b(IF, X, Xref, w, wbal, madj, mu, tau, W, Wref, adj, noadj,
+        omit)
     _mm_ebalance_IF_a(IF, X, w, wbal, tau, W)
     
     // copy IFs to tempvars

@@ -27,6 +27,10 @@ DATE:						DETAILS:
 							Need to test more with more covariates!!!
 							vline > xline
 29.03.2021					order tp fp fn tn
+07.05.2021					Reduce the blank lines in the output
+11.05.2021					fixed dp = 4 for p-value, fixed dp=0 for df
+14.06.2021					Graph save issues
+17.06.2021					Subline fix
 
 */
 
@@ -295,8 +299,8 @@ version 14.0
 		local nusp = "mu_sp"
 	}
 	else {
-		local nuse = "mu_se + I`Index' + `Index'"
-		local nusp = "mu_sp + I`Index' + `Index'"
+		local nuse = "mu_se + Index + `Index'"
+		local nusp = "mu_sp + Index + `Index'"
 	}	
 	*local VarX: word 1 of `regressors'
 	forvalues i=1/`p' {
@@ -335,7 +339,7 @@ version 14.0
 		local nusp = "`nusp'"
 	}
 	
-	di as res _n "*********************************** Fitted model ***************************************"  _n
+	di as res _n "*********************************** Fitted model ***************************************" 
 	
 	tokenize `varlist'
 	di "{phang} `1' ~ binomial(logit(se), `1' + `4'){p_end}"
@@ -343,20 +347,18 @@ version 14.0
 	di "{phang} logit(se) = `nuse'{p_end}"
 	di "{phang} logit(sp) = `nusp'{p_end}"
 	
-	
 	if "`model'" == "random" {	
 		di "{phang}`studyid'_se, `studyid'_sp ~ biv.normal(0, sigma){p_end}"
 	}
 	if "`paired'" != "" {
-		di "{phang} I`Index' = No if `Comparator'{p_end}"
-		di "{phang} I`Index' = Yes if `Index'{p_end}"
+		di "{phang} Index = 0 if Comparator{p_end}"
+		di "{phang} Index = 1 if Index{p_end}"
 	}
-	di _n
+	
 	di "{phang}" as txt "Number of observations = " as res "`=r(N)'{p_end}"
 	di "{phang}" as txt "Number of studies = " as res "`Nuniq'{p_end}"
 	
 	
-	di _n"*********************************** ************* ***************************************" _n
 	//=======================================================================================================================
 	//=======================================================================================================================
 	tempfile master
@@ -477,8 +479,8 @@ version 14.0
 	}
 		
 	if ("`catreg'" != " " | "`typevarx'" =="i")  {
-		di _n "{phang}Base levels{p_end}"
-		di _n as txt "{pmore} Variable  -- Base Level{p_end}"
+		di "{phang}Base levels{p_end}"
+		di as txt "{pmore} Variable  -- Base Level{p_end}"
 		
 		/*if "`typevarx'" =="i" & strpos("`catreg'", "`varx'") == 0 {
 			local catregs = "`catreg' `varx'"
@@ -605,8 +607,8 @@ version 14.0
 			local S_89`i' = .
 		}
 		
-		di _n"*********************************** ************* ***************************************" _n
-		di as txt _n "Just a moment - Fitting reduced models for comparisons"
+		di "*********************************** ************* ***************************************"
+		di as txt "Just a moment - Fitting reduced models for comparisons"
 		if "`interaction'" !="" {
 			local confariates "`confounders'"
 		}
@@ -1395,7 +1397,7 @@ version 14.0
 				local S_422 = `sprrout'[`l', 6]
 			}
 			local lab:label `groupvar' `l'
-			replace `label' = "`lab'" if `use' == -2 & `groupvar' == `l'	
+			replace `label' = "`groupvar' = `lab'" if `use' == -2 & `groupvar' == `l'	
 			replace `es' = `S_112'*`se' + `S_122'*`sp' if `use' == 2 & `groupvar' == `l'	
 			replace `lci' = `S_312'*`se' + `S_322'*`sp' if `use' == 2 & `groupvar' == `l'	
 			replace `uci' = `S_412'*`se' + `S_422'*`sp' if `use' == 2 & `groupvar' == `l'	
@@ -1503,7 +1505,7 @@ version 14.0
 		local nlen = r(max) + 5 
 		local nlense = strlen("`sumstatse'")
 		local nlensp = strlen("`sumstatsp'")
-		di as res _n "****************************************************************************************"
+		di as res  "****************************************************************************************"
 		di as res "{pmore2} Study specific test accuracy sensitivity and specificity  {p_end}"
 		di as res    "****************************************************************************************" 
 		
@@ -1561,14 +1563,14 @@ version 14.0
 	}
 
 	if (`p' > 0 ) | ("`model'" =="random") {
-		di as res _n "****************************************************************************************"
+		di as res  "****************************************************************************************"
 		
 		if "`model'" =="random" {			
 			local rho 		= `bvar'[1, 2]/sqrt(`bvar'[1, 1]*`bvar'[2, 2])
 			local tau2se 	= `bvar'[1, 1]
 			local tau2sp	= `bvar'[2, 2]
 			local tau2g		= (1 - (`bvar'[1, 2]/sqrt(`bvar'[1, 1]*`bvar'[2, 2]))^2)*`bvar'[1, 1]*`bvar'[2, 2]
-			di as txt _n "Between-study heterogeneity" 
+			di as txt "Between-study heterogeneity" 
 			di as txt _col(28) "rho" _cont
 			di as res _n _col(28) %5.`=`dp''f `rho' 
 			
@@ -1588,8 +1590,8 @@ version 14.0
 		}
 		
 		if ("`mc'" =="") {
-			di as txt _n _col(30) "Chi2"  _skip(8) "degrees of" _cont
-			di as txt _n    _col(28) "statistic" 	_skip(6) "freedom"      _skip(8)"p-val"   _cont
+			di as txt  _col(30) "Chi2"  _skip(8) "degrees of" _cont
+			di as txt _n  _col(28) "statistic" 	_skip(6) "freedom"      _skip(8)"p-val"   _cont
 		}	
 		local nc : word count `catreg'
 		
@@ -1599,7 +1601,7 @@ version 14.0
 			local pv 	= `bshet'[1, 3]	
 			if ("`mc'" =="") { 		
 				di as txt _n "LR Test: RE vs FE model" _cont
-				di as res _col(25) %10.`=`dp''f `chisq' _col(45) `df' _col(52) %10.`=`dp''f `pv'  
+				di as res _col(25) %10.`=`dp''f `chisq' _col(45) `df' _col(52) %10.4f `pv'  
 			}
 		}
 		
@@ -1611,14 +1613,14 @@ version 14.0
 			local S_92 = `bghet'[2, 2] //p
 			local S_892 = `bghet'[2, 3] //df
 			if (`p' > 0) {
-			di as txt _n "LR Test: Full Model vs Intercept-only Model"   _cont
+			di as txt  "LR Test: Full Model vs Intercept-only Model"   _cont
 			di as txt _n "Sensitivity " _cont
-			di as res  _col(25) %10.`=`dp''f `S_81' _col(45) `S_891' _col(52) %10.`=`dp''f `S_91'   _cont
+			di as res  _col(25) %10.`=`dp''f `S_81' _col(45) `S_891' _col(52) %10.4f `S_91'   _cont
 			di as txt _n "Specificity" _cont
-			di as res  _col(25) %10.`=`dp''f `S_82' _col(45) `S_892' _col(52) %10.`=`dp''f `S_92'  
+			di as res  _col(25) %10.`=`dp''f `S_82' _col(45) `S_892' _col(52) %10.4f `S_92'  
 			}	
-			di as res _n "****************************************************************************************"
-			di as txt _n "Leave-one-out LR Tests: Model comparisons"
+			di as res  "****************************************************************************************"
+			di as txt  "Leave-one-out LR Tests: Model comparisons"
 			cap confirm matrix `se_lrtest'
 			local semat = _rc
 			
@@ -1661,7 +1663,7 @@ version 14.0
 			
 			#delimit ;
 			noi matlist `testmat2print', rowtitle(Excluded Effect) 
-				cspec(& %`rownamesmaxlen's |  %8.`=`dp''f &  %8.`=`dp''f &  %8.`=`dp''f o2&) 
+				cspec(& %`rownamesmaxlen's |  %8.`=`dp''f &  %8.0f &  %8.4f o2&) 
 				rspec(`testrspec') underscore nodotz
 			;
 			
@@ -1672,8 +1674,6 @@ version 14.0
 			else {
 				di as txt "*NOTE: Model with and without main effect"
 			}
-			
-
 		}			
 	}
 	restore
@@ -1979,7 +1979,7 @@ end
 				local rownamesmaxlen = 10 /*Default*/
 			}
 			
-			local nrowss = `ncatreg' - 2 //Except the grand rows
+			local nrowss = `ncatreg' + `byncatreg' - 2 //Except the grand rows
 			
 			//# equations
 			if "`cveffect'" == "sesp" {
@@ -2218,7 +2218,7 @@ end
 			if "`print'" == "" {
 				local nlensstat : strlen local sumstat
 				local nlensstat = max(10, `nlensstat')
-				di as res _n "****************************************************************************************"
+				di as res  "****************************************************************************************"
 				di as res "{pmore2} Marginal summary measures of test accuracy : `sumstat' {p_end}"
 				di as res    "****************************************************************************************" 
 				tempname mat2print
@@ -2238,7 +2238,7 @@ end
 				
 				#delimit ;
 				noi matlist `mat2print', rowtitle(Parameter) 
-							cspec(& %`rownamesmaxlen's |  %`nlensstat'.`=`dp''f &  %9.`=`dp''f &  %8.`=`dp''f &  %15.`=`dp''f &  %8.`=`dp''f &  %8.`=`dp''f o2&) 
+							cspec(& %`rownamesmaxlen's |  %`nlensstat'.`=`dp''f &  %9.`=`dp''f &  %8.`=`dp''f &  %8.4f &  %8.`=`dp''f &  %8.`=`dp''f o2&) 
 							rspec(`rspec') underscore  nodotz
 				;
 				#delimit cr
@@ -2536,7 +2536,7 @@ end
 		local nlensstat : strlen local sumstat
 		local nlensstat = max(8, `nlensstat')
 		if "`print'" == "" {
-			di as res _n "****************************************************************************************"
+			di as res  "****************************************************************************************"
 			di as res "{pmore2} Marginal summary measures of test accuracy : Ratio {p_end}"
 			di as res    "****************************************************************************************" 
 			tempname mat2print
@@ -2555,20 +2555,20 @@ end
 			}		
 			#delimit ;
 			noi matlist `mat2print', rowtitle(Parameter) 
-						cspec(& %`rownamesmaxlen's |  %`nlensstat'.`=`dp''f &  %8.`=`dp''f &  %8.`=`dp''f &  %13.`=`dp''f &  %8.`=`dp''f &  %8.`=`dp''f o2&) 
+						cspec(& %`rownamesmaxlen's |  %`nlensstat'.`=`dp''f &  %8.`=`dp''f &  %8.`=`dp''f &  %8.4f &  %8.`=`dp''f &  %8.`=`dp''f o2&) 
 						rspec(`rspec') underscore nodotz
 			;
 			#delimit cr
 			if "`confounders'" != "" {
 				cap confirm matrix `testmat2print'
 				if _rc == 0 {
-					di as res _n "****************************************************************************************"
-					di as txt _n "Wald-type test for nonlinear hypothesis"
-					di as txt _n "{phang}H0: All (log)RR equal vs. H1: Some (log)RR different {p_end}"
+					di as res  "****************************************************************************************"
+					di as txt  "Wald-type test for nonlinear hypothesis"
+					di as txt  "{phang}H0: All (log)RR equal vs. H1: Some (log)RR are different {p_end}"
 					
 					#delimit ;
 					noi matlist `testmat2print', rowtitle(Parameter) 
-								cspec(& %`rownamesmaxlen's |  %8.`=`dp''f &  %8.`=`dp''f &  %8.`=`dp''f o2&) 
+								cspec(& %`rownamesmaxlen's |  %8.`=`dp''f &  %8.0f &  %8.4f o2&) 
 								rspec(`testrspec') underscore nodotz
 					;
 					#delimit cr
@@ -2721,7 +2721,7 @@ end
 		ARRowopt(passthru) 		
 		OLineopt(passthru) 
 		OUTplot(string) 
-		PLOTstat(passthru) 
+		PLOTstat(passthru) //comma seperated
 		POINTopt(passthru) 
 		SUBLine 
 		TEXts(real 1.0) 
@@ -2782,7 +2782,7 @@ end
 	if "`texts'" != "" {
 		local texts "texts(`texts')"
 	}
-	local foptions `"`astext' `ciopt' `diamopt' `arrowopt' `double' `ovline' `stats' `olineopt' `plotstat' `pointopt' `subline' `texts' `xlabel' `xtick' `grid' `vline' `xlineopt' `logscale' `graphsave' `options'"'
+	local foptions `"`astext' `ciopt' `diamopt' `arrowopt' `double' `ovline' `stats' `olineopt' `plotstat' `pointopt' `subline' `texts' `xlabel' `xtick' `grid' `xline'  `logscale' `graphsave' `options'"'
 	return local outplot = "`outplot'"
 	return local lcols ="`lcols'"
 	return local foptions = `"`foptions'"'
@@ -2816,17 +2816,16 @@ end
 		noSTATS 
 		OLineopt(string) 
 		OUTplot(string) 
-		PLOTstat(string asis) 
+		PLOTstat(string asis) /*comma seperated*/
 		POINTopt(string) 
 		SUBLine 
 		TEXts(real 1.0) 
-		XLIne(string)
+		XLIne(string asis)
 		XLAbel(string) 
 		XTick(string)
 		GRID
-		GRAphsave(string asis)
+		GRAPHSave(string asis)
 		logscale
-		xlineopt(string asis)
 		*
 	  ];
 	#delimit cr
@@ -2859,8 +2858,9 @@ end
 			}
 		}
 		else {
-			local plotstatse : word 1 of `plotstat'
-			local plotstatsp : word 2 of `plotstat'
+			tokenize "`plotstat'", parse(",")
+			local plotstatse "`1'"
+			local plotstatsp "`3'"
 		}
 		qui summ `id'
 		gen `expand' = 1
@@ -3504,10 +3504,10 @@ end
 			qui label list `groupvar'
 			local nlevels = r(max)
 			forvalues l = 1/`nlevels' {
-				summ `effect' if `use' == 2  & `groupvar' == `l' & (`se' == `=`r' - 1')
+				qui summ `effect' if `use' == 2  & `groupvar' == `l' & (`se' == `=`r' - 1')
 				local tempSub`l' = r(mean)
-				if `r'== 2 {
-					local tempSub`l' = tempSub`l' + `DXmin2' - `DXmin1' 
+				if `r'== 1 {
+					local tempSub`l' = `tempSub`l'' + `DXmin2' - `DXmin1'
 				}
 				qui summ `id' if `use' == 1 & `groupvar' == `l'
 				local subMax`l' = r(max) + 1
@@ -3522,7 +3522,7 @@ end
 			local sublineCommand`r' ""
 		}
 	}
-	if `"`xline'"' != "" {
+	if `"`xline'"' != `""' {
 			tokenize "`xline'", parse(",")
 			if "`logscale'" != "" {
 				if "`1'" == "0" {
@@ -3535,7 +3535,7 @@ end
 			else {
 				local xlineval = `1'
 			}
-			if "`3'" == "" {
+			if "`3'" != "" {
 				local xlineopts = "`3'"
 			}
 			else {
@@ -3698,16 +3698,13 @@ end
 			}
 			
 			qui graph rename `gname'`ext' `gname'_fplot$by_index_`ext', replace
-			if "`graphsave'" != "" {
-				graph save `graphsave'_$by_index, replace
-			}
+
 		}
-		else {
-			if "`graphsave'" != "" {
-				di _n
-				graph save `graphsave', replace
-			}			
-		}
+		if `"`graphsave'"' != `""' {
+			di _n
+			noi graph save `graphsave', replace
+		}			
+		
 end
 
 /*==================================== GETWIDTH  ================================================*/
@@ -3760,7 +3757,7 @@ end
 			PREDCIopt(string) /*soptions: options the PREDCI points*/
 			BUBOpt(string) /*soptions: options the bubble points*/
 			BIDopt(string) /*soptions: options the bubble ID points*/
-			GRAphsave(string asis)
+			GRAPHSave(string asis)
 			* /*soptions:Other two-way options*/
 			]
 			;
@@ -4179,16 +4176,13 @@ end
 			
 			qui graph rename `gname'`ext' `gname'_sroc$by_index_`ext', replace
 			
-			if "`graphsave'" != "" {
-				graph save `graphsave'_$by_index, replace
-			}
 		}
-		else {
-			if "`graphsave'" != "" {
-				di _n
-				graph save `graphsave', replace
-			}
+		
+		if `"`graphsave'"' != `""' {
+			di _n
+			noi graph save `graphsave', replace
 		}
+		
 
 	end
 

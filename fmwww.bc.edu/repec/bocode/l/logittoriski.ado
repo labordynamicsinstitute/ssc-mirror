@@ -1,6 +1,9 @@
-* LogitToRiski version 1.0 - 01 December 2020
-* Authors: Luis Furuya-Kanamori (luis.furuya-kanamori@anu.edu.au) & Suhail AR Doi
+* LogitToRiski version 1.1 - 15 October 2021
+* Authors: Luis Furuya-Kanamori (l.furuya@uq.edu.au) & Suhail AR Doi
 
+	*v1.1 - updated affiliation
+
+	
 program define logittoriski, rclass
 version 14
 

@@ -1,15 +1,20 @@
 {smcl}
-{* *! version 3.0  9nov2020}{...}
+{* *! version 4.0  21juin2021}{...}
+
 {title:Title}
+
+{p2colset 9 18 22 2}{...}
+{cmdab: complexity} computes several metrics of Complexity of specialization pattern (See ECI/PCI from Hidalgo et al. 2009, 20017, or fitness Tachela et al 2017).
+For generalization purposes, we refer to individuals (rather than countries), and nodes (from any network rather than goods from product space). 
+{cmdab: complexity} only requires a matrix of individuals' specialization over nodes as input - either expressed in raw performance or in Revealed Comparative Advantage (RCA) (see Haussman & Hidalgo, 2012).
+This input can be either specified as Stata varlist, Stata matrix or mata matrix, with inidividuals in row and nodes in columns.
+Three alternative methodologies are available. By default, the eigenvalue method is followed as detailed at the {browse "https://oec.world/fr/resources/methodology/": OEC methodology} webpage.
+The alternative methods are the inital Method of Reflection (MR, Hidalgo & Hausmann, 2009), and the Fitness index (Tacchela et al, 2012).
+{p2colreset}{...}
+
 
 {pstd}
 
-{p2colset 9 18 22 2}{...}
-{p2col :{cmd:complexity} {hline 2} Computes Complexity indexes similar to Hidalgo et al. ECI/PCI indexes. Only requires a Matrix of Individuals' Revealed Comparative Advantages over a set of Nodes (see Haussman & Hidalgo, 2012).}
-Three alternative methodologies are available. By default, the eigenvalue method is followed as detailed at the {browse "https://oec.world/fr/resources/methodology/": OEC methodology} webpage. 
-The alternative methods are the inital Method of Reflection (MR, Hidalgo & Hausmann, 2009), and the Fitness index (Tacchela et al, 2012).
-For generalization purposes, we refer to individuals (rather than countries), and nodes (from any network rather than products from HH's product space).
-{p2colreset}{...}
 
 
 {title:Syntax}
@@ -17,9 +22,11 @@ For generalization purposes, we refer to individuals (rather than countries), an
 {p 8 17 2}
 {cmdab: complexity}
 {cmd:,}
+{opt var:list()}
 {opt m:atrix()}
-[{opt s:ource()}
-{opt met:hode()}
+{opt mats:ource()}
+{opt met:hod()}
+{opt rca}
 {opt iter:ations()}
 {opt p:rojection()}
 {opt t:ranspose}
@@ -27,21 +34,28 @@ For generalization purposes, we refer to individuals (rather than countries), an
 
 
 
-
 {synoptset 25 tabbed}{...}
 {synopthdr}
 {synoptline}
 
-{synopt:{opt m:atrix()}  {it:Required}}  Name (or path) of Matrix of Revealed Comparative Advantage of individuals (rows) in nodes (columns). Binary (=1 if RCA>1) or continuous RCA matrices are allowed.
+{it:Required}
+{synopt:{opt var:list()}  } Varlist indicating the "nodes" or activities of specialization.
 
-{synopt:{opt s:ource()}} Indicates the matrix file type of the RCA matrix source. Can be {cmd: matrix} for a matrix stored in Stata or {cmd: mata} for a mata matrix (default). 
-Can also be (but not recommended) {cmd:dta} for a matrix stored in a .dta file (with {ul:no other variables than RCAs}).
-If {cmd: dta} is specified, then {cmd: matrix()} should indicate the path to the .dta file. If {cmd: matrix} or {cmd: mata} are specified, {cmd: matrix()} should indicate the matrix name.
+OR
+
+{synopt:{opt m:atrix()}  }  Name of input matrix.
+
+
+{synopt:{opt mats:ource()}} Indicates the input matrix type. Can be {cmd: matrix} for a matrix stored in Stata or {cmd: mata} for a mata matrix (default). 
+
+{it:Optional}
 
 {synopt:{opt met:hod()}} Indicates the algorithm followed. Can be {cmd:eigenvalue} (default if empty).
 Alternative methods are {cmd:mr} to follow instead the Method of Reflection as in {browse "https://www.pnas.org/content/106/26/10570.short":Hidalgo & Hausmann, 2009},
  or {cmd:fitness} to follow the Fitness Complexity Method as detailed in {browse "https://www.nature.com/articles/srep00723":Tacchella et al.(2012)}. Note that fitness at the node level is the reverse of its complexity.
 
+{synopt:{opt rca}} To be specified if varlist() or matsource() correspond to Revealed Comparative Advantage matrix. 
+ 
 {synopt:{opt iter:ations}} Sets the number of iterations (for MR or fitness methods). If reached, the optimal level of iteration (i.e. when the final ranking doesn't vary anymore) is chosen. Iterations must be of even order.
  
 {synopt:{opt p:rojection()}} Indicates which complexity index to return. {cmd: indiv} would return the individuals' complexity (e.g. countries ECI), while {cmd:nodes} returns the nodes' complexity (e.g. product PCI). 
@@ -89,20 +103,30 @@ To compute complexity index on a real set of data, please see this link:
 
 Otherwise, on random example values:
 
+{it:Using varlist() input}
+{phang}{cmd:. set obs 15}{p_end}
+{phang}{cmd:. gen n1=runiform()*10}{p_end}
+{phang}{cmd:. gen n2=runiform()*10}{p_end}
+{phang}{cmd:. gen n3=runiform()*10}{p_end}
+{phang}{cmd:. gen n4=runiform()*10}{p_end}
+
+{phang}{cmd:. complexity, varlist(n*) }{p_end}
+{phang}{cmd:. complexity, varlist(n*) rca method(mr) }{p_end}
+
+
+{it:Using matsource() input}
 {phang}{cmd:. mata mat=(0.1,0.2,3,1.2 \ 0.5, 1, 1.5 , 1 \ 2.1 , 0 , 5, 0.5)}{p_end}
 {phang}{cmd:. mata st_matrix("Smat", mat)}{p_end}
 
-{phang}{cmd:. complexity, source(matrix) mat(Smat)}{p_end}
-{phang}{cmd:. complexity,  mat(mat) pro(nodes)}{p_end}
-{phang}{cmd:. complexity,  mat(mat) method(mr)}{p_end}
+{phang}{cmd:. complexity, matsource(matrix) mat(Smat)}{p_end}
+{phang}{cmd:. complexity,  matrix(mat) pro(nodes)}{p_end}
+{phang}{cmd:. complexity,  matrix(mat) method(mr)}{p_end}
 
 
 
 {marker Notes}{...}
 {title:Notes}
 Requires moremata (available on SSC) package to run.
-Also note that the Eigenvector method is susceptible to crash as Mata faces some issue with computing Eigensystems of large matrices of very small elements
-{browse "https://www.statalist.org/forums/forum/general-stata-discussion/mata/1532997-missing-eigenvalues-and-eigenvector": this Statalist thread}
 
 {marker References}{...}
 {title:References}

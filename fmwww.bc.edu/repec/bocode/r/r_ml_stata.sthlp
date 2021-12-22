@@ -1,5 +1,5 @@
 {smcl}
-{* 20Aug2020}{...}
+{* 09Nov2021}{...}
 {cmd:help r_ml_stata}
 {hline}
 
@@ -16,11 +16,13 @@
 {it:outcome} 
 [{it:varlist}],
 {cmd:mlmodel}{cmd:(}{it:{help r_ml_stata##modeltype:modeltype}}{cmd:)}
-{cmd:out_sample}{cmd:(}{it:filename}{cmd:)}
+{cmd:out_sample_x}{cmd:(}{it:filename}{cmd:)}
+{cmd:out_sample_y}{cmd:(}{it:filename}{cmd:)}
 {cmd:in_prediction}{cmd:(}{it:name}{cmd:)}
 {cmd:out_prediction}{cmd:(}{it:name}{cmd:)}
 {cmd:cross_validation}{cmd:(}{it:name}{cmd:)}
 {cmd:seed}{cmd:(}{it:integer}{cmd:)}
+{cmd:n_folds}{cmd:(}{it:integer}{cmd:)}
 [{cmd:save_graph_cv}{cmd:(}{it:name}{cmd:)}]
 
 
@@ -49,9 +51,14 @@ This command makes use of the Python {browse "https://scikit-learn.org/stable/":
 {phang} {cmd:mlmodel}{cmd:(}{it:{help r_ml_stata##modeltype:modeltype}}{cmd:)} 
 specifies the machine learning algorithm to be estimated.   
 
-{phang} {cmd:out_sample}{cmd:(}{it:filename}{cmd:)}
-requests to provide a new dataset in {it:filename} containing the new 
-instances over which estimating predictions. This dataset contains only features.
+{phang} {cmd:out_sample_x}{cmd:(}{it:filename}{cmd:)}
+requests to provide a new Stata dataset as {it:filename} containing the new 
+instances over which estimating predictions. This dataset must contain only the features.
+
+{phang} {cmd:out_sample_y}{cmd:(}{it:filename}{cmd:)}
+requests to provide a new Stata dataset as {it:filename} containing the outcome of the new instances. 
+This dataset must contain only the outcome. When the outcome of the new instances is unknown, 
+this can be inserted as a variable with all missing values. 
 
 {phang} {cmd:in_prediction}{cmd:(}{it:name}{cmd:)}
 requires to specify a {it:name} for the file that will contain in-sample predictions. 
@@ -61,11 +68,12 @@ requires to specify a {it:name} for the file that will contain out-sample predic
 These predictions are those obtained from the option {cmd:out_sample}{cmd:(}{it:filename}{cmd:)}.   
 
 {phang} {cmd:cross_validation}{cmd:(}{it:name}{cmd:)}
-requires to specify a {it:name} for the dataset that will contain cross-validation results.
-The command uses K-fold cross-validation, with K=10 by default. 
+requires to specify a {it:name} for the dataset that will contain cross-validation results. 
 
 {phang} {cmd:seed}{cmd:(}{it:integer}{cmd:)} requests to specify a integer seed to assure replication
-of same results.  
+of same results. 
+
+{phang} {cmd:n_folds}{cmd:(}{it:integer}{cmd:)} requests to specify the number of folds to catty out {it:K}-fold cross-validation. 
 
 {phang} {cmd:save_graph_cv}{cmd:(}{it:name}{cmd:)} allows to obtain the cross-validation optimal tuning graph drawing both train and test accuracy.   
 
@@ -97,9 +105,13 @@ and the "standard error of the optimal test accuracy" obtained via cross-validat
            Before running this command, please check whether your dataset presents missing values
            and delete them.  
 
-{phang} -> To run this program you need to have both Stata 16 and Python (from version 2.7 onwards) installed.
-           Also, the Python Scikit-learn and the Stata Function Interface (SFI) 
-           packages must be uploaded before running the command. 
+{phang} -> To run this program you need to have both Stata 16 (or later versions) and Python 
+           (from version 2.7 onwards) installed. You can find information about how to install 
+           Python in your machine here: https://www.python.org/downloads.
+           Also, the Python Scikit-learn (and related dependencies) and the Stata Function Interface (sfi) APIs
+           must be uploaded before running the command. You can find information about how to install/use
+           them here (observe that the SFI API is already installed in your Stata 16 or later versions): 
+           (1) Scikit-learn: https://scikit-learn.org/stable/install.html; (2) sfi: https://www.stata.com/python/api17. 
 
 {phang} -> Please, remember to have the most recent up-to-date version of this program installed.
 
@@ -108,15 +120,18 @@ and the "standard error of the optimal test accuracy" obtained via cross-validat
 
 {phang} . use "r_ml_stata_data_example.dta" , clear
 
-{phang} . r_ml_stata y x1-x13 , mlmodel(tree) in_prediction("in_pred") cross_validation("CV") ///
-out_sample("r_ml_stata_data_new_example") out_prediction("out_pred") seed(10) save_graph_cv("graph_cv")
+{phang} . r_ml_stata y x1 x2 x3 x4 , mlmodel(tree) in_prediction("in_pred") cross_validation("CV")
+          out_sample_x("data_new_x") out_sample_y("data_new_y") out_prediction("out_pred") 
+          seed(10) n_folds(10) save_graph_cv("graph_cv")
 
 
 {title:Reference}
 
 {phang}
-Gareth, J., Witten, D., Hastie, D.T., Tibshirani, R. 2013. {it:An Introduction to Statistical Learning : with Applications in R}. New York, Springer.
+Cerulli, G. 2021. Improving econometric prediction by machine learning, {it:Applied Economics Letters}, 28, 16, 1419-1425, 2021.
 
+{phang}
+Gareth, J., Witten, D., Hastie, D.T., Tibshirani, R. 2013. {it:An Introduction to Statistical Learning : with Applications in R}. New York, Springer.
 
 {phang} 
 Raschka, S., Mirjalili, V. 2019. {it:Python Machine Learning}. 3rd Edition, Packt Publishing.

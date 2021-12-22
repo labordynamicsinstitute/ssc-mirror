@@ -1,6 +1,8 @@
 p m_stats module to implement interpoint distance distribution analysis
 p mac_unab module to unabbreviate Global Macro Lists
+p macrof module to compute the macroF evaluation criterion for multi-class outcomes
 p madfuller module to perform Dickey-Fuller test on panel data
+p madot module to create dot plot for summarizing pooled estimates of multiple outcomes from meta-analysis
 p mads module to calculate Median Absolute Deviations
 p mahapick module to select matching observations based on a Mahalanobis distance measure
 p mail module to send progress reports (Mac OSX/Linux/Unix)
@@ -107,6 +109,7 @@ p metaprop module to perform fixed and random effects meta-analysis of proportio
 p metaprop_one module to perform fixed and random effects meta-analysis of proportions
 p metareg module to perform meta-analysis regression
 p metastrong module for estimating the proportion of true effect sizes above or below a threshold in random-effects meta-analysis
+p metatef module to perform IPD meta analysis of an interaction between treatment and a continuous covariate
 p metatrend module to implement regression methods for detecting trends in cumulative meta-analysis
 p metatrim module to perform nonparametric analysis of publication bias
 p mfelogit module to estimate marginal effects (AME) and average treatment effects (ATE) in fixed effect logit models

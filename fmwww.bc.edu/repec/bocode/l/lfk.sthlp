@@ -1,5 +1,5 @@
 {smcl}
-{* 09abr2020}{...}
+{* 15oct2021}{...}
 {cmd:help lfk}{right: ({browse "https://www.epigear.com/index_files/metaxl.html"})}
 {hline}
 
@@ -45,6 +45,8 @@ LFK index values outside the interval between -1 and +1 are deemed consistent wi
 
 {pstd} {cmd:nograph} suppresses the Doi plot. 
 
+{pstd} {cmd:rsample} adds new variables {cmd:_lfk} and {cmd:_z} to the dataset.
+
 
 
 {title:Saved results}
@@ -57,15 +59,22 @@ LFK index values outside the interval between -1 and +1 are deemed consistent wi
 
 {title:Examples}
 
-{phang2}{cmd:. lfk event_treat noevent_treat event_ctrl noevent_ctrl, or} {p_end}
-{phang2}{cmd:. lfk es se_es, nograph} {p_end}
+{pstd} The data for the example is taken from Ross Harris 2006) originally prepared for {stata "help metan9":metan9}. {p_end}
+{phang2} {stata "use http://fmwww.bc.edu/repec/bocode/m/metan_example_data, clear":. use http://fmwww.bc.edu/repec/bocode/m/metan_example_data, clear} {p_end}
+
+{pstd} Using cases and non_cases. {p_end}
+{phang2}{stata "lfk tdeath tnodeath cdeath cnodeath, or":. lfk tdeath tnodeath cdeath cnodeath, or} {p_end}
+
+{pstd} Using _ES _seES after running admetan or metan. {p_end}
+{phang2}{stata "admetan tdeath tnodeath cdeath cnodeath, or ivhet nograph":. admetan tdeath tnodeath cdeath cnodeath, or ivhet nograph} {p_end}
+{phang2}{stata "lfk _ES _seES":. lfk _ES _seES} {p_end}
 
 
 
 {title:Authors}
 
-{pstd} Luis Furuya-Kanamori, Research School of Population Health, Australian National University, Australia{p_end}
-{pstd} {browse "mailto:luis.furuya-kanamori@anu.edu.au?subject=LFK Stata enquiry":luis.furuya-kanamori@anu.edu.au}{p_end}
+{pstd} Luis Furuya-Kanamori, UQ Centre for Clinical Research, The University of Queensland, Australia{p_end}
+{pstd} {browse "mailto:l.furuya@uq.edu.au?subject=LFK Stata enquiry":l.furuya@uq.edu.au}{p_end}
 
 {pstd} Suhail AR Doi, Department of Population Medicine, College of Medicine, Qatar University, Qatar
 

@@ -1,8 +1,9 @@
 d 'PYCONVERTU': module to convert a string variable into a classification from the default or user-provided JSON file with the help of Python 3
 d
-d  The command can easily transform country names in English to ISO 3-, 2-letter or 
-d numeric codes or build dimensions for a balanced panel dataset for the whole world 
-d (as of ISO's list of countries) in three lines of Stata code.
+d  The command can easily transform country names in English to ISO
+d 3-, 2-letter or numeric codes or build dimensions for a balanced
+d panel dataset for the whole world (as of ISO's list of countries)
+d in three lines of Stata code. 
 d
 d KW: data management
 d KW: country codes
@@ -11,11 +12,11 @@ d KW: Python
 d
 d Requires: Stata version 16 and Python 3
 d
-d Distribution-Date: 20210728
+d Distribution-Date: 20211026
 d
-d Author: Ilya Bolotov, University of Economics and Business, Prague
+d Author: Ilya Bolotov, Prague University of Economics and Business
 d Support: email ilya.bolotov@@vse.cz
 d
 f pyconvertu.ado
-F pyconvertu_classification.json
+f pyconvertu_classification.json
 f pyconvertu.sthlp

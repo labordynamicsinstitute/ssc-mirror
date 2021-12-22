@@ -1,10 +1,8 @@
 {smcl}
-{* *! version 1.0 23 May 2019}{...}
+{* *! version 1.0}{...}
 {vieweralsosee "" "--"}{...}
-{vieweralsosee "Install merlin" "ssc install merlin"}{...}
-{vieweralsosee "Install multistate" "ssc install multistate"}{...}
-{vieweralsosee "Help merlin (if installed)" "help merlin"}{...}
-{vieweralsosee "Help predictms (if installed)" "help predictms"}{...}
+{vieweralsosee "help merlin" "help merlin"}{...}
+{vieweralsosee "help predictms" "help predictms"}{...}
 {viewerjumpto "Syntax" "exptorcs##syntax"}{...}
 {viewerjumpto "Description" "exptorcs##description"}{...}
 {viewerjumpto "Options" "exptorcs##options"}{...}
@@ -43,7 +41,6 @@ multiple-timescale {cmd:merlin} model object
 {synoptline}
 {synopt:{opt knots(string)}} specify the knot locations (including boundary knots){p_end}
 {synopt:{opt log}} create splines of log(varname){p_end}
-{synopt:{opt offset(varname)}} include an additive offset{p_end}
 {synopt:{opt noorthog}} suppress default orthogonalisation of spline variables{p_end}
 {synoptline}
 {p2colreset}{...}
@@ -54,13 +51,19 @@ multiple-timescale {cmd:merlin} model object
 {title:Description}
 
 {pstd}
-{cmd:exptorcs} turns an expected incidence or mortality rate into a spline-based survival model, i.e. a parametric model for the rate. 
-It requires an incidence file which contains the number of events and the total exposure time, stratified by appropriate 
-variables such as age, calendar year and sex. It first turns the rates into a Poisson based model, before transforming into a 
-spline-based survival model on the log hazard scale, using {helpb merlin}. Once it is turned into a {helpb merlin} model, it can 
-then be used as a transition model within a multi-state survival setting, using {helpb predictms}. See Weibull et al. (Submitted) for 
-further details. 
- 
+{cmd:exptorcs} turns an expected incidence or mortality rate into a restricted cubic spline-based survival model, 
+i.e. a smooth parametric model for the rate, dependent on multiple timescales. It requires an incidence file which 
+contains the number of events and the total exposure time, stratified by appropriate variables such as age, 
+calendar year and sex. It first turns the rates into a Poisson based model, before transforming into a spline-based 
+survival model on the log hazard scale, using {helpb merlin}. Once it is turned into a {helpb merlin} model, it can 
+then be used as a transition model within a multi-state survival setting, using {helpb predictms}. See 
+Weibull et al. (Submitted) for further details. 
+
+{phang}
+{cmd:exptorcs} is part of the {helpb merlin} family. Further 
+details here: {bf:{browse "https://www.mjcrowther.co.uk/software/merlin":mjcrowther.co.uk/software/merlin}}
+{p_end}
+
  
 {marker options}{...}
 {title:Options}
@@ -104,10 +107,6 @@ The {cmd:year()} and {cmd:age()} options specify the restricted cubic spline exp
 {p_end}
 
 {phang2}
-{opt offset(varname)} defines an offset to be added to the {it:varname} variable prior to the spline function being derived.
-{p_end}
-
-{phang2}
 {cmd:noorthog} suppress the default orthogonalisation of the spline variables.
 {p_end}
 
@@ -120,26 +119,11 @@ The {cmd:year()} and {cmd:age()} options specify the restricted cubic spline exp
 {cmd:exptorcs sex, expdata(popinc) event(_d) exposure(_t) ///}
 {p_end}
 {phang2}
-{cmd:year(_year, knots(1980 1990 2000) offset(_yeardiag)) ///}
+{cmd:year(_year, knots(1980 1990 2000)) ///}
 {p_end}
 {phang2}
 {cmd:age(_age, knots(25 50 75 85) log)}
 {p_end}
-
-{title:References}
-{pstd}
-
-{pstd}
-Weibull CE, Lambert PC, Eloranta S, Andersson TM-L, Dickman PW, Crowther MJ. A multi-state model incorporating 
-estimation of excess hazards and multiple time scales. (Submitted).
-
-{pstd}
-Crowther MJ. Extended multivariate generalised linear and non-linear mixed effects models. 
-{browse "https://arxiv.org/abs/1710.02223":https://arxiv.org/abs/1710.02223}
-
-{pstd}
-Crowther MJ. merlin - a unified framework for data analysis and methods development in Stata. 
-{browse "https://arxiv.org/abs/1806.01615":https://arxiv.org/abs/1806.01615}
 
 
 {title:Authors}
@@ -162,3 +146,22 @@ michael.crowther@le.ac.uk{p_end}
 Department of Medicine{p_end}
 {p 5 12 2}
 Karolinska Institutet{p_end}
+
+
+{title:References}
+{pstd}
+
+{phang}
+Crowther MJ. Extended multivariate generalised linear and non-linear mixed effects models. 
+{browse "https://arxiv.org/abs/1710.02223":https://arxiv.org/abs/1710.02223}
+{p_end}
+
+{phang}
+Crowther MJ. merlin - a unified framework for data analysis and methods development in Stata. 
+{browse "https://arxiv.org/abs/1806.01615":https://arxiv.org/abs/1806.01615}
+{p_end}
+
+{phang}
+Weibull CE, Lambert PC, Eloranta S, Andersson TM-L, Dickman PW, Crowther MJ. A multi-state model incorporating 
+estimation of excess hazards and multiple time scales. (Submitted).
+{p_end}

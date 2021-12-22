@@ -19,8 +19,8 @@ d Requires: Stata version 16
 d
 d Distribution-Date: 20210804
 d
-d Author: Jan Ditzen, Heriot-Watt University
-d Support: email  j.ditzen@@hw.ac.uk
+d Author: Jan Ditzen, Free University of Bozen-Bolzano
+d Support: email  Jan.Ditzen@@unibz.it 
 d
 f simulate2.ado
 f simulate2.sthlp

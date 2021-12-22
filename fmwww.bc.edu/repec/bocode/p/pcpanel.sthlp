@@ -1,5 +1,5 @@
 {smcl}
-{* *! version 3.1 17sep2020}{...}
+{* *! version 3.2 17oct2021}{...}
 {vieweralsosee "[R] power" "help power"}{...}
 {vieweralsosee "[R] pc_simulate" "help pc_simulate"}{...}
 {vieweralsosee "[R] pc_dd_analytic" "help pc_dd_analytic"}{...}
@@ -17,7 +17,7 @@ The package {cmd:pcpanel} has three functions:
 {phang}{help pc_dd_covar}{p_end}
 
 {pstd}
-Please enter {cmd:ssc install pcpanel, replace} to install the most up-to-date version of the package. This is version 3.1, updated on 17sep2020.{p_end}
+Please enter {cmd:ssc install pcpanel, replace} to install the most up-to-date version of the package. This is version 3.2, updated on 17oct2021.{p_end}
 
 {pstd}
 The accompanying journal article, which we kindly ask you to cite, is:
