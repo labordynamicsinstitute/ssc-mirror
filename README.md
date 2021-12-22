@@ -1,10 +1,12 @@
+[![Mirror workflow](https://github.com/labordynamicsinstitute/ssc-mirror/actions/workflows/mirror.yml/badge.svg)](https://github.com/labordynamicsinstitute/ssc-mirror/actions/workflows/mirror.yml)
+
 # A mirror of the Statistical Software Components archive at BC
 
 This repository contains a sequence of updates from the SSC Archive at BC.
 
 ## How the mirror is created
 
-See [mirror.repec.sh](mirror.repec.sh)
+See [mirror.repec.sh](mirror.repec.sh). The process can take up to 30 minutes.
 
 ## Date-stamped tags
 

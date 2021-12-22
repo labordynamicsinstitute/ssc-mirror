@@ -30,9 +30,9 @@ fi
 # --adjust-extension removed, as it converted .do files to HTML
 wget --mirror --convert-links --page-requisites --no-parent $SRCURL
 # clean up
-rm fmwww.bc.edu/repec/repec.css
-rm fmwww.bc.edu/ecstyle.css
+[[ -f fmwww.bc.edu/repec/repec.css ]] && rm fmwww.bc.edu/repec/repec.css
+[[ -f fmwww.bc.edu/ecstyle.css ]]     && rm fmwww.bc.edu/ecstyle.css
 find fmwww.bc.edu -name index.html\* -exec rm {} \;
 # put a note
-sed "s/XXDATEXX/$(date +%F)/" stata.toc > fmwww.bc.edu/repec/bocode/stata.toc
+sed "s/XXDATEXX/$(date +%F)/" stata.toc.template > fmwww.bc.edu/repec/bocode/stata.toc
 
