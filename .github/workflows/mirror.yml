@@ -6,6 +6,11 @@ name: Mirror workflow
 # or API.
 on:
   workflow_dispatch:
+    - inputs:
+        suffix:
+          description: "Suffix to be added to tag"
+          required: true
+          default: ''
   schedule:
     - cron: "42 3 * * *"
     
@@ -36,5 +41,5 @@ jobs:
         publish_branch: main
         keep_files: true
         full_commit_message: "Snapshot of SSC Archive as of ${{ env.PULLDATE }})"
-        tag_name: ${{ env.PULLDATE }}
-        tag_message: "Snapshot of SSC Archive as of ${{ env.PULLDATE }})"
+        tag_name: ${{ env.PULLDATE }}${{ github.event.inputs.suffix }}"
+        tag_message: "Snapshot of SSC Archive as of ${{ env.PULLDATE }}${{ github.event.inputs.tags }})"
