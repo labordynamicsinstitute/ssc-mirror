@@ -1,17 +1,34 @@
 #!/bin/bash
 SRCURL=http://fmwww.bc.edu/repec/bocode/
-if [[ -z $1 ]]
+
+# if we are on Codespaces or in a Github Action environment, remove the prior download
+arg=$1
+[[ -z $CODESPACES ]] || clean=yes
+[[ -z $GITHUB_WORKFLOW ]] && clean=$clean || clean=yes
+[[ "$arg" == "clean" ]] && clean=yes || clean=$clean
+
+[[ -z $arg ]] && arg=$clean || arg=$arg
+
+if [[ -z $arg ]]
 then
 cat << EOF
 
-   $0 start
+   $0 start|clean
 
    mirror $SRCURL to this directory
 
 EOF
 exit 0
 fi
-wget --mirror --convert-links --adjust-extension --page-requisites --no-parent $SRCURL
+
+# removing the prior download
+
+[[ "$clean" == "yes" ]] && \rm -rf fmwww.bc.edu
+
+# Downloading afresh
+
+# --adjust-extension removed, as it converted .do files to HTML
+wget --mirror --convert-links --page-requisites --no-parent $SRCURL
 # clean up
 rm fmwww.bc.edu/repec/repec.css
 rm fmwww.bc.edu/ecstyle.css
