@@ -21,6 +21,8 @@ jobs:
     # Runs a single command using the runners shell
     - name: Set environment vars
       run: echo "PULLDATE=$(date +%F)" >> $GITHUB_ENV
+    - name: Check out repository code
+      uses: actions/checkout@v2
     - name: Mirror archive data
       run: |
          chmod +x mirror.repec.sh
