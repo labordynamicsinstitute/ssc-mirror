@@ -6,11 +6,11 @@ name: Mirror workflow
 # or API.
 on:
   workflow_dispatch:
-    - inputs:
-        suffix:
-          description: "Suffix to be added to tag"
-          required: true
-          default: ''
+    inputs:
+      suffix:
+        description: "Suffix to be added to tag"
+        required: true
+        default: ''
   schedule:
     - cron: "42 3 * * *"
     
