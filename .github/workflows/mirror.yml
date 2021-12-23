@@ -44,7 +44,7 @@ jobs:
       run: |
          chmod +x bin/mirror.repec.sh
          cd mirror/
-         echo ./bin/mirror.repec.sh
+         ../bin/mirror.repec.sh
    # Deploy to a new branch      
     - name: Deploy
       uses: peaceiris/actions-gh-pages@v3
