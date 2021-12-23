@@ -11,7 +11,7 @@ on:
         description: "Suffix to be added to tag"
         required: false
   schedule:
-    - cron: "42 3 * * *"
+    - cron: "42 6 * * *"
     
 
 # A workflow run is made up of one or more jobs that can run sequentially or in parallel
