@@ -1,9 +1,0 @@
-v 3
-d 'pyex' test .py install
-d
-d Requires: Stata version 16.1
-d
-d Distribution-Date: 20200821
-f pyex.ado
-F pyex.py
-
