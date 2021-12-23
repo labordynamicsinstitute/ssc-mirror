@@ -10,10 +10,6 @@ on:
       suffix:
         description: "Suffix to be added to tag"
         required: true
-      run:
-        description: "Set to false if skipping run"
-        required: true
-        default: "true"
   schedule:
     - cron: "42 3 * * *"
     
@@ -48,7 +44,7 @@ jobs:
       run: |
          chmod +x bin/mirror.repec.sh
          cd mirror/
-         if [ "${{ github.event.inputs.run }}" == "true" ] ; then ../bin/mirror.repec.sh; fi
+         echo ./bin/mirror.repec.sh
    # Deploy to a new branch      
     - name: Deploy
       uses: peaceiris/actions-gh-pages@v3
