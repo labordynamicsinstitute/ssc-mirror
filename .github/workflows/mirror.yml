@@ -11,9 +11,9 @@ on:
         description: "Suffix to be added to tag"
         required: true
       run:
-        description: "Set to echo if skipping run"
+        description: "Set to false if skipping run"
         required: true
-        default: ""
+        default: "true"
   schedule:
     - cron: "42 3 * * *"
     
@@ -31,7 +31,8 @@ jobs:
       run: |
          echo "PULLDATE=$(date +%F)" >> $GITHUB_ENV
          echo "FULLTIME=$(date)" >> $GITHUB_ENV
-         (test -z ${{ github.event.inputs.suffix }} && TAGNAME=$PULLDATE || TAGNAME=${PULLDATE}${{ github.event.inputs.suffix }}) >> $GITHUB_ENV
+         test -z ${{ github.event.inputs.suffix }} && echo "TAGNAME=$PULLDATE"  >> $GITHUB_ENV
+         test -z ${{ github.event.inputs.suffix }} || echo "TAGNAME=${PULLDATE}${{ github.event.inputs.suffix }}" >> $GITHUB_ENV
          echo "$GITHUB_ENV"
          test -f $GITHUB_ENV && cat $GITHUB_ENV
     - name: Check out repository code
@@ -47,7 +48,7 @@ jobs:
       run: |
          chmod +x bin/mirror.repec.sh
          cd mirror/
-         ${{ github.event.inputs.run }} ../bin/mirror.repec.sh
+         if [ "${{ github.event.inputs.run }}" == "true" ] ; then ../bin/mirror.repec.sh; fi
    # Deploy to a new branch      
     - name: Deploy
       uses: peaceiris/actions-gh-pages@v3
