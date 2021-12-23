@@ -6,7 +6,7 @@ This repository contains a sequence of updates from the SSC Archive at BC.
 
 ## How the mirror is created
 
-See [mirror.repec.sh](mirror.repec.sh). The process can take up to 60 minutes.
+See [mirror.repec.sh](mirror.repec.sh). The process can take up to 60 minutes. The downloaded mirror is in the [releases branch](https://github.com/labordynamicsinstitute/ssc-mirror/tree/releases).
 
 ## Date-stamped tags
 
