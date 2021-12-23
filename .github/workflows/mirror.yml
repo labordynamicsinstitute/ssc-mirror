@@ -28,17 +28,25 @@ jobs:
       run: echo "PULLDATE=$(date +%F)" >> $GITHUB_ENV
     - name: Check out repository code
       uses: actions/checkout@v2
+      with:
+        path: bin
+    - name: Checkout last mirror
+      uses: actions/checkout@v2
+      with:
+        ref: releases
+        path: mirror
     - name: Mirror archive data
       run: |
-         chmod +x mirror.repec.sh
-         ./mirror.repec.sh
+         chmod +x bin/mirror.repec.sh
+         cd mirror/
+         ../bin/mirror.repec.sh
    # Deploy to a new branch      
     - name: Deploy
       uses: peaceiris/actions-gh-pages@v3
       with:
         github_token: ${{ secrets.GITHUB_TOKEN }}
-        publish_dir: .
-        publish_branch: main
+        publish_dir: mirror
+        publish_branch: releases
         keep_files: true
         full_commit_message: "Snapshot of SSC Archive as of ${{ env.PULLDATE }})"
         tag_name: ${{ env.PULLDATE }}${{ github.event.inputs.suffix }}"
