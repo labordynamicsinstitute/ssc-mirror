@@ -9,7 +9,7 @@ on:
     inputs:
       suffix:
         description: "Suffix to be added to tag"
-        required: true
+        required: false
   schedule:
     - cron: "42 3 * * *"
     
