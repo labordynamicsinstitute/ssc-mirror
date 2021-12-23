@@ -27,8 +27,8 @@ jobs:
       run: |
          echo "PULLDATE=$(date +%F)" >> $GITHUB_ENV
          echo "FULLTIME=$(date)" >> $GITHUB_ENV
-         test -z ${{ github.event.inputs.suffix }} && echo "TAGNAME=$PULLDATE"  >> $GITHUB_ENV
-         test -z ${{ github.event.inputs.suffix }} || echo "TAGNAME=${PULLDATE}${{ github.event.inputs.suffix }}" >> $GITHUB_ENV
+         test -z ${{ github.event.inputs.suffix }} && echo "TAGNAME=$(date +%F)"  >> $GITHUB_ENV
+         test -z ${{ github.event.inputs.suffix }} || echo "TAGNAME=$(date +%F)${{ github.event.inputs.suffix }}" >> $GITHUB_ENV
          echo "$GITHUB_ENV"
          test -f $GITHUB_ENV && cat $GITHUB_ENV
     - name: Check out repository code
