@@ -1,6 +1,6 @@
 {smcl}
 {* *! version 1.1.1}{...}
-{title:Title}
+{title:Title} 
 
 {phang}
 {bf:npeivreg} {hline 2} Executes estimation of nonparametric errors-in-variables (EIV) regression and construction of its uniform confidence band.
@@ -73,6 +73,43 @@ respectively. The output consists of a deconvolution estimate of the nonparametr
 {phang}{cmd:. use "doctor_visit_male50.dta"}{p_end}
 {phang}{cmd:. npeivreg huq050 bmi_exam bmi_self, domain(1.5)}{p_end}
 
+{marker stored}{...}
+{title:Stored results}
+
+{phang}
+{bf:npeivreg} stores the following in {bf:e()}: 
+{p_end}
+
+{phang}
+Scalars
+{p_end}
+{phang2}
+{bf:r(N)} {space 10}observations
+{p_end}
+
+{phang}
+Macros
+{p_end}
+{phang2}
+{bf:r(cmd)} {space 8}{bf:npeivreg}
+{p_end}
+
+{phang}
+Matrices
+{p_end}
+{phang2}
+{bf:r(x)} {space 10}vector of x
+{p_end}
+{phang2}
+{bf:r(g)} {space 10}vector of g(x)
+{p_end}
+{phang2}
+{bf:r(lower)} {space 6}confidence band (lower boundary)
+{p_end}
+{phang2}
+{bf:r(upper)} {space 6}confidence band (upper boundary)
+{p_end}
+
 {title:Reference}
 
 {p 4 8}Kato, K. and Y. Sasaki. 2019. Uniform Confidence Bands for Nonparametric Errors-in-Variables Regression. {it:Journal of Econometrics}, 213 (2), pp. 516-555. 
@@ -84,6 +121,3 @@ respectively. The output consists of a deconvolution estimate of the nonparametr
 {p 4 8}Kengo Kato, Cornell University, Ithaca, NY.{p_end}
 
 {p 4 8}Yuya Sasaki, Vanderbilt University, Nashville, TN.{p_end}
-
-
-

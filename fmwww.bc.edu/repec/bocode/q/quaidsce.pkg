@@ -1,0 +1,27 @@
+d 'QUAIDSCE': module to estimate censored almost-ideal demand systems
+d
+d    quaidsce estimates the parameters of Deaton and Muellbauer's
+d (1980) almost-ideal demand system (AIDS) and Banks, Blundell, and
+d    Lewbel's (1997) quadratic AIDS model.  Demographic variables
+d can be included in the model based on Ray's (1983) expenditure   
+d function scaling technique.  Censoring is accounted for based on
+d the method proposed by Shonkwiler and Yen (1999). This    command
+d extends over the quaids command, as described in Poi (2012). 
+d
+d KW: AIDS
+d KW: censoring
+d
+d Requires: Stata version 12
+d
+d Distribution-Date: 20211223
+d
+d Author:  Juan C. Caro,  University of Luxembourg
+d Support: email juan.caro@@uni.lu
+d
+f quaidsce.sthlp
+f quaidsce_postestimation.sthlp
+f quaidsce.ado
+f quaidsce_estat.ado
+f quaidsce_p.ado
+f ../n/nlsur__quaidsce.ado
+f ../u/utils__quaidsce.mata

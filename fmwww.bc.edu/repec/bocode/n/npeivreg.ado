@@ -7,7 +7,7 @@
 // variable x with measurement errors e1 = x1 - x and e2 = x2 - x. The command
 // draws a uniform confidence band for the density function fx of x.
 ////////////////////////////////////////////////////////////////////////////////
-program define npeivreg, rclass
+program define npeivreg, rclass 
     version 14.2
  
     syntax varlist(min=2 numeric) [if] [in] [, numx(real 20), domain(real 2) cover(real 0.95), tp(real 0.2)]
@@ -18,13 +18,20 @@ program define npeivreg, rclass
     fvexpand `indepvars' 
     local cnames `r(varlist)'
  
-    tempname N CB
+    tempname N CB x g CBlower CBupper
 
 		mata: estimate("`depvar'", "`cnames'", `numx', `domain', ///
-					   `tp', `cover', "`touse'", "`N'", "`CB'") 
+					   `tp', `cover', "`touse'", "`N'", "`CB'", ///
+					   "`x'", "`g'", "`CBlower'", "`CBupper'") 
 
 	_matplot `CB', connect(1) noname ytitle("f{sub:X}(x)") xtitle("x") recast(line) name(UCB, replace)		
 
+	return scalar N = `N'
+	return matrix gCBupper = `CBupper'
+	return matrix CBlower = `CBlower'
+	return matrix g = `g'
+	return matrix x = `x'
+    return local cmd "npeivreg"
 end
 
 		
@@ -44,11 +51,13 @@ void phi_k(u, kout){
 }
 //////////////////////////////////////////////////////////////////////////////// 
 // Estimation of QRKD
-void estimate( string scalar yv,     string scalar x12v,	 	
+void estimate( string scalar yv,      string scalar x12v,	 	
 			   real scalar numx,      real scalar domain,
 			   real scalar tuning,	  real scalar cover,
 			   string scalar touse,   string scalar nname, 
-			   string scalar cbname) 
+			   string scalar cbname,
+			   string scalar xname,   string scalar gname,
+			   string scalar cblname, string scalar cbuname) 
 {
 	printf("\n{hline 78}\n")
 	printf("Executing:          Kato, K. & Sasaki, Y. (2018): Uniform Confidence Bands in \n")
@@ -188,6 +197,11 @@ void estimate( string scalar yv,     string scalar x12v,
     st_matrix(cbname, (BBB,XXX))
 	
     st_numscalar(nname, n)
+	
+	st_matrix(xname, final_xlist)
+	st_matrix(gname, final_g)
+	st_matrix(cblname, final_CBl)
+	st_matrix(cbuname, final_CBu)
 }
 end
 ////////////////////////////////////////////////////////////////////////////////

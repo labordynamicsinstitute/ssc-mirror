@@ -29,6 +29,7 @@ p qrprocess module for quantile regression: fast algorithm, pointwise and unifor
 p qsim module to produce variables for clarify routines
 p qsub module to emulate a cluster environment using your desktop PC
 p quadas module to provide graphical depiction of quality assessment in diagnostic accuracy reviews
+p quaidsce module to estimate censored almost-ideal demand systems
 p qualtricsload module to download survey results from Qualtrics server and optionally convert to Stata dataset
 p quandl module to obtain data from Quandl using the Quandl API
 p quantiles module to categorize by quantiles
