@@ -19,7 +19,7 @@
 */
 
 program define pmvnormal, rclass
-version 1.0
+version 15.0
 syntax , LOWer(numlist miss) UPPer(numlist miss) [MEan(numlist) ///
          Sigma(string) SHIfts(integer 12) SAMples(integer 1000) ALPha(real 3)]
 

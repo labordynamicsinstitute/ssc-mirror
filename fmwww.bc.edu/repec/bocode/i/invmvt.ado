@@ -16,7 +16,7 @@
 */
 
 program define invmvt, rclass
-version 11.0
+version 15.0
 syntax , p(real) [DELta(numlist) Sigma(string) df(real 1) Tail(string) ///
          MAX_iter(integer 1000000) TOLerance(real 0.000001) ///
 		 INTegrator(string) SHIfts(integer 12) SAMples(integer 1000)]
