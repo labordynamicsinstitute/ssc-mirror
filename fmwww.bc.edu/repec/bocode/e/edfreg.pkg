@@ -1,0 +1,25 @@
+d 'EDFREG': module to make corrections for statistical inference with robust or clustered covariance matrices
+d
+d  edfreg computes bias adjusted standard errors and effective
+d degrees of freedom corrections for robust and clustered
+d covariance matrices.	These covariance estimates may place weight
+d on a subset of residuals.  edfreg calculates the bias and
+d variance of the covariance estimate in the case of iid normal
+d errors and uses these to adjust the standard error and degrees of
+d freedom for each estimated coefficient, which has been found to
+d improve the accuracy of statistical inference for both iid normal
+d and non-iid non-normal errors. 
+d
+d KW: robust standard errors
+d KW: clustered standard errors
+d KW: bias corrections
+d
+d Requires: Stata version 13.1
+d
+d Distribution-Date: 20211230
+d
+d Author:  Alwyn Young,   London School of Economics
+d Support: email a.young@@lse.ac.uk
+d
+f edfreg.sthlp
+f edfreg.ado

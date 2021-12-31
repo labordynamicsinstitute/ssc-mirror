@@ -14,6 +14,7 @@ p raewma module to plot the risk adjusted exponentially weighted moving average
 p ralloc module to design randomized controlled trials
 p ralpha module to generate pseudo-random characters or words
 p randcmd module to compute randomization inference p-values
+p randcmdci module to produce robust randomization-t p-values and confidence intervals for regression coefficients
 p randcoef module to estimate correlated random effects and correlated random coefficients models
 p randinf module to calculate the treatment effect and p-value of a stratified randomized controlled experiment 
 p randomid module to identify every observation in the dataset with random alphanumeric characters

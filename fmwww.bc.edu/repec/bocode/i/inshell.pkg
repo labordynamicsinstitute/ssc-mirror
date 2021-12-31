@@ -1,0 +1,19 @@
+d 'INSHELL': module to send commands to the shell as well as capture and print their standard output, standard error, and native shell return codes
+d
+d      inshell will execute commands or scripts as a shell wrapper
+d and print the output to the Results window. It will also capture 
+d   and print the standard error and native shell return code in
+d the event of an error. 
+d
+d KW: shell
+d KW: operating system
+d
+d Requires: Stata version 10
+d
+d Distribution-Date: 20211230
+d
+d Author: Matthew Bryant Hall  ,  Wesleyan University
+d Support: email mhall@@wesleyan.edu
+d
+f inshell.sthlp
+f inshell.ado

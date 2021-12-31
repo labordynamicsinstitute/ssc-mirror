@@ -50,6 +50,7 @@ p ingap module to insert gap observations into a data set before output by listt
 p inlist2 module to create an inlist() dummy, without the inlist() limitations
 p inorm module to perform multiple imputation using Schafer's method
 p insheetjson module for importing tabular data from JSON sources on the internet
+p inshell module to send commands to the shell as well as capture and print their standard output, standard error, and native shell return codes
 p insingap module to insert a single gap observation at the top of each by-group
 p insob module to insert empty observations
 p instabilitycerdi module for Calculating the Instability or the Volatility of a Variable by the CERDI Method in some Time Window
@@ -119,6 +120,7 @@ p ivgmm0 module to perform instrumental variables via GMM
 p ivgravity module containing method-of-moment IV estimators of exponential-regression models with two-way fixed effects from a cross-section of data on dyadic interactions and endogenous covariates
 p ivhettest module to perform Pagan-Hall and related heteroskedasticity tests after IV 
 p ivolsdec module to produce decomposition of the IV-OLS coefficient gap
+p ivpermute module to estimate nearly collinear robust instrumental variables regression
 p ivpois module to estimate an instrumental variables Poisson regression via GMM
 p ivprob-ivtobit modules to estimate instrumental variables probit and tobit
 p ivprob-ivtobit6 modules to estimate instrumental variables probit and tobit

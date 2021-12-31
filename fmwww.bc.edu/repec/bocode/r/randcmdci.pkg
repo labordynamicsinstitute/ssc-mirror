@@ -1,0 +1,28 @@
+d 'RANDCMDCI': module to produce robust randomization-t p-values and confidence intervals for regression coefficients
+d
+d  randcmdci computes randomization confidence intervals and
+d p-values that are asymptotically robust to deviations from the
+d sharp null in favour of average treatment effects for OLS
+d regression models.  Randomization inference of all forms is exact
+d in finite samples when the sharp null is true (i.e. the treatment
+d effect is the same for each and every observation).  When the
+d sharp null is not true and coefficients estimate the average of
+d heterogeneous treatment effects, randomization inference in OLS
+d regression based upon studentized test statistics, the
+d randomization-t, has the same asymptotic validity as the
+d clustered/robust covariance estimate provided the regressors have
+d sufficiently high moments. 
+d
+d KW: regression
+d KW: randomization
+d KW: robust confidence intervals
+d
+d Requires: Stata version 13.1
+d
+d Distribution-Date: 20211230
+d
+d Author:  Alwyn Young,   London School of Economics
+d Support: email a.young@@lse.ac.uk
+d
+f randcmdci.sthlp
+f randcmdci.ado

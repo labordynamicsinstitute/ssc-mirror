@@ -1,0 +1,21 @@
+d 'IVPERMUTE': module to estimate nearly collinear robust instrumental variables regression
+d
+d  ivpermute estimates 2SLS coefficients using formulas based upon
+d the partitioned regression.  Estimates using the partitioned
+d regression are more robust to near collinearity among the
+d instruments than the procedures used by Stata's command
+d ivregress. 
+d
+d KW: instrumental variables
+d KW: IV
+d KW: collinearity
+d
+d Requires: Stata version 13.1
+d
+d Distribution-Date: 20211230
+d
+d Author:  Alwyn Young,   London School of Economics
+d Support: email a.young@@lse.ac.uk
+d
+f ivpermute.sthlp
+f ivpermute.ado
