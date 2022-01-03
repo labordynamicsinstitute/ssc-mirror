@@ -54,5 +54,5 @@ jobs:
         publish_branch: releases
         keep_files: true
         full_commit_message: "Snapshot of SSC Archive as of ${{ env.FULLTIME }}"
-        tag_name: ${{ env.PULLDATE }}${{ github.event.inputs.suffix }}"
+        tag_name: ${{ env.PULLDATE }}${{ github.event.inputs.suffix }}
         tag_message: "Snapshot of SSC Archive as of ${{ env.FULLTIME }}${{ github.event.inputs.tags }}"
