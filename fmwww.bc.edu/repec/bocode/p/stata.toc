@@ -12,6 +12,7 @@ p panell module to display panel length for a given set of variables
 p panels module to count panels and apply a command to panel units
 p panelthin module to identify observations for possible thinned panel dataset 
 p panelunit module to support unit root tests on panel data
+p panelview module to visualize panel data
 p pantest2 module to perform diagnostic tests in fixed effects panel regressions
 p paragr module for parallel graphing of a coefficient across different equations
 p parallel module for Parallel Computing

@@ -1,0 +1,29 @@
+d 'PANELVIEW': module to visualize panel data
+d
+d    panelview has three main functionalities:	   (1) it
+d visualizes the treatment and missing-value statuses of each
+d observation in a panel dataset;    (2) it plots the outcome
+d variable (either continuous or discrete) in a time-series
+d fashion;    (3) it visualizes the relationships between the
+d outcome and treatment variable individually or in an aggregate
+d fashion. 
+d
+d KW: panel data
+d KW: visualization
+d KW: treatment
+d
+d Requires: Stata version 15.1 and labutil, sencode from SSC (q.v.), gr0075 from SJ, grc1leg
+d
+d Distribution-Date: 20220102
+d
+d Author:     Hongyu Mou,  Peking University
+d Support: email hongyumou5@@gmail.com
+d
+d Author:    Yiqing Xu , Stanford University
+d Support: email  yiqingxu@@stanford.edu 
+d
+f panelview.sthlp
+f panelview.ado
+f ../c/capacity.dta
+f ../s/simdata.dta
+f ../t/turnout.dta
