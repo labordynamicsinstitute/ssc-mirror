@@ -8,12 +8,12 @@ d
 d KW: egen
 d KW: relative specialization
 d
-d Requires: Stata version 7
+d Requires: Stata version 8
 d
-d Distribution-Date: 20200724
+d Distribution-Date: 20220103
 d
 d Author: Joel E. H. Fuchs, University of Wuppertal
-d Support: email jfuchs@@@uni-wuppertal.de
+d Support: email jfuchs@@uni-wuppertal.de
 d
 f resp.ado
 f resp.sthlp

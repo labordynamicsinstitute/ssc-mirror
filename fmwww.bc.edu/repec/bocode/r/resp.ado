@@ -1,4 +1,4 @@
-*! version 0.4.1 08jul2020
+*! version 0.5.1 07oct2021
 /*
   This function is a wrapper for
       by byvar: egen name = resp(varname) [if][in], dim(vardim1 vardim2) mode(string)
@@ -8,7 +8,7 @@
 	jfuchs@uni-wuppertal.de
 */
 program define resp, rclass byable(onecall) sortpreserve
-    version 7, missing
+    version 8, missing
     syntax namelist(min=2 max=2) [if] [in], /*
 	 */ Dim(namelist min=2 max=2) [*]
     local dim1 : word 1 of `dim'
