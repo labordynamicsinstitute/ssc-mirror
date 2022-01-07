@@ -1,0 +1,32 @@
+d 'ESTETA': module to estimate long-run effects using historical instruments
+d
+d   esteta estimates the long-run effect of an endogenous
+d contemporary factor instrumented by a historical instrument
+d (Casey and Klemp, J. Development Econ., 2021). The estimator
+d requires two variables representing the endogenous factor
+d measured at two different points in time. It uses these two
+d variables to estimate and adjust for the persistency of the
+d endogenous contemporary factor in the estimation of the long-run
+d effect. y is the dependent variable. x2 is a variable measuring
+d the endogenous contemporary factor at some time period. x1 is a
+d variable measuring the endogenous contemporary factor at some
+d earlier time period. The required settings (see below) specifies
+d the time periods for these variables as well as for the dependent
+d variable and the time period of impact of the historical
+d instrument. 
+d
+d KW: endogeneity
+d KW: long-run analysis
+d
+d Requires: Stata version 10 and ivreg2, ranktest from SSC (q.v.)
+d
+d Distribution-Date: 20220106
+d
+d Author: Gregory Casey  ,  Williams College
+d Support: email  gregory.p.casey@@williams.edu
+d
+d Author: Marc Klemp  ,   University of Copenhagen, Denmark
+d Support: email  marc.klemp@@econ.ku.dk
+d
+f esteta.sthlp
+f esteta.ado

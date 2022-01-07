@@ -1,5 +1,5 @@
-*! cmp 8.6.6 12 October 2021
-*! Copyright (C) 2007-21 David Roodman 
+*! cmp 8.6.7 5 January 2022
+*! Copyright (C) 2007-22 David Roodman 
 
 * This program is free software: you can redistribute it and/or modify
 * it under the terms of the GNU General Public License as published by
@@ -912,7 +912,7 @@ program define _cmp
 		tempname hold
     _est hold `hold', copy restore
 		local model `e(model)'
-		version 11: ml model `:subinstr local model ": . =" ": _cmp_ind1 =", all' if e(sample) & `if', collinear missing
+		version 11: ml model `:subinstr local model ": . =" ": _cmp_ind1 =", all' if e(sample) & `if', collinear missing  // XXX incorporating user's if restriction here will affect results in hierarchical models?? too soon?
 		mata _mod.settodo("`scores'"!=""); _mod.cmp_init($ML_M)
 		_est unhold `hold'
 		mata _lnf = _S = _H = .
@@ -933,6 +933,7 @@ program define _cmp
 		exit 0
 	}
 
+  ereturn clear
 	tempname b cmpInitFull
 	// Fit individual models before mis-specifed and constant-only ones in case perfect probit predictors shrink some eq samples
 	// Do InitSearch even if user specifies init() to check for that and to build fully labelled parameter vector for constraint work in Estimate
@@ -1773,8 +1774,10 @@ program InitSearch, rclass
 				if      strpos(" `r(levels)' ", " $cmp_oprobit ")  local regtype $cmp_oprobit
 				else if strpos(" `r(levels)' ", " $cmp_int ")      local regtype $cmp_int
 				else if strpos(" `r(levels)' ", " $cmp_roprobit ") local regtype $cmp_roprobit
-				else if strpos(" `r(levels)' ", " $cmp_left ")     local regtype $cmp_left
-				else if strpos(" `r(levels)' ", " $cmp_right ")    local regtype $cmp_left
+				else if strpos(" `r(levels)' ", " $cmp_left ") | strpos(" `r(levels)' ", " $cmp_right ") {
+          if strpos(" `r(levels)' ", " $cmp_left ")        local regtype $cmp_left
+          if strpos(" `r(levels)' ", " $cmp_right ")       local regtype $cmp_right
+        }
 				else if strpos(" `r(levels)' ", " $cmp_frac ")     local regtype $cmp_frac
 				else                                               local regtype $cmp_cont
 			}
@@ -1871,8 +1874,9 @@ program InitSearch, rclass
 					}
 				}
 			}
-			else if `regtype'==$cmp_left {
-				cap noisily `svy' tobit ${cmp_y`eq'} `xvars' `awgtexp' if `if' & inlist(_cmp_ind`eq', 1, 2, 3), ${cmp_xc`eq'} ll ul
+			else if `regtype'==$cmp_left | `regtype'==$cmp_right {
+        
+				cap noisily `svy' tobit ${cmp_y`eq'} `xvars' `awgtexp' if `if' & inlist(_cmp_ind`eq', 1, 2, 3), ${cmp_xc`eq'} `=cond(`regtype'==$cmp_left,"ll","")' `=cond(`regtype'==$cmp_right,"ul","")'
 				if _rc & _rc != 430 { // crash on error other than failure to converge
 					error _rc
 					cmp_error _rc
@@ -1883,7 +1887,7 @@ program InitSearch, rclass
 				mat `V' = e(V)
 				mat `V' = `V'["model:", "model:"]
 				qui if $cmp_d > 1 | $parse_L > 1 {
-					predict `e`eq'' if e(sample) & (${cmp_y`eq'}>`e(llopt)' | `e(llopt)'==.) & ${cmp_y`eq'}<`e(ulopt)'
+					predict `e`eq'' if e(sample) & (${cmp_y`eq'} > e(llopt) | e(llopt)==.) & ${cmp_y`eq'} < e(ulopt)
 					replace `e`eq'' = ${cmp_y`eq'} - `e`eq''
 				}
 			}
@@ -2527,6 +2531,7 @@ program define cmp_error
 end
 
 * Version history
+* 8.6.7 workaround for obscure bug in Stata's tobit in Stata 16, 17 causing crash. Slightly affects results for tobit models.
 * 8.6.6 Fixed 8.6.3 crash when bicensored (oprobit intreg) eqs combined with eqs incomplete for some obs
 * 8.6.5 Allow abbreviation of vce() suboptions
 * 8.6.4 Fixed 8.6.0 bug in truncated-regression models
