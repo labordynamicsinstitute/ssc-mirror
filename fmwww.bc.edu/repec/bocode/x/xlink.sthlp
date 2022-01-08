@@ -41,8 +41,8 @@ after {helpb glm}.
 
 {phang}
 {opt robit1}, {opt robit2}, {opt robit3}, {opt robit4}, 
-{opt robit5}, {opt robit6}, {opt robit7}, and {opt robit8}
-indicates the robit link with 1, 2, 3, 4, 5, 6, 7, and 8 degrees of freedom,
+{opt robit5}, {opt robit6}, {opt robit7}, {opt robit8}, and {opt robit9}
+indicates the robit link with 1, 2, 3, 4, 5, 6, 7, 8, and 9 degrees of freedom,
 respectively.
 These link functions are defined by the formulas
 
@@ -65,6 +65,9 @@ The {cmd:robit7} link function was recommended by
 {help xlink##xlink_liu2004:Liu (2004)}
 as being similar to the logit link function,
 but less influenced by outlying outcome values.
+The {cmd:robit9} link function was mentioned by
+{help xlink##xlink_mudholkar1978:Mudholkar and George (1978)}
+as having a similar kurtosis to the logit link function.
 In general, robit link functions with fewer degrees of freedom
 are influenced less by outliers than robit link functions with more degrees of freedom.
 In the limit, as {it:k} tends to infinity,
@@ -104,6 +107,13 @@ Gelman, A. and Meng, X-L.
 {it:An Essential Journey with Donald Rubin's Statistical Family.}
 Chichester, UK: John Wiley & Sons Ltd.
 Download from {browse "https://onlinelibrary.wiley.com/doi/10.1002/0470090456.ch21":the Wiley Online website}.
+
+{phang}
+{marker xlink_mudholkar1978}{...}
+Mudholkar, G. S. and George, E. O.
+1978.
+A remark on the shape of the logistic distribution.
+{it:Biometrika} {bf:65}: 667-668.
 
 
 {title:Author}

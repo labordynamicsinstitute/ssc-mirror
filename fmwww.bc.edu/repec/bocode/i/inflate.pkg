@@ -1,0 +1,29 @@
+d 'INFLATE': module to inflate variables to real dollars using the CPI-U series
+d
+d	inflate is a one-line command to inflate (or deflate)
+d variables from any year to any other year based on the annual
+d average    Consumer Price Index All Urban, All Items U.S. City
+d Average. inflate adjusts to the year specified in end(int) using
+d either a    constant starting year in start(int) or a year
+d variable that can change across observations in year(varname). 
+d Inflation is	  calculated according to the simple formula:
+d newvar = oldvar*(CPI_end / CPI_start or CPI_year). 
+d
+d KW: inflation
+d KW: FRED
+d
+d Requires: Stata version 16; includes freduse from SSC
+d
+d Distribution-Date: 20220107
+d
+d Author:  Sean McCulloch,  Brown University
+d Support: email sean_mcculloch@@brown.edu
+d
+f inflate.sthlp
+f inflate.ado
+f ../f/freduse.ado
+f ../f/freduse.hlp
+f ../_/_freduse.ado
+f ../_/_freduse2.ado
+f ../_/_fredweb.ado
+f ../l/lfreduse.mlib

@@ -1,0 +1,35 @@
+d 'TESTOUT': module to execute diagnostic testing of outliers
+d
+d  The testout command executes diagnostic testing of outliers by
+d statistical tests of the bounded first- and second-moment
+d conditions for consistency and root-n asymptotic normality based
+d on Sasaki & Wang (JBES, 2021). The command takes as input a
+d scalar dependent variable y and a list of independent variables
+d x1, x2, ... An iv is an option, and x1 is treated as an
+d endogenous variable if the option iv is invoked. The output of
+d the command includes the p-values of the tests and the indicators
+d of whether the tests reject the null hypotheses at the
+d significance level alpha. If the test rejects the null hypothesis
+d of the bounded first-moment condition for consistency, then the
+d point estimates of reg (or ivreg when the option iv is invoked)
+d are unreliable. If the test rejects the null hypothesis of the
+d bounded second-moment condition for root-n asymptotic normality,
+d then the standard errors of reg (or ivreg when the option iv is
+d invoked) are unreliable. 
+d
+d KW: outliers
+d KW: moment conditions
+d KW: asymptotic normality
+d
+d Requires: Stata version 14.2
+d
+d Distribution-Date: 20220107
+d
+d Author: Yuya Sasaki, Department of Economics, Vanderbilt University
+d Support: email yuya.sasaki@@gmail.com
+d
+d Author: Yulong Wang, Syracuse University 
+d Support: email ywang402@@syr.edu
+d
+f testout.ado
+f testout.sthlp

@@ -19,7 +19,7 @@ d KW: glm
 d
 d Requires: Stata version 16 
 d
-d Distribution-Date: 20211220
+d Distribution-Date: 20220107
 d
 d Author: Roger Newson,  King's College London
 d Support: email roger.newson@@kcl.ac.uk
@@ -41,3 +41,5 @@ f ../r/robit7.ado
 f ../r/robit7.sthlp
 f ../r/robit8.ado
 f ../r/robit8.sthlp
+f ../r/robit9.ado
+f ../r/robit9.sthlp

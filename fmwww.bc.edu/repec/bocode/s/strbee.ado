@@ -1,18 +1,32 @@
-*! version 1.8.7   Ian White   12feb2018
+*! version 1.9.0   Ian White   7jan2022
 
 /*************************** NOTES ********************************
-version 1.8.7   12feb2018
+v1.9.0 7jan2022
+	small changes to km option
+		never show counterfactual graphs when they match observed
+		default is observed and untreated
+		change "if observed" to "as observed"
+	send to SSC before UMIT course
+v1.8.9 13feb2020 
+	added "if" to legends in kmgraph option
+version 1.8.8   30may2018 - ON MY UCL WEBSITE
+	gen() now outputs correct recensoring variable 
+		was missing
+		internal calculation was already correct
+	test now defaults to cox if adjvars is specified (but not ipe)
+version 1.8.7   12feb2018 - ON SSC
+	help file updated to UCL
 	undocumented changes:
 		allow kmgraph(show(#...)) to control which curves are graphed
 		allow hr(x x) to control which curves are compared
 			where x=fully|observed|untreated or abbreviation
-version 1.8.6   17jan2018
+version 1.8.6   17jan2018 - ON MY UCL WEBSITE
 	kmgraph() and zgraph() fixed to allow quotes
-version 1.8.5   27mar2017
-	no changes to code; small changes to help file; posted on SSC
-version 1.8.4   22apr2016 (on website)
+version 1.8.5   27mar2017 - ON SSC
+	no changes to code; small changes to help file
+version 1.8.4   22apr2016 - ON MY UCL WEBSITE
 	kmgraph greatly expanded to improve patterns and colours
-version 1.8.3   31mar2016 (on website)
+version 1.8.3   31mar2016 - ON MY UCL WEBSITE
 	kmgraph(showall) shows all 6 graphs
 	kmgraph(untreated) shows just the untreated counterfactual graphs
 	fixed bug in hr, kmgraph and gen() options with ton()/toff() syntax
@@ -187,8 +201,11 @@ if _rc exit _rc
 
 * PARSE TEST
 if "`test'"=="" {
-    if "`ipe'"=="" local test logrank
-    else local test weibull
+    if !mi("`ipe'") local assumedtest weibull
+	else if "`adjvars'"!="" local assumedtest cox
+    else local assumedtest logrank
+	di as text "test() not specified: assumed test(" as result "`assumedtest'" as text ")"
+	local test `assumedtest'
 }
 if "`test'"=="cox" local test stcox
 parsetest, `test'
@@ -421,7 +438,7 @@ qui {
         * GENERATE U, DU
         noi makeu, u(`u') du(`du') t(`t') dt(`dt') treat(`treat') psi(`psi') `psimultopt' ///
             toff(`toffvar') ton(`tonvar') `recensopts' `ipe' `ipecens' ///
-            `trace' endstudy(`endstudy') isrecens(`isrecens')
+            `trace' endstudy(`endstudy') isrecens(`isrecens') `debug'
 
         if "`trace'"=="trace" & "`endstudy'"!="." { // PRINT NUMBERS RECENSORED
             count if `isrecens' & `treat'==0
@@ -861,7 +878,7 @@ if "`estOK'"!="0" {
         qui gen byte `du'=.
         if "`endstudy'"!="." {
             tempvar cu
-            qui gen `cu'=.
+            qui gen double `cu'=.
             label var `cu' "Recensoring time for `gen'"
             local ct `endstudy'
         }
@@ -883,8 +900,8 @@ if "`estOK'"!="0" {
 			gen `toffvar' = `toffexp'
 		}
         makeu, u(`u') du(`du') t(_t) dt(_d) treat(`treat') psi(`est') `psimultopt' ///
-            toff(`toffvar') ton(`tonvar') `recensopts' ///
-            `ipe' `ipecens'  endstudy(`endstudy') 
+            toff(`toffvar') ton(`tonvar') `recensopts' recens(`cu') ///
+            `ipe' `ipecens'  endstudy(`endstudy') `debug'
     }
 
     *** HR AND KM GRAPH
@@ -910,12 +927,12 @@ if "`estOK'"!="0" {
                   `treat0' `u1' `du' `adjvars' `strata', group(3) clear
         rename _stack `type'
         qui gen int `treat' = 10*(`type'-1)+`treat0'
-        local name0  "0 observed"
-		local name1  "1 observed"
-        local name10 "0 untreated"
-		local name11 "1 untreated"    
-        local name20 "0 fully treated" 
-		local name21 "1 fully treated"
+        local name0  "0 as observed"
+		local name1  "1 as observed"
+        local name10 "0 if untreated"
+		local name11 "1 if untreated"    
+        local name20 "0 if fully treated" 
+		local name21 "1 if fully treated"
         foreach val in 0 1 10 11 20 21 {
 			label def treat2 `val' "`name`val''", add
 		}
@@ -994,10 +1011,10 @@ if "`estOK'"!="0" {
         if `"`kmgraph'"'!=`""' { // greatly expanded v1.8.4 to improve patterns and colours
             local 0 , `kmgraph'
             syntax, [run LPattern(string) LColor(string) SHOWAll UNTReated show(numlist) *]
-			if !mi("`untreated'") { // new suboption v1.8.3 
+			if !mi("`untreated'") { // if-untreated graphs only
 				qui keep if inlist(`treat',10,11)
 			}
-			else if !mi("`show'") { // new suboption v1.8.7
+			else if !mi("`show'") { // specified graphs only
 				tempvar toshow
 				gen `toshow' = 0
 				foreach toshowval of numlist `show' {
@@ -1005,11 +1022,13 @@ if "`estOK'"!="0" {
 				}
 				qui drop if !`toshow'
 			}
-			else if mi("`showall'") { // new suboption v1.8.3 
-				if `nxo0'==0 qui drop if inlist(`treat',10,20)
-				if `nxo1'==0 qui drop if inlist(`treat',11,21)
+			else { // default or showall
+				if mi("`showall'") { 
+					drop if inlist(`treat',20,21) 
+				}
+				if `nxo0'==0 qui drop if inlist(`treat',10,20) // v1.9.0: if no C switches, never show untreated or fully-treated 
+				if `nxo1'==0 qui drop if inlist(`treat',21) // v1.9.0: if no E switches, never show fully-treated 
 			}
-
 			local lpattern1 : word 1 of `lpattern'
 			local lpattern2 : word 2 of `lpattern'
 			if mi("`lpattern1'") local lpattern1 dash // for control arm
@@ -1125,7 +1144,9 @@ syntax, u(string) du(string) t(varname) dt(varname) treat(varname) psi(real) ///
     toff(varname) ton(varname) ///
     [toffmin0(string) toffmin1(string) tonmin0(string) tonmin1(string) ///
     toffmax0(string) toffmax1(string) tonmax0(string) tonmax1(string) ///
-    ipe ipecens trace endstudy(string) recens(varname) isrecens(varname) psimult(string) ]
+    ipe ipecens trace endstudy(string) recens(varname) isrecens(varname) psimult(string) debug]
+
+if !mi("`debug'") di as input "Call: makeu `0'"
 
 qui {
 	if !mi("`psimult'") local timespsimult *(`psimult')
@@ -1156,7 +1177,7 @@ qui {
 
     * COMPUTE RECENSORING TIME
     if "`endstudy'"~="." {
-        if "`recens '"=="" {
+        if "`recens'"=="" {
             tempvar recens
             gen double `recens'=.
         } 

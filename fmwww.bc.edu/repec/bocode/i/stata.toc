@@ -46,6 +46,7 @@ p ineqord module to calculate indices of inequality and polarization for ordinal
 p ineqrbd module to calculate regression-based inequality decomposition
 p inequal2 module to compute measures of inequality 
 p inequal7 module to compute measures of inequality
+p inflate module to inflate variables to real dollars using the CPI-U series
 p ingap module to insert gap observations into a data set before output by listtex
 p inlist2 module to create an inlist() dummy, without the inlist() limitations
 p inorm module to perform multiple imputation using Schafer's method

@@ -1,4 +1,7 @@
 {smcl}
+{* 07jan2022, updates to kmgraph}{...}
+{* 13feb2020, minor clarification to hr}{...}
+{* 30may2018, minor updates}{...}
 {* version 1.8.6   Ian White   17jan2018}{...}
 {* 17jan2018, updated to UCL}{...}
 {* 14mar2017, small changes to Introduction}{...}
@@ -19,11 +22,10 @@
 {viewerjumpto "Estimation by interval bisection" "strbee##bisection"}{...}
 {viewerjumpto "Examples" "strbee##examples"}{...}
 {viewerjumpto "Troubleshooting" "strbee##troubleshooting"}{...}
-{viewerjumpto "Updates" "strbee##updates"}{...}
 {viewerjumpto "Technical notes" "strbee##technotes"}{...}
 {viewerjumpto "Limitations" "strbee##limitations"}{...}
 {viewerjumpto "References" "strbee##refs"}{...}
-
+{viewerjumpto "Author and updates" "strbee##updates"}{...}
 
 
 {title:Introduction}{marker introduction}
@@ -47,7 +49,6 @@ Point estimation ("G-estimation") is performed by searching over a range of valu
 Confidence limits are similarly found where the test statistic Z(psi) is close to its critical values.
 
 {p 4 4 2}{cmd:strbee} was originally described in {help strbee##White++02:White et al (2002)}. This version has new features described {help strbee##whatsnew15:below}.
-
 
 
 {title:Syntax}{marker syntax}
@@ -105,7 +106,6 @@ If  {cmd:using} {it:filename} is omitted and {cmd:strbee} was the last r-class c
     {cmd:gen(}{it:newvarname}{cmd:)}
 
 
-
 {title:Description}{marker description}
 
 {p 4 4 2}{cmd:strbee} is an {help st} command: data must be {help stset} before running {cmd:strbee}.
@@ -116,7 +116,6 @@ censoring of T implies informative censoring of U. To avoid bias, users must
 specify the potential censoring time for all subjects: {cmd:strbee} then computes
 a recensoring time, which may be earlier than the actual censoring time, and
 recensors the data.
-
 
 
 {title:Options to specify the model (estimation syntax)}{marker opts_model}
@@ -193,7 +192,6 @@ Note that the standard error and confidence interval from this method do not all
 {phang}{cmd:ipecens} modifies IPE to use {help strbee##BW02:Branson and Whitehead}'s procedure for recensoring. The standard Robins-Tsiatis recensoring procedure is preferable {help strbee##White06:(White, 2006)} and is used by default. 
 
 
-
 {title:Options to specify the search procedure (estimation syntax)}{marker opts_search}
 
 {phang}{cmd:psimin(}#{cmd:)} and {cmd:psimax(}#{cmd:)}: with the estimation syntax, these specify the extreme permitted values of the parameter psi.
@@ -228,7 +226,6 @@ With the replay syntax, they instead affect the {cmd:zgraph} - see {help strbee#
 {phang}{cmd:maxiter(#)} limits the number of iterations for the IPE method. Default is 100.
 
 
-
 {title:Options controlling storage of results (estimation syntax)}{marker opts_storage}
 
 {phang}{cmd:savedta(}filename[{cmd:,append}|{cmd:replace}]{cmd:)} directs the values of psi and the test statistic to the specified file which can later be used with the replay syntax.
@@ -239,7 +236,6 @@ case, the results reported only use test statistics computed in this run of
 If {cmd:savedta()} is omitted then results are stored in _strbee_results.dta.
 
 {phang}{cmd:ipestore(}{it:name}{cmd:)} stores the last model fit in the IPE algorithm. It can later be retrieved using {help estimates store} {it:name}.
-
 
 
 {title:Options controlling output (both syntaxes)}{marker opts_output}
@@ -257,19 +253,23 @@ graphs the test statistic Z against psi.
 treated with arm 0 if never treated. 
 A test-based confidence interval is given. 
 For details, see {help strbee##White++99:White et al (1999)}. 
+If {cmd:adjvars(}{it:varlist}{cmd:)} is also specified 
+then the hazard ratio is adjusted for {it:varlist}.
 
 {phang}
 {cmdab:km:graph}[{cmd:(}{it:suboptions}{cmd:)}] 
-draws the Kaplan-Meier graph for the observed event times 
-and also, for each arm with switches, the counterfactual event times 
-if that arm had never received treatment 
-and if that arm had always received treatment.
+draws, for each arm, the Kaplan-Meier graph for the observed event times (labelled "as observed")
+and also the counterfactual event times 
+if that arm had never received treatment (labelled "if untreated").
+The counterfactual untreated graph is not drawn for arm 0 if there are no switches in that arm.
 
 {pmore}Possible {it:suboptions} are:
 
 {pmore}most of the options allowed with {cmd:sts graph}; see {help sts graph}. 
 
-{pmore}{cmdab:showa:ll} causes all six graphs to be drawn, even when one arm has no switches.
+{pmore}{cmdab:showa:ll} causes the Kaplan-Meier graph for the counterfactual event times 
+if that arm had always received treatment (labelled "if fully treated").
+However the fully-treated graph for arm 1 is not drawn if there are no switches in that arm.
 
 {pmore}{cmdab:untr:eated} causes only the two graphs for the counterfactual untreated event times to be drawn.
 
@@ -281,6 +281,10 @@ for the observed data (default: black),
 then the counterfactual untreated data (default: orange),
 and then the counterfactual fully treated data (default: blue).
 
+{pmore}{cmd:show(#....)} specifies exactly which graphs to show: 
+0, 10, 20 for arm 0 as observed, if untreated and if fully-treated;
+1, 11, 21 for arm 1 as observed, if untreated and if fully-treated.
+
 {phang}
 {cmd:gen(}{it:newvarname}{cmd:)} generates 
 a new variable {it:newvarname} containing the values of the counterfactual untreated outcome;
@@ -289,7 +293,6 @@ and if {cmd:endstudy(}{cmd:)} is specified, a new variable c{it:newvarname} cont
 
 {pmore}
 With the IPE method, {it:newvarname} is instead the ideal outcome, defined as the counterfactual untreated outcome in arm 0 and the counterfactual fully-treated outcome in arm 1.
-
 
 
 {title:Changes from version 1.2 to version 1.5}{marker whatsnew15}
@@ -317,7 +320,6 @@ test(wilcoxon) now works correctly.
 {phang}Graphs use the improved graphics introduced in Stata 8.
 
 
-
 {title:Changes from version 1.5 to version 1.8}{marker whatsnew18}
 
 {phang}Main new options: 
@@ -328,7 +330,6 @@ test(wilcoxon) now works correctly.
 {phang}More tests available: almost everything available with {help sts test} or {help streg}.
 
 {phang}New options for {cmd:kmgraph}.
-
 
 
 {title:Estimation by interval bisection}{marker bisection}
@@ -342,7 +343,6 @@ test(wilcoxon) now works correctly.
 {phang}    Interval bisection may give wrong answers if the test statistic is
     nondecreasing in psi, and should always be checked using the {cmd:zgraph}
     option.
-
 
 
 {title:Examples}{marker examples}
@@ -380,7 +380,6 @@ test(wilcoxon) now works correctly.
         {com}. {stata strbee imm, ton(ton) endstudy(censyrs)}{txt}
 
 
-
 {title:Troubleshooting}{marker troubleshooting}
 
 {phang}If you run into trouble, try the following:
@@ -398,15 +397,6 @@ The log file should include at least {cmd:which strbee}, a summary of your data 
 It's very helpful if you can also send me some data to illustrate your problem.
 
 
-
-{title:Updates}{marker updates}
-
-{phang}I put updates from time to time on my website.
-You can install them using 
-{stata "net install http://www.homepages.ucl.ac.uk/~rmjwiww/stata/noncomp/strbee, replace"}.
-
-
-
 {title:Technical notes}{marker technotes}
 
 {phang}{cmd:strbee} is an r-class command. 
@@ -417,7 +407,6 @@ This file contains details of the original data set as {help char:characteristic
 If results are appended to this file then {cmd:strbee} checks that the characteristics match.
 
 
-
 {title:Limitations}{marker limitations}
 
 {phang}. Censored switches occurring before the event are assumed to represent no switch.{p_end}
@@ -426,14 +415,13 @@ If results are appended to this file then {cmd:strbee} checks that the character
 {phang}. Treatment at any time must be yes/no, so that it can be summarised by the total time on or off treatment. Thus varying doses can not be allowed for in {cmd:strbee}, though the RPSFTM does allow for them.{p_end}
 
 
-
 {title:References}{marker refs}
 
 {phang}{marker BW02}Branson M, Whitehead J (2002). Estimating a treatment effect in survival studies in which patients switch treatment. Statistics in Medicine 21: 2449-2463.
 
 {phang}{marker RT91}Robins JM, Tsiatis AA (1991). Correcting for non-compliance in randomized trials using rank preserving structural failure time models. Communications in Statistics - Theory and Methods 20: 2609-2631.
 
-{phang}{marker White++02}White IR, Walker S, Babiker A (2002). strbee: Randomisation-based efficacy estimator. Stata Journal 2: 140-150.
+{phang}{marker White++02}*White IR, Walker S, Babiker A (2002). strbee: Randomisation-based efficacy estimator. Stata Journal 2: 140-150.
 
 {phang}{marker White++99}White IR, Babiker AG, Walker S, Darbyshire JH (1999). Randomisation-based methods for correcting for treatment changes: examples from the Concorde trial. Statistics in Medicine 18: 2617-2634.
 
@@ -441,17 +429,25 @@ If results are appended to this file then {cmd:strbee} checks that the character
 Estimating treatment effects in randomised trials with treatment switching.
 Statistics in Medicine 25: 1619-1622.       
 
+* Please use this reference to cite this program.
 
 
-{title:Authors}
+{title:Author and updates}{marker updates}
 
-  Ian R. White
-  MRC Clinical Trials Unit at UCL, London, UK
-  ian.white@ucl.ac.uk
+{p}Ian White, MRC Clinical  Trials Unit at UCL, London, UK. 
+Email {browse "mailto:ian.white@ucl.ac.uk":ian.white@ucl.ac.uk}.
 
-  Sarah Walker
-  MRC Clinical Trials Unit at UCL, London, UK
+{p}I put updates from time to time on my website.
+You can install them using 
+{stata "net install http://www.homepages.ucl.ac.uk/~rmjwiww/stata/noncomp/strbee, replace"}.
 
-  Abdel Babiker
-  MRC Clinical Trials Unit at UCL, London, UK
+{p}You can get the latest version of all my Stata software using 
+{stata "net from http://www.homepages.ucl.ac.uk/~rmjwiww/stata/"}.
+
+{p}The original code was co-authored with 
+Sarah Walker and Abdel Babiker, 
+MRC Clinical Trials Unit at UCL, London, UK.
+
+
+
 
