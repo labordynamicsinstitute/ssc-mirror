@@ -1,6 +1,6 @@
 {smcl}
-{right:version:  4.3}
-{cmd:help asreg} {right:Feb 17, 2021}
+{right:version:  4.7}
+{cmd:help asreg} {right:Jan 07, 2022}
 {hline}
 {viewerjumpto "Options" "asreg##options"}{...}
 {viewerjumpto "fmb" "asreg##fmb"}{...}
@@ -420,7 +420,7 @@ regressions and Fama-McBeth regressions. In the rolling regressions, {opt newey}
                 e(N_g) =  number of groups
                e(df_r) =  degrees of freedom
                   e(F) =  F-test value
-                e(_R2) =  average r-squared
+                e(r2_a) =  average r-squared
 
 macros:
               e(avgr2) : "average r-squared"

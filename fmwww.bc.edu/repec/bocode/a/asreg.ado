@@ -1,13 +1,16 @@
-*! Attaullah Shah ;  Email: attaullah.shah@imsciences.edu.pk ; * Support website: www.OpenDoors.Pk
-*! Version 4.5: Feb 17, 2021 : Shanken license updated
-* Version 4.4: Feb 09, 2021 : Issue with by groups regressions solved : Also, removed the select index pointer
-* Version 4.3: Feb 05, 2021 : label issue with the fmb, first regression is fixed. 
-* Version 4.2: Jan 31, 2021 : Option exclude(keyvar low high) added
-* Version 4.1 : Nov  2, 2020 : New system for shanken correction license
+*! Attaullah Shah ;  Email: attaullah.shah@imsciences.edu.pk ; * Support website: www.FinTechProfessor.com
+
+*! Version 4.7: Jan 07, 2022 : When data had duplicates, the fitted and residual were not calculated for each obs. This has been fixed.
+* Version 4.6 : Oct 13, 2021 : Added [aweights] and noconstant to fmb
+* Version 4.5 : Feb 17, 2021 : Shanken license updated
+* Version 4.4 : Feb 09, 2021 : Issue with by groups regressions solved : Also, removed the select index pointer
+* Version 4.3 : Feb 05, 2021 : label issue with the fmb, first regression is fixed. 
+* Version 4.2 : Jan 31, 2021 : Option exclude(keyvar low high) added
+* Version 4.1 : Nov 02, 2020 : New system for shanken correction license
 * Version 4.0 : Oct 29, 2020 : Added flexible window : window(year -40 10) etc.
-* Version 3.4 : July 9, 2019 : Added adjusted r-squared to fmb
+* Version 3.4 : Jul 09, 2019 : Added adjusted r-squared to fmb
 * Version 3.3 : Dec 19, 2018 : Fixed a bug in  function ASREG4s1f1()
-* Version 3.2 : July 2018: newey() fixing
+* Version 3.2 : Jul 01, 2018 : Fixed bugs in newey()
 * Added noConstant and Robust options
 * Added Fama and MacBeth regressions and newey SE
 * Multiple functions for se and fitted values
@@ -15,15 +18,16 @@
 
 cap prog drop asreg
 prog asreg, byable(onecall) sortpreserve eclass
-version 11
+	version 11
 
-	syntax       	///
-		varlist(min=1)     ///
+	syntax       	    ///
+		varlist(min=1)  ///
+		[aw/]           /// works only with fmb
 		[in] [if],      ///
 		[Window(string) ///
 		MINimum(real 0) ///
 		by(varlist)     ///
-		FITted         ///
+		FITted          ///
 		SE            	///
 		RMSE			///
 		RECursive		///
@@ -35,7 +39,7 @@ version 11
 		NOConstant      ///
 		Robust			///
 		shanken(str)	///
-		EXclude(str)		///
+		EXclude(str)	///
 		] 
 
 	if "`shanken'" != "" {
@@ -143,7 +147,7 @@ version 11
 				exit
 			}
 
-			
+
 		}
 
 		gettoken lhsvar rhs : varlist
@@ -161,7 +165,7 @@ version 11
 			label var _R2 "R-squared"
 			gen double _adjR2	= .
 			label var _adjR2 "Adjusted R-squared"
-			
+
 			if "`rhs'" != "" {
 
 				foreach var of varlist `rhs'{
@@ -194,7 +198,7 @@ version 11
 				if `newey' != 0 local se_text "Newey adj. Std. errors of "
 				else if "`robust'" != "" local se_text "Robust Std. errors of "
 				else local se_text "Standard Std. errors of "
-				
+
 				if "`rhs'" != "" {
 					foreach var of varlist `rhs'{
 						gen _se_`var'=.
@@ -202,7 +206,7 @@ version 11
 						local _se_rvsvars "`_se_rvsvars' _se_`var'"
 					}
 				}
-				
+
 				if "`noconstant'" == "" { 
 					gen _se_cons = .
 					label var _se_cons "`se_text'constant"
@@ -219,9 +223,14 @@ version 11
 			local ResultsVars "_Nobs _R2 _adjR2   `b_rvsvars' `_b_cons' `_se_rvsvars'  `fitres' `_b_rmse'"
 		}
 
-		if "`_byvars'" != "" {
+		if "`timevar'" != "" {
+			local by "`timevar'"
+		}
+		
+		if "`_byvars'"!="" {
 			local by "`_byvars'"
 		}
+		
 		if "`by'"=="" {
 			tempvar by
 			qui gen `by' = 1
@@ -275,11 +284,22 @@ version 11
 					"`exclude'"				///
 					)
 
-
 				if "`dt'" == "3" {
+
+					if "`fitted'" != "" {
+						loc removeFitted _fitted
+						loc removeResiduals _residuals
+
+						local  ResultsVars : list ResultsVars - removeFitted
+						local  ResultsVars : list ResultsVars - removeResiduals
+					}
+					
 					foreach v of varlist `ResultsVars' {
 						qui bys `__GByVars' `rangevar': replace `v' =`v'[_N]
 					}
+					
+					if "`fitted'" != "" gen_residual_fitted `rhs', depvar(`lhsvar') constant(`_b_cons')
+
 				}
 
 
@@ -349,10 +369,11 @@ version 11
 		marksample touse
 		preserve
 		qui _xt
-		local _byvars `r(tvar)'
-		sort `_byvars'
+		local timevar `r(tvar)'
+		sort `timevar'
 		local nvars : word count `varlist'
-		if `newey'<0 { 
+
+		if `newey'< 0 { 
 			di in red `"newey(`newey') invalid lag selected"'
 			exit 198
 		}
@@ -362,8 +383,8 @@ version 11
 		tsrevar `lhsvar'
 		loc lhsvar  `r(varlist)'
 
-		//tsrevar, list
-		
+		// tsrevar, list
+
 		if (strmatch("`rhs'", "*.*")) {
 			tsrevar `rhs'
 			loc rhsvars  `r(varlist)'
@@ -371,59 +392,98 @@ version 11
 			loc rhs  `r(varlist)'
 		}
 		else loc rhsvars `rhs'
-		
+
 		loc varlist "`lhsvar' `rhsvars'"
 
 		qui count if `touse'
 		local observations = r(N)
 
+		loc IFaweightExists 0
+
+		if ("`weight'" == "aweight") {
+		    loc aweight `exp'
+			loc IFaweightExists 1
+			loc __aweight __aweight
+		    asreg_aweights `varlist', aweight(`aweight') `noconstant'
+
+		}
+
 		qui {	
 			foreach i of varlist `rhs'{
-				gen double _b_`i'=.
-				local b_rvsvars "`b_rvsvars' _b_`i'"
 
+				gen double _b_`i'=.
+
+				local b_rvsvars "`b_rvsvars' _b_`i'"
 			}
 
 			cap drop _TimeVar obs R2 cons 
-			gen _Cons = .
-			gen _R2 = .
-			gen _adjR2 = .
-			gen _TimeVar = .
-			gen _obs = .
 
-			local ResultsVars "_TimeVar _obs _R2 _adjR2  `b_rvsvars' _Cons "
+			gen _R2      = .
+			gen _adjR2   = .
+			gen _TimeVar = .
+			gen _obs     = .
+
+			if "`noconstant'" == "" {
+				gen _Cons = .
+				loc _constant _Cons
+				loc cons ":cons"
+			}
+
+			local ResultsVars "_TimeVar _obs _R2 _adjR2  `b_rvsvars' `_constant'"
+
 		}
-		mata: ASREGFMB("`varlist'", "`_byvars'" , "`ResultsVars'" , "`touse'")
-		qui count if _obs!=.
+
+		if `IFaweightExists' {
+
+		    mata: fmb_first_stage_aw("`varlist' `__aweight'",   /// 
+				"`timevar'" , "`ResultsVars'", "`aweight'" ,        ///
+				"`noconstant'", "`touse'")
+		}
+
+		else mata: fmb_first_stage("`varlist'", "`timevar'" , "`ResultsVars'" ,  ///
+			"`noconstant'", "`newey'", "`touse'")
+
+		qui count if _obs != .
+
 		loc periods = r(N)
 
-		if "`save'" ~= "" {
+		if "`save'" != "" {
+
 			keep if _obs!=.
+
 			qui save "`save'", replace
 		}
 
-		if "`first'"~=""{
+		if "`first'" != "" {
+
 			foreach v of varlist `ResultsVars' {
 				qui format %8.0g `v'
 			}
+
 			display "{title:First stage Fama-McBeth regression results}"
-			list `ResultsVars' in 1/`periods' , noobs mean separator(0)
+			capture qui rename _TimeVar `timevar'
+
+			loc ResultsVars = subinstr("`ResultsVars'", "_TimeVar", "`timevar'", 1)
+
+			list `ResultsVars' in 1 / `periods' , noobs mean separator(0)
 		}
 
+		if `newey'==0 	mata: fmb_with_se("`b_rvsvars'", "`noconstant'")
 
-		local nVARs : word count `b_rvsvars' + 1
-		if `newey'==0 	mata: FMB2("`b_rvsvars'")			
-		else mata: FMB3("`b_rvsvars'", `nVARs', `newey')
+
+		else mata: fmb_with_newey("`b_rvsvars' `_constant'", `newey')
 
 		foreach var of local rhsvars {
+
 			local Labels "`Labels' :`var'"
 		}
+
 
 		qui sum _R2
 		ereturn local avgr2 = r(mean)
 		qui sum _adjR2, meanonly
 
-		ereturn local adjR2 = r(mean)
+		ereturn local r2_a = r(mean)
 
 		restore		
 
@@ -432,11 +492,10 @@ version 11
 
 			mata: shanken_se("v", "b", "`shanken'", `periods',  "`c(os)'")
 		}
-		dis "`rhsvars'"
 		matrix rownames b = `lhsvar'
-		matrix colnames b = `Labels' :_cons
-		matrix rownames v = `Labels' :_cons
-		matrix colnames v = `Labels' :_cons
+		matrix colnames b = `Labels' `cons'
+		matrix rownames v = `Labels' `cons'
+		matrix colnames v = `Labels' `cons'
 
 		ereturn clear
 		ereturn post b v, esample(`touse') depname("`lhsvar'")
@@ -444,13 +503,17 @@ version 11
 		ereturn scalar N = `observations'
 		ereturn scalar N_g = `periods'
 		ereturn scalar df_m = wordcount("`rhsvars'")
-		ereturn scalar df_r = `periods' - 1
+		ereturn scalar df_r = `periods' - (wordcount("`rhsvars'")+1)
+		local df_r = `periods' - (wordcount("`rhsvars'")+1)
+
+		cast_e_here df_r `df_r'
+
 
 		qui if "`rhsvars'"!=""  test `rhsvars', min  
 		ereturn scalar F = r(F)
 
 		ereturn scalar r2 = `avgR2'
-		ereturn scalar adjr2 = `adjR2'
+		ereturn scalar r2_a = `adjR2'
 
 		if `newey' == 0 {
 			if "`shanken'" == "" {
@@ -494,14 +557,52 @@ version 11
 		ereturn display, level(95)
 
 
-		if "`save'"~="" {
+		if "`save'" != "" {
 
 			preserve
 
 			use "`save'", clear
 			qui keep `ResultsVars'
+			capture qui rename _TimeVar `timevar'
 			qui save "`save'", replace
 			di as smcl `"First stage regression results saved in {browse "`save'.dta"}"'
 		}
 	}
+end
+
+program define cast_e_here, eclass
+	ereturn scalar `1' = `2'
+end
+
+* gen_residual_fitted: Version 1.0 Jan 7, 2021
+program define gen_residual_fitted
+
+	syntax varlist, depvar(str) [constant(str) ] 
+	if "`constant'" == "" local constant 0
+
+
+	local sum_notation `constant'
+
+	foreach v of local varlist {
+		local sum_notation `sum_notation' + (`v' * _b_`v')
+	}
+	qui cap replace _fitted    = `sum_notation'     if _fitted       == .
+	qui cap replace _residuals = `depvar' - _fitted if _residuals    == .
+end
+
+* asreg_aweights: Version 1.0 Oct 13, 2021 
+program define asreg_aweights
+
+	syntax varlist [if] [in], AWeight(str) [NOConstant]
+
+	if ("`noconstant'" == "") loc __aweight __aweight
+
+	quietly gen __aweight = sqrt(`aweight')
+
+	foreach v of varlist `varlist' {
+
+		qui replace `v' = `v' * __aweight
+
+	}			
+
 end
