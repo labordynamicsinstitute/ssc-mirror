@@ -2,7 +2,7 @@
 *! "c_ml_stata"
 *! Author: Giovanni Cerulli
 *! Version 11
-*! Date: 09 November 2021
+*! Date: 13 January 2022
 ********************************************************************************
 program c_ml_stata , eclass
 version 16
@@ -161,8 +161,8 @@ ereturn local OPT_WEIGHT "$OPT_WEIGHT"
 else if "`mlmodel'"=="neuralnet"{
 python script "`c(sysdir_plus)'py/c_neuralnet.py"
 ereturn clear
-ereturn scalar OPT_LAYERS=OPT_LAYERS
-ereturn scalar OPT_NEURONS=OPT_NEURONS
+ereturn scalar OPT_NEURONS_L1=OPT_NEURONS_L1
+ereturn scalar OPT_NEURONS_L2=OPT_NEURONS_L2
 }
 ********************************************************************************
 else if "`mlmodel'"=="randomforest"{

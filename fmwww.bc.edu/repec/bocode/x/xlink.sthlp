@@ -41,8 +41,8 @@ after {helpb glm}.
 
 {phang}
 {opt robit1}, {opt robit2}, {opt robit3}, {opt robit4}, 
-{opt robit5}, {opt robit6}, {opt robit7}, {opt robit8}, and {opt robit9}
-indicates the robit link with 1, 2, 3, 4, 5, 6, 7, 8, and 9 degrees of freedom,
+{opt robit5}, {opt robit6}, {opt robit7}, {opt robit8}, {opt robit9}, and {opt robit10}
+indicates the robit link with 1, 2, 3, 4, 5, 6, 7, 8, 9, and 10 degrees of freedom,
 respectively.
 These link functions are defined by the formulas
 

@@ -53,9 +53,8 @@ hazard independently.
 {title:Author}
 
 {pstd}{cmd:Michael J. Crowther}{p_end}
-{pstd}Department of Health Sciences{p_end}
-{pstd}University of Leicester{p_end}
-{pstd}E-mail: {browse "mailto:michael.crowther@le.ac.uk":michael.crowther@le.ac.uk}{p_end}
+{pstd}Red Door Analytics{p_end}
+{pstd}E-mail: {browse "mailto:michael@reddooranalytics.se":michael@reddooranalytics.se}{p_end}
 
 {phang}Please report any errors you may find.{p_end}
 

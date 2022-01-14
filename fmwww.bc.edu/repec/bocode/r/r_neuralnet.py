@@ -2,7 +2,7 @@
 #! "r_neuralnet.py": Neural network regression using Python Scikit-learn 
 #! Author: Giovanni Cerulli
 #! Version: 4
-#! Date: 09 November 2021
+#! Date: 13 January 2022
 ################################################################################
 
 # IMPORT NEEDED PACKAGES
@@ -37,15 +37,15 @@ X
 # READ THE "SEED" FROM STATA
 R=int(Macro.getLocal("seed"))
 
-# ESTIMATE A "ABC" AT GIVEN PARAMETERS (JUST TO TRY IF IT WORKS)
-model = MLPRegressor(solver='lbfgs', alpha=1e-5,hidden_layer_sizes=(5, 2), random_state=R)
+# ESTIMATE A "neuralnet" AT GIVEN PARAMETERS (JUST TO TRY IF IT WORKS)
+model = MLPRegressor(solver='lbfgs', alpha=1e-5,hidden_layer_sizes=(5, 5), random_state=R)
 
 # DEFINE THE PARAMETER VALUES THAT SHOULD BE SEARCHED FOR CROSS-VALIDATION
-# 1. "NUMBER OF LAYERS" 
-# 2. "NUMBER OF NEURONS" 
+# 1. "NUMBER OF NEURONS FOR LAYER 1" 
+# 2. "NUMBER OF NEURONS FOR LAYER 2" 
 # 3. "RANDOM SEED" 
 
-# CREATE A PARAMETER GRID AS A 2D "LIST" FOR LAYERS AND NEURONS
+# CREATE A PARAMETER GRID AS A 2D "LIST" FOR NEURONS-LAYER-1 AND NEURONS-LAYER-2
 grid=[]
 for i in range(1,10,1):
   for j in range(1,6,1):
@@ -90,10 +90,10 @@ print(grid.best_params_)
 
 # PUT THE BEST PARAMETERS INTO STATA SCALARS
 opt_nn=grid.best_params_.get('hidden_layer_sizes')
-opt_layers=opt_nn[0]
-opt_neurons=opt_nn[1]
-Scalar.setValue('OPT_LAYERS',opt_layers,vtype='visible')
-Scalar.setValue('OPT_NEURONS',opt_neurons,vtype='visible')
+opt_neurons1=opt_nn[0]
+opt_neurons2=opt_nn[1]
+Scalar.setValue('OPT_NEURONS_L_1',opt_neurons1,vtype='visible')
+Scalar.setValue('OPT_NEURONS_L_2',opt_neurons2,vtype='visible')
 
 print("------------------------------------------------------")
 print("The best estimator is:")

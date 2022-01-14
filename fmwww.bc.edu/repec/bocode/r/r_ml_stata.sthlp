@@ -1,5 +1,5 @@
 {smcl}
-{* 09Nov2021}{...}
+{* 13Jan2022}{...}
 {cmd:help r_ml_stata}
 {hline}
 
@@ -118,11 +118,45 @@ and the "standard error of the optimal test accuracy" obtained via cross-validat
 
 {title:Example}
 
-{phang} . use "r_ml_stata_data_example.dta" , clear
+{phang} *** {bf:RUNNING A REGRESSION TREE} ***
 
-{phang} . r_ml_stata y x1 x2 x3 x4 , mlmodel(tree) in_prediction("in_pred") cross_validation("CV")
-          out_sample_x("data_new_x") out_sample_y("data_new_y") out_prediction("out_pred") 
-          seed(10) n_folds(10) save_graph_cv("graph_cv")
+{phang} * {bf:Download these {browse "https://www.dropbox.com/sh/5ficl2jfsm8efk1/AAAmLu5zjmbSJx7g-gq5mduja?dl=0":datasets}, by putting them in the same directory:}
+
+{phang} * Dataset 1: "r_data" -> the complete dataset
+
+{phang} * Dataset 2: "r_data_x" -> the test dataset containing "only" the features X 
+
+{phang} * Dataset 3: "r_data_y" -> the test dataset containing "only" the outcome y  
+
+{phang} * {bf:Load the complete dataset}
+
+{phang} . use "r_data" , clear
+
+{phang} * {bf:Run the "r_ml_stata" command with model option "tree"}
+
+{phang} #delimit ;
+       
+{phang} . r_ml_stata y x1 x2 x3 x4 , mlmodel("tree") in_prediction("in_pred") cross_validation("CV") out_sample_x("r_data_x") out_sample_y("r_data_y") out_prediction("out_pred") seed(10) n_folds(10) save_graph_cv("graph_cv");
+
+{phang} #delimit cr
+
+{phang} * {bf:Look at the main results} 
+
+{phang} #delimit cr
+
+{phang} . ereturn list
+
+{phang} * {bf:Look at the cross-validation results}
+
+{phang} . use CV , clear
+
+{phang} . list
+
+{phang} * {bf:Look at the out-of-sample predictions}
+
+{phang} . use out_pred , clear
+
+{phang} . list
 
 
 {title:Reference}

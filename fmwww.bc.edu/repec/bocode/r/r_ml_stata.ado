@@ -1,8 +1,8 @@
 ********************************************************************************
 *! "r_ml_stata"
 *! Author: Giovanni Cerulli
-*! Version: 10
-*! Date: 09 November 2021
+*! Version: 11
+*! Date: 13 January 2022
 ********************************************************************************
 program r_ml_stata , eclass
 version 16
@@ -122,8 +122,8 @@ keep `y' `in_prediction'
 save `in_prediction' , replace
 restore
 ereturn clear
-ereturn scalar OPT_LAYERS=OPT_LAYERS
-ereturn scalar OPT_NEURONS=OPT_NEURONS
+ereturn scalar OPT_NEURONS_L_1=OPT_NEURONS_L_1
+ereturn scalar OPT_NEURONS_L_2=OPT_NEURONS_L_2
 }
 ********************************************************************************
 else if "`mlmodel'"=="randomforest"{

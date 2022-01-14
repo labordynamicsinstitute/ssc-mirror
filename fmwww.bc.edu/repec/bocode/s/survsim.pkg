@@ -13,7 +13,7 @@ d KW: Weibull distribution
 d
 d Requires: Stata version 14.2
 d
-d Distribution-Date: 20211013
+d Distribution-Date: 20220113
 d
 d Author: Michael J. Crowther, Karolinska Institutet
 d Support: email michael.crowther@@ki.se
@@ -23,6 +23,8 @@ f survsim_model.ado
 f survsim_msm.ado
 f survsim_user.ado
 f survsim_user_core.ado
+f survsim_msm_mataf_total.mata
+f survsim_msm_mataf.mata
 f survsim.sthlp
 f survsim_model.sthlp
 f survsim_msm.sthlp

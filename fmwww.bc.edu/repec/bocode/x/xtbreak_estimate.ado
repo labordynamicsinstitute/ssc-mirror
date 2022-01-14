@@ -139,6 +139,13 @@ program define xtbreak_estimate, eclass
 			}			
 			issorted `idvars' `tvar_o'
 			
+			*** Additional check if panel model used and only breakconstant specified, assumption is no fixed effects
+			if "`breakconstant'" != "" & `IsPanel' == 1 & "`nofixedeffects'" == "" {
+				noi disp "Option {cmd:nofixedeffects} assumed."
+				local nofixedeffects "nofixedeffects"				
+			}
+
+
 			*** generate new tvar from 1...T
 			tempvar tvar
 			egen `tvar' = group(`tvar_o') if `touse'
@@ -418,7 +425,7 @@ program define xtbreak_estimate, eclass
 			}
 		}
 
-
+		return clear
 		ereturn clear
 
 		ereturn post , esample(`touse')
@@ -427,7 +434,7 @@ program define xtbreak_estimate, eclass
 		gettoken lhs rhs: vars
 		ereturn hidden local breakvars "`rhs'"
 		ereturn hidden local depvar "`lhs'"
-		ereturn hidden local cmd "estimate"
+		ereturn local cmd "`cmd'"
 		
 		ereturn matrix breaks = breaks
 		ereturn matrix CI = CI

@@ -109,10 +109,10 @@ print("------------------------------------------------------")
 
 # STORE THE TWO BEST PARAMETERS INTO TWO VARIABLES 
 opt_nn=grid.best_params_.get('hidden_layer_sizes')
-opt_layers=opt_nn[0]
-opt_neurons=opt_nn[1]
-Scalar.setValue('OPT_LAYERS',opt_layers,vtype='visible')
-Scalar.setValue('OPT_NEURONS',opt_neurons,vtype='visible')
+opt_neurons1=opt_nn[0]
+opt_neurons2=opt_nn[1]
+Scalar.setValue('OPT_NEURONS_L1',opt_neurons1,vtype='visible')
+Scalar.setValue('OPT_NEURONS_L2',opt_neurons2,vtype='visible')
 
 # USING THE BEST PARAMETERS TO MAKE PREDICTIONS
 # TRAIN YOUR MODEL USING ALL DATA AND THE BEST KNOWN PARAMETERS

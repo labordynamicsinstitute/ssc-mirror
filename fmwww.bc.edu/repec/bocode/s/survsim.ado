@@ -1,49 +1,52 @@
-*! version 4.0.6 13oct2021 MJC
+*! version 4.0.8 14jan2022 MJC
 
 /*
 History
+12jan2022 version 4.0.8 - build error; now fixed
+02dec2021 version 4.0.7 - bug fix with msm simulation, would occur if directory of installed files had a space in it
+                        - missing .mata files in pkg file
 13oct2021 version 4.0.6 - bug fix with varnames in chazard() or logchazard() not parsed correctly with survsim user; now fixed
-						- error check for negative hazard() added
-						- Now tidies up after itself if it errors out
+                        - error check for negative hazard() added
+                        - Now tidies up after itself if it errors out
 02sep2021 version 4.0.5 - bug fix; mixture + tde() would error out, now fixed
 24aug2020 version 4.0.4 - re-syncing with predictms for merlin model simulation
-                        - bug fix in missing value warning text; now fixed
+- bug fix in missing value warning text; now fixed
 25may2020 version 4.0.3 - efficiency of _msm improved
-						- bug fix: Stata variables in user-defined hazard functions not parsed correctly; now fixed
+                        - bug fix: Stata variables in user-defined hazard functions not parsed correctly; now fixed
 30mar2020 version 4.0.2 - bug fix; missing value issue when t = 0 in chq function, now fixed
-						- bug fix; indexing issue occurred in varied circumstances, now fixed
+                        - bug fix; indexing issue occurred in varied circumstances, now fixed
 29mar2020 version 4.0.1 - bug fix; error in distribution(gompertz) when specified in a hazard#() -> now fixed
-						- help file edits
+                        - help file edits
 26mar2020 version 4.0.0 - computation time reduced by about 70% for multi-state model simulation
-						- reset added to hazard#() for semi-Markov models
-						- syntax changed for user-defined functions, #t now {t} for more robust parsing
-						- support for general multiple timescales, including:
-							- {t0} can be used in user() and tdefunction() for time of entry into initial state for associated transition
-						- cr subclass removed, now part of general msm syntax
-						- bug fix; variables used directly in user() with a multi-state model were not passed to Mata -> now fixed
-						- bug fix; if the same variable was used in multiple hazard#()s, parsing would only pick up the first -> now fixed
+                        - reset added to hazard#() for semi-Markov models
+                        - syntax changed for user-defined functions, #t now {t} for more robust parsing
+                        - support for general multiple timescales, including:
+                                - {t0} can be used in user() and tdefunction() for time of entry into initial state for associated transition
+                        - cr subclass removed, now part of general msm syntax
+                        - bug fix; variables used directly in user() with a multi-state model were not passed to Mata -> now fixed
+                        - bug fix; if the same variable was used in multiple hazard#()s, parsing would only pick up the first -> now fixed
 24mar2020 version 3.1.0 - general Markov multi-state simulation now added
-						- transmatrix() option added
-						- tolerance changed to 0 from 1e-08 in mm_root()
+                        - transmatrix() option added
+                        - tolerance changed to 0 from 1e-08 in mm_root()
 21mar2020 version 3.0.0 - complete re-write of core code
-						- can now simulate from a fitted merlin survival model
-						- can now simulate from cause-specific hazards competing risks models, with either parametric or user-defined hazard functions, with a new syntax
-						- distribution() now required for parameteric models
-						- ltruncated() added, can be number or varname, synced with all except merlin model simulation
-						- maxtime() can now be a number or a varname
-						- help files re-written, hugely improved
-						- added error report on missing values when general algorithm used
-						- parsing made more robust
+                        - can now simulate from a fitted merlin survival model
+                        - can now simulate from cause-specific hazards competing risks models, with either parametric or user-defined hazard functions, with a new syntax
+                        - distribution() now required for parameteric models
+                        - ltruncated() added, can be number or varname, synced with all except merlin model simulation
+                        - maxtime() can now be a number or a varname
+                        - help files re-written, hugely improved
+                        - added error report on missing values when general algorithm used
+                        - parsing made more robust
 18dec2013 version 2.0.3 - tde() with logcumh() or cumh() caused an error. Now fixed.
 10oct2013 version 2.0.2 - bug fix -> exact option added to confirm vars
 08jul2013 version 2.0.1 - minor bug fix in mixture models
 04jan2013 version 2.0.0 - maxtime() added to specify maximum generated survival time and event indicator
-						- n() removed so must set obs
-						- loghazard() and hazard() added for user-defined hazard functions, simulated using quadrature and root finding
-						- default centol() changed to 1E-08
-						- varnames can now appear in loghazard()/hazard() allowing time-dependent covariates
-						- mixture models now use Brent method -> much more reliable than NR, and allows tdes
-						- cumhazard() and logcumhazard() now added which just use root finding
+                        - n() removed so must set obs
+                        - loghazard() and hazard() added for user-defined hazard functions, simulated using quadrature and root finding
+                        - default centol() changed to 1E-08
+                        - varnames can now appear in loghazard()/hazard() allowing time-dependent covariates
+                        - mixture models now use Brent method -> much more reliable than NR, and allows tdes
+                        - cumhazard() and logcumhazard() now added which just use root finding
 15Nov2011 version 1.1.2 - Fixed bug when generating covariate tempvars with competing risks.
 20sep2011 version 1.1.1 - Exponential distribution added.
 10sep2011 version 1.1.0 - Added Gompertz distribution. Time-dependent effects available for all models except mixture. showerror option added.
@@ -56,32 +59,32 @@ program define survsim
 	CheckObs
 	
 	local opts1											/// -fitted merlin model-
-							MODel(passthru)				/// 
+                        MODel(passthru)				/// 
 														//
 													
 	local opts2											///	-user-defined-
-							LOGHazard(passthru)			///	
-							Hazard(passthru)			///	
-							LOGCHazard(passthru)		/// 
-							CHazard(passthru)			/// 
-							NODES(passthru)				///	-# nodes-
-							TDEFUNCtion(passthru)		///	-function of time to interact with time-dependent effects-
-							MIXture						///	-two-component mixture-
-							PMix(passthru)				///	-mixture parameter-
-							CR							///	-simulate competing risks-
-							NCR(string)					///	-number of competing risks-
-							Distribution(passthru)		/// 
-							Lambdas(passthru)			///	
-							Gammas(passthru)			///	
-							COVariates(passthru)		///	-baseline covariates, e.g, (sex 0.5 race -0.4)-
-							TDE(passthru)				///	-time dependent effects-
-							MARGinal					///
-														//
+                        LOGHazard(passthru)		///	
+                        Hazard(passthru)		///	
+                        LOGCHazard(passthru)		/// 
+                        CHazard(passthru)		/// 
+                        NODES(passthru)			///	-# nodes-
+                        TDEFUNCtion(passthru)		///	-function of time to interact with time-dependent effects-
+                        MIXture				///	-two-component mixture-
+                        PMix(passthru)			///	-mixture parameter-
+                        CR				///	-simulate competing risks-
+                        NCR(string)			///	-number of competing risks-
+                        Distribution(passthru)		/// 
+                        Lambdas(passthru)		///	
+                        Gammas(passthru)		///	
+                        COVariates(passthru)		///	-baseline covariates, e.g, (sex 0.5 race -0.4)-
+                        TDE(passthru)			///	-time dependent effects-
+                        MARGinal			///
+                                                        //
 
-	local commonopts	 								///
-							MAXTime(string)				///	-right censoring time-
-							LTruncated(string)			///	-left truncation/delayed entry-
-														//
+	local commonopts	 			///
+                        MAXTime(string)			///	-right censoring time-
+                        LTruncated(string)		///	-left truncation/delayed entry-
+							//
 													
 	//==============================================================================================================//
 	//parse opts that are common to all three settings

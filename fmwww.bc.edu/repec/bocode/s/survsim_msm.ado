@@ -417,7 +417,7 @@ program define survsim_msm
 				forvalues i=1/`Nhazards' {
 					global i `i'
 					global matahazard`i' `matahazard`i''
-					do `smfile'
+					do "`smfile'"
 					//mata: function hf`i'(tnodes,expxb,tdexb,hvars,lt,time0) return(`matahazard`i'')
 					mata: Phfs[`i'] = &hf`i'()
 					macro drop i matahazard`i'
@@ -431,7 +431,7 @@ program define survsim_msm
 					if "`totalhazard`i''"!="" {
 						global i `i'
 						global totalhazard`i' `totalhazard`i''
-						do `smfile'
+						do "`smfile'"
  						//mata: function totalhf`i'(tnodes,expxb,tdexb,hvars,lt,time0) return(`totalhazard`i'')
 						mata: Ptotalhfs[`i'] = &totalhf`i'()
 						macro drop i totalhazard`i'
