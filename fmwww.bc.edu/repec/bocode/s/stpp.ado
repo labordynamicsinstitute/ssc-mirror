@@ -1,4 +1,4 @@
-*! version 1.2.2 2021-08-16
+*! version 1.2.4 2022-01-13
 
 program define stpp, rclass sortpreserve
   version 16.0
@@ -121,7 +121,7 @@ program define stpp, rclass sortpreserve
     }
   }
   else {
-    count if _d==1 &`touse'
+    quietly count if _d==1 &`touse'
     if `r(N)' == 0 {
     	di as error "There are zero events" 
       exit 198
@@ -215,6 +215,26 @@ program define stpp, rclass sortpreserve
 	
   mata: stpp()
   return add
+  
+  if "`by'" != "" {
+  	quietly {
+	  matrix colnames PP=`by' time PP PP_lci PP_uci	
+	  return matrix PP=PP
+	  if "`allcause'"  != "" {
+	  	matrix colnames AC=`by' time AC AC_lci AC_uci	
+	    return matrix AC=AC
+		
+	  }
+	  if "`crudeprob'" != "" {
+	    matrix colnames CP_can=`by' time CP_can CP_can_lci CP_can_uci	
+	    return matrix CP_can=CP_can
+		if wordcount("`crudeprob'")>1 {
+		  matrix colnames CP_oth=`by' time CP_oth CP_oth_lci CP_oth_uci	
+	      return matrix CP_oth=CP_oth		
+		}
+	  }
+	}
+  }  
 
   // merge in results  
   tempvar tmplink
@@ -415,7 +435,7 @@ void function stpp()
 
 // Generate_estimates 
   PP_Gen_estimates(S)
-  
+ 
 // Generate cumulative estimates 
   PP_Gen_cumulative_estimates(S)
 
@@ -522,6 +542,7 @@ struct stpp_info {
 // unique value of t
   transmorphic matrix   unique_t_sk,      // unique values of t by stand and by levels
                         unique_t_k,       // unique values of t by by levels
+                        mint_k,           // minimum value of t by by levels
                         maxt_k            // maximum value of t by by levels
   
   real         matrix   Nunique_t_sk,     // No. of unique t for stand and by levels
@@ -697,6 +718,8 @@ function PP_Get_stpp_info()
   S.Nobs_by_sk   = J(S.Nstandlevels,S.Nbylevels,.)  
   S.Nunique_t_k  = J(1,S.Nbylevels,.)
   S.maxt_k       = asarray_create("real",1)
+  S.mint_k       = asarray_create("real",1)
+  
 
   for(k=1;k<=S.Nbylevels;k++) {
     for(s=1;s<=S.Nstandlevels;s++) {
@@ -706,6 +729,7 @@ function PP_Get_stpp_info()
     }
     asarray(S.unique_t_k,(k),uniqrows(S.t[selectindex(S.d :& rowsum(S.by:==S.bylevels[k,]):==S.Nbyvars)]))
     S.Nunique_t_k[k] = rows(asarray(S.unique_t_k,(k)))
+    asarray(S.mint_k,k,min(S.t[selectindex(rowsum(S.by:==S.bylevels[k,]):==S.Nbyvars)]))
     asarray(S.maxt_k,k,max(S.t[selectindex(rowsum(S.by:==S.bylevels[k,]):==S.Nbyvars)]))
   }  
 
@@ -1212,7 +1236,7 @@ real matrix function PP_loglog_tran_var(real matrix x,
 void function PP_Write_list_results(struct stpp_info scalar   S)
 {
   real matrix         RS_tmplist, AC_tmplist, CP_can_tmplist, CP_oth_tmplist, 
-                      tindex, tminindex, tmp  
+                      tindex, tminindex, tmp, tempPP, tempAC, tempCP_can, tempCP_oth  
 
   real scalar         i, k, j
 
@@ -1240,6 +1264,11 @@ void function PP_Write_list_results(struct stpp_info scalar   S)
   if(S.hascrudeprob) CP_can_list_matrix = asarray_create("real",1)
   if(S.CP_calcother) CP_oth_list_matrix = asarray_create("real",1)
 
+  tempPP = J(0,S.Nbyvars+4,.)
+  if(S.hasallcause) tempAC = J(0,S.Nbyvars+4,.)
+  if(S.hascrudeprob) tempCP_can = J(0,S.Nbyvars+4,.)
+  if(S.CP_calcother) tempCP_oth = J(0,S.Nbyvars+4,.)
+
   for(k=1;k<=S.Nbylevels;k++) {
     RS_tmplist         = J(S.Nlist,4,.)
     AC_tmplist     = J(S.Nlist,4,.)
@@ -1248,11 +1277,17 @@ void function PP_Write_list_results(struct stpp_info scalar   S)
     for(i=1;i<=S.Nlist;i++) {
       tindex = selectindex(asarray(S.unique_t_k,k):<=S.list[i])
       minindex(S.list[i]:-asarray(S.unique_t_k,k)[tindex],1,tminindex,tmp=.)
-      if(S.list[i]<=asarray(S.maxt_k,k)) {
+      if(S.list[i]<=asarray(S.maxt_k,k) & S.list[i]>=asarray(S.mint_k,k)) {
         RS_tmplist[i,] = (S.list[i],asarray(S.RS_PP, k)[tminindex,])
         if(S.hasallcause)  AC_tmplist[i,]     = (S.list[i],asarray(S.AC, k)[tminindex,])    
         if(S.hascrudeprob) CP_can_tmplist[i,] = (S.list[i],asarray(S.CP_can, k)[tminindex,])  
         if(S.CP_calcother) CP_oth_tmplist[i,] = (S.list[i],asarray(S.CP_oth, k)[tminindex,])
+      }
+      else if(S.list[i]<asarray(S.mint_k,k)) {
+        RS_tmplist[i,] = (S.list[i],1,1,1)
+        if(S.hasallcause)  AC_tmplist[i,]     = (S.list[i],1,1,1)    
+        if(S.hascrudeprob) CP_can_tmplist[i,] = (S.list[i],0,0,0)  
+        if(S.CP_calcother) CP_oth_tmplist[i,] = (S.list[i],0,0,0)        
       }
       else {
         RS_tmplist[i,1] = (S.list[i])
@@ -1284,40 +1319,59 @@ void function PP_Write_list_results(struct stpp_info scalar   S)
     	  }
     	printf("{txt}-> %s\n\n",bytext)
       }
-      printf("{txt}Time{space 5}{c |}   PP{space 5}(%s{txt}%% CI) \n",strofreal(S.level*100))
-      printf("{hline 9}{c +}{hline 26}\n")		
+      printf("{txt}Time{space   7}{c |}   PP{space 5}(%s{txt}%% CI) \n",strofreal(S.level*100))
+      printf("{hline 11}{c +}{hline 26}\n")		
       for(i=1;i<=S.Nlist;i++) {
-        printf("{res}%3.2g{space 5}{txt}{c |} {res}%5.3f (%5.3f to %5.3f)\n",
+        printf("{res}%6.3g{space 5}{txt}{c |} {res}%5.3f (%5.3f to %5.3f)\n",
         asarray(RS_list_matrix,k)[i,1],
         asarray(RS_list_matrix,k)[i,2],
         asarray(RS_list_matrix,k)[i,3],
         asarray(RS_list_matrix,k)[i,4])
       }
-      printf("{txt}{hline 9}{c +}{hline 26}\n\n")
+      printf("{txt}{hline 11}{c +}{hline 26}\n\n")
       stata("return clear")
       
       if(!S.hasby) rmatname = "r(PP)"
       else rmatname = "r(PP" + strofreal(k) + ")"
       st_matrix(rmatname,asarray(RS_list_matrix,k))
+     
+      if(S.hasby) {
+         tempPP = tempPP \ (J(rows(asarray(RS_list_matrix,k)),1,S.bylevels[k,]),asarray(RS_list_matrix,k))
+      }
 
       if(S.hasallcause) {
         if(!S.hasby) rmatname = "r(AC)"
         else rmatname = "r(AC" + strofreal(k) + ")"
         st_matrix(rmatname,asarray(AC_list_matrix,k))
+        if(S.hasby) {
+           tempAC = tempAC \ (J(rows(asarray(AC_list_matrix,k)),1,S.bylevels[k,]),asarray(AC_list_matrix,k))
+        }
       }
 
       if(S.hascrudeprob) {
       	if(!S.hasby) rmatname = "r(CP_can)"
         else rmatname = "r(CP_can" + strofreal(k) + ")"
         st_matrix(rmatname,asarray(CP_can_list_matrix,k))
+        if(S.hasby) {
+           tempCP_can = tempCP_can \ (J(rows(asarray(CP_can_list_matrix,k)),1,S.bylevels[k,]),asarray(CP_can_list_matrix,k))
+        }
         if(S.CP_calcother) {
       	  if(!S.hasby) rmatname = "r(CP_oth)"
           else rmatname = "r(CP_oth" + strofreal(k) + ")"
-          st_matrix(rmatname,asarray(CP_oth_list_matrix,k))        	
+          st_matrix(rmatname,asarray(CP_oth_list_matrix,k))
+          if(S.hasby) {
+             tempCP_oth = tempCP_oth \ (J(rows(asarray(CP_oth_list_matrix,k)),1,S.bylevels[k,]),asarray(CP_oth_list_matrix,k))
+          }        	
         }
       }
     }
-  }  
+  }
+  if(S.hasby) {
+    st_matrix("PP",tempPP)
+    if(S.hasallcause) st_matrix("AC",tempAC)
+    if(S.hascrudeprob) st_matrix("CP_can",tempCP_can)  
+    if(S.CP_calcother) st_matrix("CP_oth",tempCP_oth)
+  }
 }
 
 

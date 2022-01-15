@@ -298,18 +298,19 @@ indweights(wt_age) graphname(R_pp4, replace) {p_end}
 
 {pstd}
 If the {cmd:list} option is used then the output is saved to matrix. 
-When using the {cmd:by()} option multiple matrices will be saved.
+When using the {cmd:by()} option multiple matrices will be saved as well
+as the combined results.
 
 {synoptset 20 tabbed}{...}
 {p2col 5 20 24 2: Matrices}{p_end}
-{synopt:{cmd:r(PP)}}Pohar Perme estimates and 95% confidence interavls{p_end}
-{synopt:{cmd:r(PPk)}}Pohar Perme estimates and 95% confidence interavls for kth by group{p_end}
-{synopt:{cmd:r(AC)}}All-cause estimates and 95% confidence interavls{p_end}
-{synopt:{cmd:r(ACk)}}All-cause estimates and 95% confidence interavls for kth by group{p_end}
-{synopt:{cmd:r(CP_can)}}Crude probability estimates (cancer) and 95% confidence interavls{p_end}
-{synopt:{cmd:r(CP_cank)}}Crude probability estimates (cancer) and 95% confidence interavls for kth by group{p_end}
-{synopt:{cmd:r(CP_oth)}}Crude probability estimates (other causes) and 95% confidence interavls{p_end}
-{synopt:{cmd:r(CP_othk)}}Crude probability estimates (other causes) and 95% confidence interavls for kth by group{p_end}
+{synopt:{cmd:r(PP)}}Pohar Perme estimates and 95% confidence intervals{p_end}
+{synopt:{cmd:r(PPk)}}Pohar Perme estimates and 95% confidence intervals for kth by group{p_end}
+{synopt:{cmd:r(AC)}}All-cause estimates and 95% confidence intervals{p_end}
+{synopt:{cmd:r(ACk)}}All-cause estimates and 95% confidence intervals for kth by group{p_end}
+{synopt:{cmd:r(CP_can)}}Crude probability estimates (cancer) and 95% confidence intervals{p_end}
+{synopt:{cmd:r(CP_cank)}}Crude probability estimates (cancer) and 95% confidence intervals for kth by group{p_end}
+{synopt:{cmd:r(CP_oth)}}Crude probability estimates (other causes) and 95% confidence intervals{p_end}
+{synopt:{cmd:r(CP_othk)}}Crude probability estimates (other causes) and 95% confidence intervals for kth by group{p_end}
 {title:Author}
 
 {pstd}
