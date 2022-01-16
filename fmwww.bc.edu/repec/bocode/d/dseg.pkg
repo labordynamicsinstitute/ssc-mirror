@@ -10,9 +10,9 @@ d KW: Atkinson
 d KW: Entropy
 d KW: Diversity
 d
-d Requires: Stata version 14
+d Requires: Stata version 14.1
 d
-d Distribution-Date: 20201210
+d Distribution-Date: 20220115
 d
 d Author: Ricardo Mora , University Carlos III Madrid
 d Support: email ricmora@@eco.uc3m.es

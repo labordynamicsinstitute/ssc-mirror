@@ -1,236 +1,374 @@
-*! version 3 Oct2020
+*! version JanNov2022
 *! author Ricardo Mora, UC3M
 program dseg, rclass byable(recall)
 syntax anything  [if] [in] [fweight],		///
-			[GENerate(name)		///
+			 Given(varlist)		///
+			[Addindex(string asis)	///
 			 Within(string asis)	///
+			 PREFIX(name)		///
                          By(varlist)		///
 			 Format(string)		///
 			 SAVING(string asis)	///
 			 CLEAR			///
 			 NOLIST			///
-			 BOOTstraps(numlist integer max=1) /// // # of bootstrap samples
+			 BOOTstraps(string asis) /// // # of bootstrap samples
 			 Random(numlist integer max=1)	/// // # of simulated samples
 			 RSEED(numlist max=1)	/// // seed for random number generator
 			 MISSING		///
-			 NORMALIZED		/// // to normalized mutual information
 			 FAST]
-	version 14
+//	version 14
+	tempname index_t S 
+	tempfile temp0 temp1
 	quietly {
-	tempvar ones rep level n_random u
-	tempfile dsegfile rassfile
-	tempname random_name
-	// counting sample
-	marksample alluse, noby strok
-	count if `alluse'
-        local totN = r(N)
-	// parsing index and group and units varlists
+	// parsing index, varlist1, and addindex
 	gettoken index varlist: anything
-	gettoken group_list varlist: varlist, match(p)
-	gettoken given varlist: varlist, match(p)
-	gettoken unit_list varlist: varlist, match(p)
-	// parsing saving options
-	gettoken saving saving_options: saving, parse(",")
-	gettoken saving_options saving_options: saving_options, parse(",")
+	local index=strlower("`index'")
+	local varlist = strltrim("`varlist'")
+	local varlist: list uniq varlist
+	// eliminating repetitions in index addindex
+	local addindex=strlower("`addindex'")
+	local index_addindex: list index | addindex
+	local index_addindex: list uniq index_addindex
+	// parsing "index_addindex" to "indexes" and to "alt_indexes"
+	  foreach i in `index_addindex' {
+	     if ustrpos(" `indexes'"," `i'")==0 ///
+		 if "`i'"=="atkinson" | "`i'"=="diversity" | "`i'"=="theil" | "`i'"=="mutual" | "`i'"=="n_mutual" local indexes: list indexes | i
+	     if ustrpos("`alt_indexes'","`i'")==0 ///
+		 if "`i'"=="alt_atkinson" | "`i'"=="alt_diversity" | "`i'"=="alt_theil" local alt_indexes: list alt_indexes | i
+	  }
 	// parsing within options
-	gettoken within components: within, parse(",")
+	gettoken w_varlist components: within, parse(",")
 	gettoken components components: components, parse(",")
 	local components =  strltrim("`components'")
-	// warning messages
-	if "`nolist'"!="" & "`clear'"=="" & "`saving'"=="" {
-	    noi di as txt "Warning: you have chosen option <nolist> without options <clear> and <saving()>;" _newline ///
-				_col(10) "hence, results are computed but neither displayed nor saved;" _newline ///
-        			_col(10) "consider using options <clear> and/or <saving()>;"
-	}
-	if "`nolist'"!="" & "`clear'"=="" & "`saving'"=="" {
-	    noi di as txt "Warning: you have chosen option <missing> with weighted data;" _newline ///
-				_col(10) "observations with zero weights are not used;"
+	// counting sample
+	marksample alluse, noby strok
+	markout `alluse' `varlist' `given' `by' `w_varlist', strok 
+	count if `alluse'
+        local totN = r(N)
+	// parsing saving options
+	gettoken saving savopt: saving, parse(",")
+	gettoken savopt savopt: savopt, parse(",")
+	// format default
+	if "`format'"=="" local format="%9.4f"
+	// nolist is only option with bootstraps and random
+	if ("`bootstraps'"!="" | "`random'"!="") local nolist="nolist"
+	// warning message
+	if "`missing'"!="" & "`weight'"!="" {
+	    noi di as txt "Warning: you have chosen <missing> with weighted data;" _newline ///
+				_col(10) "observations without weights are not used"
 	}
 	// error messages
-	if "`index'"!="mutual" & "`index'"!="atkinson" & "`index'"!="theil" & "`index'"!="diversity"{
-        	noi di as err "`index' index is not supported"
-		error 197
+	foreach  i in `index_addindex' {
+	 if "`i'"!="mutual"   & "`i'"!="atkinson"     & "`i'"!="theil"     & "`i'"!="diversity" & ///
+	    "`i'"!="n_mutual" & "`i'"!="alt_atkinson" & "`i'"!="alt_theil" & "`i'"!="alt_diversity" {
+	        	noi di as err "`i' index is not supported"
+			error 498
    		}
-	if "`given'"!="given" | "`varlist'"!="" {
-        	noi di as err "groups and/or units varlists not identified"
-		error 197
-   		}
-	if "`group_list'"==""  | "`unit_list'"=="" {
-        	noi di as err "<group_varlist> and <units_varlist> are required"
-		error 197
+	}
+	if "`varlist'"=="" {
+        	noi di as err "varlist required after dseg `index'"
+		error 498
 		}
 	if "`fast'"!="" {
-		foreach  c in ftools {
-			capture : which `c'
+		foreach  c in ftools moremata {
+			if "`c'"=="moremata" local c `c'.hlp
+			capture: which `c'
 			if (_rc) {
-			    noi di as err "you need package {it:ftools} to use the <fast> option;" _newline ///
+			    if "`c'"=="ftools" {
+			      noi di as err "you need package {it:ftools} to use <fast>;" _newline ///
         			"you can install it by typing <ssc install ftools>;" _newline ///
-				"you will also need to install the MOREMATA module if you do not have it;" _newline ///
-        			"you can install it by typing <ssc install moremata>;" 
-			    error 199
+				"to run {it:ftools}, you need the MOREMATA module if you do not have it;" _newline ///
+        			"you can install it by typing <ssc install moremata>" 
+			    }
+			    else {
+			    noi di as err "to run {it:ftools}, you need the MOREMATA module;" _newline ///
+        			"you can install it by typing <ssc install moremata>" 
+			    }
+		            error 498
 			}
 		}
-		foreach v of varlist `group_list' `unit_list' `within' `by' {
+		foreach v of varlist `varlist' `given' `w_varlist' `by' {
 			capture confirm numeric variable `v'
 			if (_rc) {
-			    noi di as err "with option <fast> all variables must be numeric"
-			    error 999
+			    noi di as err "<fast> requires all variables to be numeric" 
+			    error 498
 			}
 		}
 	}
-	if "`components'"!="" & "`within'"=="" {
-        	noi di as err "option <within()> is required if option <components> is used"
-		error 197
+	if "`components'"!="" & "`w_varlist'"=="" {
+        	noi di as err "syntax error in <within()>" 
+		error 498
    		}
 	if "`components'"!="" & "`components'"!="components"  {
-        	noi di as err "<within()> option <`components'> not allowed"
-		error 197
+        	noi di as err "<within> suboption <`components'> not allowed" 
+		error 498
    		}
-	// generate can only be used when clear and/or saving are used
-	if "`generate'"!="" {
-		if "`clear'"=="" & "`saving'"=="" {
-	        	noi di as err "option <generate()> only allowed with <clear> and/or <saving()>"
-			error 197
+	// new names conflict
+	local old_v = "`by'"
+	if "`components'"!="" local old_v = "`by' `w_varlist'"
+	if "`old_v'"!="" {
+	 foreach v of varlist `old_v' {
+		foreach  i in `index' `addindex' {
+		 if "`i'"=="mutual" local nombre="`prefix'M"
+		 else if "`i'"=="atkinson" local nombre="`prefix'A"
+		 else if "`i'"=="theil" local nombre="`prefix'H"
+		 else if "`i'"=="diversity" local nombre="`prefix'R"
+		 else if "`i'"=="alt_atkinson" local nombre="`prefix'AltA"
+		 else if "`i'"=="alt_theil" local nombre="`prefix'AltH"
+		 else if "`i'"=="alt_diversity" local nombre="`prefix'AltR"
+		 else if "`i'"=="n_mutual" local nombre="`prefix'NM"
+		 if "`v'"=="`nombre'" {
+			noi di as error "name conflict: <`v'> already in <by> or <within>; use <prefix>" 
+			error 498
+		 }
+		 else if "`w_varlist'"!="" & ("`v'"=="`nombre'_B" | "`v'"=="`nombre'_W" ) {
+			noi di as error "name conflict: <`v'> already in <by> or <within>; use <prefix>" 
+			error 498 
+		 }
+		 else if "`components'"!="" & ("`v'"=="`nombre'_w" | "`v'"=="`nombre'_l" ) {
+			noi di as error "name conflict: <`v'> already in <by> or <within>; use <prefix>" 
+			error 498 
+		 }
 		}
+	 }
 	}
-	// generate: no debe generar un conflicto de nombres en el nuevo fichero de datos
-	if "`generate'"!= "" { 	
-		  if "`by'"!="" {
-			  foreach v of varlist `by' {
-				if "`v'"=="`generate'" {
-				  noi di as error "conflict variable name;" _newline ///
-					"choose another name in option <generate()>"
-				  error 110
-				}
-			   }
-		  }
-		  if "`components'"!="" {
-			  foreach v of varlist `within' {
-				if "`v'"=="`generate'" {
-				  noi di as error "conflict variable name;" _newline ///
-					"choose another name in option <generate()>"
-				  error 110
-				}
-			   }
-		  }
-	}
-	if "`generate'"=="" {
-		if "`index'"== "mutual" local generate = "M"
-		else if "`index'"== "atkinson" local generate = "A"
-		else if "`index'"== "theil" local generate = "H"
-		else if "`index'"== "diversity" local generate = "R"
-	}
-	// no variable in group_list can also be in unit_list, within, or by variable
-	foreach w in `group_list' {
-		foreach v in `unit_list' `by' {
+	// no variable in varlist can also be in given, within, or by 
+	foreach w in `varlist' {
+		foreach v in `given' `by' `w_varlist' {
 			if "`v'"=="`w'" {
-	        	noi di as err "no variable in <groups_varlist> can be in <units_varlist>, <w_varlist>, or <by_varlist>"
-			error 197
+	        	noi di as err "no variable in <varlist> can be in <given>, <within>, or <by>"
+			error 498
 			}
 		}
 	}
-	// units_lists and within variables cannot simultaneously be by variables
+	// given and within variables cannot simultaneously be by variables
 	foreach v_by in `by' {
-		foreach v in `unit_list' `within' {
+		foreach v in `given' `w_varlist' {
 			if "`v'"=="`v_by'" {
-		        	noi di as err "<units_varlist> and <w_varlist> cannot share variables with <by_varlist>"
-				error 197
+		        	noi di as err "no variable in <given> and/or <within> can be in <by>"
+				error 498
 			}
 		}
 	}
 	// bootstraps and random must be used with clear and/or saving
 	if ("`bootstraps'"!="" | "`random'"!="") & "`clear'"=="" & "`saving'"=="" {
-        	if ("`bootstraps'"!="") noi di as err "option <bootstraps()> must be used with options <clear> and/or <saving()>"
-        	if ("`random'"!="") noi di as err "option <random()> must be used with options <clear> and/or <saving()>"
-		error 197
+		noi di as err "<bootstraps> and <random> must be used with <clear> and/or <saving()>"
+		error 498
 	}
 	// bootstraps and random cannot be used with weights
 	if ("`bootstraps'"!="" | "`random'"!="") & "`weight'"!="" {
-        	noi di as err "option <bootstraps()> cannot be used with weighted data"
-		error 197
+        	noi di as err "<bootstraps> and <random> cannot be used with weighted data"
+		error 498
 	}
 	// rseed can only be used with bootstraps or random
 	if "`bootstraps'"=="" & "`random'"=="" & "`rseed'"!="" {
-        	noi di as err "option <rseed()> can only be used with option <bootstraps()>"
-		error 197
+        	noi di as err "<bootstraps> or <random> must be used if <rseed> used"
+		error 498
 	}
-	// normalized option only for mutual
-	if "`index'"!="mutual" & "`normalized'"=="normalized" {
-        	noi di as err "option <normalized> can only be used with index <mutual>"
-		error 197
+	// bootstraps and random cannot be used simultaneously
+	if ("`bootstraps'"!="" & "`random'"!="") {
+		noi di as err "<bootstraps> and <random> cannot be used simultaneously"
+		error 498
 	}
+	// heading message
+	noi dis _newline _col(4) in g "Decomposable Multigroup Segregation Indexes"
+	noi dis _newline _col(4) in g "Differences in " in y "`varlist' " in g "given " in y "`given'" _continue 
+	if wordcount("`indexes'")==1 noi dis _newline _col(6) in g "Index: " _continue
+	else noi dis _newline _col(6) in g "Indexes: " 
+	local j=1
+	foreach i in `indexes' {
+		if `j'>1  noi dis in g ", " _continue
+		if `j'==4  noi dis in g "" 
+		if "`i'"=="mutual" noi dis _col(6) in y "Mutual Information" _continue
+		else if "`i'"=="n_mutual" noi dis _col(6) in y "Normalized Mutual Information" _continue
+		else if "`i'"=="atkinson" noi dis _col(6) in y "Symmetric Atkinson" _continue
+		else if "`i'"=="theil" noi dis _col(6) in y "Theil's H" _continue
+		else if "`i'"=="diversity" noi dis _col(6) in y "Relative Diversity" _continue
+		local j=`j'+1
+	}
+	if "`alt_indexes'"!="" {
+	 noi dis _newline _col(4) in g "Differences in " in y "`given' " in g "given " in y "`varlist'" _continue
+	 if wordcount("`alt_indexes'")==1 noi dis _newline _col(6) in g "Index: " _continue
+	 else noi dis _newline _col(6) in g "Indexes: " 
+	 local j=1
+	 foreach i in `alt_indexes' {
+		if `j'>1  noi dis in g ", " _continue
+		if `j'==4  noi dis in g "" 
+		else if "`i'"=="alt_atkinson" noi dis _col(4) in y "Symmetric Atkinson" _continue
+		else if "`i'"=="alt_theil" noi dis _col(4) in y "Theil's H" _continue
+		else if "`i'"=="alt_diversity" noi dis _col(4) in y "Relative Diversity" _continue
+		local j=`j'+1
+	 }
+	}
+	if "`w_varlist'" != "" noi dis _newline _col(4) in g "Between/Within " in y "`w_varlist'" in g " decomposition" _continue
+	if "`by'" != "" noi dis _newline _col(4) in g "By " in y "`by'"
+	noi dis ""
+	// options
+	if "`weight'"!="" local peso = "[`weight'`exp']"
+	if "`within'"!="" local dentro="within(`within')"
+	if "`by'"!="" local para="by(`by')"
+	if "`bootstraps'"!="" local trabilla="bootstraps(`bootstraps')"
+	if "`random'"!="" local aleatorio="random(`random')"
+	if "`rseed'"!="" local semilla="rseed(`rseed')"
+	// loop for each index
+	foreach i in `index_addindex' {
+		local normalized=""
+		// names
+		if "`i'"=="mutual" local index_t="`prefix'M"	
+		else if "`i'"=="atkinson" local index_t="`prefix'A"
+		else if "`i'"=="theil" local index_t="`prefix'H"
+		else if "`i'"=="diversity" local index_t="`prefix'R"
+		else if "`i'"=="alt_atkinson" local index_t="`prefix'AltA"
+		else if "`i'"=="alt_theil" local index_t="`prefix'AltH"
+		else if "`i'"=="alt_diversity" local index_t="`prefix'AltR"
+		else if "`i'"=="n_mutual" {
+			local index_t="`prefix'NM"
+			local indice="mutual"
+			local normalized="normalized"
+		}
+		if substr("`i'",1,4)!="alt_" {
+			local lista1="`varlist'"
+			local lista2="`given'"
+			local indice=subinstr("`i'","n_","",1)
+		}
+		else {
+			local lista1="`given'"
+			local lista2="`varlist'"
+			local indice=subinstr("`i'","alt_","",1)
+		}
+		preserve
+		local orden=`orden'+1
+		noi dseg2 `indice' `lista1' `if' `in' `peso',					///
+			 given(`lista2')							///
+			 names(`index_t' `index_t'_B `index_t'_W `index_t'_w `index_t'_l )	///
+			 format(`format')	///
+			 `dentro'		///
+                         `para'			///
+			 `trabilla'		/// // bootstraps option
+			 `aleatorio'		/// // random option
+			 `semilla'		/// // seed for random number generator
+			 `missing'		///
+			 `normalized'		/// // to normalize mutual information
+			 `fast'
+		if `orden'==1 {
+			d, varlist
+			local listaord=r(sortlist)
+			local listaord="`listaord'"
+		}
+		save `temp0', replace
+		if `orden'>1 {
+			use `temp1', replace	
+			merge 1:1 _n using `temp0', nogenerate sorted noreport
+		}
+		save `temp1', replace
+		restore
+	 }
+	if "`clear'"!="clear" preserve
+	  use `temp1', replace
+	  if "`listaord'"!="." sort `listaord'
+	  // storing in matrix (if possible)
+	  d, varlist
+	  local matvars=r(varlist)
+	  capture mkmat `matvars', matrix(`S') 
+	  if _rc!=0 noi di  _col(4) as txt "Warning: indexes could not be stored as matrix"
+	  // saving in file
+	  if "`saving'"!="" {
+		save "`saving'", `savopt'
+		noi dis _col(4) as txt "File `saving' saved"
+	  }
+	  // display
+	  if "`clear'"=="clear" & "`nolist'"=="nolist" noi describe, fullnames
+	  if "`nolist'"=="" noi l , noobs clean 
+	if "`clear'"!="clear" restore
+	return clear
+	capture return matrix S = `S'
+	return scalar N = `totN'
+	return local notion = "Differences in `varlist' given `given'"
+	return local index "`index' `addindex'"
+	return local cmd "dseg"
+	} // end of quietly
+end
 
+program dseg2, rclass byable(recall)
+syntax anything  [if] [in] [fweight],		///
+			 Given(varlist)		///
+			 NAMES(namelist)	///
+			 Format(string)		///
+			[Within(string asis)	///
+                         By(varlist)		///
+			 BOOTstraps(string asis) /// // # of bootstrap samples
+			 Random(string asis)	/// // # of simulated samples
+			 RSEED(numlist max=1)	/// // seed for random number generator
+			 MISSING		///
+			 NORMALIZED		/// // to normalized mutual information
+			 FAST]
+	quietly {
+	tempvar ones rep level n_random u
+	tempfile dsegfile rassfile
+	tempname random_name 
+	// parsing index and varlist1
+	gettoken index varlist: anything
+	// parsing within options
+	gettoken within components: within, parse(",")
+	gettoken components components: components, parse(",")
+	local components =  strltrim("`components'")
+	// counting sample
+	marksample alluse, noby strok
+	markout `alluse' `varlist' `given' `by' `within', strok 
 	// defaults
 	// if within, default is decomposition, if components, then decomposition is null string
 	if "`within'"!="" {
 		if "`components'"=="" local decomposition="decomposition"
 		else local decomposition=""
 	}
-	if "`format'"=="" local format="%9.4f"
 	if "`weight'"=="" {
 		local weight="fweight"	
 		local exp="= `ones'"
 		gen `ones'=1
 		}
 	if "`fast'"!="" local f="f"
-
-	// heading message
-	noi dis _newline _col(4) in g "Segregation Index: " _continue
-	if "`index'"=="mutual" & "`normalized'"=="" noi dis in y "Mutual Information" 
-	else if "`index'"=="mutual" noi dis in y "Mutual Information (normalized)"
-	else if "`index'"=="atkinson" noi dis in y "Symmetric Atkinson"
-	else if "`index'"=="theil" noi dis in y "Theil's H"
-	else if "`index'"=="diversity" noi dis in y "Relative Diversity"
-	noi dis _col(4) in g "Differences in " in y "`group_list' " in g "given" in y " `unit_list'" 
-	if "`within'" != "" noi dis _col(4) in g "Between/Within " in y "`within'"
-	if "`by'" != "" noi dis _col(4) in g "By " in y "`by'"
-	noi dis ""
-
 	// index computation
 	if "`bootstraps'"=="" & "`random'"=="" {
-		noi _decseg `index' `group_list' `if' `in' [`weight'`exp'], within(`within') by(`by') format(`format') ///
-			generate(`generate') saving(`"`saving'"') savopt(`saving_options') `clear' `fast' `nolist'   ///
-			unit(`unit_list') `decomposition' `missing' `normalized'
+		noi _decseg `index' `varlist' `if' `in' [`weight'`exp'], unit(`given') names(`names') ///
+			within(`within') by(`by') `fast' `components' `missing' `normalized' format(`format') 
 	}
 	// bootstrapping
 	else if "`bootstraps'"!="" {
+		// parsing bootstraps options
+		gettoken bootstraps bootstraps_options: bootstraps, parse(",")
+		local bootstraps_options =  strltrim("`bootstraps_options'")
+		noi dis _newline as txt "Index: `index'" 
 		local i=0
 		while `i'<=`bootstraps' {
 		   preserve
 		   if `i'!=0 {
 			noi _show_iteration, i(`i') bootstraps(`bootstraps')
-		   	bsample
+		   	bsample `bootstraps_options'
 		   }
-		   _decseg `index' `group_list' `if' `in' [`weight'`exp'], within(`within') by(`by') format(`format') ///
-			generate(`generate') clear `fast' nolist unit(`unit_list') `decomposition' `missing' `normalized'
-		   gen `rep'=`i'
+		   _decseg `index' `varlist' `if' `in' [`weight'`exp'], unit(`given') names(`names') ///
+			within(`within') by(`by') `fast' `components' `missing' `normalized' format(`format') 
+		   if `i'==0 {
+			d, varlist
+			if r(listaord)!=. local listaord=r(sortlist)
+		   }
+		   gen bsn=`i'
 		   if "`i'"!="0" append using `dsegfile'
 		   save `dsegfile', replace
 		   local i=`i'+1
 		   restore
 		}
-		if "`clear'"=="" preserve
-			use `dsegfile', replace
-			rename `rep' bsn
-			label variable bsn "Bootstrap sample number"
-			order bsn
-			if "`components'"=="" sort bsn `by' 
-			else sort bsn `by' `within'
-			if "`saving'"!="" {
-				save "`saving'", `saving_options'
-				noi dis _newline as txt "File " in y "`saving'" as txt " saved"
-		}
-		if "`clear'"=="" restore
-		if "`clear'"!="" {
-			noi dis ""
-			noi describe, fullnames
-		}
+		use `dsegfile', replace
+		label variable bsn "Bootstrap sample number"
+		order bsn `listaord'
+		sort bsn `listaord'
+		noi dis _newline _col(4) as txt "" 
 	}
 	// randomization test & Carrington-Troske modification
 	else {
+		noi dis _newline as txt "Index: `index'" 
 		// creating the random assignment file for group_list
 		preserve
-			keep `group_list'
+			keep `varlist'
 			gen `n_random'=_n
 			sort `n_random'
 			save `rassfile', replace
@@ -242,70 +380,62 @@ syntax anything  [if] [in] [fweight],		///
 			noi _show_iteration, i(`i') random(`random')
 			gen `u'=runiform()
 			sort `u'
-			drop `u' `group_list'
+			drop `u' `varlist'
 			gen `n_random'=_n
 			sort `n_random'
 			merge 1:1 `n_random' using `rassfile', nogenerate sorted noreport
 		   }
-		   _decseg `index' `group_list' `if' `in' [`weight'`exp'], within(`within') by(`by') format(`format') ///
-			generate(`generate') clear `fast' nolist unit(`unit_list') `decomposition' `missing' `normalized'
-		   gen `rep'=`i'
+		   _decseg `index' `varlist' `if' `in' [`weight'`exp'], unit(`given') names(`names') ///
+			within(`within') by(`by') `fast' `components' `missing' `normalized' format(`format') 
+		   if `i'==0 {
+			d, varlist
+			if r(listaord)!=. local listaord=r(sortlist)
+		   }
+		   gen ssn=`i'
 		   if "`i'"!="0" append using `dsegfile'
 		   save `dsegfile', replace
 		   local i=`i'+1
 		   restore
 		}
-		if "`clear'"=="" preserve
-			use `dsegfile', replace
-			rename `rep' ssn
-			label variable ssn "Simulation sample number"
-			order ssn
-			if "`components'"=="" sort ssn `by' 
-			else sort ssn `by' `within'
-			if "`saving'"!="" {
-				save "`saving'", `saving_options'
-				noi dis _newline as txt "File " in y "`saving'" as txt " saved"
-		}
-		if "`clear'"=="" restore
-		if "`clear'"!="" {
-			noi dis ""
-			noi describe, fullnames
-		}
+		use `dsegfile', replace
+		label variable ssn "Simulation sample number"
+		order ssn `listaord'
+		sort ssn `listaord'
+		noi dis _newline _col(4) as txt "" 
 	}
-	return clear
-	return scalar N = `totN'
-	return local index "`index'"
-	return local cmd "dseg"
 }		// endof quietly
 end
 
 program define _decseg
         syntax  anything [if] [in] [fweight /] ,		///
-					[GENerate(name)		///
-					 UNIT(varlist) 	///
-					 Within(varlist) 	///
+					 NAMES(namelist)	///
+					 UNIT(varlist) 		///
+					[Within(varlist) 	///
                                          By(varlist)		///
-					 Format(string)		///
-					 SAVING(string) 	///
-					 SAVOPT(string) 	///
-					 CLEAR			///
 					 FAST			///
-					 NOLIST			///
 					 MISSING		///
 					 NORMALIZED		///
-					 DECOMPOSITION]
+					 COMPONENTS		///
+					 Format(string)		///
+					]
 	quietly {
 	tempname njg ng         
-	tempvar level group frequency tempv numG index_t index_w index_b comp_i comp_w
+	tempvar level group frequency tempv numG grupos unidades 
 	marksample touse, strok novarlist
 	gettoken index varlist: anything
+	local varlist = strltrim("`varlist'")
+	// parsing names options
+	gettoken index_t names: names
+	gettoken index_b names: names
+	gettoken index_w names: names
+	gettoken comp_w names: names
+	gettoken comp_i names: names
 	if "`by'"=="" {
 		gen `level'=1
 		local by="`level'"
 		local noby="noby"
 		}
 	if "`fast'"!="" local f = "f"
-	if "`clear'"=="" preserve
 	keep if `touse'
 	if "`missing'"=="" {
 		foreach v of varlist `varlist' `unit' `within' `by' {
@@ -320,7 +450,6 @@ program define _decseg
 		if _rc==7 `f'egen `group'=group(`varlist')
 		else gen `group'=`varlist'
 	}
-
 	if "`index'"!="atkinson" {
 		local units `unit' `within'
 		local groups `group'
@@ -356,11 +485,13 @@ program define _decseg
 		    noi di as err "<fcollapse> is not running as expected" _n "try without the <fast> option"
 		    exit 999
 		}
-	// preparando la normalizacion del mutual si es necesario
+	// preparing for mutual normalization if required
 	if "`index'"=="mutual" & "`normalized'"=="normalized" {
-		inspect `groups'
+		egen `grupos'=group(`groups')
+		inspect `grupos'
 		local G=r(N_unique)
-		inspect `units'
+		egen `unidades'=group(`units')
+		inspect `unidades'
 		local N=r(N_unique)
 		if `G'<`N' local base=`G'
 		else if `N'<`G' local base=`N'
@@ -388,42 +519,55 @@ program define _decseg
           gen double `index_w'=`comp_w'*`comp_i'
           `f'collapse (mean) `index_t' `tempv'=`index_w' `comp_i' `comp_w', by(`within' `by') `fast'
           egen_sum `index_w', sum(`tempv') by(`by') `fast'
-          gen double `index_b'=`index_t'-`index_w'
+          gen double `index_b'=`index_t'-`index_w'  	
+          replace `index_b'=0 if `index_b'<0 		// to avoid very small negative values instead of zero
 	}
 	else {
 		foreach v in `index_w' `index_b' `comp_i' `comp_w' {
 			gen `v'=.
 		}
 	}
-	// normalizando el mutual si es necesario
+	// normalizing mutual if required
 	if "`index'"=="mutual" & "`normalized'"=="normalized" {
 		foreach v in `index_t' `index_w' `index_b' `comp_w' {
 			replace `v'=`v'/log(`base')
 		}
 	}
-	// preparando variables y poniendo labels
-	_decseg_data `index', group("`varlist'") unit("`unit'") gen(`generate') indext(`index_t') 		///
-				indexw(`index_w') indexb(`index_b') compi(`comp_i') compw(`comp_w') 		///
-				within(`within') by(`by') `fast' `decomposition' `noby' format(`format') `normalized'
-	// saving
-	if "`saving'"!="" {
-		save "`saving'", `savopt'
-		noi dis _col(4) as txt "File `saving' saved"
+	// preparing the data
+	format `index_t' `index_b' `index_w' `comp_i' `comp_w' `format'
+	order `by' `within' `index_t' `index_b' `index_w' `comp_w' `comp_i' 
+	sort `by' `within'
+	// simpler cases:
+	if "`components'"=="" `f'collapse (mean) `index_t' `index_b' `index_w', by(`by') `fast'
+	if "`noby'"=="noby" drop `by'
+	if "`noby'"=="noby" & "`within'"=="" keep `index_t'
+	else if "`noby'"=="noby" & "`within'"!="" & "`components'"=="" keep `index_t' `index_b' `index_w' 
+	else if "`noby'"=="noby" & "`within'"!="" & "`components'"!="" {
+		order `within' `index_t' `index_b' `index_w' `comp_w' `comp_i' 
+		sort `within'
 	}
-	// display
-	if "`clear'"!="" & "`nolist'"=="nolist" noi describe, fullnames
-	if "`nolist'"=="" {
-          if "`by'"=="`level'" & "`within'"=="" noi l , noobs clean noheader
-	  else noi l , noobs clean
+	else if "`noby'"=="" & "`within'"=="" {
+		keep `by' `index_t'
+		order `by' `index_t'
+		sort `by' `index_t'
 	}
-	// si no se sustituyen los datos
-	if "`clear'"=="" restore
+	else if "`noby'"=="" & "`within'"!="" & "`components'"=="" {
+		order `by' `index_t' `index_b' `index_w'
+		sort `by' 
+	}
+	// labels
+	if "`within'"!="" local dentro = " indexw(`index_w') indexb(`index_b') within(`within')"
+	if "`noby'"=="" local para = "by(`by')"
+	if "`components'"!="" local componentes= " compi(`comp_i') compw(`comp_w')"
+	noi _decseg_labels `index', group("`varlist'") unit("`unit'") indext(`index_t') 	///
+			`dentro' `para'	`componentes' 						///
+			`fast' `normalized' format(`format') 
 	}	// endof quietly
 end
 
 program define _decseg_mutual
        syntax varlist(max=1), GROUP(varlist) UNIT(varlist) GENerate(name) BY(varlist) [FAST] 
-       tempvar T Nj Ng m
+       tempvar T Nj Ng m	
        egen_sum `T', sum(`varlist') by(`by') `fast'
        egen_sum `Nj', sum(`varlist') by(`unit' `by') `fast'
        egen_sum `Ng', sum(`varlist') by(`group' `by') `fast'
@@ -448,7 +592,7 @@ program define _decseg_mutual_p
        gen double `generate'=`Nj'/`T'
        keep `by_unit' `generate'
        sort `by_unit'
-       merge m:m `by_unit' using `fichero', nogenerate sorted noreport
+       merge 1:m `by_unit' using `fichero', nogenerate sorted noreport
 end
 
 program define _decseg_atkinson
@@ -487,7 +631,7 @@ program define _decseg_atkinson
        capture `f'collapse (sum) `a', by(`by') `fast'
        gen double `generate'=1-`a'
        sort `by'
-       merge m:m `by' using `fichero', noreport nogenerate sorted
+       merge 1:m `by' using `fichero', noreport nogenerate sorted
        mvencode `generate', mv(1)
 end
 
@@ -527,8 +671,10 @@ program define _decseg_atkinson_p
        gen double `generate'=exp(`tempv'/`n') if (`numN'==`n')
        keep `by_group' `generate'
        sort `by_group'
-       merge m:m `by_group' using `fichero', sorted noreport
+       `f'collapse (mean) `generate', by(`by_group') `fast'
+       merge 1:m `by_group' using `fichero', sorted noreport
        drop if _merge==1
+       drop _merge
        mvencode `generate', mv(0) 
 end
 
@@ -558,7 +704,7 @@ program define _decseg_theil
        egen_sum `tempv', sum(`e') by(`by') `fast'
        keep `by_group' `tempv'
        sort `by_group' 
-       merge m:m `by_group' using `fichero', nogenerate sorted noreport
+       merge 1:m `by_group' using `fichero', nogenerate sorted noreport
        replace `generate'=`generate'/`tempv'
 end
 
@@ -585,7 +731,7 @@ program define _decseg_theil_p
        egen_sum `tempv2', sum(`ej') by(`by_unit') `fast'
        keep `by_group_unit' `tempv1' `tempv2' `T' `Ng'
        sort `by_group_unit'
-       merge m:m `by_group_unit' using `fichero', nogenerate sorted noreport
+       merge 1:m `by_group_unit' using `fichero', nogenerate sorted noreport
        sort `by_group'
        save `fichero', replace
        `f'collapse (sum) `varlist' (mean) `T' `Ng', by(`by_group') `fast'
@@ -594,7 +740,7 @@ program define _decseg_theil_p
        egen_sum `tempv3', sum(`e') by(`by') `fast'
        keep `by_group' `tempv3'
        sort `by_group' 
-       merge m:m `by_group' using `fichero', nogenerate sorted noreport
+       merge 1:m `by_group' using `fichero', nogenerate sorted noreport
        gen double `generate'=`tempv1'*(`tempv2'/`tempv3')
 end
 
@@ -654,7 +800,7 @@ program define _decseg_diversity_p
        egen_sum `tempv2', sum(`ej') by(`by_unit') `fast'
        keep `by_group_unit' `tempv1' `tempv2' `T' `Ng'
        sort `by_group_unit'
-       merge m:m `by_group_unit' using `fichero', nogenerate sorted noreport
+       merge 1:m `by_group_unit' using `fichero', nogenerate sorted noreport
        sort `by_group'
        save `fichero', replace
        capture `f'collapse (sum) `varlist' (mean) `T' `Ng', by(`by_group') `fast'
@@ -663,7 +809,7 @@ program define _decseg_diversity_p
        egen_sum `tempv3', sum(`e') by(`by') `fast'
        keep `by_group' `tempv3'
        sort `by_group'
-       merge m:m `by_group' using `fichero', nogenerate sorted noreport
+       merge 1:m `by_group' using `fichero', nogenerate sorted noreport
        gen double `generate'=`tempv1'*(`tempv2'/`tempv3')
 end
 
@@ -681,122 +827,80 @@ program define egen_sum
 	}
 end
 
-program define _decseg_data
-	syntax anything, GROUP(string) UNIT(string) BY(varlist) GENerate(name) INDEXT(varlist) ///
-			[WITHIN(varlist) NOBY DECOMPOSITION FAST INDEXW(varlist) INDEXB(varlist) ///
-			COMPI(varlist) COMPW(varlist) NORMALIZED ] FORMAT(string)		
+program define _decseg_labels
+	syntax anything, 	///
+		GROUP(string) 	///
+		UNIT(string) 	///
+		INDEXT(varlist) ///
+		FORMAT(string)	///
+		[BY(varlist) WITHIN(string) FAST INDEXW(varlist) INDEXB(varlist) ///
+		COMPI(varlist) COMPW(varlist) NORMALIZED] 
 	quietly {
 	if "`anything'"=="mutual" {
-		local short_name="M"
+		local short_name="Mutual"
 		local long_name="Mutual Information index"
 	}
 	else if "`anything'"=="atkinson" {
-		local short_name="A"
+		local short_name="Atkinson"
 		local long_name="Symmetric Atkinson index"
 	}
 	else if "`anything'"=="theil" {
-		local short_name="H"
+		local short_name="Theil"
 		local long_name="Theil's index"
 	}
 	else if "`anything'"=="diversity" {
-		local short_name="R"
+		local short_name="R Diversity"
 		local long_name="Relative Diversity index"
 	}
-	// preparing the data
-	foreach lname in `generate' `generate'_B `generate'_W `generate'_weight `generate'_within {
-		capture drop `lname'
-	}
-	if "`decomposition'"!="" {
-		`f'collapse (mean) `generate'=`indext' `generate'_B=`indexb' `generate'_W=`indexw', by(`by') `fast'
-		order `by' `generate' `generate'_B `generate'_W
-		format `generate' `generate'_B `generate'_W `format'
-	}
-	else if "`within'"!="" {
-		rename `indext' `generate'
-		rename `indexb' `generate'_B
-		rename `indexw' `generate'_W
-		rename `compi'  `generate'_within
-		rename `compw'  `generate'_weight
-		keep `by' `within' `generate' `generate'_B `generate'_W `generate'_weight `generate'_within
-		order `by' `within' `generate' `generate'_B `generate'_W `generate'_weight `generate'_within
-		format `generate' `generate'_B `generate'_W `generate'_weight `generate'_within `format'
-	}
-	else {
-		`f'collapse (mean) `generate'=`indext', by(`by') `fast'
-		order `by' `generate' 
-		format `generate' `format'
-	}
-	if "`within'"!="" & "`decomposition'"=="" {
-		if "`noby'"=="" sort `by' `within'
-		else {
-			drop `by'
-			sort `within'
-		}	
-	}
-	else {
-		if "`noby'"=="" sort `by'
-		else drop `by'
-	}
-	// labels
 	local maxlon = 63
 	if "`noby'"=="" local maxlon = `maxlon' - 4
 	if "`within'"!="" local maxlon = `maxlon' - 7
-	local variables `group' `unit' `by' `within'
-	local longitud = ustrlen("`variables'")
-	// labels para generate variable
+	local longitud = ustrlen("`group' `unit' `by' `within'")
+	// variable labels
 	if "`within'"!="" {
 		if `longitud'<`maxlon' {
-			if "`noby'"=="" {
-			   label variable `generate'   "`short_name': `group' given `unit' by `by'"
-			   label variable `generate'_B "`short_name' (Between term): `group' given `within' by `by'"
-			   label variable `generate'_W "`short_name' (Within term): `group' given `unit' within `within' by `by'"
+			if "`by'"!="" {
+			   label variable `indext' "`short_name': `group' given `unit' by `by'"
+			   label variable `indexb' "`short_name' (Between term): `group' given `within' by `by'"
+			   label variable `indexw' "`short_name' (Within term): `group' given `unit' within `within' by `by'"
 			}
 			else {
-			   label variable `generate' "`short_name': `group' given `unit'"
-			   label variable `generate'_B "`short_name' (Between term): `group' given `within'"
-			   label variable `generate'_W "`short_name' (Within term): `group' given `unit' within `within'"
+			   label variable `indext' "`short_name': `group' given `unit'"
+			   label variable `indexb' "`short_name' (Between term): `group' given `within'"
+			   label variable `indexw' "`short_name' (Within term): `group' given `unit' within `within'"
 			}
 		}
 		else {
-			label variable `generate' "`long_name'"
-			label variable `generate'_B "Between term"
-			label variable `generate'_W "Within term"
+			label variable `indext' "`long_name'"
+			label variable `indexb' "Between term"
+			label variable `indexw' "Within term"
 		}
 	}
+
 	else {
 	  if `longitud'<`maxlon' {
-		if "`noby'"==""  ///
-			label variable `generate' "`short_name': `group' given `unit' by `by'
-		else label variable `generate' "`short_name': `group' given `unit'
+		if "`by'"!=""  label variable `indext' "`short_name': `group' given `unit' by `by'
+		else             label variable `indext' "`short_name': `group' given `unit'
 	  }
-	  else label variable `generate' "`long_name'"
+	  else label variable `indext' "`long_name'"
 	}
 	// labels para pesos e indices locales
-	if "`within'"!="" & "`decomposition'"=="" {
+	if "`compw'"!="" {
 	   if `longitud'<`maxlon' {
-		if "`noby'"=="" {
-		 if "`anything'"=="mutual" label variable `generate'_weight "Proportion of `within' over `by'"
-		 else label variable `generate'_weight "`short_name': Weight for each `within' in `by'"
-		 label variable `generate'_within "`short_name': `group' given `unit' for each `within' by `by'"
+		if "`by'"!="" {
+		 label variable `compw' "`short_name': Local weight for each `within' in `by'"
+		 label variable `compi' "`short_name': `group' given `unit' for each `within' by `by'"
 		}
 		else {
-		 if "`anything'"=="mutual" label variable `generate'_weight "Proportion of `within' over total"
-		 else label variable `generate'_weight "`short_name': Weight for each `within'"
-		 label variable `generate'_within "`short_name': `group' given `unit' for each `within'"
+		 label variable `compw' "`short_name': Local weight for each `within'"
+		 label variable `compi' "`short_name': `group' given `unit' for each `within'"
 		}
 	   }
 	   else {
-		if "`anything'"=="mutual" label variable `generate'_weight "Proportion of 'within' category over 'by' category"
-		else label variable `generate'_weight "Weight for each 'within' category in 'by' category"
-		label variable `generate'_within "`long_name' for each 'within' category in 'by' category"
+		label variable `compw' "Local weight"
+		label variable `compi' "Local index"
 	  }
 	}
-	// label para dataset
-	local labeldata = "`short_name' index:`group' given `unit'"
-	if "`within'"!="" local labeldata = "`labeldata' within `within'"
-	if "`noby'"=="" local labeldata = "`labeldata' by `by'"
-	if "`normalized'"=="normalized" local labeldata = "`labeldata' (`normalized')"
-	label data "`labeldata'"
 	}
 end
 
