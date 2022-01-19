@@ -260,6 +260,7 @@ p stddiff module to compute Standardized differences for continuous and categori
 p stdtable module to standardize cross-tabulations to pre-specified row and column totals
 p stgenreg module to fit general parametric survival models
 p stgit module to retrieve information about a Git repository
+p stipw module to estimate Inverse probability weighted parametric survival models with variance obtained via M-estimation
 p stjm module to fit shared parameter joint models of longitudinal and survival data
 p stjm11 module to fit shared parameter joint models of longitudinal and survival data
 p stjmgraph module to create a joint longitudinal and survival graph

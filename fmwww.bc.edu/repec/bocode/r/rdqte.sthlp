@@ -19,7 +19,7 @@
 
 {marker description}{...}
 {title:Description}
-
+ 
 {phang}
 {cmd:rdqte} executes estimation and robust inference for quantile treatment effects (QTE) in the sharp and fuzzy regression discontinuity designs (RDD) based on 
 {browse "https://www.sciencedirect.com/science/article/abs/pii/S0304407619300569":Chiang, Hsu, and Sasaki (2019)}. 
@@ -89,6 +89,53 @@ Quantile treatment effects of the program on scores on the Woodcock-Johnson sub-
 {phang}{cmd:. rdqte score bdate, fuzzy(treat) cover(0.9) ql(0.1) qh(0.9) qn(9)}{p_end}
 
 
+{marker stored}{...}
+{title:Stored results}
+
+{phang}
+{bf:rdqte} stores the following in {bf:r()}: 
+{p_end}
+
+{phang}
+Scalars
+{p_end}
+{phang2}
+{bf:r(N)} {space 10}observations
+{p_end}
+{phang2}
+{bf:r(c)} {space 10}cutoff location
+{p_end}
+{phang2}
+{bf:r(h)} {space 10}bandwidth
+{p_end}
+
+{phang}
+Macros
+{p_end}
+{phang2}
+{bf:r(cmd)} {space 8}{bf:rdqte}
+{p_end}
+
+{phang}
+matrices
+{p_end}
+{phang2}
+{bf:r(q)} {space 10}quantiles
+{p_end}
+{phang2}
+{bf:r(b)} {space 10}QTE estimates
+{p_end}
+{phang2}
+{bf:r(V)} {space 10}variance matrix
+{p_end}
+{phang2}
+{bf:r(CBlower)} {space 4}lower bounds of confidence band
+{p_end}
+{phang2}
+{bf:r(CBupper)} {space 4}upper bounds of confidence band
+{p_end}
+
+
 {title:Reference}
 
 {p 4 8}Chiang, H.D., Y.-C. Hsu, and Y. Sasaki. 2019. Robust Uniform Inference for Quantile Treatment Effects in Regression Discontinuity Designs.
@@ -104,6 +151,3 @@ Quantile treatment effects of the program on scores on the Woodcock-Johnson sub-
 {p 4 8}Yu-Chin Hsu, Academia Sinica, Taipei, Taiwan.{p_end}
 
 {p 4 8}Yuya Sasaki, Vanderbilt University, Nashville, TN.{p_end}
-
-
-

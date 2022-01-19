@@ -32,6 +32,7 @@ p hetprob module to estimate heteroskedastic probit model
 p hetred module to implement heterogeneity reducing algorithms
 p hetsar module to estimate spatial autoregressive models with heterogeneous coefficients 
 p hettreatreg module to compute diagnostics for linear regression when treatment effects are heterogeneous
+p hful_hlim module for heteroskedasticity-robust version of the Fuller estimator and jackknife version of the limited-information maximum likelihood estimator
 p hgclg module to estimate geometric-complementary log log hurdle regression
 p hglogit module to estimate geometric-logit hurdle regression
 p hhi module to compute Herfindahl index

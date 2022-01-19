@@ -1,0 +1,33 @@
+d 'HFUL_HLIM': module for heteroskedasticity-robust version of the Fuller estimator and jackknife version of the limited-information maximum likelihood estimator
+d
+d  hful provides the  heteroskedasticity-robust version of the
+d Fuller estimator. hlim provides a jackknife version of the
+d limited-information maximum likelihood estimator. Both are based
+d on Hausman et al., Instrumental variable estimation with
+d heteroskedasticity and many instruments, Quantitative Economics,
+d 2012. 
+d
+d KW: robust
+d KW: Fuller
+d KW: LIML,
+d
+d Requires: Stata version 14
+d
+d Distribution-Date: 20220118
+d
+d Author: Xiduo Chen, University of Arizona
+d Support: email xiduochen@@email.arizona.edu
+d
+d Author: Tiemen Wouterson, University of Arizona
+d Support: email wouterson@@arizona.edu
+d
+d Author: Pierangelo De Pace, Pomona College
+d Support: email pierangelo.depace@@pomona.edu
+d
+d Author: John Chao, University of Maryland
+d Support: email chao@@econ.umd.edu
+d
+f hful.ado
+f hful.sthlp
+f hlim.ado
+f hlim.sthlp

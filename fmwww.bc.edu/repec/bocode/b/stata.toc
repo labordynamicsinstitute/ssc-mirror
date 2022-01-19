@@ -52,6 +52,7 @@ p birthsim module to simulate completed fertility and birth intervals
 p bitobit module to perform bivariate Tobit regression
 p bking module to implement Baxter-King filter for timeseries data
 p bkrosenblatt module for Blum, Kiefer and Rosenblatt test of bivariate independence
+p blandaltman module to create Bland-Altman plots featuring differences or %differences or ratios, with options to add a variety of lines and intervals
 p blinding module to compute blinding indexes
 p blindschemes module to provide graph schemes sensitive to color vision deficiency 
 p blist module to list values of variables in as small a space as possible

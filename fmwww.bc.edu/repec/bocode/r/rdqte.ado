@@ -6,9 +6,9 @@
 // Use it when you consider a regression discontinuity design and you are 
 // interested in analyzing heterogeneous causal effects.
 ////////////////////////////////////////////////////////////////////////////////
-program define rdqte, eclass
+program define rdqte, rclass
     version 14.2
- 
+  
     syntax varlist(numeric) [if] [in] [, c(real 0) fuzzy(varname numeric) cover(real 0.95) ql(real 0.25) qh(real 0.75) qn(real 3) bw(real -1)]
     marksample touse
  
@@ -17,7 +17,7 @@ program define rdqte, eclass
     fvexpand `indepvars' 
     local cnames `r(varlist)'
  
-    tempname b V N cb
+    tempname b V N cb h q CBl CBu
 
 	// Case of Sharp Design ////////////////////////////////////////////////////
 	if "`fuzzy'" == "" {
@@ -25,7 +25,8 @@ program define rdqte, eclass
 							    `c', `ql', `qh', ///
 						        `qn', `bw', "`touse'", ///
 						        "`b'", "`V'", "`N'", ///
-						        `cover', "`cb'")
+						        `cover', "`cb'", "`h'", ///
+								"`q'", "`CBl'", "`CBu'")
    	} //END IF SHARP////////////////////////////////////////////////////////////
 	
 	// Case of Fuzzy Design ////////////////////////////////////////////////////
@@ -36,16 +37,23 @@ program define rdqte, eclass
 							    `c', `ql', `qh', ///
 						        `qn', `bw', "`touse'", ///
 						        "`b'", "`V'", "`N'", ///
-						        `cover', "`cb'")
+						        `cover', "`cb'", "`h'", ///
+								"`q'", "`CBl'", "`CBu'")
    	} //END IF FUZZY////////////////////////////////////////////////////////////
 	
 	matrix colnames `b' = QTE
 	matrix colnames `V' = QTE
 	matrix rownames `V' = QTE
 	
-    ereturn post `b' `V', esample(`touse') buildfvinfo
-    ereturn scalar N    = `N'
-    ereturn local  cmd  "rdqte"
+	return scalar h    = `h'
+	return scalar c    = `c'
+    return scalar N    = `N'
+	return matrix CBupper = `CBu'
+	return matrix CBlower = `CBl'
+	return matrix V    = `V'
+	return matrix b    = `b'
+	return matrix q    = `q'
+    return local  cmd  "rdqte"
 end
 
 		
@@ -64,7 +72,8 @@ void estimate_sharpqte( string scalar yv,      string scalar xv,
 						real scalar cut, 	   real scalar q_low, 	   real scalar q_high, 	  
 						real scalar q_num, 	   real scalar b_w,	       string scalar touse,   
 						string scalar bname,   string scalar Vname,    string scalar nname,
-						real scalar cover, 	   string scalar cbname) 
+						real scalar cover, 	   string scalar cbname,   string scalar hname,
+						string scalar qname,   string scalar cblname,  string scalar cbuname) 
 {
 	printf("\n{hline 78}\n")
 	printf("Executing:    Chiang, H.D., Hsu, Y.-C. & Sasaki, Y. (2019): Robust Uniform    \n")
@@ -310,7 +319,11 @@ void estimate_sharpqte( string scalar yv,      string scalar xv,
 
     st_matrix(bname, b)
     st_matrix(Vname, V)
+	st_matrix(qname, qlist)
+	st_matrix(cblname, bl)
+	st_matrix(cbuname, bu)
     st_numscalar(nname, n)
+	st_numscalar(hname, h)
 
 	////////////////////////////////////////////////////////////////////////////
 	// Console output
@@ -319,7 +332,7 @@ void estimate_sharpqte( string scalar yv,      string scalar xv,
 	printf(  "Number of observations:                                        n = %f\n", n)
 	printf(  "The discontinuity location of the running variable:            c = %f\n", cut)
 	printf(  "{hline 78}\n")
-	printf(  "Quantile         QRKD     [%2.0f%% Unif. Conf. Band]\n",100*cover)
+	printf(  "Quantile          QTE     [%2.0f%% Unif. Conf. Band]\n",100*cover)
 	printf(  "{hline 48}\n")
 	for( idx = 1 ; idx <= length(qlist) ; idx++ ){
 	    printf("   %5.3f   %10.5f   %10.5f   %10.5f\n",qlist[idx],b[idx],bl[idx],bu[idx])
@@ -335,7 +348,8 @@ void estimate_fuzzyqte( string scalar yv,      string scalar xv,	   string scala
 						real scalar cut, 	   real scalar q_low, 	   real scalar q_high, 	 
 						real scalar q_num, 	   real scalar b_w,	       string scalar touse,   
 						string scalar bname,   string scalar Vname,    string scalar nname,
-						real scalar cover,	   string scalar cbname) 
+						real scalar cover,	   string scalar cbname,   string scalar hname,
+						string scalar qname,   string scalar cblname,  string scalar cbuname) 
 {
 	printf("\n{hline 78}\n")
 	printf("Executing:    Chiang, H.D., Hsu, Y.-C. & Sasaki, Y. (2019): Robust Uniform    \n")
@@ -581,7 +595,11 @@ void estimate_fuzzyqte( string scalar yv,      string scalar xv,	   string scala
 
     st_matrix(bname, b)
     st_matrix(Vname, V)
+	st_matrix(qname, qlist)
+	st_matrix(cblname, bl)
+	st_matrix(cbuname, bu)
     st_numscalar(nname, n)
+	st_numscalar(hname, h)
 
 	////////////////////////////////////////////////////////////////////////////
 	// Console output
@@ -590,7 +608,7 @@ void estimate_fuzzyqte( string scalar yv,      string scalar xv,	   string scala
 	printf(  "Number of observations:                                        n = %f\n", n)
 	printf(  "The discontinuity location of the running variable:            c = %f\n", cut)
 	printf(  "{hline 78}\n")
-	printf(  "Quantile         QRKD     [%2.0f%% Unif. Conf. Band]\n",100*cover)
+	printf(  "Quantile          QTE     [%2.0f%% Unif. Conf. Band]\n",100*cover)
 	printf(  "{hline 48}\n")
 	for( idx = 1 ; idx <= length(qlist) ; idx++ ){
 	    printf("   %5.3f   %10.5f   %10.5f   %10.5f\n",qlist[idx],b[idx],bl[idx],bu[idx])
