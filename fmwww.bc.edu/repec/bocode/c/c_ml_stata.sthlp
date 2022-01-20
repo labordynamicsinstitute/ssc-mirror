@@ -1,5 +1,5 @@
 {smcl}
-{* 13jan2022}{...}
+{* 18jan2022}{...}
 {cmd:help c_ml_stata}
 {hline}
 
@@ -60,13 +60,11 @@ API to carry out both cross-validation and prediction.
 specifies the machine learning algorithm to be estimated.   
 
 {phang} {cmd:out_sample_x}{cmd:(}{it:filename}{cmd:)}
-requests to provide a new Stata dataset as {it:filename} containing the new 
-instances over which estimating predictions. This dataset must contain only the features.
+requests to provide a dataset as {it:filename} containing the testing observations over which estimating predictions. 
+This dataset contains only predictors.
 
 {phang} {cmd:out_sample_y}{cmd:(}{it:filename}{cmd:)}
-requests to provide a new Stata dataset as {it:filename} containing the outcome of the new instances. 
-This dataset must contain only the outcome. When the outcome of the new instances is unknown, 
-this can be inserted as a variable with all missing values. 
+requests to provide a dataset as {it:filename} containing the outcome of the testing observations over which estimating predictions. This dataset must contain only the outcome. When the outcome is unknown, this can be inserted as a variable with all missing values.  
 
 {phang} {cmd:in_prediction}{cmd:(}{it:name}{cmd:)}
 requires to specify a {it:name} for the file that will contain in-sample predictions. 
@@ -107,15 +105,75 @@ of same results.
 {pstd} {cmd:c_ml_stata} returns into e-return scalars (if numeric) or macros (if string) 
 the "optimal hyper-parameters", the "optimal train accuracy", the "optimal test accuracy", 
 and the "standard error of the optimal test accuracy" obtained via cross-validation. 
+For each learner, the list and meaning of the tuned hyper-parameters are:
+
+{phang} {cmd:Boosting} (option "boost"):
+
+{phang} -> {it:e(OPT_LEARNING_RATE)}: scalar. It is the coefficient that shrinks the contribution of each tree to the Boosting's prediction. 
+
+{phang} -> {it:e(OPT_N_ESTIMATORS)}: scalar. It is the number of boosting iteration to perform. 
+
+{phang} {cmd:Nearest-neighbor} (option "nearestneighbor")
+
+{phang} -> {it:e(OPT_NN)}: scalar. It is the number of nearest neighbors to use. 
+
+{phang} -> {it:e(OPT_WEIGHT)}: local macro. It returns the kernel weighting scheme, that can be: 
+(1) {it:uniform}: uniform weights, where all observations in each neighborhood are weighted equally; 
+or (2) {it:distance}, weighting observations by the inverse of their distance from the point of imputation. 
+
+{phang} {cmd:Naive Bayes} (option "naivebayes")
+
+{phang} -> {it:e(OPT_VAR_SMOOTHING)}: scalar. Portion of the largest variance of all predictors that is added to variances for calculation stability.
+
+{phang} {cmd:Neural network} (option "neuralnet")
+
+{phang} -> {it:e(OPT_NEURONS_L_1}: scalar. It is the number of neurons (or hidden units) in the first (hidden) layer. 
+ 
+{phang} -> {it:e(OPT_NEURONS_L_2}: scalar. It is the number of neurons (or hidden units) in the second (hidden) layer.   
+
+{phang} {cmd:Random forests} (option "randomforest")
+
+{phang} -> {it:e(OPT_MAX_DEPTH)}: scalar. It is the maximum depth of the tree. 
+
+{phang} -> {it:e(OPT_MAX_FEATURES)}: scalar. It is the number of features (or predictors) 
+to consider when looking for the tree best split. 
+
+{phang} {cmd:Regularized multinomial} (option "regularizedmultinomial")
+
+{phang} -> {it:e(OPT_PENALIZATION)}: scalar. It is the inverse of regularization strength (positive coefficient). Like in the support vector machine, smaller values specify stronger regularization.
+
+{phang} -> {it:e(OPT_L1_RATIO)}: scalar. It is the elastic mixing parameter, varying between zero (Lasso regression) and one (Ridge regression). Intermediate values of this parameter weigh differently the Lasso and Ridge penalization terms. 
+
+{phang} {cmd:Support vector machine} (option "svm")
+
+{phang} -> {it:e(OPT_C)}: scalar. It is the SVM regularization parameter, 
+where the strength of the regularization is inversely proportional to C. It is strictly positive.
+
+{phang} -> {it:e(OPT_GAMMA)}: scalar. It is the kernel coefficient for the polynomial or radial kernel. 
+
+{phang} {cmd:Regression tree} (option "tree")
+
+{phang} -> {it:e(OPT_DEPTH)}: scalar. It is the maximum depth of the tree. 
 
 {pstd} {cmd:c_ml_stata} provides model predictions both as predicted labels and as predicted probabilities. 
 
 
 {title:Remarks}
 
-{phang} -> Missing values in both {it:outcome} and {it:varlist} are not allowed. 
-           Before running this command, please check whether your dataset presents missing values
-           and delete them. 
+{phang} -> When running {cmd:c_ml_stata}, one has to prepare in advance three datasets: 
+(i) the main dataset to open and use in the current Stata session: it is the {it:training} dataset, employed also for carrying out K-fold cross-validation;
+(ii) a dataset (located in the current working directory) to insert as {it:filename} in option {cmd:out_sample_x}{cmd:(}{it:filename}{cmd:)}: 
+it is the {it:testing} dataset, only containing the predictors of testing observations; 
+(iii) a dataset (located in the current working directory) to insert as {it:filename} 
+in option {cmd:out_sample_y}{cmd:(}{it:filename}{cmd:)}: it is the {it:testing} dataset, 
+only containing the outcome of testing observations. 
+The datasets defined in (i) and (ii) must not contain missing values. 
+Before running this command, please check whether these datasets contain missing values and delete observations containing them (listwise). 
+Of course, the datasets in (ii) and (iii) must have the same size and refer to the same out-of-sample observations.   
+
+{phang} -> The order in which the predictors appear in the testing dataset to insert in {cmd:out_sample_x}{cmd:(}{it:filename}{cmd:)} must be the same as the one of the training dataset.
+
+{phang} -> If the variables appearing in the used Stata datasets contain value labels, it is recommended to eliminate them. Indeed, Python cannot read data with labeled values. 
            
 {phang} -> To run this program you need to have both Stata 16 (or later versions) and Python 
            (from version 2.7 onwards) installed. You can find information about how to install 
