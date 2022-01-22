@@ -1,10 +1,14 @@
 *! extension of Stata Corp. simulate
-*! Version 1.02 - 02.03.2020
+*! Version 1.06 - 21.01.2022
 *! by Jan Ditzen - www.jan.ditzen.net
 /* changelog
 To version 1.01
 	- 21.10.2019: 	- bug in setting seed options fixed
 	- 02.03.2020:	- bug in setting seed options fixed 2nd
+Tp Version 1.06
+	- 21.01.2022:	- fix when simulate2 and seed() used.
+			- added if support
+			- output when psimulate2 used added (internal option inpsim2)
 */
 
 
@@ -19,7 +23,7 @@ program simulate2
 		local 0 `"`s(after)'"'
         local before `"`s(before)'"'
 		
-		syntax [anything] , [parallel(string) *]
+		syntax [anything] [if] [in], [parallel(string) *]
 		
 		if "`parallel'" != "" {
 			psimulate2 `before' : `options'
@@ -37,11 +41,12 @@ program simulate2
                         Verbose                         ///
                         SEED(string)                    /// not documented
                         TRace                           /// "prefix" options                       
-						/// simulate2 options
-						SEEDSave(string)				/// seed save option
-						perindicator(string)			/// save every x-th file as indicator for progress
-						/// rest
-						 *                               ///
+			/// simulate2 options
+			SEEDSave(string)		/// seed save option
+			perindicator(string)		/// save every x-th file as indicator for progress
+			inpsim2				/// indicator for psim2
+			/// rest
+			 *                               ///
                 ]
 		_get_dots_option, `options'
         local dots `"`s(dotsopt)'"'
@@ -107,7 +112,7 @@ program simulate2
 		set seed
 		*/
 		local seedtype = 0
-        if "`seed'" != "" {
+        	if "`seed'" != "" {
 			local 0 `seed'
 			syntax anything , [frame dta start(integer 1)]
 			if wordcount("`frame' `dta'") == 2 {
@@ -117,28 +122,24 @@ program simulate2
 			
 			local seedstart = `start'
 			
-			if "`frame'`dta'" == "" {
-				noi disp "set seed"
-				tokenize `anything'				
-                noi disp "`2'--`3'"
+			if "`frame'`dta'" == "" {				
+				tokenize `anything'
+							
 				if "`2'" != "" {
 					set rng `2'
 				}				
 				if "`3'" != "" {
-					set rngstream `3'
-					noi disp "stream set"
+					set rngstream `3'					
 					disp c(rngstream)
 				}				
 				if "`1'" != "."  {
 					cap `version' set seed `1'
 					cap `version' set rng `1'
-					set rngstream `3'
+					cap set rngstream `3'
 				}				
-				disp c(rngstream)
 				local rng `c(rng_current)'`version' set seed `1'
 				local seed `c(rngstate)'
 				local seedstream `c(rngstream)'
-				display rnormal()
 				local seedtype = 1
 			}
 			else {
@@ -222,10 +223,10 @@ program simulate2
 					}
 					set `rngname' `seedi'	
 					
-				}				
+				}							
 			}	
 			
-        }
+        	}
         
 		local framesavetype = 0
 		if "`seedsave'" != "" {			 
@@ -265,8 +266,17 @@ program simulate2
 			qui frame `framesave': replace run = `seednumber' in `startsave'
 			frame change `currentframe'
 		}	
+	if "`inpsim2'" != "" {
+		noi disp "This is psimulate2 in simulate2"
+		noi disp "Process ID: `performid'"
+		noi disp "Draws: `start'"
+		cap noi disp as inp `"Command Line is: `command'"'
+		cap noi disp "Seedstream: " c(rngstream)
+		cap noi disp "RNG: " c(rng)
+		noi disp "Seed: " c(seed)
 
-        `noi' di as inp `". `command'"'
+	}	
+        
 
         // run the command using the entire dataset
         _prefix_clear, e r

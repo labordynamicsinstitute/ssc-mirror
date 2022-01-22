@@ -15,12 +15,12 @@ d KW: accelerated failure time
 d KW: single-failure
 d KW: multiple-failure
 d
-d Requires: Stata version 14.1
+d Requires: Stata version 15.1
 d
 d Distribution-Date: 20170731
 d
-d Author: Michael J. Crowther, Karolinska Institutet
-d Support: email michael.crowther@@ki.se
+d Author: Michael J. Crowther, Red Door Analytics
+d Support: email michael@@reddooranalytics.se
 d
 f staft.ado
 f staft.sthlp

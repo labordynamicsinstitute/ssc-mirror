@@ -1,5 +1,5 @@
 *! parallelise simulate2
-*! Version 1.04 - 03.02.2021
+*! Version 1.06 - 21.01.2022
 *! by Jan Ditzen - www.jan.ditzen.net
 /* changelog
 To version 1.01
@@ -19,6 +19,9 @@ To version 1.04
 	- 03.02.2021 	- bug fixed if data appended to frame but frame does not exists
 To version 1.05
 	- 02.08.2021 	- bug fix in exepath
+To version 1.06
+	- 21.01.2022  - bug fix in temppath
+
 
 */
 program psimulate2 , rclass
@@ -446,14 +449,14 @@ program define psim2_WriteDofile
 		
 		_on_colon_parse `0'
 		local after `"`s(after)'"'
-        local 0 `"`s(before)'"'
+        	local 0 `"`s(before)'"'
 
 		syntax [anything(name=explist equalok)], id(string) startdta(string) temppath(string) processors(integer) seedstream(integer)  [simulate] *  
 		
 		local sim2_options `options'
 		
 		local path `"`temppath'"'
-        local doFileName "psim2_DoFile_`id'.do"
+        	local doFileName "psim2_DoFile_`id'.do"
 		
 		tempname dofile
 		
@@ -461,10 +464,14 @@ program define psim2_WriteDofile
 		**** Create do file with programs
 		psim2_programlist , temppath("`temppath'")
 		local pnames "`r(pnames)'"
-				
+		noi disp "pnames: `pnames'"		
 		**** Write do file
 		file open `dofile' using `"`path'/`doFileName'"' , w replace        
 		
+		*** Add Time Stamp
+		file write `dofile' `"disp "This is psmulate2""' _n
+		file write `dofile' `"disp "File was written `c(current_time)'""' _n
+
 		if "`pnames'"  != "" {
 			file write `dofile' `"include `"`temppath'/psim2_programs.do"'"' _n
 		}
@@ -537,7 +544,7 @@ program define psim2_WriteDofile
 		
 		**** Do cmd
 		if "`simulate'" == "" {
-			file write `dofile' `"simulate2 `explist' , `options' : `after'"' _n
+			file write `dofile' `"simulate2 `explist' , inpsim2 `options' : `after'"' _n
 		}
 		else {
 			file write `dofile' `"set rng mt64s"' _n
@@ -625,7 +632,7 @@ program define psim2_programlist, rclass
 	set linesize `linesize'
 	tempname file nextline
 	file open `file' using `"`temppath'/psim2_plog.log"' , read
-    file read `file' line
+    	file read `file' line
 	while r(eof)==0 {
         local line `"  `macval(line)'"'
 		local count = wordcount("`line'") 

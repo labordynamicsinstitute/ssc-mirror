@@ -1,7 +1,8 @@
 {smcl}
 {hline}
-{hi:help simulate2}{right: v. 1.01 - 03. November 2019}
-{hi:help psimulate2}{right: v. 1.05 - 02. August 2021}
+{hi:help simulate2}{right: v. 1.03 - 21. January 2022}
+{hi:help psimulate2}{right: v. 1.06 - 21. January 2022}
+
 {hline}
 {title:Title}
 
@@ -480,6 +481,13 @@ command names. In such cases it tends to shorten the names which might cause int
 The best solution is to shorten the names.{p_end}
 {p 8 8} - Some servers require the {cmd:nocls} function to run {cmd:psimulate2}.{p_end}
 
+{marker install}{title:How to install}
+
+{p 4 4}{cmd:simulate2} and {cmd:psimulate2} can be directly installed from GitHub:{p_end}
+
+{col 8}{stata "net install simulate2, from(https://janditzen.github.io/simulate2/)"}
+
+
 {marker about}{title:Author}
 
 {p 4}Jan Ditzen (Free University of Bozen-Bolzano){p_end}
@@ -490,11 +498,15 @@ The best solution is to shorten the names.{p_end}
 and Tim Morris at the Stata User group meeting 2019 in London.
 Parts of the program code and help file were taken from {help simulate}.
 Kit Baum initiated the integration of MacOS and Unix and assisted in the implementation. 
-Michael Porst provided much valued feedback.
+Michael Porst and 
+Gabriel Chodorow-Reich provided much valued feedback.
 I am grateful for all of their help.
 All remaining errors are my own.{p_end}
 
 {title:Change Log}
+
+{p 4}Version 1.05 to 1.06{p_end}
+{p 8 8}- various small bug fixes (thanks to Gabriel Chodorow-Reich){p_end}
 {p 4}Version 1.04 to 1.05{p_end}
 {p 8 8}- bug fix in exepath{p_end}
 {p 4}Version 1.03 to 1.04{p_end}
