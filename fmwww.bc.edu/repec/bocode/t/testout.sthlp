@@ -49,7 +49,7 @@ The default value is {bf: alpha(0.05)}.
 
 {phang}
 {bf:maxw({it:real})} sets the maximum value of the set of the tail index in the composite alternative over which the likelihood function in the numerator of the likelihood ratio test statistic is integrated with respect to the Lebesgue measure. 
-The default value is {bf: maxw(5)}.
+The default value is {bf: maxw(2)}.
 
 {phang}
 {bf:prec({it:real})} sets the precision of approximating the null distribution of the test statistic by simulations.
@@ -60,16 +60,20 @@ The default value is {bf: prec(0.00025)}.
 {marker examples}{...}
 {title:Examples}
 
-{phang}
-{bf:y} outcome variable, {bf:x} independent variable, {bf:z} instrumental variable
+{phang}Consider the following regression:
 
-{phang}Outlier tests for the OLS {bf:reg}:
+{phang}{cmd:. use "tip_chicago.dta"}{p_end}
+{phang}{cmd:. regress wh_pop_change indicat min* income vacant rent single public}{p_end}
 
-{phang}{cmd:. testout y x}{p_end}
+{phang}The outlier tests for this regression can be implemented by:
 
-{phang}Outlier tests for the 2SLS {bf:ivreg}:
+{phang}{cmd:. testout wh_pop_change indicat min* income vacant rent single public}{p_end}
 
-{phang}{cmd:. testex y x, iv(z)}{p_end}
+{phang}We can repeat these lines for another city:
+
+{phang}{cmd:. use "tip_washington.dta"}{p_end}
+{phang}{cmd:. regress wh_pop_change indicat min* income vacant rent single public}{p_end}
+{phang}{cmd:. testout wh_pop_change indicat min* income vacant rent single public}{p_end}
 
 
 {marker stored}{...}

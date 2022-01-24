@@ -23,7 +23,7 @@ d KW: asymptotic normality
 d
 d Requires: Stata version 14.2
 d
-d Distribution-Date: 20220107
+d Distribution-Date: 20220123
 d
 d Author: Yuya Sasaki, Department of Economics, Vanderbilt University
 d Support: email yuya.sasaki@@gmail.com
@@ -33,3 +33,5 @@ d Support: email ywang402@@syr.edu
 d
 f testout.ado
 f testout.sthlp
+f tip_washington.dta
+f tip_chicago.dta

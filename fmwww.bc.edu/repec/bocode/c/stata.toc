@@ -137,6 +137,7 @@ p cmp module to implement conditional (recursive) mixed process estimator
 p cnar module to retrieve Chinese listed firms' financial data
 p cnbreg module to estimate negative binomial regression - canonical parameterization
 p cndnmb3 module to calculate condition number of regressor matrix
+p cnevent module to carry out an event study with Chinese publicly listed firms
 p cngcode module to geocode Chinese addresses 
 p cngdf module to calculate any base period GDP deflator for China
 p cnindex module to download historical stock quotations from Chinese market

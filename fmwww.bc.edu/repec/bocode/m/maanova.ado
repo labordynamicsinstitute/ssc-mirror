@@ -1,5 +1,5 @@
 /* Stata Macro -- Written by David B. Wilson 
-   Version 2021.05.05
+   Version 2022.01.23
    See help for maanova */
 
 program define maanova
@@ -206,7 +206,7 @@ if "`model'"!="FE" & ("`tau_unique'"!="yes" & "`tau_unique'"!="YES") {
 }
 di " "
 di in text _col(1) "----------------+-------------------------------------------------------------"
-di in text _col(1) " Cateogry       |      Mean    -95%CI    +95%CI      se       z       p      k"
+di in text _col(1) " Category       |      Mean    -95%CI    +95%CI      se       z       p      k"
 di in text _col(1) "----------------+-------------------------------------------------------------"
 /* overall results */
 di in text _col(1) "Total" in text _col(17) "|" /*

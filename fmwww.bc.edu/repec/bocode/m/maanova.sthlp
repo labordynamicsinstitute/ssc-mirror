@@ -1,6 +1,6 @@
 
 {smcl}
-{* *! version 2.0 05may2021}{...}
+{* *! version 2.01 01jan2022}{...}
 {viewerdialog maanova "dialog maanova"}{...}
 
 {marker syntax}{...}

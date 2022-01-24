@@ -7,7 +7,7 @@
 program define testout, rclass
     version 14.2
 
-    syntax varlist(min=2 numeric) [if] [in] [, iv(varname numeric) k(real 0) alpha(real 0.05) maxw(real 5) prec(real 0.00025)]
+    syntax varlist(min=2 numeric) [if] [in] [, iv(varname numeric) k(real 0) alpha(real 0.05) maxw(real 2) prec(real 0.00025)]
     marksample touse
  
     gettoken depvar indepvars : varlist
@@ -54,29 +54,43 @@ end
 		
 mata:
 //////////////////////////////////////////////////////////////////////////////// 
-// Function: Random Number Generator from Pareto Distribution
-real vector rpareto(real scalar n, real scalar xi){
-	return( (1:-uniform(n,1)):^(-xi) )
+// Function: Density Function of the Generalized Pareto Distribution
+real vector dpareto(real vector x, real scalar xi){
+	return( (1:+xi:*x):^(-1/xi-1) ) 
+}
+//////////////////////////////////////////////////////////////////////////////// 
+// Function: Quantile Function of the Generalized Pareto Distribution
+real vector qpareto(real vector p, real scalar xi){
+	return( ((1:-p):^(-xi):-1):/xi ) 
 }
 //////////////////////////////////////////////////////////////////////////////// 
 // Function: Get f_{V*} / Gamma(k)
-real scalar getfvstar(real vector vstar, real scalar k, real scalar xi){
-	slist = 1..100
-	fvstar = 0
-	for( idx = 1 ; idx <= length(slist) ; idx++ ){
-	 s = slist[idx]
-	 fvstar = fvstar + (slist[2] - slist[1]) * ( s^(k-2) * exp( (-1-1/xi) * ( log(1+xi*s) + sum(log(1:+xi:*vstar[2..(k-1)]:*s)) ) ) )
+real scalar getfvstar(real vector vstar, real scalar k, real scalar xi, real scalar maxw){
+    maxxi = maxw + 0.5
+    grid = 100
+	ulist = ((1..grid):-0.5):/grid
+	knots = qpareto(ulist,maxxi)
+	integrand = J(length(ulist),1,0)
+	for( idx = 1 ; idx <= length(ulist) ; idx++ ){
+	 s = knots[idx]
+	 integrand[idx,1] = ( s^(k-2) * exp( (-1-1/xi) * ( log(1+xi*s) + sum(log(1:+xi:*vstar[2..(k-1)]:*s)) ) ) )
 	}
-	return( fvstar )
+	fvstar = J(length(ulist)-1,1,0)
+	for( idx = 1 ; idx <= length(ulist)-1 ; idx++ ){
+	 fvstar[idx,] = (knots[idx+1]-knots[idx]) * (integrand[idx,1]+integrand[idx+1,1]) / 2
+	}
+	logfvstar = log(max(fvstar)) :+ log(sum(exp(log(fvstar):-max(log(fvstar)))))
+	return( exp(logfvstar) )
 }
 //////////////////////////////////////////////////////////////////////////////// 
 // Function: Get the Test Statistics
 real scalar getteststat(real vector vstar, real scalar k, real scalar maxW){
-	W = 1 :+ (0..10):/10 :* (maxW-1)
+    grid = 10
+	W = 1 :+ (0..grid):/grid :* (maxW-1)
 	num = 0
-	den = getfvstar(vstar,k,1)
+	den = getfvstar(vstar,k,1,maxW)
 	for( jdx = 1 ; jdx <= length(W) ; jdx++ ){
- 	 num = num + (W[2]-W[1]) * getfvstar(vstar,k,W[jdx])
+ 	 num = num + (W[2]-W[1]) * getfvstar(vstar,k,W[jdx],maxW)
 	}
 	return( num/den )
 }
@@ -101,12 +115,12 @@ void test( string scalar yv, string scalar xv, string scalar touse, string scala
 	 k = max(3 \ ceil(0.05*n))
 	}
 
-	
 	// Compute The Null Distribution of The Test Statistic /////////////////////
 	stat_dist = J(ceil(1/prec),1,0)
 	for( idx = 1 ; idx <= ceil(1/prec) ; idx++ ){
- 	 V = rpareto(k,1)
-	 Vorder = sort(V,-1)
+	 Estar = lowertriangle(J(k,1,rexponential(1,k,1)))
+	 sumEstar = rowsum(Estar)
+	 Vorder = sumEstar:^(-1):-1
 	 Vstar = ( Vorder :- Vorder[k,1] ) :/ ( Vorder[1] - Vorder[k] )
 	 stat_dist[idx,1] = getteststat(Vstar,k,maxW)
 	}
@@ -179,8 +193,9 @@ void test_iv( string scalar yv, string scalar xv, string scalar touse, string sc
 	// Compute The Null Distribution of The Test Statistic /////////////////////
 	stat_dist = J(ceil(1/prec),1,0)
 	for( idx = 1 ; idx <= ceil(1/prec) ; idx++ ){
- 	 V = rpareto(k,1)
-	 Vorder = sort(V,-1)
+	 Estar = lowertriangle(J(k,1,rexponential(1,k,1)))
+	 sumEstar = rowsum(Estar)
+	 Vorder = sumEstar:^(-1):-1
 	 Vstar = ( Vorder :- Vorder[k,1] ) :/ ( Vorder[1] - Vorder[k] )
 	 stat_dist[idx,1] = getteststat(Vstar,k,maxW)
 	}
