@@ -1,5 +1,5 @@
 {smcl}
-{* 18jan2022}{...}
+{* 26jan2022}{...}
 {cmd:help c_ml_stata}
 {hline}
 
@@ -127,9 +127,9 @@ or (2) {it:distance}, weighting observations by the inverse of their distance fr
 
 {phang} {cmd:Neural network} (option "neuralnet")
 
-{phang} -> {it:e(OPT_NEURONS_L_1}: scalar. It is the number of neurons (or hidden units) in the first (hidden) layer. 
+{phang} -> {it:e(OPT_NEURONS_L_1)}: scalar. It is the number of neurons (or hidden units) in the first (hidden) layer. 
  
-{phang} -> {it:e(OPT_NEURONS_L_2}: scalar. It is the number of neurons (or hidden units) in the second (hidden) layer.   
+{phang} -> {it:e(OPT_NEURONS_L_2)}: scalar. It is the number of neurons (or hidden units) in the second (hidden) layer.   
 
 {phang} {cmd:Random forests} (option "randomforest")
 

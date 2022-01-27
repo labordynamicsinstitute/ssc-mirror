@@ -1,5 +1,5 @@
 {smcl}
-{* 06May2020}{...}
+{*26Jan2022}{...}
 {cmd:help sctree}
 {hline}
 
@@ -15,7 +15,7 @@
 {hi:sctree}
 {it:outcome} 
 [{it:varlist}]
-{ifin}
+{ifin},
 {cmd:model}{cmd:(}{it:{help sctree##modeltype:modeltype}}{cmd:)}
 {cmd:rversion}{cmd:(}{it:R_version}{cmd:)}
 [{cmd:prune}{cmd:(}{it:integer}{cmd:)}
