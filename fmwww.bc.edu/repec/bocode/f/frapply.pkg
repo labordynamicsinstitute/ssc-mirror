@@ -1,0 +1,27 @@
+d 'FRAPPLY': module to nondestructively apply command(s) to a frame
+d
+d  frapply applies a command or a series of commands to the dataset
+d in the specified (or current) frame and optionally puts the
+d result into another frame. Commands that are otherwise
+d destructive (such as drop, keep, collapse, contract etc.) can be
+d run serially while preserving the dataset. This can be
+d particularly useful in interactive and experimental settings
+d where we want to quickly and iteratively summarize and/or
+d transform the data without changing it. frapply can also be a
+d convenient drop-in replacement for the frames prefix and a
+d substitute for frames commands such as frame copy and frame put.
+d It can do everything those commands can do in a more flexible
+d fashion. 
+d
+d KW: data management
+d KW: frames
+d
+d Requires: Stata version 16
+d
+d Distribution-Date: 20220129
+d
+d Author: Gorkem Aksaray , Koc University
+d Support: email gaksaray@@ku.edu.tr
+d
+f frapply.ado
+f frapply.sthlp
