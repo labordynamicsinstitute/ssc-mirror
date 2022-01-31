@@ -1,7 +1,9 @@
-*! v1.53 FRA add window to cevent. Censored averages.
-*! v1.52 FRA changes how data is stored for csdid estat
-*! v1.51 FRA add from to simple calendar and group
-*! v1 Command for estimating estats from RIF file
+*! v1.55 FRA Reports Group,calendar,event averages
+* v1.55 FRA allows for more periods
+* v1.53 FRA add window to cevent. Censored averages.
+* v1.52 FRA changes how data is stored for csdid estat
+* v1.51 FRA add from to simple calendar and group
+* v1 Command for estimating estats from RIF file
 program adde, eclass
         ereturn `0'
 end
@@ -147,6 +149,38 @@ program csdid_est, rclass
 		local  `:char _dta[note`i']'
 	}
 	
+** checking Notes 7 and 8
+	if "`:word 1 of `rifgt''"=="see_char" {
+		local mk "`:word 2 of `rifgt''"
+		local rifgt
+		forvalues i = 1/`mk'{
+			local rifgt `rifgt' `:char _dta[rifgt`i']'
+		}
+	}
+	
+	if "`:word 1 of `rifwt''"=="see_char" {
+		local mk "`:word 2 of `rifwt''"
+		local rifwt
+		forvalues i = 1/`mk'{
+			local rifwt `rifwt' `:char _dta[rifwt`i']'
+		}
+	}
+	
+	if "`:word 1 of `colname''"=="see_char" {
+		local mk "`:word 2 of `colname''"
+		local colname
+		forvalues i = 1/`mk'{
+			local colname `colname' `:char _dta[colname`i']'
+		}
+	}
+	
+	if "`:word 1 of `eqname''"=="see_char" {
+		local mk "`:word 2 of `eqname''"
+		local eqname
+		forvalues i = 1/`mk'{
+			local eqname `eqname' `:char _dta[eqname`i']'
+		}
+	}
 	
 	tempname cband
 	tempname b1 b2 b3 b4 b5 
@@ -267,9 +301,22 @@ program csdid_est, rclass
 	
  	if "`post'"=="" capture:qui:est restore `lastreg'
 	
+	if inlist("`agg'","group","calendar")  {
+		tempname bb vv
+		matrix `bb' = `b1'[1,2...]
+		matrix `vv' = `s1'[2...,2...]
+	}
+	if inlist("`agg'","event")  {
+		tempname bb vv
+		matrix `bb' = `b1'[1,3...]
+		matrix `vv' = `s1'[3...,3...]
+	}
+	
 	return matrix table = rtb
 	return matrix b `b1'
-	return matrix  V `s1'
+	return matrix V `s1'
+	capture return matrix bb `bb'
+	capture return matrix vv `vv'
 	return local agg `agg'
   	if "`wboot'"!="" {
 		return matrix cband `cband'
@@ -330,6 +377,7 @@ void makerif2(string scalar rifgt_ , rifwt_ , agg,
 	// wnw Window				
     real matrix rifgt , rifwt, wgt, t0, glvl, tlvl
 	real scalar i,j,k,h, wndw
+	real matrix sumwgt, aux2
 	rifgt	= st_data(.,rifgt_)
 	rifwt  	= st_data(.,rifwt_)
 	
@@ -414,7 +462,8 @@ void makerif2(string scalar rifgt_ , rifwt_ , agg,
 		k=0
 		
 		aux    =J(rows(rifwt),0,.)
-		coleqnm=""
+		sumwgt =J(rows(rifwt),0,.)
+		coleqnm="GAverage"
 		ind_wt=colsum(abs(rifgt))
 
 		/// ag_wt=J(rows(rifwt),0,.)
@@ -430,14 +479,18 @@ void makerif2(string scalar rifgt_ , rifwt_ , agg,
 					ind_gt=ind_gt,k
  				}
  			}
+			
 			if (flag==1)  {
 				coleqnm=coleqnm+sprintf(" G%s",strofreal(glvl[i]))
 				ag_rif = rifgt[.,ind_gt]
 				ag_wt  = rifwt[.,ind_gt]
+				sumwgt = sumwgt, rowsum(ag_wt):/cols(ag_wt)
 				aux = aux, aggte(ag_rif, ag_wt)
 			}
 		}
- 
+		_editmissing(sumwgt,0)
+		aux = aggte(aux,sumwgt ), aux
+		
 		// get table elements		
 		make_tbl(aux ,bb,VV,clvar_,wboot, cband_,ci, reps, wbtype, citype)
 	}	
@@ -445,17 +498,14 @@ void makerif2(string scalar rifgt_ , rifwt_ , agg,
 	
 	if (agg=="calendar") {
 		// i groups j time
-		aux =J(rows(rifwt),0,.)
-		coleqnm=""
-		ind_wt=colsum(abs(rifgt))
-		
+		sumwgt=aux =J(rows(rifwt),0,.)
+		coleqnm="CAverage "
+		ind_wt=colsum(abs(rifgt))		
 		for(h=1;h<=cols(tlvl);h++){
 			k=0
 			flag=0
 			ind_gt=J(1,0,.)
-		
 			/// ag_wt=J(rows(rifwt),0,.)
- 
 			for(i=1;i<=cols(glvl);i++) {
 				for(j=1;j<=cols(tlvl);j++) {
 					k++
@@ -468,32 +518,35 @@ void makerif2(string scalar rifgt_ , rifwt_ , agg,
 						flag=1
 					}
 				}
-				
 			}
 			
 			if (flag==1) {
 				ag_rif = rifgt[.,ind_gt]
 				ag_wt  = rifwt[.,ind_gt]
-				aux = aux, aggte(ag_rif, ag_wt)
+				///sumwgt = sumwgt, rowsum(ag_wt):/cols(ag_wt)
+ 				aux = aux, aggte(ag_rif, ag_wt)
  			}
-		}	
+		}
+		///_editmissing(sumwgt,0)
+		aux = aggte(aux, J(rows(aux),cols(aux),1) ), aux
+//		aux = aggte(aux, sumwgt), aux		
 		// get table elements		
 		make_tbl(aux ,bb,VV,clvar_,wboot, cband_,ci, reps, wbtype, citype)
 	}
 	
 	if (agg=="event") {
 		// i groups j time
-		real matrix evnt_lst
+		real matrix evnt_lst, iit
 		evnt_lst=event_list(glvl,tlvl,wndw)
-		coleqnm=""
+		coleqnm="Pre_avg Post_avg "
 		ind_wt=colsum(abs(rifgt))
-		aux =J(rows(rifwt),0,.)
+		sumwgt = aux =J(rows(rifwt),0,.)
+		iit = J(1,0,.)
 		for(h=1;h<=cols(evnt_lst);h++){
 			k=0
 			flag=0
 			ind_gt=J(1,0,.)
  			/// ag_wt=J(rows(rifwt),0,.)
- 
 			for(i=1;i<=cols(glvl);i++) {
 				for(j=1;j<=cols(tlvl);j++) {
 					k++					
@@ -515,9 +568,19 @@ void makerif2(string scalar rifgt_ , rifwt_ , agg,
 			if (flag==1) {
 				ag_rif = rifgt[.,ind_gt]
 				ag_wt  = rifwt[.,ind_gt]			
-				aux = aux, aggte(ag_rif, ag_wt, )
+				//sumwgt = sumwgt, rowsum(ag_wt):/rowsum(ag_wt:!=0)
+				aux    = aux, aggte(ag_rif, ag_wt )
+				iit    = iit , evnt_lst[h]>=0
 			}
-		}	
+		}
+		//_editmissing(sumwgt,0)
+		//sumwgt = J(rows(aux),cols(aux),1)
+		
+		aux =  aggte(select(aux,iit:==0), J(rows(aux),cols(aux)-sum(iit),1) ),
+		       aggte(select(aux,iit)    , J(rows(aux),sum(iit),1) ), aux
+
+		///aux =   aggte(select(aux,iit:==0), select(sumwgt,iit:==0)), 
+		///		aggte(select(aux,iit)    , select(sumwgt,iit))    ,aux
 		// get table elements		
 		make_tbl(aux ,bb,VV,clvar_,wboot, cband_, ci, reps, wbtype, citype)
 	}

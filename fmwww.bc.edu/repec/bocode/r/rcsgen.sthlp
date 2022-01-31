@@ -30,6 +30,7 @@
 {synopt :{opt bk:nots(numlist)}}location of boundary knots{p_end}
 {synopt :{opt o:rthog}}orthogonalize generates spline variables{p_end}
 {synopt :{opt rmat:rix(matname)}}use supplied matrix for orthogonalization{p_end}
+{synopt :{opt rmsk:nots(#)}}Use knots as in Harrells Regression Modelling Strategies book{p_end}
 {synopt :{opt if2(string)}}use extra condition when generating knots using {cmd:df} or {cmd:percentile} options{p_end}
 {synopt :{opt fw(varname)}}name of variable containing weights when generating knots using the {cmd:df} or {cmd:percentile} options{p_end}
 {synopt :{opt rev:erse}}derives the spline variables in reversed order{p_end}
@@ -77,6 +78,20 @@ In addition boundary knots are placed at the maximum and minimum values of {it:v
 
 {phang}
 {opt rmatrix(matname)} will orthogonalize the generated spline variables using the supplied R matrix. If X is the N*p matrix of untransformed spline variables and Q is the N*(p+1) matrix of orthogonlized variables plus a column of ones, then X=QR.
+
+{phang}
+{opt rmsknots(matname)} use the knots give in Table table 2.3 of Frank Harrells Regression Modelling Strategies Book as an alternative to the 
+default knot locations when using {cmd:df()}.  This can be for between 3 and 7 knots with the locations shown below.
+
+        {hline 60}
+        k (knots)        Centile positions
+        {hline 60}
+         3         10    50     90
+         4          5    35     65     95
+         5          5    27.5   50     72.5  95
+         6          5    23     41     59    77     95
+         7          2.5  18.33  34.17  50    65.83  81.67  97.5
+        {hline 60}
 
 {phang}
 {opt if2(condition)} supplies a condition when generating the knots using the {cmd:df} or {cmd:percentile} options. 
@@ -142,7 +157,8 @@ as a function of age is obtained using the {help partpred} command available fro
 
 {p 2 2 2}
 This command is based on {help rcs} written by Chris Nelson ({browse "mailto:cn46@le.ac.uk":cn46@le.ac.uk})
- that comes with the {help strsrcs} command available from SSC.
+that comes with the {help strsrcs} command available from SSC. Note {cmd:strsrcs} has
+been superceeded by {help stpm2}.
 
 {p 2 2 2}
 Paul Lambert ({browse "mailto:paul.lambert@le.ac.uk":paul.lambert@le.ac.uk}) added the percentile, rmatrix,
@@ -153,6 +169,11 @@ Mark Rutherford ({browse "mailto:mjr40@le.ac.uk":mjr40@le.ac.uk}) added the df, 
 
 {p 2 2 2}
 Therese Andersson ({browse "mailto:therese.m-l.andersson@ki.se":therese.m-l.andersson@ki.se}) added the reverse option.
+
+{p 2 2 2}
+Sarwar Mozumder added the rmsknots option.
+
+
 {title:Also see}
 
 {p 0 19}On-line:  help for {help splinegen}, {help mkspline}.

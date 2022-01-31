@@ -1,5 +1,5 @@
 {smcl}
-{* *! version 2.1 07jan2020}{...}
+{* *! version 2.3 16nov2021}{...}
 {viewerjumpto "Syntax" "binscatterhist##syntax"}{...}
 {viewerjumpto "Description" "binscatterhist##description"}{...}
 {viewerjumpto "Options" "binscatterhist##options"}{...}
@@ -60,6 +60,8 @@ where {it:varlist} is
 
 {syntab :Coefficient and Sample Reporting}
 {synopt :{opth coef:ficient(#)}}reports the slope of the fitted line with its standard error, rounded at # using round(coef,#). See {help f_round:round}  {p_end}
+{synopt :{opth ci(#)}}reports the #% confidence interval, rounded as the coefficient()  {p_end}
+{synopt :{opt p:value}}reports the pvalue of the regression on residualized variables {p_end}
 {synopt :{opt sample}}reports the sample size of the regression on residualized variables{p_end}
 {synopt :{opth stars(stars)}}signals p-value using stars; stars can be: {bf:nostars}, {bf:1} (*5% **1%), {bf:2} (+10% *5% **1%), {bf:3} (+10% *5% **1% ***0.1%), {bf:4} (*5% **1% ***0.1%); default is {bf:stars(1)}{p_end}
 
@@ -246,6 +248,10 @@ Specifically, a bin may contain a discontinuity within its range, and therefore 
 
 {phang}{opt coef:ficient} reports the slope of the fitted line with its standard error.
 
+{phang} {opth ci(#)} reports the #% confidence interval, rounded as the coefficient().
+
+{phang}{opt p:value} reports the pvalue of the regression on residualized variables.
+
 {phang}{opt sample} reports the sample size of the regression on residualized variables.
 
 {phang}{opth stars(stars)} signals p-value using stars; stars can be: {bf:nostars}, {bf:1} (*5% **1%), {bf:2} (+10% *5% **1%), {bf:3} (+10% *5% **1% ***0.1%), {bf:4} (*5% **1% ***0.1%); default is {bf:stars(1)}.
@@ -418,9 +424,9 @@ used each age as a discrete bin, since there are fewer than 20 unique values.){p
 {pstd}Let's report the estimation results, using robust standard errors and with grade fixed effects{p_end}
 {phang2}. {stata binscatterhist wage tenure, absorb(grade) vce(robust) coef(0.01) sample xmin(-2.2) ymin(5) histogram(wage tenure)  xhistbarheight(15) yhistbarheight(15) xhistbins(40) yhistbins(40)}{p_end}
 
-{pstd}Let's use now areg - therefore keeping singleton fixed effects. With a negative slope, the reported coefficient and sample adjust automatically their position{p_end}
-{phang2}. {stata replace tenure=-tenure}{p_end}
-{phang2}. {stata binscatterhist wage tenure, regtype(areg) absorb(grade) vce(robust) coef(0.01) sample xmin(-22) ymin(5) histogram(wage tenure)  xhistbarheight(15) yhistbarheight(15) xhistbins(40) yhistbins(40)}{p_end}
+{pstd}Let's use now areg - therefore keeping singleton fixed effects. With a negative slope, the reported coefficient and sample adjust automatically their position We further report 95% CI and pvalue{p_end}
+{phang2}. {stata replace tenure=-abs(tenure)}{p_end}
+{phang2}. {stata binscatterhist wage tenure, regtype(areg) absorb(grade) vce(robust) coef(0.01) ci(95) pvalue sample xmin(-22) ymin(5) histogram(wage tenure)  xhistbarheight(15) yhistbarheight(15) xhistbins(40) yhistbins(40)}{p_end}
 
 {marker saved_results}{...}
 {title:Saved Results}
@@ -455,6 +461,6 @@ rather than {bf:r(graphcmd)} in order to avoid truncation due to Stata's charact
 {marker acknowledgements}{...}
 {title:Acknowledgements}
 
-{pstd} The author would like to thank Elliott Ash, Chistopher Baum, Suresh Naidu, Sergio Galletta and Malka Guillot for the useful feedback on first versions of the program.
+{pstd} The author would like to thank one anonymous referee, Elliott Ash, Chistopher Baum, Suresh Naidu, Sergio Galletta and Malka Guillot for the useful feedback on first versions of the program.
 
 {pstd}The present version of {cmd:binscatterhist} is based on a program in Michael Stepner (2013): "BINSCATTER: Stata module to generate binned scatterplots" - https://EconPapers.repec.org/RePEc:boc:bocode:s457709 and Ben Jann (2014): "ADDPLOT: Stata module to add twoway plot objects to an existing twoway graph," Statistical Software Components S457917, Boston College Department of Economics, revised 28 Jan 2015 <https://ideas.repec.org/c/boc/bocode/s457917.html>

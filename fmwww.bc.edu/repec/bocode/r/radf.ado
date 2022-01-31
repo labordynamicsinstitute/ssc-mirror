@@ -1,4 +1,5 @@
-*! radf.    v1.9 CFBaum 27oct2021
+*! radf.   v1.10 CFBaum 30jan2022  
+*! radf     v1.9 CFBaum 27oct2021
 *! radf     v1.8 CFBaum 24aug2021
 *! radf     v1.7 CFBaum 18may2021
 *! radf     v1.6 CFBaum 14oct2020
@@ -68,9 +69,10 @@ if !`nok' {
 		foreach v of local vvv {
 			confirm new var `prefix'`v'
 		}
-// also must validate BSADF 95%, indicator for exceedance
+// also must validate BSADF 95%, indicators for exceedance at 90 and 95
 		confirm new var `prefix'BSADF_95
-		confirm new var `prefix'Exceeding
+		confirm new var `prefix'Exceeding95
+		confirm new var `prefix'Exceeding90
     }
    loc i 0
    foreach v of local vvv { 
@@ -313,10 +315,11 @@ if "`prefix'" != "" {
 	}
 // add 5% CV for gensupadf to created variables
 	qui g `prefix'BSADF_95 = `cv95' if !mi(`cv95')
-	qui g `prefix'Exceeding = (`prefix'BSADF > `cv95') if !mi(`cv95')
+	qui g `prefix'Exceeding95 = (`prefix'BSADF > `cv95') if !mi(`cv95')
+	qui g `prefix'Exceeding90 = (`prefix'BSADF > `cv90') if !mi(`cv90')
 	if ("`print'" == "print") {
 		di as res _n "Labeled by endpoint of estimation window"
-		l `tvar' `newvars2' `prefix'BSADF_95 `prefix'Exceeding in `fc'/`lc', sep(0) noobs abb(20)
+		l `tvar' `newvars2' `prefix'BSADF_95 `prefix'Exceeding95 in `fc'/`lc', sep(0) noobs abb(20)
 	}
 }
 if ("`print'" == "print") {

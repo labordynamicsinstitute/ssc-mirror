@@ -1,4 +1,4 @@
-*! version 2.2 01jan2020  Matteo Pinna, matteo.pinna@gess.ethz.ch
+*! version 2.3 16nov2021  Matteo Pinna, matteo.pinna@gess.ethz.ch
 
 * Versions:
 * version 1.1 partly fixes the display of multiple graphs, sets default values for xmin and ymin, add twoway general options to the histograms and solves some bugs in the error messages
@@ -8,6 +8,7 @@
 * version 2.0 adds an option to report automatically coefficient (s.e.) and/or sample size with or without p-value stars. Uses reghdfe as default, but option areg can be alternatively specified. Furthermore, allows for clustered or robust standard errors for the coefficient report, modifying therefore the sample for residualization and for estimation.
 * version 2.1 fixes a compatibility problem with older STATA versions, of the new options coefficient and sample (stata <16) and transparency of colors (stata<15)
 * version 2.2 fixes an issue with color compatibility and adds rounding option for coefficient reporting
+* version 2.3 adds the options pvalue and ci()
 
 /*
 This work is licensed under a Creative Commons Attribution-NonCommercial-ShareAlike 4.0 International License.  
@@ -17,6 +18,7 @@ The full legal text as well as a human-readable summary can be accessed at http:
 * Any feedback on issues and possible new features is very welcome.
 
 * This program is based on the original binscatter by Michael Stepner (2013): "BINSCATTER: Stata module to generate binned scatterplots" - https://EconPapers.repec.org/RePEc:boc:bocode:s457709 and uses Ben Jann (2014): "ADDPLOT: Stata module to add twoway plot objects to an existing twoway graph," Statistical Software Components S457917, Boston College Department of Economics, revised 28 Jan 2015 <https://ideas.repec.org/c/boc/bocode/s457917.html>
+cap program drop binscatterhist
 program define binscatterhist, rclass sortpreserve
 
 local stata_version=c(version)
@@ -31,13 +33,13 @@ local stata_version=c(version)
 		nofastxtile randvar(varname numeric) randcut(real 1) randn(integer -1) ///
 		/* LEGACY OPTIONS */ nbins(integer 20) create_xq x_q(varname numeric) symbols(string) method(string) unique(string) ///
 		/* standard errors */ CLUSTer(varname) vce(string) ///
-		/* coefficient display */ COEFficient(string) sample stars(string) ///
+		/* coefficient display */ COEFficient(string) sample Pvalue ci(string) stars(string) ///
 		/* histogram options */ HISTogram(string) XMin(string) YMin(string) xhistbarheight(string) yhistbarheight(string) xhistbarwidth(string) yhistbarwidth(string) xhistbins(string) yhistbins(string) ///
 		/* histogram esthetic options */ xcolor(string) xcfcolor(string) xfintensity(string) xlcolor(string) xlwidth(string) xlpattern(string) xlalign(string) xlstyle(string) xbstyle(string) xpstyle(string) ycolor(string) ycfcolor(string) yfintensity(string) ylcolor(string) ylwidth(string) ylpattern(string) ylalign(string) ylstyle(string) ybstyle(string) ypstyle(string) ///
 		*]
 		
 	set more off
-
+	
 	* Parse varlist into y-vars and x-var
 	local x_var=word("`varlist'",-1)
 	local y_vars=regexr("`varlist'"," `x_var'$","")
@@ -128,6 +130,10 @@ local stata_version=c(version)
 	if ("`stars'"!="") & ("`stars'"!="nostars") & ("`stars'"!="1") & ("`stars'"!="2") & ("`stars'"!="3") & ("`stars'"!="4") {
 	di as error "Option stars() can only be: nostars, 1, 2, 3, 4."
 	}
+	
+	if (("`ci'"!="")|("`pvalue'"!="")) & ("`coefficient'"==""){
+	di as error "Pvalue and ci(level) options require the option COEFficient(rounding)"
+	}	
 	
 	***** End legacy option capatibility code
 
@@ -242,6 +248,11 @@ local stata_version=c(version)
 		local addvce="vce(`vce')"
 		}
 
+	******  Confidence interval  ******
+		if ("`ci'"!="") {
+		local addci="level(`ci')"
+		}	
+	
 	******  Create residuals  ******
 	
 	if (`"`controls'`absorb'"'!="") quietly {
@@ -266,7 +277,7 @@ local stata_version=c(version)
 		local firstloop=1
 		foreach var of varlist `x_var' `y_vars' {
 			tempvar residvar
-			`regtype' `var' `controls' `wt' if `touse', `absorb' `addcluster' `addvce' `addresid'
+			`regtype' `var' `controls' `wt' if `touse', `absorb' `addcluster' `addvce' `addresid' `addci'
 			predict `residvar' if e(sample), residuals
 			if ("`addmean'"!="noaddmean") {
 				summarize `var' `wt' if `touse', meanonly
@@ -1017,62 +1028,73 @@ local stata_version=c(version)
 	
 	****** Coefficient, s.e., p-value and sample report ******	
 	if "`coefficient'"!="" | "`sample'"!="" {
-		* P-value
+		
+		* P-value and CI
+		if "`ci'"!=""{
+		local ci2=(`ci'+((1-`ci'/100)/2)*100)/100
+		}
 		mat eb=e(b)
 		mat eV=e(V)
 		local tstatistic = eb[1,1]/sqrt(eV[1,1])
-		local pvalue=2*ttail(e(df_r),abs(`tstatistic'))
+		local pval=2*ttail(e(df_r),abs(`tstatistic'))
+		if "`ci'"!=""{
+		local ci2=(`ci'+((1-`ci'/100)/2)*100)/100
+		local lci=eb[1,1]-invnormal(`ci2')*sqrt(eV[1,1])
+		local uci=eb[1,1]+invnormal(`ci2')*sqrt(eV[1,1])
+		}
 			if "`stars'"=="nostars" | "`stars'"=="nostar"{
 			local addstars=""
 			}	
 			if "`stars'"=="1"|"`stars'"==""{
-				if `pvalue'<=0.05 & `pvalue'>0.01{
+				if `pval'<=0.05 & `pval'>0.01{
 				local addstars="*"
 				}
-				if `pvalue'<=0.01{
+				if `pval'<=0.01{
 				local addstars="**"
 				}
 			}
 			if "`stars'"=="2"{
-				if `pvalue'<=0.10 & `pvalue'>0.05{
+				if `pval'<=0.10 & `pval'>0.05{
 				local addstars="+"
 				}
-				if `pvalue'<=0.05 & `pvalue'>0.01{
+				if `pval'<=0.05 & `pval'>0.01{
 				local addstars="*"
 				}
-				if `pvalue'<=0.01{
+				if `pval'<=0.01{
 				local addstars="**"
 				}
 			}	
 			if "`stars'"=="3"{
-				if `pvalue'<=0.10 & `pvalue'>0.05{
+				if `pval'<=0.10 & `pval'>0.05{
 				local addstars="+"
 				}
-				if `pvalue'<=0.05 & `pvalue'>0.01{
+				if `pval'<=0.05 & `pval'>0.01{
 				local addstars="*"
 				}
-				if `pvalue'<=0.01 & `pvalue'>0.001{
+				if `pval'<=0.01 & `pval'>0.001{
 				local addstars="**"
 				}
-				if `pvalue'<=0.001{
+				if `pval'<=0.001{
 				local addstars="***"
 				}
 			}
 			if "`stars'"=="4"{
-				if `pvalue'<=0.05 & `pvalue'>0.01{
+				if `pval'<=0.05 & `pval'>0.01{
 				local addstars="*"
 				}
-				if `pvalue'<=0.01 & `pvalue'>0.001{
+				if `pval'<=0.01 & `pval'>0.001{
 				local addstars="**"
 				}
-				if `pvalue'<=0.001{
+				if `pval'<=0.001{
 				local addstars="***"
 				}
 			}	
 			
-		* Coef and sample
+		* Coef and sample (and ci rounding)
 		if ("`coefficient'"=="") local rounding=0.01
 		if ("`coefficient'"!="") local rounding=`coefficient'
+		local uci=round(`uci',`rounding')
+		local lci=round(`lci',`rounding')
 			if eb[1,1]>0 {
 			local xmin_coef=`t_maxb_`x_var'' -(1/6)*`t_rb_`x_var''
 			local ymin_coef=`t_minb_`y_vars''+(1/16)*`t_rb_`y_vars''
@@ -1093,12 +1115,40 @@ local stata_version=c(version)
 			}
 		
 		* Label
-		if "`coefficient'"!="" & "`sample'"=="sample" {
-		local coefficient_report=`"text(`ymin_coef' `xmin_coef' "Coef = `beta'`addstars'  (`standerr')" "N = `sampsize'", size(3) box fcolor(none) margin(vsmall))"'
+		local sign="="
+		if `pval'>=0.0001{
+		local pval=round(`pval',0.0001)
 		}
-		if "`coefficient'"!="" & "`sample'"=="" {
+		if `pval'<0.0001{
+		local pval=".0001"
+		local sign="<"
+		}
+		if "`coefficient'"!="" & "`sample'"=="sample" & "`pvalue'"=="" & "`ci'"==""{
+		local coefficient_report=`"text(`ymin_coef' `xmin_coef' "Coef = `beta'`addstars'  (`standerr')" "N = `sampsize'", size(3) box fcolor(none) margin(vsmall))"'
+		}	
+		if "`coefficient'"!="" & "`sample'"=="sample" & "`pvalue'"=="" & "`ci'"!=""{
+		local coefficient_report=`"text(`ymin_coef' `xmin_coef' "Coef = `beta'`addstars'  (`standerr')" "`ci'% CI = [`lci' , `uci']" "N = `sampsize'", size(3) box fcolor(none) margin(vsmall))"'
+		}	
+		if "`coefficient'"!="" & "`sample'"=="sample" & "`pvalue'"=="pvalue" & "`ci'"==""{
+		local coefficient_report=`"text(`ymin_coef' `xmin_coef' "Coef = `beta'`addstars'  (`standerr')" "Pvalue `sign' `pval'" "N = `sampsize'", size(3) box fcolor(none) margin(vsmall))"'
+		}			
+		if "`coefficient'"!="" & "`sample'"=="sample" & "`pvalue'"=="pvalue" & "`ci'"!=""{
+		local coefficient_report=`"text(`ymin_coef' `xmin_coef' "Coef = `beta'`addstars'  (`standerr')" "`ci'% CI = [`lci' , `uci']" "Pvalue `sign' `pval'" "N = `sampsize'", size(3) box fcolor(none) margin(vsmall))"'
+		}			
+		*
+		if "`coefficient'"!="" & "`sample'"=="" & "`pvalue'"=="" & "`ci'"==""{
 		local coefficient_report=`"text(`ymin_coef' `xmin_coef' "Coef = `beta'`addstars'  (`standerr')", size(3) box fcolor(none) margin(vsmall))"'
 		}
+		if "`coefficient'"!="" & "`sample'"=="" & "`pvalue'"=="" & "`ci'"!=""{
+		local coefficient_report=`"text(`ymin_coef' `xmin_coef' "Coef = `beta'`addstars'  (`standerr')" "`ci'% CI = [`lci' , `uci']", size(3) box fcolor(none) margin(vsmall))"'
+		}		
+		if "`coefficient'"!="" & "`sample'"=="" & "`pvalue'"=="pvalue" & "`ci'"==""{
+		local coefficient_report=`"text(`ymin_coef' `xmin_coef' "Coef = `beta'`addstars'  (`standerr')" "Pvalue `sign' `pval'", size(3) box fcolor(none) margin(vsmall))"'
+		}		
+		if "`coefficient'"!="" & "`sample'"=="" & "`pvalue'"=="pvalue" & "`ci'"!=""{
+		local coefficient_report=`"text(`ymin_coef' `xmin_coef' "Coef = `beta'`addstars'  (`standerr')" "`ci'% CI = [`lci' , `uci']" "Pvalue `sign' `pval'", size(3) box fcolor(none) margin(vsmall))"'
+		}
+		*
 		if "`coefficient'"=="" & "`sample'"=="sample" {
 		local coefficient_report=`"text(`ymin_coef' `xmin_coef' "N = `sampsize'", size(3) box fcolor(none) margin(vsmall))"'
 		}

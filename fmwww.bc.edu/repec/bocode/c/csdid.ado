@@ -1,17 +1,19 @@
-
 ** NOTE when Panel is unbalanced (check this somehow.)
 ** there could be two solutions.
 ** 1 Using strong balance 
 ** 2 use semi balance (whenever att_gt exists)
 ** 3 use weak balance/crossection with cluster.
 ** Ultimate check. Do thestatistics Once.
-*! v1.52  by FRA. Adds option "from" for simple aggregation
-*! v1.51  by FRA. Added seed and method. for bootstrap
-*! v1.3  by FRA. Overhaul Change in how Weights are estimated. All effects are now in Mata.
+* v1.56  by FRA. bug for NOT YET, 2021 ref
+* v1.55  by FRA. Allows for more periods
+* v1.53  by FRA. changes e(gtt). THis give sdetailed sample 
+* v1.52  by FRA. Adds option "from" for simple aggregation
+* v1.51  by FRA. Added seed and method. for bootstrap
+* v1.3  by FRA. Overhaul Change in how Weights are estimated. All effects are now in Mata.
 * All effects in mata. Quick!
-*! v1.03 by FRA. Adding Balance checks
-*! v1.02 by FRA. added touse
-*! v1.01 by FRA. Make sure we have at least 1 not treated period.
+* v1.03 by FRA. Adding Balance checks
+* v1.02 by FRA. added touse
+* v1.01 by FRA. Make sure we have at least 1 not treated period.
 // and check that if no Never treated exist, we add extra variable for dummies.
 // exclude if There are no treated observations
 * v1 by FRA csdid Added all tests! and ready to play
@@ -36,6 +38,44 @@ syntax varlist(fv ) [if] [in] [iw], /// Basic syntax  allows for weights
 end*/
 *capture program drop sdots
 *capture program drop csdid
+
+*program drop mynote
+*This should break Notes into smaller pieces. Still unsure about how to pull them all together
+program mynote, 
+	syntax anything
+	gettoken lc rest:anything
+	local k =0
+	if length("`rest'")>60000 {
+		  local cnt = 0 
+		  foreach i in `rest' {
+		  	   local ll `ll' `i'
+			   local cnt = `cnt'+length("`i'")
+ 			   if `cnt'>60000 {
+					local cnt=0
+					local k = `k'+1
+					local ll`k' `ll'
+					local ll					
+			   }
+		  }
+   }
+ 
+   *return local knote `k'
+   *return local note_nm `lc'
+   
+   if `k'==0 {
+		note : `lc' `rest'
+   }
+   else {
+		note : `lc' "see_char `k'"
+		forvalues kk = 1/`k' {
+			char _dta[`lc'`kk'] "`ll`kk''"
+		}
+   }
+   
+end
+
+** Parsing notes:
+
 program sdots
 syntax , [mydots(integer 10) maxdots(int 50) bad]
 	
@@ -271,6 +311,7 @@ program csdid_r, sortpreserve eclass
 							pointwise               /// with Wboot
 							from(int 0) 		    /// for aggregations
 							long                    /// to allow for "long gaps"
+							dryrun					/// for testing
 							]  // This allows other estimators
 				
 	marksample touse
@@ -370,8 +411,7 @@ program csdid_r, sortpreserve eclass
 			if _rc!=0 {
 				qui:xtset `ivar' `time'
 				qui:xtset ,  clear
-			}
-			
+			}			
 			
 			if "`cluster'"!="" {
 				_xtreg_chk_cl2 `cluster' `ivar'
@@ -429,7 +469,7 @@ program csdid_r, sortpreserve eclass
 					capture drop `gsel'
 					qui:gen byte `gsel'=inlist(`gvar',0,`i') if  `touse'
 					if "`tyet'"!="" {
-						qui:replace `gsel'=1 if (`gvar'==0 | `gvar'==`i' | `gvar'> `j') & `touse'
+						qui:replace `gsel'=1 if (`gvar'==0 | `gvar'==`i' | (`gvar'> `i' & `gvar' >`j' )) & `touse'
 					}
 					capture drop `tr'
 					qui:gen byte `tr'=(`gvar'==`i') if `touse'
@@ -439,8 +479,7 @@ program csdid_r, sortpreserve eclass
 								 & inlist(`time',`time1',`j') ///
 								 & `touse' [`weight'`exp'],   ///
 								ivar(`ivar') time(`time') treatment(`tr') ///
-								`method' stub(__) replace
-					
+								`method' stub(__) replace `dryrun'
 					
 					
 					if _rc == 1 {
@@ -496,7 +535,7 @@ program csdid_r, sortpreserve eclass
 					capture drop `gsel'
 					qui:gen byte `gsel'=inlist(`gvar',0,`i') if  `touse'
 					if "`tyet'"!="" {
-						qui:replace `gsel'=1 if (`gvar'==0 | `gvar'==`i' | `gvar'> `j') & `touse'
+						qui:replace `gsel'=1 if (`gvar'==0 | `gvar'==`i' | (`gvar'> `i' & `gvar' >`j' )) & `touse'
 					}
 					capture drop `tr'
 					qui:gen byte `tr'=(`gvar'==`i') if `touse'
@@ -506,7 +545,7 @@ program csdid_r, sortpreserve eclass
 								 & inlist(`time',`time1',`j') ///
 								 & `touse' [`weight'`exp'],   ///
 								ivar(`ivar') time(`time') treatment(`tr') ///
-								`method' stub(__) replace
+								`method' stub(__) replace `dryrun'
 								
 											 
 					
@@ -591,7 +630,7 @@ program csdid_r, sortpreserve eclass
 					local kc=`kc'+1
 					local rvl:word `kc' of `vlabrif'
 					qui:gen double w`i'_`j'=0
-					qui:replace w`i'_`j'=1 if (`rvl'!=.) & (`gvar'==`i')
+					qui:replace w`i'_`j'=1 if (`rvl'!=.) & (`gvar'==`i') 
 					local lvl_gvar `lvl_gvar' w`i'_`j'
 				}
 			}
@@ -611,15 +650,40 @@ program csdid_r, sortpreserve eclass
 			note: tlvls `tlev'
 			note: glvls `glev'
 			note: clvar `cluster'
-			note: rifgt `vlabrif'
-			note: rifwt `lvl_gvar'
-			note: colname `colname'
-			note: eqname  `eqname'
+			
+			mynote rifgt `vlabrif'
+			*note: rifgt `vlabrif'
+			
+			mynote rifwt `lvl_gvar'
+			*note: rifwt `lvl_gvar'
+			
+			mynote colname `colname'
+			*note: colname `colname'
+			
+			mynote eqname  `eqname'
+			*note: eqname  `eqname'
+			
 			note: cmd  csdid
 			
 			/// parsing notes.
 			forvalues i = 3/8 {
 				local  `:char _dta[note`i']'
+			}
+			** checking Notes 7 and 8
+			if "`:word 1 of `rifgt''"=="see_char" {
+				local mk "`:word 2 of `rifgt''"
+				local rifgt
+				forvalues i = 1/`mk'{
+					local rifgt `rifgt' `:char _dta[rifgt`i']'
+				}
+			}
+			
+			if "`:word 1 of `rifwt''"=="see_char" {
+				local mk "`:word 2 of `rifwt''"
+				local rifwt
+				forvalues i = 1/`mk'{
+					local rifwt `rifwt' `:char _dta[rifwt`i']'
+				}
 			}
 			
 			/// "Option will define the following
@@ -676,7 +740,7 @@ program csdid_r, sortpreserve eclass
 		matrix roweq   V_attgt=`eqname'
 		
 	*** Mata to put all together.
-	matrix colname `gtt' = cohort t0 t1 error N N_trt N_cntr
+	matrix colname `gtt' = cohort t0 t1 error N N_cntr N_trt 
 	
 	quietly count if `cs_sample'
 	local N = r(N)
@@ -722,7 +786,7 @@ program csdid_r, sortpreserve eclass
 		
 	Display, level(`level')
 	display "Control: `e(control_group)'" 
-	display _n "See Callaway and Sant'Anna (2020) for details"
+	display _n "See Callaway and Sant'Anna (2021) for details"
 end 
 
 /// This can be used for aggregation. Creates the matrixes we need.
@@ -1155,6 +1219,7 @@ real vector qtp2(real matrix y, real scalar p) {
 	real matrix yy, qq
 	qq=J(1,0,.)
 	k = cols(y)
+	 
 	for(i=1;i<=k;i++){
 		yy=sort(y[,i],1)
 		q=ceil((rows(yy)+1)*p) 
@@ -1170,6 +1235,7 @@ real vector qtp(real matrix y, real scalar p) {
 	qq=J(1,0,.)
 	k = cols(y)
 	y=rowmax(y)
+	 
 	for(i=1;i<=k;i++){
 		yy=sort(y,1)
 		q=ceil((rows(yy)+1)*p) 
@@ -1195,6 +1261,7 @@ void mboot(real matrix rif,mean_rif, vv, cband, string scalar clv, real matrix v
 		// this gets Tvalue
 		//qtp(abs(fr :/ ifse),ci)  
 		//qtp2(abs(fr :/ ifse),ci)  
+	
  		if (citype ==1) tt = qtp(abs(fr :/ ifse),ci)  
 		else if (citype ==2) tt = qtp2(abs(fr :/ ifse),ci)
 		cband=( mean_rif',

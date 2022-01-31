@@ -1,4 +1,4 @@
-*! version 1.5.7 25jun2015
+*! version 1.5.8 30JAN2022
 * Added various options + use mata for orthogonalisation
 * Based on an original program by Chris Nelson
 * Chris Nelson 24/APR/2006
@@ -13,12 +13,13 @@
 * Mark Rutherford 25/July/2014  - allow a center option & make percentiles code more efficient
 * Patrick Royston 31/7/2014 -  return macros for rcslist varlists
 * Paul Lambert 25/6/2015 - when using percentiles, r(knots) were not in numerical order
+* Sarwar Mozumder 18/10/2021 - added Harrell's knot positions (from RMS book, table 2.3)
 
 program define rcsgen, rclass
 	version 10.0
 	syntax  [varlist(default=none)] [if] [in] ///
 		,	[Gen(string) DGen(string) Knots(numlist) BKnots(numlist max=2) Orthog Percentiles(numlist ascending) RMATrix(name) ///
-			DF(int 0)  IF2(string) FW(varname)  REVerse SCAlar(string) NOSecondder NOFirstder CENTer(string)]      
+			DF(int 0)  IF2(string) FW(varname)  REVerse SCAlar(string) NOSecondder NOFirstder CENTer(string) RMSKnots(string) ]      
 
 	marksample touse
 	
@@ -42,6 +43,10 @@ program define rcsgen, rclass
 			display as error "You can't specify the percentiles option with the scalar option"
 			exit 198
 		} 
+		if "`rmsknots'" != "" {
+			display as error "You can't specify the rmsknots option with the scalar option"
+			exit 198
+		}     
 		if "`orthog'" != "" {
 			display as error "You can't specify the orthog option with the scalar option"
 			exit 198
@@ -51,7 +56,28 @@ program define rcsgen, rclass
 			exit 198
 		}
 	}
-
+  if "`rmsknots'" != "" {
+    if (`rmsknots' < 3 | `rmsknots' > 7 {
+      display as err "Can only specify k = 3, ..., 7 knots as detailed in Table 2.3 in Regression Modeling Strategies by F. Harrell."
+      exit 198
+    }
+  }
+	
+	if "`knots'" != "" & "`rmsknots'" != "" {
+		display as err "Only one of the knots, df, percentiles and rmsknots options can be used"
+		exit 198
+	}
+	
+	if "`percentiles'" != "" & "`rmsknots'" != "" {
+		display as err "Only one of the knots, df, percentiles and rmsknots options can be used"
+		exit 198
+	}
+	
+	if "`df'" != "0" & "`rmsknots'" != "" {
+		display as err "Only one of the knots, df, percentiles and rmsknots options can be used"
+		exit 198
+	}
+	
 	if "`knots'" != "" & "`percentiles'" != "" {
 		display as err "Only one of the knots, df and percentiles options can be used"
 		exit 198
@@ -91,41 +117,60 @@ program define rcsgen, rclass
 		di in red "Must specify name for cubic splines basis"
 		exit 198
 	}
-    
-/* percentiles option */             
-	if "`percentiles'" != "" {
-		if "`fw'" != "" {
-			local fw [fw=`fw']
-		}
-		if "`if2'" != "" {
-			local aif & `if2'
-		}
-		local knots
 
-		local percentilesm
-			foreach ptile in `percentiles' {
-               summ `varlist' if `touse' `aif', meanonly
-               if `ptile' == 0 {
-					local knots `r(min)'
-				}
-                else if `ptile' == 100 {
-					local knots `knots' `r(max)'
-                }
-                else {
-					local percentilesm `percentilesm' `ptile'
-                }
-			}			
+	/* Determine knot locations if rmsknots is used */
+  // (from RMS book, table 2.3)
+	if "`rmsknots'" != "" {
+			if `rmsknots' == 3 {
+				local percentiles 10 50 90
+			}
+			if `rmsknots' == 4 {
+				local percentiles 5 35 65 95
+			}
+			if `rmsknots' == 5 {
+				local percentiles 5 27.5 50 72.5 95
+			}
+			if `rmsknots' == 6 {
+				local percentiles 5 23 41 59 77 95
+			}
+			if `rmsknots' == 7 {
+				local percentiles 2.5 18.33 34.17 50 65.83 81.67 97.5
+			}
+	}
+	
+/* percentiles option */    
+	if "`percentiles'" != "" {
+    if "`fw'" != "" {
+      local fw [fw=`fw']
+    }
+    if "`if2'" != "" {
+      local aif & `if2'
+    }
+
+    local knots
+    local percentilesm
+    foreach ptile in `percentiles' {
+      summ `varlist' if `touse' `aif', meanonly
+      if `ptile' == 0 {
+        local knots `r(min)'
+      }
+      else if `ptile' == 100 {
+        local knots `knots' `r(max)'
+      }
+      else {
+        local percentilesm `percentilesm' `ptile'
+      }
+    }			
 	
 		local dfp: word count `percentilesm'
-				
-		_pctile `varlist' if `touse' `aif' `fw', p(`percentilesm')
+    _pctile `varlist' if `touse' `aif' `fw', p(`percentilesm')
 				
 		forvalues i= 1/`dfp' {
 			local knots `knots' `r(r`i')'
 		}
 		local knots : list sort knots
 	}
-
+  
 /* Find knot locations if df option is used */
 	if "`df'" > "1" {
 		if "`fw'" != "" {
@@ -168,7 +213,6 @@ program define rcsgen, rclass
 	 	local knots
 		local knots  `lowerknot' `intknots' `upperknot'
 	}
-
 
 	
 /*Derive the spline variables in the default way (not backwards)*/
@@ -1059,7 +1103,7 @@ program define rcsgen, rclass
 		di in green "`type' `gen'1 to `gen'`nparams' were created"
 	}
 	if "`knots'" == "" {
-		di in green "Warning: Only `gen'1 has been created as you did not specifiy any the knots, df or percentile options"
+		di in green "Warning: Only `gen'1 has been created as you did not specify any the knots, df, percentile or rmsknots options"
 	}
 	
 	if "`orthog'" != "" {

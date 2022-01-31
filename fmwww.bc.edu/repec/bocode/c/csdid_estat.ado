@@ -1,9 +1,11 @@
-*! v1.52 FRA add window to cevent. Censored averages.
-*! v1.51 FRA add from to simple calendar and group
-*! v1.5 FRA Change from nlcom to mata
-*! v1.2 FRA Adds the options for simple and calendar so it doesnt depend on consecutive years
+*! v1.54 FRA adds Average Group, calendar and event
+* v1.53 FRA adds Average Group
+* v1.52 FRA add window to cevent. Censored averages.
+* v1.51 FRA add from to simple calendar and group
+* v1.5 FRA Change from nlcom to mata
+* v1.2 FRA Adds the options for simple and calendar so it doesnt depend on consecutive years
 * also adds the option window
-*! v1 FRA Adds Safeguards to csdid calendar. Calendar starts after treatment
+* v1 FRA Adds Safeguards to csdid calendar. Calendar starts after treatment
 ** Estat command for aggregators
 program csdid_estat, sortpreserve  
 version 14
@@ -36,11 +38,18 @@ program csdid_all, sortpreserve rclass
 end
 
 program csdid_pretrend, sortpreserve rclass
+	syntax, [window(str)]
 	clrreturn
-	display "Pretrend Test. H0 All Pre-treatment are equal to 0"
-	mata:csdid_pretrend("e(b_attgt)","e(V_attgt)","`e(glev)'","`e(tlev)'")
-	display "chi2(`r(df)') = `r(chi2)'"
-	display "p-value       = `r(pchi2)'"
+	if "`window'"!="" {
+		numlist "`window'", min(2) max(2) sort integer   
+		local window `r(numlist)'
+		display "Pretrend Test. H0 Pre-treatment within window are equal to 0"
+	}
+	else display "Pretrend Test. H0 All Pre-treatment are equal to 0"
+
+	mata:csdid_pretrend("e(b_attgt)","e(V_attgt)","`e(glev)'","`e(tlev)'","`window'")
+	display "chi2(`r(df)') = " %10.4f `r(chi2)'
+	display "p-value  = " %10.4f `r(pchi2)'
 end
 
 program clrreturn, rclass
@@ -126,12 +135,16 @@ program csdid_group, sortpreserve rclass
 	if "`esave'" !="" est save  `esave', `replace'
 	_coef_table
 	matrix rtb=r(table)
-
 	if "`post'"=="" qui:est restore `lastreg'
 
+	tempname bb vv
+	matrix `bb' = r_b_[1,2...]
+	matrix `vv' = r_V_[2...,2...]
 	return matrix table = rtb
 	return matrix b = r_b_
 	return matrix V = r_V_
+	return matrix bb = `bb'
+	return matrix vv = `vv'
 	return local agg  group
  
 end
@@ -158,9 +171,16 @@ program csdid_calendar, sortpreserve rclass
 	
 	if "`post'"=="" qui:est restore `lastreg'
 
+	
+	tempname bb vv
+	matrix `bb' = r_b_[1,2...]
+	matrix `vv' = r_V_[2...,2...]
+	
 	return matrix table = rtb
 	return matrix b = r_b_
 	return matrix V = r_V_
+	return matrix bb = `bb'
+	return matrix vv = `vv'
 	return local agg  calendar
  
 end
@@ -195,9 +215,16 @@ program csdid_event, sortpreserve rclass
 
 	if "`post'"=="" qui:est restore `lastreg'
 
+	tempname bb vv
+	matrix `bb' = r_b_[1,3...]
+	matrix `vv' = r_V_[3...,3...]
+	
+		
 	return matrix table = rtb
 	return matrix b = r_b_
 	return matrix V = r_V_
+	return matrix bb = `bb'
+	return matrix vv = `vv'
 	return local agg event
 	return local cmd estat
  
@@ -296,16 +323,44 @@ void csdid_group(string scalar bb_, vv_, gl_, tl_, real scalar from){
 	r2 = r2:*iii
 	real matrix bbb, vvv
 	bbb=rowsum(br :* bw:*iii):/rowsum(bw :* iii)
- 
-	vvv=makesymmetric((r1,r2)*v*(r1,r2)')
+ 	vvv=makesymmetric((r1,r2)*v*(r1,r2)')
+
+	//st_matrix("r_b_",bbb')
+	//st_matrix("r_V_",vvv)
 	
+	/// FOR EXTRA
+	real matrix rx1, rx2, rx3, xbb, xvv
+	rx1 = r1*0
+	rx2 = (iii):/rowsum(iii)
+	rx1= r1\rx1
+	rx2= r2\rx2
+	xbb=bbb\ (rowsum(bw :* iii):/rowsum(iii) )
+	xvv=makesymmetric((rx1,rx2)*v*(rx1,rx2)')
+	// sm for group N
+	real scalar sm
+	sm=rows(xvv)
+	iii=J(1,sm/2,1)
+	xbb=xbb'
+	br=xbb[1,1..sm/2]
+	bw=xbb[1,sm/2+1..sm]
 	
-	st_matrix("r_b_",bbb')
+	r1 = (bw :* iii):/rowsum(bw :* iii)
+	//r1 = (iii:/rowsum(iii))
+	r2 = (br :* iii):/rowsum(bw :* iii):-rowsum((br:*iii):*(bw:*iii)):/(rowsum(bw :* iii):^2)
+	r2 = r2:*iii
+	
+	xbb=rowsum(br :* bw:*iii):/rowsum(bw :* iii)
+	//xbb=rowsum(br :*iii):/rowsum(iii)
+ 	xvv=makesymmetric((r1,r2)*xvv*(r1,r2)')
+	
+	bbb=xbb',bbb'
+	vvv=blockdiag(xvv,vvv)
+	st_matrix("r_b_",bbb)
 	st_matrix("r_V_",vvv)
 	
-	stata("matrix colname r_b_ ="+coleqnm)
-	stata("matrix colname r_V_ ="+coleqnm)
-	stata("matrix rowname r_V_ ="+coleqnm)
+	stata("matrix colname r_b_ = GAverage "+coleqnm)
+	stata("matrix colname r_V_ = GAverage "+coleqnm)
+	stata("matrix rowname r_V_ = GAverage "+coleqnm)
 
 }
  
@@ -354,25 +409,80 @@ void csdid_calendar(string scalar bb_, vv_, gl_, tl_, real scalar from){
  
 	vvv=makesymmetric((r1,r2)*v*(r1,r2)')
 	
-	st_matrix("r_b_",bbb')
+	//st_matrix("r_b_",bbb')
+	//st_matrix("r_V_",vvv)
+	
+	
+	real matrix rx1, rx2, rx3, xbb, xvv
+	rx1 = r1*0
+	rx2 = (iii):/rowsum(iii)
+	rx1= r1\rx1
+	rx2= r2\rx2
+	xbb=bbb\ (rowsum(bw :* iii):/rowsum(iii) )
+	xvv=makesymmetric((rx1,rx2)*v*(rx1,rx2)')
+	// sm for group N
+	real scalar sm
+	sm=rows(xvv)
+	iii=J(1,sm/2,1)
+	xbb=xbb'
+	br=xbb[1,1..sm/2]
+	bw=xbb[1,sm/2+1..sm]
+ 
+///	r1 = (bw :* iii):/rowsum(bw :* iii)
+///	r2 = (br :* iii):/rowsum(bw :* iii):-rowsum((br:*iii):*(bw:*iii)):/(rowsum(bw :* iii):^2)
+///	r2 = r2:*iii
+ 
+ 	//r1 = (bw :* iii):/rowsum(bw :* iii)
+	r1 = (iii:/rowsum(iii))
+	//r2 = (br :* iii):/rowsum(bw :* iii):-rowsum((br:*iii):*(bw:*iii)):/(rowsum(bw :* iii):^2)
+	r2 = iii:*0  
+	
+	xbb=rowsum(br :*iii):/rowsum(iii)
+ 	xvv=makesymmetric((r1,r2)*xvv*(r1,r2)')
+	
+	bbb=xbb',bbb'
+	vvv=blockdiag(xvv,vvv)
+	st_matrix("r_b_",bbb)
 	st_matrix("r_V_",vvv)
 	
-	stata("matrix colname r_b_ ="+coleqnm)
-	stata("matrix colname r_V_ ="+coleqnm)
-	stata("matrix rowname r_V_ ="+coleqnm)
+	stata("matrix colname r_b_ = CAverage "+coleqnm)
+	stata("matrix colname r_V_ = CAverage "+coleqnm)
+	stata("matrix rowname r_V_ = CAverage "+coleqnm)
+	
+	///stata("matrix colname r_b_ ="+coleqnm)
+	///stata("matrix colname r_V_ ="+coleqnm)
+	///stata("matrix rowname r_V_ ="+coleqnm)
 	}
 
-void csdid_pretrend(string scalar bb_, vv_, gl_, tl_){
-    real matrix b, v , ii, glvl, tlvl
+void csdid_pretrend(string scalar bb_, vv_, gl_, tl_, wnd_ ){
+    real matrix b, v , ii, glvl, tlvl, wnd 
 	glvl = strtoreal(tokens(gl_));tlvl = strtoreal(tokens(tl_))	
 	b=st_matrix(bb_);v=st_matrix(vv_)
-	real scalar k, i, j
+	wndw=strtoreal(tokens(wnd_))
+
+	real scalar k, i, j, smp
 	k=0;ii=J(1,0,.)
-	for(i=1;i<=cols(glvl);i++) {
-		for(j=1;j<=cols(tlvl);j++) {
-			k++
-			if ( (glvl[i]>tlvl[j]) & (b[k]!=0) )  {
-				ii=ii,k				
+ 
+	if (cols(wndw)==0) {
+		for(i=1;i<=cols(glvl);i++) {
+			for(j=1;j<=cols(tlvl);j++) {
+				k++
+				if ( (glvl[i]>tlvl[j]) & (b[k]!=0) )  {
+					ii=ii,k				
+				}
+			}
+		}
+	}
+	else {
+		for(i=1;i<=cols(glvl);i++) {
+			for(j=1;j<=cols(tlvl);j++) {
+				k++
+				smp = (tlvl[j]-glvl[i])
+				smp = (smp >= wndw[1])*(smp <= wndw[2])*(smp<0)
+				
+				if ( ( smp ==1 ) & (b[k]!=0) )  {
+					ii=ii,k				
+				}
 			}
 		}
 	}
@@ -482,9 +592,12 @@ vector ptreat(real matrix glvl, tlvl, b){
 	ii=(1..(cols(glvl)*cols(tlvl)))
 
 	coleqnm=""
-	real matrix iii
-	iii=J(0,cols(ii),.)
+	real matrix iii, iit
 	
+	iii=J(0,cols(ii),.)
+	iit=J(1,0,.)
+	/// THINK HOW TO ID Possitive Events. 
+	/// 
 	for(h=1;h<=cols(evnt_lst);h++){
 		k=0
 		flag=0
@@ -505,7 +618,10 @@ vector ptreat(real matrix glvl, tlvl, b){
 				}
 			}
 		}
-		if (flag == 1) iii=iii\ii
+		if (flag == 1) {
+			iii=iii\ii
+			iit=iit,(evnt_lst[h]>=0)
+		}
 	}
 	real matrix r1, r2
 	r1 = (bw :* iii):/rowsum(bw :* iii)
@@ -516,12 +632,48 @@ vector ptreat(real matrix glvl, tlvl, b){
  
 	vvv=makesymmetric((r1,r2)*v*(r1,r2)')
 	
-	st_matrix("r_b_",bbb')
+	///st_matrix("r_b_",bbb')
+	///st_matrix("r_V_",vvv)
+	
+	real matrix rx1, rx2, rx3, xbb, xvv
+	rx1 = r1*0
+	rx2 = (iii):/rowsum(iii)
+	rx1= r1\rx1
+	rx2= r2\rx2
+	xbb=bbb\ (rowsum(bw :* iii):/rowsum(iii) )
+	xvv=makesymmetric((rx1,rx2)*v*(rx1,rx2)')
+	// sm for group N
+	real scalar sm
+	sm=rows(xvv)
+	iii=J(1,sm/2,1):*((1:-iit)\iit)
+	xbb=xbb'
+	br=xbb[1,1..sm/2]
+	bw=xbb[1,sm/2+1..sm]
+ 
+	///r1 = (bw :* iii):/rowsum(bw :* iii)
+	///r2 = (br :* iii):/rowsum(bw :* iii):-rowsum((br:*iii):*(bw:*iii)):/(rowsum(bw :* iii):^2)
+	///r2 = r2:*iii
+	
+	//r1 = (bw :* iii):/rowsum(bw :* iii)
+	r1 = (iii:/rowsum(iii))
+	//r2 = (br :* iii):/rowsum(bw :* iii):-rowsum((br:*iii):*(bw:*iii)):/(rowsum(bw :* iii):^2)
+	r2 = iii:*0  
+ 
+	xbb=rowsum(br :*iii):/rowsum(iii)
+ 	xvv=makesymmetric((r1,r2)*xvv*(r1,r2)')
+	
+	bbb=xbb',bbb'
+	vvv=blockdiag(xvv,vvv)
+	st_matrix("r_b_",bbb)
 	st_matrix("r_V_",vvv)
 	
-	stata("matrix colname r_b_ ="+coleqnm)
-	stata("matrix colname r_V_ ="+coleqnm)
-	stata("matrix rowname r_V_ ="+coleqnm)
+	stata("matrix colname r_b_ = Pre_avg Post_avg "+coleqnm)
+	stata("matrix colname r_V_ = Pre_avg Post_avg "+coleqnm)
+	stata("matrix rowname r_V_ = Pre_avg Post_avg "+coleqnm)
+		
+	///stata("matrix colname r_b_ ="+coleqnm)
+	///stata("matrix colname r_V_ ="+coleqnm)
+	///stata("matrix rowname r_V_ ="+coleqnm)
 	}
  
  

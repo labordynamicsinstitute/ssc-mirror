@@ -1,4 +1,4 @@
-*! version 2.2  01feb2020  Matteo Pinna, matteo.pinna@gess.ethz.ch
+*! version 2.3  16nov2021  Matteo Pinna, matteo.pinna@gess.ethz.ch
 
 /*
 This work is licensed under a Creative Commons Attribution-NonCommercial-ShareAlike 4.0 International License.  
@@ -11,11 +11,8 @@ The full legal text as well as a human-readable summary can be accessed at http:
 
 /* WORKING EXAMPLE */
 clear all
-
-cd /Users/matteop/Dropbox/a_projects/stata_programs/binscatterhist/working_example
-webuse nlsw88, clear
-
-* cd ../binscatterhist_1.4/working_example/
+* cd ../binscatterhist_2.3/working_example/
+webuse nlsw88
 
 * The basic binscatterhist works exactly as binscatter
 binscatterhist wage tenure
@@ -41,12 +38,10 @@ graph export "example5.png", replace
 binscatterhist wage tenure, absorb(grade) vce(robust) coef(0.01) sample xmin(-2.2) ymin(5) histogram(wage tenure)  xhistbarheight(15) yhistbarheight(15) xhistbins(40) yhistbins(40)
 graph export "example6.png", replace
 
-* Let's use now areg - therefore keeping singleton fixed effects. With a negative slope, the reported coefficient and sample adjust automatically their position
-replace tenure=-tenure
-binscatterhist wage tenure, regtype(areg) absorb(grade) vce(robust) coef(0.01) sample xmin(-22) ymin(5) histogram(wage tenure)  xhistbarheight(15) yhistbarheight(15) xhistbins(40) yhistbins(40)
+* Let's use now areg - therefore keeping singleton fixed effects. With a negative slope, the reported coefficient and sample adjust automatically their position. We further report 95% CI and pvalue.
+replace tenure=-abs(tenure)
+binscatterhist wage tenure, regtype(areg) absorb(grade) vce(robust) coef(0.01) ci(95) pvalue sample xmin(-22) ymin(5) histogram(wage tenure)  xhistbarheight(15) yhistbarheight(15) xhistbins(40) yhistbins(40)
 graph export "example7.png", replace
-
-
 
 
 

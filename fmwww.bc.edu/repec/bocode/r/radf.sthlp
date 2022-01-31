@@ -1,5 +1,5 @@
 ﻿{smcl}
-{* *! version 1 20may2021}{...}
+{* *! version 1 30jan2022}{...}
 {cmd:help radf}
 {hline}
 
@@ -60,10 +60,11 @@ This option allows the computation of bootstrap critical values for any initial 
 
 {phang}
 {opt prefix} can be used to provide a `stub' with which variables created in {cmd: radf} will be named if no more than 600 observations
-are in the specified sample. If this option is given, four Stata variables will be created for the appropriate range of dates:
-{it:prefix_}SADF, {it:prefix_}BSADF, {it:prefix_}BSADF_95 and {it:prefix_}Exceeding. These variables record the SADF and BSADF statistics,
+are in the specified sample. If this option is given, five Stata variables will be created for the appropriate range of dates:
+{it:prefix_}SADF, {it:prefix_}BSADF, {it:prefix_}BSADF_95, {it:prefix_}Exceeding95 and {it:prefix_}Exceeding90. These variables record the SADF and BSADF statistics,
 with the third variable displaying the 95% critical values for the BSADF statistic, which vary over the estimation period.
-The fourth variable is an indicator, set to 1 when the BSADF statistic exceeds its 95% critical value. The {opt prefix} option must be specified to enable
+The fourth variable is an indicator, set to 1 when the BSADF statistic exceeds its 95% critical value. 
+The fourth variable is an indicator, set to 1 when the BSADF statistic exceeds its 90% critical value.The {opt prefix} option must be specified to enable
 the {opt graph} option.
 
 {phang}

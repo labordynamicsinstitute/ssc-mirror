@@ -19,7 +19,7 @@ d KW: drdid
 d
 d Requires: Stata version 14 and drdid from SSC (q.v.)
 d
-d Distribution-Date: 20211104
+d Distribution-Date: 20220130
 d
 d Author: Fernando Rios-Avila, Levy Economics Institute of Bard College
 d Support: email friosavi@@levy.org
@@ -35,5 +35,7 @@ f csdid_estat.ado
 f csdid_stats.ado
 f csdid_table.ado
 f csdid_plot.ado
+f ../_/_gcsgvar.ado
+f ../t/tsvmat.ado
 f csdid.sthlp
 f csdid_postestimation.sthlp

@@ -32,12 +32,12 @@ d KW: state transitions
 d
 d Requires: Stata version 15.1 and merlin from SSC (q.v.)
 d
-d Distribution-Date: 20211208
+d Distribution-Date: 20220130
 d
-d Author: Michael J. Crowther, Karolinska Institutet
+d Author: Michael J. Crowther, Red Door Analytics
 d Support: email michael.crowther@@ki.se
 d
-d Author: Paul Lambert, University of Leicester
+d Author: Paul Lambert, Karolinska Institutet
 d Support: email paul.lambert@@le.ac.uk
 d
 f multistate.sthlp
