@@ -1,4 +1,4 @@
-*! version 1.0  26jan2022  Gorkem Aksaray <gaksaray@ku.edu.tr>
+*! version 1.01  31jan2022  Gorkem Aksaray <gaksaray@ku.edu.tr>
 *!
 *! Syntax
 *! ------
@@ -13,6 +13,9 @@
 *!
 *! Changelog
 *! ---------
+*!   [1.01]
+*!     - Using an if expression on a non-current frame was causing an error.
+*!       This is now fixed.
 *!   [1.0]
 *!     - Initial SSC release.
 
@@ -90,7 +93,15 @@ end
 capture program drop parse_prefix
 program define parse_prefix, rclass
     version 16.0
-    syntax [name(name=from)] [if] [in] [, into(string asis) QUIetly]
+    gettoken from 0 : 0
+    capture confirm frame `from'
+    if !_rc frame `from' {
+        syntax [if] [in] [, into(string asis) QUIetly]
+    }
+    else {
+        local 0 "`from' `0'"
+        syntax [name(name=from)] [if] [in] [, into(string asis) QUIetly]
+    }
     
     return local from "`from'"
     return local if "`if'"

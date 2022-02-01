@@ -1,3 +1,4 @@
+*! 2.9.1 NJC 30 January 2022     
 *! 2.9.0 NJC 10 July 2021     
 * 2.8.1 NJC 11 October 2020 
 * 2.8.0 NJC 4 July 2018 
@@ -217,7 +218,7 @@ program stripplot, sort
 				egen `median' = median(`data'), by(`by' _stack) 
 				egen `loq' = pctile(`data'), p(25) by(`by' _stack) 
 				egen `upq' = pctile(`data'), p(75) by(`by' _stack) 
-				if `"`tufte'`tufte2'"' != local pctile = 0 
+				if `"`tufte'`tufte2'"' != "" local pctile = 0 
 	
 				if "`iqr'`iqr2'" != "" { 
 					egen `upper' = max(cond(`data' <= `upq' + `mult' * (`upq' - `loq'), `data', .)), by(`by' _stack) 

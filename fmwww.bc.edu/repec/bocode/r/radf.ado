@@ -69,8 +69,9 @@ if !`nok' {
 		foreach v of local vvv {
 			confirm new var `prefix'`v'
 		}
-// also must validate BSADF 95%, indicators for exceedance at 90 and 95
+// also must validate BSADF 95, 90, indicators for exceedance at 90 and 95
 		confirm new var `prefix'BSADF_95
+		confirm new var `prefix'BSADF_90
 		confirm new var `prefix'Exceeding95
 		confirm new var `prefix'Exceeding90
     }
@@ -313,8 +314,9 @@ if "`prefix'" != "" {
 	foreach v of local vvvv {
 		qui replace `prefix'`v' = ``v''
 	}
-// add 5% CV for gensupadf to created variables
+// add 5%, 10%^ CV for gensupadf to created variables
 	qui g `prefix'BSADF_95 = `cv95' if !mi(`cv95')
+	qui g `prefix'BSADF_90 = `cv90' if !mi(`cv90')
 	qui g `prefix'Exceeding95 = (`prefix'BSADF > `cv95') if !mi(`cv95')
 	qui g `prefix'Exceeding90 = (`prefix'BSADF > `cv90') if !mi(`cv90')
 	if ("`print'" == "print") {
