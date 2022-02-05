@@ -18,13 +18,13 @@ program define cdecompose, eclass
     fvexpand `indepvars' 
     local cnames `r(varlist)'
  
-    tempname N b V
+    tempname N b V rho mu kappa
 
 	mata: estimate_moments("`depvar'", "`cnames'", ///
 						   `p', `q', ///
 						   `delta', `nboot', ///
 				           "`touse'", "`N'", ///
-						   "`b'", "`V'") 
+						   "`b'", "`V'", "`rho'", "`mu'", "`kappa'") 
 						   
 	mata: bootstrap_moments("`depvar'", "`cnames'", ///
 						    `p', `q', ///
@@ -41,10 +41,13 @@ program define cdecompose, eclass
 
     ereturn post `b' `V', esample(`touse') buildfvinfo
     ereturn scalar N    = `N'
+    ereturn scalar p    = `p'
+    ereturn scalar q    = `q'
     ereturn local  cmd  "cdecompose"
+	ereturn matrix rho  = `rho'
  
     ereturn display
-end
+end 
 
 		
 		
@@ -57,7 +60,9 @@ void estimate_moments( string scalar y1v,    		  string scalar y2v,
 					   real scalar p,	  	  		  real scalar q,	
 					   real scalar delta,	  	  	  real scalar num_boot,	
 					   string scalar touse,   		  string scalar nname,
-					   string scalar bname,   		  string scalar vname) 
+					   string scalar bname,   		  string scalar vname,
+					   string scalar rhoname,         string scalar muname,
+					   string scalar kappaname) 
 {
 	printf("\n{hline 78}\n")
 	printf("Executing: Hu, Y., Moffitt, R., & Sasaki, Y. (2019): Semiparametric Estimation\n")
@@ -219,6 +224,9 @@ void estimate_moments( string scalar y1v,    		  string scalar y2v,
 	// Set
     st_numscalar(nname, n)
     st_matrix(bname, b)
+	st_matrix(rhoname, rho)
+	st_matrix(muname, mu)
+    st_numscalar(kappaname, kappa)	
 }
 
 //////////////////////////////////////////////////////////////////////////////// 

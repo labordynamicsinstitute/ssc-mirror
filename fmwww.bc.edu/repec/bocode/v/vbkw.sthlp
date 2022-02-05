@@ -27,7 +27,7 @@ help for {hi:vbkw}
 {title:Description}
 
 {pstd}
-{cmd:vbkw} implements vector-based kernel weighting to adjust for pre-treatment observable differences between treatment groups in a multiple-treatment setting.
+{cmd:vbkw} implements vector-based kernel weighting to adjust for pre-treatment observable differences between treatment groups in a multiple-treatment setting (allows for up to 5 treatment groups).
 Treatment status is identified by {it:depvar}.
 {p_end}
 
@@ -102,7 +102,7 @@ If none are specified, the default bandwidth is 0.2*standard deviation of the pr
 
 {phang}
 {cmdab:sdbw:idth}{cmd:(}{it:real}{cmd:)} the bandwidth used for matching if the user desires a bandwidth based on the standard deviation of the ps or the logit of the ps.
-Default bandwidth is 0.2*standard deviation of the propensity score, or logit of the propensity score (if specified).
+Default bandwidth is 0.2*standard deviation of the propensity score, or logit of the propensity score (if logitps is specified).
 Only one of {cmdab:bw:idth}{cmd:(}{it:real}{cmd:)} or {cmdab:sdbw:idth}{cmd:(}{it:real}{cmd:)} may be specified at a time.
 If none are specified, the default bandwidth is 0.2*standard deviation of the propensity score, or 0.2*standard deviation of the logit of the propensity score (if {cmdab:logitps} is specified).
 
@@ -117,24 +117,27 @@ The default option is to apply the common support restriction based on the minim
 {cmdab:logitps} Use the logit of the propensity scores instead of the raw propensity scores (default). 
 
 {phang}		
-{cmdab:n:reps}{cmd:(}{it:numeric}{cmd:)} Specifies the number of replications to be used in calculating bootstrapped standard errors. The default replications is 300
+{cmdab:n:reps}{cmd:(}{it:numeric}{cmd:)} Specifies the number of replications to be used in calculating bootstrapped standard errors. The default replications is 300 (Note: using more replications will increase processing time). 
 
 {phang}
-{cmdab:no:save} This command automatically creates a separate dataset where the observations off common support dropped and the generated variables mentioned above are stored.
+{cmdab:no:save} The vbkw command automatically creates a separate dataset where the observations off common support are dropped and the generated variables mentioned above are stored. If the user desires not to save this dataset, user should specify nosave. 
 	
 
 {title:Examples}
+The following statement will produce ATTs and ATEs for the effect of a multiple category treatment (treat) on an outcome (Y). 
+In this case, weights are assigned to comparison observations within a bandwidth of .4*standard deviation of the logit of the propensity score according to a biweight kernel function:
+{inp: . vbkw treat x1 x2 x3 x4, kerneltype(biweight) logitps outcome(Y) sdbwidth(0.4) bstrap nreps(200)}
 
-{inp: . vbkw treat x1 x2 x3 x4, kerneltype(biweight) logitps outcome(Y) nocommon sdbwidth(0.4) bstrap nreps(200)}
-{inp: . use "vbkwdta_commonsupportonly.dta", clear // use the dataset that contains the generated variables after estimating with {cmdab:vbkw}}
+use the dataset that contains the generated variables after estimating with vbkw:
+{inp: . use "vbkwdta_commonsupportonly.dta", clear }
 	
-	
+For balance testing, users may calculate standardized differences in covariates according to Austin (2009) (see background reading below) using weights created by vbkw.	
 	
 {title:Thanks for citing {cmd:vbkw} as follows}
 
 {pstd}
-J. Lum and M. M. Garrido (2021). "vbkw: Stata module to perform vector-based kernel weighting in multiple treatment settings ".
-http://ideas.repec.org/c/boc/bocode/?.html. This version INSERT_VERSION_HERE.
+J. Lum and M. M. Garrido (2021). "vbkw: Stata module to perform vector-based kernel weighting in multiple treatment settings".
+https://ideas.repec.org/c/boc/bocode/s459019.html
 
 where you can check your version as follows:
 
@@ -154,6 +157,8 @@ IN NO EVENT WILL THE COPYRIGHT HOLDERS OR THEIR EMPLOYERS, OR ANY OTHER PARTY WH
 {p 0 2}Abadie, A., Drukker, D., Herr, J. L., & Imbens, G. W. (2004). "Implementing matching estimators for average treatment effects in Stata", {it:Stata journal 4}, 290-311.
 
 {p 0 2}Abadie A. and Imbens, G. (2006), "Large sample properties of matching estimators for average treatment effects", {it:Econometrica 74}(1), 235-267.
+
+{p 0 2}Austin PC. "Balance diagnostics for comparing the distribution of baseline covariates between treatment groups in propensity-score matched samples". Stat Med. 2009 Nov 10;28(25):3083-107. doi: 10.1002/sim.3697. PMID: 19757444; PMCID: PMC3472075.
 
 {p 0 2}Austin, P. C., and Small, D. S. (2014), "The use of bootstrapping when using propensity-score matching without replacement: a simulation study", {it:Statistics in Medicine 33}, 4306– 4319.
 https://doi.org/10.1002/sim.6276
@@ -183,7 +188,6 @@ https://doi.org/10.1002/sim.8836
 
 {p 0 2}Rubin, D.B. (1974), "Estimating Causal Effects of Treatments in Randomised and Non-Randomised Studies", {it:Journal of Educational Psychology 66}, 688-701.
 
-{pstd} note to self: add in reading for 1. our vbkw paper, 2. p.c. austin's paper on simple and complex bootstrapping, 3. lopez and gutman's vector matching. 
 
 {title:Author}
 
@@ -191,5 +195,5 @@ https://doi.org/10.1002/sim.8836
 Jessica Lum, Department of Veterans Affairs. If you observe any problems {browse "mailto:jlum917@gmail.com"}.
 
 {pstd}
-Melissa M. Garrido, Boston Univeristy School of Public Health, MA, USA. Department of Veterans Affairs. 
+Melissa M. Garrido, Boston Univeristy School of Public Health, MA, USA. Department of Veterans Affairs {browse "mailto:melissa.garrido@va.gov"}. 
 

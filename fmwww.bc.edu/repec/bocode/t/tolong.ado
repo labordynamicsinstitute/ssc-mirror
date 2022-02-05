@@ -1,4 +1,4 @@
-*! version 1.0.2  28jan2022
+*! version 1.0.3  02feb2022
 program tolong
     version 15
     syntax anything(name=stubs equalok everything) [, i(varlist) j(string) *]
@@ -24,11 +24,16 @@ version 1.0.2
    in float precision. This has been fixed.
 
 2. Stub variable indices whose values exceeded float precision were
-   incorrectly stored in float precision instead of long or double precision.
-   This has been fixed.
+   incorrectly stored as float instead of long or double. This has been fixed.
 
 3. Stub variable indices that exceed the largest integer Stata can store
    (9007199254740992) were stored as doubles but still lost precision. To
    preserve all digits, the variable j is now stored in string format if
    any of j's values exceeds the largest integer value Stata can store.
+
+version 1.0.3
+
+1. When reshaping two or more variables with non-overlapping stub indices,
+   under certain conditions, the first stub variable values were not correctly
+   matched to the indices. This has been fixed.
 

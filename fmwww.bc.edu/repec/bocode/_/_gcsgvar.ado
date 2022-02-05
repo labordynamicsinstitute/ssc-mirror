@@ -1,12 +1,13 @@
-*! v1 Creates gvar-Cohort/group variable
+*! v1.1 Corrects typo
+* v1 Creates gvar-Cohort/group variable
 *program drop _gcsgvar
 program _gcsgvar, sortpreserve
 	syntax newvarname =/exp [if] [in], tvar(varname) ivar(varname)
 	local exp = subinstr("`exp'","(","",.)
 	local exp = subinstr("`exp'",")","",.)
 	tempvar touse
-	qui:gen byte `touse'=1
-	qui:replace `touse'=0 [`if'] [`in']
+	qui:gen byte `touse'=0
+	qui:replace `touse'=1 `if' `in'
 	qui:replace `touse'=0 if `tvar'==. | `ivar'==. | `exp'==.
 		
 	tempvar vals

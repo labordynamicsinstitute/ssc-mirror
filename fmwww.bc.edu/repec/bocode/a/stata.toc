@@ -72,6 +72,7 @@ p archlm module to calculate LM test for ARCH effects
 p archqq module to generate Q-Q plot and distribution tests for ARCH models
 p ardl module to perform autoregressive distributed lag model estimation
 p arhomme module to estimate Arellano and Bonhomme quantile selection model 
+p arimaauto module to find the best ARIMA model with the help of a Stata-adjusted Hyndman-Khandakar (2008) algorithm 
 p arimafit module to calculate AIC, SIC for ARIMA model
 p arimasel module to compute selection criteria for ARMA(p,q) models
 p armadiag module to compute post-estimation residual diagnostics for time series

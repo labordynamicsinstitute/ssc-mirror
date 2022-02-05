@@ -1,0 +1,36 @@
+d 'WORDY': module to play a silly word game and show your guesses on a Stata graph
+d
+d      wordy picks a new word every day from a list of 8,938
+d five-letter words legal in a popular crossword game in 1998.	You
+d then	  have six guesses at the word, and every time you type a
+d guess, a Stata graph appears showing green squares for letters in
+d the	 right position and yellow squares for a letter that
+d appears in the word but in the wrong position.  This may remind
+d you of a    different game using colored pegs on an oblong brown
+d plastic board. 
+d
+d KW: word games
+d KW: erudition
+d
+d Requires: Stata version 8.2
+d
+d Distribution-Date: 20220204
+d
+d Author: Austin Nichols
+d Support: email austinnichols@@gmail.com
+d
+f wordy.ado
+f word.ado
+f wor.ado
+f wo.ado
+f w.ado
+f wordy1.ado
+f wordy2.ado
+f wordy3.ado
+f wordy4.ado
+f wordy5.ado
+f wordy.sthlp
+f word.sthlp
+f wor.sthlp
+f wo.sthlp
+f w.sthlp

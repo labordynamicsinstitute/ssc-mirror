@@ -49,6 +49,7 @@ a user should use {it:y}({it:t}-{it:p}-{it:q})...{it:y}({it:t}+{it:q}+1) as inpu
 {bf:nboot({it:real})} sets the number of bootstrap iterations for approximating standard errors. The default value is {bf: nboot(1000)}.
 {p_end}
 
+
 {marker examples}{...}
 {title:Examples}
 
@@ -66,12 +67,65 @@ a user should use {it:y}({it:t}-{it:p}-{it:q})...{it:y}({it:t}+{it:q}+1) as inpu
 {phang}(Note that it is a common practice in the earnings dynamics literature
         that {bf:y37}...{bf:y42} are defined as the residual of earnings on
         observed attributes.){p_end}
+		
+		
+{marker stored}{...} 
+{title:Stored results}
+
+{phang}
+{bf:cdecompose} stores the following in {bf:e()}: 
+{p_end}
+
+{phang}
+Scalars
+{p_end}
+{phang2}
+{bf:e(N)} {space 10}observations
+{p_end}
+{phang2}
+{bf:e(p)} {space 10}AR order
+{p_end}
+{phang2}
+{bf:e(q)} {space 10}MA order
+{p_end}
+
+{phang}
+Macros
+{p_end}
+{phang2}
+{bf:e(cmd)} {space 8}{bf:cdecompose}
+{p_end}
+{phang2}
+{bf:e(properties)} {space 1}{bf:b V}
+{p_end}
+
+{phang}
+Matrices
+{p_end}
+{phang2}
+{bf:e(b)} {space 10}coefficient vector
+{p_end}
+{phang2}
+{bf:e(V)} {space 10}variance-covariance matrix of the estimators
+{p_end}
+{phang2}
+{bf:e(rho)} {space 8}AR coefficients
+{p_end}
+
+{phang}
+Functions
+{p_end}
+{phang2}
+{bf:e(sample)} {space 5}marks estimation sample
+{p_end}
+
 
 {title:Reference}
 
 {p 4 8}Hu, Y., R. Moffitt, and Y. Sasaki. 2019. Semiparametric Estimation of the Canonical Permanent‐Transitory Model of Earnings Dynamics. {it:Quantitative Economics}, 10 (4), pp. 1495-1536. 
 {browse  "https://onlinelibrary.wiley.com/doi/full/10.3982/QE1117":Link to Paper}.
 {p_end}
+
 
 {title:Authors}
 

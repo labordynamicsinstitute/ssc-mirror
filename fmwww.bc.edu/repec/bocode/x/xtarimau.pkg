@@ -1,0 +1,28 @@
+d 'XTARIMAU': module  Finds the best [S]ARIMA[X] models in heterogeneous panels with the help of arimaauto 
+d
+d	 xtarimau is a panel wrapper for arimaauto which is de
+d facto an "augmented" Mata-written sister program to Christopher
+d F.	Baum's ARMA-limited arimasel with mutually consistent
+d output, allowing for ARIMA(p,d,q) and multiplicative seasonal   
+d ARIMA(p,d,q)(P,D,Q) models, selecting the best model based on the
+d LLF, AIC or SIC, and returning its estimates at the same    time.
+d However, unlike arimasel, the selection is by default peformed
+d with the help of the Hyndman-Khandakar algorithm, first   
+d implemented in the auto.arima function (part of of the "forecast"
+d package) in the R language. 
+d
+d KW: ARIMA
+d KW: seasonal time series
+d KW: panel data
+d KW: stationarity
+d
+d Requires: Stata version 13, hegy from SJ/st0453 and arimaauto, kpss from SSC (q.v.) 
+d
+d Distribution-Date: 20220204
+d
+d Author: Ilya Bolotov, Prague University of Economics and Business
+d Support: email ilya.bolotov@@vse.cz
+d
+f xtarimau.ado
+f ../l/larimaauto.mlib
+f xtarimau.sthlp

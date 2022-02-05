@@ -36,6 +36,7 @@ p witch module to mystically manage files on adopath
 p wntstmvq module to compute multivariate Ljung-Box Q test
 p wordcb module to create a codebook in MS Word format
 p wordconvert module to  transfer files among several types in Windows 
+p wordy module to play a silly word game and show your guesses on a Stata graph
 p workdays module to compute elapsed workdays
 p worldstat module to produce a visualisation of the state of world development
 p wosaddress module to convert datasets from Web of Science data from wide to long
