@@ -153,5 +153,7 @@ used.
 {phang}
 Cook, J., N. Newberger, and J. Lee. 2020. On identification and estimation of Heckman models. {it:Working paper}. {browse "https://papers.ssrn.com/sol3/papers.cfm?abstract_id=3639727":https://papers.ssrn.com/sol3/papers.cfm?abstract_id=3639727}
 
+{phang}
+Cook, J., N. Newberger, and J. Lee. 2021. On identification and estimation of Heckman models. {it:Stata Journal}, 21(4), p 972-998. {browse "https://doi.org/10.1177/1536867X211063149":https://doi.org/10.1177/1536867X211063149}
 
 	
