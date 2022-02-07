@@ -30,7 +30,7 @@ d KW: model quality
 d
 d Requires: Stata version 15.1
 d
-d Distribution-Date: 20210728
+d Distribution-Date: 20220206
 d
 d Author: Kelli Marquardt, University of Arizona
 d Support: email marquardtk@@email.arizona.edu
@@ -46,7 +46,10 @@ f ../c/callCcode.ado
 f ggt.sthlp
 G WIN64  ../b/bayesqual13_win.plugin      bayesqual13.plugin
 G MACINTEL64 ../b/bayesqual13_mac.plugin  bayesqual13.plugin
+G MACARM64 ../b/bayesqual13_mac.plugin  bayesqual13.plugin
+G OSX.ARM64 ../b/bayesqual13_mac.plugin  bayesqual13.plugin
 G OSX.X8664 ../b/bayesqual13_mac.plugin   bayesqual13.plugin
+G LINUX64 ../b/bayesqual13_linux.plugin  bayesqual13.plugin
 h bayesqual13.plugin
 f GGT_test_data.dta
 f GGT_Documentation_Full.pdf

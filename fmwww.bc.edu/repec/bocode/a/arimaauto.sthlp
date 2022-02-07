@@ -1,5 +1,5 @@
 {smcl}
-{* *! version 1.0.0  31jan2022}{...}
+{* *! version 1.0.1  31jan2022}{...}
 {vieweralsosee "[TS] arima" "mansection TS arima"}{...}
 {vieweralsosee "" "--"}{...}
 {vieweralsosee "[TS] arima postestimation" "help arima postestimation"}{...}
@@ -110,7 +110,7 @@ of a time series  by Christopher F. Baum, Boston College, U.S.
 {synoptline}
 {p2colreset}{...}
 {p 4 6 2}
-The user must {opt tsset} your data before using {opt arimaauto};
+The user must {opt tsset} the data before using {opt arimaauto};
 see {manhelp tsset TS}.
 {p_end}
 {p 4 6 2}
@@ -137,10 +137,10 @@ to Christopher F. Baum's ARMA-limited {helpb arimasel} with mutually consistent
 output, allowing for ARIMA({it:p,d,q}) and multiplicative seasonal
 ARIMA({it:p,d,q})({it:P,D,Q}) models, selecting the best model based on
 the LLF, AIC or SIC, and returning its estimates at the same time. However,
-unlike {helpb arimasel}, the selection is by default peformed with the help of 
+unlike {helpb arimasel}, the selection is by default performed with the help of 
 the Hyndman-Khandakar algorithm, first implemented in the
 {browse "https://www.rdocumentation.org/search?q=auto.arima":{bf:auto.arima}}
-function (part of of the "forecast" package) in the {bf: R language}.
+function (part of the "forecast" package) in the {bf: R language}.
 
 {pstd}
 {cmd:arimaauto} can therefore be considered an {bf:estimation command}, built

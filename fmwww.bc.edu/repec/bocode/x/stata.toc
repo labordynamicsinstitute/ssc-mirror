@@ -27,7 +27,7 @@ p xsvmat module to convert a matrix to variables in an output dataset
 p xtab module to tabulate longitudinal data
 p xtable module for exporting table output to Excel 
 p xtabond2 module to extend xtabond dynamic panel data estimator 
-p xtarimau module  Finds the best [S]ARIMA[X] models in heterogeneous panels with the help of arimaauto 
+p xtarimau module to find the best [S]ARIMA[X] models in heterogeneous panels with the help of arimaauto 
 p xtarsim module to perform Monte Carlo analysis for dynamic panel data models
 p xtavplot module to produce added-variable plots for panel data estimation
 p xtbalance module to transform the dataset into balanced Panel Data

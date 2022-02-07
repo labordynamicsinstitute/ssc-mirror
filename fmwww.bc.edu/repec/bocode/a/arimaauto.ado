@@ -1,5 +1,5 @@
-*! version 1.0.0  31jan2022
-*! requires st0453.pkg and sts15_2.pkg from net
+*! version 1.0.1  31jan2022
+*! requires st0453.pkg and from net and kpss from ssc
 
 program define arimaauto, rclass byable(recall)
 	version 13.0
@@ -18,11 +18,13 @@ program define arimaauto, rclass byable(recall)
 
 	// install dependencies, unit root tests                                    
 	cap which hegy
+	if _rc {
+		di "please type:" in smcl _n "{cmd:. net install st0453.pkg }"
+		exit 601
+	}
 	cap which kpss
 	if _rc {
-		di "please type:" in smcl _n "{cmd:. net install st0453.pkg }"		///
-		                          _n "{cmd:. net install sts15_2.pkg}"
-		exit 601
+		ssc install kpss
 	}
 
 	// replay last result                                                       

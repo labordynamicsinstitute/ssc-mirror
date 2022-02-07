@@ -198,6 +198,7 @@ p louvain module to find communities in weighted graph
 p lowyseattle module for managing settings and recompiling
 p lowyseattlea module for tables, statistics, data management, output
 p lowyseattleb module for creating, transforming, labeling, variables
+p lppinv module to solve an under-, over- and identified linear problem without an objective function with the Moore-Penrose pseudoinverse and singular value decomposition (SVD) 
 p lprplot module to produce logistic regression partial residual plots
 p lrchg module to calculate change in coefficients between logistic models 
 p lrdrop1 module to calculate likelihood-ratio test after dropping one term

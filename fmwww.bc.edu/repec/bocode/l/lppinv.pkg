@@ -1,0 +1,25 @@
+d 'LPPINV': module to solve an under-, over- and identified linear problem without an objective function with the Moore-Penrose pseudoinverse and singular value decomposition (SVD) 
+d
+d  The algorithm solves "hybrid" least squares linear programming
+d (LS-LP) problems with the help of the Moore-Penrose inverse
+d (pseudoinverse), calculated using singular value decomposition
+d (SVD), with emphasis	on estimation of non-typical constrained
+d OLS (cOLS), Transaction Matrix (TM), and custom (user-defined)
+d cases. Eventual regression analysis and a Monte-Carlo-based
+d t-test of mean NRMSE is performed, the sample being drawn from a
+d uniform or a user-specified distribution (Mata function). 
+d
+d KW: linear programming
+d KW: least squares
+d KW: pseudoinverse
+d KW: singular value decomposition
+d
+d Requires: Stata version 16
+d
+d Distribution-Date: 20220206
+d
+d Author: Ilya Bolotov, Prague University of Economics and Business
+d Support: email ilya.bolotov@@vse.cz
+d
+f lppinv.ado
+f lppinv.sthlp

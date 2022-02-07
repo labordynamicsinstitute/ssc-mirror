@@ -1,4 +1,4 @@
-d 'XTARIMAU': module  Finds the best [S]ARIMA[X] models in heterogeneous panels with the help of arimaauto 
+d 'XTARIMAU': module to find the best [S]ARIMA[X] models in heterogeneous panels with the help of arimaauto 
 d
 d	 xtarimau is a panel wrapper for arimaauto which is de
 d facto an "augmented" Mata-written sister program to Christopher
