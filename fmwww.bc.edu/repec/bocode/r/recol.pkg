@@ -1,0 +1,19 @@
+d 'RECOL': module to Dynamically Resize Columns in Stata's Data Browser 
+d
+d  recol examines your variable names and the content of your
+d variables in order to determine the appropriate display widths
+d for your columns in the data browser. It works with string,
+d numeric, and date variables. 
+d
+d KW: data management
+d KW: browser
+d
+d Requires: Stata version 10
+d
+d Distribution-Date: 20220214
+d
+d Author: Tyson Van Alfen,  Southern Illinois University, Carbondale
+d Support: email tyson@@vanalfen.io
+d
+f recol.ado
+f recol.sthlp

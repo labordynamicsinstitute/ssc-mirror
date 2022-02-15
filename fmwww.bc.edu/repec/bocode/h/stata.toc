@@ -37,6 +37,7 @@ p hgclg module to estimate geometric-complementary log log hurdle regression
 p hglogit module to estimate geometric-logit hurdle regression
 p hhi module to compute Herfindahl index
 p hhi5 module to generate Herfindahl-Hirschman index (HHI) variables
+p hibi module to compute Harms index and benefits index (Hi-Bi) for measuring the impact of zero-cases studies in evidence synthesis practice
 p hildasetup module to create a longitudinal dataset for the Household, Income and Labour Dynamics in Australia (HILDA) Survey
 p himap module to create heatmaps for the web, using java api developed by highcharts 
 p himatrix module to highlight selected elements of scatterplot

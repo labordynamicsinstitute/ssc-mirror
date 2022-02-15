@@ -1,0 +1,28 @@
+d 'HIBI': module to compute Harms index and benefits index (Hi-Bi) for measuring the impact of zero-cases studies in evidence synthesis practice
+d
+d    hibi generates the Hi-Bi plot and estimates the Hi and Bi
+d metrics to detect the potential impacts of double-zero studies on
+d    the results of a meta-analysis.	The Hi and Bi metrics are
+d defined by the minimal number of cases added to the treatment arm
+d (Hi) or control arm (Bi) of	 studies with no cases in a
+d meta-analysis that lead to a change of the direction of the
+d effect or its statistical significance.    This idea is inspired
+d by the fragility index discussed by Atal et al. 
+d
+d KW: meta-amalysis
+d KW: treatment
+d KW: control
+d
+d Requires: Stata version 14
+d
+d Distribution-Date: 20220214
+d
+d Author:   Chang Xu,  Anhui Medical University, China
+d Support: email  xuchang2016@@runbox.com
+d
+d Author:   Luis Furuya-Kanamori,  University of Queensland
+d Support: email NA
+d
+f hibi.ado
+f hibi.sthlp
+f hibi_example_data.dta

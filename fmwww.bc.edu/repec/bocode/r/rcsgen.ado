@@ -1,4 +1,4 @@
-*! version 1.5.8 30JAN2022
+*! version 1.5.9 13FEB2022
 * Added various options + use mata for orthogonalisation
 * Based on an original program by Chris Nelson
 * Chris Nelson 24/APR/2006
@@ -14,6 +14,7 @@
 * Patrick Royston 31/7/2014 -  return macros for rcslist varlists
 * Paul Lambert 25/6/2015 - when using percentiles, r(knots) were not in numerical order
 * Sarwar Mozumder 18/10/2021 - added Harrell's knot positions (from RMS book, table 2.3)
+* Paul Lambert 18/10/2021 - rmsknots fix
 
 program define rcsgen, rclass
 	version 10.0
@@ -57,7 +58,7 @@ program define rcsgen, rclass
 		}
 	}
   if "`rmsknots'" != "" {
-    if (`rmsknots' < 3 | `rmsknots' > 7 {
+    if (`rmsknots' < 3 | `rmsknots' > 7) {
       display as err "Can only specify k = 3, ..., 7 knots as detailed in Table 2.3 in Regression Modeling Strategies by F. Harrell."
       exit 198
     }

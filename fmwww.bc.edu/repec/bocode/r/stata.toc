@@ -81,6 +81,7 @@ p recast2 module to change storage type of variable
 p reclink module to probabilistically match records
 p recocl module to recode municipal codes for Chile (CL)
 p recode2 module to provide extended recode capabilities
+p recol module to Dynamically Resize Columns in Stata's Data Browser 
 p reffadjust module  to estimate adjusted regression coefficients for the association between two random effects variables
 p reffect module to compute Pearson's r Effect Size Computation for Analysis of Variance (ANOVA)
 p reformat module to reformat regression output
